@@ -428,7 +428,7 @@ CmiCreateRegistryHive(PWSTR Filename,
   BOOLEAN CreateNew);
 
 NTSTATUS
-CmiLoadHive(PUNICODE_STRING KeyName,
+CmiLoadHive(POBJECT_ATTRIBUTES KeyObjectAttributes,
 	    PUNICODE_STRING FileName,
 	    ULONG Flags);
 
@@ -567,11 +567,11 @@ CmiAddFree(PREGISTRY_HIVE  RegistryHive,
 	   BOOLEAN MergeFreeBlocks);
 
 NTSTATUS
-CmiConnectHive(PUNICODE_STRING KeyName,
+CmiConnectHive(POBJECT_ATTRIBUTES KeyObjectAttributes,
 	       PREGISTRY_HIVE RegistryHive);
 
 NTSTATUS
-CmiDisconnectHive (PUNICODE_STRING KeyName,
+CmiDisconnectHive (POBJECT_ATTRIBUTES KeyObjectAttributes,
 		   PREGISTRY_HIVE *RegistryHive);
 
 NTSTATUS

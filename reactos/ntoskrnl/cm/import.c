@@ -1,4 +1,4 @@
-/* $Id: import.c,v 1.20 2003/05/30 22:28:14 ekohl Exp $
+/* $Id: import.c,v 1.21 2003/06/01 15:10:52 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -166,6 +166,7 @@ BOOLEAN
 CmImportSystemHive(PCHAR ChunkBase,
 		   ULONG ChunkSize)
 {
+  OBJECT_ATTRIBUTES ObjectAttributes;
   PREGISTRY_HIVE RegistryHive;
   UNICODE_STRING KeyName;
   NTSTATUS Status;
@@ -190,7 +191,12 @@ CmImportSystemHive(PCHAR ChunkBase,
   /* Attach it to the machine key */
   RtlInitUnicodeString (&KeyName,
 			L"\\Registry\\Machine\\System");
-  Status = CmiConnectHive (&KeyName,
+  InitializeObjectAttributes (&ObjectAttributes,
+			      &KeyName,
+			      OBJ_CASE_INSENSITIVE,
+			      NULL,
+			      NULL);
+  Status = CmiConnectHive (&ObjectAttributes,
 			   RegistryHive);
   if (!NT_SUCCESS(Status))
     {
@@ -215,8 +221,8 @@ BOOLEAN
 CmImportHardwareHive(PCHAR ChunkBase,
 		     ULONG ChunkSize)
 {
-  PREGISTRY_HIVE RegistryHive;
   OBJECT_ATTRIBUTES ObjectAttributes;
+  PREGISTRY_HIVE RegistryHive;
   UNICODE_STRING KeyName;
   HANDLE HardwareKey;
   ULONG Disposition;
@@ -235,7 +241,7 @@ CmImportHardwareHive(PCHAR ChunkBase,
 			    L"\\Registry\\Machine\\HARDWARE");
       InitializeObjectAttributes (&ObjectAttributes,
 				  &KeyName,
-				  0,
+				  OBJ_CASE_INSENSITIVE,
 				  NULL,
 				  NULL);
       Status = NtCreateKey (&HardwareKey,
@@ -256,7 +262,7 @@ CmImportHardwareHive(PCHAR ChunkBase,
 			   L"\\Registry\\Machine\\HARDWARE\\DESCRIPTION");
       InitializeObjectAttributes (&ObjectAttributes,
 				  &KeyName,
-				  0,
+				  OBJ_CASE_INSENSITIVE,
 				  NULL,
 				  NULL);
       Status = NtCreateKey (&HardwareKey,
@@ -277,7 +283,7 @@ CmImportHardwareHive(PCHAR ChunkBase,
 			    L"\\Registry\\Machine\\HARDWARE\\DEVICEMAP");
       InitializeObjectAttributes (&ObjectAttributes,
 				  &KeyName,
-				  0,
+				  OBJ_CASE_INSENSITIVE,
 				  NULL,
 				  NULL);
       Status = NtCreateKey (&HardwareKey,
@@ -298,7 +304,7 @@ CmImportHardwareHive(PCHAR ChunkBase,
 			   L"\\Registry\\Machine\\HARDWARE\\RESOURCEMAP");
       InitializeObjectAttributes (&ObjectAttributes,
 				  &KeyName,
-				  0,
+				  OBJ_CASE_INSENSITIVE,
 				  NULL,
 				  NULL);
       Status = NtCreateKey (&HardwareKey,
@@ -337,7 +343,12 @@ CmImportHardwareHive(PCHAR ChunkBase,
   /* Attach it to the machine key */
   RtlInitUnicodeString (&KeyName,
 			L"\\Registry\\Machine\\HARDWARE");
-  Status = CmiConnectHive (&KeyName,
+  InitializeObjectAttributes (&ObjectAttributes,
+			      &KeyName,
+			      OBJ_CASE_INSENSITIVE,
+			      NULL,
+			      NULL);
+  Status = CmiConnectHive (&ObjectAttributes,
 			   RegistryHive);
   if (!NT_SUCCESS(Status))
     {

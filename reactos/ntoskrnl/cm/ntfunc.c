@@ -13,7 +13,8 @@
 #include <internal/ob.h>
 #include <limits.h>
 #include <string.h>
-#include <internal/pool.h>
+//#include <internal/pool.h>
+#include <internal/se.h>
 #include <internal/registry.h>
 
 #define NDEBUG
@@ -1437,22 +1438,103 @@ NtLoadKey2 (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 	    IN POBJECT_ATTRIBUTES FileObjectAttributes,
 	    IN ULONG Flags)
 {
+  POBJECT_NAME_INFORMATION NameInfo;
+  PUNICODE_STRING NamePointer;
+  PUCHAR Buffer;
+  ULONG BufferSize;
+  ULONG Length;
   NTSTATUS Status;
 
   DPRINT ("NtLoadKey2() called\n");
 
-  if (Flags & ~REG_NO_LAZY_FLUSH)
-    return STATUS_INVALID_PARAMETER;
+#if 0
+  if (!SeSinglePrivilegeCheck (SeRestorePrivilege, KeGetPreviousMode ()))
+    return STATUS_PRIVILEGE_NOT_HELD;
+#endif
 
-  /* FIXME: Get the absolute file name */
+  if (FileObjectAttributes->RootDirectory != NULL)
+    {
+      BufferSize =
+	sizeof(OBJECT_NAME_INFORMATION) + MAX_PATH * sizeof(WCHAR);
+      Buffer = ExAllocatePool (NonPagedPool,
+			       BufferSize);
+      if (Buffer == NULL)
+	return STATUS_INSUFFICIENT_RESOURCES;
 
-  Status = CmiLoadHive (KeyObjectAttributes->ObjectName,
-			FileObjectAttributes->ObjectName,
+      Status = NtQueryObject (FileObjectAttributes->RootDirectory,
+			      ObjectNameInformation,
+			      Buffer,
+			      BufferSize,
+			      &Length);
+      if (!NT_SUCCESS(Status))
+	{
+	  DPRINT1 ("NtQueryObject() failed (Status %lx)\n", Status);
+	  ExFreePool (Buffer);
+	  return Status;
+	}
+
+      NameInfo = (POBJECT_NAME_INFORMATION)Buffer;
+      DPRINT ("ObjectPath: '%wZ'  Length %hu\n",
+	      &NameInfo->Name, NameInfo->Name.Length);
+
+      NameInfo->Name.MaximumLength = MAX_PATH * sizeof(WCHAR);
+      if (FileObjectAttributes->ObjectName->Buffer[0] != L'\\')
+	{
+	  RtlAppendUnicodeToString (&NameInfo->Name,
+				    L"\\");
+	  DPRINT ("ObjectPath: '%wZ'  Length %hu\n",
+		  &NameInfo->Name, NameInfo->Name.Length);
+	}
+      RtlAppendUnicodeStringToString (&NameInfo->Name,
+				      FileObjectAttributes->ObjectName);
+
+      DPRINT ("ObjectPath: '%wZ'  Length %hu\n",
+	      &NameInfo->Name, NameInfo->Name.Length);
+      NamePointer = &NameInfo->Name;
+    }
+  else
+    {
+      if (FileObjectAttributes->ObjectName->Buffer[0] == L'\\')
+	{
+	  Buffer = NULL;
+	  NamePointer = FileObjectAttributes->ObjectName;
+	}
+      else
+	{
+	  BufferSize =
+	    sizeof(OBJECT_NAME_INFORMATION) + MAX_PATH * sizeof(WCHAR);
+	  Buffer = ExAllocatePool (NonPagedPool,
+				   BufferSize);
+	  if (Buffer == NULL)
+	    return STATUS_INSUFFICIENT_RESOURCES;
+
+	  NameInfo = (POBJECT_NAME_INFORMATION)Buffer;
+	  NameInfo->Name.MaximumLength = MAX_PATH * sizeof(WCHAR);
+	  NameInfo->Name.Length = 0;
+	  NameInfo->Name.Buffer = (PWSTR)((ULONG_PTR)Buffer + sizeof(OBJECT_NAME_INFORMATION));
+	  NameInfo->Name.Buffer[0] = 0;
+
+	  RtlAppendUnicodeToString (&NameInfo->Name,
+				    L"\\");
+	  RtlAppendUnicodeStringToString (&NameInfo->Name,
+					  FileObjectAttributes->ObjectName);
+
+	  NamePointer = &NameInfo->Name;
+	}
+    }
+
+  DPRINT ("Full name: '%wZ'\n", NamePointer);
+
+  Status = CmiLoadHive (KeyObjectAttributes,
+			NamePointer,
 			Flags);
   if (!NT_SUCCESS (Status))
     {
       DPRINT1 ("CmiLoadHive() failed (Status %lx)\n", Status);
     }
+
+  if (Buffer != NULL)
+    ExFreePool (Buffer);
 
   return Status;
 }
@@ -1639,7 +1721,7 @@ NtUnloadKey (IN POBJECT_ATTRIBUTES KeyObjectAttributes)
 
   DPRINT ("NtUnloadKey() called\n");
 
-  Status = CmiDisconnectHive (KeyObjectAttributes->ObjectName,
+  Status = CmiDisconnectHive (KeyObjectAttributes,
 			      &RegistryHive);
   if (!NT_SUCCESS (Status))
     {

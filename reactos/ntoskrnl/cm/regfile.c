@@ -1157,7 +1157,7 @@ CmiCreateRegistryHive(PWSTR Filename,
 
 
 NTSTATUS
-CmiLoadHive(IN PUNICODE_STRING KeyName,
+CmiLoadHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 	    IN PUNICODE_STRING FileName,
 	    IN ULONG Flags)
 {
@@ -1165,6 +1165,9 @@ CmiLoadHive(IN PUNICODE_STRING KeyName,
   NTSTATUS Status;
 
   DPRINT ("CmiLoadHive(Filename %wZ)\n", FileName);
+
+  if (Flags & ~REG_NO_LAZY_FLUSH)
+    return STATUS_INVALID_PARAMETER;
 
   Hive = ExAllocatePool (NonPagedPool,
 			 sizeof(REGISTRY_HIVE));
@@ -1211,7 +1214,7 @@ CmiLoadHive(IN PUNICODE_STRING KeyName,
   VERIFY_REGISTRY_HIVE(Hive);
 
 
-  Status = CmiConnectHive (KeyName,
+  Status = CmiConnectHive (KeyObjectAttributes,
 			   Hive);
   if (!NT_SUCCESS(Status))
     {

@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.99 2003/05/30 22:28:14 ekohl Exp $
+/* $Id: registry.c,v 1.100 2003/06/01 15:10:52 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -498,11 +498,10 @@ CmiCreateCurrentControlSetLink(VOID)
 
 
 NTSTATUS
-CmiConnectHive(IN PUNICODE_STRING KeyName,
+CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 	       IN PREGISTRY_HIVE RegistryHive)
 {
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING ParentKeyName;
+  UNICODE_STRING RemainingPath;
   PKEY_OBJECT ParentKey;
   PKEY_OBJECT NewKey;
   NTSTATUS Status;
@@ -511,48 +510,47 @@ CmiConnectHive(IN PUNICODE_STRING KeyName,
   DPRINT("CmiConnectHive(%p, %wZ) called.\n",
 	 RegistryHive, KeyName);
 
-  SubName = wcsrchr (KeyName->Buffer, L'\\');
-  if (SubName == NULL)
-    {
-      return STATUS_UNSUCCESSFUL;
-    }
-
-  ParentKeyName.Length = (USHORT)(SubName - KeyName->Buffer) * sizeof(WCHAR);
-  ParentKeyName.MaximumLength = ParentKeyName.Length + sizeof(WCHAR);
-  ParentKeyName.Buffer = ExAllocatePool (NonPagedPool,
-					 ParentKeyName.MaximumLength);
-  RtlCopyMemory (ParentKeyName.Buffer,
-		 KeyName->Buffer,
-		 ParentKeyName.Length);
-  ParentKeyName.Buffer[ParentKeyName.Length / sizeof(WCHAR)] = 0;
-  SubName++;
-
-  Status = ObReferenceObjectByName (&ParentKeyName,
-				    OBJ_CASE_INSENSITIVE,
-				    NULL,
-				    STANDARD_RIGHTS_REQUIRED,
-				    CmiKeyType,
-				    KernelMode,
-				    NULL,
-				    (PVOID*)&ParentKey);
-  RtlFreeUnicodeString (&ParentKeyName);
+  Status = ObFindObject(KeyObjectAttributes,
+			(PVOID*)&ParentKey,
+			&RemainingPath,
+			CmiKeyType);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1 ("ObReferenceObjectByName() failed (Status %lx)\n", Status);
-      return Status;
+      return(Status);
     }
 
-  InitializeObjectAttributes(&ObjectAttributes,
-			     KeyName,
-			     0,
-			     NULL,
-			     NULL);
+  DPRINT ("RemainingPath %wZ\n", &RemainingPath);
+
+  if ((RemainingPath.Buffer == NULL) || (RemainingPath.Buffer[0] == 0))
+    {
+      ObDereferenceObject (ParentKey);
+      return STATUS_OBJECT_NAME_COLLISION;
+    }
+
+  /* If RemainingPath contains \ we must return error
+     because CmiConnectHive() can not create trees */
+  SubName = RemainingPath.Buffer;
+  if (*SubName == L'\\')
+    SubName++;
+
+  if (wcschr (SubName, L'\\') != NULL)
+    {
+      ObDereferenceObject (ParentKey);
+      return STATUS_OBJECT_NAME_NOT_FOUND;
+    }
+
+  DPRINT("RemainingPath %S  ParentObject %x\n", RemainingPath.Buffer, Object);
 
   Status = ObCreateObject(NULL,
 			  STANDARD_RIGHTS_REQUIRED,
-			  &ObjectAttributes,
+			  NULL,
 			  CmiKeyType,
 			  (PVOID*)&NewKey);
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
+
   if (!NT_SUCCESS(Status))
     {
       DPRINT1 ("ObCreateObject() failed (Status %lx)\n", Status);
@@ -560,6 +558,7 @@ CmiConnectHive(IN PUNICODE_STRING KeyName,
       return Status;
     }
 
+  NewKey->ParentKey = ParentKey;
   NewKey->RegistryHive = RegistryHive;
   NewKey->BlockOffset = RegistryHive->HiveHeader->RootKeyCell;
   NewKey->KeyCell = CmiGetBlock(RegistryHive, NewKey->BlockOffset, NULL);
@@ -602,64 +601,77 @@ CmiConnectHive(IN PUNICODE_STRING KeyName,
 
 
 NTSTATUS
-CmiDisconnectHive (IN PUNICODE_STRING KeyName,
+CmiDisconnectHive (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 		   OUT PREGISTRY_HIVE *RegistryHive)
 {
   PKEY_OBJECT KeyObject;
   PREGISTRY_HIVE Hive;
+  HANDLE KeyHandle;
   NTSTATUS Status;
 
   DPRINT("CmiDisconnectHive() called\n");
 
   *RegistryHive = NULL;
 
-  Status = ObReferenceObjectByName (KeyName,
-				    OBJ_CASE_INSENSITIVE,
-				    NULL,
-				    STANDARD_RIGHTS_REQUIRED,
-				    CmiKeyType,
-				    KernelMode,
-				    NULL,
-				    (PVOID*)&KeyObject);
+  Status = ObOpenObjectByName (KeyObjectAttributes,
+			       CmiKeyType,
+			       NULL,
+			       KernelMode,
+			       STANDARD_RIGHTS_REQUIRED,
+			       NULL,
+			       &KeyHandle);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1 ("ObOpenObjectByName() failed (Status %lx)\n", Status);
+      return Status;
+    }
+
+  Status = ObReferenceObjectByHandle (KeyHandle,
+				      STANDARD_RIGHTS_REQUIRED,
+				      CmiKeyType,
+				      KernelMode,
+				      (PVOID*)&KeyObject,
+				      NULL);
+  NtClose (KeyHandle);
   if (!NT_SUCCESS(Status))
     {
       DPRINT1 ("ObReferenceObjectByName() failed (Status %lx)\n", Status);
       return Status;
     }
-  DPRINT("KeyObject %p  Hive %p\n", KeyObject, KeyObject->RegistryHive);
+  DPRINT ("KeyObject %p  Hive %p\n", KeyObject, KeyObject->RegistryHive);
 
   if (!(KeyObject->KeyCell->Flags & REG_KEY_ROOT_CELL))
     {
-      DPRINT1("Key is not the Hive-Root-Key\n");
-      ObDereferenceObject(KeyObject);
+      DPRINT1 ("Key is not the Hive-Root-Key\n");
+      ObDereferenceObject (KeyObject);
       return STATUS_INVALID_PARAMETER;
     }
 
-  if (ObGetObjectHandleCount(KeyObject) != 0 ||
-      ObGetObjectPointerCount(KeyObject) != 2)
+  if (ObGetObjectHandleCount (KeyObject) != 0 ||
+      ObGetObjectPointerCount (KeyObject) != 2)
     {
-      DPRINT1("Hive is still in use\n");
-      ObDereferenceObject(KeyObject);
+      DPRINT1 ("Hive is still in use\n");
+      ObDereferenceObject (KeyObject);
       return STATUS_UNSUCCESSFUL;
     }
 
   Hive = KeyObject->RegistryHive;
 
   /* Dereference KeyObject twice to delete it */
-  ObDereferenceObject(KeyObject);
-  ObDereferenceObject(KeyObject);
+  ObDereferenceObject (KeyObject);
+  ObDereferenceObject (KeyObject);
 
   *RegistryHive = Hive;
 
-  DPRINT("CmiDisconnectHive() done\n");
+  DPRINT ("CmiDisconnectHive() done\n");
 
   return STATUS_SUCCESS;
 }
 
 
 static NTSTATUS
-CmiInitializeSystemHive (PWSTR FileName,
-			 PUNICODE_STRING KeyName)
+CmiInitializeSystemHive (POBJECT_ATTRIBUTES KeyObjectAttributes,
+			 PWSTR FileName)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING ControlSetKeyName;
@@ -678,7 +690,7 @@ CmiInitializeSystemHive (PWSTR FileName,
       return Status;
     }
 
-  Status = CmiConnectHive (KeyName,
+  Status = CmiConnectHive (KeyObjectAttributes,
 			   RegistryHive);
   if (!NT_SUCCESS(Status))
     {
@@ -749,8 +761,8 @@ CmiInitializeSystemHive (PWSTR FileName,
 
 
 NTSTATUS
-CmiInitializeHive(PWSTR FileName,
-		  PUNICODE_STRING KeyName,
+CmiInitializeHive(POBJECT_ATTRIBUTES KeyObjectAttributes,
+		  PWSTR FileName,
 		  BOOLEAN CreateNew)
 {
   PREGISTRY_HIVE RegistryHive;
@@ -772,7 +784,7 @@ CmiInitializeHive(PWSTR FileName,
     }
 
   /* Connect the hive */
-  Status = CmiConnectHive(KeyName,
+  Status = CmiConnectHive(KeyObjectAttributes, //KeyName,
 			  RegistryHive);
   if (!NT_SUCCESS(Status))
     {
@@ -878,8 +890,13 @@ CmiInitHives(BOOLEAN SetupBoot)
 
       RtlInitUnicodeString (&KeyName,
 			    REG_SYSTEM_KEY_NAME);
-      Status = CmiInitializeSystemHive (ConfigPath,
-					&KeyName);
+      InitializeObjectAttributes(&ObjectAttributes,
+				 &KeyName,
+				 OBJ_CASE_INSENSITIVE,
+				 NULL,
+				 NULL);
+      Status = CmiInitializeSystemHive (&ObjectAttributes,
+					ConfigPath);
       if (!NT_SUCCESS(Status))
 	{
 	  DPRINT1("CmiInitializeSystemHive() failed (Status %lx)\n", Status);
@@ -893,8 +910,13 @@ CmiInitHives(BOOLEAN SetupBoot)
 
   RtlInitUnicodeString (&KeyName,
 			REG_SOFTWARE_KEY_NAME);
-  Status = CmiInitializeHive(ConfigPath,
+  InitializeObjectAttributes(&ObjectAttributes,
 			     &KeyName,
+			     OBJ_CASE_INSENSITIVE,
+			     NULL,
+			     NULL);
+  Status = CmiInitializeHive(&ObjectAttributes,
+			     ConfigPath,
 			     SetupBoot);
   if (!NT_SUCCESS(Status))
     {
@@ -908,8 +930,13 @@ CmiInitHives(BOOLEAN SetupBoot)
 
   RtlInitUnicodeString (&KeyName,
 			REG_SAM_KEY_NAME);
-  Status = CmiInitializeHive(ConfigPath,
+  InitializeObjectAttributes(&ObjectAttributes,
 			     &KeyName,
+			     OBJ_CASE_INSENSITIVE,
+			     NULL,
+			     NULL);
+  Status = CmiInitializeHive(&ObjectAttributes,
+			     ConfigPath,
 			     SetupBoot);
   if (!NT_SUCCESS(Status))
     {
@@ -923,8 +950,13 @@ CmiInitHives(BOOLEAN SetupBoot)
 
   RtlInitUnicodeString (&KeyName,
 			REG_SEC_KEY_NAME);
-  Status = CmiInitializeHive(ConfigPath,
+  InitializeObjectAttributes(&ObjectAttributes,
 			     &KeyName,
+			     OBJ_CASE_INSENSITIVE,
+			     NULL,
+			     NULL);
+  Status = CmiInitializeHive(&ObjectAttributes,
+			     ConfigPath,
 			     SetupBoot);
   if (!NT_SUCCESS(Status))
     {
@@ -938,8 +970,13 @@ CmiInitHives(BOOLEAN SetupBoot)
 
   RtlInitUnicodeString (&KeyName,
 			REG_DEFAULT_USER_KEY_NAME);
-  Status = CmiInitializeHive(ConfigPath,
+  InitializeObjectAttributes(&ObjectAttributes,
 			     &KeyName,
+			     OBJ_CASE_INSENSITIVE,
+			     NULL,
+			     NULL);
+  Status = CmiInitializeHive(&ObjectAttributes,
+			     ConfigPath,
 			     SetupBoot);
   if (!NT_SUCCESS(Status))
     {
