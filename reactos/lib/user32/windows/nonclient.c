@@ -147,23 +147,38 @@ UserHasMenu(HWND hWnd, ULONG Style)
 HICON 
 UserGetWindowIcon(HWND hwnd)
 {
-  HICON Ret = 0;
+  HICON Ret;
   
-  SendMessageTimeoutW(hwnd, WM_GETICON, ICON_SMALL2, 0, SMTO_ABORTIFHUNG, 1000, (LPDWORD)&Ret);
-  if (!Ret)
-    SendMessageTimeoutW(hwnd, WM_GETICON, ICON_SMALL, 0, SMTO_ABORTIFHUNG, 1000, (LPDWORD)&Ret);
-  if (!Ret)
-    SendMessageTimeoutW(hwnd, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG, 1000, (LPDWORD)&Ret);
-  if (!Ret)
-    Ret = (HICON)GetClassLongW(hwnd, GCL_HICONSM);
-  if (!Ret)
-    Ret = (HICON)GetClassLongW(hwnd, GCL_HICON);
-  if (!Ret)
-    SendMessageTimeoutW(hwnd, WM_QUERYDRAGICON, 0, 0, 0, 1000, (LPDWORD)&Ret);
-  if (!Ret)
-    Ret = LoadIconW(0, IDI_APPLICATION);
+  if(SendMessageTimeoutW(hwnd, WM_GETICON, ICON_SMALL2, 0, SMTO_ABORTIFHUNG, 1000, (LPDWORD)&Ret) && Ret)
+  {
+    return Ret;
+  }
+  if(SendMessageTimeoutW(hwnd, WM_GETICON, ICON_SMALL, 0, SMTO_ABORTIFHUNG, 1000, (LPDWORD)&Ret) && Ret)
+  {
+    return Ret;
+  }
+  if(SendMessageTimeoutW(hwnd, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG, 1000, (LPDWORD)&Ret) && Ret)
+  {
+    return Ret;
+  }
+  if((Ret = (HICON)GetClassLongW(hwnd, GCL_HICONSM)))
+  {
+    return Ret;
+  }
+  if((Ret = (HICON)GetClassLongW(hwnd, GCL_HICON)))
+  {
+    return Ret;
+  }
+  if(SendMessageTimeoutW(hwnd, WM_QUERYDRAGICON, 0, 0, 0, 1000, (LPDWORD)&Ret) && Ret)
+  {
+    return Ret;
+  }
+  if((Ret = LoadIconW(0, IDI_APPLICATION)))
+  {
+    return Ret;
+  }
   
-  return Ret;
+  return NULL;
 }
 
 BOOL
