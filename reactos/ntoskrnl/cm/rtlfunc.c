@@ -272,7 +272,9 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 	    }
 	  else
 	    {
-	      if (ValueInfo->Type == REG_SZ)
+	      if (ValueInfo->Type == REG_SZ ||
+		  ValueInfo->Type == REG_MULTI_SZ ||
+		  ValueInfo->Type == REG_EXPAND_SZ)
 		{
 		  PUNICODE_STRING ValueString;
 
@@ -281,7 +283,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		    {
 		      RtlInitUnicodeString(ValueString,
 					   NULL);
-		      ValueString->MaximumLength = 256 * sizeof(WCHAR);
+		      ValueString->MaximumLength = ValueInfo->DataLength + sizeof(WCHAR); //256 * sizeof(WCHAR);
 		      ValueString->Buffer = ExAllocatePool(PagedPool,
 							   ValueString->MaximumLength);
 		      if (!ValueString->Buffer)
