@@ -1,12 +1,20 @@
 #
 #
 #
-
 OBJECTS = beep.o ../../../ntoskrnl/ntoskrnl.a
 
 all: beep.sys
 
 .PHONY: all
+
+clean:
+	- $(RM) beep.o
+	- $(RM) junk.tmp
+	- $(RM) base.tmp
+	- $(RM) temp.exp
+	- $(RM) beep.sys
+
+.phony: clean
 
 beep.sys: $(OBJECTS)
 	$(CC) -specs=../../svc_specs -mdll -o junk.tmp -Wl,--defsym,_end=end \

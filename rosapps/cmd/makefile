@@ -17,6 +17,14 @@ OBJECTS = ../common/crt0.o cmd.o attrib.o alias.o batch.o beep.o call.o \
 
 LIBS= ../../lib/kernel32/kernel32.a ../../lib/ntdll/ntdll.a
 
+CLEAN_FILES = $(OBJECTS) cmd.exe cmd.sym
+
+clean: $(CLEAN_FILES:%=%_clean)
+
+$(CLEAN_FILES:%=%_clean): %_clean:
+	- $(RM) $*
+
+.phony: clean $(CLEAN_FILES:%=%_clean)
 
 cmd.bin: $(OBJECTS)
 	$(LD) -Ttext 0x10000 $(OBJECTS) $(LIBS) -o cmd.exe

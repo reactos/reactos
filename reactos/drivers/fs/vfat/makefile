@@ -1,6 +1,27 @@
+#
+#
+#
+OBJECTS = blockdev.o dir.o dirwr.o iface.o ../../../ntoskrnl/ntoskrnl.a
+
 all: vfatfsd.sys
 
-OBJECTS = blockdev.o dir.o dirwr.o iface.o ../../../ntoskrnl/ntoskrnl.a
+.phony: all
+
+clean:
+ifeq ($(DOSCLI),yes)
+	- $(RM) blockdev.o
+	- $(RM) dir.o
+	- $(RM) dirwr.o
+	- $(RM) iface.o
+	- $(RM) junk.tmp
+	- $(RM) base.tmp
+	- $(RM) temp.exp
+	- $(RM) vfatfsd.sys
+else
+	- $(RM) blockdev.o dir.o dirwr.o iface.o junk.tmp base.tmp temp.exp vfatfsd.sys
+endif
+
+.phony: clean
 
 vfatfsd.sys: $(OBJECTS)
 	$(CC) -specs=../../svc_specs -mdll -o junk.tmp -Wl,--defsym,_end=end \
@@ -13,3 +34,5 @@ vfatfsd.sys: $(OBJECTS)
 	$(CC) --verbose -Wl,--image-base,0x10000 -Wl,-e,_DriverEntry@8 \
 	      -specs=../../svc_specs -mdll -o vfatfsd.sys $(OBJECTS) -Wl,temp.exp
 	- $(RM) temp.exp
+
+

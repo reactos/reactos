@@ -1,6 +1,20 @@
+#
+#
+#
+OBJECTS = ide.o ../../../ntoskrnl/ntoskrnl.a
+
 all: ide.sys
 
-OBJECTS = ide.o ../../../ntoskrnl/ntoskrnl.a
+.phony: all
+
+clean:
+	- $(RM) ide.o
+	- $(RM) junk.tmp
+	- $(RM) base.tmp
+	- $(RM) temp.exp
+	- $(RM) ide.sys
+
+.phony: clean
 
 ide.sys: $(OBJECTS)
 	$(CC) -specs=../../svc_specs -mdll -o junk.tmp -Wl,--defsym,_end=end \
@@ -13,3 +27,4 @@ ide.sys: $(OBJECTS)
 	$(CC) --verbose -Wl,--image-base,0x10000 -Wl,-e,_DriverEntry@8 \
               -specs=../../svc_specs -mdll -o ide.sys $(OBJECTS) -Wl,temp.exp
 	- $(RM) temp.exp
+

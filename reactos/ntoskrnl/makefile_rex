@@ -102,6 +102,18 @@ OBJECTS = objects/hal.o objects/ke.o objects/rtl.o objects/mm.o \
 	  objects/se.o objects/cm.o objects/dbg.o\
 	  objects/nt.o objects/cc.o objects/ldr.o
 	  
+ifeq ($(DOSCLI),yes)
+CLEAN_FILES = objects\*.o cc\*.o cm\*.o dbg\*.o ex\*.o hal\x86\*.o io\*.o  \
+              ke\*.o ldr\*.o mm\*.o nt\*.o ob\*.o ps\*.o rtl\*.o se\*.o  \
+              utils\export\export.exe ntoskrnl.o ntoskrnl.a junk.tmp base.tmp  \
+              temp.exp ntoskrnl.exe ntoskrnl.sym
+else
+CLEAN_FILES = objects/*.o cc/*.o cm/*.o dbg/*.o ex/*.o hal/x86/*.o io/*.o  \
+              ke/*.o ldr/*.o mm/*.o nt/*.o ob/*.o ps/*.o rtl/*.o se/*.o  \
+              utils/export/export ntoskrnl.o ntoskrnl.a junk.tmp base.tmp  \
+              temp.exp ntoskrnl.exe ntoskrnl.sym
+endif
+
 utils/export/export$(EXE_POSTFIX): utils/export/export.c
 	$(NATIVE_CC) -g utils/export/export.c -o utils/export/export$(EXE_POSTFIX)
 
@@ -137,8 +149,13 @@ ntoskrnl.exe: $(OBJECTS) ntoskrnl.def
 	      -Wl,--defsym,_etext=etext -Wl,temp.exp
 	- $(RM) temp.exp
 	$(NM) --numeric-sort ntoskrnl.exe > ntoskrnl.sym
-	
-dummy:
+
+clean: $(CLEAN_FILES:%=%_clean)
+
+$(CLEAN_FILES:%=%_clean): %_clean:
+	- $(RM) $*
+
+.PHONY: clean $(CLEAN_FILES:%=%_clean)
 
 ex/napi.o: ex/napi.c ../include/ntdll/napi.h
 
@@ -146,3 +163,4 @@ ex/napi.o: ex/napi.c ../include/ntdll/napi.h
 WIN32_LEAN_AND_MEAN = yes
 #WARNINGS_ARE_ERRORS = yes
 include ../rules.mak
+

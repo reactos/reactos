@@ -1,6 +1,20 @@
+#
+#
+#
+OBJECTS = keyboard.o ../../../ntoskrnl/ntoskrnl.a
+
 all: keyboard.sys
 
-OBJECTS = keyboard.o ../../../ntoskrnl/ntoskrnl.a
+.phony: all
+
+clean:
+	- $(RM) keyboard.o
+	- $(RM) junk.tmp
+	- $(RM) base.tmp
+	- $(RM) temp.exp
+	- $(RM) keyboard.sys
+
+.phony: clean
 
 keyboard.sys: $(OBJECTS)
 	$(CC) -specs=../../svc_specs -mdll -o junk.tmp -Wl,--defsym,_end=end \

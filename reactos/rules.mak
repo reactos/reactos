@@ -27,8 +27,9 @@ EXE_POSTFIX = .exe
 CP = copy
 DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
 NASM_CMD = nasm
-RM = DELETE
+RM = del
 KM_SPECS = specs
+DOSCLI = yes
 endif
 
 #

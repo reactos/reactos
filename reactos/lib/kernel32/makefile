@@ -58,6 +58,16 @@ OBJECTS = $(MISC_OBJECTS) $(FILE_OBJECTS) $(THREAD_OBJECTS) \
           $(PROCESS_OBJECTS) $(STRING_OBJECTS) $(MEM_OBJECTS) \
 	  $(INTERNAL_OBJECTS) $(SYNCH_OBJECTS) $(EXCEPT_OBJECTS)
 
+ifeq ($(DOSCLI),yes)
+CLEAN_FILES = except\*.o file\*.o internal\*.o mem\*.o misc\*.o nls\*.o  \
+              process\*.o string\*.o synch\*.o thread\*.o  \
+              kernel32.o kernel32.a junk.tmp base.tmp temp.exp kernel32.dll kernel32.sym
+else
+CLEAN_FILES = except/*.o file/*.o internal/*.o mem/*.o misc/*.o nls/*.o  \
+              process/*.o string/*.o synch/*.o thread/*.o  \
+              kernel32.o kernel32.a junk.tmp base.tmp temp.exp kernel32.dll kernel32.sym
+endif
+
 kernel32.a: $(OBJECTS)
 	$(AR) csr kernel32.a $(OBJECTS)
 
@@ -78,5 +88,12 @@ kernel32.dll: $(DLLMAIN) $(OBJECTS) kernel32.def
 	      -Wl,temp.exp
 	- $(RM) temp.exp
 	$(NM) --numeric-sort kernel32.dll > kernel32.sym
+
+clean: $(CLEAN_FILES:%=%_clean)
+
+$(CLEAN_FILES:%=%_clean): %_clean:
+	- $(RM) $*
+
+.PHONY: clean $(CLEAN_FILES:%=%_clean)
 
 include ../../rules.mak

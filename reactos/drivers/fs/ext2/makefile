@@ -1,7 +1,26 @@
-all: ext2fs.sys
-
+#
+#
+#
 OBJECTS = super.o blockdev.o inode.o file.o dir.o rw.o \
           ../../../ntoskrnl/ntoskrnl.a
+
+all: ext2fs.sys
+
+.phony: all
+
+clean:
+	- $(RM) super.o 
+	- $(RM) blockdev.o
+	- $(RM) inode.o
+	- $(RM) file.o
+	- $(RM) dir.o
+	- $(RM) rw.o
+	- $(RM) junk.tmp
+	- $(RM) base.tmp
+	- $(RM) temp.exp
+	- $(RM) ext2fs.sys
+
+.phony: clean
 
 ext2fs.sys: $(OBJECTS)
 	$(CC) -specs=$(KM_SPECS) -mdll -o junk.tmp -Wl,--defsym,_end=end \
@@ -14,3 +33,4 @@ ext2fs.sys: $(OBJECTS)
 	$(CC) --verbose -Wl,--image-base,0x10000 -Wl,-e,_DriverEntry \
 	      -specs=$(KM_SPECS) -mdll -o ext2fs.sys $(OBJECTS) -Wl,temp.exp
 	$(RM) temp.exp
+
