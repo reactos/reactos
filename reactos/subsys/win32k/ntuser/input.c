@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.14 2003/10/09 06:13:04 gvg Exp $
+/* $Id: input.c,v 1.15 2003/10/18 20:41:10 vizzini Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -38,6 +38,7 @@
 #include <include/msgqueue.h>
 #include <ddk/ntddmou.h>
 #include <include/mouse.h>
+#include <include/input.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -291,6 +292,9 @@ InitInputImpl(VOID)
        NtClose(MouseDeviceHandle);
        return STATUS_SUCCESS;
      }
+
+   /* Initialize the default keyboard layout */
+   (VOID)W32kGetDefaultKeyLayout();
    
    return STATUS_SUCCESS;
 }

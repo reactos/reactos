@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: keyboard.c,v 1.10 2003/10/09 06:13:04 gvg Exp $
+/* $Id: keyboard.c,v 1.11 2003/10/18 20:41:10 vizzini Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -44,8 +44,9 @@
 #define NDEBUG
 #include <debug.h>
 
+#define SYSTEMROOT_DIR L"\\SystemRoot\\System32\\"
+
 BYTE QueueKeyStateTable[256];
-PKBDTABLES pkKeyboardLayout = 0;
 
 /* arty -- These should be phased out for the general kbdxx.dll tables */
 
@@ -393,6 +394,114 @@ int STDCALL ToUnicode( UINT wVirtKey,
 		      0 );
 }
 
+/* 
+ * Utility to copy and append two unicode strings.
+ *
+ * IN OUT PUNICODE_STRING ResultFirst -> First string and result
+ * IN     PUNICODE_STRING Second      -> Second string to append
+ * IN     BOOL            Deallocate  -> TRUE: Deallocate First string before
+ *                                       overwriting.
+ *
+ * Returns NTSTATUS.
+ */
+
+static NTSTATUS ReallyAppendUnicodeString(PUNICODE_STRING ResultFirst,
+					  PUNICODE_STRING Second,
+					  BOOL Deallocate) {
+  NTSTATUS Status;
+  PWSTR new_string = 
+    ExAllocatePool(PagedPool,
+		   (ResultFirst->Length + Second->Length + sizeof(WCHAR)));
+  if( !new_string ) {
+    return STATUS_NO_MEMORY;
+  }
+  memcpy( new_string, ResultFirst->Buffer, 
+	  ResultFirst->Length );
+  memcpy( new_string + ResultFirst->Length / sizeof(WCHAR),
+	  Second->Buffer,
+	  Second->Length );
+  if( Deallocate ) RtlFreeUnicodeString(ResultFirst);
+  ResultFirst->Length += Second->Length;
+  ResultFirst->MaximumLength = ResultFirst->Length;
+  new_string[ResultFirst->Length / sizeof(WCHAR)] = 0;
+  Status = RtlCreateUnicodeString(ResultFirst,new_string) ? 
+    STATUS_SUCCESS : STATUS_NO_MEMORY;
+  ExFreePool(new_string);
+  return Status;
+}
+
+/*
+ * Utility function to read a value from the registry more easily.
+ *
+ * IN  PUNICODE_STRING KeyName       -> Name of key to open
+ * IN  PUNICODE_STRING ValueName     -> Name of value to open
+ * OUT PUNICODE_STRING ReturnedValue -> String contained in registry
+ *
+ * Returns NTSTATUS
+ */
+
+static NTSTATUS ReadRegistryValue( PUNICODE_STRING KeyName,
+				   PUNICODE_STRING ValueName,
+				   PUNICODE_STRING ReturnedValue ) {
+  NTSTATUS Status;
+  HANDLE KeyHandle;
+  OBJECT_ATTRIBUTES KeyAttributes;
+  PKEY_VALUE_PARTIAL_INFORMATION KeyValuePartialInfo;
+  ULONG Length = 0;
+  ULONG ResLength = 0;
+  UNICODE_STRING Temp;
+
+  InitializeObjectAttributes(&KeyAttributes, KeyName, OBJ_CASE_INSENSITIVE,
+			     NULL, NULL);
+  Status = ZwOpenKey(&KeyHandle, KEY_ALL_ACCESS, &KeyAttributes);
+  if( !NT_SUCCESS(Status) ) {
+    return Status;
+  }
+
+  Status = ZwQueryValueKey(KeyHandle, ValueName, KeyValuePartialInformation,
+			   0,
+			   0,
+			   &ResLength);
+
+  if( Status != STATUS_BUFFER_TOO_SMALL ) {
+    NtClose(KeyHandle);
+    return Status;
+  }
+
+  ResLength += sizeof( *KeyValuePartialInfo );
+  KeyValuePartialInfo = 
+    ExAllocatePool(PagedPool, ResLength);
+  Length = ResLength;
+
+  if( !KeyValuePartialInfo ) {
+    NtClose(KeyHandle);
+    return STATUS_NO_MEMORY;
+  }
+
+  Status = ZwQueryValueKey(KeyHandle, ValueName, KeyValuePartialInformation,
+			   (PVOID)KeyValuePartialInfo,
+			   Length,
+			   &ResLength);
+
+  if( !NT_SUCCESS(Status) ) {
+    NtClose(KeyHandle);
+    ExFreePool(KeyValuePartialInfo);
+    return Status;
+  }
+
+  Temp.Length = Temp.MaximumLength = KeyValuePartialInfo->DataLength;
+  Temp.Buffer = (PWCHAR)KeyValuePartialInfo->Data;
+  
+  /* At this point, KeyValuePartialInfo->Data contains the key data */
+  RtlInitUnicodeString(ReturnedValue,L"");
+  ReallyAppendUnicodeString(ReturnedValue,&Temp,FALSE);
+
+  ExFreePool(KeyValuePartialInfo);
+  NtClose(KeyHandle);
+
+  return Status;
+}
+
 typedef PVOID (*KbdLayerDescriptor)(VOID);
 NTSTATUS STDCALL LdrGetProcedureAddress(PVOID module,
 					PANSI_STRING import_name,
@@ -400,31 +509,113 @@ NTSTATUS STDCALL LdrGetProcedureAddress(PVOID module,
 					PVOID *func_addr);
 
 void InitKbdLayout( PVOID *pkKeyboardLayout ) {
+  UNICODE_STRING KeyName;
+  UNICODE_STRING ValueName;
+  UNICODE_STRING LayoutKeyName;
+  UNICODE_STRING LayoutValueName;
+  UNICODE_STRING DefaultLocale;
+  UNICODE_STRING LayoutFile;
+  UNICODE_STRING FullLayoutPath;
+  PWCHAR KeyboardLayoutWSTR;
   HMODULE kbModule = 0;
+  NTSTATUS Status;
   ANSI_STRING kbdProcedureName;
-  //NTSTATUS Status;
-
   KbdLayerDescriptor layerDescGetFn;
 
-  kbModule = EngLoadImage(L"\\SystemRoot\\system32\\kbdus.dll");
+  #define XX_STATUS(x) if (!NT_SUCCESS(Status = (x))) continue;
 
-  if( !kbModule ) {
-    DbgPrint( "Foo: No kbdus.dll\n" );
-    return;
+  do {
+    RtlInitUnicodeString(&KeyName,
+			 L"\\REGISTRY\\Machine\\SYSTEM\\CurrentControlSet"
+			 L"\\Control\\Nls\\Locale");
+    RtlInitUnicodeString(&ValueName,
+			 L"(Default)");
+       
+    DPRINT("KeyName = %wZ, ValueName = %wZ\n", &KeyName, &ValueName);
+
+    Status = ReadRegistryValue(&KeyName,&ValueName,&DefaultLocale);
+    
+    if( !NT_SUCCESS(Status) ) {
+      DbgPrint( "Could not get default locale (%08x).\n", Status );
+      return;
+    }
+
+    DPRINT( "DefaultLocale = %wZ\n", &DefaultLocale );
+    
+    RtlInitUnicodeString(&LayoutKeyName,
+			 L"\\REGISTRY\\Machine\\SYSTEM\\CurrentControlSet"
+			 L"\\Control\\KeyboardLayouts\\");
+
+    ReallyAppendUnicodeString(&LayoutKeyName,&DefaultLocale,FALSE);
+
+    RtlFreeUnicodeString(&DefaultLocale);
+    RtlInitUnicodeString(&LayoutValueName,L"Layout File");
+
+    Status = ReadRegistryValue(&LayoutKeyName,&LayoutValueName,&LayoutFile);
+
+    if( !NT_SUCCESS(Status) ) {
+      DbgPrint("Got default locale but not layout file. (%08x)\n",
+	       Status);
+      return;
+    }
+
+    DPRINT("Read registry and got %wZ\n", &LayoutFile);
+      
+    RtlFreeUnicodeString(&LayoutKeyName);
+
+    RtlInitUnicodeString(&FullLayoutPath,SYSTEMROOT_DIR);
+    ReallyAppendUnicodeString(&FullLayoutPath,&LayoutFile,FALSE);
+
+    DPRINT("Loading Keyboard DLL %wZ\n", &FullLayoutPath);
+
+    RtlFreeUnicodeString(&LayoutFile);
+
+    KeyboardLayoutWSTR = ExAllocatePool(PagedPool,
+					(FullLayoutPath.Length + 1) * 
+					sizeof(WCHAR));
+  
+    if( !KeyboardLayoutWSTR ) {
+      DbgPrint("Couldn't allocate a string for the keyboard layout name.\n");
+      RtlFreeUnicodeString(&FullLayoutPath);
+      return;
+    }
+
+    memcpy(KeyboardLayoutWSTR,FullLayoutPath.Buffer,
+	   (FullLayoutPath.Length + 1) * sizeof(WCHAR));
+    KeyboardLayoutWSTR[FullLayoutPath.Length] = 0;
+    
+    kbModule = EngLoadImage(KeyboardLayoutWSTR);
+    DPRINT( "Load Keyboard Layout: %S\n", KeyboardLayoutWSTR );
+    
+    if( !kbModule ) {
+      DbgPrint( "Load Keyboard Layout: No %wZ\n", &FullLayoutPath );
+      RtlFreeUnicodeString(&FullLayoutPath);
+      return;
+    }
+    
+    RtlFreeUnicodeString(&FullLayoutPath);
+    RtlInitAnsiString( &kbdProcedureName, "KbdLayerDescriptor" );
+
+    LdrGetProcedureAddress((PVOID)kbModule,
+			   &kbdProcedureName,
+			   0,
+			   (PVOID*)&layerDescGetFn);
+    
+    if( layerDescGetFn ) {
+      *pkKeyboardLayout = layerDescGetFn();
+    }
+  } while (FALSE);
+
+  if( !*pkKeyboardLayout ) {
+    DbgPrint("Failed to load the keyboard layout.\n");
   }
 
-  RtlInitAnsiString( &kbdProcedureName, "KbdLayerDescriptor" );
-  LdrGetProcedureAddress((PVOID)kbModule,
-			 &kbdProcedureName,
-			 0,
-			 (PVOID*)&layerDescGetFn);
-  if( layerDescGetFn ) {
-    *pkKeyboardLayout = layerDescGetFn();
-  }
+#undef XX_STATUS
 }
 
 PKBDTABLES W32kGetDefaultKeyLayout() {
-  if( !pkKeyboardLayout ) InitKbdLayout( (PVOID) &pkKeyboardLayout );
+  PKBDTABLES pkKeyboardLayout = 0;
+  InitKbdLayout( (PVOID) &pkKeyboardLayout );
   return pkKeyboardLayout;
 }
 
