@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.148 2003/03/22 18:27:40 ekohl Exp $
+/* $Id: main.c,v 1.149 2003/03/22 22:32:17 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -485,7 +485,16 @@ ExpInitializeExecutive(VOID)
     {
       start = KeLoaderModules[i].ModStart;
       length = KeLoaderModules[i].ModEnd - start;
-      name = (PCHAR)KeLoaderModules[i].String;
+      name = strrchr((PCHAR)KeLoaderModules[i].String, '\\');
+      if (name == NULL)
+	{
+	  name = (PCHAR)KeLoaderModules[i].String;
+	}
+      else
+	{
+	  name++;
+	}
+
       if (!_stricmp (name, "system") ||
 	  !_stricmp (name, "system.hiv"))
 	{
