@@ -7,6 +7,7 @@
 #define MOUSE_SET_SCALE21               0xE7  // Set 2:1 scaling
 #define MOUSE_GET_SCALE                 0xE9  // Get scaling factor
 #define MOUSE_SET_STREAM                0xEA  // Set stream mode
+#define MOUSE_READ_DEVICETYPE			0xF2  // Read Device Type
 #define MOUSE_SET_SAMPLE_RATE           0xF3  /* Set sample rate (number of times
                                                * the controller will poll the port
                                                * per second */
@@ -29,6 +30,8 @@
 #define GPM_B_LEFT      1
 #define GPM_B_RIGHT     2
 #define GPM_B_MIDDLE    4
+#define GPM_B_FOURTH    0x10
+#define GPM_B_FIFTH     0x20
 
 // Some aux operations take long time
 #define MAX_RETRIES          60
@@ -36,6 +39,9 @@
 // Hardware defines
 #define MOUSE_IRQ            12
 #define MOUSE_WRAP_MASK      0x1F
+
+#define MOUSE_ISINTELLIMOUSE    0x03
+#define MOUSE_ISINTELLIMOUSE5BUTTONS    0x04
 
 static PIRP  CurrentIrp;
 static ULONG MouseDataRead;
@@ -47,4 +53,3 @@ static VOID MouseDpcRoutine(PKDPC Dpc,
 			  PVOID DeferredContext,
 			  PVOID SystemArgument1,
 			  PVOID SystemArgument2);
-
