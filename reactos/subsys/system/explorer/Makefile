@@ -74,6 +74,7 @@ full-docu:
 
 doxy-footer.html: ever
 	updatefooter
+
 ever:
 
 buildno.h: ../../../include/reactos/buildno.h
