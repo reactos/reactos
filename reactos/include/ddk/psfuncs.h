@@ -1,15 +1,8 @@
-/* $Id: psfuncs.h,v 1.11 2000/09/06 03:00:10 phreak Exp $
+/* $Id: psfuncs.h,v 1.12 2000/12/22 13:29:48 ekohl Exp $
  */
 #ifndef _INCLUDE_DDK_PSFUNCS_H
 #define _INCLUDE_DDK_PSFUNCS_H
 
-PACCESS_TOKEN PsReferenceEffectiveToken(struct _ETHREAD* Thread,
-					PTOKEN_TYPE TokenType,
-					PUCHAR b,
-					PSECURITY_IMPERSONATION_LEVEL Level);
-
-NTSTATUS PsOpenTokenOfProcess(HANDLE ProcessHandle,
-			      PACCESS_TOKEN* Token);
 NTSTATUS STDCALL PsAssignImpersonationToken (struct _ETHREAD* Thread,
 					     HANDLE TokenHandle);
 
@@ -40,12 +33,7 @@ NTSTATUS STDCALL PsCreateSystemThread(PHANDLE ThreadHandle,
 				      PKSTART_ROUTINE StartRoutine,
 				      PVOID StartContext);
 NTSTATUS STDCALL PsTerminateSystemThread(NTSTATUS ExitStatus);
-ULONG PsSuspendThread(struct _ETHREAD* Thread,
-		      PNTSTATUS WaitStatus,
-		      UCHAR Alertable,
-		      ULONG WaitMode);
-ULONG PsResumeThread(struct _ETHREAD* Thread,
-		     PNTSTATUS WaitStatus);
+
 struct _ETHREAD* STDCALL PsGetCurrentThread(VOID);
 struct _EPROCESS* STDCALL PsGetCurrentProcess(VOID);
 PACCESS_TOKEN STDCALL PsReferenceImpersonationToken(struct _ETHREAD* Thread,

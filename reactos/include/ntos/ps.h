@@ -59,5 +59,7 @@
 #define NORMAL_PRIORITY_CLASS	(32)
 #define REALTIME_PRIORITY_CLASS	(256)
 
+/* ResumeThread / SuspendThread */
+#define MAXIMUM_SUSPEND_COUNT	(0x7f)
 
 #endif /* __INCLUDE_PS_H */

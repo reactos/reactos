@@ -139,8 +139,8 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread)
    KeInitializeSemaphore(&Thread->SuspendSemaphore, 0, 255);
    Thread->ThreadListEntry.Flink = NULL;
    Thread->ThreadListEntry.Blink = NULL;
-   Thread->FreezeCount = 1;
-   Thread->SuspendCount = 0;
+   Thread->FreezeCount = 0;
+   Thread->SuspendCount = 1;
 
    /*
     * Initialize ReactOS specific members
