@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.16 2001/01/20 12:19:57 ekohl Exp $
+/* $Id: dllmain.c,v 1.17 2001/01/20 18:37:08 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -24,12 +24,48 @@ extern UNICODE_STRING SystemDirectory;
 extern UNICODE_STRING WindowsDirectory;
 
 HANDLE hProcessHeap = NULL;
+HANDLE hBaseDir = NULL;
 
 static WINBOOL DllInitialized = FALSE;
 
 WINBOOL STDCALL DllMain (HANDLE hInst,
 			 ULONG ul_reason_for_call,
 			 LPVOID lpReserved);
+
+
+static NTSTATUS OpenBaseDirectory(PHANDLE DirHandle)
+{
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   UNICODE_STRING Name;
+   NTSTATUS Status;
+
+   RtlInitUnicodeString(&Name,
+			L"\\BaseNamedObjects");
+
+   InitializeObjectAttributes(&ObjectAttributes,
+			      &Name,
+			      OBJ_PERMANENT,
+			      NULL,
+			      NULL);
+
+   Status = NtOpenDirectoryObject(DirHandle,
+				  DIRECTORY_ALL_ACCESS,
+				  &ObjectAttributes);
+   if (!NT_SUCCESS(Status))
+     {
+	Status = NtCreateDirectoryObject(DirHandle,
+					 DIRECTORY_ALL_ACCESS,
+					 &ObjectAttributes);
+	if (!NT_SUCCESS(Status))
+	  {
+	     DbgPrint("NtCreateDirectoryObject() failed\n");
+	  }
+
+	return Status;
+     }
+
+   return STATUS_SUCCESS;
+}
 
 
 BOOL WINAPI DllMainCRTStartup(HANDLE hDll, DWORD dwReason, LPVOID lpReserved)
@@ -84,6 +120,13 @@ WINBOOL STDCALL DllMain(HANDLE hInst,
 	     wcscpy (SystemDirectory.Buffer, WindowsDirectory.Buffer);
 	     wcscat (SystemDirectory.Buffer, L"\\System32");
 
+	     /* Open object base directory */
+	     Status = OpenBaseDirectory(&hBaseDir);
+	     if (!NT_SUCCESS(Status))
+	       {
+		  DbgPrint("Failed to open object base directory: expect trouble\n");
+	       }
+
 	     /* Insert more dll attach stuff here! */
 
 	     DllInitialized = TRUE;
@@ -95,11 +138,13 @@ WINBOOL STDCALL DllMain(HANDLE hInst,
 	     DPRINT("DLL_PROCESS_DETACH\n");
 	     if (DllInitialized == TRUE)
 	       {
-		  RtlFreeUnicodeString (&SystemDirectory);
-		  RtlFreeUnicodeString (&WindowsDirectory);
-
 		  /* Insert more dll detach stuff here! */
 
+		  /* Close object base directory */
+		  NtClose(hBaseDir);
+
+		  RtlFreeUnicodeString (&SystemDirectory);
+		  RtlFreeUnicodeString (&WindowsDirectory);
 	       }
 	     break;
 	  }

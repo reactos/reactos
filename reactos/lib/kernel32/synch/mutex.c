@@ -1,4 +1,4 @@
-/* $Id: mutex.c,v 1.1 2001/01/20 12:20:43 ekohl Exp $
+/* $Id: mutex.c,v 1.2 2001/01/20 18:37:58 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -59,7 +59,7 @@ CreateMutexW(LPSECURITY_ATTRIBUTES lpMutexAttributes,
 			(LPWSTR)lpName);
 
    ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-   ObjectAttributes.RootDirectory = NULL;
+   ObjectAttributes.RootDirectory = hBaseDir;
    ObjectAttributes.ObjectName = &NameString;
    ObjectAttributes.Attributes = 0;
    ObjectAttributes.SecurityDescriptor = NULL;
@@ -112,7 +112,7 @@ OpenMutexA(DWORD dwDesiredAccess,
 				TRUE);
 
    ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-   ObjectAttributes.RootDirectory = NULL;
+   ObjectAttributes.RootDirectory = hBaseDir;
    ObjectAttributes.ObjectName = &NameU;
    ObjectAttributes.Attributes = 0;
    ObjectAttributes.SecurityDescriptor = NULL;
@@ -158,7 +158,7 @@ OpenMutexW(DWORD dwDesiredAccess,
 			(LPWSTR)lpName);
 
    ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-   ObjectAttributes.RootDirectory = NULL;
+   ObjectAttributes.RootDirectory = hBaseDir;
    ObjectAttributes.ObjectName = &Name;
    ObjectAttributes.Attributes = 0;
    ObjectAttributes.SecurityDescriptor = NULL;

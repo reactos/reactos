@@ -32,7 +32,7 @@
 
 extern WINBOOL bIsFileApiAnsi;
 extern HANDLE hProcessHeap;
-
+extern HANDLE hBaseDir;
 
 /* FUNCTION PROTOTYPES ********************************************************/
 
