@@ -101,6 +101,8 @@ extern void REBAR_Register(void);
 extern void REBAR_Unregister(void);
 extern void STATUS_Register(void);
 extern void STATUS_Unregister(void);
+extern void SYSLINK_Register(void);
+extern void SYSLINK_Unregister(void);
 extern void TAB_Register(void);
 extern void TAB_Unregister(void);
 extern void TOOLBAR_Register(void);
@@ -174,6 +176,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
             LISTVIEW_Register ();
             PROGRESS_Register ();
             STATUS_Register ();
+            SYSLINK_Register ();
             TAB_Register ();
             TOOLBAR_Register ();
             TOOLTIPS_Register ();
@@ -198,6 +201,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
             PROGRESS_Unregister ();
             REBAR_Unregister ();
             STATUS_Unregister ();
+            SYSLINK_Unregister ();
             TAB_Unregister ();
             TOOLBAR_Unregister ();
             TOOLTIPS_Unregister ();
@@ -709,6 +713,10 @@ InitCommonControlsEx (LPINITCOMMONCONTROLSEX lpInitCtrls)
 
 	    case ICC_NATIVEFNTCTL_CLASS:
 		NATIVEFONT_Register ();
+		break;
+
+	    case ICC_LINK_CLASS:
+		SYSLINK_Register ();
 		break;
 
 	    default:
