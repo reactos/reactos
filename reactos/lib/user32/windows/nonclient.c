@@ -937,7 +937,6 @@ DefWndDoButton(HWND hWnd, WPARAM wParam)
       case WM_MOUSEMOVE:
         if(HasBtn)
         {
-          ClientToScreen(hWnd, &Msg.pt);
           CurBtn = DefWndNCHitTest(hWnd, Msg.pt);
           if(InBtn != (CurBtn == OrigBtn))
           {
