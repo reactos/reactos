@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.27 2003/10/25 22:57:34 navaraf Exp $
+# $Id: Makefile,v 1.28 2003/11/02 06:58:56 navaraf Exp $
 
 PATH_TO_TOP = ../..
 
@@ -8,11 +8,12 @@ TARGET_NAME = user32
 
 TARGET_BASE = 0x77e70000
 
-TARGET_SDKLIBS = ntdll.a kernel32.a gdi32.a rosrtl.a
+TARGET_SDKLIBS = ntdll.a kernel32.a gdi32.a rosrtl.a winedbgc.a
 
 TARGET_CFLAGS = \
  -I./include \
  -DUNICODE \
+ -D__REACTOS__ \
  -Wall \
  -Werror \
  -fno-builtin

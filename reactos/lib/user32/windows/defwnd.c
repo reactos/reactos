@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.103 2003/10/26 11:08:31 navaraf Exp $
+/* $Id: defwnd.c,v 1.104 2003/11/02 06:58:57 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -156,6 +156,7 @@ GetSysColorBrush(int nIndex)
 /*
  * @unimplemented
  */
+/*
 LRESULT STDCALL
 DefFrameProcA( HWND hWnd,
 	      HWND hWndMDIClient,
@@ -166,10 +167,12 @@ DefFrameProcA( HWND hWnd,
     UNIMPLEMENTED;
     return ((LRESULT)0);
 }
+*/
 
 /*
  * @unimplemented
  */
+/*
 LRESULT STDCALL
 DefFrameProcW(HWND hWnd,
 	      HWND hWndMDIClient,
@@ -180,6 +183,7 @@ DefFrameProcW(HWND hWnd,
     UNIMPLEMENTED;
     return ((LRESULT)0);
 }
+*/
 
 PINTERNALPOS
 UserGetInternalPos(HWND hWnd)

@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.77 2003/10/30 21:58:42 mtempel Exp $
+/* $Id: window.c,v 1.78 2003/11/02 06:58:57 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -320,6 +320,7 @@ BringWindowToTop(HWND hWnd)
 /*
  * @unimplemented
  */
+/*
 WORD STDCALL
 CascadeWindows(HWND hwndParent,
 	       UINT wHow,
@@ -330,6 +331,7 @@ CascadeWindows(HWND hwndParent,
   UNIMPLEMENTED;
   return 0;
 }
+*/
 
 
 /*
@@ -1477,6 +1479,7 @@ ShowWindowAsync(HWND hWnd,
 /*
  * @unimplemented
  */
+/*
 WORD STDCALL
 TileWindows(HWND hwndParent,
 	    UINT wHow,
@@ -1487,6 +1490,7 @@ TileWindows(HWND hwndParent,
   UNIMPLEMENTED;
   return 0;
 }
+*/
 
 
 /*

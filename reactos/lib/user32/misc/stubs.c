@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.45 2003/10/12 00:39:50 weiden Exp $
+/* $Id: stubs.c,v 1.46 2003/11/02 06:58:57 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING WINBOOLthe top level directory
  * PROJECT:         ReactOS user32.dll
@@ -894,6 +894,7 @@ SetProgmanWindow ( DWORD x )
 /*
  * @unimplemented
  */
+/*
 VOID
 STDCALL
 ScrollChildren(
@@ -905,6 +906,7 @@ ScrollChildren(
 {
   UNIMPLEMENTED;
 }
+*/
 
 /*
  * @unimplemented

@@ -1,9 +1,11 @@
+#include <reactos/resource.h>
 #include <defines.h>
 #include <reactos/resource.h>
 #include <messages.h>
 #include <resource.h>
+#define IDS_MDI_MOREWINDOWS     13
 
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
 VS_VERSION_INFO VERSIONINFO
 	FILEVERSION	RES_UINT_FV_MAJOR,RES_UINT_FV_MINOR,RES_UINT_FV_REVISION,RES_UINT_FV_BUILD
@@ -153,3 +155,7 @@ STRINGTABLE
   IDS_CONTINUE, "&Continue"
 }
 
+STRINGTABLE
+{
+  IDS_MDI_MOREWINDOWS, "&More Windows..."
+}
