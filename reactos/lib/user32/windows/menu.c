@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.12 2003/07/31 23:06:43 weiden Exp $
+/* $Id: menu.c,v 1.13 2003/08/01 00:44:27 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -93,6 +93,158 @@ HWND hTopPopupWnd = 0;
 HANDLE hMenuDefSysPopup = 0;
 
 #define NO_SELECTED_ITEM (0xffff)
+
+#ifndef MF_END
+#define MF_END             0x0080
+#endif
+
+
+/* INTERNAL FUNCTIONS ********************************************************/
+
+/* Rip the fun and easy to use and fun WINE unicode string manipulation routines. 
+ * Of course I didnt copy the ASM code because we want this to be portable 
+ * and it needs to go away.
+ */
+
+static inline unsigned int strlenW( const WCHAR *str )
+{
+    const WCHAR *s = str;
+    while (*s) s++;
+    return s - str;
+}
+
+static inline WCHAR *strncpyW( WCHAR *str1, const WCHAR *str2, int n )
+{
+    WCHAR *ret = str1;
+    while (n-- > 0) if (!(*str1++ = *str2++)) break;
+    while (n-- > 0) *str1++ = 0;
+    return ret;
+}
+
+static inline WCHAR *strcpyW( WCHAR *dst, const WCHAR *src )
+{
+    WCHAR *p = dst;
+    while ((*p++ = *src++));
+    return dst;
+}
+
+static inline WCHAR *strcatW( WCHAR *dst, const WCHAR *src )
+{
+    strcpyW( dst + strlenW(dst), src );
+    return dst;
+}
+
+#ifndef GET_WORD
+#define GET_WORD(ptr)  (*(WORD *)(ptr))
+#endif
+#ifndef GET_DWORD
+#define GET_DWORD(ptr) (*(DWORD *)(ptr))
+#endif
+
+/**********************************************************************
+ *         MENUEX_ParseResource
+ *
+ * Parse an extended menu resource and add items to the menu.
+ * Return a pointer to the end of the resource.
+ */
+static LPCSTR MENUEX_ParseResource( LPCSTR res, HMENU hMenu)
+{
+    WORD resinfo;
+    
+    do {
+	MENUITEMINFO mii;
+
+	mii.cbSize = sizeof(mii);
+	mii.fMask = MIIM_STATE | MIIM_ID | MIIM_TYPE;
+	mii.fType = GET_DWORD(res);
+        res += sizeof(DWORD);
+	mii.fState = GET_DWORD(res);
+        res += sizeof(DWORD);
+	mii.wID = GET_DWORD(res);
+        res += sizeof(DWORD);
+	resinfo = GET_WORD(res);
+        res += sizeof(WORD);
+	/* Align the text on a word boundary.  */
+	res += (~((int)res - 1)) & 1;
+	mii.dwTypeData = (LPWSTR) res;
+	res += (1 + strlenW(mii.dwTypeData)) * sizeof(WCHAR);
+	/* Align the following fields on a dword boundary.  */
+	res += (~((int)res - 1)) & 3;
+
+	if (resinfo & 1) {	/* Pop-up? */
+	    /* DWORD helpid = GET_DWORD(res); FIXME: use this.  */
+	    res += sizeof(DWORD);
+	    mii.hSubMenu = CreatePopupMenu();
+	    if (!mii.hSubMenu)
+		return NULL;
+	    if (!(res = MENUEX_ParseResource(res, mii.hSubMenu))) {
+		DestroyMenu(mii.hSubMenu);
+                return NULL;
+	    }
+	    mii.fMask |= MIIM_SUBMENU;
+	    mii.fType |= MF_POPUP;
+        }
+	else if(!*mii.dwTypeData && !(mii.fType & MF_SEPARATOR))
+	{
+	    DbgPrint("WARN: Converting NULL menu item %04x, type %04x to SEPARATOR\n",
+		mii.wID, mii.fType);
+	    mii.fType |= MF_SEPARATOR;
+	}
+	InsertMenuItemW(hMenu, -1, MF_BYPOSITION, &mii);
+    } while (!(resinfo & MF_END));
+    return res;
+}
+
+/**********************************************************************
+ *         MENU_ParseResource
+ *
+ * Parse a standard menu resource and add items to the menu.
+ * Return a pointer to the end of the resource.
+ *
+ * NOTE: flags is equivalent to the mtOption field
+ */
+static LPCSTR MENU_ParseResource( LPCSTR res, HMENU hMenu, BOOL unicode )
+{
+    WORD flags, id = 0;
+    LPCSTR str;
+    BOOL end = FALSE;
+
+    do
+    {
+        flags = GET_WORD(res);
+        
+        /* remove MF_END flag before passing it to AppendMenu()! */
+        end = (flags & MF_END);
+        if(end) flags ^= MF_END;
+        
+        res += sizeof(WORD);
+        if (!(flags & MF_POPUP))
+        {
+            id = GET_WORD(res);
+            res += sizeof(WORD);
+        }
+        str = res;
+        if (!unicode) res += strlen(str) + 1;
+        else res += (strlenW((LPCWSTR)str) + 1) * sizeof(WCHAR);
+        if (flags & MF_POPUP)
+        {
+            HMENU hSubMenu = CreatePopupMenu();
+            if (!hSubMenu) return NULL;
+            if (!(res = MENU_ParseResource( res, hSubMenu, unicode )))
+                return NULL;
+            if (!unicode) AppendMenuA( hMenu, flags, (UINT)hSubMenu, str );
+            else AppendMenuW( hMenu, flags, (UINT)hSubMenu, (LPCWSTR)str );
+        }
+        else  /* Not a popup */
+        {
+            if (!unicode) AppendMenuA( hMenu, flags, id, *str ? str : NULL );
+            else AppendMenuW( hMenu, flags, id,
+                                *(LPCWSTR)str ? (LPCWSTR)str : NULL );
+        }
+    } while (!end);
+    return res;
+}
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -831,13 +983,44 @@ LoadMenuIndirectA(CONST MENUTEMPLATE *lpMenuTemplate)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HMENU STDCALL
 LoadMenuIndirectW(CONST MENUTEMPLATE *lpMenuTemplate)
 {
-  UNIMPLEMENTED;
-  return (HMENU)0;
+    HMENU hMenu;
+    WORD version, offset;
+    LPCSTR p = (LPCSTR)lpMenuTemplate;
+
+    version = GET_WORD(p);
+    p += sizeof(WORD);
+
+    switch (version)
+    {
+      case 0: /* standard format is version of 0 */
+	offset = GET_WORD(p);
+	p += sizeof(WORD) + offset;
+	if (!(hMenu = CreateMenu())) return 0;
+	if (!MENU_ParseResource( p, hMenu, TRUE ))
+	  {
+	    DestroyMenu( hMenu );
+	    return 0;
+	  }
+	return hMenu;
+      case 1: /* extended format is version of 1 */
+	offset = GET_WORD(p);
+	p += sizeof(WORD) + offset;
+	if (!(hMenu = CreateMenu())) return 0;
+	if (!MENUEX_ParseResource( p, hMenu))
+	  {
+	    DestroyMenu( hMenu );
+	    return 0;
+	  }
+	return hMenu;
+      default:
+        DbgPrint("LoadMenuIndirectW(): version %d not supported.\n", version);
+        return 0;
+    }
 }
 
 
