@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.80 2004/10/23 19:17:54 gvg Exp $ */
+/* $Id: bitmaps.c,v 1.81 2004/11/21 10:55:29 navaraf Exp $ */
 #include <w32k.h>
 
 #define IN_RECT(r,x,y) \
@@ -355,7 +355,7 @@ NtGdiCreateBitmap(
    }
    else
    {
-      Size.cx = Width;
+      Size.cx = abs(Width);
       Size.cy = abs(Height);
    }
 
