@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: suspend.c,v 1.6 2001/08/27 01:22:22 ekohl Exp $
+/* $Id: suspend.c,v 1.7 2002/07/10 15:17:35 ekohl Exp $
  *
  * PROJECT:                ReactOS kernel
  * FILE:                   ntoskrnl/ps/suspend.c
@@ -46,6 +46,7 @@ PiSuspendThreadRundownRoutine(PKAPC Apc)
 {
 }
 
+
 VOID STDCALL
 PiSuspendThreadKernelRoutine(PKAPC Apc,
 			     PKNORMAL_ROUTINE* NormalRoutine,
@@ -55,48 +56,55 @@ PiSuspendThreadKernelRoutine(PKAPC Apc,
 {
 }
 
+
 VOID STDCALL
 PiSuspendThreadNormalRoutine(PVOID NormalContext,
 			     PVOID SystemArgument1,
 			     PVOID SystemArgument2)
 {
-   KeWaitForSingleObject(&PsGetCurrentThread()->Tcb.SuspendSemaphore,
-			 0,
-			 UserMode,
-			 TRUE,
-			 NULL);
+  KeWaitForSingleObject(&PsGetCurrentThread()->Tcb.SuspendSemaphore,
+			0,
+			UserMode,
+			TRUE,
+			NULL);
 }
+
 
 NTSTATUS
 PsResumeThread(PETHREAD Thread, PULONG SuspendCount)
 {
+  *SuspendCount = InterlockedDecrement((PULONG)&Thread->Tcb.SuspendCount);
   KeReleaseSemaphore(&Thread->Tcb.SuspendSemaphore, IO_NO_INCREMENT, 1, FALSE);
+
   return(STATUS_SUCCESS);
 }
 
-NTSTATUS 
+
+NTSTATUS
 PsSuspendThread(PETHREAD Thread, PULONG PreviousSuspendCount)
 {
-   ULONG OldValue;
+  ULONG OldValue;
 
-   OldValue = InterlockedIncrement((PULONG)&Thread->Tcb.SuspendCount);
-   if (OldValue == 0)
-     {
-       KeInsertQueueApc(&Thread->Tcb.SuspendApc,
-			NULL,
-			NULL,
-			0);
-     }
-   else
-     {
-       InterlockedDecrement(&Thread->Tcb.SuspendSemaphore.Header.SignalState);
-     }
-   return(STATUS_SUCCESS);
+  OldValue = InterlockedIncrement((PULONG)&Thread->Tcb.SuspendCount);
+  if (OldValue == 0)
+    {
+      KeInsertQueueApc(&Thread->Tcb.SuspendApc,
+		       NULL,
+		       NULL,
+		       0);
+    }
+  else
+    {
+      InterlockedDecrement(&Thread->Tcb.SuspendSemaphore.Header.SignalState);
+    }
+
+  return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL 
-NtResumeThread (IN	HANDLE	ThreadHandle,
-		IN	PULONG	SuspendCount)
+
+NTSTATUS STDCALL
+NtResumeThread(IN HANDLE ThreadHandle,
+	       IN PULONG SuspendCount)
 /*
  * FUNCTION: Decrements a thread's resume count
  * ARGUMENTS: 
@@ -105,36 +113,39 @@ NtResumeThread (IN	HANDLE	ThreadHandle,
  * RETURNS: Status
  */
 {
-   PETHREAD Thread;
-   NTSTATUS Status;
-   ULONG Count;
+  PETHREAD Thread;
+  NTSTATUS Status;
+  ULONG Count;
 
-   Status = ObReferenceObjectByHandle(ThreadHandle,
-				      THREAD_SUSPEND_RESUME,
-				      PsThreadType,
-				      UserMode,
-				      (PVOID*)&Thread,
-				      NULL);
-   if (!NT_SUCCESS(Status))
-     {
-	return(Status);
-     }
+  DPRINT("NtResumeThead(ThreadHandle %lx  SuspendCount %p)\n",
+	 ThreadHandle, SuspendCount);
 
-   Status = PsResumeThread(Thread, &Count);
-   if (SuspendCount != NULL)
-     {
-	*SuspendCount = Count;
-     }
+  Status = ObReferenceObjectByHandle(ThreadHandle,
+				     THREAD_SUSPEND_RESUME,
+				     PsThreadType,
+				     UserMode,
+				     (PVOID*)&Thread,
+				     NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
 
-   ObDereferenceObject((PVOID)Thread);
+  Status = PsResumeThread(Thread, &Count);
+  if (SuspendCount != NULL)
+    {
+      *SuspendCount = Count;
+    }
 
-   return STATUS_SUCCESS;
+  ObDereferenceObject((PVOID)Thread);
+
+  return(STATUS_SUCCESS);
 }
 
 
-NTSTATUS STDCALL 
-NtSuspendThread (IN HANDLE ThreadHandle,
-		 IN PULONG PreviousSuspendCount)
+NTSTATUS STDCALL
+NtSuspendThread(IN HANDLE ThreadHandle,
+		IN PULONG PreviousSuspendCount)
 /*
  * FUNCTION: Increments a thread's suspend count
  * ARGUMENTS: 
@@ -147,35 +158,32 @@ NtSuspendThread (IN HANDLE ThreadHandle,
  *        The suspend count is not increased if it is greater than 
  *        MAXIMUM_SUSPEND_COUNT.
  * RETURNS: Status
- */ 
+ */
 {
-   PETHREAD Thread;
-   NTSTATUS Status;
-   ULONG Count;
+  PETHREAD Thread;
+  NTSTATUS Status;
+  ULONG Count;
 
-   Status = ObReferenceObjectByHandle(ThreadHandle,
-				      THREAD_SUSPEND_RESUME,
-				      PsThreadType,
-				      UserMode,
-				      (PVOID*)&Thread,
-				      NULL);
-   if (!NT_SUCCESS(Status))
-     {
-	return(Status);
-     }
+  Status = ObReferenceObjectByHandle(ThreadHandle,
+				     THREAD_SUSPEND_RESUME,
+				     PsThreadType,
+				     UserMode,
+				     (PVOID*)&Thread,
+				     NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
 
-   Status = PsSuspendThread(Thread, &Count);
-   if (PreviousSuspendCount != NULL)
-     {
-	*PreviousSuspendCount = Count;
-     }
+  Status = PsSuspendThread(Thread, &Count);
+  if (PreviousSuspendCount != NULL)
+    {
+      *PreviousSuspendCount = Count;
+    }
 
-   ObDereferenceObject((PVOID)Thread);
+  ObDereferenceObject((PVOID)Thread);
 
-   return STATUS_SUCCESS;
+  return(STATUS_SUCCESS);
 }
 
-
-
-
-
+/* EOF */

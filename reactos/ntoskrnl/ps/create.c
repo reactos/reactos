@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.46 2002/03/05 00:20:54 ekohl Exp $
+/* $Id: create.c,v 1.47 2002/07/10 15:17:34 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -546,77 +546,96 @@ PsCreateTeb(HANDLE ProcessHandle,
 
 
 NTSTATUS STDCALL
-NtCreateThread (PHANDLE		ThreadHandle,
-		ACCESS_MASK		DesiredAccess,
-		POBJECT_ATTRIBUTES	ObjectAttributes,
-		HANDLE			ProcessHandle,
-		PCLIENT_ID		Client,
-		PCONTEXT		ThreadContext,
-		PINITIAL_TEB		InitialTeb,
-		BOOLEAN CreateSuspended)
+NtCreateThread(PHANDLE ThreadHandle,
+	       ACCESS_MASK DesiredAccess,
+	       POBJECT_ATTRIBUTES ObjectAttributes,
+	       HANDLE ProcessHandle,
+	       PCLIENT_ID Client,
+	       PCONTEXT ThreadContext,
+	       PINITIAL_TEB InitialTeb,
+	       BOOLEAN CreateSuspended)
 {
-   PETHREAD Thread;
-   PTEB  TebBase;
-   NTSTATUS Status;
-   
-   DPRINT("NtCreateThread(ThreadHandle %x, PCONTEXT %x)\n",
-	  ThreadHandle,ThreadContext);
-   
-   Status = PsInitializeThread(ProcessHandle,
-			       &Thread,
-			       ThreadHandle,
-			       DesiredAccess,
-			       ObjectAttributes,
-			       FALSE);
-   if (!NT_SUCCESS(Status))
-     {
-	return(Status);
-     }
-   
-   Status = Ke386InitThreadWithContext(&Thread->Tcb,
-				       ThreadContext);
-   if (!NT_SUCCESS(Status))
-     {
-	return(Status);
-     }
-   
-   Status = PsCreateTeb(ProcessHandle,
-                        &TebBase,
-                        Thread,
-                        InitialTeb);
-   if (!NT_SUCCESS(Status))
-     {
-        return(Status);
-     }
-   
-   /* Attention: TebBase is in user memory space */
-   Thread->Tcb.Teb = TebBase;
+  PETHREAD Thread;
+  PTEB TebBase;
+  NTSTATUS Status;
 
-   Thread->StartAddress=NULL;
+  DPRINT("NtCreateThread(ThreadHandle %x, PCONTEXT %x)\n",
+	 ThreadHandle,ThreadContext);
 
-   if (Client != NULL)
-     {
-	*Client=Thread->Cid;
-     }
-   
-   /*
-    * Maybe send a message to the process's debugger
-    */
-   DbgkCreateThread((PVOID)ThreadContext->Eip);
-   
-   /*
-    * Start the thread running
-    */
-   if (!CreateSuspended)
-     {
-	DPRINT("Not creating suspended\n");
-	PsUnblockThread(Thread, NULL);
-     }
-   else
-     {
-       KeBugCheck(0);
-     }
-   return(STATUS_SUCCESS);
+  Status = PsInitializeThread(ProcessHandle,
+			      &Thread,
+			      ThreadHandle,
+			      DesiredAccess,
+			      ObjectAttributes,
+			      FALSE);
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
+
+  Status = Ke386InitThreadWithContext(&Thread->Tcb,
+				      ThreadContext);
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
+
+  Status = PsCreateTeb(ProcessHandle,
+		       &TebBase,
+		       Thread,
+		       InitialTeb);
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
+
+  /* Attention: TebBase is in user memory space */
+  Thread->Tcb.Teb = TebBase;
+
+  Thread->StartAddress=NULL;
+
+  if (Client != NULL)
+    {
+      *Client=Thread->Cid;
+    }
+
+  /*
+   * Maybe send a message to the process's debugger
+   */
+  DbgkCreateThread((PVOID)ThreadContext->Eip);
+
+  /*
+   * Start the thread running
+   */
+  if (!CreateSuspended)
+    {
+      DPRINT("Not creating suspended\n");
+      PsUnblockThread(Thread, NULL);
+    }
+  else
+    {
+      DPRINT("Creating suspended\n");
+
+      /*
+       * Simulate a call to NtWaitForSingleObject() upon thread startup
+       */
+
+      /* Increment the suspend counter */
+      Thread->Tcb.SuspendCount++;
+
+      /* Add one wait-block for suspend semaphore */
+      Thread->Tcb.WaitStatus = STATUS_UNSUCCESSFUL;
+      Thread->Tcb.WaitBlockList = &Thread->Tcb.WaitBlock[0];
+      Thread->Tcb.WaitBlock[0].Object = (POBJECT)&Thread->Tcb.SuspendSemaphore;
+      Thread->Tcb.WaitBlock[0].Thread = &Thread->Tcb;
+      Thread->Tcb.WaitBlock[0].WaitKey = STATUS_WAIT_0;
+      Thread->Tcb.WaitBlock[0].WaitType = WaitAny;
+      Thread->Tcb.WaitBlock[0].NextWaitBlock = NULL;
+      InsertTailList(&Thread->Tcb.SuspendSemaphore.Header.WaitListHead,
+		     &Thread->Tcb.WaitBlock[0].WaitListEntry);
+    }
+
+  return(STATUS_SUCCESS);
 }
 
 
