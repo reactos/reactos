@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: lineto.c,v 1.26 2003/10/30 08:56:38 gvg Exp $
+ * $Id: lineto.c,v 1.27 2003/12/22 12:44:16 navaraf Exp $
  */
 
 #include <ddk/winddi.h>
@@ -502,6 +502,9 @@ IntEngLineTo(SURFOBJ *DestSurf,
   BOOLEAN ret;
   SURFGDI *SurfGDI;
 RECTL b;
+
+  if (Brush->logbrush.lbStyle == BS_NULL)
+    return TRUE;
 
   /* No success yet */
   ret = FALSE;
