@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.63 2004/03/14 12:16:50 weiden Exp $
+ * $Id: gdiobj.c,v 1.64 2004/04/03 20:33:39 gvg Exp $
  *
  */
 
@@ -43,9 +43,6 @@
 #define NDEBUG
 #include <win32k/debug1.h>
 
-
-/* enable/disable GDI object caching */
-#define GDI_CACHE_OBJECTS 0
 /* count all gdi objects */
 #define GDI_COUNT_OBJECTS 1
 
@@ -94,16 +91,9 @@ typedef struct _GDI_HANDLE_TABLE
   #if GDI_COUNT_OBJECTS
   ULONG HandlesCount;
   #endif
-  #if GDI_CACHE_OBJECTS
-  ULONG ObjHdrSize;
-  PGDIOBJHDR *CachedObjects;
-  #endif
+  PPAGED_LOOKASIDE_LIST LookasideLists;
   PGDIOBJHDR Handles[1];
 } GDI_HANDLE_TABLE, *PGDI_HANDLE_TABLE;
-
-#if GDI_CACHE_OBJECTS
-
-#define N_OBJ_TYPES 16
 
 typedef struct
 {
@@ -111,27 +101,23 @@ typedef struct
   ULONG Size;
 } GDI_OBJ_SIZE;
 
-typedef struct _GDI_DONTCARE
-{
-  PVOID Data;
-} GDI_DONTCARE, *PGDI_DONTCARE;
-
 const
-GDI_OBJ_SIZE ObjSizes[N_OBJ_TYPES] =
+GDI_OBJ_SIZE ObjSizes[] =
 {
-  {GDI_OBJECT_TYPE_DC,          sizeof(DC)},
-  {GDI_OBJECT_TYPE_DCE,         sizeof(DCE)},
-  {GDI_OBJECT_TYPE_PALETTE,     sizeof(PALGDI)},
-  {GDI_OBJECT_TYPE_FONT,        sizeof(TEXTOBJ)},
-  {GDI_OBJECT_TYPE_BRUSH,       sizeof(BRUSHOBJ)},
-  {GDI_OBJECT_TYPE_PEN,         sizeof(PENOBJ)},
+  /* Testing shows that regions are the most used GDIObj type,
+     so put that one first for performance */
   {GDI_OBJECT_TYPE_REGION,      sizeof(ROSRGNDATA)},
   {GDI_OBJECT_TYPE_BITMAP,      sizeof(BITMAPOBJ)},
+  {GDI_OBJECT_TYPE_DC,          sizeof(DC)},
+  {GDI_OBJECT_TYPE_PALETTE,     sizeof(PALGDI)},
+  {GDI_OBJECT_TYPE_BRUSH,       sizeof(BRUSHOBJ)},
+  {GDI_OBJECT_TYPE_PEN,         sizeof(PENOBJ)},
+  {GDI_OBJECT_TYPE_FONT,        sizeof(TEXTOBJ)},
+  {GDI_OBJECT_TYPE_DCE,         sizeof(DCE)},
 /*
   {GDI_OBJECT_TYPE_DIRECTDRAW,  sizeof(DD_DIRECTDRAW)},
   {GDI_OBJECT_TYPE_DD_SURFACE,  sizeof(DD_SURFACE)},
 */
-  {GDI_OBJECT_TYPE_DONTCARE,    sizeof(GDI_DONTCARE)},
   {GDI_OBJECT_TYPE_EXTPEN,      0},
   {GDI_OBJECT_TYPE_METADC,      0},
   {GDI_OBJECT_TYPE_METAFILE,    0},
@@ -141,18 +127,7 @@ GDI_OBJ_SIZE ObjSizes[N_OBJ_TYPES] =
   {GDI_OBJECT_TYPE_EMF,         0}
 };
 
-ULONG FASTCALL
-GDI_MaxGdiObjHeaderSize(VOID)
-{
-  ULONG i, Size;
-  for(i = 0, Size = 0; i < N_OBJ_TYPES; i++)
-  {
-    Size = max(Size, ObjSizes[i].Size);
-  }
-  return Size;
-}
-
-#endif
+#define OBJTYPE_COUNT (sizeof(ObjSizes) / sizeof(ObjSizes[0]))
 
 /*  GDI stock objects */
 
@@ -233,12 +208,9 @@ GDIOBJ_iAllocHandleTable (WORD Size)
 {
   PGDI_HANDLE_TABLE  handleTable;
   ULONG MemSize;
+  UINT ObjType;
   
-#if GDI_CACHE_OBJECTS
-  MemSize = sizeof(GDI_HANDLE_TABLE) + sizeof(PGDIOBJ) * (Size << 1);
-#else
   MemSize = sizeof(GDI_HANDLE_TABLE) + sizeof(PGDIOBJ) * Size;
-#endif
 
   /* prevent APC delivery for the *FastMutexUnsafe calls */
   const KIRQL PrevIrql = KfRaiseIrql(APC_LEVEL);
@@ -249,12 +221,23 @@ GDIOBJ_iAllocHandleTable (WORD Size)
 #if GDI_COUNT_OBJECTS
   handleTable->HandlesCount = 0;
 #endif
-#if GDI_CACHE_OBJECTS
-  handleTable->CachedObjects = &handleTable->Handles[Size];
-  handleTable->ObjHdrSize = sizeof(GDIOBJHDR) + GDI_MaxGdiObjHeaderSize();
-#endif
   handleTable->wTableSize = Size;
   handleTable->AllocationHint = 1;
+  handleTable->LookasideLists = ExAllocatePoolWithTag(NonPagedPool,
+                                                      OBJTYPE_COUNT * sizeof(PAGED_LOOKASIDE_LIST),
+                                                      TAG_GDIHNDTBLE);
+  if (NULL == handleTable->LookasideLists)
+    {
+      ExFreePool(handleTable);
+      ExReleaseFastMutexUnsafe (&HandleTableMutex);
+      KfLowerIrql(PrevIrql);
+      return NULL;
+    }
+  for (ObjType = 0; ObjType < OBJTYPE_COUNT; ObjType++)
+    {
+      ExInitializePagedLookasideList(handleTable->LookasideLists + ObjType, NULL, NULL, 0,
+                                     ObjSizes[ObjType].Size + sizeof(GDIOBJHDR), TAG_GDIOBJ, 0);
+    }
   ExReleaseFastMutexUnsafe (&HandleTableMutex);
   KfLowerIrql(PrevIrql);
 
@@ -310,6 +293,24 @@ GDIOBJ_iGetNextOpenHandleIndex (void)
    return 0;
 }
 
+static PPAGED_LOOKASIDE_LIST FASTCALL
+FindLookasideList(DWORD ObjectType)
+{
+  int Index;
+
+  for (Index = 0; Index < OBJTYPE_COUNT; Index++)
+    {
+      if (ObjSizes[Index].Type == ObjectType)
+        {
+          return HandleTable->LookasideLists + Index;
+        }
+    }
+
+  DPRINT1("Can't find lookaside list for object type 0x%08x\n", ObjectType);
+
+  return NULL;
+}
+
 /*!
  * Allocate memory for GDI object and return handle to it.
  *
@@ -328,10 +329,8 @@ GDIOBJ_AllocObj(WORD Size, DWORD ObjectType, GDICLEANUPPROC CleanupProc)
   PW32PROCESS W32Process;
   PGDIOBJHDR  newObject;
   WORD Index;
-#if GDI_CACHE_OBJECTS
-  PGDIOBJHDR *CachedObject;
-#endif
-  
+  PPAGED_LOOKASIDE_LIST LookasideList;
+
   ExAcquireFastMutex(&HandleTableMutex);
   Index = GDIOBJ_iGetNextOpenHandleIndex ();
   if (0 == Index)
@@ -341,50 +340,20 @@ GDIOBJ_AllocObj(WORD Size, DWORD ObjectType, GDICLEANUPPROC CleanupProc)
       return NULL;
     }
 
-#if GDI_CACHE_OBJECTS
-  CachedObject = (PGDIOBJHDR*)(HandleTable->CachedObjects + Index);
-  if(!(newObject = *CachedObject))
-  {
-    /* allocate new gdi object */
-    newObject = ExAllocatePoolWithTag(PagedPool, HandleTable->ObjHdrSize, TAG_GDIOBJ);
-    if(!newObject)
+  LookasideList = FindLookasideList(ObjectType);
+  if (NULL == LookasideList)
     {
       ExReleaseFastMutex(&HandleTableMutex);
-      DPRINT1("GDIOBJ_AllocObj: failed\n");
       return NULL;
     }
-    RtlZeroMemory(newObject, HandleTable->ObjHdrSize);
-    *CachedObject = newObject;
-  }
-  /* Zero the memory when destroying the object */
-  if(ObjectType == GDI_OBJECT_TYPE_DONTCARE)
-  {
-    PVOID *Data;
-    PGDI_DONTCARE dc;
-    
-    Data = ExAllocatePoolWithTag(PagedPool, sizeof(PVOID) + Size, TAG_GDIOBJ);
-    if(!Data)
+  newObject = ExAllocateFromPagedLookasideList(LookasideList);
+  if (NULL == newObject)
     {
       ExReleaseFastMutex(&HandleTableMutex);
-      DPRINT1("GDIOBJ_AllocObj failed: %d bytes for GDI_OBJECT_TYPE_DONTCARE\n", Size + sizeof(PVOID));
+      DPRINT1("Unable to allocate GDI object from lookaside list\n");
       return NULL;
     }
-    dc = (PGDI_DONTCARE)((PCHAR)newObject + sizeof(GDIOBJHDR));
-    RtlZeroMemory((PVOID)(Data + 1), Size);
-    ((PGDI_DONTCARE)((PCHAR)newObject + sizeof(GDIOBJHDR)))->Data = Data;
-    *Data = newObject;
-  }
-#else
-  DPRINT("GDIOBJ_AllocObj: handle: %d, size: %d, type: 0x%08x\n", Index, Size, ObjectType);
-  newObject = ExAllocatePoolWithTag(PagedPool, Size + sizeof (GDIOBJHDR), TAG_GDIOBJ);
-  if (newObject == NULL)
-  {
-    ExReleaseFastMutex(&HandleTableMutex);
-    DPRINT1("GDIOBJ_AllocObj: failed\n");
-    return NULL;
-  }
   RtlZeroMemory (newObject, Size + sizeof(GDIOBJHDR));
-#endif
 
   newObject->wTableIndex = Index;
 
@@ -431,6 +400,7 @@ GDIOBJ_FreeObj(HGDIOBJ hObj, DWORD ObjectType, DWORD Flag)
   PW32PROCESS W32Process;
   PGDIOBJHDR objectHeader;
   PGDIOBJ Obj;
+  PPAGED_LOOKASIDE_LIST LookasideList;
   BOOL 	bRet = TRUE;
 
   objectHeader = GDIOBJ_iGetObjectForIndex(GDI_HANDLE_GET_INDEX(hObj));
@@ -466,19 +436,11 @@ GDIOBJ_FreeObj(HGDIOBJ hObj, DWORD ObjectType, DWORD Flag)
       Obj = (PGDIOBJ)((PCHAR)objectHeader + sizeof(GDIOBJHDR));
       bRet = (*(objectHeader->CleanupProc))(Obj);
     }
-#if GDI_CACHE_OBJECTS
-  if(GDI_MAGIC_TO_TYPE(objectHeader->Magic) == GDI_OBJECT_TYPE_DONTCARE)
-  {
-    PGDI_DONTCARE dc = (PGDI_DONTCARE)((PCHAR)objectHeader + sizeof(GDIOBJHDR));
-    if(dc->Data)
+  LookasideList = FindLookasideList(GDI_MAGIC_TO_TYPE(objectHeader->Magic));
+  if (NULL != LookasideList)
     {
-      ExFreePool(dc->Data);
+      ExFreeToPagedLookasideList(LookasideList, objectHeader);
     }
-    RtlZeroMemory(objectHeader, HandleTable->ObjHdrSize);
-  }
-#else
-  ExFreePool(objectHeader);
-#endif
   ExAcquireFastMutexUnsafe (&HandleTableMutex);
   HandleTable->Handles[GDI_HANDLE_GET_INDEX(hObj)] = NULL;
 #if GDI_COUNT_OBJECTS
@@ -787,15 +749,7 @@ GDIOBJ_LockObjDbg (const char* file, int line, HGDIOBJ hObj, DWORD ObjectType)
       ObjHdr->lockline = line;
     }
 
-#if GDI_CACHE_OBJECTS
-  if(GDI_MAGIC_TO_TYPE(ObjHdr->Magic) != GDI_OBJECT_TYPE_DONTCARE)
-  {
-    return (PGDIOBJ)((PCHAR)ObjHdr + sizeof(GDIOBJHDR));
-  }
-  return (PGDIOBJ)((PVOID)(((PGDI_DONTCARE)((PCHAR)ObjHdr + sizeof(GDIOBJHDR)))->Data) + 1);
-#else
   return (PGDIOBJ)((PCHAR)ObjHdr + sizeof(GDIOBJHDR));
-#endif
 }
 #endif//GDIOBJ_LockObj
 
