@@ -995,7 +995,7 @@ void StartMenuRoot::ShowLaunchDialog(HWND hwndDesktopBar)
 	}
 }
 
-void StartMenuRoot::ShowExitWindowsDialog(HWND hwndOwner)
+void ShowExitWindowsDialog(HWND hwndOwner)
 {
 	static DynamicFct<EXITWINDOWSDLG> ExitWindowsDlg(TEXT("SHELL32"), 60);
 

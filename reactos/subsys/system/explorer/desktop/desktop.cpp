@@ -253,7 +253,8 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		break;
 
 	  case WM_CLOSE:
-		break;	// Over-ride close. We need to close desktop some other way.
+		ShowExitWindowsDialog(_hwnd);
+		break;
 
 	  case WM_SYSCOMMAND:
 		if (wparam == SC_TASKLIST) {

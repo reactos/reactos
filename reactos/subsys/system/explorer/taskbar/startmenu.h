@@ -246,7 +246,6 @@ protected:
 	int		Command(int id, int code);
 
 	static void	ShowLaunchDialog(HWND hwndDesktopBar);
-	static void	ShowExitWindowsDialog(HWND hwndOwner);
 	static void	ShowRestartDialog(HWND hwndOwner, UINT flags);
 };
 
