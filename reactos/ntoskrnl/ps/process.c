@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.104 2003/05/21 15:05:47 ekohl Exp $
+/* $Id: process.c,v 1.105 2003/05/24 17:14:41 hbirr Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -340,6 +340,7 @@ PsCreatePeb(HANDLE ProcessHandle,
 
   ViewSize = 0;
   SectionOffset.QuadPart = 0LL;
+  TableBase = NULL;
   Status = MmMapViewOfSection(NlsSectionObject,
 			      Process,
 			      &TableBase,
