@@ -24,11 +24,7 @@
 #define KJK_PSEH_FRAMEBASED_H_
 
 #include <pseh/framebased/internal.h>
-
-/* Safeguards against broken SDK/CRT headers */
-#ifndef _SEH_NO_SYSTEM_HEADERS
-# include <excpt.h>
-#endif
+#include <pseh/excpt.h>
 
 #ifndef offsetof
 # include <stddef.h>
@@ -81,7 +77,7 @@ static __declspec(noreturn) void __stdcall _SEHCompilerSpecificHandler
 #define _SEH_TRY_FINALLY(FINALLY_) \
  _SEH_TRY_FILTER_FINALLY \
  ( \
-  (_SEHFilter_t)(EXCEPTION_CONTINUE_SEARCH + 1), \
+  (_SEHFilter_t)(_SEH_CONTINUE_SEARCH + 1), \
   (FINALLY_) \
  )
 
@@ -93,7 +89,7 @@ static __declspec(noreturn) void __stdcall _SEHCompilerSpecificHandler
 #define _SEH_TRY_HANDLE_FINALLY(FINALLY_) \
  _SEH_TRY_FILTER_FINALLY \
  ( \
-  (_SEHFilter_t)(EXCEPTION_EXECUTE_HANDLER + 1), \
+  (_SEHFilter_t)(_SEH_EXECUTE_HANDLER + 1), \
   (FINALLY_) \
  )
 

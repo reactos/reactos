@@ -25,6 +25,7 @@
 #include <windows.h>
 
 #include <pseh/framebased/internal.h>
+#include <pseh/excpt.h>
 #include <excpt.h>
 
 /* Assembly helpers, see i386/framebased.asm */
@@ -78,9 +79,9 @@ int __cdecl _SEHFrameHandler
 
    switch((UINT_PTR)frame->SPF_Handlers->SH_Filter)
    {
-    case EXCEPTION_EXECUTE_HANDLER + 1:
-    case EXCEPTION_CONTINUE_SEARCH + 1:
-    case EXCEPTION_CONTINUE_EXECUTION + 1:
+    case _SEH_EXECUTE_HANDLER + 1:
+    case _SEH_CONTINUE_SEARCH + 1:
+    case _SEH_CONTINUE_EXECUTION + 1:
     {
      ret = (int)((UINT_PTR)frame->SPF_Handlers->SH_Filter) - 1;
      break;
@@ -98,13 +99,13 @@ int __cdecl _SEHFrameHandler
     }
    }
 
-   /* EXCEPTION_CONTINUE_EXECUTION */
+   /* _SEH_CONTINUE_EXECUTION */
    if(ret < 0)
     return ExceptionContinueExecution;
-   /* EXCEPTION_EXECUTE_HANDLER */
+   /* _SEH_EXECUTE_HANDLER */
    else if(ret > 0)
     _SEHCallHandler(frame);
-   /* EXCEPTION_CONTINUE_SEARCH */
+   /* _SEH_CONTINUE_SEARCH */
    else
     /* fall through */;
   }
