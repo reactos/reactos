@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ntuser.c,v 1.1.4.14 2004/09/27 12:07:47 royce Exp $
+/* $Id: ntuser.c,v 1.1.4.15 2004/09/27 12:26:31 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2462,3 +2462,25 @@ NtUserWaitMessage(VOID)
   END_NTUSER_NOERR();
 }
 
+UINT STDCALL
+NtUserRegisterWindowMessage(PUNICODE_STRING MessageNameUnsafe)
+{
+  UNICODE_STRING SafeMessageName;
+  NTSTATUS Status;
+  BEGIN_NTUSER(UINT,0);
+  
+  NTUSER_FAIL_INVALID_PARAMETER(MessageNameUnsafe,NULL);
+  
+  Status = IntSafeCopyUnicodeStringTerminateNULL(&SafeMessageName, MessageNameUnsafe);
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    return 0;
+  }
+  
+  Result = (UINT)IntAddAtom(SafeMessageName.Buffer);
+  
+  RtlFreeUnicodeString(&SafeMessageName);
+
+  END_NTUSER();
+}

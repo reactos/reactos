@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.45.12.7 2004/09/24 18:35:40 weiden Exp $
+/* $Id: stubs.c,v 1.45.12.8 2004/09/27 12:26:32 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -796,7 +796,7 @@ NtUserSetScrollBarInfo(
   SETSCROLLBARINFO *info)
 {
    UNIMPLEMENTED;
-   return FALSE;
+   return TRUE;
 }
 
 DWORD
@@ -1063,20 +1063,6 @@ NtUserLockWindowUpdate(DWORD Unknown0)
 }
 
 
-BOOL STDCALL
-NtUserMoveWindow(      
-    HWND hWnd,
-    int X,
-    int Y,
-    int nWidth,
-    int nHeight,
-    BOOL bRepaint)
-{
-   UNIMPLEMENTED;
-   return FALSE;
-}
-
-
 /*
 	QueryWindow based on KJK::Hyperion and James Tabor.
 
@@ -1101,14 +1087,6 @@ DWORD STDCALL
 NtUserRealChildWindowFromPoint(DWORD Unknown0,
 			       DWORD Unknown1,
 			       DWORD Unknown2)
-{
-   UNIMPLEMENTED;
-   return 0;
-}
-
-
-UINT STDCALL
-NtUserRegisterWindowMessage(PUNICODE_STRING MessageNameUnsafe)
 {
    UNIMPLEMENTED;
    return 0;
