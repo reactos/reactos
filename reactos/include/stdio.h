@@ -22,13 +22,13 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.4 $
+ * $Revision: 1.5 $
  * $Author: ariadne $
- * $Date: 1999/02/21 13:29:56 $
+ * $Date: 1999/03/07 13:35:10 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
-/* modified _iob */
+/* implemented clearerr feof ferror perror as macros */
 #ifndef _STDIO_H_
 #define	_STDIO_H_
 
@@ -90,7 +90,7 @@ typedef struct {
  * NOTE: These will go to the bit-bucket silently in GUI applications!
  */
 extern FILE (*__imp__iob)[];	/* A pointer to an array of FILE */
-extern FILE _iob[];	/* An array of FILE */
+#define _iob	(*__imp__iob)	/* An array of FILE */
 #define stdin	(&_iob[0])
 #define stdout	(&_iob[1])
 #define stderr	(&_iob[2])
@@ -211,7 +211,7 @@ int	sscanf (const char* szReadFrom, const char* szFormat, ...);
 /* Wide character versions */
 int	fwscanf (FILE* fileReadFrom, const wchar_t* wsFormat, ...);
 int	wscanf (const wchar_t* wsFormat, ...);
-int	swscanf (wchar_t* wsReadFrom, const wchar_t* wsFormat, ...);
+int	swscanf (const wchar_t* wsReadFrom, const wchar_t* wsFormat, ...);
 
 /*
  * Character Input and Output Functions
@@ -222,7 +222,7 @@ char*	fgets (char* caBuffer, int nBufferSize, FILE* fileRead);
 int	fputc (int c, FILE* fileWrite);
 int	fputs (const char* szOutput, FILE* fileWrite);
 int	getc (FILE* fileRead);
-//int	getchar ();
+int	getchar (void);
 char*	gets (char* caBuffer);	/* Unsafe: how does gets know how long the
 				 * buffer is? */
 int	putc (int c, FILE* fileWrite);
@@ -301,12 +301,18 @@ int	fsetpos (FILE* fileSetPosition, fpos_t* pfpos);
 /*
  * Error Functions
  */
-
+#if 0
 void	clearerr (FILE* fileClearErrors);
 int	feof (FILE* fileIsAtEnd);
 int	ferror (FILE* fileIsError);
 void	perror (const char* szErrorMessage);
 
+#endif
+
+#define  clearerr(f)     (((f)->_flag) &= ~(_IOERR|_IOEOF))
+#define feof(f)		(((f)->_flag&_IOEOF)!=0)
+#define ferror(f)	(((f)->_flag&_IOERR)!=0)
+#define  perror(s)	(fprintf(stderr, "%s: %s\n", (s), _strerror(NULL)))
 /*
  * Non ANSI functions
  */
@@ -317,9 +323,9 @@ int	_fputchar (int c);
 FILE*	_fdopen (int nHandle, char* szMode);
 
 #ifndef _NO_OLDNAMES
-//int	fgetchar ();
-int	fputchar (int c);
-FILE*	fdopen (int nHandle, char* szMode);
+#define	fgetchar 	_fgetchar
+#define	fputchar 	_fputchar
+#define	fdopen 		_fdopen
 #endif	/* Not _NO_OLDNAMES */
 
 #endif	/* Not __STRICT_ANSI__ */

@@ -18,9 +18,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.2 $
+ * $Revision: 1.3 $
  * $Author: ariadne $
- * $Date: 1999/02/21 13:29:56 $
+ * $Date: 1999/03/07 13:35:10 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
@@ -119,6 +119,9 @@ unsigned long
 void	_endthreadex	(unsigned unExitCode);
 #endif
 
+
+void *_loaddll (char *name);
+int _unloaddll(void *handle);
 
 #ifndef	_NO_OLDNAMES
 

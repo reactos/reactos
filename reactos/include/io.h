@@ -18,14 +18,15 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.4 $
+ * $Revision: 1.5 $
  * $Author: ariadne $
- * $Date: 1999/02/25 22:51:47 $
+ * $Date: 1999/03/07 13:35:10 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
 /* added D_OK */
 /* changed get_osfhandle and open_osfhandle */
+/* added fileno as macro */
 #ifndef	_IO_H_
 #define	_IO_H_
 
@@ -67,6 +68,7 @@ extern "C" {
 int		_access (const char* szFileName, int nAccessMode);
 int		_chsize (int nHandle, long lnNewSize);
 int		_close (int nHandle);
+int 		_commit(int _fd);
 int		_creat (const char* szFileName, int nAccessMode);
 int		_dup (int nHandle);
 int		_dup2 (int nOldHandle, int nNewHandle);
@@ -115,13 +117,13 @@ size_t		_write(int _fd, const void *_buf, size_t _nbyte);
 #define	dup2 		_dup2
 #define	eof		_eof
 #define	filelength 	_filelength
-#define	fileno 		_fileno
+#define fileno(f)	((f)->_file)
 #define	isatty 		_isatty
 #define	lseek 		_lseek
 #define	open 		_open
 #define	read 		_read
-#define	sopen 		_sopen
-#define	tell 		_tell
+#define	sopen(path,access,shflag,mode) 	_open((path), (access)|(shflag), (mode))
+#define	tell(file) 			_lseek(_file, 0, SEEK_CUR)
 #define	umask 		_umask
 #define	unlink		_unlink
 #define	write 		_write

@@ -18,9 +18,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.1 $
+ * $Revision: 1.2 $
  * $Author: ariadne $
- * $Date: 1999/02/21 17:43:45 $
+ * $Date: 1999/03/07 13:35:10 $
  *
  */
 #ifndef _LINUX_CTYPE_H
@@ -50,6 +50,10 @@
 
 #define	_ALPHA		0x0103
 
+// additionally defined
+#define _PRINT		0x0200
+#define _GRAPH		0x0400
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -68,7 +72,7 @@ int	isupper(int c);
 int	isxdigit(int c);
 
 #ifndef	__STRICT_ANSI__
-int	_isctype (int c, int ctypeFlags);
+int	_isctype (unsigned char c, int ctypeFlags);
 #endif
 
 int	tolower(int c);
@@ -99,20 +103,20 @@ int	_toupper(int c);
 typedef int	wctype_t;
 
 /* Wide character equivalents */
-int	iswalnum(wint_t wc);
-int	iswalpha(wint_t wc);
-int	iswascii(wint_t wc);
-int	iswcntrl(wint_t wc);
-int	iswctype(wint_t wc, wctype_t wctypeFlags);
-int	is_wctype(wint_t wc, wctype_t wctypeFlags);	/* Obsolete! */
-int	iswdigit(wint_t wc);
-int	iswgraph(wint_t wc);
-int	iswlower(wint_t wc);
-int	iswprint(wint_t wc);
-int	iswpunct(wint_t wc);
-int	iswspace(wint_t wc);
-int	iswupper(wint_t wc);
-int	iswxdigit(wint_t wc);
+int	iswalnum(int wc);
+int	iswalpha(int wc);
+int	iswascii(int wc);
+int	iswcntrl(int wc);
+int	iswctype(unsigned short wc, int wctypeFlags);
+int	is_wctype(unsigned short wc, int wctypeFlags);	/* Obsolete! */
+int	iswdigit(int wc);
+int	iswgraph(int wc);
+int	iswlower(int wc);
+int	iswprint(int wc);
+int	iswpunct(int wc);
+int	iswspace(int wc);
+int	iswupper(int wc);
+int	iswxdigit(int wc);
 
 wchar_t	towlower(wchar_t c);
 wchar_t	towupper(wchar_t c);
@@ -126,10 +130,10 @@ int	__iscsymf (int c);	/* Valid first character in C symbol */
 int	__iscsym (int c);	/* Valid character in C symbol (after first) */
 
 #ifndef	_NO_OLDNAMES
-int	isascii (int c);
-int	toascii (int c);
-int	iscsymf (int c);
-int	iscsym (int c);
+#define	isascii(c)	 	(!((c)&(~0x7f)))
+#define	toascii(c)  		((unsigned)(c) &0x7F)
+#define	iscsymf(c)		(isalpha(c) || ( c == '_' )) 
+#define	iscsym(c)		(isalnum(c) || ( c == '_' )) 
 #endif	/* Not _NO_OLDNAMES */
 
 #endif	/* Not __STRICT_ANSI__ */

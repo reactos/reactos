@@ -7,8 +7,6 @@
 #include <fcntl.h>
 
 
-//#include <libc/dosio.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -36,21 +34,19 @@ void	_fwalk(void (*)(FILE *));
 
 char __is_text_file(FILE *p);
 
+int __fileno_alloc(void *hFile, int mode);
+
 int _doprnt(const char *fmt, va_list args, FILE *f);
 int _dowprnt(const char *fmt, va_list args, FILE *f);
 int _doscan(FILE *iop, const char *fmt, void **argp);
+int _dowscan(FILE *iop, const wchar_t *fmt, void **argp);
 
-void *filehnd(int fileno);
+
 int __fileno_dup2( int handle1, int handle2 );
 int __fileno_setmode(int _fd, int _newmode);
 int __fileno_close(int _fd);
 
-#undef  fileno
-#define fileno(f)	(f->_file)
-#undef  feof
-#define feof(f)		(((f)->_flag&_IOEOF)!=0)
-#undef  ferror
-#define ferror(f)	(((f)->_flag&_IOERR)!=0)
+
 
 #endif /* !_POSIX_SOURCE */
 #endif /* !__STRICT_ANSI__ */
