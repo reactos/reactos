@@ -16,13 +16,14 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: attrib.c,v 1.5 2003/08/07 11:47:32 silverblade Exp $
+/* $Id: attrib.c,v 1.6 2003/09/15 16:01:16 ea Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/fs/ntfs/attrib.c
  * PURPOSE:          NTFS filesystem driver
  * PROGRAMMER:       Eric Kohl
+ * Updated	by       Valentin Verkhovsky  2003/09/12 
  */
 
 /* INCLUDES *****************************************************************/
@@ -39,13 +40,47 @@
 
 /* FUNCTIONS ****************************************************************/
 
+
+
+ULONG RunLength(PUCHAR run)
+{
+  return(*run & 0x0f) + ((*run >> 4) & 0x0f) + 1;
+}
+
+
+LONGLONG RunLCN(PUCHAR run)
+{
+	UCHAR n1 = *run & 0x0f;
+	UCHAR n2 = (*run >> 4) & 0x0f;
+	LONGLONG lcn = n2 == 0 ? 0 : (CHAR)(run[n1 + n2]);
+	LONG i = 0;
+	
+	for (i = n1 +n2 - 1; i > n1; i--)
+		lcn = (lcn << 8) + run[i];
+	return lcn;
+}
+
+
+
+ULONGLONG RunCount(PUCHAR run)
+{
+	UCHAR n =  *run & 0xf;
+	ULONGLONG count = 0;
+	ULONG i = 0;
+
+	for (i = n; i > 0; i--)
+		count = (count << 8) + run[i];
+	return count;
+}
+
+
 VOID
 NtfsDumpFileNameAttribute(PATTRIBUTE Attribute)
 {
   PRESIDENT_ATTRIBUTE ResAttr;
   PFILENAME_ATTRIBUTE FileNameAttr;
 
-  DbgPrint("  $FILE_NAME ");
+  DbgPrint("  FILE_NAME ");
 
   ResAttr = (PRESIDENT_ATTRIBUTE)Attribute;
 //  DbgPrint(" Length %lu  Offset %hu ", ResAttr->ValueLength, ResAttr->ValueOffset);
@@ -90,7 +125,7 @@ NtfsDumpVolumeInformationAttribute(PATTRIBUTE Attribute)
 }
 
 
-VOID
+BOOL
 NtfsDumpAttribute(PATTRIBUTE Attribute)
 {
   PNONRESIDENT_ATTRIBUTE NresAttr;
@@ -100,9 +135,16 @@ NtfsDumpAttribute(PATTRIBUTE Attribute)
   UCHAR RunHeader;
   ULONG RunLength;
   ULONG RunStart;
+  
 
   switch (Attribute->AttributeType)
     {
+     
+       case AttributeFileName:
+	NtfsDumpFileNameAttribute(Attribute);
+	break;
+  
+  
       case AttributeStandardInformation:
 	DbgPrint("  $STANDARD_INFORMATION ");
 	break;
@@ -111,9 +153,7 @@ NtfsDumpAttribute(PATTRIBUTE Attribute)
 	DbgPrint("  $ATTRIBUTE_LIST ");
 	break;
 
-      case AttributeFileName:
-	NtfsDumpFileNameAttribute(Attribute);
-	break;
+   
 
       case AttributeObjectId:
 	DbgPrint("  $OBJECT_ID ");
@@ -133,6 +173,7 @@ NtfsDumpAttribute(PATTRIBUTE Attribute)
 
       case AttributeData:
 	DbgPrint("  $DATA ");
+	//DataBuf = ExAllocatePool(NonPagedPool,AttributeLengthAllocated(Attribute));
 	break;
 
       case AttributeIndexRoot:
@@ -184,85 +225,23 @@ NtfsDumpAttribute(PATTRIBUTE Attribute)
 
   DbgPrint("(%s)\n",
 	   Attribute->Nonresident ? "non-resident" : "resident");
+    
+     
 
-  if (Attribute->Nonresident != 0)
+
+    if (Attribute->Nonresident != 0)
     {
-      NresAttr = (PNONRESIDENT_ATTRIBUTE)Attribute;
-      Ptr = (PUCHAR)((ULONG)NresAttr + NresAttr->RunArrayOffset);
-      while (*Ptr != 0)
-	{
-	  RunHeader = *Ptr++;
 
-	  switch (RunHeader & 0x0F)
-	    {
-	      case 1:
-		RunLength = (ULONG)*Ptr++;
-		break;
-
-	      case 2:
-		RunLength = *((PUSHORT)Ptr);
-		Ptr += 2;
-		break;
-
-	      case 3:
-		RunLength = *Ptr++;
-		RunLength += *Ptr++ << 8;
-		RunLength += *Ptr++ << 16;
-		break;
-
-	      case 4:
-		RunLength = *((PULONG)Ptr);
-		Ptr += 4;
-		break;
-
-	      default:
-		DbgPrint("RunLength size of %hu not implemented!\n", RunHeader & 0x0F);
-		KEBUGCHECK(0);
-	    }
-
-	  switch (RunHeader >> 4)
-	    {
-	      case 1:
-		RunStart = (ULONG)*Ptr;
-		Ptr++;
-		break;
-
-	      case 2:
-		RunStart = *((PUSHORT)Ptr);
-		Ptr += 2;
-		break;
-
-	      case 3:
-		RunStart = *Ptr++;
-		RunStart += *Ptr++ << 8;
-		RunStart += *Ptr++ << 16;
-		break;
-
-	      case 4:
-		RunStart = *((PULONG)Ptr);
-		Ptr += 4;
-		break;
-
-	      default:
-		DbgPrint("RunStart size of %hu not implemented!\n", RunHeader >> 4);
-		KEBUGCHECK(0);
-	    }
-
-	  DbgPrint("    AllocatedSize %I64d  DataSize %I64d\n", NresAttr->AllocatedSize, NresAttr->DataSize);
-//	  DbgPrint("    Run: Header %hx  Start %lu  Length %lu\n", RunHeader, RunStart, RunLength);
-	  if (RunLength == 1)
-	    {
-	      DbgPrint("    logical sector %lu (0x%lx)\n", RunStart, RunStart);
-	    }
-	  else
-	    {
-	      DbgPrint("    logical sectors %lu-%lu (0x%lx-0x%lx)\n",
-		       RunStart, RunStart + RunLength - 1,
-		       RunStart, RunStart + RunLength - 1);
-	    }
+       return TRUE;
 	}
-    }
 
+    return FALSE;
+
+  
+	
+
+
+	
 
 }
 

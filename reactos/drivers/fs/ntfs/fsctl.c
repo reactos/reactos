@@ -16,20 +16,21 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.7 2003/07/17 13:31:39 chorns Exp $
+/* $Id: fsctl.c,v 1.8 2003/09/15 16:01:16 ea Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             services/fs/ntfs/fsctl.c
  * PURPOSE:          NTFS filesystem driver
  * PROGRAMMER:       Eric Kohl
+ * Updated	by       Valentin Verkhovsky  2003/09/12
  */
 
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #include "ntfs.h"
@@ -163,6 +164,7 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
       Vcb->NtfsInfo.MftStart.QuadPart = BootSector->MftLocation;
       Vcb->NtfsInfo.MftMirrStart.QuadPart = BootSector->MftMirrLocation;
       Vcb->NtfsInfo.SerialNumber = BootSector->SerialNumber;
+      Vcb->NtfsInfo.ClustersPerFileRecord = BootSector->ClustersPerMftRecord;
 
 //#indef NDEBUG
       DbgPrint("Boot sector information:\n");

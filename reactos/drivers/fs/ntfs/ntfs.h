@@ -50,6 +50,7 @@ typedef struct _NTFS_INFO
   ULARGE_INTEGER MftStart;
   ULARGE_INTEGER MftMirrStart;
   ULONGLONG SerialNumber;
+  ULONG ClustersPerFileRecord;
 
 } NTFS_INFO, *PNTFS_INFO;
 
@@ -153,8 +154,8 @@ typedef enum
 typedef struct
 {
   ULONG Type;             /* Magic number 'FILE' */
-  USHORT UsnOffset;       /* Offset to the update sequence */
-  USHORT UsnSize;         /* Size in words of Update Sequence Number & Array (S) */
+  USHORT UsaOffset;       /* Offset to the update sequence */
+  USHORT UsaCount;         /* Size in words of Update Sequence Number & Array (S) */
   ULONGLONG Lsn;          /* $LogFile Sequence Number (LSN) */
 } NTFS_RECORD_HEADER, *PNTFS_RECORD_HEADER;
 
@@ -280,9 +281,12 @@ extern PNTFS_GLOBAL_DATA NtfsGlobalData;
 
 /* attrib.c */
 
-VOID
+BOOL
 NtfsDumpAttribute(PATTRIBUTE Attribute);
 
+LONGLONG RunLCN(PUCHAR run);
+
+ULONG RunLength(PUCHAR run);
 
 /* blockdev.c */
 
@@ -398,6 +402,42 @@ NTSTATUS
 NtfsOpenMft(PDEVICE_OBJECT DeviceObject,
 	    PDEVICE_EXTENSION Vcb);
 
+
+VOID ReadAttribute(PATTRIBUTE attr, PVOID buffer, PDEVICE_EXTENSION Vcb, 
+				    PDEVICE_OBJECT DeviceObject);
+
+ULONG AttributeLength(PATTRIBUTE  attr);
+
+VOID ReadFileRecord(ULONG index, PFILE_RECORD_HEADER file,
+					  PDEVICE_EXTENSION Vcb, PFILE_RECORD_HEADER Mft,
+					   PDEVICE_OBJECT DeviceObject);
+
+
+PATTRIBUTE FindAttribute(PFILE_RECORD_HEADER file,
+
+						 ATTRIBUTE_TYPE type, PWSTR name);
+
+
+ULONG AttributeLengthAllocated(PATTRIBUTE attr);
+
+VOID ReadVCN(PFILE_RECORD_HEADER file, ATTRIBUTE_TYPE type,
+			 ULONGLONG vcn, ULONG count, PVOID buffer,
+			 PDEVICE_EXTENSION Vcb, PDEVICE_OBJECT DeviceObject);
+
+
+VOID FixupUpdateSequenceArray(PFILE_RECORD_HEADER file);
+
+VOID ReadExternalAttribute(PNONRESIDENT_ATTRIBUTE NresAttr,
+						   ULONGLONG vcn, ULONG count, PVOID buffer,
+						                       PDEVICE_EXTENSION Vcb,
+											   PDEVICE_OBJECT DeviceObject);
+
+VOID ReadLCN(ULONGLONG lcn, ULONG count, PVOID buffer, PDEVICE_EXTENSION Vcb,
+			 PDEVICE_OBJECT DeviceObject);
+
+
+VOID EnumerAttribute(PFILE_RECORD_HEADER file,PDEVICE_EXTENSION Vcb, 
+					 PDEVICE_OBJECT DeviceObject );
 
 #if 0
 /* misc.c */
