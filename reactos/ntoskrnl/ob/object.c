@@ -894,7 +894,7 @@ ObReferenceObjectByPointer(IN PVOID Object,
 	DPRINT("eip %x\n", ((PULONG)&Object)[-1]);
      }
  
-   if (Header->CloseInProcess)
+   if (Header->RefCount == 0 && !Header->Permanent)
    {
       if (Header->ObjectType == PsProcessType)
         {
@@ -907,7 +907,10 @@ ObReferenceObjectByPointer(IN PVOID Object,
       return(STATUS_UNSUCCESSFUL);
    }
 
-   InterlockedIncrement(&Header->RefCount);
+   if (1 == InterlockedIncrement(&Header->RefCount) && !Header->Permanent)
+   {
+      KEBUGCHECK(0);
+   }
    
    return(STATUS_SUCCESS);
 }
@@ -1023,12 +1026,6 @@ ObpDeleteObjectDpcLevel(IN POBJECT_HEADER ObjectHeader,
       KEBUGCHECK(0);
     }
 
-  if (ObjectHeader->CloseInProcess)
-    {
-      KEBUGCHECK(0);
-      return STATUS_UNSUCCESSFUL;
-    }
-  ObjectHeader->CloseInProcess = TRUE;
   
   switch (KeGetCurrentIrql ())
     {
@@ -1094,12 +1091,11 @@ ObfReferenceObject(IN PVOID Object)
   Header = BODY_TO_HEADER(Object);
 
   /* No one should be referencing an object once we are deleting it. */
-  if (Header->CloseInProcess)
-    {
-      KEBUGCHECK(0);
-    }
+  if (InterlockedIncrement(&Header->RefCount) == 1 && !Header->Permanent)
+  {
+     KEBUGCHECK(0);
+  }
 
-  InterlockedIncrement(&Header->RefCount);
 }
 
 

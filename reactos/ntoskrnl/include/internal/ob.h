@@ -157,7 +157,6 @@ typedef struct _OBJECT_HEADER
    LIST_ENTRY Entry;
    LONG RefCount;
    LONG HandleCount;
-   BOOLEAN CloseInProcess;
    BOOLEAN Permanent;
    BOOLEAN Inherit;
    struct _DIRECTORY_OBJECT* Parent;
