@@ -1,4 +1,4 @@
-/* $Id: fdo.c,v 1.9 2004/08/16 09:13:00 ekohl Exp $
+/* $Id: fdo.c,v 1.10 2004/10/22 16:30:46 navaraf Exp $
  *
  * PROJECT:         ReactOS PCI bus driver
  * FILE:            fdo.c
@@ -22,6 +22,7 @@ static NTSTATUS
 FdoLocateChildDevice(
   PPCI_DEVICE *Device,
   PFDO_DEVICE_EXTENSION DeviceExtension,
+  ULONG BusNumber,
   PCI_SLOT_NUMBER SlotNumber,
   PPCI_COMMON_CONFIG PciConfig)
 {
@@ -37,7 +38,8 @@ FdoLocateChildDevice(
     /* If both vendor ID and device ID match, it is the same device */
     if ((PciConfig->VendorID == CurrentDevice->PciConfig.VendorID) &&
         (PciConfig->DeviceID == CurrentDevice->PciConfig.DeviceID) &&
-        (SlotNumber.u.AsULONG == CurrentDevice->SlotNumber.u.AsULONG)) {
+        (SlotNumber.u.AsULONG == CurrentDevice->SlotNumber.u.AsULONG) &&
+        (BusNumber == CurrentDevice->BusNumber)) {
       *Device = CurrentDevice;
       DPRINT("Done\n");
       return STATUS_SUCCESS;
@@ -105,9 +107,9 @@ FdoEnumerateDevices(
                              BusNumber,
                              SlotNumber.u.AsULONG,
                              &PciConfig,
-                             sizeof(PCI_COMMON_CONFIG));
+                             PCI_COMMON_HDR_LENGTH);
         DPRINT("Size %lu\n", Size);
-        if (Size < sizeof(PCI_COMMON_CONFIG))
+        if (Size < PCI_COMMON_HDR_LENGTH)
         {
           if (FunctionNumber == 0)
           {
@@ -126,7 +128,7 @@ FdoEnumerateDevices(
           PciConfig.VendorID,
           PciConfig.DeviceID);
 
-        Status = FdoLocateChildDevice(&Device, DeviceExtension, SlotNumber, &PciConfig);
+        Status = FdoLocateChildDevice(&Device, DeviceExtension, BusNumber, SlotNumber, &PciConfig);
         if (!NT_SUCCESS(Status))
         {
           Device = (PPCI_DEVICE)ExAllocatePool(PagedPool, sizeof(PCI_DEVICE));
