@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.105 2003/05/24 17:14:41 hbirr Exp $
+/* $Id: process.c,v 1.106 2003/06/05 22:45:22 gdalsnes Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -52,7 +52,6 @@ static GENERIC_MAPPING PiProcessMapping = {PROCESS_READ,
 
 #define MAX_PROCESS_NOTIFY_ROUTINE_COUNT    8
 
-static ULONG PiProcessNotifyRoutineCount = 0;
 static PCREATE_PROCESS_NOTIFY_ROUTINE
 PiProcessNotifyRoutine[MAX_PROCESS_NOTIFY_ROUTINE_COUNT];
 
@@ -286,19 +285,31 @@ PiDeleteProcess(PVOID ObjectBody)
   KIRQL oldIrql;
   PEPROCESS Process;
   ULONG i;
+  PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine[MAX_PROCESS_NOTIFY_ROUTINE_COUNT];
+  ULONG NotifyRoutineCount;
 
   DPRINT("PiDeleteProcess(ObjectBody %x)\n",ObjectBody);
 
   Process = (PEPROCESS)ObjectBody;
   KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
-  for (i = 0; i < PiProcessNotifyRoutineCount; i++)
-    {
-      PiProcessNotifyRoutine[i](Process->InheritedFromUniqueProcessId,
-			        (HANDLE)Process->UniqueProcessId,
-			        FALSE);
-    }
+  NotifyRoutineCount = 0;
+  for (i = 0; i < MAX_PROCESS_NOTIFY_ROUTINE_COUNT; i++)
+  {
+     if (PiProcessNotifyRoutine[i])
+     {
+        NotifyRoutine[NotifyRoutineCount++] = PiProcessNotifyRoutine[i];   
+     }
+  }
   RemoveEntryList(&Process->ProcessListEntry);
   KeReleaseSpinLock(&PsProcessListLock, oldIrql);
+
+  for (i = 0;i < NotifyRoutineCount; i++)
+  {
+     //must be called below DISPATCH_LVL
+     NotifyRoutine[i](Process->InheritedFromUniqueProcessId,
+                      (HANDLE)Process->UniqueProcessId,
+                      FALSE);   
+  }
 
   /* KDB hook */
   KDB_DELETEPROCESS_HOOK(Process);
@@ -472,7 +483,9 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
    PVOID BaseAddress;
    PMEMORY_AREA MemoryArea;
    ULONG i;
-   
+   PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine[MAX_PROCESS_NOTIFY_ROUTINE_COUNT];
+   ULONG NotifyRoutineCount;
+
    DPRINT("NtCreateProcess(ObjectAttributes %x)\n",ObjectAttributes);
 
    Status = ObReferenceObjectByHandle(ParentProcessHandle,
@@ -558,16 +571,26 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
      }
 
    KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
-   for (i = 0; i < PiProcessNotifyRoutineCount; i++)
-    {
-      PiProcessNotifyRoutine[i](Process->InheritedFromUniqueProcessId,
-			        (HANDLE)Process->UniqueProcessId,
-			        TRUE);
-    }
+   NotifyRoutineCount = 0;
+   for (i = 0; i < MAX_PROCESS_NOTIFY_ROUTINE_COUNT; i++)
+   {
+      if (PiProcessNotifyRoutine[i])
+      {
+         NotifyRoutine[NotifyRoutineCount++] = PiProcessNotifyRoutine[i];   
+      }
+   }
    InsertHeadList(&PsProcessListHead, &Process->ProcessListEntry);
    InitializeListHead(&Process->ThreadListHead);
    KeReleaseSpinLock(&PsProcessListLock, oldIrql);
-   
+
+   for (i = 0;i < NotifyRoutineCount; i++)
+   {
+      //must be called below DISPATCH_LVL
+      NotifyRoutine[i](Process->InheritedFromUniqueProcessId,
+                       (HANDLE)Process->UniqueProcessId,
+                       TRUE);
+   }
+
    Process->Pcb.State = PROCESS_STATE_ACTIVE;
    
    /*
@@ -1318,13 +1341,44 @@ NTSTATUS STDCALL
 PsSetCreateProcessNotifyRoutine(IN PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine,
 				IN BOOLEAN Remove)
 {
-  if (PiProcessNotifyRoutineCount >= MAX_PROCESS_NOTIFY_ROUTINE_COUNT)
-    return(STATUS_INSUFFICIENT_RESOURCES);
+  KIRQL oldIrql;
+  ULONG i;
 
-  PiProcessNotifyRoutine[PiProcessNotifyRoutineCount] = NotifyRoutine;
-  PiProcessNotifyRoutineCount++;
+  KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
 
-  return(STATUS_SUCCESS);
+  if (Remove)
+  {
+     for(i=0;i<MAX_PROCESS_NOTIFY_ROUTINE_COUNT;i++)
+     {
+        if ((PVOID)PiProcessNotifyRoutine[i] == (PVOID)NotifyRoutine)
+        {
+           PiProcessNotifyRoutine[i] = NULL;
+           break;
+        }
+     }
+
+     KeReleaseSpinLock(&PsProcessListLock, oldIrql);
+     return(STATUS_SUCCESS);
+  }
+
+  /*insert*/
+  for(i=0;i<MAX_PROCESS_NOTIFY_ROUTINE_COUNT;i++)
+  {
+     if (PiProcessNotifyRoutine[i] == NULL)
+     {
+        PiProcessNotifyRoutine[i] = NotifyRoutine;
+        break;
+     }
+  }
+
+  KeReleaseSpinLock(&PsProcessListLock, oldIrql);
+
+  if (i == MAX_PROCESS_NOTIFY_ROUTINE_COUNT)
+  {
+     return STATUS_INSUFFICIENT_RESOURCES;
+  }
+
+  return STATUS_SUCCESS;
 }
 
 /* EOF */
