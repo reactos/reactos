@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.1 2003/12/02 18:12:05 navaraf Exp $
+# $Id: makefile,v 1.2 2004/01/10 00:39:52 sedwards Exp $
 
 PATH_TO_TOP = ../..
 
@@ -8,7 +8,7 @@ TARGET_TYPE = library
 
 TARGET_NAME = libwine
 
-#TARGET_CFLAGS = -D__NTDLL__
+TARGET_CFLAGS = -D__REACTOS__
 
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -D_DISABLE_TIDENTS -Werror -Wall
