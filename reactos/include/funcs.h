@@ -2193,9 +2193,6 @@ NTSTATUS  STDCALL RtlFindCharInUnicodeString(
     const UNICODE_STRING *main_str,
     const UNICODE_STRING *search_chars,
     USHORT *pos);
-CCHAR     STDCALL RtlFindLeastSignificantBit(ULONGLONG ulLong);
-CCHAR     STDCALL RtlFindMostSignificantBit(ULONGLONG ulLong);
-VOID      STDCALL RtlFreeOemString(POEM_STRING str);
 NTSTATUS  STDCALL RtlInitUnicodeStringEx(PUNICODE_STRING target,PCWSTR source);
 NTSTATUS  STDCALL RtlInt64ToUnicodeString(ULONGLONG value,ULONG base,UNICODE_STRING *str);
 

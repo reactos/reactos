@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.112 2004/01/10 21:06:37 arty Exp $
+# $Id: Makefile,v 1.113 2004/02/02 00:35:24 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -97,6 +97,7 @@ OBJECTS_NT = \
 # Run-Time Library (Rtl)
 OBJECTS_RTL = \
 	rtl/atom.o \
+	rtl/bit.o \
 	rtl/bitmap.o \
 	rtl/compress.o \
 	rtl/ctype.o \

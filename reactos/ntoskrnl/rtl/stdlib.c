@@ -1,4 +1,4 @@
-/* $Id: stdlib.c,v 1.10 2003/12/30 18:52:06 fireball Exp $
+/* $Id: stdlib.c,v 1.11 2004/02/02 00:36:36 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -137,13 +137,57 @@ char *_itoa (int value, char *string, int radix)
     i = v % radix;
     v = v / radix;
     if (i < 10)
-      *tp++ = i+'0';
+      *tp++ = i + '0';
     else
       *tp++ = i + 'a' - 10;
   }
 
   if (sign)
     *sp++ = '-';
+
+  while (tp > tmp)
+    *sp++ = *--tp;
+  *sp = 0;
+
+  return string;
+}
+
+/*
+ * NOTE: no radix range check (valid range: 2 - 36)
+ *
+ * @implemented
+ */
+
+wchar_t *_itow (int value, wchar_t *string, int radix)
+{
+  wchar_t tmp[33];
+  wchar_t *tp = tmp;
+  int i;
+  unsigned v;
+  int sign;
+  wchar_t *sp = NULL;
+
+  if (string == NULL)
+    return NULL;
+
+  sign = (radix == 10 && value < 0);
+  if (sign)
+    v = -value;
+  else
+    v = (unsigned)value;
+
+  while (v || tp == tmp)
+  {
+    i = v % radix;
+    v = v / radix;
+    if (i < 10)
+      *tp++ = i + L'0';
+    else
+      *tp++ = i + L'a' - 10;
+  }
+
+  if (sign)
+    *sp++ = L'-';
 
   while (tp > tmp)
     *sp++ = *--tp;

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.159 2004/01/18 22:34:05 gdalsnes Exp $
+; $Id: ntoskrnl.edf,v 1.160 2004/02/02 00:36:07 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -753,9 +753,11 @@ RtlFindClearBits=RtlFindClearBits@12
 RtlFindClearBitsAndSet=RtlFindClearBitsAndSet@12
 RtlFindFirstRunClear=RtlFindFirstRunClear@8
 RtlFindFirstRunSet=RtlFindFirstRunSet@8
+RtlFindLeastSignificantBit=RtlFindLeastSignificantBit@8
 RtlFindLongestRunClear=RtlFindLongestRunClear@8
 RtlFindLongestRunSet=RtlFindLongestRunSet@8
 RtlFindMessage=RtlFindMessage@20
+RtlFindMostSignificantBit=RtlFindMostSignificantBit@8
 RtlFindSetBits=RtlFindSetBits@12
 RtlFindSetBitsAndClear=RtlFindSetBitsAndClear@12
 ;RtlFindUnicodePrefix
@@ -1003,6 +1005,7 @@ _except_handler2
 _except_handler3
 _global_unwind2
 _itoa
+_itow
 _local_unwind2
 _purecall
 _snprintf

@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.25 2004/02/01 20:45:18 ekohl Exp $
+/* $Id: rtl.h,v 1.26 2004/02/02 00:35:00 ekohl Exp $
  * 
  */
 #ifndef __DDK_RTL_H
@@ -607,13 +607,42 @@ PushEntryList (
 */
 
 
-NTSTATUS
-STDCALL
-RtlAddAtomToAtomTable (
-	IN	PRTL_ATOM_TABLE	AtomTable,
-	IN	PWSTR		AtomName,
-	OUT	PRTL_ATOM	Atom
-	);
+NTSTATUS STDCALL
+RtlAbsoluteToSelfRelativeSD (PSECURITY_DESCRIPTOR AbsSD,
+			     PSECURITY_DESCRIPTOR RelSD,
+			     PULONG BufferLength);
+
+NTSTATUS STDCALL
+RtlAddAccessAllowedAce (PACL Acl,
+			ULONG Revision,
+			ACCESS_MASK AccessMask,
+			PSID Sid);
+
+NTSTATUS STDCALL
+RtlAddAccessDeniedAce (PACL Acl,
+		       ULONG Revision,
+		       ACCESS_MASK AccessMask,
+		       PSID Sid);
+
+NTSTATUS STDCALL
+RtlAddAce (PACL Acl,
+	   ULONG Revision,
+	   ULONG StartingIndex,
+	   PACE AceList,
+	   ULONG AceListLength);
+
+NTSTATUS STDCALL
+RtlAddAtomToAtomTable (IN PRTL_ATOM_TABLE AtomTable,
+		       IN PWSTR AtomName,
+		       OUT PRTL_ATOM Atom);
+
+NTSTATUS STDCALL
+RtlAddAuditAccessAce (PACL Acl,
+		      ULONG Revision,
+		      ACCESS_MASK AccessMask,
+		      PSID Sid,
+		      BOOLEAN Success,
+		      BOOLEAN Failure);
 
 NTSTATUS STDCALL
 RtlAddRange (IN OUT PRTL_RANGE_LIST RangeList,
@@ -624,6 +653,19 @@ RtlAddRange (IN OUT PRTL_RANGE_LIST RangeList,
 	     IN PVOID UserData OPTIONAL,
 	     IN PVOID Owner OPTIONAL);
 
+NTSTATUS STDCALL
+RtlAllocateAndInitializeSid (IN PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
+			     IN UCHAR SubAuthorityCount,
+			     IN ULONG SubAuthority0,
+			     IN ULONG SubAuthority1,
+			     IN ULONG SubAuthority2,
+			     IN ULONG SubAuthority3,
+			     IN ULONG SubAuthority4,
+			     IN ULONG SubAuthority5,
+			     IN ULONG SubAuthority6,
+			     IN ULONG SubAuthority7,
+			     OUT PSID *Sid);
+
 PVOID STDCALL
 RtlAllocateHeap (
 	HANDLE	Heap,
@@ -631,11 +673,8 @@ RtlAllocateHeap (
 	ULONG	Size
 	);
 
-WCHAR
-STDCALL
-RtlAnsiCharToUnicodeChar (
-	CHAR	AnsiChar
-	);
+WCHAR STDCALL
+RtlAnsiCharToUnicodeChar (IN CHAR AnsiChar);
 
 ULONG
 STDCALL
@@ -671,6 +710,14 @@ RtlAppendUnicodeStringToString (
 	PUNICODE_STRING	Destination,
 	PUNICODE_STRING	Source
 	);
+
+BOOLEAN STDCALL
+RtlAreAllAccessesGranted (ACCESS_MASK GrantedAccess,
+			  ACCESS_MASK DesiredAccess);
+
+BOOLEAN STDCALL
+RtlAreAnyAccessesGranted (ACCESS_MASK GrantedAccess,
+			  ACCESS_MASK DesiredAccess);
 
 BOOLEAN
 STDCALL
@@ -769,15 +816,15 @@ RtlCompressChunks(IN PUCHAR UncompressedBuffer,
 		  IN PVOID WorkSpace);
 
 LARGE_INTEGER STDCALL
-RtlConvertLongToLargeInteger(IN LONG SignedInteger);
+RtlConvertLongToLargeInteger (IN LONG SignedInteger);
 
 NTSTATUS STDCALL
-RtlConvertSidToUnicodeString(IN OUT PUNICODE_STRING String,
-			     IN PSID Sid,
-			     IN BOOLEAN AllocateString);
+RtlConvertSidToUnicodeString (IN OUT PUNICODE_STRING String,
+			      IN PSID Sid,
+			      IN BOOLEAN AllocateString);
 
 LARGE_INTEGER STDCALL
-RtlConvertUlongToLargeInteger(IN ULONG UnsignedInteger);
+RtlConvertUlongToLargeInteger (IN ULONG UnsignedInteger);
 
 #if 0
 VOID
@@ -833,6 +880,11 @@ RtlCopyUnicodeString(PUNICODE_STRING DestinationString,
 		     PUNICODE_STRING SourceString);
 
 NTSTATUS STDCALL
+RtlCreateAcl (PACL Acl,
+	      ULONG AclSize,
+	      ULONG AclRevision);
+
+NTSTATUS STDCALL
 RtlCreateAtomTable(IN ULONG TableSize,
 		   IN OUT PRTL_ATOM_TABLE *AtomTable);
 
@@ -847,30 +899,21 @@ RtlCreateHeap (
 	PRTL_HEAP_DEFINITION	Definition
 	);
 
-NTSTATUS
-STDCALL
-RtlCreateRegistryKey (
-	ULONG	RelativeTo,
-	PWSTR	Path
-	);
+NTSTATUS STDCALL
+RtlCreateRegistryKey (ULONG RelativeTo,
+		      PWSTR Path);
 
-NTSTATUS
-STDCALL
-RtlCreateSecurityDescriptor (
-	PSECURITY_DESCRIPTOR	SecurityDescriptor,
-	ULONG			Revision
-	);
-
-BOOLEAN
-STDCALL
-RtlCreateUnicodeString (
-	OUT	PUNICODE_STRING	Destination,
-	IN	PWSTR		Source
-	);
+NTSTATUS STDCALL
+RtlCreateSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor,
+			     ULONG Revision);
 
 BOOLEAN STDCALL
-RtlCreateUnicodeStringFromAsciiz (OUT	PUNICODE_STRING	Destination,
-				  IN	PCSZ		Source);
+RtlCreateUnicodeString (OUT PUNICODE_STRING Destination,
+			IN PWSTR Source);
+
+BOOLEAN STDCALL
+RtlCreateUnicodeStringFromAsciiz (OUT PUNICODE_STRING Destination,
+				  IN PCSZ Source);
 
 NTSTATUS
 STDCALL
@@ -911,8 +954,12 @@ RtlDecompressFragment(IN USHORT CompressionFormat,
 		      IN PVOID WorkSpace);
 
 NTSTATUS STDCALL
-RtlDeleteAtomFromAtomTable(IN PRTL_ATOM_TABLE AtomTable,
-			   IN RTL_ATOM Atom);
+RtlDeleteAce (PACL Acl,
+	      ULONG AceIndex);
+
+NTSTATUS STDCALL
+RtlDeleteAtomFromAtomTable (IN PRTL_ATOM_TABLE AtomTable,
+			    IN RTL_ATOM Atom);
 
 NTSTATUS STDCALL
 RtlDeleteOwnersRanges (IN OUT PRTL_RANGE_LIST RangeList,
@@ -932,10 +979,10 @@ RtlDescribeChunk(IN USHORT CompressionFormat,
 		 OUT PULONG ChunkSize);
 
 NTSTATUS STDCALL
-RtlDestroyAtomTable(IN PRTL_ATOM_TABLE AtomTable);
+RtlDestroyAtomTable (IN PRTL_ATOM_TABLE AtomTable);
 
 BOOL STDCALL
-RtlDestroyHeap(HANDLE hheap);
+RtlDestroyHeap (HANDLE hheap);
 
 NTSTATUS
 STDCALL
@@ -973,6 +1020,14 @@ RtlEnlargedUnsignedMultiply (
 	ULONG	Multiplicand,
 	ULONG	Multiplier
 	);
+
+BOOLEAN STDCALL
+RtlEqualPrefixSid (PSID Sid1,
+		   PSID Sid2);
+
+BOOLEAN STDCALL
+RtlEqualSid (PSID Sid1,
+	     PSID Sid2);
 
 BOOLEAN
 STDCALL
@@ -1043,6 +1098,9 @@ RtlFindFirstRunSet (
 	PULONG		StartingIndex
 	);
 
+CCHAR STDCALL
+RtlFindLeastSignificantBit (IN ULONGLONG Set);
+
 ULONG
 STDCALL
 RtlFindLongestRunClear (
@@ -1066,6 +1124,9 @@ RtlFindMessage (
 	IN	ULONG				MessageId,
 	OUT	PRTL_MESSAGE_RESOURCE_ENTRY	*MessageResourceEntry
 	);
+
+CCHAR STDCALL
+RtlFindMostSignificantBit (IN ULONGLONG Set);
 
 NTSTATUS STDCALL
 RtlFindRange (IN PRTL_RANGE_LIST RangeList,
@@ -1095,17 +1156,15 @@ RtlFindSetBitsAndClear (
 	ULONG		HintIndex
 	);
 
-NTSTATUS
-STDCALL
-RtlFormatCurrentUserKeyPath (
-	IN OUT	PUNICODE_STRING	KeyPath
-	);
+BOOLEAN STDCALL
+RtlFirstFreeAce (PACL Acl,
+		 PACE* Ace);
 
-VOID
-STDCALL
-RtlFreeAnsiString (
-	PANSI_STRING	AnsiString
-	);
+NTSTATUS STDCALL
+RtlFormatCurrentUserKeyPath (IN OUT PUNICODE_STRING KeyPath);
+
+VOID STDCALL
+RtlFreeAnsiString (IN PANSI_STRING AnsiString);
 
 BOOLEAN
 STDCALL
@@ -1115,38 +1174,48 @@ RtlFreeHeap (
 	PVOID	Address
 	);
 
-VOID
-STDCALL
-RtlFreeOemString (
-	POEM_STRING	OemString
-	);
+VOID STDCALL
+RtlFreeOemString (IN POEM_STRING OemString);
 
 VOID STDCALL
 RtlFreeRangeList (IN PRTL_RANGE_LIST RangeList);
 
-VOID
-STDCALL
-RtlFreeUnicodeString (
-	PUNICODE_STRING	UnicodeString
-	);
+PSID STDCALL
+RtlFreeSid (PSID Sid);
 
 VOID STDCALL
-RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
-		     IN BOOLEAN AllowExtendedCharacters,
-		     IN OUT PGENERATE_NAME_CONTEXT Context,
-		     OUT PUNICODE_STRING Name8dot3);
+RtlFreeUnicodeString (IN PUNICODE_STRING UnicodeString);
+
+VOID STDCALL
+RtlGenerate8dot3Name (IN PUNICODE_STRING Name,
+		      IN BOOLEAN AllowExtendedCharacters,
+		      IN OUT PGENERATE_NAME_CONTEXT Context,
+		      OUT PUNICODE_STRING Name8dot3);
 
 NTSTATUS STDCALL
-RtlGetCompressionWorkSpaceSize(IN USHORT CompressionFormatAndEngine,
-			       OUT PULONG CompressBufferAndWorkSpaceSize,
-			       OUT PULONG CompressFragmentWorkSpaceSize);
+RtlGetAce (PACL Acl,
+	   ULONG AceIndex,
+	   PACE *Ace);
 
-VOID
-STDCALL
-RtlGetDefaultCodePage (
-	PUSHORT AnsiCodePage,
-	PUSHORT OemCodePage
-	);
+NTSTATUS STDCALL
+RtlGetCompressionWorkSpaceSize (IN USHORT CompressionFormatAndEngine,
+				OUT PULONG CompressBufferAndWorkSpaceSize,
+				OUT PULONG CompressFragmentWorkSpaceSize);
+
+NTSTATUS STDCALL
+RtlGetControlSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor,
+				 PSECURITY_DESCRIPTOR_CONTROL Control,
+				 PULONG Revision);
+
+NTSTATUS STDCALL
+RtlGetDaclSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor,
+			      PBOOLEAN DaclPresent,
+			      PACL* Dacl,
+			      PBOOLEAN DaclDefaulted);
+
+VOID STDCALL
+RtlGetDefaultCodePage (OUT PUSHORT AnsiCodePage,
+		       OUT PUSHORT OemCodePage);
 
 NTSTATUS STDCALL
 RtlGetFirstRange (IN PRTL_RANGE_LIST RangeList,
@@ -1154,9 +1223,28 @@ RtlGetFirstRange (IN PRTL_RANGE_LIST RangeList,
 		  OUT PRTL_RANGE *Range);
 
 NTSTATUS STDCALL
+RtlGetGroupSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor,
+			       PSID* Group,
+			       PBOOLEAN GroupDefaulted);
+
+NTSTATUS STDCALL
 RtlGetNextRange (IN OUT PRTL_RANGE_LIST_ITERATOR Iterator,
 		 OUT PRTL_RANGE *Range,
 		 IN BOOLEAN MoveForwards);
+
+NTSTATUS STDCALL
+RtlGetOwnerSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor,
+			       PSID* Owner,
+			       PBOOLEAN OwnerDefaulted);
+
+NTSTATUS STDCALL
+RtlGetSaclSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor,
+			      PBOOLEAN SaclPresent,
+			      PACL* Sacl,
+			      PBOOLEAN SaclDefaulted);
+
+PSID_IDENTIFIER_AUTHORITY STDCALL
+RtlIdentifierAuthoritySid (PSID Sid);
 
 PVOID
 STDCALL
@@ -1203,6 +1291,11 @@ RtlInitCodePageTable (
 	IN	PUSHORT		TableBase,
 	OUT	PCPTABLEINFO	CodePageTable
 	);
+
+NTSTATUS STDCALL
+RtlInitializeSid (PSID Sid,
+		  PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
+		  UCHAR SubAuthorityCount);
 
 VOID
 STDCALL
@@ -1496,11 +1589,14 @@ RtlLargeIntegerSubtract (
 	LARGE_INTEGER	Subtrahend
 	);
 
-ULONG
-STDCALL
-RtlLengthSecurityDescriptor (
-	PSECURITY_DESCRIPTOR	SecurityDescriptor
-	);
+ULONG STDCALL
+RtlLengthRequiredSid (UCHAR SubAuthorityCount);
+
+ULONG STDCALL
+RtlLengthSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor);
+
+ULONG STDCALL
+RtlLengthSid (PSID Sid);
 
 BOOL
 STDCALL
@@ -1508,13 +1604,19 @@ RtlLockHeap (
 	HANDLE	hheap
 	);
 
-NTSTATUS
-STDCALL
-RtlLookupAtomInAtomTable (
-	IN	PRTL_ATOM_TABLE	AtomTable,
-	IN	PWSTR		AtomName,
-	OUT	PRTL_ATOM	Atom
-	);
+NTSTATUS STDCALL
+RtlLookupAtomInAtomTable (IN PRTL_ATOM_TABLE AtomTable,
+			  IN PWSTR AtomName,
+			  OUT PRTL_ATOM Atom);
+
+NTSTATUS STDCALL
+RtlMakeSelfRelativeSD (PSECURITY_DESCRIPTOR AbsSD,
+		       PSECURITY_DESCRIPTOR RelSD,
+		       PULONG BufferLength);
+
+VOID STDCALL
+RtlMapGenericMask (PACCESS_MASK AccessMask,
+		   PGENERIC_MAPPING GenericMapping);
 
 NTSTATUS STDCALL
 RtlMergeRangeLists (OUT PRTL_RANGE_LIST MergedRangeList,
@@ -1633,17 +1735,20 @@ RtlQueryAtomInAtomTable (
 	IN OUT	PULONG		NameLength OPTIONAL
 	);
 
-NTSTATUS
-STDCALL
-RtlQueryTimeZoneInformation (
-	IN OUT	PTIME_ZONE_INFORMATION	TimeZoneInformation
-	);
+NTSTATUS STDCALL
+RtlQueryInformationAcl (PACL Acl,
+			PVOID Information,
+			ULONG InformationLength,
+			ACL_INFORMATION_CLASS InformationClass);
 
-VOID
-STDCALL
-RtlRaiseException (
-	IN	PEXCEPTION_RECORD	ExceptionRecord
-	);
+NTSTATUS STDCALL
+RtlQueryTimeZoneInformation (IN OUT PTIME_ZONE_INFORMATION TimeZoneInformation);
+
+VOID STDCALL
+RtlRaiseException (IN PEXCEPTION_RECORD ExceptionRecord);
+
+ULONG STDCALL
+RtlRandom (PULONG Seed);
 
 LPVOID
 STDCALL
@@ -1664,11 +1769,8 @@ RtlReserveChunk (
 	IN	ULONG	ChunkSize
 	);
 
-VOID
-STDCALL
-RtlResetRtlTranslations (
-	IN	PNLSTABLEINFO	NlsTable
-	);
+VOID STDCALL
+RtlResetRtlTranslations (IN PNLSTABLEINFO NlsTable);
 
 /*
  * VOID
@@ -1708,25 +1810,29 @@ RtlResetRtlTranslations (
 		*((PUSHORT)(DestAddress))=*((PUSHORT)(SrcAddress)); \
 	}
 
-VOID
-STDCALL
-RtlSecondsSince1970ToTime (
-	ULONG SecondsSince1970,
-	PLARGE_INTEGER Time
-	);
+VOID STDCALL
+RtlSecondsSince1970ToTime (ULONG SecondsSince1970,
+			   PLARGE_INTEGER Time);
 
-VOID
-STDCALL
-RtlSecondsSince1980ToTime (
-	ULONG SecondsSince1980,
-	PLARGE_INTEGER Time
-	);
+VOID STDCALL
+RtlSecondsSince1980ToTime (ULONG SecondsSince1980,
+			   PLARGE_INTEGER Time);
 
-VOID
-STDCALL
-RtlSetAllBits (
-	IN	PRTL_BITMAP	BitMapHeader
-	);
+NTSTATUS STDCALL
+RtlSelfRelativeToAbsoluteSD (PSECURITY_DESCRIPTOR RelSD,
+			     PSECURITY_DESCRIPTOR AbsSD,
+			     PULONG AbsSDSize,
+			     PACL Dacl,
+			     PULONG DaclSize,
+			     PACL Sacl,
+			     PULONG SaclSize,
+			     PSID Owner,
+			     PULONG OwnerSize,
+			     PSID Group,
+			     PULONG GroupSize);
+
+VOID STDCALL
+RtlSetAllBits (IN PRTL_BITMAP BitMapHeader);
 
 VOID
 STDCALL
@@ -1736,20 +1842,36 @@ RtlSetBits (
 	ULONG		NumberToSet
 	);
 
-NTSTATUS
-STDCALL
-RtlSetDaclSecurityDescriptor (
-	PSECURITY_DESCRIPTOR	SecurityDescriptor,
-	BOOLEAN			DaclPresent,
-	PACL			Dacl,
-	BOOLEAN			DaclDefaulted
-	);
+NTSTATUS STDCALL
+RtlSetDaclSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor,
+			      BOOLEAN DaclPresent,
+			      PACL Dacl,
+			      BOOLEAN DaclDefaulted);
 
-NTSTATUS
-STDCALL
-RtlSetTimeZoneInformation (
-	IN OUT	PTIME_ZONE_INFORMATION	TimeZoneInformation
-	);
+NTSTATUS STDCALL
+RtlSetGroupSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor,
+			       PSID Group,
+			       BOOLEAN GroupDefaulted);
+
+NTSTATUS STDCALL
+RtlSetOwnerSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor,
+			       PSID Owner,
+			       BOOLEAN OwnerDefaulted);
+
+NTSTATUS STDCALL
+RtlSetSaclSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor,
+			      BOOLEAN SaclPresent,
+			      PACL Sacl,
+			      BOOLEAN SaclDefaulted);
+
+NTSTATUS STDCALL
+RtlSetInformationAcl (PACL Acl,
+		      PVOID Information,
+		      ULONG InformationLength,
+		      ACL_INFORMATION_CLASS InformationClass);
+
+NTSTATUS STDCALL
+RtlSetTimeZoneInformation (IN OUT PTIME_ZONE_INFORMATION TimeZoneInformation);
 
 DWORD
 STDCALL
@@ -1801,12 +1923,26 @@ NTSTATUS STDCALL
 RtlStringFromGUID (IN REFGUID Guid,
 		   OUT PUNICODE_STRING GuidString);
 
-BOOLEAN
-STDCALL
-RtlTimeFieldsToTime (
-	PTIME_FIELDS	TimeFields,
-	PLARGE_INTEGER	Time
-	);
+PULONG STDCALL
+RtlSubAuthoritySid (PSID Sid,
+		    ULONG SubAuthority);
+
+PULONG STDCALL
+RtlSubAuthoritySid (PSID Sid,
+		    ULONG SubAuthority);
+
+PUCHAR STDCALL
+RtlSubAuthorityCountSid (PSID Sid);
+
+PRTL_SPLAY_LINKS STDCALL
+RtlSubtreePredecessor (IN PRTL_SPLAY_LINKS Links);
+
+PRTL_SPLAY_LINKS STDCALL
+RtlSubtreeSuccessor (IN PRTL_SPLAY_LINKS Links);
+
+BOOLEAN STDCALL
+RtlTimeFieldsToTime (PTIME_FIELDS TimeFields,
+		     PLARGE_INTEGER Time);
 
 BOOLEAN
 STDCALL
@@ -1912,6 +2048,9 @@ RtlUnicodeToOemN (
 	ULONG	UnicodeSize
 	);
 
+ULONG STDCALL
+RtlUniform (PULONG Seed);
+
 BOOL
 STDCALL
 RtlUnlockHeap (
@@ -2009,6 +2148,9 @@ RtlUpperString (
 	PSTRING	SourceString
 	);
 
+BOOLEAN STDCALL
+RtlValidAcl (PACL Acl);
+
 BOOL
 STDCALL
 RtlValidateHeap (
@@ -2017,14 +2159,11 @@ RtlValidateHeap (
 	PVOID	pmem
 	);
 
-BOOLEAN
-STDCALL
-RtlValidSecurityDescriptor (
-	PSECURITY_DESCRIPTOR	SecurityDescriptor
-	);
+BOOLEAN STDCALL
+RtlValidSecurityDescriptor (IN PSECURITY_DESCRIPTOR SecurityDescriptor);
 
 BOOLEAN STDCALL
-RtlValidSid(IN PSID Sid);
+RtlValidSid (IN PSID Sid);
 
 ULONG
 STDCALL
@@ -2141,90 +2280,12 @@ WRITE_REGISTER_BUFFER_ULONG (
 	);
 
 
-NTSTATUS STDCALL RtlCreateAcl(PACL Acl, ULONG AclSize, ULONG AclRevision);
-NTSTATUS STDCALL RtlQueryInformationAcl (PACL Acl, PVOID Information, ULONG InformationLength, ACL_INFORMATION_CLASS InformationClass);
-NTSTATUS STDCALL RtlSetInformationAcl (PACL Acl, PVOID Information, ULONG InformationLength, ACL_INFORMATION_CLASS InformationClass);
-BOOLEAN STDCALL RtlValidAcl (PACL Acl);
-
-NTSTATUS STDCALL RtlAddAccessAllowedAce(PACL Acl, ULONG Revision, ACCESS_MASK AccessMask, PSID Sid);
-NTSTATUS STDCALL RtlAddAccessDeniedAce(PACL Acl, ULONG Revision, ACCESS_MASK AccessMask, PSID Sid);
-NTSTATUS STDCALL RtlAddAce(PACL Acl, ULONG Revision, ULONG StartingIndex, PACE AceList, ULONG AceListLength);
-NTSTATUS STDCALL RtlAddAuditAccessAce (PACL Acl, ULONG Revision, ACCESS_MASK AccessMask, PSID Sid, BOOLEAN Success, BOOLEAN Failure);
-NTSTATUS STDCALL RtlDeleteAce(PACL Acl, ULONG AceIndex);
-BOOLEAN STDCALL RtlFirstFreeAce(PACL Acl, PACE* Ace);
-NTSTATUS STDCALL RtlGetAce(PACL Acl, ULONG AceIndex, PACE *Ace);
-
-NTSTATUS STDCALL RtlAbsoluteToSelfRelativeSD (PSECURITY_DESCRIPTOR AbsSD, PSECURITY_DESCRIPTOR RelSD, PULONG BufferLength);
-NTSTATUS STDCALL RtlMakeSelfRelativeSD (PSECURITY_DESCRIPTOR AbsSD, PSECURITY_DESCRIPTOR RelSD, PULONG BufferLength);
-NTSTATUS STDCALL RtlCreateSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor, ULONG Revision);
-BOOLEAN STDCALL RtlValidSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor);
-ULONG STDCALL RtlLengthSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor);
-NTSTATUS STDCALL RtlSetDaclSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor, BOOLEAN DaclPresent, PACL Dacl, BOOLEAN DaclDefaulted);
-NTSTATUS STDCALL RtlGetDaclSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor, PBOOLEAN DaclPresent, PACL* Dacl, PBOOLEAN DaclDefauted);
-NTSTATUS STDCALL RtlSetOwnerSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor, PSID Owner, BOOLEAN OwnerDefaulted);
-NTSTATUS STDCALL RtlGetOwnerSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor, PSID* Owner, PBOOLEAN OwnerDefaulted);
-NTSTATUS STDCALL RtlSetGroupSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor, PSID Group, BOOLEAN GroupDefaulted);
-NTSTATUS STDCALL RtlGetGroupSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor, PSID* Group, PBOOLEAN GroupDefaulted);
-NTSTATUS STDCALL RtlGetControlSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor, PSECURITY_DESCRIPTOR_CONTROL Control, PULONG Revision);
-NTSTATUS STDCALL RtlSetSaclSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor, BOOLEAN SaclPresent, PACL Sacl, BOOLEAN SaclDefaulted);
-NTSTATUS STDCALL RtlGetSaclSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor, PBOOLEAN SaclPresent, PACL* Sacl, PBOOLEAN SaclDefauted);
-NTSTATUS STDCALL RtlSelfRelativeToAbsoluteSD (PSECURITY_DESCRIPTOR RelSD,
-					      PSECURITY_DESCRIPTOR AbsSD,
-					      PDWORD AbsSDSize,
-					      PACL Dacl,
-					      PDWORD DaclSize,
-					      PACL Sacl,
-					      PDWORD SaclSize,
-					      PSID Owner,
-					      PDWORD OwnerSize,
-					      PSID Group,
-					      PDWORD GroupSize);
-
-NTSTATUS STDCALL RtlAllocateAndInitializeSid (PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
-					      UCHAR SubAuthorityCount,
-					      ULONG SubAuthority0,
-					      ULONG SubAuthority1,
-					      ULONG SubAuthority2,
-					      ULONG SubAuthority3,
-					      ULONG SubAuthority4,
-					      ULONG SubAuthority5,
-					      ULONG SubAuthority6,
-					      ULONG SubAuthority7,
-					      PSID *Sid);
-ULONG STDCALL RtlLengthRequiredSid (UCHAR SubAuthorityCount);
-PSID_IDENTIFIER_AUTHORITY STDCALL RtlIdentifierAuthoritySid (PSID Sid);
-NTSTATUS STDCALL RtlInitializeSid (PSID Sid, PSID_IDENTIFIER_AUTHORITY IdentifierAuthority, UCHAR SubAuthorityCount);
-PULONG STDCALL RtlSubAuthoritySid (PSID Sid, ULONG SubAuthority);
-BOOLEAN STDCALL RtlEqualPrefixSid (PSID Sid1, PSID Sid2);
-BOOLEAN STDCALL RtlEqualSid(PSID Sid1, PSID Sid2);
-PSID STDCALL RtlFreeSid (PSID Sid);
-ULONG STDCALL RtlLengthSid (PSID Sid);
-PULONG STDCALL RtlSubAuthoritySid (PSID Sid, ULONG SubAuthority);
-PUCHAR STDCALL RtlSubAuthorityCountSid (PSID Sid);
-BOOLEAN STDCALL RtlValidSid (PSID Sid);
-NTSTATUS STDCALL RtlConvertSidToUnicodeString (PUNICODE_STRING String, PSID Sid, BOOLEAN AllocateBuffer);
-
-BOOLEAN STDCALL RtlAreAllAccessesGranted (ACCESS_MASK GrantedAccess, ACCESS_MASK DesiredAccess);
-BOOLEAN STDCALL RtlAreAnyAccessesGranted (ACCESS_MASK GrantedAccess, ACCESS_MASK DesiredAccess);
-VOID STDCALL RtlMapGenericMask (PACCESS_MASK AccessMask, PGENERIC_MAPPING GenericMapping);
-
-ULONG STDCALL
-RtlRandom (PULONG Seed);
-
-PRTL_SPLAY_LINKS STDCALL
-RtlSubtreePredecessor (IN PRTL_SPLAY_LINKS Links);
-
-PRTL_SPLAY_LINKS STDCALL
-RtlSubtreeSuccessor (IN PRTL_SPLAY_LINKS Links);
-
-ULONG STDCALL
-RtlUniform (PULONG Seed);
-
 /*  functions exported from NTOSKRNL.EXE which are considered RTL  */
 
 #if defined(__NTOSKRNL__) || defined(__NTDRIVER__) || defined(__NTHAL__) || defined(__NTDLL__) || defined(__NTAPP__)
 
 char *_itoa (int value, char *string, int radix);
+wchar_t *_itow (int value, wchar_t *string, int radix);
 int _snprintf(char * buf, size_t cnt, const char *fmt, ...);
 int _snwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, ...);
 int _stricmp(const char *s1, const char *s2);
