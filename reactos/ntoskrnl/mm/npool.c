@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.78 2003/12/13 21:11:53 gvg Exp $
+/* $Id: npool.c,v 1.79 2003/12/14 17:56:23 hbirr Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -253,7 +253,7 @@ void avl_insert (PNODE * root, PNODE n, int (*compare)(PNODE, PNODE))
   PNODE y;     /* Top node to update balance factor, and parent. */
   PNODE p, q;  /* Iterator, and parent. */
   PNODE w;     /* New root of rebalanced subtree. */
-  int dir;     /* Direction to descend. */
+  int dir = 0; /* Direction to descend. */
 
   n->link[0] = n->link[1] = n->parent = NULL;
   n->balance = 0;
@@ -805,8 +805,8 @@ MiDebugDumpNonPagedPoolStats(BOOLEAN NewOnly)
   ULONG i;
   BLOCK_HDR* current;
   ULONG CurrentTag;
-  ULONG CurrentNrBlocks;
-  ULONG CurrentSize;
+  ULONG CurrentNrBlocks = 0;
+  ULONG CurrentSize = 0;
   ULONG TotalBlocks;
   ULONG TotalSize;
   ULONG Size;
@@ -1277,7 +1277,7 @@ grow_block(BLOCK_HDR* blk, PVOID end)
 static BLOCK_HDR* get_block(unsigned int size, unsigned long alignment)
 {
    BLOCK_HDR *blk, *current, *previous = NULL, *next = NULL, *best = NULL;
-   ULONG previous_size, current_size, next_size, new_size;
+   ULONG previous_size = 0, current_size, next_size = 0, new_size;
    PVOID end;
    PVOID addr, aligned_addr;
    PNODE p;

@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.40 2003/08/25 11:57:22 ekohl Exp $
+/* $Id: xhaldrv.c,v 1.41 2003/12/14 17:56:22 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -686,7 +686,7 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 {
   LARGE_INTEGER RealPartitionOffset;
   ULONGLONG PartitionOffset;
-  ULONGLONG nextPartitionOffset;
+  ULONGLONG nextPartitionOffset = 0LL;
   ULONGLONG containerOffset;
   NTSTATUS Status;
   PPARTITION_SECTOR PartitionSector;
@@ -926,7 +926,7 @@ xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
   PPARTITION_SECTOR PartitionSector;
   LARGE_INTEGER RealPartitionOffset;
   ULONGLONG PartitionOffset;
-  ULONGLONG nextPartitionOffset;
+  ULONGLONG nextPartitionOffset = 0LL;
   ULONGLONG containerOffset;
   NTSTATUS Status;
   ULONG i;
@@ -1105,7 +1105,7 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
   PPARTITION_SECTOR PartitionSector;
   LARGE_INTEGER RealPartitionOffset;
   ULONGLONG PartitionOffset;
-  ULONGLONG NextPartitionOffset;
+  ULONGLONG NextPartitionOffset = 0LL;
   ULONGLONG ContainerOffset;
   BOOLEAN ContainerEntry;
   DISK_MANAGER DiskManager;

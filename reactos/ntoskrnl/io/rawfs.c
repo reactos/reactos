@@ -1,4 +1,4 @@
-/* $Id: rawfs.c,v 1.7 2003/11/27 00:50:22 gdalsnes Exp $
+/* $Id: rawfs.c,v 1.8 2003/12/14 17:56:22 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -526,7 +526,7 @@ RawFsWrite(IN PRAWFS_IRP_CONTEXT IrpContext)
 static NTSTATUS
 RawFsMount(IN PRAWFS_IRP_CONTEXT IrpContext)
 {
-  PRAWFS_GLOBAL_DATA GlobalData;
+  PRAWFS_GLOBAL_DATA GlobalData = NULL;
   PDEVICE_OBJECT DeviceObject = NULL;
   PRAWFS_DEVICE_EXTENSION DeviceExt = NULL;
   PRAWFS_FCB VolumeFcb = NULL;

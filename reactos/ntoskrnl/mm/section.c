@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.135 2003/11/24 14:51:46 ekohl Exp $
+/* $Id: section.c,v 1.136 2003/12/14 17:56:22 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -3449,7 +3449,7 @@ MmUnmapViewOfSection(PEPROCESS Process,
        ULONG NrSegments;
        PMM_IMAGE_SECTION_OBJECT ImageSectionObject;
        PMM_SECTION_SEGMENT SectionSegments;
-       PVOID ImageBaseAddress;
+       PVOID ImageBaseAddress = 0;
        PMM_SECTION_SEGMENT Segment;
    
        Segment = MemoryArea->Data.SectionData.Segment;
