@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.20 2003/08/26 19:26:02 weiden Exp $
+/* $Id: msgqueue.c,v 1.21 2003/08/29 19:17:32 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -172,99 +172,72 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
 			 PWINDOW_OBJECT ScopeWin, PUSHORT HitTest,
 			 PPOINT ScreenPoint, PBOOL MouseClick)
 {
-  static ULONG ClkTime = 0;
-  static USHORT ClkMessage = 0;
-  static HWND ClkWnd = 0;
-  static POINT ClkPos = {0, 0};
-
   USHORT Msg = Message->Msg.message;
   PWINDOW_OBJECT Window;
   POINT Point;
-  ULONG Click = 0;
 
   if ((Window = IntGetCaptureWindow()) == NULL)
-    {
-      *HitTest = WinPosWindowFromPoint(ScopeWin, Message->Msg.pt, &Window);
-    }
+  {
+    *HitTest = WinPosWindowFromPoint(ScopeWin, Message->Msg.pt, &Window);
+  }
   else
-    {
-      *HitTest = HTCLIENT;
-    }
+  {
+    *HitTest = HTCLIENT;
+  }
 
   if (Window == NULL)
-    {
-      ExFreePool(Message);
-      return(FALSE);
-    }
+  {
+    ExFreePool(Message);
+    return(FALSE);
+  }
   if (Window->MessageQueue != PsGetWin32Thread()->MessageQueue)
-    {
-      ExAcquireFastMutex(&Window->MessageQueue->Lock);
-      InsertTailList(&Window->MessageQueue->HardwareMessagesListHead,
-		     &Message->ListEntry);
-      ExReleaseFastMutex(&Window->MessageQueue->Lock);
-      KeSetEvent(&Window->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
-      return(FALSE);
-    }
+  {
+    ExAcquireFastMutex(&Window->MessageQueue->Lock);
+    InsertTailList(&Window->MessageQueue->HardwareMessagesListHead,
+                   &Message->ListEntry);
+    ExReleaseFastMutex(&Window->MessageQueue->Lock);
+    KeSetEvent(&Window->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
+    return(FALSE);
+  }
 
   if (hWnd != NULL && Window->Self != hWnd &&
       !IntIsChildWindow(hWnd, Window->Self))
-    {
-      return(FALSE);
-    }
+  {
+    return(FALSE);
+  }
 
-  if (Msg == WM_LBUTTONDOWN || Msg == WM_RBUTTONDOWN || Msg == WM_MBUTTONDOWN)
-    {
-      (*MouseClick) = Click = 1;
-    }
-  if (Click)
-    {
-      if (IntGetClassLong(Window, GCL_STYLE, FALSE) & CS_DBLCLKS ||
-	  (*HitTest) != HTCLIENT)
+  if (Msg == WM_LBUTTONDBLCLK || Msg == WM_RBUTTONDBLCLK || Msg == WM_MBUTTONDBLCLK)
+  {
+    if (!(IntGetClassLong(Window, GCL_STYLE, FALSE) & CS_DBLCLKS) &&
+        ((*HitTest) == HTCLIENT))
 	{
-	  if (Msg == ClkMessage &&
-	      Window->Self == ClkWnd &&
-	      (Message->Msg.time - ClkTime) < 452 &&
-	      abs(Message->Msg.pt.x - ClkPos.x) < 2 &&
-	      abs(Message->Msg.pt.y - ClkPos.y) < 2)
-	    {
-	      Msg += (WM_LBUTTONDBLCLK - WM_LBUTTONDOWN);
-	      Click++;
-	    }
+      Msg -= (WM_LBUTTONDBLCLK - WM_LBUTTONDOWN);
+      /* FIXME set WindowStation's system cursor variables:
+               LastBtnDown to Msg.time
+      */
 	}
-    }
+	else
+	{
+	  /* FIXME check if the dblclick was made in the same window, if
+	           not, change it to a normal click message */
+	}
+  }
 
   *ScreenPoint = Message->Msg.pt;
 
   if ((*HitTest) != HTCLIENT)
-    {
-      Msg += WM_NCMOUSEMOVE - WM_MOUSEMOVE;
-      Message->Msg.wParam = *HitTest;
-    }
+  {
+    Msg += WM_NCMOUSEMOVE - WM_MOUSEMOVE;
+    Message->Msg.wParam = *HitTest;
+  }
   else
-    {
-      Point = Message->Msg.pt;
-
-      Point.x -= Window->ClientRect.left;
-      Point.y -= Window->ClientRect.top;
-    }
+  {
+    Point = Message->Msg.pt;
+    Point.x -= Window->ClientRect.left;
+    Point.y -= Window->ClientRect.top;
+  }
 
   /* FIXME: Check message filter. */
-
-  if (Remove && Click)
-    {
-      if (Click == 1)
-	{
-	  ClkTime = Message->Msg.time;
-	  ClkMessage = Msg;
-	  ClkWnd = Window->Self;
-	  ClkPos = (*ScreenPoint);
-	}
-      else
-	{
-	  ClkTime = 0;
-	  ClkWnd = NULL;
-	}
-    }
 
   if (Remove)
     {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.39 2003/08/29 00:24:42 weiden Exp $
+/* $Id: mouse.c,v 1.40 2003/08/29 19:17:31 weiden Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -152,7 +152,11 @@ IntDetectDblClick(PSYSTEM_CURSORINFO CurInfo, DWORD TickCount)
           (dY <= CurInfo->DblClickHeight);
 
     if(res)
+    {
       CurInfo->LastBtnDown = 0; /* prevent sending 2 or more DBLCLK messages */
+      CurInfo->LastBtnDownX = CurInfo->x;
+      CurInfo->LastBtnDownY = CurInfo->y;
+    }
     else
     {
       CurInfo->LastBtnDown = TickCount;
