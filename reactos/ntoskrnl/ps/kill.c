@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.68 2003/12/30 00:12:47 hyperion Exp $
+/* $Id: kill.c,v 1.69 2003/12/30 03:27:52 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -125,6 +125,7 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
    PKMUTANT Mutant;
    BOOLEAN Last;
    PEPROCESS CurrentProcess;
+   SIZE_T Length = PAGE_SIZE;
 
    KeLowerIrql(PASSIVE_LEVEL);
 
@@ -144,8 +145,19 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
 
    KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 
+   /* Notify subsystems of the thread termination */
    PspRunCreateThreadNotifyRoutines(CurrentThread, FALSE);
    PsTerminateWin32Thread(CurrentThread);
+
+   /* Free the TEB */
+   if(CurrentThread->Tcb.Teb)
+    ZwFreeVirtualMemory
+    (
+     NtCurrentProcess(),
+     (PVOID *)&CurrentThread->Tcb.Teb,
+     &Length,
+     MEM_RELEASE
+    );
 
    /* abandon all owned mutants */
    current_entry = CurrentThread->Tcb.MutantListHead.Flink;
