@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.21 2003/08/07 11:47:32 silverblade Exp $
+/* $Id: fsctl.c,v 1.22 2003/08/10 20:01:16 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -466,7 +466,7 @@ VfatGetRetrievalPointers(PVFAT_IRP_CONTEXT IrpContext)
    MaxExtentCount = ((Stack->Parameters.DeviceIoControl.OutputBufferLength - sizeof(GET_RETRIEVAL_DESCRIPTOR)) / sizeof(MAPPING_PAIR));
 
 
-   if (Vcn.QuadPart >= Fcb->RFCB.FileSize.QuadPart / DeviceExt->FatInfo.BytesPerCluster)
+   if (Vcn.QuadPart >= Fcb->RFCB.AllocationSize.QuadPart / DeviceExt->FatInfo.BytesPerCluster)
    {
       Status = STATUS_INVALID_PARAMETER;
       goto ByeBye;
