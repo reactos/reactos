@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.18 2003/02/21 21:50:04 jfilby Exp $
+; $Id: msvcrt.def,v 1.19 2003/04/06 12:40:55 gvg Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -124,7 +124,7 @@ __p__commode
 __p__environ
 ; __p__fileinfo
 __p__fmode
-; __p__iob
+__p__iob
 ; __p__mbcasemap
 ; __p__mbctype
 __p__osver
@@ -436,7 +436,7 @@ _searchenv
 ; _set_sbh_threshold
 _seterrormode
 _setjmp
-; _setjmp3
+_setjmp3
 ; _setmaxstdio
 ; _setmbcp
 _setmode

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.31 2002/12/10 19:09:26 hbirr Exp $
+# $Id: Makefile,v 1.32 2003/04/06 12:40:55 gvg Exp $
 
 PATH_TO_TOP = ../..
 
@@ -34,6 +34,7 @@ TARGET_CLEAN = \
 	process/*.o \
 	search/*.o \
 	setjmp/*.o \
+	setjmp/i386/*.o \
 	signal/*.o \
 	stdio/*.o \
 	stdlib/*.o \
@@ -273,7 +274,7 @@ SEARCH_OBJECTS = \
 	search/lsearch.o
 
 SETJMP_OBJECTS = \
-	setjmp/setjmp.o
+	setjmp/i386/setjmp.o
 	
 SIGNAL_OBJECTS = \
 	signal/signal.o
