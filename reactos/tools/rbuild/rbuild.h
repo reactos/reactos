@@ -33,6 +33,8 @@ class Dependency;
 
 class Project
 {
+	std::string xmlfile;
+	XMLElement *node, *head;
 public:
 	std::string name;
 	std::string makefile;
@@ -40,7 +42,7 @@ public:
 	std::vector<Include*> includes;
 	std::vector<Define*> defines;
 
-	Project ();
+	//Project ();
 	Project ( const std::string& filename );
 	~Project ();
 	void ProcessXML ( const std::string& path );
@@ -48,10 +50,12 @@ public:
 	const Module* LocateModule ( const std::string& name ) const;
 private:
 	void ReadXml ();
-	XMLFile xmlfile;
-	XMLElement* node;
 	void ProcessXMLSubElement ( const XMLElement& e,
 	                            const std::string& path );
+
+	// disable copy semantics
+	Project ( const Project& );
+	Project& operator = ( const Project& );
 };
 
 

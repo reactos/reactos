@@ -12,15 +12,26 @@ using std::map;
 
 map<ModuleType,MingwModuleHandler*>*
 MingwModuleHandler::handler_map = NULL;
+int
+MingwModuleHandler::ref = 0;
 
 FILE*
 MingwModuleHandler::fMakefile = NULL;
 
 MingwModuleHandler::MingwModuleHandler ( ModuleType moduletype )
 {
-	if ( !handler_map )
+	if ( !ref++ )
 		handler_map = new map<ModuleType,MingwModuleHandler*>;
 	(*handler_map)[moduletype] = this;
+}
+
+MingwModuleHandler::~MingwModuleHandler()
+{
+	if ( !--ref )
+	{
+		delete handler_map;
+		handler_map = NULL;
+	}
 }
 
 /*static*/ void

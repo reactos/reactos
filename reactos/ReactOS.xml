@@ -1,6 +1,11 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
 <project name="ReactOS" makefile="Makefile.auto" xmlns:xi="http://www.w3.org/2001/XInclude">
+	<xi:include href="config.xml">
+		<xi:fallback>
+			<xi:include href="config.template.xml" />
+		</xi:fallback>
+	</xi:include>
 	<define name="_M_IX86" />
 	<include>include</include>
 	<include>w32api/include</include>

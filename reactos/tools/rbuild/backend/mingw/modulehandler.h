@@ -7,9 +7,10 @@ class MingwModuleHandler
 {
 public:
 	static std::map<ModuleType,MingwModuleHandler*>* handler_map;
+	static int ref;
 
 	MingwModuleHandler ( ModuleType moduletype );
-	virtual ~MingwModuleHandler() {}
+	virtual ~MingwModuleHandler();
 
 	static void SetMakefile ( FILE* f );
 	static MingwModuleHandler* LookupHandler ( const std::string& location,

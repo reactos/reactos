@@ -13,11 +13,12 @@ public:
 	class Factory
 	{
 		static std::map<std::string,Factory*>* factories;
+		static int ref;
 
 	protected:
 
 		Factory ( const std::string& name_ );
-		virtual ~Factory() {}
+		virtual ~Factory();
 
 		virtual Backend* operator() ( Project& ) = 0;
 

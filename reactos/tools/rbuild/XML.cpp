@@ -22,6 +22,28 @@ static const char* WSEQ = " =\t\r\n";
 
 string working_directory;
 
+class XMLInclude
+{
+public:
+	XMLElement *e;
+	Path path;
+
+	XMLInclude ( XMLElement* e_, const Path& path_ )
+		: e(e_), path(path_)
+	{
+	}
+};
+
+class XMLIncludes : public vector<XMLInclude*>
+{
+public:
+	~XMLIncludes()
+	{
+		for ( size_t i = 0; i < this->size(); i++ )
+			delete (*this)[i];
+	}
+};
+
 void
 InitWorkingDirectory()
 {
@@ -306,6 +328,19 @@ XMLAttribute::XMLAttribute(const string& name_,
 {
 }
 
+XMLAttribute::XMLAttribute ( const XMLAttribute& src )
+	: name(src.name), value(src.value)
+{
+
+}
+
+XMLAttribute& XMLAttribute::operator = ( const XMLAttribute& src )
+{
+	name = src.name;
+	value = src.value;
+	return *this;
+}
+
 XMLElement::XMLElement ( const string& location_ )
 	: location(location_),
 	  parentElement(NULL)
@@ -451,7 +486,6 @@ XMLElement::GetAttribute ( const string& attribute,
 
 // XMLParse()
 // This function reads a "token" from the file loaded in XMLFile
-// REM TODO FIXME: At the moment it can't handle comments or non-xml tags.
 // if it finds a tag that is non-singular, it parses sub-elements and/or
 // inner text into the XMLElement that it is building to return.
 // Return Value: an XMLElement allocated via the new operator that contains
@@ -459,13 +493,14 @@ XMLElement::GetAttribute ( const string& attribute,
 // (no more data)
 XMLElement*
 XMLParse(XMLFile& f,
+         XMLIncludes* includes,
          const Path& path,
-         bool* pend_tag /*= NULL*/)
+         bool* pend_tag = NULL )
 {
 	string token;
 	if ( !f.get_token(token) )
 		return NULL;
-	bool end_tag;
+	bool end_tag, is_include = false;
 
 	while ( token[0] != '<'
 	        || !strncmp ( token.c_str(), "<!--", 4 )
@@ -482,32 +517,10 @@ XMLParse(XMLFile& f,
 	XMLElement* e = new XMLElement ( f.Location() );
 	bool bNeedEnd = e->Parse ( token, end_tag );
 
-	if ( e->name == "xi:include" )
+	if ( e->name == "xi:include" && includes )
 	{
-		XMLAttribute* att;
-		att = e->GetAttribute("href",true);
-		assert(att);
-
-		string file ( path.Fixup(att->value,true) );
-		string top_file ( Path::RelativeFromWorkingDirectory ( file ) );
-		e->attributes.push_back ( new XMLAttribute ( "top_href", top_file ) );
-		XMLFile fInc;
-		if ( !fInc.open ( file ) )
-			throw FileNotFoundException (
-				ssprintf("%s (referenced from %s)",
-					file.c_str(),
-					f.Location().c_str() ) );
-		else
-		{
-			Path path2 ( path, att->value );
-			for ( ;; )
-			{
-				XMLElement* e2 = XMLParse ( fInc, path2 );
-				if ( !e2 )
-					break;
-				e->AddSubElement ( e2 );
-			}
-		}
+		includes->push_back ( new XMLInclude ( e, path ) );
+		is_include = true;
 	}
 
 	if ( !bNeedEnd )
@@ -531,7 +544,9 @@ XMLParse(XMLFile& f,
 		{
 			if ( !f.get_token ( token ) || !token.size() )
 			{
-				throw Exception ( "internal tool error - get_token() failed when more_tokens() returned true" );
+				throw InvalidBuildFileException (
+					f.Location(),
+					"internal tool error - get_token() failed when more_tokens() returned true" );
 				break;
 			}
 			if ( e->subElements.size() && !bThisMixingErrorReported )
@@ -556,12 +571,23 @@ XMLParse(XMLFile& f,
 		}
 		else
 		{
-			XMLElement* e2 = XMLParse ( f, path, &end_tag );
+			XMLElement* e2 = XMLParse ( f, is_include ? NULL : includes, path, &end_tag );
+			if ( !e2 )
+			{
+				throw InvalidBuildFileException (
+					e->location,
+					"end of file found looking for end tag" );
+				break;
+			}
 			if ( end_tag )
 			{
 				if ( e->name != e2->name )
+				{
+					delete e2;
 					throw XMLSyntaxErrorException ( f.Location(),
 					                                "end tag name mismatch" );
+					break;
+				}
 				delete e2;
 				break;
 			}
@@ -575,4 +601,119 @@ XMLParse(XMLFile& f,
 		}
 	}
 	return e;
+}
+
+void
+XMLReadFile ( XMLFile& f, XMLElement& head, XMLIncludes& includes, const Path& path )
+{
+	for ( ;; )
+	{
+		XMLElement* e = XMLParse ( f, &includes, path );
+		if ( !e )
+			return;
+		head.AddSubElement ( e );
+	}
+}
+
+XMLElement*
+XMLLoadInclude ( XMLElement* e, const Path& path, XMLIncludes& includes )
+{
+	// TODO FIXME
+	XMLAttribute* att;
+	att = e->GetAttribute("href",true);
+	assert(att);
+
+	string file ( path.Fixup(att->value,true) );
+	string top_file ( Path::RelativeFromWorkingDirectory ( file ) );
+	e->attributes.push_back ( new XMLAttribute ( "top_href", top_file ) );
+	XMLFile fInc;
+	if ( !fInc.open ( file ) )
+	{
+		// look for xi:fallback element
+		for ( size_t i = 0; i < e->subElements.size(); i++ )
+		{
+			XMLElement* e2 = e->subElements[i];
+			if ( e2->name == "xi:fallback" )
+			{
+				// now look for xi:include below...
+				for ( i = 0; i < e2->subElements.size(); i++ )
+				{
+					XMLElement* e3 = e2->subElements[i];
+					if ( e3->name == "xi:include" )
+					{
+						return XMLLoadInclude ( e3, path, includes );
+					}
+				}
+				throw InvalidBuildFileException (
+					e2->location,
+					"<xi:fallback> must have a <xi:include> sub-element" );
+				return NULL;
+			}
+		}
+		return NULL;
+	}
+	else
+	{
+		XMLElement* new_e = new XMLElement ( e->location );
+		new_e->name = "xi:included";
+		Path path2 ( path, att->value );
+		XMLReadFile ( fInc, *new_e, includes, path2 );
+		return new_e;
+	}
+}
+
+XMLElement*
+XMLLoadFile ( const string& filename, const Path& path )
+{
+	XMLIncludes includes;
+	XMLFile f;
+
+	if ( !f.open ( filename ) )
+		throw FileNotFoundException ( filename );
+
+	XMLElement* head = new XMLElement("(virtual)");
+
+	XMLReadFile ( f, *head, includes, path );
+
+	for ( size_t i = 0; i < includes.size(); i++ )
+	{
+		XMLElement* e = includes[i]->e;
+		XMLElement* e2 = XMLLoadInclude ( includes[i]->e, includes[i]->path, includes );
+		if ( !e2 )
+		{
+			throw FileNotFoundException (
+				ssprintf("%s (referenced from %s)",
+					e->GetAttribute("top_href",true)->value.c_str(),
+					f.Location().c_str() ) );
+		}
+		XMLElement* parent = e->parentElement;
+		XMLElement** parent_container = NULL;
+		if ( !parent )
+		{
+			delete e;
+			throw Exception ( "internal tool error: xi:include doesn't have a parent" );
+			return NULL;
+		}
+		for ( size_t j = 0; j < parent->subElements.size(); j++ )
+		{
+			if ( parent->subElements[j] == e )
+			{
+				parent_container = &parent->subElements[j];
+				break;
+			}
+		}
+		if ( !parent_container )
+		{
+			delete e;
+			throw Exception ( "internal tool error: couldn't find xi:include in parent's sub-elements" );
+			return NULL;
+		}
+		// replace inclusion tree with the imported tree
+		e2->name = e->name;
+		e2->attributes = e->attributes;
+		*parent_container = e2;
+		e->attributes.resize(0);
+		delete e;
+	}
+	return head;
 }

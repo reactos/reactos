@@ -8,15 +8,27 @@ using std::string;
 using std::vector;
 using std::map;
 
-map<string,Backend::Factory*>* Backend::Factory::factories = NULL;
+map<string,Backend::Factory*>*
+Backend::Factory::factories = NULL;
+int
+Backend::Factory::ref = 0;
 
 Backend::Factory::Factory ( const std::string& name_ )
 {
 	string name(name_);
 	strlwr ( &name[0] );
-	if ( !factories )
+	if ( !ref++ )
 		factories = new map<string,Factory*>;
 	(*factories)[name] = this;
+}
+
+Backend::Factory::~Factory()
+{
+	if ( !--ref )
+	{
+		delete factories;
+		factories = NULL;
+	}
 }
 
 /*static*/ Backend*

@@ -52,6 +52,8 @@ public:
 
 	XMLAttribute();
 	XMLAttribute ( const std::string& name_, const std::string& value_ );
+	XMLAttribute ( const XMLAttribute& );
+	XMLAttribute& operator = ( const XMLAttribute& );
 };
 
 
@@ -77,8 +79,11 @@ public:
 };
 
 XMLElement*
+XMLLoadFile ( const std::string& filename, const Path& path );
+
+/*XMLElement*
 XMLParse(XMLFile& f,
          const Path& path,
-         bool* pend_tag = NULL);
+         bool* pend_tag = NULL);*/
 
 #endif//XML_H

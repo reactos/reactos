@@ -7,39 +7,48 @@
 using std::string;
 using std::vector;
 
-Project::Project()
+/*Project::Project()
+	: node(NULL), head(NULL)
 {
-}
+}*/
 
 Project::Project ( const string& filename )
+	: xmlfile(filename), node(NULL), head(NULL)
 {
-	if ( !xmlfile.open ( filename ) )
-		throw FileNotFoundException ( filename );
 	ReadXml();
 }
 
 Project::~Project ()
 {
-	for ( size_t i = 0; i < modules.size (); i++ )
+	size_t i;
+	for ( i = 0; i < modules.size (); i++ )
 		delete modules[i];
-	delete node;
+	for ( i = 0; i < includes.size(); i++ )
+		delete includes[i];
+	for ( i = 0; i < defines.size(); i++ )
+		delete defines[i];
+	delete head;
 }
 
 void
-Project::ReadXml ()
+Project::ReadXml()
 {
 	Path path;
-
-	do
+	head = XMLLoadFile ( xmlfile, path );
+	node = NULL;
+	for ( size_t i = 0; i < head->subElements.size(); i++ )
 	{
-		node = XMLParse ( xmlfile, path );
-		if ( !node )
-			throw InvalidBuildFileException (
-				node->location,
-				"Document contains no 'project' tag." );
-	} while ( node->name != "project" );
+		if ( head->subElements[i]->name == "project" )
+		{
+			node = head->subElements[i];
+			this->ProcessXML ( "." );
+			return;
+		}
+	}
 
-	this->ProcessXML ( "." );
+	throw InvalidBuildFileException (
+		node->location,
+		"Document contains no 'project' tag." );
 }
 
 void
