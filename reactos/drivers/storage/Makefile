@@ -6,7 +6,7 @@ PATH_TO_TOP = ../..
 
 include $(PATH_TO_TOP)/rules.mak
 
-DRIVERS = atapi cdrom class2 disk diskdump floppy scsiport
+DRIVERS = atapi cdrom class2 disk diskdump scsiport
 
 all: $(DRIVERS)
 
