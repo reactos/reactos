@@ -107,6 +107,8 @@ static BOOLEAN KeDispatcherObjectWakeOne(DISPATCHER_HEADER* hdr)
 			       WaitListEntry);
    DPRINT("current_entry %x current %x\n",current_entry,current);
    DPRINT("Waking %x\n",current->Thread);
+   if (hdr->Type == SemaphoreType)
+      hdr->SignalState--;
    PsResumeThread(CONTAINING_RECORD(current->Thread,ETHREAD,Tcb));
    return(TRUE);
 }
@@ -136,12 +138,15 @@ BOOLEAN KeDispatcherObjectWake(DISPATCHER_HEADER* hdr)
 	return(Ret);
 	
       case SemaphoreType:
-	Ret = KeDispatcherObjectWakeOne(hdr);
-	if (Ret)
-	  {
-	     hdr->SignalState--;
-	  }
-	return(Ret);
+	if(hdr->SignalState>0)
+	{
+          do
+          {
+     	    Ret = KeDispatcherObjectWakeOne(hdr);
+          } while(hdr->SignalState > 0 &&  Ret) ;
+	  return(Ret);
+	}
+	else return FALSE;
 	
       case ProcessType:
 	return(KeDispatcherObjectWakeAll(hdr));
@@ -190,7 +195,6 @@ NTSTATUS KeWaitForSingleObject(PVOID Object,
 	   break;
 	   
 	 case SemaphoreType:
-	   hdr->SignalState--;
 	   break;
 	}
       KeReleaseDispatcherDatabaseLock(FALSE);
