@@ -32,7 +32,7 @@ _getch(void)
   }
   else
   {	
-	ReadConsoleA(filehnd(stdin->_file), &c,1,&NumberOfCharsRead ,NULL);
+	ReadConsoleA(_get_osfhandle(stdin->_file), &c,1,&NumberOfCharsRead ,NULL);
 	
   }
   if ( c == 10 )
