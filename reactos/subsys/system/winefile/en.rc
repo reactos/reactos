@@ -62,7 +62,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM SEPARATOR
 		MENUITEM "&Format Disk..." ,			203
 #ifdef _WIN95
-		MENUITEM "&Make System Disk...", -1	//TODO
+		MENUITEM "&Make System Disk...", -1	/*TODO*/
 #endif
 		MENUITEM SEPARATOR
 		MENUITEM "Connect &Network Drive" ,			252
@@ -183,4 +183,18 @@ STRINGTABLE
 {
 	IDS_FONT_SEL_DLG_NAME	"Applying font settings"
 	IDS_FONT_SEL_ERROR	"Error while selecting new font."
+}
+
+STRINGTABLE
+{
+	IDS_WINEFILE	"Winefile"
+	IDS_ERROR		"Error"
+	IDS_ROOT_FS		"root fs"
+	IDS_UNIXFS		"unixfs"
+	IDS_DESKTOP		"Desktop"
+	IDS_SHELL		"Shell"
+	IDS_TITLEFMT	"%s - %s"
+	IDS_NO_IMPL		"Not yet implemented"
+	IDS_WINE		"WINE"
+	IDS_WINE_FILE	"Wine File"
 }

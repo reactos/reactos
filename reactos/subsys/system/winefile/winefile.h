@@ -71,12 +71,6 @@
 #define	ASSERT(x)	/* nothing */
 #endif
 
-#ifdef _MSC_VER
-#define	LONGLONGARG _T("I64")
-#else
-#define	LONGLONGARG _T("L")
-#endif
-
 #define	BUFFER_LEN	1024
 
 

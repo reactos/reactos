@@ -58,7 +58,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 		MENUITEM SEPARATOR
 		MENUITEM "Datenträger &formatieren..." ,			203
 #ifdef _WIN95
-		MENUITEM "...",			-1	//TODO
+		MENUITEM "...",			-1	/*TODO*/
 #endif
 		MENUITEM SEPARATOR
 		MENUITEM "Netzwerklaufwerk &verbinden..." ,			252

@@ -16,69 +16,86 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+
 /* images */
-#define	IDB_TOOLBAR						100
-#define	IDB_DRIVEBAR					101
-#define	IDB_IMAGES						102
-#define	IDI_WINEFILE					100
+
+#define IDB_TOOLBAR						100
+#define IDB_DRIVEBAR					101
+#define IDB_IMAGES						102
+#define IDI_WINEFILE					100
 
 
 /* accellerators and menus */
 
-#define	IDA_WINEFILE					101
-#define	IDM_WINEFILE					102
+#define IDA_WINEFILE					101
+#define IDM_WINEFILE					102
 
 
 /* dialogs */
 
-#define	IDD_EXECUTE						103
+#define IDD_EXECUTE						103
 #define IDD_SELECT_DESTINATION			104
 
 
 /* control ids */
 
-#define	ID_ACTIVATE						101
-#define	ID_EXECUTE						105
+#define ID_ACTIVATE						101
+#define ID_EXECUTE						105
 #define ID_FILE_MOVE					106
-#define	ID_FILE_EXIT					115
-#define	ID_VIEW_NAME					401
-#define	ID_VIEW_ALL_ATTRIBUTES			402
-#define	ID_VIEW_SELECTED_ATTRIBUTES		403
+#define ID_FILE_EXIT					115
+#define ID_VIEW_NAME					401
+#define ID_VIEW_ALL_ATTRIBUTES			402
+#define ID_VIEW_SELECTED_ATTRIBUTES		403
 #define ID_SELECT_FONT					510
-#define	ID_VIEW_TOOL_BAR				508
-#define	ID_VIEW_DRIVE_BAR				507
-#define	ID_VIEW_STATUSBAR				503
+#define ID_VIEW_TOOL_BAR				508
+#define ID_VIEW_DRIVE_BAR				507
+#define ID_VIEW_STATUSBAR				503
 
-#define	ID_ABOUT						1803
-#define	ID_REFRESH						1704
-#define	ID_EDIT_PROPERTIES				57656
-#define	ID_WINDOW_NEW					0xE130
-#define	ID_WINDOW_ARRANGE				0xE131
-#define	ID_WINDOW_CASCADE				0xE132
-#define	ID_WINDOW_TILE_HORZ 			0xE133
-#define	ID_WINDOW_TILE_VERT 			0xE134
-#define	ID_WINDOW_SPLIT 				0xE135
-#define	ID_HELP_USING					0xE144
-#define	ID_HELP 						0xE146
+#define ID_ABOUT						1803
+#define ID_REFRESH						1704
+#define ID_EDIT_PROPERTIES				57656
+#define ID_WINDOW_NEW					0xE130
+#define ID_WINDOW_ARRANGE				0xE131
+#define ID_WINDOW_CASCADE				0xE132
+#define ID_WINDOW_TILE_HORZ 			0xE133
+#define ID_WINDOW_TILE_VERT 			0xE134
+#define ID_WINDOW_SPLIT 				0xE135
+#define ID_HELP_USING					0xE144
+#define ID_HELP 						0xE146
 
 
 /* winefile extensions */
-#define	ID_ABOUT_WINE					0x8000
-#define	ID_LICENSE						0x8001
-#define	ID_NO_WARRANTY					0x8002
-#define	ID_WINDOW_AUTOSORT				0x8003
-#define	ID_VIEW_FULLSCREEN				0x8004
-#define	ID_PREFERED_SIZES				0x8005
+
+#define ID_ABOUT_WINE					0x8000
+#define ID_LICENSE						0x8001
+#define ID_NO_WARRANTY					0x8002
+#define ID_WINDOW_AUTOSORT				0x8003
+#define ID_VIEW_FULLSCREEN				0x8004
+#define ID_PREFERED_SIZES				0x8005
 
 
 /* string table */
+
 #define IDS_FONT_SEL_DLG_NAME			1101
 #define IDS_FONT_SEL_ERROR				1103
 
-/* range for drive bar command ids: 0x9000..0x90FF */
-#ifdef __WINE__
-#define	ID_DRIVE_UNIX_FS				0x9000
-#endif
-#define	ID_DRIVE_SHELL_NS				0x9001
+#define IDS_WINEFILE					1200
+#define IDS_ERROR						1201
+#define IDS_ROOT_FS						1202
+#define IDS_UNIXFS						1203
+#define IDS_DESKTOP						1204
+#define IDS_SHELL						1205
+#define IDS_TITLEFMT					1206
+#define IDS_NO_IMPL						1207
+#define IDS_WINE						1208
+#define IDS_WINE_FILE					1209
 
-#define	ID_DRIVE_FIRST					0x9002
+
+/* range for drive bar command ids: 0x9000..0x90FF */
+
+#ifdef __WINE__
+#define ID_DRIVE_UNIX_FS				0x9000
+#endif
+#define ID_DRIVE_SHELL_NS				0x9001
+
+#define ID_DRIVE_FIRST					0x9002
