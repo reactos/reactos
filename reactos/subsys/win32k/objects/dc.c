@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.78 2003/08/31 07:56:24 gvg Exp $
+/* $Id: dc.c,v 1.79 2003/09/10 21:06:26 fireball Exp $
  *
  * DC.C - Device context functions
  *
@@ -349,7 +349,7 @@ NtGdiCreatePrimarySurface(LPCWSTR Driver,
     return FALSE;
   }
 
-  DPRINT("Display driver %S loaded\n", DriverName);
+  DPRINT("Display driver %S loaded\n", CurrentName);
 
   DPRINT("Building DDI Functions\n");
 
