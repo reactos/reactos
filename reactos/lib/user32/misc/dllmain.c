@@ -23,9 +23,6 @@ extern CRITICAL_SECTION gcsMPH;
 static ULONG User32TlsIndex;
 HINSTANCE User32Instance;
 
-/* To make the linker happy */
-VOID STDCALL KeBugCheck (ULONG	BugCheckCode) {}
-
 HWINSTA ProcessWindowStation;
 
 PUSER32_THREAD_DATA

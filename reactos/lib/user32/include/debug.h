@@ -38,7 +38,7 @@ extern DWORD DebugTraceLevel;
 #ifdef NASSERT
 #define ASSERT(x)
 #else /* NASSERT */
-#define ASSERT(x) if (!(x)) { D(MIN_TRACE, ("Assertion "#x" failed at %s:%d\n", __FILE__, __LINE__)); KeBugCheck(0); }
+#define ASSERT(x) if (!(x)) { D(MIN_TRACE, ("Assertion "#x" failed at %s:%d\n", __FILE__, __LINE__)); }
 #endif /* NASSERT */
 
 #define ASSERT_IRQL(x) ASSERT(KeGetCurrentIrql() <= (x))
