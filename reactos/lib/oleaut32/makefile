@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.1 2001/07/16 01:45:43 rex Exp $
+# $Id: makefile,v 1.2 2001/07/21 15:34:08 ea Exp $
 #
 # Makefile for ReactOS oleaut32.dll
 #
@@ -11,14 +11,14 @@ TARGETNAME=oleaut32
 IMAGE_BASE = 0x76260000
 
 DLLTARGET=$(TARGETNAME).dll
-OBJECTS = dllmain.o stubs.o 
+OBJECTS = dllmain.o stubs.o $(TARGETNAME).coff
 CLEAN_FILES = $(OBJECTS) $(TARGETNAME).o $(TARGETNAME).a junk.tmp  \
 	base.tmp temp.exp $(TARGETNAME).dll $(TARGETNAME).sym  \
 	$(TARGETNAME).coff
 
 all: $(DLLTARGET)
 
-$(TARGETNAME).coff: $(TARGETNAME).rc ../../include/reactos/resource.h
+$(TARGETNAME).coff: $(TARGETNAME).rc $(PATH_TO_TOP)/include/reactos/resource.h
 
 $(TARGETNAME).a: $(OBJECTS)
 	$(LD) -r $(OBJECTS) -o $(TARGETNAME).a
