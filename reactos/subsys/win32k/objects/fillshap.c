@@ -88,10 +88,7 @@ W32kRectangle(HDC  hDC,
   if(PATH_IsPathOpen(dc->w.path)) {
     ret = PATH_Rectangle(hDC, LeftRect, TopRect, RightRect, BottomRect);
   } else {
-
-    DbgPrint("W32kRectangle pen: ");
-    DbgPrint("--- %08x\n", GDIOBJ_HandleToPtr(dc->w.hPen, GO_PEN_MAGIC));
-
+    // Draw the rectangle with the current pen
     BrushObj = PenToBrushObj(dc, GDIOBJ_HandleToPtr(dc->w.hPen, GO_PEN_MAGIC));
 
     ret = EngLineTo(SurfObj,

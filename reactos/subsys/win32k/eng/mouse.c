@@ -92,6 +92,7 @@ void TestMouse()
   PSURFOBJ SurfObj = AccessUserObject(dc->Surface);
   PSURFGDI SurfGDI = AccessInternalObject(dc->Surface);
   BOOL txt;
+  int i;
 
   BRUSHOBJ Brush;
   HBITMAP hMouseSurf;
@@ -101,14 +102,30 @@ void TestMouse()
   RECTL MouseRect;
 
   // Draw a test mouse cursor
-  Brush.iSolidColor = 1;
+/*  Brush.iSolidColor = 1;
   EngLineTo(SurfObj, NULL, &Brush, 0, 0, 15, 0, NULL, 0);
   EngLineTo(SurfObj, NULL, &Brush, 0, 0, 0, 15, NULL, 0);
   EngLineTo(SurfObj, NULL, &Brush, 0, 15, 15, 0, NULL, 0);
   Brush.iSolidColor = 15;
   EngLineTo(SurfObj, NULL, &Brush, 1, 1, 13, 1, NULL, 0);
   EngLineTo(SurfObj, NULL, &Brush, 1, 1, 1, 13, NULL, 0);
-  EngLineTo(SurfObj, NULL, &Brush, 1, 13, 13, 1, NULL, 0);
+  EngLineTo(SurfObj, NULL, &Brush, 1, 13, 13, 1, NULL, 0); */
+
+  // Draw transparent colored rectangle
+  Brush.iSolidColor = 5;
+  for (i = 0; i < 17; i++)
+    EngLineTo(SurfObj, NULL, &Brush, 0, i, 17, i, NULL, 0);
+
+  // Draw white interior
+  Brush.iSolidColor = 15;
+  for (i = 1; i < 16; i++)
+    EngLineTo(SurfObj, NULL, &Brush, 0, i-1, 16-i, i-1, NULL, 0);
+
+  // Draw black outline
+  Brush.iSolidColor = 0;
+  EngLineTo(SurfObj, NULL, &Brush, 0, 0, 15, 0, NULL, 0);
+  EngLineTo(SurfObj, NULL, &Brush, 0, 16, 15, 0, NULL, 0);
+  EngLineTo(SurfObj, NULL, &Brush, 0, 15, 0, 0, NULL, 0);
 
   // Create the bitmap for the mouse cursor data
   MouseSize.cx = 16;

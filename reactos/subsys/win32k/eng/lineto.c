@@ -22,7 +22,6 @@ BOOL EngLineTo(SURFOBJ *Surface, CLIPOBJ *Clip, BRUSHOBJ *Brush,
   if(Surface->iType!=STYPE_BITMAP)
   {
     // Call the driver's DrvLineTo
-DbgPrint("calling surfgdi's lineto\n");
     return SurfGDI->LineTo(Surface, Clip, Brush, x1, y1, x2, y2, RectBounds, mix);
   }
 
