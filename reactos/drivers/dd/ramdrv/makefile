@@ -1,6 +1,6 @@
-# $Id: makefile,v 1.6 2002/01/31 20:22:12 phreak Exp $
+# $Id: makefile,v 1.7 2002/02/05 02:30:13 phreak Exp $
 
-# $Id: makefile,v 1.6 2002/01/31 20:22:12 phreak Exp $
+# $Id: makefile,v 1.7 2002/02/05 02:30:13 phreak Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -8,7 +8,9 @@ TARGET_TYPE = driver
 
 TARGET_NAME = ramdrv
 
-TARGET_OBJECTS = ramdrv.o ../../../dk/nkm/lib/unbzip2.a
+TARGET_OBJECTS = ramdrv.o
+
+TARGET_DDKLIBS = unbzip2.a
 
 TARGET_NORC = yes
 
