@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: control.c,v 1.7 2004/10/29 16:59:16 ekohl Exp $
+/* $Id: control.c,v 1.8 2004/10/30 12:38:52 ekohl Exp $
  *
  * PROJECT:         ReactOS System Control Panel
  * FILE:            lib/cpl/system/control.c
@@ -297,36 +297,138 @@ LRESULT CALLBACK MyWindowProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 }
 
 
-#ifdef _MSVC
-int WINAPI wWinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,WCHAR *lpCmdLine,int nCmdShow)
-#else
-int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,char *lpCmdLine,int nCmdShow)
-#endif
+static INT
+RunControlPanelWindow(int nCmdShow)
 {
-	MSG msg;
-	WNDCLASS wc;
+  MSG msg;
+  WNDCLASS wc;
 
-	hInst = hInstance;
-	CTL_DEBUG((_T("My Control Panel\r\n")));
-	memset(&wc,0x00,sizeof(wc));
-	wc.hIcon = LoadIcon(hInst,MAKEINTRESOURCE(IDI_MAINICON));
-	wc.lpszClassName = MYWNDCLASS;
-	wc.lpszMenuName = _T("MAINMENU");
-	wc.lpfnWndProc = MyWindowProc;
-	RegisterClass(&wc);
-	InitCommonControls();
-	hMainWnd = CreateWindowEx(WS_EX_CLIENTEDGE,MYWNDCLASS,_T("Control Panel"),WS_OVERLAPPEDWINDOW,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,NULL,LoadMenu(hInst,MAKEINTRESOURCE(IDM_MAINMENU)),hInst,0);
-	if (!hMainWnd)
-	{
-		CTL_DEBUG((_T("Unable to create window\r\n")));
-		return -1;
-	}
-	ShowWindow(hMainWnd,nCmdShow);
-	while (GetMessage(&msg,0,0,0))
-	{
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
-	}
+  memset(&wc,0x00,sizeof(wc));
+  wc.hIcon = LoadIcon(hInst,MAKEINTRESOURCE(IDI_MAINICON));
+  wc.lpszClassName = MYWNDCLASS;
+  wc.lpszMenuName = _T("MAINMENU");
+  wc.lpfnWndProc = MyWindowProc;
+  RegisterClass(&wc);
 
-	return 0;
+  InitCommonControls();
+
+  hMainWnd = CreateWindowEx(WS_EX_CLIENTEDGE,
+			    MYWNDCLASS,
+			    _T("Control Panel"),
+			    WS_OVERLAPPEDWINDOW,
+			    CW_USEDEFAULT,
+			    CW_USEDEFAULT,
+			    CW_USEDEFAULT,
+			    CW_USEDEFAULT,
+			    NULL,
+			    LoadMenu(hInst, MAKEINTRESOURCE(IDM_MAINMENU)),
+			    hInst,
+			    0);
+  if (!hMainWnd)
+    {
+      CTL_DEBUG((_T("Unable to create window\r\n")));
+      return -1;
+    }
+
+  ShowWindow(hMainWnd, nCmdShow);
+  while (GetMessage(&msg, 0, 0, 0))
+    {
+      TranslateMessage(&msg);
+      DispatchMessage(&msg);
+    }
+
+  return 0;
+}
+
+
+static INT
+RunControlPanel(LPCTSTR lpName, UINT uIndex)
+{
+  CPLINFO CplInfo;
+  HMODULE hDll;
+  CPLAPPLETFUNC pFunc;
+  UINT uPanelCount;
+
+  hDll = LoadLibrary(lpName);
+  if (hDll == 0)
+    {
+      return -1;
+    }
+  CTL_DEBUG((_T("Handle %08X\r\n"), hDll));
+
+  pFunc = (CPLAPPLETFUNC)GetProcAddress(hDll, "CPlApplet");
+  if (pFunc == NULL)
+    {
+      FreeLibrary(hDll);
+      return -1;
+    }
+  CTL_DEBUG((_T("CPLFunc %08X\r\n"), pFunc));
+
+  if (!pFunc(NULL, CPL_INIT, 0, 0))
+    {
+      FreeLibrary(hDll);
+      return -1;
+    }
+
+  uPanelCount = (UINT)pFunc(NULL, CPL_GETCOUNT, 0, 0);
+  if (uIndex >= uPanelCount)
+    {
+      FreeLibrary(hDll);
+      return -1;
+    }
+
+  pFunc(NULL, CPL_INQUIRE, (LPARAM)uIndex, (LPARAM)&CplInfo);
+
+  pFunc(NULL, CPL_DBLCLK, CplInfo.lData, 0);
+
+  FreeLibrary(hDll);
+
+  return 0;
+}
+
+
+int WINAPI
+WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+{
+  LPTSTR lpCommandLine;
+  LPTSTR lpParam;
+
+  hInst = hInstance;
+  CTL_DEBUG((_T("My Control Panel\r\n")));
+
+  lpCommandLine = GetCommandLine();
+
+  CTL_DEBUG((_T("CommandLine: %s\n"), lpCommandLine));
+
+  lpParam = _tcschr(lpCommandLine, _T(' '));
+  if (lpParam == NULL)
+    {
+      /* No argument on the command line */
+      return RunControlPanelWindow(nCmdShow);
+    }
+
+  lpParam++;
+
+  if (_tcsicmp(lpParam, _T("desktop")) == 0)
+    {
+      return RunControlPanel(_T("desk.cpl"), 0);
+    }
+  else if (_tcsicmp(lpParam, _T("date/time")) == 0)
+    {
+      return RunControlPanel(_T("timedate.cpl"), 0);
+    }
+  else if (_tcsicmp(lpParam, _T("international")) == 0)
+    {
+      return RunControlPanel(_T("intl.cpl"), 0);
+    }
+  else if (_tcsicmp(lpParam, _T("mouse")) == 0)
+    {
+      return RunControlPanel(_T("main.cpl"), 0);
+    }
+  else if (_tcsicmp(lpParam, _T("keyboard")) == 0)
+    {
+      return RunControlPanel(_T("main.cpl"), 1);
+    }
+
+  return 0;
 }

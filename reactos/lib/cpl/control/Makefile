@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2004/06/30 12:10:12 ekohl Exp $
+# $Id: Makefile,v 1.4 2004/10/30 12:38:52 ekohl Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -21,7 +21,7 @@ TARGET_CFLAGS = \
  -Werror \
  -fno-builtin
 
-TARGET_SDKLIBS = kernel32.a user32.a comctl32.a
+TARGET_SDKLIBS = ntdll.a kernel32.a user32.a comctl32.a
 
 # TARGET_GCCLIBS = gcc
 
