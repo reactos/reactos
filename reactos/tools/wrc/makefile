@@ -28,11 +28,11 @@ WRC_HOST_CFLAGS = -I$(WRC_BASE) -g -Werror -Wall \
 WRC_HOST_LFLAGS = -g
 
 $(WRC_TARGET): $(WRC_OBJECTS) $(UNICODE_TARGET) $(WPP_TARGET)
-	$(HALFVERBOSEECHO) [LD]      $@
+	$(ECHO_LD)
 	${host_gcc} $(WRC_OBJECTS) $(UNICODE_TARGET) $(WPP_TARGET) $(WRC_HOST_LFLAGS) -o $(WRC_TARGET)
 
 $(WRC_OBJECTS): %.o : %.c
-	$(HALFVERBOSEECHO) [CC]      $<
+	$(ECHO_CC)
 	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
 .PHONY: wrc_clean

@@ -15,11 +15,11 @@ CDMAKE_HOST_CFLAGS = -Iinclude -g -Werror -Wall
 CDMAKE_HOST_LFLAGS = -g
 
 $(CDMAKE_TARGET): $(CDMAKE_OBJECTS)
-	$(HALFVERBOSEECHO) [LD]      $@
+	$(ECHO_LD)
 	${host_gcc} $(CDMAKE_OBJECTS) $(CDMAKE_HOST_CFLAGS) -o $(CDMAKE_TARGET)
 
 $(CDMAKE_OBJECTS): %.o : %.c
-	$(HALFVERBOSEECHO) [CC]      $<
+	$(ECHO_CC)
 	${host_gcc} $(CDMAKE_CFLAGS) -c $< -o $@
 
 .PHONY: cdmake_clean

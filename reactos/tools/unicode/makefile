@@ -83,12 +83,15 @@ UNICODE_HOST_CFLAGS = \
 	-Dwchar_t="unsigned short" -D_WCHAR_T_DEFINED \
 	-I$(UNICODE_BASE) -Iinclude/wine -Iw32api/include
 
+.PHONY: unicode
+unicode: $(UNICODE_TARGET)
+
 $(UNICODE_TARGET): $(UNICODE_OBJECTS)
-	$(HALFVERBOSEECHO) [AR]      $@
+	$(ECHO_AR)
 	${host_ar} -rc $(UNICODE_TARGET) $(UNICODE_OBJECTS)
 
 $(UNICODE_OBJECTS): %.o : %.c
-	$(HALFVERBOSEECHO) [CC]      $<
+	$(ECHO_CC)
 	${host_gcc} $(UNICODE_HOST_CFLAGS) -c $< -o $@
 
 .PHONY: unicode_clean

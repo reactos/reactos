@@ -14,11 +14,11 @@ NCI_HOST_CFLAGS = -Iinclude -g -Werror -Wall
 NCI_HOST_LFLAGS = -g
 
 $(NCI_TARGET): $(NCI_OBJECTS)
-	$(HALFVERBOSEECHO) [LD]      $@
+	$(ECHO_LD)
 	${host_gcc} $(NCI_OBJECTS) $(NCI_HOST_CFLAGS) -o $(NCI_TARGET)
 
 $(NCI_OBJECTS): %.o : %.c
-	$(HALFVERBOSEECHO) [CC]      $<
+	$(ECHO_CC)
 	${host_gcc} $(NCI_HOST_CFLAGS) -c $< -o $@
 
 .PHONY: nci_clean
@@ -47,7 +47,7 @@ NCI_SERVICE_FILES = \
 	$(WIN32K_USER_STUBS)
 
 $(NCI_SERVICE_FILES): $(NCI_TARGET)
-	$(HALFVERBOSEECHO) [NCI]     $@
+	$(ECHO_NCI)
 	$(Q)$(EXEPREFIX)$(NCI_TARGET) \
 		$(KERNEL_SVC_DB) \
 		$(WIN32K_SVC_DB) \

@@ -726,7 +726,7 @@ MingwModuleHandler::GenerateGccCommand ( const Module& module,
 	          "%s: %s\n",
 	          objectFilename.c_str (),
 	          deps.c_str () );
-	fprintf ( fMakefile, "\t$(HALFVERBOSEECHO) [CC]      $<\n" );
+	fprintf ( fMakefile, "\t$(ECHO_CC)\n" );
 	fprintf ( fMakefile,
 	         "\t%s -c %s -o %s %s\n",
 	         cc.c_str (),
@@ -746,7 +746,7 @@ MingwModuleHandler::GenerateGccAssemblerCommand ( const Module& module,
 	          "%s: %s\n",
 	          objectFilename.c_str (),
 	          sourceFilename.c_str () );
-	fprintf ( fMakefile, "\t$(HALFVERBOSEECHO) [GAS]     $<\n" );
+	fprintf ( fMakefile, "\t$(ECHO_GAS)\n" );
 	fprintf ( fMakefile,
 	          "\t%s -x assembler-with-cpp -c %s -o %s -D__ASM__ %s\n",
 	          cc.c_str (),
@@ -765,7 +765,7 @@ MingwModuleHandler::GenerateNasmCommand ( const Module& module,
 	          "%s: %s\n",
 	          objectFilename.c_str (),
 	          sourceFilename.c_str () );
-	fprintf ( fMakefile, "\t$(HALFVERBOSEECHO) [NASM]    $<\n" );
+	fprintf ( fMakefile, "\t$(ECHO_NASM)\n" );
 	fprintf ( fMakefile,
 	          "\t%s -f win32 %s -o %s %s\n",
 	          "$(Q)nasm",
@@ -788,7 +788,7 @@ MingwModuleHandler::GenerateWindresCommand ( const Module& module,
 	          "%s: %s\n",
 	          objectFilename.c_str (),
 	          sourceFilename.c_str () );
-	fprintf ( fMakefile, "\t$(HALFVERBOSEECHO) [WRC]     $@\n" );
+	fprintf ( fMakefile, "\t$(ECHO_WRC)\n" );
 	fprintf ( fMakefile,
 	         "\t${gcc} -xc -E -DRC_INVOKED ${%s} %s > %s\n",
 	         windresflagsMacro.c_str (),
@@ -829,7 +829,7 @@ MingwModuleHandler::GenerateWinebuildCommands (
 	          "%s: %s\n",
 	          def_file.c_str (),
 	          sourceFilename.c_str () );
-	fprintf ( fMakefile, "\t$(HALFVERBOSEECHO) [WINEBLD] $@\n" );
+	fprintf ( fMakefile, "\t$(ECHO_WINEBLD)\n" );
 	fprintf ( fMakefile,
 	          "\t%s --def=%s -o %s\n",
 	          "${winebuild}",
@@ -840,7 +840,7 @@ MingwModuleHandler::GenerateWinebuildCommands (
 	          "%s: %s\n",
 	          stub_file.c_str (),
 	          sourceFilename.c_str () );
-	fprintf ( fMakefile, "\t$(HALFVERBOSEECHO) [WINEBLD] $@\n" );
+	fprintf ( fMakefile, "\t$(ECHO_WINEBLD)\n" );
 	fprintf ( fMakefile,
 	          "\t%s --pedll=%s -o %s\n",
 	          "${winebuild}",
@@ -929,7 +929,7 @@ MingwModuleHandler::GenerateLinkerCommand (
 	const string& libsMacro,
 	string_list& clean_files ) const
 {
-	fprintf ( fMakefile, "\t$(HALFVERBOSEECHO) [LD]      $@\n" );
+	fprintf ( fMakefile, "\t$(ECHO_LD)\n" );
 	string targetName ( module.GetTargetName () );
 	string target ( FixupTargetFilename ( module.GetPath () ) );
 	if ( module.importLibrary != NULL )
@@ -996,7 +996,7 @@ MingwModuleHandler::GenerateLinkerCommand (
 		          GetLinkerMacro ( module ).c_str () );
 	}
 
-	fprintf ( fMakefile, "\t$(HALFVERBOSEECHO) [RSYM]    $@\n" );
+	fprintf ( fMakefile, "\t$(ECHO_RSYM)\n" );
 	fprintf ( fMakefile,
 	          "\t${rsym} %s %s\n\n",
 	          target.c_str (),
@@ -1066,7 +1066,7 @@ MingwModuleHandler::GenerateObjectFileTargets (
 			"%s: %s\n",
 			gch_file.c_str(),
 			pch_file.c_str() );
-		fprintf ( fMakefile, "\t$(HALFVERBOSEECHO) [PCH]     $@\n" );
+		fprintf ( fMakefile, "\t$(ECHO_PCH)\n" );
 		fprintf (
 			fMakefile,
 			"\t%s -c %s -o %s %s\n\n",
@@ -1115,7 +1115,7 @@ MingwModuleHandler::GenerateArchiveTarget ( const Module& module,
 	          archiveFilename.c_str (),
 	          objs_macro.c_str ());
 
-	fprintf ( fMakefile, "\t$(HALFVERBOSEECHO) [AR]      $@\n" );
+	fprintf ( fMakefile, "\t$(ECHO_AR)\n" );
 
 	fprintf ( fMakefile,
 	          "\t%s -rc %s %s\n\n",
@@ -1320,7 +1320,7 @@ MingwModuleHandler::GenerateInvocations ( const Module& module ) const
 		          "%s: %s\n",
 		          invoke.GetTargets ().c_str (),
 		          FixupTargetFilename ( invoke.invokeModule->GetPath () ).c_str () );
-		fprintf ( fMakefile, "\t$(HALFVERBOSEECHO) [INVOKE]  $<\n" );
+		fprintf ( fMakefile, "\t$(ECHO_INVOKE)\n" );
 		fprintf ( fMakefile,
 		          "\t%s %s\n\n",
 		          FixupTargetFilename ( invoke.invokeModule->GetPath () ).c_str (),
@@ -1415,7 +1415,7 @@ MingwModuleHandler::GenerateImportLibraryTargetIfNeeded (
 		          library_target.c_str (),
 		          definitionDependencies.c_str () );
 
-		fprintf ( fMakefile, "\t$(HALFVERBOSEECHO) [DLLTOOL] $@\n" );
+		fprintf ( fMakefile, "\t$(ECHO_DLLTOOL)\n" );
 
 		string killAt = module.mangledSymbols ? "" : "--kill-at";
 		fprintf ( fMakefile,
@@ -1506,7 +1506,7 @@ MingwBuildToolModuleHandler::GenerateBuildToolModuleTarget ( const Module& modul
 	          target.c_str (),
 	          objectsMacro.c_str (),
 	          linkDepsMacro.c_str () );
-	fprintf ( fMakefile, "\t$(HALFVERBOSEECHO) [LD]      $@\n" );
+	fprintf ( fMakefile, "\t$(ECHO_LD)\n" );
 	fprintf ( fMakefile,
 	          "\t%s %s -o %s %s %s\n\n",
 	          linker.c_str (),
@@ -1561,7 +1561,7 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ( const Module& module, str
 	          target.c_str (),
 	          objectsMacro.c_str (),
 	          linkDepsMacro.c_str () );
-	fprintf ( fMakefile, "\t$(HALFVERBOSEECHO) [LD]      $@\n" );
+	fprintf ( fMakefile, "\t$(ECHO_LD)\n" );
 	fprintf ( fMakefile,
 	          "\t${gcc} %s %s -Wl,--base-file,%s -o %s %s %s\n",
 	          GetLinkerMacro ( module ).c_str (),
@@ -1594,7 +1594,7 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ( const Module& module, str
 	fprintf ( fMakefile,
 	          "\t-@${rm} %s\n",
 	          temp_exp.c_str () );
-	fprintf ( fMakefile, "\t$(HALFVERBOSEECHO) [RSYM]    $@\n" );
+	fprintf ( fMakefile, "\t$(ECHO_RSYM)\n" );
 	fprintf ( fMakefile,
 		      "\t${rsym} %s %s\n\n",
 		      target.c_str (),
@@ -1914,7 +1914,7 @@ MingwWin32DLLModuleHandler::GenerateExtractWineDLLResourcesTarget ( const Module
 		if ( extension == ".rc" || extension == ".RC" )
 		{
 			string resource = FixupTargetFilename ( file.name );
-			fprintf ( fMakefile, "\t$(HALFVERBOSEECHO) [BIN2RES] $<\n" );
+			fprintf ( fMakefile, "\t$(ECHO_BIN2RES)\n" );
 			fprintf ( fMakefile, "\t@:echo ${bin2res} -f -x %s\n",
 			          resource.c_str () );
 		}
@@ -2130,7 +2130,7 @@ MingwBootLoaderModuleHandler::GenerateBootLoaderModuleTarget (
 	          objectsMacro.c_str (),
 	          linkDepsMacro.c_str () );
 
-	fprintf ( fMakefile, "\t$(HALFVERBOSEECHO) [LD]      $@\n" );
+	fprintf ( fMakefile, "\t$(ECHO_LD)\n" );
 
 	fprintf ( fMakefile,
 	          "\t${ld} %s -N -Ttext=0x8000 -o %s %s %s\n",
@@ -2346,7 +2346,7 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ( const Module& module, string_li
 	          isoboot.c_str (),
 	          cdDirectories.c_str (),
 	          cdFiles.c_str () );
-	fprintf ( fMakefile, "\t$(HALFVERBOSEECHO) [CABMAN]  $<\n" );
+	fprintf ( fMakefile, "\t$(ECHO_CABMAN)\n" );
 	fprintf ( fMakefile,
 	          "\t${cabman} -C %s -L %s -I\n",
 	          reactosDff.c_str (),
@@ -2363,7 +2363,7 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ( const Module& module, string_li
 	                                  module );
 	OutputCdfileCopyCommands ( bootcdDirectory,
 	                           module );
-	fprintf ( fMakefile, "\t$(HALFVERBOSEECHO) [CDMAKE]  $@\n" );
+	fprintf ( fMakefile, "\t$(ECHO_CDMAKE)\n" );
 	fprintf ( fMakefile,
 	          "\t${cdmake} -v -m -b %s %s REACTOS ReactOS.iso\n",
 	          isoboot.c_str (),

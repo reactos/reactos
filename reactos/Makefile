@@ -1,15 +1,52 @@
 # Default to half-verbose mode
 ifeq ($(VERBOSE),no)
   Q = @
-  HALFVERBOSEECHO = @:
+  HALFVERBOSEECHO = no
 else
 ifeq ($(VERBOSE),yes)
   Q =
-  HALFVERBOSEECHO = @:
+  HALFVERBOSEECHO = no
 else
   Q = @
-  HALFVERBOSEECHO = @echo
+  HALFVERBOSEECHO = yes
 endif
+endif
+ifeq ($(HALFVERBOSEECHO),yes)
+  ECHO_INVOKE =@echo [INVOKE]  $<
+  ECHO_PCH    =@echo [PCH]     $@
+  ECHO_CC     =@echo [CC]      $<
+  ECHO_GAS    =@echo [GAS]     $<
+  ECHO_NASM   =@echo [NASM]    $<
+  ECHO_AR     =@echo [AR]      $@
+  ECHO_WINEBLD=@echo [WINEBLD] $@
+  ECHO_WRC    =@echo [WRC]     $@
+  ECHO_BIN2RES=@echo [BIN2RES] $<
+  ECHO_DLLTOOL=@echo [DLLTOOL] $@
+  ECHO_LD     =@echo [LD]      $@
+  ECHO_RBUILD =@echo [RBUILD]  $@
+  ECHO_RSYM   =@echo [RSYM]    $@
+  ECHO_NCI    =@echo [NCI]     $@
+  ECHO_CABMAN =@echo [CABMAN]  $<
+  ECHO_CDMAKE =@echo [CDMAKE]  $@
+  ECHO_TEST   =@echo [TEST]    $@
+else
+  ECHO_INVOKE =@true
+  ECHO_PCH    =@true
+  ECHO_CC     =@true
+  ECHO_GAS    =@true
+  ECHO_NASM   =@true
+  ECHO_AR     =@true
+  ECHO_WINEBLD=@true
+  ECHO_WRC    =@true
+  ECHO_BIN2RES=@true
+  ECHO_DLLTOOL=@true
+  ECHO_LD     =@true
+  ECHO_RBUILD =@true
+  ECHO_RSYM   =@true
+  ECHO_NCI    =@true
+  ECHO_CABMAN =@true
+  ECHO_CDMAKE =@true
+  ECHO_TEST   =@true
 endif
 
 
@@ -77,7 +114,7 @@ PREAUTO := \
 
 makefile.auto: $(RMKDIR_TARGET) $(BUILDNO_TARGET) $(NCI_SERVICE_FILES) $(WMC_TARGET) $(WRC_TARGET) \
                $(RSYM_TARGET) $(CDMAKE_TARGET) $(RBUILD_TARGET) $(PREAUTO) $(XMLBUILDFILES)
-	$(HALFVERBOSEECHO) [RBUILD]  makefile.auto
+	$(ECHO_RBUILD)
 	$(Q)tools$(SEP)rbuild$(SEP)rbuild$(EXEPOSTFIX) mingw
 
 
