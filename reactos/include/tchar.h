@@ -30,13 +30,19 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  * $Revision: 1.14 $
- * $Author: navaraf $
- * $Date: 2004/08/02 15:04:24 $
+ * $Author$
+ * $Date$
  *
  */
 
 #ifndef	_ROS_TCHAR_H_
 #define _ROS_TCHAR_H_
+
+#ifdef __USE_W32API
+
+#include_next <tchar.h>
+
+#else
 
 #include <msvcrt/string.h>
 
@@ -262,5 +268,7 @@ typedef char TCHAR;
 #define	_tfopen		fopen
 
 #endif	/* Not _UNICODE */
+
+#endif  /* Not __USE_W32API */
 
 #endif	/* Not _TCHAR_H_ */
