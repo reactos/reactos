@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.32 2003/08/18 09:59:29 silverblade Exp $
+/* $Id: stubs.c,v 1.33 2003/08/19 01:31:15 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -418,19 +418,6 @@ SetDoubleClickTime(
 {
   UNIMPLEMENTED;
   return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-SetLastErrorEx(
-  DWORD dwErrCode,
-  DWORD dwType)
-{
-  UNIMPLEMENTED;
 }
 
 
