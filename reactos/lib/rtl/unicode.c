@@ -540,8 +540,10 @@ RtlIntegerToChar(
       Radix = 10;
 
    if ((Radix != 2) && (Radix != 8) &&
-         (Radix != 10) && (Radix != 16))
+       (Radix != 10) && (Radix != 16))
+   {
       return STATUS_INVALID_PARAMETER;
+   }
 
    tp = temp;
    while (v || tp == temp)
@@ -556,7 +558,64 @@ RtlIntegerToChar(
    }
 
    if (tp - temp >= Length)
+   {
       return STATUS_BUFFER_TOO_SMALL;
+   }
+
+   sp = String;
+   while (tp > temp)
+      *sp++ = *--tp;
+   *sp = 0;
+
+   return STATUS_SUCCESS;
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS
+STDCALL
+RtlIntegerToUnicode(
+    IN ULONG Value,
+    IN ULONG Base  OPTIONAL,
+    IN ULONG Length OPTIONAL,
+    IN OUT LPWSTR String
+    )
+{
+   ULONG Radix;
+   WCHAR  temp[33];
+   ULONG v = Value;
+   ULONG i;
+   PWCHAR tp;
+   PWCHAR sp;
+
+   Radix = Base;
+   if (Radix == 0)
+      Radix = 10;
+
+   if ((Radix != 2) && (Radix != 8) &&
+       (Radix != 10) && (Radix != 16))
+   {
+      return STATUS_INVALID_PARAMETER;
+   }
+
+   tp = temp;
+   while (v || tp == temp)
+   {
+      i = v % Radix;
+      v = v / Radix;
+      if (i < 10)
+         *tp = i + L'0';
+      else
+         *tp = i + L'a' - 10;
+      tp++;
+   }
+
+   if (tp - temp >= Length)
+   {
+      return STATUS_BUFFER_TOO_SMALL;
+   }
 
    sp = String;
    while (tp > temp)
@@ -598,22 +657,6 @@ RtlIntegerToUnicodeString(
                                           FALSE);
 
    return Status;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-RtlIntegerToUnicode(
-    IN ULONG Value,
-    IN ULONG Base  OPTIONAL,
-    IN ULONG Length OPTIONAL,
-    IN OUT LPWSTR String
-    )
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
 }
 
 
