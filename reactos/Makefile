@@ -105,7 +105,7 @@ STORAGE_DRIVERS = atapi cdrom class2 disk floppy scsiport diskdump
 # autochk cmd format services setup usetup welcome winlogon msiexec 
 SYS_APPS = autochk calc cmd explorer expand format ibrowser msiexec regedt32 regsvr32 \
   reporterror services setup taskmgr userinit usetup welcome vmwinst \
-  winlogon regedit winefile notepad reactos
+  winlogon regedit winefile notepad reactos lsass
 
 # System services
 SYS_SVC = rpcss eventlog umpnpmgr
