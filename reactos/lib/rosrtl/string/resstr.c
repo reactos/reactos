@@ -62,7 +62,7 @@ RosAllocAndLoadStringA(LPSTR *lpTarget, HINSTANCE hInst, UINT uID)
   ln = RosLenOfStrResource(hInst, uID);
   if(ln++ > 0)
   {
-    (*lpTarget) = (LPSTR)LocalAlloc(LHND, ln * sizeof(CHAR));
+    (*lpTarget) = (LPSTR)LocalAlloc(LMEM_FIXED, ln * sizeof(CHAR));
     if((*lpTarget) != NULL)
     {
       int Ret;
@@ -94,7 +94,7 @@ RosAllocAndLoadStringW(LPWSTR *lpTarget, HINSTANCE hInst, UINT uID)
   ln = RosLenOfStrResource(hInst, uID);
   if(ln++ > 0)
   {
-    (*lpTarget) = (LPWSTR)LocalAlloc(LHND, ln * sizeof(WCHAR));
+    (*lpTarget) = (LPWSTR)LocalAlloc(LMEM_FIXED, ln * sizeof(WCHAR));
     if((*lpTarget) != NULL)
     {
       int Ret;
