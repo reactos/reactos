@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.18 1999/12/06 00:22:00 ekohl Exp $
+; $Id: ntdll.edf,v 1.19 1999/12/12 00:17:25 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -533,6 +533,7 @@ _wcsicmp
 _wcslwr
 _wcsnicmp
 _wcsupr
+abs
 atoi
 atol
 isalpha
@@ -546,6 +547,7 @@ ispunct
 isspace
 isupper
 isxdigit
+labs
 memchr
 memcmp
 memcpy
