@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: keyboard.c,v 1.21.4.1 2004/02/19 03:41:39 arty Exp $
+/* $Id: keyboard.c,v 1.21.4.2 2004/02/19 03:46:28 arty Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -973,10 +973,6 @@ VOID FASTCALL W32kKeyProcessMessage(LPMSG Msg, PKBDTABLES KeyboardLayout) {
   BaseMapping = Msg->wParam = 
     IntMapVirtualKeyEx( ScanCode, 1, KeyboardLayout );
   RawVk = KeyboardLayout->pusVSCtoVK[ScanCode];
-
-  if( BaseMapping == VK_DELETE )
-      DbgPrint("Got delete (%04x %04x %08x)\n", 
-	       Msg->message, Msg->wParam, Msg->lParam );
 
   if ((ModifierBits & NUMLOCK_BIT) && 
       !(ModifierBits & GetShiftBit(KeyboardLayout)) && 
