@@ -29,10 +29,7 @@ VOID ConOutPuts (LPTSTR szText)
 	DWORD dwWritten;
 
 	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), szText, _tcslen(szText), &dwWritten, NULL);
-#if 0
-	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), "\x0a\x0d", 2, &dwWritten, NULL);
-#endif
-	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), "\n", 1, &dwWritten, NULL);
+	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), _T("\n"), 1, &dwWritten, NULL);
 }
 
 
@@ -61,7 +58,7 @@ VOID error_sfile_not_found (LPTSTR f)
 
 VOID ConErrPuts (LPTSTR szText)
 {
-	ConErrPrintf("%s\n",szText );
+	ConErrPrintf(_T("%s\n"),szText );
 }
 
 
