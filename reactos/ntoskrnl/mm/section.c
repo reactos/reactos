@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.43 2001/01/28 15:17:52 ekohl Exp $
+/* $Id: section.c,v 1.44 2001/02/06 00:11:19 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1135,7 +1135,7 @@ MmAllocateSection (IN ULONG Length)
 				Length,
 				0,
 				&marea);
-   if (!NT_SUCCESS(STATUS_SUCCESS))
+   if (!NT_SUCCESS(Status))
      {
 	return (NULL);
      }

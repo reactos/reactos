@@ -1,4 +1,4 @@
-/* $Id: suspend.c,v 1.2 2001/01/21 14:54:30 dwelch Exp $
+/* $Id: suspend.c,v 1.3 2001/02/06 00:11:20 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -28,7 +28,6 @@
 VOID
 PiSuspendThreadRundownRoutine(PKAPC Apc)
 {
-   ExFreePool(Apc);
 }
 
 VOID
@@ -38,12 +37,18 @@ PiSuspendThreadKernelRoutine(PKAPC Apc,
 			     PVOID* SystemArgument1,
 			     PVOID* SystemArguemnt2)
 {
+}
+
+VOID
+PiSuspendThreadNormalRoutine(PVOID NormalContext,
+			     PVOID SystemArgument1,
+			     PVOID SystemArgument2)
+{
    KeWaitForSingleObject(&PsGetCurrentThread()->Tcb.SuspendSemaphore,
 			 0,
 			 UserMode,
 			 TRUE,
 			 NULL);
-   ExFreePool(Apc);
 }
 
 NTSTATUS
@@ -56,45 +61,20 @@ PsResumeThread(PETHREAD Thread, PULONG SuspendCount)
 NTSTATUS 
 PsSuspendThread(PETHREAD Thread, PULONG PreviousSuspendCount)
 {
-   PKAPC Apc;
-   NTSTATUS Status;
+   ULONG OldValue;
 
-   /*
-    * If we are suspending ourselves then we can cut out the work in
-    * sending an APC
-    */
-   if (Thread == PsGetCurrentThread())
+   OldValue = InterlockedIncrement((PULONG)&Thread->Tcb.SuspendCount);
+   if (OldValue == 0)
      {
-       Status = KeWaitForSingleObject(&Thread->Tcb.SuspendSemaphore,
-				      0,
-				      UserMode,
-				      FALSE,
-				      NULL);
-       if (!NT_SUCCESS(Status))
-	 {
-	   return(Status);
-	 }
-       return(Status);
+       KeInsertQueueApc(&Thread->Tcb.SuspendApc,
+			NULL,
+			NULL,
+			0);
      }
-
-   Apc = ExAllocatePool(NonPagedPool, sizeof(KAPC));
-   if (Apc == NULL)
+   else
      {
-	return(STATUS_NO_MEMORY);
+       InterlockedDecrement(&Thread->Tcb.SuspendSemaphore.Header.SignalState);
      }
-   
-   KeInitializeApc(Apc,
-		   &Thread->Tcb,
-		   0,
-		   PiSuspendThreadKernelRoutine,
-		   PiSuspendThreadRundownRoutine,
-		   NULL,
-		   KernelMode,
-		   NULL);
-   KeInsertQueueApc(Apc,
-		    NULL,
-		    NULL,
-		    0);
    return(STATUS_SUCCESS);
 }
 

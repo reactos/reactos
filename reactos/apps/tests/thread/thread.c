@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.6 2000/01/31 20:24:27 ekohl Exp $
+/* $Id: thread.c,v 1.7 2001/02/06 00:11:17 dwelch Exp $
  *
  *
  *
@@ -48,12 +48,13 @@ int main (int argc, char* argv[])
 
    // The user must supply one argument (the seed). if he/she doesn't
    // then we show the help.
-   if(argc < 2) {
-		showHelp();
-		return 1;
-   }
+   //   if(argc < 2) {
+   //		showHelp();
+   //		return 1;
+   //   }
 		
-   nr = atoi(argv[1]);
+   //   nr = atoi(argv[1]);
+   nr = 500;
    printf("Seed %ld\n", nr);
    
    printf("Creating %d threads...\n",NR_THREADS*2);

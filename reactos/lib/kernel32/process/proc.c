@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.36 2000/12/28 20:38:27 ekohl Exp $
+/* $Id: proc.c,v 1.37 2001/02/06 00:11:18 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -284,25 +284,35 @@ Sleep (
 }
 
 
-DWORD
-STDCALL
-SleepEx (
-	DWORD	dwMilliseconds,
-	BOOL	bAlertable
-	)
+DWORD STDCALL
+SleepEx (DWORD	dwMilliseconds,
+	 BOOL	bAlertable)
 {
-   TIME Interval;
-   NTSTATUS errCode;
+  TIME Interval;
+  NTSTATUS errCode;
+  
+  if (dwMilliseconds != INFINITE)
+    {
+      /*
+       * System time units are 100 nanoseconds (a nanosecond is a billionth of
+       * a second).
+       */
+      Interval.QuadPart = dwMilliseconds;
+      Interval.QuadPart = -(Interval.QuadPart * 10000);
+    }  
+  else
+    {
+      /* Approximately 292000 years hence */
+      Interval.QuadPart = -0x7FFFFFFFFFFFFFFF;
+    }
 
-   Interval.QuadPart = dwMilliseconds * 1000;
-
-   errCode = NtDelayExecution (bAlertable, & Interval);
-   if (!NT_SUCCESS(errCode))
-     {
-	SetLastErrorByStatus (errCode);
-	return -1;
-     }
-   return 0;
+  errCode = NtDelayExecution (bAlertable, &Interval);
+  if (!NT_SUCCESS(errCode))
+    {
+      SetLastErrorByStatus (errCode);
+      return -1;
+    }
+  return 0;
 }
 
 

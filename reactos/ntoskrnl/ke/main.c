@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.76 2001/01/18 16:54:22 ekohl Exp $
+/* $Id: main.c,v 1.77 2001/02/06 00:11:18 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -475,14 +475,6 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
    HalInitSystem (0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
    KeInit1();
    KeLowerIrql(DISPATCH_LEVEL);
-   
-   {
-     char tmpbuf[80];
-     sprintf(tmpbuf,"system with %d/%d MB memory\n",
-	     (unsigned int)(KeLoaderBlock.MemLower)/1024,
-	     (unsigned int)(KeLoaderBlock.MemHigher)/1024);
-     HalDisplayString(tmpbuf);
-   }
 
    /*
     * Display version number and copyright/warranty message
@@ -495,6 +487,19 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
    HalDisplayString("are welcome to change it and/or distribute copies of it "
 		    "under certain\n"); 
    HalDisplayString("conditions. There is absolutely no warranty for ReactOS.\n");
+
+   /*
+    * Fail at runtime if someone has changed various structures without
+    * updating the offsets used for the assembler code
+    */
+   assert(FIELD_OFFSET(KTHREAD, InitialStack) == KTHREAD_INITIAL_STACK);
+   assert(FIELD_OFFSET(KTHREAD, Teb) == KTHREAD_TEB);
+   assert(FIELD_OFFSET(KTHREAD, KernelStack) == KTHREAD_KERNEL_STACK);
+   assert(FIELD_OFFSET(KTHREAD, PreviousMode) == KTHREAD_PREVIOUS_MODE);
+   assert(FIELD_OFFSET(KTHREAD, TrapFrame) == KTHREAD_TRAP_FRAME);
+   assert(FIELD_OFFSET(ETHREAD, ThreadsProcess) == ETHREAD_THREADS_PROCESS);
+   assert(FIELD_OFFSET(KPROCESS, PageTableDirectory) == 
+	  KPROCESS_PAGE_TABLE_DIRECTORY);
    
    last_kernel_address = KeLoaderModules[KeLoaderBlock.ModsCount - 1].ModEnd;
    

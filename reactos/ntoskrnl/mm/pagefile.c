@@ -1,4 +1,4 @@
-/* $Id: pagefile.c,v 1.9 2001/01/13 18:38:09 dwelch Exp $
+/* $Id: pagefile.c,v 1.10 2001/02/06 00:11:19 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -38,14 +38,32 @@ typedef struct _PAGINGFILE
 
 #define MAX_PAGING_FILES  (32)
 
+/* List of paging files, both used and free */
 static PPAGINGFILE PagingFileList[MAX_PAGING_FILES];
+/* Lock for examining the list of paging files */
 static KSPIN_LOCK PagingFileListLock;
 
+/* Number of pages that are available for swapping */
 static ULONG MiFreeSwapPages;
+/* Number of pages that have been allocated for swapping */
 static ULONG MiUsedSwapPages;
+/* 
+ * Number of pages that have been reserved for swapping but not yet allocated 
+ */
 static ULONG MiReservedSwapPages;
 
+/* 
+ * Ratio between reserved and available swap pages, e.g. setting this to five
+ * forces one swap page to be available for every five swap pages that are
+ * reserved. Setting this to zero turns off commit checking altogether.
+ */
 #define MM_PAGEFILE_COMMIT_RATIO      (1)
+/*
+ * Number of pages that can be used for potentially swapable memory without
+ * pagefile space being reserved. The intention is that is allows smss
+ * to start up and create page files while ordinarily having a commit
+ * ratio of one.
+ */
 #define MM_PAGEFILE_COMMIT_GRACE      (256)
 
 #if 0
@@ -53,9 +71,11 @@ static PVOID MmCoreDumpPageFrame;
 static BYTE MmCoreDumpHeader[PAGESIZE];
 #endif
 
+/*
+ * Translate between a swap entry and a file and offset pair.
+ */
 #define FILE_FROM_ENTRY(i) ((i) >> 24)
 #define OFFSET_FROM_ENTRY(i) (((i) & 0xffffff) - 1)
-
 #define ENTRY_FROM_FILE_OFFSET(i, j) (((i) << 24) || ((j) + 1))
 
 /* FUNCTIONS *****************************************************************/
@@ -111,7 +131,8 @@ NTSTATUS MmReadFromSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
    return(Status);
 }
 
-VOID MmInitPagingFile(VOID)
+VOID 
+MmInitPagingFile(VOID)
 {
    ULONG i;
    
@@ -127,27 +148,38 @@ VOID MmInitPagingFile(VOID)
      }
 }
 
-VOID MmReserveSwapPages(ULONG Nr)
+BOOLEAN
+MmReserveSwapPages(ULONG Nr)
 {
    KIRQL oldIrql;
+   ULONG MiAvailSwapPages;
    
    KeAcquireSpinLock(&PagingFileListLock, &oldIrql);
+   MiAvailSwapPages =
+     (MiFreeSwapPages * MM_PAGEFILE_COMMIT_RATIO) + MM_PAGEFILE_COMMIT_GRACE;
+   if (MM_PAGEFILE_COMMIT_RATIO != 0 && MiAvailSwapPages < MiReservedSwapPages)
+     {
+       KeReleaseSpinLock(&PagingFileListLock, oldIrql);
+       return(FALSE);
+     }
    MiReservedSwapPages = MiReservedSwapPages + Nr;
-//   MiFreeSwapPages = MiFreeSwapPages - Nr;
    KeReleaseSpinLock(&PagingFileListLock, oldIrql);
+
+   return(TRUE);
 }
 
-VOID MmDereserveSwapPages(ULONG Nr)
+VOID 
+MmDereserveSwapPages(ULONG Nr)
 {
    KIRQL oldIrql;
    
    KeAcquireSpinLock(&PagingFileListLock, &oldIrql);
    MiReservedSwapPages = MiReservedSwapPages - Nr;
-//   MiFreeSwapPages = MiFreeSwapPages - Nr;
    KeReleaseSpinLock(&PagingFileListLock, oldIrql);
 }
 
-ULONG MiAllocPageFromPagingFile(PPAGINGFILE PagingFile)
+static ULONG 
+MiAllocPageFromPagingFile(PPAGINGFILE PagingFile)
 {
    KIRQL oldIrql;
    ULONG i;
@@ -170,7 +202,8 @@ ULONG MiAllocPageFromPagingFile(PPAGINGFILE PagingFile)
    return(0);
 }
 
-VOID MmFreeSwapPage(SWAPENTRY Entry)
+VOID 
+MmFreeSwapPage(SWAPENTRY Entry)
 {
    ULONG i;
    ULONG off;
@@ -194,7 +227,8 @@ VOID MmFreeSwapPage(SWAPENTRY Entry)
    KeReleaseSpinLock(&PagingFileListLock, oldIrql);
 }
 
-SWAPENTRY MmAllocSwapPage(VOID)
+SWAPENTRY 
+MmAllocSwapPage(VOID)
 {
    KIRQL oldIrql;
    ULONG i;
@@ -256,10 +290,11 @@ NTSTATUS STDCALL MmDumpToPagingFile(PCONTEXT Context,
 }
 #endif
 
-NTSTATUS STDCALL NtCreatePagingFile(IN	PUNICODE_STRING	PageFileName,
-				    IN	ULONG		MinimumSize,
-				    IN	ULONG		MaximumSize,
-				    OUT	PULONG		ActualSize)
+NTSTATUS STDCALL 
+NtCreatePagingFile(IN	PUNICODE_STRING	PageFileName,
+		   IN	ULONG		MinimumSize,
+		   IN	ULONG		MaximumSize,
+		   OUT	PULONG		ActualSize)
 {
    NTSTATUS Status;
    OBJECT_ATTRIBUTES ObjectAttributes;

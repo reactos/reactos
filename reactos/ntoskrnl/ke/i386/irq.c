@@ -1,4 +1,4 @@
-/* $Id: irq.c,v 1.4 2001/01/18 15:00:08 dwelch Exp $
+/* $Id: irq.c,v 1.5 2001/02/06 00:11:19 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -198,6 +198,13 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
 	if (irq == 0)
 	  {
 	    PsDispatchThread(THREAD_STATE_RUNNABLE);
+	  }
+	if (KeGetCurrentThread() != NULL &&
+	    KeGetCurrentThread()->Alerted[1] != 0 &&
+	    Trapframe->Cs != KERNEL_CS)
+	  {
+	    HalEndSystemInterrupt (APC_LEVEL, 0);
+	    KiDeliverNormalApc();
 	  }
      }
 
@@ -426,8 +433,7 @@ IoConnectInterrupt(PKINTERRUPT* InterruptObject,
 }
 
 
-VOID
-STDCALL
+VOID STDCALL
 IoDisconnectInterrupt(PKINTERRUPT InterruptObject)
 /*
  * FUNCTION: Releases a drivers isr

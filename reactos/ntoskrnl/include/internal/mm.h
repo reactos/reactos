@@ -24,7 +24,7 @@ typedef ULONG SWAPENTRY;
 #define MEMORY_AREA_SECTION_VIEW_RESERVE (9)
 #define MEMORY_AREA_CACHE_SEGMENT        (10)
 #define MEMORY_AREA_SHARED_DATA          (11)
-
+#define MEMORY_AREA_WORKING_SET          (12)
 
 #define PAGE_TO_SECTION_PAGE_DIRECTORY_OFFSET(x) \
                           ((x) / (4*1024*1024))
@@ -119,27 +119,22 @@ typedef struct
      } Data;
 } MEMORY_AREA, *PMEMORY_AREA;
 
-#define WSET_ADDRESSES_IN_PAGE    (1020)
-
-typedef struct _MWORKING_SET
-{
-   PVOID Address[WSET_ADDRESSES_IN_PAGE];
-   struct _MWORKING_SET* Next;
-} MWORKING_SET, *PMWORKING_SET;
-
 typedef struct _MADDRESS_SPACE
 {
-   LIST_ENTRY MAreaListHead;
-   KMUTEX Lock;
-   ULONG LowestAddress;
-   struct _EPROCESS* Process;
-   ULONG WorkingSetSize;
-   ULONG WorkingSetLruFirst;
-   ULONG WorkingSetLruLast;
-   ULONG WorkingSetPagesAllocated;
-   PUSHORT PageTableRefCountTable;
-   ULONG PageTableRefCountTableSize;
+  LIST_ENTRY MAreaListHead;
+  KMUTEX Lock;
+  ULONG LowestAddress;
+  struct _EPROCESS* Process;
+  PMEMORY_AREA WorkingSetArea;
+  ULONG WorkingSetSize;
+  ULONG WorkingSetLruFirst;
+  ULONG WorkingSetLruLast;
+  ULONG WorkingSetPagesAllocated;
+  ULONG WorkingSetMaximumLength;
+  PUSHORT PageTableRefCountTable;
+  ULONG PageTableRefCountTableSize;
 } MADDRESS_SPACE, *PMADDRESS_SPACE;
+
 
 /* FUNCTIONS */
 
@@ -268,11 +263,12 @@ ULONG MmTrimWorkingSet(struct _EPROCESS* Process,
 		       ULONG ReduceHint);
 VOID MmRemovePageFromWorkingSet(struct _EPROCESS* Process,
 				PVOID Address);
-BOOLEAN MmAddPageToWorkingSet(struct _EPROCESS* Process,
-			      PVOID Address);
+VOID
+MmAddPageToWorkingSet(struct _EPROCESS* Process, PVOID Address);
 
 VOID MmInitPagingFile(VOID);
-VOID MmReserveSwapPages(ULONG Nr);
+BOOLEAN
+MmReserveSwapPages(ULONG Nr);
 VOID MmDereserveSwapPages(ULONG Nr);
 SWAPENTRY MmAllocSwapPage(VOID);
 VOID MmFreeSwapPage(SWAPENTRY Entry);

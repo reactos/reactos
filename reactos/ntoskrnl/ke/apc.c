@@ -33,21 +33,6 @@ VOID PsTerminateCurrentThread(NTSTATUS ExitStatus);
 
 /* FUNCTIONS *****************************************************************/
 
-VOID KeCallKernelRoutineApc(PKAPC Apc)
-/*
- * FUNCTION: Call the kernel routine for an APC
- */
-{  
-   DPRINT("KeCallKernelRoutineApc(Apc %x)\n",Apc);
-   
-   Apc->KernelRoutine(Apc,
-		      &Apc->NormalRoutine,
-		      &Apc->NormalContext,
-		      &Apc->SystemArgument1,
-		      &Apc->SystemArgument2);
-   DPRINT("Finished KeCallKernelRoutineApc()\n");
-}
-
 VOID KiRundownThread(VOID)
 /*
  * FUNCTION: 
@@ -74,7 +59,51 @@ BOOLEAN KiTestAlert(VOID)
    return(TRUE);
 }
 
-BOOLEAN KiDeliverUserApc(PKTRAP_FRAME TrapFrame)
+VOID
+KiDeliverNormalApc(VOID)
+{
+   PETHREAD Thread = PsGetCurrentThread();
+   PLIST_ENTRY current;
+   PKAPC Apc;
+   KIRQL oldlvl;
+   PKNORMAL_ROUTINE NormalRoutine;
+   PVOID NormalContext;
+   PVOID SystemArgument1;
+   PVOID SystemArgument2;
+
+   KeAcquireSpinLock(&PiApcLock, &oldlvl);
+   while(!IsListEmpty(&(Thread->Tcb.ApcState.ApcListHead[0])))
+   {
+     current = Thread->Tcb.ApcState.ApcListHead[0].Blink;
+     Apc = CONTAINING_RECORD(current, KAPC, ApcListEntry);
+     if (Apc->NormalRoutine != NULL)
+       {
+	 (void)RemoveTailList(&Thread->Tcb.ApcState.ApcListHead[0]);
+	 Thread->Tcb.ApcState.KernelApcInProgress++;
+	 Thread->Tcb.ApcState.KernelApcPending--;
+
+	 KeReleaseSpinLock(&PiApcLock, oldlvl);
+	 
+	 NormalRoutine = Apc->NormalRoutine;
+	 NormalContext = Apc->NormalContext;
+	 SystemArgument1 = Apc->SystemArgument1;
+	 SystemArgument2 = Apc->SystemArgument2;
+	 Apc->KernelRoutine(Apc,
+			    &NormalRoutine,
+			    &NormalContext,
+			    &SystemArgument1,
+			    &SystemArgument2);	 
+	 NormalRoutine(NormalContext, SystemArgument1, SystemArgument2);
+
+	 KeAcquireSpinLock(&PiApcLock, &oldlvl);
+	 Thread->Tcb.ApcState.KernelApcInProgress--;
+       }
+   }
+   KeReleaseSpinLock(&PiApcLock, oldlvl);
+}
+
+BOOLEAN 
+KiDeliverUserApc(PKTRAP_FRAME TrapFrame)
 /*
  * FUNCTION: Tests whether there are any pending APCs for the current thread
  * and if so the APCs will be delivered on exit from kernel mode.
@@ -205,17 +234,26 @@ VOID STDCALL KiDeliverApc(ULONG Unknown1,
    KeAcquireSpinLock(&PiApcLock, &oldlvl);
    while(!IsListEmpty(&(Thread->Tcb.ApcState.ApcListHead[0])))
    {
-      DPRINT("Delivering APC\n");
-      current = RemoveTailList(&(Thread->Tcb.ApcState.ApcListHead[0]));
-      Thread->Tcb.ApcState.KernelApcInProgress++;
-      Thread->Tcb.ApcState.KernelApcPending--;
-      KeReleaseSpinLock(&PiApcLock, oldlvl);
-      
-      Apc = CONTAINING_RECORD(current, KAPC, ApcListEntry);
-      KeCallKernelRoutineApc(Apc);
-      
-      KeAcquireSpinLock(&PiApcLock, &oldlvl);
-      Thread->Tcb.ApcState.KernelApcInProgress--;
+     current = Thread->Tcb.ApcState.ApcListHead[0].Blink;
+     Apc = CONTAINING_RECORD(current, KAPC, ApcListEntry);
+     if (Apc->NormalRoutine == NULL)
+       {
+	 (void)RemoveTailList(&Thread->Tcb.ApcState.ApcListHead[0]);
+	 Thread->Tcb.ApcState.KernelApcInProgress++;
+	 Thread->Tcb.ApcState.KernelApcPending--;
+
+	 KeReleaseSpinLock(&PiApcLock, oldlvl);
+	 
+	 Apc = CONTAINING_RECORD(current, KAPC, ApcListEntry);
+	 Apc->KernelRoutine(Apc,
+			    &Apc->NormalRoutine,
+			    &Apc->NormalContext,
+			    &Apc->SystemArgument1,
+			    &Apc->SystemArgument2);	 
+
+	 KeAcquireSpinLock(&PiApcLock, &oldlvl);
+	 Thread->Tcb.ApcState.KernelApcInProgress--;
+       }
    }
    KeReleaseSpinLock(&PiApcLock, oldlvl);
 }
@@ -267,10 +305,22 @@ KeInsertQueueApc (PKAPC	Apc,
    Apc->Inserted = TRUE;
    
    if (Apc->ApcMode == KernelMode && TargetThread->KernelApcDisable >= 1 &&
-       TargetThread->WaitIrql < APC_LEVEL)
+       TargetThread->WaitIrql < APC_LEVEL && Apc->NormalRoutine == NULL)
      {
 	KeRemoveAllWaitsThread(CONTAINING_RECORD(TargetThread, ETHREAD, Tcb),
 			       STATUS_KERNEL_APC);
+     }
+   if (Apc->ApcMode == KernelMode && Apc->NormalRoutine != NULL)
+     {
+       TargetThread->Alerted[1] = 1;
+       if (TargetThread->Alertable == TRUE &&
+	   TargetThread->WaitMode == UserMode)
+	 {
+	   PETHREAD Thread;
+
+	   Thread = CONTAINING_RECORD(TargetThread, ETHREAD, Tcb);
+	   KeRemoveAllWaitsThread(Thread, STATUS_USER_APC);
+	 }
      }
 
    /*

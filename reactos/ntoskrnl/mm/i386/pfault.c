@@ -12,6 +12,9 @@
 
 #include <ddk/ntddk.h>
 #include <internal/mm.h>
+#include <internal/ke.h>
+#include <internal/i386/segment.h>
+#include <internal/ps.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -54,7 +57,13 @@ NTSTATUS MmPageFault(ULONG Cs,
      {
 	Status = MmNotPresentFault(Mode, Cr2);
      }
-
+   
+   if (KeGetCurrentThread() != NULL &&
+       KeGetCurrentThread()->Alerted[1] != 0 &&
+       Cs != KERNEL_CS)
+     {
+       KiDeliverNormalApc();
+     }
    if (!NT_SUCCESS(Status) && (Mode == KernelMode) &&
        ((*Eip) >= (ULONG)MmSafeCopyFromUserUnsafeStart) &&
        ((*Eip) <= (ULONG)MmSafeCopyFromUserRestart))

@@ -1,4 +1,4 @@
-/* $Id: wset.c,v 1.6 2001/01/08 02:14:06 dwelch Exp $
+/* $Id: wset.c,v 1.7 2001/02/06 00:11:19 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -14,6 +14,7 @@
 #include <ddk/ntddk.h>
 #include <internal/mm.h>
 #include <internal/ps.h>
+#include <ntos/minmax.h>
 
 #include <internal/debug.h>
 
@@ -38,16 +39,55 @@ VOID MmUnlockWorkingSet(PEPROCESS Process)
    KeReleaseMutex(&Process->WorkingSetLock, FALSE);
 }
 
-VOID MmInitializeWorkingSet(PEPROCESS Process,
-			    PMADDRESS_SPACE AddressSpace)
+VOID 
+MmInitializeWorkingSet(PEPROCESS Process, PMADDRESS_SPACE AddressSpace)
 {
-   AddressSpace->WorkingSetSize = 0;
-   AddressSpace->WorkingSetLruFirst = 0;
-   AddressSpace->WorkingSetLruLast = 0;
-   AddressSpace->WorkingSetPagesAllocated = 1;
-   KeInitializeMutex(&Process->WorkingSetLock, 1);
-   Process->WorkingSetPage = ExAllocatePage();
-   memset(Process->WorkingSetPage, 0, 4096);
+  PVOID BaseAddress;
+  ULONG MaximumLength;
+  PVOID FirstPage;
+  NTSTATUS Status;
+
+  /*
+   * The maximum number of pages in the working set is the maximum
+   * of the size of physical memory and the size of the user address space
+   */
+  MaximumLength = MmStats.NrTotalPages - MmStats.NrReservedPages;
+  MaximumLength = min(MaximumLength, KERNEL_BASE / PAGESIZE);
+  MaximumLength = PAGE_ROUND_UP(MaximumLength * sizeof(ULONG));
+  
+  FirstPage = MmAllocPageMaybeSwap(0);
+  if (FirstPage == NULL)
+    {
+      KeBugCheck(0);
+    }
+  
+  BaseAddress = 0;
+  Status = MmCreateMemoryArea(NULL,
+			      MmGetKernelAddressSpace(),
+			      MEMORY_AREA_WORKING_SET,
+			      &BaseAddress,
+			      MaximumLength,
+			      0,
+			      &AddressSpace->WorkingSetArea);
+  if (!NT_SUCCESS(Status))
+    {
+      KeBugCheck(0);
+    }
+  AddressSpace->WorkingSetSize = 0;
+  AddressSpace->WorkingSetLruFirst = 0;
+  AddressSpace->WorkingSetLruLast = 0;
+  AddressSpace->WorkingSetMaximumLength = MaximumLength;
+  KeInitializeMutex(&Process->WorkingSetLock, 1);
+  Process->WorkingSetPage = BaseAddress;
+  Status = MmCreateVirtualMapping(NULL,
+				  Process->WorkingSetPage,
+				  PAGE_READWRITE,
+				  (ULONG)FirstPage);
+  if (!NT_SUCCESS(Status))
+    {
+      KeBugCheck(0);
+    }
+  memset(Process->WorkingSetPage, 0, 4096);
 }
 
 ULONG MmPageOutPage(PMADDRESS_SPACE AddressSpace,
@@ -87,13 +127,13 @@ ULONG MmTrimWorkingSet(PEPROCESS Process,
 {
    ULONG i, j;
    PMADDRESS_SPACE AddressSpace;
-   PMWORKING_SET WSet;
+   PVOID* WSet;
    ULONG Count;
    BOOLEAN Ul;
    
    MmLockWorkingSet(Process);
    
-   WSet = (PMWORKING_SET)Process->WorkingSetPage;
+   WSet = (PVOID*)Process->WorkingSetPage;
    AddressSpace = &Process->AddressSpace;
    
    Count = 0;
@@ -104,7 +144,7 @@ ULONG MmTrimWorkingSet(PEPROCESS Process,
 	PVOID Address;
 	PMEMORY_AREA MArea;
 	
-	Address = WSet->Address[j];
+	Address = WSet[j];
 		
 	MArea = MmOpenMemoryAreaByAddress(AddressSpace, Address);
 	
@@ -124,7 +164,7 @@ ULONG MmTrimWorkingSet(PEPROCESS Process,
 	  }
 	else
 	  {
-	     j = (j + 1) % WSET_ADDRESSES_IN_PAGE;
+	     j = (j + 1) % AddressSpace->WorkingSetMaximumLength;
 	     i++;
 	  }
 			
@@ -143,58 +183,93 @@ VOID MmRemovePageFromWorkingSet(PEPROCESS Process,
 {
    ULONG i;
    PMADDRESS_SPACE AddressSpace;
-   PMWORKING_SET WSet;
+   PVOID* WSet;
    ULONG j;
    
-   WSet = (PMWORKING_SET)Process->WorkingSetPage;
+   WSet = (PVOID*)Process->WorkingSetPage;
    AddressSpace = &Process->AddressSpace;
    
    j = AddressSpace->WorkingSetLruFirst;
    for (i = 0; i < AddressSpace->WorkingSetSize; i++)
      {
-	if (WSet->Address[j] == Address)
+	if (WSet[j] == Address)
 	  {
-	     WSet->Address[j] = 
-	       WSet->Address[AddressSpace->WorkingSetLruLast - 1];
+	     WSet[j] = WSet[AddressSpace->WorkingSetLruLast - 1];
 	     if (AddressSpace->WorkingSetLruLast != 0)
 	       {
-		  AddressSpace->WorkingSetLruLast =
-		    AddressSpace->WorkingSetLruLast --;
+		 AddressSpace->WorkingSetLruLast--;
 	       }
 	     else
 	       {
-		  AddressSpace->WorkingSetLruLast = WSET_ADDRESSES_IN_PAGE;
+		  AddressSpace->WorkingSetLruLast = 
+		    AddressSpace->WorkingSetMaximumLength;
 	       }
 	     return;
 	  }
-	j = (j + 1) % WSET_ADDRESSES_IN_PAGE;
+	j = (j + 1) % AddressSpace->WorkingSetMaximumLength;
      }
    KeBugCheck(0);
 }
 
-BOOLEAN MmAddPageToWorkingSet(PEPROCESS Process,
-			      PVOID Address)
+VOID
+MmAddPageToWorkingSet(PEPROCESS Process,
+		      PVOID Address)
 {
-   PMWORKING_SET WSet;
+   PVOID* WSet;
    PMADDRESS_SPACE AddressSpace;
-   
+   BOOLEAN Present;
+   ULONG Current;
+   PVOID NextAddress;
+
    AddressSpace = &Process->AddressSpace;
    
-   if (((AddressSpace->WorkingSetLruLast + 1) % WSET_ADDRESSES_IN_PAGE) ==
-       AddressSpace->WorkingSetLruFirst)
+   /*
+    * This can't happen unless there is a bug 
+    */
+   if (AddressSpace->WorkingSetSize == AddressSpace->WorkingSetMaximumLength)
      {
-	return(FALSE);
+       KeBugCheck(0);
      }
    
-   WSet = (PMWORKING_SET)Process->WorkingSetPage;
+   WSet = (PVOID*)Process->WorkingSetPage;
    
-   WSet->Address[AddressSpace->WorkingSetLruLast] = Address;
+   Current = AddressSpace->WorkingSetLruLast;
    
-   AddressSpace->WorkingSetLruLast =
-     (AddressSpace->WorkingSetLruLast + 1) % WSET_ADDRESSES_IN_PAGE;
+   /*
+    * If we are growing the working set then check to see if we need
+    * to allocate a page
+    */
+   NextAddress = (PVOID)PAGE_ROUND_DOWN((PVOID)&WSet[Current]);
+   Present = MmIsPagePresent(NULL, NextAddress);
+   if (!Present)
+     {
+       PVOID Page;
+       NTSTATUS Status;
+
+       Page = MmAllocPageMaybeSwap(0);
+       if (Page == 0)
+	 {
+	   KeBugCheck(0);
+	 }
+
+       Status = MmCreateVirtualMapping(NULL,
+				       NextAddress,
+				       PAGE_READWRITE,
+				       (ULONG)Page);
+       if (!NT_SUCCESS(Status))
+	 {
+	   KeBugCheck(0);
+	 }
+     }
+
+   /*
+    * Insert the page in the working set
+    */
+   WSet[Current] = Address;  
+
+   AddressSpace->WorkingSetLruLast = 
+     (Current + 1) % AddressSpace->WorkingSetMaximumLength;
    AddressSpace->WorkingSetSize++;
-   
-   return(TRUE);
 }
 
 

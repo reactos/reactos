@@ -38,6 +38,18 @@
 
 extern VOID 
 PiTimeoutThread(struct _KDPC Dpc, PVOID Context, PVOID Arg1, PVOID Arg2);
+VOID
+PiSuspendThreadRundownRoutine(PKAPC Apc);
+VOID
+PiSuspendThreadKernelRoutine(PKAPC Apc,
+			     PKNORMAL_ROUTINE* NormalRoutine,
+			     PVOID* NormalContext,
+			     PVOID* SystemArgument1,
+			     PVOID* SystemArguemnt2);
+VOID
+PiSuspendThreadNormalRoutine(PVOID NormalContext,
+			     PVOID SystemArgument1,
+			     PVOID SystemArgument2);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -141,7 +153,14 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
    Thread->ApcQueueable = 0;
    Thread->AutoAlignment = 0;
    Thread->StackBase = KernelStack;
-   memset(&Thread->SuspendApc, 0, sizeof(KAPC));
+   KeInitializeApc(&Thread->SuspendApc,
+		   Thread,
+		   0,
+		   PiSuspendThreadKernelRoutine,
+		   PiSuspendThreadRundownRoutine,
+		   PiSuspendThreadNormalRoutine,
+		   KernelMode,
+		   NULL);
    KeInitializeSemaphore(&Thread->SuspendSemaphore, 0, 255);
    Thread->ThreadListEntry.Flink = NULL;
    Thread->ThreadListEntry.Blink = NULL;

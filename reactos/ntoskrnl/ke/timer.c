@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.37 2001/02/05 02:31:04 phreak Exp $
+/* $Id: timer.c,v 1.38 2001/02/06 00:11:18 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -119,8 +119,8 @@ NTSTATUS KeAddThreadTimeout(PKTHREAD Thread, PLARGE_INTEGER Interval)
 
    DPRINT("KeAddThreadTimeout(Thread %x, Interval %x)\n",Thread,Interval);
    
-   KeInitializeTimer(&(Thread->Timer));
-   KeSetTimer( &(Thread->Timer), *Interval, &Thread->TimerDpc );
+   KeInitializeTimer(&Thread->Timer);
+   KeSetTimer(&Thread->Timer, *Interval, &Thread->TimerDpc);
 
    DPRINT("Thread->Timer.entry.Flink %x\n",
 	    Thread->Timer.TimerListEntry.Flink);
@@ -136,10 +136,11 @@ NTSTATUS STDCALL NtDelayExecution(IN ULONG Alertable,
    LARGE_INTEGER Timeout;
    
    Timeout = *((PLARGE_INTEGER)Interval);
-   Timeout.QuadPart = -Timeout.QuadPart;
    DPRINT("NtDelayExecution(Alertable %d, Internal %x) IntervalP %x\n",
 	  Alertable, Internal, Timeout);
    
+   DPRINT("Execution delay is %d/%d\n", 
+	  Timeout.u.Highpart, Timeout.u.LowPart);
    Status = KeDelayExecutionThread(UserMode, Alertable, &Timeout);
    return(Status);
 }
@@ -161,9 +162,9 @@ KeDelayExecutionThread (KPROCESSOR_MODE	WaitMode,
 {
    PKTHREAD CurrentThread = KeGetCurrentThread();
    KeAddThreadTimeout(CurrentThread, Interval);
-   return (KeWaitForSingleObject(&(CurrentThread->Timer),
+   return (KeWaitForSingleObject(&CurrentThread->Timer,
 				 Executive,
-				 KernelMode,
+				 UserMode,
 				 Alertable,
 				 NULL));
 }

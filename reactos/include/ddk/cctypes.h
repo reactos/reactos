@@ -75,7 +75,12 @@ typedef VOID (*PFLUSH_TO_LSN)(IN PVOID LogHandle, IN LARGE_INTEGER Lsn);
 
 typedef struct _REACTOS_COMMON_FCB_HEADER
 {
+  CSHORT NodeTypeCode;
+  CSHORT NodeByteSize;
   PBCB Bcb;
+  LARGE_INTEGER AllocationSize;
+  LARGE_INTEGER FileSize;
+  LARGE_INTEGER ValidDataLength;
 } REACTOS_COMMON_FCB_HEADER;
 
 #endif /* __INCLUDE_DDK_CCTYPES_H */

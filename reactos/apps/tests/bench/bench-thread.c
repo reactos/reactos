@@ -1,14 +1,14 @@
 #include <stdio.h>
 #include <windows.h>
 
-#define NR_THREADS (0x1)
+#define NR_THREADS (30)
 
 
 DWORD WINAPI
 thread_main1(LPVOID param)
 {
    printf("Thread 1 running (Counter %lu)\n", (DWORD)param);
-
+   SleepEx(INFINITE, TRUE);
    return 0;
 }
 
@@ -17,7 +17,7 @@ DWORD WINAPI
 thread_main2(LPVOID param)
 {
    printf("Thread 2 running (Counter %lu)\n", (DWORD)param);
-
+   Sleep(INFINITE);
    return 0;
 }
 
@@ -77,6 +77,6 @@ int main (void)
 
    printf("Thread terminated...\n");
 #endif
-
+   printf("Exiting\n");
    return 0;
 }

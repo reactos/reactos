@@ -41,4 +41,5 @@ cp apps/dump_shared_data/dump_shared_data.exe $1/reactos/bin
 cp apps/vmtest/vmtest.exe $1/reactos/bin
 cp apps/uitest/uitest.exe $1/reactos/bin/
 cp apps/gditest/gditest.exe $1/reactos/bin/
-cp apps/ptest/ptest.exe $1/reactos/bin
+cp apps/ptest/ptest.exe $1/reactos/bin/
+cp apps/timer/timer.exe $1/reactos/bin/

@@ -102,6 +102,8 @@ PULONG KeGetStackTopThread(struct _ETHREAD* Thread);
 VOID KeContextToTrapFrame(PCONTEXT Context,
 			  PKTRAP_FRAME TrapFrame);
 VOID KeReleaseDispatcherDatabaseLockAtDpcLevel(BOOLEAN Wait);
+VOID
+KiDeliverNormalApc(VOID);
 
 BOOLEAN STDCALL KeRemoveQueueApc (PKAPC Apc);
 

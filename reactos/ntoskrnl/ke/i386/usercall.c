@@ -1,4 +1,4 @@
-/* $Id: usercall.c,v 1.18 2001/01/19 15:09:01 dwelch Exp $
+/* $Id: usercall.c,v 1.19 2001/02/06 00:11:19 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -25,10 +25,6 @@
 #include <ddk/defines.h>
 #include <internal/ps.h>
 
-/* GLOBALS *******************************************************************/
-
-VOID PsTerminateCurrentThread(NTSTATUS ExitStatus);
-
 /* FUNCTIONS *****************************************************************/
 
 VOID KiSystemCallHook(ULONG Nr, ...)
@@ -53,32 +49,14 @@ VOID KiSystemCallHook(ULONG Nr, ...)
 
 ULONG KiAfterSystemCallHook(ULONG NtStatus, PKTRAP_FRAME TrapFrame)
 {
-  KIRQL oldIrql;
-  PETHREAD EThread;
-  extern KSPIN_LOCK PiThreadListLock;
-
-  assert(KeGetCurrentIrql() == PASSIVE_LEVEL);
-  
-  /*
-   * Check if the current thread is terminating
-   */
-  KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
-  EThread = PsGetCurrentThread();
-  if (EThread->DeadThread)
+  if (KeGetCurrentThread()->Alerted[1] != 0 && TrapFrame->Cs != KERNEL_CS)
     {
-       KeReleaseSpinLock(&PiThreadListLock, oldIrql);
-       PsTerminateCurrentThread(EThread->ExitStatus);
+      KiDeliverNormalApc();
     }
-  else
+  if (KeGetCurrentThread()->Alerted[0] != 0 && TrapFrame->Cs != KERNEL_CS)
     {
-      KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+      KiDeliverUserApc(TrapFrame);
     }
-   
-  if (KeGetCurrentThread()->Alerted[0] == 0 || TrapFrame->Cs == KERNEL_CS)
-    {
-      return(NtStatus);
-    }
-  KiDeliverUserApc(TrapFrame);
   return(NtStatus);
 }
 

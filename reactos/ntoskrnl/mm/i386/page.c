@@ -1,4 +1,4 @@
-/* $Id: page.c,v 1.17 2001/01/08 02:14:06 dwelch Exp $
+/* $Id: page.c,v 1.18 2001/02/06 00:11:19 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -283,7 +283,7 @@ ULONG MmGetPhysicalAddressForProcess(PEPROCESS Process,
 
 VOID MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage)
 /*
- * FUNCTION: Delete a virtual mapping 
+` * FUNCTION: Delete a virtual mapping 
  */
 {
    PULONG Pte;

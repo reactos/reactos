@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.27 2001/02/02 20:46:36 ekohl Exp $
+/* $Id: handle.c,v 1.28 2001/02/06 00:11:19 dwelch Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -595,7 +595,7 @@ NTSTATUS STDCALL NtClose(HANDLE Handle)
    ObjectBody = ObDeleteHandle(PsGetCurrentProcess(), Handle);
    if (ObjectBody == NULL)
      {
-	return(STATUS_HANDLES_CLOSED);
+	return(STATUS_INVALID_HANDLE);
      }
    
    Header = BODY_TO_HEADER(ObjectBody);

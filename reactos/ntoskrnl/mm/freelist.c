@@ -280,6 +280,8 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 	InsertTailList(&FreePageListHead,
 		       &MmPageArray[i].ListEntry);
      }  
+   MmStats.NrTotalPages = MmStats.NrFreePages + MmStats.NrSystemPages +
+     MmStats.NrReservedPages + MmStats.NrUserPages;
    return((PVOID)LastKernelAddress);
 }
 

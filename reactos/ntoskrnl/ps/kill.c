@@ -139,6 +139,30 @@ VOID PsTerminateCurrentThread(NTSTATUS ExitStatus)
    KeBugCheck(0);
 }
 
+VOID
+PiTerminateThreadRundownRoutine(PKAPC Apc)
+{
+  ExFreePool(Apc);
+}
+
+VOID
+PiTerminateThreadKernelRoutine(PKAPC Apc,
+			       PKNORMAL_ROUTINE* NormalRoutine,
+			       PVOID* NormalContext,
+			       PVOID* SystemArgument1,
+			       PVOID* SystemArguemnt2)
+{
+  ExFreePool(Apc);
+}
+
+VOID
+PiTerminateThreadNormalRoutine(PVOID NormalContext,
+			     PVOID SystemArgument1,
+			     PVOID SystemArgument2)
+{
+  PsTerminateCurrentThread(PsGetCurrentThread()->ExitStatus);
+}
+
 VOID 
 PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus)
 /*
@@ -146,22 +170,26 @@ PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus)
  * NOTES: This function must be called with PiThreadListLock held
  */
 {
-   DPRINT("PsTerminateOtherThread(Thread %x, ExitStatus %x)\n",
-	  Thread, ExitStatus);
-   
-   /*
-    * We must synchronize the termination of a thread with its execution
-    * so all this routine does is to mark the thread as terminated and
-    * wake it if possible. The thread will then kill itself when it
-    * next exits kernel mode.
-    */
-   Thread->DeadThread = 1;
-   Thread->ExitStatus = ExitStatus;
-   if (Thread->Tcb.State == THREAD_STATE_FROZEN && 
-       (Thread->Tcb.Alertable || Thread->Tcb.WaitMode == UserMode))
-     {
-	KeRemoveAllWaitsThread(Thread, STATUS_ALERTED);
-     }
+  PKAPC Apc;
+
+  DPRINT("PsTerminateOtherThread(Thread %x, ExitStatus %x)\n",
+	 Thread, ExitStatus);
+  
+  Thread->DeadThread = 1;
+  Thread->ExitStatus = ExitStatus;
+  Apc = ExAllocatePool(NonPagedPool, sizeof(KAPC));
+  KeInitializeApc(Apc,
+		  &Thread->Tcb,
+		  0,
+		  PiTerminateThreadKernelRoutine,
+		  PiTerminateThreadRundownRoutine,
+		  PiTerminateThreadNormalRoutine,
+		  KernelMode,
+		  NULL);
+  KeInsertQueueApc(Apc,
+		   NULL,
+		   NULL,
+		   KernelMode);
 }
 
 NTSTATUS STDCALL 
