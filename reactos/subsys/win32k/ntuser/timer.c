@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.25 2004/03/04 01:30:00 gdalsnes Exp $
+/* $Id: timer.c,v 1.26 2004/03/06 23:09:23 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -413,11 +413,6 @@ TimerThreadMain(PVOID StartContext)
       MsgTimer = CONTAINING_RECORD( TimerListHead.Flink, MSG_TIMER_ENTRY, ListEntry);
       KeSetTimer(&Timer, MsgTimer->Timeout, NULL);
     }
-    else
-    {
-      /* cancel timer, this reset the state of the timer event on which we wait */
-      KeCancelTimer(&Timer);
-    }
     
     IntUnLockTimerList;
 
@@ -437,7 +432,7 @@ InitTimerImpl(VOID)
   BitmapBytes = ROUND_UP(NUM_WINDOW_LESS_TIMERS, sizeof(ULONG) * 8) / 8;
   
   InitializeListHead(&TimerListHead);
-  KeInitializeTimer(&Timer);
+  KeInitializeTimerEx(&Timer, SynchronizationTimer);
   ExInitializeFastMutex(&Mutex);
   
   WindowLessTimersBitMapBuffer = ExAllocatePoolWithTag(PagedPool, BitmapBytes, TAG_TIMERBMP);
