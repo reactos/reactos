@@ -121,7 +121,7 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PNDIS_BUFFER Buffer, PUINT BufferSize ) {
 		 EntityList[RtCurrent->Index - 1].context;
 	     RtCurrent->Index-- );
 	
-	RtCurrent->Index = EntityList[RtCurrent->Index].tei_instance;
+        RtCurrent->Index = EntityList[RtCurrent->Index - 1].tei_instance;
 	TcpipReleaseSpinLock(&EntityListLock, OldIrql);
 	
 	RtCurrent++; RCacheCur++;
