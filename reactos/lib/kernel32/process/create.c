@@ -1289,7 +1289,7 @@ CreateProcessW
    }
 
    /* Now duplicate handles if required */
-   if (InputDup)
+   if (InputDup && Ppb->hStdInput != NULL)
    {
       if (IsConsoleHandle(Ppb->hStdInput))
       {
@@ -1312,7 +1312,7 @@ CreateProcessW
       }
    }
 
-   if (OutputDup)
+   if (OutputDup && Ppb->hStdOutput != NULL)
    {
       if (IsConsoleHandle(Ppb->hStdOutput))
       {
@@ -1335,7 +1335,7 @@ CreateProcessW
       }
    }
 
-   if (ErrorDup)
+   if (ErrorDup && Ppb->hStdError != NULL)
    {
       if (IsConsoleHandle(Ppb->hStdError))
       {
