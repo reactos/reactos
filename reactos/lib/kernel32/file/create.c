@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.21 2000/06/03 14:47:31 ea Exp $
+/* $Id: create.c,v 1.22 2001/09/09 12:21:37 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -121,7 +121,7 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
 				      &NtPathU,
 				      NULL,
 				      NULL))
-     return FALSE;
+     return INVALID_HANDLE_VALUE;
    
    DPRINT("NtPathU \'%S\'\n", NtPathU.Buffer);
    
