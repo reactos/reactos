@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.13 2004/05/11 20:44:30 gvg Exp $
+/* $Id: cmd.c,v 1.14 2004/06/06 08:58:56 hbirr Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -122,6 +122,10 @@
  *
  *    30-Apr-2004 (Filip Navara <xnavara@volny.cz>)
  *       Make MakeSureDirectoryPathExistsEx unicode safe.
+ *
+ *    28-Mai-2004 (Hartmut Birr)
+ *       Removed MakeSureDirectoryPathExistsEx. 
+ *       Use the current directory if GetTempPath fails.
  */
 
 #include "config.h"
@@ -167,57 +171,6 @@ WORD wColor;              /* current color */
 WORD wDefColor;           /* default color */
 #endif
 
-
-
-/***********************************************************************
- *           MakeSureDirectoryPathExistsEx
- *
- * If a dir is at the end and the path ends with a backslash, FileAtEnd
- * is ignored. If the path doesn't end with a backslash, FileAtEnd is
- * used to determine if the last part of the path is a file name or a
- * directory.
- *
- * Path may be absolute or relative to current dir.
- *
- * FIXME: maybe put this in a header/library where everyone can use it?????
- */
-BOOL WINAPI MakeSureDirectoryPathExistsEx(LPCTSTR DirPath, BOOL FileAtEnd)
-{
-	TCHAR Path[MAX_PATH];
-	TCHAR *SlashPos = Path;
-	TCHAR Slash;
-	BOOL bRes;
-   
-	_tcscpy(Path, DirPath);
-	while ((SlashPos = _tcspbrk(SlashPos + 1, _T("\\/"))))
-	{
-		Slash = *SlashPos;
-		*SlashPos = 0;
-      
-		bRes = CreateDirectory(Path, NULL);
-		if (bRes == FALSE && GetLastError() != ERROR_ALREADY_EXISTS)
-		{
-			return FALSE;
-		}
-      
-		*SlashPos = Slash;
-		if (*(SlashPos + 1) == 0) return TRUE;
-	}
-
-	if (!FileAtEnd)
-	{
-		bRes = CreateDirectory(Path, NULL);
-		if (bRes == FALSE && GetLastError() != ERROR_ALREADY_EXISTS)
-		{
-			return FALSE;
-		}
-	}
-
-	return TRUE;
-}
-
-
-
 /*
  *  is character a delimeter when used on first word?
  *
@@ -262,7 +215,7 @@ static BOOL IsConsoleProcess(HANDLE Process)
 
 	if (NULL == NtQueryInformationProcessPtr || NULL == NtReadVirtualMemoryPtr)
 	{
-		return FALSE;
+		return TRUE;
 	}
 
 	Status = NtQueryInformationProcessPtr(Process, ProcessBasicInformation,
@@ -374,7 +327,7 @@ Execute (LPTSTR full, LPTSTR first, LPTSTR rest)
 		                   full,
 		                   NULL,
 		                   NULL,
-		                   FALSE,
+		                   TRUE,
 		                   CREATE_NEW_PROCESS_GROUP,
 		                   NULL,
 		                   NULL,
@@ -543,6 +496,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 	LPTSTR t = NULL;
 	INT  num = 0;
 	INT  nRedirFlags = 0;
+	INT  Length;
 
 	HANDLE hOldConIn;
 	HANDLE hOldConOut;
@@ -563,8 +517,11 @@ VOID ParseCommandLine (LPTSTR cmd)
 
 #ifdef FEATURE_REDIRECTION
 	/* find the temp path to store temporary files */
-	GetTempPath (MAX_PATH, szTempPath);
-	MakeSureDirectoryPathExistsEx(szTempPath, FALSE);
+	Length = GetTempPath (MAX_PATH, szTempPath);
+	if (Length == 0 || Length >= MAX_PATH)
+	{
+		_tcscpy(szTempPath, _T(".\\"));
+	}
 	if (szTempPath[_tcslen (szTempPath) - 1] != _T('\\'))
 		_tcscat (szTempPath, _T("\\"));
 
