@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: accel.c,v 1.9 2003/07/11 17:08:44 chorns Exp $
+/* $Id: accel.c,v 1.10 2003/07/20 03:45:31 hyperion Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -28,41 +28,17 @@
  */
 
 /* INCLUDES ******************************************************************/
-#include <string.h>
 #include <windows.h>
-#include <user32.h>
-#include <debug.h>
+#include <user32/accel.h>
+#include <win32k/ntuser.h>
 
 /* FUNCTIONS *****************************************************************/
-
-/* RT_ACCELERATOR resources are arrays of RES_ACCEL structures */
-typedef struct _RES_ACCEL
-{
- WORD fVirt;
- WORD key;
- DWORD cmd;
-}
-RES_ACCEL;
-
-/* ACCELERATOR TABLES CACHE */
-/* Cache entry */
-typedef struct _USER_ACCEL_CACHE_ENTRY
-{
- struct _USER_ACCEL_CACHE_ENTRY * Next;
- ULONG_PTR Usage; /* how many times the table has been loaded */
- HACCEL Object;   /* handle to the NtUser accelerator table object */
- HGLOBAL Data;    /* base address of the resource data */
-}
-U32_ACCEL_CACHE_ENTRY;
 
 /* Lock guarding the cache */
 CRITICAL_SECTION U32AccelCacheLock;
 
 /* Cache */
 U32_ACCEL_CACHE_ENTRY * U32AccelCache = NULL;
-
-U32_ACCEL_CACHE_ENTRY ** WINAPI U32AccelCacheFind(HANDLE, HGLOBAL);
-void WINAPI U32AccelCacheAdd(HACCEL, HGLOBAL);
 
 /* Look up a handle or resource address in the cache */
 U32_ACCEL_CACHE_ENTRY ** WINAPI U32AccelCacheFind(HANDLE Object, HGLOBAL Data)
@@ -220,7 +196,7 @@ BOOL WINAPI DestroyAcceleratorTable(HACCEL hAccel)
   U32_ACCEL_CACHE_ENTRY * pEntry = *ppEntry;
 
   /* decrement the reference count */
-  nUsage = pEntry->Usage= pEntry->Usage - 1;
+  nUsage = pEntry->Usage = pEntry->Usage - 1;
 
   /* reference count now zero: destroy the cache entry */
   if(nUsage == 0)

@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <debug.h>
 #include <user32/callback.h>
+#include <user32/accel.h>
 #include <window.h>
 
 #ifdef DBG
@@ -43,6 +44,8 @@ Init(VOID)
     (PVOID)User32SendSTYLECHANGEDMessageForKernel;
 
   UserSetupInternalPos();
+  
+  RtlInitializeCriticalSection(&U32AccelCacheLock);
 
   GdiDllInitialize(NULL, DLL_PROCESS_ATTACH, NULL);
 
