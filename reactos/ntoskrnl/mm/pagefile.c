@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.45 2004/05/20 08:37:20 hbirr Exp $
+/* $Id: pagefile.c,v 1.46 2004/06/06 07:52:22 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -485,7 +485,7 @@ MmDumpToPagingFile(ULONG BugCode,
 {
    PMM_CORE_DUMP_HEADER Headers;
    NTSTATUS Status;
-   UCHAR MdlBase[sizeof(MDL) + sizeof(PVOID)];
+   UCHAR MdlBase[sizeof(MDL) + sizeof(ULONG)];
    PMDL Mdl = (PMDL)MdlBase;
    PETHREAD Thread = PsGetCurrentThread();
    ULONG StackSize;
@@ -553,7 +553,7 @@ MmDumpToPagingFile(ULONG BugCode,
    RetrievalPointers = PagingFileList[MmCoreDumpPageFile]->RetrievalPointers;
 
    /* Dump the header. */
-   MdlMap[0] = MmGetPhysicalAddress(MmCoreDumpPageFrame).u.LowPart;
+   MdlMap[0] = MmGetPhysicalAddress(MmCoreDumpPageFrame).QuadPart >> PAGE_SHIFT;
 #if defined(__GNUC__)
 
    DiskOffset = MmGetOffsetPageFile(RetrievalPointers, (LARGE_INTEGER)0LL);
@@ -586,7 +586,7 @@ MmDumpToPagingFile(ULONG BugCode,
       {
          LARGE_INTEGER PhysicalAddress;
          PhysicalAddress.QuadPart = i * PAGE_SIZE;
-         MdlMap[0] = i * PAGE_SIZE;
+         MdlMap[0] = i;
          MmCreateVirtualMappingForKernel(MmCoreDumpPageFrame, 
 	                                 PAGE_READWRITE,
                                          PhysicalAddress);

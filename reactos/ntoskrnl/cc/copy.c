@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.21 2004/05/22 18:28:18 hbirr Exp $
+/* $Id: copy.c,v 1.22 2004/06/06 07:52:22 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -136,7 +136,7 @@ ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
 		  PHYSICAL_ADDRESS page;
 		  address = (char*)current2->BaseAddress + (i * PAGE_SIZE);
 		  page = MmGetPhysicalAddressForProcess(NULL, address);
-		  ((PULONG)(Mdl + 1))[offset] = page.u.LowPart;
+		  ((PULONG)(Mdl + 1))[offset] = page.QuadPart >> PAGE_SHIFT;
 		  offset++;
 		}
 	      current2 = current2->NextInChain;
@@ -553,7 +553,7 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
 	  Mdl->MdlFlags |= (MDL_PAGES_LOCKED | MDL_IO_PAGE_READ);
 	  for (i = 0; i < ((Mdl->Size - sizeof(MDL)) / sizeof(ULONG)); i++)
 	    {
-	      ((PULONG)(Mdl + 1))[i] = CcZeroPage.u.LowPart;
+	      ((PULONG)(Mdl + 1))[i] = CcZeroPage.QuadPart >> PAGE_SHIFT;
 	    }
           KeInitializeEvent(&Event, NotificationEvent, FALSE);
 	  Status = IoPageWrite(FileObject, Mdl, &WriteOffset, &Event, &Iosb);
