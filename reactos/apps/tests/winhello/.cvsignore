@@ -4,3 +4,4 @@ winhello.sym
 winhello.coff
 *.d
 *.o
+*.map

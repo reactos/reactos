@@ -5,3 +5,4 @@ sc.nostrip.exe
 sc.coff
 sc.sym
 sc.map
+*.map
