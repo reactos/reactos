@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: install.c,v 1.7 2004/01/23 10:34:23 ekohl Exp $
+/* $Id: install.c,v 1.8 2004/01/23 16:51:41 navaraf Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -56,7 +56,7 @@ PSID AdminSid = NULL;
 void
 DebugPrint(char* fmt,...)
 {
-  char Buffer[512];
+  char buffer[512];
   va_list ap;
 
   va_start(ap, fmt);
@@ -68,7 +68,7 @@ DebugPrint(char* fmt,...)
 #else
   strcat (buffer, "\nRebooting now!");
   MessageBoxA (NULL,
-	       Buffer,
+	       buffer,
 	       "ReactOS Setup",
 	       MB_OK);
 #endif
