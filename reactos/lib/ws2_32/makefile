@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.19 2004/11/25 23:32:53 arty Exp $
+# $Id: makefile,v 1.20 2004/11/26 07:24:17 arty Exp $
 
 PATH_TO_TOP = ../..
 
@@ -29,8 +29,7 @@ TARGET_LFLAGS = -nostartfiles -nostdlib
 
 TARGET_SDKLIBS = ntdll.a kernel32.a advapi32.a dnsapi.a
 
-TARGET_OBJECTS = \
-  misc/bsd.o misc/catalog.o misc/dllmain.o \
+TARGET_OBJECTS = misc/bsd.o misc/catalog.o misc/dllmain.o \
   misc/event.o misc/handle.o misc/ns.o \
   misc/sndrcv.o misc/stubs.o misc/upcall.o
 

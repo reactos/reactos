@@ -488,7 +488,7 @@ gethostbyname(
   char* found = 0;
   DNS_STATUS dns_status = {0};
   /* include/WinDNS.h -- look up DNS_RECORD on MSDN */
-  PDNS_RECORDA dp = 0;
+  PDNS_RECORD dp = 0;
 
   addr = GH_INVALID;
 
@@ -554,7 +554,7 @@ gethostbyname(
       if(dns_status == 0) {
 	//ASSERT(dp->wType == DNS_TYPE_A);
 	//ASSERT(dp->wDataLength == sizeof(DNS_A_DATA));
-	PDNS_RECORDA curr;
+	PDNS_RECORD curr;
 	for(curr=dp;
 	    curr != NULL && curr->wType != DNS_TYPE_A;
 	    curr = curr->pNext ) { 
@@ -565,7 +565,7 @@ gethostbyname(
 	if(curr) {
 	  WS_DbgPrint(MID_TRACE,("populating hostent\n"));
 	  WS_DbgPrint(MID_TRACE,("pName is (%s)\n", curr->pName));
-	  populate_hostent(p->Hostent, curr->pName, curr->Data.A);
+	  populate_hostent(p->Hostent, (PCHAR)curr->pName, curr->Data.A);
 	  DnsRecordListFree(dp, DnsFreeRecordList);
 	  return p->Hostent;
 	} else {
