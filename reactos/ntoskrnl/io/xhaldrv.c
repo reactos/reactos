@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.39 2003/08/24 18:07:45 ekohl Exp $
+/* $Id: xhaldrv.c,v 1.40 2003/08/25 11:57:22 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1178,8 +1178,8 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
   ContainerOffset = 0ULL;
   for (i = 0; i < PartitionBuffer->PartitionCount; i += 4)
     {
-      DPRINT1 ("PartitionOffset: %I64u\n", PartitionOffset);
-      DPRINT1 ("ContainerOffset: %I64u\n", ContainerOffset);
+      DPRINT ("PartitionOffset: %I64u\n", PartitionOffset);
+      DPRINT ("ContainerOffset: %I64u\n", ContainerOffset);
 
       /* Handle disk managers */
       if (DiskManager == OntrackDiskManager)
