@@ -125,7 +125,7 @@ VGAFindAdapter(PVOID  DeviceExtension,
 {
   /* FIXME: Determine if the adapter is present  */
   *Again = FALSE;
-  return  STATUS_DEVICE_DOES_NOT_EXIST;
+  return  STATUS_SUCCESS;
   
   /* FIXME: Claim any necessary memory/IO resources for the adapter  */
   /* FIXME: Map resources into system memory for the adapter  */
@@ -385,11 +385,6 @@ VOID  VGAQueryCurrentMode(OUT PVIDEO_MODE_INFORMATION  CurrentMode,
 
 VOID  VGAQueryNumAvailModes(OUT PVIDEO_NUM_MODES  NumberOfModes,
                             OUT PSTATUS_BLOCK  StatusBlock)
-{
-  UNIMPLEMENTED;
-}
-
-VOID  VGAResetDevice(OUT PSTATUS_BLOCK  StatusBlock)
 {
   UNIMPLEMENTED;
 }
