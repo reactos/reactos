@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.16.2.2 2004/04/18 03:01:12 arty Exp $
+# $Id: makefile,v 1.16.2.3 2004/04/22 16:51:38 arty Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -8,9 +8,9 @@ TARGET_TYPE = export_driver
 
 TARGET_NAME = tcpip
 
-TARGET_CFLAGS = -I./include -DNDIS40 -D__USE_W32API 
+TARGET_CFLAGS = -I./include -DNDIS40 -D__USE_W32API -I$(PATH_TO_TOP)/lib/oskittcp/include -DMEMTRACK
 
-TARGET_DDKLIBS = ndis.a
+TARGET_DDKLIBS = ndis.a $(PATH_TO_TOP)/dk/w32/lib/oskittcp.a
 
 TARGET_CLEAN = \
   tcpip/*.o \
@@ -32,9 +32,8 @@ NETWORK_OBJECTS  = network/icmp.o network/ip.o network/neighbor.o \
                    network/transmit.o network/prefix.o
 DATAGRAM_OBJECTS = transport/datagram/datagram.o
 RAWIP_OBJECTS    = transport/rawip/rawip.o
-TCP_OBJECTS      = transport/tcp/tcp.o transport/tcp/tcpcore.o \
-                   transport/tcp/tcp_input.o transport/tcp/tcp_ipv4.o \
-                   transport/tcp/tcp_output.o transport/tcp/tcp_timer.o
+TCP_OBJECTS      = transport/tcp/tcp.o transport/tcp/event.o \
+		   transport/tcp/rawpkt.o
 UDP_OBJECTS      = transport/udp/udp.o
 ARCH_OBJECTS     = tcpip/i386/checksum.o
 
@@ -46,8 +45,10 @@ TARGET_OBJECTS = \
   $(DATAGRAM_OBJECTS) \
   $(RAWIP_OBJECTS) \
   $(TCP_OBJECTS) \
+  $(FREEBSD_OBJECTS) \
+  $(REACTOS_OBJECTS) \
   $(UDP_OBJECTS) \
-  $(ARCH_OBJECTS)
+  $(ARCH_OBJECTS) 
 
 include $(PATH_TO_TOP)/rules.mak
 

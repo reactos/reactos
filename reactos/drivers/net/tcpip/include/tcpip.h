@@ -137,6 +137,10 @@ typedef struct {
     InfoSet_f info_set;
 } TDIEntityInfo;
 
+#ifndef htons
+#define htons(x) (((x) << 16) | (((x) >> 8) & 0xff))
+#endif
+
 /* Global variable */
 extern PDEVICE_OBJECT TCPDeviceObject;
 extern PDEVICE_OBJECT UDPDeviceObject;

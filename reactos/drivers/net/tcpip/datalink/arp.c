@@ -129,8 +129,11 @@ VOID ARPTransmitComplete(
  */
 {
     TI_DbgPrint(DEBUG_ARP, ("Called.\n"));
-
+    /* Already freed, according to memtrack */
+#if 0
     FreeNdisPacket(NdisPacket);
+    Untrack(NdisPacket);
+#endif
 }
 
 

@@ -326,8 +326,7 @@ typedef struct _CONNECTION_ENDPOINT {
   ULONG RefCount;             /* Number of references to this object */
   PVOID ClientContext;        /* Pointer to client context information */
   PADDRESS_FILE AddressFile;  /* Associated address file object (NULL if none) */
-
-  CONNECTION_STATE State;     /* Connection state */
+  PVOID SocketContext;        /* Context for lower layer */
 
   PIP_ADDRESS LocalAddress;   /* Pointer to local IP address */
   USHORT LocalPort;           /* Local port number (network byte order) */
@@ -335,6 +334,7 @@ typedef struct _CONNECTION_ENDPOINT {
   PIP_ADDRESS RemoteAddress;  /* Pointer to remote IP address */
   USHORT RemotePort;          /* Remote port number (network byte order) */
 
+  CONNECTION_STATE State;     /* Connection state */
   /* Send sequence variables */
   ULONG SendUnacknowledged;   /* Highest sequence number that is acknowledged */
   ULONG SendNext;             /* Sequence number of last data block sent */

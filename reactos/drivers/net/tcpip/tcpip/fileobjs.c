@@ -438,7 +438,9 @@ NTSTATUS FileOpenConnection(
   PTDI_REQUEST Request,
   PVOID ClientContext)
 {
+  NTSTATUS Status;
   PCONNECTION_ENDPOINT Connection;
+  PADDRESS_FILE AddrFile;
 
   TI_DbgPrint(MID_TRACE, ("Called.\n"));
 
@@ -456,12 +458,14 @@ NTSTATUS FileOpenConnection(
   /* Reference the object */
   Connection->RefCount = 1;
 
-  /* Put connection in the closed state */
-  Connection->State = ctClosed;
-
   /* Save client context pointer */
   Connection->ClientContext = ClientContext;
-
+  Status = OskitTCPSocket( &Connection->SocketContext,
+			   AF_INET,
+			   SOCK_STREAM,
+			   IPPROTO_TCP );
+  DbgPrint("STATUS from OSKITTCP was %08x\n", Status);
+  
   /* Initialize receive requests queue */
   InitializeListHead(&Connection->ReceiveRequests);
 

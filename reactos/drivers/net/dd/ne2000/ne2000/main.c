@@ -13,7 +13,7 @@
 #ifdef DBG
 
 /* See debug.h for debug/trace constants */
-ULONG DebugTraceLevel = MIN_TRACE;
+ULONG DebugTraceLevel = 0x7fffffff;
 
 #endif /* DBG */
 
@@ -761,6 +761,9 @@ NDIS_STATUS MiniportTransferData(
 
     NdisQueryPacket(Packet, NULL, NULL, &DstBuffer, NULL);
     NdisQueryBuffer(DstBuffer, (PVOID)&DstData, &DstSize);
+
+    NDIS_DbgPrint(MAX_TRACE, ("DstData: %x, DatSize: %d\n", 
+			      DstData, DstSize));
 
     SrcData = Adapter->PacketOffset + sizeof(PACKET_HEADER) + ByteOffset;
     if (ByteOffset + sizeof(PACKET_HEADER) + BytesToTransfer > Adapter->PacketHeader.PacketLength)

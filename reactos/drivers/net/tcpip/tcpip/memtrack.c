@@ -81,6 +81,8 @@ VOID UntrackFL( PCHAR File, DWORD Line, PVOID Thing ) {
 	Entry = Entry->Flink;
     }
     KeReleaseSpinLock( &AllocatedObjectsLock, OldIrql );
+    DbgPrint("UNTRACK: SPECIFIED ALREADY FREE ITEM %x\n", Thing);
+    KeBugCheck( 0 );
 }
 
 VOID TrackDumpFL( PCHAR File, DWORD Line ) {

@@ -6,7 +6,7 @@ PATH_TO_TOP = ../..
 
 include $(PATH_TO_TOP)/rules.mak
 
-DRIVERS = afd dd ndis npf tcpip tdi wshtcpip
+DRIVERS = $(PATH_TO_TOP)/lib/oskittcp afd dd ndis npf tcpip tdi wshtcpip
 
 all: $(DRIVERS)
 

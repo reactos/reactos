@@ -729,6 +729,8 @@ DriverEntry(
   TrackTag(NDIS_BUFFER_TAG);
   TrackTag(NDIS_PACKET_TAG);
 
+  InitOskitTCP();
+
   /* TdiInitialize() ? */
 
   /* FIXME: Create symbolic links in Win32 namespace */
