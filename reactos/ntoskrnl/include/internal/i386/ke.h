@@ -69,6 +69,15 @@
 #define KTRAP_FRAME_RESERVED9      (0x8A)
 #define KTRAP_FRAME_SIZE           (0x8C)
 
+#define X86_EFLAGS_VM	    0x00020000 /* Virtual Mode */
+#define X86_EFLAGS_ID	    0x00200000 /* CPUID detection flag */
+
+#define X86_CR4_PAE	    0x00000020 /* enable physical address extensions */
+#define X86_CR4_PGE	    0x00000080 /* enable global pages */
+
+#define X86_FEATURE_PAE	    0x00000040 /* physical address extension is present */	
+#define X86_FEATURE_PGE	    0x00002000 /* Page Global Enable */
+
 #ifndef __ASM__
 
 typedef struct _KTRAP_FRAME
@@ -155,15 +164,6 @@ ULONG KeAllocateGdtSelector(ULONG Desc[2]);
 VOID KeFreeGdtSelector(ULONG Entry);
 VOID
 NtEarlyInitVdm(VOID);
-
-#define X86_EFLAGS_VM	    0x00020000 /* Virtual Mode */
-#define X86_EFLAGS_ID	    0x00200000 /* CPUID detection flag */
-
-#define X86_CR4_PAE	    0x00000020 /* enable physical address extensions */
-#define X86_CR4_PGE	    0x00000080 /* enable global pages */
-
-#define X86_FEATURE_PAE	    0x00000040 /* physical address extension is present */	
-#define X86_FEATURE_PGE	    0x00002000 /* Page Global Enable */
 
 #if defined(__GNUC__)
 #define Ke386DisableInterrupts() __asm__("cli\n\t");
