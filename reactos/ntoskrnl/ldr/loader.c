@@ -165,28 +165,6 @@ VOID LdrInitModuleManagement(VOID)
 
 }
 
-static NTSTATUS 
-LdrCreateModule(PVOID ObjectBody,
-                PVOID Parent,
-                PWSTR RemainingPath,
-                POBJECT_ATTRIBUTES ObjectAttributes)
-{
-  DPRINT("LdrCreateModule(ObjectBody %x, Parent %x, RemainingPath %w)\n",
-         ObjectBody, 
-         Parent, 
-         RemainingPath);
-  if (RemainingPath != NULL && wcschr(RemainingPath + 1, '\\') != NULL)
-    {
-      return  STATUS_UNSUCCESSFUL;
-    }
-  if (Parent != NULL && RemainingPath != NULL)
-    {
-      ObAddEntryDirectory(Parent, ObjectBody, RemainingPath + 1);
-    }
-
-  return  STATUS_SUCCESS;
-}
-
 /*
  * load the auto config drivers.
  */
@@ -215,6 +193,28 @@ VOID LdrLoadAutoConfigDrivers(VOID)
       DbgPrintErrorMessage(Status);
     }
  
+}
+
+static NTSTATUS 
+LdrCreateModule(PVOID ObjectBody,
+                PVOID Parent,
+                PWSTR RemainingPath,
+                POBJECT_ATTRIBUTES ObjectAttributes)
+{
+  DPRINT("LdrCreateModule(ObjectBody %x, Parent %x, RemainingPath %w)\n",
+         ObjectBody, 
+         Parent, 
+         RemainingPath);
+  if (RemainingPath != NULL && wcschr(RemainingPath + 1, '\\') != NULL)
+    {
+      return  STATUS_UNSUCCESSFUL;
+    }
+  if (Parent != NULL && RemainingPath != NULL)
+    {
+      ObAddEntryDirectory(Parent, ObjectBody, RemainingPath + 1);
+    }
+
+  return  STATUS_SUCCESS;
 }
 
 /*
@@ -633,31 +633,21 @@ LdrPEProcessModule(PVOID ModuleLoadBase)
           /*  Check to make sure that import lib is kernel  */
           pName = (PCHAR) DriverBase + 
             ImportModuleDirectory->dwRVAModuleName;
-#if 0
-          if (!strcmp(pName, "ntoskrnl.exe") || !strcmp(pName, "HAL.dll"))
+          wcscpy(NameBuffer, MODULE_ROOT_NAME);
+          for (Idx = 0; NameBuffer[Idx] != 0; Idx++)
+            ;
+          for (Idx2 = 0; pName[Idx2] != '\0'; Idx2++)
             {
-              LibraryModuleObject = NULL;
-              DPRINT("Kernel imports\n");
+              NameBuffer[Idx + Idx2] = (WCHAR) pName[Idx2];
             }
-          else
-#endif
+          NameBuffer[Idx + Idx2] = 0;
+          ModuleName.Length = ModuleName.MaximumLength = wcslen(NameBuffer);
+          ModuleName.Buffer = NameBuffer;
+          DPRINT("Import module: %W\n", &ModuleName);
+          LibraryModuleObject = LdrLoadModule(&ModuleName);
+          if (LibraryModuleObject == 0)
             {
-              wcscpy(NameBuffer, MODULE_ROOT_NAME);
-              for (Idx = 0; NameBuffer[Idx] != 0; Idx++)
-                ;
-              for (Idx2 = 0; pName[Idx2] != '\0'; Idx2++)
-                {
-                  NameBuffer[Idx + Idx2] = (WCHAR) pName[Idx2];
-                }
-              NameBuffer[Idx + Idx2] = 0;
-              ModuleName.Length = ModuleName.MaximumLength = wcslen(NameBuffer);
-              ModuleName.Buffer = NameBuffer;
-              DPRINT("Import module: %W\n", &ModuleName);
-              LibraryModuleObject = LdrLoadModule(&ModuleName);
-              if (LibraryModuleObject == 0)
-                {
-                  DbgPrint("Unknown import module: %W\n", &ModuleName);
-                }
+              DbgPrint("Unknown import module: %W\n", &ModuleName);
             }
           /*  Get the import address list  */
           ImportAddressList = (PVOID *) ((DWORD)DriverBase + 
@@ -699,18 +689,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase)
                 }
               else
                 {
-#if 0
-                  /*  Get address for symbol  */
-                  *SymbolNameBuf = '_';
-                  strcpy(SymbolNameBuf + 1, pName);
-                  *ImportAddressList = (PVOID) LdrGetKernelSymbolAddr(SymbolNameBuf);
-                  if (*ImportAddressList == 0L)
-                    {
-                     DbgPrint("Unresolved kernel symbol: %s\n", pName);
-                    }
-#else
 		   DbgPrint("Unresolved kernel symbol: %s\n", pName);
-#endif
                 }
               ImportAddressList++;
               FunctionNameList++;
@@ -878,44 +857,4 @@ LdrPEGetEnclosingSectionHeader(DWORD  RVA,
   return 0;
 }
 
-#if 0
-/*
- * FUNCTION: Get the address of a kernel symbol
- * ARGUMENTS:
- *      name = symbol name
- * RETURNS: The address of the symbol on success
- *          NULL on failure
- */
 
-static unsigned int  
-LdrGetKernelSymbolAddr(char *Name)
-{
-  int i = 0;
-   char* s;
-   
-   if ((s=strchr(Name,'@'))!=NULL)
-     {
-	*s=0;
-	DPRINT("Name %s ",Name);
-     }
-  while (symbol_table[i].name != NULL)
-    {
-      if (strcmp(symbol_table[i].name, Name) == 0)
-        {
-	   if (s!=NULL)
-	     {
-		*s=0;
-		DPRINT("Matched with %s\n",symbol_table[i].name);
-	     }
-          return symbol_table[i].value;
-        }
-      i++;
-    }
-   if (s!=NULL)
-     {
-	*s=0;
-     }   
-   return 0L;
-}
-
-#endif

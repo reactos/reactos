@@ -3,13 +3,9 @@
 :
 : copy files to HD...
 :
-COPY /Y BLUE.SYS C:\reactos\system\drivers\blue.SYS > NUL:
-COPY /Y KEYBOARD.SYS C:\reactos\system\drivers\KEYBOARD.SYS > NUL:
-COPY /Y NTDLL.DLL C:\reactos\system\NTDLL.DLL > NUL:
-COPY /Y KERNEL32.DLL C:\reactos\system\KERNEL32.DLL > NUL:
-: COPY /Y CRTDLL.DLL C:\reactos\system\CRTDLL.DLL > NUL:
-COPY /Y SHELL.EXE C:\reactos\system\SHELL.EXE > NUL:
-
+COPY /Y A:\DRIVERS\*.SYS C:\reactos\system\drivers > NUL:
+COPY /Y A:\DLLS\*.DLL C:\reactos\system > NUL:
+COPY /Y A:\APPS\*.EXE C:\reactos\system > NUL:
 :
 : present a menu to the booter...
 :

@@ -111,9 +111,9 @@ typedef USHORT CSHORT;
 typedef struct _TIME {
 	DWORD LowPart;
 	LONG HighPart;
-} TIME;
+} TIME, *PTIME;
 #endif
 
-typedef ULARGE_INTEGER TIME;
+typedef ULARGE_INTEGER TIME, *PTIME;
 
 #endif

@@ -30,6 +30,8 @@ NASM_CMD = nasm
 RM = del
 KM_SPECS = specs
 DOSCLI = yes
+FLOPPY_DIR=A:
+DIST_DIR=dist
 endif
 
 #

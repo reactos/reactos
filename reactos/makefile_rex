@@ -15,14 +15,15 @@ include rules.mak
 # Required to run the system
 #
 COMPONENTS = iface_native ntoskrnl
-DLLS = ntdll kernel32 crtdll fmifs
-#DLLS = advapi32
+DLLS = ntdll kernel32 crtdll user32 fmifs gdi32
+#DLLS = advapi32 mingw32
 SUBSYS = win32k
 
 #
 # Select the server(s) you want to build
 #
-SERVERS = win32 posix linux os2
+SERVERS = win32
+# SERVERS = posix linux os2
 
 #
 # Select the loader(s) you want to build
@@ -33,10 +34,10 @@ LOADERS = dos
 #
 # Select the device drivers and filesystems you want
 #
-DEVICE_DRIVERS = blue ide keyboard mouse null parallel serial
+DEVICE_DRIVERS = blue ide keyboard mouse null parallel serial vidport
 # DEVICE_DRIVERS = beep event floppy ide_test sound test test1
-FS_DRIVERS = vfat ext2
-# FS_DRIVERS = template
+FS_DRIVERS = vfat
+# FS_DRIVERS = minix ext2 template
 KERNEL_SERVICES = $(DEVICE_DRIVERS) $(FS_DRIVERS)
 		  
 APPS = args hello shell test cat bench

@@ -3,11 +3,14 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cm/registry.c
  * PURPOSE:         Registry functions
- * PROGRAMMER:      David Welch (welch@mcmail.com)
+ * PROGRAMMERS:     Rex Jolliff
+ *                  Matt Pyne
  * UPDATE HISTORY:
  *                  Created 22/05/98
  */
 
+#undef WIN32_LEAN_AND_MEAN
+#include <windows.h>
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
 #include <wchar.h>
@@ -15,7 +18,7 @@
 //#define NDEBUG
 #include <internal/debug.h>
 
-//#define  PROTO_REG  1  /* Comment out to disable */
+#define  PROTO_REG  1  /* Comment out to disable */
 
 /*  -----------------------------------------------------  Typedefs  */
 
@@ -23,6 +26,17 @@
 
 #define  REG_BLOCK_SIZE  4096
 #define  REG_HEAP_BLOCK_DATA_OFFSET  32
+#define  REG_INIT_BLOCK_LIST_SIZE  32
+#define  REG_INIT_HASH_TABLE_SIZE  32
+#define  REG_EXTEND_HASH_TABLE_SIZE  32
+#define  REG_VALUE_LIST_BLOCK_MULTIPLE  32
+#define  REG_KEY_BLOCK_ID    0x6b6e
+#define  REG_HASH_TABLE_BLOCK_ID  0x666c
+#define  REG_VALUE_BLOCK_ID  0x6b76
+#define  REG_KEY_BLOCK_TYPE  0x20
+#define  REG_ROOT_KEY_BLOCK_TYPE  0x2c
+
+#define  REG_ROOT_KEY_NAME  L"\\Registry"
 #define  SYSTEM_REG_FILE  L"\\SystemDir\\System32\\Config\\SYSTEM.DAT"
 
 typedef DWORD  BLOCK_OFFSET;
@@ -59,8 +73,8 @@ typedef struct _FREE_SUB_BLOCK
 
 typedef struct _KEY_BLOCK
 {
-  DWORD  SubBlockId;
-  DWORD  Type;
+  WORD  SubBlockId;
+  WORD  Type;
   LARGE_INTEGER  LastWriteTime;
   BLOCK_OFFSET  ParentKeyOffset;
   DWORD  NumberOfSubKeys;
@@ -83,16 +97,45 @@ typedef struct _HASH_RECORD
 
 typedef struct _HASH_TABLE_BLOCK
 {
-  DWORD  SubBlockId;
-  DWORD  HashTableSize;
+  WORD  SubBlockId;
+  WORD  HashTableSize;
   HASH_RECORD  Table[1];
 } HASH_TABLE_BLOCK, *PHASH_TABLE_BLOCK;
+
+typedef struct _VALUE_LIST_BLOCK
+{
+  BLOCK_OFFSET  Values[1];
+} VALUE_LIST_BLOCK, *PVALUE_LIST_BLOCK;
+
+typedef struct _VALUE_BLOCK
+{
+  WORD  SubBlockId;
+  WORD  NameSize;
+  DWORD  DataSize;
+  BLOCK_OFFSET  DataOffset;
+  DWORD  DataType;
+  WORD  Flags;
+  WORD  Unused1;
+  WCHAR  Name[1];
+} VALUE_BLOCK, *PVALUE_BLOCK;
+
+typedef struct _IN_MEMORY_BLOCK
+{
+  DWORD  FileOffset;
+  DWORD  BlockSize;
+  PVOID *Data;
+} IN_MEMORY_BLOCK, *PIN_MEMORY_BLOCK;
 
 typedef struct _REGISTRY_FILE
 {
   PWSTR  Filename;
-  PVOID  Data;
-  PVOID  (*Extend)(PVOID *Data, ULONG NewSize);
+  HANDLE  FileHandle;
+  PHEADER_BLOCK  HeaderBlock;
+  ULONG  NumberOfBlocks;
+  ULONG  BlockListSize;
+  PIN_MEMORY_BLOCK  *BlockList;
+
+  NTSTATUS  (*Extend)(ULONG NewSize);
   PVOID  (*Flush)(VOID);
 } REGISTRY_FILE, *PREGISTRY_FILE;
 
@@ -126,34 +169,23 @@ static VOID  CmiObjectDelete(PVOID  DeletedObject);
 static NTSTATUS  CmiBuildKeyPath(PWSTR  *KeyPath, 
                                  POBJECT_ATTRIBUTES  ObjectAttributes);
 static VOID  CmiAddKeyToList(PKEY_OBJECT  NewKey);
+static VOID  CmiRemoveKeyFromList(PKEY_OBJECT  NewKey);
 static PKEY_OBJECT  CmiScanKeyList(PWSTR  KeyNameBuf);
 static PREGISTRY_FILE  CmiCreateRegistry(PWSTR  Filename);
-static PVOID  CmiExtendVolatileFile(PVOID *Data, ULONG NewSize);
-static NTSTATUS  CmiCreateKey(PREGISTRY_FILE  RegistryFile,
-                              PWSTR  KeyNameBuf,
-                              PKEY_BLOCK  *KeyBlock,
-                              ACCESS_MASK DesiredAccess,
-                              ULONG TitleIndex,
-                              PUNICODE_STRING Class, 
-                              ULONG CreateOptions, 
-                              PULONG Disposition);
-static NTSTATUS  CmiFindKey(PREGISTRY_FILE  RegistryFile,
-                            PWSTR  KeyNameBuf,
-                            PKEY_BLOCK  *KeyBlock,
-                            ACCESS_MASK DesiredAccess,
-                            ULONG TitleIndex,
-                            PUNICODE_STRING Class);
-static PHASH_TABLE_BLOCK  CmiGetHashTableBlock(PREGISTRY_FILE  RegistryFile,
-                                               PKEY_BLOCK  KeyBlock);
-static PKEY_BLOCK  CmiGetKeyFromHashByIndex(PREGISTRY_FILE RegistryFile,
-                                            PHASH_TABLE_BLOCK  HashTableBlock,
-                                            ULONG  Index);
-static VOID CmiLockBlock(PREGISTRY_FILE  RegistryFile,
-                         PVOID  Block);
-static VOID CmiUnlockBlock(PREGISTRY_FILE  RegistryFile,
-                           PVOID  Block);
-static PWSTR  CmiGetClassBlock(PREGISTRY_FILE  RegistryFile,
-                               PKEY_BLOCK  KeyBlock);
+static NTSTATUS  CmiCreateKey(IN PREGISTRY_FILE  RegistryFile,
+                              IN PWSTR  KeyNameBuf,
+                              OUT PKEY_BLOCK  *KeyBlock,
+                              IN ACCESS_MASK DesiredAccess,
+                              IN ULONG TitleIndex,
+                              IN PUNICODE_STRING Class, 
+                              IN ULONG CreateOptions, 
+                              OUT PULONG Disposition);
+static NTSTATUS  CmiFindKey(IN PREGISTRY_FILE  RegistryFile,
+                            IN PWSTR  KeyNameBuf,
+                            OUT PKEY_BLOCK  *KeyBlock,
+                            IN ACCESS_MASK DesiredAccess,
+                            IN ULONG TitleIndex,
+                            IN PUNICODE_STRING Class);
 static ULONG  CmiGetMaxNameLength(PREGISTRY_FILE  RegistryFile,
                                   PKEY_BLOCK  KeyBlock);
 static ULONG  CmiGetMaxClassLength(PREGISTRY_FILE  RegistryFile,
@@ -162,6 +194,81 @@ static ULONG  CmiGetMaxValueNameLength(PREGISTRY_FILE  RegistryFile,
                                        PKEY_BLOCK  KeyBlock);
 static ULONG  CmiGetMaxValueDataLength(PREGISTRY_FILE  RegistryFile,
                                        PKEY_BLOCK  KeyBlock);
+static NTSTATUS  CmiScanForSubKey(IN PREGISTRY_FILE  RegistryFile, 
+                                  IN PKEY_BLOCK  KeyBlock, 
+                                  OUT PKEY_BLOCK  *SubKeyBlock,
+                                  IN PWSTR  KeyName,
+                                  IN ACCESS_MASK  DesiredAccess);
+static NTSTATUS  CmiAddSubKey(IN PREGISTRY_FILE  RegistryFile, 
+                              IN PKEY_BLOCK  CurKeyBlock,
+                              OUT PKEY_BLOCK  *SubKeyBlock,
+                              IN PWSTR  NewSubKeyName,
+                              IN ULONG  TitleIndex,
+                              IN PWSTR  Class, 
+                              IN ULONG  CreateOptions);
+static NTSTATUS  CmiScanKeyForValue(IN PREGISTRY_FILE  RegistryFile,
+                                    IN PKEY_BLOCK  KeyBlock,
+                                    IN PWSTR  ValueName,
+                                    OUT PVALUE_BLOCK  *ValueBlock);
+static NTSTATUS  CmiAddValueToKey(IN PREGISTRY_FILE  RegistryFile,
+                                  IN PKEY_BLOCK  KeyBlock,
+                                  IN PWSTR  ValueNameBuf,
+                                  IN ULONG  Type, 
+                                  IN PVOID  Data,
+                                  IN ULONG  DataSize);
+static NTSTATUS  CmiDeleteValueFromKey(IN PREGISTRY_FILE  RegistryFile,
+                                       IN PKEY_BLOCK  KeyBlock,
+                                       IN PWSTR  ValueName);
+static NTSTATUS  CmiAllocateKeyBlock(IN PREGISTRY_FILE  RegistryFile,
+                                     OUT PKEY_BLOCK  *KeyBlock,
+                                     IN PWSTR  NewSubKeyName,
+                                     IN ULONG  TitleIndex,
+                                     IN PWSTR  Class,
+                                    IN ULONG  CreateOptions);
+static PKEY_BLOCK  CmiGetKeyBlock(PREGISTRY_FILE  RegistryFile,
+                                  BLOCK_OFFSET  KeyBlockOffset);
+static NTSTATUS  CmiDestroyKeyBlock(PREGISTRY_FILE  RegistryFile,
+                                    PKEY_BLOCK  KeyBlock);
+static NTSTATUS  CmiAllocateHashTableBlock(IN PREGISTRY_FILE  RegistryFile,
+                                           OUT PHASH_TABLE_BLOCK  *HashBlock,
+                                           IN ULONG  HashTableSize);
+static PHASH_TABLE_BLOCK  CmiGetHashTableBlock(PREGISTRY_FILE  RegistryFile,
+                                               BLOCK_OFFSET  HashBlockOffset);
+static PKEY_BLOCK  CmiGetKeyFromHashByIndex(PREGISTRY_FILE RegistryFile,
+                                            PHASH_TABLE_BLOCK  HashBlock,
+                                            ULONG  Index);
+static NTSTATUS  CmiAddKeyToHashTable(PREGISTRY_FILE  RegistryFile,
+                                      PHASH_TABLE_BLOCK  HashBlock,
+                                      PKEY_BLOCK  NewKeyBlock);
+static NTSTATUS  CmiDestroyHashTableBlock(PREGISTRY_FILE  RegistryFile,
+                                          PHASH_TABLE_BLOCK  HashBlock);
+static NTSTATUS  CmiAllocateValueBlock(IN PREGISTRY_FILE  RegistryFile,
+                                       OUT PVALUE_BLOCK  *ValueBlock,
+                                       IN PWSTR  ValueNameBuf,
+                                       IN ULONG  Type, 
+                                       IN PVOID  Data,
+                                       IN ULONG  DataSize);
+static NTSTATUS  CmiReplaceValueData(IN PREGISTRY_FILE  RegistryFile,
+                                     IN PVALUE_BLOCK  ValueBlock,
+                                     IN ULONG  Type, 
+                                     IN PVOID  Data,
+                                     IN ULONG  DataSize);
+static NTSTATUS  CmiDestroyValueBlock(PREGISTRY_FILE  RegistryFile,
+                                      PVALUE_BLOCK  ValueBlock);
+static NTSTATUS  CmiAllocateBlock(PREGISTRY_FILE  RegistryFile,
+                                  PVOID  *Block,
+                                  ULONG  BlockSize);
+static NTSTATUS  CmiDestroyBlock(PREGISTRY_FILE  RegistryFile,
+                                 PVOID  Block);
+static PVOID  CmiGetBlock(PREGISTRY_FILE  RegistryFile,
+                          BLOCK_OFFSET  BlockOffset);
+static BLOCK_OFFSET  CmiGetBlockOffset(PREGISTRY_FILE  RegistryFile,
+                                       PVOID  Block);
+static VOID CmiLockBlock(PREGISTRY_FILE  RegistryFile,
+                         PVOID  Block);
+static VOID  CmiReleaseBlock(PREGISTRY_FILE  RegistryFile,
+                             PVOID  Block);
+
 #endif
 
 /*  ---------------------------------------------  Public Interface  */
@@ -194,7 +301,7 @@ CmInitializeRegistry(VOID)
 
   /*  Build the Root Key Object  */
   /*  FIXME: This should be split into two objects, 1 system and 1 user  */
-  RtlInitUnicodeString(&RootKeyName, L"\\Registry");
+  RtlInitUnicodeString(&RootKeyName, REG_ROOT_KEY_NAME);
   InitializeObjectAttributes(&ObjectAttributes, &RootKeyName, 0, NULL, NULL);
   ObCreateObject(&RootKeyHandle,
                  STANDARD_RIGHTS_REQUIRED,
@@ -253,8 +360,8 @@ ZwCreateKey(OUT PHANDLE  KeyHandle,
 
   assert(ObjectAttributes != NULL);
 
-  FileToUse = (CreateOptions & REG_OPTION_NON_VOLATILE) ? 
-    CmiSystemFile : CmiVolatileFile;
+  FileToUse = (CreateOptions & REG_OPTION_VOLATILE) ? 
+    CmiVolatileFile : CmiSystemFile;
   
   /*  Construct the complete registry relative pathname  */
   Status = CmiBuildKeyPath(&KeyNameBuf, ObjectAttributes);
@@ -395,7 +502,6 @@ ZwEnumerateKey(IN HANDLE  KeyHandle,
   PREGISTRY_FILE  RegistryFile;
   PKEY_BLOCK  KeyBlock, SubKeyBlock;
   PHASH_TABLE_BLOCK  HashTableBlock;
-  PWSTR  ClassBlock;
   PKEY_BASIC_INFORMATION  BasicInformation;
   PKEY_NODE_INFORMATION  NodeInformation;
   PKEY_FULL_INFORMATION  FullInformation;
@@ -417,7 +523,7 @@ ZwEnumerateKey(IN HANDLE  KeyHandle,
   RegistryFile = KeyObject->RegistryFile;
     
   /*  Get pointer to SubKey  */
-  HashTableBlock = CmiGetHashTableBlock(RegistryFile, KeyBlock);
+  HashTableBlock = CmiGetHashTableBlock(RegistryFile, KeyBlock->HashTableOffset);
   SubKeyBlock = CmiGetKeyFromHashByIndex(RegistryFile, 
                                          HashTableBlock, 
                                          Index);
@@ -426,7 +532,6 @@ ZwEnumerateKey(IN HANDLE  KeyHandle,
       return  STATUS_NO_MORE_ENTRIES;
     }
 
-  CmiLockBlock(RegistryFile, SubKeyBlock);
   Status = STATUS_SUCCESS;
   switch (KeyInformationClass)
     {
@@ -477,10 +582,8 @@ ZwEnumerateKey(IN HANDLE  KeyHandle,
           NodeInformation->Name[SubKeyBlock->NameSize] = 0;
           if (SubKeyBlock->ClassSize != 0)
             {
-              ClassBlock = CmiGetClassBlock(RegistryFile, SubKeyBlock);
-              
               wcsncpy(NodeInformation->Name + SubKeyBlock->NameSize + 1,
-                      ClassBlock,
+                      &SubKeyBlock->Name[SubKeyBlock->NameSize + 1],
                       SubKeyBlock->ClassSize);
               NodeInformation->
                 Name[SubKeyBlock->NameSize + 1 + SubKeyBlock->ClassSize] = 0;
@@ -517,19 +620,16 @@ ZwEnumerateKey(IN HANDLE  KeyHandle,
             CmiGetMaxValueNameLength(RegistryFile, SubKeyBlock);
           FullInformation->MaxValueDataLen = 
             CmiGetMaxValueDataLength(RegistryFile, SubKeyBlock);
-          ClassBlock = CmiGetClassBlock(RegistryFile, SubKeyBlock);
-          CmiLockBlock(RegistryFile, ClassBlock);
           wcsncpy(FullInformation->Class,
-                  ClassBlock,
+                  &SubKeyBlock->Name[SubKeyBlock->NameSize + 1],
                   SubKeyBlock->ClassSize);
-          CmiUnlockBlock(RegistryFile, ClassBlock);
           FullInformation->Class[SubKeyBlock->ClassSize] = 0;
           *ResultLength = sizeof(KEY_FULL_INFORMATION) +
             SubKeyBlock->ClassSize * sizeof(WCHAR);
         }
       break;
     }
-  CmiUnlockBlock(RegistryFile, SubKeyBlock);
+  CmiReleaseBlock(RegistryFile, SubKeyBlock);
 
   return  Status;
 #else
@@ -713,7 +813,6 @@ ZwQueryKey(IN HANDLE  KeyHandle,
   PKEY_OBJECT  KeyObject;
   PREGISTRY_FILE  RegistryFile;
   PKEY_BLOCK  KeyBlock;
-  PWSTR  ClassBlock;
   PKEY_BASIC_INFORMATION  BasicInformation;
   PKEY_NODE_INFORMATION  NodeInformation;
   PKEY_FULL_INFORMATION  FullInformation;
@@ -734,7 +833,6 @@ ZwQueryKey(IN HANDLE  KeyHandle,
   KeyBlock = KeyObject->KeyBlock;
   RegistryFile = KeyObject->RegistryFile;
     
-  CmiLockBlock(RegistryFile, KeyBlock);
   Status = STATUS_SUCCESS;
   switch (KeyInformationClass)
     {
@@ -785,12 +883,9 @@ ZwQueryKey(IN HANDLE  KeyHandle,
           NodeInformation->Name[KeyBlock->NameSize] = 0;
           if (KeyBlock->ClassSize != 0)
             {
-              ClassBlock = CmiGetClassBlock(RegistryFile, KeyBlock);
-              CmiLockBlock(RegistryFile, ClassBlock);
               wcsncpy(NodeInformation->Name + KeyBlock->NameSize + 1,
-                      ClassBlock,
+                      &KeyBlock->Name[KeyBlock->NameSize + 1],
                       KeyBlock->ClassSize);
-              CmiUnlockBlock(RegistryFile, ClassBlock);
               NodeInformation->
                 Name[KeyBlock->NameSize + 1 + KeyBlock->ClassSize] = 0;
             }
@@ -826,19 +921,15 @@ ZwQueryKey(IN HANDLE  KeyHandle,
             CmiGetMaxValueNameLength(RegistryFile, KeyBlock);
           FullInformation->MaxValueDataLen = 
             CmiGetMaxValueDataLength(RegistryFile, KeyBlock);
-          ClassBlock = CmiGetClassBlock(RegistryFile, KeyBlock);
-          CmiLockBlock(RegistryFile, ClassBlock);
           wcsncpy(FullInformation->Class,
-                  ClassBlock,
+                  &KeyBlock->Name[KeyBlock->NameSize + 1],
                   KeyBlock->ClassSize);
-          CmiUnlockBlock(RegistryFile, ClassBlock);
           FullInformation->Class[KeyBlock->ClassSize] = 0;
           *ResultLength = sizeof(KEY_FULL_INFORMATION) +
             KeyBlock->ClassSize * sizeof(WCHAR);
         }
       break;
     }
-  CmiUnlockBlock(RegistryFile, KeyBlock);
 
   return  Status;
 #else
@@ -875,6 +966,8 @@ ZwQueryValueKey(IN HANDLE  KeyHandle,
   PKEY_OBJECT  KeyObject;
   PREGISTRY_FILE  RegistryFile;
   PKEY_BLOCK  KeyBlock;
+  PVALUE_BLOCK  ValueBlock;
+  PVOID  DataBlock;
   PKEY_VALUE_BASIC_INFORMATION  ValueBasicInformation;
   PKEY_VALUE_PARTIAL_INFORMATION  ValuePartialInformation;
   PKEY_VALUE_FULL_INFORMATION  ValueFullInformation;
@@ -895,19 +988,91 @@ ZwQueryValueKey(IN HANDLE  KeyHandle,
   KeyBlock = KeyObject->KeyBlock;
   RegistryFile = KeyObject->RegistryFile;
     
-  Status = STATUS_SUCCESS;
-  CmiLockBlock(RegistryFile, KeyBlock);
-  
-  /* FIXME: get value list block  */
-  /* FIXME: loop through value list  */
-    /* FIXME: get value block for current list entry  */
-    /* FIXME: compare name with desired value name */
-      /* FIXME: if name is correct */
-      /* FIXME: check size of input buffer  */
-      /* FIXME: copy data into buffer  */
-      /* FIXME: set ResultLength  */
-  
-  CmiUnlockBlock(RegistryFile, KeyBlock);
+  /*  Get Value block of interest  */
+  Status = CmiScanKeyForValue(RegistryFile, 
+                              KeyBlock,
+                              ValueName->Buffer,
+                              &ValueBlock);
+  if (!NT_SUCCESS(Status))
+    {
+      return  Status;
+    }
+  else if (ValueBlock != NULL)
+    {
+      switch (KeyValueInformationClass)
+        {
+        case KeyValueBasicInformation:
+          *ResultLength = sizeof(KEY_VALUE_BASIC_INFORMATION) + 
+            ValueBlock->NameSize * sizeof(WCHAR);
+          if (Length < *ResultLength)
+            {
+              Status = STATUS_BUFFER_OVERFLOW;
+            }
+          else
+            {
+              ValueBasicInformation = (PKEY_VALUE_BASIC_INFORMATION) 
+                KeyValueInformation;
+              ValueBasicInformation->TitleIndex = 0;
+              ValueBasicInformation->Type = ValueBlock->DataType;
+              ValueBasicInformation->NameLength = ValueBlock->NameSize;
+              wcscpy(ValueBasicInformation->Name, ValueBlock->Name);
+            }
+          break;
+
+        case KeyValuePartialInformation:
+          *ResultLength = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 
+            ValueBlock->DataSize;
+          if (Length < *ResultLength)
+            {
+              Status = STATUS_BUFFER_OVERFLOW;
+            }
+          else
+            {
+              ValuePartialInformation = (PKEY_VALUE_PARTIAL_INFORMATION) 
+                KeyValueInformation;
+              ValuePartialInformation->TitleIndex = 0;
+              ValuePartialInformation->Type = ValueBlock->DataType;
+              ValuePartialInformation->DataLength = ValueBlock->DataSize;
+              DataBlock = CmiGetBlock(RegistryFile, ValueBlock->DataOffset);
+              RtlCopyMemory(ValuePartialInformation->Data, 
+                            DataBlock, 
+                            ValueBlock->DataSize);
+              CmiReleaseBlock(RegistryFile, DataBlock);
+            }
+          break;
+
+        case KeyValueFullInformation:
+          *ResultLength = sizeof(KEY_VALUE_FULL_INFORMATION) + 
+            ValueBlock->NameSize * sizeof(WCHAR) + ValueBlock->DataSize;
+          if (Length < *ResultLength)
+            {
+              Status = STATUS_BUFFER_OVERFLOW;
+            }
+          else
+            {
+              ValueFullInformation = (PKEY_VALUE_FULL_INFORMATION) 
+                KeyValueInformation;
+              ValueFullInformation->TitleIndex = 0;
+              ValueFullInformation->Type = ValueBlock->DataType;
+              ValueFullInformation->DataOffset = 
+                sizeof(KEY_VALUE_FULL_INFORMATION) + 
+                ValueBlock->NameSize * sizeof(WCHAR);
+              ValueFullInformation->DataLength = ValueBlock->DataSize;
+              ValueFullInformation->NameLength = ValueBlock->NameSize;
+              wcscpy(ValueFullInformation->Name, ValueBlock->Name);
+              DataBlock = CmiGetBlock(RegistryFile, ValueBlock->DataOffset);
+              RtlCopyMemory(&ValueFullInformation->Name[ValueBlock->NameSize + 1], 
+                            DataBlock, 
+                            ValueBlock->DataSize);
+              CmiReleaseBlock(RegistryFile, DataBlock);
+            }
+          break;
+        }
+    }
+  else
+    {
+      Status = STATUS_UNSUCCESSFUL;
+    }
   
   return  Status;
 #else
@@ -915,9 +1080,13 @@ ZwQueryValueKey(IN HANDLE  KeyHandle,
 #endif
 }
 
-NTSTATUS NtSetValueKey(HANDLE KeyHandle, PUNICODE_STRING ValueName,
-                       ULONG TitleIndex, ULONG Type, PVOID Data,
-                       ULONG DataSize)
+NTSTATUS 
+NtSetValueKey(IN HANDLE  KeyHandle, 
+              IN PUNICODE_STRING  ValueName,
+              IN ULONG  TitleIndex,
+              IN ULONG  Type, 
+              IN PVOID  Data,
+              IN ULONG  DataSize)
 {
   return ZwSetValueKey(KeyHandle, 
                        ValueName,
@@ -927,49 +1096,122 @@ NTSTATUS NtSetValueKey(HANDLE KeyHandle, PUNICODE_STRING ValueName,
                        DataSize);
 }
 
-NTSTATUS ZwSetValueKey(HANDLE KeyHandle, PUNICODE_STRING ValueName,
-                       ULONG TitleIndex, ULONG Type, PVOID Data,
-                       ULONG DataSize)
+NTSTATUS 
+ZwSetValueKey(IN HANDLE  KeyHandle, 
+              IN PUNICODE_STRING  ValueName,
+              IN ULONG  TitleIndex,
+              IN ULONG  Type, 
+              IN PVOID  Data,
+              IN ULONG  DataSize)
 {
+#ifdef PROTO_REG
+  NTSTATUS  Status;
+  PKEY_OBJECT  KeyObject;
+  PREGISTRY_FILE  RegistryFile;
+  PKEY_BLOCK  KeyBlock;
+  PVALUE_BLOCK  ValueBlock;
+
+  /*  Verify that the handle is valid and is a registry key  */
+  Status = ObReferenceObjectByHandle(KeyHandle,
+                                     KEY_QUERY_VALUE,
+                                     CmiKeyType,
+                                     UserMode,
+                                     (PVOID *)&KeyObject,
+                                     NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      return  Status;
+    }
+
+  /*  Get pointer to KeyBlock  */
+  KeyBlock = KeyObject->KeyBlock;
+  RegistryFile = KeyObject->RegistryFile;
+  Status = CmiScanKeyForValue(RegistryFile,
+                              KeyBlock,
+                              ValueName->Buffer,
+                              &ValueBlock);
+  if (!NT_SUCCESS(Status))
+    {
+      return  Status;
+    }
+  if (ValueBlock == NULL)
+    {
+      Status =  CmiAddValueToKey(RegistryFile,
+                                 KeyBlock,
+                                 ValueName->Buffer,
+                                 Type,
+                                 Data,
+                                 DataSize);
+    }
+  else
+    {
+      Status = CmiReplaceValueData(RegistryFile,
+                                   ValueBlock,
+                                   Type,
+                                   Data,
+                                   DataSize);
+    }
+  
+  return  Status;
+#else
    UNIMPLEMENTED;
+#endif
 }
 
-NTSTATUS
-STDCALL
-NtDeleteValueKey(IN HANDLE KeyHandle,
-                 IN PUNICODE_STRING ValueName)
+NTSTATUS STDCALL
+NtDeleteValueKey(IN HANDLE  KeyHandle,
+                 IN PUNICODE_STRING  ValueName)
 {
   return ZwDeleteValueKey(KeyHandle,
                           ValueName);
 }
 
-NTSTATUS
-STDCALL
-ZwDeleteValueKey(
-	IN HANDLE KeyHandle,
-	IN PUNICODE_STRING ValueName	
-		 )
+NTSTATUS STDCALL
+ZwDeleteValueKey(IN HANDLE  KeyHandle,
+                 IN PUNICODE_STRING  ValueName)
 {
-  UNIMPLEMENTED;
+#ifdef PROTO_REG
+  NTSTATUS  Status;
+  PKEY_OBJECT  KeyObject;
+  PREGISTRY_FILE  RegistryFile;
+  PKEY_BLOCK  KeyBlock;
+
+  /*  Verify that the handle is valid and is a registry key  */
+  Status = ObReferenceObjectByHandle(KeyHandle,
+                                     KEY_QUERY_VALUE,
+                                     CmiKeyType,
+                                     UserMode,
+                                     (PVOID *)&KeyObject,
+                                     NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      return  Status;
+    }
+
+  /*  Get pointer to KeyBlock  */
+  KeyBlock = KeyObject->KeyBlock;
+  RegistryFile = KeyObject->RegistryFile;
+  Status = CmiDeleteValueFromKey(RegistryFile,
+                                 KeyBlock,
+                                 ValueName->Buffer);
+
+  return  Status;
+#else
+   UNIMPLEMENTED;
+#endif
 }
 
-NTSTATUS
-STDCALL 
-NtLoadKey(
-	PHANDLE KeyHandle,
-	OBJECT_ATTRIBUTES ObjectAttributes
-	)
+NTSTATUS STDCALL 
+NtLoadKey(PHANDLE KeyHandle,
+          OBJECT_ATTRIBUTES ObjectAttributes)
 {
   return ZwLoadKey(KeyHandle,
                    ObjectAttributes);
 }
 
-NTSTATUS
-STDCALL 
-ZwLoadKey(
-	PHANDLE KeyHandle,
-	OBJECT_ATTRIBUTES ObjectAttributes
-	)
+NTSTATUS STDCALL 
+ZwLoadKey(PHANDLE KeyHandle,
+          OBJECT_ATTRIBUTES ObjectAttributes)
 {
   UNIMPLEMENTED;
 }
@@ -979,20 +1221,17 @@ NTSTATUS STDCALL NtLoadKey2(VOID)
   UNIMPLEMENTED;
 }
 
-NTSTATUS
-STDCALL
-NtNotifyChangeKey(
-	IN HANDLE KeyHandle,
-	IN HANDLE Event,
-	IN PIO_APC_ROUTINE ApcRoutine OPTIONAL, 
-	IN PVOID ApcContext OPTIONAL, 
-	OUT PIO_STATUS_BLOCK IoStatusBlock,
-	IN ULONG CompletionFilter,
-	IN BOOLEAN Asynchroneous, 
-	OUT PVOID ChangeBuffer,
-	IN ULONG Length,
-	IN BOOLEAN WatchSubtree
-	)
+NTSTATUS STDCALL
+NtNotifyChangeKey(IN HANDLE  KeyHandle,
+                  IN HANDLE  Event,
+                  IN PIO_APC_ROUTINE  ApcRoutine OPTIONAL, 
+                  IN PVOID ApcContext  OPTIONAL, 
+                  OUT PIO_STATUS_BLOCK  IoStatusBlock,
+                  IN ULONG  CompletionFilter,
+                  IN BOOLEAN  Asynchroneous, 
+                  OUT PVOID  ChangeBuffer,
+                  IN ULONG  Length,
+                  IN BOOLEAN  WatchSubtree)
 {
   return ZwNotifyChangeKey(KeyHandle,
                            Event,
@@ -1006,34 +1245,28 @@ NtNotifyChangeKey(
                            WatchSubtree);
 }
 
-NTSTATUS
-STDCALL
-ZwNotifyChangeKey(
-	IN HANDLE KeyHandle,
-	IN HANDLE Event,
-	IN PIO_APC_ROUTINE ApcRoutine OPTIONAL, 
-	IN PVOID ApcContext OPTIONAL, 
-	OUT PIO_STATUS_BLOCK IoStatusBlock,
-	IN ULONG CompletionFilter,
-	IN BOOLEAN Asynchroneous, 
-	OUT PVOID ChangeBuffer,
-	IN ULONG Length,
-	IN BOOLEAN WatchSubtree
-	)
+NTSTATUS STDCALL
+ZwNotifyChangeKey(IN HANDLE  KeyHandle,
+                  IN HANDLE  Event,
+                  IN PIO_APC_ROUTINE  ApcRoutine OPTIONAL, 
+                  IN PVOID  ApcContext OPTIONAL, 
+                  OUT PIO_STATUS_BLOCK  IoStatusBlock,
+                  IN ULONG  CompletionFilter,
+                  IN BOOLEAN  Asynchroneous, 
+                  OUT PVOID  ChangeBuffer,
+                  IN ULONG  Length,
+                  IN BOOLEAN  WatchSubtree)
 {
   UNIMPLEMENTED;
 }
 
-NTSTATUS
-STDCALL
-NtQueryMultipleValueKey(
-   HANDLE KeyHandle,	
-   PVALENT ListOfValuesToQuery,	
-   ULONG NumberOfItems,	
-   PVOID MultipleValueInformation,		
-   ULONG Length,
-   PULONG  ReturnLength
-)
+NTSTATUS STDCALL
+NtQueryMultipleValueKey(IN HANDLE  KeyHandle,	
+                        IN PVALENT  ListOfValuesToQuery,	
+                        IN ULONG  NumberOfItems,	
+                        OUT PVOID  MultipleValueInformation,		
+                        IN ULONG  Length,
+                        OUT PULONG  ReturnLength)
 {
   return ZwQueryMultipleValueKey(KeyHandle,	
                                  ListOfValuesToQuery,	
@@ -1043,97 +1276,73 @@ NtQueryMultipleValueKey(
                                  ReturnLength);
 }
 
-NTSTATUS
-STDCALL
-ZwQueryMultipleValueKey(
-   HANDLE KeyHandle,	
-   PVALENT ListOfValuesToQuery,	
-   ULONG NumberOfItems,	
-   PVOID MultipleValueInformation,		
-   ULONG Length,
-   PULONG  ReturnLength
-)
+NTSTATUS STDCALL 
+ZwQueryMultipleValueKey(IN HANDLE  KeyHandle,	
+                        IN PVALENT  ListOfValuesToQuery,	
+                        IN ULONG  NumberOfItems,	
+                        OUT PVOID  MultipleValueInformation,		
+                        IN ULONG  Length,
+                        OUT PULONG  ReturnLength)
 {
   UNIMPLEMENTED;
 }
 
-NTSTATUS
-STDCALL
-NtReplaceKey(
-	IN POBJECT_ATTRIBUTES ObjectAttributes, 
-	IN HANDLE Key,
-	IN POBJECT_ATTRIBUTES ReplacedObjectAttributes 
-	)
+NTSTATUS STDCALL
+NtReplaceKey(IN POBJECT_ATTRIBUTES  ObjectAttributes, 
+             IN HANDLE  Key,
+             IN POBJECT_ATTRIBUTES  ReplacedObjectAttributes)
 {
   return ZwReplaceKey(ObjectAttributes, 
                       Key,
                       ReplacedObjectAttributes);
 }
 
-NTSTATUS
-STDCALL
-ZwReplaceKey(
-	IN POBJECT_ATTRIBUTES ObjectAttributes, 
-	IN HANDLE Key,
-	IN POBJECT_ATTRIBUTES ReplacedObjectAttributes 
-	)
+NTSTATUS STDCALL
+ZwReplaceKey(IN POBJECT_ATTRIBUTES  ObjectAttributes, 
+             IN HANDLE  Key,
+             IN POBJECT_ATTRIBUTES  ReplacedObjectAttributes)
 {
   UNIMPLEMENTED;
 }
 
-NTSTATUS
-STDCALL
-NtRestoreKey(
-	HANDLE KeyHandle,
-	HANDLE FileHandle,
-	ULONG RestoreFlags
-	)
+NTSTATUS STDCALL
+NtRestoreKey(IN HANDLE  KeyHandle,
+             IN HANDLE  FileHandle,
+             IN ULONG  RestoreFlags)
 {
   return ZwRestoreKey(KeyHandle,
                       FileHandle,
                       RestoreFlags);
 }
 
-NTSTATUS
-STDCALL
-ZwRestoreKey(
-	HANDLE KeyHandle,
-	HANDLE FileHandle,
-	ULONG RestoreFlags
-	)
+NTSTATUS STDCALL
+ZwRestoreKey(IN HANDLE  KeyHandle,
+             IN HANDLE  FileHandle,
+             IN ULONG  RestoreFlags)
 {
   UNIMPLEMENTED;
 }
 
-NTSTATUS
-STDCALL
-NtSaveKey(
-	IN HANDLE KeyHandle,
-	IN HANDLE FileHandle
-	)
+NTSTATUS STDCALL
+NtSaveKey(IN HANDLE  KeyHandle,
+          IN HANDLE  FileHandle)
 {
   return ZwSaveKey(KeyHandle,
                    FileHandle);
 }
 
-NTSTATUS
-STDCALL
-ZwSaveKey(
-	IN HANDLE KeyHandle,
-	IN HANDLE FileHandle
-	)
+NTSTATUS STDCALL
+ZwSaveKey(IN HANDLE  KeyHandle,
+          IN HANDLE  FileHandle)
 {
   UNIMPLEMENTED;
 }
 
-NTSTATUS
-STDCALL
-NtSetInformationKey(
-	IN HANDLE KeyHandle,
-	IN CINT KeyInformationClass,
-	IN PVOID KeyInformation,
-	IN ULONG KeyInformationLength
-	)
+NTSTATUS STDCALL
+NtSetInformationKey(IN HANDLE  KeyHandle,
+                    IN CINT  KeyInformationClass,
+                    IN PVOID  KeyInformation,
+                    IN ULONG  KeyInformationLength)
 {
   return ZwSetInformationKey(KeyHandle,
                              KeyInformationClass,
@@ -1141,67 +1350,78 @@ NtSetInformationKey(
                              KeyInformationLength);
 }
 
-NTSTATUS STDCALL ZwSetInformationKey(IN HANDLE KeyHandle,
-				     IN CINT KeyInformationClass,
-				     IN PVOID KeyInformation,
-				     IN ULONG KeyInformationLength)
+NTSTATUS STDCALL
+ZwSetInformationKey(IN HANDLE  KeyHandle,
+                    IN CINT  KeyInformationClass,
+                    IN PVOID  KeyInformation,
+                    IN ULONG  KeyInformationLength)
 {
-   UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtUnloadKey(HANDLE KeyHandle)
+NTSTATUS STDCALL 
+NtUnloadKey(HANDLE KeyHandle)
 {
   return ZwUnloadKey(KeyHandle);
 }
 
-NTSTATUS STDCALL ZwUnloadKey(HANDLE KeyHandle)
+NTSTATUS STDCALL 
+ZwUnloadKey(HANDLE KeyHandle)
 {
-   UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtInitializeRegistry(BOOLEAN SetUpBoot)
+NTSTATUS STDCALL 
+NtInitializeRegistry(BOOLEAN SetUpBoot)
 {
   return ZwInitializeRegistry(SetUpBoot);
 }
 
-NTSTATUS STDCALL ZwInitializeRegistry(BOOLEAN SetUpBoot)
+NTSTATUS STDCALL 
+ZwInitializeRegistry(BOOLEAN SetUpBoot)
 {
-   UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
-NTSTATUS RtlCheckRegistryKey(ULONG RelativeTo, PWSTR Path)
+NTSTATUS 
+RtlCheckRegistryKey(ULONG RelativeTo, PWSTR Path)
 {
-   UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
-NTSTATUS RtlCreateRegistryKey(ULONG RelativeTo, PWSTR Path)
+NTSTATUS 
+RtlCreateRegistryKey(IN ULONG RelativeTo, IN PWSTR Path)
 {
-   UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
-NTSTATUS RtlDeleteRegistryValue(ULONG RelativeTo, PWSTR Path,
-				PWSTR ValueName)
+NTSTATUS 
+RtlDeleteRegistryValue(IN ULONG  RelativeTo, 
+                       IN PWSTR  Path,
+                       IN PWSTR  ValueName)
 {
-   UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
-NTSTATUS RtlQueryRegistryValues(ULONG RelativeTo,
-				PWSTR Path,
-				PRTL_QUERY_REGISTRY_TABLE QueryTable,
-				PVOID Context,
-				PVOID Environment)
+NTSTATUS 
+RtlQueryRegistryValues(IN ULONG  RelativeTo,
+                       IN PWSTR  Path,
+                       PRTL_QUERY_REGISTRY_TABLE  QueryTable,
+                       PVOID  Context,
+                       PVOID  Environment)
 {
-   UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
-NTSTATUS RtlWriteRegistryValue(ULONG RelativeTo,
-			       PWSTR Path,
-			       PWSTR ValueName,
-			       ULONG ValueType,
-			       PVOID ValueData,
-			       ULONG ValueLength)
+NTSTATUS 
+RtlWriteRegistryValue(ULONG RelativeTo,
+                      PWSTR Path,
+                      PWSTR ValueName,
+                      ULONG ValueType,
+                      PVOID ValueData,
+                      ULONG ValueLength)
 {
-   UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
 /*  ------------------------------------------  Private Implementation  */
@@ -1211,63 +1431,255 @@ NTSTATUS RtlWriteRegistryValue(ULONG RelativeTo,
 static PVOID 
 CmiObjectParse(PVOID  ParsedObject, PWSTR  *Path)
 {
-  UNIMPLEMENTED
+  NTSTATUS  Status;
+  /* FIXME: this should be allocated based on the largest subkey name  */
+  WCHAR  CurKeyName[256];
+  PWSTR  Remainder, NextSlash;
+  PREGISTRY_FILE  RegistryFile;
+  PKEY_OBJECT  NewKeyObject;
+  HANDLE  KeyHandle;
+  PKEY_BLOCK  CurKeyBlock, SubKeyBlock;
+
+  Status = STATUS_SUCCESS;
+
+  /* FIXME: it should probably get this from ParsedObject  */
+  RegistryFile = CmiVolatileFile;
+
+  /*  Scan key object list for key already open  */
+  NewKeyObject = CmiScanKeyList((*Path) + 1);
+  if (NewKeyObject != NULL)
+    {
+      /*  Return reference if found  */
+      ObReferenceObjectByPointer(NewKeyObject,
+                                 STANDARD_RIGHTS_REQUIRED,
+                                 NULL,
+                                 UserMode);
+      *Path = NULL;
+
+      return  NewKeyObject;
+    }
+
+  /* FIXME: this access of RootKeyBlock should be guarded by spinlock  */
+  CurKeyBlock = CmiGetKeyBlock(RegistryFile, 
+                               RegistryFile->HeaderBlock->RootKeyBlock);
+
+  /*  Loop through each key level and find the needed subkey  */
+  Remainder = (*Path) + 1;
+  while (NT_SUCCESS(Status) && *Remainder != 0)
+    {
+      NextSlash = wcschr(Remainder, L'\\');
+
+      /*  Copy just the current subkey name to a buffer  */
+      if (NextSlash != NULL)
+        {
+          wcsncpy(CurKeyName, Remainder, NextSlash - Remainder);
+          CurKeyName[NextSlash - Remainder] = 0;
+        }
+      else
+        {
+          wcscpy(CurKeyName, Remainder);
+        }
+
+      /* Verify existance of CurKeyName  */
+      Status = CmiScanForSubKey(RegistryFile, 
+                                CurKeyBlock, 
+                                &SubKeyBlock,
+                                CurKeyName,
+                                STANDARD_RIGHTS_REQUIRED);
+      if (!NT_SUCCESS(Status))
+        {
+          continue;
+        }
+      if (SubKeyBlock == NULL)
+        {
+          Status = STATUS_UNSUCCESSFUL;
+          continue;
+        }
+      CmiReleaseBlock(RegistryFile, CurKeyBlock);
+      CurKeyBlock = SubKeyBlock;
+
+      if (NextSlash != NULL)
+        {
+          Remainder = NextSlash + 1;
+        }
+      else
+        {
+          Remainder = NULL;
+        }
+    }
+  
+  /*  Create new key object and put into linked list  */
+  NewKeyObject = ObCreateObject(&KeyHandle, 
+                                STANDARD_RIGHTS_REQUIRED, 
+                                NULL, 
+                                CmiKeyType);
+  if (NewKeyObject == NULL)
+    {
+      return  NULL;
+    }
+  NewKeyObject->Flags = 0;
+  NewKeyObject->Name = ExAllocatePool(NonPagedPool, 
+                                      wcslen(*Path) * sizeof(WCHAR));
+  wcscpy(NewKeyObject->Name, (*Path) + 1);
+  NewKeyObject->KeyBlock = CurKeyBlock;
+  NewKeyObject->RegistryFile = RegistryFile;
+  CmiAddKeyToList(NewKeyObject);
+  *Path = (Remainder != NULL) ? Remainder - 1 : NULL;
+  
+  return  NewKeyObject;
 }
 
 static VOID  
 CmiObjectDelete(PVOID  DeletedObject)
 {
-  /* FIXME: if marked for delete, then call CmiDeleteKey  */
-  UNIMPLEMENTED;
+  PKEY_OBJECT  KeyObject;
+
+  KeyObject = (PKEY_OBJECT) DeletedObject;
+  if (KeyObject->Flags & KO_MARKED_FOR_DELETE)
+    {
+      CmiDestroyKeyBlock(KeyObject->RegistryFile,
+                         KeyObject->KeyBlock);
+    }
+  else
+    {
+      CmiReleaseBlock(KeyObject->RegistryFile,
+                      KeyObject->KeyBlock);
+    }
+  ExFreePool(KeyObject->Name);
+  CmiRemoveKeyFromList(KeyObject);
 }
 
 static NTSTATUS
 CmiBuildKeyPath(PWSTR  *KeyPath, POBJECT_ATTRIBUTES  ObjectAttributes)
 {
+  NTSTATUS  Status;
   ULONG  KeyNameSize;
   PWSTR  KeyNameBuf;
+  PVOID  ObjectBody;
+  PKEY_OBJECT  KeyObject;
+  POBJECT_HEADER  ObjectHeader;
 
-  /* FIXME: Verify ObjectAttributes is in \\Registry space and comppute size for path */
+  /* FIXME: Verify ObjectAttributes is in \\Registry space and compute size for path */
   KeyNameSize = 0;
+  ObjectHeader = 0;
   if (ObjectAttributes->RootDirectory != NULL)
     {
       /* FIXME: determine type of object for RootDirectory  */
-      /* FIXME: if object type is ObDirType  */
-        /* FIXME: fail if RootDirectory != '\\'  */
-        /* FIXME: check for 'Registry' in ObjectName, fail if missing  */
-        /* FIXME: add size for remainder to KeyNameSize  */
-      /* FIXME: else if object type is CmiKeyType  */
-        /* FIXME: add size of Name from RootDirectory object to KeyNameSize  */
-        /* FIXME: add 1 to KeyNamesize for '\\'  */
-        /* FIXME: add size of ObjectName to KeyNameSize  */
-      /* FIXME: else fail on incorrect type  */
+      Status = ObReferenceObjectByHandle(ObjectAttributes->RootDirectory,
+                                         KEY_READ,
+                                         NULL,
+                                         UserMode,
+                                         (PVOID *)&ObjectBody,
+                                         NULL);
+      if (!NT_SUCCESS(Status))
+        {
+          return  Status;
+        }
+      ObjectHeader = BODY_TO_HEADER(ObjectBody);
+
+      if (ObjectHeader->ObjectType != CmiKeyType)
+        {
+          /*  Fail if RootDirectory != '\\'  */
+          if (ObjectBody == NameSpaceRoot)
+            {
+              /*  Check for 'Registry' in ObjectName, fail if missing  */
+              if (wcsncmp(ObjectAttributes->ObjectName->Buffer, 
+                          REG_ROOT_KEY_NAME + 1, 
+                          wcslen(REG_ROOT_KEY_NAME + 1)) != 0 ||
+                          ObjectAttributes->ObjectName->Buffer[wcslen(REG_ROOT_KEY_NAME + 1)] != L'\\')
+                {
+                  ObDereferenceObject(ObjectBody);
+
+                  return  STATUS_OBJECT_PATH_INVALID;
+                }
+ 
+              /*  Compute size of registry portion of path to KeyNameSize  */
+              KeyNameSize = (ObjectAttributes->ObjectName->Length -
+                (wcslen(REG_ROOT_KEY_NAME + 1) + 1))
+                * sizeof(WCHAR);
+            }
+          else if (!wcscmp(ObjectHeader->Name.Buffer, 
+                           REG_ROOT_KEY_NAME + 1))
+            {
+              /*  Add size of ObjectName to KeyNameSize  */
+              KeyNameSize = ObjectAttributes->ObjectName->Length;
+            }
+          else 
+            {
+              ObDereferenceObject(ObjectBody);
+
+              return  STATUS_OBJECT_PATH_INVALID;
+            }
+        }
+      else
+        {
+          KeyObject = (PKEY_OBJECT) ObjectBody;
+        
+          /*  Add size of Name from RootDirectory object to KeyNameSize  */
+          KeyNameSize = wcslen(KeyObject->Name) * sizeof(WCHAR);
+
+          /*  Add 1 to KeyNamesize for '\\'  */
+          KeyNameSize += sizeof(WCHAR);
+
+          /*  Add size of ObjectName to KeyNameSize  */
+          KeyNameSize += ObjectAttributes->ObjectName->Length * sizeof(WCHAR);
+        }
     }
   else
     {
-      /* FIXME: check for \\Registry and fail if missing  */
-      /* FIXME: add size of remainder to KeyNameSize  */
+      /*  Check for \\Registry and fail if missing  */
+      if (wcsncmp(ObjectAttributes->ObjectName->Buffer, 
+                  REG_ROOT_KEY_NAME, 
+                  wcslen(REG_ROOT_KEY_NAME)) != 0 ||
+          ObjectAttributes->ObjectName->Buffer[wcslen(REG_ROOT_KEY_NAME)] != L'\\')
+        {
+          return  STATUS_OBJECT_PATH_INVALID;
+        }
+ 
+      /*  Compute size of registry portion of path to KeyNameSize  */
+      KeyNameSize = (ObjectAttributes->ObjectName->Length - 
+        (wcslen(REG_ROOT_KEY_NAME) + 1)) * sizeof(WCHAR);
     }
 
-  KeyNameBuf = ExAllocatePool(NonPagedPool, KeyNameSize);
+  KeyNameBuf = ExAllocatePool(NonPagedPool, KeyNameSize + sizeof(WCHAR));
 
-  /* FIXME: Construct relative pathname  */
+  /*  Construct relative pathname  */
   KeyNameBuf[0] = 0;
   if (ObjectAttributes->RootDirectory != NULL)
     {
-      /* FIXME: determine type of object for RootDirectory  */
-      /* FIXME: if object type is ObDirType  */
-        /* FIXME: fail if RootDirectory != '\\'  */
-        /* FIXME: check for 'Registry' in ObjectName, fail if missing  */
-        /* FIXME: copy remainder into KeyNameBuf  */
-      /* FIXME: else if object type is CmiKeyType  */
-        /* FIXME: copy Name from RootDirectory object into KeyNameBuf  */
-        /* FIXME: append '\\' into KeyNameBuf  */
-        /* FIXME: append ObjectName into KeyNameBuf  */
+      if (ObjectHeader->ObjectType != CmiKeyType)
+        {
+          /*  Fail if RootDirectory != '\\'  */
+          if (ObjectBody == NameSpaceRoot)
+            {
+              /*  Copy remainder of ObjectName after 'Registry'  */
+              wcscpy(KeyNameBuf, ObjectAttributes->ObjectName->Buffer + wcslen(REG_ROOT_KEY_NAME + 1));
+            }
+          else
+            {
+              /*  Copy all of ObjectName  */
+              wcscpy(KeyNameBuf, ObjectAttributes->ObjectName->Buffer);
+            }
+        }
+      else
+        {
+          KeyObject = (PKEY_OBJECT) ObjectBody;
+        
+          /*  Copy Name from RootDirectory object to KeyNameBuf  */
+          wcscpy(KeyNameBuf, KeyObject->Name);
+
+          /*  Append '\\' onto KeyNameBuf */
+          wcscat(KeyNameBuf, L"\\");
+
+          /*  Append ObjectName onto KeyNameBuf  */
+          wcscat(KeyNameBuf, ObjectAttributes->ObjectName->Buffer);
+        }
     }
   else
     {
-      /* FIXME: check for \\Registry\\ and fail if missing  */
-      /* FIXME: copy remainder into KeyNameBuf  */
+      /*  Copy registry portion of path into KeyNameBuf  */
+      wcscpy(KeyNameBuf, ObjectAttributes->ObjectName->Buffer + 
+        (wcslen(REG_ROOT_KEY_NAME) + 1));
     }
 
   *KeyPath = KeyNameBuf;
@@ -1282,6 +1694,32 @@ CmiAddKeyToList(PKEY_OBJECT  NewKey)
   KeAcquireSpinLock(&CmiKeyListLock, &OldIrql);
   NewKey->NextKey = CmiKeyList;
   CmiKeyList = NewKey;
+  KeReleaseSpinLock(&CmiKeyListLock, OldIrql);
+}
+
+static VOID  
+CmiRemoveKeyFromList(PKEY_OBJECT  KeyToRemove)
+{
+  KIRQL  OldIrql;
+  PKEY_OBJECT  CurKey;
+
+  KeAcquireSpinLock(&CmiKeyListLock, &OldIrql);
+  if (CmiKeyList == KeyToRemove)
+    {
+      CmiKeyList = CmiKeyList->NextKey;
+    }
+  else
+    {
+      CurKey = CmiKeyList;
+      while (CurKey != NULL && CurKey->NextKey != KeyToRemove)
+        {
+          CurKey = CurKey->NextKey;
+        }
+      if (CurKey != NULL)
+        {
+          CurKey->NextKey = KeyToRemove->NextKey;
+        }
+    }
   KeReleaseSpinLock(&CmiKeyListLock, OldIrql);
 }
 
@@ -1305,11 +1743,8 @@ CmiScanKeyList(PWSTR  KeyName)
 static PREGISTRY_FILE  
 CmiCreateRegistry(PWSTR  Filename)
 {
-  ULONG  Idx;
   PREGISTRY_FILE  RegistryFile;
-  PHEADER_BLOCK  HeaderBlock;
-  PHEAP_BLOCK  HeapBlock;
-  PFREE_SUB_BLOCK  FreeSubBlock;
+  PKEY_BLOCK  RootKeyBlock;
 
   RegistryFile = ExAllocatePool(NonPagedPool, sizeof(REGISTRY_FILE));
   if (Filename != NULL)
@@ -1322,126 +1757,1041 @@ CmiCreateRegistry(PWSTR  Filename)
   else
     {
       RegistryFile->Filename = NULL;
-      RegistryFile->Data = NULL;
-      RegistryFile->Extend = CmiExtendVolatileFile;
-      RegistryFile->Flush = NULL;
-      RegistryFile->Data = CmiExtendVolatileFile(NULL, REG_BLOCK_SIZE * 2);
-      RtlZeroMemory(RegistryFile->Data, REG_BLOCK_SIZE * 2);
-      HeaderBlock = (PHEADER_BLOCK) RegistryFile->Data;
-      HeaderBlock->BlockId = 0x66676572;
-      HeaderBlock->DateModified.QuadPart = 0;
-      HeaderBlock->Unused2 = 1;
-      HeaderBlock->Unused3 = 3;
-      HeaderBlock->Unused5 = 1;
-      HeaderBlock->RootKeyBlock = 0;
-      HeaderBlock->BlockSize = REG_BLOCK_SIZE;
-      HeaderBlock->Unused6 = 1;
-      HeaderBlock->Checksum = 0;
-      for (Idx = 0; Idx < 127; Idx++)
-        {
-          HeaderBlock->Checksum += ((DWORD *)HeaderBlock)[Idx];
-        }
-      HeapBlock = (PHEAP_BLOCK) 
-        ((DWORD)RegistryFile->Data + REG_BLOCK_SIZE);
-      HeapBlock->BlockId = 0x6e696268;
-      HeapBlock->PreviousHeapBlock = -1;
-      HeapBlock->NextHeapBlock = -1;
-      HeapBlock->BlockSize = REG_BLOCK_SIZE;
-      FreeSubBlock = (PFREE_SUB_BLOCK) 
-        ((DWORD)HeapBlock + REG_HEAP_BLOCK_DATA_OFFSET);
-      FreeSubBlock->SubBlockSize = 
-        -(REG_BLOCK_SIZE - REG_HEAP_BLOCK_DATA_OFFSET);
+      RegistryFile->FileHandle = NULL;
+
+      RegistryFile->HeaderBlock = (PHEADER_BLOCK) 
+        ExAllocatePool(NonPagedPool, sizeof(HEADER_BLOCK));
+      RtlZeroMemory(RegistryFile->HeaderBlock, sizeof(HEADER_BLOCK));
+      RegistryFile->HeaderBlock->BlockId = 0x66676572;
+      RegistryFile->HeaderBlock->DateModified.QuadPart = 0;
+      RegistryFile->HeaderBlock->Unused2 = 1;
+      RegistryFile->HeaderBlock->Unused3 = 3;
+      RegistryFile->HeaderBlock->Unused5 = 1;
+      RegistryFile->HeaderBlock->RootKeyBlock = 0;
+      RegistryFile->HeaderBlock->BlockSize = REG_BLOCK_SIZE;
+      RegistryFile->HeaderBlock->Unused6 = 1;
+      RegistryFile->HeaderBlock->Checksum = 0;
+      RootKeyBlock = (PKEY_BLOCK) 
+        ExAllocatePool(NonPagedPool, sizeof(KEY_BLOCK));
+      RtlZeroMemory(RootKeyBlock, sizeof(KEY_BLOCK));
+      RootKeyBlock->SubBlockId = REG_KEY_BLOCK_ID;
+      RootKeyBlock->Type = REG_ROOT_KEY_BLOCK_TYPE;
+      ZwQuerySystemTime((PTIME) &RootKeyBlock->LastWriteTime);
+      RootKeyBlock->ParentKeyOffset = 0;
+      RootKeyBlock->NumberOfSubKeys = 0;
+      RootKeyBlock->HashTableOffset = 0;
+      RootKeyBlock->NumberOfValues = 0;
+      RootKeyBlock->ValuesOffset = 0;
+      RootKeyBlock->SecurityKeyOffset = 0;
+      RootKeyBlock->ClassNameOffset = sizeof(KEY_BLOCK);
+      RootKeyBlock->NameSize = 0;
+      RootKeyBlock->ClassSize = 0;
+      RootKeyBlock->Name[0] = 0;
+      RegistryFile->HeaderBlock->RootKeyBlock = (BLOCK_OFFSET) RootKeyBlock;
     }
 
   return  RegistryFile;
 }
 
 static NTSTATUS
-CmiCreateKey(PREGISTRY_FILE  RegistryFile,
-             PWSTR  KeyNameBuf,
-             PKEY_BLOCK  *KeyBlock,
-             ACCESS_MASK DesiredAccess,
-             ULONG TitleIndex,
-             PUNICODE_STRING Class, 
-             ULONG CreateOptions, 
-             PULONG Disposition)
+CmiCreateKey(IN PREGISTRY_FILE  RegistryFile,
+             IN PWSTR  KeyNameBuf,
+             OUT PKEY_BLOCK  *KeyBlock,
+             IN ACCESS_MASK DesiredAccess,
+             IN ULONG TitleIndex,
+             IN PUNICODE_STRING Class, 
+             IN ULONG CreateOptions, 
+             OUT PULONG Disposition)
 {
-  UNIMPLEMENTED;
+  /* FIXME: this should be allocated based on the largest subkey name  */
+  NTSTATUS  Status;
+  WCHAR  CurKeyName[256];
+  PWSTR  ClassName;
+  PWSTR  Remainder, NextSlash;
+  PKEY_BLOCK  CurKeyBlock, SubKeyBlock;
+
+  /* FIXME:  Should handle search by Class/TitleIndex  */
+
+  /*  Loop through each key level and find or build the needed subkey  */
+  Status = STATUS_SUCCESS;
+  /* FIXME: this access of RootKeyBlock should be guarded by spinlock  */
+  CurKeyBlock = CmiGetKeyBlock(RegistryFile, 
+                               RegistryFile->HeaderBlock->RootKeyBlock);
+  Remainder = KeyNameBuf;
+  while (NT_SUCCESS(Status)  &&
+         (NextSlash = wcschr(Remainder, L'\\')) != NULL)
+    {
+      /*  Copy just the current subkey name to a buffer  */
+      wcsncpy(CurKeyName, Remainder, NextSlash - Remainder);
+      CurKeyName[NextSlash - Remainder] = 0;
+
+      /* Verify existance of/Create CurKeyName  */
+      Status = CmiScanForSubKey(RegistryFile, 
+                                CurKeyBlock, 
+                                &SubKeyBlock,
+                                CurKeyName,
+                                DesiredAccess);
+      if (!NT_SUCCESS(Status))
+        {
+          continue;
+        }
+      if (SubKeyBlock == NULL)
+        {
+          Status = CmiAddSubKey(RegistryFile, 
+                                CurKeyBlock,
+                                &SubKeyBlock,
+                                CurKeyName,
+                                0,
+                                NULL, 
+                                0);
+          if (!NT_SUCCESS(Status))
+            {
+              continue;
+            }
+        }
+      CmiReleaseBlock(RegistryFile, CurKeyBlock);
+      CurKeyBlock = SubKeyBlock;
+
+      Remainder = NextSlash + 1;      
+    }
+  if (NT_SUCCESS(Status))
+    {
+      Status = CmiScanForSubKey(RegistryFile, 
+                                CurKeyBlock, 
+                                &SubKeyBlock,
+                                CurKeyName,
+                                DesiredAccess);
+      if (NT_SUCCESS(Status))
+        {
+          if (SubKeyBlock == NULL)
+            {
+              if (Class != NULL)
+                {
+                  ClassName = ExAllocatePool(NonPagedPool, Class->Length + 1);
+                  wcsncpy(ClassName, Class->Buffer, Class->Length);
+                  ClassName[Class->Length] = 0;
+                }
+              else
+                {
+                  ClassName = 0;
+                }
+              Status = CmiAddSubKey(RegistryFile, 
+                                    CurKeyBlock,
+                                    &SubKeyBlock,
+                                    Remainder,
+                                    TitleIndex,
+                                    ClassName, 
+                                    CreateOptions);
+              ExFreePool(ClassName);
+              if (NT_SUCCESS(Status) && Disposition != NULL)
+                {
+                  *Disposition = REG_CREATED_NEW_KEY;
+                }
+            }
+          else if (Disposition != NULL)
+            {
+              *Disposition = REG_OPENED_EXISTING_KEY;
+            }
+        }
+      *KeyBlock = SubKeyBlock;
+    }
+  CmiReleaseBlock(RegistryFile, CurKeyBlock);
+  
+  return  Status;
 }
 
 static NTSTATUS  
-CmiFindKey(PREGISTRY_FILE  RegistryFile,
-           PWSTR  KeyNameBuf,
-           PKEY_BLOCK  *KeyBlock,
-           ACCESS_MASK DesiredAccess,
-           ULONG TitleIndex,
-           PUNICODE_STRING Class)
+CmiFindKey(IN PREGISTRY_FILE  RegistryFile,
+           IN PWSTR  KeyNameBuf,
+           OUT PKEY_BLOCK  *KeyBlock,
+           IN ACCESS_MASK DesiredAccess,
+           IN ULONG TitleIndex,
+           IN PUNICODE_STRING Class)
 {
-  UNIMPLEMENTED;
-}
+  /* FIXME: this should be allocated based on the largest subkey name  */
+  NTSTATUS  Status;
+  WCHAR  CurKeyName[256];
+  PWSTR  Remainder, NextSlash;
+  PKEY_BLOCK  CurKeyBlock, SubKeyBlock;
 
-static PHASH_TABLE_BLOCK  
-CmiGetHashTableBlock(PREGISTRY_FILE  RegistryFile,
-                     PKEY_BLOCK  KeyBlock)
-{
-  UNIMPLEMENTED;
-}
+  /* FIXME:  Should handle search by Class/TitleIndex  */
 
-static PKEY_BLOCK  
-CmiGetKeyFromHashByIndex(PREGISTRY_FILE RegistryFile,
-                         PHASH_TABLE_BLOCK  HashTableBlock,
-                         ULONG  Index)
-{
-  UNIMPLEMENTED;
-}
+  /*  Loop through each key level and find the needed subkey  */
+  Status = STATUS_SUCCESS;
+  /* FIXME: this access of RootKeyBlock should be guarded by spinlock  */
+  CurKeyBlock = CmiGetKeyBlock(RegistryFile, RegistryFile->HeaderBlock->RootKeyBlock);
+  Remainder = KeyNameBuf;
+  while (NT_SUCCESS(Status) &&
+         (NextSlash = wcschr(Remainder, L'\\')) != NULL)
+    {
+      /*  Copy just the current subkey name to a buffer  */
+      wcsncpy(CurKeyName, Remainder, NextSlash - Remainder);
+      CurKeyName[NextSlash - Remainder] = 0;
 
-static VOID 
-CmiLockBlock(PREGISTRY_FILE  RegistryFile,
-             PVOID  Block)
-{
-  UNIMPLEMENTED;
-}
+      /* Verify existance of CurKeyName  */
+      Status = CmiScanForSubKey(RegistryFile, 
+                                CurKeyBlock, 
+                                &SubKeyBlock,
+                                CurKeyName,
+                                DesiredAccess);
+      if (!NT_SUCCESS(Status))
+        {
+          continue;
+        }
+      if (SubKeyBlock == NULL)
+        {
+          Status = STATUS_UNSUCCESSFUL;
+          continue;
+        }
+      CmiReleaseBlock(RegistryFile, CurKeyBlock);
+      CurKeyBlock = SubKeyBlock;
 
-static VOID 
-CmiUnlockBlock(PREGISTRY_FILE  RegistryFile,
-               PVOID  Block)
-{
-  UNIMPLEMENTED;
-}
-
-static PWSTR  
-CmiGetClassBlock(PREGISTRY_FILE  RegistryFile,
-                 PKEY_BLOCK  KeyBlock)
-{
-  UNIMPLEMENTED;
+      Remainder = NextSlash + 1;      
+    }
+  if (NT_SUCCESS(Status))
+    {
+      Status = CmiScanForSubKey(RegistryFile, 
+                                CurKeyBlock, 
+                                &SubKeyBlock,
+                                CurKeyName,
+                                DesiredAccess);
+      if (NT_SUCCESS(Status))
+        {
+          if (SubKeyBlock == NULL)
+            {
+              Status = STATUS_UNSUCCESSFUL;
+            }
+          else
+            {
+              *KeyBlock = SubKeyBlock;
+            }
+        }
+    }
+  CmiReleaseBlock(RegistryFile, CurKeyBlock);
+  
+  return  Status;
 }
 
 static ULONG  
 CmiGetMaxNameLength(PREGISTRY_FILE  RegistryFile,
                     PKEY_BLOCK  KeyBlock)
 {
-  UNIMPLEMENTED;
+  ULONG  Idx, MaxName;
+  PHASH_TABLE_BLOCK  HashBlock;
+  PKEY_BLOCK  CurSubKeyBlock;
+
+  MaxName = 0;
+  HashBlock = CmiGetHashTableBlock(RegistryFile, KeyBlock->HashTableOffset);
+  if (HashBlock == 0)
+    {
+      return  0;
+    }
+  for (Idx = 0; Idx < HashBlock->HashTableSize; Idx++)
+    {
+      if (HashBlock->Table[Idx].KeyOffset != 0)
+        {
+          CurSubKeyBlock = CmiGetKeyBlock(RegistryFile,
+                                          HashBlock->Table[Idx].KeyOffset);
+          if (MaxName < CurSubKeyBlock->NameSize)
+            {
+              MaxName = CurSubKeyBlock->NameSize;
+            }
+          CmiReleaseBlock(RegistryFile, CurSubKeyBlock);
+        }
+    }
+
+  CmiReleaseBlock(RegistryFile, HashBlock);
+  
+  return  MaxName;
 }
 
 static ULONG  
 CmiGetMaxClassLength(PREGISTRY_FILE  RegistryFile,
                      PKEY_BLOCK  KeyBlock)
 {
-  UNIMPLEMENTED;
+  ULONG  Idx, MaxClass;
+  PHASH_TABLE_BLOCK  HashBlock;
+  PKEY_BLOCK  CurSubKeyBlock;
+
+  MaxClass = 0;
+  HashBlock = CmiGetHashTableBlock(RegistryFile, KeyBlock->HashTableOffset);
+  if (HashBlock == 0)
+    {
+      return  0;
+    }
+  for (Idx = 0; Idx < HashBlock->HashTableSize; Idx++)
+    {
+      if (HashBlock->Table[Idx].KeyOffset != 0)
+        {
+          CurSubKeyBlock = CmiGetKeyBlock(RegistryFile,
+                                          HashBlock->Table[Idx].KeyOffset);
+          if (MaxClass < CurSubKeyBlock->ClassSize)
+            {
+              MaxClass = CurSubKeyBlock->ClassSize;
+            }
+          CmiReleaseBlock(RegistryFile, CurSubKeyBlock);
+        }
+    }
+
+  CmiReleaseBlock(RegistryFile, HashBlock);
+  
+  return  MaxClass;
 }
 
 static ULONG  
 CmiGetMaxValueNameLength(PREGISTRY_FILE  RegistryFile,
                          PKEY_BLOCK  KeyBlock)
 {
-  UNIMPLEMENTED;
+  ULONG  Idx, MaxValueName;
+  PVALUE_LIST_BLOCK  ValueListBlock;
+  PVALUE_BLOCK  CurValueBlock;
+
+  ValueListBlock = CmiGetBlock(RegistryFile, 
+                               KeyBlock->ValuesOffset);
+  MaxValueName = 0;
+  if (ValueListBlock == 0)
+    {
+      return  0;
+    }
+  for (Idx = 0; Idx < KeyBlock->NumberOfValues; Idx++)
+    {
+      CurValueBlock = CmiGetBlock(RegistryFile,
+                                  ValueListBlock->Values[Idx]);
+      if (CurValueBlock != NULL &&
+          MaxValueName < CurValueBlock->NameSize)
+        {
+          MaxValueName = CurValueBlock->NameSize;
+        }
+      CmiReleaseBlock(RegistryFile, CurValueBlock);
+    }
+
+  CmiReleaseBlock(RegistryFile, ValueListBlock);
+  
+  return  MaxValueName;
 }
 
 static ULONG  
 CmiGetMaxValueDataLength(PREGISTRY_FILE  RegistryFile,
                          PKEY_BLOCK  KeyBlock)
 {
+  ULONG  Idx, MaxValueData;
+  PVALUE_LIST_BLOCK  ValueListBlock;
+  PVALUE_BLOCK  CurValueBlock;
+
+  ValueListBlock = CmiGetBlock(RegistryFile, 
+                               KeyBlock->ValuesOffset);
+  MaxValueData = 0;
+  if (ValueListBlock == 0)
+    {
+      return  0;
+    }
+  for (Idx = 0; Idx < KeyBlock->NumberOfValues; Idx++)
+    {
+      CurValueBlock = CmiGetBlock(RegistryFile,
+                                  ValueListBlock->Values[Idx]);
+      if (CurValueBlock != NULL &&
+          MaxValueData < CurValueBlock->DataSize)
+        {
+          MaxValueData = CurValueBlock->DataSize;
+        }
+      CmiReleaseBlock(RegistryFile, CurValueBlock);
+    }
+
+  CmiReleaseBlock(RegistryFile, ValueListBlock);
+  
+  return  MaxValueData;
+}
+
+static NTSTATUS
+CmiScanForSubKey(IN PREGISTRY_FILE  RegistryFile, 
+                 IN PKEY_BLOCK  KeyBlock, 
+                 OUT PKEY_BLOCK  *SubKeyBlock,
+                 IN PWSTR  KeyName,
+                 IN ACCESS_MASK  DesiredAccess)
+{
+  ULONG  Idx;
+  PHASH_TABLE_BLOCK  HashBlock;
+  PKEY_BLOCK  CurSubKeyBlock;
+
+  HashBlock = CmiGetHashTableBlock(RegistryFile, KeyBlock->HashTableOffset);
+  *SubKeyBlock = NULL;
+  if (HashBlock == 0)
+    {
+      return  STATUS_SUCCESS;
+    }
+  for (Idx = 0; Idx < HashBlock->HashTableSize; Idx++)
+    {
+      if (HashBlock->Table[Idx].KeyOffset != 0 &&
+          !wcsncmp(KeyName, (PWSTR) &HashBlock->Table[Idx].HashValue, 4))
+        {
+          CurSubKeyBlock = CmiGetKeyBlock(RegistryFile,
+                                          HashBlock->Table[Idx].KeyOffset);
+          if (!wcscmp(KeyName, CurSubKeyBlock->Name))
+            {
+              *SubKeyBlock = CurSubKeyBlock;
+              break;
+            }
+          else
+            {
+              CmiReleaseBlock(RegistryFile, CurSubKeyBlock);
+            }
+        }
+    }
+
+  CmiReleaseBlock(RegistryFile, HashBlock);
+  
+  return  STATUS_SUCCESS;
+}
+
+static NTSTATUS
+CmiAddSubKey(PREGISTRY_FILE  RegistryFile, 
+             PKEY_BLOCK  KeyBlock,
+             PKEY_BLOCK  *SubKeyBlock,
+             PWSTR  NewSubKeyName,
+             ULONG  TitleIndex,
+             PWSTR  Class, 
+             ULONG  CreateOptions)
+{
+  NTSTATUS  Status;
+  PHASH_TABLE_BLOCK  HashBlock, NewHashBlock;
+  PKEY_BLOCK  NewKeyBlock;
+
+  Status = CmiAllocateKeyBlock(RegistryFile,
+                               &NewKeyBlock,
+                               NewSubKeyName,
+                               TitleIndex,
+                               Class,
+                               CreateOptions);
+  if (!NT_SUCCESS(Status))
+    {
+      return  Status;
+    }
+  if (KeyBlock->HashTableOffset == 0)
+    {
+      Status = CmiAllocateHashTableBlock(RegistryFile, 
+                                         &HashBlock,
+                                         REG_INIT_HASH_TABLE_SIZE);
+      if (!NT_SUCCESS(Status))
+        {
+          return  Status;
+        }
+      KeyBlock->HashTableOffset = CmiGetBlockOffset(RegistryFile, HashBlock);
+    }
+  else
+    {
+      HashBlock = CmiGetHashTableBlock(RegistryFile, KeyBlock->HashTableOffset);
+      if (KeyBlock->NumberOfSubKeys + 1 >= HashBlock->HashTableSize)
+        {
+
+          /* FIXME: All Subkeys will need to be rehashed here!  */
+
+          /*  Reallocate the hash table block  */
+          Status = CmiAllocateHashTableBlock(RegistryFile, 
+                                             &NewHashBlock,
+                                             HashBlock->HashTableSize +
+                                               REG_EXTEND_HASH_TABLE_SIZE);
+          if (!NT_SUCCESS(Status))
+            {
+              return  Status;
+            }
+          RtlZeroMemory(&NewHashBlock->Table[0], 
+                        sizeof(NewHashBlock->Table[0]) * NewHashBlock->HashTableSize);
+          RtlCopyMemory(&NewHashBlock->Table[0],
+                        &HashBlock->Table[0],
+                        sizeof(NewHashBlock->Table[0]) * HashBlock->HashTableSize);
+          KeyBlock->HashTableOffset = CmiGetBlockOffset(RegistryFile, NewHashBlock);
+          CmiDestroyHashTableBlock(RegistryFile, HashBlock);
+          HashBlock = NewHashBlock;
+        }
+    }
+  Status = CmiAddKeyToHashTable(RegistryFile, HashBlock, NewKeyBlock);
+  if (NT_SUCCESS(Status))
+    { 
+      KeyBlock->NumberOfSubKeys++;
+      *SubKeyBlock = NewKeyBlock;
+    }
+  CmiReleaseBlock(RegistryFile, HashBlock);
+  
+  return  Status;
+}
+
+static NTSTATUS  
+CmiScanKeyForValue(IN PREGISTRY_FILE  RegistryFile,
+                   IN PKEY_BLOCK  KeyBlock,
+                   IN PWSTR  ValueName,
+                   OUT PVALUE_BLOCK  *ValueBlock)
+{
+  ULONG  Idx;
+  PVALUE_LIST_BLOCK  ValueListBlock;
+  PVALUE_BLOCK  CurValueBlock;
+
+  ValueListBlock = CmiGetBlock(RegistryFile, 
+                               KeyBlock->ValuesOffset);
+  *ValueBlock = NULL;
+  if (ValueListBlock == 0)
+    {
+      return  STATUS_SUCCESS;
+    }
+  for (Idx = 0; Idx < KeyBlock->NumberOfValues; Idx++)
+    {
+      CurValueBlock = CmiGetBlock(RegistryFile,
+                                  ValueListBlock->Values[Idx]);
+      if (CurValueBlock != NULL &&
+          !wcscmp(CurValueBlock->Name, ValueName))
+        {
+          *ValueBlock = CurValueBlock;
+          break;
+        }
+      CmiReleaseBlock(RegistryFile, CurValueBlock);
+    }
+
+  CmiReleaseBlock(RegistryFile, ValueListBlock);
+  
+  return  STATUS_SUCCESS;
+}
+
+static NTSTATUS  
+CmiAddValueToKey(IN PREGISTRY_FILE  RegistryFile,
+                 IN PKEY_BLOCK  KeyBlock,
+                 IN PWSTR  ValueNameBuf,
+                 IN ULONG  Type, 
+                 IN PVOID  Data,
+                 IN ULONG  DataSize)
+{
+  NTSTATUS  Status;
+  PVALUE_LIST_BLOCK  ValueListBlock, NewValueListBlock;
+  PVALUE_BLOCK  ValueBlock;
+
+  Status = CmiAllocateValueBlock(RegistryFile,
+                                 &ValueBlock,
+                                 ValueNameBuf,
+                                 Type,
+                                 Data,
+                                 DataSize);
+  if (!NT_SUCCESS(Status))
+    {
+      return  Status;
+    }
+  ValueListBlock = CmiGetBlock(RegistryFile, 
+                               KeyBlock->ValuesOffset);
+  if (ValueListBlock == NULL)
+    {
+      Status = CmiAllocateBlock(RegistryFile,
+                                (PVOID) &ValueListBlock,
+                                sizeof(BLOCK_OFFSET) *
+                                  REG_VALUE_LIST_BLOCK_MULTIPLE);
+      if (!NT_SUCCESS(Status))
+        {
+          CmiDestroyValueBlock(RegistryFile,
+                               ValueBlock);
+          return  Status;
+        }
+    }
+  else if (KeyBlock->NumberOfValues % REG_VALUE_LIST_BLOCK_MULTIPLE)
+    {
+      Status = CmiAllocateBlock(RegistryFile,
+                                (PVOID) &NewValueListBlock,
+                                sizeof(BLOCK_OFFSET) *
+                                  (KeyBlock->NumberOfValues + 
+                                    REG_VALUE_LIST_BLOCK_MULTIPLE));
+      if (!NT_SUCCESS(Status))
+        {
+          CmiDestroyValueBlock(RegistryFile,
+                               ValueBlock);
+          return  Status;
+        }
+      RtlCopyMemory(NewValueListBlock, 
+                    ValueListBlock,
+                    sizeof(BLOCK_OFFSET) * KeyBlock->NumberOfValues);
+      KeyBlock->ValuesOffset = CmiGetBlockOffset(RegistryFile, 
+                                                 NewValueListBlock);
+      CmiDestroyBlock(RegistryFile, ValueListBlock);
+      ValueListBlock = NewValueListBlock;
+    }
+  ValueListBlock->Values[KeyBlock->NumberOfValues] = 
+    CmiGetBlockOffset(RegistryFile, ValueBlock);
+  KeyBlock->NumberOfValues++;
+  CmiReleaseBlock(RegistryFile, ValueBlock);
+  CmiReleaseBlock(RegistryFile, ValueListBlock);
+
+  return  STATUS_SUCCESS;
+}
+
+static NTSTATUS  
+CmiDeleteValueFromKey(IN PREGISTRY_FILE  RegistryFile,
+                      IN PKEY_BLOCK  KeyBlock,
+                      IN PWSTR  ValueName)
+{
+  ULONG  Idx;
+  PVALUE_LIST_BLOCK  ValueListBlock;
+  PVALUE_BLOCK  CurValueBlock;
+
+  ValueListBlock = CmiGetBlock(RegistryFile, 
+                               KeyBlock->ValuesOffset);
+  if (ValueListBlock == 0)
+    {
+      return  STATUS_SUCCESS;
+    }
+  for (Idx = 0; Idx < KeyBlock->NumberOfValues; Idx++)
+    {
+      CurValueBlock = CmiGetBlock(RegistryFile,
+                                  ValueListBlock->Values[Idx]);
+      if (CurValueBlock != NULL &&
+          !wcscmp(CurValueBlock->Name, ValueName))
+        {
+          if (KeyBlock->NumberOfValues - 1 < Idx)
+            {
+              RtlCopyMemory(&ValueListBlock->Values[Idx],
+                            &ValueListBlock->Values[Idx + 1],
+                            sizeof(BLOCK_OFFSET) * 
+                              (KeyBlock->NumberOfValues - 1 - Idx));
+            }
+          else
+            {
+              RtlZeroMemory(&ValueListBlock->Values[Idx],
+                            sizeof(BLOCK_OFFSET));
+            }
+          KeyBlock->NumberOfValues -= 1;
+          CmiDestroyValueBlock(RegistryFile, CurValueBlock);
+
+          break;
+        }
+      CmiReleaseBlock(RegistryFile, CurValueBlock);
+    }
+
+  CmiReleaseBlock(RegistryFile, ValueListBlock);
+  
+  return  STATUS_SUCCESS;
+}
+
+static NTSTATUS
+CmiAllocateKeyBlock(IN PREGISTRY_FILE  RegistryFile,
+                    OUT PKEY_BLOCK  *KeyBlock,
+                    IN PWSTR  KeyName,
+                    IN ULONG  TitleIndex,
+                    IN PWSTR  Class,
+                    IN ULONG  CreateOptions)
+{
+  NTSTATUS  Status;
+  ULONG  NewKeySize;
+  PKEY_BLOCK  NewKeyBlock;
+
+  Status = STATUS_SUCCESS;
+
+  /*  Handle volatile files first  */
+  if (RegistryFile->Filename == NULL)
+    {
+      NewKeySize = sizeof(KEY_BLOCK) + wcslen(KeyName) + 1 + 
+        (Class != NULL ? wcslen(Class) + 1 : 0);
+      NewKeyBlock = ExAllocatePool(NonPagedPool, NewKeySize);
+      if (NewKeyBlock == NULL)
+        {
+          Status = STATUS_INSUFFICIENT_RESOURCES;
+        }
+      else
+        {
+          RtlZeroMemory(NewKeyBlock, NewKeySize);
+          NewKeyBlock->SubBlockId = REG_KEY_BLOCK_ID;
+          NewKeyBlock->Type = REG_KEY_BLOCK_TYPE;
+          ZwQuerySystemTime((PTIME) &NewKeyBlock->LastWriteTime);
+          NewKeyBlock->ParentKeyOffset = 0;
+          NewKeyBlock->NumberOfSubKeys = 0;
+          NewKeyBlock->HashTableOffset = 0;
+          NewKeyBlock->NumberOfValues = 0;
+          NewKeyBlock->ValuesOffset = 0;
+          NewKeyBlock->SecurityKeyOffset = 0;
+          NewKeyBlock->ClassNameOffset = sizeof(KEY_BLOCK) + wcslen(KeyName);
+          NewKeyBlock->NameSize = wcslen(KeyName);
+          NewKeyBlock->ClassSize = (Class != NULL) ? wcslen(Class) : 0;
+          wcscpy(NewKeyBlock->Name, KeyName);
+          if (Class != NULL)
+            {
+              wcscpy(&NewKeyBlock->Name[wcslen(KeyName) + 1], Class);
+            }
+          CmiLockBlock(RegistryFile, NewKeyBlock);
+          *KeyBlock = NewKeyBlock;
+        }
+    }
+  else
+    {
+      UNIMPLEMENTED;
+    }
+
+  return  Status;
+}
+
+static PKEY_BLOCK
+CmiGetKeyBlock(PREGISTRY_FILE  RegistryFile,
+               BLOCK_OFFSET  KeyBlockOffset)
+{
+  PKEY_BLOCK  KeyBlock;
+
+  if (RegistryFile->Filename == NULL)
+    {
+      CmiLockBlock(RegistryFile, (PVOID) KeyBlockOffset);
+
+      KeyBlock = (PKEY_BLOCK) KeyBlockOffset;
+    }
+  else
+    {
+      UNIMPLEMENTED;
+    }
+
+  return  KeyBlock;
+}
+
+static NTSTATUS
+CmiDestroyKeyBlock(PREGISTRY_FILE  RegistryFile,
+                   PKEY_BLOCK  KeyBlock)
+{
+  NTSTATUS  Status;
+
+  Status = STATUS_SUCCESS;
+
+  if (RegistryFile->Filename == NULL)
+    {
+      CmiReleaseBlock(RegistryFile, KeyBlock);
+      ExFreePool(KeyBlock);
+    }
+  else
+    {  
+      UNIMPLEMENTED;
+    }
+
+  return  Status;
+}
+
+static NTSTATUS
+CmiAllocateHashTableBlock(IN PREGISTRY_FILE  RegistryFile,
+                          OUT PHASH_TABLE_BLOCK  *HashBlock,
+                          IN ULONG  HashTableSize)
+{
+  NTSTATUS  Status;
+  ULONG  NewHashSize;
+  PHASH_TABLE_BLOCK  NewHashBlock;
+
+  Status = STATUS_SUCCESS;
+
+  /*  Handle volatile files first  */
+  if (RegistryFile->Filename == NULL)
+    {
+      NewHashSize = sizeof(HASH_TABLE_BLOCK) + 
+        (HashTableSize - 1) * sizeof(HASH_RECORD);
+      NewHashBlock = ExAllocatePool(NonPagedPool, NewHashSize);
+      if (NewHashBlock == NULL)
+        {
+          Status = STATUS_INSUFFICIENT_RESOURCES;
+        }
+      else
+        {
+          RtlZeroMemory(NewHashBlock, NewHashSize);
+          NewHashBlock->SubBlockId = REG_HASH_TABLE_BLOCK_ID;
+          NewHashBlock->HashTableSize = HashTableSize;
+          CmiLockBlock(RegistryFile, NewHashBlock);
+          *HashBlock = NewHashBlock;
+        }
+    }
+  else
+    {
+      UNIMPLEMENTED;
+    }
+
+  return  Status;
+}
+
+static PHASH_TABLE_BLOCK  
+CmiGetHashTableBlock(PREGISTRY_FILE  RegistryFile,
+                     BLOCK_OFFSET  HashBlockOffset)
+{
+  PHASH_TABLE_BLOCK  HashBlock;
+
+  if (RegistryFile->Filename == NULL)
+    {
+      CmiLockBlock(RegistryFile, (PVOID) HashBlockOffset);
+
+      HashBlock = (PHASH_TABLE_BLOCK) HashBlockOffset;
+    }
+  else
+    {
+      UNIMPLEMENTED;
+    }
+
+  return  HashBlock;
+}
+
+static PKEY_BLOCK  
+CmiGetKeyFromHashByIndex(PREGISTRY_FILE RegistryFile,
+                         PHASH_TABLE_BLOCK  HashBlock,
+                         ULONG  Index)
+{
+  PKEY_BLOCK  KeyBlock;
+
+  if (RegistryFile->Filename == NULL)
+    {
+      KeyBlock = (PKEY_BLOCK) HashBlock->Table[Index].KeyOffset;
+      CmiLockBlock(RegistryFile, KeyBlock);
+    }
+  else
+    {
+      UNIMPLEMENTED;
+    }
+
+  return  KeyBlock;
+}
+
+static NTSTATUS  
+CmiAddKeyToHashTable(PREGISTRY_FILE  RegistryFile,
+                     PHASH_TABLE_BLOCK  HashBlock,
+                     PKEY_BLOCK  NewKeyBlock)
+{
   UNIMPLEMENTED;
+}
+
+static NTSTATUS
+CmiDestroyHashTableBlock(PREGISTRY_FILE  RegistryFile,
+                         PHASH_TABLE_BLOCK  HashBlock)
+{
+  NTSTATUS  Status;
+
+  Status = STATUS_SUCCESS;
+
+  if (RegistryFile->Filename == NULL)
+    {
+      CmiReleaseBlock(RegistryFile, HashBlock);
+      ExFreePool(HashBlock);
+    }
+  else
+    {  
+      Status = STATUS_NOT_IMPLEMENTED;
+    }
+
+  return  Status;
+}
+
+static NTSTATUS
+CmiAllocateValueBlock(PREGISTRY_FILE  RegistryFile,
+                      PVALUE_BLOCK  *ValueBlock,
+                      IN PWSTR  ValueNameBuf,
+                      IN ULONG  Type, 
+                      IN PVOID  Data,
+                      IN ULONG  DataSize)
+{
+  NTSTATUS  Status;
+  ULONG  NewValueSize;
+  PVALUE_BLOCK  NewValueBlock;
+  PVOID  DataBlock;
+
+  Status = STATUS_SUCCESS;
+
+  /*  Handle volatile files first  */
+  if (RegistryFile->Filename == NULL)
+    {
+      NewValueSize = sizeof(VALUE_BLOCK) + wcslen(ValueNameBuf);
+      NewValueBlock = ExAllocatePool(NonPagedPool, NewValueSize);
+      if (NewValueBlock == NULL)
+        {
+          Status = STATUS_INSUFFICIENT_RESOURCES;
+        }
+      else
+        {
+          RtlZeroMemory(NewValueBlock, NewValueSize);
+          NewValueBlock->SubBlockId = REG_VALUE_BLOCK_ID;
+          NewValueBlock->NameSize = wcslen(ValueNameBuf);
+          wcscpy(NewValueBlock->Name, ValueNameBuf);
+          NewValueBlock->DataType = Type;
+          NewValueBlock->DataSize = DataSize;
+          Status = CmiAllocateBlock(RegistryFile,
+                                    &DataBlock,
+                                    DataSize);
+          if (!NT_SUCCESS(Status))
+            {
+              ExFreePool(NewValueBlock);
+            }
+          else
+            {
+              RtlCopyMemory(DataBlock, Data, DataSize);
+              NewValueBlock->DataOffset = CmiGetBlockOffset(RegistryFile,
+                                                            DataBlock);
+              CmiLockBlock(RegistryFile, NewValueBlock);
+              CmiReleaseBlock(RegistryFile, DataBlock);
+              *ValueBlock = NewValueBlock;
+            }
+        }
+    }
+  else
+    {
+      Status = STATUS_NOT_IMPLEMENTED;
+    }
+
+  return  Status;
+}
+
+static NTSTATUS  
+CmiReplaceValueData(IN PREGISTRY_FILE  RegistryFile,
+                    IN PVALUE_BLOCK  ValueBlock,
+                    IN ULONG  Type, 
+                    IN PVOID  Data,
+                    IN ULONG  DataSize)
+{
+  NTSTATUS  Status;
+  PVOID   DataBlock, NewDataBlock;
+
+  Status = STATUS_SUCCESS;
+
+  /* If new data size is <= current then overwrite current data  */
+  if (DataSize <= ValueBlock->DataSize)
+    {
+      DataBlock = CmiGetBlock(RegistryFile, ValueBlock->DataOffset);
+      RtlCopyMemory(DataBlock, Data, DataSize);
+      ValueBlock->DataSize = DataSize;
+      ValueBlock->DataType = Type;
+      CmiReleaseBlock(RegistryFile, DataBlock);
+    }
+  else
+    {
+      /*  Destroy current data block and allocate a new one  */
+      DataBlock = CmiGetBlock(RegistryFile, ValueBlock->DataOffset);
+      Status = CmiAllocateBlock(RegistryFile,
+                                &NewDataBlock,
+                                DataSize);
+      RtlCopyMemory(NewDataBlock, Data, DataSize);
+      ValueBlock->DataOffset = CmiGetBlockOffset(RegistryFile, DataBlock);
+      ValueBlock->DataSize = DataSize;
+      ValueBlock->DataType = Type;
+      CmiReleaseBlock(RegistryFile, NewDataBlock);
+      CmiDestroyBlock(RegistryFile, DataBlock);
+    }
+
+  return  Status;
+}
+
+static NTSTATUS
+CmiDestroyValueBlock(PREGISTRY_FILE  RegistryFile,
+                     PVALUE_BLOCK  ValueBlock)
+{
+  NTSTATUS  Status;
+
+  Status = CmiDestroyBlock(RegistryFile, 
+                           CmiGetBlock(RegistryFile,
+                                       ValueBlock->DataOffset));
+  if (!NT_SUCCESS(Status))
+    {
+      return  Status;
+    }
+  return  CmiDestroyBlock(RegistryFile, ValueBlock);
+}
+
+static NTSTATUS
+CmiAllocateBlock(PREGISTRY_FILE  RegistryFile,
+                 PVOID  *Block,
+                 ULONG  BlockSize)
+{
+  NTSTATUS  Status;
+  PVOID  NewBlock;
+
+  Status = STATUS_SUCCESS;
+
+  /*  Handle volatile files first  */
+  if (RegistryFile->Filename == NULL)
+    {
+      NewBlock = ExAllocatePool(NonPagedPool, BlockSize);
+      if (NewBlock == NULL)
+        {
+          Status = STATUS_INSUFFICIENT_RESOURCES;
+        }
+      else
+        {
+          RtlZeroMemory(NewBlock, BlockSize);
+          CmiLockBlock(RegistryFile, NewBlock);
+          *Block = NewBlock;
+        }
+    }
+  else
+    {
+      Status = STATUS_NOT_IMPLEMENTED;
+    }
+
+  return  Status;
+}
+
+static NTSTATUS
+CmiDestroyBlock(PREGISTRY_FILE  RegistryFile,
+                PVOID  Block)
+{
+  NTSTATUS  Status;
+
+  Status = STATUS_SUCCESS;
+
+  if (RegistryFile->Filename == NULL)
+    {
+      CmiReleaseBlock(RegistryFile, Block);
+      ExFreePool(Block);
+    }
+  else
+    {  
+      Status = STATUS_NOT_IMPLEMENTED;
+    }
+
+  return  Status;
+}
+
+static PVOID
+CmiGetBlock(PREGISTRY_FILE  RegistryFile,
+            BLOCK_OFFSET  BlockOffset)
+{
+  PVOID  Block;
+
+  Block = NULL;
+  if (RegistryFile->Filename == NULL)
+    {
+      CmiLockBlock(RegistryFile, (PVOID) BlockOffset);
+
+      Block = (PVOID) BlockOffset;
+    }
+  else
+    {
+      UNIMPLEMENTED;
+    }
+
+  return  Block;
+}
+
+static BLOCK_OFFSET
+CmiGetBlockOffset(PREGISTRY_FILE  RegistryFile,
+                  PVOID  Block)
+{
+  BLOCK_OFFSET  BlockOffset;
+
+  if (RegistryFile->Filename == NULL)
+    {
+      BlockOffset = (BLOCK_OFFSET) Block;
+    }
+  else
+    {
+      UNIMPLEMENTED;
+    }
+
+  return BlockOffset;
+}
+
+static VOID 
+CmiLockBlock(PREGISTRY_FILE  RegistryFile,
+             PVOID  Block)
+{
+  if (RegistryFile->Filename != NULL)
+    {
+      UNIMPLEMENTED;
+    }
+}
+
+static VOID 
+CmiReleaseBlock(PREGISTRY_FILE  RegistryFile,
+               PVOID  Block)
+{
+  if (RegistryFile->Filename != NULL)
+    {
+      UNIMPLEMENTED;
+    }
 }
 
 #endif

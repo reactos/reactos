@@ -22,7 +22,8 @@ SUBSYS = win32k
 #
 # Select the server(s) you want to build
 #
-SERVERS = win32 posix linux os2
+SERVERS = win32
+# SERVERS = posix linux os2
 
 #
 # Select the loader(s) you want to build
