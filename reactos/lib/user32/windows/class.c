@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.53 2004/12/17 09:56:10 gvg Exp $
+/* $Id: class.c,v 1.53.2.1 2004/12/27 00:44:11 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -86,6 +86,7 @@ static BOOL GetClassInfoExCommon(
   if ( !str3.Buffer )
   {
     SetLastError (RtlNtStatusToDosError(STATUS_NO_MEMORY));
+    HEAP_free ( str2.Buffer );
     if ( !IS_ATOM(str) )
       HEAP_free ( str );
     return FALSE;
@@ -438,7 +439,7 @@ RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
   
    RtlCopyMemory(&WndClass, lpwcx, sizeof(WNDCLASSEXW));
 
-   if (IS_ATOM(lpwcx->lpszMenuName))
+   if (IS_ATOM(lpwcx->lpszMenuName) || lpwcx->lpszMenuName == 0)
    {
       MenuName.Length =
       MenuName.MaximumLength = 0;
