@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.32 2002/01/21 22:28:45 hbirr Exp $
+/* $Id: iotypes.h,v 1.33 2002/01/26 17:59:25 ekohl Exp $
  * 
  */
 
@@ -30,6 +30,7 @@ struct _FILE_OBJECT;
 struct _DEVICE_OBJECT;
 struct _IRP;
 struct _IO_STATUS_BLOCK;
+struct _SCSI_REQUEST_BLOCK;
 
 /* SIMPLE TYPES *************************************************************/
 
@@ -157,7 +158,7 @@ typedef struct _IO_RESOURCE_DESCRIPTOR
 	     ULONG MinimumChannel;
 	     ULONG MaximumChannel;
 	  } Dma;
-     } u;     
+     } u;
 } IO_RESOURCE_DESCRIPTOR, *PIO_RESOURCE_DESCRIPTOR;
 
 // IO_RESOURCE_DESCRIPTOR Options
@@ -258,166 +259,183 @@ typedef struct
  */
 typedef struct __attribute__((packed)) _IO_STACK_LOCATION
 {
-   UCHAR MajorFunction;
-   UCHAR MinorFunction;
-   UCHAR Flags;
-   UCHAR Control;
-   
-   union
-     {
-	struct
-	  {
-	     PIO_SECURITY_CONTEXT SecurityContext;
-	     ULONG Options;
-	     USHORT FileAttributes;
-	     USHORT ShareAccess;
-	     ULONG EaLength;
-	  } Create;
-	struct
-	  {
-	     ULONG Length;
-	     ULONG Key;
-	     LARGE_INTEGER ByteOffset;
-	  } Read;
-	struct
-	  {
-	     ULONG Length;
-	     ULONG Key;
-	     LARGE_INTEGER ByteOffset;
-	  } Write;
-	struct
-	  {
-	     ULONG OutputBufferLength;
-	     ULONG InputBufferLength;
-	     ULONG IoControlCode;
-	     PVOID Type3InputBuffer;
-	  } DeviceIoControl;
-	struct
-	  {
-	     ULONG OutputBufferLength;
-	     ULONG InputBufferLength;
-	     ULONG IoControlCode;
-	     PVOID Type3InputBuffer;
-	  } FileSystemControl;
-	struct
-	  {
-	     struct _VPB* Vpb;
-	     struct _DEVICE_OBJECT* DeviceObject;
-	  } Mount;
-	struct
-	  {
-	     ULONG Length;
-	     FILE_INFORMATION_CLASS FileInformationClass;
-	  } QueryFile;
-	struct
-	  {
-	     ULONG Length;
-	     FS_INFORMATION_CLASS FsInformationClass;
-	  } QueryVolume;
-	struct
-	  {
-	     ULONG Length;
-	     FS_INFORMATION_CLASS FsInformationClass;
-	  } SetVolume;
-	struct
-	  {
-	     ULONG Length;
-	     FILE_INFORMATION_CLASS FileInformationClass;
-	     struct _FILE_OBJECT* FileObject;
-	     union
-	       {
-		  struct
-		    {
-		       BOOLEAN ReplaceIfExists;
-		       BOOLEAN AdvanceOnly;
-		    } d;
-		  ULONG ClusterCount;
-		  HANDLE DeleteHandle;
-	       } u;
-	  } SetFile;
-	struct
-	  {
-	     ULONG Length;
-	     PUNICODE_STRING FileName;
-	     FILE_INFORMATION_CLASS FileInformationClass;
-	     ULONG FileIndex;
-	  } QueryDirectory;
+  UCHAR MajorFunction;
+  UCHAR MinorFunction;
+  UCHAR Flags;
+  UCHAR Control;
+  
+  union
+    {
+      struct
+	{
+	  PIO_SECURITY_CONTEXT SecurityContext;
+	  ULONG Options;
+	  USHORT FileAttributes;
+	  USHORT ShareAccess;
+	  ULONG EaLength;
+	} Create;
+      struct
+	{
+	  ULONG Length;
+	  ULONG Key;
+	  LARGE_INTEGER ByteOffset;
+	} Read;
+      struct
+	{
+	  ULONG Length;
+	  ULONG Key;
+	  LARGE_INTEGER ByteOffset;
+	} Write;
+      struct
+	{
+	  ULONG OutputBufferLength;
+	  ULONG InputBufferLength;
+	  ULONG IoControlCode;
+	  PVOID Type3InputBuffer;
+	} DeviceIoControl;
+      struct
+	{
+	  ULONG OutputBufferLength;
+	  ULONG InputBufferLength;
+	  ULONG IoControlCode;
+	  PVOID Type3InputBuffer;
+	} FileSystemControl;
+      struct
+	{
+	  struct _VPB* Vpb;
+	  struct _DEVICE_OBJECT* DeviceObject;
+	} Mount;
+      struct
+	{
+	  ULONG Length;
+	  FILE_INFORMATION_CLASS FileInformationClass;
+	} QueryFile;
+      struct
+	{
+	  ULONG Length;
+	  FS_INFORMATION_CLASS FsInformationClass;
+	} QueryVolume;
+      struct
+	{
+	  ULONG Length;
+	  FS_INFORMATION_CLASS FsInformationClass;
+	} SetVolume;
+      struct
+	{
+	  ULONG Length;
+	  FILE_INFORMATION_CLASS FileInformationClass;
+	  struct _FILE_OBJECT* FileObject;
+	  union
+	    {
+	      struct
+		{
+		  BOOLEAN ReplaceIfExists;
+		  BOOLEAN AdvanceOnly;
+		} d;
+	      ULONG ClusterCount;
+	      HANDLE DeleteHandle;
+	    } u;
+	} SetFile;
+      struct
+	{
+	  ULONG Length;
+	  PUNICODE_STRING FileName;
+	  FILE_INFORMATION_CLASS FileInformationClass;
+	  ULONG FileIndex;
+	} QueryDirectory;
 
-    // Parameters for IRP_MN_QUERY_DEVICE_RELATIONS
-    struct {
-      DEVICE_RELATION_TYPE Type;
-    } QueryDeviceRelations;
+      // Parameters for IRP_MN_QUERY_DEVICE_RELATIONS
+      struct
+	{
+	  DEVICE_RELATION_TYPE Type;
+	} QueryDeviceRelations;
 
-    // Parameters for IRP_MN_QUERY_INTERFACE
-    struct {
-      CONST GUID *InterfaceType;
-      USHORT Size;
-      USHORT Version;
-      PINTERFACE Interface;
-      PVOID InterfaceSpecificData;
-    } QueryInterface;
+      // Parameters for IRP_MN_QUERY_INTERFACE
+      struct
+	{
+	  CONST GUID *InterfaceType;
+	  USHORT Size;
+	  USHORT Version;
+	  PINTERFACE Interface;
+	  PVOID InterfaceSpecificData;
+	} QueryInterface;
 
-    // Parameters for IRP_MN_QUERY_CAPABILITIES
-    struct {
-      PDEVICE_CAPABILITIES Capabilities;
-    } DeviceCapabilities;
+      // Parameters for IRP_MN_QUERY_CAPABILITIES
+      struct
+	{
+	  PDEVICE_CAPABILITIES Capabilities;
+	} DeviceCapabilities;
 
-    // Parameters for IRP_MN_QUERY_ID
-    struct {
-      BUS_QUERY_ID_TYPE IdType;
-    } QueryId;
+      // Parameters for IRP_MN_QUERY_ID
+      struct
+	{
+	  BUS_QUERY_ID_TYPE IdType;
+	} QueryId;
 
-    // Parameters for IRP_MN_QUERY_DEVICE_TEXT
-    struct {
-      DEVICE_TEXT_TYPE DeviceTextType;
-      LCID LocaleId;
-    } QueryDeviceText;
+      // Parameters for IRP_MN_QUERY_DEVICE_TEXT
+      struct
+	{
+	  DEVICE_TEXT_TYPE DeviceTextType;
+	  LCID LocaleId;
+	} QueryDeviceText;
 
-    // Parameters for IRP_MN_DEVICE_USAGE_NOTIFICATION
-    struct {
-      BOOLEAN InPath;
-      BOOLEAN Reserved[3];
-      DEVICE_USAGE_NOTIFICATION_TYPE Type;
-    } UsageNotification;
+      // Parameters for IRP_MN_DEVICE_USAGE_NOTIFICATION
+      struct
+	{
+	  BOOLEAN InPath;
+	  BOOLEAN Reserved[3];
+	  DEVICE_USAGE_NOTIFICATION_TYPE Type;
+	} UsageNotification;
 
-    // Parameters for IRP_MN_WAIT_WAKE
-    struct {
-      SYSTEM_POWER_STATE PowerState;
-    } WaitWake;
+      // Parameters for IRP_MN_WAIT_WAKE
+      struct
+	{
+	  SYSTEM_POWER_STATE PowerState;
+	} WaitWake;
 
-    // Parameter for IRP_MN_POWER_SEQUENCE
-    struct {
-      PPOWER_SEQUENCE PowerSequence;
-    } PowerSequence;
+      // Parameter for IRP_MN_POWER_SEQUENCE
+      struct
+	{
+	  PPOWER_SEQUENCE PowerSequence;
+	} PowerSequence;
 
-    // Parameters for IRP_MN_SET_POWER and IRP_MN_QUERY_POWER
-    struct {
-      ULONG SystemContext;
-      POWER_STATE_TYPE Type;
-      POWER_STATE State;
-      POWER_ACTION ShutdownType;
-    } Power;
+      // Parameters for IRP_MN_SET_POWER and IRP_MN_QUERY_POWER
+      struct
+	{
+	  ULONG SystemContext;
+	  POWER_STATE_TYPE Type;
+	  POWER_STATE State;
+	  POWER_ACTION ShutdownType;
+	} Power;
 
-    // Parameters for IRP_MN_START_DEVICE
-    struct {
-      PCM_RESOURCE_LIST AllocatedResources;
-      PCM_RESOURCE_LIST AllocatedResourcesTranslated;
-    } StartDevice;
+      // Parameters for IRP_MN_START_DEVICE
+      struct
+	{
+	  PCM_RESOURCE_LIST AllocatedResources;
+	  PCM_RESOURCE_LIST AllocatedResourcesTranslated;
+	} StartDevice;
 
-  }  Parameters;
-   
-   struct _DEVICE_OBJECT* DeviceObject;
-   struct _FILE_OBJECT* FileObject;
-   
-   PIO_COMPLETION_ROUTINE CompletionRoutine;
-   PVOID CompletionContext;
-   
+      // Parameters for IRP_MN_SCSI_CLASS
+      struct
+	{
+	  struct _SCSI_REQUEST_BLOCK *Srb;
+	} Scsi;
+
+    } Parameters;
+  
+  struct _DEVICE_OBJECT* DeviceObject;
+  struct _FILE_OBJECT* FileObject;
+  
+  PIO_COMPLETION_ROUTINE CompletionRoutine;
+  PVOID CompletionContext;
+  
 } __attribute__((packed)) IO_STACK_LOCATION, *PIO_STACK_LOCATION;
+
 
 typedef struct _IO_STATUS_BLOCK
 {
-   NTSTATUS Status;
-   ULONG Information;
+  NTSTATUS Status;
+  ULONG Information;
 } IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
 
 
