@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pointer.c,v 1.13 2003/01/25 23:06:32 ei Exp $
+/* $Id: pointer.c,v 1.14 2003/03/11 00:21:40 gvg Exp $
  *
  * PROJECT:         ReactOS VGA16 display driver
  * FILE:            drivers/dd/vga/display/objects/pointer.c
@@ -76,9 +76,10 @@ VGADDI_BltPointerToVGA(ULONG StartX, ULONG StartY, ULONG SizeX,
 
       /* Write the mask. */
       Video = (PUCHAR)vidmem + StartY * 80 + (StartX >> 3);
-      Src = MaskBits;
-      for (i = 0; i < SizeY; i++, Video+=80, Src+=MaskPitch)
+      Src = MaskBits + SizeY * MaskPitch;
+      for (i = 0; i < SizeY; i++, Video+=80)
 	{
+	  Src -= MaskPitch;
 	  SrcValue = (*Src) >> (StartX % 8);
 	  (VOID)READ_REGISTER_UCHAR(Video);
 	  WRITE_REGISTER_UCHAR(Video, SrcValue);
@@ -101,7 +102,7 @@ VGADDI_BltPointerToVGA(ULONG StartX, ULONG StartY, ULONG SizeX,
   for (i = StartY; i < EndY; i++)
     {
       Video = (PUCHAR)vidmem + i * 80 + (Left >> 3);
-      Src = MaskBits + (i - StartY) * MaskPitch;
+      Src = MaskBits + (EndY - i - 1) * MaskPitch;
       for (j = 0; j < Length; j++, Video++, Src++)
 	{
 	  if ((StartX % 8) != 0)
@@ -127,9 +128,10 @@ VGADDI_BltPointerToVGA(ULONG StartX, ULONG StartY, ULONG SizeX,
       WRITE_PORT_UCHAR((PUCHAR)GRA_D, Mask);
 
       Video = (PUCHAR)vidmem + StartY * 80 + (EndX >> 3);
-      Src = MaskBits + (SizeX >> 3) - 1;
-      for (i = StartY; i < EndY; i++, Video+=80, Src+=MaskPitch)
+      Src = MaskBits + SizeY * MaskPitch + (SizeX >> 3) - 1;
+      for (i = StartY; i < EndY; i++, Video+=80)
 	{
+	  Src -= MaskPitch;
 	  SrcValue = (Src[0] << (8 - (StartX % 8)));
 	  (VOID)READ_REGISTER_UCHAR(Video);
 	  WRITE_REGISTER_UCHAR(Video, SrcValue);
@@ -279,6 +281,8 @@ DrvSetPointerShape(PSURFOBJ pso,
 
   /* Show the cursor */
   VGADDI_ShowCursor(ppdev);
+
+  return SPS_ACCEPT_EXCLUDE;
 }
 
 VOID
@@ -303,7 +307,7 @@ VOID
 VGADDI_ShowCursor(PPDEV ppdev)
 {
   ULONG i, j, cx, cy;
-  PUCHAR AndMask;
+  PUCHAR XorMask;
   ULONG SizeX;
 
   if (ppdev->pPointerAttributes->Enable != 0)
@@ -326,20 +330,20 @@ VGADDI_ShowCursor(PPDEV ppdev)
 			      ppdev->pPointerAttributes->Height);
 
   /* Display the cursor. */
-  AndMask = ppdev->pPointerAttributes->Pixels +
+  XorMask = ppdev->pPointerAttributes->Pixels +
     ppdev->pPointerAttributes->WidthInBytes *
     ppdev->pPointerAttributes->Height;
   VGADDI_BltPointerToVGA(ppdev->xyCursor.x,
 			 ppdev->xyCursor.y,
 			 ppdev->pPointerAttributes->Width,
 			 ppdev->pPointerAttributes->Height,
-			 AndMask,
+			 ppdev->pPointerAttributes->Pixels,
 			 VGA_AND);
   VGADDI_BltPointerToVGA(ppdev->xyCursor.x,
 			 ppdev->xyCursor.y,
 			 ppdev->pPointerAttributes->Width,
 			 ppdev->pPointerAttributes->Height,
-			 ppdev->pPointerAttributes->Pixels,
+			 XorMask,
 			 VGA_XOR);
 
   /* Save the new cursor location. */

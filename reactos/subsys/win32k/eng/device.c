@@ -9,6 +9,7 @@
  */
 
 #include <ddk/ntddk.h>
+#include <win32k/misc.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -32,16 +33,21 @@ EngDeviceIoControl(HANDLE  hDevice,
 
   KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
 
+  /* Switch to process context in which hDevice is valid */
+  KeAttachProcess(W32kDeviceProcess);
+
   Status = ObReferenceObjectByHandle(hDevice,
 				     FILE_READ_DATA | FILE_WRITE_DATA,
 				     IoFileObjectType,
 				     KernelMode,
 				     (PVOID *)&FileObject,
 				     NULL);
-   if (!NT_SUCCESS(Status))
-     {
-	return(Status);
-     }
+  KeDetachProcess();
+
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
 
   Irp = IoBuildDeviceIoControlRequest(dwIoControlCode,
 				      FileObject->DeviceObject,

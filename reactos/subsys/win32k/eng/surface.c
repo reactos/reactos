@@ -214,6 +214,7 @@ EngCreateBitmap(IN SIZEL Size,
   SurfObj->sizlBitmap = Size;
   SurfObj->iBitmapFormat = Format;
   SurfObj->iType = STYPE_BITMAP;
+  SurfObj->fjBitmap = Flags & (BMF_TOPDOWN | BMF_NOZEROINIT);
   SurfObj->pvScan0 = SurfObj->pvBits;
 
   InitializeFuncs(SurfGDI, Format);

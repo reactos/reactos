@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.23 2003/02/25 23:08:53 gvg Exp $
+/* $Id: driver.c,v 1.24 2003/03/11 00:21:41 gvg Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -11,6 +11,7 @@
 #include <ddk/ntddk.h>
 #include <windows.h>
 #include <win32k/driver.h>
+#include <win32k/misc.h>
 #include <wchar.h>
 #include <ddk/winddi.h>
 #include <ddk/ntddvid.h>
@@ -67,7 +68,7 @@ PGD_ENABLEDRIVER DRIVER_FindDDIDriver(LPCWSTR Name)
   GRAPHICS_DRIVER *Driver = DriverList;
   NTSTATUS Status;
   WCHAR *FullName;
-  WCHAR *p;
+  LPCWSTR p;
   BOOL PathSeparatorFound;
   BOOL DotFound;
   UINT Size;
@@ -226,6 +227,9 @@ HANDLE DRIVER_FindMPDriver(LPCWSTR  Name)
   HANDLE DisplayHandle;
   NTSTATUS Status;
 
+  /* Switch to process context in which handle is to be valid */
+  KeAttachProcess(W32kDeviceProcess);
+
   RtlInitUnicodeStringFromLiteral(&DeviceName, L"\\??\\DISPLAY1");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &DeviceName,
@@ -238,6 +242,9 @@ HANDLE DRIVER_FindMPDriver(LPCWSTR  Name)
 		      &Iosb,
 		      0,
 		      FILE_SYNCHRONOUS_IO_ALERT);
+
+  KeDetachProcess();
+
   if (!NT_SUCCESS(Status))
     {
       DPRINT("ZwOpenFile() failed (Status %lx)\n", Status);
