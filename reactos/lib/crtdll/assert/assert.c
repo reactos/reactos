@@ -2,12 +2,11 @@
 #include <crtdll/assert.h>
 #include <crtdll/stdio.h>
 #include <crtdll/stdlib.h>
+#include <crtdll/signal.h>
 
 void _assert(const char *msg, const char *file, int line) 
 {
   /* Assertion failed at foo.c line 45: x<y */
   fprintf(stderr, "Assertion failed at %s line %d: %s\n", file, line, msg);
- // raise(SIGABRT);
-  exit(1);
-  for(;;);
+  raise(SIGABRT);
 }

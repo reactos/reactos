@@ -17,7 +17,7 @@ char *setlocale(int category, const char *locale)
 	char code_page[100];
 	parse_locale((char *)locale,lang,country,code_page);	
 
-	printf("%s %s %s %s\n",locale,lang,country,code_page);
+	//printf("%s %s %s %s\n",locale,lang,country,code_page);
 
 
 	switch ( category )
@@ -115,26 +115,26 @@ const struct map_cntr {
 };
 
 
-struct lconv _lconv =  {
-	'.',   // decimal_point
-	',',   // thousands_sep
-	"",    // grouping;
-	"DOL", // int_curr_symbol
-	"$",   // currency_symbol
-	'.',   // mon_decimal_point
-	',',   // mon_thousands_sep
-	"",    // mon_grouping;
-	'+',   // positive_sign
-	'-',   // negative_sign
-	2,     // int_frac_digits
-	2,     // frac_digits
-	1,     // p_cs_precedes
-	1,     // p_sep_by_space
-	1,     // n_cs_precedes
-	1,     // n_sep_by_space
-	1,     // p_sign_posn;
-	1      // n_sign_posn;
-	};
+struct lconv _lconv =  {        
+".",   // decimal_point 
+",",   // thousands_sep
+"",    // grouping;     
+"DOL", // int_curr_symbol       
+"$",   // currency_symbol
+".",   // mon_decimal_point     
+",",   // mon_thousands_sep     
+"",    // mon_grouping;
+"+",   // positive_sign 
+"-",   // negative_sign 
+127,     // int_frac_digits
+127,     // frac_digits 
+127,     // p_cs_precedes       
+127,     // p_sep_by_space
+127,     // n_cs_precedes       
+127,     // n_sep_by_space      
+127,     // p_sign_posn;
+127      // n_sign_posn;        
+};
 
 struct lconv *localeconv(void)
 {

@@ -15,7 +15,7 @@ _popen (const char *cm, const char *md) /* program name, pipe mode */
   STARTUPINFO StartupInfo;
   PROCESS_INFORMATION ProcessInformation;
 
-  printf("CreatePipe\n");
+  // fixme CreatePipe
 
 //  if ( !CreatePipe(&hReadPipe,&hWritePipe,NULL,1024))
 //		return NULL;	

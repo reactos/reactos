@@ -55,6 +55,8 @@ int __fileno_dup2( int handle1, int handle2 );
 int __fileno_setmode(int _fd, int _newmode);
 int __fileno_close(int _fd);
 
+void sigabort_handler(int sig);
+
 #include <windows.h>
 
 void UnixTimeToFileTime( time_t unix_time, FILETIME *filetime, DWORD remainder );

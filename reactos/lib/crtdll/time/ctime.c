@@ -1,3 +1,6 @@
+
+// fix djdir
+
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 /* This file has been modified by DJ Delorie.  These modifications are
 ** Copyright (C) 1995 DJ Delorie, 24 Kirsten Ave, Rochester NH,

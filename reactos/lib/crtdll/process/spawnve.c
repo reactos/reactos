@@ -83,17 +83,17 @@ static int go32_exec(const char *program, char **argv, char **envp)
 	args[0] = 0;
 
 	while(argv[i] != NULL ) {
-        strcat(args,envp[i]);
-        strcat(args," ");
-        i++; 
+          strcat(args,envp[i]);
+          strcat(args," ");
+          i++; 
 	}
-    printf("%s \n %s\n",args, GetEnvironmentStrings());
+
 	args[0] = 0;
-    i = 0;
+        i = 0;
 	while(argv[i] != NULL ) {
-        strcat(args,argv[i]);
-        strcat(args," ");
-        i++; 
+          strcat(args,argv[i]);
+          strcat(args," ");
+          i++; 
 	}
   
 	return direct_exec_tail(program,args,envp);

@@ -7,8 +7,13 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-#include <crtdll/io.h>
+
+// rember to interlock the allocation of fileno when making this thread safe
+
+// possibly store extra information at the handle
+
 #include <windows.h>
+#include <crtdll/io.h>
 #include <crtdll/fcntl.h>
 #include <crtdll/sys/stat.h>
 #include <crtdll/stdlib.h>

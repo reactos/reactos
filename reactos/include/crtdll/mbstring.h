@@ -7,6 +7,11 @@ extern "C" {
 
 #include <crtdll/stddef.h>
 
+size_t _mbstrlen(const char *str);
+
+
+
+
 int _mbbtype(unsigned char c, int type);
 int _mbsbtype( const unsigned char *str, size_t n );
 

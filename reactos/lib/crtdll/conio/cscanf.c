@@ -8,8 +8,7 @@ _cscanf(char *fmt, ...)
 
 	va_list ap;
 
-	// fixme cscanf
-	printf("cscanf \n");
+	//fixme cscanf should scan the console's keyboard
   
   	va_start(ap, fmt);
   	cnt = __vscanf(fmt, ap);

@@ -24,7 +24,7 @@ _kbhit(void)
   if (char_avail)
     	return(1);
   else {
-	printf("fixeme PeekConsoleInput might do DeviceIo \n");
+	//FIXME PeekConsoleInput might do DeviceIo
 	//PeekConsoleInput((HANDLE)stdin->_file,&InputRecord,1,&NumberRead);
 	return NumberRead;
   }

@@ -3,7 +3,8 @@
 
 int _getpid (void)
 {
-	printf("get current processid\n");
+	//fixme GetCurrentProcessId
         //return (int)GetCurrentProcessId();
+	return 1;
 }
 

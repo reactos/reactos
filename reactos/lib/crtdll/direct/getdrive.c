@@ -20,6 +20,7 @@ int _getdrive( void )
 
 unsigned long _getdrives(void)
 {
-    return printf("get logical drives\n");
+    //fixme get logical drives
     //return GetLogicalDrives();
+     return 5;  // drive A and C
 }

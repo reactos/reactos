@@ -1,8 +1,8 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 #include <crtdll/string.h>
-
-
 #include <crtdll/time.h>
+#include <crtdll/stdlib.h>
+#include <crtdll/wchar.h>
 
 #define TM_YEAR_BASE 1900
 
@@ -55,7 +55,9 @@ _fmt(const char *format, const struct tm *t)
 {
   for (; *format; ++format)
   {
-    if (*format == '%')
+    if (*format == '%') {
+	if (*(format+1) == '#' ) {format++;}
+
       switch(*++format)
       {
       case '\0':
@@ -206,6 +208,7 @@ _fmt(const char *format, const struct tm *t)
       default:
 	break;
       }
+    }
     if (!gsize--)
       return 0;
     *pt++ = *format;
@@ -230,5 +233,32 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *t)
 size_t
 wcsftime(wchar_t *s, size_t maxsize, const wchar_t *format, const struct tm *t)
 {
-	printf("wcsftime\n");
+  char *x;
+  char *f;
+  int i,j;
+  x = malloc(maxsize);
+  j = wcslen(format);
+  f = malloc(j+1);
+  for(i=0;i<j;i++)
+	f[i] = (char)*format;
+  f[i] = 0;
+  pt = x;
+  if ((gsize = maxsize) < 1)
+    return 0;
+  if (_fmt(f, t))
+  {
+    *pt = '\0';
+    free(f);
+    for(i=0;i<maxsize;i++)
+	s[i] = (wchar_t)x[i];
+    s[i] = 0;
+    free(x);
+    return maxsize - gsize;
+  }
+  for(i=0;i<maxsize;i++)
+	s[i] = (wchar_t)x[i];
+  s[i] = 0;
+  free(f);
+  free(x);
+  return 0;
 }

@@ -1,7 +1,17 @@
+/*
+ * COPYRIGHT:   See COPYING in the top level directory
+ * PROJECT:     ReactOS system libraries
+ * FILE:        lib/crtdll/time/strtime.c
+ * PURPOSE:     Fills a buffer with a formatted date representation
+ * PROGRAMER:   Boudewijn Dekker
+ * UPDATE HISTORY:
+ *              28/12/98: Created
+ */
 #include <crtdll/time.h>
 #include <crtdll/stdio.h>
+#include <crtdll/errno.h>
+#include <crtdll/internal/file.h>
 
-// copy date according to mm/dd/yy format
 char *_strdate( const char *datestr )
 {
 
@@ -9,10 +19,12 @@ char *_strdate( const char *datestr )
 	struct tm *d;
 	char *dt = (char *)datestr;
 
-	if ( datestr == NULL )
+	if ( datestr == NULL ){
+		__set_errno(EINVAL);
 		return NULL;
+	}
 	t =  time(NULL);
 	d = localtime(&t);
-	sprintf(dt,"%d\%d\%d",d->tm_mday,d->tm_mon+1,d->tm_year);
+	sprintf(dt,"%d/%d/%d",d->tm_mday,d->tm_mon+1,d->tm_year);
 	return dt;
 }

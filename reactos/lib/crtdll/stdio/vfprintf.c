@@ -670,7 +670,7 @@ __vfprintf(FILE *f, const char *fmt, va_list args)
 			while (--field_width > 0)
 				putc( ' ',f);
 			continue;
-
+		 case 'S':
 		 case 'w':
 		   sw = va_arg(args,short int *);
 //		   DPRINT("L %x\n",sw);

@@ -15,7 +15,7 @@
 int system(const char *command)
 {
 	char szCmdLine[MAX_PATH];
-	char *szComSpec;
+	char *szComSpec=NULL;
 	
 
 	PROCESS_INFORMATION ProcessInformation;
