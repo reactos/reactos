@@ -1577,6 +1577,12 @@ LdrPEFixupImports(PMODULE_OBJECT Module)
    DPRINT("Processeing import directory at %p\n", ImportModuleDirectory);
    while (ImportModuleDirectory->Name)
    {
+      if (Module->Length <= ImportModuleDirectory->Name)
+      {
+         DPRINT1("Invalid import directory in %wZ\n", &Module->FullName);
+         return STATUS_SECTION_NOT_IMAGE;
+      }
+
       /*  Check to make sure that import lib is kernel  */
       ImportedName = (PCHAR) Module->Base + ImportModuleDirectory->Name;
 
