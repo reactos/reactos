@@ -3,6 +3,7 @@
 //
 #include <stdio.h> 
 #include <stdarg.h>
+#include <tchar.h>
 #define WIN32_LEAN_AND_MEAN
 #include "windows.h"
 #include "trace.h"

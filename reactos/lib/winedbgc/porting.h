@@ -29,12 +29,20 @@
 long interlocked_xchg_add(long *dest, long incr);
 
 #define strlenW wcslen
-
+#define strcpyW wcscpy
+#define strcatW wcscat
 #define strstrW wcsstr
 #define strtolW wcstol
+#define strchrW wcschr
+#define strncmpW wcsncmp
+#define tolowerW towlower
+#define atoiW _wtoi
+#define atolW _wtol
 #define strncasecmp strncmp
 #define snprintf _snprintf
 #define strcasecmp _stricmp
 
+#define SLOWORD(l) ((SHORT)(LONG)(l))
+#define SHIWORD(l) ((SHORT)((LONG)(l) >> 16))
 
 #endif  /* __PORTING_WINE2ROS_H */
