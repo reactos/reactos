@@ -605,6 +605,13 @@ extern "C" {
 #define GCL_MENUNAME (-8)
 #define GCL_STYLE (-26)
 #define GCL_WNDPROC (-24)
+#define GCLP_HBRBACKGROUND (-10)
+#define GCLP_HCURSOR (-12)
+#define GCLP_HICON (-14)
+#define GCLP_HICONSM (-34)
+#define GCLP_HMODULE (-16)
+#define GCLP_MENUNAME (-8)
+#define GCLP_WNDPROC (-24)
 #if 0
     /* This is supposed to be defined by the program using it not defined
        in the w32api headers.  I've left it here for documentation purposes.
@@ -3420,6 +3427,13 @@ BOOL WINAPI GetClassInfoW(HINSTANCE,LPCWSTR,LPWNDCLASSW);
 BOOL WINAPI GetClassInfoExW(HINSTANCE,LPCWSTR,LPWNDCLASSEXW);
 DWORD WINAPI GetClassLongA(HWND,int);
 DWORD WINAPI GetClassLongW(HWND,int);
+#ifdef _WIN64
+LONG_PTR WINAPI GetClassLongPtrA(HWND,int);
+LONG_PTR WINAPI GetClassLongPtrW(HWND,int);
+#else
+#define GetClassLongPtrA GetClassLongA
+#define GetClassLongPtrW GetClassLongW
+#endif
 int WINAPI GetClassNameA(HWND,LPSTR,int);
 int WINAPI GetClassNameW(HWND,LPWSTR,int);
 WORD WINAPI GetClassWord(HWND,int);

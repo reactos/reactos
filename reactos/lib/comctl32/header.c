@@ -324,9 +324,19 @@ HEADER_DrawItem (HWND hwnd, HDC hdc, INT iItem, BOOL bHotTrack)
 	    } 
 	    else
 		tx = 0;
-	    ImageList_DrawEx(infoPtr->himl, phdi->iImage, hdc, r.left + tx + 2*infoPtr->iMargin,
-			     r.top + (r.bottom-r.top-infoPtr->himl->cy)/2, infoPtr->himl->cx, r.bottom-r.top, 
-			     CLR_DEFAULT, CLR_DEFAULT, 0);
+
+	    if (tx < (r.right-r.left - infoPtr->himl->cx - GetSystemMetrics(SM_CXEDGE)))
+		ImageList_DrawEx(infoPtr->himl, phdi->iImage, hdc, r.left + tx + 2*infoPtr->iMargin,
+				 r.top + (r.bottom-r.top-infoPtr->himl->cy)/2, infoPtr->himl->cx, r.bottom-r.top, 
+				 CLR_DEFAULT, CLR_DEFAULT, 0);
+	    else {
+		INT x = max(r.right - infoPtr->iMargin - infoPtr->himl->cx, r.left);
+		INT cx = min(infoPtr->himl->cx, r.right-r.left - GetSystemMetrics(SM_CXEDGE));
+		ImageList_DrawEx(infoPtr->himl, phdi->iImage, hdc, x ,
+				 r.top + (r.bottom-r.top-infoPtr->himl->cy)/2, cx, r.bottom-r.top, 
+				 CLR_DEFAULT, CLR_DEFAULT, 0);	
+		r.right -= infoPtr->himl->cx - infoPtr->iMargin;
+	    }
 	}	
 
         if (((phdi->fmt & HDF_STRING)
@@ -1203,10 +1213,8 @@ HEADER_SetItemA (HWND hwnd, WPARAM wParam, LPARAM lParam)
       {
 	lpItem->iOrder = phdi->iOrder;
       }
-    else
-      lpItem->iOrder = nItem;
 
-	HEADER_SendHeaderNotify (hwnd, HDN_ITEMCHANGEDA, nItem, phdi->mask);
+    HEADER_SendHeaderNotify (hwnd, HDN_ITEMCHANGEDA, nItem, phdi->mask);
 
     HEADER_SetItemBounds (hwnd);
 
@@ -1270,10 +1278,8 @@ HEADER_SetItemW (HWND hwnd, WPARAM wParam, LPARAM lParam)
       {
 	lpItem->iOrder = phdi->iOrder;
       }
-    else
-      lpItem->iOrder = nItem;
 
-	HEADER_SendHeaderNotify(hwnd, HDN_ITEMCHANGEDW, nItem, phdi->mask);
+    HEADER_SendHeaderNotify(hwnd, HDN_ITEMCHANGEDW, nItem, phdi->mask);
 
     HEADER_SetItemBounds (hwnd);
 
