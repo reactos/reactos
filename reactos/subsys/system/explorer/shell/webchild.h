@@ -1075,4 +1075,6 @@ protected:
 	auto_ptr<EventConnector> _connector;
 
 	LRESULT WndProc(UINT message, WPARAM wparam, LPARAM lparam);
+
+	virtual void jump_to(void* path);
 };

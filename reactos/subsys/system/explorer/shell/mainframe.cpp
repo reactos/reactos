@@ -487,7 +487,7 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		//	FileChildWindow::create(_hmdiclient, create_info);
 			return (LRESULT)ShellBrowserChild::create(create_info);
 		}
-		break;}
+		return TRUE;}	// success
 
 	  case PM_GET_CONTROLWINDOW:
 		if (wparam == FCW_STATUS)

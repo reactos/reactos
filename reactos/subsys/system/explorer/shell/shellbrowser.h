@@ -125,6 +125,8 @@ protected:
 	int		InsertSubitems(HTREEITEM hParentItem, Entry* entry, IShellFolder* pParentFolder);
 	bool	InitDragDrop();
 
+	virtual void jump_to(void* path);
+
 	HRESULT OnDefaultCommand(LPIDA pida);
 
 	void	OnTreeGetDispInfo(int idCtrl, LPNMHDR pnmh);

@@ -338,7 +338,7 @@ HWND DesktopWindow::Create()
 	int height = GetSystemMetrics(SM_CYSCREEN);
 
 	HWND hwndDesktop = Window::Create(WINDOW_CREATOR(DesktopWindow),
-					WS_EX_TOOLWINDOW, wcDesktop, TEXT("Program Manager"), WS_POPUP|WS_VISIBLE|WS_CLIPCHILDREN,
+					WS_EX_TOOLWINDOW, wcDesktop, TEXT("Program Manager"), WS_POPUP|WS_VISIBLE,	//|WS_CLIPCHILDREN for SDI frames
 					0, 0, width, height, 0);
 
 	 // work around to display desktop bar in Wine

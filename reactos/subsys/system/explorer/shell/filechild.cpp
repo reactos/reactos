@@ -95,6 +95,35 @@ WebChildWndInfo::WebChildWndInfo(HWND hmdiclient, LPCTSTR url)
 }
 
 
+BOOL CALLBACK ExecuteDialog::WndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
+{
+	static struct ExecuteDialog* dlg;
+
+	switch(nmsg) {
+	  case WM_INITDIALOG:
+		dlg = (struct ExecuteDialog*) lparam;
+		return 1;
+
+	  case WM_COMMAND: {
+		int id = (int)wparam;
+
+		if (id == IDOK) {
+			GetWindowText(GetDlgItem(hwnd, 201), dlg->cmd, MAX_PATH);
+			dlg->cmdshow = Button_GetState(GetDlgItem(hwnd,214))&BST_CHECKED?
+											SW_SHOWMINIMIZED: SW_SHOWNORMAL;
+			EndDialog(hwnd, id);
+		} else if (id == IDCANCEL)
+			EndDialog(hwnd, id);
+
+		return 1;}
+	}
+
+	return 0;
+}
+
+
+ // FileChildWindow
+
 FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
  :	ChildWindow(hwnd, info)
 {
@@ -615,28 +644,9 @@ int FileChildWindow::Notify(int id, NMHDR* pnmh)
 }
 
 
-BOOL CALLBACK ExecuteDialog::WndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
+void FileChildWindow::jump_to(void* path)
 {
-	static struct ExecuteDialog* dlg;
 
-	switch(nmsg) {
-	  case WM_INITDIALOG:
-		dlg = (struct ExecuteDialog*) lparam;
-		return 1;
+//@@
 
-	  case WM_COMMAND: {
-		int id = (int)wparam;
-
-		if (id == IDOK) {
-			GetWindowText(GetDlgItem(hwnd, 201), dlg->cmd, MAX_PATH);
-			dlg->cmdshow = Button_GetState(GetDlgItem(hwnd,214))&BST_CHECKED?
-											SW_SHOWMINIMIZED: SW_SHOWNORMAL;
-			EndDialog(hwnd, id);
-		} else if (id == IDCANCEL)
-			EndDialog(hwnd, id);
-
-		return 1;}
-	}
-
-	return 0;
 }

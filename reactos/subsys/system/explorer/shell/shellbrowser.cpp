@@ -87,6 +87,26 @@ LRESULT ShellBrowserChild::Init(LPCREATESTRUCT pcs)
 //	_himlLarge = (HIMAGELIST)SHGetFileInfo(TEXT("C:\\"), 0, &sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX|SHGFI_LARGEICON);
 
 
+	const String& root_name = GetDesktopFolder().get_name(_create_info._root_shell_path, SHGDN_FORPARSING);
+
+	_root._drive_type = DRIVE_UNKNOWN;
+	lstrcpy(_root._volname, root_name);	// most of the time "Desktop"
+	_root._fs_flags = 0;
+	lstrcpy(_root._fs, TEXT("Desktop"));
+
+//@@	_root._entry->read_tree(shell_info._root_shell_path.get_folder(), info._shell_path, SORT_NAME/*_sortOrder*/);
+
+/*@todo
+	we should call read_tree() here to iterate through the hierarchy and open all folders from shell_info._root_shell_path to shell_info._shell_path
+	-> see FileChildWindow::FileChildWindow()
+*/
+	_root._entry = new ShellDirectory(GetDesktopFolder(), _create_info._root_shell_path, _hwnd);
+	_root._entry->read_directory();
+
+	/* already filled by ShellDirectory constructor
+	lstrcpy(_root._entry->_data.cFileName, TEXT("Desktop")); */
+
+
 	 // create explorer treeview
 	if (_create_info._open_mode & OWM_EXPLORE)
 		_left_hwnd = CreateWindowEx(0, WC_TREEVIEW, NULL,
@@ -111,26 +131,6 @@ void ShellBrowserChild::InitializeTree()
 
 	TreeView_SetImageList(_left_hwnd, _himlSmall, TVSIL_NORMAL);
 	TreeView_SetScrollTime(_left_hwnd, 100);
-
-	const String& root_name = GetDesktopFolder().get_name(_create_info._root_shell_path, SHGDN_FORPARSING);
-
-	_root._drive_type = DRIVE_UNKNOWN;
-	lstrcpy(_root._volname, root_name);	// most of the time "Desktop"
-	_root._fs_flags = 0;
-	lstrcpy(_root._fs, TEXT("Desktop"));
-
-//@@	_root._entry->read_tree(shell_info._root_shell_path.get_folder(), info._shell_path, SORT_NAME/*_sortOrder*/);
-
-/*@todo
-	we should call read_tree() here to iterate through the hierarchy and open all folders from shell_info._root_shell_path to shell_info._shell_path
-	-> see FileChildWindow::FileChildWindow()
-*/
-	_root._entry = new ShellDirectory(GetDesktopFolder(), _create_info._root_shell_path, _hwnd);
-	_root._entry->read_directory();
-
-	/* already filled by ShellDirectory constructor
-	lstrcpy(_root._entry->_data.cFileName, TEXT("Desktop")); */
-
 
 	TV_ITEM tvItem;
 
@@ -460,7 +460,7 @@ HRESULT ShellBrowserChild::OnDefaultCommand(LPIDA pida)
 {
 	CONTEXT("ShellBrowserChild::OnDefaultCommand()");
 
-	if (pida->cidl>=1) {
+	if (pida->cidl >= 1) {
 		if (_left_hwnd) {	// explorer mode
 			if (_last_sel) {
 				ShellDirectory* parent = (ShellDirectory*)TreeView_GetItemData(_left_hwnd, _last_sel);
@@ -520,4 +520,12 @@ bool ShellBrowserChild::expand_folder(ShellDirectory* entry)
 	}
 
 	return false;
+}
+
+
+void ShellBrowserChild::jump_to(void* path)
+{
+
+//@@
+
 }
