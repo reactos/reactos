@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdrom.c,v 1.27 2004/02/29 12:26:09 hbirr Exp $
+/* $Id: cdrom.c,v 1.28 2004/05/09 14:50:50 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -675,7 +675,6 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   if (!(CdromData->XaFlags & XA_NOT_SUPPORTED))
     {
       RtlZeroMemory (&Srb, sizeof(SCSI_REQUEST_BLOCK));
-      Srb.CdbLength = 10;
       Srb.TimeOutValue = DiskDeviceExtension->TimeOutValue;
       Cdb = (PCDB)Srb.Cdb;
 
@@ -684,6 +683,7 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
           /* Try the 10 byte version */
           Length = sizeof(MODE_CAPABILITIES_PAGE2) + MODE_HEADER_LENGTH10;
 
+          Srb.CdbLength = 10;
           Cdb->MODE_SENSE10.OperationCode = SCSIOP_MODE_SENSE10;
           Cdb->MODE_SENSE10.PageCode = 0x2a;
           Cdb->MODE_SENSE10.AllocationLength[0] = (UCHAR)(Length >> 8);
@@ -693,6 +693,7 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
         {
           Length = sizeof(MODE_CAPABILITIES_PAGE2) + MODE_HEADER_LENGTH;
 
+          Srb.CdbLength = 6;
           Cdb->MODE_SENSE.OperationCode = SCSIOP_MODE_SENSE;
           Cdb->MODE_SENSE.PageCode = 0x2a;
           Cdb->MODE_SENSE.AllocationLength = (UCHAR)Length;
