@@ -1,0 +1,39 @@
+# $Id: Makefile.ros-template
+
+TARGET_NAME = msi
+
+TARGET_OBJECTS = @C_SRCS@ @EXTRA_OBJS@
+
+TARGET_CFLAGS = @EXTRADEFS@ -D__REACTOS__
+
+TARGET_SDKLIBS = @IMPORTS@ winmm.a wine.a wine_uuid.a wine_unicode.a ntdll.a
+
+TARGET_BASE = $(TARGET_BASE_LIB_WINMM)
+
+TARGET_RC_SRCS = @RC_SRCS@
+TARGET_RC_BINSRC = @RC_BINSRC@
+TARGET_RC_BINARIES = @RC_BINARIES@
+
+#TARGET_CLEAN = *.tab.c *.tab.h
+
+default: all
+
+DEP_OBJECTS = $(TARGET_OBJECTS)
+
+include $(TOOLS_PATH)/depend.mk
+
+#
+#	Optional use of bison, this will allow independent building from
+#	Wine.
+#
+#	Bison is requiered for building msi.dll. If MingW32 for windows,
+#	download bison from http://gnuwin32.sourceforge.net/
+#	Make sure bison.exe is placed in your command path for execution.
+#
+#
+
+#sql.tab.c sql.tab.h: sql.y
+#	bison -p SQL_ -d ./sql.y -o sql.tab.c
+
+#cond.tab.c cond.tab.h: cond.y
+#	bison -p COND_ -d ./cond.y -o cond.tab.c
