@@ -24,7 +24,7 @@
 
 /*
  * $Source: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/kjs/ksrc/iostream.c,v $
- * $Id: iostream.c,v 1.1 2004/01/10 20:38:17 arty Exp $
+ * $Id: iostream.c,v 1.2 2004/05/29 21:21:06 navaraf Exp $
  */
 
 #include "jsint.h"
@@ -88,7 +88,7 @@ js_iostream_read (JSIOStream *stream, void *ptr, size_t size)
 
 	  stream->bufpos += got;
 	  size -= got;
-	  (unsigned char *) ptr += got;
+	  ptr = (void *)((unsigned char *)ptr + got);
 	  total += got;
 	}
       else
