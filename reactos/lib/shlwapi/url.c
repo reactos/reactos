@@ -2428,8 +2428,10 @@ HRESULT WINAPI MLBuildResURLW(LPCWSTR lpszLibName, HMODULE hMod, DWORD dwFlags,
     if (hMod)
     {
       WCHAR szBuff[MAX_PATH];
+      DWORD len;
 
-      if (GetModuleFileNameW(hMod, szBuff, sizeof(szBuff)/sizeof(WCHAR)))
+      len = GetModuleFileNameW(hMod, szBuff, sizeof(szBuff)/sizeof(WCHAR));
+      if (len && len < sizeof(szBuff)/sizeof(WCHAR))
       {
         DWORD dwPathLen = strlenW(szBuff) + 1;
 

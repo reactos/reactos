@@ -3265,9 +3265,12 @@ HMODULE WINAPI MLLoadLibraryA(LPCSTR new_mod, HMODULE inst_hwnd, DWORD dwFlags)
    */
     CHAR mod_path[2*MAX_PATH];
     LPSTR ptr;
+    DWORD len;
 
     FIXME("(%s,%p,0x%08lx) semi-stub!\n", debugstr_a(new_mod), inst_hwnd, dwFlags);
-    GetModuleFileNameA(inst_hwnd, mod_path, 2*MAX_PATH);
+    len = GetModuleFileNameA(inst_hwnd, mod_path, sizeof(mod_path));
+    if (!len || len >= sizeof(mod_path)) return NULL;
+
     ptr = strrchr(mod_path, '\\');
     if (ptr) {
 	strcpy(ptr+1, new_mod);
@@ -3286,9 +3289,12 @@ HMODULE WINAPI MLLoadLibraryW(LPCWSTR new_mod, HMODULE inst_hwnd, DWORD dwFlags)
 {
     WCHAR mod_path[2*MAX_PATH];
     LPWSTR ptr;
+    DWORD len;
 
     FIXME("(%s,%p,0x%08lx) semi-stub!\n", debugstr_w(new_mod), inst_hwnd, dwFlags);
-    GetModuleFileNameW(inst_hwnd, mod_path, 2*MAX_PATH);
+    len = GetModuleFileNameW(inst_hwnd, mod_path, sizeof(mod_path) / sizeof(WCHAR));
+    if (!len || len >= sizeof(mod_path) / sizeof(WCHAR)) return NULL;
+
     ptr = strrchrW(mod_path, '\\');
     if (ptr) {
 	strcpyW(ptr+1, new_mod);
@@ -3504,6 +3510,14 @@ BOOL WINAPI MLFreeLibrary(HMODULE hModule)
 {
 	FIXME("(%p) semi-stub\n", hModule);
 	return FreeLibrary(hModule);
+}
+
+/*************************************************************************
+ *      @	[SHLWAPI.419]
+ */
+BOOL WINAPI SHFlushSFCacheWrap(void) {
+  FIXME(": stub\n");
+  return TRUE;
 }
 
 /*************************************************************************

@@ -38,6 +38,7 @@
 #include "wingdi.h"
 #include "winuser.h"
 #include "winreg.h"
+#include "winternl.h"
 #define NO_SHLWAPI_STREAM
 #include "shlwapi.h"
 #include "wine/debug.h"
@@ -81,9 +82,8 @@ void WINAPI StopWatchFlush()
   FIXME("() stub!\n");
 }
 
-
 /*************************************************************************
- *      @	[SHLWAPI.243]
+ *      @	[SHLWAPI.244]
  *
  * Write a performance event to a log file
  *
@@ -98,28 +98,31 @@ void WINAPI StopWatchFlush()
  *  Success: ERROR_SUCCESS.
  *  Failure: A standard Win32 error code indicating the failure.
  */
-DWORD WINAPI StopWatchA(DWORD dwClass, LPCSTR lpszStr, DWORD dwUnknown,
+DWORD WINAPI StopWatchW(DWORD dwClass, LPCWSTR lpszStr, DWORD dwUnknown,
                         DWORD dwMode, DWORD dwTimeStamp)
 {
-  FIXME("(%ld,%s,%ld,%ld,%ld) stub!\n", dwClass, debugstr_a(lpszStr),
+    FIXME("(%ld,%s,%ld,%ld,%ld) stub!\n", dwClass, debugstr_w(lpszStr),
         dwUnknown, dwMode, dwTimeStamp);
   return ERROR_SUCCESS;
 }
 
 /*************************************************************************
- *      @	[SHLWAPI.244]
+ *      @	[SHLWAPI.243]
  *
- * See StopWatchA.
+ * See StopWatchW.
  */
-DWORD WINAPI StopWatchW(DWORD dwClass, LPCWSTR lpszStr, DWORD dwUnknown,
+DWORD WINAPI StopWatchA(DWORD dwClass, LPCSTR lpszStr, DWORD dwUnknown,
                         DWORD dwMode, DWORD dwTimeStamp)
-{
-  char szBuff[MAX_PATH];
+{   DWORD retval;
+    UNICODE_STRING szStrW;
 
-  if(!WideCharToMultiByte(0, 0, lpszStr, -1, szBuff, MAX_PATH, 0, 0))
-    return ERROR_NOT_ENOUGH_MEMORY;
+    if(lpszStr) RtlCreateUnicodeStringFromAsciiz(&szStrW, lpszStr);
+    else szStrW.Buffer = NULL;
 
-  return StopWatchA(dwClass, szBuff, dwUnknown, dwMode, dwTimeStamp);
+    retval = StopWatchW(dwClass, szStrW.Buffer, dwUnknown, dwMode, dwTimeStamp);
+
+    RtlFreeUnicodeString(&szStrW);
+    return retval;
 }
 
 /*************************************************************************
