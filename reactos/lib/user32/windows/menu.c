@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.59 2004/04/01 23:17:28 gvg Exp $
+/* $Id: menu.c,v 1.60 2004/04/02 19:00:56 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -1984,10 +1984,12 @@ MenuMoveSelection(HWND WndOwner, PROSMENUINFO MenuInfo, INT Offset)
  *
  * Grey the appropriate items in System menu.
  */
-static void FASTCALL
-MenuInitSysMenuPopup(HMENU Menu, DWORD Style, DWORD ClsStyle )
+void FASTCALL
+MenuInitSysMenuPopup(HMENU Menu, DWORD Style, DWORD ClsStyle, LONG HitTest )
 {
   BOOL Gray;
+  UINT DefItem;
+  MENUITEMINFOW mii;
 
   Gray = 0 == (Style & WS_THICKFRAME) || 0 != (Style & (WS_MAXIMIZE | WS_MINIMIZE));
   EnableMenuItem(Menu, SC_SIZE, (Gray ? MF_GRAYED : MF_ENABLED));
@@ -2006,6 +2008,31 @@ MenuInitSysMenuPopup(HMENU Menu, DWORD Style, DWORD ClsStyle )
     {
       EnableMenuItem(Menu, SC_CLOSE, MF_GRAYED);
     }
+  
+  /* Set default menu item */
+  if(Style & WS_MINIMIZE)
+  {
+    DefItem = SC_RESTORE;
+  }
+  else
+  {
+    if(HitTest == HTCAPTION)
+    {
+      DefItem = ((Style & (WS_MAXIMIZE | WS_MINIMIZE)) ? SC_RESTORE : SC_MAXIMIZE);
+    }
+    else
+    {
+      DefItem = SC_CLOSE;
+    }
+  }
+  mii.cbSize = sizeof(MENUITEMINFOW);
+  mii.fMask = MIIM_STATE;
+  if(GetMenuItemInfoW(Menu, DefItem, FALSE, &mii) && 
+     (mii.fState & (MFS_GRAYED | MFS_DISABLED)))
+  {
+    DefItem = SC_CLOSE;
+  }
+  SetMenuDefaultItem(Menu, DefItem, MF_BYCOMMAND);
 }
 
 /***********************************************************************
@@ -2093,9 +2120,8 @@ MenuShowSubPopup(HWND WndOwner, PROSMENUINFO MenuInfo, BOOL SelectFirst, UINT Fl
 
   if (IS_SYSTEM_MENU(MenuInfo))
     {
-      MenuInitSysMenuPopup(ItemInfo.hSubMenu,
-                           GetWindowLongW(MenuInfo->Wnd, GWL_STYLE ),
-                           GetClassLongW(MenuInfo->Wnd, GCL_STYLE));
+      MenuInitSysMenuPopup(ItemInfo.hSubMenu, GetWindowLongW(MenuInfo->Wnd, GWL_STYLE),
+                           GetClassLongW(MenuInfo->Wnd, GCL_STYLE), FALSE);
 
       NcGetSysPopupPos(MenuInfo->Wnd, &Rect);
       Rect.top = Rect.bottom;

@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.127 2004/03/31 14:12:04 weiden Exp $
+/* $Id: defwnd.c,v 1.128 2004/04/02 19:00:56 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -30,6 +30,7 @@ LRESULT DefWndNCActivate(HWND hWnd, WPARAM wParam);
 LRESULT DefWndNCHitTest(HWND hWnd, POINT Point);
 LRESULT DefWndNCLButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam);
 LRESULT DefWndNCLButtonDblClk(HWND hWnd, WPARAM wParam, LPARAM lParam);
+void FASTCALL MenuInitSysMenuPopup(HMENU Menu, DWORD Style, DWORD ClsStyle, LONG HitTest );
 
 /* GLOBALS *******************************************************************/
 
@@ -1044,9 +1045,9 @@ User32DefWindowProc(HWND hWnd,
             }
             else
             {
-                LONG HitCode;
                 POINT Pt;
                 DWORD Style;
+                LONG HitCode;
                 
                 Style = GetWindowLongW(hWnd, GWL_STYLE);
                 
@@ -1062,18 +1063,19 @@ User32DefWindowProc(HWND hWnd,
                 if (HitCode == HTCAPTION || HitCode == HTSYSMENU)
                 {
                     HMENU SystemMenu;
-                    UINT DefItem = SC_CLOSE;
+                    UINT Flags;
                     
                     if((SystemMenu = GetSystemMenu(hWnd, FALSE)))
                     {
+                      MenuInitSysMenuPopup(SystemMenu, GetWindowLongW(hWnd, GWL_STYLE),
+                                           GetClassLongW(hWnd, GCL_STYLE), HitCode);
+                      
                       if(HitCode == HTCAPTION)
-                        DefItem = ((Style & (WS_MAXIMIZE | WS_MINIMIZE)) ? 
-                                   SC_RESTORE : SC_MAXIMIZE);
+                        Flags = TPM_LEFTBUTTON | TPM_RIGHTBUTTON;
+                      else
+                        Flags = TPM_LEFTBUTTON;
                       
-                      SetMenuDefaultItem(SystemMenu, DefItem, MF_BYCOMMAND);
-                      
-                      TrackPopupMenu(SystemMenu,
-                                     TPM_LEFTBUTTON | TPM_RIGHTBUTTON,
+                      TrackPopupMenu(SystemMenu, Flags,
                                      Pt.x, Pt.y, 0, hWnd, NULL);
                     }
                 }
