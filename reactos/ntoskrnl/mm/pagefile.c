@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.28 2003/01/11 15:49:33 hbirr Exp $
+/* $Id: pagefile.c,v 1.29 2003/05/11 09:48:57 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -50,6 +50,7 @@ typedef struct _PAGINGFILE
    PULONG AllocMap;
    KSPIN_LOCK AllocMapLock;
    ULONG AllocMapSize;
+   PGET_RETRIEVAL_DESCRIPTOR RetrievalPointers;
 } PAGINGFILE, *PPAGINGFILE;
 
 /* GLOBALS *******************************************************************/
@@ -121,11 +122,14 @@ MmShowOutOfSpaceMessagePagingFile(VOID)
 
 NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
 {
-   ULONG i, offset;
+   ULONG i, offset, j;
    LARGE_INTEGER file_offset;
    IO_STATUS_BLOCK Iosb;
    NTSTATUS Status;
    KEVENT Event;
+   PGET_RETRIEVAL_DESCRIPTOR RetrievalPointers;
+
+   DPRINT("MmWriteToSwapPage\n");
    
    if (SwapEntry == 0)
      {
@@ -148,7 +152,30 @@ NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
        KeBugCheck(0);
      }
    
-   file_offset.QuadPart = offset * 4096;
+   file_offset.QuadPart = offset * PAGE_SIZE;
+   RetrievalPointers = PagingFileList[i]->RetrievalPointers;
+
+   for (j = 0; j < RetrievalPointers->NumberOfPairs; j++)
+     {
+       if (file_offset.QuadPart < RetrievalPointers->Pair[j].Vcn)
+         {
+           if (j == 0)
+	     {
+	       file_offset.QuadPart += RetrievalPointers->Pair[0].Lcn - RetrievalPointers->StartVcn;
+	     }
+	   else
+	     {
+               file_offset.QuadPart += RetrievalPointers->Pair[j].Lcn  - RetrievalPointers->Pair[j-1].Vcn;
+	     }
+	   break;
+         }
+     }
+   if (j >= RetrievalPointers->NumberOfPairs)
+     {
+       CHECKPOINT1;
+       KeBugCheck(0);
+     }
+
    KeInitializeEvent(&Event, NotificationEvent, FALSE);
    Status = IoPageWrite(PagingFileList[i]->FileObject,
 			Mdl,
@@ -165,11 +192,14 @@ NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
 
 NTSTATUS MmReadFromSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
 {
-   ULONG i, offset;
+   ULONG i, offset, j;
    LARGE_INTEGER file_offset;
    IO_STATUS_BLOCK Iosb;
    NTSTATUS Status;
    KEVENT Event;
+   PGET_RETRIEVAL_DESCRIPTOR RetrievalPointers;
+
+   DPRINT("MmReadFromSwapPage\n");
    
    if (SwapEntry == 0)
      {
@@ -192,7 +222,29 @@ NTSTATUS MmReadFromSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
        KeBugCheck(0);
      }
    
-   file_offset.QuadPart = offset * 4096;
+   file_offset.QuadPart = offset * PAGE_SIZE;
+   RetrievalPointers = PagingFileList[i]->RetrievalPointers;
+
+   for (j = 0; j < RetrievalPointers->NumberOfPairs; j++)
+     {
+       if (file_offset.QuadPart < RetrievalPointers->Pair[j].Vcn)
+         {
+           if (j == 0)
+	     {
+	       file_offset.QuadPart += RetrievalPointers->Pair[0].Lcn - RetrievalPointers->StartVcn;
+	     }
+	   else
+	     {
+               file_offset.QuadPart += RetrievalPointers->Pair[j].Lcn  - RetrievalPointers->Pair[j-1].Vcn;
+	     }
+	   break;
+         }
+     }
+   if (j >= RetrievalPointers->NumberOfPairs)
+     {
+       CHECKPOINT1;
+       KeBugCheck(0);
+     }
    KeInitializeEvent(&Event, NotificationEvent, FALSE);
    Status = IoPageRead(PagingFileList[i]->FileObject,
 		       Mdl,
@@ -522,7 +574,13 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
    PPAGINGFILE PagingFile;
    KIRQL oldIrql;
    ULONG AllocMapSize;
+   ULONG Size;
+   FILE_FS_SIZE_INFORMATION FsSizeInformation;
+   PGET_RETRIEVAL_DESCRIPTOR RetrievalPointers;
    ULONG i;
+   ULONG BytesPerAllocationUnit;
+   LARGE_INTEGER Vcn;
+   ULONG ExtentCount;
 
    DPRINT("NtCreatePagingFile(FileName %wZ, InitialSize %I64d)\n",
 	  FileName, InitialSize->QuadPart);
@@ -556,6 +614,24 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
      {
 	return(Status);
      }
+   
+   Status = NtQueryVolumeInformationFile(FileHandle,
+                                         &IoStatus,
+					 &FsSizeInformation,
+					 sizeof(FILE_FS_SIZE_INFORMATION),
+					 FileFsSizeInformation);
+   if (!NT_SUCCESS(Status))
+     {
+       NtClose(FileHandle);
+       return Status;
+     }
+   
+   BytesPerAllocationUnit = FsSizeInformation.SectorsPerAllocationUnit * FsSizeInformation.BytesPerSector;
+   if (BytesPerAllocationUnit < PAGE_SIZE)
+     {
+       NtClose(FileHandle);
+       return STATUS_UNSUCCESSFUL;
+     }
 
    Status = NtSetInformationFile(FileHandle,
 				 &IoStatus,
@@ -564,7 +640,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
 				 FileAllocationInformation);
    if (!NT_SUCCESS(Status))
      {
-       ZwClose(FileHandle);
+       NtClose(FileHandle);
        return(Status);
      }
 
@@ -579,7 +655,49 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
 	NtClose(FileHandle);
 	return(Status);
      }
-   
+
+   RetrievalPointers = ExAllocatePool(NonPagedPool, sizeof(GET_RETRIEVAL_DESCRIPTOR) + sizeof(MAPPING_PAIR));
+
+   if (RetrievalPointers == NULL)
+     {
+       ObDereferenceObject(FileObject);
+       NtClose(FileHandle);
+       return(STATUS_NO_MEMORY);
+     }
+
+   Vcn.QuadPart = 0LL;
+   ExtentCount = 0;
+   while(1)
+     {
+       Status = NtFsControlFile(FileHandle,
+	                        0,
+			        NULL,
+			        NULL,
+			        &IoStatus,
+			        FSCTL_GET_RETRIEVAL_POINTERS,
+			        &Vcn,
+			        sizeof(LARGE_INTEGER),
+			        RetrievalPointers,
+			        sizeof(GET_RETRIEVAL_DESCRIPTOR) + sizeof(MAPPING_PAIR));
+       if (!NT_SUCCESS(Status))
+         {
+           ExFreePool(RetrievalPointers);
+           ObDereferenceObject(FileObject);
+           NtClose(FileHandle);
+           return(Status);
+         }
+       ExtentCount += RetrievalPointers->NumberOfPairs;
+       if (RetrievalPointers->Pair[0].Vcn < InitialSize->QuadPart / BytesPerAllocationUnit)
+         {
+           Vcn.QuadPart = RetrievalPointers->Pair[0].Vcn;
+         }
+       else
+         {
+           break;
+         }
+     }
+   ExFreePool(RetrievalPointers);
+
    PagingFile = ExAllocatePool(NonPagedPool, sizeof(*PagingFile));
    if (PagingFile == NULL)
      {
@@ -604,10 +722,63 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
      {
        ExFreePool(PagingFile);
        ObDereferenceObject(FileObject);
+       ZwClose(FileHandle);
+       return(STATUS_NO_MEMORY);
+     }
+
+   Size = sizeof(GET_RETRIEVAL_DESCRIPTOR) + ExtentCount * sizeof(MAPPING_PAIR);
+   PagingFile->RetrievalPointers = ExAllocatePool(NonPagedPool, Size);
+   if (PagingFile->RetrievalPointers == NULL)
+   {
+      ExFreePool(PagingFile->AllocMap);
+      ExFreePool(PagingFile);
+      ObDereferenceObject(FileObject);
+      NtClose(FileHandle);
+      return(STATUS_NO_MEMORY);
+   }
+   
+   Vcn.QuadPart = 0LL;
+   Status = NtFsControlFile(FileHandle,
+	                    0,
+			    NULL,
+			    NULL,
+			    &IoStatus,
+			    FSCTL_GET_RETRIEVAL_POINTERS,
+			    &Vcn,
+			    sizeof(LARGE_INTEGER),
+			    PagingFile->RetrievalPointers,
+			    Size);
+   if (!NT_SUCCESS(Status))
+     {
+       ExFreePool(PagingFile->RetrievalPointers);
+       ExFreePool(PagingFile->AllocMap);
+       ExFreePool(PagingFile);
+       ObDereferenceObject(FileObject);
        NtClose(FileHandle);
        return(STATUS_NO_MEMORY);
      }
-   
+
+   if (PagingFile->RetrievalPointers->NumberOfPairs != ExtentCount || 
+       PagingFile->RetrievalPointers->Pair[ExtentCount - 1].Vcn != InitialSize->QuadPart / BytesPerAllocationUnit)
+     {
+       ExFreePool(PagingFile->RetrievalPointers);
+       ExFreePool(PagingFile->AllocMap);
+       ExFreePool(PagingFile);
+       ObDereferenceObject(FileObject);
+       NtClose(FileHandle);
+       return(STATUS_UNSUCCESSFUL);
+     }
+
+   /* 
+    * Change the entries from lcn's to volume offset's.
+    */
+   PagingFile->RetrievalPointers->StartVcn *= BytesPerAllocationUnit;
+   for (i = 0; i < ExtentCount; i++)
+     {
+       PagingFile->RetrievalPointers->Pair[i].Lcn *= BytesPerAllocationUnit;
+       PagingFile->RetrievalPointers->Pair[i].Vcn *= BytesPerAllocationUnit;
+     }
+
    KeAcquireSpinLock(&PagingFileListLock, &oldIrql);
    for (i = 0; i < MAX_PAGING_FILES; i++)
      {
