@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bthread.S,v 1.8 2003/05/28 18:09:10 chorns Exp $
+/* $Id: bthread.S,v 1.9 2003/06/16 19:18:48 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -122,7 +122,7 @@ _PsBeginThreadWithContextInternal:
 	/*
 	 * Load the debugging registers
 	 */
-	testl	$CONTEXT_DEBUG_REGISTERS, %ebx
+	testl	$(CONTEXT_DEBUG_REGISTERS & ~CONTEXT_i386), %ebx
 	jz	.L1
 	popl	%eax		/* Dr0 */
 	movl	%eax, %dr0
@@ -145,8 +145,9 @@ _PsBeginThreadWithContextInternal:
 	 * Load the floating point registers
 	 */
 	movl	(_HardwareMathSupport), %eax
+	testl	%eax,%eax
 	jz	.L2
-	testl	$CONTEXT_FLOATING_POINT, %ebx
+	testl	$(CONTEXT_FLOATING_POINT & ~CONTEXT_i386), %ebx
 	jz	.L2
 	frstor	(%esp)
 .L2:
