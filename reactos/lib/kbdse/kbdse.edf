@@ -1,0 +1,5 @@
+LIBRARY user32.dll
+
+EXPORTS
+KbdLayerDescriptor=KbdLayerDescriptor@0
+; EOF
