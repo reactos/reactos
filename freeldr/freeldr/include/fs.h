@@ -33,13 +33,15 @@
 #define PFILE			FILE *
 
 VOID	FileSystemError(PUCHAR ErrorString);
-BOOL	OpenDiskDrive(ULONG DriveNumber, ULONG PartitionNumber);
+BOOL	OpenDiskDrive(U32 DriveNumber, U32 PartitionNumber);
 PFILE	OpenFile(PUCHAR FileName);
 VOID	CloseFile(PFILE FileHandle);
-BOOL	ReadFile(PFILE FileHandle, ULONG BytesToRead, PULONG BytesRead, PVOID Buffer);
-ULONG	GetFileSize(PFILE FileHandle);
-VOID	SetFilePointer(PFILE FileHandle, ULONG NewFilePointer);
-ULONG	GetFilePointer(PFILE FileHandle);
+BOOL	ReadFile(PFILE FileHandle, U32 BytesToRead, U32* BytesRead, PVOID Buffer);
+U32		GetFileSize(PFILE FileHandle);
+VOID	SetFilePointer(PFILE FileHandle, U32 NewFilePointer);
+U32		GetFilePointer(PFILE FileHandle);
 BOOL	IsEndOfFile(PFILE FileHandle);
+U32		FsGetNumPathParts(PUCHAR Path);
+VOID	FsGetFirstNameFromPath(PUCHAR Buffer, PUCHAR Path);
 
 #endif // #defined __FS_H

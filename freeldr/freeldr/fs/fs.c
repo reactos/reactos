@@ -21,6 +21,7 @@
 #include <fs.h>
 #include "fat.h"
 #include "iso.h"
+#include "ext2.h"
 #include <disk.h>
 #include <rtl.h>
 #include <ui.h>
@@ -32,7 +33,7 @@
 // DATA
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-ULONG		FileSystemType = 0;	// Type of filesystem on boot device, set by OpenDiskDrive()
+U32			FileSystemType = 0;	// Type of filesystem on boot device, set by OpenDiskDrive()
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS
@@ -47,7 +48,7 @@ VOID FileSystemError(PUCHAR ErrorString)
 
 /*
  *
- * BOOL OpenDiskDrive(ULONG DriveNumber, ULONG PartitionNumber);
+ * BOOL OpenDiskDrive(U32 DriveNumber, U32 PartitionNumber);
  *
  * This function is called to open a disk drive for file access.
  * It must be called before any of the file functions will work.
@@ -60,9 +61,10 @@ VOID FileSystemError(PUCHAR ErrorString)
  *            If it is zero then it opens the active (bootable) partition
  *
  */
-BOOL OpenDiskDrive(ULONG DriveNumber, ULONG PartitionNumber)
+BOOL OpenDiskDrive(U32 DriveNumber, U32 PartitionNumber)
 {
 	PARTITION_TABLE_ENTRY	PartitionTableEntry;
+	UCHAR					ErrorText[80];
 
 	DbgPrint((DPRINT_FILESYSTEM, "OpenDiskDrive() DriveNumber: 0x%x PartitionNumber: 0x%x\n", DriveNumber, PartitionNumber));
 
@@ -126,9 +128,13 @@ BOOL OpenDiskDrive(ULONG DriveNumber, ULONG PartitionNumber)
 	case PARTITION_FAT32_XINT13:
 		FileSystemType = FS_FAT;
 		return FatOpenVolume(DriveNumber, PartitionTableEntry.SectorCountBeforePartition);
+	case PARTITION_EXT2:
+		FileSystemType = FS_EXT2;
+		return Ext2OpenVolume(DriveNumber, PartitionTableEntry.SectorCountBeforePartition);
 	default:
 		FileSystemType = 0;
-		FileSystemError("Unsupported file system.");
+		sprintf(ErrorText, "Unsupported file system. Type: 0x%x", PartitionTableEntry.SystemIndicator);
+		FileSystemError(ErrorText);
 		return FALSE;
 	}
 
@@ -143,21 +149,32 @@ PFILE OpenFile(PUCHAR FileName)
 	// Print status message
 	//
 	DbgPrint((DPRINT_FILESYSTEM, "Opening file '%s'...\n", FileName));
+
+	//
+	// Check and see if the first character is '\' or '/' and remove it if so
+	//
+	while ((*FileName == '\\') || (*FileName == '/'))
+	{
+		FileName++;
+	}
 	
 	//
 	// Check file system type and pass off to appropriate handler
 	//
-	if (FileSystemType == FS_FAT)
+	switch (FileSystemType)
 	{
+	case FS_FAT:
 		FileHandle = FatOpenFile(FileName);
-	}
-	else if (FileSystemType == FS_ISO9660)
-	{
+		break;
+	case FS_ISO9660:
 		FileHandle = IsoOpenFile(FileName);
-	}
-	else
-	{
+		break;
+	case FS_EXT2:
+		FileHandle = Ext2OpenFile(FileName);
+		break;
+	default:
 		FileSystemError("Error: Unknown filesystem.");
+		break;
 	}
 
 #ifdef DEBUG
@@ -185,7 +202,7 @@ VOID CloseFile(PFILE FileHandle)
  * ReadFile()
  * returns number of bytes read or EOF
  */
-BOOL ReadFile(PFILE FileHandle, ULONG BytesToRead, PULONG BytesRead, PVOID Buffer)
+BOOL ReadFile(PFILE FileHandle, U32 BytesToRead, U32* BytesRead, PVOID Buffer)
 {
 	//
 	// Set the number of bytes read equal to zero
@@ -205,6 +222,10 @@ BOOL ReadFile(PFILE FileHandle, ULONG BytesToRead, PULONG BytesRead, PVOID Buffe
 
 		return IsoReadFile(FileHandle, BytesToRead, BytesRead, Buffer);
 
+	case FS_EXT2:
+
+		return Ext2ReadFile(FileHandle, BytesToRead, BytesRead, Buffer);
+
 	default:
 
 		FileSystemError("Unknown file system.");
@@ -214,7 +235,7 @@ BOOL ReadFile(PFILE FileHandle, ULONG BytesToRead, PULONG BytesRead, PVOID Buffe
 	return FALSE;
 }
 
-ULONG GetFileSize(PFILE FileHandle)
+U32 GetFileSize(PFILE FileHandle)
 {
 	switch (FileSystemType)
 	{
@@ -226,6 +247,10 @@ ULONG GetFileSize(PFILE FileHandle)
 
 		return IsoGetFileSize(FileHandle);
 
+	case FS_EXT2:
+
+		return Ext2GetFileSize(FileHandle);
+
 	default:
 		FileSystemError("Unknown file system.");
 		break;
@@ -234,7 +259,7 @@ ULONG GetFileSize(PFILE FileHandle)
 	return 0;
 }
 
-VOID SetFilePointer(PFILE FileHandle, ULONG NewFilePointer)
+VOID SetFilePointer(PFILE FileHandle, U32 NewFilePointer)
 {
 	switch (FileSystemType)
 	{
@@ -248,13 +273,18 @@ VOID SetFilePointer(PFILE FileHandle, ULONG NewFilePointer)
 		IsoSetFilePointer(FileHandle, NewFilePointer);
 		break;
 
+	case FS_EXT2:
+
+		Ext2SetFilePointer(FileHandle, NewFilePointer);
+		break;
+
 	default:
 		FileSystemError("Unknown file system.");
 		break;
 	}
 }
 
-ULONG GetFilePointer(PFILE FileHandle)
+U32 GetFilePointer(PFILE FileHandle)
 {
 	switch (FileSystemType)
 	{
@@ -266,6 +296,11 @@ ULONG GetFilePointer(PFILE FileHandle)
 	case FS_ISO9660:
 
 		return IsoGetFilePointer(FileHandle);
+		break;
+
+	case FS_EXT2:
+
+		return Ext2GetFilePointer(FileHandle);
 		break;
 
 	default:
@@ -286,4 +321,58 @@ BOOL IsEndOfFile(PFILE FileHandle)
 	{
 		return FALSE;
 	}
+}
+
+/*
+ * FsGetNumPathParts()
+ * This function parses a path in the form of dir1\dir2\file1.ext
+ * and returns the number of parts it has (i.e. 3 - dir1,dir2,file1.ext)
+ */
+U32 FsGetNumPathParts(PUCHAR Path)
+{
+	U32		i;
+	U32		num;
+
+	for (i=0,num=0; i<(int)strlen(Path); i++)
+	{
+		if ((Path[i] == '\\') || (Path[i] == '/'))
+		{
+			num++;
+		}
+	}
+	num++;
+
+	DbgPrint((DPRINT_FILESYSTEM, "FatGetNumPathParts() Path = %s NumPathParts = %d\n", Path, num));
+
+	return num;
+}
+
+/*
+ * FsGetFirstNameFromPath()
+ * This function parses a path in the form of dir1\dir2\file1.ext
+ * and puts the first name of the path (e.g. "dir1") in buffer
+ * compatible with the MSDOS directory structure
+ */
+VOID FsGetFirstNameFromPath(PUCHAR Buffer, PUCHAR Path)
+{
+	U32		i;
+
+	// Copy all the characters up to the end of the
+	// string or until we hit a '\' character
+	// and put them in Buffer
+	for (i=0; i<(int)strlen(Path); i++)
+	{
+		if ((Path[i] == '\\') || (Path[i] == '/'))
+		{
+			break;
+		}
+		else
+		{
+			Buffer[i] = Path[i];
+		}
+	}
+
+	Buffer[i] = 0;
+
+	DbgPrint((DPRINT_FILESYSTEM, "FatGetFirstNameFromPath() Path = %s FirstName = %s\n", Path, Buffer));
 }

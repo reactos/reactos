@@ -30,19 +30,19 @@ VOID GuiDrawBackdrop(VOID)
 {
 }
 
-VOID GuiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR FillChar, UCHAR Attr /* Color Attributes */)
+VOID GuiFillArea(U32 Left, U32 Top, U32 Right, U32 Bottom, UCHAR FillChar, UCHAR Attr /* Color Attributes */)
 {
 }
 
-VOID GuiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom)
+VOID GuiDrawShadow(U32 Left, U32 Top, U32 Right, U32 Bottom)
 {
 }
 
-VOID GuiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOL Fill, BOOL Shadow, UCHAR Attr)
+VOID GuiDrawBox(U32 Left, U32 Top, U32 Right, U32 Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOL Fill, BOOL Shadow, UCHAR Attr)
 {
 }
 
-VOID GuiDrawText(ULONG X, ULONG Y, PUCHAR Text, UCHAR Attr)
+VOID GuiDrawText(U32 X, U32 Y, PUCHAR Text, UCHAR Attr)
 {
 }
 
@@ -70,7 +70,7 @@ VOID GuiMessageBoxCritical(PUCHAR MessageText)
 {
 }
 
-VOID GuiDrawProgressBar(ULONG Position, ULONG Range)
+VOID GuiDrawProgressBar(U32 Position, U32 Range)
 {
 }
 

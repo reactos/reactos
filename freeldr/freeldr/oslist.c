@@ -24,16 +24,16 @@
 #include <mm.h>
 #include <ui.h>
 
-BOOL InitOperatingSystemList(PUCHAR **SectionNamesPointer, PUCHAR **DisplayNamesPointer, PULONG OperatingSystemCountPointer)
+BOOL InitOperatingSystemList(PUCHAR **SectionNamesPointer, PUCHAR **DisplayNamesPointer, U32* OperatingSystemCountPointer)
 {
-	ULONG	Idx;
-	ULONG	CurrentOperatingSystemIndex;
+	U32		Idx;
+	U32		CurrentOperatingSystemIndex;
 	UCHAR	SettingName[260];
 	UCHAR	SettingValue[260];
-	ULONG	OperatingSystemCount;
-	ULONG	SectionId;
-	ULONG	OperatingSystemSectionId;
-	ULONG	SectionSettingCount;
+	U32		OperatingSystemCount;
+	U32		SectionId;
+	U32		OperatingSystemSectionId;
+	U32		SectionSettingCount;
 	PUCHAR	*OperatingSystemSectionNames;
 	PUCHAR	*OperatingSystemDisplayNames;
 
@@ -104,13 +104,13 @@ BOOL InitOperatingSystemList(PUCHAR **SectionNamesPointer, PUCHAR **DisplayNames
 	return TRUE;
 }
 
-ULONG CountOperatingSystems(ULONG SectionId)
+U32 CountOperatingSystems(U32 SectionId)
 {
-	ULONG	Idx;
+	U32		Idx;
 	UCHAR	SettingName[260];
 	UCHAR	SettingValue[260];
-	ULONG	OperatingSystemCount = 0;
-	ULONG	SectionSettingCount;
+	U32		OperatingSystemCount = 0;
+	U32		SectionSettingCount;
 	
 	//
 	// Loop through and count the operating systems
@@ -137,9 +137,9 @@ ULONG CountOperatingSystems(ULONG SectionId)
 	return OperatingSystemCount;
 }
 
-BOOL AllocateListMemory(PUCHAR **SectionNamesPointer, PUCHAR **DisplayNamesPointer, ULONG OperatingSystemCount)
+BOOL AllocateListMemory(PUCHAR **SectionNamesPointer, PUCHAR **DisplayNamesPointer, U32 OperatingSystemCount)
 {
-	ULONG	Idx;
+	U32		Idx;
 	PUCHAR	*OperatingSystemSectionNames = NULL;
 	PUCHAR	*OperatingSystemDisplayNames = NULL;
 

@@ -49,13 +49,7 @@ void printf(char *format, ... )
 		}
 		else
 		{
-			c = *(format++);
-			if (c == 'l')
-			{
-				c = *(format++);
-			}
-
-			switch (c)
+			switch (c = *(format++))
 			{
 			case 'd': case 'u': case 'x':
 				*convert_to_ascii(str, c, *((unsigned long *) dataptr++)) = 0;
@@ -77,6 +71,12 @@ void printf(char *format, ... )
 				{
 					putchar(c);
 				}
+				break;
+			case '%':
+				putchar(c);
+				break;
+			default:
+				printf("\nprintf() invalid format specifier - %%%c\n", c);
 				break;
 			}
 		}
@@ -100,13 +100,7 @@ void sprintf(char *buffer, char *format, ... )
 		}
 		else
 		{
-			c = *(format++);
-			if (c == 'l')
-			{
-				c = *(format++);
-			}
-
-			switch (c)
+			switch (c = *(format++))
 			{
 			case 'd': case 'u': case 'x':
 				*convert_to_ascii(str, c, *((unsigned long *) dataptr++)) = 0;
@@ -133,6 +127,13 @@ void sprintf(char *buffer, char *format, ... )
 				*p = c;
 				p++;
 				}
+				break;
+			case '%':
+				*p = c;
+				p++;
+				break;
+			default:
+				printf("\nsprintf() invalid format specifier - %%%c\n", c);
 				break;
 			}
 		}

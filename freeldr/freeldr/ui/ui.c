@@ -31,8 +31,8 @@
 #define DISPLAYMODE_TEXT		0
 #define DISPLAYMODE_GRAPHICS	1
 
-ULONG	UiScreenWidth = 80;									// Screen Width
-ULONG	UiScreenHeight = 25;								// Screen Height
+U32		UiScreenWidth = 80;									// Screen Width
+U32		UiScreenHeight = 25;								// Screen Height
 
 UCHAR	UiStatusBarFgColor			= COLOR_BLACK;			// Status bar foreground color
 UCHAR	UiStatusBarBgColor			= COLOR_CYAN;			// Status bar background color
@@ -62,9 +62,9 @@ UCHAR	UiMonthNames[12][15] = { "January ", "February ", "March ", "April ", "May
 
 BOOL UiInitialize(VOID)
 {
-	ULONG	SectionId;
+	U32		SectionId;
 	UCHAR	SettingText[260];
-	ULONG	VideoMode = VIDEOMODE_NORMAL_TEXT;
+	U32		VideoMode = VIDEOMODE_NORMAL_TEXT;
 
 	DbgPrint((DPRINT_UI, "Initializing User Interface.\n"));
 	
@@ -207,7 +207,7 @@ VOID UiDrawBackdrop(VOID)
 	}
 }
 
-VOID UiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR FillChar, UCHAR Attr /* Color Attributes */)
+VOID UiFillArea(U32 Left, U32 Top, U32 Right, U32 Bottom, UCHAR FillChar, UCHAR Attr /* Color Attributes */)
 {
 	if (UiDisplayMode == DISPLAYMODE_TEXT)
 	{
@@ -220,7 +220,7 @@ VOID UiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR FillChar
 	}
 }
 
-VOID UiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom)
+VOID UiDrawShadow(U32 Left, U32 Top, U32 Right, U32 Bottom)
 {
 	if (UiDisplayMode == DISPLAYMODE_TEXT)
 	{
@@ -233,7 +233,7 @@ VOID UiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom)
 	}
 }
 
-VOID UiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOL Fill, BOOL Shadow, UCHAR Attr)
+VOID UiDrawBox(U32 Left, U32 Top, U32 Right, U32 Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOL Fill, BOOL Shadow, UCHAR Attr)
 {
 	if (UiDisplayMode == DISPLAYMODE_TEXT)
 	{
@@ -246,7 +246,7 @@ VOID UiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle
 	}
 }
 
-VOID UiDrawText(ULONG X, ULONG Y, PUCHAR Text, UCHAR Attr)
+VOID UiDrawText(U32 X, U32 Y, PUCHAR Text, UCHAR Attr)
 {
 	if (UiDisplayMode == DISPLAYMODE_TEXT)
 	{
@@ -259,7 +259,7 @@ VOID UiDrawText(ULONG X, ULONG Y, PUCHAR Text, UCHAR Attr)
 	}
 }
 
-VOID UiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PUCHAR TextString, UCHAR Attr)
+VOID UiDrawCenteredText(U32 Left, U32 Top, U32 Right, U32 Bottom, PUCHAR TextString, UCHAR Attr)
 {
 	if (UiDisplayMode == DISPLAYMODE_TEXT)
 	{
@@ -300,20 +300,19 @@ VOID UiUpdateDateTime(VOID)
 
 VOID UiMessageBox(PUCHAR MessageText)
 {
-	
-	strcat(UiMessageBoxLineText, MessageText);
-
 	// We have not yet displayed the user interface
 	// We are probably still reading the .ini file
 	// and have encountered an error. Just use printf()
 	// and return.
 	if (!UserInterfaceUp)
 	{
-		printf("%s\n", UiMessageBoxLineText);
+		printf("%s\n", MessageText);
 		printf("Press any key\n");
 		getch();
 		return;
 	}
+
+	strcat(UiMessageBoxLineText, MessageText);
 
 	if (UiDisplayMode == DISPLAYMODE_TEXT)
 	{
@@ -387,7 +386,7 @@ UCHAR UiTextToFillStyle(PUCHAR FillStyleText)
 	}
 }
 
-VOID UiDrawProgressBarCenter(ULONG Position, ULONG Range)
+VOID UiDrawProgressBarCenter(U32 Position, U32 Range)
 {
 	if (UiDisplayMode == DISPLAYMODE_TEXT)
 	{
@@ -400,7 +399,7 @@ VOID UiDrawProgressBarCenter(ULONG Position, ULONG Range)
 	}
 }
 
-VOID UiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range)
+VOID UiDrawProgressBar(U32 Left, U32 Top, U32 Right, U32 Bottom, U32 Position, U32 Range)
 {
 	if (UiDisplayMode == DISPLAYMODE_TEXT)
 	{
@@ -415,10 +414,10 @@ VOID UiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG P
 
 VOID UiShowMessageBoxesInSection(PUCHAR SectionName)
 {
-	ULONG	Idx;
+	U32		Idx;
 	UCHAR	SettingName[80];
 	UCHAR	SettingValue[80];
-	ULONG	SectionId;
+	U32		SectionId;
 
 	//
 	// Zero out message line text
@@ -455,12 +454,12 @@ VOID UiShowMessageBoxesInSection(PUCHAR SectionName)
 	strcpy(UiMessageBoxLineText, "");
 }
 
-VOID UiTruncateStringEllipsis(PUCHAR StringText, ULONG MaxChars)
+VOID UiTruncateStringEllipsis(PUCHAR StringText, U32 MaxChars)
 {
     UNIMPLEMENTED
 }
 
-BOOL UiDisplayMenu(PUCHAR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, PULONG SelectedMenuItem)
+BOOL UiDisplayMenu(PUCHAR MenuItemList[], U32 MenuItemCount, U32 DefaultMenuItem, S32 MenuTimeOut, U32* SelectedMenuItem)
 {
 	if (UiDisplayMode == DISPLAYMODE_TEXT)
 	{

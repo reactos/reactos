@@ -37,13 +37,13 @@ VOID RunBootManager(VOID)
 {
 	UCHAR	SettingName[80];
 	UCHAR	SettingValue[80];
-	ULONG	SectionId;
-	ULONG	OperatingSystemCount;
+	U32		SectionId;
+	U32		OperatingSystemCount;
 	PUCHAR	*OperatingSystemSectionNames;
 	PUCHAR	*OperatingSystemDisplayNames;
-	ULONG	DefaultOperatingSystem;
-	LONG	TimeOut;
-	ULONG	SelectedOperatingSystem;
+	U32		DefaultOperatingSystem;
+	S32		TimeOut;
+	U32		SelectedOperatingSystem;
 
 	if (!IniFileInitialize())
 	{
@@ -148,12 +148,12 @@ reboot:
 	return;
 }
 
-ULONG GetDefaultOperatingSystem(PUCHAR OperatingSystemList[], ULONG OperatingSystemCount)
+U32	 GetDefaultOperatingSystem(PUCHAR OperatingSystemList[], U32	 OperatingSystemCount)
 {
 	UCHAR	DefaultOSText[80];
-	ULONG	SectionId;
-	ULONG	DefaultOS = 0;
-	ULONG	Idx;
+	U32		SectionId;
+	U32		DefaultOS = 0;
+	U32		Idx;
 
 	if (!IniOpenSection("FreeLoader", &SectionId))
 	{
@@ -175,11 +175,11 @@ ULONG GetDefaultOperatingSystem(PUCHAR OperatingSystemList[], ULONG OperatingSys
 	return DefaultOS;
 }
 
-LONG GetTimeOut(VOID)
+S32 GetTimeOut(VOID)
 {
 	UCHAR	TimeOutText[20];
-	ULONG	TimeOut;
-	ULONG	SectionId;
+	U32		TimeOut;
+	U32		SectionId;
 
 	if (!IniOpenSection("FreeLoader", &SectionId))
 	{

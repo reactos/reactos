@@ -55,7 +55,7 @@ RegInitializeRegistry(VOID)
 }
 
 
-LONG
+S32
 RegInitCurrentControlSet(BOOL LastKnownGood)
 {
   CHAR ControlSetKeyName[80];
@@ -63,11 +63,11 @@ RegInitCurrentControlSet(BOOL LastKnownGood)
   HKEY SystemKey;
   HKEY ControlSetKey;
   HKEY LinkKey;
-  ULONG CurrentSet = 0;
-  ULONG DefaultSet = 0;
-  ULONG LastKnownGoodSet = 0;
-  ULONG DataSize;
-  LONG Error;
+  U32 CurrentSet = 0;
+  U32 DefaultSet = 0;
+  U32 LastKnownGoodSet = 0;
+  U32 DataSize;
+  S32 Error;
 
   Error = RegOpenKey(NULL,
 		     "\\Registry\\Machine\\SYSTEM\\Select",
@@ -78,7 +78,7 @@ RegInitCurrentControlSet(BOOL LastKnownGood)
       return(Error);
     }
 
-  DataSize = sizeof(ULONG);
+  DataSize = sizeof(U32);
   Error = RegQueryValue(SelectKey,
 			"Default",
 			NULL,
@@ -90,7 +90,7 @@ RegInitCurrentControlSet(BOOL LastKnownGood)
       return(Error);
     }
 
-  DataSize = sizeof(ULONG);
+  DataSize = sizeof(U32);
   Error = RegQueryValue(SelectKey,
 			"LastKnownGood",
 			NULL,
@@ -165,7 +165,7 @@ RegInitCurrentControlSet(BOOL LastKnownGood)
 }
 
 
-LONG
+S32
 RegCreateKey(HKEY ParentKey,
 	     PCHAR KeyName,
 	     PHKEY Key)
@@ -285,7 +285,7 @@ RegCreateKey(HKEY ParentKey,
 }
 
 
-LONG
+S32
 RegDeleteKey(HKEY Key,
 	     PCHAR Name)
 {
@@ -300,16 +300,16 @@ RegDeleteKey(HKEY Key,
 }
 
 
-LONG
+S32
 RegEnumKey(HKEY Key,
-	   ULONG Index,
+	   U32 Index,
 	   PCHAR Name,
-	   PULONG NameSize)
+	   U32* NameSize)
 {
   PLIST_ENTRY Ptr;
   HKEY SearchKey;
-  ULONG Count = 0;
-  ULONG Size;
+  U32 Count = 0;
+  U32 Size;
 
   Ptr = Key->SubKeyList.Flink;
   while (Ptr != &Key->SubKeyList)
@@ -338,7 +338,7 @@ RegEnumKey(HKEY Key,
 }
 
 
-LONG
+S32
 RegOpenKey(HKEY ParentKey,
 	   PCHAR KeyName,
 	   PHKEY Key)
@@ -438,12 +438,12 @@ RegOpenKey(HKEY ParentKey,
 }
 
 
-LONG
+S32
 RegSetValue(HKEY Key,
 	    PCHAR ValueName,
-	    ULONG Type,
+	    U32 Type,
 	    PUCHAR Data,
-	    ULONG DataSize)
+	    U32 DataSize)
 {
   PLIST_ENTRY Ptr;
   PVALUE Value = NULL;
@@ -536,14 +536,14 @@ RegSetValue(HKEY Key,
 }
 
 
-LONG
+S32
 RegQueryValue(HKEY Key,
 	      PCHAR ValueName,
-	      PULONG Type,
+	      U32* Type,
 	      PUCHAR Data,
-	      PULONG DataSize)
+	      U32* DataSize)
 {
-  ULONG Size;
+  U32 Size;
   PLIST_ENTRY Ptr;
   PVALUE Value = NULL;
 
@@ -623,7 +623,7 @@ RegQueryValue(HKEY Key,
 }
 
 
-LONG
+S32
 RegDeleteValue(HKEY Key,
 	       PCHAR ValueName)
 {
@@ -679,18 +679,18 @@ RegDeleteValue(HKEY Key,
 }
 
 
-LONG
+S32
 RegEnumValue(HKEY Key,
-	     ULONG Index,
+	     U32 Index,
 	     PCHAR ValueName,
-	     PULONG NameSize,
-	     PULONG Type,
+	     U32* NameSize,
+	     U32* Type,
 	     PUCHAR Data,
-	     PULONG DataSize)
+	     U32* DataSize)
 {
   PLIST_ENTRY Ptr;
   PVALUE Value;
-  ULONG Count = 0;
+  U32 Count = 0;
 
   if (Key->Data != NULL)
     {
@@ -736,7 +736,7 @@ RegEnumValue(HKEY Key,
 
 
 #if 0
-LONG
+S32
 RegQueryMultipleValue(HKEY Key,
 		      ...)
 {

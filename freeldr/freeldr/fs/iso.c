@@ -31,13 +31,13 @@
 
 #define SECTORSIZE 2048
 
-static ULONG	IsoRootSector;		// Starting sector of the root directory
-static ULONG	IsoRootLength;		// Length of the root directory
+static U32		IsoRootSector;		// Starting sector of the root directory
+static U32		IsoRootLength;		// Length of the root directory
 
-ULONG		IsoDriveNumber = 0;
+U32			IsoDriveNumber = 0;
 
 
-BOOL IsoOpenVolume(ULONG DriveNumber)
+BOOL IsoOpenVolume(U32 DriveNumber)
 {
 	PPVD Pvd;
 
@@ -69,11 +69,11 @@ BOOL IsoOpenVolume(ULONG DriveNumber)
 }
 
 
-static BOOL IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, UINT32 DirectoryLength, PUCHAR FileName, PISO_FILE_INFO IsoFileInfoPointer)
+static BOOL IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, U32 DirectoryLength, PUCHAR FileName, PISO_FILE_INFO IsoFileInfoPointer)
 {
 	PDIR_RECORD	Record;
-	ULONG		Offset;
-	ULONG i;
+	U32			Offset;
+	U32 i;
 	UCHAR Name[32];
 
 	DbgPrint((DPRINT_FILESYSTEM, "IsoSearchDirectoryBufferForFile() DirectoryBuffer = 0x%x DirectoryLength = %d FileName = %s\n", DirectoryBuffer, DirectoryLength, FileName));
@@ -131,10 +131,10 @@ static BOOL IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, UINT32 Direct
 
 
 
-static PVOID IsoBufferDirectory(UINT32 DirectoryStartSector, UINT32 DirectoryLength)
+static PVOID IsoBufferDirectory(U32 DirectoryStartSector, U32 DirectoryLength)
 {
 	PVOID	DirectoryBuffer;
-	UINT32	SectorCount;
+	U32	SectorCount;
 
 	DbgPrint((DPRINT_FILESYSTEM, "IsoBufferDirectory() DirectoryStartSector = %d DirectoryLength = %d\n", DirectoryStartSector, DirectoryLength));
 
@@ -166,62 +166,6 @@ static PVOID IsoBufferDirectory(UINT32 DirectoryStartSector, UINT32 DirectoryLen
 
 
 /*
- * IsoGetNumPathParts()
- * This function parses a path in the form of dir1\dir2\file1.ext
- * and returns the number of parts it has (i.e. 3 - dir1,dir2,file1.ext)
- */
-static ULONG IsoGetNumPathParts(PUCHAR Path)
-{
-	ULONG	i;
-	ULONG	num;
-
-	for (i=0,num=0; i<(int)strlen(Path); i++)
-	{
-		if ((Path[i] == '\\') || (Path[i] == '/'))
-		{
-			num++;
-		}
-	}
-	num++;
-
-	DbgPrint((DPRINT_FILESYSTEM, "IsoGetNumPathParts() Path = %s NumPathParts = %d\n", Path, num));
-
-	return num;
-}
-
-
-/*
- * IsoGetFirstNameFromPath()
- * This function parses a path in the form of dir1\dir2\file1.ext
- * and puts the first name of the path (e.g. "dir1") in buffer
- * compatible with the MSDOS directory structure
- */
-static VOID IsoGetFirstNameFromPath(PUCHAR Buffer, PUCHAR Path)
-{
-	ULONG	i;
-
-	// Copy all the characters up to the end of the
-	// string or until we hit a '\' character
-	// and put them in Buffer
-	for (i=0; i<(int)strlen(Path); i++)
-	{
-		if ((Path[i] == '\\') || (Path[i] == '/'))
-		{
-			break;
-		}
-		else
-		{
-			Buffer[i] = Path[i];
-		}
-	}
-
-	Buffer[i] = 0;
-
-	DbgPrint((DPRINT_FILESYSTEM, "IsoGetFirstNameFromPath() Path = %s FirstName = %s\n", Path, Buffer));
-}
-
-
-/*
  * IsoLookupFile()
  * This function searches the file system for the
  * specified filename and fills in an ISO_FILE_INFO structure
@@ -231,11 +175,11 @@ static VOID IsoGetFirstNameFromPath(PUCHAR Buffer, PUCHAR Path)
 static BOOL IsoLookupFile(PUCHAR FileName, PISO_FILE_INFO IsoFileInfoPointer)
 {
 	int		i;
-	ULONG		NumberOfPathParts;
+	U32			NumberOfPathParts;
 	UCHAR		PathPart[261];
 	PVOID		DirectoryBuffer;
-	UINT32		DirectorySector;
-	UINT32		DirectoryLength;
+	U32		DirectorySector;
+	U32		DirectoryLength;
 	ISO_FILE_INFO	IsoFileInfo;
 
 	DbgPrint((DPRINT_FILESYSTEM, "IsoLookupFile() FileName = %s\n", FileName));
@@ -243,17 +187,9 @@ static BOOL IsoLookupFile(PUCHAR FileName, PISO_FILE_INFO IsoFileInfoPointer)
 	memset(IsoFileInfoPointer, 0, sizeof(ISO_FILE_INFO));
 
 	//
-	// Check and see if the first character is '\' and remove it if so
-	//
-	while ((*FileName == '\\') || (*FileName == '/'))
-	{
-		FileName++;
-	}
-
-	//
 	// Figure out how many sub-directories we are nested in
 	//
-	NumberOfPathParts = IsoGetNumPathParts(FileName);
+	NumberOfPathParts = FsGetNumPathParts(FileName);
 
 	DirectorySector = IsoRootSector;
 	DirectoryLength = IsoRootLength;
@@ -266,7 +202,7 @@ static BOOL IsoLookupFile(PUCHAR FileName, PISO_FILE_INFO IsoFileInfoPointer)
 		//
 		// Get first path part
 		//
-		IsoGetFirstNameFromPath(PathPart, FileName);
+		FsGetFirstNameFromPath(PathPart, FileName);
 
 		//
 		// Advance to the next part of the path
@@ -348,7 +284,7 @@ FILE* IsoOpenFile(PUCHAR FileName)
  * IsoReadPartialSector()
  * Reads part of a cluster into memory
  */
-static BOOL IsoReadPartialSector(ULONG SectorNumber, ULONG StartingOffset, ULONG Length, PVOID Buffer)
+static BOOL IsoReadPartialSector(U32 SectorNumber, U32 StartingOffset, U32 Length, PVOID Buffer)
 {
 	PUCHAR	SectorBuffer;
 
@@ -379,13 +315,13 @@ static BOOL IsoReadPartialSector(ULONG SectorNumber, ULONG StartingOffset, ULONG
  * Reads BytesToRead from open file and
  * returns the number of bytes read in BytesRead
  */
-BOOL IsoReadFile(FILE *FileHandle, ULONG BytesToRead, PULONG BytesRead, PVOID Buffer)
+BOOL IsoReadFile(FILE *FileHandle, U32 BytesToRead, U32* BytesRead, PVOID Buffer)
 {
 	PISO_FILE_INFO	IsoFileInfo = (PISO_FILE_INFO)FileHandle;
-	UINT32		SectorNumber;
-	UINT32		OffsetInSector;
-	UINT32		LengthInSector;
-	UINT32		NumberOfSectors;
+	U32		SectorNumber;
+	U32		OffsetInSector;
+	U32		LengthInSector;
+	U32		NumberOfSectors;
 
 	DbgPrint((DPRINT_FILESYSTEM, "IsoReadFile() BytesToRead = %d Buffer = 0x%x\n", BytesToRead, Buffer));
 
@@ -531,7 +467,7 @@ BOOL IsoReadFile(FILE *FileHandle, ULONG BytesToRead, PULONG BytesRead, PVOID Bu
 }
 
 
-ULONG IsoGetFileSize(FILE *FileHandle)
+U32 IsoGetFileSize(FILE *FileHandle)
 {
 	PISO_FILE_INFO	IsoFileHandle = (PISO_FILE_INFO)FileHandle;
 
@@ -540,7 +476,7 @@ ULONG IsoGetFileSize(FILE *FileHandle)
 	return IsoFileHandle->FileSize;
 }
 
-VOID IsoSetFilePointer(FILE *FileHandle, ULONG NewFilePointer)
+VOID IsoSetFilePointer(FILE *FileHandle, U32 NewFilePointer)
 {
 	PISO_FILE_INFO	IsoFileHandle = (PISO_FILE_INFO)FileHandle;
 
@@ -549,7 +485,7 @@ VOID IsoSetFilePointer(FILE *FileHandle, ULONG NewFilePointer)
 	IsoFileHandle->FilePointer = NewFilePointer;
 }
 
-ULONG IsoGetFilePointer(FILE *FileHandle)
+U32 IsoGetFilePointer(FILE *FileHandle)
 {
 	PISO_FILE_INFO	IsoFileHandle = (PISO_FILE_INFO)FileHandle;
 

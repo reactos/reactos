@@ -23,10 +23,11 @@
 #include <mm.h>
 #include <debug.h>
 #include <bootmgr.h>
+#include <fs.h>
 
 // Variable BootDrive moved to asmcode.S
-//ULONG			BootDrive = 0;							// BIOS boot drive, 0-A:, 1-B:, 0x80-C:, 0x81-D:, etc.
-ULONG			BootPartition = 0;						// Boot Partition, 1-4
+//U32				BootDrive = 0;							// BIOS boot drive, 0-A:, 1-B:, 0x80-C:, 0x81-D:, etc.
+U32				BootPartition = 0;						// Boot Partition, 1-4
 
 VOID BootMain(VOID)
 {

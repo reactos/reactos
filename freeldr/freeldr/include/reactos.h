@@ -40,9 +40,9 @@ VOID	ReactOSRunSetupLoader(VOID);
 // ARC Path Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-BOOL	DissectArcPath(char *ArcPath, char *BootPath, PULONG BootDrive, PULONG BootPartition);
-//BOOL	ConvertBiosDriveToArcName(PUCHAR ArcName, ULONG BiosDriveNumber);
-//ULONG	ConvertArcNameToBiosDrive(PUCHAR ArcName);
+BOOL	DissectArcPath(char *ArcPath, char *BootPath, U32* BootDrive, U32* BootPartition);
+//BOOL	ConvertBiosDriveToArcName(PUCHAR ArcName, U32 BiosDriveNumber);
+//U32		ConvertArcNameToBiosDrive(PUCHAR ArcName);
 
 
 #endif // defined __REACTOS_H

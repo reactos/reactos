@@ -146,12 +146,12 @@ void	boot_reactos(void);
 
 BOOL	MultiBootLoadKernel(FILE *KernelImage);
 //BOOL	MultiBootLoadModule(FILE *ModuleImage, char *ModuleName);
-PVOID	MultiBootLoadModule(FILE *ModuleImage, char *ModuleName, PULONG ModuleSize);
+PVOID	MultiBootLoadModule(FILE *ModuleImage, char *ModuleName, U32* ModuleSize);
 
 int	GetBootPartition(char *OperatingSystemName);
 
 PVOID MultiBootCreateModule(char *ModuleName);
-BOOL MultiBootCloseModule(PVOID ModuleBase, DWORD dwModuleSize);
+BOOL MultiBootCloseModule(PVOID ModuleBase, U32 dwModuleSize);
 
 #endif /* ! ASM */
 

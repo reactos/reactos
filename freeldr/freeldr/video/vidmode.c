@@ -20,11 +20,11 @@
 #include <freeldr.h>
 #include <video.h>
 
-ULONG	CurrentVideoMode	= VIDEOMODE_NORMAL_TEXT;
-ULONG	VideoResolutionX	= 80;
-ULONG	VideoResolutionY	= 25;
+U32		CurrentVideoMode	= VIDEOMODE_NORMAL_TEXT;
+U32		VideoResolutionX	= 80;
+U32		VideoResolutionY	= 25;
 
-BOOL VideoSetMode(ULONG VideoMode)
+BOOL VideoSetMode(U32 VideoMode)
 {
 	switch (VideoMode)
 	{
@@ -163,17 +163,17 @@ BOOL VideoSetMode80x60(VOID)
 	return TRUE;
 }
 
-ULONG VideoGetCurrentModeResolutionX(VOID)
+U32 VideoGetCurrentModeResolutionX(VOID)
 {
 	return VideoResolutionX;
 }
 
-ULONG VideoGetCurrentModeResolutionY(VOID)
+U32 VideoGetCurrentModeResolutionY(VOID)
 {
 	return VideoResolutionY;
 }
 
-ULONG VideoGetCurrentMode(VOID)
+U32 VideoGetCurrentMode(VOID)
 {
 	return CurrentVideoMode;
 }

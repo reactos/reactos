@@ -100,10 +100,10 @@ VOID TuiDrawBackdrop(VOID)
  * FillArea()
  * This function assumes coordinates are zero-based
  */
-VOID TuiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR FillChar, UCHAR Attr /* Color Attributes */)
+VOID TuiFillArea(U32 Left, U32 Top, U32 Right, U32 Bottom, UCHAR FillChar, UCHAR Attr /* Color Attributes */)
 {
 	PUCHAR	ScreenMemory = (PUCHAR)TUI_SCREEN_MEM;
-	ULONG	i, j;
+	U32		i, j;
 
 	// Clip the area to the screen
 	// FIXME: This code seems to have problems... Uncomment and view ;-)
@@ -136,10 +136,10 @@ VOID TuiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR FillCha
  * DrawShadow()
  * This function assumes coordinates are zero-based
  */
-VOID TuiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom)
+VOID TuiDrawShadow(U32 Left, U32 Top, U32 Right, U32 Bottom)
 {
 	PUCHAR	ScreenMemory = (PUCHAR)TUI_SCREEN_MEM;
-	ULONG	Idx;
+	U32		Idx;
 
 	// Shade the bottom of the area
 	if (Bottom < (UiScreenHeight - 1))
@@ -196,7 +196,7 @@ VOID TuiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom)
  * DrawBox()
  * This function assumes coordinates are zero-based
  */
-VOID TuiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOL Fill, BOOL Shadow, UCHAR Attr)
+VOID TuiDrawBox(U32 Left, U32 Top, U32 Right, U32 Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOL Fill, BOOL Shadow, UCHAR Attr)
 {
 	UCHAR	ULCorner, URCorner, LLCorner, LRCorner;
 
@@ -268,10 +268,10 @@ VOID TuiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyl
  * DrawText()
  * This function assumes coordinates are zero-based
  */
-VOID TuiDrawText(ULONG X, ULONG Y, PUCHAR Text, UCHAR Attr)
+VOID TuiDrawText(U32 X, U32 Y, PUCHAR Text, UCHAR Attr)
 {
 	PUCHAR	ScreenMemory = (PUCHAR)TUI_SCREEN_MEM;
-	ULONG	i, j;
+	U32		i, j;
 
 	// Draw the text
 	for (i=X, j=0; Text[j]  && i<UiScreenWidth; i++,j++)
@@ -281,13 +281,13 @@ VOID TuiDrawText(ULONG X, ULONG Y, PUCHAR Text, UCHAR Attr)
 	}
 }
 
-VOID TuiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PUCHAR TextString, UCHAR Attr)
+VOID TuiDrawCenteredText(U32 Left, U32 Top, U32 Right, U32 Bottom, PUCHAR TextString, UCHAR Attr)
 {
 }
 
 VOID TuiDrawStatusText(PUCHAR StatusText)
 {
-	ULONG	i;
+	U32		i;
 
 	TuiDrawText(0, UiScreenHeight-1, " ", ATTR(UiStatusBarFgColor, UiStatusBarBgColor));
 	TuiDrawText(1, UiScreenHeight-1, StatusText, ATTR(UiStatusBarFgColor, UiStatusBarBgColor));
@@ -303,7 +303,7 @@ VOID TuiUpdateDateTime(VOID)
 	UCHAR	DateString[40];
 	UCHAR	TimeString[40];
 	UCHAR	TempString[20];
-	ULONG	Hour, Minute, Second;
+	U32		Hour, Minute, Second;
 	BOOL	PMHour = FALSE;
 
 	// Get the month name
@@ -385,7 +385,7 @@ VOID TuiUpdateDateTime(VOID)
 VOID TuiSaveScreen(PUCHAR Buffer)
 {
 	PUCHAR	ScreenMemory = (PUCHAR)TUI_SCREEN_MEM;
-	ULONG	i;
+	U32		i;
 
 	for (i=0; i < (UiScreenWidth * UiScreenHeight * 2); i++)
 	{
@@ -396,7 +396,7 @@ VOID TuiSaveScreen(PUCHAR Buffer)
 VOID TuiRestoreScreen(PUCHAR Buffer)
 {
 	PUCHAR	ScreenMemory = (PUCHAR)TUI_SCREEN_MEM;
-	ULONG	i;
+	U32		i;
 
 	for (i=0; i < (UiScreenWidth * UiScreenHeight * 2); i++)
 	{
@@ -505,11 +505,11 @@ VOID TuiMessageBoxCritical(PUCHAR MessageText)
 }
 
 
-VOID TuiDrawProgressBarCenter(ULONG Position, ULONG Range)
+VOID TuiDrawProgressBarCenter(U32 Position, U32 Range)
 {
-	ULONG	Left, Top, Right, Bottom;
-	ULONG	Width = 50; // Allow for 50 "bars"
-	ULONG	Height = 2;
+	U32		Left, Top, Right, Bottom;
+	U32		Width = 50; // Allow for 50 "bars"
+	U32		Height = 2;
 
 	Left = (UiScreenWidth - Width - 4) / 2;
 	Right = Left + Width + 3;
@@ -520,10 +520,10 @@ VOID TuiDrawProgressBarCenter(ULONG Position, ULONG Range)
 	TuiDrawProgressBar(Left, Top, Right, Bottom, Position, Range);
 }
 
-VOID TuiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range)
+VOID TuiDrawProgressBar(U32 Left, U32 Top, U32 Right, U32 Bottom, U32 Position, U32 Range)
 {
-	ULONG	i;
-	ULONG	ProgressBarWidth = (Right - Left) - 3;
+	U32		i;
+	U32		ProgressBarWidth = (Right - Left) - 3;
 
 	if (Position > Range)
 	{

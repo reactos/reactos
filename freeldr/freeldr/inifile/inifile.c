@@ -23,7 +23,7 @@
 #include <rtl.h>
 #include <debug.h>
 
-BOOL IniOpenSection(PUCHAR SectionName, PULONG SectionId)
+BOOL IniOpenSection(PUCHAR SectionName, U32* SectionId)
 {
 	PINI_SECTION	Section;
 
@@ -37,7 +37,7 @@ BOOL IniOpenSection(PUCHAR SectionName, PULONG SectionId)
 		if (stricmp(SectionName, Section->SectionName) == 0)
 		{
 			// We found it
-			*SectionId = (ULONG)Section;
+			*SectionId = (U32)Section;
 			DbgPrint((DPRINT_INIFILE, "IniOpenSection() Found it! SectionId = 0x%x\n", SectionId));
 			return TRUE;
 		}
@@ -51,7 +51,7 @@ BOOL IniOpenSection(PUCHAR SectionName, PULONG SectionId)
 	return FALSE;
 }
 
-ULONG IniGetNumSectionItems(ULONG SectionId)
+U32 IniGetNumSectionItems(U32 SectionId)
 {
 	PINI_SECTION	Section = (PINI_SECTION)SectionId;
 
@@ -61,12 +61,12 @@ ULONG IniGetNumSectionItems(ULONG SectionId)
 	return Section->SectionItemCount;
 }
 
-BOOL IniReadSettingByNumber(ULONG SectionId, ULONG SettingNumber, PUCHAR SettingName, ULONG NameSize, PUCHAR SettingValue, ULONG ValueSize)
+BOOL IniReadSettingByNumber(U32 SectionId, U32 SettingNumber, PUCHAR SettingName, U32 NameSize, PUCHAR SettingValue, U32 ValueSize)
 {
 	PINI_SECTION		Section = (PINI_SECTION)SectionId;
 	PINI_SECTION_ITEM	SectionItem;
 #ifdef DEBUG
-	ULONG				RealSettingNumber = SettingNumber;
+	U32					RealSettingNumber = SettingNumber;
 #endif
 
 	DbgPrint((DPRINT_INIFILE, "IniReadSettingByNumber() SectionId = 0x%x\n", SectionId));
@@ -100,7 +100,7 @@ BOOL IniReadSettingByNumber(ULONG SectionId, ULONG SettingNumber, PUCHAR Setting
 	return FALSE;
 }
 
-BOOL IniReadSettingByName(ULONG SectionId, PUCHAR SettingName, PUCHAR Buffer, ULONG BufferSize)
+BOOL IniReadSettingByName(U32 SectionId, PUCHAR SettingName, PUCHAR Buffer, U32 BufferSize)
 {
 	PINI_SECTION		Section = (PINI_SECTION)SectionId;
 	PINI_SECTION_ITEM	SectionItem;

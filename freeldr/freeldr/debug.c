@@ -31,17 +31,17 @@
 //#define DEBUG_NONE
 
 #if defined (DEBUG_ULTRA)
-ULONG	DebugPrintMask = DPRINT_WARNING | DPRINT_MEMORY | DPRINT_FILESYSTEM |
+U32		DebugPrintMask = DPRINT_WARNING | DPRINT_MEMORY | DPRINT_FILESYSTEM |
 						DPRINT_UI | DPRINT_DISK | DPRINT_CACHE | DPRINT_REACTOS |
 						DPRINT_LINUX;
 #elif defined (DEBUG_INIFILE)
-ULONG	DebugPrintMask = DPRINT_INIFILE;
+U32		DebugPrintMask = DPRINT_INIFILE;
 #elif defined (DEBUG_REACTOS)
-ULONG	DebugPrintMask = DPRINT_REACTOS | DPRINT_REGISTRY;
+U32		DebugPrintMask = DPRINT_REACTOS | DPRINT_REGISTRY;
 #elif defined (DEBUG_CUSTOM)
-ULONG	DebugPrintMask = DPRINT_WARNING;
+U32		DebugPrintMask = DPRINT_WARNING|DPRINT_FILESYSTEM;
 #else //#elif defined (DEBUG_NONE)
-ULONG	DebugPrintMask = 0;
+U32		DebugPrintMask = 0;
 #endif
 
 #define	SCREEN				0
@@ -55,12 +55,12 @@ ULONG	DebugPrintMask = 0;
 
 #define BOCHS_OUTPUT_PORT	0xe9
 
-//ULONG	DebugPort = RS232;
-//ULONG	DebugPort = SCREEN;
-ULONG	DebugPort = BOCHS;
-ULONG	ComPort = COM1;
-//ULONG	BaudRate = 19200;
-ULONG	BaudRate = 115200;
+//U32		DebugPort = RS232;
+//U32		DebugPort = SCREEN;
+U32		DebugPort = BOCHS;
+U32		ComPort = COM1;
+//U32		BaudRate = 19200;
+U32		BaudRate = 115200;
 
 BOOL	DebugStartOfLine = TRUE;
 
@@ -97,7 +97,7 @@ VOID DebugPrintChar(UCHAR Character)
 	}
 }
 
-VOID DebugPrintHeader(ULONG Mask)
+VOID DebugPrintHeader(U32 Mask)
 {
   /* No header */
   if (Mask == 0)
@@ -217,7 +217,7 @@ VOID DebugPrintHeader(ULONG Mask)
 	}
 }
 
-VOID DebugPrint(ULONG Mask, char *format, ...)
+VOID DebugPrint(U32 Mask, char *format, ...)
 {
 	int *dataptr = (int *) &format;
 	char c, *ptr, str[16];
@@ -245,13 +245,7 @@ VOID DebugPrint(ULONG Mask, char *format, ...)
 		}
 		else
 		{
-			c = *(format++);
-			if (c == 'l')
-			{
-				c = *(format++);
-			}
-
-			switch (c)
+			switch (c = *(format++))
 			{
 			case 'd': case 'u': case 'x':
 				
@@ -279,6 +273,12 @@ VOID DebugPrint(ULONG Mask, char *format, ...)
 					DebugPrintChar(c);
 				}
 				break;
+			case '%':
+				DebugPrintChar(c);
+				break;
+			default:
+				DebugPrint(Mask, "\nDebugPrint() invalid format specifier - %%%c\n", c);
+				break;
 			}
 		}
 	}
@@ -291,11 +291,11 @@ VOID DebugPrint(ULONG Mask, char *format, ...)
 
 }
 
-VOID DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length)
+VOID DebugDumpBuffer(U32 Mask, PVOID Buffer, U32 Length)
 {
 	PUCHAR	BufPtr = (PUCHAR)Buffer;
-	ULONG	Idx;
-	ULONG	Idx2;
+	U32		Idx;
+	U32		Idx2;
 	
 	// Mask out unwanted debug messages
 	if (!(Mask & DebugPrintMask))

@@ -29,19 +29,19 @@
 //
 ///////////////////////////////////////////////////////////////////////////////////////
 VOID	TuiDrawBackdrop(VOID);									// Fills the entire screen with a backdrop
-VOID	TuiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR FillChar, UCHAR Attr /* Color Attributes */);	// Fills the area specified with FillChar and Attr
-VOID	TuiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom);	// Draws a shadow on the bottom and right sides of the area specified
-VOID	TuiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOL Fill, BOOL Shadow, UCHAR Attr);	// Draws a box around the area specified
-VOID	TuiDrawText(ULONG X, ULONG Y, PUCHAR Text, UCHAR Attr);	// Draws text at coordinates specified
-VOID	TuiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PUCHAR TextString, UCHAR Attr);	// Draws centered text at the coordinates specified and clips the edges
+VOID	TuiFillArea(U32 Left, U32 Top, U32 Right, U32 Bottom, UCHAR FillChar, UCHAR Attr /* Color Attributes */);	// Fills the area specified with FillChar and Attr
+VOID	TuiDrawShadow(U32 Left, U32 Top, U32 Right, U32 Bottom);	// Draws a shadow on the bottom and right sides of the area specified
+VOID	TuiDrawBox(U32 Left, U32 Top, U32 Right, U32 Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOL Fill, BOOL Shadow, UCHAR Attr);	// Draws a box around the area specified
+VOID	TuiDrawText(U32 X, U32 Y, PUCHAR Text, UCHAR Attr);	// Draws text at coordinates specified
+VOID	TuiDrawCenteredText(U32 Left, U32 Top, U32 Right, U32 Bottom, PUCHAR TextString, UCHAR Attr);	// Draws centered text at the coordinates specified and clips the edges
 VOID	TuiDrawStatusText(PUCHAR StatusText);					// Draws text at the very bottom line on the screen
 VOID	TuiUpdateDateTime(VOID);								// Updates the date and time
 VOID	TuiSaveScreen(PUCHAR Buffer);							// Saves the screen so that it can be restored later
 VOID	TuiRestoreScreen(PUCHAR Buffer);						// Restores the screen from a previous save
 VOID	TuiMessageBox(PUCHAR MessageText);						// Displays a message box on the screen with an ok button
 VOID	TuiMessageBoxCritical(PUCHAR MessageText);				// Displays a message box on the screen with an ok button using no system resources
-VOID	TuiDrawProgressBarCenter(ULONG Position, ULONG Range);			// Draws the progress bar showing nPos percent filled
-VOID	TuiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range);			// Draws the progress bar showing nPos percent filled
+VOID	TuiDrawProgressBarCenter(U32 Position, U32 Range);			// Draws the progress bar showing nPos percent filled
+VOID	TuiDrawProgressBar(U32 Left, U32 Top, U32 Right, U32 Bottom, U32 Position, U32 Range);			// Draws the progress bar showing nPos percent filled
 
 UCHAR	TuiTextToColor(PUCHAR ColorText);						// Converts the text color into it's equivalent color value
 UCHAR	TuiTextToFillStyle(PUCHAR FillStyleText);				// Converts the text fill into it's equivalent fill value
@@ -55,23 +55,23 @@ UCHAR	TuiTextToFillStyle(PUCHAR FillStyleText);				// Converts the text fill int
 typedef struct
 {
 	PUCHAR *MenuItemList;
-	ULONG	MenuItemCount;
-	LONG	MenuTimeRemaining;
-	ULONG	SelectedMenuItem;
+	U32		MenuItemCount;
+	S32		MenuTimeRemaining;
+	U32		SelectedMenuItem;
 
-	ULONG	Left;
-	ULONG	Top;
-	ULONG	Right;
-	ULONG	Bottom;
+	U32		Left;
+	U32		Top;
+	U32		Right;
+	U32		Bottom;
 
 } TUI_MENU_INFO, *PTUI_MENU_INFO;
 
 VOID	TuiCalcMenuBoxSize(PTUI_MENU_INFO MenuInfo);
 VOID	TuiDrawMenu(PTUI_MENU_INFO MenuInfo);
 VOID	TuiDrawMenuBox(PTUI_MENU_INFO MenuInfo);
-VOID	TuiDrawMenuItem(PTUI_MENU_INFO MenuInfo, ULONG MenuItemNumber);
-ULONG	TuiProcessMenuKeyboardEvent(PTUI_MENU_INFO MenuInfo);
-BOOL	TuiDisplayMenu(PUCHAR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, PULONG SelectedMenuItem);
+VOID	TuiDrawMenuItem(PTUI_MENU_INFO MenuInfo, U32 MenuItemNumber);
+U32		TuiProcessMenuKeyboardEvent(PTUI_MENU_INFO MenuInfo);
+BOOL	TuiDisplayMenu(PUCHAR MenuItemList[], U32 MenuItemCount, U32 DefaultMenuItem, S32 MenuTimeOut, U32* SelectedMenuItem);
 
 
 /*

@@ -29,12 +29,12 @@
 
 typedef struct
 {
-	ULONG	BaseAddressLow;
-	ULONG	BaseAddressHigh;
-	ULONG	LengthLow;
-	ULONG	LengthHigh;
-	ULONG	Type;
-	ULONG	Reserved;
+	U32		BaseAddressLow;
+	U32		BaseAddressHigh;
+	U32		LengthLow;
+	U32		LengthHigh;
+	U32		Type;
+	U32		Reserved;
 } PACKED BIOS_MEMORY_MAP, *PBIOS_MEMORY_MAP;
 
 typedef struct
@@ -43,22 +43,22 @@ typedef struct
 } PACKED BIOS_MEMORY_MAP_ARRAY, *PBIOS_MEMORY_MAP_ARRAY;
 
 
-ULONG	GetSystemMemorySize(VOID);								// Returns the amount of total memory in the system
+U32		GetSystemMemorySize(VOID);								// Returns the amount of total memory in the system
 
 // These functions are implemented in mem.S
-ULONG	GetExtendedMemorySize(VOID);							// Returns extended memory size in KB
-ULONG	GetConventionalMemorySize(VOID);						// Returns conventional memory size in KB
-ULONG	GetBiosMemoryMap(PBIOS_MEMORY_MAP_ARRAY BiosMemoryMap);	// Fills structure with BIOS memory map and returns memory map item count
+U32		GetExtendedMemorySize(VOID);							// Returns extended memory size in KB
+U32		GetConventionalMemorySize(VOID);						// Returns conventional memory size in KB
+U32		GetBiosMemoryMap(PBIOS_MEMORY_MAP_ARRAY BiosMemoryMap);	// Fills structure with BIOS memory map and returns memory map item count
 
 
 
 
-//BOOL	MmInitializeMemoryManager(ULONG LowMemoryStart, ULONG LowMemoryLength);
+//BOOL	MmInitializeMemoryManager(U32 LowMemoryStart, U32 LowMemoryLength);
 BOOL	MmInitializeMemoryManager(VOID);
-PVOID	MmAllocateMemory(ULONG MemorySize);
+PVOID	MmAllocateMemory(U32 MemorySize);
 VOID	MmFreeMemory(PVOID MemoryPointer);
-//PVOID	MmAllocateLowMemory(ULONG MemorySize);
+//PVOID	MmAllocateLowMemory(U32 MemorySize);
 //VOID	MmFreeLowMemory(PVOID MemoryPointer);
-PVOID	MmAllocateMemoryAtAddress(ULONG MemorySize, PVOID DesiredAddress);
+PVOID	MmAllocateMemoryAtAddress(U32 MemorySize, PVOID DesiredAddress);
 
 #endif // defined __MEMORY_H

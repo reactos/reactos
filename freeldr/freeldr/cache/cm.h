@@ -38,9 +38,9 @@ typedef struct
 {
 	LIST_ITEM	ListEntry;					// Doubly linked list synchronization member
 
-	ULONG		BlockNumber;				// Track index for CHS, 64k block index for LBA
+	U32			BlockNumber;				// Track index for CHS, 64k block index for LBA
 	BOOL		LockedInCache;				// Indicates that this block is locked in cache memory
-	ULONG		AccessCount;				// Access count for this block
+	U32			AccessCount;				// Access count for this block
 
 	PVOID		BlockData;					// Pointer to block data
 
@@ -55,11 +55,11 @@ typedef struct
 ///////////////////////////////////////////////////////////////////////////////////////
 typedef struct
 {
-	ULONG				DriveNumber;
+	U32					DriveNumber;
 	BOOL				LbaSupported;
 	GEOMETRY			DriveGeometry;
 
-	ULONG				BlockSize;			// Block size (in sectors)
+	U32					BlockSize;			// Block size (in sectors)
 	PCACHE_BLOCK		CacheBlockHead;
 
 } CACHE_DRIVE, *PCACHE_DRIVE;
@@ -72,18 +72,18 @@ typedef struct
 ///////////////////////////////////////////////////////////////////////////////////////
 extern	CACHE_DRIVE		CacheManagerDrive;
 extern	BOOL			CacheManagerInitialized;
-extern	ULONG			CacheBlockCount;
-extern	ULONG			CacheSizeLimit;
-extern	ULONG			CacheSizeCurrent;
+extern	U32				CacheBlockCount;
+extern	U32				CacheSizeLimit;
+extern	U32				CacheSizeCurrent;
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //
 // Internal functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-PCACHE_BLOCK	CacheInternalGetBlockPointer(PCACHE_DRIVE CacheDrive, ULONG BlockNumber);			// Returns a pointer to a CACHE_BLOCK structure given a block number
-PCACHE_BLOCK	CacheInternalFindBlock(PCACHE_DRIVE CacheDrive, ULONG BlockNumber);					// Searches the block list for a particular block
-PCACHE_BLOCK	CacheInternalAddBlockToCache(PCACHE_DRIVE CacheDrive, ULONG BlockNumber);			// Adds a block to the cache's block list
+PCACHE_BLOCK	CacheInternalGetBlockPointer(PCACHE_DRIVE CacheDrive, U32 BlockNumber);				// Returns a pointer to a CACHE_BLOCK structure given a block number
+PCACHE_BLOCK	CacheInternalFindBlock(PCACHE_DRIVE CacheDrive, U32 BlockNumber);					// Searches the block list for a particular block
+PCACHE_BLOCK	CacheInternalAddBlockToCache(PCACHE_DRIVE CacheDrive, U32 BlockNumber);				// Adds a block to the cache's block list
 BOOL			CacheInternalFreeBlock(PCACHE_DRIVE CacheDrive);									// Removes a block from the cache's block list & frees the memory
 VOID			CacheInternalCheckCacheSizeLimits(PCACHE_DRIVE CacheDrive);							// Checks the cache size limits to see if we can add a new block, if not calls CacheInternalFreeBlock()
 VOID			CacheInternalDumpBlockList(PCACHE_DRIVE CacheDrive);								// Dumps the list of cached blocks to the debug output port

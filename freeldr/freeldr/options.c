@@ -119,7 +119,7 @@ void DoBootOptionsMenu(int BootDriveNum, char *BootDriveText)
 			}
 
 			// Check for validity
-			if (*((WORD*)(0x7c00 + 0x1fe)) != 0xaa55)
+			if (*((U16*)(0x7c00 + 0x1fe)) != 0xaa55)
 			{
 				MessageBox("Invalid boot sector magic (0xaa55)");
 				return;
@@ -173,7 +173,7 @@ void DoBootPartitionOptionsMenu(int BootDriveNum)
 	}
 
 	// Check for validity
-	if (*((WORD*)(SectorBuffer + 0x1fe)) != 0xaa55)
+	if (*((U16*)(SectorBuffer + 0x1fe)) != 0xaa55)
 	{
 		MessageBox("Invalid partition table magic (0xaa55)");
 		return;
@@ -231,7 +231,7 @@ void DoBootPartitionOptionsMenu(int BootDriveNum)
 			}
 
 			// Check for validity
-			if (*((WORD*)(0x7c00 + 0x1fe)) != 0xaa55)
+			if (*((U16*)(0x7c00 + 0x1fe)) != 0xaa55)
 			{
 				MessageBox("Invalid boot sector magic (0xaa55)");
 				return;

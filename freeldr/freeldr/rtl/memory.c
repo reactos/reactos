@@ -19,9 +19,9 @@
 
 #include <freeldr.h>
 
-int RtlCompareMemory(const PVOID Source1, const PVOID Source2, ULONG Length)
+int RtlCompareMemory(const PVOID Source1, const PVOID Source2, U32 Length)
 {
-	ULONG		i;
+	U32			i;
 	const PCHAR buffer1 = Source1;
 	const PCHAR buffer2 = Source2;
 
@@ -36,9 +36,9 @@ int RtlCompareMemory(const PVOID Source1, const PVOID Source2, ULONG Length)
 	return 0;
 }
 
-VOID RtlCopyMemory(PVOID Destination, const PVOID Source, ULONG Length)
+VOID RtlCopyMemory(PVOID Destination, const PVOID Source, U32 Length)
 {
-	ULONG		i;
+	U32			i;
 	PCHAR		buf1 = Destination;
 	const PCHAR	buf2 = Source;
 
@@ -49,9 +49,9 @@ VOID RtlCopyMemory(PVOID Destination, const PVOID Source, ULONG Length)
 
 }
 
-VOID RtlFillMemory(PVOID Destination, ULONG Length, UCHAR Fill)
+VOID RtlFillMemory(PVOID Destination, U32 Length, UCHAR Fill)
 {
-	ULONG		i;
+	U32			i;
 	PUCHAR		buf1 = Destination;
 
 	for (i=0; i<Length; i++)
@@ -61,7 +61,7 @@ VOID RtlFillMemory(PVOID Destination, ULONG Length, UCHAR Fill)
 
 }
 
-VOID RtlZeroMemory(PVOID Destination, ULONG Length)
+VOID RtlZeroMemory(PVOID Destination, U32 Length)
 {
 	RtlFillMemory(Destination, Length, 0);
 }

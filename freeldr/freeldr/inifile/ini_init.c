@@ -29,7 +29,7 @@ BOOL IniFileInitialize(VOID)
 {
 	PFILE	Freeldr_Ini;	// File handle for freeldr.ini
 	PUCHAR	FreeLoaderIniFileData;
-	ULONG	FreeLoaderIniFileSize;
+	U32		FreeLoaderIniFileSize;
 	BOOL	Success;
 
 	// Open the boot drive for file access

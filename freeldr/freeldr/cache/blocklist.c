@@ -29,7 +29,7 @@
 // Returns a pointer to a CACHE_BLOCK structure
 // Adds the block to the cache manager block list
 // in cache memory if it isn't already there
-PCACHE_BLOCK CacheInternalGetBlockPointer(PCACHE_DRIVE CacheDrive, ULONG BlockNumber)
+PCACHE_BLOCK CacheInternalGetBlockPointer(PCACHE_DRIVE CacheDrive, U32 BlockNumber)
 {
 	PCACHE_BLOCK	CacheBlock = NULL;
 
@@ -54,7 +54,7 @@ PCACHE_BLOCK CacheInternalGetBlockPointer(PCACHE_DRIVE CacheDrive, ULONG BlockNu
 	return CacheBlock;
 }
 
-PCACHE_BLOCK CacheInternalFindBlock(PCACHE_DRIVE CacheDrive, ULONG BlockNumber)
+PCACHE_BLOCK CacheInternalFindBlock(PCACHE_DRIVE CacheDrive, U32 BlockNumber)
 {
 	PCACHE_BLOCK	CacheBlock = NULL;
 
@@ -92,7 +92,7 @@ PCACHE_BLOCK CacheInternalFindBlock(PCACHE_DRIVE CacheDrive, ULONG BlockNumber)
 	return NULL;
 }
 
-PCACHE_BLOCK CacheInternalAddBlockToCache(PCACHE_DRIVE CacheDrive, ULONG BlockNumber)
+PCACHE_BLOCK CacheInternalAddBlockToCache(PCACHE_DRIVE CacheDrive, U32 BlockNumber)
 {
 	PCACHE_BLOCK	CacheBlock = NULL;
 
@@ -194,7 +194,7 @@ BOOL CacheInternalFreeBlock(PCACHE_DRIVE CacheDrive)
 
 VOID CacheInternalCheckCacheSizeLimits(PCACHE_DRIVE CacheDrive)
 {
-	ULONG	NewCacheSize;
+	U32		NewCacheSize;
 
 	DbgPrint((DPRINT_CACHE, "CacheInternalCheckCacheSizeLimits()\n"));
 

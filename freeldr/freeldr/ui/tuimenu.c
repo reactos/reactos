@@ -26,10 +26,10 @@
 #include <mm.h>
 
 
-BOOL TuiDisplayMenu(PUCHAR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, PULONG SelectedMenuItem)
+BOOL TuiDisplayMenu(PUCHAR MenuItemList[], U32 MenuItemCount, U32 DefaultMenuItem, S32 MenuTimeOut, U32* SelectedMenuItem)
 {
 	TUI_MENU_INFO	MenuInformation;
-	ULONG			CurrentClockSecond;
+	U32				CurrentClockSecond;
 
 	//
 	// The first thing we need to check is the timeout
@@ -128,10 +128,10 @@ BOOL TuiDisplayMenu(PUCHAR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMen
 
 VOID TuiCalcMenuBoxSize(PTUI_MENU_INFO MenuInfo)
 {
-	ULONG	Idx;
-	ULONG	Width;
-	ULONG	Height;
-	ULONG	Length;
+	U32		Idx;
+	U32		Width;
+	U32		Height;
+	U32		Length;
 
 	//
 	// Height is the menu item count plus 2 (top border & bottom border)
@@ -169,7 +169,7 @@ VOID TuiCalcMenuBoxSize(PTUI_MENU_INFO MenuInfo)
 
 VOID TuiDrawMenu(PTUI_MENU_INFO MenuInfo)
 {
-	ULONG	Idx;
+	U32		Idx;
 
 	//
 	// Draw the menu box
@@ -225,13 +225,13 @@ VOID TuiDrawMenuBox(PTUI_MENU_INFO MenuInfo)
 	}
 }
 
-VOID TuiDrawMenuItem(PTUI_MENU_INFO MenuInfo, ULONG MenuItemNumber)
+VOID TuiDrawMenuItem(PTUI_MENU_INFO MenuInfo, U32 MenuItemNumber)
 {
-	ULONG	Idx;
+	U32		Idx;
 	UCHAR	MenuLineText[80];
-	ULONG	SpaceTotal;
-	ULONG	SpaceLeft;
-	ULONG	SpaceRight;
+	U32		SpaceTotal;
+	U32		SpaceLeft;
+	U32		SpaceRight;
 
 	//
 	// We will want the string centered so calculate
@@ -283,9 +283,9 @@ VOID TuiDrawMenuItem(PTUI_MENU_INFO MenuInfo, ULONG MenuItemNumber)
 	}
 }
 
-ULONG TuiProcessMenuKeyboardEvent(PTUI_MENU_INFO MenuInfo)
+U32 TuiProcessMenuKeyboardEvent(PTUI_MENU_INFO MenuInfo)
 {
-	ULONG	KeyEvent = 0;
+	U32		KeyEvent = 0;
 
 	//
 	// Check for a keypress

@@ -143,7 +143,7 @@ int stricmp(const char *string1, const char *string2)
 	return (int)tolower(*string1) - (int)tolower(*string2);
 }
 
-int _strnicmp(const char *string1, const char *string2, size_t length)
+int strnicmp(const char *string1, const char *string2, size_t length)
 {
 	if (length == 0)
 		return 0;

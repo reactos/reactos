@@ -36,8 +36,8 @@
 	#define DPRINT_LINUX		  0x00000200  // OR this with DebugPrintMask to enable Linux messages
 
 	VOID	DebugInit(VOID);
-	VOID	DebugPrint(ULONG Mask, char *format, ...);
-	VOID	DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length);
+	VOID	DebugPrint(U32 Mask, char *format, ...);
+	VOID	DebugDumpBuffer(U32 Mask, PVOID Buffer, U32 Length);
 
 	#define DbgPrint(_x_)					{ DebugPrint(DPRINT_NONE, "%s:%d(%s)\n", __FILE__, __LINE__, __FUNCTION__);  DebugPrint _x_ ; }
 	#define BugCheck(_x_)				  { DebugPrint(DPRINT_WARNING, "Fatal Error: %s:%d(%s)\n", __FILE__, __LINE__, __FUNCTION__); DebugPrint _x_ ; for (;;); }

@@ -23,21 +23,21 @@
 
 typedef struct
 {
-	BYTE	DriveMapCount;		// Count of drives currently mapped
+	U8		DriveMapCount;		// Count of drives currently mapped
 
-	BYTE	DriveMap[8];		// Map of BIOS drives
+	U8		DriveMap[8];		// Map of BIOS drives
 
 } PACKED DRIVE_MAP_LIST, *PDRIVE_MAP_LIST;
 
 VOID	DriveMapMapDrivesInSection(PUCHAR SectionName);
 BOOL	DriveMapIsValidDriveString(PUCHAR DriveString);			// Checks the drive string ("hd0") for validity
-ULONG	DriveMapGetBiosDriveNumber(PUCHAR DeviceName);			// Returns a BIOS drive number for any given device name (e.g. 0x80 for 'hd0')
+U32		DriveMapGetBiosDriveNumber(PUCHAR DeviceName);			// Returns a BIOS drive number for any given device name (e.g. 0x80 for 'hd0')
 VOID	DriveMapInstallInt13Handler(PDRIVE_MAP_LIST DriveMap);	// Installs the int 13h handler for the drive mapper
 VOID	DriveMapRemoveInt13Handler(VOID);						// Removes a previously installed int 13h drive map handler
 
 extern PVOID			DriveMapInt13HandlerStart;
 extern PVOID			DriveMapInt13HandlerEnd;
-extern ULONG			DriveMapOldInt13HandlerAddress;
+extern U32				DriveMapOldInt13HandlerAddress;
 extern DRIVE_MAP_LIST	DriveMapInt13HandlerMapList;
 
 #endif // #defined __DRIVEMAP_H

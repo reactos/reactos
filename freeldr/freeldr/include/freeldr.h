@@ -20,48 +20,53 @@
 #ifndef __FREELDR_H
 #define __FREELDR_H
 
-
-#define	size_t	unsigned int
-#define BOOL	int
-#define BOOLEAN	int
 #define	NULL	0
 #define	TRUE	1
 #define FALSE	0
-#define BYTE	unsigned char
-#define WORD	unsigned short
-#define DWORD	unsigned long
+
+#define BOOL	int
+#define BOOLEAN	int
+
 #define CHAR	char
 #define PCHAR	char *
 #define UCHAR	unsigned char
 #define PUCHAR	unsigned char *
 #define WCHAR	unsigned short
 #define PWCHAR	unsigned short *
-#define SHORT	short
-#define USHORT	unsigned short
-#define PUSHORT	unsigned short *
-#define LONG	long
-#define ULONG	unsigned long
-#define PULONG	unsigned long *
-#define PDWORD	DWORD *
-#define PWORD	WORD *
+
 #define VOID	void
 #define PVOID	VOID*
-#define INT8	char
-#define UINT8	unsigned char
-#define INT16	short
-#define UINT16	unsigned short
-#define INT32	long
-#define UINT32	unsigned long
-#define PUINT32	UINT32 *
-#define INT64	long long
-#define UINT64	unsigned long long
+
+#ifdef __i386__
+
+#define	size_t	unsigned int
+
+typedef unsigned char		U8;
+typedef char				S8;
+typedef unsigned short		U16;
+typedef short				S16;
+typedef unsigned long		U32;
+typedef long				S32;
+typedef unsigned long long	U64;
+typedef long long			S64;
+
+typedef U8					__u8;
+typedef S8					__s8;
+typedef U16					__u16;
+typedef S16					__s16;
+typedef U32					__u32;
+typedef S32					__s32;
+typedef U64					__u64;
+typedef S64					__s64;
+
+#endif // __i386__
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 
 #define PACKED __attribute__((packed))
 
-extern ULONG		BootDrive;			// BIOS boot drive, 0-A:, 1-B:, 0x80-C:, 0x81-D:, etc.
-extern ULONG		BootPartition;		// Boot Partition, 1-4
+extern U32			BootDrive;			// BIOS boot drive, 0-A:, 1-B:, 0x80-C:, 0x81-D:, etc.
+extern U32			BootPartition;		// Boot Partition, 1-4
 extern BOOL			UserInterfaceUp;	// Tells us if the user interface is displayed
 
 void	BootMain(void);

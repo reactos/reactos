@@ -23,7 +23,7 @@
 #include <mm.h>
 
 
-BOOL DiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY DriveGeometry)
+BOOL DiskGetDriveGeometry(U32 DriveNumber, PGEOMETRY DriveGeometry)
 {
 	// For now just return the geometry as the BIOS reports it
 	// BytesPerSector is always set to 512 by BiosInt13GetDriveParameters()

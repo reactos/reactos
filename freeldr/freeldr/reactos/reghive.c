@@ -266,7 +266,7 @@ computeKeyValueDataSize (PCHAR  regChunk, PCHAR  dataFormat)
   }
   else if (strcmp (dataFormat, "dword") == 0)
   {
-    dataSize = sizeof(DWORD);
+    dataSize = sizeof(U32);
     while (*regChunk != 0 && isxdigit(*regChunk))
     {
       regChunk++;
@@ -335,7 +335,7 @@ static PCHAR
 getKeyValueDataFromChunk (PCHAR  regChunk, PCHAR  dataFormat, PCHAR data)
 {
   char  dataValue;
-  ULONG ulValue;
+  U32 ulValue;
   PCHAR ptr;
   
   if (strcmp (dataFormat, "string") == 0)
@@ -382,7 +382,7 @@ getKeyValueDataFromChunk (PCHAR  regChunk, PCHAR  dataFormat, PCHAR data)
       ulValue = (ulValue << 4) + dataValue;
       regChunk++;
     }
-    memcpy(data, &ulValue, sizeof(ULONG));
+    memcpy(data, &ulValue, sizeof(U32));
   }
   else if (strcmp (dataFormat, "multi") == 0)
   {
@@ -434,11 +434,11 @@ getKeyValueDataFromChunk (PCHAR  regChunk, PCHAR  dataFormat, PCHAR data)
 static BOOL
 setKeyValue (HKEY currentKey,
              PCHAR newValueName,
-             ULONG keyValueType,
+             U32 keyValueType,
              PVOID data,
-             ULONG dataSize)
+             U32 dataSize)
 {
-  LONG status;
+  S32 status;
 
   DbgPrint((DPRINT_REGISTRY, "Adding value (%s) to current key, with data type %d and size %d\n",
     newValueName, (int)keyValueType, (int)dataSize));
@@ -459,7 +459,7 @@ setKeyValue (HKEY currentKey,
 
 VOID
 RegImportHive(PCHAR ChunkBase,
-	      ULONG ChunkSize)
+	      U32 ChunkSize)
 {
   HKEY  currentKey = INVALID_HANDLE_VALUE;
   char *newKeyName = NULL;
@@ -477,7 +477,7 @@ RegImportHive(PCHAR ChunkBase,
   if (regChunk == 0)
     return;
 
-  while (regChunk != 0 && *regChunk != 0 && (((ULONG)regChunk-(ULONG)ChunkBase) < ChunkSize))
+  while (regChunk != 0 && *regChunk != 0 && (((U32)regChunk-(U32)ChunkBase) < ChunkSize))
   {
     regChunk = skipWhitespaceInChunk (regChunk);
     if (regChunk == 0)
@@ -581,7 +581,7 @@ RegImportHive(PCHAR ChunkBase,
 }
 
 BOOL
-RegExportHive(PCHAR ChunkBase, PULONG ChunkSize)
+RegExportHive(PCHAR ChunkBase, U32* ChunkSize)
 {
   return(TRUE);
 }

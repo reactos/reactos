@@ -38,27 +38,27 @@
 #define VIDEOPORT_PALETTE_DATA		0x03C9
 #define VIDEOPORT_VERTICAL_RETRACE	0x03DA
 
-VOID	BiosSetVideoMode(ULONG VideoMode);				// Implemented in biosvid.S
+VOID	BiosSetVideoMode(U32 VideoMode);				// Implemented in biosvid.S
 VOID	BiosSetVideoFont8x8(VOID);						// Implemented in biosvid.S
 VOID	BiosSetVideoFont8x14(VOID);						// Implemented in biosvid.S
 VOID	BiosSetVideoFont8x16(VOID);						// Implemented in biosvid.S
 VOID	BiosSelectAlternatePrintScreen(VOID);			// Implemented in biosvid.S
 VOID	BiosDisableCursorEmulation(VOID);				// Implemented in biosvid.S
-VOID	BiosDefineCursor(ULONG StartScanLine, ULONG EndScanLine);	// Implemented in biosvid.S
-ULONG	BiosDetectVideoCard(VOID);						// Implemented in biosvid.S
+VOID	BiosDefineCursor(U32 StartScanLine, U32 EndScanLine);	// Implemented in biosvid.S
+U32		BiosDetectVideoCard(VOID);						// Implemented in biosvid.S
 VOID	BiosSet200ScanLines(VOID);						// Implemented in biosvid.S, must be called right before BiosSetVideoMode()
 VOID	BiosSet350ScanLines(VOID);						// Implemented in biosvid.S, must be called right before BiosSetVideoMode()
 VOID	BiosSet400ScanLines(VOID);						// Implemented in biosvid.S, must be called right before BiosSetVideoMode()
 VOID	BiosSet480ScanLines(VOID);						// Implemented in biosvid.S, must be called right after BiosSetVideoMode()
 VOID	BiosSetVideoDisplayEnd(VOID);					// Implemented in biosvid.S
 
-VOID	VideoSetTextCursorPosition(ULONG X, ULONG Y);	// Implemented in biosvid.S
+VOID	VideoSetTextCursorPosition(U32 X, U32 Y);	// Implemented in biosvid.S
 VOID	VideoHideTextCursor(VOID);						// Implemented in biosvid.S
 VOID	VideoShowTextCursor(VOID);						// Implemented in biosvid.S
-ULONG	VideoGetTextCursorPositionX(VOID);				// Implemented in biosvid.S
-ULONG	VideoGetTextCursorPositionY(VOID);				// Implemented in biosvid.S
+U32		VideoGetTextCursorPositionX(VOID);				// Implemented in biosvid.S
+U32		VideoGetTextCursorPositionY(VOID);				// Implemented in biosvid.S
 
-BOOL	VideoSetMode(ULONG VideoMode);
+BOOL	VideoSetMode(U32 VideoMode);
 BOOL	VideoSetMode80x25(VOID);						// Sets 80x25
 BOOL	VideoSetMode80x50_80x43(VOID);					// Sets 80x50 (VGA) or 80x43 (EGA) 8-pixel mode
 BOOL	VideoSetMode80x28(VOID);						// Sets 80x28. Works on all VGA's. Standard 80x25 with 14-point font
@@ -66,9 +66,9 @@ BOOL	VideoSetMode80x43(VOID);						// Sets 80x43. Works on all VGA's. It's a 350
 BOOL	VideoSetMode80x30(VOID);						// Sets 80x30. Works on all VGA's. 480 scanlines, 16-pixel font.
 BOOL	VideoSetMode80x34(VOID);						// Sets 80x34. Works on all VGA's. 480 scanlines, 14-pixel font.
 BOOL	VideoSetMode80x60(VOID);						// Sets 80x60. Works on all VGA's. 480 scanlines, 8-pixel font.
-ULONG	VideoGetCurrentModeResolutionX(VOID);
-ULONG	VideoGetCurrentModeResolutionY(VOID);
-ULONG	VideoGetCurrentMode(VOID);
+U32		VideoGetCurrentModeResolutionX(VOID);
+U32		VideoGetCurrentModeResolutionY(VOID);
+U32		VideoGetCurrentMode(VOID);
 
 VOID	VideoClearScreen(VOID);
 VOID	VideoWaitForVerticalRetrace(VOID);

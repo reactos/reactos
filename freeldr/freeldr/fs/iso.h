@@ -25,10 +25,10 @@ struct _DIR_RECORD
 {
   UCHAR  RecordLength;			// 1
   UCHAR  ExtAttrRecordLength;		// 2
-  ULONG  ExtentLocationL;		// 3-6
-  ULONG  ExtentLocationM;		// 7-10
-  ULONG  DataLengthL;			// 11-14
-  ULONG  DataLengthM;			// 15-18
+  U32  ExtentLocationL;		// 3-6
+  U32  ExtentLocationM;		// 7-10
+  U32  DataLengthL;			// 11-14
+  U32  DataLengthM;			// 15-18
   UCHAR  Year;				// 19
   UCHAR  Month;				// 20
   UCHAR  Day;				// 21
@@ -39,7 +39,7 @@ struct _DIR_RECORD
   UCHAR  FileFlags;			// 26
   UCHAR  FileUnitSize;			// 27
   UCHAR  InterleaveGapSize;		// 28
-  ULONG  VolumeSequenceNumber;		// 29-32
+  U32  VolumeSequenceNumber;		// 29-32
   UCHAR  FileIdLength;			// 33
   UCHAR  FileId[1];			// 34
 } __attribute__((packed));
@@ -71,18 +71,18 @@ struct _PVD
   UCHAR  SystemId[32];			// 9-40
   UCHAR  VolumeId[32];			// 41-72
   UCHAR  unused1[8];			// 73-80
-  ULONG  VolumeSpaceSizeL;		// 81-84
-  ULONG  VolumeSpaceSizeM;		// 85-88
+  U32  VolumeSpaceSizeL;		// 81-84
+  U32  VolumeSpaceSizeM;		// 85-88
   UCHAR  unused2[32];			// 89-120
-  ULONG  VolumeSetSize;			// 121-124
-  ULONG  VolumeSequenceNumber;		// 125-128
-  ULONG  LogicalBlockSize;		// 129-132
-  ULONG  PathTableSizeL;		// 133-136
-  ULONG  PathTableSizeM;		// 137-140
-  ULONG  LPathTablePos;			// 141-144
-  ULONG  LOptPathTablePos;		// 145-148
-  ULONG  MPathTablePos;			// 149-152
-  ULONG  MOptPathTablePos;		// 153-156
+  U32  VolumeSetSize;			// 121-124
+  U32  VolumeSequenceNumber;		// 125-128
+  U32  LogicalBlockSize;		// 129-132
+  U32  PathTableSizeL;		// 133-136
+  U32  PathTableSizeM;		// 137-140
+  U32  LPathTablePos;			// 141-144
+  U32  LOptPathTablePos;		// 145-148
+  U32  MPathTablePos;			// 149-152
+  U32  MOptPathTablePos;		// 153-156
   DIR_RECORD RootDirRecord;		// 157-190
   UCHAR  VolumeSetIdentifier[128];	// 191-318
   UCHAR  PublisherIdentifier[128];	// 319-446
@@ -97,19 +97,19 @@ typedef struct _PVD PVD, *PPVD;
 
 typedef struct
 {
-	ULONG	FileStart;		// File start sector
-	ULONG	FileSize;		// File size
-	ULONG	FilePointer;		// File pointer
+	U32		FileStart;		// File start sector
+	U32		FileSize;		// File size
+	U32		FilePointer;		// File pointer
 	BOOL	Directory;
-	ULONG	DriveNumber;
+	U32		DriveNumber;
 } ISO_FILE_INFO, * PISO_FILE_INFO;
 
 
-BOOL	IsoOpenVolume(ULONG DriveNumber);
+BOOL	IsoOpenVolume(U32 DriveNumber);
 FILE*	IsoOpenFile(PUCHAR FileName);
-BOOL	IsoReadFile(FILE *FileHandle, ULONG BytesToRead, PULONG BytesRead, PVOID Buffer);
-ULONG	IsoGetFileSize(FILE *FileHandle);
-VOID	IsoSetFilePointer(FILE *FileHandle, ULONG NewFilePointer);
-ULONG	IsoGetFilePointer(FILE *FileHandle);
+BOOL	IsoReadFile(FILE *FileHandle, U32 BytesToRead, U32* BytesRead, PVOID Buffer);
+U32		IsoGetFileSize(FILE *FileHandle);
+VOID	IsoSetFilePointer(FILE *FileHandle, U32 NewFilePointer);
+U32		IsoGetFilePointer(FILE *FileHandle);
 
 #endif // #defined __FAT_H

@@ -1,4 +1,4 @@
-/* $Id: portio.c,v 1.2 2002/06/06 05:58:35 bpalmer Exp $
+/* $Id: portio.c,v 1.3 2002/08/07 05:13:15 bpalmer Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -54,7 +54,7 @@
 VOID /*STDCALL*/
 READ_PORT_BUFFER_UCHAR (PUCHAR Port,
                         PUCHAR Buffer,
-                        ULONG Count)
+                        U32 Count)
 {
    __asm__ __volatile__ ("cld ; rep ; insb\n\t" 
 			 : "=D" (Buffer), "=c" (Count) 
@@ -62,9 +62,9 @@ READ_PORT_BUFFER_UCHAR (PUCHAR Port,
 }
 
 VOID /*STDCALL*/
-READ_PORT_BUFFER_USHORT (PUSHORT Port,
-                         PUSHORT Buffer,
-                         ULONG Count)
+READ_PORT_BUFFER_USHORT (U16* Port,
+                         U16* Buffer,
+                         U32 Count)
 {
    __asm__ __volatile__ ("cld ; rep ; insw"
 			 : "=D" (Buffer), "=c" (Count) 
@@ -72,9 +72,9 @@ READ_PORT_BUFFER_USHORT (PUSHORT Port,
 }
 
 VOID /*STDCALL*/
-READ_PORT_BUFFER_ULONG (PULONG Port,
-                        PULONG Buffer,
-                        ULONG Count)
+READ_PORT_BUFFER_ULONG (U32* Port,
+                        U32* Buffer,
+                        U32 Count)
 {
    __asm__ __volatile__ ("cld ; rep ; insl"
 			 : "=D" (Buffer), "=c" (Count) 
@@ -93,10 +93,10 @@ READ_PORT_UCHAR (PUCHAR Port)
    return(Value);
 }
 
-USHORT /*STDCALL*/
-READ_PORT_USHORT (PUSHORT Port)
+U16 /*STDCALL*/
+READ_PORT_USHORT (U16* Port)
 {
-   USHORT Value;
+   U16 Value;
    
    __asm__("inw %w1, %0\n\t"
 	   : "=a" (Value)
@@ -105,10 +105,10 @@ READ_PORT_USHORT (PUSHORT Port)
    return(Value);
 }
 
-ULONG /*STDCALL*/
-READ_PORT_ULONG (PULONG Port)
+U32 /*STDCALL*/
+READ_PORT_ULONG (U32* Port)
 {
-   ULONG Value;
+   U32 Value;
    
    __asm__("inl %w1, %0\n\t"
 	   : "=a" (Value)
@@ -120,7 +120,7 @@ READ_PORT_ULONG (PULONG Port)
 VOID /*STDCALL*/
 WRITE_PORT_BUFFER_UCHAR (PUCHAR Port,
                          PUCHAR Buffer,
-                         ULONG Count)
+                         U32 Count)
 {
    __asm__ __volatile__ ("cld ; rep ; outsb" 
 			 : "=S" (Buffer), "=c" (Count) 
@@ -128,9 +128,9 @@ WRITE_PORT_BUFFER_UCHAR (PUCHAR Port,
 }
 
 VOID /*STDCALL*/
-WRITE_PORT_BUFFER_USHORT (PUSHORT Port,
-                          PUSHORT Buffer,
-                          ULONG Count)
+WRITE_PORT_BUFFER_USHORT (U16* Port,
+                          U16* Buffer,
+                          U32 Count)
 {
    __asm__ __volatile__ ("cld ; rep ; outsw"
 			 : "=S" (Buffer), "=c" (Count) 
@@ -138,9 +138,9 @@ WRITE_PORT_BUFFER_USHORT (PUSHORT Port,
 }
 
 VOID /*STDCALL*/
-WRITE_PORT_BUFFER_ULONG (PULONG Port,
-                         PULONG Buffer,
-                         ULONG Count)
+WRITE_PORT_BUFFER_ULONG (U32* Port,
+                         U32* Buffer,
+                         U32 Count)
 {
    __asm__ __volatile__ ("cld ; rep ; outsl" 
 			 : "=S" (Buffer), "=c" (Count) 
@@ -159,8 +159,8 @@ WRITE_PORT_UCHAR (PUCHAR Port,
 }
 
 VOID /*STDCALL*/
-WRITE_PORT_USHORT (PUSHORT Port,
-                   USHORT Value)
+WRITE_PORT_USHORT (U16* Port,
+                   U16 Value)
 {
    __asm__("outw %0, %w1\n\t"
 	   : 
@@ -170,8 +170,8 @@ WRITE_PORT_USHORT (PUSHORT Port,
 }
 
 VOID /*STDCALL*/
-WRITE_PORT_ULONG (PULONG Port,
-                  ULONG Value)
+WRITE_PORT_ULONG (U32* Port,
+                  U32 Value)
 {
    __asm__("outl %0, %w1\n\t"
 	   : 

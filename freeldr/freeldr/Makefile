@@ -194,7 +194,8 @@ RTL_OBJS	=	memory.o	\
 
 FS_OBJS		=	fs.o		\
 				fat.o		\
-				iso.o
+				iso.o		\
+				ext2.o
 
 UI_OBJS		=	tui.o		\
 				tuimenu.o	\
@@ -228,6 +229,11 @@ INIFILE_OBJS=	inifile.o	\
 VIDEO_OBJS	=	video.o		\
 				vidmode.o
 
+# libgcc2.o contains code (__udivdi3, __umoddi3) necessary to do
+# 64-bit division on the i386 (and other 32-bit) architectures
+# This code was taken from the GCC v3.1 source
+MATH_OBJS	=	libgcc2.o
+
 FREELDR_OBJS=	freeldr.o	\
 				miscboot.o	\
 				options.o	\
@@ -253,6 +259,7 @@ OBJS		=	$(ARCH_OBJS)		\
 				$(CACHE_OBJS)		\
 				$(INIFILE_OBJS)		\
 				$(VIDEO_OBJS)		\
+				$(MATH_OBJS)		\
 				$(FREELDR_OBJS)
 
 #############################################
@@ -270,6 +277,7 @@ VPATH		=	$(SRCDIR)/					\
 				$(SRCDIR)/cache				\
 				$(SRCDIR)/inifile			\
 				$(SRCDIR)/video				\
+				$(SRCDIR)/math				\
 				$(SRCDIR)/include
 
 #############################################
@@ -283,6 +291,7 @@ freeldr.sys : $(OBJS)
 	@echo ===================================================== LINKING $@
 #	@$(LD) -N -Ttext=0x8000 --oformat=binary -s -o freeldr.sys $(OBJS)
 	@$(LD) $(LFLAGS) -Map freeldr.map -o freeldr.exe $(OBJS)
+#	@$(CC) -Wl,-Ttext=0x8000,-N,-Map,freeldr.map -o freeldr.exe $(OBJS)
 	@$(NM) --numeric-sort freeldr.exe > freeldr.sym
 	@$(OBJCOPY) -O binary freeldr.exe freeldr.sys
 

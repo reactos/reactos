@@ -26,9 +26,9 @@
 #include <debug.h>
 
 BOOL	DriveMapInstalled = FALSE;	// Tells us if we have already installed our drive map int 13h handler code
-ULONG	OldInt13HandlerAddress = 0;	// Address of BIOS int 13h handler
-ULONG	DriveMapHandlerAddress = 0;	// Linear address of our drive map handler
-ULONG	DriveMapHandlerSegOff = 0;	// Segment:offset style address of our drive map handler
+U32		OldInt13HandlerAddress = 0;	// Address of BIOS int 13h handler
+U32		DriveMapHandlerAddress = 0;	// Linear address of our drive map handler
+U32		DriveMapHandlerSegOff = 0;	// Segment:offset style address of our drive map handler
 
 VOID DriveMapMapDrivesInSection(PUCHAR SectionName)
 {
@@ -37,10 +37,10 @@ VOID DriveMapMapDrivesInSection(PUCHAR SectionName)
 	UCHAR			ErrorText[260];
 	UCHAR			Drive1[80];
 	UCHAR			Drive2[80];
-	ULONG			SectionId;
-	ULONG			SectionItemCount;
-	ULONG			Index;
-	ULONG			Index2;
+	U32				SectionId;
+	U32				SectionItemCount;
+	U32				Index;
+	U32				Index2;
 	DRIVE_MAP_LIST	DriveMapList;
 
 	RtlZeroMemory(&DriveMapList, sizeof(DRIVE_MAP_LIST));
@@ -119,7 +119,7 @@ VOID DriveMapMapDrivesInSection(PUCHAR SectionName)
 
 BOOL DriveMapIsValidDriveString(PUCHAR DriveString)
 {
-	ULONG	Index;
+	U32		Index;
 	
 	// Now verify that the user has given us appropriate strings
 	if ((strlen(DriveString) < 3) ||
@@ -147,9 +147,9 @@ BOOL DriveMapIsValidDriveString(PUCHAR DriveString)
 	return TRUE;
 }
 
-ULONG DriveMapGetBiosDriveNumber(PUCHAR DeviceName)
+U32 DriveMapGetBiosDriveNumber(PUCHAR DeviceName)
 {
-	ULONG	BiosDriveNumber = 0;
+	U32		BiosDriveNumber = 0;
 
 	// Convert the drive number string into a number
 	// 'hd1' = 1
@@ -167,8 +167,8 @@ ULONG DriveMapGetBiosDriveNumber(PUCHAR DeviceName)
 
 VOID DriveMapInstallInt13Handler(PDRIVE_MAP_LIST DriveMap)
 {
-	PDWORD	RealModeIVT = (PULONG)0x00000000;
-	PWORD	BiosLowMemorySize = (PWORD)0x00000413;
+	U32*	RealModeIVT = (U32*)0x00000000;
+	U16*	BiosLowMemorySize = (U16*)0x00000413;
 
 	if (!DriveMapInstalled)
 	{
@@ -179,7 +179,7 @@ VOID DriveMapInstallInt13Handler(PDRIVE_MAP_LIST DriveMap)
 		(*BiosLowMemorySize)--;
 
 		// Get linear address for drive map handler
-		DriveMapHandlerAddress = (ULONG)(*BiosLowMemorySize) << 10;
+		DriveMapHandlerAddress = (U32)(*BiosLowMemorySize) << 10;
 
 		// Convert to segment:offset style address
 		DriveMapHandlerSegOff = (DriveMapHandlerAddress << 12) & 0xffff0000;
@@ -192,7 +192,7 @@ VOID DriveMapInstallInt13Handler(PDRIVE_MAP_LIST DriveMap)
 	DriveMapOldInt13HandlerAddress = OldInt13HandlerAddress;
 
 	// Copy the code to our reserved area
-	RtlCopyMemory((PVOID)DriveMapHandlerAddress, &DriveMapInt13HandlerStart, ((ULONG)&DriveMapInt13HandlerEnd - (ULONG)&DriveMapInt13HandlerStart));
+	RtlCopyMemory((PVOID)DriveMapHandlerAddress, &DriveMapInt13HandlerStart, ((U32)&DriveMapInt13HandlerEnd - (U32)&DriveMapInt13HandlerStart));
 
 	// Update the IVT
 	RealModeIVT[0x13] = DriveMapHandlerSegOff;
@@ -203,8 +203,8 @@ VOID DriveMapInstallInt13Handler(PDRIVE_MAP_LIST DriveMap)
 
 VOID DriveMapRemoveInt13Handler(VOID)
 {
-	PDWORD	RealModeIVT = (PULONG)0x00000000;
-	PWORD	BiosLowMemorySize = (PWORD)0x00000413;
+	U32*	RealModeIVT = (U32*)0x00000000;
+	U16*	BiosLowMemorySize = (U16*)0x00000413;
 
 	if (DriveMapInstalled)
 	{

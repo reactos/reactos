@@ -26,7 +26,7 @@
 
 
 
-BOOL DiskIsDriveRemovable(ULONG DriveNumber)
+BOOL DiskIsDriveRemovable(U32 DriveNumber)
 {
 	// Hard disks use drive numbers >= 0x80
 	// So if the drive number indicates a hard disk
@@ -41,7 +41,7 @@ BOOL DiskIsDriveRemovable(ULONG DriveNumber)
 }
 
 
-BOOL DiskIsDriveCdRom(ULONG DriveNumber)
+BOOL DiskIsDriveCdRom(U32 DriveNumber)
 {
 	PUCHAR Sector = (PUCHAR)DISKREADBUFFER;
 	BOOL Result;
@@ -74,9 +74,9 @@ BOOL DiskIsDriveCdRom(ULONG DriveNumber)
 }
 
 
-BOOL DiskGetActivePartitionEntry(ULONG DriveNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
+BOOL DiskGetActivePartitionEntry(U32 DriveNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
 {
-	ULONG				BootablePartitionCount = 0;
+	U32					BootablePartitionCount = 0;
 	MASTER_BOOT_RECORD	MasterBootRecord;
 
 	// Read master boot record
@@ -108,9 +108,14 @@ BOOL DiskGetActivePartitionEntry(ULONG DriveNumber, PPARTITION_TABLE_ENTRY Parti
 	}
 
 	// Make sure there was only one bootable partition
-	if (BootablePartitionCount != 1)
+	if (BootablePartitionCount == 0)
 	{
-		DiskError("Too many bootable partitions or none found.");
+		DiskError("No bootable (active) partitions found.");
+		return FALSE;
+	}
+	else if (BootablePartitionCount != 1)
+	{
+		DiskError("Too many bootable (active) partitions found.");
 		return FALSE;
 	}
 
@@ -120,12 +125,12 @@ BOOL DiskGetActivePartitionEntry(ULONG DriveNumber, PPARTITION_TABLE_ENTRY Parti
 	return TRUE;
 }
 
-BOOL DiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
+BOOL DiskGetPartitionEntry(U32 DriveNumber, U32 PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
 {
 	MASTER_BOOT_RECORD		MasterBootRecord;
 	PARTITION_TABLE_ENTRY	ExtendedPartitionTableEntry;
-	ULONG					ExtendedPartitionNumber;
-	ULONG					Index;
+	U32						ExtendedPartitionNumber;
+	U32						Index;
 
 	// Read master boot record
 	if (!DiskReadBootRecord(DriveNumber, 0, &MasterBootRecord))
@@ -184,7 +189,7 @@ BOOL DiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_
 
 BOOL DiskGetFirstPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry)
 {
-	ULONG	Index;
+	U32		Index;
 
 	for (Index=0; Index<4; Index++)
 	{
@@ -205,7 +210,7 @@ BOOL DiskGetFirstPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION
 
 BOOL DiskGetFirstExtendedPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry)
 {
-	ULONG	Index;
+	U32		Index;
 
 	for (Index=0; Index<4; Index++)
 	{
@@ -222,10 +227,10 @@ BOOL DiskGetFirstExtendedPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PP
 	return FALSE;
 }
 
-BOOL DiskReadBootRecord(ULONG DriveNumber, ULONG LogicalSectorNumber, PMASTER_BOOT_RECORD BootRecord)
+BOOL DiskReadBootRecord(U32 DriveNumber, U32 LogicalSectorNumber, PMASTER_BOOT_RECORD BootRecord)
 {
 #ifdef DEBUG
-	ULONG	Index;
+	U32		Index;
 #endif
 
 	// Read master boot record

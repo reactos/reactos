@@ -22,8 +22,8 @@
 
 
 VOID	RunBootManager(VOID);
-ULONG	GetDefaultOperatingSystem(PUCHAR OperatingSystemList[], ULONG OperatingSystemCount);
-LONG	GetTimeOut(VOID);
+U32		GetDefaultOperatingSystem(PUCHAR OperatingSystemList[], U32 OperatingSystemCount);
+S32		GetTimeOut(VOID);
 
 
 #endif // #defined __BOOTMGR_H

@@ -33,15 +33,15 @@ module_t*	pOpenModule = NULL;
 
 BOOL MultiBootLoadKernel(FILE *KernelImage)
 {
-	PDWORD				ImageHeaders;
+	U32*				ImageHeaders;
 	int					Idx;
-	DWORD				dwHeaderChecksum;
-	DWORD				dwFileLoadOffset;
-	DWORD				dwDataSize;
-	DWORD				dwBssSize;
+	U32					dwHeaderChecksum;
+	U32					dwFileLoadOffset;
+	U32					dwDataSize;
+	U32					dwBssSize;
 
 	// Allocate 8192 bytes for multiboot header
-	ImageHeaders = (PDWORD)MmAllocateMemory(8192);
+	ImageHeaders = (U32*)MmAllocateMemory(8192);
 	if (ImageHeaders == NULL)
 	{
 		return FALSE;
@@ -110,7 +110,7 @@ BOOL MultiBootLoadKernel(FILE *KernelImage)
 	/*
 	 * Get the file offset, this should be 0, and move the file pointer
 	 */
-	dwFileLoadOffset = (Idx * sizeof(DWORD)) - (mb_header.header_addr - mb_header.load_addr);
+	dwFileLoadOffset = (Idx * sizeof(U32)) - (mb_header.header_addr - mb_header.load_addr);
 	SetFilePointer(KernelImage, dwFileLoadOffset);
 	
 	/*
@@ -133,7 +133,7 @@ BOOL MultiBootLoadKernel(FILE *KernelImage)
 #if 0
 BOOL MultiBootLoadModule(FILE *ModuleImage, char *ModuleName)
 {
-	DWORD		dwModuleSize;
+	U32			dwModuleSize;
 	module_t*	pModule;
 	char*		ModuleNameString;
 	char *          TempName;
@@ -168,9 +168,9 @@ BOOL MultiBootLoadModule(FILE *ModuleImage, char *ModuleName)
 }
 #endif
 
-PVOID MultiBootLoadModule(FILE *ModuleImage, char *ModuleName, PULONG ModuleSize)
+PVOID MultiBootLoadModule(FILE *ModuleImage, char *ModuleName, U32* ModuleSize)
 {
-	DWORD		dwModuleSize;
+	U32			dwModuleSize;
 	module_t*	pModule;
 	char*		ModuleNameString;
 	char *          TempName;
@@ -211,7 +211,7 @@ int GetBootPartition(char *OperatingSystemName)
 {
 	int		BootPartitionNumber = -1;
 	char	value[1024];
-	ULONG	SectionId;
+	U32		SectionId;
 
 	if (IniOpenSection(OperatingSystemName, &SectionId))
 	{
@@ -248,7 +248,7 @@ PVOID MultiBootCreateModule(char *ModuleName)
 }
 
 
-BOOL MultiBootCloseModule(PVOID ModuleBase, DWORD dwModuleSize)
+BOOL MultiBootCloseModule(PVOID ModuleBase, U32 dwModuleSize)
 {
 	module_t*	pModule;
 

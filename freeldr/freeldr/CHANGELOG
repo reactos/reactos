@@ -1,3 +1,16 @@
+Changes in v1.7 (8/6/2002) (brianp)
+
+- EXT2/EXT3 file system support.
+- Does not yet support symbolic links or booting from an EXT2/3 partition.
+- Fixed bug in UI code.
+- Added '%%' format specifier to printf()-like functions.
+- Added functions __udivdi3 & __umoddi3 so that 64-bit division is now supported.
+- Changed types BYTE, WORD, DWORD, LONG, ULONG to U8, U16, U32, S32, U32
+  so that you know the size of the variable across different
+  architectures with different sized words & dwords, etc.
+- Types CHAR, UCHAR, PCHAR, PUCHAR, WCHAR, PWCHAR have not been
+  changed yet (I haven't decided exactly how I'm going to handle unicode)
+
 Changes in v1.6.2 (7/28/2002) (brianp)
 
 - Fix for GetFatEntry16 bug (fathelp.asm) by Mike Lerwill

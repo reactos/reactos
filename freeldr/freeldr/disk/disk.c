@@ -41,13 +41,13 @@ VOID DiskError(PUCHAR ErrorString)
 	UiMessageBox(ErrorCodeString);
 }
 
-BOOL DiskReadLogicalSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG SectorCount, PVOID Buffer)
+BOOL DiskReadLogicalSectors(U32 DriveNumber, U32 SectorNumber, U32 SectorCount, PVOID Buffer)
 {
-	ULONG		PhysicalSector;
-	ULONG		PhysicalHead;
-	ULONG		PhysicalTrack;
+	U32			PhysicalSector;
+	U32			PhysicalHead;
+	U32			PhysicalTrack;
 	GEOMETRY	DriveGeometry;
-	ULONG		NumberOfSectorsToRead;
+	U32			NumberOfSectorsToRead;
 
 	DbgPrint((DPRINT_DISK, "ReadLogicalSectors() DriveNumber: 0x%x SectorNumber: %d SectorCount: %d Buffer: 0x%x\n", DriveNumber, SectorNumber, SectorCount, Buffer));
 

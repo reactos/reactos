@@ -37,17 +37,17 @@ char *	strrchr(const char *s, int c);
 int		strcmp(const char *string1, const char *string2);
 int		stricmp(const char *string1, const char *string2);
 int		strncmp(const char *string1, const char *string2, size_t length);
-int		_strnicmp(const char *string1, const char *string2, size_t length);
+int		strnicmp(const char *string1, const char *string2, size_t length);
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //
 // Memory Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-int		RtlCompareMemory(const PVOID Source1, const PVOID Source2, ULONG Length);
-VOID	RtlCopyMemory(PVOID Destination, const PVOID Source, ULONG Length);
-VOID	RtlFillMemory(PVOID Destination, ULONG Length, UCHAR Fill);
-VOID	RtlZeroMemory(PVOID Destination, ULONG Length);
+int		RtlCompareMemory(const PVOID Source1, const PVOID Source2, U32 Length);
+VOID	RtlCopyMemory(PVOID Destination, const PVOID Source, U32 Length);
+VOID	RtlFillMemory(PVOID Destination, U32 Length, UCHAR Fill);
+VOID	RtlZeroMemory(PVOID Destination, U32 Length);
 
 #define	memcmp(buf1, buf2, count)	RtlCompareMemory(buf1, buf2, count)
 #define	memcpy(dest, src, count)	RtlCopyMemory(dest, src,count)
@@ -117,7 +117,7 @@ PLIST_ITEM	RtlListRemoveTail(PLIST_ITEM ListHead);								// Removes the entry a
 PLIST_ITEM	RtlListGetHead(PLIST_ITEM ListHead);								// Returns the entry at the head of the list
 PLIST_ITEM	RtlListGetTail(PLIST_ITEM ListHead);								// Returns the entry at the tail of the list
 BOOL		RtlListIsEmpty(PLIST_ITEM ListHead);								// Indicates whether a doubly linked list is empty
-ULONG		RtlListCountEntries(PLIST_ITEM ListHead);							// Counts the entries in a doubly linked list
+U32			RtlListCountEntries(PLIST_ITEM ListHead);							// Counts the entries in a doubly linked list
 PLIST_ITEM	RtlListGetPrevious(PLIST_ITEM ListEntry);							// Returns the previous item in the list
 PLIST_ITEM	RtlListGetNext(PLIST_ITEM ListEntry);								// Returns the next item in the list
 PLIST_ITEM	RtlListRemoveEntry(PLIST_ITEM ListEntry);							// Removes the entry from the list

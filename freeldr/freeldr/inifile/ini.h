@@ -47,26 +47,26 @@ typedef struct
 {
 	LIST_ITEM			ListEntry;
 	PUCHAR				SectionName;
-	ULONG				SectionItemCount;
+	U32					SectionItemCount;
 	PINI_SECTION_ITEM	SectionItemList;
 
 } INI_SECTION, *PINI_SECTION;
 
 extern	PINI_SECTION		IniFileSectionListHead;
-extern	ULONG				IniFileSectionListCount;
+extern	U32					IniFileSectionListCount;
 
-BOOL	IniParseFile(PUCHAR IniFileData, ULONG IniFileSize);
-ULONG	IniGetNextLineSize(PUCHAR IniFileData, ULONG IniFileSize, ULONG CurrentOffset);
-ULONG	IniGetNextLine(PUCHAR IniFileData, ULONG IniFileSize, PUCHAR Buffer, ULONG BufferSize, ULONG CurrentOffset);
-BOOL	IniIsLineEmpty(PUCHAR LineOfText, ULONG TextLength);
-BOOL	IniIsCommentLine(PUCHAR LineOfText, ULONG TextLength);
-BOOL	IniIsSectionName(PUCHAR LineOfText, ULONG TextLength);
-ULONG	IniGetSectionNameSize(PUCHAR SectionNameLine, ULONG LineLength);
-VOID	IniExtractSectionName(PUCHAR SectionName, PUCHAR SectionNameLine, ULONG LineLength);
-BOOL	IniIsSetting(PUCHAR LineOfText, ULONG TextLength);
-ULONG	IniGetSettingNameSize(PUCHAR SettingNameLine, ULONG LineLength);
-ULONG	IniGetSettingValueSize(PUCHAR SettingValueLine, ULONG LineLength);
-VOID	IniExtractSettingName(PUCHAR SettingName, PUCHAR SettingNameLine, ULONG LineLength);
-VOID	IniExtractSettingValue(PUCHAR SettingValue, PUCHAR SettingValueLine, ULONG LineLength);
+BOOL	IniParseFile(PUCHAR IniFileData, U32 IniFileSize);
+U32		IniGetNextLineSize(PUCHAR IniFileData, U32 IniFileSize, U32 CurrentOffset);
+U32		IniGetNextLine(PUCHAR IniFileData, U32 IniFileSize, PUCHAR Buffer, U32 BufferSize, U32 CurrentOffset);
+BOOL	IniIsLineEmpty(PUCHAR LineOfText, U32 TextLength);
+BOOL	IniIsCommentLine(PUCHAR LineOfText, U32 TextLength);
+BOOL	IniIsSectionName(PUCHAR LineOfText, U32 TextLength);
+U32		IniGetSectionNameSize(PUCHAR SectionNameLine, U32 LineLength);
+VOID	IniExtractSectionName(PUCHAR SectionName, PUCHAR SectionNameLine, U32 LineLength);
+BOOL	IniIsSetting(PUCHAR LineOfText, U32 TextLength);
+U32		IniGetSettingNameSize(PUCHAR SettingNameLine, U32 LineLength);
+U32		IniGetSettingValueSize(PUCHAR SettingValueLine, U32 LineLength);
+VOID	IniExtractSettingName(PUCHAR SettingName, PUCHAR SettingNameLine, U32 LineLength);
+VOID	IniExtractSettingValue(PUCHAR SettingValue, PUCHAR SettingValueLine, U32 LineLength);
 
 #endif // defined __INI_H

@@ -82,7 +82,7 @@ LoadSymbolFile(PCHAR szSystemRoot,
 {
   CHAR SymbolFileName[1024];
   PFILE FilePointer;
-  DWORD Length;
+  U32 Length;
   PCHAR Start;
   PCHAR Ext;
   char value[256];
@@ -218,19 +218,19 @@ LoadNlsFile(PCHAR szFileName, PCHAR szModuleName)
 static VOID
 LoadBootDrivers(PCHAR szSystemRoot, int nPos)
 {
-  LONG rc = 0;
+  S32 rc = 0;
   HKEY hGroupKey, hServiceKey, hDriverKey;
   char ValueBuffer[512];
   char ServiceName[256];
-  ULONG BufferSize;
-  ULONG Index;
+  U32 BufferSize;
+  U32 Index;
   char *GroupName;
 
-  ULONG ValueSize;
-  ULONG ValueType;
-  ULONG StartValue;
+  U32 ValueSize;
+  U32 ValueType;
+  U32 StartValue;
   UCHAR DriverGroup[256];
-  ULONG DriverGroupSize;
+  U32 DriverGroupSize;
 
   UCHAR ImagePath[256];
 
@@ -285,7 +285,7 @@ LoadBootDrivers(PCHAR szSystemRoot, int nPos)
 	  /* open driver Key */
 	  rc = RegOpenKey(hServiceKey, ServiceName, &hDriverKey);
 
-	  ValueSize = sizeof(ULONG);
+	  ValueSize = sizeof(U32);
 	  rc = RegQueryValue(hDriverKey, "Start", &ValueType, (PUCHAR)&StartValue, &ValueSize);
 	  DbgPrint((DPRINT_REACTOS, "  Start: %x  \n", (int)StartValue));
 
@@ -337,12 +337,12 @@ LoadBootDrivers(PCHAR szSystemRoot, int nPos)
 static BOOL
 LoadNlsFiles(PCHAR szSystemRoot)
 {
-  LONG rc = ERROR_SUCCESS;
+  S32 rc = ERROR_SUCCESS;
   HKEY hKey;
   char szIdBuffer[80];
   char szNameBuffer[80];
   char szFileName[256];
-  ULONG BufferSize;
+  U32 BufferSize;
 
   /* open the codepage key */
   rc = RegOpenKey(NULL,
@@ -436,10 +436,10 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 //	int		nNumDriverFiles=0;
 //	int		nNumFilesLoaded=0;
 	char  MsgBuffer[256];
-	ULONG SectionId;
+	U32 SectionId;
 
 	char* Base;
-	ULONG Size;
+	U32 Size;
 
 
 	//

@@ -36,12 +36,12 @@ typedef struct _REG_KEY
   LIST_ENTRY SubKeyList;
   LIST_ENTRY ValueList;
 
-  ULONG NameSize;
+  U32 NameSize;
   PUCHAR Name;
 
   /* default data */
-  ULONG DataType;
-  ULONG DataSize;
+  U32 DataType;
+  U32 DataSize;
   PUCHAR Data;
 } KEY, *HKEY, **PHKEY;
 
@@ -51,12 +51,12 @@ typedef struct _REG_VALUE
   LIST_ENTRY ValueList;
 
   /* value name */
-  ULONG NameSize;
+  U32 NameSize;
   PUCHAR Name;
 
   /* value data */
-  ULONG DataType;
-  ULONG DataSize;
+  U32 DataType;
+  U32 DataSize;
   PUCHAR Data;
 } VALUE, *PVALUE;
 
@@ -193,7 +193,7 @@ typedef struct _REG_VALUE
 /*
  * PURPOSE: Returns the byte offset of a field within a structure
  */
-#define FIELD_OFFSET(Type,Field) (LONG)(&(((Type *)(0))->Field))
+#define FIELD_OFFSET(Type,Field) (S32)(&(((Type *)(0))->Field))
 
 /*
  * PURPOSE: Returns the base address structure if the caller knows the 
@@ -204,7 +204,7 @@ typedef struct _REG_VALUE
  *          Field = Name of the field whose address is none
  */
 #define CONTAINING_RECORD(Address,Type,Field) \
-	(Type *)(((LONG)Address) - FIELD_OFFSET(Type,Field))
+	(Type *)(((S32)Address) - FIELD_OFFSET(Type,Field))
 
 
 #define REG_NONE 0
@@ -225,62 +225,62 @@ typedef struct _REG_VALUE
 VOID
 RegInitializeRegistry(VOID);
 
-LONG
+S32
 RegInitCurrentControlSet(BOOL LastKnownGood);
 
 
-LONG
+S32
 RegCreateKey(HKEY ParentKey,
 	     PCHAR KeyName,
 	     PHKEY Key);
 
-LONG
+S32
 RegDeleteKey(HKEY Key,
 	     PCHAR Name);
 
-LONG
+S32
 RegEnumKey(HKEY Key,
-	   ULONG Index,
+	   U32 Index,
 	   PCHAR Name,
-	   PULONG NameSize);
+	   U32* NameSize);
 
-LONG
+S32
 RegOpenKey(HKEY ParentKey,
 	   PCHAR KeyName,
 	   PHKEY Key);
 
 
-LONG
+S32
 RegSetValue(HKEY Key,
 	    PCHAR ValueName,
-	    ULONG Type,
+	    U32 Type,
 	    PUCHAR Data,
-	    ULONG DataSize);
+	    U32 DataSize);
 
-LONG
+S32
 RegQueryValue(HKEY Key,
 	      PCHAR ValueName,
-	      PULONG Type,
+	      U32* Type,
 	      PUCHAR Data,
-	      PULONG DataSize);
+	      U32* DataSize);
 
-LONG
+S32
 RegDeleteValue(HKEY Key,
 	       PCHAR ValueName);
 
-LONG
+S32
 RegEnumValue(HKEY Key,
-	     ULONG Index,
+	     U32 Index,
 	     PCHAR ValueName,
-	     PULONG NameSize,
-	     PULONG Type,
+	     U32* NameSize,
+	     U32* Type,
 	     PUCHAR Data,
-	     PULONG DataSize);
+	     U32* DataSize);
 
 
 VOID
 RegImportHive(PCHAR ChunkBase,
-	      ULONG ChunkSize);
+	      U32 ChunkSize);
 
 
 #endif /* __REGISTRY_H */

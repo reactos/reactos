@@ -29,11 +29,11 @@
 #ifdef DEBUG
 typedef struct
 {
-	ULONG	Type;
+	U32		Type;
 	UCHAR	TypeString[20];
 } MEMORY_TYPE, *PMEMORY_TYPE;
 
-ULONG			MemoryTypeCount = 5;
+U32				MemoryTypeCount = 5;
 MEMORY_TYPE		MemoryTypeArray[] =
 {
 	{ 0, "Unknown Memory" },
@@ -45,17 +45,17 @@ MEMORY_TYPE		MemoryTypeArray[] =
 #endif
 
 PVOID	PageLookupTableAddress = NULL;
-ULONG	TotalPagesInLookupTable = 0;
-ULONG	FreePagesInLookupTable = 0;
-ULONG	LastFreePageHint = 0;
+U32		TotalPagesInLookupTable = 0;
+U32		FreePagesInLookupTable = 0;
+U32		LastFreePageHint = 0;
 
 BOOL MmInitializeMemoryManager(VOID)
 {
 	BIOS_MEMORY_MAP	BiosMemoryMap[32];
-	ULONG			BiosMemoryMapEntryCount;
-	ULONG			ExtendedMemorySize;
-	ULONG			ConventionalMemorySize;
-	ULONG			Index;
+	U32				BiosMemoryMapEntryCount;
+	U32				ExtendedMemorySize;
+	U32				ConventionalMemorySize;
+	U32				Index;
 
 	DbgPrint((DPRINT_MEMORY, "Initializing Memory Manager.\n"));
 
@@ -128,9 +128,9 @@ BOOL MmInitializeMemoryManager(VOID)
 }
 
 #ifdef DEBUG
-PUCHAR MmGetSystemMemoryMapTypeString(ULONG Type)
+PUCHAR MmGetSystemMemoryMapTypeString(U32 Type)
 {
-	ULONG	Index;
+	U32		Index;
 
 	for (Index=1; Index<MemoryTypeCount; Index++)
 	{
@@ -144,16 +144,16 @@ PUCHAR MmGetSystemMemoryMapTypeString(ULONG Type)
 }
 #endif
 
-ULONG MmGetPageNumberFromAddress(PVOID Address)
+U32 MmGetPageNumberFromAddress(PVOID Address)
 {
-	return ((ULONG)Address) / MM_PAGE_SIZE;
+	return ((U32)Address) / MM_PAGE_SIZE;
 }
 
-PVOID MmGetEndAddressOfAnyMemory(BIOS_MEMORY_MAP BiosMemoryMap[32], ULONG MapCount)
+PVOID MmGetEndAddressOfAnyMemory(BIOS_MEMORY_MAP BiosMemoryMap[32], U32 MapCount)
 {
-	ULONG	MaxStartAddressSoFar;
-	UINT64	EndAddressOfMemory;
-	ULONG	Index;
+	U32		MaxStartAddressSoFar;
+	U64	EndAddressOfMemory;
+	U32		Index;
 
 	MaxStartAddressSoFar = 0;
 	EndAddressOfMemory = 0;
@@ -162,7 +162,7 @@ PVOID MmGetEndAddressOfAnyMemory(BIOS_MEMORY_MAP BiosMemoryMap[32], ULONG MapCou
 		if (MaxStartAddressSoFar < BiosMemoryMap[Index].BaseAddressLow)
 		{
 			MaxStartAddressSoFar = BiosMemoryMap[Index].BaseAddressLow;
-			EndAddressOfMemory = ((UINT64)MaxStartAddressSoFar + (UINT64)BiosMemoryMap[Index].LengthLow);
+			EndAddressOfMemory = ((U64)MaxStartAddressSoFar + (U64)BiosMemoryMap[Index].LengthLow);
 			if (EndAddressOfMemory > 0xFFFFFFFF)
 			{
 				EndAddressOfMemory = 0xFFFFFFFF;
@@ -170,14 +170,14 @@ PVOID MmGetEndAddressOfAnyMemory(BIOS_MEMORY_MAP BiosMemoryMap[32], ULONG MapCou
 		}
 	}
 
-	DbgPrint((DPRINT_MEMORY, "MmGetEndAddressOfAnyMemory() returning 0x%x\n", (UINT32)EndAddressOfMemory));
+	DbgPrint((DPRINT_MEMORY, "MmGetEndAddressOfAnyMemory() returning 0x%x\n", (U32)EndAddressOfMemory));
 
-	return (PVOID)(UINT32)EndAddressOfMemory;
+	return (PVOID)(U32)EndAddressOfMemory;
 }
 
-ULONG MmGetAddressablePageCountIncludingHoles(BIOS_MEMORY_MAP BiosMemoryMap[32], ULONG MapCount)
+U32 MmGetAddressablePageCountIncludingHoles(BIOS_MEMORY_MAP BiosMemoryMap[32], U32 MapCount)
 {
-	ULONG	PageCount;
+	U32		PageCount;
 
 	PageCount = MmGetPageNumberFromAddress(MmGetEndAddressOfAnyMemory(BiosMemoryMap, MapCount));
 
@@ -186,10 +186,10 @@ ULONG MmGetAddressablePageCountIncludingHoles(BIOS_MEMORY_MAP BiosMemoryMap[32],
 	return PageCount;
 }
 
-PVOID MmFindLocationForPageLookupTable(BIOS_MEMORY_MAP BiosMemoryMap[32], ULONG MapCount)
+PVOID MmFindLocationForPageLookupTable(BIOS_MEMORY_MAP BiosMemoryMap[32], U32 MapCount)
 {
-	ULONG				TotalPageCount;
-	ULONG				PageLookupTableSize;
+	U32					TotalPageCount;
+	U32					PageLookupTableSize;
 	PVOID				PageLookupTableAddress;
 	int					Index;
 	BIOS_MEMORY_MAP		TempBiosMemoryMap[32];
@@ -217,10 +217,10 @@ PVOID MmFindLocationForPageLookupTable(BIOS_MEMORY_MAP BiosMemoryMap[32], ULONG 
 	return PageLookupTableAddress;
 }
 
-VOID MmSortBiosMemoryMap(BIOS_MEMORY_MAP BiosMemoryMap[32], ULONG MapCount)
+VOID MmSortBiosMemoryMap(BIOS_MEMORY_MAP BiosMemoryMap[32], U32 MapCount)
 {
-	ULONG				Index;
-	ULONG				LoopCount;
+	U32					Index;
+	U32					LoopCount;
 	BIOS_MEMORY_MAP		TempMapItem;
 
 	// Loop once for each entry in the memory map minus one
@@ -239,15 +239,15 @@ VOID MmSortBiosMemoryMap(BIOS_MEMORY_MAP BiosMemoryMap[32], ULONG MapCount)
 	}
 }
 
-VOID MmInitPageLookupTable(PVOID PageLookupTable, ULONG TotalPageCount, BIOS_MEMORY_MAP BiosMemoryMap[32], ULONG MapCount)
+VOID MmInitPageLookupTable(PVOID PageLookupTable, U32 TotalPageCount, BIOS_MEMORY_MAP BiosMemoryMap[32], U32 MapCount)
 {
-	ULONG	MemoryMapStartPage;
-	ULONG	MemoryMapEndPage;
-	ULONG	MemoryMapPageCount;
-	ULONG	MemoryMapPageAllocated;
-	ULONG	PageLookupTableStartPage;
-	ULONG	PageLookupTablePageCount;
-	ULONG	Index;
+	U32		MemoryMapStartPage;
+	U32		MemoryMapEndPage;
+	U32		MemoryMapPageCount;
+	U32		MemoryMapPageAllocated;
+	U32		PageLookupTableStartPage;
+	U32		PageLookupTablePageCount;
+	U32		Index;
 
 	DbgPrint((DPRINT_MEMORY, "MmInitPageLookupTable()\n"));
 
@@ -277,10 +277,10 @@ VOID MmInitPageLookupTable(PVOID PageLookupTable, ULONG TotalPageCount, BIOS_MEM
 	MmMarkPagesInLookupTable(PageLookupTable, PageLookupTableStartPage, PageLookupTablePageCount, MEMTYPE_RESERVED);
 }
 
-VOID MmMarkPagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG PageCount, ULONG PageAllocated)
+VOID MmMarkPagesInLookupTable(PVOID PageLookupTable, U32 StartPage, U32 PageCount, U32 PageAllocated)
 {
 	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
-	ULONG						Index;
+	U32							Index;
 
 	for (Index=StartPage; Index<(StartPage+PageCount); Index++)
 	{
@@ -289,10 +289,10 @@ VOID MmMarkPagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG Page
 	}
 }
 
-VOID MmAllocatePagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG PageCount)
+VOID MmAllocatePagesInLookupTable(PVOID PageLookupTable, U32 StartPage, U32 PageCount)
 {
 	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
-	ULONG						Index;
+	U32							Index;
 
 	for (Index=StartPage; Index<(StartPage+PageCount); Index++)
 	{
@@ -301,11 +301,11 @@ VOID MmAllocatePagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG 
 	}
 }
 
-ULONG MmCountFreePagesInLookupTable(PVOID PageLookupTable, ULONG TotalPageCount)
+U32 MmCountFreePagesInLookupTable(PVOID PageLookupTable, U32 TotalPageCount)
 {
 	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
-	ULONG						Index;
-	ULONG						FreePageCount;
+	U32							Index;
+	U32							FreePageCount;
 
 	FreePageCount = 0;
 	for (Index=0; Index<TotalPageCount; Index++)
@@ -319,12 +319,12 @@ ULONG MmCountFreePagesInLookupTable(PVOID PageLookupTable, ULONG TotalPageCount)
 	return FreePageCount;
 }
 
-ULONG MmFindAvailablePagesFromEnd(PVOID PageLookupTable, ULONG TotalPageCount, ULONG PagesNeeded)
+U32 MmFindAvailablePagesFromEnd(PVOID PageLookupTable, U32 TotalPageCount, U32 PagesNeeded)
 {
 	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
-	ULONG						AvailablePageStart;
-	ULONG						AvailablePagesSoFar;
-	ULONG						Index;
+	U32							AvailablePageStart;
+	U32							AvailablePagesSoFar;
+	U32							Index;
 
 	if (LastFreePageHint > TotalPageCount)
 	{
@@ -354,11 +354,11 @@ ULONG MmFindAvailablePagesFromEnd(PVOID PageLookupTable, ULONG TotalPageCount, U
 	return 0;
 }
 
-VOID MmFixupSystemMemoryMap(BIOS_MEMORY_MAP BiosMemoryMap[32], PULONG MapCount)
+VOID MmFixupSystemMemoryMap(BIOS_MEMORY_MAP BiosMemoryMap[32], U32* MapCount)
 {
 	int		Index;
 	int		Index2;
-	UINT64	RealLength;
+	U64	RealLength;
 
 	// Loop through each entry in the array
 	for (Index=0; Index<*MapCount; Index++)
@@ -386,10 +386,10 @@ VOID MmFixupSystemMemoryMap(BIOS_MEMORY_MAP BiosMemoryMap[32], PULONG MapCount)
 	}
 }
 
-VOID MmUpdateLastFreePageHint(PVOID PageLookupTable, ULONG TotalPageCount)
+VOID MmUpdateLastFreePageHint(PVOID PageLookupTable, U32 TotalPageCount)
 {
 	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
-	ULONG						Index;
+	U32							Index;
 
 	for (Index=TotalPageCount-1; Index>=0; Index--)
 	{
@@ -401,11 +401,11 @@ VOID MmUpdateLastFreePageHint(PVOID PageLookupTable, ULONG TotalPageCount)
 	}
 }
 
-BOOL MmAreMemoryPagesAvailable(PVOID PageLookupTable, ULONG TotalPageCount, PVOID PageAddress, ULONG PageCount)
+BOOL MmAreMemoryPagesAvailable(PVOID PageLookupTable, U32 TotalPageCount, PVOID PageAddress, U32 PageCount)
 {
 	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
-	ULONG						StartPage;
-	ULONG						Index;
+	U32							StartPage;
+	U32							Index;
 
 	StartPage = MmGetPageNumberFromAddress(PageAddress);
 

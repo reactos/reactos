@@ -23,10 +23,10 @@
 
 typedef struct _GEOMETRY
 {
-	ULONG	Cylinders;
-	ULONG	Heads;
-	ULONG	Sectors;
-	ULONG	BytesPerSector;
+	U32		Cylinders;
+	U32		Heads;
+	U32		Sectors;
+	U32		BytesPerSector;
 
 } GEOMETRY, *PGEOMETRY;
 
@@ -35,16 +35,16 @@ typedef struct _GEOMETRY
 //
 typedef struct _PARTITION_TABLE_ENTRY
 {
-	BYTE	BootIndicator;					// 0x00 - non-bootable partition, 0x80 - bootable partition (one partition only)
-	BYTE	StartHead;						// Beginning head number
-	BYTE	StartSector;					// Beginning sector (2 high bits of cylinder #)
-	BYTE	StartCylinder;					// Beginning cylinder# (low order bits of cylinder #)
-	BYTE	SystemIndicator;				// System indicator
-	BYTE	EndHead;						// Ending head number
-	BYTE	EndSector;						// Ending sector (2 high bits of cylinder #)
-	BYTE	EndCylinder;					// Ending cylinder# (low order bits of cylinder #)
-	DWORD	SectorCountBeforePartition;		// Number of sectors preceding the partition
-	DWORD	PartitionSectorCount;			// Number of sectors in the partition
+	U8		BootIndicator;					// 0x00 - non-bootable partition, 0x80 - bootable partition (one partition only)
+	U8		StartHead;						// Beginning head number
+	U8		StartSector;					// Beginning sector (2 high bits of cylinder #)
+	U8		StartCylinder;					// Beginning cylinder# (low order bits of cylinder #)
+	U8		SystemIndicator;				// System indicator
+	U8		EndHead;						// Ending head number
+	U8		EndSector;						// Ending sector (2 high bits of cylinder #)
+	U8		EndCylinder;					// Ending cylinder# (low order bits of cylinder #)
+	U32		SectorCountBeforePartition;		// Number of sectors preceding the partition
+	U32		PartitionSectorCount;			// Number of sectors in the partition
 
 } PACKED PARTITION_TABLE_ENTRY, *PPARTITION_TABLE_ENTRY;
 
@@ -53,9 +53,9 @@ typedef struct _PARTITION_TABLE_ENTRY
 //
 typedef struct _MASTER_BOOT_RECORD
 {
-	BYTE					MasterBootRecordCodeAndData[0x1be];
+	U8						MasterBootRecordCodeAndData[0x1be];
 	PARTITION_TABLE_ENTRY	PartitionTable[4];
-	WORD					MasterBootRecordMagic;
+	U16						MasterBootRecordMagic;
 
 } PACKED MASTER_BOOT_RECORD, *PMASTER_BOOT_RECORD;
 
@@ -78,6 +78,8 @@ typedef struct _MASTER_BOOT_RECORD
 #define PARTITION_PREP                  0x41      // PowerPC Reference Platform (PReP) Boot Partition
 #define PARTITION_LDM                   0x42      // Logical Disk Manager partition
 #define PARTITION_UNIX                  0x63      // Unix
+#define PARTITION_LINUX_SWAP			0x82      // Linux Swap Partition
+#define PARTITION_EXT2					0x83      // Linux Ext2/Ext3
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //
@@ -86,16 +88,16 @@ typedef struct _MASTER_BOOT_RECORD
 ///////////////////////////////////////////////////////////////////////////////////////
 int		biosdisk(int cmd, int drive, int head, int track, int sector, int nsects, void *buffer); // Implemented in asmcode.S
 
-BOOL	BiosInt13Read(ULONG Drive, ULONG Head, ULONG Track, ULONG Sector, ULONG SectorCount, PVOID Buffer); // Implemented in asmcode.S
-BOOL	BiosInt13ReadExtended(ULONG Drive, ULONG Sector, ULONG SectorCount, PVOID Buffer); // Implemented in asmcode.S
-BOOL	BiosInt13ExtensionsSupported(ULONG Drive);
-ULONG	BiosInt13GetLastErrorCode(VOID);
+BOOL	BiosInt13Read(U32 Drive, U32 Head, U32 Track, U32 Sector, U32 SectorCount, PVOID Buffer); // Implemented in asmcode.S
+BOOL	BiosInt13ReadExtended(U32 Drive, U32 Sector, U32 SectorCount, PVOID Buffer); // Implemented in asmcode.S
+BOOL	BiosInt13ExtensionsSupported(U32 Drive);
+U32		BiosInt13GetLastErrorCode(VOID);
 
 void	StopFloppyMotor(void);		// Implemented in asmcode.S
 int		get_heads(int drive);		// Implemented in asmcode.S
 int		get_cylinders(int drive);	// Implemented in asmcode.S
 int		get_sectors(int drive);		// Implemented in asmcode.S
-BOOL	BiosInt13GetDriveParameters(ULONG Drive, PGEOMETRY Geometry);	// Implemented in disk.S
+BOOL	BiosInt13GetDriveParameters(U32 Drive, PGEOMETRY Geometry);	// Implemented in disk.S
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //
@@ -103,20 +105,20 @@ BOOL	BiosInt13GetDriveParameters(ULONG Drive, PGEOMETRY Geometry);	// Implemente
 //
 ///////////////////////////////////////////////////////////////////////////////////////
 VOID	DiskError(PUCHAR ErrorString);
-BOOL	DiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY DriveGeometry);
-BOOL	DiskReadLogicalSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG SectorCount, PVOID Buffer);
+BOOL	DiskGetDriveGeometry(U32 DriveNumber, PGEOMETRY DriveGeometry);
+BOOL	DiskReadLogicalSectors(U32 DriveNumber, U32 SectorNumber, U32 SectorCount, PVOID Buffer);
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //
 // Fixed Disk Partition Management Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-BOOL	DiskIsDriveRemovable(ULONG DriveNumber);
-BOOL	DiskIsDriveCdRom(ULONG DriveNumber);
-BOOL	DiskGetActivePartitionEntry(ULONG DriveNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
-BOOL	DiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
+BOOL	DiskIsDriveRemovable(U32 DriveNumber);
+BOOL	DiskIsDriveCdRom(U32 DriveNumber);
+BOOL	DiskGetActivePartitionEntry(U32 DriveNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
+BOOL	DiskGetPartitionEntry(U32 DriveNumber, U32 PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
 BOOL	DiskGetFirstPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry);
 BOOL	DiskGetFirstExtendedPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry);
-BOOL	DiskReadBootRecord(ULONG DriveNumber, ULONG LogicalSectorNumber, PMASTER_BOOT_RECORD BootRecord);
+BOOL	DiskReadBootRecord(U32 DriveNumber, U32 LogicalSectorNumber, PMASTER_BOOT_RECORD BootRecord);
 
 #endif  // defined __DISK_H

@@ -23,15 +23,15 @@
 #include <rtl.h>
 
 
-BOOL DissectArcPath(char *ArcPath, char *BootPath, PULONG BootDrive, PULONG BootPartition)
+BOOL DissectArcPath(char *ArcPath, char *BootPath, U32* BootDrive, U32* BootPartition)
 {
 	char *p;
 
-	if (_strnicmp(ArcPath, "multi(0)disk(0)", 15) != 0)
+	if (strnicmp(ArcPath, "multi(0)disk(0)", 15) != 0)
 		return FALSE;
 
 	p = ArcPath + 15;
-	if (_strnicmp(p, "fdisk(", 6) == 0)
+	if (strnicmp(p, "fdisk(", 6) == 0)
 	{
 		/*
 		 * floppy disk path:
@@ -45,7 +45,7 @@ BOOL DissectArcPath(char *ArcPath, char *BootPath, PULONG BootDrive, PULONG Boot
 		p++;
 		*BootPartition = 0;
 	}
-	else if (_strnicmp(p, "rdisk(", 6) == 0)
+	else if (strnicmp(p, "rdisk(", 6) == 0)
 	{
 		/*
 		 * hard disk path:
@@ -54,7 +54,7 @@ BOOL DissectArcPath(char *ArcPath, char *BootPath, PULONG BootDrive, PULONG Boot
 		p = p + 6;
 		*BootDrive = atoi(p) + 0x80;
 		p = strchr(p, ')');
-		if ((p == NULL) || (_strnicmp(p, ")partition(", 11) != 0))
+		if ((p == NULL) || (strnicmp(p, ")partition(", 11) != 0))
 			return FALSE;
 		p = p + 11;
 		*BootPartition = atoi(p);

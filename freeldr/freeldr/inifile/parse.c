@@ -25,17 +25,17 @@
 
 
 PINI_SECTION		IniFileSectionListHead = NULL;
-ULONG				IniFileSectionCount = 0;
-ULONG				IniFileSettingCount = 0;
+U32					IniFileSectionCount = 0;
+U32					IniFileSettingCount = 0;
 
 
-BOOL IniParseFile(PUCHAR IniFileData, ULONG IniFileSize)
+BOOL IniParseFile(PUCHAR IniFileData, U32 IniFileSize)
 {
-	ULONG				CurrentOffset;
-	ULONG				CurrentLineNumber;
+	U32					CurrentOffset;
+	U32					CurrentLineNumber;
 	PUCHAR				IniFileLine;
-	ULONG				IniFileLineSize;
-	ULONG				LineLength;
+	U32					IniFileLineSize;
+	U32					LineLength;
 	PINI_SECTION		CurrentSection = NULL;
 	PINI_SECTION_ITEM	CurrentItem = NULL;
 
@@ -185,10 +185,10 @@ BOOL IniParseFile(PUCHAR IniFileData, ULONG IniFileSize)
 	return TRUE;
 }
 
-ULONG IniGetNextLineSize(PUCHAR IniFileData, ULONG IniFileSize, ULONG CurrentOffset)
+U32 IniGetNextLineSize(PUCHAR IniFileData, U32 IniFileSize, U32 CurrentOffset)
 {
-	ULONG	Idx;
-	ULONG	LineCharCount = 0;
+	U32		Idx;
+	U32		LineCharCount = 0;
 
 	// Loop through counting chars until we hit the end of the
 	// file or we encounter a new line char
@@ -212,9 +212,9 @@ ULONG IniGetNextLineSize(PUCHAR IniFileData, ULONG IniFileSize, ULONG CurrentOff
 	return LineCharCount;
 }
 
-ULONG IniGetNextLine(PUCHAR IniFileData, ULONG IniFileSize, PUCHAR Buffer, ULONG BufferSize, ULONG CurrentOffset)
+U32 IniGetNextLine(PUCHAR IniFileData, U32 IniFileSize, PUCHAR Buffer, U32 BufferSize, U32 CurrentOffset)
 {
-	ULONG	Idx;
+	U32		Idx;
 
 	// Loop through grabbing chars until we hit the end of the
 	// file or we encounter a new line char
@@ -248,9 +248,9 @@ ULONG IniGetNextLine(PUCHAR IniFileData, ULONG IniFileSize, PUCHAR Buffer, ULONG
 	return CurrentOffset;
 }
 
-BOOL IniIsLineEmpty(PUCHAR LineOfText, ULONG TextLength)
+BOOL IniIsLineEmpty(PUCHAR LineOfText, U32 TextLength)
 {
-	ULONG	Idx;
+	U32		Idx;
 
 	// Check for text (skipping whitespace)
 	for (Idx=0; Idx<TextLength; Idx++)
@@ -271,9 +271,9 @@ BOOL IniIsLineEmpty(PUCHAR LineOfText, ULONG TextLength)
 	return TRUE;
 }
 
-BOOL IniIsCommentLine(PUCHAR LineOfText, ULONG TextLength)
+BOOL IniIsCommentLine(PUCHAR LineOfText, U32 TextLength)
 {
-	ULONG	Idx;
+	U32		Idx;
 
 	// Check the first character (skipping whitespace)
 	// and make sure that it is an opening bracket
@@ -297,9 +297,9 @@ BOOL IniIsCommentLine(PUCHAR LineOfText, ULONG TextLength)
 	return FALSE;
 }
 
-BOOL IniIsSectionName(PUCHAR LineOfText, ULONG TextLength)
+BOOL IniIsSectionName(PUCHAR LineOfText, U32 TextLength)
 {
-	ULONG	Idx;
+	U32		Idx;
 
 	// Check the first character (skipping whitespace)
 	// and make sure that it is an opening bracket
@@ -323,10 +323,10 @@ BOOL IniIsSectionName(PUCHAR LineOfText, ULONG TextLength)
 	return FALSE;
 }
 
-ULONG IniGetSectionNameSize(PUCHAR SectionNameLine, ULONG LineLength)
+U32 IniGetSectionNameSize(PUCHAR SectionNameLine, U32 LineLength)
 {
-	ULONG	Idx;
-	ULONG	NameSize;
+	U32		Idx;
+	U32		NameSize;
 
 	// Find the opening bracket (skipping whitespace)
 	for (Idx=0; Idx<LineLength; Idx++)
@@ -364,10 +364,10 @@ ULONG IniGetSectionNameSize(PUCHAR SectionNameLine, ULONG LineLength)
 	return NameSize;
 }
 
-VOID IniExtractSectionName(PUCHAR SectionName, PUCHAR SectionNameLine, ULONG LineLength)
+VOID IniExtractSectionName(PUCHAR SectionName, PUCHAR SectionNameLine, U32 LineLength)
 {
-	ULONG	Idx;
-	ULONG	DestIdx;
+	U32		Idx;
+	U32		DestIdx;
 
 	// Find the opening bracket (skipping whitespace)
 	for (Idx=0; Idx<LineLength; Idx++)
@@ -404,9 +404,9 @@ VOID IniExtractSectionName(PUCHAR SectionName, PUCHAR SectionNameLine, ULONG Lin
 	SectionName[DestIdx] = '\0';
 }
 
-BOOL IniIsSetting(PUCHAR LineOfText, ULONG TextLength)
+BOOL IniIsSetting(PUCHAR LineOfText, U32 TextLength)
 {
-	ULONG	Idx;
+	U32		Idx;
 
 	// Basically just check for an '=' equals sign
 	for (Idx=0; Idx<TextLength; Idx++)
@@ -420,10 +420,10 @@ BOOL IniIsSetting(PUCHAR LineOfText, ULONG TextLength)
 	return FALSE;
 }
 
-ULONG IniGetSettingNameSize(PUCHAR SettingNameLine, ULONG LineLength)
+U32 IniGetSettingNameSize(PUCHAR SettingNameLine, U32 LineLength)
 {
-	ULONG	Idx;
-	ULONG	NameSize;
+	U32		Idx;
+	U32		NameSize;
 
 	// Skip whitespace
 	for (Idx=0; Idx<LineLength; Idx++)
@@ -458,10 +458,10 @@ ULONG IniGetSettingNameSize(PUCHAR SettingNameLine, ULONG LineLength)
 	return NameSize;
 }
 
-ULONG IniGetSettingValueSize(PUCHAR SettingValueLine, ULONG LineLength)
+U32 IniGetSettingValueSize(PUCHAR SettingValueLine, U32 LineLength)
 {
-	ULONG	Idx;
-	ULONG	ValueSize;
+	U32		Idx;
+	U32		ValueSize;
 
 	// Skip whitespace
 	for (Idx=0; Idx<LineLength; Idx++)
@@ -511,10 +511,10 @@ ULONG IniGetSettingValueSize(PUCHAR SettingValueLine, ULONG LineLength)
 	return ValueSize;
 }
 
-VOID IniExtractSettingName(PUCHAR SettingName, PUCHAR SettingNameLine, ULONG LineLength)
+VOID IniExtractSettingName(PUCHAR SettingName, PUCHAR SettingNameLine, U32 LineLength)
 {
-	ULONG	Idx;
-	ULONG	DestIdx;
+	U32		Idx;
+	U32		DestIdx;
 
 	// Skip whitespace
 	for (Idx=0; Idx<LineLength; Idx++)
@@ -548,10 +548,10 @@ VOID IniExtractSettingName(PUCHAR SettingName, PUCHAR SettingNameLine, ULONG Lin
 	SettingName[DestIdx] = '\0';
 }
 
-VOID IniExtractSettingValue(PUCHAR SettingValue, PUCHAR SettingValueLine, ULONG LineLength)
+VOID IniExtractSettingValue(PUCHAR SettingValue, PUCHAR SettingValueLine, U32 LineLength)
 {
-	ULONG	Idx;
-	ULONG	DestIdx;
+	U32		Idx;
+	U32		DestIdx;
 
 	// Skip whitespace
 	for (Idx=0; Idx<LineLength; Idx++)

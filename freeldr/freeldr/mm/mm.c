@@ -26,7 +26,7 @@
 
 
 #ifdef DEBUG
-ULONG		AllocationCount = 0;
+U32			AllocationCount = 0;
 
 VOID		VerifyHeap(VOID);
 VOID		DumpMemoryAllocMap(VOID);
@@ -35,10 +35,10 @@ VOID		DecrementAllocationCount(VOID);
 VOID		MemAllocTest(VOID);
 #endif // DEBUG
 
-PVOID MmAllocateMemory(ULONG MemorySize)
+PVOID MmAllocateMemory(U32 MemorySize)
 {
-	ULONG	PagesNeeded;
-	ULONG	FirstFreePageFromEnd;
+	U32		PagesNeeded;
+	U32		FirstFreePageFromEnd;
 	PVOID	MemPointer;
 
 	if (MemorySize == 0)
@@ -86,10 +86,10 @@ PVOID MmAllocateMemory(ULONG MemorySize)
 	return MemPointer;
 }
 
-PVOID MmAllocateMemoryAtAddress(ULONG MemorySize, PVOID DesiredAddress)
+PVOID MmAllocateMemoryAtAddress(U32 MemorySize, PVOID DesiredAddress)
 {
-	ULONG	PagesNeeded;
-	ULONG	StartPageNumber;
+	U32		PagesNeeded;
+	U32		StartPageNumber;
 	PVOID	MemPointer;
 
 	if (MemorySize == 0)
@@ -140,9 +140,9 @@ PVOID MmAllocateMemoryAtAddress(ULONG MemorySize, PVOID DesiredAddress)
 
 VOID MmFreeMemory(PVOID MemoryPointer)
 {
-	ULONG						PageNumber;
-	ULONG						PageCount;
-	ULONG						Idx;
+	U32							PageNumber;
+	U32							PageCount;
+	U32							Idx;
 	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTableAddress;
 
 #ifdef DEBUG
@@ -197,9 +197,9 @@ VOID MmFreeMemory(PVOID MemoryPointer)
 #ifdef DEBUG
 VOID VerifyHeap(VOID)
 {
-	ULONG						Idx;
-	ULONG						Idx2;
-	ULONG						Count;
+	U32							Idx;
+	U32							Idx2;
+	U32							Count;
 	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTableAddress;
 
 	if (DUMP_MEM_MAP_ON_VERIFY)
@@ -257,7 +257,7 @@ VOID VerifyHeap(VOID)
 
 VOID DumpMemoryAllocMap(VOID)
 {
-	ULONG						Idx;
+	U32							Idx;
 	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTableAddress;
 
 	DbgPrint((DPRINT_MEMORY, "----------- Memory Allocation Bitmap -----------\n"));
@@ -342,7 +342,7 @@ VOID MemAllocTest(VOID)
 }
 #endif // DEBUG
 
-ULONG GetSystemMemorySize(VOID)
+U32 GetSystemMemorySize(VOID)
 {
 	return (TotalPagesInLookupTable * MM_PAGE_SIZE);
 }
