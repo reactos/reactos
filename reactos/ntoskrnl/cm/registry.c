@@ -248,10 +248,12 @@ CmInitHives(BOOLEAN SetupBoot)
 {
     PCHAR BaseAddress;
     
-    /* Load Registry Hives */
-    BaseAddress = (PCHAR)CachedModules[SystemRegistry]->ModStart;
-    CmImportSystemHive(BaseAddress,
-                       CachedModules[SystemRegistry]->ModEnd - (ULONG_PTR)BaseAddress);
+    /* Load Registry Hives. This one can be missing. */
+    if (CachedModules[SystemRegistry]) {
+        BaseAddress = (PCHAR)CachedModules[SystemRegistry]->ModStart;
+        CmImportSystemHive(BaseAddress,
+                           CachedModules[SystemRegistry]->ModEnd - (ULONG_PTR)BaseAddress);
+    }
     
     BaseAddress = (PCHAR)CachedModules[HardwareRegistry]->ModStart;
     CmImportHardwareHive(BaseAddress,

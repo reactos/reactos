@@ -217,7 +217,6 @@ KiExpireTimers(PKDPC Dpc,
                PVOID SystemArgument1,
                PVOID SystemArgument2)
 {
-    ULONG Eip = (ULONG)SystemArgument1;
     PKTIMER Timer;
     ULONGLONG InterruptTime;
     LIST_ENTRY ExpiredTimerList;
@@ -265,8 +264,6 @@ KiExpireTimers(PKDPC Dpc,
     }
 
     DPRINT("Timers expired\n");
-    /* Add a Profile Event */
-    KiAddProfileEvent(ProfileTime, Eip);
 
     /* Release Dispatcher Lock */
     KeReleaseDispatcherDatabaseLock(OldIrql);
