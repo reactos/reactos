@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib4bpp.c,v 1.26 2004/04/07 10:19:34 weiden Exp $ */
+/* $Id: dib4bpp.c,v 1.27 2004/04/07 10:20:23 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -395,7 +395,7 @@ DIB_4BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
          }
          if (UsesPattern && (Brush->iSolidColor == 0xFFFFFFFF))
          {
-            Pattern = DIB_1BPP_GetPixel(PatternObj, i % PatternWidth, j % PatternHeight) ? GdiBrush->crFore : GdiBrush->crBack;
+            Pattern = DIB_1BPP_GetPixel(PatternObj, i % PatternWidth, PatternY) ? GdiBrush->crFore : GdiBrush->crBack;
          }				
          DIB_4BPP_PutPixel(DestSurf, i, j, DIB_DoRop(Rop4, Dest, Source, Pattern) & 0xF);
       }	 
