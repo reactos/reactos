@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: misc.c,v 1.11 2004/12/06 07:14:47 rcampbell Exp $
+/* $Id: misc.c,v 1.12 2004/12/06 08:41:38 ion Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/misc.c
@@ -113,5 +113,5 @@ UpdatePerUserSystemParameters(
    DWORD dwReserved,
    BOOL bEnable)
 {
-   return NtUserUpdatePerUserSystemParameters(0, dwReserved);
+   return NtUserUpdatePerUserSystemParameters(dwReserved, bEnable);
 }
