@@ -343,21 +343,25 @@ IntFindExistingCurIconObject(PWINSTATION_OBJECT WinStaObject, HMODULE hModule,
   {
     Object = CONTAINING_RECORD(CurrentEntry, CURICON_OBJECT, ListEntry);
     CurrentEntry = CurrentEntry->Flink;
-    if((Object->hModule == hModule) && (Object->hRsrc == hRsrc))
+    if(NT_SUCCESS(ObmReferenceObjectByPointer(Object, otCursorIcon)))
     {
-      if(cx && ((cx != Object->Size.cx) || (cy != Object->Size.cy)))
+      if((Object->hModule == hModule) && (Object->hRsrc == hRsrc))
       {
-        ObmDereferenceObject(Object);
-	continue;
-      }
-      if (! ReferenceCurIconByProcess(Object))
-      {
+        if(cx && ((cx != Object->Size.cx) || (cy != Object->Size.cy)))
+        {
+          ObmDereferenceObject(Object);
+          continue;
+        }
+        if (! ReferenceCurIconByProcess(Object))
+        {
+          ExReleaseFastMutex(&CurIconListLock);
+          return NULL;
+        }
         ExReleaseFastMutex(&CurIconListLock);
-        return NULL;
+        return Object;
       }
-      ExReleaseFastMutex(&CurIconListLock);
-      return Object;
     }
+    ObmDereferenceObject(Object);
   }
   
   ExReleaseFastMutex(&CurIconListLock);
