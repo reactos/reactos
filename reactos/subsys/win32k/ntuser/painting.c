@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: painting.c,v 1.32 2003/09/09 20:06:58 gvg Exp $
+/* $Id: painting.c,v 1.33 2003/09/11 22:11:44 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -414,7 +414,7 @@ PaintUpdateRgns(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags,
 		      NtGdiOffsetRgn(hRgn, -Offset.x, -Offset.y);
 		      PaintUpdateRgns(Child, hRgn, Flags, FALSE);
 		      PrevOrign.x = Rect.left + Total.x;
-		      PrevOrign.y = Rect.right + Total.y;
+		      PrevOrign.y = Rect.top + Total.y;
 		      Total.x += Offset.x;
 		      Total.y += Offset.y;
 		    }
