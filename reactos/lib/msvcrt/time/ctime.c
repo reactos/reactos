@@ -1323,7 +1323,7 @@ time2(struct tm *tmp, void (*const funcp)(const time_t *const,const long,struct 
    ** If time_t is signed, then 0 is the median value,
    ** if time_t is unsigned, then 1 << bits is median.
    */
-  t = (time_t) 1 << bits;
+  t = (time_t) ((1 << bits) - 1);
   for ( ; ; )
   {
     (*funcp)(&t, offset, &mytm);
