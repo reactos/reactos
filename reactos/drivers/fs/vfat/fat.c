@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.34 2001/11/02 22:35:31 hbirr Exp $
+ * $Id: fat.c,v 1.35 2001/11/20 23:40:26 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -208,7 +208,7 @@ FAT12FindAvailableCluster(PDEVICE_EXTENSION DeviceExt, PULONG Cluster)
   PVOID Context;
   LARGE_INTEGER Offset;
 
-  FatLength = DeviceExt->NumberOfClusters * 2;
+  FatLength = DeviceExt->NumberOfClusters;
   *Cluster = 0;
   StartCluster = DeviceExt->LastAvailableCluster;
   Offset.QuadPart = 0;
@@ -221,7 +221,7 @@ FAT12FindAvailableCluster(PDEVICE_EXTENSION DeviceExt, PULONG Cluster)
 
   for (j = 0; j < 2; j++)
   {
-    for (i = StartCluster * 2; i < FatLength; i++)
+    for (i = StartCluster; i < FatLength; i++)
     {
       FATOffset = (i * 12) / 8;
       if ((i % 2) == 0)
@@ -242,7 +242,7 @@ FAT12FindAvailableCluster(PDEVICE_EXTENSION DeviceExt, PULONG Cluster)
 	     return(STATUS_SUCCESS);
 	   }
     }
-    FatLength = StartCluster * 2;
+    FatLength = StartCluster;
     StartCluster = 2;
   }
   CcUnpinData(Context);
