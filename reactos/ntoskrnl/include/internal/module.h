@@ -35,7 +35,7 @@ typedef struct _MODULE_TEXT_SECTION
 #endif /* KDBG */
   PVOID SymbolsBase;
   ULONG SymbolsLength;
-} MODULE_TEXT_SECTION;
+} MODULE_TEXT_SECTION, *PMODULE_TEXT_SECTION;
 
 typedef struct _MODULE_OBJECT
 {
@@ -48,6 +48,7 @@ typedef struct _MODULE_OBJECT
   LIST_ENTRY ListEntry;
   UNICODE_STRING FullName;
   UNICODE_STRING BaseName;
+  PMODULE_TEXT_SECTION TextSection;
   union
     {
       struct

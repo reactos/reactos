@@ -308,6 +308,9 @@ MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
 					  BaseAddress);
    if (MemoryArea == NULL)
      {
+       
+  DPRINT1("AddressSpace 0x%X - KASpace 0x%X\n", AddressSpace, MmGetKernelAddressSpace());
+  DPRINT1("Memory area is NULL\n");
 	KeBugCheck(0);
 	return(STATUS_UNSUCCESSFUL);
      }

@@ -1,4 +1,4 @@
-/* $Id: shell.c,v 1.4 2001/02/28 23:51:58 phreak Exp $
+/* $Id: shell.c,v 1.5 2001/05/01 23:08:17 chorns Exp $
  *
  * PROJECT    : ReactOS Operating System
  * DESCRIPTION: ReactOS' Native Shell
@@ -96,6 +96,12 @@ void ExecuteDir(char* cmdline)
 void ExecuteReboot(char* cmdline)
 {
    NtShutdownSystem (ShutdownReboot);
+}
+
+
+void ExecuteShutdown(char* cmdline)
+{
+   NtShutdownSystem (ShutdownNoReboot);
 }
 
 
@@ -356,6 +362,11 @@ void ExecuteCommand(char* line)
    if (strcmp(cmd,"reboot")==0)
      {
 	ExecuteReboot(tail);
+	return;
+     }
+   if (strcmp(cmd,"shutdown")==0)
+     {
+	ExecuteShutdown(tail);
 	return;
      }
    if (strcmp(cmd,"type")==0)

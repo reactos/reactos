@@ -1,6 +1,9 @@
 #ifndef __INCLUDE_DDK_PNPTYPES_H
 #define __INCLUDE_DDK_PNPTYPES_H
 
+struct _DEVICE_OBJECT;
+struct _FILE_OBJECT;
+
 // windows.h may be included before
 #ifndef GUID_DEFINED
 #define GUID_DEFINED
@@ -13,6 +16,12 @@ typedef struct _GUID {
 } GUID, *LPGUID;
 
 #endif
+
+typedef struct _PNP_BUS_INFORMATION {
+  GUID BusTypeGuid;
+  INTERFACE_TYPE LegacyBusType;
+  ULONG BusNumber;
+} PNP_BUS_INFORMATION, *PPNP_BUS_INFORMATION;
 
 typedef struct _DEVICE_CAPABILITIES {
   USHORT Size;
@@ -73,6 +82,13 @@ typedef struct _PLUGPLAY_NOTIFICATION_HEADER {
 
 typedef ULONG PNP_DEVICE_STATE, *PPNP_DEVICE_STATE;
 
+#define PNP_DEVICE_DISABLED                      0x00000001
+#define PNP_DEVICE_DONT_DISPLAY_IN_UI            0x00000002
+#define PNP_DEVICE_FAILED                        0x00000004
+#define PNP_DEVICE_REMOVED                       0x00000008
+#define PNP_DEVICE_RESOURCE_REQUIREMENTS_CHANGED 0x00000010
+#define PNP_DEVICE_NOT_DISABLEABLE               0x00000020
+
 typedef struct _TARGET_DEVICE_CUSTOM_NOTIFICATION {
   USHORT Version;
   USHORT Size;
@@ -80,7 +96,7 @@ typedef struct _TARGET_DEVICE_CUSTOM_NOTIFICATION {
   //
   // Event-specific data
   //
-  PFILE_OBJECT FileObject;
+  struct _FILE_OBJECT *FileObject;
   LONG NameBufferOffset;
   UCHAR CustomDataBuffer[1];
 } TARGET_DEVICE_CUSTOM_NOTIFICATION, *PTARGET_DEVICE_CUSTOM_NOTIFICATION;
@@ -92,7 +108,7 @@ typedef struct _TARGET_DEVICE_REMOVAL_NOTIFICATION {
   //
   // Event-specific data
   //
-  PFILE_OBJECT FileObject;
+  struct _FILE_OBJECT *FileObject;
 } TARGET_DEVICE_REMOVAL_NOTIFICATION, *PTARGET_DEVICE_REMOVAL_NOTIFICATION;
 
 
@@ -155,7 +171,7 @@ typedef enum _DEVICE_RELATION_TYPE {
 
 typedef struct _DEVICE_RELATIONS {
   ULONG Count;
-  PDEVICE_OBJECT Objects[1];  // variable length
+  struct _DEVICE_OBJECT *Objects[1];
 } DEVICE_RELATIONS, *PDEVICE_RELATIONS;
 
 typedef enum _DEVICE_USAGE_NOTIFICATION_TYPE {

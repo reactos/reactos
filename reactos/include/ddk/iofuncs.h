@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.22 2000/12/23 02:37:36 dwelch Exp $ */
+/* $Id: iofuncs.h,v 1.23 2001/05/01 23:08:17 chorns Exp $ */
 
 /* --- EXPORTED BY NTOSKRNL --- */
 
@@ -429,6 +429,7 @@ IoConnectInterrupt (
 	KAFFINITY		ProcessorEnableMask,
 	BOOLEAN			FloatingSave
 	);
+
 PCONTROLLER_OBJECT
 STDCALL
 IoCreateController (
@@ -590,6 +591,11 @@ IoGetAttachedDevice (
 	);
 PDEVICE_OBJECT
 STDCALL
+IoGetAttachedDeviceReference (
+	PDEVICE_OBJECT	DeviceObject
+	);
+PDEVICE_OBJECT
+STDCALL
 IoGetBaseFileSystemDeviceObject (
 	IN	PFILE_OBJECT	FileObject
 	);
@@ -618,6 +624,16 @@ IoGetConfigurationInformation (
 #define IoGetCurrentIrpStackLocation(Irp) \
 	((Irp)->Tail.Overlay.CurrentStackLocation)
 */
+
+#define IoCopyCurrentIrpStackLocationToNext(Irp) { \
+  PIO_STACK_LOCATION IrpSp; \
+  PIO_STACK_LOCATION NextIrpSp; \
+  IrpSp = IoGetCurrentIrpStackLocation((Irp)); \
+  NextIrpSp = IoGetNextIrpStackLocation((Irp)); \
+  RtlCopyMemory(NextIrpSp, IrpSp, \
+    FIELD_OFFSET(IO_STACK_LOCATION, CompletionRoutine)); \
+  NextIrpSp->Control = 0; }
+
 struct _EPROCESS*
 STDCALL
 IoGetCurrentProcess (

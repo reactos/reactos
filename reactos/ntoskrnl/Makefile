@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.38 2001/04/28 22:59:16 dwelch Exp $
+# $Id: Makefile,v 1.39 2001/05/01 23:08:17 chorns Exp $
 #
 # ReactOS Operating System
 #
@@ -41,6 +41,12 @@ ifeq ($(MP), 1)
 CONFIG += MP
 else
 CONFIG += UP
+endif
+
+ifeq ($(ACPI), 1)
+CONFIG += ACPI
+else
+CONFIG +=
 endif
 
 TARGETNAME := ntoskrnl
@@ -179,6 +185,7 @@ OBJECTS_IO = \
 	io/npipe.o \
 	io/page.o \
 	io/pnpmgr.o \
+	io/pnproot.o \
 	io/process.o \
 	io/queue.o \
 	io/resource.o \

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.9 2001/04/03 17:25:49 dwelch Exp $
+/* $Id: io.h,v 1.10 2001/05/01 23:08:19 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -33,17 +33,85 @@
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
 
-extern POBJECT_TYPE		IoSymbolicLinkType;
+typedef struct _DEVICE_NODE
+{
+  struct _DEVICE_NODE *Parent;
+  struct _DEVICE_NODE *PrevSibling;
+  struct _DEVICE_NODE *NextSibling;
+  struct _DEVICE_NODE *Child;
+  PDEVICE_OBJECT Pdo;
+  UNICODE_STRING InstancePath;
+  UNICODE_STRING ServiceName;
+  //TargetDeviceNotifyList?
+  DEVICE_CAPABILITIES CapabilityFlags;
+  ULONG Flags;
+  ULONG UserFlags;
+  ULONG DisableableDepends;
+  ULONG Problem;
+  PCM_RESOURCE_LIST CmResourceList;
+  PCM_RESOURCE_LIST BootResourcesList;
+  PIO_RESOURCE_REQUIREMENTS_LIST ResourceRequirementsList;
+} DEVICE_NODE, *PDEVICE_NODE;
 
-/*
- * FUNCTION: Called to initalize a loaded driver
- * ARGUMENTS: 
- *          entry = pointer to the driver initialization routine
- * RETURNS: Success or failure
- */
-NTSTATUS 
-IoInitializeDriver(PDRIVER_INITIALIZE DriverEntry);
+/* For Flags field */
+#define DNF_MADEUP                              0x0001
+#define DNF_HAL_NODE                            0x0002
+#define DNF_PROCESSED                           0x0004
+#define DNF_ENUMERATED                          0x0008
+#define DNF_ADDED                               0x0010
+#define DNF_HAS_BOOT_CONFIG                     0x0020
+#define DNF_BOOT_CONFIG_RESERVED                0x0040
+#define DNF_RESOURCE_ASSIGNED                   0x0080
+#define DNF_NO_RESOURCE_REQUIRED                0x0100
+#define DNF_STARTED                             0x0200
+#define DNF_LEGACY_DRIVER                       0x0400
+#define DNF_RESOURCE_REQUIREMENTS_NEED_FILTERED 0x0800
+#define DNF_HAS_PROBLEM                         0x1000
 
+/* For UserFlags field */
+#define DNUF_DONT_SHOW_IN_UI    0x0002
+#define DNUF_NOT_DISABLEABLE    0x0008
+
+/* For Problem field */
+#define CM_PROB_FAILED_INSTALL  0x0001
+
+extern PDEVICE_NODE IopRootDeviceNode;
+
+extern POBJECT_TYPE IoSymbolicLinkType;
+
+VOID
+PnpInit(VOID);
+
+NTSTATUS
+STDCALL
+PnpRootDriverEntry(
+  IN PDRIVER_OBJECT DriverObject,
+  IN PUNICODE_STRING RegistryPath);
+NTSTATUS
+PnpRootCreateDevice(
+  PDEVICE_OBJECT *PhysicalDeviceObject);
+
+NTSTATUS
+IopGetSystemPowerDeviceObject(PDEVICE_OBJECT *DeviceObject);
+NTSTATUS
+IopCreateDeviceNode(PDEVICE_NODE ParentNode,
+                    PDEVICE_OBJECT PhysicalDeviceObject,
+                    PDEVICE_NODE *DeviceNode);
+NTSTATUS
+IopFreeDeviceNode(PDEVICE_NODE DeviceNode);
+NTSTATUS
+IopInterrogateBusExtender(PDEVICE_NODE DeviceNode,
+                          PDEVICE_OBJECT FunctionDeviceObject,
+                          BOOLEAN BootDriversOnly);
+VOID
+IopLoadBootStartDrivers(VOID);
+
+NTSTATUS
+IopCreateDriverObject(PDRIVER_OBJECT *DriverObject);
+NTSTATUS
+IopInitializeDriver(PDRIVER_INITIALIZE DriverEntry,
+                    PDEVICE_NODE ParentDeviceNode,
+                    BOOLEAN BootDriversOnly);
 VOID 
 IoInitCancelHandling(VOID);
 VOID 

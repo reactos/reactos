@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.24 2001/04/09 02:45:03 dwelch Exp $
+/* $Id: view.c,v 1.25 2001/05/01 23:08:18 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -197,6 +197,8 @@ CcRequestCacheSegment(PBCB Bcb,
    
   if ((FileOffset % Bcb->CacheSegmentSize) != 0)
     {
+      CPRINT("Bad fileoffset %x should be multiple of %x",
+        FileOffset, Bcb->CacheSegmentSize);
       KeBugCheck(0);
     }
 

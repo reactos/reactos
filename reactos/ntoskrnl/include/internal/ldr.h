@@ -9,10 +9,13 @@
 #define __INCLUDE_INTERNAL_LDR_H
 
 #include <pe.h>
+#include <internal/io.h>
 
 NTSTATUS
 LdrLoadDriver (
-	IN	PUNICODE_STRING	Filename
+	PUNICODE_STRING Filename,
+  PDEVICE_NODE DeviceNode,
+  BOOLEAN BootDriversOnly
 	);
 NTSTATUS
 LdrLoadInitialProcess (
@@ -29,7 +32,8 @@ LdrInitModuleManagement (
 NTSTATUS
 LdrProcessDriver (
 	IN	PVOID	ModuleLoadBase,
-	IN	PCHAR	FileName
+	IN	PCHAR	FileName,
+  IN	ULONG ModuleLength
 	);
 NTSTATUS
 LdrpMapSystemDll (

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.104 2001/04/21 12:39:33 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.105 2001/05/01 23:08:17 chorns Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -244,6 +244,7 @@ IoFreeController@4
 IoFreeIrp@4
 IoFreeMdl@4
 IoGetAttachedDevice@4
+IoGetAttachedDeviceReference@4
 IoGetBaseFileSystemDeviceObject@4
 IoGetConfigurationInformation@0
 IoGetCurrentProcess@0
@@ -550,7 +551,6 @@ NtWriteFile@36
 ;ObCheckObjectAccess@20
 ;ObCreateObject@36
 ObCreateObject@16
-ObDereferenceObject@4
 ;ObFindHandleForObject@20
 ;ObGetObjectPointerCount@4
 ;ObGetObjectSecurity@12
@@ -560,15 +560,13 @@ ObOpenObjectByName@28
 ObOpenObjectByPointer@28
 ;ObQueryNameString@16
 ;ObQueryObjectAuditingByHandle@8
+ObfDereferenceObject@4
+ObfReferenceObject@4
 ObReferenceObjectByHandle@24
 ObReferenceObjectByName@32
 ObReferenceObjectByPointer@16
 ;ObReleaseObjectSecurity@8
 ;ObSetSecurityDescriptorInfo@24
-;@ObfDereferenceObject@4
-ObfDereferenceObject@4
-;@ObfReferenceObject@4
-ObfReferenceObject@4
 ObAddEntryDirectory@12
 ;PfxFindPrefix
 ;PfxInitialize

@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.56 2001/04/07 15:06:17 jean Exp $
+/* $Id: registry.c,v 1.57 2001/05/01 23:08:18 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,6 +13,7 @@
 
 #include <windows.h>
 #include <ddk/ntddk.h>
+#include <internal/config.h>
 #include <internal/ob.h>
 #include <limits.h>
 #include <string.h>
@@ -475,7 +476,7 @@ CmInitializeRegistry2(VOID)
   if (!NT_SUCCESS(Status))
   {
     /* FIXME : search SYSTEM.alt, or create new */
-    DbgPrint(" warning : registry file %S not found\n",SYSTEM_REG_FILE);
+    CPRINT(" warning : registry file %S not found\n",SYSTEM_REG_FILE);
   }
   /* connect the SOFTWARE Hive */
   Status=CmConnectHive(SOFTWARE_REG_FILE,REG_SOFTWARE_KEY_NAME
@@ -483,7 +484,7 @@ CmInitializeRegistry2(VOID)
   if (!NT_SUCCESS(Status))
   {
     /* FIXME : search SOFTWARE.alt, or create new */
-    DbgPrint(" warning : registry file %S not found\n",SOFTWARE_REG_FILE);
+    CPRINT(" warning : registry file %S not found\n",SOFTWARE_REG_FILE);
   }
   /* connect the SAM Hive */
   Status=CmConnectHive(SAM_REG_FILE,REG_SAM_KEY_NAME
@@ -491,7 +492,7 @@ CmInitializeRegistry2(VOID)
   if (!NT_SUCCESS(Status))
   {
     /* FIXME : search SAM.alt, or create new */
-    DbgPrint(" warning : registry file %S not found\n",SAM_REG_FILE);
+    CPRINT(" warning : registry file %S not found\n",SAM_REG_FILE);
   }
   /* connect the SECURITY Hive */
   Status=CmConnectHive(SEC_REG_FILE,REG_SEC_KEY_NAME
@@ -499,7 +500,7 @@ CmInitializeRegistry2(VOID)
   if (!NT_SUCCESS(Status))
   {
     /* FIXME : search SECURITY.alt, or create new */
-    DbgPrint(" warning : registry file %S not found\n",SEC_REG_FILE);
+    CPRINT(" warning : registry file %S not found\n",SEC_REG_FILE);
   }
   /* connect the DEFAULT Hive */
   Status=CmConnectHive(USER_REG_FILE,REG_USER_KEY_NAME
@@ -507,7 +508,7 @@ CmInitializeRegistry2(VOID)
   if (!NT_SUCCESS(Status))
   {
     /* FIXME : search DEFAULT.alt, or create new */
-    DbgPrint(" warning : registry file %S not found\n",USER_REG_FILE);
+    CPRINT(" warning : registry file %S not found\n",USER_REG_FILE);
   }
   /* FIXME : initialize standards symbolic links */
 /*
@@ -528,7 +529,7 @@ CmImportHive(PCHAR  Chunk)
 VOID
 CmShutdownRegistry(VOID)
 {
-  DPRINT1("CmShutdownRegistry()...\n");
+  DPRINT("CmShutdownRegistry()...\n");
 }
 
 NTSTATUS 

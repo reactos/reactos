@@ -16,6 +16,7 @@ include rules.mak
 # Required to run the system
 #
 COMPONENTS = iface_native iface_additional ntoskrnl
+BUS = acpi isapnp
 DLLS = ntdll kernel32 crtdll advapi32 fmifs gdi32 secur32 user32 ws2_32 msafd msvcrt
 SUBSYS = smss win32k csrss
 
@@ -66,11 +67,11 @@ NET_APPS = ping
 
 KERNEL_SERVICES = $(DEVICE_DRIVERS) $(INPUT_DRIVERS) $(FS_DRIVERS) $(NET_DRIVERS) $(NET_DEVICE_DRIVERS)
 
-all: buildno $(COMPONENTS) $(DLLS) $(SUBSYS) $(LOADERS) $(KERNEL_SERVICES) $(SYS_APPS) $(APPS) $(NET_APPS)
+all: buildno $(COMPONENTS) $(BUS) $(DLLS) $(SUBSYS) $(LOADERS) $(KERNEL_SERVICES) $(SYS_APPS) $(APPS) $(NET_APPS)
 
 .PHONY: all
 
-clean: buildno_clean $(COMPONENTS:%=%_clean) $(DLLS:%=%_clean) $(LOADERS:%=%_clean) \
+clean: buildno_clean $(COMPONENTS:%=%_clean) $(BUS:%=%_clean) $(DLLS:%=%_clean) $(LOADERS:%=%_clean) \
        $(KERNEL_SERVICES:%=%_clean) $(SUBSYS:%=%_clean) $(SYS_APPS:%=%_clean) $(APPS:%=%_clean)
 
 .PHONY: clean
@@ -94,12 +95,14 @@ rmkdir$(EXE_POSTFIX): rmkdir.c
 endif
 
 
-install: rcopy$(EXE_POSTFIX) rmkdir$(EXE_POSTFIX) make_install_dirs autoexec_install $(COMPONENTS:%=%_install) \
+install: rcopy$(EXE_POSTFIX) rmkdir$(EXE_POSTFIX) make_install_dirs autoexec_install \
+        $(COMPONENTS:%=%_install) $(BUS:%=%_install) \
         $(DLLS:%=%_install) $(LOADERS:%=%_install) \
         $(KERNEL_SERVICES:%=%_install) $(SUBSYS:%=%_install) \
         $(SYS_APPS:%=%_install) $(APPS:%=%_install)
 
-dist: rcopy$(EXE_POSTFIX) clean_dist_dir make_dist_dirs $(COMPONENTS:%=%_dist) $(DLLS:%=%_dist) \
+dist: rcopy$(EXE_POSTFIX) clean_dist_dir make_dist_dirs $(COMPONENTS:%=%_dist) \
+      $(BUS:%=%_dist) $(DLLS:%=%_dist) \
       $(LOADERS:%=%_dist) $(KERNEL_SERVICES:%=%_dist) $(SUBSYS:%=%_dist) \
       $(SYS_APPS:%=%_dist) $(APPS:%=%_dist)
 
@@ -196,6 +199,24 @@ iface_additional_dist:
         iface_native_dist \
         iface_additional iface_additional_clean iface_additional_install \
         iface_additional_dist
+
+#
+# Bus driver rules
+#
+$(BUS): %:
+	make -C services/bus/$*
+
+$(BUS:%=%_clean): %_clean:
+	make -C services/bus/$* clean
+
+$(BUS:%=%_install): %_install:
+	make -C services/bus/$* install
+
+$(BUS:%=%_dist): %_dist:
+	make -C services/bus/$* dist
+
+.PHONY: $(BUS) $(BUS:%=%_clean) \
+        $(BUS:%=%_install) $(BUS:%=%_dist)
 
 #
 # Device driver rules

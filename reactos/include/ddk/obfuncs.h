@@ -5,15 +5,23 @@ PVOID STDCALL ObCreateObject(PHANDLE Handle,
 			     POBJECT_ATTRIBUTES ObjectAttributes,
 			     POBJECT_TYPE Type);
 
-/*
- * FUNCTION: Decrements the object's reference count and performs retention
- * checks
- * ARGUMENTS:
- *        Object = Object's body
- */
-VOID STDCALL ObDereferenceObject(PVOID Object);
+VOID
+FASTCALL
+ObfDereferenceObject(IN PVOID Object);
 
-VOID STDCALL ObMakeTemporaryObject(PVOID ObjectBody);
+VOID
+FASTCALL
+ObfReferenceObject(IN PVOID Object);
+
+#define ObDereferenceObject(Object) \
+  ObfDereferenceObject(Object)
+
+#define ObReferenceObject(Object) \
+  ObfReferenceObject(Object)
+
+VOID
+STDCALL
+ObMakeTemporaryObject(PVOID ObjectBody);
 
 NTSTATUS STDCALL ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
 				    IN POBJECT_TYPE ObjectType,

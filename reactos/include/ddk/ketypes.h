@@ -24,6 +24,15 @@ typedef struct _LOADER_MODULE
    ULONG Reserved;
 } LOADER_MODULE, *PLOADER_MODULE;
 
+typedef struct _ADDRESS_RANGE
+{
+   ULONG BaseAddrLow;
+   ULONG BaseAddrHigh;
+   ULONG LengthLow;
+   ULONG LengthHigh;
+   ULONG Type;
+} ADDRESS_RANGE, *PADDRESS_RANGE;
+
 typedef struct _LOADER_PARAMETER_BLOCK
 {
    ULONG Flags;

@@ -1,4 +1,4 @@
-/* $Id: halinit.c,v 1.21 2001/04/26 14:26:22 phreak Exp $
+/* $Id: halinit.c,v 1.22 2001/05/01 23:08:18 chorns Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -48,9 +48,14 @@ HalInitSystem (ULONG BootPhase,
 #endif /* MP */
 
     }
-  else
+  else if (BootPhase == 1)
     {
       HalpInitBusHandlers ();
+    }
+  else
+    {
+      /* Enumerate the devices on the motherboard */
+      HalpStartEnumerator();
     }
 
   return TRUE;

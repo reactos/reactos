@@ -1,6 +1,9 @@
 #ifndef __INCLUDE_DDK_POTYPES_H
 #define __INCLUDE_DDK_POTYPES_H
 
+struct _DEVICE_OBJECT;
+struct _IO_STATUS_BLOCK;
+
 // Flags for PoSetSystemState
 typedef ULONG EXECUTION_STATE;
 
@@ -59,10 +62,41 @@ typedef enum _POWER_STATE_TYPE {
 typedef
 VOID
 (*PREQUEST_POWER_COMPLETE) (
-  IN PDEVICE_OBJECT DeviceObject,
+  IN struct _DEVICE_OBJECT *DeviceObject,
   IN UCHAR MinorFunction,
   IN POWER_STATE PowerState,
   IN PVOID Context,
-  IN PIO_STATUS_BLOCK IoStatus);
+  IN struct _IO_STATUS_BLOCK *IoStatus);
+
+
+typedef struct _POWER_SEQUENCE {
+  ULONG SequenceD1;
+  ULONG SequenceD2;
+  ULONG SequenceD3;
+} POWER_SEQUENCE, *PPOWER_SEQUENCE;
+
+typedef VOID (*PINTERFACE_REFERENCE)(PVOID Context);
+typedef VOID (*PINTERFACE_DEREFERENCE)(PVOID Context);
+
+typedef struct _INTERFACE {
+  USHORT Size;
+  USHORT Version;
+  PVOID Context;
+  PINTERFACE_REFERENCE InterfaceReference;
+  PINTERFACE_DEREFERENCE InterfaceDereference;
+} INTERFACE, *PINTERFACE;
+
+typedef enum {
+  BusQueryDeviceID = 0,
+  BusQueryHardwareIDs = 1,
+  BusQueryCompatibleIDs = 2,
+  BusQueryInstanceID = 3,
+  BusQueryDeviceSerialNumber = 4
+} BUS_QUERY_ID_TYPE, *PBUS_QUERY_ID_TYPE;
+
+typedef enum {
+  DeviceTextDescription = 0,
+  DeviceTextLocationInformation = 1
+} DEVICE_TEXT_TYPE, *PDEVICE_TEXT_TYPE;
 
 #endif /* __INCLUDE_DDK_POTYPES_H */

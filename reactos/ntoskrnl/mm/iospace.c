@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: iospace.c,v 1.10 2001/04/09 02:45:04 dwelch Exp $
+/* $Id: iospace.c,v 1.11 2001/05/01 23:08:20 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/iospace.c
@@ -93,11 +93,11 @@ MmMapIoSpace (IN PHYSICAL_ADDRESS PhysicalAddress,
      {
 	Attributes |= (PAGE_NOCACHE | PAGE_WRITETHROUGH);
      }
-   for (i = 0; (i <= (NumberOfBytes / PAGESIZE)); i++)
+   for (i = 0; (i < ((NumberOfBytes + PAGESIZE - 1) / PAGESIZE)); i++)
      {
 	Status = 
-	  MmCreateVirtualMapping (NULL,
-				  (Result + (i * PAGESIZE)),
+	  MmCreateVirtualMappingForKernel (
+          (Result + (i * PAGESIZE)),
 				  Attributes,
 				  PhysicalAddress.u.LowPart + (i * PAGESIZE));
 	if (!NT_SUCCESS(Status))
@@ -106,7 +106,7 @@ MmMapIoSpace (IN PHYSICAL_ADDRESS PhysicalAddress,
 	     KeBugCheck(0);
 	  }
      }
-   return ((PVOID)Result);
+   return ((PVOID)(Result + PhysicalAddress.QuadPart % PAGESIZE));
 }
  
 
@@ -138,7 +138,7 @@ MmUnmapIoSpace (IN PVOID BaseAddress,
 		IN ULONG NumberOfBytes)
 {
    (VOID)MmFreeMemoryArea(&PsGetCurrentProcess()->AddressSpace,
-			  BaseAddress,
+			  (PVOID)(((ULONG)BaseAddress / PAGESIZE) * PAGESIZE),
 			  NumberOfBytes,
 			  NULL,
 			  NULL);

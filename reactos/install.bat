@@ -8,6 +8,8 @@ copy boot.bat c:\reactos
 copy loaders\dos\loadros.com c:\reactos
 copy ntoskrnl\ntoskrnl.exe c:\reactos
 copy services\fs\vfat\vfatfs.sys c:\reactos
+copy services\bus\acpi\acpi.sys c:\reactos
+copy services\bus\isapnp\isapnp.sys c:\reactos
 copy services\dd\ide\ide.sys c:\reactos
 copy services\dd\floppy\floppy.sys c:\reactos\system32\drivers
 copy services\input\keyboard\keyboard.sys c:\reactos\system32\drivers

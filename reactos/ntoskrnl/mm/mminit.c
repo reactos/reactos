@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.20 2001/04/26 14:26:23 phreak Exp $
+/* $Id: mminit.c,v 1.21 2001/05/01 23:08:20 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -79,6 +79,7 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
    ULONG Length;
    ULONG ParamLength = KernelLength;
    NTSTATUS Status;
+   //ULONG i;
    
    DPRINT("MmInitVirtualMemory(%x, %x)\n",LastKernelAddress, KernelLength);
    
@@ -163,14 +164,29 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
 	KeBugCheck(0);
      }
    ((PKUSER_SHARED_DATA)KERNEL_SHARED_DATA_BASE)->TickCountLow = 0xdeadbeef;
-   
+#if 0
+  for (i = 0; i < 0x100; i++)
+    {
+  Status = MmCreateVirtualMapping(NULL,
+	  (PVOID)(i*PAGESIZE),
+		PAGE_READWRITE,
+		(ULONG)(i*PAGESIZE));
+   if (!NT_SUCCESS(Status))
+     {
+	DbgPrint("Unable to create virtual mapping\n");
+	KeBugCheck(0);
+     }
+  }
+#endif
 //   MmDumpMemoryAreas();
    DPRINT("MmInitVirtualMemory() done\n");
 }
 
 VOID MmInit1(ULONG FirstKrnlPhysAddr, 
 	     ULONG LastKrnlPhysAddr,
-	     ULONG LastKernelAddress)
+	     ULONG LastKernelAddress,
+       PADDRESS_RANGE BIOSMemoryMap,
+       ULONG AddressRangeCount)
 /*
  * FUNCTION: Initalize memory managment
  */
@@ -216,7 +232,7 @@ VOID MmInit1(ULONG FirstKrnlPhysAddr,
     */
 #ifndef MP
    /* FIXME: This is broken in SMP mode */
-   MmDeletePageTable(NULL, 0);
+   //MmDeletePageTable(NULL, 0);
 #endif
    /*
     * Free all pages not used for kernel memory
@@ -240,13 +256,18 @@ VOID MmInit1(ULONG FirstKrnlPhysAddr,
        /* add 1MB for standard memory (not extended) */
        MmStats.NrTotalPages += 256;
      }
+#if 1
+  MmStats.NrTotalPages += 16;
+#endif
    DbgPrint("Used memory %dKb\n", (MmStats.NrTotalPages * PAGESIZE) / 1024);
-   
+
    LastKernelAddress = (ULONG)MmInitializePageList(
 					   (PVOID)FirstKrnlPhysAddr,
 					   (PVOID)LastKrnlPhysAddr,
 					   MmStats.NrTotalPages,
-					   PAGE_ROUND_UP(LastKernelAddress));
+					   PAGE_ROUND_UP(LastKernelAddress),
+             BIOSMemoryMap,
+             AddressRangeCount);
    kernel_len = LastKrnlPhysAddr - FirstKrnlPhysAddr;
    
    /*

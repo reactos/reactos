@@ -9,14 +9,17 @@
  */
 
 /*
- * NOTE: Define NDEBUG before including this header to disable debugging
- * macros
+ * NOTES: Define DBG in configuration file for "checked" version
+ *        Define NDEBUG before including this header to disable debugging
+ *        macros
+ *        Define NASSERT before including this header to disable assertions
  */
 
 #ifndef __INTERNAL_DEBUG
 #define __INTERNAL_DEBUG
 
 #include <internal/ntoskrnl.h>
+#include <internal/config.h>
 
 #define UNIMPLEMENTED do {DbgPrint("%s at %s:%d is unimplemented, have a nice day\n",__FUNCTION__,__FILE__,__LINE__); for(;;);  } while(0);
 
@@ -25,11 +28,24 @@
 #define CHECKED
 #endif
 
+#ifdef DBG
+
+/* Assert only on "checked" version */
 #ifndef NASSERT
 #define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); KeBugCheck(0); }
 #else
 #define assert(x)
 #endif
+
+/* Print if using a "checked" version */
+#define CPRINT(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0);
+
+#else /* DBG */
+
+#define CPRINT(args...)
+#define assert(x)
+
+#endif /* DBG */
 
 #define DPRINT1(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0);
 #define CHECKPOINT1 do { DbgPrint("%s:%d\n",__FILE__,__LINE__); } while(0);

@@ -32,6 +32,9 @@ VOID HalpCalibrateStallExecution(VOID);
 /* pci.c */
 VOID HalpInitPciBus (VOID);
 
+/* enum.c */
+VOID HalpStartEnumerator (VOID);
+
 struct _ADAPTER_OBJECT {
   int Channel;
   PVOID PagePort;

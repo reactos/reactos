@@ -1,4 +1,4 @@
-/* $Id: ping.c,v 1.3 2001/01/27 22:38:42 ea Exp $
+/* $Id: ping.c,v 1.4 2001/05/01 23:08:17 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ping utility
@@ -21,7 +21,9 @@
 /* Should be in the header files somewhere (exported by ntdll.dll) */
 long atol(const char *str);
 
+#ifndef __int64
 typedef long long __int64;
+#endif
 
 char * _i64toa(__int64 value, char *string, int radix);
 
@@ -126,8 +128,8 @@ VOID Reset(VOID)
 
     if (UsePerformanceCounter) {
         /* Performance counters may return incorrect results on some multiprocessor
-           platforms so we restrict execution on the first processor. This may fail on
-           Windows NT so we fall back to GetCurrentTick() for timing */
+           platforms so we restrict execution on the first processor. This may fail
+           on Windows NT so we fall back to GetCurrentTick() for timing */
         if (SetThreadAffinityMask (GetCurrentThread(), 1) == 0) {
             UsePerformanceCounter = FALSE;
         }
@@ -187,7 +189,11 @@ BOOL ParseCmdline(int argc, char* argv[])
     INT i;
     BOOL ShowUsage;
     BOOL FoundTarget;
-
+#if 0
+    lstrcpy(TargetName, "127.0.0.1");
+    PingCount = 1;
+    return TRUE;
+#endif
     if (argc < 2) {
         ShowUsage = TRUE;
     } else {
@@ -213,7 +219,7 @@ BOOL ParseCmdline(int argc, char* argv[])
             case 'f': DontFragment = TRUE; break;
             case 'i': TTLValue = GetULONG2(&argv[i][2], argv[i + 1], &i); break;
             case 'v': TOSValue = GetULONG2(&argv[i][2], argv[i + 1], &i); break;
-            case 'w': Timeout = GetULONG2(&argv[i][2], argv[i + 1], &i); break;
+            case 'w': Timeout  = GetULONG2(&argv[i][2], argv[i + 1], &i); break;
             default:
                 printf("Bad option %s.\n", argv[i]);
                 Usage();
@@ -228,7 +234,7 @@ BOOL ParseCmdline(int argc, char* argv[])
                 printf("Bad parameter %s.\n", argv[i]);
                 return FALSE;
             } else {
-				strcpy(TargetName, argv[i]);
+				lstrcpy(TargetName, argv[i]);
                 FoundTarget = TRUE;
             }
         }
@@ -268,11 +274,11 @@ WORD Checksum(PUSHORT data, UINT size)
 /* Prepare to ping target */
 BOOL Setup(VOID)
 {
-    WORD        wVersionRequested;
-    WSADATA     WsaData;
-    INT	        Status;
-    ULONG       Addr;
-    PHOSTENT    phe;
+    WORD     wVersionRequested;
+    WSADATA  WsaData;
+    INT	     Status;
+    ULONG    Addr;
+    PHOSTENT phe;
 
     wVersionRequested = MAKEWORD(2, 2);
  
@@ -311,14 +317,14 @@ BOOL Setup(VOID)
         Target.sin_family = AF_INET;
     }
 	
-    TargetIP		  = inet_ntoa(Target.sin_addr);
-    CurrentSeqNum	  = 0;
-    SentCount		  = 0;
-	LostCount		  = 0;
-    MinRTT.QuadPart   = 0;
-    MaxRTT.QuadPart   = 0;
-    SumRTT.QuadPart   = 0;
-    MinRTTSet         = FALSE;
+    TargetIP		= inet_ntoa(Target.sin_addr);
+    CurrentSeqNum	= 0;
+    SentCount		= 0;
+	LostCount		= 0;
+    MinRTT.QuadPart = 0;
+    MaxRTT.QuadPart = 0;
+    SumRTT.QuadPart = 0;
+    MinRTTSet       = FALSE;
     return TRUE;
 }
 
@@ -443,11 +449,11 @@ BOOL Ping(VOID)
     Packet = (PICMP_ECHO_PACKET)Buffer;
 
     /* Assemble ICMP echo request packet */
-    Packet->Icmp.Type       = ICMPMSG_ECHOREQUEST;
-    Packet->Icmp.Code       = 0;
-    Packet->Icmp.Id	        = (USHORT)GetCurrentProcessId();
-    Packet->Icmp.SeqNum     = (USHORT)CurrentSeqNum;
-    Packet->Icmp.Checksum   = 0;
+    Packet->Icmp.Type     = ICMPMSG_ECHOREQUEST;
+    Packet->Icmp.Code     = 0;
+    Packet->Icmp.Id	      = (USHORT)GetCurrentProcessId();
+    Packet->Icmp.SeqNum   = (USHORT)CurrentSeqNum;
+    Packet->Icmp.Checksum = 0;
 
     /* Timestamp is part of data area */
     QueryTime(&Packet->Timestamp);
@@ -502,11 +508,13 @@ BOOL Ping(VOID)
 
     if (Status == 0) {
         printf("Request timed out.\n");
+        LostCount++;
         GlobalFree(Buffer);
         return TRUE;
     }
-    
+
     if (!DecodeResponse(Buffer, Status, (PSOCKADDR_IN)&From)) {
+        /* FIXME: Wait again as it could be another ICMP message type */
         printf("Request timed out.\n");
         LostCount++;
     }
@@ -520,9 +528,9 @@ BOOL Ping(VOID)
 int main(int argc, char* argv[])
 {
     UINT Count;
-    CHAR  MinTime[20];
-    CHAR  MaxTime[20];
-    CHAR  AvgTime[20];
+    CHAR MinTime[20];
+    CHAR MaxTime[20];
+    CHAR AvgTime[20];
 
     Reset();
 

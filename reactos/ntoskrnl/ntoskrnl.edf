@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.91 2001/04/21 12:39:33 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.92 2001/05/01 23:08:18 chorns Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -244,6 +244,7 @@ IoFreeController=IoFreeController@4
 IoFreeIrp=IoFreeIrp@4
 IoFreeMdl=IoFreeMdl@4
 IoGetAttachedDevice=IoGetAttachedDevice@4
+IoGetAttachedDeviceReference=IoGetAttachedDeviceReference@4
 IoGetBaseFileSystemDeviceObject=IoGetBaseFileSystemDeviceObject@4
 IoGetConfigurationInformation=IoGetConfigurationInformation@0
 IoGetCurrentProcess=IoGetCurrentProcess@0
@@ -550,7 +551,6 @@ NtWriteFile=NtWriteFile@36
 ;ObCheckObjectAccess=ObCheckObjectAccess@20
 ;ObCreateObject=ObCreateObject@36
 ObCreateObject=ObCreateObject@16
-ObDereferenceObject=ObDereferenceObject@4
 ;ObFindHandleForObject=ObFindHandleForObject@20
 ;ObGetObjectPointerCount=ObGetObjectPointerCount@4
 ;ObGetObjectSecurity=ObGetObjectSecurity@12
@@ -560,15 +560,13 @@ ObOpenObjectByName=ObOpenObjectByName@28
 ObOpenObjectByPointer=ObOpenObjectByPointer@28
 ;ObQueryNameString=ObQueryNameString@16
 ;ObQueryObjectAuditingByHandle=ObQueryObjectAuditingByHandle@8
+ObfDereferenceObject=ObfDereferenceObject@4
+ObfReferenceObject=ObfReferenceObject@4
 ObReferenceObjectByHandle=ObReferenceObjectByHandle@24
 ObReferenceObjectByName=ObReferenceObjectByName@32
 ObReferenceObjectByPointer=ObReferenceObjectByPointer@16
 ;ObReleaseObjectSecurity=ObReleaseObjectSecurity@8
 ;ObSetSecurityDescriptorInfo=ObSetSecurityDescriptorInfo@24
-;ObfDereferenceObject=@ObfDereferenceObject@4
-ObfDereferenceObject=ObfDereferenceObject@4
-;ObfReferenceObject=@ObfReferenceObject@4
-ObfReferenceObject=ObfReferenceObject@4
 ObAddEntryDirectory=ObAddEntryDirectory@12
 ;PfxFindPrefix
 ;PfxInitialize

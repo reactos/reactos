@@ -117,10 +117,96 @@ MmGetContinuousPages(ULONG NumberOfBytes,
    return((PVOID)(start * 4096));
 }
 
+VOID MiParseRangeToFreeList(
+  PADDRESS_RANGE Range)
+{
+  ULONG i, first, last;
+
+  /* FIXME: Not 64-bit ready */
+
+  DPRINT("Range going to free list (Base 0x%X, Length 0x%X, Type 0x%X)\n",
+    Range->BaseAddrLow,
+    Range->LengthLow,
+    Range->Type);
+
+  first = (Range->BaseAddrLow + PAGESIZE - 1) / PAGESIZE;
+  last = first + ((Range->LengthLow + PAGESIZE - 1) / PAGESIZE) + 1;
+  for (i = first; i < last; i++)
+    {
+      if (MmPageArray[i].Flags == 0)
+        {
+          MmPageArray[i].Flags = MM_PHYSICAL_PAGE_FREE;
+	        MmPageArray[i].ReferenceCount = 0;
+	        InsertTailList(&FreePageListHead,
+		        &MmPageArray[i].ListEntry);
+        }
+    }
+}
+
+VOID MiParseRangeToBiosList(
+  PADDRESS_RANGE Range)
+{
+  ULONG i, first, last;
+
+  /* FIXME: Not 64-bit ready */
+
+  DPRINT("Range going to bios list (Base 0x%X, Length 0x%X, Type 0x%X)\n",
+    Range->BaseAddrLow,
+    Range->LengthLow,
+    Range->Type);
+
+  first = (Range->BaseAddrLow + PAGESIZE - 1) / PAGESIZE;
+  last = first + ((Range->LengthLow + PAGESIZE - 1) / PAGESIZE) + 1;
+  for (i = first; i < last; i++)
+    {
+      /* Remove the page from the free list if it is there */
+      if (MmPageArray[i].Flags == MM_PHYSICAL_PAGE_FREE)
+        {
+          RemoveEntryList(&MmPageArray[i].ListEntry);
+        }
+
+      if (MmPageArray[i].Flags != MM_PHYSICAL_PAGE_BIOS)
+        {
+          MmPageArray[i].Flags = MM_PHYSICAL_PAGE_BIOS;
+	        MmPageArray[i].ReferenceCount = 1;
+	        InsertTailList(&BiosPageListHead,
+		        &MmPageArray[i].ListEntry);
+        }
+    }
+}
+
+VOID MiParseBIOSMemoryMap(
+  ULONG MemorySizeInPages,
+  PADDRESS_RANGE BIOSMemoryMap,
+  ULONG AddressRangeCount)
+{
+  PADDRESS_RANGE p;
+  ULONG i;
+
+  p = BIOSMemoryMap;
+  for (i = 0; i < AddressRangeCount; i++)
+    {
+      if (((p->BaseAddrLow + PAGESIZE - 1) / PAGESIZE) < MemorySizeInPages)
+        {
+          if (p->Type == 1)
+            {
+              MiParseRangeToFreeList(p);
+            }
+          else
+            {
+              MiParseRangeToBiosList(p);
+            }
+        }
+      p += 1;
+    }
+}
+
 PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 			   PVOID LastPhysKernelAddress,
 			   ULONG MemorySizeInPages,
-			   ULONG LastKernelAddress)
+			   ULONG LastKernelAddress,
+         PADDRESS_RANGE BIOSMemoryMap,
+         ULONG AddressRangeCount)
 /*
  * FUNCTION: Initializes the page list with all pages free
  * except those known to be reserved and those used by the kernel
@@ -141,7 +227,7 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 	  LastPhysKernelAddress,
 	  MemorySizeInPages,
 	  LastKernelAddress);
-   
+
    InitializeListHead(&UsedPageListHead);
    KeInitializeSpinLock(&PageListLock);
    InitializeListHead(&FreePageListHead);
@@ -282,7 +368,16 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 	MmPageArray[i].ReferenceCount = 0;
 	InsertTailList(&FreePageListHead,
 		       &MmPageArray[i].ListEntry);
-     }  
+     }
+
+  if ((BIOSMemoryMap != NULL) && (AddressRangeCount > 0))
+    {
+      MiParseBIOSMemoryMap(
+        MemorySizeInPages,
+        BIOSMemoryMap,
+        AddressRangeCount);
+    }
+  
    MmStats.NrTotalPages = MmStats.NrFreePages + MmStats.NrSystemPages +
      MmStats.NrReservedPages + MmStats.NrUserPages;
    return((PVOID)LastKernelAddress);
@@ -423,7 +518,7 @@ MmIsUsablePage(PVOID PhysicalAddress)
      {
 	KeBugCheck(0);
      }
-   
+
    if (MM_PTYPE(MmPageArray[Start].Flags) != MM_PHYSICAL_PAGE_USED &&
        MM_PTYPE(MmPageArray[Start].Flags) != MM_PHYSICAL_PAGE_BIOS)
      {

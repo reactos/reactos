@@ -204,7 +204,9 @@ PMEMORY_AREA MmSplitMemoryArea(struct _EPROCESS* Process,
 PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 			   PVOID LastPhysKernelAddress,
 			   ULONG MemorySizeInPages,
-			   ULONG LastKernelBase);
+			   ULONG LastKernelBase,
+         PADDRESS_RANGE BIOSMemoryMap,
+         ULONG AddressRangeCount);
 
 PVOID MmAllocPage(SWAPENTRY SavedSwapEntry);
 VOID MmDereferencePage(PVOID PhysicalAddress);
@@ -311,7 +313,9 @@ VOID MmFreeSwapPage(SWAPENTRY Entry);
 
 VOID MmInit1(ULONG FirstKernelPhysAddress, 
 	     ULONG LastKernelPhysAddress,
-	     ULONG LastKernelAddress);
+	     ULONG LastKernelAddress,
+       PADDRESS_RANGE BIOSMemoryMap,
+       ULONG AddressRangeCount);
 VOID MmInit2(VOID);
 VOID MmInit3(VOID);
 NTSTATUS MmInitPagerThread(VOID);

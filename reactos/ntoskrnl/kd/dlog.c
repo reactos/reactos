@@ -1,4 +1,4 @@
-/* $Id: dlog.c,v 1.2 2001/03/25 18:56:12 dwelch Exp $
+/* $Id: dlog.c,v 1.3 2001/05/01 23:08:19 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,6 +13,7 @@
 
 #include <ddk/ntddk.h>
 #include <internal/ntoskrnl.h>
+#include <internal/config.h>
 #include <internal/kd.h>
 #include <ntos/minmax.h>
 

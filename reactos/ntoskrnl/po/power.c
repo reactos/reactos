@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: power.c,v 1.2 2001/04/16 00:48:04 chorns Exp $
+/* $Id: power.c,v 1.3 2001/05/01 23:08:20 chorns Exp $
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/po/power.c
  * PURPOSE:         Power Manager
@@ -26,6 +26,16 @@
  *   16/04/2001 CSH Stubs added
  */
 #include <ddk/ntddk.h>
+#include <internal/config.h>
+#include <internal/io.h>
+#include <internal/po.h>
+
+#define NDEBUG
+#include <internal/debug.h>
+
+
+PDEVICE_NODE PopSystemPowerDeviceNode = NULL;
+
 
 NTSTATUS
 STDCALL
@@ -33,7 +43,11 @@ PoCallDriver(
   IN PDEVICE_OBJECT DeviceObject,
   IN OUT PIRP Irp)
 {
-  return STATUS_NOT_IMPLEMENTED;
+  NTSTATUS Status;
+
+  Status = IoCallDriver(DeviceObject, Irp);
+
+  return Status;
 }
 
 PULONG
@@ -109,6 +123,77 @@ VOID
 STDCALL
 PoUnregisterSystemState(
   IN PVOID StateHandle)
+{
+}
+
+NTSTATUS
+PopSetSystemPowerState(
+  SYSTEM_POWER_STATE PowerState)
+{
+
+#ifdef ACPI
+
+  IO_STATUS_BLOCK IoStatusBlock;
+  PDEVICE_OBJECT DeviceObject;
+  PIO_STACK_LOCATION IrpSp;
+  PDEVICE_OBJECT Fdo;
+  NTSTATUS Status;
+  KEVENT Event;
+  PIRP Irp;
+
+  Status = IopGetSystemPowerDeviceObject(&DeviceObject);
+  if (!NT_SUCCESS(Status)) {
+    CPRINT("No system power driver available\n");
+    return STATUS_UNSUCCESSFUL;
+  }
+
+  Fdo = IoGetAttachedDeviceReference(DeviceObject);
+
+  if (Fdo == DeviceObject)
+    {
+      DPRINT("An FDO was not attached\n");
+      return STATUS_UNSUCCESSFUL;
+    }
+
+  KeInitializeEvent(&Event,
+	  NotificationEvent,
+	  FALSE);
+
+  Irp = IoBuildSynchronousFsdRequest(IRP_MJ_POWER,
+    Fdo,
+	  NULL,
+	  0,
+	  NULL,
+	  &Event,
+	  &IoStatusBlock);
+
+  IrpSp = IoGetNextIrpStackLocation(Irp);
+  IrpSp->MinorFunction = IRP_MN_SET_POWER;
+  IrpSp->Parameters.Power.Type = SystemPowerState;
+  IrpSp->Parameters.Power.State.SystemState = PowerState;
+
+	Status = PoCallDriver(Fdo, Irp);
+	if (Status == STATUS_PENDING)
+	  {
+		  KeWaitForSingleObject(&Event,
+		                        Executive,
+		                        KernelMode,
+		                        FALSE,
+		                        NULL);
+      Status = IoStatusBlock.Status;
+    }
+
+  ObDereferenceObject(Fdo);
+
+  return Status;
+
+#endif /* ACPI */
+
+  return STATUS_NOT_IMPLEMENTED;
+}
+
+VOID
+PoInit(VOID)
 {
 }
 

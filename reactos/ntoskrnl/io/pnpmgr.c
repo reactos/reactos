@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.1 2001/04/16 00:51:19 chorns Exp $
+/* $Id: pnpmgr.c,v 1.2 2001/05/01 23:08:19 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -12,13 +12,22 @@
 /* INCLUDES ******************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/io.h>
+#include <internal/po.h>
+#include <internal/ldr.h>
+#include <internal/module.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS *******************************************************************/
 
+PDEVICE_NODE IopRootDeviceNode;
+KSPIN_LOCK IopDeviceTreeLock;
+
 /* DATA **********************************************************************/
+
+PDRIVER_OBJECT IopRootDriverObject;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -238,8 +247,234 @@ IoUnregisterPlugPlayNotification(
   return STATUS_NOT_IMPLEMENTED;
 }
 
+
+NTSTATUS
+IopGetSystemPowerDeviceObject(PDEVICE_OBJECT *DeviceObject)
+{
+  KIRQL OldIrql;
+
+  assert(PopSystemPowerDeviceNode);
+
+  KeAcquireSpinLock(&IopDeviceTreeLock, &OldIrql);
+  *DeviceObject = PopSystemPowerDeviceNode->Pdo;
+  KeReleaseSpinLock(&IopDeviceTreeLock, OldIrql);
+
+  return STATUS_SUCCESS;
+}
+
+/**********************************************************************
+ * DESCRIPTION
+ * 	Creates a device node
+ *
+ * ARGUMENTS
+ *   ParentNode           = Pointer to parent device node
+ *   PhysicalDeviceObject = Pointer to PDO for device object. Pass NULL
+ *                          to have the root device node create one
+ *                          (eg. for legacy drivers)
+ *   DeviceNode           = Pointer to storage for created device node
+ *
+ * RETURN VALUE
+ * 	Status
+ */
+NTSTATUS
+IopCreateDeviceNode(PDEVICE_NODE ParentNode,
+  PDEVICE_OBJECT PhysicalDeviceObject,
+  PDEVICE_NODE *DeviceNode)
+/* */
+{
+  PDEVICE_NODE Node;
+  NTSTATUS Status;
+  KIRQL OldIrql;
+
+  DPRINT("ParentNode %x PhysicalDeviceObject %x\n");
+
+  Node = (PDEVICE_NODE)ExAllocatePool(PagedPool, sizeof(DEVICE_NODE));
+  if (!Node)
+    {
+      return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+  RtlZeroMemory(Node, sizeof(DEVICE_NODE));
+
+  if (!PhysicalDeviceObject)
+    {
+      Status = PnpRootCreateDevice(&PhysicalDeviceObject);
+      if (!NT_SUCCESS(Status))
+        {
+          ExFreePool(Node);
+          return Status;
+        }
+    }
+
+  Node->Pdo = PhysicalDeviceObject;
+
+  if (ParentNode)
+    {
+      KeAcquireSpinLock(&IopDeviceTreeLock, &OldIrql);
+      Node->Parent = ParentNode;
+      Node->NextSibling = ParentNode->Child;
+      ParentNode->Child->PrevSibling = Node;
+      ParentNode->Child = Node;
+      KeReleaseSpinLock(&IopDeviceTreeLock, OldIrql);
+    }
+
+  *DeviceNode = Node;
+
+  return STATUS_SUCCESS;
+}
+
+NTSTATUS
+IopFreeDeviceNode(PDEVICE_NODE DeviceNode)
+{
+  KIRQL OldIrql;
+
+  /* All children must be deleted before a parent is deleted */
+  assert(!DeviceNode->Child);
+
+  KeAcquireSpinLock(&IopDeviceTreeLock, &OldIrql);
+
+  assert(DeviceNode->Pdo);
+
+  ObDereferenceObject(DeviceNode->Pdo);
+
+  /* Unlink from parent if it exists */
+
+  if ((DeviceNode->Parent) && (DeviceNode->Parent->Child == DeviceNode))
+    {
+      DeviceNode->Parent->Child = DeviceNode->NextSibling;
+    }
+
+  /* Unlink from sibling list */
+
+  if (DeviceNode->PrevSibling)
+    {
+      DeviceNode->PrevSibling->NextSibling = DeviceNode->NextSibling;
+    }
+
+  if (DeviceNode->NextSibling)
+    {
+  DeviceNode->NextSibling->PrevSibling = DeviceNode->PrevSibling;
+    }
+
+  KeReleaseSpinLock(&IopDeviceTreeLock, OldIrql);
+
+  ExFreePool(DeviceNode);
+
+  return STATUS_SUCCESS;
+}
+
+NTSTATUS
+IopInterrogateBusExtender(PDEVICE_NODE DeviceNode,
+  PDEVICE_OBJECT FunctionDeviceObject,
+  BOOLEAN BootDriversOnly)
+{
+	IO_STATUS_BLOCK	IoStatusBlock;
+  PIO_STACK_LOCATION IrpSp;
+  NTSTATUS Status;
+  KEVENT Event;
+  PIRP Irp;
+
+  DPRINT("Sending IRP_MN_QUERY_DEVICE_RELATIONS to bus driver\n");
+
+  KeInitializeEvent(&Event,
+	  NotificationEvent,
+	  FALSE);
+
+  Irp = IoBuildSynchronousFsdRequest(IRP_MJ_PNP,
+    FunctionDeviceObject,
+	  NULL,
+	  0,
+	  NULL,
+	  &Event,
+	  &IoStatusBlock);
+
+  IrpSp = IoGetNextIrpStackLocation(Irp);
+  IrpSp->MinorFunction = IRP_MN_QUERY_DEVICE_RELATIONS;
+  IrpSp->Parameters.QueryDeviceRelations.Type = BusRelations;
+
+	Status = IoCallDriver(FunctionDeviceObject, Irp);
+	if (Status == STATUS_PENDING)
+	  {
+		  KeWaitForSingleObject(&Event,
+        Executive,
+		    KernelMode,
+		    FALSE,
+		    NULL);
+        Status = IoStatusBlock.Status;
+    }
+  if (!NT_SUCCESS(Status))
+    {
+      CPRINT("IoCallDriver() failed\n");
+    }
+
+  return Status;
+}
+
+VOID IopLoadBootStartDrivers(VOID)
+{
+  UNICODE_STRING DriverName;
+  PDEVICE_NODE DeviceNode;
+  NTSTATUS Status;
+
+  DPRINT("Loading boot start drivers\n");
+
+return;
+
+  /* FIXME: Get these from registry */
+
+  /* Use IopRootDeviceNode for now */
+  Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &DeviceNode);
+  if (!NT_SUCCESS(Status))
+    {
+  return;
+    }
+
+  /*
+   * ISA Plug and Play driver
+   */
+  RtlInitUnicodeString(&DriverName,
+    L"\\SystemRoot\\system32\\drivers\\isapnp.sys");
+  Status = LdrLoadDriver(&DriverName, DeviceNode, TRUE);
+  if (!NT_SUCCESS(Status))
+    {
+	    IopFreeDeviceNode(DeviceNode);
+
+      /* FIXME: Write an entry in the system error log */
+      DbgPrint("Could not load boot start driver: %wZ, status 0x%X\n",
+        &DriverName, Status);
+      return;
+    }
+}
+
 VOID PnpInit(VOID)
 {
+  NTSTATUS Status;
+
+  DPRINT("Called\n");
+
+  KeInitializeSpinLock(&IopDeviceTreeLock);
+
+  Status = IopCreateDriverObject(&IopRootDriverObject);
+  if (!NT_SUCCESS(Status))
+    {
+      DbgPrint("IoCreateDriverObject() failed\n");
+      KeBugCheck(0);
+    }
+
+  PnpRootDriverEntry(IopRootDriverObject, NULL);
+
+  Status = IoCreateDevice(IopRootDriverObject, 0, NULL,
+    FILE_DEVICE_CONTROLLER, 0, FALSE, &IopRootDeviceNode->Pdo);
+  if (!NT_SUCCESS(Status))
+    {
+      DbgPrint("IoCreateDevice() failed\n");
+      KeBugCheck(0);
+    }
+
+  IopRootDeviceNode->Pdo->Flags |= DO_BUS_ENUMERATED_DEVICE;
+
+  IopRootDriverObject->DriverExtension->AddDevice(
+    IopRootDriverObject, IopRootDeviceNode->Pdo);
 }
 
 /* EOF */

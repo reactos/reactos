@@ -23,6 +23,15 @@ mbm_string:	resd	1
 mbm_reserved:	resd	1
 endstruc
 
+struc multiboot_address_range
+mar_baselow:    resd 1
+mar_basehigh:   resd 1
+mar_lengthlow:  resd 1
+mar_lengthhigh:	resd 1
+mar_type:       resd 1
+mar_reserved:   resd 3
+endstruc
+
 ;
 ; We are a .com program
 ;
@@ -179,7 +188,9 @@ entry:
 	;; Process the arguments
 	;;
 	cmp	byte [di], '/'
-	je	.next_module
+	jne	.no_next_module
+	jmp	.next_module
+.no_next_module:
 
 	;;
 	;; Display a message saying we are loading the module
@@ -221,7 +232,22 @@ entry:
 	;;
 	push	di
 	mov	dx, di
-	call	pe_load_module
+
+  ; Check if it is a symbol file
+  cmp byte [bx-5],'.'
+  jne .pe_copy
+  cmp byte [bx-4],'s'
+  jne .pe_copy
+  cmp byte [bx-3],'y'
+  jne .pe_copy
+  cmp byte [bx-2],'m'
+  jne .pe_copy
+
+	call	sym_load_module
+	jmp .after_copy
+.pe_copy:
+  call	pe_load_module
+.after_copy:
 	pop	di
 	cmp	eax, 0
 	jne	.load_success
@@ -262,7 +288,7 @@ entry:
 	add	dword [_multiboot_info_base], _multiboot_info
 	
 	mov	dword [_multiboot_flags], 0xc
-	
+  
 	mov	[_multiboot_cmdline], eax
 	add	dword [_multiboot_cmdline], _multiboot_kernel_cmdline
 	
@@ -333,6 +359,50 @@ entry:
 	add	[_multiboot_mem_lower],eax
 
 .done_mem:
+
+  ;;
+  ;; Retrieve BIOS memory map if available
+  ;;
+  xor ebx,ebx
+  mov edi, _multiboot_address_ranges
+
+.mmap_next:
+
+  mov edx, 'PAMS'
+  mov ecx, multiboot_address_range_size
+  mov eax, 0E820h
+  int 15h
+  jc  .done_mmap
+
+  cmp eax, 'PAMS'
+  jne .done_mmap
+
+  add edi, multiboot_address_range_size
+
+  cmp ebx, 0
+  jne .mmap_next
+
+  ;;
+  ;; Prepare multiboot memory map structures
+  ;;
+
+  ;; Fill in the address descriptor size field
+  mov dword [_multiboot_address_range_descriptor_size], multiboot_address_range_size
+
+  ;; Set flag and base address and length of memory map
+  or  dword [_multiboot_flags], 40h
+  mov eax, edi
+  sub eax, _multiboot_address_ranges
+  mov dword [_multiboot_mmap_length], eax
+
+	xor	eax, eax
+	mov	ax, ds
+	shl	eax, 4
+	mov	[_multiboot_mmap_addr], eax
+	add	dword [_multiboot_mmap_addr], _multiboot_address_ranges
+
+.done_mmap:
+
 	pop ebx
 	
 	;;
@@ -625,12 +695,107 @@ _current_filehandle:
 	dw 0
 _current_size:
 	dd 0
+_current_file_size:
+	dd 0
+
+	;;
+	;; Load a SYM file
+	;;	DS:DX = Filename
+	;;
+sym_load_module:
+  call  load_module1
+  call  load_module2
+  mov edi, [next_load_base]
+  add edi, [_current_file_size]
+
+  mov eax, edi
+	test	di, 0xfff
+	jz	.sym_no_round
+	and	di, 0xf000
+	add	edi, 0x1000
+
+  ;;
+  ;; Clear unused space in the last page
+  ;;
+  mov esi, edi
+	mov ecx, edi
+	sub ecx, eax
+.sym_clear:
+  mov byte [esi],0
+  inc esi
+	loop  .sym_clear
+.sym_no_round:
+
+  call  load_module3
+  ret
 
 	;;
 	;; Load a PE file
 	;;	DS:DX = Filename
 	;;
 pe_load_module:
+  call load_module1
+
+	;;
+	;; Read in the DOS EXE header
+	;;
+	mov	ah, 0x3f
+	mov	bx, [_current_filehandle]
+	mov	cx, pe_doshdr_size
+	mov	dx, _cpe_doshdr
+	int	0x21
+	jnc	.header_read
+	mov	dx, error_file_read_failed
+	jmp	error
+.header_read
+
+	;;
+	;; Check the DOS EXE magic
+	;;
+	mov	ax, word [_cpe_doshdr + e_magic]
+	cmp	ax, 'MZ'
+	je	.mz_hdr_good
+	mov	dx, error_bad_mz
+	jmp	error
+.mz_hdr_good
+
+	;;
+	;; Find the BSS size
+	;;
+	mov	ebx, dword [_multiboot_mods_count]
+	cmp	ebx, 0
+	jne	.not_first
+	
+	mov	edx, 0
+	mov	ax, 0x4200
+	mov	cx, 0
+	mov	dx, 0x1004
+	mov	bx, [_current_filehandle]
+	int	0x21
+	jnc	.start_seek1
+	mov	dx, error_file_seek_failed
+	jmp	error
+.start_seek1:
+	mov	ah, 0x3F
+	mov	bx, [_current_filehandle]
+	mov	cx, 32
+	mov	dx, _mb_magic
+	int	0x21
+	jnc	.mb_header_read
+	mov	dx, error_file_read_failed
+	jmp	error
+.mb_header_read:
+	jmp	.first
+	
+.not_first:
+	mov	dword [_mb_bss_end_addr], 0
+.first:
+
+  call  load_module2
+  call  load_module3
+  ret
+
+load_module1:
 	;;
 	;; Open file
 	;;
@@ -638,7 +803,7 @@ pe_load_module:
 	int	0x21
 	jnc	.file_opened
 	mov	dx, error_file_open_failed
-	jmp	.error
+	jmp	error
 .file_opened:
 
 	;;
@@ -663,64 +828,11 @@ pe_load_module:
 	int	0x21
 	jnc	.seek_start
 	mov	dx, error_file_seek_failed
-	jmp	.error
+	jmp	error
 .seek_start:
+  ret
 
-	;;
-	;; Read in the DOS EXE header
-	;;
-	mov	ah, 0x3f
-	mov	bx, [_current_filehandle]
-	mov	cx, pe_doshdr_size
-	mov	dx, _cpe_doshdr
-	int	0x21
-	jnc	.header_read
-	mov	dx, error_file_read_failed
-	jmp	.error
-.header_read
-
-	;;
-	;; Check the DOS EXE magic
-	;;
-	mov	ax, word [_cpe_doshdr + e_magic]
-	cmp	ax, 'MZ'
-	je	.mz_hdr_good
-	mov	dx, error_bad_mz
-	jmp	.error
-.mz_hdr_good
-
-	;;
-	;; Find the BSS size
-	;;
-	mov	ebx, dword [_multiboot_mods_count]
-	cmp	ebx, 0
-	jne	.not_first
-	
-	mov	edx, 0
-	mov	ax, 0x4200
-	mov	cx, 0
-	mov	dx, 0x1004
-	mov	bx, [_current_filehandle]
-	int	0x21
-	jnc	.start_seek1
-	mov	dx, error_file_seek_failed
-	jmp	.error
-.start_seek1:
-	mov	ah, 0x3F
-	mov	bx, [_current_filehandle]
-	mov	cx, 32
-	mov	dx, _mb_magic
-	int	0x21
-	jnc	.mb_header_read
-	mov	dx, error_file_read_failed
-	jmp	.error
-.mb_header_read:
-	jmp	.first
-	
-.not_first:
-	mov	dword [_mb_bss_end_addr], 0
-.first:
-	
+load_module2:
 	;;
 	;; Seek to the end of the file to get the file size
 	;;
@@ -732,11 +844,12 @@ pe_load_module:
 	int	0x21
 	jnc	.start_end
 	mov	dx, error_file_seek_failed
-	jmp	.error
+	jmp	error
 .start_end
 	shl	edx, 16
 	mov	dx, ax
 	mov	[_current_size], edx
+	mov	[_current_file_size], edx
 	
 	mov	edx, 0
 	mov	ax, 0x4200
@@ -746,7 +859,7 @@ pe_load_module:
 	int	0x21
 	jnc	.start_seek
 	mov	dx, error_file_seek_failed
-	jmp	.error
+	jmp	error
 .start_seek
 	
 	mov	edi, [next_load_base]
@@ -769,7 +882,7 @@ pe_load_module:
 	jnc	.read_data_succeeded
 	pop	ds
 	mov	dx, error_file_read_failed
-	jmp	.error
+	jmp	error
 .read_data_succeeded:
 %ifndef NDEBUG
 	mov	ah,02h
@@ -813,7 +926,7 @@ pe_load_module:
 	jnc	.read_last_data_succeeded
 	pop	ds
 	mov	dx, error_file_read_failed
-	jmp	.error
+	jmp	error
 .read_last_data_succeeded:
 %ifndef NDEBUG
 	mov	ah,02h
@@ -848,7 +961,9 @@ pe_load_module:
 	and	di, 0xf000
 	add	edi, 0x1000
 .no_round:
+  ret
 
+load_module3:  
 	mov	bx, [_multiboot_mods_count]
 	imul	bx, bx, multiboot_module_size
 	add	bx, _multiboot_modules
@@ -868,7 +983,7 @@ pe_load_module:
 	;;
 	;; On error print a message and return zero
 	;;
-.error:
+error:
 	mov	ah, 0x9
 	int	0x21
 	mov	eax, 0
@@ -1010,7 +1125,12 @@ _multiboot_modules:
 	times (64*multiboot_module_size) db 0
 _multiboot_module_strings:
 	times (64*256) db 0
-	
+
+_multiboot_address_range_descriptor_size dd 0
+
+_multiboot_address_ranges:
+	times (64*multiboot_address_range_size) db 0
+
 _multiboot_kernel_cmdline:
 	times 255 db 0
 
@@ -1067,4 +1187,3 @@ error_coff_load_failed:
 error_bad_mz:
 	db	'Error: Bad DOS EXE magic'
 	db	0xa, 0xd, '$'
-

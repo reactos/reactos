@@ -43,7 +43,7 @@ EXE_POSTFIX := .exe
 #CP = copy /B
 CP = $(PATH_TO_TOP)/rcopy
 DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
-NASM_CMD = nasm
+NASM_CMD = nasmw
 RM = del
 RMDIR = rmdir
 #KM_SPECS = specs
@@ -115,6 +115,7 @@ OBJCOPY = $(PREFIX)objcopy
 		-o $@.unstripped \
 		$^
 	- $(RM) temp.exp
+	- $(NM) --numeric-sort $@.unstripped > $@.sym
 	$(STRIP) --strip-debug $<
 	$(CC) \
 		-nostartfiles -nostdlib -e _DriverEntry@8 \
@@ -144,11 +145,3 @@ OBJCOPY = $(PREFIX)objcopy
 	- $(RM) temp.exp
 
 RULES_MAK_INCLUDED = 1
-
-
-
-
-
-
-
-

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.39 2001/05/01 11:05:42 ekohl Exp $
+/* $Id: create.c,v 1.40 2001/05/01 23:08:19 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -78,12 +78,16 @@ IopCreateFile (PVOID			ObjectBody,
    
    if (NULL == DeviceObject)
      {
+  /* This is probably an attempt to create a meta fileobject (eg. for FAT)
+     for the cache manager, so return STATUS_SUCCESS */
 	DPRINT("DeviceObject was NULL\n");
 	return (STATUS_SUCCESS);
      }
    if (IoDeviceObjectType != BODY_TO_HEADER(Parent)->ObjectType)
      {
-	DPRINT("Parent is not a device type\n");
+	CPRINT("Parent is a %S which not a device type\n",
+    BODY_TO_HEADER(Parent)->ObjectType->TypeName.Buffer);
+  assert(FALSE);
 	return (STATUS_UNSUCCESSFUL);
      }
    Status = ObReferenceObjectByPointer (DeviceObject,
@@ -121,7 +125,8 @@ IopCreateFile (PVOID			ObjectBody,
 	    && (DeviceObject->DeviceType != FILE_DEVICE_NAMED_PIPE)
 	    && (DeviceObject->DeviceType != FILE_DEVICE_MAILSLOT))
 	  {
-	     DPRINT("Device was wrong type\n");
+	     CPRINT ("Device was wrong type\n");
+       assert(FALSE);
 	     return (STATUS_UNSUCCESSFUL);
 	  }
 
@@ -136,7 +141,7 @@ IopCreateFile (PVOID			ObjectBody,
 		  DPRINT("Status %x\n", Status);
 		  if (!NT_SUCCESS(Status))
 		    {
-		       DPRINT("Failed to mount storage device (statux %x)\n",
+		       CPRINT("Failed to mount storage device (statux %x)\n",
 			      Status);
 		       return (Status);
 		    }
@@ -185,18 +190,19 @@ IoCreateStreamFileObject(PFILE_OBJECT FileObject,
 {
   HANDLE		FileHandle;
   PFILE_OBJECT	CreatedFileObject;
-  
-  DbgPrint("IoCreateStreamFileObject(FileObject %x, DeviceObject %x)\n",
+
+  DPRINT("IoCreateStreamFileObject(FileObject %x, DeviceObject %x)\n",
 	   FileObject, DeviceObject);
    
   assert_irql (PASSIVE_LEVEL);
-  
+
   CreatedFileObject = ObCreateObject (&FileHandle,
 				      STANDARD_RIGHTS_REQUIRED,
 				      NULL,
 				      IoFileObjectType);
   if (NULL == CreatedFileObject)
     {
+      DPRINT("Could not create FileObject\n");
       return (NULL);
     }
   
@@ -205,6 +211,9 @@ IoCreateStreamFileObject(PFILE_OBJECT FileObject,
       DeviceObject = FileObject->DeviceObject;
     }
   DeviceObject = IoGetAttachedDevice(DeviceObject);
+
+  DPRINT("DeviceObject %x\n", DeviceObject);
+
   CreatedFileObject->DeviceObject = DeviceObject;
   CreatedFileObject->Vpb = DeviceObject->Vpb;
   CreatedFileObject->Type = InternalFileType;
@@ -327,13 +336,10 @@ IoCreateFile(
      }
    if (CreateOptions & FILE_SYNCHRONOUS_IO_ALERT)
      {
-	//FileObject->Flags = FileObject->Flags | FO_ALERTABLE_IO;
-	//FileObject->Flags = FileObject->Flags | FO_SYNCHRONOUS_IO;
 	FileObject->Flags |= (FO_ALERTABLE_IO | FO_SYNCHRONOUS_IO);
      }
    if (CreateOptions & FILE_SYNCHRONOUS_IO_NONALERT)
      {
-	//FileObject->Flags |= FileObject->Flags | FO_SYNCHRONOUS_IO;
 	FileObject->Flags |= FO_SYNCHRONOUS_IO;
      }
    KeInitializeEvent(&FileObject->Lock, NotificationEvent, TRUE);

@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.18 2001/03/07 16:48:42 dwelch Exp $
+/* $Id: iomgr.c,v 1.19 2001/05/01 23:08:19 chorns Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -254,6 +254,11 @@ VOID IoInit (VOID)
 	                      L"\\??");
 	IoCreateSymbolicLink (&UnicodeString,
 	                      &DeviceName);
+
+  /*
+   * Initialize PnP manager
+   */
+  PnpInit();
 }
 
 

@@ -3,6 +3,8 @@ mkdir -p $1/reactos/system32
 mkdir -p $1/reactos/system32/drivers
 mkdir -p $1/reactos/bin
 ./install-system.sh $1
+cp services/bus/acpi/acpi.sys $1/reactos/system32/drivers
+cp services/bus/isapnp/isapnp.sys $1/reactos/system32/drivers
 cp services/dd/floppy/floppy.sys $1/reactos/system32/drivers/
 cp services/input/keyboard/keyboard.sys $1/reactos/system32/drivers
 cp services/dd/blue/blue.sys $1/reactos/system32/drivers

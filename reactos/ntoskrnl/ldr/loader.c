@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.76 2001/04/26 14:26:22 phreak Exp $
+/* $Id: loader.c,v 1.77 2001/05/01 23:08:20 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -28,6 +28,7 @@
 #include <internal/config.h>
 #include <internal/module.h>
 #include <internal/ntoskrnl.h>
+#include <internal/io.h>
 #include <internal/mm.h>
 #include <internal/ob.h>
 #include <internal/ps.h>
@@ -37,9 +38,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-
-/* FIXME: this should appear in a kernel header file  */
-NTSTATUS IoInitializeDriver(PDRIVER_INITIALIZE DriverEntry);
 
 /* MACROS ********************************************************************/
 
@@ -222,9 +220,9 @@ VOID LdrInitModuleManagement(VOID)
     ModuleObject->Image.PE.OptionalHeader->AddressOfEntryPoint);
   DPRINT("ModuleObject:%08x  entrypoint at %x\n", ModuleObject, ModuleObject->EntryPoint);
    ModuleObject->Length = ModuleObject->Image.PE.OptionalHeader->SizeOfImage;
+   ModuleObject->TextSection = &NtoskrnlTextSection;
 
   /* FIXME: Add fake module entry for HAL */
-
 }
 
 /*
@@ -232,48 +230,64 @@ VOID LdrInitModuleManagement(VOID)
  */
 static VOID LdrLoadAutoConfigDriver (LPWSTR	RelativeDriverName)
 {
-   WCHAR		TmpFileName [MAX_PATH];
-   NTSTATUS	Status;
+   WCHAR TmpFileName [MAX_PATH];
    UNICODE_STRING	DriverName;
+   PDEVICE_NODE DeviceNode;
+   NTSTATUS Status;
 
-   DbgPrint("Loading %S\n",RelativeDriverName);
+   CPRINT("Loading %S\n",RelativeDriverName);
 
    wcscpy(TmpFileName, L"\\SystemRoot\\system32\\drivers\\");
    wcscat(TmpFileName, RelativeDriverName);
    RtlInitUnicodeString (&DriverName, TmpFileName);
 
-   Status = LdrLoadDriver(&DriverName);
+   /* Use IopRootDeviceNode for now */
+   Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &DeviceNode);
    if (!NT_SUCCESS(Status))
      {
-	DbgPrint("driver load failed, status (%x)\n", Status);
-//	KeBugCheck(0);
+   return;
+     }
+
+   Status = LdrLoadDriver(&DriverName, DeviceNode, FALSE);
+   if (!NT_SUCCESS(Status))
+     {
+	 IopFreeDeviceNode(DeviceNode);
+	 DPRINT1("Driver load failed, status (%x)\n", Status);
      }
 }
 
 #ifdef KDBG
 
-BOOLEAN LdrReadLine(PCHAR Line,
-                    PVOID *Buffer,
-                    PULONG Size)
+BOOLEAN LdrpReadLine(PCHAR Line,
+                     ULONG LineSize,
+                     PVOID *Buffer,
+                     PULONG Size)
 {
   CHAR ch;
   PCHAR Block;
+  ULONG Count;
 
   if (*Size == 0)
     return FALSE;
 
+  ch = ' ';
+  Count = 0;
   Block = *Buffer;
-  while ((*Size > 0) && ((ch = *Block) != (CHAR)13))
+  while ((*Size > 0) && (Count < LineSize) && ((ch = *Block) != (CHAR)13))
     {
       *Line = ch;
       Line++;
       Block++;
+      Count++;
       *Size -= 1;
     }
   *Line = (CHAR)0;
 
-  Block++;
-  *Size -= 1;
+  if (ch == (CHAR)13)
+    {
+      Block++;
+      *Size -= 1;
+    }
 
   if ((*Size > 0) && (*Block == (CHAR)10))
     {
@@ -310,9 +324,10 @@ ULONG HexL(PCHAR Buffer)
   return Value;
 }
 
-PSYMBOL LdrParseLine(PCHAR Line,
-                     PULONG ImageBase,
-                     PBOOLEAN ImageBaseValid)
+PSYMBOL LdrpParseLine(PCHAR Line,
+                      PULONG TextBase,
+                      PBOOLEAN TextBaseValid,
+                      PULONG FileAlignment)
 /*
     Line format: [ADDRESS] <TYPE> <NAME>
     TYPE:
@@ -333,8 +348,6 @@ PSYMBOL LdrParseLine(PCHAR Line,
   ULONG Address;
   PCHAR Str;
   CHAR Type;
-
-  *ImageBaseValid = FALSE;
 
   if ((Line[0] == (CHAR)0) || (Line[0] == ' '))
     return NULL;
@@ -359,12 +372,18 @@ PSYMBOL LdrParseLine(PCHAR Line,
   else
     strncpy((char*)&Buffer, Line, Str - Line);
 
-  if ((Type == 'A') && (strcmp((char*)&Buffer, "__image_base__")) == 0)
+  if ((Type == 'A') && (strcmp((char*)&Buffer, "__file_alignment__")) == 0)
     {
-      *ImageBase      = Address;
-      *ImageBaseValid = TRUE;
+      *FileAlignment = Address;
       return NULL;
     }
+
+/*  if ((Type == 'A') && (strcmp((char*)&Buffer, "__image_base__")) == 0)
+    {
+      *TextBase = Address;
+      *TextBaseValid = TRUE;
+      return NULL;
+    }*/
 
   /* We only want symbols in the .text segment */
   if ((Type != 't') && (Type != 'T'))
@@ -385,29 +404,86 @@ PSYMBOL LdrParseLine(PCHAR Line,
   RtlInitAnsiString(&AnsiString, (PCSZ)&Buffer);
   RtlAnsiStringToUnicodeString(&Symbol->Name, &AnsiString, TRUE);
 
+  if (!(*TextBaseValid))
+    {
+      *TextBase = Address - *FileAlignment;
+      *TextBaseValid = TRUE;
+    }
+
   return Symbol;
 }
 
-VOID LdrLoadModuleSymbols(PMODULE_OBJECT ModuleObject,
-			  MODULE_TEXT_SECTION* ModuleTextSection)
+VOID LdrpLoadModuleSymbolsFromBuffer(
+  PMODULE_OBJECT ModuleObject,
+  PVOID Buffer,
+  ULONG Length)
 /*
    Symbols must be sorted by address, e.g.
    "nm --numeric-sort module.sys > module.sym"
  */
 {
-  WCHAR TmpFileName[MAX_PATH];
-  LPWSTR Start, Ext;
-  ULONG Length, Tmp;
-  UNICODE_STRING Filename;
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  NTSTATUS Status;
-  HANDLE FileHandle;
-  PVOID FileBuffer, FilePtr;
-  CHAR Line[256];
-  FILE_STANDARD_INFORMATION FileStdInfo;
-  BOOLEAN ImageBaseValid;
-  ULONG ImageBase = 0;
   PSYMBOL Symbol, CurrentSymbol = NULL;
+  BOOLEAN TextBaseValid;
+  BOOLEAN Valid;
+  ULONG TextBase = 0;
+  ULONG FileAlignment = 0;
+  CHAR Line[256];
+  ULONG Tmp;
+
+  assert(ModuleObject);
+
+  if (ModuleObject->TextSection == NULL)
+    {
+      ModuleObject->TextSection = &NtoskrnlTextSection;
+    }
+
+  if (ModuleObject->TextSection->Symbols.SymbolCount > 0)
+    {
+      CPRINT("Symbols are already loaded for %wZ\n", &ModuleObject->BaseName);
+      return;
+    }
+
+  ModuleObject->TextSection->Symbols.SymbolCount = 0;
+  ModuleObject->TextSection->Symbols.Symbols = NULL;
+  TextBaseValid = FALSE;
+  Valid = FALSE;
+  while (LdrpReadLine((PCHAR)&Line, 256, &Buffer, &Length))
+    {
+      Symbol = LdrpParseLine((PCHAR)&Line, &Tmp, &Valid, &FileAlignment);
+
+      if ((Valid) && (!TextBaseValid))
+        {
+          TextBase = Tmp;
+          TextBaseValid = TRUE;
+        }
+
+      if (Symbol != NULL)
+        {
+          Symbol->RelativeAddress -= TextBase;
+
+          if (ModuleObject->TextSection->Symbols.Symbols == NULL)
+            ModuleObject->TextSection->Symbols.Symbols = Symbol;
+          else
+            CurrentSymbol->Next = Symbol;
+
+          CurrentSymbol = Symbol;
+
+          ModuleObject->TextSection->Symbols.SymbolCount++;
+        }
+    }
+}
+
+VOID LdrpLoadModuleSymbols(PMODULE_OBJECT ModuleObject)
+{
+  FILE_STANDARD_INFORMATION FileStdInfo;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  WCHAR TmpFileName[MAX_PATH];
+  UNICODE_STRING Filename;
+  LPWSTR Start, Ext;
+  HANDLE FileHandle;
+  PVOID FileBuffer;
+  NTSTATUS Status;
+  ULONG Length;
 
   /*  Get the path to the symbol store  */
   wcscpy(TmpFileName, L"\\SystemRoot\\symbols\\");
@@ -446,7 +522,7 @@ VOID LdrLoadModuleSymbols(PMODULE_OBJECT ModuleObject,
       return;
     }
 
-  DbgPrint("Loading symbols from %wZ...\n", &Filename);
+  CPRINT("Loading symbols from %wZ...\n", &Filename);
 
   /*  Get the size of the file  */
   Status = ZwQueryInformationFile(FileHandle,
@@ -485,35 +561,48 @@ VOID LdrLoadModuleSymbols(PMODULE_OBJECT ModuleObject,
 
   ZwClose(FileHandle);
 
-  ModuleTextSection->Symbols.SymbolCount = 0;
-  ModuleTextSection->Symbols.Symbols     = NULL;
-
-  FilePtr = FileBuffer;
-  Length  = FileStdInfo.EndOfFile.u.LowPart;
-
-  while (LdrReadLine((PCHAR)&Line, &FilePtr, &Length))
-    {
-      Symbol = LdrParseLine((PCHAR)&Line, &Tmp, &ImageBaseValid);
-
-      if (ImageBaseValid)
-        ImageBase = Tmp;
-
-      if (Symbol != NULL)
-        {
-          Symbol->RelativeAddress -= ImageBase;
-
-          if (ModuleTextSection->Symbols.Symbols == NULL)
-            ModuleTextSection->Symbols.Symbols = Symbol;
-          else
-            CurrentSymbol->Next = Symbol;
-
-          CurrentSymbol = Symbol;
-
-          ModuleTextSection->Symbols.SymbolCount++;
-        }
-    }
+  LdrpLoadModuleSymbolsFromBuffer(ModuleObject,
+                                  FileBuffer,
+                                  FileStdInfo.EndOfFile.u.LowPart);
 
   ExFreePool(FileBuffer);
+}
+
+NTSTATUS LdrpFindModuleObject(
+  PUNICODE_STRING ModuleName,
+  PMODULE_OBJECT *ModuleObject)
+{
+  NTSTATUS Status;
+  WCHAR NameBuffer[MAX_PATH];
+  UNICODE_STRING Name;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING RemainingPath;
+
+  wcscpy(NameBuffer, MODULE_ROOT_NAME);
+  wcscat(NameBuffer, ModuleName->Buffer);
+  RtlInitUnicodeString(&Name, NameBuffer);
+
+  InitializeObjectAttributes(&ObjectAttributes,
+                             &Name,
+                             0,
+                             NULL,
+                             NULL);
+   Status = ObFindObject(&ObjectAttributes,
+			                   (PVOID*)ModuleObject,
+			                   &RemainingPath,
+			                   NULL);
+  if (!NT_SUCCESS(Status))
+    {
+	    return Status;
+    }
+
+  if ((RemainingPath.Buffer != NULL) || (*ModuleObject == NULL))
+    {
+      RtlFreeUnicodeString(&RemainingPath);
+	    return STATUS_UNSUCCESSFUL;
+    }
+
+  return STATUS_SUCCESS;
 }
 
 #endif /* KDBG */
@@ -524,33 +613,17 @@ VOID LdrLoadAutoConfigDrivers (VOID)
 #ifdef KDBG
 
   NTSTATUS Status;
-  WCHAR NameBuffer[60];
   UNICODE_STRING ModuleName;
   PMODULE_OBJECT ModuleObject;
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING RemainingPath;
 
   /* Load symbols for ntoskrnl.exe and hal.dll because \SystemRoot
      is created after their module entries */
 
-  wcscpy(NameBuffer, MODULE_ROOT_NAME);
-  wcscat(NameBuffer, L"ntoskrnl.exe");
-  RtlInitUnicodeString(&ModuleName, NameBuffer);
+  RtlInitUnicodeString(&ModuleName, L"ntoskrnl.exe");
 
-  InitializeObjectAttributes(&ObjectAttributes,
-                             &ModuleName,
-                             0,
-                             NULL,
-                             NULL);
-  
-  Status = ObFindObject(&ObjectAttributes,
-                        (PVOID*)&ModuleObject,
-                        &RemainingPath,
-                        NULL);
+  Status = LdrpFindModuleObject(&ModuleName, &ModuleObject);
   if (NT_SUCCESS(Status)) {
-    RtlFreeUnicodeString(&RemainingPath);
-
-    LdrLoadModuleSymbols(ModuleObject, &NtoskrnlTextSection);
+    LdrpLoadModuleSymbols(ModuleObject);
   }
 
   /* FIXME: Load symbols for hal.dll */
@@ -643,19 +716,27 @@ LdrCreateModule(PVOID ObjectBody,
  * RETURNS: Status
  */
 
-NTSTATUS LdrLoadDriver(PUNICODE_STRING Filename)
+NTSTATUS LdrLoadDriver(PUNICODE_STRING Filename,
+                       PDEVICE_NODE DeviceNode,
+                       BOOLEAN BootDriversOnly)
 {
-  PMODULE_OBJECT  ModuleObject;
+  PMODULE_OBJECT ModuleObject;
+  NTSTATUS Status;
 
   ModuleObject = LdrLoadModule(Filename);
-  if (ModuleObject == 0)
+  if (!ModuleObject)
     {
-      return  STATUS_UNSUCCESSFUL;
+      return STATUS_UNSUCCESSFUL;
     }
 
-  /* FIXME: should we dereference the ModuleObject here?  */
+  Status = IopInitializeDriver(ModuleObject->EntryPoint,
+    DeviceNode, BootDriversOnly);
+  if (!NT_SUCCESS(Status))
+    {
+      ObDereferenceObject(ModuleObject);
+    }
 
-  return IoInitializeDriver(ModuleObject->EntryPoint);
+  return Status;
 }
 
 NTSTATUS LdrLoadGdiDriver (PUNICODE_STRING DriverName,
@@ -720,8 +801,8 @@ LdrLoadModule(PUNICODE_STRING Filename)
   CHECKPOINT;
   if (!NT_SUCCESS(Status))
     {
-      DbgPrint("Could not open module file: %wZ\n", Filename);
-      return  0;
+      CPRINT("Could not open module file: %wZ\n", Filename);
+      return NULL;
     }
   CHECKPOINT;
 
@@ -733,8 +814,8 @@ LdrLoadModule(PUNICODE_STRING Filename)
                                   FileStandardInformation);
   if (!NT_SUCCESS(Status))
     {
-      DbgPrint("Could not get file size\n");
-      return  0;
+      CPRINT("Could not get file size\n");
+      return NULL;
     }
   CHECKPOINT;
 
@@ -745,8 +826,8 @@ LdrLoadModule(PUNICODE_STRING Filename)
 
   if (ModuleLoadBase == NULL)
     {
-      DbgPrint("could not allocate memory for module");
-      return  0;
+      CPRINT("Could not allocate memory for module");
+      return NULL;
     }
   CHECKPOINT;
    
@@ -758,10 +839,9 @@ LdrLoadModule(PUNICODE_STRING Filename)
                       0, 0);
   if (!NT_SUCCESS(Status))
     {
-      DbgPrint("could not read module file into memory");
+      CPRINT("Could not read module file into memory");
       ExFreePool(ModuleLoadBase);
-
-      return  0;
+      return NULL;
     }
   CHECKPOINT;
 
@@ -772,14 +852,88 @@ LdrLoadModule(PUNICODE_STRING Filename)
   /*  Cleanup  */
   ExFreePool(ModuleLoadBase);
 
+#ifdef KDBG
+
+	/* Load symbols for module if available */
+  LdrpLoadModuleSymbols(ModuleObject);
+
+#endif /* KDBG */
+
   return  ModuleObject;
 }
 
 NTSTATUS
-LdrProcessDriver(PVOID ModuleLoadBase, PCHAR FileName)
+LdrProcessDriver(PVOID ModuleLoadBase, PCHAR FileName, ULONG ModuleLength)
 {
    PMODULE_OBJECT ModuleObject;
    UNICODE_STRING ModuleName;
+   PDEVICE_NODE DeviceNode;
+   NTSTATUS Status;
+
+#ifdef KDBG
+
+  CHAR TmpBaseName[MAX_PATH];
+  CHAR TmpFileName[MAX_PATH];
+  ANSI_STRING AnsiString;
+  ULONG Length;
+  PCHAR Ext;
+
+  /*  Split the filename into base name and extension  */
+  Ext = strrchr(FileName, '.');
+  if (Ext != NULL)
+    Length = Ext - FileName;
+  else
+    Length = strlen(FileName);
+
+  if ((Ext != NULL) && (strcmp(Ext, ".sym") == 0))
+    {
+  DPRINT("Module %s is a symbol file\n", FileName);
+
+  strncpy(TmpBaseName, FileName, Length);
+  TmpBaseName[Length] = '\0';
+
+  DPRINT("base: %s (Length %d)\n", TmpBaseName, Length);
+
+  strcpy(TmpFileName, TmpBaseName);
+  strcat(TmpFileName, ".sys");
+  RtlInitAnsiString(&AnsiString, TmpFileName);
+
+  DPRINT("dasdsad: %s\n", TmpFileName);
+
+  RtlAnsiStringToUnicodeString(&ModuleName, &AnsiString, TRUE);
+  Status = LdrpFindModuleObject(&ModuleName, &ModuleObject);
+  RtlFreeUnicodeString(&ModuleName);
+  if (!NT_SUCCESS(Status))
+    {
+      strcpy(TmpFileName, TmpBaseName);
+      strcat(TmpFileName, ".exe");
+      RtlInitAnsiString(&AnsiString, TmpFileName);
+      RtlAnsiStringToUnicodeString(&ModuleName, &AnsiString, TRUE);
+      Status = LdrpFindModuleObject(&ModuleName, &ModuleObject);
+      RtlFreeUnicodeString(&ModuleName);
+    }
+  if (NT_SUCCESS(Status))
+    {
+      LdrpLoadModuleSymbolsFromBuffer(
+        ModuleObject,
+        ModuleLoadBase,
+        ModuleLength);
+    }
+  return(STATUS_SUCCESS);
+    }
+  else
+    {
+  DPRINT("Module %s is executable\n", FileName);
+    }
+#endif /* KDBG */
+
+   /* Use IopRootDeviceNode for now */
+   Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &DeviceNode);
+   if (!NT_SUCCESS(Status))
+     {
+   CPRINT("Driver load failed, status (%x)\n", Status);
+   return(Status);
+     }
 
    RtlCreateUnicodeStringFromAsciiz(&ModuleName,
 				    FileName);
@@ -788,13 +942,19 @@ LdrProcessDriver(PVOID ModuleLoadBase, PCHAR FileName)
    RtlFreeUnicodeString(&ModuleName);
    if (ModuleObject == NULL)
      {
-       DPRINT1("Driver load was unsuccessful\n");
-       return(STATUS_UNSUCCESSFUL);
+	 IopFreeDeviceNode(DeviceNode);
+	 CPRINT("Driver load failed, status (%x)\n", Status);
+   return(STATUS_UNSUCCESSFUL);
      }
 
-   /* FIXME: should we dereference the ModuleObject here?  */
+   Status = IopInitializeDriver(ModuleObject->EntryPoint, DeviceNode, FALSE);
+   if (!NT_SUCCESS(Status))
+     {
+	 IopFreeDeviceNode(DeviceNode);
+	 CPRINT("Driver load failed, status (%x)\n", Status);
+     }
 
-   return(IoInitializeDriver(ModuleObject->EntryPoint));
+   return(Status);
 }
 
 PMODULE_OBJECT
@@ -809,7 +969,7 @@ LdrProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING ModuleName)
       return LdrPEProcessModule(ModuleLoadBase, ModuleName);
     }
 
-  DPRINT1("Module wasn't PE\n");
+  CPRINT("Module wasn't PE\n");
   return 0;
 }
 
@@ -1035,23 +1195,23 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING FileName)
   /*  Check file magic numbers  */
   if (PEDosHeader->e_magic != IMAGE_DOS_MAGIC)
     {
-      DbgPrint("Incorrect MZ magic: %04x\n", PEDosHeader->e_magic);
+      CPRINT("Incorrect MZ magic: %04x\n", PEDosHeader->e_magic);
       return 0;
     }
   if (PEDosHeader->e_lfanew == 0)
     {
-      DbgPrint("Invalid lfanew offset: %08x\n", PEDosHeader->e_lfanew);
-      return 0;
+      CPRINT("Invalid lfanew offset: %08x\n", PEDosHeader->e_lfanew);
+      return NULL;
     }
   if (*PEMagic != IMAGE_PE_MAGIC)
     {
-      DbgPrint("Incorrect PE magic: %08x\n", *PEMagic);
-      return 0;
+      CPRINT("Incorrect PE magic: %08x\n", *PEMagic);
+      return NULL;
     }
   if (PEFileHeader->Machine != IMAGE_FILE_MACHINE_I386)
     {
-      DbgPrint("Incorrect Architechture: %04x\n", PEFileHeader->Machine);
-      return 0;
+      CPRINT("Incorrect Architechture: %04x\n", PEFileHeader->Machine);
+      return NULL;
     }
   CHECKPOINT;
 
@@ -1074,10 +1234,10 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING FileName)
   DriverBase = MmAllocateSection(DriverSize);
   if (DriverBase == 0)
     {
-      DbgPrint("Failed to allocate a virtual section for driver\n");
+      CPRINT("Failed to allocate a virtual section for driver\n");
       return 0;
     }
-   DbgPrint("DriverBase: %x\n", DriverBase);
+   CPRINT("DriverBase: %x\n", DriverBase);
   CHECKPOINT;
   /*  Copy headers over */
   memcpy(DriverBase, ModuleLoadBase, PEOptionalHeader->SizeOfHeaders);
@@ -1174,8 +1334,8 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING FileName)
             }
           else if (Type != 0)
             {
-              DbgPrint("Unknown relocation type %x at %x\n",Type, &Type);
-              return 0;
+              CPRINT("Unknown relocation type %x at %x\n",Type, &Type);
+              return NULL;
             }
         }
       TotalRelocs += RelocDir->SizeOfBlock;
@@ -1218,7 +1378,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING FileName)
           LibraryModuleObject = LdrLoadModule(&ModuleName);
           if (LibraryModuleObject == 0)
             {
-              DbgPrint("Unknown import module: %wZ\n", &ModuleName);
+              CPRINT("Unknown import module: %wZ\n", &ModuleName);
             }
           /*  Get the import address list  */
           ImportAddressList = (PVOID *) ((DWORD)DriverBase + 
@@ -1262,8 +1422,8 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING FileName)
                 }
               else
                 {
-                   DbgPrint("Unresolved kernel symbol: %s\n", pName);
-		   return(NULL);
+                  CPRINT("Unresolved kernel symbol: %s\n", pName);
+		              return(NULL);
                 }
               ImportAddressList++;
               FunctionNameList++;
@@ -1285,7 +1445,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING FileName)
       wcscat(NameBuffer, FileName->Buffer);
     }
   RtlInitUnicodeString (&ModuleName, NameBuffer);
-  DbgPrint("Module name is: %wZ\n", &ModuleName);
+  CPRINT("Module name is: %wZ\n", &ModuleName);
 
   /*  Initialize ObjectAttributes for ModuleObject  */
   InitializeObjectAttributes(&ObjectAttributes,
@@ -1341,12 +1501,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING FileName)
   wcscpy(ModuleTextSection->Name, NameBuffer);
   InsertTailList(&ModuleTextListHead, &ModuleTextSection->ListEntry);
 
-#ifdef KDBG
-
-	/* Load symbols for module if available */
-  LdrLoadModuleSymbols(ModuleObject, ModuleTextSection);
-
-#endif /* KDBG */
+  ModuleObject->TextSection = ModuleTextSection;
 
   return  ModuleObject;
 }
@@ -1373,7 +1528,6 @@ LdrPEGetExportAddress(PMODULE_OBJECT ModuleObject,
      {
 	return NULL;
      }
-
 
    FunctionList = (PDWORD)((DWORD)ExportDir->AddressOfFunctions + ModuleObject->Base);
    NameList = (PDWORD)((DWORD)ExportDir->AddressOfNames + ModuleObject->Base);
@@ -1416,10 +1570,10 @@ LdrPEGetExportAddress(PMODULE_OBJECT ModuleObject,
 
    if (ExportAddress == 0)
      {
-	DbgPrint("Export not found for %d:%s\n",
+	CPRINT("Export not found for %d:%s\n",
 		 Hint,
 		 Name != NULL ? Name : "(Ordinal)");
-	KeBugCheck(0);
+	return NULL;
      }
 
    return ExportAddress;
@@ -1454,7 +1608,7 @@ LdrPEGetModuleObject(PUNICODE_STRING ModuleName)
 	Entry = Entry->Flink;
      }
 
-   DbgPrint("LdrPEGetModuleObject: Failed to find dll %wZ\n", ModuleName);
+   CPRINT("LdrPEGetModuleObject: Failed to find dll %wZ\n", ModuleName);
 
    return NULL;
 }
@@ -1490,12 +1644,11 @@ LdrPEFixupForward(PCHAR ForwardName)
 
    if (ModuleObject == NULL)
      {
-	DbgPrint("LdrPEFixupForward: failed to find module %s\n", NameBuffer);
+	CPRINT("LdrPEFixupForward: failed to find module %s\n", NameBuffer);
 	return NULL;
      }
 
    return LdrPEGetExportAddress(ModuleObject, p+1, 0);
 }
-
 
 /* EOF */

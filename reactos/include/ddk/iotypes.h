@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.27 2001/05/01 11:04:52 ekohl Exp $
+/* $Id: iotypes.h,v 1.28 2001/05/01 23:08:17 chorns Exp $
  * 
  */
 
@@ -104,6 +104,147 @@ typedef struct _IO_SECURITY_CONTEXT
    ULONG FullCreateOptions;
 } IO_SECURITY_CONTEXT, *PIO_SECURITY_CONTEXT;
 
+
+typedef struct _IO_RESOURCE_DESCRIPTOR
+{
+   UCHAR Option;
+   UCHAR Type;
+   UCHAR ShareDisposition;
+   
+   /*
+    * Reserved for system use
+    */
+   UCHAR Spare1;             
+   
+   USHORT Flags;
+   
+   /*
+    * Reserved for system use
+    */
+   UCHAR Spare2;
+   
+   union
+     {
+	struct
+	  {
+	     ULONG Length;
+	     ULONG Alignment;
+	     PHYSICAL_ADDRESS MinimumAddress;
+	     PHYSICAL_ADDRESS MaximumAddress;
+	  } Port;
+	struct
+	  {
+	     ULONG Length;
+	     ULONG Alignment;
+	     PHYSICAL_ADDRESS MinimumAddress;
+	     PHYSICAL_ADDRESS MaximumAddress;
+	  } Memory;
+	struct
+	  { 
+	     ULONG MinimumVector;
+	     ULONG MaximumVector;
+	  } Interrupt;
+	struct
+	  {
+	     ULONG MinimumChannel;
+	     ULONG MaximumChannel;
+	  } Dma;
+     } u;     
+} IO_RESOURCE_DESCRIPTOR, *PIO_RESOURCE_DESCRIPTOR;
+
+// IO_RESOURCE_DESCRIPTOR Options
+#define IO_RESOURCE_REQUIRED    0x00
+#define IO_RESOURCE_PREFERRED   0x01
+#define IO_RESOURCE_DEFAULT     0x02
+#define IO_RESOURCE_ALTERNATIVE 0x08
+
+typedef struct _IO_RESOURCE_LIST
+{
+   USHORT Version;
+   USHORT Revision;
+   ULONG Count;
+   IO_RESOURCE_DESCRIPTOR Descriptors[1];
+} IO_RESOURCE_LIST, *PIO_RESOURCE_LIST;
+
+typedef struct _IO_RESOURCE_REQUIREMENTS_LIST
+{
+   /*
+    * List size in bytes
+    */
+   ULONG ListSize;
+   
+   /*
+    * System defined enum for the bus
+    */
+   INTERFACE_TYPE InterfaceType;
+   
+   ULONG BusNumber;
+   ULONG SlotNumber;
+   ULONG Reserved[3];
+   ULONG AlternativeLists;
+   IO_RESOURCE_LIST List[1];   
+} IO_RESOURCE_REQUIREMENTS_LIST, *PIO_RESOURCE_REQUIREMENTS_LIST;
+
+typedef struct
+{
+   UCHAR Type;
+   UCHAR ShareDisposition;
+   USHORT Flags;
+   union
+     {
+	struct
+	  {
+	     PHYSICAL_ADDRESS Start;
+	     ULONG Length;
+	  } Port;
+	struct
+	  {
+	     ULONG Level;
+	     ULONG Vector;
+	     ULONG Affinity;
+	  } Interrupt;
+	struct
+	  {
+	     PHYSICAL_ADDRESS Start;
+	     ULONG Length;
+	  } Memory;
+	struct
+	  {
+	     ULONG Channel;
+	     ULONG Port;
+	     ULONG Reserved1;
+	  } Dma;
+	struct
+	  {
+	     ULONG DataSize;
+	     ULONG Reserved1;
+	     ULONG Reserved2;
+	  } DeviceSpecificData;
+     } u;
+} CM_PARTIAL_RESOURCE_DESCRIPTOR, *PCM_PARTIAL_RESOURCE_DESCRIPTOR;
+
+typedef struct
+{
+   USHORT Version;
+   USHORT Revision;
+   ULONG Count;
+   CM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptors[1];
+} CM_PARTIAL_RESOURCE_LIST;
+
+typedef struct
+{
+   INTERFACE_TYPE InterfaceType;
+   ULONG BusNumber;
+   CM_PARTIAL_RESOURCE_LIST PartialResourceList;
+} CM_FULL_RESOURCE_DESCRIPTOR;
+
+typedef struct
+{
+   ULONG Count;
+   CM_FULL_RESOURCE_DESCRIPTOR List[1];
+} CM_RESOURCE_LIST, *PCM_RESOURCE_LIST;
+
+
 /*
  * PURPOSE: IRP stack location
  */
@@ -193,7 +334,84 @@ typedef struct _IO_STACK_LOCATION
 	     FILE_INFORMATION_CLASS FileInformationClass;
 	     ULONG FileIndex;
 	  } QueryDirectory;
-     } Parameters;
+/*
+	struct
+	  {
+	     ULONG CreateDisposition;
+	     ULONG CreateOptions;
+	     ULONG ShareAccess;
+	     BOOLEAN WriteModeMessage;
+	     BOOLEAN ReadModeMessage;
+	     BOOLEAN NonBlocking;
+	     ULONG MaxInstances;
+	     ULONG InBufferSize;
+	     ULONG OutBufferSize;
+	     LARGE_INTEGER TimeOut;
+	  } CreateNamedPipe;
+*/
+
+    // Parameters for IRP_MN_QUERY_DEVICE_RELATIONS
+    struct {
+      DEVICE_RELATION_TYPE Type;
+    } QueryDeviceRelations;
+
+    // Parameters for IRP_MN_QUERY_INTERFACE
+    struct {
+      CONST GUID *InterfaceType;
+      USHORT Size;
+      USHORT Version;
+      PINTERFACE Interface;
+      PVOID InterfaceSpecificData;
+    } QueryInterface;
+
+    // Parameters for IRP_MN_QUERY_CAPABILITIES
+    struct {
+      PDEVICE_CAPABILITIES Capabilities;
+    } DeviceCapabilities;
+
+    // Parameters for IRP_MN_QUERY_ID
+    struct {
+      BUS_QUERY_ID_TYPE IdType;
+    } QueryId;
+
+    // Parameters for IRP_MN_QUERY_DEVICE_TEXT
+    struct {
+      DEVICE_TEXT_TYPE DeviceTextType;
+      LCID LocaleId;
+    } QueryDeviceText;
+
+    // Parameters for IRP_MN_DEVICE_USAGE_NOTIFICATION
+    struct {
+      BOOLEAN InPath;
+      BOOLEAN Reserved[3];
+      DEVICE_USAGE_NOTIFICATION_TYPE Type;
+    } UsageNotification;
+
+    // Parameters for IRP_MN_WAIT_WAKE
+    struct {
+      SYSTEM_POWER_STATE PowerState;
+    } WaitWake;
+
+    // Parameter for IRP_MN_POWER_SEQUENCE
+    struct {
+      PPOWER_SEQUENCE PowerSequence;
+    } PowerSequence;
+
+    // Parameters for IRP_MN_SET_POWER and IRP_MN_QUERY_POWER
+    struct {
+      ULONG SystemContext;
+      POWER_STATE_TYPE Type;
+      POWER_STATE State;
+      POWER_ACTION ShutdownType;
+    } Power;
+
+    // Parameters for IRP_MN_START_DEVICE
+    struct {
+      PCM_RESOURCE_LIST AllocatedResources;
+      PCM_RESOURCE_LIST AllocatedResourcesTranslated;
+    } StartDevice;
+
+  } Parameters;
    
    struct _DEVICE_OBJECT* DeviceObject;
    struct _FILE_OBJECT* FileObject;
@@ -578,143 +796,6 @@ typedef struct _DRIVER_LAYOUT_INFORMATION
    ULONG Signature;
    PARTITION_INFORMATION PartitionEntry[1];
 } DRIVER_LAYOUT_INFORMATION, *PDRIVER_LAYOUT_INFORMATION;
-
-
-
-
-
-typedef struct _IO_RESOURCE_DESCRIPTOR
-{
-   UCHAR Option;
-   UCHAR Type;
-   UCHAR SharedDisposition;
-   
-   /*
-    * Reserved for system use
-    */
-   UCHAR Spare1;             
-   
-   USHORT Flags;
-   
-   /*
-    * Reserved for system use
-    */
-   UCHAR Spare2;
-   
-   union
-     {
-	struct
-	  {
-	     ULONG Length;
-	     ULONG Alignment;
-	     PHYSICAL_ADDRESS MinimumAddress;
-	     PHYSICAL_ADDRESS MaximumAddress;
-	  } Port;
-	struct
-	  {
-	     ULONG Length;
-	     ULONG Alignment;
-	     PHYSICAL_ADDRESS MinimumAddress;
-	     PHYSICAL_ADDRESS MaximumAddress;
-	  } Memory;
-	struct
-	  { 
-	     ULONG MinimumVector;
-	     ULONG MaximumVector;
-	  } Interrupt;
-	struct
-	  {
-	     ULONG MinimumChannel;
-	     ULONG MaximumChannel;
-	  } Dma;
-     } u;     
-} IO_RESOURCE_DESCRIPTOR, *PIO_RESOURCE_DESCRIPTOR;
-
-typedef struct _IO_RESOURCE_LIST
-{
-   USHORT Version;
-   USHORT Revision;
-   ULONG Count;
-   IO_RESOURCE_DESCRIPTOR Descriptors[1];
-} IO_RESOURCE_LIST, *PIO_RESOURCE_LIST;
-
-typedef struct _IO_RESOURCES_REQUIREMENTS_LIST
-{
-   /*
-    * List size in bytes
-    */
-   ULONG ListSize;
-   
-   /*
-    * System defined enum for the bus
-    */
-   INTERFACE_TYPE InterfaceType;
-   
-   ULONG BusNumber;
-   ULONG SlotNumber;
-   ULONG Reserved[3];
-   ULONG AlternativeLists;
-   IO_RESOURCE_LIST List[1];   
-} IO_RESOURCES_REQUIREMENTS_LIST, *PIO_RESOURCE_REQUIREMENTS_LIST;
-
-typedef struct
-{
-   UCHAR Type;
-   UCHAR ShareDisposition;
-   USHORT Flags;
-   union
-     {
-	struct
-	  {
-	     PHYSICAL_ADDRESS Start;
-	     ULONG Length;
-	  } Port;
-	struct
-	  {
-	     ULONG Level;
-	     ULONG Vector;
-	     ULONG Affinity;
-	  } Interrupt;
-	struct
-	  {
-	     PHYSICAL_ADDRESS Start;
-	     ULONG Length;
-	  } Memory;
-	struct
-	  {
-	     ULONG Channel;
-	     ULONG Port;
-	     ULONG Reserved1;
-	  } Dma;
-	struct
-	  {
-	     ULONG DataSize;
-	     ULONG Reserved1;
-	     ULONG Reserved2;
-	  } DeviceSpecificData;
-     } u;
-} CM_PARTIAL_RESOURCE_DESCRIPTOR, *PCM_PARTIAL_RESOURCE_DESCRIPTOR;
-
-typedef struct
-{
-   USHORT Version;
-   USHORT Revision;
-   ULONG Count;
-   CM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptors[1];
-} CM_PARTIAL_RESOURCE_LIST;
-
-typedef struct
-{
-   INTERFACE_TYPE InterfaceType;
-   ULONG BusNumber;
-   CM_PARTIAL_RESOURCE_LIST PartialResourceList;
-} CM_FULL_RESOURCE_DESCRIPTOR;
-
-typedef struct
-{
-   ULONG Count;
-   CM_FULL_RESOURCE_DESCRIPTOR List[1];
-} CM_RESOURCE_LIST, *PCM_RESOURCE_LIST;
 
 
 typedef

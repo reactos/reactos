@@ -12,9 +12,11 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/config.h>
 #include <internal/ps.h>
 #include <internal/io.h>
 #include <internal/mm.h>
+#include <internal/po.h>
 
 #include <internal/debug.h>
 
@@ -44,6 +46,8 @@ NtShutdownSystem(IN SHUTDOWN_ACTION Action)
 #if 0
         /* Switch off */
         HalReturnToFirmware (FIRMWARE_OFF);
+#else
+        PopSetSystemPowerState(PowerSystemShutdown);
 #endif
      }
    else if (Action == ShutdownReboot)

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.94 2001/04/26 03:58:32 phreak Exp $
+/* $Id: main.c,v 1.95 2001/05/01 23:08:19 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -38,6 +38,7 @@
 #include <internal/ps.h>
 #include <internal/ke.h>
 #include <internal/io.h>
+#include <internal/po.h>
 #include <napi/shared_data.h>
 #include <internal/v86m.h>
 #include <internal/kd.h>
@@ -56,6 +57,8 @@ LOADER_PARAMETER_BLOCK EXPORTED KeLoaderBlock;
 static LOADER_MODULE KeLoaderModules[64];
 static UCHAR KeLoaderModuleStrings[64][256];
 static UCHAR KeLoaderCommandLine[256];
+static ADDRESS_RANGE KeMemoryMap[64];
+static ULONG KeMemoryMapRangeCount;
 static ULONG FirstKrnlPhysAddr;
 static ULONG LastKrnlPhysAddr;
 static ULONG LastKernelAddress;
@@ -134,7 +137,7 @@ CreateSystemRootLink (PCSZ ParameterLine)
 	{
 		RtlFreeUnicodeString (&BootPath);
 		RtlFreeUnicodeString (&DeviceName);
-		DbgPrint("NtOpenSymbolicLinkObject() '%wZ' failed (Status %x)\n",
+		DPRINT("NtOpenSymbolicLinkObject() '%wZ' failed (Status %x)\n",
 		         &ArcName,
 		         Status);
 		RtlFreeUnicodeString (&ArcName);
@@ -382,11 +385,34 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
      }
 }
 
+#ifndef NDEBUG
+
+VOID DumpBIOSMemoryMap(VOID)
+{
+  ULONG i;
+
+  DbgPrint("Dumping BIOS memory map:\n");
+  DbgPrint("Memory map base: %d\n", KeLoaderBlock.MmapAddr);
+  DbgPrint("Memory map size: %d\n", KeLoaderBlock.MmapLength);
+  DbgPrint("Address range count: %d\n", KeMemoryMapRangeCount);
+  for (i = 0; i < KeMemoryMapRangeCount; i++)
+    {
+      DbgPrint("Range: Base (%08X)  Length (%08X)  Type (%02X)\n",
+        KeMemoryMap[i].BaseAddrLow,
+        KeMemoryMap[i].LengthLow,
+        KeMemoryMap[i].Type);
+    }
+  for (;;);
+}
+
+#endif /* !NDEBUG */
+
 VOID
 ExpInitializeExecutive(VOID)
 {
   ULONG i;
   ULONG start;
+  ULONG length;
   PCHAR name;
   CHAR str[50];
 
@@ -416,7 +442,11 @@ ExpInitializeExecutive(VOID)
   
   NtEarlyInitVdm();
   
-  MmInit1(FirstKrnlPhysAddr, LastKrnlPhysAddr, LastKernelAddress);
+  MmInit1(FirstKrnlPhysAddr,
+    LastKrnlPhysAddr,
+    LastKernelAddress,
+    (PADDRESS_RANGE)&KeMemoryMap,
+    KeMemoryMapRangeCount);
   
   /*
    * Initialize the kernel debugger
@@ -480,6 +510,7 @@ ExpInitializeExecutive(VOID)
 
   ExInit();
   IoInit();
+  PoInit();
   LdrInitModuleManagement();
   CmInitializeRegistry();
   NtInit();
@@ -487,7 +518,7 @@ ExpInitializeExecutive(VOID)
   
   /* Report all resources used by hal */
   HalReportResourceUsage ();
-  
+
   /*
    * Enter the kernel debugger before starting up the boot drivers
    */
@@ -501,7 +532,7 @@ ExpInitializeExecutive(VOID)
   DPRINT1("%d files loaded\n",KeLoaderBlock.ModsCount);
   for (i=0; i < KeLoaderBlock.ModsCount; i++)
     {
-      DPRINT1("module: %s\n", KeLoaderModules[i].String);
+      CPRINT("Module: %s\n", KeLoaderModules[i].String);
     }
 
   /*  Pass 1: load registry chunks passed in  */
@@ -510,7 +541,7 @@ ExpInitializeExecutive(VOID)
       start = KeLoaderModules[i].ModStart;
       if (strcmp ((PCHAR) start, "REGEDIT4") == 0)
 	{
-	  DPRINT1("process registry chunk at %08lx\n", start);
+	  CPRINT("Process registry chunk at %08lx\n", start);
 	  CmImportHive((PCHAR) start);
 	}
     }
@@ -519,16 +550,18 @@ ExpInitializeExecutive(VOID)
   for (i=1; i < KeLoaderBlock.ModsCount; i++)
     {
       start = KeLoaderModules[i].ModStart;
+      length = KeLoaderModules[i].ModEnd - start;
       name = (PCHAR)KeLoaderModules[i].String;
       if (strcmp ((PCHAR) start, "REGEDIT4") != 0)
 	{
-	  DPRINT1("process module '%s' at %08lx\n", name, start);
-	  LdrProcessDriver((PVOID)start, name);
+	  CPRINT("Processing module '%s' at %08lx, length 0x%08lx\n",
+      name, start, length);
+	  LdrProcessDriver((PVOID)start, name, length);
 	}
     }
   
   /* Create the SystemRoot symbolic link */
-  DbgPrint("CommandLine: %s\n", (PUCHAR)KeLoaderBlock.CommandLine);
+  CPRINT("CommandLine: %s\n", (PUCHAR)KeLoaderBlock.CommandLine);
 
   CreateSystemRootLink ((PUCHAR)KeLoaderBlock.CommandLine);
 
@@ -540,6 +573,16 @@ ExpInitializeExecutive(VOID)
   
 
   CmInitializeRegistry2();
+
+  /*
+   * Start the motherboard enumerator (the HAL)
+   */
+  HalInitSystem (2, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+
+  /*
+   * Load boot start drivers
+   */
+  IopLoadBootStartDrivers();
 
   /*
    * Load Auto configured drivers
@@ -599,6 +642,7 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
  */
 {
   ULONG i;
+  ULONG size;
   ULONG last_kernel_address;
   extern ULONG _bss_end__;
   
@@ -639,6 +683,22 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
   FirstKrnlPhysAddr = KeLoaderModules[0].ModStart - 0xc0000000 + 0x200000;
   LastKrnlPhysAddr = last_kernel_address - 0xc0000000 + 0x200000;
   LastKernelAddress = last_kernel_address;
+
+  KeMemoryMapRangeCount = 0;
+  if (KeLoaderBlock.Flags & MB_FLAGS_MMAP_INFO)
+    {
+      /* We have a memory map from the nice BIOS */
+      size = *((PULONG)(KeLoaderBlock.MmapAddr - sizeof(ULONG)));
+      i = 0;
+      while (i < KeLoaderBlock.MmapLength)
+        {
+          memcpy (&KeMemoryMap[KeMemoryMapRangeCount],
+            (PVOID)(KeLoaderBlock.MmapAddr + i),
+	          sizeof(ADDRESS_RANGE));
+          KeMemoryMapRangeCount++;
+          i += size;
+        }
+    }
 
   KeInit1();
   

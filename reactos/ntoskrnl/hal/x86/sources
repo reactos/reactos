@@ -6,6 +6,7 @@ OBJECTS_HAL_COMMON = \
 	hal/x86/display.o \
 	hal/x86/dma.o \
 	hal/x86/drive.o \
+	hal/x86/enum.o \
 	hal/x86/fmutex.o \
 	hal/x86/halinit.o \
 	hal/x86/isa.o \

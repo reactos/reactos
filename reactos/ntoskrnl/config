@@ -17,3 +17,8 @@ DBG := 1
 # Whether to compile a multiprocessor or single processor version
 #
 MP := 0
+
+#
+# Whether to compile for ACPI compliant systems
+#
+ACPI := 0

@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.26 2001/03/07 16:48:41 dwelch Exp $
+/* $Id: device.c,v 1.27 2001/05/01 23:08:19 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -13,11 +13,13 @@
 
 #include <ddk/ntddk.h>
 #include <internal/io.h>
+#include <internal/po.h>
 #include <internal/ob.h>
 #include <internal/ldr.h>
 #include <internal/id.h>
 #include <internal/ps.h>
 #include <internal/pool.h>
+#include <internal/config.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -25,6 +27,7 @@
 /* GLOBALS *******************************************************************/
 
 #define TAG_DRIVER             TAG('D', 'R', 'V', 'R')
+#define TAG_DRIVER_EXTENSION   TAG('D', 'R', 'V', 'E')
 #define TAG_DEVICE_EXTENSION   TAG('D', 'E', 'X', 'T')
 
 /* FUNCTIONS ***************************************************************/
@@ -58,8 +61,26 @@ NtLoadDriver (
 	PUNICODE_STRING	DriverServiceName
 	)
 {
+  PDEVICE_NODE DeviceNode;
+  NTSTATUS Status;
+
   /* FIXME: this should lookup the filename from the registry and then call LdrLoadDriver  */
-  return  LdrLoadDriver (DriverServiceName);
+
+  /* Use IopRootDeviceNode for now */
+  Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &DeviceNode);
+  if (!NT_SUCCESS(Status))
+    {
+  return(Status);
+    }
+
+  Status = LdrLoadDriver (DriverServiceName, DeviceNode, FALSE);
+  if (!NT_SUCCESS(Status))
+    {
+  IopFreeDeviceNode(DeviceNode);
+  DPRINT("Driver load failed, status (%x)\n", Status);
+    }
+
+  return Status;
 }
 
 
@@ -210,6 +231,21 @@ IoGetAttachedDevice(PDEVICE_OBJECT DeviceObject)
    return(Current);
 }
 
+PDEVICE_OBJECT
+STDCALL
+IoGetAttachedDeviceReference(PDEVICE_OBJECT DeviceObject)
+{
+   PDEVICE_OBJECT Current = DeviceObject;
+  
+   while (Current->AttachedDevice!=NULL)
+     {
+	Current = Current->AttachedDevice;
+     }
+
+   ObReferenceObject(Current);
+   return(Current);
+}
+
 PDEVICE_OBJECT STDCALL
 IoAttachDeviceToDeviceStack(PDEVICE_OBJECT SourceDevice,
 			    PDEVICE_OBJECT TargetDevice)
@@ -247,40 +283,176 @@ IopDefaultDispatchFunction(PDEVICE_OBJECT DeviceObject,
 }
 
 NTSTATUS 
-IoInitializeDriver(PDRIVER_INITIALIZE DriverEntry)
+IopCreateDriverObject(PDRIVER_OBJECT *DriverObject)
+{
+  PDRIVER_OBJECT Object;
+  ULONG i;
+
+  Object = ExAllocatePoolWithTag(NonPagedPool,
+       sizeof(DRIVER_OBJECT),
+       TAG_DRIVER);
+  if (Object == NULL)
+    {
+	return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+  RtlZeroMemory(Object, sizeof(DRIVER_OBJECT));
+
+  Object->DriverExtension = (PDRIVER_EXTENSION)
+    ExAllocatePoolWithTag(NonPagedPool,
+       sizeof(DRIVER_EXTENSION),
+       TAG_DRIVER_EXTENSION);
+  if (Object->DriverExtension == NULL)
+    {
+  ExFreePool(Object);
+	return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+  RtlZeroMemory(Object->DriverExtension, sizeof(DRIVER_EXTENSION));
+
+  Object->Type = InternalDriverType;
+   
+  for (i=0; i<=IRP_MJ_MAXIMUM_FUNCTION; i++)
+    {
+  Object->MajorFunction[i] = IopDefaultDispatchFunction;
+    }
+
+  *DriverObject = Object;
+
+  return STATUS_SUCCESS;
+}
+
+NTSTATUS 
+IopInitializeDriver(PDRIVER_INITIALIZE DriverEntry,
+                    PDEVICE_NODE DeviceNode,
+                    BOOLEAN BootDriversOnly)
 /*
  * FUNCTION: Called to initalize a loaded driver
  * ARGUMENTS:
  */
 {
-   NTSTATUS Status;
-   PDRIVER_OBJECT DriverObject;
-   ULONG i;
-   
-   DriverObject = 
-     ExAllocatePoolWithTag(NonPagedPool, sizeof(DRIVER_OBJECT), TAG_DRIVER);
-   if (DriverObject == NULL)
-     {
-	return STATUS_INSUFFICIENT_RESOURCES;
-     }
-   memset(DriverObject, 0, sizeof(DRIVER_OBJECT));
-   
-   DriverObject->Type = InternalDriverType;
-   
-   for (i=0; i<=IRP_MJ_MAXIMUM_FUNCTION; i++)
-     {
-	DriverObject->MajorFunction[i] = IopDefaultDispatchFunction;
-     }
+  IO_STATUS_BLOCK	IoStatusBlock;
+  PDRIVER_OBJECT DriverObject;
+  PIO_STACK_LOCATION IrpSp;
+  PDEVICE_OBJECT Fdo;
+  NTSTATUS Status;
+  KEVENT Event;
+  PIRP Irp;
 
-   DPRINT("Calling driver entrypoint at %08lx\n", DriverEntry);
-   Status = DriverEntry(DriverObject, NULL);
-   if (!NT_SUCCESS(Status))
-     {
+  DPRINT("IopInitializeDriver (DriverEntry %08lx, DeviceNode %08lx, "
+    "BootDriversOnly %d)\n", DriverEntry, DeviceNode, BootDriversOnly);
+
+  Status = IopCreateDriverObject(&DriverObject);
+  if (!NT_SUCCESS(Status))
+    {
+  return(Status);
+    }
+
+  DPRINT("Calling driver entrypoint at %08lx\n", DriverEntry);
+  Status = DriverEntry(DriverObject, NULL);
+  if (!NT_SUCCESS(Status))
+    {
+  ExFreePool(DriverObject->DriverExtension);
 	ExFreePool(DriverObject);
 	return(Status);
-     }
+    }
 
-   return(Status);
+  if (DriverObject->DriverExtension->AddDevice)
+    {
+      /* This is a Plug and Play driver */
+      DPRINT("Plug and Play driver found\n");
+
+      assert(DeviceNode->Pdo);
+
+      DPRINT("Calling driver AddDevice entrypoint at %08lx\n",
+        DriverObject->DriverExtension->AddDevice);
+      Status = DriverObject->DriverExtension->AddDevice(
+        DriverObject, DeviceNode->Pdo);
+      if (!NT_SUCCESS(Status))
+        {
+          ExFreePool(DriverObject->DriverExtension);
+	        ExFreePool(DriverObject);
+	        return(Status);
+        }
+      DPRINT("Sending IRP_MN_START_DEVICE to driver\n");
+
+      Fdo = IoGetAttachedDeviceReference(DeviceNode->Pdo);
+
+      if (Fdo == DeviceNode->Pdo)
+        {
+          /* FIXME: What do we do? Unload the driver? */
+          DbgPrint("An FDO was not attached\n");
+          KeBugCheck(0);
+        }
+
+      KeInitializeEvent(&Event,
+	      NotificationEvent,
+	      FALSE);
+
+      Irp = IoBuildSynchronousFsdRequest(IRP_MJ_PNP,
+        Fdo,
+	      NULL,
+	      0,
+	      NULL,
+	      &Event,
+	      &IoStatusBlock);
+
+      IrpSp = IoGetNextIrpStackLocation(Irp);
+      IrpSp->MinorFunction = IRP_MN_START_DEVICE;
+
+      /* FIXME: Put some resources in the IRP for the device */
+
+	    Status = IoCallDriver(Fdo, Irp);
+
+	    if (Status == STATUS_PENDING)
+	      {
+		      KeWaitForSingleObject(&Event,
+		                       Executive,
+		                       KernelMode,
+		                       FALSE,
+		                       NULL);
+          Status = IoStatusBlock.Status;
+	      }
+      if (!NT_SUCCESS(Status))
+        {
+          ObDereferenceObject(Fdo);
+          ExFreePool(DriverObject->DriverExtension);
+	        ExFreePool(DriverObject);
+	        return(Status);
+        }
+
+      if (Fdo->DeviceType == FILE_DEVICE_BUS_EXTENDER)
+        {
+          DPRINT("Bus extender found\n");
+
+          Status = IopInterrogateBusExtender(
+            DeviceNode, Fdo, BootDriversOnly);
+          if (!NT_SUCCESS(Status))
+            {
+              ObDereferenceObject(Fdo);
+              ExFreePool(DriverObject->DriverExtension);
+	            ExFreePool(DriverObject);
+	            return(Status);
+            }
+          else
+            {
+#ifdef ACPI
+              static BOOLEAN SystemPowerDeviceNodeCreated = FALSE;
+
+              /* The system power device node is the first bus enumerator
+                 device node created after the root device node */
+              if (!SystemPowerDeviceNodeCreated)
+                {
+                  PopSystemPowerDeviceNode = DeviceNode;
+                  SystemPowerDeviceNodeCreated = TRUE;
+                }
+#endif /* ACPI */
+            }
+        }
+      ObDereferenceObject(Fdo);
+    }
+
+  return(Status);
 }
 
 NTSTATUS STDCALL
@@ -411,7 +583,13 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
 	ExFreePool(CreatedDeviceObject);
 	return(STATUS_INSUFFICIENT_RESOURCES);
      }
-   
+
+  if (DeviceExtensionSize > 0)
+     {
+  RtlZeroMemory(CreatedDeviceObject->DeviceExtension,
+    DeviceExtensionSize);
+     }
+
    CreatedDeviceObject->AttachedDevice = NULL;
    CreatedDeviceObject->DeviceType = DeviceType;
    CreatedDeviceObject->StackSize = 1;

@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.36 2001/04/09 02:45:04 dwelch Exp $
+/* $Id: irp.c,v 1.37 2001/05/01 23:08:19 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -104,17 +104,25 @@ IofCallDriver (PDEVICE_OBJECT DeviceObject, PIRP Irp)
    PDRIVER_OBJECT DriverObject;
    PIO_STACK_LOCATION Param;
    
-//   DPRINT("IoCallDriver(DeviceObject %x, Irp %x)\n",DeviceObject,Irp);
+   DPRINT("IofCallDriver(DeviceObject %x, Irp %x)\n",DeviceObject,Irp);
    
+   assert(Irp);
+   assert(DeviceObject);
+
    DriverObject = DeviceObject->DriverObject;
+
+   assert(DriverObject);
+
    Param = IoGetNextIrpStackLocation(Irp);
+
+   DPRINT("IrpSp 0x%X\n", Param);
    
    Irp->Tail.Overlay.CurrentStackLocation--;
    Irp->CurrentLocation--;
    
-//   DPRINT("MajorFunction %d\n", Param->MajorFunction);
-//   DPRINT("DriverObject->MajorFunction[Param->MajorFunction] %x\n",
-//	    DriverObject->MajorFunction[Param->MajorFunction]);
+   DPRINT("MajorFunction %d\n", Param->MajorFunction);
+   DPRINT("DriverObject->MajorFunction[Param->MajorFunction] %x\n",
+	    DriverObject->MajorFunction[Param->MajorFunction]);
    Status = DriverObject->MajorFunction[Param->MajorFunction](DeviceObject,
 							      Irp);
    return Status;
