@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.4 2000/05/13 10:39:23 ekohl Exp $
+/* $Id: process.c,v 1.5 2000/05/13 14:56:46 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -70,13 +70,38 @@ IoGetRequestorProcess (
 }
 
 
-VOID
+/**********************************************************************
+ * NAME							EXPORTED
+ * 	IoSetThreadHardErrorMode@4
+ *
+ * ARGUMENTS
+ * 	HardErrorEnabled
+ * 		TRUE : enable hard errors processing;
+ * 		FALSE: do NOT process hard errors.
+ *
+ * RETURN VALUE
+ * 	Previous value for the current thread's hard errors
+ * 	processing policy.
+ */
+BOOLEAN
 STDCALL
+EXPORTED
 IoSetThreadHardErrorMode (
-	IN	PVOID	Unknown0
+	IN	BOOLEAN	HardErrorEnabled
 	)
 {
-	UNIMPLEMENTED;
+	BOOLEAN PreviousHEM = NtCurrentTeb ()->HardErrorDisabled;
+	
+	NtCurrentTeb ()->HardErrorDisabled = (
+		(TRUE == HardErrorEnabled)
+		 ? FALSE
+		 : TRUE
+		 );
+	return (
+		(TRUE == PreviousHEM)
+			? FALSE
+			: TRUE
+			);
 }
 
 

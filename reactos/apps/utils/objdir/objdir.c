@@ -1,4 +1,4 @@
-/* $Id: objdir.c,v 1.2 2000/05/01 13:53:43 ea Exp $
+/* $Id: objdir.c,v 1.3 2000/05/13 14:56:46 ea Exp $
  *
  * DESCRIPTION: Object Manager Simple Explorer
  * PROGRAMMER:  David Welch
@@ -30,6 +30,27 @@ struct
 	WCHAR			Buffer [MAX_PATH + MAX_TYPE + 2];
 	
 } DirectoryEntry;
+
+
+static
+const char *
+STDCALL
+StatusToName (NTSTATUS Status)
+{
+	static char RawValue [16];
+	
+	switch (Status)
+	{
+		case STATUS_OBJECT_NAME_INVALID:
+			return "STATUS_OBJECT_NAME_INVALID";
+		case STATUS_OBJECT_NAME_NOT_FOUND:
+			return "STATUS_OBJECT_NAME_NOT_FOUND";
+		case STATUS_PATH_SYNTAX_BAD:
+			return "STATUS_PATH_SYNTAX_BAD";
+	}
+	wsprintf (RawValue, "0x%08x", Status);
+	return (const char *) RawValue;
+}
 
 
 int main(int argc, char* argv[])
@@ -86,8 +107,8 @@ int main(int argc, char* argv[])
 	if (!NT_SUCCESS(Status))
 	{
 		printf (
-			"Failed to open directory object (Status: %x)\n",
-			Status
+			"Failed to open directory object (Status: %s)\n",
+			StatusToName (Status)
 			);
 		return EXIT_FAILURE;
 	}
@@ -106,8 +127,8 @@ int main(int argc, char* argv[])
 	if (!NT_SUCCESS(Status))
 	{
 		printf (
-			"Failed to query directory object (Status: %x)\n",
-			Status
+			"Failed to query directory object (Status: %s)\n",
+			StatusToName (Status)
 			);
 		NtClose (DirectoryHandle);
 		return EXIT_FAILURE;

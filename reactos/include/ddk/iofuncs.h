@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.10 2000/04/05 15:47:40 ekohl Exp $ */
+/* $Id: iofuncs.h,v 1.11 2000/05/13 14:56:46 ea Exp $ */
 
 /* --- EXPORTED BY NTOSKRNL --- */
 
@@ -799,10 +799,10 @@ IoSetShareAccess (
 	PFILE_OBJECT	FileObject,
 	PSHARE_ACCESS	ShareAccess
 	);
-VOID
+BOOLEAN
 STDCALL
 IoSetThreadHardErrorMode (
-	IN	PVOID	Unknown0
+	IN	BOOLEAN	HardErrorEnabled
 	);
 VOID
 STDCALL

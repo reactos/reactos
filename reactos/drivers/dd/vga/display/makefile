@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.5 2000/04/10 20:17:32 jfilby Exp $
+# $Id: makefile,v 1.6 2000/05/13 14:56:47 ea Exp $
 #
 # Makefile for ReactOS vgaddi.dll
 #
@@ -43,7 +43,7 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 		-mdll \
 		-o junk.tmp \
 		-Wl,--entry,_DrvEnableDriver \
-		-Wl,--base-file,base.tmp 
+		-Wl,--base-file,base.tmp
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
 		--dllname $(TARGET).dll \
