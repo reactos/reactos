@@ -78,6 +78,7 @@ VOID InitHistory(VOID);
 VOID History_move_to_bottom(VOID);
 VOID History (INT dir, LPTSTR commandline);
 VOID CleanHistory(VOID);
+VOID History_del_current_entry(LPTSTR str);
 
 /*service functions*/
 VOID del(LPHIST_ENTRY item);
@@ -121,16 +122,50 @@ VOID CleanHistory(VOID)
 }
 
 
+VOID History_del_current_entry(LPTSTR str)
+{
+	LPHIST_ENTRY tmp;
+	
+	if (size==0)
+		return;
+
+	if(curr_ptr==Bottom)
+		curr_ptr=Bottom->next;
+
+	if(curr_ptr==Top)
+		curr_ptr=Top->prev;
+
+
+	tmp=curr_ptr;		
+	curr_ptr=curr_ptr->prev;
+	del(tmp);
+	History(-1,str);
+
+}
+
+
 static
 VOID del(LPHIST_ENTRY item)
 {
 
-	if(item==NULL)
+	if( item==NULL || item==Top || item==Bottom )
+	{
+#ifdef _DEBUG
+		DebugPrintf("del in " __FILE__  ": retrning\n"
+			"item is 0x%08x (Bottom is0x%08x)\n",
+			item, Bottom);			
+
+#endif
 		return;
+	}
+
+
 
 	/*free string's mem*/
 	if (item->string)
 		free(item->string);
+	
+
 
 
 

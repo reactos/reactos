@@ -131,11 +131,11 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 {
 	SHORT orgx;			/* origin x/y */
 	SHORT orgy;
-	SHORT curx;
+	SHORT curx;			/*current x/y cursor position*/
 	SHORT cury;
-	INT   count;
-	INT   current = 0;
-	INT   charcount = 0;
+	INT   count;		/*used in some for loops*/
+	INT   current = 0;	/*the position of the cursor in the string (str)*/
+	INT   charcount = 0;/*chars in the string (str)*/
 	INPUT_RECORD ir;
 	WORD   wLastKey = 0;
 	TCHAR  ch;
@@ -302,10 +302,13 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 				ClearCommandLine (str, maxlen, orgx, orgy);
 				current = charcount = 0;
 				break;
-#ifdef FEATURE_HISTORY
+
 			case VK_F3:
+#ifdef FEATURE_HISTORY
 				History_move_to_bottom();
+#endif
 			case VK_UP:
+#ifdef FEATURE_HISTORY
 				/* get previous command from buffer */
 				ClearCommandLine (str, maxlen, orgx, orgy);
 				History (-1, str);
@@ -356,6 +359,42 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 				}
 				break;
 
+#ifdef FEATURE_HISTORY
+			
+			/*!!!WARNING!!!*/
+				/*this will only work as long as the two if statement 
+				evaluates the same expression and a break is included
+				in each if statement.
+				This can be used for any combination using CTRL.
+				For other combinations is needed another system*/
+	
+			//case VK_K:
+			case 'K':
+				/*add the current command line to the history*/
+				if (ir.Event.KeyEvent.dwControlKeyState &
+					(LEFT_CTRL_PRESSED|RIGHT_CTRL_PRESSED))
+				{
+				
+					if (str[0])
+						History(0,str);
+
+					ClearCommandLine (str, maxlen, orgx, orgy);
+					current = charcount = 0;
+					break;
+				}
+
+			case 'D':
+				if (ir.Event.KeyEvent.dwControlKeyState &
+					(LEFT_CTRL_PRESSED|RIGHT_CTRL_PRESSED))
+				{
+					ClearCommandLine (str, maxlen, orgx, orgy);
+					History_del_current_entry(str);					
+					current = charcount = _tcslen (str);
+					ConOutPrintf (_T("%s"), str);
+					break;
+				}
+
+#endif
 			default:
 #ifdef _UNICODE
 				ch = ir.Event.KeyEvent.uChar.UnicodeChar;
