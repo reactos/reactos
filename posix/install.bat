@@ -5,7 +5,6 @@ goto Install
 :NoParameter
 set ROS_INSTALL=c:\reactos
 :Install
-echo on
 echo Installing to %ROS_INSTALL%
 @echo off
 
@@ -21,4 +20,3 @@ copy lib\psxdll\psxdll.dll %ROS_INSTALL%\system32
 copy lib\psxdll\psxdll.map %ROS_INSTALL%\symbols
 copy lib\psxx\psxx.dll %ROS_INSTALL%\system32
 copy lib\psxx\psxx.map %ROS_INSTALL%\symbols
-
