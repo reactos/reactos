@@ -1,4 +1,4 @@
-/* $Id: util.c,v 1.3 2000/01/10 22:46:38 ea Exp $
+/* $Id: util.c,v 1.4 2000/01/20 22:14:45 ea Exp $
  *
  * reactos/ntoskrnl/fs/util.c
  *
@@ -283,11 +283,12 @@ FsRtlPostStackOverflow (
  *	FsRtlSyncVolumes@12
  *
  * DESCRIPTION
+ *	Obsolete function.
  *
  * ARGUMENTS
  *
  * RETURN VALUE
- * 
+ *	It always returns STATUS_SUCCESS.
  */
 NTSTATUS
 STDCALL
