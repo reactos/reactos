@@ -1968,8 +1968,7 @@ COMMAND_PROTOTYPE(ShowVirtualMemory)
 					  MEMORY_AREA,
 					  Entry);
 				// find the filename
-	      if(((current->Type == MEMORY_AREA_SECTION_VIEW_COMMIT) ||
-		  (current->Type == MEMORY_AREA_SECTION_VIEW_RESERVE) )&&
+	      if(((current->Type == MEMORY_AREA_SECTION_VIEW) ) &&
 		 current->Data.SectionData.Section->FileObject)
                 {
 		  if(IsAddressValid((ULONG)current->Data.SectionData.Section->FileObject->FileName.Buffer) )
