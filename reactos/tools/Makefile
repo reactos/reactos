@@ -14,7 +14,7 @@ all: $(TOOLS)
 
 buildno$(EXE_POSTFIX): buildno.c ../include/reactos/version.h
 	$(HOST_CC) $(CFLAGS) -o buildno$(EXE_POSTFIX) buildno.c
-	buildno$(EXE_POSTFIX)
+	$(EXE_PREFIX)buildno$(EXE_POSTFIX)
 
 depends$(EXE_POSTFIX): depends.c
 	$(HOST_CC) $(CFLAGS) -o depends$(EXE_POSTFIX) depends.c

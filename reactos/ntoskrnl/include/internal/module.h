@@ -3,7 +3,7 @@
 #define __MODULE_H
 
 #include <ddk/ntddk.h>
-#include <internal/config.h>
+#include <roscfg.h>
 #include <pe.h>
 #include <ntos/kdbgsyms.h>
 

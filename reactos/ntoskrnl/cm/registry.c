@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.63 2001/08/29 05:06:31 rex Exp $
+/* $Id: registry.c,v 1.64 2001/08/30 20:38:18 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,7 +12,7 @@
  */
 
 #include <ddk/ntddk.h>
-#include <internal/config.h>
+#include <roscfg.h>
 #include <internal/ob.h>
 #include <limits.h>
 #include <string.h>

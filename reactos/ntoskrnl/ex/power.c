@@ -12,7 +12,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <internal/config.h>
+#include <roscfg.h>
 #include <internal/ps.h>
 #include <internal/io.h>
 #include <internal/mm.h>

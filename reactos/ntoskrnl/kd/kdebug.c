@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.27 2001/06/21 04:12:19 rex Exp $
+/* $Id: kdebug.c,v 1.28 2001/08/30 20:38:19 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,7 +13,7 @@
 #include <internal/ntoskrnl.h>
 #include <internal/kd.h>
 #include <internal/mm.h>
-#include <internal/config.h>
+#include <roscfg.h>
 #include "../dbg/kdb.h"
 
 /* serial debug connection */

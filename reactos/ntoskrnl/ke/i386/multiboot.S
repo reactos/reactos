@@ -1,4 +1,4 @@
-#include <internal/config.h>
+#include <roscfg.h>
 #include <internal/ntoskrnl.h>
 #include <internal/i386/segment.h>
 

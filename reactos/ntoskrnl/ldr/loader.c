@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.87 2001/08/26 17:27:44 ekohl Exp $
+/* $Id: loader.c,v 1.88 2001/08/30 20:38:20 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -25,7 +25,7 @@
 
 #include <limits.h>
 #include <ddk/ntddk.h>
-#include <internal/config.h>
+#include <roscfg.h>
 #include <internal/module.h>
 #include <internal/ntoskrnl.h>
 #include <internal/io.h>

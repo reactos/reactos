@@ -1,5 +1,5 @@
 #include <ntos/kdbgsyms.h>
-#include "../ntoskrnl/include/internal/config.h"
+#include <roscfg.h>
 
 typedef NTSTATUS STDCALL (*PEPFUNC)(PPEB);
 

@@ -7,7 +7,7 @@
 */
 
 #include <ddk/ntddk.h>
-#include <internal/config.h>
+#include <roscfg.h>
 #include <internal/ob.h>
 #include <limits.h>
 #include <string.h>

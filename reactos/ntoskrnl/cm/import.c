@@ -1,4 +1,4 @@
-/* $Id: import.c,v 1.1 2001/08/29 05:06:31 rex Exp $
+/* $Id: import.c,v 1.2 2001/08/30 20:38:18 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -10,7 +10,7 @@
 #include <ctype.h>
 
 #include <ddk/ntddk.h>
-#include <internal/config.h>
+#include <roscfg.h>
 #include <internal/ob.h>
 #include <limits.h>
 #include <string.h>
