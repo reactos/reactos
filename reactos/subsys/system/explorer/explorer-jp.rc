@@ -31,7 +31,7 @@ BEGIN
     BEGIN
         MENUITEM "終了(&X)",                       ID_FILE_EXIT
     END
-    POPUP "表示(&V)"
+    POPUP "表\示(&V)"
     BEGIN
         MENUITEM "ツールバー(&T)",                    ID_VIEW_TOOL_BAR
         MENUITEM "ステータスバー(&S)",                 ID_VIEW_STATUSBAR
@@ -103,7 +103,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "子ノードをマーク(&M)",                505 //FIXME?
     END
-    POPUP "表示(&V)"
+    POPUP "表\示(&V)"
     BEGIN
         MENUITEM "ツリーとフォルダ(&R)",         413
         MENUITEM "ツリーのみ(&E)",                  411
@@ -114,7 +114,7 @@ BEGIN
         MENUITEM "名前(&N)",                       ID_VIEW_NAME //FIXME?
         MENUITEM "ファイルの全詳細(&A)",           ID_VIEW_ALL_ATTRIBUTES
         , CHECKED
-        MENUITEM "詳細を選択表示(&P)...",         ID_VIEW_SELECTED_ATTRIBUTES //FIXME?
+        MENUITEM "詳細を選択表\示(&P)...",         ID_VIEW_SELECTED_ATTRIBUTES //FIXME?
         MENUITEM SEPARATOR
         MENUITEM "名前順に整列(&S)",               404
         MENUITEM "種類順に整列(&B)",               405
@@ -132,7 +132,7 @@ BEGIN
         MENUITEM "ツールバー(&T)",                    ID_VIEW_TOOL_BAR, CHECKED
         MENUITEM "ドライブバー(&D)",                   ID_VIEW_DRIVE_BAR, CHECKED
         MENUITEM "ステータスバー(&S)",                 ID_VIEW_STATUSBAR, CHECKED
-        MENUITEM "全画面表示(&U)\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
+        MENUITEM "全画面表\示(&U)\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
         MENUITEM SEPARATOR
         MENUITEM "アプリケーション起動後にエクスプローラを最小化(&S)",  65535 //FIXME?
         MENUITEM "終了時の設定を保存(&E)", 511 //FIXME?
@@ -213,7 +213,7 @@ STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "デスクトップのプロパティ" //FIXME?
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT           "以下のアイコン表示方法が利用出来ます",
+    LTEXT           "以下のアイコン表\示方法が利用出来ます",
                     IDC_STATIC,7,7,166,8 //FIXME?
     CONTROL         "left/top dwn",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,7,25,46,44

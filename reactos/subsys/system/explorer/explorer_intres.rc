@@ -400,9 +400,7 @@ END
 
 3 TEXTINCLUDE DISCARDABLE 
 BEGIN
-    "#ifndef __WINDRES__\r\n"
     "#include ""explorer-jp.rc""\r\n"
-    "#endif\r\n"
     "\0"
 END
 
@@ -1187,9 +1185,7 @@ END
 //
 // Generated from the TEXTINCLUDE 3 resource.
 //
-#ifndef __WINDRES__
 #include "explorer-jp.rc"
-#endif
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
