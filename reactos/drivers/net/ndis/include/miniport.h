@@ -47,11 +47,36 @@ typedef struct _MINIPORT_CONFIGURATION_CONTEXT {
 /* Bugcheck callback context */
 typedef struct _MINIPORT_BUGCHECK_CONTEXT {
     PVOID                       DriverContext;
-	 ADAPTER_SHUTDOWN_HANDLER    ShutdownHandler;
+    ADAPTER_SHUTDOWN_HANDLER    ShutdownHandler;
     PKBUGCHECK_CALLBACK_RECORD  CallbackRecord;
 } MINIPORT_BUGCHECK_CONTEXT, *PMINIPORT_BUGCHECK_CONTEXT;
 
+/* allocated map register list */
+typedef struct _ADAPTER_MAP_REGISTER_LIST {
+    LIST_ENTRY  ListEntry;
+    UINT        NumRegisters;
+    PVOID       MapRegister;
+} ADAPTER_MAP_REGISTER_LIST, *PADAPTER_MAP_REGISTER_LIST;
+
+/* a miniport's shared memory */
+typedef struct _MINIPORT_SHARED_MEMORY {
+    PADAPTER_OBJECT   AdapterObject;
+    ULONG             Length;
+    PHYSICAL_ADDRESS  PhysicalAddress;
+    PVOID             VirtualAddress;
+    BOOLEAN           Cached;
+} MINIPORT_SHARED_MEMORY, *PMINIPORT_SHARED_MEMORY;
+
 #define GET_MINIPORT_DRIVER(Handle)((PMINIPORT_DRIVER)Handle)
+
+/* detected adapters that are driverless */
+typedef struct _ORPHAN_ADATER {
+    LIST_ENTRY        ListEntry;
+    NDIS_STRING       RegistryPath;
+    INTERFACE_TYPE    BusType;
+    ULONG             BusNumber;
+    ULONG             SlotNumber;
+} ORPHAN_ADAPTER, *PORPHAN_ADAPTER;
 
 /* Information about a logical adapter */
 typedef struct _LOGICAL_ADAPTER {
@@ -88,7 +113,23 @@ typedef struct _LOGICAL_ADAPTER {
     PNDIS_PACKET                PacketQueueTail;        /* Head of packet queue */
 
     PNDIS_PACKET                LoopPacket;             /* Current packet beeing looped */
-	 PMINIPORT_BUGCHECK_CONTEXT  BugcheckContext;        /* Adapter's shutdown handler */
+    PMINIPORT_BUGCHECK_CONTEXT  BugcheckContext;        /* Adapter's shutdown handler */
+    UINT                        MapRegistersRequested;  /* Number of outstanding map registers requested */
+    PADAPTER_OBJECT             AdapterObject;          /* Adapter object for DMA ops */
+    ADAPTER_MAP_REGISTER_LIST   MapRegisterList;        /* List of allocated map registers */
+    KEVENT                      DmaEvent;               /* Event to support DMA register allocation */
+    KSPIN_LOCK                  DmaLock;                /* Spinlock to protect the dma list */
+    UINT                        BusNumber;
+    INTERFACE_TYPE              BusType;
+    UINT                        SlotNumber;
+    ULONG                       Irql;
+    ULONG                       Vector;
+    KAFFINITY                   Affinity;
+    PHYSICAL_ADDRESS            BaseIoAddress;
+    PHYSICAL_ADDRESS            BaseMemoryAddress;      /* multiple ranges? */
+    ULONG                       DmaChannel;
+    ULONG                       DmaPort;
+    PNDIS_MINIPORT_TIMER        Timer;
 } LOGICAL_ADAPTER, *PLOGICAL_ADAPTER;
 
 #define GET_LOGICAL_ADAPTER(Handle)((PLOGICAL_ADAPTER)Handle)
@@ -151,6 +192,16 @@ NDIS_STATUS
 MiniDoRequest(
     PLOGICAL_ADAPTER Adapter,
     PNDIS_REQUEST NdisRequest);
+
+BOOLEAN 
+NdisFindDevice(
+    UINT   VendorID, 
+    UINT   DeviceID, 
+    PUINT  BusNumber, 
+    PUINT  SlotNumber);
+
+VOID
+NdisStartDevices();
 
 #endif /* __MINIPORT_H */
 
