@@ -90,7 +90,7 @@ BEGIN
     IDS_SHUTDOWN            "Oprire calculator ..."
     IDS_LAUNCH              "Pornire ..."
     IDS_START_HELP          "Ajutor"
-    IDS_SEARCH              "Cãutare..."
+    IDS_SEARCH_FILES        "Cãutare Files..."
     IDS_DOCUMENTS           "Documente"
     IDS_FAVORITES           "Preferinþe"
     IDS_PROGRAMS            "Programe"
@@ -99,6 +99,7 @@ BEGIN
     IDS_EMPTY               "(Empty)"
     IDS_RECENT              "Documente Recente"
     IDS_ADMIN               "Administrare"
+    IDS_SEARCH				"Cãutare..."
 END
 
 STRINGTABLE DISCARDABLE 
@@ -110,7 +111,7 @@ BEGIN
     IDS_SETTINGS_MENU       "Settings Menu"
     IDS_CONTROL_PANEL       "Control Panel"
     IDS_PRINTERS            "Printers"
-    IDS_BROWSE              "Browse Files..."
+    IDS_BROWSE              "Browse Files"
     IDS_SEARCH_PRG          "Search Programm..."
     IDS_ALL_USERS           "All Users\\"
 END
@@ -361,7 +362,7 @@ BEGIN
     IDS_SHUTDOWN            "Herunterfahren..."
     IDS_LAUNCH              "Starten..."
     IDS_START_HELP          "Hilfe"
-    IDS_SEARCH              "Suche..."
+    IDS_SEARCH_FILES        "Suche Dateien..."
     IDS_DOCUMENTS           "Dokumente"
     IDS_FAVORITES           "Bookmarks"
     IDS_PROGRAMS            "Programme"
@@ -370,6 +371,7 @@ BEGIN
     IDS_EMPTY               "(Empty)"
     IDS_RECENT              "Aktuelle Dokumente"
     IDS_ADMIN               "Verwaltung"
+    IDS_SEARCH              "Suche"
 END
 
 STRINGTABLE DISCARDABLE 
@@ -381,7 +383,7 @@ BEGIN
     IDS_SETTINGS_MENU       "Einstellungen-Menu"
     IDS_CONTROL_PANEL       "Systemsteuerung"
     IDS_PRINTERS            "Drucker"
-    IDS_BROWSE              "Dateien..."
+    IDS_BROWSE              "Dateien"
     IDS_SEARCH_PRG          "Suche Programm..."
     IDS_ALL_USERS           "Alle Benutzer\\"
 END
@@ -610,7 +612,7 @@ BEGIN
     IDS_SHUTDOWN            "Turn Off..."
     IDS_LAUNCH              "Run..."
     IDS_START_HELP          "Help"
-    IDS_SEARCH              "Search..."
+    IDS_SEARCH_FILES        "Search..."
     IDS_DOCUMENTS           "Documents"
     IDS_FAVORITES           "Favorites"
     IDS_PROGRAMS            "Programs"
@@ -619,6 +621,7 @@ BEGIN
     IDS_EMPTY               "(Empty)"
     IDS_RECENT              "Recent Documents"
     IDS_ADMIN               "Administration"
+    IDS_SEARCH				"Search"
 END
 
 STRINGTABLE DISCARDABLE 
@@ -630,7 +633,7 @@ BEGIN
     IDS_SETTINGS_MENU       "Settings Menu"
     IDS_CONTROL_PANEL       "Control Panel"
     IDS_PRINTERS            "Printers"
-    IDS_BROWSE              "Browse Files..."
+    IDS_BROWSE              "Browse Files"
     IDS_SEARCH_PRG          "Search Programm..."
     IDS_ALL_USERS           "All Users\\"
 END
@@ -717,7 +720,7 @@ BEGIN
     IDS_SHUTDOWN            "Arrêter..."
     IDS_LAUNCH              "Exécuter..."
     IDS_START_HELP          "Aide"
-    IDS_SEARCH              "Rechercher..."
+    IDS_SEARCH_FILES        "Rechercher Files..."
     IDS_DOCUMENTS           "Documents"
     IDS_FAVORITES           "Favoris"
     IDS_PROGRAMS            "Programmes"
@@ -726,6 +729,7 @@ BEGIN
     IDS_EMPTY               "(Vide)"
     IDS_RECENT              "Documents récents"
     IDS_ADMIN               "Administration"
+    IDS_SEARCH              "Rechercher"
 END
 
 STRINGTABLE DISCARDABLE 
@@ -737,7 +741,7 @@ BEGIN
     IDS_SETTINGS_MENU       "Barre des tâches et menu démarrer"
     IDS_CONTROL_PANEL       "Panneau de configuration"
     IDS_PRINTERS            "Imprimantes"
-    IDS_BROWSE              "Parcourir..."
+    IDS_BROWSE              "Parcourir"
     IDS_SEARCH_PRG          "Recherche Programme..."
     IDS_ALL_USERS           "Tous les utilisateurs\\"
 END

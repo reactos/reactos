@@ -41,7 +41,7 @@
 #define	IDC_SHUTDOWN			0x1002
 #define	IDC_LAUNCH				0x1003
 #define	IDC_START_HELP			0x1004
-#define	IDC_SEARCH				0x1005
+#define	IDC_SEARCH_FILES		0x1005
 #define	IDC_SEARCH_COMPUTER		0x1006
 #define	IDC_SETTINGS			0x1007
 #define	IDC_ADMIN				0x1008
@@ -58,6 +58,7 @@
 #define	IDC_PRINTERS			0x1013
 #define	IDC_BROWSE				0x1014
 #define	IDC_SEARCH_PROGRAM		0x1015
+#define	IDC_SEARCH				0x1016
 
 #define	IDC_FIRST_MENU			0x3000
 

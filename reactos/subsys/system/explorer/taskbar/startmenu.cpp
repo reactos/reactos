@@ -794,8 +794,6 @@ LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 	 // insert hard coded start entries
 	AddButton(ResString(IDS_PROGRAMS),		0, true, IDC_PROGRAMS);
 
-	AddButton(ResString(IDS_SEARCH_PRG),	0, false, IDC_SEARCH_PROGRAM);
-
 	AddButton(ResString(IDS_DOCUMENTS),		0, true, IDC_DOCUMENTS);
 
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
@@ -816,12 +814,7 @@ LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 #else
 	if (IS_VALUE_ZERO(hkey, _T("NoFind")))
 #endif
-		AddButton(ResString(IDS_SEARCH),	0, false, IDC_SEARCH);
-
-#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
-	if (!g_Globals._SHRestricted || !SHRestricted(REST_HASFINDCOMPUTERS))
-#endif
-		AddButton(ResString(IDS_SEARCH_COMPUTER),0,false, IDC_SEARCH_COMPUTER);
+		AddButton(ResString(IDS_SEARCH),	0, true, IDC_SEARCH);
 
 	AddButton(ResString(IDS_START_HELP),	0, false, IDC_START_HELP);
 
@@ -919,11 +912,6 @@ int StartMenuRoot::Command(int id, int code)
 		CreateSubmenu(id, CSIDL_COMMON_PROGRAMS, CSIDL_PROGRAMS, ResString(IDS_PROGRAMS));
 		break;
 
-	  case IDC_SEARCH_PROGRAM:
-		CloseStartMenu(id);
-		Dialog::DoModal(IDD_SEARCH_PROGRAM, WINDOW_CREATOR(FindProgramDlg));
-		break;
-
 	  case IDC_EXPLORE:
 		CloseStartMenu(id);
 		explorer_show_frame(_hwnd, SW_SHOWNORMAL);
@@ -956,11 +944,7 @@ int StartMenuRoot::Command(int id, int code)
 		break;
 
 	  case IDC_SEARCH:
-		ShowSearchDialog();
-		break;
-
-	  case IDC_SEARCH_COMPUTER:
-		ShowSearchComputer();
+		CreateSubmenu(id, ResString(IDS_SEARCH), STARTMENU_CREATOR(SearchMenu));
 		break;
 
 	  case IDC_LOGOFF:
@@ -1023,22 +1007,6 @@ void StartMenuRoot::ShowRestartDialog(HWND hwndOwner, UINT flags)
 
 	if (RestartDlg)
 		(*RestartDlg)(hwndOwner, (LPWSTR)L"You selected <Log Off>.\n\n", flags);	///@todo ANSI string conversion if needed
-}
-
-void StartMenuRoot::ShowSearchDialog()
-{
-	static DynamicFct<SHFINDFILES> SHFindFiles(TEXT("SHELL32"), 90);
-
-	if (SHFindFiles)
-		(*SHFindFiles)(NULL, NULL);
-}
-
-void StartMenuRoot::ShowSearchComputer()
-{
-	static DynamicFct<SHFINDCOMPUTER> SHFindComputer(TEXT("SHELL32"), 91);
-
-	if (SHFindComputer)
-		(*SHFindComputer)(NULL, NULL);
 }
 
 
@@ -1122,6 +1090,60 @@ int BrowseMenu::Command(int id, int code)
 	}
 
 	return 0;
+}
+
+
+void SearchMenu::AddEntries()
+{
+	super::AddEntries();
+
+	AddButton(ResString(IDS_SEARCH_PRG),		0, false, IDC_SEARCH_PROGRAM);
+
+	AddButton(ResString(IDS_SEARCH_FILES),		0, false, IDC_SEARCH_FILES);
+
+#ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
+	if (!g_Globals._SHRestricted || !SHRestricted(REST_HASFINDCOMPUTERS))
+#endif
+		AddButton(ResString(IDS_SEARCH_COMPUTER),	0, false, IDC_SEARCH_COMPUTER);
+}
+
+int SearchMenu::Command(int id, int code)
+{
+	switch(id) {
+	  case IDC_SEARCH_PROGRAM:
+		CloseStartMenu(id);
+		Dialog::DoModal(IDD_SEARCH_PROGRAM, WINDOW_CREATOR(FindProgramDlg));
+		break;
+
+	  case IDC_SEARCH_FILES:
+		ShowSearchDialog();
+		break;
+
+	  case IDC_SEARCH_COMPUTER:
+		ShowSearchComputer();
+		break;
+
+	  default:
+		return super::Command(id, code);
+	}
+
+	return 0;
+}
+
+void SearchMenu::ShowSearchDialog()
+{
+	static DynamicFct<SHFINDFILES> SHFindFiles(TEXT("SHELL32"), 90);
+
+	if (SHFindFiles)
+		(*SHFindFiles)(NULL, NULL);
+}
+
+void SearchMenu::ShowSearchComputer()
+{
+	static DynamicFct<SHFINDCOMPUTER> SHFindComputer(TEXT("SHELL32"), 91);
+
+	if (SHFindComputer)
+		(*SHFindComputer)(NULL, NULL);
 }
 
 

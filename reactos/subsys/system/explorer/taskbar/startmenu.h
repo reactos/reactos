@@ -248,8 +248,6 @@ protected:
 	static void	ShowLaunchDialog(HWND hwndDesktopBar);
 	static void	ShowExitWindowsDialog(HWND hwndOwner);
 	static void	ShowRestartDialog(HWND hwndOwner, UINT flags);
-	static void	ShowSearchDialog();
-	static void	ShowSearchComputer();
 };
 
 
@@ -286,6 +284,27 @@ struct BrowseMenu : public StartMenu
 protected:
 	void	AddEntries();
 	int		Command(int id, int code);
+};
+
+
+ /// Search sub-startmenu
+struct SearchMenu : public StartMenu
+{
+	typedef StartMenu super;
+
+	SearchMenu(HWND hwnd, const StartMenuCreateInfo& create_info)
+	 :	super(hwnd, create_info)
+	{
+	}
+
+	void	TrackStartmenu();
+
+protected:
+	void	AddEntries();
+	int		Command(int id, int code);
+
+	static void	ShowSearchDialog();
+	static void	ShowSearchComputer();
 };
 
 

@@ -8,7 +8,7 @@
 #define IDS_SHUTDOWN                    4
 #define IDS_LAUNCH                      5
 #define IDS_START_HELP                  6
-#define IDS_SEARCH                      7
+#define IDS_SEARCH_FILES                7
 #define IDS_DOCUMENTS                   8
 #define IDS_FAVORITES                   9
 #define IDS_PROGRAMS                    10
@@ -27,6 +27,7 @@
 #define IDS_BROWSE                      23
 #define IDS_SEARCH_PRG                  24
 #define IDS_ALL_USERS                   25
+#define IDS_SEARCH                      26
 #define IDI_REACTOS                     100
 #define IDI_EXPLORER                    101
 #define IDI_STARTMENU                   102
