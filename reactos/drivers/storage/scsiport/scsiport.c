@@ -16,13 +16,14 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.52 2004/04/02 15:43:01 hbirr Exp $
+/* $Id: scsiport.c,v 1.53 2004/04/07 09:21:01 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            services/storage/scsiport/scsiport.c
  * PURPOSE:         SCSI port driver
  * PROGRAMMER:      Eric Kohl (ekohl@rz-online.de)
+ *                  Hartmut Birr
  */
 
 /* INCLUDES *****************************************************************/
@@ -41,16 +42,23 @@
 
 #include "scsiport_int.h"
 
-/* #define USE_DEVICE_QUEUES */
-
 /* TYPES *********************************************************************/
 
 #define IRP_FLAG_COMPLETE	0x00000001
 #define IRP_FLAG_NEXT		0x00000002
 #define IRP_FLAG_NEXT_LU	0x00000004
 
+#define MAX_SRB_EXTENSIONS	32
 
 /* GLOBALS *******************************************************************/
+
+static VOID
+SpiProcessRequests(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension, 
+	           PIRP NextIrp);
+
+static VOID 
+SpiStartIo(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+	   PIRP Irp);
 
 static BOOLEAN
 SpiGetPciConfigData (IN struct _HW_INITIALIZATION_DATA *HwInitializationData,
@@ -69,10 +77,6 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
 static NTSTATUS STDCALL
 ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 		      IN PIRP Irp);
-
-static VOID STDCALL
-ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
-		IN PIRP Irp);
 
 static BOOLEAN STDCALL
 ScsiPortStartPacket(IN OUT PVOID Context);
@@ -119,15 +123,19 @@ ScsiPortIoTimer(PDEVICE_OBJECT DeviceObject,
 		PVOID Context);
 
 static PSCSI_REQUEST_BLOCK
-ScsiPortInitSenseRequestSrb(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
-			    PSCSI_REQUEST_BLOCK OriginalSrb);
-
-static VOID
-ScsiPortFreeSenseRequestSrb(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension);
+ScsiPortInitSenseRequestSrb(PSCSI_REQUEST_BLOCK OriginalSrb);
 
 static NTSTATUS
 SpiBuildDeviceMap (PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 		   PUNICODE_STRING RegistryPath);
+
+static VOID
+SpiAllocateSrbExtension(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+			PSCSI_REQUEST_BLOCK Srb);
+
+static VOID
+SpiFreeSrbExtension(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+		    PSCSI_REQUEST_BLOCK Srb);
 
 
 /* FUNCTIONS *****************************************************************/
@@ -568,12 +576,13 @@ ScsiPortGetUncachedExtension(IN PVOID HwDeviceExtension,
 
   /* Allocate a common DMA buffer */
   DeviceExtension->CommonBufferLength =
-    NumberOfBytes + DeviceExtension->SrbExtensionSize;
+    NumberOfBytes + PAGE_ROUND_UP(DeviceExtension->SrbExtensionSize * MAX_SRB_EXTENSIONS);
   DeviceExtension->VirtualAddress =
     HalAllocateCommonBuffer(DeviceExtension->AdapterObject,
 			    DeviceExtension->CommonBufferLength,
 			    &DeviceExtension->PhysicalAddress,
 			    FALSE);
+  DeviceExtension->VirtualAddressMap = 0;
   if (DeviceExtension->VirtualAddress == NULL)
     {
       DPRINT1("HalAllocateCommonBuffer() failed!\n");
@@ -582,7 +591,7 @@ ScsiPortGetUncachedExtension(IN PVOID HwDeviceExtension,
     }
 
   return (PVOID)((ULONG_PTR)DeviceExtension->VirtualAddress +
-                 DeviceExtension->SrbExtensionSize);
+                 PAGE_ROUND_UP(DeviceExtension->SrbExtensionSize * MAX_SRB_EXTENSIONS));
 }
 
 
@@ -685,7 +694,7 @@ ScsiPortInitialize(IN PVOID Argument1,
       (HwInitializationData->HwResetBus == NULL))
     return(STATUS_INVALID_PARAMETER);
 
-  DriverObject->DriverStartIo = ScsiPortStartIo;
+  DriverObject->DriverStartIo = NULL;
   DriverObject->MajorFunction[IRP_MJ_CREATE] = ScsiPortCreateClose;
   DriverObject->MajorFunction[IRP_MJ_CLOSE] = ScsiPortCreateClose;
   DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = ScsiPortDeviceControl;
@@ -738,6 +747,7 @@ ScsiPortInitialize(IN PVOID Argument1,
       PortDeviceObject->AlignmentRequirement = FILE_WORD_ALIGNMENT;
 
       DeviceExtension = PortDeviceObject->DeviceExtension;
+      RtlZeroMemory(DeviceExtension, DeviceExtensionSize);
       DeviceExtension->Length = DeviceExtensionSize;
       DeviceExtension->DeviceObject = PortDeviceObject;
       DeviceExtension->PortNumber = SystemConfig->ScsiPortCount;
@@ -758,6 +768,12 @@ ScsiPortInitialize(IN PVOID Argument1,
 
       /* Initialize the device base list */
       InitializeListHead (&DeviceExtension->DeviceBaseListHead);
+
+      /* Initialize the irp lists */
+      InitializeListHead (&DeviceExtension->PendingIrpListHead);
+      InitializeListHead (&DeviceExtension->ActiveIrpListHead);
+      DeviceExtension->PendingIrpCount = 0;
+      DeviceExtension->ActiveIrpCount = 0;
 
       /* Initialize LUN-Extension list */
       InitializeListHead (&DeviceExtension->LunExtensionListHead);
@@ -826,6 +842,9 @@ ScsiPortInitialize(IN PVOID Argument1,
       PortConfig->MaximumNumberOfTargets = SCSI_MAXIMUM_TARGETS;
 //  PortConfig->MaximumNumberOfLogicalUnits = SCSI_MAXIMUM_LOGICAL_UNITS;
 
+    PortConfig->SrbExtensionSize = HwInitializationData->SrbExtensionSize;
+    PortConfig->SpecificLuExtensionSize = HwInitializationData->SpecificLuExtensionSize;
+
       PortConfig->SlotNumber = SlotNumber.u.AsULONG;
 
       PortConfig->AccessRanges = (PACCESS_RANGE)(PortConfig + 1);
@@ -870,13 +889,35 @@ ScsiPortInitialize(IN PVOID Argument1,
 	{
 	  DPRINT("ScsiPortInitialize(): Found HBA! (%x)\n", PortConfig->BusInterruptVector);
 
+
+          if (DeviceExtension->VirtualAddress == NULL && DeviceExtension->SrbExtensionSize)
+	    {
+	      ScsiPortGetUncachedExtension(&DeviceExtension->MiniPortDeviceExtension,
+		                           PortConfig,
+					   0);
+	    }
+	      
 	  /* Register an interrupt handler for this device */
 	  MappedIrq = HalGetInterruptVector(PortConfig->AdapterInterfaceType,
 					    PortConfig->SystemIoBusNumber,
 					    PortConfig->BusInterruptLevel,
+#if 1					    
+/* 
+ * FIXME:
+ *   Something is wrong in our interrupt conecting code. 
+ *   The promise Ultra100TX driver returns 0 for BusInterruptVector
+ *   and a nonzero value for BusInterruptLevel. The driver does only 
+ *   work with this fix.
+ */   					    
+					    PortConfig->BusInterruptLevel,
+#else
 					    PortConfig->BusInterruptVector,
+#endif
 					    &Dirql,
 					    &Affinity);
+	  DPRINT("AdapterInterfaceType %x, SystemIoBusNumber %x, BusInterruptLevel %x, BusInterruptVector %x\n",
+	          PortConfig->AdapterInterfaceType, PortConfig->SystemIoBusNumber, 
+		  PortConfig->BusInterruptLevel, PortConfig->BusInterruptVector); 
 	  Status = IoConnectInterrupt(&DeviceExtension->Interrupt,
 				      ScsiPortIsr,
 				      DeviceExtension,
@@ -1089,12 +1130,15 @@ ScsiPortNotification(IN SCSI_NOTIFICATION_TYPE NotificationType,
 
 	  DPRINT("Notify: RequestComplete (Srb %p)\n", Srb);
 	  DeviceExtension->IrpFlags |= IRP_FLAG_COMPLETE;
+	  Srb->SrbFlags &= ~SRB_FLAGS_IS_ACTIVE;
+	  InterlockedIncrement((PLONG)&DeviceExtension->CompleteRequestCount);
 	}
 	break;
 
       case NextRequest:
 	DPRINT("Notify: NextRequest\n");
 	DeviceExtension->IrpFlags |= IRP_FLAG_NEXT;
+	InterlockedIncrement((PLONG)&DeviceExtension->NextRequestCount);
 	break;
 
       case NextLuRequest:
@@ -1102,20 +1146,25 @@ ScsiPortNotification(IN SCSI_NOTIFICATION_TYPE NotificationType,
 	  UCHAR PathId;
 	  UCHAR TargetId;
 	  UCHAR Lun;
+          PSCSI_PORT_LUN_EXTENSION LunExtension;
 
 	  PathId = (UCHAR) va_arg (ap, int);
 	  TargetId = (UCHAR) va_arg (ap, int);
 	  Lun = (UCHAR) va_arg (ap, int);
 
-	  DPRINT1 ("Notify: NextLuRequest(PathId %u  TargetId %u  Lun %u)\n",
+	  DPRINT ("Notify: NextLuRequest(PathId %u  TargetId %u  Lun %u)\n",
 		   PathId, TargetId, Lun);
-	  /* FIXME: Implement it! */
 
-	  DeviceExtension->IrpFlags |= IRP_FLAG_NEXT;
-//	  DeviceExtension->IrpFlags |= IRP_FLAG_NEXT_LU;
-
-	  /* Hack! */
-	  DeviceExtension->IrpFlags |= IRP_FLAG_NEXT;
+          LunExtension = SpiGetLunExtension(DeviceExtension,
+				            PathId,
+				            TargetId,
+				            Lun);
+	  if (LunExtension)
+	    {
+	      DeviceExtension->IrpFlags |= IRP_FLAG_NEXT_LU;
+	      InterlockedIncrement((PLONG)&LunExtension->NextLuRequestCount);
+	      InterlockedIncrement((PLONG)&DeviceExtension->NextLuRequestCount);
+	    }
 	}
 	break;
 
@@ -1425,34 +1474,10 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
     {
       case SRB_FUNCTION_EXECUTE_SCSI:
       case SRB_FUNCTION_IO_CONTROL:
-#ifdef USE_DEVICE_QUEUES
-	if (Srb->SrbFlags & SRB_FLAGS_BYPASS_FROZEN_QUEUE)
-	  {
-	    IoMarkIrpPending(Irp);
-	    IoStartPacket (DeviceObject, Irp, NULL, NULL);
-	  }
-	else
-	  {
-	    KIRQL oldIrql;
-
-	    KeRaiseIrql (DISPATCH_LEVEL,
-			 &oldIrql);
-
-	    if (!KeInsertByKeyDeviceQueue (&LunExtension->DeviceQueue,
-					   &Irp->Tail.Overlay.DeviceQueueEntry,
-					   Srb->QueueSortKey))
-	      {
-		Srb->SrbStatus = SRB_STATUS_SUCCESS;
-		IoMarkIrpPending(Irp);
-		IoStartPacket (DeviceObject, Irp, NULL, NULL);
-	      }
-
-	    KeLowerIrql (oldIrql);
-	  }
-#else
         IoMarkIrpPending(Irp);
-        IoStartPacket (DeviceObject, Irp, NULL, NULL);
-#endif
+	Srb->OriginalRequest = LunExtension;
+        Irp->Tail.Overlay.DriverContext[3] = Srb;
+	SpiProcessRequests(DeviceExtension, Irp);
 	return(STATUS_PENDING);
 
       case SRB_FUNCTION_SHUTDOWN:
@@ -1460,7 +1485,9 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
 	if (DeviceExtension->PortConfig->CachesData == TRUE)
 	  {
             IoMarkIrpPending(Irp);
-	    IoStartPacket(DeviceObject, Irp, NULL, NULL);
+	    Srb->OriginalRequest = LunExtension;
+            Irp->Tail.Overlay.DriverContext[3] = Srb;
+	    SpiProcessRequests(DeviceExtension, Irp);
 	    return(STATUS_PENDING);
 	  }
 	break;
@@ -1581,130 +1608,49 @@ ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
   return(STATUS_SUCCESS);
 }
 
-
-static VOID STDCALL
-ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
-		IN PIRP Irp)
+static VOID 
+SpiAllocateSrbExtension(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+			PSCSI_REQUEST_BLOCK Srb)
 {
-  PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
-  PSCSI_PORT_LUN_EXTENSION LunExtension;
-  PIO_STACK_LOCATION IrpStack;
-  PSCSI_REQUEST_BLOCK Srb;
-  KIRQL oldIrql;
+  ULONG i;
+  ULONG mask;
 
-  DPRINT("ScsiPortStartIo() called!\n");
+  DPRINT("SpiAllocateSrbExtension\n");
 
-  DeviceExtension = DeviceObject->DeviceExtension;
-  IrpStack = IoGetCurrentIrpStackLocation(Irp);
+  DPRINT("DeviceExtension->VirtualAddress %x, DeviceExtension->SrbExtensionSize %x\n", 
+         DeviceExtension->VirtualAddress, DeviceExtension->SrbExtensionSize);
 
-  DPRINT("DeviceExtension %p\n", DeviceExtension);
-
-  oldIrql = KeGetCurrentIrql();
-
-  if (IrpStack->MajorFunction != IRP_MJ_SCSI)
+  if (DeviceExtension->VirtualAddress != NULL &&
+      DeviceExtension->SrbExtensionSize > 0)
     {
-      DPRINT("No IRP_MJ_SCSI!\n");
-      Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
-      Irp->IoStatus.Information = 0;
-      IoCompleteRequest (Irp,
-			 IO_NO_INCREMENT);
-      if (oldIrql < DISPATCH_LEVEL)
-	{
-	  KeRaiseIrql (DISPATCH_LEVEL,
-		       &oldIrql);
-	  IoStartNextPacket (DeviceObject,
-			     FALSE);
-	  KeLowerIrql (oldIrql);
-	}
-      else
-	{
-	  IoStartNextPacket (DeviceObject,
-			     FALSE);
-	}
-      return;
-    }
-
-  Srb = IrpStack->Parameters.Scsi.Srb;
-
-  LunExtension = SpiGetLunExtension(DeviceExtension,
-				    Srb->PathId,
-				    Srb->TargetId,
-				    Srb->Lun);
-  if (LunExtension == NULL)
-    {
-      DPRINT("Can't get LunExtension!\n");
-      Irp->IoStatus.Status = STATUS_NO_SUCH_DEVICE;
-      Irp->IoStatus.Information = 0;
-      IoCompleteRequest (Irp,
-			 IO_NO_INCREMENT);
-      if (oldIrql < DISPATCH_LEVEL)
-	{
-	  KeRaiseIrql (DISPATCH_LEVEL,
-		       &oldIrql);
-	  IoStartNextPacket (DeviceObject,
-			     FALSE);
-	  KeLowerIrql (oldIrql);
-	}
-      else
-	{
-	  IoStartNextPacket (DeviceObject,
-			     FALSE);
-	}
-      return;
-    }
-
-  Irp->IoStatus.Status = STATUS_SUCCESS;
-  Irp->IoStatus.Information = Srb->DataTransferLength;
-
-  DeviceExtension->CurrentIrp = Irp;
-
-  if (!KeSynchronizeExecution(DeviceExtension->Interrupt,
-			      ScsiPortStartPacket,
-			      DeviceExtension))
-    {
-      DPRINT("Synchronization failed!\n");
-
-      Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-      Irp->IoStatus.Information = 0;
-      IoCompleteRequest(Irp,
-			IO_NO_INCREMENT);
-      if (oldIrql < DISPATCH_LEVEL)
-	{
-	  KeRaiseIrql (DISPATCH_LEVEL,
-		       &oldIrql);
-	  IoStartNextPacket (DeviceObject,
-			     FALSE);
-	  KeLowerIrql (oldIrql);
-	}
-      else
-	{
-	  IoStartNextPacket (DeviceObject,
-			     FALSE);
+      for (i = 0, mask = 1; i < MAX_SRB_EXTENSIONS; i++, mask <<= 1)
+        {
+	  if (!(DeviceExtension->VirtualAddressMap & mask))
+	    {
+	      DeviceExtension->VirtualAddressMap |= mask;
+	      Srb->SrbExtension = DeviceExtension->VirtualAddress + i * DeviceExtension->SrbExtensionSize;
+              DPRINT("%x\n", Srb->SrbExtension);
+	      return;
+	    }
 	}
     }
+  Srb->SrbExtension = NULL;
+}
 
-  KeAcquireSpinLock(&DeviceExtension->IrpLock, &oldIrql);
-  if (DeviceExtension->IrpFlags & IRP_FLAG_COMPLETE)
-    {
-      DeviceExtension->IrpFlags &= ~IRP_FLAG_COMPLETE;
-      IoCompleteRequest(Irp,
-			IO_NO_INCREMENT);
-    }
+static VOID
+SpiFreeSrbExtension(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+		    PSCSI_REQUEST_BLOCK Srb)
+{
+  ULONG i;
 
-  if (DeviceExtension->IrpFlags & IRP_FLAG_NEXT)
+  if (DeviceExtension->VirtualAddress != NULL &&
+      DeviceExtension->SrbExtensionSize > 0 &&
+      Srb->SrbExtension != NULL)
     {
-      DeviceExtension->IrpFlags &= ~IRP_FLAG_NEXT;
-      KeReleaseSpinLockFromDpcLevel(&DeviceExtension->IrpLock);
-      IoStartNextPacket(DeviceObject,
-			FALSE);
-      KeLowerIrql(oldIrql);
+      i = ((ULONG_PTR)Srb->SrbExtension - (ULONG_PTR)DeviceExtension->VirtualAddress) / DeviceExtension->SrbExtensionSize;
+      DeviceExtension->VirtualAddressMap &= ~(1 << i);
     }
-  else
-    {
-      KeReleaseSpinLock(&DeviceExtension->IrpLock, oldIrql);
-    }
-
-  DPRINT("ScsiPortStartIo() done\n");
+  Srb->SrbExtension = NULL;
 }
 
 
@@ -1712,21 +1658,16 @@ static BOOLEAN STDCALL
 ScsiPortStartPacket(IN OUT PVOID Context)
 {
   PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
-  PIO_STACK_LOCATION IrpStack;
   PSCSI_REQUEST_BLOCK Srb;
+  PIRP Irp;
+  PIO_STACK_LOCATION IrpStack;
 
   DPRINT("ScsiPortStartPacket() called\n");
-
-  DeviceExtension = (PSCSI_PORT_DEVICE_EXTENSION)Context;
-
-  IrpStack = IoGetCurrentIrpStackLocation(DeviceExtension->CurrentIrp);
-  Srb = IrpStack->Parameters.Scsi.Srb;
-
-  /* Allocte SRB extension */
-  if (DeviceExtension->SrbExtensionSize != 0)
-    {
-      Srb->SrbExtension = DeviceExtension->VirtualAddress;
-    }
+  
+  Srb = (PSCSI_REQUEST_BLOCK)Context;
+  Irp = (PIRP)Srb->OriginalRequest;
+  IrpStack = IoGetCurrentIrpStackLocation(Irp);
+  DeviceExtension = IrpStack->DeviceObject->DeviceExtension;
 
   return(DeviceExtension->HwStartIo(&DeviceExtension->MiniPortDeviceExtension,
 				    Srb));
@@ -1766,7 +1707,8 @@ SpiAllocateLunExtension (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
   LunExtension->TargetId = TargetId;
   LunExtension->Lun = Lun;
 
-  KeInitializeDeviceQueue (&LunExtension->DeviceQueue);
+  LunExtension->PendingIrpCount = 0;
+  LunExtension->ActiveIrpCount = 0;
 
   return LunExtension;
 }
@@ -2064,7 +2006,7 @@ ScsiPortIsr(IN PKINTERRUPT Interrupt,
   if (DeviceExtension->IrpFlags)
     {
       IoRequestDpc(DeviceExtension->DeviceObject,
-		   DeviceExtension->CurrentIrp,
+                   NULL,
 		   DeviceExtension);
     }
 
@@ -2090,96 +2032,13 @@ ScsiPortDpcForIsr(IN PKDPC Dpc,
 		  IN PVOID DpcContext)
 {
   PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
-  PIO_STACK_LOCATION IrpStack;
-  PSCSI_REQUEST_BLOCK Srb;
 
   DPRINT("ScsiPortDpcForIsr(Dpc %p  DpcDeviceObject %p  DpcIrp %p  DpcContext %p)\n",
 	 Dpc, DpcDeviceObject, DpcIrp, DpcContext);
 
   DeviceExtension = (PSCSI_PORT_DEVICE_EXTENSION)DpcContext;
 
-  KeAcquireSpinLockAtDpcLevel(&DeviceExtension->IrpLock);
-  if (DeviceExtension->IrpFlags)
-    {
-      IrpStack = IoGetCurrentIrpStackLocation(DeviceExtension->CurrentIrp);
-      Srb = IrpStack->Parameters.Scsi.Srb;
-
-      if (DeviceExtension->OriginalSrb != NULL)
-	{
-	  DPRINT("Got sense data!\n");
-
-	  DPRINT("Valid: %x\n", DeviceExtension->InternalSenseData.Valid);
-	  DPRINT("ErrorCode: %x\n", DeviceExtension->InternalSenseData.ErrorCode);
-	  DPRINT("SenseKey: %x\n", DeviceExtension->InternalSenseData.SenseKey);
-	  DPRINT("SenseCode: %x\n", DeviceExtension->InternalSenseData.AdditionalSenseCode);
-
-	  /* Copy sense data */
-	  if (DeviceExtension->OriginalSrb->SenseInfoBufferLength != 0)
-	    {
-	      RtlCopyMemory(DeviceExtension->OriginalSrb->SenseInfoBuffer,
-			    &DeviceExtension->InternalSenseData,
-			    sizeof(SENSE_DATA));
-	      DeviceExtension->OriginalSrb->SrbStatus |= SRB_STATUS_AUTOSENSE_VALID;
-	    }
-
-	  /* Clear current sense data */
-	  RtlZeroMemory(&DeviceExtension->InternalSenseData, sizeof(SENSE_DATA));
-
-	  IrpStack->Parameters.Scsi.Srb = DeviceExtension->OriginalSrb;
-	  ScsiPortFreeSenseRequestSrb (DeviceExtension);
-	}
-      else if ((SRB_STATUS(Srb->SrbStatus) != SRB_STATUS_SUCCESS) &&
-	       (Srb->ScsiStatus == SCSISTAT_CHECK_CONDITION))
-	{
-	  DPRINT("SCSIOP_REQUEST_SENSE required!\n");
-
-	  DeviceExtension->OriginalSrb = Srb;
-	  IrpStack->Parameters.Scsi.Srb = ScsiPortInitSenseRequestSrb(DeviceExtension,
-								      Srb);
-	  KeReleaseSpinLockFromDpcLevel(&DeviceExtension->IrpLock);
-	  if (!KeSynchronizeExecution(DeviceExtension->Interrupt,
-				      ScsiPortStartPacket,
-				      DeviceExtension))
-	    {
-	      DPRINT1("Synchronization failed!\n");
-
-	      DpcIrp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-	      DpcIrp->IoStatus.Information = 0;
-	      IoCompleteRequest(DpcIrp,
-				IO_NO_INCREMENT);
-	      IoStartNextPacket(DpcDeviceObject,
-				FALSE);
-	    }
-
-	  return;
-	}
-
-      DeviceExtension->CurrentIrp = NULL;
-
-//      DpcIrp->IoStatus.Information = 0;
-//      DpcIrp->IoStatus.Status = STATUS_SUCCESS;
-
-      if (DeviceExtension->IrpFlags & IRP_FLAG_COMPLETE)
-	{
-	  DeviceExtension->IrpFlags &= ~IRP_FLAG_COMPLETE;
-	  IoCompleteRequest(DpcIrp, IO_NO_INCREMENT);
-	}
-
-      if (DeviceExtension->IrpFlags & IRP_FLAG_NEXT)
-	{
-	  DeviceExtension->IrpFlags &= ~IRP_FLAG_NEXT;
-	  KeReleaseSpinLockFromDpcLevel(&DeviceExtension->IrpLock);
-	  IoStartNextPacket(DpcDeviceObject, FALSE);
-	}
-      else
-	{
-	  KeReleaseSpinLockFromDpcLevel(&DeviceExtension->IrpLock);
-	}
-    }
-  else
-    {
-      KeReleaseSpinLockFromDpcLevel(&DeviceExtension->IrpLock);
-    }
+  SpiProcessRequests(DeviceExtension, NULL);
 
   DPRINT("ScsiPortDpcForIsr() done\n");
 }
@@ -2205,27 +2064,29 @@ ScsiPortIoTimer(PDEVICE_OBJECT DeviceObject,
 
 
 static PSCSI_REQUEST_BLOCK
-ScsiPortInitSenseRequestSrb(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
-			    PSCSI_REQUEST_BLOCK OriginalSrb)
+ScsiPortInitSenseRequestSrb(PSCSI_REQUEST_BLOCK OriginalSrb)
 {
   PSCSI_REQUEST_BLOCK Srb;
   PCDB Cdb;
 
-  Srb = &DeviceExtension->InternalSrb;
+  Srb = ExAllocatePoolWithTag(NonPagedPool, 
+                       sizeof(SCSI_REQUEST_BLOCK) + sizeof(SENSE_DATA),
+		       TAG('S', 'S', 'r', 'b'));
 
   RtlZeroMemory(Srb,
-		sizeof(SCSI_REQUEST_BLOCK));
+		sizeof(SCSI_REQUEST_BLOCK) + sizeof(SENSE_DATA));
 
   Srb->PathId = OriginalSrb->PathId;
   Srb->TargetId = OriginalSrb->TargetId;
   Srb->Function = SRB_FUNCTION_EXECUTE_SCSI;
   Srb->Length = sizeof(SCSI_REQUEST_BLOCK);
   Srb->SrbFlags = SRB_FLAGS_DATA_IN | SRB_FLAGS_DISABLE_SYNCH_TRANSFER;
+  Srb->OriginalRequest = OriginalSrb->OriginalRequest;
 
   Srb->TimeOutValue = 4;
 
   Srb->CdbLength = 6;
-  Srb->DataBuffer = &DeviceExtension->InternalSenseData;
+  Srb->DataBuffer = Srb + 1;
   Srb->DataTransferLength = sizeof(SENSE_DATA);
 
   Cdb = (PCDB)Srb->Cdb;
@@ -2234,14 +2095,6 @@ ScsiPortInitSenseRequestSrb(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 
   return(Srb);
 }
-
-
-static VOID
-ScsiPortFreeSenseRequestSrb(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
-{
-  DeviceExtension->OriginalSrb = NULL;
-}
-
 
 /**********************************************************************
  * NAME							INTERNAL
@@ -2665,5 +2518,322 @@ ByeBye:
 
   return Status;
 }
+
+static VOID
+SpiProcessRequests(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension, 
+	           IN PIRP NextIrp)
+{
+  /*
+   * Using of some fields from Srb and Irp while processing requests:
+   *
+   * NextIrp on entry:
+   *   Srb->OriginalRequest -> LunExtension
+   *   Irp->Tail.Overlay.DriverContext[3] -> original Srb
+   *   IoStack->Parameters.Scsi.Srb -> original Srb
+   *
+   * Irp is within the pending irp list:
+   *   Srb->OriginalRequest -> LunExtension
+   *   Irp->Tail.Overlay.DriverContext[0] and DriverContext[1] -> ListEntry for queue
+   *   Irp->Tail.Overlay.DriverContext[2] -> sort key (from Srb->QueueSortKey)
+   *   Irp->Tail.Overlay.DriverContext[3] -> current Srb (original or sense request)
+   *   IoStack->Parameters.Scsi.Srb -> original Srb
+   *   
+   * Irp is within the active irp list or while other processing:
+   *   Srb->OriginalRequest -> Irp
+   *   Irp->Tail.Overlay.DriverContext[0] and DriverContext[1] -> ListEntry for queue
+   *   Irp->Tail.Overlay.DriverContext[2] -> LunExtension
+   *   Irp->Tail.Overlay.DriverContext[3] -> current Srb (original or sense request)
+   *   IoStack->Parameters.Scsi.Srb -> original Srb
+   */   
+  PIO_STACK_LOCATION IrpStack;
+  PSCSI_PORT_LUN_EXTENSION LunExtension;
+  PLIST_ENTRY ListEntry;
+  KIRQL oldIrql;
+  PIRP Irp;
+  LIST_ENTRY NextIrpListHead;
+  LIST_ENTRY CompleteIrpListHead;
+  PSCSI_REQUEST_BLOCK Srb;
+  PSCSI_REQUEST_BLOCK OriginalSrb;
+
+  DPRINT("SpiProcessRequests() called\n");
+
+  InitializeListHead(&NextIrpListHead);
+  InitializeListHead(&CompleteIrpListHead);
+
+  KeAcquireSpinLock(&DeviceExtension->IrpLock, &oldIrql);
+
+  if (NextIrp)
+    {
+      Srb = NextIrp->Tail.Overlay.DriverContext[3];
+      NextIrp->Tail.Overlay.DriverContext[2] = (PVOID)Srb->QueueSortKey;
+
+      ListEntry = DeviceExtension->PendingIrpListHead.Flink;
+      while (ListEntry != DeviceExtension->PendingIrpListHead.Flink)
+        {
+          Irp = CONTAINING_RECORD(ListEntry, IRP, Tail.Overlay.DriverContext[0]);
+          if ((ULONG)Irp->Tail.Overlay.DriverContext[2] > Srb->QueueSortKey)
+            {
+              break;
+	    }
+          ListEntry = ListEntry->Flink;
+	}
+      InsertTailList(ListEntry, (PLIST_ENTRY)&NextIrp->Tail.Overlay.DriverContext[0]);
+    }
+
+  while (DeviceExtension->CompleteRequestCount ||
+         ((DeviceExtension->SrbExtensionSize == 0 || DeviceExtension->ActiveIrpCount < MAX_SRB_EXTENSIONS) && !IsListEmpty(&DeviceExtension->PendingIrpListHead) &&
+	  (DeviceExtension->NextRequestCount || DeviceExtension->NextLuRequestCount || IsListEmpty(&DeviceExtension->ActiveIrpListHead))))
+    {
+      DPRINT("CompleteRequestCount %d, NextRequestCount %d, NextLuRequestCount %d, PendingIrpList is %s, ActiveIrpList is %s\n", 
+	     DeviceExtension->CompleteRequestCount, 
+	     DeviceExtension->NextRequestCount,
+	     DeviceExtension->NextLuRequestCount, 
+	     IsListEmpty(&DeviceExtension->PendingIrpListHead) ? "EMPTY" : "NOT empty", 
+	     IsListEmpty(&DeviceExtension->ActiveIrpListHead) ? "EMPTY" : "NOT empty");
+
+      if (DeviceExtension->CompleteRequestCount > 0)
+        {
+	  DeviceExtension->IrpFlags &= ~IRP_FLAG_COMPLETE;
+	  ListEntry = DeviceExtension->ActiveIrpListHead.Flink;
+	  while (ListEntry != &DeviceExtension->ActiveIrpListHead)
+	    {
+              Irp = CONTAINING_RECORD(ListEntry, IRP, Tail.Overlay.DriverContext[0]);
+	      ListEntry = ListEntry->Flink;
+	      Srb = Irp->Tail.Overlay.DriverContext[3];
+              if (!(Srb->SrbFlags & SRB_FLAGS_IS_ACTIVE))
+	        {
+                  BOOLEAN CompleteThisRequest;
+		  InterlockedDecrement((PLONG)&DeviceExtension->CompleteRequestCount);
+                  LunExtension = Irp->Tail.Overlay.DriverContext[2];
+		  IrpStack = IoGetCurrentIrpStackLocation(Irp);
+		  OriginalSrb = IrpStack->Parameters.Scsi.Srb;
+
+                  if (OriginalSrb != Srb)
+	            {
+	              SENSE_DATA* SenseInfoBuffer;
+
+		      SenseInfoBuffer = Srb->DataBuffer;
+
+	              DPRINT("Got sense data!\n");
+
+	              DPRINT("Valid: %x\n", SenseInfoBuffer->Valid);
+	              DPRINT("ErrorCode: %x\n", SenseInfoBuffer->ErrorCode);
+	              DPRINT("SenseKey: %x\n", SenseInfoBuffer->SenseKey);
+	              DPRINT("SenseCode: %x\n", SenseInfoBuffer->AdditionalSenseCode);
+	      
+	              /* Copy sense data */
+	              if (OriginalSrb->SenseInfoBufferLength != 0)
+	                {
+	                  RtlCopyMemory(OriginalSrb->SenseInfoBuffer,
+			                SenseInfoBuffer,
+			                sizeof(SENSE_DATA));
+	                  OriginalSrb->SrbStatus |= SRB_STATUS_AUTOSENSE_VALID;
+	                }
+		      ExFreePool(Srb);
+		      CompleteThisRequest = TRUE;
+		    }
+		  else if ((SRB_STATUS(Srb->SrbStatus) != SRB_STATUS_SUCCESS) &&
+	                   (Srb->ScsiStatus == SCSISTAT_CHECK_CONDITION))
+	            {
+	              DPRINT("SCSIOP_REQUEST_SENSE required!\n");
+
+       	              Srb = ScsiPortInitSenseRequestSrb(OriginalSrb);
+
+	              if (Srb)
+	                {
+			  CompleteThisRequest = FALSE;
+			  Irp->Tail.Overlay.DriverContext[3] = Srb;
+                          RemoveEntryList((PLIST_ENTRY)&Irp->Tail.Overlay.DriverContext[0]);
+	                  SpiFreeSrbExtension(DeviceExtension, Srb);
+	                  LunExtension->ActiveIrpCount--;
+	                  DeviceExtension->ActiveIrpCount--;
+
+                          Srb->OriginalRequest = LunExtension;
+                          Irp->Tail.Overlay.DriverContext[2] = 0;
+
+			  InsertHeadList(&DeviceExtension->PendingIrpListHead, (PLIST_ENTRY)&Irp->Tail.Overlay.DriverContext[0]);
+			  DeviceExtension->PendingIrpCount++;
+			  LunExtension->PendingIrpCount++;
+			}
+		      else
+		        {
+			  CompleteThisRequest = TRUE;
+			}
+		    }
+		  else
+		    {
+	              DPRINT("Complete Request\n");
+		      CompleteThisRequest = TRUE;
+		    }
+		  if (CompleteThisRequest)
+		    {
+                      RemoveEntryList((PLIST_ENTRY)&Irp->Tail.Overlay.DriverContext[0]);
+	              InsertHeadList(&CompleteIrpListHead, (PLIST_ENTRY)&Irp->Tail.Overlay.DriverContext[0]);
+                      SpiFreeSrbExtension(DeviceExtension, OriginalSrb);
+	              LunExtension->ActiveIrpCount--;
+                      DeviceExtension->ActiveIrpCount--;
+		    }
+		}	     
+	    }
+	}
+      if (DeviceExtension->NextLuRequestCount ||
+	  DeviceExtension->NextRequestCount)
+        {
+	  BOOLEAN StartThisRequest;
+	  DeviceExtension->IrpFlags &= ~(IRP_FLAG_NEXT|IRP_FLAG_NEXT_LU);
+	  ListEntry = DeviceExtension->PendingIrpListHead.Flink;
+	  while (ListEntry != &DeviceExtension->PendingIrpListHead)
+	    {
+	      Irp = CONTAINING_RECORD(ListEntry, IRP, Tail.Overlay.DriverContext[0]);
+	      ListEntry = ListEntry->Flink;
+	      Srb = Irp->Tail.Overlay.DriverContext[3];
+	      LunExtension = Srb->OriginalRequest;
+	      if (DeviceExtension->SrbExtensionSize > 0 &&
+		  DeviceExtension->ActiveIrpCount >= MAX_SRB_EXTENSIONS)
+	        {
+		  break;
+		}
+	      if (LunExtension->NextLuRequestCount > 0)
+                {
+		  StartThisRequest = TRUE;
+		  InterlockedDecrement((PLONG)&LunExtension->NextLuRequestCount);
+		  InterlockedDecrement((PLONG)&DeviceExtension->NextLuRequestCount);
+		}
+	      else if (DeviceExtension->NextRequestCount > 0 &&
+		       LunExtension->ActiveIrpCount == 0)
+	        {
+		  InterlockedDecrement((PLONG)&DeviceExtension->NextRequestCount);
+		  StartThisRequest = TRUE;
+		}
+	      else
+	        {
+		  StartThisRequest = FALSE;
+		}
+	      if (StartThisRequest)
+	        {
+		  LunExtension->PendingIrpCount--;
+		  DeviceExtension->PendingIrpCount--;
+                  RemoveEntryList((PLIST_ENTRY)&Irp->Tail.Overlay.DriverContext[0]);
+                  LunExtension->ActiveIrpCount++;
+                  DeviceExtension->ActiveIrpCount++;
+		  SpiAllocateSrbExtension(DeviceExtension, Srb);
+
+		  Irp->Tail.Overlay.DriverContext[2] = LunExtension;
+		  Srb->OriginalRequest = Irp;
+
+                  InsertHeadList(&NextIrpListHead, (PLIST_ENTRY)&Irp->Tail.Overlay.DriverContext[0]);		   
+		}
+	    }
+	}
+
+      if (!IsListEmpty(&NextIrpListHead))
+        {
+	  while (!IsListEmpty(&NextIrpListHead))
+	    {
+	      ListEntry = RemoveTailList(&NextIrpListHead);
+	      Irp = CONTAINING_RECORD(ListEntry, IRP, Tail.Overlay.DriverContext[0]);
+              InsertHeadList(&DeviceExtension->ActiveIrpListHead, (PLIST_ENTRY)&Irp->Tail.Overlay.DriverContext[0]);		   
+	      KeReleaseSpinLockFromDpcLevel(&DeviceExtension->IrpLock);
+
+	      // Start this Irp
+	      SpiStartIo(DeviceExtension, Irp);
+	      KeAcquireSpinLockAtDpcLevel(&DeviceExtension->IrpLock);
+	    }
+	}
+
+      if (!IsListEmpty(&DeviceExtension->PendingIrpListHead) &&
+	   IsListEmpty(&DeviceExtension->ActiveIrpListHead) &&
+	   (DeviceExtension->SrbExtensionSize == 0 || DeviceExtension->ActiveIrpCount < MAX_SRB_EXTENSIONS))
+        {
+	  ListEntry = RemoveHeadList(&DeviceExtension->PendingIrpListHead);
+          Irp = CONTAINING_RECORD(ListEntry, IRP, Tail.Overlay.DriverContext[0]);
+          Srb = Irp->Tail.Overlay.DriverContext[3];
+	  LunExtension = Srb->OriginalRequest;
+
+	  LunExtension->PendingIrpCount--;
+	  DeviceExtension->PendingIrpCount--;
+          InsertHeadList(&DeviceExtension->ActiveIrpListHead, (PLIST_ENTRY)&Irp->Tail.Overlay.DriverContext[0]);		   
+          LunExtension->ActiveIrpCount++;
+          DeviceExtension->ActiveIrpCount++;
+	  SpiAllocateSrbExtension(DeviceExtension, Srb);
+
+	  Irp->Tail.Overlay.DriverContext[2] = LunExtension;
+	  Srb->OriginalRequest = Irp;
+
+	  KeReleaseSpinLockFromDpcLevel(&DeviceExtension->IrpLock);
+
+          // Start this irp
+          SpiStartIo(DeviceExtension, Irp);
+	  KeAcquireSpinLockAtDpcLevel(&DeviceExtension->IrpLock);
+	}
+
+      if (!IsListEmpty(&CompleteIrpListHead))
+	{
+	  KeReleaseSpinLockFromDpcLevel(&DeviceExtension->IrpLock);
+	  while (!IsListEmpty(&CompleteIrpListHead))
+	    {
+	      ListEntry = RemoveTailList(&CompleteIrpListHead);
+	      Irp = CONTAINING_RECORD(ListEntry, IRP, Tail.Overlay.DriverContext[0]);
+	      IoCompleteRequest(Irp, IO_NO_INCREMENT);
+	    }
+	  KeAcquireSpinLockAtDpcLevel(&DeviceExtension->IrpLock);
+	}
+     }
+   KeReleaseSpinLock(&DeviceExtension->IrpLock, oldIrql);
+
+   DPRINT("SpiProcessRequests() done\n");
+ }
+
+static VOID
+SpiStartIo(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+	   IN PIRP Irp)
+{
+  PSCSI_PORT_LUN_EXTENSION LunExtension;
+  PSCSI_REQUEST_BLOCK Srb;
+  PIO_STACK_LOCATION IrpStack;
+
+  DPRINT("SpiStartIo() called!\n");
+
+  assert(KeGetCurrentIrql() == DISPATCH_LEVEL);
+
+  Srb = Irp->Tail.Overlay.DriverContext[3];
+  LunExtension = Irp->Tail.Overlay.DriverContext[2];
+
+  Srb->SrbFlags |= SRB_FLAGS_IS_ACTIVE;
+  Irp->IoStatus.Status = STATUS_SUCCESS;
+  Irp->IoStatus.Information = Srb->DataTransferLength;
+
+  if (!KeSynchronizeExecution(DeviceExtension->Interrupt,
+			      ScsiPortStartPacket,
+                              Srb))
+    {
+      DPRINT1("Synchronization failed!\n");
+
+      Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+      Irp->IoStatus.Information = 0;
+
+      KeAcquireSpinLockAtDpcLevel(&DeviceExtension->IrpLock);
+
+      RemoveEntryList((PLIST_ENTRY)Irp->Tail.Overlay.DriverContext[0]);
+      LunExtension = Irp->Tail.Overlay.DriverContext[2];
+      LunExtension->ActiveIrpCount--;
+      SpiFreeSrbExtension(DeviceExtension, Srb);
+      IrpStack = IoGetCurrentIrpStackLocation(Irp);
+      if (IrpStack->Parameters.Scsi.Srb != Srb)
+        {
+	  ExFreePool(Srb);
+	}
+      DeviceExtension->ActiveIrpCount--;
+
+      KeReleaseSpinLockFromDpcLevel(&DeviceExtension->IrpLock);
+      
+      IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    }
+
+  DPRINT("SpiStartIo() done\n");
+}
+
+
 
 /* EOF */

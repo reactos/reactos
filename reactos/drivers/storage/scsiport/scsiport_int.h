@@ -37,7 +37,9 @@ typedef struct _SCSI_PORT_LUN_EXTENSION
 
   INQUIRYDATA InquiryData;
 
-  KDEVICE_QUEUE DeviceQueue;
+  ULONG PendingIrpCount;
+  ULONG ActiveIrpCount;
+  ULONG NextLuRequestCount;
 
   /* More data? */
 
@@ -63,7 +65,6 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
   KSPIN_LOCK IrpLock;
   KSPIN_LOCK SpinLock;
   PKINTERRUPT Interrupt;
-  PIRP                   CurrentIrp;
   ULONG IrpFlags;
 
   SCSI_PORT_TIMER_STATES TimerState;
@@ -84,9 +85,6 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
   PHW_STARTIO HwStartIo;
   PHW_INTERRUPT HwInterrupt;
 
-  PSCSI_REQUEST_BLOCK OriginalSrb;
-  SCSI_REQUEST_BLOCK InternalSrb;
-  SENSE_DATA InternalSenseData;
 
   /* DMA related stuff */
   PADAPTER_OBJECT AdapterObject;
@@ -94,7 +92,20 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
 
   PHYSICAL_ADDRESS PhysicalAddress;
   PVOID VirtualAddress;
+  ULONG VirtualAddressMap;
   ULONG CommonBufferLength;
+
+  LIST_ENTRY PendingIrpListHead;
+  LIST_ENTRY ActiveIrpListHead;
+  ULONG PendingIrpCount;
+  ULONG ActiveIrpCount;
+
+  ULONG CompleteRequestCount;
+  ULONG NextRequestCount;
+  ULONG NextLuRequestCount;
 
   UCHAR MiniPortDeviceExtension[1]; /* must be the last entry */
 } SCSI_PORT_DEVICE_EXTENSION, *PSCSI_PORT_DEVICE_EXTENSION;
+
+
+
