@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.80 2003/12/30 18:52:05 fireball Exp $
+/* $Id: npool.c,v 1.81 2004/02/07 16:37:23 hbirr Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -1170,6 +1170,7 @@ add_to_free_list(BLOCK_HDR* blk)
  */
 {
   BLOCK_HDR* current;
+  BOOL UpdatePrevPtr = FALSE;
 
   DPRINT("add_to_free_list (%d)\n", blk->Size);
 
@@ -1183,6 +1184,7 @@ add_to_free_list(BLOCK_HDR* blk)
       current->Magic = BLOCK_HDR_USED_MAGIC;
       memset(blk, 0xcc, BLOCK_HDR_SIZE);
       blk = current;
+      UpdatePrevPtr = TRUE;
     }
 
   current = (BLOCK_HDR*)((char*)blk + BLOCK_HDR_SIZE + blk->Size);
@@ -1192,13 +1194,14 @@ add_to_free_list(BLOCK_HDR* blk)
       remove_from_free_list(current);
       blk->Size += BLOCK_HDR_SIZE + current->Size;
       memset(current, 0xcc, BLOCK_HDR_SIZE);
+      UpdatePrevPtr = TRUE;
       current = (BLOCK_HDR*)((char*)blk + BLOCK_HDR_SIZE + blk->Size);
-      if ((char*)current < (char*)MiNonPagedPoolStart + MiNonPagedPoolLength)
-        {
-	  current->previous = blk;
-	}
     }
-
+  if (UpdatePrevPtr &&
+      (char*)current < (char*)MiNonPagedPoolStart + MiNonPagedPoolLength)
+    {
+      current->previous = blk;
+    }
   DPRINT("%d\n", blk->Size);
   blk->Magic = BLOCK_HDR_FREE_MAGIC;
   EiFreeNonPagedPool += blk->Size;
