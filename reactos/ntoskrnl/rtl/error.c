@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.9 2003/07/11 01:23:15 royce Exp $
+/* $Id: error.c,v 1.10 2004/02/27 05:50:56 navaraf Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -881,10 +881,10 @@ RtlNtStatusToDosErrorNoTeb(IN NTSTATUS Status)
 
 	while (Table->Start)
 	{
-		if (Status < (NTSTATUS) Table->Start)
+		if ((ULONG)Status < Table->Start)
 			break;
 
-		if (Status < (NTSTATUS) Table->End)
+		if ((ULONG)Status < Table->End)
 		{
 			DWORD ret = Table->Table[Status - Table->Start];
 			if (!ret)
