@@ -1,4 +1,4 @@
-/* $Id: exit.c,v 1.1 2003/12/30 05:10:32 hyperion Exp $
+/* $Id: exit.c,v 1.2 2004/10/03 18:53:05 gvg Exp $
 */
 /*
 */
@@ -11,27 +11,12 @@
 
 #include <rosrtl/thread.h>
 
-static VOID NTAPI RtlRosExitUserThread_Stage2
-(
- IN ULONG_PTR Status
-)
-{
- RtlRosFreeUserThreadStack(NtCurrentProcess(), NtCurrentThread());
- NtTerminateThread(NtCurrentThread(), Status);
-}
-
 __declspec(noreturn) VOID NTAPI RtlRosExitUserThread
 (
  IN NTSTATUS Status
 )
 {
- RtlRosSwitchStackForExit
- (
-  NtCurrentTeb()->StaticUnicodeBuffer,
-  sizeof(NtCurrentTeb()->StaticUnicodeBuffer),
-  RtlRosExitUserThread_Stage2,
-  Status
- );
+ NtTerminateThread(NtCurrentThread(), Status);
 
  for(;;);
 }

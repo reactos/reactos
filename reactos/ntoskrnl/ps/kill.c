@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.77 2004/10/01 20:29:58 gvg Exp $
+/* $Id: kill.c,v 1.78 2004/10/03 18:53:05 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -114,6 +114,7 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
    PEPROCESS CurrentProcess;
    SIZE_T Length = PAGE_SIZE;
    PVOID TebBlock;
+   ULONG StackSize;
 
    KeLowerIrql(PASSIVE_LEVEL);
 
@@ -147,9 +148,14 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
    PspRunCreateThreadNotifyRoutines(CurrentThread, FALSE);
    PsTerminateWin32Thread(CurrentThread);
 
-   /* Free the TEB */
+   /* Free the usermode stack and the TEB */
    if(CurrentThread->Tcb.Teb)
    {
+     StackSize = 0;
+     ZwFreeVirtualMemory(NtCurrentProcess(),
+                         &CurrentThread->Tcb.Teb->DeallocationStack,
+                         &StackSize,
+                         MEM_RELEASE);
      DPRINT("Decommit teb at %p\n", CurrentThread->Tcb.Teb);
      ExAcquireFastMutex(&CurrentProcess->TebLock);
      TebBlock = MM_ROUND_DOWN(CurrentThread->Tcb.Teb, MM_VIRTMEM_GRANULARITY);
