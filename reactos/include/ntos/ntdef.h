@@ -11,7 +11,7 @@
 #ifndef __INCLUDE_NTDEF_H
 #define __INCLUDE_NTDEF_H
 
-#ifndef _USE_W32API
+#ifndef __USE_W32API
 #define MAXIMUM_WAIT_OBJECTS (64)
 #endif
 

@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.32 2004/12/30 18:30:05 ion Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -556,34 +556,31 @@ CcDeferWrite (
 /*
  * @unimplemented
  */
-BOOLEAN
+VOID
 STDCALL
 CcFastCopyRead (
-	IN	PFILE_OBJECT		FileObject,
-	IN	ULONG			FileOffset,
-	IN	ULONG			Length,
-	IN	ULONG			PageCount,
-	OUT	PVOID			Buffer,
-	OUT	PIO_STATUS_BLOCK	IoStatus
+    IN  PFILE_OBJECT FileObject,
+    IN  ULONG FileOffset,
+    IN  ULONG Length,
+    IN  ULONG PageCount,
+    OUT PVOID Buffer,
+    OUT PIO_STATUS_BLOCK IoStatus
 	)
 {
 	UNIMPLEMENTED;
-	return FALSE;
 }
 /*
  * @unimplemented
  */
-BOOLEAN
+VOID
 STDCALL
-CcFastCopyWrite (
-	IN	PFILE_OBJECT		FileObject,
-	IN	PLARGE_INTEGER		FileOffset,
-	IN	ULONG			Length,
-	IN	PVOID			Buffer
-	)
+CcFastCopyWrite(
+    IN  PFILE_OBJECT FileObject,
+    IN  ULONG FileOffset,
+    IN  ULONG Length,
+    IN  PVOID Buffer)
 {
 	UNIMPLEMENTED;
-	return FALSE;
 }
 
 /*

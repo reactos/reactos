@@ -2243,7 +2243,6 @@ extern "C" {
 #define WAIT_IO_COMPLETION	(0xc0L)
 #define WAIT_ABANDONED	(0x80L)
 #define WAIT_FAILED	(0xffffffffL)
-#define MAXIMUM_WAIT_OBJECTS	(0x40)
 #define MAXIMUM_SUSPEND_COUNT	(0x7f)
 
 /* MultiByteToWideChar */

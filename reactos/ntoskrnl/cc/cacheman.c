@@ -60,7 +60,7 @@ CcGetFlushedValidData (
 /*
  * @unimplemented
  */
-VOID
+PVOID
 STDCALL
 CcRemapBcb (
     IN PVOID Bcb

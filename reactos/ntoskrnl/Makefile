@@ -356,7 +356,6 @@ OBJECTS_CC = \
 	cc/fs.o \
 	cc/pin.o \
 	cc/mdl.o \
-	cc/misc.o \
 	cc/view.o
 
 # Kernel Debugger Support (Kd)

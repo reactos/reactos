@@ -1,4 +1,4 @@
-/* $Id: pin.c,v 1.18 2004/10/22 20:11:11 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -117,7 +117,7 @@ CcPinMappedData (
 	IN	PFILE_OBJECT		FileObject,
 	IN	PLARGE_INTEGER		FileOffset,
 	IN	ULONG			Length,
-	IN	BOOLEAN			Wait,
+	IN	ULONG			Flags,
 	OUT	PVOID			* Bcb
 	)
 {
@@ -134,14 +134,14 @@ CcPinRead (
 	IN	PFILE_OBJECT		FileObject,
 	IN	PLARGE_INTEGER		FileOffset,
 	IN	ULONG			Length,
-	IN	BOOLEAN			Wait,
+	IN	ULONG			Flags,
 	OUT	PVOID			* Bcb,
 	OUT	PVOID			* Buffer
 	)
 {
-  if (CcMapData(FileObject, FileOffset, Length, Wait, Bcb, Buffer))
+  if (CcMapData(FileObject, FileOffset, Length, Flags, Bcb, Buffer))
   {
-    if (CcPinMappedData(FileObject, FileOffset, Length, Wait, Bcb))
+    if (CcPinMappedData(FileObject, FileOffset, Length, Flags, Bcb))
       return TRUE;
     else
       CcUnpinData(Bcb);
@@ -159,7 +159,7 @@ CcPreparePinWrite (
 	IN	PLARGE_INTEGER		FileOffset,
 	IN	ULONG			Length,
 	IN	BOOLEAN			Zero,
-	IN	BOOLEAN			Wait,
+	IN	ULONG			Flags,
 	OUT	PVOID			* Bcb,
 	OUT	PVOID			* Buffer
 	)
@@ -172,7 +172,7 @@ CcPreparePinWrite (
          * For now calling CcPinRead is better than returning error or
          * just having UNIMPLEMENTED here.
          */
-        return CcPinRead(FileObject, FileOffset, Length, Wait, Bcb, Buffer);
+        return CcPinRead(FileObject, FileOffset, Length, Flags, Bcb, Buffer);
 }
 
 /*

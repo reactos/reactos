@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.72 2004/11/05 12:26:55 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -447,7 +447,7 @@ DWORD STDCALL
 SleepEx(DWORD dwMilliseconds,
 	BOOL bAlertable)
 {
-  TIME Interval;
+  LARGE_INTEGER Interval;
   NTSTATUS errCode;
   
   if (dwMilliseconds != INFINITE)

@@ -1,7 +1,7 @@
 
 #ifndef _NTOS_CCFUNCS_H
 #define _NTOS_CCFUNCS_H
-/* $Id: ccfuncs.h,v 1.10 2004/08/21 20:18:07 tamlin Exp $ */
+/* $Id$ */
 
 #ifdef __cplusplus
 extern "C" {
@@ -62,7 +62,7 @@ CcDeferWrite (
 	IN	BOOLEAN			Retrying
 	);
 
-BOOLEAN
+VOID
 STDCALL
 CcFastCopyRead (
 	IN	PFILE_OBJECT		FileObject,
@@ -73,11 +73,11 @@ CcFastCopyRead (
 	OUT	PIO_STATUS_BLOCK	IoStatus
 	);
 
-BOOLEAN
+VOID
 STDCALL
 CcFastCopyWrite (
 	IN	PFILE_OBJECT		FileObject,
-	IN	PLARGE_INTEGER		FileOffset,
+	IN	ULONG		FileOffset,
 	IN	ULONG			Length,
 	IN	PVOID			Buffer
 	);
@@ -191,7 +191,7 @@ CcPinMappedData (
 	IN	PFILE_OBJECT		FileObject,
 	IN	PLARGE_INTEGER		FileOffset,
 	IN	ULONG			Length,
-	IN	BOOLEAN			Wait,
+	IN	ULONG			Flags,
 	OUT	PVOID			* Bcb
 	);
 
@@ -201,7 +201,7 @@ CcPinRead (
 	IN	PFILE_OBJECT		FileObject,
 	IN	PLARGE_INTEGER		FileOffset,
 	IN	ULONG			Length,
-	IN	BOOLEAN			Wait,
+	IN	ULONG			Flags,
 	OUT	PVOID			* Bcb,
 	OUT	PVOID			* Buffer
 	);
@@ -223,7 +223,7 @@ CcPreparePinWrite (
 	IN	PLARGE_INTEGER		FileOffset,
 	IN	ULONG			Length,
 	IN	BOOLEAN			Zero,
-	IN	BOOLEAN			Wait,
+	IN	ULONG			Flags,
 	OUT	PVOID			* Bcb,
 	OUT	PVOID			* Buffer
 	);
@@ -251,7 +251,7 @@ CcRepinBcb (
 	IN	PVOID	Bcb
 	);
 
-VOID
+PVOID
 STDCALL
 CcRemapBcb (
     IN PVOID Bcb
