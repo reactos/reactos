@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.6 2000/12/03 18:00:07 ekohl Exp $
+# $Id: Makefile,v 1.7 2000/12/28 11:43:07 jean Exp $
 #
 # ReactOS Operating System
 #
@@ -41,6 +41,23 @@ OBJECTS_DIRECT = \
 	direct/mkdir.o \
 	direct/rmdir.o
 
+OBJECTS_FLOAT = \
+	float/isnan.o \
+
+OBJECTS_IO = \
+	io/close.o \
+	io/fmode.o \
+	io/isatty.o \
+	io/lseek.o \
+	io/open.o \
+	io/read.o \
+	io/setmode.o \
+	io/write.o
+
+OBJECTS_MATH = \
+	math/modf.o \
+	math/pow.o \
+
 OBJECTS_MISC = \
 	misc/dllmain.o \
 	misc/tls.o
@@ -48,9 +65,45 @@ OBJECTS_MISC = \
 OBJECTS_PROCESS = \
 	process/thread.o
 	
+OBJECTS_SIGNAL = \
+	signal/signal.o \
+
+OBJECTS_STDIO = \
+	stdio/allocfil.o \
+	stdio/fclose.o \
+	stdio/feof.o \
+	stdio/ferror.o \
+	stdio/fflush.o \
+	stdio/fgets.o \
+	stdio/filbuf.o \
+	stdio/flsbuf.o \
+	stdio/fopen.o \
+	stdio/fprintf.o \
+	stdio/fputc.o \
+	stdio/fputs.o \
+	stdio/fread.o \
+	stdio/fwalk.o \
+	stdio/fwrite.o \
+	stdio/getc.o \
+	stdio/printf.o \
+	stdio/putc.o \
+	stdio/putchar.o \
+	stdio/puts.o \
+	stdio/remove.o \
+	stdio/setvbuf.o \
+	stdio/sprintf.o \
+	stdio/stdhnd.o \
+	stdio/vfprintf.o \
+	stdio/vfwprint.o \
+	stdio/vprintf.o \
+	stdio/vsprintf.o \
+
 #incomplete
 OBJECTS_STDLIB = \
+	stdlib/_exit.o \
+	stdlib/abort.o \
 	stdlib/abs.o \
+	stdlib/atexit.o \
 	stdlib/atof.o \
 	stdlib/atoi.o \
 	stdlib/atol.o \
@@ -66,6 +119,7 @@ OBJECTS_STDLIB = \
 	stdlib/makepath.o \
 	stdlib/malloc.o \
 	stdlib/putenv.o \
+	stdlib/qsort.o \
 	stdlib/rand.o \
 	stdlib/rot.o \
 	stdlib/senv.o \
@@ -112,6 +166,13 @@ OBJECTS_STRING = \
 	string/strupr.o \
 	string/strxfrm.o 
 
+OBJECTS_SYS_STAT = \
+	sys_stat/fstat.o
+
+OBJECTS_TIME = \
+	time/time.o \
+	time/ctime.o
+
 OBJECTS_WSTRING = \
 	wstring/wcscat.o \
 	wstring/wcschr.o \
@@ -141,10 +202,17 @@ OBJECTS_WSTRING = \
 OBJECTS = \
 	$(OBJECTS_CTYPE) \
 	$(OBJECTS_DIRECT) \
+	$(OBJECTS_FLOAT) \
+	$(OBJECTS_IO) \
+	$(OBJECTS_MATH) \
 	$(OBJECTS_MISC) \
 	$(OBJECTS_PROCESS) \
+	$(OBJECTS_SIGNAL) \
+	$(OBJECTS_STDIO) \
 	$(OBJECTS_STDLIB) \
 	$(OBJECTS_STRING) \
+	$(OBJECTS_SYS_STAT) \
+	$(OBJECTS_TIME) \
 	$(OBJECTS_WSTRING) \
 	msvcrt.coff
 

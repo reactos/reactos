@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.1 2000/12/03 18:00:07 ekohl Exp $
+; $Id: msvcrt.def,v 1.2 2000/12/28 11:43:07 jean Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -189,7 +189,7 @@ _chdrive
 ; _chmod
 ; _chsize
 ; _clearfp
-; _close
+_close
 ; _commit
 ; _commode
 ; _control87
@@ -223,12 +223,12 @@ _endthreadex
 ; _execvpe
 ; _exit
 ; _expand
-; _fcloseall
+_fcloseall
 ; _fcvt
 ; _fdopen
 ; _fgetchar
 ; _fgetwchar
-; _filbuf
+_filbuf
 ; _fileinfo
 ; _filelength
 ; _filelengthi64
@@ -238,24 +238,24 @@ _endthreadex
 ; _findfirsti64
 ; _findnext
 ; _findnexti64
-; _finite
-; _flsbuf
-; _flushall
-; _fmode
+_finite
+_flsbuf
+_flushall
+_fmode
 ; _fpclass
 ; _fpieee_flt
 ; _fpreset
 ; _fputchar
 ; _fputwchar
 ; _fsopen
-; _fstat
+_fstat
 ; _fstati64
 ; _ftime
 ; _ftol
 _fullpath
 ; _futime
 ; _gcvt
-; _get_osfhandle
+_get_osfhandle
 ; _get_sbh_threshold
 ; _getch
 ; _getche
@@ -285,8 +285,8 @@ _getdrives
 ; _inp
 ; _inpd
 ; _inpw
-; _iob
-; _isatty
+_iob
+_isatty
 _isctype
 ; _ismbbalnum
 ; _ismbbalpha
@@ -317,7 +317,7 @@ _isctype
 ; _ismbcupper
 ; _ismbslead
 ; _ismbstrail
-; _isnan
+_isnan
 _itoa
 _itow
 ; _j0
@@ -334,7 +334,7 @@ _itow
 _lrotl
 _lrotr
 ; _lsearch
-; _lseek
+_lseek
 ; _lseeki64
 _ltoa
 _ltow
@@ -401,8 +401,8 @@ _mkdir
 ; _msize
 ; _nextafter
 ; _onexit
-; _open
-; _open_osfhandle
+_open
+_open_osfhandle
 _osver DATA
 ; _outp
 ; _outpd
@@ -418,7 +418,7 @@ _putenv
 ; _putw
 ; _putws
 ; _pwctype
-; _read
+_read
 _rmdir
 ; _rmtmp
 _rotl
@@ -437,11 +437,11 @@ _searchenv
 ; _setjmp3
 ; _setmaxstdio
 ; _setmbcp
-; _setmode
+_setmode
 ; _setsystime
 ; _sleep
-; _snprintf
-; _snwprintf
+_snprintf
+_snwprintf
 ; _sopen
 ; _spawnl
 ; _spawnle
@@ -480,7 +480,7 @@ _strupr
 _tolower
 _toupper
 ; _tzname
-; _tzset
+_tzset
 ; _ui64toa
 ; _ui64tow
 _ultoa
@@ -491,8 +491,8 @@ _ultow
 ; _unloaddll
 ; _unlock
 ; _utime
-; _vsnprintf
-; _vsnwprintf
+_vsnprintf
+_vsnwprintf
 ; _waccess
 ; _wasctime
 _wchdir
@@ -545,7 +545,7 @@ _wmkdir
 _wputenv
 ; _wremove
 ; _wrename
-; _write
+_write
 _wrmdir
 _wsearchenv
 ; _wsetlocale
@@ -574,14 +574,14 @@ _wtol
 ; _y0
 ; _y1
 ; _yn
-; abort
+abort
 abs
 ; acos
-; asctime
+asctime
 ; asin
 ; atan
 ; atan2
-; atexit
+atexit
 atof
 atoi
 atol
@@ -592,30 +592,30 @@ calloc
 ; clock
 ; cos
 ; cosh
-; ctime
+ctime
 ; difftime
 div
-; exit
+exit
 ; exp
 ; fabs
-; fclose
-; feof
-; ferror
-; fflush
+fclose
+feof
+ferror
+fflush
 ; fgetc
 ; fgetpos
-; fgets
+fgets
 ; fgetwc
 ; fgetws
 ; floor
 ; fmod
-; fopen
-; fprintf
-; fputc
-; fputs
+fopen
+fprintf
+fputc
+fputs
 ; fputwc
 ; fputws
-; fread
+fread
 free
 ; freopen
 ; frexp
@@ -623,16 +623,16 @@ free
 ; fseek
 ; fsetpos
 ; ftell
-; fwprintf
-; fwrite
+fwprintf
+fwrite
 ; fwscanf
-; getc
+getc
 ; getchar
-; getenv
+getenv
 ; gets
-; getwc
+getwc
 ; getwchar
-; gmtime
+gmtime
 is_wctype
 isalnum
 isalpha
@@ -663,7 +663,7 @@ labs
 ; ldexp
 ldiv
 ; localeconv
-; localtime
+localtime
 ; log
 ; log10
 ; longjmp
@@ -676,31 +676,31 @@ memcmp
 memcpy
 memmove
 memset
-; mktime
-; modf
+mktime
+modf
 ; perror
-; pow
-; printf
-; putc
-; putchar
-; puts
-; putwc
+pow
+printf
+putc
+putchar
+puts
+putwc
 ; putwchar
-; qsort
-; raise
+qsort
+raise
 ; rand
 realloc
-; remove
+remove
 ; rename
 ; rewind
 ; scanf
 ; setbuf
 ; setlocale
-; setvbuf
-; signal
+setvbuf
+signal
 ; sin
 ; sinh
-; sprintf
+sprintf
 ; sqrt
 ; srand
 ; sscanf
@@ -725,12 +725,12 @@ strtok
 strtol
 strtoul
 strxfrm
-; swprintf
+swprintf
 ; swscanf
 ; system
 ; tan
 ; tanh
-; time
+time
 ; tmpfile
 ; tmpnam
 tolower
@@ -739,12 +739,12 @@ towlower
 towupper
 ; ungetc
 ; ungetwc
-; vfprintf
-; vfwprintf
-; vprintf
-; vsprintf
-; vswprintf
-; vwprintf
+vfprintf
+vfwprintf
+vprintf
+vsprintf
+vswprintf
+vwprintf
 wcscat
 wcschr
 wcscmp
@@ -767,7 +767,7 @@ wcstol
 wcstoul
 wcsxfrm
 ; wctomb
-; wprintf
+wprintf
 ; wscanf
 
 ; EOF
