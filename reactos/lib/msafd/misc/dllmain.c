@@ -974,6 +974,9 @@ WSPAccept(
 					sizeof(RemoteAddress));
 
 	NtClose( SockEvent );
+ 
+    /* Re-enable Async Event */
+    SockReenableAsyncSelectEvent(Socket, FD_ACCEPT);
 
 	AFD_DbgPrint(MID_TRACE,("Socket %x\n", AcceptSocket));
 
@@ -1054,6 +1057,16 @@ WSPConnect(
 					SocketAddress->sa_data, 
 					SocketAddressLength - sizeof(SocketAddress->sa_family));
 
+    /* 
+     * Disable FD_WRITE and FD_CONNECT 
+     * The latter fixes a race condition where the FD_CONNECT is re-enabled
+     * at the end of this function right after the Async Thread disables it.
+     * This should only happen at the *next* WSPConnect
+     */
+    if (Socket->SharedData.AsyncEvents & FD_CONNECT) {
+        Socket->SharedData.AsyncDisabledEvents |= FD_CONNECT | FD_WRITE;
+    }
+    
 	/* Tell AFD that we want Connection Data back, have it allocate a buffer */
 	if (lpCalleeData != NULL) {
 		InConnectDataLength = lpCalleeData->len;
@@ -1074,6 +1087,11 @@ WSPConnect(
 	ConnectInfo->UseSAN = FALSE;
 	ConnectInfo->Unknown = 0;
 
+    /* FIXME: Handle Async Connect */
+    if (Socket->SharedData.NonBlocking) {
+        AFD_DbgPrint(MIN_TRACE, ("Async Connect UNIMPLEMENTED!\n"));
+    }
+               
 	/* Send IOCTL */
 	Status = NtDeviceIoControlFile((HANDLE)Handle,
 									SockEvent,
@@ -1100,6 +1118,12 @@ WSPConnect(
 										lpCalleeData->len);
 	 }
 
+    /* Re-enable Async Event */
+    SockReenableAsyncSelectEvent(Socket, FD_WRITE);
+    
+    /* FIXME: THIS IS NOT RIGHT!!! HACK HACK HACK! */
+    SockReenableAsyncSelectEvent(Socket, FD_CONNECT);
+    
 	AFD_DbgPrint(MID_TRACE,("Ending\n"));
 
 	NtClose( SockEvent );
@@ -1717,7 +1741,6 @@ VOID SockAsyncSelectCompletionRoutine(PVOID Context, PIO_STATUS_BLOCK IoStatusBl
 		return;
 	}
 
-
 	for (x = 1; x; x<<=1) {
 		switch (AsyncData->AsyncSelectInfo.Handles[0].Events & x) {
 			case AFD_EVENT_RECEIVE:
@@ -1756,6 +1779,7 @@ VOID SockAsyncSelectCompletionRoutine(PVOID Context, PIO_STATUS_BLOCK IoStatusBl
 				}
 				break;
 
+            /* FIXME: THIS IS NOT RIGHT!!! HACK HACK HACK! */
 			case AFD_EVENT_CONNECT:
 				if (0 != (Socket->SharedData.AsyncEvents & FD_CONNECT) && 0 == (Socket->SharedData.AsyncDisabledEvents & FD_CONNECT)) {
 					/* Make the Notifcation */
@@ -1842,6 +1866,7 @@ VOID SockProcessAsyncSelect(PSOCKET_INFORMATION Socket, PASYNC_DATA AsyncData)
 		AsyncData->AsyncSelectInfo.Handles[0].Events |= AFD_EVENT_ACCEPT;
 	}
 
+     /* FIXME: THIS IS NOT RIGHT!!! HACK HACK HACK! */
 	if (lNetworkEvents & FD_CONNECT) {
 		AsyncData->AsyncSelectInfo.Handles[0].Events |= AFD_EVENT_CONNECT | AFD_EVENT_CONNECT_FAIL;
 	}
@@ -1906,6 +1931,51 @@ VOID SockProcessQueuedAsyncSelect(PVOID Context, PIO_STATUS_BLOCK IoStatusBlock)
 	}
 
 	return;
+}
+
+VOID
+SockReenableAsyncSelectEvent (
+    IN PSOCKET_INFORMATION Socket,
+    IN ULONG Event
+    )
+{
+    PASYNC_DATA AsyncData;
+
+    /* Make sure the event is actually disabled */
+    if (!(Socket->SharedData.AsyncDisabledEvents & Event)) {
+        return;
+    }
+
+    /* Re-enable it */
+    Socket->SharedData.AsyncDisabledEvents &= ~Event;
+
+    /* Return if no more events are being polled */
+    if ((Socket->SharedData.AsyncEvents & (~Socket->SharedData.AsyncDisabledEvents)) == 0 ) {
+        return;
+    }
+
+    /* Wait on new events */
+    AsyncData = HeapAlloc(GetProcessHeap(), 0, sizeof(ASYNC_DATA));
+
+    /* Create the Asynch Thread if Needed */  
+    SockCreateOrReferenceAsyncThread();
+
+    /* Increase the sequence number to stop anything else */
+    Socket->SharedData.SequenceNumber++;
+    
+    /* Set up the Async Data */
+    AsyncData->ParentSocket = Socket;
+    AsyncData->SequenceNumber = Socket->SharedData.SequenceNumber;
+
+    /* Begin Async Select by using I/O Completion */
+    NtSetIoCompletion(SockAsyncCompletionPort,
+                      (PVOID)&SockProcessQueuedAsyncSelect,
+                      AsyncData,
+                      0,
+                      0);
+    
+    /* All done */
+    return;
 }
 
 BOOL

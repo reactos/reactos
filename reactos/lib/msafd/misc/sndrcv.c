@@ -58,7 +58,7 @@ WSPAsyncSelect(
 	Socket->SharedData.AsyncDisabledEvents = 0;
 	Socket->SharedData.SequenceNumber++;
 
-        /* Return if there are no more Events */
+    /* Return if there are no more Events */
 	if ((Socket->SharedData.AsyncEvents & (~Socket->SharedData.AsyncDisabledEvents)) == 0) {
 		HeapFree(GetProcessHeap(), 0, AsyncData);
 		return 0;
@@ -76,7 +76,7 @@ WSPAsyncSelect(
 				  0);
 
 	/* Return */
-	return 0;
+	return ERROR_SUCCESS;
 }
 
 
@@ -206,6 +206,13 @@ WSPRecv(
     case STATUS_RECEIVE_PARTIAL_EXPEDITED: 
 	*ReceiveFlags = MSG_PARTIAL | MSG_OOB; break;
     case STATUS_RECEIVE_PARTIAL: *ReceiveFlags = MSG_PARTIAL; break;
+    }
+    
+    /* Re-enable Async Event */
+    if (*ReceiveFlags == MSG_OOB) {
+        SockReenableAsyncSelectEvent(Socket, FD_OOB);
+    } else {
+        SockReenableAsyncSelectEvent(Socket, FD_READ);
     }
 
     return MsafdReturnWithErrno
@@ -337,6 +344,9 @@ WSPRecvFrom(
     case STATUS_RECEIVE_PARTIAL: *ReceiveFlags = MSG_PARTIAL; break;
     }
 
+    /* Re-enable Async Event */
+    SockReenableAsyncSelectEvent(Socket, FD_READ);
+    
     return MsafdReturnWithErrno
 	( Status, lpErrno, IOSB->Information, lpNumberOfBytesRead );
 }
@@ -448,6 +458,9 @@ WSPSend(
 	    return WSA_IO_PENDING;
 	}
 
+     /* Re-enable Async Event */
+    SockReenableAsyncSelectEvent(Socket, FD_WRITE);
+    
 	AFD_DbgPrint(MID_TRACE,("Leaving (Success, %d)\n", IOSB->Information));
 
     return MsafdReturnWithErrno
@@ -572,6 +585,9 @@ WSPSendTo(
 	if (Status == STATUS_PENDING) {
         return WSA_IO_PENDING;
 	}
+ 
+    /* Re-enable Async Event */
+    SockReenableAsyncSelectEvent(Socket, FD_WRITE);
 
     return MsafdReturnWithErrno
 	( Status, lpErrno, IOSB->Information, lpNumberOfBytesSent );

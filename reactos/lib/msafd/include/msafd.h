@@ -460,6 +460,12 @@ VOID SockProcessQueuedAsyncSelect(
 	PIO_STATUS_BLOCK IoStatusBlock
 );
 
+VOID
+SockReenableAsyncSelectEvent (
+    IN PSOCKET_INFORMATION Socket,
+    IN ULONG Event
+    );
+    
 DWORD MsafdReturnWithErrno( NTSTATUS Status, LPINT Errno, DWORD Received,
 			    LPDWORD ReturnedBytes );
 
