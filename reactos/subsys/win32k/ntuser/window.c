@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.118 2003/10/23 09:07:54 gvg Exp $
+/* $Id: window.c,v 1.119 2003/10/25 22:57:34 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1340,7 +1340,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   /* extra window data */
   if (ClassObject->cbWndExtra != 0)
     {
-      WindowObject->ExtraData = (PULONG)(WindowObject + 1);
+      WindowObject->ExtraData = (PCHAR)(WindowObject + 1);
       WindowObject->ExtraDataSize = ClassObject->cbWndExtra;
       RtlZeroMemory(WindowObject->ExtraData, WindowObject->ExtraDataSize);
     }
@@ -2242,13 +2242,14 @@ NtUserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi)
 
   if (0 <= (int) Index)
     {
-      if (WindowObject->ExtraDataSize - sizeof(LONG) < Index ||
-          0 != Index % sizeof(LONG))
+      DbgPrint("GetWindowLong(%x, %d)\n", hWnd, Index);
+      if (Index > WindowObject->ExtraDataSize - sizeof(LONG))
 	{
 	  SetLastWin32Error(ERROR_INVALID_PARAMETER);
 	  return 0;
 	}
-      Result = WindowObject->ExtraData[Index / sizeof(LONG)];
+      Result = *((LONG *)(WindowObject->ExtraData + Index));
+      DbgPrint("Result: %x\n", Result);
     }
   else
     {
@@ -2939,14 +2940,15 @@ NtUserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
 
   if (0 <= (int) Index)
     {
-      if (WindowObject->ExtraDataSize - sizeof(LONG) < Index ||
-          0 != Index % sizeof(LONG))
+      DbgPrint("SetWindowLong(%x, %d, %x)\n", hWnd, Index, NewValue);
+      if (Index > WindowObject->ExtraDataSize - sizeof(LONG))
 	{
 	  SetLastWin32Error(ERROR_INVALID_PARAMETER);
 	  return 0;
 	}
-      OldValue = WindowObject->ExtraData[Index / sizeof(LONG)];
-      WindowObject->ExtraData[Index / sizeof(LONG)] = NewValue;
+      OldValue = *((LONG *)(WindowObject->ExtraData + Index));
+      *((LONG *)(WindowObject->ExtraData + Index)) = NewValue;
+      DbgPrint("OldValue: %x\n", OldValue);
     }
   else
     {

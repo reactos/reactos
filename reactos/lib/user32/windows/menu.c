@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.33 2003/08/29 10:20:53 gvg Exp $
+/* $Id: menu.c,v 1.34 2003/10/25 22:57:34 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -395,6 +395,8 @@ MenuDrawMenuBar(HDC hDC, LPRECT Rect, HWND hWnd, BOOL Draw)
   RECT *omir, *mir = NULL;
   LPWSTR str;
   
+  FillRect(hDC, Rect, GetSysColorBrush(COLOR_MENU));
+
   height = Rect->bottom - Rect->top;
   mnu = GetMenu(hWnd); /* Fixme - pass menu handle as parameter */
   /* get menu item list size */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scrollbar.c,v 1.17 2003/10/06 17:25:16 weiden Exp $
+/* $Id: scrollbar.c,v 1.18 2003/10/25 22:57:34 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -868,6 +868,8 @@ NtUserShowScrollBar(HWND hWnd, int wBar, DWORD bShow)
       return FALSE;		/* Nothing to do! */
     }
 
+  IntReleaseWindowObject(Window);
+  
   if (fShowH || fShowV)		/* frame has been changed, let the window redraw itself */
   {
     WinPosSetWindowPos (hWnd, 0, 0, 0, 0, 0,

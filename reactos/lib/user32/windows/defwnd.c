@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.101 2003/10/23 19:39:00 weiden Exp $
+/* $Id: defwnd.c,v 1.102 2003/10/25 22:57:34 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -23,9 +23,16 @@
 #define NDEBUG
 #include <debug.h>
 
+LRESULT DefWndNCPaint(HWND hWnd, HRGN hRgn);
+LRESULT DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect);
+LRESULT DefWndNCActivate(HWND hWnd, WPARAM wParam);
+LRESULT DefWndNCHitTest(HWND hWnd, POINT Point);
+LRESULT DefWndNCLButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam);
+LRESULT DefWndNCLButtonDblClk(HWND hWnd, WPARAM wParam, LPARAM lParam);
+LRESULT DefWndNCLButtonUp(HWND hWnd, WPARAM wParam, LPARAM lParam);
+
 /* GLOBALS *******************************************************************/
 
-static HBITMAP hbSysMenu;
 /* TODO:  widgets will be cached here.
 static HBITMAP hbClose;
 static HBITMAP hbCloseD;
@@ -43,7 +50,7 @@ static HBITMAP hbScrRight;
 
 static COLORREF SysColours[] =
   {
-    RGB(224, 224, 224) /* COLOR_SCROLLBAR */,
+    RGB(192, 192, 192) /* COLOR_SCROLLBAR */,
     RGB(58, 110, 165) /* COLOR_BACKGROUND */,
     RGB(0, 0, 128) /* COLOR_ACTIVECAPTION */,
     RGB(128, 128, 128) /* COLOR_INACTIVECAPTION */,
@@ -53,28 +60,30 @@ static COLORREF SysColours[] =
     RGB(0, 0, 0) /* COLOR_MENUTEXT */,
     RGB(0, 0, 0) /* COLOR_WINDOWTEXT */,
     RGB(255, 255, 255) /* COLOR_CAPTIONTEXT */,
-    RGB(128, 128, 128) /* COLOR_ACTIVEBORDER */,
-    RGB(255, 255, 255) /* COLOR_INACTIVEBORDER */,
-    RGB(255, 255, 232) /* COLOR_APPWORKSPACE */,
-    RGB(224, 224, 224) /* COLOR_HILIGHT */,
-    RGB(0, 0, 128) /* COLOR_HILIGHTTEXT */,
+    RGB(192, 192, 192) /* COLOR_ACTIVEBORDER */,
+    RGB(192, 192, 192) /* COLOR_INACTIVEBORDER */,
+    RGB(128, 128, 128) /* COLOR_APPWORKSPACE */,
+    RGB(0, 0, 128) /* COLOR_HILIGHT */,
+    RGB(255, 255, 255) /* COLOR_HILIGHTTEXT */,
     RGB(192, 192, 192) /* COLOR_BTNFACE */,
     RGB(128, 128, 128) /* COLOR_BTNSHADOW */,
-    RGB(192, 192, 192) /* COLOR_GRAYTEXT */,
+    RGB(128, 128, 128) /* COLOR_GRAYTEXT */,
     RGB(0, 0, 0) /* COLOR_BTNTEXT */,
     RGB(192, 192, 192) /* COLOR_INACTIVECAPTIONTEXT */,
     RGB(255, 255, 255) /* COLOR_BTNHILIGHT */,
     RGB(32, 32, 32) /* COLOR_3DDKSHADOW */,
-    RGB(192, 192, 192) /* COLOR_3DLIGHT */,
+    RGB(224, 224, 224) /* COLOR_3DLIGHT */,
     RGB(0, 0, 0) /* COLOR_INFOTEXT */,
     RGB(255, 255, 192) /* COLOR_INFOBK */,
-    RGB(184, 180, 184) /* COLOR_ALTERNATEBTNFACE */,
+    RGB(180, 180, 180) /* COLOR_ALTERNATEBTNFACE */,
     RGB(0, 0, 255) /* COLOR_HOTLIGHT */,
     RGB(16, 132, 208) /* COLOR_GRADIENTACTIVECAPTION */,
     RGB(181, 181, 181) /* COLOR_GRADIENTINACTIVECAPTION */,
   };
 
-static ATOM AtomInternalPos;
+#define NUM_SYSCOLORS (sizeof(SysColours) / sizeof(SysColours[0]))
+
+ATOM AtomInternalPos;
 
 /* Bits in the dwKeyData */
 #define KEYDATA_ALT   0x2000
@@ -103,9 +112,9 @@ GetSysColor(int nIndex)
 HPEN STDCALL
 GetSysColorPen(int nIndex)
 {
-  static HPEN SysPens[sizeof(SysColours) / sizeof(SysColours[0])];
+  static HPEN SysPens[NUM_SYSCOLORS];
 
-  if (nIndex < 0 || sizeof(SysColours) / sizeof(SysColours[0]) < nIndex)
+  if (nIndex < 0 || NUM_SYSCOLORS < nIndex)
     {
       SetLastError(ERROR_INVALID_PARAMETER);
       return NULL;
@@ -127,9 +136,9 @@ GetSysColorPen(int nIndex)
 HBRUSH STDCALL
 GetSysColorBrush(int nIndex)
 {
-  static HBRUSH SysBrushes[sizeof(SysColours) / sizeof(SysColours[0])];
+  static HBRUSH SysBrushes[NUM_SYSCOLORS];
 
-  if (nIndex < 0 || sizeof(SysColours) / sizeof(SysColours[0]) < nIndex)
+  if (nIndex < 0 || NUM_SYSCOLORS < nIndex)
     {
       SetLastError(ERROR_INVALID_PARAMETER);
       return NULL;
@@ -181,29 +190,6 @@ UserGetInternalPos(HWND hWnd)
     return(lpPos);
 }
 
-BOOL
-DefWndRedrawIconTitle(HWND hWnd)
-{
-    PINTERNALPOS lpPos = (PINTERNALPOS)GetPropA(hWnd, (LPSTR)(DWORD)AtomInternalPos);
-
-    if (lpPos != NULL)
-    {
-        if (lpPos->IconTitle != NULL)
-        {
-            SendMessageA(lpPos->IconTitle, WM_SHOWWINDOW, TRUE, 0);
-            InvalidateRect(lpPos->IconTitle, NULL, TRUE);
-            return(TRUE);
-        }
-    }
-    return(FALSE);
-}
-
-BOOL
-UserHasMenu(HWND hWnd, ULONG Style)
-{
-    return (!(Style & WS_CHILD) && GetMenu(hWnd) != 0);
-}
-
 ULONG
 UserHasAnyFrameStyle(ULONG Style, ULONG ExStyle)
 {
@@ -237,33 +223,6 @@ UserHasBigFrameStyle(ULONG Style, ULONG ExStyle)
 {
     return ((Style & (WS_THICKFRAME | WS_DLGFRAME)) ||
             (ExStyle & WS_EX_DLGMODALFRAME));
-}
-
-void
-UserGetFrameSize(ULONG Style, ULONG ExStyle, SIZE *Size)
-{
-  if (UserHasThickFrameStyle(Style, ExStyle))
-  {
-    Size->cx = GetSystemMetrics(SM_CXFRAME);
-    Size->cy = GetSystemMetrics(SM_CYFRAME);
-    return;
-  }
-  else if (UserHasDlgFrameStyle(Style, ExStyle))
-  {
-    Size->cx = GetSystemMetrics(SM_CXDLGFRAME);
-    Size->cy = GetSystemMetrics(SM_CYDLGFRAME);
-    return;
-  }
-  else if (UserHasThinFrameStyle(Style, ExStyle))
-  {
-    Size->cx = GetSystemMetrics(SM_CXBORDER);
-    Size->cy = GetSystemMetrics(SM_CYBORDER);
-    return;
-  }
-  else
-  {
-    Size->cx = Size->cy = 0;
-  }
 }
 
 void
@@ -310,812 +269,6 @@ UserGetInsideRectNC(HWND hWnd, RECT *rect)
             }
         }
     }
-}
-
-WINBOOL
-UserDrawSysMenuButton(HWND hWnd, HDC hDC, LPRECT Rect, BOOL down)
-{
-    HDC hDcMem;
-    HBITMAP hSavedBitmap;
-
-    if (!hbSysMenu)
-    {
-        hbSysMenu = (HBITMAP)LoadBitmapW(0, MAKEINTRESOURCEW(OBM_CLOSE));
-    }
-    hDcMem = CreateCompatibleDC(hDC);
-    if (!hDcMem)
-    {
-        return FALSE;
-    }
-    hSavedBitmap = SelectObject(hDcMem, hbSysMenu);
-    if (!hSavedBitmap)
-    {
-        DeleteDC(hDcMem);
-        return FALSE;
-    }
-
-    BitBlt(hDC, Rect->left + 2, Rect->top + 3, 16, 14, hDcMem,
-           (GetWindowLongW(hWnd, GWL_STYLE) & WS_CHILD) ?
-	        GetSystemMetrics(SM_CXSIZE): 0, 0, SRCCOPY);
-
-    SelectObject(hDcMem, hSavedBitmap);
-    DeleteDC(hDcMem);
-    return TRUE;
-}
-
-/*
- * FIXME:
- * Cache bitmaps, then just bitblt instead of calling DFC() (and
- * wasting precious CPU cycles) every time
- */
-static void
-UserDrawCaptionButton(HWND hWnd, HDC hDC, BOOL bDown, ULONG Type)
-{
-    RECT rect;
-    ULONG ExStyle;
-    ULONG Style = GetWindowLongW(hWnd, GWL_STYLE);
-    INT iBmpWidth = GetSystemMetrics(SM_CXSIZE) - 2;
-    INT iBmpHeight = GetSystemMetrics(SM_CYSIZE) - 4;
-    SIZE FrameSize;
-    
-    if (!(Style & WS_SYSMENU))
-    {
-        return;
-    }
-    
-    ExStyle = GetWindowLongW(hWnd, GWL_EXSTYLE);
-    UserGetFrameSize(Style, ExStyle, &FrameSize);
-
-    GetWindowRect(hWnd, &rect);
-
-    rect.right = rect.right - rect.left;
-    rect.bottom = rect.bottom - rect.top;
-    rect.left = rect.top = 0;
-
-    switch(Type)
-    {
-        case DFCS_CAPTIONMIN:
-        {
-            if ((ExStyle & WS_EX_TOOLWINDOW) == TRUE)
-                return; /* ToolWindows don't have min/max buttons */
-
-            SetRect(&rect, rect.right - FrameSize.cx - (iBmpWidth * 3) - 4,
-                    FrameSize.cy + 2, rect.right - (iBmpWidth * 2) - FrameSize.cx - 4,
-                    rect.top + iBmpHeight + FrameSize.cy + 2);
-            DrawFrameControl(hDC, &rect, DFC_CAPTION,
-                             DFCS_CAPTIONMIN | (bDown ? DFCS_PUSHED : 0) |
-                             ((Style & WS_MINIMIZEBOX) ? 0 : DFCS_INACTIVE));
-            break;
-        }
-        case DFCS_CAPTIONMAX:
-        {
-            if ((ExStyle & WS_EX_TOOLWINDOW) == TRUE)
-                return; /* ToolWindows don't have min/max buttons */
-
-            SetRect(&rect, rect.right - FrameSize.cx - (iBmpWidth * 2) - 4,
-                    FrameSize.cy + 2, rect.right - iBmpWidth - FrameSize.cx - 4,
-                    rect.top + iBmpHeight + FrameSize.cy + 2);
-            DrawFrameControl(hDC, &rect, DFC_CAPTION,
-                             (IsZoomed(hWnd) ? DFCS_CAPTIONRESTORE : DFCS_CAPTIONMAX) |
-                             (bDown ? DFCS_PUSHED : 0) |
-                             ((Style & WS_MAXIMIZEBOX) ? 0 : DFCS_INACTIVE));
-            break;
-        }
-        case DFCS_CAPTIONCLOSE:
-        {
-            SetRect(&rect, rect.right - FrameSize.cx - iBmpWidth - 2,
-                    FrameSize.cy + 2,	rect.right - FrameSize.cx - 2,
-                    rect.top + iBmpHeight + FrameSize.cy + 2 );      
-            DrawFrameControl(hDC, &rect, DFC_CAPTION,
-                             (DFCS_CAPTIONCLOSE | (bDown ? DFCS_PUSHED : 0) |
-                             ((Style & WS_SYSMENU) ? 0 : DFCS_INACTIVE)));
-            break;
-        }
-    }
-}
-
-// Enabling this will cause captions to draw smoother, but slower:
-// #define DOUBLE_BUFFER_CAPTION
-// NOTE: Double buffering appears to be broken for this at the moment
-
-/*
- * @implemented
- */
-WINBOOL STDCALL
-DrawCaption(
-  HWND hWnd,
-  HDC hDC,
-  LPRECT lprc,
-  UINT uFlags)
-{
-    NONCLIENTMETRICSW nclm;
-    BOOL result = FALSE;
-    RECT r = *lprc;
-    UINT VCenter = 0, Padding = 0, Height;
-    ULONG Style;
-    WCHAR buffer[256];
-    HFONT hFont = NULL;
-    HFONT hOldFont = NULL;
-    HBRUSH OldBrush = NULL;
-    HDC MemDC = NULL;
-    int ButtonWidth;
-    COLORREF OldTextColor;
-
-#ifdef DOUBLE_BUFFER_CAPTION
-    HBITMAP MemBMP = NULL, OldBMP = NULL;
-
-    MemDC = CreateCompatibleDC(hDC);
-    if (! MemDC) goto cleanup;
-    MemBMP = CreateCompatibleBitmap(hDC, lprc->right - lprc->left, lprc->bottom - lprc->top);
-    if (! MemBMP) goto cleanup;
-    OldBMP = SelectObject(MemDC, MemBMP);
-    if (! OldBMP) goto cleanup;
-#else
-    MemDC = hDC;
-
-    OffsetViewportOrgEx(MemDC, lprc->left, lprc->top, NULL);
-#endif
-
-    // If DC_GRADIENT is specified, a Win 98/2000 style caption gradient should
-    // be painted. For now, that flag is ignored:
-    // Windows 98/Me, Windows 2000/XP: When this flag is set, the function uses
-    // COLOR_GRADIENTACTIVECAPTION (if the DC_ACTIVE flag was set) or
-    // COLOR_GRADIENTINACTIVECAPTION for the title-bar color. 
-
-    // Draw the caption background
-    if (uFlags & DC_INBUTTON)
-    {
-        OldBrush = SelectObject(MemDC, GetSysColorBrush(uFlags & DC_ACTIVE ? COLOR_BTNFACE : COLOR_BTNSHADOW) );
-        if (! OldBrush) goto cleanup;
-        if (! PatBlt(MemDC, 0, 0, lprc->right - lprc->left, lprc->bottom - lprc->top, PATCOPY )) goto cleanup;
-    }
-    else
-    {
-        // DC_GRADIENT check should go here somewhere
-        OldBrush = SelectObject(MemDC, GetSysColorBrush(uFlags & DC_ACTIVE ? COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION) );
-        if (! OldBrush) goto cleanup;
-        if (! PatBlt(MemDC, 0, 0, lprc->right - lprc->left, lprc->bottom - lprc->top, PATCOPY )) goto cleanup;
-    }
-    
-    Style = GetWindowLongW(hWnd, GWL_STYLE);
-    
-    /* Windows behaves like this */
-    Height = GetSystemMetrics(SM_CYCAPTION) - 1;
-
-    VCenter = (lprc->bottom - lprc->top) / 2;
-    Padding = VCenter - (Height / 2);
-
-    r.left = Padding;
-    r.right = r.left + (lprc->right - lprc->left);
-    r.top = Padding;
-    r.bottom = r.top + (Height / 2);
-
-    if ((uFlags & DC_ICON) && (Style & WS_SYSMENU))
-    {
-        // For some reason the icon isn't centered correctly...
-        r.top --;
-        UserDrawSysMenuButton(hWnd, MemDC, &r, FALSE);
-        r.top ++;
-    }
-
-    r.top ++;
-    r.left += 2;
-
-  if ((uFlags & DC_TEXT) && (GetWindowTextW( hWnd, buffer, sizeof(buffer)/sizeof(buffer[0]) )))
-  {
-    // Duplicate odd behaviour from Windows:
-    if ((! uFlags & DC_SMALLCAP) || (uFlags & DC_ICON) || (uFlags & DC_INBUTTON) ||
-        (! uFlags & DC_ACTIVE))
-        r.left += GetSystemMetrics(SM_CXSIZE) + Padding;
-
-    r.right = (lprc->right - lprc->left);
-    ButtonWidth = GetSystemMetrics(SM_CXSIZE) - 2;
-
-    if (Style & WS_SYSMENU)
-    {
-      r.right -= 3 + ButtonWidth;
-      if (! (GetWindowLongW(hWnd, GWL_EXSTYLE) & WS_EX_TOOLWINDOW))
-      {
-        if(Style & (WS_MAXIMIZEBOX | WS_MINIMIZEBOX))
-	      r.right -= 2 + 2 * ButtonWidth;
-        else
-	      r.right -= 2;
-      }
-    }
-    r.right -= 2;
-
-    nclm.cbSize = sizeof(nclm);
-    if (! SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICSW), &nclm, 0)) goto cleanup;
-
-    SetBkMode( MemDC, TRANSPARENT );
-    if (Style & WS_EX_TOOLWINDOW)
-//    if (uFlags & DC_SMALLCAP) // incorrect
-        hFont = CreateFontIndirectW(&nclm.lfSmCaptionFont);
-    else
-        hFont = CreateFontIndirectW(&nclm.lfCaptionFont);
-
-    if (! hFont) goto cleanup;
-
-    hOldFont = SelectObject(MemDC, hFont);
-    if (! hOldFont) goto cleanup;
-    
-    if (uFlags & DC_INBUTTON)
-        OldTextColor = SetTextColor(MemDC, SysColours[ uFlags & DC_ACTIVE ? COLOR_BTNTEXT : COLOR_GRAYTEXT]);
-    else
-        OldTextColor = SetTextColor(MemDC, SysColours[ uFlags & DC_ACTIVE ? COLOR_CAPTIONTEXT : COLOR_INACTIVECAPTIONTEXT]);
-
-    DrawTextW(MemDC, buffer, wcslen(buffer), &r, DT_VCENTER | DT_END_ELLIPSIS);
-    
-    SetTextColor(MemDC, OldTextColor);
-  }
-
-    if (uFlags & DC_BUTTONS)
-    {
-        // Windows XP draws the caption buttons with DC_BUTTONS
-//        r.left += GetSystemMetrics(SM_CXSIZE) + 1;
-//        UserDrawCaptionButton( hWnd, hDC, FALSE, DFCS_CAPTIONCLOSE);
-//        r.right -= GetSystemMetrics(SM_CXSMSIZE) + 1;
-//        UserDrawCaptionButton( hWnd, hDC, FALSE, DFCS_CAPTIONMIN);
-//        UserDrawCaptionButton( hWnd, hDC, FALSE, DFCS_CAPTIONMAX);
-    }
-
-#ifdef DOUBLE_BUFFER_CAPTION
-    if (! BitBlt(hDC, lprc->left, lprc->top, lprc->right - lprc->left, lprc->bottom - lprc->top,
-            MemDC, 0, 0, SRCCOPY)) goto cleanup;
-#endif
-
-    result = TRUE;
-
-    cleanup :
-        if (MemDC)
-        {
-            if (OldBrush) SelectObject(MemDC, OldBrush);
-            if (hOldFont) SelectObject(MemDC, hOldFont);
-            if (hFont) DeleteObject(hFont);
-#ifdef DOUBLE_BUFFER_CAPTION
-            if (OldBMP) SelectObject(MemDC, OldBMP);
-            if (MemBMP) DeleteObject(MemBMP);
-            DeleteDC(MemDC);
-#else
-            OffsetViewportOrgEx(MemDC, -lprc->left, -lprc->top, NULL);
-#endif
-        }
-
-        return result;
-}
-
-static void
-UserDrawCaptionNC (
-	HDC hDC,
-	RECT *rect,
-	HWND hWnd,
-	DWORD style,
-	BOOL active )
-{
-  POINT OldPos;
-  HPEN lPen, oPen;
-  RECT r = *rect;
-  ULONG ExStyle;
-  UINT capflags = 0;
-  SIZE FrameSize;
-  
-  ExStyle = GetWindowLongW(hWnd, GWL_EXSTYLE);
-  
-  capflags = DC_ICON | DC_TEXT;
-  capflags |= (active & DC_ACTIVE);
-  
-  if(style & WS_EX_TOOLWINDOW)
-    capflags |= DC_SMALLCAP;
-  
-  UserGetFrameSize(style, ExStyle, &FrameSize);
-  
-  r.left += FrameSize.cx;
-  r.top += FrameSize.cy;
-  r.right -= FrameSize.cx;
-  r.bottom = r.top + GetSystemMetrics(SM_CYCAPTION) - 1;
-  
-  DrawCaption(hWnd, hDC, &r, capflags);
-  
-  /* draw line below caption */
-  lPen = GetSysColorPen(COLOR_MENU);
-  oPen = SelectObject(hDC, lPen);
-  MoveToEx(hDC, r.left, r.bottom, &OldPos);
-  LineTo(hDC, r.right, r.bottom);
-  MoveToEx(hDC, OldPos.x, OldPos.y, NULL);
-  SelectObject(hDC, oPen);
-  r.bottom++;
-  
-  if (style & WS_SYSMENU)
-  {
-    r.left += GetSystemMetrics(SM_CXSIZE) + 1;
-    UserDrawCaptionButton( hWnd, hDC, FALSE, DFCS_CAPTIONCLOSE);
-    r.right -= GetSystemMetrics(SM_CXSMSIZE) + 1;
-    if((style & (WS_MAXIMIZEBOX | WS_MINIMIZEBOX)) && !(ExStyle & WS_EX_TOOLWINDOW))
-    {
-      UserDrawCaptionButton( hWnd, hDC, FALSE, DFCS_CAPTIONMIN);
-      UserDrawCaptionButton( hWnd, hDC, FALSE, DFCS_CAPTIONMAX);
-    }
-  }
-}
-
-
-static VOID
-UserDrawFrameNC(HDC hDC, RECT* rect, BOOL dlgFrame, BOOL active)
-{
-  DrawEdge(hDC, rect, EDGE_RAISED, BF_RECT | BF_MIDDLE);
-}
-
-
-void
-SCROLL_DrawScrollBar (HWND hWnd, HDC hDC, INT nBar, BOOL arrows, BOOL interior);
-
-VOID
-DefWndDoPaintNC(HWND hWnd, HRGN clip)
-{
-  BOOL Active = FALSE;
-  HDC hDC;
-  RECT rect, clientrect;
-  ULONG Style;
-  ULONG ExStyle;
-  SIZE FrameSize;
-  HGDIOBJ OldObj;
-
-  if (GetActiveWindow() == hWnd) Active = TRUE;
-
-  hDC = GetDCEx(hWnd, (clip > (HRGN)1) ? clip : 0, DCX_USESTYLE | DCX_WINDOW |
-		((clip > (HRGN)1) ? (DCX_INTERSECTRGN | DCX_KEEPCLIPRGN) : 0));
-  if (hDC == 0)
-    {
-      return;
-    }
-    
-  Style = GetWindowLongW(hWnd, GWL_STYLE);
-  ExStyle = GetWindowLongW(hWnd, GWL_EXSTYLE);
-
-  /* FIXME: Test whether we need to draw anything at all. */
-
-  GetWindowRect(hWnd, &rect);
-  GetClientRect(hWnd, &clientrect);
-  
-  rect.right -= rect.left;
-  rect.bottom -= rect.top;
-  rect.top = rect.left = 0;
-  
-  UserGetFrameSize(Style, ExStyle, &FrameSize);
-
-  OldObj = SelectObject(hDC, GetSysColorPen(COLOR_WINDOWFRAME));
-  
-  if(UserHasThickFrameStyle(Style, ExStyle))
-    UserDrawFrameNC(hDC, &rect, FALSE, Active);
-  else if (UserHasDlgFrameStyle(Style, ExStyle))
-    UserDrawFrameNC(hDC, &rect, TRUE, Active);
-    
-  if (Style & WS_CAPTION)
-    {
-      RECT r = rect;
-      r.bottom = rect.top + GetSystemMetrics(SM_CYSIZE);
-      rect.top += GetSystemMetrics(SM_CYCAPTION) + FrameSize.cy;
-      DbgPrint("1. rect.top == %d\n", rect.top);
-      UserDrawCaptionNC(hDC, &r, hWnd, Style, Active);
-    }
-
-  /*  Draw menu bar.  */
-  if (UserHasMenu(hWnd, Style))
-    {DbgPrint("2. rect.top == %d\n", rect.top);
-      RECT r = rect;
-      r.bottom = rect.top + GetSystemMetrics(SM_CYMENU);
-      r.left += FrameSize.cx;
-      r.right -= FrameSize.cx;
-      rect.top += MenuDrawMenuBar(hDC, &r, hWnd, FALSE);
-      DbgPrint("3. rect.top == %d\n", rect.top);
-    }
-
-  if (ExStyle & WS_EX_CLIENTEDGE)
-    DrawEdge(hDC, &rect, EDGE_SUNKEN, BF_RECT | BF_ADJUST);
-
-  /*  Draw scrollbars */
-  if((Style & WS_VSCROLL) && (clientrect.right < rect.right - (2 * FrameSize.cx)))
-    SCROLL_DrawScrollBar(hWnd, hDC, SB_VERT, TRUE, TRUE);
-  DbgPrint("HSCROLL: %d < %d - %d - %d\n", clientrect.bottom, rect.bottom, rect.top, FrameSize.cy);
-  if((Style & WS_HSCROLL) && (clientrect.bottom < rect.bottom - rect.top - FrameSize.cy))
-    SCROLL_DrawScrollBar(hWnd, hDC, SB_HORZ, TRUE, TRUE);
-
-  /* FIXME: Draw size box.*/
-  SelectObject(hDC, OldObj);
-
-  ReleaseDC(hWnd, hDC);
-}
-
-
-LRESULT
-DefWndPaintNC(HWND hWnd, HRGN clip)
-{
-  if (IsWindowVisible(hWnd))
-    {
-      if (IsIconic(hWnd))
-	{
-	  DefWndRedrawIconTitle(hWnd);
-	}
-      else
-	{
-	  DefWndDoPaintNC(hWnd, clip);
-	}
-    }
-  return(0);
-}
-
-
-LRESULT
-DefWndHitTestNC(HWND hWnd, POINT Point)
-{
-  RECT WindowRect, ClientRect, WndRect;
-  LONG ScrollXY;
-  SIZE FrameSize;
-  ULONG Style = GetWindowLongW(hWnd, GWL_STYLE);
-  ULONG ExStyle = GetWindowLongW(hWnd, GWL_EXSTYLE);
-
-  GetWindowRect(hWnd, &WindowRect);
-  WndRect = WindowRect;
-  if (!PtInRect(&WindowRect, Point))
-    {      
-      return(HTNOWHERE);
-    }
-  if (Style & WS_MINIMIZE)
-    {
-      return(HTCAPTION);
-    }
-  if (UserHasThickFrameStyle(Style, ExStyle))
-    {
-      FrameSize.cx = GetSystemMetrics(SM_CXFRAME);
-      FrameSize.cy = GetSystemMetrics(SM_CYFRAME);
-      InflateRect(&WindowRect, -FrameSize.cx, -FrameSize.cy);
-      if (!PtInRect(&WindowRect, Point))
-	{
-	  if (Point.y < WindowRect.top)
-	    {
-	      if (Point.x < (WindowRect.left + GetSystemMetrics(SM_CXSIZE)))
-		{
-		  return(HTTOPLEFT);
-		}
-	      if (Point.x >= (WindowRect.right - GetSystemMetrics(SM_CXSIZE)))
-		{
-		  return(HTTOPRIGHT);
-		}
-	      return(HTTOP);
-	    }
-	  if (Point.y >= WindowRect.bottom)
-	    {
-	      if (Point.x < (WindowRect.left + GetSystemMetrics(SM_CXSIZE)))
-		{
-		  return(HTBOTTOMLEFT);
-		}
-	      if (Point.x >= (WindowRect.right - GetSystemMetrics(SM_CXSIZE)))
-		{
-		  return(HTBOTTOMRIGHT);
-		}
-	      return(HTBOTTOM);
-	    }
-	  if (Point.x < WindowRect.left)
-	    {
-	      if (Point.y < (WindowRect.top + GetSystemMetrics(SM_CYSIZE)))
-		{
-		  return(HTTOPLEFT);
-		}
-	      if (Point.y >= (WindowRect.bottom - GetSystemMetrics(SM_CYSIZE)))
-		{
-		  return(HTBOTTOMLEFT);
-		}
-	      return(HTLEFT);
-	    }
-	  if (Point.x >= WindowRect.right)
-	    {
-	      if (Point.y < (WindowRect.top + GetSystemMetrics(SM_CYSIZE)))
-		{
-		  return(HTTOPRIGHT);
-		}
-	      if (Point.y >= (WindowRect.bottom - GetSystemMetrics(SM_CYSIZE)))
-		{
-		  return(HTBOTTOMRIGHT);
-		}
-	      return(HTRIGHT);
-	    }
-	}
-    }
-  else
-    {
-      if (UserHasDlgFrameStyle(Style, ExStyle))
-	{
-      FrameSize.cx = GetSystemMetrics(SM_CXDLGFRAME);
-      FrameSize.cy = GetSystemMetrics(SM_CYDLGFRAME);
-	  InflateRect(&WindowRect, -FrameSize.cx, -FrameSize.cy);
-	}
-      else if (UserHasThinFrameStyle(Style, ExStyle))
-	{
-      FrameSize.cx = GetSystemMetrics(SM_CXBORDER);
-      FrameSize.cy = GetSystemMetrics(SM_CYBORDER);
-	  InflateRect(&WindowRect, -FrameSize.cx, -FrameSize.cy);
-	}
-      if (!PtInRect(&WindowRect, Point))
-	{
-	  return(HTBORDER);
-	}
-    }
-
-  if ((Style & WS_CAPTION) == WS_CAPTION)
-    {
-      WindowRect.top += (GetSystemMetrics(SM_CYCAPTION));
-      if (!PtInRect(&WindowRect, Point))
-	{
-	  if ((Style & WS_SYSMENU) && !(ExStyle & WS_EX_TOOLWINDOW))
-	    {
-	      WindowRect.left += GetSystemMetrics(SM_CXSIZE);
-	      WindowRect.right -= GetSystemMetrics(SM_CXSIZE);
-	    }
-	  if (Point.x <= WindowRect.left)
-	    {
-	      return(HTSYSMENU);
-	    }
-	  if (WindowRect.right <= Point.x)
-	    {
-	      return(HTCLOSE);
-	    }
-
-	  if (Style & WS_MAXIMIZEBOX || Style & WS_MINIMIZEBOX)
-	    {
-	      WindowRect.right -= GetSystemMetrics(SM_CXSIZE);
-	    }
-	  if (Point.x >= WindowRect.right)
-	    {
-	      return(HTMAXBUTTON);
-	    }
-
-	  if (Style & WS_MINIMIZEBOX)
-	    {
-	      WindowRect.right -= GetSystemMetrics(SM_CXSIZE);
-	    }
-	  if (Point.x >= WindowRect.right)
-	    {
-	      return(HTMINBUTTON);
-	    }
-	  return(HTCAPTION);
-	}
-    }
-
-  ScreenToClient(hWnd, &Point);
-  GetClientRect(hWnd, &ClientRect);
-  WndRect.right -= WndRect.left;
-  WndRect.bottom -= WndRect.top;
-  WndRect.left = WndRect.top = 0;
-
-  if (PtInRect(&ClientRect, Point))
-    {
-      return(HTCLIENT);
-    }
-    
-  if (UserHasMenu(hWnd, Style))
-  {
-    if (Point.y < 0 && Point.x >= 0 && Point.x <= WindowRect.right)
-	{
-	  return(HTMENU);
-	}
-  }
-
-  if (Style & WS_VSCROLL)
-  {
-    ScrollXY = GetSystemMetrics(SM_CXVSCROLL);
-    ClientRect.left = ClientRect.right;
-    ClientRect.right += ScrollXY;
-    if (PtInRect(&ClientRect, Point) && PtInRect(&WndRect, Point))
-    {
-      return(HTVSCROLL);
-    }
-  }
-  else
-    ScrollXY = 0;
-  
-  if (Style & WS_HSCROLL)
-  {
-    GetClientRect(hWnd, &ClientRect);
-    ClientRect.top = ClientRect.bottom;
-    ClientRect.bottom = ClientRect.top + GetSystemMetrics(SM_CXVSCROLL);
-    if (PtInRect(&ClientRect, Point) && PtInRect(&WndRect, Point))
-    {
-      return(HTHSCROLL);
-    }
-    if (ScrollXY)
-    {
-      ClientRect.left = ClientRect.right;
-      ClientRect.right += ScrollXY;
-      if(PtInRect(&WndRect, Point) && PtInRect(&ClientRect, Point))
-      {
-        return(HTBOTTOMRIGHT);
-      }
-    }
-  }
-  
-  return(HTNOWHERE);
-}
-
-VOID STATIC
-DefWndDoButton(HWND hWnd, WPARAM wParam)
-{
-  MSG Msg;
-  BOOL InBtn, HasBtn = FALSE;
-  ULONG Btn, Style;
-  WPARAM SCMsg, CurBtn = wParam, OrigBtn = wParam;
-  
-  Style = GetWindowLongW(hWnd, GWL_STYLE);
-  switch(wParam)
-  {
-    case HTCLOSE:
-      Btn = DFCS_CAPTIONCLOSE;
-      SCMsg = SC_CLOSE;
-      HasBtn = (Style & WS_SYSMENU);
-      break;
-    case HTMINBUTTON:
-      Btn = DFCS_CAPTIONMIN;
-      SCMsg = SC_MINIMIZE;
-      HasBtn = (Style & WS_MINIMIZEBOX);
-      break;
-    case HTMAXBUTTON:
-      Btn = DFCS_CAPTIONMAX;
-      SCMsg = SC_MAXIMIZE;
-      HasBtn = (Style & WS_MAXIMIZEBOX);
-      break;
-    default:
-      return;
-  }
-  
-  InBtn = HasBtn;
-  
-  SetCapture(hWnd);
-  
-  if(HasBtn)
-    UserDrawCaptionButton( hWnd, GetWindowDC(hWnd), HasBtn , Btn);
-  
-  while(1)
-  {
-    GetMessageW(&Msg, 0, 0, 0);
-    switch(Msg.message)
-    {
-      case WM_NCLBUTTONUP:
-      case WM_LBUTTONUP:
-        if(InBtn)
-          goto done;
-        else
-        {
-          ReleaseCapture();
-          return;
-        }
-      case WM_NCMOUSEMOVE:
-      case WM_MOUSEMOVE:
-        if(HasBtn)
-        {
-          CurBtn = DefWndHitTestNC(hWnd, Msg.pt);
-          if(InBtn != (CurBtn == OrigBtn))
-          {
-            UserDrawCaptionButton( hWnd, GetWindowDC(hWnd), (CurBtn == OrigBtn) , Btn);
-          }
-          InBtn = CurBtn == OrigBtn;
-        }
-        break;
-    }
-  }
-  
-done:
-  UserDrawCaptionButton( hWnd, GetWindowDC(hWnd), FALSE , Btn);
-  ReleaseCapture();
-  SendMessageA(hWnd, WM_SYSCOMMAND, SCMsg, 0);
-  return;
-}
-
-VOID STATIC
-DefWndDoScrollBarDown(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
-{
-  POINT Point;
-  DWORD hit;
-  Point.x = SLOWORD(lParam);
-  Point.y = SHIWORD(lParam);
-  
-  hit = SCROLL_HitTest(hWnd, (wParam == HTHSCROLL) ? SB_HORZ : SB_VERT, Point, FALSE);
-  
-  if(hit)
-    DPRINT("SCROLL_HitTest() == 0x%x\n", hit);
-  
-  SendMessageA(hWnd, WM_SYSCOMMAND, Msg + (UINT)wParam, lParam);
-}
-
-LRESULT
-DefWndHandleLButtonDownNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
-{
-    switch (wParam)
-    {
-        case HTCAPTION:
-        {
-	        HWND hTopWnd = GetAncestor(hWnd, GA_ROOT);
-	        if (SetActiveWindow(hTopWnd) || GetActiveWindow() == hTopWnd)
-	        {
-	            SendMessageA(hWnd, WM_SYSCOMMAND, SC_MOVE + HTCAPTION, lParam);
-	        }
-	        break;
-        }
-        case HTSYSMENU:
-        {
-	  if (GetWindowLongW(hWnd, GWL_STYLE) & WS_SYSMENU)
-            {
-	      if (!(GetWindowLongW(hWnd, GWL_STYLE) & WS_MINIMIZE))
-		{
-		  HDC hDC = GetWindowDC(hWnd);
-//		  UserDrawSysMenuButton(hWnd, hDC, TRUE);
-		  ReleaseDC(hWnd, hDC);
-		}
-	      SendMessageA(hWnd, WM_SYSCOMMAND, SC_MOUSEMENU + HTSYSMENU,
-			   lParam);
-	    }
-	  break;
-        }
-        case HTMENU:
-        {
-            SendMessageA(hWnd, WM_SYSCOMMAND, SC_MOUSEMENU + HTMENU, lParam);
-            break;
-        }
-        case HTHSCROLL:
-        {
-            DefWndDoScrollBarDown(hWnd, SC_HSCROLL, HTHSCROLL, lParam);
-            //SendMessageA(hWnd, WM_SYSCOMMAND, SC_HSCROLL + HTHSCROLL, lParam);
-            break;
-        }
-        case HTVSCROLL:
-        {
-            DefWndDoScrollBarDown(hWnd, SC_VSCROLL, HTVSCROLL, lParam);
-            //SendMessageA(hWnd, WM_SYSCOMMAND, SC_VSCROLL + HTVSCROLL, lParam);
-            break;
-        }
-        case HTMINBUTTON:
-        case HTMAXBUTTON:
-        case HTCLOSE:
-        {
-          DefWndDoButton(hWnd, wParam);
-          break;
-        }
-        case HTLEFT:
-        case HTRIGHT:
-        case HTTOP:
-        case HTBOTTOM:
-        case HTTOPLEFT:
-        case HTTOPRIGHT:
-        case HTBOTTOMLEFT:
-        case HTBOTTOMRIGHT:
-        {
-            SendMessageA(hWnd, WM_SYSCOMMAND, SC_SIZE + wParam - 2, lParam);
-            break;
-        }
-    }
-    return(0);
-}
-
-
-LRESULT
-DefWndHandleLButtonDblClkNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
-{
-  UNIMPLEMENTED;
-  return(0);
-}
-
-
-LRESULT
-DefWndHandleLButtonUpNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
-{
-  UNIMPLEMENTED;
-  return(0);
-}
-
-
-LRESULT
-DefWndHandleActiveNC(HWND hWnd, WPARAM wParam)
-{
-  UNIMPLEMENTED;
-  return(0);
 }
 
 
@@ -1221,7 +374,7 @@ DefWndStartSizeMove(HWND hWnd, WPARAM wParam, POINT *capturePoint)
 	  switch(msg.message)
 	    {
 	    case WM_MOUSEMOVE:
-	      hittest = DefWndHitTestNC(hWnd, msg.pt);
+	      hittest = DefWndNCHitTest(hWnd, msg.pt);
 	      if ((hittest < HTLEFT) || (hittest > HTBOTTOMRIGHT))
 		hittest = 0;
 	      break;
@@ -1620,116 +773,6 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, POINT Pt)
   return(0);
 }
 
-
-VOID
-DefWndAdjustRect(HWND hWnd, RECT* Rect, ULONG Style, BOOL Menu, ULONG ExStyle)
-{
-  SIZE FrameSize;
-  
-  if(Style & WS_ICONIC)
-    return;
-  
-  UserGetFrameSize(Style, ExStyle, &FrameSize);
-  
-  InflateRect(Rect, FrameSize.cx, FrameSize.cy);
-  
-  if(Style & WS_CAPTION)
-  {
-    Rect->top -= GetSystemMetrics(SM_CYCAPTION);
-  }
-  if(Menu)
-  {
-    Rect->top -= MenuGetMenuBarHeight(hWnd, Rect->right - Rect->left, -Rect->left, -Rect->top);
-  }
-}
-
-LRESULT STDCALL
-DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT* Rect)
-{
-    LRESULT Result = 0;
-    LONG ScrollXY;
-    SIZE FrameSize;
-    NCCALCSIZE_PARAMS *SizeStruct = (NCCALCSIZE_PARAMS *)Rect;
-    RECT NewRect, TmpRect = {0, 0, 0, 0};
-    ULONG ExStyle = GetWindowLongW(hWnd, GWL_EXSTYLE);
-    LONG Style = GetClassLongW(hWnd, GCL_STYLE);
-
-    if (Style & CS_VREDRAW)
-    {
-        Result |= WVR_VREDRAW;
-    }
-    if (Style & CS_HREDRAW)
-    {
-        Result |= WVR_HREDRAW;
-    }
-    
-    Style = GetWindowLongW(hWnd, GWL_STYLE);
-
-    if (!(Style & WS_MINIMIZE))
-    {
-        if(!(Style & WS_ICONIC))
-        {
-            UserGetFrameSize(Style, ExStyle, &FrameSize);
-            InflateRect(&TmpRect, FrameSize.cx, FrameSize.cy);
-            if(Style & WS_CAPTION)
-                TmpRect.top -= GetSystemMetrics(SM_CYCAPTION);
-        }
-
-        if(CalcSizeStruct)
-        {
-          Rect = &(SizeStruct->rgrc[0]);
-        }
-        else
-        {
-          Result = 0;
-        }
-        
-        NewRect.left = Rect->left - TmpRect.left;
-        NewRect.top = Rect->top - TmpRect.top;
-        NewRect.right = Rect->right - TmpRect.right;
-        NewRect.bottom = Rect->bottom - TmpRect.bottom;
-        if(NewRect.top > NewRect.bottom)
-            NewRect.bottom = NewRect.top;
-        if(NewRect.left > NewRect.right)
-            NewRect.right = NewRect.left;
-            
-        if(UserHasMenu(hWnd, Style))
-            NewRect.top += MenuGetMenuBarHeight(hWnd, NewRect.right - NewRect.left, NewRect.left, NewRect.top);
-        
-        if (Style & WS_VSCROLL)
-        {
-          ScrollXY = GetSystemMetrics(SM_CXVSCROLL);
-          if(NewRect.right - NewRect.left > ScrollXY)
-          {
-            NewRect.right -= ScrollXY + 1;
-            if (UserHasAnyFrameStyle(Style, ExStyle))
-            {
-              NewRect.right++;
-            }
-          }
-        }
-        if (Style & WS_HSCROLL)
-        {
-          ScrollXY = GetSystemMetrics(SM_CYHSCROLL);
-          if(NewRect.bottom - NewRect.top > ScrollXY)
-          {
-            NewRect.bottom -= ScrollXY + 1;
-            if (UserHasAnyFrameStyle(Style, ExStyle))
-            {
-              NewRect.bottom++;
-            }
-          }
-        }
-        
-        Rect->left = NewRect.left;
-        Rect->top = NewRect.top;
-        Rect->right = NewRect.right;
-        Rect->bottom = NewRect.bottom;
-        
-    }
-    return Result;
-}
-
 LRESULT
 DefWndHandleWindowPosChanging(HWND hWnd, WINDOWPOS* Pos)
 {
@@ -1843,14 +886,52 @@ User32DefWindowProc(HWND hWnd,
 {
     switch (Msg)
     {
-        case WM_NCPAINT:
-        {
-            return (DefWndPaintNC(hWnd, (HRGN)wParam));
+	case WM_NCPAINT:
+	{
+            return DefWndNCPaint(hWnd, (HRGN)wParam);
         }
 
         case WM_NCCALCSIZE:
         {
-            return (DefWndNCCalcSize(hWnd, (BOOL)wParam, (RECT*)lParam));
+            return DefWndNCCalcSize(hWnd, (BOOL)wParam, (RECT*)lParam);
+        }
+
+        case WM_NCACTIVATE:
+        {
+            return DefWndNCActivate(hWnd, wParam);
+        }
+
+        case WM_NCHITTEST:
+        {
+            POINT Point;
+            Point.x = SLOWORD(lParam);
+            Point.y = SHIWORD(lParam);
+            return (DefWndNCHitTest(hWnd, Point));
+        }
+
+        case WM_NCLBUTTONDOWN:
+        {
+            return (DefWndNCLButtonDown(hWnd, wParam, lParam));
+        }
+
+        case WM_NCLBUTTONUP:
+        {
+            return (DefWndNCLButtonUp(hWnd, wParam, lParam));
+        }
+
+        case WM_LBUTTONDBLCLK:
+        case WM_NCLBUTTONDBLCLK:
+        {
+            return (DefWndNCLButtonDblClk(hWnd, wParam, lParam));
+        }
+
+        case WM_NCRBUTTONDOWN:
+        {
+            if (wParam == HTCAPTION)
+            {
+                SetCapture(hWnd);
+            }
+            break;
         }
 
         case WM_WINDOWPOSCHANGING:
@@ -1861,39 +942,6 @@ User32DefWindowProc(HWND hWnd,
         case WM_WINDOWPOSCHANGED:
         {
             return (DefWndHandleWindowPosChanged(hWnd, (WINDOWPOS*)lParam));
-        }
-
-        case WM_NCHITTEST:
-        {
-            POINT Point;
-            Point.x = SLOWORD(lParam);
-            Point.y = SHIWORD(lParam);
-            return (DefWndHitTestNC(hWnd, Point));
-        }
-
-        case WM_NCLBUTTONDOWN:
-        {
-            return (DefWndHandleLButtonDownNC(hWnd, wParam, lParam));
-        }
-
-        case WM_NCLBUTTONUP:
-        {
-            return (DefWndHandleLButtonUpNC(hWnd, wParam, lParam));
-        }
-
-        case WM_LBUTTONDBLCLK:
-        case WM_NCLBUTTONDBLCLK:
-        {
-            return (DefWndHandleLButtonDblClkNC(hWnd, wParam, lParam));
-        }
-
-        case WM_NCRBUTTONDOWN:
-        {
-            if (wParam == HTCAPTION)
-            {
-                SetCapture(hWnd);
-            }
-            break;
         }
 
         case WM_RBUTTONUP:
@@ -1943,7 +991,7 @@ User32DefWindowProc(HWND hWnd,
                     ScreenToClient(GetParent(hWnd), &Pt);
                 }
 
-                HitCode = DefWndHitTestNC(hWnd, Pt);
+                HitCode = DefWndNCHitTest(hWnd, Pt);
 
                 if (HitCode == HTCAPTION || HitCode == HTSYSMENU)
                 {
@@ -1951,13 +999,8 @@ User32DefWindowProc(HWND hWnd,
                                    TPM_LEFTBUTTON | TPM_RIGHTBUTTON,
                                    Pt.x, Pt.y, 0, hWnd, NULL);
                 }
-	        }
+	    }
             break;
-        }
-
-        case WM_NCACTIVATE:
-        {
-            return (DefWndHandleActiveNC(hWnd, wParam));
         }
 
         case WM_PRINT:
@@ -2370,9 +1413,9 @@ DefWindowProcA(HWND hWnd,
                 (strlen((PSTR)lParam) + 1) * sizeof(CHAR));
             strcpy(WindowText, (PSTR)lParam);
             SetPropA(hWnd, WindowTextAtom, WindowText);
-            if (0 != (GetWindowLongW(hWnd, GWL_STYLE) & WS_CAPTION))
-	        {
-                DefWndPaintNC(hWnd, (HRGN) 1);
+            if ((GetWindowLongW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
+            {
+                DefWndNCPaint(hWnd, (HRGN)1);
             }
             return (1);
         }
@@ -2475,8 +1518,8 @@ DefWindowProcW(HWND hWnd,
             wcscpy(WindowText, (PWSTR)lParam);
             SetPropW(hWnd, WindowTextAtom, WindowText);
             if ((GetWindowLongW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
-	        {
-                DefWndPaintNC(hWnd, (HRGN)1);
+            {
+                DefWndNCPaint(hWnd, (HRGN)1);
             }
             return (1);
         }

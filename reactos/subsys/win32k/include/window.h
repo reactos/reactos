@@ -51,7 +51,7 @@ typedef struct _WINDOW_OBJECT
   /* Entry in the thread's list of windows. */
   LIST_ENTRY ListEntry;
   /* Pointer to the extra data associated with the window. */
-  PULONG ExtraData;
+  PCHAR ExtraData;
   /* Size of the extra data associated with the window. */
   ULONG ExtraDataSize;
   /* Position of the window. */
