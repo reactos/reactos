@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.8 2000/03/08 21:23:14 jfilby Exp $
+/* $Id: driver.c,v 1.9 2000/03/09 21:04:10 jfilby Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -79,14 +79,85 @@ PGD_ENABLEDRIVER  DRIVER_FindDDIDriver(LPCWSTR  Name)
 
   /* If not, then load it */
   RtlInitUnicodeString (&DriverNameW, Name);
+
   ModuleObject = EngLoadImage(&DriverNameW);
+
   return (PGD_ENABLEDRIVER)ModuleObject->EntryPoint;
 }
 
 BOOL  DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED, 
                                PDRIVER_FUNCTIONS  DF)
 {
-  UNIMPLEMENTED;
+  int i;
+
+  for (i=0; i<DED->c; i++)
+  {
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvEnablePDEV)      DF->EnablePDev = (PGD_ENABLEPDEV)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvCompletePDEV)    DF->CompletePDev = (PGD_COMPLETEPDEV)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvDisablePDEV)     DF->DisablePDev = (PGD_DISABLEPDEV)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvAssertMode)      DF->AssertMode = (PGD_ASSERTMODE)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvResetPDEV)       DF->ResetPDev = (PGD_RESETPDEV)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvCreateDeviceBitmap)
+      DF->CreateDeviceBitmap = (PGD_CREATEDEVICEBITMAP)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvDeleteDeviceBitmap)
+      DF->DeleteDeviceBitmap = (PGD_DELETEDEVICEBITMAP)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvRealizeBrush)    DF->RealizeBrush = (PGD_REALIZEBRUSH)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvDitherColor)     DF->DitherColor = (PGD_DITHERCOLOR)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvStrokePath)      DF->StrokePath = (PGD_STROKEPATH)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvFillPath)        DF->FillPath = (PGD_FILLPATH)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvStrokeAndFillPath)
+      DF->StrokeAndFillPath = (PGD_STROKEANDFILLPATH)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvPaint)           DF->Paint = (PGD_PAINT)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvBitBlt)          DF->BitBlt = (PGD_BITBLT)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvCopyBits)        DF->CopyBits = (PGD_COPYBITS)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvStretchBlt)      DF->StretchBlt = (PGD_STRETCHBLT)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvSetPalette)      DF->SetPalette = (PGD_SETPALETTE)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvTextOut)         DF->TextOut = (PGD_TEXTOUT)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvEscape)          DF->Escape = (PGD_ESCAPE)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvDrawEscape)      DF->DrawEscape = (PGD_DRAWESCAPE)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvQueryFont)       DF->QueryFont = (PGD_QUERYFONT)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvQueryFontTree)   DF->QueryFontTree = (PGD_QUERYFONTTREE)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvQueryFontData)   DF->QueryFontData = (PGD_QUERYFONTDATA)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvSetPointerShape) DF->SetPointerShape = (PGD_SETPOINTERSHAPE)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvMovePointer)     DF->MovePointer = (PGD_MOVEPOINTER)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvLineTo)          DF->LineTo = (PGD_LINETO)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvSendPage)        DF->SendPage = (PGD_SENDPAGE)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvStartPage)       DF->StartPage = (PGD_STARTPAGE)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvEndDoc)          DF->EndDoc = (PGD_ENDDOC)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvStartDoc)        DF->StartDoc = (PGD_STARTDOC)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvGetGlyphMode)    DF->GetGlyphMode = (PGD_GETGLYPHMODE)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvSynchronize)     DF->Synchronize = (PGD_SYNCHRONIZE)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvSaveScreenBits)  DF->SaveScreenBits = (PGD_SAVESCREENBITS)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvGetModes)        DF->GetModes = (PGD_GETMODES)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvFree)            DF->Free = (PGD_FREE)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvDestroyFont)     DF->DestroyFont = (PGD_DESTROYFONT)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvQueryFontCaps)   DF->QueryFontCaps = (PGD_LOADFONTFILE)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvLoadFontFile)    DF->LoadFontFile = (PGD_LOADFONTFILE)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvUnloadFontFile)  DF->UnloadFontFile = (PGD_UNLOADFONTFILE)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvFontManagement)  DF->FontManagement = (PGD_FONTMANAGEMENT)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvQueryTrueTypeTable)
+      DF->QueryTrueTypeTable = (PGD_QUERYTRUETYPETABLE)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvQueryTrueTypeOutline)
+      DF->QueryTrueTypeOutline = (PGD_QUERYTRUETYPEOUTLINE)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvGetTrueTypeFile) DF->GetTrueTypeFile = (PGD_GETTRUETYPEFILE)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvQueryFontFile)   DF->QueryFontFile = (PGD_QUERYFONTFILE)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvQueryAdvanceWidths)
+      DF->QueryAdvanceWidths = (PGD_QUERYADVANCEWIDTHS)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvSetPixelFormat)  DF->SetPixelFormat = (PGD_SETPIXELFORMAT)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvDescribePixelFormat)
+      DF->DescribePixelFormat = (PGD_DESCRIBEPIXELFORMAT)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvSwapBuffers)     DF->SwapBuffers = (PGD_SWAPBUFFERS)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvStartBanding)    DF->StartBanding = (PGD_STARTBANDING)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvNextBand)        DF->NextBand = (PGD_NEXTBAND)DED->pdrvfn[i].pfn;
+#if 0
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvGetDirectDrawInfo) DF->GETDIRECTDRAWINFO = (PGD_)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvEnableDirectDraw)  DF->ENABLEDIRECTDRAW = (PGD_)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvDisableDirectDraw) DF->DISABLEDIRECTDRAW = (PGD_)DED->pdrvfn[i].pfn;
+#endif
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvQuerySpoolType)  DF->QuerySpoolType = (PGD_QUERYSPOOLTYPE)DED->pdrvfn[i].pfn;
+  }
+
+  return TRUE;
 }
 
 HANDLE  DRIVER_FindMPDriver(LPCWSTR  Name)
