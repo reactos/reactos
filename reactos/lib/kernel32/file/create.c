@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.33 2003/07/10 18:50:51 chorns Exp $
+/* $Id: create.c,v 1.34 2003/11/27 20:57:58 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -127,16 +127,6 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
         return (INVALID_HANDLE_VALUE);
      }
 
-   /* validate & translate the flags */
-   if (dwFlagsAndAttributes & FILE_FLAG_OVERLAPPED)
-   {
-    DPRINT("Overlapped I/O not supported\n");
-    SetLastError(ERROR_NOT_SUPPORTED);
-    return INVALID_HANDLE_VALUE;
-   }
-   else
-     Flags |= FILE_SYNCHRONOUS_IO_ALERT;
-   
    /* validate & translate the filename */
    if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpFileName,
 				      &NtPathU,
@@ -150,7 +140,15 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
    
    DPRINT("NtPathU \'%S\'\n", NtPathU.Buffer);
 
+  /* validate & translate the flags */
+
    /* translate the flags that need no validation */
+  if (!(dwFlagsAndAttributes & FILE_FLAG_OVERLAPPED)){
+    /* yes, nonalert is correct! apc's are not delivered
+    while waiting for file io to complete */
+    Flags |= FILE_SYNCHRONOUS_IO_NONALERT;
+  }
+   
    if(dwFlagsAndAttributes & FILE_FLAG_WRITE_THROUGH)
     Flags |= FILE_WRITE_THROUGH;
 
@@ -181,6 +179,10 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
    }
    else
     Flags |= FILE_NON_DIRECTORY_FILE;
+    
+    
+  /* handle may allways be waited on and querying attributes are allways allowed */
+  dwDesiredAccess |= SYNCHRONIZE|FILE_READ_ATTRIBUTES; 
 
    /* FILE_FLAG_POSIX_SEMANTICS is handled later */
 
@@ -192,21 +194,6 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
    if(dwFlagsAndAttributes & FILE_FLAG_OPEN_NO_RECALL)
     Flags |= FILE_OPEN_NO_RECALL;
 #endif
-
-   /* translate the desired access */
-   if (dwDesiredAccess & GENERIC_ALL)
-     dwDesiredAccess |= FILE_ALL_ACCESS;
-   else
-   {
-     if (dwDesiredAccess & GENERIC_READ)
-       dwDesiredAccess |= FILE_GENERIC_READ;
-     
-     if (dwDesiredAccess & GENERIC_WRITE)
-       dwDesiredAccess |= FILE_GENERIC_WRITE;
-     
-     if (dwDesiredAccess & GENERIC_EXECUTE)
-       dwDesiredAccess |= FILE_GENERIC_EXECUTE;
-   }
 
    /* check for console output */
    if (0 == _wcsicmp(L"CONOUT$", lpFileName))
@@ -284,24 +271,27 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
    RtlFreeUnicodeString(&NtPathU);
 
    /* error */
-   if (!NT_SUCCESS(Status))
-     {
-	SetLastErrorByStatus (Status);
-	return INVALID_HANDLE_VALUE;
-     }
+  if (!NT_SUCCESS(Status))
+  {
+    SetLastErrorByStatus (Status);
+    return INVALID_HANDLE_VALUE;
+  }
    
-   switch(IoStatusBlock.Information)
-   {
-    case FILE_OPENED:
-    case FILE_CREATED:
-     SetLastError(ERROR_ALREADY_EXISTS);
-     break;
-    
-    default:
-     break;
-   }
-   
-   return FileHandle;
+  /*
+  create with OPEN_ALWAYS (FILE_OPEN_IF) returns info = FILE_OPENED or FILE_CREATED
+  create with CREATE_ALWAYS (FILE_OVERWRITE_IF) returns info = FILE_OVERWRITTEN or FILE_CREATED
+  */    
+  if ((dwCreationDisposition == FILE_OPEN_IF && IoStatusBlock.Information == FILE_OPENED) ||
+      (dwCreationDisposition == FILE_OVERWRITE_IF && IoStatusBlock.Information == FILE_OVERWRITTEN))
+  {
+    SetLastError(ERROR_ALREADY_EXISTS);
+  }
+  else
+  {
+    SetLastError(0);
+  }
+
+  return FileHandle;
 }
 
 /* EOF */
