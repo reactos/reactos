@@ -1,4 +1,4 @@
-/* $Id: pci.c,v 1.6 2002/12/09 23:15:57 ekohl Exp $
+/* $Id: pci.c,v 1.7 2003/02/17 21:24:13 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -27,6 +27,9 @@
 
 /* MACROS ******************************************************************/
 
+/* FIXME These are also defined in drivers/bus/pci/pcidef.h.
+   Maybe put PCI definitions in a central include file??? */
+
 /* access type 1 macros */
 #define CONFIG_CMD(bus, dev_fn, where) \
 	(0x80000000 | (((ULONG)(bus)) << 16) | (((dev_fn) & 0x1F) << 11) | (((dev_fn) & 0xE0) << 3) | ((where) & ~3))
@@ -37,8 +40,22 @@
 #define FUNC(dev_fn) \
 	((((dev_fn) & 0xE0) >> 4) | 0xf0)
 
+#define  PCI_BASE_ADDRESS_SPACE	0x01	/* 0 = memory, 1 = I/O */
+#define  PCI_BASE_ADDRESS_SPACE_IO 0x01
+#define  PCI_BASE_ADDRESS_SPACE_MEMORY 0x00
+#define  PCI_BASE_ADDRESS_MEM_TYPE_MASK 0x06
+#define  PCI_BASE_ADDRESS_MEM_TYPE_32	0x00	/* 32 bit address */
+#define  PCI_BASE_ADDRESS_MEM_TYPE_1M	0x02	/* Below 1M [obsolete] */
+#define  PCI_BASE_ADDRESS_MEM_TYPE_64	0x04	/* 64 bit address */
+#define  PCI_BASE_ADDRESS_MEM_PREFETCH	0x08	/* prefetchable? */
+#define  PCI_BASE_ADDRESS_MEM_MASK	(~0x0fUL)
+#define  PCI_BASE_ADDRESS_IO_MASK	(~0x03UL)
+/* bit 1 is reserved if address_space = 1 */
+
 
 /* GLOBALS ******************************************************************/
+
+#define TAG_PCI  TAG('P', 'C', 'I', 'H')
 
 static ULONG BusConfigType = 0;  /* undetermined config type */
 static KSPIN_LOCK PciLock;
@@ -562,6 +579,134 @@ HalpTranslatePciAddress(PBUS_HANDLER BusHandler,
    return TRUE;
 }
 
+/*
+ * Find the extent of a PCI decode..
+ */
+static ULONG STDCALL
+PciSize(ULONG Base, ULONG Mask)
+{
+  ULONG Size = Mask & Base;   /* Find the significant bits */
+  Size = Size & ~(Size - 1);  /* Get the lowest of them to find the decode size */
+  return Size;
+}
+
+static NTSTATUS STDCALL
+HalpAssignPciSlotResources(IN PBUS_HANDLER BusHandler,
+			   IN ULONG BusNumber,
+			   IN PUNICODE_STRING RegistryPath,
+			   IN PUNICODE_STRING DriverClassName,
+			   IN PDRIVER_OBJECT DriverObject,
+			   IN PDEVICE_OBJECT DeviceObject,
+			   IN ULONG SlotNumber,
+			   IN OUT PCM_RESOURCE_LIST *AllocatedResources)
+{
+  UINT Address;
+  UINT NoAddresses;
+  ULONG BaseAddresses[PCI_TYPE0_ADDRESSES];
+  ULONG Size[PCI_TYPE0_ADDRESSES];
+  NTSTATUS Status = STATUS_SUCCESS;
+  UCHAR Offset;
+  PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor;
+
+  /* FIXME: Should handle 64-bit addresses */
+
+  /* Read the PCI configuration space for the device and store base address and
+     size information in temporary storage. Count the number of valid base addresses */
+  NoAddresses = 0;
+  for (Address = 0; Address < PCI_TYPE0_ADDRESSES; Address++)
+    {
+      Offset = offsetof(PCI_COMMON_CONFIG, u.type0.BaseAddresses[Address]);
+      Status = ReadPciConfigUlong(BusNumber, SlotNumber,
+                                  Offset, BaseAddresses + Address);
+      if (! NT_SUCCESS(Status))
+	{
+	  return Status;
+	}
+      if (0xffffffff == BaseAddresses[Address])
+	{
+	  BaseAddresses[Address] = 0;
+	}
+      if (0 != BaseAddresses[Address])
+	{
+	  NoAddresses++;
+	  Status = WritePciConfigUlong(BusNumber, SlotNumber, Offset, 0xffffffff);
+	  if (! NT_SUCCESS(Status))
+	    {
+	      WritePciConfigUlong(BusNumber, SlotNumber, Offset, BaseAddresses[Address]);
+	      return Status;
+	    }
+	  Status = ReadPciConfigUlong(BusNumber, SlotNumber,
+	                              Offset, Size + Address);
+	  if (! NT_SUCCESS(Status))
+	    {
+	      WritePciConfigUlong(BusNumber, SlotNumber, Offset, BaseAddresses[Address]);
+	      return Status;
+	    }
+	  Status = WritePciConfigUlong(BusNumber, SlotNumber, Offset, BaseAddresses[Address]);
+	  if (! NT_SUCCESS(Status))
+	    {
+	      return Status;
+	    }
+
+	}
+    }
+
+  /* Allocate output buffer and initialize */
+  *AllocatedResources = ExAllocatePoolWithTag(PagedPool,
+                                              sizeof(CM_RESOURCE_LIST) +
+                                              (NoAddresses - 1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR),
+                                              TAG_PCI);
+  if (NULL == *AllocatedResources)
+    {
+    return STATUS_NO_MEMORY;
+    }
+  (*AllocatedResources)->Count = 1;
+  (*AllocatedResources)->List[0].InterfaceType = PCIBus;
+  (*AllocatedResources)->List[0].BusNumber = BusNumber;
+  (*AllocatedResources)->List[0].PartialResourceList.Version = 1;
+  (*AllocatedResources)->List[0].PartialResourceList.Revision = 1;
+  (*AllocatedResources)->List[0].PartialResourceList.Count = NoAddresses;
+  Descriptor = (*AllocatedResources)->List[0].PartialResourceList.PartialDescriptors;
+
+  /* Store configuration information */
+  for (Address = 0; Address < PCI_TYPE0_ADDRESSES; Address++)
+    {
+      if (0 != BaseAddresses[Address])
+	{
+	  if (PCI_BASE_ADDRESS_SPACE_MEMORY ==
+              (BaseAddresses[Address] & PCI_BASE_ADDRESS_SPACE))
+	    {
+	      Descriptor->Type = CmResourceTypeMemory;
+	      Descriptor->ShareDisposition = CmResourceShareDeviceExclusive; /* FIXME I have no idea... */
+	      Descriptor->Flags = CM_RESOURCE_MEMORY_READ_WRITE;             /* FIXME Just a guess */
+	      Descriptor->u.Memory.Start.QuadPart = (BaseAddresses[Address] & PCI_BASE_ADDRESS_MEM_MASK);
+	      Descriptor->u.Memory.Length = PciSize(Size[Address], PCI_BASE_ADDRESS_MEM_MASK);
+	    }
+	  else if (PCI_BASE_ADDRESS_SPACE_IO ==
+                   (BaseAddresses[Address] & PCI_BASE_ADDRESS_SPACE))
+	    {
+	      Descriptor->Type = CmResourceTypePort;
+	      Descriptor->ShareDisposition = CmResourceShareDeviceExclusive; /* FIXME I have no idea... */
+	      Descriptor->Flags = CM_RESOURCE_PORT_IO;                       /* FIXME Just a guess */
+	      Descriptor->u.Port.Start.QuadPart = BaseAddresses[Address] &= PCI_BASE_ADDRESS_IO_MASK;
+	      Descriptor->u.Port.Length = PciSize(Size[Address], PCI_BASE_ADDRESS_IO_MASK & 0xffff);
+	    }
+	  else
+	    {
+	      assert(FALSE);
+	      return STATUS_UNSUCCESSFUL;
+	    }
+	  Descriptor++;
+	}
+    }
+
+  assert(Descriptor == (*AllocatedResources)->List[0].PartialResourceList.PartialDescriptors + NoAddresses);
+
+  /* FIXME: Should store the resources in the registry resource map */
+
+  return Status;
+}
+
 
 VOID
 HalpInitPciBus(VOID)
@@ -590,8 +735,8 @@ HalpInitPciBus(VOID)
     (pTranslateBusAddress)HalpTranslatePciAddress;
 //	BusHandler->AdjustResourceList =
 //		(pGetSetBusData)HalpAdjustPciResourceList;
-//	BusHandler->AssignSlotResources =
-//		(pGetSetBusData)HalpAssignPciSlotResources;
+  BusHandler->AssignSlotResources =
+    (pAssignSlotResources)HalpAssignPciSlotResources;
 
 
   /* agp bus (bus 1) handler */
@@ -606,8 +751,8 @@ HalpInitPciBus(VOID)
     (pTranslateBusAddress)HalpTranslatePciAddress;
 //	BusHandler->AdjustResourceList =
 //		(pGetSetBusData)HalpAdjustPciResourceList;
-//	BusHandler->AssignSlotResources =
-//		(pGetSetBusData)HalpAssignPciSlotResources;
+  BusHandler->AssignSlotResources =
+    (pAssignSlotResources)HalpAssignPciSlotResources;
 
   DPRINT("HalpInitPciBus() finished.\n");
 }
