@@ -51,6 +51,7 @@ BEGIN
     POPUP "&Ajutor"
     BEGIN
         MENUITEM "&Despre Explorer...",         ID_ABOUT
+        MENUITEM "Explorer &FAQ...",            ID_EXPLORER_FAQ
     END
 END
 
@@ -141,8 +142,8 @@ IDB_LOGOV               BITMAP  DISCARDABLE     "res/logov.bmp"
 
 IDA_EXPLORER ACCELERATORS DISCARDABLE 
 BEGIN
-    "X",            ID_FILE_EXIT,           VIRTKEY, ALT, NOINVERT
-    "S",            ID_VIEW_FULLSCREEN,     VIRTKEY, SHIFT, CONTROL, 
+    0x58,            ID_FILE_EXIT,           VIRTKEY, ALT, NOINVERT
+    0x53,            ID_VIEW_FULLSCREEN,     VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
 END
 
@@ -412,7 +413,8 @@ BEGIN
     END
     POPUP "&Help"
     BEGIN
-        MENUITEM "&About explorer...",          ID_ABOUT
+        MENUITEM "&About Explorer...",          ID_ABOUT
+        MENUITEM "Explorer &FAQ...",            ID_EXPLORER_FAQ
     END
 END
 

@@ -67,6 +67,7 @@
 #define ID_FILE_EXIT                    0xE141
 #define ID_HELP_USING                   0xE144
 #define ID_HELP                         0xE146
+#define ID_EXPLORER_FAQ                 10002
 
 // Next default values for new objects
 // 
