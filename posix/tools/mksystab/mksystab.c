@@ -1,4 +1,4 @@
-/* $Id: mksystab.c,v 1.4 2002/10/29 04:45:58 rex Exp $
+/* $Id: mksystab.c,v 1.1 2003/01/05 18:08:11 robd Exp $
  *
  * PROJECT    : ReactOS / POSIX+ Subsystem
  * DESCRIPTION: Build the system calls table for

@@ -1,4 +1,4 @@
-# $Id: syscall.db,v 1.3 2002/10/29 04:45:58 rex Exp $
+# $Id: syscall.db,v 1.1 2003/01/05 18:08:11 robd Exp $
 #
 # ReactOS - Operating System
 # Symbolic system calls table for the POSIX+ server.
