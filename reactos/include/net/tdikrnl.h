@@ -909,7 +909,7 @@ typedef VOID DDKAPI
   IN PTA_ADDRESS  Address,
   IN PUNICODE_STRING  DeviceName,
   IN PTDI_PNP_CONTEXT  Context);
-
+/*
 typedef NTSTATUS DDKAPI
 (*TDI_PNP_POWER_HANDLER)(
   IN PUNICODE_STRING  DeviceName,
@@ -925,7 +925,7 @@ typedef VOID DDKAPI
 (*ProviderPnPPowerComplete)(
   IN PNET_PNP_EVENT  NetEvent,
   IN NTSTATUS  ProviderStatus);
-
+ */
 
 
 
@@ -1048,7 +1048,7 @@ DDKAPI
 TdiMatchPdoWithChainedReceiveContext(
   IN PVOID TsduDescriptor,
   IN PVOID PDO);
-
+/*
 TDIKRNLAPI
 VOID
 DDKAPI
@@ -1066,7 +1066,7 @@ TdiPnPPowerRequest(
   IN PTDI_PNP_CONTEXT  Context1,
   IN PTDI_PNP_CONTEXT  Context2,
   IN ProviderPnPPowerComplete  ProtocolCompletionHandler);
-
+ */
 TDIKRNLAPI
 NTSTATUS
 DDKAPI
@@ -1096,7 +1096,7 @@ TdiRegisterNetAddress(
   IN PUNICODE_STRING  DeviceName,
   IN PTDI_PNP_CONTEXT  Context,
   OUT HANDLE  *AddrRegistrationHandle);
-
+/*
 TDIKRNLAPI
 NTSTATUS
 DDKAPI
@@ -1112,7 +1112,7 @@ TdiRegisterPnPHandlers(
   IN PTDI_CLIENT_INTERFACE_INFO  ClientInterfaceInfo,
   IN ULONG  InterfaceInfoSize,
   OUT HANDLE  *BindingHandle);
-
+ */
 TDIKRNLAPI
 NTSTATUS
 DDKAPI
