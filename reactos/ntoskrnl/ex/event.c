@@ -124,16 +124,6 @@ NtCreateEvent(OUT PHANDLE EventHandle,
 	      IN EVENT_TYPE EventType,
 	      IN BOOLEAN InitialState)
 {
-/*
- * @implemented
- */
-NTSTATUS STDCALL
-NtCreateEvent(OUT PHANDLE EventHandle,
-	      IN ACCESS_MASK DesiredAccess,
-	      IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
-	      IN EVENT_TYPE EventType,
-	      IN BOOLEAN InitialState)
-{
    KPROCESSOR_MODE PreviousMode;
    PKEVENT Event;
    HANDLE hEvent;
