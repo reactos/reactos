@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.22 2001/04/09 02:45:04 dwelch Exp $
+/* $Id: kdebug.c,v 1.23 2001/04/10 17:48:17 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,6 +13,8 @@
 #include <internal/ntoskrnl.h>
 #include <internal/kd.h>
 #include <internal/mm.h>
+#include <internal/config.h>
+#include "../dbg/kdb.h"
 
 /* serial debug connection */
 #define DEFAULT_DEBUG_PORT      2	/* COM2 */
@@ -394,8 +396,10 @@ KdSystemDebugControl(ULONG Code)
   /* K - Enter the system debugger. */
   else if (Code == 10)
     {
-#if KDBG
+#ifdef KDBG
+      KdbEnter();
 #else /* KDBG */
+      DbgPrint("No local kernel debugger\n");
 #endif /* not KDBG */
     }
 }

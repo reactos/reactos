@@ -436,8 +436,18 @@ static BOOLEAN KeyboardHandler(PKINTERRUPT Interrupt, PVOID Context)
    BYTE thisKey;
    BOOL isDown;
    static BYTE lastKey;
+   CHAR Status;
 
    CHECKPOINT;
+
+   /*
+    * Check status
+    */
+   Status = READ_PORT_UCHAR((PUCHAR)KBD_CTRL_PORT);
+   if (!(Status & KBD_OBF))
+     {
+       return (FALSE);
+     }
 
    // Read scan code
    thisKey=READ_PORT_UCHAR((PUCHAR)KBD_DATA_PORT);
@@ -585,6 +595,23 @@ static void KeyboardConnectInterrupt(void)
 			       FALSE);
 }
 
+VOID
+KbdClearInput(VOID)
+{
+  ULONG i;
+  CHAR Status;
+
+  for (i = 0; i < 100; i++)
+    {
+      Status = READ_PORT_UCHAR((PUCHAR)KBD_CTRL_PORT);
+      if (!(Status & KBD_OBF))
+	{
+	  return;
+	}
+      (VOID)READ_PORT_UCHAR((PUCHAR)KBD_DATA_PORT);
+    }
+}
+
 static int InitializeKeyboard(void)
 {
    // Initialize variables
@@ -598,6 +625,7 @@ static int InitializeKeyboard(void)
    ctrlKeyState=0;
    extKey=0;
 
+   KbdClearInput();
    KeyboardConnectInterrupt();
    KeInitializeDpc(&KbdDpc,KbdDpcRoutine,NULL);
    return 0;

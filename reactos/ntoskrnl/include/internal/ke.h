@@ -22,13 +22,19 @@
 
 /* INCLUDES *****************************************************************/
 
+#ifndef __ASM__
 #include <ddk/ntddk.h>
 
 #include <stdarg.h>
+#endif /* not __ASM__ */
 
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
 
+#ifndef __ASM__
+
 struct _KTHREAD;
+
+#endif /* not __ASM__ */
 
 #define KTRAP_FRAME_DEBUGEBP     (0x0)
 #define KTRAP_FRAME_DEBUGEIP     (0x4)
@@ -74,6 +80,9 @@ struct _KTHREAD;
 #define KTRAP_FRAME_RESERVED8      (0x86)
 #define KTRAP_FRAME_V86_GS         (0x88)
 #define KTRAP_FRAME_RESERVED9      (0x8A)
+#define KTRAP_FRAME_SIZE           (0x8C)
+
+#ifndef __ASM__
 
 typedef struct _KTRAP_FRAME
 {
@@ -180,4 +189,7 @@ KiDispatchException(PEXCEPTION_RECORD Er,
 		    BOOLEAN SearchFrames);
 VOID KeTrapFrameToContext(PKTRAP_FRAME TrapFrame,
 			  PCONTEXT Context);
+
+#endif /* not __ASM__ */
+
 #endif

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.2 2000/11/20 19:59:11 ekohl Exp $
+# $Id: makefile,v 1.3 2001/04/10 17:48:17 dwelch Exp $
 #
 #
 PATH_TO_TOP = ../../..
@@ -7,7 +7,7 @@ TARGET=keyboard
 
 OBJECTS = $(TARGET).o $(TARGET).coff ../../../ntoskrnl/ntoskrnl.a
 
-CFLAGS = -O2 -I.
+CFLAGS = -O2 -I. -g
 
 all: $(TARGET).sys $(TARGET).sys.unstripped
 

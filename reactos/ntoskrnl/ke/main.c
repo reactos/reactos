@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.85 2001/03/27 21:43:42 dwelch Exp $
+/* $Id: main.c,v 1.86 2001/04/10 17:48:17 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -42,6 +42,8 @@
 #include <internal/v86m.h>
 #include <internal/kd.h>
 #include <internal/trap.h>
+#include <internal/config.h>
+#include "../dbg/kdb.h"
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -502,6 +504,13 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
    
    /* Report all resources used by hal */
    HalReportResourceUsage ();
+
+   /*
+    * Enter the kernel debugger before starting up the boot drivers
+    */
+#ifdef KDBG
+   KdbEnter();
+#endif /* KDBG */
    
    /*
     * Initalize services loaded at boot time

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.30 2001/04/09 02:45:03 dwelch Exp $
+# $Id: Makefile,v 1.31 2001/04/10 17:48:16 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -16,7 +16,7 @@ ARCH := i386
 #
 # Whether to compile in the kernel debugger
 #
-KDBG := 0
+KDBG := 1
 
 #
 # Whether to compile for debugging
@@ -24,18 +24,33 @@ KDBG := 0
 DBG := 1
 
 #
+# Whether to compile a multiprocessor or single processor version
+#
+MP := 0
+
 #
 #
+#
+CONFIG :=
+
 ifeq ($(DBG), 1)
-CFLAGS_DBG := -g -DDBG
+CFLAGS_DBG := -g
+CONFIG += DBG
 else
 CFLAGS_DBG :=
 endif
 
 ifeq ($(KDBG), 1)
-CFLAGS_KDBG := -DKDBG
+OBJECTS_KDBG := dbg/kdb.o dbg/kdb_keyboard.o dbg/i386/kdb_help.o
+CONFIG += KDBG
 else
-CFLAGS_KDBG :=
+OBJECTS_KDBG :=
+endif
+
+ifeq ($(MP), 1)
+CONFIG += MP
+else
+CONFIG += UP
 endif
 
 TARGETNAME := ntoskrnl
@@ -43,11 +58,11 @@ TARGETNAME := ntoskrnl
 OBJECTS_PATH = objects
 
 ASFLAGS = -Iinclude
-CFLAGS = -Iinclude -D__NTOSKRNL__ $(CFLAGS_DBG) $(CFLAGS_KDBG) -Wall -Werror 
+CFLAGS = -Iinclude -D__NTOSKRNL__ $(CFLAGS_DBG) -Wall -Werror 
 
 include $(PATH_TO_TOP)/rules.mak
 
-all: $(EXE_PREFIX)depends$(EXE_POSTFIX) \
+all: config $(EXE_PREFIX)depends$(EXE_POSTFIX) \
 	$(OBJECTS_PATH) \
 	$(TARGETNAME).nostrip.exe \
 	$(TARGETNAME).exe \
@@ -264,7 +279,8 @@ OBJECTS_DBG = \
 	dbg/dbgctrl.o \
 	dbg/errinfo.o \
 	dbg/print.o \
-	dbg/user.o
+	dbg/user.o \
+	$(OBJECTS_KDBG)
 
 # Loader
 OBJECTS_LDR = \
@@ -596,6 +612,14 @@ dist: ../$(DIST_DIR)/$(TARGETNAME).exe
 ex/napi.o: ex/napi.c ../include/ntdll/napi.h
 
 ke/main.o: ke/main.c ../include/reactos/buildno.h
+
+mkconfig$(EXE_SUFFIX): mkconfig.c
+	$(HOST_CC) -g -o mkconfig$(EXE_SUFFIX) mkconfig.c
+
+config:
+	$(EXE_PREFIX)mkconfig$(EXE_SUFFIX) include/internal/config.h $(CONFIG)
+
+.PHONY: config
 
 include $(D1_FILES)
 
