@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.152 2004/12/24 17:06:59 navaraf Exp $
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -870,6 +870,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
      return Status;
   }
 
+  MmSetPageProtect(NULL, DriverBase, PAGE_READONLY);
   /* Set the protections for the various parts of the driver */
   for (Idx = 0; Idx < PENtHeaders->FileHeader.NumberOfSections; Idx++)
   {
@@ -1077,6 +1078,7 @@ LdrSafePEProcessModule(PVOID ModuleLoadBase,
   }
 
   /*  Set the page protection for the virtual sections */
+  MmSetPageProtect(NULL, DriverBase, PAGE_READONLY);
   for (Idx = 0; Idx < PENtHeaders->FileHeader.NumberOfSections; Idx++)
   {
      ULONG Characteristics = PESectionHeaders[Idx].Characteristics;
