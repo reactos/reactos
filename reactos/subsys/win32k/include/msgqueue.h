@@ -128,7 +128,7 @@ IntSendMessage(HWND hWnd,
 VOID STDCALL
 MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 VOID FASTCALL
-MsqInsertSystemMessage(MSG* Msg);
+MsqInsertSystemMessage(MSG* Msg, BOOL RemMouseMoveMsg);
 
 inline BOOL MsqIsSignaled( PUSER_MESSAGE_QUEUE queue );
 inline VOID MsqSetQueueBits( PUSER_MESSAGE_QUEUE queue, WORD bits );

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.35 2003/08/26 00:33:53 weiden Exp $
+/* $Id: mouse.c,v 1.36 2003/08/26 19:26:02 weiden Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -311,7 +311,7 @@ MouseMoveCursor(LONG X, LONG Y)
       Msg.time = TickCount;
       Msg.pt.x = X;
       Msg.pt.y = Y;
-      MsqInsertSystemMessage(&Msg);
+      MsqInsertSystemMessage(&Msg, TRUE);
       /* move cursor */
       CurInfo->x = X;
       CurInfo->y = Y;
@@ -413,7 +413,7 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
     
       if ((0 != Data[i].LastX) || (0 != Data[i].LastY))
       {
-        MsqInsertSystemMessage(&Msg);
+        MsqInsertSystemMessage(&Msg, FALSE);
         MouseMoveAdded = TRUE;
       }
       
@@ -449,7 +449,7 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
         Msg.message = WM_RBUTTONUP;
       }
 
-      MsqInsertSystemMessage(&Msg);
+      MsqInsertSystemMessage(&Msg, FALSE);
     }
   }
 
@@ -467,7 +467,7 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
       Msg.pt.y = CurInfo->y;
       Msg.time = TickCount;
       Msg.lParam = MAKELPARAM(CurInfo->x, CurInfo->y);
-      MsqInsertSystemMessage(&Msg);
+      MsqInsertSystemMessage(&Msg, TRUE);
     }
     
     if (!CurInfo->SafetySwitch && !CurInfo->SafetySwitch2 &&
@@ -532,7 +532,8 @@ EnableMouse(HDC hDisplayDC)
                     CurInfo);
 
     PointerStatus = SurfGDI->SetPointerShape(SurfObj, MouseSurf, NULL, NULL,
-                                             0, 0, 
+                                             SysCursor->hx,
+                                             SysCursor->hy, 
                                              CurInfo->x, 
                                              CurInfo->y, 
                                              &MouseRect,
