@@ -36,20 +36,6 @@ BEGIN
     END
 END
 
-// Close Menu
-OBM_CLOSE BITMAP "resources/obm_close.bmp"
-
-// Minimize Box
-OBM_REDUCE BITMAP "resources/obm_reduce.bmp"
-OBM_REDUCED BITMAP "resources/obm_reduced.bmp"
-
-// Maximize Box
-OBM_ZOOM BITMAP "resources/obm_zoom.bmp"
-OBM_ZOOMD BITMAP "resources/obm_zoomd.bmp"
-
-// Restore Box
-OBM_RESTORE BITMAP "resources/obm_restore.bmp"
-OBM_RESTORED BITMAP "resources/obm_restored.bmp"
 /////////////////////////////////////////////////////////////////////////////
 //
 // Dialog
