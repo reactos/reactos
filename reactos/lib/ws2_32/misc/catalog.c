@@ -197,7 +197,7 @@ INT LoadProvider(
      * UNICODE_STRING objects are not null-terminated, but LoadLibraryW
      * expects a null-terminated string
      */
-    Provider->LibraryName.Buffer[Provider->LibraryName.Length] = L'\0';
+    Provider->LibraryName.Buffer[Provider->LibraryName.Length / sizeof(WCHAR)] = L'\0';
     Provider->hModule = LoadLibraryW(Provider->LibraryName.Buffer);
     if (NULL != Provider->hModule) {
       Provider->WSPStartup = (LPWSPSTARTUP)GetProcAddress(
