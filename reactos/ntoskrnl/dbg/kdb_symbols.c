@@ -914,6 +914,8 @@ KdbSymProcessSymbolFile(IN PVOID ModuleLoadBase,
   PIMAGE_SYMBOL_INFO SymbolInfo;
   ANSI_STRING AnsiString;
   PCHAR Extension;
+  ULONG i;
+  const char *KnownExtension[] = {".exe", ".sys", ".dll"};
 
   DPRINT("Module %s is a symbol file\n", FileName);
 
@@ -928,22 +930,21 @@ KdbSymProcessSymbolFile(IN PVOID ModuleLoadBase,
 
   DPRINT("base: %s (Length %d)\n", TmpBaseName, Length);
 
-  strcpy(TmpFileName, TmpBaseName);
-  strcat(TmpFileName, ".sys");
-  RtlInitAnsiString(&AnsiString, TmpFileName);
-
-  RtlAnsiStringToUnicodeString(&ModuleName, &AnsiString, TRUE);
-  ModuleObject = LdrGetModuleObject(&ModuleName);
-  RtlFreeUnicodeString(&ModuleName);
-  if (ModuleObject == NULL)
+  for (i = 0; i < sizeof(KnownExtension) / sizeof(*KnownExtension); i++)
     {
       strcpy(TmpFileName, TmpBaseName);
-      strcat(TmpFileName, ".exe");
+      strcat(TmpFileName, KnownExtension[i]);
       RtlInitAnsiString(&AnsiString, TmpFileName);
+
       RtlAnsiStringToUnicodeString(&ModuleName, &AnsiString, TRUE);
       ModuleObject = LdrGetModuleObject(&ModuleName);
       RtlFreeUnicodeString(&ModuleName);
+      if (ModuleObject)
+        {
+	  break;
+	}
     }
+  
   if (ModuleObject != NULL)
     {
       SymbolInfo = (PIMAGE_SYMBOL_INFO) &ModuleObject->TextSection->SymbolInfo;
