@@ -1755,6 +1755,18 @@ VOID SockAsyncSelectCompletionRoutine(PVOID Context, PIO_STATUS_BLOCK IoStatusBl
 					Socket->SharedData.AsyncDisabledEvents |= FD_WRITE;
 				}
 				break;
+
+			case AFD_EVENT_CONNECT:
+				if (0 != (Socket->SharedData.AsyncEvents & FD_CONNECT) && 0 == (Socket->SharedData.AsyncDisabledEvents & FD_CONNECT)) {
+					/* Make the Notifcation */
+					(Upcalls.lpWPUPostMessage)(Socket->SharedData.hWnd,
+								   Socket->SharedData.wMsg,
+								   Socket->Handle,
+								   WSAMAKESELECTREPLY(FD_CONNECT, 0));
+					/* Disable this event forever; */
+					Socket->SharedData.AsyncDisabledEvents |= FD_CONNECT;
+				}
+				break;
 				
 			case AFD_EVENT_ACCEPT:
 				if (0 != (Socket->SharedData.AsyncEvents & FD_ACCEPT) && 0 == (Socket->SharedData.AsyncDisabledEvents & FD_ACCEPT)) {
