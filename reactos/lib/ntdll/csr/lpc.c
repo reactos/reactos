@@ -1,4 +1,4 @@
-/* $Id: lpc.c,v 1.13 2004/07/03 17:13:09 hbirr Exp $
+/* $Id: lpc.c,v 1.14 2004/12/21 21:38:26 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -71,7 +71,10 @@ CsrCaptureParameterBuffer(PVOID ParameterBuffer,
     {
       return(STATUS_NO_MEMORY);
     }
-  memcpy(Block, ParameterBuffer, ParameterBufferSize);
+  if(ParameterBuffer != NULL)
+  {
+    memcpy(Block, ParameterBuffer, ParameterBufferSize);
+  }
   *ClientAddress = Block;
   *ServerAddress = Block - CsrSectionMapBase + CsrSectionMapServerBase;
   return(STATUS_SUCCESS);

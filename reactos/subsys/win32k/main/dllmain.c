@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.83 2004/12/12 01:40:37 weiden Exp $
+/* $Id: dllmain.c,v 1.84 2004/12/21 21:38:26 weiden Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -88,8 +88,6 @@ Win32kProcessCallback (struct _EPROCESS *Process,
       CleanupMonitorImpl();
 
       GDI_CleanupForProcess(Process);
-
-      IntGraphicsCheck(FALSE);
       
       /*
        * Deregister logon application automatically
@@ -194,6 +192,8 @@ Win32kThreadCallback (struct _ETHREAD *Thread,
       {
         ObDereferenceObject(Win32Thread->Desktop);
       }
+      
+      IntGraphicsCheck(FALSE);
     }
 
   return STATUS_SUCCESS;

@@ -73,6 +73,14 @@ ClassReferenceClassByNameOrAtom(
    LPCWSTR ClassNameOrAtom,
    HINSTANCE hInstance);
 
+PWNDCLASS_OBJECT FASTCALL
+IntCreateClass(
+   CONST WNDCLASSEXW *lpwcx,
+   DWORD Flags,
+   WNDPROC wpExtra,
+   PUNICODE_STRING MenuName,
+   RTL_ATOM Atom);
+
 struct _WINDOW_OBJECT;
 ULONG FASTCALL
 IntGetClassLong(struct _WINDOW_OBJECT *WindowObject, ULONG Offset, BOOL Ansi);

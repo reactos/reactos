@@ -70,6 +70,8 @@ typedef struct
 typedef struct
 {
    PCONTROLDISPATCHER CtrlDispatcher;
+   UNICODE_STRING DesktopName;
+   UNICODE_STRING Title;
 } CSRSS_ALLOC_CONSOLE_REQUEST, *PCSRSS_ALLOC_CONSOLE_REQUEST;
 
 typedef struct
@@ -533,6 +535,7 @@ typedef struct
 
 typedef struct
 {
+  HDESK hDesktop;
   HWND DesktopWindow;
   ULONG Width;
   ULONG Height;
@@ -544,6 +547,7 @@ typedef struct
 
 typedef struct
 {
+  HDESK hDesktop;
   HWND DesktopWindow;
 } CSRSS_HIDE_DESKTOP_REQUEST, *PCSRSS_HIDE_DESKTOP_REQUEST;
 
@@ -614,6 +618,16 @@ typedef struct
 {
   HANDLE InputWaitHandle;
 } CSRSS_GET_INPUT_WAIT_HANDLE_REPLY, *PCSRSS_GET_INPUT_WAIT_HANDLE_REPLY;
+
+typedef struct
+{
+  HWINSTA hWindowStation;
+} CSRSS_REGISTER_SYSTEM_CLASSES_REQUEST, *PCSRSS_REGISTER_SYSTEM_CLASSES_REQUEST;
+
+typedef struct
+{
+  HWINSTA hWindowStation;
+} CSRSS_REGISTER_SYSTEM_CLASSES_REPLY, *PCSRSS_REGISTER_SYSTEM_CALSSES_REPLY;
 
 #define CSRSS_MAX_WRITE_CONSOLE_REQUEST       \
       (MAX_MESSAGE_DATA - sizeof(ULONG) - sizeof(CSRSS_WRITE_CONSOLE_REQUEST))
@@ -687,6 +701,7 @@ typedef struct
 #define CSRSS_GET_CONSOLE_OUTPUT_CP         (0x33)
 #define CSRSS_SET_CONSOLE_OUTPUT_CP         (0x34)
 #define CSRSS_GET_INPUT_WAIT_HANDLE	    (0x35)
+#define CSRSS_REGISTER_SYSTEM_CLASSES       (0x36)
 
 /* Keep in sync with definition below. */
 #define CSRSS_REQUEST_HEADER_SIZE (LPC_MESSAGE_BASE_SIZE + sizeof(ULONG))
@@ -752,6 +767,7 @@ typedef struct
         CSRSS_GET_CONSOLE_OUTPUT_CP_REQUEST GetConsoleOutputCodePage;
         CSRSS_SET_CONSOLE_OUTPUT_CP_REQUEST SetConsoleOutputCodePage;
 	CSRSS_GET_INPUT_WAIT_HANDLE_REQUEST GetConsoleInputWaitHandle;
+	CSRSS_REGISTER_SYSTEM_CLASSES_REQUEST RegisterSystemClassesRequest;
       } Data;
     };
   };
@@ -807,6 +823,7 @@ typedef struct
         CSRSS_GET_CONSOLE_OUTPUT_CP_REPLY GetConsoleOutputCodePage;
         CSRSS_SET_CONSOLE_OUTPUT_CP_REPLY SetConsoleOutputCodePage;
 	CSRSS_GET_INPUT_WAIT_HANDLE_REPLY GetConsoleInputWaitHandle;
+	CSRSS_REGISTER_SYSTEM_CLASSES_REPLY RegisterSystemClassesReply;
       } Data;
     };
   };

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: desktop.c,v 1.28 2004/12/12 01:40:37 weiden Exp $
+ *  $Id: desktop.c,v 1.29 2004/12/21 21:38:27 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -47,7 +47,6 @@ ObFindHandleForObject(IN PEPROCESS Process,
 
 /* Currently active desktop */
 PDESKTOP_OBJECT InputDesktop = NULL;
-HDESK InputDesktopHandle = NULL; 
 HDC ScreenDeviceContext = NULL;
 
 BOOL g_PaintDesktopVersion = FALSE;
@@ -448,42 +447,94 @@ BOOL FASTCALL IntDesktopUpdatePerUserSettings(BOOL bEnable)
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 NTSTATUS FASTCALL
-IntShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height)
+IntShowDesktop(PDESKTOP_OBJECT Desktop)
 {
   CSRSS_API_REQUEST Request;
   CSRSS_API_REPLY Reply;
+  NTSTATUS Status;
+  SIZEL DesktopSize;
+  PDC dc;
+  HDC hDC;
+  
+  IntGraphicsCheck(TRUE);
+  
+  hDC = IntGetScreenDC();
+  if(hDC != NULL && (dc = DC_LockDc(hDC)))
+  {
+    BITMAPOBJ *BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
+    if(BitmapObj != NULL)
+    {
+      DesktopSize.cx = BitmapObj->SurfObj.sizlBitmap.cx;
+      DesktopSize.cy = BitmapObj->SurfObj.sizlBitmap.cy;
+      BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
+    }
+    DC_UnlockDc(hDC);
+  }
+  else
+  {
+    DPRINT1("Failed to query screen size!\n");
+    IntGraphicsCheck(FALSE);
+    return STATUS_UNSUCCESSFUL;
+  }
+  
+  DPRINT1("IntShowDesktop: 0x%x, %d, %d\n", Desktop->DesktopWindow, DesktopSize.cx, DesktopSize.cy);
+  
+  Status = CsrInsertObject((PVOID)Desktop,
+                           NULL,
+                           GENERIC_ALL,
+                           0,
+                           NULL,
+                           (HANDLE*)&Request.Data.ShowDesktopRequest.hDesktop);
+  if (NT_SUCCESS(Status))
+  {
+    Request.Type = CSRSS_SHOW_DESKTOP;
+    Request.Data.ShowDesktopRequest.DesktopWindow = Desktop->DesktopWindow;
+    Request.Data.ShowDesktopRequest.Width = DesktopSize.cx;
+    Request.Data.ShowDesktopRequest.Height = DesktopSize.cy;
 
-  Request.Type = CSRSS_SHOW_DESKTOP;
-  Request.Data.ShowDesktopRequest.DesktopWindow = Desktop->DesktopWindow;
-  Request.Data.ShowDesktopRequest.Width = Width;
-  Request.Data.ShowDesktopRequest.Height = Height;
+    Status = CsrNotify(&Request, &Reply);
+    
+    CsrCloseHandle(Request.Data.ShowDesktopRequest.hDesktop);
+  }
+  
+  if(!NT_SUCCESS(Status))
+  {
+    DPRINT1("IntShowDesktop: Failed to notify CSRSS!\n");
+    IntGraphicsCheck(FALSE);
+  }
 
-  return CsrNotify(&Request, &Reply);
+  return Status;
 }
 
 NTSTATUS FASTCALL
 IntHideDesktop(PDESKTOP_OBJECT Desktop)
 {
-#if 0
   CSRSS_API_REQUEST Request;
   CSRSS_API_REPLY Reply;
+  NTSTATUS Status;
+  
+  Status = CsrInsertObject((PVOID)Desktop,
+                           NULL,
+                           GENERIC_ALL,
+                           0,
+                           NULL,
+                           (HANDLE*)&Request.Data.HideDesktopRequest.hDesktop);
+  if(NT_SUCCESS(Status))
+  {
+    Request.Type = CSRSS_HIDE_DESKTOP;
+    Request.Data.HideDesktopRequest.DesktopWindow = Desktop->DesktopWindow;
 
-  Request.Type = CSRSS_HIDE_DESKTOP;
-  Request.Data.HideDesktopRequest.DesktopWindow = Desktop->DesktopWindow;
-
-  return NotifyCsrss(&Request, &Reply);
-#else
-  PWINDOW_OBJECT DesktopWindow;
-
-  DesktopWindow = IntGetWindowObject(Desktop->DesktopWindow);
-  if (! DesktopWindow)
-    {
-      return ERROR_INVALID_WINDOW_HANDLE;
-    }
-  DesktopWindow->Style &= ~WS_VISIBLE;
-
-  return STATUS_SUCCESS;
-#endif
+    Status = CsrNotify(&Request, &Reply);
+    
+    CsrCloseHandle(Request.Data.HideDesktopRequest.hDesktop);
+  }
+  
+  if(NT_SUCCESS(Status))
+  {
+    IntGraphicsCheck(FALSE);
+  }
+  
+  return Status;
 }
 
 /*
@@ -796,38 +847,21 @@ NtUserOpenInputDesktop(
    BOOL fInherit,
    ACCESS_MASK dwDesiredAccess)
 {
-   PDESKTOP_OBJECT Object;
    NTSTATUS Status;
    HDESK Desktop;
 
    DPRINT("About to open input desktop\n");
 
-   /* Get a pointer to the desktop object */
-
-   Status = IntValidateDesktopHandle(
-      InputDesktopHandle,
-      UserMode,
-      0,
-      &Object);
-
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("Validation of input desktop handle (0x%X) failed\n", InputDesktop);
-      return (HDESK)0;
-   }
-
    /* Create a new handle to the object */
 
    Status = ObOpenObjectByPointer(
-      Object,
+      InputDesktop,
       0,
       NULL,
       dwDesiredAccess,
       ExDesktopObjectType,
       UserMode,
       (HANDLE*)&Desktop);
-
-   ObDereferenceObject(Object);
 
    if (NT_SUCCESS(Status))
    {
@@ -1055,7 +1089,7 @@ NtUserPaintDesktop(HDC hDC)
 BOOL STDCALL
 NtUserSwitchDesktop(HDESK hDesktop)
 {
-   PDESKTOP_OBJECT DesktopObject;
+   PDESKTOP_OBJECT DesktopObject, PreviousDesktop;
    NTSTATUS Status;
 
    DPRINT("About to switch desktop (0x%X)\n", hDesktop);
@@ -1090,12 +1124,26 @@ NtUserSwitchDesktop(HDESK hDesktop)
    /* FIXME: Connect to input device */
 
    /* Set the active desktop in the desktop's window station. */
-   DesktopObject->WindowStation->ActiveDesktop = DesktopObject;
+   PreviousDesktop = InterlockedExchangePointer(&DesktopObject->WindowStation->ActiveDesktop, DesktopObject);
+   if(PreviousDesktop != DesktopObject)
+   {
+      /* FIXME - nasty hack... */
 
-   /* Set the global state. */
-   InputDesktop = DesktopObject;
-   InputDesktopHandle = hDesktop;
-   InputWindowStation = DesktopObject->WindowStation;
+      if(PreviousDesktop != NULL)
+      {
+         IntHideDesktop(PreviousDesktop);
+      }
+      
+      /* Set the global state. */
+      InputDesktop = DesktopObject;
+      InputWindowStation = DesktopObject->WindowStation;
+
+      /* FIXME - HACK! This is only because we want GUI on demand! */
+      if(IntIsGUIActive())
+      {
+        IntShowDesktop(DesktopObject);
+      }
+   }
 
    ObDereferenceObject(DesktopObject);
 

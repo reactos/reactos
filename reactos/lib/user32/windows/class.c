@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.53 2004/12/17 09:56:10 gvg Exp $
+/* $Id: class.c,v 1.54 2004/12/21 21:38:26 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -40,8 +40,6 @@ static BOOL GetClassInfoExCommon(
     str = (LPWSTR)lpszClass;
   else
   {
-    extern BOOL ControlsInitialized;
-
     if (unicode)
     {
         str = HEAP_strdupW ( lpszClass, wcslen(lpszClass) );
@@ -62,12 +60,6 @@ static BOOL GetClassInfoExCommon(
             SetLastError(RtlNtStatusToDosError(Status));
             return FALSE;
         }
-    }
-
-    /* Register built-in controls if not already done */
-    if ( !ControlsInitialized )
-    {
-      ControlsInitialized = ControlsInit(str);
     }
   }
 
@@ -458,14 +450,13 @@ RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
       RtlCreateUnicodeStringFromAsciiz(&ClassName, lpwcx->lpszClassName);
    }
 
-   Atom = NtUserRegisterClassExWOW(
+   Atom = NtUserRegisterClassEx(
       (WNDCLASSEXW*)&WndClass,
-      &ClassName,
       &ClassName,
       &MenuName,
       NULL,
       REGISTERCLASS_ANSI,
-      0);
+      NULL);
 
    if (!IS_ATOM(lpwcx->lpszMenuName))
       RtlFreeUnicodeString(&MenuName);
@@ -533,14 +524,13 @@ RegisterClassExW(CONST WNDCLASSEXW *lpwcx)
       RtlInitUnicodeString(&ClassName, lpwcx->lpszClassName);
    }
 
-   return (ATOM)NtUserRegisterClassExWOW(
+   return (ATOM)NtUserRegisterClassEx(
       &WndClass,
-      &ClassName,
       &ClassName,
       &MenuName,
       NULL,
       0,
-      0);
+      NULL);
 }
 
 /*

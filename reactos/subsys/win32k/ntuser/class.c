@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.62 2004/12/11 21:19:40 weiden Exp $
+/* $Id: class.c,v 1.63 2004/12/21 21:38:26 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -370,14 +370,13 @@ IntCreateClass(
 }
 
 RTL_ATOM STDCALL
-NtUserRegisterClassExWOW(
+NtUserRegisterClassEx(
    CONST WNDCLASSEXW* lpwcx,
    PUNICODE_STRING ClassName,
-   PUNICODE_STRING ClassNameCopy,
    PUNICODE_STRING MenuName,
-   WNDPROC wpExtra, /* FIXME: Windows uses this parameter for something different. */
+   WNDPROC wpAnsiWindowProc  OPTIONAL, /* FIXME: Windows uses this parameter for something different. */
    DWORD Flags,
-   DWORD Unknown7)
+   HWINSTA hWindowStation  OPTIONAL)
 
 /*
  * FUNCTION:
@@ -423,7 +422,32 @@ NtUserRegisterClassExWOW(
       return (RTL_ATOM)0;
    }
   
-  WinStaObject = PsGetWin32Thread()->Desktop->WindowStation;
+  if(Flags & REGISTERCLASS_SYSTEM)
+  {
+    if(PsGetCurrentProcess() != CsrProcess)
+    {
+      DPRINT1("Process (ID: %d) attempted to register a system window class!\n", PsGetCurrentProcessId());
+      SetLastWin32Error(ERROR_ACCESS_DENIED);
+      return (RTL_ATOM)0;
+    }
+    
+    Status = ObReferenceObjectByHandle(hWindowStation,
+                                       0,
+                                       ExWindowStationObjectType,
+                                       UserMode,
+                                       (PVOID*)&WinStaObject,
+                                       NULL);
+
+    if(!NT_SUCCESS(Status))
+    {
+      SetLastNtError(Status);
+      return (RTL_ATOM)0;
+    }
+  }
+  else
+  {
+    WinStaObject = PsGetWin32Thread()->Desktop->WindowStation;
+  }
   
   if (ClassName->Length > 0)
   {
@@ -436,7 +460,11 @@ NtUserRegisterClassExWOW(
     {
       DPRINT1("Failed adding class name (%S) to atom table\n",
 	ClassName->Buffer);
-      SetLastNtError(Status);      
+      SetLastNtError(Status);
+      if(Flags & REGISTERCLASS_SYSTEM)
+      {
+        ObDereferenceObject(WinStaObject);
+      }
       return((RTL_ATOM)0);
     }
   }
@@ -444,12 +472,16 @@ NtUserRegisterClassExWOW(
   {
     Atom = (RTL_ATOM)(ULONG)ClassName->Buffer;
   }
-  ClassObject = IntCreateClass(&SafeClass, Flags, wpExtra, MenuName, Atom);
+  ClassObject = IntCreateClass(&SafeClass, Flags, wpAnsiWindowProc, MenuName, Atom);
   if (ClassObject == NULL)
   {
     if (ClassName->Length)
     {
       RtlDeleteAtomFromAtomTable(WinStaObject->AtomTable, Atom);
+    }
+    if(Flags & REGISTERCLASS_SYSTEM)
+    {
+      ObDereferenceObject(WinStaObject);
     }
     DPRINT("Failed creating window class object\n");
     return((RTL_ATOM)0);
@@ -462,6 +494,11 @@ NtUserRegisterClassExWOW(
   IntLockGlobalClassList();
   InsertTailList(&GlobalClassListHead, &ClassObject->GlobalListEntry);
   IntUnlockGlobalClassList();
+  
+  if(Flags & REGISTERCLASS_SYSTEM)
+  {
+    ObDereferenceObject(WinStaObject);
+  }
   return(Atom);
 }
 

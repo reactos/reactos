@@ -1,4 +1,4 @@
-/* $Id: regcontrol.h,v 1.8 2004/05/16 19:31:06 navaraf Exp $
+/* $Id: regcontrol.h,v 1.9 2004/12/21 21:38:25 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -26,8 +26,6 @@ struct builtin_class_descr
     HBRUSH  brush;   /* brush or system color */
 };
 
-extern BOOL FASTCALL ControlsInit(LPCWSTR ClassName);
-
 extern const struct builtin_class_descr BUTTON_builtin_class;
 extern const struct builtin_class_descr COMBO_builtin_class;
 extern const struct builtin_class_descr COMBOLBOX_builtin_class;
@@ -41,5 +39,8 @@ extern const struct builtin_class_descr MDICLIENT_builtin_class;
 extern const struct builtin_class_descr MENU_builtin_class;
 extern const struct builtin_class_descr SCROLL_builtin_class;
 extern const struct builtin_class_descr STATIC_builtin_class;
+
+extern BOOL STDCALL PrivateCsrssRegisterBuiltinSystemWindowClasses(HWINSTA hWindowStation);
+extern ATOM STDCALL PrivateCsrssRegisterSystemWindowClass(HWINSTA hWindowStation, WNDCLASSEXW *lpwcx, WNDPROC lpfnWndProcA);
 
 #endif /* ROS_REGCONTROL_H */

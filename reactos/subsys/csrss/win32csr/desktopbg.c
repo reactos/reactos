@@ -1,4 +1,4 @@
-/* $Id: desktopbg.c,v 1.12 2004/12/01 18:38:04 weiden Exp $
+/* $Id: desktopbg.c,v 1.13 2004/12/21 21:38:26 weiden Exp $
  *
  * reactos/subsys/csrss/win32csr/desktopbg.c
  *
@@ -21,12 +21,15 @@
 
 #include <windows.h>
 #include <csrss/csrss.h>
+#include <user32/regcontrol.h>
 
 #include "api.h"
 #include "desktopbg.h"
 
 #define NDEBUG
 #include <debug.h>
+
+extern BOOL STDCALL PrivateCsrssIsGUIActive(VOID);
 
 #define DESKTOP_WINDOW_ATOM 32880
 
@@ -52,9 +55,6 @@ typedef struct tagPRIVATE_NOTIFY_DESKTOP
     } ShowDesktop;
   };
 } PRIVATE_NOTIFY_DESKTOP, *PPRIVATE_NOTIFY_DESKTOP;
-
-static BOOL Initialized = FALSE;
-static HWND VisibleDesktopWindow = NULL;
 
 static LRESULT CALLBACK
 DtbgWindowProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
@@ -99,27 +99,29 @@ DtbgWindowProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
           case PM_SHOW_DESKTOP:
           {
             LRESULT Result;
+            
+            DPRINT("Show desktop: 0x%x (%d:%d)\n", Wnd, nmh->ShowDesktop.Width, nmh->ShowDesktop.Height);
 
-            Result = ! SetWindowPos(Wnd,
-                                    NULL, 0, 0,
-                                    nmh->ShowDesktop.Width,
-                                    nmh->ShowDesktop.Height,
-                                    SWP_NOACTIVATE | SWP_NOZORDER | SWP_SHOWWINDOW);
+            Result = SetWindowPos(Wnd,
+                                  NULL, 0, 0,
+                                  nmh->ShowDesktop.Width,
+                                  nmh->ShowDesktop.Height,
+                                  SWP_NOACTIVATE | SWP_NOZORDER | SWP_SHOWWINDOW);
             UpdateWindow(Wnd);
-            VisibleDesktopWindow = Wnd;
             return Result;
           }
 
           case PM_HIDE_DESKTOP:
           {
             LRESULT Result;
+            
+            DPRINT("Hide desktop: 0x%x\n", Wnd);
 
-            Result = ! SetWindowPos(Wnd,
-                                    NULL, 0, 0, 0, 0,
-                                    SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE |
-                                    SWP_HIDEWINDOW);
+            Result = SetWindowPos(Wnd,
+                                  NULL, 0, 0, 0, 0,
+                                  SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE |
+                                  SWP_HIDEWINDOW);
             UpdateWindow(Wnd);
-            VisibleDesktopWindow = NULL;
             return Result;
           }
 
@@ -131,38 +133,6 @@ DtbgWindowProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
     }
 
   return 0;
-}
-
-static BOOL FASTCALL
-DtbgInit()
-{
-  WNDCLASSEXW Class;
-  ATOM ClassAtom;
-
-  /*
-   * Create the desktop window class
-   */
-  Class.cbSize = sizeof(WNDCLASSEXW);
-  Class.style = 0;
-  Class.lpfnWndProc = DtbgWindowProc;
-  Class.cbClsExtra = 0;
-  Class.cbWndExtra = 0;
-  Class.hInstance = (HINSTANCE) GetModuleHandleW(NULL);
-  Class.hIcon = NULL;
-  Class.hCursor = NULL;
-  Class.hbrBackground = GetSysColorBrush(COLOR_BACKGROUND);
-  Class.lpszMenuName = NULL;
-  Class.lpszClassName = (LPCWSTR) DESKTOP_WINDOW_ATOM;
-  ClassAtom = RegisterClassExW(&Class);
-  if ((ATOM) 0 == ClassAtom)
-    {
-      DPRINT1("Unable to register desktop background class (error %d)\n",
-              GetLastError());
-      return FALSE;
-    }
-  VisibleDesktopWindow = NULL;
-
-  return TRUE;
 }
 
 static DWORD STDCALL
@@ -200,6 +170,8 @@ DtbgDesktopThread(PVOID Data)
 
   ThreadData->Status = STATUS_SUCCESS;
   SetEvent(ThreadData->Event);
+  
+  DPRINT("Desktop thread running... (wnd: 0x%x, PID:%d)\n", BackgroundWnd, GetCurrentProcessId());
 
   while (GetMessageW(&msg, NULL, 0, 0))
     {
@@ -207,7 +179,63 @@ DtbgDesktopThread(PVOID Data)
       DispatchMessageW(&msg);
     }
 
+  DPRINT("Desktop thread terminating... (wnd: 0x%x)\n", BackgroundWnd);
+
   return 1;
+}
+
+CSR_API(CsrRegisterSystemClasses)
+{
+  WNDCLASSEXW wc;
+  
+  /* The hWindowStation handle is only valid while processing this request! */
+  
+  /*
+   * This routine is called when creating an interactive window station. It sets
+   * up all system window classes so applications and csrss can use them later.
+   */
+  
+  DPRINT("CsrRegisterSystemClasses\n");
+  
+  Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
+  
+  /*
+   * Register the system window classes (buttons, edit controls, ...) that are
+   * managed by user32
+   */
+  if(!PrivateCsrssRegisterBuiltinSystemWindowClasses(Request->Data.RegisterSystemClassesRequest.hWindowStation))
+  {
+    DPRINT1("Unable to register builtin system window classes: LastError: %d\n", GetLastError());
+    return Reply->Status = STATUS_UNSUCCESSFUL;
+  }
+  
+  /*
+   * Register the desktop window class
+   */
+  wc.cbSize = sizeof(WNDCLASSEXW);
+  wc.style = 0;
+  wc.lpfnWndProc = DtbgWindowProc;
+  wc.cbClsExtra = 0;
+  wc.cbWndExtra = 0;
+  wc.hInstance = (HINSTANCE) GetModuleHandleW(NULL);
+  wc.hIcon = NULL;
+  wc.hCursor = NULL;
+  wc.hbrBackground = GetSysColorBrush(COLOR_BACKGROUND);
+  wc.lpszMenuName = NULL;
+  wc.lpszClassName = (LPCWSTR) DESKTOP_WINDOW_ATOM;
+  /* we don't support an ansi version of the window procedure, so don't specify it! */
+  if(!PrivateCsrssRegisterSystemWindowClass(Request->Data.RegisterSystemClassesRequest.hWindowStation,
+                                            &wc,
+                                            NULL))
+  {
+    DPRINT1("Unable to register the desktop window class: LastError: %d\n", GetLastError());
+    return Reply->Status = STATUS_UNSUCCESSFUL;
+  }
+  
+  Reply->Data.RegisterSystemClassesReply.hWindowStation = Request->Data.RegisterSystemClassesRequest.hWindowStation;
+
+  return Reply->Status = STATUS_SUCCESS;
 }
 
 CSR_API(CsrCreateDesktop)
@@ -215,19 +243,10 @@ CSR_API(CsrCreateDesktop)
   DTBG_THREAD_DATA ThreadData;
   HANDLE ThreadHandle;
 
-  DPRINT("CsrCreateDesktop\n");
+  DPRINT("CsrCreateDesktop (PID:%d)\n", GetCurrentProcessId());
 
   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
-
-  if (! Initialized)
-    {
-      Initialized = TRUE;
-      if (! DtbgInit())
-        {
-          return Reply->Status = STATUS_UNSUCCESSFUL;
-        }
-    }
 
   /*
    * the desktop handle we got from win32k is in the scope of CSRSS so we can just use it
@@ -252,8 +271,10 @@ CSR_API(CsrCreateDesktop)
       DPRINT1("Failed to create desktop window thread.\n");
       return Reply->Status = STATUS_UNSUCCESSFUL;
     }
+  /* FIXME - we should wait on the thread handle as well, it may happen that the
+             thread crashes or doesn't start at all, we should catch this case
+             instead of waiting forever! */
   CloseHandle(ThreadHandle);
-
   WaitForSingleObject(ThreadData.Event, INFINITE);
   CloseHandle(ThreadData.Event);
 
@@ -265,10 +286,21 @@ CSR_API(CsrCreateDesktop)
 CSR_API(CsrShowDesktop)
 {
   PRIVATE_NOTIFY_DESKTOP nmh;
-  DPRINT("CsrShowDesktop\n");
+  
+  /* The hDesktop handle is only valid during processing this request! */
 
+  DPRINT("CsrShowDesktop (hwnd: 0x%x) (PID:%d)\n", Request->Data.ShowDesktopRequest.DesktopWindow, GetCurrentProcessId());
+  
   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
+  
+  /* We need to set the desktop for this thread to be able to send the messages
+     to the desktop thread! */
+  if(!SetThreadDesktop(Request->Data.ShowDesktopRequest.hDesktop))
+  {
+    DPRINT1("CsrShowDesktop: Failed to set thread desktop!\n");
+    return Reply->Status = STATUS_UNSUCCESSFUL;
+  }
 
   nmh.hdr.hwndFrom = Request->Data.ShowDesktopRequest.DesktopWindow;
   nmh.hdr.idFrom = 0;
@@ -281,7 +313,9 @@ CSR_API(CsrShowDesktop)
                                WM_NOTIFY,
                                (WPARAM)nmh.hdr.hwndFrom,
                                (LPARAM)&nmh)
-                  ? STATUS_UNSUCCESSFUL : STATUS_SUCCESS;
+                  ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
+
+  DPRINT("CsrShowDesktop: SendMessageW (Status: 0x%x), LastError: %d\n", Reply->Status, GetLastError());
 
   return Reply->Status;
 }
@@ -289,10 +323,21 @@ CSR_API(CsrShowDesktop)
 CSR_API(CsrHideDesktop)
 {
   PRIVATE_NOTIFY_DESKTOP nmh;
-  DPRINT("CsrHideDesktop\n");
+  
+  /* The hDesktop handle is only valid while processing this request! */
+
+  DPRINT1("CsrHideDesktop (hwnd: 0x%x) (PID:%d)\n", Request->Data.ShowDesktopRequest.DesktopWindow, GetCurrentProcessId());
 
   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
+  
+  /* We need to set the desktop for this thread to be able to send the messages
+     to the desktop thread! */
+  if(!SetThreadDesktop(Request->Data.ShowDesktopRequest.hDesktop))
+  {
+    DPRINT1("CsrShowDesktop: Failed to set thread desktop!\n");
+    return Reply->Status = STATUS_UNSUCCESSFUL;
+  }
 
   nmh.hdr.hwndFrom = Request->Data.ShowDesktopRequest.DesktopWindow;
   nmh.hdr.idFrom = 0;
@@ -302,7 +347,7 @@ CSR_API(CsrHideDesktop)
                                WM_NOTIFY,
                                (WPARAM)nmh.hdr.hwndFrom,
                                (LPARAM)&nmh)
-                  ? STATUS_UNSUCCESSFUL : STATUS_SUCCESS;
+                  ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 
   return Reply->Status;
 }
@@ -310,12 +355,10 @@ CSR_API(CsrHideDesktop)
 BOOL FASTCALL
 DtbgIsDesktopVisible(VOID)
 {
-  if (NULL != VisibleDesktopWindow && ! IsWindowVisible(VisibleDesktopWindow))
-    {
-      VisibleDesktopWindow = NULL;
-    }
-
-  return NULL != VisibleDesktopWindow;
+  /* FIXME - This is a hack, it's not possible to determine whether a desktop
+             is visible or not unless a handle is supplied! we just check through
+             a private api if we're running in GUI mode */
+  return PrivateCsrssIsGUIActive();
 }
 
 /* EOF */

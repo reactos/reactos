@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.92 2004/12/12 23:08:11 navaraf Exp $
+/* $Id: misc.c,v 1.93 2004/12/21 21:38:27 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -133,6 +133,10 @@ NtUserCallNoParam(DWORD Routine)
     
     case NOPARAM_ROUTINE_GDI_QUERY_TABLE:
       Result = (DWORD)GDI_MapHandleTable(NtCurrentProcess());
+      break;
+      
+    case NOPARAM_ROUTINE_IS_GUI_ACTIVE:
+      Result = (DWORD)IntIsGUIActive();
       break;
     
     default:

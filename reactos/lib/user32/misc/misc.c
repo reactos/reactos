@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: misc.c,v 1.12 2004/12/06 08:41:38 ion Exp $
+/* $Id: misc.c,v 1.13 2004/12/21 21:38:26 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/misc.c
@@ -62,6 +62,13 @@ STDCALL
 PrivateCsrssInitialized(VOID)
 {
   NtUserCallNoParam(NOPARAM_ROUTINE_CSRSS_INITIALIZED);
+}
+
+BOOL
+STDCALL
+PrivateCsrssIsGUIActive(VOID)
+{
+  return (BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_IS_GUI_ACTIVE);
 }
 
 
