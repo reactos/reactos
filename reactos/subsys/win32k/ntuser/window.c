@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.87 2003/08/11 21:10:49 royce Exp $
+/* $Id: window.c,v 1.88 2003/08/12 22:27:55 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1483,13 +1483,38 @@ NtUserGetWindowPlacement(DWORD Unknown0,
 }
 
 DWORD STDCALL
-NtUserInternalGetWindowText(DWORD Unknown0,
-			    DWORD Unknown1,
-			    DWORD Unknown2)
+NtUserInternalGetWindowText(HWND hWnd,
+			    LPWSTR lpString,
+			    int nMaxCount)
 {
-  UNIMPLEMENTED
-
-  return 0;
+  DWORD res = 0;
+  PWINDOW_OBJECT WindowObject;
+  HANDLE Atom;
+  
+  W32kAcquireWinLockShared(); /* ??? */
+  WindowObject = W32kGetWindowObject(hWnd);
+  if(!WindowObject)
+  {
+    W32kReleaseWinLock(); /* ??? */
+    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+    return 0;
+  }
+  
+  if(lpString)
+  {
+    /* FIXME - Window text is currently stored
+               in the Atom 'USER32!WindowTextAtomA' */
+    
+  }
+  else
+  {
+    /* FIXME - return length of window text */
+  }
+  
+  W32kReleaseWindowObject(WindowObject);
+  
+  W32kReleaseWinLock(); /* ??? */
+  return res;
 }
 
 DWORD STDCALL

@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.56 2003/08/11 19:09:53 gdalsnes Exp $
+/* $Id: window.c,v 1.57 2003/08/12 22:27:55 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -14,6 +14,7 @@
 #include <windows.h>
 #include <user32.h>
 #include <window.h>
+#include <string.h>
 #include <user32/callback.h>
 #include <user32/regcontrol.h>
 
@@ -1582,6 +1583,38 @@ GetWindowContextHelpId(HWND hwnd)
 {
   UNIMPLEMENTED;
   return(0);
+}
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+InternalGetWindowText(HWND hWnd, LPWSTR lpString, int nMaxCount)
+{
+  DWORD res = 0;
+  LPWSTR lps = NULL;
+  if(lpString && (nMaxCount > 0))
+  {
+    lps = RtlAllocateHeap(RtlGetProcessHeap(), 0, nMaxCount * sizeof(WCHAR));
+    if(!lps)
+    {
+      SetLastError(ERROR_OUTOFMEMORY);
+      return 0;
+    }
+  }
+  
+  res = NtUserInternalGetWindowText(hWnd, lps, nMaxCount);
+  
+  if(lps)
+  {
+    RtlCopyMemory(lpString, lps, res * sizeof(WCHAR));
+    lpString[res] = (WCHAR)"\0";  /* null-terminate the string */
+    
+    RtlFreeHeap(RtlGetProcessHeap(), 0, lps);
+  }
+  
+  return res;
 }
 
 /* EOF */

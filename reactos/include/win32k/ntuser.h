@@ -914,9 +914,9 @@ NtUserInitTask(
 DWORD
 STDCALL
 NtUserInternalGetWindowText(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+  HWND hWnd,
+  LPWSTR lpString,
+  int nMaxCount);
 
 DWORD
 STDCALL
