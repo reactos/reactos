@@ -39,8 +39,8 @@ END
 
 
 /* Bitmaps */
-IDB_WATERMARK BITMAP "res/watermark.bmp"
-IDB_HEADER    BITMAP "res/header.bmp"
+IDB_WATERMARK BITMAP "resources/watermark.bmp"
+IDB_HEADER    BITMAP "resources/header.bmp"
 
 
 /*
