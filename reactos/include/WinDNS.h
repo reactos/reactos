@@ -12,6 +12,9 @@
 #define WINDNS_H
 
 /* The WinDNS Header */
+#ifdef __USE_W32API
+#include_next <windns.h>
+#else
 
 /* Constants provided by DNSAPI */
 #define DNS_CONFIG_FLAG_ALLOC TRUE
@@ -441,5 +444,6 @@ typedef struct XNAME(_DNS_RECORD_) {
   } Data;
 } XNAME(DNS_RECORD), *XNAME(PDNS_RECORD);
 
+#endif /* __USE_W32API */
 #endif /* _WINDNS_STRUCT_DEFINITIONS */
 
