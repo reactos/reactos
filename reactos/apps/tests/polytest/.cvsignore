@@ -4,3 +4,7 @@
 *.coff
 *.sym
 *.map
+*.ncb
+*.opt
+Debug
+Release
