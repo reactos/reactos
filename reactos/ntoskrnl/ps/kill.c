@@ -161,6 +161,7 @@ NTSTATUS STDCALL PiTerminateProcess(PEPROCESS Process,
           Process, ExitStatus);
    
    PiTerminateProcessThreads(Process, ExitStatus);
+   ObCloseAllHandles(Process);
    KeRaiseIrql(DISPATCH_LEVEL, &oldlvl);
    Process->Pcb.ProcessState = PROCESS_STATE_TERMINATED;
    Process->Pcb.DispatcherHeader.SignalState = TRUE;

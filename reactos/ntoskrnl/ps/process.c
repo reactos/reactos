@@ -131,11 +131,13 @@ VOID PiDeleteProcess(PVOID ObjectBody)
 {
    KIRQL oldIrql;
    
-   DPRINT("PiDeleteProcess(ObjectBody %x)\n",ObjectBody);
+   DPRINT1("PiDeleteProcess(ObjectBody %x)\n",ObjectBody);
+   
    KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
    RemoveEntryList(&((PEPROCESS)ObjectBody)->Pcb.ProcessListEntry);
    KeReleaseSpinLock(&PsProcessListLock, oldIrql);
    (VOID)MmReleaseMmInfo((PEPROCESS)ObjectBody);
+   ObDeleteHandleTable((PEPROCESS)ObjectBody);
 }
 
 

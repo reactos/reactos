@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.20 1999/12/13 22:04:34 dwelch Exp $
+/* $Id: utils.c,v 1.21 1999/12/20 02:14:37 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -571,105 +571,99 @@ LdrGetExportByName (
  * NOTE
  *
  */
-static
-NTSTATUS
-LdrPerformRelocations (
-	PIMAGE_NT_HEADERS	NTHeaders,
-	PVOID			ImageBase
-	)
+static NTSTATUS LdrPerformRelocations (PIMAGE_NT_HEADERS	NTHeaders,
+				       PVOID			ImageBase)
 {
-	USHORT			NumberOfEntries;
-	PUSHORT			pValue16;
-	ULONG			RelocationRVA;
-	ULONG			Delta32;
-	ULONG			Offset;
-	PULONG			pValue32;
-	PRELOCATION_DIRECTORY	RelocationDir;
-	PRELOCATION_ENTRY	RelocationBlock;
-	int			i;
+   USHORT			NumberOfEntries;
+   PUSHORT			pValue16;
+   ULONG			RelocationRVA;
+   ULONG			Delta32;
+   ULONG			Offset;
+   PULONG			pValue32;
+   PRELOCATION_DIRECTORY	RelocationDir;
+   PRELOCATION_ENTRY	RelocationBlock;
+   int			i;
 
 
-	RelocationRVA =
-		NTHeaders->OptionalHeader
-			.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC]
-				.VirtualAddress;
-	if (RelocationRVA)
+   RelocationRVA = NTHeaders->OptionalHeader
+     .DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC]
+     .VirtualAddress;
+   
+   if (RelocationRVA)
 	{
-		RelocationDir = (PRELOCATION_DIRECTORY)
-			((PCHAR)ImageBase + RelocationRVA);
+	   RelocationDir = (PRELOCATION_DIRECTORY)
+	     ((PCHAR)ImageBase + RelocationRVA);
 
-		while (RelocationDir->SizeOfBlock)
-		{
-			Delta32 = (unsigned long) (
+	   while (RelocationDir->SizeOfBlock)
+	     {
+		Delta32 = (ULONG)(ImageBase - 
+				  NTHeaders->OptionalHeader.ImageBase);
+		RelocationBlock = (PRELOCATION_ENTRY) (
+						       RelocationRVA
+						       + ImageBase
+						       + sizeof (RELOCATION_DIRECTORY)
+						       );
+		NumberOfEntries = (
+				   RelocationDir->SizeOfBlock
+				   - sizeof (RELOCATION_DIRECTORY)
+				   )
+		  / sizeof (RELOCATION_ENTRY);
+		
+		for (	i = 0;
+		     (i < NumberOfEntries);
+		     i++
+		     )
+		  {
+		     Offset = (
+			       RelocationBlock[i].TypeOffset
+			       & 0xfff
+			       )
+		       + RelocationDir->VirtualAddress;
+		     /*
+		      * What kind of relocations should we perform
+		      * for the current entry?
+		      */
+		     switch (RelocationBlock[i].TypeOffset >> 12)
+		       {
+			case TYPE_RELOC_ABSOLUTE:
+			  break;
+			  
+			case TYPE_RELOC_HIGH:
+			  pValue16 = (PUSHORT) (ImageBase + Offset);
+			  *pValue16 += Delta32 >> 16;
+			  break;
+			  
+			case TYPE_RELOC_LOW:
+			  pValue16 = (PUSHORT)(ImageBase + Offset);
+			  *pValue16 += Delta32 & 0xffff;
+			  break;
+			  
+			case TYPE_RELOC_HIGHLOW:
+			  pValue32 = (PULONG) (ImageBase + Offset);
+			  *pValue32 += Delta32;
+			  break;
+			  
+			case TYPE_RELOC_HIGHADJ:
+			  /* FIXME: do the highadjust fixup  */
+			  DPRINT(
+				 "TYPE_RELOC_HIGHADJ fixup not implemented"
+				 ", sorry\n"
+				 );
+			  return(STATUS_UNSUCCESSFUL);
+			  
+			default:
+			  DPRINT("unexpected fixup type\n");
+			  return STATUS_UNSUCCESSFUL;
+		       }
+		  }
+		RelocationRVA += RelocationDir->SizeOfBlock;
+		RelocationDir = (PRELOCATION_DIRECTORY) (
 				ImageBase
-				- NTHeaders->OptionalHeader.ImageBase
-				);
-			RelocationBlock = (PRELOCATION_ENTRY) (
-				RelocationRVA
-				+ ImageBase
-				+ sizeof (RELOCATION_DIRECTORY)
-				);
-			NumberOfEntries = (
-				RelocationDir->SizeOfBlock
-				- sizeof (RELOCATION_DIRECTORY)
-				)
-				/ sizeof (RELOCATION_ENTRY);
-
-			for (	i = 0;
-				(i < NumberOfEntries);
-				i++
-				)
-			{
-				Offset = (
-					RelocationBlock[i].TypeOffset
-					& 0xfff
-					)
-					+ RelocationDir->VirtualAddress;
-				/*
-				 * What kind of relocations should we perform
-				 * for the current entry?
-				 */
-				switch (RelocationBlock[i].TypeOffset >> 12)
-				{
-				case TYPE_RELOC_ABSOLUTE:
-					break;
-
-				case TYPE_RELOC_HIGH:
-					pValue16 = (PUSHORT) (ImageBase + Offset);
-					*pValue16 += Delta32 >> 16;
-					break;
-
-				case TYPE_RELOC_LOW:
-					pValue16 = (PUSHORT)(ImageBase + Offset);
-					*pValue16 += Delta32 & 0xffff;
-					break;
-
-				case TYPE_RELOC_HIGHLOW:
-					pValue32 = (PULONG) (ImageBase + Offset);
-					*pValue32 += Delta32;
-					break;
-
-				case TYPE_RELOC_HIGHADJ:
-					/* FIXME: do the highadjust fixup  */
-					DPRINT(
-						"TYPE_RELOC_HIGHADJ fixup not implemented"
-						", sorry\n"
-						);
-					return(STATUS_UNSUCCESSFUL);
-
-				default:
-					DPRINT("unexpected fixup type\n");
-					return STATUS_UNSUCCESSFUL;
-				}
-			}
-			RelocationRVA += RelocationDir->SizeOfBlock;
-			RelocationDir = (PRELOCATION_DIRECTORY) (
-				ImageBase
-				+ RelocationRVA
-				);
-		}
+							 + RelocationRVA
+							 );
+	     }
 	}
-	return STATUS_SUCCESS;
+   return STATUS_SUCCESS;
 }
 
 
@@ -693,10 +687,10 @@ LdrPerformRelocations (
 static NTSTATUS LdrFixupImports(PIMAGE_NT_HEADERS	NTHeaders,
 				PVOID			ImageBase)
 {
-   PIMAGE_IMPORT_MODULE_DIRECTORY	ImportModuleDirectory;
-   ULONG				Ordinal;
-   PDLL				Module;
-   NTSTATUS			Status;
+   PIMAGE_IMPORT_MODULE_DIRECTORY ImportModuleDirectory;
+   ULONG Ordinal;
+   PDLL	Module;
+   NTSTATUS Status;
    
    DPRINT("LdrFixupImports(NTHeaders %x, ImageBase %x)\n", NTHeaders, 
 	   ImageBase);
@@ -708,6 +702,7 @@ static NTSTATUS LdrFixupImports(PIMAGE_NT_HEADERS	NTHeaders,
 			       ImageBase + NTHeaders->OptionalHeader
 				 .DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT]
 			     .VirtualAddress);
+   DPRINT1("ImportModuleDirectory %x\n", ImportModuleDirectory);
    DPRINT("ImportModuleDirectory %x\n", ImportModuleDirectory);
    
    while (ImportModuleDirectory->dwRVAModuleName)

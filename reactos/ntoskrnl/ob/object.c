@@ -34,7 +34,6 @@ VOID ObInitializeObject(POBJECT_HEADER ObjectHeader,
    RtlInitUnicodeString(&(ObjectHeader->Name),NULL);
    if (Handle != NULL)
      {
-	ObjectHeader->HandleCount = 1;
 	ObCreateHandle(PsGetCurrentProcess(),
 		       HEADER_TO_BODY(ObjectHeader),
 		       DesiredAccess,
@@ -209,10 +208,16 @@ NTSTATUS ObPerformRetentionChecks(POBJECT_HEADER Header)
 //   DPRINT("ObPerformRetentionChecks(Header %x), RefCount %d, HandleCount %d\n",
 //	   Header,Header->RefCount,Header->HandleCount);
    
-   if (Header->RefCount <  0 || Header->HandleCount < 0)
+   if (Header->RefCount < 0)
      {
-	DbgPrint("Object %x/%x has invalid reference or handle count\n",
-		 Header,HEADER_TO_BODY(Header));
+	DbgPrint("Object %x/%x has invalid reference count (%d)\n",
+		 Header, HEADER_TO_BODY(Header), Header->RefCount);
+	KeBugCheck(0);
+     }
+   if (Header->HandleCount < 0)
+     {
+	DbgPrint("Object %x/%x has invalid handle count (%d)\n",
+		 Header, HEADER_TO_BODY(Header), Header->HandleCount);
 	KeBugCheck(0);
      }
    

@@ -52,7 +52,6 @@ enum
 BOOL ObAddObjectToNameSpace(PUNICODE_STRING path, POBJECT_HEADER Object);
 
 VOID ObRegisterType(CSHORT id, OBJECT_TYPE* type);
-VOID ObDeleteHandle(HANDLE Handle);
 NTSTATUS ObLookupObject(HANDLE rootdir, PWSTR string, PVOID* Object,
 			 PWSTR* UnparsedSection, ULONG Attributes);
 PVOID ObCreateObject(PHANDLE Handle,
@@ -113,5 +112,7 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 
 ULONG ObGetReferenceCount(PVOID Object);
 ULONG ObGetHandleCount(PVOID Object);
+VOID ObCloseAllHandles(PEPROCESS Process);
+VOID ObDeleteHandleTable(PEPROCESS Process);
 
 #endif /* __INCLUDE_INTERNAL_OBJMGR_H */

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.3 1999/12/18 07:33:53 phreak Exp $
+/* $Id: create.c,v 1.4 1999/12/20 02:14:40 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -72,7 +72,8 @@ VOID PsBeginThread(PKSTART_ROUTINE StartRoutine, PVOID StartContext)
 VOID PiDeleteThread(PVOID ObjectBody)
 {
    KIRQL oldIrql;
-   DPRINT("PiDeleteThread(ObjectBody %x)\n",ObjectBody);
+   
+   DPRINT1("PiDeleteThread(ObjectBody %x)\n",ObjectBody);
    
    KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
    ObDereferenceObject(((PETHREAD)ObjectBody)->ThreadsProcess);
@@ -81,6 +82,7 @@ VOID PiDeleteThread(PVOID ObjectBody)
    RemoveEntryList(&((PETHREAD)ObjectBody)->Tcb.ThreadListEntry);
    HalReleaseTask((PETHREAD)ObjectBody);
    KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+   DPRINT1("PiDeleteThread() finished\n");
 }
 
 VOID PiCloseThread(PVOID ObjectBody, ULONG HandleCount)

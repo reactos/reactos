@@ -438,7 +438,7 @@ NTSTATUS MmFreeMemoryArea(PEPROCESS Process,
 	  {
 	     PhysicalAddr = MmGetPhysicalAddress(MemoryArea->BaseAddress + 
 						 (i*PAGESIZE));
-             MmFreePage((PVOID)(ULONG)(PhysicalAddr.u.LowPart), 1);
+             MmDereferencePage((PVOID)(ULONG)(PhysicalAddr.u.LowPart));
 	  }
      }
    for (i=0; i<=(MemoryArea->Length/PAGESIZE); i++)

@@ -67,9 +67,11 @@ VOID KeAcquireSpinLockAtDpcLevel(PKSPIN_LOCK SpinLock)
  *        SpinLock = Spinlock to acquire
  */
 {
-   while (InterlockedExchange(&SpinLock->Lock, 1) == 1)
+   ULONG i;
+   
+   while ((i = InterlockedExchange(&SpinLock->Lock, 1)) == 1)
      {
-	DbgPrint("Spinning on spinlock %x\n", SpinLock);
+	DbgPrint("Spinning on spinlock %x current value %x\n", SpinLock, i);
 	KeBugCheck(0);
      }
 }

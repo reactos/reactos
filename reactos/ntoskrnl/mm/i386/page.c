@@ -64,7 +64,7 @@ NTSTATUS Mmi386ReleaseMmInfo(PEPROCESS Process)
 {
    DPRINT("Mmi386ReleaseMmInfo(Process %x)\n",Process);
    
-   MmFreePage(Process->Pcb.PageTableDirectory, 1);
+   MmDereferencePage(Process->Pcb.PageTableDirectory);
    Process->Pcb.PageTableDirectory = NULL;
    
    DPRINT("Finished Mmi386ReleaseMmInfo()\n");
@@ -181,7 +181,7 @@ VOID MmDeletePageEntry(PEPROCESS Process, PVOID Address, BOOL FreePage)
 		      *page_tlb);
 	     KeBugCheck(0);
 	  }
-        MmFreePage((PVOID)PAGE_MASK(*page_tlb),1);
+        MmDereferencePage((PVOID)PAGE_MASK(*page_tlb));
      }
    *page_tlb = 0;
    if (Process != NULL && Process != CurrentProcess)

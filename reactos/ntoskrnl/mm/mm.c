@@ -234,8 +234,7 @@ NTSTATUS MmSectionHandleFault(MEMORY_AREA* MemoryArea,
    return(STATUS_SUCCESS);
 }
 
-asmlinkage int page_fault_handler(unsigned int cs,
-                                  unsigned int eip)
+ULONG MmPageFault(ULONG cs, ULONG eip, ULONG error_code)
 /*
  * FUNCTION: Handle a page fault
  */
@@ -249,10 +248,16 @@ asmlinkage int page_fault_handler(unsigned int cs,
     * Get the address for the page fault
     */
    __asm__("movl %%cr2,%0\n\t" : "=d" (cr2));                
-   DPRINT("Page fault at address %x with eip %x in process %x\n",cr2,eip,
-	  PsGetCurrentProcess());
+//   DbgPrint("Page fault address %x eip %x process %x code %x\n",cr2,eip,
+//	  PsGetCurrentProcess(), error_code);
 
    cr2 = PAGE_ROUND_DOWN(cr2);
+   
+   if (error_code & 0x1)
+     {
+	DPRINT1("Page protection fault at %x with eip %x\n", cr2, eip);
+	return(0);
+     }
    
 //   DbgPrint("(%%");
    

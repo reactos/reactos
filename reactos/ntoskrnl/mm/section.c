@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.18 1999/11/25 23:37:02 ekohl Exp $
+/* $Id: section.c,v 1.19 1999/12/20 02:14:39 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -56,6 +56,7 @@ PVOID MiTryToSharePageInSection(PSECTION_OBJECT Section,
 	     
 	     PhysPage = MmGetPhysicalAddressForProcess(current->Process,
 						       Address);
+	     MmReferencePage((PVOID)PhysPage);
 	     KeReleaseSpinLock(&Section->ViewListLock, oldIrql);
 	     return((PVOID)PhysPage);
 	  }
@@ -204,8 +205,12 @@ NTSTATUS STDCALL NtCreateSection (OUT PHANDLE SectionHandle,
 					   NULL);
 	if (Status != STATUS_SUCCESS)
 	  {
-	     // Delete section object
+	     /*
+	      * Delete section object
+	      */
 	     DPRINT("NtCreateSection() = %x\n",Status);
+	     ZwClose(SectionHandle);
+	     ObDereferenceObject(Section);
 	     return(Status);
 	  }
      }

@@ -94,7 +94,8 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 			   ULONG LastKernelBase);
 
 PVOID MmAllocPage(VOID);
-VOID MmFreePage(PVOID PhysicalAddress, ULONG Nr);
+VOID MmDereferencePage(PVOID PhysicalAddress);
+VOID MmReferencePage(PVOID PhysicalAddress);
 VOID MmDeletePageTable(PEPROCESS Process, PVOID Address);
 NTSTATUS MmCopyMmInfo(PEPROCESS Src, PEPROCESS Dest);
 NTSTATUS MmReleaseMmInfo(PEPROCESS Process);
@@ -117,5 +118,6 @@ PVOID MiTryToSharePageInSection(PSECTION_OBJECT Section, ULONG Offset);
 NTSTATUS MmSafeCopyFromUser(PVOID Dest, PVOID Src, ULONG NumberOfBytes);
 NTSTATUS MmSafeCopyToUser(PVOID Dest, PVOID Src, ULONG NumberOfBytes);
 VOID MmInitPagingFile(VOID);
+ULONG MmPageFault(ULONG cs, ULONG eip, ULONG error_code);
 
 #endif

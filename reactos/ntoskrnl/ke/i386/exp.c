@@ -17,14 +17,12 @@
 #include <internal/i386/segment.h>
 #include <internal/mmhal.h>
 #include <internal/module.h>
+#include <internal/mm.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS *****************************************************************/
-
-asmlinkage int page_fault_handler(unsigned int cs,
-                                  unsigned int eip);
 
 static exception_hook* exception_hooks[256]={NULL,};
 
@@ -209,7 +207,7 @@ asmlinkage void exception_handler(unsigned int edi,
    
    if (type==14)
      {
-	if (page_fault_handler(cs&0xffff,eip))
+	if (MmPageFault(cs&0xffff, eip, error_code))
 	  {
 	     return;
 	  }

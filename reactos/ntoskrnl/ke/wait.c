@@ -156,7 +156,7 @@ static BOOLEAN KeDispatcherObjectWakeAll(DISPATCHER_HEADER* hdr)
    NTSTATUS Status;
 
    DPRINT("KeDispatcherObjectWakeAll(hdr %x)\n",hdr);
-
+   
    if (IsListEmpty(&hdr->WaitListHead))
      {
 	return(FALSE);
@@ -171,38 +171,38 @@ static BOOLEAN KeDispatcherObjectWakeAll(DISPATCHER_HEADER* hdr)
         if (current->WaitType == WaitAny)
           {
              DPRINT("WaitAny: Remove all wait blocks.\n");
-	         for( PrevBlock = current->Thread->WaitBlockList; PrevBlock; PrevBlock = PrevBlock->NextWaitBlock )
-			    if( PrevBlock != current )
-				    RemoveEntryList( &(PrevBlock->WaitListEntry) );
-		     current->Thread->WaitBlockList = 0;
+	     for( PrevBlock = current->Thread->WaitBlockList; PrevBlock; PrevBlock = PrevBlock->NextWaitBlock )
+	       if( PrevBlock != current )
+		 RemoveEntryList( &(PrevBlock->WaitListEntry) );
+	     current->Thread->WaitBlockList = 0;
           }
         else
           {
-              DPRINT("WaitAll: Remove the current wait block only.\n");
-
-              PrevBlock = current->Thread->WaitBlockList;
-              if (PrevBlock == current)
-              {
-                 DPRINT( "WaitAll: Current block is list head.\n" );
-                 current->Thread->WaitBlockList = current->NextWaitBlock;
-              }
-              else
-              {
-                 DPRINT( "WaitAll: Current block is not list head.\n" );
-                 while ( PrevBlock && PrevBlock->NextWaitBlock != current)
-                 {
-                    PrevBlock = PrevBlock->NextWaitBlock;
-                 }
-                 if (PrevBlock)
-                 {
-                    PrevBlock->NextWaitBlock = current->NextWaitBlock;
-                 }
-              }
-		   }     
+	     DPRINT("WaitAll: Remove the current wait block only.\n");
+	     
+	     PrevBlock = current->Thread->WaitBlockList;
+	     if (PrevBlock == current)
+	       {
+		  DPRINT( "WaitAll: Current block is list head.\n" );
+		  current->Thread->WaitBlockList = current->NextWaitBlock;
+	       }
+	     else
+	       {
+		  DPRINT( "WaitAll: Current block is not list head.\n" );
+		  while ( PrevBlock && PrevBlock->NextWaitBlock != current)
+		    {
+		       PrevBlock = PrevBlock->NextWaitBlock;
+		    }
+		  if (PrevBlock)
+		    {
+		       PrevBlock->NextWaitBlock = current->NextWaitBlock;
+		    }
+	       }
+	  }     
 	KiSideEffectsBeforeWake(hdr);
-    Status = current->WaitKey;
+	Status = current->WaitKey;
 	if( current->Thread->WaitBlockList == NULL )
-        PsUnfreezeThread( CONTAINING_RECORD( current->Thread,ETHREAD,Tcb ), &Status );
+	  PsUnfreezeThread( CONTAINING_RECORD( current->Thread,ETHREAD,Tcb ), &Status );
      }
    return(TRUE);
 }
@@ -229,10 +229,10 @@ static BOOLEAN KeDispatcherObjectWakeOne(DISPATCHER_HEADER* hdr)
    if (current->WaitType == WaitAny)
      {
         DPRINT("WaitAny: Remove all wait blocks.\n");
-		for( PrevBlock = current->Thread->WaitBlockList; PrevBlock; PrevBlock = PrevBlock->NextWaitBlock )
-			if( PrevBlock != current )
-                RemoveEntryList( &(PrevBlock->WaitListEntry) );
-		current->Thread->WaitBlockList = 0;
+	for( PrevBlock = current->Thread->WaitBlockList; PrevBlock; PrevBlock = PrevBlock->NextWaitBlock )
+	  if( PrevBlock != current )
+	    RemoveEntryList( &(PrevBlock->WaitListEntry) );
+	current->Thread->WaitBlockList = 0;
      }
    else
      {
@@ -255,7 +255,7 @@ static BOOLEAN KeDispatcherObjectWakeOne(DISPATCHER_HEADER* hdr)
                 {
                    PrevBlock->NextWaitBlock = current->NextWaitBlock;
                 }
-		   }
+	   }
      }
 
    DPRINT("Waking %x\n",current->Thread);
