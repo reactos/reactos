@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.26 2001/01/21 00:07:03 phreak Exp $
+/* $Id: console.c,v 1.27 2001/01/24 05:10:38 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -678,22 +678,32 @@ WriteConsoleOutputCharacterA(
 	LPDWORD		lpNumberOfCharsWritten
 	)
 {
-   CSRSS_API_REQUEST Request;
+   PCSRSS_API_REQUEST Request;
    CSRSS_API_REPLY Reply;
    NTSTATUS Status;
    WORD Size;
 
-   Request.Type = CSRSS_WRITE_CONSOLE_OUTPUT_CHAR;
-   Request.Data.WriteConsoleOutputCharRequest.ConsoleHandle = hConsoleOutput;
-   Request.Data.WriteConsoleOutputCharRequest.Coord = dwWriteCoord;
+   Request = HeapAlloc(GetProcessHeap(),
+		       HEAP_ZERO_MEMORY,
+		       sizeof(CSRSS_API_REQUEST) + CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR);
+   if( !Request )
+     {
+       SetLastError( ERROR_OUTOFMEMORY );
+       return FALSE;
+     }
+   Request->Type = CSRSS_WRITE_CONSOLE_OUTPUT_CHAR;
+   Request->Data.WriteConsoleOutputCharRequest.ConsoleHandle = hConsoleOutput;
+   Request->Data.WriteConsoleOutputCharRequest.Coord = dwWriteCoord;
    if( lpNumberOfCharsWritten )
       *lpNumberOfCharsWritten = nLength;
    while( nLength )
       {
 	 Size = nLength > CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR ? CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR : nLength;
-	 Request.Data.WriteConsoleOutputCharRequest.Length = Size;
-
-	 Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
+	 Request->Data.WriteConsoleOutputCharRequest.Length = Size;
+	 memcpy( &Request->Data.WriteConsoleOutputCharRequest.String[0],
+		 lpCharacter,
+		 Size );
+	 Status = CsrClientCallServer( Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
 	 if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
 	    {
 	       SetLastErrorByStatus ( Status );
@@ -701,7 +711,7 @@ WriteConsoleOutputCharacterA(
 	    }
 	 nLength -= Size;
 	 lpCharacter += Size;
-	 Request.Data.WriteConsoleOutputCharRequest.Coord = Reply.Data.WriteConsoleOutputCharReply.EndCoord;
+	 Request->Data.WriteConsoleOutputCharRequest.Coord = Reply.Data.WriteConsoleOutputCharReply.EndCoord;
       }
    return TRUE;
 }
@@ -741,24 +751,32 @@ WriteConsoleOutputAttribute(
 	LPDWORD		 lpNumberOfAttrsWritten
 	)
 {
-   CSRSS_API_REQUEST Request;
+   PCSRSS_API_REQUEST Request;
    CSRSS_API_REPLY Reply;
    NTSTATUS Status;
    WORD Size;
-   int c;
 
-   Request.Type = CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB;
-   Request.Data.WriteConsoleOutputAttribRequest.ConsoleHandle = hConsoleOutput;
-   Request.Data.WriteConsoleOutputAttribRequest.Coord = dwWriteCoord;
+   Request = HeapAlloc(GetProcessHeap(),
+		       HEAP_ZERO_MEMORY,
+		       sizeof(CSRSS_API_REQUEST) + CSRSS_MAX_WRITE_CONSOLE_OUTPUT_ATTRIB);
+   if( !Request )
+     {
+       SetLastError( ERROR_OUTOFMEMORY );
+       return FALSE;
+     }
+   Request->Type = CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB;
+   Request->Data.WriteConsoleOutputAttribRequest.ConsoleHandle = hConsoleOutput;
+   Request->Data.WriteConsoleOutputAttribRequest.Coord = dwWriteCoord;
    if( lpNumberOfAttrsWritten )
       *lpNumberOfAttrsWritten = nLength;
    while( nLength )
       {
 	 Size = nLength > CSRSS_MAX_WRITE_CONSOLE_OUTPUT_ATTRIB ? CSRSS_MAX_WRITE_CONSOLE_OUTPUT_ATTRIB : nLength;
-	 Request.Data.WriteConsoleOutputAttribRequest.Length = Size;
-	 for( c = 0; c < Size; c++ )
-	    Request.Data.WriteConsoleOutputAttribRequest.String[c] = lpAttribute[c];
-	 Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
+	 Request->Data.WriteConsoleOutputAttribRequest.Length = Size;
+	 memcpy( &Request->Data.WriteConsoleOutputAttribRequest.String[0],
+		 lpAttribute,
+		 Size * 2 );
+	 Status = CsrClientCallServer( Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
 	 if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
 	    {
 	       SetLastErrorByStatus ( Status );
@@ -766,7 +784,7 @@ WriteConsoleOutputAttribute(
 	    }
 	 nLength -= Size;
 	 lpAttribute += Size;
-	 Request.Data.WriteConsoleOutputAttribRequest.Coord = Reply.Data.WriteConsoleOutputAttribReply.EndCoord;
+	 Request->Data.WriteConsoleOutputAttribRequest.Coord = Reply.Data.WriteConsoleOutputAttribReply.EndCoord;
       }
    return TRUE;
 }
