@@ -385,7 +385,7 @@ PORT_DRIVER_INTERNAL
 MessageId=0x2D
 Severity=Success
 Facility=System
-SymbolicName=PORT_DRIVER_INTERNAL
+SymbolicName=SCSI_DISK_DRIVER_INTERNAL
 Language=English
 SCSI_DISK_DRIVER_INTERNAL
 .
