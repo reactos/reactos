@@ -64,25 +64,29 @@ void wakeup( struct socket *so, struct selinfo *si, void *token ) {
     KEVENT Event;
     PLIST_ENTRY Entry;
     PSLEEPING_THREAD SleepingThread;
+    UINT flags = 0;
 
     OS_DbgPrint
 	(OSK_MID_TRACE,("XXX Bytes to receive: %d\n", so->so_rcv.sb_cc));
 
-    if( so->so_rcv.sb_cc && si )
-	si->si_flags |= SEL_READ;
+    if( so->so_state & SS_ISCONNECTED ) {
+	OS_DbgPrint(OSK_MID_TRACE,("Socket connected!\n"));
+	flags |= SEL_CONNECT;
+    }
+    if( so->so_rcv.sb_cc && si ) {
+	OS_DbgPrint(OSK_MID_TRACE,("Socket readable\n"));
+	flags |= SEL_READ;
+    }
 
     OS_DbgPrint(OSK_MID_TRACE,("Wakeup %x (socket %x, si_flags %x, state %x)!\n",
 			       token, so, si ? si->si_flags : 0,
 			       so->so_state));
 
-    if( OtcpEvent.SocketState ) {
-	OS_DbgPrint(OSK_MID_TRACE,("Calling client's socket state fn\n"));
+    if( OtcpEvent.SocketState ) 
 	OtcpEvent.SocketState( OtcpEvent.ClientData,
 			       so,
-			       so->so_connection,
-			       si ? si->si_flags : 0,
-			       so->so_state );
-    }
+			       so ? so->so_connection : 0,
+			       flags );
 
     ExAcquireFastMutex( &SleepingThreadsLock );
     Entry = SleepingThreadsList.Flink;

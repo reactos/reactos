@@ -742,8 +742,10 @@ sbflush(sb)
 		panic("sbflush");
 	while (sb->sb_mbcnt)
 		sbdrop(sb, (int)sb->sb_cc);
+#if 0
 	if (sb->sb_cc || sb->sb_mb)
 		panic("sbflush 2");
+#endif
 }
 
 /*

@@ -121,10 +121,11 @@ tcp_reass(tp, ti, m)
 	 * Find a segment which begins after this one does.
 	 */
 	for (q = tp->seg_next; q != (struct tcpiphdr *)tp;
-	    q = (struct tcpiphdr *)q->ti_next)
-		if (SEQ_GT(q->ti_seq, ti->ti_seq))
-			break;
-
+	     q = (struct tcpiphdr *)q->ti_next) { 
+	    printf("Finding segment: %x\n", q);
+	    if (SEQ_GT(q->ti_seq, ti->ti_seq))
+		break;
+	}
 	/*
 	 * If there is a preceding segment, it may provide some of
 	 * our data already.  If so, drop the data from the incoming
@@ -760,7 +761,7 @@ findpcb:
 			 */
 			tp->rcv_adv += min(tp->rcv_wnd, TCP_MAXWIN);
 			tcpstat.tcps_connects++;
-			soisconnected(so);
+			//soisconnected(so);
 			tp->t_timer[TCPT_KEEP] = tcp_keepinit;
 			dropsocket = 0;		/* committed to socket */
 			tcpstat.tcps_accepts++;
@@ -853,7 +854,7 @@ findpcb:
 					goto dropwithreset;
 			}
 			tcpstat.tcps_connects++;
-			soisconnected(so);
+			//soisconnected(so);
 			/* Do window scaling on this connection? */
 			if ((tp->t_flags & (TF_RCVD_SCALE|TF_REQ_SCALE)) ==
 				(TF_RCVD_SCALE|TF_REQ_SCALE)) {
@@ -890,6 +891,7 @@ findpcb:
 				 ("Socket %x entered ESTABLISHED state\n",
 				  so));
 			    tp->t_state = TCPS_ESTABLISHED;
+			    soisconnected(so);
 			    tp->t_timer[TCPT_KEEP] = tcp_keepidle;
 			    socwakeup(so);
 			}
@@ -1220,7 +1222,7 @@ trimthenstep6:
 			goto dropwithreset;
 
 		tcpstat.tcps_connects++;
-		soisconnected(so);
+		//soisconnected(so);
 		/* Do window scaling? */
 		if ((tp->t_flags & (TF_RCVD_SCALE|TF_REQ_SCALE)) ==
 			(TF_RCVD_SCALE|TF_REQ_SCALE)) {

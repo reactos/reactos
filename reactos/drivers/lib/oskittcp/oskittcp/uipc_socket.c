@@ -74,6 +74,8 @@ socreate(dom, aso, type, proto)
 	register struct socket *so;
 	register int error;
 
+	printf("socreate(%d,%x,%d,%d)\n", dom, aso, type, proto);
+
 	if (proto)
 		prp = pffindproto(dom, proto, type);
 	else
@@ -352,7 +354,7 @@ sosend(so, addr, uio, top, control, flags)
 	dontroute =
 	    (flags & MSG_DONTROUTE) && (so->so_options & SO_DONTROUTE) == 0 &&
 	    (so->so_proto->pr_flags & PR_ATOMIC);
-	p->p_stats->p_ru.ru_msgsnd++;
+	/* p->p_stats->p_ru.ru_msgsnd++; */
 	if (control)
 		clen = control->m_len;
 #define	snderr(errno)	{ error = errno; splx(s); goto release; }

@@ -50,12 +50,12 @@ struct connect_args {
 #define SEL_ERROR   256
 #define SEL_FINOUT  512
 
-typedef void (*OSKITTCP_SOCKET_STATE)
+typedef int (*OSKITTCP_SOCKET_STATE)
     ( void *ClientData,
       void *WhichSocket,
       void *WhichConnection,
-      OSK_UINT SelFlags,
-      OSK_UINT SocketState );
+      OSK_UINT NewState );
+
 typedef int (*OSKITTCP_SEND_PACKET)
     ( void *ClientData,
       void *WhichSocket,
@@ -86,6 +86,11 @@ extern int OskitTCPReceive( void *socket,
 			    OSK_UINT Len,
 			    OSK_UINT *OutLen,
 			    OSK_UINT Flags );
+extern int OskitTCPSend( void *socket, 
+			 OSK_PCHAR Data,
+			 OSK_UINT Len,
+			 OSK_UINT *OutLen,
+			 OSK_UINT Flags );
 #undef errno
 
 #define malloc(x,...) fbsd_malloc(x,__FILE__,__LINE__)

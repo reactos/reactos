@@ -452,7 +452,6 @@ tcp_connect(tp, nam)
     
     in_pcbrehash(inp);
     
-    
     tp->t_template = tcp_template(tp);
     
     if (tp->t_template == 0) {
@@ -477,7 +476,6 @@ tcp_connect(tp, nam)
     tp->iss = tcp_iss; tcp_iss += TCP_ISSINCR/2;
     
     tcp_sendseqinit(tp);
-    
     
     /*
      * Generate a CC value for this connection and

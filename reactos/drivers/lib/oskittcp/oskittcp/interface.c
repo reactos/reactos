@@ -1,3 +1,4 @@
+
 #include <oskittcp.h>
 #include <oskitdebug.h>
 #include <ntddk.h>
@@ -79,13 +80,13 @@ int OskitTCPSocket( void *context,
     int error = socreate(domain, &so, type, proto);
     if( !error ) {
 	so->so_connection = context;
+	so->so_state = SS_NBIO;
 	*aso = so;
     }
     return error;
 }
 
 int OskitTCPRecv( void *connection,
-		  void *Addr,
 		  OSK_PCHAR Data,
 		  OSK_UINT Len,
 		  OSK_UINT *OutLen,
@@ -117,9 +118,6 @@ int OskitTCPRecv( void *connection,
 	OS_DbgPrint(OSK_MID_TRACE,("Successful read from TCP:\n"));
 	OskitDumpBuffer( m.m_data, uio.uio_resid );
     }
-
-    if( paddr )
-	memcpy( Addr, paddr, min(sizeof(struct sockaddr),paddr->m_len) );
 
     *OutLen = uio.uio_resid;
     return error;
@@ -186,22 +184,6 @@ NTSTATUS OskitTCPConnect( PVOID socket, PVOID connection,
 	goto done;
     }
 
-    s = splnet();
-
-    while ((so->so_state & SS_ISCONNECTING) && so->so_error == 0) {
-	error = tsleep((caddr_t)&so->so_timeo, PSOCK | PCATCH,
-		       "connect", 0);
-	if (error)
-	    break;
-    }
-
-    if (error == 0) {
-	error = so->so_error;
-	so->so_error = 0;
-    }
-
-    splx(s);
-
 bad:
     so->so_state &= ~SS_ISCONNECTING;
 
@@ -219,12 +201,17 @@ DWORD OskitTCPClose( void *socket ) {
     soclose( so );
 }
 
-DWORD OskitTCPSend( void *socket, OSK_PCHAR Data, OSK_UINT Len, int flags ) {
-    OskitDumpBuffer( Data, Len );
+int OskitTCPSend( void *socket, OSK_PCHAR Data, OSK_UINT Len, 
+		  OSK_UINT *OutLen, OSK_UINT flags ) {
     struct mbuf mb;
+    struct uio uio = { 0 };
+    int error = 0;
+    OskitDumpBuffer( Data, Len );
     mb.m_data = Data;
     mb.m_len  = Len;
-    return sosend( socket, NULL, NULL, (struct mbuf *)&mb, NULL, 0 );
+    error = sosend( socket, NULL, &uio, (struct mbuf *)&mb, NULL, 0 );
+    *OutLen = uio.uio_resid;
+    return error;
 }
 
 void *OskitTCPAccept( void *socket, 
