@@ -132,10 +132,6 @@ CdfsOpenFile(PDEVICE_EXTENSION DeviceExt,
 	}
 
       FileName = &AbsFileName;
-
-      RtlFreeUnicodeString(&AbsFileName);
-
-      return STATUS_UNSUCCESSFUL;
     }
 
   Status = CdfsDeviceIoControl (DeviceExt->StorageDevice,
