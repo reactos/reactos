@@ -19,8 +19,9 @@
 
 /* FUNCTIONS ***************************************************************/
 
-BOOLEAN VFATReadSector(IN PDEVICE_OBJECT pDeviceObject,
+BOOLEAN VFATReadSectors(IN PDEVICE_OBJECT pDeviceObject,
 			IN ULONG	DiskSector,
+                        IN ULONG        SectorCount,
 			IN UCHAR*	Buffer)
 {
     LARGE_INTEGER   sectorNumber;
@@ -40,7 +41,7 @@ BOOLEAN VFATReadSector(IN PDEVICE_OBJECT pDeviceObject,
 
     KeInitializeEvent(&event, NotificationEvent, FALSE);
 
-    sectorSize = BLOCKSIZE;
+    sectorSize = BLOCKSIZE*SectorCount;
 
     mbr = ExAllocatePool(NonPagedPool, sectorSize);
 
@@ -49,6 +50,7 @@ BOOLEAN VFATReadSector(IN PDEVICE_OBJECT pDeviceObject,
     }
 
 
+    DPRINT("Building synchronous FSD Request...\n");
     irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
                                        pDeviceObject,
                                        mbr,
@@ -63,28 +65,31 @@ BOOLEAN VFATReadSector(IN PDEVICE_OBJECT pDeviceObject,
         return FALSE;
     }
 
+    DPRINT("Calling IO Driver...\n");
     status = IoCallDriver(pDeviceObject,
                           irp);
 
+    DPRINT("Waiting for IO Operation...\n");
     if (status == STATUS_PENDING) {
         KeWaitForSingleObject(&event,
                               Suspended,
                               KernelMode,
                               FALSE,
                               NULL);
+        DPRINT("Getting IO Status...\n");
         status = ioStatus.Status;
     }
 
     if (!NT_SUCCESS(status)) {
-        DbgPrint("IO failed!!! Error code: %x\n", status);
+        DbgPrint("IO failed!!! Error code: %d\n", status);
         ExFreePool(mbr);
         return FALSE;
     }
 
+    DPRINT("Copying memory...\n");
    RtlCopyMemory(Buffer,mbr,sectorSize);
 
     ExFreePool(mbr);
     DPRINT("Block request succeeded\n");
-
     return TRUE;
 }
