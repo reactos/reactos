@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: messagebox.c,v 1.10 2003/08/07 04:03:24 royce Exp $
+/* $Id: messagebox.c,v 1.11 2003/08/09 14:25:07 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/messagebox.c
@@ -86,7 +86,8 @@ static HFONT MSGBOX_OnInit(HWND hwnd, LPMSGBOXPARAMS lpmb)
     RECT rect;
     HWND hItem;
     HDC hdc;
-    int i, buttons;
+    DWORD buttons;
+    int i;
     int bspace, bw, bh, theight, tleft, wwidth, wheight, bpos;
     int borheight, borwidth, iheight, ileft, iwidth, twidth, tiheight;
     BOOL sdefbtn = FALSE;
@@ -288,7 +289,7 @@ static HFONT MSGBOX_OnInit(HWND hwnd, LPMSGBOXPARAMS lpmb)
     tleft = ileft;
     if (iwidth)
         tleft += ileft + iwidth;
-    twidth = max((bw + bspace) * buttons + bspace - tleft, rect.right);
+    twidth = max((LONG) ((bw + bspace) * buttons + bspace - tleft), rect.right);
     theight = rect.bottom;
 
     if (hFont)

@@ -1,4 +1,4 @@
-/* $Id: ppool.c,v 1.16 2003/08/04 08:26:19 hbirr Exp $
+/* $Id: ppool.c,v 1.17 2003/08/09 14:25:08 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -33,15 +33,15 @@
 
 typedef struct _MM_PPOOL_FREE_BLOCK_HEADER
 {
-  LONG Size;
+  ULONG Size;
   struct _MM_PPOOL_FREE_BLOCK_HEADER* NextFree;
 } MM_PPOOL_FREE_BLOCK_HEADER, *PMM_PPOOL_FREE_BLOCK_HEADER;
 
 typedef struct _MM_PPOOL_USED_BLOCK_HEADER
 {
-  LONG Size;
+  ULONG Size;
 #if MM_PPOOL_BOUNDARY_BYTES
-  LONG UserSize; // how many bytes the user actually asked for...
+  ULONG UserSize; // how many bytes the user actually asked for...
 #endif//MM_PPOOL_BOUNDARY_BYTES
 } MM_PPOOL_USED_BLOCK_HEADER, *PMM_PPOOL_USED_BLOCK_HEADER;
 

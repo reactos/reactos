@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.22 2003/08/08 02:57:54 royce Exp $
+/* $Id: menu.c,v 1.23 2003/08/09 14:25:07 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -843,7 +843,7 @@ IsMenu(
   DWORD ret;
   SetLastError(ERROR_SUCCESS);
   ret = NtUserBuildMenuItemList(hMenu, NULL, 0, 0);
-  return ((ret == -1) || (GetLastError() == ERROR_INVALID_MENU_HANDLE));
+  return ((ret == (DWORD)-1) || (GetLastError() == ERROR_INVALID_MENU_HANDLE));
 }
 
 

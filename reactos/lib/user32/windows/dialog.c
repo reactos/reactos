@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dialog.c,v 1.14 2003/07/28 08:09:51 ekohl Exp $
+/* $Id: dialog.c,v 1.15 2003/08/09 14:25:07 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/dialog.c
@@ -1740,7 +1740,7 @@ GetDlgItemInt(
         if (!endptr || (endptr == str))  /* Conversion was unsuccessful */
             return 0;
 		/* FIXME: errno? */
-        if ((result == ULONG_MAX)/* && (errno == ERANGE) */) return 0;
+        if ((result == LONG_MAX)/* && (errno == ERANGE) */) return 0;
     }
     if (lpTranslated) *lpTranslated = TRUE;
     return (UINT)result;
