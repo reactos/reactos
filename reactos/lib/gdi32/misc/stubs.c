@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.3 2000/06/16 07:34:15 jfilby Exp $
+/* $Id: stubs.c,v 1.4 2000/07/07 00:37:52 phreak Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -289,19 +289,6 @@ CreateSolidBrush(
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
-
-
-
-BOOL
-STDCALL
-DeleteDC(
-	HDC		a0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
 
 
 BOOL

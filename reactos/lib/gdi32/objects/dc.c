@@ -86,6 +86,12 @@ CreateDCW (
 			);
 }
 
+BOOL STDCALL DeleteDC( HDC hDC )
+{
+  return W32kDeleteDC( hDC );
+}
+
+
 HDC
 STDCALL
 CreateCompatibleDC(
