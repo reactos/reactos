@@ -543,7 +543,7 @@ DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect)
          UserGetWindowBorders(Style, ExStyle, &WindowBorders, FALSE);
          InflateRect(Rect, -WindowBorders.cx, -WindowBorders.cy);
       } else
-      if (ExStyle & WS_EX_STATICEDGE)
+      if ((ExStyle & WS_EX_STATICEDGE) || (Style & WS_BORDER))
       {
          InflateRect(Rect, -1, -1);
       }
