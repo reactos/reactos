@@ -1,5 +1,10 @@
 2003-06-05  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* lib/user32/windows/icon.c (CURSORICON_FindBestCursor,
+	CURSORICON_FindBestIcon): Fix unsigned/signed warning.
+
+2003-06-05  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	Changes for compiling with w32api
 
 	* ntoskrnl/include/internal/i386/ps.h (KPCR_TSS): Redefine as 0x3C.

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: icon.c,v 1.5 2003/06/03 22:25:37 ekohl Exp $
+/* $Id: icon.c,v 1.6 2003/06/05 11:57:12 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/icon.c
@@ -464,8 +464,8 @@ CURSORICON_FindBestCursor( CURSORICONDIR *dir, int width, int height, int colors
     /* Find Best Colors for Best Fit */
     for (i = 0, entry = &dir->idEntries[0]; i < dir->idCount; i++,entry++)
     {
-        if(abs(width - entry->Info.icon.bWidth) == iXDiff &&
-            abs(height - entry->Info.icon.bHeight) == iYDiff)
+        if(abs(width - entry->Info.icon.bWidth) == (int) iXDiff &&
+            abs(height - entry->Info.icon.bHeight) == (int) iYDiff)
         {
             iTempColorDiff = abs(colors - entry->Info.icon.bColorCount);
 
@@ -517,8 +517,8 @@ CURSORICON_FindBestIcon( CURSORICONDIR *dir, int width, int height, int colors)
     /* Find Best Colors for Best Fit */
     for (i = 0, entry = &dir->idEntries[0]; i < dir->idCount; i++,entry++)
       {
-        if(abs(width - entry->Info.icon.bWidth) == iXDiff &&
-           abs(height - entry->Info.icon.bHeight) == iYDiff)
+        if(abs(width - entry->Info.icon.bWidth) == (int) iXDiff &&
+           abs(height - entry->Info.icon.bHeight) == (int) iYDiff)
         {
             iTempColorDiff = abs(colors - entry->Info.icon.bColorCount);
             if(iColorDiff > iTempColorDiff)
