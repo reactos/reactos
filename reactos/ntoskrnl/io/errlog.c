@@ -1,4 +1,4 @@
-/* $Id: errlog.c,v 1.13 2003/11/19 12:53:14 ekohl Exp $
+/* $Id: errlog.c,v 1.14 2003/11/20 11:08:52 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -24,7 +24,7 @@ typedef struct _ERROR_LOG_ENTRY
 {
   LIST_ENTRY Entry;
   LARGE_INTEGER TimeStamp;
-  ULONG EntrySize;
+  ULONG PacketSize;
 } ERROR_LOG_ENTRY, *PERROR_LOG_ENTRY;
 
 typedef struct _LOG_WORKER_DPC
@@ -113,12 +113,13 @@ IopRestartLogWorker (VOID)
       return;
     }
 
+  /* Initialize DPC and Timer */
   KeInitializeDpc (&WorkerDpc->Dpc,
 		   IopLogDpcRoutine,
 		   WorkerDpc);
   KeInitializeTimer (&WorkerDpc->Timer);
 
-  /* 30 seconds */
+  /* Restart after 30 seconds */
   Timeout.QuadPart = -300000000LL;
   KeSetTimer (&WorkerDpc->Timer,
 	      Timeout,
@@ -130,8 +131,10 @@ static BOOLEAN
 IopConnectLogPort (VOID)
 {
   UNICODE_STRING PortName;
-  ULONG MaxMessageSize;
   NTSTATUS Status;
+  ULONG MaxMessageSize;
+
+  DPRINT1 ("IopConnectLogPort() called\n");
 
   RtlInitUnicodeString (&PortName,
 			L"\\ErrorLogPort");
@@ -141,9 +144,10 @@ IopConnectLogPort (VOID)
 			  NULL,
 			  NULL,
 			  NULL,
-			  &MaxMessageSize,
+			  &MaxMessageSize, //NULL,
 			  NULL,
-			  0);
+			  NULL);
+  DPRINT1 ("NtConnectPort() (Status %lx)\n", Status);
   if (!NT_SUCCESS(Status))
     {
       DPRINT1 ("NtConnectPort() failed (Status %lx)\n", Status);
@@ -152,7 +156,7 @@ IopConnectLogPort (VOID)
 
   DPRINT1 ("Maximum message size %lu\n", MaxMessageSize);
 
-  IopLogPortConnected = TRUE;
+  DPRINT1 ("IopConnectLogPort() done\n");
 
   return TRUE;
 }
@@ -162,7 +166,11 @@ static VOID STDCALL
 IopLogWorker (PVOID Parameter)
 {
   PERROR_LOG_ENTRY LogEntry;
+  PLPC_MAX_MESSAGE Request;
+  PIO_ERROR_LOG_MESSAGE Message;
+  PIO_ERROR_LOG_PACKET Packet;
   KIRQL Irql;
+  NTSTATUS Status;
 
   DPRINT1 ("IopLogWorker() called\n");
 
@@ -175,12 +183,14 @@ IopLogWorker (PVOID Parameter)
     {
       if (IopConnectLogPort () == FALSE)
 	{
+CHECKPOINT1;
 	  IopRestartLogWorker ();
 	  return;
 	}
-    }
 
-  IopLogWorkerRunning = FALSE;
+CHECKPOINT1;
+      IopLogPortConnected = TRUE;
+    }
 
   while (TRUE)
     {
@@ -209,28 +219,68 @@ IopLogWorker (PVOID Parameter)
 	  break;
 	}
 
+      /* Get pointer to the log packet */
+      Packet = (PIO_ERROR_LOG_PACKET)((ULONG_PTR)LogEntry + sizeof(ERROR_LOG_ENTRY));
 
+      /* Allocate request buffer */
+      Request = ExAllocatePool (NonPagedPool,
+				sizeof(LPC_MAX_MESSAGE));
+      if (Request == NULL)
+	{
+	  DPRINT1("Failed to allocate request buffer!\n");
 
-      /* FIXME: Send the error message to the log port */
+	  /* FIXME: Requeue log message and restart the worker */
 
+	  return;
+	}
 
-#if 0
+      /* Initialize the log message */
+      Message = (PIO_ERROR_LOG_MESSAGE)Request->Data;
+      Message->Type = 0xC; //IO_TYPE_ERROR_MESSAGE;
+      Message->Size =
+	sizeof(IO_ERROR_LOG_MESSAGE) - sizeof(IO_ERROR_LOG_PACKET) + LogEntry->PacketSize;
+      Message->DriverNameLength = 0; /* FIXME */
+      Message->TimeStamp.QuadPart = LogEntry->TimeStamp.QuadPart;
+      Message->DriverNameOffset = 0;  /* FIXME */
+
+      RtlCopyMemory (&Message->EntryData,
+		     Packet,
+		     LogEntry->PacketSize);
+
+  DPRINT1 ("SequenceNumber %lx\n", Packet->SequenceNumber);
+
+      Request->Header.DataSize = Message->Size;
+      Request->Header.MessageSize =
+	Request->Header.DataSize + sizeof(LPC_MESSAGE);
+
+      /* Send the error message to the log port */
       Status = NtRequestPort (IopLogPort,
-			      Message);
+			      &Request->Header);
 
+      /* Release request buffer */
+      ExFreePool (Request);
 
-#endif
+      if (!NT_SUCCESS(Status))
+	{
+	  DPRINT1 ("NtRequestPort() failed (Status %lx)\n", Status);
+
+	  /* FIXME: Requeue log message and restart the worker */
+
+	  return;
+	}
 
       /* Release error log entry */
       KeAcquireSpinLock (&IopAllocationLock,
 			 &Irql);
 
-      IopTotalLogSize -= LogEntry->EntrySize;
+      IopTotalLogSize -= LogEntry->PacketSize;
       ExFreePool (LogEntry);
 
       KeReleaseSpinLock (&IopAllocationLock,
 			 Irql);
     }
+
+  IopLogWorkerRunning = FALSE;
 
   DPRINT1 ("IopLogWorker() done\n");
 }
@@ -274,7 +324,7 @@ IoAllocateErrorLogEntry (IN PVOID IoObject,
 
   IopTotalLogSize += EntrySize;
 
-  LogEntry->EntrySize = LogEntrySize;
+  LogEntry->PacketSize = LogEntrySize;
 
   KeReleaseSpinLock (&IopAllocationLock,
 		     Irql);
@@ -297,9 +347,8 @@ IoWriteErrorLogEntry (IN PVOID ElEntry)
 
   LogEntry = (PERROR_LOG_ENTRY)((ULONG_PTR)ElEntry - sizeof(ERROR_LOG_ENTRY));
 
-
-  /* FIXME: Get logging time */
-
+  /* Get time stamp */
+  KeQuerySystemTime (&LogEntry->TimeStamp);
 
   KeAcquireSpinLock (&IopLogListLock,
 		     &Irql);
