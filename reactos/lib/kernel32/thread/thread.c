@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.35 2003/02/03 14:20:24 ekohl Exp $
+/* $Id: thread.c,v 1.36 2003/02/17 16:30:17 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -23,9 +23,9 @@
 /* FUNCTIONS *****************************************************************/
 
 static EXCEPTION_DISPOSITION __cdecl
-_except_handler(struct _EXCEPTION_RECORD *ExceptionRecord,
+_except_handler(EXCEPTION_RECORD *ExceptionRecord,
 		void * EstablisherFrame,
-		struct _CONTEXT *ContextRecord,
+		CONTEXT *ContextRecord,
 		void * DispatcherContext)
 {
   ExitThread(0);
