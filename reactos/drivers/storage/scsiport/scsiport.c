@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.36 2003/09/11 11:51:05 ekohl Exp $
+/* $Id: scsiport.c,v 1.37 2003/09/25 23:23:21 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -50,6 +50,13 @@
 
 
 /* GLOBALS *******************************************************************/
+
+static BOOLEAN
+SpiGetPciConfigData (IN struct _HW_INITIALIZATION_DATA *HwInitializationData,
+		     IN OUT PPORT_CONFIGURATION_INFORMATION PortConfig,
+		     IN ULONG BusNumber,
+		     IN OUT PULONG NextDeviceNumber,
+		     IN OUT PULONG NextFunctionNumber);
 
 static NTSTATUS STDCALL
 ScsiPortCreateClose(IN PDEVICE_OBJECT DeviceObject,
@@ -410,8 +417,8 @@ ScsiPortGetPhysicalAddress(IN PVOID HwDeviceExtension,
   ULONG BufferLength = 0;
   ULONG Offset;
 
-  DPRINT1("ScsiPortGetPhysicalAddress(%p %p %p %p)\n",
-	  HwDeviceExtension, Srb, VirtualAddress, Length);
+  DPRINT("ScsiPortGetPhysicalAddress(%p %p %p %p)\n",
+	 HwDeviceExtension, Srb, VirtualAddress, Length);
 
   DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
 				      SCSI_PORT_DEVICE_EXTENSION,
@@ -477,8 +484,8 @@ ScsiPortGetUncachedExtension(IN PVOID HwDeviceExtension,
   PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
   DEVICE_DESCRIPTION DeviceDescription;
 
-  DPRINT1("ScsiPortGetUncachedExtension(%p %p %lu)\n",
-	  HwDeviceExtension, ConfigInfo, NumberOfBytes);
+  DPRINT("ScsiPortGetUncachedExtension(%p %p %lu)\n",
+	 HwDeviceExtension, ConfigInfo, NumberOfBytes);
 
   DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
 				      SCSI_PORT_DEVICE_EXTENSION,
@@ -614,6 +621,9 @@ ScsiPortInitialize(IN PVOID Argument1,
   ULONG MaxBus;
   PACCESS_RANGE AccessRanges;
   ULONG ExtensionSize;
+  ULONG NextBusNumber = 0;
+  ULONG NextDeviceNumber = 0;
+  ULONG NextFunctionNumber = 0;
 
   DPRINT("ScsiPortInitialize() called!\n");
 
@@ -648,22 +658,49 @@ ScsiPortInitialize(IN PVOID Argument1,
   PortConfig = &PseudoDeviceExtension->PortConfig;
 
   PortConfig->Length = sizeof(PORT_CONFIGURATION_INFORMATION);
+  PortConfig->SystemIoBusNumber = 0;
   PortConfig->AdapterInterfaceType = HwInitializationData->AdapterInterfaceType;
+//  PortConfig->BusInterruptLevel = oz_dev_pci_conf_inb (pciconfp, OZ_DEV_PCI_CONF_B_INTLINE);
+//  PortConfig->BusInterruptVector = ;
   PortConfig->InterruptMode =
    (PortConfig->AdapterInterfaceType == PCIBus) ? LevelSensitive : Latched;
+  PortConfig->MaximumTransferLength = SP_UNINITIALIZED_VALUE;
+  PortConfig->NumberOfPhysicalBreaks = SP_UNINITIALIZED_VALUE;
+  PortConfig->DmaChannel = SP_UNINITIALIZED_VALUE;
+  PortConfig->DmaPort = SP_UNINITIALIZED_VALUE;
+//  PortConfig->DmaWidth =
+//  PortConfig->DmaSpeed =
+//  PortConfig->AlignmentMask =
+  PortConfig->NumberOfAccessRanges = HwInitializationData->NumberOfAccessRanges;
+//  PortConfig->NumberOfBuses =
+
+  for (i = 0; i < SCSI_MAXIMUM_BUSES; i++)
+    PortConfig->InitiatorBusId[i] = 255;
+
+//  PortConfig->ScatterGather =
+//  PortConfig->Master =
+//  PortConfig->CachesData =
+//  PortConfig->AdapterScansDown =
   PortConfig->AtdiskPrimaryClaimed = SystemConfig->AtDiskPrimaryAddressClaimed;
   PortConfig->AtdiskSecondaryClaimed = SystemConfig->AtDiskSecondaryAddressClaimed;
-  PortConfig->NumberOfAccessRanges = HwInitializationData->NumberOfAccessRanges;
+//  PortConfig->Dma32BitAddresses =
+//  PortConfig->DemandMode =
+  PortConfig->MapBuffers = HwInitializationData->MapBuffers;
+  PortConfig->NeedPhysicalAddresses = HwInitializationData->NeedPhysicalAddresses;
+  PortConfig->TaggedQueuing = HwInitializationData->TaggedQueuing;
+  PortConfig->AutoRequestSense = HwInitializationData->AutoRequestSense;
+  PortConfig->MultipleRequestPerLu = HwInitializationData->MultipleRequestPerLu;
+  PortConfig->ReceiveEvent = HwInitializationData->ReceiveEvent;
+//  PortConfig->RealModeInitialized =
+//  PortConfig->BufferAccessScsiPortControlled =
+  PortConfig->MaximumNumberOfTargets = SCSI_MAXIMUM_TARGETS;
+//  PortConfig->MaximumNumberOfLogicalUnits = SCSI_MAXIMUM_LOGICAL_UNITS;
+  PortConfig->SlotNumber = 0;
 
   PortConfig->AccessRanges =
     ExAllocatePool(PagedPool,
 		   sizeof(ACCESS_RANGE) * PortConfig->NumberOfAccessRanges);
 
-  for (i = 0; i < SCSI_MAXIMUM_BUSES; i++)
-    PortConfig->InitiatorBusId[i] = 255;
-
-  PortConfig->SystemIoBusNumber = 0;
-  PortConfig->SlotNumber = 0;
 
   MaxBus = (PortConfig->AdapterInterfaceType == PCIBus) ? 8 : 1;
 
@@ -687,14 +724,42 @@ ScsiPortInitialize(IN PVOID Argument1,
       RtlZeroMemory(PseudoDeviceExtension->MiniPortDeviceExtension,
 		    PseudoDeviceExtension->MiniPortExtensionSize);
 
+      if ((HwInitializationData->AdapterInterfaceType == PCIBus) &&
+	  (HwInitializationData->VendorIdLength > 0) &&
+	  (HwInitializationData->VendorId != NULL) &&
+	  (HwInitializationData->DeviceIdLength > 0) &&
+	  (HwInitializationData->DeviceId != NULL))
+	{
+	  /* Get PCI device data */
+	  DPRINT("VendorId '%.*s'  DeviceId '%.*s'\n",
+		 HwInitializationData->VendorIdLength,
+		 HwInitializationData->VendorId,
+		 HwInitializationData->DeviceIdLength,
+		 HwInitializationData->DeviceId);
+
+	  if (!SpiGetPciConfigData (HwInitializationData,
+				    &PseudoDeviceExtension->PortConfig,
+				    NextBusNumber,
+				    &NextDeviceNumber,
+				    &NextFunctionNumber))
+	    {
+	      ExFreePool(PortConfig->AccessRanges);
+	      ExFreePool(PseudoDeviceExtension);
+
+	      return STATUS_UNSUCCESSFUL;
+	    }
+	}
+
       /* Note: HwFindAdapter is called once for each bus */
+      Again = FALSE;
       Result = (HwInitializationData->HwFindAdapter)(&PseudoDeviceExtension->MiniPortDeviceExtension,
 						     HwContext,
-						     NULL,	/* BusInformation */
-						     NULL,	/* ArgumentString */
+						     0,	/* BusInformation */
+						     "",	/* ArgumentString */
 						     &PseudoDeviceExtension->PortConfig,
 						     &Again);
-      DPRINT("HwFindAdapter() result: %lu\n", Result);
+      DPRINT("HwFindAdapter() Result: %lu  Again: %s\n",
+	     Result, (Again) ? "True" : "False");
 
       if (Result == SP_RETURN_FOUND)
 	{
@@ -722,7 +787,7 @@ ScsiPortInitialize(IN PVOID Argument1,
 	  SpiBuildDeviceMap (RealDeviceExtension,
 			     (PUNICODE_STRING)Argument2);
 
-	  /* Update the configuration info */
+	  /* Update the system configuration info */
 	  SystemConfig->AtDiskPrimaryAddressClaimed = PortConfig->AtdiskPrimaryClaimed;
 	  SystemConfig->AtDiskSecondaryAddressClaimed = PortConfig->AtdiskSecondaryClaimed;
 	  SystemConfig->ScsiPortCount++;
@@ -732,6 +797,9 @@ ScsiPortInitialize(IN PVOID Argument1,
 	{
 	  PortConfig->SystemIoBusNumber++;
 	  PortConfig->SlotNumber = 0;
+	  NextBusNumber++;
+	  NextDeviceNumber = 0;
+	  NextFunctionNumber = 0;
 	}
 
       DPRINT("Bus: %lu  MaxBus: %lu\n", PortConfig->SystemIoBusNumber, MaxBus);
@@ -760,7 +828,7 @@ ScsiPortIoMapTransfer(IN PVOID HwDeviceExtension,
 		      IN ULONG LogicalAddress,
 		      IN ULONG Length)
 {
-  DPRINT("ScsiPortIoMapTransfer()\n");
+  DPRINT1("ScsiPortIoMapTransfer()\n");
   UNIMPLEMENTED;
 }
 
@@ -779,7 +847,7 @@ ScsiPortLogError(IN PVOID HwDeviceExtension,
 {
   PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
 
-  DPRINT("ScsiPortLogError() called\n");
+  DPRINT1("ScsiPortLogError() called\n");
 
   DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
 				      SCSI_PORT_DEVICE_EXTENSION,
@@ -920,6 +988,98 @@ ScsiPortValidateRange(IN PVOID HwDeviceExtension,
 
 
 /* INTERNAL FUNCTIONS ********************************************************/
+
+
+static BOOLEAN
+SpiGetPciConfigData (IN struct _HW_INITIALIZATION_DATA *HwInitializationData,
+		     IN OUT PPORT_CONFIGURATION_INFORMATION PortConfig,
+		     IN ULONG BusNumber,
+		     IN OUT PULONG NextDeviceNumber,
+		     IN OUT PULONG NextFunctionNumber)
+{
+  PCI_COMMON_CONFIG PciConfig;
+  PCI_SLOT_NUMBER SlotNumber;
+  ULONG DataSize;
+  ULONG DeviceNumber;
+  ULONG FunctionNumber;
+  CHAR VendorIdString[8];
+  CHAR DeviceIdString[8];
+
+  DPRINT1("SpiGetPciConfiguration() called\n");
+
+  if (*NextFunctionNumber > 7)
+    {
+      *NextFunctionNumber = 0;
+      (*NextDeviceNumber)++;
+    }
+
+  if (*NextDeviceNumber > 31)
+    {
+      *NextDeviceNumber = 0;
+      return FALSE;
+    }
+
+  for (DeviceNumber = *NextDeviceNumber; DeviceNumber < PCI_MAX_DEVICES; DeviceNumber++)
+    {
+      SlotNumber.u.bits.DeviceNumber = DeviceNumber;
+
+      for (FunctionNumber = *NextFunctionNumber; FunctionNumber < PCI_MAX_FUNCTION; FunctionNumber++)
+	{
+	  SlotNumber.u.bits.FunctionNumber = FunctionNumber;
+
+	  DataSize = HalGetBusData (PCIConfiguration,
+				    BusNumber,
+				    SlotNumber.u.AsULONG,
+				    &PciConfig,
+				    PCI_COMMON_HDR_LENGTH);
+	  if (DataSize != PCI_COMMON_HDR_LENGTH)
+	    {
+	      if (FunctionNumber == 0)
+		{
+		  break;
+		}
+	      else
+		{
+		  continue;
+		}
+	    }
+
+	  sprintf (VendorIdString, "%04hx", PciConfig.VendorID);
+	  sprintf (DeviceIdString, "%04hx", PciConfig.DeviceID);
+
+	  if (!_strnicmp(VendorIdString, HwInitializationData->VendorId, HwInitializationData->VendorIdLength) &&
+	      !_strnicmp(DeviceIdString, HwInitializationData->DeviceId, HwInitializationData->DeviceIdLength))
+	    {
+	      DPRINT1 ("Found device 0x%04hx 0x%04hx at %1lu %2lu %1lu\n",
+		       PciConfig.VendorID,
+		       PciConfig.DeviceID,
+		       BusNumber,
+		       SlotNumber.u.bits.DeviceNumber,
+		       SlotNumber.u.bits.FunctionNumber);
+
+	      PortConfig->SlotNumber = SlotNumber.u.AsULONG;
+
+	      *NextDeviceNumber = DeviceNumber;
+	      *NextFunctionNumber = FunctionNumber + 1;
+
+	      return TRUE;
+	    }
+
+
+	  if (FunctionNumber == 0 && !(PciConfig.HeaderType & PCI_MULTIFUNCTION))
+	    {
+	      break;
+	    }
+	}
+       *NextFunctionNumber = 0;
+    }
+
+  DPRINT1("No device found\n");
+
+  return FALSE;
+}
+
+
 
 /**********************************************************************
  * NAME							INTERNAL
