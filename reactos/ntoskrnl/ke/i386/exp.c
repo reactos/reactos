@@ -27,8 +27,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
 #include <roscfg.h>
+#include <ddk/ntddk.h>
 #include <internal/ntoskrnl.h>
 #include <internal/ke.h>
 #include <internal/i386/segment.h>
