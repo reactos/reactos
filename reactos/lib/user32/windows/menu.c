@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.71 2004/09/14 01:30:02 weiden Exp $
+/* $Id: menu.c,v 1.72 2004/12/04 19:53:55 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -4437,8 +4437,34 @@ SetMenuItemInfoA(
   BOOL fByPosition,
   LPCMENUITEMINFOA lpmii)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  MENUITEMINFOW MenuItemInfoW;
+  UNICODE_STRING UnicodeString;
+  ULONG Result;
+
+  RtlCopyMemory(&MenuItemInfoW, lpmii, min(lpmii->cbSize, sizeof(MENUITEMINFOW)));
+
+  if ((MenuItemInfoW.fMask & (MIIM_TYPE | MIIM_STRING)) &&
+      (MENU_ITEM_TYPE(MenuItemInfoW.fType) == MF_STRING) &&
+      MenuItemInfoW.dwTypeData)
+  {
+    RtlCreateUnicodeStringFromAsciiz(&UnicodeString,
+                                     (LPSTR)MenuItemInfoW.dwTypeData);
+    MenuItemInfoW.dwTypeData = (LPWSTR)&UnicodeString;
+  }
+  else
+  {
+    UnicodeString.Buffer = NULL;
+  }
+
+  Result = NtUserMenuItemInfo(hMenu, uItem, fByPosition,
+                              (PROSMENUITEMINFO)&MenuItemInfoW, TRUE);
+
+  if (UnicodeString.Buffer != NULL)
+  {
+    RtlFreeUnicodeString(&UnicodeString);
+  }
+
+  return Result;
 }
 
 
@@ -4453,8 +4479,21 @@ SetMenuItemInfoW(
   BOOL fByPosition,
   LPCMENUITEMINFOW lpmii)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  MENUITEMINFOW MenuItemInfoW;
+  UNICODE_STRING UnicodeString;
+
+  RtlCopyMemory(&MenuItemInfoW, lpmii, min(lpmii->cbSize, sizeof(MENUITEMINFOW)));
+
+  if ((MenuItemInfoW.fMask & (MIIM_TYPE | MIIM_STRING)) &&
+      (MENU_ITEM_TYPE(MenuItemInfoW.fType) == MF_STRING) &&
+      MenuItemInfoW.dwTypeData)
+  {
+    RtlInitUnicodeString(&UnicodeString, MenuItemInfoW.dwTypeData);
+    MenuItemInfoW.dwTypeData = (LPWSTR)&UnicodeString;
+  }
+
+  return NtUserMenuItemInfo(hMenu, uItem, fByPosition,
+                            (PROSMENUITEMINFO)&MenuItemInfoW, TRUE);
 }
 
 /*
