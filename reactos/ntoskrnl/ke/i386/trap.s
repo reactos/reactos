@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: trap.s,v 1.13 2002/07/17 21:04:55 dwelch Exp $
+/* $Id: trap.s,v 1.14 2002/08/30 02:47:36 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/trap.s
@@ -40,14 +40,7 @@ _KiTrapEpilog:
 	cmpl	$1, %eax       /* Check for v86 recovery */
 	jne     _KiTrapRet
 	jmp	_KiV86Complete
-_KiTrapRet:		
-	/* Get a pointer to the current thread */
-        movl	%fs:0x124, %esi
-	
-        /* Restore the old trap frame pointer */
-        movl	0x3c(%esp), %ebx
-	movl	%ebx, KTHREAD_TRAP_FRAME(%esi)
-	
+_KiTrapRet:				
 	/* Skip debug information and unsaved registers */
 	addl	$0x30, %esp
 	popl	%gs
@@ -138,21 +131,31 @@ _KiTrapProlog:
 	pushl	$0     /* XXX: DebugArgMark */
 	movl    0x60(%esp), %ebx
 	pushl	%ebx   /* XXX: DebugEIP */
-	pushl	%ebp   /* XXX: DebugEBP */
-
+	pushl	%ebp   /* XXX: DebugEBP */	
+		
 	/* Load the segment registers */
 	movl	$KERNEL_DS, %ebx
 	movl	%ebx, %ds
 	movl	%ebx, %es
 	movl	%ebx, %gs
-
+	
 	/*  Set ES to kernel segment  */
 	movw	$KERNEL_DS,%bx
 	movw	%bx,%es
 
 	movl	%esp, %ebx
-	movl	%esp, %ebp
-	
+	movl	%esp, %ebp		
+
+	/* Save the old trap frame. */
+	cmpl	$0, %edi
+	je	.L7
+	movl	%ss:KTHREAD_TRAP_FRAME(%edi), %edx
+	pushl	%edx
+	jmp	.L8
+.L7:
+	pushl	$0
+.L8:	
+
 	/* Save a pointer to the trap frame in the current KTHREAD */
 	cmpl	$0, %edi
 	je	.L6
@@ -166,6 +169,13 @@ _KiTrapProlog:
 	addl	$4, %esp
 	addl	$4, %esp
 
+	/* Get a pointer to the current thread */
+        movl	%fs:0x124, %esi
+	
+        /* Restore the old trap frame pointer */
+	popl	%ebx
+	movl	%ebx, KTHREAD_TRAP_FRAME(%esi)
+	
 	/* Return to the caller */
 	jmp	_KiTrapEpilog
 

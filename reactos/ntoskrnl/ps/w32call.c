@@ -1,4 +1,4 @@
-/* $Id: w32call.c,v 1.1 2002/06/18 22:03:48 dwelch Exp $
+/* $Id: w32call.c,v 1.2 2002/08/30 02:47:37 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -43,6 +43,7 @@ typedef struct _NTW32CALL_SAVED_STATE
   PULONG CallerResultLength;
   PNTSTATUS CallbackStatus;
   PKTRAP_FRAME SavedTrapFrame;
+  PVOID SavedCallbackStack;
 } NTW32CALL_SAVED_STATE, *PNTW32CALL_SAVED_STATE;
 
 /* FUNCTIONS ***************************************************************/
@@ -63,6 +64,7 @@ NtCallbackReturn (PVOID		Result,
   KIRQL oldIrql;
   PNTW32CALL_SAVED_STATE State;
   PKTRAP_FRAME SavedTrapFrame;
+  PVOID SavedCallbackStack;
 
   Thread = PsGetCurrentThread();
   if (Thread->Tcb.CallbackStack == NULL)
@@ -71,12 +73,11 @@ NtCallbackReturn (PVOID		Result,
     }
 
   OldStack = (PULONG)Thread->Tcb.CallbackStack;
-  Thread->Tcb.CallbackStack = NULL;
 
   /*
    * Get the values that NtW32Call left on the inactive stack for us.
    */
-  State = (PNTW32CALL_SAVED_STATE)OldStack[0];
+  State = (PNTW32CALL_SAVED_STATE)OldStack[0];  
   CallbackStatus = State->CallbackStatus;
   CallerResultLength = State->CallerResultLength;
   CallerResult = State->CallerResult;
@@ -84,6 +85,7 @@ NtCallbackReturn (PVOID		Result,
   StackBase = State->SavedStackBase;
   StackLimit = State->SavedStackLimit;
   SavedTrapFrame = State->SavedTrapFrame;
+  SavedCallbackStack = State->SavedCallbackStack;
   
   /*
    * Copy the callback status and the callback result to NtW32Call
@@ -110,6 +112,7 @@ NtCallbackReturn (PVOID		Result,
   Thread->Tcb.StackBase = StackBase;
   Thread->Tcb.StackLimit = StackLimit;
   Thread->Tcb.TrapFrame = SavedTrapFrame;
+  Thread->Tcb.CallbackStack = SavedCallbackStack;
   KeGetCurrentKPCR()->TSS->Esp0 = (ULONG)Thread->Tcb.InitialStack;
   KeStackSwitchAndRet((PVOID)(OldStack + 1));
 
@@ -199,14 +202,10 @@ NtW32Call (IN ULONG RoutineIndex,
   NTSTATUS CallbackStatus;
   NTW32CALL_SAVED_STATE SavedState;
 
-  DPRINT1("NtW32Call(RoutineIndex %d, Argument %X, ArgumentLength %d)\n",
+  DPRINT("NtW32Call(RoutineIndex %d, Argument %X, ArgumentLength %d)\n",
 	  RoutineIndex, Argument, ArgumentLength);
 
   Thread = PsGetCurrentThread();
-  if (Thread->Tcb.CallbackStack != NULL)
-    {
-      return(STATUS_UNSUCCESSFUL);
-    }
 
   /* Set up the new kernel and user environment. */
   StackSize = (ULONG)(Thread->Tcb.StackBase - Thread->Tcb.StackLimit);  
@@ -233,6 +232,7 @@ NtW32Call (IN ULONG RoutineIndex,
   SavedState.CallerResultLength = ResultLength;
   SavedState.CallbackStatus = &CallbackStatus;
   SavedState.SavedTrapFrame = Thread->Tcb.TrapFrame;
+  SavedState.SavedCallbackStack = Thread->Tcb.CallbackStack;
   Thread->Tcb.InitialStack = Thread->Tcb.StackBase = NewStack + StackSize;
   Thread->Tcb.StackLimit = (ULONG)NewStack;
   Thread->Tcb.KernelStack = NewStack + StackSize - sizeof(KTRAP_FRAME);

@@ -509,11 +509,9 @@ NtUserGetAltTabInfo(
   DWORD Unknown4,
   DWORD Unknown5);
 
-DWORD
-STDCALL
-NtUserGetAncestor(
-  DWORD Unknown0,
-  DWORD Unknown1);
+HWND STDCALL
+NtUserGetAncestor(HWND hWnd, UINT Flags);
+
 
 DWORD
 STDCALL

@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.8 2002/07/17 21:04:54 dwelch Exp $
+/* $Id: window.c,v 1.9 2002/08/30 02:47:36 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -541,10 +541,9 @@ GetAltTabInfoW(HWND hwnd,
 }
 
 HWND STDCALL
-GetAncestor(HWND hwnd,
-	    UINT gaFlags)
+GetAncestor(HWND hwnd, UINT gaFlags)
 {
-  return (HWND)0;
+  return(NtUserGetAncestor(hwnd, gaFlags));
 }
 
 WINBOOL STDCALL
@@ -719,7 +718,15 @@ IsWindowUnicode(HWND hWnd)
 WINBOOL STDCALL
 IsWindowVisible(HWND hWnd)
 {
-  return FALSE;
+  while (GetWindowLong(hWnd, GWL_STYLE) & WS_CHILD)
+    {
+      if (!(GetWindowLong(hWnd, GWL_STYLE) & WS_VISIBLE))
+	{
+	  return(FALSE);
+	}
+      hWnd = GetAncestor(hWnd, GA_PARENT);
+    }
+  return(GetWindowLong(hWnd, GWL_STYLE) & WS_VISIBLE);
 }
 
 WINBOOL STDCALL

@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.11 2002/08/26 23:20:54 dwelch Exp $
+/* $Id: window.c,v 1.12 2002/08/30 02:47:37 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -27,6 +27,42 @@
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
+
+HWND STDCALL
+NtUserGetAncestor(HWND hWnd, UINT Flags)
+{
+  if (W32kIsDesktopWindow(hWnd))
+    {
+      return(NULL);
+    }
+  if (Flags & GA_PARENT)
+    {
+      PWINDOW_OBJECT Window;
+      HWND hParent;
+
+      Window = W32kGetWindowObject(hWnd);
+      if (Window == NULL)
+	{
+	  return(NULL);
+	}     
+
+      if (Window->Parent == NULL)
+	{
+	  W32kReleaseWindowObject(Window);
+	}
+
+      hParent = Window->Parent->Self;
+
+      W32kReleaseWindowObject(Window);
+
+      return(hParent);
+    }
+  else
+    {
+      UNIMPLEMENTED;
+      return(NULL);
+    }
+}
 
 VOID
 W32kSetFocusWindow(HWND hWnd)

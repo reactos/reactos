@@ -49,7 +49,9 @@
 //#define STATUS_PENDING     		(0x00000103L)
 #endif /* WIN32_NO_STATUS */
 
-
+#define GA_PARENT               (1)
+#define GA_ROOT                 (2)
+#define GA_ROOTOWNER            (3)
 
 /* CreateFile, GetFileAttributes, SetFileAttributes */
 
