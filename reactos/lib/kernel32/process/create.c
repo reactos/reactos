@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.52 2002/09/08 10:22:45 chorns Exp $
+/* $Id: create.c,v 1.53 2002/09/13 18:55:31 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -74,7 +74,7 @@ CreateProcessA (LPCSTR			lpApplicationName,
 		"lpStartupInfo %x, lpProcessInformation %x\n", dwCreationFlags, 
 		lpEnvironment, lpCurrentDirectory, lpStartupInfo, lpProcessInformation);
 
-	if (lpEnvironment)
+	if (lpEnvironment && !(dwCreationFlags & CREATE_UNICODE_ENVIRONMENT))
 	{
 		PCHAR ptr = lpEnvironment;
 		ULONG len = 0;
@@ -149,7 +149,7 @@ CreateProcessA (LPCSTR			lpApplicationName,
 	                         lpThreadAttributes,
 	                         bInheritHandles,
 	                         dwCreationFlags,
-	                         lpEnvironmentW,
+				 dwCreationFlags & CREATE_UNICODE_ENVIRONMENT ? lpEnvironment : lpEnvironmentW,
 	                         (lpCurrentDirectory == NULL) ? NULL : CurrentDirectoryU.Buffer,
 	                         (LPSTARTUPINFOW)lpStartupInfo,
 	                         lpProcessInformation);
