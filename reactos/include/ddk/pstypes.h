@@ -3,6 +3,8 @@
 
 #include <kernel32/heap.h>
 
+typedef ULONG THREADINFOCLASS;
+
 typedef struct _CLIENT_ID 
 {
     HANDLE UniqueProcess;
@@ -60,10 +62,7 @@ typedef struct _NT_PEB
 	WORD			wMinorVersion; 
 	WORD			wBuildNumber;  
 	WORD			wPlatformId;	
-} NT_PEB;
-
-typedef NT_PEB *PPEB;	
-
+} NT_PEB, *PPEB;
 
 
 typedef struct _NT_TIB {
@@ -104,8 +103,58 @@ typedef struct _EPROCESS
 {
 } EPROCESS, *PEPROCESS;
 
+//typedef KTHREAD ETHREAD, *PETHREAD;
+
+#if ETHREAD_NOT_THE_SAME_AS_KTHREAD
 typedef struct _ETHREAD
 {
+   EPROCESS* Process;
 } ETHREAD, *PETHREAD;
+
+/*
+ * PURPOSE: Thread object
+ */
+typedef struct 
+{
+   CSHORT Type;
+   CSHORT Size;
+   
+   /*
+    * PURPOSE: Entry in the linked list of threads
+    */
+   LIST_ENTRY Entry;
+   
+   /*
+    * PURPOSE: Current state of the thread
+    */
+   ULONG State;
+   
+   /*
+    * PURPOSE: Priority modifier of the thread
+    */
+   ULONG Priority;
+   
+   /*
+    * PURPOSE: Pointer to our parent process
+    */
+//   PEPROCESS Parent;
+   
+   /*
+    * PURPOSE: Handle of our parent process
+    */
+   HANDLE ParentHandle;
+   
+   /*
+    * PURPOSE: Not currently used 
+    */
+   ULONG AffinityMask;
+   
+   /*
+    * PURPOSE: Saved thread context
+    */
+   hal_thread_state context;
+   
+} THREAD_OBJECT, *PTHREAD_OBJECT;
+#endif
 
 #endif /* __INCLUDE_DDK_PSTYPES_H */

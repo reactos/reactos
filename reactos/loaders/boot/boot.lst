@@ -27,11 +27,11 @@
     27                                  ;
     28                                  ; $Logfile:   C:/dos-c/src/boot/boot.asv  $
     29                                  ;
-    30                                  ; $Header: /cygdrive/c/RCVS/CVS/ReactOS/reactos/loaders/boot/Attic/boot.lst,v 1.1 1996/01/23 01:02:19 rosmgr Exp $
+    30                                  ; $Header: /cygdrive/c/RCVS/CVS/ReactOS/reactos/loaders/boot/Attic/boot.lst,v 1.1.1.2 1998/08/25 04:27:38 rex Exp $
     31                                  ;
     32                                  ; $Log: boot.lst,v $
-    32                                  ; Revision 1.1  1996/01/23 01:02:19  rosmgr
-    32                                  ; Initial revision
+    32                                  ; Revision 1.1.1.2  1998/08/25 04:27:38  rex
+    32                                  ; A much Needed Update
     32                                  ;
     33                                  ;	
     34                                  ;	   Rev 1.5   10 Jan 1997  4:58:06   patv

@@ -25,3 +25,8 @@ NTSTATUS PsCreateSystemThread(PHANDLE ThreadHandle,
 			      PCLIENT_ID ClientId,
 			      PKSTART_ROUTINE StartRoutine,
                               PVOID StartContext);
+NTSTATUS PsTerminateSystemThread(NTSTATUS ExitStatus);
+NTSTATUS PsSuspendThread(VOID);
+NTSTATUS PsWakeThread(PETHREAD Thread);
+PETHREAD PsGetCurrentThread(VOID);
+PEPROCESS PsGetCurrentProcess(VOID);

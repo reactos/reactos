@@ -1,1 +1,1 @@
-loaders\dos\loadros kernel\kimage.bin %1 %2 %3 %4
+loaders\dos\loadros ntoskrnl\kimage.bin %1 %2 %3 %4

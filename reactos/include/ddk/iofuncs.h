@@ -224,7 +224,7 @@ BOOLEAN IoCancelIrp(PIRP Irp);
 NTSTATUS IoCheckShareAccess(ACCESS_MASK DesiredAccess,
 			    ULONG DesiredShareAccess,
 			    PFILE_OBJECT FileObject,
-//			    PSHARE_ACCESS ShareAccess,
+			    PSHARE_ACCESS ShareAccess,
 			    BOOLEAN Update);
 
 /*
@@ -404,7 +404,7 @@ BOOLEAN IoRaiseHardInformationalError(NTSTATUS ErrorStatus,
 NTSTATUS IoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 			      ULONG SectorSize,
 			      BOOLEAN ReturnedRecognizedPartitions,
-			      struct _DRIVER_LAYOUT_INFORMATION** PBuffer);
+			      struct _DRIVE_LAYOUT_INFORMATION** PBuffer);
 
 VOID IoRegisterDriverReinitialization(PDRIVER_OBJECT DriverObject,
 				      PDRIVER_REINITIALIZE ReinitRoutine,
@@ -502,3 +502,22 @@ NTSTATUS IoWritePartitionTable(PDEVICE_OBJECT DeviceObject,
 			       ULONG SectorsPerTrack,
 			       ULONG NumberOfHeads,
 			       struct _DRIVE_LAYOUT_INFORMATION* PBuffer);
+
+typedef ULONG FS_INFORMATION_CLASS;
+
+// Preliminary guess
+NTKERNELAPI NTSTATUS IoQueryFileVolumeInformation(IN PFILE_OBJECT FileObject, 
+				  IN FS_INFORMATION_CLASS FsInformationClass, 
+						  IN ULONG Length, 
+						  OUT PVOID FsInformation, 
+						  OUT PULONG ReturnedLength);
+
+NTKERNELAPI // confirmed - Undocumented because it does not require a valid file handle 
+NTSTATUS 
+IoQueryFileInformation(
+IN PFILE_OBJECT FileObject,
+IN FILE_INFORMATION_CLASS FileInformationClass,
+IN ULONG Length,
+OUT PVOID FileInformation,
+OUT PULONG ReturnedLength
+);

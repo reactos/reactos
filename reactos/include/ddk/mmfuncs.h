@@ -152,7 +152,7 @@ PVOID MmGetSystemAddressForMdl(PMDL Mdl);
  *       BaseVa = Base virtual address of the buffer 
  *       Length = Length in bytes of the buffer
  */
-VOID MmInitalizeMdl(PMDL MemoryDescriptorList, PVOID BaseVa, ULONG Length);
+VOID MmInitializeMdl(PMDL MemoryDescriptorList, PVOID BaseVa, ULONG Length);
 
 /*
  * FUNCTION: Checks whether an address is valid for read/write

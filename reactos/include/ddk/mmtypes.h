@@ -1,24 +1,14 @@
-typedef struct _MDL
+ typedef struct _MDL
 /*
  * PURPOSE: Describes a user buffer passed to a system API
  */
 {
-   /*
-    * Base address of the buffer in user mode
-    */
-   PVOID Base;
-   
-   /*
-    * Length of the buffer in bytes
-    */
-   ULONG Length;
-   
-   /*
-    * System address of buffer or NULL if not mapped
-    */
-   PVOID SysBase;
-   
-   /*
-    * Below this is a variable length list of page physical address
-    */
+   struct _MDL* Next;
+   CSHORT Size;
+   CSHORT MdlFlags;
+   struct _EPROCESS* Process;
+   PVOID MappedSystemVa;
+   PVOID StartVa;
+   ULONG ByteCount;
+   ULONG ByteOffset;
 } MDL, *PMDL;

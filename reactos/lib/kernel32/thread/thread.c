@@ -8,12 +8,7 @@ todo: improve debug info
 #include <thread.h>
 
 
-WINBASEAPI 
-BOOL 
-WINAPI 
-SwitchToThread( 
-    VOID 
-    )
+WINBASEAPI BOOL WINAPI SwitchToThread(VOID )
 {
 	return NtYieldExecution();
 }

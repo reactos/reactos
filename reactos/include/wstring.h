@@ -10,6 +10,8 @@
 
 #include <types.h>        /* for size_t */
 
+typedef unsigned short wchar_t;
+
 #ifndef NULL
 #define NULL ((void *) 0)
 #endif
@@ -38,8 +40,8 @@ extern int wcsnicmp(const wchar_t* cs,const wchar_t * ct, size_t count);
 /*
  * Include machine specific inline routines
  */
-#ifndef _I386_STRING_H_
-#define _I386_STRING_H_
+//#ifndef _I386_STRING_H_
+//#define _I386_STRING_H_
 
 /*
  * On a 486 or Pentium, we are better off not using the
@@ -70,7 +72,7 @@ extern int wcsnicmp(const wchar_t* cs,const wchar_t * ct, size_t count);
 
 
 #define __HAVE_ARCH_WCSCPY
-inline wchar_t * wcscpy(wchar_t * dest,const wchar_t *src)
+extern inline wchar_t * wcscpy(wchar_t * dest,const wchar_t *src)
 {
 __asm__ __volatile__(
 	"cld\n"
@@ -524,7 +526,7 @@ __asm__ __volatile__(
 return __res;
 }
 
-#endif
+//#endif
 #endif
 
 #ifdef __cplusplus

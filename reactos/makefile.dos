@@ -5,12 +5,12 @@
 #
 # Select your host
 #
-#HOST = djgpp-linux
-#HOST = mingw32-linux
+#HOST =	djgpp-linux
+#HOST =	mingw32-linux
 HOST = djgpp-msdos
-#HOST = mingw32-windows
+#HOST =	mingw32-windows
 
-include rules.mak
+include	rules.mak
 
 #
 # Required to run the system
@@ -18,45 +18,45 @@ include rules.mak
 COMPONENTS = kernel lib
 
 #
-# Select the loader(s) you want to build
+# Select the loader(s) you want	to build
 #
-LOADERS = dos
+LOADERS	= dos
 
 #
 # Select the modules you want
 #
-MODULES = parallel keyboard
+MODULES	= parallel keyboard
 
 all: $(COMPONENTS) $(LOADERS) $(MODULES)
 
 #
-# Device driver rules
+# Device driver	rules
 #
 
 parallel: dummy
-	make -C modules/parallel
+		      make -C services/parallel
 
 keyboard: dummy
-	make -C modules/keyboard
+	make -C	services/keyboard
 
 mouse: dummy
-	make -C modules/mouse
+	make -C	services/mouse
 
 #
 # Kernel loaders
 #
 
 dos: dummy
-	make -C loaders/dos
+	make -C	loaders/dos
 
 #
 # Required system components
 #
 
-kernel: dummy
-	make -C kernel
+kernel:	dummy
+	make -C	ntoskrnl
 
 lib: dummy
-	make -C lib
+	make -C	lib
 
 dummy:
