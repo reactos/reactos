@@ -1252,10 +1252,11 @@ IopInitializeBootDrivers(VOID)
     */
    for (i = 1; i < KeLoaderBlock.ModsCount; i++)
    {
-
        MiFreeBootDriverMemory((PVOID)KeLoaderModules[i].ModStart,
                               KeLoaderModules[i].ModEnd - KeLoaderModules[i].ModStart);
    }
+
+   KeLoaderBlock.ModsCount = 0;
 
    if (BootDriverCount == 0)
    {

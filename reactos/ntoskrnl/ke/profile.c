@@ -40,7 +40,7 @@ KeInitializeProfile(PKPROFILE Profile,
     Profile->Process = Process;
     Profile->RegionStart = ImageBase;
     Profile->BucketShift = BucketSize - 2; /* See ntinternals.net -- Alex */
-    Profile->RegionEnd = (ULONG_PTR)ImageBase + ImageSize;
+    Profile->RegionEnd = (PVOID)(ULONG_PTR)ImageBase + ImageSize;
     Profile->Active = FALSE;
     Profile->Source = ProfileSource;
     Profile->Affinity = Affinity;    
@@ -232,6 +232,40 @@ KeProfileInterrupt(PKTRAP_FRAME TrapFrame)
     KeProfileInterruptWithSource(TrapFrame, ProfileTime);
 }
 
+VOID
+STDCALL
+KiParseProfileList(IN PKTRAP_FRAME TrapFrame,
+                   IN KPROFILE_SOURCE Source,
+                   IN PLIST_ENTRY ListHead)
+{
+    PULONG BucketValue;
+    PKPROFILE Profile;
+    PLIST_ENTRY NextEntry;
+    
+    /* Loop the List */
+    for (NextEntry = ListHead->Flink; NextEntry != ListHead; NextEntry = NextEntry->Flink) {
+    
+        /* Get the Current Profile in the List */
+        Profile = CONTAINING_RECORD(NextEntry, KPROFILE, ListEntry);
+        
+        /* Check if the source is good, and if it's within the range */
+        if ((Profile->Source != Source) || 
+            (TrapFrame->Eip < (ULONG_PTR)Profile->RegionStart) || 
+            (TrapFrame->Eip > (ULONG_PTR)Profile->RegionEnd)) {
+            
+            continue;
+        }   
+
+        /* Get the Pointer to the Bucket Value representing this EIP */
+        BucketValue = (PULONG)(((ULONG_PTR)(Profile->Buffer + 
+                               (TrapFrame->Eip - (ULONG_PTR)Profile->RegionStart))
+                                >> Profile->BucketShift) &~ 0x3);
+        
+        /* Increment the value */
+        ++BucketValue;
+    }
+}
+
 /*
  * @implemented
  *
@@ -247,7 +281,11 @@ VOID
 KeProfileInterruptWithSource(IN PKTRAP_FRAME TrapFrame,
                              IN KPROFILE_SOURCE Source)
 {
-
+    PKPROCESS Process = KeGetCurrentThread()->ApcState.Process;
+    
+    /* We have to parse 2 lists. Per-Process and System-Wide */
+    KiParseProfileList(TrapFrame, Source, &Process->ProfileListHead);
+    KiParseProfileList(TrapFrame, Source, &KiProfileListHead);
 }
 
 /*

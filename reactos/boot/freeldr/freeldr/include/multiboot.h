@@ -52,6 +52,7 @@
 #define MB_INFO_FLAG_BOOT_LOADER_NAME	0x00000200
 #define MB_INFO_FLAG_APM_TABLE			0x00000400
 #define MB_INFO_FLAG_GRAPHICS_TABLE		0x00000800
+#define MB_INFO_FLAG_ACPI_TABLE         0x00001000
 
 #ifndef ASM
 /* Do not include here in boot.S. */

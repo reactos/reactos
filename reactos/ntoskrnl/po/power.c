@@ -12,8 +12,8 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-
 PDEVICE_NODE PopSystemPowerDeviceNode = NULL;
+BOOLEAN PopAcpiPresent = FALSE;
 
 /*
  * @implemented
@@ -133,10 +133,7 @@ PoUnregisterSystemState(
 NTSTATUS
 PopSetSystemPowerState(
   SYSTEM_POWER_STATE PowerState)
-{
-
-#ifdef ACPI
-
+{    
   IO_STATUS_BLOCK IoStatusBlock;
   PDEVICE_OBJECT DeviceObject;
   PIO_STACK_LOCATION IrpSp;
@@ -144,6 +141,8 @@ PopSetSystemPowerState(
   NTSTATUS Status;
   KEVENT Event;
   PIRP Irp;
+  
+  if (!PopAcpiPresent) return STATUS_NOT_IMPLEMENTED;
 
   Status = IopGetSystemPowerDeviceObject(&DeviceObject);
   if (!NT_SUCCESS(Status)) {
@@ -190,10 +189,6 @@ PopSetSystemPowerState(
   ObDereferenceObject(Fdo);
 
   return Status;
-
-#endif /* ACPI */
-
-  return STATUS_NOT_IMPLEMENTED;
 }
 
 VOID INIT_FUNCTION

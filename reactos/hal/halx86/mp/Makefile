@@ -61,7 +61,9 @@ GENERIC_OBJECTS = \
 MP_OBJECTS = \
 	apic.o \
 	halinit_mp.o \
+	ioapic.o \
 	ipi_mp.o \
+	mpconfig.o \
 	mpsirql.o \
 	mpsboot.o \
 	mps.o \

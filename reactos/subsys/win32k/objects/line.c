@@ -368,6 +368,12 @@ NtGdiArc(HDC  hDC,
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return FALSE;
   }
+  if (dc->IsIC)
+  {
+    DC_UnlockDc(hDC);
+    /* Yes, Windows really returns TRUE in this case */
+    return TRUE;
+  }
   
   Ret = IntGdiArc(dc,
                   LeftRect,
@@ -403,6 +409,12 @@ NtGdiArcTo(HDC  hDC,
   {
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return FALSE;
+  }
+  if (dc->IsIC)
+  {
+    DC_UnlockDc(hDC);
+    /* Yes, Windows really returns TRUE in this case */
+    return TRUE;
   }
 
   // Line from current position to starting point of arc
@@ -466,6 +478,12 @@ NtGdiLineTo(HDC  hDC,
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return FALSE;
   }
+  if (dc->IsIC)
+  {
+    DC_UnlockDc(hDC);
+    /* Yes, Windows really returns TRUE in this case */
+    return TRUE;
+  }
   
   Ret = IntGdiLineTo(dc, XEnd, YEnd);
   
@@ -490,6 +508,12 @@ NtGdiMoveToEx(HDC      hDC,
   {
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return FALSE;
+  }
+  if (dc->IsIC)
+  {
+    DC_UnlockDc(hDC);
+    /* Yes, Windows really returns TRUE in this case */
+    return TRUE;
   }
   
   if(Point)
@@ -525,6 +549,12 @@ NtGdiPolyBezier(HDC           hDC,
   {
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return FALSE;
+  }
+  if (dc->IsIC)
+  {
+    DC_UnlockDc(hDC);
+    /* Yes, Windows really returns TRUE in this case */
+    return TRUE;
   }
   
   if(Count > 0)
@@ -576,6 +606,12 @@ NtGdiPolyBezierTo(HDC  hDC,
   {
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return FALSE;
+  }
+  if (dc->IsIC)
+  {
+    DC_UnlockDc(hDC);
+    /* Yes, Windows really returns TRUE in this case */
+    return TRUE;
   }
   
   if(Count > 0)
@@ -639,6 +675,12 @@ NtGdiPolyline(HDC            hDC,
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return FALSE;
   }
+  if (dc->IsIC)
+  {
+    DC_UnlockDc(hDC);
+    /* Yes, Windows really returns TRUE in this case */
+    return TRUE;
+  }
   
   if(Count >= 2)
   {
@@ -689,6 +731,12 @@ NtGdiPolylineTo(HDC            hDC,
   {
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return FALSE;
+  }
+  if (dc->IsIC)
+  {
+    DC_UnlockDc(hDC);
+    /* Yes, Windows really returns TRUE in this case */
+    return TRUE;
   }
   
   if(Count > 0)
@@ -742,6 +790,12 @@ NtGdiPolyPolyline(HDC            hDC,
   {
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return FALSE;
+  }
+  if (dc->IsIC)
+  {
+    DC_UnlockDc(hDC);
+    /* Yes, Windows really returns TRUE in this case */
+    return TRUE;
   }
   
   if(Count > 0)

@@ -45,6 +45,18 @@ static void indent(int delta)
   if (delta > 0) indentation += delta;
 }
 
+int is_base_type(type_t *t)
+{
+  return (t->type == RPC_FC_BYTE || t->type == RPC_FC_CHAR ||
+          t->type == RPC_FC_SMALL || t->type == RPC_FC_USMALL ||
+          t->type == RPC_FC_WCHAR || t->type == RPC_FC_SHORT ||
+          t->type == RPC_FC_USHORT || t->type == RPC_FC_LONG ||
+          t->type == RPC_FC_ULONG || t->type == RPC_FC_FLOAT ||
+          t->type == RPC_FC_HYPER || t->type == RPC_FC_DOUBLE ||
+          t->type == RPC_FC_ENUM16 || t->type == RPC_FC_ENUM32 ||
+          t->type == RPC_FC_IGNORE);
+}
+
 int is_attr(attr_t *a, enum attr_type t)
 {
   while (a) {

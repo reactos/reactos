@@ -99,6 +99,7 @@
 #define X86_FEATURE_FXSR        0x01000000 /* FXSAVE/FXRSTOR instructions present */
 #define X86_FEATURE_SSE         0x02000000 /* SSE extension present */
 #define X86_FEATURE_SSE2        0x04000000 /* SSE2 extension present */
+#define X86_FEATURE_HT          0x10000000 /* Hyper-Threading present */
 
 #define X86_EXT_FEATURE_SSE3    0x00000001 /* SSE3 extension present */
 #define X86_EXT_FEATURE_3DNOW   0x40000000 /* 3DNOW! extension present */

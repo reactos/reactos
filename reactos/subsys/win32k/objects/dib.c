@@ -27,6 +27,11 @@ NtGdiSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Col
    PBITMAPOBJ BitmapObj;
 
    if (!(dc = DC_LockDc(hDC))) return 0;
+   if (dc->IsIC)
+   {
+      DC_UnlockDc(hDC);
+      return 0;
+   }
 
    BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
    if (BitmapObj == NULL)
@@ -73,6 +78,11 @@ NtGdiGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors)
    PBITMAPOBJ BitmapObj;
 
    if (!(dc = DC_LockDc(hDC))) return 0;
+   if (dc->IsIC)
+   {
+      DC_UnlockDc(hDC);
+      return 0;
+   }
 
    BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
    if (BitmapObj == NULL)
@@ -264,6 +274,11 @@ NtGdiSetDIBits(
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return 0;
     }
+  if (Dc->IsIC)
+    {
+      DC_UnlockDc(hDC);
+      return 0;
+    }
 
   Ret = IntSetDIBits(Dc, hBitmap, StartScan, ScanLines, Bits, bmi, ColorUse);
 
@@ -323,6 +338,11 @@ NtGdiGetDIBits(HDC hDC,
    if (Dc == NULL)
    {
       SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return 0;
+   }
+   if (Dc->IsIC)
+   {
+      DC_UnlockDc(hDC);
       return 0;
    }
    hSourcePalette = Dc->w.hPalette;

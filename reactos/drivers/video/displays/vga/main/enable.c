@@ -266,6 +266,9 @@ DrvEnablePDEV(IN DEVMODEW *DM,
     GDIInfoSize = sizeof(GDIINFO);
     }
   memcpy(GDIInfo, &gaulCap, GDIInfoSize);
+  DM->dmBitsPerPel = gaulCap.cBitsPixel * gaulCap.cPlanes;
+  DM->dmPelsWidth = gaulCap.ulHorzRes;
+  DM->dmPelsHeight = gaulCap.ulVertRes;
 
   devinfoVGA.hpalDefault = EngCreatePalette(PAL_INDEXED, 16, (ULONG *) VGApalette.PaletteEntry, 0, 0, 0);
   if (sizeof(DEVINFO) < DevInfoSize)

@@ -132,7 +132,7 @@ DceAllocDCE(HWND hWnd, DCE_TYPE Type)
   /* No real locking, just get the pointer */
   DCEOBJ_UnlockDCE(DceHandle);
   Dce->Self = DceHandle;
-  Dce->hDC = IntGdiCreateDC(&DriverName, NULL, NULL, NULL);
+  Dce->hDC = IntGdiCreateDC(&DriverName, NULL, NULL, NULL, FALSE);
   if (NULL == defaultDCstate)
     {
       defaultDCstate = NtGdiGetDCState(Dce->hDC);

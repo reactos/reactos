@@ -25,18 +25,19 @@ NpfsListeningCancelRoutine(IN PDEVICE_OBJECT DeviceObject,
   PNPFS_WAITER_ENTRY Waiter;
 
   DPRINT1("NpfsListeningCancelRoutine() called\n");
-  /* FIXME: Not tested. */
+
+  IoReleaseCancelSpinLock(Irp->CancelIrql);
 
   Waiter = Irp->Tail.Overlay.DriverContext[0];
 
+  KeLockMutex(&Waiter->Pipe->FcbListLock);
   RemoveEntryList(&Waiter->Entry);
-  ExFreePool(Waiter);
-
-  IoReleaseCancelSpinLock(Irp->CancelIrql);
+  KeUnlockMutex(&Waiter->Pipe->FcbListLock);
 
   Irp->IoStatus.Status = STATUS_CANCELLED;
   Irp->IoStatus.Information = 0;
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
+  ExFreePool(Waiter);
 }
 
 
@@ -45,7 +46,6 @@ NpfsAddListeningServerInstance(PIRP Irp,
 			       PNPFS_FCB Fcb)
 {
   PNPFS_WAITER_ENTRY Entry;
-  KIRQL OldIrql;
 
   Entry = ExAllocatePool(NonPagedPool, sizeof(NPFS_WAITER_ENTRY));
   if (Entry == NULL)
@@ -53,22 +53,28 @@ NpfsAddListeningServerInstance(PIRP Irp,
 
   Entry->Irp = Irp;
   Entry->Fcb = Fcb;
+  Entry->Pipe = Fcb->Pipe;
+
+  KeLockMutex(&Fcb->Pipe->FcbListLock);
+
+  IoMarkIrpPending(Irp);
+  Irp->Tail.Overlay.DriverContext[0] = Entry;
   InsertTailList(&Fcb->Pipe->WaiterListHead, &Entry->Entry);
 
-  IoAcquireCancelSpinLock(&OldIrql);
+  IoSetCancelRoutine(Irp, NpfsListeningCancelRoutine);
+  
   if (!Irp->Cancel)
     {
-      Irp->Tail.Overlay.DriverContext[0] = Entry;
-      IoMarkIrpPending(Irp);
-      IoSetCancelRoutine(Irp, NpfsListeningCancelRoutine);
-      IoReleaseCancelSpinLock(OldIrql);
+      KeUnlockMutex(&Fcb->Pipe->FcbListLock);
       return STATUS_PENDING;
     }
-  /* IRP has already been cancelled */
-  IoReleaseCancelSpinLock(OldIrql);
-
-  DPRINT1("FIXME: Remove waiter entry!\n");
+  
   RemoveEntryList(&Entry->Entry);
+  
+  Irp->IoStatus.Status = STATUS_CANCELLED;
+  Irp->IoStatus.Information = 0;
+  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+  KeUnlockMutex(&Fcb->Pipe->FcbListLock);
   ExFreePool(Entry);
 
   return STATUS_CANCELLED;

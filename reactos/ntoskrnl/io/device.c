@@ -82,7 +82,6 @@ IopInitializeDevice(
           return Status;
       }
 
-#ifdef ACPI
       if (Fdo->DeviceType == FILE_DEVICE_ACPI)
       {
          static BOOLEAN SystemPowerDeviceNodeCreated = FALSE;
@@ -94,7 +93,6 @@ IopInitializeDevice(
             SystemPowerDeviceNodeCreated = TRUE;
          }
       }
-#endif /* ACPI */
 
       if (Fdo->DeviceType == FILE_DEVICE_BUS_EXTENDER ||
           Fdo->DeviceType == FILE_DEVICE_ACPI)
@@ -260,16 +258,30 @@ IoGetDiskDeviceObject(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 PDEVICE_OBJECT
 STDCALL
-IoGetLowerDeviceObject(
-    IN  PDEVICE_OBJECT  DeviceObject
-    )
+IoGetLowerDeviceObject(IN  PDEVICE_OBJECT  DeviceObject)
 {
-	UNIMPLEMENTED;
-	return 0;
+
+    //PDEVOBJ_EXTENSION DeviceExtension = DeviceObject->DeviceObjectExtension;
+    PDEVICE_OBJECT LowerDeviceObject = NULL;
+#if 0
+    /* Make sure it's not getting deleted */
+    if (DeviceExtension->ExtensionFlags &
+        (DOE_UNLOAD_PENDING | DOE_DELETE_PENDING | 
+         DOE_REMOVE_PENDING | DOE_REMOVE_PROCESSED)) {
+        
+        /* Get the Lower Device Object */   
+        LowerDeviceObject = DeviceExtension->AttachedTo;      
+        
+        /* Reference it */
+        ObReferenceObject(LowerDeviceObject);
+    }
+#endif
+    /* Return it */
+    return LowerDeviceObject;
 }
 
 /*

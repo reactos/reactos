@@ -78,7 +78,7 @@ typedef struct _KPROFILE {
     CSHORT Size;
     LIST_ENTRY ListEntry; 
     PVOID RegionStart;
-    ULONG RegionEnd;
+    PVOID RegionEnd;
     ULONG BucketShift;
     PVOID Buffer;
     CSHORT Source;

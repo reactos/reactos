@@ -158,6 +158,11 @@ NtGdiExtEscape(
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return -1;
    }
+   if ( pDC->IsIC )
+   {
+      DC_UnlockDc(hDC);
+      return 0;
+   }
 
    if ( InSize && UnsafeInData )
    {

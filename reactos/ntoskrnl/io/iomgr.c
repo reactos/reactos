@@ -646,9 +646,8 @@ IoInit3(VOID)
     }
 
     /* Start Profiling on a Debug Build */
-#if defined(KDBG) || defined(DBG)
+#if defined(KDBG)
     KdbInit();
-    //KdbInitProfiling2();
 #endif /* KDBG */
 
     /* I/O is now setup for disk access, so start the debugging logger thread. */

@@ -9,76 +9,6 @@
 
 #define IRQL2TPR(irql)	    ((irql) >= IPI_LEVEL ? IPI_VECTOR : ((irql) >= PROFILE_LEVEL ? LOCAL_TIMER_VECTOR : ((irql) > DISPATCH_LEVEL ? IRQL2VECTOR(irql) : 0)))
 
-#define IOAPIC_DEFAULT_BASE   0xFEC00000    /* Default I/O APIC Base Register Address */
-
-/* I/O APIC Register Address Map */
-#define IOAPIC_IOREGSEL 0x0000  /* I/O Register Select (index) (R/W) */
-#define IOAPIC_IOWIN    0x0010  /* I/O window (data) (R/W) */
-
-#define IOAPIC_ID       0x0000  /* IO APIC ID (R/W) */
-#define IOAPIC_VER      0x0001  /* IO APIC Version (R) */
-#define IOAPIC_ARB      0x0002  /* IO APIC Arbitration ID (R) */
-#define IOAPIC_REDTBL   0x0010  /* Redirection Table (0-23 64-bit registers) (R/W) */
-
-#define IOAPIC_ID_MASK        (0xF << 24)
-#define GET_IOAPIC_ID(x)	    (((x) & IOAPIC_ID_MASK) >> 24)
-#define SET_IOAPIC_ID(x)	    ((x) << 24)
-
-#define IOAPIC_VER_MASK       (0xFF)
-#define GET_IOAPIC_VERSION(x) (((x) & IOAPIC_VER_MASK))
-#define IOAPIC_MRE_MASK       (0xFF << 16)  /* Maximum Redirection Entry */
-#define GET_IOAPIC_MRE(x)     (((x) & IOAPIC_MRE_MASK) >> 16)
-
-#define IOAPIC_ARB_MASK       (0xF << 24)
-#define GET_IOAPIC_ARB(x)	    (((x) & IOAPIC_ARB_MASK) >> 24)
-
-#define IOAPIC_TBL_DELMOD   (0x7 << 10) /* Delivery Mode (see APIC_DM_*) */
-#define IOAPIC_TBL_DM       (0x1 << 11) /* Destination Mode */
-#define IOAPIC_TBL_DS       (0x1 << 12) /* Delivery Status */
-#define IOAPIC_TBL_INTPOL   (0x1 << 13) /* Interrupt Input Pin Polarity */
-#define IOAPIC_TBL_RIRR     (0x1 << 14) /* Remote IRR */
-#define IOAPIC_TBL_TM       (0x1 << 15) /* Trigger Mode */
-#define IOAPIC_TBL_IM       (0x1 << 16) /* Interrupt Mask */
-#define IOAPIC_TBL_DF0      (0xF << 56) /* Destination Field (physical mode) */
-#define IOAPIC_TBL_DF1      (0xFF<< 56) /* Destination Field (logical mode) */
-#define IOAPIC_TBL_VECTOR   (0xFF << 0) /* Vector (10h - FEh) */
-
-typedef struct _IOAPIC_ROUTE_ENTRY {
-	ULONG	vector		:  8,
-		delivery_mode	:  3,	/* 000: FIXED
-					               * 001: lowest priority
-					               * 111: ExtINT
-					               */
-		dest_mode	:  1,	    /* 0: physical, 1: logical */
-		delivery_status	:  1,
-		polarity	:  1,
-		irr		:  1,
-		trigger		:  1,	    /* 0: edge, 1: level */
-		mask		:  1,	      /* 0: enabled, 1: disabled */
-		__reserved_2	: 15;
-
-	union {		struct { ULONG
-					__reserved_1	: 24,
-					physical_dest	:  4,
-					__reserved_2	:  4;
-			} physical;
-
-			struct { ULONG
-					__reserved_1	: 24,
-					logical_dest	:  8;
-			} logical;
-	} dest;
-} __attribute__ ((packed)) IOAPIC_ROUTE_ENTRY, *PIOAPIC_ROUTE_ENTRY;
-
-typedef struct _IOAPIC_INFO
-{
-   ULONG  ApicId;         /* APIC ID */
-   ULONG  ApicVersion;    /* APIC version */
-   ULONG  ApicAddress;    /* APIC address */
-   ULONG  EntryCount;     /* Number of redirection entries */
-} IOAPIC_INFO, *PIOAPIC_INFO;
-
-
 
 #if 0
 /* This values are defined in halirql.h */
@@ -148,12 +78,6 @@ typedef struct __attribute__((packed)) _MP_CONFIGURATION_PROCESSOR
 } __attribute__((packed)) MP_CONFIGURATION_PROCESSOR, 
   *PMP_CONFIGURATION_PROCESSOR;
 
-#define CPU_FLAG_ENABLED         1  /* Processor is available */
-#define CPU_FLAG_BSP             2  /* Processor is the bootstrap processor */
-
-#define CPU_STEPPING_MASK  0x0F
-#define CPU_MODEL_MASK	   0xF0
-#define CPU_FAMILY_MASK	   0xF00
 
 
 typedef struct __attribute__((packed)) _MP_CONFIGURATION_BUS
@@ -239,54 +163,20 @@ typedef struct __attribute__((packed)) _MP_CONFIGURATION_INTLOCAL
 } MP_CONFIGURATION_INTLOCAL, *PMP_CONFIGURATION_INTLOCAL;
 
 #define MP_APIC_ALL	0xFF
-
-
-static inline VOID ReadPentiumClock(PULARGE_INTEGER Count)
-{
-   register ULONG nLow;
-   register ULONG nHigh;
   
-#if defined(__GNUC__)
-   __asm__ __volatile__ ("rdtsc" : "=a" (nLow), "=d" (nHigh));
-#elif defined(_MSC_VER)
-   __asm rdtsc
-   __asm mov nLow, eax
-   __asm mov nHigh, edx
-#else
-#error Unknown compiler for inline assembler
-#endif
+#define CPU_FLAG_ENABLED         1  /* Processor is available */
+#define CPU_FLAG_BSP             2  /* Processor is the bootstrap processor */
 
-   Count->u.LowPart = nLow;
-   Count->u.HighPart = nHigh;
-}
-
-
-
-
-/* CPU flags */
-#define CPU_USABLE   0x01  /* 1 if the CPU is usable (ie. can be used) */
-#define CPU_ENABLED  0x02  /* 1 if the CPU is enabled */
-#define CPU_BSP      0x04  /* 1 if the CPU is the bootstrap processor */
-
-
-typedef enum {
-  amPIC = 0,    /* IMCR and PIC compatibility mode */
-  amVWIRE       /* Virtual Wire compatibility mode */
-} APIC_MODE;
-
+#define CPU_STEPPING_MASK  0x0F
+#define CPU_MODEL_MASK	   0xF0
+#define CPU_FAMILY_MASK	   0xF00
 
 #define PIC_IRQS  16
 
 /* Prototypes */
 
 VOID HalpInitMPS(VOID);
-ULONG IOAPICRead(ULONG Apic, ULONG Offset);
-VOID IOAPICWrite(ULONG Apic, ULONG Offset, ULONG Value);
-VOID IOAPICMaskIrq(ULONG Irq);
-VOID IOAPICUnmaskIrq(ULONG Irq);
 
-/* For debugging */
-VOID IOAPICDump(VOID);
 
 #endif /* __INCLUDE_HAL_MPS */
 

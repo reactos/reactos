@@ -36,7 +36,7 @@ NpfsQueryFsDeviceInformation(PFILE_FS_DEVICE_INFORMATION FsDeviceInfo,
 
   DPRINT("NpfsQueryFsDeviceInformation() finished.\n");
 
-   return STATUS_SUCCESS;
+  return STATUS_SUCCESS;
 }
 
 
