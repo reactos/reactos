@@ -95,52 +95,6 @@ BOOL DiskIsDriveRemovable(U32 DriveNumber)
 	return TRUE;
 }
 
-
-BOOL DiskIsDriveCdRom(U32 DriveNumber)
-{
-	PUCHAR Sector = (PUCHAR)DISKREADBUFFER;
-
-	// FIXME:
-	// I need to move this code to somewhere else
-	// probably in the file system code.
-	// I don't like the fact that the disk code
-	// reads the on-disk structures to determine
-	// if it's a CD-ROM drive. Only the file system
-	// should interpret on-disk data.
-	// The disk code should use some other method
-	// to determine if it's a CD-ROM drive.
-
-	// Hard disks use drive numbers >= 0x80
-	// So if the drive number indicates a hard disk
-	// then return FALSE
-	//
-	// We first check if we are running as a SetupLoader
-	// If so then we are probably booting from a CD-ROM
-	// So we shouldn't call i386DiskInt13ExtensionsSupported()
-	// because apparently it screws up some BIOSes
-	if ((DriveNumber >= 0x80) && (IsSetupLdr || DiskInt13ExtensionsSupported(DriveNumber)))
-	{
-
-		// We are a CD-ROM drive so we should only
-		// use the extended Int13 disk functions
-		if (!DiskReadLogicalSectorsLBA(DriveNumber, 16, 1, Sector))
-		{
-			DiskError("Disk read error.", 0);
-			return FALSE;
-		}
-
-		return (Sector[0] == 1 &&
-			Sector[1] == 'C' &&
-			Sector[2] == 'D' &&
-			Sector[3] == '0' &&
-			Sector[4] == '0' &&
-			Sector[5] == '1');
-	}
-
-	// Drive is not CdRom so return FALSE
-	return FALSE;
-}
-
 // This function is in arch/i386/i386disk.c
 //VOID DiskStopFloppyMotor(VOID)
 

@@ -109,7 +109,6 @@ PUCHAR	DiskGetErrorCodeString(U32 ErrorCode);
 BOOL	DiskGetDriveGeometry(U32 DriveNumber, PGEOMETRY DriveGeometry);
 BOOL	DiskReadLogicalSectors(U32 DriveNumber, U64 SectorNumber, U32 SectorCount, PVOID Buffer); // Implemented in i386disk.c
 BOOL	DiskIsDriveRemovable(U32 DriveNumber);
-BOOL	DiskIsDriveCdRom(U32 DriveNumber);
 VOID	DiskStopFloppyMotor(VOID);	// Implemented in i386disk.c
 U32		DiskGetCacheableBlockCount(U32 DriveNumber);	// Implemented in i386disk.c
 

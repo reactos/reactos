@@ -35,7 +35,6 @@
 #include <drivemap.h>
 #include <keycodes.h>
 
-BOOL IsSetupLdr = FALSE;
 
 VOID RunLoader(VOID)
 {

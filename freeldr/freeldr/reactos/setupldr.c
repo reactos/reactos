@@ -31,7 +31,6 @@
 #include "registry.h"
 #include "hwdetect.h"
 
-BOOL IsSetupLdr = TRUE;
 
 static BOOL
 LoadKernel(PCHAR szFileName)

@@ -37,6 +37,25 @@ static U32		IsoRootLength;		// Length of the root directory
 U32			IsoDriveNumber = 0;
 
 
+BOOL IsIsoFs(U32 DriveNumber)
+{
+	PUCHAR Sector = (PUCHAR)DISKREADBUFFER;
+
+	if (!DiskReadLogicalSectorsLBA(DriveNumber, 16, 1, Sector))
+	{
+		FileSystemError("Failed to read the PVD.");
+		return FALSE;
+	}
+
+	return (Sector[0] == 1 &&
+		Sector[1] == 'C' &&
+		Sector[2] == 'D' &&
+		Sector[3] == '0' &&
+		Sector[4] == '0' &&
+		Sector[5] == '1');
+}
+
+
 BOOL IsoOpenVolume(U32 DriveNumber)
 {
 	PPVD Pvd = (PPVD)DISKREADBUFFER;
@@ -49,7 +68,7 @@ BOOL IsoOpenVolume(U32 DriveNumber)
 	IsoRootSector = 0;
 	IsoRootLength = 0;
 
-	if (!DiskReadLogicalSectors(DriveNumber, 16, 1, Pvd))
+	if (!DiskReadLogicalSectorsLBA(DriveNumber, 16, 1, Pvd))
 	{
 		FileSystemError("Failed to read the PVD.");
 		return FALSE;
@@ -160,7 +179,7 @@ static PVOID IsoBufferDirectory(U32 DirectoryStartSector, U32 DirectoryLength)
 	//
 	for (i = 0, Ptr = DirectoryBuffer; i < SectorCount; i++, Ptr += SECTORSIZE)
 	{
-		if (!DiskReadLogicalSectors(IsoDriveNumber, DirectoryStartSector + i, 1, (PVOID)DISKREADBUFFER))
+		if (!DiskReadLogicalSectorsLBA(IsoDriveNumber, DirectoryStartSector + i, 1, (PVOID)DISKREADBUFFER))
 		{
 			MmFreeMemory(DirectoryBuffer);
 			return NULL;
@@ -372,7 +391,7 @@ BOOL IsoReadFile(FILE *FileHandle, U32 BytesToRead, U32* BytesRead, PVOID Buffer
 		//
 		// Now do the read and update BytesRead, BytesToRead, FilePointer, & Buffer
 		//
-		if (!DiskReadLogicalSectors(IsoDriveNumber, SectorNumber, 1, (PVOID)DISKREADBUFFER))
+		if (!DiskReadLogicalSectorsLBA(IsoDriveNumber, SectorNumber, 1, (PVOID)DISKREADBUFFER))
 		{
 			return FALSE;
 		}
@@ -403,7 +422,7 @@ BOOL IsoReadFile(FILE *FileHandle, U32 BytesToRead, U32* BytesRead, PVOID Buffer
 			//
 			// Now do the read and update BytesRead, BytesToRead, FilePointer, & Buffer
 			//
-			if (!DiskReadLogicalSectors(IsoDriveNumber, SectorNumber, 1, (PVOID)DISKREADBUFFER))
+			if (!DiskReadLogicalSectorsLBA(IsoDriveNumber, SectorNumber, 1, (PVOID)DISKREADBUFFER))
 			{
 				return FALSE;
 			}
@@ -430,7 +449,7 @@ BOOL IsoReadFile(FILE *FileHandle, U32 BytesToRead, U32* BytesRead, PVOID Buffer
 		//
 		// Now do the read and update BytesRead, BytesToRead, FilePointer, & Buffer
 		//
-		if (!DiskReadLogicalSectors(IsoDriveNumber, SectorNumber, 1, (PVOID)DISKREADBUFFER))
+		if (!DiskReadLogicalSectorsLBA(IsoDriveNumber, SectorNumber, 1, (PVOID)DISKREADBUFFER))
 		{
 			return FALSE;
 		}

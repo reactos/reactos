@@ -53,7 +53,7 @@ BOOL DiskReadLogicalSectors(U32 DriveNumber, U64 SectorNumber, U32 SectorCount, 
 	// If so then check to see if Int13 extensions work
 	// If they do then use them, otherwise default back to BIOS calls
 	//
-	if ((DriveNumber >= 0x80) && (IsSetupLdr || DiskInt13ExtensionsSupported(DriveNumber)))
+	if ((DriveNumber >= 0x80) && DiskInt13ExtensionsSupported(DriveNumber))
 	{
 		DbgPrint((DPRINT_DISK, "Using Int 13 Extensions for read. DiskInt13ExtensionsSupported(%d) = %s\n", DriveNumber, DiskInt13ExtensionsSupported(DriveNumber) ? "TRUE" : "FALSE"));
 
@@ -336,11 +336,13 @@ BOOL DiskInt13ExtensionsSupported(U32 DriveNumber)
 		// CF set on error (extensions not supported)
 		return FALSE;
 	}
+
 	if (RegsOut.w.bx != 0xAA55)
 	{
 		// BX = AA55h if installed
 		return FALSE;
 	}
+
 	if (!(RegsOut.w.cx & 0x01))
 	{
 		// CX = API subset support bitmap
