@@ -302,7 +302,8 @@ GetDiskFreeSpaceExW@16
 GetDiskFreeSpaceExW = GetDiskFreeSpaceExW@16
 ;GetDriveTypeA@4
 ;GetDriveTypeW@4
-;GetEnvironmentStrings@0
+GetEnvironmentStrings@0 = GetEnvironmentStringsA@0
+GetEnvironmentStrings = GetEnvironmentStringsA@0
 GetEnvironmentStringsA@0
 GetEnvironmentStringsA = GetEnvironmentStringsA@0
 GetEnvironmentStringsW@0
@@ -718,7 +719,8 @@ Sleep = Sleep@4
 ;SuspendThread@4
 ;SystemTimeToFileTime@8
 ;SystemTimeToTzSpecificLocalTime@12
-;TerminateProcess@8
+TerminateProcess@8
+TerminateProcess = TerminateProcess@8
 ;TerminateThread@8
 ;TlsAlloc@0
 ;TlsFree@4
@@ -752,6 +754,7 @@ Sleep = Sleep@4
 ;WaitForMultipleObjects@16
 ;WaitForMultipleObjectsEx@20
 WaitForSingleObject@8
+WaitForSingleObject = WaitForSingleObject@8
 ;WaitForSingleObjectEx@12
 ;WaitNamedPipeA@8
 ;WaitNamedPipeW@8
