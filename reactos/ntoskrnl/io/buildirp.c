@@ -212,6 +212,39 @@ PIRP IoBuildSynchronousFsdRequest(ULONG MajorFunction,
      {
 	return(NULL);
      }
+   
+   Irp->UserBuffer = (LPVOID)Buffer;
+   if (DeviceObject->Flags&DO_BUFFERED_IO)
+     {
+	DPRINT("Doing buffer i/o\n",0);
+	Irp->AssociatedIrp.SystemBuffer = (PVOID)
+	                   ExAllocatePool(NonPagedPool,Length);
+	if (Irp->AssociatedIrp.SystemBuffer==NULL)
+	  {
+	     return(NULL);
+	  }
+        if (MajorFunction == IRP_MJ_WRITE)
+          {
+             RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, Buffer, Length);
+          }
+	Irp->UserBuffer = NULL;
+     }
+   if (DeviceObject->Flags&DO_DIRECT_IO)
+     {
+	DPRINT("Doing direct i/o\n",0);
+	
+	Irp->MdlAddress = MmCreateMdl(NULL,Buffer,Length);
+        if (MajorFunction == IRP_MJ_READ)
+          {
+             MmProbeAndLockPages(Irp->MdlAddress,UserMode,IoWriteAccess);
+          }
+        else
+          {
+             MmProbeAndLockPages(Irp->MdlAddress,UserMode,IoReadAccess);
+          }
+	Irp->UserBuffer = NULL;
+	Irp->AssociatedIrp.SystemBuffer = NULL;
+     }
 
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->MajorFunction = MajorFunction;
@@ -221,59 +254,36 @@ PIRP IoBuildSynchronousFsdRequest(ULONG MajorFunction,
    StackPtr->DeviceObject = DeviceObject;
    StackPtr->FileObject = NULL;
    StackPtr->Parameters.Write.Length = Length;
-   
-   Irp->Tail.Overlay.Thread = PsGetCurrentThread();
-   
-   if (MajorFunction == IRP_MJ_READ || MajorFunction == IRP_MJ_WRITE)
+   if (MajorFunction == IRP_MJ_READ)
      {
-	Irp->UserBuffer = (LPVOID)Buffer;
-	if (DeviceObject->Flags&DO_BUFFERED_IO)
-	  {
-	     DPRINT("Doing buffer i/o\n",0);
-	     Irp->AssociatedIrp.SystemBuffer = (PVOID)
-	       ExAllocatePool(NonPagedPool,Length);
-	     if (Irp->AssociatedIrp.SystemBuffer==NULL)
-	       {
-		  return(NULL);
-	       }
-	     if (MajorFunction == IRP_MJ_WRITE)
-	       {
-		  RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, Buffer, 
-				Length);
-	       }
-	  }
-	if (DeviceObject->Flags&DO_DIRECT_IO)
-	  {
-	     DPRINT("Doing direct i/o\n",0);
-	     
-	     Irp->MdlAddress = MmCreateMdl(NULL,Buffer,Length);
-	     Irp->UserBuffer = NULL;
-	     if (MajorFunction == IRP_MJ_READ)
-	       {
-		  MmProbeAndLockPages(Irp->MdlAddress,UserMode,IoWriteAccess);
-	       }
-	     else
-	       {
-		  MmProbeAndLockPages(Irp->MdlAddress,UserMode,IoReadAccess);
-	       }
-	     Irp->AssociatedIrp.SystemBuffer = NULL;
-	  }
-	if (StartingOffset!=NULL)
-	  {
-	     StackPtr->Parameters.Write.ByteOffset.LowPart = 
-	       StartingOffset->LowPart;
-	     StackPtr->Parameters.Write.ByteOffset.HighPart = 
-	       StartingOffset->HighPart;
-	  }
-	else
-	  {
-	     StackPtr->Parameters.Write.ByteOffset.LowPart = 0;
-	     StackPtr->Parameters.Write.ByteOffset.HighPart = 0;
-	  }	
+       if (StartingOffset!=NULL)
+         {
+            StackPtr->Parameters.Read.ByteOffset.LowPart = 
+              StartingOffset->LowPart;
+            StackPtr->Parameters.Read.ByteOffset.HighPart = 
+              StartingOffset->HighPart;
+         }
+       else
+         {
+            StackPtr->Parameters.Read.ByteOffset.LowPart = 0;
+            StackPtr->Parameters.Read.ByteOffset.HighPart = 0;
+         }
      }
-	
-   Irp->UserIosb = IoStatusBlock;
-   Irp->UserEvent = Event;
-      
+   else
+     {
+       if (StartingOffset!=NULL)
+         {
+            StackPtr->Parameters.Write.ByteOffset.LowPart = 
+              StartingOffset->LowPart;
+            StackPtr->Parameters.Write.ByteOffset.HighPart = 
+              StartingOffset->HighPart;
+         }
+       else
+         {
+            StackPtr->Parameters.Write.ByteOffset.LowPart = 0;
+            StackPtr->Parameters.Write.ByteOffset.HighPart = 0;
+         }
+     }
+
    return(Irp);
 }

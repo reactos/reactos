@@ -53,7 +53,8 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
 		    PULONG Key)
 {
    NTSTATUS Status;
-   PFILE_OBJECT FileObject = NULL;
+   COMMON_BODY_HEADER* hdr = ObGetObjectByHandle(FileHandle);
+   PFILE_OBJECT FileObject = (PFILE_OBJECT)hdr;
    PIRP Irp;
    PIO_STACK_LOCATION StackPtr;
    KEVENT Event;
@@ -90,23 +91,39 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
 
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->FileObject = FileObject;
-   DPRINT("StackPtr->FileObject %x\n",FileObject);
+   StackPtr->Parameters.Read.Length = Length;
+   if (ByteOffset!=NULL)
+   {
+        StackPtr->Parameters.Read.ByteOffset.LowPart = ByteOffset->LowPart;
+        StackPtr->Parameters.Read.ByteOffset.HighPart = ByteOffset->HighPart;
+   }
+   else
+   {
+        StackPtr->Parameters.Read.ByteOffset.LowPart = 0;
+        StackPtr->Parameters.Read.ByteOffset.HighPart = 0;
+   }
+   if (Key!=NULL)
+   {
+         StackPtr->Parameters.Read.Key = *Key;
+   }
+   else
+   {
+        StackPtr->Parameters.Read.Key = 0;
+   }
    
+   DPRINT("FileObject->DeviceObject %x\n",FileObject->DeviceObject);
    Status = IoCallDriver(FileObject->DeviceObject,Irp);
-   DPRINT("Status %d STATUS_PENDING %d\n",Status,STATUS_PENDING);
-   if (Status==STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
+   if (NT_SUCCESS(Status))
      {
-	DPRINT("Waiting for io operation\n");
-	if (FileObject->Flags & FO_ALERTABLE_IO)
-	  {
-	     KeWaitForSingleObject(&Event,Executive,KernelMode,TRUE,NULL);
-	  }
-	else
-	  {
-	     DPRINT("Non-alertable wait\n");
-	     KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
-	  }
-	Status = IoStatusBlock->Status;
+       KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
+       Status = Irp->IoStatus.Status;
+       if (NT_SUCCESS(Status))
+         {
+           if (FileObject->DeviceObject->Flags&DO_BUFFERED_IO)
+             {
+               memcpy(Buffer,Irp->AssociatedIrp.SystemBuffer,Length);
+             }
+         }
      }
    return(Status);
 }
@@ -142,26 +159,16 @@ NTSTATUS ZwWriteFile(HANDLE FileHandle,
 		     PLARGE_INTEGER ByteOffset,
 		     PULONG Key)
 {
-   PFILE_OBJECT FileObject = NULL;
+   NTSTATUS Status;
+   COMMON_BODY_HEADER* hdr = ObGetObjectByHandle(FileHandle);
+   PFILE_OBJECT FileObject = (PFILE_OBJECT)hdr;
    PIRP Irp;
    PIO_STACK_LOCATION StackPtr;
-   NTSTATUS Status;
    KEVENT Event;
-
-   Status = ObReferenceObjectByHandle(FileHandle,
-				      FILE_WRITE_DATA,
-				      NULL,
-				      UserMode,
-				      &FileObject,
-				      NULL);
-   if (Status != STATUS_SUCCESS)
+   
+   if (hdr==NULL)
      {
-	return(Status);
-     }
-
-   if (ByteOffset==NULL)
-     {
-	ByteOffset = &(FileObject->CurrentByteOffset);
+	return(STATUS_INVALID_HANDLE);
      }
    
    KeInitializeEvent(&Event,NotificationEvent,FALSE);
@@ -172,22 +179,12 @@ NTSTATUS ZwWriteFile(HANDLE FileHandle,
 				      ByteOffset,
 				      &Event,
 				      IoStatusBlock);
-
-   StackPtr = IoGetNextIrpStackLocation(Irp);
-   StackPtr->FileObject = FileObject;
-   
+   DPRINT("FileObject->DeviceObject %x\n",FileObject->DeviceObject);
    Status = IoCallDriver(FileObject->DeviceObject,Irp);
    if (Status==STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
      {
-	if (FileObject->Flags & FO_ALERTABLE_IO)
-	  {             
-	     KeWaitForSingleObject(&Event,Executive,KernelMode,TRUE,NULL);
-	  }
-	else
-	  {
-	     KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
-	  }
-	Status = IoStatusBlock->Status;
+	KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
+        Status = Irp->IoStatus.Status;
      }
    return(Status);
 }

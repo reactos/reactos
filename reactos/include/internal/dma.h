@@ -1,4 +1,4 @@
-/* $Id: dma.h,v 1.1.1.2 1998/08/25 04:27:32 rex Exp $
+/* $Id: dma.h,v 1.1.1.3 1998/10/05 04:55:15 rex Exp $
  * linux/include/asm/dma.h: Defines for using and allocating dma channels.
  * Written by Hennus Bergman, 1992.
  * High DMA channel support & info by Hannu Savolainen

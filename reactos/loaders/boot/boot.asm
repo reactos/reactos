@@ -27,9 +27,15 @@
 ;
 ; $Logfile:   C:/dos-c/src/boot/boot.asv  $
 ;
-; $Header: /cygdrive/c/RCVS/CVS/ReactOS/reactos/loaders/boot/Attic/boot.asm,v 1.1.1.2 1998/08/25 04:27:38 rex Exp $
+; $Header: /cygdrive/c/RCVS/CVS/ReactOS/reactos/loaders/boot/Attic/boot.asm,v 1.1.1.3 1998/10/05 04:55:23 rex Exp $
 ;
 ; $Log: boot.asm,v $
+; Revision 1.1.1.3  1998/10/05 04:55:23  rex
+; including floppy driver
+;
+; Revision 1.3  1998/08/25 04:37:43  rex
+; new release cleanup
+;
 ; Revision 1.1.1.2  1998/08/25 04:27:38  rex
 ; A much Needed Update
 ;
@@ -285,7 +291,4 @@ filename        db      "KERNEL  BIN"
                 TIMES 510-($-$$) DB 0 
 sign            dw      0aa55h
                 
-
-
-
 

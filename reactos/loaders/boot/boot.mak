@@ -1,9 +1,15 @@
 #
 # makefile for DOS-C boot
 #
-# $Header: /cygdrive/c/RCVS/CVS/ReactOS/reactos/loaders/boot/Attic/boot.mak,v 1.1.1.2 1998/08/25 04:27:38 rex Exp $
+# $Header: /cygdrive/c/RCVS/CVS/ReactOS/reactos/loaders/boot/Attic/boot.mak,v 1.1.1.3 1998/10/05 04:55:25 rex Exp $
 #
 # $Log: boot.mak,v $
+# Revision 1.1.1.3  1998/10/05 04:55:25  rex
+# including floppy driver
+#
+# Revision 1.3  1998/08/25 04:39:40  rex
+# Release cleanup
+#
 # Revision 1.1.1.2  1998/08/25 04:27:38  rex
 # A much Needed Update
 #
@@ -53,3 +59,4 @@ clean:
 		del *.las
 		del *.obj
 		del *.exe
+

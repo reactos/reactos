@@ -30,14 +30,11 @@ static KEVENT event = {};
 NTSTATUS TstShell(VOID);
 
 /* FUNCTIONS ****************************************************************/
-
 NTSTATUS TstPlaySound(VOID)
 {
    HANDLE hfile;
    
-   /*
-    * Open the parallel port
-    */
+//    * Open the parallel port
    printk("Opening Waveout\n");
 //   hfile = CreateFile("\\Device\\WaveOut",0,0,0,0,0,0);
    if (hfile == NULL)
@@ -174,6 +171,267 @@ VOID ExExecuteShell(VOID)
 		  FALSE);
 }
 
+/* IDE TEST STUFF ***********************************************************/
+
+typedef struct _BOOT_PARAMETERS {
+  WORD BytesBerSector;
+  BYTE SectorsPerAllocationUnit;
+  WORD ReservedSectorCount;
+  BYTE FATCount;
+  WORD RootDirEntryCount;
+  WORD TotalSectorCount;
+  BYTE MediaDescriptor;
+  WORD SectorsPerFAT;
+  WORD SectorsPerTrack;
+  WORD HeadCount;
+  DWORD HiddenSectorCount;
+  DWORD TotalSectorsInLogicalVolume;
+} __attribute__ ((packed)) BOOT_PARAMETERS, __attribute__ ((packed)) *PBOOT_PARAMETERS;
+
+typedef struct _BOOT_BLOCK {
+  char JumpInstruction[3];
+  char OEMName[8];
+  BOOT_PARAMETERS BootParameters;
+  BYTE DriveNumber;
+  BYTE Reserved1;
+  BYTE ExtBootSignatureRecord;
+  DWORD BinaryVolumeID;
+  char VolumeLabel[11];
+  char Reserved2[8]; 
+  char Bootstrap[512 - 61];
+} __attribute__ ((packed)) BOOT_BLOCK, __attribute__ ((packed)) *PBOOT_BLOCK;
+
+typedef struct _ROOT_DIR_ENTRY {
+  char Filename[8];
+  char Extension[3];
+  char FileAttribute;
+  char Reserved1[10];
+  WORD ModifiedTime;
+  WORD ModifiedDate;
+  WORD StartingCluster;
+  DWORD FileSize;
+} __attribute__ ((packed)) ROOT_DIR_ENTRY;
+
+#define ENTRIES_PER_BLOCK (512 / sizeof(ROOT_DIR_ENTRY))
+
+void TstIDERead(void)
+{
+  BOOLEAN TestFailed;
+  int Entry, i, j;
+  HANDLE FileHandle;
+  NTSTATUS Status;
+  LARGE_INTEGER BlockOffset;
+  ANSI_STRING AnsiDeviceName;
+  UNICODE_STRING UnicodeDeviceName;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+// static  char SectorBuffer2[512 ];
+static  char SectorBuffer[512 * 10];
+  PBOOT_BLOCK BootBlock;
+  ROOT_DIR_ENTRY DirectoryBlock[ENTRIES_PER_BLOCK];
+
+  DbgPrint("IDE Read Test\n");
+  TestFailed = FALSE;
+
+    /*  open the first partition  */
+  DbgPrint("Opening Partition1\n");
+  RtlInitAnsiString(&AnsiDeviceName, "\\Device\\HardDrive0\\Partition1");
+  RtlAnsiStringToUnicodeString(&UnicodeDeviceName, &AnsiDeviceName, TRUE);
+  InitializeObjectAttributes(&ObjectAttributes,
+                             &UnicodeDeviceName, 
+                             0,
+                             NULL,
+                             NULL);
+  Status = ZwOpenFile(&FileHandle, 0, &ObjectAttributes, NULL, 0, 0);
+  if (!NT_SUCCESS(Status))
+    {
+      DbgPrint("Failed to open partition1\n");
+      TestFailed = TRUE;
+    }
+
+    /*  Read the boot block  */
+  if (!TestFailed)
+    {
+      DbgPrint("Reading boot block from Partition1\n");
+      RtlZeroMemory(SectorBuffer, sizeof(SectorBuffer));
+      Status = ZwReadFile(FileHandle,
+                          NULL,
+                          NULL,
+                          NULL,
+                          NULL,
+                          SectorBuffer,
+                          512,
+                          0,
+                          0);
+      if (!NT_SUCCESS(Status))
+        {
+          DbgPrint("Failed to read book block from partition1 status:%x\n", Status);
+          TestFailed = TRUE;
+        }
+    }  
+
+    /* %%% Check for valid boot block signature  */
+
+    /*  Spew info about boot block  */
+  if (!TestFailed)
+    {
+      BootBlock = (PBOOT_BLOCK) SectorBuffer;
+      DbgPrint("boot block on Partition1:\n");
+      DbgPrint("  OEM Name: %.8s  Bytes/Sector:%d Sectors/Cluster:%d\n",
+               BootBlock->OEMName,
+               BootBlock->BootParameters.BytesBerSector,
+               BootBlock->BootParameters.SectorsPerAllocationUnit);
+      DbgPrint("  ReservedSectors:%d FATs:%d RootDirEntries:%d\n",
+               BootBlock->BootParameters.ReservedSectorCount,
+               BootBlock->BootParameters.FATCount,
+               BootBlock->BootParameters.RootDirEntryCount);
+      DbgPrint("  TotalSectors:%d MediaDescriptor:%d Sectors/FAT:%d\n",
+               BootBlock->BootParameters.TotalSectorCount,
+               BootBlock->BootParameters.MediaDescriptor,
+               BootBlock->BootParameters.SectorsPerFAT);
+      DbgPrint("  Sectors/Track:%d Heads:%d HiddenSectors:%d\n",
+               BootBlock->BootParameters.SectorsPerTrack,
+               BootBlock->BootParameters.HeadCount,
+               BootBlock->BootParameters.HiddenSectorCount);
+      DbgPrint("  VolumeLabel:%.11s\n", BootBlock->VolumeLabel);
+    }
+
+    /*  Read the first root directory block */
+  if (!TestFailed)
+    {
+      DbgPrint("Reading rootdir block from Partition1\n");
+      BlockOffset.HighPart = 0;
+      BlockOffset.LowPart = BootBlock->BootParameters.ReservedSectorCount * 512 +
+                            BootBlock->BootParameters.FATCount * 
+                            BootBlock->BootParameters.SectorsPerFAT * 512;
+      Status = ZwReadFile(FileHandle,
+                          NULL,
+                          NULL,
+                          NULL,
+                          NULL,
+                          DirectoryBlock,
+                          sizeof(DirectoryBlock),
+                          &BlockOffset,
+                          0);
+      if (!NT_SUCCESS(Status))
+        {
+          DbgPrint("Failed to read root directory block from partition1\n");
+          TestFailed = TRUE;
+        }
+    }  
+
+    /*  Print the contents  */
+  if (!TestFailed)
+    {
+      for (Entry = 0; Entry < ENTRIES_PER_BLOCK; Entry++)
+        {
+          switch (DirectoryBlock[Entry].Filename[0])
+            {
+            case 0x00:
+              DbgPrint("End of Directory.\n");
+              Entry = ENTRIES_PER_BLOCK;
+              break;
+
+            case 0x05:
+              DbgPrint("  FILE: %c%.7s.%.3s ATTR:%x Time:%04x Date:%04x offset:%d size:%d\n",
+                       0xe5,
+                       &DirectoryBlock[Entry].Filename[1],
+                       DirectoryBlock[Entry].Extension,
+                       DirectoryBlock[Entry].FileAttribute,
+                       DirectoryBlock[Entry].ModifiedTime,
+                       DirectoryBlock[Entry].ModifiedDate,
+                       DirectoryBlock[Entry].StartingCluster,
+                       DirectoryBlock[Entry].FileSize);
+              break;
+
+            case 0x2e:
+              DbgPrint("  ALIAS: %.8s ATTR:%x Time:%04x Date:%04x offset:%d size:%d\n",
+                       &DirectoryBlock[Entry].Filename[1],
+                       DirectoryBlock[Entry].FileAttribute,
+                       DirectoryBlock[Entry].ModifiedTime,
+                       DirectoryBlock[Entry].ModifiedDate,
+                       DirectoryBlock[Entry].StartingCluster,
+                       DirectoryBlock[Entry].FileSize);
+              break;
+
+            case 0xe5:
+              break;
+
+            default:
+              DbgPrint("  FILE: %.8s.%.3s ATTR:%x Time:%04x Date:%04x offset:%d size:%d\n",
+                       DirectoryBlock[Entry].Filename,
+                       DirectoryBlock[Entry].Extension,
+                       DirectoryBlock[Entry].FileAttribute,
+                       DirectoryBlock[Entry].ModifiedTime,
+                       DirectoryBlock[Entry].ModifiedDate,
+                       DirectoryBlock[Entry].StartingCluster,
+                       DirectoryBlock[Entry].FileSize);
+              break;
+            }
+        }
+    }
+
+    /*  Execute a multiblock disk read/write test  */
+  if (!TestFailed)
+    {
+      DbgPrint("Reading data from blocks 10000-4 from Partition1\n");
+      RtlFillMemory(SectorBuffer, sizeof(SectorBuffer), 0xea);
+      BlockOffset.HighPart = 0;
+      BlockOffset.LowPart = 10000 * 512;
+      Status = ZwReadFile(FileHandle,
+                          NULL,
+                          NULL,
+                          NULL,
+                          NULL,
+                          SectorBuffer,
+                          512 * 5,
+                          &BlockOffset,
+                          0);
+      if (!NT_SUCCESS(Status))
+        {
+          DbgPrint("Failed to read blocks 10000-4 from partition1 status:%x\n", 
+                   Status);
+          TestFailed = TRUE;
+        }
+      else
+        {
+          for (j = 0; j < 10; j++)
+            {
+              DbgPrint("%04x: ", j * 256);
+              for (i = 0; i < 16; i++)
+                {
+                  DbgPrint("%02x ", (unsigned char)SectorBuffer[j * 256 + i]);
+                  SectorBuffer[j * 256 + i]++;
+                }
+              DbgPrint("\n");
+            }
+//for(;;);
+          Status = ZwWriteFile(FileHandle,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               SectorBuffer,
+                               512 * 5,
+                               &BlockOffset,
+                               0);
+          if (!NT_SUCCESS(Status))
+            {
+              DbgPrint("Failed to write blocks 10000-4 to partition1 status:%x\n", 
+                       Status);
+              TestFailed = TRUE;
+            }
+          else
+            {
+              DbgPrint("Block written\n");
+            }
+        }
+    }  
+
+  if (FileHandle != NULL)
+    {
+      ZwClose(FileHandle);
+    }
+}
 
 void TstBegin()
 {
@@ -181,6 +439,8 @@ void TstBegin()
 //   TstFileRead();
 //   TstGeneralWrite();
 //   TstThreadSupport();
+//   TstKeyboardRead();
+//   TstIDERead();
 //   TstKeyboardRead();
 //   TstShell();
 }

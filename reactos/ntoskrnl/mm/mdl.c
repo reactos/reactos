@@ -57,7 +57,7 @@ PVOID MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
 		      PsGetCurrentProcess(),
 		      MEMORY_AREA_MDL_MAPPING,
 		      &base,
-		      Mdl->ByteCount,
+		      Mdl->ByteCount + Mdl->ByteOffset,
 		      0,
 		      &Result);
    CHECKPOINT;

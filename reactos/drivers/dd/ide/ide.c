@@ -70,7 +70,7 @@ typedef DISK_GEOMETRY *PDISK_GEOMETRY;
 #include <internal/hal/io.h>
 #include <internal/string.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 #include "ide.h"
@@ -793,7 +793,7 @@ IDEGetPartitionTable(IN int CommandPort,
                      SectorBuf);
   if (RC != 0) 
     {
-      DbgPrint("read failed: port %04x drive %d sector %d rc %d\n", 
+      DPRINT("read failed: port %04x drive %d sector %d rc %d\n", 
              CommandPort, 
              DriveNum, 
              Offset, 
@@ -802,7 +802,7 @@ IDEGetPartitionTable(IN int CommandPort,
     } 
   else if (*((WORD *)(SectorBuf + PART_MAGIC_OFFSET)) != PARTITION_MAGIC) 
     {
-      DbgPrint("Bad partition magic: port %04x drive %d offset %d magic %d\n", 
+      DPRINT("Bad partition magic: port %04x drive %d offset %d magic %d\n", 
              CommandPort, 
              DriveNum, 
              Offset, 
@@ -922,7 +922,6 @@ IDECreateDevice(IN PDRIVER_OBJECT DriverObject,
     {
       RtlInitAnsiString(&AnsiSymLink, Win32Alias);
       RtlAnsiStringToUnicodeString(&SymLink, &AnsiSymLink, TRUE);
-      DbgPrint("SymbolicLink (%w -> %w)\n",SymLink.Buffer,UnicodeName.Buffer);
       IoCreateSymbolicLink(&SymLink, &UnicodeName);
       RtlFreeUnicodeString(&SymLink);
     }

@@ -27,9 +27,15 @@
 ;
 ; $Logfile:   C:/dos-c/src/boot/boot.asv  $
 ;
-; $Header: /cygdrive/c/RCVS/CVS/ReactOS/reactos/loaders/boot/Attic/bootbk.asm,v 1.1.1.2 1998/08/25 04:27:38 rex Exp $
+; $Header: /cygdrive/c/RCVS/CVS/ReactOS/reactos/loaders/boot/Attic/bootbk.asm,v 1.1.1.3 1998/10/05 04:55:23 rex Exp $
 ;
 ; $Log: bootbk.asm,v $
+; Revision 1.1.1.3  1998/10/05 04:55:23  rex
+; including floppy driver
+;
+; Revision 1.3  1998/08/25 04:40:47  rex
+; Release cleanup
+;
 ; Revision 1.1.1.2  1998/08/25 04:27:38  rex
 ; A much Needed Update
 ;
@@ -288,7 +294,5 @@ sign            dw      0aa55h
 
 TEXT            ENDS
 		end
-
-
 
 

@@ -5,9 +5,9 @@
 #
 # Select your host
 #
-HOST = djgpp-linux
+#HOST = djgpp-linux
 #HOST = mingw32-linux
-#HOST = djgpp-msdos
+HOST = djgpp-msdos
 #HOST = mingw32-windows
 
 include rules.mak
