@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.70 2004/08/15 21:36:30 chorns Exp $
+/* $Id: menu.c,v 1.71 2004/09/14 01:30:02 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -441,7 +441,7 @@ MenuGetBitmapItemSize(UINT Id, DWORD Data, SIZE *Size)
           case (INT_PTR) HBMMENU_POPUP_MAXIMIZE:
           case (INT_PTR) HBMMENU_POPUP_MINIMIZE:
           default:
-            FIXME("Magic menu bitmap not implemented\n");
+            DPRINT("Magic menu bitmap not implemented\n");
             return;
         }
     }
@@ -523,7 +523,7 @@ MenuDrawBitmapItem(HDC Dc, PROSMENUITEMINFO Item, const RECT *Rect, BOOL MenuBar
           case (INT_PTR) HBMMENU_POPUP_MAXIMIZE:
           case (INT_PTR) HBMMENU_POPUP_MINIMIZE:
           default:
-            FIXME("Magic menu bitmap not implemented\n");
+            DPRINT("Magic menu bitmap not implemented\n");
             return;
         }
       InflateRect(&r, -1, -1);
