@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.2 2004/08/12 15:41:36 weiden Exp $
+/* $Id: stubs.c,v 1.3 2004/08/12 19:27:12 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         SkyOS GI library
@@ -119,17 +119,6 @@ GC_set_bg_color(GC *gc,
 /*
  * @unimplemented
  */
-HRESULT __cdecl
-GI_ShowApplicationWindow(HANDLE hWnd)
-{
-  STUB("GI_ShowApplicationWindow(0x%x) returns 0!\n", hWnd);
-  return 0;
-}
-
-
-/*
- * @unimplemented
- */
 int __cdecl
 GI_add_menu_item(widget_menu *menu,
                  widget_menu_item *item)
@@ -166,17 +155,6 @@ GI_create_DDB_from_DIB(DIB *dib)
 /*
  * @unimplemented
  */
-HANDLE __cdecl
-GI_create_app(app_para *p)
-{
-  STUB("GI_create_app(0x%x) returns NULL!\n", p);
-  return NULL;
-}
-
-
-/*
- * @unimplemented
- */
 widget_menu* __cdecl
 GI_create_menu(HANDLE win)
 {
@@ -196,29 +174,6 @@ GI_create_menu_item(unsigned char *text,
 {
   STUB("GI_create_menu_item(0x%x, 0x%x, 0x%x, 0x%x) returns NULL!\n", text, ID, flags, enabled);
   return NULL;
-}
-
-
-/*
- * @unimplemented
- */
-int __cdecl
-GI_destroy_window(s_window *win)
-{
-  STUB("GI_destroy_window(0x%x) returns 0!\n", win);
-  return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int __cdecl
-GI_dispatch_message(s_window *win,
-                    s_gi_msg *m)
-{
-  STUB("GI_dispatch_message(0x%x, 0x%x) returns 0!\n", win, m);
-  return 0;
 }
 
 
@@ -276,18 +231,6 @@ GI_set_high_timer(HANDLE w,
                   unsigned int msec)
 {
   STUB("GI_set_high_timer(0x%x, 0x%x) returns 0!\n", w, msec);
-  return 0;
-}
-
-
-/*
- * @unimplemented
- */
-unsigned int __cdecl
-GI_wait_message(s_gi_msg *m,
-                s_window* w)
-{
-  STUB("GI_wait_message(0x%x, 0x%x) returns 0!\n", m, w);
   return 0;
 }
 
@@ -365,17 +308,6 @@ GC_set_font_param(GC *gc,
 {
   STUB("GC_set_font_param(0x%x, 0x%x, 0x%x, 0x%x, 0x%x) returns 0!\n", gc, font, fontsize, flags, trans);
   return 0;
-}
-
-
-/*
- * @unimplemented
- */
-sCreateApplication* __cdecl
-GI_CreateApplicationStruct(void)
-{
-  STUB("GI_CreateApplicationStruct() returns NULL!\n");
-  return NULL;
 }
 
 

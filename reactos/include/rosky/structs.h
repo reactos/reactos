@@ -191,7 +191,7 @@ typedef struct s_window
   unsigned int width;
   unsigned int orgx;
   unsigned int orgy;
-  unsigned long (*win_func)(HANDLE win, s_gi_msg *m);
+  unsigned long (__cdecl *win_func)(HANDLE win, s_gi_msg *m);
   HANDLE handle;
 
   struct s_window *parent;
@@ -211,10 +211,10 @@ typedef struct s_window
 typedef struct sCreateApplication
 {
   unsigned char ucApplicationName[255];
-  unsigned int  uiX;
-  unsigned int  uiY;
-  unsigned int  uiWidth;
-  unsigned int  uiHeight;
+  unsigned int uiX;
+  unsigned int uiY;
+  unsigned int uiWidth;
+  unsigned int uiHeight;
 
   void *fwndClient;
   unsigned int uiStyleApplication;
