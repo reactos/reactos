@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.237 2004/06/16 06:09:40 gvg Exp $
+/* $Id: window.c,v 1.238 2004/06/19 20:18:09 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2169,11 +2169,6 @@ NtUserDestroyWindow(HWND Wnd)
       HOOK_CallHooks( WH_SHELL, HSHELL_WINDOWDESTROYED, (WPARAM)hwnd, 0L, TRUE );
       /* FIXME: clean up palette - see "Internals" p.352 */
     }
-
-  if (! IsWindow(Wnd))
-    {
-    return TRUE;
-    }
 #endif
 
   if (!IntIsWindow(Wnd))
@@ -2200,16 +2195,9 @@ NtUserDestroyWindow(HWND Wnd)
 		{
 		  Child = IntGetWindowObject(*ChildHandle);
 		  if (Child == NULL)
-		    {
-		      continue;
-		    }
-		  if(Child->Self == Wnd)
-		  {
-		    IntReleaseWindowObject(Child);
 		    continue;
-		  }
 		  IntLockRelatives(Child);
-		  if (Child->Parent != Window->Self)
+		  if (Child->Owner != Window->Self)
 		    {
 		      IntUnLockRelatives(Child);
 		      IntReleaseWindowObject(Child);
