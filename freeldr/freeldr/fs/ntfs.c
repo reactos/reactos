@@ -1,7 +1,4 @@
 /*
- *  FreeLoader
- *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
- *
  *  FreeLoader NTFS support
  *  Copyright (C) 2004       Filip Navara  <xnavara@volny.cz>
  *
@@ -25,10 +22,6 @@
  * - No support for compressed files.
  * - No attribute list support.
  * - May crash on currupted filesystem.
- *
- * Bugs:
- * - I encountered file names like 'KERNEL~1.EE' stored on
- *   the disk. These aren't handled correctly yet.
  */
 
 #include <freeldr.h>
@@ -40,7 +33,6 @@
 #include <debug.h>
 #include <cache.h>
 
-#define NTFS_DEFS
 #include "ntfs.h"
 
 PNTFS_BOOTSECTOR NtfsBootSector;
@@ -56,7 +48,7 @@ PUCHAR NtfsDecodeRun(PUCHAR DataRun, S64 *DataRunOffset, U64 *DataRunLength)
 {
     U8 DataRunOffsetSize;
     U8 DataRunLengthSize;
-    U8 i;
+    S8 i;
 
     DataRunOffsetSize = (*DataRun >> 4) & 0xF;
     DataRunLengthSize = *DataRun & 0xF;
@@ -68,16 +60,27 @@ PUCHAR NtfsDecodeRun(PUCHAR DataRun, S64 *DataRunOffset, U64 *DataRunLength)
         *DataRunLength += *DataRun << (i << 3);
         DataRun++;
     }
-    for (i = 0; i < DataRunOffsetSize; i++)
+
+    /* NTFS 3+ sparse files */
+    if (DataRunOffsetSize == 0)
     {
-        *DataRunOffset += *DataRun << (i << 3);
-        DataRun++;
+        *DataRunOffset = -1;
+    }
+    else
+    {
+        for (i = 0; i < DataRunOffsetSize - 1; i++)
+        {
+            *DataRunOffset += *DataRun << (i << 3);
+            DataRun++;
+        }
+        /* The last byte contains sign so we must process it different way. */
+        *DataRunOffset = ((S8)(*(DataRun++)) << (i << 3)) + *DataRunOffset;
     }
 
     DbgPrint((DPRINT_FILESYSTEM, "DataRunOffsetSize: %x\n", DataRunOffsetSize));
     DbgPrint((DPRINT_FILESYSTEM, "DataRunLengthSize: %x\n", DataRunLengthSize));
-    DbgPrint((DPRINT_FILESYSTEM, "DataRunOffset: %x\n", DataRunOffset));
-    DbgPrint((DPRINT_FILESYSTEM, "DataRunLength: %x\n", DataRunLength));
+    DbgPrint((DPRINT_FILESYSTEM, "DataRunOffset: %x\n", *DataRunOffset));
+    DbgPrint((DPRINT_FILESYSTEM, "DataRunLength: %x\n", *DataRunLength));
 
     return DataRun;
 }
@@ -97,7 +100,7 @@ BOOL NtfsFindAttribute(PNTFS_ATTR_CONTEXT Context, PNTFS_MFT_RECORD MftRecord, U
 
     while (AttrRecord < AttrRecordEnd)
     {
-        if (AttrRecord->Type == ATTR_TYPE_END)
+        if (AttrRecord->Type == NTFS_ATTR_TYPE_END)
             break;
 
         if (AttrRecord->Type == Type)
@@ -117,6 +120,7 @@ BOOL NtfsFindAttribute(PNTFS_ATTR_CONTEXT Context, PNTFS_MFT_RECORD MftRecord, U
                         Context->CacheRun = (PUCHAR)Context->Record + Context->Record->NonResident.MappingPairsOffset;
                         Context->CacheRunOffset = 0;
                         Context->CacheRun = NtfsDecodeRun(Context->CacheRun, &DataRunOffset, &DataRunLength);
+                        Context->CacheRunLength = DataRunLength;
                         if (DataRunOffset != -1)
                         {
                             /* Normal run. */
@@ -146,6 +150,9 @@ BOOL NtfsFindAttribute(PNTFS_ATTR_CONTEXT Context, PNTFS_MFT_RECORD MftRecord, U
 BOOL NtfsDiskRead(U64 Offset, U64 Length, PCHAR Buffer)
 {
     U16 ReadLength;
+
+    DbgPrint((DPRINT_FILESYSTEM, "NtfsDiskRead - Offset: %I64d Length: %I64d\n", Offset, Length));
+    RtlZeroMemory((PCHAR)DISKREADBUFFER, 0x1000);
 
     /* I. Read partial first sector if needed */
     if (Offset % NtfsBootSector->BytesPerSector)
@@ -216,6 +223,7 @@ U64 NtfsReadAttribute(PNTFS_ATTR_CONTEXT Context, U64 Offset, PCHAR Buffer, U64 
         DataRun = Context->CacheRun;
         LastLCN = Context->CacheRunLastLCN;
         DataRunStartLCN = Context->CacheRunStartLCN;
+        DataRunLength = Context->CacheRunLength;
         CurrentOffset = Context->CacheRunCurrentOffset;
     }
     else
@@ -238,6 +246,8 @@ U64 NtfsReadAttribute(PNTFS_ATTR_CONTEXT Context, U64 Offset, PCHAR Buffer, U64 
                 /* Sparse data run. */
                 DataRunStartLCN = -1;
             }
+
+            DbgPrint((DPRINT_FILESYSTEM, "YYY - %I64x\n", DataRunStartLCN));
 
             if (Offset >= CurrentOffset &&
                 Offset < CurrentOffset + (DataRunLength * NtfsClusterSize))
@@ -270,6 +280,10 @@ U64 NtfsReadAttribute(PNTFS_ATTR_CONTEXT Context, U64 Offset, PCHAR Buffer, U64 
 	Buffer += ReadLength;
 	AlreadyRead += ReadLength;
 
+	/* We finished this request, but there still data in this data run. */
+	if (Length == 0 && ReadLength != DataRunLength * NtfsClusterSize)
+	    break;
+
 	/*
 	 * Go to next run in the list.
          */
@@ -294,15 +308,47 @@ U64 NtfsReadAttribute(PNTFS_ATTR_CONTEXT Context, U64 Offset, PCHAR Buffer, U64 
     Context->CacheRun = DataRun;
     Context->CacheRunOffset = Offset + AlreadyRead;
     Context->CacheRunStartLCN = DataRunStartLCN;
+    Context->CacheRunLength = DataRunLength;
     Context->CacheRunLastLCN = LastLCN;
     Context->CacheRunCurrentOffset = CurrentOffset;
 
     return AlreadyRead;
 }
 
+BOOL NtfsFixupRecord(PNTFS_RECORD Record)
+{
+    U16 *USA;
+    U16 USANumber;
+    U16 USACount;
+    U16 *Block;
+
+    USA = (U16*)((PCHAR)Record + Record->USAOffset);
+    USANumber = *(USA++);
+    USACount = Record->USACount - 1; /* Exclude the USA Number. */
+    Block = (U16*)((PCHAR)Record + NtfsBootSector->BytesPerSector - 2);
+
+    while (USACount)
+    {
+        if (*Block != USANumber)
+            return FALSE;
+        *Block = *(USA++);
+        Block = (U16*)((PCHAR)Block + NtfsBootSector->BytesPerSector);
+        USACount--;
+    }
+
+    return TRUE;
+}
+
 BOOL NtfsReadMftRecord(U32 MFTIndex, PNTFS_MFT_RECORD Buffer)
 {
-    return NtfsReadAttribute(&NtfsMFTContext, MFTIndex * NtfsMftRecordSize, (PCHAR)Buffer, NtfsMftRecordSize) == NtfsMftRecordSize;
+    U64 BytesRead;
+    
+    BytesRead = NtfsReadAttribute(&NtfsMFTContext, MFTIndex * NtfsMftRecordSize, (PCHAR)Buffer, NtfsMftRecordSize);
+    if (BytesRead != NtfsMftRecordSize)
+        return FALSE;
+
+    /* Apply update sequence array fixups. */
+    return NtfsFixupRecord((PNTFS_RECORD)Buffer);
 }
 
 #ifdef DEBUG
@@ -341,7 +387,7 @@ BOOL NtfsCompareFileName(PCHAR FileName, PNTFS_INDEX_ENTRY IndexEntry)
         return FALSE;
 
     /* Do case-sensitive compares for Posix file names. */
-    if (IndexEntry->FileName.FileNameType == FILE_NAME_POSIX)
+    if (IndexEntry->FileName.FileNameType == NTFS_FILE_NAME_POSIX)
     {
         for (i = 0; i < EntryFileNameLength; i++)
             if (EntryFileName[i] != FileName[i])
@@ -383,7 +429,7 @@ BOOL NtfsFindMftRecord(U32 MFTIndex, PCHAR FileName, U32 *OutMFTIndex)
     {
         Magic = MftRecord->Magic;
 
-        if (!NtfsFindAttribute(&IndexRootCtx, MftRecord, ATTR_TYPE_INDEX_ROOT, L"$I30"))
+        if (!NtfsFindAttribute(&IndexRootCtx, MftRecord, NTFS_ATTR_TYPE_INDEX_ROOT, L"$I30"))
         {
             MmFreeMemory(MftRecord);
             return FALSE;
@@ -405,7 +451,7 @@ BOOL NtfsFindMftRecord(U32 MFTIndex, PCHAR FileName, U32 *OutMFTIndex)
         DbgPrint((DPRINT_FILESYSTEM, "NtfsIndexRecordSize: %x IndexBlockSize: %x\n", NtfsIndexRecordSize, IndexRoot->IndexBlockSize));
 
         while (IndexEntry < IndexEntryEnd &&
-               !(IndexEntry->Flags & INDEX_ENTRY_END))
+               !(IndexEntry->Flags & NTFS_INDEX_ENTRY_END))
         {
             if (NtfsCompareFileName(FileName, IndexEntry))
             {
@@ -417,13 +463,13 @@ BOOL NtfsFindMftRecord(U32 MFTIndex, PCHAR FileName, U32 *OutMFTIndex)
 	    IndexEntry = (PNTFS_INDEX_ENTRY)((PCHAR)IndexEntry + IndexEntry->Length);
         }
 
-        if (IndexRoot->IndexHeader.Flags & LARGE_INDEX)
+        if (IndexRoot->IndexHeader.Flags & NTFS_LARGE_INDEX)
         {
             DbgPrint((DPRINT_FILESYSTEM, "Large Index!\n"));
 
             IndexBlockSize = IndexRoot->IndexBlockSize;
 
-            if (!NtfsFindAttribute(&IndexBitmapCtx, MftRecord, ATTR_TYPE_BITMAP, L"$I30"))
+            if (!NtfsFindAttribute(&IndexBitmapCtx, MftRecord, NTFS_ATTR_TYPE_BITMAP, L"$I30"))
             {
                 DbgPrint((DPRINT_FILESYSTEM, "Corrupted filesystem!\n"));
                 MmFreeMemory(MftRecord);
@@ -443,7 +489,7 @@ BOOL NtfsFindMftRecord(U32 MFTIndex, PCHAR FileName, U32 *OutMFTIndex)
             }
             NtfsReadAttribute(&IndexBitmapCtx, 0, BitmapData, BitmapDataSize);
 
-            if (!NtfsFindAttribute(&IndexAllocationCtx, MftRecord, ATTR_TYPE_INDEX_ALLOCATION, L"$I30"))
+            if (!NtfsFindAttribute(&IndexAllocationCtx, MftRecord, NTFS_ATTR_TYPE_INDEX_ALLOCATION, L"$I30"))
             {
                 DbgPrint((DPRINT_FILESYSTEM, "Corrupted filesystem!\n"));
                 MmFreeMemory(BitmapData);
@@ -463,7 +509,7 @@ BOOL NtfsFindMftRecord(U32 MFTIndex, PCHAR FileName, U32 *OutMFTIndex)
                 DbgPrint((DPRINT_FILESYSTEM, "RecordOffset: %x IndexAllocationSize: %x\n", RecordOffset, IndexAllocationSize));
                 for (; RecordOffset < IndexAllocationSize;)
                 {
-                    U8 Bit = 1 << ((RecordOffset / IndexBlockSize) & 3);
+                    U8 Bit = 1 << ((RecordOffset / IndexBlockSize) & 7);
                     U32 Byte = (RecordOffset / IndexBlockSize) >> 3;
                     if ((BitmapData[Byte] & Bit))
                         break;
@@ -471,16 +517,23 @@ BOOL NtfsFindMftRecord(U32 MFTIndex, PCHAR FileName, U32 *OutMFTIndex)
                 }
             
                 if (RecordOffset >= IndexAllocationSize)
+                {
                     break;
+                }
 
                 NtfsReadAttribute(&IndexAllocationCtx, RecordOffset, IndexRecord, IndexBlockSize);
+
+                if (!NtfsFixupRecord((PNTFS_RECORD)IndexRecord))
+                {
+                    break;
+                }
 
                 /* FIXME */
                 IndexEntry = (PNTFS_INDEX_ENTRY)(IndexRecord + 0x18 + *(U16 *)(IndexRecord + 0x18));
 	        IndexEntryEnd = (PNTFS_INDEX_ENTRY)(IndexRecord + IndexBlockSize);
 
                 while (IndexEntry < IndexEntryEnd &&
-                       !(IndexEntry->Flags & INDEX_ENTRY_END))
+                       !(IndexEntry->Flags & NTFS_INDEX_ENTRY_END))
                 {        
                     if (NtfsCompareFileName(FileName, IndexEntry))
                     {
@@ -520,7 +573,7 @@ BOOL NtfsLookupFile(PUCHAR FileName, PNTFS_MFT_RECORD MftRecord, PNTFS_ATTR_CONT
 
     DbgPrint((DPRINT_FILESYSTEM, "NtfsLookupFile() FileName = %s\n", FileName));
 
-    CurrentMFTIndex = FILE_ROOT;
+    CurrentMFTIndex = NTFS_FILE_ROOT;
     NumberOfPathParts = FsGetNumPathParts(FileName);
     for (i = 0; i < NumberOfPathParts; i++)
     {
@@ -545,7 +598,7 @@ BOOL NtfsLookupFile(PUCHAR FileName, PNTFS_MFT_RECORD MftRecord, PNTFS_ATTR_CONT
         return FALSE;
     }
 
-    if (!NtfsFindAttribute(DataContext, MftRecord, ATTR_TYPE_DATA, L""))
+    if (!NtfsFindAttribute(DataContext, MftRecord, NTFS_ATTR_TYPE_DATA, L""))
     {
         DbgPrint((DPRINT_FILESYSTEM, "NtfsLookupFile: Can't find data attribute\n"));
         return FALSE;
@@ -619,7 +672,7 @@ BOOL NtfsOpenVolume(U32 DriveNumber, U32 VolumeStartSector)
     RtlCopyMemory(NtfsMasterFileTable, (PCHAR)DISKREADBUFFER, NtfsMftRecordSize);
 
     DbgPrint((DPRINT_FILESYSTEM, "Searching for DATA attribute...\n"));
-    if (!NtfsFindAttribute(&NtfsMFTContext, NtfsMasterFileTable, ATTR_TYPE_DATA, L""))
+    if (!NtfsFindAttribute(&NtfsMFTContext, NtfsMasterFileTable, NTFS_ATTR_TYPE_DATA, L""))
     {
         FileSystemError("Can't find data attribute for Master File Table.");
         return FALSE;

@@ -1,3 +1,8 @@
+Changes in v1.8.22 (21/05/2004) (navaraf)
+
+- Fixed lots of bugs in NTFS code and added correct update sequence
+  fixups handling and untested NTFS 3+ sparse file support.
+
 Changes in v1.8.21 (21/05/2004) (navaraf)
 
 - Experimental NTFS reading support with no boot code yet.

@@ -1,7 +1,4 @@
 /*
- *  FreeLoader
- *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
- *
  *  FreeLoader NTFS support
  *  Copyright (C) 2004       Filip Navara  <xnavara@volny.cz>
  *
@@ -23,75 +20,79 @@
 #ifndef __NTFS_H
 #define __NTFS_H
 
-#ifdef NTFS_DEFS
+#define NTFS_FILE_MFT				0
+#define NTFS_FILE_MFTMIRR			1
+#define NTFS_FILE_LOGFILE			2
+#define NTFS_FILE_VOLUME			3
+#define NTFS_FILE_ATTRDEF			4
+#define NTFS_FILE_ROOT				5
+#define NTFS_FILE_BITMAP			6
+#define NTFS_FILE_BOOT				7
+#define NTFS_FILE_BADCLUS			8
+#define NTFS_FILE_QUOTA				9
+#define NTFS_FILE_UPCASE			10
 
-#define FILE_MFT				0
-#define FILE_MFTMIRR				1
-#define FILE_LOGFILE				2
-#define FILE_VOLUME				3
-#define FILE_ATTRDEF				4
-#define FILE_ROOT				5
-#define FILE_BITMAP				6
-#define FILE_BOOT				7
-#define FILE_BADCLUS				8
-#define FILE_QUOTA				9
-#define FILE_UPCASE				10
+#define NTFS_ATTR_TYPE_STANDARD_INFORMATION	0x10
+#define NTFS_ATTR_TYPE_ATTRIBUTE_LIST		0x20
+#define NTFS_ATTR_TYPE_FILENAME			0x30
+#define NTFS_ATTR_TYPE_SECURITY_DESCRIPTOR	0x50
+#define NTFS_ATTR_TYPE_DATA			0x80
+#define NTFS_ATTR_TYPE_INDEX_ROOT		0x90
+#define NTFS_ATTR_TYPE_INDEX_ALLOCATION		0xa0
+#define NTFS_ATTR_TYPE_BITMAP			0xb0
+#define NTFS_ATTR_TYPE_SYMLINK			0xc0
+#define NTFS_ATTR_TYPE_END			0xffffffff
 
-#define ATTR_TYPE_STANDARD_INFORMATION		0x10
-#define ATTR_TYPE_ATTRIBUTE_LIST			0x20
-#define ATTR_TYPE_FILENAME				0x30
-#define ATTR_TYPE_SECURITY_DESCRIPTOR		0x50
-#define ATTR_TYPE_DATA				0x80
-#define ATTR_TYPE_INDEX_ROOT				0x90
-#define ATTR_TYPE_INDEX_ALLOCATION			0xa0
-#define ATTR_TYPE_BITMAP				0xb0
-#define ATTR_TYPE_SYMLINK				0xc0
-#define ATTR_TYPE_END					0xffffffff
+#define NTFS_ATTR_NORMAL			0
+#define NTFS_ATTR_COMPRESSED			1
+#define NTFS_ATTR_RESIDENT			2
+#define NTFS_ATTR_ENCRYPTED			0x4000
 
-#define ATTR_NORMAL				0
-#define ATTR_COMPRESSED				1
-#define ATTR_RESIDENT				2
-#define ATTR_ENCRYPTED				0x4000
+#define NTFS_SMALL_INDEX			0
+#define NTFS_LARGE_INDEX			1
 
-#define SMALL_INDEX				0
-#define LARGE_INDEX				1
+#define NTFS_INDEX_ENTRY_NODE			1
+#define NTFS_INDEX_ENTRY_END			2
 
-#define INDEX_ENTRY_NODE			1
-#define INDEX_ENTRY_END				2
-
-#define FILE_NAME_POSIX				0
-#define FILE_NAME_WIN32				1
-#define FILE_NAME_DOS				2
-#define FILE_NAME_WIN32_AND_DOS			3 
-#endif
+#define NTFS_FILE_NAME_POSIX			0
+#define NTFS_FILE_NAME_WIN32			1
+#define NTFS_FILE_NAME_DOS			2
+#define NTFS_FILE_NAME_WIN32_AND_DOS		3 
 
 typedef struct
 {
-	U8		JumpBoot[3];				// Jump to the boot loader routine
-	U8		SystemId[8];				// System Id ("NTFS    ")
-	U16		BytesPerSector;				// Bytes per sector
-	U8		SectorsPerCluster;			// Number of sectors in a cluster
+	U8		JumpBoot[3];			// Jump to the boot loader routine
+	U8		SystemId[8];			// System Id ("NTFS    ")
+	U16		BytesPerSector;			// Bytes per sector
+	U8		SectorsPerCluster;		// Number of sectors in a cluster
 	U8		Unused1[7];
-	U8		MediaDescriptor;			// Media descriptor byte
+	U8		MediaDescriptor;		// Media descriptor byte
 	U8		Unused2[2];
-	U16		SectorsPerTrack;			// Number of sectors in a track
-	U16		NumberOfHeads;				// Number of heads on the disk
+	U16		SectorsPerTrack;		// Number of sectors in a track
+	U16		NumberOfHeads;			// Number of heads on the disk
 	U8		Unused3[8];
-	U8		DriveNumber;				// Int 0x13 drive number (e.g. 0x80)
+	U8		DriveNumber;			// Int 0x13 drive number (e.g. 0x80)
 	U8		CurrentHead;
-	U8		BootSignature;				// Extended boot signature (0x80)
+	U8		BootSignature;			// Extended boot signature (0x80)
 	U8		Unused4;
-	U64		VolumeSectorCount;			// Number of sectors in the volume
+	U64		VolumeSectorCount;		// Number of sectors in the volume
 	U64		MftLocation;
 	U64		MftMirrorLocation;
 	S8		ClustersPerMftRecord;		// Clusters per MFT Record
 	U8		Unused5[3];
 	S8		ClustersPerIndexRecord;		// Clusters per Index Record
 	U8		Unused6[3];
-	U64		VolumeSerialNumber;			// Volume serial number
+	U64		VolumeSerialNumber;		// Volume serial number
 	U8		BootCodeAndData[430];		// The remainder of the boot sector
-	U16		BootSectorMagic;			// 0xAA55
+	U16		BootSectorMagic;		// 0xAA55
 } PACKED NTFS_BOOTSECTOR, *PNTFS_BOOTSECTOR;
+
+typedef struct
+{
+	U32		Magic;
+	U16		USAOffset;					// Offset to the Update Sequence Array from the start of the ntfs record
+	U16		USACount;
+} PACKED NTFS_RECORD, *PNTFS_RECORD;
 
 typedef struct
 {
@@ -206,6 +207,7 @@ typedef struct
 	PUCHAR			CacheRun;
 	U64			CacheRunOffset;
 	S64			CacheRunStartLCN;
+	U64			CacheRunLength;
 	S64			CacheRunLastLCN;
 	U64			CacheRunCurrentOffset;
 } NTFS_ATTR_CONTEXT, *PNTFS_ATTR_CONTEXT;
