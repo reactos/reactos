@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.56 2004/12/09 14:20:06 royce Exp $
+/* $Id: driver.c,v 1.57 2004/12/23 23:33:54 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -1126,12 +1126,12 @@ IopInitializeBuiltinDriver(
       FileNameWithoutPath);
    Status = LdrProcessModule(ModuleLoadBase, &DeviceNode->ServiceName,
       &ModuleObject);
-   if (ModuleObject == NULL)
+   if (!NT_SUCCESS(Status))
    {
       if (ModuleDeviceNode == NULL)
          IopFreeDeviceNode(DeviceNode);
       CPRINT("Driver load failed, status (%x)\n", Status);
-      return STATUS_UNSUCCESSFUL;
+      return Status;
    }
 
    /*
