@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.67 2000/04/08 19:08:05 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.68 2000/04/15 23:13:17 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -444,7 +444,7 @@ RtlCopyLuid@8
 RtlCopySid@12
 RtlCopyString@8
 RtlCopyUnicodeString@8
-;RtlCreateAcl
+RtlCreateAcl@12
 ;RtlCreateAtomTable
 ;RtlCreateHeap
 ;RtlCreateRegistryKey
@@ -514,7 +514,7 @@ RtlInitializeSid@12
 ;RtlInsertUnicodePrefix
 RtlIntegerToChar@16
 RtlIntegerToUnicodeString@12
-;RtlIsNamelegalDOS8Dot3
+;RtlIsNameLegalDOS8Dot3
 RtlLargeIntegerAdd@16
 RtlLargeIntegerArithmeticShift@12
 RtlLargeIntegerDivide@20
@@ -542,8 +542,8 @@ RtlOemStringToUnicodeSize@4
 RtlOemStringToUnicodeString@12
 RtlOemToUnicodeN@20
 ;RtlPinAtomInAtomTable
-;RtlPrefixString
-;RtlPrefixUnicodeString
+RtlPrefixString@12
+RtlPrefixUnicodeString@12
 ;RtlQueryAtomInAtomTable
 ;RtlQueryRegistryValues
 ;RtlQueryTimeZoneInformation
@@ -558,7 +558,7 @@ RtlSetBits@12
 RtlSetDaclSecurityDescriptor@16
 RtlSetGroupSecurityDescriptor@12
 RtlSetOwnerSecurityDescriptor@12
-;RtlSetSaclSecurityDescriptor
+RtlSetSaclSecurityDescriptor@16
 ;RtlSetTimeZoneInformation
 ;RtlSplay
 RtlSubAuthorityCountSid@4

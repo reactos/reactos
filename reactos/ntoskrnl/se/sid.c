@@ -1,9 +1,9 @@
-/* $Id: sid.c,v 1.3 2000/01/05 21:57:00 dwelch Exp $
+/* $Id: sid.c,v 1.4 2000/04/15 23:14:32 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Security manager
- * FILE:              kernel/se/sid.c
+ * FILE:              ntoskrnl/se/sid.c
  * PROGRAMER:         David Welch <welch@cwcom.net>
  * REVISION HISTORY:
  *                 26/07/98: Added stubs for security functions
@@ -88,6 +88,5 @@ NTSTATUS STDCALL RtlCopySid (ULONG BufferLength, PSID Dest, PSID Src)
    memmove(Dest, Src, RtlLengthSid(Src));
    return(STATUS_SUCCESS);
 }
-
 
 /* EOF */

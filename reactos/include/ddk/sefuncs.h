@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_SEFUNCS_H
 #define _INCLUDE_DDK_SEFUNCS_H
-/* $Id: sefuncs.h,v 1.9 2000/04/06 02:27:17 ekohl Exp $ */
+/* $Id: sefuncs.h,v 1.10 2000/04/15 23:12:26 ekohl Exp $ */
 NTSTATUS STDCALL RtlCreateAcl(PACL Acl, ULONG AclSize, ULONG AclRevision);
 NTSTATUS STDCALL RtlQueryInformationAcl (PACL Acl, PVOID Information, ULONG InformationLength, ACL_INFORMATION_CLASS InformationClass);
 NTSTATUS STDCALL RtlSetInformationAcl (PACL Acl, PVOID Information, ULONG InformationLength, ACL_INFORMATION_CLASS InformationClass);
@@ -63,6 +63,7 @@ ULONG STDCALL RtlLengthSid (PSID Sid);
 PULONG STDCALL RtlSubAuthoritySid (PSID Sid, ULONG SubAuthority);
 PUCHAR STDCALL RtlSubAuthorityCountSid (PSID Sid);
 BOOLEAN STDCALL RtlValidSid (PSID Sid);
+NTSTATUS STDCALL RtlConvertSidToUnicodeString (PUNICODE_STRING String, PSID Sid, BOOLEAN AllocateBuffer);
 
 BOOLEAN STDCALL RtlAreAllAccessesGranted (ACCESS_MASK GrantedAccess, ACCESS_MASK DesiredAccess);
 BOOLEAN STDCALL RtlAreAnyAccessesGranted (ACCESS_MASK GrantedAccess, ACCESS_MASK DesiredAccess);

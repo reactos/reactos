@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.14 2000/03/03 00:48:50 ekohl Exp $
+/* $Id: unicode.c,v 1.15 2000/04/15 23:13:48 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -954,6 +954,93 @@ RtlOemStringToUnicodeString (
 	DestinationString->Buffer[Length / sizeof(WCHAR)] = 0;
 
 	return STATUS_SUCCESS;
+}
+
+
+BOOLEAN
+STDCALL
+RtlPrefixString (
+	PANSI_STRING	String1,
+	PANSI_STRING	String2,
+	BOOLEAN		CaseInsensitive
+	)
+{
+	PCHAR pc1;
+	PCHAR pc2;
+	ULONG Length;
+
+	if (String2->Length < String1->Length)
+		return FALSE;
+
+	Length = String1->Length;
+	pc1 = String1->Buffer;
+	pc2 = String2->Buffer;
+
+	if (pc1 && pc2)
+	{
+		if (CaseInsensitive)
+		{
+			while (Length--)
+			{
+				if (RtlUpperChar (*pc1++) != RtlUpperChar (*pc2++))
+					return FALSE;
+			}
+		}
+		else
+		{
+			while (Length--)
+			{
+				if (*pc1++ != *pc2++)
+					return FALSE;
+			}
+		}
+		return TRUE;
+	}
+	return FALSE;
+}
+
+
+BOOLEAN
+STDCALL
+RtlPrefixUnicodeString (
+	PUNICODE_STRING	String1,
+	PUNICODE_STRING	String2,
+	BOOLEAN		CaseInsensitive
+	)
+{
+	PWCHAR pc1;
+	PWCHAR pc2;
+	ULONG Length;
+
+	if (String2->Length < String1->Length)
+		return FALSE;
+
+	Length = String1->Length / 2;
+	pc1 = String1->Buffer;
+	pc2  = String2->Buffer;
+
+	if (pc1 && pc2)
+	{
+		if (CaseInsensitive)
+		{
+			while (Length--)
+			{
+				if (RtlUpcaseUnicodeChar (*pc1++)
+				    != RtlUpcaseUnicodeChar (*pc2++))
+					return FALSE;
+			}
+		}
+		else
+		{
+			while (Length--)
+			{
+				if( *pc1++ != *pc2++ )
+					return FALSE;
+			}
+		}
+		return TRUE;
+	}
+	return FALSE;
 }
 
 

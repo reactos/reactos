@@ -1,4 +1,4 @@
-/* $Id: sd.c,v 1.2 1999/12/26 17:22:19 ea Exp $
+/* $Id: sd.c,v 1.3 2000/04/15 23:14:32 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -275,6 +275,83 @@ NTSTATUS STDCALL RtlGetGroupSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDes
    return(STATUS_SUCCESS);
 }
 
+NTSTATUS
+STDCALL
+RtlGetSaclSecurityDescriptor (
+	PSECURITY_DESCRIPTOR	SecurityDescriptor,
+	PBOOLEAN		SaclPresent,
+	PACL			*Sacl,
+	PBOOLEAN		SaclDefaulted)
+{
+   if (SecurityDescriptor->Revision != 1)
+     {
+	return(STATUS_UNSUCCESSFUL);
+     }
+   if (!(SecurityDescriptor->Control & SE_SACL_PRESENT))
+     {
+	*SaclPresent = 0;
+	return(STATUS_SUCCESS);
+     }
+   *SaclPresent = 1;
+   if (SecurityDescriptor->Sacl == NULL)
+     {
+	*Sacl = NULL;
+     }
+   else
+     {
+	if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
+	  {
+	     *Sacl = (PACL)((ULONG)SecurityDescriptor->Sacl +
+			    (PVOID)SecurityDescriptor);
+	  }
+	else
+	  {
+	     *Sacl = SecurityDescriptor->Sacl;
+	  }
+     }
+   if (SecurityDescriptor->Control & SE_SACL_DEFAULTED)
+     {
+	*SaclDefaulted = 1;
+     }
+   else
+     {
+	*SaclDefaulted = 0;
+     }
+   return(STATUS_SUCCESS);
+}
+
+NTSTATUS
+STDCALL
+RtlSetSaclSecurityDescriptor (
+	PSECURITY_DESCRIPTOR	SecurityDescriptor,
+	BOOLEAN			SaclPresent,
+	PACL			Sacl,
+	BOOLEAN			SaclDefaulted
+	)
+{
+   if (SecurityDescriptor->Revision != 1)
+     {
+	return(STATUS_UNSUCCESSFUL);
+     }
+   if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
+     {
+	return(STATUS_UNSUCCESSFUL);
+     }
+   if (!SaclPresent)
+     {
+	SecurityDescriptor->Control = SecurityDescriptor->Control & ~(SE_SACL_PRESENT);
+	return(STATUS_SUCCESS);
+     }
+   SecurityDescriptor->Control = SecurityDescriptor->Control | SE_SACL_PRESENT;
+   SecurityDescriptor->Sacl = Sacl;
+   SecurityDescriptor->Control = SecurityDescriptor->Control & ~(SE_SACL_DEFAULTED);
+   if (SaclDefaulted)
+     {
+	SecurityDescriptor->Control = SecurityDescriptor->Control | SE_SACL_DEFAULTED;
+     }
+   return(STATUS_SUCCESS);
+}
+
 NTSTATUS STDCALL RtlAbsoluteToSelfRelativeSD (PSECURITY_DESCRIPTOR AbsSD,
 				     PSECURITY_DESCRIPTOR RelSD,
 				     PULONG BufferLength)
@@ -285,6 +362,5 @@ NTSTATUS STDCALL RtlAbsoluteToSelfRelativeSD (PSECURITY_DESCRIPTOR AbsSD,
      }
    UNIMPLEMENTED;
 }
-
 
 /* EOF */

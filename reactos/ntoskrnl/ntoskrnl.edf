@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.54 2000/04/08 19:08:05 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.55 2000/04/15 23:13:17 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -434,6 +434,7 @@ RtlCopyLuid=RtlCopyLuid@8
 RtlCopySid=RtlCopySid@12
 RtlCopyString=RtlCopyString@8
 RtlCopyUnicodeString=RtlCopyUnicodeString@8
+RtlCreateAcl=RtlCreateAcl@12
 RtlCreateSecurityDescriptor=RtlCreateSecurityDescriptor@8
 RtlCreateUnicodeString=RtlCreateUnicodeString@8
 RtlDowncaseUnicodeString=RtlDowncaseUnicodeString@12
@@ -491,6 +492,8 @@ RtlNumberOfSetBits=RtlNumberOfSetBits@4
 RtlOemStringToCountedUnicodeString=RtlOemStringToCountedUnicodeString@12
 RtlOemStringToUnicodeSize=RtlOemStringToUnicodeSize@4
 RtlOemStringToUnicodeString=RtlOemStringToUnicodeString@12
+RtlPrefixString=RtlPrefixString@12
+RtlPrefixUnicodeString=RtlPrefixUnicodeString@12
 RtlSecondsSince1970ToTime=RtlSecondsSince1970ToTime@8
 RtlSecondsSince1980ToTime=RtlSecondsSince1980ToTime@8
 RtlSetAllBits=RtlSetAllBits@4
@@ -498,6 +501,7 @@ RtlSetBits=RtlSetBits@12
 RtlSetDaclSecurityDescriptor=RtlSetDaclSecurityDescriptor@16
 RtlSetGroupSecurityDescriptor=RtlSetGroupSecurityDescriptor@12
 RtlSetOwnerSecurityDescriptor=RtlSetOwnerSecurityDescriptor@12
+RtlSetSaclSecurityDescriptor=RtlSetSaclSecurityDescriptor@16
 RtlSubAuthorityCountSid=RtlSubAuthorityCountSid@4
 RtlSubAuthoritySid=RtlSubAuthoritySid@8
 RtlTimeFieldsToTime=RtlTimeFieldsToTime@8

@@ -1,9 +1,9 @@
-/* $Id: sid.c,v 1.1 2000/03/12 01:17:59 ekohl Exp $
+/* $Id: sid.c,v 1.2 2000/04/15 23:10:41 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Security manager
- * FILE:              kernel/se/sid.c
+ * FILE:              lib/ntdll/rtl/sid.c
  * PROGRAMER:         David Welch <welch@cwcom.net>
  * REVISION HISTORY:
  *                 26/07/98: Added stubs for security functions
@@ -186,5 +186,77 @@ RtlEqualPrefixSid (
 }
 
 
+NTSTATUS
+STDCALL
+RtlConvertSidToUnicodeString (
+	PUNICODE_STRING String,
+	PSID		Sid,
+	BOOLEAN		AllocateBuffer
+	)
+{
+	WCHAR Buffer[256];
+	PWSTR wcs;
+	ULONG Length;
+	BYTE  i;
+
+	if (RtlValidSid (Sid) == FALSE)
+		return STATUS_INVALID_SID;
+
+	wcs = Buffer;
+	wcs += swprintf (wcs, L"S-%u-", Sid->Revision);
+	if (!Sid->IdentifierAuthority.Value[0] &&
+	    !Sid->IdentifierAuthority.Value[1])
+	{
+		wcs += swprintf (wcs,
+		                 L"%u",
+		                 (DWORD)Sid->IdentifierAuthority.Value[2] << 24 |
+		                 (DWORD)Sid->IdentifierAuthority.Value[3] << 16 |
+		                 (DWORD)Sid->IdentifierAuthority.Value[4] << 8 |
+		                 (DWORD)Sid->IdentifierAuthority.Value[5]);
+	}
+	else
+	{
+		wcs += swprintf (wcs,
+		                 L"0x%02hx%02hx%02hx%02hx%02hx%02hx",
+		                 Sid->IdentifierAuthority.Value[0],
+		                 Sid->IdentifierAuthority.Value[1],
+		                 Sid->IdentifierAuthority.Value[2],
+		                 Sid->IdentifierAuthority.Value[3],
+		                 Sid->IdentifierAuthority.Value[4],
+		                 Sid->IdentifierAuthority.Value[5]);
+	}
+
+	for (i = 0; i < Sid->SubAuthorityCount; i++)
+	{
+		wcs += swprintf (wcs,
+		                 L"-%u",
+		                 Sid->SubAuthority[0]);
+	}
+
+	Length = (wcs - Buffer) * sizeof(WCHAR);
+	if(AllocateBuffer)
+	{
+		String->Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
+		                                  0,
+		                                  Length + sizeof(WCHAR));
+		if (String->Buffer == NULL)
+			return STATUS_NO_MEMORY;
+		String->MaximumLength = Length + sizeof(WCHAR);
+	}
+	else
+	{
+		if (Length > String->MaximumLength)
+			return STATUS_BUFFER_TOO_SMALL;
+	}
+
+	String->Length = Length;
+	memmove (String->Buffer,
+	         Buffer,
+	         Length);
+	if (Length < String->MaximumLength)
+		String->Buffer[Length] = 0;
+
+	return STATUS_SUCCESS;
+}
 
 /* EOF */

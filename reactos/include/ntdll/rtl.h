@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.14 2000/04/07 12:45:02 ekohl Exp $
+/* $Id: rtl.h,v 1.15 2000/04/15 23:11:42 ekohl Exp $
  *
  */
 
@@ -65,10 +65,33 @@ RtlCompactHeap (
 	DWORD	flags
 	);
 
+BOOLEAN
+STDCALL
+RtlEqualComputerName (
+	IN	PUNICODE_STRING	ComputerName1,
+	IN	PUNICODE_STRING	ComputerName2
+	);
+
+BOOLEAN
+STDCALL
+RtlEqualDomainName (
+	IN	PUNICODE_STRING	DomainName1,
+	IN	PUNICODE_STRING	DomainName2
+	);
+
 VOID
 STDCALL
 RtlEraseUnicodeString (
 	IN	PUNICODE_STRING	String
+	);
+
+NTSTATUS
+STDCALL
+RtlLargeIntegerToChar (
+	IN	PLARGE_INTEGER	Value,
+	IN	ULONG		Base,
+	IN	ULONG		Length,
+	IN OUT	PCHAR		String
 	);
 
 /* Path functions */

@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.31 2000/04/14 01:42:07 ekohl Exp $
+/* $Id: rtl.h,v 1.32 2000/04/15 23:12:26 ekohl Exp $
  * 
  */
 
@@ -990,6 +990,22 @@ RtlOemToUnicodeN (
 	PULONG	ResultSize,
 	PCHAR	OemString,
 	ULONG	OemSize
+	);
+
+BOOLEAN
+STDCALL
+RtlPrefixString (
+	PANSI_STRING	String1,
+	PANSI_STRING	String2,
+	BOOLEAN		CaseInsensitive
+	);
+
+BOOLEAN
+STDCALL
+RtlPrefixUnicodeString (
+	PUNICODE_STRING	String1,
+	PUNICODE_STRING	String2,
+	BOOLEAN		CaseInsensitive
 	);
 
 NTSTATUS

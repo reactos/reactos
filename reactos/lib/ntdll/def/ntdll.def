@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.51 2000/04/14 01:43:20 ekohl Exp $
+; $Id: ntdll.def,v 1.52 2000/04/15 23:10:02 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -280,10 +280,10 @@ RtlCompareUnicodeString@12
 ;RtlConvertExclusiveToShared
 RtlConvertLongToLargeInteger@4
 ;RtlConvertSharedToExclusive
-;RtlConvertSidToUnicodeString
+RtlConvertSidToUnicodeString@12
 ;RtlConvertUiListToApiList
 RtlConvertUlongToLargeInteger@4
-;RtlCopyLuid
+RtlCopyLuid@8
 ;RtlCopyLuidAndAttributesArray
 ;RtlCopySecurityDescriptor
 RtlCopySid@12
@@ -341,9 +341,9 @@ RtlEnterCriticalSection@4
 ;RtlEnumerateGenericTable
 ;RtlEnumerateGenericTableWithoutSplaying
 ;RtlEnumerateProperties
-;RtlEqualComputerName
-;RtlEqualDomainName
-;RtlEqualLuid
+RtlEqualComputerName@8
+RtlEqualDomainName@8
+RtlEqualLuid@8
 RtlEqualPrefixSid@8
 RtlEqualSid@8
 RtlEqualString@12
@@ -429,7 +429,7 @@ RtlLargeIntegerNegate@8
 RtlLargeIntegerShiftLeft@12
 RtlLargeIntegerShiftRight@12
 RtlLargeIntegerSubtract@16
-;RtlLargeIntegerToChar
+RtlLargeIntegerToChar@16
 RtlLeaveCriticalSection@4
 RtlLengthRequiredSid@4
 RtlLengthSecurityDescriptor@4
@@ -458,8 +458,8 @@ RtlOemToUnicodeN@20
 ;RtlOpenCurrentUser
 ;RtlPcToFileHeader
 ;RtlPinAtomInAtomTable
-;RtlPrefixString
-;RtlPrefixUnicodeString
+RtlPrefixString@12
+RtlPrefixUnicodeString@12
 ;RtlPropertySetNameToGuid
 ;RtlProtectHeap
 ;RtlQueryAtomInAtomTable

@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.40 2000/04/14 01:43:20 ekohl Exp $
+; $Id: ntdll.edf,v 1.41 2000/04/15 23:10:02 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -256,7 +256,9 @@ RtlCompareMemoryUlong=RtlCompareMemoryUlong@12
 RtlCompareString=RtlCompareString@12
 RtlCompareUnicodeString=RtlCompareUnicodeString@12
 RtlConvertLongToLargeInteger=RtlConvertLongToLargeInteger@4
+RtlConvertSidToUnicodeString=RtlConvertSidToUnicodeString@12
 RtlConvertUlongToLargeInteger=RtlConvertUlongToLargeInteger@4
+RtlCopyLuid=RtlCopyLuid@8
 RtlCopySid=RtlCopySid@12
 RtlCopyString=RtlCopyString@8
 RtlCopyUnicodeString=RtlCopyUnicodeString@8
@@ -284,6 +286,9 @@ RtlEnlargedIntegerMultiply=RtlEnlargedIntegerMultiply@8
 RtlEnlargedUnsignedDivide=RtlEnlargedUnsignedDivide@16
 RtlEnlargedUnsignedMultiply=RtlEnlargedUnsignedMultiply@8
 RtlEnterCriticalSection=RtlEnterCriticalSection@4
+RtlEqualComputerName=RtlEqualComputerName@8
+RtlEqualDomainName=RtlEqualDomainName@8
+RtlEqualLuid=RtlEqualLuid@8
 RtlEqualPrefixSid=RtlEqualPrefixSid@8
 RtlEqualSid=RtlEqualSid@8
 RtlEqualString=RtlEqualString@12
@@ -339,6 +344,7 @@ RtlLargeIntegerNegate=RtlLargeIntegerNegate@8
 RtlLargeIntegerShiftLeft=RtlLargeIntegerShiftLeft@12
 RtlLargeIntegerShiftRight=RtlLargeIntegerShiftRight@12
 RtlLargeIntegerSubtract=RtlLargeIntegerSubtract@16
+RtlLargeIntegerToChar=RtlLargeIntegerToChar@16
 RtlLeaveCriticalSection=RtlLeaveCriticalSection@4
 RtlLengthRequiredSid=RtlLengthRequiredSid@4
 RtlLengthSecurityDescriptor=RtlLengthSecurityDescriptor@4
@@ -358,6 +364,8 @@ RtlNumberOfSetBits=RtlNumberOfSetBits@4
 RtlOemStringToUnicodeSize=RtlOemStringToUnicodeSize@4
 RtlOemStringToUnicodeString=RtlOemStringToUnicodeString@12
 RtlOemToUnicodeN=RtlOemToUnicodeN@20
+RtlPrefixString=RtlPrefixString@12
+RtlPrefixUnicodeString=RtlPrefixUnicodeString@12
 RtlQueryEnvironmentVariable_U=RtlQueryEnvironmentVariable_U@12
 RtlQueryInformationAcl=RtlQueryInformationAcl@16
 RtlReAllocateHeap=RtlReAllocateHeap@16
