@@ -1,4 +1,4 @@
-/* $Id: blue.c,v 1.20 2000/02/24 13:16:40 ekohl Exp $
+/* $Id: blue.c,v 1.21 2000/04/23 17:42:57 phreak Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -157,15 +157,15 @@ NTSTATUS
 ScrWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     PIO_STACK_LOCATION stk = IoGetCurrentIrpStackLocation (Irp);
-    PDEVICE_EXTENSION DeviceExtension;
+    PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
     NTSTATUS Status;
     char *pch = Irp->UserBuffer;
     char *vidmem;
     int i, j, offset;
     int cursorx, cursory;
     int rows, columns;
+    int processed = DeviceExtension->Mode & ENABLE_PROCESSED_OUTPUT;
 
-    DeviceExtension = DeviceObject->DeviceExtension;
     vidmem  = DeviceExtension->VideoMemory;
     rows = DeviceExtension->Rows;
     columns = DeviceExtension->Columns;
@@ -178,83 +178,90 @@ ScrWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
     cursory = offset / columns;
     cursorx = offset % columns;
 
-    for (i = 0; i < stk->Parameters.Write.Length; i++, pch++)
-    {
-        switch (*pch)
-        {
-            case '\b':
-                if (cursorx > 0)
-                {
-                    cursorx--;
-                }
-                else if (cursory > 0)
-                {
-                    cursorx = columns - 1;
-                    cursory--;
-                }   
-                break;
+    if( processed == 0 )
+       {
+	  /* raw output mode */
+	  memcpy( &vidmem[(cursorx * 2) + (cursory * columns * 2)], pch, stk->Parameters.Write.Length );
+	  offset += (stk->Parameters.Write.Length / 2);
+       }
+    else {
+       for (i = 0; i < stk->Parameters.Write.Length; i++, pch++)
+	  {
+	     switch (*pch)
+		{
+		case '\b':
+		   if (cursorx > 0)
+		      {
+			 cursorx--;
+		      }
+		   else if (cursory > 0)
+		      {
+			 cursorx = columns - 1;
+			 cursory--;
+		      }   
+		   break;
+		   
+		case '\n':
+		   cursory++;
+		   cursorx = 0;
+		   break;
+		   
+		case '\r':
+		   break;
+		   
+		case '\t':
+		   offset = TAB_WIDTH - (cursorx % TAB_WIDTH);
+		   for (j = 0; j < offset; j++)
+		      {
+			 vidmem[(cursorx * 2) + (cursory * columns * 2)] = ' ';
+			 cursorx++;
+			 
+			 if (cursorx >= columns)
+			    {
+			       cursory++;
+			       cursorx = 0;
+			    }
+		      }
+		   break;
+		   
+		default:
+		   vidmem[(cursorx * 2) + (cursory * columns * 2)] = *pch;
+		   vidmem[(cursorx * 2) + (cursory * columns * 2) + 1] = (char) DeviceExtension->CharAttribute;
+		   cursorx++;
+		   if (cursorx >= columns)
+		      {
+			 cursory++;
+			 cursorx = 0;
+		      }
+		   break;
+		}
+	     
+	     if (cursory >= rows)
+		{
+		   unsigned short *LinePtr;
 
-            case '\n':
-                cursory++;
-                cursorx = 0;
-                break;
+		   memcpy (vidmem,
+			   &vidmem[columns * 2],
+			   columns * (rows - 1) * 2);
 
-            case '\r':
-                break;
+		   LinePtr = (unsigned short *) &vidmem[columns * (rows - 1) * 2];
 
-            case '\t':
-                offset = TAB_WIDTH - (cursorx % TAB_WIDTH);
-                for (j = 0; j < offset; j++)
-                {
-                    vidmem[(cursorx * 2) + (cursory * columns * 2)] = ' ';
-                    cursorx++;
-
-                    if (cursorx >= columns)
-                    {
-                        cursory++;
-                        cursorx = 0;
-                    }
-                }
-                break;
-
-            default:
-                vidmem[(cursorx * 2) + (cursory * columns * 2)] = *pch;
-                vidmem[(cursorx * 2) + (cursory * columns * 2) + 1] = (char) DeviceExtension->CharAttribute;
-                cursorx++;
-                if (cursorx >= columns)
-                {
-                    cursory++;
-                    cursorx = 0;
-                }
-                break;
-        }
-
-        if (cursory >= rows)
-        {
-            unsigned short *LinePtr;
-
-            memcpy (vidmem,
-                    &vidmem[columns * 2],
-                    columns * (rows - 1) * 2);
-
-            LinePtr = (unsigned short *) &vidmem[columns * (rows - 1) * 2];
-
-            for (j = 0; j < columns; j++)
-            {
-                LinePtr[j] = DeviceExtension->CharAttribute << 8;
-            }
-            cursory = rows - 1;
-            for (j = 0; j < columns; j++)
-            {
-                vidmem[(j * 2) + (cursory * columns * 2)] = ' ';
-                vidmem[(j * 2) + (cursory * columns * 2) + 1] = (char)DeviceExtension->CharAttribute;
-            }
-        }
+		   for (j = 0; j < columns; j++)
+		      {
+			 LinePtr[j] = DeviceExtension->CharAttribute << 8;
+		      }
+		   cursory = rows - 1;
+		   for (j = 0; j < columns; j++)
+		      {
+			 vidmem[(j * 2) + (cursory * columns * 2)] = ' ';
+			 vidmem[(j * 2) + (cursory * columns * 2) + 1] = (char)DeviceExtension->CharAttribute;
+		      }
+		}
+	  }
+       
+       /* Set the cursor position */
+       offset = (cursory * columns) + cursorx;
     }
-
-    /* Set the cursor position */
-    offset = (cursory * columns) + cursorx;
-
     WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSLO);
     WRITE_PORT_UCHAR (CRTC_DATA, offset);
     WRITE_PORT_UCHAR (CRTC_COMMAND, CRTC_CURSORPOSHI);
@@ -296,8 +303,8 @@ ScrIoControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
                 offset += (READ_PORT_UCHAR (CRTC_DATA) << 8);
                 __asm__("sti\n\t");
 
-                pcsbi->dwSize.X = rows;
-                pcsbi->dwSize.Y = columns;
+                pcsbi->dwSize.X = columns;
+                pcsbi->dwSize.Y = rows;
 
                 pcsbi->dwCursorPosition.X = (SHORT)(offset % columns);
                 pcsbi->dwCursorPosition.Y = (SHORT)(offset / columns);
