@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.77 2002/07/20 21:49:35 dwelch Exp $
+# $Id: Makefile,v 1.78 2002/07/25 13:18:31 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -83,6 +83,7 @@ OBJECTS_NT = \
 OBJECTS_RTL = \
 	rtl/atom.o \
 	rtl/bitmap.o \
+	rtl/compress.o \
 	rtl/ctype.o \
 	rtl/dos8dot3.o \
 	rtl/error.o \

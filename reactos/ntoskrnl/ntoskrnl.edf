@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.123 2002/07/18 21:49:59 ei Exp $
+; $Id: ntoskrnl.edf,v 1.124 2002/07/25 13:18:31 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -676,8 +676,8 @@ RtlCompareMemory=RtlCompareMemory@12
 RtlCompareMemoryUlong=RtlCompareMemoryUlong@12
 RtlCompareString=RtlCompareString@12
 RtlCompareUnicodeString=RtlCompareUnicodeString@12
-;RtlCompressBuffer
-;RtlCompressChunks
+RtlCompressBuffer=RtlCompressBuffer@32
+RtlCompressChunks=RtlCompressChunks@28
 RtlConvertLongToLargeInteger=RtlConvertLongToLargeInteger@4
 RtlConvertSidToUnicodeString=RtlConvertSidToUnicodeString@12
 RtlConvertUlongToLargeInteger=RtlConvertUlongToLargeInteger@4
@@ -692,15 +692,15 @@ RtlCreateRegistryKey=RtlCreateRegistryKey@8
 RtlCreateSecurityDescriptor=RtlCreateSecurityDescriptor@8
 RtlCreateUnicodeString=RtlCreateUnicodeString@8
 RtlCustomCPToUnicodeN=RtlCustomCPToUnicodeN@24
-;RtlDecompressBuffer
-;RtlDecompressChunks
-;RtlDecompressFragment
+RtlDecompressBuffer=RtlDecompressBuffer@24
+RtlDecompressChunks=RtlDecompressChunks@28
+RtlDecompressFragment=RtlDecompressFragment@32
 ;RtlDelete
 RtlDeleteAtomFromAtomTable=RtlDeleteAtomFromAtomTable@8
 ;RtlDeleteElementGenericTable
 ;RtlDeleteNoSplay
 RtlDeleteRegistryValue=RtlDeleteRegistryValue@12
-;RtlDescribeChunk
+RtlDescribeChunk=RtlDescribeChunk@20
 RtlDestroyAtomTable=RtlDestroyAtomTable@4
 ;RtlDestroyHeap
 RtlDowncaseUnicodeString=RtlDowncaseUnicodeString@12
@@ -736,7 +736,7 @@ RtlFreeOemString=RtlFreeOemString@4
 RtlFreeUnicodeString=RtlFreeUnicodeString@4
 RtlGenerate8dot3Name=RtlGenerate8dot3Name@16
 ;RtlGetCallersAddress
-;RtlGetCompressionWorkSpaceSize
+RtlGetCompressionWorkSpaceSize=RtlGetCompressionWorkSpaceSize@12
 RtlGetDaclSecurityDescriptor=RtlGetDaclSecurityDescriptor@16
 RtlGetDefaultCodePage=RtlGetDefaultCodePage@8
 ;RtlGetElementGenericTable
@@ -790,7 +790,7 @@ RtlQueryTimeZoneInformation=RtlQueryTimeZoneInformation@4
 RtlRaiseException=RtlRaiseException@4
 ;RtlRandom
 ;RtlRemoveUnicodePrefix
-;RtlReserveChunk
+RtlReserveChunk=RtlReserveChunk@20
 RtlSecondsSince1970ToTime=RtlSecondsSince1970ToTime@8
 RtlSecondsSince1980ToTime=RtlSecondsSince1980ToTime@8
 RtlSetAllBits=RtlSetAllBits@4

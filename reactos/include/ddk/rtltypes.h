@@ -1,9 +1,19 @@
-/* $Id: rtltypes.h,v 1.2 2002/06/05 16:49:57 ekohl Exp $
+/* $Id: rtltypes.h,v 1.3 2002/07/25 13:15:08 ekohl Exp $
  * 
  */
 
 #ifndef __DDK_RTLTYPES_H
 #define __DDK_RTLTYPES_H
+
+
+#define COMPRESSION_FORMAT_NONE		0x0000
+#define COMPRESSION_FORMAT_DEFAULT	0x0001
+#define COMPRESSION_FORMAT_LZNT1	0x0002
+
+#define COMPRESSION_ENGINE_STANDARD	0x0000
+#define COMPRESSION_ENGINE_MAXIMUM	0x0100
+#define COMPRESSION_ENGINE_HIBER	0x0200
+
 
 typedef struct _INITIAL_TEB
 {
@@ -180,5 +190,17 @@ typedef struct _GENERATE_NAME_CONTEXT
   WCHAR ExtensionBuffer[4];
   ULONG LastIndexValue;
 } GENERATE_NAME_CONTEXT, *PGENERATE_NAME_CONTEXT;
+
+
+typedef struct _COMPRESSED_DATA_INFO
+{
+  USHORT CompressionFormatAndEngine;
+  UCHAR CompressionUnitShift;
+  UCHAR ChunkShift;
+  UCHAR ClusterShift;
+  UCHAR Reserved;
+  USHORT NumberOfChunks;
+  ULONG CompressedChunkSizes[1];
+} COMPRESSED_DATA_INFO, *PCOMPRESSED_DATA_INFO;
 
 #endif /* __DDK_RTLTYPES_H */

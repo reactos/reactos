@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.61 2002/06/05 16:49:56 ekohl Exp $
+/* $Id: rtl.h,v 1.62 2002/07/25 13:15:08 ekohl Exp $
  * 
  */
 
@@ -605,25 +605,35 @@ RtlCompareUnicodeString (
 	BOOLEAN		BaseInsensitive
 	);
 
-LARGE_INTEGER
-STDCALL
-RtlConvertLongToLargeInteger (
-	IN	LONG	SignedInteger
-	);
+NTSTATUS STDCALL
+RtlCompressBuffer(IN USHORT CompressionFormatAndEngine,
+		  IN PUCHAR UncompressedBuffer,
+		  IN ULONG UncompressedBufferSize,
+		  OUT PUCHAR CompressedBuffer,
+		  IN ULONG CompressedBufferSize,
+		  IN ULONG UncompressedChunkSize,
+		  OUT PULONG FinalCompressedSize,
+		  IN PVOID WorkSpace);
 
-NTSTATUS
-STDCALL
-RtlConvertSidToUnicodeString (
-	IN OUT	PUNICODE_STRING	String,
-	IN	PSID		Sid,
-	IN	BOOLEAN		AllocateString
-	);
+NTSTATUS STDCALL
+RtlCompressChunks(IN PUCHAR UncompressedBuffer,
+		  IN ULONG UncompressedBufferSize,
+		  OUT PUCHAR CompressedBuffer,
+		  IN ULONG CompressedBufferSize,
+		  IN OUT PCOMPRESSED_DATA_INFO CompressedDataInfo,
+		  IN ULONG CompressedDataInfoLength,
+		  IN PVOID WorkSpace);
 
-LARGE_INTEGER
-STDCALL
-RtlConvertUlongToLargeInteger (
-	IN	ULONG	UnsignedInteger
-	);
+LARGE_INTEGER STDCALL
+RtlConvertLongToLargeInteger(IN LONG SignedInteger);
+
+NTSTATUS STDCALL
+RtlConvertSidToUnicodeString(IN OUT PUNICODE_STRING String,
+			     IN PSID Sid,
+			     IN BOOLEAN AllocateString);
+
+LARGE_INTEGER STDCALL
+RtlConvertUlongToLargeInteger(IN ULONG UnsignedInteger);
 
 #if 0
 VOID
@@ -721,32 +731,54 @@ RtlCustomCPToUnicodeN (
 	ULONG		CustomSize
 	);
 
-NTSTATUS
-STDCALL
-RtlDeleteAtomFromAtomTable (
-	IN	PRTL_ATOM_TABLE	AtomTable,
-	IN	RTL_ATOM	Atom
-	);
+NTSTATUS STDCALL
+RtlDecompressBuffer(IN USHORT CompressionFormat,
+		    OUT PUCHAR UncompressedBuffer,
+		    IN ULONG UncompressedBufferSize,
+		    IN PUCHAR CompressedBuffer,
+		    IN ULONG CompressedBufferSize,
+		    OUT PULONG FinalUncompressedSize);
 
-NTSTATUS
-STDCALL
-RtlDeleteRegistryValue (
-	ULONG	RelativeTo,
-	PWSTR	Path,
-	PWSTR	ValueName
-	);
+NTSTATUS STDCALL
+RtlDecompressChunks(OUT PUCHAR UncompressedBuffer,
+		    IN ULONG UncompressedBufferSize,
+		    IN PUCHAR CompressedBuffer,
+		    IN ULONG CompressedBufferSize,
+		    IN PUCHAR CompressedTail,
+		    IN ULONG CompressedTailSize,
+		    IN PCOMPRESSED_DATA_INFO CompressedDataInfo);
 
-NTSTATUS
-STDCALL
-RtlDestroyAtomTable (
-	IN	PRTL_ATOM_TABLE	AtomTable
-	);
+NTSTATUS STDCALL
+RtlDecompressFragment(IN USHORT CompressionFormat,
+		      OUT PUCHAR UncompressedFragment,
+		      IN ULONG UncompressedFragmentSize,
+		      IN PUCHAR CompressedBuffer,
+		      IN ULONG CompressedBufferSize,
+		      IN ULONG FragmentOffset,
+		      OUT PULONG FinalUncompressedSize,
+		      IN PVOID WorkSpace);
 
-BOOL
-STDCALL
-RtlDestroyHeap (
-	HANDLE	hheap
-	);
+NTSTATUS STDCALL
+RtlDeleteAtomFromAtomTable(IN PRTL_ATOM_TABLE AtomTable,
+			   IN RTL_ATOM Atom);
+
+NTSTATUS STDCALL
+RtlDeleteRegistryValue(IN ULONG RelativeTo,
+		       IN PWSTR Path,
+		       IN PWSTR ValueName);
+
+NTSTATUS STDCALL
+RtlDescribeChunk(IN USHORT CompressionFormat,
+		 IN OUT PUCHAR *CompressedBuffer,
+		 IN PUCHAR EndOfCompressedBufferPlus1,
+		 OUT PUCHAR *ChunkBuffer,
+		 OUT PULONG ChunkSize);
+
+NTSTATUS STDCALL
+RtlDestroyAtomTable(IN PRTL_ATOM_TABLE AtomTable);
+
+BOOL STDCALL
+RtlDestroyHeap(HANDLE hheap);
 
 NTSTATUS
 STDCALL
@@ -956,6 +988,11 @@ VOID
 RtlGetCallersAddress (
 	PVOID	* CallersAddress
 	);
+
+NTSTATUS STDCALL
+RtlGetCompressionWorkSpaceSize(IN USHORT CompressionFormatAndEngine,
+			       OUT PULONG CompressBufferAndWorkSpaceSize,
+			       OUT PULONG CompressFragmentWorkSpaceSize);
 
 VOID
 STDCALL
@@ -1441,6 +1478,13 @@ RtlReAllocateHeap (
 	LPVOID	ptr,
 	DWORD	size
 	);
+
+NTSTATUS STDCALL
+RtlReserveChunk(IN USHORT CompressionFormat,
+		IN OUT PUCHAR *CompressedBuffer,
+		IN PUCHAR EndOfCompressedBufferPlus1,
+		OUT PUCHAR *ChunkBuffer,
+		IN ULONG ChunkSize);
 
 /*
  * VOID

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.137 2002/07/18 21:49:59 ei Exp $
+; $Id: ntoskrnl.def,v 1.138 2002/07/25 13:18:31 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -676,8 +676,8 @@ RtlCompareMemory@12
 RtlCompareMemoryUlong@12
 RtlCompareString@12
 RtlCompareUnicodeString@12
-;RtlCompressBuffer
-;RtlCompressChunks
+RtlCompressBuffer@32
+RtlCompressChunks@28
 RtlConvertLongToLargeInteger@4
 RtlConvertSidToUnicodeString@12
 RtlConvertUlongToLargeInteger@4
@@ -692,15 +692,15 @@ RtlCreateRegistryKey@8
 RtlCreateSecurityDescriptor@8
 RtlCreateUnicodeString@8
 RtlCustomCPToUnicodeN@24
-;RtlDecompressBuffer
-;RtlDecompressChunks
-;RtlDecompressFragment
+RtlDecompressBuffer@24
+RtlDecompressChunks@28
+RtlDecompressFragment@32
 ;RtlDelete
 RtlDeleteAtomFromAtomTable@8
 ;RtlDeleteElementGenericTable
 ;RtlDeleteNoSplay
 RtlDeleteRegistryValue@12
-;RtlDescribeChunk
+RtlDescribeChunk@20
 RtlDestroyAtomTable@4
 ;RtlDestroyHeap
 RtlDowncaseUnicodeString@12
@@ -736,7 +736,7 @@ RtlFreeOemString@4
 RtlFreeUnicodeString@4
 RtlGenerate8dot3Name@16
 ;RtlGetCallersAddress
-;RtlGetCompressionWorkSpaceSize
+RtlGetCompressionWorkSpaceSize@12
 RtlGetDaclSecurityDescriptor@16
 RtlGetDefaultCodePage@8
 ;RtlGetElementGenericTable
@@ -791,7 +791,7 @@ RtlQueryTimeZoneInformation@4
 RtlRaiseException@4
 ;RtlRandom
 ;RtlRemoveUnicodePrefix
-;RtlReserveChunk
+RtlReserveChunk@20
 RtlSecondsSince1970ToTime@8
 RtlSecondsSince1980ToTime@8
 RtlSetAllBits@4
