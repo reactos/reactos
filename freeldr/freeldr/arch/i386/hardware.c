@@ -353,7 +353,7 @@ DetectCPU(HKEY CpuKey,
       /* Get Identifier */
       GetCpuid(1, &eax, &ebx, &ecx, &edx);
       sprintf(Identifier,
-	      "x86 Family %u Model %u Stepping %u\n",
+	      "x86 Family %u Model %u Stepping %u",
 	      (unsigned int)((eax >> 8) & 0x0F),
 	      (unsigned int)((eax >> 4) & 0x0F),
 	      (unsigned int)(eax & 0x0F));
@@ -365,7 +365,7 @@ DetectCPU(HKEY CpuKey,
 
       strcpy(VendorIdentifier, "Unknown");
       sprintf(Identifier,
-	      "x86 Family %u Model %u Stepping %u\n",
+	      "x86 Family %u Model %u Stepping %u",
 	      (unsigned int)((eax >> 8) & 0x0F),
 	      (unsigned int)((eax >> 4) & 0x0F),
 	      (unsigned int)(eax & 0x0F));
@@ -431,18 +431,136 @@ DetectCPU(HKEY CpuKey,
 }
 
 
+static VOID
+SetMpsProcessor(HKEY CpuKey,
+		HKEY FpuKey,
+		PMPS_PROCESSOR_ENTRY CpuEntry)
+{
+  char VendorIdentifier[13];
+  char Identifier[64];
+  char Buffer[8];
+  U32 FeatureSet;
+  HKEY CpuInstKey;
+  HKEY FpuInstKey;
+  U32 eax = 0;
+  U32 ebx = 0;
+  U32 ecx = 0;
+  U32 edx = 0;
+  U32 *Ptr;
+  S32 Error;
+
+  /* Get processor instance number */
+  sprintf(Buffer, "%u", CpuEntry->LocalApicId);
+
+  /* Create the CPU instance key */
+  Error = RegCreateKey(CpuKey,
+		       Buffer,
+		       &CpuInstKey);
+  if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", (int)Error));
+      return;
+    }
+
+  /* Create the FPU instance key */
+  Error = RegCreateKey(FpuKey,
+		       Buffer,
+		       &FpuInstKey);
+  if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", (int)Error));
+      return;
+    }
+
+  /* Get 'VendorIdentifier' */
+  GetCpuid(0, &eax, &ebx, &ecx, &edx);
+  VendorIdentifier[12] = 0;
+  Ptr = (U32*)&VendorIdentifier[0];
+  *Ptr = ebx;
+  Ptr++;
+  *Ptr = edx;
+  Ptr++;
+  *Ptr = ecx;
+
+  /* Get 'Identifier' */
+  sprintf(Identifier,
+	  "x86 Family %u Model %u Stepping %u",
+	  (U32)((CpuEntry->CpuSignature >> 8) & 0x0F),
+	  (U32)((CpuEntry->CpuSignature >> 4) & 0x0F),
+	  (U32)(CpuEntry->CpuSignature & 0x0F));
+
+  /* Get FeatureSet */
+  FeatureSet = CpuEntry->FeatureFlags;
+
+  /* FIXME: Set 'Configuration Data' value (CPU and FPU) */
+
+  /* Set 'FeatureSet' value (CPU only) */
+  DbgPrint((DPRINT_HWDETECT, "FeatureSet: %x\n", FeatureSet));
+
+  Error = RegSetValue(CpuInstKey,
+		      "FeatureSet",
+		      REG_DWORD,
+		      (PU8)&FeatureSet,
+		      sizeof(U32));
+  if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
+    }
+
+  /* Set 'Identifier' value (CPU and FPU) */
+  DbgPrint((DPRINT_HWDETECT, "Identifier: %s\n", Identifier));
+
+  Error = RegSetValue(CpuInstKey,
+		      "Identifier",
+		      REG_SZ,
+		      (PU8)Identifier,
+		      strlen(Identifier) + 1);
+  if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
+    }
+
+  Error = RegSetValue(FpuInstKey,
+		      "Identifier",
+		      REG_SZ,
+		      (PU8)Identifier,
+		      strlen(Identifier) + 1);
+  if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
+    }
+
+  /* Set 'VendorIdentifier' value (CPU only) */
+  DbgPrint((DPRINT_HWDETECT, "Vendor Identifier: %s\n", VendorIdentifier));
+
+  Error = RegSetValue(CpuInstKey,
+		      "VendorIdentifier",
+		      REG_SZ,
+		      (PU8)VendorIdentifier,
+		      strlen(VendorIdentifier) + 1);
+  if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
+    }
+
+  /* FIXME: Set 'Update Signature' value (CPU only) */
+
+  /* FIXME: Set 'Update Status' value (CPU only) */
+
+  /* FIXME: Set '~MHz' value (CPU only) */
+}
+
+
 static BOOL
 DetectMps(HKEY CpuKey,
 	  HKEY FpuKey)
 {
-  U32 DefaultConfig;
-  char *Buffer;
-//  char Signature[5];
   PMPS_CONFIG_TABLE_HEADER ConfigTable;
   PMPS_PROCESSOR_ENTRY CpuEntry;
+  U32 DefaultConfig;
+  char *Buffer;
   char *Ptr;
-  unsigned long Offset;
-
+  U32 Offset;
 
   DefaultConfig = MpsGetDefaultConfiguration();
   if (DefaultConfig == 0)
@@ -450,15 +568,8 @@ DetectMps(HKEY CpuKey,
       /* Read configuration table */
       MpsGetConfigurationTable((PVOID)DISKREADBUFFER);
       Buffer = (char *)DISKREADBUFFER;
-
-//      Signature[0] = Buffer[0];
-//      Signature[1] = Buffer[1];
-//      Signature[2] = Buffer[2];
-//      Signature[3] = Buffer[3];
-//      Signature[4] = 0;
-
-//      printf("    Signature: %s\n",
-//		 Signature);
+      DbgPrint((DPRINT_HWDETECT, "MPS signature: %c%c%c%c\n",
+		Buffer[0], Buffer[1], Buffer[2], Buffer[3]));
 
       ConfigTable = (PMPS_CONFIG_TABLE_HEADER)DISKREADBUFFER;
       Offset = 0x2C;
@@ -470,51 +581,48 @@ DetectMps(HKEY CpuKey,
 	    {
 	      case 0:
 		CpuEntry = (PMPS_PROCESSOR_ENTRY)Ptr;
-		printf ("    Processor %u: x86 Family %u Model %u Stepping %u\n",
-			CpuEntry->LocalApicId,
-			(unsigned int)((CpuEntry->CpuSignature >> 8) & 0x0F),
-			(unsigned int)((CpuEntry->CpuSignature >> 4) & 0x0F),
-			(unsigned int)(CpuEntry->CpuSignature & 0x0F));
 
-		printf ("CpuFlags %x  FeatureFlags %x  Reserved1 %x  Reserved2 %x\n",
-			CpuEntry->CpuFlags,
-			CpuEntry->FeatureFlags,
-			CpuEntry->Reserved1,
-			CpuEntry->Reserved2);
+		DbgPrint((DPRINT_HWDETECT, "Processor Entry\n"));
+		DbgPrint((DPRINT_HWDETECT, 
+			  "APIC Id %u  APIC Version %u  Flags %x  Signature %x  Feature %x\n",
+			  CpuEntry->LocalApicId,
+			  CpuEntry->LocalApicVersion,
+			  CpuEntry->CpuFlags,
+			  CpuEntry->CpuSignature,
+			  CpuEntry->FeatureFlags));
+		DbgPrint((DPRINT_HWDETECT,
+			  "Processor %u: x86 Family %u Model %u Stepping %u\n",
+			  CpuEntry->LocalApicId,
+			  (U32)((CpuEntry->CpuSignature >> 8) & 0x0F),
+			  (U32)((CpuEntry->CpuSignature >> 4) & 0x0F),
+			  (U32)(CpuEntry->CpuSignature & 0x0F)));
 
-//		printf("    Processor Entry\n");
-//		printf("      APIC Id %u  APIC Version %u  Flags %x  Signature %x  Feature %x\n",
-//		       CpuEntry->LocalApicId,
-//		       CpuEntry->LocalApicVersion,
-//		       CpuEntry->CpuFlags,
-//		       CpuEntry->CpuSignature,
-//		       CpuEntry->FeatureFlags);
-
+		SetMpsProcessor(CpuKey, FpuKey, CpuEntry);
 		Offset += 0x14;
 		break;
 
 	      case 1:
-//		printf("    Bus Entry\n");
+		DbgPrint((DPRINT_HWDETECT, "Bus Entry\n"));
 		Offset += 0x08;
 		break;
 
 	      case 2:
-//		printf("    I/0 APIC Entry\n");
+		DbgPrint((DPRINT_HWDETECT, "I/0 APIC Entry\n"));
 		Offset += 0x08;
 		break;
 
 	      case 3:
-//		printf("    I/0 Interrupt Assignment Entry\n");
+		DbgPrint((DPRINT_HWDETECT, "I/0 Interrupt Assignment Entry\n"));
 		Offset += 0x08;
 		break;
 
 	      case 4:
-//		printf("    Local Interrupt Assignment Entry\n");
+		DbgPrint((DPRINT_HWDETECT, "Local Interrupt Assignment Entry\n"));
 		Offset += 0x08;
 		break;
 
 	      default:
-//		printf("    Unknown Entry %u\n",(unsigned int)*Ptr);
+		DbgPrint((DPRINT_HWDETECT, "Unknown Entry %u\n",(U32)*Ptr));
 		return FALSE;
 	    }
 
@@ -522,7 +630,12 @@ DetectMps(HKEY CpuKey,
     }
   else
     {
-//      printf("    Unsupported MPS configuration: %x\n", (unsigned int)DefaultConfig);
+      DbgPrint((DPRINT_HWDETECT,
+	       "Unsupported MPS configuration: %x\n",
+	       (U32)DefaultConfig));
+
+      /* FIXME: Identify default configurations */
+
       return FALSE;
     }
 
@@ -894,7 +1007,6 @@ DetectIsaBios(HKEY SystemKey, U32 *BusNumber)
 		(int)Error));
       return;
     }
-
 
 
   /* Detect ISA/BIOS devices */
