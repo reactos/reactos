@@ -104,6 +104,7 @@ PVOID AllocateMemory(ULONG NumberOfBytes)
 #ifdef DEBUG
 	IncrementAllocationCount();
 	DbgPrint((DPRINT_MEMORY, "Allocated %d bytes (%d blocks) of memory starting at block %d. AllocCount: %d\n", NumberOfBytes, BlocksNeeded, Idx, AllocationCount));
+	DbgPrint((DPRINT_MEMORY, "Memory allocation pointer: 0x%x\n", MemPointer));
 	VerifyHeap();
 #endif // DEBUG
 
@@ -225,7 +226,7 @@ VOID DumpMemoryAllocMap(VOID)
 		if ((Idx % 32) == 0)
 		{
 			DbgPrint((DPRINT_MEMORY, "\n"));
-			DbgPrint((DPRINT_MEMORY, "%x:\t", (Idx * 256)));
+			DbgPrint((DPRINT_MEMORY, "%x:\t", HeapBaseAddress + (Idx * 256)));
 		}
 		else if ((Idx % 4) == 0)
 		{

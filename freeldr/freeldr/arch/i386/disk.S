@@ -292,7 +292,7 @@ EXTERN(_BiosInt13ExtensionsSupported)
 	movb	_int13_extension_check_drive,%dl	// DL = drive (80h-FFh)
 	int		$0x13								// IBM/MS INT 13 Extensions - INSTALLATION CHECK
 	jc		_int13_extension_check_error		// CF set on error (extensions not supported)
-	cmpw	$0x55aa,%bx							// BX = AA55h if installed
+	cmpw	$0xaa55,%bx							// BX = AA55h if installed
 	jne		_int13_extension_check_error
 	testb	$1,%cl								// CX = API subset support bitmap
 	jz		_int13_extension_check_error		// Bit 0, extended disk access functions (AH=42h-44h,47h,48h) supported
