@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: focus.c,v 1.7 2004/01/12 00:07:34 navaraf Exp $
+ * $Id: focus.c,v 1.8 2004/01/12 20:48:48 gvg Exp $
  */
 
 #include <win32k/win32k.h>
@@ -59,12 +59,12 @@ IntSendDeactivateMessages(HWND hWndPrev, HWND hWnd)
       IntSendMessage(hWndPrev, WM_NCACTIVATE, FALSE, 0);
       IntSendMessage(hWndPrev, WM_ACTIVATE,
          MAKEWPARAM(WA_INACTIVE, NtUserGetWindowLong(hWndPrev, GWL_STYLE, FALSE) & WS_MINIMIZE),
-         (LPARAM)NULL);
+         (LPARAM)hWnd);
    }
 }
 
 VOID FASTCALL
-IntSendActivateMessages(HWND hWndPrev, HWND hWnd)
+IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
 {
    if (hWnd)
    {
@@ -83,7 +83,8 @@ IntSendActivateMessages(HWND hWndPrev, HWND hWnd)
       IntSendMessage(hWnd, WM_NCACTIVATE, (WPARAM)(hWnd == NtUserGetForegroundWindow()), 0);
       /* FIXME: WA_CLICKACTIVE */
       IntSendMessage(hWnd, WM_ACTIVATE,
-         MAKEWPARAM(WA_INACTIVE, NtUserGetWindowLong(hWnd, GWL_STYLE, FALSE) & WS_MINIMIZE),
+         MAKEWPARAM(MouseActivate ? WA_CLICKACTIVE : WA_ACTIVE,
+                    NtUserGetWindowLong(hWnd, GWL_STYLE, FALSE) & WS_MINIMIZE),
          (LPARAM)hWndPrev);
    }
 }
@@ -106,14 +107,16 @@ IntSendSetFocusMessages(HWND hWndPrev, HWND hWnd)
    }
 }
 
-BOOL FASTCALL
-IntSetForegroundWindow(PWINDOW_OBJECT Window)
+STATIC BOOL FASTCALL
+IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWindow, BOOL MouseActivate)
 {
-   HWND hWndPrev = 0;
    HWND hWnd = Window->Self;
+   HWND hWndPrev = NULL;
+   HWND hWndFocus = FocusWindow->Self;
+   HWND hWndFocusPrev = NULL;
    PUSER_MESSAGE_QUEUE PrevForegroundQueue;
 
-   DPRINT("IntSetForegroundWindow(%x)\n", hWnd);
+   DPRINT("IntSetForegroundAndFocusWindow(%x, %x, %s)\n", hWnd, hWndFocus, MouseActivate ? "TRUE" : "FALSE");
    DPRINT("(%wZ)\n", &Window->WindowName);
 
    if ((Window->Style & (WS_CHILD | WS_POPUP)) == WS_CHILD)
@@ -142,6 +145,9 @@ IntSetForegroundWindow(PWINDOW_OBJECT Window)
       return TRUE;
    }
 
+   hWndFocusPrev = (PrevForegroundQueue == FocusWindow->MessageQueue
+                    ? FocusWindow->MessageQueue->FocusWindow : NULL);
+
    /* FIXME: Call hooks. */
 
    IntSetFocusMessageQueue(Window->MessageQueue);
@@ -149,20 +155,56 @@ IntSetForegroundWindow(PWINDOW_OBJECT Window)
    if (Window->MessageQueue)
    {
       Window->MessageQueue->ActiveWindow = hWnd;
-      Window->MessageQueue->FocusWindow = hWnd;
+   }
+/*   ExReleaseFastMutex(&Window->MessageQueue->Lock);*/
+/*   ExAcquireFastMutex(&FocusWindow->MessageQueue->Lock);*/
+   if (FocusWindow->MessageQueue)
+   {
+      FocusWindow->MessageQueue->FocusWindow = hWndFocus;
    }
 /*   ExReleaseFastMutex(&Window->MessageQueue->Lock);*/
 
    IntSendDeactivateMessages(hWndPrev, hWnd);
-   IntSendKillFocusMessages(hWndPrev, hWnd);
+   IntSendKillFocusMessages(hWndFocusPrev, hWndFocus);
    if (PrevForegroundQueue != Window->MessageQueue)
    {
       /* FIXME: Send WM_ACTIVATEAPP to all thread windows. */
    }
-   IntSendSetFocusMessages(hWndPrev, hWnd);
-   IntSendActivateMessages(hWndPrev, hWnd);
+   IntSendSetFocusMessages(hWndFocusPrev, hWndFocus);
+   IntSendActivateMessages(hWndPrev, hWnd, MouseActivate);
 
    return TRUE;
+}
+
+BOOL FASTCALL
+IntSetForegroundWindow(PWINDOW_OBJECT Window)
+{
+   return IntSetForegroundAndFocusWindow(Window, Window, FALSE);
+}
+
+VOID FASTCALL
+IntMouseActivateWindow(PWINDOW_OBJECT Window)
+{
+  HWND Top;
+  PWINDOW_OBJECT TopWindow;
+
+//if ((DWORD)Window->Self != 0x1c && (DWORD)Window->Self != 0x34) __asm__("int $3\n");
+  Top = NtUserGetAncestor(Window->Self, GA_ROOT);
+  if (Top != Window->Self)
+    {
+      TopWindow = IntGetWindowObject(Top);
+    }
+  else
+    {
+      TopWindow = Window;
+    }
+
+  IntSetForegroundAndFocusWindow(TopWindow, Window, TRUE);
+
+  if (Top != Window->Self)
+    {
+      IntReleaseWindowObject(TopWindow);
+    }
 }
 
 HWND FASTCALL
@@ -198,7 +240,7 @@ IntSetActiveWindow(PWINDOW_OBJECT Window)
 /*   ExReleaseFastMutex(&ThreadQueue->Lock);*/
 
    IntSendDeactivateMessages(hWndPrev, hWnd);
-   IntSendActivateMessages(hWndPrev, hWnd);
+   IntSendActivateMessages(hWndPrev, hWnd, FALSE);
 
 /* FIXME */
 /*   return IntIsWindow(hWndPrev) ? hWndPrev : 0;*/

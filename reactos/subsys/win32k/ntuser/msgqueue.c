@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.61 2003/12/30 20:09:11 weiden Exp $
+/* $Id: msgqueue.c,v 1.62 2004/01/12 20:48:48 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -269,25 +269,27 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
         if(Window && (Hit != (USHORT)HTTRANSPARENT))
         {
           Result = IntSendMessage(Wnd, WM_MOUSEACTIVATE, (WPARAM)NtUserGetParent(Window->Self), (LPARAM)SpareLParam);
-          IntReleaseWindowObject(Window);
           
           switch (Result)
           {
               case MA_NOACTIVATEANDEAT:
                   *Freed = FALSE;
+                  IntReleaseWindowObject(Window);
                   return TRUE;
               case MA_NOACTIVATE:
                   break;
               case MA_ACTIVATEANDEAT:
-                  NtUserSetFocus(Wnd);
+                  IntMouseActivateWindow(Window);
+                  IntReleaseWindowObject(Window);
                   *Freed = FALSE;
                   return TRUE;
 /*              case MA_ACTIVATE:
               case 0:*/
               default:
-                  NtUserSetFocus(Wnd);
+                  IntMouseActivateWindow(Window);
                   break;
           }
+          IntReleaseWindowObject(Window);
         }
         else
         {
