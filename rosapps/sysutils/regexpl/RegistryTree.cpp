@@ -1,4 +1,4 @@
-/* $Id: RegistryTree.cpp,v 1.5 2001/04/16 05:07:23 narnaoud Exp $
+/* $Id: RegistryTree.cpp,v 1.6 2001/04/24 22:32:31 narnaoud Exp $
  *
  * regexpl - Console Registry Explorer
  *
@@ -114,7 +114,8 @@ BOOL CRegistryTree::ChangeCurrentKey(const TCHAR *pszRelativePath)
     if (pszBuffer[size-1] == _T('\\'))
       pszBuffer[--size] = 0;
       
-    if ((*pszBuffer == _T('\"'))&&(pszBuffer[size-1] == _T('\"')))
+    TCHAR *psz;
+    if (*pszBuffer == _T('\"') && (psz = _tcschr(pszBuffer+1,_T('\"'))) && size_t(psz-pszBuffer) == size-1)
     {
       size--;
       pszBuffer[size] = 0;
