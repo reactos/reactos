@@ -92,7 +92,7 @@ MingwBackend::ProcessModule ( Module& module )
 {
 	MingwModuleHandler* h = MingwModuleHandler::LookupHandler (
 		module.node.location,
-		module.stype );
+		module.type );
 	h->Process ( module );
 }
 

@@ -130,9 +130,9 @@ UnknownBackendException::UnknownBackendException ( const string& name )
 }
 
 UnknownModuleTypeException::UnknownModuleTypeException ( const string& location,
-                                                         const string& moduletype )
+                                                         int moduletype )
 	: InvalidBuildFileException ( location,
-	                              "module type requested: '%s'",
-	                              moduletype.c_str() )
+	                              "module type requested: %i",
+	                              moduletype )
 {
 }

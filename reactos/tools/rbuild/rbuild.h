@@ -71,8 +71,7 @@ public:
 	std::string name;
 	std::string extension;
 	std::string path;
-	ModuleType etype;
-	std::string stype;
+	ModuleType type;
 	std::vector<File*> files;
 	std::vector<Library*> libraries;
 	std::vector<Include*> includes;

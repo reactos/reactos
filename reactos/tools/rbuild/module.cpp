@@ -38,9 +38,7 @@ Module::Module ( const Project& project,
 
 	att = moduleNode.GetAttribute ( "type", true );
 	assert(att);
-	stype = att->value;
-	strlwr ( &stype[0] );
-	etype = GetModuleType ( node.location, *att );
+	type = GetModuleType ( node.location, *att );
 
 	att = moduleNode.GetAttribute ( "extension", false );
 	if (att != NULL)
@@ -154,7 +152,7 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 string
 Module::GetDefaultModuleExtension () const
 {
-	switch (etype)
+	switch (type)
 	{
 		case BuildTool:
 			return EXEPOSTFIX;

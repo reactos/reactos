@@ -10,18 +10,16 @@ using std::string;
 using std::vector;
 using std::map;
 
-map<string,MingwModuleHandler*>*
+map<ModuleType,MingwModuleHandler*>*
 MingwModuleHandler::handler_map = NULL;
 
 FILE*
 MingwModuleHandler::fMakefile = NULL;
 
-MingwModuleHandler::MingwModuleHandler ( const char* moduletype_ )
+MingwModuleHandler::MingwModuleHandler ( ModuleType moduletype )
 {
-	string moduletype ( moduletype_ );
-	strlwr ( &moduletype[0] );
 	if ( !handler_map )
-		handler_map = new map<string,MingwModuleHandler*>;
+		handler_map = new map<ModuleType,MingwModuleHandler*>;
 	(*handler_map)[moduletype] = this;
 }
 
@@ -33,10 +31,8 @@ MingwModuleHandler::SetMakefile ( FILE* f )
 
 /*static*/ MingwModuleHandler*
 MingwModuleHandler::LookupHandler ( const string& location,
-                                    const string& moduletype_ )
+                                    ModuleType moduletype )
 {
-	string moduletype ( moduletype_ );
-	strlwr ( &moduletype[0] );
 	if ( !handler_map )
 		throw Exception ( "internal tool error: no registered module handlers" );
 	MingwModuleHandler* h = (*handler_map)[moduletype];
@@ -386,7 +382,7 @@ MingwModuleHandler::GenerateInvocations ( const Module& module ) const
 	{
 		const Invoke& invoke = *module.invocations[i];
 
-		if ( invoke.invokeModule->etype != BuildTool )
+		if ( invoke.invokeModule->type != BuildTool )
 			throw InvalidBuildFileException ( module.node.location,
 		                                      "Only modules of type buildtool can be invoked." );
 
@@ -446,7 +442,7 @@ MingwModuleHandler::GeneratePreconditionDependencies ( const Module& module ) co
 static MingwBuildToolModuleHandler buildtool_handler;
 
 MingwBuildToolModuleHandler::MingwBuildToolModuleHandler()
-	: MingwModuleHandler ( "buildtool" )
+	: MingwModuleHandler ( BuildTool )
 {
 }
 
@@ -477,7 +473,7 @@ MingwBuildToolModuleHandler::GenerateBuildToolModuleTarget ( const Module& modul
 static MingwKernelModuleHandler kernelmodule_handler;
 
 MingwKernelModuleHandler::MingwKernelModuleHandler ()
-	: MingwModuleHandler ( "kernelmodedll" )
+	: MingwModuleHandler ( KernelModeDLL )
 {
 }
 
@@ -539,7 +535,7 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ( const Module& module )
 static MingwStaticLibraryModuleHandler staticlibrary_handler;
 
 MingwStaticLibraryModuleHandler::MingwStaticLibraryModuleHandler ()
-	: MingwModuleHandler ( "staticlibrary" )
+	: MingwModuleHandler ( StaticLibrary )
 {
 }
 

@@ -98,7 +98,7 @@ class UnknownModuleTypeException : public InvalidBuildFileException
 {
 public:
 	UnknownModuleTypeException ( const std::string& location,
-	                             const std::string& moduletype );
+	                             int moduletype );
 };
 
 #endif /* __EXCEPTION_H */

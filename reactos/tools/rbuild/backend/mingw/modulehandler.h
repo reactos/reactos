@@ -6,14 +6,14 @@
 class MingwModuleHandler
 {
 public:
-	static std::map<std::string,MingwModuleHandler*>* handler_map;
+	static std::map<ModuleType,MingwModuleHandler*>* handler_map;
 
-	MingwModuleHandler ( const char* moduletype_ );
+	MingwModuleHandler ( ModuleType moduletype );
 	virtual ~MingwModuleHandler() {}
 
 	static void SetMakefile ( FILE* f );
 	static MingwModuleHandler* LookupHandler ( const std::string& location,
-	                                           const std::string& moduletype_ );
+	                                           ModuleType moduletype_ );
 	virtual void Process ( const Module& module ) = 0;
 
 protected:
