@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.58 2003/12/21 10:19:40 weiden Exp $
+/* $Id: winpos.c,v 1.59 2003/12/21 22:38:38 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -111,12 +111,10 @@ WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
    }
 }
 
-POINT STATIC FASTCALL
-WinPosFindIconPos(HWND hWnd, POINT Pos)
+VOID STATIC FASTCALL
+WinPosFindIconPos(HWND hWnd, POINT *Pos)
 {
-  POINT point;
-  //FIXME
-  return point;
+  /* FIXME */
 }
 
 HWND STATIC FASTCALL
@@ -170,6 +168,8 @@ WinPosShowIconTitle(PWINDOW_OBJECT WindowObject, BOOL Show)
 PINTERNALPOS STATIC STDCALL
 WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT pt, PRECT RestoreRect)
 {
+  INT XInc, YInc;
+  
   if (WindowObject->InternalPos == NULL)
     {
       WindowObject->InternalPos = ExAllocatePool(NonPagedPool, sizeof(INTERNALPOS));
@@ -180,8 +180,29 @@ WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT pt, PRECT RestoreRect)
       }
       WindowObject->InternalPos->IconTitle = 0;
       WindowObject->InternalPos->NormalRect = WindowObject->WindowRect;
-      WindowObject->InternalPos->IconPos.x = WindowObject->InternalPos->MaxPos.x = 0xFFFFFFFF;
-      WindowObject->InternalPos->IconPos.y = WindowObject->InternalPos->MaxPos.y = 0xFFFFFFFF;
+      if (HAS_DLGFRAME(WindowObject->Style, WindowObject->ExStyle))
+      {
+        XInc = NtUserGetSystemMetrics(SM_CXDLGFRAME);
+        YInc = NtUserGetSystemMetrics(SM_CYDLGFRAME);
+      }
+      else
+      {
+        XInc = YInc = 0;
+        if (HAS_THICKFRAME(WindowObject->Style, WindowObject->ExStyle))
+        {
+          XInc += NtUserGetSystemMetrics(SM_CXFRAME);
+          YInc += NtUserGetSystemMetrics(SM_CYFRAME);
+        }
+        if (WindowObject->Style & WS_BORDER)
+        {
+          XInc += NtUserGetSystemMetrics(SM_CXBORDER);
+          YInc += NtUserGetSystemMetrics(SM_CYBORDER);
+        }
+      }
+      WindowObject->InternalPos->MaxPos.x = -XInc;
+      WindowObject->InternalPos->MaxPos.y = -YInc;
+      WindowObject->InternalPos->IconPos.x = 0;
+      WindowObject->InternalPos->IconPos.y = 0;
     }
   if (WindowObject->Style & WS_MINIMIZE)
     {
@@ -234,11 +255,10 @@ WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos)
 		WindowObject->Style &= ~WINDOWOBJECT_RESTOREMAX;
 	      }
 	    WindowObject->Style |= WS_MINIMIZE;
-	    InternalPos->IconPos = WinPosFindIconPos(WindowObject,
-						     InternalPos->IconPos);
+	    WinPosFindIconPos(WindowObject, &InternalPos->IconPos);
 	    NtGdiSetRect(NewPos, InternalPos->IconPos.x, InternalPos->IconPos.y,
-			NtUserGetSystemMetrics(SM_CXICON),
-			NtUserGetSystemMetrics(SM_CYICON));
+			NtUserGetSystemMetrics(SM_CXMINIMIZED),
+			NtUserGetSystemMetrics(SM_CYMINIMIZED));
 	    SwpFlags |= SWP_NOCOPYBITS;
 	    break;
 	  }
@@ -284,7 +304,6 @@ WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos)
 		*NewPos = InternalPos->NormalRect;
 		NewPos->right -= NewPos->left;
 		NewPos->bottom -= NewPos->top;
-		DPRINT1("Restoring window to %d, %d, %d, %d\n", NewPos->left, NewPos->top, NewPos->right, NewPos->bottom);
 		break;
 	      }
 	  }
