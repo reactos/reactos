@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.42 2001/03/26 16:33:10 dwelch Exp $
+/* $Id: utils.c,v 1.43 2001/04/10 19:14:27 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -615,15 +615,20 @@ LdrGetExportByName(PVOID BaseAddress,
    PVOID			Function;
    ULONG minn, maxn;
    ULONG ExportDirSize;
-
+   
    DPRINT("LdrGetExportByName %x %s %hu\n", BaseAddress, SymbolName, Hint);
-
+   
    ExportDir = (PIMAGE_EXPORT_DIRECTORY)
      RtlImageDirectoryEntryToData(BaseAddress,
 				  TRUE,
 				  IMAGE_DIRECTORY_ENTRY_EXPORT,
 				  &ExportDirSize);
-
+   if (ExportDir == NULL)
+     {
+	DbgPrint("LdrGetExportByName(): no export directory!\n");
+	return NULL;
+     }
+   
    /*
     * Get header pointers
     */
@@ -654,11 +659,12 @@ LdrGetExportByName(PVOID BaseAddress,
 	       return Function;
 	  }
      }
-
+   
    /*
     * Try a binary search first
     */
-   minn = 0, maxn = ExportDir->NumberOfFunctions;
+   minn = 0;
+   maxn = ExportDir->NumberOfFunctions;
    while (minn <= maxn)
      {
 	ULONG mid;
@@ -681,6 +687,11 @@ LdrGetExportByName(PVOID BaseAddress,
 	     if (Function != NULL)
 	       return Function;
 	  }
+	else if (minn == maxn)
+	  {
+	     DPRINT("LdrGetExportByName(): binary search failed\n");
+	     break;
+	  }
 	else if (res > 0)
 	  {
 	     maxn = mid - 1;
@@ -690,11 +701,11 @@ LdrGetExportByName(PVOID BaseAddress,
 	     minn = mid + 1;
 	  }
      }
+   
    /*
     * Fall back on a linear search
     */
-
-   DbgPrint("LDR: Falling back on a linear search of export table\n");
+   DPRINT("LdrGetExportByName(): Falling back on a linear search of export table\n");
    for (i = 0; i < ExportDir->NumberOfFunctions; i++)
      {
 	ExName = RVA(BaseAddress, ExNames[i]);
@@ -712,7 +723,7 @@ LdrGetExportByName(PVOID BaseAddress,
 	     return Function;
 	  }
      }
-   DbgPrint("LdrGetExportByName() = failed to find %s\n",SymbolName);
+   DbgPrint("LdrGetExportByName(): failed to find %s\n",SymbolName);
    return NULL;
 }
 
