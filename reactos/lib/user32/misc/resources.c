@@ -1,4 +1,4 @@
-
+#include <string.h>
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <kernel32/error.h>

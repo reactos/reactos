@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: accel.c,v 1.4 2002/09/17 23:46:23 dwelch Exp $
+/* $Id: accel.c,v 1.5 2002/09/30 21:21:38 chorns Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -27,7 +27,7 @@
  */
 
 /* INCLUDES ******************************************************************/
-
+#include <string.h>
 #include <windows.h>
 #include <user32.h>
 #include <debug.h>
