@@ -1,4 +1,6 @@
+#include <wine/windef.h>
 #include <windows.h>
+#include <ddraw.h>
 #include <ddentry.h>
 #include <string.h>
 #include <win32k/kapi.h>
