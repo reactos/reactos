@@ -239,18 +239,25 @@ WSASocketW(
 
   assert(Provider->ProcTable.lpWSPSocket);
 
+  WS_DbgPrint(MAX_TRACE,("About to call provider socket fn\n"));
+
   Socket = Provider->ProcTable.lpWSPSocket(
-    af,
-    type,
-    protocol,
-    lpProtocolInfo,
-    g,
-    dwFlags,
-    &Status);
-	if (Status != NO_ERROR) {
-    WSASetLastError(Status);
-    return INVALID_SOCKET;
+      af,
+      type,
+      protocol,
+      lpProtocolInfo,
+      g,
+      dwFlags,
+      &Status);
+
+  WS_DbgPrint(MAX_TRACE,("Socket: %x, Status: %x\n", Socket, Status));
+
+  if (Status != NO_ERROR) {
+      WSASetLastError(Status);
+      return INVALID_SOCKET;
   }
+  
+  WS_DbgPrint(MAX_TRACE,("Status: %x\n", Status));
 
   return Socket;
 }
@@ -531,8 +538,13 @@ WSAAccept(
     return SOCKET_ERROR;
   }
 
+  WS_DbgPrint(MAX_TRACE,("Calling provider accept\n"));
+
   Socket = Provider->ProcTable.lpWSPAccept(
     s, addr, addrlen, lpfnCondition, dwCallbackData, &Errno);
+
+  WS_DbgPrint(MAX_TRACE,("Calling provider accept -> Socket %x, Errno %x\n",
+			 Socket, Errno));
 
   DereferenceProviderByPointer(Provider);
 

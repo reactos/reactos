@@ -253,7 +253,7 @@ WSPSocket(
 error:
 	AFD_DbgPrint(MID_TRACE,("Ending\n"));
 
-        *lpErrno = Status;
+        if( lpErrno ) *lpErrno = Status;
 
 	return INVALID_SOCKET;
 }
@@ -269,7 +269,10 @@ DWORD MsafdReturnWithErrno( NTSTATUS Status, LPINT Errno, DWORD Received,
 	if( ReturnedBytes ) *ReturnedBytes = Received; break;
     case STATUS_PENDING: *Errno = WSA_IO_PENDING; break;
     case STATUS_BUFFER_OVERFLOW: *Errno = WSAEMSGSIZE; break;
-    default: *Errno = WSAEINVAL; break;
+    default: {
+	DbgPrint("MSAFD: Error %d is unknown\n", Errno);
+	*Errno = WSAEINVAL; break;
+    } break;
     }
 
     /* Success */
@@ -545,6 +548,8 @@ WSPSelect(
 					PollInfo->Handles[i].Handle));
 		OutCount++;
 		if( readfds ) FD_SET(PollInfo->Handles[i].Handle, readfds);
+		break;
+
 	    case AFD_EVENT_SEND: case AFD_EVENT_CONNECT:
 		AFD_DbgPrint(MID_TRACE,("Event %x on handle %x\n",
 					PollInfo->Handles[i].Events,
@@ -566,10 +571,14 @@ WSPSelect(
 
     NtClose( SockEvent );
 
-    switch( IOSB.Status ) {
-    case STATUS_SUCCESS: 
-    case STATUS_TIMEOUT: *lpErrno = 0; break;
-    default: *lpErrno = WSAEINVAL;
+    AFD_DbgPrint(MID_TRACE,("lpErrno = %x\n", lpErrno));
+
+    if( lpErrno ) {
+	switch( IOSB.Status ) {
+	case STATUS_SUCCESS: 
+	case STATUS_TIMEOUT: *lpErrno = 0; break;
+	default: *lpErrno = WSAEINVAL; break;
+	}
     }
 
     AFD_DbgPrint(MID_TRACE,("%d events\n", OutCount));
@@ -608,24 +617,42 @@ WSPAccept(
 	UCHAR						ReceiveBuffer[0x1A];
 	HANDLE                                  SockEvent;
 
+	AFD_DbgPrint(MID_TRACE,("\n"));
+	
 	Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
 				NULL, 1, FALSE );
 
+	AFD_DbgPrint(MID_TRACE,("\n"));
+
 	if( !NT_SUCCESS(Status) ) return -1;
+
+	AFD_DbgPrint(MID_TRACE,("\n"));
 
 	/* Dynamic Structure...ugh */
 	ListenReceiveData = (PAFD_RECEIVED_ACCEPT_DATA)ReceiveBuffer;
 
+	AFD_DbgPrint(MID_TRACE,("\n"));
+
 	/* Get the Socket Structure associate to this Socket*/
 	Socket = GetSocketStructure(Handle);
+
+	AFD_DbgPrint(MID_TRACE,("\n"));
 
 	/* If this is non-blocking, make sure there's something for us to accept */
 	FD_ZERO(&ReadSet);
 	FD_SET(Socket->Handle, &ReadSet);
 	Timeout.tv_sec=0;
 	Timeout.tv_usec=0;
+
+	AFD_DbgPrint(MID_TRACE,("\n"));
+
 	WSPSelect(0, &ReadSet, NULL, NULL, &Timeout, NULL);
+
+	AFD_DbgPrint(MID_TRACE,("\n"));
+
 	if (ReadSet.fd_array[0] != Socket->Handle) return 0;
+
+	AFD_DbgPrint(MID_TRACE,("\n"));
 
 	/* Send IOCTL */
 	Status = NtDeviceIoControlFile( (HANDLE)Socket->Handle,
@@ -639,14 +666,24 @@ WSPAccept(
 					ListenReceiveData,
 					0xA + sizeof(*ListenReceiveData));
 	
+	AFD_DbgPrint(MID_TRACE,("\n"));
+
 	if (lpfnCondition != NULL) {
+	AFD_DbgPrint(MID_TRACE,("\n"));
+
 		if ((Socket->SharedData.ServiceFlags1 & XP1_CONNECT_DATA) != 0) {
+
+	AFD_DbgPrint(MID_TRACE,("\n"));
 
 			/* Find out how much data is pending */
 			PendingAcceptData.SequenceNumber = ListenReceiveData->SequenceNumber;
+	AFD_DbgPrint(MID_TRACE,("\n"));
+
 			PendingAcceptData.ReturnSize = TRUE;
 
 			/* Send IOCTL */
+	AFD_DbgPrint(MID_TRACE,("\n"));
+
 			Status = NtDeviceIoControlFile( (HANDLE)Socket->Handle,
 							SockEvent,
 							NULL,
@@ -658,18 +695,28 @@ WSPAccept(
 							&PendingAcceptData,
 							sizeof(PendingAcceptData));
 
+	AFD_DbgPrint(MID_TRACE,("\n"));
+
 			/* How much data to allocate */
 			PendingDataLength = IOSB.Information;
 
+	AFD_DbgPrint(MID_TRACE,("\n"));
+
 			if (PendingDataLength) {
+
+	AFD_DbgPrint(MID_TRACE,("\n"));
 
 				/* Allocate needed space */
 				PendingData = HeapAlloc(GlobalHeap, 0, PendingDataLength);
 
 				/* We want the data now */
+	AFD_DbgPrint(MID_TRACE,("\n"));
+
 				PendingAcceptData.ReturnSize = FALSE;
 
 				/* Send IOCTL */
+	AFD_DbgPrint(MID_TRACE,("\n"));
+
 				Status = NtDeviceIoControlFile( (HANDLE)Socket->Handle,
 								SockEvent,
 								NULL,
@@ -680,46 +727,70 @@ WSPAccept(
 								sizeof(PendingAcceptData),
 								PendingData,
 								PendingDataLength);
+	AFD_DbgPrint(MID_TRACE,("\n"));
+
 			}
+	AFD_DbgPrint(MID_TRACE,("\n"));
+
 		}
 
+	AFD_DbgPrint(MID_TRACE,("\n"));
 		
 		if ((Socket->SharedData.ServiceFlags1 & XP1_QOS_SUPPORTED) != 0) {
 			/* I don't support this yet */
+	AFD_DbgPrint(MID_TRACE,("\n"));
 		}
 		
 		/* Build Callee ID */
 		CalleeID.buf = (PVOID)Socket->LocalAddress;
 		CalleeID.len = Socket->SharedData.SizeOfLocalAddress;
 
+	AFD_DbgPrint(MID_TRACE,("\n"));
+
 		/* Set up Address in SOCKADDR Format */
 		RtlCopyMemory (RemoteAddress, 
 						&ListenReceiveData->Address.Address[0].AddressType, 
 						sizeof(RemoteAddress));
 
+	AFD_DbgPrint(MID_TRACE,("\n"));
+
 		/* Build Caller ID */
 		CallerID.buf = (PVOID)RemoteAddress;
 		CallerID.len = sizeof(RemoteAddress);
+
+	AFD_DbgPrint(MID_TRACE,("\n"));
 
 		/* Build Caller Data */
 		CallerData.buf = PendingData;
 		CallerData.len = PendingDataLength;
 
+	AFD_DbgPrint(MID_TRACE,("\n"));
+
 		/* Check if socket supports Conditional Accept */
 		if (Socket->SharedData.UseDelayedAcceptance != 0) {
 			
+	AFD_DbgPrint(MID_TRACE,("\n"));
+
 			/* Allocate Buffer for Callee Data */
 			CalleeDataBuffer = HeapAlloc(GlobalHeap, 0, 4096);
 			CalleeData.buf = CalleeDataBuffer;
 			CalleeData.len = 4096;
 
+	AFD_DbgPrint(MID_TRACE,("\n"));
+
 		} else {
+
+	AFD_DbgPrint(MID_TRACE,("\n"));
 
 			/* Nothing */
 			CalleeData.buf = 0;
 			CalleeData.len = 0;
+	AFD_DbgPrint(MID_TRACE,("\n"));
+
 		}
 	
+	AFD_DbgPrint(MID_TRACE,("\n"));
+
 		/* Call the Condition Function */
 		CallBack = (lpfnCondition)( &CallerID,
 						CallerData.buf == NULL
@@ -733,25 +804,34 @@ WSPAccept(
 						: & CalleeData,
 						&GroupID,
 						dwCallbackData);
+	AFD_DbgPrint(MID_TRACE,("\n"));
+
 
 		if (((CallBack == CF_ACCEPT) && GroupID) != 0) {
 			/* TBD: Check for Validity */
+	AFD_DbgPrint(MID_TRACE,("\n"));
 		}
 
 		if (CallBack == CF_ACCEPT) {
 
 			if ((Socket->SharedData.ServiceFlags1 & XP1_QOS_SUPPORTED) != 0) {
 				/* I don't support this yet */
+	AFD_DbgPrint(MID_TRACE,("\n"));
 			}
 
 			if (CalleeData.buf) {
 				// SockSetConnectData Sockets(SocketID), IOCTL_AFD_SET_CONNECT_DATA, CalleeData.Buffer, CalleeData.BuffSize, 0
+	AFD_DbgPrint(MID_TRACE,("\n"));
 			}
 		
+	AFD_DbgPrint(MID_TRACE,("\n"));
+
 		} else {
 			/* Callback rejected. Build Defer Structure */
 			DeferData.SequenceNumber = ListenReceiveData->SequenceNumber;
 			DeferData.RejectConnection = (CallBack == CF_REJECT);
+
+	AFD_DbgPrint(MID_TRACE,("\n"));
 
 			/* Send IOCTL */
 			Status = NtDeviceIoControlFile( (HANDLE)Socket->Handle,
@@ -765,32 +845,47 @@ WSPAccept(
 							NULL,
 							0);
 
+	AFD_DbgPrint(MID_TRACE,("\n"));
+
 			NtClose( SockEvent );
 
+	AFD_DbgPrint(MID_TRACE,("\n"));
+
 			if (CallBack == CF_REJECT ) {
+	AFD_DbgPrint(MID_TRACE,("\n"));
 				return WSAECONNREFUSED;
 			} else {
+	AFD_DbgPrint(MID_TRACE,("\n"));
 				return WSATRY_AGAIN;
 			}
 		}
 	}
 	
+	AFD_DbgPrint(MID_TRACE,("\n"));
+
 	/* Create a new Socket */
 	ProtocolInfo.dwCatalogEntryId = Socket->SharedData.CatalogEntryId;
 	ProtocolInfo.dwServiceFlags1 = Socket->SharedData.ServiceFlags1;
 	ProtocolInfo.dwProviderFlags = Socket->SharedData.ProviderFlags;
+
+	AFD_DbgPrint(MID_TRACE,("\n"));
+
 	AcceptSocket = WSPSocket (Socket->SharedData.AddressFamily,
-								Socket->SharedData.SocketType, 
-								Socket->SharedData.Protocol, 
-								&ProtocolInfo,
-								GroupID, 
-								Socket->SharedData.CreateFlags, 
-								NULL);
+				  Socket->SharedData.SocketType, 
+				  Socket->SharedData.Protocol, 
+				  &ProtocolInfo,
+				  GroupID, 
+				  Socket->SharedData.CreateFlags, 
+				  NULL);
+
+	AFD_DbgPrint(MID_TRACE,("\n"));
 
 	/* Set up the Accept Structure */
    	AcceptData.ListenHandle = AcceptSocket;
 	AcceptData.SequenceNumber = ListenReceiveData->SequenceNumber;
     
+	AFD_DbgPrint(MID_TRACE,("\n"));
+
 	/* Send IOCTL to Accept */
 	Status = NtDeviceIoControlFile( (HANDLE)Socket->Handle,
 					SockEvent,
@@ -803,12 +898,18 @@ WSPAccept(
 					NULL,
 					0);
 	
+	AFD_DbgPrint(MID_TRACE,("\n"));
+
 	/* Return Address in SOCKADDR FORMAT */
 	RtlCopyMemory (SocketAddress, 
 					&ListenReceiveData->Address.Address[0].AddressType, 
 					sizeof(RemoteAddress));
 
+	AFD_DbgPrint(MID_TRACE,("\n"));
+
 	NtClose( SockEvent );
+
+	AFD_DbgPrint(MID_TRACE,("Socket %x\n", AcceptSocket));
 
 	/* Return Socket */
 	return AcceptSocket;

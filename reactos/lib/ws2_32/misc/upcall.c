@@ -7,6 +7,7 @@
  * REVISIONS:
  *   CSH 01/09-2000 Created
  */
+#include <roscfg.h>
 #include <ws2_32.h>
 #include <catalog.h>
 #include <handle.h>
@@ -138,7 +139,8 @@ WPUModifyIFSHandle(
   if (!Provider) {
     WS_DbgPrint(MIN_TRACE, ("Provider with catalog entry id (%d) was not found.\n",
       dwCatalogEntryId));
-    *lpErrno = WSAEINVAL;
+    if( lpErrno ) *lpErrno = WSAEINVAL;
+    WS_DbgPrint(MID_TRACE, ("Returning invalid socket\n"));
     return INVALID_SOCKET;
   }
 
@@ -146,8 +148,9 @@ WPUModifyIFSHandle(
     (HANDLE)ProposedHandle,
     Provider);
 
-  *lpErrno = NO_ERROR;
+  if( lpErrno ) *lpErrno = NO_ERROR;
 
+  WS_DbgPrint(MID_TRACE, ("Socket: %x\n", Socket));
   return Socket;
 }
 
