@@ -17,89 +17,6 @@
 static UINT RandomNumber = 0x12345678;
 
 
-inline NTSTATUS BuildDatagramSendRequest(
-    PDATAGRAM_SEND_REQUEST *SendRequest,
-    PIP_ADDRESS RemoteAddress,
-    USHORT RemotePort,
-    PNDIS_BUFFER Buffer,
-    DWORD BufferSize,
-    DATAGRAM_COMPLETION_ROUTINE Complete,
-    PVOID Context,
-    DATAGRAM_BUILD_ROUTINE Build,
-    ULONG Flags)
-/*
- * FUNCTION: Allocates and intializes a datagram send request
- * ARGUMENTS:
- *     SendRequest     = Pointer to datagram send request
- *     RemoteAddress   = Pointer to remote IP address
- *     RemotePort      = Remote port number
- *     Buffer          = Pointer to NDIS buffer to send
- *     BufferSize      = Size of Buffer
- *     Complete        = Completion routine
- *     Context         = Pointer to context information
- *     Build           = Datagram build routine
- *     Flags           = Protocol specific flags
- * RETURNS:
- *     Status of operation
- */
-{
-  PDATAGRAM_SEND_REQUEST Request;
-
-  Request = ExAllocatePool(NonPagedPool, sizeof(DATAGRAM_SEND_REQUEST));
-  if (!Request)
-    return STATUS_INSUFFICIENT_RESOURCES;
-
-  InitializeDatagramSendRequest(
-    Request,
-    RemoteAddress,
-    RemotePort,
-    Buffer,
-    BufferSize,
-    Complete,
-    Context,
-    Build,
-    Flags);
-
-  *SendRequest = Request;
-
-  return STATUS_SUCCESS;
-}
-
-
-inline NTSTATUS BuildTCPSendRequest(
-    PTCP_SEND_REQUEST *SendRequest,
-    DATAGRAM_COMPLETION_ROUTINE Complete,
-    PVOID Context,
-    PVOID ProtocolContext)
-/*
- * FUNCTION: Allocates and intializes a TCP send request
- * ARGUMENTS:
- *     SendRequest     = Pointer to TCP send request
- *     Complete        = Completion routine
- *     Context         = Pointer to context information
- *     ProtocolContext = Protocol specific context
- * RETURNS:
- *     Status of operation
- */
-{
-  PTCP_SEND_REQUEST Request;
-
-  Request = ExAllocatePool(NonPagedPool, sizeof(TCP_SEND_REQUEST));
-  if (!Request)
-    return STATUS_INSUFFICIENT_RESOURCES;
-
-  InitializeTCPSendRequest(
-    Request,
-    Complete,
-    Context,
-    ProtocolContext);
-
-  *SendRequest = Request;
-
-  return STATUS_SUCCESS;
-}
-
-
 UINT Random(
     VOID)
 /*
@@ -390,7 +307,7 @@ UINT CopyPacketToBufferChain(
 }
 
 
-VOID FreeNdisPacket(
+VOID FreeNdisPacketX(
     PNDIS_PACKET Packet)
 /*
  * FUNCTION: Frees an NDIS packet
@@ -403,7 +320,6 @@ VOID FreeNdisPacket(
     TI_DbgPrint(DEBUG_BUFFER, ("Packet (0x%X)\n", Packet));
 
     MTMARK();
-    TrackDump();
 
     /* Free all the buffers in the packet first */
     NdisQueryPacket(Packet, NULL, NULL, &Buffer, NULL);
@@ -412,23 +328,17 @@ VOID FreeNdisPacket(
         UINT Length;
 
 	MTMARK();
-	TrackDump();
 
         NdisGetNextBuffer(Buffer, &NextBuffer);
         NdisQueryBuffer(Buffer, &Data, &Length);
         NdisFreeBuffer(Buffer);
-	Untrack(Buffer);
         ExFreePool(Data);
 
 	MTMARK();
-	TrackDump();
     }
 
     /* Finally free the NDIS packet discriptor */
     NdisFreePacket(Packet);
-    Untrack(Packet);
-
-    TrackDump();
 }
 
 
@@ -656,6 +566,37 @@ VOID DisplayTCPPacket(
         Length = IPPacket->ContigSize;
         DisplayTCPHeader(Buffer, Length);
     }
+}
+
+NDIS_STATUS AllocatePacketWithBuffer( PNDIS_PACKET *NdisPacket,
+				      PCHAR Data, UINT Len ) {
+    PNDIS_PACKET Packet;
+    PNDIS_BUFFER Buffer;
+    NDIS_STATUS Status;
+    PCHAR NewData;
+
+    NewData = ExAllocatePool( NonPagedPool, Len );
+    if( !NewData ) return NDIS_STATUS_NOT_ACCEPTED; // XXX 
+
+    if( Data ) 
+	RtlCopyMemory(NewData, Data, Len);
+
+    NdisAllocatePacket( &Status, &Packet, GlobalPacketPool );
+    if( Status != NDIS_STATUS_SUCCESS ) {
+	ExFreePool( NewData );
+	return Status;
+    }
+
+    NdisAllocateBuffer( &Status, &Buffer, GlobalBufferPool, NewData, Len );
+    if( Status != NDIS_STATUS_SUCCESS ) {
+	ExFreePool( NewData );
+	FreeNdisPacket( Packet );
+    }
+
+    *NdisPacket = Packet;
+    NdisChainBufferAtFront( Packet, Buffer );
+
+    return NDIS_STATUS_SUCCESS;
 }
 
 #endif /* DBG */

@@ -127,17 +127,18 @@ typedef NTSTATUS (*DATAGRAM_BUILD_ROUTINE)(
     PIP_PACKET *IPPacket);
 
 typedef struct _DATAGRAM_SEND_REQUEST {
-    LIST_ENTRY ListEntry;                 /* Entry on list */
-    PIP_ADDRESS RemoteAddress;            /* Pointer to remote IP address */
-    USHORT RemotePort;                    /* Remote port number */
-    PNDIS_BUFFER Buffer;                  /* Pointer to NDIS buffer to send */
-    DWORD BufferSize;                     /* Size of Buffer */
+    LIST_ENTRY ListEntry;
+    PNDIS_PACKET PacketToSend;
     DATAGRAM_COMPLETION_ROUTINE Complete; /* Completion routine */
     PVOID Context;                        /* Pointer to context information */
-    DATAGRAM_BUILD_ROUTINE Build;         /* Datagram build routine */
+    IP_PACKET Packet;
+    UINT BufferSize;
+    PIP_ADDRESS RemoteAddress;
+    USHORT RemotePort;
     ULONG Flags;                          /* Protocol specific flags */
 } DATAGRAM_SEND_REQUEST, *PDATAGRAM_SEND_REQUEST;
 
+#if 0
 #define InitializeDatagramSendRequest( \
   _SendRequest, \
   _RemoteAddress, \
@@ -157,6 +158,7 @@ typedef struct _DATAGRAM_SEND_REQUEST {
     (_SendRequest)->Build = (_Build); \
     (_SendRequest)->Flags = (_Flags); \
   }
+#endif /* These things bug me...  They hide the member names. */
 
 /* Transport address file context structure. The FileObject->FsContext2
    field holds a pointer to this structure */
@@ -254,8 +256,6 @@ typedef struct _AF_SEARCH {
     USHORT Protocol;        /* Protocol number */
 } AF_SEARCH, *PAF_SEARCH;
 
-
-
 /*******************************************************
 * Connection-oriented communication support structures *
 *******************************************************/
@@ -267,27 +267,6 @@ typedef struct _TCP_RECEIVE_REQUEST {
   DATAGRAM_COMPLETION_ROUTINE Complete; /* Completion routine */
   PVOID Context;                        /* Pointer to context information */
 } TCP_RECEIVE_REQUEST, *PTCP_RECEIVE_REQUEST;
-
-typedef struct _TCP_SEND_REQUEST {
-  LIST_ENTRY ListEntry;                 /* Entry on list */
-  DATAGRAM_COMPLETION_ROUTINE Complete; /* Completion routine */
-  PVOID Context;                        /* Pointer to context information */
-  PVOID ProtocolContext;                /* Protocol specific context */
-  ULONG Flags;                          /* Protocol specific flags */
-  ULONG SequenceNumber;                 /* Sequence number (network byte order) */
-  ULONG AckNumber;                      /* Acknowledgement number (network byte order) */
-} TCP_SEND_REQUEST, *PTCP_SEND_REQUEST;
-
-#define InitializeTCPSendRequest( \
-  _SendRequest, \
-  _Complete, \
-  _Context, \
-  _ProtocolContext) { \
-    (_SendRequest)->Complete = (_Complete); \
-    (_SendRequest)->Context = (_Context); \
-    (_SendRequest)->ProtocolContext = (_ProtocolContext); \
-  }
-
 
 /* Connection states */
 typedef enum {

@@ -68,7 +68,6 @@ PNDIS_PACKET PrepareARPPacket(
         ExFreePool(DataBuffer);
         return NULL;
     }
-    Track(NDIS_PACKET_TAG,NdisPacket);
 
     /* Allocate NDIS buffer for maximum link level header and ARP packet */
     NdisAllocateBuffer(&NdisStatus, &NdisBuffer, GlobalBufferPool,
@@ -78,7 +77,6 @@ PNDIS_PACKET PrepareARPPacket(
         ExFreePool(DataBuffer);
         return NULL;
     }
-    Track(NDIS_BUFFER_TAG,NdisBuffer);
 
     /* Link NDIS buffer into packet */
     NdisChainBufferAtFront(NdisPacket, NdisBuffer);
@@ -129,11 +127,7 @@ VOID ARPTransmitComplete(
  */
 {
     TI_DbgPrint(DEBUG_ARP, ("Called.\n"));
-    /* Already freed, according to memtrack */
-#if 0
     FreeNdisPacket(NdisPacket);
-    Untrack(NdisPacket);
-#endif
 }
 
 

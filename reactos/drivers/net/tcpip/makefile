@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.16.2.3 2004/04/22 16:51:38 arty Exp $
+# $Id: makefile,v 1.16.2.4 2004/04/25 03:37:47 arty Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -32,8 +32,7 @@ NETWORK_OBJECTS  = network/icmp.o network/ip.o network/neighbor.o \
                    network/transmit.o network/prefix.o
 DATAGRAM_OBJECTS = transport/datagram/datagram.o
 RAWIP_OBJECTS    = transport/rawip/rawip.o
-TCP_OBJECTS      = transport/tcp/tcp.o transport/tcp/event.o \
-		   transport/tcp/rawpkt.o
+TCP_OBJECTS      = transport/tcp/tcp.o transport/tcp/event.o
 UDP_OBJECTS      = transport/udp/udp.o
 ARCH_OBJECTS     = tcpip/i386/checksum.o
 

@@ -39,8 +39,6 @@ VOID SendICMPComplete(
     FreeNdisPacket(Packet);
 
     TI_DbgPrint(DEBUG_ICMP, ("Freeing IP packet at %X.\n", IPPacket));
-
-    (*IPPacket->Free)(IPPacket);
 }
 
 
@@ -82,7 +80,6 @@ PIP_PACKET PrepareICMPPacket(
         sizeof(ICMP_HEADER) + DataSize;
     DataBuffer = ExAllocatePool(NonPagedPool, Size);
     if (!DataBuffer) {
-        (*IPPacket->Free)(IPPacket);
         return NULL;
     }
 
@@ -91,7 +88,6 @@ PIP_PACKET PrepareICMPPacket(
     /* Allocate NDIS packet */
     NdisAllocatePacket(&NdisStatus, &NdisPacket, GlobalPacketPool);
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        (*IPPacket->Free)(IPPacket);
         ExFreePool(DataBuffer);
         return NULL;
     }
@@ -103,7 +99,6 @@ PIP_PACKET PrepareICMPPacket(
     NdisAllocateBuffer(&NdisStatus, &NdisBuffer, GlobalBufferPool,
         DataBuffer, Size);
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        (*IPPacket->Free)(IPPacket);
         FreeNdisPacket(NdisPacket);
         ExFreePool(DataBuffer);
         return NULL;
@@ -254,7 +249,6 @@ VOID ICMPTransmit(
         /* Send the packet */
         if (IPSendDatagram(IPPacket, RCN) != STATUS_SUCCESS) {
             FreeNdisPacket(IPPacket->NdisPacket);
-            (*IPPacket->Free)(IPPacket);
         }
         /* We're done with the RCN */
         DereferenceObject(RCN);
@@ -266,7 +260,6 @@ VOID ICMPTransmit(
             IPPacket->DstAddr.Address.IPv4Address));
         /* Discard packet */
         FreeNdisPacket(IPPacket->NdisPacket);
-        (*IPPacket->Free)(IPPacket);
     }
 }
 

@@ -87,24 +87,6 @@ VOID TCPAddSegment(
   PTCP_SEGMENT Segment,
   PULONG Acknowledged);
 
-inline NTSTATUS TCPBuildSendRequest(
-    PTCP_SEND_REQUEST *SendRequest,
-    PDATAGRAM_SEND_REQUEST *DGSendRequest,
-    PCONNECTION_ENDPOINT Connection,
-    DATAGRAM_COMPLETION_ROUTINE Complete,
-    PVOID Context,
-    PNDIS_BUFFER Buffer,
-    DWORD BufferSize,
-    ULONG Flags);
-
-inline NTSTATUS TCPBuildAndTransmitSendRequest(
-    PCONNECTION_ENDPOINT Connection,
-    DATAGRAM_COMPLETION_ROUTINE Complete,
-    PVOID Context,
-    PNDIS_BUFFER Buffer,
-    DWORD BufferSize,
-    ULONG Flags);
-
 NTSTATUS TCPConnect(
   PTDI_REQUEST Request,
   PTDI_CONNECTION_INFORMATION ConnInfo,

@@ -123,7 +123,6 @@ NTSTATUS SendFragments(
         ExFreePool(IFC);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-    Track(NDIS_PACKET_TAG, IFC->NdisPacket);
 
     /* Allocate NDIS buffer */
     NdisAllocateBuffer(&NdisStatus, &IFC->NdisBuffer,
@@ -134,7 +133,6 @@ NTSTATUS SendFragments(
         ExFreePool(IFC);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-    Track(NDIS_BUFFER_TAG, IFC->NdisBuffer);
 
     /* Link NDIS buffer into packet */
     NdisChainBufferAtFront(IFC->NdisPacket, IFC->NdisBuffer);
@@ -210,7 +208,10 @@ VOID IPSendComplete(
             NdisPacket = IFC->Datagram;
             FreeNdisPacket(IFC->NdisPacket);
             ExFreePool(IFC);
-            (*PC(NdisPacket)->Complete)(PC(NdisPacket)->Context, NdisPacket, NdisStatus);
+            (*PC(NdisPacket)->Complete)
+		(PC(NdisPacket)->Context, 
+		 NdisPacket, 
+		 NdisStatus);
         }
     }
 }
@@ -332,15 +333,18 @@ NTSTATUS IPSendDatagram(
     MTMARK();
     /* Fetch path MTU now, because it may change */
     PathMTU = RCN->PathMTU;
+    TI_DbgPrint(MID_TRACE,("PathMTU: %d\n", PathMTU));
     MTMARK();
 
     if (IPPacket->TotalSize > PathMTU) {
 	MTMARK();
+	TI_DbgPrint(MID_TRACE,("Doing SendFragments\n"));
         return SendFragments(IPPacket, NCE, PathMTU);
     } else {
 	MTMARK();
         if ((IPPacket->Flags & IP_PACKET_FLAG_RAW) == 0) {
             /* Calculate checksum of IP header */
+	    TI_DbgPrint(MID_TRACE,("-> not IP_PACKET_FLAG_RAW\n"));
 	    MTMARK();
             ((PIPv4_HEADER)IPPacket->Header)->Checksum = 0;
 

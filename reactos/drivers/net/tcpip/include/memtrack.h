@@ -2,15 +2,22 @@
 #define MEMTRACK_H
 
 #ifdef MEMTRACK
-#define MTMARK() \
-      { PNDIS_BUFFER ArtyFake; \
-        NDIS_STATUS ArtyStatus; \
-        DbgPrint("Buffer Tracking Mark %s:%d\n", __FILE__, __LINE__); \
-	NdisAllocateBuffer(&ArtyStatus, \
-			   &ArtyFake, \
-			   GlobalBufferPool, \
-			   0, \
-			   0); }
+#define MTMARK() TrackDumpFL(__FILE__, __LINE__)
+#define NdisAllocateBuffer(x,y,z,a,b) { \
+    NdisAllocateBuffer(x,y,z,a,b); \
+    if( *x == NDIS_STATUS_SUCCESS ) { \
+        Track(NDIS_BUFFER_TAG, *y); \
+    } \
+}
+#define NdisAllocatePacket(x,y,z) { \
+    NdisAllocatePacket(x,y,z); \
+    if( *x == NDIS_STATUS_SUCCESS ) { \
+        Track(NDIS_PACKET_TAG, *y); \
+    } \
+}
+#define FreeNdisPacket(x) { TI_DbgPrint(MID_TRACE,("Deleting Packet %x\n", x)); FreeNdisPacketX(x); }
+#define NdisFreePacket(x) { Untrack(x); NdisFreePacket(x); }
+#define NdisFreeBuffer(x) { Untrack(x); NdisFreeBuffer(x); }
 
 extern LIST_ENTRY AllocatedObjectsHead;
 extern KSPIN_LOCK AllocatedObjectsLock;
@@ -40,6 +47,7 @@ VOID TrackTag( DWORD Tag );
 #define TrackDump()
 #define Untrack(x)
 #define TrackTag(x)
+#define FreeNdisPacket FreeNdisPacketX
 #endif
 
 #endif/*MEMMTRAC_H*/

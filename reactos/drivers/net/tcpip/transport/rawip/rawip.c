@@ -22,8 +22,7 @@ BOOLEAN RawIPInitialized = FALSE;
 NTSTATUS BuildRawIPPacket(
     PVOID Context,
     PIP_ADDRESS LocalAddress,
-    USHORT LocalPort,
-    PIP_PACKET *IPPacket)
+    USHORT LocalPort )
 /*
  * FUNCTION: Builds an UDP packet
  * ARGUMENTS:
@@ -36,11 +35,12 @@ NTSTATUS BuildRawIPPacket(
  */
 {
     PVOID Header;
-    PIP_PACKET Packet;
     NDIS_STATUS NdisStatus;
     PNDIS_BUFFER HeaderBuffer;
     PDATAGRAM_SEND_REQUEST SendRequest = (PDATAGRAM_SEND_REQUEST)Context;
+    PIP_PACKET Packet = &SendRequest->Packet;
 
+#if 0
     TI_DbgPrint(MAX_TRACE, ("TCPIP.SYS: NDIS data buffer is at (0x%X).\n", SendRequest->Buffer));
     TI_DbgPrint(MAX_TRACE, ("NDIS data buffer Next is at (0x%X).\n", SendRequest->Buffer->Next));
     TI_DbgPrint(MAX_TRACE, ("NDIS data buffer Size is (0x%X).\n", SendRequest->Buffer->Size));
@@ -48,32 +48,23 @@ NTSTATUS BuildRawIPPacket(
     TI_DbgPrint(MAX_TRACE, ("NDIS data buffer StartVa is (0x%X).\n", SendRequest->Buffer->StartVa));
     TI_DbgPrint(MAX_TRACE, ("NDIS data buffer ByteCount is (0x%X).\n", SendRequest->Buffer->ByteCount));
     TI_DbgPrint(MAX_TRACE, ("NDIS data buffer ByteOffset is (0x%X).\n", SendRequest->Buffer->ByteOffset));
+#endif
 
     /* Prepare packet */
 
     /* FIXME: Assumes IPv4 */
-    Packet = IPCreatePacket(IP_ADDRESS_V4);
     if (!Packet)
         return STATUS_INSUFFICIENT_RESOURCES;
 
+    IPInitializePacket(Packet,IP_ADDRESS_V4);
     Packet->Flags      = IP_PACKET_FLAG_RAW;    /* Don't touch IP header */
     Packet->TotalSize  = SendRequest->BufferSize;
-
-    /* Allocate NDIS packet */
-    NdisAllocatePacket(&NdisStatus, &Packet->NdisPacket, GlobalPacketPool);
-    if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        TI_DbgPrint(MIN_TRACE, ("Cannot allocate NDIS packet. NdisStatus = (0x%X)\n", NdisStatus))
-        (*Packet->Free)(Packet);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-    Track(NDIS_PACKET_TAG, Packet->NdisPacket);
 
     if (MaxLLHeaderSize != 0) {
         Header = ExAllocatePool(NonPagedPool, MaxLLHeaderSize);
         if (!Header) {
             TI_DbgPrint(MIN_TRACE, ("Cannot allocate memory for packet headers.\n"));
             FreeNdisPacket(Packet->NdisPacket);
-            (*Packet->Free)(Packet);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
@@ -90,20 +81,13 @@ NTSTATUS BuildRawIPPacket(
             TI_DbgPrint(MIN_TRACE, ("Cannot allocate NDIS buffer for packet headers. NdisStatus = (0x%X)\n", NdisStatus));
             ExFreePool(Header);
             FreeNdisPacket(Packet->NdisPacket);
-            (*Packet->Free)(Packet);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
-	Track(NDIS_BUFFER_TAG, HeaderBuffer);
         /* Chain header at front of packet */
         NdisChainBufferAtFront(Packet->NdisPacket, HeaderBuffer);
     }
 
-    /* Chain data after link level header if it exists */
-    NdisChainBufferAtBack(Packet->NdisPacket, SendRequest->Buffer);
-
     DISPLAY_IP_PACKET(Packet);
-
-    *IPPacket = Packet;
 
     return STATUS_SUCCESS;
 }
@@ -125,8 +109,32 @@ NTSTATUS RawIPSendDatagram(
  *     Status of operation
  */
 {
-    return DGSendDatagram(Request, ConnInfo,
-        Buffer, DataSize, BuildRawIPPacket);
+    IP_PACKET Packet;
+    NDIS_STATUS Status;
+    PCHAR BufferData;
+    UINT BufferLen;
+    PADDRESS_FILE AddrFile = 
+	(PADDRESS_FILE)Request->Handle.AddressHandle;
+    PDATAGRAM_SEND_REQUEST SendRequest;
+
+    Request = ExAllocatePool( NonPagedPool, sizeof(*Request) );
+
+    NdisQueryBuffer( Buffer, &BufferData, &BufferLen );
+    Status = AllocatePacketWithBuffer( &Packet.NdisPacket,
+				       BufferData,
+				       BufferLen );
+    
+    BuildRawIPPacket( SendRequest,
+		      (PIP_ADDRESS)&AddrFile->ADE->Address->Address.
+		      IPv4Address,
+		      AddrFile->Port );
+
+    if( Status != NDIS_STATUS_SUCCESS ) 
+	Status = DGSendDatagram(Request, ConnInfo, &SendRequest->Packet);
+
+    NdisFreeBuffer( Buffer );
+
+    return Status;
 }
 
 

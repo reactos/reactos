@@ -18,8 +18,8 @@
 #include <routines.h>
 #include <oskittcp.h>
 
+LONG TCP_IPIdentification = 0;
 static BOOLEAN TCPInitialized = FALSE;
-static LONG IPIdentification = 0;
 static NPAGED_LOOKASIDE_LIST TCPSegmentList;
 
 VOID TCPReceive(PNET_TABLE_ENTRY NTE, PIP_PACKET IPPacket)

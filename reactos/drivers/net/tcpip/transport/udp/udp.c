@@ -64,7 +64,6 @@ NTSTATUS AddUDPHeaderIPv4(
     ExFreePool(Header);
     return STATUS_INSUFFICIENT_RESOURCES;
   }
-  Track(NDIS_BUFFER_TAG, HeaderBuffer);
 
   /* Chain header at front of NDIS packet */
   NdisChainBufferAtFront(IPPacket->NdisPacket, HeaderBuffer);
@@ -112,8 +111,7 @@ NTSTATUS AddUDPHeaderIPv4(
 NTSTATUS BuildUDPPacket(
   PVOID Context,
   PIP_ADDRESS LocalAddress,
-  USHORT LocalPort,
-  PIP_PACKET *IPPacket)
+  USHORT LocalPort)
 /*
  * FUNCTION: Builds an UDP packet
  * ARGUMENTS:
@@ -126,31 +124,22 @@ NTSTATUS BuildUDPPacket(
  */
 {
   NTSTATUS Status;
-  PIP_PACKET Packet;
   NDIS_STATUS NdisStatus;
   PDATAGRAM_SEND_REQUEST SendRequest = (PDATAGRAM_SEND_REQUEST)Context;
+  PIP_PACKET Packet = &SendRequest->Packet;
 
   TI_DbgPrint(MAX_TRACE, ("Called.\n"));
 
   /* Prepare packet */
 
   /* FIXME: Assumes IPv4 */
-  Packet = IPCreatePacket(IP_ADDRESS_V4);
+  IPInitializePacket(IP_ADDRESS_V4, &SendRequest->Packet);
   if (!Packet)
     return STATUS_INSUFFICIENT_RESOURCES;
 
   Packet->TotalSize = sizeof(IPv4_HEADER) +
                       sizeof(UDP_HEADER)  +
                       SendRequest->BufferSize;
-
-  /* Allocate NDIS packet */
-  NdisAllocatePacket(&NdisStatus, &Packet->NdisPacket, GlobalPacketPool);
-  if (NdisStatus != NDIS_STATUS_SUCCESS) {
-    TI_DbgPrint(MIN_TRACE, ("Cannot allocate NDIS packet. NdisStatus = (0x%X)\n", NdisStatus));
-    (*Packet->Free)(Packet);
-    return STATUS_INSUFFICIENT_RESOURCES;
-  }
-  Track(NDIS_PACKET_TAG, Packet->NdisPacket);
 
   switch (SendRequest->RemoteAddress->Type) {
   case IP_ADDRESS_V4:
@@ -166,16 +155,10 @@ NTSTATUS BuildUDPPacket(
   if (!NT_SUCCESS(Status)) {
     TI_DbgPrint(MIN_TRACE, ("Cannot add UDP header. Status = (0x%X)\n", Status));
     FreeNdisPacket(Packet->NdisPacket);
-    (*Packet->Free)(Packet);
     return Status;
   }
 
-  /* Chain data after header */
-  NdisChainBufferAtBack(Packet->NdisPacket, SendRequest->Buffer);
-
   DISPLAY_IP_PACKET(Packet);
-
-  *IPPacket = Packet;
 
   return STATUS_SUCCESS;
 }
@@ -197,11 +180,18 @@ NTSTATUS UDPSendDatagram(
  *     Status of operation
  */
 {
-  return DGSendDatagram(Request,
-                        ConnInfo,
-                        Buffer,
-                        DataSize,
-                        BuildUDPPacket);
+    PDATAGRAM_SEND_REQUEST SendRequest;
+    PADDRESS_FILE AddrFile = 
+	(PADDRESS_FILE)Request->Handle.AddressHandle;
+    
+    BuildUDPPacket( SendRequest,
+		    (PIP_ADDRESS)&AddrFile->ADE->Address->Address.
+		    IPv4Address,
+		    AddrFile->Port );
+
+    return DGSendDatagram(Request,
+			  ConnInfo,
+			  &SendRequest->Packet);
 }
 
 

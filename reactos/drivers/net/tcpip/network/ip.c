@@ -47,6 +47,17 @@ VOID FreePacket(
 }
 
 
+VOID DontFreePacket(
+    PVOID Object)
+/*
+ * FUNCTION: Do nothing for when the IPPacket struct is part of another
+ * ARGUMENTS:
+ *     Object = Pointer to an IP packet structure
+ */
+{
+}
+
+
 VOID FreeADE(
     PVOID Object)
 /*
@@ -226,6 +237,29 @@ PIP_PACKET IPCreatePacket(
   IPPacket->Type     = Type;
 
   return IPPacket;
+}
+
+PIP_PACKET IPInitializePacket(
+    PIP_PACKET IPPacket,
+    ULONG Type)
+/*
+ * FUNCTION: Creates an IP packet object
+ * ARGUMENTS:
+ *     Type = Type of IP packet
+ * RETURNS:
+ *     Pointer to the created IP packet. NULL if there was not enough free resources.
+ */
+{
+    /* FIXME: Is this needed? */
+    RtlZeroMemory(IPPacket, sizeof(IP_PACKET));
+    
+    INIT_TAG(IPPacket, TAG('I','P','K','T'));
+    
+    IPPacket->Free     = DontFreePacket;
+    IPPacket->RefCount = 1;
+    IPPacket->Type     = Type;
+    
+    return IPPacket;
 }
 
 

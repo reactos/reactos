@@ -99,7 +99,8 @@ VOID DeleteAddress(
   CurrentEntry = AddrFile->TransmitQueue.Flink;
   while (CurrentEntry != &AddrFile->TransmitQueue) {
     NextEntry = CurrentEntry->Flink;
-    SendRequest = CONTAINING_RECORD(CurrentEntry, DATAGRAM_SEND_REQUEST, ListEntry);
+    SendRequest = CONTAINING_RECORD(CurrentEntry, 
+				    DATAGRAM_SEND_REQUEST, ListEntry);
     /* Abort the request and free its resources */
     KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
     (*SendRequest->Complete)(SendRequest->Context, STATUS_ADDRESS_CLOSED, 0);

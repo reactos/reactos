@@ -56,7 +56,6 @@ typedef struct LAN_ADAPTER {
     UINT MacOptions;                        /* MAC options for NIC driver/adapter */
     UINT Speed;                             /* Link speed */
     UINT PacketFilter;                      /* Packet filter for this adapter */
-    PNDIS_PACKET TDPackets;                 /* Transfer Data packets */
 } LAN_ADAPTER, *PLAN_ADAPTER;
 
 /* LAN adapter state constants */

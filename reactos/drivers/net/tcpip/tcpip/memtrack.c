@@ -37,6 +37,31 @@ VOID TrackWithTag( DWORD Tag, PVOID Thing, PCHAR FileName, DWORD LineNo ) {
     PALLOCATION_TRACKER TrackedThing = 
 	ExAllocatePool( NonPagedPool, sizeof(*TrackedThing) );
 
+    KIRQL OldIrql;
+    PLIST_ENTRY Entry;
+    PALLOCATION_TRACKER ThingInList;
+
+    DbgPrint("Track: %s:%d\n", FileName, LineNo);
+
+    KeAcquireSpinLock( &AllocatedObjectsLock, &OldIrql );
+    Entry = AllocatedObjectsList.Flink;
+    while( Entry != &AllocatedObjectsList ) {
+	ThingInList = CONTAINING_RECORD(Entry, ALLOCATION_TRACKER, Entry);
+	if( ThingInList->Thing == Thing ) {
+	    RemoveEntryList(Entry);
+	    
+	    ShowTrackedThing( "Free ", ThingInList );
+	    
+	    ExFreePool( ThingInList );
+	    KeReleaseSpinLock( &AllocatedObjectsLock, OldIrql );
+	    DbgPrint("UNTRACK: SPECIFIED ALREADY ALLOCATED ITEM %x\n", Thing);
+	    KeBugCheck( 0 );
+	}
+	Entry = Entry->Flink;
+    }
+
+    KeReleaseSpinLock( &AllocatedObjectsLock, OldIrql );
+
     if( TrackedThing ) {
 	TrackedThing->Tag      = Tag;
 	TrackedThing->Thing    = Thing;
@@ -48,6 +73,8 @@ VOID TrackWithTag( DWORD Tag, PVOID Thing, PCHAR FileName, DWORD LineNo ) {
 				     &AllocatedObjectsLock );
 	ShowTrackedThing( "Alloc", TrackedThing );
     }
+
+    TrackDumpFL( FileName, LineNo );
 }
 
 BOOL ShowTag( DWORD Tag ) {
@@ -76,11 +103,13 @@ VOID UntrackFL( PCHAR File, DWORD Line, PVOID Thing ) {
 	    
 	    ExFreePool( ThingInList );
 	    KeReleaseSpinLock( &AllocatedObjectsLock, OldIrql );
+	    TrackDumpFL( File, Line );
 	    return;
 	}
 	Entry = Entry->Flink;
     }
     KeReleaseSpinLock( &AllocatedObjectsLock, OldIrql );
+    TrackDumpFL( File, Line );
     DbgPrint("UNTRACK: SPECIFIED ALREADY FREE ITEM %x\n", Thing);
     KeBugCheck( 0 );
 }
