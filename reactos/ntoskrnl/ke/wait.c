@@ -153,6 +153,7 @@ static BOOLEAN KeDispatcherObjectWakeAll(DISPATCHER_HEADER* hdr)
    PKWAIT_BLOCK current;
    PLIST_ENTRY current_entry;
    PKWAIT_BLOCK PrevBlock;
+   NTSTATUS Status;
 
    DPRINT("KeDispatcherObjectWakeAll(hdr %x)\n",hdr);
 
@@ -163,7 +164,6 @@ static BOOLEAN KeDispatcherObjectWakeAll(DISPATCHER_HEADER* hdr)
    
    while (!IsListEmpty(&(hdr->WaitListHead)))
      {
-	NTSTATUS Status = STATUS_WAIT_0;
 	current_entry = RemoveHeadList(&hdr->WaitListHead);
 	current = CONTAINING_RECORD(current_entry,KWAIT_BLOCK,
 				    WaitListEntry);
@@ -172,51 +172,38 @@ static BOOLEAN KeDispatcherObjectWakeAll(DISPATCHER_HEADER* hdr)
         if (current->WaitType == WaitAny)
           {
              DPRINT("WaitAny: Remove all wait blocks.\n");
-	     //count the number of the wait block that is waking us, and set that as the wake status
-	     for( PrevBlock = current->Thread->WaitBlockList; PrevBlock; ++Status, PrevBlock = PrevBlock->NextWaitBlock )
-	       if( PrevBlock == current )
-		 break;
-	     if( PrevBlock == 0 )
-	       DbgPrint( "WaitOne: Wait Block not in list! Wait result will be corrupt\n" );
-             current->Thread->WaitBlockList = NULL;
+	         for( PrevBlock = current->Thread->WaitBlockList; PrevBlock; PrevBlock = PrevBlock->NextWaitBlock )
+			    if( PrevBlock != current )
+				    RemoveEntryList( &PrevBlock->WaitListEntry );
+		     current->Thread->WaitBlockList = 0;
           }
         else
           {
-             DPRINT("WaitAll: Remove the current wait block only.\n");
+              DPRINT("WaitAll: Remove the current wait block only.\n");
 
-             PrevBlock = current->Thread->WaitBlockList;
-             if (PrevBlock)
-               {
-                  if (PrevBlock->NextWaitBlock == current)
-                    {
-                       DPRINT("WaitAll: Current block is list head.\n");
-                       PrevBlock->NextWaitBlock = current->NextWaitBlock;
-                    }
-                  else
-                    {
-                       DPRINT("WaitAll: Current block is list head.\n");
-                       while (PrevBlock &&
-                              PrevBlock->NextWaitBlock != current)
-                         {
-                            PrevBlock = PrevBlock->NextWaitBlock;
-                         }
-
-                       if (PrevBlock)
-                         {
-                            PrevBlock->NextWaitBlock = current->NextWaitBlock;
-                         }
-                    }
-               }
-             else
-               {
-                  DPRINT("WaitAll: Wait Block List is empty!\n");
-               }
-          }
+              PrevBlock = current->Thread->WaitBlockList;
+              if (PrevBlock == current)
+              {
+                 DPRINT( "WaitAll: Current block is list head.\n" );
+                 current->Thread->WaitBlockList = current->NextWaitBlock;
+              }
+              else
+              {
+                 DPRINT( "WaitAll: Current block is not list head.\n" );
+                 while ( PrevBlock && PrevBlock->NextWaitBlock != current)
+                 {
+                    PrevBlock = PrevBlock->NextWaitBlock;
+                 }
+                 if (PrevBlock)
+                 {
+                    PrevBlock->NextWaitBlock = current->NextWaitBlock;
+                 }
+              }
+		   }     
 	
 	KiSideEffectsBeforeWake(hdr);
-	
-	PsUnfreezeThread(CONTAINING_RECORD(current->Thread,ETHREAD,Tcb),
-			 &Status);
+    Status = current->WaitKey;
+	PsUnfreezeThread( CONTAINING_RECORD( current->Thread,ETHREAD,Tcb ), &Status );
      };
    return(TRUE);
 }
@@ -226,7 +213,7 @@ static BOOLEAN KeDispatcherObjectWakeOne(DISPATCHER_HEADER* hdr)
    PKWAIT_BLOCK current;
    PLIST_ENTRY current_entry;
    PKWAIT_BLOCK PrevBlock;
-   NTSTATUS Status = STATUS_WAIT_0;
+   NTSTATUS Status;
 
    DPRINT("KeDispatcherObjectWakeOn(hdr %x)\n",hdr);
    DPRINT("hdr->WaitListHead.Flink %x hdr->WaitListHead.Blink %x\n",
@@ -244,52 +231,40 @@ static BOOLEAN KeDispatcherObjectWakeOne(DISPATCHER_HEADER* hdr)
    if (current->WaitType == WaitAny)
      {
         DPRINT("WaitAny: Remove all wait blocks.\n");
-		//count the number of the wait block that is waking us, and set that as the wake status
-        for( PrevBlock = current->Thread->WaitBlockList; PrevBlock; ++Status, PrevBlock = PrevBlock->NextWaitBlock )
-			if( PrevBlock == current )
-				break;
-		if( PrevBlock == 0 )
-			DbgPrint( "WaitOne: Wait Block not in list! Wait result will be corrupt\n" );
-		current->Thread->WaitBlockList = NULL;
+		for( PrevBlock = current->Thread->WaitBlockList; PrevBlock; PrevBlock = PrevBlock->NextWaitBlock )
+			if( PrevBlock != current )
+				RemoveEntryList( &PrevBlock->WaitListEntry );
+		current->Thread->WaitBlockList = 0;
      }
    else
      {
         DPRINT("WaitAll: Remove the current wait block only.\n");
 
         PrevBlock = current->Thread->WaitBlockList;
-        if (PrevBlock)
-          {
-             if (PrevBlock->NextWaitBlock == current)
-               {
-                  DPRINT("WaitAll: Current block is list head.\n");
-                  PrevBlock->NextWaitBlock = current->NextWaitBlock;
-               }
-             else
-               {
-                  DPRINT("WaitAll: Current block is list head.\n");
-                  while (PrevBlock && PrevBlock->NextWaitBlock != current)
-                    {
-                       PrevBlock = PrevBlock->NextWaitBlock;
-                    }
-
-                  if (PrevBlock)
-                    {
-                       PrevBlock->NextWaitBlock = current->NextWaitBlock;
-                    }
-               }
-          }
-         else
+        if (PrevBlock == current)
            {
-              DPRINT("WaitAll: Wait Block List is empty!\n");
+              DPRINT( "WaitAll: Current block is list head.\n" );
+              current->Thread->WaitBlockList = current->NextWaitBlock;
            }
+        else
+           {
+              DPRINT( "WaitAll: Current block is not list head.\n" );
+              while ( PrevBlock && PrevBlock->NextWaitBlock != current)
+                {
+                   PrevBlock = PrevBlock->NextWaitBlock;
+                }
+              if (PrevBlock)
+                {
+                   PrevBlock->NextWaitBlock = current->NextWaitBlock;
+                }
+		   }
      }
 
    DPRINT("Waking %x\n",current->Thread);
    
    KiSideEffectsBeforeWake(hdr);
-   
-   PsUnfreezeThread(CONTAINING_RECORD(current->Thread,ETHREAD,Tcb),
-		    &Status);
+   Status = current->WaitKey;
+   PsUnfreezeThread( CONTAINING_RECORD( current->Thread, ETHREAD, Tcb ), &Status );
    return(TRUE);
 }
 
@@ -368,7 +343,6 @@ NTSTATUS KeWaitForSingleObject(PVOID Object,
  */
 {
    DISPATCHER_HEADER* hdr = (DISPATCHER_HEADER *)Object;
-   KWAIT_BLOCK blk;
    PKTHREAD CurrentThread;
    NTSTATUS Status;
    
@@ -405,16 +379,16 @@ NTSTATUS KeWaitForSingleObject(PVOID Object,
 	  }
 		
 	/* Append wait block to the KTHREAD wait block list */
-	CurrentThread->WaitBlockList = &blk;
+	CurrentThread->WaitBlockList = &CurrentThread->WaitBlock[0];
 	
-	blk.Object = Object;
-	blk.Thread = CurrentThread;
-	blk.WaitKey = 0;
-	blk.WaitType = WaitAny;
-	blk.NextWaitBlock = NULL;
-	DPRINT("hdr->WaitListHead.Flink %x hdr->WaitListHead.Blink %x blk.WaitListEntry = %x\n",
-	       hdr->WaitListHead.Flink,hdr->WaitListHead.Blink, blk.WaitListEntry );
-	InsertTailList(&hdr->WaitListHead, &blk.WaitListEntry);
+	CurrentThread->WaitBlock[0].Object = Object;
+	CurrentThread->WaitBlock[0].Thread = CurrentThread;
+	CurrentThread->WaitBlock[0].WaitKey = 0;
+	CurrentThread->WaitBlock[0].WaitType = WaitAny;
+	CurrentThread->WaitBlock[0].NextWaitBlock = NULL;
+	DPRINT("hdr->WaitListHead.Flink %x hdr->WaitListHead.Blink %x CurrentThread->WaitBlock[0].WaitListEntry = %x\n",
+	       hdr->WaitListHead.Flink,hdr->WaitListHead.Blink, CurrentThread->WaitBlock[0].WaitListEntry );
+	InsertTailList(&hdr->WaitListHead, &CurrentThread->WaitBlock[0].WaitListEntry);
 	KeReleaseDispatcherDatabaseLock(FALSE);
 	DPRINT("Waiting for %x with irql %d\n", Object, KeGetCurrentIrql());
 	PsFreezeThread(PsGetCurrentThread(),
