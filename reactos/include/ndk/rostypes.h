@@ -1,4 +1,4 @@
-/* $Id: rostypes.h,v 1.1.2.1 2004/10/25 01:24:07 ion Exp $
+/* $Id: rostypes.h,v 1.1.2.2 2004/10/25 03:09:39 ion Exp $
  *
  *  ReactOS Headers
  *  Copyright (C) 1998-2004 ReactOS Team
@@ -45,6 +45,8 @@
 #define NT_SEVERITY(StatCode) (((StatCode) >> NTSTAT_SEVERITY_SHIFT) & NTSTAT_SEVERITY_MASK)
 #define NT_FACILITY(StatCode) (((StatCode) >> NTSTAT_FACILITY_SHIFT) & NTSTAT_FACILITY_MASK)
 #define NT_CUSTOMER(StatCode) ((StatCode) & NTSTAT_CUSTOMER_MASK)
+
+#define RTL_REGISTRY_ENUM       6   /* ReactOS specific: Used internally in kernel only */
 
 typedef enum _TRAVERSE_METHOD {
 	TraverseMethodPreorder,
