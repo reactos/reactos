@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.17 1999/11/25 10:47:57 dwelch Exp $
+/* $Id: section.c,v 1.18 1999/11/25 23:37:02 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -86,7 +86,7 @@ NTSTATUS MmpCreateSection(PVOID ObjectBody,
 	return(STATUS_SUCCESS);
      }
    
-   if (wcschr(RemainingPath+1, '\\') != NULL)
+   if (wcschr(RemainingPath+1, L'\\') != NULL)
      {
 	return(STATUS_UNSUCCESSFUL);
      }
