@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.21 2003/04/30 22:07:29 gvg Exp $
+; $Id: msvcrt.def,v 1.22 2003/07/16 13:29:01 royce Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -252,7 +252,7 @@ _fputwchar
 _fsopen
 _fstat
 _fstati64
-; _ftime
+_ftime
 _ftol=NTDLL._ftol
 _fullpath
 _futime

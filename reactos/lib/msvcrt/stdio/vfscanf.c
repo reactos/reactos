@@ -64,7 +64,7 @@ unsigned long int __strtoul_internal  (const char *__nptr,  char **__endptr, int
 # define TYPEMOD	(LONG|LONGDBL|SHORT)
 
 
-# define ungetc(c, s)	((void) (c != EOF && --read_in), ungetc (c, s))
+# define UNGETC(c, s)	((void) (((wint_t)c) != ((wint_t)EOF) && --read_in), ungetc (c, s))
 # define inchar()	((c = getc (s)), (void) (c != EOF && ++read_in), c)
 # define encode_error()	do {						      \
 			  funlockfile (s);				      \
@@ -198,7 +198,7 @@ int __vfscanf (FILE *s, const char *format, va_list argptr)
 		    input_error ();
 		  else if (c != *f++)
 		    {
-		      ungetc (c, s);
+		      UNGETC (c, s);
 		      conv_error ();
 		    }
 		}
@@ -236,7 +236,7 @@ int __vfscanf (FILE *s, const char *format, va_list argptr)
 
 	  if (c != fc)
 	    {
-	      ungetc (c, s);
+	      UNGETC (c, s);
 	      conv_error ();
 	    }
 
@@ -356,7 +356,7 @@ int __vfscanf (FILE *s, const char *format, va_list argptr)
 	    if (inchar () == EOF && *_errno() == EINTR)
 	      input_error ();
 	  while (isspace (c));
-	  ungetc (c, s);
+	  UNGETC (c, s);
 	  skip_space = 0;
 	}
 
@@ -366,7 +366,7 @@ int __vfscanf (FILE *s, const char *format, va_list argptr)
 	  c = inchar ();
 	  if (c != fc)
 	    {
-	      ungetc (c, s);
+	      UNGETC (c, s);
 	      conv_error ();
 	    }
 	  break;
@@ -583,7 +583,7 @@ int __vfscanf (FILE *s, const char *format, va_list argptr)
 	    {
 	      if (isspace (c))
 		{
-		  ungetc (c, s);
+		  UNGETC (c, s);
 		  break;
 		}
 #define	STRING_ADD_CHAR(Str, c, Type)					      \
@@ -653,7 +653,7 @@ int __vfscanf (FILE *s, const char *format, va_list argptr)
 		       not make a difference for white space characters
 		       we can simply push back a simple <SP> which is
 		       guaranteed to be in the [:space:] class.  */
-		    ungetc (' ', s);
+		    UNGETC (' ', s);
 		    break;
 		  }
 
@@ -751,7 +751,7 @@ int __vfscanf (FILE *s, const char *format, va_list argptr)
 	    }
 
 	  /* The just read character is not part of the number anymore.  */
-	  ungetc (c, s);
+	  UNGETC (c, s);
 
 	  if (wpsize == 0 ||
 	      (wpsize == 1 && (wp[0] == '+' || wp[0] == '-')))
@@ -853,7 +853,7 @@ int __vfscanf (FILE *s, const char *format, va_list argptr)
 		{
 		  /* The last read character is not part of the number
 		     anymore.  */
-		  ungetc (c, s);
+		  UNGETC (c, s);
 		  break;
 		}
 	      if (width > 0)
@@ -951,7 +951,7 @@ int __vfscanf (FILE *s, const char *format, va_list argptr)
 	  if (fc == '\0')
 	    {
 	      if (!(flags & LONG))
-		ungetc (c, s);
+		UNGETC (c, s);
 	      conv_error();
 	    }
 
@@ -973,7 +973,7 @@ int __vfscanf (FILE *s, const char *format, va_list argptr)
 			 input we push it back only in case it is
 			 representable within one byte.  */
 		      if (val < 0x80)
-			ungetc (val, s);
+			UNGETC (val, s);
 		      break;
 		    }
 		  STRING_ADD_CHAR (wstr, val, wchar_t);
@@ -999,7 +999,7 @@ int __vfscanf (FILE *s, const char *format, va_list argptr)
 		{
 		  if (wp[c] == not_in)
 		    {
-		      ungetc (c, s);
+		      UNGETC (c, s);
 		      break;
 		    }
 		  STRING_ADD_CHAR (str, c, char);
@@ -1036,7 +1036,7 @@ int __vfscanf (FILE *s, const char *format, va_list argptr)
       do
 	c = inchar ();
       while (isspace (c));
-      ungetc (c, s);
+      UNGETC (c, s);
     }
 
 
