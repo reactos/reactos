@@ -18,14 +18,18 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.  */
 
-double ldexp (double __x, int __y);
 
-double ldexp (double __x, int __y)
+double fmod (double __x, double __y);
+
+double fmod (double __x, double __y)
 {
   register double __value;
   __asm __volatile__
-    ("fscale"
-     : "=t" (__value) : "0" (__x), "u" ((double) __y));
+    ("1:        fprem\n\t"
+     "fstsw     %%ax\n\t"
+     "sahf\n\t"
+     "jp        1b"
+     : "=t" (__value) : "0" (__x), "u" (__y) : "ax", "cc");
 
   return __value;
 }

@@ -18,14 +18,17 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.  */
 
-double ldexp (double __x, int __y);
 
-double ldexp (double __x, int __y)
+double log10 (double __x);
+
+double log10 (double __x)
 {
   register double __value;
   __asm __volatile__
-    ("fscale"
-     : "=t" (__value) : "0" (__x), "u" ((double) __y));
+    ("fldlg2\n\t"
+     "fxch\n\t"
+     "fyl2x"
+     : "=t" (__value) : "0" (__x));
 
   return __value;
 }

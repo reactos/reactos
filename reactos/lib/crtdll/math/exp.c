@@ -18,14 +18,25 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.  */
 
-double ldexp (double __x, int __y);
 
-double ldexp (double __x, int __y)
+double exp (double __x);
+
+double exp (double __x)
 {
-  register double __value;
+  register double __value, __exponent;
+  __asm __volatile__
+    ("fldl2e                    # e^x = 2^(x * log2(e))\n\t"
+     "fmul      %%st(1)         # x * log2(e)\n\t"
+     "fstl      %%st(1)\n\t"
+     "frndint                   # int(x * log2(e))\n\t"
+     "fxch\n\t"
+     "fsub      %%st(1)         # fract(x * log2(e))\n\t"
+     "f2xm1                     # 2^(fract(x * log2(e))) - 1\n\t"
+     : "=t" (__value), "=u" (__exponent) : "0" (__x));
+  __value += 1.0;
   __asm __volatile__
     ("fscale"
-     : "=t" (__value) : "0" (__x), "u" ((double) __y));
+     : "=t" (__value) : "0" (__value), "u" (__exponent));
 
   return __value;
 }
