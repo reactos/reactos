@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mm.c,v 1.69 2004/03/13 19:14:15 dwelch Exp $
+/* $Id: mm.c,v 1.70 2004/04/08 20:05:08 jfilby Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -144,12 +144,19 @@ BOOLEAN STDCALL MmIsAddressValid(PVOID VirtualAddress)
    MEMORY_AREA* MemoryArea;
    PMADDRESS_SPACE AddressSpace;
    
-   AddressSpace = &PsGetCurrentProcess()->AddressSpace;
+   if ((ULONG)VirtualAddress >= KERNEL_BASE)
+     {
+	AddressSpace = MmGetKernelAddressSpace();
+     }
+   else
+     {
+    AddressSpace = &PsGetCurrentProcess()->AddressSpace;
+     }
    
    MmLockAddressSpace(AddressSpace);
    MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
-					  VirtualAddress);
-
+                      VirtualAddress);
+   
    if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
      {
 	MmUnlockAddressSpace(AddressSpace);
