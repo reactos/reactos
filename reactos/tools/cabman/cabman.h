@@ -14,7 +14,7 @@
 #define CM_MODE_CREATE   0
 #define CM_MODE_DISPLAY  1
 #define CM_MODE_EXTRACT  2
-
+#define CM_MODE_CREATE_SIMPLE 3
 
 /* Classes */
 
@@ -27,6 +27,7 @@ public:
 private:
     void Usage();
     bool CreateCabinet();
+    bool CreateSimpleCabinet();
     bool DisplayCabinet();
     bool ExtractFromCabinet();
     /* Event handlers */

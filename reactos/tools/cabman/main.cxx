@@ -191,6 +191,7 @@ void CCABManager::Usage()
     printf("ReactOS Cabinet Manager - Version %s\n\n", CM_VERSION);
     printf("CABMAN [/D | /E] [/A] [/L dir] cabinet [filename ...]\n");
     printf("CABMAN /C dirfile [/I] [/RC file]\n");
+    printf("CABMAN /S cabinet filename\n");
     printf("  cabinet   Cabinet file.\n");
     printf("  filename  Name of the file to extract from the cabinet.\n");
     printf("            Wild cards and multiple filenames\n");
@@ -209,6 +210,7 @@ void CCABManager::Usage()
     printf("  /N        Don't create the .inf file, only the cabinet.\n");
     printf("  /RC       Specify file to put in cabinet reserved area\n");
     printf("            (size must be less than 64KB).\n");
+    printf("  /S        Create simple cabinet.\n");
 }
 
 bool CCABManager::ParseCmdline(int argc, char* argv[])
@@ -222,14 +224,14 @@ bool CCABManager::ParseCmdline(int argc, char* argv[])
  */
 {
     int i;
-	  bool ShowUsage;
+    bool ShowUsage;
     bool FoundCabinet = false;
-	
+
     ShowUsage = (argc < 2);
 
-	  for (i = 1; i < argc; i++) {
-    		if (argv[i][0] == '/') {
-    			switch (argv[i][1]) {
+    for (i = 1; i < argc; i++) {
+        if (argv[i][0] == '/') {
+          switch (argv[i][1]) {
           case 'a':
           case 'A': ProcessAll = true; break;
           case 'c':
@@ -237,11 +239,11 @@ bool CCABManager::ParseCmdline(int argc, char* argv[])
           case 'd':
           case 'D': Mode = CM_MODE_DISPLAY; break;
           case 'e':
-    			case 'E': Mode = CM_MODE_EXTRACT; break;
+          case 'E': Mode = CM_MODE_EXTRACT; break;
           case 'i':
           case 'I': InfFileOnly = true; break;
           case 'l':
-    			case 'L':
+          case 'L':
                     if (argv[i][2] == 0) {
                         i++;
                         SetDestinationPath((char*)&argv[i][0]);
@@ -251,7 +253,7 @@ bool CCABManager::ParseCmdline(int argc, char* argv[])
                     break;
           case 'n':
           case 'N': DontGenerateInf = true; break;
-    			case 'R':
+          case 'R':
                     switch (argv[i][2]) {
                         case 'C': /* File to put in cabinet reserved area */
                             if (argv[i][3] == 0) {
@@ -272,30 +274,32 @@ bool CCABManager::ParseCmdline(int argc, char* argv[])
                             return false;
                     }
                     break;
-    			default:
+          case 's':
+          case 'S': Mode = CM_MODE_CREATE_SIMPLE; break;
+          default:
                     printf("Bad parameter %s.\n", argv[i]);
                     return false;
-    			}
-    		} else {
-			      if ((FoundCabinet) || (Mode == CM_MODE_CREATE)) {
+          }
+        } else {
+            if ((FoundCabinet) || (Mode == CM_MODE_CREATE)) {
                 /* FIXME: There may be many of these if Mode != CM_MODE_CREATE */
                 strcpy((char*)FileName, argv[i]);
             } else {
                 SetCabinetName(argv[i]);
                 FoundCabinet = true;
             }
-    		}
+        }
     }
 
     if (ShowUsage) {
-    	Usage();
-    	return false;
+      Usage();
+      return false;
     }
 
     /* FIXME */
     SelectCodec(CAB_CODEC_MSZIP);
 
-	  return true;
+    return true;
 }
 
 
@@ -313,6 +317,39 @@ bool CCABManager::CreateCabinet()
     }
 
     Parse();
+
+    return true;
+}
+
+
+bool CCABManager::CreateSimpleCabinet()
+/*
+ * FUNCTION: Create cabinet
+ */
+{
+    unsigned long Status;
+
+    Status = NewCabinet();
+    if (Status != CAB_STATUS_SUCCESS) {
+        DPRINT(MIN_TRACE, ("Cannot create cabinet (%d).\n", (unsigned int)Status));
+        return false;
+    }
+
+    Status = AddFile(FileName);
+    if (Status != CAB_STATUS_SUCCESS) {
+        DPRINT(MIN_TRACE, ("Cannot add file to cabinet (%d).\n", (unsigned int)Status));
+        return false;
+    }
+
+    Status = WriteDisk(false);
+    if (Status == CAB_STATUS_SUCCESS)
+        Status = CloseDisk();
+    if (Status != CAB_STATUS_SUCCESS) {
+        DPRINT(MIN_TRACE, ("Cannot write disk (%d).\n", (unsigned int)Status));
+        return false;
+    }
+
+    CloseCabinet();
 
     return true;
 }
@@ -423,6 +460,7 @@ bool CCABManager::Run()
     case CM_MODE_CREATE:  return CreateCabinet(); break;
     case CM_MODE_DISPLAY: return DisplayCabinet(); break;
     case CM_MODE_EXTRACT: return ExtractFromCabinet(); break;
+    case CM_MODE_CREATE_SIMPLE:  return CreateSimpleCabinet(); break;
     default:
         break;
     }
