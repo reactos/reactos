@@ -3,6 +3,7 @@
 #
 PATH_TO_TOP = ../../..
 
+include $(PATH_TO_TOP)/config
 include $(PATH_TO_TOP)/rules.mak
 
 SRV_OBJECTS= lpcsrv.o
