@@ -1,4 +1,4 @@
-/* $Id: lookas.c,v 1.6 2002/09/08 10:23:19 chorns Exp $
+/* $Id: lookas.c,v 1.7 2002/09/30 20:52:23 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -73,7 +73,7 @@ ExpDefaultAllocate(POOL_TYPE PoolType,
  *   Pointer to allocated memory, or NULL if there is not enough free resources
  */
 {
-  return ExAllocatePool(PoolType, NumberOfBytes);
+  return ExAllocatePoolWithTag(PoolType, NumberOfBytes, Tag);
 }
 
 
