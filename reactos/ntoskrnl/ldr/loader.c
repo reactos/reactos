@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.145 2004/09/26 15:07:44 hbirr Exp $
+/* $Id: loader.c,v 1.146 2004/09/28 20:16:24 hbirr Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -666,7 +666,7 @@ LdrLookupPageProtection(PVOID PageStart,
    ULONG Length;
    PVOID BaseAddress;
    
-   for (Idx = 0; Idx < PEFileHeader->NumberOfSections && !Write && !Execute; Idx++)
+   for (Idx = 0; Idx < PEFileHeader->NumberOfSections; Idx++)
    {
       Characteristics = PESectionHeaders[Idx].Characteristics;
       if (!(Characteristics & IMAGE_SECTION_NOLOAD))
