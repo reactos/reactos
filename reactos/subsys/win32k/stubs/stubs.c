@@ -1263,3 +1263,331 @@ VidMemFree(
 {
    UNIMPLEMENTED;
 }
+
+/*
+ * @unimplemented
+ */
+HANDLE STDCALL
+BRUSHOBJ_hGetColorTransform(
+   IN BRUSHOBJ *Brush)
+{
+   UNIMPLEMENTED;
+   return NULL;
+}
+
+/*
+ * @unimplemented
+ */
+VOID STDCALL
+EngClearEvent(
+   IN PEVENT Event)
+{
+   UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+EngDeleteFile(
+   IN LPWSTR FileName)
+{
+   UNIMPLEMENTED;
+   return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+VOID STDCALL
+EngDeleteSafeSemaphore(
+   IN OUT ENGSAFESEMAPHORE *Semaphore)
+{
+   UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+EngGetPrinterDriver(
+   IN HANDLE Printer,
+   IN LPWSTR Environment,
+   IN DWORD Level,
+   OUT BYTE *DrvInfo,
+   IN DWORD Buf,
+   OUT DWORD *Needed)
+{
+   UNIMPLEMENTED;
+   return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+ULONG STDCALL
+EngHangNotification(
+   IN HDEV Dev,
+   IN PVOID Reserved)
+{
+   UNIMPLEMENTED;
+   return EHN_ERROR;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+EngInitializeSafeSemaphore(
+   OUT ENGSAFESEMAPHORE *Semaphore)
+{
+   UNIMPLEMENTED;
+   return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+PDD_SURFACE_LOCAL STDCALL
+EngLockDirectDrawSurface(
+   IN HANDLE Surface)
+{
+   UNIMPLEMENTED;
+   return NULL;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+EngLpkInstalled()
+{
+   UNIMPLEMENTED;
+   return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+PVOID STDCALL
+EngMapFile(
+   IN LPWSTR Filename,
+   IN ULONG Size,
+   OUT ULONG_PTR *File)
+{
+   UNIMPLEMENTED;
+   return NULL;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+EngPlgBlt(
+   IN SURFOBJ *Dest,
+   IN SURFOBJ *Source,
+   IN SURFOBJ *Mask,
+   IN CLIPOBJ *Clip,
+   IN XLATEOBJ *Xlate,
+   IN COLORADJUSTMENT *ColorAdjustment,
+   IN POINTL *BrusOrigin,
+   IN POINTFIX *DestPoints,
+   IN RECTL *SourceRect,
+   IN POINTL *MaskPoint,
+   IN ULONG Mode)
+{
+   UNIMPLEMENTED;
+   return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+EngQueryDeviceAttribute(
+   IN HDEV Device,
+   IN ENG_DEVICE_ATTRIBUTE Attribute,
+   IN VOID *In,
+   IN ULONG InSize,
+   OUT VOID *Out,
+   OUT ULONG OutSize)
+{
+   UNIMPLEMENTED;
+   return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+LONG STDCALL
+EngReadStateEvent(
+   IN PEVENT Event)
+{
+   UNIMPLEMENTED;
+   return 0;
+}
+BOOL STDCALL
+EngStretchBltROP(
+   IN SURFOBJ *Dest,
+   IN SURFOBJ *Source,
+   IN SURFOBJ *Mask,
+   IN CLIPOBJ *Clip,
+   IN XLATEOBJ *Xlate,
+   IN COLORADJUSTMENT *ColorAdjustment,
+   IN POINTL *BrushOrigin,
+   IN RECTL *DestRect,
+   IN RECTL *SourceRect,
+   IN POINTL *MaskPoint,
+   IN ULONG Mode,
+   IN BRUSHOBJ *BrushObj,
+   IN DWORD ROP4)
+{
+   UNIMPLEMENTED;
+   return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+EngUnlockDirectDrawSurface(
+   IN PDD_SURFACE_LOCAL Surface)
+{
+   UNIMPLEMENTED;
+   return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+EngUnmapFile(
+   IN ULONG_PTR File)
+{
+   UNIMPLEMENTED;
+   return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+FD_GLYPHSET * STDCALL
+FONTOBJ_pfdg(
+   IN FONTOBJ *FontObj)
+{
+   UNIMPLEMENTED;
+   return NULL;
+}
+
+/*
+ * @unimplemented
+ */
+PBYTE STDCALL
+FONTOBJ_pjOpenTypeTablePointer(
+   IN FONTOBJ *FontObj,
+   IN ULONG Tag,
+   OUT ULONG *Table)
+{
+   UNIMPLEMENTED;
+   return NULL;
+}
+
+/*
+ * @unimplemented
+ */
+PFD_GLYPHATTR STDCALL
+FONTOBJ_pQueryGlyphAttrs(
+   IN FONTOBJ *FontObj,
+   IN ULONG Mode)
+{
+   UNIMPLEMENTED;
+   return NULL;
+}
+
+/*
+ * @unimplemented
+ */
+LPWSTR STDCALL
+FONTOBJ_pwszFontFilePaths(
+   IN FONTOBJ *FontObj,
+   OUT ULONG *PathLength)
+{
+   UNIMPLEMENTED;
+   return NULL;
+}
+
+/*
+ * @unimplemented
+ */
+LONG STDCALL
+HT_Get8BPPMaskPalette(
+   IN OUT LPPALETTEENTRY PaletteEntry,
+   IN BOOL Use8BPPMaskPal,
+   IN BYTE CMYMask,
+   IN USHORT RedGamma,
+   IN USHORT GreenGamma,
+   IN USHORT BlueGamma)
+{
+   UNIMPLEMENTED;
+   return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+STROBJ_bEnumPositionsOnly(
+   IN STROBJ *StringObj,
+   OUT ULONG *Count,
+   OUT PGLYPHPOS *Pos)
+{
+   UNIMPLEMENTED;
+   return (BOOL) DDI_ERROR;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+STROBJ_bGetAdvanceWidths(
+   IN STROBJ *StringObj,
+   IN ULONG First,
+   IN ULONG Count,
+   OUT POINTQF *Widths)
+{
+   UNIMPLEMENTED;
+   return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+FIX STDCALL
+STROBJ_fxBreakExtra(
+   IN STROBJ *StringObj)
+{
+   UNIMPLEMENTED;
+   return (FIX) 0;
+}
+
+/*
+ * @unimplemented
+ */
+FIX STDCALL
+STROBJ_fxCharacterExtra(
+   IN STROBJ *StringObj)
+{
+   UNIMPLEMENTED;
+   return (FIX) 0;
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE STDCALL
+XLATEOBJ_hGetColorTransform(
+   IN XLATEOBJ *XlateObj)
+{
+   UNIMPLEMENTED;
+   return NULL;
+}
