@@ -33,20 +33,9 @@ BOOL GDItoVGA(
 
   if(ColorTranslation == NULL)
   {
-DPRINT("GDItoVGA: No color translation\n");
     // No color translation necessary, we assume BPP = 1
+    BltToVGA(DestRect->left, DestRect->top, dx, dy, Source->pvBits, Source->lDelta);
 
-    for(j=SourcePoint->y; j<SourcePoint->y+dy; j++)
-    {
-      initial = GDIpos;
-
-      for(i=SourcePoint->x; i<SourcePoint->x+dx; i++)
-      {
-        vgaPutPixel(i+alterx, j+altery, *GDIpos);
-        GDIpos+=BPP;
-      }
-      GDIpos = initial + Source->lDelta;
-    }
   } else {
     // Perform color translation
     for(j=SourcePoint->y; j<SourcePoint->y+dy; j++)
@@ -72,32 +61,28 @@ BOOL VGAtoGDI(
   LONG i, j, dx, dy, RGBulong, BPP;
   BYTE  *GDIpos, *initial, idxColor;
 
+  // Used by the temporary DFB
+  PDEVSURF	TargetSurf;
+  DEVSURF	DestDevSurf;
+  PSURFOBJ	TargetBitmapSurf;
+  HBITMAP	hTargetBitmap;
+  SIZEL		InterSize;
+  POINTL	ZeroPoint;
+
   // FIXME: Optimize to retrieve entire bytes at a time (see /display/vgavideo/vgavideo.c:vgaGetByte)
 
   BPP = bytesPerPixel(Dest->iBitmapFormat);
-
-DPRINT("VGAtoGDI: BPP: %u\n", BPP);
-
-  GDIpos = Dest->pvBits +
-           (DestRect->top * Dest->lDelta) + (DestRect->left * BPP);
-
+  GDIpos = Dest->pvBits + (DestRect->top * Dest->lDelta) + (DestRect->left * BPP);
   dx = DestRect->right  - DestRect->left;
   dy = DestRect->bottom - DestRect->top;
 
   if(ColorTranslation == NULL)
   {
-DPRINT("VGAtoGDI: No color translation\n");
-    // No color translation necessary, we assume BPP = 1
-    for(j=SourcePoint->y; j<SourcePoint->y+dy; j++)
-    {
-       initial = GDIpos;
-       for(i=SourcePoint->x; i<SourcePoint->x+dx; i++)
-       {
-         *GDIpos = vgaGetPixel(i, j);
-         GDIpos++;
-       }
-       GDIpos = initial + Dest->lDelta;
-    }
+    // Prepare a Dest Dev Target and copy from the DFB to the DIB
+    DestDevSurf.NextScan = Dest->lDelta;
+    DestDevSurf.StartBmp = Dest->pvScan0;
+    BltFromVGA(SourcePoint->x, SourcePoint->y, dx, dy, Dest->pvBits, Dest->lDelta);
+
   } else {
     // Color translation
     for(j=SourcePoint->y; j<SourcePoint->y+dy; j++)
@@ -193,8 +178,9 @@ BOOL VGADDIBitBlt(SURFOBJ *Dest, SURFOBJ *Source, SURFOBJ *Mask,
 {
    RECT_ENUM RectEnum;
    BOOL EnumMore;
-
    PFN_VGABlt  BltOperation;
+
+DPRINT("VGADDIBitBlt: Dest->pvScan0: %08x\n", Dest->pvScan0);
 
    // Determine the bltbit operation
 
@@ -224,7 +210,7 @@ DPRINT("VGA2DFB\n");
       BltOperation = VGAtoDFB;
    } else
    {
-DPRINT("VGA:bitblt.c: Can't handle requested BitBlt operation\n");
+DPRINT("VGA:bitblt.c: Can't handle requested BitBlt operation (source:%u dest:%u)\n", Source->iType, Dest->iType);
       // Cannot handle given surfaces for VGA BitBlt
       return FALSE;
    }

@@ -130,6 +130,34 @@ VOID vgaPreCalc()
    }
 }
 
+static void
+get_masks(int x, int w)
+{
+	register int tmp;
+
+	leftMask = rightMask = 0;
+	byteCounter = w;
+	/* right margin */
+	tmp = (x+w) & 7;
+	if (tmp) {
+		byteCounter -= tmp;
+		rightMask = (unsigned char)(0xff00 >> tmp);
+	}
+	/* left margin */
+	tmp = x & 7;
+	if (tmp) {
+		byteCounter -= (8 - tmp);
+		leftMask = (0xff >> tmp);
+	}
+	/* too small ? */
+	if (byteCounter < 0) {
+		leftMask &= rightMask;
+		rightMask = 0;
+		byteCounter = 0;
+	}
+	byteCounter /= 8;
+}
+
 VOID vgaPutPixel(INT x, INT y, UCHAR c)
 {
   ULONG offset;
@@ -332,33 +360,128 @@ BOOL VGADDIIntersectRect(PRECTL prcDst, PRECTL prcSrc1, PRECTL prcSrc2)
 
    return FALSE;
 }
-/*
-BOOL bltToVga(INT x1, INT y1, INT dx, INT dy, UCHAR *bitmap)
+
+void BltFromVGA(int x, int y, int w, int h, void *b, int bw)
 {
-  // We use vertical stripes because we save some time by setting the mask less often
-  // Prototype code, to be implemented in bitblt.c
+	unsigned char *vp, *vpY, *vpP;
+	unsigned char data, mask, maskP;
+	unsigned char *bp, *bpY;
+	unsigned char plane_mask;
+	int byte_per_line = SCREEN_X >> 3;
+	int plane, i, j;
 
-  ULONG offset, i;
-  UCHAR a, *initial;
+	ASSIGNVP4(x, y, vpP)
+	ASSIGNMK4(x, y, maskP)
+	get_masks(x, w);
+	outb(GRA_I, 0x05);	/* read mode 0 */
+	saved_GC_mode = inb(GRA_D);
+	outb(GRA_D, 0x00);
+	outb(GRA_I, 0x04);	/* read map select */
+	saved_GC_rmap = inb(GRA_D);
+	/* clear buffer */
+	bp=b;
+	for (j=h; j>0; j--) {
+		memset(bp, 0, w);
+		bp += bw;
+	}
+	for (plane=0, plane_mask=1; plane<4; plane++, plane_mask<<=1) {
+		outb(GRA_D, plane);	/* read map select */
+		vpY = vpP;
+		bpY = b;
+		for (j=h; j>0; j--) {
+			vp = vpY;
+			bp = bpY;
+			if (leftMask) {
+				mask = maskP;
+				data = *vp++;
+				do {
+					if (data & mask) *bp |= plane_mask;
+					bp++;
+					mask >>= 1;
+				} while (mask & leftMask);
 
-  for(j=x; j<x+dx; j++)
-  {
-    offset = xconv[x]+y80[y];
-
-    WRITE_PORT_UCHAR((PUCHAR)0x3ce,0x08);       // set the mask
-    WRITE_PORT_UCHAR((PUCHAR)0x3cf,maskbit[x]);
-
-    initial = bitmap;
-    for(i=y; i<y+dy; i++)
-    {
-      a = READ_REGISTER_UCHAR(vidmem + offset);
-      WRITE_REGISTER_UCHAR(vidmem + offset, *bitmap);
-      offset+=80;
-      bitmap+=dx;
-    }
-    bitmap = initial + dx;
-  }
-
-  return TRUE;
+			}
+			if (byteCounter) {
+				for (i=byteCounter; i>0; i--) {
+					data = *vp++;
+					if (data & 0x80) *bp |= plane_mask;
+					bp++;
+					if (data & 0x40) *bp |= plane_mask;
+					bp++;
+					if (data & 0x20) *bp |= plane_mask;
+					bp++;
+					if (data & 0x10) *bp |= plane_mask;
+					bp++;
+					if (data & 0x08) *bp |= plane_mask;
+					bp++;
+					if (data & 0x04) *bp |= plane_mask;
+					bp++;
+					if (data & 0x02) *bp |= plane_mask;
+					bp++;
+					if (data & 0x01) *bp |= plane_mask;
+					bp++;
+				}
+			}
+			if (rightMask) {
+				mask = 0x80;
+				data = *vp;
+				do {
+					if (data & mask) *bp |= plane_mask;
+					bp++;
+					mask >>= 1;
+				} while (mask & rightMask);
+			}
+			bpY += bw;
+			vpY += byte_per_line;
+		}
+	}
+	/* reset GC register */
+	outb(GRA_D, saved_GC_rmap);
+	outb(GRA_I, 0x05);
+	outb(GRA_D, saved_GC_mode);
 }
-*/
+
+
+void BltToVGA(int x, int y, int w, int h, void *b, int bw)
+{
+	unsigned char *bp, *bpX;
+	unsigned char *vp, *vpX;
+	unsigned char mask;
+	volatile unsigned char dummy;
+	int byte_per_line;
+	int i, j;
+
+	bpX = b;
+	ASSIGNVP4(x, y, vpX)
+	ASSIGNMK4(x, y, mask)
+	byte_per_line = SCREEN_X >> 3;
+	outb(GRA_I, 0x05);      /* write mode 2 */
+	saved_GC_mode = inb(GRA_D);
+	outb(GRA_D, 0x02);
+	outb(GRA_I, 0x03);      /* replace */
+	saved_GC_fun = inb(GRA_D);
+	outb(GRA_D, 0x00);
+	outb(GRA_I, 0x08);      /* bit mask */
+	saved_GC_mask = inb(GRA_D);
+	for (i=w; i>0; i--) {
+		outb(GRA_D, mask);
+		bp = bpX;
+		vp = vpX;
+		for (j=h; j>0; j--) {
+			dummy = *vp; *vp = *bp;
+			bp += bw;
+			vp += byte_per_line;
+		}
+		bpX++;
+		if ((mask >>= 1) == 0) {
+			vpX++;
+			mask = 0x80;
+		}
+	}
+	/* reset GC register */
+	outb(GRA_D, saved_GC_mask);
+	outb(GRA_I, 0x03);
+	outb(GRA_D, saved_GC_fun);
+	outb(GRA_I, 0x05);
+	outb(GRA_D, saved_GC_mode);
+}

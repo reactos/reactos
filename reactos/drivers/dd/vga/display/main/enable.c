@@ -1,9 +1,9 @@
 /*
  * entry.c
  *
- * $Revision: 1.8 $
- * $Author: phreak $
- * $Date: 2000/07/07 00:59:41 $
+ * $Revision: 1.9 $
+ * $Author: jfilby $
+ * $Date: 2000/10/14 22:40:17 $
  *
  */
 
@@ -44,9 +44,10 @@ BOOL VGADDIBitBlt(SURFOBJ *Dest, SURFOBJ *Source, SURFOBJ *Mask,
                   CLIPOBJ *Clip, XLATEOBJ *ColorTranslation,
                   RECTL *DestRect, POINTL *SourcePoint, POINTL *MaskPoint,
                   BRUSHOBJ *Brush, POINTL *BrushPoint, ROP4 rop4);
-BOOL VGADDICopyBits(SURFOBJ *Dest, SURFOBJ *Source,
-                    CLIPOBJ *Clip, XLATEOBJ *ColorTranslation,
-                    PRECTL DestRect, PPOINTL SourcePoint);
+VOID VGADDIMovePointer(PSURFOBJ pso, LONG x, LONG y, PRECTL prcl);
+ULONG VGADDISetPointerShape(PSURFOBJ pso, PSURFOBJ psoMask, PSURFOBJ psoColor, PXLATEOBJ pxlo,
+			    LONG xHot, LONG yHot, LONG x, LONG y,
+			    PRECTL prcl, ULONG fl);
 
 DRVFN FuncList[] =
 {
@@ -61,7 +62,8 @@ DRVFN FuncList[] =
   {INDEX_DrvLineTo, (PFN) VGADDILineTo},
   {INDEX_DrvPaint, (PFN) VGADDIPaint},
   {INDEX_DrvBitBlt, (PFN) VGADDIBitBlt},
-//  {INDEX_DrvCopyBits, (PFN) VGADDICopyBits},
+  {INDEX_DrvMovePointer, (PFN) VGADDIMovePointer},
+  {INDEX_DrvSetPointerShape, (PFN) VGADDISetPointerShape},
 
 #if 0
   /*  Optional Display driver functions  */
@@ -71,7 +73,6 @@ DRVFN FuncList[] =
   {INDEX_DrvFillPath, (PFN) VGADDIFillPath},
   {INDEX_DrvGetTrueTypeFile, (PFN) VGADDIGetTrueTypeFile},
   {INDEX_DrvLoadFontFile, (PFN) VGADDILoadFontFile},
-  {INDEX_DrvMovePointer, (PFN) VGADDIMovePointer},
   {INDEX_DrvQueryFont, (PFN) VGADDIQueryFont},
   {INDEX_DrvQueryFontCaps, (PFN) VGADDIQueryFontCaps},
   {INDEX_DrvQueryFontData, (PFN) VGADDIQueryFontData},
@@ -83,7 +84,6 @@ DRVFN FuncList[] =
   {INDEX_DrvResetPDEV, (PFN) VGADDIResetPDEV},
   {INDEX_DrvSetPalette, (PFN) VGADDISetPalette},
   {INDEX_DrvSetPixelFormat, (PFN) VGADDISetPixelFormat},
-  {INDEX_DrvSetPointerShape, (PFN) VGADDISetPointerShape},
   {INDEX_DrvStretchBlt, (PFN) VGADDIStretchBlt},
   {INDEX_DrvStrokePath, (PFN) VGADDIStrokePath},
   {INDEX_DrvSwapBuffers, (PFN) VGADDISwapBuffers},
@@ -196,7 +196,7 @@ DHPDEV VGADDIEnablePDEV(IN DEVMODEW  *DM,
 VOID VGADDICompletePDEV(IN DHPDEV  PDev,
                         IN HDEV  Dev)
 {
-  ((PPDEV) PDev)->GDIDevHandle = Dev;
+  ((PPDEV) PDev)->GDIDevHandle = Dev; // Handle to the DC
 }
 
 
@@ -210,11 +210,11 @@ VOID VGADDIAssertMode(IN DHPDEV  DPev,
   {
     // Reenable our graphics mode
 
-/*   if (!InitPointer(ppdev))
+    if (!InitPointer(ppdev))
      {
-         // Failed to set pointer
-         return FALSE;
-     } POINTER CODE CURRENTLY UNIMPLEMENTED... */
+        // Failed to set pointer
+        return FALSE;
+     }
 
      if (!InitVGA(ppdev, FALSE))
      {
@@ -353,6 +353,7 @@ HSURF VGADDIEnableSurface(IN DHPDEV  PDev)
     goto error_done;
   }
 
+  // dhsurf is of type DEVSURF, which is the drivers specialized surface type
   dhsurf = (DHSURF)EngAllocMem(0, sizeof(DEVSURF), ALLOC_TAG);
   if (dhsurf == (DHSURF) 0)
   {
@@ -374,10 +375,10 @@ HSURF VGADDIEnableSurface(IN DHPDEV  PDev)
   pdsurf->StartBmp      = ppdev->fbScreen;
 /*  pdsurf->Conv          = &ConvertBuffer[0]; */
 
-/* if (!bInitPointer(ppdev)) {
-      DISPDBG((0, "DrvEnablePDEV failed bInitPointer\n"));
+  if (!InitPointer(ppdev)) {
+      DbgPrint("DrvEnablePDEV failed bInitPointer\n");
       goto error_clean;
-   } POINTER CODE UNIMPLEMENTED */
+   }
 
 /* if (!SetUpBanking(pdsurf, ppdev)) {
       DISPDBG((0, "DrvEnablePDEV failed SetUpBanking\n"));
