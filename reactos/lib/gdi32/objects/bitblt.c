@@ -340,9 +340,9 @@ SetPixel(HDC  hDC,
  * @implemented
  */
 BOOL STDCALL
-PatBlt(HDC hDC, INT Top, INT Left, INT Width, INT Height, ULONG Rop)
+PatBlt(HDC hDC, INT Left, INT Top, INT Width, INT Height, ULONG Rop)
 {
-  return(NtGdiPatBlt(hDC, Top, Left, Width, Height, Rop));
+   return NtGdiPatBlt(hDC, Left, Top, Width, Height, Rop);
 }
 
 /*
