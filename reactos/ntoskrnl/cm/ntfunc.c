@@ -333,9 +333,9 @@ NtEnumerateKey(IN HANDLE KeyHandle,
     {
       if (KeyCell->HashTableOffset == (BLOCK_OFFSET)-1)
 	{
-	  return(STATUS_NO_MORE_ENTRIES);
 	  ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
 	  ObDereferenceObject(KeyObject);
+	  return(STATUS_NO_MORE_ENTRIES);
 	}
 
       HashTableBlock = CmiGetBlock(RegistryHive, KeyCell->HashTableOffset, NULL);
@@ -1552,7 +1552,8 @@ NtNotifyChangeKey (IN HANDLE KeyHandle,
 		   IN ULONG Length,
 		   IN BOOLEAN WatchSubtree)
 {
-  UNIMPLEMENTED;
+	UNIMPLEMENTED;
+	return(STATUS_NOT_IMPLEMENTED);
 }
 
 
@@ -1678,6 +1679,7 @@ NtReplaceKey (IN POBJECT_ATTRIBUTES ObjectAttributes,
 	      IN POBJECT_ATTRIBUTES ReplacedObjectAttributes)
 {
 	UNIMPLEMENTED;
+	return(STATUS_NOT_IMPLEMENTED);
 }
 
 
@@ -1687,6 +1689,7 @@ NtRestoreKey (IN HANDLE KeyHandle,
 	      IN ULONG RestoreFlags)
 {
 	UNIMPLEMENTED;
+	return(STATUS_NOT_IMPLEMENTED);
 }
 
 
@@ -1695,6 +1698,7 @@ NtSaveKey (IN HANDLE KeyHandle,
 	   IN HANDLE FileHandle)
 {
 	UNIMPLEMENTED;
+	return(STATUS_NOT_IMPLEMENTED);
 }
 
 
@@ -1704,7 +1708,8 @@ NtSetInformationKey (IN HANDLE KeyHandle,
 		     IN PVOID KeyInformation,
 		     IN ULONG KeyInformationLength)
 {
-  UNIMPLEMENTED;
+	UNIMPLEMENTED;
+	return(STATUS_NOT_IMPLEMENTED);
 }
 
 
