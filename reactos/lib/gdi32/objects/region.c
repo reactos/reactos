@@ -7,6 +7,26 @@
 #include <ddk/ntddk.h>
 #include <win32k/kapi.h>
 
+/*
+ * @implemented
+ */
+int
+STDCALL
+GetClipRgn(
+        HDC     a0,
+        HRGN    a1
+        )
+{
+	HRGN rgn = W32kGetClipRgn(a0);
+	if(rgn)
+	{
+		if(W32kCombineRgn(a1, rgn, 0, RGN_COPY) != ERROR) return 1;
+		else
+			return -1;
+	}
+	else	return 0;
+}
+
 
 /*
  * @unimplemented

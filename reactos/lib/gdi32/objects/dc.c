@@ -7,6 +7,73 @@
 #include <ddk/ntddk.h>
 #include <win32k/kapi.h>
 
+
+/*
+ * @implemented
+ */
+int
+STDCALL
+GetMapMode(
+        HDC     a0
+        )
+{
+        return W32kGetMapMode(a0);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+GetCurrentPositionEx(
+        HDC     a0,
+        LPPOINT a1
+        )
+{
+        return W32kGetCurrentPositionEx(a0, a1);
+}
+
+
+/*
+ * @implemented
+ */
+COLORREF
+STDCALL
+GetBkColor(
+        HDC     a0
+        )
+{
+        return W32kGetBkColor(a0);
+}
+
+
+/*
+ * @implemented
+ */
+int
+STDCALL
+GetBkMode(
+        HDC     a0
+        )
+{
+        return W32kGetBkMode(a0);
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+GetBrushOrgEx(
+        HDC     a0,
+        LPPOINT a1
+        )
+{
+        return W32kGetBrushOrgEx(a0, a1);
+}
+
+
 /*
  * @implemented
  */
