@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.4 2004/02/19 06:59:50 arty Exp $
+/* $Id: conio.c,v 1.5 2004/02/25 18:12:52 hbirr Exp $
  *
  * reactos/subsys/csrss/win32csr/conio.c
  *
@@ -1140,7 +1140,7 @@ ConioGetShiftState(PBYTE KeyState)
         }
     }
 
-  if (KeyState[VK_LSHIFT] || KeyState[VK_RSHIFT] & 0x80)
+  if (KeyState[VK_LSHIFT] & 0x80 || KeyState[VK_RSHIFT] & 0x80)
       ssOut |= SHIFT_PRESSED;
 
   if (KeyState[VK_LCONTROL] & 0x80)
@@ -1259,7 +1259,7 @@ ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode)
     }
     
   ConInRec->InputEvent = er;
-  ConInRec->Fake = 
+  ConInRec->Fake = AsciiChar && 
     (msg->message != WM_CHAR && msg->message != WM_SYSCHAR &&
      msg->message != WM_KEYUP && msg->message != WM_SYSKEYUP);
   ConInRec->NotChar = (msg->message != WM_CHAR && msg->message != WM_SYSCHAR);
