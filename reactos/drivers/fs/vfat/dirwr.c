@@ -1,4 +1,4 @@
-/* $Id: dirwr.c,v 1.10 2000/03/12 23:28:59 ekohl Exp $
+/* $Id: dirwr.c,v 1.11 2000/03/13 17:58:06 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -19,23 +19,87 @@
 
 #include "vfat.h"
 
+
+/*
+ * Copies a file name into a directory slot (long file name entry)
+ * and fills trailing slot space with 0xFFFF. This keeps scandisk
+ * from complaining.
+ */
+static VOID
+FillSlot (slot *Slot, WCHAR *FileName)
+{
+	BOOLEAN fill = FALSE;
+	WCHAR *src = FileName;
+	WCHAR *dst;
+	int i;
+
+	i = 5;
+	dst = Slot->name0_4;
+	while (i-- > 0)
+	{
+		if (fill == FALSE)
+			*dst = *src;
+		else
+			*dst = 0xffff;
+
+		if (fill == FALSE && (*src == 0))
+			fill = TRUE;
+		dst++;
+		src++;
+	}
+
+	i = 6;
+	dst = Slot->name5_10;
+	while (i-- > 0)
+	{
+		if (fill == FALSE)
+			*dst = *src;
+		else
+			*dst = 0xffff;
+
+		if (fill == FALSE && (*src == 0))
+			fill = TRUE;
+		dst++;
+		src++;
+	}
+
+	i = 2;
+	dst = Slot->name11_12;
+	while (i-- > 0)
+	{
+		if (fill == FALSE)
+			*dst = *src;
+		else
+			*dst = 0xffff;
+
+		if (fill == FALSE && (*src == 0))
+			fill = TRUE;
+		dst++;
+		src++;
+	}
+}
+
+
 NTSTATUS updEntry(PDEVICE_EXTENSION DeviceExt,PFILE_OBJECT pFileObject)
 /*
   update an existing FAT entry
 */
 {
- WCHAR DirName[MAX_PATH],*FileName,*PathFileName;
- VFATFCB FileFcb;
- ULONG Sector=0,Entry=0;
- PUCHAR Buffer;
- FATDirEntry * pEntries;
- NTSTATUS status;
- FILE_OBJECT FileObject;
- PVFATCCB pDirCcb;
- PVFATFCB pDirFcb,pFcb;
- short i,posCar,NameLen;
+   WCHAR DirName[MAX_PATH],*FileName,*PathFileName;
+   VFATFCB FileFcb;
+   ULONG Sector=0,Entry=0;
+   PUCHAR Buffer;
+   FATDirEntry * pEntries;
+   NTSTATUS status;
+   FILE_OBJECT FileObject;
+   PVFATCCB pDirCcb;
+   PVFATFCB pDirFcb,pFcb;
+   short i,posCar,NameLen;
+
    PathFileName=pFileObject->FileName.Buffer;
    pFcb=((PVFATCCB)pFileObject->FsContext2)->pFcb;
+   DPRINT("PathFileName \'%S\'\n", PathFileName);
+
    //find last \ in PathFileName
    posCar=-1;
    for(i=0;PathFileName[i];i++)
@@ -44,14 +108,20 @@ NTSTATUS updEntry(PDEVICE_EXTENSION DeviceExt,PFILE_OBJECT pFileObject)
      return STATUS_UNSUCCESSFUL;
    FileName=&PathFileName[posCar+1];
    for(NameLen=0;FileName[NameLen];NameLen++);
+
    // extract directory name from pathname
    memcpy(DirName,PathFileName,posCar*sizeof(WCHAR));
    DirName[posCar]=0;
    if(FileName[0]==0 && DirName[0]==0)
      return STATUS_SUCCESS;//root : nothing to do ?
    memset(&FileObject,0,sizeof(FILE_OBJECT));
-DPRINT("open directory %S for update of entry %S\n",DirName,FileName);
+   DPRINT("open directory \'%S\' for update of entry \'%S\'\n",DirName,FileName);
    status=FsdOpenFile(DeviceExt,&FileObject,DirName);
+   if (!NT_SUCCESS(status))
+   {
+     DbgPrint ("Failed to open \'%S\'. Status %lx\n", DirName, status);
+     return status;
+   }
    pDirCcb=(PVFATCCB)FileObject.FsContext2;
    assert(pDirCcb);
    pDirFcb=pDirCcb->pFcb;
@@ -71,6 +141,7 @@ DPRINT("open directory %S for update of entry %S\n",DirName,FileName);
    FsdCloseFile(DeviceExt,&FileObject);
    return status;
 }
+
 
 NTSTATUS addEntry(PDEVICE_EXTENSION DeviceExt,
                   PFILE_OBJECT pFileObject,
@@ -264,12 +335,7 @@ DPRINT("i=%d,j=%d,%d,%d\n",i,j,pEntry->Filename[i],FileName[i]);
         pSlots[i].id=nbSlots-i-1+0x40;
       pSlots[i].alias_checksum=pSlots[0].alias_checksum;
 //FIXME      pSlots[i].start=;
-      memcpy(pSlots[i].name0_4  ,FileName+(nbSlots-i-2)*13
-         ,5*sizeof(WCHAR));
-      memcpy(pSlots[i].name5_10 ,FileName+(nbSlots-i-2)*13+5
-         ,6*sizeof(WCHAR));
-      memcpy(pSlots[i].name11_12,FileName+(nbSlots-i-2)*13+11
-         ,2*sizeof(WCHAR));
+      FillSlot (&pSlots[i], FileName+(nbSlots-i-2)*13);
    }
 
    //try to find nbSlots contiguous entries frees in directory
