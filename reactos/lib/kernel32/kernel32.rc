@@ -29,6 +29,7 @@ BEGIN
             VALUE "OriginalFilename",	"kernel32.dll\0"
             VALUE "ProductName",	RES_STR_PRODUCT_NAME
             VALUE "ProductVersion",	RES_STR_PRODUCT_VERSION
+            VALUE "Build Date",		RES_STR_BUILD_DATE
         END
     END
     BLOCK "VarFileInfo"

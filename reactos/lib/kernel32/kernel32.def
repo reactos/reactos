@@ -168,8 +168,8 @@ DisconnectNamedPipe@4
 DnsHostnameToComputerNameA@12
 DnsHostnameToComputerNameW@12
 DosDateTimeToFileTime@12
-;DosPathToSessionPathA
-;DosPathToSessionPathW
+DosPathToSessionPathA@12
+DosPathToSessionPathW@12
 DuplicateConsoleHandle@16
 DuplicateHandle@28
 EndUpdateResourceA@8

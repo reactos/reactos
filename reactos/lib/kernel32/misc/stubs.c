@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.91 2004/09/23 19:03:26 weiden Exp $
+/* $Id: stubs.c,v 1.92 2004/09/23 21:01:23 ea Exp $
  *
  * KERNEL32.DLL stubs (STUB functions)
  * Remove from this file, if you implement them.
@@ -1192,17 +1192,6 @@ WriteFileGather(
     LPDWORD lpReserved,
     LPOVERLAPPED lpOverlapped
     )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-WTSGetActiveConsoleSessionId(VOID)
 {
     STUB;
     return 0;
