@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kdb.c,v 1.26 2004/08/10 01:49:36 navaraf Exp $
+/* $Id: kdb.c,v 1.27 2004/08/10 19:49:25 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/kdb.c
@@ -165,7 +165,6 @@ volatile DWORD x_dr0 = 0, x_dr1 = 0, x_dr2 = 0, x_dr3 = 0, x_dr7 = 0;
 
 extern LONG KdbDisassemble(ULONG Address);
 extern LONG KdbGetInstLength(ULONG Address);
-extern PULONG MmGetPageEntry(PVOID PAddress, BOOL CreatePde);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -408,49 +407,40 @@ KdbDecodeAddress(PUCHAR Buffer, PULONG Address)
 NTSTATUS STATIC
 KdbOverwriteInst(ULONG Address, PUCHAR PreviousInst, UCHAR NewInst)
 {
-  PULONG BreakPtePtr;
-  ULONG SavedPte;
   NTSTATUS Status;
-  /* Get the pte for the page containing the address. */
-  BreakPtePtr = MmGetPageEntry((PVOID)PAGE_ROUND_DOWN(Address), FALSE);
+  ULONG Protect;
+  /* Get the protection for the address. */
+  Protect = MmGetPageProtect(PsGetCurrentProcess(), (PVOID)PAGE_ROUND_DOWN(Address));
   /* Return if that page isn't present. */
-  if (BreakPtePtr == NULL)
-    {
-      return(STATUS_UNSUCCESSFUL);
-    }
-  if (!((*BreakPtePtr) & (1 << 0)))
+  if (Protect & PAGE_NOACCESS)
     {
       return(STATUS_MEMORY_NOT_ALLOCATED);
     }
-  /* Saved the old pte and enable write permissions. */
-  SavedPte = *BreakPtePtr;
-  (*BreakPtePtr) |= (1 << 1);
-  /* Flush the TLB. */
-  __asm__ __volatile__ ("movl %%cr3, %%eax\n\t"
-			"movl %%eax, %%cr3\n\t" 
-			: : : "memory", "eax");
+  if (Protect & (PAGE_READONLY|PAGE_EXECUTE|PAGE_EXECUTE_READ))
+    {
+      MmSetPageProtect(PsGetCurrentProcess(), (PVOID)PAGE_ROUND_DOWN(Address), 
+	               (Protect & ~(PAGE_READONLY|PAGE_EXECUTE|PAGE_EXECUTE_READ)) | PAGE_READWRITE);
+    }
   /* Copy the old instruction back to the caller. */
   if (PreviousInst != NULL)
     {
       Status = MmSafeCopyFromUser(PreviousInst, (PUCHAR)Address, 1);
       if (!NT_SUCCESS(Status))
-	{
-	  return(Status);
-	}
+	    {
+          if (Protect & (PAGE_READONLY|PAGE_EXECUTE|PAGE_EXECUTE_READ))
+            {
+              MmSetPageProtect(PsGetCurrentProcess(), (PVOID)PAGE_ROUND_DOWN(Address), Protect);
+            }
+	      return(Status);
+	    }
     }
   /* Copy the new instruction in its place. */
   Status = MmSafeCopyToUser((PUCHAR)Address, &NewInst, 1);
-  if (!NT_SUCCESS(Status))
+  if (Protect & (PAGE_READONLY|PAGE_EXECUTE|PAGE_EXECUTE_READ))
     {
-      return(Status);
+      MmSetPageProtect(PsGetCurrentProcess(), (PVOID)PAGE_ROUND_DOWN(Address), Protect);
     }
-  /* Restore the old pte. */
-  *BreakPtePtr = SavedPte;
-  /* And flush the tlb again. */
-  __asm__ __volatile__ ("movl %%cr3, %%eax\n\t"
-			"movl %%eax, %%cr3\n\t" 
-			: : : "memory", "eax");
-  return(STATUS_SUCCESS);
+  return Status;
 }
 
 
