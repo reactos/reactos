@@ -36,7 +36,6 @@
     
 //#include <shellapi.h>
 #include <windowsx.h>
-#include <process.h>
 #include <assert.h>
 #define ASSERT assert
 
@@ -44,6 +43,7 @@
 #include "about.h"
 #include "framewnd.h"
 #include "childwnd.h"
+#include "worker.h"
 #include "utils.h"
 #include "shell.h"
 #include "network.h"
@@ -57,10 +57,6 @@
 BOOL bInMenuLoop = FALSE;        // Tells us if we are in the menu loop
 int  nOldWidth;                  // Holds the previous client area width
 int  nOldHeight;                 // Holds the previous client area height
-
-static HANDLE hMonitorThreadEvent = NULL;	// When this event becomes signaled then we run the monitor thread
-
-void MonitorThreadProc(void *lpParameter);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Local module support methods
@@ -81,10 +77,11 @@ static void resize_frame_rect(HWND hWnd, PRECT prect)
 		SendMessage(Globals.hDriveBar, WM_SIZE, 0, 0);
 		GetClientRect(Globals.hDriveBar, &rt);
 //		new_top = --prect->top + rt.bottom+3;
-		new_top = --prect->top + rt.bottom+1;
+		new_top = --prect->top + rt.bottom+0;
 		MoveWindow(Globals.hDriveBar, 0, prect->top, rt.right, new_top, TRUE);
 		prect->top = new_top;
-		prect->bottom -= rt.bottom+2;
+//		prect->bottom -= rt.bottom+2;
+		prect->bottom -= rt.bottom-1;
 	}
 	if (IsWindowVisible(Globals.hStatusBar)) {
 		SetupStatusBar(TRUE);
@@ -172,7 +169,7 @@ static ChildWnd* alloc_child_window(LPCTSTR path)
 	pChildWnd->pos.rcNormalPosition.right = CW_USEDEFAULT;
 	pChildWnd->pos.rcNormalPosition.bottom = CW_USEDEFAULT;
 	pChildWnd->nFocusPanel = 0;
-	pChildWnd->nSplitPos = 200;
+	pChildWnd->nSplitPos = 300;
 	pChildWnd->sortOrder = SORT_NAME;
 	pChildWnd->header_wdths_ok = FALSE;
 	lstrcpy(pChildWnd->szPath, path);
@@ -275,6 +272,7 @@ static void OnEnterMenuLoop(HWND hWnd)
 
 static void OnExitMenuLoop(HWND hWnd)
 {
+/*
     RECT  rc;
     int   nParts[3];
 
@@ -286,7 +284,10 @@ static void OnExitMenuLoop(HWND hWnd)
     nParts[2] = rc.right;
     SendMessage(Globals.hStatusBar, SB_SETPARTS, 3, (long)nParts);
     SendMessage(Globals.hStatusBar, SB_SETTEXT, 0, (LPARAM)_T(""));
-	SetupStatusBar(TRUE);
+ */
+    SendMessage(Globals.hStatusBar, SB_SETTEXT, 0, (LPARAM)_T(""));
+    bInMenuLoop = FALSE;
+    SetupStatusBar(TRUE);
 	UpdateStatusBar();
 }
 
@@ -722,7 +723,7 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         }
         CheckShellAvailable();
         CheckNetworkAvailable();
-        _beginthread(MonitorThreadProc, 0, NULL);
+        CreateMonitorThread(hWnd);
         CreateChildWindow(-1);
 		break;
 
@@ -758,7 +759,7 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 		break;
 
 	case WM_TIMER:
-        SetEvent(hMonitorThreadEvent);
+        SignalMonitorEvent();
 		break;
 
 	case WM_SIZE:
@@ -775,7 +776,7 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 		break;
 	case WM_DESTROY:
 		WinHelp(hWnd, _T("winfile"), HELP_QUIT, 0);
-		CloseHandle(hMonitorThreadEvent);
+        DestryMonitorThread();
 		PostQuitMessage(0);
 		break;
     case WM_QUERYENDSESSION:
@@ -791,50 +792,3 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 }
 
 
-
-void MonitorThreadProc(void *lpParameter)
-{
-//	ULONG	OldProcessorUsage = 0;
-//	ULONG	OldProcessCount = 0;
-
-	// Create the event
-	hMonitorThreadEvent = CreateEvent(NULL, TRUE, TRUE, "Winfile Monitor Event");
-
-	// If we couldn't create the event then exit the thread
-	if (!hMonitorThreadEvent)
-		return;
-
-	while (1) {
-		DWORD	dwWaitVal;
-
-		// Wait on the event
-		dwWaitVal = WaitForSingleObject(hMonitorThreadEvent, INFINITE);
-
-		// If the wait failed then the event object must have been
-		// closed and the task manager is exiting so exit this thread
-		if (dwWaitVal == WAIT_FAILED)
-			return;
-
-		if (dwWaitVal == WAIT_OBJECT_0) {
-			// Reset our event
-			ResetEvent(hMonitorThreadEvent);
-#if 0
-			TCHAR	text[260];
-			if ((ULONG)SendMessage(hProcessPageListCtrl, LVM_GETITEMCOUNT, 0, 0) != PerfDataGetProcessCount())
-				SendMessage(hProcessPageListCtrl, LVM_SETITEMCOUNT, PerfDataGetProcessCount(), /*LVSICF_NOINVALIDATEALL|*/LVSICF_NOSCROLL);
-			if (IsWindowVisible(hProcessPage))
-				InvalidateRect(hProcessPageListCtrl, NULL, FALSE);
-			if (OldProcessorUsage != PerfDataGetProcessorUsage()) {
-				OldProcessorUsage = PerfDataGetProcessorUsage();
-				wsprintf(text, _T("CPU Usage: %3d%%"), OldProcessorUsage);
-				SendMessage(hStatusWnd, SB_SETTEXT, 1, (LPARAM)text);
-			}
-			if (OldProcessCount != PerfDataGetProcessCount()) {
-				OldProcessCount = PerfDataGetProcessCount();
-				wsprintf(text, _T("Processes: %d"), OldProcessCount);
-				SendMessage(hStatusWnd, SB_SETTEXT, 0, (LPARAM)text);
-			}
-#endif
-		}
-	}
-}

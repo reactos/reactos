@@ -40,6 +40,7 @@
 
 #include "main.h"
 #include "listview.h"
+#include "dialogs.h"
 #include "run.h"
 #include "trace.h"
 
@@ -322,7 +323,23 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case ID_FILE_COPY_CLIPBOARD:
         case ID_FILE_DELETE:
         case ID_FILE_RENAME:
+            break;
         case ID_FILE_PROPERTIES:
+            {
+            LVITEM item;
+            item.mask = LVIF_PARAM;
+            item.iItem = ListView_GetNextItem(hWnd, -1, LVNI_SELECTED);
+            if (item.iItem != -1) {
+                if (ListView_GetItem(hWnd, &item)) {
+                    Entry* entry = (Entry*)item.lParam;
+                    struct PropertiesDialog dlg = { _T("empty"), 0, entry };
+                    if (DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_DIALOG_PROPERTIES), hWnd, PropertiesDlgProc, (LPARAM)&dlg) == IDOK) {
+                    }
+                }
+            }
+            }
+            break;
+
         case ID_FILE_COMPRESS:
         case ID_FILE_UNCOMPRESS:
             break;

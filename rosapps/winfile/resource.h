@@ -10,7 +10,6 @@
 #define ID_SECURITY_MENU                6
 #define ID_WINDOW_MENU                  7
 #define ID_HELP_MENU                    8
-
 #define IDS_LIST_COLUMN_FIRST           91
 #define IDS_LIST_COLUMN_NAME            91
 #define IDS_LIST_COLUMN_SIZE            92
@@ -19,6 +18,7 @@
 #define IDS_LIST_COLUMN_ATTRIB          95
 #define IDS_LIST_COLUMN_DOSNAME         96
 #define IDS_LIST_COLUMN_LAST            96
+#define ID_CMD_FIRST                    100
 #define IDD_ABOUTBOX                    104
 #define IDS_APP_TITLE                   105
 #define IDI_WINFILE                     107
@@ -38,6 +38,7 @@
 #define IDD_DIALOG_VIEW_TYPE            145
 #define IDD_DIALOG_OPTIONS_CONFIRMATON  146
 #define IDR_ACCELERATOR1                147
+#define IDD_DIALOG_PROPERTIES           148
 #define ID_WINDOW_CLOSE                 798
 #define ID_WINDOW_CLOSEALL              799
 #define IDC_VIEW_TYPE_MASK              999
@@ -50,14 +51,25 @@
 #define IDC_VIEW_TYPE_SYSFILES          1005
 #define IDC_CONFIRMATION_FILE_DELETE    1006
 #define IDC_CONFIRMATION_DIR_DELETE     1007
+#define IDC_CHECK_READONLY              1007
 #define IDC_CONFIRMATION_FILE_REPLACE   1008
+#define IDC_CHECK_ARCHIVE               1008
 #define IDC_CONFIRMATION_MOUSE_ACTIONS  1009
+#define IDC_CHECK_COMPRESSED            1009
 #define IDC_CONFIRMATION_DISK_COMMANDS  1010
+#define IDC_CHECK_HIDDEN                1010
 #define IDC_CONFIRMATION_MODIFY_SYSTEM  1011
-
-#define ID_CMD_FIRST                    100
-#define ID_CMD_LAST                     32830
-
+#define IDC_CHECK_SYSTEM                1011
+#define IDC_LIST_PROP_VERSION_TYPES     1012
+#define IDC_LIST_PROP_VERSION_VALUES    1013
+#define IDC_STATIC_PROP_FILENAME        1015
+#define IDC_STATIC_PROP_PATH            1016
+#define IDC_STATIC_PROP_LASTCHANGE      1017
+#define IDC_STATIC_PROP_VERSION         1018
+#define IDC_STATIC_PROP_COPYRIGHT       1019
+#define IDC_STATIC_PROP_SIZE            1020
+#define IDC_EDIT1                       1021
+#define ID_TREE_COLLAPSE_BRANCH         32768
 #define ID_FILE_OPEN                    32769
 #define ID_FILE_MOVE                    32770
 #define ID_FILE_COPY                    32771
@@ -85,7 +97,6 @@
 #define ID_TREE_EXPAND_ONE_LEVEL        32793
 #define ID_TREE_EXPAND_BRANCH           32794
 #define ID_TREE_EXPAND_ALL              32795
-#define ID_TREE_COLLAPSE_BRANCH         32768
 #define ID_TREE_INDICATE_EXPANDABLE_BRANCHES 32796
 #define ID_VIEW_TREE_DIRECTORY          32797
 #define ID_VIEW_TREE_ONLY               32798
@@ -120,6 +131,7 @@
 #define ID_HELP_CONTENTS                32827
 #define ID_HELP_SEARCH_HELP             32828
 #define ID_HELP_HOW_TO_USE_HELP         32829
+#define ID_CMD_LAST                     32830
 #define ID_HELP_ABOUT                   32830
 #define IDC_LICENSE_EDIT                32831
 #define IDS_LICENSE                     32832
@@ -129,9 +141,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        148
+#define _APS_NEXT_RESOURCE_VALUE        149
 #define _APS_NEXT_COMMAND_VALUE         32832
-#define _APS_NEXT_CONTROL_VALUE         1007
+#define _APS_NEXT_CONTROL_VALUE         1022
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif

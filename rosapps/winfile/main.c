@@ -374,10 +374,11 @@ void SetupStatusBar(BOOL bResize)
 //		SendMessage(Globals.hStatusBar, SB_SETPARTS, 2, (LPARAM)&parts);
 
     // Create the status bar panes
-    nParts[0] = 150;
-    nParts[1] = 220;
-    nParts[2] = 100;
-    nParts[3] = 100;
+    nParts[0] = 350;
+    nParts[1] = 700;
+    nParts[2] = 800;
+    nParts[3] = 900;
+
 	if (bResize)
 		SendMessage(Globals.hStatusBar, WM_SIZE, 0, 0);
     SendMessage(Globals.hStatusBar, SB_SETPARTS, 4, (long)nParts);
@@ -385,15 +386,15 @@ void SetupStatusBar(BOOL bResize)
 
 void UpdateStatusBar(void)
 {
-    TCHAR text[260];
-	DWORD size;
+//  TCHAR text[260];
+//	DWORD size;
 
 //	size = sizeof(text)/sizeof(TCHAR);
 //	GetUserName(text, &size);
-//  SendMessage(Globals.hStatusBar, SB_SETTEXT, 2, (LPARAM)text);
-	size = sizeof(text)/sizeof(TCHAR);
-	GetComputerName(text, &size);
-    SendMessage(Globals.hStatusBar, SB_SETTEXT, 3, (LPARAM)text);
+//  SendMessage(Globals.hStatusBar, SB_SETTEXT, 0, (LPARAM)text);
+//	size = sizeof(text)/sizeof(TCHAR);
+//	GetComputerName(text, &size);
+//  SendMessage(Globals.hStatusBar, SB_SETTEXT, 1, (LPARAM)text);
 }
 
 

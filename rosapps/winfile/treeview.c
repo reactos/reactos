@@ -423,6 +423,44 @@ static BOOL OnSelChanged(NMTREEVIEW* pnmtv)
 } 
  */
 
+void UpdateStatus(HWND hWnd, Entry* pEntry)
+{
+    int file_count = 0;
+    int files_size = 0;
+    TCHAR suffix[10];
+    TCHAR number[50];
+    TCHAR Text[260];
+
+    while (pEntry) {
+        if (pEntry->data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+        } else {
+            ++file_count;
+            files_size += pEntry->data.nFileSizeLow;
+        }
+        pEntry = pEntry->next;
+    };
+
+    _tcscpy(suffix, _T(" bytes"));
+    {
+        NUMBERFMT numFmt;
+        memset(&numFmt, 0, sizeof(numFmt));
+        numFmt.NumDigits = 0;
+        numFmt.LeadingZero = 0;
+        numFmt.Grouping = 3;
+        numFmt.lpDecimalSep = _T(".");
+        numFmt.lpThousandSep = _T(",");
+        numFmt.NegativeOrder = 0;
+
+        wsprintf(Text, _T("%d"), files_size);
+        if (GetNumberFormat(LOCALE_USER_DEFAULT, 0, Text, &numFmt, number, sizeof(number))) {
+            wsprintf(Text, _T("Total %d file(s) (%s%s)"), file_count, number, suffix);
+        } else {
+            wsprintf(Text, _T("Total %d file(s) (%d%s)"), file_count, files_size, suffix);
+        }
+        SendMessage(Globals.hStatusBar, SB_SETTEXT, 1, (LPARAM)Text);
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 static WNDPROC g_orgTreeWndProc;
 
@@ -451,6 +489,9 @@ static LRESULT CALLBACK TreeWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
             return OnExpanding(hWnd, (NMTREEVIEW*)lParam);
             break;
         case TVN_SELCHANGED:
+
+            UpdateStatus(hWnd, child->left.cur->down);
+            break;
 //            return OnSelChanged((NMTREEVIEW*)lParam);
 //           break;
 #if 0
@@ -473,12 +514,7 @@ static LRESULT CALLBACK TreeWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
 		//ListBox_SetSel(hWnd, TRUE, 1);
 		//TODO: check menu items
         if (!child->nFocusPanel) {
-            int file_count = 50;
-            int files_size = 1115467;
-            TCHAR suffix[10];
-            TCHAR Text[260];
-			wsprintf(Text, _T("Total %d file(s) (%d%s)"), file_count, files_size, suffix);
-			SendMessage(Globals.hStatusBar, SB_SETTEXT, 2, (LPARAM)Text);
+            UpdateStatus(hWnd, pane->cur);
         }
 		break;
 	case WM_KEYDOWN:

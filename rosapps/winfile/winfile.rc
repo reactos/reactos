@@ -63,7 +63,7 @@ BEGIN
         , GRAYED
         MENUITEM "&Delete...\tDel",             ID_FILE_DELETE, GRAYED
         MENUITEM "Re&name...\t",                ID_FILE_RENAME, GRAYED
-        MENUITEM "Proper&ties...\tAlt+Enter",   ID_FILE_PROPERTIES, GRAYED
+        MENUITEM "Proper&ties...\tAlt+Enter",   ID_FILE_PROPERTIES
         MENUITEM SEPARATOR
         MENUITEM "Compre&ss...\t",              ID_FILE_COMPRESS, GRAYED
         MENUITEM "&Uncompress...\t",            ID_FILE_UNCOMPRESS, GRAYED
@@ -103,7 +103,6 @@ BEGIN
         MENUITEM "Expand &Branch\t*",           ID_TREE_EXPAND_BRANCH
         MENUITEM "Expand &All\tCtrl+*",         ID_TREE_EXPAND_ALL
         MENUITEM "Collapse Branch\t-",          ID_TREE_COLLAPSE_BRANCH
-
         MENUITEM SEPARATOR
         MENUITEM "&Indicate Expandable Branches", 
                                                 ID_TREE_INDICATE_EXPANDABLE_BRANCHES
@@ -243,6 +242,7 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
+    ID_TREE_COLLAPSE_BRANCH "Collapses all directories of the selected directory"
     ID_FILE_OPEN            "Opens selected item"
     ID_FILE_MOVE            "Moves selected item"
     ID_FILE_COPY            "Copies files and directories"
@@ -274,7 +274,6 @@ BEGIN
     ID_TREE_EXPAND_ONE_LEVEL "Displays another level of a directory"
     ID_TREE_EXPAND_BRANCH   "Displays all levels of a directory"
     ID_TREE_EXPAND_ALL      "Displays all levels of all directories"
-    ID_TREE_COLLAPSE_BRANCH "Collapses all directories of the selected directory"
     ID_TREE_INDICATE_EXPANDABLE_BRANCHES 
                             "Indicates directories that have sub-directories"
     ID_VIEW_TREE_DIRECTORY  "Displays the directory tree and the contents of the current directory"
@@ -418,6 +417,45 @@ BEGIN
                     WS_TABSTOP,13,71,132,8
 END
 
+IDD_DIALOG_PROPERTIES DIALOG DISCARDABLE  0, 0, 248, 215
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Properties for %s"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,191,83,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,191,101,50,14
+    LTEXT           "&File Name:",IDC_STATIC,7,7,59,9
+    LTEXT           "Static",IDC_STATIC_PROP_PATH,71,18,162,9
+    LTEXT           "&Path",IDC_STATIC,7,18,59,9
+    LTEXT           "Last Change:",IDC_STATIC,7,29,59,9
+    LTEXT           "Version:",IDC_STATIC,7,40,59,9
+    LTEXT           "Static",IDC_STATIC_PROP_FILENAME,71,7,162,9,WS_TABSTOP
+    LTEXT           "Cop&yright:",IDC_STATIC,7,51,59,9
+    LTEXT           "Size:",IDC_STATIC,7,62,59,9
+    LTEXT           "Static",IDC_STATIC_PROP_LASTCHANGE,71,29,162,9
+    GROUPBOX        "Attributes",IDC_STATIC,7,79,158,46
+    GROUPBOX        "&Version Information",IDC_STATIC,7,129,234,79
+    CONTROL         "&Read Only",IDC_CHECK_READONLY,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,17,91,68,9
+    CONTROL         "&Archive",IDC_CHECK_ARCHIVE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,17,101,68,9
+    CONTROL         "&Compressed",IDC_CHECK_COMPRESSED,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,17,111,68,9
+    CONTROL         "H&idden",IDC_CHECK_HIDDEN,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,92,91,68,9
+    CONTROL         "&System",IDC_CHECK_SYSTEM,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,92,101,68,9
+    LTEXT           "Static",IDC_STATIC_PROP_VERSION,71,40,162,9
+    LTEXT           "Static",IDC_STATIC_PROP_COPYRIGHT,71,51,162,9
+    LTEXT           "Static",IDC_STATIC_PROP_SIZE,71,62,162,9
+    LISTBOX         IDC_LIST_PROP_VERSION_TYPES,13,139,107,63,LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+//    LISTBOX         IDC_LIST_PROP_VERSION_VALUES,123,139,111,63,LBS_SORT | 
+//                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_LIST_PROP_VERSION_VALUES,123,139,111,63,ES_MULTILINE | ES_READONLY | 
+                    WS_VSCROLL
+END
+
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -472,6 +510,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 82
     END
+
+    IDD_DIALOG_PROPERTIES, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 241
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 208
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -499,18 +545,18 @@ BEGIN
     BEGIN
         BLOCK "0c0904b0"
         BEGIN
-            VALUE "Comments", "\0"
-            VALUE "CompanyName", "None\0"
-            VALUE "FileDescription", "winfile\0"
+            VALUE "Comments", "Absolutely no warranties whatsoever - Use at your own risk\0"
+            VALUE "CompanyName", "ReactWare\0"
+            VALUE "FileDescription", "ReactOS File Manager by Robert Dickenson\0"
             VALUE "FileVersion", "1, 0, 0, 1\0"
             VALUE "InternalName", "winfile\0"
-            VALUE "LegalCopyright", "Copyright © 2002\0"
+            VALUE "LegalCopyright", "Copyright © 2002 Robert Dickenson\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "winfile.exe\0"
             VALUE "PrivateBuild", "\0"
-            VALUE "ProductName", "None winfile\0"
+            VALUE "ProductName", "ReactOS File Manager\0"
             VALUE "ProductVersion", "1, 0, 0, 1\0"
-            VALUE "SpecialBuild", "\0"
+            VALUE "SpecialBuild", "Non-versioned Development Beta Release\0"
         END
     END
     BLOCK "VarFileInfo"

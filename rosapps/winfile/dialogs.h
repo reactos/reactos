@@ -38,11 +38,23 @@ struct ExecuteDialog {
 	int		cmdshow;
 };
 
+struct MoveFileDialog {
+	TCHAR	cmd[MAX_PATH];
+	int		cmdshow;
+};
+
+struct PropertiesDialog {
+	TCHAR	cmd[MAX_PATH];
+	int		cmdshow;
+    Entry*  pEntry;
+};
+
 
 BOOL CALLBACK ExecuteDialogWndProc(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK ViewFileTypeWndProc(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK OptionsConfirmationWndProc(HWND, UINT, WPARAM, LPARAM);
 BOOL CALLBACK MoveFileWndProc(HWND, UINT, WPARAM, LPARAM);
+BOOL CALLBACK PropertiesDlgProc(HWND, UINT, WPARAM, LPARAM);
 
 
 #ifdef __cplusplus

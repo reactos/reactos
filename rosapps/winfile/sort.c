@@ -34,8 +34,6 @@
 #include <stdio.h>
 #endif
     
-#include <shellapi.h>
-//#include <winspool.h>
 #include <windowsx.h>
 #include <shellapi.h>
 #include <ctype.h>
