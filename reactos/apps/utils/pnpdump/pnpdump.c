@@ -671,6 +671,7 @@ int main (int argc, char *argv[])
   HKEY hPnpKey;
   DWORD dwType;
   DWORD dwSize;
+  BOOL Ask = TRUE;
   PCM_FULL_RESOURCE_DESCRIPTOR lpBuffer;
   PCM_PNP_BIOS_INSTALLATION_CHECK lpPnpInst;
   PCM_PNP_BIOS_DEVICE_NODE lpDevNode;
@@ -678,7 +679,21 @@ int main (int argc, char *argv[])
   DWORD dwDataSize, dwResourceSize;
 
   hPnpKey = 0;
+  
 
+  if (argc >1 && (!strcmp (argv[1],"/S") || !strcmp (argv[1],"/s")))
+    {
+      Ask = FALSE;
+    }
+  
+  if (argc >1 && !strcmp (argv[1],"/?"))
+    {
+      printf ("This utility prints the PnP-nodes from the registry\n");
+      printf ("\"/s\" prevents the \"Press any key\"\n\n");
+      return 0;
+    }
+    
+    
   lError = GetPnpKey(&hPnpKey);
   if (lError != ERROR_SUCCESS)
     {
@@ -783,8 +798,15 @@ return 0;
       lpDevNode = (PCM_PNP_BIOS_DEVICE_NODE)((DWORD)lpDevNode + lpDevNode->Size);
     }
 
-  printf ("\n Press any key...\n");
-  getch();
+  if (Ask)
+    {
+      printf ("\n Press any key...\n");
+      getch();
+    }
+  else
+    {
+      printf ("\n");
+    }
 
   dwDataSize = sizeof(CM_PNP_BIOS_INSTALLATION_CHECK);
   lpDevNode = (PCM_PNP_BIOS_DEVICE_NODE)((DWORD)lpPnpInst + sizeof(CM_PNP_BIOS_INSTALLATION_CHECK));
@@ -793,9 +815,16 @@ return 0;
     {
       PrintDeviceData (lpDevNode);
 
-      printf ("\n Press any key...\n");
-      getch();
-
+      if (Ask)
+        {
+          printf ("\n Press any key...\n");
+          getch();
+        }
+      else
+        {
+          printf ("\n");
+        }
+      
       dwDataSize += lpDevNode->Size;
       lpDevNode = (PCM_PNP_BIOS_DEVICE_NODE)((DWORD)lpDevNode + lpDevNode->Size);
     }
