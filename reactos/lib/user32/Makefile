@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.9 2003/01/01 11:18:06 robd Exp $
+# $Id: Makefile,v 1.10 2003/02/02 17:36:16 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -10,7 +10,16 @@ TARGET_BASE = 0x77e70000
 
 TARGET_SDKLIBS = ntdll.a kernel32.a gdi32.a
 
-TARGET_CFLAGS = -I./include -DUNICODE -Wall -Werror
+TARGET_CFLAGS = \
+ -I./include \
+ -DUNICODE \
+ -Wall \
+ -Werror \
+ -nostdinc \
+ -nostdlib \
+ -fno-builtin
+
+TARGET_LFLAGS = -nostartfiles
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 
