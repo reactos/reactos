@@ -49,19 +49,31 @@ void ExecuteCd(char* cmdline)
 
 void ExecuteDir(char* cmdline)
 {
-        HANDLE shandle;
-        WIN32_FIND_DATA FindData;
+ HANDLE shandle;
+ WIN32_FIND_DATA FindData;
+ int nFile=0,nRep=0;
+ TIME_FIELDS fTime;
 
-        shandle = FindFirstFile("*",&FindData);
+  shandle = FindFirstFile("*",&FindData);
 
-        if (shandle==INVALID_HANDLE_VALUE)
-        {
-                return;
-        }
-        do
-        {
-                debug_printf("Scanning %s\n",FindData.cFileName);
-        } while(FindNextFile(shandle,&FindData));
+  if (shandle==INVALID_HANDLE_VALUE)
+  {
+          return;
+  }
+  do
+  {
+    debug_printf("%-15.15s",FindData.cAlternateFileName);
+    if(FindData.dwFileAttributes &FILE_ATTRIBUTE_DIRECTORY)
+         debug_printf("<REP>       "),nRep++;
+       else
+         debug_printf(" %10d ",FindData.nFileSizeLow),nFile++;
+//    RtlTimeToTimeFields(&FindData.ftLastWriteTime  ,&fTime);
+//    debug_printf("%02d/%02d/%04d %02d:%02d:%02d "
+//        ,fTime.Month,fTime.Day,fTime.Year
+//        ,fTime.Hour,fTime.Minute,fTime.Second);
+    debug_printf("%s\n",FindData.cFileName);
+  } while(FindNextFile(shandle,&FindData));
+  debug_printf("\n    %d files\n    %d directories\n\n",nFile,nRep);
 }
 
 void ExecuteType(char* cmdline)
