@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: line.c,v 1.24 2003/11/24 21:20:35 gvg Exp $ */
+/* $Id: line.c,v 1.25 2003/12/13 10:18:01 weiden Exp $ */
 
 // Some code from the WINE project source (www.winehq.com)
 
@@ -33,130 +33,45 @@
 #include <include/inteng.h>
 #include <include/object.h>
 #include <include/path.h>
+#include <include/intgdi.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
 
 
-BOOL
-STDCALL
-NtGdiAngleArc(HDC  hDC,
-             int  X,
-             int  Y,
-             DWORD  Radius,
-             FLOAT  StartAngle,
-             FLOAT  SweepAngle)
+BOOL FASTCALL
+IntGdiMoveToEx(DC      *dc,
+               int     X,
+               int     Y,
+               LPPOINT Point)
 {
-  UNIMPLEMENTED;
-}
-
-BOOL
-STDCALL
-NtGdiArc(HDC  hDC,
-        int  LeftRect,
-        int  TopRect,
-        int  RightRect,
-        int  BottomRect,
-        int  XStartArc,
-        int  YStartArc,
-        int  XEndArc,
-        int  YEndArc)
-{
-  DC *dc = DC_LockDc(hDC);
-  if(!dc) return FALSE;
-
-  if(PATH_IsPathOpen(dc->w.path))
+  BOOL  PathIsOpen;
+  
+  if ( Point )
   {
-    DC_UnlockDc ( hDC );
-    return PATH_Arc(hDC, LeftRect, TopRect, RightRect, BottomRect,
-                    XStartArc, YStartArc, XEndArc, YEndArc);
+    Point->x = dc->w.CursPosX;
+    Point->y = dc->w.CursPosY;
   }
-
-  // FIXME
-//   EngArc(dc, LeftRect, TopRect, RightRect, BottomRect, UNIMPLEMENTED
-//          XStartArc, YStartArc, XEndArc, YEndArc);
-
-  DC_UnlockDc( hDC );
+  dc->w.CursPosX = X;
+  dc->w.CursPosY = Y;
+  
+  PathIsOpen = PATH_IsPathOpen(dc->w.path);
+  
+  if ( PathIsOpen )
+    return PATH_MoveTo ( dc );
+  
   return TRUE;
 }
 
-BOOL
-STDCALL
-NtGdiArcTo(HDC  hDC,
-          int  LeftRect,
-          int  TopRect,
-          int  RightRect,
-          int  BottomRect,
-          int  XRadial1,
-          int  YRadial1,
-          int  XRadial2,
-          int  YRadial2)
+BOOL FASTCALL
+IntGdiLineTo(DC  *dc,
+             int XEnd,
+             int YEnd)
 {
-  BOOL result;
-  //DC *dc;
-
-  // Line from current position to starting point of arc
-  if ( !NtGdiLineTo(hDC, XRadial1, YRadial1) )
-    return FALSE;
-
-  //dc = DC_LockDc(hDC);
-
-  //if(!dc) return FALSE;
-
-  // Then the arc is drawn.
-  result = NtGdiArc(hDC, LeftRect, TopRect, RightRect, BottomRect,
-                   XRadial1, YRadial1, XRadial2, YRadial2);
-
-  //DC_UnlockDc( hDC );
-
-  // If no error occured, the current position is moved to the ending point of the arc.
-  if(result)
-    NtGdiMoveToEx(hDC, XRadial2, YRadial2, NULL);
-
-  return result;
-}
-
-INT
-FASTCALL
-IntGetArcDirection ( PDC dc )
-{
-  ASSERT ( dc );
-  return dc->w.ArcDirection;
-}
-
-INT
-STDCALL
-NtGdiGetArcDirection(HDC  hDC)
-{
-  PDC dc = DC_LockDc (hDC);
-  int ret = 0; // default to failure
-
-  if ( dc )
-  {
-    ret = IntGetArcDirection ( dc );
-    DC_UnlockDc( hDC );
-  }
-
-  return ret;
-}
-
-BOOL
-STDCALL
-NtGdiLineTo(HDC  hDC,
-           int  XEnd,
-           int  YEnd)
-{
-  DC      *dc = DC_LockDc(hDC);
   SURFOBJ *SurfObj;
   BOOL     Ret;
   BRUSHOBJ PenBrushObj;
   RECT     Bounds;
-
-  if ( !dc )
-    {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return FALSE;
-    }
 
   SurfObj = (SURFOBJ*)AccessUserObject ( (ULONG)dc->Surface );
   if (NULL == SurfObj)
@@ -167,16 +82,13 @@ NtGdiLineTo(HDC  hDC,
 
   if (PATH_IsPathOpen(dc->w.path))
     {
-      DC_UnlockDc(hDC);
-      Ret = PATH_LineTo(hDC, XEnd, YEnd);
+      Ret = PATH_LineTo(dc, XEnd, YEnd);
       if (Ret)
-	{
-	  // FIXME - PATH_LineTo should maybe do this...
-	  dc = DC_LockDc(hDC);
-	  dc->w.CursPosX = XEnd;
-	  dc->w.CursPosY = YEnd;
-	  DC_UnlockDc(hDC);
-	}
+	  {
+	    // FIXME - PATH_LineTo should maybe do this...
+	    dc->w.CursPosX = XEnd;
+	    dc->w.CursPosY = YEnd;
+	  }
       return Ret;
     }
   else
@@ -223,56 +135,20 @@ NtGdiLineTo(HDC  hDC,
       dc->w.CursPosX = XEnd;
       dc->w.CursPosY = YEnd;
     }
-  DC_UnlockDc(hDC);
 
   return Ret;
 }
 
-BOOL
-STDCALL
-NtGdiMoveToEx(HDC      hDC,
-             int      X,
-             int      Y,
-             LPPOINT  Point)
+BOOL FASTCALL
+IntGdiPolyBezier(DC      *dc,
+                 LPPOINT pt,
+                 DWORD   Count)
 {
-  DC   *dc = DC_LockDc( hDC );
-  BOOL  PathIsOpen;
-
-  if ( !dc ) return FALSE;
-
-  if ( Point )
-  {
-    Point->x = dc->w.CursPosX;
-    Point->y = dc->w.CursPosY;
-  }
-  dc->w.CursPosX = X;
-  dc->w.CursPosY = Y;
-
-  PathIsOpen = PATH_IsPathOpen(dc->w.path);
-
-  DC_UnlockDc ( hDC );
-
-  if ( PathIsOpen )
-    return PATH_MoveTo ( hDC );
-
-  return TRUE;
-}
-
-BOOL
-STDCALL
-NtGdiPolyBezier(HDC            hDC,
-               CONST LPPOINT  pt,
-               DWORD          Count)
-{
-  DC *dc = DC_LockDc(hDC);
   BOOL ret = FALSE; // default to FAILURE
-
-  if ( !dc ) return FALSE;
 
   if ( PATH_IsPathOpen(dc->w.path) )
   {
-    DC_UnlockDc( hDC );
-    return PATH_PolyBezier ( hDC, pt, Count );
+    return PATH_PolyBezier ( dc, pt, Count );
   }
 
   /* We'll convert it into line segments and draw them using Polyline */
@@ -284,27 +160,23 @@ NtGdiPolyBezier(HDC            hDC,
     if ( Pts )
     {
       DbgPrint("Pts = %p, no = %d\n", Pts, nOut);
-      ret = NtGdiPolyline(dc->hSelf, Pts, nOut);
+      ret = IntGdiPolyline(dc, Pts, nOut);
       ExFreePool(Pts);
     }
   }
-  DC_UnlockDc( hDC );
+  
   return ret;
 }
 
-BOOL
-STDCALL
-NtGdiPolyBezierTo(HDC  hDC,
-                 CONST LPPOINT  pt,
-                 DWORD  Count)
+BOOL FASTCALL
+IntGdiPolyBezierTo(DC      *dc,
+                   LPPOINT pt,
+                   DWORD  Count)
 {
-  DC *dc = DC_LockDc(hDC);
   BOOL ret = FALSE; // default to failure
 
-  if ( !dc ) return ret;
-
   if ( PATH_IsPathOpen(dc->w.path) )
-    ret = PATH_PolyBezierTo ( hDC, pt, Count );
+    ret = PATH_PolyBezierTo ( dc, pt, Count );
   else /* We'll do it using PolyBezier */
   {
     POINT *npt;
@@ -314,7 +186,7 @@ NtGdiPolyBezierTo(HDC  hDC,
       npt[0].x = dc->w.CursPosX;
       npt[0].y = dc->w.CursPosY;
       memcpy(npt + 1, pt, sizeof(POINT) * Count);
-      ret = NtGdiPolyBezier(dc->hSelf, npt, Count+1);
+      ret = IntGdiPolyBezier(dc, npt, Count+1);
       ExFreePool(npt);
     }
   }
@@ -323,25 +195,14 @@ NtGdiPolyBezierTo(HDC  hDC,
     dc->w.CursPosX = pt[Count-1].x;
     dc->w.CursPosY = pt[Count-1].y;
   }
-  DC_UnlockDc( hDC );
+  
   return ret;
 }
 
-BOOL
-STDCALL
-NtGdiPolyDraw(HDC            hDC,
-             CONST LPPOINT  pt,
-             CONST LPBYTE   Types,
-             int            Count)
-{
-  UNIMPLEMENTED;
-}
-
-BOOL
-FASTCALL
-IntPolyline(PDC           dc,
-            CONST LPPOINT pt,
-            int           Count)
+BOOL FASTCALL
+IntGdiPolyline(DC      *dc,
+               LPPOINT pt,
+               int     Count)
 {
   SURFOBJ     *SurfObj = NULL;
   BOOL         ret = FALSE; // default to failure
@@ -395,39 +256,16 @@ IntPolyline(PDC           dc,
   return ret;
 }
 
-BOOL
-STDCALL
-NtGdiPolyline(HDC            hDC,
-             CONST LPPOINT  pt,
-             int            Count)
+BOOL FASTCALL
+IntGdiPolylineTo(DC      *dc,
+                 LPPOINT pt,
+                 DWORD   Count)
 {
-  DC    *dc = DC_LockDc(hDC);
-  BOOL   ret = FALSE; // default to failure
-
-  if ( dc )
-  {
-    ret = IntPolyline ( dc, pt, Count );
-
-    DC_UnlockDc( hDC );
-  }
-
-  return ret;
-}
-
-BOOL
-STDCALL
-NtGdiPolylineTo(HDC            hDC,
-               CONST LPPOINT  pt,
-               DWORD          Count)
-{
-  DC *dc = DC_LockDc(hDC);
   BOOL ret = FALSE; // default to failure
-
-  if ( !dc ) return ret;
 
   if(PATH_IsPathOpen(dc->w.path))
   {
-    ret = PATH_PolylineTo(hDC, pt, Count);
+    ret = PATH_PolylineTo(dc, pt, Count);
   }
   else /* do it using Polyline */
   {
@@ -437,7 +275,7 @@ NtGdiPolylineTo(HDC            hDC,
       pts[0].x = dc->w.CursPosX;
       pts[0].y = dc->w.CursPosY;
       memcpy( pts + 1, pt, sizeof(POINT) * Count);
-      ret = NtGdiPolyline(hDC, pts, Count + 1);
+      ret = IntGdiPolyline(dc, pts, Count + 1);
       ExFreePool(pts);
     }
   }
@@ -446,8 +284,454 @@ NtGdiPolylineTo(HDC            hDC,
     dc->w.CursPosX = pt[Count-1].x;
     dc->w.CursPosY = pt[Count-1].y;
   }
-  DC_UnlockDc( hDC );
+  
   return ret;
+}
+
+INT FASTCALL
+IntGdiGetArcDirection(DC *dc)
+{
+  return dc->w.ArcDirection;
+}
+
+BOOL FASTCALL
+IntGdiArc(DC  *dc,
+          int LeftRect,
+          int TopRect,
+          int RightRect,
+          int BottomRect,
+          int XStartArc,
+          int YStartArc,
+          int XEndArc,
+          int YEndArc)
+{
+  if(PATH_IsPathOpen(dc->w.path))
+  {
+    return PATH_Arc(dc, LeftRect, TopRect, RightRect, BottomRect,
+                    XStartArc, YStartArc, XEndArc, YEndArc);
+  }
+
+  // FIXME
+//   EngArc(dc, LeftRect, TopRect, RightRect, BottomRect, UNIMPLEMENTED
+//          XStartArc, YStartArc, XEndArc, YEndArc);
+
+  return TRUE;
+}
+
+BOOL FASTCALL
+IntGdiPolyPolyline(DC      *dc,
+                   LPPOINT pt,
+                   LPDWORD PolyPoints,
+                   DWORD   Count)
+{
+  int i;
+  LPPOINT pts;
+  LPDWORD pc;
+  BOOL ret = FALSE; // default to failure
+  pts = pt;
+  pc = PolyPoints;
+
+  for (i = 0; i < Count; i++)
+  {
+    ret = IntGdiPolyline ( dc, pts, *pc );
+    if (ret == FALSE)
+    {
+      return ret;
+    }
+    pts+=*pc++;
+  }
+
+  return ret;
+}
+
+/******************************************************************************/
+
+BOOL
+STDCALL
+NtGdiAngleArc(HDC  hDC,
+             int  X,
+             int  Y,
+             DWORD  Radius,
+             FLOAT  StartAngle,
+             FLOAT  SweepAngle)
+{
+  UNIMPLEMENTED;
+}
+
+BOOL
+STDCALL
+NtGdiArc(HDC  hDC,
+        int  LeftRect,
+        int  TopRect,
+        int  RightRect,
+        int  BottomRect,
+        int  XStartArc,
+        int  YStartArc,
+        int  XEndArc,
+        int  YEndArc)
+{
+  DC *dc;
+  BOOL Ret;
+  
+  dc = DC_LockDc (hDC);
+  if(!dc)
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return FALSE;
+  }
+  
+  Ret = IntGdiArc(dc,
+                  LeftRect,
+                  TopRect,
+                  RightRect,
+                  BottomRect,
+                  XStartArc,
+                  YStartArc,
+                  XEndArc,
+                  YEndArc);
+  
+  DC_UnlockDc( hDC );
+  return Ret;
+}
+
+BOOL
+STDCALL
+NtGdiArcTo(HDC  hDC,
+          int  LeftRect,
+          int  TopRect,
+          int  RightRect,
+          int  BottomRect,
+          int  XRadial1,
+          int  YRadial1,
+          int  XRadial2,
+          int  YRadial2)
+{
+  BOOL result;
+  DC *dc;
+  
+  dc = DC_LockDc (hDC);
+  if(!dc)
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return FALSE;
+  }
+
+  // Line from current position to starting point of arc
+  if ( !IntGdiLineTo(dc, XRadial1, YRadial1) )
+  {
+    DC_UnlockDc( hDC );
+    return FALSE;
+  }
+
+  //dc = DC_LockDc(hDC);
+
+  //if(!dc) return FALSE;
+
+  // Then the arc is drawn.
+  result = IntGdiArc(dc, LeftRect, TopRect, RightRect, BottomRect,
+                     XRadial1, YRadial1, XRadial2, YRadial2);
+
+  //DC_UnlockDc( hDC );
+
+  // If no error occured, the current position is moved to the ending point of the arc.
+  if(result)
+    IntGdiMoveToEx(dc, XRadial2, YRadial2, NULL);
+  
+  DC_UnlockDc( hDC );
+
+  return result;
+}
+
+INT
+STDCALL
+NtGdiGetArcDirection(HDC  hDC)
+{
+  PDC dc = DC_LockDc (hDC);
+  int ret = 0; // default to failure
+
+  if ( dc )
+  {
+    ret = IntGdiGetArcDirection ( dc );
+    DC_UnlockDc( hDC );
+  }
+  else
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+  }
+
+  return ret;
+}
+
+BOOL
+STDCALL
+NtGdiLineTo(HDC  hDC,
+           int  XEnd,
+           int  YEnd)
+{
+  DC *dc;
+  BOOL Ret;
+  
+  dc = DC_LockDc(hDC);
+  if(!dc)
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return FALSE;
+  }
+  
+  Ret = IntGdiLineTo(dc, XEnd, YEnd);
+  
+  DC_UnlockDc(hDC);
+  return Ret;
+}
+
+BOOL
+STDCALL
+NtGdiMoveToEx(HDC      hDC,
+             int      X,
+             int      Y,
+             LPPOINT  Point)
+{
+  DC *dc;
+  POINT SafePoint;
+  NTSTATUS Status;
+  BOOL Ret;
+  
+  dc = DC_LockDc(hDC);
+  if(!dc)
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return FALSE;
+  }
+  
+  if(Point)
+  {
+    Status = MmCopyFromCaller(&SafePoint, Point, sizeof(POINT));
+    if(!NT_SUCCESS(Status))
+    {
+      DC_UnlockDc(hDC);
+      SetLastNtError(Status);
+      return FALSE;
+    }
+  }
+  
+  Ret = IntGdiMoveToEx(dc, X, Y, (Point ? &SafePoint : NULL));
+  
+  DC_UnlockDc(hDC);
+  return Ret;
+}
+
+BOOL
+STDCALL
+NtGdiPolyBezier(HDC           hDC,
+               CONST LPPOINT  pt,
+               DWORD          Count)
+{
+  DC *dc;
+  LPPOINT Safept;
+  NTSTATUS Status;
+  BOOL Ret;
+  
+  dc = DC_LockDc(hDC);
+  if(!dc)
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return FALSE;
+  }
+  
+  if(Count > 0)
+  {
+    Safept = ExAllocatePool(NonPagedPool, sizeof(POINT) * Count);
+    if(!Safept)
+    {
+      DC_UnlockDc(hDC);
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return FALSE;
+    }
+    
+    Status = MmCopyFromCaller(Safept, pt, sizeof(POINT) * Count);
+    if(!NT_SUCCESS(Status))
+    {
+      DC_UnlockDc(hDC);
+      SetLastNtError(Status);
+      return FALSE;
+    }
+  }
+  else
+  {
+    DC_UnlockDc(hDC);
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+  
+  Ret = IntGdiPolyBezier(dc, Safept, Count);
+  
+  ExFreePool(Safept);
+  DC_UnlockDc(hDC);
+  
+  return Ret;
+}
+
+BOOL
+STDCALL
+NtGdiPolyBezierTo(HDC  hDC,
+                 CONST LPPOINT  pt,
+                 DWORD  Count)
+{
+  DC *dc;
+  LPPOINT Safept;
+  NTSTATUS Status;
+  BOOL Ret;
+  
+  dc = DC_LockDc(hDC);
+  if(!dc)
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return FALSE;
+  }
+  
+  if(Count > 0)
+  {
+    Safept = ExAllocatePool(NonPagedPool, sizeof(POINT) * Count);
+    if(!Safept)
+    {
+      DC_UnlockDc(hDC);
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return FALSE;
+    }
+    
+    Status = MmCopyFromCaller(Safept, pt, sizeof(POINT) * Count);
+    if(!NT_SUCCESS(Status))
+    {
+      DC_UnlockDc(hDC);
+      SetLastNtError(Status);
+      return FALSE;
+    }
+  }
+  else
+  {
+    DC_UnlockDc(hDC);
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+  
+  Ret = IntGdiPolyBezierTo(dc, Safept, Count);
+  
+  ExFreePool(Safept);
+  DC_UnlockDc(hDC);
+  
+  return Ret;
+}
+
+BOOL
+STDCALL
+NtGdiPolyDraw(HDC            hDC,
+             CONST LPPOINT  pt,
+             CONST LPBYTE   Types,
+             int            Count)
+{
+  UNIMPLEMENTED;
+}
+
+BOOL
+STDCALL
+NtGdiPolyline(HDC            hDC,
+             CONST LPPOINT  pt,
+             int            Count)
+{
+  DC *dc;
+  LPPOINT Safept;
+  NTSTATUS Status;
+  BOOL Ret;
+  
+  dc = DC_LockDc(hDC);
+  if(!dc)
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return FALSE;
+  }
+  
+  if(Count >= 2)
+  {
+    Safept = ExAllocatePool(NonPagedPool, sizeof(POINT) * Count);
+    if(!Safept)
+    {
+      DC_UnlockDc(hDC);
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return FALSE;
+    }
+    
+    Status = MmCopyFromCaller(Safept, pt, sizeof(POINT) * Count);
+    if(!NT_SUCCESS(Status))
+    {
+      DC_UnlockDc(hDC);
+      SetLastNtError(Status);
+      return FALSE;
+    }
+  }
+  else
+  {
+    DC_UnlockDc(hDC);
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+  
+  Ret = IntGdiPolyline(dc, Safept, Count);
+
+  ExFreePool(Safept);
+  DC_UnlockDc(hDC);
+  
+  return Ret;
+}
+
+BOOL
+STDCALL
+NtGdiPolylineTo(HDC            hDC,
+               CONST LPPOINT  pt,
+               DWORD          Count)
+{
+  DC *dc;
+  LPPOINT Safept;
+  NTSTATUS Status;
+  BOOL Ret;
+  
+  dc = DC_LockDc(hDC);
+  if(!dc)
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return FALSE;
+  }
+  
+  if(Count > 0)
+  {
+    Safept = ExAllocatePool(NonPagedPool, sizeof(POINT) * Count);
+    if(!Safept)
+    {
+      DC_UnlockDc(hDC);
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return FALSE;
+    }
+    
+    Status = MmCopyFromCaller(Safept, pt, sizeof(POINT) * Count);
+    if(!NT_SUCCESS(Status))
+    {
+      DC_UnlockDc(hDC);
+      SetLastNtError(Status);
+      return FALSE;
+    }
+  }
+  else
+  {
+    DC_UnlockDc(hDC);
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+  
+  Ret = IntGdiPolylineTo(dc, Safept, Count);
+  
+  ExFreePool(Safept);
+  DC_UnlockDc(hDC);
+  
+  return Ret;
 }
 
 BOOL
@@ -457,29 +741,52 @@ NtGdiPolyPolyline(HDC            hDC,
                  CONST LPDWORD  PolyPoints,
                  DWORD          Count)
 {
-  DC    *dc = DC_LockDc(hDC);
-  int i;
-  LPPOINT pts;
-  LPDWORD pc;
-  BOOL   ret = FALSE; // default to failure
-  pts = pt;
-  pc = PolyPoints;
-  if ( dc )
+  DC *dc;
+  LPPOINT Safept;
+  LPDWORD SafePolyPoints;
+  NTSTATUS Status;
+  BOOL Ret;
+  
+  dc = DC_LockDc(hDC);
+  if(!dc)
   {
-	for (i=0;i<Count;i++)
-	{
-		ret = IntPolyline ( dc, pts, *pc );
-		if (ret == FALSE)
-		{
-		    DC_UnlockDc( hDC );
-			return ret;
-		}
-		pts+=*pc++;
-	}
-    DC_UnlockDc( hDC );
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return FALSE;
   }
-
-  return ret;
+  
+  if(Count > 0)
+  {
+    Safept = ExAllocatePool(NonPagedPool, (sizeof(POINT) + sizeof(DWORD)) * Count);
+    if(!Safept)
+    {
+      DC_UnlockDc(hDC);
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return FALSE;
+    }
+    
+    Status = MmCopyFromCaller(Safept, pt, (sizeof(POINT) + sizeof(DWORD)) * Count);
+    if(!NT_SUCCESS(Status))
+    {
+      DC_UnlockDc(hDC);
+      SetLastNtError(Status);
+      return FALSE;
+    }
+  }
+  else
+  {
+    DC_UnlockDc(hDC);
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+  
+  SafePolyPoints = (LPDWORD)&Safept[Count];
+  
+  Ret = IntGdiPolyPolyline(dc, Safept, SafePolyPoints, Count);
+  
+  ExFreePool(Safept);
+  DC_UnlockDc(hDC);
+  
+  return Ret;
 }
 
 int

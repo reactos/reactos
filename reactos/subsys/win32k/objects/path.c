@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: path.c,v 1.16 2003/09/09 15:49:59 gvg Exp $ */
+/* $Id: path.c,v 1.17 2003/12/13 10:18:01 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -30,6 +30,7 @@
 #define _WIN32K_PATH_INTERNAL
 #include <include/object.h>
 #include <include/path.h>
+#include <include/intgdi.h>
 
 #include <math.h>
 #include <float.h>
@@ -422,7 +423,7 @@ PATH_Arc ( PDC dc, INT x1, INT y1, INT x2, INT y2,
 
   ASSERT ( dc );
 
-  clockwise = ( IntGetArcDirection(dc) == AD_CLOCKWISE );
+  clockwise = ( IntGdiGetArcDirection(dc) == AD_CLOCKWISE );
 
   /* Get pointer to path */
   PATH_GetPathFromDC ( dc, &pPath );
