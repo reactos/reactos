@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.53 2004/11/06 04:12:59 ion Exp $
+/* $Id: iomgr.c,v 1.54 2004/11/21 21:53:07 ion Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -19,6 +19,7 @@
 
 #define TAG_DEVICE_TYPE     TAG('D', 'E', 'V', 'T')
 #define TAG_FILE_TYPE       TAG('F', 'I', 'L', 'E')
+#define TAG_ADAPTER_TYPE    TAG('A', 'D', 'P', 'T')
 
 /* DATA ********************************************************************/
 
@@ -442,6 +443,19 @@ IoInit (VOID)
   RtlRosInitUnicodeStringFromLiteral(&IoFileObjectType->TypeName, L"File");
 
   ObpCreateTypeObject(IoFileObjectType);
+  
+    /*
+   * Register iomgr types: AdapterObjectType
+   */
+  IoAdapterObjectType = ExAllocatePool (NonPagedPool,
+				       sizeof (OBJECT_TYPE));
+  RtlZeroMemory(IoAdapterObjectType, sizeof(OBJECT_TYPE));
+  IoAdapterObjectType->Tag = TAG_ADAPTER_TYPE;
+  IoAdapterObjectType->MaxObjects = ULONG_MAX;
+  IoAdapterObjectType->MaxHandles = ULONG_MAX;
+  IoDeviceObjectType->Mapping = &IopFileMapping;
+  RtlRosInitUnicodeStringFromLiteral(&IoAdapterObjectType->TypeName, L"Adapter");
+  ObpCreateTypeObject(IoAdapterObjectType);
 
   /*
    * Create the '\Driver' object directory

@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.84 2004/10/22 20:43:58 ekohl Exp $
+/* $Id: object.c,v 1.85 2004/11/21 21:53:07 ion Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -364,7 +364,7 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
 			    NULL);
       if (!NT_SUCCESS(Status))
 	{
-	  DPRINT("ObFindObject() failed! (Status 0x%x)\n", Status);
+	  DPRINT1("ObFindObject() failed! (Status 0x%x)\n", Status);
 	  return Status;
 	}
     }
@@ -376,11 +376,15 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
   Header = (POBJECT_HEADER)ExAllocatePoolWithTag(NonPagedPool,
 						 OBJECT_ALLOC_SIZE(ObjectSize),
 						 Type->Tag);
-  if (Header == NULL)
-    return STATUS_INSUFFICIENT_RESOURCES;
+  if (Header == NULL) {
+	DPRINT1("Not enough memory!\n");
+	return STATUS_INSUFFICIENT_RESOURCES;
+  }
+
   RtlZeroMemory(Header, OBJECT_ALLOC_SIZE(ObjectSize));
 
   /* Initialize the object header */
+  DPRINT("Initalizing header\n");
   Header->HandleCount = 0;
   Header->RefCount = 1;
   Header->ObjectType = Type;
@@ -406,6 +410,7 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
 
   RtlInitUnicodeString(&(Header->Name),NULL);
 
+  DPRINT("Getting Parent and adding entry\n");
   if (Parent != NULL)
     {
       ParentHeader = BODY_TO_HEADER(Parent);
@@ -426,6 +431,7 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
       ObjectAttached = TRUE;
     }
 
+  DPRINT("About to call Create Routine\n");
   if (Header->ObjectType->Create != NULL)
     {
       DPRINT("Calling %x\n", Header->ObjectType->Create);
@@ -446,6 +452,7 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
 	  RtlFreeUnicodeString(&Header->Name);
 	  RtlFreeUnicodeString(&RemainingPath);
 	  ExFreePool(Header);
+	  DPRINT("Create Failed\n");
 	  return Status;
 	}
     }
@@ -453,6 +460,7 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
 
   SeCaptureSubjectContext(&SubjectContext);
 
+  DPRINT("Security Assignment in progress\n");
   /* Build the new security descriptor */
   Status = SeAssignSecurity((ParentHeader != NULL) ? ParentHeader->SecurityDescriptor : NULL,
 			    (ObjectAttributes != NULL) ? ObjectAttributes->SecurityDescriptor : NULL,
@@ -486,6 +494,7 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
       SeDeassignSecurity(&NewSecurityDescriptor);
     }
 
+  DPRINT("Security Complete\n");
   SeReleaseSubjectContext(&SubjectContext);
 
   if (Object != NULL)
@@ -493,6 +502,7 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
       *Object = HEADER_TO_BODY(Header);
     }
 
+  DPRINT("Sucess!\n");
   return STATUS_SUCCESS;
 }
 

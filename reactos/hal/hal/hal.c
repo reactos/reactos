@@ -1,4 +1,4 @@
-/* $Id: hal.c,v 1.7 2004/10/23 23:43:23 ion Exp $
+/* $Id: hal.c,v 1.8 2004/11/21 21:53:06 ion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -139,12 +139,11 @@ HalAssignSlotResources(
 }
 
 
-BOOLEAN
+BOOLEAN 
 STDCALL 
-HalBeginSystemInterrupt(
-  ULONG Vector,
-  KIRQL Irql,
-  PKIRQL OldIrql)
+HalBeginSystemInterrupt (ULONG Vector,
+			 KIRQL Irql,
+			 PKIRQL OldIrql)
 {
   UNIMPLEMENTED;
 

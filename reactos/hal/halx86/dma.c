@@ -1,4 +1,4 @@
-/* $Id: dma.c,v 1.9 2004/07/22 18:49:18 navaraf Exp $
+/* $Id: dma.c,v 1.10 2004/11/21 21:53:06 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,42 +12,19 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-
+#define NDEBUG
 #include <internal/debug.h>
 #include <hal.h>
 
-/* XXX This initialization is out of date - ADAPTER_OBJECT has changed */
-/* NOTE: The following initializations have to be kept in synch with ADAPTER_OBJECT in hal.h */
-ADAPTER_OBJECT IsaSlaveAdapterObjects[] = {
-  { Isa, FALSE, 0, (PVOID)0x87, (PVOID)0x1, (PVOID)0x0, 0, NULL },
-  { Isa, FALSE, 1, (PVOID)0x83, (PVOID)0x3, (PVOID)0x2, 0, NULL },
-  { Isa, FALSE, 2, (PVOID)0x81, (PVOID)0x5, (PVOID)0x4, 0, NULL },
-  { Isa, FALSE, 3, (PVOID)0x82, (PVOID)0x7, (PVOID)0x6, 0, NULL },
-  /* 16-bit DMA */
-  { Isa, FALSE, 4, (PVOID)0x8F, (PVOID)0xC2, (PVOID)0xC0, 0, NULL },
-  { Isa, FALSE, 5, (PVOID)0x8B, (PVOID)0xC6, (PVOID)0xC4, 0, NULL },
-  { Isa, FALSE, 6, (PVOID)0x89, (PVOID)0xCA, (PVOID)0xC8, 0, NULL },
-  { Isa, FALSE, 7, (PVOID)0x8A, (PVOID)0xCE, (PVOID)0xCC, 0, NULL } };
-
-ADAPTER_OBJECT PciBusMasterAdapterObjects[] = {
-  { PCIBus, TRUE, 0, (PVOID)0, (PVOID)0, (PVOID)0x0, 0, NULL } };
+/* Adapters for each channel */
+PADAPTER_OBJECT HalpEisaAdapter[8];
 
 /* FUNCTIONS *****************************************************************/
 
 VOID
 HalpInitDma (VOID)
 {
-  ULONG Index;
-
-  KeInitializeDeviceQueue(&PciBusMasterAdapterObjects[0].DeviceQueue);
-  KeInitializeSpinLock(&PciBusMasterAdapterObjects[0].SpinLock);
-  PciBusMasterAdapterObjects[0].Inuse = FALSE;
-  for (Index = 0; Index < 8; Index++)
-    {
-      KeInitializeDeviceQueue(&IsaSlaveAdapterObjects[Index].DeviceQueue);
-      KeInitializeSpinLock(&IsaSlaveAdapterObjects[Index].SpinLock);
-      IsaSlaveAdapterObjects[Index].Inuse = FALSE;
-    }
+  /* TODO: Initialize the first Map Buffer */
 }
 
 PVOID STDCALL
@@ -79,15 +56,11 @@ HalAllocateCommonBuffer (PADAPTER_OBJECT    AdapterObject,
   LowestAddress.QuadPart = 0;
   BoundryAddressMultiple.QuadPart = 0;
   HighestAddress.u.HighPart = 0;
-  if (AdapterObject->InterfaceType == Isa ||
-      (AdapterObject->InterfaceType == MicroChannel && AdapterObject->Master == FALSE))
-    {
-      HighestAddress.u.LowPart = 0x00FFFFFF; /* 24Bit: 16MB address range */
-    }
-  else
-    {
+  if ((AdapterObject->Dma32BitAddresses) && (AdapterObject->MasterDevice)) {
       HighestAddress.u.LowPart = 0xFFFFFFFF; /* 32Bit: 4GB address range */
-    }
+  } else {
+      HighestAddress.u.LowPart = 0x00FFFFFF; /* 24Bit: 16MB address range */
+  }
 
   BaseAddress = MmAllocateContiguousAlignedMemory(
       Length,
@@ -141,49 +114,284 @@ HalGetAdapter (PDEVICE_DESCRIPTION	DeviceDescription,
  * RETURNS: The allocated adapter object on success
  *          NULL on failure
  * TODO:
- *        Honour all the fields in DeviceDescription structure.
+ *        Testing
  */
 {
-  PADAPTER_OBJECT AdapterObject;
+	PADAPTER_OBJECT AdapterObject;
+	DWORD ChannelSelect;
+	DWORD Controller;
+	ULONG MaximumLength;
+	BOOLEAN ChannelSetup;
 
-  /* Validate parameters in device description, and return a pointer to
-     the adapter object for the requested dma channel */
-  if( DeviceDescription->Version != DEVICE_DESCRIPTION_VERSION )
-    return NULL;
+	DPRINT("Entered Function\n");
+  
+	/* Validate parameters in device description, and return a pointer to
+	the adapter object for the requested dma channel */
+	if(DeviceDescription->Version != DEVICE_DESCRIPTION_VERSION) {
+		DPRINT("Invalid Adapter version!\n");
+		return NULL;
+	}
 
-  switch (DeviceDescription->InterfaceType)
-    {
-      case PCIBus:
-        if (DeviceDescription->Master == FALSE)
-          return NULL;
-        return &PciBusMasterAdapterObjects[0];
+	DPRINT("Checking Interface Type: %x \n", DeviceDescription->InterfaceType);
+	if (DeviceDescription->InterfaceType == PCIBus) {
+		if (DeviceDescription->Master == FALSE) {
+			DPRINT("Invalid request!\n");
+			return NULL;
+		}
+		ChannelSetup = FALSE;
+	}
+	
+	/* There are only 8 DMA channels on ISA, so any request above this
+	should not get any channel setup */
+	if (DeviceDescription->DmaChannel >= 8) {
+		ChannelSetup = FALSE;
+	}
+	
+	/* Channel 4 is Reserved for Chaining, so you cant use it */
+	if (DeviceDescription->DmaChannel == 4 && ChannelSetup) {
+		DPRINT("Invalid request!\n");
+		return NULL;
+	}
+	
+	/* Devices that support Scatter/Gather do not need Map Registers */
+	if (DeviceDescription->ScatterGather && 
+	    (DeviceDescription->InterfaceType == Eisa ||
+	     DeviceDescription->InterfaceType == PCIBus)) {
+		*NumberOfMapRegisters = 0;
+	}
+	
+	/* Check if Extended DMA is available (we're just going to do a random read/write
+	I picked Channel 2 because it's the first Channel in the Register */
+	WRITE_PORT_UCHAR((PUCHAR)FIELD_OFFSET(EISA_CONTROL, DmaController1Pages.Channel2), 0x2A);
+	if (READ_PORT_UCHAR((PUCHAR)FIELD_OFFSET(EISA_CONTROL, DmaController1Pages.Channel2)) == 0x2A) {
+		HalpEisaDma = TRUE;
+	}
+	 
+	/* Find out how many Map Registers we need */
+	DPRINT("Setting up Adapter Settings!\n");
+	MaximumLength = DeviceDescription->MaximumLength & 0x7FFFFFFF;
+        *NumberOfMapRegisters = BYTES_TO_PAGES(MaximumLength) + 1;
+	
+	/* Set the Channel Selection */
+	ChannelSelect = DeviceDescription->DmaChannel & 0x03;
+	
+	/* Get the Controller Setup */
+	Controller = (DeviceDescription->DmaChannel & 0x04) ? 1 : 2;
+	
+	/* Get the Adapter Object */
+	if (HalpEisaAdapter[DeviceDescription->DmaChannel] != NULL) {
+	
+		/* Already allocated, return it */
+		DPRINT("Getting an Adapter Object from the Cache\n");
+		AdapterObject = HalpEisaAdapter[DeviceDescription->DmaChannel];
+		
+		/* Do we need more Map Registers this time? */
+		if ((AdapterObject->NeedsMapRegisters) && 
+		    (*NumberOfMapRegisters > AdapterObject->MapRegistersPerChannel)) {
+			AdapterObject->MapRegistersPerChannel = *NumberOfMapRegisters;
+		}
+		
+		} else {
+	
+		/* We have to allocate a new object! How exciting! */
+		DPRINT("Allocating a new Adapter Object\n");
+		AdapterObject = HalpAllocateAdapterEx(*NumberOfMapRegisters,
+						      FALSE,
+						      DeviceDescription->Dma32BitAddresses);
 
-      case Isa:
-        /* There are only 8 DMA channels on ISA. */
-        if (DeviceDescription->DmaChannel >= 8)
-          return NULL;
-        /* Channels 1-4 are for 8-bit transfers... */
-        if (DeviceDescription->DmaWidth != Width8Bits &&
-            DeviceDescription->DmaChannel < 4)
-          return NULL;
-        /* ...and the rest is for 16-bit transfers. */
-        if (DeviceDescription->DmaWidth != Width16Bits &&
-            DeviceDescription->DmaChannel >= 4)
-          return NULL;
-        AdapterObject = &IsaSlaveAdapterObjects[DeviceDescription->DmaChannel];
-        AdapterObject->Master = DeviceDescription->Master;
-        AdapterObject->ScatterGather = DeviceDescription->ScatterGather;
-        AdapterObject->AutoInitialize = DeviceDescription->AutoInitialize;
-        AdapterObject->DemandMode = DeviceDescription->DemandMode;
-        AdapterObject->Buffer = 0;
-        /* FIXME: Is this correct? */
-        *NumberOfMapRegisters = 16;
-        return AdapterObject;
-
-      default:
-        /* Unsupported bus. */
-        return NULL;
-    }
+		if (AdapterObject == NULL) return NULL;
+		
+		HalpEisaAdapter[DeviceDescription->DmaChannel] = AdapterObject;
+		
+		if (!*NumberOfMapRegisters) {
+			/* Easy case, no Map Registers needed */
+			AdapterObject->NeedsMapRegisters = FALSE;
+		
+			/* If you're the master, you get all you want */
+			if (DeviceDescription->Master) {
+				AdapterObject->MapRegistersPerChannel= *NumberOfMapRegisters;
+			} else {
+				AdapterObject->MapRegistersPerChannel = 1;
+			}
+		} else {
+			/* We Desire Registers */
+			AdapterObject->NeedsMapRegisters = TRUE;
+		
+			/* The registers you want */
+			AdapterObject->MapRegistersPerChannel = *NumberOfMapRegisters;
+		
+			/* Increase commitment */
+			MasterAdapter->CommittedMapRegisters += *NumberOfMapRegisters;
+		}
+	}
+	
+	/* Set up DMA Structure */
+	if (Controller == 1) {
+		AdapterObject->AdapterBaseVa = (PVOID)FIELD_OFFSET(EISA_CONTROL, DmaController1);
+	} else {
+		AdapterObject->AdapterBaseVa = (PVOID)FIELD_OFFSET(EISA_CONTROL, DmaController2);
+	}
+	        
+	/* Set up Some Adapter Data */
+	DPRINT("Setting up an Adapter Object\n");
+	AdapterObject->IgnoreCount = DeviceDescription->IgnoreCount;
+	AdapterObject->Dma32BitAddresses = DeviceDescription->Dma32BitAddresses;
+	AdapterObject->Dma64BitAddresses = DeviceDescription->Dma64BitAddresses;
+	AdapterObject->ScatterGather = DeviceDescription->ScatterGather;
+        AdapterObject->MasterDevice = DeviceDescription->Master;
+	if (DeviceDescription->InterfaceType != PCIBus) AdapterObject->LegacyAdapter = TRUE;
+	
+	/* Everything below is not required if we don't need a channel */
+	if (!ChannelSetup) {
+		DPRINT("Retuning Adapter Object without Channel Setup\n");
+		return AdapterObject;
+	}
+	
+	AdapterObject->ChannelNumber = ChannelSelect;
+	
+	
+	/* Set up the Page Port */
+	if (Controller == 1) {
+		switch (ChannelSelect) {
+		
+		case 0:
+			AdapterObject->PagePort = (PUCHAR)(FIELD_OFFSET(DMA_PAGE, Channel0));
+			break;
+		case 1:
+			AdapterObject->PagePort = (PUCHAR)(FIELD_OFFSET(DMA_PAGE, Channel1));
+			break;
+		case 2:
+			AdapterObject->PagePort = (PUCHAR)(FIELD_OFFSET(DMA_PAGE, Channel2));
+			break;
+		case 3:
+			AdapterObject->PagePort = (PUCHAR)(FIELD_OFFSET(DMA_PAGE, Channel3));
+			break;
+		}
+	
+		/* Set Controller Number */
+		AdapterObject->AdapterNumber = 1; 
+	} else {
+		switch (ChannelSelect) {
+		
+		case 1:
+			AdapterObject->PagePort = (PUCHAR)(FIELD_OFFSET(DMA_PAGE, Channel5));
+			break;
+		case 2:
+			AdapterObject->PagePort = (PUCHAR)(FIELD_OFFSET(DMA_PAGE, Channel6));
+			break;
+		case 3:
+			AdapterObject->PagePort = (PUCHAR)(FIELD_OFFSET(DMA_PAGE, Channel7));
+			break;
+		}
+		
+		/* Set Controller Number */
+		AdapterObject->AdapterNumber = 2; 
+	}
+	
+	/* Set up the Extended Register */
+	if (HalpEisaDma) {
+		DMA_EXTENDED_MODE ExtendedMode;
+		
+		ExtendedMode.ChannelNumber = ChannelSelect;
+	
+		switch (DeviceDescription->DmaSpeed) {
+		
+		case Compatible:
+			ExtendedMode.TimingMode = COMPATIBLE_TIMING;
+			break;
+		
+		case TypeA:
+			ExtendedMode.TimingMode = TYPE_A_TIMING;
+			break;
+			
+		case TypeB:
+			ExtendedMode.TimingMode = TYPE_B_TIMING;
+			break;
+			
+		case TypeC:
+			ExtendedMode.TimingMode = BURST_TIMING;
+			break;
+		
+		default:
+			return NULL;
+		}
+	
+		switch (DeviceDescription->DmaWidth) {
+		
+		case Width8Bits:
+			ExtendedMode.TransferSize = B_8BITS;
+			break;
+		
+		case Width16Bits:
+			ExtendedMode.TransferSize = B_16BITS;
+			break;
+			
+		case Width32Bits:
+			ExtendedMode.TransferSize = B_32BITS;
+			break;
+			
+		default:
+			return NULL;
+				}
+		
+		if (Controller == 1) {
+			WRITE_PORT_UCHAR((PUCHAR)FIELD_OFFSET(EISA_CONTROL, DmaExtendedMode1),
+				    	*((PUCHAR)&ExtendedMode));
+		} else {
+	       		WRITE_PORT_UCHAR((PUCHAR)FIELD_OFFSET(EISA_CONTROL, DmaExtendedMode2),
+				    	*((PUCHAR)&ExtendedMode));
+		}
+	}
+			/* Do 8/16-bit validation */
+	DPRINT("Validating an Adapter Object\n");
+	if (!DeviceDescription->Master) {
+		if ((DeviceDescription->DmaWidth == Width8Bits) && (Controller != 1)) {
+			return NULL; /* 8-bit is only avalable on Controller 1 */
+		} else if (DeviceDescription->DmaWidth == Width16Bits) {
+			if (Controller != 2) {
+				return NULL; /* 16-bit is only avalable on Controller 2 */
+			} else {
+				AdapterObject->Width16Bits = TRUE;
+			}
+		}
+	}
+		UCHAR DmaMode;	
+			DPRINT("Final DMA Request Mode Setting of the Adapter Object\n");
+	/* Set the DMA Request Modes */
+	if (DeviceDescription->Master) {
+		/* This is a cascade request */
+		((PDMA_MODE)&DmaMode)->RequestMode = CASCADE_REQUEST_MODE;
+		
+		/* Send the request */
+		if (AdapterObject->AdapterNumber == 1) {
+			/* Set the Request Data */
+			WRITE_PORT_UCHAR(&((PDMA1_CONTROL)AdapterObject->AdapterBaseVa)->Mode,
+				  	AdapterObject->AdapterMode);
+					  
+			/* Unmask DMA Channel */
+			WRITE_PORT_UCHAR(&((PDMA1_CONTROL)AdapterObject->AdapterBaseVa)->SingleMask,
+				  	AdapterObject->ChannelNumber | DMA_CLEARMASK);
+		} else {
+			/* Set the Request Data */
+			WRITE_PORT_UCHAR(&((PDMA2_CONTROL)AdapterObject->AdapterBaseVa)->Mode,
+				  	AdapterObject->AdapterMode);
+				  
+			/* Unmask DMA Channel */
+			WRITE_PORT_UCHAR(&((PDMA2_CONTROL)AdapterObject->AdapterBaseVa)->SingleMask,
+				  	AdapterObject->ChannelNumber | DMA_CLEARMASK);
+		}
+	} else if (DeviceDescription->DemandMode) {
+		/* This is a Demand request */
+		((PDMA_MODE)&DmaMode)->RequestMode = DEMAND_REQUEST_MODE;
+	} else {
+		/* Normal Request */
+		((PDMA_MODE)&DmaMode)->RequestMode = SINGLE_REQUEST_MODE;
+	}
+	
+	/* Auto Initialize Enabled or Not*/
+	((PDMA_MODE)&DmaMode)->AutoInitialize = DeviceDescription->AutoInitialize;
+	AdapterObject->AdapterMode = DmaMode;
+	return AdapterObject;
 }
 
 ULONG STDCALL
@@ -192,29 +400,46 @@ HalReadDmaCounter (PADAPTER_OBJECT	AdapterObject)
   KIRQL OldIrql;
   ULONG Count;
 
-  if (AdapterObject && AdapterObject->InterfaceType == Isa && !AdapterObject->Master)
-  {
-    KeAcquireSpinLock(&AdapterObject->SpinLock, &OldIrql);
+ 	KeAcquireSpinLock(&AdapterObject->MasterAdapter->SpinLock, &OldIrql);
+  
+  	/* Send the Request to the specific controller */
+	if (AdapterObject->AdapterNumber == 1) {
+  	
+		/* Set this for Ease */
+  		PDMA1_CONTROL DmaControl1 = AdapterObject->AdapterBaseVa;
+	
+		/* Send Reset */
+		WRITE_PORT_UCHAR(&DmaControl1->ClearBytePointer, 0);
+	
+		/* Read Count */
+		Count = READ_PORT_UCHAR(&DmaControl1->DmaAddressCount
+					[AdapterObject->ChannelNumber].DmaBaseCount);
+		Count |= READ_PORT_UCHAR(&DmaControl1->DmaAddressCount
+					[AdapterObject->ChannelNumber].DmaBaseCount) << 8;
+      
+	} else {
 
-    /* Clear the flip/flop register */
-    WRITE_PORT_UCHAR( AdapterObject->Channel < 4 ? (PVOID)0x0C : (PVOID)0xD8, 0 );
-    /* Read the offset */
-    Count = READ_PORT_UCHAR( AdapterObject->CountPort );
-    Count |= READ_PORT_UCHAR( AdapterObject->CountPort ) << 8;
-
-    KeReleaseSpinLock(&AdapterObject->SpinLock, OldIrql);
-
-    /*
-     * We must return twice the sound for channel >= 4 because it's the size
-     * of words (16-bit) and not bytes.
-     */
-    if (AdapterObject->Channel < 4)
-      return Count;
-    else
-      return Count << 1;
-  }
-
-  return 0;
+		/* Set this for Ease */
+  		PDMA2_CONTROL DmaControl2 = AdapterObject->AdapterBaseVa;
+	
+		/* Send Reset */
+		WRITE_PORT_UCHAR(&DmaControl2->ClearBytePointer, 0);
+	
+		/* Read Count */
+		Count = READ_PORT_UCHAR(&DmaControl2->DmaAddressCount
+					[AdapterObject->ChannelNumber].DmaBaseCount);
+		Count |= READ_PORT_UCHAR(&DmaControl2->DmaAddressCount
+					[AdapterObject->ChannelNumber].DmaBaseCount) << 8;
+	}
+	
+	/* Play around with the count (add bias and multiply by 2 if 16-bit DMA) */
+	Count ++;
+	if (AdapterObject->Width16Bits) Count *=2 ;
+	
+	KeReleaseSpinLock(&AdapterObject->MasterAdapter->SpinLock, OldIrql);
+	
+	/* Return it */
+	return Count;
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: irql.c,v 1.21 2004/11/14 19:04:42 hbirr Exp $
+/* $Id: irql.c,v 1.22 2004/11/21 21:53:06 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -20,6 +20,10 @@
 #include <internal/debug.h>
 
 /* GLOBALS ******************************************************************/
+
+/*
+ * FIXME: Use EISA_CONTROL STRUCTURE INSTEAD OF HARD-CODED OFFSETS 
+*/
 
 typedef union
 {
