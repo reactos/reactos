@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.4 1999/08/29 06:59:04 ea Exp $
+; $Id: ntdll.edf,v 1.5 1999/09/04 18:32:57 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -431,6 +431,8 @@ RtlAppendUnicodeStringToString
 RtlAppendUnicodeToString
 RtlCharToInteger
 RtlCreateHeap=RtlCreateHeap@24
+RtlCreateUserProcess=RtlCreateUserProcess@32
+RtlCreateUserThread=RtlCreateUserThread@40
 RtlCompactHeap=RtlCompactHeap@8
 RtlCompareString
 RtlCompareUnicodeString
@@ -447,6 +449,7 @@ RtlFreeHeap=RtlFreeHeap@12
 RtlFreeUnicodeString
 RtlGetProcessHeap=RtlGetProcessHeap@0
 RtlInitAnsiString
+RtlInitializeContext=RtlInitializeContext@20
 RtlInitString
 RtlInitUnicodeString
 RtlIntegerToUnicodeString

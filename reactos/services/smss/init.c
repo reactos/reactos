@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.2 1999/06/08 22:44:19 ea Exp $
+/* $Id: init.c,v 1.3 1999/09/04 18:38:02 ekohl Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -34,25 +34,45 @@ InitSessionManager(
 	HANDLE	Children[]
 	)
 {
+        NTSTATUS Status;
+        UNICODE_STRING CmdLineW;
+
 	/* FIXME: Create the \SmApiPort object (LPC) */
 	/* FIXME: Create two thread for \SmApiPort */
 	/* FIXME: Create the system environment variables */
 	/* FIXME: Define symbolic links to kernel devices (MS-DOS names) */
-	/* FIXME: Create pagination files (if any) other than the first one */
+        /* FIXME: Create paging files (if any) other than the first one */
 	/* FIXME: Load the well known DLLs */
 	/* FIXME: Load the kernel mode driver win32k.sys */
+
+#if 0
 	/* Start the Win32 subsystem (csrss.exe) */
 	Status = NtCreateProcess(
-			L"\\??\\C:\\reactos\\system\\csrss.exe",
+                        L"\\??\\C:\\reactos\\system32\\csrss.exe",
 			& Children[CHILD_CSRSS]
 			);
+#endif
+
+        /* Start the simple shell (shell.exe) */
+        RtlInitUnicodeString(&CmdLineW,
+                             L"\\??\\C:\\reactos\\system32\\shell.exe");
+        Status = RtlCreateUserProcess(&CmdLineW,
+                                      NULL,
+                                      NULL,
+                                      FALSE,
+                                      0,
+                                      NULL,
+                                      &Children[0],
+                                      NULL);
+
 	if (!NT_SUCCESS(Status))
 	{
 		return FALSE;
 	}
+#if 0
 	/* Start winlogon.exe */
 	Status = NtCreateProcess(
-			L"\\??\\C:\\reactos\\system\\winlogon.exe",
+                        L"\\??\\C:\\reactos\\system32\\winlogon.exe",
 			& Children[CHILD_WINLOGON]
 			);
 	if (!NT_SUCCESS(Status))
@@ -62,6 +82,7 @@ InitSessionManager(
 				);
 		return FALSE;
 	}
+#endif
 	/* FIXME: Create the \DbgSsApiPort object (LPC) */
 	/* FIXME: Create the \DbgUiApiPort object (LPC) */
 	return TRUE;

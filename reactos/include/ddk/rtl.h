@@ -808,4 +808,47 @@ RtlDenormalizeProcessParams (
 	IN OUT	PSTARTUP_ARGUMENT	pArgument
 	);
 
+
+NTSTATUS
+WINAPI
+RtlInitializeContext(
+        IN      HANDLE                  ProcessHandle,
+        IN      PCONTEXT                Context,
+        IN      HANDLE                  DebugPort,
+        IN      PVOID                   StartAddress,
+        IN OUT  PINITIAL_TEB            InitialTeb
+        );
+
+
+NTSTATUS
+WINAPI
+RtlCreateUserThread(
+        IN      HANDLE                  ProcessHandle,
+        IN      PSECURITY_DESCRIPTOR    SecurityDescriptor,
+        IN      BOOLEAN                 CreateSuspended,
+        IN      LONG                    StackZeroBits,
+        IN OUT  PULONG                  StackReserved,
+        IN OUT  PULONG                  StackCommit,
+        IN      PVOID                   StartAddress,
+        IN      HANDLE                  DebugPort,
+        IN OUT  PHANDLE                 ThreadHandle,
+        IN OUT  PCLIENT_ID              ClientId
+        );
+
+
+NTSTATUS
+STDCALL
+RtlCreateUserProcess(PUNICODE_STRING ApplicationName,
+                     PSECURITY_DESCRIPTOR ProcessSd,
+                     PSECURITY_DESCRIPTOR ThreadSd,
+                     WINBOOL bInheritHandles,
+                     DWORD dwCreationFlags,
+//                     LPVOID lpEnvironment,
+//                     LPCWSTR lpCurrentDirectory,
+//                     LPSTARTUPINFO lpStartupInfo,
+                     PCLIENT_ID ClientId,
+                     PHANDLE ProcessHandle,
+                     PHANDLE ThreadHandle);
+
+
 #endif /* __DDK_RTL_H */

@@ -1,4 +1,4 @@
-/* $Id: smss.c,v 1.2 1999/06/08 22:44:19 ea Exp $
+/* $Id: smss.c,v 1.3 1999/09/04 18:38:02 ekohl Exp $
  *
  * smss.c - Session Manager
  * 
@@ -53,11 +53,21 @@ NtProcessStartup( PSTARTUP_ARGUMENT StartupArgument )
 	
 	DisplayString( L"Session Manager\n" );
 
+
 	if (TRUE == InitSessionManager(Children))
 	{
 		LARGE_INTEGER	Time = {{(DWORD)-1,(DWORD)-1}}; /* infinite? */
 		NTSTATUS	wws;
-		
+
+                DisplayString( L"SM: Waiting for process termination...\n" );
+
+                wws = NtWaitForSingleObject (
+                                Children[0],
+				TRUE,	/* alertable */
+				& Time 
+				);
+
+#if 0
 		wws = NtWaitForMultipleObjects (
 				((LONG) sizeof Children / sizeof (HANDLE)),
 				Children,
@@ -65,17 +75,25 @@ NtProcessStartup( PSTARTUP_ARGUMENT StartupArgument )
 				TRUE,	/* alertable */
 				& Time 
 				);
+#endif
 		if (!NT_SUCCESS(wws))
 		{
 			DisplayString( L"SM: NtWaitForMultipleObjects failed!\n" );
 			/* FIXME: CRASH THE SYSTEM (BSOD) */
 		}
+                else
+                {
+                        DisplayString( L"SM: Process terminated!\n" );
+			/* FIXME: CRASH THE SYSTEM (BSOD) */
+                }
 	}
 	else
 	{
 		DisplayString( L"SM: initialization failed!\n" );
 		/* FIXME: CRASH SYSTEM (BSOD)*/
 	}
+
+
 	/*
 	 * OK: CSRSS asked to shutdown the system;
 	 * We die.
