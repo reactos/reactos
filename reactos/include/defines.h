@@ -1569,6 +1569,10 @@ extern "C" {
 #define GM_COMPATIBLE	(1)
 #define GM_ADVANCED	(2)
 
+/* GetGuiResources */
+#define GR_GDIOBJECTS    (0)
+#define GR_USEROBJECTS  (1)
+
 /* GetGUIThreadInfo */
 #define GUI_CARETBLINKING   (1)
 #define GUI_INMOVESIZE   (2)

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.50 2003/11/09 18:38:09 navaraf Exp $
+/* $Id: stubs.c,v 1.51 2003/11/19 12:25:03 weiden Exp $
  *
  * COPYRIGHT:       See COPYING WINBOOLthe top level directory
  * PROJECT:         ReactOS user32.dll
@@ -124,20 +124,6 @@ CopyImage(
 {
   UNIMPLEMENTED;
   return (HANDLE)0;
-}
-
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-GetGuiResources(
-  HANDLE hProcess,
-  DWORD uiFlags)
-{
-  UNIMPLEMENTED;
-  return 0;
 }
 
 

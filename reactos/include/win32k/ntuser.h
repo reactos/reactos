@@ -694,8 +694,8 @@ NtUserGetForegroundWindow(VOID);
 DWORD
 STDCALL
 NtUserGetGuiResources(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  HANDLE hProcess,
+  DWORD uiFlags);
 
 BOOL
 STDCALL

@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.49 2003/11/08 14:58:34 gvg Exp $
+ * $Id: gdiobj.c,v 1.50 2003/11/19 12:25:03 weiden Exp $
  *
  */
 
@@ -237,6 +237,7 @@ GDIOBJ_iGetNextOpenHandleIndex (void)
 HGDIOBJ FASTCALL
 GDIOBJ_AllocObj(WORD Size, DWORD ObjectType, GDICLEANUPPROC CleanupProc)
 {
+  PW32PROCESS W32Process;
   PGDIOBJHDR  newObject;
   WORD Index;
   
@@ -265,6 +266,12 @@ GDIOBJ_AllocObj(WORD Size, DWORD ObjectType, GDICLEANUPPROC CleanupProc)
   newObject->lockfile = NULL;
   newObject->lockline = 0;
   HandleTable->Handles[Index] = newObject;
+  
+  W32Process = PsGetCurrentProcess()->Win32Process;
+  if(W32Process)
+  {
+    W32Process->GDIObjects++;
+  }
 
   return GDI_HANDLE_CREATE(Index, ObjectType);
 }
@@ -287,6 +294,7 @@ GDIOBJ_AllocObj(WORD Size, DWORD ObjectType, GDICLEANUPPROC CleanupProc)
 BOOL STDCALL
 GDIOBJ_FreeObj(HGDIOBJ hObj, DWORD ObjectType, DWORD Flag)
 {
+  PW32PROCESS W32Process;
   PGDIOBJHDR objectHeader;
   PGDIOBJ Obj;
   BOOL 	bRet = TRUE;
@@ -327,6 +335,12 @@ GDIOBJ_FreeObj(HGDIOBJ hObj, DWORD ObjectType, DWORD Flag)
 
   ExFreePool(objectHeader);
   HandleTable->Handles[GDI_HANDLE_GET_INDEX(hObj)] = NULL;
+  
+  W32Process = PsGetCurrentProcess()->Win32Process;
+  if(W32Process)
+  {
+    W32Process->GDIObjects--;
+  }
 
   return bRet;
 }
@@ -420,6 +434,9 @@ GDIOBJ_UnlockMultipleObj(PGDIMULTILOCK pList, INT nObj)
 VOID FASTCALL
 GDIOBJ_MarkObjectGlobal(HGDIOBJ ObjectHandle)
 {
+  PEPROCESS Process;
+  PW32PROCESS W32Process;
+  NTSTATUS Status;
   PGDIOBJHDR ObjHdr;
 
   DPRINT("GDIOBJ_MarkObjectGlobal handle 0x%08x\n", ObjectHandle);
@@ -428,7 +445,17 @@ GDIOBJ_MarkObjectGlobal(HGDIOBJ ObjectHandle)
     {
       return;
     }
-
+  
+  Status = PsLookupProcessByProcessId((PVOID)ObjHdr->hProcessId, &Process);
+  if(NT_SUCCESS(Status))
+  {
+    W32Process = Process->Win32Process;
+    if(W32Process)
+    {
+      W32Process->GDIObjects--;
+    }
+  }
+  
   ObjHdr->hProcessId = GDI_GLOBAL_PROCESS;
 }
 
@@ -442,6 +469,7 @@ GDIOBJ_MarkObjectGlobal(HGDIOBJ ObjectHandle)
 VOID FASTCALL
 GDIOBJ_UnmarkObjectGlobal(HGDIOBJ ObjectHandle)
 {
+  PW32PROCESS W32Process;
   PGDIOBJHDR ObjHdr;
 
   DPRINT("GDIOBJ_MarkObjectGlobal handle 0x%08x\n", ObjectHandle);
@@ -450,7 +478,13 @@ GDIOBJ_UnmarkObjectGlobal(HGDIOBJ ObjectHandle)
     {
       return;
     }
-
+  
+  W32Process = PsGetCurrentProcess()->Win32Process;
+  if(W32Process)
+  {
+    W32Process->GDIObjects++;
+  }
+  
   ObjHdr->hProcessId = PsGetCurrentProcessId();
 }
 

@@ -9327,6 +9327,13 @@ GetWindowThreadProcessId(
 			 LPDWORD lpdwProcessId);
 
 
+DWORD
+STDCALL
+GetGuiResources(
+		   HANDLE hProcess,
+		   DWORD uiFlags);
+
+
 WINBOOL
 STDCALL
 GetGUIThreadInfo(

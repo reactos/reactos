@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.24 2003/11/18 23:33:31 weiden Exp $
+/* $Id: misc.c,v 1.25 2003/11/19 12:25:03 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -511,5 +511,61 @@ NtUserGetGUIThreadInfo(
   }
 
   return TRUE;
+}
+
+
+DWORD
+STDCALL
+NtUserGetGuiResources(
+  HANDLE hProcess,
+  DWORD uiFlags)
+{
+  PEPROCESS Process;
+  PW32PROCESS W32Process;
+  NTSTATUS Status;
+  DWORD Ret = 0;
+  
+  Status = ObReferenceObjectByHandle(hProcess,
+                                     PROCESS_QUERY_INFORMATION,
+                                     PsProcessType,
+                                     ExGetPreviousMode(),
+                                     (PVOID*)&Process,
+                                     NULL);
+  
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    return 0;
+  }
+  
+  W32Process = Process->Win32Process;
+  if(!W32Process)
+  {
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return 0;
+  }
+  
+  switch(uiFlags)
+  {
+    case GR_GDIOBJECTS:
+    {
+      Ret = (DWORD)W32Process->GDIObjects;
+      break;
+    }
+    case GR_USEROBJECTS:
+    {
+      Ret = (DWORD)W32Process->UserObjects;
+      break;
+    }
+    default:
+    {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      break;
+    }
+  }
+  
+  ObDereferenceObject(Process);
+
+  return Ret;
 }
 

@@ -18,6 +18,8 @@ typedef struct _W32PROCESS
   LIST_ENTRY MenuListHead;
   struct _KBDTABLES* KeyboardLayout;
   struct _WINSTATION_OBJECT* WindowStation;
+  WORD GDIObjects;
+  WORD UserObjects;
 } W32PROCESS, *PW32PROCESS;
 
 PW32THREAD STDCALL

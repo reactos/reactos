@@ -92,20 +92,27 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	  if(gti.flags & GUI_SYSTEMMENUMODE) lstrcat(str, "GUI_SYSTEMMENUMODE ");
 	  TextOut(hDC, 10, 10, str, strlen(str));
 	  
-	  wsprintf(str, "hwndActive == %04x", gti.hwndActive);
+	  wsprintf(str, "hwndActive == %08X", gti.hwndActive);
 	  TextOut(hDC, 10, 30, str, strlen(str));
-	  wsprintf(str, "hwndFocus == %04x", gti.hwndFocus);
+	  wsprintf(str, "hwndFocus == %08X", gti.hwndFocus);
 	  TextOut(hDC, 10, 50, str, strlen(str));
-	  wsprintf(str, "hwndCapture == %04x", gti.hwndCapture);
+	  wsprintf(str, "hwndCapture == %08X", gti.hwndCapture);
 	  TextOut(hDC, 10, 70, str, strlen(str));
-	  wsprintf(str, "hwndMenuOwner == %04x", gti.hwndMenuOwner);
+	  wsprintf(str, "hwndMenuOwner == %08X", gti.hwndMenuOwner);
 	  TextOut(hDC, 10, 90, str, strlen(str));
-	  wsprintf(str, "hwndMoveSize == %04x", gti.hwndMoveSize);
+	  wsprintf(str, "hwndMoveSize == %08X", gti.hwndMoveSize);
 	  TextOut(hDC, 10, 110, str, strlen(str));
-	  wsprintf(str, "hwndCaret == %04x", gti.hwndCaret);
+	  wsprintf(str, "hwndCaret == %08X", gti.hwndCaret);
 	  TextOut(hDC, 10, 130, str, strlen(str));
 	  wsprintf(str, "rcCaret == (%lu, %lu, %lu, %lu)", gti.rcCaret.left, gti.rcCaret.top, gti.rcCaret.right, gti.rcCaret.bottom);
 	  TextOut(hDC, 10, 150, str, strlen(str));
+	  
+	  wsprintf(str, "GetGuiResources for the current process: %08X", GetCurrentProcess());
+	  TextOut(hDC, 10, 180, str, strlen(str));
+	  wsprintf(str, "GetGuiResources: GR_GDIOBJECTS == %04X", GetGuiResources(GetCurrentProcess(), GR_GDIOBJECTS));
+	  TextOut(hDC, 10, 200, str, strlen(str));
+	  wsprintf(str, "GetGuiResources: GR_USEROBJECTS == %04x", GetGuiResources(GetCurrentProcess(), GR_USEROBJECTS));
+	  TextOut(hDC, 10, 220, str, strlen(str));
 	  EndPaint(hWnd, &ps);
 	  break;
     
