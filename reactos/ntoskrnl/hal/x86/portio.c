@@ -1,4 +1,4 @@
-/* $Id: portio.c,v 1.4 2000/10/07 13:41:50 dwelch Exp $
+/* $Id: portio.c,v 1.5 2000/10/08 23:44:45 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -87,8 +87,7 @@ READ_PORT_UCHAR (PUCHAR Port)
    
    __asm__("inb %w1, %0\n\t"
 	   : "=a" (Value)
-	   : "d" (Port)
-	   : "eax", "dx");
+	   : "d" (Port));
    SLOW_DOWN_IO;
    return(Value);
 }
@@ -100,8 +99,7 @@ READ_PORT_USHORT (PUSHORT Port)
    
    __asm__("inw %w1, %0\n\t"
 	   : "=a" (Value)
-	   : "d" (Port)
-	   : "eax", "dx");
+	   : "d" (Port));
    SLOW_DOWN_IO;
    return(Value);
 }
@@ -113,8 +111,7 @@ READ_PORT_ULONG (PULONG Port)
    
    __asm__("inl %w1, %0\n\t"
 	   : "=a" (Value)
-	   : "d" (Port)
-	   : "eax", "dx");
+	   : "d" (Port));
    SLOW_DOWN_IO;
    return(Value);
 }
@@ -156,8 +153,7 @@ WRITE_PORT_UCHAR (PUCHAR Port,
    __asm__("outb %0, %w1\n\t"
 	   : 
 	   : "a" (Value),
-	     "d" (Port)
-	   : "eax", "dx");
+	     "d" (Port));
    SLOW_DOWN_IO;
 }
 
@@ -168,8 +164,7 @@ WRITE_PORT_USHORT (PUSHORT Port,
    __asm__("outw %0, %w1\n\t"
 	   : 
 	   : "a" (Value),
-	     "d" (Port)
-	   : "eax", "dx");
+	     "d" (Port));
    SLOW_DOWN_IO;
 }
 
@@ -180,8 +175,7 @@ WRITE_PORT_ULONG (PULONG Port,
    __asm__("outl %0, %w1\n\t"
 	   : 
 	   : "a" (Value),
-	     "d" (Port)
-	   : "eax", "dx");
+	     "d" (Port));
    SLOW_DOWN_IO;
 }
 

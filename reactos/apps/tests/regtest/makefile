@@ -40,7 +40,7 @@ else
 endif
 
 regtest.exe: $(OBJECTS) $(LIBS)
-	$(CC) -specs=../../specs $(OBJECTS) $(LIBS) -lgcc -o regtest.exe
+	$(CC) -nostartfiles -nostdlib $(OBJECTS) $(LIBS) -lgcc -o regtest.exe
 	$(NM) --numeric-sort regtest.exe > regtest.sym
 
 include ../../rules.mak

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 2000/10/07 18:44:07 dwelch Exp $
+# $Id: Makefile,v 1.5 2000/10/08 23:44:46 dwelch Exp $
 #
 #
 PATH_TO_TOP = ../../../..
@@ -48,7 +48,7 @@ $(TARGETNAME).sys: $(OBJECTS) $(TARGETNAME).def
 		--output-lib $(TARGETNAME).a \
 		--kill-at
 	$(CC) \
-        -specs=../../../../specs \
+        -nostdlib -nostdinc \
 		--subsystem=native \
 		-mdll \
 		--dll \

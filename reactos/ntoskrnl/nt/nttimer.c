@@ -33,7 +33,7 @@ NtCreateTimer (
 	OUT	PHANDLE			TimerHandle,
 	IN	ACCESS_MASK		DesiredAccess,
 	IN	POBJECT_ATTRIBUTES	ObjectAttributes	OPTIONAL,
-	IN	CINT			TimerType
+	IN	TIMER_TYPE			TimerType
 	)
 {
 	UNIMPLEMENTED;
