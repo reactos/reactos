@@ -1,4 +1,4 @@
-/* $Id: curdir.c,v 1.44 2004/08/24 17:15:42 navaraf Exp $
+/* $Id: curdir.c,v 1.45 2004/08/29 12:12:34 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -405,7 +405,7 @@ GetWindowsDirectoryW (
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 UINT
 STDCALL
@@ -414,12 +414,11 @@ GetSystemWindowsDirectoryA(
 	UINT	uSize
 	)
 {
-    DbgPrint("Fixme: GetSystemWindowsDirectoryA\n");
     return GetWindowsDirectoryA( lpBuffer, uSize );
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 UINT
 STDCALL
@@ -428,7 +427,6 @@ GetSystemWindowsDirectoryW(
 	UINT	uSize
 	)
 {
-    DbgPrint("Fixme: GetSystemWindowsDirectoryW\n");
     return GetWindowsDirectoryW( lpBuffer, uSize );
 }
 
