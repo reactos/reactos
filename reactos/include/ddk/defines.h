@@ -18,20 +18,6 @@
 #define NR_PRIORITY_LEVELS (32)
 
 /*
- * Types of memory to allocate
- */
-enum
-{
-   NonPagedPool,
-   PagedPool,
-   NonPagedPoolMustSucceed,
-   NonPagedPoolCacheAligned = 4,
-   PagedPoolCacheAligned,
-   NonPagedPoolCacheAlignedMustS,
-};
-
-
-/*
  * PURPOSE: Object attributes
  */
 enum

@@ -1,14 +1,14 @@
 #ifndef _INCLUDE_DDK_MMFUNCS_H
 #define _INCLUDE_DDK_MMFUNCS_H
-/* $Id: mmfuncs.h,v 1.24 2004/10/22 20:51:44 ekohl Exp $ */
+/* $Id$ */
 /* MEMORY MANAGMENT ******************************************************/
 
 
 #ifdef __NTOSKRNL__
-extern PVOID EXPORTED MmUserProbeAddress;
+extern ULONG EXPORTED MmUserProbeAddress;
 extern PVOID EXPORTED MmHighestUserAddress;
 #else
-extern PVOID IMPORTED MmUserProbeAddress;
+extern ULONG IMPORTED MmUserProbeAddress;
 extern PVOID IMPORTED MmHighestUserAddress;
 #endif
 
@@ -632,8 +632,8 @@ MmSecureVirtualMemory (
 BOOLEAN
 STDCALL
 MmSetAddressRangeModified (
-	DWORD	Unknown0,
-	DWORD	Unknown1
+    IN PVOID    Address,
+    IN ULONG    Length
 	);
 NTSTATUS
 STDCALL

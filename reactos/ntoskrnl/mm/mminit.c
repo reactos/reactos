@@ -327,7 +327,7 @@ MmInit1(ULONG FirstKrnlPhysAddr,
     * FIXME: Set this based on the system command line
     */
    MmSystemRangeStart = (PVOID)KERNEL_BASE; // 0xC0000000
-   MmUserProbeAddress = (PVOID)0x7fff0000;
+   MmUserProbeAddress = 0x7fff0000;
    MmHighestUserAddress = (PVOID)0x7ffeffff;
 
    /*

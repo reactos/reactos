@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.160 2004/12/24 17:07:00 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -787,7 +787,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
    MmLockAddressSpace(&Process->AddressSpace);
 
    /* Protect the highest 64KB of the process address space */
-   BaseAddress = MmUserProbeAddress;
+   BaseAddress = (PVOID)MmUserProbeAddress;
    Status = MmCreateMemoryArea(Process,
 			       &Process->AddressSpace,
 			       MEMORY_AREA_NO_ACCESS,

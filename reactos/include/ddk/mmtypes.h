@@ -1,4 +1,4 @@
-/* $Id: mmtypes.h,v 1.21 2004/12/22 05:06:59 royce Exp $ */
+/* $Id$ */
 
 #ifndef _INCLUDE_DDK_MMTYPES_H
 #define _INCLUDE_DDK_MMTYPES_H
@@ -48,6 +48,11 @@
 #define   MDL_ALLOCATED_MUST_SUCCEED   (0x4000)
 #define   MDL_64_BIT_VA                (0x8000)
 
+typedef enum _MM_PAGE_PRIORITY {
+  LowPagePriority,
+  NormalPagePriority = 16,
+  HighPagePriority = 32
+} MM_PAGE_PRIORITY;
 
 typedef struct _MDL
 /*

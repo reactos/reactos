@@ -5,6 +5,24 @@
 
 typedef ULONG INTERLOCKED_RESULT;
 
+typedef enum _POOL_TYPE {
+    NonPagedPool,
+    PagedPool,
+    NonPagedPoolMustSucceed,
+    DontUseThisType,
+    NonPagedPoolCacheAligned,
+    PagedPoolCacheAligned,
+    NonPagedPoolCacheAlignedMustS,
+    MaxPoolType,
+    NonPagedPoolSession = 32,
+    PagedPoolSession,
+    NonPagedPoolMustSucceedSession,
+    DontUseThisTypeSession,
+    NonPagedPoolCacheAlignedSession,
+    PagedPoolCacheAlignedSession,
+    NonPagedPoolCacheAlignedMustSSession
+} POOL_TYPE;
+
 typedef enum _WORK_QUEUE_TYPE {
     CriticalWorkQueue,
     DelayedWorkQueue,

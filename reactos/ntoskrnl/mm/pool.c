@@ -1,4 +1,4 @@
-/* $Id: pool.c,v 1.36 2004/12/11 00:13:37 royce Exp $
+/* $Id$
  * 
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -121,7 +121,7 @@ ExAllocatePool (POOL_TYPE PoolType, ULONG NumberOfBytes)
  * @implemented
  */
 PVOID STDCALL
-ExAllocatePoolWithTag (ULONG PoolType, ULONG NumberOfBytes, ULONG Tag)
+ExAllocatePoolWithTag (POOL_TYPE PoolType, ULONG NumberOfBytes, ULONG Tag)
 {
    PVOID Block;
 

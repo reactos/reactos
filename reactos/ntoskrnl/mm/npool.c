@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.93 2004/11/28 22:06:25 blight Exp $
+/* $Id$
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -1537,7 +1537,7 @@ VOID STDCALL ExFreeNonPagedPool (PVOID block)
 }
 
 PVOID STDCALL
-ExAllocateNonPagedPoolWithTag(ULONG Type, ULONG Size, ULONG Tag, PVOID Caller)
+ExAllocateNonPagedPoolWithTag(POOL_TYPE Type, ULONG Size, ULONG Tag, PVOID Caller)
 {
 #ifdef WHOLE_PAGE_ALLOCATIONS
    PVOID block;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mm.c,v 1.80 2004/11/13 13:09:07 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -38,7 +38,7 @@
 extern MODULE_OBJECT NtoskrnlModuleObject;
 extern MODULE_OBJECT HalModuleObject;
 
-PVOID EXPORTED MmUserProbeAddress = NULL;
+ULONG EXPORTED MmUserProbeAddress = 0;
 PVOID EXPORTED MmHighestUserAddress = NULL;
 PBOOLEAN EXPORTED Mm64BitPhysicalAddress = FALSE;
 PVOID EXPORTED MmSystemRangeStart = NULL;
@@ -490,8 +490,8 @@ MmGrowKernelStack (
 BOOLEAN
 STDCALL
 MmSetAddressRangeModified (
-   DWORD Unknown0,
-   DWORD Unknown1
+    IN PVOID    Address,
+    IN ULONG    Length
 )
 {
    UNIMPLEMENTED;

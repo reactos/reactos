@@ -1,4 +1,4 @@
-/* $Id: ntddk.h,v 1.38 2003/12/30 17:39:38 fireball Exp $
+/* $Id$
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -62,8 +62,8 @@ extern "C" {
 #include <ddk/mmtypes.h>
 #include <ddk/potypes.h>
 #include <ddk/pnptypes.h>
-#include <ddk/iotypes.h>
 #include <ddk/extypes.h>
+#include <ddk/iotypes.h>
 #include <ddk/pstypes.h>
 #include <ntos/ldrtypes.h>
 #include <ntos/zwtypes.h>

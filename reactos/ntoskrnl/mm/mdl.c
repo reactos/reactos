@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.69 2004/10/22 20:38:22 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -814,7 +814,7 @@ MmMapLockedPagesSpecifyCache ( IN PMDL Mdl,
                                IN MEMORY_CACHING_TYPE CacheType,
                                IN PVOID BaseAddress,
                                IN ULONG BugCheckOnFailure,
-                               IN ULONG Priority )
+                               IN MM_PAGE_PRIORITY Priority )
 {
    UNIMPLEMENTED;
    return MmMapLockedPages (Mdl, AccessMode);
