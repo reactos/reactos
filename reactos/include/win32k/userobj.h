@@ -1,4 +1,4 @@
-/* $Id: userobj.h,v 1.1 2001/07/06 00:05:05 rex Exp $
+/* $Id: userobj.h,v 1.2 2003/05/18 17:22:31 ea Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -35,12 +35,12 @@ typedef  HANDLE  HUSEROBJ;
 #define  UserObjectHeaderToHandle(header) ((HUSEROBJ)header)
 #define  UserObjectHandleToHeader(handle) ((HUSEROBJ)handle)
 
-PUSER_OBJECT  USEROBJ_AllocObject (WORD  size, WORD  magic);
-BOOL  USEROBJ_FreeObject (PUSER_OBJECT  object, WORD  magic);
-HUSEROBJ  USEROBJ_PtrToHandle (PUSER_OBJECT  object, WORD  magic);
-PUSER_OBJECT  USEROBJ_HandleToPtr (HUSEROBJ  object, WORD  magic);
-BOOL  USEROBJ_LockObject (HUSEROBJ Obj);
-BOOL  USEROBJ_UnlockObject (HUSEROBJ Obj);
+PUSER_OBJECT FASTCALL USEROBJ_AllocObject (WORD  size, WORD  magic);
+BOOL         FASTCALL USEROBJ_FreeObject (PUSER_OBJECT  object, WORD  magic);
+HUSEROBJ     FASTCALL USEROBJ_PtrToHandle (PUSER_OBJECT  object, WORD  magic);
+PUSER_OBJECT FASTCALL USEROBJ_HandleToPtr (HUSEROBJ  object, WORD  magic);
+BOOL         FASTCALL USEROBJ_LockObject (HUSEROBJ Obj);
+BOOL         FASTCALL USEROBJ_UnlockObject (HUSEROBJ Obj);
 
 #endif
 

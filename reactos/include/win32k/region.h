@@ -14,9 +14,9 @@ typedef struct _ROSRGNDATA {
 #define  RGNDATA_FreeRgn(hRgn)  GDIOBJ_FreeObj((HGDIOBJ)hRgn, GO_REGION_MAGIC, GDIOBJFLAG_DEFAULT)
 #define  RGNDATA_LockRgn(hRgn) ((PROSRGNDATA)GDIOBJ_LockObj((HGDIOBJ)hRgn, GO_REGION_MAGIC))
 #define  RGNDATA_UnlockRgn(hRgn) GDIOBJ_UnlockObj((HGDIOBJ)hRgn, GO_REGION_MAGIC)
-HRGN RGNDATA_AllocRgn(INT n);
+HRGN FASTCALL RGNDATA_AllocRgn(INT n);
 
-BOOL RGNDATA_InternalDelete( PROSRGNDATA Obj );
+BOOL FASTCALL RGNDATA_InternalDelete( PROSRGNDATA Obj );
 
 /*  User entry points */
 HRGN STDCALL
@@ -148,7 +148,8 @@ STDCALL
 W32kGetRegionData(HRGN hrgn,
 						DWORD count,
 						LPRGNDATA rgndata);
-HRGN REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lpPt);
+
+HRGN STDCALL REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lpPt);
 HRGN STDCALL
 UnsafeW32kCreateRectRgnIndirect(CONST PRECT rc);
 INT STDCALL

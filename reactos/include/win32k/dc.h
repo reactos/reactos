@@ -126,17 +126,17 @@ typedef struct
 #define  DC_ReleasePtr(hDC)  \
   GDIOBJ_UnlockObj ((HGDIOBJ) hDC, GO_DC_MAGIC)
 
-HDC RetrieveDisplayHDC(VOID);
-HDC  DC_AllocDC(LPCWSTR  Driver);
-void  DC_InitDC(HDC  DCToInit);
-HDC  DC_FindOpenDC(LPCWSTR  Driver);
-void  DC_FreeDC(HDC  DCToFree);
-HDC  DC_GetNextDC (PDC pDC);
-void  DC_SetNextDC (PDC pDC, HDC hNextDC);
-BOOL DC_InternalDeleteDC( PDC DCToDelete );
+HDC  FASTCALL RetrieveDisplayHDC(VOID);
+HDC  FASTCALL DC_AllocDC(LPCWSTR  Driver);
+VOID FASTCALL DC_InitDC(HDC  DCToInit);
+HDC  FASTCALL DC_FindOpenDC(LPCWSTR  Driver);
+VOID FASTCALL DC_FreeDC(HDC  DCToFree);
+HDC  FASTCALL DC_GetNextDC (PDC pDC);
+VOID FASTCALL DC_SetNextDC (PDC pDC, HDC hNextDC);
+BOOL FASTCALL DC_InternalDeleteDC( PDC DCToDelete );
 
-void DC_UpdateXforms(PDC  dc);
-BOOL DC_InvertXform(const XFORM *xformSrc, XFORM *xformDest);
+VOID FASTCALL DC_UpdateXforms(PDC  dc);
+BOOL FASTCALL DC_InvertXform(const XFORM *xformSrc, XFORM *xformDest);
 
 /*  User entry points */
 
@@ -202,4 +202,3 @@ INT STDCALL  W32kSetStretchBltMode(HDC  hDC, INT  stretchBltMode);
 COLORREF STDCALL  W32kSetTextColor(HDC hDC, COLORREF color);
 
 #endif
-
