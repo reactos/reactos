@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.25 2001/06/12 17:50:28 chorns Exp $
+/* $Id: init.c,v 1.26 2001/07/15 13:46:16 ekohl Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -34,6 +34,18 @@
 #include "smss.h"
 
 #define NDEBUG
+
+/* TYPES ********************************************************************/
+
+/*
+ * NOTE: This is only used until the dos device links are
+ *       read from the registry!!
+ */
+typedef struct
+{
+   PWSTR DeviceName;
+   PWSTR LinkName;
+} LINKDATA, *PLINKDATA;
 
 /* GLOBAL VARIABLES *********************************************************/
 
@@ -133,6 +145,89 @@ SmCreatePagingFiles (VOID)
 	                    &ulCurrentSize);
 }
 #endif
+
+
+static VOID
+SmInitDosDevices(VOID)
+{
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   UNICODE_STRING DeviceName;
+   UNICODE_STRING LinkName;
+   HANDLE LinkHandle;
+#if 0
+   HANDLE DeviceHandle;
+   IO_STATUS_BLOCK StatusBlock;
+#endif
+   NTSTATUS Status;
+   WCHAR LinkBuffer[80];
+   
+   PLINKDATA LinkPtr;
+   LINKDATA LinkData[] =
+	{{L"\\Device\\NamedPipe", L"PIPE"},
+	 {L"\\Device\\Null", L"NUL"},
+	 {L"\\Device\\Mup", L"UNC"},
+	 {L"\\Device\\MailSlot", L"MAILSLOT"},
+	 {L"\\DosDevices\\COM1", L"AUX"},
+	 {L"\\DosDevices\\LPT1", L"PRN"},
+	 {NULL, NULL}};
+   
+   /* FIXME: Read the list of symbolic links from the registry!! */
+   
+   LinkPtr = &LinkData[0];
+   while (LinkPtr->DeviceName != NULL)
+     {
+	swprintf(LinkBuffer, L"\\??\\%s",
+		 LinkPtr->LinkName);
+	RtlInitUnicodeString(&LinkName,
+			     LinkBuffer);
+	RtlInitUnicodeString(&DeviceName,
+			     LinkPtr->DeviceName);
+   
+	PrintString("SM: Linking %wZ --> %wZ\n",
+		    &LinkName,
+		    &DeviceName);
+#if 0
+	/* check if target device exists (can be opened) */
+	InitializeObjectAttributes(&ObjectAttributes,
+				   &DeviceName,
+				   0,
+				   NULL,
+				   NULL);
+   
+	Status = NtOpenFile(&DeviceHandle,
+			    0x10001,
+			    &ObjectAttributes,
+			    &StatusBlock,
+			    1,
+			    FILE_SYNCHRONOUS_IO_NONALERT);
+	if (NT_SUCCESS(Status))
+	  {
+	     NtClose(DeviceHandle);
+#endif
+	     /* create symbolic link */
+	     InitializeObjectAttributes(&ObjectAttributes,
+					&LinkName,
+					OBJ_PERMANENT,
+					NULL,
+					NULL);
+   
+	     Status = NtCreateSymbolicLinkObject(&LinkHandle,
+						 SYMBOLIC_LINK_ALL_ACCESS,
+						 &ObjectAttributes,
+						 &DeviceName);
+	     if (!NT_SUCCESS(Status))
+	       {
+		  PrintString("SM: NtCreateSymbolicLink( %wZ --> %wZ ) failed!\n",
+			      &LinkName,
+			      &DeviceName);
+	       }
+	     NtClose(LinkHandle);
+#if 0
+	  }
+#endif
+	LinkPtr++;
+     }
+}
 
 
 static VOID
@@ -332,7 +427,8 @@ BOOL InitSessionManager (HANDLE	Children[])
    DisplayString (L"SM: System Environment created\n");
 #endif
 
-   /* FIXME: Define symbolic links to kernel devices (MS-DOS names) */
+   /* Define symbolic links to kernel devices (MS-DOS names) */
+   SmInitDosDevices();
    
    /* FIXME: Run all programs in the boot execution list */
    
