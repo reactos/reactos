@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.229 2004/05/10 17:07:18 weiden Exp $
+/* $Id: window.c,v 1.230 2004/05/10 19:23:37 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1634,9 +1634,9 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   
   if(!(WindowObject->Style & (WS_POPUP | WS_CHILD)))
   {
-    /* Automatically assign the overlapped window style. Also always
+    /* Automatically assign the caption and border style. Also always
        clip siblings for overlapped windows. */
-    WindowObject->Style |= (WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS);
+    WindowObject->Style |= (WS_CAPTION | WS_BORDER | WS_CLIPSIBLINGS);
   }
   
   /* create system menu */
