@@ -2397,6 +2397,11 @@ GetSystemTime(
 	      LPSYSTEMTIME lpSystemTime
 	      );
 
+VOID
+STDCALL
+GetSystemTimeAsFileTime (
+	LPFILETIME	lpSystemTimeAsFileTime 
+	);
 
 WINBOOL
 STDCALL
