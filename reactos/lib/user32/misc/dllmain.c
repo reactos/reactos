@@ -5,6 +5,7 @@
 #include <window.h>
 #include <menu.h>
 #include <user32.h>
+#include <strpool.h>
 
 #ifdef DBG
 
@@ -110,6 +111,7 @@ DllMain(PVOID	hinstDll,
   switch (dwReason)
     {
     case DLL_PROCESS_ATTACH:
+	  hProcessHeap = RtlGetProcessHeap();
       Init();
       InitThread();
       break;

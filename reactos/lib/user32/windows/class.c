@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.26 2003/08/07 04:03:24 royce Exp $
+/* $Id: class.c,v 1.27 2003/08/08 02:57:54 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -13,26 +13,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <debug.h>
-#include <window.h> /* for IS_ATOM */
-
-/* copied from menu.c */
-NTSTATUS
-STATIC HEAP_strdupA2W ( HANDLE hHeap, LPWSTR* ppszW, LPCSTR lpszA, UINT* NewLen )
-{
-  ULONG len;
-  NTSTATUS Status;
-  *ppszW = NULL;
-  if ( !lpszA )
-    return STATUS_SUCCESS;
-  len = lstrlenA(lpszA);
-  *ppszW = RtlAllocateHeap ( hHeap, 0, (len+1) * sizeof(WCHAR) );
-  if ( !*ppszW )
-    return STATUS_NO_MEMORY;
-  Status = RtlMultiByteToUnicodeN ( *ppszW, len*sizeof(WCHAR), NULL, (PCHAR)lpszA, len ); 
-  (*ppszW)[len] = L'\0';
-  if(NewLen) (*NewLen) = (UINT)len;
-  return Status;
-}
+#include <window.h>
+#include <strpool.h>
 
 /*
  * @unimplemented
@@ -95,56 +77,79 @@ GetClassInfoW(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD STDCALL
-GetClassLongA(HWND hWnd, int nIndex)
-{
-  /*
-   * FIXME - for GCL_MENUNAME, we need to allocate a buffer
-   * in thread-local storage and convert the results back
-   * to that. Subsequent calls should be sure and clean that
-   * up
-   */
-  return(NtUserGetClassLong(hWnd, nIndex, TRUE));
+GetClassLongA ( HWND hWnd, int nIndex )
+{ 
+  PUNICODE_STRING str;
+
+  if ( nIndex != GCL_MENUNAME )
+  {
+    return NtUserGetClassLong ( hWnd, nIndex, TRUE );
+  }
+
+  str = (PUNICODE_STRING)NtUserGetClassLong ( hWnd, nIndex, TRUE );
+  if ( IS_INTRESOURCE(str) )
+  {
+    return (DWORD)str;
+  }
+  else
+  {
+    return (DWORD)heap_string_poolA ( str->Buffer, str->Length );
+  }
 }
 
 /*
  * @implemented
  */
 DWORD STDCALL
-GetClassLongW(HWND hWnd, int nIndex)
+GetClassLongW ( HWND hWnd, int nIndex )
 {
-  return(NtUserGetClassLong(hWnd, nIndex, FALSE));
+  PUNICODE_STRING str;
+
+  if ( nIndex != GCL_MENUNAME )
+  {
+    return NtUserGetClassLong ( hWnd, nIndex, FALSE );
+  }
+
+  str = (PUNICODE_STRING)NtUserGetClassLong(hWnd, nIndex, TRUE);
+  if ( IS_INTRESOURCE(str) )
+  {
+    return (DWORD)str;
+  }
+  else
+  {
+    return (DWORD)heap_string_poolW ( str->Buffer, str->Length );
+  }
 }
 
 
 /*
  * @implemented
  */
-int
-STDCALL
+int STDCALL
 GetClassNameA(
   HWND hWnd,
   LPSTR lpClassName,
   int nMaxCount)
 {
-	int result;
-	LPWSTR ClassName;
-	NTSTATUS Status;
-	ClassName = RtlAllocateHeap(RtlGetProcessHeap(),HEAP_ZERO_MEMORY,nMaxCount);
-    result = NtUserGetClassName(hWnd, ClassName, nMaxCount);
-    Status = RtlUnicodeToMultiByteN (lpClassName,
-				   result,
-				   NULL,
-				   ClassName,
-				   result);
-    if (!NT_SUCCESS(Status))
-	{
-		return 0;
-	}
-	RtlFreeHeap(RtlGetProcessHeap(),0,ClassName);
-	return result;
+  int result;
+  LPWSTR ClassNameW;
+  NTSTATUS Status;
+
+  ClassNameW = HEAP_alloc ( (nMaxCount+1)*sizeof(WCHAR) );
+
+  result = NtUserGetClassName ( hWnd, ClassNameW, nMaxCount );
+
+  Status = HEAP_strcpyWtoA ( lpClassName, ClassNameW, result );
+
+  HEAP_free ( ClassNameW );
+
+  if ( !NT_SUCCESS(Status) )
+    return 0;
+
+  return result;
 }
 
 
@@ -158,13 +163,18 @@ GetClassNameW(
   LPWSTR lpClassName,
   int nMaxCount)
 {
-	int result;
-	LPWSTR ClassName;
-	ClassName = RtlAllocateHeap(RtlGetProcessHeap(),HEAP_ZERO_MEMORY,nMaxCount);
-    result = NtUserGetClassName(hWnd, ClassName, nMaxCount);
-	RtlCopyMemory(ClassName,lpClassName,result);
-	RtlFreeHeap(RtlGetProcessHeap(),0,ClassName);
-	return result;
+  int result;
+  LPWSTR ClassNameW;
+
+  ClassNameW = HEAP_alloc ( (nMaxCount+1) * sizeof(WCHAR) );
+
+  result = NtUserGetClassName ( hWnd, ClassNameW, nMaxCount );
+
+  RtlCopyMemory ( lpClassName, ClassNameW, result );
+
+  HEAP_free ( ClassNameW );
+
+  return result;
 }
 
 
@@ -250,9 +260,10 @@ RegisterClassA(CONST WNDCLASSA *lpWndClass)
 {
   WNDCLASSEXA Class;
 
-  if ( !lpWndClass ) return (ATOM)0;
+  if ( !lpWndClass )
+    return 0;
 
-  RtlMoveMemory ( &Class.style, lpWndClass, sizeof(WNDCLASSA) );
+  RtlCopyMemory ( &Class.style, lpWndClass, sizeof(WNDCLASSA) );
 
   Class.cbSize = sizeof(WNDCLASSEXA);
   Class.hIconSm = INVALID_HANDLE_VALUE;
@@ -268,23 +279,22 @@ RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
 {
   RTL_ATOM Atom;
   WNDCLASSEXW wndclass;
-  HANDLE hHeap;
   NTSTATUS Status;
   LPWSTR ClassName = NULL;
   LPWSTR MenuName = NULL;
 
-  if(!lpwcx || (lpwcx->cbSize != sizeof(WNDCLASSEXA)))
-    return (ATOM)0;
+  if ( !lpwcx || (lpwcx->cbSize != sizeof(WNDCLASSEXA)) )
+    return 0;
 
-  if(!lpwcx->lpszClassName) return (ATOM)0;
+  if ( !lpwcx->lpszClassName )
+    return 0;
 
-  hHeap = RtlGetProcessHeap();
-  RtlMoveMemory(&wndclass, lpwcx, sizeof(WNDCLASSEXW));
+  RtlCopyMemory ( &wndclass, lpwcx, sizeof(WNDCLASSEXW) );
 
   if ( !IS_ATOM(lpwcx->lpszClassName) )
   {
-    Status = HEAP_strdupA2W (hHeap, &ClassName, (LPCSTR)lpwcx->lpszClassName, NULL);
-    if (!NT_SUCCESS (Status))
+    Status = HEAP_strdupAtoW ( &ClassName, (LPCSTR)lpwcx->lpszClassName, NULL );
+    if ( !NT_SUCCESS (Status) )
     {
       SetLastError (RtlNtStatusToDosError(Status));
       return 0;
@@ -292,31 +302,24 @@ RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
     wndclass.lpszClassName = ClassName;
   }
 
-  if ( !IS_ATOM(lpwcx->lpszMenuName) )
+  if ( !IS_INTRESOURCE(lpwcx->lpszMenuName) )
   {
-    Status = HEAP_strdupA2W (hHeap, &MenuName, (LPCSTR)lpwcx->lpszMenuName, NULL);
-    if (!NT_SUCCESS (Status))
+    Status = HEAP_strdupAtoW ( &MenuName, (LPCSTR)lpwcx->lpszMenuName, NULL );
+    if ( !NT_SUCCESS (Status) )
     {
-      if(HIWORD(lpwcx->lpszClassName))
-      {
-        RtlFreeHeap (hHeap, 0, ClassName);
-      }
+      if ( ClassName )
+	HEAP_free ( ClassName );
       SetLastError (RtlNtStatusToDosError(Status));
       return 0;
     }
     wndclass.lpszMenuName = MenuName;
   }
 
-  Atom = NtUserRegisterClassExWOW (
-    &wndclass,
-    FALSE,
-    0,
-    0,
-    0);
+  Atom = NtUserRegisterClassExWOW ( &wndclass, FALSE, 0, 0, 0 );
 
   /* free strings if neccessary */
-  if(MenuName) RtlFreeHeap (hHeap, 0, MenuName);
-  if(ClassName) RtlFreeHeap (hHeap, 0, ClassName);  
+  if ( MenuName  ) HEAP_free ( MenuName );
+  if ( ClassName ) HEAP_free ( ClassName );
 
   return (ATOM)Atom;
 }
@@ -334,60 +337,47 @@ RegisterClassExW(CONST WNDCLASSEXW *lpwcx)
   WNDCLASSEXW wndclass;
   LPWSTR ClassName = NULL;
   LPWSTR MenuName = NULL;
-  ULONG len;
 
-  if(!lpwcx || (lpwcx->cbSize != sizeof(WNDCLASSEXA)))
-    return (ATOM)0;
+  if ( !lpwcx || (lpwcx->cbSize != sizeof(WNDCLASSEXA)) )
+    return 0;
 
-  if(!lpwcx->lpszClassName) return (ATOM)0;
+  if ( !lpwcx->lpszClassName )
+    return 0;
 
   hHeap = RtlGetProcessHeap();
-  RtlMoveMemory(&wndclass, lpwcx, sizeof(WNDCLASSEXW));
+  RtlCopyMemory ( &wndclass, lpwcx, sizeof(WNDCLASSEXW) );
 
   /* copy strings if needed */
 
   if ( !IS_ATOM(lpwcx->lpszClassName) )
   {
-    len = lstrlenW(lpwcx->lpszClassName);
-    ClassName = RtlAllocateHeap (hHeap, 0, (len + 1) * sizeof(WCHAR));
-    if(!ClassName)
+    ClassName = HEAP_strdupW ( lpwcx->lpszClassName, lstrlenW(lpwcx->lpszClassName) );
+    if ( !ClassName )
     {
       SetLastError(RtlNtStatusToDosError(STATUS_NO_MEMORY));
       return 0;
     }
-    RtlMoveMemory(&ClassName, &lpwcx->lpszClassName, len);
-
     wndclass.lpszClassName = ClassName;
   }
 
-  if ( !IS_ATOM(lpwcx->lpszMenuName) )
+  if ( !IS_INTRESOURCE(lpwcx->lpszMenuName) )
   {
-    len = lstrlenW(lpwcx->lpszMenuName);
-    MenuName = RtlAllocateHeap (hHeap, 0, (len + 1) * sizeof(WCHAR));
-    if(!MenuName)
+    MenuName = HEAP_strdupW ( lpwcx->lpszMenuName, lstrlenW(lpwcx->lpszMenuName) );
+    if ( !MenuName )
     {
-      if(HIWORD(lpwcx->lpszClassName))
-      {
-        RtlFreeHeap (hHeap, 0, MenuName);
-      }
+      if ( ClassName )
+	HEAP_free ( MenuName );
       SetLastError(RtlNtStatusToDosError(STATUS_NO_MEMORY));
       return 0;
     }
-    RtlMoveMemory(&MenuName, &lpwcx->lpszMenuName, len);
-
     wndclass.lpszMenuName = MenuName;
   }
 
-  Atom = NtUserRegisterClassExWOW (
-    &wndclass,
-    TRUE,
-    0,
-    0,
-    0);
+  Atom = NtUserRegisterClassExWOW ( &wndclass, TRUE, 0, 0, 0 );
 
   /* free strings if neccessary */
-  if(MenuName) RtlFreeHeap (hHeap, 0, MenuName);
-  if(ClassName) RtlFreeHeap (hHeap, 0, ClassName);
+  if ( MenuName  ) HEAP_free ( MenuName  );
+  if ( ClassName ) HEAP_free ( ClassName );
 
   return (ATOM)Atom;
 }
@@ -400,31 +390,62 @@ RegisterClassW(CONST WNDCLASSW *lpWndClass)
 {
   WNDCLASSEXW Class;
 
-  if ( !lpWndClass ) return (ATOM)0;
+  if ( !lpWndClass )
+    return 0;
 
-  RtlMoveMemory ( &Class.style, lpWndClass, sizeof(WNDCLASSW) );
+  RtlCopyMemory ( &Class.style, lpWndClass, sizeof(WNDCLASSW) );
+
   Class.cbSize = sizeof(WNDCLASSEXW);
   Class.hIconSm = INVALID_HANDLE_VALUE;
+
   return RegisterClassExW ( &Class );
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD
 STDCALL
-SetClassLongA(
+SetClassLongA (
   HWND hWnd,
   int nIndex,
   LONG dwNewLong)
 {
-  /* FIXME - handle GCL_MENUNAME special case */
-  return(NtUserSetClassLong(hWnd, nIndex, dwNewLong, TRUE));
+  PUNICODE_STRING str;
+  PUNICODE_STRING str2;
+
+  if ( nIndex != GCL_MENUNAME )
+  {
+    return NtUserSetClassLong ( hWnd, nIndex, dwNewLong, TRUE );
+  }
+  if ( IS_INTRESOURCE(dwNewLong) )
+  {
+    str2 = (PUNICODE_STRING)dwNewLong;
+  }
+  else
+  {
+    RtlCreateUnicodeString ( str2, (LPWSTR)dwNewLong );
+  }
+
+  str = (PUNICODE_STRING)NtUserSetClassLong(hWnd, nIndex, (DWORD)str2, TRUE);
+
+  if ( !IS_INTRESOURCE(dwNewLong) )
+  {
+    RtlFreeUnicodeString ( str2 );
+  }
+  if ( IS_INTRESOURCE(str) )
+  {
+    return (DWORD)str;
+  }
+  else
+  {
+    return (DWORD)heap_string_poolA ( str->Buffer, str->Length );
+  }
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD
 STDCALL
@@ -433,8 +454,36 @@ SetClassLongW(
   int nIndex,
   LONG dwNewLong)
 {
-  /* FIXME - handle GCL_MENUNAME special case */
-  return(NtUserSetClassLong(hWnd, nIndex, dwNewLong, FALSE));
+  PUNICODE_STRING str;
+  PUNICODE_STRING str2;
+
+  if (nIndex != GCL_MENUNAME )
+  {
+    return NtUserSetClassLong ( hWnd, nIndex, dwNewLong, FALSE );
+  }
+  if ( IS_INTRESOURCE(dwNewLong) )
+  {
+    str2 = (PUNICODE_STRING)dwNewLong;
+  }
+  else
+  {
+    RtlCreateUnicodeStringFromAsciiz ( str2,(LPSTR)dwNewLong );
+  }
+
+  str = (PUNICODE_STRING)NtUserSetClassLong(hWnd, nIndex, (DWORD)str2, TRUE);
+
+  if ( !IS_INTRESOURCE(dwNewLong) )
+  {
+    RtlFreeUnicodeString(str2);
+  }
+  if ( IS_INTRESOURCE(str) )
+  {
+    return (DWORD)str;
+  }
+  else
+  {
+    return (DWORD)heap_string_poolW ( str->Buffer, str->Length );
+  }
 }
 
 

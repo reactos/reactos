@@ -499,7 +499,6 @@ PtInRect@12
 ;QuerySendMessage
 ;QueryUserCounters
 RealChildWindowFromPoint@12
-RealGetWindowClass@12
 RealGetWindowClassA@12
 RealGetWindowClassW@12
 RedrawWindow@16

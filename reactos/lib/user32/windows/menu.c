@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.21 2003/08/07 04:03:24 royce Exp $
+/* $Id: menu.c,v 1.22 2003/08/08 02:57:54 royce Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -34,6 +34,7 @@
 #include <string.h>
 #include <draw.h>
 #include <window.h>
+#include <strpool.h>
 
 /* TYPES *********************************************************************/
 
@@ -92,24 +93,6 @@ static inline WCHAR *strcatW( WCHAR *dst, const WCHAR *src )
 {
     strcpyW( dst + strlenW(dst), src );
     return dst;
-}
-
-NTSTATUS
-STATIC HEAP_strdupA2W ( HANDLE hHeap, LPWSTR* ppszW, LPCSTR lpszA, UINT* NewLen )
-{
-  ULONG len;
-  NTSTATUS Status;
-  *ppszW = NULL;
-  if ( !lpszA )
-    return STATUS_SUCCESS;
-  len = lstrlenA(lpszA);
-  *ppszW = RtlAllocateHeap ( hHeap, 0, (len+1) * sizeof(WCHAR) );
-  if ( !*ppszW )
-    return STATUS_NO_MEMORY;
-  Status = RtlMultiByteToUnicodeN ( *ppszW, len*sizeof(WCHAR), NULL, (PCHAR)lpszA, len ); 
-  (*ppszW)[len] = L'\0';
-  if(NewLen) (*NewLen) = (UINT)len;
-  return Status;
 }
 
 #ifndef GET_WORD
@@ -754,18 +737,17 @@ InsertMenuItemA(
   WINBOOL res = FALSE;
   BOOL CleanHeap = FALSE;
   NTSTATUS Status;
-  HANDLE hHeap = RtlGetProcessHeap();
 
   if((lpmii->cbSize == sizeof(MENUITEMINFOA)) || 
      (lpmii->cbSize == sizeof(MENUITEMINFOA) - sizeof(HBITMAP)))
   {
-    memcpy(&mi, lpmii, lpmii->cbSize);
-    
+    RtlMoveMemory ( &mi, lpmii, lpmii->cbSize );
+
     /* copy the text string */
     if((mi.fMask & (MIIM_TYPE | MIIM_STRING)) && 
       (MENU_ITEM_TYPE(mi.fType) == MF_STRING) && mi.dwTypeData)
     {
-      Status = HEAP_strdupA2W (hHeap, &mi.dwTypeData, (LPCSTR)mi.dwTypeData, &mi.cch);
+      Status = HEAP_strdupAtoW ( &mi.dwTypeData, (LPCSTR)mi.dwTypeData, &mi.cch );
       if (!NT_SUCCESS (Status))
       {
         SetLastError (RtlNtStatusToDosError(Status));
@@ -773,10 +755,10 @@ InsertMenuItemA(
       }
       CleanHeap = TRUE;
     }
-    
+
     res = NtUserInsertMenuItem(hMenu, uItem, fByPosition, &mi);
-    
-    if(CleanHeap) RtlFreeHeap (hHeap, 0, mi.dwTypeData);
+
+    if ( CleanHeap ) HEAP_free ( mi.dwTypeData );
   }
   return res;
 }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.80 2003/08/06 18:43:58 weiden Exp $
+/* $Id: window.c,v 1.81 2003/08/08 02:57:54 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1730,16 +1730,14 @@ NtUserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi)
 	case GWL_STYLE:
 	  Result = WindowObject->Style;
 	  break;
-    /* FIXME: need to return the "invalid" value if the caller asks for it
-	   (but we cant do that because that breaks stuff in user32 which wont be fixable until we have an implementation of IsWindowUnicode available */
 	case GWL_WNDPROC:
-	  if (WindowObject->Unicode)
+	  if (Ansi)
 	  {
-		Result = (LONG) WindowObject->WndProcW;
+		Result = (LONG) WindowObject->WndProcA;
 	  }
 	  else
 	  {
-		Result = (LONG) WindowObject->WndProcA;
+		Result = (LONG) WindowObject->WndProcW;
 	  }
 	  break;
 
@@ -1826,9 +1824,16 @@ NtUserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
 
 	case GWL_WNDPROC:
 	  /* FIXME: should check if window belongs to current process */
-	  /*OldValue = (LONG) WindowObject->WndProc;
-	  WindowObject->WndProc = (WNDPROC) NewValue;*/
-	  OldValue = 0;
+	  if (Ansi)
+	  {
+	    OldValue = (LONG) WindowObject->WndProcA;
+	    WindowObject->WndProcA = (WNDPROC) NewValue;
+	  }
+	  else
+	  {
+	    OldValue = (LONG) WindowObject->WndProcW;
+	    WindowObject->WndProcW = (WNDPROC) NewValue;
+	  }
 	  break;
 
 	case GWL_HINSTANCE:

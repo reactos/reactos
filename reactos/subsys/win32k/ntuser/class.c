@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.24 2003/08/07 04:03:25 royce Exp $
+/* $Id: class.c,v 1.25 2003/08/08 02:57:54 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -158,7 +158,6 @@ NtUserGetClassInfo(IN LPWSTR ClassName,
 		   OUT PULONG ReturnedLength)
 {
   UNIMPLEMENTED;
-    
   return(0);
 }
 
@@ -167,32 +166,33 @@ W32kGetClassName(struct _WINDOW_OBJECT *WindowObject,
 		   LPWSTR lpClassName,
 		   int nMaxCount)
 {
-	int length;
-	LPCWSTR name;
-	if (IS_ATOM(WindowObject->Class->lpszClassName))
-	{
-		/* FIXME find the string from the atom */
-		name = L"\0";
-		length = wcslen(name);
-	}
-	else
-	{
-		name = WindowObject->Class->lpszClassName->Buffer;
-		length = WindowObject->Class->lpszClassName->Length / sizeof(WCHAR);
-	}
-	if (length > nMaxCount)
-	{
-		length = nMaxCount;
-	}
-	*(lpClassName+length) = 0;
-	wcsncpy(lpClassName,name,length);
-	return length;
+  int length;
+  LPCWSTR name;
+  if (IS_ATOM(WindowObject->Class->lpszClassName))
+  {
+    /* FIXME find the string from the atom */
+    name = L"\0";
+    length = wcslen(name);
+  }
+  else
+  {
+    name = WindowObject->Class->lpszClassName->Buffer;
+    length = WindowObject->Class->lpszClassName->Length / sizeof(WCHAR);
+  }
+  if (length > nMaxCount)
+  {
+    length = nMaxCount;
+  }
+  *(lpClassName+length) = 0;
+  wcsncpy(lpClassName,name,length);
+  return length;
 }
 
 DWORD STDCALL
-NtUserGetClassName(HWND hWnd,
-		   LPWSTR lpClassName,
-		   int nMaxCount)
+NtUserGetClassName (
+  HWND hWnd,
+  LPWSTR lpClassName,
+  int nMaxCount)
 {
   PWINDOW_OBJECT WindowObject;
   LONG Ret;
@@ -212,7 +212,6 @@ NtUserGetWOWClass(DWORD Unknown0,
 		  DWORD Unknown1)
 {
   UNIMPLEMENTED;
-  
   return(0);
 }
 
@@ -251,7 +250,7 @@ W32kCreateClass(CONST WNDCLASSEXW *lpwcx,
 		ClassObject->lpfnWndProcA = lpwcx->lpfnWndProc;
 		ClassObject->lpfnWndProcW = (WNDPROC)0xCCCCCCCC;
 	}
-	if (HIWORD(lpwcx->lpszMenuName) == 0)
+	if (IS_INTRESOURCE(lpwcx->lpszMenuName))
 	{
 		ClassObject->lpszMenuName = (PUNICODE_STRING)lpwcx->lpszMenuName;
 	}
@@ -307,7 +306,7 @@ NtUserRegisterClassExWOW(
       ObDereferenceObject(WinStaObject);
       DPRINT("Failed adding class name (%wS) to atom table\n",
 	lpwcx->lpszClassName);
-      SetLastNtError(Status);
+      SetLastNtError(Status);      
       return((RTL_ATOM)0);
     }
   }
@@ -361,27 +360,20 @@ W32kGetClassLong(struct _WINDOW_OBJECT *WindowObject, ULONG Offset, BOOL Ansi)
     case GCL_HMODULE:
       Ret = (ULONG)WindowObject->Class->hInstance;
       break;
-    /*case GCL_MENUNAME:
-	  if (Ansi)
-	  {
-		Ret = (ULONG)WindowObject->Class->ClassA.lpszMenuName;
-	  }
-	  else
-	  {
-		Ret = (ULONG)WindowObject->Class->ClassW.lpszMenuName;
-	  }
-      break;*/
+    case GCL_MENUNAME:
+      Ret = (ULONG)WindowObject->Class->lpszMenuName;
+      break;
     case GCL_STYLE:
       Ret = WindowObject->Class->style;
       break;
     case GCL_WNDPROC:
-	  if (WindowObject->Unicode)
+	  if (Ansi)
 	  {
-		Ret = (ULONG)WindowObject->Class->lpfnWndProcW;
+		Ret = (ULONG)WindowObject->Class->lpfnWndProcA;
 	  }
 	  else
 	  {
-		Ret = (ULONG)WindowObject->Class->lpfnWndProcA;
+		Ret = (ULONG)WindowObject->Class->lpfnWndProcW;
 	  }
       break;
     default:
@@ -410,6 +402,7 @@ NtUserGetClassLong(HWND hWnd, DWORD Offset, BOOL Ansi)
 void FASTCALL
 W32kSetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, LONG dwNewLong, BOOL Ansi)
 {
+  PUNICODE_STRING str;
   switch (Offset)
     {
     case GCL_CBWNDEXTRA:
@@ -433,15 +426,31 @@ W32kSetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, LONG dwNewLong, BOOL
     case GCL_HMODULE:
       WindowObject->Class->hInstance = (HINSTANCE)dwNewLong;
       break;
-    /*case GCL_MENUNAME:
-      WindowObject->Class->Class.lpszMenuName = (LPCWSTR)dwNewLong;
-      break;*/
+    case GCL_MENUNAME:
+	  if (!IS_INTRESOURCE(dwNewLong))
+	  {
+	    str = ExAllocatePool(PagedPool,sizeof(UNICODE_STRING)+((PUNICODE_STRING)dwNewLong)->Length);
+	    memcpy(str,(PUNICODE_STRING)dwNewLong,sizeof(UNICODE_STRING)+((PUNICODE_STRING)dwNewLong)->Length);
+        WindowObject->Class->lpszMenuName = str;
+	  }
+	  else
+	  {
+		WindowObject->Class->lpszMenuName = (PUNICODE_STRING)dwNewLong;
+	  }
+      break;
     case GCL_STYLE:
       WindowObject->Class->style = dwNewLong;
       break;
-    /*case GCL_WNDPROC:
-      WindowObject->Class->Class.lpfnWndProc = (WNDPROC)dwNewLong;
-      break;*/
+    case GCL_WNDPROC:
+	  if (Ansi)
+	  {
+		WindowObject->Class->lpfnWndProcA = (WNDPROC)dwNewLong;
+	  }
+	  else
+	  {
+		WindowObject->Class->lpfnWndProcW = (WNDPROC)dwNewLong;
+	  }
+      break;
     }
 }
 
@@ -471,7 +480,6 @@ NtUserSetClassWord(DWORD Unknown0,
 		   DWORD Unknown2)
 {
   UNIMPLEMENTED;
-
   return(0);
 }
 
@@ -481,7 +489,6 @@ NtUserUnregisterClass(DWORD Unknown0,
 		      DWORD Unknown2)
 {
   UNIMPLEMENTED;
-
   return(0);
 }
 

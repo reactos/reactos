@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.23 2003/08/07 04:03:23 royce Exp $
+# $Id: Makefile,v 1.24 2003/08/08 02:57:53 royce Exp $
 
 PATH_TO_TOP = ../..
 
@@ -45,7 +45,8 @@ MISC_OBJECTS = \
 	misc/winsta.o \
 	misc/resources.o \
 	misc/object.o \
-	misc/timer.o
+	misc/timer.o \
+	misc/strpool.o
 
 WINDOWS_OBJECTS = \
 	windows/caret.o \
