@@ -21,7 +21,7 @@
 #endif /* __REACTOS__ */
 
 
-/* JPP 20 Jul 1998 - define _DEBUG to add debugging code */
+/* Define to enable debugging code */
 /* #define _DEBUG */
 
 
@@ -61,14 +61,12 @@
 #define INCLUDE_CMD_ACTIVATE
 #endif
 #define INCLUDE_CMD_ATTRIB
-/*#define INCLUDE_CMD_BREAK*/
 #define INCLUDE_CMD_CHCP
 #define INCLUDE_CMD_CHDIR
 #define INCLUDE_CMD_CHOICE
 #define INCLUDE_CMD_CLS
 #define INCLUDE_CMD_COLOR
 #define INCLUDE_CMD_COPY
-/*#define INCLUDE_CMD_CTTY*/
 #define INCLUDE_CMD_DATE
 #define INCLUDE_CMD_DEL
 #define INCLUDE_CMD_DELAY
@@ -114,7 +112,5 @@ if
 shift
 
 */
-
-
 
 #endif /* _CONFIG_H_INCLUDED_ */

@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.12 1999/10/22 20:35:02 ekohl Exp $
+/* $Id: cmd.c,v 1.13 1999/10/23 18:17:37 ekohl Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -456,7 +456,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 
 		/* Set current stdout to temporary file */
 		hFile[1] = CreateFile (szFileName[1], GENERIC_WRITE, 0, NULL,
-							   TRUNCATE_EXISTING, FILE_ATTRIBUTE_TEMPORARY, NULL);
+				       TRUNCATE_EXISTING, FILE_ATTRIBUTE_TEMPORARY, NULL);
 		SetStdHandle (STD_OUTPUT_HANDLE, hFile[1]);
 
 		DoCommand (s);
@@ -888,9 +888,6 @@ Initialize (int argc, char *argv[])
 	TCHAR commandline[CMDLINE_LENGTH];
 	INT i;
 
-	/* Added by Rob Lake 06/16/98.  This enables the command.com
-	 * to run the autoexec.bat at startup */
-
 #ifdef _DEBUG
 	INT x;
 
@@ -916,15 +913,17 @@ Initialize (int argc, char *argv[])
 
 	if (argc >= 2 && !_tcsncmp (argv[1], _T("/?"), 2))
 	{
-		ConOutPuts (_T("Starts a new instance of the ReactOS command line interpreter\n\n"
-		               "CMD [/P][/C]...\n\n"
-		               "  /P  ...\n"
-		               "  /C  ..."));
+		ConOutPuts (_T("Starts a new instance of the ReactOS command line interpreter.\n"
+		               "\n"
+		               "CMD [/[C|K] command][/P][/Q][/T:bf]\n"
+		               "\n"
+		               "  /C command  Runs the specified command and terminates.\n"
+		               "  /K command  Runs the specified command and remains.\n"
+		               "  /P          CMD becomes permanent and runs autoexec.bat\n"
+		               "              (cannot be terminated).\n"
+		               "  /T:bf       Sets the background/foreground color (see COLOR command)."));
 		ExitProcess (0);
 	}
-
-	ShortVersion ();
-	ShowCommands ();
 
 #ifdef INCLUDE_CMD_CHDIR
 	InitLastPath ();
@@ -957,7 +956,7 @@ Initialize (int argc, char *argv[])
 			}
 			else if (!_tcsicmp (argv[i], _T("/c")))
 			{
-				/* This just runs a program and exits, RL: 06/16,21/98 */
+				/* This just runs a program and exits */
 				++i;
 				_tcscpy (commandline, argv[i]);
 				while (argv[++i])
@@ -969,7 +968,19 @@ Initialize (int argc, char *argv[])
 				ParseCommandLine(commandline);
 				ExitProcess (ProcessInput (TRUE));
 			}
+			else if (!_tcsicmp (argv[i], _T("/k")))
+			{
+				/* This just runs a program and remains */
+				++i;
+				_tcscpy (commandline, argv[i]);
+				while (argv[++i])
+				{
+					_tcscat (commandline, " ");
+					_tcscat (commandline, argv[i]);
+				}
 
+				ParseCommandLine(commandline);
+			}
 #ifdef INCLUDE_CMD_COLOR
 			else if (!_tcsnicmp (argv[i], _T("/t:"), 3))
 			{
@@ -981,6 +992,9 @@ Initialize (int argc, char *argv[])
 #endif
 		}
 	}
+
+	ShortVersion ();
+	ShowCommands ();
 
 	/* run cmdstart.bat */
 	if (IsValidFileName (_T("cmdstart.bat")))

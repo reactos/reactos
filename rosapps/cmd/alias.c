@@ -217,23 +217,26 @@ VOID InitializeAlias (VOID)
 
 VOID DestroyAlias (VOID)
 {
-	while (lpFirst->next != NULL)
-	{
-		lpLast = lpFirst;
-		lpFirst = lpLast->next;
+        if (lpFirst == NULL)
+                return;
 
-		free (lpLast->lpName);
-		free (lpLast->lpSubst);
-		free (lpLast);
-	}
+        while (lpFirst->next != NULL)
+        {
+                lpLast = lpFirst;
+                lpFirst = lpLast->next;
 
-	free (lpFirst->lpName);
-	free (lpFirst->lpSubst);
-	free (lpFirst);
+                free (lpLast->lpName);
+                free (lpLast->lpSubst);
+                free (lpLast);
+        }
 
-	lpFirst = NULL;
-	lpLast = NULL;
-	dwUsed = 0;
+        free (lpFirst->lpName);
+        free (lpFirst->lpSubst);
+        free (lpFirst);
+
+        lpFirst = NULL;
+        lpLast = NULL;
+        dwUsed = 0;
 }
 
 /* specified routines */

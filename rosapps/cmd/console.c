@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.11 1999/10/22 20:35:02 ekohl Exp $
+/* $Id: console.c,v 1.12 1999/10/23 18:17:37 ekohl Exp $
  *
  *  CONSOLE.C - console input/output functions.
  *
@@ -34,7 +34,7 @@ VOID DebugPrintf (LPTSTR szFormat, ...)
 	_vstprintf (szOut, szFormat, arg_ptr);
 	va_end (arg_ptr);
 
-	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE),
+        WriteFile (GetStdHandle (STD_ERROR_HANDLE),
 	           szOut,
 	           _tcslen(szOut) * sizeof(TCHAR),
 	           &dwWritten,

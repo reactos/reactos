@@ -48,10 +48,6 @@ COMMAND cmds[] =
 	{_T("beep"),     0, cmd_beep},
 #endif
 
-/*
-	{_T("break"),    0, cmd_break},
-*/
-
 	{_T("call"), CMD_BATCHONLY, cmd_call},
 
 #ifdef INCLUDE_CMD_CHDIR
@@ -80,19 +76,13 @@ COMMAND cmds[] =
 	{_T("copy"),     0, cmd_copy},
 #endif
 
-/*
-#define INCLUDE_CMD_CTTY
-	{_T("ctty"),     0, cmd_ctty},
-#endif
-*/
-
 #ifdef INCLUDE_CMD_DATE
 	{_T("date"),     0, cmd_date},
 #endif
 
 #ifdef INCLUDE_CMD_DEL
-	{_T("del"),      0, cmd_del},
-	{_T("delete"),   0, cmd_del},
+	{_T("del"),      0, CommandDelete},
+	{_T("delete"),   0, CommandDelete},
 #endif
 
 #ifdef INCLUDE_CMD_DELAY
@@ -103,13 +93,17 @@ COMMAND cmds[] =
 	{_T("dir"), CMD_SPECIAL, cmd_dir},
 #endif
 
+#ifdef FEATURE_DIRECTORY_STACK
+        {_T("dirs"), 0, CommandDirs},
+#endif
+
 	{_T("echo"), 0, CommandEcho},
 	{_T("echos"), 0, CommandEchos},
 	{_T("echoerr"), 0, CommandEchoerr},
 	{_T("echoserr"), 0, CommandEchoserr},
 
 #ifdef INCLUDE_CMD_DEL
-	{_T("erase"), 0, cmd_del},
+	{_T("erase"), 0, CommandDelete},
 #endif
 
 	{_T("exit"), 0, CommandExit},

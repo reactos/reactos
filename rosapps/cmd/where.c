@@ -97,6 +97,63 @@ SearchForExecutable (LPCTSTR pFileName, LPTSTR pFullName)
 	INT    n;
 	LPTSTR p,s,f;
 
+
+	/* initialize full name buffer */
+	*pFullName = _T('\0');
+
+#ifdef _DEBUG
+        DebugPrintf (_T("SearchForExecutable: \'%s\'\n"), pFileName);
+#endif
+
+        if (_tcschr (pFileName, _T('\\')) != NULL)
+        {
+                LPTSTR pFilePart;
+#ifdef _DEBUG
+                DebugPrintf (_T("Absolute or relative path is given.\n"));
+#endif
+                GetFullPathName (pFileName,
+                                 MAX_PATH,
+                                 szPathBuffer,
+                                 &pFilePart);
+
+                if (_tcschr (pFilePart, _T('.')) != NULL)
+                {
+#ifdef _DEBUG
+                        DebugPrintf (_T("Filename extension!\n"));
+#endif
+                        _tcscpy (pFullName, szPathBuffer);
+                        return TRUE;
+
+                }
+                else
+                {
+#ifdef _DEBUG
+                        DebugPrintf (_T("No filename extension!\n"));
+#endif
+
+                        p = szPathBuffer + _tcslen (szPathBuffer);
+
+                        for (n = 0; n < nExtCount; n++)
+                        {
+                                _tcscpy (p, ext[n]);
+
+#ifdef _DEBUG
+                                DebugPrintf (_T("Testing: \'%s\'\n"), szPathBuffer);
+#endif
+
+                                if (IsValidFileName (szPathBuffer))
+                                {
+#ifdef _DEBUG
+                                        DebugPrintf (_T("Found: \'%s\'\n"), szPathBuffer);
+#endif
+                                        _tcscpy (pFullName, szPathBuffer);
+                                        return TRUE;
+                                }
+                        }
+                        return FALSE;
+                }
+        }
+
 	/* load environment varable PATH into buffer */
 	pszBuffer = (LPTSTR)malloc (ENV_BUFFER_SIZE * sizeof(TCHAR));
 	dwBuffer = GetEnvironmentVariable (_T("PATH"), pszBuffer, ENV_BUFFER_SIZE);
@@ -105,9 +162,6 @@ SearchForExecutable (LPCTSTR pFileName, LPTSTR pFullName)
 		pszBuffer = (LPTSTR)realloc (pszBuffer, dwBuffer * sizeof (TCHAR));
 		GetEnvironmentVariable (_T("PATH"), pszBuffer, dwBuffer * sizeof (TCHAR));
 	}
-
-	/* initialize full name buffer */
-	*pFullName = _T('\0');
 
 	if (!(p = _tcsrchr (pFileName, _T('.'))) ||
 		_tcschr (p + 1, _T('\\')))

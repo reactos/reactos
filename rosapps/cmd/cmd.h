@@ -172,7 +172,7 @@ INT cmd_date (LPTSTR, LPTSTR);
 
 
 /* Prototypes for DEL.C */
-INT cmd_del (LPTSTR, LPTSTR);
+INT CommandDelete (LPTSTR, LPTSTR);
 
 
 /* Prototypes for DELAY.C */
@@ -190,6 +190,7 @@ VOID DestroyDirectoryStack (VOID);
 INT  GetDirectoryStackDepth (VOID);
 INT  CommandPushd (LPTSTR, LPTSTR);
 INT  CommandPopd (LPTSTR, LPTSTR);
+INT  CommandDirs (LPTSTR, LPTSTR);
 
 
 /* Prototypes for ECHO.C */

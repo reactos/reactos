@@ -136,8 +136,10 @@ RemoveFile (LPTSTR lpFileName, DWORD dwFlags)
 }
 
 
-INT cmd_del (LPTSTR cmd, LPTSTR param)
+INT CommandDelete (LPTSTR cmd, LPTSTR param)
 {
+	TCHAR szFullPath[MAX_PATH];
+	LPTSTR pFilePart;
 	LPTSTR *arg = NULL;
 	INT args;
 	INT i;
@@ -151,21 +153,20 @@ INT cmd_del (LPTSTR cmd, LPTSTR param)
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
 		ConOutPuts (_T("Deletes one or more files.\n"
-					   "\n"
-					   "DEL [/N /P /T /Q /W /Z] file ...\n"
-					   "DELETE [/N /P /T /Q /W /Z] file ...\n"
-					   "ERASE [/N /P /T /Q /W /Z] file ...\n"
-					   "\n"
-					   "  file  Specifies the file(s) to delete.\n"
-					   "\n"
-					   "  /N    Nothing.\n"
-					   "  /P    Prompts for confirmation before deleting each file.\n"
-					   "        (Not implemented yet!)\n"
-					   "  /T    Display total number of deleted files and freed disk space.\n"
-					   "  /Q    Quiet.\n"
-					   "  /W    Wipe. Overwrite the file with zeros before deleting it.\n"
-					   "  /Z    Zap (delete hidden, read-only and system files).\n"
-					   ));
+		               "\n"
+		               "DEL [/N /P /T /Q /W /Z] file ...\n"
+		               "DELETE [/N /P /T /Q /W /Z] file ...\n"
+		               "ERASE [/N /P /T /Q /W /Z] file ...\n"
+		               "\n"
+		               "  file  Specifies the file(s) to delete.\n"
+		               "\n"
+		               "  /N    Nothing.\n"
+		               "  /P    Prompts for confirmation before deleting each file.\n"
+		               "        (Not implemented yet!)\n"
+		               "  /T    Display total number of deleted files and freed disk space.\n"
+		               "  /Q    Quiet.\n"
+		               "  /W    Wipe. Overwrite the file with zeros before deleting it.\n"
+		               "  /Z    Zap (delete hidden, read-only and system files).\n"));
 
 		return 0;
 	}
@@ -250,7 +251,17 @@ INT cmd_del (LPTSTR cmd, LPTSTR param)
 					ConErrPrintf (_T("Wildcards!\n\n"));
 #endif
 
-					hFile = FindFirstFile (arg[i], &f);
+					GetFullPathName (arg[i],
+					                 MAX_PATH,
+					                 szFullPath,
+					                 &pFilePart);
+
+#ifdef _DEBUG
+					ConErrPrintf (_T("Full path: %s\n"), szFullPath);
+					ConErrPrintf (_T("File part: %s\n"), pFilePart);
+#endif
+
+					hFile = FindFirstFile (szFullPath, &f);
 					if (hFile == INVALID_HANDLE_VALUE)
 					{
 						error_file_not_found ();
@@ -265,13 +276,19 @@ INT cmd_del (LPTSTR cmd, LPTSTR param)
 							!_tcscmp (f.cFileName, _T("..")))
 							continue;
 
+						_tcscpy (pFilePart, f.cFileName);
+
+#ifdef _DEBUG
+						ConErrPrintf (_T("Full filename: %s\n"), szFullPath);
+#endif
+
 						if (!(dwFlags & DEL_QUIET) && !(dwFlags & DEL_TOTAL))
-							ConErrPrintf (_T("Deleting: %s\n"), f.cFileName);
+							ConErrPrintf (_T("Deleting: %s\n"), szFullPath);
 
 						/* delete the file */
 						if (!(dwFlags & DEL_NOTHING))
 						{
-							if (RemoveFile (f.cFileName, dwFlags))
+							if (RemoveFile (szFullPath, dwFlags))
 							{
 								dwFiles++;
 							}
@@ -279,9 +296,9 @@ INT cmd_del (LPTSTR cmd, LPTSTR param)
 							{
 								if (dwFlags & DEL_ZAP)
 								{
-									if (SetFileAttributes (arg[i], 0))
+									if (SetFileAttributes (szFullPath, 0))
 									{
-										if (RemoveFile (arg[i], dwFlags))
+										if (RemoveFile (szFullPath, dwFlags))
 										{
 											dwFiles++;
 										}
@@ -301,8 +318,6 @@ INT cmd_del (LPTSTR cmd, LPTSTR param)
 								}
 							}
 						}
-
-
 					}
 					while (FindNextFile (hFile, &f));
 					FindClose (hFile);
@@ -310,17 +325,22 @@ INT cmd_del (LPTSTR cmd, LPTSTR param)
 				else
 				{
 					/* no wildcards in filespec */
-
 #ifdef _DEBUG
 					ConErrPrintf (_T("No Wildcards!\n"));
 #endif
-
+					GetFullPathName (arg[i],
+					                 MAX_PATH,
+					                 szFullPath,
+					                 &pFilePart);
+#ifdef _DEBUG
+					ConErrPrintf (_T("Full path: %s\n"), szFullPath);
+#endif
 					if (!(dwFlags & DEL_QUIET) && !(dwFlags & DEL_TOTAL))
-						ConOutPrintf (_T("Deleting %s\n"), arg[i]);
+						ConOutPrintf (_T("Deleting %s\n"), szFullPath);
 
 					if (!(dwFlags & DEL_NOTHING))
 					{
-						if (RemoveFile (arg[i], dwFlags))
+						if (RemoveFile (szFullPath, dwFlags))
 						{
 							dwFiles++;
 						}
@@ -328,9 +348,9 @@ INT cmd_del (LPTSTR cmd, LPTSTR param)
 						{
 							if (dwFlags & DEL_ZAP)
 							{
-								if (SetFileAttributes (arg[i], 0))
+								if (SetFileAttributes (szFullPath, 0))
 								{
-									if (RemoveFile (arg[i], dwFlags))
+									if (RemoveFile (szFullPath, dwFlags))
 									{
 										dwFiles++;
 									}
@@ -364,14 +384,14 @@ INT cmd_del (LPTSTR cmd, LPTSTR param)
 
 	freep (arg);
 
-
 	if (!(dwFlags & DEL_QUIET))
 	{
 		if (dwFiles == 0)
 			ConOutPrintf (_T("    0 files deleted\n"));
 		else
 			ConOutPrintf (_T("    %lu file%s deleted\n"),
-						  dwFiles, (dwFiles == 1) ? "s" : "");
+			              dwFiles,
+			              (dwFiles == 1) ? "s" : "");
 	}
 
 	return 0;

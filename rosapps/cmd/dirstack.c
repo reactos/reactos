@@ -9,6 +9,9 @@
  *
  *    20-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Unicode and redirection safe!
+ *
+ *    20-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *        Added DIRS command.
  */
 
 #include "config.h"
@@ -25,6 +28,7 @@
 
 typedef struct tagDIRENTRY
 {
+	struct tagDIRENTRY *prev;
 	struct tagDIRENTRY *next;
 	LPTSTR pszPath;
 } DIRENTRY, *LPDIRENTRY;
@@ -32,6 +36,7 @@ typedef struct tagDIRENTRY
 
 static INT nStackDepth;
 static LPDIRENTRY lpStackTop;
+static LPDIRENTRY lpStackBottom;
 
 
 static INT
@@ -46,7 +51,17 @@ PushDirectory (LPTSTR pszPath)
 		return -1;
 	}
 
-	lpDir->next = (lpStackTop) ? lpStackTop : NULL;
+	lpDir->prev = NULL;
+	if (lpStackTop == NULL)
+	{
+		lpDir->next = NULL;
+		lpStackBottom = lpDir;
+	}
+	else
+	{
+		lpDir->next = lpStackTop;
+		lpStackTop->prev = lpDir;
+	}
 	lpStackTop = lpDir;
 
 	lpDir->pszPath = (LPTSTR)malloc ((_tcslen(pszPath)+1)*sizeof(TCHAR));
@@ -75,6 +90,11 @@ PopDirectory (VOID)
 
 	lpDir = lpStackTop;
 	lpStackTop = lpDir->next;
+	if (lpStackTop != NULL)
+		lpStackTop->prev = NULL;
+	else
+		lpStackBottom = NULL;
+
 	free (lpDir->pszPath);
 	free (lpDir);
 
@@ -99,6 +119,7 @@ VOID InitDirectoryStack (VOID)
 {
 	nStackDepth = 0;
 	lpStackTop = NULL;
+	lpStackBottom = NULL;
 }
 
 
@@ -174,6 +195,41 @@ INT CommandPopd (LPTSTR first, LPTSTR rest)
 	PopDirectory ();
 
 	SetCurrentDirectory (szPath);
+
+	return 0;
+}
+
+
+/*
+ * dirs command
+ */
+INT CommandDirs (LPTSTR first, LPTSTR rest)
+{
+	LPDIRENTRY lpDir;
+
+	if (!_tcsncmp(rest, _T("/?"), 2))
+	{
+		ConOutPuts (_T("Prints the contents of the directory stack.\n"
+		               "\n"
+		               "DIRS"));
+		return 0;
+	}
+
+
+	lpDir = lpStackBottom;
+
+	if (lpDir == NULL)
+	{
+		ConOutPuts (_T("Directory stack empty"));
+		return 0;
+	}
+
+	while (lpDir != NULL)
+	{
+		ConOutPuts (lpDir->pszPath);
+
+		lpDir = lpDir->prev;
+	}
 
 	return 0;
 }

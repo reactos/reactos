@@ -10,7 +10,6 @@ Sorting in DIR command ("dir /o...").
 ^S and ^Q to pause/resume displays.
 
 Improve DEL, COPY and MOVE commands.
-BREAK command on command-line.
 
 Add wildcard support to REN.
 
