@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.20 2001/06/15 11:14:06 ekohl Exp $
+/* $Id: volume.c,v 1.21 2001/11/02 22:08:28 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -436,10 +436,12 @@ GetVolumeInformationA(
 
 	if (Result)
 	{
+                VolumeNameU.Length = wcslen(VolumeNameU.Buffer) * sizeof(WCHAR);
 		VolumeName.Length = 0;
 		VolumeName.MaximumLength = nVolumeNameSize;
 		VolumeName.Buffer = lpVolumeNameBuffer;
 
+                FileSystemNameU.Length = wcslen(FileSystemNameU.Buffer) * sizeof(WCHAR);
 		FileSystemName.Length = 0;
 		FileSystemName.MaximumLength = nFileSystemNameSize;
 		FileSystemName.Buffer = lpFileSystemNameBuffer;
