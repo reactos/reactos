@@ -172,7 +172,7 @@ static HWND CreateListView(HWND hwndParent, int id)
  
 void OnGetDispInfo(NMLVDISPINFO* plvdi)
 {
-    static buffer[200];
+    static char buffer[200];
 
 //    LVITEM* pItem = &(plvdi->item);
 //    Entry* entry = (Entry*)pItem->lParam;
@@ -192,7 +192,7 @@ void OnGetDispInfo(NMLVDISPINFO* plvdi)
 
             //entry->bhfi.ftCreationTime
 
-            sprintf(buffer, "%u", entry->bhfi.nFileSizeLow);
+            wsprintf(buffer, "%u", entry->bhfi.nFileSizeLow);
             plvdi->item.pszText = buffer;
         } else {
             plvdi->item.pszText = "unknown";

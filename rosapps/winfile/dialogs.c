@@ -49,12 +49,6 @@
 #include "debug.h"
 
 
-struct ExecuteDialog {
-	TCHAR	cmd[MAX_PATH];
-	int		cmdshow;
-};
-
-
 BOOL CALLBACK ExecuteDialogWndProg(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	static struct ExecuteDialog* dlg;

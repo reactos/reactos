@@ -34,8 +34,13 @@ extern "C" {
 #include "resource.h"
 
 
-BOOL CALLBACK ExecuteDialogWndProg(HWND, UINT, WPARAM, LPARAM);
+struct ExecuteDialog {
+	TCHAR	cmd[MAX_PATH];
+	int		cmdshow;
+};
 
+
+BOOL CALLBACK ExecuteDialogWndProg(HWND, UINT, WPARAM, LPARAM);
 
 
 #ifdef __cplusplus

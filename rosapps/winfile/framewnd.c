@@ -46,6 +46,7 @@
 #include "utils.h"
 #include "run.h"
 #include "format.h"
+#include "dialogs.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -407,11 +408,24 @@ LRESULT _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				SetErrorMode(OldMode); // Put it back the way it was. 			
 			}
 			break;
-		case ID_OPTIONS_CONFIRMATION:
+        case ID_VIEW_BY_FILE_TYPE:
 			{
-//			struct ExecuteDialog dlg = {{0}};
-//			if (DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_EXECUTE), hWnd, ExecuteDialogWndProg, (LPARAM)&dlg) == IDOK)
+			struct ExecuteDialog dlg = {{0}};
+            if (DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_DIALOG_VIEW_TYPE), hWnd, ExecuteDialogWndProg, (LPARAM)&dlg) == IDOK) {
+            }
+			}
+			break;
+        case ID_OPTIONS_CONFIRMATION:
+/*
+#define IDD_DIALOG_DIRECTORY            144
+#define IDD_DIALOG_VIEW_TYPE            145
+#define IDD_DIALOG_OPTIONS_CONFIRMATON  146
+ */
+			{
+			struct ExecuteDialog dlg = {{0}};
+            if (DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_DIALOG_OPTIONS_CONFIRMATON), hWnd, ExecuteDialogWndProg, (LPARAM)&dlg) == IDOK) {
 //				ShellExecute(hWnd, _T("open")/*operation*/, dlg.cmd/*file*/, NULL/*parameters*/, NULL/*dir*/, dlg.cmdshow);
+            }
 			}
             break;
 		case ID_OPTIONS_FONT:
