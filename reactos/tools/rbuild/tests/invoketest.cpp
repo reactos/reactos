@@ -14,6 +14,6 @@ void InvokeTest::Run()
 	Invoke& invoke1 = *module1.invocations[0];
 	ARE_EQUAL(1, invoke1.output.size());
 
-	File& file1 = *invoke1.output[0];
+	InvokeFile& file1 = *invoke1.output[0];
 	ARE_EQUAL(".\\dir1\\file1.c", file1.name);
 }
