@@ -200,6 +200,13 @@ REGEDIT4
 "Start"=dword:00000001
 "Type"=dword:00000001
 
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Serial]
+"ErrorControl"=dword:00000000
+"Group"="Base"
+"ImagePath"=expand:"system32\drivers\serial.sys"
+"Start"=dword:00000001
+"Type"=dword:00000001
+
 [\Registry\Machine\SYSTEM\ControlSet001\Services\Pice]
 "ErrorControl"=dword:00000000
 "Group"="Debug"
@@ -259,12 +266,6 @@ REGEDIT4
 "ErrorControl"=dword:00000000
 "Group"="Pointer Port"
 "ImagePath"=expand:"system32\drivers\psaux.sys"
-"Start"=dword:00000001
-"Type"=dword:00000001
-
-[\Registry\Machine\SYSTEM\ControlSet001\Services\Serial]
-"ErrorControl"=dword:00000000
-"ImagePath"=expand:"system32\drivers\serial.sys"
 "Start"=dword:00000001
 "Type"=dword:00000001
 
