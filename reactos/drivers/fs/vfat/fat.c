@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.14 2001/01/16 09:55:02 dwelch Exp $
+ * $Id: fat.c,v 1.15 2001/01/16 15:43:42 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -216,7 +216,7 @@ FAT16FindAvailableCluster (PDEVICE_EXTENSION DeviceExt,
 	}
       if (*((PUSHORT)(BaseAddress + ((FatStart + i) % PAGESIZE))) == 0)
 	{
-	  DPRINT1("Found available cluster 0x%x\n", i);
+	  DPRINT("Found available cluster 0x%x\n", i);
 	  *Cluster = i / 2;
 	  CcReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);
 	  return(STATUS_SUCCESS);
@@ -281,7 +281,7 @@ FAT12FindAvailableCluster (PDEVICE_EXTENSION DeviceExt, PULONG Cluster)
 	}
       if (Entry == 0)
 	{
-	  DPRINT1("Found available cluster 0x%x\n", i);
+	  DPRINT("Found available cluster 0x%x\n", i);
 	  *Cluster = i;
 	  CcReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);
 	}
@@ -464,7 +464,7 @@ FAT12WriteCluster (PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
   CBlock = (PUCHAR)BaseAddress;
 
   FATOffset = (ClusterToWrite * 12) / 8;
-  DPRINT1("Writing 0x%x for 0x%x at 0x%x\n",
+  DPRINT("Writing 0x%x for 0x%x at 0x%x\n",
 	  NewValue, ClusterToWrite, FATOffset);
   if ((ClusterToWrite % 2) == 0)
     {
@@ -546,7 +546,7 @@ FAT16WriteCluster (PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
 	    }
 	}
       
-      DPRINT1("Writing 0x%x for offset 0x%x 0x%x\n", NewValue, FATOffset,
+      DPRINT("Writing 0x%x for offset 0x%x 0x%x\n", NewValue, FATOffset,
 	     ClusterToWrite);
       *((PUSHORT)(BaseAddress + (FATOffset % PAGESIZE))) = NewValue;
       Status = VfatWriteSectors(DeviceExt->StorageDevice,
@@ -555,7 +555,7 @@ FAT16WriteCluster (PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
 				BaseAddress);
       CcReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);
       
-      DPRINT1("DeviceExt->Boot->FATSectors %d\n",
+      DPRINT("DeviceExt->Boot->FATSectors %d\n",
 	      DeviceExt->Boot->FATSectors);
       FATOffset = FATOffset + DeviceExt->Boot->FATSectors * BLOCKSIZE;
     }

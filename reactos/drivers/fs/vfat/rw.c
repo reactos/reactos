@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.19 2001/01/16 09:55:02 dwelch Exp $
+/* $Id: rw.c,v 1.20 2001/01/16 15:43:42 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -528,8 +528,8 @@ VfatWriteBigCluster(PDEVICE_EXTENSION DeviceExt,
        * If we are writing into the cache or we are writing from a
        * temporary buffer then copy the data over
        */
-      DPRINT1("InternalOffset 0x%x InternalLength 0x%x BA %x Byte1 %c\n",
-	      InternalOffset, InternalLength, BaseAddress, *(PUCHAR)Source);
+      DPRINT("InternalOffset 0x%x InternalLength 0x%x BA %x\n",
+	      InternalOffset, InternalLength, BaseAddress);
       memcpy(BaseAddress + InternalOffset, Source, InternalLength);
     }
   /*
@@ -770,7 +770,7 @@ VfatWriteFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   NTSTATUS Status;
   BOOLEAN Extend;
 
-  DPRINT1 ("VfatWriteFile(FileObject %x, Buffer %x, Length %x, "
+  DPRINT ("VfatWriteFile(FileObject %x, Buffer %x, Length %x, "
 	   "WriteOffset %x\n", FileObject, Buffer, Length, WriteOffset);
 
   /* Locate the first cluster of the file */
