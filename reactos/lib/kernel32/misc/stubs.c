@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.29 2002/07/18 21:49:58 ei Exp $
+/* $Id: stubs.c,v 1.30 2002/08/28 19:31:09 robertk Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -1293,6 +1293,67 @@ VirtualBufferExceptionHandler (
 }
 
 
+/**********************************************************************
+ * NAME							EXPORTED
+ * 	MultiByteToWideChar@32
+ * 
+ *	Not yet implemented complete (without NLS so far)
+ *
+ * ARGUMENTS
+ * 	CodePage
+ *		CP_ACP ANSI code page 
+ *		CP_MACCP Macintosh code page 
+ *		CP_OEMCP OEM code page 
+ *		CP_SYMBOL Symbol code page (42) 
+ *		CP_THREAD_ACP Current thread's ANSI code page 
+ *		CP_UTF7 Translate using UTF-7 
+ *		CP_UTF8 Translate using UTF-8 
+ *		(UINT)		Any installed code page
+ *
+ * 	dwFlags
+ *		WC_NO_BEST_FIT_CHARS	
+ *		WC_COMPOSITECHECK Convert composite characters to precomposed characters. 
+ *		WC_DISCARDNS Discard nonspacing characters during conversion. 
+ *		WC_SEPCHARS Generate separate characters during conversion. This is the default conversion behavior. 
+ *		WC_DEFAULTCHAR Replace exceptions with the default character during conversion. 
+ *
+ * 	lpWideCharStr 
+ *		Points to the wide-character string to be converted. 
+ *
+ * 	cchWideChar
+ * 		Size (in WCHAR unit) of WideCharStr, or 0
+ * 		if the caller just wants to know how large
+ * 		WideCharStr should be for a successful
+ * 		conversion.
+ *	lpMultiByteStr 
+ *		Points to the buffer to receive the translated string. 
+ *	cchMultiByte 
+ *		Specifies the size in bytes of the buffer pointed to by the 
+ *		lpMultiByteStr parameter. If this value is zero, the function 
+ *		returns the number of bytes required for the buffer. 
+ *	lpDefaultChar 
+ *		Points to the character used if a wide character cannot be 
+ *		represented in the specified code page. If this parameter is 
+ *		NULL, a system default value is used. 
+		FIXME: ignored
+ *	lpUsedDefaultChar 
+ *		Points to a flag that indicates whether a default character was used. 
+ *		This parameter may be NULL. 
+		FIXME: allways set to FALSE.
+ *
+ *
+ *
+ * RETURN VALUE
+ * 	0 on error; otherwise the number of bytes written
+ * 	in the lpMultiByteStr buffer. Or the number of
+ *	bytes needed for the lpMultiByteStr buffer if cchMultiByte is zero.
+ *
+ * NOTE
+ * 	A raw converter for now. It just cuts off the upper 9 Bit.
+ *	So the MBCS-string does not contain any LeadCharacters
+ * 	FIXME - FIXME - FIXME - FIXME
+ */
+
 int
 STDCALL
 WideCharToMultiByte (
@@ -1306,9 +1367,74 @@ WideCharToMultiByte (
 	LPBOOL	lpUsedDefaultChar
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	int wi, di;  // wide counter, dbcs byte count
+
+	// for now, make no difference but only convert cut the characters to 7Bit
+	switch( CodePage )
+	{
+	case CP_ACP:            //ANSI code page         
+	case CP_MACCP:			//Macintosh code page 
+	case CP_OEMCP:			//OEM code page 
+	case CP_SYMBOL:			//Symbol code page (42) 
+	case CP_THREAD_ACP:		//ACP Current thread's ANSI code page 
+	case CP_UTF7:			//Translate using UTF-7 
+	case CP_UTF8:			//Translate using UTF-8 
+		if( cchWideChar == -1 ) // assume its a 0-terminated str
+		{						// and determine its length
+			for( cchWideChar=0; lpWideCharStr[cchWideChar]!=0; )
+				cchWideChar++;
+		}
+
+		// user wants to determine needed space
+		if( cchMultiByte == 0 ) 
+		{
+			SetLastError(ERROR_SUCCESS);
+			return cchWideChar;			// FIXME: determine correct.
+		}
+		// the lpWideCharStr is cchWideChar characters long.
+		for( wi=0, di=0; wi<cchWideChar && di<cchMultiByte; ++wi)
+		{
+			// Flag and a not displayable char    FIXME
+			/*if( (dwFlags&WC_NO_BEST_FIT_CHARS) && (lpWideCharStr[wi] >127) ) 
+			{
+				lpMultiByteStr[di]=
+				*lpUsedDefaultChar = TRUE;
+
+			}*/
+			// FIXME
+			// just cut off the upper 9 Bit, since vals>=128 mean LeadByte.
+			lpMultiByteStr[di] = lpWideCharStr[wi] & 0x007F;
+			++di;
+		}
+		// has MultiByte exceeded but Wide is still in the string?
+		if( wi < cchWideChar && di >= cchMultiByte)
+		{
+			SetLastError(ERROR_INSUFFICIENT_BUFFER);
+			return di;
+		}
+		// else return # of bytes wirtten to MBCSbuffer (di)
+		SetLastError(ERROR_SUCCESS);
+				// FIXME: move that elsewhere
+				if( lpUsedDefaultChar!=NULL ) *lpUsedDefaultChar=FALSE; 
+		return di;
+		break;
+	default:
+		SetLastError(ERROR_INVALID_PARAMETER);
+		return FALSE;
+		break;
+	}
+	SetLastError(ERROR_INVALID_PARAMETER);
 	return FALSE;
 }
+
+
+
+
+
+
+
+
+
 
 
 /* EOF */
