@@ -235,6 +235,9 @@ static HRESULT WINAPI ISF_Desktop_fnParseDisplayName (IShellFolder2 * iface,
 	    len = lstrlenA(szPath);
 	    WideCharToMultiByte(CP_ACP, 0, lpszDisplayName, -1, szPath + len, MAX_PATH - len, NULL, NULL);
 	    pidlTemp = _ILCreateFromPathA(szPath);
+
+	    if (!pidlTemp)
+		hr = 0x80070002L;   /* file not found */
 	} else {
 	    pidlTemp = _ILCreateMyComputer();
 	}

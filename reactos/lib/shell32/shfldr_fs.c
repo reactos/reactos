@@ -354,7 +354,9 @@ IShellFolder_fnParseDisplayName (IShellFolder2 * iface,
 
 	/* get the pidl */
 	pidlTemp = _ILCreateFromPathA(szPath);
-	if (pidlTemp) {
+	if (!pidlTemp)
+	    hr = 0x80070002L;   /* file not found */
+	else {
 	    if (szNext && *szNext) {
 		/* try to analyse the next element */
 		hr = SHELL32_ParseNextElement (iface, hwndOwner, pbc, &pidlTemp, (LPOLESTR) szNext, pchEaten, pdwAttributes);
@@ -748,8 +750,11 @@ static HRESULT WINAPI IShellFolder_fnSetNameOf (IShellFolder2 * iface, HWND hwnd
     szDest[MAX_PATH - 1] = 0;
     TRACE ("src=%s dest=%s\n", szSrc, szDest);
     if (MoveFileA (szSrc, szDest)) {
-	if (pPidlOut)
+	if (pPidlOut) {
 	    *pPidlOut = _ILCreateFromPathA(szDest);
+	    if (!*pPidlOut)
+	        return 0x80070002L;   /* file not found */
+	}
 	SHChangeNotify (bIsFolder ? SHCNE_RENAMEFOLDER : SHCNE_RENAMEITEM, SHCNF_PATHA, szSrc, szDest);
 	return S_OK;
     }
@@ -977,9 +982,15 @@ static HRESULT WINAPI ISFHelper_fnAddFolder (ISFHelper * iface, HWND hwnd, LPCST
     bRes = CreateDirectoryA (lpstrNewDir, NULL);
     if (bRes) {
 	SHChangeNotify (SHCNE_MKDIR, SHCNF_PATHA, lpstrNewDir, NULL);
-	if (ppidlOut)
-	    *ppidlOut = _ILCreateFromPathA(lpstrNewDir);
+
 	hres = S_OK;
+
+	if (ppidlOut) {
+    	    *ppidlOut = _ILCreateFromPathA(lpstrNewDir);
+
+	    if (!*ppidlOut)
+		hres = 0x80070002L;   /* file not found */
+	}
     } else {
 	char lpstrText[128 + MAX_PATH];
 	char lpstrTempText[128];
