@@ -1,4 +1,4 @@
-/* $Id: beep.c,v 1.4 1999/10/16 12:41:42 ekohl Exp $
+/* $Id: beep.c,v 1.5 2000/07/02 10:54:12 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -227,7 +227,8 @@ NTSTATUS BeepUnload(PDRIVER_OBJECT DriverObject)
 }
 
 
-STDCALL NTSTATUS
+NTSTATUS
+STDCALL
 DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 /*
  * FUNCTION:  Called by the system to initalize the driver
@@ -237,34 +238,13 @@ DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
  * RETURNS:   Success or failure
  */
 {
-    PDEVICE_OBJECT    DeviceObject;
     PDEVICE_EXTENSION DeviceExtension;
-    NTSTATUS ret;
-    ANSI_STRING ansi_device_name;
-    UNICODE_STRING device_name;
-    ANSI_STRING asymlink_name;
-    UNICODE_STRING symlink_name;
+    PDEVICE_OBJECT DeviceObject;
+    UNICODE_STRING DeviceName;
+    UNICODE_STRING SymlinkName;
+    NTSTATUS Status;
 
     DbgPrint ("Beep Device Driver 0.0.2\n");
-
-    RtlInitAnsiString (&ansi_device_name, "\\Device\\Beep");
-    RtlAnsiStringToUnicodeString (&device_name, &ansi_device_name, TRUE);
-    ret = IoCreateDevice (DriverObject,
-                          sizeof(DEVICE_EXTENSION),
-                          &device_name,
-                          FILE_DEVICE_BEEP,
-                          0,
-                          FALSE,
-                          &DeviceObject);
-    if (ret!=STATUS_SUCCESS)
-    {
-        return (ret);
-    }
-
-    /* prelininary */
-    RtlInitAnsiString (&asymlink_name, "\\??\\Beep");
-    RtlAnsiStringToUnicodeString (&symlink_name, &asymlink_name, TRUE);
-    IoCreateSymbolicLink (&symlink_name, &device_name);
 
     DriverObject->MajorFunction[IRP_MJ_CREATE] = BeepCreate;
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = BeepClose;
@@ -283,6 +263,20 @@ DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
     KeInitializeEvent (&(DeviceExtension->Event),
                        SynchronizationEvent,
                        FALSE);
+
+    RtlInitUnicodeString (&DeviceName, L"\\Device\\Beep");
+    Status = IoCreateDevice (DriverObject,
+                             sizeof(DEVICE_EXTENSION),
+                             &DeviceName,
+                             FILE_DEVICE_BEEP,
+                             0,
+                             FALSE,
+                             &DeviceObject);
+    if (NT_SUCCESS(Status))
+        return Status;
+
+    RtlInitUnicodeString (&SymlinkName, L"\\??\\Beep");
+    IoCreateSymbolicLink (&SymlinkName, &DeviceName);
 
     return (STATUS_SUCCESS);
 }

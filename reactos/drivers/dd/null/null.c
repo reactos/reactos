@@ -1,4 +1,4 @@
-/* $Id: null.c,v 1.3 1999/12/04 20:58:39 ea Exp $
+/* $Id: null.c,v 1.4 2000/07/02 10:54:41 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -68,7 +68,8 @@ NTSTATUS NullUnload(PDRIVER_OBJECT DriverObject)
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL
+NTSTATUS
+STDCALL
 DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 /*
  * FUNCTION: Called by the system to initalize the driver
@@ -79,21 +80,11 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
  */
 {
    PDEVICE_OBJECT DeviceObject;
-   NTSTATUS ret;
-   ANSI_STRING ansi_device_name;
-   UNICODE_STRING device_name;
+   UNICODE_STRING DeviceName;
+   NTSTATUS Status;
    
    DbgPrint("Null Device Driver 0.0.2\n");
    
-   RtlInitAnsiString(&ansi_device_name,"\\Device\\NUL");
-   RtlAnsiStringToUnicodeString(&device_name,&ansi_device_name,TRUE);
-   ret = IoCreateDevice(DriverObject,0,&device_name,
-                        FILE_DEVICE_NULL,0,FALSE,&DeviceObject);
-   if (ret!=STATUS_SUCCESS)
-     {
-	return(ret);
-     }
-
    DeviceObject->Flags=0;
    DriverObject->MajorFunction[IRP_MJ_CLOSE] = NullDispatch;
    DriverObject->MajorFunction[IRP_MJ_CREATE] = NullDispatch;
@@ -101,6 +92,15 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
    DriverObject->MajorFunction[IRP_MJ_READ] = NullDispatch;
    DriverObject->DriverUnload = NullUnload;
    
-   return(STATUS_SUCCESS);
+   RtlInitUnicodeString(&DeviceName,
+                        L"\\Device\\Null");
+   Status = IoCreateDevice(DriverObject,
+                           0,
+                           &DeviceName,
+                           FILE_DEVICE_NULL,
+                           0,
+                           FALSE,
+                           &DeviceObject);
+   return (Status);
 }
 

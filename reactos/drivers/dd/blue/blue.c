@@ -1,4 +1,4 @@
-/* $Id: blue.c,v 1.24 2000/06/29 23:35:47 dwelch Exp $
+/* $Id: blue.c,v 1.25 2000/07/02 10:54:23 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -599,14 +599,13 @@ ScrDispatch (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
  * Module entry point
  */
-NTSTATUS STDCALL
+NTSTATUS
+STDCALL
 DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
     PDEVICE_OBJECT DeviceObject;
-    ANSI_STRING adevice_name;
-    UNICODE_STRING device_name;
-    ANSI_STRING asymlink_name;
-    UNICODE_STRING symlink_name;
+    UNICODE_STRING DeviceName;
+    UNICODE_STRING SymlinkName;
 
     DbgPrint ("Screen Driver 0.0.6\n");
 
@@ -616,22 +615,17 @@ DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
     DriverObject->MajorFunction[IRP_MJ_WRITE]  = ScrWrite;
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL ] = ScrIoControl;
 
-    RtlInitAnsiString (&adevice_name, "\\Device\\BlueScreen");
-    RtlAnsiStringToUnicodeString (&device_name, &adevice_name, TRUE);
+    RtlInitUnicodeString (&DeviceName, L"\\Device\\BlueScreen");
     IoCreateDevice (DriverObject,
                     sizeof(DEVICE_EXTENSION),
-                    &device_name,
+                    &DeviceName,
                     FILE_DEVICE_SCREEN,
                     0,
                     TRUE,
                     &DeviceObject);
 
-    RtlInitAnsiString (&asymlink_name, "\\??\\BlueScreen");
-    RtlAnsiStringToUnicodeString (&symlink_name, &asymlink_name, TRUE);
-    IoCreateSymbolicLink (&symlink_name, &device_name);
-
-    RtlFreeUnicodeString (&device_name);
-    RtlFreeUnicodeString (&symlink_name);
+    RtlInitUnicodeString (&SymlinkName, L"\\??\\BlueScreen");
+    IoCreateSymbolicLink (&SymlinkName, &DeviceName);
 
     return (STATUS_SUCCESS);
 }
