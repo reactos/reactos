@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.3 2004/05/28 17:56:17 royce Exp $
+# $Id: makefile,v 1.4 2004/09/10 23:30:45 sedwards Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -13,7 +13,7 @@ TARGET_CFLAGS += -D_DISABLE_TIDENTS -D__USE_W32API
 
 TARGET_NAME = user32_test
 
-TARGET_SDKLIBS = gdi32.a user32.a
+TARGET_SDKLIBS = gdi32.a user32.a ntdll.a
 
 TARGET_OBJECTS = \
 	testlist.o \
