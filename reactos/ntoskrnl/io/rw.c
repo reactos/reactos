@@ -115,23 +115,8 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
    if (Status == STATUS_PENDING  && (FileObject->Flags & FO_SYNCHRONOUS_IO))
      {
        KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
-       Status = Irp->IoStatus.Status;
-       if (NT_SUCCESS(Status))
-         {
-           if (FileObject->DeviceObject->Flags&DO_BUFFERED_IO)
-             {
-               memcpy(Buffer,Irp->AssociatedIrp.SystemBuffer,Length);
-             }
-         }
-     } 
-   else if (NT_SUCCESS(Status))
-     {
-       if (FileObject->DeviceObject->Flags&DO_BUFFERED_IO)
-         {
-           memcpy(Buffer,Irp->AssociatedIrp.SystemBuffer,Length);
-         }
+       return(IoStatusBlock->Status);
      }
-
    return(Status);
 }
 

@@ -4,6 +4,8 @@
 
 VOID STDCALL OutputDebugStringA(LPCSTR lpOutputString)
 {
+   NtDisplayString(lpOutputString);
+   #if 0
 	WCHAR DebugStringW[161];
 	int i,j;
 	i = 0;
@@ -21,7 +23,8 @@ VOID STDCALL OutputDebugStringA(LPCSTR lpOutputString)
 		j = 0;
 	}
    
-	return;   
+	return;
+   #endif
 }
 
 VOID

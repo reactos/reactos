@@ -13,9 +13,13 @@ _interrupt_handler2e:
 	 push es
 	 push esi
 	 push edi
+	 push ebp
+	 push ebx
 	 
 	 mov bx,KERNEL_DS
 	 mov es,bx
+	 
+	 mov ebp,esp
 	 
 	 mov esi,edx
 	 mov ecx,[es:__SystemServiceTable+eax*8]
@@ -28,6 +32,10 @@ _interrupt_handler2e:
 	 mov eax,[__SystemServiceTable+4+eax*8]
 	 call eax
 	 
+	 mov esp,ebp
+	 
+	 pop ebx
+	 pop ebp
 	 pop edi
 	 pop esi
 	 pop es

@@ -11,7 +11,7 @@ void debug_printf(char* fmt, ...)
    
    va_start(args,fmt);
    vsprintf(buffer,fmt,args);
-   OutputDebugString(buffer);
+   OutputDebugStringA(buffer);
    va_end(args);
 }
 
@@ -36,18 +36,18 @@ void main()
 			   0,
 			   NULL);
    
-NtDisplayString("#1\n");
+
    debug_printf("C:\\");
-NtDisplayString("#2\n");
    for(;;)
      {
 	ReadFile(FileHandle,
 		 &KeyEvent,
-		 sizeof(KeyEvent),
+		 sizeof(KEY_EVENT_RECORD),
 		 &Result,
 		 NULL);
-NtDisplayString("#3\n");
-	debug_printf("%c",KeyEvent[0].AsciiChar);
-NtDisplayString("#4\n");
+	if (KeyEvent[0].bKeyDown)
+	  {
+	     debug_printf("%c",KeyEvent[0].AsciiChar);
+	  }
      }
 }

@@ -138,6 +138,7 @@ NTSTATUS STDCALL NtDisplayString(IN PUNICODE_STRING DisplayString)
 {
 //   DbgPrint("DisplayString %x\n",DisplayString);
    DbgPrint("%s",DisplayString);
+//   DbgPrint("Returning from NtDisplayString()\n");
    return(STATUS_SUCCESS);
 }
 

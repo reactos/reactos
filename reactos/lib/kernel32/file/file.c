@@ -70,7 +70,9 @@ HANDLE STDCALL CreateFileA(LPCSTR lpFileName,
 
    WCHAR FileNameW[MAX_PATH];
    ULONG i = 0;
-  
+   
+   OutputDebugStringA("CreateFileA\n");
+   
    while ((*lpFileName)!=0 && i < MAX_PATH)
      {
 	FileNameW[i] = *lpFileName;
@@ -103,12 +105,14 @@ HANDLE STDCALL CreateFileW(LPCWSTR lpFileName,
    WCHAR *FilePart;
    UINT Len = 0;
    
+   OutputDebugStringA("CreateFileW\n");
+   
    if (!(dwFlagsAndAttributes & FILE_FLAG_OVERLAPPED))
      {
 	Flags |= FILE_SYNCHRONOUS_IO_ALERT;
      }
 
-  
+   #if 0
    
    if ( ( ( dwCreationDisposition & OPEN_EXISTING ) == OPEN_EXISTING ) ||
 	 ( ( dwCreationDisposition & TRUNCATE_EXISTING ) == TRUNCATE_EXISTING ) )
@@ -135,7 +139,12 @@ HANDLE STDCALL CreateFileW(LPCWSTR lpFileName,
    
    FileNameString.Buffer = (WCHAR *)PathNameW;
    FileNameString.MaximumLength = FileNameString.Length;
-   
+   #endif
+     
+     FileNameString.Buffer = lpFileName;
+     FileNameString.Length = 
+     FileNameString.MaximumLength = lstrlenW(lpFileName) * sizeof(WCHAR);
+     
    ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
    ObjectAttributes.RootDirectory = NULL;
    ObjectAttributes.ObjectName = &FileNameString;
