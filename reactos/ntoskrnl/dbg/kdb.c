@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kdb.c,v 1.22 2004/05/04 21:16:51 navaraf Exp $
+/* $Id: kdb.c,v 1.23 2004/07/19 19:40:01 blight Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/kdb.c
@@ -262,6 +262,7 @@ KdbGetCommand(PCH Buffer)
   PCH Orig = Buffer;
   static UCHAR LastCommand[256] = "";
   ULONG ScanCode = 0;
+  static CHAR LastKey = '\0';
   
   KbdEchoOn = !((KdDebugState & KD_DEBUG_KDNOECHO) != 0);
   
@@ -272,7 +273,11 @@ KdbGetCommand(PCH Buffer)
       else
 	while ((Key = KdbTryGetCharKeyboard(&ScanCode)) == -1);
 
-      if (Key == '\r' || Key == '\n')
+      if (Key == '\n' && LastKey == '\r')
+        {
+          /* Ignore this key... */
+        }
+      else if (Key == '\r' || Key == '\n')
 	{
 	  DbgPrint("\n");
 	  /*
@@ -288,6 +293,7 @@ KdbGetCommand(PCH Buffer)
 	      *Buffer = 0;
 	      strcpy(LastCommand, Orig);
 	    }
+	  LastKey = Key;
 	  return;
 	}
       else if (Key == BS || Key == DEL)
@@ -330,6 +336,7 @@ KdbGetCommand(PCH Buffer)
           *Buffer = Key;
           Buffer++;
         }
+      LastKey = Key;
     }
 }
 
