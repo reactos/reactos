@@ -5,16 +5,18 @@ void _makepath( char *path, const char *drive, const char *dir, const char *fnam
 {
 	int dir_len;
 	if ( drive != NULL ) {
-		strcat(path,drive);
+		strcpy(path,drive);
 		strcat(path,":");
 	}
+	   else
+	   (*path)=0;
 
 	if ( dir != NULL ) {
 		strcat(path,dir);
 		if ( *dir != '\\' )
 			strcat(path,"\\");
 		dir_len = strlen(dir);
-		if ( *(dir + dir_len - 1) != '\\' )
+		if (dir_len && *(dir + dir_len - 1) != '\\' )
 			strcat(path,"\\");
 	}
 	if ( fname != NULL ) {
@@ -31,16 +33,18 @@ void _wmakepath( wchar_t *path, const wchar_t *drive, const wchar_t *dir, const 
 {
 	int dir_len;
 	if ( drive != NULL ) {
-		wcscat(path,drive);
+		wcscpy(path,drive);
 		wcscat(path,L":");
 	}
+	   else
+	   (*path)=0;
 
 	if ( dir != NULL ) {
 		wcscat(path,dir);
 		if ( *dir != L'\\' )
 			wcscat(path,L"\\");
 		dir_len = wcslen(dir);
-		if ( *(dir + dir_len - 1) != L'\\' )
+		if ( dir_len && *(dir + dir_len - 1) != L'\\' )
 			wcscat(path,L"\\");
 	}
 	if ( fname != NULL ) {
