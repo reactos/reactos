@@ -1,4 +1,4 @@
-/* $Id: npipe.c,v 1.19 2004/10/08 21:25:18 weiden Exp $
+/* $Id: npipe.c,v 1.20 2004/10/08 23:24:01 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -77,8 +77,9 @@ CreateNamedPipeW(LPCWSTR lpName,
    BOOLEAN ReadModeMessage;
    BOOLEAN NonBlocking;
    IO_STATUS_BLOCK Iosb;
-   ULONG ShareAccess;
+   ULONG ShareAccess, Attributes;
    LARGE_INTEGER DefaultTimeOut;
+   PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
    
    Result = RtlDosPathNameToNtPathName_U((LPWSTR)lpName,
 					 &NamedPipeName,
@@ -93,11 +94,19 @@ CreateNamedPipeW(LPCWSTR lpName,
    DPRINT("Pipe name: %wZ\n", &NamedPipeName);
    DPRINT("Pipe name: %S\n", NamedPipeName.Buffer);
    
+   Attributes = OBJ_CASE_INSENSITIVE;
+   if(lpSecurityAttributes)
+     {
+       SecurityDescriptor = lpSecurityAttributes->lpSecurityDescriptor;
+       if(lpSecurityAttributes->bInheritHandle)
+          Attributes |= OBJ_INHERIT;
+     }
+
    InitializeObjectAttributes(&ObjectAttributes,
 			      &NamedPipeName,
-			      OBJ_CASE_INSENSITIVE,
+			      Attributes,
 			      NULL,
-			      NULL);
+			      SecurityDescriptor);
    
    DesiredAccess = 0;
    
