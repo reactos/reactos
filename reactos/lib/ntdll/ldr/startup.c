@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.53 2003/08/15 10:17:09 hbirr Exp $
+/* $Id: startup.c,v 1.54 2003/08/21 12:49:23 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -37,6 +37,150 @@ static CRITICAL_SECTION LoaderLock;
 static RTL_BITMAP TlsBitMap;
 
 ULONG NtGlobalFlag = 0;
+
+#define VALUE_BUFFER_SIZE 256
+
+BOOL FASTCALL
+ReadCompatibilitySetting(HANDLE Key, LPWSTR Value, PKEY_VALUE_PARTIAL_INFORMATION ValueInfo, DWORD *Buffer)
+{
+	UNICODE_STRING ValueName;
+	NTSTATUS Status;
+	ULONG Length;
+
+	RtlInitUnicodeString(&ValueName, Value);
+	Status = NtQueryValueKey(Key,
+		&ValueName,
+		KeyValuePartialInformation,
+		ValueInfo,
+		VALUE_BUFFER_SIZE,
+		&Length);
+
+	if (!NT_SUCCESS(Status) || (ValueInfo->Type != REG_DWORD))
+	{
+		RtlFreeUnicodeString(&ValueName);
+		return FALSE;
+	}
+	RtlCopyMemory(Buffer, &ValueInfo->Data[0], sizeof(DWORD));
+	RtlFreeUnicodeString(&ValueName);
+	return TRUE;
+}
+
+BOOL FASTCALL
+LoadCompatibilitySettings(PPEB Peb)
+{
+	NTSTATUS Status;
+	HANDLE UserKey = NULL;
+	HANDLE KeyHandle;
+	HANDLE SubKeyHandle;
+	OBJECT_ATTRIBUTES ObjectAttributes;
+	UNICODE_STRING KeyName;
+	UNICODE_STRING ValueName;
+	UCHAR ValueBuffer[VALUE_BUFFER_SIZE];
+	PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
+	ULONG Length;
+	DWORD MajorVersion, MinorVersion, BuildNumber, PlatformId,
+		  SPMajorVersion, SPMinorVersion= 0;
+
+	if(Peb->ProcessParameters &&
+		(Peb->ProcessParameters->ImagePathName.Length > 0))
+	{
+		Status = RtlOpenCurrentUser(KEY_READ,
+				    &UserKey);
+		if (!NT_SUCCESS(Status))
+		{
+			return FALSE;
+		}
+
+		RtlInitUnicodeStringFromLiteral(&KeyName, 
+			L"Software\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers");
+
+		InitializeObjectAttributes(&ObjectAttributes,
+			&KeyName,
+			OBJ_CASE_INSENSITIVE,
+			UserKey,
+			NULL);
+
+		Status = NtOpenKey(&KeyHandle,
+					KEY_QUERY_VALUE,
+					&ObjectAttributes);
+
+		if (!NT_SUCCESS(Status))
+		{
+			if (UserKey) NtClose(UserKey);
+			return FALSE;
+		}
+
+		/* query version name for application */
+		ValueInfo = (PKEY_VALUE_PARTIAL_INFORMATION)ValueBuffer;
+		Status = NtQueryValueKey(KeyHandle,
+			&Peb->ProcessParameters->ImagePathName,
+			KeyValuePartialInformation,
+			ValueBuffer,
+			VALUE_BUFFER_SIZE,
+			&Length);
+
+		if (!NT_SUCCESS(Status) || (ValueInfo->Type != REG_SZ))
+		{
+			NtClose(KeyHandle);
+			if (UserKey) NtClose(UserKey);
+			return FALSE;
+		}
+
+		ValueName.Length = ValueInfo->DataLength;
+		ValueName.MaximumLength = ValueInfo->DataLength;
+		ValueName.Buffer = (PWSTR)ValueInfo->Data;
+
+		/* load version info */
+		InitializeObjectAttributes(&ObjectAttributes,
+			&ValueName,
+			OBJ_CASE_INSENSITIVE,
+			KeyHandle,
+			NULL);
+
+		Status = NtOpenKey(&SubKeyHandle,
+					KEY_QUERY_VALUE,
+					&ObjectAttributes);
+
+		if (!NT_SUCCESS(Status))
+		{
+			NtClose(KeyHandle);
+			if (UserKey) NtClose(UserKey);
+			return FALSE;
+		}
+
+		DPRINT("Loading version information for: %wZ\n", &ValueName);
+
+		/* read settings from registry */
+		if(!ReadCompatibilitySetting(SubKeyHandle, L"MajorVersion", ValueInfo, &MajorVersion))
+			goto finish;
+		if(!ReadCompatibilitySetting(SubKeyHandle, L"MinorVersion", ValueInfo, &MinorVersion))
+			goto finish;
+		if(!ReadCompatibilitySetting(SubKeyHandle, L"BuildNumber", ValueInfo, &BuildNumber))
+			goto finish;
+		if(!ReadCompatibilitySetting(SubKeyHandle, L"PlatformId", ValueInfo, &PlatformId))
+			goto finish;
+
+		/* now assign the settings */
+		Peb->OSMajorVersion = (ULONG)MajorVersion;
+		Peb->OSMinorVersion = (ULONG)MinorVersion;
+		Peb->OSBuildNumber = (USHORT)BuildNumber;
+		Peb->OSPlatformId = (ULONG)PlatformId;
+
+		/* optional service pack version numbers */
+		if(ReadCompatibilitySetting(SubKeyHandle, L"SPMajorVersion", ValueInfo, &SPMajorVersion))
+			Peb->SPMajorVersion = (UCHAR)SPMajorVersion;
+		if(ReadCompatibilitySetting(SubKeyHandle, L"SPMinorVersion", ValueInfo, &SPMinorVersion))
+			Peb->SPMinorVersion = (UCHAR)SPMinorVersion;
+
+finish:
+		/* we're finished */
+		NtClose(SubKeyHandle);
+		NtClose(KeyHandle);
+		if (UserKey) NtClose(UserKey);
+		return TRUE;
+	}
+	return FALSE;
+}
 
 
 /* FUNCTIONS *****************************************************************/
@@ -172,6 +316,9 @@ __true_LdrInitializeThunk (ULONG Unknown1,
    InitializeListHead(&Peb->Ldr->InLoadOrderModuleList);
    InitializeListHead(&Peb->Ldr->InMemoryOrderModuleList);
    InitializeListHead(&Peb->Ldr->InInitializationOrderModuleList);
+
+   /* Load compatibility settings */
+   LoadCompatibilitySettings(Peb);
 
    /* build full ntdll path */
    wcscpy (FullNtDllPath, SharedUserData->NtSystemRoot);
