@@ -297,7 +297,7 @@ static void print_reg( struct fragment_program *p,
    case UREG_TYPE_LOCAL_CONST: emit(p, "local_const"); break;
    case UREG_TYPE_ENV_CONST: emit(p, "env_const"); break;
    case UREG_TYPE_STATE_CONST: emit(p, "state_param"); break;
-   case UREG_TYPE_PARAM: emit(p, "param"); break;
+   case UREG_TYPE_PARAM: emit(p, "local_param"); break;
    };
    
    emit(p, "[%d]", GET_UREG_NR(arg));

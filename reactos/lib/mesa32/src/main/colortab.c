@@ -175,11 +175,11 @@ set_component_sizes( struct gl_color_table *table )
  * Update/replace all or part of a color table.  Helper function
  * used by _mesa_ColorTable() and _mesa_ColorSubTable().
  * The table->Table buffer should already be allocated.
- * \param start - first entry to update
- * \param count - number of entries to update
- * \param format - format of user-provided table data
- * \param type - datatype of user-provided table data
- * \param data - user-provided table data
+ * \param start first entry to update
+ * \param count number of entries to update
+ * \param format format of user-provided table data
+ * \param type datatype of user-provided table data
+ * \param data user-provided table data
  * \param [rgba]Scale - RGBA scale factors
  * \param [rgba]Bias - RGBA bias factors
  */

@@ -24,8 +24,11 @@
 
 /*
  * $Log: colors.h,v $
- * Revision 1.3  2004/08/25 12:35:11  blight
- * Mesa version 6.1 import.
+ * Revision 1.4  2004/10/05 14:18:59  blight
+ * Mesa version 6.2 import (also removed _MSC_VER define for building with mingw) - look at http://www.mesa3d.org/ for changelogs.
+ *
+ * Revision 1.2  2004/08/25 15:59:48  brianp
+ * Silence gcc 3.4 warnings on ReactOS.  Mostly unused var warnings.  (patch 1015696)
  *
  * Revision 1.1  2003/07/24 03:47:46  kschultz
  * Source code for GDI driver.
@@ -52,8 +55,11 @@
 
 /*
  * $Log: colors.h,v $
- * Revision 1.3  2004/08/25 12:35:11  blight
- * Mesa version 6.1 import.
+ * Revision 1.4  2004/10/05 14:18:59  blight
+ * Mesa version 6.2 import (also removed _MSC_VER define for building with mingw) - look at http://www.mesa3d.org/ for changelogs.
+ *
+ * Revision 1.2  2004/08/25 15:59:48  brianp
+ * Silence gcc 3.4 warnings on ReactOS.  Mostly unused var warnings.  (patch 1015696)
  *
  * Revision 1.1  2003/07/24 03:47:46  kschultz
  * Source code for GDI driver.
@@ -80,8 +86,11 @@
  
 /*
  * $Log: colors.h,v $
- * Revision 1.3  2004/08/25 12:35:11  blight
- * Mesa version 6.1 import.
+ * Revision 1.4  2004/10/05 14:18:59  blight
+ * Mesa version 6.2 import (also removed _MSC_VER define for building with mingw) - look at http://www.mesa3d.org/ for changelogs.
+ *
+ * Revision 1.2  2004/08/25 15:59:48  brianp
+ * Silence gcc 3.4 warnings on ReactOS.  Mostly unused var warnings.  (patch 1015696)
  *
  * Revision 1.1  2003/07/24 03:47:46  kschultz
  * Source code for GDI driver.

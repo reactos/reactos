@@ -1105,7 +1105,7 @@ _mesa_texstore_rgb888(STORE_PARAMS)
                                                  srcWidth, srcHeight, srcDepth,
                                                  srcFormat, srcType, srcAddr,
                                                  srcPacking);
-      const GLchan *src = (const GLubyte *) tempImage;
+      const GLchan *src = (const GLchan *) tempImage;
       GLubyte *dstImage = (GLubyte *) dstAddr
                         + dstZoffset * dstImageStride
                         + dstYoffset * dstRowStride
@@ -1209,7 +1209,7 @@ _mesa_texstore_bgr888(STORE_PARAMS)
                                                  srcWidth, srcHeight, srcDepth,
                                                  srcFormat, srcType, srcAddr,
                                                  srcPacking);
-      const GLchan *src = (const GLubyte *) tempImage;
+      const GLchan *src = (const GLchan *) tempImage;
       GLubyte *dstImage = (GLubyte *) dstAddr
                         + dstZoffset * dstImageStride
                         + dstYoffset * dstRowStride

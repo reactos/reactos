@@ -112,6 +112,9 @@ WMesaContext WC = NULL;
 
 #if defined(_MSC_VER) && _MSC_VER >= 1200
 #define FORCEINLINE __forceinline
+#elif defined(__GNUC__) && (__GCC_MAJOR__ > 3 || (__GCC_MAJOR__ == 3 && __GCC_MINOR__ >= 1))
+#define FORCEINLINE __attribute__((always_inline))
+#error FORCEINLINE OK!!!
 #else
 #define FORCEINLINE __inline
 #endif
@@ -979,8 +982,8 @@ static void read_ci32_span( const GLcontext* ctx, GLuint n, GLint x, GLint y,
                             GLuint index[])
 {
   GLuint i;
-  (void) ctx;
   BYTE *Mem=Current->ScreenMem+FLIP(y)*Current->ScanWidth+x;
+  (void) ctx;
   assert(Current->rgb_flag==GL_FALSE);
   for (i=0; i<n; i++)
     index[i]=Mem[i];

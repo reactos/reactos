@@ -1665,12 +1665,32 @@ _swrast_alloc_depth_buffer( GLframebuffer *buffer )
 void
 _swrast_clear_depth_buffer( GLcontext *ctx )
 {
+   SWcontext *swrast = SWRAST_CONTEXT(ctx);
+
    if (ctx->Visual.depthBits == 0
-       || !ctx->DrawBuffer->DepthBuffer
        || !ctx->Depth.Mask) {
       /* no depth buffer, or writing to it is disabled */
       return;
    }
+
+   if (swrast->Driver.WriteMonoDepthSpan) {
+      const GLdepth clearValue = (GLdepth)(ctx->Depth.Clear * ctx->DepthMax);
+      const GLint x = ctx->DrawBuffer->_Xmin;
+      const GLint y = ctx->DrawBuffer->_Ymin;
+      const GLint height = ctx->DrawBuffer->_Ymax - ctx->DrawBuffer->_Ymin;
+      const GLint width  = ctx->DrawBuffer->_Xmax - ctx->DrawBuffer->_Xmin;
+      GLint i;
+
+      for (i = 0; i < height; i++) {
+         (*swrast->Driver.WriteMonoDepthSpan)( ctx, width, x, y + i,
+                                               clearValue, NULL );
+      }
+
+      return;
+   }
+
+   if (!ctx->DrawBuffer->DepthBuffer)
+      return;
 
    /* The loops in this function have been written so the IRIX 5.3
     * C compiler can unroll them.  Hopefully other compilers can too!

@@ -354,7 +354,7 @@ void _tnl_x86choosers( tnl_attrfv_func (*choose)[4],
          FIXUP(code, 0, 0, attr);
          FIXUP(code, 0, 1, size + 1);
          FIXUPREL(code, 0, 2, do_choose);
-         choose[attr][size] = (tnl_attrfv_func) (int) code;
+         choose[attr][size] = (tnl_attrfv_func)code;
       }
    }
 }

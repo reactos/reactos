@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.2
  *
  * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
@@ -104,7 +104,7 @@
 static int
 generic_noop(void)
 {
-   _mesa_problem(NULL, "User called no-op dispatch function (not part of Mesa subset?)");
+   _mesa_problem(NULL, "User called no-op dispatch function (an unsupported extension function?)");
    return 0;
 }
 

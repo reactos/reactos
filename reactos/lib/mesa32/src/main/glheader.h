@@ -20,7 +20,7 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.2
  *
  * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
@@ -98,10 +98,10 @@
 #      pragma warning( disable : 4761 ) /* integral size mismatch in argument; conversion supplied */
 #    endif
 #  endif
-#  if defined(_MSC_VER) && defined(BUILD_GL32) /* tag specify we're building mesa as a DLL */
+#  if (defined(_MSC_VER) || defined(__MINGW32__)) && defined(BUILD_GL32) /* tag specify we're building mesa as a DLL */
 #    define GLAPI __declspec(dllexport)
 #    define WGLAPI __declspec(dllexport)
-#  elif defined(_MSC_VER) && defined(_DLL) /* tag specifying we're building for DLL runtime support */
+#  elif (defined(_MSC_VER) || defined(__MINGW32__)) && defined(_DLL) /* tag specifying we're building for DLL runtime support */
 #    define GLAPI __declspec(dllimport)
 #    define WGLAPI __declspec(dllimport)
 #  else /* for use with static link lib build of Win32 edition only */
@@ -213,24 +213,14 @@ typedef struct tagPIXELFORMATDESCRIPTOR PIXELFORMATDESCRIPTOR, *PPIXELFORMATDESC
 #include <GL/internal/glcore.h>
 
 
-/* XXX temporary hack */
-#ifndef GL_PIXEL_PACK_BUFFER_EXT
-#define GL_PIXEL_PACK_BUFFER_EXT                        0x88EB
-#define GL_PIXEL_UNPACK_BUFFER_EXT                      0x88EC
-#define GL_PIXEL_PACK_BUFFER_BINDING_EXT                0x88ED
-#define GL_PIXEL_UNPACK_BUFFER_BINDING_EXT              0x88EF
-#endif
-
-
-/* XXX temporary hack */
+/* XXX temporary hack - remove when glext.h is updated */
 #ifndef GL_ARB_half_float_pixel
 #define GL_ARB_half_float_pixel 1
 #define GL_HALF_FLOAT_ARB 0x140B
 typedef GLushort GLhalfARB;
 #endif
 
-
-/* XXX temporary hack */
+/* XXX temporary hack - remove when glext.h is updated */
 #ifndef GL_ARB_texture_float
 #define GL_ARB_texture_float 1
 #define GL_TEXTURE_RED_TYPE_ARB             0x9000
@@ -255,6 +245,12 @@ typedef GLushort GLhalfARB;
 #define GL_LUMINANCE_ALPHA16F_ARB           0x881F
 #endif
 
+/* XXX temporary hack - remove when glext.h is updated */
+#ifndef GL_POINT_SPRITE_COORD_ORIGIN
+#define GL_POINT_SPRITE_COORD_ORIGIN        0x10000
+#define GL_LOWER_LEFT                       0x10001
+#define GL_UPPER_LEFT                       0x10002
+#endif
 
 
 

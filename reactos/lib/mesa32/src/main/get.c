@@ -5,7 +5,7 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.2
  *
  * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
@@ -1390,6 +1390,10 @@ _mesa_GetBooleanv( GLenum pname, GLboolean *params )
          CHECK_EXTENSION_B(NV_point_sprite, pname);
          *params = ENUM_TO_BOOL(ctx->Point.SpriteRMode);
          break;
+      case GL_POINT_SPRITE_COORD_ORIGIN:
+         CHECK_EXTENSION_B(ARB_point_sprite, pname);
+         *params = ENUM_TO_BOOL(ctx->Point.SpriteOrigin);
+         break;
 
       /* GL_SGIS_generate_mipmap */
       case GL_GENERATE_MIPMAP_HINT_SGIS:
@@ -1617,6 +1621,14 @@ _mesa_GetBooleanv( GLenum pname, GLboolean *params )
       case GL_PIXEL_UNPACK_BUFFER_BINDING_EXT:
          CHECK_EXTENSION_B(EXT_pixel_buffer_object, pname);
          *params = INT_TO_BOOL(ctx->Unpack.BufferObj->Name);
+         break;
+#endif
+
+#if FEATURE_ARB_vertex_program
+      /* GL_NV_vertex_program and GL_ARB_fragment_program define others */
+      case GL_MAX_VERTEX_ATTRIBS_ARB:
+         CHECK_EXTENSION_B(ARB_vertex_program, pname);
+         *params = (ctx->Const.MaxVertexProgramAttribs > 0) ? GL_TRUE : GL_FALSE;
          break;
 #endif
 
@@ -2942,6 +2954,10 @@ _mesa_GetDoublev( GLenum pname, GLdouble *params )
          CHECK_EXTENSION_D(NV_point_sprite, pname);
          *params = (GLdouble) ctx->Point.SpriteRMode;
          break;
+      case GL_POINT_SPRITE_COORD_ORIGIN:
+         CHECK_EXTENSION_D(ARB_point_sprite, pname);
+         *params = (GLdouble) ctx->Point.SpriteOrigin;
+         break;
 
       /* GL_SGIS_generate_mipmap */
       case GL_GENERATE_MIPMAP_HINT_SGIS:
@@ -3167,6 +3183,14 @@ _mesa_GetDoublev( GLenum pname, GLdouble *params )
       case GL_PIXEL_UNPACK_BUFFER_BINDING_EXT:
          CHECK_EXTENSION_D(EXT_pixel_buffer_object, pname);
          *params = (GLdouble) ctx->Unpack.BufferObj->Name;
+         break;
+#endif
+
+#if FEATURE_ARB_vertex_program
+      /* GL_NV_vertex_program and GL_ARB_fragment_program define others */
+      case GL_MAX_VERTEX_ATTRIBS_ARB:
+         CHECK_EXTENSION_D(ARB_vertex_program, pname);
+         *params = (GLdouble) ctx->Const.MaxVertexProgramAttribs;
          break;
 #endif
 
@@ -4468,6 +4492,10 @@ _mesa_GetFloatv( GLenum pname, GLfloat *params )
          CHECK_EXTENSION_F(NV_point_sprite, pname);
          *params = (GLfloat) ctx->Point.SpriteRMode;
          break;
+      case GL_POINT_SPRITE_COORD_ORIGIN:
+         CHECK_EXTENSION_F(ARB_point_sprite, pname);
+         *params = (GLfloat) ctx->Point.SpriteOrigin;
+         break;
 
       /* GL_SGIS_generate_mipmap */
       case GL_GENERATE_MIPMAP_HINT_SGIS:
@@ -4693,6 +4721,14 @@ _mesa_GetFloatv( GLenum pname, GLfloat *params )
       case GL_PIXEL_UNPACK_BUFFER_BINDING_EXT:
          CHECK_EXTENSION_F(EXT_pixel_buffer_object, pname);
          *params = (GLfloat) ctx->Unpack.BufferObj->Name;
+         break;
+#endif
+
+#if FEATURE_ARB_vertex_program
+      /* GL_NV_vertex_program and GL_ARB_fragment_program define others */
+      case GL_MAX_VERTEX_ATTRIBS_ARB:
+         CHECK_EXTENSION_F(ARB_vertex_program, pname);
+         *params = (GLfloat) ctx->Const.MaxVertexProgramAttribs;
          break;
 #endif
 
@@ -6032,6 +6068,10 @@ _mesa_GetIntegerv( GLenum pname, GLint *params )
          CHECK_EXTENSION_I(NV_point_sprite, pname);
          *params = (GLint) ctx->Point.SpriteRMode;
          break;
+      case GL_POINT_SPRITE_COORD_ORIGIN:
+         CHECK_EXTENSION_I(ARB_point_sprite, pname);
+         *params = (GLint) ctx->Point.SpriteOrigin;
+         break;
 
       /* GL_SGIS_generate_mipmap */
       case GL_GENERATE_MIPMAP_HINT_SGIS:
@@ -6260,6 +6300,14 @@ _mesa_GetIntegerv( GLenum pname, GLint *params )
          break;
 #endif
 
+#if FEATURE_ARB_vertex_program
+      /* GL_NV_vertex_program and GL_ARB_fragment_program define others */
+      case GL_MAX_VERTEX_ATTRIBS_ARB:
+         CHECK_EXTENSION_I(ARB_vertex_program, pname);
+         *params = (GLint) ctx->Const.MaxVertexProgramAttribs;
+         break;
+#endif
+
 #if FEATURE_ARB_fragment_program
       case GL_FRAGMENT_PROGRAM_ARB:
          CHECK_EXTENSION_I(ARB_fragment_program, pname);
@@ -6484,7 +6532,6 @@ _mesa_GetString( GLenum name )
                    ctx->Extensions.SGIS_generate_mipmap) {
                   if (ctx->Extensions.ARB_occlusion_query &&
                       ctx->Extensions.ARB_vertex_buffer_object &&
-                      ctx->Extensions.ARB_texture_non_power_of_two &&
                       ctx->Extensions.EXT_shadow_funcs) {
                      return (const GLubyte *) version_1_5;
                   }

@@ -16,6 +16,13 @@ do {									\
 			        "D" ((long)vb),				\
 			        "S" ((long)v) );			\
 } while (0)
+#elif defined(HAVE_LE32_VERTS)
+#define COPY_DWORDS( j, vb, vertsize, v )				\
+do {									\
+   for ( j = 0 ; j < vertsize ; j++ )					\
+      vb[j] = CPU_TO_LE32(((GLuint *)v)[j]);				\
+   vb += vertsize;							\
+} while (0)
 #else
 #define COPY_DWORDS( j, vb, vertsize, v )				\
 do {									\

@@ -30,6 +30,7 @@
 /* Internal symbols which may collide with other OpenGL implementations. */
 #define __glCoreCreateContext __mglCoreCreateContext
 #define __glCoreNopDispatch   __mglCoreNopDispatch
+#define gl__unused413 MANGLE(__unused413)
 
 /*REGENERATE_TO_END-----------ALL LINES BELOW HERE GET REPLACED ON REGENERATION */
 

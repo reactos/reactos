@@ -1,16 +1,6 @@
-/**
- * \file m_matrix.c
- * Matrix operations.
- *
- * \note
- * -# 4x4 transformation matrices are stored in memory in column major order.
- * -# Points/vertices are to be thought of as column vectors.
- * -# Transformation of a point p by a matrix M is: p' = M * p
- */
-
 /*
  * Mesa 3-D graphics library
- * Version:  6.0.1
+ * Version:  6.2
  *
  * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
@@ -30,6 +20,17 @@
  * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+
+/**
+ * \file m_matrix.c
+ * Matrix operations.
+ *
+ * \note
+ * -# 4x4 transformation matrices are stored in memory in column major order.
+ * -# Points/vertices are to be thought of as column vectors.
+ * -# Transformation of a point p by a matrix M is: p' = M * p
  */
 
 
@@ -1142,7 +1143,7 @@ static void analyse_from_scratch( GLmatrix *mat )
       mat->type = MATRIX_2D_NO_ROT;
 
       if ((mask & MASK_NO_2D_SCALE) != MASK_NO_2D_SCALE)
-	 mat->flags = MAT_FLAG_GENERAL_SCALE;
+	 mat->flags |= MAT_FLAG_GENERAL_SCALE;
    }
    else if ((mask & MASK_2D) == (GLuint) MASK_2D) {
       GLfloat mm = DOT2(m, m);

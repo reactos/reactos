@@ -1,4 +1,4 @@
-/* $Id: x86.c,v 1.2 2004/08/25 12:35:19 blight Exp $ */
+/* $Id: x86.c,v 1.3 2004/10/05 14:19:12 blight Exp $ */
 
 /*
  * Mesa 3-D graphics library

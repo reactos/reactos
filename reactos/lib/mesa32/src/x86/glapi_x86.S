@@ -29,6 +29,8 @@
 #include "assyntax.h"
 #include "glapioffsets.h"
 
+#if 1 //ndef __WIN32__
+
 #if defined(STDCALL_API)
 # if defined(USE_MGL_NAMESPACE)
 #  define GL_PREFIX(n,n2) GLNAME(CONCAT(mgl,n2))
@@ -1024,3 +1026,5 @@ GLNAME(gl_dispatch_functions_start):
 	GL_STUB(BlendFuncSeparateINGR, _gloffset_BlendFuncSeparateEXT, BlendFuncSeparateINGR@16)
 	GL_STUB(PointParameterfSGIS, _gloffset_PointParameterfEXT, PointParameterfSGIS@8)
 	GL_STUB(PointParameterfvSGIS, _gloffset_PointParameterfvEXT, PointParameterfvSGIS@8)
+
+#endif  /* __WIN32__ */

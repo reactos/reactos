@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.2
  *
  * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
@@ -44,6 +44,12 @@
 /**********************************************************************/
 /* Utility functions                                                  */
 /**********************************************************************/
+
+
+/* A pointer to this dummy program is put into the hash table when
+ * glGenPrograms is called.
+ */
+struct program _mesa_DummyProgram;
 
 
 /**
@@ -163,9 +169,12 @@ _mesa_find_line_column(const GLubyte *string, const GLubyte *pos,
 }
 
 
-static struct program * _mesa_init_program_struct( GLcontext *ctx, 
-						   struct program *prog,
-						   GLenum target, GLuint id)
+/**
+ * Initialize a new vertex/fragment program object.
+ */
+static struct program *
+_mesa_init_program_struct( GLcontext *ctx, struct program *prog,
+                           GLenum target, GLuint id)
 {
    (void) ctx;
    if (prog) {
@@ -178,9 +187,13 @@ static struct program * _mesa_init_program_struct( GLcontext *ctx,
    return prog;
 }
 
-struct program * _mesa_init_fragment_program( GLcontext *ctx, 
-					      struct fragment_program *prog,
-					      GLenum target, GLuint id)
+
+/**
+ * Initialize a new fragment program object.
+ */
+struct program *
+_mesa_init_fragment_program( GLcontext *ctx, struct fragment_program *prog,
+                             GLenum target, GLuint id)
 {
    if (prog) 
       return _mesa_init_program_struct( ctx, &prog->Base, target, id );
@@ -188,9 +201,13 @@ struct program * _mesa_init_fragment_program( GLcontext *ctx,
       return NULL;
 }
 
-struct program * _mesa_init_vertex_program( GLcontext *ctx, 
-					    struct vertex_program *prog,
-					    GLenum target, GLuint id)
+
+/**
+ * Initialize a new vertex program object.
+ */
+struct program *
+_mesa_init_vertex_program( GLcontext *ctx, struct vertex_program *prog,
+                           GLenum target, GLuint id)
 {
    if (prog) 
       return _mesa_init_program_struct( ctx, &prog->Base, target, id );
@@ -218,12 +235,10 @@ _mesa_new_program(GLcontext *ctx, GLenum target, GLuint id)
    case GL_VERTEX_PROGRAM_ARB: /* == GL_VERTEX_PROGRAM_NV */
       return _mesa_init_vertex_program( ctx, CALLOC_STRUCT(vertex_program),
 					target, id );
-
    case GL_FRAGMENT_PROGRAM_NV:
    case GL_FRAGMENT_PROGRAM_ARB:
       return _mesa_init_fragment_program( ctx, CALLOC_STRUCT(fragment_program),
 					  target, id );
-
    default:
       _mesa_problem(ctx, "bad target in _mesa_new_program");
       return NULL;
@@ -866,15 +881,19 @@ _mesa_BindProgram(GLenum target, GLuint id)
         && ctx->Extensions.NV_vertex_program) ||
        (target == GL_VERTEX_PROGRAM_ARB
         && ctx->Extensions.ARB_vertex_program)) {
-      if (ctx->VertexProgram.Current &&
-          ctx->VertexProgram.Current->Base.Id == id)
+      /*** Vertex program binding ***/
+      struct vertex_program *curProg = ctx->VertexProgram.Current;
+      if (curProg->Base.Id == id) {
+         /* binding same program - no change */
          return;
-      /* decrement refcount on previously bound vertex program */
-      if (ctx->VertexProgram.Current) {
-         ctx->VertexProgram.Current->Base.RefCount--;
+      }
+      if (curProg->Base.Id != 0) {
+         /* decrement refcount on previously bound vertex program */
+         curProg->Base.RefCount--;
          /* and delete if refcount goes below one */
-         if (ctx->VertexProgram.Current->Base.RefCount <= 0) {
-            ctx->Driver.DeleteProgram(ctx, &(ctx->VertexProgram.Current->Base));
+         if (curProg->Base.RefCount <= 0) {
+            ASSERT(curProg->Base.DeletePending);
+            ctx->Driver.DeleteProgram(ctx, &(curProg->Base));
             _mesa_HashRemove(ctx->Shared->Programs, id);
          }
       }
@@ -883,15 +902,19 @@ _mesa_BindProgram(GLenum target, GLuint id)
              && ctx->Extensions.NV_fragment_program) ||
             (target == GL_FRAGMENT_PROGRAM_ARB
              && ctx->Extensions.ARB_fragment_program)) {
-      if (ctx->FragmentProgram.Current &&
-          ctx->FragmentProgram.Current->Base.Id == id)
+      /*** Fragment program binding ***/
+      struct fragment_program *curProg = ctx->FragmentProgram.Current;
+      if (curProg->Base.Id == id) {
+         /* binding same program - no change */
          return;
-      /* decrement refcount on previously bound fragment program */
-      if (ctx->FragmentProgram.Current) {
-         ctx->FragmentProgram.Current->Base.RefCount--;
+      }
+      if (curProg->Base.Id != 0) {
+         /* decrement refcount on previously bound fragment program */
+         curProg->Base.RefCount--;
          /* and delete if refcount goes below one */
-         if (ctx->FragmentProgram.Current->Base.RefCount <= 0) {
-            ctx->Driver.DeleteProgram(ctx, &(ctx->FragmentProgram.Current->Base));
+         if (curProg->Base.RefCount <= 0) {
+            ASSERT(curProg->Base.DeletePending);
+            ctx->Driver.DeleteProgram(ctx, &(curProg->Base));
             _mesa_HashRemove(ctx->Shared->Programs, id);
          }
       }
@@ -905,7 +928,7 @@ _mesa_BindProgram(GLenum target, GLuint id)
     * That's supposed to be caught in glBegin.
     */
    if (id == 0) {
-      /* default program */
+      /* Bind default program */
       prog = NULL;
       if (target == GL_VERTEX_PROGRAM_NV || target == GL_VERTEX_PROGRAM_ARB)
          prog = ctx->Shared->DefaultVertexProgram;
@@ -913,19 +936,9 @@ _mesa_BindProgram(GLenum target, GLuint id)
          prog = ctx->Shared->DefaultFragmentProgram;
    }
    else {
+      /* Bind user program */
       prog = (struct program *) _mesa_HashLookup(ctx->Shared->Programs, id);
-      if (prog) {
-         if (prog->Target == 0) {
-            /* prog was allocated with glGenProgramsNV */
-            prog->Target = target;
-         }
-         else if (prog->Target != target) {
-            _mesa_error(ctx, GL_INVALID_OPERATION,
-                        "glBindProgramNV/ARB(target mismatch)");
-            return;
-         }
-      }
-      else {
+      if (!prog || prog == &_mesa_DummyProgram) {
          /* allocate a new program now */
          prog = ctx->Driver.NewProgram(ctx, target, id);
          if (!prog) {
@@ -933,6 +946,11 @@ _mesa_BindProgram(GLenum target, GLuint id)
             return;
          }
          _mesa_HashInsert(ctx->Shared->Programs, id, prog);
+      }
+      else if (prog->Target != target) {
+         _mesa_error(ctx, GL_INVALID_OPERATION,
+                     "glBindProgramNV/ARB(target mismatch)");
+         return;
       }
    }
 
@@ -943,6 +961,10 @@ _mesa_BindProgram(GLenum target, GLuint id)
    else if (target == GL_FRAGMENT_PROGRAM_NV || target == GL_FRAGMENT_PROGRAM_ARB) {
       ctx->FragmentProgram.Current = (struct fragment_program *) prog;
    }
+
+   /* Never null pointers */
+   ASSERT(ctx->VertexProgram.Current);
+   ASSERT(ctx->FragmentProgram.Current);
 
    if (prog)
       prog->RefCount++;
@@ -973,7 +995,11 @@ _mesa_DeletePrograms(GLsizei n, const GLuint *ids)
       if (ids[i] != 0) {
          struct program *prog = (struct program *)
             _mesa_HashLookup(ctx->Shared->Programs, ids[i]);
-         if (prog) {
+         if (prog == &_mesa_DummyProgram) {
+            _mesa_HashRemove(ctx->Shared->Programs, ids[i]);
+         }
+         else if (prog) {
+            /* Unbind program if necessary */
             if (prog->Target == GL_VERTEX_PROGRAM_NV ||
                 prog->Target == GL_VERTEX_STATE_PROGRAM_NV) {
                if (ctx->VertexProgram.Current &&
@@ -994,18 +1020,16 @@ _mesa_DeletePrograms(GLsizei n, const GLuint *ids)
                _mesa_problem(ctx, "bad target in glDeleteProgramsNV");
                return;
             }
-            prog->RefCount--;
+            /* Decrement reference count if not already marked for delete */
+            if (!prog->DeletePending) {
+               prog->DeletePending = GL_TRUE;
+               prog->RefCount--;
+            }
             if (prog->RefCount <= 0) {
+               _mesa_HashRemove(ctx->Shared->Programs, ids[i]);
                ctx->Driver.DeleteProgram(ctx, prog);
             }
          }
-         /* Always remove entry from hash table.
-          * This is necessary as we can't tell from HashLookup
-          * whether the entry exists with data == 0, or if it
-          * doesn't exist at all.  As GenPrograms creates the first
-          * case below, need to call Remove() to avoid memory leak:
-          */
-         _mesa_HashRemove(ctx->Shared->Programs, ids[i]);
       }
    }
 }
@@ -1034,8 +1058,9 @@ _mesa_GenPrograms(GLsizei n, GLuint *ids)
 
    first = _mesa_HashFindFreeKeyBlock(ctx->Shared->Programs, n);
 
+   /* Insert pointer to dummy program as placeholder */
    for (i = 0; i < (GLuint) n; i++) {
-      _mesa_HashInsert(ctx->Shared->Programs, first + i, 0);
+      _mesa_HashInsert(ctx->Shared->Programs, first + i, &_mesa_DummyProgram);
    }
 
    /* Return the program names */
@@ -1046,7 +1071,7 @@ _mesa_GenPrograms(GLsizei n, GLuint *ids)
 
 
 /**
- * Determine if id names a program.
+ * Determine if id names a vertex or fragment program.
  * \note Not compiled into display lists.
  * \note Called from both glIsProgramNV and glIsProgramARB.
  * \param id is the program identifier

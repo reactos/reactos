@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  3.5
+ * Version:  6.2
  *
- * Copyright (C) 1999-2001  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -21,6 +20,24 @@
  * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+
+/**
+ * \mainpage Mesa GL API Module
+ *
+ * \section GLAPIIntroduction Introduction
+ *
+ * The Mesa GL API module is responsible for dispatching all the
+ * gl*() functions.  All GL functions are dispatched by jumping through
+ * the current dispatch table (basically a struct full of function
+ * pointers.)
+ *
+ * A per-thread current dispatch table and per-thread current context
+ * pointer are managed by this module too.
+ *
+ * This module is intended to be non-Mesa-specific so it can be used
+ * with the X/DRI libGL also.
  */
 
 

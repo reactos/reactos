@@ -1,9 +1,8 @@
-
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
+ * Version:  6.2
  *
- * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -177,11 +176,10 @@ static GLvector4f * _XFORMAPI TAG(cliptest_points3)( GLvector4f *clip_vec,
    const GLuint stride = clip_vec->stride;
    const GLuint count = clip_vec->count;
    const GLfloat *from = (GLfloat *)clip_vec->start;
-   (void) proj_vec;
-
    GLubyte tmpOrMask = *orMask;
    GLubyte tmpAndMask = *andMask;
    GLuint i;
+   (void) proj_vec;
    STRIDE_LOOP {
       const GLfloat cx = from[0], cy = from[1], cz = from[2];
       GLubyte mask = 0;
@@ -211,11 +209,10 @@ static GLvector4f * _XFORMAPI TAG(cliptest_points2)( GLvector4f *clip_vec,
    const GLuint stride = clip_vec->stride;
    const GLuint count = clip_vec->count;
    const GLfloat *from = (GLfloat *)clip_vec->start;
-   (void) proj_vec;
-
    GLubyte tmpOrMask = *orMask;
    GLubyte tmpAndMask = *andMask;
    GLuint i;
+   (void) proj_vec;
    STRIDE_LOOP {
       const GLfloat cx = from[0], cy = from[1];
       GLubyte mask = 0;

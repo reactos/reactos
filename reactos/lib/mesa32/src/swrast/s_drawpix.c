@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.2
  *
  * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
@@ -521,12 +521,12 @@ draw_index_pixels( GLcontext *ctx, GLint x, GLint y,
       const GLint spanEnd = (width - skipPixels > MAX_WIDTH)
                           ? MAX_WIDTH : (width - skipPixels);
       ASSERT(spanEnd <= MAX_WIDTH);
-      for (row = 0; row < height; row++, span.y++) {
+      for (row = 0; row < height; row++, spanY++) {
          const GLvoid *source = _mesa_image_address(unpack, pixels,
                                                     width, height,
                                                     GL_COLOR_INDEX, type,
                                                     0, row, skipPixels);
-         _mesa_unpack_index_span(ctx, span.end, GL_UNSIGNED_INT,
+         _mesa_unpack_index_span(ctx, spanEnd, GL_UNSIGNED_INT,
                                  span.array->index, type, source, unpack,
                                  ctx->_ImageTransferState);
 
@@ -659,17 +659,17 @@ draw_depth_pixels( GLcontext *ctx, GLint x, GLint y,
        && ctx->Visual.rgbMode
        && width <= MAX_WIDTH) {
       /* Special case: directly write 16-bit depth values */
-      GLint row;
-      span.x = x;
-      span.y = y;
-      span.end = width;
-      for (row = 0; row < height; row++, span.y++) {
+      GLint row, spanY = y;
+      for (row = 0; row < height; row++, spanY++) {
          const GLushort *zSrc = (const GLushort *)
             _mesa_image_address(unpack, pixels, width, height,
                                 GL_DEPTH_COMPONENT, type, 0, row, 0);
          GLint i;
          for (i = 0; i < width; i++)
             span.array->z[i] = zSrc[i];
+         span.x = x;
+         span.y = spanY;
+         span.end = width;
          _swrast_write_rgba_span(ctx, &span);
       }
    }
@@ -681,11 +681,8 @@ draw_depth_pixels( GLcontext *ctx, GLint x, GLint y,
             && width <= MAX_WIDTH) {
       /* Special case: shift 32-bit values down to ctx->Visual.depthBits */
       const GLint shift = 32 - ctx->Visual.depthBits;
-      GLint row;
-      span.x = x;
-      span.y = y;
-      span.end = width;
-      for (row = 0; row < height; row++, span.y++) {
+      GLint row, spanY = y;
+      for (row = 0; row < height; row++, spanY++) {
          const GLuint *zSrc = (const GLuint *)
             _mesa_image_address(unpack, pixels, width, height,
                                 GL_DEPTH_COMPONENT, type, 0, row, 0);
@@ -697,6 +694,9 @@ draw_depth_pixels( GLcontext *ctx, GLint x, GLint y,
             for (col = 0; col < width; col++)
                span.array->z[col] = zSrc[col] >> shift;
          }
+         span.x = x;
+         span.y = spanY;
+         span.end = width;
          _swrast_write_rgba_span(ctx, &span);
       }
    }
