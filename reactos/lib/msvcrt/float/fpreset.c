@@ -1,5 +1,6 @@
 #include <msvcrt/float.h>
 
+
 void _fpreset(void)
 {
   /* FIXME: This causes an exception */

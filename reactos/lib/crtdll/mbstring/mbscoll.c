@@ -54,6 +54,7 @@ int _mbscoll(const unsigned char *str1, const unsigned char *str2)
 	return 0;
 }
 
+#if 0
 int _mbsbcoll(const unsigned char *str1, const unsigned char *str2)
 {
 	unsigned char *s1 = (unsigned char *)str1;
@@ -93,3 +94,4 @@ int _mbsbcoll(const unsigned char *str1, const unsigned char *str2)
 	} ;
 	return 0;
 }
+#endif

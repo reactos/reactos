@@ -16,11 +16,11 @@ License along with the GNU C Library; see the file COPYING.LIB.  If
 not, write to the Free Software Foundation, Inc., 675 Mass Ave,
 Cambridge, MA 02139, USA.  */
 
-#include <stdarg.h>
+#include <msvcrt/stdarg.h>
 #include <msvcrt/stdio.h>
 #include <msvcrt/internal/file.h>
+#include <msvcrt/internal/stdio.h>
 
-int __vfscanf (FILE *s, const char *format, va_list argptr);
 
 #undef  vscanf
 
@@ -31,5 +31,4 @@ int __vscanf (const char *format, va_list arg)
 {
   return __vfscanf(stdin, format, arg);
 }
-//weak_alias (__vscanf, vscanf)
 

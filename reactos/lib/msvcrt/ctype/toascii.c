@@ -5,5 +5,5 @@
 
 int __toascii(int c)
 {
-  return ((unsigned)(c) & 0x7F );
+    return((unsigned)(c) & 0x7F);
 }

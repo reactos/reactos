@@ -4,6 +4,7 @@
 #include <msvcrt/stdlib.h>
 #include <msvcrt/signal.h>
 
+
 void _assert(const char *msg, const char *file, int line)
 {
   /* Assertion failed at foo.c line 45: x<y */

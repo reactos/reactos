@@ -7,15 +7,15 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-
 #include <msvcrt/ctype.h>
+
 
 int __iscsymf(int c)
 {
-  return (isalpha(c) || ( c == '_' ));
+	return (isalpha(c) || ( c == '_' )) ;
 }
 
 int __iscsym(int c)
 {
-  return (isalnum(c) || ( c == '_' ));
+	return (isalnum(c) || ( c == '_' )) ;
 }

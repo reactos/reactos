@@ -11,6 +11,7 @@
 #include <msvcrt/mbstring.h>
 #include <msvcrt/mbctype.h>
 
+
 int _ismbchira( unsigned int c )
 {
   return ((c>=0x829F) && (c<=0x82F1));

@@ -1,4 +1,4 @@
-/* $Id: setmode.c,v 1.5 2002/11/24 18:42:13 robd Exp $
+/* $Id: setmode.c,v 1.6 2002/11/29 15:59:00 robd Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries

@@ -12,5 +12,4 @@ void rewind(FILE *f)
   f->_cnt = 0;
   f->_ptr = f->_base;
   f->_flag &= ~(_IOERR|_IOEOF|_IOAHEAD);
-
 }

@@ -19,10 +19,10 @@
 #include <msvcrt/time.h>
 #include <msvcrt/internal/file.h>
 
+
 VOID STDCALL GetSystemTimeAsFileTime(LPFILETIME  lpSystemTimeAsFileTime );
 
-time_t
-time(time_t *t)
+time_t time(time_t* t)
 {
 	FILETIME  SystemTime;
 	DWORD Remainder;

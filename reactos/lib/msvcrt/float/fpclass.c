@@ -2,6 +2,7 @@
 #include <msvcrt/math.h>
 #include <msvcrt/internal/ieee.h>
 
+
 #define _FPCLASS_SNAN	0x0001	/* signaling NaN */
 #define _FPCLASS_QNAN	0x0002	/* quiet NaN */
 #define _FPCLASS_NINF	0x0004	/* negative infinity */
@@ -58,8 +59,5 @@ fpclass_t _fpclass(double __d)
 		}
 	
 	}
-
 	return 0;
 }
-
-

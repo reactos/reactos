@@ -1,4 +1,4 @@
-/* $Id: fstat.c,v 1.13 2002/11/24 18:42:25 robd Exp $
+/* $Id: fstat.c,v 1.14 2002/11/29 15:59:05 robd Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -23,8 +23,7 @@ int _fstat(int fd, struct stat* statbuf)
   DWORD dwFileType;
   void* handle;
 
-  if (!statbuf)
-  {
+  if (!statbuf) {
     __set_errno(EINVAL);
     return -1;
   }

@@ -1,12 +1,16 @@
+/* $Id: thread.c,v 1.6 2002/11/29 15:59:01 robd Exp $
+ *
+ */
 #include <windows.h>
-#include <msvcrt/process.h>
 #include <msvcrt/errno.h>
+#include <msvcrt/process.h>
 #include <msvcrt/internal/file.h>
 
 
-unsigned long
-	_beginthread	(void (*pfuncStart)(void *),
-			 unsigned unStackSize, void* pArgList)
+unsigned long _beginthread(
+    void (*pfuncStart)(void*),
+	unsigned unStackSize,
+    void* pArgList)
 {
 	DWORD  ThreadId;
  	HANDLE hThread;
@@ -20,6 +24,7 @@ unsigned long
 	}
 	return (unsigned long)hThread;
 }
+
 void	_endthread(void)
 {
 	//fixme ExitThread

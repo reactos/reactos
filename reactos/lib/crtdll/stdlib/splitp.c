@@ -1,6 +1,7 @@
 #include <msvcrt/stdlib.h>
 #include <msvcrt/string.h>
 
+
 void _splitpath( const char *path, char *drive, char *dir, char *fname, char *ext )
 {
 	char *tmp_drive;
@@ -44,4 +45,3 @@ void _splitpath( const char *path, char *drive, char *dir, char *fname, char *ex
 		*(fname+(tmp_ext-path))=0;
 	}
 }
-

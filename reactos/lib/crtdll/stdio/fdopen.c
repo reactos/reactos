@@ -3,6 +3,7 @@
 
 FILE *	__alloc_file(void);
 
+
 FILE *_fdopen(int handle, char *mode)
 {
   FILE *file;
@@ -51,4 +52,3 @@ FILE *_fdopen(int handle, char *mode)
 
   return file;
 }        
-

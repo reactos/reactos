@@ -29,10 +29,6 @@
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#if defined(LIBC_SCCS) && !defined(lint)
-static char sccsid[] = "@(#)ctime.c	5.23 (Berkeley) 6/22/90";
-#endif /* LIBC_SCCS and not lint */
-
 /*
 ** Leap second handling from Bradley White (bww@k.gp.cs.cmu.edu).
 ** POSIX-style TZ environment variable handling from Guy Harris
@@ -52,6 +48,7 @@ static char sccsid[] = "@(#)ctime.c	5.23 (Berkeley) 6/22/90";
 #include <msvcrt/io.h>
 
 #include "posixrul.h"
+
 
 #ifdef __cplusplus 
 #define CPP_CONST const 
@@ -88,13 +85,8 @@ static char sccsid[] = "@(#)ctime.c	5.23 (Berkeley) 6/22/90";
 ** that tzname[0] has the "normal" length of three characters).
 */
 
-#ifdef _MSVCRT_LIB_
-int _daylight;
-int _timezone;
-#else
-int _daylight_dll;
-int _timezone_dll;
-#endif /*_MSVCRT_LIB_*/
+void _set_daylight_export(int);
+void _set_timezone_export(int);
 
 
 static char WILDABBR[] = "   ";
@@ -229,12 +221,17 @@ settzname(void)
     _tzname[ttisp->tt_isdst] =
       (char *)&sp->chars[ttisp->tt_abbrind];
 #if 0
-    if (ttisp->tt_isdst)
-      _daylight = 1;
-    if (i == 0 || !ttisp->tt_isdst)
-      _timezone_dll = -(ttisp->tt_gmtoff);
-    if (i == 0 || ttisp->tt_isdst)
+    if (ttisp->tt_isdst) {
+      //_daylight = 1;
+      _set_daylight_export(1);
+    }
+    if (i == 0 || !ttisp->tt_isdst) {
+      //_timezone_dll = -(ttisp->tt_gmtoff);
+      _set_timezone_export(-(ttisp->tt_gmtoff));
+    }
+    if (i == 0 || ttisp->tt_isdst) {
       _altzone = -(ttisp->tt_gmtoff);
+    }
 #endif
   }
   /*

@@ -1,4 +1,5 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
+
 #include <msvcrt/math.h>
 
 double tanh(double x)
@@ -14,4 +15,3 @@ double tanh(double x)
     return (ebig - esmall) / (ebig + esmall);
   }
 }
-

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.50 2002/11/24 18:42:12 robd Exp $
+# $Id: makefile,v 1.51 2002/11/29 15:58:59 robd Exp $
 
 PATH_TO_TOP = ../..
 
@@ -52,45 +52,45 @@ include $(TOOLS_PATH)/helper.mk
 
 
 CONIO_OBJECTS = \
-	conio/cgets.o \
-	conio/cprintf.o \
-	conio/cputs.o \
-	conio/cscanf.o \
-	conio/getch.o \
-	conio/getche.o \
-	conio/kbhit.o \
-	conio/putch.o \
-	conio/ungetch.o
+	$(PATH_TO_MSVCRT)/conio/cgets.o \
+	$(PATH_TO_MSVCRT)/conio/cprintf.o \
+	$(PATH_TO_MSVCRT)/conio/cputs.o \
+	$(PATH_TO_MSVCRT)/conio/cscanf.o \
+	$(PATH_TO_MSVCRT)/conio/getch.o \
+	$(PATH_TO_MSVCRT)/conio/getche.o \
+	$(PATH_TO_MSVCRT)/conio/kbhit.o \
+	$(PATH_TO_MSVCRT)/conio/putch.o \
+	$(PATH_TO_MSVCRT)/conio/ungetch.o
 
 CTYPE_OBJECTS = \
-	ctype/ctype.o \
-	ctype/isalnum.o \
-	ctype/isalpha.o \
-	ctype/isascii.o \
-	ctype/iscntrl.o \
-	ctype/isdigit.o \
-	ctype/isgraph.o \
-	ctype/islower.o \
-	ctype/isprint.o \
-	ctype/ispunct.o \
-	ctype/isspace.o \
-	ctype/isupper.o \
-	ctype/isxdigit.o \
-	ctype/toascii.o \
-	ctype/tolower.o \
-	ctype/toupper.o \
-	ctype/iscsym.o \
+	$(PATH_TO_MSVCRT)/ctype/ctype.o \
+	$(PATH_TO_MSVCRT)/ctype/isalnum.o \
+	$(PATH_TO_MSVCRT)/ctype/isalpha.o \
+	$(PATH_TO_MSVCRT)/ctype/isascii.o \
+	$(PATH_TO_MSVCRT)/ctype/iscntrl.o \
+	$(PATH_TO_MSVCRT)/ctype/isdigit.o \
+	$(PATH_TO_MSVCRT)/ctype/isgraph.o \
+	$(PATH_TO_MSVCRT)/ctype/islower.o \
+	$(PATH_TO_MSVCRT)/ctype/isprint.o \
+	$(PATH_TO_MSVCRT)/ctype/ispunct.o \
+	$(PATH_TO_MSVCRT)/ctype/isspace.o \
+	$(PATH_TO_MSVCRT)/ctype/isupper.o \
+	$(PATH_TO_MSVCRT)/ctype/isxdigit.o \
+	$(PATH_TO_MSVCRT)/ctype/toascii.o \
+	$(PATH_TO_MSVCRT)/ctype/tolower.o \
+	$(PATH_TO_MSVCRT)/ctype/toupper.o \
+	$(PATH_TO_MSVCRT)/ctype/iscsym.o \
 	ctype/isctype.o
 
 DIRECT_OBJECTS = \
-	direct/chdir.o \
-	direct/chdrive.o \
-	direct/getcwd.o \
-	direct/getdcwd.o \
-	direct/getdfree.o \
-	direct/getdrive.o \
-	direct/mkdir.o \
-	direct/rmdir.o
+	$(PATH_TO_MSVCRT)/direct/chdir.o \
+	$(PATH_TO_MSVCRT)/direct/chdrive.o \
+	$(PATH_TO_MSVCRT)/direct/getcwd.o \
+	$(PATH_TO_MSVCRT)/direct/getdcwd.o \
+	$(PATH_TO_MSVCRT)/direct/getdfree.o \
+	$(PATH_TO_MSVCRT)/direct/getdrive.o \
+	$(PATH_TO_MSVCRT)/direct/mkdir.o \
+	$(PATH_TO_MSVCRT)/direct/rmdir.o
 
 EXCEPT_OBJECTS = \
 	except/abnorter.o \
@@ -99,159 +99,159 @@ EXCEPT_OBJECTS = \
 	except/unwind.o
 
 FLOAT_OBJECTS = \
-	float/chgsign.o \
-	float/clearfp.o \
-	float/cntrlfp.o \
-	float/copysign.o \
-	float/fpclass.o \
-	float/fpreset.o \
-	float/isnan.o \
-	float/logb.o \
-	float/nafter.o \
-	float/scalb.o \
-	float/statfp.o
+	$(PATH_TO_MSVCRT)/float/chgsign.o \
+	$(PATH_TO_MSVCRT)/float/clearfp.o \
+	$(PATH_TO_MSVCRT)/float/cntrlfp.o \
+	$(PATH_TO_MSVCRT)/float/copysign.o \
+	$(PATH_TO_MSVCRT)/float/fpclass.o \
+	$(PATH_TO_MSVCRT)/float/fpreset.o \
+	$(PATH_TO_MSVCRT)/float/isnan.o \
+	$(PATH_TO_MSVCRT)/float/logb.o \
+	$(PATH_TO_MSVCRT)/float/nafter.o \
+	$(PATH_TO_MSVCRT)/float/scalb.o \
+	$(PATH_TO_MSVCRT)/float/statfp.o
 
 IO_OBJECTS = \
-	io/access.o \
-	io/chmod.o \
-	io/chsize.o \
-	io/close.o \
-	io/commit.o \
+	$(PATH_TO_MSVCRT)/io/access.o \
+	$(PATH_TO_MSVCRT)/io/chmod.o \
+	$(PATH_TO_MSVCRT)/io/chsize.o \
+	$(PATH_TO_MSVCRT)/io/close.o \
+	$(PATH_TO_MSVCRT)/io/commit.o \
 	io/create.o \
 	io/dup.o \
-	io/dup2.o \
+	$(PATH_TO_MSVCRT)/io/dup2.o \
 	io/eof.o \
-	io/filelen.o \
+	$(PATH_TO_MSVCRT)/io/filelen.o \
 	io/find.o \
 	io/fmode.o \
-	io/isatty.o \
-	io/locking.o \
+	$(PATH_TO_MSVCRT)/io/isatty.o \
+	$(PATH_TO_MSVCRT)/io/locking.o \
 	io/lseek.o \
-	io/mktemp.o \
+	$(PATH_TO_MSVCRT)/io/mktemp.o \
 	io/open.o \
 	io/pipe.o \
 	io/read.o \
-	io/setmode.o \
-	io/sopen.o \
-	io/tell.o \
-	io/umask.o \
+	$(PATH_TO_MSVCRT)/io/setmode.o \
+	$(PATH_TO_MSVCRT)/io/sopen.o \
+	$(PATH_TO_MSVCRT)/io/tell.o \
+	$(PATH_TO_MSVCRT)/io/umask.o \
 	io/unlink.o \
-	io/utime.o \
+	$(PATH_TO_MSVCRT)/io/utime.o \
 	io/write.o
 
 LOCALE_OBJECTS = \
-	locale/locale.o 
+	$(PATH_TO_MSVCRT)/locale/locale.o 
 
 MATH_OBJECTS = \
-	math/acos.o \
+	$(PATH_TO_MSVCRT)/math/acos.o \
 	math/acosh.o \
-	math/asin.o \
+	$(PATH_TO_MSVCRT)/math/asin.o \
 	math/asinh.o \
-	math/atan.o \
-	math/atan2.o\
+	$(PATH_TO_MSVCRT)/math/atan.o \
+	$(PATH_TO_MSVCRT)/math/atan2.o\
 	math/atanh.o \
-	math/cabs.o \
+	$(PATH_TO_MSVCRT)/math/cabs.o \
 	math/ceil.o \
-	math/cos.o \
-	math/cosh.o \
-	math/exp.o \
-	math/fabs.o\
+	$(PATH_TO_MSVCRT)/math/cos.o \
+	$(PATH_TO_MSVCRT)/math/cosh.o \
+	$(PATH_TO_MSVCRT)/math/exp.o \
+	$(PATH_TO_MSVCRT)/math/fabs.o\
 	math/floor.o \
-	math/fmod.o \
-	math/frexp.o \
-	math/ftol.o \
+	$(PATH_TO_MSVCRT)/math/fmod.o \
+	$(PATH_TO_MSVCRT)/math/frexp.o \
+	$(PATH_TO_MSVCRT)/math/ftol.o \
 	math/huge_val.o \
-	math/hypot.o \
-	math/j0_y0.o \
-	math/j1_y1.o \
-	math/jn_yn.o \
-	math/ldexp.o \
-	math/log.o \
-	math/log10.o \
-	math/modf.o \
-	math/pow.o \
-	math/sin.o \
-	math/sinh.o \
-	math/sqrt.o \
-	math/stubs.o \
-	math/tan.o \
-	math/tanh.o
+	$(PATH_TO_MSVCRT)/math/hypot.o \
+	$(PATH_TO_MSVCRT)/math/j0_y0.o \
+	$(PATH_TO_MSVCRT)/math/j1_y1.o \
+	$(PATH_TO_MSVCRT)/math/jn_yn.o \
+	$(PATH_TO_MSVCRT)/math/ldexp.o \
+	$(PATH_TO_MSVCRT)/math/log.o \
+	$(PATH_TO_MSVCRT)/math/log10.o \
+	$(PATH_TO_MSVCRT)/math/modf.o \
+	$(PATH_TO_MSVCRT)/math/pow.o \
+	$(PATH_TO_MSVCRT)/math/sin.o \
+	$(PATH_TO_MSVCRT)/math/sinh.o \
+	$(PATH_TO_MSVCRT)/math/sqrt.o \
+	$(PATH_TO_MSVCRT)/math/stubs.o \
+	$(PATH_TO_MSVCRT)/math/tan.o \
+	$(PATH_TO_MSVCRT)/math/tanh.o
 
 MALLOC_OBJECTS = \
 	malloc/expand.o \
 	malloc/heap.o
 
 MBSTRING_OBJECTS = \
-	mbstring/hanzen.o \
-	mbstring/ischira.o \
-	mbstring/iskana.o \
-	mbstring/iskpun.o \
-	mbstring/islead.o \
-	mbstring/islwr.o \
-	mbstring/iskmoji.o \
-	mbstring/ismbal.o \
-	mbstring/ismbaln.o \
-	mbstring/ismbc.o \
-	mbstring/ismbgra.o \
-	mbstring/ismbkaln.o \
-	mbstring/ismblead.o \
-	mbstring/ismbpri.o \
-	mbstring/ismbpun.o \
-	mbstring/ismbtrl.o \
-	mbstring/isuppr.o \
-	mbstring/jistojms.o \
-	mbstring/jmstojis.o \
-	mbstring/mbbtype.o \
-	mbstring/mbccpy.o \
-	mbstring/mbclen.o \
-	mbstring/mbscat.o \
-	mbstring/mbschr.o \
-	mbstring/mbscmp.o \
-	mbstring/mbscoll.o \
-	mbstring/mbscpy.o \
-	mbstring/mbscspn.o \
-	mbstring/mbsdec.o \
-	mbstring/mbsdup.o \
-	mbstring/mbsicmp.o \
-	mbstring/mbsicoll.o \
-	mbstring/mbsinc.o \
-	mbstring/mbslen.o \
-	mbstring/mbslwr.o \
-	mbstring/mbsncat.o \
-	mbstring/mbsnccnt.o \
-	mbstring/mbsncmp.o \
-	mbstring/mbsncoll.o \
-	mbstring/mbsncpy.o \
-	mbstring/mbsnextc.o \
-	mbstring/mbsnicmp.o \
-	mbstring/mbsnicoll.o \
-	mbstring/mbsninc.o \
-	mbstring/mbsnset.o \
-	mbstring/mbspbrk.o \
-	mbstring/mbsrchr.o \
-	mbstring/mbsrev.o \
-	mbstring/mbsset.o \
-	mbstring/mbsspn.o \
-	mbstring/mbsspnp.o \
-	mbstring/mbsstr.o \
-	mbstring/mbstok.o \
-	mbstring/mbstrlen.o \
-	mbstring/mbsupr.o
+	$(PATH_TO_MSVCRT)/mbstring/hanzen.o \
+	$(PATH_TO_MSVCRT)/mbstring/ischira.o \
+	$(PATH_TO_MSVCRT)/mbstring/iskana.o \
+	$(PATH_TO_MSVCRT)/mbstring/iskpun.o \
+	$(PATH_TO_MSVCRT)/mbstring/islead.o \
+	$(PATH_TO_MSVCRT)/mbstring/islwr.o \
+	$(PATH_TO_MSVCRT)/mbstring/iskmoji.o \
+	$(PATH_TO_MSVCRT)/mbstring/ismbal.o \
+	$(PATH_TO_MSVCRT)/mbstring/ismbaln.o \
+	$(PATH_TO_MSVCRT)/mbstring/ismbc.o \
+	$(PATH_TO_MSVCRT)/mbstring/ismbgra.o \
+	$(PATH_TO_MSVCRT)/mbstring/ismbkaln.o \
+	$(PATH_TO_MSVCRT)/mbstring/ismblead.o \
+	$(PATH_TO_MSVCRT)/mbstring/ismbpri.o \
+	$(PATH_TO_MSVCRT)/mbstring/ismbpun.o \
+	$(PATH_TO_MSVCRT)/mbstring/ismbtrl.o \
+	$(PATH_TO_MSVCRT)/mbstring/isuppr.o \
+	$(PATH_TO_MSVCRT)/mbstring/jistojms.o \
+	$(PATH_TO_MSVCRT)/mbstring/jmstojis.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbbtype.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbccpy.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbclen.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbscat.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbschr.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbscmp.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbscoll.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbscpy.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbscspn.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbsdec.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbsdup.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbsicmp.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbsicoll.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbsinc.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbslen.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbslwr.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbsncat.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbsnccnt.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbsncmp.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbsncoll.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbsncpy.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbsnextc.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbsnicmp.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbsnicoll.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbsninc.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbsnset.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbspbrk.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbsrchr.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbsrev.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbsset.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbsspn.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbsspnp.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbsstr.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbstok.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbstrlen.o \
+	$(PATH_TO_MSVCRT)/mbstring/mbsupr.o
 
 MISC_OBJECTS = \
 	misc/amsg.o \
-	misc/assert.o \
+	$(PATH_TO_MSVCRT)/misc/assert.o \
 	misc/debug.o \
 	misc/dllmain.o \
 	misc/GetArgs.o \
-	misc/initterm.o \
+	$(PATH_TO_MSVCRT)/misc/initterm.o \
 	misc/purecall.o \
 	misc/setnew.o
 
 PROCESS_OBJECTS = \
 	process/_cwait.o \
 	process/_system.o\
-	process/dll.o \
+	$(PATH_TO_MSVCRT)/process/dll.o \
 	process/spawnl.o \
 	process/spawnlp.o \
 	process/spawnlpe.o \
@@ -267,9 +267,9 @@ PROCESS_OBJECTS = \
 	process/execv.o \
 	process/execle.o \
 	process/execve.o \
-	process/procid.o \
+	$(PATH_TO_MSVCRT)/process/procid.o \
 	process/thread.o \
-	process/threadid.o
+	$(PATH_TO_MSVCRT)/process/threadid.o
 
 QUAD_OBJECTS = \
 	quad/qdivrem.o \
@@ -279,159 +279,159 @@ QUAD_OBJECTS = \
 	quad/umoddi3.o
 
 SEARCH_OBJECTS = \
-	search/lfind.o \
-	search/lsearch.o
+	$(PATH_TO_MSVCRT)/search/lfind.o \
+	$(PATH_TO_MSVCRT)/search/lsearch.o
 
 SETJMP_OBJECTS = \
-	setjmp/setjmp.o
+	$(PATH_TO_MSVCRT)/setjmp/setjmp.o
 
 SIGNAL_OBJECTS = \
 	signal/xcptfil.o \
 	signal/xcptinfo.o \
-	signal/signal.o
+	$(PATH_TO_MSVCRT)/signal/signal.o
 
 STDIO_OBJECTS = \
-	stdio/allocfil.o \
+	$(PATH_TO_MSVCRT)/stdio/allocfil.o \
 	stdio/getenv.o \
-	stdio/clearerr.o \
-	stdio/fclose.o \
-	stdio/fdopen.o \
-	stdio/feof.o \
+	$(PATH_TO_MSVCRT)/stdio/clearerr.o \
+	$(PATH_TO_MSVCRT)/stdio/fclose.o \
+	$(PATH_TO_MSVCRT)/stdio/fdopen.o \
+	$(PATH_TO_MSVCRT)/stdio/feof.o \
 	stdio/ferror.o \
 	stdio/fflush.o \
-	stdio/fgetc.o \
+	$(PATH_TO_MSVCRT)/stdio/fgetc.o \
 	stdio/fgetchar.o \
-	stdio/fgetpos.o \
+	$(PATH_TO_MSVCRT)/stdio/fgetpos.o \
 	stdio/fgets.o \
 	stdio/filbuf.o \
 	stdio/fileno.o \
-	stdio/flsbuf.o \
+	$(PATH_TO_MSVCRT)/stdio/flsbuf.o \
 	stdio/fopen.o \
-	stdio/fprintf.o \
-	stdio/fputc.o \
+	$(PATH_TO_MSVCRT)/stdio/fprintf.o \
+	$(PATH_TO_MSVCRT)/stdio/fputc.o \
 	stdio/fputchar.o\
 	stdio/fputs.o \
 	stdio/fread.o \
 	stdio/freopen.o \
 	stdio/fscanf.o \
-	stdio/fseek.o \
-	stdio/fsetpos.o \
+	$(PATH_TO_MSVCRT)/stdio/fseek.o \
+	$(PATH_TO_MSVCRT)/stdio/fsetpos.o \
 	stdio/frlist.o \
 	stdio/fsopen.o \
 	stdio/ftell.o \
-	stdio/fwalk.o \
+	$(PATH_TO_MSVCRT)/stdio/fwalk.o \
 	stdio/fwrite.o \
 	stdio/getc.o \
 	stdio/getchar.o \
 	stdio/gets.o \
-	stdio/getw.o \
+	$(PATH_TO_MSVCRT)/stdio/getw.o \
 	stdio/perror.o \
 	stdio/popen.o \
 	stdio/printf.o \
 	stdio/putc.o \
 	stdio/putchar.o \
 	stdio/puts.o \
-	stdio/putw.o \
+	$(PATH_TO_MSVCRT)/stdio/putw.o \
 	stdio/remove.o \
-	stdio/rename.o \
-	stdio/rewind.o \
-	stdio/rmtmp.o \
-	stdio/setbuffe.o \
-	stdlib/obsol.o \
-	stdio/setlineb.o \
+	$(PATH_TO_MSVCRT)/stdio/rename.o \
+	$(PATH_TO_MSVCRT)/stdio/rewind.o \
+	$(PATH_TO_MSVCRT)/stdio/rmtmp.o \
 	stdio/scanf.o \
-	stdio/setbuf.o \
-	stdio/setvbuf.o \
-	stdio/sprintf.o \
-	stdio/sscanf.o \
-	stdio/stdhnd.o \
+	$(PATH_TO_MSVCRT)/stdio/setbuf.o \
+	stdio/setbuffe.o \
+	stdio/setlineb.o \
+	$(PATH_TO_MSVCRT)/stdio/setvbuf.o \
+	$(PATH_TO_MSVCRT)/stdio/sprintf.o \
+	$(PATH_TO_MSVCRT)/stdio/sscanf.o \
+	$(PATH_TO_MSVCRT)/stdio/stdhnd.o \
 	stdio/stdiohk.o \
-	stdio/tempnam.o \
-	stdio/tmpfile.o \
-	stdio/tmpnam.o \
-	stdio/ungetc.o \
+	$(PATH_TO_MSVCRT)/stdio/tempnam.o \
+	$(PATH_TO_MSVCRT)/stdio/tmpfile.o \
+	$(PATH_TO_MSVCRT)/stdio/tmpnam.o \
+	$(PATH_TO_MSVCRT)/stdio/ungetc.o \
 	stdio/vfprintf.o \
 	stdio/vfscanf.o \
 	stdio/vfwprint.o \
-	stdio/vprintf.o \
-	stdio/vscanf.o \
-	stdio/vsprintf.o \
-	stdio/vsscanf.o
+	$(PATH_TO_MSVCRT)/stdio/vprintf.o \
+	$(PATH_TO_MSVCRT)/stdio/vscanf.o \
+	$(PATH_TO_MSVCRT)/stdio/vsprintf.o \
+	$(PATH_TO_MSVCRT)/stdio/vsscanf.o
  
 STDLIB_OBJECTS = \
-	stdlib/_exit.o \
-	stdlib/abort.o \
-	stdlib/abs.o \
-	stdlib/atexit.o \
-	stdlib/atof.o \
-	stdlib/atoi.o \
-	stdlib/atol.o \
-	stdlib/bsearch.o \
-	stdlib/div.o \
-	stdlib/ecvt.o \
-	stdlib/ecvtbuf.o \
+	$(PATH_TO_MSVCRT)/stdlib/_exit.o \
+	$(PATH_TO_MSVCRT)/stdlib/abort.o \
+	$(PATH_TO_MSVCRT)/stdlib/abs.o \
+	$(PATH_TO_MSVCRT)/stdlib/atexit.o \
+	$(PATH_TO_MSVCRT)/stdlib/atof.o \
+	$(PATH_TO_MSVCRT)/stdlib/atoi.o \
+	$(PATH_TO_MSVCRT)/stdlib/atol.o \
+	$(PATH_TO_MSVCRT)/stdlib/bsearch.o \
+	$(PATH_TO_MSVCRT)/stdlib/div.o \
+	$(PATH_TO_MSVCRT)/stdlib/ecvt.o \
+	$(PATH_TO_MSVCRT)/stdlib/ecvtbuf.o \
 	stdlib/errno.o \
-	stdlib/fcvt.o \
-	stdlib/fcvtbuf.o \
+	$(PATH_TO_MSVCRT)/stdlib/fcvt.o \
+	$(PATH_TO_MSVCRT)/stdlib/fcvtbuf.o \
 	stdlib/fullpath.o \
-	stdlib/gcvt.o \
-	stdlib/itoa.o \
+	$(PATH_TO_MSVCRT)/stdlib/gcvt.o \
+	$(PATH_TO_MSVCRT)/stdlib/itoa.o \
 	stdlib/itow.o \
-	stdlib/labs.o \
-	stdlib/ldiv.o \
-	stdlib/makepath.o \
+	$(PATH_TO_MSVCRT)/stdlib/labs.o \
+	$(PATH_TO_MSVCRT)/stdlib/ldiv.o \
+	$(PATH_TO_MSVCRT)/stdlib/makepath.o \
 	stdlib/malloc.o \
 	stdlib/mbstowcs.o \
+	$(PATH_TO_MSVCRT)/stdlib/obsol.o \
 	stdlib/putenv.o \
 	stdlib/qsort.o \
 	stdlib/rand.o \
-	stdlib/rot.o \
-	stdlib/senv.o \
-	stdlib/splitp.o \
-	stdlib/strtod.o \
-	stdlib/strtol.o \
-	stdlib/strtoul.o \
-	stdlib/swab.o \
-	stdlib/wcstomb.o \
+	$(PATH_TO_MSVCRT)/stdlib/rot.o \
+	$(PATH_TO_MSVCRT)/stdlib/senv.o \
+	$(PATH_TO_MSVCRT)/stdlib/splitp.o \
+	$(PATH_TO_MSVCRT)/stdlib/strtod.o \
+	$(PATH_TO_MSVCRT)/stdlib/strtol.o \
+	$(PATH_TO_MSVCRT)/stdlib/strtoul.o \
+	$(PATH_TO_MSVCRT)/stdlib/swab.o \
+	$(PATH_TO_MSVCRT)/stdlib/wcstomb.o \
 
 STRING_OBJECTS = \
-	string/memccpy.o \
-	string/memchr.o \
-	string/memcmp.o \
-	string/memcpy.o \
-	string/memicmp.o \
-	string/memmove.o \
-	string/memset.o \
-	string/strcat.o \
-    string/strchr.o \
-	string/strcmp.o \
-	string/strcoll.o \
-	string/strcpy.o \
-	string/strcspn.o \
-	string/strdup.o \
+	$(PATH_TO_MSVCRT)/string/memccpy.o \
+	$(PATH_TO_MSVCRT)/string/memchr.o \
+	$(PATH_TO_MSVCRT)/string/memcmp.o \
+	$(PATH_TO_MSVCRT)/string/memcpy.o \
+	$(PATH_TO_MSVCRT)/string/memicmp.o \
+	$(PATH_TO_MSVCRT)/string/memmove.o \
+	$(PATH_TO_MSVCRT)/string/memset.o \
+	$(PATH_TO_MSVCRT)/string/strcat.o \
+	$(PATH_TO_MSVCRT)/string/strchr.o \
+	$(PATH_TO_MSVCRT)/string/strcmp.o \
+	$(PATH_TO_MSVCRT)/string/strcoll.o \
+	$(PATH_TO_MSVCRT)/string/strcpy.o \
+	$(PATH_TO_MSVCRT)/string/strcspn.o \
+	$(PATH_TO_MSVCRT)/string/strdup.o \
 	string/strerror.o \
-	string/stricmp.o \
-	string/strlen.o \
-	string/strlwr.o \
-	string/strncat.o \
-	string/strncmp.o \
-	string/strncpy.o \
-	string/strnicmp.o \
-	string/strnlen.o \
-	string/strpbrk.o \
-	string/strrchr.o \
-	string/strrev.o \
-	string/strset.o \
-	string/strspn.o \
-	string/strstr.o \
+	$(PATH_TO_MSVCRT)/string/stricmp.o \
+	$(PATH_TO_MSVCRT)/string/strlen.o \
+	$(PATH_TO_MSVCRT)/string/strlwr.o \
+	$(PATH_TO_MSVCRT)/string/strncat.o \
+	$(PATH_TO_MSVCRT)/string/strncmp.o \
+	$(PATH_TO_MSVCRT)/string/strncpy.o \
+	$(PATH_TO_MSVCRT)/string/strnicmp.o \
+	$(PATH_TO_MSVCRT)/string/strnlen.o \
+	$(PATH_TO_MSVCRT)/string/strpbrk.o \
+	$(PATH_TO_MSVCRT)/string/strrchr.o \
+	$(PATH_TO_MSVCRT)/string/strrev.o \
+	$(PATH_TO_MSVCRT)/string/strset.o \
+	$(PATH_TO_MSVCRT)/string/strspn.o \
+	$(PATH_TO_MSVCRT)/string/strstr.o \
 	string/strtok.o \
-	string/strupr.o \
+	$(PATH_TO_MSVCRT)/string/strupr.o \
 	string/str_old.o \
-	string/strxfrm.o
+	$(PATH_TO_MSVCRT)/string/strxfrm.o
 
 SYS_STAT_OBJECTS = \
 	sys_stat/fstat.o \
-	sys_stat/futime.o \
+	$(PATH_TO_MSVCRT)/sys_stat/futime.o \
 	sys_stat/ftime.o \
 	sys_stat/systime.o \
 	sys_stat/stat.o
@@ -445,13 +445,14 @@ TCHAR_OBJECTS = \
 	tchar/strspnp.o
 
 TIME_OBJECTS = \
-	time/clock.o \
-	time/ctime.o \
-	time/difftime.o \
-	time/strdate.o \
-	time/strftime.o \
-	time/strtime.o \
-	time/time.o
+	$(PATH_TO_MSVCRT)/time/clock.o \
+	$(PATH_TO_MSVCRT)/time/ctime.o \
+	$(PATH_TO_MSVCRT)/time/difftime.o \
+	$(PATH_TO_MSVCRT)/time/strdate.o \
+	$(PATH_TO_MSVCRT)/time/strftime.o \
+	$(PATH_TO_MSVCRT)/time/strtime.o \
+	$(PATH_TO_MSVCRT)/time/time.o \
+	time/tz_vars.o \
 
 WSTRING_OBJECTS = \
 	$(PATH_TO_MSVCRT)/wstring/wcscat.o \

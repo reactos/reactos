@@ -1,11 +1,11 @@
 #include <msvcrt/string.h>
 
 
-void * memset(void *src,int val,size_t count)
+void* memset(void* src, int val, size_t count)
 {
-	char *char_src = (char *)src;
+	char* char_src = (char*)src;
 
-	while(count>0) {
+	while (count>0) {
 		*char_src = val;
 		char_src++;
 		count--;

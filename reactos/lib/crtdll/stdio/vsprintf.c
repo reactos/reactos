@@ -1,6 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 #include <msvcrt/stdio.h>
-#include <stdarg.h>
+#include <msvcrt/stdarg.h>
 #include <limits.h>
 #include <msvcrt/internal/file.h>
 

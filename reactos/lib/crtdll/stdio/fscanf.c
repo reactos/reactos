@@ -17,13 +17,13 @@ not, write to the Free Software Foundation, Inc., 675 Mass Ave,
 Cambridge, MA 02139, USA.  */
 
 
-#include <stdarg.h>
+#include <msvcrt/stdarg.h>
 #include <msvcrt/stdio.h>
 #include <msvcrt/wchar.h>
 #include <msvcrt/alloc.h>
+#include <msvcrt/internal/stdio.h>
 
 
-int __vfscanf (FILE *s, const char *format, va_list argptr);
 /* Read formatted input from STREAM according to the format string FORMAT.  */
 /* VARARGS2 */
 int fscanf(FILE *stream,const char *format, ...)
@@ -57,4 +57,3 @@ fwscanf(FILE *stream, const wchar_t *fmt, ...)
   free(cf);
   return done;
 }
-

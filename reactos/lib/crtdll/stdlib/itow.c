@@ -1,4 +1,4 @@
-/* $Id: itow.c,v 1.2 2002/11/24 18:42:18 robd Exp $
+/* $Id: itow.c,v 1.3 2002/11/29 15:59:01 robd Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -131,9 +131,9 @@ wchar_t* _ultow(unsigned long value, wchar_t* string, int radix)
     }
 
     if (string == 0) {
-#ifdef _MSVCRT_LIB_
+#ifdef _MSVCRT_LIB_    // TODO: check on difference?
         string = (wchar_t *)malloc(((tp-tmp)+1)*sizeof(wchar_t));
-#else
+#else // TODO: FIXME: review which is correct
         string = (wchar_t *) malloc((tp - tmp) + sizeof(wchar_t));
 #endif /*_MSVCRT_LIB_*/
     }

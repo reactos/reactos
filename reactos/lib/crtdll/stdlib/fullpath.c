@@ -20,7 +20,7 @@ char* _fullpath(char* absPath, const char* relPath, size_t maxLength)
 {
     char* lpFilePart;
 
-	if (GetFullPathName(relPath,maxLength,absPath,&lpFilePart) == 0)
+	if (GetFullPathNameA(relPath,maxLength,absPath,&lpFilePart) == 0)
 		return NULL;
 
 	return absPath;

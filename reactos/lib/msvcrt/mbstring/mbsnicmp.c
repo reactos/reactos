@@ -1,7 +1,9 @@
 #include <msvcrt/mbstring.h>
 
+
 size_t _mbclen2(const unsigned int s);
 unsigned int _mbbtoupper(unsigned int c);
+
 
 int _mbsnicmp(const unsigned char *s1, const unsigned char *s2, size_t n)
 {
@@ -37,4 +39,3 @@ int _mbsnbicmp(const unsigned char *s1, const unsigned char *s2, size_t n)
   } while (n > 0);
   return 0;
 }
-

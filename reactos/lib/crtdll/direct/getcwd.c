@@ -3,20 +3,20 @@
 #include <msvcrt/stdlib.h>
 
 
-char *_getcwd( char *buffer, int maxlen )
+char *_getcwd(char* buffer, int maxlen)
 {
-	char *cwd;
-	int len;
+    char *cwd;
+    int len;
 
-	if ( buffer == NULL ) {
-		cwd = malloc(MAX_PATH);
-		len = MAX_PATH;
-	} else {
-		cwd = buffer;
-		len = maxlen;
-	}
-    if (GetCurrentDirectoryA(len, cwd) == 0) {
-		return NULL;
+    if (buffer == NULL) {
+        cwd = malloc(MAX_PATH);
+        len = MAX_PATH;
+    } else {
+        cwd = buffer;
+        len = maxlen;
     }
-	return cwd;
+    if (GetCurrentDirectoryA(len, cwd) == 0) {
+        return NULL;
+    }
+    return cwd;
 }

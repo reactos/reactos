@@ -1,4 +1,4 @@
-/* $Id: makepath.c,v 1.8 2002/11/24 18:42:18 robd Exp $
+/* $Id: makepath.c,v 1.9 2002/11/29 15:59:01 robd Exp $
  */
 #include <msvcrt/stdlib.h>
 #include <msvcrt/string.h>

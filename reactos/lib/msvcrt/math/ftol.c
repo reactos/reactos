@@ -2,5 +2,5 @@
 
 long _ftol(double fl)
 {
-  return (long)fl;
+	return (long)fl;
 }

@@ -13,11 +13,12 @@ char *_tempnam(const char *dir,const char *prefix )
     else 
         d = (char *)dir;
 
-#ifdef _MSVCRT_LIB_
+#ifdef _MSVCRT_LIB_    // TODO: check on difference?
     if (GetTempFileNameA(d, prefix, 1, TempFileName) == 0) {
-#else
+#else// TODO: FIXME: review which is correct
     if (GetTempFileNameA(d, prefix, 0, TempFileName) == 0) {
 #endif /*_MSVCRT_LIB_*/
+
         free(TempFileName);
         return NULL;
     }

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.27 2002/11/25 17:41:39 robd Exp $
+# $Id: Makefile,v 1.28 2002/11/29 15:59:02 robd Exp $
 
 PATH_TO_TOP = ../..
 
@@ -448,6 +448,7 @@ TIME_OBJECTS = \
 	time/strftime.o \
 	time/strtime.o \
 	time/time.o \
+	time/tz_vars.o \
 	time/wctime.o \
 	time/wstrdate.o \
 	time/wstrtime.o

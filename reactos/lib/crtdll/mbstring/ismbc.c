@@ -87,7 +87,6 @@ int _ismbclegal(unsigned int c)
 		return _ismbbtrail(c&0xFF);
 
 	return 0;
-        
 }
 
 int _ismbcl0(unsigned int c)

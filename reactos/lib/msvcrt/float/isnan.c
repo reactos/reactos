@@ -20,6 +20,7 @@ Cambridge, MA 02139, USA.  */
 #include <msvcrt/float.h>
 #include <msvcrt/internal/ieee.h>
 
+
 int _isnan(double __x)
 {
 	double_t * x = (double_t *)&__x;
@@ -28,7 +29,6 @@ int _isnan(double __x)
 
 int _isnanl(long double __x)
 {
-	
 	/* Intel's extended format has the normally implicit 1 explicit
 	   present.  Sigh!  */
 	
@@ -43,14 +43,11 @@ int _isnanl(long double __x)
 	  && ( (x->mantissah & (unsigned int)0x7fffffff) != 0  || x->mantissal != 0 ));	
 }
 
-
 int _isinf(double __x)
 {
 	double_t * x = (double_t *)&__x;
 	return ( x->exponent == 0x7ff  && ( x->mantissah == 0 && x->mantissal == 0 ));	
 }
-
-
 
 int _finite( double x )
 {
@@ -73,5 +70,3 @@ int _isinfl(long double __x)
 		return x->sign ? -1 : 1;
 	return 0;
 }
-
-

@@ -19,16 +19,16 @@
 #include <msvcrt/time.h>
 #include <msvcrt/internal/file.h>
 
-VOID STDCALL GetSystemTimeAsFileTime(LPFILETIME  lpSystemTimeAsFileTime );
 
-time_t
-time(time_t *t)
+VOID STDCALL GetSystemTimeAsFileTime(LPFILETIME lpSystemTimeAsFileTime);
+
+time_t time(time_t* t)
 {
 	FILETIME  SystemTime;
 	DWORD Remainder;
 	time_t tt;
 	GetSystemTimeAsFileTime(&SystemTime);
-	tt = FileTimeToUnixTime( &SystemTime,&Remainder ); 
+	tt = FileTimeToUnixTime(&SystemTime,&Remainder);
 	if (t)
 		*t = tt;
 	return tt;

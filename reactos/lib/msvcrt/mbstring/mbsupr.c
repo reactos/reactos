@@ -48,4 +48,3 @@ unsigned char * _mbsupr(unsigned char *x)
         }
         return x;
 }
-
