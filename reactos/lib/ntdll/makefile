@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.32 1999/12/30 01:51:37 dwelch Exp $
+# $Id: makefile,v 1.33 1999/12/30 14:39:43 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -34,7 +34,8 @@ RTL_OBJECTS = rtl/critical.o rtl/error.o rtl/heap.o rtl/largeint.o \
 STDLIB_OBJECTS = stdlib/abs.o stdlib/atoi.o stdlib/atoi64.o stdlib/atol.o \
                  stdlib/itoa.o stdlib/itow.o stdlib/labs.o stdlib/splitp.o \
                  stdlib/strtol.o stdlib/strtoul.o stdlib/wcstol.o \
-                 stdlib/wcstoul.o stdlib/wtoi.o stdlib/wtoi64.o stdlib/wtol.o
+                 stdlib/wcstoul.o stdlib/wtoi.o stdlib/wtoi64.o stdlib/wtol.o \
+                 stdlib/mbstowcs.o stdlib/wcstombs.o
 
 STRING_OBJECTS = string/ctype.o string/memccpy.o string/memchr.o \
                  string/memcmp.o string/memcpy.o string/memicmp.o\

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.23 1999/12/29 01:36:34 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.24 1999/12/30 14:38:12 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -406,8 +406,8 @@ isprint
 isspace
 isupper
 isxdigit
-;mbstowcs
-;mbtowc
+mbstowcs
+mbtowc
 memchr
 memcpy
 memmove
@@ -427,7 +427,6 @@ strcpy
 strrchr
 strspn
 strstr
-;strtok
 ;swprintf
 tolower
 toupper
@@ -446,8 +445,8 @@ wcsncpy
 wcsrchr
 wcsspn
 wcsstr
-;wcstombs
-;wctomb
+wcstombs
+wctomb
 ;
 ;
 ; exports from hal.dll

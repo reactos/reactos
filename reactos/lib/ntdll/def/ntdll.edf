@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.24 1999/12/30 01:33:28 ekohl Exp $
+; $Id: ntdll.edf,v 1.25 1999/12/30 14:39:27 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -573,6 +573,7 @@ iswctype
 isxdigit
 labs
 log
+mbstowcs
 memchr
 memcmp
 memcpy
@@ -617,6 +618,7 @@ wcsrchr
 wcsspn
 wcsstr
 wcstol
+wcstombs
 wcstoul
 LdrGetExportByName
 LdrGetExportByOrdinal
