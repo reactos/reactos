@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.143 2002/09/08 10:23:15 chorns Exp $
+; $Id: ntoskrnl.def,v 1.144 2002/10/02 19:25:19 hbirr Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -11,6 +11,8 @@ CcRosInitializeFileCache@12
 CcRosReleaseFileCache@8
 CcCopyRead@24
 CcCopyWrite@20
+CcFlushCache@16
+CcGetFileObjectFromSectionPtrs@4
 CcMapData@24
 CcMdlReadComplete@8
 CcSetDirtyPinnedData@8
