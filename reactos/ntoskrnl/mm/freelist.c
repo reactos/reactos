@@ -552,7 +552,7 @@ MmAllocPage(SWAPENTRY SavedSwapEntry)
    
    DPRINT("MmAllocPage()\n");
    
-   ListEntry = ExInterlockedRemoveHeadList(&FreePageListHead, 
+   ListEntry = ExInterlockedRemoveTailList(&FreePageListHead, 
 					   &PageListLock);
    DPRINT("ListEntry %x\n",ListEntry);
    if (ListEntry == NULL)
