@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.41 2002/05/05 20:20:15 hbirr Exp $
+/* $Id: rw.c,v 1.42 2002/06/10 21:17:57 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -786,15 +786,7 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
       Status = STATUS_SUCCESS;
       goto ByeBye;
    }
-#ifdef __VFAT_NT__
-   if (IrpContext->MinorFunction & IRP_MN_DPC)
-   {
-      DPRINT("IRP_MN_DPC is set\n");
-      IrpContext->MinorFunction &= ~IRP_MN_DPC;
-      Status = STATUS_PENDING;
-      goto ByeBye;
-   }
-#endif
+   
    if (Fcb->Flags & FCB_IS_VOLUME)
    {
       Resource = &IrpContext->DeviceExt->DirResource;
@@ -914,7 +906,6 @@ ByeBye:
       {
          IrpContext->FileObject->CurrentByteOffset.QuadPart =
            ByteOffset.QuadPart + IrpContext->Irp->IoStatus.Information;
-         DPRINT("--> %d\n",  IrpContext->Irp->IoStatus.Information);
       }
 
       IoCompleteRequest(IrpContext->Irp,
@@ -931,8 +922,10 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
    PVFATFCB Fcb;
    PERESOURCE Resource = NULL;
    LARGE_INTEGER ByteOffset;
+   LARGE_INTEGER OldFileSize;
    NTSTATUS Status = STATUS_SUCCESS;
    ULONG Length;
+   ULONG OldAllocationSize;
    PVOID Buffer;
 
    assert (IrpContext);
@@ -1057,6 +1050,9 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
       }
    }
 
+   OldFileSize = Fcb->RFCB.FileSize;
+   OldAllocationSize = Fcb->RFCB.AllocationSize.u.LowPart;
+
    if (!(Fcb->Flags & (FCB_IS_FAT|FCB_IS_VOLUME)) && !(IrpContext->Irp->Flags & IRP_PAGING_IO))
    {
       Status = vfatExtendSpace(IrpContext->DeviceExt, IrpContext->FileObject,
@@ -1067,6 +1063,11 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
          CHECKPOINT;
          goto ByeBye;
       }
+   }
+
+   if (ByteOffset.QuadPart > OldFileSize.QuadPart)
+   {
+      CcZeroData(IrpContext->FileObject, &OldFileSize, &ByteOffset, TRUE);
    }
 
    if (!(IrpContext->Irp->Flags & (IRP_NOCACHE|IRP_PAGING_IO)) &&
@@ -1129,7 +1130,13 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
 		    	           &Fcb->entry.UpdateTime);
          Fcb->entry.AccessDate = Fcb->entry.UpdateDate;
          // update dates/times and length
-         updEntry (IrpContext->DeviceExt, IrpContext->FileObject);
+	 if (OldAllocationSize != Fcb->RFCB.AllocationSize.u.LowPart)
+	 {
+	    updEntry (IrpContext->DeviceExt, IrpContext->FileObject);
+	    Fcb->Flags &= ~FCB_UPDATE_DIRENTRY;
+	 }
+	 else
+	    Fcb->Flags |= FCB_UPDATE_DIRENTRY;
       }
    }
 
