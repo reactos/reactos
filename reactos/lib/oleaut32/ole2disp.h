@@ -1,7 +1,5 @@
 /*
- * Top level resource file for oleaut32
- *
- * Copyright 2003 Jon Griffiths
+ * Copyright 1995 Martin von Loewis
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,27 +16,27 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifndef __WINE_OLEAUT32_OLE2DISP_H
+#define __WINE_OLEAUT32_OLE2DISP_H
+
+#include <stdarg.h>
+
 #include "windef.h"
 #include "winbase.h"
-#include "resource.h"
+#include "wtypes.h"
+#include "wine/windef16.h"
 
-#include "oleaut32_De.rc"
-#include "oleaut32_Dk.rc"
-#include "oleaut32_En.rc"
-#include "oleaut32_Es.rc"
-#include "oleaut32_Cz.rc"
-#include "oleaut32_Fr.rc"
-#include "oleaut32_Hu.rc"
-#include "oleaut32_It.rc"
-#include "oleaut32_Nl.rc"
-#include "oleaut32_No.rc"
-#include "oleaut32_Pt.rc"
-#include "oleaut32_Sv.rc"
-#include "oleaut32_Th.rc"
+typedef CHAR OLECHAR16;
+typedef LPSTR LPOLESTR16;
+typedef LPCSTR LPCOLESTR16;
+typedef OLECHAR16 *BSTR16;
+typedef BSTR16 *LPBSTR16;
 
-/*
- * FIXME:
- *  Polish, Finnish, Greek, Hebrew, Japanese, Korean, Portuguese,
- *  Russian, Turkish, Slovenian (at least) are localised in XP Home.
- *  I expect Chinese etc are localised in Asian Editions also.
- */
+BSTR16 WINAPI SysAllocString16(LPCOLESTR16);
+BSTR16 WINAPI SysAllocStringLen16(const char*, int);
+VOID   WINAPI SysFreeString16(BSTR16);
+INT16  WINAPI SysReAllocString16(LPBSTR16,LPCOLESTR16);
+int    WINAPI SysReAllocStringLen16(BSTR16*, const char*,  int);
+int    WINAPI SysStringLen16(BSTR16);
+
+#endif /* !defined(__WINE_OLEAUT32_OLE2DISP_H) */

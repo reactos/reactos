@@ -1,5 +1,5 @@
 /*
- * Top level resource file for oleaut32
+ * Resource defines for oleaut32
  *
  * Copyright 2003 Jon Griffiths
  *
@@ -17,28 +17,30 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+#ifndef WINE_OLEAUT32_RESOURCE_H
+#define WINE_OLEAUT32_RESOURCE_H
 
-#include "windef.h"
-#include "winbase.h"
-#include "resource.h"
-
-#include "oleaut32_De.rc"
-#include "oleaut32_Dk.rc"
-#include "oleaut32_En.rc"
-#include "oleaut32_Es.rc"
-#include "oleaut32_Cz.rc"
-#include "oleaut32_Fr.rc"
-#include "oleaut32_Hu.rc"
-#include "oleaut32_It.rc"
-#include "oleaut32_Nl.rc"
-#include "oleaut32_No.rc"
-#include "oleaut32_Pt.rc"
-#include "oleaut32_Sv.rc"
-#include "oleaut32_Th.rc"
-
-/*
- * FIXME:
- *  Polish, Finnish, Greek, Hebrew, Japanese, Korean, Portuguese,
- *  Russian, Turkish, Slovenian (at least) are localised in XP Home.
- *  I expect Chinese etc are localised in Asian Editions also.
+/* Localised boolean text */
+#define IDS_TRUE  100
+#define IDS_FALSE 101
+#define IDS_YES   102
+#define IDS_NO    103
+#define IDS_ON    104
+#define IDS_OFF   105
+/* Alternative month names. Note in XP these are localised only for Russian,
+ * Polish and Arabic.
  */
+#define IDS_MTH_1  106
+#define IDS_MTH_2  107
+#define IDS_MTH_3  108
+#define IDS_MTH_4  109
+#define IDS_MTH_5  110
+#define IDS_MTH_6  111
+#define IDS_MTH_7  112
+#define IDS_MTH_8  113
+#define IDS_MTH_9  114
+#define IDS_MTH_10 115
+#define IDS_MTH_11 116
+#define IDS_MTH_12 117
+
+#endif /* WINE_OLEAUT32_RESOURCE_H */

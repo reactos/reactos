@@ -4,3 +4,6 @@
 *.o
 *.d
 *.map
+*.tmp
+Makefile.ros
+oleaut32.spec.def

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.209 2004/02/05 19:17:11 weiden Exp $
+# $Id: Makefile,v 1.210 2004/02/07 18:53:58 mf Exp $
 #
 # Global makefile
 #
@@ -46,7 +46,7 @@ DLLS_CPL = cpl
 # imagehlp imm32
 DLLS = advapi32 cabinet cards comctl32 crtdll comdlg32 d3d8thk fmifs freetype gdi32 \
 	imm32 iphlpapi kernel32 lzexpand mpr msafd msgina msimg32 msvcrt msvcrt20 mswsock \
-	ntdll ole32 oledlg packet psapi richedit rpcrt4 samlib secur32 shell32 shlwapi \
+	ntdll ole32 oleaut32 oledlg packet psapi richedit rpcrt4 samlib secur32 shell32 shlwapi \
 	snmpapi syssetup twain unicode user32 userenv version wininet winmm winspool \
 	ws2help ws2_32 wsock32 wshirda $(DLLS_KBD) $(DLLS_CPL)
 

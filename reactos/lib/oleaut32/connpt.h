@@ -1,7 +1,5 @@
 /*
- * Top level resource file for oleaut32
- *
- * Copyright 2003 Jon Griffiths
+ * Copyright 2000 Huw D M Davies for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,27 +16,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "windef.h"
-#include "winbase.h"
-#include "resource.h"
+#ifndef _CONNPT_H
+#define _CONNPT_H
 
-#include "oleaut32_De.rc"
-#include "oleaut32_Dk.rc"
-#include "oleaut32_En.rc"
-#include "oleaut32_Es.rc"
-#include "oleaut32_Cz.rc"
-#include "oleaut32_Fr.rc"
-#include "oleaut32_Hu.rc"
-#include "oleaut32_It.rc"
-#include "oleaut32_Nl.rc"
-#include "oleaut32_No.rc"
-#include "oleaut32_Pt.rc"
-#include "oleaut32_Sv.rc"
-#include "oleaut32_Th.rc"
+HRESULT CreateConnectionPoint(IUnknown *pUnk, REFIID riid, IConnectionPoint **pCP);
 
-/*
- * FIXME:
- *  Polish, Finnish, Greek, Hebrew, Japanese, Korean, Portuguese,
- *  Russian, Turkish, Slovenian (at least) are localised in XP Home.
- *  I expect Chinese etc are localised in Asian Editions also.
- */
+#endif /* _CONNPT_H */
