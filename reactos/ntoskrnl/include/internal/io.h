@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.41 2004/03/27 19:41:31 navaraf Exp $
+/* $Id: io.h,v 1.42 2004/03/28 09:48:13 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -56,6 +56,12 @@ typedef struct _DEVOBJ_EXTENSION {
    ULONG Unknown[3];
    struct _DEVICE_NODE *DeviceNode;
 } DEVOBJ_EXTENSION, *PDEVOBJ_EXTENSION;
+
+typedef struct _PRIVATE_DRIVER_EXTENSIONS {
+   struct _PRIVATE_DRIVER_EXTENSIONS *Link;
+   PVOID ClientIdentificationAddress;
+   CHAR Extension[1];
+} PRIVATE_DRIVER_EXTENSIONS, *PPRIVATE_DRIVER_EXTENSIONS;
 
 typedef struct _DEVICE_NODE
 {
