@@ -1,0 +1,11 @@
+; $Id: vgaddi.def,v 1.1 2000/03/10 12:45:44 jfilby Exp $
+;
+; vgaddi.def
+;
+; ReactOS Operating System
+;
+; From Anders Norlander's w32api-0.1.5 vgaddi.def.
+;
+LIBRARY vgaddi.dll
+EXPORTS
+DrvEnableDriver
