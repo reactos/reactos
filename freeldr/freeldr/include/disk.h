@@ -31,6 +31,21 @@ typedef struct _GEOMETRY
 } GEOMETRY, *PGEOMETRY;
 
 //
+// Extended disk geometry (Int13 / ah=48h)
+//
+typedef struct _EXTENDED_GEOMETRY
+{
+	U16		Size;
+	U16		Flags;
+	U32		Cylinders;
+	U32		Heads;
+	U32		SectorsPerTrack;
+	U64		Sectors;
+	U16		BytesPerSector;
+	U32		PDPTE;
+} __attribute__((packed)) EXTENDED_GEOMETRY, *PEXTENDED_GEOMETRY;
+
+//
 // Define the structure of a partition table entry
 //
 typedef struct _PARTITION_TABLE_ENTRY
@@ -53,9 +68,11 @@ typedef struct _PARTITION_TABLE_ENTRY
 //
 typedef struct _MASTER_BOOT_RECORD
 {
-	U8						MasterBootRecordCodeAndData[0x1be];
-	PARTITION_TABLE_ENTRY	PartitionTable[4];
-	U16						MasterBootRecordMagic;
+	U8			MasterBootRecordCodeAndData[0x1b8];	/* 0x000 */
+	U32			Signature;				/* 0x1B8 */
+	U16			Reserved;				/* 0x1BC */
+	PARTITION_TABLE_ENTRY	PartitionTable[4];			/* 0x1BE */
+	U16			MasterBootRecordMagic;			/* 0x1FE */
 
 } PACKED MASTER_BOOT_RECORD, *PMASTER_BOOT_RECORD;
 
@@ -95,6 +112,8 @@ BOOL	DiskResetController(U32 DriveNumber);
 BOOL	DiskInt13ExtensionsSupported(U32 DriveNumber);
 //VOID	DiskStopFloppyMotor(VOID);
 BOOL	DiskGetDriveParameters(U32 DriveNumber, PGEOMETRY Geometry);
+BOOL	DiskGetExtendedDriveParameters(U32 DriveNumber, PVOID Buffer, U16 BufferSize);
+
 //U32	DiskGetCacheableBlockCount(U32 DriveNumber);
 
 #endif // defined __i386__

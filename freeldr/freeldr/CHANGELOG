@@ -1,3 +1,11 @@
+Changes in v1.8.11 (4/30/2003) (ekohl)
+
+- Added DiskGetExtendedDriveParameters()
+- Moved hardware detection into the arch directory
+- Rewrote/completed harddisk detection
+- Removed PCI and IDE detection
+- Added basic CPU detection
+
 Changes in v1.8.10 (4/27/2003) (chorns)
 
 - Query BIOS for supported disk drives

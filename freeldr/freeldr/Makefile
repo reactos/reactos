@@ -206,6 +206,8 @@ ARCH_OBJS	=	fathelp.o	\
 				int386.o	\
 				i386disk.o	\
 				portio.o	\
+				hardware.o	\
+				i386cpu.o	\
 				_alloca.o		# For Mingw32 builds
 
 RTL_OBJS	=	print.o		\
@@ -230,7 +232,6 @@ UI_OBJS		=	tui.o		\
 
 REACTOS_OBJS=	reactos.o	\
 				arcname.o	\
-				hwdetect.o	\
 				reghive.o	\
 				binhive.o	\
 				registry.o

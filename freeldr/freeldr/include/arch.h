@@ -163,6 +163,8 @@ void	EnableA20(void);
 VOID	ChainLoadBiosBootSectorCode(VOID);	// Implemented in boot.S
 VOID	SoftReboot(VOID);					// Implemented in boot.S
 
+VOID	DetectHardware(VOID);		// Implemented in hardware.c
+
 #endif /* ! ASM */
 
 

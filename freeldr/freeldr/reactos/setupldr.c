@@ -29,7 +29,6 @@
 #include <mm.h>
 
 #include "registry.h"
-#include "hwdetect.h"
 
 
 static BOOL
@@ -151,7 +150,8 @@ VOID RunLoader(VOID)
 
   /* Copy ARC path into kernel command line */
   sprintf(multiboot_kernel_cmdline,
-	  "multi(0)disk(0)cdrom(%u)\\reactos  /DEBUGPORT=COM1",
+//	  "multi(0)disk(0)cdrom(%u)\\reactos  /DEBUGPORT=COM1",
+	  "multi(0)disk(0)cdrom(%u)\\reactos  /DEBUGPORT=SCREEN",
 	  (unsigned int)BootDrive);
 
   /* Open boot drive */

@@ -420,6 +420,47 @@ BOOL DiskGetDriveParameters(U32 DriveNumber, PGEOMETRY Geometry)
 	return TRUE;
 }
 
+BOOL DiskGetExtendedDriveParameters(U32 DriveNumber, PVOID Buffer, U16 BufferSize)
+{
+	REGS	RegsIn;
+	REGS	RegsOut;
+	PU16	Ptr = (PU16)(BIOSCALLBUFFER);
+
+	DbgPrint((DPRINT_DISK, "DiskGetExtendedDriveParameters()\n"));
+
+	// Initialize transfer buffer
+	*Ptr = BufferSize;
+
+	// BIOS Int 13h, function 48h - Get drive parameters
+	// AH = 48h
+	// DL = drive (bit 7 set for hard disk)
+	// DS:SI = result buffer
+	// Return:
+	// CF set on error
+	// AH = status (07h)
+	// CF clear if successful
+	// AH = 00h
+	// DS:SI -> result buffer
+	RegsIn.b.ah = 0x48;
+	RegsIn.b.dl = DriveNumber;
+	RegsIn.x.ds = BIOSCALLBUFSEGMENT;	// DS:SI -> result buffer
+	RegsIn.w.si = BIOSCALLBUFOFFSET;
+
+	// Get drive parameters
+	Int386(0x13, &RegsIn, &RegsOut);
+
+	if (!INT386_SUCCESS(RegsOut))
+	{
+		return FALSE;
+	}
+
+	memcpy(Buffer, Ptr, BufferSize);
+
+	return TRUE;
+}
+
+
+
 U32 DiskGetCacheableBlockCount(U32 DriveNumber)
 {
 	GEOMETRY	Geometry;

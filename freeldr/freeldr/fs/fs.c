@@ -122,8 +122,8 @@ BOOL FsOpenVolume(U32 DriveNumber, U32 PartitionNumber)
 	// Try to recognize the file system
 	if (!FsRecognizeVolume(DriveNumber, PartitionTableEntry.SectorCountBeforePartition, &VolumeType))
 	{
-		sprintf(ErrorText, "Unrecognized file system. Type: 0x%x", PartitionTableEntry.SystemIndicator);
-		FileSystemError(ErrorText);
+		FileSystemError("Unrecognized file system.");
+		return FALSE;
 	}
 
 	//switch (PartitionTableEntry.SystemIndicator)
@@ -142,7 +142,7 @@ BOOL FsOpenVolume(U32 DriveNumber, U32 PartitionNumber)
 		return Ext2OpenVolume(DriveNumber, PartitionTableEntry.SectorCountBeforePartition);
 	default:
 		FileSystemType = 0;
-		sprintf(ErrorText, "Unsupported file system. Type: 0x%x", PartitionTableEntry.SystemIndicator);
+		sprintf(ErrorText, "Unsupported file system. Type: 0x%x", VolumeType);
 		FileSystemError(ErrorText);
 		return FALSE;
 	}

@@ -31,7 +31,6 @@
 #include <inifile.h>
 
 #include "registry.h"
-#include "hwdetect.h"
 
 
 #define NDEBUG
