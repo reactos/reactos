@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.76 2003/08/29 09:29:11 gvg Exp $
+/* $Id: dc.c,v 1.77 2003/08/29 12:28:24 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -143,14 +143,11 @@ NtGdiCreateCompatableDC(HDC  hDC)
     hNewDC = DC_AllocDC(OrigDC->DriverName);
   }
 
-  if (NewDC == NULL)
+  if (NULL == hNewDC)
   {
     return  NULL;
   }
-  else
-  {
-    NewDC = DC_LockDc( hNewDC );
-  }
+  NewDC = DC_LockDc( hNewDC );
 
   /* Copy information from original DC to new DC  */
   NewDC->hSelf = NewDC;
