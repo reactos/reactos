@@ -5,7 +5,7 @@
 #include <win32k/debug.h>
 #include <debug.h>
 #include <ddk/winddi.h>
-#include "..\eng\objects.h"
+#include "../eng/objects.h"
 #include "dib.h"
 
 VOID DIB_4BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, BYTE c)
