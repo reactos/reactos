@@ -4404,13 +4404,16 @@ SetTimer(
 	 TIMERPROC lpTimerFunc);
 
 
-BOOL STDCALL SetWaitableTimer( HANDLE Timer,
-			       const LARGE_INTEGER *duetime,
-			       LONG Period,
-			       PTIMERAPCROUTINE Apcroutine,
-			       LPVOID Param,
-			       BOOL Resume );
-  
+WINBOOL
+STDCALL
+SetWaitableTimer(HANDLE hTimer,
+		 const LARGE_INTEGER *pDueTime,
+		 LONG lPeriod,
+		 PTIMERAPCROUTINE pfnCompletionRoutine,
+		 LPVOID lpArgToCompletionRoutine,
+		 WINBOOL fResume);
+
+
 WINBOOL
 STDCALL
 KillTimer(

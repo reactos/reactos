@@ -1192,16 +1192,6 @@ typedef struct _FILE_NOTIFY_INFORMATION {
 */
 
 
-//FIXME: I am a win32 object
-typedef
-VOID
-(*PTIMERAPCROUTINE)(
-	LPVOID lpArgToCompletionRoutine,
-	DWORD dwTimerLowValue,
-	DWORD dwTimerHighValue
-	);
-
-
 // File System Control commands ( related to defragging )
 
 #define	FSCTL_READ_MFT_RECORD			0x90068 // NTFS only

@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.6 2000/08/05 18:01:50 dwelch Exp $
+/* $Id: timer.c,v 1.7 2001/01/27 19:35:04 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -144,7 +144,7 @@ OpenWaitableTimerA (
 
 WINBOOL STDCALL SetWaitableTimer(
   HANDLE hTimer,
-  LARGE_INTEGER *pDueTime,
+  const LARGE_INTEGER *pDueTime,
   LONG lPeriod,
   PTIMERAPCROUTINE pfnCompletionRoutine,
   LPVOID lpArgToCompletionRoutine,
@@ -154,7 +154,7 @@ WINBOOL STDCALL SetWaitableTimer(
 	NTSTATUS errCode;
 	BOOLEAN pState;
 
-	errCode = NtSetTimer(hTimer, pDueTime,
+	errCode = NtSetTimer(hTimer, (LARGE_INTEGER *)pDueTime,
 		 pfnCompletionRoutine,
 		lpArgToCompletionRoutine, fResume, lPeriod, &pState);
 

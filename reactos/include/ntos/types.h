@@ -343,4 +343,13 @@ typedef struct _SMALL_RECT {
   SHORT Bottom;
 } SMALL_RECT, *PSMALL_RECT;
 
+
+typedef
+VOID
+(*PTIMERAPCROUTINE)(
+	LPVOID lpArgToCompletionRoutine,
+	DWORD dwTimerLowValue,
+	DWORD dwTimerHighValue
+	);
+
 #endif /* __INCLUDE_TYPES_H */
