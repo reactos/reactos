@@ -90,7 +90,7 @@ typedef enum _FILE_INFORMATION_CLASS
   FileInheritContentIndexInformation,
   FileOleInformation,
   FileMaximumInformation,
-} FILE_INFORMATION_CLASS;
+} FILE_INFORMATION_CLASS, *PFILE_INFORMATION_CLASS;
 
 typedef ULONG WAIT_TYPE;
 typedef USHORT CSHORT;

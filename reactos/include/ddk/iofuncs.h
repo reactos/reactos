@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.27 2001/12/05 12:13:12 ekohl Exp $ */
+/* $Id: iofuncs.h,v 1.28 2002/01/21 11:41:05 ekohl Exp $ */
 
 /* --- EXPORTED BY NTOSKRNL --- */
 
@@ -376,29 +376,24 @@ STDCALL
 IoCancelIrp (
 	PIRP	Irp
 	);
-VOID
-STDCALL
-IoCheckDesiredAccess (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	);
-NTSTATUS
-STDCALL
-IoCheckEaBufferValidity (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	);
-NTSTATUS
-STDCALL
-IoCheckFunctionAccess (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5
-	);
+
+NTSTATUS STDCALL
+IoCheckDesiredAccess(IN OUT PACCESS_MASK DesiredAccess,
+		     IN ACCESS_MASK GrantedAccess);
+
+NTSTATUS STDCALL
+IoCheckEaBufferValidity(IN PFILE_FULL_EA_INFORMATION EaBuffer,
+			IN ULONG EaLength,
+			OUT PULONG ErrorOffset);
+
+NTSTATUS STDCALL
+IoCheckFunctionAccess(IN ACCESS_MASK GrantedAccess,
+		      IN UCHAR MajorFunction,
+		      IN UCHAR MinorFunction,
+		      IN ULONG IoControlCode,
+		      IN PFILE_INFORMATION_CLASS FileInformationClass OPTIONAL,
+		      IN PFS_INFORMATION_CLASS FsInformationClass OPTIONAL);
+
 NTSTATUS
 STDCALL
 IoCheckShareAccess (
@@ -560,15 +555,14 @@ STDCALL
 IoEnqueueIrp (
 	PIRP	Irp
 	);
-VOID
-STDCALL
-IoFastQueryNetworkAttributes (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
-	);
+
+BOOLEAN STDCALL
+IoFastQueryNetworkAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes,
+			     IN ACCESS_MASK DesiredAccess,
+			     IN ULONG OpenOptions,
+			     OUT PIO_STATUS_BLOCK IoStatus,
+			     OUT PFILE_NETWORK_OPEN_INFORMATION Buffer);
+
 VOID
 STDCALL
 IoFreeController (

@@ -372,7 +372,7 @@ enum
 #define FILE_VALID_SET_FLAGS                    0x00001036
 
 
-typedef ULONG FS_INFORMATION_CLASS;
+typedef ULONG FS_INFORMATION_CLASS, *PFS_INFORMATION_CLASS;
 
 /*
  * file system information class values

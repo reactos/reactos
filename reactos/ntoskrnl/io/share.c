@@ -1,4 +1,4 @@
-/* $Id: share.c,v 1.4 2001/08/14 21:05:10 hbirr Exp $
+/* $Id: share.c,v 1.5 2002/01/21 11:42:04 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -263,61 +263,58 @@ IoSetShareAccess(ACCESS_MASK DesiredAccess,
 }
 
 
-VOID STDCALL
-IoCheckDesiredAccess(DWORD Unknown0,
-		     DWORD Unknown1)
+NTSTATUS STDCALL
+IoCheckDesiredAccess(IN OUT PACCESS_MASK DesiredAccess,
+		     IN ACCESS_MASK GrantedAccess)
 {
-   UNIMPLEMENTED;
+  UNIMPLEMENTED;
+  return(STATUS_NOT_IMPLEMENTED);
 }
 
 
 NTSTATUS STDCALL
-IoCheckEaBufferValidity(DWORD Unknown0,
-			DWORD Unknown1,
-			DWORD Unknown2)
+IoCheckEaBufferValidity(IN PFILE_FULL_EA_INFORMATION EaBuffer,
+			IN ULONG EaLength,
+			OUT PULONG ErrorOffset)
 {
-   UNIMPLEMENTED;
-   return (STATUS_NOT_IMPLEMENTED);
+  UNIMPLEMENTED;
+  return(STATUS_NOT_IMPLEMENTED);
 }
 
 
 NTSTATUS STDCALL
-IoCheckFunctionAccess(DWORD Unknown0,
-		      DWORD Unknown1,
-		      DWORD Unknown2,
-		      DWORD Unknown3,
-		      DWORD Unknown4,
-		      DWORD Unknown5)
+IoCheckFunctionAccess(IN ACCESS_MASK GrantedAccess,
+		      IN UCHAR MajorFunction,
+		      IN UCHAR MinorFunction,
+		      IN ULONG IoControlCode,
+		      IN PFILE_INFORMATION_CLASS FileInformationClass OPTIONAL,
+		      IN PFS_INFORMATION_CLASS FsInformationClass OPTIONAL)
 {
-   UNIMPLEMENTED;
-   return (STATUS_NOT_IMPLEMENTED);
+  UNIMPLEMENTED;
+  return(STATUS_NOT_IMPLEMENTED);
 }
 
 
 NTSTATUS STDCALL
-IoSetInformation (
-	IN	PFILE_OBJECT		FileObject,
-	IN	FILE_INFORMATION_CLASS	FileInformationClass,
-	IN	ULONG			Length,
-	OUT	PVOID			FileInformation
-	)
+IoSetInformation(IN PFILE_OBJECT FileObject,
+		 IN FILE_INFORMATION_CLASS FileInformationClass,
+		 IN ULONG Length,
+		 OUT PVOID FileInformation)
 {
-	UNIMPLEMENTED;
-	return (STATUS_NOT_IMPLEMENTED);
+  UNIMPLEMENTED;
+  return(STATUS_NOT_IMPLEMENTED);
 }
 
 
-VOID STDCALL
-IoFastQueryNetworkAttributes (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
-	)
+BOOLEAN STDCALL
+IoFastQueryNetworkAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes,
+			     IN ACCESS_MASK DesiredAccess,
+			     IN ULONG OpenOptions,
+			     OUT PIO_STATUS_BLOCK IoStatus,
+			     OUT PFILE_NETWORK_OPEN_INFORMATION Buffer)
 {
-	UNIMPLEMENTED;
+  UNIMPLEMENTED;
+  return(FALSE);
 }
-
 
 /* EOF */
