@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.38 2004/07/16 19:49:15 ekohl Exp $
+/* $Id: sysinfo.c,v 1.39 2004/07/22 17:22:36 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -400,7 +400,7 @@ QSI_DEF(SystemPerformanceInformation)
 	
 	PsLookupProcessByProcessId((PVOID) 1, &TheIdleProcess);
 	
-	Spi->IdleTime.QuadPart = TheIdleProcess->Pcb.KernelTime * 100000;
+	Spi->IdleTime.QuadPart = TheIdleProcess->Pcb.KernelTime * 100000LL;
 
 	Spi->ReadTransferCount.QuadPart = IoReadTransferCount;
 	Spi->WriteTransferCount.QuadPart = IoWriteTransferCount;
@@ -580,8 +580,8 @@ QSI_DEF(SystemProcessInformation)
 		SpiCur->NextEntryDelta = curSize+inLen; // relative offset to the beginnnig of the next structure
 		SpiCur->ThreadCount = nThreads;
 		SpiCur->CreateTime = pr->CreateTime;
-		SpiCur->UserTime.QuadPart = pr->Pcb.UserTime * 100000; 
-		SpiCur->KernelTime.QuadPart = pr->Pcb.KernelTime * 100000;
+		SpiCur->UserTime.QuadPart = pr->Pcb.UserTime * 100000LL; 
+		SpiCur->KernelTime.QuadPart = pr->Pcb.KernelTime * 100000LL;
 		SpiCur->ProcessName.Length = strlen(pr->ImageFileName) * sizeof(WCHAR);
 		SpiCur->ProcessName.MaximumLength = inLen;
 		SpiCur->ProcessName.Buffer = (void*)(pCur+curSize);
@@ -690,12 +690,12 @@ QSI_DEF(SystemProcessorPerformanceInformation)
 	CurrentTime.QuadPart = KeQueryInterruptTime();
 
         Spi->TotalProcessorRunTime.QuadPart = 
-		TheIdleProcess->Pcb.KernelTime * 100000; // IdleTime
-        Spi->TotalProcessorTime.QuadPart =  KiKernelTime * 100000; // KernelTime
-        Spi->TotalProcessorUserTime.QuadPart = KiUserTime * 100000;
-        Spi->TotalDPCTime.QuadPart = KiDpcTime * 100000;
+		TheIdleProcess->Pcb.KernelTime * 100000LL; // IdleTime
+        Spi->TotalProcessorTime.QuadPart =  KiKernelTime * 100000LL; // KernelTime
+        Spi->TotalProcessorUserTime.QuadPart = KiUserTime * 100000LL;
+        Spi->TotalDPCTime.QuadPart = KiDpcTime * 100000LL;
         Spi->TotalInterruptTime = CurrentTime;
-        Spi->TotalInterrupts = CurrentTime.QuadPart / 100000; // Interrupt Count
+        Spi->TotalInterrupts = CurrentTime.QuadPart / 100000LL; // Interrupt Count
 
 	ObDereferenceObject(TheIdleProcess);
         

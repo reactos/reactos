@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.136 2004/07/20 23:58:35 ion Exp $
+/* $Id: process.c,v 1.137 2004/07/22 17:22:38 jimtabor Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -1128,8 +1128,8 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 	                     (PKERNEL_USER_TIMES)ProcessInformation;
 
 	   ProcessTimeP->CreateTime = (TIME) Process->CreateTime;
-           ProcessTimeP->UserTime.QuadPart = Process->Pcb.UserTime * 100000;
-           ProcessTimeP->KernelTime.QuadPart = Process->Pcb.KernelTime * 100000;
+           ProcessTimeP->UserTime.QuadPart = Process->Pcb.UserTime * 100000LL;
+           ProcessTimeP->KernelTime.QuadPart = Process->Pcb.KernelTime * 100000LL;
 	   ProcessTimeP->ExitTime = (TIME) Process->ExitTime;
 
 	  if (ReturnLength)
