@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: loader.c,v 1.16 2004/04/11 09:09:38 gvg Exp $
+/* $Id: loader.c,v 1.17 2004/06/28 21:02:49 navaraf Exp $
  *
  */
 
@@ -29,56 +29,10 @@
 
 #ifdef __USE_W32API
 PIMAGE_NT_HEADERS STDCALL
-RtlImageNtHeader(IN PVOID BaseAddress);
+RtlImageNtHeader(PVOID);
+PVOID STDCALL
+RtlImageDirectoryEntryToData(PVOID,BOOLEAN,ULONG,PULONG);
 #endif
-
-/*
- * This is copied from ntdll...  It's needed for loading keyboard dlls.
- */
-
-PVOID
-STDCALL
-RtlImageDirectoryEntryToData (
-	PVOID	BaseAddress,
-	BOOLEAN	bFlag,
-	ULONG	Directory,
-	PULONG	Size
-	)
-{
-	PIMAGE_NT_HEADERS NtHeader;
-	PIMAGE_SECTION_HEADER SectionHeader;
-	ULONG Va;
-	ULONG Count;
-
-	NtHeader = RtlImageNtHeader (BaseAddress);
-	if (NtHeader == NULL)
-		return NULL;
-
-	if (Directory >= NtHeader->OptionalHeader.NumberOfRvaAndSizes)
-		return NULL;
-
-	Va = NtHeader->OptionalHeader.DataDirectory[Directory].VirtualAddress;
-	if (Va == 0)
-		return NULL;
-
-	if (Size)
-		*Size = NtHeader->OptionalHeader.DataDirectory[Directory].Size;
-
-	if (bFlag)
-		return (PVOID)(BaseAddress + Va);
-
-	/* image mapped as ordinary file, we must find raw pointer */
-	SectionHeader = (PIMAGE_SECTION_HEADER)(NtHeader + 1);
-	Count = NtHeader->FileHeader.NumberOfSections;
-	while (Count--)
-	{
-		if (SectionHeader->VirtualAddress == Va)
-			return (PVOID)(BaseAddress + SectionHeader->PointerToRawData);
-		SectionHeader++;
-	}
-
-	return NULL;
-}
 
 /*
  * Blatantly stolen from ldr/utils.c in ntdll.  I can't link ntdll from
