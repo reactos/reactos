@@ -1,4 +1,4 @@
-/* $Id: inbv.c,v 1.5 2003/12/30 18:52:03 fireball Exp $
+/* $Id: inbv.c,v 1.6 2004/01/20 21:08:40 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -106,6 +106,9 @@ InbvEnableBootDriver(IN BOOLEAN Enable)
 
   if (Enable)
     {
+      /* Notify the hal we will acquire the display. */
+      HalAcquireDisplayOwnership(InbvResetDisplayParameters);
+
       Status = NtDeviceIoControlFile(BootVidDevice,
 				     NULL,
 				     NULL,
@@ -121,9 +124,7 @@ InbvEnableBootDriver(IN BOOLEAN Enable)
 	  KeBugCheck(0);
 	}
       BootVidDriverInstalled = TRUE;
-      /* Notify the hal we have acquired the display. */
       CHECKPOINT;
-      HalAcquireDisplayOwnership(InbvResetDisplayParameters);
     }
   else
     {
