@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: accelerator.c,v 1.7 2003/12/29 23:28:46 sedwards Exp $
+/* $Id: accelerator.c,v 1.8 2004/02/02 15:16:53 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -514,17 +514,16 @@ NtUserTranslateAccelerator(
       if (IntTranslateAccelerator(Window, Message->message, Message->wParam, Message->lParam,
 		  AcceleratorTable->Table[i].fVirt, AcceleratorTable->Table[i].key,
 		  AcceleratorTable->Table[i].cmd))
-	    {
-		  ObDereferenceObject(WindowStation);
-          DPRINT1("NtUserTranslateAccelerator(Window %x, Table %x, Message %p) = %i end\n",
-            Window, Table, Message, 1);
+        {
+          ObDereferenceObject(WindowStation);
+          DPRINT("NtUserTranslateAccelerator(Window %x, Table %x, Message %p) = %i end\n",
+                 Window, Table, Message, 1);
           return 1;
-		}
-	  if (((AcceleratorTable->Table[i].fVirt & 0x80) > 0))
-	    {
+        }
+      if (((AcceleratorTable->Table[i].fVirt & 0x80) > 0))
+        {
           break;
-	    }
-	  i++;
+        }
     }
 
   ObDereferenceObject(WindowStation);
