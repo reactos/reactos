@@ -513,11 +513,11 @@ char* findend ( char* p, bool& externc )
 
 Type identify ( const vector<string>& tokens, int off )
 {
-	/*if ( tokens.size() > off+3 )
+	if ( tokens.size() > off+2 )
 	{
-		if ( tokens[off+3] == "HandleToUlong" )
+		if ( tokens[off+2] == "_lfind" )
 			_CrtDbgBreak();
-	}*/
+	}
 	/*if ( tokens.size() > off+1 )
 	{
 		if ( tokens[off+1] == "_OSVERSIONINFOEXA" )
@@ -535,15 +535,18 @@ Type identify ( const vector<string>& tokens, int off )
 		return T_WHILE;
 	else if ( tokens[off] == "do" )
 		return T_DO;
-	int parens = 0;
+	int openparens = 0;
+	int closeparens = 0;
 	int brackets = 0;
 	for ( int i = off; i < tokens.size(); i++ )
 	{
 		if ( tokens[i] == "(" && !brackets )
-			parens++;
+			openparens++;
+		else if ( tokens[i] == ")" && !brackets && openparens == 1 )
+			closeparens++;
 		else if ( tokens[i] == "{" )
 			brackets++;
-		else if ( (tokens[i] == "struct" || tokens[i] == "union") && !parens )
+		else if ( (tokens[i] == "struct" || tokens[i] == "union") && !openparens )
 		{
 			for ( int j = i + 1; j < tokens.size(); j++ )
 			{
@@ -556,9 +559,9 @@ Type identify ( const vector<string>& tokens, int off )
 		else if ( tokens[i] == ";" )
 			break;
 	}
-	if ( parens > 1 )
+	if ( openparens > 1 && closeparens )
 		return T_FUNCTION_PTR;
-	else if ( parens == 1 )
+	else if ( openparens >= 1 )
 		return T_FUNCTION;
 	return T_VARIABLE;
 }
