@@ -23,6 +23,14 @@ BOOLEAN FloppyIsrDetect( PCONTROLLER_OBJECT Controller )
    ControllerExtension->St0 = FloppyReadDATA( ControllerExtension->PortBase );
    KeStallExecutionProcessor( 100 );
    DeviceExtension->Cyl = FloppyReadDATA( ControllerExtension->PortBase );
+   KeStallExecutionProcessor( 100 );
+   if (FLOPPY_MS_DATARDYR ==
+       (FloppyReadMSTAT( ControllerExtension->PortBase ) & FLOPPY_MS_RDYMASK))
+      {
+	 /* There's something still to be read (what is it???? only happens on some
+	    controllers). Ignore it. */
+	 (void) FloppyReadDATA( ControllerExtension->PortBase );
+      }
    // now queue DPC to set the event
    IoRequestDpc( ControllerExtension->Device,
 		 0,
@@ -78,6 +86,13 @@ BOOLEAN FloppyIsrRecal( PCONTROLLER_OBJECT Controller )
    ControllerExtension->St0 = FloppyReadDATA( ControllerExtension->PortBase );
    KeStallExecutionProcessor( 1000 );
    FloppyReadDATA( ControllerExtension->PortBase );  // ignore cyl number
+   if (FLOPPY_MS_DATARDYR ==
+       (FloppyReadMSTAT( ControllerExtension->PortBase ) & FLOPPY_MS_RDYMASK))
+      {
+	 /* There's something still to be read (what is it???? only happens on some
+	    controllers). Ignore it. */
+	 (void) FloppyReadDATA( ControllerExtension->PortBase );
+      }
    DPRINT( "Recal St0: %2x\n", ControllerExtension->St0 );
 
    // If recalibrate worked, issue read ID for each media type untill one works

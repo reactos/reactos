@@ -31,7 +31,6 @@ const FLOPPY_MEDIA_TYPE MediaTypes[] = {
    { 0x02, 80, 2, 18, 512 },
    { 0, 0, 0, 0, 0 } };
 
-
 static BOOLEAN
 FloppyCreateController(PDRIVER_OBJECT DriverObject,
                        PFLOPPY_CONTROLLER_PARAMETERS ControllerParameters,
@@ -179,7 +178,6 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
       }
    // set for high speed mode
    //   FloppyWriteCCNTL( ControllerExtension->PortBase, FLOPPY_CCNTL_1MBIT );
-   
    // ok, so we have an FDC, now check for drives
    // aparently the sense drive status command does not work on any FDC I can find
    // so instead we will just have to assume a 1.44 meg 3.5 inch floppy.  At some
@@ -209,7 +207,7 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
    if( ControllerExtension->St0 != FLOPPY_ST0_SEEKGD )
      {
        DbgPrint( "Floppy: error recalibrating drive, ST0: %2x\n", (DWORD)ControllerExtension->St0 );
-       goto interruptcleanup;
+       goto devicecleanup;
      }
    DeviceExtension->Cyl = 0;
    // drive is good, and it is now on track 0, turn off the motor
@@ -231,7 +229,7 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
    if( !NT_SUCCESS( Status ) )
      {
        DPRINT1( "Error: IoAllocateAdapterChannel returned %x\n", Status );
-       goto interruptcleanup;
+       goto devicecleanup;
      }
    CHECKPOINT;
    Status = KeWaitForSingleObject( &ControllerExtension->Event,
@@ -243,7 +241,7 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
    if( Status != STATUS_WAIT_0 )
       {
 	 DPRINT1( "Error: KeWaitForSingleObject returned: %x\n", Status );
-	 goto interruptcleanup;
+	 goto devicecleanup;
       }
    // Ok, we own the adapter object, from now on we can just IoMapTransfer, and not
    // bother releasing the adapter ever.
@@ -259,7 +257,6 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
    // turn off controller
    FloppyWriteDOR( ControllerExtension->PortBase, 0 );
    IoDeleteController(ControllerObject);
-   for(;;);
    return FALSE;
 }
 
@@ -324,16 +321,18 @@ FloppyExecuteReadWrite(PDEVICE_OBJECT DeviceObject,
 		 Timeout,
 		 &ControllerExtension->MotorSpindownDpc );
    }
-   // verify media content
+#if 0
+   /* Handle disk change, doesn't work correctly */
    if( FloppyReadDIR( ControllerExtension->PortBase ) & FLOPPY_DI_DSKCHNG )
       {
 	 // No disk is in the drive
 	 DPRINT( "No disk is in the drive\n" );
-	 Irp->IoStatus.Status = STATUS_NO_MEDIA;
+	 Irp->IoStatus.Status = STATUS_MEDIA_CHANGED;
 	 Irp->IoStatus.Information = 0;
 	 IoCompleteRequest( Irp, 0 );
 	 return DeallocateObject;
       }
+#endif
    if( DeviceExtension->MediaType == ~0 )
       {
 	 // media is in disk, but we have not yet detected what kind it is,
@@ -562,4 +561,3 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 }
 
 /* EOF */
-

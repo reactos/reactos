@@ -17,7 +17,7 @@
 #define    FLOPPY_MS_FDCBUSY     0x10
 #define    FLOPPY_MS_DMAMODE     0x20
 #define    FLOPPY_MS_DATADIR     0x40
-#define    FLOPPY_MS_RDYMASK     0xF0
+#define    FLOPPY_MS_RDYMASK     0xC0
 #define    FLOPPY_MS_DATARDYW    0x80
 #define    FLOPPY_MS_DATARDYR    0xC0
 #define  FLOPPY_REG_DATA       0x0005
