@@ -60,10 +60,7 @@ MAKETARGET	= $(MAKE) --no-print-directory -C $(OUTPUT_DIR) \
 
 .PHONY: CHANGE_TO_TARGET
 CHANGE_TO_TARGET: $(OBJDIR) $(OBJDIR)/$(TARGET)
-	+@$(MAKETARGET) > nul
-# If you are compiling on a linux box you can remove the above "> nul"
-# it is only there because Microsoft likes to print its version string
-# during my make and I don't like it to print it's version string
+	+@$(MAKETARGET)
 
 $(OBJDIR):
 	@echo Creating directory: $(OBJDIR)
