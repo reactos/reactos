@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.43 2003/11/20 09:18:49 navaraf Exp $
+/* $Id: winpos.c,v 1.44 2003/11/20 21:21:29 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -744,7 +744,15 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       return FALSE;
    }
-  
+
+   if (Window->Flags & WINDOWOBJECT_MAPPING)
+   {
+      /* FIXME: SetLastWin32Error */
+      return FALSE;
+   }
+
+   Window->Flags |= WINDOWOBJECT_MAPPING;
+   
    WinPos.hwnd = Wnd;
    WinPos.hwndInsertAfter = WndInsertAfter;
    WinPos.x = x;
@@ -810,9 +818,9 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
       ParentWindow = Window->Parent;
       if (ParentWindow)
       {
-         if (WndInsertAfter == HWND_TOP)
+         if (WinPos.hwndInsertAfter == HWND_TOP)
             InsertAfterWindow = NULL;
-         else if (WndInsertAfter == HWND_BOTTOM)
+         else if (WinPos.hwndInsertAfter == HWND_BOTTOM)
             InsertAfterWindow = ParentWindow->LastChild;
          else
             InsertAfterWindow = IntGetWindowObject(WinPos.hwndInsertAfter);
@@ -866,20 +874,10 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
       Window->Style |= WS_VISIBLE;
    }
 
-#if 0
-   if (WvrFlags & WVR_REDRAW)
-   {
-      IntRedrawWindow(Window, NULL, 0, RDW_INVALIDATE | RDW_ERASE | RDW_FRAME);
-   }
-#endif
-
    if (!(WinPos.flags & SWP_NOACTIVATE))
    {
       WinPosChangeActiveWindow(WinPos.hwnd, FALSE);
    }
-
-   /* FIXME: Check some conditions before doing this. */
-   IntSendWINDOWPOSCHANGEDMessage(WinPos.hwnd, &WinPos);
 
    /* Determine the new visible region */
    VisAfter = VIS_ComputeVisibleRegion(
@@ -900,7 +898,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
     * change.
     */
    if (VisBefore != NULL && VisAfter != NULL && !(WinPos.flags & SWP_NOCOPYBITS) &&
-       ((WinPos.flags & SWP_NOSIZE) || !(Window->Class->style & (CS_HREDRAW | CS_VREDRAW))))
+       ((WinPos.flags & SWP_NOSIZE) || !(WvrFlags & WVR_REDRAW)))
    {
       CopyRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
       RgnType = NtGdiCombineRgn(CopyRgn, VisAfter, VisBefore, RGN_AND);
@@ -1025,6 +1023,17 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
       NtGdiDeleteObject(VisAfter);
    }
 
+   if (!(WinPos.flags & SWP_NOREDRAW))
+   {
+      /* FIXME: Call IntRedrawWindow to erase *all* touched windows. */
+      IntRedrawWindow(Window, NULL, 0, RDW_ALLCHILDREN | RDW_ERASENOW);
+   }
+
+   /* FIXME: Check some conditions before doing this. */
+   IntSendWINDOWPOSCHANGEDMessage(WinPos.hwnd, &WinPos);
+
+   Window->Flags &= ~WINDOWOBJECT_MAPPING;
+
    IntReleaseWindowObject(Window);
 
    return TRUE;
@@ -1042,13 +1051,18 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
 {
   BOOLEAN WasVisible;
   PWINDOW_OBJECT Window;
+  NTSTATUS Status;
   UINT Swp = 0;
-  RECT NewPos = {0, 0, 0, 0};
+  RECT NewPos;
   BOOLEAN ShowFlag;
-/*  HRGN VisibleRgn;*/
+  HRGN VisibleRgn;
 
-  Window = IntGetWindowObject(Wnd);
-  if (!Window)
+  Status = 
+    ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->HandleTable,
+			       Wnd,
+			       otWindow,
+			       (PVOID*)&Window);
+  if (!NT_SUCCESS(Status))
     {
       return(FALSE);
     }
@@ -1139,50 +1153,60 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
        */
     }
 
-  /* We can't activate a child window */
-  if ((Window->Style & WS_CHILD) &&
-      !(Window->ExStyle & WS_EX_MDICHILD))
+  if (Window->Style & WS_CHILD &&
+      !IntIsWindowVisible(Window->Parent->Self) &&
+      (Swp & (SWP_NOSIZE | SWP_NOMOVE)) == (SWP_NOSIZE | SWP_NOMOVE))
     {
-      Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
-    }
-
-  WinPosSetWindowPos(Wnd, HWND_TOP, NewPos.left, NewPos.top,
-    NewPos.right, NewPos.bottom, LOWORD(Swp));
-
-  if (Cmd == SW_HIDE)
-    {
-      /* FIXME: This will cause the window to be activated irrespective
-       * of whether it is owned by the same thread. Has to be done
-       * asynchronously.
-       */
-
-      if (Wnd == IntGetActiveWindow())
-        {
-          WinPosActivateOtherWindow(Window);
-        }
-
-      /* Revert focus to parent */
-      if (Wnd == IntGetFocusWindow() ||
-	  IntIsChildWindow(Wnd, IntGetFocusWindow()))
+      if (Cmd == SW_HIDE)
 	{
-	  IntSetFocusWindow(Window->Parent->Self);
+	  VisibleRgn = VIS_ComputeVisibleRegion(PsGetWin32Thread()->Desktop, Window,
+	                                        FALSE, FALSE, FALSE);
+	  Window->Style &= ~WS_VISIBLE;
+	  VIS_WindowLayoutChanged(PsGetWin32Thread()->Desktop, Window, VisibleRgn);
+	  NtGdiDeleteObject(VisibleRgn);
+	}
+      else
+	{
+	  Window->Style |= WS_VISIBLE;
 	}
     }
-
-  if (!IntIsWindow(Wnd))
+  else
     {
-      IntReleaseWindowObject(Window);
-      return WasVisible;
-    }
-  else if (Window->Style & WS_MINIMIZE)
-    {
-      WinPosShowIconTitle(Window, TRUE);
+      if (Window->Style & WS_CHILD &&
+	  !(Window->ExStyle & WS_EX_MDICHILD))
+	{
+	  Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
+	}
+      if (!(Swp & MINMAX_NOSWP))
+	{
+	  WinPosSetWindowPos(Wnd, HWND_TOP, NewPos.left, NewPos.top,
+			     NewPos.right, NewPos.bottom, LOWORD(Swp));
+	  if (Cmd == SW_HIDE)
+	    {
+	      /* Hide the window. */
+	      if (Wnd == IntGetActiveWindow())
+		{
+		  WinPosActivateOtherWindow(Window);
+		}
+	      /* Revert focus to parent. */
+	      if (Wnd == IntGetFocusWindow() ||
+		  IntIsChildWindow(Wnd, IntGetFocusWindow()))
+		{
+		  IntSetFocusWindow(Window->Parent->Self);
+		}
+	    }
+	}
+      /* FIXME: Check for window destruction. */
+      /* Show title for minimized windows. */
+      if (Window->Style & WS_MINIMIZE)
+	{
+	  WinPosShowIconTitle(Window, TRUE);
+	}
     }
 
   if (Window->Flags & WINDOWOBJECT_NEED_SIZE)
     {
-      /* should happen only in CreateWindowEx() */
-      int wParam = SIZE_RESTORED;
+      WPARAM wParam = SIZE_RESTORED;
 
       Window->Flags &= ~WINDOWOBJECT_NEED_SIZE;
       if (Window->Style & WS_MAXIMIZE)
@@ -1210,8 +1234,8 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
       WinPosChangeActiveWindow(Wnd, FALSE);
     }
 
-  IntReleaseWindowObject(Window);
-  return WasVisible;
+  ObmDereferenceObject(Window);
+  return(WasVisible);
 }
 
 BOOL STATIC FASTCALL

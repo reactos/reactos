@@ -27,11 +27,6 @@ typedef struct _WINDOW_OBJECT
   UNICODE_STRING WindowName;
   /* Style. */
   DWORD Style;
-  /* Initial window position. */
-  INT x;
-  INT y;
-  INT Width;
-  INT Height;
   /* Context help id */
   DWORD ContextHelpId;
   /* system menu handle. */
@@ -93,6 +88,7 @@ typedef struct _WINDOW_OBJECT
 #define WINDOWOBJECT_NEED_ERASEBKGND      (0x00000002)
 #define WINDOWOBJECT_NEED_NCPAINT         (0x00000004)
 #define WINDOWOBJECT_NEED_INTERNALPAINT   (0x00000008)
+#define WINDOWOBJECT_MAPPING              (0x00000010)
 #define WINDOWOBJECT_RESTOREMAX           (0x00000020)
 
 inline BOOL IntIsDesktopWindow(PWINDOW_OBJECT WindowObject);

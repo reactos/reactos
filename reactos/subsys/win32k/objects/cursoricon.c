@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.20 2003/11/18 19:59:51 weiden Exp $ */
+/* $Id: cursoricon.c,v 1.21 2003/11/20 21:21:29 navaraf Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -69,6 +69,7 @@ IntCopyBitmap(HBITMAP bmp)
 HCURSOR FASTCALL
 IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor, BOOL ForceChange)
 {
+  HDC hDC;
   PDC dc;
   PSURFOBJ SurfObj;
   PSURFGDI SurfGDI;
@@ -92,11 +93,13 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor, BOOL Fo
     goto done;
   
   /* FIXME use the desktop's HDC instead of using ScreenDeviceContext */
-  dc = DC_LockDc(ScreenDeviceContext);
+  hDC = NtUserGetDC(0);
+  dc = DC_LockDc(hDC);
   SurfObj = (PSURFOBJ)AccessUserObject((ULONG) dc->Surface);
   SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
   DevInfo = dc->DevInfo;
-  DC_UnlockDc(ScreenDeviceContext);
+  DC_UnlockDc(hDC);
+  NtUserReleaseDC(0, hDC);
   
   if(!NewCursor && (CurInfo->CurrentCursorObject || ForceChange))
   {

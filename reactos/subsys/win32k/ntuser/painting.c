@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.35 2003/11/19 09:10:36 navaraf Exp $
+ *  $Id: painting.c,v 1.36 2003/11/20 21:21:29 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -585,6 +585,8 @@ IntFindWindowToRepaint(HWND hWnd, PW32THREAD Thread)
       }
 
       ExAcquireFastMutex(&Window->ChildrenListLock);
+
+#if 0
       for (Child = Window->FirstChild; Child; Child = Child->NextSibling)
       {
          if (Child->Style & WS_VISIBLE &&
@@ -599,6 +601,7 @@ IntFindWindowToRepaint(HWND hWnd, PW32THREAD Thread)
 
       if (hFoundWnd == NULL)
       {
+#endif
          for (Child = Window->FirstChild; Child; Child = Child->NextSibling)
          {
             if (Child->Style & WS_VISIBLE)
@@ -608,7 +611,9 @@ IntFindWindowToRepaint(HWND hWnd, PW32THREAD Thread)
                   break;
             }
          }
+#if 0
       }
+#endif
 
       ExReleaseFastMutex(&Window->ChildrenListLock);
       IntReleaseWindowObject(Window);
@@ -628,7 +633,18 @@ IntGetPaintMessage(PWINDOW_OBJECT Wnd, PW32THREAD Thread, MSG *Message)
       Message->hwnd = IntFindWindowToRepaint(NULL, PsGetWin32Thread());
 
    if (Message->hwnd == NULL)
+   {
+      PUSER_MESSAGE_QUEUE MessageQueue;
+
+      DPRINT1("PAINTING BUG: Thread marked as containing dirty windows, but no dirty windows found!\n");
+      MessageQueue = (PUSER_MESSAGE_QUEUE)Thread->MessageQueue;
+      ExAcquireFastMutex(&MessageQueue->Lock);
+      DPRINT1("Current paint count: %d\n", MessageQueue->PaintCount);
+      MessageQueue->PaintCount = 0;
+      MessageQueue->PaintPosted = FALSE;
+      ExReleaseFastMutex(&MessageQueue->Lock);
       return FALSE;
+   }
 
    Window = IntGetWindowObject(Message->hwnd);
    if (Window != NULL)

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.139 2003/11/20 15:35:33 weiden Exp $
+/* $Id: window.c,v 1.140 2003/11/20 21:21:29 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -467,10 +467,6 @@ IntCreateDesktopWindow(PWINSTATION_OBJECT WindowStation,
   WindowObject->ExStyle = 0;
   WindowObject->Style = WS_VISIBLE;
   WindowObject->Flags = 0;
-  WindowObject->x = 0;
-  WindowObject->y = 0;
-  WindowObject->Width = Width;
-  WindowObject->Height = Height;
   WindowObject->Parent = NULL;
   WindowObject->Owner = NULL;
   WindowObject->IDMenu = 0;
@@ -756,6 +752,7 @@ IntLinkWindow(
  *
  * Change the focus window, sending the WM_SETFOCUS and WM_KILLFOCUS messages
  */
+#if 0
 static HWND FASTCALL
 set_focus_window(HWND New, PWINDOW_OBJECT Window, HWND Previous)
 {
@@ -802,10 +799,12 @@ set_focus_window(HWND New, PWINDOW_OBJECT Window, HWND Previous)
 
   return Previous;
 }
+#endif
 
 HWND FASTCALL
 IntSetFocusWindow(HWND hWnd)
 {
+#if 0
   PUSER_MESSAGE_QUEUE OldMessageQueue;
   PDESKTOP_OBJECT DesktopObject;
   PWINDOW_OBJECT WindowObject;
@@ -921,6 +920,8 @@ IntSetFocusWindow(HWND hWnd)
   DPRINT("hWndOldFocus = 0x%x\n", hWndOldFocus);
 
   return hWndOldFocus;
+#endif
+  return 0;
 }
 
 
@@ -1435,10 +1436,6 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   else
     WindowObject->SystemMenu = (HANDLE)0;
   
-  WindowObject->x = x;
-  WindowObject->y = y;
-  WindowObject->Width = nWidth;
-  WindowObject->Height = nHeight;
   WindowObject->ContextHelpId = 0;
   WindowObject->IDMenu = (UINT)hMenu;
   WindowObject->Instance = hInstance;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.36 2003/11/19 09:10:36 navaraf Exp $
+/* $Id: windc.c,v 1.37 2003/11/20 21:21:29 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -455,7 +455,7 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
             }
 */
         }
-      Flags &= DCX_INTERSECTRGN;
+      Flags |= DCX_INTERSECTRGN;
     }
 
   if (NULL != ClipRegion)
