@@ -514,7 +514,7 @@ RegisterClipboardFormatW=RegisterClipboardFormatW@4
 ;RegisterDeviceNotificationW@12
 RegisterHotKey=RegisterHotKey@16
 ;RegisterLogonProcess
-;RegisterServicesProcess
+RegisterServicesProcess=RegisterServicesProcess@4
 ;RegisterShellHookWindow
 ;RegisterSystemThread
 ;RegisterTasklist

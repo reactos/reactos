@@ -1,4 +1,4 @@
-/* $Id: services.c,v 1.8 2002/09/08 10:23:47 chorns Exp $
+/* $Id: services.c,v 1.9 2002/10/20 14:54:34 ekohl Exp $
  *
  * service control manager
  * 
@@ -265,8 +265,8 @@ WinMain(HINSTANCE hInstance,
    /* FIXME: create listener thread for pipe */
 
 
-  /* FIXME: register process as service process */
-//  RegisterServiceProcess();
+  /* Register service process with CSRSS */
+  RegisterServicesProcess(GetCurrentProcessId());
 
   PrintString("SERVICES: Initialized.\n");
 

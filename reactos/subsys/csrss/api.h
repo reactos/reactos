@@ -122,6 +122,8 @@ CSR_API(CsrScrollConsoleScreenBuffer);
 CSR_API(CsrReadConsoleOutputChar);
 CSR_API(CsrReadConsoleOutputAttrib);
 CSR_API(CsrGetNumberOfConsoleInputEvents);
+CSR_API(CsrRegisterServicesProcess);
+CSR_API(CsrExitReactos);
 
 /* print.c */
 VOID STDCALL DisplayString(LPCWSTR lpwString);

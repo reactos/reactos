@@ -7582,6 +7582,9 @@ SwitchToFiber (
 	);
 
 
+WINBOOL STDCALL
+RegisterServicesProcess(DWORD ServicesProcessId);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

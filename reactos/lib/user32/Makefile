@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.6 2002/09/17 23:46:22 dwelch Exp $
+# $Id: Makefile,v 1.7 2002/10/20 14:53:02 ekohl Exp $
 
 PATH_TO_TOP = ../..
 
@@ -26,16 +26,17 @@ CONTROLS_OBJECTS = \
 	controls/scrollbar.o
 
 MISC_OBJECTS = \
+	misc/dde.o \
 	misc/desktop.o \
+	misc/display.o \
 	misc/dllmain.o \
+	misc/exit.o \
 	misc/sprintf.o \
 	misc/stubs.o \
 	misc/winhelp.o \
 	misc/win32k.o \
 	misc/winsta.o \
 	misc/resources.o \
-	misc/dde.o \
-	misc/display.o \
 	misc/object.o \
 	misc/timer.o
 

@@ -282,6 +282,18 @@ typedef struct
    DWORD NumInputEvents;
 }CSRSS_GET_NUM_INPUT_EVENTS_REPLY, *PCSRSS_GET_NUM_INPUT_EVENTS_REPLY;
 
+typedef struct
+{
+  DWORD ProcessId;
+} CSRSS_REGISTER_SERVICES_PROCESS_REQUEST, *PCSRSS_REGISTER_SERVICES_PROCESS_REQUEST;
+
+typedef struct
+{
+  UINT Flags;
+  DWORD Reserved;
+} CSRSS_EXIT_REACTOS_REQUEST, *PCSRSS_EXIT_REACTOS_REQUEST;
+
+
 #define CSRSS_MAX_WRITE_CONSOLE_REQUEST       \
       (MAX_MESSAGE_DATA - sizeof(ULONG) - sizeof(CSRSS_WRITE_CONSOLE_REQUEST))
 
@@ -328,7 +340,10 @@ typedef struct
 #define CSRSS_SCROLL_CONSOLE_SCREEN_BUFFER  (0x19)
 #define CSRSS_READ_CONSOLE_OUTPUT_CHAR      (0x1A)
 #define CSRSS_READ_CONSOLE_OUTPUT_ATTRIB    (0x1B)
-#define CSRSS_GET_NUM_INPUT_EVENTS          (0x1C) 
+#define CSRSS_GET_NUM_INPUT_EVENTS          (0x1C)
+#define CSRSS_REGISTER_SERVICES_PROCESS     (0x1D)
+#define CSRSS_EXIT_REACTOS                  (0x1E)
+
 
 
 /* Keep in sync with definition below. */
@@ -367,6 +382,8 @@ typedef struct
     CSRSS_READ_CONSOLE_OUTPUT_CHAR_REQUEST ReadConsoleOutputCharRequest;
     CSRSS_READ_CONSOLE_OUTPUT_ATTRIB_REQUEST ReadConsoleOutputAttribRequest;
     CSRSS_GET_NUM_INPUT_EVENTS_REQUEST GetNumInputEventsRequest;
+    CSRSS_REGISTER_SERVICES_PROCESS_REQUEST RegisterServicesProcessRequest;
+    CSRSS_EXIT_REACTOS_REQUEST ExitReactosRequest;
   } Data;
 } CSRSS_API_REQUEST, *PCSRSS_API_REQUEST;
 

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.15 2002/09/17 23:46:23 dwelch Exp $
+/* $Id: stubs.c,v 1.16 2002/10/20 14:52:45 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -122,8 +122,6 @@ DragDetect(
   return FALSE;
 }
 
-
-
 WINBOOL
 STDCALL
 EnableScrollBar(
@@ -133,18 +131,6 @@ EnableScrollBar(
 {
   return FALSE;
 }
-
-WINBOOL
-STDCALL
-ExitWindowsEx(
-  UINT uFlags,
-  DWORD dwReserved)
-{
-  return FALSE;
-}
-
-
-
 
 HWND
 STDCALL

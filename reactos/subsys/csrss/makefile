@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.16 2002/08/26 13:06:03 dwelch Exp $
+# $Id: makefile,v 1.17 2002/10/20 14:53:59 ekohl Exp $
 
 PATH_TO_TOP = ../..
 
@@ -16,7 +16,8 @@ OBJECTS_API = \
   api/process.o \
   api/wapi.o \
   api/conio.o \
-  api/handle.o
+  api/handle.o \
+  api/user.o
 
 OBJECTS_MISC = \
   $(TARGET_NAME).o \

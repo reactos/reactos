@@ -1,4 +1,4 @@
-/* $Id: wapi.c,v 1.20 2002/10/20 00:34:40 mdill Exp $
+/* $Id: wapi.c,v 1.21 2002/10/20 14:53:43 ekohl Exp $
  * 
  * reactos/subsys/csrss/api/wapi.c
  *
@@ -55,7 +55,9 @@ static const CsrFunc CsrFuncs[] = {
    CsrScrollConsoleScreenBuffer,
    CsrReadConsoleOutputChar,
    CsrReadConsoleOutputAttrib,
-   CsrGetNumberOfConsoleInputEvents,  
+   CsrGetNumberOfConsoleInputEvents,
+   CsrRegisterServicesProcess,
+   CsrExitReactos,
    0 };
 
 static void Thread_Api2(HANDLE ServerPort)
