@@ -536,7 +536,7 @@ W32kTextOut(HDC  hDC,
     bitSize.cx		= glyph->bitmap.width-1;
     bitSize.cy		= glyph->bitmap.rows-1;
 
-    HSourceGlyph = EngCreateBitmap(bitSize, glyph->bitmap.pitch /* -1 */ , BMF_8BPP, 0, glyph->bitmap.buffer);
+    HSourceGlyph = EngCreateBitmap(bitSize, glyph->bitmap.pitch, BMF_8BPP, 0, glyph->bitmap.buffer);
     SourceGlyphSurf = AccessUserObject(HSourceGlyph);
 
     EngBitBlt(SurfObj, SourceGlyphSurf,
