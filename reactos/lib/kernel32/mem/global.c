@@ -1,4 +1,4 @@
-/* $Id: global.c,v 1.23 2004/04/22 02:20:52 jimtabor Exp $
+/* $Id: global.c,v 1.24 2004/05/31 16:54:04 jimtabor Exp $
  *
  * Win32 Global/Local heap functions (GlobalXXX, LocalXXX).
  * These functions included in Win32 for compatibility with 16 bit Windows
@@ -453,17 +453,20 @@ VOID STDCALL
 GlobalMemoryStatus(LPMEMORYSTATUS lpBuffer)
 {
     MEMORYSTATUSEX lpBufferEx;
-    
+#if 0    
     if (lpBuffer->dwLength != sizeof(MEMORYSTATUS))
       {
         SetLastError(ERROR_INVALID_PARAMETER);
         return;      
       }
-
+#endif
     lpBufferEx.dwLength = sizeof(MEMORYSTATUSEX);
 
     if (GlobalMemoryStatusEx(&lpBufferEx))
       {
+
+	 lpBuffer->dwLength 	   = sizeof(MEMORYSTATUS);
+
          lpBuffer->dwMemoryLoad    = lpBufferEx.dwMemoryLoad;
          lpBuffer->dwTotalPhys     = lpBufferEx.ullTotalPhys;
          lpBuffer->dwAvailPhys     = lpBufferEx.ullAvailPhys;
