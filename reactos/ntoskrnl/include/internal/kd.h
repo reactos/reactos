@@ -1,4 +1,4 @@
-/* $Id: kd.h,v 1.27 2004/08/26 16:04:50 blight Exp $
+/* $Id: kd.h,v 1.28 2004/11/20 22:21:35 arty Exp $
  *
  * kernel debugger prototypes
  */
@@ -8,6 +8,7 @@
 
 #include <internal/ke.h>
 #include <internal/ldr.h>
+#include <ntdll/ldr.h>
 
 #define KD_DEBUG_DISABLED	0x00
 #define KD_DEBUG_GDB		0x01
@@ -154,8 +155,10 @@ KdbSymPrintAddress(IN PVOID Address);
 
 KD_CONTINUE_TYPE
 KdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
+			  KPROCESSOR_MODE PreviousMode,
                           PCONTEXT Context,
-                          PKTRAP_FRAME TrapFrame);
+                          PKTRAP_FRAME TrapFrame,
+			  BOOLEAN HandleAlways);
 
 #endif /* KDBG */
 
