@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.15 2003/09/25 15:54:42 navaraf Exp $
+/* $Id: pnpmgr.c,v 1.16 2003/09/28 12:52:53 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -593,7 +593,7 @@ IopActionInterrogateDeviceStack(
   WCHAR InstancePath[MAX_PATH];
   IO_STACK_LOCATION Stack;
   NTSTATUS Status;
-  WCHAR KeyBuffer[MAX_PATH];
+  PWSTR KeyBuffer;
 
   DPRINT("DeviceNode %x  Context %x\n", DeviceNode, Context);
 
@@ -807,17 +807,14 @@ IopActionInterrogateDeviceStack(
   DPRINT("InstancePath is %S\n", DeviceNode->InstancePath.Buffer);
 
   /*
-   * Create registry key for the device id, if it doesn't exist yet
-   *
-   * FIXME: This code is temporary until I figure out where these keys should
-   * be created. The keys are needed for installation of PnP drivers.
-   *
-   * FiN
+   * Create registry key for the instance id, if it doesn't exist yet
    */  
-
+  KeyBuffer = ExAllocatePool(PagedPool, (49 + DeviceNode->InstancePath.Length) * sizeof(WCHAR));
   wcscpy(KeyBuffer, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
-  wcscat(KeyBuffer, DeviceNode->DeviceID.Buffer);
+  wcscat(KeyBuffer, DeviceNode->InstancePath.Buffer);  
   RtlpCreateRegistryKeyPath(KeyBuffer);
+  ExFreePool(KeyBuffer);
+  DeviceNode->Flags |= DNF_PROCESSED;
 
   return STATUS_SUCCESS;
 }
@@ -1116,6 +1113,7 @@ IopInterrogateBusExtender(
       DeviceNode,
       DeviceRelations->Objects[i],
       &ChildDeviceNode);
+    DeviceNode->Flags |= DNF_ENUMERATED;
     if (!NT_SUCCESS(Status))
     {
       DPRINT("No resources\n");
