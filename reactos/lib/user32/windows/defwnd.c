@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.138 2004/05/20 14:34:14 weiden Exp $
+/* $Id: defwnd.c,v 1.139 2004/05/21 12:46:59 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -573,8 +573,16 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
     }
   else 
     {
-      SystemParametersInfoW(SPI_GETWORKAREA, 0, &clipRect, 0);
-      mouseRect = clipRect;
+      if(!(ExStyle & WS_EX_TOPMOST))
+      {
+        SystemParametersInfoW(SPI_GETWORKAREA, 0, &clipRect, 0);
+        mouseRect = clipRect;
+      }
+      else
+      {
+        SetRect(&mouseRect, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+        clipRect = mouseRect;
+      }
     }
   ClipCursor(&clipRect);
   
