@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.73 2001/04/16 02:02:05 dwelch Exp $
+/* $Id: loader.c,v 1.74 2001/04/23 22:00:28 ea Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -918,7 +918,7 @@ LdrpQueryModuleInformation(PVOID Buffer,
 	Smi->Module[ModuleCount].Unknown2 = 0;		/* Always 0 */
 	Smi->Module[ModuleCount].BaseAddress = current->Base;
 	Smi->Module[ModuleCount].Size = current->Length;
-	Smi->Module[ModuleCount].Unknown3 = 0;		/* Flags ??? */
+	Smi->Module[ModuleCount].Flags = 0;		/* Flags ??? (GN) */
 	Smi->Module[ModuleCount].EntryIndex = ModuleCount;
 
 	AnsiName.Length = 0;
