@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.1 2001/05/30 20:00:34 ekohl Exp $
+/* $Id: message.c,v 1.2 2001/06/22 12:36:22 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -54,7 +54,7 @@ RtlFindMessage(PVOID BaseAddress,
 
    Status = LdrAccessResource(BaseAddress,
 			      ResourceDataEntry,
-			      &MessageTable,
+			      (PVOID*)&MessageTable,
 			      NULL);
    if (!NT_SUCCESS(Status))
      {

@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.8 2000/11/04 13:51:41 ekohl Exp $
+/* $Id: time.c,v 1.9 2001/06/22 12:36:23 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -14,6 +14,7 @@
 
 #include <ddk/ntddk.h>
 #include <ntdll/rtl.h>
+
 
 #define TICKSPERSEC        10000000
 #define TICKSPERMSEC       10000
@@ -54,12 +55,9 @@ static __inline void NormalizeTimeFields(CSHORT *FieldToNormalize,
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
-STDCALL
-RtlTimeToTimeFields (
-	PLARGE_INTEGER liTime,
-	PTIME_FIELDS TimeFields
-	)
+VOID STDCALL
+RtlTimeToTimeFields(PLARGE_INTEGER liTime,
+		    PTIME_FIELDS TimeFields)
 {
   const int *Months;
   int LeapSecondCorrections, SecondsInDay, CurYear;
@@ -128,12 +126,10 @@ RtlTimeToTimeFields (
   TimeFields->Day = (CSHORT) (Days + 1);
 }
 
-BOOLEAN
-STDCALL
-RtlTimeFieldsToTime (
-	PTIME_FIELDS tfTimeFields,
-	PLARGE_INTEGER Time
-	)
+
+BOOLEAN STDCALL
+RtlTimeFieldsToTime(PTIME_FIELDS tfTimeFields,
+		    PLARGE_INTEGER Time)
 {
   int CurYear, CurMonth;
   long long int rcTime;
@@ -195,12 +191,9 @@ RtlTimeFieldsToTime (
 }
 
 
-VOID
-STDCALL
-RtlSecondsSince1970ToTime (
-	ULONG SecondsSince1970,
-	PLARGE_INTEGER Time
-	)
+VOID STDCALL
+RtlSecondsSince1970ToTime(ULONG SecondsSince1970,
+			  PLARGE_INTEGER Time)
 {
    LONGLONG llTime;
 
@@ -210,12 +203,9 @@ RtlSecondsSince1970ToTime (
 }
 
 
-VOID
-STDCALL
-RtlSecondsSince1980ToTime (
-	ULONG SecondsSince1980,
-	PLARGE_INTEGER Time
-	)
+VOID STDCALL
+RtlSecondsSince1980ToTime(ULONG SecondsSince1980,
+			  PLARGE_INTEGER Time)
 {
    LONGLONG llTime;
 
@@ -225,12 +215,9 @@ RtlSecondsSince1980ToTime (
 }
 
 
-BOOLEAN
-STDCALL
-RtlTimeToSecondsSince1970 (
-	PLARGE_INTEGER Time,
-	PULONG SecondsSince1970
-	)
+BOOLEAN STDCALL
+RtlTimeToSecondsSince1970(PLARGE_INTEGER Time,
+			  PULONG SecondsSince1970)
 {
    LARGE_INTEGER liTime;
 
@@ -246,12 +233,9 @@ RtlTimeToSecondsSince1970 (
 }
 
 
-BOOLEAN
-STDCALL
-RtlTimeToSecondsSince1980 (
-	PLARGE_INTEGER Time,
-	PULONG SecondsSince1980
-	)
+BOOLEAN STDCALL
+RtlTimeToSecondsSince1980(PLARGE_INTEGER Time,
+			  PULONG SecondsSince1980)
 {
    LARGE_INTEGER liTime;
 
@@ -267,12 +251,9 @@ RtlTimeToSecondsSince1980 (
 }
 
 
-NTSTATUS
-STDCALL
-RtlLocalTimeToSystemTime (
-	PLARGE_INTEGER	LocalTime,
-	PLARGE_INTEGER	SystemTime
-	)
+NTSTATUS STDCALL
+RtlLocalTimeToSystemTime(PLARGE_INTEGER LocalTime,
+			 PLARGE_INTEGER SystemTime)
 {
    SYSTEM_TIMEOFDAY_INFORMATION TimeInformation;
    NTSTATUS Status;
@@ -291,12 +272,9 @@ RtlLocalTimeToSystemTime (
 }
 
 
-NTSTATUS
-STDCALL
-RtlSystemTimeToLocalTime (
-	PLARGE_INTEGER	SystemTime,
-	PLARGE_INTEGER	LocalTime
-	)
+NTSTATUS STDCALL
+RtlSystemTimeToLocalTime(PLARGE_INTEGER SystemTime,
+			 PLARGE_INTEGER LocalTime)
 {
    SYSTEM_TIMEOFDAY_INFORMATION TimeInformation;
    NTSTATUS Status;
