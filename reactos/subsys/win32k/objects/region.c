@@ -113,7 +113,7 @@ SOFTWARE.
  * the y-x-banding that's so nice to have...
  */
 
-/* $Id: region.c,v 1.57 2004/05/18 22:32:48 weiden Exp $ */
+/* $Id: region.c,v 1.58 2004/06/28 21:03:08 navaraf Exp $ */
 #include <w32k.h>
 #include <win32k/float.h>
 
@@ -400,7 +400,7 @@ static inline int xmemcheck(ROSRGNDATA *reg, PRECT *rect, PRECT *firstrect ) {
 		    return 0;
 		RtlCopyMemory( temp, *firstrect, reg->rdh.nRgnSize );
 		reg->rdh.nRgnSize *= 2;
-		if (*firstrect != &reg->BuiltInRect)
+		if (*firstrect != &reg->rdh.rcBound)
 		    ExFreePool( *firstrect );
 		*firstrect = temp;
 		*rect = (*firstrect)+reg->rdh.nCount;
@@ -466,7 +466,7 @@ static BOOL FASTCALL REGION_CopyRegion(PROSRGNDATA dst, PROSRGNDATA src)
 	  if( !temp )
 		return FALSE;
 
-	  if( dst->Buffer && dst->Buffer != &dst->BuiltInRect )
+	  if( dst->Buffer && dst->Buffer != &dst->rdh.rcBound )
 	  	ExFreePool( dst->Buffer );	//free the old buffer
 	  dst->Buffer = temp;
       dst->rdh.nRgnSize = src->rdh.nCount * sizeof(RECT);  //size of region buffer
@@ -541,7 +541,7 @@ static BOOL FASTCALL REGION_CropAndOffsetRegion(const PPOINT off, const PRECT re
     }
     else{
       xrect = ExAllocatePoolWithTag(PagedPool, rgnSrc->rdh.nCount * sizeof(RECT), TAG_REGION);
-	  if( rgnDst->Buffer && rgnDst->Buffer != &rgnDst->BuiltInRect )
+	  if( rgnDst->Buffer && rgnDst->Buffer != &rgnDst->rdh.rcBound )
 	  	ExFreePool( rgnDst->Buffer ); //free the old buffer. will be assigned to xrect below.
 	}
 
@@ -604,7 +604,7 @@ static BOOL FASTCALL REGION_CropAndOffsetRegion(const PPOINT off, const PRECT re
       if(!temp)
 	      return FALSE;
 
-	  if( rgnDst->Buffer && rgnDst->Buffer != &rgnDst->BuiltInRect )
+	  if( rgnDst->Buffer && rgnDst->Buffer != &rgnDst->rdh.rcBound )
 	  	ExFreePool( rgnDst->Buffer ); //free the old buffer
       rgnDst->Buffer = temp;
       rgnDst->rdh.nCount = i;
@@ -1142,7 +1142,7 @@ REGION_RegionOp(
 			else{
 				newReg->rdh.nRgnSize = newReg->rdh.nCount*sizeof(RECT);
 				RtlCopyMemory( newReg->Buffer, prev_rects, newReg->rdh.nRgnSize );
-				if (prev_rects != &newReg->BuiltInRect)
+				if (prev_rects != &newReg->rdh.rcBound)
 					ExFreePool( prev_rects );
 			}
 		}
@@ -1153,7 +1153,7 @@ REGION_RegionOp(
 		     * the region is empty
 		     */
 		    newReg->rdh.nRgnSize = sizeof(RECT);
-		    if (newReg->Buffer != &newReg->BuiltInRect)
+		    if (newReg->Buffer != &newReg->rdh.rcBound)
 			ExFreePool( newReg->Buffer );
 		    newReg->Buffer = ExAllocatePoolWithTag( PagedPool, sizeof(RECT), TAG_REGION );
 			ASSERT( newReg->Buffer );
@@ -1165,7 +1165,7 @@ REGION_RegionOp(
 	else
 		newReg->rdh.iType = (newReg->rdh.nCount > 1)? COMPLEXREGION : SIMPLEREGION;
 
-	if (oldRects != &newReg->BuiltInRect)
+	if (oldRects != &newReg->rdh.rcBound)
 		ExFreePool( oldRects );
     return;
 }
@@ -1900,7 +1900,10 @@ HRGN FASTCALL RGNDATA_AllocRgn(INT n)
         {
           if (1 == n)
             {
-              pReg->Buffer = &pReg->BuiltInRect;
+              /* Testing shows that > 95% of all regions have only 1 rect.
+                 Including that here saves us from having to do another
+                 allocation */
+              pReg->Buffer = &pReg->rdh.rcBound;
             }
           else
             {
@@ -1931,7 +1934,7 @@ HRGN FASTCALL RGNDATA_AllocRgn(INT n)
 BOOL FASTCALL RGNDATA_InternalDelete( PROSRGNDATA pRgn )
 {
   ASSERT(pRgn);
-  if(pRgn->Buffer && pRgn->Buffer != &pRgn->BuiltInRect)
+  if(pRgn->Buffer && pRgn->Buffer != &pRgn->rdh.rcBound)
     ExFreePool(pRgn->Buffer);
   return TRUE;
 }
@@ -2383,10 +2386,13 @@ NtGdiOffsetRgn(HRGN  hRgn,
         pbox->bottom += YOffset;
         pbox++;
       }
-      rgn->rdh.rcBound.left += XOffset;
-      rgn->rdh.rcBound.right += XOffset;
-      rgn->rdh.rcBound.top += YOffset;
-      rgn->rdh.rcBound.bottom += YOffset;
+      if (rgn->Buffer != &rgn->rdh.rcBound)
+      {
+        rgn->rdh.rcBound.left += XOffset;
+        rgn->rdh.rcBound.right += XOffset;
+        rgn->rdh.rcBound.top += YOffset;
+        rgn->rdh.rcBound.bottom += YOffset;
+      }
     }
   }
   ret = rgn->rdh.iType;
@@ -2877,7 +2883,7 @@ static int FASTCALL REGION_PtsToRegion(int numFullPtBlocks, int iCurPtBlock,
     if(reg->Buffer != NULL)
     {
       RtlCopyMemory(temp, reg->Buffer, reg->rdh.nCount * sizeof(RECT));
-      if(reg->Buffer != &reg->BuiltInRect)
+      if(reg->Buffer != &reg->rdh.rcBound)
         ExFreePool(reg->Buffer);
     }
     reg->Buffer = temp;
