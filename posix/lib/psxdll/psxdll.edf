@@ -1,4 +1,4 @@
-; $Id: psxdll.edf,v 1.4 2002/03/07 06:07:31 hyperion Exp $
+; $Id: psxdll.edf,v 1.5 2002/03/10 17:10:30 hyperion Exp $
 ;
 ; ReactOS POSIX+ Client Library
 ;
@@ -37,7 +37,12 @@ __fdtable_entry_add=__fdtable_entry_add
 __fdtable_entry_remove=__fdtable_entry_remove
 __fdtable_entry_get=__fdtable_entry_get
 ;misc/heap
+;for Microsoft POSIX and Interix compatibility
 GetProcessHeap=GetProcessHeap@0
+HeapAlloc=NTDLL.RtlAllocateHeap
+HeapFree=NTDLL.RtlFreeHeap
+HeapReAlloc=NTDLL.ReAllocateHeap
+HeapSize=NTDLL.RtlSizeHeap
 ;misc/init
 __PdxInitializeData=__PdxInitializeData@8
 ;misc/path
@@ -81,6 +86,7 @@ pthread_kill=pthread_kill
 raise=raise
 
 ;stdio
+;temporary forward exports, soon to be changed
 printf=MSVCRT.printf
 gets=MSVCRT.gets
 
@@ -91,6 +97,8 @@ realloc=realloc
 free=free
 calloc=calloc
 exit=exit
+;FIXME: should the two calls be distinct?
+_exit=exit
 
 ;string
 ;forward-exports to NTDLL
@@ -145,5 +153,17 @@ wcstol=NTDLL.wcstol
 wcstombs=NTDLL.wcstombs
 wcstoul=NTDLL.wcstoul
 ;implemented internally
+
+;others (FIXME: cathegorize these calls)
+RtlAnsiCharToUnicodeChar=NTDLL.RtlAnsiCharToUnicodeChar
+RtlFillMemory=NTDLL.RtlFillMemory
+RtlMoveMemory=NTDLL.RtlMoveMemory
+RtlMultiByteToUnicodeN=NTDLL.RtlMultiByteToUnicodeN
+RtlUnicodeToMultiByteN=NTDLL.RtlUnicodeToMultiByteN
+RtlUnicodeToMultiByteSize=NTDLL.RtlUnicodeToMultiByteSize
+RtlUnwind=NTDLL.RtlUnwind
+RtlUpcaseUnicodeChar=NTDLL.RtlUpcaseUnicodeChar
+RtlUpcaseUnicodeToMultiByteN=NTDLL.RtlUpcaseUnicodeToMultiByteN
+RtlZeroMemory=NTDLL.RtlZeroMemory
 
 ;EOF

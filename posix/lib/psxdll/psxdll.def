@@ -1,4 +1,4 @@
-; $Id: psxdll.def,v 1.4 2002/03/07 06:07:31 hyperion Exp $
+; $Id: psxdll.def,v 1.5 2002/03/10 17:10:30 hyperion Exp $
 ;
 ; ReactOS POSIX+ Client Library
 ;
@@ -37,7 +37,12 @@ __fdtable_entry_add
 __fdtable_entry_remove
 __fdtable_entry_get
 ;misc/heap
+;for Microsoft POSIX and Interix compatibility
 GetProcessHeap
+HeapAlloc
+HeapFree
+HeapReAlloc
+HeapSize
 ;misc/init
 __PdxInitializeData
 ;misc/path
@@ -81,6 +86,7 @@ pthread_kill
 raise
 
 ;stdio
+;temporary forward exports, soon to be changed
 printf
 gets
 
@@ -91,6 +97,8 @@ realloc
 free
 calloc
 exit
+;FIXME: should the two calls be distinct?
+_exit
 
 ;string
 ;forward-exports to NTDLL
@@ -145,5 +153,17 @@ wcstol
 wcstombs
 wcstoul
 ;implemented internally
+
+;others (FIXME: cathegorize these calls)
+RtlAnsiCharToUnicodeChar
+RtlFillMemory
+RtlMoveMemory
+RtlMultiByteToUnicodeN
+RtlUnicodeToMultiByteN
+RtlUnicodeToMultiByteSize
+RtlUnwind
+RtlUpcaseUnicodeChar
+RtlUpcaseUnicodeToMultiByteN
+RtlZeroMemory
 
 ;EOF
