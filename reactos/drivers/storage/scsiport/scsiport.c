@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.39 2003/10/02 13:40:00 ekohl Exp $
+/* $Id: scsiport.c,v 1.40 2003/10/03 10:47:40 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -89,14 +89,21 @@ SpiAllocateLunExtension (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 			 IN UCHAR TargetId,
 			 IN UCHAR Lun);
 
+static VOID
+SpiRemoveLunExtension (IN PSCSI_PORT_LUN_EXTENSION LunExtension);
+
 static PSCSI_PORT_LUN_EXTENSION
 SpiGetLunExtension (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 		    IN UCHAR PathId,
 		    IN UCHAR TargetId,
 		    IN UCHAR Lun);
 
+static NTSTATUS
+SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
+		IN OUT PSCSI_REQUEST_BLOCK Srb);
+
 static VOID
-SpiInquirePort (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension);
+SpiScanAdapter (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension);
 
 static ULONG
 SpiGetInquiryData (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
@@ -874,8 +881,8 @@ ScsiPortInitialize(IN PVOID Argument1,
 	    PortConfig->AdapterScansDown;
 	  PortCapabilities->AdapterUsesPio = TRUE; /* FIXME */
 
-	  /* Get inquiry data */
-	  SpiInquirePort (DeviceExtension);
+	  /* Scan the adapter for devices */
+	  SpiScanAdapter (DeviceExtension);
 
 	  /* Build the registry device map */
 	  SpiBuildDeviceMap (DeviceExtension,
@@ -1022,11 +1029,6 @@ ScsiPortNotification(IN SCSI_NOTIFICATION_TYPE NotificationType,
 				      MiniPortDeviceExtension);
 
   DPRINT("DeviceExtension %p\n", DeviceExtension);
-
-  DPRINT("Initializing = %s\n", (DeviceExtension->Initializing)?"TRUE":"FALSE");
-
-  if (DeviceExtension->Initializing == TRUE)
-    return;
 
   va_start(ap, HwDeviceExtension);
 
@@ -1357,9 +1359,9 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
 	break;
 
       case SRB_FUNCTION_CLAIM_DEVICE:
-	DPRINT("  SRB_FUNCTION_CLAIM_DEVICE\n");
+	DPRINT ("  SRB_FUNCTION_CLAIM_DEVICE\n");
 
-	/* Reference device object and keep the pointer */
+	/* Reference device object and keep the device object */
 	ObReferenceObject(DeviceObject);
 	LunExtension->DeviceObject = DeviceObject;
 	LunExtension->DeviceClaimed = TRUE;
@@ -1367,24 +1369,14 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
 	break;
 
       case SRB_FUNCTION_RELEASE_DEVICE:
-	{
-	  PSCSI_PORT_LUN_EXTENSION LunExtension;
+	DPRINT ("  SRB_FUNCTION_RELEASE_DEVICE\n");
+	DPRINT ("PathId: %lu  TargetId: %lu  Lun: %lu\n",
+		Srb->PathId, Srb->TargetId, Srb->Lun);
 
-	  DPRINT("  SRB_FUNCTION_RELEASE_DEVICE\n");
-	  DPRINT("PathId: %lu  TargetId: %lu  Lun: %lu\n", Srb->PathId, Srb->TargetId, Srb->Lun);
-
-	  LunExtension = SpiGetLunExtension(DeviceExtension,
-					    Srb->PathId,
-					    Srb->TargetId,
-					    Srb->Lun);
-	  if (LunExtension != NULL)
-	    {
-	      /* Dereference device object */
-	      ObDereferenceObject(LunExtension->DeviceObject);
-	      LunExtension->DeviceObject = NULL;
-	      LunExtension->DeviceClaimed = FALSE;
-	    }
-	}
+	/* Dereference device object and clear the device object */
+	ObDereferenceObject(LunExtension->DeviceObject);
+	LunExtension->DeviceObject = NULL;
+	LunExtension->DeviceClaimed = FALSE;
 	break;
 
       default:
@@ -1632,6 +1624,27 @@ SpiAllocateLunExtension (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 }
 
 
+static VOID
+SpiRemoveLunExtension (IN PSCSI_PORT_LUN_EXTENSION LunExtension)
+{
+  DPRINT("SpiRemoveLunExtension(%p) called\n",
+	 LunExtension);
+
+  if (LunExtension == NULL)
+    return;
+
+  RemoveEntryList (&LunExtension->List);
+
+
+  /* Release LUN extersion data */
+
+
+  ExFreePool (LunExtension);
+
+  return;
+}
+
+
 static PSCSI_PORT_LUN_EXTENSION
 SpiGetLunExtension (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 		    IN UCHAR PathId,
@@ -1667,8 +1680,67 @@ SpiGetLunExtension (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 }
 
 
+static NTSTATUS
+SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
+		IN OUT PSCSI_REQUEST_BLOCK Srb)
+{
+  IO_STATUS_BLOCK IoStatusBlock;
+  PIO_STACK_LOCATION IrpStack;
+  PKEVENT Event;
+  PIRP Irp;
+  NTSTATUS Status;
+
+  Event = ExAllocatePool (NonPagedPool,
+			  sizeof(KEVENT));
+  if (Event == NULL)
+    return STATUS_INSUFFICIENT_RESOURCES;
+
+  KeInitializeEvent (Event,
+		     NotificationEvent,
+		     FALSE);
+
+  Irp = IoBuildDeviceIoControlRequest (IOCTL_SCSI_EXECUTE_OUT,
+				       DeviceObject,
+				       NULL,
+				       0,
+				       Srb->DataBuffer,
+				       Srb->DataTransferLength,
+				       TRUE,
+				       Event,
+				       &IoStatusBlock);
+  if (Irp == NULL)
+    {
+      DPRINT("IoBuildDeviceIoControlRequest() failed\n");
+      ExFreePool (Event);
+      return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+  /* Attach Srb to the Irp */
+  IrpStack = IoGetNextIrpStackLocation (Irp);
+  IrpStack->Parameters.Scsi.Srb = Srb;
+  Srb->OriginalRequest = Irp;
+
+  /* Call the driver */
+  Status = IoCallDriver (DeviceObject,
+			 Irp);
+  if (Status == STATUS_PENDING)
+    {
+      KeWaitForSingleObject (Event,
+			     Suspended,
+			     KernelMode,
+			     FALSE,
+			     NULL);
+      Status = IoStatusBlock.Status;
+    }
+
+  ExFreePool (Event);
+
+  return Status;
+}
+
+
 static VOID
-SpiInquirePort(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
+SpiScanAdapter (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 {
   PSCSI_PORT_LUN_EXTENSION LunExtension;
   SCSI_REQUEST_BLOCK Srb;
@@ -1676,10 +1748,9 @@ SpiInquirePort(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
   ULONG Target;
   ULONG Lun;
   BOOLEAN Result;
+  NTSTATUS Status;
 
-  DPRINT ("SpiInquirePort() called\n");
-
-  DeviceExtension->Initializing = TRUE;
+  DPRINT ("SpiScanAdapter() called\n");
 
   RtlZeroMemory(&Srb,
 		sizeof(SCSI_REQUEST_BLOCK));
@@ -1702,23 +1773,31 @@ SpiInquirePort(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 	      Srb.Lun = Lun;
 	      Srb.SrbStatus = SRB_STATUS_SUCCESS;
 
-	      Result = DeviceExtension->HwStartIo(&DeviceExtension->MiniPortDeviceExtension,
-						  &Srb);
-	      DPRINT("Result %s  Srb.SrbStatus %lx\n", (Result) ? "TRUE" : "FALSE", Srb.SrbStatus);
-
-	      if (Result == TRUE && Srb.SrbStatus == SRB_STATUS_SUCCESS)
+	      LunExtension = SpiAllocateLunExtension (DeviceExtension,
+						      Bus,
+						      Target,
+						      Lun);
+	      if (LunExtension == NULL)
 		{
-		  LunExtension = SpiAllocateLunExtension(DeviceExtension,
-							 Bus,
-							 Target,
-							 Lun);
-		  if (LunExtension != NULL)
-		    {
-		      /* Copy inquiry data */
-		      RtlCopyMemory (&LunExtension->InquiryData,
-				     Srb.DataBuffer,
-				     sizeof(INQUIRYDATA));
-		    }
+		  DPRINT("Failed to allocate the LUN extension!\n");
+		  ExFreePool(Srb.DataBuffer);
+		  return;
+		}
+
+	      Status = SpiSendInquiry (DeviceExtension->DeviceObject,
+				       &Srb);
+	      DPRINT("Status %lx  Srb.SrbStatus %lx\n", Status, Srb.SrbStatus);
+
+	      if (NT_SUCCESS(Status) && Srb.SrbStatus == SRB_STATUS_SUCCESS)
+		{
+		  /* Copy inquiry data */
+		  RtlCopyMemory (&LunExtension->InquiryData,
+				 Srb.DataBuffer,
+				 sizeof(INQUIRYDATA));
+		}
+	      else
+		{
+		  SpiRemoveLunExtension (LunExtension);
 		}
 	    }
 	}
@@ -1726,9 +1805,7 @@ SpiInquirePort(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 
   ExFreePool(Srb.DataBuffer);
 
-  DeviceExtension->Initializing = FALSE;
-
-  DPRINT ("SpiInquirePort() done\n");
+  DPRINT ("SpiScanAdapter() done\n");
 }
 
 
@@ -1779,11 +1856,14 @@ SpiGetInquiryData(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 		  UnitInfo->TargetId = Target;
 		  UnitInfo->Lun = Lun;
 		  UnitInfo->InquiryDataLength = INQUIRYDATABUFFERSIZE;
-		  memcpy(&UnitInfo->InquiryData,
-			 &LunExtension->InquiryData,
-			 INQUIRYDATABUFFERSIZE);
+		  RtlCopyMemory (&UnitInfo->InquiryData,
+				 &LunExtension->InquiryData,
+				 INQUIRYDATABUFFERSIZE);
 		  if (PrevUnit != NULL)
-		    PrevUnit->NextInquiryDataOffset = (ULONG)((PUCHAR)UnitInfo-(PUCHAR)AdapterBusInfo);
+		    {
+		      PrevUnit->NextInquiryDataOffset =
+			(ULONG)((ULONG_PTR)UnitInfo-(ULONG_PTR)AdapterBusInfo);
+		    }
 		  PrevUnit = UnitInfo;
 		  UnitInfo = (PSCSI_INQUIRY_DATA)((PUCHAR)UnitInfo + sizeof(SCSI_INQUIRY_DATA)+INQUIRYDATABUFFERSIZE-1);
 		  UnitCount++;
@@ -1793,7 +1873,9 @@ SpiGetInquiryData(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
       DPRINT("UnitCount: %lu\n", UnitCount);
       AdapterBusInfo->BusData[Bus].NumberOfLogicalUnits = UnitCount;
       if (UnitCount == 0)
-	AdapterBusInfo->BusData[Bus].InquiryDataOffset = 0;
+	{
+	  AdapterBusInfo->BusData[Bus].InquiryDataOffset = 0;
+	}
     }
 
   DPRINT("Data size: %lu\n", (ULONG)UnitInfo - (ULONG)AdapterBusInfo);

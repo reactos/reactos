@@ -69,8 +69,6 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
   SCSI_PORT_TIMER_STATES TimerState;
   LONG                   TimerCount;
 
-  BOOLEAN Initializing;
-
   LIST_ENTRY DeviceBaseListHead;
 
   ULONG LunExtensionSize;
