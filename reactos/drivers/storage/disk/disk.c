@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.28 2003/04/29 18:06:26 ekohl Exp $
+/* $Id: disk.c,v 1.29 2003/04/29 19:49:17 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -154,13 +154,6 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
   InitData.ClassShutdownFlush = DiskClassShutdownFlush;
   InitData.ClassCreateClose = NULL;
   InitData.ClassStartIo = NULL;
-
-  ScsiClassInitialize(DriverObject,
-		      RegistryPath,
-		      &InitData);
-
-  DPRINT1("*** System stopped ***\n");
-  for(;;);
 
   return(ScsiClassInitialize(DriverObject,
 			     RegistryPath,
@@ -658,21 +651,21 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 	  if (!ScsiDiskCalcMbrCheckSum(DiskDeviceExtension,
 				       &DiskData->MbrCheckSum))
 	    {
-	      DPRINT1("MBR checksum calculation failed for disk %lu\n",
-		      DiskDeviceExtension->DeviceNumber);
+	      DPRINT("MBR checksum calculation failed for disk %lu\n",
+		     DiskDeviceExtension->DeviceNumber);
 	    }
 	  else
 	    {
-	      DPRINT1("MBR checksum for disk %lu is %lx\n",
-		      DiskDeviceExtension->DeviceNumber,
-		      DiskData->MbrCheckSum);
+	      DPRINT("MBR checksum for disk %lu is %lx\n",
+		     DiskDeviceExtension->DeviceNumber,
+		     DiskData->MbrCheckSum);
 	    }
 	}
       else
 	{
-	  DPRINT1("Signature on disk %lu is %lx\n",
-		  DiskDeviceExtension->DeviceNumber,
-		  DiskData->Signature);
+	  DPRINT("Signature on disk %lu is %lx\n",
+		 DiskDeviceExtension->DeviceNumber,
+		 DiskData->Signature);
 	}
 
       /* Update disk geometry if disk is visible to the BIOS */
@@ -1658,7 +1651,7 @@ ScsiDiskUpdateFixedDiskGeometry(IN PDEVICE_EXTENSION DeviceExtension)
 		     &ObjectAttributes);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("ZwOpenKey() failed (Status %lx)\n", Status);
+      DPRINT("ZwOpenKey() failed (Status %lx)\n", Status);
       return;
     }
 
@@ -1684,7 +1677,7 @@ ScsiDiskUpdateFixedDiskGeometry(IN PDEVICE_EXTENSION DeviceExtension)
 			   &Length);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("ZwQueryValueKey() failed (Status %lx)\n", Status);
+      DPRINT("ZwQueryValueKey() failed (Status %lx)\n", Status);
       ExFreePool(ValueBuffer);
       ZwClose(SystemKey);
       return;
@@ -1706,14 +1699,14 @@ ScsiDiskUpdateFixedDiskGeometry(IN PDEVICE_EXTENSION DeviceExtension)
   ZwClose(SystemKey);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("ZwQueryValueKey() failed (Status %lx)\n", Status);
+      DPRINT("ZwQueryValueKey() failed (Status %lx)\n", Status);
       ExFreePool(ValueBuffer);
       return;
     }
 
   if (!ScsiDiskSearchForDisk(DeviceExtension, BusKey, &DiskNumber))
     {
-      DPRINT1("ScsiDiskSearchForDisk() failed\n");
+      DPRINT("ScsiDiskSearchForDisk() failed\n");
       ZwClose(BusKey);
       ExFreePool(ValueBuffer);
       return;
@@ -1742,10 +1735,10 @@ ScsiDiskUpdateFixedDiskGeometry(IN PDEVICE_EXTENSION DeviceExtension)
   TracksPerCylinder = DriveParameters[DiskNumber].MaxHeads +1;
   SectorsPerTrack = DriveParameters[DiskNumber].SectorsPerTrack;
 
-  DPRINT1("BIOS geometry: %lu Cylinders  %hu Heads  %hu Sectors\n",
-	  Cylinders,
-	  TracksPerCylinder,
-	  SectorsPerTrack);
+  DPRINT("BIOS geometry: %lu Cylinders  %hu Heads  %hu Sectors\n",
+	 Cylinders,
+	 TracksPerCylinder,
+	 SectorsPerTrack);
 
   Sectors = (ULONG)
     (DeviceExtension->PartitionLength.QuadPart >> DeviceExtension->SectorShift);
@@ -1763,10 +1756,10 @@ ScsiDiskUpdateFixedDiskGeometry(IN PDEVICE_EXTENSION DeviceExtension)
 
   Cylinders = Sectors / Length;
 
-  DPRINT1("Logical geometry: %lu Cylinders  %hu Heads  %hu Sectors\n",
-	  Cylinders,
-	  TracksPerCylinder,
-	  SectorsPerTrack);
+  DPRINT("Logical geometry: %lu Cylinders  %hu Heads  %hu Sectors\n",
+	 Cylinders,
+	 TracksPerCylinder,
+	 SectorsPerTrack);
 
   /* Update the disk geometry */
   DeviceExtension->DiskGeometry->SectorsPerTrack = SectorsPerTrack;
