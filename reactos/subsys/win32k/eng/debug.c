@@ -10,7 +10,7 @@
 
 #include <ddk/ntddk.h>
 
-VOID EngDebugPrint(PCHAR StandardPrefix, PCHAR DebugMessage, va_list ap)
+VOID STDCALL EngDebugPrint(PCHAR StandardPrefix, PCHAR DebugMessage, va_list ap)
 {
   DbgPrint(StandardPrefix);
   DbgPrint(DebugMessage, ap);

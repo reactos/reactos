@@ -6,6 +6,7 @@ TARGET=win32k
 
 BASE_CFLAGS = -I../../include
 
+ENG_OBJECTS= eng/debug.o eng/mem.o
 MAIN_OBJECTS = main/dllmain.o
 MISC_OBJECTS = misc/driver.o
 OBJECTS_OBJECTS = objects/bitmaps.o objects/brush.o objects/cliprgn.o  \
@@ -17,7 +18,7 @@ OBJECTS_OBJECTS = objects/bitmaps.o objects/brush.o objects/cliprgn.o  \
 RESOURCE_OBJECT = $(TARGET).coff
 STUBS_OBJECTS = stubs/stubs.o
 
-OBJECTS = $(MAIN_OBJECTS) $(MISC_OBJECTS) $(OBJECTS_OBJECTS)  \
+OBJECTS = $(ENG_OBJECTS) $(MAIN_OBJECTS) $(MISC_OBJECTS) $(OBJECTS_OBJECTS)  \
           $(RESOURCE_OBJECT) $(STUBS_OBJECTS) 
 
 all: $(TARGET).sys
@@ -87,7 +88,7 @@ else
 endif
 
 #WITH_DEBUGGING = yes
-WIN32_LEAN_AND_MEAN = yes
+#WIN32_LEAN_AND_MEAN = yes
 #WARNINGS_ARE_ERRORS = yes
 include ../../rules.mak
 

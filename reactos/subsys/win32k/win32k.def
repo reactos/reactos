@@ -1,4 +1,4 @@
-; $Id: win32k.def,v 1.4 1999/07/17 23:10:31 ea Exp $
+; $Id: win32k.def,v 1.5 1999/10/23 22:40:49 rex Exp $
 ;
 ; win32k.def
 ;
@@ -14,8 +14,8 @@ CLIPOBJ_bEnum
 CLIPOBJ_cEnumStart
 CLIPOBJ_ppoGetPath
 EngAcquireSemaphore
-EngAllocMem
-EngAllocUserMem
+EngAllocMem@12
+EngAllocUserMem@8
 EngAssociateSurface
 EngBitBlt
 EngCheckAbort
@@ -33,7 +33,7 @@ EngCreateSemaphore
 EngCreateWnd
 ; EngDebugBreak = NTOSKRNL.DbgBreakPoint
 EngDebugBreak
-EngDebugPrint
+EngDebugPrint@12
 EngDeleteClip
 EngDeleteDriverObj
 EngDeleteEvent
@@ -48,9 +48,9 @@ EngEraseSurface
 EngFillPath
 EngFindImageProcAddress
 EngFindResource
-EngFreeMem
+EngFreeMem@4
 EngFreeModule
-EngFreeUserMem
+EngFreeUserMem@4
 EngGetCurrentCodePage
 EngGetDriverName
 EngGetFileChangeTime
