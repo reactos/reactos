@@ -511,7 +511,6 @@ UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOperation,
     WCHAR filetype[256];     /* registry name for this filetype */
     LONG  filetypelen = 256; /* length of above */
     WCHAR command[256];      /* command from registry */
-    LONG  commandlen = 256;  /* This is the most DOS can handle :) */
     WCHAR wBuffer[256];      /* Used to GetProfileString */
     UINT  retval = 31;       /* default - 'No association was found' */
     WCHAR *tok;              /* token pointer */
