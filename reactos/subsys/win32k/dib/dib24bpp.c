@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib24bpp.c,v 1.27 2004/05/14 22:56:17 gvg Exp $ */
+/* $Id: dib24bpp.c,v 1.28 2004/06/09 20:39:41 sedwards Exp $ */
 #include <w32k.h>
 
 VOID
@@ -200,7 +200,7 @@ DIB_24BPP_BitBltSrcCopy(  SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       else
       {
 	/* FIXME */
-	DPRINT1("DIB_24BPP_Bitblt: Unhandled ColorTranslation for 16 -> 16 copy");
+	DPRINT1("DIB_24BPP_Bitblt: Unhandled ColorTranslation for 16 -> 16 copy\n");
         return FALSE;
       }
       break;
