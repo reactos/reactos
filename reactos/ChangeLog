@@ -1,5 +1,20 @@
 2003-07-17  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* drivers/fs/ntfs/notes.txt: New file.
+	* drivers/fs/ntfs/close.c: Ditto.
+	* drivers/fs/ntfs/rw.c: Ditto.
+	* drivers/fs/ntfs/attrib.c: Change Cdfs prefix to Ntfs.
+	* drivers/fs/ntfs/fcb.c: Ditto.
+	* drivers/fs/ntfs/finfo.c: Ditto.
+	* drivers/fs/ntfs/fsctl.c: Ditto.
+	* drivers/fs/ntfs/volinfo.c: Ditto.
+	* drivers/fs/ntfs/ntfs.c (DriverEntry): Set remaining dispatch functions.
+	* drivers/fs/ntfs/ntfs.h: Change Cdfs prefix to Ntfs.
+	(NTFS_RECORD_HEADER, FILE_RECORD_HEADER): Document fields.
+	* drivers/fs/ntfs/makefile (TARGET_OBJECTS): Add close.o rw.o.
+
+2003-07-17  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* INSTALL: Update installation instructions.
 
 2003-07-16  Royce Mitchell III <royce3@ev1.net>

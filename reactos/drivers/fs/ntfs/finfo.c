@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: finfo.c,v 1.1 2002/06/25 22:23:05 ekohl Exp $
+/* $Id: finfo.c,v 1.2 2003/07/17 13:31:39 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -140,16 +140,16 @@ NtfsGetNameInformation(PFILE_OBJECT FileObject,
   assert(NameInfo != NULL);
   assert(Fcb != NULL);
 
-//  NameLength = wcslen(Fcb->PathName) * sizeof(WCHAR);
-  NameLength = 2;
+  NameLength = wcslen(Fcb->PathName) * sizeof(WCHAR);
+//  NameLength = 2;
   if (*BufferLength < sizeof(FILE_NAME_INFORMATION) + NameLength)
     return(STATUS_BUFFER_OVERFLOW);
 
   NameInfo->FileNameLength = NameLength;
-//  memcpy(NameInfo->FileName,
-//	 Fcb->PathName,
-//	 NameLength + sizeof(WCHAR));
-  wcscpy(NameInfo->FileName, L"\\");
+  memcpy(NameInfo->FileName,
+	 Fcb->PathName,
+	 NameLength + sizeof(WCHAR));
+//  wcscpy(NameInfo->FileName, L"\\");
 
   *BufferLength -=
     (sizeof(FILE_NAME_INFORMATION) + NameLength + sizeof(WCHAR));

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fcb.c,v 1.6 2003/06/07 11:34:35 chorns Exp $
+/* $Id: fcb.c,v 1.7 2003/07/17 13:31:39 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -29,7 +29,7 @@
 
 #include <ddk/ntddk.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 #include "ntfs.h"
@@ -327,7 +327,7 @@ NtfsGetDirEntryName(PDEVICE_EXTENSION DeviceExt,
 	}
       else
 	{
-	  CdfsSwapString(Name, Record->FileId, Record->FileIdLength);
+	  NtfsSwapString(Name, Record->FileId, Record->FileIdLength);
 	}
     }
 
@@ -353,7 +353,7 @@ NtfsMakeFCBFromDirEntry(PVCB Vcb,
     }
 
   wcscpy(pathName, DirectoryFCB->PathName);
-  if (!CdfsFCBIsRoot(DirectoryFCB))
+  if (!NtfsFCBIsRoot(DirectoryFCB))
     {
       wcscat(pathName, L"\\");
     }
@@ -366,11 +366,11 @@ NtfsMakeFCBFromDirEntry(PVCB Vcb,
     {
       WCHAR entryName[MAX_PATH];
 
-      CdfsGetDirEntryName(Vcb, Record, entryName);
+      NtfsGetDirEntryName(Vcb, Record, entryName);
       wcscat(pathName, entryName);
     }
 
-  rcFCB = CdfsCreateFCB(pathName);
+  rcFCB = NtfsCreateFCB(pathName);
   memcpy(&rcFCB->Entry, Record, sizeof(DIR_RECORD));
 
   Size = rcFCB->Entry.DataLengthL;
@@ -379,9 +379,9 @@ NtfsMakeFCBFromDirEntry(PVCB Vcb,
   rcFCB->RFCB.ValidDataLength.QuadPart = Size;
   rcFCB->RFCB.AllocationSize.QuadPart = ROUND_UP(Size, BLOCKSIZE);
 //  DPRINT1("%S %d %d\n", longName, Size, (ULONG)rcFCB->RFCB.AllocationSize.QuadPart);
-  CdfsFCBInitializeCache(Vcb, rcFCB);
+  NtfsFCBInitializeCache(Vcb, rcFCB);
   rcFCB->RefCount++;
-  CdfsAddFCBToTable(Vcb, rcFCB);
+  NtfsAddFCBToTable(Vcb, rcFCB);
   *fileFCB = rcFCB;
 
   return(STATUS_SUCCESS);
@@ -424,19 +424,19 @@ NtfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
       Fcb->Flags |= FCB_CACHE_INITIALIZED;
     }
 
-  DPRINT("file open: fcb:%x file size: %d\n", Fcb, Fcb->Entry.DataLengthL);
+  //DPRINT("file open: fcb:%x file size: %d\n", Fcb, Fcb->Entry.DataLengthL);
 
   return(STATUS_SUCCESS);
 }
 
 
-#if 0
 NTSTATUS
 NtfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
 		PFCB DirectoryFcb,
 		PWSTR FileToFind,
 		PFCB *FoundFCB)
 {
+#if 0
   WCHAR TempName[2];
   WCHAR Name[256];
   PVOID Block;
@@ -454,7 +454,7 @@ NtfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
   assert(DirectoryFcb);
   assert(FileToFind);
 
-  DPRINT("CdfsDirFindFile(VCB:%08x, dirFCB:%08x, File:%S)\n",
+  DPRINT("NtfsDirFindFile(VCB:%08x, dirFCB:%08x, File:%S)\n",
 	 DeviceExt,
 	 DirectoryFcb,
 	 FileToFind);
@@ -492,13 +492,13 @@ NtfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
       DPRINT("RecordLength %u  ExtAttrRecordLength %u  NameLength %u\n",
 	     Record->RecordLength, Record->ExtAttrRecordLength, Record->FileIdLength);
 
-      CdfsGetDirEntryName(DeviceExt, Record, Name);
+      NtfsGetDirEntryName(DeviceExt, Record, Name);
       DPRINT("Name '%S'\n", Name);
 
       if (wstrcmpjoki(Name, FileToFind))
 	{
 	  DPRINT("Match found, %S\n", Name);
-	  Status = CdfsMakeFCBFromDirEntry(DeviceExt,
+	  Status = NtfsMakeFCBFromDirEntry(DeviceExt,
 					   DirectoryFcb,
 					   Name,
 					   Record,
@@ -536,10 +536,10 @@ NtfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
     }
 
   CcUnpinData(Context);
-
+#endif
   return(STATUS_OBJECT_NAME_NOT_FOUND);
 }
-#endif
+
 
 NTSTATUS
 NtfsGetFCBForFile(PDEVICE_EXTENSION Vcb,
@@ -561,11 +561,11 @@ NtfsGetFCBForFile(PDEVICE_EXTENSION Vcb,
 	 pFileName);
 
   /* Dummy code */
-  FCB = NtfsOpenRootFCB(Vcb);
-  *pFCB = FCB;
-  *pParentFCB = NULL;
+//  FCB = NtfsOpenRootFCB(Vcb);
+//  *pFCB = FCB;
+//  *pParentFCB = NULL;
 
-#if 0
+#if 1
   /* Trivial case, open of the root directory on volume */
   if (pFileName [0] == L'\0' || wcscmp(pFileName, L"\\") == 0)
     {
@@ -581,15 +581,15 @@ NtfsGetFCBForFile(PDEVICE_EXTENSION Vcb,
     {
       currentElement = pFileName + 1;
       wcscpy (pathName, L"\\");
-      FCB = CdfsOpenRootFCB (Vcb);
+      FCB = NtfsOpenRootFCB (Vcb);
     }
   parentFCB = NULL;
 
   /* Parse filename and check each path element for existance and access */
-  while (CdfsGetNextPathElement(currentElement) != 0)
+  while (NtfsGetNextPathElement(currentElement) != 0)
     {
       /*  Skip blank directory levels */
-      if ((CdfsGetNextPathElement(currentElement) - currentElement) == 0)
+      if ((NtfsGetNextPathElement(currentElement) - currentElement) == 0)
 	{
 	  currentElement++;
 	  continue;
@@ -601,16 +601,16 @@ NtfsGetFCBForFile(PDEVICE_EXTENSION Vcb,
       /* Descend to next directory level */
       if (parentFCB)
 	{
-	  CdfsReleaseFCB(Vcb, parentFCB);
+	  NtfsReleaseFCB(Vcb, parentFCB);
 	  parentFCB = NULL;
 	}
 
       /* fail if element in FCB is not a directory */
-      if (!CdfsFCBIsDirectory(FCB))
+      if (!NtfsFCBIsDirectory(FCB))
 	{
 	  DPRINT("Element in requested path is not a directory\n");
 
-	  CdfsReleaseFCB(Vcb, FCB);
+	  NtfsReleaseFCB(Vcb, FCB);
 	  FCB = 0;
 	  *pParentFCB = NULL;
 	  *pFCB = NULL;
@@ -620,26 +620,26 @@ NtfsGetFCBForFile(PDEVICE_EXTENSION Vcb,
       parentFCB = FCB;
 
       /* Extract next directory level into dirName */
-      CdfsWSubString(pathName,
+      NtfsWSubString(pathName,
 		     pFileName,
-		     CdfsGetNextPathElement(currentElement) - pFileName);
+		     NtfsGetNextPathElement(currentElement) - pFileName);
       DPRINT("  pathName:%S\n", pathName);
 
-      FCB = CdfsGrabFCBFromTable(Vcb, pathName);
+      FCB = NtfsGrabFCBFromTable(Vcb, pathName);
       if (FCB == NULL)
 	{
-	  CdfsWSubString(elementName,
+	  NtfsWSubString(elementName,
 			 currentElement,
-			 CdfsGetNextPathElement(currentElement) - currentElement);
+			 NtfsGetNextPathElement(currentElement) - currentElement);
 	  DPRINT("  elementName:%S\n", elementName);
 
-	  Status = CdfsDirFindFile(Vcb, parentFCB, elementName, &FCB);
+	  Status = NtfsDirFindFile(Vcb, parentFCB, elementName, &FCB);
 	  if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
 	    {
 	      *pParentFCB = parentFCB;
 	      *pFCB = NULL;
-	      currentElement = CdfsGetNextPathElement(currentElement);
-	      if (*currentElement == L'\0' || CdfsGetNextPathElement(currentElement + 1) == 0)
+	      currentElement = NtfsGetNextPathElement(currentElement);
+	      if (*currentElement == L'\0' || NtfsGetNextPathElement(currentElement + 1) == 0)
 		{
 		  return(STATUS_OBJECT_NAME_NOT_FOUND);
 		}
@@ -650,14 +650,14 @@ NtfsGetFCBForFile(PDEVICE_EXTENSION Vcb,
 	    }
 	  else if (!NT_SUCCESS(Status))
 	    {
-	      CdfsReleaseFCB(Vcb, parentFCB);
+	      NtfsReleaseFCB(Vcb, parentFCB);
 	      *pParentFCB = NULL;
 	      *pFCB = NULL;
 
 	      return(Status);
 	    }
 	}
-      currentElement = CdfsGetNextPathElement(currentElement);
+      currentElement = NtfsGetNextPathElement(currentElement);
     }
 
   *pParentFCB = parentFCB;

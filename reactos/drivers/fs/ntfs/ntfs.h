@@ -152,24 +152,33 @@ typedef enum
 
 typedef struct
 {
-  ULONG Type;
-  USHORT UsnOffset;
-  USHORT UsnSize;
-  ULONGLONG Usn;
+  ULONG Type;             /* Magic number 'FILE' */
+  USHORT UsnOffset;       /* Offset to the update sequence */
+  USHORT UsnSize;         /* Size in words of Update Sequence Number & Array (S) */
+  ULONGLONG Lsn;          /* $LogFile Sequence Number (LSN) */
 } NTFS_RECORD_HEADER, *PNTFS_RECORD_HEADER;
 
 typedef struct
 {
   NTFS_RECORD_HEADER Ntfs;
-  USHORT SequenceNumber;
-  USHORT LinkCount;
-  USHORT AttributeOffset;
-  USHORT Flags;
-  ULONG BytesInUse;
-  ULONG BytesAllocated;
-  ULONGLONG BaseFileRecord;
-  USHORT NextAttributeNumber;
+  USHORT SequenceNumber;        /* Sequence number */
+  USHORT LinkCount;             /* Hard link count */
+  USHORT AttributeOffset;       /* Offset to the first Attribute */
+  USHORT Flags;                 /* Flags */
+  ULONG BytesInUse;             /* Real size of the FILE record */
+  ULONG BytesAllocated;         /* Allocated size of the FILE record */
+  ULONGLONG BaseFileRecord;     /* File reference to the base FILE record */
+  USHORT NextAttributeNumber;   /* Next Attribute Id */
+  USHORT Pading;                /* Align to 4 byte boundary (XP) */
+  ULONG MFTRecordNumber;        /* Number of this MFT Record (XP) */
 } FILE_RECORD_HEADER, *PFILE_RECORD_HEADER;
+
+/* Flags in FILE_RECORD_HEADER */
+
+#define FRH_IN_USE    0x01    /* Record is in use */
+#define FRH_DIRECTORY 0x02    /* Record is a directory */
+#define FRH_UNKNOWN1  0x04    /* Don't know */
+#define FRH_UNKNOWN2  0x08    /* Don't know */
 
 typedef struct
 {
@@ -299,13 +308,11 @@ NtfsDeviceIoControl(IN PDEVICE_OBJECT DeviceObject,
 		    IN OUT PVOID OutputBuffer,
 		    IN OUT PULONG OutputBufferSize);
 
-#if 0
 /* close.c */
 
 NTSTATUS STDCALL
-CdfsClose(PDEVICE_OBJECT DeviceObject,
+NtfsClose(PDEVICE_OBJECT DeviceObject,
 	  PIRP Irp);
-#endif
 
 /* create.c */
 
@@ -319,7 +326,6 @@ NtfsCreate(PDEVICE_OBJECT DeviceObject,
 NTSTATUS STDCALL
 NtfsDirectoryControl(PDEVICE_OBJECT DeviceObject,
 		     PIRP Irp);
-
 
 /* fcb.c */
 
@@ -411,17 +417,17 @@ CdfsDateTimeToFileTime(PFCB Fcb,
 VOID
 CdfsFileFlagsToAttributes(PFCB Fcb,
 			  PULONG FileAttributes);
+#endif
 
 /* rw.c */
 
 NTSTATUS STDCALL
-CdfsRead(PDEVICE_OBJECT DeviceObject,
+NtfsRead(PDEVICE_OBJECT DeviceObject,
 	PIRP Irp);
 
 NTSTATUS STDCALL
-CdfsWrite(PDEVICE_OBJECT DeviceObject,
+NtfsWrite(PDEVICE_OBJECT DeviceObject,
 	  PIRP Irp);
-#endif
 
 
 /* volinfo.c */

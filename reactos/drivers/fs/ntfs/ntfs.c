@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ntfs.c,v 1.2 2002/08/20 20:37:06 hyperion Exp $
+/* $Id: ntfs.c,v 1.3 2003/07/17 13:31:39 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -29,7 +29,7 @@
 
 #include <ddk/ntddk.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 #include "ntfs.h"
@@ -80,20 +80,20 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 
   /* Initialize driver data */
   DeviceObject->Flags = DO_DIRECT_IO;
-//  DriverObject->MajorFunction[IRP_MJ_CLOSE] = NtfsClose;
-  DriverObject->MajorFunction[IRP_MJ_CREATE] = NtfsCreate;
-//  DriverObject->MajorFunction[IRP_MJ_READ] = NtfsRead;
-//  DriverObject->MajorFunction[IRP_MJ_WRITE] = NtfsWrite;
+  DriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH) NtfsClose;
+  DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH) NtfsCreate;
+  DriverObject->MajorFunction[IRP_MJ_READ] = (PDRIVER_DISPATCH) NtfsRead;
+  DriverObject->MajorFunction[IRP_MJ_WRITE] = (PDRIVER_DISPATCH) NtfsWrite;
   DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] =
-    NtfsFileSystemControl;
+    (PDRIVER_DISPATCH) NtfsFileSystemControl;
   DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] =
-    NtfsDirectoryControl;
+    (PDRIVER_DISPATCH) NtfsDirectoryControl;
   DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] =
-    NtfsQueryInformation;
-//  DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] =
-//    NtfsQueryVolumeInformation;
-//  DriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION] =
-//    NtfsSetVolumeInformation;
+    (PDRIVER_DISPATCH) NtfsQueryInformation;
+  DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] =
+    (PDRIVER_DISPATCH) NtfsQueryVolumeInformation;
+  DriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION] =
+    (PDRIVER_DISPATCH) NtfsSetVolumeInformation;
 
   DriverObject->DriverUnload = NULL;
 
