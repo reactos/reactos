@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.84 2004/11/15 11:41:33 ekohl Exp $
+/* $Id: device.c,v 1.85 2004/11/18 11:46:07 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -68,7 +68,7 @@ IopInitializeDevice(
       /* FIXME: Should be DeviceNode->ResourceList */
       Stack.Parameters.StartDevice.AllocatedResources = DeviceNode->BootResources;
       /* FIXME: Should be DeviceNode->ResourceListTranslated */
-      Stack.Parameters.StartDevice.AllocatedResourcesTranslated = NULL;
+      Stack.Parameters.StartDevice.AllocatedResourcesTranslated = DeviceNode->BootResources;
 
       Status = IopInitiatePnpIrp(
          Fdo,
