@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.80 2001/01/13 18:38:08 dwelch Exp $
+; $Id: ntoskrnl.edf,v 1.81 2001/01/14 15:36:32 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -1016,7 +1016,7 @@ HalAllocateCommonBuffer=HalAllocateCommonBuffer@16
 ;HalAllocateCrashDumpRegisters=HalAllocateCrashDumpRegisters@8
 HalAssignSlotResource=HalAssignSlotResources@32
 HalBeginSystemInterrupt=HalBeginSystemInterrupt@12
-;HalCalibratePerformanceCounter=HalCalibratePerformanceCounter@4
+HalCalibratePerformanceCounter=HalCalibratePerformanceCounter@4
 ;HalClearSoftwareInterrupt=@HalClearSoftwareInterrupt@4
 ;HalClearSoftwareInterrupt=HalClearSoftwareInterrupt@4
 HalDisableSystemInterrupt=HalDisableSystemInterrupt@8
@@ -1028,7 +1028,7 @@ HalFreeCommonBuffer=HalFreeCommonBuffer@24
 HalGetAdapter=HalGetAdapter@8
 HalGetBusData=HalGetBusData@20
 HalGetBusDataByOffset=HalGetBusDataByOffset@24
-;HalGetEnvironmentVariable=HalGetEnvironmentVariable@12
+HalGetEnvironmentVariable=HalGetEnvironmentVariable@12
 HalGetInterruptVector=HalGetInterruptVector@24
 HalHandleNMI=HalHandleNMI@4
 HalInitSystem=HalInitSystem@8
@@ -1039,14 +1039,14 @@ HalQueryDisplayParameters=HalQueryDisplayParameters@16
 HalQueryRealTimeClock=HalQueryRealTimeClock@4
 HalReadDmaCounter=HalReadDmaCounter@4
 HalReportResourceUsage=HalReportResourceUsage@0
-;HalRequestIpi=HalRequestIpi@4
+HalRequestIpi=HalRequestIpi@4
 ;HalRequestSoftwareInterrupt=@HalRequestSoftwareInterrupt@4
 ;HalRequestSoftwareInterrupt=HalRequestSoftwareInterrupt@4
 HalReturnToFirmware=HalReturnToFirmware@4
 HalSetBusData=HalSetBusData@20
 HalSetBusDataByOffset=HalSetBusDataByOffset@24
 HalSetDisplayParameters=HalSetDisplayParameters@8
-;HalSetEnvironmentVariable=HalSetEnvironmentVariable@8
+HalSetEnvironmentVariable=HalSetEnvironmentVariable@8
 ;HalSetProfileInterval=HalSetProfileInterval@4
 HalSetRealTimeClock=HalSetRealTimeClock@4
 ;HalSetTimeIncrement=HalSetTimeIncrement@4

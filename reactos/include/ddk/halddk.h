@@ -1,4 +1,4 @@
-/* $Id: halddk.h,v 1.7 2000/12/30 01:41:04 ekohl Exp $
+/* $Id: halddk.h,v 1.8 2001/01/14 15:35:56 ekohl Exp $
  *
  * COPYRIGHT:                See COPYING in the top level directory
  * PROJECT:                  ReactOS kernel
@@ -348,9 +348,11 @@ BOOLEAN STDCALL HalBeginSystemInterrupt (ULONG Vector,
 					 KIRQL Irql,
 					 PKIRQL OldIrql);
 
-/*
-HalCalibratePerformanceCounter
-*/
+VOID
+STDCALL
+HalCalibratePerformanceCounter (
+	ULONG Count
+	);
 
 /*
 FASTCALL
@@ -440,9 +442,13 @@ HalGetDmaAlignmentRequirement (
 	VOID
 	);
 
-/*
-HalGetEnvironmentVariable
-*/
+BOOLEAN
+STDCALL
+HalGetEnvironmentVariable (
+	IN	PCH	Name,
+	OUT	PCH	Value,
+	IN	USHORT	ValueLength
+	);
 
 ULONG
 STDCALL
@@ -550,9 +556,12 @@ HalSetDisplayParameters (
 	ULONG	CursorPosY
 	);
 
-/*
-HalSetEnvironmentVariable
-*/
+BOOLEAN
+STDCALL
+HalSetEnvironmentVariable (
+	IN	PCH	Name,
+	IN	PCH	Value
+	);
 
 /*
 HalSetProfileInterval

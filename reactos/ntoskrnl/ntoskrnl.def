@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.93 2001/01/13 18:38:08 dwelch Exp $
+; $Id: ntoskrnl.def,v 1.94 2001/01/14 15:36:32 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -1018,8 +1018,9 @@ HalAllocateCommonBuffer@16
 ;HalAllocateCrashDumpRegisters@8
 HalAssignSlotResources@32
 HalBeginSystemInterrupt@12
-;HalCalibratePerformanceCounter@4
+HalCalibratePerformanceCounter@4
 ;@HalClearSoftwareInterrupt@4
+;HalClearSoftwareInterrupt@4
 HalDisableSystemInterrupt@8
 HalDisplayString@4
 HalEnableSystemInterrupt@12
@@ -1029,7 +1030,7 @@ HalFreeCommonBuffer@24
 HalGetAdapter@8
 HalGetBusData@20
 HalGetBusDataByOffset@24
-;HalGetEnvironmentVariable@12
+HalGetEnvironmentVariable@12
 HalGetInterruptVector@24
 HalHandleNMI@4
 HalInitSystem@8
@@ -1040,13 +1041,14 @@ HalQueryDisplayParameters@16
 HalQueryRealTimeClock@4
 HalReadDmaCounter@4
 HalReportResourceUsage@0
-;HalRequestIpi@4
+HalRequestIpi@4
 ;@HalRequestSoftwareInterrupt@4
+;HalRequestSoftwareInterrupt@4
 HalReturnToFirmware@4
 HalSetBusData@20
 HalSetBusDataByOffset@24
 HalSetDisplayParameters@8
-;HalSetEnvironmentVariable@8
+HalSetEnvironmentVariable@8
 ;HalSetProfileInterval@4
 HalSetRealTimeClock@4
 ;HalSetTimeIncrement@4

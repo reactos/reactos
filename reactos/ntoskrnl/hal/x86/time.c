@@ -9,6 +9,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <string.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -24,6 +25,8 @@
 
 #define RTC_REGISTER_A   0x0A
 #define   RTC_REG_A_UIP  0x80  /* Update In Progress bit */
+
+#define RTC_REGISTER_B   0x0B
 
 #define RTC_REGISTER_CENTURY   0x32
 
@@ -59,11 +62,8 @@ HalSetCMOS (BYTE Reg, BYTE Val)
 }
 
 
-VOID
-STDCALL
-HalQueryRealTimeClock (
-	PTIME_FIELDS Time
-	)
+VOID STDCALL
+HalQueryRealTimeClock(PTIME_FIELDS Time)
 {
     /* check 'Update In Progress' bit */
     while (HalQueryCMOS (RTC_REGISTER_A) & RTC_REG_A_UIP)
@@ -102,11 +102,8 @@ HalQueryRealTimeClock (
 }
 
 
-VOID
-STDCALL
-HalSetRealTimeClock (
-	PTIME_FIELDS	Time
-	)
+VOID STDCALL
+HalSetRealTimeClock(PTIME_FIELDS Time)
 {
     /* check 'Update In Progress' bit */
     while (HalQueryCMOS (RTC_REGISTER_A) & RTC_REG_A_UIP)
@@ -124,4 +121,57 @@ HalSetRealTimeClock (
     /* Century */
     HalSetCMOS (RTC_REGISTER_CENTURY, INT_BCD(Time->Year / 100));
 #endif
+}
+
+
+BOOLEAN STDCALL
+HalGetEnvironmentVariable(PCH Name,
+			  PCH Value,
+			  USHORT ValueLength)
+{
+   if (_stricmp(Name, "LastKnownGood") != 0)
+     {
+	return FALSE;
+     }
+
+   if (HalQueryCMOS(RTC_REGISTER_B) & 0x01)
+     {
+	strncpy(Value, "FALSE", ValueLength);
+     }
+   else
+     {
+	strncpy(Value, "TRUE", ValueLength);
+     }
+
+   return TRUE;
+}
+
+
+BOOLEAN STDCALL
+HalSetEnvironmentVariable(PCH Name,
+			  PCH Value)
+{
+   UCHAR Val;
+
+   if (_stricmp(Name, "LastKnownGood") != 0)
+     {
+	return FALSE;
+     }
+
+   Val = HalQueryCMOS(RTC_REGISTER_B);
+
+   if (_stricmp(Value, "TRUE") == 0)
+     {
+	HalSetCMOS(RTC_REGISTER_B, Val | 0x01);
+     }
+   else if (_stricmp(Value, "FALSE") == 0)
+     {
+	HalSetCMOS(RTC_REGISTER_B, Val & ~0x01);
+     }
+   else
+     {
+	return FALSE;
+     }
+
+   return TRUE;
 }

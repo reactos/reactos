@@ -1,4 +1,4 @@
-/* $Id: perfcnt.c,v 1.1 2000/06/09 20:05:00 ekohl Exp $
+/* $Id: perfcnt.c,v 1.2 2001/01/14 15:36:55 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -17,16 +17,25 @@
 
 /* FUNCTIONS **************************************************************/
 
-/*
-HalCalibratePerformanceCounter@4
-*/
+
+VOID STDCALL
+HalCalibratePerformanceCounter(ULONG Count)
+{
+   ULONG i;
+
+   /* save flags and disable interrupts */
+   __asm__("pushf\n\t" \
+	   "cli\n\t");
+
+   for (i = 0; i < Count; i++);
+
+   /* restore flags */
+   __asm__("popf\n\t");
+}
 
 
-LARGE_INTEGER
-STDCALL
-KeQueryPerformanceCounter (
-	PLARGE_INTEGER	PerformanceFreq
-	)
+LARGE_INTEGER STDCALL
+KeQueryPerformanceCounter(PLARGE_INTEGER PerformanceFreq)
 /*
  * FUNCTION: Queries the finest grained running count avaiable in the system
  * ARGUMENTS:

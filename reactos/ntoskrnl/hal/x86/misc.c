@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.6 2000/08/17 17:42:53 ekohl Exp $
+/* $Id: misc.c,v 1.7 2001/01/14 15:36:55 ekohl Exp $
  *
  * COPYRIGHT:             See COPYING in the top level directory
  * PROJECT:               ReactOS kernel
@@ -43,6 +43,12 @@ HalProcessorIdle (VOID)
 #else
    
 #endif
+}
+
+VOID STDCALL
+HalRequestIpi(ULONG Unknown)
+{
+   return;
 }
 
 ULONG FASTCALL
