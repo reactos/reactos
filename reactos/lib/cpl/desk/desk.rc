@@ -39,25 +39,25 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Screen Saver"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-   CONTROL         "",1002,"Static",SS_BITMAP | SS_CENTERIMAGE,63,11,125,
-                    107
-    GROUPBOX        "&Screen Saver",200,7,129,238,48
-    COMBOBOX        1000,13,140,115,200,CBS_DROPDOWNLIST | CBS_SORT | 
+    GROUPBOX        "&Screen Saver",200,4,129,238,48
+    COMBOBOX        1000,10,140,115,200,CBS_DROPDOWNLIST | CBS_SORT | 
                     WS_VSCROLL | WS_GROUP | WS_TABSTOP
-    PUSHBUTTON      "Se&ttings...",1003,132,139,50,14,WS_GROUP
-    PUSHBUTTON      "Pre&view",1004,186,139,50,14
-    CONTROL         "&Password protected",1020,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,13,160,80,9
-    LTEXT           "&Wait:",1016,154,144,17,9
-    EDITTEXT        1006,173,158,30,12,ES_RIGHT | WS_GROUP
+    PUSHBUTTON      "Se&ttings...",1003,130,139,50,14,WS_GROUP
+    PUSHBUTTON      "Pre&view",1004,183,139,50,14
+    CONTROL         "&Lock desktop on resume",1020,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,13,157,112,9
+    LTEXT           "&Wait:",1016,151,160,17,9
+    EDITTEXT        1006,170,158,30,12,ES_RIGHT | WS_GROUP
     CONTROL         "",1007,"msctls_updown32",UDS_SETBUDDYINT | 
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | 
                     UDS_NOTHOUSANDS | WS_BORDER | WS_GROUP,203,158,11,12
-    LTEXT           "minutes",1022,219,160,28,9
-    GROUPBOX        "Energy saving features of monitor",1017,7,179,238,33
-    PUSHBUTTON      "P&ower...",1014,186,190,50,14
+    LTEXT           "minutes",1022,204,160,28,9
+    GROUPBOX        "Energy saving features of monitor",1017,4,179,238,33
+    PUSHBUTTON      "P&ower...",1014,175,190,50,14
     LTEXT           "To adjust the power settings for your monitor, click Power.",
-                    1018,22,190,155,16
+                    1018,19,190,155,16
+    CONTROL         "",1002,"Static",SS_BITMAP | SS_CENTERIMAGE,60,11,125,
+                    107
 END
 
 IDD_PROPPAGEAPPEARANCE DIALOGEX 0, 0, 246, 228
