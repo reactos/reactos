@@ -33,6 +33,8 @@ typedef long uid_t;  // SunOS 5.5
 #define  S_ISREG(mode)   (((mode)&0xF000) == 0x8000)
 #define  S_ISDIR(mode)   (((mode)&0xF000) == 0x4000)
 
+#undef MIN //take care of windows default
+#undef MAX //take care of windows default
 #define MIN(a, b) ((a) <= (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
