@@ -18,7 +18,6 @@
 
 #ifndef SNDMSG
 #define SNDMSG ::SendMessage
-#define SNDMSG SendMessage
 #endif /* ifndef SNDMSG */
 
 
@@ -87,7 +86,7 @@ int CALLBACK MyEnumFontFamExProc(ENUMLOGFONTEX *lpelfe,
    {
       // if the typeface name is not already in the list
       LPARAM name = reinterpret_cast<LPARAM>(lpelfe->elfFullName);
-      if (SNDMSG(hListBox, LB_FINDSTRINGEXACT, -1, name) == LB_ERR)
+      if (SNDMSG(hListBox, LB_FINDSTRINGEXACT, (ULONG)-1, name) == LB_ERR)
       {                 
          // add each font to the list box    
          int index = SNDMSG(hListBox, LB_ADDSTRING, 0, name);
@@ -125,7 +124,7 @@ void AddScreenFonts()
       // enumerate the current screen fonts        
       EnumFontFamiliesEx(
          hScreenDC, &lf, 
-         reinterpret_cast<FONTENUMPROC>(MyEnumFontFamExProc),
+         MyEnumFontFamExProc,
          0, 0
          );                         
    }    
