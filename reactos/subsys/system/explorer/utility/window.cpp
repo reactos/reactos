@@ -1068,22 +1068,22 @@ LRESULT	FlatButton::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 HyperlinkCtrl::HyperlinkCtrl(HWND hwnd, COLORREF colorLink, COLORREF colorVisited)
  :	super(hwnd),
+	_cmd(ResString(GetDlgCtrlID(hwnd))),
 	_textColor(colorLink),
 	_colorVisited(colorVisited),
 	_hfont(0),
-	_crsr_link(0),
-	_cmd(ResString(GetDlgCtrlID(hwnd)))
+	_crsr_link(0)
 {
 	init();
 }
 
 HyperlinkCtrl::HyperlinkCtrl(HWND owner, int id, COLORREF colorLink, COLORREF colorVisited)
  :	super(GetDlgItem(owner, id)),
+	_cmd(ResString(id)),
 	_textColor(colorLink),
 	_colorVisited(colorVisited),
 	_hfont(0),
-	_crsr_link(0),
-	_cmd(ResString(id))
+	_crsr_link(0)
 {
 	init();
 }
