@@ -15,7 +15,7 @@ include rules.mak
 # Required to run the system
 #
 COMPONENTS = iface_native ntoskrnl
-DLLS = ntdll kernel32 crtdll
+DLLS = ntdll kernel32 crtdll user32 fmifs
 #DLLS = crtdll mingw32
 
 #
