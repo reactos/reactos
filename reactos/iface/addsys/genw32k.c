@@ -1,4 +1,4 @@
-/* $Id: genw32k.c,v 1.10 2004/04/12 22:07:45 hyperion Exp $
+/* $Id: genw32k.c,v 1.10.16.1 2004/10/25 01:29:47 ion Exp $
  *
  * COPYRIGHT:             See COPYING in the top level directory
  * PROJECT:               ReactOS version of ntdll

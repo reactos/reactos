@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.14 2004/07/21 18:17:50 chorns Exp $
+# $Id: makefile,v 1.14.6.1 2004/10/25 01:29:47 ion Exp $
 #
 # ReactOS Operating System
 #
@@ -13,7 +13,7 @@ PATH_TO_TOP = ../..
 TARGET = genntdll
 SYSTEM_CALLS_DB = sysfuncs.lst
 NTDLL_STUBS = ../../lib/ntdll/napi.c
-KERNEL_SERVICE_TABLE = ../../include/ntdll/napi.h
+KERNEL_SERVICE_TABLE = ../../include/reactos/napi.h
 KERNEL_ZW_CALLS = ../../ntoskrnl/nt/zw.c
 NAPI_FILES = $(NTDLL_STUBS) $(KERNEL_SERVICE_TABLE) $(KERNEL_ZW_CALLS)
 

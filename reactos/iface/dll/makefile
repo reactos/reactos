@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.3 2000/08/18 22:26:58 dwelch Exp $
+# $Id: makefile,v 1.3.34.1 2004/10/25 01:29:47 ion Exp $
 #
 # ReactOS Operating System
 #
