@@ -1,12 +1,14 @@
-/* $Id: adapter.c,v 1.5 2003/07/21 21:53:50 royce Exp $
+/* $Id: adapter.c,v 1.6 2003/10/20 06:03:28 vizzini Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            hal/x86/adapter.c (from ntoskrnl/io/adapter.c)
  * PURPOSE:         DMA handling
- * PROGRAMMER:      David Welch (welch@mcmail.com)
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
+ *                  Vizzini (vizzini@plasmic.com)
  * UPDATE HISTORY:
  *                  Created 22/05/98
+ *                  18-Oct-2003 Vizzini DMA support modifications
  */
 
 /* INCLUDES *****************************************************************/
@@ -22,17 +24,46 @@
 
 NTSTATUS STDCALL
 HalAllocateAdapterChannel(PADAPTER_OBJECT AdapterObject,
-			  PDEVICE_OBJECT DeviceObject,
+			  PWAIT_CONTEXT_BLOCK WaitContextBlock,
 			  ULONG NumberOfMapRegisters,
-			  PDRIVER_CONTROL ExecutionRoutine,
-			  PVOID Context )
+			  PDRIVER_CONTROL ExecutionRoutine)
+/*
+ * FUNCTION: Sets up an ADAPTER_OBJECT with map registers
+ * ARGUMENTS:
+ *     - AdapterObject: pointer to an ADAPTER_OBJECT to set up 
+ *     - WaitContextBlock: Context block to be used with ExecutionRoutine
+ *     - NumberOfMapRegisters: number of map registers requested 
+ *     - ExecutionRoutine: callback to call when map registers are allocated
+ * RETURNS:
+ *     STATUS_INSUFFICIENT_RESOURCES if map registers cannot be allocated
+ *     STATUS_SUCCESS in all other cases, including if the callbacak had
+ *                    to be queued for later delivery
+ * NOTES:
+ *     - Map registers don't exist on X86 so we can just call the callback
+ *       with a map register base of 0
+ *     - the ADAPTER_OBJECT struct is undocumented; please make copious
+ *       notes here if anything is changed or improved since there is
+ *       no other documentation for this routine or its data structures
+ *     - The original implementation of this function allocated a contiguous
+ *       physical buffer the size of NumberOfMapRegisters * PAGE_SIZE, which
+ *       is unnecessary and very expensive (contiguous memory is rare).  It
+ *       also leaked in some circumstances (drivers allocate and sometimes
+ *       don't free map registers)
+ * BUGS:
+ *     - This routine should check whether or not map registers are needed
+ *       (rather than assuming they're not) and allocate them on platforms
+ *       that support them.
+ */
 {
+#if 0
   KIRQL OldIrql;
   PVOID Buffer;
   int ret;
   LARGE_INTEGER MaxAddress;
 
   MaxAddress.QuadPart = 0x1000000;
+
+  /* why 64K alignment? */
   Buffer = MmAllocateContiguousAlignedMemory( NumberOfMapRegisters * PAGE_SIZE,
 					      MaxAddress,
 					      0x10000 );
@@ -51,7 +82,7 @@ HalAllocateAdapterChannel(PADAPTER_OBJECT AdapterObject,
     ret = ExecutionRoutine( DeviceObject,
 			    NULL,
 			    Buffer,
-			    Context );
+			    WaitContextBlock->DriverContext );
     KeAcquireSpinLock( &AdapterObject->SpinLock, &OldIrql );
     if( ret == DeallocateObject )
       {
@@ -61,6 +92,19 @@ HalAllocateAdapterChannel(PADAPTER_OBJECT AdapterObject,
     else AdapterObject->Buffer = Buffer;
   }
   KeReleaseSpinLock( &AdapterObject->SpinLock, OldIrql );
+#endif
+
+  AdapterObject->MapRegisterBase = 0;
+  AdapterObject->AllocatedMapRegisters = 0;
+
+  IO_ALLOCATION_ACTION Retval = ExecutionRoutine(WaitContextBlock->DeviceObject,
+      WaitContextBlock->CurrentIrp, 0, WaitContextBlock->DeviceContext);
+
+  if(Retval == DeallocateObject)
+    IoFreeAdapterChannel(AdapterObject);
+  else if(Retval == DeallocateObjectKeepRegisters)
+    AdapterObject->AllocatedMapRegisters = 0;
+
   return STATUS_SUCCESS;
 }
 

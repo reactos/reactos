@@ -334,7 +334,7 @@ NdisReadConfiguration(
         wcslen(L"Environment") == Keyword->Length/sizeof(WCHAR)
     )
     {
-        *ParameterValue = ExAllocatePool(PagedPool, sizeof(ULONG));
+        *ParameterValue = ExAllocatePool(PagedPool, sizeof(NDIS_CONFIGURATION_PARAMETER));
         if(!*ParameterValue)
         {
             NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
@@ -346,6 +346,7 @@ NdisReadConfiguration(
         if(!MiniportResource)
         {
             NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
+            ExFreePool(*ParameterValue);
             *ParameterValue = NULL;
             *Status = NDIS_STATUS_RESOURCES;
             return;
@@ -372,7 +373,7 @@ NdisReadConfiguration(
         wcslen(L"ProcessorType") == Keyword->Length/sizeof(WCHAR)
     )
     {
-        *ParameterValue = ExAllocatePool(PagedPool, sizeof(ULONG));
+        *ParameterValue = ExAllocatePool(PagedPool, sizeof(NDIS_CONFIGURATION_PARAMETER));
         if(!*ParameterValue)
         {
             NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
@@ -384,6 +385,7 @@ NdisReadConfiguration(
         if(!MiniportResource)
         {
             NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
+            ExFreePool(*ParameterValue);
             *ParameterValue = NULL;
             *Status = NDIS_STATUS_RESOURCES;
             return;
@@ -407,7 +409,7 @@ NdisReadConfiguration(
         wcslen(L"NdisVersion") == Keyword->Length/sizeof(WCHAR)
     )
     {
-        *ParameterValue = ExAllocatePool(PagedPool, sizeof(ULONG));
+        *ParameterValue = ExAllocatePool(PagedPool, sizeof(NDIS_CONFIGURATION_PARAMETER));
         if(!*ParameterValue)
         {
             NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
@@ -419,6 +421,7 @@ NdisReadConfiguration(
         if(!MiniportResource)
         {
             NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
+            ExFreePool(*ParameterValue);
             *ParameterValue = NULL;
             *Status = NDIS_STATUS_RESOURCES;
             return;
@@ -434,6 +437,8 @@ NdisReadConfiguration(
         (*ParameterValue)->ParameterData.IntegerData = NDIS_VERSION;
         *Status = NDIS_STATUS_SUCCESS;
 
+        NDIS_DbgPrint(MAX_TRACE,("ParameterType = %0x%x, ParameterValue = 0x%x\n",
+            (*ParameterValue)->ParameterType, (*ParameterValue)->ParameterData.IntegerData));
         return;
     }
 

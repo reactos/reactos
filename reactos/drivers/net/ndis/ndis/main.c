@@ -74,7 +74,7 @@ DriverEntry(
    * NOTE- this will load and start other services before this one returns STATUS_SUCCESS.
    * I hope there aren't code reentrancy problems. :) 
    */
-  NdisStartDevices();
+  //NdisStartDevices();
 
   return STATUS_SUCCESS;
 }

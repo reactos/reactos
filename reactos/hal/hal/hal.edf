@@ -9,7 +9,7 @@ ExTryToAcquireFastMutex=@ExTryToAcquireFastMutex@4
 HalAcquireDisplayOwnership=HalAcquireDisplayOwnership@4
 HalAdjustResourceList=HalAdjustResourceList@4
 HalAllProcessorsStarted=HalAllProcessorsStarted@0
-HalAllocateAdapterChannel=HalAllocateAdapterChannel@20
+HalAllocateAdapterChannel=HalAllocateAdapterChannel@16
 HalAllocateCommonBuffer=HalAllocateCommonBuffer@16
 ;HalAllocateCrashDumpRegisters@8
 HalAssignSlotResources=HalAssignSlotResources@32

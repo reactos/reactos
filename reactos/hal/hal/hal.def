@@ -9,7 +9,7 @@ EXPORTS
 HalAcquireDisplayOwnership@4
 HalAdjustResourceList@4
 HalAllProcessorsStarted@0
-HalAllocateAdapterChannel@20
+HalAllocateAdapterChannel@16
 HalAllocateCommonBuffer@16
 ;HalAllocateCrashDumpRegisters@8
 HalAssignSlotResources@32

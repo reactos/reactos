@@ -1863,7 +1863,10 @@ NdisMSetAttributes(
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
   Adapter->NdisMiniportBlock.MiniportAdapterContext = MiniportAdapterContext;
-  Adapter->Attributes    = BusMaster? NDIS_ATTRIBUTE_BUS_MASTER : 0;
+  
+  if(BusMaster)
+    Adapter->NdisMiniportBlock.Flags |= NDIS_ATTRIBUTE_BUS_MASTER;
+
   Adapter->NdisMiniportBlock.AdapterType   = AdapterType;
   Adapter->AttributesSet = TRUE;
 }
@@ -1900,7 +1903,7 @@ NdisMSetAttributesEx(
   Adapter->NdisMiniportBlock.MiniportAdapterContext = MiniportAdapterContext;
 
   /* don't know why this is here - anybody? */
-  Adapter->Attributes = AttributeFlags & NDIS_ATTRIBUTE_BUS_MASTER;
+  Adapter->NdisMiniportBlock.Flags  = AttributeFlags;
 
   Adapter->NdisMiniportBlock.AdapterType = AdapterType;
   Adapter->AttributesSet = TRUE;
@@ -1915,14 +1918,30 @@ NdisMSetAttributesEx(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
 NdisMSleep(
     IN  ULONG   MicrosecondsToSleep)
+/*
+ * FUNCTION: delay the thread's execution for MillisecondsToSleep
+ * ARGUMENTS:
+ *     MillisecondsToSleep: duh...
+ * NOTES:
+ *     - Because this is a blocking call, current IRQL must be < DISPATCH_LEVEL
+ */
 {
-    UNIMPLEMENTED
+  KTIMER Timer;
+  LARGE_INTEGER DueTime;
+
+  PAGED_CODE();
+
+  DueTime.QuadPart = (-1) * 10 * MicrosecondsToSleep;
+
+  KeInitializeTimer(&Timer);
+  KeSetTimer(&Timer, DueTime, 0);
+  KeWaitForSingleObject(&Timer, Executive, KernelMode, FALSE, 0);
 }
 
 

@@ -51,13 +51,6 @@ typedef struct _MINIPORT_BUGCHECK_CONTEXT {
     PKBUGCHECK_CALLBACK_RECORD  CallbackRecord;
 } MINIPORT_BUGCHECK_CONTEXT, *PMINIPORT_BUGCHECK_CONTEXT;
 
-/* allocated map register list */
-typedef struct _ADAPTER_MAP_REGISTER_LIST {
-    LIST_ENTRY  ListEntry;
-    UINT        NumRegisters;
-    PVOID       MapRegister;
-} ADAPTER_MAP_REGISTER_LIST, *PADAPTER_MAP_REGISTER_LIST;
-
 /* a miniport's shared memory */
 typedef struct _MINIPORT_SHARED_MEMORY {
     PADAPTER_OBJECT   AdapterObject;
@@ -110,9 +103,6 @@ typedef struct _LOGICAL_ADAPTER
     PNDIS_PACKET                PacketQueueTail;        /* Head of packet queue */
     PNDIS_PACKET                LoopPacket;             /* Current packet beeing looped */
     PMINIPORT_BUGCHECK_CONTEXT  BugcheckContext;        /* Adapter's shutdown handler */
-    UINT                        MapRegistersRequested;  /* Number of outstanding map registers requested */
-    PADAPTER_OBJECT             AdapterObject;          /* Adapter object for DMA ops */
-    ADAPTER_MAP_REGISTER_LIST   MapRegisterList;        /* List of allocated map registers */
     KEVENT                      DmaEvent;               /* Event to support DMA register allocation */
     KSPIN_LOCK                  DmaLock;                /* Spinlock to protect the dma list */
     UINT                        BusNumber;              /* The bus number of the adapter  */

@@ -103,37 +103,7 @@ NdisInterlockedRemoveHeadList(
   return ExInterlockedRemoveHeadList ( ListHead, (PKSPIN_LOCK)SpinLock );
 }
 
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisMCompleteBufferPhysicalMapping(
-    IN  NDIS_HANDLE     MiniportAdapterHandle,
-    IN  PNDIS_BUFFER    Buffer,
-    IN  ULONG           PhysicalMapRegister)
-{
-}
-
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisMStartBufferPhysicalMapping(
-    IN  NDIS_HANDLE                 MiniportAdapterHandle,
-    IN  PNDIS_BUFFER                Buffer,
-    IN  ULONG                       PhysicalMapRegister,
-    IN  BOOLEAN                     WriteToDevice,
-    OUT PNDIS_PHYSICAL_ADDRESS_UNIT	PhysicalAddressArray,
-    OUT PUINT                       ArraySize)
-{
-    UNIMPLEMENTED
-}
-
-
+
 /*
  * @unimplemented
  */

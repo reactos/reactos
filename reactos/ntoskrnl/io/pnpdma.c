@@ -1,4 +1,4 @@
-/* $Id: pnpdma.c,v 1.3 2003/10/16 14:49:05 ekohl Exp $
+/* $Id: pnpdma.c,v 1.4 2003/10/20 06:03:29 vizzini Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -82,7 +82,7 @@ IopAllocateAdapterChannel(
   IN PDRIVER_CONTROL ExecutionRoutine,
   IN PVOID Context)
 {
-  return HalAllocateAdapterChannel(
+  return IoAllocateAdapterChannel(
     ((PDMA_ADAPTER_INTERNAL)DmaAdapter)->HalAdapter,
     DeviceObject, NumberOfMapRegisters, ExecutionRoutine, Context);
 }

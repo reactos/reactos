@@ -881,7 +881,7 @@ NdisFreePacket(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
@@ -895,7 +895,10 @@ NdisGetBufferPhysicalArraySize(
  *     ArraySize = Address of buffer to place number of physical blocks
  */
 {
-    UNIMPLEMENTED
+  ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
+  ASSERT(Buffer && ArraySize);
+
+  *ArraySize = NDIS_BUFFER_TO_SPAN_PAGES(Buffer);
 }
 
 

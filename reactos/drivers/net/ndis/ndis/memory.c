@@ -275,7 +275,7 @@ NdisMAllocateSharedMemory(
 
   NDIS_DbgPrint(MAX_TRACE,("Called.\n"));
 
-  *VirtualAddress = HalAllocateCommonBuffer(Adapter->AdapterObject, Length, PhysicalAddress, Cached);
+  *VirtualAddress = HalAllocateCommonBuffer(Adapter->NdisMiniportBlock.SystemAdapterObject, Length, PhysicalAddress, Cached);
 }
 
 
@@ -366,7 +366,7 @@ NdisMFreeSharedMemory(
       return;
     }
 
-  Memory->AdapterObject = Adapter->AdapterObject;
+  Memory->AdapterObject = Adapter->NdisMiniportBlock.SystemAdapterObject;
   Memory->Length = Length;
   Memory->PhysicalAddress = PhysicalAddress;
   Memory->VirtualAddress = VirtualAddress;

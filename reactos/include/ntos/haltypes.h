@@ -1,4 +1,4 @@
-/* $Id: haltypes.h,v 1.3 2003/08/20 04:18:31 royce Exp $
+/* $Id: haltypes.h,v 1.4 2003/10/20 06:03:29 vizzini Exp $
  *
  * COPYRIGHT:                See COPYING in the top level directory
  * PROJECT:                  ReactOS kernel
@@ -34,8 +34,29 @@ enum
    DEVICE_DESCRIPTION_VERSION1,
 };
 
-typedef ULONG DMA_WIDTH;
-typedef ULONG DMA_SPEED;
+/*
+ * DMA speed specifiers
+ */
+typedef enum _DMA_SPEED
+{
+  Compatible,
+  TypeA,
+  TypeB,
+  TypeC,
+  TypeF,
+  MaximumDmaSpeed
+} DMA_SPEED, *PDMA_SPEED;
+
+/*
+ * DMA width specifiers
+ */
+typedef enum _DMA_WIDTH
+{
+  Width8Bits,
+  Width16Bits,
+  Width32Bits,
+  MaximumDmaWidth
+} DMA_WIDTH, *PDMA_WIDTH;
 
 /*
  * PURPOSE: Types for HalGetBusData
@@ -66,8 +87,8 @@ typedef struct _DEVICE_DESCRIPTION
   BOOLEAN AutoInitialize;
   BOOLEAN Dma32BitAddresses;
   BOOLEAN IgnoreCount;
-  BOOLEAN Reserved1;
-  BOOLEAN Reserved2;
+  BOOLEAN Reserved1;        /* Must be false */
+  BOOLEAN Dma64BitAddresses;
   ULONG BusNumber;
   ULONG DmaChannel;
   INTERFACE_TYPE InterfaceType;

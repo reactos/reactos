@@ -33,6 +33,16 @@ VOID HalpInitPciBus (VOID);
 /* enum.c */
 VOID HalpStartEnumerator (VOID);
 
+/*
+ * ADAPTER_OBJECT - Track a busmaster DMA adapter and its associated resources
+ *
+ * NOTES:
+ *     - I have not found any documentation on this; if you have any, please 
+ *       fix this struct definition
+ *     - Some of this is right and some of this is wrong; many of these fields
+ *       are unused at this point because X86 doesn't have map registers and
+ *       currently that's all ROS supports
+ */
 struct _ADAPTER_OBJECT {
   INTERFACE_TYPE InterfaceType;
   BOOLEAN Master;
@@ -43,6 +53,12 @@ struct _ADAPTER_OBJECT {
   KSPIN_LOCK SpinLock;
   PVOID Buffer;
   BOOLEAN Inuse;
+  ULONG AvailableMapRegisters;
+  PVOID MapRegisterBase;
+  ULONG AllocatedMapRegisters;
+  PWAIT_CONTEXT_BLOCK WaitContextBlock;
+  PKDEVICE_QUEUE DeviceQueue;
+  BOOLEAN UsesPhysicalMapRegisters;
 };
 
 /* sysinfo.c */

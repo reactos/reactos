@@ -13,8 +13,9 @@
  * TODO:
  *    - Fix HalGetBusDataByOffset() param 2 in most calls below
  */
+#include <ndis.h>
 #include <ndissys.h>
-#include <miniport.h>
+#include "../include/miniport.h"
 
 
 /*
@@ -89,7 +90,7 @@ NdisMPciAssignResources(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
@@ -98,8 +99,26 @@ NdisMQueryAdapterResources(
     IN      NDIS_HANDLE         WrapperConfigurationContext,
     OUT     PNDIS_RESOURCE_LIST ResourceList,
     IN OUT  PUINT               BufferSize)
+/*
+ * FUNCTION: returns a nic's hardware resources
+ * ARGUMENTS:
+ *     Status: on return, contains the status of the operation
+ *     WrapperConfigurationContext: handle input to MiniportInitialize 
+ *     ResourceList: on return, contains the list of resources for the nic
+ *     BufferSize: size of ResourceList
+ * NOTES:
+ *     - Caller must allocate Status and ResourceList
+ *     - Must be called at IRQL = PASSIVE_LEVEL;
+ * BUGS:
+ *     - Needs an implementation; for now i think we are waiting on pnp
+ */
 {
-    UNIMPLEMENTED
+  PAGED_CODE();
+  ASSERT(Status && ResourceList);
+
+  NDIS_DbgPrint(MIN_TRACE, ("Unimplemented!\n"));
+
+  *Status = STATUS_NOT_SUPPORTED;
 }
 
 

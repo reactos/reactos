@@ -746,7 +746,7 @@ typedef struct _NDIS_CONFIGURATION_PARAMETER {
     union {
         ULONG IntegerData;
         NDIS_STRING StringData;
-		  BINARY_DATA BinaryData;
+        BINARY_DATA BinaryData;
     } ParameterData;
 } NDIS_CONFIGURATION_PARAMETER, *PNDIS_CONFIGURATION_PARAMETER;
 
@@ -765,7 +765,7 @@ typedef VOID STDCALL
 
 
 
-#ifdef NDIS_WRAPPER
+//#ifdef NDIS_WRAPPER
 
 typedef struct _OID_LIST    OID_LIST, *POID_LIST;
 
@@ -788,7 +788,7 @@ typedef enum _NDIS_PNP_DEVICE_STATE {
 #define NDIS_DEVICE_DISABLE_WAKE_UP             0x00000010
 #define NDIS_DEVICE_DISABLE_WAKE_ON_RECONNECT   0x00000020
 
-#endif /* NDIS_WRAPPER */
+//#endif /* NDIS_WRAPPER */
 
 
 typedef struct _ATM_ADDRESS ATM_ADDRESS, *PATM_ADDRESS;
@@ -4583,7 +4583,7 @@ typedef VOID STDCALL
     IN  NDIS_STATUS Status);
 
 
-#ifdef NDIS_WRAPPER
+//#ifdef NDIS_WRAPPER
 
 #define ARC_SEND_BUFFERS    8
 #define ARC_HEADER_SIZE     4
@@ -4608,7 +4608,7 @@ typedef struct _NDIS_LOG {
     UCHAR                   LogBuf[1];
 } NDIS_LOG, *PNDIS_LOG;
 
-#endif /* NDIS_WRAPPER */
+//#endif /* NDIS_WRAPPER */
 
 
 struct _NDIS_ADAPTER_BLOCK
@@ -4664,6 +4664,8 @@ struct _NDIS_ADAPTER_BLOCK
 #endif
 };
 
+/* XXX anyone with info on what this really is - please fix or mail me */
+#define NDIS_STATS PVOID
 
 struct _NDIS_MINIPORT_BLOCK {
     ULONG                       NullValue;
@@ -4750,19 +4752,17 @@ struct _NDIS_MINIPORT_BLOCK {
     NDIS_WM_SEND_COMPLETE_HANDLER   WanSendCompleteHandler;
     WAN_RCV_HANDLER                 WanRcvHandler;
     WAN_RCV_COMPLETE_HANDLER        WanRcvCompleteHandler;
-#if 0
-#ifdef NDIS_WRAPPER
     SINGLE_LIST_ENTRY           WorkQueue[NUMBER_OF_WORK_ITEM_TYPES];
     SINGLE_LIST_ENTRY           SingleWorkItems[NUMBER_OF_SINGLE_WORK_ITEMS];
     PNDIS_MAC_BLOCK	            FakeMac;
     UCHAR                       SendFlags;
     UCHAR                       TrResetRing;
     UCHAR                       ArcnetAddress;
-
-    union {
+    union
+    {
         PNDIS_ARC_BUF           ArcBuf;
         PVOID                   BusInterface;
-    } u1;
+    };
     ULONG                       ChannelNumber;
     PNDIS_LOG                   Log;
     ULONG                       BusId;
@@ -4771,17 +4771,11 @@ struct _NDIS_MINIPORT_BLOCK {
     PCM_RESOURCE_LIST           AllocatedResourcesTranslated;
     SINGLE_LIST_ENTRY           PatternList;
     NDIS_PNP_CAPABILITIES       PMCapabilities;
-#if 0
     DEVICE_CAPABILITIES	        DeviceCaps;
-#endif
     ULONG                       WakeUpEnable;
-#if 0
     DEVICE_POWER_STATE          CurrentDeviceState;
-#endif
     PIRP                        pIrpWaitWake;
-#if 0
     SYSTEM_POWER_STATE          WaitWakeSystemState;
-#endif
     LARGE_INTEGER               VcIndex;
     KSPIN_LOCK	                VcCountLock;
     LIST_ENTRY                  WmiEnabledVcs;
@@ -4801,15 +4795,11 @@ struct _NDIS_MINIPORT_BLOCK {
     NDIS_EVENT                  OpenReadyEvent;
     NDIS_PNP_DEVICE_STATE       PnPDeviceState;
     NDIS_PNP_DEVICE_STATE       OldPnPDeviceState;
-#if 0
     PGET_SET_DEVICE_DATA        SetBusData;
     PGET_SET_DEVICE_DATA        GetBusData;
-#endif
     POID_LIST                   OidList;
     KDPC                        DeferredDpc;
-#if 0
     NDIS_STATS                  NdisStats;
-#endif
     PNDIS_PACKET                IndicatedPacket[MAXIMUM_PROCESSORS];
     PKEVENT	                    RemoveReadyEvent;
     PKEVENT	                    AllOpensClosedEvent;
@@ -4817,17 +4807,14 @@ struct _NDIS_MINIPORT_BLOCK {
     ULONG                       InitTimeMs;
     NDIS_MINIPORT_WORK_ITEM     WorkItemBuffer[NUMBER_OF_SINGLE_WORK_ITEMS];
     PNDIS_MINIPORT_TIMER        TimerQueue;
-	ULONG                       DriverVerifyFlags;
-
+    ULONG                       DriverVerifyFlags;
     PNDIS_MINIPORT_BLOCK        NextGlobalMiniport;
-	USHORT                      InternalResetCount;
+    USHORT                      InternalResetCount;
     USHORT                      MiniportResetCount;
     USHORT                      MediaSenseConnectCount;
     USHORT                      MediaSenseDisconnectCount;
     PNDIS_PACKET                *xPackets;
     ULONG                       UserModeOpenReferences;
-#endif /* NDIS_WRAPPER */
-#endif
 };
 
 

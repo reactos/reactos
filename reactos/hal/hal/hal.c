@@ -1,4 +1,4 @@
-/* $Id: hal.c,v 1.5 2002/09/08 10:22:24 chorns Exp $
+/* $Id: hal.c,v 1.6 2003/10/20 06:03:28 vizzini Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -97,10 +97,9 @@ NTSTATUS
 STDCALL
 HalAllocateAdapterChannel(
   PADAPTER_OBJECT AdapterObject,
-  PDEVICE_OBJECT DeviceObject,
+  PWAIT_CONTEXT_BLOCK WaitContextBlock,
   ULONG NumberOfMapRegisters,
-  PDRIVER_CONTROL ExecutionRoutine,
-  PVOID Context)
+  PDRIVER_CONTROL ExecutionRoutine)
 {
   UNIMPLEMENTED;
 
