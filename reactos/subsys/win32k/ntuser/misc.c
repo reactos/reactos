@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.16 2003/09/12 12:54:26 weiden Exp $
+/* $Id: misc.c,v 1.17 2003/09/13 13:58:38 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -68,7 +68,7 @@ NtUserCallOneParam(
         return FALSE;
       }
       
-      Result = (DWORD)WindowObject->Menu;
+      Result = (DWORD)WindowObject->IDMenu;
       
       IntReleaseWindowObject(WindowObject);
       return Result;

@@ -1,4 +1,4 @@
-/* $Id: scrollbar.c,v 1.15 2003/09/12 12:54:26 weiden Exp $
+/* $Id: scrollbar.c,v 1.16 2003/09/13 13:58:38 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -453,7 +453,7 @@ GetScrollInfo (HWND hwnd, int fnBar, LPSCROLLINFO lpsi)
   SCROLLINFO si;
   
   if(!lpsi || 
-     ((lpsi->cbSize != sizeof(SCROLLINFO)) && (lpsi->cbSize != sizeof(SCROLLINFO))))
+     ((lpsi->cbSize != sizeof(SCROLLINFO)) && (lpsi->cbSize != sizeof(SCROLLINFO) - sizeof(si.nTrackPos))))
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return 0;
@@ -529,7 +529,8 @@ SetScrollInfo (HWND hwnd, int fnBar, LPCSCROLLINFO lpsi, WINBOOL fRedraw)
 {
   SCROLLINFO si;
   
-  if(!lpsi)
+  if(!lpsi || 
+     ((lpsi->cbSize != sizeof(SCROLLINFO)) && (lpsi->cbSize != sizeof(SCROLLINFO) - sizeof(si.nTrackPos))))
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return 0;

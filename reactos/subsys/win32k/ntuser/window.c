@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.107 2003/09/07 09:55:52 weiden Exp $
+/* $Id: window.c,v 1.108 2003/09/13 13:58:38 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -325,7 +325,7 @@ IntCreateDesktopWindow(PWINSTATION_OBJECT WindowStation,
   WindowObject->Height = Height;
   WindowObject->ParentHandle = NULL;
   WindowObject->Parent = NULL;
-  WindowObject->Menu = NULL;
+  WindowObject->IDMenu = 0;
   WindowObject->Instance = NULL;
   WindowObject->Parameters = NULL;
   WindowObject->Self = Handle;
@@ -754,7 +754,7 @@ IntSetParent(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndNewParent)
       if (!(Wnd->Style & WS_CHILD))
       {
         //if ( Wnd->Menu ) DestroyMenu ( Wnd->menu );
-        Wnd->Menu = NULL;
+        Wnd->IDMenu = 0;
       }
     }
   }
@@ -1180,7 +1180,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->Height = nHeight;
   WindowObject->ContextHelpId = 0;
   WindowObject->ParentHandle = hWndParent;
-  WindowObject->Menu = hMenu;
+  WindowObject->IDMenu = (UINT)hMenu;
   if(SystemMenu)
     WindowObject->SystemMenu = SystemMenu->Self;
   else
@@ -2596,14 +2596,14 @@ NtUserSetMenu(
       return FALSE;
     }
     
-    WindowObject->Menu = hMenu;
+    WindowObject->IDMenu = (UINT)hMenu;
     
     IntReleaseMenuObject(MenuObject);
   }
   else
   {
     /* remove the menu handle */
-    WindowObject->Menu = 0;
+    WindowObject->IDMenu = 0;
   }
   
   IntReleaseWindowObject(WindowObject);

@@ -41,8 +41,6 @@ typedef struct _WINDOW_OBJECT
   DWORD ContextHelpId;
   /* Parent window handle. */
   HWND ParentHandle;
-  /* Window menu handle. */
-  HMENU Menu;
   /* system menu handle. */
   HMENU SystemMenu;
   /* Handle of the module that created the window. */
@@ -63,7 +61,7 @@ typedef struct _WINDOW_OBJECT
   HANDLE Self;
   /* Window flags. */
   ULONG Flags;
-  /* FIXME: Don't know. */
+  /* Window menu handle or window id */
   UINT IDMenu;
   /* Handle of region of the window to be updated. */
   HANDLE UpdateRegion;

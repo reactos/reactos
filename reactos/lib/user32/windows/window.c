@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.71 2003/08/28 13:38:23 gvg Exp $
+/* $Id: window.c,v 1.72 2003/09/13 13:58:38 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -567,7 +567,7 @@ CreateWindowExA(DWORD dwExStyle,
 	}
     }
     
-  if(!hMenu)
+  if(!hMenu && (dwStyle & (WS_OVERLAPPEDWINDOW | WS_POPUP)))
   {
     wce.cbSize = sizeof(WNDCLASSEXA);
     if(GetClassInfoExA(hInstance, lpClassName, &wce) && wce.lpszMenuName)
@@ -697,7 +697,7 @@ CreateWindowExW(DWORD dwExStyle,
 	}
     }
 
-  if(!hMenu)
+  if(!hMenu && (dwStyle & (WS_OVERLAPPEDWINDOW | WS_POPUP)))
   {
     wce.cbSize = sizeof(WNDCLASSEXW);
     if(GetClassInfoExW(hInstance, lpClassName, &wce) && wce.lpszMenuName)

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: messagebox.c,v 1.17 2003/08/30 18:38:08 weiden Exp $
+/* $Id: messagebox.c,v 1.18 2003/09/13 13:58:38 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/messagebox.c
@@ -76,13 +76,8 @@ typedef UINT *LPUINT;
 
 static HWND MSGBOX_CreateButton(HWND hwnd, LONG ID, LPWSTR Caption)
 {
-  HWND btn = CreateWindowExW(0, L"BUTTON", Caption, WS_CHILD | WS_TABSTOP | WS_VISIBLE,
-                        0, 0, 10, 10, hwnd, 0, 0, NULL);
-  if(btn)
-  {
-    SetWindowLongW(btn, GWL_ID, ID);
-  }
-  return btn;
+  return CreateWindowExW(0, L"BUTTON", Caption, WS_CHILD | WS_TABSTOP | WS_VISIBLE,
+                        0, 0, 10, 10, hwnd, (HMENU)ID, 0, NULL);
 }
 
 static HFONT MSGBOX_OnInit(HWND hwnd, LPMSGBOXPARAMS lpmb)

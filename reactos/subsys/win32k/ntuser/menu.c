@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.29 2003/08/28 10:39:44 weiden Exp $
+/* $Id: menu.c,v 1.30 2003/09/13 13:58:38 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1341,7 +1341,7 @@ NtUserHiliteMenuItem(
     SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
     return res;
   }
-  if(WindowObject->Menu == hmenu)
+  if(WindowObject->IDMenu == (UINT)hmenu)
   {
     ExAcquireFastMutexUnsafe(&MenuObject->MenuItemsLock);
     res = IntHiliteMenuItem(WindowObject, MenuObject, uItemHilite, uHilite);
