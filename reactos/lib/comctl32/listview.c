@@ -8348,6 +8348,36 @@ static LRESULT LISTVIEW_Paint(LISTVIEW_INFO *infoPtr, HDC hdc)
     return 0;
 }
 
+
+/***
+ * DESCRIPTION:
+ * Paints/Repaints the listview control.
+ *
+ * PARAMETER(S):
+ * [I] infoPtr : valid pointer to the listview structure
+ * [I] hdc : device context handle
+ * [I] options : drawing options
+ *
+ * RETURN:
+ * Zero
+ */
+static LRESULT LISTVIEW_PrintClient(LISTVIEW_INFO *infoPtr, HDC hdc, DWORD options)
+{
+    FIXME("Partial Stub: (hdc=%p options=0x%08lx)\n", hdc, options);
+
+    if ((options & PRF_CHECKVISIBLE) && !IsWindowVisible(infoPtr->hwndSelf))
+        return 0;
+
+    if (options & PRF_ERASEBKGND)
+        LISTVIEW_EraseBkgnd(infoPtr, hdc);
+
+    if (options & PRF_CLIENT)
+        LISTVIEW_Paint(infoPtr, hdc);
+
+    return 0;
+}
+
+
 /***
  * DESCRIPTION:
  * Processes double click messages (right mouse button).
@@ -9195,6 +9225,9 @@ LISTVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
   case WM_NOTIFYFORMAT:
     return LISTVIEW_NotifyFormat(infoPtr, (HWND)wParam, (INT)lParam);
 
+  case WM_PRINTCLIENT:
+    return LISTVIEW_PrintClient(infoPtr, (HDC)wParam, (DWORD)lParam);
+
   case WM_PAINT:
     return LISTVIEW_Paint(infoPtr, (HDC)wParam);
 
@@ -9262,7 +9295,6 @@ LISTVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return DefWindowProcW(hwnd, uMsg, wParam, lParam);
   }
 
-  return 0;
 }
 
 /***

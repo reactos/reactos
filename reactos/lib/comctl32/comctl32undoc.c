@@ -106,9 +106,8 @@ typedef HRESULT (CALLBACK *DPALOADPROC)(LPLOADDATA,IStream*,LPARAM);
  * NOTES
  *     No more information available yet!
  */
-
-HRESULT WINAPI
-DPA_LoadStream (HDPA *phDpa, DPALOADPROC loadProc, IStream *pStream, LPARAM lParam)
+HRESULT WINAPI DPA_LoadStream (HDPA *phDpa, DPALOADPROC loadProc,
+                               IStream *pStream, LPARAM lParam)
 {
     HRESULT errCode;
     LARGE_INTEGER position;
@@ -205,9 +204,8 @@ DPA_LoadStream (HDPA *phDpa, DPALOADPROC loadProc, IStream *pStream, LPARAM lPar
  * NOTES
  *     No more information available yet!
  */
-
-HRESULT WINAPI
-DPA_SaveStream (const HDPA hDpa, DPALOADPROC loadProc, IStream *pStream, LPARAM lParam)
+HRESULT WINAPI DPA_SaveStream (const HDPA hDpa, DPALOADPROC loadProc,
+                               IStream *pStream, LPARAM lParam)
 {
 
     FIXME ("hDpa=%p loadProc=%p pStream=%p lParam=%lx\n",
@@ -219,6 +217,8 @@ DPA_SaveStream (const HDPA hDpa, DPALOADPROC loadProc, IStream *pStream, LPARAM 
 
 /**************************************************************************
  * DPA_Merge [COMCTL32.11]
+ *
+ * Merge two dynamic pointers arrays.
  *
  * PARAMS
  *     hdpa1       [I] handle to a dynamic pointer array
@@ -235,10 +235,9 @@ DPA_SaveStream (const HDPA hDpa, DPALOADPROC loadProc, IStream *pStream, LPARAM 
  * NOTES
  *     No more information available yet!
  */
-
-BOOL WINAPI
-DPA_Merge (const HDPA hdpa1, const HDPA hdpa2, DWORD dwFlags,
-	   PFNDPACOMPARE pfnCompare, PFNDPAMERGE pfnMerge, LPARAM lParam)
+BOOL WINAPI DPA_Merge (const HDPA hdpa1, const HDPA hdpa2, DWORD dwFlags,
+                       PFNDPACOMPARE pfnCompare, PFNDPAMERGE pfnMerge,
+                       LPARAM lParam)
 {
     INT nCount;
     LPVOID *pWork1, *pWork2;
@@ -373,7 +372,6 @@ DPA_Merge (const HDPA hdpa1, const HDPA hdpa2, DWORD dwFlags,
  *     Success: pointer to allocated memory block
  *     Failure: NULL
  */
-
 LPVOID WINAPI Alloc (DWORD dwSize)
 {
     return LocalAlloc( LMEM_ZEROINIT, dwSize );
@@ -398,7 +396,6 @@ LPVOID WINAPI Alloc (DWORD dwSize)
  *     If lpSrc is a NULL-pointer, then ReAlloc allocates a memory
  *     block like Alloc.
  */
-
 LPVOID WINAPI ReAlloc (LPVOID lpSrc, DWORD dwSize)
 {
     if (lpSrc)
@@ -420,7 +417,6 @@ LPVOID WINAPI ReAlloc (LPVOID lpSrc, DWORD dwSize)
  *     Success: TRUE
  *     Failure: FALSE
  */
-
 BOOL WINAPI Free (LPVOID lpMem)
 {
     return !LocalFree( lpMem );
@@ -440,7 +436,6 @@ BOOL WINAPI Free (LPVOID lpMem)
  *     Success: size of the specified memory block
  *     Failure: 0
  */
-
 DWORD WINAPI GetSize (LPVOID lpMem)
 {
     return LocalSize( lpMem );
@@ -448,33 +443,90 @@ DWORD WINAPI GetSize (LPVOID lpMem)
 
 
 /**************************************************************************
- * The MRU-API is a set of functions to manipulate MRU(Most Recently Used)
- * lists.
+ * MRU-Functions  {COMCTL32}
  *
- * Stored in the reg. as a set of values under a single key.  Each item in the
- * list has a value name that is a single char. 'a' - 'z', '{', '|' or '}'.
- * The order of the list is stored with value name 'MRUList' which is a string
- * containing the value names (i.e. 'a', 'b', etc.) in the relevant order.
+ * NOTES
+ * The MRU-Api is a set of functions to manipulate lists of M.R.U. (Most Recently
+ * Used) items. It is an undocumented Api that is used (at least) by the shell
+ * and explorer to implement their recent documents feature.
+ *
+ * Since these functions are undocumented, they are unsupported by MS and
+ * may change at any time.
+ *
+ * Internally, the list is implemented as a last in, last out list of items
+ * persisted into the system registry under a caller chosen key. Each list
+ * item is given a one character identifier in the Ascii range from 'a' to
+ * '}'. A list of the identifiers in order from newest to oldest is stored
+ * under the same key in a value named "MRUList".
+ *
+ * Items are re-ordered by changing the order of the values in the MRUList
+ * value. When a new item is added, it becomes the new value of the oldest
+ * identifier, and that identifier is moved to the front of the MRUList value.
+ * 
+ * Wine stores MRU-lists in the same registry format as Windows, so when
+ * switching between the builtin and native comctl32.dll no problems or
+ * incompatibilities should occur.
+ *
+ * The following undocumented structure is used to create an MRU-list:
+ *|typedef INT (CALLBACK *MRUStringCmpFn)(LPCTSTR lhs, LPCTSTR rhs);
+ *|typedef INT (CALLBACK *MRUBinaryCmpFn)(LPCVOID lhs, LPCVOID rhs, DWORD length);
+ *|
+ *|typedef struct tagCREATEMRULIST
+ *|{
+ *|    DWORD   cbSize;
+ *|    DWORD   nMaxItems;
+ *|    DWORD   dwFlags;
+ *|    HKEY    hKey;
+ *|    LPCTSTR lpszSubKey;
+ *|    PROC    lpfnCompare;
+ *|} CREATEMRULIST, *LPCREATEMRULIST;
+ *
+ * MEMBERS
+ *  cbSize      [I] The size of the CREATEMRULIST structure. This must be set
+ *                  to sizeof(CREATEMRULIST) by the caller.
+ *  nMaxItems   [I] The maximum number of items allowed in the list. Because
+ *                  of the limited number of identifiers, this should be set to
+ *                  a value from 1 to 30 by the caller.
+ *  dwFlags     [I] If bit 0 is set, the list will be used to store binary
+ *                  data, otherwise it is assumed to store strings. If bit 1
+ *                  is set, every change made to the list will be reflected in
+ *                  the registry immediately, otherwise changes will only be
+ *                  written when the list is closed.
+ *  hKey        [I] The registry key that the list should be written under.
+ *                  This must be supplied by the caller.
+ *  lpszSubKey  [I] A caller supplied name of a subkey under hKey to write
+ *                  the list to. This may not be blank.
+ *  lpfnCompare [I] A caller supplied comparison function, which may be either
+ *                  an MRUStringCmpFn if dwFlags does not have bit 0 set, or a
+ *                  MRUBinaryCmpFn otherwise.
+ *
+ * FUNCTIONS
+ *  - Create an MRU-list with CreateMRUList() or CreateMRUListLazy().
+ *  - Add items to an MRU-list with AddMRUString() or AddMRUData().
+ *  - Remove items from an MRU-list with DelMRUString().
+ *  - Find data in an MRU-list with FindMRUString() or FindMRUData().
+ *  - Iterate through an MRU-list with EnumMRUList().
+ *  - Free an MRU-list with FreeMRUList().
  */
 
 typedef struct tagCREATEMRULISTA
 {
-    DWORD  cbSize;        /* size of struct */
-    DWORD  nMaxItems;     /* max no. of items in list */
-    DWORD  dwFlags;       /* see below */
-    HKEY   hKey;          /* root reg. key under which list is saved */
-    LPCSTR lpszSubKey;    /* reg. subkey */
-    PROC   lpfnCompare;   /* item compare proc */
+    DWORD  cbSize;
+    DWORD  nMaxItems;
+    DWORD  dwFlags;
+    HKEY   hKey;
+    LPCSTR lpszSubKey;
+    PROC   lpfnCompare;
 } CREATEMRULISTA, *LPCREATEMRULISTA;
 
 typedef struct tagCREATEMRULISTW
 {
-    DWORD   cbSize;        /* size of struct */
-    DWORD   nMaxItems;     /* max no. of items in list */
-    DWORD   dwFlags;       /* see below */
-    HKEY    hKey;          /* root reg. key under which list is saved */
-    LPCWSTR lpszSubKey;    /* reg. subkey */
-    PROC    lpfnCompare;   /* item compare proc */
+    DWORD   cbSize;
+    DWORD   nMaxItems;
+    DWORD   dwFlags;
+    HKEY    hKey;
+    LPCWSTR lpszSubKey;
+    PROC    lpfnCompare;
 } CREATEMRULISTW, *LPCREATEMRULISTW;
 
 /* dwFlags */
@@ -517,9 +569,9 @@ typedef struct tagWINEMRULIST
 /**************************************************************************
  *              MRU_SaveChanged (internal)
  *
- * Localize MRU saving code
+ * Local MRU saving code
  */
-VOID MRU_SaveChanged( LPWINEMRULIST mp )
+static void MRU_SaveChanged ( LPWINEMRULIST mp )
 {
     UINT i, err;
     HKEY newkey;
@@ -587,16 +639,17 @@ VOID MRU_SaveChanged( LPWINEMRULIST mp )
  *     hMRUList [I] Handle to list.
  *
  * RETURNS
- *     Success: TRUE
- *     Failure: FALSE
+ *     Nothing.
  */
-BOOL WINAPI
-FreeMRUList (HANDLE hMRUList)
+void WINAPI FreeMRUList (HANDLE hMRUList)
 {
     LPWINEMRULIST mp = (LPWINEMRULIST)hMRUList;
     UINT i;
 
-    TRACE("\n");
+    TRACE("(%p)\n", hMRUList);
+    if (!hMRUList)
+        return;
+
     if (mp->wineFlags & WMRUF_CHANGED) {
 	/* need to open key and then save the info */
 	MRU_SaveChanged( mp );
@@ -609,7 +662,7 @@ FreeMRUList (HANDLE hMRUList)
     Free(mp->realMRU);
     Free(mp->array);
     Free((LPWSTR)mp->extview.lpszSubKey);
-    return Free(mp);
+    Free(mp);
 }
 
 
@@ -629,8 +682,8 @@ FreeMRUList (HANDLE hMRUList)
  * RETURNS
  *    Position in list 0 -> MRU.  -1 if item not found.
  */
-INT WINAPI
-FindMRUData (HANDLE hList, LPCVOID lpData, DWORD cbData, LPINT lpRegNum)
+INT WINAPI FindMRUData (HANDLE hList, LPCVOID lpData, DWORD cbData,
+                        LPINT lpRegNum)
 {
     LPWINEMRULIST mp = (LPWINEMRULIST)hList;
     INT ret;
@@ -707,14 +760,22 @@ FindMRUData (HANDLE hList, LPCVOID lpData, DWORD cbData, LPINT lpRegNum)
  *     No. corresponding to registry name where value is stored 'a' -> 0 etc.
  *     -1 on error.
  */
-INT WINAPI
-AddMRUData (HANDLE hList, LPCVOID lpData, DWORD cbData)
+INT WINAPI AddMRUData (HANDLE hList, LPCVOID lpData, DWORD cbData)
 {
     LPWINEMRULIST mp = (LPWINEMRULIST)hList;
     LPWINEMRUITEM witem;
-    INT i, replace, ret;
+    INT i, replace;
 
-    if ((replace = FindMRUData (hList, lpData, cbData, NULL)) < 0) {
+    if ((replace = FindMRUData (hList, lpData, cbData, NULL)) >= 0) {
+        /* Item exists, just move it to the front */
+        LPSTR pos = strchr(mp->realMRU, replace + 'a');
+        while (pos > mp->realMRU)
+        {
+            pos[0] = pos[-1];
+            pos--;
+        }
+    }
+    else {
 	/* either add a new entry or replace oldest */
 	if (mp->cursize < mp->extview.nMaxItems) {
 	    /* Add in a new item */
@@ -726,57 +787,73 @@ AddMRUData (HANDLE hList, LPCVOID lpData, DWORD cbData)
 	    replace = mp->realMRU[mp->cursize - 1] - 'a';
 	    Free(mp->array[replace]);
 	}
-    }
-    else {
-	/* free up the old data */
-	Free(mp->array[replace]);
+
+        /* Allocate space for new item and move in the data */
+        mp->array[replace] = witem = Alloc(cbData + sizeof(WINEMRUITEM));
+        witem->itemFlag |= WMRUIF_CHANGED;
+        witem->size = cbData;
+        memcpy( &witem->datastart, lpData, cbData);
+
+        /* now rotate MRU list */
+        for(i=mp->cursize-1; i>=1; i--)
+            mp->realMRU[i] = mp->realMRU[i-1];
     }
 
-    /* Allocate space for new item and move in the data */
-    mp->array[replace] = witem = Alloc(cbData + sizeof(WINEMRUITEM));
-    witem->itemFlag |= WMRUIF_CHANGED;
-    witem->size = cbData;
-    memcpy( &witem->datastart, lpData, cbData);
-
-    /* now rotate MRU list */
+    /* The new item gets the front spot */
     mp->wineFlags |= WMRUF_CHANGED;
-    for(i=mp->cursize-1; i>=1; i--) {
-	mp->realMRU[i] = mp->realMRU[i-1];
-    }
     mp->realMRU[0] = replace + 'a';
+
     TRACE("(%p, %p, %ld) adding data, /%c/ now most current\n",
-	  hList, lpData, cbData, replace+'a');
-    ret = replace;
+          hList, lpData, cbData, replace+'a');
 
     if (!(mp->extview.dwFlags & MRUF_DELAYED_SAVE)) {
 	/* save changed stuff right now */
 	MRU_SaveChanged( mp );
     }
 
-    return ret;
+    return replace;
 }
 
 /**************************************************************************
  *              AddMRUStringW [COMCTL32.401]
  *
- * Add item to MRU string list.  If item already exists in list them it is
- * simply moved up to the top of the list and not added again.  If list is
- * full then the least recently used item is removed to make room.
+ * Add an item to an MRU string list.
  *
  * PARAMS
- *     hList [I] Handle to list.
- *     lpszString [I] ptr to string to add.
+ *     hList      [I] Handle to list.
+ *     lpszString [I] The string to add.
  *
  * RETURNS
- *     No. corresponding to registry name where value is stored 'a' -> 0 etc.
- *     -1 on error.
+ *   Success: The number corresponding to the registry name where the string
+ *            has been stored (0 maps to 'a', 1 to 'b' and so on).
+ *   Failure: -1, if hList is NULL or memory allocation fails. If lpszString
+ *            is invalid, the function returns 0, and GetLastError() returns
+ *            ERROR_INVALID_PARAMETER. The last error value is set only in
+ *            this case.
+ *
+ * NOTES
+ *  -If lpszString exists in the list already, it is moved to the top of the
+ *   MRU list (it is not duplicated).
+ *  -If the list is full the least recently used list entry is replaced with
+ *   lpszString.
+ *  -If this function returns 0 you should check the last error value to
+ *   ensure the call really succeeded.
  */
-INT WINAPI
-AddMRUStringW(HANDLE hList, LPCWSTR lpszString)
+INT WINAPI AddMRUStringW(HANDLE hList, LPCWSTR lpszString)
 {
-    FIXME("(%p, %s) empty stub!\n", hList, debugstr_w(lpszString));
+    TRACE("(%p,%s)\n", hList, debugstr_w(lpszString));
 
-    return 0;
+    if (!hList)
+        return -1;
+
+    if (!lpszString || IsBadStringPtrW(lpszString, -1))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    return AddMRUData(hList, lpszString,
+                      (strlenW(lpszString) + 1) * sizeof(WCHAR));
 }
 
 /**************************************************************************
@@ -784,12 +861,32 @@ AddMRUStringW(HANDLE hList, LPCWSTR lpszString)
  *
  * See AddMRUStringW.
  */
-INT WINAPI
-AddMRUStringA(HANDLE hList, LPCSTR lpszString)
+INT WINAPI AddMRUStringA(HANDLE hList, LPCSTR lpszString)
 {
-    FIXME("(%p, %s) empty stub!\n", hList, debugstr_a(lpszString));
+    DWORD len;
+    LPWSTR stringW;
+    INT ret;
 
-    return 0;
+    TRACE("(%p,%s)\n", hList, debugstr_a(lpszString));
+
+    if (!hList)
+        return -1;
+
+    if (IsBadStringPtrA(lpszString, -1))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+	return 0;
+    }
+
+    len = MultiByteToWideChar(CP_ACP, 0, lpszString, -1, NULL, 0) * sizeof(WCHAR);
+    stringW = Alloc(len);
+    if (!stringW)
+        return -1;
+
+    MultiByteToWideChar(CP_ACP, 0, lpszString, -1, stringW, len);
+    ret = AddMRUData(hList, stringW, len);
+    Free(stringW);
+    return ret;
 }
 
 /**************************************************************************
@@ -804,8 +901,7 @@ AddMRUStringA(HANDLE hList, LPCSTR lpszString)
  * RETURNS
  *    TRUE if successful, FALSE if nItemPos is out of range.
  */
-BOOL WINAPI
-DelMRUString(HANDLE hList, INT nItemPos)
+BOOL WINAPI DelMRUString(HANDLE hList, INT nItemPos)
 {
     FIXME("(%p, %d): stub\n", hList, nItemPos);
     return TRUE;
@@ -816,11 +912,10 @@ DelMRUString(HANDLE hList, INT nItemPos)
  *
  * See FindMRUStringA.
  */
-INT WINAPI
-FindMRUStringW (HANDLE hList, LPCWSTR lpszString, LPINT lpRegNum)
+INT WINAPI FindMRUStringW (HANDLE hList, LPCWSTR lpszString, LPINT lpRegNum)
 {
-  FIXME("stub\n");
-  return -1;
+  return FindMRUData(hList, lpszString,
+                     (lstrlenW(lpszString) + 1) * sizeof(WCHAR), lpRegNum);
 }
 
 /**************************************************************************
@@ -838,8 +933,7 @@ FindMRUStringW (HANDLE hList, LPCWSTR lpszString, LPINT lpRegNum)
  * RETURNS
  *    Position in list 0 -> MRU.  -1 if item not found.
  */
-INT WINAPI
-FindMRUStringA (HANDLE hList, LPCSTR lpszString, LPINT lpRegNum)
+INT WINAPI FindMRUStringA (HANDLE hList, LPCSTR lpszString, LPINT lpRegNum)
 {
     DWORD len = MultiByteToWideChar(CP_ACP, 0, lpszString, -1, NULL, 0);
     LPWSTR stringW = Alloc(len * sizeof(WCHAR));
@@ -854,7 +948,7 @@ FindMRUStringA (HANDLE hList, LPCSTR lpszString, LPINT lpRegNum)
 /*************************************************************************
  *                 CreateMRUListLazy_common (internal)
  */
-HANDLE CreateMRUListLazy_common(LPWINEMRULIST mp)
+static HANDLE CreateMRUListLazy_common(LPWINEMRULIST mp)
 {
     UINT i, err;
     HKEY newkey;
@@ -901,7 +995,7 @@ HANDLE CreateMRUListLazy_common(LPWINEMRULIST mp)
 	    *mp->realMRU = 0;
 	}
 
-	TRACE("MRU list = %s\n", mp->realMRU);
+	TRACE("MRU list = %s, datasize = %ld\n", mp->realMRU, datasize);
 
 	mp->cursize = datasize - 1;
 	/* datasize now has number of items in the MRUList */
@@ -939,16 +1033,16 @@ HANDLE CreateMRUListLazy_common(LPWINEMRULIST mp)
  *
  * See CreateMRUListLazyA.
  */
-HANDLE WINAPI
-CreateMRUListLazyW (LPCREATEMRULISTW lpcml, DWORD dwParam2, DWORD dwParam3, DWORD dwParam4)
+HANDLE WINAPI CreateMRUListLazyW (LPCREATEMRULISTW lpcml, DWORD dwParam2,
+                                  DWORD dwParam3, DWORD dwParam4)
 {
     LPWINEMRULIST mp;
 
-    if (lpcml == NULL)
-	return 0;
+    /* Native does not check for a NULL lpcml */
 
-    if (lpcml->cbSize < sizeof(CREATEMRULISTW))
-	return 0;
+    if (lpcml->cbSize != sizeof(CREATEMRULISTW) || !lpcml->hKey ||
+        IsBadStringPtrW(lpcml->lpszSubKey, -1))
+	return NULL;
 
     mp = Alloc(sizeof(WINEMRULIST));
     memcpy(&mp->extview, lpcml, sizeof(CREATEMRULISTW));
@@ -973,16 +1067,16 @@ CreateMRUListLazyW (LPCREATEMRULISTW lpcml, DWORD dwParam2, DWORD dwParam3, DWOR
  * RETURNS
  *     Handle to MRU list.
  */
-HANDLE WINAPI
-CreateMRUListLazyA (LPCREATEMRULISTA lpcml, DWORD dwParam2, DWORD dwParam3, DWORD dwParam4)
+HANDLE WINAPI CreateMRUListLazyA (LPCREATEMRULISTA lpcml, DWORD dwParam2,
+                                  DWORD dwParam3, DWORD dwParam4)
 {
     LPWINEMRULIST mp;
     DWORD len;
 
-    if (lpcml == NULL)
-	return 0;
+    /* Native does not check for a NULL lpcml */
 
-    if (lpcml->cbSize < sizeof(CREATEMRULISTA))
+    if (lpcml->cbSize != sizeof(CREATEMRULISTA) || !lpcml->hKey ||
+        IsBadStringPtrA(lpcml->lpszSubKey, -1))
 	return 0;
 
     mp = Alloc(sizeof(WINEMRULIST));
@@ -1000,8 +1094,7 @@ CreateMRUListLazyA (LPCREATEMRULISTA lpcml, DWORD dwParam2, DWORD dwParam3, DWOR
  *
  * See CreateMRUListA.
  */
-HANDLE WINAPI
-CreateMRUListW (LPCREATEMRULISTW lpcml)
+HANDLE WINAPI CreateMRUListW (LPCREATEMRULISTW lpcml)
 {
     return CreateMRUListLazyW(lpcml, 0, 0, 0);
 }
@@ -1017,8 +1110,7 @@ CreateMRUListW (LPCREATEMRULISTW lpcml)
  * RETURNS
  *     Handle to MRU list.
  */
-HANDLE WINAPI
-CreateMRUListA (LPCREATEMRULISTA lpcml)
+HANDLE WINAPI CreateMRUListA (LPCREATEMRULISTA lpcml)
 {
      return CreateMRUListLazyA (lpcml, 0, 0, 0);
 }
@@ -1042,8 +1134,8 @@ CreateMRUListA (LPCREATEMRULISTA lpcml)
  *    If lpBuffer == NULL or nItemPos is -ve return value is no. of items in
  *    the list.
  */
-INT WINAPI EnumMRUListW(HANDLE hList, INT nItemPos, LPVOID lpBuffer,
-DWORD nBufferSize)
+INT WINAPI EnumMRUListW (HANDLE hList, INT nItemPos, LPVOID lpBuffer,
+                         DWORD nBufferSize)
 {
     LPWINEMRULIST mp = (LPWINEMRULIST) hList;
     LPWINEMRUITEM witem;
@@ -1067,8 +1159,8 @@ DWORD nBufferSize)
  *
  * See EnumMRUListW.
  */
-INT WINAPI EnumMRUListA(HANDLE hList, INT nItemPos, LPVOID lpBuffer,
-DWORD nBufferSize)
+INT WINAPI EnumMRUListA (HANDLE hList, INT nItemPos, LPVOID lpBuffer,
+                         DWORD nBufferSize)
 {
     LPWINEMRULIST mp = (LPWINEMRULIST) hList;
     LPWINEMRUITEM witem;
@@ -1110,9 +1202,7 @@ DWORD nBufferSize)
  * RETURNS
  *     The number of characters copied.
  */
-
-INT WINAPI
-Str_GetPtrA (LPCSTR lpSrc, LPSTR lpDest, INT nMaxLen)
+INT WINAPI Str_GetPtrA (LPCSTR lpSrc, LPSTR lpDest, INT nMaxLen)
 {
     INT len;
 
@@ -1157,9 +1247,7 @@ Str_GetPtrA (LPCSTR lpSrc, LPSTR lpDest, INT nMaxLen)
  *     Set lpSrc to NULL to free the memory allocated by a previous call
  *     to this function.
  */
-
-BOOL WINAPI
-Str_SetPtrA (LPSTR *lppDest, LPCSTR lpSrc)
+BOOL WINAPI Str_SetPtrA (LPSTR *lppDest, LPCSTR lpSrc)
 {
     TRACE("(%p %p)\n", lppDest, lpSrc);
 
@@ -1186,9 +1274,7 @@ Str_SetPtrA (LPSTR *lppDest, LPCSTR lpSrc)
  *
  * See Str_GetPtrA.
  */
-
-INT WINAPI
-Str_GetPtrW (LPCWSTR lpSrc, LPWSTR lpDest, INT nMaxLen)
+INT WINAPI Str_GetPtrW (LPCWSTR lpSrc, LPWSTR lpDest, INT nMaxLen)
 {
     INT len;
 
@@ -1221,9 +1307,7 @@ Str_GetPtrW (LPCWSTR lpSrc, LPWSTR lpDest, INT nMaxLen)
  *
  * See Str_SetPtrA.
  */
-
-BOOL WINAPI
-Str_SetPtrW (LPWSTR *lppDest, LPCWSTR lpSrc)
+BOOL WINAPI Str_SetPtrW (LPWSTR *lppDest, LPCWSTR lpSrc)
 {
     TRACE("(%p %p)\n", lppDest, lpSrc);
 
@@ -1260,8 +1344,7 @@ Str_SetPtrW (LPWSTR *lppDest, LPCWSTR lpSrc)
  *     Length, in bytes, of the converted string.
  */
 
-INT
-Str_GetPtrWtoA (LPCWSTR lpSrc, LPSTR lpDest, INT nMaxLen)
+INT Str_GetPtrWtoA (LPCWSTR lpSrc, LPSTR lpDest, INT nMaxLen)
 {
     INT len;
 
@@ -1306,9 +1389,7 @@ Str_GetPtrWtoA (LPCWSTR lpSrc, LPSTR lpDest, INT nMaxLen)
  *     TRUE: conversion successful
  *     FALSE: error
  */
-
-BOOL
-Str_SetPtrAtoW (LPWSTR *lppDest, LPCSTR lpSrc)
+BOOL Str_SetPtrAtoW (LPWSTR *lppDest, LPCSTR lpSrc)
 {
     TRACE("(%p %s)\n", lppDest, lpSrc);
 
@@ -1350,9 +1431,7 @@ Str_SetPtrAtoW (LPWSTR *lppDest, LPCSTR lpSrc)
  *     fixed-size memory blocks. These arrays can store any kind of data
  *     (e.g. strings and icons).
  */
-
-HDSA WINAPI
-DSA_Create (INT nSize, INT nGrow)
+HDSA WINAPI DSA_Create (INT nSize, INT nGrow)
 {
     HDSA hdsa;
 
@@ -1384,9 +1463,7 @@ DSA_Create (INT nSize, INT nGrow)
  *     Success: TRUE
  *     Failure: FALSE
  */
-
-BOOL WINAPI
-DSA_Destroy (const HDSA hdsa)
+BOOL WINAPI DSA_Destroy (const HDSA hdsa)
 {
     TRACE("(%p)\n", hdsa);
 
@@ -1414,9 +1491,7 @@ DSA_Destroy (const HDSA hdsa)
  *     Success: TRUE
  *     Failure: FALSE
  */
-
-BOOL WINAPI
-DSA_GetItem (const HDSA hdsa, INT nIndex, LPVOID pDest)
+BOOL WINAPI DSA_GetItem (const HDSA hdsa, INT nIndex, LPVOID pDest)
 {
     LPVOID pSrc;
 
@@ -1447,9 +1522,7 @@ DSA_GetItem (const HDSA hdsa, INT nIndex, LPVOID pDest)
  *     Success: pointer to an item
  *     Failure: NULL
  */
-
-LPVOID WINAPI
-DSA_GetItemPtr (const HDSA hdsa, INT nIndex)
+LPVOID WINAPI DSA_GetItemPtr (const HDSA hdsa, INT nIndex)
 {
     LPVOID pSrc;
 
@@ -1482,9 +1555,7 @@ DSA_GetItemPtr (const HDSA hdsa, INT nIndex)
  *     Success: TRUE
  *     Failure: FALSE
  */
-
-BOOL WINAPI
-DSA_SetItem (const HDSA hdsa, INT nIndex, LPVOID pSrc)
+BOOL WINAPI DSA_SetItem (const HDSA hdsa, INT nIndex, LPVOID pSrc)
 {
     INT  nSize, nNewItems;
     LPVOID pDest, lpTemp;
@@ -1540,9 +1611,7 @@ DSA_SetItem (const HDSA hdsa, INT nIndex, LPVOID pSrc)
  *     Success: position of the new item
  *     Failure: -1
  */
-
-INT WINAPI
-DSA_InsertItem (const HDSA hdsa, INT nIndex, LPVOID pSrc)
+INT WINAPI DSA_InsertItem (const HDSA hdsa, INT nIndex, LPVOID pSrc)
 {
     INT   nNewItems, nSize;
     LPVOID  lpTemp, lpDest;
@@ -1603,9 +1672,7 @@ DSA_InsertItem (const HDSA hdsa, INT nIndex, LPVOID pSrc)
  *     Success: number of the deleted element
  *     Failure: -1
  */
-
-INT WINAPI
-DSA_DeleteItem (const HDSA hdsa, INT nIndex)
+INT WINAPI DSA_DeleteItem (const HDSA hdsa, INT nIndex)
 {
     LPVOID lpDest,lpSrc;
     INT  nSize;
@@ -1657,9 +1724,7 @@ DSA_DeleteItem (const HDSA hdsa, INT nIndex)
  *     Success: TRUE
  *     Failure: FALSE
  */
-
-BOOL WINAPI
-DSA_DeleteAllItems (const HDSA hdsa)
+BOOL WINAPI DSA_DeleteAllItems (const HDSA hdsa)
 {
     TRACE("(%p)\n", hdsa);
 
@@ -1688,9 +1753,7 @@ DSA_DeleteAllItems (const HDSA hdsa)
  *     Success: TRUE
  *     Failure: FALSE
  */
-
-BOOL WINAPI
-DPA_Destroy (const HDPA hdpa)
+BOOL WINAPI DPA_Destroy (const HDPA hdpa)
 {
     TRACE("(%p)\n", hdpa);
 
@@ -1717,9 +1780,7 @@ DPA_Destroy (const HDPA hdpa)
  *     Success: TRUE
  *     Failure: FALSE
  */
-
-BOOL WINAPI
-DPA_Grow (const HDPA hdpa, INT nGrow)
+BOOL WINAPI DPA_Grow (const HDPA hdpa, INT nGrow)
 {
     TRACE("(%p %d)\n", hdpa, nGrow);
 
@@ -1751,9 +1812,7 @@ DPA_Grow (const HDPA hdpa, INT nGrow)
  *     - If 'hdpa' is a NULL-Pointer, the original implementation crashes,
  *       this implementation just returns NULL.
  */
-
-HDPA WINAPI
-DPA_Clone (const HDPA hdpa, const HDPA hdpaNew)
+HDPA WINAPI DPA_Clone (const HDPA hdpa, const HDPA hdpaNew)
 {
     INT nNewItems, nSize;
     HDPA hdpaTemp;
@@ -1811,9 +1870,7 @@ DPA_Clone (const HDPA hdpa, const HDPA hdpaNew)
  *     Success: pointer
  *     Failure: NULL
  */
-
-LPVOID WINAPI
-DPA_GetPtr (const HDPA hdpa, INT nIndex)
+LPVOID WINAPI DPA_GetPtr (const HDPA hdpa, INT nIndex)
 {
     TRACE("(%p %d)\n", hdpa, nIndex);
 
@@ -1847,9 +1904,7 @@ DPA_GetPtr (const HDPA hdpa, INT nIndex)
  *     Success: index of the specified pointer
  *     Failure: -1
  */
-
-INT WINAPI
-DPA_GetPtrIndex (const HDPA hdpa, LPVOID p)
+INT WINAPI DPA_GetPtrIndex (const HDPA hdpa, LPVOID p)
 {
     INT i;
 
@@ -1879,9 +1934,7 @@ DPA_GetPtrIndex (const HDPA hdpa, LPVOID p)
  *     Success: index of the inserted pointer
  *     Failure: -1
  */
-
-INT WINAPI
-DPA_InsertPtr (const HDPA hdpa, INT i, LPVOID p)
+INT WINAPI DPA_InsertPtr (const HDPA hdpa, INT i, LPVOID p)
 {
     TRACE("(%p %d %p)\n", hdpa, i, p);
 
@@ -1914,9 +1967,7 @@ DPA_InsertPtr (const HDPA hdpa, INT i, LPVOID p)
  *     Success: TRUE
  *     Failure: FALSE
  */
-
-BOOL WINAPI
-DPA_SetPtr (const HDPA hdpa, INT i, LPVOID p)
+BOOL WINAPI DPA_SetPtr (const HDPA hdpa, INT i, LPVOID p)
 {
     LPVOID *lpTemp;
 
@@ -1967,9 +2018,7 @@ DPA_SetPtr (const HDPA hdpa, INT i, LPVOID p)
  *     Success: deleted pointer
  *     Failure: NULL
  */
-
-LPVOID WINAPI
-DPA_DeletePtr (const HDPA hdpa, INT i)
+LPVOID WINAPI DPA_DeletePtr (const HDPA hdpa, INT i)
 {
     LPVOID *lpDest, *lpSrc, lpTemp = NULL;
     INT  nSize;
@@ -2022,9 +2071,7 @@ DPA_DeletePtr (const HDPA hdpa, INT i)
  *     Success: TRUE
  *     Failure: FALSE
  */
-
-BOOL WINAPI
-DPA_DeleteAllPtrs (const HDPA hdpa)
+BOOL WINAPI DPA_DeleteAllPtrs (const HDPA hdpa)
 {
     TRACE("(%p)\n", hdpa);
 
@@ -2058,10 +2105,8 @@ DPA_DeleteAllPtrs (const HDPA hdpa)
  * RETURNS
  *     NONE
  */
-
-static VOID
-DPA_QuickSort (LPVOID *lpPtrs, INT l, INT r,
-	       PFNDPACOMPARE pfnCompare, LPARAM lParam)
+static VOID DPA_QuickSort (LPVOID *lpPtrs, INT l, INT r,
+                           PFNDPACOMPARE pfnCompare, LPARAM lParam)
 {
     INT m;
     LPVOID t;
@@ -2109,9 +2154,7 @@ DPA_QuickSort (LPVOID *lpPtrs, INT l, INT r,
  *     Success: TRUE
  *     Failure: FALSE
  */
-
-BOOL WINAPI
-DPA_Sort (const HDPA hdpa, PFNDPACOMPARE pfnCompare, LPARAM lParam)
+BOOL WINAPI DPA_Sort (const HDPA hdpa, PFNDPACOMPARE pfnCompare, LPARAM lParam)
 {
     if (!hdpa || !pfnCompare)
 	return FALSE;
@@ -2148,10 +2191,8 @@ DPA_Sort (const HDPA hdpa, PFNDPACOMPARE pfnCompare, LPARAM lParam)
  *     Function is NOT tested!
  *     If something goes wrong, blame HIM not ME! (Eric Kohl)
  */
-
-INT WINAPI
-DPA_Search (const HDPA hdpa, LPVOID pFind, INT nStart,
-	    PFNDPACOMPARE pfnCompare, LPARAM lParam, UINT uOptions)
+INT WINAPI DPA_Search (const HDPA hdpa, LPVOID pFind, INT nStart,
+                       PFNDPACOMPARE pfnCompare, LPARAM lParam, UINT uOptions)
 {
     if (!hdpa || !pfnCompare || !pFind)
 	return -1;
@@ -2232,9 +2273,7 @@ DPA_Search (const HDPA hdpa, LPVOID pFind, INT nStart,
  *     The DPA_ functions can be used to create and manipulate arrays of
  *     pointers.
  */
-
-HDPA WINAPI
-DPA_CreateEx (INT nGrow, HANDLE hHeap)
+HDPA WINAPI DPA_CreateEx (INT nGrow, HANDLE hHeap)
 {
     HDPA hdpa;
 
@@ -2275,9 +2314,7 @@ DPA_CreateEx (INT nGrow, HANDLE hHeap)
  *     The DPA_ functions can be used to create and manipulate arrays of
  *     pointers.
  */
-
-HDPA WINAPI
-DPA_Create (INT nGrow)
+HDPA WINAPI DPA_Create (INT nGrow)
 {
     return DPA_CreateEx( nGrow, 0 );
 }
@@ -2302,8 +2339,7 @@ typedef struct tagNOTIFYDATA
  * DoNotify [Internal]
  */
 
-static LRESULT
-DoNotify (LPNOTIFYDATA lpNotify, UINT uCode, LPNMHDR lpHdr)
+static LRESULT DoNotify (LPNOTIFYDATA lpNotify, UINT uCode, LPNMHDR lpHdr)
 {
     NMHDR nmhdr;
     LPNMHDR lpNmh = NULL;
@@ -2355,7 +2391,6 @@ DoNotify (LPNOTIFYDATA lpNotify, UINT uCode, LPNMHDR lpHdr)
  *     message is taken from the NMHDR structure.
  *     If hwndFrom is not -1 then lpHdr can be NULL.
  */
-
 LRESULT WINAPI SendNotify (HWND hwndTo, HWND hwndFrom, UINT uCode, LPNMHDR lpHdr)
 {
     NOTIFYDATA notify;
@@ -2393,7 +2428,6 @@ LRESULT WINAPI SendNotify (HWND hwndTo, HWND hwndFrom, UINT uCode, LPNMHDR lpHdr
  *     message is taken from the NMHDR structure.
  *     If hwndFrom is not -1 then lpHdr can be NULL.
  */
-
 LRESULT WINAPI SendNotifyEx (HWND hwndTo, HWND hwndFrom, UINT uCode,
                              LPNMHDR lpHdr, DWORD dwParam5)
 {
@@ -2436,9 +2470,8 @@ LRESULT WINAPI SendNotifyEx (HWND hwndTo, HWND hwndFrom, UINT uCode,
  * RETURNS
  *     none
  */
-
-VOID WINAPI
-DPA_EnumCallback (HDPA hdpa, PFNDPAENUMCALLBACK enumProc, LPVOID lParam)
+VOID WINAPI DPA_EnumCallback (HDPA hdpa, PFNDPAENUMCALLBACK enumProc,
+                              LPVOID lParam)
 {
     INT i;
 
@@ -2471,9 +2504,8 @@ DPA_EnumCallback (HDPA hdpa, PFNDPAENUMCALLBACK enumProc, LPVOID lParam)
  * RETURNS
  *     none
  */
-
-void WINAPI
-DPA_DestroyCallback (HDPA hdpa, PFNDPAENUMCALLBACK enumProc, LPVOID lParam)
+void WINAPI DPA_DestroyCallback (HDPA hdpa, PFNDPAENUMCALLBACK enumProc,
+                                 LPVOID lParam)
 {
     TRACE("(%p %p %p)\n", hdpa, enumProc, lParam);
 
@@ -2495,9 +2527,8 @@ DPA_DestroyCallback (HDPA hdpa, PFNDPAENUMCALLBACK enumProc, LPVOID lParam)
  * RETURNS
  *     none
  */
-
-VOID WINAPI
-DSA_EnumCallback (HDSA hdsa, PFNDSAENUMCALLBACK enumProc, LPVOID lParam)
+VOID WINAPI DSA_EnumCallback (HDSA hdsa, PFNDSAENUMCALLBACK enumProc,
+                              LPVOID lParam)
 {
     INT i;
 
@@ -2531,9 +2562,8 @@ DSA_EnumCallback (HDSA hdsa, PFNDSAENUMCALLBACK enumProc, LPVOID lParam)
  * RETURNS
  *     none
  */
-
-void WINAPI
-DSA_DestroyCallback (HDSA hdsa, PFNDSAENUMCALLBACK enumProc, LPVOID lParam)
+void WINAPI DSA_DestroyCallback (HDSA hdsa, PFNDSAENUMCALLBACK enumProc,
+                                 LPVOID lParam)
 {
     TRACE("(%p %p %p)\n", hdsa, enumProc, lParam);
 

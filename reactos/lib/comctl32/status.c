@@ -455,7 +455,7 @@ STATUSBAR_GetTextLength (STATUS_INFO *infoPtr, INT nPart)
     else
 	part = &infoPtr->parts[nPart];
 
-    if (part->text)
+    if ((~part->style & SBT_OWNERDRAW) && part->text)
 	result = strlenW(part->text);
     else
 	result = 0;
@@ -1252,7 +1252,6 @@ StatusWindowProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		     msg, wParam, lParam);
 	    return DefWindowProcW (hwnd, msg, wParam, lParam);
     }
-    return 0;
 }
 
 

@@ -187,32 +187,20 @@ static void ANIMATE_Free(ANIMATE_INFO *infoPtr)
  	    FreeResource(infoPtr->hRes);
 	    infoPtr->hRes = 0;
 	}
-	if (infoPtr->lpIndex) {
-	    HeapFree(GetProcessHeap(), 0, infoPtr->lpIndex);
-	    infoPtr->lpIndex = NULL;
-	}
+        HeapFree(GetProcessHeap(), 0, infoPtr->lpIndex);
+        infoPtr->lpIndex = NULL;
 	if (infoPtr->hic) {
 	    fnIC.fnICClose(infoPtr->hic);
 	    infoPtr->hic = 0;
 	}
-	if (infoPtr->inbih) {
-	    HeapFree(GetProcessHeap(), 0, infoPtr->inbih);
-	    infoPtr->inbih = NULL;
-	}
-	if (infoPtr->outbih) {
-	    HeapFree(GetProcessHeap(), 0, infoPtr->outbih);
-	    infoPtr->outbih = NULL;
-	}
-        if( infoPtr->indata )
-        {
+        HeapFree(GetProcessHeap(), 0, infoPtr->inbih);
+        infoPtr->inbih = NULL;
+        HeapFree(GetProcessHeap(), 0, infoPtr->outbih);
+        infoPtr->outbih = NULL;
 	HeapFree(GetProcessHeap(), 0, infoPtr->indata);
-            infoPtr->indata = NULL;
-        }
-    	if( infoPtr->outdata )
-        {
+        infoPtr->indata = NULL;
 	HeapFree(GetProcessHeap(), 0, infoPtr->outdata);
-            infoPtr->outdata = NULL;
-        }
+        infoPtr->outdata = NULL;
     	if( infoPtr->hbmPrevFrame )
         {
 	    DeleteObject(infoPtr->hbmPrevFrame);

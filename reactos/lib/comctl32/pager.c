@@ -1368,8 +1368,6 @@ PAGER_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         default:
             return DefWindowProcW (hwnd, uMsg, wParam, lParam);
     }
-
-    return 0;
 }
 
 

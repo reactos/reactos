@@ -5522,8 +5522,7 @@ TOOLBAR_Destroy (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	DestroyWindow (infoPtr->hwndToolTip);
 
     /* delete temporary buffer for tooltip text */
-    if (infoPtr->pszTooltipText)
-        HeapFree(GetProcessHeap(), 0, infoPtr->pszTooltipText);
+    HeapFree(GetProcessHeap(), 0, infoPtr->pszTooltipText);
 
     /* delete button data */
     if (infoPtr->buttons)
@@ -6275,11 +6274,8 @@ static LRESULT TOOLBAR_TTGetDispInfo (TOOLBAR_INFO *infoPtr, NMTTDISPINFOW *lpnm
 
     TRACE("button index = %d\n", index);
 
-    if (infoPtr->pszTooltipText)
-    {
-        HeapFree(GetProcessHeap(), 0, infoPtr->pszTooltipText);
-        infoPtr->pszTooltipText = NULL;
-    }
+    HeapFree(GetProcessHeap(), 0, infoPtr->pszTooltipText);
+    infoPtr->pszTooltipText = NULL;
 
     if (index < 0)
         return 0;
@@ -7101,7 +7097,6 @@ ToolbarWindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		     uMsg, wParam, lParam);
 	    return DefWindowProcW (hwnd, uMsg, wParam, lParam);
     }
-    return 0;
 }
 
 
