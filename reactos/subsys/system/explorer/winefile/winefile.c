@@ -3048,6 +3048,10 @@ BOOL launch_entry(Entry* entry, HWND hwnd, UINT nCmdShow)
 		shexinfo.cbSize = sizeof(SHELLEXECUTEINFO);
 		shexinfo.fMask = SEE_MASK_IDLIST;
 		shexinfo.hwnd = hwnd;
+		shexinfo.lpVerb = NULL;
+		shexinfo.lpFile = NULL;
+		shexinfo.lpParameters = NULL;
+		shexinfo.lpDirectory = NULL;
 		shexinfo.nShow = nCmdShow;
 		shexinfo.lpIDList = get_to_absolute_pidl(entry, hwnd);
 
