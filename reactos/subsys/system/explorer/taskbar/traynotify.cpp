@@ -307,9 +307,16 @@ HWND ClockWindow::Create(HWND hwndParent)
 {
 	ClientRect clnt(hwndParent);
 
+	WindowCanvas canvas(hwndParent);
+	FontSelection font(canvas, GetStockFont(DEFAULT_GUI_FONT));
+
+	RECT rect = {0, 0, 0, 0};
+	DrawText(canvas, TEXT("00:00"), -1, &rect, DT_SINGLELINE|DT_NOPREFIX|DT_CALCRECT);
+	int clockwindowWidth = rect.right-rect.left + 4;
+
 	return Window::Create(WINDOW_CREATOR(ClockWindow), 0,
 							BtnWindowClass(CLASSNAME_CLOCKWINDOW,CS_DBLCLKS), NULL, WS_CHILD|WS_VISIBLE,
-							clnt.right-(CLOCKWINDOW_WIDTH+1), 1, CLOCKWINDOW_WIDTH, clnt.bottom-2, hwndParent);
+							clnt.right-(clockwindowWidth+1), 1, clockwindowWidth, clnt.bottom-2, hwndParent);
 }
 
 LRESULT ClockWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
