@@ -346,6 +346,7 @@ static BYTE VirtualToAscii(WORD keyCode,BOOL isDown)
    }
 
    if ((keyCode>=VK_A)&&(keyCode<=VK_Z))
+   {
       if (ctrlKeyState & CAPSLOCK_ON)
          if (ctrlKeyState & SHIFT_PRESSED)
             return keyCode-VK_A+'a';
@@ -356,21 +357,26 @@ static BYTE VirtualToAscii(WORD keyCode,BOOL isDown)
             return keyCode-VK_A+'A';
          else
             return keyCode-VK_A+'a';
+   }
 
    if ((keyCode>=VK_0)&&(keyCode<=VK_9))
+   {
       if (ctrlKeyState & SHIFT_PRESSED)
          return asciiTable1[keyCode-VK_0];
       else
          return keyCode-VK_0+'0';
+   }
 
    if ((keyCode>=VK_NUMPAD0)&&(keyCode<=VK_DIVIDE))
       return asciiTable2[keyCode-VK_NUMPAD0];
 
    if ((keyCode>=186)&&(keyCode<=222))
+   {
       if (ctrlKeyState & SHIFT_PRESSED)
          return asciiTable4[keyCode-186];
       else
          return asciiTable3[keyCode-186];
+   }
 
    switch(keyCode)
    {
@@ -425,21 +431,21 @@ static VOID KbdDpcRoutine(PKDPC Dpc,
    IoStartNextPacket(DeviceObject,FALSE);
 }
 
-static unsigned int KeyboardHandler(unsigned int irq)
+static BOOLEAN KeyboardHandler(PKINTERRUPT Interrupt, PVOID Context)
 {
-   BYTE resp,thisKey;
+   BYTE thisKey;
    BOOL isDown;
    static BYTE lastKey;
-   
+
    CHECKPOINT;
-   
+
    // Read scan code
    thisKey=inb_p(KBD_DATA_PORT);
    if ((thisKey==0xE0)||(thisKey==0xE1))   // Extended key
    {
       extKey=1;         // Wait for next byte
       lastKey=thisKey;
-      return 0;
+      return FALSE;
    }
 
    isDown=!(thisKey & 0x80);
@@ -455,7 +461,7 @@ static unsigned int KeyboardHandler(unsigned int irq)
    if (extKey & ((thisKey==0x2A)||(thisKey==0x36)))
    {
       extKey=0;
-      return 0;
+      return FALSE;
    }
 
    // Check for PAUSE sequence
@@ -465,27 +471,27 @@ static unsigned int KeyboardHandler(unsigned int irq)
          lastKey=0xFF;     // Sequence is OK
       else
          extKey=0;
-      return 0;
+      return FALSE;
    }
    if (extKey && (lastKey==0xFF))
    {
       if (thisKey!=0x45)
       {
          extKey=0;         // Bad sequence
-         return 0;
+         return FALSE;
       }
       thisKey=0x7F;        // Pseudo-code for PAUSE
    }
 
    ProcessScanCode(thisKey,isDown);
-   
+
 //   DbgPrint("Key: %c\n",VirtualToAscii(ScanToVirtual(thisKey),isDown));
 //   DbgPrint("Key: %x\n",ScanToVirtual(thisKey));
    if (ScanToVirtual(thisKey)==0x2a)
      {
 	KeBugCheck(0);
      }
-   
+
    if (CurrentIrp!=NULL)
      {
 	KEY_EVENT_RECORD* rec = (KEY_EVENT_RECORD *)
@@ -512,14 +518,14 @@ static unsigned int KeyboardHandler(unsigned int irq)
 	     CurrentIrp=NULL;
 	  }
 	CHECKPOINT;
-	return(TRUE);
+	return TRUE;
      }
    
    // Buffer is full ?
    if (keysInBuffer==KBD_BUFFER_SIZE)      // Buffer is full
    {
       extKey=0;
-      return 0;
+      return FALSE;
    }
    kbdBuffer[bufHead].bKeyDown=isDown;
    kbdBuffer[bufHead].wRepeatCount=1;
@@ -535,6 +541,8 @@ static unsigned int KeyboardHandler(unsigned int irq)
    bufHead&=KBD_WRAP_MASK;    // Modulo KBD_BUFFER_SIZE
    keysInBuffer++;
    extKey=0;
+
+   return TRUE;
 }
 
 
@@ -590,10 +598,6 @@ static int InitializeKeyboard(void)
  * Read data from keyboard buffer
  */
 
-static void dummy(void)
-{
-}
-
 BOOLEAN KbdSynchronizeRoutine(PVOID Context)
 {
    PIRP Irp = (PIRP)Context;
@@ -605,7 +609,7 @@ BOOLEAN KbdSynchronizeRoutine(PVOID Context)
 
    DPRINT("NrToRead %d keysInBuffer %d\n",NrToRead,keysInBuffer);
    NrToRead = min(NrToRead,keysInBuffer);
-   
+
    DPRINT("NrToRead %d stk->Parameters.Read.Length %d\n",
 	  NrToRead,stk->Parameters.Read.Length);
    DPRINT("sizeof(KEY_EVENT_RECORD) %d\n",sizeof(KEY_EVENT_RECORD));
@@ -620,11 +624,11 @@ BOOLEAN KbdSynchronizeRoutine(PVOID Context)
      {
 	return(TRUE);
      }
-   
+
    KeysRequired=stk->Parameters.Read.Length/sizeof(KEY_EVENT_RECORD);
    KeysRead=NrToRead;
    CurrentIrp=Irp;
-   
+
    return(FALSE);
 }
 
@@ -652,7 +656,7 @@ NTSTATUS KbdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
       case IRP_MJ_CLOSE:
         Status = STATUS_SUCCESS;
 	break;
-	
+
       case IRP_MJ_READ:
         DPRINT("Handling Read request\n");
         if (KeSynchronizeExecution(KbdInterrupt,KbdSynchronizeRoutine,Irp))
@@ -666,12 +670,12 @@ NTSTATUS KbdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	      Status = STATUS_PENDING;
            }
 	break;
-	
+
       default:
         Status = STATUS_NOT_IMPLEMENTED;
 	break;
      }
-   
+
    if (Status==STATUS_PENDING)
      {
 	DPRINT("Marking irp pending\n");
@@ -698,26 +702,24 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
    UNICODE_STRING device_name;
    ANSI_STRING asymlink_name;
    UNICODE_STRING symlink_name;
-   
+
    DbgPrint("Keyboard Driver 0.0.4\n");
    InitializeKeyboard();
-   
+
    DriverObject->MajorFunction[IRP_MJ_CREATE] = KbdDispatch;
    DriverObject->MajorFunction[IRP_MJ_CLOSE] = KbdDispatch;
    DriverObject->MajorFunction[IRP_MJ_READ] = KbdDispatch;
    DriverObject->DriverStartIo = KbdStartIo;
-   
+
    RtlInitAnsiString(&adevice_name,"\\Device\\Keyboard");
    RtlAnsiStringToUnicodeString(&device_name,&adevice_name,TRUE);
    IoCreateDevice(DriverObject,0,&device_name,FILE_DEVICE_KEYBOARD,0,
 		  TRUE,&DeviceObject);
    DeviceObject->Flags = DO_BUFFERED_IO;
-   
+
    RtlInitAnsiString(&asymlink_name,"\\??\\Keyboard");
    RtlAnsiStringToUnicodeString(&symlink_name,&asymlink_name,TRUE);
    IoCreateSymbolicLink(&symlink_name,&device_name);
-   
+
    return(STATUS_SUCCESS);
 }
-		
-
