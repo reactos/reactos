@@ -1,4 +1,4 @@
-/* $Id: blue.c,v 1.27 2000/09/12 10:12:12 jean Exp $
+/* $Id: blue.c,v 1.28 2000/09/29 15:03:21 jean Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -121,7 +121,7 @@ STDCALL ScrCreate (PDEVICE_OBJECT DeviceObject, PIRP Irp)
     DeviceExtension->Rows =
         DeviceExtension->Rows / DeviceExtension->ScanLines;
 #ifdef BOCHS_30ROWS
-    DeviceExtension->Rows = 25;
+    DeviceExtension->Rows = 30;
 #endif
 
     DPRINT ("%d Columns  %d Rows %d Scanlines\n",
