@@ -1,4 +1,4 @@
-/* $Id: irql.c,v 1.11 2003/11/04 21:36:22 gvg Exp $
+/* $Id: irql.c,v 1.12 2003/11/05 22:37:42 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -201,8 +201,6 @@ HalpLowerIrql(KIRQL NewIrql)
 VOID FASTCALL
 KfLowerIrql (KIRQL	NewIrql)
 {
-  KIRQL OldIrql;
-  
   DPRINT("KfLowerIrql(NewIrql %d)\n", NewIrql);
   
   if (NewIrql > CurrentIrql)

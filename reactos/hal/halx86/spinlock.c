@@ -1,4 +1,4 @@
-/* $Id: spinlock.c,v 1.4 2003/08/12 21:19:50 royce Exp $
+/* $Id: spinlock.c,v 1.5 2003/11/05 22:37:42 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -44,8 +44,23 @@ KeAcquireSpinLockRaiseToSynch (
 	PKSPIN_LOCK	SpinLock
 	)
 {
-  ASSERT_IRQL(SYNCH_LEVEL);
+  KIRQL OldIrql;
+  KIRQL NewIrql;
+
+#ifdef MP
+  NewIrql = IPI_LEVEL - 1;
+#else
+  NewIrql = DISPATCH_LEVEL;
+#endif
+
+  OldIrql = KeGetCurrentIrql();
+  if (OldIrql < NewIrql)
+    {
+      KeRaiseIrql(NewIrql, &OldIrql);
+    }
   KeAcquireSpinLockAtDpcLevel(SpinLock);
+
+  return OldIrql;
 }
 
 VOID STDCALL

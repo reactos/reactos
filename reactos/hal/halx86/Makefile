@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.11 2003/08/07 04:03:22 royce Exp $
+# $Id: Makefile,v 1.12 2003/11/05 22:37:42 gvg Exp $
 
 PATH_TO_TOP = ../..
 
@@ -26,7 +26,7 @@ TARGET_LIBPATH = .
 
 TARGET_ASFLAGS = -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/ntoskrnl/include -D__ASM__
 
-TARGET_CFLAGS = -I./include -I$(PATH_TO_TOP)/ntoskrnl/include -g
+TARGET_CFLAGS = -I./include -I$(PATH_TO_TOP)/ntoskrnl/include -Wall -Werror
 
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -D_DISABLE_TIDENTS
