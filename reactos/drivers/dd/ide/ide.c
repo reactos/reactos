@@ -1,4 +1,4 @@
-/* $Id: ide.c,v 1.37 2001/01/06 23:25:35 rex Exp $
+/* $Id: ide.c,v 1.38 2001/03/04 00:46:46 ekohl Exp $
  *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
@@ -1491,7 +1491,7 @@ IDEStartController(IN OUT PVOID Context)
   /*  wait for BUSY to clear and DRDY to assert */
   for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++)
     {
-      BYTE  Status = IDEReadStatus(ControllerExtension->CommandPortBase);
+      Status = IDEReadStatus(ControllerExtension->CommandPortBase);
       if (!(Status & IDE_SR_BUSY) && (Status & IDE_SR_DRDY)) 
         {
           break;
