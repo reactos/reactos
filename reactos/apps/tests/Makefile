@@ -8,7 +8,7 @@ include $(PATH_TO_TOP)/rules.mak
 
 # test_old tests
 TEST_APPS = SampleWindow alive apc args atomtest bench bitblt \
-button button2 capclock combo consume copymove count dibtest \
+button button2 capclock cliarea combo consume copymove count dibtest \
 dump_shared_data edit enumwnd event file gditest hello hivetest \
 icontest isotest lineclip linetest lock lpc messagebox mktime \
 mstest multiwin mutex nptest patblt pipe primitives pteb regtest \
