@@ -7,7 +7,7 @@ DEP_FILES := $(join $(dir $(DEP_FILTERED)), $(addprefix ., $(notdir $(DEP_FILTER
 
 
 # I (Andrew Greenwood) had to add this to compile under MinGW:
-SEP = /
+# SEP = /
  
 ifneq ($(MAKECMDGOALS),clean)
 -include $(DEP_FILES)
