@@ -1,4 +1,4 @@
-/* $Id: read.c,v 1.2 2004/07/18 22:49:17 arty Exp $
+/* $Id: read.c,v 1.3 2004/08/22 02:15:57 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/read.c
@@ -111,7 +111,8 @@ NTSTATUS DDKAPI ReceiveComplete
 			       &NextIrp->Tail.Overlay.ListEntry);
 		break;
 	    } else {
-		AFD_DbgPrint(MID_TRACE,("Completing recv %x\n", NextIrp));
+		AFD_DbgPrint(MID_TRACE,("Completing recv %x (%d)\n", NextIrp,
+					TotalBytesCopied));
 		UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount );
 		NextIrp->IoStatus.Status = Status;
 		NextIrp->IoStatus.Information = TotalBytesCopied;
@@ -151,7 +152,6 @@ NTSTATUS DDKAPI ReceiveComplete
 	PollReeval( FCB->DeviceExt, FCB->FileObject );
     } else
 	FCB->PollState &= ~AFD_EVENT_RECEIVE;
-    
 
     SocketStateUnlock( FCB );
 

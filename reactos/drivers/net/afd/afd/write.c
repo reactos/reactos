@@ -1,4 +1,4 @@
-/* $Id: write.c,v 1.2 2004/07/18 22:49:17 arty Exp $
+/* $Id: write.c,v 1.3 2004/08/22 02:15:57 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/write.c
@@ -53,6 +53,7 @@ NTSTATUS DDKAPI SendComplete
 	}
 	
 	SocketStateUnlock( FCB );
+
 	return STATUS_SUCCESS;
     }
 
@@ -117,6 +118,8 @@ NTSTATUS DDKAPI SendComplete
 
 	if( Status == STATUS_PENDING )
 	    Status = STATUS_SUCCESS;
+
+	SocketStateUnlock( FCB );
 
 	AFD_DbgPrint(MID_TRACE,("Dismissing request: %x\n", Status));
 	
