@@ -301,7 +301,7 @@ PVOID MmFindGapTopDown(PMADDRESS_SPACE AddressSpace, ULONG Length)
 	      DPRINT("Found gap at %p\n", TopAddress - Length);
 	      return(TopAddress - Length + 1);
 	    }
-	  TopAddress = current->BaseAddress;
+	  TopAddress = current->BaseAddress - 1;
 	}
       current_entry = current_entry->Blink;
     }
