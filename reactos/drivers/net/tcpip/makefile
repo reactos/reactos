@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.25 2004/10/03 20:38:48 arty Exp $
+# $Id: makefile,v 1.26 2004/10/07 04:47:42 arty Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -14,6 +14,7 @@ TARGET_PCH = include/precomp.h
 TARGET_CFLAGS = \
 	-D__USE_W32API \
 	-DNDIS40 \
+	-DMEMTRACK \
 	-Wall -Werror \
 	-I./include \
 	-I$(PATH_TO_TOP)/drivers/lib/oskittcp/include \
@@ -26,7 +27,9 @@ TARGET_DDKLIBS = \
 	$(PATH_TO_TOP)/dk/w32/lib/rosrtl.a \
 	ndis.a
 
-TARGET_CLEAN = tcpip/*.o datalink/*.o
+TARGET_CLEAN = tcpip/*.o datalink/*.o \
+	$(PATH_TO_TOP)/dk/w32/lib/ip.a \
+	$(PATH_TO_TOP)/dk/w32/lib/oskittcp.a 
 
 TCPIP_OBJECTS    = tcpip/buffer.o \
 		   tcpip/dispatch.o \
@@ -42,8 +45,11 @@ TARGET_OBJECTS = \
   $(INFO_OBJECTS) \
   $(DATALINK_OBJECTS)
 
-preall: $(PATH_TO_TOP)/dk/w32/lib/ip.a
+preall: $(PATH_TO_TOP)/dk/w32/lib/ip.a $(PATH_TO_TOP)/dk/w32/lib/oskittcp.a
 	$(MAKE) all
+
+$(PATH_TO_TOP)/dk/w32/lib/oskittcp.a:
+	$(MAKE) -C $(PATH_TO_TOP)/drivers/lib/oskittcp
 
 $(PATH_TO_TOP)/dk/w32/lib/ip.a:
 	$(MAKE) -C $(PATH_TO_TOP)/drivers/lib/ip
