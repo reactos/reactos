@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dpc.c,v 1.48 2004/11/21 18:13:47 hbirr Exp $
+/* $Id: dpc.c,v 1.49 2004/11/27 19:27:31 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -248,14 +248,12 @@ KeInsertQueueDpc (PKDPC	Dpc,
 			/* Send IPI if High Importance */
 			if ((Dpc->Importance == HighImportance) ||
 			    (Pcr->PrcbData.DpcData[0].DpcQueueDepth >= Pcr->PrcbData.MaximumDpcQueueDepth)) {
-                	
-#if 0
-				KiIpiSendRequest(1 << Dpc->Number, IPI_REQUEST_DPC);
-#else
-				/* FIXME: USE IPI */
-				Pcr->PrcbData.DpcInterruptRequested = TRUE;
-				HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
-#endif				
+				if (Dpc->Number >= MAXIMUM_PROCESSORS) {
+				    KiIpiSendRequest(1 << (Dpc->Number - MAXIMUM_PROCESSORS), IPI_REQUEST_DPC);
+				} else {
+				    KiIpiSendRequest(1 << Dpc->Number, IPI_REQUEST_DPC);
+				}
+
 			}
 		} else {
 			/* Request an Interrupt only if the DPC isn't low priority */
