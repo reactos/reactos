@@ -40,33 +40,33 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
   ICI_SQ_SAME( sizeof(IO_COUNTERS),                   sizeof(ULONG), ICIF_QUERY ),                     /* ProcessIoCounters */
   ICI_SQ_SAME( sizeof(VM_COUNTERS),                   sizeof(ULONG), ICIF_QUERY ),                     /* ProcessVmCounters */
   ICI_SQ_SAME( sizeof(KERNEL_USER_TIMES),             sizeof(ULONG), ICIF_QUERY ),                     /* ProcessTimes */
-  ICI_SQ_SAME( sizeof(KPRIORITY),                     sizeof(USHORT), ICIF_SET ),                       /* ProcessBasePriority */
+  ICI_SQ_SAME( sizeof(KPRIORITY),                     sizeof(ULONG), ICIF_SET ),                       /* ProcessBasePriority */
   ICI_SQ_SAME( sizeof(ULONG),                         sizeof(ULONG), ICIF_SET ),                       /* ProcessRaisePriority */
   ICI_SQ_SAME( sizeof(HANDLE),                        sizeof(ULONG), ICIF_QUERY | ICIF_SET ),          /* ProcessDebugPort */
   ICI_SQ_SAME( sizeof(HANDLE),                        sizeof(ULONG), ICIF_SET ),                       /* ProcessExceptionPort */
-  ICI_SQ_SAME( sizeof(PROCESS_ACCESS_TOKEN),          sizeof(USHORT), ICIF_SET ),                       /* ProcessAccessToken */
-  ICI_SQ_SAME( 0 /* FIXME */,                         sizeof(USHORT), ICIF_QUERY | ICIF_SET ),          /* ProcessLdtInformation */
-  ICI_SQ_SAME( 0 /* FIXME */,                         sizeof(USHORT), ICIF_SET ),                       /* ProcessLdtSize */
-  ICI_SQ_SAME( sizeof(ULONG),                         sizeof(USHORT), ICIF_QUERY | ICIF_SET ),          /* ProcessDefaultHardErrorMode */
-  ICI_SQ_SAME( 0 /* FIXME */,                         sizeof(USHORT), ICIF_SET ),                       /* ProcessIoPortHandlers */
+  ICI_SQ_SAME( sizeof(PROCESS_ACCESS_TOKEN),          sizeof(ULONG), ICIF_SET ),                       /* ProcessAccessToken */
+  ICI_SQ_SAME( 0 /* FIXME */,                         sizeof(ULONG), ICIF_QUERY | ICIF_SET ),          /* ProcessLdtInformation */
+  ICI_SQ_SAME( 0 /* FIXME */,                         sizeof(ULONG), ICIF_SET ),                       /* ProcessLdtSize */
+  ICI_SQ_SAME( sizeof(ULONG),                         sizeof(ULONG), ICIF_QUERY | ICIF_SET ),          /* ProcessDefaultHardErrorMode */
+  ICI_SQ_SAME( 0 /* FIXME */,                         sizeof(ULONG), ICIF_SET ),                       /* ProcessIoPortHandlers */
   ICI_SQ_SAME( sizeof(POOLED_USAGE_AND_LIMITS),       sizeof(ULONG), ICIF_QUERY ),                     /* ProcessPooledUsageAndLimits */
   ICI_SQ_SAME( sizeof(PROCESS_WS_WATCH_INFORMATION),  sizeof(ULONG), ICIF_QUERY | ICIF_SET ),          /* ProcessWorkingSetWatch */
-  ICI_SQ_SAME( 0 /* FIXME */,                         sizeof(USHORT), ICIF_SET ),                       /* ProcessUserModeIOPL */
-  ICI_SQ_SAME( sizeof(BOOLEAN),                       sizeof(USHORT), ICIF_SET ),                       /* ProcessEnableAlignmentFaultFixup */
-  ICI_SQ_SAME( sizeof(PROCESS_PRIORITY_CLASS),        sizeof(USHORT), ICIF_SET ),                      /* ProcessPriorityClass */
+  ICI_SQ_SAME( 0 /* FIXME */,                         sizeof(ULONG), ICIF_SET ),                       /* ProcessUserModeIOPL */
+  ICI_SQ_SAME( sizeof(BOOLEAN),                       sizeof(ULONG), ICIF_SET ),                       /* ProcessEnableAlignmentFaultFixup */
+  ICI_SQ_SAME( sizeof(PROCESS_PRIORITY_CLASS),        sizeof(USHORT), ICIF_SET ),                       /* ProcessPriorityClass */
   ICI_SQ_SAME( sizeof(ULONG),                         sizeof(ULONG), ICIF_QUERY ),                     /* ProcessWx86Information */
   ICI_SQ_SAME( sizeof(ULONG),                         sizeof(ULONG), ICIF_QUERY ),                     /* ProcessHandleCount */
-  ICI_SQ_SAME( sizeof(KAFFINITY),                     sizeof(USHORT), ICIF_SET ),                       /* ProcessAffinityMask */
+  ICI_SQ_SAME( sizeof(KAFFINITY),                     sizeof(ULONG), ICIF_SET ),                       /* ProcessAffinityMask */
   ICI_SQ_SAME( sizeof(ULONG),                         sizeof(ULONG), ICIF_QUERY | ICIF_SET ),          /* ProcessPriorityBoost */
 
   ICI_SQ(/*Q*/ sizeof(((PPROCESS_DEVICEMAP_INFORMATION)0x0)->Query),                                   /* ProcessDeviceMap */
          /*S*/ sizeof(((PPROCESS_DEVICEMAP_INFORMATION)0x0)->Set),
-                                                /*Q*/ sizeof(USHORT),
-                                                /*S*/ sizeof(USHORT),
+                                                /*Q*/ sizeof(ULONG),
+                                                /*S*/ sizeof(ULONG),
                                                                      ICIF_QUERY | ICIF_SET ),
 
-  ICI_SQ_SAME( sizeof(PROCESS_SESSION_INFORMATION),   sizeof(USHORT), ICIF_QUERY | ICIF_SET ),          /* ProcessSessionInformation */
-  ICI_SQ_SAME( sizeof(BOOLEAN),                       sizeof(USHORT), ICIF_SET ),                       /* ProcessForegroundInformation */
+  ICI_SQ_SAME( sizeof(PROCESS_SESSION_INFORMATION),   sizeof(ULONG), ICIF_QUERY | ICIF_SET ),          /* ProcessSessionInformation */
+  ICI_SQ_SAME( sizeof(BOOLEAN),                       sizeof(ULONG), ICIF_SET ),                       /* ProcessForegroundInformation */
   ICI_SQ_SAME( sizeof(ULONG),                         sizeof(ULONG), ICIF_QUERY ),                     /* ProcessWow64Information */
   ICI_SQ_SAME( sizeof(UNICODE_STRING),                sizeof(ULONG), ICIF_QUERY | ICIF_SIZE_VARIABLE), /* ProcessImageFileName */
 };
