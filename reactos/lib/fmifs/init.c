@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.1 1999/05/11 21:19:41 ea Exp $
+/* $Id: init.c,v 1.2 2002/03/07 00:24:24 ea Exp $
  *
  * COPYING:	See the top level directory
  * PROJECT:	ReactOS 
@@ -15,11 +15,28 @@
 #include <fmifs.h>
 
 /* FMIFS.8 */
-VOID
-__stdcall
-InitializeFmIfs(VOID)
+static BOOL FmIfsInitialized = FALSE;
+
+static BOOL STDCALL
+InitializeFmIfsOnce (VOID)
 {
+	/* TODO: Check how many IFS are installed in the system */
+	/* TOSO: and register a descriptor for each one */
+	return TRUE;
 }
 
+BOOL STDCALL
+InitializeFmIfs(VOID)
+{
+	if (FALSE == FmIfsInitialized)
+	{
+		if (FALSE == InitializeFmIfsOnce())
+		{
+			return FALSE;
+		}
+		FmIfsInitialized = TRUE;
+	}
+	return TRUE;
+}
 
 /* EOF */
