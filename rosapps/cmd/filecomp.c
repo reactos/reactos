@@ -125,11 +125,15 @@ VOID CompleteFilename (LPTSTR str, INT charcount)
 		while (FindNextFile (hFile, &file));
 
 		FindClose (hFile);
+                if( perfectmatch )
+                {
+		    str[start] = '\"';
+		    _tcscpy (&str[start+1], directory);
+		    _tcscat (&str[start], maxmatch);
+                    _tcscat (&str[start], "\"" );
+                }
 
-		_tcscpy (&str[start], directory);
-		_tcscat (&str[start], maxmatch);
-
-		if (!perfectmatch)
+		else
 #ifdef __REACTOS__
 			Beep (440, 50);
 #else
