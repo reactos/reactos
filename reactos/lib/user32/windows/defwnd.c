@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.146 2004/09/12 19:47:49 weiden Exp $
+/* $Id: defwnd.c,v 1.147 2004/11/19 23:07:09 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -272,6 +272,11 @@ UserGetInsideRectNC(HWND hWnd, RECT *rect)
 VOID
 DefWndSetRedraw(HWND hWnd, WPARAM wParam)
 {
+  if ((BOOL) wParam && 0 == (GetWindowLong(hWnd, GWL_STYLE) & WS_VISIBLE))
+    {
+      ShowWindow(hWnd, SW_NORMAL);
+    }
+
   UNIMPLEMENTED;
 }
 
