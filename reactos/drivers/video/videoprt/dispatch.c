@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: dispatch.c,v 1.3 2004/04/08 09:43:55 navaraf Exp $
+ * $Id: dispatch.c,v 1.4 2004/04/08 15:36:36 gvg Exp $
  */
 
 #include "videoprt.h"
@@ -49,9 +49,8 @@ IntVideoPortResetDisplayParameters(ULONG Columns, ULONG Rows)
 
    DriverExtension = ResetDisplayParametersDeviceExtension->DriverExtension;
 
-   ASSERT(DriverExtension->InitializationData.HwResetHw != NULL);
-
-   if (!DriverExtension->InitializationData.HwResetHw(
+   if (NULL == DriverExtension->InitializationData.HwResetHw ||
+       !DriverExtension->InitializationData.HwResetHw(
           &ResetDisplayParametersDeviceExtension->MiniPortDeviceExtension,
           Columns, Rows))
    {
