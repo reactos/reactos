@@ -1,3 +1,21 @@
+#ifndef _KEYBOARD_H_
+#define _KEYBOARD_H_
+#include <ddk/ntddkbd.h>
+#include <ddk/ntdd8042.h>
+
+
+/*-----------------------------------------------------
+ *  DeviceExtension
+ * --------------------------------------------------*/
+typedef struct _DEVICE_EXTENSION
+{
+    
+	PI8042_KEYBOARD_INITIALIZATION_ROUTINE InitializationHookCallback;
+    PI8042_KEYBOARD_ISR IsrHookCallback;
+    PVOID HookContext;
+
+} DEVICE_EXTENSION, *PDEVICE_EXTENSION;
+
 /*
  * Some defines
  */
@@ -65,3 +83,5 @@
 #define KBD_LED_SCROLL     0x01
 #define KBD_LED_NUM        0x02
 #define KBD_LED_CAPS       0x04
+
+#endif // _KEYBOARD_H_
