@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.h,v 1.6.2.5 2004/03/19 17:37:55 navaraf Exp $
+ * $Id: videoprt.h,v 1.6.2.6 2004/03/19 20:51:47 navaraf Exp $
  */
 
 #ifndef VIDEOPRT_H
@@ -95,6 +95,11 @@ IntVideoPortDispatchOpen(
 
 NTSTATUS STDCALL
 IntVideoPortDispatchClose(
+   IN PDEVICE_OBJECT DeviceObject,
+   IN PIRP Irp);
+
+NTSTATUS STDCALL
+IntVideoPortDispatchCleanup(
    IN PDEVICE_OBJECT DeviceObject,
    IN PIRP Irp);
 

@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: interrupt.c,v 1.1.2.4 2004/03/19 17:37:55 navaraf Exp $
+ * $Id: interrupt.c,v 1.1.2.5 2004/03/19 20:51:47 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -49,19 +49,17 @@ IntVideoPortSetupInterrupt(
 
    DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
-   if ((ConfigInfo->BusInterruptVector != 0 ||
-        ConfigInfo->BusInterruptLevel != 0) &&
-       DriverExtension->InitializationData.HwInterrupt != NULL)
+   if (ConfigInfo->BusInterruptVector == 0)
+      ConfigInfo->BusInterruptVector = DeviceExtension->InterruptVector;
+
+   if (ConfigInfo->BusInterruptLevel == 0)
+      ConfigInfo->BusInterruptLevel = DeviceExtension->InterruptLevel;
+
+   if (DriverExtension->InitializationData.HwInterrupt != NULL)
    {
       ULONG InterruptVector;
       KIRQL Irql;
       KAFFINITY Affinity;
-
-      if (ConfigInfo->BusInterruptVector == 0)
-         ConfigInfo->BusInterruptVector = DeviceExtension->InterruptVector;
-
-      if (ConfigInfo->BusInterruptLevel == 0)
-         ConfigInfo->BusInterruptLevel = DeviceExtension->InterruptLevel;
 
       InterruptVector = HalGetInterruptVector(
          ConfigInfo->AdapterInterfaceType,

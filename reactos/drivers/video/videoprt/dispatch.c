@@ -18,10 +18,12 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: dispatch.c,v 1.1.2.10 2004/03/19 17:37:55 navaraf Exp $
+ * $Id: dispatch.c,v 1.1.2.11 2004/03/19 20:51:47 navaraf Exp $
  */
 
 #include "videoprt.h"
+
+/* EXTERNAL FUNCTIONS *********************************************************/
 
 typedef PVOID PHAL_RESET_DISPLAY_PARAMETERS;
 VOID STDCALL HalAcquireDisplayOwnership(IN PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParameters);
@@ -273,10 +275,31 @@ IntVideoPortDispatchPnp(
       case IRP_MN_STOP_DEVICE:
       case IRP_MN_QUERY_STOP_DEVICE:
       case IRP_MN_CANCEL_STOP_DEVICE:
+         Irp->IoStatus.Status = STATUS_SUCCESS;
+         Irp->IoStatus.Information = 0;
+         IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
          return STATUS_SUCCESS;
    }
    
    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS STDCALL
+IntVideoPortDispatchCleanup(
+   IN PDEVICE_OBJECT DeviceObject,
+   IN PIRP Irp)
+{
+   PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+
+   DeviceExtension = DeviceObject->DeviceExtension;
+   RtlFreeUnicodeString(&DeviceExtension->RegistryPath);
+
+   Irp->IoStatus.Status = STATUS_SUCCESS;
+   Irp->IoStatus.Information = 0;
+   IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+   return STATUS_SUCCESS;
 }
 
 NTSTATUS STDCALL

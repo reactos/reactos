@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: resource.c,v 1.1.2.4 2004/03/17 20:16:22 navaraf Exp $
+ * $Id: resource.c,v 1.1.2.5 2004/03/19 20:51:47 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -234,6 +234,7 @@ VideoPortMapBankedMemory(
 /*
  * @implemented
  */
+
 VP_STATUS STDCALL
 VideoPortMapMemory(
    IN PVOID HwDeviceExtension,
@@ -304,6 +305,7 @@ VideoPortGetAccessRanges(
    USHORT VendorIdToFind;
    USHORT DeviceIdToFind;
    ULONG SlotIdToFind;
+   ULONG ReturnedLength;
 
    DPRINT("VideoPortGetAccessRanges\n");
 
@@ -312,57 +314,70 @@ VideoPortGetAccessRanges(
    if (NumRequestedResources == 0 && 
        DeviceExtension->AdapterInterfaceType == PCIBus)
    {
-      VendorIdToFind = VendorId != NULL ? *(PUSHORT)VendorId : 0;
-      DeviceIdToFind = DeviceId != NULL ? *(PUSHORT)DeviceId : 0;
       if (DeviceExtension->PhysicalDeviceObject != NULL)
-         SlotIdToFind = DeviceExtension->SystemIoSlotNumber;
-      else
-         SlotIdToFind = Slot != NULL ? *Slot : 0;
-
-      DPRINT("Looking for VendorId 0x%04x DeviceId 0x%04x SlotId 0x%04x\n", 
-	     VendorIdToFind, DeviceIdToFind, SlotIdToFind);
-
-      PciSlotNumber.u.AsULONG = SlotIdToFind;
-
-      /*
-       * Search for the device id and vendor id on this bus.
-       */
-
-      for (FunctionNumber = 0; FunctionNumber < 8; FunctionNumber++)
       {
-         ULONG ReturnedLength;
+         PciSlotNumber.u.AsULONG = DeviceExtension->SystemIoSlotNumber;
 
-         DPRINT("- Function number: %d\n", FunctionNumber);
-         PciSlotNumber.u.bits.FunctionNumber = FunctionNumber;
          ReturnedLength = HalGetBusData(
             PCIConfiguration, 
             DeviceExtension->SystemIoBusNumber,
             PciSlotNumber.u.AsULONG,
             &Config,
             sizeof(PCI_COMMON_CONFIG));
-         DPRINT("- Length of data: %x\n", ReturnedLength);
-         if (ReturnedLength == sizeof(PCI_COMMON_CONFIG))
-         {
-            DPRINT("- Slot 0x%02x (Device %d Function %d) VendorId 0x%04x "
-                   "DeviceId 0x%04x\n",
-                   PciSlotNumber.u.AsULONG, 
-                   PciSlotNumber.u.bits.DeviceNumber,
-                   PciSlotNumber.u.bits.FunctionNumber,
-                   Config.VendorID,
-                   Config.DeviceID);
 
-            if ((VendorIdToFind == 0 || Config.VendorID == VendorIdToFind) &&
-                (DeviceIdToFind == 0 || Config.DeviceID == DeviceIdToFind))
-            {
-               break;
-            }
+         if (ReturnedLength != sizeof(PCI_COMMON_CONFIG))
+         {
+            return ERROR_NO_SYSTEM_RESOURCES;
          }
       }
-
-      if (FunctionNumber == 8)
+      else
       {
-         DPRINT("Didn't find device.\n");
-         return ERROR_NO_SYSTEM_RESOURCES;
+         VendorIdToFind = VendorId != NULL ? *(PUSHORT)VendorId : 0;
+         DeviceIdToFind = DeviceId != NULL ? *(PUSHORT)DeviceId : 0;
+         SlotIdToFind = Slot != NULL ? *Slot : 0;
+         PciSlotNumber.u.AsULONG = SlotIdToFind;
+
+         DPRINT("Looking for VendorId 0x%04x DeviceId 0x%04x\n", 
+                VendorIdToFind, DeviceIdToFind);
+
+         /*
+          * Search for the device id and vendor id on this bus.
+          */
+
+         for (FunctionNumber = 0; FunctionNumber < 8; FunctionNumber++)
+         {
+            DPRINT("- Function number: %d\n", FunctionNumber);
+            PciSlotNumber.u.bits.FunctionNumber = FunctionNumber;
+            ReturnedLength = HalGetBusData(
+               PCIConfiguration, 
+               DeviceExtension->SystemIoBusNumber,
+               PciSlotNumber.u.AsULONG,
+               &Config,
+               sizeof(PCI_COMMON_CONFIG));
+            DPRINT("- Length of data: %x\n", ReturnedLength);
+            if (ReturnedLength == sizeof(PCI_COMMON_CONFIG))
+            {
+               DPRINT("- Slot 0x%02x (Device %d Function %d) VendorId 0x%04x "
+                      "DeviceId 0x%04x\n",
+                      PciSlotNumber.u.AsULONG, 
+                      PciSlotNumber.u.bits.DeviceNumber,
+                      PciSlotNumber.u.bits.FunctionNumber,
+                      Config.VendorID,
+                      Config.DeviceID);
+
+               if ((VendorIdToFind == 0 || Config.VendorID == VendorIdToFind) &&
+                   (DeviceIdToFind == 0 || Config.DeviceID == DeviceIdToFind))
+               {
+                  break;
+               }
+            }
+         }
+
+         if (FunctionNumber == 8)
+         {
+            DPRINT("Didn't find device.\n");
+            return ERROR_NO_SYSTEM_RESOURCES;
+         }
       }
 
       Status = HalAssignSlotResources(

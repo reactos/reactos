@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: timer.c,v 1.1.2.4 2004/03/19 17:37:55 navaraf Exp $
+ * $Id: timer.c,v 1.1.2.5 2004/03/19 20:51:47 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -77,9 +77,7 @@ VOID STDCALL
 VideoPortStartTimer(IN PVOID HwDeviceExtension)
 {
    DPRINT("VideoPortStartTimer\n");
-/*
    IoStartTimer(VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension)->FunctionalDeviceObject);
-*/
 }
 
 /*
@@ -90,7 +88,5 @@ VOID STDCALL
 VideoPortStopTimer(IN PVOID HwDeviceExtension)
 {
    DPRINT("VideoPortStopTimer\n");
-/*
    IoStopTimer(VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension)->FunctionalDeviceObject);
-*/
 }

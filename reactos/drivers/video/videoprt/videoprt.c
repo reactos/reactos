@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.c,v 1.21.2.6 2004/03/19 17:37:55 navaraf Exp $
+ * $Id: videoprt.c,v 1.21.2.7 2004/03/19 20:51:47 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -349,6 +349,9 @@ IntVideoPortFindAdapter(
          DeviceExtension->SystemIoBusNumber =
          ConfigInfo.SystemIoBusNumber = BusNumber;
 
+         RtlZeroMemory(&DeviceExtension->MiniPortDeviceExtension, 
+                       DriverExtension->InitializationData.HwDeviceExtensionSize);
+   
          /* FIXME: Need to figure out what string to pass as param 3. */
          Status = DriverExtension->InitializationData.HwFindAdapter(
             &DeviceExtension->MiniPortDeviceExtension,
@@ -637,9 +640,9 @@ VideoPortGetCurrentIrql(VOID)
 
 typedef struct QueryRegistryCallbackContext
 {
-  PVOID HwDeviceExtension;
-  PVOID HwContext;
-  PMINIPORT_GET_REGISTRY_ROUTINE HwGetRegistryRoutine;
+   PVOID HwDeviceExtension;
+   PVOID HwContext;
+   PMINIPORT_GET_REGISTRY_ROUTINE HwGetRegistryRoutine;
 } QUERY_REGISTRY_CALLBACK_CONTEXT, *PQUERY_REGISTRY_CALLBACK_CONTEXT;
 
 static NTSTATUS STDCALL
