@@ -28,38 +28,6 @@ start:
         jmp     __main
 
 .data
-_gdt:
-        .word 0               
-        .word 0
-        .word 0
-        .word 0
-                                
-        .word 0x0000        
-        .word 0x0000         
-        .word 0xfa00
-        .word 0x00cc
-                               
-        .word 0x0000         
-        .word 0x0000        
-        .word 0xf200
-        .word 0x00cc
-                            
-        .word 0xffff        
-        .word 0x0000      
-        .word 0x9200
-        .word 0x00cf
-
-        .word 0xffff       
-        .word 0x0000        
-        .word 0x9a00        
-        .word 0x00cf
-                               
-        .word 0xffff          
-        .word 0x0000          
-        .word 0x9200        
-        .word 0x00cf
-        
-         .fill 128,8,0
 
 _idt_descr:
         .word (256*8)-1
@@ -67,7 +35,7 @@ _idt_descr:
 
 _gdt_descr:
         .word ((6+NR_TASKS)*8)-1
-        .long _gdt
+        .long _KiGdt
 
 _idt:
         .fill 256,8,0

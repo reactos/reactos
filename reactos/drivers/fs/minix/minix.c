@@ -13,7 +13,7 @@
 #include <internal/string.h>
 #include <wstring.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 #include "minix_fs.h"

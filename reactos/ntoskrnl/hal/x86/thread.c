@@ -18,6 +18,7 @@
 #include <internal/hal.h>
 #include <internal/i386/segment.h>
 #include <internal/mmhal.h>
+#include <internal/ke.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -26,25 +27,22 @@
 
 #define NR_TASKS 128
 
-VOID PsBeginThread(PKSTART_ROUTINE StartRoutine, PVOID StartContext);
-VOID PsBeginThreadWithContextInternal(VOID);
-
 #define FIRST_TSS_SELECTOR (KERNEL_DS + 0x8)
 #define FIRST_TSS_OFFSET (FIRST_TSS_SELECTOR / 8)
 
-static char null_ldt[8]={0,};
-static unsigned int null_ldt_sel=0;
-static PETHREAD FirstThread=NULL;
+static char KiNullLdt[8] = {0,};
+static unsigned int KiNullLdtSel = 0;
+static PETHREAD FirstThread = NULL;
 
 /* FUNCTIONS **************************************************************/
 
-void HalTaskSwitch(PKTHREAD thread)
+VOID HalTaskSwitch(PKTHREAD thread)
 /*
  * FUNCTION: Switch tasks
  * ARGUMENTS:
  *         thread = Thread to switch to
  * NOTE: This function will not return until the current thread is scheduled
- * again
+ * again (possibly never);
  */
 {
    DPRINT("Scheduling thread %x\n",thread);
@@ -74,10 +72,6 @@ void HalTaskSwitch(PKTHREAD thread)
    DPRINT("trap %x iomap_base %x nr %x io_bitmap[0] %x\n",
           thread->Context.trap,thread->Context.iomap_base,
           thread->Context.nr,thread->Context.io_bitmap[0]);
-   DPRINT("&gdt[nr/8].a %.8x gdt[nr/8].a %.8x gdt[nr/8].b %.8x\n",
-	  &(gdt[thread->Context.nr/8].a),
-	  gdt[thread->Context.nr/8].a,
-	  gdt[thread->Context.nr/8].b);
    DPRINT("thread->Context.cr3 %x\n",thread->Context.cr3);
    __asm__("pushfl\n\t"
 	   "cli\n\t"
@@ -86,25 +80,6 @@ void HalTaskSwitch(PKTHREAD thread)
 	   : /* No outputs */
 	   : "m" (*(((unsigned char *)(&(thread->Context.nr)))-4) )
 	   : "ax","dx");
-}
-
-static unsigned int allocate_tss_descriptor(void)
-/*
- * FUNCTION: Allocates a slot within the GDT to describe a TSS
- * RETURNS: The offset within the GDT of the slot allocated on succcess
- *          Zero on failure
- */
-{
-   unsigned int i;
-   for (i=0;i<NR_TASKS;i++)
-     {
-	if (gdt[FIRST_TSS_OFFSET + i].a==0 &&
-	    gdt[FIRST_TSS_OFFSET + i].b==0)
-	  {
-	     return(FIRST_TSS_OFFSET + i);
-	  }
-     }
-   return(0);
 }
 
 #define FLAG_NT (1<<14)
@@ -165,8 +140,7 @@ NTSTATUS HalReleaseTask(PETHREAD Thread)
  * NOTE: The thread had better not be running when this is called
  */
 {
-   gdt[Thread->Tcb.Context.nr/8].a=0;
-   gdt[Thread->Tcb.Context.nr/8].b=0;
+   KeFreeGdtSelector(Thread->Tcb.Context.nr);
    ExFreePool(Thread->Tcb.Context.KernelStackBase);
    if (Thread->Tcb.Context.SavedKernelStackBase != NULL)
      {
@@ -190,6 +164,7 @@ NTSTATUS HalInitTaskWithContext(PETHREAD Thread, PCONTEXT Context)
    PVOID kernel_stack;
    NTSTATUS Status;
    PVOID stack_start;
+   ULONG GdtDesc[2];
    
    DPRINT("HalInitTaskWithContext(Thread %x, Context %x)\n",
           Thread,Context);
@@ -200,13 +175,7 @@ NTSTATUS HalInitTaskWithContext(PETHREAD Thread, PCONTEXT Context)
      {
 	return(Status);
      }
-   
-   desc = allocate_tss_descriptor();
-   if (desc == 0)
-     {
-	return(STATUS_UNSUCCESSFUL);
-     }
-   
+      
    length = sizeof(hal_thread_state) - 1;
    base = (unsigned int)(&(Thread->Tcb.Context));
    kernel_stack = ExAllocatePool(NonPagedPool,PAGESIZE);
@@ -214,9 +183,14 @@ NTSTATUS HalInitTaskWithContext(PETHREAD Thread, PCONTEXT Context)
    /*
     * Setup a TSS descriptor
     */
-   gdt[desc].a = (length & 0xffff) | ((base & 0xffff) << 16);
-   gdt[desc].b = ((base & 0xff0000)>>16) | 0x8900 | (length & 0xf0000)
+   GdtDesc[0] = (length & 0xffff) | ((base & 0xffff) << 16);
+   GdtDesc[1] = ((base & 0xff0000)>>16) | 0x8900 | (length & 0xf0000)
                  | (base & 0xff000000);
+   desc = KeAllocateGdtSelector(GdtDesc);
+   if (desc == 0)
+     {
+	return(STATUS_UNSUCCESSFUL);
+     }
    
    stack_start = kernel_stack + 4096 - sizeof(CONTEXT);
    memcpy(stack_start, Context, sizeof(CONTEXT));
@@ -225,7 +199,7 @@ NTSTATUS HalInitTaskWithContext(PETHREAD Thread, PCONTEXT Context)
     * Initialize the thread context
     */
    memset(&Thread->Tcb.Context,0,sizeof(hal_thread_state));
-   Thread->Tcb.Context.ldt = null_ldt_sel;
+   Thread->Tcb.Context.ldt = KiNullLdtSel;
    Thread->Tcb.Context.eflags = (1<<1) + (1<<9);
    Thread->Tcb.Context.iomap_base = FIELD_OFFSET(hal_thread_state,io_bitmap);
    Thread->Tcb.Context.esp0 = (ULONG)stack_start;
@@ -263,7 +237,8 @@ NTSTATUS HalInitTask(PETHREAD thread, PKSTART_ROUTINE fn, PVOID StartContext)
    unsigned int desc;
    unsigned int length = sizeof(hal_thread_state) - 1;
    unsigned int base = (unsigned int)(&(thread->Tcb.Context));
-   PULONG kernel_stack = ExAllocatePool(NonPagedPool,4096);
+   PULONG KernelStack = ExAllocatePool(NonPagedPool,4096);
+   ULONG GdtDesc[2];
    
    DPRINT("HalInitTask(Thread %x, fn %x, StartContext %x)\n",
           thread,fn,StartContext);
@@ -274,47 +249,43 @@ NTSTATUS HalInitTask(PETHREAD thread, PKSTART_ROUTINE fn, PVOID StartContext)
     */
    assert(sizeof(hal_thread_state)>=0x68);
    
-   desc = allocate_tss_descriptor();
+   /*
+    * Setup a TSS descriptor
+    */
+   GdtDesc[0] = (length & 0xffff) | ((base & 0xffff) << 16);
+   GdtDesc[1] = ((base & 0xff0000)>>16) | 0x8900 | (length & 0xf0000)
+                 | (base & 0xff000000);
+   desc = KeAllocateGdtSelector(GdtDesc);
    if (desc == 0)
      {
 	return(STATUS_UNSUCCESSFUL);
      }
    
-   /*
-    * Setup a TSS descriptor
-    */
-   gdt[desc].a = (length & 0xffff) | ((base & 0xffff) << 16);
-   gdt[desc].b = ((base & 0xff0000)>>16) | 0x8900 | (length & 0xf0000)
-                 | (base & 0xff000000);
    
 //   DPRINT("sizeof(descriptor) %d\n",sizeof(descriptor));
 //   DPRINT("desc %d\n",desc);
-   DPRINT("&gdt[desc].a %.8x gdt[desc].a %.8x\ngdt[desc].b %.8x\n",
-	  &(gdt[desc].a),
-	  gdt[desc].a,
-	  gdt[desc].b);
    
    /*
     * Initialize the stack for the thread (including the two arguments to 
     * the general start routine).					   
     */
-   kernel_stack[1023] = (unsigned int)StartContext;
-   kernel_stack[1022] = (unsigned int)fn;
-   kernel_stack[1021] = 0;     
+   KernelStack[1023] = (unsigned int)StartContext;
+   KernelStack[1022] = (unsigned int)fn;
+   KernelStack[1021] = 0;     
    
    /*
     * Initialize the thread context
     */
    memset(&thread->Tcb.Context,0,sizeof(hal_thread_state));
-   thread->Tcb.Context.ldt = null_ldt_sel;
+   thread->Tcb.Context.ldt = KiNullLdtSel;
    thread->Tcb.Context.eflags = (1<<1)+(1<<9);
    thread->Tcb.Context.iomap_base = FIELD_OFFSET(hal_thread_state,io_bitmap);
-   thread->Tcb.Context.esp0 = (ULONG)&kernel_stack[1021];
+   thread->Tcb.Context.esp0 = (ULONG)&KernelStack[1021];
    thread->Tcb.Context.ss0 = KERNEL_DS;
-   thread->Tcb.Context.esp = (ULONG)&kernel_stack[1021];
+   thread->Tcb.Context.esp = (ULONG)&KernelStack[1021];
    thread->Tcb.Context.ss = KERNEL_DS;
    thread->Tcb.Context.cs = KERNEL_CS;
-   thread->Tcb.Context.eip = (unsigned long)PsBeginThread;
+   thread->Tcb.Context.eip = (ULONG)PsBeginThread;
    thread->Tcb.Context.io_bitmap[0] = 0xff;
    thread->Tcb.Context.cr3 = (ULONG)
      thread->ThreadsProcess->Pcb.PageTableDirectory;
@@ -323,7 +294,7 @@ NTSTATUS HalInitTask(PETHREAD thread, PKSTART_ROUTINE fn, PVOID StartContext)
    thread->Tcb.Context.fs = KERNEL_DS;
    thread->Tcb.Context.gs = KERNEL_DS;
    thread->Tcb.Context.nr = desc * 8;
-   thread->Tcb.Context.KernelStackBase = kernel_stack;
+   thread->Tcb.Context.KernelStackBase = KernelStack;
    thread->Tcb.Context.SavedKernelEsp = 0;
    thread->Tcb.Context.SavedKernelStackBase = NULL;
    DPRINT("Allocated %x\n",desc*8);
@@ -337,18 +308,19 @@ void HalInitFirstTask(PETHREAD thread)
  * initial thread
  */
 {
-   unsigned int base;
-   unsigned int length;
-   unsigned int desc;
+   ULONG base;
+   ULONG length;
+   ULONG desc;
+   ULONG GdtDesc[2];
    
-   memset(null_ldt,0,sizeof(null_ldt));
-   desc = allocate_tss_descriptor();
-   base = (unsigned int)&null_ldt;
-   length = sizeof(null_ldt) - 1;
-   gdt[desc].a = (length & 0xffff) | ((base & 0xffff) << 16);
-   gdt[desc].b = ((base & 0xff0000)>>16) | 0x8200 | (length & 0xf0000)
-                 | (base & 0xff000000);
-   null_ldt_sel = desc*8;
+   memset(KiNullLdt, 0, sizeof(KiNullLdt));
+   base = (unsigned int)&KiNullLdt;
+   length = sizeof(KiNullLdt) - 1;
+   GdtDesc[0] = (length & 0xffff) | ((base & 0xffff) << 16);
+   GdtDesc[1] = ((base & 0xff0000)>>16) | 0x8200 | (length & 0xf0000)
+                | (base & 0xff000000);
+   desc = KeAllocateGdtSelector(GdtDesc);
+   KiNullLdtSel = desc*8;
    
    /*
     * Initialize the thread context

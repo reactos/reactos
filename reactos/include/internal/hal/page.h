@@ -37,23 +37,8 @@ void set_page(unsigned int vaddr, unsigned int attributes,
 #define PA_SYSTEM          (0)
 
 #define KERNEL_BASE        (0xc0000000)
-#define IDMAP_BASE         (0xd0000000)
 
 
-
-/*
- * Return a linear address which can be used to access the physical memory
- * starting at x 
- */
-extern inline unsigned int physical_to_linear(unsigned int x)
-{
-        return(x+IDMAP_BASE);
-}
-
-extern inline unsigned int linear_to_physical(unsigned int x)
-{
-        return(x-IDMAP_BASE);
-}
 
 #define FLUSH_TLB    __asm__("movl %cr3,%eax\n\tmovl %eax,%cr3\n\t")
 

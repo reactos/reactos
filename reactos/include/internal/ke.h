@@ -29,6 +29,8 @@ VOID KeInitializeDispatcherHeader(DISPATCHER_HEADER* Header, ULONG Type,
 				  ULONG Size, ULONG SignalState);
 
 VOID KeDumpStackFrames(ULONG DummyArg, ULONG NrFrames);
+ULONG KeAllocateGdtSelector(ULONG Desc[2]);
+VOID KeFreeGdtSelector(ULONG Entry);
 
 /* INITIALIZATION FUNCTIONS *************************************************/
 

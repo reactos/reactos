@@ -5099,7 +5099,10 @@ NTSTATUS STDCALL NtRequestPort(VOID);
 
 NTSTATUS STDCALL NtSetDefaultLocale(VOID);
 
-NTSTATUS STDCALL NtSetLdtEntries(VOID);
+//NTSTATUS STDCALL NtSetLdtEntries(VOID);
+NTSTATUS STDCALL NtSetLdtEntries(PEPROCESS Process,
+				 ULONG FirstEntry,
+				 PULONG Entries);
 
 NTSTATUS STDCALL NtSetSystemPowerState(VOID);
 

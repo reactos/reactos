@@ -302,7 +302,8 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
       return STATUS_INSUFFICIENT_RESOURCES;
     }
   CHECKPOINT;
-
+   DbgPrint("Module is at base %x\n",DriverBase);
+   
   /*  Copy image sections into virtual section  */
   memcpy(DriverBase, ModuleLoadBase, PESectionHeaders[0].PointerToRawData);
   CurrentBase = (PVOID) ((DWORD)DriverBase + PESectionHeaders[0].PointerToRawData);
@@ -486,6 +487,7 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
 
   /*  Compute address of entry point  */
   EntryPoint = (PVOID) ((DWORD)DriverBase + PEOptionalHeader->AddressOfEntryPoint);
+   DbgPrint("Calling entrypoint at %x\n",EntryPoint);
 
   return IoInitializeDriver(EntryPoint); 
 }

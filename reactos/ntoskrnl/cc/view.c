@@ -12,31 +12,25 @@
 
 #include <ddk/ntddk.h>
 #include <ddk/ntifs.h>
-#include <internal/bitops.h>
+#include <internal/mm.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 /* TYPES *********************************************************************/
 
-#define CACHE_SEGMENT_SIZE (0x10000)
+#define CACHE_SEGMENT_SIZE (0x1000)
 
 typedef struct _CACHE_SEGMENT
 {
    PVOID BaseAddress;
    PMEMORY_AREA MemoryArea;
-   ULONG ValidPages;
-   ULONG AllocatedPages;
+   BOOLEAN Valid;
    LIST_ENTRY ListEntry;
    ULONG FileOffset;
+   KEVENT Lock;
+   ULONG ReferenceCount;
 } CACHE_SEGMENT, *PCACHE_SEGMENT;
-
-typedef struct _BCB
-{
-   LIST_ENTRY CacheSegmentListHead;
-   PFILE_OBJECT FileObject;
-   KSPIN_LOCK BcbLock;
-} BCB, *PBCB;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -48,58 +42,73 @@ NTSTATUS CcRequestCachePage(PBCB Bcb,
    KIRQL oldirql;
    PLIST_ENTRY current_entry;
    PCACHE_SEGMENT current;
-   ULONG InternalOffset;
+   
+   DPRINT("CcRequestCachePage(Bcb %x, FileOffset %x)\n");
    
    KeAcquireSpinLock(&Bcb->BcbLock, &oldirql);
    
    current_entry = Bcb->CacheSegmentListHead.Flink;
    while (current_entry != &Bcb->CacheSegmentListHead)
      {
-	current = CONTAING_RECORD(current, CACHE_SEGMENT, ListEntry);
-	if (current->FileOffset <= FileOffset &&
-	    (current->FileOffset + CACHE_SEGMENT_SIZE) > FileOffset)
+	current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, ListEntry);
+	if (current->FileOffset == PAGE_ROUND_DOWN(FileOffset))
 	  {
-	     InternalOffset = (FileOffset - current->FileOffset);
-	     
-	     if (!test_bit(InternalOffset / PAGESIZE,
-			   current->AllocatedPages))
-	       {
-		  MmSetPageEntry(PsGetCurrentProcess(),
-				 current->BaseAddress + InternalOffset,
-				 PAGE_READWRITE,
-				 get_free_page());
-	       }
-	     if (!test_bit(InternalOffset / PAGESIZE,
-			   current->ValidPages))
-	       {
-		  UptoDate = False;
-	       }
-	     else
-	       {
-		  UptoDate = True;
-	       }
-	     (*BaseAddress) = current->BaseAddress + InternalOffset;
+	     current->ReferenceCount++;
 	     KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
+	     KeWaitForSingleObject(&current->Lock,
+				   Executive,
+				   KernelMode,
+				   FALSE,
+				   NULL);
+	     *UptoDate = current->Valid;
+	     BaseAddress = current->BaseAddress;
 	     return(STATUS_SUCCESS);
 	  }
 	current_entry = current_entry->Flink;
      }
+
+   current = ExAllocatePool(NonPagedPool, sizeof(CACHE_SEGMENT));
+   current->BaseAddress = NULL;
+   MmCreateMemoryArea(KernelMode,
+		      PsGetCurrentProcess(),
+		      MEMORY_AREA_CACHE_SEGMENT,
+		      &current->BaseAddress,
+		      CACHE_SEGMENT_SIZE,
+		      PAGE_READWRITE,
+		      &current->MemoryArea);
+   current->Valid = FALSE;
+   current->FileOffset = PAGE_ROUND_DOWN(FileOffset);
+   KeInitializeEvent(&current->Lock, SynchronizationEvent, TRUE);
+   current->ReferenceCount = 1;
+   InsertTailList(&Bcb->CacheSegmentListHead, &current->ListEntry);
+   *UptoDate = current->Valid;
+   *BaseAddress = current->BaseAddress;
+   MmSetPage(PsGetCurrentProcess(),
+	     current->BaseAddress, 
+	     (ULONG)MmAllocPage(), 
+	     PAGE_READWRITE);
    
    KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
+   
+   return(STATUS_SUCCESS);
 }
 
 NTSTATUS CcInitializeFileCache(PFILE_OBJECT FileObject,
 			       PBCB* Bcb)
 {
+   DPRINT("CcInitializeFileCache(FileObject %x)\n",FileObject);
+   
    (*Bcb) = ExAllocatePool(NonPagedPool, sizeof(BCB));
    if ((*Bcb) == NULL)
      {
-	return(STATUS_OUT_OF_MEMORY);
+	return(STATUS_UNSUCCESSFUL);
      }
    
    (*Bcb)->FileObject = FileObject;
    InitializeListHead(&(*Bcb)->CacheSegmentListHead);
    KeInitializeSpinLock(&(*Bcb)->BcbLock);
+   
+   DPRINT("Finished CcInitializeFileCache() = %x\n", *Bcb);
    
    return(STATUS_SUCCESS);
 }

@@ -16,6 +16,8 @@ VOID PsDispatchThread(VOID);
 VOID PiTerminateProcessThreads(PEPROCESS Process, NTSTATUS ExitStatus);
 VOID PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus);
 VOID PsReleaseThread(PETHREAD Thread);
+VOID PsBeginThread(PKSTART_ROUTINE StartRoutine, PVOID StartContext);
+VOID PsBeginThreadWithContextInternal(VOID);
 
 /*
  * PURPOSE: Thread states

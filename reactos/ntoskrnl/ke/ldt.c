@@ -16,7 +16,11 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS STDCALL NtSetLdtEntries(VOID)
+
+
+NTSTATUS STDCALL NtSetLdtEntries(PEPROCESS Process,
+				 ULONG FirstEntry,
+				 PULONG Entries)
 {
    UNIMPLEMENTED;
 }

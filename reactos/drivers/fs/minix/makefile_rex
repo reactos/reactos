@@ -1,9 +1,7 @@
-#
-#
-#
-OBJECTS = block.o rw.o inode.o dir.o mount.o blockdev.o
+all: minix.sys
 
-all: minix.o
+OBJECTS = block.o rw.o inode.o dir.o mount.o blockdev.o \
+          ../../../ntoskrnl/ntoskrnl.a 
 
 .phony: all
 

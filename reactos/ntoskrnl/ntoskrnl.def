@@ -64,3 +64,6 @@ RtlLargeIntegerGreaterThan
 RtlLargeIntegerShiftRight
 RtlZeroMemory
 ZwCreateDirectoryObject@12
+CbInitDccb
+CbAcquireForRead
+CbReleaseFromRead

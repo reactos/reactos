@@ -9,18 +9,7 @@
 #include <internal/stddef.h>
 #endif
 
-/*
- * On a 486 or Pentium, we are better off not using the
- * byte string operations. But on a 386 or a PPro the
- * byte string ops are faster than doing it by hand
- * (MUCH faster on a Pentium).
- *
- * Also, the byte strings actually work correctly. Forget
- * the i486 routines for now as they may be broken..
- */
-#if FIXED_486_STRING && (CPU == 486 || CPU == 586)
-#include <asm/string-486.h>
-#else
+#include <string.h>
 
 /*
  * This string-include defines all string functions as inline
@@ -491,5 +480,4 @@ extern inline void * memscan(void * addr, int c, size_t size)
 	return addr;
 }
 
-#endif
 #endif

@@ -15,7 +15,7 @@
 #include <internal/bitops.h>
 #include <ddk/ntifs.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 #include "minix.h"

@@ -12,7 +12,7 @@
 #include <ddk/ntddk.h>
 #include <ddk/ntifs.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 #include "minix.h"
@@ -87,8 +87,8 @@ NTSTATUS MinixFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    return(Status);
 }
 
-NTSTATUS DriverEntry(PDRIVER_OBJECT _DriverObject, 
-		     PUNICODE_STRING RegistryPath)
+NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT _DriverObject, 
+			     PUNICODE_STRING RegistryPath)
 /*
  * FUNCTION: Called by the system to initalize the driver
  * ARGUMENTS:
