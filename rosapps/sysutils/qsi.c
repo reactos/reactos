@@ -1,4 +1,4 @@
-/* $Id: qsi.c,v 1.5 2001/01/14 19:59:43 ea Exp $
+/* $Id: qsi.c,v 1.6 2001/01/14 20:16:37 ea Exp $
  *
  * PROJECT    : ReactOS Operating System (see http://www.reactos.com/)
  * DESCRIPTION: Tool to query system information
@@ -1964,14 +1964,13 @@ CMD_NOT_IMPLEMENTED
  */
 CMD_DEF(44)
 {
-#if 0
 	NTSTATUS			Status;
-	TIME_ZONE_INFORMATION		Tzi;
+	SYSTEM_TIME_ZONE_INFORMATION	Tzi;
 	WCHAR				Name [33];
 
 	RtlZeroMemory (& Tzi, sizeof Tzi);
 	Status = NtQuerySystemInformation(
-			SystemTimeZoneInformation,
+			44,
 			& Tzi,
 			sizeof Tzi,
 			0
@@ -1982,15 +1981,11 @@ CMD_DEF(44)
 		return EXIT_FAILURE;
 	}
 	printf (
-		"12h/24h.....: %dh\n",
-		0  /* FIXME: */
-		);
-	printf (
-		"Bias........: %d'\n",
+		"  Bias........: %d'\n",
 		Tzi.Bias /* LONG */
 		);
 	
-	printf ("Standard\n");
+	printf ("  Standard\n");
 	RtlZeroMemory (
 		(PVOID) Name,
 		sizeof Name
@@ -2007,14 +2002,14 @@ CMD_DEF(44)
 		
 	PrintUtcDateTime (
 		"\tDate: %s\n",
-		& Tzi.StandardDate	/* SYSTEMTIME */
+		(PTIME) & Tzi.StandardDate	/* SYSTEMTIME */
 		);
 		
 	printf ("\tBias: %d'\n",
 		Tzi.StandardBias /* LONG */
 		);
 	
-	printf ("Daylight\n");
+	printf ("  Daylight\n");
 	RtlZeroMemory (
 		(PVOID) Name,
 		sizeof Name
@@ -2031,14 +2026,14 @@ CMD_DEF(44)
 		
 	PrintUtcDateTime (
 		"\tDate: %s\n",
-		& Tzi.DaylightDate /* SYSTEMTIME */ 
+		(PTIME) & Tzi.DaylightDate /* SYSTEMTIME */ 
 		);
 		
 	printf (
 		"\tBias: %d'\n",
 		Tzi.DaylightBias /* LONG */ 
 		);
-#endif
+
 	return EXIT_SUCCESS;
 }
 
