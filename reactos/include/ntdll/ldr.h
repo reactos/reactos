@@ -67,7 +67,7 @@ typedef struct _MODULE_INFORMATION
   MODULE_ENTRY ModuleEntry[1];
 } MODULE_INFORMATION, *PMODULE_INFORMATION;
 
-#ifdef KDBG
+#if defined(KDBG) || defined(DBG)
 
 VOID
 LdrpLoadUserModuleSymbols(PLDR_MODULE LdrModule);
