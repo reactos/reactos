@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.168 2004/05/24 12:08:55 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.169 2004/05/28 21:16:27 royce Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -685,6 +685,8 @@ READ_REGISTER_USHORT=READ_REGISTER_USHORT@4
 READ_REGISTER_BUFFER_UCHAR=READ_REGISTER_BUFFER_UCHAR@12
 READ_REGISTER_BUFFER_ULONG=READ_REGISTER_BUFFER_ULONG@12
 READ_REGISTER_BUFFER_USHORT=READ_REGISTER_BUFFER_USHORT@12
+KeRosPrintAddress=KeRosPrintAddress@4
+KeRosDumpStackFrames=KeRosDumpStackFrames@8
 RtlAbsoluteToSelfRelativeSD=RtlAbsoluteToSelfRelativeSD@12
 RtlAddAccessAllowedAce=RtlAddAccessAllowedAce@16
 RtlAddAce=RtlAddAce@20

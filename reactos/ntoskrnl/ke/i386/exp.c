@@ -126,15 +126,15 @@ static NTSTATUS ExceptionToNtStatus[] =
 /* FUNCTIONS ****************************************************************/
 
 #ifdef KDBG
-STATIC BOOLEAN
-print_address(PVOID address)
+BOOLEAN STDCALL
+KeRosPrintAddress(PVOID address)
 {
   KdbPrintAddress(address);
   return TRUE;
 }
 #else /* KDBG */
-STATIC BOOLEAN 
-print_address(PVOID address)
+BOOLEAN STDCALL
+KeRosPrintAddress(PVOID address)
 {
    PLIST_ENTRY current_entry;
    MODULE_TEXT_SECTION* current;
@@ -268,7 +268,7 @@ KiDoubleFaultHandler(VOID)
        DbgPrint("Exception: %d(%x)\n", ExceptionNr, 0);
      }
    DbgPrint("CS:EIP %x:%x ", OldTss->Cs, OldTss->Eip);
-   print_address((PVOID)OldTss->Eip);
+   KeRosPrintAddress((PVOID)OldTss->Eip);
    DbgPrint("\n");
    DbgPrint("cr2 %x cr3 %x ", cr2_, OldCr3);
    DbgPrint("Proc: %x ",PsGetCurrentProcess());
@@ -327,7 +327,7 @@ KiDoubleFaultHandler(VOID)
       Frame = (PULONG)OldTss->Ebp;
       while (Frame != NULL && (ULONG)Frame >= StackBase)
 	{
-	  print_address((PVOID)Frame[1]);
+	  KeRosPrintAddress((PVOID)Frame[1]);
 	  Frame = (PULONG)Frame[0];
           DbgPrint(" ");
 	}
@@ -391,7 +391,7 @@ KiDoubleFaultHandler(VOID)
 	{
 	  if (StackRepeatCount[i] == 0)
 	    {
-	      print_address(StackTrace[i]);
+	      KeRosPrintAddress(StackTrace[i]);
 	      i++;
 	    }
 	  else
@@ -403,7 +403,7 @@ KiDoubleFaultHandler(VOID)
 		}
 	      for (j = 0; j < StackRepeatLength[i]; j++)
 		{
-		  print_address(StackTrace[i + j]);
+		  KeRosPrintAddress(StackTrace[i + j]);
 		}
 	      DbgPrint("}*%d", StackRepeatCount[i]);
 	      i = i + StackRepeatLength[i] * StackRepeatCount[i];
@@ -444,7 +444,7 @@ KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG Parameter1, ULONG Parameter2)
      }
    DbgPrint("Processor: %d CS:EIP %x:%x ", KeGetCurrentProcessorNumber(),
 	    Tf->Cs&0xffff, Tf->Eip);
-   print_address((PVOID)Tf->Eip);
+   KeRosPrintAddress((PVOID)Tf->Eip);
    DbgPrint("\n");
    Ke386GetPageTableDirectory(cr3_);
    DbgPrint("cr2 %x cr3 %x ", cr2, cr3_);
@@ -505,7 +505,7 @@ KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG Parameter1, ULONG Parameter2)
 	   DbgPrint("<INVALID>");
 	   break;
 	 }
-       if (!print_address(Eip))
+       if (!KeRosPrintAddress(Eip))
 	 {
 	   DbgPrint("<%X>", Eip);
 	   break;
@@ -524,7 +524,7 @@ KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG Parameter1, ULONG Parameter2)
    while (Frame < (PULONG)PsGetCurrentThread()->Tcb.StackBase && i < 50)
      {
 	 ULONG Address = *Frame;
-	 if (print_address((PVOID)Address))
+	 if (KeRosPrintAddress((PVOID)Address))
 	   {
 	     i++;
 	   }
@@ -630,20 +630,43 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
 VOID 
 KeDumpStackFrames(PULONG Frame)
 {
-  ULONG i;
+	ULONG i;
 
-  DbgPrint("Frames: ");
-  i = 1;
-  while (Frame != NULL)
-    {
-      if (!print_address((PVOID)Frame[1]))
+	DbgPrint("Frames: ");
+	i = 1;
+	while ( MmIsAddressValid(Frame) )
 	{
-	  DbgPrint("<%X>", (PVOID)Frame[1]);
+		if (!KeRosPrintAddress((PVOID)Frame[1]))
+		{
+			DbgPrint("<%X>", (PVOID)Frame[1]);
+		}
+		Frame = (PULONG)Frame[0];
+		i++;
+		DbgPrint(" ");
 	}
-      Frame = (PULONG)Frame[0];
-      i++;
-      DbgPrint(" ");
-    }
+}
+
+VOID STDCALL
+KeRosDumpStackFrames ( PULONG Frame, ULONG FrameCount )
+{
+	ULONG i;
+
+	DbgPrint("Frames: ");
+	if ( !Frame )
+	{
+		__asm__("mov %%ebp, %%ebx" : "=b" (Frame) : );
+		Frame = (PULONG)Frame[0]; // step out of KeRosDumpStackFrames
+	}
+	i = 1;
+	while ( MmIsAddressValid(Frame) && i++ < FrameCount )
+	{
+		if (!KeRosPrintAddress((PVOID)Frame[1]))
+		{
+			DbgPrint("<%X>", (PVOID)Frame[1]);
+		}
+		Frame = (PULONG)Frame[0];
+		DbgPrint(" ");
+	}
 }
 
 static void set_system_call_gate(unsigned int sel, unsigned int func)
