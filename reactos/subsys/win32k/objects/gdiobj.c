@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.79 2004/12/18 21:41:17 royce Exp $
+ * $Id: gdiobj.c,v 1.80 2004/12/19 00:03:56 royce Exp $
  */
 #include <w32k.h>
 
@@ -226,7 +226,7 @@ void IntDumpHandleTable ( int which )
 {
 	int i, n = 0, j;
 
-	// step through GDI handle table and find out who our culprit is...
+	/*  step through GDI handle table and find out who our culprit is... */
 	for ( i = RESERVE_ENTRIES_COUNT; i < GDI_HANDLE_COUNT; i++ )
 	{
 		for ( j = 0; j < n; j++ )
@@ -246,7 +246,7 @@ void IntDumpHandleTable ( int which )
 				h[j].count++;
 		}
 	}
-	// bubble sort time! weeeeee!!
+	/* bubble sort time! weeeeee!! */
 	for ( i = 0; i < n-1; i++ )
 	{
 		if ( h[i].count < h[i+1].count )
@@ -262,7 +262,7 @@ void IntDumpHandleTable ( int which )
 			h[j] = t;
 		}
 	}
-	// print the first 30 offenders...
+	/* print the first 30 offenders... */
 	DbgPrint ( "Worst GDI Handle leak offenders - stack trace level %i (out of %i unique locations):\n", which, n );
 	for ( i = 0; i < 30 && i < n; i++ )
 	{
@@ -272,7 +272,7 @@ void IntDumpHandleTable ( int which )
 		DbgPrint ( " (%i allocations)\n", h[i].count );
 	}
 }
-#endif//DBG
+#endif /* DBG */
 
 /*!
  * Allocate memory for GDI object and return handle to it.
@@ -299,6 +299,12 @@ GDIOBJ_AllocObj(ULONG ObjectType)
   ULONG Attempts = 0;
 #endif
 
+  W32Process = PsGetWin32Process();
+  /* HACK HACK HACK: simplest-possible quota implementation - don't allow a process
+     to take too many GDI objects, itself. */
+  if ( W32Process && W32Process->GDIObjects >= 0x2710 )
+    return NULL;
+
   ASSERT(ObjectType != GDI_OBJECT_TYPE_DONTCARE);
 
   LookasideList = FindLookasideList(ObjectType);
@@ -317,7 +323,6 @@ GDIOBJ_AllocObj(ULONG ObjectType)
          FIXME - don't shift once ROS' PIDs match with nt! */
       CurrentProcessId = (LONG)PsGetCurrentProcessId() << 1;
       LockedProcessId = CurrentProcessId | 0x1;
-      W32Process = PsGetWin32Process();
 
       newObject->LockingThread = NULL;
       newObject->Locks = 0;
@@ -372,17 +377,16 @@ LockHandle:
 #elif defined(_MSC_VER)
             __asm mov [Frame], ebp
 #endif
-			Frame = (PULONG)Frame[0]; // step out of AllocObj()
+			Frame = (PULONG)Frame[0]; /* step out of AllocObj() */
 			for ( which = 0; which < GDI_STACK_LEVELS && Frame[1] != 0 && Frame[1] != 0xDEADBEEF; which++ )
 			{
-	            GDIHandleAllocator[which][Index] = Frame[1]; // step out of AllocObj()
+	            GDIHandleAllocator[which][Index] = Frame[1]; /* step out of AllocObj() */
 				Frame = ((PULONG)Frame[0]);
 			}
 			for ( ; which < GDI_STACK_LEVELS; which++ )
 				GDIHandleAllocator[which][Index] = 0xDEADBEEF;
           }
-#endif//DBG
-          //ExAllocatePool ( PagedPool, (ULONG)newObject ); // initiate red-zone verification of object we allocated
+#endif /* DBG */
 
           if(W32Process != NULL)
           {
@@ -424,7 +428,7 @@ LockHandle:
 	  {
 		  DPRINT1("gdi handle abusers already reported!\n");
 	  }
-#endif//DBG
+#endif /* DBG */
     }
     else
     {
@@ -945,7 +949,6 @@ LockHandle:
       PGDIOBJHDR GdiHdr;
 
       GdiHdr = GDIBdyToHdr(Entry->KernelData);
-	  //ExAllocatePool ( PagedPool, (ULONG)GdiHdr ); // initiate red-zone validation on this block
 
       PrevThread = GdiHdr->LockingThread;
       if(PrevThread == Thread)
