@@ -1,4 +1,4 @@
-/* $Id: service.c,v 1.7 2004/01/05 14:28:20 weiden Exp $
+/* $Id: service.c,v 1.8 2004/01/08 18:54:12 jfilby Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -138,12 +138,14 @@ void interrupt_handler2d()
 
 		sub esp, 112  /* FloatSave */
 
+		mov ebx, eax
 		mov eax, dr7 __asm push eax
 		mov eax, dr6 __asm push eax
 		mov eax, dr3 __asm push eax
 		mov eax, dr2 __asm push eax
 		mov eax, dr1 __asm push eax
 		mov eax, dr0 __asm push eax
+		mov eax, ebx
 
 		push 0		/* ContextFlags */
 
