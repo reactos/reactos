@@ -17,6 +17,13 @@
 
 /* FUNCTIONS *****************************************************************/
 
+int CDECL
+_abnormal_termination(VOID)
+{
+  DPRINT("_abnormal_termination() called\n");
+  return 0;
+}
+
 VOID
 CDECL
 _local_unwind2(
