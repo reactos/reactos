@@ -102,7 +102,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   if (End != NULL)
     {
       ObDereferenceObject(Object);
-      return STATUS_UNSUCCESSFUL;
+      return STATUS_OBJECT_NAME_NOT_FOUND;
     }
 
   DPRINT("RemainingPath %S  ParentObject %x\n", RemainingPath.Buffer, Object);
