@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.2 1999/07/12 23:26:57 rex Exp $
+/* $Id: driver.c,v 1.3 1999/10/27 05:49:58 rex Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -58,7 +58,7 @@ PGD_ENABLEDRIVER  DRIVER_FindDDIDriver(LPCWSTR  Name)
   
   while (Driver && Name)
     {
-      if (!wcsicmp( Driver->Name, Name)) 
+      if (!_wcsicmp( Driver->Name, Name)) 
         {
           return Driver->EnableDriver;
         }
@@ -134,7 +134,7 @@ BOOL  DRIVER_UnregisterDriver(LPCWSTR  Name)
     {
       if (DriverList != NULL)
         {
-          if (!wcsicmp(DriverList->Name, Name))
+          if (!_wcsicmp(DriverList->Name, Name))
             {
               Driver = DriverList;
               DriverList = DriverList->Next;
@@ -142,7 +142,7 @@ BOOL  DRIVER_UnregisterDriver(LPCWSTR  Name)
           else
             {
               Driver = DriverList;
-              while (Driver->Next && wcsicmp(Driver->Name, Name))
+              while (Driver->Next && _wcsicmp(Driver->Name, Name))
                 {
                   Driver = Driver->Next;
                 }

@@ -45,7 +45,7 @@ $(TARGET).sys: $(OBJECTS) $(TARGET).def
 	      -Wl,--defsym,_end=end \
 	      -Wl,--defsym,_edata=__data_end__ \
 	      -Wl,--defsym,_etext=etext -Wl,--base-file,base.tmp $(TARGET).o \
-              ../../ntoskrnl/ntoskrnl.a
+              -specs=../../specs ../../ntoskrnl/ntoskrnl.a
 	- $(RM) junk.tmp
 	$(DLLTOOL) --dllname $(TARGET).sys --base-file base.tmp \
 	           --output-exp temp.exp --def $(TARGET).def
@@ -57,7 +57,7 @@ $(TARGET).sys: $(OBJECTS) $(TARGET).def
 	      -Wl,--section-alignment,0x1000 \
 	      -Wl,--defsym,_end=end \
 	      -Wl,--defsym,_edata=__data_end__ \
-	      -Wl,--defsym,_etext=etext -Wl,temp.exp
+	      -Wl,--defsym,_etext=etext -Wl,temp.exp -specs=../../specs
               
 	- $(RM) temp.exp
 	$(NM) --numeric-sort $(TARGET).sys > $(TARGET).sym
