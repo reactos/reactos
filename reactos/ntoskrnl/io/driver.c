@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.29 2003/10/28 22:48:37 navaraf Exp $
+/* $Id: driver.c,v 1.30 2003/10/30 18:16:25 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -558,7 +558,7 @@ IopInitializeBootDrivers(VOID)
        */
       if (!_stricmp(Extension, ".sym"))
       {
-         KDB_SYMBOLFILE_HOOK(ModuleStart, ModuleName, ModuleSize);
+         KDB_SYMBOLFILE_HOOK((PVOID)ModuleStart, ModuleName, ModuleSize);
       } else
 
       /*
