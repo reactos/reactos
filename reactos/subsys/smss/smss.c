@@ -24,7 +24,6 @@
  * --------------------------------------------------------------------
  */
 #include "smss.h"
-//#include <ntdll/rtl.h>
 #include <rosrtl/string.h>
 
 #define NDEBUG

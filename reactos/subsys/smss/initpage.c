@@ -27,7 +27,7 @@
 #include <rosrtl/string.h>
 #include <wchar.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 static NTSTATUS STDCALL

@@ -28,7 +28,7 @@
 #include "smss.h"
 #include <rosrtl/string.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* TODO: this file should be totally rewritten

@@ -26,7 +26,7 @@
 
 #include "smss.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 HANDLE Children[2] = {0, 0}; /* csrss, winlogon */
