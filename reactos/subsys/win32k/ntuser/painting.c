@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.69 2004/02/21 13:51:13 navaraf Exp $
+ *  $Id: painting.c,v 1.70 2004/02/21 22:22:26 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -87,8 +87,15 @@ IntValidateParent(PWINDOW_OBJECT Child, HRGN ValidRegion)
          }
          ExReleaseFastMutex(&ParentWindow->UpdateLock);
       }
-      IntReleaseWindowObject(ParentWindow);
-      Parent = NtUserGetAncestor(Parent, GA_PARENT);
+      if (ParentWindow)
+      {
+         IntReleaseWindowObject(ParentWindow);
+         Parent = NtUserGetAncestor(Parent, GA_PARENT);
+      }
+      else
+      {
+         return;
+      }
    }
 }
 
@@ -103,6 +110,7 @@ IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
 {
   HDC hDC;
   HWND hWnd = Window->Self;
+  HRGN TempRegion;
 
   if (Flags & (RDW_ERASENOW | RDW_UPDATENOW))
     {
@@ -113,11 +121,12 @@ IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
             {
               IntValidateParent(Window, Window->NCUpdateRegion);
             }
-          IntSendMessage(hWnd, WM_NCPAINT, (WPARAM)Window->NCUpdateRegion, 0);
+          TempRegion = Window->NCUpdateRegion;
           Window->NCUpdateRegion = NULL;
           Window->Flags &= ~WINDOWOBJECT_NEED_NCPAINT;
           MsqDecPaintCountQueue(Window->MessageQueue);
           ExReleaseFastMutex(&Window->UpdateLock);
+          IntSendMessage(hWnd, WM_NCPAINT, (WPARAM)TempRegion, 0);
         }
 
       if (Window->Flags & WINDOWOBJECT_NEED_ERASEBKGND)
@@ -912,6 +921,7 @@ NtUserRedrawWindow(HWND hWnd, CONST RECT *lprcUpdate, HRGN hrgnUpdate,
       if (!NT_SUCCESS(Status))
       {
          SetLastWin32Error(ERROR_INVALID_PARAMETER);
+         IntReleaseWindowObject(Wnd);
          return FALSE;
       }
    }
@@ -923,9 +933,11 @@ NtUserRedrawWindow(HWND hWnd, CONST RECT *lprcUpdate, HRGN hrgnUpdate,
    {
       /* IntRedrawWindow fails only in case that flags are invalid */
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      IntReleaseWindowObject(Wnd);
       return FALSE;
    }
  
+   IntReleaseWindowObject(Wnd);
    return TRUE;
 }
 
