@@ -40,21 +40,21 @@ Project::Project()
 {
 }
 
-Project::Project(const string& filename)
+Project::Project ( const string& filename )
 {
 	if ( !xmlfile.open ( filename ) )
 		throw FileNotFoundException ( filename );
 	ReadXml();
 }
 
-Project::~Project()
+Project::~Project ()
 {
-	for ( size_t i = 0; i < modules.size(); i++ )
+	for ( size_t i = 0; i < modules.size (); i++ )
 		delete modules[i];
 	delete head;
 }
 
-void Project::ReadXml()
+void Project::ReadXml ()
 {
 	Path path;
 
@@ -102,7 +102,7 @@ Project::ProcessXML ( const XMLElement& e, const string& path )
 			return;
 		subpath = path + "/" + att->value;
 	}
-	for ( size_t i = 0; i < e.subElements.size(); i++ )
+	for ( size_t i = 0; i < e.subElements.size (); i++ )
 		ProcessXML ( *e.subElements[i], subpath );
 }
 

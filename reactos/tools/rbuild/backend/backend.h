@@ -6,7 +6,8 @@
 class Backend
 {
 public:
-	Backend ( Project& );
+	Backend ( Project& project );
+	virtual void Process () = 0;
 protected:
 	Project& ProjectNode;
 };

@@ -4,6 +4,7 @@
 #include "../Rbuild.h"
 #include "backend.h"
 
-Backend::Backend ( Project& project ) : ProjectNode(project)
+Backend::Backend ( Project& project )
+	: ProjectNode ( project )
 {
 }

@@ -20,7 +20,8 @@ public:
 	Project ();
 	Project ( const std::string& filename );
 	~Project ();
-	void ProcessXML ( const XMLElement& e, const std::string& path );
+	void ProcessXML ( const XMLElement& e,
+	                  const std::string& path );
 	bool GenerateOutput();
 private:
 	void ReadXml ();

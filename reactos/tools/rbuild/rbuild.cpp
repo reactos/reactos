@@ -8,6 +8,8 @@
 #include <assert.h>
 
 #include "rbuild.h"
+#include "backend/backend.h"
+#include "backend/mingw/mingw.h"
 
 using std::string;
 using std::vector;
@@ -18,9 +20,10 @@ main ( int argc, char** argv )
 	try
 	{
 		string projectFilename ( "ReactOS.xml" );
-		Project project ( projectFilename );
-		project.GenerateOutput();
-
+		Project project = Project ( projectFilename );
+		Backend* backend = new MingwBackend ( project );
+		backend->Process ();
+		
 		// REM TODO FIXME actually do something with Project object...
 #if 0
 		printf ( "Found %d modules:\n", project.modules.size() );

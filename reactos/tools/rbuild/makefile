@@ -5,8 +5,9 @@ TARGET = rbuild$(EXE_POSTFIX)
 all: $(TARGET)
 
 BACKEND_MINGW_BASE_OBJECTS = \
-	backend/mingw/mingw.cpp
-
+	backend/mingw/mingw.cpp \
+	backend/mingw/modulehandler.cpp
+	
 BACKEND_BASE_OBJECTS = \
 	$(BACKEND_MINGW_BASE_OBJECTS) \
 	backend/backend.cpp
