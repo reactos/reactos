@@ -11,7 +11,7 @@
 
 //#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include "Utils.h"
+#include "utils.h"
 
 #define CONTROLCLASS  "COMBOBOX"  /* the class name */
 #define CONTROLCLASSW L"COMBOBOX" /* the class name in unicode*/
