@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.60 2004/04/14 23:17:56 weiden Exp $
+/* $Id: misc.c,v 1.61 2004/04/14 23:40:43 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -931,10 +931,16 @@ IntSafeCopyUnicodeString(PUNICODE_STRING Dest,
     return Status;
   }
   
-  if(Dest->Length > 0)
+  if(Dest->Length > 0x4000)
   {
-    Src = Dest->Buffer;
-    
+    return STATUS_UNSUCCESSFUL;
+  }
+  
+  Src = Dest->Buffer;
+  Dest->Buffer = NULL;
+  
+  if(Dest->Length > 0 && Src)
+  {
     Dest->Buffer = ExAllocatePoolWithTag(NonPagedPool, Dest->Length, TAG_STRING);
     if(!Dest->Buffer)
     {
