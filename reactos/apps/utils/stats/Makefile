@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2003/11/14 17:13:23 weiden Exp $
+# $Id: Makefile,v 1.4 2003/11/16 22:25:34 sedwards Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -14,7 +14,7 @@ TARGET_SDKLIBS = kernel32.a
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 
-TARGET_CFLAGS = -Wall -Werror
+TARGET_CFLAGS = -Wall -Werror -D__USE_W32API
 
 include $(PATH_TO_TOP)/rules.mak
 

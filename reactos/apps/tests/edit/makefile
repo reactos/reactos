@@ -15,7 +15,7 @@ TARGET_OBJECTS = \
 	edittest.o \
 	utils.o
 
-TARGET_CFLAGS = -Wall -Werror
+TARGET_CFLAGS = -Wall -Werror -D__USE_W32API
 
 include $(PATH_TO_TOP)/rules.mak
 
