@@ -246,13 +246,12 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
    /*
     * FIXME: retrieve the offset of the APC dispatcher from NTDLL
     */
-/*
    RtlInitAnsiString (&ProcedureName,
 		      "KiUserApcDispatcher");
    Status = LdrGetProcedureAddress ((PVOID)ImageBase,
 				    &ProcedureName,
 				    0,
-				    (PULONG)&SystemDllApcDispatcher);
+				    &SystemDllApcDispatcher);
    if (!NT_SUCCESS(Status))
      {
 	DbgPrint ("LdrGetProcedureAddress failed (Status %x)\n", Status);
@@ -261,8 +260,6 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
 	ZwClose(NTDllSectionHandle);
 	return (Status);
      }
-*/
-   SystemDllApcDispatcher = NULL;
 
    KeDetachProcess();
    ObDereferenceObject(Process);

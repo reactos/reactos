@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.21 2000/10/08 16:32:52 dwelch Exp $
+/* $Id: thread.c,v 1.22 2000/10/11 20:50:32 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -344,12 +344,9 @@ DWORD STDCALL ResumeThread(HANDLE hThread)
 }
 
 
-WINBOOL
-STDCALL
-TerminateThread (
-	HANDLE	hThread,
-	DWORD	dwExitCode
-	)
+WINBOOL STDCALL
+TerminateThread (HANDLE	hThread,
+		 DWORD	dwExitCode)
 {
    NTSTATUS errCode;
 

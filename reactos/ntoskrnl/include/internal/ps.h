@@ -30,6 +30,7 @@
 /*
  * Defines for accessing KPCR and KTHREAD structure members
  */
+#define KTHREAD_KERNEL_STACK      0x28
 #define KTHREAD_PREVIOUS_MODE     0x137
 #define KTHREAD_TRAP_FRAME        0x128
 

@@ -17,9 +17,14 @@
 #include <internal/i386/segment.h>
 #include <internal/ps.h>
 #include <internal/ke.h>
+#include <internal/ldr.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
+/* NOTES *********************************************************************/
+
+
 
 /* GLOBALS *******************************************************************/
 
@@ -45,9 +50,16 @@ VOID KeCallKernelRoutineApc(PKAPC Apc)
    DPRINT("Finished KeCallKernelRoutineApc()\n");
 }
 
+VOID KiRundownThread(VOID)
+/*
+ * FUNCTION: 
+ */
+{
+}
+
 BOOLEAN KiTestAlert(VOID)
 /*
- * FUNCTION: Tests whether there are any pending APCs for the curren thread
+ * FUNCTION: Tests whether there are any pending APCs for the current thread
  * and if so the APCs will be delivered on exit from kernel mode
  */
 {
@@ -73,61 +85,98 @@ BOOLEAN KiDeliverUserApc(PKTRAP_FRAME TrapFrame)
  *        UserContext = The user context saved on entry to kernel mode
  */
 {
-#if 0   
    PLIST_ENTRY current_entry;
    PKAPC Apc;
    PULONG Esp;
+   PCONTEXT Context;
    KIRQL oldlvl;
-   CONTEXT SavedContext;
-   ULONG Top;
-   BOOL ret = FALSE;
-   PETHREAD EThread;
    PKTHREAD Thread;
    
-   DPRINT("KiDeliverUserApc(TrapFrame %x)\n", TrapFrame);
+   DPRINT("KiDeliverUserApc(TrapFrame %x/%x)\n", TrapFrame,
+	  KeGetCurrentThread()->TrapFrame);
    Thread = KeGetCurrentThread();
-   while(1)
+   KeAcquireSpinLock(&PiApcLock, &oldlvl);
+   current_entry = Thread->ApcState.ApcListHead[1].Flink;
+   
+   /*
+    * Shouldn't happen but check anyway.
+    */
+   if (current_entry == &Thread->ApcState.ApcListHead[1])
      {
-       KeAcquireSpinLock(&PiApcLock, &oldlvl);
-       current_entry = Thread->ApcState.ApcListHead[1].Flink;
-       
-       if (current_entry == &Thread->ApcState.ApcListHead[1])
-	 {
-	   KeReleaseSpinLock(&PiApcLock, oldlvl);
-	   break;
-	 }
-       ret = TRUE;
-       current_entry = RemoveHeadList(&Thread->ApcState.ApcListHead[1]);
-       Apc = CONTAINING_RECORD(current_entry, KAPC, ApcListEntry);
-       
-       DPRINT("Esp %x\n", Esp);
-       DPRINT("Apc->NormalContext %x\n", Apc->NormalContext);
-       DPRINT("Apc->SystemArgument1 %x\n", Apc->SystemArgument1);
-       DPRINT("Apc->SystemArgument2 %x\n", Apc->SystemArgument2);
-       DPRINT("UserContext->Eip %x\n", UserContext->Eip);
-       
-       Esp = (PULONG)UserContext->Esp;
-       
-       memcpy(&SavedContext, UserContext, sizeof(CONTEXT));
-       
-       Esp = Esp - (sizeof(CONTEXT) + (5 * sizeof(ULONG)));
-       memcpy(Esp, &SavedContext, sizeof(CONTEXT));
-       Top = sizeof(CONTEXT) / 4;
-       Esp[Top] = (ULONG)Apc->NormalRoutine;
-       Esp[Top + 1] = (ULONG)Apc->NormalContext;
-       Esp[Top + 2] = (ULONG)Apc->SystemArgument1;
-       Esp[Top + 3] = (ULONG)Apc->SystemArgument2;
-       Esp[Top + 4] = (ULONG)Esp - sizeof(CONTEXT);
-       UserContext->Eip = 0;  // KiUserApcDispatcher
-       
-       KeReleaseSpinLock(&PiApcLock, oldlvl);
-       
-       /*
-	* Now call for the kernel routine for the APC, which will free
-	* the APC data structure
-	*/
-       KeCallKernelRoutineApc(Apc);
+	KeReleaseSpinLock(&PiApcLock, oldlvl);
+	DbgPrint("KiDeliverUserApc called but no APC was pending\n");
+	return(FALSE);
      }
+   
+   current_entry = RemoveHeadList(&Thread->ApcState.ApcListHead[1]);
+   Apc = CONTAINING_RECORD(current_entry, KAPC, ApcListEntry);
+   
+   /*
+    * Save the thread's current context (in other words the registers
+    * that will be restored when it returns to user mode) so the
+    * APC dispatcher can restore them later
+    */
+   Context = (PCONTEXT)(((PUCHAR)TrapFrame->Esp) - sizeof(CONTEXT));
+   memset(Context, 0, sizeof(CONTEXT));
+   Context->ContextFlags = CONTEXT_CONTROL | CONTEXT_INTEGER | 
+     CONTEXT_SEGMENTS | CONTEXT_i386;
+   Context->SegGs = TrapFrame->Gs;
+   Context->SegFs = TrapFrame->Fs;
+   Context->SegEs = TrapFrame->Es;
+   Context->SegDs = TrapFrame->Ds;
+   Context->Edi = TrapFrame->Edi;
+   Context->Esi = TrapFrame->Esi;
+   Context->Ebx = TrapFrame->Ebx;
+   Context->Edx = TrapFrame->Edx;
+   Context->Ecx = TrapFrame->Ecx;
+   Context->Eax = TrapFrame->Eax;
+   Context->Ebp = TrapFrame->Ebp;
+   Context->Eip = TrapFrame->Eip;
+   Context->SegCs = TrapFrame->Cs;
+   Context->EFlags = TrapFrame->Eflags;
+   Context->Esp = TrapFrame->Esp;
+   Context->SegSs = TrapFrame->Ss;
+   
+   /*
+    * Setup the trap frame so the thread will start executing at the
+    * APC Dispatcher when it returns to user-mode
+    */
+   Esp = (PULONG)(((PUCHAR)TrapFrame->Esp) - 
+		  (sizeof(CONTEXT) + (6 * sizeof(ULONG))));
+   
+   Esp[0] = 0xdeadbeef;
+   Esp[1] = (ULONG)Apc->NormalRoutine;
+   Esp[2] = (ULONG)Apc->NormalContext;
+   Esp[3] = (ULONG)Apc->SystemArgument1;
+   Esp[4] = (ULONG)Apc->SystemArgument2;
+   Esp[5] = (ULONG)Context;
+   TrapFrame->Eip = (ULONG)LdrpGetSystemDllApcDispatcher();
+   TrapFrame->Esp = (ULONG)Esp;     
+   
+   /*
+    * We've dealt with one pending user-mode APC
+    */
+   Thread->ApcState.UserApcPending--;
+   
+   /*
+    * FIXME: Give some justification for this
+    */
+   KeReleaseSpinLock(&PiApcLock, oldlvl);
+       
+   /*
+    * Now call for the kernel routine for the APC, which will free
+    * the APC data structure, we can't do this ourselves because
+    * the APC may be embedded in some larger structure e.g. an IRP
+    * We also give the kernel routine a last chance to modify the arguments to 
+    * the user APC routine.
+    */
+   Apc->KernelRoutine(Apc,
+		      (PKNORMAL_ROUTINE*)&Esp[1],
+		      (PVOID*)&Esp[2],
+		      (PVOID*)&Esp[3],
+		      (PVOID*)&Esp[4]);
+
+#if 0   
    KeAcquireSpinLock(&PiThreadListLock, &oldlvl);
    EThread = CONTAINING_RECORD(Thread, ETHREAD, Tcb);
    if (EThread->DeadThread)
@@ -147,6 +196,14 @@ BOOLEAN KiDeliverUserApc(PKTRAP_FRAME TrapFrame)
 VOID STDCALL KiDeliverApc(ULONG Unknown1,
 			  ULONG Unknown2,
 			  ULONG Unknown3)
+/*
+ * FUNCTION: Deliver an APC to the current thread.
+ * NOTES: This is called from the IRQL switching code if the current thread
+ * is returning from an IRQL greater than or equal to APC_LEVEL to 
+ * PASSIVE_LEVEL and there are kernel-mode APCs pending. This means any
+ * pending APCs will be delivered after a thread gets a new quantum and
+ * after it wakes from a wait. 
+ */
 {
    PETHREAD Thread = PsGetCurrentThread();
    PLIST_ENTRY current;
@@ -217,8 +274,6 @@ VOID STDCALL KeInsertQueueApc (PKAPC	Apc,
      {
 	InsertTailList(&TargetThread->ApcState.ApcListHead[1],
 		       &Apc->ApcListEntry);
-	TargetThread->ApcState.KernelApcPending++;
-	TargetThread->ApcState.UserApcPending++;
      }
    Apc->Inserted = TRUE;
    
@@ -235,6 +290,7 @@ VOID STDCALL KeInsertQueueApc (PKAPC	Apc,
 	
 	DPRINT("Resuming thread for user APC\n");
 	
+	TargetThread->ApcState.UserApcPending++;
 	Status = STATUS_USER_APC;
 	KeRemoveAllWaitsThread(CONTAINING_RECORD(TargetThread, ETHREAD, Tcb),
 			       STATUS_USER_APC);
@@ -289,6 +345,19 @@ KeInitializeApc (PKAPC			Apc,
      }
 }
 
+VOID NtQueueApcRundownRoutine(PKAPC Apc)
+{
+   ExFreePool(Apc);
+}
+
+VOID NtQueueApcKernelRoutine(PKAPC Apc,
+			     PKNORMAL_ROUTINE* NormalRoutine,
+			     PVOID* NormalContext,
+			     PVOID* SystemArgument1,
+			     PVOID* SystemArgument2)
+{
+   ExFreePool(Apc);
+}
 
 NTSTATUS STDCALL NtQueueApcThread(HANDLE			ThreadHandle,
 				  PKNORMAL_ROUTINE	ApcRoutine,
@@ -321,8 +390,8 @@ NTSTATUS STDCALL NtQueueApcThread(HANDLE			ThreadHandle,
    KeInitializeApc(Apc,
 		   &Thread->Tcb,
 		   0,
-		   NULL,
-		   NULL,
+		   NtQueueApcKernelRoutine,
+		   NtQueueApcRundownRoutine,
 		   ApcRoutine,
 		   UserMode,
 		   NormalContext);

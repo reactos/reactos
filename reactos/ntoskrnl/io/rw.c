@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.31 2000/07/07 00:42:58 phreak Exp $
+/* $Id: rw.c,v 1.32 2000/10/11 20:50:34 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -88,15 +88,20 @@ NTSTATUS STDCALL NtReadFile(HANDLE			FileHandle,
 					   NULL);
 	if (!NT_SUCCESS(Status))
 	  {
+	     ObDereferenceObject(FileObject);
 	     return Status;
 	  }
      }
-   else
-     {
+   else if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+     {	
 	KeInitializeEvent(&Event,
 			  NotificationEvent,
 			  FALSE);
 	ptrEvent = &Event;
+     }
+   else
+     {
+	ptrEvent = NULL;
      }
    
    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
@@ -126,10 +131,21 @@ NTSTATUS STDCALL NtReadFile(HANDLE			FileHandle,
    if ((Status == STATUS_PENDING) && 
        (FileObject->Flags & FO_SYNCHRONOUS_IO))
      {
+	BOOLEAN Alertable;
+	
+	if (FileObject->Flags & FO_ALERTABLE_IO)
+	  {
+	     Alertable = TRUE;
+	  }
+	else
+	  {
+	     Alertable = FALSE;
+	  } 
+	
 	KeWaitForSingleObject(&Event,
 			      Executive,
 			      KernelMode,
-			      FALSE,
+			      Alertable,
 			      NULL);
 	Status = IoStatusBlock->Status;
      }
@@ -166,6 +182,7 @@ NTSTATUS STDCALL NtWriteFile(HANDLE			FileHandle,
    PIRP Irp;
    PIO_STACK_LOCATION StackPtr;
    KEVENT Event;
+   PKEVENT ptrEvent;
    
    DPRINT("NtWriteFile(FileHandle %x, Buffer %x, Length %d)\n",
 	  FileHandle, Buffer, Length);
@@ -185,7 +202,33 @@ NTSTATUS STDCALL NtWriteFile(HANDLE			FileHandle,
      {
 	ByteOffset = &FileObject->CurrentByteOffset;
      }
-   
+
+   if (EventHandle != NULL)
+     {
+	Status = ObReferenceObjectByHandle(EventHandle,
+					   SYNCHRONIZE,
+					   ExEventObjectType,
+					   UserMode,
+					   (PVOID*)&ptrEvent,
+					   NULL);
+	if (!NT_SUCCESS(Status))
+	  {
+	     ObDereferenceObject(FileObject);
+	     return(Status);
+	  }
+     }
+   else if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+     {	
+	KeInitializeEvent(&Event,
+			  NotificationEvent,
+			  FALSE);
+	ptrEvent = &Event;
+     }
+   else
+     {
+	ptrEvent = NULL;
+     }
+
    KeInitializeEvent(&Event,
 		     NotificationEvent,
 		     FALSE);
@@ -194,7 +237,7 @@ NTSTATUS STDCALL NtWriteFile(HANDLE			FileHandle,
 				      Buffer,
 				      Length,
 				      ByteOffset,
-				      &Event,
+				      ptrEvent,
 				      IoStatusBlock);
    
    Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;

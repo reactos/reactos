@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.57 2000/10/08 16:32:53 dwelch Exp $
+/* $Id: thread.c,v 1.58 2000/10/11 20:50:35 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -52,56 +52,6 @@ ULONG PiNrRunnableThreads = 0;
 static PETHREAD CurrentThread = NULL;
 
 /* FUNCTIONS ***************************************************************/
-
-VOID PsFreezeProcessThreads(PEPROCESS Process)
-{
-   KIRQL oldIrql;
-   PLIST_ENTRY current_entry;
-   PETHREAD current;
-   
-   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
-   current_entry = PiThreadListHead.Flink;
-   
-   while (current_entry != &PiThreadListHead)
-     {
-	current = CONTAINING_RECORD(current_entry, ETHREAD, 
-				    Tcb.ThreadListEntry);
-	
-	current_entry = current_entry->Flink;
-	
-	if (current->ThreadsProcess == Process &&
-	    current != PsGetCurrentThread())
-	  {
-	     PsFreezeOtherThread(current);
-	  }
-     }
-   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
-}
-
-VOID PsUnfreezeProcessThreads(PEPROCESS Process)
-{
-   KIRQL oldIrql;
-   PLIST_ENTRY current_entry;
-   PETHREAD current;
-   
-   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
-   current_entry = PiThreadListHead.Flink;
-   
-   while (current_entry != &PiThreadListHead)
-     {
-	current = CONTAINING_RECORD(current_entry, ETHREAD, 
-				    Tcb.ThreadListEntry);
-	
-	current_entry = current_entry->Flink;
-	
-	if (current->ThreadsProcess == Process &&
-	    current != PsGetCurrentThread())
-	  {
-	     PsUnfreezeOtherThread(current);
-	  }
-     }
-   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
-}
 
 PKTHREAD STDCALL KeGetCurrentThread(VOID)
 {
@@ -300,25 +250,6 @@ VOID PsUnfreezeOtherThread(PETHREAD Thread)
      }
 }
 
-VOID PsFreezeOtherThread(PETHREAD Thread)
-{
-   ULONG r;
-   
-   Thread->Tcb.FreezeCount++;
-   r = Thread->Tcb.FreezeCount;
-   
-   if (r == 0)
-     {
-	return;
-     }
-   
-   if (Thread->Tcb.State == THREAD_STATE_RUNNABLE)
-     {
-	RemoveEntryList(&Thread->Tcb.QueueListEntry);
-     }
-   Thread->Tcb.State = THREAD_STATE_FROZEN;   
-}
-
 ULONG PsFreezeThread(PETHREAD Thread, 
 		     PNTSTATUS Status, 
 		     UCHAR Alertable,
@@ -346,13 +277,8 @@ ULONG PsFreezeThread(PETHREAD Thread,
    
    if (PsGetCurrentThread() != Thread)
      {
-	DPRINT("Suspending other\n");
-	if (Thread->Tcb.State == THREAD_STATE_RUNNABLE)
-	  {
-	     RemoveEntryList(&Thread->Tcb.QueueListEntry);
-	  }
-	Thread->Tcb.State = THREAD_STATE_FROZEN;
-	KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+	DbgPrint("Suspending other\n");
+	KeBugCheck(0);
      }
    else
      {
@@ -495,14 +421,6 @@ NTSTATUS STDCALL NtAlertThread (IN HANDLE ThreadHandle)
    return(STATUS_SUCCESS);   
 }
 
-
-NTSTATUS STDCALL NtGetContextThread (IN	HANDLE		ThreadHandle, 
-				     OUT	PCONTEXT	Context)
-{
-	UNIMPLEMENTED;
-}
-
-
 NTSTATUS STDCALL NtOpenThread(OUT	PHANDLE ThreadHandle,
 			      IN	ACCESS_MASK DesiredAccess,
 			      IN	POBJECT_ATTRIBUTES ObjectAttributes,
@@ -511,6 +429,214 @@ NTSTATUS STDCALL NtOpenThread(OUT	PHANDLE ThreadHandle,
 	UNIMPLEMENTED;
 }
 
+VOID KeContextToTrapFrame(PCONTEXT Context,
+			  PKTRAP_FRAME TrapFrame)
+{
+      if (Context->ContextFlags & CONTEXT_CONTROL)
+     {
+	TrapFrame->Esp = Context->Esp;
+	TrapFrame->Ss = Context->SegSs;
+	TrapFrame->Cs = Context->SegCs;
+	TrapFrame->Eip = Context->Eip;
+	TrapFrame->Eflags = Context->EFlags;	
+	TrapFrame->Ebp = Context->Ebp;
+     }
+   if (Context->ContextFlags & CONTEXT_INTEGER)
+     {
+	TrapFrame->Eax = Context->Eax;
+	TrapFrame->Ebx = Context->Ebx;
+	TrapFrame->Ecx = Context->Ecx;
+	/*
+	 * Edx is used in the TrapFrame to hold the old trap frame pointer
+	 * so we don't want to overwrite it here
+	 */
+/*	TrapFrame->Edx = Context->Edx; */
+	TrapFrame->Esi = Context->Esi;
+	TrapFrame->Edx = Context->Edi;
+     }
+   if (Context->ContextFlags & CONTEXT_SEGMENTS)
+     {
+	TrapFrame->Ds = Context->SegDs;
+	TrapFrame->Es = Context->SegEs;
+	TrapFrame->Fs = Context->SegFs;
+	TrapFrame->Gs = Context->SegGs;
+     }
+   if (Context->ContextFlags & CONTEXT_FLOATING_POINT)
+     {
+	/*
+	 * Not handled
+	 */
+     }
+   if (Context->ContextFlags & CONTEXT_DEBUG_REGISTERS)
+     {
+	/*
+	 * Not handled
+	 */
+     }
+}
+
+VOID KeTrapFrameToContext(PKTRAP_FRAME TrapFrame,
+			  PCONTEXT Context)
+{
+   if (Context->ContextFlags & CONTEXT_CONTROL)
+     {
+	Context->SegSs = TrapFrame->Ss;
+	Context->Esp = TrapFrame->Esp;
+	Context->SegCs = TrapFrame->Cs;
+	Context->Eip = TrapFrame->Eip;
+	Context->EFlags = TrapFrame->Eflags;
+	Context->Ebp = TrapFrame->Ebp;
+     }
+   if (Context->ContextFlags & CONTEXT_INTEGER)
+     {
+	Context->Eax = TrapFrame->Eax;
+	Context->Ebx = TrapFrame->Ebx;
+	Context->Ecx = TrapFrame->Ecx;
+	/*
+	 * NOTE: In the trap frame which is built on entry to a system
+	 * call TrapFrame->Edx will actually hold the address of the
+	 * previous TrapFrame. I don't believe leaking this information
+	 * has security implications
+	 */
+	Context->Edx = TrapFrame->Edx;
+	Context->Esi = TrapFrame->Esi;
+	Context->Edi = TrapFrame->Edi;
+     }
+   if (Context->ContextFlags & CONTEXT_SEGMENTS)
+     {
+	Context->SegDs = TrapFrame->Ds;
+	Context->SegEs = TrapFrame->Es;
+	Context->SegFs = TrapFrame->Fs;
+	Context->SegGs = TrapFrame->Gs;
+     }
+   if (Context->ContextFlags & CONTEXT_DEBUG_REGISTERS)
+     {
+	/*
+	 * FIXME: Implement this case
+	 */	
+     }
+   if (Context->ContextFlags & CONTEXT_FLOATING_POINT)
+     {
+	/*
+	 * FIXME: Implement this case
+	 */
+     }
+#if 0   
+   if (Context->ContextFlags & CONTEXT_EXTENDED_REGISTERS)
+     {
+	/*
+	 * FIXME: Investigate this
+	 */
+     }
+#endif
+}
+
+VOID KeGetContextRundownRoutine(PKAPC Apc)
+{
+   PKEVENT Event;
+   PNTSTATUS Status;
+   
+   Event = (PKEVENT)Apc->SystemArgument1;
+   Status = (PNTSTATUS)Apc->SystemArgument2;
+   (*Status) = STATUS_THREAD_IS_TERMINATING;
+   KeSetEvent(Event, IO_NO_INCREMENT, FALSE);
+}
+
+VOID KeGetContextKernelRoutine(PKAPC Apc,
+			       PKNORMAL_ROUTINE* NormalRoutine,
+			       PVOID* NormalContext,
+			       PVOID* SystemArgument1,
+			       PVOID* SystemArgument2)
+{
+   PKEVENT Event;
+   PCONTEXT Context;
+   PNTSTATUS Status;
+   
+   Context = (PCONTEXT)(*NormalContext);
+   Event = (PKEVENT)(*SystemArgument1);
+   Status = (PNTSTATUS)(*SystemArgument2);
+   
+   KeTrapFrameToContext(KeGetCurrentThread()->TrapFrame, Context);
+   
+   *Status = STATUS_SUCCESS;
+   KeSetEvent(Event, IO_NO_INCREMENT, FALSE);
+}
+
+NTSTATUS STDCALL NtGetContextThread (IN	HANDLE ThreadHandle, 
+				     OUT PCONTEXT Context)
+{
+   PETHREAD Thread;
+   NTSTATUS Status;
+   
+   Status = ObReferenceObjectByHandle(ThreadHandle,
+				      THREAD_GET_CONTEXT,
+				      PsThreadType,
+				      UserMode,
+				      (PVOID*)&Thread,
+				      NULL);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
+   if (Thread == PsGetCurrentThread())
+     {
+	/*
+	 * I don't know if trying to get your own context makes much
+	 * sense but we can handle it more efficently.
+	 */
+	
+	KeTrapFrameToContext(Thread->Tcb.TrapFrame, Context);
+	ObDereferenceObject(Thread);
+	return(STATUS_SUCCESS);
+     }
+   else
+     {
+	KAPC Apc;
+	KEVENT Event;
+	NTSTATUS AStatus;
+	CONTEXT KContext;
+	
+	KContext.ContextFlags = Context->ContextFlags;
+	KeInitializeEvent(&Event,
+			  NotificationEvent,
+			  FALSE);	
+	AStatus = STATUS_SUCCESS;
+	
+	KeInitializeApc(&Apc,
+			&Thread->Tcb,
+			0,
+			KeGetContextKernelRoutine,
+			KeGetContextRundownRoutine,
+			NULL,
+			KernelMode,
+			(PVOID)&KContext);
+	KeInsertQueueApc(&Apc,
+			 (PVOID)&Event,
+			 (PVOID)&AStatus,
+			 0);
+	Status = KeWaitForSingleObject(&Event,
+				       0,
+				       UserMode,
+				       FALSE,
+				       NULL);
+	if (!NT_SUCCESS(Status))
+	  {
+	     return(Status);
+	  }
+	if (!NT_SUCCESS(AStatus))
+	  {
+	     return(AStatus);
+	  }
+	memcpy(Context, &KContext, sizeof(CONTEXT));
+	return(STATUS_SUCCESS);
+     }
+}
+
+NTSTATUS STDCALL NtSetContextThread (IN	HANDLE		ThreadHandle,
+				     IN	PCONTEXT	Context)
+{
+   UNIMPLEMENTED;
+}
 
 NTSTATUS STDCALL NtResumeThread (IN	HANDLE	ThreadHandle,
 				 IN	PULONG	SuspendCount)
@@ -527,13 +653,6 @@ NTSTATUS STDCALL NtResumeThread (IN	HANDLE	ThreadHandle,
 {
    UNIMPLEMENTED;
    return(STATUS_UNSUCCESSFUL);
-}
-
-
-NTSTATUS STDCALL NtSetContextThread (IN	HANDLE		ThreadHandle,
-				     IN	PCONTEXT	Context)
-{
-   UNIMPLEMENTED;
 }
 
 
@@ -561,12 +680,15 @@ NTSTATUS STDCALL NtSuspendThread (IN HANDLE ThreadHandle,
 NTSTATUS STDCALL NtContinue(IN PCONTEXT	Context,
 			    IN BOOLEAN TestAlert)
 {
-   PULONG StackTop;
+   PKTRAP_FRAME TrapFrame;
    
-   StackTop = KeGetStackTopThread(PsGetCurrentThread());
-   
-   memcpy(StackTop, Context, sizeof(CONTEXT));
-   
+   TrapFrame = KeGetCurrentThread()->TrapFrame;
+   if (TrapFrame == NULL)
+     {
+	DbgPrint("NtContinue called but TrapFrame was NULL\n");
+	KeBugCheck(0);
+     }   
+   KeContextToTrapFrame(Context, TrapFrame);
    return(STATUS_SUCCESS);
 }
 

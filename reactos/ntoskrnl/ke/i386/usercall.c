@@ -1,4 +1,4 @@
-/* $Id: usercall.c,v 1.15 2000/10/07 13:41:52 dwelch Exp $
+/* $Id: usercall.c,v 1.16 2000/10/11 20:50:34 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -44,7 +44,8 @@ VOID KiSystemCallHook(ULONG Nr, ...)
 
 ULONG KiAfterSystemCallHook(ULONG NtStatus, PKTRAP_FRAME TrapFrame)
 {
-   if (KeGetCurrentThread()->ApcState.UserApcPending == 0)
+   if (KeGetCurrentThread()->ApcState.UserApcPending == 0 ||
+       TrapFrame->Cs == KERNEL_CS)
      {
 	return(NtStatus);
      }

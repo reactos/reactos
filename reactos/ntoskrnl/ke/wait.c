@@ -397,6 +397,7 @@ NTSTATUS STDCALL KeWaitForSingleObject (PVOID		Object,
    if (Alertable && !IsListEmpty(&CurrentThread->ApcState.ApcListHead[1]))
      {
 	DPRINT("Thread is alertable and user APCs are pending\n");
+	KiTestAlert();
 	return(STATUS_USER_APC);
      }
    
@@ -444,6 +445,10 @@ NTSTATUS STDCALL KeWaitForSingleObject (PVOID		Object,
    if (Timeout != NULL)
      {
 	KeCancelTimer(&KeGetCurrentThread()->Timer);
+     }
+   if (Status == STATUS_USER_APC)
+     {
+	KiTestAlert();
      }
    
    DPRINT("Returning from KeWaitForSingleObject()\n");

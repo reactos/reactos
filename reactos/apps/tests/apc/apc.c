@@ -92,7 +92,6 @@ int main(int argc, char* argv[])
    printf("Returned from wait\n");
    ZwClose(FileHandle);
    printf("Program finished\n");
-   for(;;);
    return 0;
 }
 

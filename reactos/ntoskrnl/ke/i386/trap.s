@@ -1,4 +1,4 @@
-/* $Id: trap.s,v 1.3 2000/10/07 13:41:52 dwelch Exp $
+/* $Id: trap.s,v 1.4 2000/10/11 20:50:34 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -170,7 +170,7 @@ new_serviceInRange:
            movl %ebp,%esp
 
 	   /* Call the post system call hook and deliver any pending APCs */
-	   pushl %esp
+	   pushl %ebp
 	   pushl %eax
 	   call _KiAfterSystemCallHook
 	   addl $8,%esp
@@ -251,9 +251,7 @@ new_done:
 	   popl %ebx
 	   movl %ebx, %fs:KPCR_EXCEPTION_LIST
 	
-	   popl %ebx
-	   movl %ebx, %fs
-/*	   popl %fs */
+	   popl %fs 
 	   popl %edi
 	   popl %esi
 	   popl %ebx

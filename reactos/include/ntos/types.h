@@ -68,11 +68,13 @@ typedef union _LARGE_INTEGER
     DWORD LowPart;
     LONG  HighPart;
   } u;
+#ifdef ANONYMOUSUNIONS   
   struct
   {
     DWORD LowPart;
     LONG  HighPart;
   };
+#endif /* ANONYMOUSUNIONS */
   LONGLONG QuadPart;
 } LARGE_INTEGER, *PLARGE_INTEGER;
 
@@ -83,11 +85,13 @@ typedef union _ULARGE_INTEGER
     DWORD LowPart;
     DWORD HighPart;
   } u;
+#ifdef ANONYMOUSUNIONS   
   struct
   {
     DWORD LowPart;
     DWORD HighPart;
   };
+#endif /* ANONYMOUSUNIONS */   
   ULONGLONG QuadPart;
 } ULARGE_INTEGER, *PULARGE_INTEGER;
 
@@ -118,6 +122,34 @@ typedef DWORD STDCALL (*PTHREAD_START_ROUTINE) (LPVOID);
 typedef PTHREAD_START_ROUTINE LPTHREAD_START_ROUTINE;
 
 typedef unsigned short *PWCHAR;
+
+#ifdef __PPC__
+#define CONTEXT_CONTROL         1L
+#define CONTEXT_FLOATING_POINT  2L
+#define CONTEXT_INTEGER         4L
+#define CONTEXT_DEBUG_REGISTERS	8L
+
+#define CONTEXT_FULL (CONTEXT_CONTROL | CONTEXT_FLOATING_POINT | CONTEXT_INTEGER)
+#define CONTEXT_DEBUGGER (CONTEXT_FULL)
+
+#else /* x86 */
+/* The doc refered me to winnt.h, so I had to look... */
+#define SIZE_OF_80387_REGISTERS      80
+
+/* Values for contextflags */
+#define CONTEXT_i386    0x10000
+#define CONTEXT_CONTROL         (CONTEXT_i386 | 1)	
+#define CONTEXT_INTEGER         (CONTEXT_i386 | 2)	
+#define CONTEXT_SEGMENTS        (CONTEXT_i386 | 4)	
+#define CONTEXT_FLOATING_POINT  (CONTEXT_i386 | 8)	
+#define CONTEXT_DEBUG_REGISTERS (CONTEXT_i386 | 0x10)
+#define CONTEXT_FULL (CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_SEGMENTS)
+
+/* our own invention */
+#define FLAG_TRACE_BIT 0x100
+#define CONTEXT_DEBUGGER (CONTEXT_FULL | CONTEXT_FLOATING_POINT)
+
+#endif
 
 #ifdef __i386__
 

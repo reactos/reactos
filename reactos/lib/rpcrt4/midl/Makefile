@@ -1,12 +1,10 @@
-# $Id: Makefile,v 1.1 2000/03/26 22:00:08 dwelch Exp $
+# $Id: Makefile,v 1.2 2000/10/11 20:50:33 dwelch Exp $
 #
 # ReactOS Operating System
 #
 TARGET=midl
 
-BASE_CFLAGS = -I../../include
-
-CFLAGS = $(CFLAGS) 
+CFLAGS = 
 
 all: midl$(EXE_POSTFIX)
 

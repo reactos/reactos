@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.29 2000/07/04 08:52:38 dwelch Exp $
+/* $Id: irp.c,v 1.30 2000/10/11 20:50:34 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -40,8 +40,7 @@
 
 /* FUNCTIONS ****************************************************************/
 
-PDEVICE_OBJECT
-STDCALL
+PDEVICE_OBJECT STDCALL
 IoGetDeviceToVerify (PETHREAD Thread)
 /*
  * FUNCTION: Returns a pointer to the device, representing a removable-media
@@ -52,8 +51,7 @@ IoGetDeviceToVerify (PETHREAD Thread)
 }
 
 
-VOID
-STDCALL
+VOID STDCALL
 IoFreeIrp (PIRP Irp)
 /*
  * FUNCTION: Releases a caller allocated irp
@@ -65,8 +63,7 @@ IoFreeIrp (PIRP Irp)
 }
 
 
-PIRP
-STDCALL
+PIRP STDCALL
 IoMakeAssociatedIrp (PIRP Irp, CCHAR StackSize)
 /*
  * FUNCTION: Allocates and initializes an irp to associated with a master irp
@@ -83,8 +80,7 @@ IoMakeAssociatedIrp (PIRP Irp, CCHAR StackSize)
 }
 
 
-VOID
-STDCALL
+VOID STDCALL
 IoInitializeIrp (PIRP Irp, USHORT PacketSize, CCHAR StackSize)
 /*
  * FUNCTION: Initalizes an irp allocated by the caller
@@ -104,8 +100,7 @@ IoInitializeIrp (PIRP Irp, USHORT PacketSize, CCHAR StackSize)
 }
 
 
-NTSTATUS
-FASTCALL
+NTSTATUS FASTCALL
 IofCallDriver (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
   * FUNCTION: Sends an IRP to the next lower driver
@@ -248,10 +243,9 @@ IofCompleteRequest (PIRP Irp, CCHAR PriorityBoost)
 			IopCompleteRequest,
 			NULL,
 			(PKNORMAL_ROUTINE)
-			Irp->Overlay.AsynchronousParameters.UserApcRoutine,
-			UserMode,
-			(PVOID)
-			   Irp->Overlay.AsynchronousParameters.UserApcContext);
+			NULL,
+			KernelMode,
+			NULL);
 	KeInsertQueueApc(&Irp->Tail.Apc,
 			 (PVOID)Irp,
 			 (PVOID)(ULONG)PriorityBoost,

@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.53 2000/09/01 17:04:47 ekohl Exp $
+; $Id: ntdll.edf,v 1.54 2000/10/11 20:50:32 dwelch Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -29,7 +29,7 @@ DbgUiContinue=DbgUiContinue@8
 DbgUiWaitStateChange=DbgUiWaitStateChange@8
 DbgUserBreakPoint=DbgUserBreakPoint@0
 ;KiRaiseUserExceptionDispatcher
-;KiUserApcDispatcher
+KiUserApcDispatcher=KiUserApcDispatcher@20
 ;KiUserCallbackDispatcher
 ;KiUserExceptionDispatcher
 LdrAccessResource=LdrAccessResource@16

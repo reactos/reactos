@@ -20,6 +20,7 @@ typedef struct _KTRAP_FRAME
    PVOID DebugEbp;
    PVOID DebugEip;
    PVOID DebugArgMark;
+   PVOID DebugPointer;
    PVOID TempCs;
    PVOID TempEip;
    PVOID Dr0;

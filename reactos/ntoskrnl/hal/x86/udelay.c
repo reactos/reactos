@@ -1,11 +1,8 @@
-/* $Id: udelay.c,v 1.3 2000/10/07 13:41:50 dwelch Exp $
- *
- * PROJECT:        ReactOS kernel
- * FILE:           ntoskrnl/hal/x86/udelay.c
- * PURPOSE:        Busy waiting
- * PROGRAMMER:     David Welch (david.welch@seh.ox.ac.uk)
- * UPDATE HISTORY:
- *                 06/11/99 Created
+/*
+ * ReactOS kernel
+ * Copyright (C) 2000 David Welch <welch@cwcom.net>
+ * Copyright (C) 1999 Gareth Owen <gaz@athene.co.uk>, Ramon von Handel
+ * Copyright (C) 1991, 1992 Linus Torvalds
  * 
  * This software is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -22,6 +19,15 @@
  * to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge,
  * MA 02139, USA.  
  *
+ */
+/* $Id: udelay.c,v 1.4 2000/10/11 20:50:33 dwelch Exp $
+ *
+ * PROJECT:        ReactOS kernel
+ * FILE:           ntoskrnl/hal/x86/udelay.c
+ * PURPOSE:        Busy waiting
+ * PROGRAMMER:     David Welch (david.welch@seh.ox.ac.uk)
+ * UPDATE HISTORY:
+ *                 06/11/99 Created
  */
 
 /* INCLUDES ***************************************************************/

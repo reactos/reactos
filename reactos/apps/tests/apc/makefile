@@ -3,6 +3,8 @@
 #
 PATH_TO_TOP = ../..
 
+CFLAGS = -g
+
 OBJECTS= ../common/crt0.o apc.o
 PROGS= apc.exe
 

@@ -36,9 +36,9 @@ LdrpMapSystemDll (
 	PVOID	* LdrStartupAddress
 	);
 PVOID
-LdrpGetSystemDllEntryPoint (
-	VOID
-	);
+LdrpGetSystemDllEntryPoint (VOID);
+PVOID 
+LdrpGetSystemDllApcDispatcher(VOID);
 NTSTATUS
 LdrpMapImage (
 	HANDLE	ProcessHandle, 
