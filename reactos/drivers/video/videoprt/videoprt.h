@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.h,v 1.6.2.4 2004/03/18 21:28:21 navaraf Exp $
+ * $Id: videoprt.h,v 1.6.2.5 2004/03/19 17:37:55 navaraf Exp $
  */
 
 #ifndef VIDEOPRT_H
@@ -50,6 +50,13 @@ typedef struct _VIDEO_PORT_ADDRESS_MAPPING
    UINT MappingCount;
 } VIDEO_PORT_ADDRESS_MAPPING, *PVIDEO_PORT_ADDRESS_MAPPING;
 
+typedef struct _VIDEO_PORT_DRIVER_EXTENSION
+{
+   VIDEO_HW_INITIALIZATION_DATA InitializationData;
+   PVOID HwContext;
+   UNICODE_STRING RegistryPath;
+} VIDEO_PORT_DRIVER_EXTENSION, *PVIDEO_PORT_DRIVER_EXTENSION;
+
 typedef struct _VIDEO_PORT_DEVICE_EXTENSTION
 {
    PDEVICE_OBJECT PhysicalDeviceObject;
@@ -64,15 +71,9 @@ typedef struct _VIDEO_PORT_DEVICE_EXTENSTION
    ULONG SystemIoSlotNumber;
    LIST_ENTRY AddressMappingListHead;
    KDPC DpcObject;
+   VIDEO_PORT_DRIVER_EXTENSION *DriverExtension;
    CHAR MiniPortDeviceExtension[1];
 } VIDEO_PORT_DEVICE_EXTENSION, *PVIDEO_PORT_DEVICE_EXTENSION;
-
-typedef struct _VIDEO_PORT_DRIVER_EXTENSION
-{
-   VIDEO_HW_INITIALIZATION_DATA InitializationData;
-   PVOID HwContext;
-   UNICODE_STRING RegistryPath;
-} VIDEO_PORT_DRIVER_EXTENSION, *PVIDEO_PORT_DRIVER_EXTENSION;
 
 #define VIDEO_PORT_GET_DEVICE_EXTENSION(MiniportExtension) \
    CONTAINING_RECORD( \

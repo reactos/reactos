@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: timer.c,v 1.1.2.3 2004/03/18 21:28:21 navaraf Exp $
+ * $Id: timer.c,v 1.1.2.4 2004/03/19 17:37:55 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -31,15 +31,10 @@ IntVideoPortTimerRoutine(
    IN PVOID ServiceContext)
 {
    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension = ServiceContext;
-   PVIDEO_PORT_DRIVER_EXTENSION DriverExtension;
 
-   DriverExtension = IoGetDriverObjectExtension(
-      DeviceObject->DriverObject,
-      DeviceObject->DriverObject);
-  
-   ASSERT(DriverExtension->InitializationData.HwTimer != NULL);
+   ASSERT(DeviceExtension->DriverExtension->InitializationData.HwTimer != NULL);
 
-   DriverExtension->InitializationData.HwTimer(
+   DeviceExtension->DriverExtension->InitializationData.HwTimer(
       &DeviceExtension->MiniPortDeviceExtension);
 }
 

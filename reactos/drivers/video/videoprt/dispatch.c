@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: dispatch.c,v 1.1.2.9 2004/03/18 21:28:21 navaraf Exp $
+ * $Id: dispatch.c,v 1.1.2.10 2004/03/19 17:37:55 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -45,9 +45,7 @@ IntVideoPortResetDisplayParameters(ULONG Columns, ULONG Rows)
    if (ResetDisplayParametersDeviceExtension == NULL)
       return FALSE;
 
-   DriverExtension = IoGetDriverObjectExtension(
-      ResetDisplayParametersDeviceExtension->FunctionalDeviceObject->DriverObject,
-      ResetDisplayParametersDeviceExtension->FunctionalDeviceObject->DriverObject);
+   DriverExtension = ResetDisplayParametersDeviceExtension->DriverExtension;
 
    ASSERT(DriverExtension->InitializationData.HwResetHw != NULL);
 
@@ -125,10 +123,7 @@ IntVideoPortDispatchOpen(
    }
 
    DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-
-   DriverExtension = IoGetDriverObjectExtension(
-      DeviceObject->DriverObject,
-      DeviceObject->DriverObject);
+   DriverExtension = DeviceExtension->DriverExtension;
 
    if (DriverExtension->InitializationData.HwInitialize(&DeviceExtension->MiniPortDeviceExtension))
    {
@@ -206,9 +201,7 @@ IntVideoPortDispatchDeviceControl(
 
    IrpStack = IoGetCurrentIrpStackLocation(Irp);
    DeviceExtension = DeviceObject->DeviceExtension;
-   DriverExtension = IoGetDriverObjectExtension(
-      DeviceObject->DriverObject,
-      DeviceObject->DriverObject);
+   DriverExtension = DeviceExtension->DriverExtension;
 
    /* Translate the IRP to a VRP */
    vrp = ExAllocatePool(NonPagedPool, sizeof(VIDEO_REQUEST_PACKET));

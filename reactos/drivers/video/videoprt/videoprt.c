@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.c,v 1.21.2.5 2004/03/18 21:28:21 navaraf Exp $
+ * $Id: videoprt.c,v 1.21.2.6 2004/03/19 17:37:55 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -233,8 +233,7 @@ IntVideoPortFindAdapter(
    DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
    DeviceExtension->PhysicalDeviceObject = PhysicalDeviceObject;
    DeviceExtension->FunctionalDeviceObject = DeviceObject;
-   DeviceExtension->SystemIoBusNumber = ConfigInfo.SystemIoBusNumber;
-   DeviceExtension->AdapterInterfaceType = ConfigInfo.AdapterInterfaceType;
+   DeviceExtension->DriverExtension = DriverExtension;
 
    DeviceExtension->RegistryPath.Length = 
    DeviceExtension->RegistryPath.MaximumLength = 
@@ -315,6 +314,7 @@ IntVideoPortFindAdapter(
       ConfigInfo.InterruptMode = Latched;
    ConfigInfo.DriverRegistryPath = DriverExtension->RegistryPath.Buffer;
    ConfigInfo.VideoPortGetProcAddress = IntVideoPortGetProcAddress;
+   ConfigInfo.SystemIoBusNumber = DeviceExtension->SystemIoBusNumber;
 
    Size = sizeof(SystemBasicInfo);
    Status = ZwQuerySystemInformation(

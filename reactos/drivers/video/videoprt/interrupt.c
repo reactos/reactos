@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: interrupt.c,v 1.1.2.3 2004/03/18 21:28:21 navaraf Exp $
+ * $Id: interrupt.c,v 1.1.2.4 2004/03/19 17:37:55 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -31,15 +31,10 @@ IntVideoPortInterruptRoutine(
    IN PVOID ServiceContext)
 {
    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension = ServiceContext;
-   PVIDEO_PORT_DRIVER_EXTENSION DriverExtension;
 
-   DriverExtension = IoGetDriverObjectExtension(
-      DeviceExtension->FunctionalDeviceObject->DriverObject,
-      DeviceExtension->FunctionalDeviceObject->DriverObject);
-  
-   ASSERT(DriverExtension->InitializationData.HwInterrupt != NULL);
+   ASSERT(DeviceExtension->DriverExtension->InitializationData.HwInterrupt != NULL);
 
-   return DriverExtension->InitializationData.HwInterrupt(
+   return DeviceExtension->DriverExtension->InitializationData.HwInterrupt(
       &DeviceExtension->MiniPortDeviceExtension);
 }
 
