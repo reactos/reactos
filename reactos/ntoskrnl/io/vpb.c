@@ -1,4 +1,4 @@
-/* $Id: vpb.c,v 1.14 2001/11/02 22:22:33 hbirr Exp $
+/* $Id: vpb.c,v 1.15 2002/04/10 09:57:31 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -375,15 +375,5 @@ IoReleaseVpbSpinLock(IN KIRQL Irql)
    KeReleaseSpinLock(&IoVpbLock,
 		     Irql);
 }
-
-
-NTSTATUS STDCALL
-IoVerifyVolume(IN PDEVICE_OBJECT DeviceObject,
-	       IN BOOLEAN AllowRawMount)
-{
-   UNIMPLEMENTED;
-   return(STATUS_NOT_IMPLEMENTED);
-}
-
 
 /* EOF */

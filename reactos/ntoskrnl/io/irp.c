@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.39 2002/01/21 22:30:26 hbirr Exp $
+/* $Id: irp.c,v 1.40 2002/04/10 09:57:31 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -46,19 +46,20 @@
 
 
 VOID STDCALL
-IoFreeIrp (PIRP Irp)
+IoFreeIrp(PIRP Irp)
 /*
  * FUNCTION: Releases a caller allocated irp
  * ARGUMENTS:
  *      Irp = Irp to free
  */
 {
-	ExFreePool(Irp);
+  ExFreePool(Irp);
 }
 
 
 PIRP STDCALL
-IoMakeAssociatedIrp (PIRP Irp, CCHAR StackSize)
+IoMakeAssociatedIrp(PIRP Irp,
+		    CCHAR StackSize)
 /*
  * FUNCTION: Allocates and initializes an irp to associated with a master irp
  * ARGUMENTS:
@@ -67,15 +68,17 @@ IoMakeAssociatedIrp (PIRP Irp, CCHAR StackSize)
  * RETURNS: The irp allocated
  */
 {
-   PIRP AssocIrp;
-   
-   AssocIrp = IoAllocateIrp(StackSize,FALSE);
-   UNIMPLEMENTED;
+  PIRP AssocIrp;
+  
+  AssocIrp = IoAllocateIrp(StackSize,FALSE);
+  UNIMPLEMENTED;
 }
 
 
 VOID STDCALL
-IoInitializeIrp (PIRP Irp, USHORT PacketSize, CCHAR StackSize)
+IoInitializeIrp(PIRP Irp,
+		USHORT PacketSize,
+		CCHAR StackSize)
 /*
  * FUNCTION: Initalizes an irp allocated by the caller
  * ARGUMENTS:
@@ -84,48 +87,50 @@ IoInitializeIrp (PIRP Irp, USHORT PacketSize, CCHAR StackSize)
  *          StackSize = Number of stack locations in the IRP
  */
 {
-   assert(Irp != NULL);
+  assert(Irp != NULL);
 
-   memset(Irp, 0, PacketSize);
-   Irp->Size = PacketSize;
-   Irp->StackCount = StackSize;
-   Irp->CurrentLocation = StackSize;
-   Irp->Tail.Overlay.CurrentStackLocation = &Irp->Stack[(ULONG)StackSize];
+  memset(Irp, 0, PacketSize);
+  Irp->Size = PacketSize;
+  Irp->StackCount = StackSize;
+  Irp->CurrentLocation = StackSize;
+  Irp->Tail.Overlay.CurrentStackLocation = &Irp->Stack[(ULONG)StackSize];
 }
 
 
 NTSTATUS FASTCALL
-IofCallDriver (PDEVICE_OBJECT DeviceObject, PIRP Irp)
+IofCallDriver(PDEVICE_OBJECT DeviceObject,
+	      PIRP Irp)
 /*
   * FUNCTION: Sends an IRP to the next lower driver
  */
 {
-   NTSTATUS Status;
-   PDRIVER_OBJECT DriverObject;
-   PIO_STACK_LOCATION Param;
-   
-   DPRINT("IofCallDriver(DeviceObject %x, Irp %x)\n",DeviceObject,Irp);
-   
-   assert(Irp);
-   assert(DeviceObject);
+  NTSTATUS Status;
+  PDRIVER_OBJECT DriverObject;
+  PIO_STACK_LOCATION Param;
+  
+  DPRINT("IofCallDriver(DeviceObject %x, Irp %x)\n",DeviceObject,Irp);
+  
+  assert(Irp);
+  assert(DeviceObject);
 
-   DriverObject = DeviceObject->DriverObject;
+  DriverObject = DeviceObject->DriverObject;
 
-   assert(DriverObject);
+  assert(DriverObject);
 
-   Param = IoGetNextIrpStackLocation(Irp);
+  Param = IoGetNextIrpStackLocation(Irp);
 
-   DPRINT("IrpSp 0x%X\n", Param);
-   
-   Irp->Tail.Overlay.CurrentStackLocation--;
-   Irp->CurrentLocation--;
-   
-   DPRINT("MajorFunction %d\n", Param->MajorFunction);
-   DPRINT("DriverObject->MajorFunction[Param->MajorFunction] %x\n",
-	    DriverObject->MajorFunction[Param->MajorFunction]);
-   Status = DriverObject->MajorFunction[Param->MajorFunction](DeviceObject,
-							      Irp);
-   return Status;
+  DPRINT("IrpSp 0x%X\n", Param);
+  
+  Irp->Tail.Overlay.CurrentStackLocation--;
+  Irp->CurrentLocation--;
+  
+  DPRINT("MajorFunction %d\n", Param->MajorFunction);
+  DPRINT("DriverObject->MajorFunction[Param->MajorFunction] %x\n",
+	 DriverObject->MajorFunction[Param->MajorFunction]);
+  Status = DriverObject->MajorFunction[Param->MajorFunction](DeviceObject,
+							     Irp);
+
+  return(Status);
 }
 
 
@@ -133,16 +138,14 @@ NTSTATUS
 STDCALL
 IoCallDriver (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
-	return IofCallDriver (
-			DeviceObject,
-			Irp
-			);
+  return(IofCallDriver(DeviceObject,
+		       Irp));
 }
 
 
-PIRP
-STDCALL
-IoAllocateIrp (CCHAR StackSize, BOOLEAN ChargeQuota)
+PIRP STDCALL
+IoAllocateIrp(CCHAR StackSize,
+	      BOOLEAN ChargeQuota)
 /*
  * FUNCTION: Allocates an IRP
  * ARGUMENTS:
@@ -151,37 +154,41 @@ IoAllocateIrp (CCHAR StackSize, BOOLEAN ChargeQuota)
  * RETURNS: Irp allocated
  */
 {
-   PIRP Irp;
+  PIRP Irp;
 
 #if 0
-   DbgPrint("IoAllocateIrp(StackSize %d ChargeQuota %d)\n",
-          StackSize,
-	  ChargeQuota);
-   KeDumpStackFrames(0,8);
+  DbgPrint("IoAllocateIrp(StackSize %d ChargeQuota %d)\n",
+	   StackSize,
+	   ChargeQuota);
+  KeDumpStackFrames(0,8);
 #endif
-   
-   if (ChargeQuota)
-     {
-//	Irp = ExAllocatePoolWithQuota(NonPagedPool,IoSizeOfIrp(StackSize));
-	Irp = ExAllocatePoolWithTag(NonPagedPool, IoSizeOfIrp(StackSize), 
-				    TAG_IRP);
-     }
-   else
-     {	
-	Irp = ExAllocatePoolWithTag(NonPagedPool,IoSizeOfIrp(StackSize),
-				    TAG_IRP);
-     }
-      
-   if (Irp==NULL)
-     {
-	return(NULL);
-     }
-   
-   IoInitializeIrp(Irp, IoSizeOfIrp(StackSize), StackSize);
+  
+  if (ChargeQuota)
+    {
+//      Irp = ExAllocatePoolWithQuota(NonPagedPool,IoSizeOfIrp(StackSize));
+      Irp = ExAllocatePoolWithTag(NonPagedPool,
+				  IoSizeOfIrp(StackSize),
+				  TAG_IRP);
+    }
+  else
+    {
+      Irp = ExAllocatePoolWithTag(NonPagedPool,
+				  IoSizeOfIrp(StackSize),
+				  TAG_IRP);
+    }
 
-//   DPRINT("Irp %x Irp->StackPtr %d\n", Irp, Irp->CurrentLocation);
+  if (Irp==NULL)
+    {
+      return(NULL);
+    }
 
-   return Irp;
+  IoInitializeIrp(Irp,
+		  IoSizeOfIrp(StackSize),
+		  StackSize);
+
+//  DPRINT("Irp %x Irp->StackPtr %d\n", Irp, Irp->CurrentLocation);
+
+  return(Irp);
 }
 
 
@@ -192,11 +199,12 @@ IopCompleteRequest(struct _KAPC* Apc,
 		   PVOID* SystemArgument1,
 		   PVOID* SystemArgument2)
 {
-   DPRINT("IopCompleteRequest(Apc %x, SystemArgument1 %x, "
-	  "(*SystemArgument1) %x\n", Apc, SystemArgument1,
-	  *SystemArgument1);
-   IoSecondStageCompletion((PIRP)(*SystemArgument1),
-                           (KPRIORITY)(*SystemArgument2));
+  DPRINT("IopCompleteRequest(Apc %x, SystemArgument1 %x, (*SystemArgument1) %x\n",
+	 Apc,
+	 SystemArgument1,
+	 *SystemArgument1);
+  IoSecondStageCompletion((PIRP)(*SystemArgument1),
+			  (KPRIORITY)(*SystemArgument2));
 }
 
 
@@ -263,14 +271,12 @@ IofCompleteRequest(PIRP Irp,
 }
 
 
-VOID
-STDCALL
-IoCompleteRequest (PIRP Irp, CCHAR PriorityBoost)
+VOID STDCALL
+IoCompleteRequest(PIRP Irp,
+		  CCHAR PriorityBoost)
 {
-	IofCompleteRequest (
-		Irp,
-		PriorityBoost
-		);
+  IofCompleteRequest(Irp,
+		     PriorityBoost);
 }
 
 
@@ -288,89 +294,65 @@ IoCompleteRequest (PIRP Irp, CCHAR PriorityBoost)
  * RETURN VALUE
  * 	TRUE if Irp's operation is synchronous; otherwise FALSE.
  */
-BOOLEAN
-STDCALL
-IoIsOperationSynchronous (
-	IN	PIRP	Irp
-	)
+BOOLEAN STDCALL
+IoIsOperationSynchronous(IN PIRP Irp)
 {
-	ULONG		Flags = 0;
-	PFILE_OBJECT	FileObject = NULL;
-	
-	/*
-	 * Check the associated FILE_OBJECT's
-	 * flags first.
-	 */
-	FileObject = Irp->Tail.Overlay.OriginalFileObject;
-	if (!(FO_SYNCHRONOUS_IO & FileObject->Flags))
+  PFILE_OBJECT FileObject = NULL;
+  ULONG Flags = 0;
+
+  /* Check the associated FILE_OBJECT's flags first. */
+  FileObject = Irp->Tail.Overlay.OriginalFileObject;
+  if (!(FO_SYNCHRONOUS_IO & FileObject->Flags))
+    {
+      /* Check IRP's flags. */
+      Flags = Irp->Flags;
+      if (!((IRP_SYNCHRONOUS_API | IRP_SYNCHRONOUS_PAGING_IO) & Flags))
 	{
-		/* Check IRP's flags. */
-		Flags = Irp->Flags;
-		if (!(	(IRP_SYNCHRONOUS_API | IRP_SYNCHRONOUS_PAGING_IO)
-			& Flags
-			))
-		{
-			return FALSE;
-		}
+	  return(FALSE);
 	}
-	/*
-	 * Check more IRP's flags.
-	 */
-	Flags = Irp->Flags;
-	if (	!(IRP_MOUNT_COMPLETION & Flags)
-		|| (IRP_SYNCHRONOUS_PAGING_IO & Flags)
-		)
-	{
-		return TRUE;
-	}
-	/*
-	 * Otherwise, it is an
-	 * asynchronous operation.
-	 */
-	return FALSE;
+    }
+
+  /* Check more IRP's flags. */
+  Flags = Irp->Flags;
+  if (!(IRP_MOUNT_COMPLETION & Flags)
+      || (IRP_SYNCHRONOUS_PAGING_IO & Flags))
+    {
+      return(TRUE);
+    }
+
+  /* Otherwise, it is an asynchronous operation. */
+  return(FALSE);
 }
 
 
-VOID
-STDCALL
-IoEnqueueIrp (
-	PIRP	Irp
-	)
+VOID STDCALL
+IoEnqueueIrp(IN PIRP Irp)
 {
-	UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
 
-VOID
-STDCALL
-IoSetTopLevelIrp (
-	IN	PIRP	Irp
-	)
+VOID STDCALL
+IoSetTopLevelIrp(IN PIRP Irp)
 {
-	PETHREAD Thread;
+  PETHREAD Thread;
 
-	Thread = PsGetCurrentThread ();
-	Thread->TopLevelIrp->TopLevelIrp = Irp;
+  Thread = PsGetCurrentThread();
+  Thread->TopLevelIrp->TopLevelIrp = Irp;
 }
 
 
-PIRP
-STDCALL
-IoGetTopLevelIrp (
-	VOID
-	)
+PIRP STDCALL
+IoGetTopLevelIrp(VOID)
 {
-	return (PsGetCurrentThread ()->TopLevelIrp->TopLevelIrp);
+  return(PsGetCurrentThread()->TopLevelIrp->TopLevelIrp);
 }
 
 
-VOID
-STDCALL
-IoQueueThreadIrp (
-	PVOID	Unknown0
-	)
+VOID STDCALL
+IoQueueThreadIrp(IN PIRP Irp)
 {
-	UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
 /* EOF */

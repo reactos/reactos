@@ -1,4 +1,4 @@
-/* $Id: fsctl.c,v 1.1 2002/03/18 22:37:13 hbirr Exp $
+/* $Id: fsctl.c,v 1.2 2002/04/10 09:58:45 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -202,7 +202,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
       goto ByeBye;
    }
 
-   Status = VfatHasFileSystem (IrpContext->Stack->Parameters.Mount.DeviceObject, &RecognizedFS, NULL);
+   Status = VfatHasFileSystem (IrpContext->Stack->Parameters.MountVolume.DeviceObject, &RecognizedFS, NULL);
    if (!NT_SUCCESS(Status))
    {
       goto ByeBye;
@@ -233,8 +233,8 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    RtlZeroMemory(DeviceExt, sizeof(DEVICE_EXTENSION));
 
    /* use same vpb as device disk */
-   DeviceObject->Vpb = IrpContext->Stack->Parameters.Mount.DeviceObject->Vpb;
-   Status = VfatMountDevice(DeviceExt, IrpContext->Stack->Parameters.Mount.DeviceObject);
+   DeviceObject->Vpb = IrpContext->Stack->Parameters.MountVolume.DeviceObject->Vpb;
+   Status = VfatMountDevice(DeviceExt, IrpContext->Stack->Parameters.MountVolume.DeviceObject);
    if (!NT_SUCCESS(Status))
    {
       /* FIXME: delete device object */
@@ -254,7 +254,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    }
 #endif
    DeviceObject->Vpb->Flags |= VPB_MOUNTED;
-   DeviceExt->StorageDevice = IoAttachDeviceToDeviceStack(DeviceObject, IrpContext->Stack->Parameters.Mount.DeviceObject);
+   DeviceExt->StorageDevice = IoAttachDeviceToDeviceStack(DeviceObject, IrpContext->Stack->Parameters.MountVolume.DeviceObject);
 
    DeviceExt->FATFileObject = IoCreateStreamFileObject(NULL, DeviceExt->StorageDevice);
    Fcb = vfatNewFCB(NULL);
@@ -334,6 +334,21 @@ ByeBye:
   return Status;
 }
 
+
+static NTSTATUS
+VfatVerify (PVFAT_IRP_CONTEXT IrpContext)
+/*
+ * FUNCTION: Mount the filesystem
+ */
+{
+  DPRINT("VfatVerify(IrpContext %x)\n", IrpContext);
+
+  assert(IrpContext);
+
+  return(STATUS_INVALID_DEVICE_REQUEST);
+}
+
+
 NTSTATUS VfatFileSystemControl(PVFAT_IRP_CONTEXT IrpContext)
 /*
  * FUNCTION: File system control
@@ -358,8 +373,7 @@ NTSTATUS VfatFileSystemControl(PVFAT_IRP_CONTEXT IrpContext)
 	 break;
 
       case IRP_MN_VERIFY_VOLUME:
-         DPRINT("VFAT FSC: IRP_MN_VERIFY_VOLUME\n");
-	 Status = STATUS_INVALID_DEVICE_REQUEST;
+	 Status = VfatVerify(IrpContext);
 	 break;
 
       default:

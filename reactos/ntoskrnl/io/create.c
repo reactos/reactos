@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.55 2002/04/07 18:36:13 phreak Exp $
+/* $Id: create.c,v 1.56 2002/04/10 09:57:31 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -44,7 +44,7 @@
 NTSTATUS STDCALL
 NtDeleteFile(IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
-   UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
 
@@ -67,91 +67,95 @@ IopCreateFile(PVOID			ObjectBody,
 	      PWSTR			RemainingPath,
 	      POBJECT_ATTRIBUTES	ObjectAttributes)
 {
-   PDEVICE_OBJECT	DeviceObject = (PDEVICE_OBJECT) Parent;
-   PFILE_OBJECT	FileObject = (PFILE_OBJECT) ObjectBody;
-   NTSTATUS	Status;
-   
-   DPRINT("IopCreateFile(ObjectBody %x, Parent %x, RemainingPath %S)\n",
-	  ObjectBody,
-	  Parent,
-	  RemainingPath);
-   
-   if (NULL == DeviceObject)
-     {
-	/* This is probably an attempt to create a meta fileobject (eg. for FAT)
-	   for the cache manager, so return STATUS_SUCCESS */
-	DPRINT("DeviceObject was NULL\n");
-	return (STATUS_SUCCESS);
-     }
-   if (IoDeviceObjectType != BODY_TO_HEADER(Parent)->ObjectType)
-     {
-	CPRINT("Parent is a %S which is not a device type\n",
-	       BODY_TO_HEADER(Parent)->ObjectType->TypeName.Buffer);
-	return (STATUS_UNSUCCESSFUL);
-     }
-   Status = ObReferenceObjectByPointer (DeviceObject,
-					STANDARD_RIGHTS_REQUIRED,
-					IoDeviceObjectType,
-					UserMode);
-   if (STATUS_SUCCESS != Status)
-     {
-	CHECKPOINT1;
-	return (Status);
-     }
-   
-   DeviceObject = IoGetAttachedDevice (DeviceObject);
-   
-   DPRINT("DeviceObject %x\n", DeviceObject);
-   
-   if (NULL == RemainingPath)
-     {
-	FileObject->Flags = FileObject->Flags | FO_DIRECT_DEVICE_OPEN;
-	FileObject->FileName.Buffer = 0;
-	FileObject->FileName.Length = FileObject->FileName.MaximumLength = 0;
-     }
-   else
-     {
-	if ((DeviceObject->DeviceType != FILE_DEVICE_FILE_SYSTEM)
-	    && (DeviceObject->DeviceType != FILE_DEVICE_DISK)
-	    && (DeviceObject->DeviceType != FILE_DEVICE_NETWORK)
-	    && (DeviceObject->DeviceType != FILE_DEVICE_NAMED_PIPE)
-	    && (DeviceObject->DeviceType != FILE_DEVICE_MAILSLOT))
-	  {
-	     CPRINT ("Device was wrong type\n");
-	     return (STATUS_UNSUCCESSFUL);
-	  }
+  PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT) Parent;
+  PFILE_OBJECT FileObject = (PFILE_OBJECT) ObjectBody;
+  NTSTATUS Status;
 
-	if (DeviceObject->DeviceType != FILE_DEVICE_NETWORK
-	    && (DeviceObject->DeviceType != FILE_DEVICE_NAMED_PIPE)
-	    && (DeviceObject->DeviceType != FILE_DEVICE_MAILSLOT))
-	  {
-	     if (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
-	       {
-		  DPRINT("Trying to mount storage device\n");
-		  Status = IoTryToMountStorageDevice (DeviceObject);
-		  DPRINT("Status %x\n", Status);
-		  if (!NT_SUCCESS(Status))
-		    {
-		       CPRINT("Failed to mount storage device (status %x)\n",
-			      Status);
-		       return (Status);
-		    }
-		  DeviceObject = IoGetAttachedDevice(DeviceObject);
-	       }
-	  }
-	RtlCreateUnicodeString(&(FileObject->FileName),
-			       RemainingPath);
-     }
-   DPRINT("FileObject->FileName.Buffer %S\n",
-	  FileObject->FileName.Buffer);
-   FileObject->DeviceObject = DeviceObject;
-   DPRINT("FileObject %x DeviceObject %x\n",
-	  FileObject,
-	  DeviceObject);
-   FileObject->Vpb = DeviceObject->Vpb;
-   FileObject->Type = InternalFileType;
-   
-   return (STATUS_SUCCESS);
+  DPRINT("IopCreateFile(ObjectBody %x, Parent %x, RemainingPath %S)\n",
+	 ObjectBody,
+	 Parent,
+	 RemainingPath);
+
+  if (NULL == DeviceObject)
+    {
+      /* This is probably an attempt to create a meta fileobject (eg. for FAT)
+         for the cache manager, so return STATUS_SUCCESS */
+      DPRINT("DeviceObject was NULL\n");
+      return(STATUS_SUCCESS);
+    }
+
+  if (IoDeviceObjectType != BODY_TO_HEADER(Parent)->ObjectType)
+    {
+      CPRINT("Parent is a %S which is not a device type\n",
+	     BODY_TO_HEADER(Parent)->ObjectType->TypeName.Buffer);
+      return(STATUS_UNSUCCESSFUL);
+    }
+
+  Status = ObReferenceObjectByPointer(DeviceObject,
+				      STANDARD_RIGHTS_REQUIRED,
+				      IoDeviceObjectType,
+				      UserMode);
+  if (!NT_SUCCESS(Status))
+    {
+      CPRINT("Failed to reference device object %x\n", DeviceObject);
+      return(Status);
+    }
+
+  DeviceObject = IoGetAttachedDevice(DeviceObject);
+  DPRINT("DeviceObject %x\n", DeviceObject);
+
+  if (NULL == RemainingPath)
+    {
+      FileObject->Flags = FileObject->Flags | FO_DIRECT_DEVICE_OPEN;
+      FileObject->FileName.Buffer = 0;
+      FileObject->FileName.Length = FileObject->FileName.MaximumLength = 0;
+    }
+  else
+    {
+      if ((DeviceObject->DeviceType != FILE_DEVICE_FILE_SYSTEM)
+	  && (DeviceObject->DeviceType != FILE_DEVICE_DISK)
+	  && (DeviceObject->DeviceType != FILE_DEVICE_CD_ROM)
+	  && (DeviceObject->DeviceType != FILE_DEVICE_TAPE)
+	  && (DeviceObject->DeviceType != FILE_DEVICE_NETWORK)
+	  && (DeviceObject->DeviceType != FILE_DEVICE_NAMED_PIPE)
+	  && (DeviceObject->DeviceType != FILE_DEVICE_MAILSLOT))
+	{
+	  CPRINT("Device was wrong type\n");
+	  return(STATUS_UNSUCCESSFUL);
+	}
+
+      if (DeviceObject->DeviceType != FILE_DEVICE_NETWORK
+	  && (DeviceObject->DeviceType != FILE_DEVICE_NAMED_PIPE)
+	  && (DeviceObject->DeviceType != FILE_DEVICE_MAILSLOT))
+	{
+	  if (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
+	    {
+	      DPRINT("Trying to mount storage device\n");
+	      Status = IoTryToMountStorageDevice(DeviceObject, FALSE);
+	      DPRINT("Status %x\n", Status);
+	      if (!NT_SUCCESS(Status))
+		{
+		  CPRINT("Failed to mount storage device (status %x)\n",
+			 Status);
+		  return(Status);
+		}
+	      DeviceObject = IoGetAttachedDevice(DeviceObject);
+	    }
+	}
+      RtlCreateUnicodeString(&(FileObject->FileName),
+			     RemainingPath);
+    }
+
+  DPRINT("FileObject->FileName %wZ\n",
+	 &FileObject->FileName);
+  FileObject->DeviceObject = DeviceObject;
+  DPRINT("FileObject %x DeviceObject %x\n",
+	 FileObject,
+	 DeviceObject);
+  FileObject->Vpb = DeviceObject->Vpb;
+  FileObject->Type = InternalFileType;
+
+  return(STATUS_SUCCESS);
 }
 
 
@@ -184,15 +188,15 @@ IoCreateStreamFileObject(PFILE_OBJECT FileObject,
   NTSTATUS Status;
 
   DPRINT("IoCreateStreamFileObject(FileObject %x, DeviceObject %x)\n",
-	   FileObject, DeviceObject);
-   
-  assert_irql (PASSIVE_LEVEL);
+	 FileObject, DeviceObject);
+  
+  assert_irql(PASSIVE_LEVEL);
 
-  Status = ObCreateObject (&FileHandle,
-			   STANDARD_RIGHTS_REQUIRED,
-			   NULL,
-			   IoFileObjectType,
-			   (PVOID*)&CreatedFileObject);
+  Status = ObCreateObject(&FileHandle,
+			  STANDARD_RIGHTS_REQUIRED,
+			  NULL,
+			  IoFileObjectType,
+			  (PVOID*)&CreatedFileObject);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("Could not create FileObject\n");
@@ -213,11 +217,11 @@ IoCreateStreamFileObject(PFILE_OBJECT FileObject,
   CreatedFileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
 
   // shouldn't we initialize the lock event, and several other things here too?
-  KeInitializeEvent( &CreatedFileObject->Event, NotificationEvent, FALSE );
+  KeInitializeEvent(&CreatedFileObject->Event, NotificationEvent, FALSE);
   
-  ZwClose (FileHandle);
+  ZwClose(FileHandle);
   
-  return (CreatedFileObject);
+  return(CreatedFileObject);
 }
 
 

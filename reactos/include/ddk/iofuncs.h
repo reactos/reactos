@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.29 2002/01/21 22:27:36 hbirr Exp $ */
+/* $Id: iofuncs.h,v 1.30 2002/04/10 09:55:10 ekohl Exp $ */
 
 /* --- EXPORTED BY NTOSKRNL --- */
 
@@ -822,7 +822,7 @@ IoQueryVolumeInformation (
 VOID
 STDCALL
 IoQueueThreadIrp (
-	PVOID	Unknown0
+	IN	PIRP	Irp
 	);
 VOID
 STDCALL

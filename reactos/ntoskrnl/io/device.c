@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.36 2002/03/24 15:30:44 ekohl Exp $
+/* $Id: device.c,v 1.37 2002/04/10 09:57:31 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -274,18 +274,20 @@ IoRegisterDriverReinitialization(PDRIVER_OBJECT DriverObject,
    UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL 
+
+NTSTATUS STDCALL
 IopDefaultDispatchFunction(PDEVICE_OBJECT DeviceObject,
 			   PIRP Irp)
 {
-   Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
-   Irp->IoStatus.Information = 0;
-   
-   IoCompleteRequest(Irp, IO_NO_INCREMENT);
-   return(STATUS_NOT_IMPLEMENTED);
+  Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+  Irp->IoStatus.Information = 0;
+
+  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+  return(STATUS_NOT_IMPLEMENTED);
 }
 
-NTSTATUS 
+
+NTSTATUS
 IopCreateDriverObject(PDRIVER_OBJECT *DriverObject)
 {
   PDRIVER_OBJECT Object;
@@ -458,13 +460,12 @@ IopInitializeService(
 }
 
 NTSTATUS
-IopInitializeDeviceNodeService(
-  PDEVICE_NODE DeviceNode)
+IopInitializeDeviceNodeService(PDEVICE_NODE DeviceNode)
 {
   RTL_QUERY_REGISTRY_TABLE QueryTable[2];
   UNICODE_STRING ImagePath;
   HANDLE KeyHandle;
-  NTSTATUS Status; 
+  NTSTATUS Status;
 
   Status = RtlpGetRegistryHandle(
     RTL_REGISTRY_SERVICES,
@@ -473,8 +474,8 @@ IopInitializeDeviceNodeService(
 		&KeyHandle);
   if (!NT_SUCCESS(Status))
     {
-  DPRINT("RtlpGetRegistryHandle() failed (Status %x)\n", Status);
-  return Status;
+      DPRINT("RtlpGetRegistryHandle() failed (Status %x)\n", Status);
+      return(Status);
     }
 
   RtlZeroMemory(QueryTable, sizeof(QueryTable));
@@ -496,20 +497,20 @@ IopInitializeDeviceNodeService(
   DPRINT("RtlQueryRegistryValues() returned status %x\n", Status);
 
   if (NT_SUCCESS(Status))
-  {
-    DPRINT("Got ImagePath %S\n", ImagePath.Buffer);
+    {
+      DPRINT("Got ImagePath %S\n", ImagePath.Buffer);
 
-    Status = IopInitializeService(DeviceNode, &ImagePath);
+      Status = IopInitializeService(DeviceNode, &ImagePath);
 
-    RtlFreeUnicodeString(&ImagePath);
-  }
+      RtlFreeUnicodeString(&ImagePath);
+    }
 
-  return Status;
+  return(Status);
 }
 
-NTSTATUS 
+NTSTATUS
 IopInitializeDriver(PDRIVER_INITIALIZE DriverEntry,
-                    PDEVICE_NODE DeviceNode)
+		    PDEVICE_NODE DeviceNode)
 /*
  * FUNCTION: Called to initalize a loaded driver
  * ARGUMENTS:
@@ -528,21 +529,21 @@ IopInitializeDriver(PDRIVER_INITIALIZE DriverEntry,
   Status = IopCreateDriverObject(&DriverObject);
   if (!NT_SUCCESS(Status))
     {
-  return(Status);
+      return(Status);
     }
 
   DeviceNode->DriverObject = DriverObject;
 
   if (DeviceNode->ServiceName.Buffer)
-  {
-    wcscpy(RegistryKeyBuffer, DRIVER_REGISTRY_KEY_BASENAME);
-    wcscat(RegistryKeyBuffer, DeviceNode->ServiceName.Buffer);
-    RtlInitUnicodeString(&RegistryKey, RegistryKeyBuffer);
-  }
+    {
+      wcscpy(RegistryKeyBuffer, DRIVER_REGISTRY_KEY_BASENAME);
+      wcscat(RegistryKeyBuffer, DeviceNode->ServiceName.Buffer);
+      RtlInitUnicodeString(&RegistryKey, RegistryKeyBuffer);
+    }
   else
-  {
-    RtlInitUnicodeString(&RegistryKey, NULL);
-  }
+    {
+      RtlInitUnicodeString(&RegistryKey, NULL);
+    }
 
   DPRINT("RegistryKey: %wZ\n", &RegistryKey);
   DPRINT("Calling driver entrypoint at %08lx\n", DriverEntry);
@@ -550,16 +551,17 @@ IopInitializeDriver(PDRIVER_INITIALIZE DriverEntry,
   Status = DriverEntry(DriverObject, &RegistryKey);
   if (!NT_SUCCESS(Status))
     {
-  DeviceNode->DriverObject = NULL;
-  ExFreePool(DriverObject->DriverExtension);
-	ExFreePool(DriverObject);
-	return(Status);
+      DeviceNode->DriverObject = NULL;
+      ExFreePool(DriverObject->DriverExtension);
+      ExFreePool(DriverObject);
+      return(Status);
     }
 
   Status = IopInitializeDevice(DeviceNode, TRUE);
 
   return(Status);
 }
+
 
 NTSTATUS STDCALL
 IoAttachDevice(PDEVICE_OBJECT SourceDevice,
@@ -573,8 +575,9 @@ IoAttachDevice(PDEVICE_OBJECT SourceDevice,
  *       AttachedDevice (OUT) = Caller storage for the device attached to
  */
 {
-   UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
+
 
 NTSTATUS STDCALL
 IopCreateDevice(PVOID ObjectBody,
@@ -674,45 +677,48 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
 	CreatedDeviceObject->NextDevice = DriverObject->DeviceObject;
 	DriverObject->DeviceObject = CreatedDeviceObject;
      }
-   
-   CreatedDeviceObject->Type = DeviceType;
-   CreatedDeviceObject->DriverObject = DriverObject;
-   CreatedDeviceObject->CurrentIrp = NULL;
-   CreatedDeviceObject->Flags = 0;
+  
+  CreatedDeviceObject->Type = DeviceType;
+  CreatedDeviceObject->DriverObject = DriverObject;
+  CreatedDeviceObject->CurrentIrp = NULL;
+  CreatedDeviceObject->Flags = 0;
 
-   CreatedDeviceObject->DeviceExtension = 
-     ExAllocatePoolWithTag(NonPagedPool, DeviceExtensionSize, 
-			   TAG_DEVICE_EXTENSION);
-   if (DeviceExtensionSize > 0 && CreatedDeviceObject->DeviceExtension == NULL)
-     {
-	ExFreePool(CreatedDeviceObject);
-	return(STATUS_INSUFFICIENT_RESOURCES);
-     }
+  CreatedDeviceObject->DeviceExtension = 
+    ExAllocatePoolWithTag(NonPagedPool, DeviceExtensionSize,
+			  TAG_DEVICE_EXTENSION);
+  if (DeviceExtensionSize > 0 && CreatedDeviceObject->DeviceExtension == NULL)
+    {
+      ExFreePool(CreatedDeviceObject);
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
 
   if (DeviceExtensionSize > 0)
-     {
-  RtlZeroMemory(CreatedDeviceObject->DeviceExtension,
-    DeviceExtensionSize);
-     }
+    {
+      RtlZeroMemory(CreatedDeviceObject->DeviceExtension,
+		    DeviceExtensionSize);
+    }
 
-   CreatedDeviceObject->AttachedDevice = NULL;
-   CreatedDeviceObject->DeviceType = DeviceType;
-   CreatedDeviceObject->StackSize = 1;
-   CreatedDeviceObject->AlignmentRequirement = 1;
-   KeInitializeDeviceQueue(&CreatedDeviceObject->DeviceQueue);
-   
-   KeInitializeEvent(&CreatedDeviceObject->DeviceLock,
-		     SynchronizationEvent,
-		     TRUE);
-   
-   if (CreatedDeviceObject->DeviceType == FILE_DEVICE_DISK)
-     {
-	IoAttachVpb(CreatedDeviceObject);
-     }
-   
-   *DeviceObject = CreatedDeviceObject;
-   
-   return(STATUS_SUCCESS);
+  CreatedDeviceObject->AttachedDevice = NULL;
+  CreatedDeviceObject->DeviceType = DeviceType;
+  CreatedDeviceObject->StackSize = 1;
+  CreatedDeviceObject->AlignmentRequirement = 1;
+  KeInitializeDeviceQueue(&CreatedDeviceObject->DeviceQueue);
+  
+  KeInitializeEvent(&CreatedDeviceObject->DeviceLock,
+		    SynchronizationEvent,
+		    TRUE);
+  
+  /* FIXME: Do we need to add network drives too?! */
+  if (CreatedDeviceObject->DeviceType == FILE_DEVICE_DISK ||
+      CreatedDeviceObject->DeviceType == FILE_DEVICE_CD_ROM ||
+      CreatedDeviceObject->DeviceType == FILE_DEVICE_TAPE)
+    {
+      IoAttachVpb(CreatedDeviceObject);
+    }
+  
+  *DeviceObject = CreatedDeviceObject;
+  
+  return(STATUS_SUCCESS);
 }
 
 
@@ -726,8 +732,8 @@ IoOpenDeviceInstanceKey (
 	DWORD	Unknown4
 	)
 {
-	UNIMPLEMENTED;
-	return (STATUS_NOT_IMPLEMENTED);
+  UNIMPLEMENTED;
+  return(STATUS_NOT_IMPLEMENTED);
 }
 
 
@@ -738,8 +744,8 @@ IoQueryDeviceEnumInfo (
 	DWORD	Unknown1
 	)
 {
-	UNIMPLEMENTED;
-	return 0;
+  UNIMPLEMENTED;
+  return 0;
 }
 
 
@@ -750,15 +756,15 @@ IoGetDeviceToVerify (PETHREAD Thread)
  * device, that is the target of the given thread's I/O request
  */
 {
-   return Thread->DeviceToVerify;
+  return(Thread->DeviceToVerify);
 }
 
 
 VOID STDCALL
-IoSetDeviceToVerify (IN PETHREAD Thread,
-		     IN PDEVICE_OBJECT DeviceObject)
+IoSetDeviceToVerify(IN PETHREAD Thread,
+		    IN PDEVICE_OBJECT DeviceObject)
 {
-   Thread->DeviceToVerify = DeviceObject;
+  Thread->DeviceToVerify = DeviceObject;
 }
 
 
@@ -766,7 +772,7 @@ VOID STDCALL
 IoSetHardErrorOrVerifyDevice(PIRP Irp,
 			     PDEVICE_OBJECT DeviceObject)
 {
-   Irp->Tail.Overlay.Thread->DeviceToVerify = DeviceObject;
+  Irp->Tail.Overlay.Thread->DeviceToVerify = DeviceObject;
 }
 
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.17 2002/03/15 23:59:05 ekohl Exp $
+/* $Id: io.h,v 1.18 2002/04/10 09:58:02 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -254,17 +254,19 @@ NTSTATUS
 IopInitializeDeviceNodeService(PDEVICE_NODE DeviceNode);
 NTSTATUS
 IopInitializeDriver(PDRIVER_INITIALIZE DriverEntry,
-                    PDEVICE_NODE DeviceNode);
-VOID 
+		    PDEVICE_NODE DeviceNode);
+VOID
 IoInitCancelHandling(VOID);
-VOID 
+VOID
 IoInitSymbolicLinkImplementation(VOID);
-VOID 
+VOID
 IoInitFileSystemImplementation(VOID);
-VOID 
+VOID
 IoInitVpbImplementation (VOID);
 
-NTSTATUS IoTryToMountStorageDevice(PDEVICE_OBJECT DeviceObject);
+NTSTATUS
+IoTryToMountStorageDevice(IN PDEVICE_OBJECT DeviceObject,
+			  IN BOOLEAN AllowRawMount);
 POBJECT IoOpenSymlink(POBJECT SymbolicLink);
 POBJECT IoOpenFileOnDevice(POBJECT SymbolicLink, PWCHAR Name);
 
@@ -299,17 +301,18 @@ VOID IoInitShutdownNotification(VOID);
 VOID IoShutdownRegisteredDevices(VOID);
 VOID IoShutdownRegisteredFileSystems(VOID);
 
-NTSTATUS STDCALL 
-IoPageRead (PFILE_OBJECT		FileObject,
+NTSTATUS STDCALL
+IoPageRead(PFILE_OBJECT		FileObject,
+	   PMDL			Mdl,
+	   PLARGE_INTEGER		Offset,
+	   PIO_STATUS_BLOCK	StatusBlock,
+	   BOOLEAN PagingIo);
+NTSTATUS STDCALL
+IoPageWrite(PFILE_OBJECT		FileObject,
 	    PMDL			Mdl,
 	    PLARGE_INTEGER		Offset,
 	    PIO_STATUS_BLOCK	StatusBlock,
 	    BOOLEAN PagingIo);
-NTSTATUS STDCALL IoPageWrite (PFILE_OBJECT		FileObject,
-			      PMDL			Mdl,
-			      PLARGE_INTEGER		Offset,
-			      PIO_STATUS_BLOCK	StatusBlock,
-                  BOOLEAN PagingIo);
 
 NTSTATUS
 IoCreateArcNames(VOID);

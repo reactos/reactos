@@ -1,4 +1,4 @@
-/* $Id: buildirp.c,v 1.26 2002/03/17 17:21:44 hbirr Exp $
+/* $Id: buildirp.c,v 1.27 2002/04/10 09:57:31 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -81,8 +81,8 @@ PIRP IoBuildFilesystemControlRequest(ULONG MinorFunction,
  *         DeviceObject = Device object to send the request to
  *         UserEvent = Event used to notify the caller of completion
  *         IoStatusBlock (OUT) = Used to return the status of the operation
- *         DeviceToMount = Device to mount (for the IRP_MN_MOUNT_DEVICE 
- *                                          request)
+ *         DeviceToMount = Device to mount (for the IRP_MN_MOUNT_VOLUME 
+ *                         or IRP_MN_VERIFY_VOLUME request)
  */
 {
    PIRP Irp;
@@ -114,11 +114,13 @@ PIRP IoBuildFilesystemControlRequest(ULONG MinorFunction,
 	break;
 	
       case IRP_MN_MOUNT_VOLUME:
-	StackPtr->Parameters.Mount.Vpb = DeviceToMount->Vpb;
-	StackPtr->Parameters.Mount.DeviceObject = DeviceToMount;
+	StackPtr->Parameters.MountVolume.Vpb = DeviceToMount->Vpb;
+	StackPtr->Parameters.MountVolume.DeviceObject = DeviceToMount;
 	break;
 	
       case IRP_MN_VERIFY_VOLUME:
+	StackPtr->Parameters.VerifyVolume.Vpb = DeviceToMount->Vpb;
+	StackPtr->Parameters.VerifyVolume.DeviceObject = DeviceToMount;
 	break;
 	
       case IRP_MN_LOAD_FILE_SYSTEM:

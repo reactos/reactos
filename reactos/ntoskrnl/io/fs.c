@@ -1,4 +1,4 @@
-/* $Id: fs.c,v 1.21 2002/04/07 18:36:13 phreak Exp $
+/* $Id: fs.c,v 1.22 2002/04/10 09:57:31 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -130,7 +130,9 @@ NtFsControlFile (
    return(Status);
 }
 
-VOID IoInitFileSystemImplementation(VOID)
+
+VOID
+IoInitFileSystemImplementation(VOID)
 {
   InitializeListHead(&FileSystemListHead);
   KeInitializeSpinLock(&FileSystemListLock);
@@ -139,7 +141,9 @@ VOID IoInitFileSystemImplementation(VOID)
   KeInitializeSpinLock(&FsChangeNotifyListLock);
 }
 
-VOID IoShutdownRegisteredFileSystems(VOID)
+
+VOID
+IoShutdownRegisteredFileSystems(VOID)
 {
    KIRQL oldlvl;
    PLIST_ENTRY current_entry;
@@ -180,8 +184,10 @@ VOID IoShutdownRegisteredFileSystems(VOID)
    KeReleaseSpinLock(&FileSystemListLock,oldlvl);
 }
 
-NTSTATUS IoAskFileSystemToMountDevice(PDEVICE_OBJECT DeviceObject,
-				      PDEVICE_OBJECT DeviceToMount)
+
+NTSTATUS
+IoAskFileSystemToMountDevice(PDEVICE_OBJECT DeviceObject,
+			     PDEVICE_OBJECT DeviceToMount)
 {
    PIRP Irp;
    IO_STATUS_BLOCK IoStatusBlock;
@@ -211,12 +217,17 @@ NTSTATUS IoAskFileSystemToMountDevice(PDEVICE_OBJECT DeviceObject,
    return(Status);
 }
 
-NTSTATUS IoAskFileSystemToLoad(PDEVICE_OBJECT DeviceObject)
+
+NTSTATUS
+IoAskFileSystemToLoad(PDEVICE_OBJECT DeviceObject)
 {
    UNIMPLEMENTED;
 }
 
-NTSTATUS IoTryToMountStorageDevice(PDEVICE_OBJECT DeviceObject)
+
+NTSTATUS
+IoTryToMountStorageDevice(IN PDEVICE_OBJECT DeviceObject,
+			  IN BOOLEAN AllowRawMount)
 /*
  * FUNCTION: Trys to mount a storage device
  * ARGUMENTS:
@@ -231,7 +242,7 @@ NTSTATUS IoTryToMountStorageDevice(PDEVICE_OBJECT DeviceObject)
    
    assert_irql(PASSIVE_LEVEL);
    
-   DPRINT("IoTryToMountStorageDevice(DeviceObject %x)\n",DeviceObject);
+   DPRINT1("IoTryToMountStorageDevice(DeviceObject %x)\n",DeviceObject);
    
    KeAcquireSpinLock(&FileSystemListLock,&oldlvl);
    current_entry = FileSystemListHead.Flink;
@@ -266,6 +277,90 @@ NTSTATUS IoTryToMountStorageDevice(PDEVICE_OBJECT DeviceObject)
    return(STATUS_UNRECOGNIZED_VOLUME);
 }
 
+
+/**********************************************************************
+ * NAME							EXPORTED
+ * 	IoVerifyVolume
+ *
+ * DESCRIPTION
+ *	Veriyfy the file system type and volume information or mount
+ *	a file system.
+ *
+ * ARGUMENTS
+ *	DeviceObject
+ *		Device to verify or mount
+ *
+ *	AllowRawMount
+ *		...
+ *
+ * RETURN VALUE
+ *	Status
+ */
+NTSTATUS STDCALL
+IoVerifyVolume(IN PDEVICE_OBJECT DeviceObject,
+	       IN BOOLEAN AllowRawMount)
+{
+#if 0
+  IO_STATUS_BLOCK IoStatusBlock,
+  KEVENT Event;
+  PIRP Irp;
+#endif
+  NTSTATUS Status;
+
+  DPRINT1("IoVerifyVolume(DeviceObject %x  AllowRawMount %x)\n",
+	 DeviceObject,
+	 AllowRawMount);
+
+  Status = STATUS_SUCCESS;
+
+  KeWaitForSingleObject(&DeviceObject->DeviceLock,
+			Executive,
+			KernelMode,
+			FALSE,
+			NULL);
+
+  if (DeviceObject->Vpb->Flags & VPB_MOUNTED)
+    {
+      /* FIXME: Issue verify request to the FSD */
+#if 0
+      KeInitializeEvent(&Event,...);
+
+      Irp = IoBuildFilesystemControlRequest(IRP_MN_VERIFY_VOLUME,
+					    DeviceObject,
+					    &Event,
+					    &IoStatusBlock,
+					    &DeviceToMount)
+
+
+#endif
+
+      if (NT_SUCCESS(Status))
+	{
+	  KeSetEvent(&DeviceObject->DeviceLock,
+		     IO_NO_INCREMENT,
+		     FALSE);
+	  return(STATUS_SUCCESS);
+	}
+    }
+
+  if (Status == STATUS_WRONG_VOLUME)
+    {
+      /* FIXME: Replace existing VPB by a new one */
+
+    }
+
+  /* Start mount sequence */
+  Status = IoTryToMountStorageDevice(DeviceObject,
+				     AllowRawMount);
+
+  KeSetEvent(&DeviceObject->DeviceLock,
+	     IO_NO_INCREMENT,
+	     FALSE);
+
+  return(Status);
+}
+
+
 VOID STDCALL
 IoRegisterFileSystem(PDEVICE_OBJECT DeviceObject)
 {
@@ -282,6 +377,7 @@ IoRegisterFileSystem(PDEVICE_OBJECT DeviceObject)
 			       &FileSystemListLock);
    IopNotifyFileSystemChange(DeviceObject, TRUE);
 }
+
 
 VOID STDCALL
 IoUnregisterFileSystem(PDEVICE_OBJECT DeviceObject)

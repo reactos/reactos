@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.35 2002/03/25 21:53:27 ekohl Exp $
+/* $Id: iotypes.h,v 1.36 2002/04/10 09:55:10 ekohl Exp $
  * 
  */
 
@@ -304,7 +304,7 @@ typedef struct __attribute__((packed)) _IO_STACK_LOCATION
 	{
 	  struct _VPB* Vpb;
 	  struct _DEVICE_OBJECT* DeviceObject;
-	} Mount;
+	} MountVolume;
       struct
 	{
 	  struct _VPB* Vpb;
