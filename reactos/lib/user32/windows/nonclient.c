@@ -60,6 +60,11 @@ Already defined in makefile now.
 #define HAS_THINFRAME(Style, ExStyle) \
             (((Style) & (WS_BORDER | WS_MINIMIZE)) || (!((Style) & (WS_CHILD | WS_POPUP))))
 
+#define HASSIZEGRIP(Style, ExStyle, ParentStyle, WindowRect, ParentClientRect) \
+            (!(Style & WS_CHILD) || (ExStyle & WS_EX_MDICHILD) || \
+             ((Style & WS_CHILD) && !(ParentStyle & WS_MAXIMIZE) && \
+             (WindowRect.right - WindowRect.left == ParentClientRect.right) && \
+             (WindowRect.bottom - WindowRect.top == ParentClientRect.bottom)))
 /*
  * FIXME: This should be moved to a header
  */
@@ -268,6 +273,7 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn)
    HDC hDC;
    BOOL Active;
    DWORD Style, ExStyle;
+   HWND Parent;
    RECT ClientRect, WindowRect, CurrentRect, TempRect;
 
    if (!IsWindowVisible(hWnd))
@@ -280,13 +286,14 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn)
    {
       return 0;
    }
-
+   
+   Parent = GetParent(hWnd);
    ExStyle = GetWindowLongW(hWnd, GWL_EXSTYLE);
    if (ExStyle & WS_EX_MDICHILD)
    {
       Active = IsChild(GetForegroundWindow(), hWnd);
       if (Active)
-         Active = (hWnd == (HWND)SendMessageW(GetParent(hWnd), WM_MDIGETACTIVE, 0, 0));
+         Active = (hWnd == (HWND)SendMessageW(Parent, WM_MDIGETACTIVE, 0, 0));
    }
    else
    {
@@ -438,6 +445,8 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn)
      if ((Style & WS_VSCROLL) && (Style & WS_HSCROLL) &&
          (CurrentRect.bottom - CurrentRect.top) > GetSystemMetrics(SM_CYHSCROLL))
      {
+        RECT ParentClientRect;
+        
         TempRect = CurrentRect;
         if (ExStyle & WS_EX_LEFTSCROLLBAR)
            TempRect.right = TempRect.left + GetSystemMetrics(SM_CXVSCROLL);
@@ -446,7 +455,9 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn)
         TempRect.top = TempRect.bottom - GetSystemMetrics(SM_CYHSCROLL);
         FillRect(hDC, &TempRect, GetSysColorBrush(COLOR_SCROLLBAR));
         /* FIXME: Correct drawing of size-box with WS_EX_LEFTSCROLLBAR */
-        if (!(Style & WS_CHILD) || (ExStyle & WS_EX_MDICHILD))
+        if(Parent)
+          GetClientRect(Parent, &ParentClientRect);
+        if (HASSIZEGRIP(Style, ExStyle, GetWindowLongW(Parent, GWL_STYLE), WindowRect, ParentClientRect))
         {
            TempRect.top--;
            TempRect.bottom++;
@@ -582,7 +593,7 @@ DefWndNCActivate(HWND hWnd, WPARAM wParam)
 LRESULT
 DefWndNCHitTest(HWND hWnd, POINT Point)
 {
-   RECT WindowRect, ClientRect;
+   RECT WindowRect, ClientRect, OrigWndRect;
    POINT ClientPoint;
    SIZE WindowBorders;
    ULONG Style = GetWindowLongW(hWnd, GWL_STYLE);
@@ -593,7 +604,8 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
    {      
       return HTNOWHERE;
    }
-
+   OrigWndRect = WindowRect;
+   
    if (UserHasWindowEdge(Style, ExStyle))
    {
       DWORD XSize, YSize; 
@@ -731,7 +743,8 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
      if ((Style & WS_VSCROLL) && (Style & WS_HSCROLL) &&
          (WindowRect.bottom - WindowRect.top) > GetSystemMetrics(SM_CYHSCROLL))
      {
-        RECT TempRect = WindowRect, TempRect2 = WindowRect;
+        RECT ParentRect, TempRect = WindowRect, TempRect2 = WindowRect;
+        HWND Parent = GetParent(hWnd);
 
         TempRect.bottom -= GetSystemMetrics(SM_CYHSCROLL);
         if ((ExStyle & WS_EX_LEFTSCROLLBAR) != 0)
@@ -751,8 +764,10 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
 
         TempRect.top = TempRect2.top;
         TempRect.bottom = TempRect2.bottom;
-        if (PtInRect(&TempRect, Point) && 
-            (!(Style & WS_CHILD) || (ExStyle & WS_EX_MDICHILD)))
+        if(Parent)
+          GetClientRect(Parent, &ParentRect);
+        if (PtInRect(&TempRect, Point) && HASSIZEGRIP(Style, ExStyle, 
+            GetWindowLongW(Parent, GWL_STYLE), OrigWndRect, ParentRect))
         {
            if ((ExStyle & WS_EX_LEFTSCROLLBAR) != 0)
               return HTBOTTOMLEFT;
@@ -921,6 +936,16 @@ DefWndNCLButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
         case HTBOTTOMLEFT:
         case HTBOTTOMRIGHT:
         {
+            HWND Parent;
+            
+            if(wParam == HTBOTTOMRIGHT && (Parent = GetParent(hWnd)) &&
+               (GetWindowLongW(hWnd, GWL_STYLE) & WS_CHILD) && 
+               !(GetWindowLongW(hWnd, GWL_EXSTYLE) & WS_EX_MDICHILD) && 
+               !(GetWindowLongW(Parent, GWL_STYLE) & WS_MAXIMIZE))
+            {
+              SendMessageW(Parent, WM_SYSCOMMAND, SC_SIZE + wParam - 2, lParam);
+              break;
+            }
             SendMessageW(hWnd, WM_SYSCOMMAND, SC_SIZE + wParam - 2, lParam);
             break;
         }
