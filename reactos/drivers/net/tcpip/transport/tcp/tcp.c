@@ -82,8 +82,8 @@ NTSTATUS TCPStartup(VOID)
     ExInitializeFastMutex( &SleepingThreadsLock );
     InitializeListHead( &SleepingThreadsList );    
 
-    InitOskitTCP();
     RegisterOskitTCPEventHandlers( &EventHandlers );
+    InitOskitTCP();
     
     /* Register this protocol with IP layer */
     IPRegisterProtocol(IPPROTO_TCP, TCPReceive);
