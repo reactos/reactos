@@ -1,3 +1,42 @@
+2002-08-17  David Welch  <welch@computer2.darkstar.org>
+
+	* ntoskrnl/ps/create.c (PiDeleteThread): Don't dereference
+	the thread's process while holding the thread list lock.
+
+2002-08-17  David Welch  <welch@computer2.darkstar.org>
+
+	* ntoskrnl/mm/section.c (MmMapViewOfSection): Check there is 
+	enough space for all parts of an image before mapping it; if
+	there isn't enough space free at the preferred base address
+	then try to choose a different one.
+
+2002-08-17  David Welch  <welch@computer2.darkstar.org>
+
+	* ntoskrnl/mm/mpw.c (MmInitMpwThread): Run the MPW thread at
+	idle priority.
+
+2002-08-17  David Welch  <welch@computer2.darkstar.org>
+
+	* ntoskrnl/mm/kmap.c (ExUnmapPage, ExAllocatePageWithPhysPage,
+	MiFreeNonPagedPoolRegion, MiAllocNonPagedPoolRegion): Maintain
+	a hint of the next free page; makes running with whole page
+	allocation more bearable.
+
+2002-08-17  David Welch  <welch@computer2.darkstar.org>
+
+	* ntoskrnl/mm/anonmem.c (MmPageOutVirtualMemory): Show an
+	out of swap space message if we are out of swap space.
+	* ntoskrnl/mm/section.c (MmPageOutSectionView): Show an
+	out of swap space message if we are out of swap space.
+	* ntoskrnl/mm/pagefile.c (MmAllocSwapPage): Don't automatically
+	show an out of swap space message on failure.
+	* ntoskrnl/mm/pagefile.c (MmShowOutOfSpaceMessagePagingFile): New
+	function to notify the user that the pagefile is full.
+
+2002-08-17  David Welch  <welch@computer2.darkstar.org>
+
+	* drivers/lib/zlib/Makefile: Create a dummy zlib.sym
+
 2002-08-16  David Welch  <welch@computer2.darkstar.org>
 
 	* ntoskrnl/mm/npool.c (ExAllocateWholePageBlock): Converted

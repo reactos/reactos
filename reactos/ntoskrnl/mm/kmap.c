@@ -1,4 +1,4 @@
-/* $Id: kmap.c,v 1.17 2002/06/04 15:26:56 dwelch Exp $
+/* $Id: kmap.c,v 1.18 2002/08/17 01:42:02 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -13,6 +13,7 @@
 #include <internal/mm.h>
 #include <internal/ntoskrnl.h>
 #include <internal/pool.h>
+#include <ntos/minmax.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -25,8 +26,9 @@
  * One bit for each page in the kmalloc region
  *      If set then the page is used by a kmalloc block
  */
-static unsigned int AllocMap[ALLOC_MAP_SIZE/32]={0,};
+static ULONG AllocMap[ALLOC_MAP_SIZE/32]={0,};
 static KSPIN_LOCK AllocMapLock;
+static ULONG AllocMapHint = 1;
 
 static PVOID NonPagedPoolBase;
 
@@ -41,9 +43,10 @@ ExUnmapPage(PVOID Addr)
    DPRINT("ExUnmapPage(Addr %x)\n",Addr);
    DPRINT("i %x\n",i);
    
-   KeAcquireSpinLock(&AllocMapLock, &oldIrql);
    MmDeleteVirtualMapping(NULL, (PVOID)Addr, FALSE, NULL, NULL);
+   KeAcquireSpinLock(&AllocMapLock, &oldIrql);   
    AllocMap[i / 32] &= (~(1 << (i % 32)));
+   AllocMapHint = min(AllocMapHint, i);
    KeReleaseSpinLock(&AllocMapLock, oldIrql);
 }
 
@@ -101,12 +104,13 @@ ExAllocatePageWithPhysPage(PHYSICAL_ADDRESS PhysPage)
    NTSTATUS Status;
 
    KeAcquireSpinLock(&AllocMapLock, &oldlvl);
-   for (i = 1; i < ALLOC_MAP_SIZE; i++)
+   for (i = AllocMapHint; i < ALLOC_MAP_SIZE; i++)
      {
        if (!(AllocMap[i / 32] & (1 << (i % 32))))
 	 {
 	    DPRINT("i %x\n",i);
 	    AllocMap[i / 32] |= (1 << (i % 32));
+	    AllocMapHint = i + 1;
 	    addr = (ULONG)(NonPagedPoolBase + (i*PAGESIZE));
 	    Status = MmCreateVirtualMapping(NULL, 
 					    (PVOID)addr, 
@@ -142,10 +146,11 @@ MiFreeNonPagedPoolRegion(PVOID Addr, ULONG Count, BOOLEAN Free)
   KIRQL oldlvl;
   
   KeAcquireSpinLock(&AllocMapLock, &oldlvl);
+  AllocMapHint = min(AllocMapHint, Base);
   for (i = 0; i < Count; i++)
     {
       Offset = Base + i;
-      AllocMap[Offset / 32] &= (~(1 << (Offset % 32))); 
+      AllocMap[Offset / 32] &= (~(1 << (Offset % 32)));       
       MmDeleteVirtualMapping(NULL, 
 			     Addr + (i * PAGESIZE), 
 			     Free, 
@@ -167,7 +172,7 @@ MiAllocNonPagedPoolRegion(ULONG nr_pages)
    KIRQL oldlvl;
 
    KeAcquireSpinLock(&AllocMapLock, &oldlvl);
-   for (i=1; i<ALLOC_MAP_SIZE;i++)
+   for (i=AllocMapHint; i<ALLOC_MAP_SIZE;i++)
      {
        if (!(AllocMap[i/32] & (1 << (i % 32))))
 	  {
@@ -182,22 +187,23 @@ MiAllocNonPagedPoolRegion(ULONG nr_pages)
 	       }
 	     if (length==nr_pages)
 	       {
-		  for (j=start;j<(start+length);j++)
-		    {
-		      AllocMap[j / 32] |= (1 << (j % 32));
-		    }
-		  DPRINT("returning %x\n",((start*PAGESIZE)+NonPagedPoolBase));
-		  KeReleaseSpinLock(&AllocMapLock, oldlvl);
-		  return(((start*PAGESIZE)+NonPagedPoolBase));
+		 AllocMapHint = start + length;
+		 for (j=start;j<(start+length);j++)
+		   {
+		     AllocMap[j / 32] |= (1 << (j % 32));
+		   }
+		 DPRINT("returning %x\n",((start*PAGESIZE)+NonPagedPoolBase));
+		 KeReleaseSpinLock(&AllocMapLock, oldlvl);
+		 return(((start*PAGESIZE)+NonPagedPoolBase));
 	       }
 	  }
-	else
-	  {
-	     start=0;
-	     length=0;
-	  }
+       else
+	 {
+	   start=0;
+	   length=0;
+	 }
      }
    DbgPrint("CRITICAL: Out of non-paged pool space\n");
-   for(;;);
+   KeBugCheck(0);
    return(0);
 }

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.50 2002/08/14 20:58:38 dwelch Exp $
+/* $Id: create.c,v 1.51 2002/08/17 01:42:03 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -279,40 +279,26 @@ PiDeleteThread(PVOID ObjectBody)
   KIRQL oldIrql;
   PETHREAD Thread;
   ULONG i;
+  Thread = (PETHREAD)ObjectBody;
 
   DPRINT("PiDeleteThread(ObjectBody %x)\n",ObjectBody);
 
-  KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
-  Thread = (PETHREAD)ObjectBody;
+  ObDereferenceObject(Thread->ThreadsProcess);
+  Thread->ThreadsProcess = NULL;
 
+  KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
+  
   for (i = 0; i < PiThreadNotifyRoutineCount; i++)
     {
       PiThreadNotifyRoutine[i](Thread->Cid.UniqueProcess,
 			       Thread->Cid.UniqueThread,
 			       FALSE);
-    }
-
-  DPRINT("Process %x(%d)\n",
-	 Thread->ThreadsProcess,
-	 ObGetObjectPointerCount(Thread->ThreadsProcess));
-  ObDereferenceObject(Thread->ThreadsProcess);
-  Thread->ThreadsProcess = NULL;
+    }    
   PiNrThreads--;
   RemoveEntryList(&Thread->Tcb.ThreadListEntry);
   KeReleaseThread(Thread);
   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
   DPRINT("PiDeleteThread() finished\n");
-}
-
-VOID STDCALL
-PiCloseThread(PVOID ObjectBody,
-	      ULONG HandleCount)
-{
-   DPRINT("PiCloseThread(ObjectBody %x)\n", ObjectBody);
-   DPRINT("ObGetObjectPointerCount(ObjectBody) %d "
-	  "ObGetObjectHandleCount(ObjectBody) %d\n",
-	  ObGetObjectPointerCount(ObjectBody),
-	  ObGetObjectHandleCount(ObjectBody));
 }
 
 NTSTATUS

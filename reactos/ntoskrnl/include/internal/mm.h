@@ -288,7 +288,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
 MEMORY_AREA* MmOpenMemoryAreaByRegion(PMADDRESS_SPACE AddressSpace, 
 				      PVOID Address,
 				      ULONG Length);
-
+PVOID MmFindGap(PMADDRESS_SPACE AddressSpace, ULONG Length);
 VOID ExUnmapPage(PVOID Addr);
 PVOID ExAllocatePage(VOID);
 
@@ -604,5 +604,7 @@ MmIsDirtyPageRmap(PHYSICAL_ADDRESS PhysicalAddress);
 NTSTATUS MmInitMpwThread(VOID);
 BOOLEAN
 MmIsAvailableSwapPage(VOID);
+VOID
+MmShowOutOfSpaceMessagePagingFile(VOID);
 
 #endif

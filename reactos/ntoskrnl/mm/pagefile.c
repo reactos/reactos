@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.22 2002/08/14 20:58:36 dwelch Exp $
+/* $Id: pagefile.c,v 1.23 2002/08/17 01:42:02 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -105,7 +105,19 @@ ULONG MmCoreDumpType;
 #define OFFSET_FROM_ENTRY(i) (((i) & 0xffffff) - 1)
 #define ENTRY_FROM_FILE_OFFSET(i, j) (((i) << 24) | ((j) + 1))
 
+static BOOLEAN MmSwapSpaceMessage = FALSE;
+
 /* FUNCTIONS *****************************************************************/
+
+VOID
+MmShowOutOfSpaceMessagePagingFile(VOID)
+{
+  if (!MmSwapSpaceMessage)
+    {
+      DPRINT1("MM: Out of swap space.\n");
+      MmSwapSpaceMessage = TRUE;
+    }
+}
 
 NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
 {
@@ -316,19 +328,13 @@ MmAllocSwapPage(VOID)
    KIRQL oldIrql;
    ULONG i;
    ULONG off;
-   SWAPENTRY entry;
-   static BOOLEAN SwapSpaceMessage = FALSE;
+   SWAPENTRY entry;   
    
    KeAcquireSpinLock(&PagingFileListLock, &oldIrql);
    
    if (MiFreeSwapPages == 0)
      {
-	KeReleaseSpinLock(&PagingFileListLock, oldIrql);
-	if (!SwapSpaceMessage)
-	  {
-	    DPRINT1("MM: Out of swap space.\n");
-	    SwapSpaceMessage = TRUE;
-	  }
+	KeReleaseSpinLock(&PagingFileListLock, oldIrql);	
 	return(0);
      }
    
@@ -354,11 +360,7 @@ MmAllocSwapPage(VOID)
      }
    
    KeReleaseSpinLock(&PagingFileListLock, oldIrql); 
-   if (!SwapSpaceMessage)
-     {
-       DPRINT1("MM: Out of swap space.\n");
-       SwapSpaceMessage = TRUE;
-     }
+   KeBugCheck(0);
    return(0);
 }
 
@@ -658,6 +660,9 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
 	 }
      }
    NtClose(FileHandle);
+
+   MmSwapSpaceMessage = FALSE;
+
    return(STATUS_SUCCESS);
 }
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.89 2002/08/14 20:58:37 dwelch Exp $
+/* $Id: section.c,v 1.90 2002/08/17 01:42:02 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -1387,6 +1387,8 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
       SwapEntry = MmAllocSwapPage();
       if (SwapEntry == 0)
 	{
+	  MmShowOutOfSpaceMessagePagingFile();
+
 	  /*
 	   * For private pages restore the old mappings.
 	   */
@@ -3286,16 +3288,56 @@ MmMapViewOfSection(IN PVOID SectionObject,
    if (Section->AllocationAttributes & SEC_IMAGE)
      {
        ULONG i;
-
+       PVOID ImageBase;
+       ULONG ImageSize;	   
+       
+       ImageBase = *BaseAddress;
+       if (ImageBase == NULL)
+	 {
+	   ImageBase = Section->ImageBase;
+	 }
+       
+       ImageSize = 0;
        for (i = 0; i < Section->NrSegments; i++)
 	 {
-	   PVOID SBaseAddress;
+	   if (!(Section->Segments[i].Characteristics & IMAGE_SECTION_NOLOAD))
+	     {
+	       ULONG MaxExtent;
+	       MaxExtent = (ULONG)(Section->Segments[i].VirtualAddress +
+				   Section->Segments[i].Length);
+	       ImageSize = max(ImageSize, MaxExtent);
+	     }
+	 }
 
+       /* Check there is enough space to map the section at that point. */
+       if (MmOpenMemoryAreaByRegion(AddressSpace, ImageBase, 
+				    ImageSize) != NULL)
+	 {
+	   /* Fail if the user requested a fixed base address. */
+	   if ((*BaseAddress) != NULL)
+	     {
+	       MmUnlockSection(Section);
+	       MmUnlockAddressSpace(AddressSpace);
+	       return(Status);
+	     }
+	   /* Otherwise find a gap to map the image. */
+	   ImageBase = MmFindGap(AddressSpace, ImageSize);
+	   if (ImageBase == NULL)
+	     {
+	       MmUnlockSection(Section);
+	       MmUnlockAddressSpace(AddressSpace);
+	       return(Status);
+	     }
+	 }
+				    
+       for (i = 0; i < Section->NrSegments; i++)
+	 {
+	   PVOID SBaseAddress;	   	   
+	   
 	   if (!(Section->Segments[i].Characteristics & IMAGE_SECTION_NOLOAD))
 	     {
 	       SBaseAddress = (PVOID)
-		 ((ULONG)Section->ImageBase + 
-		  (ULONG)Section->Segments[i].VirtualAddress);
+		 (ImageBase + (ULONG_PTR)Section->Segments[i].VirtualAddress);
 
 	       MmLockSectionSegment(&Section->Segments[i]);
 	       Status = MmMapViewOfSegment(Process,
@@ -3315,7 +3357,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
 		 }
 	     }
 	 }
-       *BaseAddress = Section->ImageBase;
+       *BaseAddress = ImageBase;
      }
    else
      {

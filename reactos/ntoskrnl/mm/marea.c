@@ -71,8 +71,6 @@ MEMORY_AREA* MmOpenMemoryAreaByAddress(PMADDRESS_SPACE AddressSpace,
    DPRINT("MmOpenMemoryAreaByAddress(AddressSpace %x, Address %x)\n",
 	   AddressSpace, Address);
    
-//   MmDumpMemoryAreas(&AddressSpace->MAreaListHead);
-   
    previous_entry = &AddressSpace->MAreaListHead;
    current_entry = AddressSpace->MAreaListHead.Flink;
    while (current_entry != &AddressSpace->MAreaListHead)
@@ -80,22 +78,7 @@ MEMORY_AREA* MmOpenMemoryAreaByAddress(PMADDRESS_SPACE AddressSpace,
 	current = CONTAINING_RECORD(current_entry,
 				    MEMORY_AREA,
 				    Entry);
-	DPRINT("Scanning %x BaseAddress %x Length %x\n",
-		current, current->BaseAddress, current->Length);
 	assert(current_entry->Blink->Flink == current_entry);
-	if (current_entry->Flink->Blink != current_entry)
-	  {
-	     DPRINT1("BaseAddress %x\n", current->BaseAddress);
-	     DPRINT1("current_entry->Flink %x ", current_entry->Flink);
-	     DPRINT1("&current_entry->Flink %x\n",
-		     &current_entry->Flink);
-	     DPRINT1("current_entry->Flink->Blink %x\n",
-		     current_entry->Flink->Blink);
-	     DPRINT1("&current_entry->Flink->Blink %x\n",
-		     &current_entry->Flink->Blink);
-	     DPRINT1("&current_entry->Flink %x\n",
-		     &current_entry->Flink);
-	  }
 	assert(current_entry->Flink->Blink == current_entry);
 	assert(previous_entry->Flink == current_entry);
 	if (current->BaseAddress <= Address &&
@@ -184,38 +167,24 @@ static VOID MmInsertMemoryArea(PMADDRESS_SPACE AddressSpace,
    ListHead = &AddressSpace->MAreaListHead;
    
    current_entry = ListHead->Flink;
-   CHECKPOINT;
    if (IsListEmpty(ListHead))
      {
-	CHECKPOINT;
 	InsertHeadList(ListHead,&marea->Entry);
-	DPRINT("Inserting at list head\n");
-	CHECKPOINT;
 	return;
      }
-   CHECKPOINT;
    current = CONTAINING_RECORD(current_entry,MEMORY_AREA,Entry);
-   CHECKPOINT;
    if (current->BaseAddress > marea->BaseAddress)
      {
-	CHECKPOINT;
 	InsertHeadList(ListHead,&marea->Entry);
-	DPRINT("Inserting at list head\n");
-	CHECKPOINT;
 	return;
      }
-   CHECKPOINT;
    while (current_entry->Flink!=ListHead)
      {
-//	CHECKPOINT;
 	current = CONTAINING_RECORD(current_entry,MEMORY_AREA,Entry);
 	next = CONTAINING_RECORD(current_entry->Flink,MEMORY_AREA,Entry);
-//	assert(current->BaseAddress != marea->BaseAddress);	
-//	assert(next->BaseAddress != marea->BaseAddress);
 	if (current->BaseAddress < marea->BaseAddress &&
 	    current->Entry.Flink==ListHead)
 	  {
-	     DPRINT("Insert after %x\n", current_entry);
 	     current_entry->Flink = inserted_entry;
 	     inserted_entry->Flink=ListHead;
 	     inserted_entry->Blink=current_entry;
@@ -225,7 +194,6 @@ static VOID MmInsertMemoryArea(PMADDRESS_SPACE AddressSpace,
 	if (current->BaseAddress < marea->BaseAddress &&
 	    next->BaseAddress > marea->BaseAddress)
 	  {	     
-	     DPRINT("Inserting before %x\n", current_entry);
 	     inserted_entry->Flink = current_entry->Flink;
 	     inserted_entry->Blink = current_entry;
 	     inserted_entry->Flink->Blink = inserted_entry;
@@ -234,13 +202,10 @@ static VOID MmInsertMemoryArea(PMADDRESS_SPACE AddressSpace,
 	  }
 	current_entry = current_entry->Flink;
      }
-   CHECKPOINT;
-   DPRINT("Inserting at list tail\n");
    InsertTailList(ListHead,inserted_entry);
 }
 
-static PVOID MmFindGap(PMADDRESS_SPACE AddressSpace,
-		       ULONG Length)
+PVOID MmFindGap(PMADDRESS_SPACE AddressSpace, ULONG Length)
 {
    PLIST_ENTRY ListHead;
    PLIST_ENTRY current_entry;
@@ -257,12 +222,7 @@ static PVOID MmFindGap(PMADDRESS_SPACE AddressSpace,
      {
 	current = CONTAINING_RECORD(current_entry,MEMORY_AREA,Entry);
 	next = CONTAINING_RECORD(current_entry->Flink,MEMORY_AREA,Entry);
-	DPRINT("current %x current->BaseAddress %x ",current,
-	       current->BaseAddress);
-	DPRINT("current->Length %x\n",current->Length);
-	DPRINT("next %x next->BaseAddress %x ",next,next->BaseAddress);
 	Gap = (next->BaseAddress ) -(current->BaseAddress + current->Length);
-	DPRINT("Base %x Gap %x\n",current->BaseAddress,Gap);
 	if (Gap >= Length)
 	  {
 	     return(current->BaseAddress + PAGE_ROUND_UP(current->Length));
@@ -276,8 +236,6 @@ static PVOID MmFindGap(PMADDRESS_SPACE AddressSpace,
      }
    
    current = CONTAINING_RECORD(current_entry,MEMORY_AREA,Entry);
-   //DbgPrint("current %x returning %x\n",current,current->BaseAddress+
-//	    current->Length);
    return(current->BaseAddress + PAGE_ROUND_UP(current->Length));
 }
 
@@ -294,15 +252,17 @@ NTSTATUS
 MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
 		 PVOID BaseAddress,
 		 ULONG Length,
-		 VOID (*FreePage)(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, 
-				  PHYSICAL_ADDRESS PhysAddr, SWAPENTRY SwapEntry, BOOLEAN Dirty),
+		 VOID (*FreePage)(PVOID Context, MEMORY_AREA* MemoryArea, 
+				  PVOID Address, PHYSICAL_ADDRESS PhysAddr, 
+				  SWAPENTRY SwapEntry, BOOLEAN Dirty),
 		 PVOID FreePageContext)
 {
    MEMORY_AREA* MemoryArea;
    ULONG i;
    
    DPRINT("MmFreeMemoryArea(AddressSpace %x, BaseAddress %x, Length %x,"
-	   "FreePageContext %d)\n",AddressSpace,BaseAddress,Length,FreePageContext);
+	   "FreePageContext %d)\n",AddressSpace,BaseAddress,Length,
+	  FreePageContext);
 
    MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
 					  BaseAddress);

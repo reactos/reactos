@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: anonmem.c,v 1.2 2002/08/14 20:58:36 dwelch Exp $
+/* $Id: anonmem.c,v 1.3 2002/08/17 01:42:02 dwelch Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/anonmem.c
@@ -187,6 +187,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
        SwapEntry = MmAllocSwapPage();
        if (SwapEntry == 0)
 	 {
+	   MmShowOutOfSpaceMessagePagingFile();
 	   MmEnableVirtualMapping(MemoryArea->Process, Address);
 	   PageOp->Status = STATUS_UNSUCCESSFUL;
 	   KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);

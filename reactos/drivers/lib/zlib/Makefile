@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 2002/06/16 06:05:28 sedwards Exp $
+# $Id: Makefile,v 1.5 2002/08/17 01:42:01 dwelch Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -17,6 +17,9 @@ TARGET_OBJECTS = \
 include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
+
+zlib.sym:
+	@echo FIXME!>$@
 
 # FIXME: this rule should be defined in helper.mk
 $(TARGET_NAME).nostrip.a:

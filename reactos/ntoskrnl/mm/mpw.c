@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mpw.c,v 1.8 2002/08/14 20:58:36 dwelch Exp $
+/* $Id: mpw.c,v 1.9 2002/08/17 01:42:02 dwelch Exp $
  *
  * PROJECT:      ReactOS kernel
  * FILE:         ntoskrnl/mm/mpw.c
@@ -74,55 +74,62 @@ MmWriteDirtyPages(ULONG Target, PULONG Actual)
 NTSTATUS STDCALL
 MmMpwThreadMain(PVOID Ignored)
 {
-   NTSTATUS Status;
-   ULONG PagesWritten;
-   LARGE_INTEGER Timeout;
-
-   Timeout.QuadPart = -50000000;
-
-   for(;;)
-     {
-       Status = KeWaitForSingleObject(&MpwThreadEvent,
-				      0,
-				      KernelMode,
-				      FALSE,
-				      &Timeout);
-       if (!NT_SUCCESS(Status))
-	 {
-	   DbgPrint("MpwThread: Wait failed\n");
-	   KeBugCheck(0);
-	   return(STATUS_UNSUCCESSFUL);
-	 }
-       if (MpwThreadShouldTerminate)
-	 {
-	   DbgPrint("MpwThread: Terminating\n");
-	   return(STATUS_SUCCESS);
-	 }
-       
-       PagesWritten = 0;
-       MmWriteDirtyPages(128, &PagesWritten);
-       CcRosFlushDirtyPages(128, &PagesWritten);
-     }
+  NTSTATUS Status;
+  ULONG PagesWritten;
+  LARGE_INTEGER Timeout;
+  
+  Timeout.QuadPart = -50000000;
+  
+  for(;;)
+    {
+      Status = KeWaitForSingleObject(&MpwThreadEvent,
+				     0,
+				     KernelMode,
+				     FALSE,
+				     &Timeout);
+      if (!NT_SUCCESS(Status))
+	{
+	  DbgPrint("MpwThread: Wait failed\n");
+	  KeBugCheck(0);
+	  return(STATUS_UNSUCCESSFUL);
+	}
+      if (MpwThreadShouldTerminate)
+	{
+	  DbgPrint("MpwThread: Terminating\n");
+	  return(STATUS_SUCCESS);
+	}
+      
+      PagesWritten = 0;
+      MmWriteDirtyPages(128, &PagesWritten);
+      CcRosFlushDirtyPages(128, &PagesWritten);
+    }
 }
 
 NTSTATUS MmInitMpwThread(VOID)
 {
-   NTSTATUS Status;
-   
-   MpwThreadShouldTerminate = FALSE;
-   KeInitializeEvent(&MpwThreadEvent, SynchronizationEvent, FALSE);
-
-   Status = PsCreateSystemThread(&MpwThreadHandle,
-				 THREAD_ALL_ACCESS,
-				 NULL,
-				 NULL,
-				 &MpwThreadId,
-				 MmMpwThreadMain,
-				 NULL);
-   if (!NT_SUCCESS(Status))
-     {
-	return(Status);
+  KPRIORITY Priority;
+  NTSTATUS Status;
+  
+  MpwThreadShouldTerminate = FALSE;
+  KeInitializeEvent(&MpwThreadEvent, SynchronizationEvent, FALSE);
+  
+  Status = PsCreateSystemThread(&MpwThreadHandle,
+				THREAD_ALL_ACCESS,
+				NULL,
+				NULL,
+				&MpwThreadId,
+				MmMpwThreadMain,
+				NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
      }
-   
-   return(STATUS_SUCCESS);
+  
+  Priority = 1;
+  NtSetInformationThread(MpwThreadHandle,
+			 ThreadPriority,
+			 &Priority,
+			 sizeof(Priority));
+  
+  return(STATUS_SUCCESS);
 }

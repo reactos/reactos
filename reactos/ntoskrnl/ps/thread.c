@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.102 2002/08/16 01:39:16 dwelch Exp $
+/* $Id: thread.c,v 1.103 2002/08/17 01:42:03 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -426,7 +426,7 @@ PsInitThreadManagment(VOID)
    PsThreadType->Mapping = &PiThreadMapping;
    PsThreadType->Dump = NULL;
    PsThreadType->Open = NULL;
-   PsThreadType->Close = PiCloseThread;
+   PsThreadType->Close = NULL;
    PsThreadType->Delete = PiDeleteThread;
    PsThreadType->Parse = NULL;
    PsThreadType->Security = NULL;
