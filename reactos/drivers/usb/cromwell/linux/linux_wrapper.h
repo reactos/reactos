@@ -686,47 +686,7 @@ int my_kernel_thread(int (*handler)(void*), void* parm, int flags);
 /*------------------------------------------------------------------------*/ 
 /* PCI, simple and inlined... */
 /*------------------------------------------------------------------------*/ 
-static int __inline__ pci_enable_device(struct pci_dev *dev) {return 0;}
-
-static unsigned long __inline__ pci_resource_start (struct pci_dev *dev, int x)
-{
-	return dev->base[x];
-}
-
-static unsigned long __inline__ pci_resource_len (struct pci_dev *dev, int x){return 0;}
-
-static int __inline__ request_mem_region(unsigned long addr, unsigned long len, const char * d){return 1;}
-
-static void __inline__ *ioremap_nocache(unsigned long addr, unsigned long len)
-{
-	return (void*)addr;
-}
-
-static int __inline__ release_mem_region(unsigned long addr, unsigned long len){return 0;}
-
-static int __inline__ pci_resource_flags(struct pci_dev *dev, int x)
-{
-	return dev->flags[x];
-}
-
-static int __inline__ request_region(unsigned long addr, unsigned long len, const char * d){return 0;}
-
-static int __inline__ pci_set_master(struct pci_dev *dev){return 0;}
-
-static int __inline__ iounmap(void* p){return 0;}
-
-static int __inline__ release_region(unsigned long addr, unsigned long len){return 0;}
-
-static int __inline__ pci_set_drvdata(struct pci_dev *dev, void* d)
-{
-	dev->data=(void*)d;
-	return 0;
-}
-
-static void __inline__ *pci_get_drvdata(struct pci_dev *dev)
-{
-	return dev->data;
-}
+#include "pci_hal.c"
 
 /*------------------------------------------------------------------------*/ 
 /* IRQ handling */
