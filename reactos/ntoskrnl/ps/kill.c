@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.80 2004/10/24 20:37:27 weiden Exp $
+/* $Id: kill.c,v 1.81 2004/10/31 13:01:04 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,7 +18,6 @@
 /* GLOBALS *******************************************************************/
 
 extern KSPIN_LOCK PiThreadLock;
-extern KSPIN_LOCK PiApcLock;
 
 VOID PsTerminateCurrentThread(NTSTATUS ExitStatus);
 
@@ -249,7 +248,7 @@ PsTerminateOtherThread(PETHREAD Thread,
   Apc = ExAllocatePoolWithTag(NonPagedPool, sizeof(KAPC), TAG_TERMINATE_APC);
   KeInitializeApc(Apc,
 		  &Thread->Tcb,
-        OriginalApcEnvironment,
+		  OriginalApcEnvironment,
 		  PiTerminateThreadKernelRoutine,
 		  PiTerminateThreadRundownRoutine,
 		  PiTerminateThreadNormalRoutine,

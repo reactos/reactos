@@ -35,8 +35,6 @@
 
 /* GLOBALS *******************************************************************/
 
-KSPIN_LOCK PiApcLock;
-
 VOID PsTerminateCurrentThread(NTSTATUS ExitStatus);
 
 #define TAG_KAPC     TAG('K', 'A', 'P', 'C')
@@ -70,14 +68,14 @@ BOOLEAN KiTestAlert(VOID)
 {
    KIRQL oldIrql; 
    
-   KeAcquireSpinLock(&PiApcLock, &oldIrql);
+   oldIrql = KeRaiseIrqlToDpcLevel();
    if (KeGetCurrentThread()->ApcState.UserApcPending == 0)
      {
-	KeReleaseSpinLock(&PiApcLock, oldIrql);
+	KeLowerIrql(oldIrql);
 	return(FALSE);
      }
    KeGetCurrentThread()->Alerted[0] = 1;
-   KeReleaseSpinLock(&PiApcLock, oldIrql);
+   KeLowerIrql(oldIrql);
    return(TRUE);
 }
 
@@ -93,7 +91,7 @@ KiDeliverNormalApc(VOID)
    PVOID SystemArgument1;
    PVOID SystemArgument2;
 
-   KeAcquireSpinLock(&PiApcLock, &oldlvl);
+   oldlvl = KeRaiseIrqlToDpcLevel();
    while(!IsListEmpty(&(Thread->Tcb.ApcState.ApcListHead[0])))
      {
        current = RemoveTailList(&Thread->Tcb.ApcState.ApcListHead[0]);
@@ -108,7 +106,9 @@ KiDeliverNormalApc(VOID)
        Thread->Tcb.ApcState.KernelApcInProgress++;
        Thread->Tcb.ApcState.KernelApcPending--;
        
-       KeReleaseSpinLock(&PiApcLock, oldlvl);
+       KeLowerIrql(oldlvl);
+
+       ASSERT(Apc->KernelRoutine);
        
        NormalRoutine = Apc->NormalRoutine;
        NormalContext = Apc->NormalContext;
@@ -121,10 +121,10 @@ KiDeliverNormalApc(VOID)
 			  &SystemArgument2);
        NormalRoutine(NormalContext, SystemArgument1, SystemArgument2);
        
-       KeAcquireSpinLock(&PiApcLock, &oldlvl);
+       oldlvl = KeRaiseIrqlToDpcLevel();
        Thread->Tcb.ApcState.KernelApcInProgress--;
      }
-   KeReleaseSpinLock(&PiApcLock, oldlvl);
+   KeLowerIrql(oldlvl);
 }
 
 BOOLEAN 
@@ -152,7 +152,7 @@ KiDeliverUserApc(PKTRAP_FRAME TrapFrame)
     * Check for thread termination
     */
 
-   KeAcquireSpinLock(&PiApcLock, &oldlvl);
+   oldlvl = KeRaiseIrqlToDpcLevel();
 
    current_entry = Thread->ApcState.ApcListHead[1].Flink;
    
@@ -161,7 +161,7 @@ KiDeliverUserApc(PKTRAP_FRAME TrapFrame)
     */
    if (current_entry == &Thread->ApcState.ApcListHead[1])
      {
-	KeReleaseSpinLock(&PiApcLock, oldlvl);
+        KeLowerIrql(oldlvl);
 	DbgPrint("KiDeliverUserApc called but no APC was pending\n");
 	return(FALSE);
      }
@@ -176,7 +176,7 @@ KiDeliverUserApc(PKTRAP_FRAME TrapFrame)
 	* We've dealt with one pending user-mode APC
 	*/
        Thread->ApcState.UserApcPending--;
-       KeReleaseSpinLock(&PiApcLock, oldlvl);       
+       KeLowerIrql(oldlvl);
        
        /*
 	* Save the thread's current context (in other words the registers
@@ -228,16 +228,17 @@ KiDeliverUserApc(PKTRAP_FRAME TrapFrame)
 	* We also give the kernel routine a last chance to modify the 
 	* arguments to the user APC routine.
 	*/
+       ASSERT(Apc->KernelRoutine);
        Apc->KernelRoutine(Apc,
 			  (PKNORMAL_ROUTINE*)&Esp[1],
 			  (PVOID*)&Esp[2],
 			  (PVOID*)&Esp[3],
 			  (PVOID*)&Esp[4]);
 
-       KeAcquireSpinLock(&PiApcLock, &oldlvl);
+       oldlvl = KeRaiseIrqlToDpcLevel();
      }       
    Thread->Alerted[0] = 0;
-   KeReleaseSpinLock(&PiApcLock, oldlvl);
+   KeLowerIrql(oldlvl);
 
    return(TRUE);
 }
@@ -264,7 +265,7 @@ KiDeliverApc(ULONG Unknown1,
    KIRQL oldlvl;
 
    DPRINT("KiDeliverApc()\n");
-   KeAcquireSpinLock(&PiApcLock, &oldlvl);
+   oldlvl = KeRaiseIrqlToDpcLevel();
    current_entry = Thread->Tcb.ApcState.ApcListHead[0].Flink;
    while(current_entry != &Thread->Tcb.ApcState.ApcListHead[0])
      {
@@ -276,15 +277,16 @@ KiDeliverApc(ULONG Unknown1,
 	   Thread->Tcb.ApcState.KernelApcInProgress++;
 	   Thread->Tcb.ApcState.KernelApcPending--;
 	   
-	   KeReleaseSpinLock(&PiApcLock, oldlvl);
+           KeLowerIrql(oldlvl);
 	   
+	   ASSERT(Apc->KernelRoutine);
 	   Apc->KernelRoutine(Apc,
 			      &Apc->NormalRoutine,
 			      &Apc->NormalContext,
 			      &Apc->SystemArgument1,
 			      &Apc->SystemArgument2);
 	   
-	   KeAcquireSpinLock(&PiApcLock, &oldlvl);
+           oldlvl = KeRaiseIrqlToDpcLevel();
 	   Thread->Tcb.ApcState.KernelApcInProgress--;
 	   current_entry = Thread->Tcb.ApcState.ApcListHead[0].Flink;
 	 }
@@ -293,7 +295,7 @@ KiDeliverApc(ULONG Unknown1,
 	   current_entry = current_entry->Flink;
 	 }
      }
-   KeReleaseSpinLock(&PiApcLock, oldlvl);
+   KeLowerIrql(oldlvl);
 }
 
 /*
@@ -334,14 +336,14 @@ KeInsertQueueApc (PKAPC	Apc,
 #endif
      }
 
-   KeAcquireSpinLock(&PiApcLock, &oldlvl);
+   oldlvl = KeRaiseIrqlToDpcLevel();
 
    TargetThread = Apc->Thread;
 
    if (TargetThread->State == THREAD_STATE_TERMINATED_1 ||
        TargetThread->State == THREAD_STATE_TERMINATED_2)
      {
-       KeReleaseSpinLock(&PiApcLock, oldlvl);
+       KeLowerIrql(oldlvl);
        return(FALSE);
      }
 
@@ -368,7 +370,7 @@ KeInsertQueueApc (PKAPC	Apc,
    if (Apc->ApcMode == KernelMode && TargetThread == KeGetCurrentThread() && 
        Apc->NormalRoutine == NULL)
      {
-       KeReleaseSpinLock(&PiApcLock, oldlvl);
+       KeLowerIrql(oldlvl);
        return TRUE;
      }
 
@@ -422,7 +424,7 @@ KeInsertQueueApc (PKAPC	Apc,
 	KeRemoveAllWaitsThread(CONTAINING_RECORD(TargetThread, ETHREAD, Tcb),
 			       STATUS_USER_APC, TRUE);
      }
-   KeReleaseSpinLock(&PiApcLock, oldlvl);
+   KeLowerIrql(oldlvl);
    return TRUE;
 }
 
@@ -440,11 +442,9 @@ KeRemoveQueueApc (PKAPC Apc)
    KIRQL oldIrql;
    PKTHREAD TargetThread;
 
-   KeRaiseIrql(HIGH_LEVEL, &oldIrql);
-   KiAcquireSpinLock(&PiApcLock);
+   oldIrql = KeRaiseIrqlToDpcLevel();
    if (Apc->Inserted == FALSE)
      {
-        KiReleaseSpinLock(&PiApcLock);
         KeLowerIrql(oldIrql);
         return FALSE;
      }
@@ -461,7 +461,6 @@ KeRemoveQueueApc (PKAPC Apc)
      }
    Apc->Inserted = FALSE;
 
-   KiReleaseSpinLock(&PiApcLock);
    KeLowerIrql(oldIrql);   
    return(TRUE);
 }
@@ -578,7 +577,7 @@ NtQueueApcThread(HANDLE			ThreadHandle,
    
    KeInitializeApc(Apc,
 		   &Thread->Tcb,
-         OriginalApcEnvironment,
+                   OriginalApcEnvironment,
 		   NtQueueApcKernelRoutine,
 		   NtQueueApcRundownRoutine,
 		   ApcRoutine,
@@ -603,7 +602,6 @@ NTSTATUS STDCALL NtTestAlert(VOID)
 VOID INIT_FUNCTION
 PiInitApcManagement(VOID)
 {
-   KeInitializeSpinLock(&PiApcLock);
 }
 
 static VOID FASTCALL
@@ -626,8 +624,6 @@ KiSwapApcEnvironment(
   PKTHREAD Thread,
   PKPROCESS NewProcess)
 {
-  /* FIXME: Grab the process apc lock or the PiApcLock? And why does both exist? */
-
   if (Thread->ApcStateIndex == AttachedApcEnvironment)
   {
     /* NewProcess must be the same as in the original-environment */
