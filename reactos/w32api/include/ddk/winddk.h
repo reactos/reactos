@@ -7615,15 +7615,6 @@ KeMemoryBarrier(
   __asm__ __volatile__ ("xchg %%eax, %0" : : "m" (Barrier) : "%eax");
 }
 
-static __inline
-VOID
-KeMemoryBarrier(
-  VOID)
-{
-  volatile LONG Barrier;
-  __asm__ __volatile__ ("xchg %%eax, %0" : : "m" (Barrier) : "%eax");
-}
-
 NTOSAPI
 LONG
 DDKAPI
