@@ -217,9 +217,9 @@ VOID del(LPHIST_ENTRY item)
 	if( item==NULL || item==Top || item==Bottom )
 	{
 #ifdef _DEBUG
-		DebugPrintf("del in " __FILE__  ": retrning\n"
-			"item is 0x%08x (Bottom is0x%08x)\n",
-			item, Bottom);			
+		DebugPrintf(_T("del in " __FILE__  ": retrning\n"
+			    "item is 0x%08x (Bottom is0x%08x)\n"),
+			    item, Bottom);			
 
 #endif
 		return;
@@ -267,7 +267,7 @@ VOID add_before_last(LPTSTR string)
 
 	/*allocte entry and string*/
 	tmp=malloc(sizeof(HIST_ENTRY));
-	tmp->string=malloc(_tcslen(string)+1);
+	tmp->string=malloc((_tcslen(string)+1)*sizeof(TCHAR));
 	_tcscpy(tmp->string,string);		
 	
 	
@@ -320,7 +320,7 @@ VOID add_at_bottom(LPTSTR string)
 
 		
 	/*fill bottom with string, it will become Bottom->next*/		
-	Bottom->string=malloc(_tcslen(string)+1);
+	Bottom->string=malloc((_tcslen(string)+1)*sizeof(TCHAR));
 	_tcscpy(Bottom->string,string);		
 	
 	/*save Bottom value*/

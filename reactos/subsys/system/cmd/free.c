@@ -62,8 +62,8 @@ ConvertULargeInteger (ULARGE_INTEGER num, LPTSTR des, INT len)
 static VOID
 PrintDiskInfo (LPTSTR szDisk)
 {
-	TCHAR szRootPath[4] = "A:\\";
-	TCHAR szDrive[2] = "A";
+	TCHAR szRootPath[4] = _T("A:\\");
+	TCHAR szDrive[2] = _T("A");
 	TCHAR szVolume[64];
 	TCHAR szSerial[10];
 	TCHAR szTotal[40];

@@ -46,7 +46,7 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 	LPTSTR pp;
 
 #ifdef _DEBUG
-	DebugPrintf ("cmd_if: (\'%s\', \'%s\'\n", cmd, param);
+	DebugPrintf (_T("cmd_if: (\'%S\', \'%S\')\n"), cmd, param);
 #endif
 
 	if (!_tcsncmp (param, _T("/?"), 2))

@@ -13,8 +13,8 @@
 
 #ifdef INCLUDE_CMD_SCREEN
 
-#include <tchar.h>
 #include <windows.h>
+#include <tchar.h>
 #include <stdlib.h>
 #include <ctype.h>
 
@@ -48,10 +48,10 @@ INT CommandScreen (LPTSTR cmd, LPTSTR param)
 		return 1;
 	}
 
-	y = atoi(param);
+	y = _ttoi(param);
 	if (y<0 || y>(maxy-1))
 	{
-		ConOutPrintf("invalid value for	row");
+		ConOutPrintf(_T("invalid value for	row"));
 		return 1;
 	}
 
@@ -71,7 +71,7 @@ INT CommandScreen (LPTSTR cmd, LPTSTR param)
 		return 1;
 	}
 
-	x = atoi(param);
+	x = _ttoi(param);
 	if (x<0 || x>(maxx-1))
 	{
 		ConErrPuts(_T("invalid value for col"));

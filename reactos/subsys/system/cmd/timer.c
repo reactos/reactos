@@ -25,7 +25,7 @@
 
 
 //print timer status
-#define PS ConOutPrintf("Timer %d is %s: ",clk_n,cS?"ON":"OFF"); \
+#define PS ConOutPrintf(_T("Timer %d is %s: "),clk_n,cS?_T("ON"):_T("OFF")); \
 	PrintTime()
 
 //print timer value
@@ -46,13 +46,13 @@ PrintElapsedTime (DWORD time,INT format)
 	DWORD h,m,s,ms;
 
 #ifdef _DEBUG
-	DebugPrintf("PrintTime(%d,%d)",time,format);
+	DebugPrintf(_T("PrintTime(%d,%d)"),time,format);
 #endif
 	
 	switch (format)
 	{
 	case 0:
-		ConOutPrintf("Elapsed %d msecs\n",time);
+		ConOutPrintf(_T("Elapsed %d msecs\n"),time);
 		break;
 
 	case 1:
@@ -62,7 +62,7 @@ PrintElapsedTime (DWORD time,INT format)
 		time /=60;
 		m = time % 60;		
 		h = time / 60;
-		ConOutPrintf("Elapsed %02d%c%02d%c%02d%c%02d\n",
+		ConOutPrintf(_T("Elapsed %02d%c%02d%c%02d%c%02d\n"),
 		             h,cTimeSeparator,
 		             m,cTimeSeparator,
 		             s,cDecimalSeparator,ms/10);
@@ -138,14 +138,14 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 	for (i = 0; i < argc; i++)
 	{
 		//set timer on
-		if (!(_tcsicmp(&p[i][0],"on"))  && NewClkStatus == NCS_NOT_SPECIFIED)
+		if (!(_tcsicmp(&p[i][0],_T("on")))  && NewClkStatus == NCS_NOT_SPECIFIED)
 		{
 			NewClkStatus = NCS_ON;
 			continue;
 		}
 
 		//set timer off
-		if (!(_tcsicmp(&p[i][0],"off")) && NewClkStatus == NCS_NOT_SPECIFIED)
+		if (!(_tcsicmp(&p[i][0],_T("off"))) && NewClkStatus == NCS_NOT_SPECIFIED)
 		{
 			NewClkStatus = NCS_OFF;
 			continue;

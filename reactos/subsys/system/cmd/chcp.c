@@ -41,14 +41,14 @@ INT CommandChcp (LPTSTR cmd, LPTSTR param)
 	if (args == 0)
 	{
 		/* display active code page number */
-		ConOutPrintf ("Active code page: %u\n", GetConsoleCP ());
+		ConOutPrintf (_T("Active code page: %u\n"), GetConsoleCP ());
 		return 0;
 	}
 
 	if (args >= 2)
 	{
 		/* too many parameters */
-		ConErrPrintf ("Invalid parameter format - %s\n", param);
+		ConErrPrintf (_T("Invalid parameter format - %s\n"), param);
 		return 1;
 	}
 
@@ -62,14 +62,14 @@ INT CommandChcp (LPTSTR cmd, LPTSTR param)
 
 	if (uNewCodePage == 0)
 	{
-		ConErrPrintf ("Parameter format incorrect - %s\n", arg[0]);
+		ConErrPrintf (_T("Parameter format incorrect - %s\n"), arg[0]);
 		freep (arg);
 		return 1;
 	}
 
 	if (!SetConsoleCP (uNewCodePage))
 	{
-		ConErrPrintf ("Invalid code page\n");
+		ConErrPrintf (_T("Invalid code page\n"));
 	}
 	else
 	{

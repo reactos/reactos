@@ -47,7 +47,7 @@ INT cmd_goto (LPTSTR cmd, LPTSTR param)
 	LONG   lNewPosHigh;
 
 #ifdef _DEBUG
-	DebugPrintf ("cmd_goto (\'%s\', \'%s\'\n", cmd, param);
+	DebugPrintf (_T("cmd_goto (\'%s\', \'%s\'\n"), cmd, param);
 #endif
 
 	if (!_tcsncmp (param, _T("/?"), 2))

@@ -106,7 +106,7 @@ IsKeyInString (LPTSTR lpString, TCHAR cKey, BOOL bCaseSensitive)
 INT
 CommandChoice (LPTSTR cmd, LPTSTR param)
 {
-	LPTSTR lpOptions = "YN";
+	LPTSTR lpOptions = _T("YN");
 	LPTSTR lpText    = NULL;
 	BOOL   bNoPrompt = FALSE;
 	BOOL   bCaseSensitive = FALSE;

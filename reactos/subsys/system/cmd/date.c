@@ -231,16 +231,16 @@ INT cmd_date (LPTSTR cmd, LPTSTR param)
 			PrintDateString ();
 			ConInString (s, 40);
 #ifdef _DEBUG
-			DebugPrintf ("\'%s\'\n", s);
+			DebugPrintf (_T("\'%s\'\n"), s);
 #endif
-			while (*s && s[_tcslen (s) - 1] < ' ')
-				s[_tcslen (s) - 1] = '\0';
+			while (*s && s[_tcslen (s) - 1] < _T(' '))
+				s[_tcslen (s) - 1] = _T('\0');
 			if (ParseDate (s))
 			{
 				freep (arg);
 				return 0;
 			}
-			ConErrPuts ("Invalid date.");
+			ConErrPuts (_T("Invalid date."));
 		}
 	}
 	else
@@ -250,7 +250,7 @@ INT cmd_date (LPTSTR cmd, LPTSTR param)
 			freep (arg);
 			return 0;
 		}
-		ConErrPuts ("Invalid date.");
+		ConErrPuts (_T("Invalid date."));
 	}
 
 	freep (arg);

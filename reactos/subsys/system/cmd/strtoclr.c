@@ -47,46 +47,46 @@ typedef struct _CLRTABLE
 
 CLRTABLE clrtable[] =
 {
-	{"bla"	,0			},
-	{"blu"	,_B			},
-	{"gre"	,_G			},
-	{"cya"	,_B|_G		},
-	{"red"	,_R			},
-	{"mag"	,_B|_R		},
-	{"yel"	,_R|_G		},
-	{"whi"	,_R|_G|_B	},
-	{"gra"	,_I			},
+	{_T("bla")	,0		},
+	{_T("blu")	,_B		},
+	{_T("gre")	,_G		},
+	{_T("cya")	,_B|_G		},
+	{_T("red")	,_R		},
+	{_T("mag")	,_B|_R		},
+	{_T("yel")	,_R|_G		},
+	{_T("whi")	,_R|_G|_B	},
+	{_T("gra")	,_I		},
 
 	
-	{"0"	,0			},
-	{"2"	,_G			},
-	{"3"	,_B|_G		},
-	{"4"	,_R			},
-	{"5"	,_B|_R		},
-	{"6"	,_R|_G		},
-	{"7"	,_R|_G|_B	},
+	{_T("0")	,0		},
+	{_T("2")	,_G		},
+	{_T("3")	,_B|_G		},
+	{_T("4")	,_R		},
+	{_T("5")	,_B|_R		},
+	{_T("6")	,_R|_G		},
+	{_T("7")	,_R|_G|_B	},
 
-	{"8"	,_I			},
-	{"9"	,_I|_B		},
-	{"10"	,_I|_G		},
-	{"11"	,_I|_B|_G	},
-	{"12"	,_I|_R		},
-	{"13"	,_I|_B|_R	},
-	{"14"	,_I|_R|_G	},
-	{"15"	,_I|_R|_G|_B},
+	{_T("8")	,_I		},
+	{_T("9")	,_I|_B		},
+	{_T("10")	,_I|_G		},
+	{_T("11")	,_I|_B|_G	},
+	{_T("12")	,_I|_R		},
+	{_T("13")	,_I|_B|_R	},
+	{_T("14")	,_I|_R|_G	},
+	{_T("15")	,_I|_R|_G|_B	},
 
 	
 	/* note that 1 is at the end of list
 	to avoid to confuse it with 10-15*/
-	{"1"	,_B			},
+	{_T("1")	,_B		},
 
 	/*cyan synonimous*/
-	{"aqu"	,_B|_G		},
+	{_T("aqu")	,_B|_G		},
 	/*magenta synonimous*/
-	{"pur"	,_B|_R		},
+	{_T("pur")	,_B|_R		},
 
 	
-	{""   ,0},
+	{_T("")   ,0},
 };
 
 
@@ -208,7 +208,7 @@ WORD str_to_color(LPTSTR* arg_str)
 	/*foreground*/
         bBri = FALSE;
 
-	if(_tcsnicmp(str,"bri",3) == 0 )
+	if(_tcsnicmp(str,_T("bri"),3) == 0 )
 	{
 		bBri = TRUE;
 
@@ -230,7 +230,7 @@ WORD str_to_color(LPTSTR* arg_str)
 	/*background*/
 	bBri = FALSE;
 
-	if(_tcsnicmp(str,"bri",3) == 0 )
+	if(_tcsnicmp(str,_T("bri"),3) == 0 )
 	{
 		bBri = TRUE;
 

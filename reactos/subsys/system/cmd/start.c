@@ -53,11 +53,11 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 	if( !*rest )
 	  {
 	    // FIXME: use comspec instead
-	    rest = "cmd";
+	    rest = _T("cmd");
 	  }
 	/* get the PATH environment variable and parse it */
 	/* search the PATH environment variable for the binary */
-	param = strchr( rest, ' ' );  // skip program name to reach parameters
+	param = _tcschr( rest, _T(' ') );  // skip program name to reach parameters
 	if( param )
 	  {
 	    *param = 0;
@@ -73,7 +73,7 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 		!_tcsicmp (_tcsrchr (szFullName, _T('.')), _T(".cmd")))
 	{
 #ifdef _DEBUG
-		DebugPrintf ("[BATCH: %s %s]\n", szFullName, rest);
+		DebugPrintf (_T("[BATCH: %s %s]\n"), szFullName, rest);
 #endif
 		ConErrPuts (_T("No batch support at the moment!"));
 	}
@@ -85,13 +85,13 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 		STARTUPINFO stui;
 
 #ifdef _DEBUG
-		DebugPrintf ("[EXEC: %s %s]\n", szFullName, rest);
+		DebugPrintf (_T("[EXEC: %s %s]\n"), szFullName, rest);
 #endif
 		/* build command line for CreateProcess() */
 		_tcscpy (szFullCmdLine, first);
 		if( param )
 		  {
-		    _tcscat(szFullCmdLine, " " );
+		    _tcscat(szFullCmdLine, _T(" ") );
 		    _tcscat (szFullCmdLine, param);
 		  }
 
@@ -117,7 +117,7 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 		else
 		{
 			ErrorMessage (GetLastError (),
-						  "Error executing CreateProcess()!!\n");
+						  _T("Error executing CreateProcess()!!\n"));
 		}
 	}
 

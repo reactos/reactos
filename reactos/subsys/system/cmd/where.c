@@ -82,7 +82,7 @@
 #define ENV_BUFFER_SIZE  1024
 
 
-static LPTSTR ext[]  = {".bat", ".cmd", ".com", ".exe"};
+static LPTSTR ext[]  = {_T(".bat"), _T(".cmd"), _T(".com"), _T(".exe")};
 static INT nExtCount = sizeof(ext) / sizeof(LPTSTR);
 
 

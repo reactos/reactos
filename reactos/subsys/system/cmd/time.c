@@ -187,7 +187,7 @@ INT cmd_time (LPTSTR cmd, LPTSTR param)
 			ConInString (s, 40);
 
 #ifdef _DEBUG
-			DebugPrintf ("\'%s\'\n", s);
+			DebugPrintf (_T("\'%s\'\n"), s);
 #endif
 
 			while (*s && s[_tcslen (s) - 1] < _T(' '))

@@ -61,7 +61,7 @@ INT cmd_path (LPTSTR cmd, LPTSTR param)
 		dwBuffer = GetEnvironmentVariable (_T("PATH"), pszBuffer, ENV_BUFFER_SIZE);
 		if (dwBuffer == 0)
 		{
-			ConErrPrintf ("CMD: Not in environment \"PATH\"\n");
+			ConErrPrintf (_T("CMD: Not in environment \"PATH\"\n"));
 			return 0;
 		}
 		else if (dwBuffer > ENV_BUFFER_SIZE)

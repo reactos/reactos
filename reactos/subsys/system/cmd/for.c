@@ -60,7 +60,7 @@ INT cmd_for (LPTSTR cmd, LPTSTR param)
 	TCHAR  var;
 
 #ifdef _DEBUG
-	DebugPrintf ("cmd_for (\'%s\', \'%s\'\n", cmd, param);
+	DebugPrintf (_T("cmd_for (\'%s\', \'%s\'\n"), cmd, param);
 #endif
 
 	if (!_tcsncmp (param, _T("/?"), 2))

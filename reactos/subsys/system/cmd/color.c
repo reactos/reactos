@@ -1,4 +1,4 @@
-/* $Id: color.c,v 1.2 2003/06/01 17:06:22 hbirr Exp $
+/* $Id: color.c,v 1.3 2003/08/07 09:27:42 hbirr Exp $
  *
  *  COLOR.C - color internal command.
  *
@@ -107,11 +107,11 @@ INT CommandColor (LPTSTR first, LPTSTR rest)
 
 	if (StringToColor (&wColor, &rest) == FALSE)
 	{
-		ConErrPuts("error in color specification");
+		ConErrPuts(_T("error in color specification"));
 		return 1;
 	}
 
-	ConErrPrintf ("Color %x\n", wColor);
+	ConErrPrintf (_T("Color %x\n"), wColor);
 
 	if ((wColor & 0xF) == (wColor &0xF0) >> 4)
 	{
@@ -121,7 +121,7 @@ INT CommandColor (LPTSTR first, LPTSTR rest)
 
 	/* set color */
 	SetScreenColor (wColor,
-	                (_tcsstr (rest,"/F") || _tcsstr (rest,"/f")));
+	                (_tcsstr (rest,_T("/F")) || _tcsstr (rest,_T("/f"))));
 
 	return 0;
 }

@@ -1,4 +1,4 @@
-/* $Id: call.c,v 1.1 2003/03/20 19:19:22 rcampbell Exp $
+/* $Id: call.c,v 1.2 2003/08/07 09:27:42 hbirr Exp $
  *
  *  CALL.C - call internal batch command.
  *
@@ -52,7 +52,7 @@ INT cmd_call (LPTSTR cmd, LPTSTR param)
 	LPBATCH_CONTEXT n = NULL;
 
 #ifdef _DEBUG
-	DebugPrintf ("cmd_call: (\'%s\',\'%s\')\n", cmd, param);
+	DebugPrintf (_T("cmd_call: (\'%s\',\'%s\')\n"), cmd, param);
 #endif
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{

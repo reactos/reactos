@@ -1,4 +1,4 @@
-/* $Id: cmd.h,v 1.2 2003/06/01 17:06:22 hbirr Exp $
+/* $Id: cmd.h,v 1.3 2003/08/07 09:27:42 hbirr Exp $
  *
  *  CMD.H - header file for the modules in CMD.EXE
  *
@@ -49,20 +49,20 @@
 #define BREAK_IGNORE 4
 
 /* define some error messages */
-#define NOENVERR        "ERROR: no environment"
-#define INVALIDDRIVE    "ERROR: invalid drive"
-#define INVALIDFUNCTION "ERROR: invalid function"
-#define ACCESSDENIED    "ERROR: access denied"
-#define BADENVIROMENT   "ERROR: bad enviroment"
-#define BADFORMAT       "ERROR: bad format"
-#define ERROR_E2BIG     "ERROR: Argument list too long"
-#define ERROR_EINVAL    "ERROR: Invalid argument"
+#define NOENVERR        _T("ERROR: no environment")
+#define INVALIDDRIVE    _T("ERROR: invalid drive")
+#define INVALIDFUNCTION _T("ERROR: invalid function")
+#define ACCESSDENIED    _T("ERROR: access denied")
+#define BADENVIROMENT   _T("ERROR: bad enviroment")
+#define BADFORMAT       _T("ERROR: bad format")
+#define ERROR_E2BIG     _T("ERROR: Argument list too long")
+#define ERROR_EINVAL    _T("ERROR: Invalid argument")
 
 #define SHELLINFO       "ReactOS Command Line Interpreter"
 
 
-#define D_ON         "on"
-#define D_OFF        "off"
+#define D_ON         _T("on")
+#define D_OFF        _T("off")
 
 
 /* command line buffer length */
@@ -409,8 +409,8 @@ INT CommandWindow (LPTSTR, LPTSTR);
 
 
 /* The MSDOS Batch Commands [MS-DOS 5.0 User's Guide and Reference p359] */
-int cmd_if(char *, char *);
-int cmd_pause(char *, char *);
-int cmd_shift(char *, char *);
+int cmd_if(TCHAR *, TCHAR *);
+int cmd_pause(TCHAR *, TCHAR *);
+int cmd_shift(TCHAR *, TCHAR *);
 
 #endif /* _CMD_H_INCLUDED_ */

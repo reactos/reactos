@@ -221,7 +221,7 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 						str[current - 1] = _T('\0');
 						if (GetCursorX () != 0)
 						{
-							ConOutPrintf ("\b \b");
+							ConOutPrintf (_T("\b \b"));
 						}
 						else
 						{

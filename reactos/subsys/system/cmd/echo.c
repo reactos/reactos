@@ -1,4 +1,4 @@
-/* $Id: echo.c,v 1.1 2003/03/20 19:19:22 rcampbell Exp $
+/* $Id: echo.c,v 1.2 2003/08/07 09:27:42 hbirr Exp $
  *
  *  ECHO.C - internal echo commands.
  *
@@ -37,7 +37,7 @@
 INT CommandEcho (LPTSTR cmd, LPTSTR param)
 {
 #ifdef _DEBUG
-	DebugPrintf ("CommandEcho '%s' : '%s'\n", cmd, param);
+	DebugPrintf (_T("CommandEcho '%s' : '%s'\n"), cmd, param);
 #endif
 
 	if (!_tcsncmp (param, _T("/?"), 2))
@@ -77,19 +77,19 @@ INT CommandEcho (LPTSTR cmd, LPTSTR param)
 INT CommandEchos (LPTSTR cmd, LPTSTR param)
 {
 #ifdef _DEBUG
-	DebugPrintf ("CommandEchos '%s' : '%s'\n", cmd, param);
+	DebugPrintf (_T("CommandEchos '%s' : '%s'\n"), cmd, param);
 #endif
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts ("Display a messages without trailing carridge return and line feed.\n"
-		            "\n"
-		            "  ECHOS message");
+		ConOutPuts (_T("Display a messages without trailing carridge return and line feed.\n"
+		               "\n"
+		               "  ECHOS message"));
 		return 0;
 	}
 
 	if (*param)
-		ConOutPrintf ("%s", param);
+		ConOutPrintf (_T("%s"), param);
 
 	return 0;
 }
@@ -98,15 +98,15 @@ INT CommandEchos (LPTSTR cmd, LPTSTR param)
 INT CommandEchoerr (LPTSTR cmd, LPTSTR param)
 {
 #ifdef _DEBUG
-	DebugPrintf ("CommandEchoerr '%s' : '%s'\n", cmd, param);
+	DebugPrintf (_T("CommandEchoerr '%s' : '%s'\n"), cmd, param);
 #endif
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts ("Displays a message to the standard error.\n"
-		            "\n"
-		            "  ECHOERR message\n"
-		            "  ECHOERR.           prints an empty line");
+		ConOutPuts (_T("Displays a message to the standard error.\n"
+		               "\n"
+		               "  ECHOERR message\n"
+		               "  ECHOERR.           prints an empty line"));
 		return 0;
 	}
 
@@ -128,14 +128,14 @@ INT CommandEchoerr (LPTSTR cmd, LPTSTR param)
 INT CommandEchoserr (LPTSTR cmd, LPTSTR param)
 {
 #ifdef _DEBUG
-	DebugPrintf ("CommandEchoserr '%s' : '%s'\n", cmd, param);
+	DebugPrintf (_T("CommandEchoserr '%s' : '%s'\n"), cmd, param);
 #endif
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts ("Prints a messages to standard error output without trailing carridge return and line feed.\n"
-		            "\n"
-		            "  ECHOSERR message");
+		ConOutPuts (_T("Prints a messages to standard error output without trailing carridge return and line feed.\n"
+		               "\n"
+		               "  ECHOSERR message"));
 		return 0;
 	}
 

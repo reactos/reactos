@@ -1,4 +1,4 @@
-/* $Id: batch.c,v 1.1 2003/03/20 19:19:22 rcampbell Exp $
+/* $Id: batch.c,v 1.2 2003/08/07 09:27:42 hbirr Exp $
  *
  *  BATCH.C - batch file processor for CMD.EXE.
  *
@@ -93,7 +93,7 @@ LPTSTR FindArg (INT n)
 	LPTSTR pp;
 
 #ifdef _DEBUG
-	DebugPrintf ("FindArg: (%d)\n", n);
+	DebugPrintf (_T("FindArg: (%d)\n"), n);
 #endif
 
 	if (bc == NULL)
@@ -180,7 +180,7 @@ LPTSTR BatchParams (LPTSTR s1, LPTSTR s2)
 VOID ExitBatch (LPTSTR msg)
 {
 #ifdef _DEBUG
-	DebugPrintf ("ExitBatch: (\'%s\')\n", msg);
+	DebugPrintf (_T("ExitBatch: (\'%s\')\n"), msg);
 #endif
 
 	if (bc != NULL)
@@ -210,7 +210,7 @@ VOID ExitBatch (LPTSTR msg)
 	}
 
 	if (msg && *msg)
-		ConOutPrintf ("%s\n", msg);
+		ConOutPrintf (_T("%s\n"), msg);
 }
 
 
@@ -230,7 +230,7 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 						FILE_FLAG_SEQUENTIAL_SCAN, NULL);
 
 #ifdef _DEBUG
-	DebugPrintf ("Batch: (\'%s\', \'%s\', \'%s\')  hFile = %x\n",
+	DebugPrintf (_T("Batch: (\'%s\', \'%s\', \'%s\')  hFile = %x\n"),
 				 fullname, firstword, param, hFile);
 #endif
 
@@ -276,7 +276,7 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 	bc->params = BatchParams (firstword, param);
 
 #ifdef _DEBUG
-	DebugPrintf ("Batch: returns TRUE\n");
+	DebugPrintf (_T("Batch: returns TRUE\n"));
 #endif
 
 	return TRUE;
@@ -305,7 +305,7 @@ LPTSTR ReadBatchLine (LPBOOL bLocalEcho)
 		return NULL;
 
 #ifdef _DEBUG
-	DebugPrintf ("ReadBatchLine ()\n");
+	DebugPrintf (_T("ReadBatchLine ()\n"));
 #endif
 
 	while (1)

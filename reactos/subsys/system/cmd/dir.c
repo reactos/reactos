@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.2 2003/05/09 21:58:05 ekohl Exp $
+/* $Id: dir.c,v 1.3 2003/08/07 09:27:42 hbirr Exp $
  *
  *  DIR.C - dir internal command.
  *
@@ -703,12 +703,11 @@ GetUserDiskFreeSpace(LPCTSTR lpRoot,
   hInstance = LoadLibrary(_T("KERNEL32"));
   if (hInstance != NULL)
     {
-#ifndef UNICODE
-      pGetFreeDiskSpaceEx = GetProcAddress(hInstance,
-					   "GetDiskFreeSpaceExA");
+      pGetFreeDiskSpaceEx = (PGETFREEDISKSPACEEX)GetProcAddress(hInstance,
+#ifdef _UNICODE
+					                        _T("GetDiskFreeSpaceExW"));
 #else
-      pGetFreeDiskSpaceEx = GetProcAddress(hInstance,
-					   "GetDiskFreeSpaceExW");
+				                                _T("GetDiskFreeSpaceExA"));
 #endif
       if (pGetFreeDiskSpaceEx != NULL)
 	{
@@ -990,7 +989,7 @@ DirList (LPTSTR szPath, LPTSTR szFilespec, LPINT pLine, DWORD dwFlags)
 				/* print file size */
 				if (file.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 				{
-					ConOutPrintf ("%-14s", "<DIR>");
+					ConOutPrintf (_T("%-14s"), _T("<DIR>"));
 					dircount++;
 				}
 				else
@@ -1013,7 +1012,7 @@ DirList (LPTSTR szPath, LPTSTR szFilespec, LPINT pLine, DWORD dwFlags)
 				}
 
 				/* print long filename */
-				ConOutPrintf (" %s\n", file.cFileName);
+				ConOutPrintf (_T(" %s\n"), file.cFileName);
 			}
 
 			if (IncLine (pLine, dwFlags))
@@ -1093,10 +1092,10 @@ DirRead (LPTSTR szPath, LPTSTR szFilespec, LPINT pLine, DWORD dwFlags)
 
 			if ((dwFlags & DIR_BARE) == 0)
 			{
-				ConOutPrintf ("\n");
+				ConOutPrintf (_T("\n"));
 				if (IncLine (pLine, dwFlags) != 0)
 					return 1;
-				ConOutPrintf ("\n");
+				ConOutPrintf (_T("\n"));
 				if (IncLine (pLine, dwFlags) != 0)
 					return 1;
 			}
@@ -1191,7 +1190,7 @@ INT CommandDir (LPTSTR first, LPTSTR rest)
 
 	/* default to current directory */
 	if (!param)
-		param = ".";
+		param = _T(".");
 
 	/* parse the directory info */
 	if (DirParsePathspec (param, szPath, szFilespec))
