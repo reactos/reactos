@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.34 2004/07/18 13:02:28 ekohl Exp $
+/* $Id: semgr.c,v 1.35 2004/07/19 12:45:56 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -208,19 +208,28 @@ NtAllocateUuids(PULARGE_INTEGER Time,
 VOID STDCALL
 SeCaptureSubjectContext(OUT PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
-  PEPROCESS Process;
+  PETHREAD Thread;
   BOOLEAN CopyOnOpen;
   BOOLEAN EffectiveOnly;
 
-  Process = PsGetCurrentThread ()->ThreadsProcess;
-
-  SubjectContext->ProcessAuditId = Process;
-  SubjectContext->ClientToken = 
-    PsReferenceImpersonationToken (PsGetCurrentThread(),
-				   &CopyOnOpen,
-				   &EffectiveOnly,
-				   &SubjectContext->ImpersonationLevel);
-  SubjectContext->PrimaryToken = PsReferencePrimaryToken (Process);
+  Thread = PsGetCurrentThread();
+  if (Thread == NULL)
+    {
+      SubjectContext->ProcessAuditId = 0;
+      SubjectContext->PrimaryToken = NULL;
+      SubjectContext->ClientToken = NULL;
+      SubjectContext->ImpersonationLevel = 0;
+    }
+  else
+    {
+      SubjectContext->ProcessAuditId = Thread->ThreadsProcess;
+      SubjectContext->ClientToken = 
+	PsReferenceImpersonationToken(Thread,
+				      &CopyOnOpen,
+				      &EffectiveOnly,
+				      &SubjectContext->ImpersonationLevel);
+      SubjectContext->PrimaryToken = PsReferencePrimaryToken(Thread->ThreadsProcess);
+    }
 }
 
 
@@ -240,10 +249,14 @@ SeLockSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
 VOID STDCALL
 SeReleaseSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
-  ObDereferenceObject (SubjectContext->PrimaryToken);
+  if (SubjectContext->PrimaryToken != NULL)
+    {
+      ObDereferenceObject(SubjectContext->PrimaryToken);
+    }
+
   if (SubjectContext->ClientToken != NULL)
     {
-      ObDereferenceObject (SubjectContext->ClientToken);
+      ObDereferenceObject(SubjectContext->ClientToken);
     }
 }
 
@@ -262,14 +275,15 @@ SeUnlockSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
  * @implemented
  */
 NTSTATUS STDCALL
-SeDeassignSecurity(PSECURITY_DESCRIPTOR* SecurityDescriptor)
+SeDeassignSecurity(PSECURITY_DESCRIPTOR *SecurityDescriptor)
 {
-  if ((*SecurityDescriptor) != NULL)
+  if (*SecurityDescriptor != NULL)
     {
       ExFreePool(*SecurityDescriptor);
-      (*SecurityDescriptor) = NULL;
+      *SecurityDescriptor = NULL;
     }
-  return(STATUS_SUCCESS);
+
+  return STATUS_SUCCESS;
 }
 
 
