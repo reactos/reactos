@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kdb.c,v 1.33 2004/10/30 23:48:55 navaraf Exp $
+/* $Id: kdb.c,v 1.34 2004/11/10 23:16:16 blight Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/kdb.c
@@ -152,6 +152,30 @@ struct
   {"help", "help", "Display help screen", DbgProcessHelpCommand},
   {NULL, NULL, NULL}
 };
+
+static const char *ExceptionTypeStrings[] =
+  {
+    "Divide Error",
+    "Debug Trap",
+    "NMI",
+    "Breakpoint",
+    "Overflow",
+    "BOUND range exceeded",
+    "Invalid Opcode",
+    "No Math Coprocessor",
+    "Double Fault",
+    "Unknown(9)",
+    "Invalid TSS",
+    "Segment Not Present",
+    "Stack Segment Fault",
+    "General Protection",
+    "Page Fault",
+    "Reserved(15)",
+    "Math Fault",
+    "Alignment Check",
+    "Machine Check",
+    "SIMD Fault"
+  };
 
 volatile DWORD x_dr0 = 0, x_dr1 = 0, x_dr2 = 0, x_dr3 = 0, x_dr7 = 0;
 
@@ -1679,7 +1703,11 @@ KdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
     }
   else
     {
-      DbgPrint("Entered debugger on exception number %d.\n", ExpNr);
+      const char *ExceptionString =
+         (ExpNr < (sizeof (ExceptionTypeStrings) / sizeof (ExceptionTypeStrings[0]))) ?
+         (ExceptionTypeStrings[ExpNr]) :
+         ("Unknown/User defined exception");
+      DbgPrint("Entered debugger on exception number %d (%s)\n", ExpNr, ExceptionString);
     }
   KdbInternalEnter(TrapFrame);
   KdbEntryCount--;
