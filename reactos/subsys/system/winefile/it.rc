@@ -30,7 +30,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 {
 	POPUP "&File"  {
 		MENUITEM "&Apri\tInvio" ,			101
-		MENUITEM "&Sposta...\tF7" , 			106
+		MENUITEM "&Sposta...\tF7" , 			ID_FILE_MOVE
 		MENUITEM "&Copia...\tF8" ,			107
 		MENUITEM "&Negli Appunti...\tF9" ,		118
 		MENUITEM "&Cancella\tDel" ,			108
@@ -103,7 +103,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 
 	POPUP "&Opzioni"  {
 		MENUITEM "&Confermazione..." ,		-1
-		MENUITEM "&Font..." ,			-1
+		MENUITEM "&Font..." ,			ID_SELECT_FONT
 		MENUITEM "&Personalizza barra degli strumenti..." , -1
 		MENUITEM SEPARATOR
 		MENUITEM "&Barra degli strumenti" ,		ID_VIEW_TOOL_BAR, CHECKED
@@ -161,7 +161,28 @@ FONT 8, "MS Shell Dlg"
 	CONTROL 		"&Comando:" , -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
 	EDITTEXT		201, 3, 29, 134, 12, ES_AUTOHSCROLL
 	CONTROL 		"Come &Simbolo" , 214, "Button", BS_AUTOCHECKBOX|WS_TABSTOP,3, 45, 71, 12
-	DEFPUSHBUTTON	"OK" , 1, 158, 6, 47, 14
+	DEFPUSHBUTTON		"OK" , 1, 158, 6, 47, 14
 	PUSHBUTTON		"Annulla" , 2, 158, 23, 47, 14
 	PUSHBUTTON		"&Aiuto" , 254, 158, 43, 47, 14
+}
+
+IDD_SELECT_DESTINATION DIALOG FIXED IMPURE 15, 13, 210, 63
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Select destination"
+FONT 8, "MS Shell Dlg"
+{
+	CONTROL 		"", 101, "Statico", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
+	CONTROL 		"&Percorso:" , -1, "Statico", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+	EDITTEXT		201, 3, 29, 134, 12, ES_AUTOHSCROLL
+	DEFPUSHBUTTON		"OK" , 1, 158, 6, 47, 14
+	PUSHBUTTON		"Annulla" , 2, 158, 23, 47, 14
+	PUSHBUTTON		"&Naviga" , 254, 158, 43, 47, 14
+}
+
+STRINGTABLE
+{
+	IDS_FONT_SEL_DLG_NAME	"Applica le impostazioni dei font"
+	IDS_FONT_SEL_DLG_INFO	"I cambiamenti alle impostazioni dei font vengono applicati solo alle finestre apertesuccesivamente."
+	IDS_FONT_SEL_ERROR	"Si è verificato un errore durante la selezione del nuovo font."
+	IDS_FILE_MOVE_ERROR	"Si è verificato un errore durante lo spostamento del file o della directory."
 }
