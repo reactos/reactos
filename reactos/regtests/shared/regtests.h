@@ -17,6 +17,32 @@
 #define TS_OK             0
 #define TS_FAILED         1
 
+/* Macros to simplify tests */
+#define DISPATCHER(TestName)    \
+  switch (Command)              \
+  {                             \
+    case TESTCMD_RUN:           \
+      return RunTest(Buffer);   \
+    case TESTCMD_TESTNAME:      \
+      strcpy(Buffer, TestName); \
+      return TS_OK;             \
+    default:                    \
+      break;                    \
+  }                             \
+  return TS_FAILED;
+
+#define FAIL(ErrorMessage) \
+  sprintf(Buffer, "%s\n", ErrorMessage); \
+  return TS_FAILED;
+
+#define FAIL_IF_NULL(GivenValue, ErrorMessage)                     if (GivenValue == NULL) { FAIL(ErrorMessage); }
+#define FAIL_IF_TRUE(GivenValue, ErrorMessage)                     if (GivenValue == TRUE) { FAIL(ErrorMessage); }
+#define FAIL_IF_FALSE(GivenValue, ErrorMessage)                    if (GivenValue == FALSE) { FAIL(ErrorMessage); }
+#define FAIL_IF_EQUAL(GivenValue, FailValue, ErrorMessage)         if (GivenValue == FailValue) { FAIL(ErrorMessage); }
+#define FAIL_IF_NOT_EQUAL(GivenValue, FailValue, ErrorMessage)     if (GivenValue != FailValue) { FAIL(ErrorMessage); }
+#define FAIL_IF_LESS_EQUAL(GivenValue, FailValue, ErrorMessage)    if (GivenValue <= FailValue) { FAIL(ErrorMessage); }
+#define FAIL_IF_GREATER_EQUAL(GivenValue, FailValue, ErrorMessage) if (GivenValue >= FailValue) { FAIL(ErrorMessage); }
+
 /*
  * Test routine prototype
  * Command - The command to process

@@ -16,33 +16,18 @@ static int RunTest(char *Buffer)
 
   /* MmSizeOfMdl test */
   MdlSize = 0;
-  MdlSize = MmSizeOfMdl(pmem1,
-                        AllocSize);
-  if (MdlSize <= sizeof(MDL))
-  {
-    strcpy(Buffer, "MmSizeOfMdl() failed\n");
-    return TS_FAILED;
-  }
+  MdlSize = MmSizeOfMdl(pmem1, AllocSize);
+  FAIL_IF_LESS_EQUAL(MdlSize, sizeof(MDL), "MmSizeOfMdl() failed");
 
   /* MmCreateMdl test */
   Mdl = NULL;
-  Mdl = MmCreateMdl(NULL,
-                    pmem1,
-                    AllocSize);
-  if (Mdl == NULL)
-  {
-    strcpy(Buffer, "MmCreateMdl() failed for Mdl\n");
-    return TS_FAILED;
-  }
+  Mdl = MmCreateMdl(NULL, pmem1, AllocSize);
+  FAIL_IF_NULL(Mdl, "MmCreateMdl() failed for Mdl");
 
   /* MmGetMdlByteCount test */
   MdlSize = 0;
   MdlSize = MmGetMdlByteCount(Mdl);
-  if (MdlSize != AllocSize)
-  {
-    strcpy(Buffer, "MmGetMdlByteCount() failed for Mdl\n");
-    return TS_FAILED;
-  }
+  FAIL_IF_NOT_EQUAL(MdlSize, AllocSize, "MmGetMdlByteCount() failed for Mdl");
 
   /* MmGetMdlByteOffset test */
   MdlOffset = MmGetMdlByteOffset(Mdl);
@@ -50,20 +35,12 @@ static int RunTest(char *Buffer)
   /* MmGetMdlPfnArray test */
   MdlPfnArray = NULL;
   MdlPfnArray = MmGetMdlPfnArray(Mdl);
-  if (MdlPfnArray == NULL)
-  {
-    strcpy(Buffer, "MmGetMdlPfnArray() failed for Mdl\n");
-    return TS_FAILED;
-  }
+  FAIL_IF_NULL(MdlPfnArray, "MmGetMdlPfnArray() failed for Mdl");
 
   /* MmGetMdlVirtualAddress test */
   MdlVirtAddr = NULL;
   MdlVirtAddr = MmGetMdlVirtualAddress(Mdl);
-  if (MdlVirtAddr == NULL)
-  {
-    strcpy(Buffer, "MmGetMdlVirtualAddress() failed for Mdl\n");
-    return TS_FAILED;
-  }
+  FAIL_IF_NULL(MdlVirtAddr, "MmGetMdlVirtualAddress() failed for Mdl");
 
   /* Free memory used in test */
   ExFreePool(pmem1);
@@ -74,15 +51,5 @@ static int RunTest(char *Buffer)
 int
 Mdl_1Test(int Command, char *Buffer)
 {
-  switch (Command)
-    {
-      case TESTCMD_RUN:
-        return RunTest(Buffer);
-      case TESTCMD_TESTNAME:
-        strcpy(Buffer, "Kernel Memory MDL API (1)");
-        return TS_OK;
-      default:
-        break;
-    }
-  return TS_FAILED;
+  DISPATCHER("Kernel Memory MDL API (1)");
 }

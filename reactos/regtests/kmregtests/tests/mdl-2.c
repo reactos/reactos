@@ -7,56 +7,36 @@ static int RunTest(char *Buffer)
 {
   VOID *pmem1, *sysaddr1, *sysaddr2;
   ULONG AllocSize;
+  BOOLEAN BoolVal;
   PMDL Mdl;
 
   /* Allocate memory for use in testing */
   AllocSize = 1024;
-  pmem1 = ExAllocatePool(NonPagedPool,
-                         AllocSize);
+  pmem1 = ExAllocatePool(NonPagedPool, AllocSize);
 
   /* MmCreateMdl test */
   Mdl = NULL;
-  Mdl = MmCreateMdl(NULL,
-                    pmem1,
-                    AllocSize);
-  if (Mdl == NULL)
-  {
-    strcpy(Buffer, "MmCreateMdl() failed for Mdl\n");
-    return TS_FAILED;
-  }
+  Mdl = MmCreateMdl(NULL, pmem1, AllocSize);
+  FAIL_IF_NULL(Mdl, "MmCreateMdl() failed for Mdl");
 
   /* MmBuildMdlForNonPagedPool test */
   MmBuildMdlForNonPagedPool(Mdl);
 
   /* MmGetSystemAddressForMdl test for buffer built by MmBuildMdlForNonPagedPool */
   sysaddr1 = MmGetSystemAddressForMdl(Mdl);
-  if (sysaddr1 == NULL)
-  {
-    strcpy(Buffer, "MmGetSystemAddressForMdl() failed for Mdl after MmBuildMdlForNonPagedPool\n");
-    return TS_FAILED;
-  }
+  FAIL_IF_NULL(sysaddr1, "MmGetSystemAddressForMdl() failed for Mdl after MmBuildMdlForNonPagedPool");
 
   /* MmIsNonPagedSystemAddressValid test */
-  if (MmIsNonPagedSystemAddressValid(sysaddr1) == FALSE)
-  {
-    strcpy(Buffer, "MmIsNonPagedSystemAddressValid() failed for Mdl for sysaddr1\n");
-    return TS_FAILED;
-  }
+  BoolVal = MmIsNonPagedSystemAddressValid(sysaddr1);
+  FAIL_IF_FALSE(BoolVal, "MmIsNonPagedSystemAddressValid() failed for Mdl for sysaddr1");
 
   /* MmGetSystemAddressForMdlSafe test */
   sysaddr2 = MmGetSystemAddressForMdlSafe(Mdl, HighPagePriority);
-  if (sysaddr2 == NULL)
-  {
-    strcpy(Buffer, "MmGetSystemAddressForMdlSafe() failed for Mdl after MmBuildMdlForNonPagedPool\n");
-    return TS_FAILED;
-  }
+  FAIL_IF_NULL(sysaddr2, "MmGetSystemAddressForMdlSafe() failed for Mdl after MmBuildMdlForNonPagedPool");
 
   /* MmIsNonPagedSystemAddressValid test */
-  if (MmIsNonPagedSystemAddressValid(sysaddr2) == FALSE)
-  {
-    strcpy(Buffer, "MmIsNonPagedSystemAddressValid() failed for Mdl for sysaddr2\n");
-    return TS_FAILED;
-  }
+  BoolVal = MmIsNonPagedSystemAddressValid(sysaddr2);
+  FAIL_IF_FALSE(BoolVal, "MmIsNonPagedSystemAddressValid() failed for Mdl for sysaddr2");
 
   /* Free memory used in test */
   ExFreePool(pmem1);
@@ -67,15 +47,5 @@ static int RunTest(char *Buffer)
 int
 Mdl_2Test(int Command, char *Buffer)
 {
-  switch (Command)
-    {
-      case TESTCMD_RUN:
-        return RunTest(Buffer);
-      case TESTCMD_TESTNAME:
-        strcpy(Buffer, "Kernel Memory MDL API (2)");
-        return TS_OK;
-      default:
-        break;
-    }
-  return TS_FAILED;
+  DISPATCHER("Kernel Memory MDL API (2)");
 }
