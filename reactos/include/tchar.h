@@ -29,9 +29,9 @@
  *  DISCLAIMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.12 $
- * $Author: gvg $
- * $Date: 2004/07/10 21:23:18 $
+ * $Revision: 1.13 $
+ * $Author: navaraf $
+ * $Date: 2004/08/02 02:52:31 $
  *
  */
 
@@ -150,6 +150,7 @@ typedef wchar_t TCHAR;
 #define	_ttoi		_wtoi
 #define	_tcsftime	wcsftime
 #define	_tsplitpath	_wsplitpath
+#define	_tmakepath	_wmakepath
 
 #else	/* Not _UNICODE */
 
@@ -256,6 +257,7 @@ typedef char TCHAR;
 #define	_ttoi		atoi
 #define _tcsftime	strftime
 #define	_tsplitpath	_splitpath
+#define	_tmakepath	_makepath
 
 #endif	/* Not _UNICODE */
 
