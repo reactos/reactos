@@ -300,9 +300,9 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Setup di Pagina"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  CONTROL "", rct1, 130, 0x00020006, 80, 8, 80, 80,  SS_WHITERECT
-  CONTROL "", rct2, 130, 0x00020005, 160, 12, 4, 80, SS_GRAYRECT
-  CONTROL "", rct3, 130, 0x00020005, 84, 88, 80, 4,  SS_GRAYRECT
+  CONTROL "", rct1, "Static", SS_WHITERECT, 80, 8, 80, 80
+  CONTROL "", rct2, "Static", SS_GRAYRECT, 160, 12, 4, 80
+  CONTROL "", rct3, "Static", SS_GRAYRECT,  84, 88, 80, 4
   GROUPBOX "Carta", grp2, 8, 96, 224, 56, BS_GROUPBOX
   LTEXT "&Dimensione:", stc2, 16, 112, 36, 8
   COMBOBOX cmb2, 64, 110, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
@@ -407,7 +407,6 @@ supportato dalla stampante.\nInserire un valore compreso tra 1 e %d"
 
     PD32_DEFAULT_PRINTER                  "Stampante predefinita; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "Ci sono %d documenti nella coda di stampa"
-    PD32_PRINT_ALL_X_PAGES                "&Tutte le %d pagine"
     PD32_MARGINS_IN_INCHES                "Margini [pollici]"
     PD32_MARGINS_IN_MILIMETERS            "Margini [mm]"
     PD32_MILIMETERS                       "mm"

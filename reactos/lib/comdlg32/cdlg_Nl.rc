@@ -251,7 +251,7 @@ FONT 8, "MS Shell Dlg"
     EDITTEXT                          edt3, 240,106,  32,12, WS_GROUP | ES_NUMBER
 
     GROUPBOX        "Afdrukbereik",   grp1,   8,92,  144,64, WS_GROUP
-    CONTROL         "&Alle xx",       rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
+    CONTROL         "&Alle",          rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
     CONTROL         "&Pagina's",      rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12
     CONTROL         "Sele&ctie",      rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
     EDITTEXT                          edt1,  74,122,  26,12, WS_GROUP | ES_NUMBER
@@ -289,7 +289,6 @@ gespecifieerde fout"
     PD32_DEFAULT_PRINTER                  "Default Printer, "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "Er staan %d documenten in de \
 wachtrij"
-    PD32_PRINT_ALL_X_PAGES                "&Alle %d pagina's"
     PD32_MARGINS_IN_INCHES                "Marges [inch]"
     PD32_MARGINS_IN_MILIMETERS            "Marges [mm]"
     PD32_MILIMETERS                       "mm"

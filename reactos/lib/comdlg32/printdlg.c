@@ -479,8 +479,8 @@ static BOOL PRINTDLG_PaperSizeA(
 out:
     GlobalUnlock(pdlga->hDevNames);
     GlobalUnlock(pdlga->hDevMode);
-    if (Names) HeapFree(GetProcessHeap(),0,Names);
-    if (points) HeapFree(GetProcessHeap(),0,points);
+    HeapFree(GetProcessHeap(),0,Names);
+    HeapFree(GetProcessHeap(),0,points);
     return retval;
 }
 
@@ -537,8 +537,8 @@ static BOOL PRINTDLG_PaperSizeW(
 out:
     GlobalUnlock(pdlga->hDevNames);
     GlobalUnlock(pdlga->hDevMode);
-    if (Names) HeapFree(GetProcessHeap(),0,Names);
-    if (points) HeapFree(GetProcessHeap(),0,points);
+    HeapFree(GetProcessHeap(),0,Names);
+    HeapFree(GetProcessHeap(),0,points);
     return retval;
 }
 
@@ -860,10 +860,8 @@ BOOL PRINTDLG_ChangePrinterA(HWND hDlg, char *name,
     DWORD needed;
     HANDLE hprn;
 
-    if(PrintStructures->lpPrinterInfo)
-        HeapFree(GetProcessHeap(),0, PrintStructures->lpPrinterInfo);
-    if(PrintStructures->lpDriverInfo)
-        HeapFree(GetProcessHeap(),0, PrintStructures->lpDriverInfo);
+    HeapFree(GetProcessHeap(),0, PrintStructures->lpPrinterInfo);
+    HeapFree(GetProcessHeap(),0, PrintStructures->lpDriverInfo);
     if(!OpenPrinterA(name, &hprn, NULL)) {
         ERR("Can't open printer %s\n", name);
 	return FALSE;
@@ -883,10 +881,8 @@ BOOL PRINTDLG_ChangePrinterA(HWND hDlg, char *name,
 
     PRINTDLG_UpdatePrinterInfoTextsA(hDlg, PrintStructures->lpPrinterInfo);
 
-    if(PrintStructures->lpDevMode) {
-        HeapFree(GetProcessHeap(), 0, PrintStructures->lpDevMode);
-	PrintStructures->lpDevMode = NULL;
-    }
+    HeapFree(GetProcessHeap(), 0, PrintStructures->lpDevMode);
+    PrintStructures->lpDevMode = NULL;
 
     dmSize = DocumentPropertiesA(0, 0, name, NULL, NULL, 0);
     if(dmSize == -1) {
@@ -927,15 +923,6 @@ BOOL PRINTDLG_ChangePrinterA(HWND hDlg, char *name,
 	} else {
 	    if (lppd->Flags & PD_PAGENUMS)
 	        CheckRadioButton(hDlg, rad1, rad3, rad3);
-	}
-	/* "All xxx pages"... */
-	{
-	    char        resourcestr[64];
-	    char        result[64];
-	    LoadStringA(COMDLG32_hInstance, PD32_PRINT_ALL_X_PAGES,
-			resourcestr, 49);
-	    sprintf(result,resourcestr,lppd->nMaxPage - lppd->nMinPage + 1);
-	    SendDlgItemMessageA(hDlg, rad1, WM_SETTEXT, 0, (LPARAM) result);
 	}
 
 	/* Collate pages
@@ -1022,10 +1009,8 @@ static BOOL PRINTDLG_ChangePrinterW(HWND hDlg, WCHAR *name,
     DWORD needed;
     HANDLE hprn;
 
-    if(PrintStructures->lpPrinterInfo)
-        HeapFree(GetProcessHeap(),0, PrintStructures->lpPrinterInfo);
-    if(PrintStructures->lpDriverInfo)
-        HeapFree(GetProcessHeap(),0, PrintStructures->lpDriverInfo);
+    HeapFree(GetProcessHeap(),0, PrintStructures->lpPrinterInfo);
+    HeapFree(GetProcessHeap(),0, PrintStructures->lpDriverInfo);
     if(!OpenPrinterW(name, &hprn, NULL)) {
         ERR("Can't open printer %s\n", debugstr_w(name));
 	return FALSE;
@@ -1045,10 +1030,8 @@ static BOOL PRINTDLG_ChangePrinterW(HWND hDlg, WCHAR *name,
 
     PRINTDLG_UpdatePrinterInfoTextsW(hDlg, PrintStructures->lpPrinterInfo);
 
-    if(PrintStructures->lpDevMode) {
-        HeapFree(GetProcessHeap(), 0, PrintStructures->lpDevMode);
-	PrintStructures->lpDevMode = NULL;
-    }
+    HeapFree(GetProcessHeap(), 0, PrintStructures->lpDevMode);
+    PrintStructures->lpDevMode = NULL;
 
     dmSize = DocumentPropertiesW(0, 0, name, NULL, NULL, 0);
     if(dmSize == -1) {
@@ -1089,15 +1072,6 @@ static BOOL PRINTDLG_ChangePrinterW(HWND hDlg, WCHAR *name,
 	} else {
 	    if (lppd->Flags & PD_PAGENUMS)
 	        CheckRadioButton(hDlg, rad1, rad3, rad3);
-	}
-	/* "All xxx pages"... */
-	{
-	    WCHAR        resourcestr[64];
-	    WCHAR        result[64];
-	    LoadStringW(COMDLG32_hInstance, PD32_PRINT_ALL_X_PAGES,
-			resourcestr, 49);
-	    wsprintfW(result,resourcestr,lppd->nMaxPage - lppd->nMinPage + 1);
-	    SendDlgItemMessageW(hDlg, rad1, WM_SETTEXT, 0, (LPARAM) result);
 	}
 
 	/* Collate pages
@@ -1412,7 +1386,7 @@ LRESULT PRINTDLG_WMCommandA(HWND hDlg, WPARAM wParam,
     switch (LOWORD(wParam))  {
     case IDOK:
         TRACE(" OK button was hit\n");
-        if (PRINTDLG_UpdatePrintDlgA(hDlg, PrintStructures)!=TRUE) {
+        if (!PRINTDLG_UpdatePrintDlgA(hDlg, PrintStructures)) {
 	    FIXME("Update printdlg was not successful!\n");
 	    return(FALSE);
 	}
@@ -1589,7 +1563,7 @@ static LRESULT PRINTDLG_WMCommandW(HWND hDlg, WPARAM wParam,
     switch (LOWORD(wParam))  {
     case IDOK:
         TRACE(" OK button was hit\n");
-        if (PRINTDLG_UpdatePrintDlgW(hDlg, PrintStructures)!=TRUE) {
+        if (!PRINTDLG_UpdatePrintDlgW(hDlg, PrintStructures)) {
 	    FIXME("Update printdlg was not successful!\n");
 	    return(FALSE);
 	}

@@ -56,7 +56,7 @@
 
 typedef struct
 {
-    LPOPENFILENAMEA ofnInfos;
+    LPOPENFILENAMEW ofnInfos;
     BOOL unicode;
     LPWSTR initdir;
     LPWSTR filename;
