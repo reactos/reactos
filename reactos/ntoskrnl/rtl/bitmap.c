@@ -1,4 +1,4 @@
-/* $Id: bitmap.c,v 1.6 2002/11/11 22:53:26 hbirr Exp $
+/* $Id: bitmap.c,v 1.7 2003/01/19 01:49:10 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,6 +12,8 @@
 
 
 #define ALIGN(x,align)	(((x)+(align)-1) / (align))
+
+#define MASK(Count, Shift) ((Count) == 32 ? 0xFFFFFFFF : ~(0xFFFFFFFF << (Count)) << (Shift))
 
 
 VOID
@@ -55,7 +57,7 @@ RtlAreBitsClear (
 		Count = (Length > 32 - Shift) ? 32 - Shift : Length;
 
 		/* check dword */
-		if (*Ptr++ & (~(0xFFFFFFFF << Count) << Shift))
+		if (*Ptr++ & MASK(Count, Shift))
 			return FALSE;
 
 		Length -= Count;
@@ -94,7 +96,7 @@ RtlAreBitsSet (
 		Count = (Length > 32 - Shift) ? 32 - Shift : Length;
 
 		/* check dword */
-		if (~*Ptr++ & (~(0xFFFFFFFF << Count) << Shift))
+		if (~*Ptr++ & MASK(Count, Shift))
 			return FALSE;
 
 		Length -= Count;
@@ -113,7 +115,7 @@ RtlClearAllBits (
 {
 	memset (BitMapHeader->Buffer,
 	        0x00,
-	        ALIGN(BitMapHeader->SizeOfBitMap, 32));
+	        ALIGN(BitMapHeader->SizeOfBitMap, 8));
 }
 
 
@@ -146,7 +148,7 @@ RtlClearBits (
 		Count = (NumberToClear > 32 - Shift ) ? 32 - Shift : NumberToClear;
 
 		/* adjust dword */
-		*Ptr++ &= ~(~(0xFFFFFFFF << Count) << Shift);
+		*Ptr++ &= ~MASK(Count, Shift);
 		NumberToClear -= Count;
 		StartingIndex += Count;
 	}
@@ -607,7 +609,7 @@ RtlSetAllBits (
 {
 	memset (BitMapHeader->Buffer,
 	        0xFF,
-	        ALIGN(BitMapHeader->SizeOfBitMap, 32));
+	        ALIGN(BitMapHeader->SizeOfBitMap, 8));
 }
 
 
@@ -640,7 +642,7 @@ RtlSetBits (
 		Count = (NumberToSet > 32 - Shift) ? 32 - Shift : NumberToSet;
 
 		/* adjust dword */
-		*Ptr++ |= ~(0xFFFFFFFF << Count) << Shift;
+		*Ptr++ |= MASK(Count, Shift);
 		NumberToSet -= Count;
 		StartingIndex += Count;
 	}
