@@ -1,0 +1,32 @@
+EXTRADEFS = -D_SETUPAPI_
+TOPSRCDIR = @top_srcdir@
+TOPOBJDIR = ../..
+SRCDIR    = @srcdir@
+VPATH     = @srcdir@
+MODULE    = setupapi.dll
+IMPORTS   = user32 version advapi32 kernel32 ntdll
+ALTNAMES  = setupx.dll
+EXTRALIBS = $(LIBUNICODE)
+
+SPEC_SRCS16 = $(ALTNAMES:.dll=.spec)
+
+C_SRCS = \
+	devinst.c \
+	dirid.c \
+	install.c \
+	parser.c \
+	queue.c \
+	setupcab.c \
+	stubs.c
+
+C_SRCS16 = \
+	devinst16.c \
+	infparse.c \
+	setupx_main.c \
+	virtcopy.c
+
+RC_SRCS= setupapi.rc
+
+@MAKE_DLL_RULES@
+
+### Dependencies:
