@@ -1,4 +1,4 @@
-; $Id: fmifs.def,v 1.5 2003/09/08 09:56:56 weiden Exp $
+; $Id: fmifs.def,v 1.6 2004/02/23 11:55:12 ekohl Exp $
 ;
 ; fmifs.def
 ;
@@ -21,7 +21,7 @@ Extend@0
 Format@0
 FormatEx@28
 ;FormatEx2
-InitializeFmIfs@0
+InitializeFmIfs@12
 ;QueryAvailableFileSystemFormat
 ;QueryDeviceInformation
 ;QueryDeviceInformationByHandle

@@ -1,4 +1,4 @@
-/* $Id: media.c,v 1.1 1999/05/11 21:19:41 ea Exp $
+/* $Id: media.c,v 1.2 2004/02/23 11:55:12 ekohl Exp $
  *
  * COPYING:	See the top level directory
  * PROJECT:	ReactOS 
@@ -16,11 +16,9 @@
 
 
 /* FMIFS.9 */
-VOID
-__stdcall
-QuerySupportedMedia(VOID)
+VOID STDCALL
+QuerySupportedMedia (VOID)
 {
 }
-
 
 /* EOF */

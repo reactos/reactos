@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.2 2002/03/07 00:24:24 ea Exp $
+/* $Id: init.c,v 1.3 2004/02/23 11:55:12 ekohl Exp $
  *
  * COPYING:	See the top level directory
  * PROJECT:	ReactOS 
@@ -14,7 +14,6 @@
 #include <windows.h>
 #include <fmifs.h>
 
-/* FMIFS.8 */
 static BOOL FmIfsInitialized = FALSE;
 
 static BOOL STDCALL
@@ -25,18 +24,38 @@ InitializeFmIfsOnce (VOID)
 	return TRUE;
 }
 
+
+/* FMIFS.8 */
 BOOL STDCALL
-InitializeFmIfs(VOID)
+InitializeFmIfs (PVOID hinstDll,
+		 DWORD dwReason,
+		 PVOID reserved)
 {
-	if (FALSE == FmIfsInitialized)
+  switch (dwReason)
+  {
+    case DLL_PROCESS_ATTACH:
+      if (FALSE == FmIfsInitialized)
+      {
+	if (FALSE == InitializeFmIfsOnce())
 	{
-		if (FALSE == InitializeFmIfsOnce())
-		{
-			return FALSE;
-		}
-		FmIfsInitialized = TRUE;
+	  return FALSE;
 	}
-	return TRUE;
+
+	FmIfsInitialized = TRUE;
+      }
+      break;
+
+    case DLL_THREAD_ATTACH:
+      break;
+
+    case DLL_THREAD_DETACH:
+      break;
+
+    case DLL_PROCESS_DETACH:
+      break;
+  }
+
+  return TRUE;
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: compress.c,v 1.1 1999/05/11 21:19:41 ea Exp $
+/* $Id: compress.c,v 1.2 2004/02/23 11:55:12 ekohl Exp $
  *
  * COPYING:	See the top level directory
  * PROJECT:	ReactOS 
@@ -16,15 +16,11 @@
 
 
 /* FMIFS.4 */
-BOOL
-__stdcall
-EnableVolumeCompression(
-	PWCHAR	DriveRoot,
-	BOOL	Enable
-	)
+BOOLEAN STDCALL
+EnableVolumeCompression (PWCHAR DriveRoot,
+			 BOOLEAN Enable)
 {
-	return FALSE;
+  return FALSE;
 }
-
 
 /* EOF */

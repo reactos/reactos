@@ -1,4 +1,4 @@
-/* $Id: label.c,v 1.1 1999/05/11 21:19:41 ea Exp $
+/* $Id: label.c,v 1.2 2004/02/23 11:55:12 ekohl Exp $
  *
  * COPYING:	See the top level directory
  * PROJECT:	ReactOS 
@@ -16,11 +16,9 @@
 
 
 /* FMIFS.10 */
-VOID
-__stdcall
-SetLabel(VOID)
+VOID STDCALL
+SetLabel (VOID)
 {
 }
-
 
 /* EOF */

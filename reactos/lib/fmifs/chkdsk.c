@@ -1,4 +1,4 @@
-/* $Id: chkdsk.c,v 1.1 1999/05/11 21:19:41 ea Exp $
+/* $Id: chkdsk.c,v 1.2 2004/02/23 11:55:12 ekohl Exp $
  *
  * COPYING:	See the top level directory
  * PROJECT:	ReactOS 
@@ -16,37 +16,30 @@
 
 
 /* FMIFS.1 */
-VOID
-__stdcall
-Chkdsk(
-	PWCHAR		DriveRoot, 
+VOID STDCALL
+Chkdsk (PWCHAR		DriveRoot,
 	PWCHAR		Format,
-	BOOL		CorrectErrors, 
-	BOOL		Verbose, 
-	BOOL		CheckOnlyIfDirty,
-	BOOL		ScanDrive, 
-	PVOID		Unused2, 
+	BOOLEAN		CorrectErrors,
+	BOOLEAN		Verbose,
+	BOOLEAN		CheckOnlyIfDirty,
+	BOOLEAN		ScanDrive,
+	PVOID		Unused2,
 	PVOID		Unused3,
-	PFMIFSCALLBACK	Callback
-	)
+	PFMIFSCALLBACK	Callback)
 {
-	BOOL	Argument = FALSE;
+  BOOLEAN	Argument = FALSE;
 
-	/* FAIL immediately */
-	Callback(
-		DONE,		/* Command */
-		0,		/* DWORD Modifier */
-		& Argument	/* Argument */
-		);
+  /* FAIL immediately */
+  Callback (DONE,	/* Command */
+	    0,		/* DWORD Modifier */
+	    &Argument);	/* Argument */
 }
 
 
 /* FMIFS.2 (SP4 only?) */
-VOID
-__stdcall
-ChkdskEx(VOID)
+VOID STDCALL
+ChkdskEx (VOID)
 {
 }
-
 
 /* EOF */

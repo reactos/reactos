@@ -1,4 +1,4 @@
-/* $Id: format.c,v 1.3 2003/09/12 17:51:46 vizzini Exp $
+/* $Id: format.c,v 1.4 2004/02/23 11:55:12 ekohl Exp $
  *
  * COPYING:	See the top level directory
  * PROJECT:	ReactOS 
@@ -21,51 +21,49 @@
 
 
 /* FMIFS.6 */
-VOID
-__stdcall
-Format(VOID)
+VOID STDCALL
+Format (VOID)
 {
 }
 
 
 /* FMIFS.7 */
-VOID
-__stdcall
-FormatEx(
-	PWCHAR		DriveRoot,
-	DWORD		MediaFlag,
-	PWCHAR		Format,
-	PWCHAR		Label,
-	BOOL		QuickFormat,
-	DWORD		ClusterSize,
-	PFMIFSCALLBACK	Callback
-	)
+VOID STDCALL
+FormatEx (PWCHAR DriveRoot,
+	  ULONG MediaFlag,
+	  PWCHAR Format,
+	  PWCHAR Label,
+	  BOOLEAN QuickFormat,
+	  ULONG ClusterSize,
+	  PFMIFSCALLBACK Callback)
 {
-	UNICODE_STRING usDriveRoot;
-	UNICODE_STRING usLabel;
-	BOOL Argument = FALSE;
+  UNICODE_STRING usDriveRoot;
+  UNICODE_STRING usLabel;
+  BOOLEAN Argument = FALSE;
 
-	RtlInitUnicodeString(&usDriveRoot, DriveRoot);
-	RtlInitUnicodeString(&usLabel, Label);
+  RtlInitUnicodeString(&usDriveRoot, DriveRoot);
+  RtlInitUnicodeString(&usLabel, Label);
 
-	if (_wcsnicmp(Format, L"FAT", 3) == 0)
-	{
-		DPRINT1("FormatEx - FAT\n");
-		VfatInitialize();
+  if (_wcsnicmp(Format, L"FAT", 3) == 0)
+    {
+      DPRINT1("FormatEx - FAT\n");
 
-		VfatFormat(&usDriveRoot, MediaFlag, &usLabel, QuickFormat, ClusterSize, Callback);
-
-		VfatCleanup();
-	}
-	else
-	{
-		/* Unknown file system */
-		Callback(DONE,		/* Command */
-			0,				/* DWORD Modifier */
-			&Argument		/* Argument */
-		);
-	}
+      VfatInitialize ();
+      VfatFormat (&usDriveRoot,
+		  MediaFlag,
+		  &usLabel,
+		  QuickFormat,
+		  ClusterSize,
+		  Callback);
+      VfatCleanup ();
+    }
+  else
+    {
+      /* Unknown file system */
+      Callback (DONE,        /* Command */
+		0,           /* DWORD Modifier */
+		&Argument);  /* Argument */
+    }
 }
-
 
 /* EOF */
