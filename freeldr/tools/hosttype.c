@@ -1,7 +1,9 @@
-//
-// hosttype.c
-// Copyright (C) 2002 by Brian Palmer <brianp@sginet.com>
-//
+/**
+ *
+ * hosttype.c
+ * Copyright (C) 2002 by Brian Palmer <brianp@sginet.com>
+ *
+ */
 
 #include <stdio.h>
 
