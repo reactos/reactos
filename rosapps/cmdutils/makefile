@@ -31,6 +31,11 @@ y.exe: y.o y.coff
 	$(CC) y.o -lkernel32 -lmsvcrt -o y.exe y.coff
 	$(NM) --numeric-sort y.exe > y.sym
 
+install:
+
+.phony: install
+
+
 clean: $(CLEAN_FILES:%=%_clean)
 
 $(CLEAN_FILES:%=%_clean): %_clean:

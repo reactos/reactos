@@ -3,61 +3,40 @@
 #
 #  Makefile
 #
-#  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
-#
-#  This program is free software; you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation; either version 2 of the License, or
-#  (at your option) any later version.
-#
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with this program; if not, write to the Free Software
-#  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-#
-	
-PATH_TO_TOP = ..
 
-TARGET = calc
+PATH_TO_TOP = ../../reactos
 
-#BASE_CFLAGS = -DGCC -D_WIN32_IE=0x0400
+WINE_MODE = yes
 
-#RCFLAGS = -DGCC -D_WIN32_IE=0x0400
+WINE_RC = calc
 
+TARGET_TYPE = program
 
-OBJS =	settings.o \
+TARGET_APPTYPE = console
+
+TARGET_NAME = calc
+
+WINE_INCLUDE = ./
+
+#TARGET_CFLAGS = -I$(TEST_ROOT) -DDBG -DUNICODE -D_UNICODE
+
+BASE_CFLAGS = -D_WIN32_IE=0x0400
+
+RCFLAGS = -D_WIN32_IE=0x0400
+
+TARGET_SDKLIBS = \
+	kernel32.a \
+	user32.a \
+	gdi32.a \
+	$(COMCTL32_TARGET).a
+
+TARGET_OBJECTS = \
+	settings.o \
         button.o \
         main.o
 
-LIBS = -lgdi32 -luser32 -lkernel32 -lcomctl32
-#LIBS = -lgdi32 -luser32 -lkernel32
-
-all:	$(TARGET).exe
-
-#$(TARGET).res:	$(TARGET).rc
-
-$(TARGET).exe:	$(OBJS) $(TARGET).coff
-	$(CC) -Wl,--subsystem,windows -o $(TARGET).exe $(OBJS) $(TARGET).coff $(LIBS)
-	$(NM) --numeric-sort $(TARGET).exe > $(TARGET).sym
-
-
-main.h:		resource.h
-
-main.o:		main.c main.h settings.h
-
-settings.o:	settings.c settings.h main.h
-
-button.o:	button.c button.h main.h
-
-
-clean:
-	- $(RM) $(OBJS)
-	- $(RM) $(TARGET).exe
-	- $(RM) $(TARGET).sym
-	- $(RM) $(TARGET).coff
-
 include $(PATH_TO_TOP)/rules.mak
+
+include $(TOOLS_PATH)/helper.mk
+
+# EOF

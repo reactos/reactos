@@ -11,7 +11,7 @@
 #ifdef __GNUC__
 #include <windows.h>
 //#include <reactos/resource.h>
-#include <commctrl.h>
+//#include <commctrl.h>
 #else
 #include "windows.h"
 #endif

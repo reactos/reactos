@@ -39,6 +39,23 @@
 #include "listview.h"
 
 
+#define LVM_GETITEMTEXTA        (LVM_FIRST + 45)
+#define LVM_GETITEMTEXTW        (LVM_FIRST + 115)
+
+#ifdef UNICODE
+#define  LVM_GETITEMTEXT        LVM_GETITEMTEXTW
+#else
+#define  LVM_GETITEMTEXT        LVM_GETITEMTEXTA
+#endif
+
+#define ListView_GetItemText(hwndLV, i, iSubItem_, pszText_, cchTextMax_) \
+{ LV_ITEM _ms_lvi;\
+  _ms_lvi.iSubItem = iSubItem_;\
+  _ms_lvi.cchTextMax = cchTextMax_;\
+  _ms_lvi.pszText = pszText_;\
+  SNDMSG((hwndLV), LVM_GETITEMTEXT, (WPARAM)i, (LPARAM)(LV_ITEM FAR *)&_ms_lvi);\
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Global and Local Variables:
 //

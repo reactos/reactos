@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2002/08/17 15:16:38 robd Exp $
+# $Id: Makefile,v 1.3 2003/01/15 19:55:28 robd Exp $
 
 PATH_TO_TOP = ../../reactos
 
@@ -12,7 +12,7 @@ TARGET_APPTYPE = windows
 
 TARGET_NAME = control
 
-TARGET_SDKLIBS = roshel32.a
+TARGET_SDKLIBS = shell32.a
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 

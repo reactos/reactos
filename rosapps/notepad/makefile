@@ -3,54 +3,38 @@
 #
 #  Makefile
 #
-#  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
-#
-#  This program is free software; you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation; either version 2 of the License, or
-#  (at your option) any later version.
-#
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with this program; if not, write to the Free Software
-#  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-#
-	
-PATH_TO_TOP = ..
 
-TARGET = notepad
+PATH_TO_TOP = ../../reactos
 
-BASE_CFLAGS = -D_WIN32_IE=0x0400
+TARGET_TYPE = program
 
-RCFLAGS = -D_WIN32_IE=0x0400
+TARGET_APPTYPE = console
 
-OBJS =	framewnd.o \
+TARGET_NAME = notepad
+
+TARGET_CFLAGS = -D_WIN32_IE=0x0400 # -DUNICODE -D_UNICODE
+
+TARGET_RCFLAGS = -D_WIN32_IE=0x0400
+
+WINE_MODE = yes
+
+WINE_RC = $(TARGET_NAME)
+
+WINE_INCLUDE = ./
+
+TARGET_SDKLIBS = \
+	kernel32.a \
+	user32.a \
+	gdi32.a \
+	$(COMCTL32_TARGET).a \
+	$(COMDLG32_TARGET).a
+
+TARGET_OBJECTS = \
+	framewnd.o \
         main.o
 
-LIBS = -lgdi32 -luser32 -lkernel32 -lcomctl32 -lcomdlg32
-
-all:	$(TARGET).exe
-
-$(TARGET).res:	$(TARGET).rc
-
-$(TARGET).exe:	$(OBJS) $(TARGET).coff
-	$(CC) -Wl,--subsystem,windows -o $(TARGET).exe $(OBJS) $(TARGET).coff $(LIBS)
-	$(NM) --numeric-sort $(TARGET).exe > $(TARGET).sym
-
-
-main.o:		main.c main.h framewnd.h resource.h
-
-framewnd.o:	framewnd.c framewnd.h main.h resource.h
-
-
-clean:
-	- $(RM) $(OBJS)
-	- $(RM) $(TARGET).exe
-	- $(RM) $(TARGET).sym
-	- $(RM) $(TARGET).coff
-
 include $(PATH_TO_TOP)/rules.mak
+
+include $(TOOLS_PATH)/helper.mk
+
+# EOF

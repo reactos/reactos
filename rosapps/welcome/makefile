@@ -29,6 +29,8 @@ clean:
 	- $(RM) *.coff
 	- $(RM) *.exe
 
+install:
+
 include $(PATH_TO_TOP)/rules.mak
 
 # EOF

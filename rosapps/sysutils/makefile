@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.12 2003/01/07 18:16:44 robd Exp $
+# $Id: makefile,v 1.13 2003/01/15 19:53:01 robd Exp $
 #
 # ReactOS System Utilities
 #
@@ -134,6 +134,10 @@ regexpl/regexpl.exe:
 	make -C regexpl
 
 #---
+
+install:
+
+.phony: install
 
 CLEAN_FILES = *.o *.exe *.sym
 

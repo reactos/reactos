@@ -1,60 +1,27 @@
-# $Id: makefile,v 1.5 2001/10/16 21:02:02 ea Exp $
 #
-# ReactOS makefile for notevil
-# Compiler: egcs 1.1.2
+#  ReactOS notevil
 #
-PATH_TO_TOP = ..
-PATH_TO_REACTOS = $(PATH_TO_TOP)/../reactos
+#  Makefile
+#
 
-TARGET=notevil
+PATH_TO_TOP = ../../reactos
 
-BASE_CFLAGS = -I$(PATH_TO_REACTOS)/include
+TARGET_TYPE = program
 
-all: $(TARGET).exe
+TARGET_APPTYPE = console
 
-OBJECTS = $(TARGET).o $(TARGET).coff
+TARGET_NAME = notevil
 
-CLEAN_FILES = *.o $(TARGET).exe $(TARGET).sym $(TARGET).coff
+#TARGET_CFLAGS = -DUNICODE -D_UNICODE
 
-clean: $(CLEAN_FILES:%=%_clean)
+TARGET_SDKLIBS = \
+	kernel32.a \
+	user32.a
 
-$(CLEAN_FILES:%=%_clean): %_clean:
-	- $(RM) $*
-
-.phony: clean $(CLEAN_FILES:%=%_clean)
-
-$(TARGET).exe: $(OBJECTS)
-	$(CC) $(OBJECTS) \
-		-o $(TARGET).exe \
-		-lkernel32 \
-		-luser32 \
-		-lmsvcrt
-	$(NM) --numeric-sort $(TARGET).exe > $(TARGET).sym
-
-$(TARGET).coff: $(TARGET).rc
-	$(RC) $(RFLAGS) $(TARGET).rc $(TARGET).coff
-
-$(TARGET).o: $(TARGET).c resource.h
-
-floppy: $(TARGET:%=$(FLOPPY_DIR)/apps/%)
-
-$(TARGET:%=$(FLOPPY_DIR)/apps/%): $(FLOPPY_DIR)/apps/%: %
-ifeq ($(DOSCLI),yes)
-	$(CP) $* $(FLOPPY_DIR)\apps\$*
-else
-	$(CP) $* $(FLOPPY_DIR)/apps/$*
-endif
-
-
-dist: $(TARGET:%=$(PATH_TO_TOP)/$(DIST_DIR)/apps/%)
-
-$(TARGET:%=$(PATH_TO_TOP)/$(DIST_DIR)/apps/%): $(PATH_TO_TOP)/$(DIST_DIR)/apps/%: %
-ifeq ($(DOSCLI),yes)
-	$(CP) $* ..\$(DIST_DIR)\apps\$*
-else
-	$(CP) $* $(PATH_TO_TOP)/$(DIST_DIR)/apps/$*
-endif
+TARGET_OBJECTS = $(TARGET_NAME).o
 
 include $(PATH_TO_TOP)/rules.mak
+
+include $(TOOLS_PATH)/helper.mk
 
 # EOF

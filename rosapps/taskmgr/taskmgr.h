@@ -49,6 +49,17 @@ typedef struct _IO_COUNTERS {
 #define HDM_GETORDERARRAY	(HDM_FIRST+19)   // TODO: FIX ME
 #endif
 
+//#define LVM_REDRAWITEMS         (LVM_FIRST + 21)
+#define ListView_RedrawItems(hwndLV, iFirst, iLast) \
+    (BOOL)SNDMSG((hwndLV), LVM_REDRAWITEMS, (WPARAM)(int)iFirst, (LPARAM)(int)iLast)
+
+//#if (_WIN32_IE >= 0x0300)
+//#define LVM_GETHEADER               (LVM_FIRST + 31)
+#define ListView_GetHeader(hwnd)\
+    (HWND)SNDMSG((hwnd), LVM_GETHEADER, 0, 0L)
+//#endif
+
+
 #endif
 
 #include "resource.h"

@@ -28,6 +28,8 @@
 #include <process.h>
 #include <stdio.h>
     
+#include "commctrl.h"
+
 #include <windowsx.h>
 #include "main.h"
 #include "listview.h"

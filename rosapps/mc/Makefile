@@ -1,30 +1,112 @@
-include ../rules.mak
+#
+#  ReactOS mc
+#
+#  Makefile
+#
 
-TARGET_OS=NT
+PATH_TO_TOP = ../../reactos
 
-#CC=gcc
-LINK=$(CC) -lmsvcrt
-OBJ_SUFFIX=o
-OBJ_PLACE=-o
-EXE_PLACE=-o
+TARGET_TYPE = program
 
-# ---- Compiler-specific optional stuff
-MC_MISC_CFLAGS=
-OBJS_DIR=release
-EXTRA_MC_SRCS=
-SPECIFIC_DEFINES=
-SPECIFIC_MC_CFLAGS=-O2 $(MC_MISC_CFLAGS)
-SPECIFIC_MC_LFLAGS_EXTRA=
-SPECIFIC_SLANG_CFLAGS=$(SPECIFIC_MC_CFLAGS)
-SPECIFIC_MCEDIT_CFLAGS=$(SPECIFIC_MC_CFLAGS)
+TARGET_OS = NT
 
-# ---- Compiler independent defines
-include Makefile.PC
+TARGET_APPTYPE = console
 
-# ---- Linkers are very compiler-specific
+TARGET_NAME = mc
 
-SPECIFIC_MC_LFLAGS=$(SPECIFIC_MC_LFLAGS_EXTRA)
-MC_LIBS= # -lintl
+TARGET_CFLAGS = -I./pc -I./slang -DMC_$(TARGET_OS) -DHAVE_CONFIG_H
 
-$(MC_EXE): $(OBJS) $(MCEDIT_OBJS) $(SLANG_OBJS)
-	$(LINK) $(EXE_PLACE) $(MC_EXE) $(SPECIFIC_MC_LFLAGS) $+  $(MC_LIBS) 
+WINE_MODE = yes
+
+WINE_RC = $(TARGET_NAME)
+
+WINE_INCLUDE = ./
+
+TARGET_SDKLIBS = \
+	kernel32.a \
+	user32.a
+
+MC_OBJS = \
+	./src/terms.o \
+	./src/user.o \
+	./src/file.o \
+	./src/listmode.o \
+	./src/cmd.o \
+	./src/command.o \
+	./src/help.o \
+	./src/menu.o \
+	./src/view.o \
+	./src/dir.o \
+	./src/info.o \
+	./src/widget.o \
+	./src/option.o \
+	./src/dlg.o \
+	./src/panelize.o \
+	./src/profile.o \
+	./src/util.o \
+	./src/dialog.o \
+	./src/ext.o \
+	./src/color.o \
+	./src/layout.o \
+	./src/setup.o \
+	./src/regex.o \
+	./src/hotlist.o \
+	./src/tree.o \
+	./src/win.o \
+	./src/complete.o \
+	./src/find.o \
+	./src/wtools.o \
+	./src/boxes.o \
+	./src/background.o \
+	./src/main.o \
+	./src/popt.o \
+	./src/text.o \
+	./src/screen.o
+
+PC_OBJS= \
+	./pc/slint_pc.o \
+	./pc/chmod.o \
+        ./pc/drive.o
+
+NT_OBJS = \
+	./pc/cons_nt.o \
+	./pc/dirent_nt.o \
+	./pc/key_nt.o \
+	./pc/util_win32.o \
+	./pc/util_winnt.o \
+	./pc/util_nt.o
+
+SLANG_NT = slw32tty.o
+
+SLANG_OS2 = slos2tty.o
+
+SLANG_OBJS = \
+	./slang/slerr.o \
+	./slang/slgetkey.o \
+	./slang/slsmg.o \
+	./slang/slvideo.o \
+	./slang/$(SLANG_$(TARGET_OS))
+
+MCEDIT_OBJS = \
+	./edit/edit.o \
+	./edit/editcmd.o \
+	./edit/editdraw.o \
+	./edit/editmenu.o \
+	./edit/editoptions.o \
+	./edit/editwidget.o \
+	./edit/syntax.o \
+	./edit/wordproc.o
+
+TARGET_OBJECTS = \
+	$(MC_OBJS) \
+	$(PC_OBJS) \
+	$(NT_OBJS) \
+	$(SLANG_OBJS) \
+	$(MCEDIT_OBJS) \
+
+
+include $(PATH_TO_TOP)/rules.mak
+
+include $(TOOLS_PATH)/helper.mk
+
+# EOF

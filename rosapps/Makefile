@@ -46,10 +46,14 @@ implib:
 clean: $(APPS:%=%_clean)
 .PHONY: clean
 
+install: $(APPS:%=%_install)
+.PHONY: install
+
 floppy: make_floppy_dirs $(APPS:%=%_floppy)
 
 dist: clean_dist_dir make_dist_dirs $(APPS:%=%_dist)
 .PHONY: dist
+
 
 #
 # Applications
@@ -66,7 +70,10 @@ $(APPS:%=%_floppy): %_floppy:
 $(APPS:%=%_dist): %_dist:
 	make -C $* dist
 
-.PHONY: $(APPS) $(APPS:%=%_clean) $(APPS:%=%_floppy) $(APPS:%=%_dist)
+$(APPS:%=%_install): %_install:
+	make -C $* install
+
+.PHONY: $(APPS) $(APPS:%=%_clean) $(APPS:%=%_floppy) $(APPS:%=%_dist) $(APPS:%=%_install)
 
 
 #
@@ -106,6 +113,9 @@ else
 	mkdir $(DIST_DIR)
 	mkdir $(DIST_DIR)/apps
 endif
+
+#dist: $(TOOLS_PATH)/rcopy$(EXE_POSTFIX) dist_clean dist_dirs \
+#      $(WINE_MODULES:%=%_dist)
 
 .PHONY: clean_dist_dir make_dist_dirs
 

@@ -98,7 +98,8 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 #define _USE_CMD_MAP
 
 #ifdef _USE_CMD_MAP
-#define BEGIN_CMD_MAP(a) switch( ##a ) {
+//#define BEGIN_CMD_MAP(a) switch( ##a ) {
+#define BEGIN_CMD_MAP(a) switch( a ) {
 #define CMD_MAP_ENTRY(a, b) case a: b(); break;
 #define END_CMD_MAP(a) }
 

@@ -49,6 +49,11 @@ DIST_DIR = dist
 SEP = \$($EMPTY_VAR)
 endif
 
+# Set INSTALL_DIR to default value if not already set
+# ifeq ($(INSTALL_DIR),)
+INSTALL_DIR = $(PATH_TO_TOP)/reactos
+# endif
+
 #
 # Create variables for all the compiler tools 
 #

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.8 2002/09/09 22:36:40 sedwards Exp $
+# $Id: Makefile,v 1.9 2003/01/15 19:53:01 robd Exp $
 #
 #  ReactOS makefile for RegExpl
 #
@@ -22,9 +22,9 @@ IMPORT_KERNEL32=$(ROS_LIB)/kernel32.a
 IMPORT_ADVAPI32=$(ROS_LIB)/advapi32.a
 IMPORT_USER32=$(ROS_LIB)/user32.a
 
-depend.mak : *.h
-	$(CC) \
-		-MM *.cpp *.c > $@
+#depend.mak : *.h
+#	$(CC) \
+#		-MM *.cpp *.c > $@
 
 OBJECTS = \
 	ArgumentParser.o		\
@@ -65,14 +65,19 @@ CLEAN_FILES = \
 	depend.mak
 
 
-$(TARGET_NAME)$(EXE_POSTFIX): $(OBJECTS)
-	$(CPP) \
-		-Wl,--subsystem,console	\
-		-o $@				\
-		$(IMPORT_KERNEL32)	\
-		$(IMPORT_USER32)	\
-		$(OBJECTS)
-	$(NM) --numeric-sort $(TARGET_NAME)$(EXE_POSTFIX) > $(TARGET_NAME).sym
+$(TARGET_NAME).exe: $(OBJECTS) $(TARGET_NAME).coff
+	$(CC) -Wl,--subsystem,console -o $(TARGET_NAME).exe $(OBJECTS) $(TARGET_NAME).coff $(IMPORT_KERNEL32) $(IMPORT_USER32)
+	$(NM) --numeric-sort $(TARGET_NAME).exe > $(TARGET_NAME).sym
+
+
+#$(TARGET_NAME)$(EXE_POSTFIX): $(OBJECTS)
+#	$(CPP) \
+#		-Wl,--subsystem,console	\
+#		-o $@				\
+#		$(IMPORT_KERNEL32)	\
+#		$(IMPORT_USER32)	\
+#		$(OBJECTS)
+#	$(NM) --numeric-sort $(TARGET_NAME)$(EXE_POSTFIX) > $(TARGET_NAME).sym
 
 clean: $(CLEAN_FILES:%=%_clean)
 
@@ -101,5 +106,5 @@ else
 	$(CP) $* ../$(DIST_DIR)/apps\$*
 endif
 
-# EOF
 
+# EOF
