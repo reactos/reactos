@@ -1,4 +1,4 @@
-/* $Id: stubsa.c,v 1.28 2004/03/23 00:18:54 gvg Exp $
+/* $Id: stubsa.c,v 1.29 2004/03/23 07:59:47 gvg Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -205,40 +205,6 @@ EnumFontsA (
     }
   return rc;
 #endif
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GetCharWidthA (
-	HDC	hdc,
-	UINT	iFirstChar,
-	UINT	iLastChar,
-	LPINT	lpBuffer
-	)
-{
-  /* FIXME what to do with iFirstChar and iLastChar ??? */
-  return NtGdiGetCharWidth ( hdc, iFirstChar, iLastChar, lpBuffer );
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GetCharWidth32A(
-	HDC	hdc,
-	UINT	iFirstChar,
-	UINT	iLastChar,
-	LPINT	lpBuffer
-	)
-{
-  /* FIXME what to do with iFirstChar and iLastChar ??? */
-  return NtGdiGetCharWidth32 ( hdc, iFirstChar, iLastChar, lpBuffer );
 }
 
 

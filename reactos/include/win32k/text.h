@@ -101,13 +101,6 @@ NtGdiGetCharacterPlacement(HDC  hDC,
 
 BOOL
 STDCALL
-NtGdiGetCharWidth(HDC  hDC,
-                       UINT  FirstChar,
-                       UINT  LastChar,
-                       LPINT  Buffer);
-
-BOOL
-STDCALL
 NtGdiGetCharWidth32(HDC  hDC,
                          UINT  FirstChar,
                          UINT  LastChar,

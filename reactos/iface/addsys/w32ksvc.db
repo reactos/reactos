@@ -104,7 +104,6 @@ NtGdiGetBrushOrgEx			2
 NtGdiGetCharABCWidths			4
 NtGdiGetCharABCWidthsFloat		4
 NtGdiGetCharacterPlacement		6
-NtGdiGetCharWidth			4
 NtGdiGetCharWidth32			4
 NtGdiGetCharWidthFloat			4
 NtGdiGetClipBox				2

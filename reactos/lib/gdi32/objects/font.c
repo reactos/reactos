@@ -1,4 +1,4 @@
-/* $Id: font.c,v 1.1 2004/03/23 00:18:54 gvg Exp $
+/* $Id: font.c,v 1.2 2004/03/23 07:59:47 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -15,6 +15,7 @@
 #include <windows.h>
 #include <rosrtl/logfont.h>
 #include <win32k/font.h>
+#include <win32k/text.h>
 #include <internal/font.h>
 
 #define NDEBUG
@@ -329,4 +330,70 @@ EnumFontFamiliesA(HDC Dc, LPCSTR Family, FONTENUMPROCA EnumFontFamProc,
     }
 
   return IntEnumFontFamilies(Dc, &LogFont, EnumFontFamProc, lParam, FALSE);
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+GetCharWidthA (
+	HDC	hdc,
+	UINT	iFirstChar,
+	UINT	iLastChar,
+	LPINT	lpBuffer
+	)
+{
+  /* FIXME what to do with iFirstChar and iLastChar ??? */
+  return NtGdiGetCharWidth32 ( hdc, iFirstChar, iLastChar, lpBuffer );
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+GetCharWidth32A(
+	HDC	hdc,
+	UINT	iFirstChar,
+	UINT	iLastChar,
+	LPINT	lpBuffer
+	)
+{
+  /* FIXME what to do with iFirstChar and iLastChar ??? */
+  return NtGdiGetCharWidth32 ( hdc, iFirstChar, iLastChar, lpBuffer );
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+GetCharWidthW (
+	HDC	hdc,
+	UINT	iFirstChar,
+	UINT	iLastChar,
+	LPINT	lpBuffer
+	)
+{
+  return NtGdiGetCharWidth32 ( hdc, iFirstChar, iLastChar, lpBuffer );
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+GetCharWidth32W(
+	HDC	hdc,
+	UINT	iFirstChar,
+	UINT	iLastChar,
+	LPINT	lpBuffer
+	)
+{
+  return NtGdiGetCharWidth32 ( hdc, iFirstChar, iLastChar, lpBuffer );
 }

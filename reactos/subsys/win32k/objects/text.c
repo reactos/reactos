@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.82 2004/03/23 00:18:54 gvg Exp $ */
+/* $Id: text.c,v 1.83 2004/03/23 07:59:47 gvg Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -1894,17 +1894,6 @@ NtGdiGetCharacterPlacement(HDC  hDC,
 
 BOOL
 STDCALL
-NtGdiGetCharWidth(HDC  hDC,
-                       UINT  FirstChar,
-                       UINT  LastChar,
-                       LPINT  Buffer)
-{
-    DPRINT1("NtGdiGetCharWidth isnt really unimplemented - keep going anyway\n");
-    return 1;
-}
-
-BOOL
-STDCALL
 NtGdiGetCharWidth32(HDC  hDC,
                          UINT  FirstChar,
                          UINT  LastChar,
@@ -1924,7 +1913,7 @@ NtGdiGetCharWidth32(HDC  hDC,
       return FALSE;
    }
 
-   BufferSize = (LastChar - FirstChar) * sizeof(INT);
+   BufferSize = (LastChar - FirstChar + 1) * sizeof(INT);
    SafeBuffer = ExAllocatePoolWithTag(PagedPool, BufferSize, TAG_GDITEXT);
    if (SafeBuffer == NULL)
    {
@@ -1982,7 +1971,7 @@ NtGdiGetCharWidth32(HDC  hDC,
    {
       glyph_index = FT_Get_Char_Index(face, i);
       FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
-      SafeBuffer[i] = face->glyph->advance.x >> 6;
+      SafeBuffer[i - FirstChar] = face->glyph->advance.x >> 6;
    }
    IntUnLockFreeType;
    TEXTOBJ_UnlockText(dc->w.hFont);

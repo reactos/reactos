@@ -1,4 +1,4 @@
-/* $Id: stubsw.c,v 1.25 2004/03/23 00:18:54 gvg Exp $
+/* $Id: stubsw.c,v 1.26 2004/03/23 07:59:47 gvg Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -130,38 +130,6 @@ EnumFontsW(
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return 0;
 #endif
-}
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-GetCharWidthW (
-	HDC	hdc,
-	UINT	iFirstChar,
-	UINT	iLastChar,
-	LPINT	lpBuffer
-	)
-{
-  return NtGdiGetCharWidth ( hdc, iFirstChar, iLastChar, lpBuffer );
-}
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-GetCharWidth32W(
-	HDC	hdc,
-	UINT	iFirstChar,
-	UINT	iLastChar,
-	LPINT	lpBuffer
-	)
-{
-  return NtGdiGetCharWidth32 ( hdc, iFirstChar, iLastChar, lpBuffer );
 }
 
 
