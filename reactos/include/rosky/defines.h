@@ -7,6 +7,7 @@
 #define MSG_MOUSE_BUT1_RELEASED		164
 #define MSG_MOUSE_BUT2_RELEASED		165
 #define MSG_GUI_REDRAW			170
+#define MSG_COMMAND			2505
 #define MSG_QUIT			2600
 #define MSG_DESTROY			2700
 
@@ -34,5 +35,8 @@
 /* GC types */
 #define GC_TYPE_WINDOW			0x00000002
 #define GC_TYPE_DIB			0x00000004
+
+/* Menu flags */
+#define MENU_SEPERATOR			0x00000001
 
 #endif /* __RSK_DEFINES_H */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: libskygi.c,v 1.6 2004/08/13 17:10:22 navaraf Exp $
+/* $Id: libskygi.c,v 1.7 2004/08/13 20:14:40 navaraf Exp $
  *
  * PROJECT:         SkyOS GI library
  * FILE:            lib/libskygi/libskygi.c
@@ -26,6 +26,7 @@
  *      08/12/2004  Created
  */
 #include <windows.h>
+#include <stdio.h>
 #include <rosky/rosky.h>
 #include "libskygi.h"
 #include "resource.h"
@@ -35,6 +36,18 @@ typedef struct
   s_window Window;
   HWND hWnd;
 } SKY_WINDOW, *PSKY_WINDOW;
+
+typedef struct
+{
+  widget_menu Menu;
+  HMENU hMenu;
+} SKY_MENU, *PSKY_MENU;
+
+typedef struct
+{
+  widget_menu_item MenuItem;
+  MENUITEMINFOW MenuItemInfo;
+} SKY_MENUITEM, *PSKY_MENUITEM;
 
 typedef struct
 {
@@ -230,6 +243,11 @@ IntIsSkyMessage(PSKY_WINDOW skw, MSG *Msg, s_gi_msg *smsg)
       smsg->para2 = pt.y;
       return TRUE;
     }
+
+    case WM_COMMAND:
+      smsg->type = MSG_COMMAND;
+      smsg->para1 = LOWORD(Msg->wParam);
+      return TRUE;
   }
   
   return FALSE;
@@ -294,6 +312,10 @@ IntDefaultWin32Proc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
       
       return 0;
     }
+
+    case WM_COMMAND:
+      IntDispatchMsg(&skw->Window, MSG_COMMAND, LOWORD(wParam), 0);
+      return 0;
 
     case WM_ERASEBKGND:
       return 1; /* don't handle this message */
@@ -384,6 +406,8 @@ GI_create_app(app_para *p)
   ClientRect.bottom = 0 + p->ulHeight;
   AdjustWindowRectEx(&ClientRect, Style, p->ulStyle & WF_HAS_MENU, ExStyle);
 
+  DBG("Menu: %x\n", p->pMenu ? ((PSKY_MENU)p->pMenu)->hMenu : NULL);
+
   /* create the Win32 window */
   skw->hWnd = CreateWindowExW(ExStyle,
                               L"ROSkyWindow",
@@ -394,7 +418,7 @@ GI_create_app(app_para *p)
                               ClientRect.right - ClientRect.left,
                               ClientRect.bottom - ClientRect.top,
                               NULL,
-                              NULL,
+                              p->pMenu ? ((PSKY_MENU)p->pMenu)->hMenu : NULL,
                               GetModuleHandleW(NULL),
                               skw);
 
@@ -987,6 +1011,143 @@ GC_destroy(GC *Gc)
    }
    #endif
    return 0;
+}
+
+
+/*
+ * @implemented
+ */
+widget_menu* __cdecl
+GI_create_menu(HANDLE Window)
+{
+   PSKY_MENU Menu;
+
+   DBG("GI_create_menu(0x%x)\n", Window);
+
+   Menu = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SKY_MENU));
+   if (Menu == NULL)
+   {
+      return NULL;
+   }
+
+   /* Shouldn't we use CreatePopupMenu in some cases? */
+   Menu->hMenu = CreateMenu();
+   if (Menu->hMenu == NULL)
+   {
+      HeapFree(GetProcessHeap(), 0, Menu);
+      return NULL;
+   }
+
+   if (Window)
+      SetMenu(((PSKY_WINDOW)Window)->hWnd, Menu->hMenu);
+
+   return (widget_menu *)Menu;
+}
+
+
+/*
+ * @implemented
+ */
+widget_menu_item* __cdecl
+GI_create_menu_item(unsigned char *Text,
+                    unsigned int Id,
+                    unsigned int Flags,
+                    unsigned int Enabled)
+{
+   PSKY_MENUITEM MenuItem;
+   ULONG TextLength;
+   
+   DBG("GI_create_menu_item(0x%x, 0x%x, 0x%x, 0x%x)\n",
+       Text, Id, Flags, Enabled);
+
+   TextLength = MultiByteToWideChar(CP_UTF8, 0, Text, -1, NULL, 0);
+   MenuItem = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+                        sizeof(SKY_MENUITEM) + TextLength * sizeof(WCHAR));
+   if (MenuItem == NULL)
+   {
+      return NULL;
+   }
+
+   lstrcpyA(MenuItem->MenuItem.text, Text);
+   MenuItem->MenuItem.ID = Id;
+   MenuItem->MenuItem.flags = Flags;
+   MenuItem->MenuItem.enabled = Enabled;
+
+   MenuItem->MenuItemInfo.cbSize = sizeof(MENUITEMINFOW);
+   MenuItem->MenuItemInfo.fMask = MIIM_ID | MIIM_TYPE | MIIM_STATE;
+   if (Flags & MENU_SEPERATOR)
+      MenuItem->MenuItemInfo.fType = MF_SEPARATOR;
+   else
+      MenuItem->MenuItemInfo.fType = MF_STRING;
+   MenuItem->MenuItemInfo.fState = Enabled ? MFS_ENABLED : 0;
+   MenuItem->MenuItemInfo.wID = Id;
+   MenuItem->MenuItemInfo.dwTypeData = (LPWSTR)(MenuItem + 1);
+   MenuItem->MenuItemInfo.cch = TextLength;
+   MultiByteToWideChar(CP_UTF8, 0, Text, TextLength, (LPWSTR)(MenuItem + 1),
+                       TextLength);
+
+   return (widget_menu_item *)MenuItem;
+}
+
+
+/*
+ * @implemented
+ */
+int __cdecl
+GI_add_menu_item(widget_menu *Menu,
+                 widget_menu_item *Item)
+{
+   DBG("GI_add_menu_item(0x%x, 0x%x)\n", Menu, Item);
+   InsertMenuItemW(((PSKY_MENU)Menu)->hMenu, -1, TRUE,
+                   &((PSKY_MENUITEM)Item)->MenuItemInfo);
+   return 1;
+}
+
+
+/*
+ * @implemented
+ */
+int __cdecl
+GI_add_menu_sub(widget_menu *Menu,
+                widget_menu_item *Item,
+                widget_menu *Sub)
+{
+   PSKY_MENUITEM MenuItem = (PSKY_MENUITEM)Item;
+
+   DBG("GI_add_menu_sub(0x%x, 0x%x, 0x%x)\n", Menu, Item, Sub);
+   MenuItem->MenuItemInfo.fMask |= MIIM_SUBMENU;
+   MenuItem->MenuItemInfo.hSubMenu = ((PSKY_MENU)Sub)->hMenu;
+   InsertMenuItemW(((PSKY_MENU)Menu)->hMenu, -1, TRUE,
+                   &MenuItem->MenuItemInfo);
+   return 1;
+}
+
+
+/*
+ * @unimplemented
+ */
+int __cdecl
+GI_messagebox(HANDLE Window,
+              unsigned int Flags,
+              char *Title,
+              char *Fmt,
+              ...)
+{
+   CHAR Buffer[4096];
+   va_list ArgList;
+
+   DBG("GI_messagebox(0x%x, 0x%x, 0x%x, 0x%x, ...)\n",
+       Window, Flags, Title, Fmt);
+
+   va_start(ArgList, Fmt);
+   _vsnprintf(Buffer, sizeof(Buffer) / sizeof(Buffer[0]), Fmt, ArgList);
+   va_end(ArgList);
+
+   /** @todo Convert flags and fix return value! */
+   MessageBoxA(Window ? ((PSKY_WINDOW)Window)->hWnd : NULL, 
+               Buffer, Title, MB_OK);
+
+   return 1;
 }
 
 /* EOF */

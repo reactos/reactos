@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.6 2004/08/13 12:29:19 weiden Exp $
+/* $Id: stubs.c,v 1.7 2004/08/13 20:14:40 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         SkyOS GI library
@@ -52,31 +52,6 @@ GC_blit(GC *gc,
 /*
  * @unimplemented
  */
-int __cdecl
-GI_add_menu_item(widget_menu *menu,
-                 widget_menu_item *item)
-{
-  STUB("GI_add_menu_item(0x%x, 0x%x) returns 0!\n", menu, item);
-  return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int __cdecl
-GI_add_menu_sub(widget_menu *menu,
-                widget_menu_item *item,
-                widget_menu *sub)
-{
-  STUB("GI_add_menu_sub(0x%x, 0x%x, 0x%x) returns 0!\n", menu, item, sub);
-  return 0;
-}
-
-
-/*
- * @unimplemented
- */
 DDB* __cdecl
 GI_create_DDB_from_DIB(DIB *dib)
 {
@@ -88,50 +63,10 @@ GI_create_DDB_from_DIB(DIB *dib)
 /*
  * @unimplemented
  */
-widget_menu* __cdecl
-GI_create_menu(HANDLE win)
-{
-  STUB("GI_create_menu(0x%x) returns NULL!\n", win);
-  return NULL;
-}
-
-
-/*
- * @unimplemented
- */
-widget_menu_item* __cdecl
-GI_create_menu_item(unsigned char *text,
-                    unsigned int ID,
-                    unsigned int flags,
-                    unsigned int enabled)
-{
-  STUB("GI_create_menu_item(0x%x, 0x%x, 0x%x, 0x%x) returns NULL!\n", text, ID, flags, enabled);
-  return NULL;
-}
-
-
-/*
- * @unimplemented
- */
 int __cdecl
 GI_kill_timer(unsigned int uiID)
 {
   STUB("GI_kill_timer(0x%x) returns 0!\n", uiID);
-  return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int __cdecl
-GI_messagebox(HANDLE hWnd,
-              unsigned int flags,
-              char *titel,
-              char *fmt,
-              ...)
-{
-  STUB("GI_messagebox(0x%x, 0x%x, 0x%x, 0x%x, ...) returns 0!\n", hWnd, flags, titel, fmt);
   return 0;
 }
 
@@ -357,7 +292,7 @@ DIB* __cdecl
 GI_load_bitmap(char *filename,
                unsigned int ImageIndex)
 {
-  STUB("GI_load_bitmap(0x%x, 0x%x) returns NULL!\n", filename, ImageIndex);
+  STUB("GI_load_bitmap(%s, 0x%x) returns NULL!\n", filename, ImageIndex);
   return NULL;
 }
 
