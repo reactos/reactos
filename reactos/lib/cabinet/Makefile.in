@@ -1,0 +1,18 @@
+TOPSRCDIR = @top_srcdir@
+TOPOBJDIR = ../..
+SRCDIR    = @srcdir@
+VPATH     = @srcdir@
+MODULE    = cabinet.dll
+IMPORTS   = kernel32
+
+C_SRCS = \
+	cabextract.c \
+	cabinet_main.c \
+	fci.c \
+	fdi.c
+
+RC_SRCS = cabinet.rc
+
+@MAKE_DLL_RULES@
+
+### Dependencies:
