@@ -35,4 +35,6 @@ typedef UINT16    *LPUINT16;
 #define FD_SETSIZE 64
 #endif
 
+#define HAVE_SSIZE_T
+
 #endif  /* __REACTOS_WINE_WINEROS_H */
