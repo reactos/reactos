@@ -2280,7 +2280,7 @@ CmiScanForSubKey(IN PREGISTRY_HIVE ParentKeyRegistryHive,
 
   DPRINT("Scanning for sub key %wZ\n", KeyName);
 
-  assert(RegistryHive);
+//  assert(RegistryHive);
 
   *SubKeyCell = NULL;
 
