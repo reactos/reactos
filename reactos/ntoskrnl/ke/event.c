@@ -51,12 +51,12 @@ VOID STDCALL KeInitializeEvent (PKEVENT		Event,
    InitializeListHead(&(Event->Header.WaitListHead));
 }
 
-LONG STDCALL KeReadStateEvent (PKEVENT	Event)
+LONG STDCALL KeReadStateEvent (PKEVENT Event)
 {
    return(Event->Header.SignalState);
 }
 
-LONG STDCALL KeResetEvent (PKEVENT	Event)
+LONG STDCALL KeResetEvent (PKEVENT Event)
 {
    return(InterlockedExchange(&(Event->Header.SignalState),0));
 }

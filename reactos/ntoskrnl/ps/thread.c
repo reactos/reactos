@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.65 2001/01/18 15:00:09 dwelch Exp $
+/* $Id: thread.c,v 1.66 2001/01/19 15:09:01 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -66,7 +66,7 @@ HANDLE STDCALL PsGetCurrentThreadId(VOID)
    return(PsGetCurrentThread()->Cid.UniqueThread);
 }
 
-static VOID PsInsertIntoThreadList(KPRIORITY Priority, PETHREAD Thread)
+VOID PsInsertIntoThreadList(KPRIORITY Priority, PETHREAD Thread)
 {
 //   DPRINT("PsInsertIntoThreadList(Priority %x, Thread %x)\n",Priority,
 //	  Thread);
@@ -151,7 +151,7 @@ VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
    CurrentThread->Tcb.State = NewThreadStatus;
    if (CurrentThread->Tcb.State == THREAD_STATE_RUNNABLE)
      {
-	PiNrRunnableThreads--;
+	PiNrRunnableThreads++;
 	PsInsertIntoThreadList(CurrentThread->Tcb.Priority,
 			       CurrentThread);
      }
@@ -178,7 +178,6 @@ VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 	     CurrentThread = Candidate;
 	     
 	     KeReleaseSpinLockFromDpcLevel(&PiThreadListLock);
-	     //	     HalTaskSwitch(&CurrentThread->Tcb);
 	     Ki386ContextSwitch(&CurrentThread->Tcb, &OldThread->Tcb);
 	     PsReapThreads();
 	     return;
@@ -199,210 +198,53 @@ VOID PsDispatchThread(ULONG NewThreadStatus)
    
    KeAcquireSpinLock(&PiThreadListLock, &oldIrql);  
    /*
-    * Save wait IrqL
+    * Save wait IRQL
     */
    CurrentThread->Tcb.WaitIrql = oldIrql;
    PsDispatchThreadNoLock(NewThreadStatus);
    KeLowerIrql(oldIrql);
 }
 
-/*
- * Suspend and resume may only be called to suspend the current thread, except
- * by apc.c
- */
-
-ULONG PsUnfreezeThread(PETHREAD Thread, PNTSTATUS WaitStatus)
-{
-   KIRQL oldIrql;
-   ULONG r;
-   
-   DPRINT("PsUnfreezeThread(Thread %x, WaitStatus %x)\n", Thread, WaitStatus);
-   
-   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
-   
-   Thread->Tcb.FreezeCount--;
-   r = Thread->Tcb.FreezeCount;
-   
-   if (WaitStatus != NULL)
-     {
-       if (!NT_SUCCESS((*WaitStatus)))
-	 {
-	   KeBugCheck(0);
-	 }
-       Thread->Tcb.WaitStatus = *WaitStatus;
-     }
-   
-   if (r <= 0)
-     {
-	DPRINT("Resuming thread\n");
-	Thread->Tcb.State = THREAD_STATE_RUNNABLE;
-	PsInsertIntoThreadList(Thread->Tcb.Priority, Thread);
-     }
-   
-   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
-   return(r);
-}
-
-VOID PsUnfreezeOtherThread(PETHREAD Thread)
-{
-   ULONG r;
-   
-   Thread->Tcb.FreezeCount--;
-   r = Thread->Tcb.FreezeCount;
-   
-   if (r <= 0)
-     {
-	Thread->Tcb.State = THREAD_STATE_RUNNABLE;
-	PsInsertIntoThreadList(Thread->Tcb.Priority, Thread);
-     }
-}
-
-ULONG PsFreezeThread(PETHREAD Thread, 
-		     PNTSTATUS Status, 
-		     UCHAR Alertable,
-		     ULONG WaitMode)
-{
-   KIRQL oldIrql;
-   ULONG r;
-   
-   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
-   
-   Thread->Tcb.FreezeCount++;
-   r = Thread->Tcb.FreezeCount;
-   
-   DPRINT("r %d\n", r);
-   
-   if (r == 0)
-     {
-	DPRINT("Not suspending thread\n");
-	KeReleaseSpinLock(&PiThreadListLock, oldIrql);
-	return(r);
-     }
-   
-   Thread->Tcb.Alertable = Alertable;
-   Thread->Tcb.WaitMode = WaitMode;
-   
-   if (PsGetCurrentThread() != Thread)
-     {
-	DbgPrint("Suspending other\n");
-	KeBugCheck(0);
-     }
-   else
-     {
-	DPRINT("Suspending self\n");
-	Thread->Tcb.WaitIrql = oldIrql;
-	PsDispatchThreadNoLock(THREAD_STATE_FROZEN);
-	if (Status != NULL)
-	  {
-	     *Status = Thread->Tcb.WaitStatus;
-	  }
-	KeLowerIrql(oldIrql);
-     }
-   return(r);
-}
-
-#if 1
-ULONG PsResumeThread(PETHREAD Thread)
-{
-   KIRQL oldIrql;
-   ULONG SuspendCount;
-
-   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
-
-   if (Thread->Tcb.SuspendCount > 0)
-     {
-	Thread->Tcb.SuspendCount--;
-	SuspendCount = Thread->Tcb.SuspendCount;
-	Thread->Tcb.State = THREAD_STATE_RUNNABLE;
-	PsInsertIntoThreadList(Thread->Tcb.Priority, Thread);
-     }
-
-   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
-
-   return SuspendCount;
-}
-#endif
-
-#if 0
 VOID
-PiSuspendThreadRundownRoutine(PKAPC Apc)
+PsUnblockThread(PETHREAD Thread, PNTSTATUS WaitStatus)
 {
-   ExFreePool(Apc);
+  KIRQL oldIrql;
+
+  KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
+  if (WaitStatus != NULL)
+    {
+      Thread->Tcb.WaitStatus = *WaitStatus;
+    }
+  Thread->Tcb.State = THREAD_STATE_RUNNABLE;
+  PsInsertIntoThreadList(Thread->Tcb.Priority, Thread);
+  KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 }
 
 VOID
-PiSuspendThreadKernelRoutine(PKAPC Apc,
-			     PKNORMAL_ROUTINE* NormalRoutine,
-			     PVOID* NormalContext,
-			     PVOID* SystemArgument1,
-			     PVOID* SystemArguemnt2)
+PsBlockThread(PNTSTATUS Status, UCHAR Alertable, ULONG WaitMode, 
+	      BOOLEAN DispatcherLock, KIRQL WaitIrql)
 {
-   InterlockedIncrement(&PsGetCurrentThread()->Tcb.SuspendThread);
-   KeWaitForSingleObject((PVOID)&PsGetCurrentThread()->SuspendSemaphore,
-			 0,
-			 UserMode,
-			 TRUE,
-			 NULL);
-   ExFreePool(Apc);
+  KIRQL oldIrql;
+  PETHREAD Thread = PsGetCurrentThread();
+
+  KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
+  
+  if (DispatcherLock)
+    {
+      KeReleaseDispatcherDatabaseLockAtDpcLevel(FALSE);
+    }
+
+  Thread->Tcb.Alertable = Alertable;
+  Thread->Tcb.WaitMode = WaitMode;
+  Thread->Tcb.WaitIrql = WaitIrql;
+  PsDispatchThreadNoLock(THREAD_STATE_BLOCKED);
+
+  if (Status != NULL)
+    {
+      *Status = Thread->Tcb.WaitStatus;
+    }
+  KeLowerIrql(WaitIrql);
 }
-
-NTSTATUS 
-PsSuspendThread(PETHREAD Thread, PULONG SuspendCount)
-{
-   PKAPC Apc;
-   
-   Apc = ExAllocatePool(NonPagedPool, sizeof(KAPC));
-   if (Apc == NULL)
-     {
-	return(STATUS_NO_MORE_MEMORY);
-     }
-   
-   *SuspendCount = Thread->Tcb.SuspendCount;
-   
-   KeInitializeApc(Apc,
-		   &Thread->Tcb,
-		   NULL,
-		   PiSuspendThreadKernelRoutine,
-		   PiSuspendThreadRundownRoutine,
-		   NULL,
-		   KernelMode,
-		   NULL);
-   KeInsertQueueApc(Apc,
-		    NULL,
-		    NULL,
-		    0);
-   return(STATUS_SUCCESS);
-}
-#endif
-
-#if 1
-ULONG 
-PsSuspendThread(PETHREAD Thread)
-{
-   KIRQL oldIrql;
-   ULONG PreviousSuspendCount;
-
-   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
-
-   PreviousSuspendCount = Thread->Tcb.SuspendCount;
-   if (Thread->Tcb.SuspendCount < MAXIMUM_SUSPEND_COUNT)
-     {
-	Thread->Tcb.SuspendCount++;
-     }
-
-   if (PsGetCurrentThread() == Thread)
-     {
-	DbgPrint("Cannot suspend self\n");
-	KeBugCheck(0);
-     }
-
-   Thread->Tcb.State = THREAD_STATE_SUSPENDED;
-
-   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
-
-   return PreviousSuspendCount;
-}
-#endif
 
 VOID 
 PsInitThreadManagment(VOID)
@@ -510,6 +352,7 @@ NTSTATUS STDCALL NtAlertResumeThread(IN	HANDLE ThreadHandle,
 
 NTSTATUS STDCALL NtAlertThread (IN HANDLE ThreadHandle)
 {
+#if 0
    PETHREAD Thread;
    NTSTATUS Status;
    NTSTATUS ThreadStatus;
@@ -526,10 +369,12 @@ NTSTATUS STDCALL NtAlertThread (IN HANDLE ThreadHandle)
      }
    
    ThreadStatus = STATUS_ALERTED;
-   (VOID)PsUnfreezeThread(Thread, &ThreadStatus);
+   (VOID)PsUnblockThread(Thread, &ThreadStatus);
    
    ObDereferenceObject(Thread);
    return(STATUS_SUCCESS);
+#endif
+   UNIMPLEMENTED;
 }
 
 NTSTATUS STDCALL 

@@ -414,7 +414,8 @@ ULONG PsResumeThread(PETHREAD Thread);
 #define THREAD_STATE_FROZEN       (4)
 #define THREAD_STATE_TERMINATED_1 (5)
 #define THREAD_STATE_TERMINATED_2 (6)
-#define THREAD_STATE_MAX          (7)
+#define THREAD_STATE_BLOCKED      (7)
+#define THREAD_STATE_MAX          (8)
 
 
 /*
@@ -447,6 +448,11 @@ VOID PsUnfreezeProcessThreads(PEPROCESS Process);
 PEPROCESS PsGetNextProcess(PEPROCESS OldProcess);
 VOID
 Ki386ContextSwitch(PKTHREAD NewThread, PKTHREAD OldThread);
+VOID
+PsBlockThread(PNTSTATUS Status, UCHAR Alertable, ULONG WaitMode, 
+	      BOOLEAN DispatcherLock, KIRQL WaitIrql);
+VOID
+PsUnblockThread(PETHREAD Thread, PNTSTATUS WaitStatus);
 
 #endif /* ASSEMBLER */
 

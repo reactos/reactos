@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.27 2000/12/28 20:38:27 ekohl Exp $
+/* $Id: create.c,v 1.28 2001/01/19 15:09:01 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -549,7 +549,6 @@ NTSTATUS STDCALL NtCreateThread (PHANDLE		ThreadHandle,
    ThreadContext->Eip = LdrpGetSystemDllEntryPoint;
 #endif   
    
-   //   Status = HalInitTaskWithContext(Thread,ThreadContext);
    Status = Ke386InitThreadWithContext(&Thread->Tcb, ThreadContext);
    if (!NT_SUCCESS(Status))
      {
@@ -570,7 +569,7 @@ NTSTATUS STDCALL NtCreateThread (PHANDLE		ThreadHandle,
 
    Thread->StartAddress=NULL;
 
-   if (Client!=NULL)
+   if (Client != NULL)
      {
 	*Client=Thread->Cid;
      }  
@@ -650,7 +649,6 @@ NTSTATUS STDCALL PsCreateSystemThread(PHANDLE ThreadHandle,
      }
    
    Thread->StartAddress=StartRoutine;
-   //   Status = HalInitTask(Thread,StartRoutine,StartContext);
    Status = Ke386InitThread(&Thread->Tcb, StartRoutine, StartContext);
    if (!NT_SUCCESS(Status))
      {

@@ -101,6 +101,7 @@ VOID KeRemoveAllWaitsThread(struct _ETHREAD* Thread, NTSTATUS WaitStatus);
 PULONG KeGetStackTopThread(struct _ETHREAD* Thread);
 VOID KeContextToTrapFrame(PCONTEXT Context,
 			  PKTRAP_FRAME TrapFrame);
+VOID KeReleaseDispatcherDatabaseLockAtDpcLevel(BOOLEAN Wait);
 
 /* INITIALIZATION FUNCTIONS *************************************************/
 

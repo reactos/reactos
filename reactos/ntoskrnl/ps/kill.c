@@ -157,7 +157,6 @@ PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus)
     */
    Thread->DeadThread = 1;
    Thread->ExitStatus = ExitStatus;
-   Thread->Tcb.ApcState.UserApcPending++;
    if (Thread->Tcb.State == THREAD_STATE_FROZEN && 
        (Thread->Tcb.Alertable || Thread->Tcb.WaitMode == UserMode))
      {

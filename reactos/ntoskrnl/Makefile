@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.6 2000/12/26 05:32:43 dwelch Exp $
+# $Id: Makefile,v 1.7 2001/01/19 15:09:01 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -186,7 +186,8 @@ OBJECTS_PS = \
 	ps/psmgr.o \
 	ps/thread.o \
 	ps/tinfo.o \
-	ps/debug.o
+	ps/debug.o \
+	ps/suspend.o
 
 # Executive Subsystem (Ex)
 OBJECTS_EX = \

@@ -22,4 +22,6 @@
 
 #define INVALID_HANDLE_VALUE	((HANDLE)-1)
 
+#define EX_MAXIMUM_WAIT_OBJECTS (64)
+
 #endif /* __INCLUDE_NTDEF_H */

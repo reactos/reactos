@@ -64,12 +64,12 @@ BOOLEAN KiTestAlert(VOID)
    KIRQL oldIrql; 
    
    KeAcquireSpinLock(&PiApcLock, &oldIrql);
-   if (IsListEmpty(&KeGetCurrentThread()->ApcState.ApcListHead[1]))
+   if (KeGetCurrentThread()->ApcState.UserApcPending == 0)
      {
 	KeReleaseSpinLock(&PiApcLock, oldIrql);
 	return(FALSE);
      }
-   KeGetCurrentThread()->ApcState.UserApcPending++;
+   KeGetCurrentThread()->Alerted[0] = 1;
    KeReleaseSpinLock(&PiApcLock, oldIrql);
    return(TRUE);
 }
@@ -89,7 +89,6 @@ BOOLEAN KiDeliverUserApc(PKTRAP_FRAME TrapFrame)
    PCONTEXT Context;
    KIRQL oldlvl;
    PKTHREAD Thread;
-   PETHREAD EThread;
 
    DPRINT("KiDeliverUserApc(TrapFrame %x/%x)\n", TrapFrame,
 	  KeGetCurrentThread()->TrapFrame);
@@ -98,17 +97,6 @@ BOOLEAN KiDeliverUserApc(PKTRAP_FRAME TrapFrame)
    /*
     * Check for thread termination
     */
-   KeAcquireSpinLock(&PiThreadListLock, &oldlvl);
-   EThread = CONTAINING_RECORD(Thread, ETHREAD, Tcb);
-   if (EThread->DeadThread)
-     {
-       KeReleaseSpinLock(&PiThreadListLock, oldlvl);
-       PsTerminateCurrentThread(EThread->ExitStatus);
-     }
-   else
-     {
-	KeReleaseSpinLock(&PiThreadListLock, oldlvl);
-     }
 
    KeAcquireSpinLock(&PiApcLock, &oldlvl);
 
@@ -191,7 +179,8 @@ BOOLEAN KiDeliverUserApc(PKTRAP_FRAME TrapFrame)
 		      (PVOID*)&Esp[2],
 		      (PVOID*)&Esp[3],
 		      (PVOID*)&Esp[4]);
-
+   
+   Thread->Alerted[0] = 0;
    return(TRUE);
 }
 
@@ -273,6 +262,7 @@ KeInsertQueueApc (PKAPC	Apc,
      {
 	InsertTailList(&TargetThread->ApcState.ApcListHead[1],
 		       &Apc->ApcListEntry);
+	TargetThread->ApcState.UserApcPending++;
      }
    Apc->Inserted = TRUE;
    
@@ -298,8 +288,8 @@ KeInsertQueueApc (PKAPC	Apc,
 	
 	DPRINT("Resuming thread for user APC\n");
 	
-	TargetThread->ApcState.UserApcPending++;
 	Status = STATUS_USER_APC;
+	TargetThread->Alerted[0] = 1;
 	KeRemoveAllWaitsThread(CONTAINING_RECORD(TargetThread, ETHREAD, Tcb),
 			       STATUS_USER_APC);
      }

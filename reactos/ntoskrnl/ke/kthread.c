@@ -51,13 +51,6 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
    extern unsigned int init_stack_top;
    extern unsigned int init_stack;
 
-#if 0   
-   DbgPrint("Thread %x &Thread->MutantListHead %x &Thread->TrapFrame %x "
-	    "&Thread->PreviousMode %x &Thread->DisableBoost %x\n",
-	    Thread, &Thread->MutantListHead, &Thread->TrapFrame, 
-	    &Thread->PreviousMode, &Thread->DisableBoost);
-#endif   
-   
    KeInitializeDispatcherHeader(&Thread->DispatcherHeader,
                                 InternalThreadType,
                                 sizeof(ETHREAD),

@@ -6,8 +6,8 @@
  * PROGRAMMER:           David Welch (welch@mcmail.com)
  * REVISION HISTORY:
  *           21/07/98: Created
- *			 12/1/99:  Phillip Susi: Fixed wake code in KeDispatcherObjectWake
- *				so that things like KeWaitForXXX() return the correct value
+ *	     12/1/99:  Phillip Susi: Fixed wake code in KeDispatcherObjectWake
+ *		   so that things like KeWaitForXXX() return the correct value
  */
 
 /* NOTES ********************************************************************
@@ -21,6 +21,7 @@
 #include <internal/ps.h>
 #include <internal/ob.h>
 #include <internal/id.h>
+#include <ntos/ntdef.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -57,9 +58,20 @@ VOID KeAcquireDispatcherDatabaseLock(BOOLEAN Wait)
      {
 	return;
      }
-   KeAcquireSpinLock(&DispatcherDatabaseLock,&oldlvl);
+   KeAcquireSpinLock(&DispatcherDatabaseLock, &oldlvl);
    WaitSet = Wait;
    Owner = KeGetCurrentThread();
+}
+
+VOID KeReleaseDispatcherDatabaseLockAtDpcLevel(BOOLEAN Wait)
+{
+  DPRINT("KeReleaseDispatcherDatabaseLockAtDpcLevel(Wait %x)\n", Wait);
+  assert(Wait == WaitSet);
+  if (!Wait)
+    {
+      Owner = NULL;
+      KeReleaseSpinLockFromDpcLevel(&DispatcherDatabaseLock);
+    }
 }
 
 VOID KeReleaseDispatcherDatabaseLock(BOOLEAN Wait)
@@ -110,9 +122,7 @@ VOID KiSideEffectsBeforeWake(DISPATCHER_HEADER* hdr,
 	  {
 	     PKMUTEX Mutex;
 	     
-	     Mutex = CONTAINING_RECORD(hdr,
-				       KMUTEX,
-				       Header);
+	     Mutex = CONTAINING_RECORD(hdr, KMUTEX, Header);
 	     hdr->SignalState--;
 	     assert(hdr->SignalState <= 1);
 	     Mutex->OwnerThread = Thread;
@@ -134,9 +144,7 @@ static BOOLEAN KiIsObjectSignalled(DISPATCHER_HEADER* hdr,
      {
         PKMUTEX Mutex;
 	
-	Mutex = CONTAINING_RECORD(hdr,
-				  KMUTEX,
-				  Header);
+	Mutex = CONTAINING_RECORD(hdr, KMUTEX, Header);
 	
 	assert(hdr->SignalState <= 1);
 	if ((hdr->SignalState < 1 && Mutex->OwnerThread == Thread) ||
@@ -183,7 +191,7 @@ VOID KeRemoveAllWaitsThread(PETHREAD Thread, NTSTATUS WaitStatus)
    
    if (WasWaiting)
      {
-	PsUnfreezeThread(Thread, &WaitStatus);
+	PsUnblockThread(Thread, &WaitStatus);
      }
    
    KeReleaseDispatcherDatabaseLock(FALSE);
@@ -245,8 +253,8 @@ static BOOLEAN KeDispatcherObjectWakeAll(DISPATCHER_HEADER* hdr)
 	Status = current->WaitKey;
 	if (current->Thread->WaitBlockList == NULL)
 	  {
-	     PsUnfreezeThread(CONTAINING_RECORD(current->Thread,ETHREAD,Tcb), 
-			      &Status);
+	     PsUnblockThread(CONTAINING_RECORD(current->Thread,ETHREAD,Tcb), 
+			     &Status);
 	  }
      }
    return(TRUE);
@@ -306,8 +314,8 @@ static BOOLEAN KeDispatcherObjectWakeOne(DISPATCHER_HEADER* hdr)
    DPRINT("Waking %x\n",current->Thread);
    KiSideEffectsBeforeWake(hdr, current->Thread);
    Status = current->WaitKey;
-   PsUnfreezeThread(CONTAINING_RECORD(current->Thread, ETHREAD, Tcb), 
-		    &Status);
+   PsUnblockThread(CONTAINING_RECORD(current->Thread, ETHREAD, Tcb), 
+		   &Status);
    return(TRUE);
 }
 
@@ -388,66 +396,57 @@ NTSTATUS STDCALL KeWaitForSingleObject (PVOID		Object,
    DISPATCHER_HEADER* hdr = (DISPATCHER_HEADER *)Object;
    PKTHREAD CurrentThread;
    NTSTATUS Status;
-   
+   KIRQL WaitIrql;
+
    DPRINT("Entering KeWaitForSingleObject(Object %x) "
 	  "PsGetCurrentThread() %x\n",Object,PsGetCurrentThread());
 
    CurrentThread = KeGetCurrentThread();
-   
-   if (Alertable && !IsListEmpty(&CurrentThread->ApcState.ApcListHead[1]))
-     {
-	DPRINT("Thread is alertable and user APCs are pending\n");
-	KiTestAlert();
-	return(STATUS_USER_APC);
-     }
-   
+   WaitIrql = KeGetCurrentIrql();
+
    if (Timeout != NULL)
      {
-	KeAddThreadTimeout(CurrentThread,Timeout);
+	KeAddThreadTimeout(CurrentThread, Timeout);
      }
    
    do
      {
-	KeAcquireDispatcherDatabaseLock(FALSE);
+       KeAcquireDispatcherDatabaseLock(FALSE);
 	
-	DPRINT("hdr->SignalState %d\n", hdr->SignalState);     
-	
-	if (KiIsObjectSignalled(hdr, CurrentThread))
-	  {	     
-	     KeReleaseDispatcherDatabaseLock(FALSE);
-	     if (Timeout != NULL)
-	       {
-		  KeCancelTimer(&KeGetCurrentThread()->Timer);
-	       }
-	     return(STATUS_WAIT_0);
+       DPRINT("hdr->SignalState %d\n", hdr->SignalState);     
+       
+       if (Alertable && KiTestAlert())
+	 {
+	   KeReleaseDispatcherDatabaseLock(FALSE);
+	   return(STATUS_USER_APC);
+	 }      
+
+       if (KiIsObjectSignalled(hdr, CurrentThread))
+	 {	     
+	   KeReleaseDispatcherDatabaseLock(FALSE);
+	   if (Timeout != NULL)
+	     {
+	       KeCancelTimer(&KeGetCurrentThread()->Timer);
+	     }
+	   return(STATUS_WAIT_0);
 	  }
-		
-	CurrentThread->WaitStatus = STATUS_UNSUCCESSFUL;
-	/* Append wait block to the KTHREAD wait block list */
-	CurrentThread->WaitBlockList = &CurrentThread->WaitBlock[0];	
-	CurrentThread->WaitBlock[0].Object = Object;
-	CurrentThread->WaitBlock[0].Thread = CurrentThread;
-	CurrentThread->WaitBlock[0].WaitKey = 0;
-	CurrentThread->WaitBlock[0].WaitType = WaitAny;
-	CurrentThread->WaitBlock[0].NextWaitBlock = NULL;
-	InsertTailList(&hdr->WaitListHead, 
-		       &CurrentThread->WaitBlock[0].WaitListEntry);
-	KeReleaseDispatcherDatabaseLock(FALSE);
-	DPRINT("Waiting for %x with irql %d\n", Object, KeGetCurrentIrql());
-	Status = STATUS_SUCCESS;
-	PsFreezeThread(PsGetCurrentThread(),
-		       &Status,
-		       (UCHAR)Alertable,
-		       WaitMode);
-	if (!NT_SUCCESS(Status))
-	  {
-	    DPRINT1("Woke from wait with status %x\n", Status);
-	  }
+       
+       CurrentThread->WaitStatus = STATUS_UNSUCCESSFUL;
+       /* Append wait block to the KTHREAD wait block list */
+       CurrentThread->WaitBlockList = &CurrentThread->WaitBlock[0];	
+       CurrentThread->WaitBlock[0].Object = Object;
+       CurrentThread->WaitBlock[0].Thread = CurrentThread;
+       CurrentThread->WaitBlock[0].WaitKey = 0;
+       CurrentThread->WaitBlock[0].WaitType = WaitAny;
+       CurrentThread->WaitBlock[0].NextWaitBlock = NULL;
+       InsertTailList(&hdr->WaitListHead, 
+		      &CurrentThread->WaitBlock[0].WaitListEntry);
+       PsBlockThread(&Status, (UCHAR)Alertable, WaitMode, TRUE, WaitIrql);
      } while (Status == STATUS_KERNEL_APC);
    
    if (Timeout != NULL)
      {
-	KeCancelTimer(&KeGetCurrentThread()->Timer);
+       KeCancelTimer(&KeGetCurrentThread()->Timer);
      }
    
    DPRINT("Returning from KeWaitForSingleObject()\n");
@@ -455,125 +454,114 @@ NTSTATUS STDCALL KeWaitForSingleObject (PVOID		Object,
 }
 
 
-NTSTATUS
-STDCALL
-KeWaitForMultipleObjects (
-	ULONG		Count,
-	PVOID		Object[],
-	WAIT_TYPE	WaitType,
-	KWAIT_REASON	WaitReason,
-	KPROCESSOR_MODE	WaitMode,
-	BOOLEAN		Alertable,
-	PLARGE_INTEGER	Timeout,
-	PKWAIT_BLOCK	WaitBlockArray
-	)
+NTSTATUS STDCALL
+KeWaitForMultipleObjects (ULONG		Count,
+			  PVOID		Object[],
+			  WAIT_TYPE	WaitType,
+			  KWAIT_REASON	WaitReason,
+			  KPROCESSOR_MODE	WaitMode,
+			  BOOLEAN		Alertable,
+			  PLARGE_INTEGER	Timeout,
+			  PKWAIT_BLOCK	WaitBlockArray)
 {
-   DISPATCHER_HEADER* hdr;
-   PKWAIT_BLOCK blk;
-   PKTHREAD CurrentThread;
-   ULONG CountSignaled;
-   ULONG i;
-   NTSTATUS Status;
-   
-    DPRINT("Entering KeWaitForMultipleObjects(Count %lu Object[] %p) "
-    "PsGetCurrentThread() %x\n",Count,Object,PsGetCurrentThread());
+  DISPATCHER_HEADER* hdr;
+  PKWAIT_BLOCK blk;
+  PKTHREAD CurrentThread;
+  ULONG CountSignaled;
+  ULONG i;
+  NTSTATUS Status;
+  KIRQL WaitIrql;
 
-    CountSignaled = 0;
-    CurrentThread = KeGetCurrentThread();
+  DPRINT("Entering KeWaitForMultipleObjects(Count %lu Object[] %p) "
+	 "PsGetCurrentThread() %x\n",Count,Object,PsGetCurrentThread());
 
-    if (WaitBlockArray == NULL)
+  CountSignaled = 0;
+  CurrentThread = KeGetCurrentThread();
+  WaitIrql = KeGetCurrentIrql();
+
+  if (WaitBlockArray == NULL)
     {
-        if (Count > 4)
+      if (Count > 4)
         {
-            DbgPrint("(%s:%d) Too many objects!\n",
-                     __FILE__,__LINE__);
-            return STATUS_UNSUCCESSFUL;
+	  DbgPrint("(%s:%d) Too many objects!\n",
+		   __FILE__,__LINE__);
+	  return STATUS_UNSUCCESSFUL;
         }
-        blk = &CurrentThread->WaitBlock[0];
+      blk = &CurrentThread->WaitBlock[0];
     }
-    else
+  else
     {
-        if (Count > 64)
+      if (Count > 64)
         {
-            DbgPrint("(%s:%d) Too many objects!\n",
-                     __FILE__,__LINE__);
-            return STATUS_UNSUCCESSFUL;
+	  DbgPrint("(%s:%d) Too many objects!\n",
+		   __FILE__,__LINE__);
+	  return STATUS_UNSUCCESSFUL;
         }
-        blk = WaitBlockArray;
+      blk = WaitBlockArray;
     }
-    if (Timeout != NULL)
+  if (Timeout != NULL)
     {
-        KeAddThreadTimeout(CurrentThread,Timeout);
+      KeAddThreadTimeout(CurrentThread,Timeout);
     }
-
-    do {
-      KeAcquireDispatcherDatabaseLock(FALSE);
-
-      for (i = 0; i < Count; i++)
-	{
-	  hdr = (DISPATCHER_HEADER *)Object[i];
-	  
-	  DPRINT("hdr->SignalState %d\n", hdr->SignalState);
-	  
-	  if (KiIsObjectSignalled(hdr, CurrentThread))
-	    {
-	      CountSignaled++;
-	      
-	      if (WaitType == WaitAny)
-		{
+  
+  do {
+    KeAcquireDispatcherDatabaseLock(FALSE);
+    
+    for (i = 0; i < Count; i++)
+      {
+	hdr = (DISPATCHER_HEADER *)Object[i];
+	
+	DPRINT("hdr->SignalState %d\n", hdr->SignalState);
+	
+	if (KiIsObjectSignalled(hdr, CurrentThread))
+	  {
+	    CountSignaled++;
+	    
+	    if (WaitType == WaitAny)
+	      {
 		  KeReleaseDispatcherDatabaseLock(FALSE);
 		  DPRINT("One object is already signaled!\n");
 		  return(STATUS_WAIT_0 + i);
-		}
-	    }
-	}
-      
-      if ((WaitType == WaitAll) && (CountSignaled == Count))
-	{
-	  KeReleaseDispatcherDatabaseLock(FALSE);
-	  DPRINT("All objects are already signaled!\n");
-	  return(STATUS_WAIT_0);
-	}
-
-      /* Append wait block to the KTHREAD wait block list */
-      CurrentThread->WaitBlockList = blk;
-      
-      for (i = 0; i < Count; i++)
-	{
-	  hdr = (DISPATCHER_HEADER *)Object[i];
-	  
-	  DPRINT("hdr->SignalState %d\n", hdr->SignalState);
-	  
-	  blk->Object = Object[i];
-	  blk->Thread = CurrentThread;
-	  blk->WaitKey = i;
-	  blk->WaitType = WaitType;
-	  if (i == Count - 1)
-            blk->NextWaitBlock = NULL;
-	  else
-            blk->NextWaitBlock = blk + 1;
-	  DPRINT("blk %p blk->NextWaitBlock %p\n",
-		 blk, blk->NextWaitBlock);
-	  InsertTailList(&(hdr->WaitListHead),&(blk->WaitListEntry));
-	  //        DPRINT("hdr->WaitListHead.Flink %x hdr->WaitListHead.Blink %x\n",
-	  //               hdr->WaitListHead.Flink,hdr->WaitListHead.Blink);
-	  
-	  blk = blk->NextWaitBlock;
-	}
-
-      KeReleaseDispatcherDatabaseLock(FALSE);
-
-      DPRINT("Waiting at %s:%d with irql %d\n", __FILE__, __LINE__, 
-	     KeGetCurrentIrql());
-      PsFreezeThread(PsGetCurrentThread(),
-		     &Status,
-		     Alertable,
-		     WaitMode);
-    } while( Status == STATUS_KERNEL_APC );
-      if (Timeout != NULL)
-	KeCancelTimer(&KeGetCurrentThread()->Timer);
-    DPRINT("Returning from KeWaitForMultipleObjects()\n");
-    return(Status);
+	      }
+	  }
+      }
+    
+    if ((WaitType == WaitAll) && (CountSignaled == Count))
+      {
+	KeReleaseDispatcherDatabaseLock(FALSE);
+	DPRINT("All objects are already signaled!\n");
+	return(STATUS_WAIT_0);
+      }
+    
+    /* Append wait block to the KTHREAD wait block list */
+    CurrentThread->WaitBlockList = blk;
+    
+    for (i = 0; i < Count; i++)
+      {
+	hdr = (DISPATCHER_HEADER *)Object[i];
+	
+	DPRINT("hdr->SignalState %d\n", hdr->SignalState);
+	
+	blk->Object = Object[i];
+	blk->Thread = CurrentThread;
+	blk->WaitKey = i;
+	blk->WaitType = WaitType;
+	if (i == Count - 1)
+	  blk->NextWaitBlock = NULL;
+	else
+	  blk->NextWaitBlock = blk + 1;
+	
+	InsertTailList(&(hdr->WaitListHead),&(blk->WaitListEntry));
+	
+	blk = blk->NextWaitBlock;
+      }
+    
+    PsBlockThread(&Status, Alertable, WaitMode, TRUE, WaitIrql);
+  } while( Status == STATUS_KERNEL_APC );
+  if (Timeout != NULL)
+    KeCancelTimer(&KeGetCurrentThread()->Timer);
+  DPRINT("Returning from KeWaitForMultipleObjects()\n");
+  return(Status);
 }
 
 VOID KeInitializeDispatcher(VOID)
@@ -587,16 +575,16 @@ NTSTATUS STDCALL NtWaitForMultipleObjects(IN ULONG Count,
 					  IN BOOLEAN Alertable,
 					  IN PLARGE_INTEGER Time)
 {
-   KWAIT_BLOCK WaitBlockArray[64]; /* FIXME: use MAXIMUM_WAIT_OBJECTS instead */
-   PVOID ObjectPtrArray[64];       /* FIXME: use MAXIMUM_WAIT_OBJECTS instead */
+   KWAIT_BLOCK WaitBlockArray[EX_MAXIMUM_WAIT_OBJECTS]; 
+   PVOID ObjectPtrArray[EX_MAXIMUM_WAIT_OBJECTS];       
    NTSTATUS Status;
    ULONG i, j;
 
-   DPRINT("NtWaitForMultipleObjects(Count %lu Object[] %x, Alertable %d, Time %x)\n",
-          Count,Object,Alertable,Time);
+   DPRINT("NtWaitForMultipleObjects(Count %lu Object[] %x, Alertable %d, "
+	  "Time %x)\n", Count,Object,Alertable,Time);
 
-   if (Count > 64)  /* FIXME: use MAXIMUM_WAIT_OBJECTS instead */
-        return STATUS_UNSUCCESSFUL;
+   if (Count > EX_MAXIMUM_WAIT_OBJECTS)  
+     return STATUS_UNSUCCESSFUL;
 
    /* reference all objects */
    for (i = 0; i < Count; i++)
@@ -659,16 +647,11 @@ NTSTATUS STDCALL NtWaitForSingleObject (IN	HANDLE		Object,
 	return(Status);
      }
    
-   DPRINT("ObjectPtr %x\n", ObjectPtr);
-   
    Status = KeWaitForSingleObject(ObjectPtr,
 				  UserMode,
 				  UserMode,
 				  Alertable,
 				  Time);
-   
-   DPRINT("Returned from wait (status is %x) ObjectPtr %x(%d)\n", 
-	   Status, ObjectPtr, ObGetReferenceCount(ObjectPtr));
    
    ObDereferenceObject(ObjectPtr);
    
@@ -688,7 +671,7 @@ NtSignalAndWaitForSingleObject(IN HANDLE SignalObject,
    PVOID WaitObj;
    NTSTATUS Status;
 
-   ProcessorMode = CURRENT_KPCR->CurrentThread->PreviousMode;
+   ProcessorMode = ExGetPreviousMode();
    Status = ObReferenceObjectByHandle(SignalObject,
 				      0,
 				      NULL,

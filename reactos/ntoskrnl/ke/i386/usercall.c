@@ -1,4 +1,4 @@
-/* $Id: usercall.c,v 1.17 2001/01/18 15:00:08 dwelch Exp $
+/* $Id: usercall.c,v 1.18 2001/01/19 15:09:01 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -9,9 +9,12 @@
  *                  ???
  */
 
+/* INCLUDES ******************************************************************/
+
 #include <ddk/ntddk.h>
 #include <internal/ntoskrnl.h>
 #include <internal/ke.h>
+#include <internal/ps.h>
 #include <internal/i386/segment.h>
 #include <internal/mmhal.h>
 
@@ -21,6 +24,12 @@
 
 #include <ddk/defines.h>
 #include <internal/ps.h>
+
+/* GLOBALS *******************************************************************/
+
+VOID PsTerminateCurrentThread(NTSTATUS ExitStatus);
+
+/* FUNCTIONS *****************************************************************/
 
 VOID KiSystemCallHook(ULONG Nr, ...)
 {
@@ -44,15 +53,33 @@ VOID KiSystemCallHook(ULONG Nr, ...)
 
 ULONG KiAfterSystemCallHook(ULONG NtStatus, PKTRAP_FRAME TrapFrame)
 {
-   assert(KeGetCurrentIrql() == PASSIVE_LEVEL);
-   if (KeGetCurrentThread()->ApcState.UserApcPending == 0 ||
-       TrapFrame->Cs == KERNEL_CS)
-     {
-	return(NtStatus);
-     }
-   KiDeliverUserApc(TrapFrame);
-   assert(KeGetCurrentIrql() == PASSIVE_LEVEL);
-   return(NtStatus);
+  KIRQL oldIrql;
+  PETHREAD EThread;
+  extern KSPIN_LOCK PiThreadListLock;
+
+  assert(KeGetCurrentIrql() == PASSIVE_LEVEL);
+  
+  /*
+   * Check if the current thread is terminating
+   */
+  KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
+  EThread = PsGetCurrentThread();
+  if (EThread->DeadThread)
+    {
+       KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+       PsTerminateCurrentThread(EThread->ExitStatus);
+    }
+  else
+    {
+      KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+    }
+   
+  if (KeGetCurrentThread()->Alerted[0] == 0 || TrapFrame->Cs == KERNEL_CS)
+    {
+      return(NtStatus);
+    }
+  KiDeliverUserApc(TrapFrame);
+  return(NtStatus);
 }
 
 // This function should be used by win32k.sys to add its own user32/gdi32 services
