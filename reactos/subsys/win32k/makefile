@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.103 2004/10/18 19:11:09 chorns Exp $
+# $Id: makefile,v 1.103.2.1 2004/10/25 03:35:51 ion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -15,8 +15,6 @@ TARGET_PCH = w32k.h
 TARGET_DDKLIBS = freetype.a
 
 TARGET_REGTESTS = yes
-
-TARGET_BUILDENV_TEST = yes
 
 FREETYPE_DIR = $(PATH_TO_TOP)/lib/freetype
 
