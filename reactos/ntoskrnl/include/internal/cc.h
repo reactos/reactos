@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_INTERNAL_CC_H
 #define __INCLUDE_INTERNAL_CC_H
-/* $Id: cc.h,v 1.9 2001/12/31 01:53:44 dwelch Exp $ */
+/* $Id: cc.h,v 1.10 2002/01/26 21:21:02 dwelch Exp $ */
 #include <ddk/ntifs.h>
 
 typedef struct _BCB
@@ -17,7 +17,10 @@ typedef struct _CACHE_SEGMENT
 {
   /* Base address of the region where the cache segment data is mapped. */
   PVOID BaseAddress;
-  /* Memory area representing the region where the cache segment data is mapped. */
+  /* 
+   * Memory area representing the region where the cache segment data is 
+   * mapped. 
+   */
   struct _MEMORY_AREA* MemoryArea;
   /* Are the contents of the cache segment data valid. */
   BOOLEAN Valid;
@@ -39,6 +42,8 @@ typedef struct _CACHE_SEGMENT
   ULONG ReferenceCount;
   /* Pointer to the BCB for the file which this cache segment maps data for. */
   PBCB Bcb;
+  /* Pointer to the next cache segment in a chain. */
+  struct _CACHE_SEGMENT* NextInChain;
 } CACHE_SEGMENT;
 
 VOID STDCALL
@@ -66,5 +71,9 @@ NTSTATUS
 CcRosUnmapCacheSegment(PBCB Bcb, ULONG FileOffset, BOOLEAN NowDirty);
 NTSTATUS
 CcRosSuggestFreeCacheSegment(PBCB Bcb, ULONG FileOffset, BOOLEAN NowDirty);
-
+NTSTATUS
+CcRosGetCacheSegmentChain(PBCB Bcb,
+			  ULONG FileOffset,
+			  ULONG Length,
+			  PCACHE_SEGMENT* CacheSeg);
 #endif

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.35 2002/01/08 00:49:00 dwelch Exp $
+/* $Id: view.c,v 1.36 2002/01/26 21:21:02 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -98,7 +98,8 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
   current_entry = CacheSegmentLRUListHead.Flink;
   while (current_entry != &CacheSegmentLRUListHead && Target > 0)
     {
-      current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, CacheSegmentLRUListEntry);
+      current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, 
+				  CacheSegmentLRUListEntry);
       current_entry = current_entry->Flink;
       Locked = ExTryToAcquireFastMutex(&current->Lock);
       if (!Locked)
@@ -229,6 +230,144 @@ CcRosUnmapCacheSegment(PBCB Bcb, ULONG FileOffset, BOOLEAN NowDirty)
   return(STATUS_SUCCESS);
 }
 
+NTSTATUS STATIC
+CcRosCreateCacheSegment(PBCB Bcb,
+			ULONG FileOffset,
+			PCACHE_SEGMENT* CacheSeg,
+			BOOLEAN Lock)
+{
+  ULONG i;
+  PCACHE_SEGMENT current;
+  NTSTATUS Status;
+  KIRQL oldIrql;
+
+  current = ExAllocatePoolWithTag(NonPagedPool, sizeof(CACHE_SEGMENT), 
+				  TAG_CSEG);
+
+  MmLockAddressSpace(MmGetKernelAddressSpace());
+  current->BaseAddress = NULL;
+  Status = MmCreateMemoryArea(KernelMode,
+			      MmGetKernelAddressSpace(),
+			      MEMORY_AREA_CACHE_SEGMENT,
+			      &current->BaseAddress,
+			      Bcb->CacheSegmentSize,
+			      PAGE_READWRITE,
+			      (PMEMORY_AREA*)&current->MemoryArea,
+			      FALSE);
+  if (!NT_SUCCESS(Status))
+    {
+      MmUnlockAddressSpace(MmGetKernelAddressSpace());
+      KeBugCheck(0);
+    }
+  MmUnlockAddressSpace(MmGetKernelAddressSpace());
+  current->Valid = FALSE;
+  current->Dirty = FALSE;
+  current->FileOffset = ROUND_DOWN(FileOffset, Bcb->CacheSegmentSize);
+  current->Bcb = Bcb;
+  current->MappedCount = 0;
+  ExInitializeFastMutex(&current->Lock);
+  current->ReferenceCount = 1;
+  KeAcquireSpinLock(&Bcb->BcbLock, &oldIrql);
+  InsertTailList(&Bcb->BcbSegmentListHead, &current->BcbSegmentListEntry);
+  KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
+  InsertTailList(&CacheSegmentListHead, &current->CacheSegmentListEntry);
+  InsertTailList(&CacheSegmentLRUListHead, 
+		 &current->CacheSegmentLRUListEntry);
+  current->DirtySegmentListEntry.Flink = 
+    current->DirtySegmentListEntry.Blink = NULL;
+  if (Lock)
+    {
+      ExAcquireFastMutex(&current->Lock);
+    }
+  ExReleaseFastMutex(&ViewLock);
+  for (i = 0; i < (Bcb->CacheSegmentSize / PAGESIZE); i++)
+    {
+      PVOID Page;
+      
+      Status = MmRequestPageMemoryConsumer(MC_CACHE, TRUE, &Page);
+      if (!NT_SUCCESS(Status))
+	{
+	  KeBugCheck(0);
+	}
+      
+      Status = MmCreateVirtualMapping(NULL,
+				      current->BaseAddress + (i * PAGESIZE),
+				      PAGE_READWRITE,
+				      (ULONG)Page,
+				      TRUE);
+      if (!NT_SUCCESS(Status))
+	{
+	  KeBugCheck(0);
+	}
+    }
+  *CacheSeg = current;
+  return(STATUS_SUCCESS);
+}
+
+NTSTATUS
+CcRosGetCacheSegmentChain(PBCB Bcb,
+			  ULONG FileOffset,
+			  ULONG Length,
+			  PCACHE_SEGMENT* CacheSeg)
+{
+  PCACHE_SEGMENT current;
+  ULONG i;
+  PCACHE_SEGMENT* CacheSegList;
+  PCACHE_SEGMENT Previous;
+
+  Length = ROUND_UP(Length, Bcb->CacheSegmentSize);
+
+  CacheSegList = alloca(sizeof(PCACHE_SEGMENT) * 
+			(Length / Bcb->CacheSegmentSize));
+
+  /*
+   * Acquire the global lock.
+   */
+  ExAcquireFastMutex(&ViewLock);
+  
+  /*
+   * Look for a cache segment already mapping the same data.
+   */
+  for (i = 0; i < (Length / Bcb->CacheSegmentSize); i++)
+    {
+      ULONG CurrentOffset = FileOffset + (i * Bcb->CacheSegmentSize);
+      current = CcRosLookupCacheSegment(Bcb, CurrentOffset);
+      if (current != NULL)
+	{
+	  /*
+	   * Make sure the cache segment can't go away outside of our control.
+	   */
+	  current->ReferenceCount++;
+	  CacheSegList[i] = current;
+	}
+      else
+	{
+	  CcRosCreateCacheSegment(Bcb, CurrentOffset, &current, FALSE);
+	  CacheSegList[i] = current;
+	  ExAcquireFastMutex(&ViewLock);
+	}
+    }
+  ExReleaseFastMutex(&ViewLock);
+
+  for (i = 0; i < (Length / Bcb->CacheSegmentSize); i++)
+    {
+      ExAcquireFastMutex(&CacheSegList[i]->Lock);
+      if (i == 0)
+	{
+	  *CacheSeg = CacheSegList[i];
+	  Previous = CacheSegList[i];
+	}
+      else
+	{
+	  Previous->NextInChain = CacheSegList[i];
+	  Previous = CacheSegList[i];
+	}
+    }
+  Previous->NextInChain = NULL;
+  
+  return(STATUS_SUCCESS);
+}
+
 NTSTATUS
 CcRosGetCacheSegment(PBCB Bcb,
 		     ULONG FileOffset,
@@ -238,9 +377,7 @@ CcRosGetCacheSegment(PBCB Bcb,
 		     PCACHE_SEGMENT* CacheSeg)
 {
    PCACHE_SEGMENT current;
-   ULONG i;
    NTSTATUS Status;
-   KIRQL oldIrql;
 
    /*
     * Acquire the global lock.
@@ -267,6 +404,7 @@ CcRosGetCacheSegment(PBCB Bcb,
 	*/
        *UptoDate = current->Valid;
        *BaseAddress = current->BaseAddress;
+       DPRINT("*BaseAddress 0x%.8X\n", *BaseAddress);
        *CacheSeg = current;
        *BaseOffset = current->FileOffset;
        return(STATUS_SUCCESS);
@@ -275,64 +413,13 @@ CcRosGetCacheSegment(PBCB Bcb,
    /*
     * Otherwise create a new segment.
     */
-   current = ExAllocatePoolWithTag(NonPagedPool, sizeof(CACHE_SEGMENT), 
-				   TAG_CSEG);
-
-   MmLockAddressSpace(MmGetKernelAddressSpace());
-   current->BaseAddress = NULL;
-   Status = MmCreateMemoryArea(KernelMode,
-		      MmGetKernelAddressSpace(),
-		      MEMORY_AREA_CACHE_SEGMENT,
-		      &current->BaseAddress,
-		      Bcb->CacheSegmentSize,
-		      PAGE_READWRITE,
-		      (PMEMORY_AREA*)&current->MemoryArea,
-		      FALSE);
-   if (!NT_SUCCESS(Status))
-     {
-	MmUnlockAddressSpace(MmGetKernelAddressSpace());
-	KeBugCheck(0);
-     }
-   MmUnlockAddressSpace(MmGetKernelAddressSpace());
-   current->Valid = FALSE;
-   current->Dirty = FALSE;
-   current->FileOffset = ROUND_DOWN(FileOffset, Bcb->CacheSegmentSize);
-   current->Bcb = Bcb;
-   current->MappedCount = 0;
-   ExInitializeFastMutex(&current->Lock);
-   current->ReferenceCount = 1;
-   KeAcquireSpinLock(&Bcb->BcbLock, &oldIrql);
-   InsertTailList(&Bcb->BcbSegmentListHead, &current->BcbSegmentListEntry);
-   KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
-   InsertTailList(&CacheSegmentListHead, &current->CacheSegmentListEntry);
-   InsertTailList(&CacheSegmentLRUListHead, &current->CacheSegmentLRUListEntry);
-   current->DirtySegmentListEntry.Flink = current->DirtySegmentListEntry.Blink = NULL;
-   ExAcquireFastMutex(&current->Lock);
-   ExReleaseFastMutex(&ViewLock);
+   Status = CcRosCreateCacheSegment(Bcb, FileOffset, &current, TRUE);
    *UptoDate = current->Valid;
    *BaseAddress = current->BaseAddress;
+   DPRINT("*BaseAddress 0x%.8X\n", *BaseAddress);
    *CacheSeg = current;
    *BaseOffset = current->FileOffset;
-   for (i = 0; i < (Bcb->CacheSegmentSize / PAGESIZE); i++)
-     {
-       PVOID Page;
-
-       Status = MmRequestPageMemoryConsumer(MC_CACHE, TRUE, &Page);
-       if (!NT_SUCCESS(Status))
-	 {
-	   KeBugCheck(0);
-	 }
-
-       Status = MmCreateVirtualMapping(NULL,
-				       current->BaseAddress + (i * PAGESIZE),
-				       PAGE_READWRITE,
-				       (ULONG)Page,
-				       TRUE);
-       if (!NT_SUCCESS(Status))
-	 {
-	   KeBugCheck(0);
-	 }
-     }
+   
    return(STATUS_SUCCESS);
 }
 
@@ -364,8 +451,8 @@ CcRosRequestCacheSegment(PBCB Bcb,
 }
 
 STATIC VOID 
-CcFreeCachePage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, ULONG PhysAddr,
-		SWAPENTRY SwapEntry, BOOLEAN Dirty)
+CcFreeCachePage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, 
+		ULONG PhysAddr, SWAPENTRY SwapEntry, BOOLEAN Dirty)
 {
   assert(SwapEntry == 0);
   if (PhysAddr != 0)
@@ -414,7 +501,8 @@ CcRosReleaseFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
    PLIST_ENTRY current_entry;
    PCACHE_SEGMENT current;
    
-   DPRINT("CcRosReleaseFileCache(FileObject %x, Bcb %x)\n", Bcb->FileObject, Bcb);
+   DPRINT("CcRosReleaseFileCache(FileObject %x, Bcb %x)\n", Bcb->FileObject, 
+	  Bcb);
 
    MmFreeSectionSegments(Bcb->FileObject);
    
@@ -460,7 +548,8 @@ CcRosInitializeFileCache(PFILE_OBJECT FileObject,
      {
        (*Bcb)->AllocationSize = 
 	 ((REACTOS_COMMON_FCB_HEADER*)FileObject->FsContext)->AllocationSize;
-       (*Bcb)->FileSize = ((REACTOS_COMMON_FCB_HEADER*)FileObject->FsContext)->FileSize;
+       (*Bcb)->FileSize = 
+	 ((REACTOS_COMMON_FCB_HEADER*)FileObject->FsContext)->FileSize;
      }
    KeInitializeSpinLock(&(*Bcb)->BcbLock);
    InitializeListHead(&(*Bcb)->BcbSegmentListHead);

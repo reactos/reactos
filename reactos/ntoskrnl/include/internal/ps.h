@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.28 2002/01/15 02:51:32 dwelch Exp $
+/* $Id: ps.h,v 1.29 2002/01/26 21:21:02 dwelch Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -285,7 +285,7 @@ typedef struct _ETHREAD
    */
   struct _EPROCESS* OldProcess;                     /* 240/26C */
 
-  PW32THREAD Win32Thread;
+  struct _W32THREAD* Win32Thread;
   
 } __attribute__((packed)) ETHREAD, *PETHREAD;
 
@@ -353,12 +353,6 @@ typedef struct _KPROCESS
   /* Disable priority boosts? */
   UCHAR		        DisableBoost;                 /* 067 */
 } KPROCESS, *PKPROCESS;
-
-
-typedef struct _W32PROCESS
-{
-} __attribute__((packed)) W32PROCESS, *PW32PROCESS;
-
 
 struct _EPROCESS
 {
@@ -459,7 +453,7 @@ struct _EPROCESS
   UCHAR                 SubSystemMinorVersion;
   UCHAR                 SubSystemMajorVersion;
   USHORT                SubSystemVersion;
-  PW32PROCESS           Win32Process;
+  struct _W32PROCESS*   Win32Process;
   HANDLE                Win32WindowStation;
    
    /*

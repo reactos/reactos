@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: win32.c,v 1.2 2002/01/13 22:52:07 dwelch Exp $
+/* $Id: win32.c,v 1.3 2002/01/26 21:21:02 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -31,12 +31,14 @@
 
 #include <ddk/ntddk.h>
 #include <internal/ps.h>
+#include <napi/win32.h>
 
 /* TYPES *******************************************************************/
 
 /* GLOBALS ******************************************************************/
 
 static ULONG PspWin32ProcessSize = 0;
+static ULONG PspWin32ThreadSize = 0;
 
 /* FUNCTIONS ***************************************************************/
 
@@ -44,6 +46,29 @@ PW32THREAD STDCALL
 PsGetWin32Thread(VOID)
 {
   return(PsGetCurrentThread()->Win32Thread);
+}
+
+NTSTATUS STDCALL
+PsCreateWin32Thread(PETHREAD Thread)
+{
+  if (Thread->Win32Thread != NULL)
+    return(STATUS_SUCCESS);
+
+  Thread->Win32Thread = ExAllocatePool(NonPagedPool,
+					PspWin32ThreadSize);
+  if (Thread->Win32Thread == NULL)
+    return(STATUS_NO_MEMORY);
+
+  RtlZeroMemory(Thread->Win32Thread,
+		PspWin32ThreadSize);
+
+  return(STATUS_SUCCESS);
+}
+
+PW32PROCESS STDCALL
+PsGetWin32Process(VOID)
+{
+  return(PsGetCurrentProcess()->Win32Process);
 }
 
 NTSTATUS STDCALL
@@ -69,10 +94,11 @@ PsEstablishWin32Callouts(PVOID Param1,
 			 PVOID Param2,
 			 PVOID Param3,
 			 PVOID Param4,
-			 PVOID Param5,
+			 ULONG W32ThreadSize,
 			 ULONG W32ProcessSize)
 {
   PspWin32ProcessSize = W32ProcessSize;
+  PspWin32ThreadSize = W32ThreadSize;
 }
 
 /* EOF */
