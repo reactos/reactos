@@ -167,6 +167,7 @@ echo installing tests...
 copy apps\tests\hello\hello.exe %ROS_INSTALL%\bin
 copy apps\tests\args\args.exe %ROS_INSTALL%\bin
 copy apps\tests\apc\apc.exe %ROS_INSTALL%\bin
+copy apps\tests\apc2\apc2.exe %ROS_INSTALL%\bin
 copy apps\tests\shm\shmsrv.exe %ROS_INSTALL%\bin
 copy apps\tests\shm\shmclt.exe %ROS_INSTALL%\bin
 copy apps\tests\lpc\lpcsrv.exe %ROS_INSTALL%\bin
