@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.49 2002/05/14 21:19:21 dwelch Exp $
+/* $Id: object.c,v 1.50 2002/06/05 19:37:12 hbirr Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -276,7 +276,7 @@ ObCreateObject(OUT PHANDLE Handle,
 						 OBJECT_ALLOC_SIZE(Type),
 						 Type->Tag);
   ObInitializeObject(Header,
-		     Handle,
+		     NULL,
 		     DesiredAccess,
 		     Type,
 		     ObjectAttributes);
@@ -323,6 +323,15 @@ ObCreateObject(OUT PHANDLE Handle,
   RtlFreeUnicodeString( &RemainingPath );
 
   *Object = HEADER_TO_BODY(Header);
+
+  if (Handle != NULL)
+  {
+     ObCreateHandle(PsGetCurrentProcess(),
+		    *Object,
+		    DesiredAccess,
+		    ObjectAttributes && (ObjectAttributes->Attributes & OBJ_INHERIT) ? TRUE : FALSE,
+		    Handle);
+  }
 
   return(STATUS_SUCCESS);
 }
