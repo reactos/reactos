@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/advapi32/token/token.c
@@ -11,6 +10,8 @@
 
 #include "advapi32.h"
 
+#define NDEBUG
+#include <debug.h>
 
 /*
  * @implemented
@@ -308,6 +309,20 @@ DuplicateToken (HANDLE ExistingTokenHandle,
                            ImpersonationLevel,
                            TokenImpersonation,
                            DuplicateTokenHandle);
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+CheckTokenMembership(HANDLE Token, PSID SidToCheck, PBOOL IsMember)
+{
+  DPRINT1("CheckTokenMembership not implemented\n");
+
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+
+  return FALSE;
 }
 
 /* EOF */

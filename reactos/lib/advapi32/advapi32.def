@@ -45,6 +45,7 @@ BuildTrusteeWithSidA@8
 BuildTrusteeWithSidW@8
 ChangeServiceConfigA@44
 ChangeServiceConfigW@44
+CheckTokenMembership@12
 ClearEventLogA@8
 ClearEventLogW@8
 CloseEventLog@4
@@ -235,7 +236,7 @@ LsaClose@4
 LsaFreeMemory@4
 ;LsaGetQuotasForAccount@8
 ;LsaGetSystemAccessAccount@8
-;LsaGetUserName@8
+LsaGetUserName@8
 ;LsaICLookupNames@32
 ;LsaICLookupSids@32
 ;LsaLookupNames@20
@@ -359,6 +360,8 @@ RegisterEventSourceA@8
 RegisterEventSourceW@8
 RegisterServiceCtrlHandlerA@8
 RegisterServiceCtrlHandlerW@8
+RegisterServiceCtrlHandlerExA@12
+RegisterServiceCtrlHandlerExW@12
 ;ReplaceAllAccessRightsA
 ;ReplaceAllAccessRightsW
 ReportEventA@36

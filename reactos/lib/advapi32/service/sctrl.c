@@ -31,6 +31,8 @@ typedef struct _ACTIVE_SERVICE
     LPSERVICE_MAIN_FUNCTIONW lpFuncW;
   } Main;
   LPHANDLER_FUNCTION HandlerFunction;
+  LPHANDLER_FUNCTION_EX HandlerFunctionEx;
+  LPVOID HandlerContext;
   SERVICE_STATUS ServiceStatus;
   BOOL bUnicode;
   LPWSTR Arguments;
@@ -326,6 +328,64 @@ RegisterServiceCtrlHandlerW(LPCWSTR lpServiceName,
     }
 
   Service->HandlerFunction = lpHandlerProc;
+  Service->HandlerFunctionEx = NULL;
+
+  return (SERVICE_STATUS_HANDLE)Service->ThreadId;
+}
+
+
+/**********************************************************************
+ *	RegisterServiceCtrlHandlerExA
+ *
+ * @implemented
+ */
+SERVICE_STATUS_HANDLE STDCALL
+RegisterServiceCtrlHandlerExA(LPCSTR lpServiceName,
+			      LPHANDLER_FUNCTION_EX lpHandlerProc,
+			      LPVOID lpContext)
+{
+  ANSI_STRING ServiceNameA;
+  UNICODE_STRING ServiceNameU;
+  SERVICE_STATUS_HANDLE SHandle;
+
+  RtlInitAnsiString(&ServiceNameA, (LPSTR)lpServiceName);
+  if (!NT_SUCCESS(RtlAnsiStringToUnicodeString(&ServiceNameU, &ServiceNameA, TRUE)))
+    {
+      SetLastError(ERROR_OUTOFMEMORY);
+      return (SERVICE_STATUS_HANDLE)0;
+    }
+
+  SHandle = RegisterServiceCtrlHandlerExW(ServiceNameU.Buffer,
+					  lpHandlerProc,
+					  lpContext);
+
+  RtlFreeUnicodeString(&ServiceNameU);
+
+  return SHandle;
+}
+
+
+/**********************************************************************
+ *	RegisterServiceCtrlHandlerExW
+ *
+ * @implemented
+ */
+SERVICE_STATUS_HANDLE STDCALL
+RegisterServiceCtrlHandlerExW(LPCWSTR lpServiceName,
+			      LPHANDLER_FUNCTION_EX lpHandlerProc,
+			      LPVOID lpContext)
+{
+  PACTIVE_SERVICE Service;
+
+  Service = ScLookupServiceByServiceName((LPWSTR)lpServiceName);
+  if (Service == NULL)
+    {
+      return (SERVICE_STATUS_HANDLE)NULL;
+    }
+
+  Service->HandlerFunction = NULL;
+  Service->HandlerFunctionEx = lpHandlerProc;
+  Service->HandlerContext = lpContext;
 
   return (SERVICE_STATUS_HANDLE)Service->ThreadId;
 }
