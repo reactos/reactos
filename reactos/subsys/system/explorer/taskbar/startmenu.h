@@ -227,12 +227,33 @@ protected:
 };
 
 
- // Settings sub-start menu
+ // Settings sub-startmenu
 struct SettingsMenu : public StartMenu
 {
 	typedef StartMenu super;
 
-	SettingsMenu(HWND hwnd, const StartMenuFolders& info);
+	SettingsMenu(HWND hwnd, const StartMenuFolders& info)
+	 :	super(hwnd, info)
+	{
+	}
+
+	void	TrackStartmenu();
+
+protected:
+	void	AddEntries();
+	int		Command(int id, int code);
+};
+
+
+ // "Browse Files..." sub-start menu
+struct BrowseMenu : public StartMenu
+{
+	typedef StartMenu super;
+
+	BrowseMenu(HWND hwnd, const StartMenuFolders& info)
+	 :	super(hwnd, info)
+	{
+	}
 
 	void	TrackStartmenu();
 

@@ -24,6 +24,7 @@
 #define IDS_SETTINGS_MENU               20
 #define IDS_CONTROL_PANEL               21
 #define IDS_PRINTERS                    22
+#define IDS_BROWSE                      23
 #define IDI_REACTOS                     100
 #define IDI_EXPLORER                    101
 #define IDI_STARTMENU                   102
@@ -51,6 +52,7 @@
 #define ID_REFRESH                      1704
 #define ID_ABOUT                        1803
 #define IDC_FILETREE                    10001
+#define ID_EXPLORER_FAQ                 10002
 #define ID_WINDOW_AUTOSORT              0x8003
 #define ID_VIEW_FULLSCREEN              0x8004
 #define ID_PREFERED_SIZES               0x8005
@@ -68,7 +70,6 @@
 #define ID_FILE_EXIT                    0xE141
 #define ID_HELP_USING                   0xE144
 #define ID_HELP                         0xE146
-#define ID_EXPLORER_FAQ                 10002
 
 // Next default values for new objects
 // 

@@ -110,6 +110,7 @@ BEGIN
     IDS_SETTINGS_MENU       "Settings Menu"
     IDS_CONTROL_PANEL       "Control Panel"
     IDS_PRINTERS            "Printers"
+    IDS_BROWSE              "Browse Files..."
 END
 
 #endif    // Romanian resources
@@ -370,6 +371,7 @@ BEGIN
     IDS_SETTINGS_MENU       "Einstellungen-Menu"
     IDS_CONTROL_PANEL       "Systemsteuerung"
     IDS_PRINTERS            "Drucker"
+    IDS_BROWSE              "Dateien..."
 END
 
 #endif    // German (Germany) resources
@@ -583,6 +585,7 @@ BEGIN
     IDS_SETTINGS_MENU       "Settings Menu"
     IDS_CONTROL_PANEL       "Control Panel"
     IDS_PRINTERS            "Printers"
+    IDS_BROWSE              "Browse Files..."
 END
 
 #endif    // English (U.S.) resources

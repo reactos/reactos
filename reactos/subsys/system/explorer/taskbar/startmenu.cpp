@@ -677,8 +677,7 @@ LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 	AddButton(ResString(IDS_RECENT),		0, true, IDC_RECENT);
 	AddButton(ResString(IDS_FAVORITES),		0, true, IDC_FAVORITES);
 	AddButton(ResString(IDS_SETTINGS),		0, true, IDC_SETTINGS);
-	AddButton(ResString(IDS_DRIVES),		0, true, IDC_DRIVES);
-	AddButton(ResString(IDS_NETWORK),		0, true, IDC_NETWORK);
+	AddButton(ResString(IDS_BROWSE),		0, true, IDC_BROWSE);
 	AddButton(ResString(IDS_SEARCH),		0, false, IDC_SEARCH);
 	AddButton(ResString(IDS_SEARCH_COMPUTER),0,false, IDC_SEARCH_COMPUTER);
 	AddButton(ResString(IDS_START_HELP),	0, false, IDC_START_HELP);
@@ -760,13 +759,8 @@ int StartMenuRoot::Command(int id, int code)
 		CreateSubmenu(id, CSIDL_FAVORITES);
 		break;
 
-	  case IDC_NETWORK:
-		CreateSubmenu(id, CSIDL_NETWORK);
-		break;
-
-	  case IDC_DRIVES:
-		//TODO: exclude removeable drives
-		CreateSubmenu(id, CSIDL_DRIVES);
+	  case IDC_BROWSE:
+		CreateSubmenu(id, STARTMENU_CREATOR(BrowseMenu));
 		break;
 
 	  case IDC_SETTINGS:
@@ -860,21 +854,15 @@ void StartMenuRoot::ShowSearchComputer()
 }
 
 
-SettingsMenu::SettingsMenu(HWND hwnd, const StartMenuFolders& info)
- :	super(hwnd, info)
-{
-}
-
 void SettingsMenu::AddEntries()
 {
 	super::AddEntries();
 
-	 // insert hard coded start entries
-	AddButton(ResString(IDS_SETTINGS_MENU),	0, true, IDC_SETTINGS_MENU);
-	AddButton(ResString(IDS_PRINTERS),		0, true, IDC_PRINTERS);
 	AddButton(ResString(IDS_CONTROL_PANEL),	0, false, IDC_CONTROL_PANEL);
-	AddButton(ResString(IDS_ADMIN),			0, true, IDC_ADMIN);
+	AddButton(ResString(IDS_PRINTERS),		0, true, IDC_PRINTERS);
 	AddButton(ResString(IDS_CONNECTIONS),	0, true, IDC_CONNECTIONS);
+	AddButton(ResString(IDS_ADMIN),			0, true, IDC_ADMIN);
+	AddButton(ResString(IDS_SETTINGS_MENU),	0, true, IDC_SETTINGS_MENU);
 }
 
 int SettingsMenu::Command(int id, int code)
@@ -899,6 +887,34 @@ int SettingsMenu::Command(int id, int code)
 
 	  case IDC_CONNECTIONS:
 		CreateSubmenu(id, CSIDL_CONNECTIONS);
+		break;
+
+	  default:
+		return super::Command(id, code);
+	}
+
+	return 0;
+}
+
+
+void BrowseMenu::AddEntries()
+{
+	super::AddEntries();
+
+	AddButton(ResString(IDS_NETWORK),	0, true, IDC_NETWORK);
+	AddButton(ResString(IDS_DRIVES),	0, true, IDC_DRIVES);
+}
+
+int BrowseMenu::Command(int id, int code)
+{
+	switch(id) {
+	  case IDC_NETWORK:
+		CreateSubmenu(id, CSIDL_NETWORK);
+		break;
+
+	  case IDC_DRIVES:
+		//TODO: exclude removeable drives
+		CreateSubmenu(id, CSIDL_DRIVES);
 		break;
 
 	  default:
