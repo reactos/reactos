@@ -692,11 +692,11 @@ NTSTATUS DispTdiReceiveDatagram(
 
       Status = UDPReceiveDatagram(
 	  Request.Handle.AddressHandle,
-	  DgramInfo->ReceiveDatagramInformation->RemoteAddress,
+	  DgramInfo->ReceiveDatagramInformation,
 	  DataBuffer,
 	  DgramInfo->ReceiveLength,
 	  DgramInfo->ReceiveFlags,
-	  DgramInfo->ReturnDatagramInformation->RemoteAddress,
+	  DgramInfo->ReturnDatagramInformation,
 	  &BytesReceived,
 	  (PDATAGRAM_COMPLETION_ROUTINE)DispDataRequestComplete,
 	  Irp);
