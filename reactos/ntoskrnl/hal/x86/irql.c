@@ -47,6 +47,8 @@ static unsigned int HiSetCurrentPICMask(unsigned int mask)
    return mask;
 }
 
+extern VOID KeApcProlog2();
+
 static VOID HiSwitchIrql(KIRQL oldIrql)
 /*
  * FUNCTION: Switches to the current irql
@@ -83,22 +85,27 @@ static VOID HiSwitchIrql(KIRQL oldIrql)
 	__asm__("sti\n\t");
 	return;
      }
-   if (CurrentIrql == APC_LEVEL)
-     {
 	HiSetCurrentPICMask(0);
-	__asm__("sti\n\t");
-	return;
-     }
+	if(CurrentIrql == APC_LEVEL)
+	{
+		if (DpcQueueSize > 0 )
+		{
+			KeSetCurrentIrql(DISPATCH_LEVEL);
+			__asm__("sti\n\t");
+			KeDrainDpcQueue();
+			__asm__("cli\n\t");
+			KeSetCurrentIrql(PASSIVE_LEVEL);
+		}
+		__asm__("sti\n\t");
+		return;
+	}
+   if( CurrentIrql == PASSIVE_LEVEL && CurrentThread->ApcState.KernelApcPending )
+   {
+	   KeSetCurrentIrql( APC_LEVEL );
+	   KeApcProlog2();
+	   KeSetCurrentIrql( PASSIVE_LEVEL );
+   }
 
-   HiSetCurrentPICMask(0);
-   if (DpcQueueSize > 0 && oldIrql >= DISPATCH_LEVEL)
-     {
-	KeSetCurrentIrql(DISPATCH_LEVEL);
-	__asm__("sti\n\t");
-	KeDrainDpcQueue();
-	__asm__("cli\n\t");
-	KeSetCurrentIrql(PASSIVE_LEVEL);
-     }
    __asm__("sti\n\t");
 }
 
