@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.87 2004/08/08 20:33:17 ion Exp $
+/* $Id: npool.c,v 1.88 2004/08/10 20:00:49 hbirr Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -1299,6 +1299,7 @@ grow_block(BLOCK_HDR* blk, PVOID end)
 	 {
 	    MiNonPagedPoolAllocMap[j / 32] |= (1 << (j % 32));
 	 }
+         MiNonPagedPoolNrOfPages += k;
          i += k - 1;
       }
    }
