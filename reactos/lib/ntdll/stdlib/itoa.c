@@ -11,6 +11,8 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 #include <stdlib.h>
 
+typedef long long __int64;
+typedef unsigned long long __uint64;
 
 char *
 _i64toa(__int64 value, char *string, int radix)
@@ -18,7 +20,7 @@ _i64toa(__int64 value, char *string, int radix)
   char tmp[65];
   char *tp = tmp;
   __int64 i;
-  unsigned __int64 v;
+  __uint64 v;
   __int64 sign;
   char *sp;
 
@@ -31,7 +33,7 @@ _i64toa(__int64 value, char *string, int radix)
   if (sign)
     v = -value;
   else
-    v = (unsigned __int64)value;
+    v = (__uint64)value;
   while (v || tp == tmp)
   {
     i = v % radix;

@@ -1,4 +1,4 @@
-/* $Id: ide.c,v 1.25 1999/12/30 01:51:40 dwelch Exp $
+/* $Id: ide.c,v 1.26 2000/01/06 00:26:16 dwelch Exp $
  *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
@@ -2023,9 +2023,12 @@ IDEIoTimer(PDEVICE_OBJECT DeviceObject,
             if (++ControllerExtension->Retries > IDE_MAX_CMD_RETRIES)
               {
                 DPRINT("Max retries has been reached, IRP finished with error\n");
-                ControllerExtension->CurrentIrp->IoStatus.Status = STATUS_IO_TIMEOUT;
-                ControllerExtension->CurrentIrp->IoStatus.Information = 0;
-                IDEFinishOperation(ControllerExtension);
+		 if (ControllerExtension->CurrentIrp != NULL)
+		   {
+		      ControllerExtension->CurrentIrp->IoStatus.Status = STATUS_IO_TIMEOUT;
+		      ControllerExtension->CurrentIrp->IoStatus.Information = 0;
+		      IDEFinishOperation(ControllerExtension);
+		   }
                 ControllerExtension->TimerState = IDETimerIdle;
                 ControllerExtension->TimerCount = 0;
               }
