@@ -82,10 +82,10 @@ SYS_APPS = autochk services shell winlogon gstart usetup
 SYS_SVC = rpcss eventlog
 
 # Test applications
-# alive apc args atomtest bench consume count dump_shared_data
+# alive apc args atomtest bench consume copymove count dump_shared_data
 # event file gditest hello isotest lpc mstest mutex nptest
 # pteb regtest sectest shm simple thread vmtest winhello
-TEST_APPS = alive apc args atomtest bench consume count dump_shared_data \
+TEST_APPS = alive apc args atomtest bench consume copymove count dump_shared_data \
             event file gditest hello isotest lpc mstest mutex nptest \
             pteb regtest sectest shm simple thread tokentest vmtest winhello dibtest
 
