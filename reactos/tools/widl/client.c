@@ -817,7 +817,7 @@ static void write_function_stubs(type_t *iface)
         print_client("(PMIDL_STUB_MESSAGE)&_StubMsg,\n");
         print_client("_StubMsg.BufferLength,\n");
         if (implicit_handle || explicit_handle)
-            print_client("%_Handle);\n");
+            print_client("_Handle);\n");
         else
             print_client("%s__MIDL_AutoBindHandle);\n", iface->name);
         indent--;

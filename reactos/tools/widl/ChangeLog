@@ -1,5 +1,11 @@
 ChangeLog
 
+2005-03-21 navaraf
+
+   tools/widl/client.c
+
+Fix a typo in write_function_stubs.
+
 2005-03-20 navaraf
 
    tools/widl/client.c
