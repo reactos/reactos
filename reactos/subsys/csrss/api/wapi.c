@@ -1,4 +1,4 @@
-/* $Id: wapi.c,v 1.32 2003/12/05 08:43:16 gvg Exp $
+/* $Id: wapi.c,v 1.33 2003/12/30 05:10:32 hyperion Exp $
  * 
  * reactos/subsys/csrss/api/wapi.c
  *
@@ -120,7 +120,7 @@ Thread_Api2(HANDLE ServerPort)
         {
           DPRINT1("CSR: NtReplyWaitReceivePort failed\n");
           NtClose(ServerPort);
-          NtTerminateThread(NtCurrentThread(), Status);
+          RtlRosExitUserThread(Status);
           continue;
         }
 	
@@ -128,7 +128,7 @@ Thread_Api2(HANDLE ServerPort)
         {
           CsrFreeProcessData( (ULONG)LpcRequest.Header.ClientId.UniqueProcess );
           NtClose(ServerPort);
-          NtTerminateThread(NtCurrentThread(), STATUS_SUCCESS);
+          RtlRosExitUserThread(STATUS_SUCCESS);
           continue;
         }
 

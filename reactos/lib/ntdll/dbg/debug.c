@@ -1,4 +1,4 @@
-/* $Id: debug.c,v 1.12 2003/11/17 02:12:50 hyperion Exp $
+/* $Id: debug.c,v 1.13 2003/12/30 05:10:32 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -14,6 +14,7 @@
 #include <ddk/ntddk.h>
 #include <ntdll/rtl.h>
 #include <rosrtl/string.h>
+#include <rosrtl/thread.h>
 #include <ntdll/dbg.h>
 #include <napi/lpc.h>
 
@@ -189,7 +190,7 @@ NTSTATUS STDCALL DbgUiRemoteBreakin(VOID)
 {
  DbgBreakPoint();
 
- RtlExitUserThread(0);
+ RtlRosExitUserThread(0);
 
  DbgBreakPoint();
  return STATUS_SUCCESS;

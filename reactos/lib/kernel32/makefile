@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.72 2003/12/30 00:12:47 hyperion Exp $
+# $Id: makefile,v 1.73 2003/12/30 05:10:31 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -51,8 +51,7 @@ THREAD_OBJECTS = \
 	thread/fls.o
 
 THREAD_I386_OBJECTS = \
-	thread/i386/fiber.o \
-        thread/i386/exit.o
+	thread/i386/fiber.o
 
 PROCESS_OBJECTS = \
 	process/proc.o \

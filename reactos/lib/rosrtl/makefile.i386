@@ -1,8 +1,9 @@
-# $Id: makefile.i386,v 1.1 2003/07/22 20:10:04 hyperion Exp $
+# $Id: makefile.i386,v 1.2 2003/12/30 05:10:32 hyperion Exp $
 
 THREAD_OBJECTS := \
  $(THREAD_OBJECTS) \
  thread/linearstack.o \
- thread/$(ARCH)/context.o
+ thread/$(ARCH)/context.o \
+ thread/$(ARCH)/stackexit.o
 
 # EOF

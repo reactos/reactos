@@ -1,4 +1,4 @@
-/* $Id: stack.c,v 1.3 2003/07/22 20:10:04 hyperion Exp $
+/* $Id: stack.c,v 1.4 2003/12/30 05:10:32 hyperion Exp $
 */
 /*
 */
@@ -184,6 +184,57 @@ NTSTATUS NTAPI RtlRosDeleteStack
  return STATUS_SUCCESS;
 }
 
+NTSTATUS NTAPI RtlRosFreeUserThreadStack
+(
+ IN HANDLE ProcessHandle,
+ IN HANDLE ThreadHandle
+)
+{
+ NTSTATUS nErrCode;
+ ULONG nSize = 0;
+ PVOID pStackBase;
+
+ if(ThreadHandle == NtCurrentThread())
+  pStackBase = NtCurrentTeb()->DeallocationStack;
+ else
+ {
+  THREAD_BASIC_INFORMATION tbiInfo;
+  ULONG nDummy;
+
+  /* query basic information about the thread */
+  nErrCode = NtQueryInformationThread
+  (
+   ThreadHandle,
+   ThreadBasicInformation,
+   &tbiInfo,
+   sizeof(tbiInfo),
+   NULL
+  );
+ 
+  /* failure */
+  if(!NT_SUCCESS(nErrCode)) return nErrCode;
+  if(tbiInfo.TebBaseAddress == NULL) return STATUS_ACCESS_VIOLATION;
+
+  /* read the base address of the stack to be deallocated */
+  nErrCode = NtReadVirtualMemory
+  (
+   ProcessHandle,
+   &((PTEB)tbiInfo.TebBaseAddress)->DeallocationStack,
+   &pStackBase,
+   sizeof(pStackBase),
+   &nDummy
+  );
+ 
+  /* failure */
+  if(!NT_SUCCESS(nErrCode)) return nErrCode;
+  if(pStackBase == NULL) return STATUS_ACCESS_VIOLATION;
+ }
+
+ /* deallocate the stack */
+ nErrCode = NtFreeVirtualMemory(ProcessHandle, pStackBase, &nSize, MEM_RELEASE);
+
+ return nErrCode;
+}
 
 NTSTATUS NTAPI RtlpRosGetStackLimits
 (
