@@ -1,8 +1,6 @@
 #include <defines.h>
 #include <reactos/resource.h>
 
-//Microsoft Developer Studio generated resource script.
-//
 #include "resource.h"
 
 #define APSTUDIO_READONLY_SYMBOLS

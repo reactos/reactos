@@ -51,9 +51,9 @@ void Trace(TCHAR* lpszFormat, ...)
 //  nBuf = vsprintf(szBuffer, lpszFormat, args);
 //  nBuf = _vsntprintf(szBuffer, _countof(szBuffer), lpszFormat, args);
 #ifdef _UNICODE
-    nBuf = _vsnwprintf(szBuffer, sizeof(szBuffer), lpszFormat, args);
+    nBuf = _vsnwprintf(szBuffer, sizeof(szBuffer)/sizeof(TCHAR), lpszFormat, args);
 #else
-    nBuf = _vsnprintf(szBuffer, sizeof(szBuffer), lpszFormat, args);
+    nBuf = _vsnprintf(szBuffer, sizeof(szBuffer)/sizeof(TCHAR), lpszFormat, args);
 #endif
     OutputDebugString(szBuffer);
     // was there an error? was the expanded string too long?

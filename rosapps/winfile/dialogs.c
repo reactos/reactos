@@ -230,8 +230,8 @@ BOOL CALLBACK MoveFileWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
             LPVOID lpData = NULL;                     // parameter for callback
             DWORD dwFlags = MOVEFILE_COPY_ALLOWED;    // move options
 
-            GetDlgItemText(hDlg, IDC_FILE_MOVE_FROM, buffer_from, sizeof(buffer_from));
-            GetDlgItemText(hDlg, IDC_FILE_MOVE_TO, buffer_to, sizeof(buffer_to));
+            GetDlgItemText(hDlg, IDC_FILE_MOVE_FROM, buffer_from, sizeof(buffer_from)/sizeof(TCHAR));
+            GetDlgItemText(hDlg, IDC_FILE_MOVE_TO, buffer_to, sizeof(buffer_to)/sizeof(TCHAR));
 /*
 BOOL MoveFileWithProgress(
   LPCTSTR lpExistingFileName,            // file name
@@ -440,7 +440,7 @@ BOOL CALLBACK PropertiesDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
         entry = ((struct PropertiesDialog*)lParam)->pEntry;
         ASSERT(entry);
 
-        GetWindowText(hDlg, text, sizeof(text));
+        GetWindowText(hDlg, text, sizeof(text)/sizeof(TCHAR));
         wsprintf(buffer, text, dlg->pEntry->data.cFileName);
         SetWindowText(hDlg, buffer);
         SetDlgItemText(hDlg, IDC_STATIC_PROP_FILENAME, dlg->pEntry->data.cFileName);
@@ -461,8 +461,8 @@ BOOL CALLBACK PropertiesDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
             //entry->bhfi.ftCreationTime
             wsprintf(buffer, _T("%u"), entry->bhfi.nFileSizeLow);
             if (GetNumberFormat(LOCALE_USER_DEFAULT, 0, buffer, &numFmt, 
-                    buffer + sizeof(buffer)/2, sizeof(buffer)/2)) {
-                SetDlgItemText(hDlg, IDC_STATIC_PROP_SIZE, buffer + sizeof(buffer)/2);
+                    buffer + MAX_PATH/2, MAX_PATH/2)) {
+                SetDlgItemText(hDlg, IDC_STATIC_PROP_SIZE, buffer + MAX_PATH/2);
             } else {
                 SetDlgItemText(hDlg, IDC_STATIC_PROP_SIZE, buffer);
             }
@@ -472,7 +472,7 @@ BOOL CALLBACK PropertiesDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
         SetDlgItemText(hDlg, IDC_STATIC_PROP_LASTCHANGE, _T("Date?"));
         if (FileTimeToLocalFileTime(&entry->bhfi.ftLastWriteTime, &LocalFileTime)) {
             if (FileTimeToSystemTime(&LocalFileTime, &SystemTime)) {
-                if (GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &SystemTime, NULL, buffer, sizeof(buffer))) {
+                if (GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &SystemTime, NULL, buffer, sizeof(buffer)/sizeof(TCHAR))) {
 //                    SetDlgItemText(hDlg, IDC_STATIC_PROP_LASTCHANGE, buffer);
                 }
             }
@@ -482,7 +482,7 @@ BOOL CALLBACK PropertiesDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 
         if (FileTimeToLocalFileTime(&entry->bhfi.ftLastWriteTime, &LocalFileTime)) {
             if (FileTimeToSystemTime(&LocalFileTime, &SystemTime)) {
-                if (GetTimeFormat(LOCALE_USER_DEFAULT, 0, &SystemTime, NULL, buffer + offset, sizeof(buffer) - offset)) {
+                if (GetTimeFormat(LOCALE_USER_DEFAULT, 0, &SystemTime, NULL, buffer + offset, sizeof(buffer)/sizeof(TCHAR) - offset)) {
                     SetDlgItemText(hDlg, IDC_STATIC_PROP_LASTCHANGE, buffer);
                 }
             }
@@ -503,8 +503,8 @@ BOOL CALLBACK PropertiesDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 		if (id == IDOK) {
 //            LPVOID lpData = NULL;                     // parameter for callback
 //            DWORD dwFlags = MOVEFILE_COPY_ALLOWED;    // move options
-//            GetDlgItemText(hDlg, , buffer, sizeof(buffer));
-//            GetDlgItemText(hDlg, , buffer, sizeof(buffer));
+//            GetDlgItemText(hDlg, , buffer, sizeof(buffer)/sizeof(TCHAR));
+//            GetDlgItemText(hDlg, , buffer, sizeof(buffer)/sizeof(TCHAR));
 			EndDialog(hDlg, id);
         } else if (id == IDCANCEL) {
 			EndDialog(hDlg, id);

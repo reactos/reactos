@@ -128,6 +128,7 @@ typedef struct
   HWND		hToolBar;
   HWND		hDriveBar;
   HFONT		hFont;
+  HWND      hDriveCombo;
 
   TCHAR		num_sep;
   SIZE		spaceSize;

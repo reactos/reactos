@@ -255,12 +255,12 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                     TCHAR keyPath[1000];
                     int keyPathLen = 0;
                     keyPath[0] = _T('\0');
-                    hKey = FindRegRoot(pChildWnd->hTreeWnd, ((NMTREEVIEW*)lParam)->itemNew.hItem, keyPath, &keyPathLen, sizeof(keyPath));
+                    hKey = FindRegRoot(pChildWnd->hTreeWnd, ((NMTREEVIEW*)lParam)->itemNew.hItem, keyPath, &keyPathLen, sizeof(keyPath)/sizeof(TCHAR));
                     RefreshListView(pChildWnd->hListWnd, hKey, keyPath);
 
                     keyPathLen = 0;
                     keyPath[0] = _T('\0');
-                    MakeFullRegPath(pChildWnd->hTreeWnd, ((NMTREEVIEW*)lParam)->itemNew.hItem, keyPath, &keyPathLen, sizeof(keyPath));
+                    MakeFullRegPath(pChildWnd->hTreeWnd, ((NMTREEVIEW*)lParam)->itemNew.hItem, keyPath, &keyPathLen, sizeof(keyPath)/sizeof(TCHAR));
                     SendMessage(hStatusBar, SB_SETTEXT, 0, (LPARAM)keyPath);
                 }
                 break;

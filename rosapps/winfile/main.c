@@ -38,6 +38,7 @@
 #include "settings.h"
 #include "framewnd.h"
 #include "childwnd.h"
+#include "drivebar.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,6 +65,8 @@ HWND		hStatusBar;
 HWND		hToolBar;
 HWND		hDriveBar;
 HFONT		hFont;
+HWND        hDriveCombo;
+
 
 TCHAR		num_sep;
 SIZE		spaceSize;
@@ -161,46 +164,10 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     if (InitCommonControlsEx(&icc))	{
 //		TBBUTTON drivebarBtn = {0, 0, TBSTATE_ENABLED, TBSTYLE_SEP};
 		TBBUTTON drivebarBtn = {0, 0, TBSTATE_ENABLED, TBSTYLE_SEP};
-		int btn = 1;
-		PTSTR p;
+//		int btn = 1;
+//		PTSTR p;
 
-        Globals.hDriveBar = CreateToolbarEx(Globals.hMainWnd, 
-			        WS_CHILD|WS_VISIBLE|CCS_NOMOVEY|TBSTYLE_FLAT|TBSTYLE_LIST|TBSTYLE_WRAPABLE,
-//                    WS_CHILD|WS_VISIBLE|CCS_NOMOVEY|TBSTYLE_LIST|TBSTYLE_TRANSPARENT|TBSTYLE_WRAPABLE,
-					IDW_DRIVEBAR, 2, hInstance, IDB_DRIVEBAR, 
-					&drivebarBtn, 1/*iNumButtons*/, 
-					25/*dxButton*/, 16/*dyButton*/, 
-					0/*dxBitmap*/, 0/*dyBitmap*/, sizeof(TBBUTTON));
-//					16/*dxButton*/, 13/*dyButton*/, 
-//					16/*dxBitmap*/, 13/*dyBitmap*/, sizeof(TBBUTTON));
-		CheckMenuItem(Globals.hMenuOptions, ID_OPTIONS_DRIVEBAR, MF_BYCOMMAND|MF_CHECKED);
-		GetLogicalDriveStrings(BUFFER_LEN, Globals.drives);
-		drivebarBtn.fsStyle = TBSTYLE_BUTTON;
-#ifndef _NO_EXTENSIONS
-		 // register windows drive root strings
-		SendMessage(Globals.hDriveBar, TB_ADDSTRING, 0, (LPARAM)Globals.drives);
-#endif
-		drivebarBtn.idCommand = ID_DRIVE_FIRST;
-		for (p = Globals.drives; *p;) {
-#ifdef _NO_EXTENSIONS
-			 // insert drive letter
-			TCHAR b[3] = { tolower(*p) };
-			SendMessage(Globals.hDriveBar, TB_ADDSTRING, 0, (LPARAM)b);
-#endif
-			switch(GetDriveType(p)) {
-			case DRIVE_REMOVABLE:	drivebarBtn.iBitmap = 1;	break;
-			case DRIVE_CDROM:		drivebarBtn.iBitmap = 3;	break;
-			case DRIVE_REMOTE:		drivebarBtn.iBitmap = 4;	break;
-			case DRIVE_RAMDISK:		drivebarBtn.iBitmap = 5;	break;
-			default:/*DRIVE_FIXED*/	drivebarBtn.iBitmap = 2;
-			}
-			SendMessage(Globals.hDriveBar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
-			drivebarBtn.idCommand++;
-			drivebarBtn.iString++;
-			while(*p++);
-		}
-		{
-
+        {
 #define DRIVEBOX_WIDTH  200
 #define DRIVEBOX_HEIGHT 8
 
@@ -288,34 +255,43 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 		CheckMenuItem(Globals.hMenuOptions, ID_OPTIONS_TOOLBAR, MF_BYCOMMAND|MF_CHECKED);
 
         {
-// Create the edit control. Notice that hWndParent, parent of
-// the toolbar, is used as the parent of the edit control.    
-
-//HWND hWndEdit = CreateWindowEx(0L, WC_COMBOBOXEX, NULL, WS_CHILD | WS_BORDER | WS_VISIBLE 
-HWND hWndEdit = CreateWindowEx(0L, "ComboBox", NULL, WS_CHILD | WS_BORDER | WS_VISIBLE 
-   | CBS_DROPDOWN | ES_LEFT | ES_AUTOVSCROLL | ES_MULTILINE, 
-   10, 0, DRIVEBOX_WIDTH, DRIVEBOX_HEIGHT, Globals.hMainWnd, (HMENU)IDW_DRIVEBOX, hInstance, 0);
-   
-// Set the toolbar window as the parent of the edit control
-// window. You must set the toolbar as the parent of the edit
-// control for it to appear embedded in the toolbar.
-SetParent (hWndEdit, Globals.hToolBar);    
+            // Create the edit control. Notice that the parent of
+            // the toolbar, is used as the parent of the edit control.    
+            //hWndEdit = CreateWindowEx(0L, WC_COMBOBOXEX, NULL, WS_CHILD | WS_BORDER | WS_VISIBLE 
+            Globals.hDriveCombo = CreateWindowEx(0L, "ComboBox", NULL, WS_CHILD | WS_BORDER | WS_VISIBLE 
+                | CBS_DROPDOWNLIST | ES_LEFT | ES_AUTOVSCROLL | ES_MULTILINE, 
+                10, 0, DRIVEBOX_WIDTH, DRIVEBOX_HEIGHT, Globals.hMainWnd, (HMENU)IDW_DRIVEBOX, hInstance, 0);
+            // Set the toolbar window as the parent of the edit control
+            // window. You must set the toolbar as the parent of the edit
+            // control for it to appear embedded in the toolbar.
+            SetParent (Globals.hDriveCombo, Globals.hToolBar);    
         }
-
-
-
 		}
+
+    // Create the drive bar
+        Globals.hDriveBar = CreateToolbarEx(Globals.hMainWnd, 
+			        WS_CHILD|WS_VISIBLE|CCS_NOMOVEY|TBSTYLE_FLAT|TBSTYLE_LIST|TBSTYLE_WRAPABLE,
+//                    WS_CHILD|WS_VISIBLE|CCS_NOMOVEY|TBSTYLE_LIST|TBSTYLE_TRANSPARENT|TBSTYLE_WRAPABLE,
+					IDW_DRIVEBAR, 2, hInstance, IDB_DRIVEBAR, 
+					&drivebarBtn, 1/*iNumButtons*/, 
+					25/*dxButton*/, 16/*dyButton*/, 
+					0/*dxBitmap*/, 0/*dyBitmap*/, sizeof(TBBUTTON));
+//					16/*dxButton*/, 13/*dyButton*/, 
+//					16/*dxBitmap*/, 13/*dyBitmap*/, sizeof(TBBUTTON));
+		CheckMenuItem(Globals.hMenuOptions, ID_OPTIONS_DRIVEBAR, MF_BYCOMMAND|MF_CHECKED);
+        ConfigureDriveBar(Globals.hDriveBar);
+
+        // Create the status bar
+        Globals.hStatusBar = CreateStatusWindow(WS_VISIBLE|WS_CHILD|WS_CLIPSIBLINGS|SBT_NOBORDERS, 
+                                    _T(""), Globals.hMainWnd, IDW_STATUS_WINDOW);
+        if (!Globals.hStatusBar)
+            return FALSE;
+    	CheckMenuItem(Globals.hMenuOptions, ID_OPTIONS_STATUSBAR, MF_BYCOMMAND|MF_CHECKED);
+
+        // Create the status bar panes
+    	SetupStatusBar(FALSE);
 	}
 
-    // Create the status bar
-    Globals.hStatusBar = CreateStatusWindow(WS_VISIBLE|WS_CHILD|WS_CLIPSIBLINGS|SBT_NOBORDERS, 
-                                    _T(""), Globals.hMainWnd, IDW_STATUS_WINDOW);
-    if (!Globals.hStatusBar)
-        return FALSE;
-	CheckMenuItem(Globals.hMenuOptions, ID_OPTIONS_STATUSBAR, MF_BYCOMMAND|MF_CHECKED);
-
-    // Create the status bar panes
-	SetupStatusBar(FALSE);
 #if 0
 	//Globals.hstatusbar = CreateStatusWindow(WS_CHILD|WS_VISIBLE, 0, Globals.Globals.hMainWnd, IDW_STATUSBAR);
 	//CheckMenuItem(Globals.Globals.hMenuOptions, ID_OPTIONS_STATUSBAR, MF_BYCOMMAND|MF_CHECKED);
@@ -465,18 +441,4 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     SaveSettings();
 	ExitInstance();
     return msg.wParam;
-}
-
-void _GetFreeSpaceEx(void)
-{
-   BOOL fResult;
-   TCHAR szDrive[MAX_PATH];
-   ULARGE_INTEGER i64FreeBytesToCaller;
-   ULARGE_INTEGER i64TotalBytes;
-   ULARGE_INTEGER i64FreeBytes;
-
-   fResult = GetDiskFreeSpaceEx(szDrive,
-                (PULARGE_INTEGER)&i64FreeBytesToCaller,
-                (PULARGE_INTEGER)&i64TotalBytes,
-                (PULARGE_INTEGER)&i64FreeBytes);
 }

@@ -33,6 +33,7 @@ OBJS =	about.o \
         childwnd.o \
         debug.o \
         dialogs.o \
+        drivebar.o \
         draw.o \
         entries.o \
         framewnd.o \

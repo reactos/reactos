@@ -41,6 +41,7 @@
 
 #include "main.h"
 #include "worker.h"
+#include "drivebar.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -114,6 +115,10 @@ void MonitorThreadProc(void *lpParameter)
 		if (dwWaitVal == WAIT_OBJECT_0) {
 			// Reset our event
 			ResetEvent(hMonitorThreadEvent);
+
+
+            ConfigureDriveBar(Globals.hDriveBar);
+
 #if 0
 			TCHAR	text[260];
 			if ((ULONG)SendMessage(hProcessPageListCtrl, LVM_GETITEMCOUNT, 0, 0) != PerfDataGetProcessCount())

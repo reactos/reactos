@@ -194,7 +194,7 @@ BOOL OnTreeExpanding(HWND hwndTV, NMTREEVIEW* pnmtv)
     // check if this is either the root or a subkey item...
     if ((HKEY)pnmtv->itemNew.lParam == NULL) {
         keyPath[0] = _T('\0');
-        hKey = FindRegRoot(hwndTV, pnmtv->itemNew.hItem, keyPath, &keyPathLen, sizeof(keyPath));
+        hKey = FindRegRoot(hwndTV, pnmtv->itemNew.hItem, keyPath, &keyPathLen, sizeof(keyPath)/sizeof(TCHAR));
     } else {
         hKey = (HKEY)pnmtv->itemNew.lParam;
         keyPath[0] = _T('\0');

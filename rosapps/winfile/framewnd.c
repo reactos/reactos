@@ -614,10 +614,10 @@ static LPTBBUTTON      lpSaveButtons;
 		// the other 12 buttons in tbButtonNew.
         if (lpTbNotify->iItem < 5) {
             lpTbNotify->tbButton = tbButtonNew[lpTbNotify->iItem];
-//            LoadString(hInst, 4000+lpTbNotify->iItem, szBuffer, sizeof(szBuffer));
-            LoadString(hInst, lpTbNotify->iItem, szBuffer, sizeof(szBuffer));
+//            LoadString(hInst, 4000+lpTbNotify->iItem, szBuffer, sizeof(szBuffer)/sizeof(TCHAR));
+            LoadString(hInst, lpTbNotify->iItem, szBuffer, sizeof(szBuffer)/sizeof(TCHAR));
             lstrcpy (lpTbNotify->pszText, szBuffer);
-            lpTbNotify->cchText = sizeof (szBuffer);
+            lpTbNotify->cchText = sizeof(szBuffer)/sizeof(TCHAR);
             return TRUE;
         } else {
             return 0;
@@ -648,9 +648,9 @@ typedef struct _TBBUTTON {
 		// the other 12 buttons in tbButtonNew.
         if (lpTbNotify->iItem < 12) {
             lpTbNotify->tbButton = tbButtonNew[lpTbNotify->iItem];
-            LoadString(hInst, lpTbNotify->iItem + 32769, szBuffer, sizeof(szBuffer));
-            lstrcpy (lpTbNotify->pszText, szBuffer);
-            lpTbNotify->cchText = sizeof (szBuffer);
+            LoadString(hInst, lpTbNotify->iItem + 32769, szBuffer, sizeof(szBuffer)/sizeof(TCHAR));
+            lstrcpy(lpTbNotify->pszText, szBuffer);
+            lpTbNotify->cchText = sizeof(szBuffer)/sizeof(TCHAR);
             return TRUE;
         } else {
             return 0;
@@ -723,9 +723,10 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                 hWnd, (HMENU)0, hInst, &ccs);
         }
         CheckShellAvailable();
-        CheckNetworkAvailable();
+        CreateNetworkMonitorThread(hWnd);
         CreateMonitorThread(hWnd);
         CreateChildWindow(-1);
+        SetTimer(hWnd, 1, 5000, NULL);
 		break;
 
     case WM_NOTIFY:
@@ -763,6 +764,7 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 
 	case WM_TIMER:
         SignalMonitorEvent();
+        SignalNetworkMonitorEvent();
 		break;
 
 	case WM_SIZE:
@@ -779,7 +781,9 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 		break;
 	case WM_DESTROY:
 		WinHelp(hWnd, _T("winfile"), HELP_QUIT, 0);
+        KillTimer(hWnd, 1);
         DestryMonitorThread();
+        DestryNetworkMonitorThread();
 		PostQuitMessage(0);
 		break;
     case WM_QUERYENDSESSION:

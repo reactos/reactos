@@ -67,8 +67,8 @@ static void AddEntryToList(HWND hwndLV, int idx, Entry* entry)
     item.state = 0; 
     item.stateMask = 0; 
 //    item.pszText = entry->data.cFileName; 
-    item.pszText = LPSTR_TEXTCALLBACK; 
 //    item.cchTextMax = strlen(entry->data.cFileName); 
+    item.pszText = LPSTR_TEXTCALLBACK; 
     item.cchTextMax = 0; 
     item.iImage = 0; 
 //    item.iImage = I_IMAGECALLBACK; 
@@ -114,7 +114,7 @@ static void CreateListColumns(HWND hWndListView)
         lvC.iSubItem = index;
         lvC.cx = default_column_widths[index];
         lvC.fmt = column_alignment[index];
-        LoadString(hInst, IDS_LIST_COLUMN_FIRST + index, szText, sizeof(szText));
+        LoadString(hInst, IDS_LIST_COLUMN_FIRST + index, szText, sizeof(szText)/sizeof(TCHAR));
         if (ListView_InsertColumn(hWndListView, index, &lvC) == -1) {
             // TODO: handle failure condition...
             break;

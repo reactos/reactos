@@ -28,7 +28,10 @@ extern "C" {
 #endif
 
 
-BOOL CheckNetworkAvailable(void);
+BOOL CreateNetworkMonitorThread(HWND hWnd);
+void SignalNetworkMonitorEvent(void);
+BOOL DestryNetworkMonitorThread(void);
+
 DWORD MapNetworkDrives(HWND hWnd, BOOL connect);
 
 
