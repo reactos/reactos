@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.41 2003/01/15 19:58:07 chorns Exp $
+/* $Id: kdebug.c,v 1.42 2003/06/17 10:39:43 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -177,48 +177,48 @@ KdInitSystem(ULONG Reserved,
 	  p2 += 5;
 	  KdpBreakPending = TRUE;
 	}
-	  else if (!_strnicmp(p2, "COM", 3))
+      else if (!_strnicmp(p2, "COM", 3))
+	{
+	  p2 += 3;
+	  if ('=' == *p2)
 	    {
-	      p2 += 3;
-	      if (*p2 != '=')
+	      p2++;
+	      Value = (ULONG)atol(p2);
+	      if (0 < Value && Value < 5)
 		{
-		  p2++;
-		  Value = (ULONG)atol(p2);
-		  if (Value > 0 && Value < 5)
-		    {
-		      PortInfo.ComPort = Value;
-		    }
+		  PortInfo.ComPort = Value;
 		}
+	    }
 	}
       else if (!_strnicmp(p2, "BAUDRATE", 8))
 	{
 	  p2 += 8;
-	  if (*p2 != '=')
+	  if ('=' == *p2)
 	    {
 	      p2++;
 	      Value = (ULONG)atol(p2);
-	      if (Value > 0)
-			{
-			  PortInfo.BaudRate = Value;
-			}
-	    }
-	  else if (!_strnicmp(p2, "IRQ", 3))
-	    {
-	      p2 += 3;
-	      if (*p2 != '=')
+	      if (0 < Value)
 		{
-		  p2++;
-		  Value = (ULONG)atol(p2);
-		  if (Value > 0)
-		    {
-		      KdpPortIrq = Value;
-		    }
+		  PortInfo.BaudRate = Value;
+		}
+	    }
+	}
+      else if (!_strnicmp(p2, "IRQ", 3))
+	{
+	  p2 += 3;
+	  if ('=' == *p2)
+	    {
+	      p2++;
+	      Value = (ULONG)atol(p2);
+	      if (0 < Value)
+		{
+		  KdpPortIrq = Value;
 		}
 	    }
 	}
 #ifdef KDBG
     else if (!_strnicmp(p2, "PROFILE", 7))
-	  {
+      {
         KdbInitProfiling();
       }
 #endif /* KDBG */
