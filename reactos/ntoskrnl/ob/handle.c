@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: handle.c,v 1.53 2003/10/21 15:50:51 ekohl Exp $
+/* $Id: handle.c,v 1.54 2003/10/21 21:46:02 ekohl Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -681,6 +681,38 @@ NTSTATUS ObCreateHandle(PEPROCESS Process,
    KeReleaseSpinLock(&HandleTable->ListLock, oldlvl);
    *HandleReturn = (HANDLE)(handle << 2);
    return(STATUS_SUCCESS);
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+ObQueryObjectAuditingByHandle(IN HANDLE Handle,
+			      OUT PBOOLEAN GenerateOnClose)
+{
+  PEPROCESS Process;
+  KIRQL oldIrql;
+  PHANDLE_REP HandleRep;
+
+  DPRINT("ObQueryObjectAuditingByHandle(Handle %x)\n", Handle);
+
+  Process = PsGetCurrentProcess();
+
+  KeAcquireSpinLock(&Process->HandleTable.ListLock, &oldIrql);
+  HandleRep = ObpGetObjectByHandle(&Process->HandleTable,
+				   Handle);
+  if (HandleRep == NULL)
+    {
+      KeReleaseSpinLock(&Process->HandleTable.ListLock, oldIrql);
+      return STATUS_INVALID_HANDLE;
+    }
+
+  *GenerateOnClose = (BOOLEAN)((ULONG_PTR)HandleRep->ObjectBody | OB_HANDLE_FLAG_AUDIT);
+
+  KeReleaseSpinLock(&Process->HandleTable.ListLock, oldIrql);
+
+  return STATUS_SUCCESS;
 }
 
 

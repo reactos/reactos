@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.154 2003/09/25 20:02:09 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.155 2003/10/21 21:46:39 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -620,7 +620,7 @@ ObMakeTemporaryObject=ObMakeTemporaryObject@4
 ObOpenObjectByName=ObOpenObjectByName@28
 ObOpenObjectByPointer=ObOpenObjectByPointer@28
 ObQueryNameString=ObQueryNameString@16
-;ObQueryObjectAuditingByHandle=ObQueryObjectAuditingByHandle@8
+ObQueryObjectAuditingByHandle=ObQueryObjectAuditingByHandle@8
 ObfDereferenceObject=@ObfDereferenceObject@4
 ObfReferenceObject=@ObfReferenceObject@4
 ObReferenceObjectByHandle=ObReferenceObjectByHandle@24

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.167 2003/09/25 20:02:09 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.168 2003/10/21 21:46:39 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -619,7 +619,7 @@ ObMakeTemporaryObject@4
 ObOpenObjectByName@28
 ObOpenObjectByPointer@28
 ObQueryNameString@16
-;ObQueryObjectAuditingByHandle@8
+ObQueryObjectAuditingByHandle@8
 @ObfDereferenceObject@4
 @ObfReferenceObject@4
 ObReferenceObjectByHandle@24
