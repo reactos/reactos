@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.76.12.1 2004/07/15 20:07:16 weiden Exp $
+/* $Id: dllmain.c,v 1.76.12.2 2004/08/27 15:56:05 weiden Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -251,6 +251,13 @@ DllMain (
   if (!NT_SUCCESS(Status))
     {
       DbgPrint("Failed to initialize message queue implementation.\n");
+      return(Status);
+    }
+  
+  Status = InitGuiCheckImpl();
+  if (!NT_SUCCESS(Status))
+    {
+      DbgPrint("Failed to initialize GUI check implementation.\n");
       return(Status);
     }
   

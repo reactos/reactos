@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.45.12.1 2004/07/15 20:07:18 weiden Exp $
+/* $Id: stubs.c,v 1.45.12.2 2004/08/27 15:56:05 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -157,18 +157,6 @@ NtUserShowCaret(
 /*
  * Classes
  */
-
-DWORD STDCALL
-NtUserGetClassInfo(
-   HINSTANCE hInstance,
-   LPCWSTR lpClassName,
-   LPWNDCLASSEXW lpWndClassEx,
-   BOOL Ansi,
-   DWORD unknown3)
-{
-   UNIMPLEMENTED;
-   return 0;
-}
 
 DWORD STDCALL
 NtUserGetClassName (

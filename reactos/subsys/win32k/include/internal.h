@@ -149,6 +149,7 @@ BOOL          FASTCALL IntGetClassName(PWINDOW_OBJECT WindowObject, PUNICODE_STR
 BOOL          FASTCALL IntReferenceClassByNameOrAtom(PCLASS_OBJECT *Class, PUNICODE_STRING ClassNameOrAtom, HINSTANCE hInstance);
 BOOL          FASTCALL IntReferenceClassByName(PCLASS_OBJECT *Class, PUNICODE_STRING ClassName, HINSTANCE hInstance);
 BOOL          FASTCALL IntReferenceClassByAtom(PCLASS_OBJECT* Class, RTL_ATOM Atom, HINSTANCE hInstance);
+BOOL          FASTCALL IntGetClassInfo(HINSTANCE hInstance, PUNICODE_STRING ClassName, LPWNDCLASSEXW lpWndClassEx, BOOL Ansi);
 
 /* CURSORS AND ICONS **********************************************************/
 
@@ -450,8 +451,8 @@ typedef struct _USER_SENT_MESSAGE
 {
   LIST_ENTRY ListEntry;
   MSG Msg;
-  PKEVENT CompletionEvent;
-  LRESULT* Result;
+  PKEVENT volatile CompletionEvent;
+  LRESULT volatile * volatile Result;
   struct _USER_MESSAGE_QUEUE* SenderQueue;
   SENDASYNCPROC CompletionCallback;
   ULONG_PTR CompletionCallbackContext;
@@ -999,6 +1000,7 @@ VOID FASTCALL SetPointerRect(PSYSTEM_CURSORINFO CurInfo, PRECTL PointerRect);
 
 /* MISC FUNCTIONS *************************************************************/
 
+NTSTATUS  FASTCALL InitGuiCheckImpl(VOID);
 NTSTATUS  FASTCALL CsrInit(VOID);
 NTSTATUS  FASTCALL CsrNotify(PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply);
 PEPROCESS FASTCALL CsrAttachToCsrss(VOID);

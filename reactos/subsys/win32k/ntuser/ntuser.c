@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ntuser.c,v 1.1.4.2 2004/07/18 23:44:01 weiden Exp $
+/* $Id: ntuser.c,v 1.1.4.3 2004/08/27 15:56:05 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -742,6 +742,37 @@ NtUserGetCapture(VOID)
   END_NTUSER_NOERR();
 }
 
+RTL_ATOM STDCALL
+NtUserGetClassInfo(HINSTANCE hInstance, LPCWSTR lpClassName, LPWNDCLASSEXW lpWndClassEx,
+                   BOOL Ansi, DWORD unknown3)
+{
+  UNICODE_STRING ClassName;
+  BEGIN_NTUSER(RTL_ATOM, 0);
+  
+  if(!IS_ATOM(lpClassName))
+  {
+    /* FIXME - probe string */
+    #if 1
+    if(*lpClassName == L'\0') NTUSER_FAIL();
+    #endif
+    RtlInitUnicodeString(&ClassName, lpClassName);
+  }
+  else
+  {
+    ClassName.Length = 0;
+    ClassName.MaximumLength = 0;
+    ClassName.Buffer = (LPWSTR)lpClassName;
+  }
+  
+  /* FIXME - probe lpWndClassEx structure */
+  
+  ENTER_CRITICAL_SHARED();
+  Result = IntGetClassInfo(hInstance, &ClassName, lpWndClassEx, Ansi);
+  LEAVE_CRITICAL();
+  
+  END_NTUSER();
+}
+
 DWORD STDCALL
 NtUserGetClassLong(HWND hWnd, INT Offset, BOOL Ansi)
 {
@@ -949,7 +980,7 @@ NtUserGetDesktopWindow()
   NTUSER_USER_OBJECT(WINDOW, Window);
   BEGIN_NTUSER_NOERR(HWND);
   
-  ENTER_CRITICAL();
+  ENTER_CRITICAL_SHARED();
   Window = IntGetDesktopWindow();
   Result = (Window != NULL ? Window->Handle : NULL);
   LEAVE_CRITICAL();

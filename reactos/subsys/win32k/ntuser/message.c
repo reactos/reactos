@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.71.4.1 2004/07/15 20:07:17 weiden Exp $
+/* $Id: message.c,v 1.71.4.2 2004/08/27 15:56:05 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -900,7 +900,13 @@ IntSendMessageTimeout(PWINDOW_OBJECT Window,
                           uTimeout, (uFlags & SMTO_BLOCK), uResult);
   if(Status == STATUS_TIMEOUT)
   {
-    SetLastWin32Error(ERROR_TIMEOUT);
+    /* MSDN says GetLastError() should return 0 after timeout */
+    SetLastWin32Error(0);
+    return FALSE;
+  }
+  else if(!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
     return FALSE;
   }
   

@@ -573,7 +573,7 @@ STDCALL
 NtUserGetCaretPos(
   LPPOINT lpPoint);
 
-DWORD STDCALL
+RTL_ATOM STDCALL
 NtUserGetClassInfo(HINSTANCE hInst,
 		   LPCWSTR str,
 		   LPWNDCLASSEXW wcex,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.100.12.1 2004/07/15 20:07:18 weiden Exp $
+/* $Id: msgqueue.c,v 1.100.12.2 2004/08/27 15:56:05 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -375,10 +375,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWINDOW_OBJECT FilterWi
     {
       WaitStatus = KeWaitForMultipleObjects(2, WaitObjects, WaitAny, UserRequest,
                                             UserMode, TRUE, NULL, NULL);
-      while (MsqDispatchOneSentMessage(MessageQueue))
-        {
-          ;
-        }
+      while (MsqDispatchOneSentMessage(MessageQueue));
     }
   while (NT_SUCCESS(WaitStatus) && STATUS_WAIT_0 != WaitStatus);
 
@@ -805,7 +802,7 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
   ThreadQueue = PsGetWin32Thread()->MessageQueue;
   ASSERT(ThreadQueue != MessageQueue);
   
-  Timeout.QuadPart = uTimeout * -10000;
+  Timeout.QuadPart = (LONGLONG)uTimeout * (LONGLONG) -10000;
   
   /* FIXME - increase reference counter of sender's message queue here */
   

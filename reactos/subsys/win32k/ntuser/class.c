@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.59.8.1 2004/07/15 20:07:17 weiden Exp $
+/* $Id: class.c,v 1.59.8.2 2004/08/27 15:56:05 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -492,5 +492,41 @@ IntSetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, LONG dwNewLong, BOOL 
     }
   
   return Ret;
+}
+
+BOOL FASTCALL
+IntGetClassInfo(HINSTANCE hInstance, PUNICODE_STRING ClassName, LPWNDCLASSEXW lpWndClassEx, BOOL Ansi)
+{
+  PCLASS_OBJECT Class;
+  
+  if(IntReferenceClassByNameOrAtom(&Class, ClassName, hInstance))
+  {
+    RTL_ATOM Atom;
+    
+    lpWndClassEx->cbSize = sizeof(LPWNDCLASSEXW);
+    lpWndClassEx->style = Class->style;
+    lpWndClassEx->lpfnWndProc = (Ansi ? Class->lpfnWndProcA : Class->lpfnWndProcW);
+    lpWndClassEx->cbClsExtra = Class->cbClsExtra;
+    lpWndClassEx->cbWndExtra = Class->cbWndExtra;
+    /* This is not typo, we're really not going to use Class->hInstance here. */
+    lpWndClassEx->hInstance = hInstance;
+    lpWndClassEx->hIcon = Class->hIcon;
+    lpWndClassEx->hCursor = Class->hCursor;
+    lpWndClassEx->hbrBackground = Class->hbrBackground;
+    if (Class->lpszMenuName.MaximumLength)
+      RtlCopyUnicodeString((PUNICODE_STRING)lpWndClassEx->lpszMenuName, &Class->lpszMenuName);
+    else
+      lpWndClassEx->lpszMenuName = Class->lpszMenuName.Buffer;
+    /* ClassName->Buffer points to a buffer that is readable from umode because it was passed to kmode and we just probed it */
+    lpWndClassEx->lpszClassName = ClassName->Buffer;
+    lpWndClassEx->hIconSm = Class->hIconSm;
+    Atom = Class->Atom;
+
+    ObmDereferenceObject(Class);
+    return Atom;
+  }
+  
+  SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
+  return 0;
 }
 

@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: focus.c,v 1.24.4.1 2004/07/15 20:07:17 weiden Exp $
+ * $Id: focus.c,v 1.24.4.2 2004/08/27 15:56:05 weiden Exp $
  */
 #include <w32k.h>
 
@@ -97,8 +97,8 @@ IntSetForegroundWindow(PWINDOW_OBJECT Window)
    * message queue has active menus (2000/XP and later)
    */
   
-  if(pdo->ActiveMessageQueue != NULL &&
-     pdo->ActiveMessageQueue->MenuOwner != NULL)
+  if((pdo->ActiveMessageQueue != NULL) &&
+     (pdo->ActiveMessageQueue->MenuOwner != NULL))
   {
     DPRINT("Can't set foreground window, menus are opened!\n");
     return FALSE;
