@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib1bpp.c,v 1.28 2004/05/14 22:56:17 gvg Exp $ */
+/* $Id: dib1bpp.c,v 1.29 2004/05/27 12:35:23 royce Exp $ */
 #include <w32k.h>
 
 VOID
@@ -77,6 +77,7 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
 	// which direction are we going?
 	int xinc;
 	int yinc;
+	int ySrcDelta, yDstDelta;
 
 	// following 4 variables are used for the y-sweep
 	int dy; // dest y
@@ -101,6 +102,8 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
 		dy2 = DestRect->bottom - 1;
 		sy1 = SourcePoint->y;
 		yinc = 1;
+		ySrcDelta = SourceSurf->lDelta;
+		yDstDelta = DestSurf->lDelta;
 	}
 	else
 	{
@@ -109,6 +112,8 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
 		dy2 = DestRect->top;
 		sy1 = SourcePoint->y + dy1 - dy2;
 		yinc = -1;
+		ySrcDelta = -SourceSurf->lDelta;
+		yDstDelta = -DestSurf->lDelta;
 	}
 	if ( DestRect->left <= SourcePoint->x )
 	{
@@ -161,8 +166,8 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
 				if ( dy == dy2 )
 					break;
 				dy += yinc;
-				pd += yinc * DestSurf->lDelta;
-				ps += yinc * SourceSurf->lDelta;
+				pd += yDstDelta;
+				ps += ySrcDelta;
 			}
 		}
 		else if ( !(0xFF00 & (srcmask<<shift) ) ) // check if ps[0] not needed...
@@ -176,8 +181,8 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
 				if ( dy == dy2 )
 					break;
 				dy += yinc;
-				pd += yinc * DestSurf->lDelta;
-				ps += yinc * SourceSurf->lDelta;
+				pd += yDstDelta;
+				ps += ySrcDelta;
 			}
 		}
 		else if ( !(0xFF & (srcmask<<shift) ) ) // check if ps[1] not needed...
@@ -191,8 +196,8 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
 				if ( dy == dy2 )
 					break;
 				dy += yinc;
-				pd += yinc * DestSurf->lDelta;
-				ps += yinc * SourceSurf->lDelta;
+				pd += yDstDelta;
+				ps += ySrcDelta;
 			}
 		}
 		else // both ps[0] and ps[1] are needed
@@ -206,8 +211,8 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
 				if ( dy == dy2 )
 					break;
 				dy += yinc;
-				pd += yinc * DestSurf->lDelta;
-				ps += yinc * SourceSurf->lDelta;
+				pd += yDstDelta;
+				ps += ySrcDelta;
 			}
 		}
 
