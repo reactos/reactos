@@ -46,7 +46,6 @@ typedef struct tagARENA_INUSE
     DWORD  size;                    /* Block size; must be the first field */
     WORD   threadId;                /* Allocating thread id */
     WORD   magic;                   /* Magic number */
-    void  *callerEIP;               /* EIP of caller upon allocation */
 } ARENA_INUSE;
 
 typedef struct tagARENA_FREE
@@ -94,7 +93,6 @@ typedef struct tagSUBHEAP
     struct tagSUBHEAP  *next;       /* Next sub-heap */
     struct tagHEAP     *heap;       /* Main heap structure */
     DWORD               magic;      /* Magic number */
-    WORD                selector;   /* Selector for HEAP_WINE_SEGPTR heaps */
 } SUBHEAP, *PSUBHEAP;
 
 #define SUBHEAP_MAGIC    ((DWORD)('S' | ('U'<<8) | ('B'<<16) | ('H'<<24)))
@@ -107,7 +105,7 @@ typedef struct tagHEAP
     CRITICAL_SECTION critSection;   /* Critical section for serialization */
     DWORD            flags;         /* Heap flags */
     DWORD            magic;         /* Magic number */
-    void            *private;       /* Private pointer for the user of the heap */
+    BYTE             filler[4];     /* Make multiple of 8 bytes */
 } HEAP, *PHEAP;
 
 #define HEAP_MAGIC       ((DWORD)('H' | ('E'<<8) | ('A'<<16) | ('P'<<24)))
@@ -118,14 +116,6 @@ typedef struct tagHEAP
 
 
 static BOOL HEAP_IsRealArena( HANDLE heap, DWORD flags, LPCVOID block, BOOL quiet );
-
-#ifdef __GNUC__
-#define GET_EIP()    (__builtin_return_address(0))
-#define SET_EIP(ptr) ((ARENA_INUSE*)(ptr) - 1)->callerEIP = GET_EIP()
-#else
-#define GET_EIP()    0
-#define SET_EIP(ptr) /* nothing */
-#endif  /* __GNUC__ */
 
 
 /***********************************************************************
@@ -181,10 +171,9 @@ HEAP_Dump(PHEAP heap)
             else if (*(DWORD *)ptr & ARENA_FLAG_PREV_FREE)
             {
                 ARENA_INUSE *pArena = (ARENA_INUSE *)ptr;
-                DPRINTF( "%08lx Used %08lx %04x back=%08lx EIP=%p\n",
+                DPRINTF( "%08lx Used %08lx %04x back=%08lx\n",
 		      (DWORD)pArena, pArena->size & ARENA_SIZE_MASK,
-		      pArena->threadId, *((DWORD *)pArena - 1),
-		      pArena->callerEIP );
+		      pArena->threadId, *((DWORD *)pArena - 1));
                 ptr += sizeof(*pArena) + (pArena->size & ARENA_SIZE_MASK);
                 arenaSize += sizeof(ARENA_INUSE);
                 usedSize += pArena->size & ARENA_SIZE_MASK;
@@ -192,9 +181,9 @@ HEAP_Dump(PHEAP heap)
             else
             {
                 ARENA_INUSE *pArena = (ARENA_INUSE *)ptr;
-                DPRINTF( "%08lx used %08lx %04x EIP=%p\n",
+                DPRINTF( "%08lx used %08lx %04x\n",
 		      (DWORD)pArena, pArena->size & ARENA_SIZE_MASK,
-		      pArena->threadId, pArena->callerEIP );
+		      pArena->threadId);
                 ptr += sizeof(*pArena) + (pArena->size & ARENA_SIZE_MASK);
                 arenaSize += sizeof(ARENA_INUSE);
                 usedSize += pArena->size & ARENA_SIZE_MASK;
@@ -524,7 +513,6 @@ static BOOL HEAP_InitSubHeap( HEAP *heap, LPVOID address, DWORD flags,
                                 DWORD commitSize, DWORD totalSize )
 {
     SUBHEAP *subheap = (SUBHEAP *)address;
-    WORD selector = 0;
     FREE_LIST_ENTRY *pEntry;
     int i;
     NTSTATUS Status;
@@ -550,7 +538,6 @@ static BOOL HEAP_InitSubHeap( HEAP *heap, LPVOID address, DWORD flags,
 
     subheap = (SUBHEAP *)address;
     subheap->heap       = heap;
-    subheap->selector   = selector;
     subheap->size       = totalSize;
     subheap->commitSize = commitSize;
     subheap->magic      = SUBHEAP_MAGIC;
@@ -1172,7 +1159,6 @@ RtlAllocateHeap(HANDLE heap,   /* [in] Handle of private heap block */
     pInUse = (ARENA_INUSE *)pArena;
     pInUse->size      = (pInUse->size & ~ARENA_FLAG_FREE)
                         + sizeof(ARENA_FREE) - sizeof(ARENA_INUSE);
-    pInUse->callerEIP = GET_EIP();
     pInUse->threadId  = (DWORD)NtCurrentTeb()->Cid.UniqueThread;
     pInUse->magic     = ARENA_INUSE_MAGIC;
 
@@ -1363,7 +1349,6 @@ LPVOID STDCALL RtlReAllocateHeap(
 
     /* Return the new arena */
 
-    pArena->callerEIP = GET_EIP();
     if (!(flags & HEAP_NO_SERIALIZE)) RtlLeaveCriticalSection( &heapPtr->critSection );
 
     TRACE("(%08x,%08lx,%08lx,%08lx): returning %08lx\n",
