@@ -50,6 +50,12 @@ static GENERIC_MAPPING MmpSectionMapping = {
 #define SWAPENTRY_FROM_SSE(E)    ((E) >> 1)
 #define MAKE_SWAP_SSE(S)         (((S) << 1) | 0x1)
 
+static const INFORMATION_CLASS_INFO ExSectionInfoClass[] =
+{
+  ICI_SQ_SAME( sizeof(SECTION_BASIC_INFORMATION), sizeof(ULONG), ICIF_QUERY ), /* SectionBasicInformation */
+  ICI_SQ_SAME( sizeof(SECTION_IMAGE_INFORMATION), sizeof(ULONG), ICIF_QUERY ), /* SectionImageInformation */
+};
+
 /* FUNCTIONS *****************************************************************/
 
 /* Note: Mmsp prefix denotes "Memory Manager Section Private". */
@@ -3309,9 +3315,36 @@ NtCreateSection (OUT PHANDLE SectionHandle,
                  IN ULONG AllocationAttributes,
                  IN HANDLE FileHandle OPTIONAL)
 {
+   LARGE_INTEGER SafeMaximumSize;
    PSECTION_OBJECT SectionObject;
-   NTSTATUS Status;
+   KPROCESSOR_MODE PreviousMode;
+   NTSTATUS Status = STATUS_SUCCESS;
 
+   PreviousMode = ExGetPreviousMode();
+   
+   if(MaximumSize != NULL && PreviousMode != KernelMode)
+   {
+     _SEH_TRY
+     {
+       ProbeForRead(MaximumSize,
+                    sizeof(LARGE_INTEGER),
+                    sizeof(ULONG));
+       /* make a copy on the stack */
+       SafeMaximumSize = *MaximumSize;
+       MaximumSize = &SafeMaximumSize;
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+     
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
+   }
+   
    /*
     * Check the protection
     */
@@ -3367,17 +3400,52 @@ NtOpenSection(PHANDLE   SectionHandle,
               ACCESS_MASK  DesiredAccess,
               POBJECT_ATTRIBUTES ObjectAttributes)
 {
-   NTSTATUS Status;
-
-   *SectionHandle = 0;
+   HANDLE hSection;
+   KPROCESSOR_MODE PreviousMode;
+   NTSTATUS Status = STATUS_SUCCESS;
+   
+   PreviousMode = ExGetPreviousMode();
+   
+   if(PreviousMode != KernelMode)
+   {
+     _SEH_TRY
+     {
+       ProbeForWrite(SectionHandle,
+                     sizeof(HANDLE),
+                     sizeof(ULONG));
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+     
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
+   }
 
    Status = ObOpenObjectByName(ObjectAttributes,
                                MmSectionObjectType,
                                NULL,
-                               UserMode,
+                               PreviousMode,
                                DesiredAccess,
                                NULL,
-                               SectionHandle);
+                               &hSection);
+
+   if(NT_SUCCESS(Status))
+   {
+     _SEH_TRY
+     {
+       *SectionHandle = hSection;
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+   }
 
    return(Status);
 }
@@ -3487,26 +3555,77 @@ MmMapViewOfSegment(PEPROCESS Process,
  * @implemented
  */
 NTSTATUS STDCALL
-NtMapViewOfSection(HANDLE SectionHandle,
-                   HANDLE ProcessHandle,
-                   PVOID* BaseAddress,
-                   ULONG ZeroBits,
-                   ULONG CommitSize,
-                   PLARGE_INTEGER SectionOffset,
-                   PULONG ViewSize,
-                   SECTION_INHERIT InheritDisposition,
-                   ULONG AllocationType,
-                   ULONG Protect)
+NtMapViewOfSection(IN HANDLE SectionHandle,
+                   IN HANDLE ProcessHandle,
+                   IN OUT PVOID* BaseAddress  OPTIONAL,
+                   IN ULONG ZeroBits  OPTIONAL,
+                   IN ULONG CommitSize,
+                   IN OUT PLARGE_INTEGER SectionOffset  OPTIONAL,
+                   IN OUT PULONG ViewSize,
+                   IN SECTION_INHERIT InheritDisposition,
+                   IN ULONG AllocationType  OPTIONAL,
+                   IN ULONG Protect)
 {
+   PVOID SafeBaseAddress;
+   LARGE_INTEGER SafeSectionOffset;
+   ULONG SafeViewSize;
    PSECTION_OBJECT Section;
    PEPROCESS Process;
-   NTSTATUS Status;
+   KPROCESSOR_MODE PreviousMode;
    PMADDRESS_SPACE AddressSpace;
+   NTSTATUS Status = STATUS_SUCCESS;
+   
+   PreviousMode = ExGetPreviousMode();
+   
+   if(PreviousMode != KernelMode)
+   {
+     SafeBaseAddress = NULL;
+     SafeSectionOffset.QuadPart = 0;
+     SafeViewSize = 0;
+     
+     _SEH_TRY
+     {
+       if(BaseAddress != NULL)
+       {
+         ProbeForWrite(BaseAddress,
+                       sizeof(PVOID),
+                       sizeof(ULONG));
+         SafeBaseAddress = *BaseAddress;
+       }
+       if(SectionOffset != NULL)
+       {
+         ProbeForWrite(SectionOffset,
+                       sizeof(LARGE_INTEGER),
+                       sizeof(ULONG));
+         SafeSectionOffset = *SectionOffset;
+       }
+       ProbeForWrite(ViewSize,
+                     sizeof(ULONG),
+                     sizeof(ULONG));
+       SafeViewSize = *ViewSize;
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+     
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
+   }
+   else
+   {
+     SafeBaseAddress = (BaseAddress != NULL ? *BaseAddress : NULL);
+     SafeSectionOffset.QuadPart = (SectionOffset != NULL ? SectionOffset->QuadPart : 0);
+     SafeViewSize = (ViewSize != NULL ? *ViewSize : 0);
+   }
 
    Status = ObReferenceObjectByHandle(ProcessHandle,
                                       PROCESS_VM_OPERATION,
                                       PsProcessType,
-                                      UserMode,
+                                      PreviousMode,
                                       (PVOID*)(PVOID)&Process,
                                       NULL);
    if (!NT_SUCCESS(Status))
@@ -3519,7 +3638,7 @@ NtMapViewOfSection(HANDLE SectionHandle,
    Status = ObReferenceObjectByHandle(SectionHandle,
                                       SECTION_MAP_READ,
                                       MmSectionObjectType,
-                                      UserMode,
+                                      PreviousMode,
                                       (PVOID*)(PVOID)&Section,
                                       NULL);
    if (!(NT_SUCCESS(Status)))
@@ -3531,17 +3650,42 @@ NtMapViewOfSection(HANDLE SectionHandle,
 
    Status = MmMapViewOfSection(Section,
                                Process,
-                               BaseAddress,
+                               (BaseAddress != NULL ? &SafeBaseAddress : NULL),
                                ZeroBits,
                                CommitSize,
-                               SectionOffset,
-                               ViewSize,
+                               (SectionOffset != NULL ? &SafeSectionOffset : NULL),
+                               (ViewSize != NULL ? &SafeViewSize : NULL),
                                InheritDisposition,
                                AllocationType,
                                Protect);
 
    ObDereferenceObject(Section);
    ObDereferenceObject(Process);
+   
+   if(NT_SUCCESS(Status))
+   {
+     /* copy parameters back to the caller */
+     _SEH_TRY
+     {
+       if(BaseAddress != NULL)
+       {
+         *BaseAddress = SafeBaseAddress;
+       }
+       if(SectionOffset != NULL)
+       {
+         *SectionOffset = SafeSectionOffset;
+       }
+       if(ViewSize != NULL)
+       {
+         *ViewSize = SafeViewSize;
+       }
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+   }
 
    return(Status);
 }
@@ -3809,16 +3953,19 @@ NtUnmapViewOfSection (HANDLE ProcessHandle,
                       PVOID BaseAddress)
 {
    PEPROCESS Process;
+   KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status;
 
    DPRINT("NtUnmapViewOfSection(ProcessHandle %x, BaseAddress %x)\n",
           ProcessHandle, BaseAddress);
 
+   PreviousMode = ExGetPreviousMode();
+
    DPRINT("Referencing process\n");
    Status = ObReferenceObjectByHandle(ProcessHandle,
                                       PROCESS_VM_OPERATION,
                                       PsProcessType,
-                                      UserMode,
+                                      PreviousMode,
                                       (PVOID*)(PVOID)&Process,
                                       NULL);
    if (!NT_SUCCESS(Status))
@@ -3857,98 +4004,120 @@ NtUnmapViewOfSection (HANDLE ProcessHandle,
  *
  * @return Status.
  *
- * @todo Guard by SEH.
  * @implemented
  */
 NTSTATUS STDCALL
 NtQuerySection(IN HANDLE SectionHandle,
-               IN CINT SectionInformationClass,
+               IN SECTION_INFORMATION_CLASS SectionInformationClass,
                OUT PVOID SectionInformation,
-               IN ULONG Length,
-               OUT PULONG ResultLength)
+               IN ULONG SectionInformationLength,
+               OUT PULONG ResultLength  OPTIONAL)
 {
    PSECTION_OBJECT Section;
-   NTSTATUS Status;
+   KPROCESSOR_MODE PreviousMode;
+   NTSTATUS Status = STATUS_SUCCESS;
+   
+   PreviousMode = ExGetPreviousMode();
+   
+   DefaultQueryInfoBufferCheck(SectionInformationClass,
+                               ExSectionInfoClass,
+                               SectionInformation,
+                               SectionInformationLength,
+                               ResultLength,
+                               PreviousMode,
+                               &Status);
+
+   if(!NT_SUCCESS(Status))
+   {
+     DPRINT1("NtQuerySection() failed, Status: 0x%x\n", Status);
+     return Status;
+   }
 
    Status = ObReferenceObjectByHandle(SectionHandle,
                                       SECTION_QUERY,
                                       MmSectionObjectType,
-                                      UserMode,
+                                      PreviousMode,
                                       (PVOID*)(PVOID)&Section,
                                       NULL);
-   if (!(NT_SUCCESS(Status)))
+   if (NT_SUCCESS(Status))
    {
-      return(Status);
-   }
-
-   switch (SectionInformationClass)
-   {
-      case SectionBasicInformation:
+      switch (SectionInformationClass)
+      {
+         case SectionBasicInformation:
          {
-            PSECTION_BASIC_INFORMATION Sbi;
+            PSECTION_BASIC_INFORMATION Sbi = (PSECTION_BASIC_INFORMATION)SectionInformation;
 
-            if (Length != sizeof(SECTION_BASIC_INFORMATION))
+            _SEH_TRY
             {
-               ObDereferenceObject(Section);
-               return(STATUS_INFO_LENGTH_MISMATCH);
+               Sbi->Attributes = Section->AllocationAttributes;
+               if (Section->AllocationAttributes & SEC_IMAGE)
+               {
+                  Sbi->BaseAddress = 0;
+                  Sbi->Size.QuadPart = 0;
+               }
+               else
+               {
+                  Sbi->BaseAddress = (PVOID)Section->Segment->VirtualAddress;
+                  Sbi->Size.QuadPart = Section->Segment->Length;
+               }
+
+               if (ResultLength != NULL)
+               {
+                  *ResultLength = sizeof(SECTION_BASIC_INFORMATION);
+               }
+               Status = STATUS_SUCCESS;
             }
-
-            Sbi = (PSECTION_BASIC_INFORMATION)SectionInformation;
-
-            Sbi->Attributes = Section->AllocationAttributes;
-            if (Section->AllocationAttributes & SEC_IMAGE)
+            _SEH_HANDLE
             {
-               Sbi->BaseAddress = 0;
-               Sbi->Size.QuadPart = 0;
+               Status = _SEH_GetExceptionCode();
             }
-            else
-            {
-               Sbi->BaseAddress = (PVOID)Section->Segment->VirtualAddress;
-               Sbi->Size.QuadPart = Section->Segment->Length;
-            }
-
-            *ResultLength = sizeof(SECTION_BASIC_INFORMATION);
-            Status = STATUS_SUCCESS;
+            _SEH_END;
+            
             break;
          }
 
-      case SectionImageInformation:
+         case SectionImageInformation:
          {
-            PSECTION_IMAGE_INFORMATION Sii;
+            PSECTION_IMAGE_INFORMATION Sii = (PSECTION_IMAGE_INFORMATION)SectionInformation;
 
-            if (Length != sizeof(SECTION_IMAGE_INFORMATION))
+            _SEH_TRY
             {
-               ObDereferenceObject(Section);
-               return(STATUS_INFO_LENGTH_MISMATCH);
-            }
+               memset(Sii, 0, sizeof(SECTION_IMAGE_INFORMATION));
+               if (Section->AllocationAttributes & SEC_IMAGE)
+               {
+                  PMM_IMAGE_SECTION_OBJECT ImageSectionObject;
+                  ImageSectionObject = Section->ImageSection;
 
-            Sii = (PSECTION_IMAGE_INFORMATION)SectionInformation;
-            memset(Sii, 0, sizeof(SECTION_IMAGE_INFORMATION));
-            if (Section->AllocationAttributes & SEC_IMAGE)
+                  Sii->EntryPoint = ImageSectionObject->EntryPoint;
+                  Sii->StackReserve = ImageSectionObject->StackReserve;
+                  Sii->StackCommit = ImageSectionObject->StackCommit;
+                  Sii->Subsystem = ImageSectionObject->Subsystem;
+                  Sii->MinorSubsystemVersion = ImageSectionObject->MinorSubsystemVersion;
+                  Sii->MajorSubsystemVersion = ImageSectionObject->MajorSubsystemVersion;
+                  Sii->Characteristics = ImageSectionObject->ImageCharacteristics;
+                  Sii->ImageNumber = ImageSectionObject->Machine;
+                  Sii->Executable = ImageSectionObject->Executable;
+               }
+               
+               if (ResultLength != NULL)
+               {
+                  *ResultLength = sizeof(SECTION_IMAGE_INFORMATION);
+               }
+               Status = STATUS_SUCCESS;
+            }
+            _SEH_HANDLE
             {
-               PMM_IMAGE_SECTION_OBJECT ImageSectionObject;
-               ImageSectionObject = Section->ImageSection;
-
-               Sii->EntryPoint = ImageSectionObject->EntryPoint;
-               Sii->StackReserve = ImageSectionObject->StackReserve;
-               Sii->StackCommit = ImageSectionObject->StackCommit;
-               Sii->Subsystem = ImageSectionObject->Subsystem;
-               Sii->MinorSubsystemVersion = ImageSectionObject->MinorSubsystemVersion;
-               Sii->MajorSubsystemVersion = ImageSectionObject->MajorSubsystemVersion;
-               Sii->Characteristics = ImageSectionObject->ImageCharacteristics;
-               Sii->ImageNumber = ImageSectionObject->Machine;
-               Sii->Executable = ImageSectionObject->Executable;
+               Status = _SEH_GetExceptionCode();
             }
-            *ResultLength = sizeof(SECTION_IMAGE_INFORMATION);
-            Status = STATUS_SUCCESS;
+            _SEH_END;
+            
             break;
          }
+      }
 
-      default:
-         *ResultLength = 0;
-         Status = STATUS_INVALID_INFO_CLASS;
+      ObDereferenceObject(Section);
    }
-   ObDereferenceObject(Section);
+   
    return(Status);
 }
 
@@ -3964,7 +4133,6 @@ NtQuerySection(IN HANDLE SectionHandle,
  *
  * @return Status.
  *
- * @todo Guard by SEH.
  * @todo Move the actual code to internal function MmExtendSection.
  * @unimplemented
  */
@@ -3972,13 +4140,40 @@ NTSTATUS STDCALL
 NtExtendSection(IN HANDLE SectionHandle,
                 IN PLARGE_INTEGER NewMaximumSize)
 {
+   LARGE_INTEGER SafeNewMaximumSize;
    PSECTION_OBJECT Section;
-   NTSTATUS Status;
+   KPROCESSOR_MODE PreviousMode;
+   NTSTATUS Status = STATUS_SUCCESS;
+   
+   PreviousMode = ExGetPreviousMode();
+   
+   if(PreviousMode != KernelMode)
+   {
+     _SEH_TRY
+     {
+       ProbeForRead(NewMaximumSize,
+                    sizeof(LARGE_INTEGER),
+                    sizeof(ULONG));
+       /* make a copy on the stack */
+       SafeNewMaximumSize = *NewMaximumSize;
+       NewMaximumSize = &SafeNewMaximumSize;
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+     
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
+   }
 
    Status = ObReferenceObjectByHandle(SectionHandle,
                                       SECTION_EXTEND_SIZE,
                                       MmSectionObjectType,
-                                      UserMode,
+                                      PreviousMode,
                                       (PVOID*)&Section,
                                       NULL);
    if (!NT_SUCCESS(Status))

@@ -5420,10 +5420,10 @@ NTSTATUS
 STDCALL
 NtQuerySection(
 	IN HANDLE SectionHandle,
-	IN CINT SectionInformationClass,
+	IN SECTION_INFORMATION_CLASS SectionInformationClass,
 	OUT PVOID SectionInformation,
-	IN ULONG Length,
-	OUT PULONG ResultLength
+	IN ULONG SectionInformationLength,
+	OUT PULONG ResultLength  OPTIONAL
 	);
 
 /*
@@ -6451,10 +6451,10 @@ NTSTATUS
 STDCALL
 ZwQuerySection(
 	IN HANDLE SectionHandle,
-	IN CINT SectionInformationClass,
+	IN SECTION_INFORMATION_CLASS SectionInformationClass,
 	OUT PVOID SectionInformation,
-	IN ULONG Length,
-	OUT PULONG ResultLength
+	IN ULONG SectionInformationLength,
+	OUT PULONG ResultLength  OPTIONAL
 	);
 
 typedef struct _SECTION_IMAGE_INFORMATION
