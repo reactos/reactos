@@ -1,4 +1,4 @@
-/* $Id: cdmake.c,v 1.7 2003/11/16 13:45:42 ekohl Exp $ */
+/* $Id: cdmake.c,v 1.8 2003/11/18 17:40:46 ekohl Exp $ */
 /* CD-ROM Maker
    by Philip J. Erdelsky
    pje@acm.org
@@ -753,8 +753,8 @@ make_directory_records (PDIR_RECORD d)
           if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
             continue; // skip self and parent
 
-	  if (entry->d_type == DT_REG) // normal file
-	    {
+          if (entry->d_type == DT_REG) // normal file
+            {
               // Check for an absolute path
               if (source[0] == DIR_SEPARATOR_CHAR)
                 {
@@ -770,27 +770,27 @@ make_directory_records (PDIR_RECORD d)
                   strcat(buf, entry->d_name);
                 }
 
-	      if (stat(buf, &stbuf) == -1)
+              if (stat(buf, &stbuf) == -1)
                 {
                   error_exit("Can't access '%s' (%s)\n", buf, strerror(errno));
                   return;
                 }
 
-	      if (strcmp(entry->d_name, DIRECTORY_TIMESTAMP) == 0)
-		{
-		  convert_date_and_time(&d->date_and_time, &stbuf.st_size);
-		}
-	      else
-		{
-		  if (verbosity == VERBOSE)
-		    {
-		      printf("%d: file %s\n", d->level, buf);
-		    }
-		  (void) new_directory_record(entry, &stbuf, d);
-		}
+              if (strcmp(entry->d_name, DIRECTORY_TIMESTAMP) == 0)
+                {
+                  convert_date_and_time(&d->date_and_time, &stbuf.st_ctime);
+                }
+              else
+                {
+                  if (verbosity == VERBOSE)
+                    {
+                      printf("%d: file %s\n", d->level, buf);
+                    }
+                  (void) new_directory_record(entry, &stbuf, d);
+                }
          }
       }
-      closedir (dirp);
+      closedir(dirp);
     }
   else
     {
@@ -802,22 +802,22 @@ make_directory_records (PDIR_RECORD d)
   if (dirp != NULL)
     {
       while ((entry = readdir (dirp)) != NULL)
-	{
-        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
-          continue; // skip self and parent
+        {
+          if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+            continue; // skip self and parent
 
-	  if (entry->d_type == DT_DIR) // directory
-	    {
-	      old_end_source = end_source;
-	      append_string_to_source(entry->d_name);
-	      *end_source++ = DIR_SEPARATOR_CHAR;
+          if (entry->d_type == DT_DIR) // directory
+            {
+              old_end_source = end_source;
+              append_string_to_source(entry->d_name);
+              *end_source++ = DIR_SEPARATOR_CHAR;
               *end_source = 0;
-	      if (verbosity == VERBOSE)
-		{
-		  printf("%d: directory %s\n", d->level + 1, source);
-		}
-	      if (d->level < MAX_LEVEL)
-		{
+              if (verbosity == VERBOSE)
+                {
+                  printf("%d: directory %s\n", d->level + 1, source);
+                }
+              if (d->level < MAX_LEVEL)
+                {
                   // Check for an absolute path
                   if (source[0] == DIR_SEPARATOR_CHAR)
                     {
@@ -830,11 +830,11 @@ make_directory_records (PDIR_RECORD d)
                       strcat(buf, source);
                     }
 
-	          if (stat(buf, &stbuf) == -1)
-                   {
-                     error_exit("Can't access '%s' (%s)\n", buf, strerror(errno));
-                     return;
-                   }
+                  if (stat(buf, &stbuf) == -1)
+                    {
+                      error_exit("Can't access '%s' (%s)\n", buf, strerror(errno));
+                      return;
+                    }
 		  new_d = new_directory_record(entry, &stbuf, d);
 		  new_d->next_in_path_table = root.next_in_path_table;
 		  root.next_in_path_table = new_d;
@@ -849,7 +849,7 @@ make_directory_records (PDIR_RECORD d)
 	      *end_source = 0;
 	    }
         }
-      closedir (dirp);
+      closedir(dirp);
     }
   else
     {
@@ -863,7 +863,7 @@ make_directory_records (PDIR_RECORD d)
   if (dirp != NULL)
     {
       while ((entry = readdir (dirp)) != NULL)
-	{
+        {
           if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
             continue; // skip self and parent
 
@@ -889,12 +889,12 @@ make_directory_records (PDIR_RECORD d)
             }
 
           if (S_ISDIR(stbuf.st_mode))
-	    {
-	      old_end_source = end_source;
-	      append_string_to_source(entry->d_name);
-	      *end_source++ = DIR_SEPARATOR_CHAR;
-	      *end_source = 0;
-	      if (verbosity == VERBOSE)
+            {
+              old_end_source = end_source;
+              append_string_to_source(entry->d_name);
+              *end_source++ = DIR_SEPARATOR_CHAR;
+              *end_source = 0;
+              if (verbosity == VERBOSE)
 		{
 		  printf("%d: directory %s\n", d->level + 1, source);
 		}
@@ -912,14 +912,14 @@ make_directory_records (PDIR_RECORD d)
 		  error_exit("Directory is nested too deep");
 		}
 
-	      end_source = old_end_source;
+              end_source = old_end_source;
               *end_source = 0;
-	    }
+            }
           else if (S_ISREG(stbuf.st_mode))
-	    {
-	      if (strcmp(entry->d_name, DIRECTORY_TIMESTAMP) == 0)
+            {
+              if (strcmp(entry->d_name, DIRECTORY_TIMESTAMP) == 0)
 		{
-		  convert_date_and_time(&d->date_and_time, &stbuf.st_size);
+		  convert_date_and_time(&d->date_and_time, &stbuf.st_ctime);
 		}
 	      else
 		{
@@ -1166,10 +1166,10 @@ static void pass(void)
       write_directory_record(d, DOT_RECORD);
       write_directory_record(d == &root ? d : d->parent, DOT_DOT_RECORD);
       for (q = d->first_record; q != NULL; q = q->next_in_directory)
-	{
-	  write_directory_record(q,
-				 q->flags & DIRECTORY_FLAG ? SUBDIRECTORY_RECORD : FILE_RECORD);
-	}
+        {
+          write_directory_record(q,
+                                 q->flags & DIRECTORY_FLAG ? SUBDIRECTORY_RECORD : FILE_RECORD);
+        }
       fill_sector();
       d->size = (cd.sector - d->sector) * SECTOR_SIZE;
       number_of_directories++;
