@@ -676,30 +676,11 @@ static void ArrangeCtrlPositions(HWND hwndChildDlg, HWND hwndParentDlg, BOOL hid
 
 INT_PTR CALLBACK FileOpenDlgProcUserTemplate(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    FileOpenDlgInfos *fodInfos;
-
-#if 0
-    TRACE("0x%04x\n", uMsg);
-#endif
-
-    switch(uMsg)
-    {
-      case WM_INITDIALOG:
-      {
-        fodInfos = (FileOpenDlgInfos *)lParam;
-        lParam = (LPARAM) fodInfos->ofnInfos;
-
-        if(fodInfos && IsHooked(fodInfos))
-          return CallWindowProcA((WNDPROC)fodInfos->ofnInfos->lpfnHook,hwnd,uMsg,wParam,lParam);
-        return 0;
-      }
+    switch(uMsg) {
+    case WM_INITDIALOG:
+        return TRUE;
     }
-
-    fodInfos = (FileOpenDlgInfos *) GetPropA(GetParent(hwnd),FileOpenDlgInfosStr);
-    if(fodInfos && IsHooked(fodInfos))
-      return CallWindowProcA((WNDPROC)fodInfos->ofnInfos->lpfnHook,hwnd,uMsg,wParam,lParam);
-
-    return 0;
+    return FALSE;
 }
 
 HWND CreateTemplateDialog(FileOpenDlgInfos *fodInfos, HWND hwnd)
@@ -753,8 +734,9 @@ HWND CreateTemplateDialog(FileOpenDlgInfos *fodInfos, HWND hwnd)
           return NULL;
     	}
       }
-      hChildDlg= CreateDialogIndirectParamA(COMDLG32_hInstance, template,
-           hwnd, FileOpenDlgProcUserTemplate, (LPARAM)fodInfos);
+      hChildDlg = CreateDialogIndirectParamA(COMDLG32_hInstance, template, hwnd,
+                                             IsHooked(fodInfos) ? (DLGPROC)fodInfos->ofnInfos->lpfnHook : FileOpenDlgProcUserTemplate,
+                                             (LPARAM)fodInfos->ofnInfos);
       if(hChildDlg)
       {
         ShowWindow(hChildDlg,SW_SHOW);
@@ -779,7 +761,7 @@ HWND CreateTemplateDialog(FileOpenDlgInfos *fodInfos, HWND hwnd)
       temp.menu = temp.class = temp.title = 0;
 
       hChildDlg = CreateDialogIndirectParamA(COMDLG32_hInstance, &temp.tmplate,
-                  hwnd, FileOpenDlgProcUserTemplate, (LPARAM)fodInfos);
+                  hwnd, (DLGPROC)fodInfos->ofnInfos->lpfnHook, (LPARAM)fodInfos->ofnInfos);
 
       return hChildDlg;
     }
@@ -1035,15 +1017,15 @@ static LRESULT FILEDLG95_InitControls(HWND hwnd)
 
   TBBUTTON tbb[] =
   {
-   {0,                 0,                   TBSTATE_ENABLED, TBSTYLE_SEP, {0, 0}, 0, 0 },
-   {VIEW_PARENTFOLDER, FCIDM_TB_UPFOLDER,   TBSTATE_ENABLED, TBSTYLE_BUTTON, {0, 0}, 0, 0 },
-   {0,                 0,                   TBSTATE_ENABLED, TBSTYLE_SEP, {0, 0}, 0, 0 },
-   {VIEW_NEWFOLDER+1,  FCIDM_TB_DESKTOP,    TBSTATE_ENABLED, TBSTYLE_BUTTON, {0, 0}, 0, 0 },
-   {0,                 0,                   TBSTATE_ENABLED, TBSTYLE_SEP, {0, 0}, 0, 0 },
-   {VIEW_NEWFOLDER,    FCIDM_TB_NEWFOLDER,  TBSTATE_ENABLED, TBSTYLE_BUTTON, {0, 0}, 0, 0 },
-   {0,                 0,                   TBSTATE_ENABLED, TBSTYLE_SEP, {0, 0}, 0, 0 },
-   {VIEW_LIST,         FCIDM_TB_SMALLICON,  TBSTATE_ENABLED, TBSTYLE_BUTTON, {0, 0}, 0, 0 },
-   {VIEW_DETAILS,      FCIDM_TB_REPORTVIEW, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0, 0}, 0, 0 },
+   {0,                 0,                   TBSTATE_ENABLED, BTNS_SEP, {0, 0}, 0, 0 },
+   {VIEW_PARENTFOLDER, FCIDM_TB_UPFOLDER,   TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0 },
+   {0,                 0,                   TBSTATE_ENABLED, BTNS_SEP, {0, 0}, 0, 0 },
+   {VIEW_NEWFOLDER+1,  FCIDM_TB_DESKTOP,    TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0 },
+   {0,                 0,                   TBSTATE_ENABLED, BTNS_SEP, {0, 0}, 0, 0 },
+   {VIEW_NEWFOLDER,    FCIDM_TB_NEWFOLDER,  TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0 },
+   {0,                 0,                   TBSTATE_ENABLED, BTNS_SEP, {0, 0}, 0, 0 },
+   {VIEW_LIST,         FCIDM_TB_SMALLICON,  TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0 },
+   {VIEW_DETAILS,      FCIDM_TB_REPORTVIEW, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0 },
   };
   TBADDBITMAP tba[2];
   RECT rectTB;
@@ -1159,19 +1141,31 @@ static LRESULT FILEDLG95_InitControls(HWND hwnd)
           DWORD result;
 
           strcpyW(tmpBuf, fodInfos->initdir);
-          if (tmpBuf[strlenW(tmpBuf)-1] != '\\') {
-             strcatW(tmpBuf, szwSlash);
+          if( PathFileExistsW(tmpBuf) ) {
+              /* initdir does not have to be a directory. If a file is
+               * specified, the dir part is taken */
+              if( PathIsDirectoryW(tmpBuf)) {
+                  if (tmpBuf[strlenW(tmpBuf)-1] != '\\') {
+                     strcatW(tmpBuf, szwSlash);
+                  }
+                  strcatW(tmpBuf, szwStar);
+              }
+              result = GetFullPathNameW(tmpBuf, MAX_PATH, tmpBuf2, &nameBit);
+              if (result) {
+                 *nameBit = 0x00;
+                 if (fodInfos->initdir)
+                    MemFree(fodInfos->initdir);
+                 fodInfos->initdir = MemAlloc((strlenW(tmpBuf2) + 1)*sizeof(WCHAR));
+                 strcpyW(fodInfos->initdir, tmpBuf2);
+                 handledPath = TRUE;
+                 TRACE("Value in InitDir changed to %s\n", debugstr_w(fodInfos->initdir));
+              }
           }
-          strcatW(tmpBuf, szwStar);
-          result = GetFullPathNameW(tmpBuf, MAX_PATH, tmpBuf2, &nameBit);
-          if (result) {
-             *nameBit = 0x00;
-             if (fodInfos->initdir)
-                MemFree(fodInfos->initdir);
-             fodInfos->initdir = MemAlloc((strlenW(tmpBuf2) + 1)*sizeof(WCHAR));
-             strcpyW(fodInfos->initdir, tmpBuf2);
-             handledPath = TRUE;
-             TRACE("Value in InitDir changed to %s\n", debugstr_w(fodInfos->initdir));
+          else if (fodInfos->initdir)
+          {
+                    MemFree(fodInfos->initdir);
+                    fodInfos->initdir = NULL;
+                    TRACE("Value in InitDir is not an existing path, changed to (nil)\n");
           }
       }
   }
@@ -1478,12 +1472,16 @@ static BOOL FILEDLG95_SendFileOK( HWND hwnd, FileOpenDlgInfos *fodInfos )
         TRACE("---\n");
         /* First send CDN_FILEOK as MSDN doc says */
         SendCustomDlgNotificationMessage(hwnd,CDN_FILEOK);
+        if (GetWindowLongW(fodInfos->DlgInfos.hwndCustomDlg, DWL_MSGRESULT))
+        {
+            TRACE("canceled\n");
+            return FALSE;
+        }
 
         /* fodInfos->ofnInfos points to an ASCII or UNICODE structure as appropriate */
-        CallWindowProcA((WNDPROC)fodInfos->ofnInfos->lpfnHook,
-                            fodInfos->DlgInfos.hwndCustomDlg,
-                            fodInfos->HookMsg.fileokstring, 0, (LPARAM)fodInfos->ofnInfos);
-        if (GetWindowLongA(fodInfos->DlgInfos.hwndCustomDlg, DWL_MSGRESULT))
+        SendMessageW(fodInfos->DlgInfos.hwndCustomDlg,
+                     fodInfos->HookMsg.fileokstring, 0, (LPARAM)fodInfos->ofnInfos);
+        if (GetWindowLongW(fodInfos->DlgInfos.hwndCustomDlg, DWL_MSGRESULT))
         {
             TRACE("canceled\n");
             return FALSE;
@@ -1562,9 +1560,9 @@ BOOL FILEDLG95_OnOpenMultipleFiles(HWND hwnd, LPWSTR lpstrFileList, UINT nFileCo
   if ( !(fodInfos->ofnInfos->Flags & OFN_EXPLORER) )
   {
     /* For "oldstyle" dialog the components have to
-       be spearated by blanks (not '\0'!) and short
+       be separated by blanks (not '\0'!) and short
        filenames have to be used! */
-    FIXME("Components have to be separated by blanks");
+    FIXME("Components have to be separated by blanks\n");
   }
   if(fodInfos->unicode)
   {
@@ -1711,7 +1709,7 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
 
   nOpenAction = ONOPEN_BROWSE;
 
-  /* dont apply any checks with OFN_NOVALIDATE */
+  /* don't apply any checks with OFN_NOVALIDATE */
   {
     LPWSTR lpszTemp, lpszTemp1;
     LPITEMIDLIST pidl = NULL;

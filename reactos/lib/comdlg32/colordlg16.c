@@ -442,7 +442,7 @@ BOOL16 WINAPI ChooseColor16( LPCHOOSECOLOR16 lpChCol )
 	    COMDLG32_SetCommDlgExtendedError(CDERR_LOADRESFAILURE);
 	    return FALSE;
 	}
-        size = SizeofResource(GetModuleHandleA("COMDLG32"), hResInfo);
+        size = SizeofResource(COMDLG32_hInstance, hResInfo);
         hGlobal16 = GlobalAlloc16(0, size);
         if (!hGlobal16)
         {

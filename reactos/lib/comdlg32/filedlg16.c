@@ -95,18 +95,12 @@ static BOOL FileDlg_Init(void)
     static BOOL initialized = 0;
 
     if (!initialized) {
-        HINSTANCE inst = GetModuleHandleA( "comdlg32.dll" );
-        if (!inst)
-        {
-            ERR( "cannot get comdlg32.dll instance\n" );
-            return FALSE;
-        }
-        hFolder  = LoadImageA( inst, "FOLDER", IMAGE_ICON, 16, 16, LR_SHARED );
-        hFolder2 = LoadImageA( inst, "FOLDER2", IMAGE_ICON, 16, 16, LR_SHARED );
-        hFloppy  = LoadImageA( inst, "FLOPPY", IMAGE_ICON, 16, 16, LR_SHARED );
-        hHDisk   = LoadImageA( inst, "HDISK", IMAGE_ICON, 16, 16, LR_SHARED );
-        hCDRom   = LoadImageA( inst, "CDROM", IMAGE_ICON, 16, 16, LR_SHARED );
-        hNet     = LoadImageA( inst, "NETWORK", IMAGE_ICON, 16, 16, LR_SHARED );
+        hFolder  = LoadImageA( COMDLG32_hInstance, "FOLDER", IMAGE_ICON, 16, 16, LR_SHARED );
+        hFolder2 = LoadImageA( COMDLG32_hInstance, "FOLDER2", IMAGE_ICON, 16, 16, LR_SHARED );
+        hFloppy  = LoadImageA( COMDLG32_hInstance, "FLOPPY", IMAGE_ICON, 16, 16, LR_SHARED );
+        hHDisk   = LoadImageA( COMDLG32_hInstance, "HDISK", IMAGE_ICON, 16, 16, LR_SHARED );
+        hCDRom   = LoadImageA( COMDLG32_hInstance, "CDROM", IMAGE_ICON, 16, 16, LR_SHARED );
+        hNet     = LoadImageA( COMDLG32_hInstance, "NETWORK", IMAGE_ICON, 16, 16, LR_SHARED );
 	if (hFolder == 0 || hFolder2 == 0 || hFloppy == 0 ||
 	    hHDisk == 0 || hCDRom == 0 || hNet == 0)
 	{
@@ -230,7 +224,7 @@ BOOL Get16BitsTemplate(LFSPRIVATE lfs)
 	    COMDLG32_SetCommDlgExtendedError(CDERR_LOADRESFAILURE);
 	    return FALSE;
 	}
-        size = SizeofResource(GetModuleHandleA("COMDLG32"), hResInfo);
+        size = SizeofResource(COMDLG32_hInstance, hResInfo);
         hGlobal16 = GlobalAlloc16(0, size);
         if (!hGlobal16)
         {

@@ -33,9 +33,7 @@
 typedef struct
 {
   LPDEVMODEA        lpDevMode;
-  struct {
-      LPPRINTDLGA       lpPrintDlg;
-  } dlg;
+  LPPRINTDLGA       lpPrintDlg;
   LPPRINTER_INFO_2A lpPrinterInfo;
   LPDRIVER_INFO_3A  lpDriverInfo;
   UINT              HelpMessageID;
@@ -49,9 +47,7 @@ typedef struct
 typedef struct
 {
   LPDEVMODEW        lpDevMode;
-  struct {
-      LPPRINTDLGW       lpPrintDlg;
-  } dlg;
+  LPPRINTDLGW       lpPrintDlg;
   LPPRINTER_INFO_2W lpPrinterInfo;
   LPDRIVER_INFO_3W  lpDriverInfo;
   UINT              HelpMessageID;

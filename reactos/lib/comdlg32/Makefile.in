@@ -5,7 +5,7 @@ VPATH     = @srcdir@
 MODULE    = comdlg32.dll
 IMPORTS   = shell32 shlwapi comctl32 winspool user32 gdi32 kernel32 ntdll
 ALTNAMES  = commdlg.dll
-EXTRALIBS = $(LIBUUID)
+EXTRALIBS = -luuid
 
 SPEC_SRCS16 = $(ALTNAMES:.dll=.spec)
 

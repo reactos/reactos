@@ -1,0 +1,268 @@
+Index: filetitle.c
+===================================================================
+RCS file: /home/wine/wine/dlls/commdlg/filetitle.c,v
+retrieving revision 1.15
+diff -u -r1.15 filetitle.c
+--- filetitle.c	5 Sep 2003 23:08:42 -0000	1.15
++++ filetitle.c	11 Mar 2004 21:21:49 -0000
+@@ -40,7 +40,7 @@
+  *	GetFileTitleA		(COMDLG32.@)
+  *
+  */
+-short WINAPI GetFileTitleA(LPCSTR lpFile, LPSTR lpTitle, UINT cbBuf)
++short WINAPI GetFileTitleA(LPCSTR lpFile, LPSTR lpTitle, WORD cbBuf)
+ {
+     int ret;
+     UNICODE_STRING strWFile;
+@@ -60,7 +60,7 @@
+  *	GetFileTitleW		(COMDLG32.@)
+  *
+  */
+-short WINAPI GetFileTitleW(LPCWSTR lpFile, LPWSTR lpTitle, UINT cbBuf)
++short WINAPI GetFileTitleW(LPCWSTR lpFile, LPWSTR lpTitle, WORD cbBuf)
+ {
+ 	int i, len;
+         static const WCHAR brkpoint[] = {'*','[',']',0};
+Index: printdlg.c
+===================================================================
+RCS file: /home/wine/wine/dlls/commdlg/printdlg.c,v
+retrieving revision 1.74
+diff -u -r1.74 printdlg.c
+--- printdlg.c	9 Jan 2004 05:10:35 -0000	1.74
++++ printdlg.c	11 Mar 2004 21:21:50 -0000
+@@ -341,7 +341,7 @@
+ 	        lpdm->dmCollate =
+ 		  (IsDlgButtonChecked(hDlg, chx2) == BST_CHECKED);
+ 	    if (lpdm->dmFields & DM_COPIES)
+-	        lpdm->dmCopies = GetDlgItemInt(hDlg, edt3, NULL, FALSE);
++	        lpdm->u.s.dmCopies = GetDlgItemInt(hDlg, edt3, NULL, FALSE);
+ 	} else {
+ 	    if (IsDlgButtonChecked(hDlg, chx2) == BST_CHECKED)
+ 	        lppd->Flags |= PD_COLLATE;
+@@ -416,7 +416,7 @@
+ 	        lpdm->dmCollate =
+ 		  (IsDlgButtonChecked(hDlg, chx2) == BST_CHECKED);
+ 	    if (lpdm->dmFields & DM_COPIES)
+-	        lpdm->dmCopies = GetDlgItemInt(hDlg, edt3, NULL, FALSE);
++	        lpdm->u.s.dmCopies = GetDlgItemInt(hDlg, edt3, NULL, FALSE);
+ 	} else {
+ 	    if (IsDlgButtonChecked(hDlg, chx2) == BST_CHECKED)
+ 	        lppd->Flags |= PD_COLLATE;
+@@ -581,9 +581,9 @@
+                                       Sel, 0);
+         if (dm) {
+             if (nIDComboBox == cmb2)
+-                dm->u1.s1.dmPaperSize = oldWord;
++                dm->u.s.dmPaperSize = oldWord;
+             else
+-                dm->dmDefaultSource = oldWord;
++                dm->u.s.dmDefaultSource = oldWord;
+         }
+     }
+     else {
+@@ -593,9 +593,9 @@
+          */
+         if (dm) {
+             if (nIDComboBox == cmb2)
+-                oldWord = dm->u1.s1.dmPaperSize;
++                oldWord = dm->u.s.dmPaperSize;
+             else
+-                oldWord = dm->dmDefaultSource;
++                oldWord = dm->u.s.dmDefaultSource;
+         }
+     }
+ 
+@@ -691,9 +691,9 @@
+                                       Sel, 0);
+         if (dm) {
+             if (nIDComboBox == cmb2)
+-                dm->u1.s1.dmPaperSize = oldWord;
++                dm->u.s.dmPaperSize = oldWord;
+             else
+-                dm->dmDefaultSource = oldWord;
++                dm->u.s.dmDefaultSource = oldWord;
+         }
+     }
+     else {
+@@ -703,9 +703,9 @@
+          */
+         if (dm) {
+             if (nIDComboBox == cmb2)
+-                oldWord = dm->u1.s1.dmPaperSize;
++                oldWord = dm->u.s.dmPaperSize;
+             else
+-                oldWord = dm->dmDefaultSource;
++                oldWord = dm->u.s.dmDefaultSource;
+         }
+     }
+ 
+@@ -968,7 +968,7 @@
+ 	  if (lppd->hDevMode == 0)
+ 	      copies = lppd->nCopies;
+ 	  else
+-	      copies = lpdm->dmCopies;
++	      copies = lpdm->u.s.dmCopies;
+ 	  if(copies == 0) copies = 1;
+ 	  else if(copies < 0) copies = MAX_COPIES;
+ 	  SetDlgItemInt(hDlg, edt3, copies, FALSE);
+@@ -990,7 +990,7 @@
+             ShowWindow(GetDlgItem(hDlg, chx1), SW_HIDE);
+ 
+     } else { /* PD_PRINTSETUP */
+-      BOOL bPortrait = (lpdm->u1.s1.dmOrientation == DMORIENT_PORTRAIT);
++      BOOL bPortrait = (lpdm->u.s.dmOrientation == DMORIENT_PORTRAIT);
+ 
+       PRINTDLG_SetUpPaperComboBoxA(hDlg, cmb2,
+ 				  PrintStructures->lpPrinterInfo->pPrinterName,
+@@ -1131,7 +1131,7 @@
+ 	  if (lppd->hDevMode == 0)
+ 	      copies = lppd->nCopies;
+ 	  else
+-	      copies = lpdm->dmCopies;
++	      copies = lpdm->u.s.dmCopies;
+ 	  if(copies == 0) copies = 1;
+ 	  else if(copies < 0) copies = MAX_COPIES;
+ 	  SetDlgItemInt(hDlg, edt3, copies, FALSE);
+@@ -1153,7 +1153,7 @@
+             ShowWindow(GetDlgItem(hDlg, chx1), SW_HIDE);
+ 
+     } else { /* PD_PRINTSETUP */
+-      BOOL bPortrait = (lpdm->u1.s1.dmOrientation == DMORIENT_PORTRAIT);
++      BOOL bPortrait = (lpdm->u.s.dmOrientation == DMORIENT_PORTRAIT);
+ 
+       PRINTDLG_SetUpPaperComboBoxW(hDlg, cmb2,
+ 				  PrintStructures->lpPrinterInfo->pPrinterName,
+@@ -1490,7 +1490,7 @@
+     case rad1: /* Paperorientation */
+         if (lppd->Flags & PD_PRINTSETUP)
+         {
+-              lpdm->u1.s1.dmOrientation = DMORIENT_PORTRAIT;
++              lpdm->u.s.dmOrientation = DMORIENT_PORTRAIT;
+               SendDlgItemMessageA(hDlg, ico1, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
+                           (LPARAM)(PrintStructures->hPortraitIcon));
+         }
+@@ -1499,7 +1499,7 @@
+     case rad2: /* Paperorientation */
+         if (lppd->Flags & PD_PRINTSETUP)
+         {
+-              lpdm->u1.s1.dmOrientation = DMORIENT_LANDSCAPE;
++              lpdm->u.s.dmOrientation = DMORIENT_LANDSCAPE;
+               SendDlgItemMessageA(hDlg, ico1, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
+                           (LPARAM)(PrintStructures->hLandscapeIcon));
+         }
+@@ -1523,7 +1523,7 @@
+       {
+ 	  DWORD Sel = SendDlgItemMessageA(hDlg, cmb2, CB_GETCURSEL, 0, 0);
+ 	  if(Sel != CB_ERR)
+-	      lpdm->u1.s1.dmPaperSize = SendDlgItemMessageA(hDlg, cmb2,
++	      lpdm->u.s.dmPaperSize = SendDlgItemMessageA(hDlg, cmb2,
+ 							    CB_GETITEMDATA,
+ 							    Sel, 0);
+       }
+@@ -1533,7 +1533,7 @@
+       {
+ 	  DWORD Sel = SendDlgItemMessageA(hDlg, cmb3, CB_GETCURSEL, 0, 0);
+ 	  if(Sel != CB_ERR)
+-	      lpdm->dmDefaultSource = SendDlgItemMessageA(hDlg, cmb3,
++	      lpdm->u.s.dmDefaultSource = SendDlgItemMessageA(hDlg, cmb3,
+ 							  CB_GETITEMDATA, Sel,
+ 							  0);
+       }
+@@ -1544,8 +1544,8 @@
+ 	case rad1:                         /* orientation */
+ 	case rad2:
+ 	    if (IsDlgButtonChecked(hDlg, rad1) == BST_CHECKED) {
+-	        if(lpdm->u1.s1.dmOrientation != DMORIENT_PORTRAIT) {
+-		    lpdm->u1.s1.dmOrientation = DMORIENT_PORTRAIT;
++	        if(lpdm->u.s.dmOrientation != DMORIENT_PORTRAIT) {
++		    lpdm->u.s.dmOrientation = DMORIENT_PORTRAIT;
+ 		    SendDlgItemMessageA(hDlg, stc10, STM_SETIMAGE,
+ 					(WPARAM)IMAGE_ICON,
+ 					(LPARAM)PrintStructures->hPortraitIcon);
+@@ -1554,8 +1554,8 @@
+ 					(LPARAM)PrintStructures->hPortraitIcon);
+ 		}
+ 	    } else {
+-	        if(lpdm->u1.s1.dmOrientation != DMORIENT_LANDSCAPE) {
+-	            lpdm->u1.s1.dmOrientation = DMORIENT_LANDSCAPE;
++	        if(lpdm->u.s.dmOrientation != DMORIENT_LANDSCAPE) {
++	            lpdm->u.s.dmOrientation = DMORIENT_LANDSCAPE;
+ 		    SendDlgItemMessageA(hDlg, stc10, STM_SETIMAGE,
+ 					(WPARAM)IMAGE_ICON,
+ 					(LPARAM)PrintStructures->hLandscapeIcon);
+@@ -1654,7 +1654,7 @@
+     case rad1: /* Paperorientation */
+         if (lppd->Flags & PD_PRINTSETUP)
+         {
+-              lpdm->u1.s1.dmOrientation = DMORIENT_PORTRAIT;
++              lpdm->u.s.dmOrientation = DMORIENT_PORTRAIT;
+               SendDlgItemMessageA(hDlg, ico1, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
+                           (LPARAM)(PrintStructures->hPortraitIcon));
+         }
+@@ -1663,7 +1663,7 @@
+     case rad2: /* Paperorientation */
+         if (lppd->Flags & PD_PRINTSETUP)
+         {
+-              lpdm->u1.s1.dmOrientation = DMORIENT_LANDSCAPE;
++              lpdm->u.s.dmOrientation = DMORIENT_LANDSCAPE;
+               SendDlgItemMessageA(hDlg, ico1, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
+                           (LPARAM)(PrintStructures->hLandscapeIcon));
+         }
+@@ -1687,7 +1687,7 @@
+       {
+ 	  DWORD Sel = SendDlgItemMessageA(hDlg, cmb2, CB_GETCURSEL, 0, 0);
+ 	  if(Sel != CB_ERR)
+-	      lpdm->u1.s1.dmPaperSize = SendDlgItemMessageA(hDlg, cmb2,
++	      lpdm->u.s.dmPaperSize = SendDlgItemMessageA(hDlg, cmb2,
+ 							    CB_GETITEMDATA,
+ 							    Sel, 0);
+       }
+@@ -1697,7 +1697,7 @@
+       {
+ 	  DWORD Sel = SendDlgItemMessageA(hDlg, cmb3, CB_GETCURSEL, 0, 0);
+ 	  if(Sel != CB_ERR)
+-	      lpdm->dmDefaultSource = SendDlgItemMessageW(hDlg, cmb3,
++	      lpdm->u.s.dmDefaultSource = SendDlgItemMessageW(hDlg, cmb3,
+ 							  CB_GETITEMDATA, Sel,
+ 							  0);
+       }
+@@ -1708,8 +1708,8 @@
+ 	case rad1:                         /* orientation */
+ 	case rad2:
+ 	    if (IsDlgButtonChecked(hDlg, rad1) == BST_CHECKED) {
+-	        if(lpdm->u1.s1.dmOrientation != DMORIENT_PORTRAIT) {
+-		    lpdm->u1.s1.dmOrientation = DMORIENT_PORTRAIT;
++	        if(lpdm->u.s.dmOrientation != DMORIENT_PORTRAIT) {
++		    lpdm->u.s.dmOrientation = DMORIENT_PORTRAIT;
+ 		    SendDlgItemMessageA(hDlg, stc10, STM_SETIMAGE,
+ 					(WPARAM)IMAGE_ICON,
+ 					(LPARAM)PrintStructures->hPortraitIcon);
+@@ -1718,8 +1718,8 @@
+ 					(LPARAM)PrintStructures->hPortraitIcon);
+ 		}
+ 	    } else {
+-	        if(lpdm->u1.s1.dmOrientation != DMORIENT_LANDSCAPE) {
+-	            lpdm->u1.s1.dmOrientation = DMORIENT_LANDSCAPE;
++	        if(lpdm->u.s.dmOrientation != DMORIENT_LANDSCAPE) {
++	            lpdm->u.s.dmOrientation = DMORIENT_LANDSCAPE;
+ 		    SendDlgItemMessageA(hDlg, stc10, STM_SETIMAGE,
+ 					(WPARAM)IMAGE_ICON,
+ 					(LPARAM)PrintStructures->hLandscapeIcon);
+@@ -2911,7 +2911,7 @@
+ /***********************************************************************
+  *	PrintDlgExA (COMDLG32.@)
+  */
+-HRESULT WINAPI PrintDlgExA(LPVOID lpPrintDlgExA) /* [???] FIXME: LPPRINTDLGEXA */
++HRESULT WINAPI PrintDlgExA(LPPRINTDLGEXA lpPrintDlgExA)
+ {
+ 	FIXME("stub\n");
+ 	return E_NOTIMPL;
+@@ -2919,7 +2919,7 @@
+ /***********************************************************************
+  *	PrintDlgExW (COMDLG32.@)
+  */
+-HRESULT WINAPI PrintDlgExW(LPVOID lpPrintDlgExW) /* [???] FIXME: LPPRINTDLGEXW */
++HRESULT WINAPI PrintDlgExW(LPPRINTDLGEXW lpPrintDlgExW)
+ {
+ 	FIXME("stub\n");
+ 	return E_NOTIMPL;

@@ -54,7 +54,7 @@ static UINT		HelpMessage;
  * The find/replace calls are passed a structure that is _not_ used
  * internally. There is a local copy that holds the running info to
  * be able to combine xxxA and xxxW calls. The passed pointer is
- * returned upon sendmessage. Apps wont break this way when they rely
+ * returned upon sendmessage. Apps won't break this way when they rely
  * on the original pointer. This will work as long as the sizes of
  * FINDREPLACEA == FINDREPLACEW. The local copy will also prevent
  * the app to see the wine-specific extra flags to distinguish between

@@ -205,7 +205,7 @@ BOOL16 WINAPI ChooseFont16(LPCHOOSEFONT16 lpChFont)
             COMDLG32_SetCommDlgExtendedError(CDERR_LOADRESFAILURE);
             return FALSE;
         }
-        size = SizeofResource(GetModuleHandleA("COMDLG32"), hResInfo);
+        size = SizeofResource(COMDLG32_hInstance, hResInfo);
         hGlobal16 = GlobalAlloc16(0, size);
         if (!hGlobal16)
         {
