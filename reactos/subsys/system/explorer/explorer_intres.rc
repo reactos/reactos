@@ -429,13 +429,13 @@ CAPTION "About ReactOS Explorer"
 FONT 10, "MS Sans Serif"
 BEGIN
     LTEXT           "ReactOS Explorer",IDC_ROS_EXPLORER,91,13,90,11
-    LTEXT           "(c) 2003/2004 Martin Fuchs",IDC_STATIC,90,42,79,8
+    LTEXT           "V 0.9",IDC_VERSION_TXT,91,27,98,8
+    LTEXT           "(c) 2003/2004 Martin Fuchs",IDC_STATIC,91,42,79,8
+    LTEXT           "",IDC_WIN_VERSION,91,58,98,22
     LTEXT           "http://www.sky.franken.de/explorer/",IDC_WWW,21,84,104,
                     8
     CONTROL         "&OK",IDOK,"Button",BS_OWNERDRAW | BS_FLAT | WS_GROUP,
                     151,90,38,12
-    LTEXT           "V 0.9",IDC_VERSION_TXT,90,27,99,8
-    LTEXT           "",IDC_WIN_VERSION,90,58,99,22
 END
 
 
