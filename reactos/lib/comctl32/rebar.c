@@ -1186,11 +1186,6 @@ REBAR_ForceResize (REBAR_INFO *infoPtr)
     INT xedge = GetSystemMetrics(SM_CXEDGE);
     INT yedge = GetSystemMetrics(SM_CYEDGE);
 
-    /* TEST TEST TEST */
-    GetWindowRect (infoPtr->hwndSelf, &rc);
-    /* END TEST END TEST END TEST */
-
-
     GetClientRect (infoPtr->hwndSelf, &rc);
 
     TRACE( " old [%ld x %ld], new [%ld x %ld], client [%ld x %ld]\n",
@@ -1387,6 +1382,12 @@ REBAR_MoveChildWindows (REBAR_INFO *infoPtr, UINT start, UINT endplus)
 
     if (infoPtr->fStatus & NTF_HGHTCHG) {
         infoPtr->fStatus &= ~NTF_HGHTCHG;
+        /*
+         * We need to force a resize here, because some applications
+         * try to get the rebar size during processing of the 
+         * RBN_HEIGHTCHANGE notification.
+         */
+        REBAR_ForceResize (infoPtr);
         REBAR_Notify (&heightchange, infoPtr, RBN_HEIGHTCHANGE);
     }
 
