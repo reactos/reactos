@@ -15,21 +15,20 @@ C_SRCS = \
 	connpt.c \
 	dispatch.c \
 	hash.c \
+	oaidl_p.c \
 	oleaut.c \
+	olefont.c \
 	olepicture.c \
+	regsvr.c \
 	safearray.c \
 	stubs.c \
+	tmarshal.c \
+	typelib.c \
+	typelib2.c \
+	usrmarshal.c \
 	varformat.c \
 	variant.c \
 	vartype.c
-
-#	regsvr.c \
-#	olefont.c \
-#	tmarshal.c \
-#	usrmarshal.c \
-#	oaidl_p.c \
-#	typelib.c \
-#	typelib2.c \
 
 C_SRCS16 = \
 	ole2disp.c \

@@ -3,6 +3,9 @@
  *
  *	Copyright 2002	Marcus Meissner
  *
+ * The olerelay debug channel allows you to see calls marshalled by
+ * the typelib marshaller. It is not a generic COM relaying system.
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -50,6 +53,8 @@ static const WCHAR ppvObjectW[] = {'p','p','v','O','b','j','e','c','t',0};
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 WINE_DECLARE_DEBUG_CHANNEL(olerelay);
 
+#define ICOM_THIS_MULTI(impl,field,iface) impl* const This=(impl*)((char*)(iface) - offsetof(impl,field))
+
 typedef struct _marshal_state {
     LPBYTE	base;
     int		size;
@@ -58,6 +63,14 @@ typedef struct _marshal_state {
     BOOL	thisisiid;
     IID		iid;	/* HACK: for VT_VOID */
 } marshal_state;
+
+/* used in the olerelay code to avoid having the L"" stuff added by debugstr_w */
+static char *relaystr(WCHAR *in) {
+    char *tmp = (char *)debugstr_w(in);
+    tmp += 2;
+    tmp[strlen(tmp)-1] = '\0';
+    return tmp;
+}
 
 static HRESULT
 xbuf_add(marshal_state *buf, LPBYTE stuff, DWORD size) {
@@ -274,6 +287,8 @@ static int _nroffuncs(ITypeInfo *tinfo) {
     /*NOTREACHED*/
 }
 
+#ifdef __i386__
+
 #include "pshpack1.h"
 
 typedef struct _TMAsmProxy {
@@ -289,74 +304,99 @@ typedef struct _TMAsmProxy {
 
 #include "poppack.h"
 
+#else /* __i386__ */
+# error You need to implement stubless proxies for your architecture
+#endif
+
 typedef struct _TMProxyImpl {
-    DWORD				*lpvtbl;
+    LPVOID				*lpvtbl;
     IRpcProxyBufferVtbl	*lpvtbl2;
-    DWORD				ref;
+    ULONG				ref;
 
     TMAsmProxy				*asmstubs;
     ITypeInfo*				tinfo;
     IRpcChannelBuffer*			chanbuf;
     IID					iid;
+    CRITICAL_SECTION	crit;
 } TMProxyImpl;
 
 static HRESULT WINAPI
-TMProxyImpl_QueryInterface(LPRPCPROXYBUFFER iface, REFIID riid, LPVOID *ppv) {
+TMProxyImpl_QueryInterface(LPRPCPROXYBUFFER iface, REFIID riid, LPVOID *ppv)
+{
     TRACE("()\n");
     if (IsEqualIID(riid,&IID_IUnknown)||IsEqualIID(riid,&IID_IRpcProxyBuffer)) {
-	*ppv = (LPVOID)iface;
-	IRpcProxyBuffer_AddRef(iface);
-	return S_OK;
+        *ppv = (LPVOID)iface;
+        IRpcProxyBuffer_AddRef(iface);
+        return S_OK;
     }
     FIXME("no interface for %s\n",debugstr_guid(riid));
     return E_NOINTERFACE;
 }
 
 static ULONG WINAPI
-TMProxyImpl_AddRef(LPRPCPROXYBUFFER iface) {
+TMProxyImpl_AddRef(LPRPCPROXYBUFFER iface)
+{
     ICOM_THIS_MULTI(TMProxyImpl,lpvtbl2,iface);
 
     TRACE("()\n");
-    This->ref++;
-    return This->ref;
+
+    return InterlockedIncrement(&This->ref);
 }
 
 static ULONG WINAPI
-TMProxyImpl_Release(LPRPCPROXYBUFFER iface) {
+TMProxyImpl_Release(LPRPCPROXYBUFFER iface)
+{
+    ULONG refs;
     ICOM_THIS_MULTI(TMProxyImpl,lpvtbl2,iface);
 
     TRACE("()\n");
-    This->ref--;
-    if (This->ref) return This->ref;
-    if (This->chanbuf) IRpcChannelBuffer_Release(This->chanbuf);
-    HeapFree(GetProcessHeap(),0,This);
-    return 0;
+
+    refs = InterlockedDecrement(&This->ref);
+    if (!refs)
+    {
+        DeleteCriticalSection(&This->crit);
+        if (This->chanbuf) IRpcChannelBuffer_Release(This->chanbuf);
+        VirtualFree(This->asmstubs, 0, MEM_RELEASE);
+        CoTaskMemFree(This);
+    }
+    return refs;
 }
 
 static HRESULT WINAPI
 TMProxyImpl_Connect(
-    LPRPCPROXYBUFFER iface,IRpcChannelBuffer* pRpcChannelBuffer
-) {
-    ICOM_THIS_MULTI(TMProxyImpl,lpvtbl2,iface);
+    LPRPCPROXYBUFFER iface,IRpcChannelBuffer* pRpcChannelBuffer)
+{
+    ICOM_THIS_MULTI(TMProxyImpl, lpvtbl2, iface);
 
-    TRACE("(%p)\n",pRpcChannelBuffer);
+    TRACE("(%p)\n", pRpcChannelBuffer);
+
+    EnterCriticalSection(&This->crit);
+
+    IRpcChannelBuffer_AddRef(pRpcChannelBuffer);
     This->chanbuf = pRpcChannelBuffer;
-    IRpcChannelBuffer_AddRef(This->chanbuf);
+
+    LeaveCriticalSection(&This->crit);
+
     return S_OK;
 }
 
 static void WINAPI
-TMProxyImpl_Disconnect(LPRPCPROXYBUFFER iface) {
-    ICOM_THIS_MULTI(TMProxyImpl,lpvtbl2,iface);
+TMProxyImpl_Disconnect(LPRPCPROXYBUFFER iface)
+{
+    ICOM_THIS_MULTI(TMProxyImpl, lpvtbl2, iface);
 
-    FIXME("()\n");
+    TRACE("()\n");
+
+    EnterCriticalSection(&This->crit);
+
     IRpcChannelBuffer_Release(This->chanbuf);
     This->chanbuf = NULL;
+
+    LeaveCriticalSection(&This->crit);
 }
 
 
-static ICOM_VTABLE(IRpcProxyBuffer) tmproxyvtable = {
-    ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
+static IRpcProxyBufferVtbl tmproxyvtable = {
     TMProxyImpl_QueryInterface,
     TMProxyImpl_AddRef,
     TMProxyImpl_Release,
@@ -365,7 +405,7 @@ static ICOM_VTABLE(IRpcProxyBuffer) tmproxyvtable = {
 };
 
 /* how much space do we use on stack in DWORD steps. */
-int const
+int
 _argsize(DWORD vt) {
     switch (vt) {
     case VT_DATE:
@@ -411,8 +451,8 @@ serialize_param(
     BOOL		dealloc,
     TYPEDESC		*tdesc,
     DWORD		*arg,
-    marshal_state	*buf
-) {
+    marshal_state	*buf)
+{
     HRESULT hres = S_OK;
 
     TRACE("(tdesc.vt %d)\n",tdesc->vt);
@@ -429,7 +469,7 @@ serialize_param(
     case VT_UI2:
     case VT_UI1:
 	hres = S_OK;
-	if (debugout) MESSAGE("%lx",*arg);
+	if (debugout) TRACE_(olerelay)("%lx",*arg);
 	if (writeit)
 	    hres = xbuf_add(buf,(LPBYTE)arg,sizeof(DWORD));
 	return hres;
@@ -438,7 +478,7 @@ serialize_param(
 	VARIANT		*vt = (VARIANT*)arg;
 	DWORD		vttype = V_VT(vt);
 
-	if (debugout) MESSAGE("Vt(%ld)(",vttype);
+	if (debugout) TRACE_(olerelay)("Vt(%ld)(",vttype);
 	tdesc2.vt = vttype;
 	if (writeit) {
 	    hres = xbuf_add(buf,(LPBYTE)&vttype,sizeof(vttype));
@@ -446,15 +486,15 @@ serialize_param(
 	}
 	/* need to recurse since we need to free the stuff */
 	hres = serialize_param(tinfo,writeit,debugout,dealloc,&tdesc2,&(V_I4(vt)),buf);
-	if (debugout) MESSAGE(")");
+	if (debugout) TRACE_(olerelay)(")");
 	return hres;
     }
     case VT_BSTR: {
 	if (debugout) {
 	    if (arg)
-		    MESSAGE("%s",debugstr_w((BSTR)*arg));
+		    TRACE_(olerelay)("%s",relaystr((BSTR)*arg));
 	    else
-		    MESSAGE("<bstr NULL>");
+		    TRACE_(olerelay)("<bstr NULL>");
 	}
 	if (writeit) {
 	    if (!*arg) {
@@ -478,7 +518,7 @@ serialize_param(
     case VT_PTR: {
 	DWORD cookie;
 
-	if (debugout) MESSAGE("*");
+	if (debugout) TRACE_(olerelay)("*");
 	if (writeit) {
 	    cookie = *arg ? 0x42424242 : 0;
 	    hres = xbuf_add(buf,(LPBYTE)&cookie,sizeof(cookie));
@@ -486,7 +526,7 @@ serialize_param(
 		return hres;
 	}
 	if (!*arg) {
-	    if (debugout) MESSAGE("NULL");
+	    if (debugout) TRACE_(olerelay)("NULL");
 	    return S_OK;
 	}
 	hres = serialize_param(tinfo,writeit,debugout,dealloc,tdesc->u.lptdesc,(DWORD*)*arg,buf);
@@ -494,17 +534,17 @@ serialize_param(
 	return hres;
     }
     case VT_UNKNOWN:
-	if (debugout) MESSAGE("unk(0x%lx)",*arg);
+	if (debugout) TRACE_(olerelay)("unk(0x%lx)",*arg);
 	if (writeit)
 	    hres = _marshal_interface(buf,&IID_IUnknown,(LPUNKNOWN)*arg);
 	return hres;
     case VT_DISPATCH:
-	if (debugout) MESSAGE("idisp(0x%lx)",*arg);
+	if (debugout) TRACE_(olerelay)("idisp(0x%lx)",*arg);
 	if (writeit)
 	    hres = _marshal_interface(buf,&IID_IDispatch,(LPUNKNOWN)*arg);
 	return hres;
     case VT_VOID:
-	if (debugout) MESSAGE("<void>");
+	if (debugout) TRACE_(olerelay)("<void>");
 	return S_OK;
     case VT_USERDEFINED: {
 	ITypeInfo	*tinfo2;
@@ -524,7 +564,7 @@ serialize_param(
 	    break;
 	case TKIND_RECORD: {
 	    int i;
-	    if (debugout) MESSAGE("{");
+	    if (debugout) TRACE_(olerelay)("{");
 	    for (i=0;i<tattr->cVars;i++) {
 		VARDESC *vdesc;
 		ELEMDESC *elem2;
@@ -543,7 +583,7 @@ serialize_param(
 		    ERR("Need more names!\n");
 		}
 		if (!hres && debugout)
-		    MESSAGE("%s=",debugstr_w(names[0]));
+		    TRACE_(olerelay)("%s=",relaystr(names[0]));
 		*/
 		elem2 = &vdesc->elemdescVar;
 		tdesc2 = &elem2->tdesc;
@@ -559,11 +599,11 @@ serialize_param(
 		if (hres!=S_OK)
 		    return hres;
 		if (debugout && (i<(tattr->cVars-1)))
-		    MESSAGE(",");
+		    TRACE_(olerelay)(",");
 	    }
 	    if (buf->thisisiid && (tattr->cbSizeInstance==sizeof(GUID)))
 		memcpy(&(buf->iid),arg,sizeof(buf->iid));
-	    if (debugout) MESSAGE("}");
+	    if (debugout) TRACE_(olerelay)("}");
 	    break;
 	}
 	default:
@@ -578,19 +618,19 @@ serialize_param(
 	ARRAYDESC *adesc = tdesc->u.lpadesc;
 	int i, arrsize = 1;
 
-	if (debugout) MESSAGE("carr");
+	if (debugout) TRACE_(olerelay)("carr");
 	for (i=0;i<adesc->cDims;i++) {
-	    if (debugout) MESSAGE("[%ld]",adesc->rgbounds[i].cElements);
+	    if (debugout) TRACE_(olerelay)("[%ld]",adesc->rgbounds[i].cElements);
 	    arrsize *= adesc->rgbounds[i].cElements;
 	}
-	if (debugout) MESSAGE("[");
+	if (debugout) TRACE_(olerelay)("[");
 	for (i=0;i<arrsize;i++) {
 	    hres = serialize_param(tinfo, writeit, debugout, dealloc, &adesc->tdescElem, (DWORD*)((LPBYTE)arg+i*_xsize(&adesc->tdescElem)), buf);
 	    if (hres)
 		return hres;
-	    if (debugout && (i<arrsize-1)) MESSAGE(",");
+	    if (debugout && (i<arrsize-1)) TRACE_(olerelay)(",");
 	}
-	if (debugout) MESSAGE("]");
+	if (debugout) TRACE_(olerelay)("]");
 	return S_OK;
     }
     default:
@@ -607,8 +647,8 @@ serialize_LPVOID_ptr(
     BOOL		dealloc,
     TYPEDESC		*tdesc,
     DWORD		*arg,
-    marshal_state	*buf
-) {
+    marshal_state	*buf)
+{
     HRESULT	hres;
     DWORD	cookie;
 
@@ -626,11 +666,11 @@ serialize_LPVOID_ptr(
 	    return hres;
     }
     if (!*arg) {
-	if (debugout) MESSAGE("<lpvoid NULL>");
+	if (debugout) TRACE_(olerelay)("<lpvoid NULL>");
 	return S_OK;
     }
     if (debugout)
-	MESSAGE("ppv(%p)",*(LPUNKNOWN*)*arg);
+	TRACE_(olerelay)("ppv(%p)",*(LPUNKNOWN*)*arg);
     if (writeit) {
 	hres = _marshal_interface(buf,&(buf->iid),*(LPUNKNOWN*)*arg);
 	if (hres)
@@ -649,8 +689,8 @@ serialize_DISPPARAM_ptr(
     BOOL		dealloc,
     TYPEDESC		*tdesc,
     DWORD		*arg,
-    marshal_state	*buf
-) {
+    marshal_state	*buf)
+{
     DWORD	cookie;
     HRESULT	hres;
     DISPPARAMS	*disp;
@@ -668,7 +708,7 @@ serialize_DISPPARAM_ptr(
 	    return hres;
     }
     if (!*arg) {
-	if (debugout) MESSAGE("<DISPPARAMS NULL>");
+	if (debugout) TRACE_(olerelay)("<DISPPARAMS NULL>");
 	return S_OK;
     }
     disp = (DISPPARAMS*)*arg;
@@ -677,7 +717,7 @@ serialize_DISPPARAM_ptr(
 	if (hres)
 	    return hres;
     }
-    if (debugout) MESSAGE("D{");
+    if (debugout) TRACE_(olerelay)("D{");
     for (i=0;i<disp->cArgs;i++) {
 	TYPEDESC	vtdesc;
 
@@ -692,7 +732,7 @@ serialize_DISPPARAM_ptr(
 	    buf
         );
 	if (debugout && (i<disp->cArgs-1))
-	    MESSAGE(",");
+	    TRACE_(olerelay)(",");
     }
     if (dealloc)
 	HeapFree(GetProcessHeap(),0,disp->rgvarg);
@@ -701,7 +741,7 @@ serialize_DISPPARAM_ptr(
 	if (hres)
 	    return hres;
     }
-    if (debugout) MESSAGE("}{");
+    if (debugout) TRACE_(olerelay)("}{");
     for (i=0;i<disp->cNamedArgs;i++) {
 	TYPEDESC	vtdesc;
 
@@ -716,9 +756,9 @@ serialize_DISPPARAM_ptr(
 	    buf
 	);
 	if (debugout && (i<disp->cNamedArgs-1))
-	    MESSAGE(",");
+	    TRACE_(olerelay)(",");
     }
-    if (debugout) MESSAGE("}");
+    if (debugout) TRACE_(olerelay)("}");
     if (dealloc) {
 	HeapFree(GetProcessHeap(),0,disp->rgdispidNamedArgs);
 	HeapFree(GetProcessHeap(),0,disp);
@@ -734,8 +774,8 @@ deserialize_param(
     BOOL		alloc,
     TYPEDESC		*tdesc,
     DWORD		*arg,
-    marshal_state	*buf
-) {
+    marshal_state	*buf)
+{
     HRESULT hres = S_OK;
 
     TRACE("vt %d at %p\n",tdesc->vt,arg);
@@ -743,10 +783,10 @@ deserialize_param(
     while (1) {
 	switch (tdesc->vt) {
 	case VT_EMPTY:
-	    if (debugout) MESSAGE("<empty>");
+	    if (debugout) TRACE_(olerelay)("<empty>");
 	    return S_OK;
 	case VT_NULL:
-	    if (debugout) MESSAGE("<null>");
+	    if (debugout) TRACE_(olerelay)("<null>");
 	    return S_OK;
 	case VT_VARIANT: {
 	    VARIANT	*vt = (VARIANT*)arg;
@@ -762,9 +802,9 @@ deserialize_param(
 		memset(&tdesc2,0,sizeof(tdesc2));
 		tdesc2.vt = vttype;
 		V_VT(vt)  = vttype;
-	        if (debugout) MESSAGE("Vt(%ld)(",vttype);
+	        if (debugout) TRACE_(olerelay)("Vt(%ld)(",vttype);
 		hres = deserialize_param(tinfo, readit, debugout, alloc, &tdesc2, &(V_I4(vt)), buf);
-		MESSAGE(")");
+		TRACE_(olerelay)(")");
 		return hres;
 	    } else {
 		VariantInit(vt);
@@ -779,7 +819,7 @@ deserialize_param(
 		hres = xbuf_get(buf,(LPBYTE)arg,sizeof(DWORD));
 		if (hres) FIXME("Failed to read integer 4 byte\n");
 	    }
-	    if (debugout) MESSAGE("%lx",*arg);
+	    if (debugout) TRACE_(olerelay)("%lx",*arg);
 	    return hres;
 	case VT_BSTR: {
 	    WCHAR	*str;
@@ -793,7 +833,7 @@ deserialize_param(
 		}
 		if (len == -1) {
 		    *arg = 0;
-		    if (debugout) MESSAGE("<bstr NULL>");
+		    if (debugout) TRACE_(olerelay)("<bstr NULL>");
 		} else {
 		    str  = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,len+sizeof(WCHAR));
 		    hres = xbuf_get(buf,(LPBYTE)str,len);
@@ -802,7 +842,7 @@ deserialize_param(
 			return hres;
 		    }
 		    *arg = (DWORD)SysAllocStringLen(str,len);
-		    if (debugout) MESSAGE("%s",debugstr_w(str));
+		    if (debugout) TRACE_(olerelay)("%s",relaystr(str));
 		    HeapFree(GetProcessHeap(),0,str);
 		}
 	    } else {
@@ -823,11 +863,11 @@ deserialize_param(
 		    return hres;
 		}
 		if (cookie != 0x42424242) {
-		    if (debugout) MESSAGE("NULL");
+		    if (debugout) TRACE_(olerelay)("NULL");
 		    *arg = 0;
 		    return S_OK;
 		}
-		if (debugout) MESSAGE("*");
+		if (debugout) TRACE_(olerelay)("*");
 	    }
 	    if (alloc) {
 		if (derefhere)
@@ -846,17 +886,17 @@ deserialize_param(
 	    if (readit)
 		hres = _unmarshal_interface(buf,&IID_IUnknown,(LPUNKNOWN*)arg);
 	    if (debugout)
-		MESSAGE("unk(%p)",arg);
+		TRACE_(olerelay)("unk(%p)",arg);
 	    return hres;
 	case VT_DISPATCH:
 	    hres = S_OK;
 	    if (readit)
 		hres = _unmarshal_interface(buf,&IID_IDispatch,(LPUNKNOWN*)arg);
 	    if (debugout)
-		MESSAGE("idisp(%p)",arg);
+		TRACE_(olerelay)("idisp(%p)",arg);
 	    return hres;
 	case VT_VOID:
-	    if (debugout) MESSAGE("<void>");
+	    if (debugout) TRACE_(olerelay)("<void>");
 	    return S_OK;
 	case VT_USERDEFINED: {
 	    ITypeInfo	*tinfo2;
@@ -882,7 +922,7 @@ deserialize_param(
 		case TKIND_RECORD: {
 		    int i;
 
-		    if (debugout) MESSAGE("{");
+		    if (debugout) TRACE_(olerelay)("{");
 		    for (i=0;i<tattr->cVars;i++) {
 			VARDESC *vdesc;
 
@@ -900,11 +940,11 @@ deserialize_param(
 			    (DWORD*)(((LPBYTE)*arg)+vdesc->u.oInst),
 			    buf
 			);
-		        if (debugout && (i<tattr->cVars-1)) MESSAGE(",");
+		        if (debugout && (i<tattr->cVars-1)) TRACE_(olerelay)(",");
 		    }
 		    if (buf->thisisiid && (tattr->cbSizeInstance==sizeof(GUID)))
 			memcpy(&(buf->iid),(LPBYTE)*arg,sizeof(buf->iid));
-		    if (debugout) MESSAGE("}");
+		    if (debugout) TRACE_(olerelay)("}");
 		    break;
 		}
 		default:
@@ -973,7 +1013,7 @@ deserialize_LPVOID_ptr(
 	    return hres;
 	if (cookie != 0x42424242) {
 	    *(DWORD*)*arg = 0;
-	    if (debugout) MESSAGE("<lpvoid NULL>");
+	    if (debugout) TRACE_(olerelay)("<lpvoid NULL>");
 	    return S_OK;
 	}
     }
@@ -982,7 +1022,7 @@ deserialize_LPVOID_ptr(
 	if (hres)
 	    return hres;
     }
-    if (debugout) MESSAGE("ppv(%p)",(LPVOID)*arg);
+    if (debugout) TRACE_(olerelay)("ppv(%p)",(LPVOID)*arg);
     return S_OK;
 }
 
@@ -994,8 +1034,8 @@ deserialize_DISPPARAM_ptr(
     BOOL		alloc,
     TYPEDESC		*tdesc,
     DWORD		*arg,
-    marshal_state	*buf
-) {
+    marshal_state	*buf)
+{
     DWORD	cookie;
     DISPPARAMS	*disps;
     HRESULT	hres;
@@ -1011,7 +1051,7 @@ deserialize_DISPPARAM_ptr(
 	    return hres;
 	if (cookie == 0) {
 	    *arg = 0;
-	    if (debugout) MESSAGE("<DISPPARAMS NULL>");
+	    if (debugout) TRACE_(olerelay)("<DISPPARAMS NULL>");
 	    return S_OK;
 	}
     }
@@ -1025,7 +1065,7 @@ deserialize_DISPPARAM_ptr(
 	return hres;
     if (alloc)
         disps->rgvarg = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(VARIANT)*disps->cArgs);
-    if (debugout) MESSAGE("D{");
+    if (debugout) TRACE_(olerelay)("D{");
     for (i=0; i< disps->cArgs; i++) {
         TYPEDESC vdesc;
 
@@ -1040,7 +1080,7 @@ deserialize_DISPPARAM_ptr(
 	    buf
 	);
     }
-    if (debugout) MESSAGE("}{");
+    if (debugout) TRACE_(olerelay)("}{");
     hres = xbuf_get(buf, (LPBYTE)&disps->cNamedArgs, sizeof(disps->cNamedArgs));
     if (hres)
 	return hres;
@@ -1060,18 +1100,18 @@ deserialize_DISPPARAM_ptr(
 		(DWORD*)(disps->rgdispidNamedArgs+i),
 		buf
 	    );
-	    if (debugout && i<(disps->cNamedArgs-1)) MESSAGE(",");
+	    if (debugout && i<(disps->cNamedArgs-1)) TRACE_(olerelay)(",");
 	}
     }
-    if (debugout) MESSAGE("}");
+    if (debugout) TRACE_(olerelay)("}");
     return S_OK;
 }
 
 /* Searches function, also in inherited interfaces */
 static HRESULT
 _get_funcdesc(
-    ITypeInfo *tinfo, int iMethod, FUNCDESC **fdesc, BSTR *iname, BSTR *fname
-) {
+    ITypeInfo *tinfo, int iMethod, FUNCDESC **fdesc, BSTR *iname, BSTR *fname)
+{
     int i = 0, j = 0;
     HRESULT hres;
 
@@ -1121,7 +1161,8 @@ _get_funcdesc(
 }
 
 static DWORD
-xCall(LPVOID retptr, int method, TMProxyImpl *tpinfo /*, args */) {
+xCall(LPVOID retptr, int method, TMProxyImpl *tpinfo /*, args */)
+{
     DWORD		*args = ((DWORD*)&tpinfo)+1, *xargs;
     FUNCDESC		*fdesc;
     HRESULT		hres;
@@ -1133,22 +1174,24 @@ xCall(LPVOID retptr, int method, TMProxyImpl *tpinfo /*, args */) {
     BSTR		names[10];
     int			nrofnames;
 
+    EnterCriticalSection(&tpinfo->crit);
+
     hres = _get_funcdesc(tpinfo->tinfo,method,&fdesc,&iname,&fname);
     if (hres) {
 	ERR("Did not find typeinfo/funcdesc entry for method %d!\n",method);
-	return 0;
+        LeaveCriticalSection(&tpinfo->crit);
+	return E_FAIL;
     }
 
-    /*dump_FUNCDESC(fdesc);*/
     if (relaydeb) {
-	TRACE_(olerelay)("->");
+       TRACE_(olerelay)("->");
 	if (iname)
-	    MESSAGE("%s:",debugstr_w(iname));
+	    TRACE_(olerelay)("%s:",relaystr(iname));
 	if (fname)
-	    MESSAGE("%s(%d)",debugstr_w(fname),method);
+	    TRACE_(olerelay)("%s(%d)",relaystr(fname),method);
 	else
-	    MESSAGE("%d",method);
-	MESSAGE("(");
+	    TRACE_(olerelay)("%d",method);
+	TRACE_(olerelay)("(");
 	if (iname) SysFreeString(iname);
 	if (fname) SysFreeString(fname);
     }
@@ -1163,21 +1206,21 @@ xCall(LPVOID retptr, int method, TMProxyImpl *tpinfo /*, args */) {
     buf.iid = IID_IUnknown;
     if (method == 0) {
 	xbuf_add(&buf,(LPBYTE)args[0],sizeof(IID));
-	if (relaydeb) MESSAGE("riid=%s,[out]",debugstr_guid((REFIID)args[0]));
+	if (relaydeb) TRACE_(olerelay)("riid=%s,[out]",debugstr_guid((REFIID)args[0]));
     } else {
 	xargs = args;
 	for (i=0;i<fdesc->cParams;i++) {
 	    ELEMDESC	*elem = fdesc->lprgelemdescParam+i;
 	    BOOL	isserialized = FALSE;
 	    if (relaydeb) {
-		if (i) MESSAGE(",");
+		if (i) TRACE_(olerelay)(",");
 		if (i+1<nrofnames && names[i+1])
-		    MESSAGE("%s=",debugstr_w(names[i+1]));
+		    TRACE_(olerelay)("%s=",relaystr(names[i+1]));
 	    }
 	    /* No need to marshal other data than FIN */
 	    if (!(elem->u.paramdesc.wParamFlags & PARAMFLAG_FIN)) {
 		xargs+=_argsize(elem->tdesc.vt);
-		if (relaydeb) MESSAGE("[out]");
+		if (relaydeb) TRACE_(olerelay)("[out]");
 		continue;
 	    }
 	    if (((i+1)<nrofnames) && !IsBadStringPtrW(names[i+1],1)) {
@@ -1231,24 +1274,26 @@ xCall(LPVOID retptr, int method, TMProxyImpl *tpinfo /*, args */) {
 	    xargs+=_argsize(elem->tdesc.vt);
 	}
     }
-    if (relaydeb) MESSAGE(")");
+    if (relaydeb) TRACE_(olerelay)(")");
     memset(&msg,0,sizeof(msg));
     msg.cbBuffer = buf.curoff;
     msg.iMethod  = method;
     hres = IRpcChannelBuffer_GetBuffer(tpinfo->chanbuf,&msg,&(tpinfo->iid));
     if (hres) {
 	FIXME("RpcChannelBuffer GetBuffer failed, %lx\n",hres);
+        LeaveCriticalSection(&tpinfo->crit);
 	return hres;
     }
     memcpy(msg.Buffer,buf.base,buf.curoff);
-    if (relaydeb) MESSAGE("\n");
+    if (relaydeb) TRACE_(olerelay)("\n");
     hres = IRpcChannelBuffer_SendReceive(tpinfo->chanbuf,&msg,&status);
     if (hres) {
 	FIXME("RpcChannelBuffer SendReceive failed, %lx\n",hres);
+        LeaveCriticalSection(&tpinfo->crit);
 	return hres;
     }
-    relaydeb = TRACE_ON(olerelay);
-    if (relaydeb) MESSAGE(" = %08lx (",status);
+
+    if (relaydeb) TRACE_(olerelay)(" = %08lx (",status);
     if (buf.base)
 	buf.base = HeapReAlloc(GetProcessHeap(),0,buf.base,msg.cbBuffer);
     else
@@ -1258,7 +1303,7 @@ xCall(LPVOID retptr, int method, TMProxyImpl *tpinfo /*, args */) {
     buf.curoff = 0;
     if (method == 0) {
 	_unmarshal_interface(&buf,(REFIID)args[0],(LPUNKNOWN*)args[1]);
-	if (relaydeb) MESSAGE("[in],%p",*((DWORD**)args[1]));
+	if (relaydeb) TRACE_(olerelay)("[in],%p",*((DWORD**)args[1]));
     } else {
 	xargs = args;
 	for (i=0;i<fdesc->cParams;i++) {
@@ -1266,13 +1311,13 @@ xCall(LPVOID retptr, int method, TMProxyImpl *tpinfo /*, args */) {
 	    BOOL	isdeserialized = FALSE;
 
 	    if (relaydeb) {
-		if (i) MESSAGE(",");
-		if (i+1<nrofnames && names[i+1]) MESSAGE("%s=",debugstr_w(names[i+1]));
+		if (i) TRACE_(olerelay)(",");
+		if (i+1<nrofnames && names[i+1]) TRACE_(olerelay)("%s=",relaystr(names[i+1]));
 	    }
 	    /* No need to marshal other data than FOUT I think */
 	    if (!(elem->u.paramdesc.wParamFlags & PARAMFLAG_FOUT)) {
 		xargs += _argsize(elem->tdesc.vt);
-		if (relaydeb) MESSAGE("[in]");
+		if (relaydeb) TRACE_(olerelay)("[in]");
 		continue;
 	    }
 	    if (((i+1)<nrofnames) && !IsBadStringPtrW(names[i+1],1)) {
@@ -1329,16 +1374,19 @@ xCall(LPVOID retptr, int method, TMProxyImpl *tpinfo /*, args */) {
 	    xargs += _argsize(elem->tdesc.vt);
 	}
     }
-    if (relaydeb) MESSAGE(")\n\n");
+    if (relaydeb) TRACE_(olerelay)(")\n");
     HeapFree(GetProcessHeap(),0,buf.base);
+
+    LeaveCriticalSection(&tpinfo->crit);
+
     return status;
 }
 
 static HRESULT WINAPI
 PSFacBuf_CreateProxy(
     LPPSFACTORYBUFFER iface, IUnknown* pUnkOuter, REFIID riid,
-    IRpcProxyBuffer **ppProxy, LPVOID *ppv
-) {
+    IRpcProxyBuffer **ppProxy, LPVOID *ppv)
+{
     HRESULT	hres;
     ITypeInfo	*tinfo;
     int		i, nroffuncs;
@@ -1352,11 +1400,19 @@ PSFacBuf_CreateProxy(
 	return hres;
     }
     nroffuncs = _nroffuncs(tinfo);
-    proxy = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(TMProxyImpl));
+    proxy = CoTaskMemAlloc(sizeof(TMProxyImpl));
     if (!proxy) return E_OUTOFMEMORY;
-    proxy->asmstubs=HeapAlloc(GetProcessHeap(),0,sizeof(TMAsmProxy)*nroffuncs);
 
     assert(sizeof(TMAsmProxy) == 12);
+
+    proxy->asmstubs = VirtualAlloc(NULL, sizeof(TMAsmProxy) * nroffuncs, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    if (!proxy->asmstubs) {
+        ERR("Could not commit pages for proxy thunks\n");
+        CoTaskMemFree(proxy);
+        return E_OUTOFMEMORY;
+    }
+
+    InitializeCriticalSection(&proxy->crit);
 
     proxy->lpvtbl = HeapAlloc(GetProcessHeap(),0,sizeof(LPBYTE)*nroffuncs);
     for (i=0;i<nroffuncs;i++) {
@@ -1406,9 +1462,10 @@ PSFacBuf_CreateProxy(
 	xasm->xcall     -= (DWORD)&(xasm->lret);
 	xasm->lret	= 0xc2;
 	xasm->bytestopop= (nrofargs+2)*4; /* pop args, This, iMethod */
-	proxy->lpvtbl[i] = (DWORD)xasm;
+	proxy->lpvtbl[i] = xasm;
     }
     proxy->lpvtbl2	= &tmproxyvtable;
+    /* 1 reference for the proxy and 1 for the object */
     proxy->ref		= 2;
     proxy->tinfo	= tinfo;
     memcpy(&proxy->iid,riid,sizeof(*riid));
@@ -1418,8 +1475,8 @@ PSFacBuf_CreateProxy(
 }
 
 typedef struct _TMStubImpl {
-    ICOM_VTABLE(IRpcStubBuffer)	*lpvtbl;
-    DWORD			ref;
+    IRpcStubBufferVtbl	*lpvtbl;
+    ULONG			ref;
 
     LPUNKNOWN			pUnk;
     ITypeInfo			*tinfo;
@@ -1427,7 +1484,8 @@ typedef struct _TMStubImpl {
 } TMStubImpl;
 
 static HRESULT WINAPI
-TMStubImpl_QueryInterface(LPRPCSTUBBUFFER iface, REFIID riid, LPVOID *ppv) {
+TMStubImpl_QueryInterface(LPRPCSTUBBUFFER iface, REFIID riid, LPVOID *ppv)
+{
     if (IsEqualIID(riid,&IID_IRpcStubBuffer)||IsEqualIID(riid,&IID_IUnknown)){
 	*ppv = (LPVOID)iface;
 	IRpcStubBuffer_AddRef(iface);
@@ -1438,27 +1496,38 @@ TMStubImpl_QueryInterface(LPRPCSTUBBUFFER iface, REFIID riid, LPVOID *ppv) {
 }
 
 static ULONG WINAPI
-TMStubImpl_AddRef(LPRPCSTUBBUFFER iface) {
-    ICOM_THIS(TMStubImpl,iface);
+TMStubImpl_AddRef(LPRPCSTUBBUFFER iface)
+{
+    TMStubImpl *This = (TMStubImpl *)iface;
+        
+    TRACE("(%p) before %lu\n", This, This->ref);
 
-    This->ref++;
-    return This->ref;
+    return InterlockedIncrement(&This->ref);
 }
 
 static ULONG WINAPI
-TMStubImpl_Release(LPRPCSTUBBUFFER iface) {
-    ICOM_THIS(TMStubImpl,iface);
+TMStubImpl_Release(LPRPCSTUBBUFFER iface)
+{
+    ULONG refs;
+    TMStubImpl *This = (TMStubImpl *)iface;
 
-    This->ref--;
-    if (This->ref)
-	return This->ref;
-    HeapFree(GetProcessHeap(),0,This);
-    return 0;
+    TRACE("(%p) after %lu\n", This, This->ref-1);
+
+    refs = InterlockedDecrement(&This->ref);
+    if (!refs)
+    {
+        IRpcStubBuffer_Disconnect(iface);
+        CoTaskMemFree(This);
+    }
+    return refs;
 }
 
 static HRESULT WINAPI
-TMStubImpl_Connect(LPRPCSTUBBUFFER iface, LPUNKNOWN pUnkServer) {
-    ICOM_THIS(TMStubImpl,iface);
+TMStubImpl_Connect(LPRPCSTUBBUFFER iface, LPUNKNOWN pUnkServer)
+{
+    TMStubImpl *This = (TMStubImpl *)iface;
+
+    TRACE("(%p)->(%p)\n", This, pUnkServer);
 
     IUnknown_AddRef(pUnkServer);
     This->pUnk = pUnkServer;
@@ -1466,8 +1535,11 @@ TMStubImpl_Connect(LPRPCSTUBBUFFER iface, LPUNKNOWN pUnkServer) {
 }
 
 static void WINAPI
-TMStubImpl_Disconnect(LPRPCSTUBBUFFER iface) {
-    ICOM_THIS(TMStubImpl,iface);
+TMStubImpl_Disconnect(LPRPCSTUBBUFFER iface)
+{
+    TMStubImpl *This = (TMStubImpl *)iface;
+
+    TRACE("(%p)->()\n", This);
 
     IUnknown_Release(This->pUnk);
     This->pUnk = NULL;
@@ -1476,11 +1548,11 @@ TMStubImpl_Disconnect(LPRPCSTUBBUFFER iface) {
 
 static HRESULT WINAPI
 TMStubImpl_Invoke(
-    LPRPCSTUBBUFFER iface, RPCOLEMESSAGE* xmsg,IRpcChannelBuffer*rpcchanbuf
-) {
+    LPRPCSTUBBUFFER iface, RPCOLEMESSAGE* xmsg,IRpcChannelBuffer*rpcchanbuf)
+{
     int		i;
     FUNCDESC	*fdesc;
-    ICOM_THIS(TMStubImpl,iface);
+    TMStubImpl *This = (TMStubImpl *)iface;
     HRESULT	hres;
     DWORD	*args, res, *xargs, nrofargs;
     marshal_state	buf;
@@ -1579,7 +1651,7 @@ TMStubImpl_Invoke(
 	    );
 	xargs += _argsize(elem->tdesc.vt);
 	if (hres) {
-	    FIXME("Failed to deserialize param %s, hres %lx\n",debugstr_w(names[i+1]),hres);
+	    FIXME("Failed to deserialize param %s, hres %lx\n",relaystr(names[i+1]),hres);
 	    break;
 	}
     }
@@ -1665,7 +1737,7 @@ TMStubImpl_IsIIDSupported(LPRPCSTUBBUFFER iface, REFIID riid) {
 
 static ULONG WINAPI
 TMStubImpl_CountRefs(LPRPCSTUBBUFFER iface) {
-    ICOM_THIS(TMStubImpl,iface);
+    TMStubImpl *This = (TMStubImpl *)iface;
 
     return This->ref; /*FIXME? */
 }
@@ -1680,8 +1752,7 @@ TMStubImpl_DebugServerRelease(LPRPCSTUBBUFFER iface, LPVOID ppv) {
     return;
 }
 
-ICOM_VTABLE(IRpcStubBuffer) tmstubvtbl = {
-    ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
+IRpcStubBufferVtbl tmstubvtbl = {
     TMStubImpl_QueryInterface,
     TMStubImpl_AddRef,
     TMStubImpl_Release,
@@ -1709,7 +1780,7 @@ PSFacBuf_CreateStub(
 	FIXME("No typeinfo for %s?\n",debugstr_guid(riid));
 	return hres;
     }
-    stub = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(TMStubImpl));
+    stub = CoTaskMemAlloc(sizeof(TMStubImpl));
     if (!stub)
 	return E_OUTOFMEMORY;
     stub->lpvtbl	= &tmstubvtbl;
@@ -1718,13 +1789,13 @@ PSFacBuf_CreateStub(
     memcpy(&(stub->iid),riid,sizeof(*riid));
     hres = IRpcStubBuffer_Connect((LPRPCSTUBBUFFER)stub,pUnkServer);
     *ppStub 		= (LPRPCSTUBBUFFER)stub;
+    TRACE("IRpcStubBuffer: %p\n", stub);
     if (hres)
 	FIXME("Connect to pUnkServer failed?\n");
     return hres;
 }
 
-static ICOM_VTABLE(IPSFactoryBuffer) psfacbufvtbl = {
-    ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
+static IPSFactoryBufferVtbl psfacbufvtbl = {
     PSFacBuf_QueryInterface,
     PSFacBuf_AddRef,
     PSFacBuf_Release,
@@ -1733,7 +1804,7 @@ static ICOM_VTABLE(IPSFactoryBuffer) psfacbufvtbl = {
 };
 
 /* This is the whole PSFactoryBuffer object, just the vtableptr */
-static ICOM_VTABLE(IPSFactoryBuffer) *lppsfac = &psfacbufvtbl;
+static IPSFactoryBufferVtbl *lppsfac = &psfacbufvtbl;
 
 /***********************************************************************
  *           DllGetClassObject [OLE32.63]

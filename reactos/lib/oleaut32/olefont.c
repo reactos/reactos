@@ -24,16 +24,18 @@
 #include <stdarg.h>
 #include <string.h>
 
+#define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
+
 #include "winerror.h"
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
 #include "winuser.h"
 #include "wine/unicode.h"
-#include "oleauto.h"    /* for SysAllocString(....) */
 #include "objbase.h"
+#include "oleauto.h"    /* for SysAllocString(....) */
 #include "ole2.h"
 #include "olectl.h"
 #include "wine/debug.h"
@@ -61,12 +63,12 @@ struct OLEFontImpl
    * The first two are supported by the first vtable, the next two are
    * supported by the second table and the last two have their own.
    */
-  ICOM_VTABLE(IFont)*				lpvtbl1;
-  ICOM_VTABLE(IDispatch)*			lpvtbl2;
-  ICOM_VTABLE(IPersistStream)*			lpvtbl3;
-  ICOM_VTABLE(IConnectionPointContainer)*	lpvtbl4;
-  ICOM_VTABLE(IPersistPropertyBag)*		lpvtbl5;
-  ICOM_VTABLE(IPersistStreamInit)*		lpvtbl6;
+  IFontVtbl*				lpvtbl1;
+  IDispatchVtbl*			lpvtbl2;
+  IPersistStreamVtbl*			lpvtbl3;
+  IConnectionPointContainerVtbl*	lpvtbl4;
+  IPersistPropertyBagVtbl*		lpvtbl5;
+  IPersistStreamInitVtbl*		lpvtbl6;
   /*
    * Reference count for that instance of the class.
    */
@@ -102,7 +104,6 @@ struct OLEFontImpl
  * There is a version to accomodate all of the VTables implemented
  * by this object.
  */
-#define _ICOM_THIS(class,name) class* this = (class*)name
 #define _ICOM_THIS_From_IDispatch(class, name) class* this = (class*)(((char*)name)-sizeof(void*))
 #define _ICOM_THIS_From_IPersistStream(class, name) class* this = (class*)(((char*)name)-2*sizeof(void*))
 #define _ICOM_THIS_From_IConnectionPointContainer(class, name) class* this = (class*)(((char*)name)-3*sizeof(void*))
@@ -218,9 +219,8 @@ static HRESULT WINAPI OLEFontImpl_FindConnectionPoint(
 /*
  * Virtual function tables for the OLEFontImpl class.
  */
-static ICOM_VTABLE(IFont) OLEFontImpl_VTable =
+static IFontVtbl OLEFontImpl_VTable =
 {
-  ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   OLEFontImpl_QueryInterface,
   OLEFontImpl_AddRef,
   OLEFontImpl_Release,
@@ -250,9 +250,8 @@ static ICOM_VTABLE(IFont) OLEFontImpl_VTable =
   OLEFontImpl_SetHdc
 };
 
-static ICOM_VTABLE(IDispatch) OLEFontImpl_IDispatch_VTable =
+static IDispatchVtbl OLEFontImpl_IDispatch_VTable =
 {
-  ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   OLEFontImpl_IDispatch_QueryInterface,
   OLEFontImpl_IDispatch_AddRef,
   OLEFontImpl_IDispatch_Release,
@@ -262,9 +261,8 @@ static ICOM_VTABLE(IDispatch) OLEFontImpl_IDispatch_VTable =
   OLEFontImpl_Invoke
 };
 
-static ICOM_VTABLE(IPersistStream) OLEFontImpl_IPersistStream_VTable =
+static IPersistStreamVtbl OLEFontImpl_IPersistStream_VTable =
 {
-  ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   OLEFontImpl_IPersistStream_QueryInterface,
   OLEFontImpl_IPersistStream_AddRef,
   OLEFontImpl_IPersistStream_Release,
@@ -275,10 +273,9 @@ static ICOM_VTABLE(IPersistStream) OLEFontImpl_IPersistStream_VTable =
   OLEFontImpl_GetSizeMax
 };
 
-static ICOM_VTABLE(IConnectionPointContainer)
+static IConnectionPointContainerVtbl
      OLEFontImpl_IConnectionPointContainer_VTable =
 {
-  ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   OLEFontImpl_IConnectionPointContainer_QueryInterface,
   OLEFontImpl_IConnectionPointContainer_AddRef,
   OLEFontImpl_IConnectionPointContainer_Release,
@@ -286,8 +283,8 @@ static ICOM_VTABLE(IConnectionPointContainer)
   OLEFontImpl_FindConnectionPoint
 };
 
-static ICOM_VTABLE(IPersistPropertyBag) OLEFontImpl_IPersistPropertyBag_VTable;
-static ICOM_VTABLE(IPersistStreamInit) OLEFontImpl_IPersistStreamInit_VTable;
+static IPersistPropertyBagVtbl OLEFontImpl_IPersistPropertyBag_VTable;
+static IPersistStreamInitVtbl OLEFontImpl_IPersistStreamInit_VTable;
 /******************************************************************************
  *		OleCreateFontIndirect	[OLEAUT32.420]
  */
@@ -311,10 +308,10 @@ HRESULT WINAPI OleCreateFontIndirect(
   if (!lpFontDesc) {
     FONTDESC fd;
 
-    WCHAR fname[] = { 'S','y','s','t','e','m',0 };
+    static const WCHAR fname[] = { 'S','y','s','t','e','m',0 };
 
     fd.cbSizeofstruct = sizeof(fd);
-    fd.lpstrName      = fname;
+    fd.lpstrName      = (WCHAR*)fname;
     fd.cySize.s.Lo    = 80000;
     fd.cySize.s.Hi    = 0;
     fd.sWeight 	      = 0;
@@ -476,7 +473,7 @@ HRESULT WINAPI OLEFontImpl_QueryInterface(
   REFIID  riid,
   void**  ppvObject)
 {
-  _ICOM_THIS(OLEFontImpl, iface);
+  OLEFontImpl *this = (OLEFontImpl *)iface;
   TRACE("(%p)->(%s, %p)\n", this, debugstr_guid(riid), ppvObject);
 
   /*
@@ -530,11 +527,9 @@ HRESULT WINAPI OLEFontImpl_QueryInterface(
 ULONG WINAPI OLEFontImpl_AddRef(
   IFont* iface)
 {
-  _ICOM_THIS(OLEFontImpl, iface);
+  OLEFontImpl *this = (OLEFontImpl *)iface;
   TRACE("(%p)->(ref=%ld)\n", this, this->ref);
-  this->ref++;
-
-  return this->ref;
+  return InterlockedIncrement(&this->ref);
 }
 
 /************************************************************************
@@ -545,25 +540,21 @@ ULONG WINAPI OLEFontImpl_AddRef(
 ULONG WINAPI OLEFontImpl_Release(
       IFont* iface)
 {
-  _ICOM_THIS(OLEFontImpl, iface);
+  OLEFontImpl *this = (OLEFontImpl *)iface;
+  ULONG ret;
   TRACE("(%p)->(ref=%ld)\n", this, this->ref);
 
   /*
    * Decrease the reference count on this object.
    */
-  this->ref--;
+  ret = InterlockedDecrement(&this->ref);
 
   /*
    * If the reference count goes down to 0, perform suicide.
    */
-  if (this->ref==0)
-  {
-    OLEFontImpl_Destroy(this);
+  if (ret==0) OLEFontImpl_Destroy(this);
 
-    return 0;
-  }
-
-  return this->ref;
+  return ret;
 }
 
 /************************************************************************
@@ -575,7 +566,7 @@ static HRESULT WINAPI OLEFontImpl_get_Name(
   IFont*  iface,
   BSTR* pname)
 {
-  _ICOM_THIS(OLEFontImpl, iface);
+  OLEFontImpl *this = (OLEFontImpl *)iface;
   TRACE("(%p)->(%p)\n", this, pname);
   /*
    * Sanity check.
@@ -600,7 +591,7 @@ static HRESULT WINAPI OLEFontImpl_put_Name(
   IFont* iface,
   BSTR name)
 {
-  _ICOM_THIS(OLEFontImpl, iface);
+  OLEFontImpl *this = (OLEFontImpl *)iface;
   TRACE("(%p)->(%p)\n", this, name);
 
   if (this->description.lpstrName==0)
@@ -635,7 +626,7 @@ static HRESULT WINAPI OLEFontImpl_get_Size(
   IFont* iface,
   CY*    psize)
 {
-  _ICOM_THIS(OLEFontImpl, iface);
+  OLEFontImpl *this = (OLEFontImpl *)iface;
   TRACE("(%p)->(%p)\n", this, psize);
 
   /*
@@ -659,7 +650,7 @@ static HRESULT WINAPI OLEFontImpl_put_Size(
   IFont* iface,
   CY     size)
 {
-  _ICOM_THIS(OLEFontImpl, iface);
+  OLEFontImpl *this = (OLEFontImpl *)iface;
   TRACE("(%p)->(%ld)\n", this, size.s.Lo);
   this->description.cySize.s.Hi = 0;
   this->description.cySize.s.Lo = size.s.Lo;
@@ -677,7 +668,7 @@ static HRESULT WINAPI OLEFontImpl_get_Bold(
   IFont*  iface,
   BOOL* pbold)
 {
-  _ICOM_THIS(OLEFontImpl, iface);
+  OLEFontImpl *this = (OLEFontImpl *)iface;
   TRACE("(%p)->(%p)\n", this, pbold);
   /*
    * Sanity check
@@ -699,7 +690,7 @@ static HRESULT WINAPI OLEFontImpl_put_Bold(
   IFont* iface,
   BOOL bold)
 {
-  _ICOM_THIS(OLEFontImpl, iface);
+  OLEFontImpl *this = (OLEFontImpl *)iface;
   TRACE("(%p)->(%d)\n", this, bold);
   this->description.sWeight = bold ? FW_BOLD : FW_NORMAL;
   OLEFont_SendNotify(this, DISPID_FONT_BOLD);
@@ -716,7 +707,7 @@ static HRESULT WINAPI OLEFontImpl_get_Italic(
   IFont*  iface,
   BOOL* pitalic)
 {
-  _ICOM_THIS(OLEFontImpl, iface);
+  OLEFontImpl *this = (OLEFontImpl *)iface;
   TRACE("(%p)->(%p)\n", this, pitalic);
   /*
    * Sanity check
@@ -738,7 +729,7 @@ static HRESULT WINAPI OLEFontImpl_put_Italic(
   IFont* iface,
   BOOL italic)
 {
-  _ICOM_THIS(OLEFontImpl, iface);
+  OLEFontImpl *this = (OLEFontImpl *)iface;
   TRACE("(%p)->(%d)\n", this, italic);
 
   this->description.fItalic = italic;
@@ -756,7 +747,7 @@ static HRESULT WINAPI OLEFontImpl_get_Underline(
   IFont*  iface,
   BOOL* punderline)
 {
-  _ICOM_THIS(OLEFontImpl, iface);
+  OLEFontImpl *this = (OLEFontImpl *)iface;
   TRACE("(%p)->(%p)\n", this, punderline);
 
   /*
@@ -779,7 +770,7 @@ static HRESULT WINAPI OLEFontImpl_put_Underline(
   IFont* iface,
   BOOL underline)
 {
-  _ICOM_THIS(OLEFontImpl, iface);
+  OLEFontImpl *this = (OLEFontImpl *)iface;
   TRACE("(%p)->(%d)\n", this, underline);
 
   this->description.fUnderline = underline;
@@ -797,7 +788,7 @@ static HRESULT WINAPI OLEFontImpl_get_Strikethrough(
   IFont*  iface,
   BOOL* pstrikethrough)
 {
-  _ICOM_THIS(OLEFontImpl, iface);
+  OLEFontImpl *this = (OLEFontImpl *)iface;
   TRACE("(%p)->(%p)\n", this, pstrikethrough);
 
   /*
@@ -820,7 +811,7 @@ static HRESULT WINAPI OLEFontImpl_put_Strikethrough(
  IFont* iface,
  BOOL strikethrough)
 {
-  _ICOM_THIS(OLEFontImpl, iface);
+  OLEFontImpl *this = (OLEFontImpl *)iface;
   TRACE("(%p)->(%d)\n", this, strikethrough);
 
   this->description.fStrikethrough = strikethrough;
@@ -838,7 +829,7 @@ static HRESULT WINAPI OLEFontImpl_get_Weight(
   IFont* iface,
   short* pweight)
 {
-  _ICOM_THIS(OLEFontImpl, iface);
+  OLEFontImpl *this = (OLEFontImpl *)iface;
   TRACE("(%p)->(%p)\n", this, pweight);
 
   /*
@@ -861,7 +852,7 @@ static HRESULT WINAPI OLEFontImpl_put_Weight(
   IFont* iface,
   short  weight)
 {
-  _ICOM_THIS(OLEFontImpl, iface);
+  OLEFontImpl *this = (OLEFontImpl *)iface;
   TRACE("(%p)->(%d)\n", this, weight);
 
   this->description.sWeight = weight;
@@ -879,7 +870,7 @@ static HRESULT WINAPI OLEFontImpl_get_Charset(
   IFont* iface,
   short* pcharset)
 {
-  _ICOM_THIS(OLEFontImpl, iface);
+  OLEFontImpl *this = (OLEFontImpl *)iface;
   TRACE("(%p)->(%p)\n", this, pcharset);
 
   /*
@@ -902,7 +893,7 @@ static HRESULT WINAPI OLEFontImpl_put_Charset(
   IFont* iface,
   short charset)
 {
-  _ICOM_THIS(OLEFontImpl, iface);
+  OLEFontImpl *this = (OLEFontImpl *)iface;
   TRACE("(%p)->(%d)\n", this, charset);
 
   this->description.sCharset = charset;
@@ -920,7 +911,7 @@ static HRESULT WINAPI OLEFontImpl_get_hFont(
   IFont*   iface,
   HFONT* phfont)
 {
-  _ICOM_THIS(OLEFontImpl, iface);
+  OLEFontImpl *this = (OLEFontImpl *)iface;
   TRACE("(%p)->(%p)\n", this, phfont);
   if (phfont==NULL)
     return E_POINTER;
@@ -980,7 +971,7 @@ static HRESULT WINAPI OLEFontImpl_Clone(
   LOGFONTW logFont;
   INT      fontHeight;
   CY       cySize;
-  _ICOM_THIS(OLEFontImpl, iface);
+  OLEFontImpl *this = (OLEFontImpl *)iface;
   TRACE("(%p)->(%p)\n", this, ppfont);
 
   if (ppfont == NULL)
@@ -1060,7 +1051,7 @@ static HRESULT WINAPI OLEFontImpl_SetRatio(
   long   cyLogical,
   long   cyHimetric)
 {
-  _ICOM_THIS(OLEFontImpl, iface);
+  OLEFontImpl *this = (OLEFontImpl *)iface;
   TRACE("(%p)->(%ld, %ld)\n", this, cyLogical, cyHimetric);
 
   this->cyLogical  = cyLogical;
@@ -1091,7 +1082,7 @@ static HRESULT WINAPI OLEFontImpl_AddRefHfont(
   IFont*  iface,
   HFONT hfont)
 {
-  _ICOM_THIS(OLEFontImpl, iface);
+  OLEFontImpl *this = (OLEFontImpl *)iface;
   TRACE("(%p)->(%p) (lock=%ld)\n", this, hfont, this->fontLock);
 
   if ( (hfont == 0) ||
@@ -1112,7 +1103,7 @@ static HRESULT WINAPI OLEFontImpl_ReleaseHfont(
   IFont*  iface,
   HFONT hfont)
 {
-  _ICOM_THIS(OLEFontImpl, iface);
+  OLEFontImpl *this = (OLEFontImpl *)iface;
   TRACE("(%p)->(%p) (lock=%ld)\n", this, hfont, this->fontLock);
 
   if ( (hfont == 0) ||
@@ -1142,7 +1133,7 @@ static HRESULT WINAPI OLEFontImpl_SetHdc(
   IFont* iface,
   HDC  hdc)
 {
-  _ICOM_THIS(OLEFontImpl, iface);
+  OLEFontImpl *this = (OLEFontImpl *)iface;
   FIXME("(%p)->(%p): Stub\n", this, hdc);
   return E_NOTIMPL;
 }
@@ -1214,7 +1205,7 @@ static HRESULT WINAPI OLEFontImpl_GetTypeInfo(
   LCID        lcid,
   ITypeInfo** ppTInfo)
 {
-  WCHAR stdole32tlb[] = {'s','t','d','o','l','e','3','2','.','t','l','b',0};
+  static const WCHAR stdole32tlb[] = {'s','t','d','o','l','e','3','2','.','t','l','b',0};
   ITypeLib *tl;
   HRESULT hres;
 
@@ -1841,8 +1832,132 @@ static HRESULT WINAPI OLEFontImpl_IPersistPropertyBag_InitNew(
 static HRESULT WINAPI OLEFontImpl_IPersistPropertyBag_Load(
    IPersistPropertyBag *iface, IPropertyBag* pPropBag, IErrorLog* pErrorLog
 ) {
-  FIXME("(%p,%p,%p), stub!\n", iface, pPropBag, pErrorLog);
-  return E_FAIL;
+/* (from Visual Basic 6 property bag)
+         Name            =   "MS Sans Serif"
+         Size            =   13.8
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+*/
+    static const WCHAR sAttrName[] = {'N','a','m','e',0};
+    static const WCHAR sAttrSize[] = {'S','i','z','e',0};
+    static const WCHAR sAttrCharset[] = {'C','h','a','r','s','e','t',0};
+    static const WCHAR sAttrWeight[] = {'W','e','i','g','h','t',0};
+    static const WCHAR sAttrUnderline[] = {'U','n','d','e','r','l','i','n','e',0};
+    static const WCHAR sAttrItalic[] = {'I','t','a','l','i','c',0};
+    static const WCHAR sAttrStrikethrough[] = {'S','t','r','i','k','e','t','h','r','o','u','g','h',0};
+    VARIANT rawAttr;
+    VARIANT valueAttr;
+    HRESULT iRes = S_OK;
+    _ICOM_THIS_From_IPersistPropertyBag(IFont, iface);
+
+    VariantInit(&rawAttr);
+    VariantInit(&valueAttr);
+
+    if (iRes == S_OK) {
+        iRes = IPropertyBag_Read(pPropBag, sAttrName, &rawAttr, pErrorLog);
+        if (iRes == S_OK)
+        {
+            iRes = VariantChangeType(&rawAttr, &valueAttr, 0, VT_BSTR);
+            if (iRes == S_OK)
+                iRes = IFont_put_Name(this, V_BSTR(&valueAttr));
+        }
+        else if (iRes == E_INVALIDARG)
+            iRes = S_OK;
+        VariantClear(&rawAttr);
+        VariantClear(&valueAttr);
+    }
+
+    if (iRes == S_OK) {
+        iRes = IPropertyBag_Read(pPropBag, sAttrSize, &rawAttr, pErrorLog);
+        if (iRes == S_OK)
+        {
+            iRes = VariantChangeType(&rawAttr, &valueAttr, 0, VT_CY);
+            if (iRes == S_OK)
+                iRes = IFont_put_Size(this, V_CY(&valueAttr));
+        }
+        else if (iRes == E_INVALIDARG)
+            iRes = S_OK;
+        VariantClear(&rawAttr);
+        VariantClear(&valueAttr);
+    }
+
+    if (iRes == S_OK) {
+        iRes = IPropertyBag_Read(pPropBag, sAttrCharset, &rawAttr, pErrorLog);
+        if (iRes == S_OK)
+        {
+            iRes = VariantChangeType(&rawAttr, &valueAttr, 0, VT_I2);
+            if (iRes == S_OK)
+                iRes = IFont_put_Charset(this, V_I2(&valueAttr));
+        }
+        else if (iRes == E_INVALIDARG)
+            iRes = S_OK;
+        VariantClear(&rawAttr);
+        VariantClear(&valueAttr);
+    }
+
+    if (iRes == S_OK) {
+        iRes = IPropertyBag_Read(pPropBag, sAttrWeight, &rawAttr, pErrorLog);
+        if (iRes == S_OK)
+        {
+            iRes = VariantChangeType(&rawAttr, &valueAttr, 0, VT_I2);
+            if (iRes == S_OK)
+                iRes = IFont_put_Weight(this, V_I2(&valueAttr));
+        }
+        else if (iRes == E_INVALIDARG)
+            iRes = S_OK;
+        VariantClear(&rawAttr);
+        VariantClear(&valueAttr);
+
+    }
+
+    if (iRes == S_OK) {
+        iRes = IPropertyBag_Read(pPropBag, sAttrUnderline, &rawAttr, pErrorLog);
+        if (iRes == S_OK)
+        {
+            iRes = VariantChangeType(&rawAttr, &valueAttr, 0, VT_BOOL);
+            if (iRes == S_OK)
+                iRes = IFont_put_Underline(this, V_BOOL(&valueAttr));
+        }
+        else if (iRes == E_INVALIDARG)
+            iRes = S_OK;
+        VariantClear(&rawAttr);
+        VariantClear(&valueAttr);
+    }
+
+    if (iRes == S_OK) {
+        iRes = IPropertyBag_Read(pPropBag, sAttrItalic, &rawAttr, pErrorLog);
+        if (iRes == S_OK)
+        {
+            iRes = VariantChangeType(&rawAttr, &valueAttr, 0, VT_BOOL);
+            if (iRes == S_OK)
+                iRes = IFont_put_Italic(this, V_BOOL(&valueAttr));
+        }
+        else if (iRes == E_INVALIDARG)
+            iRes = S_OK;
+        VariantClear(&rawAttr);
+        VariantClear(&valueAttr);
+    }
+
+    if (iRes == S_OK) {
+        iRes = IPropertyBag_Read(pPropBag, sAttrStrikethrough, &rawAttr, pErrorLog);
+        if (iRes == S_OK)
+        {
+            iRes = VariantChangeType(&rawAttr, &valueAttr, 0, VT_BOOL);
+            if (iRes == S_OK)
+                IFont_put_Strikethrough(this, V_BOOL(&valueAttr));
+        }
+        else if (iRes == E_INVALIDARG)
+            iRes = S_OK;
+        VariantClear(&rawAttr);
+        VariantClear(&valueAttr);
+    }
+
+    if (FAILED(iRes))
+        WARN("-- 0x%08lx\n", iRes);
+    return iRes;
 }
 
 static HRESULT WINAPI OLEFontImpl_IPersistPropertyBag_Save(
@@ -1853,9 +1968,8 @@ static HRESULT WINAPI OLEFontImpl_IPersistPropertyBag_Save(
   return E_FAIL;
 }
 
-static ICOM_VTABLE(IPersistPropertyBag) OLEFontImpl_IPersistPropertyBag_VTable = 
+static IPersistPropertyBagVtbl OLEFontImpl_IPersistPropertyBag_VTable = 
 {
-  ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   OLEFontImpl_IPersistPropertyBag_QueryInterface,
   OLEFontImpl_IPersistPropertyBag_AddRef,
   OLEFontImpl_IPersistPropertyBag_Release,
@@ -1932,9 +2046,8 @@ static HRESULT WINAPI OLEFontImpl_IPersistStreamInit_InitNew(
   return S_OK;
 }
 
-static ICOM_VTABLE(IPersistStreamInit) OLEFontImpl_IPersistStreamInit_VTable = 
+static IPersistStreamInitVtbl OLEFontImpl_IPersistStreamInit_VTable = 
 {
-  ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   OLEFontImpl_IPersistStreamInit_QueryInterface,
   OLEFontImpl_IPersistStreamInit_AddRef,
   OLEFontImpl_IPersistStreamInit_Release,
@@ -1953,13 +2066,13 @@ static ICOM_VTABLE(IPersistStreamInit) OLEFontImpl_IPersistStreamInit_VTable =
 typedef struct
 {
     /* IUnknown fields */
-    ICOM_VFIELD(IClassFactory);
+    IClassFactoryVtbl          *lpVtbl;
     DWORD                       ref;
 } IClassFactoryImpl;
 
 static HRESULT WINAPI
 SFCF_QueryInterface(LPCLASSFACTORY iface,REFIID riid,LPVOID *ppobj) {
-	ICOM_THIS(IClassFactoryImpl,iface);
+	IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
 
 	FIXME("(%p)->(%s,%p),stub!\n",This,debugstr_guid(riid),ppobj);
 	return E_NOINTERFACE;
@@ -1967,14 +2080,14 @@ SFCF_QueryInterface(LPCLASSFACTORY iface,REFIID riid,LPVOID *ppobj) {
 
 static ULONG WINAPI
 SFCF_AddRef(LPCLASSFACTORY iface) {
-	ICOM_THIS(IClassFactoryImpl,iface);
-	return ++(This->ref);
+	IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
+	return InterlockedIncrement(&This->ref);
 }
 
 static ULONG WINAPI SFCF_Release(LPCLASSFACTORY iface) {
-	ICOM_THIS(IClassFactoryImpl,iface);
+	IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
 	/* static class, won't be  freed */
-	return --(This->ref);
+	return InterlockedDecrement(&This->ref);
 }
 
 static HRESULT WINAPI SFCF_CreateInstance(
@@ -1985,13 +2098,12 @@ static HRESULT WINAPI SFCF_CreateInstance(
 }
 
 static HRESULT WINAPI SFCF_LockServer(LPCLASSFACTORY iface,BOOL dolock) {
-	ICOM_THIS(IClassFactoryImpl,iface);
+	IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
 	FIXME("(%p)->(%d),stub!\n",This,dolock);
 	return S_OK;
 }
 
-static ICOM_VTABLE(IClassFactory) SFCF_Vtbl = {
-	ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
+static IClassFactoryVtbl SFCF_Vtbl = {
 	SFCF_QueryInterface,
 	SFCF_AddRef,
 	SFCF_Release,

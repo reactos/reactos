@@ -76,9 +76,9 @@ typedef struct tagMSFT_Header {
         INT   helpfile;         /* position of helpfile in stringtable */
 /*0x40*/INT   CustomDataOffset; /* if -1 no custom data, else it is offset */
                                 /* in customer data/guid offset table */
-        INT   res44;            /* unknown always: 0x20 */
-        INT   res48;            /* unknown always: 0x80 */
-        INT   dispatchpos;      /* gets a value (1+n*0x0c) with Idispatch interfaces */
+        INT   res44;            /* unknown always: 0x20 (guid hash size?) */
+        INT   res48;            /* unknown always: 0x80 (name hash size?) */
+        INT   dispatchpos;      /* HREFTYPE to IDispatch, or -1 if no IDispatch */
 /*0x50*/INT   res50;            /* is zero becomes one when an interface is derived */
 } MSFT_Header;
 
@@ -172,11 +172,11 @@ typedef struct {
     INT   DataType;     /* data type of the memeber, eg return of function */
     INT   Flags;        /* something to do with attribute flags (LOWORD) */
 #ifdef WORDS_BIGENDIAN
-    INT16 res3;         /* some offset into dunno what */
+    INT16 funcdescsize; /* size of reconstituted FUNCDESC and related structs */
     INT16 VtableOffset; /* offset in vtable */
 #else
     INT16 VtableOffset; /* offset in vtable */
-    INT16 res3;         /* some offset into dunno what */
+    INT16 funcdescsize; /* size of reconstituted FUNCDESC and related structs */
 #endif
     INT   FKCCIC;       /* bit string with the following  */
                         /* meaning (bit 0 is the msb): */
@@ -226,11 +226,11 @@ typedef struct {
     INT   DataType;     /* data type of the variable */
     INT   Flags;        /* VarFlags (LOWORD) */
 #ifdef WORDS_BIGENDIAN
-    INT16 res3;         /* some offset into dunno what */
+    INT16 vardescsize;  /* size of reconstituted VARDESC and related structs */
     INT16 VarKind;      /* VarKind */
 #else
     INT16 VarKind;      /* VarKind */
-    INT16 res3;         /* some offset into dunno what */
+    INT16 vardescsize;  /* size of reconstituted VARDESC and related structs */
 #endif
     INT   OffsValue;    /* value of the variable or the offset  */
                         /* in the data structure */
@@ -258,17 +258,23 @@ typedef struct {
 /* this is how a guid is stored */
 typedef struct {
     GUID guid;
-    INT   unk10;        /* differntiate with libid, classid etc? */
-                        /* it's -2 for a libary */
-                        /* it's 0 for an interface */
-    INT   unk14;        /* always? -1 */
+    INT   hreftype;     /* -2 for the typelib guid, typeinfo offset
+			   for typeinfo guid, low two bits are 01 if
+			   this is an imported typeinfo, low two bits
+			   are 10 if this is an imported typelib (used
+			   by imported typeinfos) */
+    INT   next_hash;    /* offset to next guid in the hash bucket */
 } MSFT_GuidEntry;
 /* some data preceding entries in the name table */
 typedef struct {
-    INT   unk00;        /* sometimes -1 (lib, parameter) ,
-                           sometimes 0 (interface, func) */
-    INT   unk10;        /* sometimes -1 (lib) , sometimes 0 (interface, func),
-                           sometimes 0x10 (par) */
+    INT   hreftype;     /* is -1 if name is for neither a typeinfo,
+			   a variable, or a function (that is, name
+			   is for a typelib or a function parameter).
+			   otherwise is the offset of the first
+			   typeinfo that this name refers to (either
+			   to the typeinfo itself or to a member of
+			   the typeinfo */
+    INT   next_hash;    /* offset to next name in the hash bucket */
     INT   namelen;      /* only lower 8 bits are valid,
 			   lower-middle 8 bits are unknown (flags?),
 			   upper 16 bits are hash code */

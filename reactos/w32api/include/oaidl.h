@@ -424,7 +424,8 @@ typedef enum tagTYPEFLAGS {
 	TYPEFLAG_FDUAL=64,TYPEFLAG_FNONEXTENSIBLE=128,
 	TYPEFLAG_FOLEAUTOMATION=256,TYPEFLAG_FRESTRICTED=512,
 	TYPEFLAG_FAGGREGATABLE=1024,TYPEFLAG_FREPLACEABLE=2048,
-	TYPEFLAG_FDISPATCHABLE=4096,TYPEFLAG_FREVERSEBIND=8192
+	TYPEFLAG_FDISPATCHABLE=4096,TYPEFLAG_FREVERSEBIND=8192,
+	TYPEFLAG_FPROXY=16384
 } TYPEFLAGS;
 typedef enum tagFUNCFLAGS {
 	FUNCFLAG_FRESTRICTED=1,FUNCFLAG_FSOURCE=2,FUNCFLAG_FBINDABLE=4,
@@ -502,6 +503,16 @@ DECLARE_INTERFACE_(IEnumVARIANT,IUnknown)
 };
 #undef INTERFACE
 
+#ifdef COBJMACROS
+#define IEnumVARIANT_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IEnumVARIANT_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define IEnumVARIANT_Release(p) (p)->lpVtbl->Release(p)
+#define IEnumVARIANT_Next(p,a,b,c) (p)->lpVtbl->Next(p,a,b,c)
+#define IEnumVARIANT_Skip(p,a) (p)->lpVtbl->Skip(p,a)
+#define IEnumVARIANT_Reset(p) (p)->lpVtbl->Reset(p)
+#define IEnumVARIANT_Clone(p,a) (p)->lpVtbl->Clone(p,a)
+#endif
+
 #define INTERFACE ITypeComp
 DECLARE_INTERFACE_(ITypeComp,IUnknown)
 {
@@ -512,6 +523,14 @@ DECLARE_INTERFACE_(ITypeComp,IUnknown)
 	STDMETHOD(BindType)(THIS_ LPOLESTR,ULONG,LPTYPEINFO*,LPTYPECOMP*) PURE;
 };
 #undef INTERFACE
+
+#ifdef COBJMACROS
+#define ITypeComp_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define ITypeComp_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define ITypeComp_Release(p) (p)->lpVtbl->Release(p)
+#define ITypeComp_Bind(p,a,b,c,d,e,f) (p)->lpVtbl->Bind(p,a,b,c,d,e,f)
+#define ITypeComp_BindType(p,a,b,c,d) (p)->lpVtbl->BindType(p,a,b,c,d)
+#endif
 
 #define INTERFACE ITypeInfo
 DECLARE_INTERFACE_(ITypeInfo,IUnknown)
@@ -609,6 +628,46 @@ DECLARE_INTERFACE_(ITypeInfo2,ITypeInfo)
 };
 #undef INTERFACE
 
+#ifdef COBJMACROS
+#define ITypeInfo2_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define ITypeInfo2_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define ITypeInfo2_Release(p) (p)->lpVtbl->Release(p)
+#define ITypeInfo2_GetTypeAttr(p,a) (p)->lpVtbl->GetTypeAttr(p,a)
+#define ITypeInfo2_GetTypeComp(p,a) (p)->lpVtbl->GetTypeComp(p,a)
+#define ITypeInfo2_GetFuncDesc(p,a,b) (p)->lpVtbl->GetFuncDesc(p,a,b)
+#define ITypeInfo2_GetVarDesc(p,a,b) (p)->lpVtbl->GetVarDesc(p,a,b)
+#define ITypeInfo2_GetNames(p,a,b,c,d) (p)->lpVtbl->GetNames(p,a,b,c,d)
+#define ITypeInfo2_GetRefTypeOfImplType(p,a,b) (p)->lpVtbl->GetRefTypeOfImplType(p,a,b)
+#define ITypeInfo2_GetImplTypeFlags(p,a,b) (p)->lpVtbl->GetImplTypeFlags(p,a,b)
+#define ITypeInfo2_GetIDsOfNames(p,a,b,c) (p)->lpVtbl->GetIDsOfNames(p,a,b,c)
+#define ITypeInfo2_Invoke(p,a,b,c,d,e,f,g) (p)->lpVtbl->Invoke(p,a,b,c,d,e,f,g)
+#define ITypeInfo2_GetDocumentation(p,a,b,c,d,e) (p)->lpVtbl->GetDocumentation(p,a,b,c,d,e)
+#define ITypeInfo2_GetDllEntry(p,a,b,c,d,e) (p)->lpVtbl->GetDllEntry(p,a,b,c,d,e)
+#define ITypeInfo2_GetRefTypeInfo(p,a,b) (p)->lpVtbl->GetRefTypeInfo(p,a,b)
+#define ITypeInfo2_AddressOfMember(p,a,b,c) (p)->lpVtbl->AddressOfMember(p,a,b,c)
+#define ITypeInfo2_CreateInstance(p,a,b,c) (p)->lpVtbl->CreateInstance(p,a,b,c)
+#define ITypeInfo2_GetMops(p,a,b) (p)->lpVtbl->GetMops(p,a,b)
+#define ITypeInfo2_GetContainingTypeLib(p,a,b) (p)->lpVtbl->GetContainingTypeLib(p,a,b)
+#define ITypeInfo2_ReleaseTypeAttr(p,a) (p)->lpVtbl->ReleaseTypeAttr(p,a)
+#define ITypeInfo2_ReleaseFuncDesc(p,a) (p)->lpVtbl->ReleaseFuncDesc(p,a)
+#define ITypeInfo2_ReleaseVarDesc(p,a) (p)->lpVtbl->ReleaseVarDesc(p,a)
+#define ITypeInfo2_GetTypeKind(p,a) (p)->lpVtbl->GetTypeKind(p,a)
+#define ITypeInfo2_GetTypeFlags(p,a) (p)->lpVtbl->GetTypeFlags(p,a)
+#define ITypeInfo2_GetFuncIndexOfMemId(p,a,b,c) (p)->lpVtbl->GetFuncIndexOfMemId(p,a,b,c)
+#define ITypeInfo2_GetVarIndexOfMemId(p,a,b) (p)->lpVtbl->GetVarIndexOfMemId(p,a,b)
+#define ITypeInfo2_GetCustData(p,a,b) (p)->lpVtbl->GetCustData(p,a,b)
+#define ITypeInfo2_GetFuncCustData(p,a,b,c) (p)->lpVtbl->GetFuncCustData(p,a,b,c)
+#define ITypeInfo2_GetParamCustData(p,a,b,c,d) (p)->lpVtbl->GetParamCustData(p,a,b,c,d)
+#define ITypeInfo2_GetVarCustData(p,a,b,c) (p)->lpVtbl->GetVarCustData(p,a,b,c)
+#define ITypeInfo2_GetImplTypeCustData(p,a,b,c) (p)->lpVtbl->GetImplTypeCustData(p,a,b,c)
+#define ITypeInfo2_GetDocumentation2(p,a,b,c,d,e) (p)->lpVtbl->GetDocumentation2(p,a,b,c,d,e)
+#define ITypeInfo2_GetAllCustData(p,a) (p)->lpVtbl->GetAllCustData(p,a)
+#define ITypeInfo2_GetAllFuncCustData(p,a,b) (p)->lpVtbl->GetAllFuncCustData(p,a,b)
+#define ITypeInfo2_GetAllParamCustData(p,a,b,c) (p)->lpVtbl->GetAllParamCustData(p,a,b,c)
+#define ITypeInfo2_GetAllVarCustData(p,a,b) (p)->lpVtbl->GetAllVarCustData(p,a,b)
+#define ITypeInfo2_GetAllImplTypeCustData(p,a,b) (p)->lpVtbl->GetAllImplTypeCustData(p,a,b)
+#endif
+
 #define INTERFACE ITypeLib
 DECLARE_INTERFACE_(ITypeLib,IUnknown)
 {
@@ -620,13 +679,29 @@ DECLARE_INTERFACE_(ITypeLib,IUnknown)
 	STDMETHOD(GetTypeInfoType)(THIS_ UINT,TYPEKIND*) PURE;
 	STDMETHOD(GetTypeInfoOfGuid)(THIS_ REFGUID,ITypeInfo**) PURE;
 	STDMETHOD(GetLibAttr)(THIS_ TLIBATTR**) PURE;
-	STDMETHOD(GetTypeComp)(THIS_ ITypeComp*) PURE;
+	STDMETHOD(GetTypeComp)(THIS_ LPTYPECOMP*) PURE;
 	STDMETHOD(GetDocumentation)(THIS_ INT,BSTR*,BSTR*,DWORD*,BSTR*) PURE;
 	STDMETHOD(IsName)(THIS_ LPOLESTR,ULONG,BOOL*) PURE;
 	STDMETHOD(FindName)(THIS_ LPOLESTR,ULONG,ITypeInfo**,MEMBERID*,USHORT*) PURE;
 	STDMETHOD_(void,ReleaseTLibAttr)(THIS_ TLIBATTR*) PURE;
 };
 #undef INTERFACE
+
+#ifdef COBJMACROS
+#define ITypeLib_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define ITypeLib_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define ITypeLib_Release(p) (p)->lpVtbl->Release(p)
+#define ITypeLib_GetTypeInfoCount(p) (p)->lpVtbl->GetTypeInfoCount(p)
+#define ITypeLib_GetTypeInfo(p,a,b) (p)->lpVtbl->GetTypeInfo(p,a,b)
+#define ITypeLib_GetTypeInfoType(p,a,b) (p)->lpVtbl->GetTypeInfoType(p,a,b)
+#define ITypeLib_GetTypeInfoOfGuid(p,a,b) (p)->lpVtbl->GetTypeInfoOfGuid(p,a,b)
+#define ITypeLib_GetLibAttr(p,a) (p)->lpVtbl->GetLibAttr(p,a)
+#define ITypeLib_GetTypeComp(p,a) (p)->lpVtbl->GetTypeComp(p,a)
+#define ITypeLib_GetDocumentation(p,a,b,c,d,e) (p)->lpVtbl->GetDocumentation(p,a,b,c,d,e)
+#define ITypeLib_IsName(p,a,b,c) (p)->lpVtbl->IsName(p,a,b,c)
+#define ITypeLib_FindName(p,a,b,c,d,e) (p)->lpVtbl->FindName(p,a,b,c,d,e)
+#define ITypeLib_ReleaseTLibAttr(p,a) (p)->lpVtbl->ReleaseTLibAttr(p,a)
+#endif
 
 #define INTERFACE ITypeLib2
 DECLARE_INTERFACE_(ITypeLib2,ITypeLib)
@@ -639,7 +714,7 @@ DECLARE_INTERFACE_(ITypeLib2,ITypeLib)
 	STDMETHOD(GetTypeInfoType)(THIS_ UINT,TYPEKIND*) PURE;
 	STDMETHOD(GetTypeInfoOfGuid)(THIS_ REFGUID,ITypeInfo**) PURE;
 	STDMETHOD(GetLibAttr)(THIS_ TLIBATTR**) PURE;
-	STDMETHOD(GetTypeComp)(THIS_ ITypeComp*) PURE;
+	STDMETHOD(GetTypeComp)(THIS_ LPTYPECOMP*) PURE;
 	STDMETHOD(GetDocumentation)(THIS_ INT,BSTR*,BSTR*,DWORD*,BSTR*) PURE;
 	STDMETHOD(IsName)(THIS_ LPOLESTR,ULONG,BOOL*) PURE;
 	STDMETHOD(FindName)(THIS_ LPOLESTR,ULONG,ITypeInfo**,MEMBERID*,USHORT*) PURE;
@@ -650,6 +725,274 @@ DECLARE_INTERFACE_(ITypeLib2,ITypeLib)
 	STDMETHOD(GetAllCustData)(THIS_ CUSTDATA*) PURE;
 };
 #undef INTERFACE
+
+#ifdef COBJMACROS
+#define ITypeLib2_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define ITypeLib2_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define ITypeLib2_Release(p) (p)->lpVtbl->Release(p)
+#define ITypeLib2_GetTypeInfoCount(p) (p)->lpVtbl->GetTypeInfoCount(p)
+#define ITypeLib2_GetTypeInfo(p,a,b) (p)->lpVtbl->GetTypeInfo(p,a,b)
+#define ITypeLib2_GetTypeInfoType(p,a,b) (p)->lpVtbl->GetTypeInfoType(p,a,b)
+#define ITypeLib2_GetTypeInfoOfGuid(p,a,b) (p)->lpVtbl->GetTypeInfoOfGuid(p,a,b)
+#define ITypeLib2_GetLibAttr(p,a) (p)->lpVtbl->GetLibAttr(p,a)
+#define ITypeLib2_GetTypeComp(p,a) (p)->lpVtbl->GetTypeComp(p,a)
+#define ITypeLib2_GetDocumentation(p,a,b,c,d,e) (p)->lpVtbl->GetDocumentation(p,a,b,c,d,e)
+#define ITypeLib2_IsName(p,a,b,c) (p)->lpVtbl->IsName(p,a,b,c)
+#define ITypeLib2_FindName(p,a,b,c,d,e) (p)->lpVtbl->FindName(p,a,b,c,d,e)
+#define ITypeLib2_ReleaseTLibAttr(p,a) (p)->lpVtbl->ReleaseTLibAttr(p,a)
+#define ITypeLib2_GetCustData(p,a,b) (p)->lpVtbl->GetCustData(p,a,b)
+#define ITypeLib2_GetLibStatistics(p,a,b) (p)->lpVtbl->GetLibStatistics(p,a,b)
+#define ITypeLib2_GetDocumentation2(p,a,b,c,d,e) (p)->lpVtbl->GetDocumentation2(p,a,b,c,d,e)
+#define ITypeLib2_GetAllCustData(p,a) (p)->lpVtbl->GetAllCustData(p,a)
+#endif
+
+#define INTERFACE ITypeFactory
+DECLARE_INTERFACE_(ITypeFactory,IUnknown)
+{
+	STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
+	STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+	STDMETHOD_(ULONG,Release)(THIS) PURE;
+	STDMETHOD(GetAllCustData)(THIS_ CUSTDATA*) PURE;
+    STDMETHOD(CreateFromTypeInfo)(THIS_ LPTYPEINFO,REFIID,LPUNKNOWN*);
+};
+#undef INTERFACE
+
+#ifdef COBJMACROS
+#define ITypeFactory_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define ITypeFactory_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define ITypeFactory_Release(p) (p)->lpVtbl->Release(p)
+#define ITypeFactory_CreateFromTypeInfo(p,a,b,c) (p)->lpVtbl->CreateFromTypeInfo(p,a,b,c)
+#endif
+
+#define INTERFACE ICreateTypeInfo
+DECLARE_INTERFACE_(ICreateTypeInfo,IUnknown)
+{
+	STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
+	STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+	STDMETHOD_(ULONG,Release)(THIS) PURE;
+	STDMETHOD(SetGuid)(THIS_ REFGUID) PURE;
+	STDMETHOD(SetTypeFlags)(THIS_ UINT) PURE;
+	STDMETHOD(SetDocString)(THIS_ LPOLESTR) PURE;
+	STDMETHOD(SetHelpContext)(THIS_ DWORD) PURE;
+	STDMETHOD(SetVersion)(THIS_ WORD,WORD) PURE;
+	STDMETHOD(AddRefTypeInfo)(THIS_ ITypeInfo*,HREFTYPE*) PURE;
+	STDMETHOD(AddFuncDesc)(THIS_ UINT,FUNCDESC*) PURE;
+	STDMETHOD(AddImplType)(THIS_ UINT,HREFTYPE) PURE;
+	STDMETHOD(SetImplTypeFlags)(THIS_ UINT,INT) PURE;
+	STDMETHOD(SetAlignment)(THIS_ WORD) PURE;
+	STDMETHOD(SetSchema)(THIS_ LPOLESTR) PURE;
+	STDMETHOD(AddVarDesc)(THIS_ UINT,VARDESC*) PURE;
+	STDMETHOD(SetFuncAndParamNames)(THIS_ UINT,LPOLESTR*,UINT) PURE;
+	STDMETHOD(SetVarName)(THIS_ UINT,LPOLESTR) PURE;
+	STDMETHOD(SetTypeDescAlias)(THIS_ TYPEDESC*) PURE;
+	STDMETHOD(DefineFuncAsDllEntry)(THIS_ UINT,LPOLESTR,LPOLESTR) PURE;
+	STDMETHOD(SetFuncDocString)(THIS_ UINT,LPOLESTR) PURE;
+	STDMETHOD(SetVarDocString)(THIS_ UINT,LPOLESTR) PURE;
+	STDMETHOD(SetFuncHelpContext)(THIS_ UINT,DWORD) PURE;
+	STDMETHOD(SetVarHelpContext)(THIS_ UINT,DWORD) PURE;
+	STDMETHOD(SetMops)(THIS_ UINT,BSTR) PURE;
+	STDMETHOD(SetTypeIdldesc)(THIS_ IDLDESC*) PURE;
+	STDMETHOD(LayOut)(THIS) PURE;
+};
+#undef INTERFACE
+
+#ifdef COBJMACROS
+#define ICreateTypeInfo_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define ICreateTypeInfo_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define ICreateTypeInfo_Release(p) (p)->lpVtbl->Release(p)
+#define ICreateTypeInfo_SetGuid(p,a) (p)->lpVtbl->SetGuid(p,a)
+#define ICreateTypeInfo_SetTypeFlags(p,a) (p)->lpVtbl->SetTypeFlags(p,a)
+#define ICreateTypeInfo_SetDocString(p,a) (p)->lpVtbl->SetDocString(p,a)
+#define ICreateTypeInfo_SetHelpContext(p,a) (p)->lpVtbl->SetHelpContext(p,a)
+#define ICreateTypeInfo_SetVersion(p,a,b) (p)->lpVtbl->SetVersion(p,a,b)
+#define ICreateTypeInfo_AddRefTypeInfo(p,a,b) (p)->lpVtbl->AddRefTypeInfo(p,a,b)
+#define ICreateTypeInfo_AddFuncDesc(p,a,b) (p)->lpVtbl->AddFuncDesc(p,a,b)
+#define ICreateTypeInfo_AddImplType(p,a,b) (p)->lpVtbl->AddImplType(p,a,b)
+#define ICreateTypeInfo_SetImplTypeFlags(p,a,b) (p)->lpVtbl->SetImplTypeFlags(p,a,b)
+#define ICreateTypeInfo_SetAlignment(p,a) (p)->lpVtbl->SetAlignment(p,a)
+#define ICreateTypeInfo_SetSchema(p,a) (p)->lpVtbl->SetSchema(p,a)
+#define ICreateTypeInfo_AddVarDesc(p,a,b) (p)->lpVtbl->AddVarDesc(p,a,b)
+#define ICreateTypeInfo_SetFuncAndParamNames(p,a,b,c) (p)->lpVtbl->SetFuncAndParamNames(p,a,b,c)
+#define ICreateTypeInfo_SetVarName(p,a,b) (p)->lpVtbl->SetVarName(p,a,b)
+#define ICreateTypeInfo_SetTypeDescAlias(p,a) (p)->lpVtbl->SetTypeDescAlias(p,a)
+#define ICreateTypeInfo_DefineFuncAsDllEntry(p,a,b,c) (p)->lpVtbl->DefineFuncAsDllEntry(p,a,b,c)
+#define ICreateTypeInfo_SetFuncDocString(p,a,b) (p)->lpVtbl->SetFuncDocString(p,a,b)
+#define ICreateTypeInfo_SetVarDocString(p,a,b) (p)->lpVtbl->SetVarDocString(p,a,b)
+#define ICreateTypeInfo_SetFuncHelpContext(p,a,b) (p)->lpVtbl->SetFuncHelpContext(p,a,b)
+#define ICreateTypeInfo_SetVarHelpContext(p,a,b) (p)->lpVtbl->SetVarHelpContext(p,a,b)
+#define ICreateTypeInfo_SetMops(p,a,b) (p)->lpVtbl->SetMops(p,a,b)
+#define ICreateTypeInfo_SetTypeIdldesc(p,a) (p)->lpVtbl->SetTypeIdldesc(p,a)
+#define ICreateTypeInfo_LayOut(p) (p)->lpVtbl->LayOut(p)
+#endif
+
+#define INTERFACE ICreateTypeInfo2
+DECLARE_INTERFACE_(ICreateTypeInfo2,IUnknown)
+{
+	STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
+	STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+	STDMETHOD_(ULONG,Release)(THIS) PURE;
+	STDMETHOD(SetGuid)(THIS_ REFGUID) PURE;
+	STDMETHOD(SetTypeFlags)(THIS_ UINT) PURE;
+	STDMETHOD(SetDocString)(THIS_ LPOLESTR) PURE;
+	STDMETHOD(SetHelpContext)(THIS_ DWORD) PURE;
+	STDMETHOD(SetVersion)(THIS_ WORD,WORD) PURE;
+	STDMETHOD(AddRefTypeInfo)(THIS_ ITypeInfo*,HREFTYPE*) PURE;
+	STDMETHOD(AddFuncDesc)(THIS_ UINT,FUNCDESC*) PURE;
+	STDMETHOD(AddImplType)(THIS_ UINT,HREFTYPE) PURE;
+	STDMETHOD(SetImplTypeFlags)(THIS_ UINT,INT) PURE;
+	STDMETHOD(SetAlignment)(THIS_ WORD) PURE;
+	STDMETHOD(SetSchema)(THIS_ LPOLESTR) PURE;
+	STDMETHOD(AddVarDesc)(THIS_ UINT,VARDESC*) PURE;
+	STDMETHOD(SetFuncAndParamNames)(THIS_ UINT,LPOLESTR*,UINT) PURE;
+	STDMETHOD(SetVarName)(THIS_ UINT,LPOLESTR) PURE;
+	STDMETHOD(SetTypeDescAlias)(THIS_ TYPEDESC*) PURE;
+	STDMETHOD(DefineFuncAsDllEntry)(THIS_ UINT,LPOLESTR,LPOLESTR) PURE;
+	STDMETHOD(SetFuncDocString)(THIS_ UINT,LPOLESTR) PURE;
+	STDMETHOD(SetVarDocString)(THIS_ UINT,LPOLESTR) PURE;
+	STDMETHOD(SetFuncHelpContext)(THIS_ UINT,DWORD) PURE;
+	STDMETHOD(SetVarHelpContext)(THIS_ UINT,DWORD) PURE;
+	STDMETHOD(SetMops)(THIS_ UINT,BSTR) PURE;
+	STDMETHOD(SetTypeIdldesc)(THIS_ IDLDESC*) PURE;
+	STDMETHOD(LayOut)(THIS) PURE;
+	STDMETHOD(DeleteFuncDesc)(THIS_ UINT) PURE;
+	STDMETHOD(DeleteFuncDescByMemId)(THIS_ MEMBERID, INVOKEKIND) PURE;
+	STDMETHOD(DeleteVarDesc)(THIS_ UINT) PURE;
+	STDMETHOD(DeleteVarDescByMemId)(THIS_ MEMBERID) PURE;        
+	STDMETHOD(DeleteImplType)(THIS_ UINT) PURE;        
+	STDMETHOD(SetCustData)(THIS_ REFGUID, VARIANT*) PURE;        
+	STDMETHOD(SetFuncCustData)(THIS_ UINT, REFGUID, VARIANT*) PURE;        
+	STDMETHOD(SetParamCustData)(THIS_ UINT, UINT, REFGUID, VARIANT*) PURE;        
+	STDMETHOD(SetVarCustData)(THIS_ UINT, REFGUID, VARIANT*) PURE;        
+	STDMETHOD(SetImplTypeCustData)(THIS_ UINT, REFGUID, VARIANT*) PURE;        
+	STDMETHOD(SetHelpStringContext)(THIS_ ULONG) PURE;        
+	STDMETHOD(SetFuncHelpStringContext)(THIS_ UINT, ULONG) PURE;        
+	STDMETHOD(SetVarHelpStringContext)(THIS_ UINT, ULONG) PURE;        
+	STDMETHOD(Invalidate)(THIS) PURE;       
+	STDMETHOD(SetName)(THIS_ LPOLESTR) PURE;
+};
+#undef INTERFACE
+
+#ifdef COBJMACROS
+#define ICreateTypeInfo2_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define ICreateTypeInfo2_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define ICreateTypeInfo2_Release(p) (p)->lpVtbl->Release(p)
+#define ICreateTypeInfo2_SetGuid(p,a) (p)->lpVtbl->SetGuid(p,a)
+#define ICreateTypeInfo2_SetTypeFlags(p,a) (p)->lpVtbl->SetTypeFlags(p,a)
+#define ICreateTypeInfo2_SetDocString(p,a) (p)->lpVtbl->SetDocString(p,a)
+#define ICreateTypeInfo2_SetHelpContext(p,a) (p)->lpVtbl->SetHelpContext(p,a)
+#define ICreateTypeInfo2_SetVersion(p,a,b) (p)->lpVtbl->SetVersion(p,a,b)
+#define ICreateTypeInfo2_AddRefTypeInfo(p,a,b) (p)->lpVtbl->AddRefTypeInfo(p,a,b)
+#define ICreateTypeInfo2_AddFuncDesc(p,a,b) (p)->lpVtbl->AddFuncDesc(p,a,b)
+#define ICreateTypeInfo2_AddImplType(p,a,b) (p)->lpVtbl->AddImplType(p,a,b)
+#define ICreateTypeInfo2_SetImplTypeFlags(p,a,b) (p)->lpVtbl->SetImplTypeFlags(p,a,b)
+#define ICreateTypeInfo2_SetAlignment(p,a) (p)->lpVtbl->SetAlignment(p,a)
+#define ICreateTypeInfo2_SetSchema(p,a) (p)->lpVtbl->SetSchema(p,a)
+#define ICreateTypeInfo2_AddVarDesc(p,a,b) (p)->lpVtbl->AddVarDesc(p,a,b)
+#define ICreateTypeInfo2_SetFuncAndParamNames(p,a,b,c) (p)->lpVtbl->SetFuncAndParamNames(p,a,b,c)
+#define ICreateTypeInfo2_SetVarName(p,a,b) (p)->lpVtbl->SetVarName(p,a,b)
+#define ICreateTypeInfo2_SetTypeDescAlias(p,a) (p)->lpVtbl->SetTypeDescAlias(p,a)
+#define ICreateTypeInfo2_DefineFuncAsDllEntry(p,a,b,c) (p)->lpVtbl->DefineFuncAsDllEntry(p,a,b,c)
+#define ICreateTypeInfo2_SetFuncDocString(p,a,b) (p)->lpVtbl->SetFuncDocString(p,a,b)
+#define ICreateTypeInfo2_SetVarDocString(p,a,b) (p)->lpVtbl->SetVarDocString(p,a,b)
+#define ICreateTypeInfo2_SetFuncHelpContext(p,a,b) (p)->lpVtbl->SetFuncHelpContext(p,a,b)
+#define ICreateTypeInfo2_SetVarHelpContext(p,a,b) (p)->lpVtbl->SetVarHelpContext(p,a,b)
+#define ICreateTypeInfo2_SetMops(p,a,b) (p)->lpVtbl->SetMops(p,a,b)
+#define ICreateTypeInfo2_SetTypeIdldesc(p,a) (p)->lpVtbl->SetTypeIdldesc(p,a)
+#define ICreateTypeInfo2_LayOut(p) (p)->lpVtbl->LayOut(p)
+#define ICreateTypeInfo2_DeleteFuncDesc(p,a) (p)->lpVtbl->DeleteFuncDesc(p,a)
+#define ICreateTypeInfo2_DeleteFuncDescByMemId(p,a,b) (p)->lpVtbl->DeleteFuncDescByMemId(p,a,b)
+#define ICreateTypeInfo2_DeleteVarDesc(p,a) (p)->lpVtbl->DeleteVarDesc(p,a)
+#define ICreateTypeInfo2_DeleteVarDescByMemId(p,a) (p)->lpVtbl->DeleteVarDescByMemId(p,a)
+#define ICreateTypeInfo2_DeleteImplType(p,a) (p)->lpVtbl->DeleteImplType(p,a)
+#define ICreateTypeInfo2_SetCustData(p,a,b) (p)->lpVtbl->SetCustData(p,a,b)
+#define ICreateTypeInfo2_SetFuncCustData(p,a,b,c) (p)->lpVtbl->SetFuncCustData(p,a,b,c)
+#define ICreateTypeInfo2_SetParamCustData(p,a,b,c,d) (p)->lpVtbl->SetParamCustData(p,a,b,c,d)
+#define ICreateTypeInfo2_SetVarCustData(p,a,b,c) (p)->lpVtbl->SetVarCustData(p,a,b,c)
+#define ICreateTypeInfo2_SetImplTypeCustData(p,a,b,c) (p)->lpVtbl->SetImplTypeCustData(p,a,b,c)
+#define ICreateTypeInfo2_SetHelpStringContext(p,a) (p)->lpVtbl->SetHelpStringContext(p,a)
+#define ICreateTypeInfo2_SetFuncHelpStringContext(p,a,b) (p)->lpVtbl->SetFuncHelpStringContext(p,a,b)
+#define ICreateTypeInfo2_SetVarHelpStringContext(p,a,b) (p)->lpVtbl->SetVarHelpStringContext(p,a,b)
+#define ICreateTypeInfo2_Invalidate(p) (p)->lpVtbl->Invalidate(p)
+#define ICreateTypeInfo2_SetName(p,a) (p)->lpVtbl->SetName(p,a)
+#endif
+
+#define INTERFACE ICreateTypeLib
+DECLARE_INTERFACE_(ICreateTypeLib,IUnknown)
+{
+	STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
+	STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+	STDMETHOD_(ULONG,Release)(THIS) PURE;
+	STDMETHOD(CreateTypeInfo)(THIS_ LPOLESTR,TYPEKIND,ICreateTypeInfo**) PURE;
+	STDMETHOD(SetName)(THIS_ LPOLESTR) PURE;
+	STDMETHOD(SetVersion)(THIS_ WORD,WORD) PURE;
+	STDMETHOD(SetGuid)(THIS_ REFGUID) PURE;
+	STDMETHOD(SetDocString)(THIS_ LPOLESTR) PURE;
+	STDMETHOD(SetHelpFileName)(THIS_ LPOLESTR) PURE;
+	STDMETHOD(SetHelpContext)(THIS_ DWORD) PURE;
+	STDMETHOD(SetLcid)(THIS_ LCID) PURE;
+	STDMETHOD(SetLibFlags)(THIS_ UINT) PURE;
+	STDMETHOD(SaveAllChanges)(THIS) PURE;
+};
+#undef INTERFACE
+
+#ifdef COBJMACROS
+#define ICreateTypeLib_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define ICreateTypeLib_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define ICreateTypeLib_Release(p) (p)->lpVtbl->Release(p)
+#define ICreateTypeLib_CreateTypeInfo(p,a,b,c) (p)->lpVtbl->CreateTypeInfo(p,a,b,c)
+#define ICreateTypeLib_SetName(p,a) (p)->lpVtbl->SetName(p,a)
+#define ICreateTypeLib_SetVersion(p,a,b) (p)->lpVtbl->SetVersion(p,a,b)
+#define ICreateTypeLib_SetGuid(p,a) (p)->lpVtbl->SetGuid(p,a)
+#define ICreateTypeLib_SetDocString(p,a) (p)->lpVtbl->SetDocString(p,a)
+#define ICreateTypeLib_SetHelpFileName(p,a) (p)->lpVtbl->SetHelpFileName(p,a)
+#define ICreateTypeLib_SetHelpContext(p,a) (p)->lpVtbl->SetHelpContext(p,a)
+#define ICreateTypeLib_SetLcid(p,a) (p)->lpVtbl->SetLcid(p,a)
+#define ICreateTypeLib_SetLibFlags(p,a) (p)->lpVtbl->SetLibFlags(p,a)
+#define ICreateTypeLib_SaveAllChanges(p) (p)->lpVtbl->SaveAllChanges(p)
+#endif
+
+#define INTERFACE ICreateTypeLib2
+DECLARE_INTERFACE_(ICreateTypeLib2,IUnknown)
+{
+	STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
+	STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+	STDMETHOD_(ULONG,Release)(THIS) PURE;
+	STDMETHOD(CreateTypeInfo)(THIS_ LPOLESTR,TYPEKIND,ICreateTypeInfo**) PURE;
+	STDMETHOD(SetName)(THIS_ LPOLESTR) PURE;
+	STDMETHOD(SetVersion)(THIS_ WORD,WORD) PURE;
+	STDMETHOD(SetGuid)(THIS_ REFGUID) PURE;
+	STDMETHOD(SetDocString)(THIS_ LPOLESTR) PURE;
+	STDMETHOD(SetHelpFileName)(THIS_ LPOLESTR) PURE;
+	STDMETHOD(SetHelpContext)(THIS_ DWORD) PURE;
+	STDMETHOD(SetLcid)(THIS_ LCID) PURE;
+	STDMETHOD(SetLibFlags)(THIS_ UINT) PURE;
+	STDMETHOD(SaveAllChanges)(THIS) PURE;
+	STDMETHOD(DeleteTypeInfo)(THIS_ LPOLESTR) PURE;
+	STDMETHOD(SetCustData)(THIS_ REFGUID, VARIANT*) PURE;
+	STDMETHOD(SetHelpStringContext)(THIS_ ULONG) PURE;        
+	STDMETHOD(SetHelpStringDll)(THIS_ LPOLESTR) PURE;
+};
+#undef INTERFACE
+
+#ifdef COBJMACROS
+#define ICreateTypeLib2_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define ICreateTypeLib2_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define ICreateTypeLib2_Release(p) (p)->lpVtbl->Release(p)
+#define ICreateTypeLib2_CreateTypeInfo(p,a,b,c) (p)->lpVtbl->CreateTypeInfo(p,a,b,c)
+#define ICreateTypeLib2_SetName(p,a) (p)->lpVtbl->SetName(p,a)
+#define ICreateTypeLib2_SetVersion(p,a,b) (p)->lpVtbl->SetVersion(p,a,b)
+#define ICreateTypeLib2_SetGuid(p,a) (p)->lpVtbl->SetGuid(p,a)
+#define ICreateTypeLib2_SetDocString(p,a) (p)->lpVtbl->SetDocString(p,a)
+#define ICreateTypeLib2_SetHelpFileName(p,a) (p)->lpVtbl->SetHelpFileName(p,a)
+#define ICreateTypeLib2_SetHelpContext(p,a) (p)->lpVtbl->SetHelpContext(p,a)
+#define ICreateTypeLib2_SetLcid(p,a) (p)->lpVtbl->SetLcid(p,a)
+#define ICreateTypeLib2_SetLibFlags(p,a) (p)->lpVtbl->SetLibFlags(p,a)
+#define ICreateTypeLib2_SaveAllChanges(p) (p)->lpVtbl->SaveAllChanges(p)
+#define ICreateTypeLib2_DeleteTypeInfo(p,a) (p)->lpVtbl->DeleteTypeInfo(p,a)
+#define ICreateTypeLib2_SetCustData(p,a,b) (p)->lpVtbl->SetCustData(p,a,b)
+#define ICreateTypeLib2_SetHelpStringContext(p,a) (p)->lpVtbl->SetHelpStringContext(p,a)
+#define ICreateTypeLib2_SetHelpStringDll(p,a) (p)->lpVtbl->SetHelpStringDll(p,a)
+#endif
 
 EXTERN_C const IID IID_IErrorInfo;
 #define INTERFACE IErrorInfo
@@ -764,6 +1107,75 @@ DECLARE_INTERFACE_(ITypeMarshal, IUnknown)
 	STDMETHOD(Free)(THIS_ PVOID) PURE;
 };
 #undef INTERFACE
+
+unsigned long __RPC_USER BSTR_UserSize(unsigned long*,unsigned long,LPBSTR);
+unsigned char* __RPC_USER BSTR_UserMarshal(unsigned long*,unsigned char*,LPBSTR);
+unsigned char* __RPC_USER BSTR_UserUnmarshal(unsigned long*,unsigned char*,LPBSTR);
+void __RPC_USER BSTR_UserFree(unsigned long*,LPBSTR);
+unsigned long __RPC_USER CLEANLOCALSTORAGE_UserSize(unsigned long*,unsigned long,CLEANLOCALSTORAGE*);
+unsigned char* __RPC_USER CLEANLOCALSTORAGE_UserMarshal(unsigned long*,unsigned char*,CLEANLOCALSTORAGE*);
+unsigned char* __RPC_USER CLEANLOCALSTORAGE_UserUnmarshal(unsigned long*,unsigned char*,CLEANLOCALSTORAGE*);
+void __RPC_USER CLEANLOCALSTORAGE_UserFree(unsigned long*,CLEANLOCALSTORAGE*);
+unsigned long __RPC_USER VARIANT_UserSize(unsigned long*,unsigned long,LPVARIANT);
+unsigned char* __RPC_USER VARIANT_UserMarshal(unsigned long*,unsigned char*,LPVARIANT);
+unsigned char* __RPC_USER VARIANT_UserUnmarshal(unsigned long*,unsigned char*,LPVARIANT);
+void __RPC_USER VARIANT_UserFree(unsigned long*,LPVARIANT);
+HRESULT STDMETHODCALLTYPE IDispatch_Invoke_Proxy(LPDISPATCH,DISPID,REFIID,LCID,WORD,DISPPARAMS*,LPVARIANT,LPEXCEPINFO,LPUINT);
+HRESULT STDMETHODCALLTYPE IDispatch_Invoke_Stub(LPDISPATCH,DISPID,REFIID,LCID,DWORD,DISPPARAMS*,LPVARIANT,LPEXCEPINFO,LPUINT,UINT,LPUINT,LPVARIANTARG);
+HRESULT STDMETHODCALLTYPE IDispatch_RemoteInvoke_Proxy(LPDISPATCH,DISPID,REFIID,LCID,DWORD,DISPPARAMS*,LPVARIANT,LPEXCEPINFO,LPUINT,UINT,LPUINT,LPVARIANTARG);
+HRESULT STDMETHODCALLTYPE IEnumVARIANT_Next_Proxy(LPENUMVARIANT,ULONG,LPVARIANT,PULONG);
+HRESULT STDMETHODCALLTYPE IEnumVARIANT_Next_Stub(LPENUMVARIANT,ULONG,LPVARIANT,PULONG);
+HRESULT STDMETHODCALLTYPE IEnumVARIANT_RemoteNext_Proxy(LPENUMVARIANT,ULONG,LPVARIANT,PULONG);
+HRESULT STDMETHODCALLTYPE ITypeComp_Bind_Proxy(LPTYPECOMP,LPOLESTR,ULONG,WORD,LPTYPEINFO*,DESCKIND*,BINDPTR*);
+HRESULT STDMETHODCALLTYPE ITypeComp_Bind_Stub(LPTYPECOMP,LPOLESTR,ULONG,WORD,LPTYPEINFO*,DESCKIND*,LPFUNCDESC*,LPVARDESC*,LPTYPECOMP*,CLEANLOCALSTORAGE*);
+HRESULT STDMETHODCALLTYPE ITypeComp_BindType_Proxy(LPTYPECOMP,LPOLESTR,ULONG,LPTYPEINFO*,LPTYPECOMP*);
+HRESULT STDMETHODCALLTYPE ITypeComp_BindType_Stub(LPTYPECOMP,LPOLESTR,ULONG,LPTYPEINFO*);
+HRESULT STDMETHODCALLTYPE ITypeInfo_GetTypeAttr_Proxy(LPTYPEINFO,LPTYPEATTR*);
+HRESULT STDMETHODCALLTYPE ITypeInfo_GetTypeAttr_Stub(LPTYPEINFO,LPTYPEATTR*,CLEANLOCALSTORAGE*);
+HRESULT STDMETHODCALLTYPE ITypeInfo_GetFuncDesc_Proxy(LPTYPEINFO,UINT,FUNCDESC**);
+HRESULT STDMETHODCALLTYPE ITypeInfo_GetFuncDesc_Stub(LPTYPEINFO,UINT,LPFUNCDESC*,CLEANLOCALSTORAGE*);
+HRESULT STDMETHODCALLTYPE ITypeInfo_GetVarDesc_Proxy(LPTYPEINFO,UINT,LPVARDESC*);
+HRESULT STDMETHODCALLTYPE ITypeInfo_GetVarDesc_Stub(LPTYPEINFO,UINT,LPVARDESC*,CLEANLOCALSTORAGE*);
+HRESULT STDMETHODCALLTYPE ITypeInfo_GetNames_Proxy(LPTYPEINFO,MEMBERID,LPBSTR,UINT,LPUINT);
+HRESULT STDMETHODCALLTYPE ITypeInfo_GetNames_Stub(LPTYPEINFO,MEMBERID,LPBSTR,UINT,LPUINT);
+HRESULT STDMETHODCALLTYPE ITypeInfo_GetIDsOfNames_Proxy(LPTYPEINFO,LPOLESTR*,UINT,MEMBERID*);
+HRESULT STDMETHODCALLTYPE ITypeInfo_GetIDsOfNames_Stub(LPTYPEINFO);
+HRESULT STDMETHODCALLTYPE ITypeInfo_Invoke_Proxy(LPTYPEINFO,PVOID,MEMBERID,WORD,DISPPARAMS*,LPVARIANT,LPEXCEPINFO,LPUINT);
+HRESULT STDMETHODCALLTYPE ITypeInfo_Invoke_Stub(LPTYPEINFO);
+HRESULT STDMETHODCALLTYPE ITypeInfo_GetDocumentation_Proxy(LPTYPEINFO,MEMBERID,LPBSTR,LPBSTR,LPDWORD,LPBSTR);
+HRESULT STDMETHODCALLTYPE ITypeInfo_GetDocumentation_Stub(LPTYPEINFO,MEMBERID,DWORD,LPBSTR,LPBSTR,LPDWORD,LPBSTR);
+HRESULT STDMETHODCALLTYPE ITypeInfo_GetDllEntry_Proxy(LPTYPEINFO,MEMBERID,INVOKEKIND,LPBSTR,LPBSTR,LPWORD);
+HRESULT STDMETHODCALLTYPE ITypeInfo_GetDllEntry_Stub(LPTYPEINFO,MEMBERID,INVOKEKIND,DWORD,LPBSTR,LPBSTR,LPWORD);
+HRESULT STDMETHODCALLTYPE ITypeInfo_AddressOfMember_Proxy(LPTYPEINFO,MEMBERID,INVOKEKIND,PVOID*);
+HRESULT STDMETHODCALLTYPE ITypeInfo_AddressOfMember_Stub(LPTYPEINFO);
+HRESULT STDMETHODCALLTYPE ITypeInfo_CreateInstance_Proxy(LPTYPEINFO,LPUNKNOWN,REFIID,PVOID*);
+HRESULT STDMETHODCALLTYPE ITypeInfo_CreateInstance_Stub(LPTYPEINFO,REFIID,LPUNKNOWN*);
+HRESULT STDMETHODCALLTYPE ITypeInfo_GetContainingTypeLib_Proxy(LPTYPEINFO,LPTYPELIB*,PUINT);
+HRESULT STDMETHODCALLTYPE ITypeInfo_GetContainingTypeLib_Stub(LPTYPEINFO,LPTYPELIB*,PUINT);
+void STDMETHODCALLTYPE ITypeInfo_ReleaseTypeAttr_Proxy(LPTYPEINFO,LPTYPEATTR);
+HRESULT STDMETHODCALLTYPE ITypeInfo_ReleaseTypeAttr_Stub(LPTYPEINFO);
+void STDMETHODCALLTYPE ITypeInfo_ReleaseFuncDesc_Proxy(LPTYPEINFO,LPFUNCDESC);
+HRESULT STDMETHODCALLTYPE ITypeInfo_ReleaseFuncDesc_Stub(LPTYPEINFO);
+void STDMETHODCALLTYPE ITypeInfo_ReleaseVarDesc_Proxy(LPTYPEINFO,VARDESC*);
+HRESULT STDMETHODCALLTYPE ITypeInfo_ReleaseVarDesc_Stub(LPTYPEINFO);
+HRESULT STDMETHODCALLTYPE ITypeInfo2_GetDocumentation2_Proxy(LPTYPEINFO2,MEMBERID,LCID,LPBSTR,LPDWORD,LPBSTR);
+HRESULT STDMETHODCALLTYPE ITypeInfo2_GetDocumentation2_Stub(LPTYPEINFO2,MEMBERID,LCID,DWORD,LPBSTR,LPDWORD,LPBSTR);
+UINT STDMETHODCALLTYPE ITypeLib_GetTypeInfoCount_Proxy(LPTYPELIB);
+HRESULT STDMETHODCALLTYPE ITypeLib_GetTypeInfoCount_Stub(LPTYPELIB,PUINT);
+HRESULT STDMETHODCALLTYPE ITypeLib_GetLibAttr_Proxy(LPTYPELIB,LPTLIBATTR*);
+HRESULT STDMETHODCALLTYPE ITypeLib_GetLibAttr_Stub(LPTYPELIB,LPTLIBATTR*,CLEANLOCALSTORAGE*);
+HRESULT STDMETHODCALLTYPE ITypeLib_GetDocumentation_Proxy(LPTYPELIB,INT,LPBSTR,LPBSTR,LPDWORD,LPBSTR);
+HRESULT STDMETHODCALLTYPE ITypeLib_GetDocumentation_Stub(LPTYPELIB,INT,DWORD,LPBSTR,LPBSTR,LPDWORD,LPBSTR);
+HRESULT STDMETHODCALLTYPE ITypeLib_IsName_Proxy(LPTYPELIB,LPOLESTR,ULONG,LPBOOL);
+HRESULT STDMETHODCALLTYPE ITypeLib_IsName_Stub(LPTYPELIB,LPOLESTR,ULONG,LPBOOL,LPBSTR);
+HRESULT STDMETHODCALLTYPE ITypeLib_FindName_Proxy(LPTYPELIB,LPOLESTR,ULONG,LPTYPEINFO*,MEMBERID*,PUSHORT);
+HRESULT STDMETHODCALLTYPE ITypeLib_FindName_Stub(LPTYPELIB,LPOLESTR,ULONG,LPTYPEINFO*,MEMBERID*,PUSHORT,LPBSTR);
+void STDMETHODCALLTYPE ITypeLib_ReleaseTLibAttr_Proxy(LPTYPELIB,LPTLIBATTR);
+HRESULT STDMETHODCALLTYPE ITypeLib_ReleaseTLibAttr_Stub(LPTYPELIB);
+HRESULT STDMETHODCALLTYPE ITypeLib2_GetLibStatistics_Proxy(LPTYPELIB2,PULONG,PULONG);
+HRESULT STDMETHODCALLTYPE ITypeLib2_GetLibStatistics_Stub(LPTYPELIB2,PULONG,PULONG);
+HRESULT STDMETHODCALLTYPE ITypeLib2_GetDocumentation2_Proxy(LPTYPELIB2,INT,LCID,LPBSTR,LPDWORD,LPBSTR);
+HRESULT STDMETHODCALLTYPE ITypeLib2_GetDocumentation2_Stub(LPTYPELIB2,INT,LCID,DWORD,LPBSTR,LPDWORD,LPBSTR);
 
 #ifdef __cplusplus
 }

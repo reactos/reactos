@@ -154,6 +154,8 @@
 
 #include <oaidl.h>
 
+EXTERN_C const IID IID_StdOle;
+
 typedef enum tagREGKIND {
 	REGKIND_DEFAULT,
 	REGKIND_REGISTER,

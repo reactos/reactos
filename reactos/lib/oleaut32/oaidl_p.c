@@ -1,5 +1,14 @@
-/* this ALWAYS GENERATED file contains the proxy stub code */
+/* This file contains the proxy/stub code for core COM interfaces.
 
+   It is usually generated directly by MIDL, however this file has
+   been tweaked since then to account for slight differences in the way
+   gcc and MSVC++ compile it. In particular, in some functions REFIIDs
+   declared on the stack have been converted to plain IID* in order to eliminate
+   the constness of the REFIID type, ensuring that the zero initializer is not
+   discarded.
+
+   Therefore, please do not regenerate this file.
+*/
 
 /* File created by MIDL compiler version 5.01.0164 */
 /* at Tue Jan 07 22:24:52 2003
@@ -436,7 +445,7 @@ void __RPC_STUB IDispatch_GetIDsOfNames_Stub(
     LCID lcid;
     DISPID __RPC_FAR *rgDispId;
     LPOLESTR __RPC_FAR *rgszNames;
-    REFIID riid = 0;
+    IID* riid = 0;
     
 NdrStubInitialize(
                      _pRpcMessage,
@@ -726,7 +735,7 @@ void __RPC_STUB IDispatch_RemoteInvoke_Stub(
     VARIANT __RPC_FAR *pVarResult;
     VARIANTARG __RPC_FAR *rgVarRef;
     UINT __RPC_FAR *rgVarRefIdx;
-    REFIID riid = 0;
+    IID* riid = 0;
     
 NdrStubInitialize(
                      _pRpcMessage,
@@ -4039,7 +4048,7 @@ void __RPC_STUB ITypeInfo_RemoteCreateInstance_Stub(
     HRESULT _RetVal;
     MIDL_STUB_MESSAGE _StubMsg;
     IUnknown __RPC_FAR *__RPC_FAR *ppvObj;
-    REFIID riid = 0;
+    IID* riid = 0;
     
 NdrStubInitialize(
                      _pRpcMessage,
@@ -10751,7 +10760,7 @@ void __RPC_STUB ISupportErrorInfo_InterfaceSupportsErrorInfo_Stub(
 {
     HRESULT _RetVal;
     MIDL_STUB_MESSAGE _StubMsg;
-    REFIID riid = 0;
+    IID* riid = 0;
     
 NdrStubInitialize(
                      _pRpcMessage,
@@ -10931,7 +10940,7 @@ void __RPC_STUB ITypeFactory_CreateFromTypeInfo_Stub(
     MIDL_STUB_MESSAGE _StubMsg;
     ITypeInfo __RPC_FAR *pTypeInfo;
     IUnknown __RPC_FAR *__RPC_FAR *ppv;
-    REFIID riid = 0;
+    IID* riid = 0;
     
 NdrStubInitialize(
                      _pRpcMessage,

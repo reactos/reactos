@@ -217,6 +217,14 @@ DECLARE_INTERFACE_(IPropertyBag,IUnknown)
 };
 #undef INTERFACE
 
+#ifdef COBJMACROS
+#define IPropertyBag_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IPropertyBag_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define IPropertyBag_Release(p) (p)->lpVtbl->Release(p)
+#define IPropertyBag_Read(p,a,b,c) (p)->lpVtbl->Read(p,a,b,c)
+#define IPropertyBag_Write(p,a,b) (p)->lpVtbl->Write(p,a,b)
+#endif
+
 EXTERN_C const IID IID_IPropertyBag2;
 #define INTERFACE IPropertyBag2
 DECLARE_INTERFACE_(IPropertyBag2,IUnknown)
@@ -231,6 +239,17 @@ DECLARE_INTERFACE_(IPropertyBag2,IUnknown)
 	STDMETHOD(LoadObject)(THIS_ LPCOLESTR,DWORD,IUnknown*,LPERRORLOG) PURE;
 };
 #undef INTERFACE
+
+#ifdef COBJMACROS
+#define IPropertyBag2_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IPropertyBag2_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define IPropertyBag2_Release(p) (p)->lpVtbl->Release(p)
+#define IPropertyBag2_Read(p,a,b,c) (p)->lpVtbl->Read(p,a,b,c)
+#define IPropertyBag2_Write(p,a,b) (p)->lpVtbl->Write(p,a,b)
+#define IPropertyBag2_CountProperties(p,a) (p)->lpVtbl->CountProperties(p,a)
+#define IPropertyBag2_GetPropertyInfo(p,a,b,c,d) (p)->lpVtbl->GetPropertyInfo(p,a,b,c,d)
+#define IPropertyBag2_LoadObject(p,a,b,c,d) (p)->lpVtbl->LoadObject(p,a,b,c,d)
+#endif
 
 EXTERN_C const IID IID_IPersistPropertyBag;
 #define INTERFACE IPersistPropertyBag
@@ -571,6 +590,36 @@ DECLARE_INTERFACE_(IFont,IUnknown)
 	STDMETHOD(SetHdc)(THIS_ HDC) PURE;
 };
 #undef INTERFACE
+
+#ifdef COBJMACROS
+#define IFont_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IFont_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define IFont_Release(p) (p)->lpVtbl->Release(p)
+#define IFont_get_Name(p,a) (p)->lpVtbl->get_Name(p,a)
+#define IFont_put_Name(p,a) (p)->lpVtbl->put_Name(p,a)
+#define IFont_get_Size(p,a) (p)->lpVtbl->get_Size(p,a)
+#define IFont_put_Size(p,a) (p)->lpVtbl->put_Size(p,a)
+#define IFont_get_Bold(p,a) (p)->lpVtbl->get_Bold(p,a)
+#define IFont_put_Bold(p,a) (p)->lpVtbl->put_Bold(p,a)
+#define IFont_get_Italic(p,a) (p)->lpVtbl->get_Italic(p,a)
+#define IFont_put_Italic(p,a) (p)->lpVtbl->put_Italic(p,a)
+#define IFont_get_Underline(p,a) (p)->lpVtbl->get_Underline(p,a)
+#define IFont_put_Underline(p,a) (p)->lpVtbl->put_Underline(p,a)
+#define IFont_get_Strikethrough(p,a) (p)->lpVtbl->get_Strikethrough(p,a)
+#define IFont_put_Strikethrough(p,a) (p)->lpVtbl->put_Strikethrough(p,a)
+#define IFont_get_Weight(p,a) (p)->lpVtbl->get_Weight(p,a)
+#define IFont_put_Weight(p,a) (p)->lpVtbl->put_Weight(p,a)
+#define IFont_get_Charset(p,a) (p)->lpVtbl->get_Charset(p,a)
+#define IFont_put_Charset(p,a) (p)->lpVtbl->put_Charset(p,a)
+#define IFont_get_hFont(p,a) (p)->lpVtbl->get_hFont(p,a)
+#define IFont_Clone(p,a) (p)->lpVtbl->Clone(p,a)
+#define IFont_IsEqual(p,a) (p)->lpVtbl->IsEqual(p,a)
+#define IFont_SetRatio(p,a,b) (p)->lpVtbl->SetRatio(p,a,b)
+#define IFont_QueryTextMetrics(p,a) (p)->lpVtbl->QueryTextMetrics(p,a)
+#define IFont_AddRefHfont(p,a) (p)->lpVtbl->AddRefHfont(p,a)
+#define IFont_ReleaseHfont(p,a) (p)->lpVtbl->ReleaseHfont(p,a)
+#define IFont_SetHdc(p,a) (p)->lpVtbl->SetHdc(p,a)
+#endif
 
 EXTERN_C const IID IID_IFontDisp;
 #define INTERFACE IFontDisp
