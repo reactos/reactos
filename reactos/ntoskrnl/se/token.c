@@ -136,27 +136,6 @@ SepDuplicateToken(PTOKEN Token,
   PVOID EndMem;
   PTOKEN AccessToken;
   NTSTATUS Status;
-  
-  if(PreviousMode != KernelMode)
-  {
-    Status = STATUS_SUCCESS;
-    _SEH_TRY
-    {
-      ProbeForWrite(NewAccessToken,
-                    sizeof(TOKEN),
-                    sizeof(ULONG));
-    }
-    _SEH_HANDLE
-    {
-      Status = _SEH_GetExceptionCode();
-    }
-    _SEH_END;
-    
-    if(!NT_SUCCESS(Status))
-    {
-      return Status;
-    }
-  }
 
   Status = ObCreateObject(PreviousMode,
 			  SepTokenObjectType,
@@ -263,17 +242,8 @@ SepDuplicateToken(PTOKEN Token,
 
   if ( NT_SUCCESS(Status) )
     {
-      _SEH_TRY
-      {
-        *NewAccessToken = AccessToken;
-        Status = STATUS_SUCCESS;
-      }
-      _SEH_HANDLE
-      {
-        Status = _SEH_GetExceptionCode();
-      }
-      _SEH_END;
-      return Status;
+      *NewAccessToken = AccessToken;
+      return(STATUS_SUCCESS);
     }
 
   ObDereferenceObject(AccessToken);
@@ -1068,11 +1038,33 @@ NtDuplicateToken(IN HANDLE ExistingTokenHandle,
 		 OUT PHANDLE NewTokenHandle)
 {
   KPROCESSOR_MODE PreviousMode;
+  HANDLE hToken;
   PTOKEN Token;
   PTOKEN NewToken;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
 
   PreviousMode = KeGetPreviousMode();
+  
+  if(PreviousMode != KernelMode)
+  {
+    _SEH_TRY
+    {
+      ProbeForWrite(NewTokenHandle,
+                    sizeof(HANDLE),
+                    sizeof(ULONG));
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    if(!NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+  }
+  
   Status = ObReferenceObjectByHandle(ExistingTokenHandle,
 				     TOKEN_DUPLICATE,
 				     SepTokenObjectType,
@@ -1108,17 +1100,24 @@ NtDuplicateToken(IN HANDLE ExistingTokenHandle,
 			  DesiredAccess,
 			  0,
 			  NULL,
-			  NewTokenHandle);
+			  &hToken);
 
   ObDereferenceObject(NewToken);
 
-  if (!NT_SUCCESS(Status))
+  if (NT_SUCCESS(Status))
     {
-      DPRINT1("Failed to create token handle (Status %lx)\n");
-      return Status;
+      _SEH_TRY
+      {
+        *NewTokenHandle = hToken;
+      }
+      _SEH_HANDLE
+      {
+        Status = _SEH_GetExceptionCode();
+      }
+      _SEH_END;
     }
 
-  return STATUS_SUCCESS;
+  return Status;
 }
 
 
@@ -1846,6 +1845,7 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
                     OUT PHANDLE TokenHandle)
 {
   PETHREAD Thread;
+  HANDLE hToken;
   PTOKEN Token, NewToken, PrimaryToken;
   BOOLEAN CopyOnOpen, EffectiveOnly;
   SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
@@ -1853,7 +1853,30 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
   OBJECT_ATTRIBUTES ObjectAttributes;
   SECURITY_DESCRIPTOR SecurityDescriptor;
   PACL Dacl = NULL;
-  NTSTATUS Status;
+  KPROCESSOR_MODE PreviousMode;
+  NTSTATUS Status = STATUS_SUCCESS;
+  
+  PreviousMode = ExGetPreviousMode();
+  
+  if(PreviousMode != KernelMode)
+  {
+    _SEH_TRY
+    {
+      ProbeForWrite(TokenHandle,
+                    sizeof(HANDLE),
+                    sizeof(ULONG));
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    
+    if(!NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+  }
 
   /*
    * At first open the thread token for information access and verify
@@ -1861,7 +1884,7 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
    */
 
   Status = ObReferenceObjectByHandle(ThreadHandle, THREAD_QUERY_INFORMATION,
-                                     PsThreadType, UserMode, (PVOID*)&Thread,
+                                     PsThreadType, PreviousMode, (PVOID*)&Thread,
                                      NULL);
   if (!NT_SUCCESS(Status))
     {
@@ -1896,7 +1919,7 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
   if (CopyOnOpen)
     {
       Status = ObReferenceObjectByHandle(ThreadHandle, THREAD_ALL_ACCESS,
-                                         PsThreadType, UserMode,
+                                         PsThreadType, PreviousMode,
                                          (PVOID*)&Thread, NULL);
       if (!NT_SUCCESS(Status))
         {
@@ -1945,7 +1968,7 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
         }
 
       Status = ObInsertObject(NewToken, NULL, DesiredAccess, 0, NULL,
-                              TokenHandle);
+                              &hToken);
 
       ObfDereferenceObject(NewToken);
     }
@@ -1953,7 +1976,7 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
     {
       Status = ObOpenObjectByPointer(Token, HandleAttributes,
                                      NULL, DesiredAccess, SepTokenObjectType,
-                                     ExGetPreviousMode(), TokenHandle);
+                                     PreviousMode, &hToken);
     }
 
   ObfDereferenceObject(Token);
@@ -1962,6 +1985,19 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
     {
       PsRestoreImpersonation(PsGetCurrentThread(), &ImpersonationState);
     }
+
+  if(NT_SUCCESS(Status))
+  {
+    _SEH_TRY
+    {
+      *TokenHandle = hToken;
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+  }
 
   return Status;
 }
