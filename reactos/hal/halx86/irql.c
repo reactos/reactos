@@ -1,4 +1,4 @@
-/* $Id: irql.c,v 1.20 2004/11/10 02:50:59 ion Exp $
+/* $Id: irql.c,v 1.21 2004/11/14 19:04:42 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -20,12 +20,6 @@
 #include <internal/debug.h>
 
 /* GLOBALS ******************************************************************/
-
-/*
- * PURPOSE: Current irq level
- */
-static BOOLEAN ApcRequested = FALSE;
-static BOOLEAN DpcRequested = FALSE;
 
 typedef union
 {
@@ -175,9 +169,9 @@ HalpLowerIrql(KIRQL NewIrql)
       return;
     }
   KeGetCurrentKPCR()->Irql = DISPATCH_LEVEL;
-  if (DpcRequested)
+  if (KeGetCurrentKPCR()->HalReserved[HAL_DPC_REQUEST])
     {
-      DpcRequested = FALSE;
+      KeGetCurrentKPCR()->HalReserved[HAL_DPC_REQUEST] = FALSE;
       KiDispatchInterrupt();
     }
   KeGetCurrentKPCR()->Irql = APC_LEVEL;
@@ -467,11 +461,11 @@ HalRequestSoftwareInterrupt(
   switch (Request)
   {
     case APC_LEVEL:
-      ApcRequested = TRUE;
+      KeGetCurrentKPCR()->HalReserved[HAL_APC_REQUEST] = TRUE;
       break;
 
     case DISPATCH_LEVEL:
-      DpcRequested = TRUE;
+      KeGetCurrentKPCR()->HalReserved[HAL_DPC_REQUEST] = TRUE;
       break;
       
     default:
