@@ -35,6 +35,7 @@ BOOL EngIntersectRect(PRECTL prcDst, PRECTL prcSrc1, PRECTL prcSrc2)
   return(FALSE);
 }
 
+INT abs(INT nm);
 
 BOOL EngBitBlt(SURFOBJ *Dest, SURFOBJ *Source,
                SURFOBJ *Mask, CLIPOBJ *ClipRegion,
@@ -42,6 +43,7 @@ BOOL EngBitBlt(SURFOBJ *Dest, SURFOBJ *Source,
                POINTL *SourcePoint, POINTL *MaskRect,
                BRUSHOBJ *Brush, POINTL *BrushOrigin, ROP4 rop4)
 {
+  BOOLEAN   ret;
   BYTE      clippingType;
   RECTL     rclTmp;
   POINTL    ptlTmp;
@@ -56,6 +58,12 @@ BOOL EngBitBlt(SURFOBJ *Dest, SURFOBJ *Source,
   SIZEL     TempSize;
 
   if(Source != NULL) SourceGDI = AccessInternalObjectFromUserObject(Source);
+  if(Dest   != NULL) DestGDI   = AccessInternalObjectFromUserObject(Dest);
+
+  MouseSafetyOnDrawStart(Source, SourceGDI, SourcePoint->x, SourcePoint->y,
+                         (SourcePoint->x + abs(DestRect->right - DestRect->left)),
+                         (SourcePoint->y + abs(DestRect->bottom - DestRect->top)));
+  MouseSafetyOnDrawStart(Dest, DestGDI, DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
 
   // If we don't have to do anything special, we can punt to DrvCopyBits
   // if it exists
@@ -71,7 +79,6 @@ BOOL EngBitBlt(SURFOBJ *Dest, SURFOBJ *Source,
   if(Dest->iType != STYPE_BITMAP)
   {
     // Destination surface is device managed
-    DestGDI = AccessInternalObjectFromUserObject(Dest);
     if (DestGDI->BitBlt!=NULL)
     {
       if (Source!=NULL)
@@ -95,9 +102,14 @@ BOOL EngBitBlt(SURFOBJ *Dest, SURFOBJ *Source,
         EngBitBlt(TempSurf, Source, NULL, NULL, ColorTranslation, &TempRect, SourcePoint, NULL, NULL, NULL, 0);
       }
 
-      return DestGDI->BitBlt(Dest, TempSurf, Mask, ClipRegion,
-                             NULL, DestRect, &TempPoint,
-                             MaskRect, Brush, BrushOrigin, rop4);
+      ret = DestGDI->BitBlt(Dest, TempSurf, Mask, ClipRegion,
+                            NULL, DestRect, &TempPoint,
+                            MaskRect, Brush, BrushOrigin, rop4);
+
+      MouseSafetyOnDrawEnd(Source, SourceGDI);
+      MouseSafetyOnDrawEnd(Dest, DestGDI);
+
+      return ret;
     }
   }
 
@@ -107,16 +119,18 @@ BOOL EngBitBlt(SURFOBJ *Dest, SURFOBJ *Source,
     if (SourceGDI->BitBlt!=NULL)
     {
       // Request the device driver to return the bitmap in a format compatible with the device
-      return SourceGDI->BitBlt(Dest, Source, Mask, ClipRegion,
-                               NULL, DestRect, SourcePoint,
-                               MaskRect, Brush, BrushOrigin, rop4);
+      ret = SourceGDI->BitBlt(Dest, Source, Mask, ClipRegion,
+                              NULL, DestRect, SourcePoint,
+                              MaskRect, Brush, BrushOrigin, rop4);
+
+      MouseSafetyOnDrawEnd(Source, SourceGDI);
+      MouseSafetyOnDrawEnd(Dest, DestGDI);
+
+      return ret;
 
       // Convert the surface from the driver into the required destination surface
     }
   }
-
-  DestGDI   = AccessInternalObjectFromUserObject(Dest);
-  SourceGDI = AccessInternalObjectFromUserObject(Source);
 
   // Determine clipping type
   if (ClipRegion == (CLIPOBJ *) NULL)
@@ -131,6 +145,10 @@ BOOL EngBitBlt(SURFOBJ *Dest, SURFOBJ *Source,
   {
     case DC_TRIVIAL:
       CopyBitsCopy(Dest, Source, DestGDI, SourceGDI, DestRect, SourcePoint, Source->lDelta, ColorTranslation);
+
+      MouseSafetyOnDrawEnd(Source, SourceGDI);
+      MouseSafetyOnDrawEnd(Dest, DestGDI);
+
       return(TRUE);
 
     case DC_RECT:
@@ -140,6 +158,9 @@ BOOL EngBitBlt(SURFOBJ *Dest, SURFOBJ *Source,
 
       ptlTmp.x = SourcePoint->x + rclTmp.left - DestRect->left;
       ptlTmp.y = SourcePoint->y + rclTmp.top  - DestRect->top;
+
+      MouseSafetyOnDrawEnd(Source, SourceGDI);
+      MouseSafetyOnDrawEnd(Dest, DestGDI);
 
       return(TRUE);
 
@@ -168,8 +189,14 @@ BOOL EngBitBlt(SURFOBJ *Dest, SURFOBJ *Source,
 
       } while(EnumMore);
 
+    MouseSafetyOnDrawEnd(Source, SourceGDI);
+    MouseSafetyOnDrawEnd(Dest, DestGDI);
+
     return(TRUE);
   }
+
+  MouseSafetyOnDrawEnd(Source, SourceGDI);
+  MouseSafetyOnDrawEnd(Dest, DestGDI);
 
   return(FALSE);
 }

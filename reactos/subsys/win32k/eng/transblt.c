@@ -20,12 +20,14 @@ BOOL EngTransparentBlt(PSURFOBJ Dest, PSURFOBJ Source,
                        PRECTL DestRect, PRECTL SourceRect,
                        ULONG TransparentColor, ULONG Reserved)
 {
-  PSURFGDI DestGDI = AccessInternalObjectFromUserObject(Dest);
+  PSURFGDI DestGDI   = AccessInternalObjectFromUserObject(Dest),
+           SourceGDI = AccessInternalObjectFromUserObject(Source);
   HSURF     hTemp;
   PSURFOBJ  TempSurf;
   POINTL    TempPoint, SourcePoint;
   RECTL     TempRect;
   SIZEL     TempSize;
+  BOOLEAN   ret;
   LONG dx, dy, sx, sy;
 
   dx = abs(DestRect->right  - DestRect->left);
@@ -36,6 +38,9 @@ BOOL EngTransparentBlt(PSURFOBJ Dest, PSURFOBJ Source,
 
   if(sx<dx) dx = sx;
   if(sy<dy) dy = sy;
+
+  MouseSafetyOnDrawStart(Source, SourceGDI, SourceRect->left, SourceRect->top, SourceRect->right, SourceRect->bottom);
+  MouseSafetyOnDrawStart(Dest, DestGDI, DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
 
   if(DestGDI->TransparentBlt != NULL)
   {
@@ -59,11 +64,19 @@ BOOL EngTransparentBlt(PSURFOBJ Dest, PSURFOBJ Source,
     // FIXME: Skip creating a TempSurf if we have the same BPP and palette
     EngBitBlt(TempSurf, Source, NULL, NULL, ColorTranslation, &TempRect, &SourcePoint, NULL, NULL, NULL, 0);
 
-    return DestGDI->TransparentBlt(Dest, TempSurf, Clip, NULL, DestRect, SourceRect,
-                                   TransparentColor, Reserved);
+    ret = DestGDI->TransparentBlt(Dest, TempSurf, Clip, NULL, DestRect, SourceRect,
+                                  TransparentColor, Reserved);
+
+    MouseSafetyOnDrawEnd(Source, SourceGDI);
+    MouseSafetyOnDrawEnd(Dest, DestGDI);
+
+    return ret;
   }
 
   // Simulate a transparent blt
+
+  MouseSafetyOnDrawEnd(Source, SourceGDI);
+  MouseSafetyOnDrawEnd(Dest, DestGDI);
 
   return TRUE;
 }

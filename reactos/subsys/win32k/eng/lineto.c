@@ -2,12 +2,11 @@
 #include "objects.h"
 #include "../dib/dib.h"
 
-// POSSIBLE FIXME: Switch X and Y's so that drawing a line doesn't try to draw from 150 to 50 (negative dx)
-
 BOOL EngLineTo(SURFOBJ *Surface, CLIPOBJ *Clip, BRUSHOBJ *Brush,
                LONG x1, LONG y1, LONG x2, LONG y2,
                RECTL *RectBounds, MIX mix)
 {
+  BOOLEAN ret;
   SURFGDI *SurfGDI;
   LONG x, y, d, deltax, deltay, i, length, xchange, ychange, error, hx, vy;
 
@@ -19,10 +18,14 @@ BOOL EngLineTo(SURFOBJ *Surface, CLIPOBJ *Clip, BRUSHOBJ *Brush,
 
   SurfGDI = AccessInternalObjectFromUserObject(Surface);
 
+  MouseSafetyOnDrawStart(Surface, SurfGDI, x1, y1, x2, y2);
+
   if(Surface->iType!=STYPE_BITMAP)
   {
     // Call the driver's DrvLineTo
-    return SurfGDI->LineTo(Surface, Clip, Brush, x1, y1, x2, y2, RectBounds, mix);
+    ret = SurfGDI->LineTo(Surface, Clip, Brush, x1, y1, x2, y2, RectBounds, mix);
+    MouseSafetyOnDrawEnd(Surface, SurfGDI);
+    return ret;
   }
 
   // Assign DIB functions according to bytes per pixel
@@ -43,6 +46,8 @@ BOOL EngLineTo(SURFOBJ *Surface, CLIPOBJ *Clip, BRUSHOBJ *Brush,
     default:
       DbgPrint("EngLineTo: unsupported DIB format %u (bitsPerPixel:%u)\n", Surface->iBitmapFormat,
                BitsPerFormat(Surface->iBitmapFormat));
+
+      MouseSafetyOnDrawEnd(Surface, SurfGDI);
       return FALSE;
   }
 
@@ -75,8 +80,8 @@ BOOL EngLineTo(SURFOBJ *Surface, CLIPOBJ *Clip, BRUSHOBJ *Brush,
     vy = y1;
   }
 
-  if(y1==y2) { DIB_HLine(Surface, hx, hx + deltax, y1, Brush->iSolidColor); return TRUE; }
-  if(x1==x2) { DIB_VLine(Surface, x1, vy, vy + deltay, Brush->iSolidColor); return TRUE; }
+  if(y1==y2) { DIB_HLine(Surface, hx, hx + deltax, y1, Brush->iSolidColor); MouseSafetyOnDrawEnd(Surface, SurfGDI); return TRUE; }
+  if(x1==x2) { DIB_VLine(Surface, x1, vy, vy + deltay, Brush->iSolidColor); MouseSafetyOnDrawEnd(Surface, SurfGDI); return TRUE; }
 
   error=0;
   i=0;
@@ -114,5 +119,6 @@ BOOL EngLineTo(SURFOBJ *Surface, CLIPOBJ *Clip, BRUSHOBJ *Brush,
     }
   }
 
+  MouseSafetyOnDrawEnd(Surface, SurfGDI);
   return TRUE;
 }

@@ -68,19 +68,29 @@ BOOL EngPaint(IN SURFOBJ *Surface, IN CLIPOBJ *ClipRegion,
               IN BRUSHOBJ *Brush,  IN POINTL *BrushOrigin,
               IN MIX  Mix)
 {
+  BOOLEAN ret;
   SURFGDI *SurfGDI;
 
   // Is the surface's Paint function hooked?
   SurfGDI = AccessInternalObjectFromUserObject(Surface);
 
+  // FIXME: Perform Mouse Safety on the given ClipRegion
+  // MouseSafetyOnDrawStart(Surface, SurfGDI, x1, y1, x2, y2);
+
   if((Surface->iType!=STYPE_BITMAP) && (SurfGDI->Paint!=NULL))
   {
     // Call the driver's DrvPaint
-    return SurfGDI->Paint(Surface, ClipRegion, Brush, BrushOrigin, Mix);
+    ret = SurfGDI->Paint(Surface, ClipRegion, Brush, BrushOrigin, Mix);
+    // MouseSafetyOnDrawEnd(Surface, SurfGDI);
+    return ret;
   }
 
   // FIXME: We only support a brush's solid color attribute
-  return(EngPaintRgn(Surface, ClipRegion, Brush->iSolidColor, Mix, NULL, BrushOrigin));
+  ret = EngPaintRgn(Surface, ClipRegion, Brush->iSolidColor, Mix, NULL, BrushOrigin);
+
+  // MouseSafetyOnDrawEnd(Surface, SurfGDI);
+
+  return ret;
 }
 
 BOOL EngEraseSurface(SURFOBJ *Surface, RECTL *Rect, ULONG iColor)

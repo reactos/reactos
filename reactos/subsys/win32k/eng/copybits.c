@@ -52,12 +52,18 @@ BOOL EngCopyBits(SURFOBJ *Dest, SURFOBJ *Source,
                  CLIPOBJ *Clip, XLATEOBJ *ColorTranslation,
                  RECTL *DestRect, POINTL *SourcePoint)
 {
+  BOOLEAN   ret;
   SURFGDI   *DestGDI, *SourceGDI;
   BYTE      clippingType;
   RECTL     rclTmp;
   POINTL    ptlTmp;
   RECT_ENUM RectEnum;
   BOOL      EnumMore;
+
+  MouseSafetyOnDrawStart(Source, SourceGDI, SourcePoint->x, SourcePoint->y,
+                         (SourcePoint->x + abs(DestRect->right - DestRect->left)),
+                         (SourcePoint->y + abs(DestRect->bottom - DestRect->top)));
+  MouseSafetyOnDrawStart(Dest, DestGDI, DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
 
   // FIXME: Don't punt to the driver's DrvCopyBits immediately. Instead,
   //        mark the copy block function to be DrvCopyBits instead of the
@@ -74,7 +80,12 @@ BOOL EngCopyBits(SURFOBJ *Dest, SURFOBJ *Source,
 
       if (DestGDI->CopyBits!=NULL)
       {
-        return DestGDI->CopyBits(Dest, Source, Clip, ColorTranslation, DestRect, SourcePoint);
+        ret = DestGDI->CopyBits(Dest, Source, Clip, ColorTranslation, DestRect, SourcePoint);
+
+        MouseSafetyOnDrawEnd(Source, SourceGDI);
+        MouseSafetyOnDrawEnd(Dest, DestGDI);
+
+        return ret;
       }
     }
 
@@ -85,14 +96,24 @@ BOOL EngCopyBits(SURFOBJ *Dest, SURFOBJ *Source,
 
       if (SourceGDI->CopyBits!=NULL)
       {
-        return SourceGDI->CopyBits(Dest, Source, Clip, ColorTranslation, DestRect, SourcePoint);
+        ret = SourceGDI->CopyBits(Dest, Source, Clip, ColorTranslation, DestRect, SourcePoint);
+
+        MouseSafetyOnDrawEnd(Source, SourceGDI);
+        MouseSafetyOnDrawEnd(Dest, DestGDI);
+
+        return ret;
       }
     }
 
     // If CopyBits wasn't hooked, BitBlt must be
-    return EngBitBlt(Dest, Source,
-                     NULL, Clip, ColorTranslation, DestRect, SourcePoint,
-                     NULL, NULL, NULL, NULL);
+    ret = EngBitBlt(Dest, Source,
+                    NULL, Clip, ColorTranslation, DestRect, SourcePoint,
+                    NULL, NULL, NULL, NULL);
+
+    MouseSafetyOnDrawEnd(Source, SourceGDI);
+    MouseSafetyOnDrawEnd(Dest, DestGDI);
+
+    return ret;
   }
 
   // Determine clipping type
@@ -114,6 +135,10 @@ BOOL EngCopyBits(SURFOBJ *Dest, SURFOBJ *Source,
     {
       case DC_TRIVIAL:
         CopyBitsCopy(Dest, Source, DestGDI, SourceGDI, DestRect, SourcePoint, Source->lDelta, ColorTranslation);
+
+        MouseSafetyOnDrawEnd(Source, SourceGDI);
+        MouseSafetyOnDrawEnd(Dest, DestGDI);
+
         return(TRUE);
 
       case DC_RECT:
@@ -124,6 +149,9 @@ BOOL EngCopyBits(SURFOBJ *Dest, SURFOBJ *Source,
         ptlTmp.y = SourcePoint->y + rclTmp.top  - DestRect->top;
 
         CopyBitsCopy(Dest, Source, DestGDI, SourceGDI, &rclTmp, &ptlTmp, Source->lDelta, ColorTranslation);
+
+        MouseSafetyOnDrawEnd(Source, SourceGDI);
+        MouseSafetyOnDrawEnd(Dest, DestGDI);
 
         return(TRUE);
 
@@ -155,9 +183,15 @@ BOOL EngCopyBits(SURFOBJ *Dest, SURFOBJ *Source,
 
           } while(EnumMore);
 
+          MouseSafetyOnDrawEnd(Source, SourceGDI);
+          MouseSafetyOnDrawEnd(Dest, DestGDI);
+
           return(TRUE);
     }
   }
+
+  MouseSafetyOnDrawEnd(Source, SourceGDI);
+  MouseSafetyOnDrawEnd(Dest, DestGDI);
 
   return FALSE;
 }

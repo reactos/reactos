@@ -3,7 +3,53 @@
 #include "..\..\services\input\include\mouse.h"
 #include "objects.h"
 
+BOOLEAN SafetySwitch = FALSE, SafetySwitch2 = FALSE, MouseEnabled = FALSE;
 LONG mouse_x, mouse_y;
+UINT mouse_width = 0, mouse_height = 0;
+
+INT MouseSafetyOnDrawStart(PSURFOBJ SurfObj, PSURFGDI SurfGDI, LONG HazardX1, LONG HazardY1, LONG HazardX2, LONG HazardY2)
+{
+  RECTL MouseRect;
+  LONG tmp;
+
+  if(SurfObj == NULL) return 0;
+
+  if((SurfObj->iType != STYPE_DEVICE) || (MouseEnabled == FALSE)) return 0;
+
+  if(HazardX1 > HazardX2) { tmp = HazardX2; HazardX2 = HazardX1; HazardX1 = tmp; }
+  if(HazardY1 > HazardY2) { tmp = HazardY2; HazardY2 = HazardY1; HazardY1 = tmp; }
+
+  if( (mouse_x + mouse_width >= HazardX1)  && (mouse_x <= HazardX2) &&
+      (mouse_y + mouse_height >= HazardY1) && (mouse_y <= HazardY2) )
+  {
+    SurfGDI->MovePointer(SurfObj, -1, -1, &MouseRect);
+    SafetySwitch = TRUE;
+  }
+
+  // Mouse is not allowed to move if GDI is busy drawing
+  SafetySwitch2 = TRUE;
+
+  return 1;
+}
+
+INT MouseSafetyOnDrawEnd(PSURFOBJ SurfObj, PSURFGDI SurfGDI)
+{
+  RECTL MouseRect;
+
+  if(SurfObj == NULL) return 0;
+
+  if((SurfObj->iType != STYPE_DEVICE) || (MouseEnabled == FALSE)) return 0;
+
+  if(SafetySwitch == TRUE)
+  {
+    SurfGDI->MovePointer(SurfObj, mouse_x, mouse_y, &MouseRect);
+    SafetySwitch = FALSE;
+  }
+
+  SafetySwitch2 = FALSE;
+
+  return 1;
+}
 
 VOID MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
 {
@@ -40,7 +86,8 @@ VOID MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
     if(mouse_x > 620) mouse_x = 620;
     if(mouse_y > 460) mouse_y = 460;
 
-    SurfGDI->MovePointer(SurfObj, mouse_x, mouse_y, &MouseRect);
+    if((SafetySwitch == FALSE) && (SafetySwitch2 == FALSE))
+      SurfGDI->MovePointer(SurfObj, mouse_x, mouse_y, &MouseRect);
   }
 }
 
@@ -111,6 +158,9 @@ void TestMouse()
   EngLineTo(SurfObj, NULL, &Brush, 1, 1, 1, 13, NULL, 0);
   EngLineTo(SurfObj, NULL, &Brush, 1, 13, 13, 1, NULL, 0); */
 
+  mouse_width  = 16;
+  mouse_height = 16;
+
   // Draw transparent colored rectangle
   Brush.iSolidColor = 5;
   for (i = 0; i < 17; i++)
@@ -147,6 +197,5 @@ void TestMouse()
   mouse_x = 50;
   mouse_y = 50;
   ConnectMouseClassDriver();
-
-  DbgPrint("OK\n");
+  MouseEnabled = TRUE;
 }
