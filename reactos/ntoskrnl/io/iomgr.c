@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.40 2003/10/12 17:05:45 hbirr Exp $
+/* $Id: iomgr.c,v 1.41 2003/10/15 17:04:39 navaraf Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -389,6 +389,14 @@ IoInit2(VOID)
       CPRINT("IopInitializeDriver() failed with status (%x)\n", Status);
       return;
     }
+
+  /*
+   * Initialize PnP root releations
+   */
+  IopInvalidateDeviceRelations(
+    IopRootDeviceNode,
+    BusRelations,
+    TRUE);
 }
 
 /*

@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.62 2003/09/30 15:46:59 navaraf Exp $
+/* $Id: device.c,v 1.63 2003/10/15 17:04:39 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -424,23 +424,12 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
         {
           DPRINT("Bus extender found\n");
 
-          /*
-           * Don't initialize boot bus drivers here, because
-           * it will not be able to load the required drivers
-           * for the devices found.
-           *
-           * FiN
-           */
-          if (!BootDriver)
+          Status = IopInvalidateDeviceRelations(
+             DeviceNode, BusRelations, BootDriver);
+          if (!NT_SUCCESS(Status))
             {
-              Status = IopInvalidateDeviceRelations(
-                DeviceNode, BusRelations);
-/*              IopInterrogateBusExtender(DeviceNode, Fdo); */
-              if (!NT_SUCCESS(Status))
-                {
-                  ObDereferenceObject(Fdo);
-    	            return(Status);
-                }
+              ObDereferenceObject(Fdo);
+              return(Status);
             }
         }
       else if (Fdo->DeviceType == FILE_DEVICE_ACPI)
@@ -496,117 +485,11 @@ IopInitializeService(
     }
   } else
   {
+    /* FIXME: This doesn't work for two devices with the same driver */
     Status = IopInitializeDevice(DeviceNode, FALSE);
   }
 
   return(Status);
-}
-
-NTSTATUS
-IopInitializeDeviceNodeService(PDEVICE_NODE DeviceNode)
-{
-#if 1
-  RTL_QUERY_REGISTRY_TABLE QueryTable[2];
-  UNICODE_STRING ImagePath;
-  NTSTATUS Status;
-  WCHAR FullImagePathBuffer[MAX_PATH];
-  UNICODE_STRING FullImagePath;
-  CHAR TextBuffer [256];
-  ULONG x, y, cx, cy;
-
-  RtlZeroMemory(QueryTable, sizeof(QueryTable));
-
-  RtlInitUnicodeString(&ImagePath, NULL);
-
-  QueryTable[0].Name = L"ImagePath";
-  QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
-  QueryTable[0].EntryContext = &ImagePath;
-
-  Status = RtlQueryRegistryValues(RTL_REGISTRY_SERVICES,
-				  DeviceNode->ServiceName.Buffer,
-				  QueryTable,
-				  NULL,
-				  NULL);
-
-  DPRINT("RtlQueryRegistryValues() returned status %x\n", Status);
-
-  if (NT_SUCCESS(Status))
-    {
-      DPRINT("Got ImagePath %S\n", ImagePath.Buffer);
-
-      if (ImagePath.Buffer[0] != L'\\')
-        {
-          wcscpy(FullImagePathBuffer, L"\\SystemRoot\\");
-          wcscat(FullImagePathBuffer, ImagePath.Buffer);
-        }
-      else
-        {
-          wcscpy(FullImagePathBuffer, ImagePath.Buffer);
-        }
-
-      RtlFreeUnicodeString(&ImagePath);
-      RtlInitUnicodeString(&FullImagePath, FullImagePathBuffer);
-
-      HalQueryDisplayParameters(&x, &y, &cx, &cy);
-      RtlFillMemory(TextBuffer, x, ' ');
-      TextBuffer[x] = '\0';
-      HalSetDisplayParameters(0, y-1);
-      HalDisplayString(TextBuffer);
-
-      sprintf(TextBuffer, "PnP Loading %S...\n", DeviceNode->ServiceName.Buffer);
-      HalSetDisplayParameters(0, y-1);
-      HalDisplayString(TextBuffer);
-      HalSetDisplayParameters(cx, cy);
-
-      Status = IopInitializeService(DeviceNode, &FullImagePath);
-    }
-
-  return(Status);
-#else
-  RTL_QUERY_REGISTRY_TABLE QueryTable[2];
-  UNICODE_STRING ImagePath;
-  HANDLE KeyHandle;
-  NTSTATUS Status;
-
-  Status = RtlpGetRegistryHandle(
-    RTL_REGISTRY_SERVICES,
-	  DeviceNode->ServiceName.Buffer,
-		TRUE,
-		&KeyHandle);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("RtlpGetRegistryHandle() failed (Status %x)\n", Status);
-      return(Status);
-    }
-
-  RtlZeroMemory(QueryTable, sizeof(QueryTable));
-
-  RtlInitUnicodeString(&ImagePath, NULL);
-
-  QueryTable[0].Name = L"ImagePath";
-  QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
-  QueryTable[0].EntryContext = &ImagePath;
-
-  Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
-				  (PWSTR)KeyHandle,
-				  QueryTable,
-				  NULL,
-				  NULL);
-  NtClose(KeyHandle);
-
-  DPRINT("RtlQueryRegistryValues() returned status %x\n", Status);
-
-  if (NT_SUCCESS(Status))
-    {
-      DPRINT("Got ImagePath %S\n", ImagePath.Buffer);
-
-      Status = IopInitializeService(DeviceNode, &ImagePath);
-
-      RtlFreeUnicodeString(&ImagePath);
-    }
-
-  return(Status);
-#endif
 }
 
 NTSTATUS

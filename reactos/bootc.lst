@@ -1,3 +1,4 @@
+system32\drivers\pci.sys
 system32\drivers\scsiport.sys
 system32\drivers\atapi.sys
 system32\drivers\class2.sys

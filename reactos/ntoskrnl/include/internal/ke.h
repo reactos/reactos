@@ -31,6 +31,11 @@
 
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
 
+#ifdef __USE_W32API
+struct _KPROCESS* KeGetCurrentProcess(VOID);
+VOID KeSetGdtSelector(ULONG Entry, ULONG Value1, ULONG Value2);
+#endif
+
 #ifndef __ASM__
 
 struct _KTHREAD;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.36 2003/09/30 15:46:59 navaraf Exp $
+/* $Id: io.h,v 1.37 2003/10/15 17:04:39 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -258,19 +258,13 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
                     PDEVICE_NODE *DeviceNode);
 NTSTATUS
 IopFreeDeviceNode(PDEVICE_NODE DeviceNode);
-NTSTATUS
-IopInvalidateDeviceRelations(PDEVICE_NODE DeviceNode,
-                             DEVICE_RELATION_TYPE Type);
-VOID
-IopLoadBootStartDrivers(VOID);
+
 NTSTATUS
 IopCreateDriverObject(PDRIVER_OBJECT *DriverObject,
 		      PUNICODE_STRING ServiceName,
 		      BOOLEAN FileSystemDriver,
 		      PVOID DriverImageStart,
 		      ULONG DriverImageSize);
-NTSTATUS
-IopInitializeDeviceNodeService(PDEVICE_NODE DeviceNode);
 NTSTATUS
 IopInitializeDriver(PDRIVER_INITIALIZE DriverEntry,
 		    PDEVICE_NODE DeviceNode,
@@ -384,5 +378,33 @@ PnpRootDriverEntry(
 NTSTATUS
 PnpRootCreateDevice(
   PDEVICE_OBJECT *PhysicalDeviceObject);
+
+/* driver.c */
+
+VOID
+IopInitializeBootDrivers(
+  VOID);
+
+VOID
+IopInitializeSystemDrivers(
+  VOID);
+
+NTSTATUS
+IopInitializeDeviceNodeService(
+  PDEVICE_NODE DeviceNode,
+  BOOLEAN BootDriverOnly);
+
+/* pnpmgr.c */
+
+NTSTATUS
+IopInitializePnpServices(
+   IN PDEVICE_NODE DeviceNode,
+   IN BOOLEAN BootDrivers);
+
+NTSTATUS
+IopInvalidateDeviceRelations(
+   IN PDEVICE_NODE DeviceNode,
+   IN DEVICE_RELATION_TYPE Type,
+   IN BOOLEAN BootDriver);
 
 #endif

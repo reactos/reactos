@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.136 2003/10/12 17:05:45 hbirr Exp $
+/* $Id: loader.c,v 1.137 2003/10/15 17:04:39 navaraf Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -940,7 +940,12 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
       CPRINT("Failed to allocate a virtual section for driver\n");
       return STATUS_UNSUCCESSFUL;
     }
+#if 0
   DbgPrint("DriverBase for %wZ: %x\n", FileName, DriverBase);
+#else
+  DbgPrint("DriverBase for %wZ", FileName);
+  DbgPrint(": %x\n", DriverBase);
+#endif
   CHECKPOINT;
   /*  Copy headers over */
   memcpy(DriverBase, ModuleLoadBase, PEOptionalHeader->SizeOfHeaders);
