@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.196 2004/01/01 15:26:04 weiden Exp $
+# $Id: Makefile,v 1.197 2004/01/01 17:09:30 sedwards Exp $
 #
 # Global makefile
 #
@@ -42,7 +42,7 @@ DLLS_KBD = kbdus kbdgr kbdfr kbduk
 # epsapi psapi richedit rpcrt4 secur32 user32 version ws2help ws2_32 wsock32 wshirda mswsock
 # imagehlp
 DLLS =	libwine advapi32 cards crtdll fmifs freetype gdi32 kernel32 packet lzexpand \
-	msafd msvcrt ntdll psapi richedit rpcrt4 secur32 syssetup twain user32 version \
+	msafd msvcrt msvcrt20 ntdll psapi richedit rpcrt4 secur32 syssetup twain user32 version \
 	winspool ws2help ws2_32 wsock32 wshirda iphlpapi msgina mswsock msimg32 d3d8thk \
 	winmm comctl32 $(DLLS_KBD)
 
