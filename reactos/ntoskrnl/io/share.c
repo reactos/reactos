@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: share.c,v 1.11 2004/08/15 16:39:03 chorns Exp $
+/* $Id: share.c,v 1.12 2004/08/25 15:01:48 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -100,7 +100,7 @@ IoCheckShareAccess(IN ACCESS_MASK DesiredAccess,
   BOOLEAN SharedDelete;
 
   ReadAccess = (DesiredAccess & (FILE_READ_DATA | FILE_EXECUTE));
-  WriteAccess = (DesiredAccess & (FILE_READ_DATA | FILE_APPEND_DATA));
+  WriteAccess = (DesiredAccess & (FILE_WRITE_DATA | FILE_APPEND_DATA));
   DeleteAccess = (DesiredAccess & DELETE);
 
   FileObject->ReadAccess = ReadAccess;
@@ -248,7 +248,7 @@ IoSetShareAccess(IN ACCESS_MASK DesiredAccess,
   BOOLEAN SharedDelete;
 
   ReadAccess = (DesiredAccess & (FILE_READ_DATA | FILE_EXECUTE));
-  WriteAccess = (DesiredAccess & (FILE_READ_DATA | FILE_APPEND_DATA));
+  WriteAccess = (DesiredAccess & (FILE_WRITE_DATA | FILE_APPEND_DATA));
   DeleteAccess = (DesiredAccess & DELETE);
 
   FileObject->ReadAccess = ReadAccess;
