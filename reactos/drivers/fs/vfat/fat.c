@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.36 2002/03/18 22:37:12 hbirr Exp $
+ * $Id: fat.c,v 1.37 2002/06/26 18:36:41 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -110,7 +110,7 @@ Fat12GetNextCluster(PDEVICE_EXTENSION DeviceExt,
   *NextCluster = 0;
 
   Offset.QuadPart = 0;
-  if(!CcMapData(DeviceExt->FATFileObject, &Offset, DeviceExt->FatInfo.FATSectors * BLOCKSIZE, 1, &Context, &BaseAddress))
+  if(!CcMapData(DeviceExt->FATFileObject, &Offset, DeviceExt->FatInfo.FATSectors * DeviceExt->FatInfo.BytesPerSector, 1, &Context, &BaseAddress))
   {
     return STATUS_UNSUCCESSFUL;
   }
@@ -216,9 +216,9 @@ FAT12FindAvailableCluster(PDEVICE_EXTENSION DeviceExt, PULONG Cluster)
   *Cluster = 0;
   StartCluster = DeviceExt->LastAvailableCluster;
   Offset.QuadPart = 0;
-  if(!CcMapData(DeviceExt->FATFileObject, &Offset, DeviceExt->FatInfo.FATSectors * BLOCKSIZE, 1, &Context, &BaseAddress))
+  if(!CcMapData(DeviceExt->FATFileObject, &Offset, DeviceExt->FatInfo.FATSectors * DeviceExt->FatInfo.BytesPerSector, 1, &Context, &BaseAddress))
   {
-    DPRINT1("CcMapData(Offset %x, Length %d) failed\n", (ULONG)Offset.QuadPart, DeviceExt->FatInfo.FATSectors * BLOCKSIZE);
+    DPRINT1("CcMapData(Offset %x, Length %d) failed\n", (ULONG)Offset.QuadPart, DeviceExt->FatInfo.FATSectors * DeviceExt->FatInfo.BytesPerSector);
     return STATUS_UNSUCCESSFUL;
   }
 
@@ -328,7 +328,7 @@ FAT12CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
   PUSHORT CBlock;
 
   Offset.QuadPart = 0;
-  if(!CcMapData(DeviceExt->FATFileObject, &Offset, DeviceExt->FatInfo.FATSectors * BLOCKSIZE, 1, &Context, &BaseAddress))
+  if(!CcMapData(DeviceExt->FATFileObject, &Offset, DeviceExt->FatInfo.FATSectors * DeviceExt->FatInfo.BytesPerSector, 1, &Context, &BaseAddress))
   {
     return STATUS_UNSUCCESSFUL;
   }
@@ -494,7 +494,7 @@ FAT12WriteCluster(PDEVICE_EXTENSION DeviceExt,
   LARGE_INTEGER Offset;
 
   Offset.QuadPart = 0;
-  if(!CcMapData(DeviceExt->FATFileObject, &Offset, DeviceExt->FatInfo.FATSectors * BLOCKSIZE, 1, &Context, &BaseAddress))
+  if(!CcMapData(DeviceExt->FATFileObject, &Offset, DeviceExt->FatInfo.FATSectors * DeviceExt->FatInfo.BytesPerSector, 1, &Context, &BaseAddress))
   {
     return STATUS_UNSUCCESSFUL;
   }
@@ -518,7 +518,7 @@ FAT12WriteCluster(PDEVICE_EXTENSION DeviceExt,
       CBlock[FATOffset + 1] = NewValue >> 4;
     }
   /* Write the changed FAT sector(s) to disk */
-  FATsector = FATOffset / BLOCKSIZE;
+  FATsector = FATOffset / DeviceExt->FatInfo.BytesPerSector;
   CcSetDirtyPinnedData(Context, NULL);
   CcUnpinData(Context);
   return(STATUS_SUCCESS);
@@ -642,63 +642,6 @@ ClusterToSector(PDEVICE_EXTENSION DeviceExt,
 {
   return DeviceExt->FatInfo.dataStart +
     ((Cluster - 2) * DeviceExt->FatInfo.SectorsPerCluster);
-}
-
-NTSTATUS
-VfatRawReadCluster(PDEVICE_EXTENSION DeviceExt,
-		   ULONG FirstCluster,
-		   PVOID Buffer,
-		   ULONG Cluster,
-           ULONG Count)
-/*
- * FUNCTION: Load one ore more continus clusters from the physical device
- */
-{
-
-  if (FirstCluster == 1)
-  {
-    return VfatReadSectors(DeviceExt->StorageDevice, Cluster,
-			 DeviceExt->FatInfo.SectorsPerCluster * Count, Buffer);
-  }
-  else
-  {
-    ULONG Sector;
-
-    Sector = ClusterToSector(DeviceExt, Cluster);
-    return VfatReadSectors(DeviceExt->StorageDevice, Sector,
-			 DeviceExt->FatInfo.SectorsPerCluster * Count, Buffer);
-  }
-}
-
-NTSTATUS
-VfatRawWriteCluster(PDEVICE_EXTENSION DeviceExt,
-		    ULONG FirstCluster,
-		    PVOID Buffer,
-		    ULONG Cluster,
-            ULONG Count)
-/*
- * FUNCTION: Write a cluster to the physical device
- */
-{
-  ULONG Sector;
-  NTSTATUS Status;
-
-  DPRINT("VfatWriteCluster(DeviceExt %x, Buffer %x, Cluster %d)\n",
-	 DeviceExt, Buffer, Cluster);
-
-  if (FirstCluster == 1)
-  {
-    Status = VfatWriteSectors(DeviceExt->StorageDevice, Cluster,
-			   DeviceExt->FatInfo.SectorsPerCluster * Count, Buffer);
-  }
-  else
-  {
-    Sector = ClusterToSector(DeviceExt, Cluster);
-
-    Status = VfatWriteSectors(DeviceExt->StorageDevice, Sector,
-				DeviceExt->FatInfo.SectorsPerCluster * Count, Buffer);
-  }
-  return(Status);
 }
 
 NTSTATUS

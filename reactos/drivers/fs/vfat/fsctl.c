@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.7 2002/06/07 16:53:18 hbirr Exp $
+/* $Id: fsctl.c,v 1.8 2002/06/26 18:36:41 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -51,6 +51,7 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
    FATINFO FatInfo;
    ULONG Size;
    ULONG Sectors;
+   LARGE_INTEGER Offset;
    struct _BootSector* Boot;
 
    *RecognizedFS = FALSE;
@@ -111,14 +112,15 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
    {
       return STATUS_SUCCESS;
    }
-ReadSector:
-   Boot = ExAllocatePool(NonPagedPool, BLOCKSIZE);
+
+   Boot = ExAllocatePool(NonPagedPool, DiskGeometry.BytesPerSector);
    if (Boot == NULL)
    {
       *RecognizedFS=FALSE;
       return STATUS_INSUFFICIENT_RESOURCES;
    }
-   Status = VfatReadSectors(DeviceToMount, 0, 1, (PUCHAR) Boot);
+   Offset.QuadPart = 0;
+   Status = VfatReadDisk(DeviceToMount, &Offset, DiskGeometry.BytesPerSector, (PUCHAR) Boot);
    if (NT_SUCCESS(Status))
    {
       FatInfo.VolumeID = Boot->VolumeID;
@@ -311,7 +313,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
 
    Fcb->Flags = FCB_IS_FAT;
 
-   Fcb->RFCB.FileSize.QuadPart = DeviceExt->FatInfo.FATSectors * BLOCKSIZE;
+   Fcb->RFCB.FileSize.QuadPart = DeviceExt->FatInfo.FATSectors * DeviceExt->FatInfo.BytesPerSector;
    Fcb->RFCB.ValidDataLength = Fcb->RFCB.FileSize;
    Fcb->RFCB.AllocationSize = Fcb->RFCB.FileSize;
 
@@ -344,7 +346,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    wcscpy(VolumeFcb->PathName, L"$$Volume$$");
    VolumeFcb->ObjectName = VolumeFcb->PathName;
    VolumeFcb->Flags = FCB_IS_VOLUME;
-   VolumeFcb->RFCB.FileSize.QuadPart = DeviceExt->FatInfo.Sectors * BLOCKSIZE;
+   VolumeFcb->RFCB.FileSize.QuadPart = DeviceExt->FatInfo.Sectors * DeviceExt->FatInfo.BytesPerSector;
    VolumeFcb->RFCB.ValidDataLength = VolumeFcb->RFCB.FileSize;
    VolumeFcb->RFCB.AllocationSize = VolumeFcb->RFCB.FileSize;
    VolumeFcb->pDevExt = (PDEVICE_EXTENSION)DeviceExt->StorageDevice;

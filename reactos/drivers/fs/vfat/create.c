@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.41 2002/05/15 18:05:00 ekohl Exp $
+/* $Id: create.c,v 1.42 2002/06/26 18:36:41 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -346,7 +346,7 @@ FindFile (PDEVICE_EXTENSION DeviceExt,
 	  CHECKPOINT;
 	  Fcb->PathName[0]='\\';
 	  Fcb->ObjectName = &Fcb->PathName[1];
-	  Fcb->entry.FileSize = DeviceExt->FatInfo.rootDirectorySectors * BLOCKSIZE;
+	  Fcb->entry.FileSize = DeviceExt->FatInfo.rootDirectorySectors * DeviceExt->FatInfo.BytesPerSector;
 	  Fcb->entry.Attrib = FILE_ATTRIBUTE_DIRECTORY;
 	  if (DeviceExt->FatInfo.FatType == FAT32)
       {

@@ -1,10 +1,12 @@
-# $Id: makefile,v 1.38 2002/03/18 22:37:13 hbirr Exp $
+# $Id: makefile,v 1.39 2002/06/26 18:36:41 hbirr Exp $
 
 PATH_TO_TOP = ../../..
 
 TARGET_TYPE = driver
 
 TARGET_NAME = vfatfs
+
+TARGET_GCCLIBS = gcc
 
 TARGET_OBJECTS = \
   blockdev.o \
@@ -26,6 +28,8 @@ TARGET_OBJECTS = \
   fsctl.o
 
 DEP_OBJECTS = $(TARGET_OBJECTS)
+
+TARGET_CLEAN = $(DEP_FILES) *.o *.sys *.sym
 
 TARGET_CFLAGS = -g
 

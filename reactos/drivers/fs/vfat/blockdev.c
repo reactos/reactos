@@ -19,37 +19,27 @@
 /* FUNCTIONS ***************************************************************/
 
 NTSTATUS
-VfatReadSectors (IN PDEVICE_OBJECT pDeviceObject,
-		 IN ULONG DiskSector,
-		 IN ULONG SectorCount,
-		 IN OUT PUCHAR Buffer)
+VfatReadDisk (IN PDEVICE_OBJECT pDeviceObject,
+	      IN PLARGE_INTEGER ReadOffset,
+	      IN ULONG ReadLength,
+	      IN OUT PUCHAR Buffer)
 {
-  LARGE_INTEGER sectorNumber;
   PIRP Irp;
   IO_STATUS_BLOCK IoStatus;
   KEVENT event;
   NTSTATUS Status;
-  ULONG sectorSize;
-
-  sectorNumber.u.LowPart = DiskSector << 9;
-  sectorNumber.u.HighPart = DiskSector >> 23;
 
   KeInitializeEvent (&event, NotificationEvent, FALSE);
-  sectorSize = BLOCKSIZE * SectorCount;
 
-  DPRINT ("VfatReadSectors(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
-	  pDeviceObject, DiskSector, Buffer);
-  DPRINT ("sectorNumber %08lx:%08lx sectorSize %ld\n",
-	  (unsigned long int) sectorNumber.u.LowPart,
-	  (unsigned long int) sectorNumber.u.HighPart, sectorSize);
-
+  DPRINT ("VfatReadSectors(pDeviceObject %x, Offset %I64x, Length %d, Buffer %x)\n",
+	  pDeviceObject, ReadOffset->QuadPart, ReadLength, Buffer);
 
   DPRINT ("Building synchronous FSD Request...\n");
   Irp = IoBuildSynchronousFsdRequest (IRP_MJ_READ,
 				      pDeviceObject,
 				      Buffer,
-				      sectorSize,
-				      &sectorNumber,
+				      ReadLength,
+				      ReadOffset,
 				      &event,
 				      &IoStatus);
 
@@ -74,9 +64,8 @@ VfatReadSectors (IN PDEVICE_OBJECT pDeviceObject,
   if (!NT_SUCCESS (Status))
     {
       DPRINT ("IO failed!!! VfatReadSectors : Error code: %x\n", Status);
-      DPRINT ("(pDeviceObject %x, DiskSector %x, Buffer %x, offset 0x%x%x)\n",
-	      pDeviceObject, DiskSector, Buffer, sectorNumber.u.HighPart,
-	      sectorNumber.u.LowPart);
+      DPRINT ("(pDeviceObject %x, Offset %I64x, Size %d, Buffer %x\n",
+	      pDeviceObject, ReadOffset->QuadPart, ReadLength, Buffer);
       return (Status);
     }
   DPRINT ("Block request succeeded for %x\n", Irp);
@@ -84,34 +73,27 @@ VfatReadSectors (IN PDEVICE_OBJECT pDeviceObject,
 }
 
 NTSTATUS
-VfatWriteSectors (IN PDEVICE_OBJECT pDeviceObject,
-		  IN ULONG DiskSector,
-		  IN ULONG SectorCount,
-		  IN PUCHAR Buffer)
+VfatWriteDisk (IN PDEVICE_OBJECT pDeviceObject,
+	       IN PLARGE_INTEGER WriteOffset,
+	       IN ULONG WriteLength,
+	       IN PUCHAR Buffer)
 {
-  LARGE_INTEGER sectorNumber;
   PIRP Irp;
   IO_STATUS_BLOCK IoStatus;
   KEVENT event;
   NTSTATUS Status;
-  ULONG sectorSize;
 
-  DPRINT ("VfatWriteSectors(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
-	  pDeviceObject, DiskSector, Buffer);
-
-  sectorNumber.u.LowPart = DiskSector << 9;
-  sectorNumber.u.HighPart = DiskSector >> 23;
+  DPRINT ("VfatWriteSectors(pDeviceObject %x, Offset %I64x, Size %d, Buffer %x)\n",
+	  pDeviceObject, WriteOffset->QuadPart, WriteLength, Buffer);
 
   KeInitializeEvent (&event, NotificationEvent, FALSE);
-
-  sectorSize = BLOCKSIZE * SectorCount;
 
   DPRINT ("Building synchronous FSD Request...\n");
   Irp = IoBuildSynchronousFsdRequest (IRP_MJ_WRITE,
 				      pDeviceObject,
 				      Buffer,
-				      sectorSize,
-				      &sectorNumber, 
+				      WriteLength,
+				      WriteOffset, 
 				      &event, 
 				      &IoStatus);
 

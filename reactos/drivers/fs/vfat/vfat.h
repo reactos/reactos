@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.42 2002/06/10 21:15:58 hbirr Exp $ */
+/* $Id: vfat.h,v 1.43 2002/06/26 18:36:41 hbirr Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -248,15 +248,15 @@ NTSTATUS VfatSetVolumeInformation (PVFAT_IRP_CONTEXT IrpContext);
 
 /*  ------------------------------------------------------  blockdev.c  */
 
-NTSTATUS VfatReadSectors(IN PDEVICE_OBJECT pDeviceObject,
-                         IN ULONG DiskSector,
-                         IN ULONG SectorCount,
-                         IN PUCHAR Buffer);
+NTSTATUS VfatReadDisk(IN PDEVICE_OBJECT pDeviceObject,
+                      IN PLARGE_INTEGER ReadOffset,
+                      IN ULONG ReadLength,
+                      IN PUCHAR Buffer);
 
-NTSTATUS VfatWriteSectors(IN PDEVICE_OBJECT pDeviceObject,
-                          IN ULONG DiskSector,
-                          IN ULONG SectorCount,
-                          IN PUCHAR Buffer);
+NTSTATUS VfatWriteDisk(IN PDEVICE_OBJECT pDeviceObject,
+                       IN PLARGE_INTEGER WriteOffset,
+                       IN ULONG WriteLength,
+                       IN PUCHAR Buffer);
 
 NTSTATUS VfatBlockDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
 				   IN ULONG CtlCode,
@@ -397,18 +397,6 @@ NTSTATUS GetNextSector (PDEVICE_EXTENSION DeviceExt,
                         ULONG CurrentSector,
                         PULONG NextSector,
                         BOOLEAN Extend);
-
-NTSTATUS VfatRawReadCluster (PDEVICE_EXTENSION DeviceExt,
-                             ULONG FirstCluster,
-                             PVOID Buffer,
-                             ULONG Cluster,
-                             ULONG Count);
-
-NTSTATUS VfatRawWriteCluster (PDEVICE_EXTENSION DeviceExt,
-                              ULONG FirstCluster,
-                              PVOID Buffer,
-                              ULONG Cluster,
-                              ULONG Count);
 
 NTSTATUS CountAvailableClusters (PDEVICE_EXTENSION DeviceExt,
                                  PLARGE_INTEGER Clusters);

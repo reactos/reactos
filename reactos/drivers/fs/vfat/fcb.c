@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.14 2002/03/18 22:37:12 hbirr Exp $
+/* $Id: fcb.c,v 1.15 2002/06/26 18:36:41 hbirr Exp $
  *
  *
  * FILE:             fcb.c
@@ -206,7 +206,7 @@ vfatMakeRootFCB(PDEVICE_EXTENSION  pVCB)
 
   FCB = vfatNewFCB(L"\\");
   memset(FCB->entry.Filename, ' ', 11);
-  FCB->entry.FileSize = pVCB->FatInfo.rootDirectorySectors * BLOCKSIZE;
+  FCB->entry.FileSize = pVCB->FatInfo.rootDirectorySectors * pVCB->FatInfo.BytesPerSector;
   FCB->entry.Attrib = FILE_ATTRIBUTE_DIRECTORY;
   if (pVCB->FatInfo.FatType == FAT32)
   {
@@ -224,7 +224,7 @@ vfatMakeRootFCB(PDEVICE_EXTENSION  pVCB)
   else
   {
     FCB->entry.FirstCluster = 1;
-    Size = pVCB->FatInfo.rootDirectorySectors * BLOCKSIZE;
+    Size = pVCB->FatInfo.rootDirectorySectors * pVCB->FatInfo.BytesPerSector;
   }
   FCB->RefCount = 1;
   FCB->dirIndex = 0;
@@ -296,7 +296,7 @@ vfatMakeFCBFromDirEntry(PVCB  vcb,
     FirstCluster = vfatDirEntryGetFirstCluster (vcb, &rcFCB->entry);
     if (FirstCluster == 1)
     {
-      Size = vcb->FatInfo.rootDirectorySectors * BLOCKSIZE;
+      Size = vcb->FatInfo.rootDirectorySectors * vcb->FatInfo.BytesPerSector;
     }
     else
     {
