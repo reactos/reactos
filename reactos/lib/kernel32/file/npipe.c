@@ -1,4 +1,4 @@
-/* $Id: npipe.c,v 1.6 2001/08/07 14:12:34 ekohl Exp $
+/* $Id: npipe.c,v 1.7 2001/10/20 15:28:03 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -17,6 +17,7 @@
 //#include <wchar.h>
 //#include <string.h>
 #include <limits.h>
+#include <napi/npipe.h>
 
 //#define NDEBUG
 #include <kernel32/kernel32.h>
@@ -171,7 +172,7 @@ CreateNamedPipeW(LPCWSTR lpName,
 	nMaxInstances = ULONG_MAX;
      }
    
-   DefaultTimeOut.QuadPart = nDefaultTimeOut * 10000;
+   DefaultTimeOut.QuadPart = nDefaultTimeOut * -10000;
    
    Status = NtCreateNamedPipeFile(&PipeHandle,
 				  DesiredAccess,
@@ -244,7 +245,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
    
    InitializeObjectAttributes(&ObjectAttributes,
 			      &NamedPipeName,
-			      0,
+			      OBJ_CASE_INSENSITIVE,
 			      NULL,
 			      NULL);
    Status = NtOpenFile(&FileHandle,
@@ -259,27 +260,25 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
 	return(FALSE);
      }
    
-   WaitPipe.Timeout.QuadPart = nTimeOut * 10000;
+   WaitPipe.Timeout.QuadPart = nTimeOut * -10000;
    
-#if 0
    Status = NtFsControlFile(FileHandle,
 			    NULL,
 			    NULL,
 			    NULL,
 			    &Iosb,
-			    FSCTL_WAIT_PIPE,
+			    FSCTL_PIPE_WAIT,
 			    &WaitPipe,
 			    sizeof(WaitPipe),
 			    NULL,
 			    0);
+   NtClose(FileHandle);
    if (!NT_SUCCESS(Status))
      {
 	SetLastErrorByStatus (Status);
 	return(FALSE);
      }
-#endif
    
-   NtClose(FileHandle);
    return(TRUE);
 }
 
@@ -405,7 +404,7 @@ SetNamedPipeHandleState(HANDLE hNamedPipe,
    
    if (lpCollectDataTimeout != NULL)
      {
-	SetState.Timeout.QuadPart = (*lpCollectDataTimeout) * 1000 * 1000;
+	SetState.Timeout.QuadPart = (*lpCollectDataTimeout) * -10000;
      }
    else
      {
