@@ -4,7 +4,7 @@ TARGET = rbuild$(EXE_POSTFIX)
 
 all: $(TARGET)
 
-BASE_OBJECTS = xml.o module.o
+BASE_OBJECTS = xml.o project.o module.o
 
 OBJECTS = $(BASE_OBJECTS) rbuild.o
 
