@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.91 2004/05/10 17:07:20 weiden Exp $ */
+/* $Id: text.c,v 1.92 2004/05/29 13:12:08 navaraf Exp $ */
 #include <w32k.h>
 
 #include <ft2build.h>
@@ -460,7 +460,7 @@ NtGdiAddFontResource(PUNICODE_STRING Filename, DWORD fl)
     return 0;
   }
   
-  Status = MmCopyFromCaller(&SafeFileName.Buffer, src, SafeFileName.MaximumLength);
+  Status = MmCopyFromCaller(SafeFileName.Buffer, src, SafeFileName.MaximumLength);
   if(!NT_SUCCESS(Status))
   {
     ExFreePool(SafeFileName.Buffer);
