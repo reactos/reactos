@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.32 2003/08/04 00:24:07 royce Exp $
+ * $Id: gdiobj.c,v 1.33 2003/08/04 19:08:26 royce Exp $
  *
  */
 
@@ -333,25 +333,32 @@ GDIOBJ_FreeObj(HGDIOBJ hObj, WORD Magic, DWORD Flag)
 BOOL FASTCALL
 GDIOBJ_LockMultipleObj( PGDIMULTILOCK pList, INT nObj )
 {
-	INT i, j;
-	ASSERT( pList );
-	//go through the list checking for duplicate objects
-	for( i = 0; i < nObj; i++ ){
-		(pList+i)->pObj = NULL;
-		for( j = 0; j < i; j++ ){
-			if( ((pList+i)->hObj == (pList+j)->hObj)
-			  && ((pList+i)->Magic == (pList+j)->Magic) ){
-				//already locked, so just copy the pointer to the object
-				(pList+i)->pObj = (pList+j)->pObj;
-				break;
-			}
-		}
-		if( (pList+i)->pObj == NULL ){
-			//object hasn't been locked, so lock it.
-			(pList+i)->pObj = GDIOBJ_LockObj( (pList+i)->hObj, (pList+i)->Magic );
-		}
+  INT i, j;
+  ASSERT( pList );
+  // FIXME - check for "invalid" handles
+  //go through the list checking for duplicate objects
+  for( i = 0; i < nObj; i++ )
+    {
+      (pList+i)->pObj = NULL;
+      for( j = 0; j < i; j++ )
+	{
+	  if( ((pList+i)->hObj == (pList+j)->hObj)
+	      && ((pList+i)->Magic == (pList+j)->Magic)
+	    )
+	    {
+	      //already locked, so just copy the pointer to the object
+	      (pList+i)->pObj = (pList+j)->pObj;
+	      break;
+	    }
 	}
-	return TRUE;
+      if( (pList+i)->pObj == NULL )
+      {
+	//object hasn't been locked, so lock it.
+	if ( (pList+i)->hObj )
+	  (pList+i)->pObj = GDIOBJ_LockObj( (pList+i)->hObj, (pList+i)->Magic );
+      }
+    }
+  return TRUE;
 }
 
 /*!
@@ -366,22 +373,26 @@ GDIOBJ_LockMultipleObj( PGDIMULTILOCK pList, INT nObj )
 BOOL FASTCALL
 GDIOBJ_UnlockMultipleObj( PGDIMULTILOCK pList, INT nObj )
 {
-	INT i, j;
-	ASSERT( pList );
-	//go through the list checking for duplicate objects
-	for( i = 0; i < nObj; i++ ){
-		if( (pList+i)->pObj != NULL ){
-			for( j = i+1; j < nObj; j++ ){
-				if( ((pList+i)->pObj == (pList+j)->pObj) ){
-					//set the pointer to zero for all duplicates
-					(pList+j)->pObj = NULL;
-				}
-			}
-			GDIOBJ_UnlockObj( (pList+i)->hObj, (pList+i)->Magic );
-			(pList+i)->pObj = NULL;
+  INT i, j;
+  ASSERT( pList );
+  //go through the list checking for duplicate objects
+  for( i = 0; i < nObj; i++ )
+    {
+      if( (pList+i)->pObj != NULL )
+	{
+	  for( j = i+1; j < nObj; j++ )
+	    {
+	      if( ((pList+i)->pObj == (pList+j)->pObj) )
+		{
+		  //set the pointer to zero for all duplicates
+		  (pList+j)->pObj = NULL;
 		}
+	    }
+	  GDIOBJ_UnlockObj( (pList+i)->hObj, (pList+i)->Magic );
+	  (pList+i)->pObj = NULL;
 	}
-	return TRUE;
+    }
+  return TRUE;
 }
 
 /*!
