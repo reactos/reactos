@@ -44,7 +44,7 @@ BEGIN
     POPUP "&Registry"
     BEGIN
         MENUITEM "&Open Local",                 ID_REGISTRY_OPENLOCAL
-        MENUITEM "&Close",                      ID_REGISTRY_CLOSE, GRAYED
+        MENUITEM "&Close",                      ID_REGISTRY_CLOSE
         MENUITEM SEPARATOR
         MENUITEM "&Load Hive",                  ID_REGISTRY_LOADHIVE, GRAYED
         MENUITEM "&Unload Hive",                ID_REGISTRY_UNLOADHIVE
@@ -52,13 +52,11 @@ BEGIN
         MENUITEM "R&estore...",                 ID_REGISTRY_RESTORE, GRAYED
         MENUITEM "Sa&ve Key...",                ID_REGISTRY_SAVEKEY, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Select Computer...",         ID_REGISTRY_SELECTCOMPUTER
+        MENUITEM "&Select Computer...",         ID_REGISTRY_SELECTCOMPUTER, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Print Subtree",              ID_REGISTRY_PRINTSUBTREE
-        , GRAYED
         MENUITEM "P&rinter Setup...",           ID_REGISTRY_PRINTERSETUP
         MENUITEM "Save Subtree &As...",         ID_REGISTRY_SAVESUBTREEAS
-        , GRAYED
         MENUITEM SEPARATOR
         MENUITEM "E&xit",                       IDM_EXIT
     END

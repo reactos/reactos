@@ -23,7 +23,7 @@
 #ifdef _MSC_VER
 #include "stdafx.h"
 #else
-#define WIN32_LEAN_AND_MEAN     // Exclude rarely-used stuff from Windows headers
+//#define WIN32_LEAN_AND_MEAN     // Exclude rarely-used stuff from Windows headers
 #include <windows.h>
 #include <commctrl.h>
 #include <stdlib.h>
@@ -111,6 +111,165 @@ static BOOL CALLBACK CloseEnumProc(HWND hWnd, LPARAM lParam)
     }
     return 1;
 }
+/*
+UINT_PTR CALLBACK CFHookProc(
+  HWND hdlg,      // handle to dialog box
+  UINT uiMsg,     // message identifier
+  WPARAM wParam,  // message parameter
+  LPARAM lParam   // message parameter
+);
+
+typedef UINT_PTR (CALLBACK *LPCFHOOKPROC)(HWND, UINT, WPARAM, LPARAM);
+
+typedef struct { 
+  DWORD        lStructSize; 
+  HWND         hwndOwner; 
+  HDC          hDC; 
+  LPLOGFONT    lpLogFont; 
+  INT          iPointSize; 
+  DWORD        Flags; 
+  COLORREF     rgbColors; 
+  LPARAM       lCustData; 
+  LPCFHOOKPROC lpfnHook; 
+  LPCTSTR      lpTemplateName; 
+  HINSTANCE    hInstance; 
+  LPTSTR       lpszStyle; 
+  WORD         nFontType; 
+  WORD         ___MISSING_ALIGNMENT__; 
+  INT          nSizeMin; 
+  INT          nSizeMax; 
+} CHOOSEFONT, *LPCHOOSEFONT; 
+ */
+void CmdOptionsFont(HWND hWnd)
+{
+//    LOGFONT LogFont;
+    CHOOSEFONT cf = { sizeof(CHOOSEFONT), hWnd, NULL,
+//        &LogFont,   // lpLogFont
+        NULL,       // lpLogFont
+        0,          // iPointSize
+//        CF_INITTOLOGFONTSTRUCT, // Flags
+        CF_SCREENFONTS,          // Flags
+        0,          // rgbColors; 
+        0L,         // lCustData; 
+        NULL,       // lpfnHook; 
+        NULL,       // lpTemplateName; 
+        hInst,      // hInstance; 
+        NULL,       // lpszStyle; 
+        0,          // nFontType; 
+        0,          // ___MISSING_ALIGNMENT__; 
+        0,          // nSizeMin; 
+        0           // nSizeMax
+    };
+
+    if (ChooseFont(&cf)) {
+
+
+    } else {
+        TCHAR* errStr = NULL;
+        DWORD error = CommDlgExtendedError();
+        switch (error) {
+        case CDERR_DIALOGFAILURE: errStr = _T("The dialog box could not be created. The common dialog box function's call to the DialogBox function failed. For example, this error occurs if the common dialog box call specifies an invalid window handle."); break;
+        case CDERR_FINDRESFAILURE: errStr = _T("The common dialog box function failed to find a specified resource."); break;
+        case CDERR_INITIALIZATION: errStr = _T("The common dialog box function failed during initialization. This error often occurs when sufficient memory is not available."); break;
+        case CDERR_LOADRESFAILURE: errStr = _T("The common dialog box function failed to load a specified resource."); break;
+        case CDERR_LOADSTRFAILURE: errStr = _T("The common dialog box function failed to load a specified string."); break;
+        case CDERR_LOCKRESFAILURE: errStr = _T("The common dialog box function failed to lock a specified resource."); break;
+        case CDERR_MEMALLOCFAILURE: errStr = _T("The common dialog box function was unable to allocate memory for internal structures."); break;
+        case CDERR_MEMLOCKFAILURE: errStr = _T("The common dialog box function was unable to lock the memory associated with a handle."); break;
+        case CDERR_NOHINSTANCE: errStr = _T("The ENABLETEMPLATE flag was set in the Flags member of the initialization structure for the corresponding common dialog box, but you failed to provide a corresponding instance handle."); break;
+        case CDERR_NOHOOK: errStr = _T("The ENABLEHOOK flag was set in the Flags member of the initialization structure for the corresponding common dialog box, but you failed to provide a pointer to a corresponding hook procedure."); break;
+        case CDERR_NOTEMPLATE: errStr = _T("The ENABLETEMPLATE flag was set in the Flags member of the initialization structure for the corresponding common dialog box, but you failed to provide a corresponding template."); break;
+        case CDERR_REGISTERMSGFAIL: errStr = _T("The RegisterWindowMessage function returned an error code when it was called by the common dialog box function."); break;
+        case CDERR_STRUCTSIZE: errStr = _T("The lStructSize member of the initialization structure for the corresponding common dialog box is invalid."); break;
+        case CFERR_MAXLESSTHANMIN:
+            break;
+        case CFERR_NOFONTS:
+            break;
+        }
+        if (errStr) {
+            MessageBox(hWnd, errStr, szTitle, MB_ICONERROR | MB_OK);
+        }
+    }
+}
+
+
+void CmdRegistryPrint(HWND hWnd, int cmd)
+{
+    PRINTDLG pd = { sizeof(PRINTDLG), hWnd,
+        0, // hDevMode; 
+        0, // hDevNames; 
+        NULL, // hDC; 
+        0L, // Flags; 
+        0, // nFromPage; 
+        0, // nToPage; 
+        0, // nMinPage; 
+        0, // nMaxPage; 
+        0, // nCopies; 
+        NULL, // hInstance; 
+        0, // lCustData; 
+        NULL, // lpfnPrintHook; 
+        NULL, // lpfnSetupHook; 
+        NULL, // lpPrintTemplateName; 
+        NULL, // lpSetupTemplateName; 
+        0, // hPrintTemplate; 
+        0 // hSetupTemplate; 
+    };
+
+    switch (cmd) {
+    case ID_REGISTRY_PRINTSUBTREE:
+        PrintDlg(&pd);
+        break;
+    case ID_REGISTRY_PRINTERSETUP:
+        PrintDlg(&pd);
+        break;
+    }
+    //PAGESETUPDLG psd;
+    //PageSetupDlg(&psd);
+}
+/*
+typedef struct tagOFN { 
+  DWORD         lStructSize; 
+  HWND          hwndOwner; 
+  HINSTANCE     hInstance; 
+  LPCTSTR       lpstrFilter; 
+  LPTSTR        lpstrCustomFilter; 
+  DWORD         nMaxCustFilter; 
+  DWORD         nFilterIndex; 
+  LPTSTR        lpstrFile; 
+  DWORD         nMaxFile; 
+  LPTSTR        lpstrFileTitle; 
+  DWORD         nMaxFileTitle; 
+  LPCTSTR       lpstrInitialDir; 
+  LPCTSTR       lpstrTitle; 
+  DWORD         Flags; 
+  WORD          nFileOffset; 
+  WORD          nFileExtension; 
+  LPCTSTR       lpstrDefExt; 
+  LPARAM        lCustData; 
+  LPOFNHOOKPROC lpfnHook; 
+  LPCTSTR       lpTemplateName; 
+#if (_WIN32_WINNT >= 0x0500)
+  void *        pvReserved;
+  DWORD         dwReserved;
+  DWORD         FlagsEx;
+#endif // (_WIN32_WINNT >= 0x0500)
+} OPENFILENAME, *LPOPENFILENAME; 
+ */
+    //GetOpenFileName(...);
+    //GetSaveFileName(...);
+void CmdRegistrySaveSubTreeAs(HWND hWnd)
+{
+    OPENFILENAME ofn;// = {    };
+
+    memset(&ofn, 0, sizeof(OPENFILENAME));
+
+    ofn.lStructSize = sizeof(OPENFILENAME); 
+    ofn.hwndOwner = hWnd; 
+    if (GetSaveFileName(&ofn)) {
+    } else {
+    }
+}
+
 
 static LRESULT _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -131,11 +290,15 @@ static LRESULT _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
 //            DestroyWindow(hWnd);
 //            break;
 //        case ID_FILE_OPEN:
+    case ID_REGISTRY_PRINTSUBTREE:
     case ID_REGISTRY_PRINTERSETUP:
-        //PRINTDLG pd;
-        //PrintDlg(&pd);
-        //PAGESETUPDLG psd;
-        //PageSetupDlg(&psd);
+        CmdRegistryPrint(hWnd, LOWORD(wParam));
+        break;
+    case ID_REGISTRY_SAVESUBTREEAS:
+        CmdRegistrySaveSubTreeAs(hWnd);
+        break;
+    case ID_OPTIONS_FONT:
+        CmdOptionsFont(hWnd);
         break;
     case ID_REGISTRY_OPENLOCAL:
     case ID_WINDOW_NEW_WINDOW:
