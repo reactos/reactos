@@ -32,4 +32,14 @@ VOID HalpCalibrateStallExecution(VOID);
 /* pci.c */
 VOID HalpInitPciBus (VOID);
 
+struct _ADAPTER_OBJECT {
+  int Channel;
+  PVOID PagePort;
+  PVOID CountPort;
+  PVOID OffsetPort;
+  KSPIN_LOCK SpinLock;
+  PVOID Buffer;
+  BOOLEAN Inuse;
+};
+
 #endif /* __INTERNAL_HAL_HAL_H */
