@@ -158,10 +158,12 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
    UNICODE_STRING SymlinkName;
    PDEVICE_EXTENSION DeviceExtension;
 
-   if(detect_ps2_port() == TRUE)
-   {
-   } else
+   if (detect_ps2_port() == TRUE) {
+     DbgPrint("PS2 Port Driver version 0.0.1\n");
+   } else {
+     DbgPrint("PS2 port not found.\n");
      return STATUS_UNSUCCESSFUL;
+   }
 
    DriverObject->MajorFunction[IRP_MJ_CREATE] = PS2MouseDispatch;
    DriverObject->MajorFunction[IRP_MJ_CLOSE]  = PS2MouseDispatch;
