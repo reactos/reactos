@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bug.c,v 1.19 2002/01/10 00:59:32 ekohl Exp $
+/* $Id: bug.c,v 1.20 2002/02/09 18:41:24 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/bug.c
@@ -140,15 +140,17 @@ KeBugCheckEx(ULONG BugCheckCode,
 //   PsDumpThreads();
   KeDumpStackFrames((PULONG)__builtin_frame_address(0));
   
-#if 1
+  if (KdDebuggerEnabled)
+    {
+      __asm__("sti\n\t");
+      DbgBreakPoint();
+    }
+
   for(;;)
     {
       /* PJS: use HLT instruction, rather than busy wait */
       __asm__("hlt\n\t");
     }
-#else
-  for(;;);
-#endif
 }
 
 VOID STDCALL

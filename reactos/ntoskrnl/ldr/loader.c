@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.95 2002/01/23 23:39:25 chorns Exp $
+/* $Id: loader.c,v 1.96 2002/02/09 18:41:24 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -28,6 +28,7 @@
 #include <roscfg.h>
 #include <internal/module.h>
 #include <internal/ntoskrnl.h>
+#include <internal/kd.h>
 #include <internal/io.h>
 #include <internal/mm.h>
 #include <internal/ob.h>
@@ -792,7 +793,7 @@ VOID LdrLoadUserModuleSymbols(PLDR_MODULE ModuleObject)
       return;
     }
 
-  DbgPrint("Loading symbols from %wZ...\n", &Filename);
+  CPRINT("Loading symbols from %wZ...\n", &Filename);
 
   /*  Get the size of the file  */
   Status = ZwQueryInformationFile(FileHandle,
@@ -916,6 +917,14 @@ VOID LdrLoadAutoConfigDrivers (VOID)
     * Keyboard driver
     */
    LdrLoadAutoConfigDriver( L"keyboard.sys" );
+
+   if (KdDebugType == PiceDebug)
+     {
+			 /*
+			  * Private ICE debugger
+			  */
+		   LdrLoadAutoConfigDriver( L"pice.sys" );
+     }
    
    /*
     * Raw console driver
@@ -967,6 +976,7 @@ VOID LdrLoadAutoConfigDrivers (VOID)
     * Novell Eagle 2000 driver
     */
    //LdrLoadAutoConfigDriver(L"ne2000.sys");
+   LdrLoadAutoConfigDriver(L"pcntn3m.sys");
 
    /*
     * TCP/IP protocol driver
@@ -2007,7 +2017,7 @@ PVOID LdrSafePEProcessModule(
             }
           else if (Type != 0)
             {
-              DbgPrint("Unknown relocation type %x at %x\n",Type, &Type);
+              CPRINT("Unknown relocation type %x at %x\n",Type, &Type);
               return 0;
             }
         }

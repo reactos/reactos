@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.17 2002/01/23 23:39:25 chorns Exp $
+/* $Id: catch.c,v 1.18 2002/02/09 18:41:24 chorns Exp $
  *
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
@@ -271,11 +271,10 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 
       /* PreviousMode == KernelMode */
 
-#ifndef KDBG
-
-      KeBugCheck (KMODE_EXCEPTION_NOT_HANDLED);
-
-#endif /* KDBG */
+      if (!KdDebuggerEnabled || KdDebugType != GdbDebug)
+        {
+          KeBugCheck (KMODE_EXCEPTION_NOT_HANDLED);
+        }
 
       Action = KdEnterDebuggerException (ExceptionRecord, Context, Tf);
       if (Action != kdHandleException)

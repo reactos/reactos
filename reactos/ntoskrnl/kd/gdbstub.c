@@ -1278,6 +1278,8 @@ KdGdbStubInit(ULONG Phase)
       }
 
        KdPortEnableInterrupts();
+
+       DbgBreakPointWithStatus (DBG_STATUS_CONTROL_C);
   }
 }
 

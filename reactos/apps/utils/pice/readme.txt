@@ -15,7 +15,7 @@ http://pice.sourceforge.net).
 Installation and use:
 
 1. PICE is loaded like a regular device driver. The only limitation - it must
-be loaded before keyboard.sys driver. You should add:
+be loaded after keyboard.sys driver. You should add:
 
    LdrLoadAutoConfigDriver( L"pice.sys" );
 
@@ -95,11 +95,10 @@ phys	 show all mappings for linear address
 timers	 show all active timers
 
 TODO:
-1. Break into pice on KeBugCheck().
-2. Evaluation of pointers.
-3. Virtual breakpoints
-4. Unimplemented commands.
-5. Video mode switching (to debug gdi applications).
+1. Evaluation of pointers.
+2. Virtual breakpoints
+3. Unimplemented commands.
+4. Video mode switching (to debug gdi applications).
 
 
 Enjoy,

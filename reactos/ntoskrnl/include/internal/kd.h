@@ -1,4 +1,4 @@
-/* $Id: kd.h,v 1.5 2002/02/02 20:12:45 ekohl Exp $
+/* $Id: kd.h,v 1.6 2002/02/09 18:41:23 chorns Exp $
  *
  * kernel debugger prototypes
  */
@@ -7,6 +7,19 @@
 #define __INCLUDE_INTERNAL_KERNEL_DEBUGGER_H
 
 #include <internal/ke.h>
+
+typedef enum
+{
+  NoDebug = 0,
+  GdbDebug,
+  PiceDebug,
+  ScreenDebug,
+  SerialDebug,
+  BochsDebug,
+  FileLogDebug
+} DEBUG_TYPE;
+
+extern DEBUG_TYPE KdDebugType;
 
 typedef enum _KD_CONTINUE_TYPE
 {

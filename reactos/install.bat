@@ -11,6 +11,7 @@ echo Installing to %ROS_INSTALL%
 
 md %ROS_INSTALL%
 md %ROS_INSTALL%\bin
+md %ROS_INSTALL%\symbols
 md %ROS_INSTALL%\system32
 md %ROS_INSTALL%\system32\config
 md %ROS_INSTALL%\system32\drivers
@@ -21,6 +22,7 @@ copy aboot.bat %ROS_INSTALL%
 copy system.hiv %ROS_INSTALL%\system32\config
 copy loaders\dos\loadros.com %ROS_INSTALL%
 copy ntoskrnl\ntoskrnl.exe %ROS_INSTALL%\system32
+copy ntoskrnl\ntoskrnl.sym %ROS_INSTALL%\symbols
 copy hal\halx86\hal.dll %ROS_INSTALL%\system32
 copy services\fs\vfat\vfatfs.sys %ROS_INSTALL%\system32\drivers
 copy services\fs\ms\msfs.sys %ROS_INSTALL%\system32\drivers
@@ -87,6 +89,9 @@ copy apps\partinfo\partinfo.exe %ROS_INSTALL%\bin
 copy apps\objdir\objdir.exe %ROS_INSTALL%\bin
 copy apps\mutex\mutex.exe %ROS_INSTALL%\bin
 copy apps\winhello\winhello.exe %ROS_INSTALL%\bin
+copy apps\pice\module\pice.sys %ROS_INSTALL%\system32\drivers
+copy apps\pice\module\pice.sym %ROS_INSTALL%\symbols
+copy apps\pice\pice.cfg %ROS_INSTALL%\symbols
 copy media\fonts\helb____.ttf %ROS_INSTALL%\media\fonts
 copy media\fonts\timr____.ttf %ROS_INSTALL%\media\fonts
 copy media\nls\*.nls %ROS_INSTALL%\system32
