@@ -1,4 +1,4 @@
-/* $Id: pageop.c,v 1.6 2002/01/09 03:00:21 dwelch Exp $
+/* $Id: pageop.c,v 1.7 2002/02/18 18:41:23 hbirr Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -53,10 +53,9 @@ MmReleasePageOp(PMM_PAGEOP PageOp)
       ExFreePool(PageOp);
       return;
     }
-  PrevPageOp = PrevPageOp->Next;
-  while (PrevPageOp != NULL)
+  while (PrevPageOp->Next != NULL)
     {
-      if (PrevPageOp == PageOp)
+      if (PrevPageOp->Next == PageOp)
 	{
 	  PrevPageOp->Next = PageOp->Next;
 	  KeReleaseSpinLock(&MmPageOpHashTableLock, oldIrql);
