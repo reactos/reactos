@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.9 2004/02/25 14:25:11 ekohl Exp $
+/* $Id: misc.c,v 1.10 2004/02/25 23:54:13 sedwards Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -6,6 +6,7 @@
  * PURPOSE:         Miscellaneous security functions
  */
 
+#include <debug.h>
 #define NTOS_MODE_USER
 #include <ntos.h>
 #include <windows.h>
@@ -142,6 +143,27 @@ RevertToSelf(VOID)
       return(FALSE);
     }
   return(TRUE);
+}
+
+
+/******************************************************************************
+ * GetUserNameA [ADVAPI32.@]
+ *
+ * Get the current user name.
+ *
+ * PARAMS
+ *  lpszName [O]   Destination for the user name.
+ *  lpSize   [I/O] Size of lpszName.
+ *
+ * RETURNS
+ *  Success: The length of the user name, including terminating NUL.
+ *  Failure: ERROR_MORE_DATA if *lpSize is too small.
+ */
+BOOL STDCALL
+GetUserNameA( LPSTR lpszName, LPDWORD lpSize )
+{
+  DPRINT1("GetUserNameA - Unimplemented\n");
+  return 1;
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-; $Id: advapi32.def,v 1.13 2004/02/25 23:12:38 sedwards Exp $
+; $Id: advapi32.def,v 1.14 2004/02/25 23:54:12 sedwards Exp $
 ;
 ; advapi32.def
 ;
@@ -136,7 +136,7 @@ GetCurrentHwProfileA@4
 ;GetExplicitAccessRightsW
 ;GetExplicitEntriesFromAclA@12
 ;GetExplicitEntriesFromAclW@12
-;GetFileSecurityA@20
+GetFileSecurityA@20
 ;GetFileSecurityW@20
 GetKernelObjectSecurity@20
 GetLengthSid@4
@@ -169,7 +169,7 @@ GetTokenInformation@20
 ;GetTrusteeNameW@4
 ;GetTrusteeTypeA@4
 ;GetTrusteeTypeW@4
-;GetUserNameA@8
+GetUserNameA@8
 ;GetUserNameW@8
 ;GrantAccessRightsA@16
 ;GrantAccessRightsW@16
@@ -352,6 +352,7 @@ RevertToSelf@0
 SetAclInformation@16
 ;SetEntriesInAclA@16
 ;SetEntriesInAclW@16
+SetFileSecurityA@20
 SetKernelObjectSecurity@12
 ;SetNamedSecurityInfoA@28
 ;SetNamedSecurityInfoW@28

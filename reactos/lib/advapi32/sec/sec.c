@@ -1,4 +1,4 @@
-/* $Id: sec.c,v 1.18 2004/02/25 14:25:11 ekohl Exp $
+/* $Id: sec.c,v 1.19 2004/02/25 23:54:13 sedwards Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,9 +11,40 @@
  *                  Created 01/11/98
  */
 
+#include <debug.h>
 #define NTOS_MODE_USER
 #include <windows.h>
 #include <ntos.h>
+
+/******************************************************************************
+ * GetFileSecurityA [ADVAPI32.@]
+ *
+ * Obtains Specified information about the security of a file or directory.
+ *
+ * PARAMS
+ *  lpFileName           [I] Name of the file to get info for
+ *  RequestedInformation [I] SE_ flags from "winnt.h"
+ *  pSecurityDescriptor  [O] Destination for security information
+ *  nLength              [I] Length of pSecurityDescriptor
+ *  lpnLengthNeeded      [O] Destination for length of returned security information
+ *
+ * RETURNS
+ *  Success: TRUE. pSecurityDescriptor contains the requested information.
+ *  Failure: FALSE. lpnLengthNeeded contains the required space to return the info. 
+ *
+ * NOTES
+ *  The information returned is constrained by the callers access rights and
+ *  privileges.
+ */
+BOOL WINAPI
+GetFileSecurityA( LPCSTR lpFileName,
+                    SECURITY_INFORMATION RequestedInformation,
+                    PSECURITY_DESCRIPTOR pSecurityDescriptor,
+                    DWORD nLength, LPDWORD lpnLengthNeeded )
+{
+  DPRINT("GetFileSecurityW : stub\n");
+  return TRUE;
+}
 
 
 /*
@@ -287,6 +318,18 @@ MakeSelfRelativeSD (
 	}
 
 	return TRUE;
+}
+
+/******************************************************************************
+ * SetFileSecurityA [ADVAPI32.@]
+ * Sets the security of a file or directory
+ */
+BOOL STDCALL SetFileSecurityA( LPCSTR lpFileName,
+                                SECURITY_INFORMATION RequestedInformation,
+                                PSECURITY_DESCRIPTOR pSecurityDescriptor)
+{
+  DPRINT("SetFileSecurityA : stub\n");
+  return TRUE;
 }
 
 
