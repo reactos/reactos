@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.41 2003/12/28 23:22:30 arty Exp $
+/* $Id: reg.c,v 1.42 2003/12/29 23:04:55 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -2156,6 +2156,10 @@ RegQueryValueExW (HKEY hKey,
       ErrorCode = RtlNtStatusToDosError (Status);
       SetLastError (ErrorCode);
       MaxCopy = 0;
+      if (NULL != lpcbData)
+        {
+          ResultSize = sizeof(*ValueInfo) + *lpcbData;
+        }
     }
 
   if (lpType != NULL)
@@ -2172,11 +2176,11 @@ RegQueryValueExW (HKEY hKey,
       (ValueInfo->Type == REG_MULTI_SZ) ||
       (ValueInfo->Type == REG_EXPAND_SZ))
     {
-      if (MaxCopy > ValueInfo->DataLength / sizeof(WCHAR))
+      if (MaxCopy > ValueInfo->DataLength)
 	((PWSTR)lpData)[ValueInfo->DataLength / sizeof(WCHAR)] = 0;
       
       if (lpcbData) {
-	*lpcbData = (ResultSize - sizeof(*ValueInfo)) / sizeof(WCHAR);
+	*lpcbData = (ResultSize - sizeof(*ValueInfo));
 	DPRINT("(string) Returning Size: %d\n", *lpcbData);
       }
     }
@@ -2248,7 +2252,7 @@ RegQueryValueExA(
   RtlCreateUnicodeStringFromAsciiz(&ValueName, (LPSTR)lpValueName);
 
   /* Convert length from USHORT to DWORD */
-  Length = ValueData.Length / sizeof(WCHAR);
+  Length = ValueData.Length;
   ErrorCode = RegQueryValueExW
     (hKey,
      ValueName.Buffer,
@@ -2264,16 +2268,20 @@ RegQueryValueExA(
           RtlInitAnsiString(&AnsiString, NULL);
           AnsiString.Buffer = lpData;
           AnsiString.MaximumLength = *lpcbData;
-	  ValueData.Length = Length * sizeof(WCHAR);
+	  ValueData.Length = Length;
 	  ValueData.MaximumLength = ValueData.Length + sizeof(WCHAR);
           RtlUnicodeStringToAnsiString(&AnsiString, &ValueData, FALSE);
+          Length = Length / sizeof(WCHAR);
         } else {
-          RtlMoveMemory(lpData, ValueData.Buffer, 
-			min(*lpcbData,Length));
+          Length = min(*lpcbData, Length);
+          RtlMoveMemory(lpData, ValueData.Buffer, Length);
         }
     }
-  
-  *lpcbData = Length;
+
+  if (NULL != lpcbData)
+    {  
+      *lpcbData = Length;
+    }
 
   if (ValueData.Buffer)
     {
