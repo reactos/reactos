@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.7 2003/08/05 15:41:03 weiden Exp $ */
+/* $Id: process.c,v 1.8 2003/08/07 09:14:14 hbirr Exp $ */
 #include <msvcrt/process.h>
 #include <msvcrt/stdlib.h>
 #include <msvcrt/string.h>
@@ -349,6 +349,7 @@ int _spawnle(int mode, const char *cmdname, const char* arg0, ... /*, NULL, cons
 	ptr = (char* const*)va_arg(argp, char*);
     }
     while (ptr != NULL);
+    ptr = (char* const*)va_arg(argp, char*);
     envs = argvtos(ptr, 0);
     if (args)
     {
@@ -445,6 +446,7 @@ int _spawnlpe(int mode, const char* cmdname, const char* arg0, .../*, NULL, cons
 	ptr = (char* const*)va_arg(argp, char*);
     }
     while (ptr != NULL);
+    ptr = (char* const*)va_arg(argp, char*);
     envs = argvtos(ptr, 0);
     if (args)
     {
@@ -521,7 +523,8 @@ int _execle(const char* cmdname, const char* arg0, ... /*, NULL, char* const* en
 	ptr = (char* const*)va_arg(argp, char*);
     }
     while (ptr != NULL);
-    envs = argvtos((char**)ptr, 0);
+    ptr = (char* const*)va_arg(argp, char*);
+    envs = argvtos(ptr, 0);
     if (args)
     {
 	ret = do_spawn(P_OVERLAY, cmdname, args, envs);
@@ -596,6 +599,7 @@ int _execlpe(const char* cmdname, const char* arg0, ... /*, NULL, char* const* e
 	ptr = (char* const*)va_arg(argp, char*);
     }
     while (ptr != NULL);
+    ptr = (char* const*)va_arg(argp, char*);
     envs = argvtos(ptr, 0);
     if (args)
     {
