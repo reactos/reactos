@@ -29,14 +29,20 @@
  *  DISCLAIMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.10 $
- * $Author: royce $
- * $Date: 2003/08/11 00:04:05 $
+ * $Revision: 1.11 $
+ * $Author: gvg $
+ * $Date: 2004/07/07 22:29:37 $
  *
  */
 
-#ifndef	_TCHAR_H_
-#define _TCHAR_H_
+#ifndef	_ROS_TCHAR_H_
+#define _ROS_TCHAR_H_
+
+#ifdef __USE_W32API
+
+#include_next <tchar.h>
+
+#else /* Not __USE_W32API */
 
 #include <msvcrt/string.h>
 
@@ -259,3 +265,4 @@ typedef char TCHAR;
 
 #endif	/* Not _TCHAR_H_ */
 
+#endif /* Not __USE_W32API */

@@ -1,4 +1,4 @@
-/* $Id: fiber.c,v 1.3 2004/07/03 17:40:19 navaraf Exp $
+/* $Id: fiber.c,v 1.4 2004/07/07 22:29:37 gvg Exp $
 */
 
 #include <assert.h>
@@ -426,7 +426,7 @@ int _tmain(int argc, _TCHAR const * const * argv)
  unsigned nFibers;
 
  if(argc > 1)
-  nFibers = _tcstoul(argv[1], 0, NULL);
+  nFibers = _tcstoul(argv[1], NULL, 0);
  else
   nFibers = FIBERTEST_COUNT;
 
