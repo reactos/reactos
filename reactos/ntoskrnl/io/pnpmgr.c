@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.37 2004/10/11 19:07:25 ekohl Exp $
+/* $Id: pnpmgr.c,v 1.38 2004/10/19 19:37:45 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -535,22 +535,22 @@ IopInitiatePnpIrp(
 
   KeInitializeEvent(
     &Event,
-	  NotificationEvent,
-	  FALSE);
-
-  /* PNP IRPs are always initialized with a status code of
-     STATUS_NOT_IMPLEMENTED */
-  IoStatusBlock->Status = STATUS_NOT_IMPLEMENTED;
-  IoStatusBlock->Information = 0;
+    NotificationEvent,
+    FALSE);
 
   Irp = IoBuildSynchronousFsdRequest(
     IRP_MJ_PNP,
     TopDeviceObject,
-	  NULL,
-	  0,
-	  NULL,
-	  &Event,
-	  IoStatusBlock);
+    NULL,
+    0,
+    NULL,
+    &Event,
+    IoStatusBlock);
+
+  /* PNP IRPs are always initialized with a status code of
+     STATUS_NOT_IMPLEMENTED */
+  Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+  Irp->IoStatus.Information = 0;
 
   IrpSp = IoGetNextIrpStackLocation(Irp);
   IrpSp->MinorFunction = MinorFunction;
@@ -832,7 +832,8 @@ IopSetDeviceInstanceData(HANDLE InstanceKey,
 			 sizeof(ULONG));
 
   /* Set 'UINumber' value */
-  if (DeviceNode->CapabilityFlags->UINumber != (ULONG)-1)
+  if (DeviceNode->CapabilityFlags != NULL &&
+      DeviceNode->CapabilityFlags->UINumber != (ULONG)-1)
   {
     RtlInitUnicodeString(&KeyName,
 			 L"UINumber");
