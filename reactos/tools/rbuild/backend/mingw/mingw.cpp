@@ -336,7 +336,7 @@ MingwBackend::GenerateDirectoryTargets ()
 		if ( IncludeDirectoryTarget ( *i ) )
 		{
 			fprintf ( fMakefile,
-			          "%s:\n",
+			          "%s: $(RMKDIR_TARGET)\n",
 			          i->c_str () );
 			fprintf ( fMakefile, 
 			          "\t${mkdir} %s\n\n",

@@ -53,6 +53,7 @@ ifeq ($(HALFVERBOSEECHO),yes)
   ECHO_LD     =@echo [LD]      $@
   ECHO_RBUILD =@echo [RBUILD]  $@
   ECHO_RSYM   =@echo [RSYM]    $@
+  ECHO_WMC    =@echo [WMC]     $@
   ECHO_NCI    =@echo [NCI]     $@
   ECHO_CABMAN =@echo [CABMAN]  $<
   ECHO_CDMAKE =@echo [CDMAKE]  $@
@@ -71,6 +72,7 @@ else
   ECHO_LD     =
   ECHO_RBUILD =
   ECHO_RSYM   =
+  ECHO_WMC    =
   ECHO_NCI    =
   ECHO_CABMAN =
   ECHO_CDMAKE =
@@ -156,16 +158,18 @@ PREAUTO := \
 	$(ERRCODES_RC) \
 	$(NCI_SERVICE_FILES)
 
-makefile.auto: $(RMKDIR_TARGET) $(BIN2RES_TARGET) $(WINEBUILD_TARGET) $(RBUILD_TARGET) $(PREAUTO) $(XMLBUILDFILES)
+makefile.auto: $(RBUILD_TARGET) $(PREAUTO) $(XMLBUILDFILES)
 	$(ECHO_RBUILD)
 	$(Q)tools$(SEP)rbuild$(SEP)rbuild$(EXEPOSTFIX) mingw
 
 
 $(BUGCODES_H) $(BUGCODES_RC): $(WMC_TARGET) $(NTOSKRNL_MC)
-	$(WMC_TARGET) -i -H $(BUGCODES_H) -o $(BUGCODES_RC) $(NTOSKRNL_MC)
+	$(ECHO_WMC)
+	$(Q)$(WMC_TARGET) -i -H $(BUGCODES_H) -o $(BUGCODES_RC) $(NTOSKRNL_MC)
 
 $(ERRCODES_H) $(ERRCODES_RC): $(WMC_TARGET) $(KERNEL32_MC)
-	$(WMC_TARGET) -i -H $(ERRCODES_H) -o $(ERRCODES_RC) $(KERNEL32_MC)
+	$(ECHO_WMC)
+	$(Q)$(WMC_TARGET) -i -H $(ERRCODES_H) -o $(ERRCODES_RC) $(KERNEL32_MC)
 
 .PHONY: makefile_auto_clean
 makefile_auto_clean:

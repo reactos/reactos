@@ -725,8 +725,7 @@ MingwModuleHandler::GenerateGccCommand ( const Module& module,
 	string objectFilename = PassThruCacheDirectory (
 		GetObjectFilename ( module, sourceFilename ) );
 	fprintf ( fMakefile,
-	          "%s: %s %s\n",
-	          objectFilename.c_str (),
+	          "%s: %s\n",
 	          objectFilename.c_str (),
 	          deps.c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_CC)\n" );
@@ -835,7 +834,7 @@ MingwModuleHandler::GenerateWinebuildCommands (
 	CLEAN_FILE ( stub_file );
 
 	fprintf ( fMakefile,
-	          "%s: %s\n",
+	          "%s: %s $(WINEBUILD_TARGET)\n",
 	          def_file.c_str (),
 	          sourceFilename.c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_WINEBLD)\n" );
@@ -1848,7 +1847,7 @@ MingwWin32DLLModuleHandler::GenerateExtractWineDLLResourcesTarget ( const Module
 {
 	fprintf ( fMakefile, ".PHONY: %s_extractresources\n\n",
 	          module.name.c_str () );
-	fprintf ( fMakefile, "%s_extractresources: bin2res\n",
+	fprintf ( fMakefile, "%s_extractresources: $(BIN2RES_TARGET)\n",
 	          module.name.c_str () );
 	const vector<File*>& files = module.non_if_data.files;
 	for ( size_t i = 0; i < files.size (); i++ )

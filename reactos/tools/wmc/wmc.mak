@@ -25,6 +25,9 @@ WMC_HOST_CXXFLAGS = -I$(WMC_BASE) -g -Werror -Wall
 
 WMC_HOST_LFLAGS = -g
 
+.PHONY: wmc
+wmc: $(WMC_TARGET)
+
 $(WMC_TARGET): $(WMC_BASE_DIR) $(WMC_OBJECTS)
 	$(ECHO_LD)
 	${host_gcc} $(WMC_OBJECTS) $(WMC_HOST_LFLAGS) -o $(WMC_TARGET)
