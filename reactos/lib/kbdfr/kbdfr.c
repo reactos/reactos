@@ -65,7 +65,10 @@
 #define VK_OEM_8 0xdf
 #endif
 #ifndef VK_OEM_102
-#define VK_OEM_102 0xe1
+#define VK_OEM_102 0xe2
+#endif
+#ifndef VK_ZOOM
+#define VK_ZOOM 0xfb
 #endif
 
 ROSDATA USHORT scancode_to_vk[] = {
@@ -75,7 +78,7 @@ ROSDATA USHORT scancode_to_vk[] = {
   VK_EMPTY,     VK_ESCAPE,    '1',          '2',
   '3',          '4',          '5',          '6',
   '7',          '8',          '9',          '0',
-  VK_OEM_MINUS, VK_OEM_PLUS,  VK_BACK,
+  VK_OEM_4, VK_OEM_PLUS,  VK_BACK,
   /* - 0f - */
   /* First Letters Row */
   VK_TAB,       'A',          'Z',          'E',
@@ -87,8 +90,8 @@ ROSDATA USHORT scancode_to_vk[] = {
   VK_LCONTROL,  
   'Q',          'S',          'D',          'F',
   'G',          'H',          'J',          'K',
-  'L',          'M' , VK_OEM_3,     VK_OEM_5, 
-  VK_LSHIFT,    VK_OEM_7,
+  'L',          'M' , VK_OEM_3,     VK_OEM_7, 
+  VK_LSHIFT,    VK_OEM_5,
   /* - 2c - */
   /* Third letters row */
   'W',          'X',          'C',          'V',
@@ -117,10 +120,10 @@ ROSDATA USHORT scancode_to_vk[] = {
   VK_SNAPSHOT,
   /* - 55 - */
   /* Oddities, and the remaining standard F-Keys */
-  VK_EMPTY,     VK_OEM_4,     VK_F11,       VK_F12,
+  VK_EMPTY,     VK_OEM_102,     VK_F11,       VK_F12,
   /* - 59 - */
   VK_CLEAR,     VK_EMPTY,     VK_EMPTY,     VK_EMPTY,     VK_EMPTY, /* EREOF */
-  VK_EMPTY,     VK_EMPTY,     VK_EMPTY,     VK_EMPTY,     VK_EMPTY, /* ZOOM */
+  VK_EMPTY,     VK_EMPTY,     VK_EMPTY,     VK_EMPTY,     VK_ZOOM, /* ZOOM */
   VK_HELP,      
   /* - 64 - */
   /* Even more F-Keys (for example, NCR keyboards from the early 90's) */
@@ -143,6 +146,22 @@ ROSDATA USHORT scancode_to_vk[] = {
 };
 
 ROSDATA VSC_VK extcode0_to_vk[] = {
+	// FIXME:m qu'est ce que c'est ?
+	// What is this?
+#if 0
+  { 'G', '$' },
+  { 'H', '&' },
+  //{ 'I', '!' },
+  { 'K', '%' },
+  { 'M', '\'' },
+  { 'O', '#' },
+  { 'P', '(' },
+  { 'Q', '"' },
+  { 'R', '-' },
+  { '_', '_' },
+  { '[', '[' },
+  { ']', ']' },
+#endif 
   { 0, 0 },
 };
 
@@ -160,13 +179,15 @@ ROSDATA VK_TO_BIT modifier_keys[] = {
 typedef struct _mymod {
   PVOID mod_keys;
   WORD maxmod;
-  BYTE mod_max[4];
+  BYTE mod_max[7];
 } INTERNAL_KBD_MODIFIERS;
 
 ROSDATA INTERNAL_KBD_MODIFIERS modifier_bits[] = {
   modifier_keys,
-  3,
-  { 0, 1, 2, 3 } /* Modifier bit order, NONE, SHIFT, CTRL, ALT */
+  6,
+  { 0, 1, 2, 4,15,15,3 } 
+  /* new: Modifier bit order, NONE, SHIFT, CTRL, ALT , ? ,? , shift+control*/
+  /* old: Modifier bit order, NONE, SHIFT, CTRL, ALT */
 };
 
 #define NOCAPS 0
@@ -176,21 +197,21 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   /* Normal vs Shifted */
   /* The numbers */
   { '1',         NOCAPS, '&', '1' },
-  { '2',         NOCAPS, 'é', '2' },
+  //{ '2',         NOCAPS, 'é', '2' },
   /* Ctrl-2 generates NUL */
-  { '3',         NOCAPS, '"', '3' },
-  { '4',         NOCAPS, '\'', '4' },
-  { '5',         NOCAPS, '(', '5' },
-  { '6',         NOCAPS, '-', '6' },
+  //{ '3',         NOCAPS, '"', '3' },
+  //{ '4',         NOCAPS, '\'', '4' },
+  //{ '5',         NOCAPS, '(', '5' },
+  //{ '6',         NOCAPS, '-', '6' },
   /* Ctrl-6 generates RS */
-  { '7',         NOCAPS, 'è', '7' },
-  { '8',         NOCAPS, '_', '8' },
-  { '9',         NOCAPS, 'ç', '9' },
-  { '0',         NOCAPS, 'à', '0' },
+  //{ '7',         NOCAPS, 'è', '7' },
+  //{ '8',         NOCAPS, '_', '8' },
+  //{ '9',         NOCAPS, 'ç', '9' },
+  //{ '0',         NOCAPS, 'à', '0' },
   /* First letter row */
   { 'A',         CAPS,   'a', 'A' },
   { 'Z',         CAPS,   'z', 'Z' },
-  { 'E',         CAPS,   'e', 'E' },
+  //{ 'E',         CAPS,   'e', 'E' },
   { 'R',         CAPS,   'r', 'R' },
   { 'T',         CAPS,   't', 'T' },
   { 'Y',         CAPS,   'y', 'Y' },
@@ -220,13 +241,13 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   /* Specials */
   /* Ctrl-_ generates US */
   { VK_OEM_PLUS    ,NOCAPS, '=', '+' },
-  { VK_OEM_1       ,NOCAPS, '$', '£' },
-  { VK_OEM_7       ,NOCAPS, '*','µ'},
-  { VK_OEM_3       ,NOCAPS, 'ù', '%' },
+  //{ VK_OEM_1       ,NOCAPS, '$', '£' },
+  { VK_OEM_5       ,NOCAPS, '*',L'µ'},
+  { VK_OEM_3       ,NOCAPS, L'ù', '%' },
   { VK_OEM_COMMA   ,NOCAPS, ',', '?' },
   { VK_OEM_PERIOD  ,NOCAPS, ';', '.' },
   { VK_OEM_2       ,NOCAPS, ':', '/' },
-  { VK_OEM_8       ,NOCAPS, '!', '§' },
+  { VK_OEM_8       ,NOCAPS, '!', L'§' },
   /* Keys that do not have shift states */
   { VK_TAB     ,NOCAPS, '\t','\t'},
   { VK_ADD     ,NOCAPS, '+', '+' },
@@ -241,20 +262,40 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
 ROSDATA VK_TO_WCHARS3 key_to_chars_3mod[] = {
   /* Normal, Shifted, Ctrl */
   /* Legacy (telnet-style) ascii escapes */
-  { VK_OEM_4, 0, '<', '>', 0x1b /* ESC */ },
-  { VK_OEM_6, 0, '^', '¨', 0x1d /* GS */ },
-  { VK_OEM_5, 0, '²','|', 0x1c /* FS */ },
+  { VK_OEM_102, 0, '<', '>', 0x1c /* FS */ },
+  { VK_OEM_6, 0, WCH_DEAD, WCH_DEAD, WCH_NONE },
+  { VK_EMPTY, 0, L'^', L'¨', WCH_NONE }, //OEM 6 DEAD
+  { VK_OEM_7, 0, L'²','|', 0x1c /* FS */ },
   { VK_RETURN,0, '\r', '\r', '\n' },
   { 0,0 }
 };
 
 ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
-  /* Normal, Shifted, Ctrl, C-S-x */
+  { '2' , 1  ,  L'é', '2', WCH_NONE , WCH_DEAD },
+  { VK_EMPTY , 0  ,  WCH_NONE, WCH_NONE, WCH_NONE , L'~' },
+  { '3' , 1  ,  '"', '3', WCH_NONE , '#' },
+  { '4' , 1  ,  '\'', '4', WCH_NONE , '{' },
+  { '7' , 1  ,  L'è', '7', WCH_NONE , WCH_DEAD },
+  { VK_EMPTY , 0  ,  WCH_NONE, WCH_NONE, WCH_NONE , L'`' },
+  { '0' , 1  ,  L'à', '0', WCH_NONE , '@' },
+  { 'E' , 1  ,  'e', 'E', WCH_NONE , L'€' /* euro */ },
+  { VK_OEM_1 ,1, '$', L'£' ,WCH_NONE, L'¤' },
+  { VK_OEM_4, NOCAPS, ')', '°', ']'  },
+  { 0, 0 }
+};
+
+ROSDATA VK_TO_WCHARS5 key_to_chars_5mod[] = {
+  /* x,x,      Normal, Shifted, Ctrl, Alt, C-S-x */
   /* Legacy Ascii generators */
   //{ '2', NOCAPS, '2', '@', WCH_NONE, 0 },
   //{ '6', NOCAPS, '6', '^', WCH_NONE, 0x1e /* RS */ },
   //{ VK_OEM_MINUS, NOCAPS, ')', '°', WCH_NONE, 0x1f /* US */ },
-  { VK_OEM_MINUS, NOCAPS, ')', '°', '#' , 0x1f /* US */ },
+  //{ '5'  | KEXT , NOCAPS, ')', '°', '#' , 0x1f /* US */ },
+  { '5' , 1  ,  '(', '5', WCH_NONE , '[' , 0x1b  },
+  { '6' , 1  ,  '-', '6', WCH_NONE , '|' , 0x1f  },
+  { '8' , 1  ,  '_', '8', WCH_NONE , '\\' , 0x1c  },
+  { '9' , 1  ,  L'ç', '9', WCH_NONE , WCH_DEAD , 0x1e},
+  { VK_EMPTY , 0  ,  WCH_NONE, WCH_NONE, WCH_NONE , L'^' ,WCH_NONE },
   { 0, 0 }
 };
 
@@ -280,8 +321,36 @@ ROSDATA VK_TO_WCHAR_TABLE vk_to_wchar_master_table[] = {
   vk_master(2,key_to_chars_2mod),
   vk_master(3,key_to_chars_3mod),
   vk_master(4,key_to_chars_4mod),
+  vk_master(5,key_to_chars_5mod),
   { 0,0,0 }
 };
+
+#define DK(l,a) (l | a <<16)
+ROSDATA DEADKEY  deadkey[] =
+{
+	{ DK('a',L'¨'), L'ä' , 0 },
+	{ DK('e',L'¨'), L'ë' , 0 },
+	{ DK('i',L'¨'), L'ï' , 0 },
+	{ DK('o',L'¨'), L'ö' , 0 },
+	{ DK('u',L'¨'), L'ü' , 0 },
+	{ DK(' ',L'¨'), L'¨' , 0 },
+	{ DK('a',L'^'), L'â' , 0 },
+	{ DK(L'^',L'e'), L'ê' , 0 },
+	{ DK('i',L'^'), L'î' , 0 },
+	{ DK('o',L'^'), L'ô' , 0 },
+	{ DK('u',L'^'), L'û' , 0 },
+	{ DK(' ',L'^'), L'^' , 0 },
+	{ DK('a',L'`'), L'à' , 0 },
+	{ DK('e',L'`'), L'è' , 0 },
+	{ DK('i',L'`'), L'ì' , 0 },
+	{ DK('o',L'`'), L'ò' , 0 },
+	{ DK('u',L'`'), L'ù' , 0 },
+	{ DK(' ',L'`'), L'`' , 0 },
+	{ DK('n',L'~'), L'ñ' , 0 },
+	{ DK(' ',L'~'), L'~' , 0 },
+  { 0,0 ,0,}
+};
+
 
 ROSDATA VSC_LPWSTR key_names[] = {
   { 0x00, L"" },
@@ -374,8 +443,7 @@ ROSDATA KBDTABLES keyboard_layout_table = {
   vk_to_wchar_master_table,
   
   /* diacritical marks -- currently implemented by wine code */
-  /* English doesn't have any, anyway */
-  NULL,
+  &deadkey,
 
   /* Key names */
   (VSC_LPWSTR *)key_names,
