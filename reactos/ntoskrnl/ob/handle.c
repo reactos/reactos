@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.18 2000/01/22 00:04:56 phreak Exp $
+/* $Id: handle.c,v 1.19 2000/03/26 22:00:09 dwelch Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -47,7 +47,7 @@ static PHANDLE_REP ObpGetObjectByHandle(PHANDLE_TABLE HandleTable, HANDLE h)
  */
 {
    PLIST_ENTRY current;
-   unsigned int handle = (((unsigned int)h) - 1) >> 3;
+   unsigned int handle = (((unsigned int)h) - 1) >> 2;
    unsigned int count=handle/HANDLE_BLOCK_ENTRIES;
    HANDLE_BLOCK* blk = NULL;
    unsigned int i;
@@ -200,7 +200,7 @@ VOID ObCloseAllHandles(PEPROCESS Process)
 		       DPRINT("Deleting handle to %x\n", ObjectBody);
 		    }
 		  
-          ObReferenceObjectByPointer(ObjectBody,
+		  ObReferenceObjectByPointer(ObjectBody,
 					     GENERIC_ALL,
 					     NULL,
 					     UserMode);
@@ -216,7 +216,7 @@ VOID ObCloseAllHandles(PEPROCESS Process)
 						 Header->HandleCount);
 		    }
 		  
-          ObDereferenceObject(ObjectBody);
+		  ObDereferenceObject(ObjectBody);
 		  KeAcquireSpinLock(&HandleTable->ListLock, &oldIrql);
 		  current_entry = &HandleTable->ListHead;
 		  break;
@@ -409,7 +409,7 @@ NTSTATUS ObCreateHandle(PEPROCESS Process,
 		  blk->handles[i].GrantedAccess = GrantedAccess;
 		  blk->handles[i].Inherit = Inherit;
 		  KeReleaseSpinLock(&HandleTable->ListLock, oldlvl);
-		  *HandleReturn = (HANDLE)((handle + i) << 3);
+		  *HandleReturn = (HANDLE)((handle + i) << 2);
 		  return(STATUS_SUCCESS);
 	       }
 	  }
@@ -429,7 +429,7 @@ NTSTATUS ObCreateHandle(PEPROCESS Process,
    new_blk->handles[0].ObjectBody = ObjectBody;
    new_blk->handles[0].GrantedAccess = GrantedAccess;
    new_blk->handles[0].Inherit = Inherit;
-   *HandleReturn = (HANDLE)(handle << 3);
+   *HandleReturn = (HANDLE)(handle << 2);
    return(STATUS_SUCCESS);   
 }
 

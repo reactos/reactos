@@ -138,6 +138,10 @@ WINBOOL STDCALL WriteConsoleA(HANDLE hConsoleOutput,
 	return(FALSE);
      }
    
+   HeapFree(GetProcessHeap(),
+	    0,
+	    Request);
+	    
    if (lpNumberOfCharsWritten != NULL)
      {
 	*lpNumberOfCharsWritten = 
@@ -192,6 +196,10 @@ WINBOOL STDCALL ReadConsoleA(HANDLE hConsoleInput,
    memcpy(lpBuffer, 
 	  Reply->Data.ReadConsoleReply.Buffer,
 	  Reply->Data.ReadConsoleReply.NrCharactersRead);
+   
+   HeapFree(GetProcessHeap(),
+	    0,
+	    Reply);
    
    return(TRUE);
 }

@@ -1,4 +1,4 @@
-/* $Id: symlink.c,v 1.11 2000/01/21 23:59:53 phreak Exp $
+/* $Id: symlink.c,v 1.12 2000/03/26 22:00:08 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -20,19 +20,15 @@
 
 /* GLOBALS ******************************************************************/
 
-typedef
-struct
+typedef struct
 {
 	CSHORT			Type;
 	CSHORT			Size;
 	UNICODE_STRING		TargetName;
-	OBJECT_ATTRIBUTES	Target;
-	
+	OBJECT_ATTRIBUTES	Target;	
 } SYMLNK_OBJECT, *PSYMLNK_OBJECT;
 
-
-POBJECT_TYPE
-IoSymbolicLinkType = NULL;
+POBJECT_TYPE IoSymbolicLinkType = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -126,41 +122,28 @@ IopParseSymbolicLink (
  *
  * REVISIONS
  */
-VOID
-IoInitSymbolicLinkImplementation (VOID)
+VOID IoInitSymbolicLinkImplementation (VOID)
 {
-	ANSI_STRING AnsiString;
+   IoSymbolicLinkType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
    
-	IoSymbolicLinkType = ExAllocatePool(
-				NonPagedPool,
-				sizeof (OBJECT_TYPE)
-				);
-   
-	IoSymbolicLinkType->TotalObjects = 0;
-	IoSymbolicLinkType->TotalHandles = 0;
-	IoSymbolicLinkType->MaxObjects = ULONG_MAX;
-	IoSymbolicLinkType->MaxHandles = ULONG_MAX;
-	IoSymbolicLinkType->PagedPoolCharge = 0;
-	IoSymbolicLinkType->NonpagedPoolCharge = sizeof (SYMLNK_OBJECT);
-	IoSymbolicLinkType->Dump = NULL;
-	IoSymbolicLinkType->Open = NULL;
-	IoSymbolicLinkType->Close = NULL;
-	IoSymbolicLinkType->Delete = NULL;
-	IoSymbolicLinkType->Parse = IopParseSymbolicLink;
-	IoSymbolicLinkType->Security = NULL;
-	IoSymbolicLinkType->QueryName = NULL;
-	IoSymbolicLinkType->OkayToClose = NULL;
-	IoSymbolicLinkType->Create = IopCreateSymbolicLink;
-   
-	RtlInitAnsiString(
-		& AnsiString,
-		"Symbolic Link"
-		);
-	RtlAnsiStringToUnicodeString(
-		& IoSymbolicLinkType->TypeName,
-		& AnsiString,
-		TRUE
-		);
+   IoSymbolicLinkType->TotalObjects = 0;
+   IoSymbolicLinkType->TotalHandles = 0;
+   IoSymbolicLinkType->MaxObjects = ULONG_MAX;
+   IoSymbolicLinkType->MaxHandles = ULONG_MAX;
+   IoSymbolicLinkType->PagedPoolCharge = 0;
+   IoSymbolicLinkType->NonpagedPoolCharge = sizeof (SYMLNK_OBJECT);
+   IoSymbolicLinkType->Dump = NULL;
+   IoSymbolicLinkType->Open = NULL;
+   IoSymbolicLinkType->Close = NULL;
+   IoSymbolicLinkType->Delete = NULL;
+   IoSymbolicLinkType->Parse = IopParseSymbolicLink;
+   IoSymbolicLinkType->Security = NULL;
+   IoSymbolicLinkType->QueryName = NULL;
+   IoSymbolicLinkType->OkayToClose = NULL;
+   IoSymbolicLinkType->Create = IopCreateSymbolicLink;
+    
+   RtlInitUnicodeString(&IoSymbolicLinkType->TypeName,
+			L"SymbolicLink");
 }
 
 

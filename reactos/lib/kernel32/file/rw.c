@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.9 2000/03/22 18:35:47 dwelch Exp $
+/* $Id: rw.c,v 1.10 2000/03/26 22:00:07 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -100,6 +100,15 @@ WINBOOL STDCALL ReadFile(HANDLE hFile,
    PIO_STATUS_BLOCK IoStatusBlock;
    PLARGE_INTEGER ptrOffset;
    
+   if (IsConsoleHandle(hFile))
+     {
+	return(ReadConsoleA(hFile,
+			    lpBuffer,
+			    nNumberOfBytesToRead,
+			    lpNumberOfBytesRead,
+			    NULL));
+     }
+   
    if (lpOverLapped != NULL) 
      {
         Offset.u.LowPart = lpOverLapped->Offset;
@@ -138,13 +147,18 @@ WINBOOL STDCALL ReadFile(HANDLE hFile,
    return(TRUE);
 }
 
-VOID ApcRoutine(PVOID ApcContext, struct _IO_STATUS_BLOCK* IoStatusBlock, ULONG NumberOfBytesTransfered)
+VOID ApcRoutine(PVOID ApcContext, 
+		struct _IO_STATUS_BLOCK* IoStatusBlock, 
+		ULONG NumberOfBytesTransfered)
 {
-	DWORD dwErrorCode;
-	LPOVERLAPPED_COMPLETION_ROUTINE  lpCompletionRoutine = (LPOVERLAPPED_COMPLETION_ROUTINE)ApcContext;
-
-	dwErrorCode = RtlNtStatusToDosError( IoStatusBlock->Status);
-	lpCompletionRoutine(  dwErrorCode, NumberOfBytesTransfered, (LPOVERLAPPED)IoStatusBlock );
+   DWORD dwErrorCode;
+   LPOVERLAPPED_COMPLETION_ROUTINE  lpCompletionRoutine = 
+     (LPOVERLAPPED_COMPLETION_ROUTINE)ApcContext;
+   
+   dwErrorCode = RtlNtStatusToDosError( IoStatusBlock->Status);
+   lpCompletionRoutine(dwErrorCode, 
+		       NumberOfBytesTransfered, 
+		       (LPOVERLAPPED)IoStatusBlock);
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: scm.c,v 1.4 1999/11/07 08:03:25 ea Exp $
+/* $Id: scm.c,v 1.5 2000/03/26 22:00:07 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -9,7 +9,13 @@
  *	19990413 EA	created
  *	19990515 EA
  */
+
+/* INCLUDES ******************************************************************/
+
 #include <windows.h>
+#include <ddk/ntddk.h>
+
+/* FUNCTIONS *****************************************************************/
 
 /**********************************************************************
  *	ChangeServiceConfigA
@@ -346,39 +352,6 @@ GetServiceKeyNameW(
 	return FALSE;
 }
 
-
-/**********************************************************************
- *	I_ScSetServiceBitsA
- *
- * Undocumented
- *
- * Return value unknown.
- */
-DWORD
-STDCALL
-I_ScSetServiceBitsA(VOID)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 1;
-}
-
-
-/**********************************************************************
- *	I_ScSetServiceBitsW
- *
- * Undocumented
- *
- * Return value unknown.
- */
-DWORD
-STDCALL
-I_ScSetServiceBitsW(VOID)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 1;
-}
-
-
 /**********************************************************************
  *	LockServiceDatabase
  */
@@ -396,32 +369,76 @@ LockServiceDatabase(
 /**********************************************************************
  *	OpenSCManagerA
  */
-SC_HANDLE
-STDCALL
-OpenSCManagerA(
-	LPCSTR	lpMachineName,
-	LPCSTR	lpDatabaseName,
-	DWORD	dwDesiredAccess
-	)
+SC_HANDLE STDCALL OpenSCManagerA(LPCSTR	lpMachineName,
+				 LPCSTR	lpDatabaseName,
+				 DWORD	dwDesiredAccess)
 {
-	SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
-	return INVALID_HANDLE_VALUE;
+   SC_HANDLE h;
+   UNICODE_STRING MachineNameW;
+   UNICODE_STRING DatabaseNameW;
+   ANSI_STRING MachineNameA;
+   ANSI_STRING DatabaseNameA;
+   
+   RtlInitAnsiString(&MachineNameA, lpMachineName);
+   RtlAnsiStringToUnicodeString(&MachineNameW,
+				&MachineNameA,
+				TRUE);
+   RtlInitAnsiString(&DatabaseNameA, lpDatabaseName);
+   RtlAnsiStringToUnicodeString(&DatabaseNameW,
+				&DatabaseNameA,
+				TRUE);
+   
+   h = OpenSCManagerW(MachineNameW.Buffer,
+		      DatabaseNameW.Buffer,
+		      dwDesiredAccess);
+   
+   RtlFreeHeap(GetProcessHeap(),
+	       0,
+	       MachineNameW.Buffer);
+   RtlFreeHeap(GetProcessHeap(),
+	       0,
+	       DatabaseNameW.Buffer);
+   
+   return(h);
 }
 
 
 /**********************************************************************
  *	OpenSCManagerW
  */
-SC_HANDLE
-STDCALL
-OpenSCManagerW(
-	LPCWSTR	lpMachineName,
-	LPCWSTR	lpDatabaseName,
-	DWORD	dwDesiredAccess
-	)
+SC_HANDLE STDCALL OpenSCManagerW(LPCWSTR	lpMachineName,
+				 LPCWSTR	lpDatabaseName,			
+				 DWORD	dwDesiredAccess)
 {
-	SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
-	return INVALID_HANDLE_VALUE;
+   HANDLE h;   
+   
+   if (lpMachineName == NULL ||
+       wcslen(lpMachineName) == 0)
+     {
+	if (lpDatabaseName != NULL &&
+	    wcscmp(lpDatabaseName, SERVICES_ACTIVE_DATABASEW) != 0)
+	  {
+	     return(NULL);
+	  }
+	
+	h = CreateFile(L"\\\\.\\pipe\ntsrvctrl",
+		       dwDesiredAccess,
+		       0,
+		       NULL,
+		       OPEN_EXISTING,
+		       0,
+		       NULL);
+	if (h == INVALID_HANDLE_VALUE)
+	  {
+	     return(NULL);
+	  }
+	
+	return(h);
+     }
+   else
+     {
+	return(NULL);
+     }
 }
 
 
@@ -607,79 +624,6 @@ QueryServiceStatusEx(VOID)
 
 
 /**********************************************************************
- *	RegisterServiceCtrlHandlerA
- */
-SERVICE_STATUS_HANDLE
-STDCALL
-RegisterServiceCtrlHandlerA(
-	LPCSTR			lpServiceName,
-	LPHANDLER_FUNCTION	lpHandlerProc
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/**********************************************************************
- *	RegisterServiceCtrlHandlerW
- */
-SERVICE_STATUS_HANDLE
-STDCALL
-RegisterServiceCtrlHandlerW(
-	LPCWSTR			lpServiceName,
-	LPHANDLER_FUNCTION	lpHandlerProc
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/**********************************************************************
- *	SetServiceBits
- */
-BOOL
-STDCALL
-SetServiceBits(VOID)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 1;
-}
-
-
-/**********************************************************************
- *	SetServiceObjectSecurity
- */
-BOOL
-STDCALL
-SetServiceObjectSecurity(
-	SC_HANDLE		hService,
-	SECURITY_INFORMATION	dwSecurityInformation,
-	PSECURITY_DESCRIPTOR	lpSecurityDescriptor
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/**********************************************************************
- *	SetServiceStatus
- */
-BOOL
-STDCALL
-SetServiceStatus(
-	SERVICE_STATUS_HANDLE	hServiceStatus,
-	LPSERVICE_STATUS	lpServiceStatus
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/**********************************************************************
  *	StartServiceA
  */
 BOOL
@@ -695,32 +639,6 @@ StartServiceA(
 }
 
 
-/**********************************************************************
- *	StartServiceCtrlDispatcherA
- */
-BOOL
-STDCALL
-StartServiceCtrlDispatcherA(
-	LPSERVICE_TABLE_ENTRYA	lpServiceStartTable
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/**********************************************************************
- *	StartServiceCtrlDispatcherW
- */
-BOOL
-STDCALL
-StartServiceCtrlDispatcherW(
-	LPSERVICE_TABLE_ENTRYW	lpServiceStartTable
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
 /**********************************************************************

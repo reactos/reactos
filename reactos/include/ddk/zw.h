@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.26 2000/03/22 18:35:45 dwelch Exp $
+/* $Id: zw.h,v 1.27 2000/03/26 22:00:06 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -17,9 +17,11 @@
 #ifndef __DDK_ZW_H
 #define __DDK_ZW_H
 
+#include <security.h>
   
 #define LCID ULONG
-#define SECURITY_INFORMATION ULONG
+//#define SECURITY_INFORMATION ULONG
+//typedef ULONG SECURITY_INFORMATION;
 
 
 /*

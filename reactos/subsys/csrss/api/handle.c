@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.4 2000/03/24 22:25:39 dwelch Exp $
+/* $Id: handle.c,v 1.5 2000/03/26 22:00:10 dwelch Exp $
  *
  * reactos/subsys/csrss/api/handle.c
  *
@@ -20,7 +20,7 @@ NTSTATUS CsrGetObject(PCSRSS_PROCESS_DATA ProcessData,
 		      HANDLE Handle,
 		      PVOID* Object)
 {
-   *Object = ProcessData->HandleTable[((ULONG)Handle) - 1];
+   *Object = ProcessData->HandleTable[(((ULONG)Handle) >> 2) - 1];
    return(STATUS_SUCCESS);
 }
 
@@ -41,7 +41,7 @@ NTSTATUS CsrInsertObject(PCSRSS_PROCESS_DATA ProcessData,
 	if (ProcessData->HandleTable[i] == NULL)
 	  {
 	     ProcessData->HandleTable[i] = Object;
-	     *Handle = (HANDLE)((i << 8) | 0x3);
+	     *Handle = (HANDLE)(((i + 1) << 2) | 0x3);
 	     return(STATUS_SUCCESS);
 	  }
      }
@@ -58,7 +58,7 @@ NTSTATUS CsrInsertObject(PCSRSS_PROCESS_DATA ProcessData,
 		 ProcessData->HandleTableSize * sizeof(HANDLE));
    ProcessData->HandleTable = NewBlock;
    ProcessData->HandleTable[i] = Object;   
-   *Handle = (HANDLE)(((i + 1) << 8) | 0x3);
+   *Handle = (HANDLE)(((i + 1) << 2) | 0x3);
    ProcessData->HandleTableSize = ProcessData->HandleTableSize + 64;
    
    return(STATUS_SUCCESS);

@@ -1,4 +1,4 @@
-/* $Id: dirobj.c,v 1.7 2000/01/12 19:04:22 ekohl Exp $
+/* $Id: dirobj.c,v 1.8 2000/03/26 22:00:09 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -47,42 +47,34 @@
  * NOTES
  * 	Undocumented.
  */
-NTSTATUS
-STDCALL
-NtOpenDirectoryObject (
-	PHANDLE			DirectoryHandle,
-	ACCESS_MASK		DesiredAccess,
-	POBJECT_ATTRIBUTES	ObjectAttributes
-	)
+NTSTATUS STDCALL NtOpenDirectoryObject(PHANDLE DirectoryHandle,
+				       ACCESS_MASK DesiredAccess,
+				       POBJECT_ATTRIBUTES ObjectAttributes)
 {
-	PVOID		Object;
-	NTSTATUS	Status;
+   PVOID Object;
+   NTSTATUS Status;
 
-	*DirectoryHandle = 0;
-
-	Status = ObReferenceObjectByName(
-			ObjectAttributes->ObjectName,
-			ObjectAttributes->Attributes,
-			NULL,
-			DesiredAccess,
-			ObDirectoryType,
-			UserMode,
-			NULL,
-			& Object
-			);
-	if (!NT_SUCCESS(Status))
-	{
-		return Status;
-	}
-
-	Status = ObCreateHandle(
-			PsGetCurrentProcess(),
-			Object,
-			DesiredAccess,
-			FALSE,
-			DirectoryHandle
-			);
-	return STATUS_SUCCESS;
+   *DirectoryHandle = 0;
+   
+   Status = ObReferenceObjectByName(ObjectAttributes->ObjectName,
+				    ObjectAttributes->Attributes,
+				    NULL,
+				    DesiredAccess,
+				    ObDirectoryType,
+				    UserMode,
+				    NULL,
+				    &Object);
+   if (!NT_SUCCESS(Status))
+     {
+	return Status;
+     }
+   
+   Status = ObCreateHandle(PsGetCurrentProcess(),
+			   Object,
+			   DesiredAccess,
+			   FALSE,
+			   DirectoryHandle);
+   return STATUS_SUCCESS;
 }
 
 
@@ -122,134 +114,133 @@ NtOpenDirectoryObject (
  * RETURN VALUE
  * 	Status.
  */
-NTSTATUS
-STDCALL
-NtQueryDirectoryObject (
-	IN	HANDLE			DirObjHandle,
-	OUT	POBJDIR_INFORMATION	DirObjInformation, 
-	IN	ULONG			BufferLength, 
-	IN	BOOLEAN			GetNextIndex, 
-	IN	BOOLEAN			IgnoreInputIndex, 
-	IN OUT	PULONG			ObjectIndex,
-	OUT	PULONG			DataWritten	OPTIONAL
-	)
+NTSTATUS STDCALL NtQueryDirectoryObject (IN HANDLE DirObjHandle,
+					 OUT POBJDIR_INFORMATION 
+					            DirObjInformation, 
+					 IN ULONG BufferLength, 
+					 IN BOOLEAN GetNextIndex, 
+					 IN BOOLEAN IgnoreInputIndex, 
+					 IN OUT PULONG ObjectIndex,
+					 OUT PULONG DataWritten OPTIONAL)
 {
-	PDIRECTORY_OBJECT	dir = NULL;
-	ULONG			EntriesToRead;
-	PLIST_ENTRY		current_entry;
-	POBJECT_HEADER		current;
-	ULONG			i=0;
-	ULONG			EntriesToSkip;
-	NTSTATUS		Status;
+   PDIRECTORY_OBJECT dir = NULL;
+   PLIST_ENTRY current_entry;
+   POBJECT_HEADER current;
+   ULONG i = 0;
+   ULONG EntriesToSkip;
+   NTSTATUS Status;
+   ULONG SpaceRequired;
+   ULONG FirstFree;
+   
+   DPRINT("NtQueryDirectoryObject(DirObjHandle %x)\n", DirObjHandle);
 
-
-	DPRINT(
-		"NtQueryDirectoryObject(DirObjHandle %x)\n",
-		DirObjHandle
-		);
-	DPRINT(
-		"dir %x namespc_root %x\n",
-		dir,
-		HEADER_TO_BODY(&(namespc_root.hdr))
-		);
-
-//	assert_irql(PASSIVE_LEVEL);
-
-	Status = ObReferenceObjectByHandle(
-			DirObjHandle,
-			DIRECTORY_QUERY,
-			ObDirectoryType,
-			UserMode,
-			(PVOID *) & dir,
-			NULL
-			);
-	if (Status != STATUS_SUCCESS)
-	{
-		return Status;
-	}
-
-	EntriesToRead = BufferLength / sizeof (OBJDIR_INFORMATION);
-	*DataWritten = 0;
-
-	DPRINT("EntriesToRead %d\n",EntriesToRead);
-
-	current_entry = dir->head.Flink;
-
-	/*
-	 * Optionally, skip over some entries at the start of the directory
-	 */
-	if (!IgnoreInputIndex)
-	{
-		CHECKPOINT;
-	
-		EntriesToSkip = *ObjectIndex;
-		while ( (i < EntriesToSkip) && (current_entry != NULL))
-		{
-			current_entry = current_entry->Flink;
-		}
-	}
-
-	DPRINT("DirObjInformation %x\n",DirObjInformation);
-
-	/*
-	 * Read the maximum entries possible into the buffer
-	 */
-	while ( (i < EntriesToRead) && (current_entry != (&(dir->head))))
-	{
-		current = CONTAINING_RECORD(
-				current_entry,
-				OBJECT_HEADER,
-				Entry
-				);
-		DPRINT(
-			"Scanning %S\n",
-			current->Name.Buffer
-			);
-		
-		DirObjInformation[i].ObjectName.Buffer = 
-			ExAllocatePool(
-				NonPagedPool,
-				(current->Name.Length + 1) * 2
-				);
-		DirObjInformation[i].ObjectName.Length =
-			current->Name.Length;
-		DirObjInformation[i].ObjectName.MaximumLength =
-			current->Name.Length;
-		
-		DPRINT(
-			"DirObjInformation[i].ObjectName.Buffer %x\n",
-			DirObjInformation[i].ObjectName.Buffer
-			);
-		
-		RtlCopyUnicodeString(
-			& DirObjInformation[i].ObjectName,
-			& (current->Name)
-			);
-		i++;
-		current_entry = current_entry->Flink;
-		(*DataWritten) = (*DataWritten) + sizeof (OBJDIR_INFORMATION);
-
-		CHECKPOINT;
-	}
+   Status = ObReferenceObjectByHandle(DirObjHandle,
+				      DIRECTORY_QUERY,
+				      ObDirectoryType,
+				      UserMode,
+				      (PVOID*)&dir,
+				      NULL);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
+   
+   /*
+    * Optionally, skip over some entries at the start of the directory
+    */
+   if (!IgnoreInputIndex)
+     {
 	CHECKPOINT;
-
-	/*
-	 * Optionally, count the number of entries in the directory
-	 */
-	if (GetNextIndex)
-	{
-		*ObjectIndex = i;
-	}
-	else
-	{
-		while ( current_entry != (&(dir->head)) )
-		{
-			current_entry = current_entry->Flink;
-			i++;
-		}
-		*ObjectIndex = i;
-	}
-	return STATUS_SUCCESS;
+	
+	EntriesToSkip = *ObjectIndex;
+	i = 0;
+	current_entry = dir->head.Flink;
+	
+	while ((i < EntriesToSkip) && (current_entry != &dir->head))
+	  {
+	     current_entry = current_entry->Flink;
+	     i++;
+	  }
+     }
+   else
+     {
+	current_entry = dir->head.Flink;
+	i = 0;
+     }
+   
+   /*
+    * Check if we have reached the end of the directory
+    */
+   if (current_entry != &dir->head)
+     {
+	*DataWritten = 0;
+	return(STATUS_NO_MORE_ENTRIES);
+     }
+   
+   /*
+    * Read the current entry into the buffer
+    */
+   FirstFree = sizeof(OBJDIR_INFORMATION);
+   
+   current = CONTAINING_RECORD(current_entry, OBJECT_HEADER, Entry);
+   
+   SpaceRequired = (wcslen(current->Name.Buffer) + 1) * 2;
+   SpaceRequired = SpaceRequired + 
+     ((wcslen(current->ObjectType->TypeName.Buffer) + 1) * 2);
+   SpaceRequired = SpaceRequired + sizeof(OBJDIR_INFORMATION);
+   
+   if (SpaceRequired <= BufferLength)
+     {
+	
+	DirObjInformation->ObjectName.Length = 
+	  current->Name.Length;
+	DirObjInformation->ObjectName.MaximumLength = 
+	  current->Name.Length;
+	DirObjInformation->ObjectName.Buffer = 
+	  (((PVOID)DirObjInformation) + FirstFree);
+	FirstFree = FirstFree + (wcslen(current->Name.Buffer + 1) * 2);
+	wcscpy(DirObjInformation->ObjectName.Buffer,
+	       current->Name.Buffer);
+		
+	DirObjInformation->ObjectTypeName.Length = 
+	  current->ObjectType->TypeName.Length;
+	DirObjInformation->ObjectTypeName.MaximumLength = 
+	  current->ObjectType->TypeName.Length;
+	DirObjInformation->ObjectName.Buffer = 
+	  (((PVOID)DirObjInformation) + FirstFree);
+	FirstFree = FirstFree + 
+	  (wcslen(current->ObjectType->TypeName.Buffer + 1) * 2);
+	wcscpy(DirObjInformation->ObjectTypeName.Buffer,
+	       current->ObjectType->TypeName.Buffer);
+	
+	*DataWritten = SpaceRequired;
+	Status = STATUS_SUCCESS;
+     }
+   else
+     {
+	Status = STATUS_BUFFER_TOO_SMALL;
+     }
+   
+   /*
+    * Store into ObjectIndex
+    */
+   if (GetNextIndex)
+     {
+	*ObjectIndex = i + 1;
+     }
+   else
+     {
+	i = 0;
+	current_entry = dir->head.Flink;
+	while (current_entry != (&dir->head))
+	  {
+	     current_entry = current_entry->Flink;
+	     i++;
+	  }
+	*ObjectIndex = i;
+     }
+   
+   return(STATUS_SUCCESS);
 }
 
 
@@ -276,23 +267,23 @@ NtQueryDirectoryObject (
  * RETURN VALUE
  * 	Status.
  */
-NTSTATUS
-STDCALL
-NtCreateDirectoryObject (
-	PHANDLE			DirectoryHandle,
-	ACCESS_MASK		DesiredAccess,
-	POBJECT_ATTRIBUTES	ObjectAttributes
-	)
+NTSTATUS STDCALL NtCreateDirectoryObject (PHANDLE DirectoryHandle,
+					  ACCESS_MASK DesiredAccess,
+					  POBJECT_ATTRIBUTES ObjectAttributes)
 {
-	PDIRECTORY_OBJECT dir;
+   PDIRECTORY_OBJECT dir;
 
-	dir = ObCreateObject(
-		DirectoryHandle,
-		DesiredAccess,
-		ObjectAttributes,
-		ObDirectoryType
-		);
-	return STATUS_SUCCESS;
+   DPRINT("NtCreateDirectoryObject(DirectoryHandle %x, "
+	  "DesiredAccess %x, ObjectAttributes %x, "
+	  "ObjectAttributes->ObjectName %S)\n",
+	  DirectoryHandle, DesiredAccess, ObjectAttributes,
+	  ObjectAttributes->ObjectName);
+   
+   dir = ObCreateObject(DirectoryHandle,
+			DesiredAccess,
+			ObjectAttributes,
+			ObDirectoryType);
+   return(STATUS_SUCCESS);
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.14 2000/03/26 19:38:13 ea Exp $
+/* $Id: iotypes.h,v 1.15 2000/03/26 22:00:06 dwelch Exp $
  * 
  */
 
@@ -165,6 +165,18 @@ typedef struct _IO_STACK_LOCATION
 	     FILE_INFORMATION_CLASS FileInformationClass;
 	     ULONG FileIndex;
 	  } QueryDirectory;
+	struct
+	  {
+	     ULONG FileAttributes;
+	     ULONG OpenMode;
+	     ULONG PipeType;
+	     ULONG PipeRead;
+	     ULONG PipeWait;
+	     ULONG MaxInstances;
+	     ULONG InBufferSize;
+	     ULONG OutBufferSize;
+	     LARGE_INTEGER Timeout;
+	  } CreateNamedPipe;
      } Parameters;
    
    PIO_COMPLETION_ROUTINE CompletionRoutine;

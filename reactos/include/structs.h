@@ -3769,9 +3769,7 @@ typedef struct _SECURITY_ATTRIBUTES {
   LPVOID lpSecurityDescriptor; 
   WINBOOL   bInheritHandle; 
 } SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES; 
- 
-typedef DWORD SECURITY_INFORMATION, *PSECURITY_INFORMATION; 
- 
+  
 typedef struct _selchange { 
   NMHDR nmhdr; 
   CHARRANGE chrg; 

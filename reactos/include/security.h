@@ -1,6 +1,8 @@
 #ifndef __INCLUDE_SECURITY_H
 #define __INCLUDE_SECURITY_H
 
+typedef ULONG SECURITY_INFORMATION, *PSECURITY_INFORMATION; 
+
 typedef enum _TOKEN_INFORMATION_CLASS {
     TokenUser = 1, 
     TokenGroups, 
