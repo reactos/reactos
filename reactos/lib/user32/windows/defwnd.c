@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.50 2003/05/29 13:17:41 gvg Exp $
+/* $Id: defwnd.c,v 1.51 2003/06/14 09:59:17 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1398,8 +1398,11 @@ DefWindowProcA(HWND hWnd,
 	CREATESTRUCTA* Cs = (CREATESTRUCTA*)lParam;
 	if (HIWORD(Cs->lpszName))
 	  {
-	    WindowTextAtom =
-	      (LPSTR)(ULONG)GlobalAddAtomA("USER32!WindowTextAtomA");
+	    if (0 == WindowTextAtom)
+	      {
+		WindowTextAtom =
+		  (LPSTR)(ULONG)GlobalAddAtomA("USER32!WindowTextAtomA");
+	      }
 	    WindowText = RtlAllocateHeap(RtlGetProcessHeap(), 0,
 					 strlen(Cs->lpszName) * sizeof(CHAR));
 	    strcpy(WindowText, Cs->lpszName);
@@ -1474,10 +1477,6 @@ DefWindowProcA(HWND hWnd,
 	  {
 	    RtlFreeHeap(GetProcessHeap(), 0, WindowText);
 	  }
-	if (WindowTextAtom != 0)
-	  {
-	    GlobalDeleteAtom((ATOM)(ULONG)WindowTextAtom);
-	  }
 	return(0);
       }
 
@@ -1506,8 +1505,11 @@ DefWindowProcW(HWND hWnd,
 	CREATESTRUCTW* Cs = (CREATESTRUCTW*)lParam;
 	if (HIWORD(Cs->lpszName))
 	  {
-	    WindowTextAtom =
-	      (LPWSTR)(DWORD)GlobalAddAtomW(L"USER32!WindowTextAtomW");
+	    if (0 == WindowTextAtom)
+	      {
+		WindowTextAtom =
+		  (LPWSTR)(DWORD)GlobalAddAtomW(L"USER32!WindowTextAtomW");
+	      }
 	    WindowText = RtlAllocateHeap(RtlGetProcessHeap(), 0,
 					 wcslen(Cs->lpszName) * sizeof(WCHAR));
 	    wcscpy(WindowText, Cs->lpszName);
@@ -1582,11 +1584,6 @@ DefWindowProcW(HWND hWnd,
 	  {
 	    RtlFreeHeap(RtlGetProcessHeap(), 0, WindowText);
 	  }
-	if (WindowTextAtom != 0)
-	  {
-	    GlobalDeleteAtom((ATOM)(DWORD)WindowTextAtom);
-	  }
-
 	return(0);
       }
 
