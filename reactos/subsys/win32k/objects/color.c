@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: color.c,v 1.37 2004/04/28 18:38:07 navaraf Exp $ */
+/* $Id: color.c,v 1.38 2004/05/01 00:51:51 navaraf Exp $ */
 
 // FIXME: Use PXLATEOBJ logicalToSystem instead of int *mapping
 
@@ -341,6 +341,7 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
     if(SurfGDI->SetPalette)
     {
       IntLockGDIDriver(SurfGDI);
+      ASSERT(sysGDI->NumColors <= 256);
       success = SurfGDI->SetPalette(dc->PDev, sysPtr, 0, 0, sysGDI->NumColors);
       IntUnLockGDIDriver(SurfGDI);
     }
