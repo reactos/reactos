@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.12 2002/03/17 17:56:57 hbirr Exp $
+/* $Id: env.c,v 1.13 2002/04/01 22:08:20 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -72,7 +72,7 @@ GetEnvironmentVariableA (
 		SetLastErrorByStatus (Status);
 		if (Status == STATUS_BUFFER_TOO_SMALL)
 		{
-			return VarNameU.Length / sizeof(WCHAR) + 1;
+			return VarValueU.Length / sizeof(WCHAR) + 1;
 		}
 		else
 		{
@@ -300,7 +300,7 @@ GetEnvironmentStringsA (
 	DPRINT("EnvPtr %p\n", EnvPtr);
 
 	/* convert unicode environment to ansi */
-	UnicodeString.MaximumLength = Length + sizeof(WCHAR);
+	UnicodeString.MaximumLength = Length * sizeof(WCHAR) + sizeof(WCHAR);
 	UnicodeString.Buffer = EnvU;
 
 	AnsiString.MaximumLength = Length + 1;
@@ -312,15 +312,15 @@ GetEnvironmentStringsA (
 	while (*(UnicodeString.Buffer))
 	{
 		UnicodeString.Length = wcslen (UnicodeString.Buffer) * sizeof(WCHAR);
+		UnicodeString.MaximumLength = UnicodeString.Length + sizeof(WCHAR);
 		if (UnicodeString.Length > 0)
 		{
-			DPRINT("UnicodeString.Buffer \'%S\'\n", UnicodeString.Buffer);
+			AnsiString.Length = 0;
+			AnsiString.MaximumLength = Length + 1 - (AnsiString.Buffer - EnvPtr);
 
 			RtlUnicodeStringToAnsiString (&AnsiString,
 			                              &UnicodeString,
 			                              FALSE);
-
-			DPRINT("AnsiString.Buffer \'%s\'\n", AnsiString.Buffer);
 
 			AnsiString.Buffer += (AnsiString.Length + 1);
 			UnicodeString.Buffer += ((UnicodeString.Length / sizeof(WCHAR)) + 1);
