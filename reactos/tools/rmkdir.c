@@ -2,12 +2,19 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <fcntl.h>
 #ifdef _MSC_VER
 #include <direct.h>
 #else
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#endif
+#ifdef WIN32
+#include <sys/utime.h>
+#include <time.h>
+#else
+#include <sys/time.h>
 #endif
 
 #if defined(WIN32)
@@ -24,6 +31,7 @@ char* convert_path(char* origpath)
 {
    char* newpath;
    int i;
+   int length;
    
    //newpath = strdup(origpath);
 	 newpath=malloc(strlen(origpath)+1);
@@ -46,6 +54,13 @@ char* convert_path(char* origpath)
 #endif	
 #endif	
 	i++;
+     }
+
+   length = strlen(newpath);
+   if (length > 0)
+     {
+        if (newpath[length - 1] == DIR_SEPARATOR_CHAR)
+          newpath[length - 1] = 0;
      }
    return(newpath);
 }
@@ -78,6 +93,43 @@ int mkdir_p(char* path)
 	exit(1);
      }
    return(0);
+}
+
+int
+write_created_file()
+{
+   char filename[256];
+   int id;
+#ifdef WIN32
+   time_t now;
+   struct utimbuf fnow;
+#endif
+
+   strcpy(filename, ".created");
+
+  id = open(filename, S_IWRITE, S_IRUSR | S_IWUSR);
+  if (id < 0)
+    {
+      id = open(filename, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
+      if (id < 0)
+        {
+          fprintf(stderr, "Cannot create file %s.\n", filename);
+          return(1);
+        }
+    }
+
+  close(id);
+
+#ifdef WIN32
+  now = time(NULL);
+  fnow.actime = now;
+  fnow.modtime = now;
+  (int) utime(filename, &fnow);
+#else
+  (int) utimes(filename, NULL);
+#endif
+   
+   return 0;
 }
 
 int main(int argc, char* argv[])
@@ -113,9 +165,10 @@ int main(int argc, char* argv[])
    
    while (csec != NULL)
      {
-	mkdir_p(csec);
+	if (mkdir_p(csec) > 0)
+    exit(1);
 	csec = strtok(NULL, DIR_SEPARATOR_STRING);
      }
-   
-   exit(0);
+
+   exit(write_created_file());
 }

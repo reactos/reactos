@@ -1,13 +1,17 @@
+# We have to put rmkdir in $(INTERMEDIATE) and not $(INTERMEDIATE)tools
+# since GNU make will always remake directory targets and we can't do the
+# .created file trick for rmkdir due to circular dependencies
+
 RMKDIR_BASE = tools
 
 RMKDIR_TARGET = \
-	$(ROS_INTERMEDIATE)$(RMKDIR_BASE)$(SEP)rmkdir$(EXEPOSTFIX)
+	$(INTERMEDIATE)rmkdir$(EXEPOSTFIX)
 
 RMKDIR_SOURCES = \
 	$(RMKDIR_BASE)$(SEP)rmkdir.c
 
 RMKDIR_OBJECTS = \
-	$(RMKDIR_SOURCES:.c=.o)
+	$(INTERMEDIATE)rmkdir.o
 
 RMKDIR_HOST_CFLAGS = -g -Werror -Wall
 
@@ -17,9 +21,9 @@ $(RMKDIR_TARGET): $(RMKDIR_OBJECTS)
 	$(ECHO_LD)
 	${host_gcc} $(RMKDIR_OBJECTS) $(RMKDIR_HOST_LFLAGS) -o $(RMKDIR_TARGET)
 
-$(RMKDIR_OBJECTS): %.o : %.c
+$(INTERMEDIATE)rmkdir.o: $(RMKDIR_BASE)$(SEP)rmkdir.c
 	$(ECHO_CC)
-	${host_gcc} $(RMKDIR_HOST_CFLAGS) -c $< -o $@
+	${host_gcc} $(RMKDIR_HOST_CFLAGS) -c $(RMKDIR_BASE)$(SEP)rmkdir.c -o $(INTERMEDIATE)rmkdir.o
 
 .PHONY: rmkdir_clean
 rmkdir_clean:
@@ -30,7 +34,7 @@ clean: rmkdir_clean
 RSYM_BASE = tools
 
 RSYM_TARGET = \
-	$(ROS_INTERMEDIATE)$(RSYM_BASE)$(SEP)rsym$(EXEPOSTFIX)
+	$(INTERMEDIATE)$(RSYM_BASE)$(SEP)rsym$(EXEPOSTFIX)
 
 RSYM_SOURCES = \
 	$(RSYM_BASE)$(SEP)rsym.c

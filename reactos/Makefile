@@ -1,3 +1,19 @@
+# Accepted environment variables:
+#
+#    ROS_INTERMEDIATE
+#        This variable controls where to put intermediate files. Intermediate
+#        files are generated files that are needed to generate the final
+#        output files. Examples of intermediate files include *.o, *.a, and
+#        *.coff. N.B. Don't put a path separator at the end. The variable
+#        defaults to .\obj-i386.
+#
+#    ROS_OUTPUT
+#        This variable controls where to put output files. Output files are
+#        generated files that makes up the result of the build process.
+#        Examples of output files include *.exe, *.dll, and *.sys. N.B. Don't
+#        put a path separator at the end. The variable defaults to .\output-i386.
+#
+
 .PHONY: all
 .PHONY: clean
 all: makefile.auto
@@ -85,7 +101,8 @@ ifeq ($(HOST),mingw32-linux)
 else # mingw32-windows
 	EXEPREFIX =
 	EXEPOSTFIX = .exe
-	SEP = \$(EMPTY_VAR)
+	ROS_EMPTY =
+	SEP = \$(ROS_EMPTY)
 	nmkdir = $(Q)mkdir
 	gcc = $(Q)gcc
 	gpp = $(Q)g++
@@ -100,18 +117,27 @@ else # mingw32-windows
 endif
 
 ifneq ($(ROS_INTERMEDIATE),)
-$(ROS_INTERMEDIATE):
-	${nmkdir} $(ROS_INTERMEDIATE)
-$(ROS_INTERMEDIATE)tools: $(ROS_INTERMEDIATE)
-	${nmkdir} $@
-$(ROS_INTERMEDIATE)dk: $(ROS_INTERMEDIATE)
-	${nkmdir} $@
-$(ROS_INTERMEDIATE)dk$(SEP)nkm: $(ROS_INTERMEDIATE)dk
-	${nkmdir} $@
+  INTERMEDIATE = .$(SEP)$(ROS_INTERMEDIATE)$(SEP)
+  INTERMEDIATE_NO_SLASH := $(ROS_INTERMEDIATE)
+else
+  INTERMEDIATE = obj-i386$(SEP)
+  INTERMEDIATE_NO_SLASH = obj-i386
 endif
 
-$(ROS_INTERMEDIATE)dk$(SEP)nkm$(SEP)lib: $(ROS_INTERMEDIATE)dk$(SEP)nkm
-	${nmkdir} $@
+ifneq ($(ROS_OUTPUT),)
+  OUTPUT = $(ROS_OUTPUT)$(SEP)
+  OUTPUT_NO_SLASH = $(ROS_OUTPUT)
+else
+  OUTPUT = obj-i386$(SEP)
+  OUTPUT_NO_SLASH = obj-i386
+endif
+
+mkdir = $(Q)$(INTERMEDIATE)rmkdir
+CREATED = .created
+
+directories:
+	-${nmkdir} $(INTERMEDIATE_NO_SLASH)
+	-${nmkdir} $(OUTPUT_NO_SLASH)
 
 NTOSKRNL_MC = .$(SEP)ntoskrnl$(SEP)ntoskrnl.mc
 KERNEL32_MC = .$(SEP)lib$(SEP)kernel32$(SEP)kernel32.mc
@@ -146,4 +172,6 @@ $(ERRCODES_H) $(ERRCODES_RC): $(WMC_TARGET) $(KERNEL32_MC)
 .PHONY: makefile_auto_clean
 makefile_auto_clean:
 	-@$(rm) makefile.auto $(PREAUTO) 2>$(NUL)
+
+.PHONY: clean
 clean: makefile_auto_clean

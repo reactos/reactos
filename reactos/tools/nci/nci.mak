@@ -1,25 +1,30 @@
-NCI_BASE = .$(SEP)tools$(SEP)nci
+NCI_BASE = tools$(SEP)nci
+
+CDMAKE_BASE_DIR = $(INTERMEDIATE)$(NCI_BASE)$(SEP)$(CREATED)
+
+$(CDMAKE_BASE_DIR): $(RMKDIR_TARGET)
+	${mkdir} $(INTERMEDIATE)$(NCI_BASE)
 
 NCI_TARGET = \
-	$(ROS_INTERMEDIATE)$(NCI_BASE)$(SEP)nci$(EXEPOSTFIX)
+	$(INTERMEDIATE)$(NCI_BASE)$(SEP)nci$(EXEPOSTFIX)
 
 NCI_SOURCES = \
 	$(NCI_BASE)$(SEP)ncitool.c
 
 NCI_OBJECTS = \
-	$(NCI_SOURCES:.c=.o)
+    $(addprefix $(INTERMEDIATE), $(NCI_SOURCES:.c=.o))
 
 NCI_HOST_CFLAGS = -Iinclude -g -Werror -Wall
 
 NCI_HOST_LFLAGS = -g
 
-$(NCI_TARGET): $(NCI_OBJECTS)
+$(NCI_TARGET): $(CDMAKE_BASE_DIR) $(NCI_OBJECTS)
 	$(ECHO_LD)
 	${host_gcc} $(NCI_OBJECTS) $(NCI_HOST_CFLAGS) -o $(NCI_TARGET)
 
-$(NCI_OBJECTS): %.o : %.c
+$(INTERMEDIATE)$(NCI_BASE)$(SEP)ncitool.o: $(CDMAKE_BASE_DIR) $(NCI_BASE)$(SEP)ncitool.c
 	$(ECHO_CC)
-	${host_gcc} $(NCI_HOST_CFLAGS) -c $< -o $@
+	${host_gcc} $(NCI_HOST_CFLAGS) -c $(NCI_BASE)$(SEP)ncitool.c -o $(INTERMEDIATE)$(NCI_BASE)$(SEP)ncitool.o
 
 .PHONY: nci_clean
 nci_clean:

@@ -1,7 +1,12 @@
-BUILDNO_BASE = .$(SEP)tools$(SEP)buildno
+BUILDNO_BASE = tools$(SEP)buildno
+
+BUILDNO_BASE_DIR = $(INTERMEDIATE)$(BUILDNO_BASE)$(SEP)$(CREATED)
+
+$(BUILDNO_BASE_DIR): $(RMKDIR_TARGET)
+	${mkdir} $(INTERMEDIATE)$(BUILDNO_BASE)
 
 BUILDNO_TARGET = \
-	$(ROS_INTERMEDIATE)$(BUILDNO_BASE)$(SEP)buildno$(EXEPOSTFIX)
+	$(INTERMEDIATE)$(BUILDNO_BASE)$(SEP)buildno$(EXEPOSTFIX)
 
 BUILDNO_SOURCES = \
 	$(BUILDNO_BASE)$(SEP)buildno.cpp \
@@ -10,35 +15,35 @@ BUILDNO_SOURCES = \
 	$(BUILDNO_BASE)$(SEP)XML.cpp
 
 BUILDNO_OBJECTS = \
-	$(BUILDNO_SOURCES:.cpp=.o)
+  $(addprefix $(INTERMEDIATE), $(BUILDNO_SOURCES:.cpp=.o))
 
 BUILDNO_HOST_CFLAGS = -Iinclude/reactos -g -Werror -Wall
 
 BUILDNO_HOST_LFLAGS = -g
 
-$(BUILDNO_TARGET): $(BUILDNO_OBJECTS)
+$(BUILDNO_TARGET): $(BUILDNO_BASE_DIR) $(BUILDNO_OBJECTS)
 	$(ECHO_LD)
 	${host_gpp} $(BUILDNO_OBJECTS) $(BUILDNO_HOST_CFLAGS) -o $(BUILDNO_TARGET)
 
-$(BUILDNO_OBJECTS): %.o : %.cpp include$(SEP)reactos$(SEP)version.h
+$(INTERMEDIATE)$(BUILDNO_BASE)$(SEP)buildno.o: $(BUILDNO_BASE_DIR) $(BUILDNO_BASE)$(SEP)buildno.cpp
 	$(ECHO_CC)
-	${host_gpp} $(BUILDNO_HOST_CFLAGS) -c $< -o $@
+	${host_gpp} $(BUILDNO_HOST_CFLAGS) -c $(BUILDNO_BASE)$(SEP)buildno.cpp -o $(INTERMEDIATE)$(BUILDNO_BASE)$(SEP)buildno.o
+
+$(INTERMEDIATE)$(BUILDNO_BASE)$(SEP)exception.o: $(BUILDNO_BASE_DIR) $(BUILDNO_BASE)$(SEP)exception.cpp
+	$(ECHO_CC)
+	${host_gpp} $(BUILDNO_HOST_CFLAGS) -c $(BUILDNO_BASE)$(SEP)exception.cpp -o $(INTERMEDIATE)$(BUILDNO_BASE)$(SEP)exception.o
+
+$(INTERMEDIATE)$(BUILDNO_BASE)$(SEP)ssprintf.o: $(BUILDNO_BASE_DIR) $(BUILDNO_BASE)$(SEP)ssprintf.cpp
+	$(ECHO_CC)
+	${host_gpp} $(BUILDNO_HOST_CFLAGS) -c $(BUILDNO_BASE)$(SEP)ssprintf.cpp -o $(INTERMEDIATE)$(BUILDNO_BASE)$(SEP)ssprintf.o
+
+$(INTERMEDIATE)$(BUILDNO_BASE)$(SEP)XML.o: $(BUILDNO_BASE_DIR) $(BUILDNO_BASE)$(SEP)XML.cpp
+	$(ECHO_CC)
+	${host_gpp} $(BUILDNO_HOST_CFLAGS) -c $(BUILDNO_BASE)$(SEP)XML.cpp -o $(INTERMEDIATE)$(BUILDNO_BASE)$(SEP)XML.o
 
 .PHONY: buildno_clean
 buildno_clean:
 	-@$(rm) $(BUILDNO_TARGET) $(BUILDNO_OBJECTS) 2>$(NUL)
-clean: buildno_clean
-
-# BUILDNO_H is defined from the top-level makefile now...
-#BUILDNO_H = .$(SEP)include$(SEP)reactos$(SEP)buildno.h
-
-.PHONY: buildno_h
-buildno_h: $(BUILDNO_H)
 
 $(BUILDNO_H): $(BUILDNO_TARGET)
-	$(BUILDNO_TARGET) $(BUILDNO_H)
-
-.PHONY: buildno_h_clean
-buildno_h_clean:
-	-@$(rm) $(BUILDNO_H)
-clean: buildno_h_clean
+	$(EXEPREFIX)$(BUILDNO_TARGET) $(BUILDNO_H)
