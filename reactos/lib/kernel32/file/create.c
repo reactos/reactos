@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.31 2003/01/17 19:26:14 guido Exp $
+/* $Id: create.c,v 1.32 2003/02/24 23:23:32 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -80,6 +80,8 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
    HANDLE FileHandle;
    NTSTATUS Status;
    ULONG Flags = 0;
+   CSRSS_API_REQUEST Request;
+   CSRSS_API_REPLY Reply;
 
    DPRINT("CreateFileW(lpFileName %S)\n",lpFileName);
 
@@ -198,6 +200,46 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
      
      if (dwDesiredAccess & GENERIC_EXECUTE)
        dwDesiredAccess |= FILE_GENERIC_EXECUTE;
+   }
+
+   /* check for console output */
+   if (0 == _wcsicmp(L"CONOUT$", lpFileName))
+   {
+      /* FIXME: Send required access rights to Csrss */
+      Request.Type = CSRSS_GET_OUTPUT_HANDLE;
+      Status = CsrClientCallServer(&Request,
+			           &Reply,
+			           sizeof(CSRSS_API_REQUEST),
+			           sizeof(CSRSS_API_REPLY));
+      if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
+      {
+         SetLastErrorByStatus(Status);
+	 return INVALID_HANDLE_VALUE;
+      }
+      else
+      {
+         return Reply.Data.GetOutputHandleReply.OutputHandle;
+      }
+   }
+
+   /* check for console input */
+   if (0 == _wcsicmp(L"CONIN$", lpFileName))
+   {
+      /* FIXME: Send required access rights to Csrss */
+      Request.Type = CSRSS_GET_INPUT_HANDLE;
+      Status = CsrClientCallServer(&Request,
+			           &Reply,
+			           sizeof(CSRSS_API_REQUEST),
+			           sizeof(CSRSS_API_REPLY));
+      if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
+      {
+         SetLastErrorByStatus(Status);
+	 return INVALID_HANDLE_VALUE;
+      }
+      else
+      {
+         return Reply.Data.GetInputHandleReply.InputHandle;
+      }
    }
 
    /* build the object attributes */
