@@ -1,4 +1,4 @@
-/* $Id: parallel.c,v 1.5 2000/06/29 23:35:49 dwelch Exp $
+/* $Id: parallel.c,v 1.6 2000/10/22 02:02:28 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -13,7 +13,6 @@
 /* FUNCTIONS **************************************************************/
 
 #include <ddk/ntddk.h>
-#include "../../../ntoskrnl/include/internal/i386/io.h"
 
 #include "parallel.h"
 
@@ -22,20 +21,20 @@
 
 
 #define LP_B (0x378)
-#define LP_S (inb_p(LP_B+1))
+#define LP_S (READ_PORT_UCHAR((PUCHAR)(LP_B+1)))
 #define LP_C (LP_B+2)
 
 static void Parallel_Reset(void)
 /*
  * FUNCTION: Resets the device attached to the parallel port
  */
-     {
-	int i;
-	
-        outb_p(LP_C,0);
-	for (i=0;i<LP_DELAY;i++);
-        outb_p(LP_C,LP_PSELECP | LP_PINITP);
-     }
+{
+   int i;
+
+   WRITE_PORT_UCHAR((PUCHAR)LP_C,0);
+   for (i=0;i<LP_DELAY;i++);
+   WRITE_PORT_UCHAR((PUCHAR)LP_C,LP_PSELECP | LP_PINITP);
+}
 
 static void Parallel_putchar(unsigned char ch)
 /*
@@ -43,7 +42,7 @@ static void Parallel_putchar(unsigned char ch)
  * ARGUMENTS:
  *          ch = character to write
  */
-     {
+{
 	
 	int count=0;
 	int status;
@@ -56,20 +55,21 @@ static void Parallel_putchar(unsigned char ch)
 	  }
 	while ( count < 500000 && !(status & LP_PBUSY) );
 	  
-        if (count==500000)
+	if (count==500000)
 	  {
-             DPRINT("printer_putchar(): timed out\n");
+	     DPRINT("printer_putchar(): timed out\n");
 	     return;
 	  }
 	
-        outb_p(LP_B,ch);
+	WRITE_PORT_UCHAR((PUCHAR)LP_B,ch);
 	while (wait != 10000) { wait++; }
-        outb_p(LP_C, (LP_PSELECP | LP_PINITP | LP_PSTROBE ));
+	WRITE_PORT_UCHAR((PUCHAR)LP_C, (LP_PSELECP | LP_PINITP | LP_PSTROBE ));
 	while (wait) { wait--; }
-        outb_p(LP_C, LP_PSELECP | LP_PINITP);
-     }
+	WRITE_PORT_UCHAR((PUCHAR)LP_C, LP_PSELECP | LP_PINITP);
+}
 
-NTSTATUS Dispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL
+Dispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
  * FUNCTION: Handles user mode requests
  * ARGUMENTS:
@@ -85,7 +85,7 @@ NTSTATUS Dispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    switch (Stack->MajorFunction)
      {
       case IRP_MJ_CREATE:
-        DPRINT("(Parallel Port Driver) Creating\n");
+	DPRINT("(Parallel Port Driver) Creating\n");
 	Parallel_Reset();
 	status = STATUS_SUCCESS;
 	break;
@@ -95,17 +95,17 @@ NTSTATUS Dispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	break;
 	
       case IRP_MJ_WRITE:
-        DPRINT("(Parallel Port Driver) Writing %d bytes\n",
-               Stack->Parameters.Write.Length);
+	DPRINT("(Parallel Port Driver) Writing %d bytes\n",
+	       Stack->Parameters.Write.Length);
 	for (i=0;i<Stack->Parameters.Write.Length;i++)
 	  {
-                Parallel_putchar(((char *)Irp->UserBuffer)[i]);             
+	     Parallel_putchar(((char *)Irp->UserBuffer)[i]);
 	  }
 	status = STATUS_SUCCESS;
 	break;
 	
       default:
-        status = STATUS_NOT_IMPLEMENTED;
+	status = STATUS_NOT_IMPLEMENTED;
 	break;
      }
    
@@ -127,33 +127,32 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
  */
 {
    PDEVICE_OBJECT DeviceObject;
-   NTSTATUS ret;
-   ANSI_STRING ansi_device_name;
-   UNICODE_STRING device_name;
+   UNICODE_STRING DeviceName;
+   NTSTATUS Status;
    
    DbgPrint("Parallel Port Driver 0.0.1\n");
-          
-   RtlInitAnsiString (&ansi_device_name, "\\Device\\Parallel");
-   RtlAnsiStringToUnicodeString (&device_name, &ansi_device_name, TRUE);
-   ret = IoCreateDevice(DriverObject,
-                        0,
-                        &device_name,
-                        FILE_DEVICE_PARALLEL_PORT,
-                        0,
-                        FALSE,
-                        &DeviceObject);
-   if (ret!=STATUS_SUCCESS)
+   
+   RtlInitUnicodeString (&DeviceName,
+			 L"\\Device\\Parallel");
+   Status = IoCreateDevice(DriverObject,
+			   0,
+			   &DeviceName,
+			   FILE_DEVICE_PARALLEL_PORT,
+			   0,
+			   FALSE,
+			   &DeviceObject);
+   if (!NT_SUCCESS(Status))
      {
-	return(ret);
+	return(Status);
      }
 
    DeviceObject->Flags=0;
    DriverObject->MajorFunction[IRP_MJ_CLOSE] = Dispatch;
    DriverObject->MajorFunction[IRP_MJ_CREATE] = Dispatch;
    DriverObject->MajorFunction[IRP_MJ_WRITE] = Dispatch;
-   DriverObject->MajorFunction[IRP_MJ_WRITE] = Dispatch;
    DriverObject->DriverUnload = NULL;
    
    return(STATUS_SUCCESS);
 }
 
+/* EOF */
