@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.46 2004/02/01 15:45:41 gvg Exp $ */
+/* $Id: cursoricon.c,v 1.47 2004/02/10 23:40:01 gvg Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -143,13 +143,17 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
   
    if (!NewCursor && (CurInfo->CurrentCursorObject || ForceChange))
    {
-      ExAcquireFastMutex(SurfGDI->DriverLock);
-      SurfGDI->PointerStatus = SurfGDI->SetPointerShape(SurfObj, NULL, NULL, NULL,
-                                                        0, 0, CurInfo->x, CurInfo->y, 
-                                                        &PointerRect, SPS_CHANGE);
-      ExReleaseFastMutex(SurfGDI->DriverLock);
-      SetPointerRect(CurInfo, &PointerRect);
-    
+      if (NULL != CurInfo->CurrentCursorObject && CurInfo->ShowingCursor)
+      {
+         /* Remove the cursor if it was displayed */
+         ExAcquireFastMutex(SurfGDI->DriverLock);
+         SurfGDI->MovePointer(SurfObj, -1, -1, &PointerRect);
+         ExReleaseFastMutex(SurfGDI->DriverLock);
+         SetPointerRect(CurInfo, &PointerRect);
+      }
+
+      SurfGDI->PointerStatus = SPS_ACCEPT_NOEXCLUDE;
+
       CurInfo->CurrentCursorObject = NewCursor; /* i.e. CurrentCursorObject = NULL */
       CurInfo->ShowingCursor = 0;
       return Ret;
