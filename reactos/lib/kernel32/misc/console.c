@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.56 2003/05/05 19:58:27 ea Exp $
+/* $Id: console.c,v 1.57 2003/05/16 20:33:15 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -357,10 +357,10 @@ InvalidateConsoleDIBits (DWORD	Unknown0,
 }
 
 HANDLE STDCALL
-OpenConsoleW (LPWSTR                 wsName,
-	      DWORD                  dwDesiredAccess,
-	      LPSECURITY_ATTRIBUTES  lpSecurityAttributes OPTIONAL,
-	      DWORD                  dwCreationDistribution)
+OpenConsoleW (LPWSTR  wsName,
+	      DWORD   dwDesiredAccess,
+	      BOOL    bInheritHandle,
+	      DWORD   dwCreationDistribution)
      /*
       * Undocumented
       */

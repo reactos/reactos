@@ -51,7 +51,7 @@ WINBOOL STDCALL CloseConsoleHandle(HANDLE Handle);
 
 HANDLE STDCALL OpenConsoleW (LPWSTR                 wsName,
 			     DWORD                  dwDesiredAccess,
-			     LPSECURITY_ATTRIBUTES  lpSecurityAttributes OPTIONAL,
+			     BOOL                   bInheritHandle,
 			     DWORD                  dwCreationDistribution);
 
 
