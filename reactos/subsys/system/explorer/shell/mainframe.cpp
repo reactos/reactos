@@ -33,8 +33,6 @@
 
 #include "../explorer_intres.h"
 
-//#include <tchar.h>	// for _splitpath()
-
 
 MainFrame::MainFrame(HWND hwnd)
  :	super(hwnd)
