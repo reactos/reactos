@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.48 2003/05/16 12:03:11 chorns Exp $
+/* $Id: irp.c,v 1.49 2003/05/17 00:25:39 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -128,11 +128,6 @@ IofCallDriver(PDEVICE_OBJECT DeviceObject,
   DPRINT("MajorFunction %d\n", Param->MajorFunction);
   DPRINT("DriverObject->MajorFunction[Param->MajorFunction] %x\n",
     DriverObject->MajorFunction[Param->MajorFunction]);
-
-  if ((Param->FileObject) && (Param->MajorFunction != IRP_MJ_CLOSE))
-    {
-      ObReferenceObject(Param->FileObject);
-    }
 
   return DriverObject->MajorFunction[Param->MajorFunction](DeviceObject, Irp);
 }
