@@ -19,9 +19,9 @@
  *  DISCLAIMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.5 $
- * $Author: robd $
- * $Date: 2002/11/24 18:06:00 $
+ * $Revision: 1.6 $
+ * $Author: sedwards $
+ * $Date: 2003/12/21 23:52:19 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
@@ -56,8 +56,9 @@ extern unsigned int* _fmode_dll;
  *       It is NOT valid outside of crtdll.
  */
 extern unsigned int* _fmode_dll;
+#ifndef __USE_W32API
 extern unsigned int _fmode;
-
+#endif
 
 /* Specifiy one of these flags to define the access mode. */
 #define _O_RDONLY   0
