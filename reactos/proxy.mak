@@ -8,3 +8,5 @@ all:
 
 clean:
 	@$(MAKE) -C $(TOP) $(DEFAULT)_clean
+
+$(DEFAULT)_clean: clean

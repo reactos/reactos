@@ -55,11 +55,11 @@ rsym_clean:
 	-@$(rm) $(RSYM_TARGET) $(RSYM_OBJECTS) 2>$(NUL)
 clean: rsym_clean
 
-include tools/buildno/makefile
-include tools/cdmake/makefile
-include tools/nci/makefile
-include tools/rbuild/makefile
-include tools/unicode/makefile
-include tools/wmc/makefile
+include tools/buildno/buildno.mak
+include tools/cdmake/cdmake.mak
+include tools/nci/nci.mak
+include tools/rbuild/rbuild.mak
+include tools/unicode/unicode.mak
+include tools/wmc/wmc.mak
 include tools/wpp/wpp.mak
-include tools/wrc/makefile
+include tools/wrc/wrc.mak
