@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.55 2000/03/08 21:23:13 jfilby Exp $
+; $Id: ntoskrnl.def,v 1.56 2000/03/10 22:09:17 ea Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -91,8 +91,10 @@ FsRtlAreNamesEqual@16
 FsRtlBalanceReads@4
 FsRtlCheckLockForReadAccess@8
 FsRtlCheckLockForWriteAccess@8
+FsRtlCheckOplock@20
 FsRtlCopyRead@32
 FsRtlCopyWrite@32
+FsRtlCurrentBatchOplock@4
 FsRtlDeregisterUncProvider@4
 FsRtlDissectDbcs@16
 FsRtlDissectName@16
@@ -110,6 +112,7 @@ FsRtlGetNextMcbEntry@20
 FsRtlInitializeFileLock@12
 FsRtlInitializeLargeMcb@8
 FsRtlInitializeMcb@8
+FsRtlInitializeOplock@4
 FsRtlIsDbcsInExpression@8
 FsRtlIsFatDbcsLegal@20
 FsRtlIsHpfsDbcsLegal@20
@@ -130,6 +133,8 @@ FsRtlMdlWriteCompleteDev@16
 FsRtlNormalizeNtstatus@8
 FsRtlNumberOfRunsInLargeMcb@4
 FsRtlNumberOfRunsInMcb@4
+FsRtlOplockFsctrl@12
+FsRtlOplockIsFastIoPossible@4
 FsRtlPostPagingFileStackOverflow@12
 FsRtlPostStackOverflow@12
 FsRtlPrepareMdlWrite@24
@@ -146,6 +151,7 @@ FsRtlTruncateMcb@8
 FsRtlUninitializeFileLock@4
 FsRtlUninitializeLargeMcb@4
 FsRtlUninitializeMcb@4
+FsRtlUninitializeOplock@4
 IoAllocateIrp@8
 IoAllocateController
 IoAttachDeviceToDeviceStack

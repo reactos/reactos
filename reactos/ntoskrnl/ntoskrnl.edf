@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.42 2000/03/08 21:23:13 jfilby Exp $
+; $Id: ntoskrnl.edf,v 1.43 2000/03/10 22:09:17 ea Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -91,8 +91,10 @@ FsRtlAreNamesEqual=FsRtlAreNamesEqual@16
 FsRtlBalanceReads=FsRtlBalanceReads@4
 FsRtlCheckLockForReadAccess=FsRtlCheckLockForReadAccess@8
 FsRtlCheckLockForWriteAccess=FsRtlCheckLockForWriteAccess@8
+FsRtlCheckOplock=FsRtlCheckOplock@20
 FsRtlCopyRead=FsRtlCopyRead@32
 FsRtlCopyWrite=FsRtlCopyWrite@32
+FsRtlCurrentBatchOplock=FsRtlCurrentBatchOplock@4
 FsRtlDeregisterUncProvider=FsRtlDeregisterUncProvider@4
 FsRtlDissectDbcs=FsRtlDissectDbcs@16
 FsRtlDissectName=FsRtlDissectName@16
@@ -110,6 +112,7 @@ FsRtlGetNextMcbEntry=FsRtlGetNextMcbEntry@20
 FsRtlInitializeFileLock=FsRtlInitializeFileLock@12
 FsRtlInitializeLargeMcb=FsRtlInitializeLargeMcb@8
 FsRtlInitializeMcb=FsRtlInitializeMcb@8
+FsRtlInitializeOplock=FsRtlInitializeOplock@4
 FsRtlIsDbcsInExpression=FsRtlIsDbcsInExpression@8
 FsRtlIsFatDbcsLegal=FsRtlIsFatDbcsLegal@20
 FsRtlIsHpfsDbcsLegal=FsRtlIsHpfsDbcsLegal@20
@@ -130,6 +133,8 @@ FsRtlMdlWriteCompleteDev=FsRtlMdlWriteCompleteDev@16
 FsRtlNormalizeNtstatus=FsRtlNormalizeNtstatus@8
 FsRtlNumberOfRunsInLargeMcb=FsRtlNumberOfRunsInLargeMcb@4
 FsRtlNumberOfRunsInMcb=FsRtlNumberOfRunsInMcb@4
+FsRtlOplockFsctrl=FsRtlOplockFsctrl@12
+FsRtlOplockIsFastIoPossible=FsRtlOplockIsFastIoPossible@4
 FsRtlPostPagingFileStackOverflow=FsRtlPostPagingFileStackOverflow@12
 FsRtlPostStackOverflow=FsRtlPostStackOverflow@12
 FsRtlPrepareMdlWrite=FsRtlPrepareMdlWrite@24
@@ -146,6 +151,7 @@ FsRtlTruncateMcb=FsRtlTruncateMcb@8
 FsRtlUninitializeFileLock=FsRtlUninitializeFileLock@4
 FsRtlUninitializeLargeMcb=FsRtlUninitializeLargeMcb@4
 FsRtlUninitializeMcb=FsRtlUninitializeMcb@4
+FsRtlUninitializeOplock=FsRtlUninitializeOplock@4
 IoAllocateIrp=IoAllocateIrp@8
 IoAllocateController
 IoAttachDeviceToDeviceStack

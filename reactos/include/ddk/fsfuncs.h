@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_FSFUNCS_H
 #define __INCLUDE_DDK_FSFUNCS_H
-/* $Id: fsfuncs.h,v 1.8 2000/03/05 19:17:37 ea Exp $ */
+/* $Id: fsfuncs.h,v 1.9 2000/03/10 22:09:16 ea Exp $ */
 VOID
 STDCALL
 FsRtlAddLargeMcbEntry (
@@ -76,6 +76,15 @@ FsRtlCheckLockForWriteAccess (
 	DWORD	Unknown0,
 	DWORD	Unknown1
 	);
+DWORD
+STDCALL
+FsRtlCheckOplock (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3,
+	DWORD	Unknown4
+	);
 BOOLEAN
 STDCALL
 FsRtlCopyRead (
@@ -99,6 +108,11 @@ FsRtlCopyWrite (
 	IN	PVOID			Buffer,
 	OUT	PIO_STATUS_BLOCK	IoStatus,
 	IN	PDEVICE_OBJECT		DeviceObject
+	);
+BOOLEAN
+STDCALL
+FsRtlCurrentBatchOplock (
+	DWORD	Unknown0
 	);
 VOID
 STDCALL
@@ -231,6 +245,11 @@ FsRtlInitializeMcb (
 	DWORD	Unknown0,
 	DWORD	Unknown1
 	);
+VOID
+STDCALL
+FsRtlInitializeOplock (
+	DWORD	Unknown0
+	);
 BOOLEAN
 STDCALL
 FsRtlIsDbcsInExpression (
@@ -361,6 +380,18 @@ FsRtlMdlWriteCompleteDev (
 	IN	PLARGE_INTEGER	FileOffset,
 	IN	PMDL		MdlChain,
 	IN	PDEVICE_OBJECT	DeviceObject
+	);
+NTSTATUS
+STDCALL
+FsRtlOplockFsctrl (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2
+	);
+BOOLEAN
+STDCALL
+FsRtlOplockIsFastIoPossible (
+	DWORD	Unknown0
 	);
 BOOLEAN
 STDCALL
@@ -501,6 +532,11 @@ FsRtlUninitializeLargeMcb (
 VOID
 STDCALL
 FsRtlUninitializeMcb (
+	DWORD	Unknown0
+	);
+DWORD
+STDCALL
+FsRtlUninitializeOplock (
 	DWORD	Unknown0
 	);
 
