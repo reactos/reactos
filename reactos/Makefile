@@ -30,23 +30,23 @@ ifeq ($(HALFVERBOSEECHO),yes)
   ECHO_CDMAKE =@echo [CDMAKE]  $@
   ECHO_TEST   =@echo [TEST]    $@
 else
-  ECHO_INVOKE =@true
-  ECHO_PCH    =@true
-  ECHO_CC     =@true
-  ECHO_GAS    =@true
-  ECHO_NASM   =@true
-  ECHO_AR     =@true
-  ECHO_WINEBLD=@true
-  ECHO_WRC    =@true
-  ECHO_BIN2RES=@true
-  ECHO_DLLTOOL=@true
-  ECHO_LD     =@true
-  ECHO_RBUILD =@true
-  ECHO_RSYM   =@true
-  ECHO_NCI    =@true
-  ECHO_CABMAN =@true
-  ECHO_CDMAKE =@true
-  ECHO_TEST   =@true
+  ECHO_INVOKE =
+  ECHO_PCH    =
+  ECHO_CC     =
+  ECHO_GAS    =
+  ECHO_NASM   =
+  ECHO_AR     =
+  ECHO_WINEBLD=
+  ECHO_WRC    =
+  ECHO_BIN2RES=
+  ECHO_DLLTOOL=
+  ECHO_LD     =
+  ECHO_RBUILD =
+  ECHO_RSYM   =
+  ECHO_NCI    =
+  ECHO_CABMAN =
+  ECHO_CDMAKE =
+  ECHO_TEST   =
 endif
 
 
@@ -102,15 +102,23 @@ $(ROS_INTERMEDIATE):
 	${nmkdir} $(ROS_INTERMEDIATE)
 endif
 
+NTOSKRNL_MC = .$(SEP)ntoskrnl$(SEP)ntoskrnl.mc
+KERNEL32_MC = .$(SEP)lib$(SEP)kernel32$(SEP)kernel32.mc
+BUILDNO_H = .$(SEP)include$(SEP)reactos$(SEP)buildno.h
+BUGCODES_H = .$(SEP)include$(SEP)reactos$(SEP)bugcodes.h
+BUGCODES_RC = .$(SEP)ntoskrnl$(SEP)bugcodes.rc
+ERRCODES_H = .$(SEP)include$(SEP)reactos$(SEP)errcodes.h
+ERRCODES_RC = .$(SEP)lib$(SEP)kernel32$(SEP)errcodes.rc
+
 include tools/Makefile
 -include makefile.auto
 
 PREAUTO := \
-	include$(SEP)reactos$(SEP)buildno.h \
-	include$(SEP)reactos$(SEP)bugcodes.h \
-	ntoskrnl$(SEP)bugcodes.rc \
-	include$(SEP)reactos$(SEP)errcodes.h \
-	lib$(SEP)kernel32$(SEP)errcodes.rc
+	$(BUILDNO_H) \
+	$(BUGCODES_H) \
+	$(BUGCODES_RC) \
+	$(ERRCODES_H) \
+	$(ERRCODES_RC)
 
 makefile.auto: $(RMKDIR_TARGET) $(BUILDNO_TARGET) $(NCI_SERVICE_FILES) $(WMC_TARGET) $(WRC_TARGET) \
                $(RSYM_TARGET) $(CDMAKE_TARGET) $(RBUILD_TARGET) $(PREAUTO) $(XMLBUILDFILES)
@@ -118,11 +126,11 @@ makefile.auto: $(RMKDIR_TARGET) $(BUILDNO_TARGET) $(NCI_SERVICE_FILES) $(WMC_TAR
 	$(Q)tools$(SEP)rbuild$(SEP)rbuild$(EXEPOSTFIX) mingw
 
 
-include$(SEP)reactos$(SEP)bugcodes.h ntoskrnl$(SEP)bugcodes.rc: $(WMC_TARGET) ntoskrnl$(SEP)ntoskrnl.mc
-	$(WMC_TARGET) -i -H include$(SEP)reactos$(SEP)bugcodes.h -o ntoskrnl$(SEP)bugcodes.rc ntoskrnl$(SEP)ntoskrnl.mc
+$(BUGCODES_H) $(BUGCODES_RC): $(WMC_TARGET) $(NTOSKRNL_MC)
+	$(WMC_TARGET) -i -H $(BUGCODES_H) -o $(BUGCODES_RC) $(NTOSKRNL_MC)
 
-include$(SEP)reactos$(SEP)errcodes.h lib$(SEP)kernel32$(SEP)errcodes.rc: $(WMC_TARGET) lib$(SEP)kernel32$(SEP)kernel32.mc
-	$(WMC_TARGET) -i -H include$(SEP)reactos$(SEP)errcodes.h -o lib$(SEP)kernel32$(SEP)errcodes.rc lib$(SEP)kernel32$(SEP)kernel32.mc
+$(ERRCODES_H) $(ERRCODES_RC): $(WMC_TARGET) $(KERNEL32_MC)
+	$(WMC_TARGET) -i -H $(ERRCODES_H) -o $(ERRCODES_RC) $(KERNEL32_MC)
 
 .PHONY: makefile_auto_clean
 makefile_auto_clean:
