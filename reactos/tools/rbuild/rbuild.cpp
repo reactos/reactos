@@ -4,17 +4,10 @@
 #pragma warning ( disable : 4786 )
 #endif//_MSC_VER
 
-#include <string>
-#include <vector>
-
 #include <stdio.h>
 #include <io.h>
 #include <assert.h>
-//#include <sys/stat.h>
-//#include <sys/types.h>
-
-using std::string;
-using std::vector;
+#include "rbuild.h"
 
 #ifdef _MSC_VER
 unsigned __int64
@@ -36,218 +29,216 @@ filelen ( FILE* f )
 static const char* WS = " \t\r\n";
 static const char* WSEQ = " =\t\r\n";
 
-class XMLFile
+XMLFile::XMLFile()
 {
-	vector<FILE*> _f;
-	string _buf;
-	const char *_p, *_end;
-public:
-	XMLFile() {}
-	void close()
+}
+
+void XMLFile::close()
+{
+	while ( _f.size() )
 	{
-		while ( _f.size() )
+		fclose ( _f.back() );
+		_f.pop_back();
+	}
+	_buf.resize(0);
+	_p = _end = NULL;
+}
+
+bool XMLFile::open(const char* filename)
+{
+	close();
+	FILE* f = fopen ( filename, "r" );
+	if ( !f )
+		return false;
+	unsigned long len = (unsigned long)filelen(f);
+	_buf.resize ( len );
+	fread ( &_buf[0], 1, len, f );
+	_p = _buf.c_str();
+	_end = _p + len;
+	_f.push_back ( f );
+	next_token();
+	return true;
+}
+
+// next_token() moves the pointer to next token, which may be
+// an xml element or a text element, basically it's a glorified
+// skipspace, normally the user of this class won't need to call
+// this function
+void XMLFile::next_token()
+{
+	_p += strspn ( _p, WS );
+}
+
+bool XMLFile::next_is_text()
+{
+	return *_p != '<';
+}
+
+bool XMLFile::more_tokens()
+{
+	return _p != _end;
+}
+
+// get_token() is used to return a token, and move the pointer
+// past the token
+bool XMLFile::get_token(string& token)
+{
+	const char* tokend;
+	if ( *_p == '<' )
+	{
+		tokend = strchr ( _p, '>' );
+		if ( !tokend )
+			tokend = _end;
+		else
+			++tokend;
+	}
+	else
+	{
+		tokend = strchr ( _p, '<' );
+		if ( !tokend )
+			tokend = _end;
+		while ( tokend > _p && isspace(tokend[-1]) )
+			--tokend;
+	}
+	if ( tokend == _p )
+		return false;
+	token = string ( _p, tokend-_p );
+	_p = tokend;
+	next_token();
+	return true;
+}
+
+#if 0
+bool XMLFile::getc(char& c)
+{
+	while ( _bufidx >= _buf.size() )
+	{
+		static buf[4096];
+		if ( !fgets ( buf, sizeof(buf), _f.back() ) )
 		{
 			fclose ( _f.back() );
-			_f.pop_back();
+			f.pop_back();
+			continue;
 		}
-		_buf.resize(0);
-		_p = _end = NULL;
-	}
-	bool open ( const char* filename )
-	{
-		close();
-		FILE* f = fopen ( filename, "r" );
-		if ( !f )
-			return false;
-		unsigned long len = (unsigned long)filelen(f);
-		_buf.resize ( len );
-		fread ( &_buf[0], 1, len, f );
-		_p = _buf.c_str();
-		_end = _p + len;
-		_f.push_back ( f );
-		next_token();
-		return true;
-	}
-	// next_token() moves the pointer to next token, which may be
-	// an xml element or a text element, basically it's a glorified
-	// skipspace, normally the user of this class won't need to call
-	// this function
-	void next_token()
-	{
-		_p += strspn ( _p, WS );
-	}
-	bool next_is_text()
-	{
-		return *_p != '<';
-	}
-	bool more_tokens()
-	{
-		return _p != _end;
-	}
-	// get_token() is used to return a token, and move the pointer
-	// past the token
-	bool get_token ( string& token )
-	{
-		const char* tokend;
-		if ( *_p == '<' )
-		{
-			tokend = strchr ( _p, '>' );
-			if ( !tokend )
-				tokend = _end;
-			else
-				++tokend;
-		}
-		else
-		{
-			tokend = strchr ( _p, '<' );
-			if ( !tokend )
-				tokend = _end;
-			while ( tokend > _p && isspace(tokend[-1]) )
-				--tokend;
-		}
-		if ( tokend == _p )
-			return false;
-		token = string ( _p, tokend-_p );
-		_p = tokend;
-		next_token();
-		return true;
-	}
-#if 0
-	bool getc ( char& c )
-	{
-		while ( _bufidx >= _buf.size() )
-		{
-			static buf[4096];
-			if ( !fgets ( buf, sizeof(buf), _f.back() ) )
-			{
-				fclose ( _f.back() );
-				f.pop_back();
-				continue;
-			}
-			_buf = buf;
-			_bufidx = 0;
-			// REM TODO FIXME - check for and load includes here...
-			/*char* p = &_buf[0];
-			p += strspn ( p, " \t" );
-			if ( *p++ != '#' )
-				break;
-			p += strspn ( p, " \t" );
-			if ( strncmp ( p, "include", 7 ) )
-				break;
-			p += 7;
-			if ( !isspace(*p++) )
-				break;*/
+		_buf = buf;
+		_bufidx = 0;
+		// REM TODO FIXME - check for and load includes here...
+		/*char* p = &_buf[0];
+		p += strspn ( p, " \t" );
+		if ( *p++ != '#' )
+			break;
+		p += strspn ( p, " \t" );
+		if ( strncmp ( p, "include", 7 ) )
+			break;
+		p += 7;
+		if ( !isspace(*p++) )
+			break;*/
 
-		}
-		c = _buf[_bufidx++];
-		return true;
 	}
+	c = _buf[_bufidx++];
+	return true;
+}
 #endif
-};
 
-class XMLAttribute
+
+XMLAttribute::XMLAttribute()
 {
-public:
-	string name, value;
+}
 
-	XMLAttribute() {}
-
-	XMLAttribute ( const string& name_, const string& value_ )
-		: name(name_), value(value_)
-	{
-	}
-
-	XMLAttribute ( const XMLAttribute& src )
-	{
-		name = src.name;
-		value = src.value;
-	}
-
-	XMLAttribute& operator = ( const XMLAttribute& src )
-	{
-		name = src.name;
-		value = src.value;
-		return *this;
-	}
-};
-
-class XMLElement
+XMLAttribute::XMLAttribute(const string& name_,
+                           const string& value_)
+: name(name_), value(value_)
 {
-public:
-	string name;
-	vector<XMLAttribute> attributes;
-	vector<XMLElement*> subElements;
-	string value;
+}
 
-	XMLElement() {}
-	// Parse() returns true if you need to look for a </tag> for
-	// this one...
-	bool Parse ( const string& token, bool& end_tag )
+XMLAttribute::XMLAttribute(const XMLAttribute& src)
+{
+	name = src.name;
+	value = src.value;
+}
+
+XMLAttribute& XMLAttribute::operator=(const XMLAttribute& src)
+{
+	name = src.name;
+	value = src.value;
+	return *this;
+}
+
+
+XMLElement::XMLElement()
+{
+}
+
+// Parse() returns true if you need to look for a </tag> for
+// this one...
+bool XMLElement::Parse(const string& token,
+                       bool& end_tag)
+{
+	const char* p = token.c_str();
+	assert ( *p == '<' );
+	p++;
+	p += strspn ( p, WS );
+	end_tag = ( *p == '/' );
+	if ( end_tag )
 	{
-		const char* p = token.c_str();
-		assert ( *p == '<' );
-		p++;
+		++p;
 		p += strspn ( p, WS );
-		end_tag = ( *p == '/' );
-		if ( end_tag )
-		{
-			++p;
-			p += strspn ( p, WS );
-		}
-		const char* end = strpbrk ( p, WS );
+	}
+	const char* end = strpbrk ( p, WS );
+	if ( !end )
+	{
+		end = strpbrk ( p, "/>" );
+		assert ( end );
+	}
+	name = string ( p, end-p );
+	p = end;
+	p += strspn ( p, WS );
+	while ( *p != '>' && *p != '/' )
+	{
+		end = strpbrk ( p, WSEQ );
 		if ( !end )
 		{
 			end = strpbrk ( p, "/>" );
 			assert ( end );
 		}
-		name = string ( p, end-p );
+		string attribute ( p, end-p ), value;
 		p = end;
 		p += strspn ( p, WS );
-		while ( *p != '>' && *p != '/' )
+		if ( *p == '=' )
 		{
-			end = strpbrk ( p, WSEQ );
+			++p;
+			p += strspn ( p, WS );
+			char quote = 0;
+			if ( strchr ( "\"'", *p ) )
+			{
+				quote = *p++;
+				end = strchr ( p, quote );
+			}
+			else
+			{
+				end = strpbrk ( p, WS );
+			}
 			if ( !end )
 			{
-				end = strpbrk ( p, "/>" );
-				assert ( end );
+				end = strchr ( p, '>' );
+				assert(end);
+				if ( end[-1] == '/' )
+					end--;
 			}
-			string attribute ( p, end-p ), value;
+			value = string ( p, end-p );
 			p = end;
+			if ( quote && *p == quote )
+				p++;
 			p += strspn ( p, WS );
-			if ( *p == '=' )
-			{
-				++p;
-				p += strspn ( p, WS );
-				char quote = 0;
-				if ( strchr ( "\"'", *p ) )
-				{
-					quote = *p++;
-					end = strchr ( p, quote );
-				}
-				else
-				{
-					end = strpbrk ( p, WS );
-				}
-				if ( !end )
-				{
-					end = strchr ( p, '>' );
-					assert(end);
-					if ( end[-1] == '/' )
-						end--;
-				}
-				value = string ( p, end-p );
-				p = end;
-				if ( quote && *p == quote )
-					p++;
-				p += strspn ( p, WS );
-			}
-			attributes.push_back ( XMLAttribute ( attribute, value ) );
 		}
-		return !( *p == '/' ) && !end_tag;
+		attributes.push_back ( XMLAttribute ( attribute, value ) );
 	}
-};
+	return !( *p == '/' ) && !end_tag;
+}
 
-XMLElement* XMLParse ( XMLFile& f, bool* pend_tag = NULL )
+
+XMLElement* XMLParse(XMLFile& f,
+                     bool* pend_tag = NULL)
 {
 	string token;
 	if ( !f.get_token(token) )
@@ -310,11 +301,11 @@ int main ( int argc, char** argv )
 		return -1;
 	}
 
-	XMLElement* head = XMLParse ( f );
-  if (head)
-  {
-	  // REM TODO FIXME actually do something with the parsed info
-  }
+	XMLElement* head = XMLParse(f);
+	if (head)
+	{
+		// REM TODO FIXME actually do something with the parsed info
+	}
 
 	return 0;
 }
