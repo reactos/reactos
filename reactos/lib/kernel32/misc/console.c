@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.45 2002/10/20 11:55:59 chorns Exp $
+/* $Id: console.c,v 1.46 2002/10/29 03:49:31 mdill Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -937,8 +937,59 @@ PeekConsoleInputA(
 	LPDWORD			lpNumberOfEventsRead
 	)
 {
-/* TO DO */
-	return FALSE;
+ PCSRSS_API_REQUEST Request;
+  CSRSS_API_REPLY Reply;
+  NTSTATUS Status;
+  PVOID BufferBase;
+  PVOID BufferTargetBase;
+  DWORD Size;
+  
+  if(lpBuffer == NULL)
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+  
+  Size = nLength * sizeof(INPUT_RECORD);
+
+  Status = CsrCaptureParameterBuffer((PVOID)lpBuffer, Size, &BufferBase, &BufferTargetBase);
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastErrorByStatus(Status);
+    return FALSE;
+  }
+  
+  Request = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(CSRSS_API_REQUEST));
+  if(Request == NULL)
+  {
+    CsrReleaseParameterBuffer(BufferBase);
+    SetLastError(ERROR_OUTOFMEMORY);
+    return FALSE;
+  }
+  
+  Request->Type = CSRSS_PEEK_CONSOLE_INPUT;
+  Request->Data.PeekConsoleInputRequest.ConsoleHandle = hConsoleInput;
+  Request->Data.PeekConsoleInputRequest.Length = nLength;
+  Request->Data.PeekConsoleInputRequest.InputRecord = (INPUT_RECORD*)BufferTargetBase;
+  
+  Status = CsrClientCallServer(Request, &Reply, sizeof(CSRSS_API_REQUEST), sizeof(CSRSS_API_REPLY));
+  
+  if(!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
+  {
+    RtlFreeHeap(GetProcessHeap(), 0, Request);
+    CsrReleaseParameterBuffer(BufferBase);
+    return FALSE;
+  }
+
+  memcpy(lpBuffer, BufferBase, sizeof(INPUT_RECORD) * Reply.Data.PeekConsoleInputReply.Length);
+
+  if(lpNumberOfEventsRead != NULL)
+    *lpNumberOfEventsRead = Reply.Data.PeekConsoleInputReply.Length;
+
+  RtlFreeHeap(GetProcessHeap(), 0, Request);
+  CsrReleaseParameterBuffer(BufferBase);  
+  
+	return TRUE;
 }
 
 

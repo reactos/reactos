@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.35 2002/10/20 00:34:40 mdill Exp $
+/* $Id: conio.c,v 1.36 2002/10/29 03:49:31 mdill Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -2074,6 +2074,77 @@ CSR_API(CsrGetNumberOfConsoleInputEvents)
   Reply->Data.GetNumInputEventsReply.NumInputEvents = NumEvents;
    
   return Reply->Status;
+}
+
+
+CSR_API(CsrPeekConsoleInput)
+{
+   NTSTATUS Status;
+   PCSRSS_CONSOLE Console;
+   DWORD Size;
+   DWORD Length;
+   PLIST_ENTRY CurrentItem;
+   PLIST_ENTRY NextItem;
+   PINPUT_RECORD InputRecord;
+   ConsoleInput* Item;
+   UINT NumItems;
+   
+   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE_HEADER);
+   
+   LOCK;
+   
+   Status = CsrGetObject(ProcessData, Request->Data.GetNumInputEventsRequest.ConsoleHandle, (Object_t**)&Console);
+   if(!NT_SUCCESS(Status))
+   {
+      Reply->Status = Status;
+      UNLOCK;
+      return Reply->Status;
+   }
+
+   if(Console->Header.Type != CSRSS_CONSOLE_MAGIC)
+   {
+      Reply->Status = STATUS_INVALID_HANDLE;
+      UNLOCK;
+      return Reply->Status;
+   }
+   
+   InputRecord = Request->Data.PeekConsoleInputRequest.InputRecord;
+   Length = Request->Data.PeekConsoleInputRequest.Length;
+   Size = Length * sizeof(INPUT_RECORD);
+   
+    if(((PVOID)InputRecord < ProcessData->CsrSectionViewBase)
+         || (((PVOID)InputRecord + Size) > (ProcessData->CsrSectionViewBase + ProcessData->CsrSectionViewSize)))
+   {
+      UNLOCK;
+      Reply->Status = STATUS_ACCESS_VIOLATION;
+      return Reply->Status ;
+   }
+   
+   NumItems = 0;
+   
+   if(!IsListEmpty(&Console->InputEvents))
+   {
+      CurrentItem = &Console->InputEvents;
+   
+      while(NumItems < Length)
+      {
+         ++NumItems;
+         Item = CONTAINING_RECORD(CurrentItem, ConsoleInput, ListEntry);
+         *InputRecord++ = Item->InputEvent;
+         
+         if(CurrentItem->Flink == &Console->InputEvents)
+            break;
+         else
+            CurrentItem = CurrentItem->Flink;
+      }
+   }
+
+   UNLOCK;
+   
+   Reply->Status = STATUS_SUCCESS;
+   Reply->Data.PeekConsoleInputReply.Length = NumItems;
+   return Reply->Status;
 }
 
 /* EOF */
