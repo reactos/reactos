@@ -1,5 +1,5 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <crtdll/stdlib.h>
+#include <msvcrt/stdlib.h>
 
 div_t
 div(int num, int denom)

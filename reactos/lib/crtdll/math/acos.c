@@ -18,9 +18,10 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.  */
 
-#include <crtdll/math.h>
+#include <msvcrt/math.h>
 
-double acos (double __x)
+
+double acos(double __x)
 {
-  return atan2 (sqrt (1.0 - __x * __x), __x);
+    return atan2(sqrt(1.0 - __x * __x), __x);
 }

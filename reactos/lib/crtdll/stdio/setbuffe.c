@@ -1,7 +1,7 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-//#include <crtdll/stubs.h>
-#include <crtdll/stdio.h>
-#include <crtdll/stdlib.h>
+//#include <msvcrt/stubs.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/stdlib.h>
 
 void setbuffer(FILE *f, void *buf, int size)
 {

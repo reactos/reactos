@@ -1,5 +1,5 @@
-#include <crtdll/wchar.h>
-#include <crtdll/stdlib.h>
+#include <msvcrt/wchar.h>
+#include <msvcrt/stdlib.h>
 
 size_t wcstombs( char *dst, const wchar_t *src, size_t len )
 {

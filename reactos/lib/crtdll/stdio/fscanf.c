@@ -18,9 +18,9 @@ Cambridge, MA 02139, USA.  */
 
 
 #include <stdarg.h>
-#include <crtdll/stdio.h>
-#include <crtdll/wchar.h>
-#include <crtdll/alloc.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/wchar.h>
+#include <msvcrt/alloc.h>
 
 
 int __vfscanf (FILE *s, const char *format, va_list argptr);

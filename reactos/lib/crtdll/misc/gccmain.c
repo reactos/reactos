@@ -11,23 +11,23 @@
  * Contributors:
  *  Code supplied by Stan Cox <scox@cygnus.com>
  *
- * $Revision: 1.2 $
- * $Author: ariadne $
- * $Date: 1999/04/02 21:43:56 $
+ * $Revision: 1.3 $
+ * $Author: robd $
+ * $Date: 2002/11/29 12:27:48 $
  *
  */
 
 /* Needed for the atexit prototype. */
-#include <crtdll/stdlib.h>
+#include <msvcrt/stdlib.h>
+
 
 typedef void (*func_ptr) (void);
 extern func_ptr __CTOR_LIST__[];
 extern func_ptr __DTOR_LIST__[];
 
-void
-__do_global_dtors (void)
+void __do_global_dtors(void)
 {
-	static func_ptr *p = __DTOR_LIST__ + 1;
+	static func_ptr* p = __DTOR_LIST__ + 1;
 
 	/*
 	 * Call each destructor in the destructor list until a null pointer
@@ -40,10 +40,9 @@ __do_global_dtors (void)
 	}
 }
 
-void
-__do_global_ctors (void)
+void __do_global_ctors(void)
 {
-	unsigned long nptrs = (unsigned long) __CTOR_LIST__[0];
+	unsigned long nptrs = (unsigned long)__CTOR_LIST__[0];
 	unsigned i;
 
 	/*
@@ -51,8 +50,7 @@ __do_global_ctors (void)
 	 * is terminated with a null entry. Otherwise the first entry was
 	 * the number of pointers in the list.
 	 */
-	if (nptrs == -1)
-	{
+	if (nptrs == -1) {
 		for (nptrs = 0; __CTOR_LIST__[nptrs + 1] != 0; nptrs++)
 			;
 	}
@@ -60,24 +58,21 @@ __do_global_ctors (void)
 	/* 
 	 * Go through the list backwards calling constructors.
 	 */
-	for (i = nptrs; i >= 1; i--)
-	{
+	for (i = nptrs; i >= 1; i--) {
 		__CTOR_LIST__[i] ();
 	}
 
 	/*
 	 * Register the destructors for processing on exit.
 	 */
-	atexit (__do_global_dtors);
+	atexit(__do_global_dtors);
 }
 
 static int initialized = 0;
 
-void
-__main (void)
+void __main(void)
 {
-	if (! initialized)
-	{
+	if (!initialized) {
 		initialized = 1;
 		__do_global_ctors ();
 	}

@@ -1,5 +1,5 @@
 #include <windows.h>
-#include <crtdll/errno.h>
+#include <msvcrt/errno.h>
 
 #undef errno
 int errno;

@@ -1,11 +1,12 @@
-#include <crtdll/wchar.h>
+#include <msvcrt/wchar.h>
 
-int _wtoi( const wchar_t *str )
+
+int _wtoi(const wchar_t* str)
 {
 	return (int)wcstol(str, 0, 10);
 }
   
-long _wtol( const wchar_t *str )
+long _wtol(const wchar_t* str)
 {
 	return (int)wcstol(str, 0, 10);
 }

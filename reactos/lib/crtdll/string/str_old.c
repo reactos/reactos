@@ -19,14 +19,14 @@
  *  DISCLAMED. This includes but is not limited to warrenties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.3 $
- * $Author: ariadne $
- * $Date: 1999/04/03 10:42:18 $
+ * $Revision: 1.4 $
+ * $Author: robd $
+ * $Date: 2002/11/29 12:27:49 $
  *
  */
 
-#include <crtdll/string.h>
-#include <crtdll/wchar.h>
+#include <msvcrt/string.h>
+#include <msvcrt/wchar.h>
 
 int
 strcasecmp (const char* sz1, const char* sz2)

@@ -1,7 +1,7 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <crtdll/stdio.h>
-#include <crtdll/wchar.h>
-#include <crtdll/internal/file.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/wchar.h>
+#include <msvcrt/internal/file.h>
 
 int
 fprintf(register FILE *iop, const char *fmt, ...)

@@ -1,8 +1,8 @@
 #include <windows.h>
-#include <crtdll/stdio.h>
-#include <crtdll/wchar.h>
-#include <crtdll/errno.h>
-#include <crtdll/internal/file.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/wchar.h>
+#include <msvcrt/errno.h>
+#include <msvcrt/internal/file.h>
 
 //getc can be a macro
 #undef getc

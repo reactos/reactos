@@ -19,10 +19,10 @@ not, write to the Free Software Foundation, Inc., 675 Mass Ave,
 Cambridge, MA 02139, USA.  */
 
 #include <stdarg.h>
-#include <crtdll/stdio.h>
-#include <crtdll/wchar.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/wchar.h>
 #include <limits.h>
-#include <crtdll/internal/file.h>
+#include <msvcrt/internal/file.h>
 
 #undef sprintf
 #undef wsprintf

@@ -1,8 +1,8 @@
-#include <crtdll/stdio.h>
-#include <crtdll/stdlib.h>
-#include <crtdll/string.h>
-#include <crtdll/errno.h>
-#include <crtdll/internal/file.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/string.h>
+#include <msvcrt/errno.h>
+#include <msvcrt/internal/file.h>
 
 
 // carriage return line feed conversion is done in filbuf and  flsbuf

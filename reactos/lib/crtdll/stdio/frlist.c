@@ -1,7 +1,7 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <crtdll/stdio.h>
-//#include <crtdll/local.h>
-#include <crtdll/internal/file.h>
+#include <msvcrt/stdio.h>
+//#include <msvcrt/local.h>
+#include <msvcrt/internal/file.h>
 
 
 static __file_rec __initial_file_rec = {

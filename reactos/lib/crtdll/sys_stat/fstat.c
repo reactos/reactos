@@ -1,4 +1,4 @@
-/* $Id: fstat.c,v 1.11 2002/11/24 18:42:19 robd Exp $
+/* $Id: fstat.c,v 1.12 2002/11/29 12:27:49 robd Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -19,35 +19,34 @@
 
 int _fstat(int fd, struct stat* statbuf)
 {
-  BY_HANDLE_FILE_INFORMATION  FileInformation;
+    BY_HANDLE_FILE_INFORMATION FileInformation;
 
-  if (!statbuf)
-    {
-      __set_errno(EINVAL);	
-      return -1;
+    if (!statbuf) {
+        __set_errno(EINVAL);
+        return -1;
     }
 
-  if ( !GetFileInformationByHandle(_get_osfhandle(fd),&FileInformation) ) {
-	__set_errno (EBADF);
-	return -1;
-  }
-  statbuf->st_ctime = FileTimeToUnixTime( &FileInformation.ftCreationTime,NULL);
-  statbuf->st_atime = FileTimeToUnixTime( &FileInformation.ftLastAccessTime,NULL);
-  statbuf->st_mtime = FileTimeToUnixTime( &FileInformation.ftLastWriteTime,NULL);
-  if (statbuf->st_atime ==0)
-    statbuf->st_atime = statbuf->st_mtime;
-  if (statbuf->st_ctime ==0)
-    statbuf->st_ctime = statbuf->st_mtime;
+    if (!GetFileInformationByHandle(_get_osfhandle(fd),&FileInformation)) {
+        __set_errno (EBADF);
+        return -1;
+    }
+    statbuf->st_ctime = FileTimeToUnixTime(&FileInformation.ftCreationTime,NULL);
+    statbuf->st_atime = FileTimeToUnixTime(&FileInformation.ftLastAccessTime,NULL);
+    statbuf->st_mtime = FileTimeToUnixTime(&FileInformation.ftLastWriteTime,NULL);
+    if (statbuf->st_atime ==0)
+        statbuf->st_atime = statbuf->st_mtime;
+    if (statbuf->st_ctime ==0)
+        statbuf->st_ctime = statbuf->st_mtime;
 
-  statbuf->st_dev = FileInformation.dwVolumeSerialNumber; 
-  statbuf->st_size = FileInformation.nFileSizeLow; 
-  statbuf->st_nlink = FileInformation.nNumberOfLinks;
-  statbuf->st_mode = S_IREAD;
-  if (FileInformation.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-    statbuf->st_mode |= S_IFDIR | S_IEXEC;
-  else
-    statbuf->st_mode |= S_IFREG;
-  if ( !(FileInformation.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
-    statbuf->st_mode |= S_IWRITE;
-  return 0;
+    statbuf->st_dev = FileInformation.dwVolumeSerialNumber;
+    statbuf->st_size = FileInformation.nFileSizeLow;
+    statbuf->st_nlink = FileInformation.nNumberOfLinks;
+    statbuf->st_mode = S_IREAD;
+    if (FileInformation.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        statbuf->st_mode |= S_IFDIR | S_IEXEC;
+    else
+        statbuf->st_mode |= S_IFREG;
+    if (!(FileInformation.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
+        statbuf->st_mode |= S_IWRITE;
+    return 0;
 }

@@ -1,10 +1,10 @@
 /* Copyright (C) 1997 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <crtdll/stdio.h>
-#include <crtdll/stdlib.h>
-#include <crtdll/ctype.h>
-#include <crtdll/internal/file.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/ctype.h>
+#include <msvcrt/internal/file.h>
 
 
 #define atold 	atof
@@ -16,7 +16,7 @@ int
 _doscan_low(FILE *iop, int (*scan_getc)(FILE *), int (*scan_ungetc)(int, FILE *),
             const char *fmt, va_list argp);
 
-//#include <crtdll/local.h>
+//#include <msvcrt/local.h>
 
 #define	SPC	01
 #define	STP	02
