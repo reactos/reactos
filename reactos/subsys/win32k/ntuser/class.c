@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.58 2004/06/20 00:45:36 navaraf Exp $
+/* $Id: class.c,v 1.59 2004/06/21 20:56:53 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -278,7 +278,7 @@ IntCreateClass(
 	ULONG  objectSize;
 	BOOL Global;
 
-	Global = !(Flags & REGISTERCLASS_SYSTEM) ? ClassObject->style & CS_GLOBALCLASS : TRUE;
+	Global = (Flags & REGISTERCLASS_SYSTEM) || (lpwcx->style & CS_GLOBALCLASS) ? TRUE : FALSE;
 
 	/* Check for double registration of the class. */
 	if (PsGetWin32Process() != NULL)
