@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.67 2004/08/01 21:57:18 navaraf Exp $
+/* $Id: rw.c,v 1.68 2004/08/05 02:48:18 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -50,8 +50,10 @@ NextCluster(PDEVICE_EXTENSION DeviceExt,
     }
   else
     {
-      return GetNextCluster(DeviceExt, (*CurrentCluster), CurrentCluster,
-                            Extend);
+      if (Extend)
+        return GetNextClusterExtend(DeviceExt, (*CurrentCluster), CurrentCluster);
+      else
+        return GetNextCluster(DeviceExt, (*CurrentCluster), CurrentCluster);
     }
 }
 
@@ -90,18 +92,28 @@ OffsetToCluster(PDEVICE_EXTENSION DeviceExt,
   else
     {
       CurrentCluster = FirstCluster;
-      for (i = 0; i < FileOffset / DeviceExt->FatInfo.BytesPerCluster; i++)
-	{
-	  Status = GetNextCluster (DeviceExt, CurrentCluster, &CurrentCluster,
-				   Extend);
-	  if (!NT_SUCCESS(Status))
-	    {
-	      return(Status);
-	    }
-	}
-      *Cluster = CurrentCluster;
-      return(STATUS_SUCCESS);
-    }
+      if (Extend)
+        {
+          for (i = 0; i < FileOffset / DeviceExt->FatInfo.BytesPerCluster; i++)
+            {
+              Status = GetNextClusterExtend (DeviceExt, CurrentCluster, &CurrentCluster);
+              if (!NT_SUCCESS(Status))
+                return(Status);
+    	    }
+          *Cluster = CurrentCluster;
+       }
+     else
+        {
+          for (i = 0; i < FileOffset / DeviceExt->FatInfo.BytesPerCluster; i++)
+            {
+              Status = GetNextCluster (DeviceExt, CurrentCluster, &CurrentCluster);
+              if (!NT_SUCCESS(Status))
+                return(Status);
+    	    }
+          *Cluster = CurrentCluster;
+       }
+     return(STATUS_SUCCESS);
+   }    
 }
 
 NTSTATUS

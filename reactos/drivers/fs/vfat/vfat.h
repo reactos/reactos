@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.66 2004/08/01 21:57:18 navaraf Exp $ */
+/* $Id: vfat.h,v 1.67 2004/08/05 02:48:18 navaraf Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -142,7 +142,7 @@ typedef struct _HASHENTRY
 }
 HASHENTRY;
 
-#define FCB_HASH_TABLE_SIZE 1024
+#define FCB_HASH_TABLE_SIZE 65536
 
 typedef struct DEVICE_EXTENSION *PDEVICE_EXTENSION;
 
@@ -509,8 +509,11 @@ ULONGLONG ClusterToSector (PDEVICE_EXTENSION DeviceExt,
 
 NTSTATUS GetNextCluster (PDEVICE_EXTENSION DeviceExt,
                          ULONG CurrentCluster,
-                         PULONG NextCluster,
-                         BOOLEAN Extend);
+                         PULONG NextCluster);
+
+NTSTATUS GetNextClusterExtend (PDEVICE_EXTENSION DeviceExt,
+	                       ULONG CurrentCluster,
+	                       PULONG NextCluster);
 
 NTSTATUS CountAvailableClusters (PDEVICE_EXTENSION DeviceExt,
                                  PLARGE_INTEGER Clusters);

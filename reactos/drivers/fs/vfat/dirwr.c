@@ -1,4 +1,4 @@
-/* $Id: dirwr.c,v 1.40 2004/08/01 21:57:17 navaraf Exp $
+/* $Id: dirwr.c,v 1.41 2004/08/05 02:48:18 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -558,7 +558,7 @@ VfatDelEntry (PDEVICE_EXTENSION DeviceExt, PVFATFCB pFcb)
 
   while (CurrentCluster && CurrentCluster != 0xffffffff)
     {
-      GetNextCluster (DeviceExt, CurrentCluster, &NextCluster, FALSE);
+      GetNextCluster (DeviceExt, CurrentCluster, &NextCluster);
       /* FIXME: check status */
       WriteCluster(DeviceExt, CurrentCluster, 0);
       CurrentCluster = NextCluster;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.34 2004/08/01 21:57:18 navaraf Exp $
+/* $Id: fsctl.c,v 1.35 2004/08/05 02:48:18 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -164,7 +164,7 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
 	  Boot->BytesPerSector != 512 &&
 	  Boot->BytesPerSector != 1024 &&
           Boot->BytesPerSector != 2048 && 
-	  Boot->BytesPerSector == 4096)
+	  Boot->BytesPerSector != 4096)
       {
          DPRINT1("BytesPerSector %d\n", Boot->BytesPerSector);
          *RecognizedFS=FALSE;

@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.45 2004/08/01 21:57:17 navaraf Exp $
+ * $Id: fat.c,v 1.46 2004/08/05 02:48:18 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -306,7 +306,6 @@ FAT32FindAndMarkAvailableCluster (PDEVICE_EXTENSION DeviceExt, PULONG Cluster)
   }
   return (STATUS_DISK_FULL);
 }
-
 
 NTSTATUS
 FAT12CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
@@ -631,8 +630,7 @@ ClusterToSector(PDEVICE_EXTENSION DeviceExt,
 NTSTATUS
 GetNextCluster(PDEVICE_EXTENSION DeviceExt,
 	       ULONG CurrentCluster,
-	       PULONG NextCluster,
-	       BOOLEAN Extend)
+	       PULONG NextCluster)
 /*
  * FUNCTION: Retrieve the next cluster depending on the FAT type
  */
@@ -642,20 +640,36 @@ GetNextCluster(PDEVICE_EXTENSION DeviceExt,
   DPRINT ("GetNextCluster(DeviceExt %x, CurrentCluster %x)\n",
 	  DeviceExt, CurrentCluster);
 
-  if (!Extend)
-  {
-    ExAcquireResourceSharedLite(&DeviceExt->FatResource, TRUE);
-  }
-  else
-  {
-    ExAcquireResourceExclusiveLite(&DeviceExt->FatResource, TRUE);
-  }
+  if (CurrentCluster == 0)
+     return(STATUS_UNSUCCESSFUL);
+
+  ExAcquireResourceSharedLite(&DeviceExt->FatResource, TRUE);
+  Status = DeviceExt->GetNextCluster(DeviceExt, CurrentCluster, NextCluster);
+  ExReleaseResourceLite(&DeviceExt->FatResource);
+
+  return(Status);
+}
+
+NTSTATUS
+GetNextClusterExtend(PDEVICE_EXTENSION DeviceExt,
+	             ULONG CurrentCluster,
+	             PULONG NextCluster)
+/*
+ * FUNCTION: Retrieve the next cluster depending on the FAT type
+ */
+{
+  NTSTATUS Status;
+
+  DPRINT ("GetNextClusterExtend(DeviceExt %x, CurrentCluster %x)\n",
+	  DeviceExt, CurrentCluster);
+
+  ExAcquireResourceExclusiveLite(&DeviceExt->FatResource, TRUE);
   CHECKPOINT;
   /*
    * If the file hasn't any clusters allocated then we need special
    * handling
    */
-  if (CurrentCluster == 0 && Extend)
+  if (CurrentCluster == 0)
   {
     ULONG NewCluster;
 
@@ -670,15 +684,10 @@ GetNextCluster(PDEVICE_EXTENSION DeviceExt,
     ExReleaseResourceLite(&DeviceExt->FatResource);
     return(STATUS_SUCCESS);
   }
-  else if (CurrentCluster == 0)
-  {
-     ExReleaseResourceLite(&DeviceExt->FatResource);
-     return(STATUS_UNSUCCESSFUL);
-  }
 
   Status = DeviceExt->GetNextCluster(DeviceExt, CurrentCluster, NextCluster);
 
-  if (Extend && (*NextCluster) == 0xFFFFFFFF)
+  if ((*NextCluster) == 0xFFFFFFFF)
   {
      ULONG NewCluster;
 

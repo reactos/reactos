@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.71 2004/08/01 21:57:17 navaraf Exp $
+/* $Id: create.c,v 1.72 2004/08/05 02:48:18 navaraf Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/fs/vfat/create.c
@@ -469,7 +469,7 @@ VfatSupersedeFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
     }
   while (Cluster != 0xffffffff && Cluster > 1)
     {
-      Status = GetNextCluster (DeviceExt, Cluster, &NextCluster, FALSE);
+      Status = GetNextCluster (DeviceExt, Cluster, &NextCluster);
       WriteCluster (DeviceExt, Cluster, 0);
       Cluster = NextCluster;
     }
