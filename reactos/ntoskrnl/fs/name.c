@@ -1,4 +1,4 @@
-/* $Id: name.c,v 1.7 2003/07/10 16:43:10 ekohl Exp $
+/* $Id: name.c,v 1.8 2003/12/17 20:26:28 ekohl Exp $
  *
  * reactos/ntoskrnl/fs/name.c
  *
@@ -25,16 +25,13 @@ PUCHAR	* FsRtlLegalAnsiCharacterArray = NULL;
  *
  * @unimplemented
  */
-BOOLEAN
-STDCALL
-FsRtlAreNamesEqual (
-	IN	PUNICODE_STRING	Name1,
-	IN	PUNICODE_STRING	Name2,
-	IN	BOOLEAN		IgnoreCase,
-	IN	PWCHAR		UpcaseTable	OPTIONAL
-	)
+BOOLEAN STDCALL
+FsRtlAreNamesEqual (IN PUNICODE_STRING Name1,
+		    IN PUNICODE_STRING Name2,
+		    IN BOOLEAN IgnoreCase,
+		    IN PWCHAR UpcaseTable OPTIONAL)
 {
-	return FALSE;
+  return FALSE;
 }
 
 
@@ -43,22 +40,74 @@ FsRtlAreNamesEqual (
  * 	FsRtlDissectName@16
  *
  * DESCRIPTION
+ *	Dissects a given path name into first and remaining part.
  *
  * ARGUMENTS
+ *	Name
+ *		Unicode string to dissect.
+ *
+ *	FirstPart
+ *		Pointer to user supplied UNICODE_STRING, that will
+ *		later point to the first part of the original name.
+ *
+ *	RemainingPart
+ *		Pointer to user supplied UNICODE_STRING, that will
+ *		later point to the remaining part of the original name.
  *
  * RETURN VALUE
+ *	None
  *
- * @unimplemented
+ * EXAMPLE
+ *	Name:		\test1\test2\test3
+ *	FirstPart:	test1
+ *	RemainingPart:	test2\test3
+ *
+ * @implemented
  */
-VOID
-STDCALL
-FsRtlDissectName (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
-	)
+VOID STDCALL
+FsRtlDissectName (IN UNICODE_STRING Name,
+		  OUT PUNICODE_STRING FirstPart,
+		  OUT PUNICODE_STRING RemainingPart)
 {
+  USHORT NameOffset = 0;
+  USHORT NameLength = 0;
+  USHORT Length;
+
+  FirstPart->Length = 0;
+  FirstPart->MaximumLength = 0;
+  FirstPart->Buffer = NULL;
+
+  RemainingPart->Length = 0;
+  RemainingPart->MaximumLength = 0;
+  RemainingPart->Buffer = NULL;
+
+  if (Name.Length == 0)
+    return;
+
+  /* Skip leading backslash */
+  if (Name.Buffer[0] == L'\\')
+    NameOffset++;
+
+  Length = Name.Length / sizeof(WCHAR);
+
+  /* Search for next backslash or end-of-string */
+  while ((NameOffset + NameLength <= Length) &&
+         (Name.Buffer[NameOffset + NameLength] != L'\\'))
+  {
+    NameLength++;
+  }
+
+  FirstPart->Length = NameLength * sizeof(WCHAR);
+  FirstPart->MaximumLength = NameLength * sizeof(WCHAR);
+  FirstPart->Buffer = &Name.Buffer[NameOffset];
+
+  NameOffset += (NameLength + 1);
+  if (NameOffset < Length)
+  {
+    RemainingPart->Length = (Length - NameOffset) * sizeof(WCHAR);
+    RemainingPart->MaximumLength = (Length - NameOffset) * sizeof(WCHAR);
+    RemainingPart->Buffer = &Name.Buffer[NameOffset];
+  }
 }
 
 
@@ -95,7 +144,7 @@ FsRtlDoesNameContainWildCards (IN PUNICODE_STRING Name)
 	return FALSE;
 
       /* Check for wildcards */
-      if ((*Ptr < '@') &&
+      if ((*Ptr < L'@') &&
 	  (*Ptr == L'\"' || *Ptr == L'*' || *Ptr == L'<' ||
 	   *Ptr == L'>' || *Ptr == L'?'))
 	return TRUE;
@@ -123,17 +172,13 @@ FsRtlDoesNameContainWildCards (IN PUNICODE_STRING Name)
  *
  * @unimplemented
  */
-BOOLEAN
-STDCALL
-FsRtlIsNameInExpression (
-	IN	PUNICODE_STRING	Expression,
-	IN	PUNICODE_STRING	Name,
-	IN	BOOLEAN		IgnoreCase,
-	IN	PWCHAR		UpcaseTable	OPTIONAL
-	)
+BOOLEAN STDCALL
+FsRtlIsNameInExpression (IN PUNICODE_STRING Expression,
+			 IN PUNICODE_STRING Name,
+			 IN BOOLEAN IgnoreCase,
+			 IN PWCHAR UpcaseTable OPTIONAL)
 {
-	return FALSE;
+  return FALSE;
 }
-
 
 /* EOF */

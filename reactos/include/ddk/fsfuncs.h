@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_FSFUNCS_H
 #define __INCLUDE_DDK_FSFUNCS_H
-/* $Id: fsfuncs.h,v 1.21 2003/10/11 20:40:21 navaraf Exp $ */
+/* $Id: fsfuncs.h,v 1.22 2003/12/17 20:27:06 ekohl Exp $ */
 #define FlagOn(x,f) ((x) & (f))
 
 #include <ntos/fstypes.h>
@@ -153,14 +153,12 @@ FsRtlDissectDbcs (
 	DWORD	Unknown2,
 	DWORD	Unknown3
 	);
-VOID
-STDCALL
-FsRtlDissectName (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
-	);
+
+VOID STDCALL
+FsRtlDissectName (IN UNICODE_STRING Name,
+		  OUT PUNICODE_STRING FirstPart,
+		  OUT PUNICODE_STRING RemainingPart);
+
 BOOLEAN
 STDCALL
 FsRtlDoesDbcsContainWildCards (
