@@ -805,8 +805,9 @@ try_again:
 			que_reclaimed = 1;
 			goto try_again;
 		}
-		/*DPRINT1("Trying to allocate %lu bytes from paged pool - nothing suitable found, returning NULL\n",
-			queBytes );*/
+		DPRINT1("Trying to allocate %lu bytes from paged pool - nothing suitable found, returning NULL\n",
+			queBytes );
+		R_RELEASE_MUTEX(pool);
 		return NULL;
 	}
 	/*
