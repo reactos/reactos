@@ -19,6 +19,7 @@ md %ROS_INSTALL%\system32\config
 md %ROS_INSTALL%\system32\drivers
 md %ROS_INSTALL%\media
 md %ROS_INSTALL%\media\fonts
+
 copy boot.bat %ROS_INSTALL%
 copy bootc.lst %ROS_INSTALL%
 copy aboot.bat %ROS_INSTALL%
@@ -141,21 +142,20 @@ copy media\fonts\timr____.ttf %ROS_INSTALL%\media\fonts
 rem copy media\nls\*.nls %ROS_INSTALL%\system32
 copy ntoskrnl\ntoskrnl.map %ROS_INSTALL%\symbols
 
-if %ROS_BUILD_EXT == "" goto Finish
+if "%ROS_BUILD_EXT%" == "" goto Finish
 
 echo Installing extra programs from rosapps directory...
-pushd ..\rosapps
-call install.bat
-popd
+call ..\rosapps\install.bat %1
+
 echo Installing targets modules ported from WINE...
-pushd ..\wine
-call install.bat
-popd
+call ..\wine\install.bat %1
+
 echo Installing targets for POSIX+ support...
-pushd ..\posix
-call install.bat
-popd
+call ..\posix\install.bat %1
+
+echo Installing targets for OS/2 support...
+call ..\os2\install.bat %1
+
 echo Done.
 
 :Finish
-
