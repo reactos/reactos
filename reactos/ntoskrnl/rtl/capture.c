@@ -115,6 +115,13 @@ RtlCaptureUnicodeString(OUT PUNICODE_STRING Dest,
       Status = _SEH_GetExceptionCode();
     }
     _SEH_END;
+    
+    if(!NT_SUCCESS(Status))
+    {
+      ExFreePool(Dest->Buffer);
+      Dest->Buffer = NULL;
+      Dest->Length = Dest->MaximumLength = 0;
+    }
   }
   else
   {
