@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.102 2002/12/15 17:01:52 chorns Exp $
+/* $Id: section.c,v 1.103 2003/01/11 15:31:05 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -564,6 +564,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
        if (PageOp->OpType != MM_PAGEOP_PAGEIN)
 	 {
 	   MmLockAddressSpace(AddressSpace);
+           KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
 	   MmReleasePageOp(PageOp);
 	   DPRINT("Address 0x%.8X\n", Address);
 	   return(STATUS_MM_RESTART_OPERATION);
@@ -574,8 +575,11 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
        if (!NT_SUCCESS(PageOp->Status))
 	 {
 	   MmLockAddressSpace(AddressSpace);
+	   Status = PageOp->Status;
+	   KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+	   MmReleasePageOp(PageOp);
 	   DPRINT("Address 0x%.8X\n", Address);
-	   return(PageOp->Status);
+	   return(Status);
 	 }
        MmLockAddressSpace(AddressSpace);
        MmLockSection(Section);
@@ -591,6 +595,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	   {
 		MmUnlockSectionSegment(Segment);
 		MmUnlockSection(Section);
+                KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
 	        MmReleasePageOp(PageOp);
 	        return(STATUS_MM_RESTART_OPERATION);
 	   } 
@@ -599,7 +604,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	   MmReferencePage(Page);	
 	   MmSharePageEntrySectionSegment(Segment, Offset.u.LowPart);
 
-	   Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
+	   Status = MmCreateVirtualMapping(MemoryArea->Process,
 					   Address,
 					   MemoryArea->Attributes,
 					   Page,
@@ -609,7 +614,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	       DbgPrint("Unable to create virtual mapping\n");
 	       KeBugCheck(0);
 	     }
-	   MmInsertRmap(Page, PsGetCurrentProcess(), 
+	   MmInsertRmap(Page, MemoryArea->Process, 
 			(PVOID)PAGE_ROUND_DOWN(Address));
 	 }
        if (Locked)
@@ -618,6 +623,8 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	 }
        MmUnlockSectionSegment(Segment);
        MmUnlockSection(Section);
+       PageOp->Status = STATUS_SUCCESS;
+       KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
        MmReleasePageOp(PageOp);
        DPRINT("Address 0x%.8X\n", Address);
        return(STATUS_SUCCESS);
@@ -650,7 +657,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	   KeBugCheck(0);
 	 }
        
-       Status = MmCreateVirtualMapping(PsGetCurrentProcess(),		      
+       Status = MmCreateVirtualMapping(AddressSpace->Process,		      
 				       Address,
 				       Region->Protect,
 				       Page,
@@ -658,7 +665,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
        while (Status == STATUS_NO_MEMORY)
 	 {
 	   MmUnlockAddressSpace(AddressSpace);	   
-	   Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
+	   Status = MmCreateVirtualMapping(AddressSpace->Process,
 					   Address,
 					   Region->Protect,
 					   Page,
@@ -680,7 +687,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
        /*
 	* Add the page to the process's working set
 	*/
-       MmInsertRmap(Page, PsGetCurrentProcess(), 
+       MmInsertRmap(Page, AddressSpace->Process, 
 		    (PVOID)PAGE_ROUND_DOWN(Address));       
        
        /*
@@ -705,7 +712,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
        /*
 	* Just map the desired physical page 
 	*/
-       Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
+       Status = MmCreateVirtualMapping(AddressSpace->Process,
 				       Address,
 				       Region->Protect,
 				       Offset,
@@ -748,12 +755,12 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	    MmLockSectionSegment(Segment);
 	 }
 
-       Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
+       Status = MmCreateVirtualMapping(AddressSpace->Process,
 				       Address,
 				       Region->Protect,
 				       Page,
 				       FALSE);
-       MmInsertRmap(Page, PsGetCurrentProcess(), 
+       MmInsertRmap(Page, AddressSpace->Process, 
 		    (PVOID)PAGE_ROUND_DOWN(Address));
        if (Locked)
 	 {
@@ -842,7 +849,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
        MmSetPageEntrySectionSegment(Segment, Offset.QuadPart, Entry);
        MmSharePageEntrySectionSegment(Segment, Offset.QuadPart);
        
-       Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
+       Status = MmCreateVirtualMapping(AddressSpace->Process,
 				       Address,
 				       Attributes,
 				       Page,
@@ -852,7 +859,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	   MmUnlockSectionSegment(Segment);
 	   MmUnlockSection(Section);
 	   MmUnlockAddressSpace(AddressSpace);
-	   Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
+	   Status = MmCreateVirtualMapping(AddressSpace->Process,
 					   Address,
 					   Attributes,
 					   Page,
@@ -865,7 +872,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	   MmLockSection(Section);
 	   MmLockSectionSegment(Segment);
 	 }
-       MmInsertRmap(Page, PsGetCurrentProcess(), 
+       MmInsertRmap(Page, AddressSpace->Process, 
 		    (PVOID)PAGE_ROUND_DOWN(Address));     
        if (!NT_SUCCESS(Status))
 	 {
@@ -943,12 +950,12 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	*/
        MmSetSavedSwapEntryPage(Page, SwapEntry);
        
-       Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
+       Status = MmCreateVirtualMapping(AddressSpace->Process,
 				       Address,
 				       Attributes,
 				       Page,
 				       FALSE);
-       MmInsertRmap(Page, PsGetCurrentProcess(), 
+       MmInsertRmap(Page, AddressSpace->Process, 
 		    (PVOID)PAGE_ROUND_DOWN(Address));
        if (!NT_SUCCESS(Status))
 	 {
@@ -978,12 +985,12 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	MmReferencePage(Page);	
 	MmSharePageEntrySectionSegment(Segment, Offset.QuadPart);
 	
-	Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
+	Status = MmCreateVirtualMapping(AddressSpace->Process,
 					Address,
 					Attributes,
 					Page,
 					FALSE);
-	MmInsertRmap(Page, PsGetCurrentProcess(), 
+	MmInsertRmap(Page, AddressSpace->Process, 
 		     (PVOID)PAGE_ROUND_DOWN(Address));
 	if (!NT_SUCCESS(Status))
 	  {
@@ -1109,6 +1116,7 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	* Restart the operation
 	*/
        MmLockAddressSpace(AddressSpace);
+       KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
        MmReleasePageOp(PageOp);
        return(STATUS_MM_RESTART_OPERATION);
      }
@@ -1137,18 +1145,18 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
    /*
     * Delete the old entry.
     */
-   MmDeleteVirtualMapping(PsGetCurrentProcess(), Address, FALSE, NULL, NULL);
+   MmDeleteVirtualMapping(AddressSpace->Process, Address, FALSE, NULL, NULL);
 
    /*
     * Set the PTE to point to the new page
     */
    MmLockAddressSpace(AddressSpace);
-   Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
+   Status = MmCreateVirtualMapping(AddressSpace->Process,
 				   Address,
 				   Region->Protect,
 				   NewPage,
 				   FALSE);   
-   MmInsertRmap(NewPage, PsGetCurrentProcess(), 
+   MmInsertRmap(NewPage, AddressSpace->Process, 
 		(PVOID)PAGE_ROUND_DOWN(Address));
    if (!NT_SUCCESS(Status))
      {
@@ -1164,7 +1172,7 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
     * Unshare the old page.
     */
    MmUnsharePageEntrySectionSegment(Section, Segment, Offset.QuadPart, FALSE);
-   MmDeleteRmap(OldPage, PsGetCurrentProcess(),
+   MmDeleteRmap(OldPage, AddressSpace->Process,
 		(PVOID)PAGE_ROUND_DOWN(Address));
    MmReleasePageMemoryConsumer(MC_USER, OldPage);
 
@@ -1843,6 +1851,12 @@ MmpDeleteSection(PVOID ObjectBody)
       ObDereferenceObject(Section->FileObject);
       Section->FileObject = NULL;
     }
+
+  if (Section->Segments->Flags & MM_PAGEFILE_SEGMENT)
+  {
+     MmFreePageTablesSectionSegment(Section->Segments);
+     ExFreePool(Section->Segments);
+  }
 }
 
 VOID STDCALL
@@ -2024,6 +2038,7 @@ MmCreatePageFileSection(PHANDLE SectionHandle,
   Segment->Length = MaximumSize.u.LowPart;
   Segment->Flags = MM_PAGEFILE_SEGMENT;
   Segment->WriteCopy = FALSE;
+  ObDereferenceObject(Section);
   return(STATUS_SUCCESS);
 }
 
@@ -2987,8 +3002,6 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
 	      MmFreeSwapPage(SavedSwapEntry);
 	      MmSetSavedSwapEntryPage(PhysAddr, 0);
 	    }
-	  MmDeleteRmap(PhysAddr, MArea->Process, Address);
-	  MmReleasePageMemoryConsumer(MC_USER, PhysAddr);
 	}
       else
 	{
@@ -2996,9 +3009,9 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
 					   MArea->Data.SectionData.Segment,
 					   Offset,
 					   Dirty);
-	  MmDeleteRmap(PhysAddr, MArea->Process, Address);
-	  MmReleasePageMemoryConsumer(MC_USER, PhysAddr);
 	}
+      MmDeleteRmap(PhysAddr, MArea->Process, Address);
+      MmReleasePageMemoryConsumer(MC_USER, PhysAddr);
     }
 }
 
@@ -3508,8 +3521,20 @@ BOOLEAN STDCALL
 MmFlushImageSection (IN	PSECTION_OBJECT_POINTERS	SectionObjectPointer,
 		     IN	MMFLUSH_TYPE			FlushType)
 {
-  UNIMPLEMENTED;
-  return (FALSE);
+   switch(FlushType)
+   {
+      case MmFlushForDelete: 
+         if (SectionObjectPointer->ImageSectionObject || 
+	     SectionObjectPointer->DataSectionObject)
+	 {
+            return FALSE;
+	 }
+	 CcRosSetRemoveOnClose(SectionObjectPointer);
+         return TRUE;
+      case MmFlushForWrite:
+	 break;
+   }
+   return FALSE;
 }
 
 BOOLEAN STDCALL
