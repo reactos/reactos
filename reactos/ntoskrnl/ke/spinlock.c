@@ -178,7 +178,7 @@ KiAcquireSpinLock(PKSPIN_LOCK SpinLock)
    * FIXME: This depends on gcc assembling this test to a single load from
    * the spinlock's value.
    */
-  ASSERT(*SpinLock == 0 || 1);
+  ASSERT(*SpinLock == 0 || *SpinLock == 1);
    
   while ((i = InterlockedExchangeUL(SpinLock, 1)) == 1)
   {
