@@ -25,15 +25,8 @@ APPS = cmdutils \
     	sysutils$(SEP)kill \
     	sysutils$(SEP)tcat \
 	sysutils$(SEP)tlist \
-	net$(SEP)ping \
-	net$(SEP)finger \
-	net$(SEP)telnet \
 	net$(SEP)niclist \
-	net$(SEP)whois \
-	net$(SEP)arp \
 	net$(SEP)ncftp \
-        net$(SEP)netstat \
-	net$(SEP)ipconfig \
 	sysutils$(SEP)regexpl \
 	tests \
 	welcome \
