@@ -15,13 +15,13 @@
 #define AP_MAGIC (0x12481020)
 
 #endif /* MP */
-	
+
 .globl _NtProcessStartup
 .globl _start
 .globl _init_stack
 .globl _init_stack_top
 .globl _trap_stack
-.globl _trap_stack_top	
+.globl _trap_stack_top
 .globl _unmap_me
 .globl _unmap_me2
 .globl _unmap_me3
@@ -29,7 +29,7 @@
 .globl _pagetable_start
 .globl _pagetable_end 
 .globl _pae_pagedirtable
-		
+
 	/*
 	 * This is called by the realmode loader, with protected mode
 	 * enabled, paging disabled and the segment registers pointing
@@ -47,7 +47,7 @@ _start:
 
 	/* Align 32 bits boundary */
 	.align 4
-	
+
 	/* Multiboot header */
 multiboot_header:
 	/* magic */
@@ -67,11 +67,11 @@ multiboot_header:
 	/* entry_addr */
 	.long (0x200000 + _start - KERNEL_BASE)
 
-_multiboot_entry:	
+_multiboot_entry:
 	/*
 	 * This	must be PIC because we haven't set up paging yet
-	 */	
-	
+	 */
+
 	/*
 	 * Gcc expects this at all times
 	 */
@@ -82,9 +82,9 @@ _multiboot_entry:
 	/*
 	 * Save the multiboot or application processor magic
 	 */
-	movl    %eax, %edx
+	movl	%eax, %edx
 
-	cmpl    $AP_MAGIC, %edx
+	cmpl	$AP_MAGIC, %edx
 	je	.m1
 
 #endif /* MP */
@@ -143,16 +143,16 @@ _multiboot_entry:
 	addl	$4, %edi
 	cmpl	$6144, %edi
 	jl	.l4
-	
+
 #ifdef  MP
 
 	/*
 	 * Initialize the page table that maps the APIC register address space
 	 */
-	 
+
 	/* 
-	 * FIXME: APIC register address space can be non-standard so do the 
-	 * mapping later 
+	 * FIXME: APIC register address space can be non-standard so do the
+	 * mapping later
 	 */
 	movl	$V2P(apic_pagetable), %esi
 	movl	$0, %edi
@@ -178,7 +178,7 @@ _multiboot_entry:
 	movl	$0xa0003, %eax
 	movl	$0x20, %ecx
 	movl	$0xE80, %edi
-.l9:	
+.l9:
 	movl	%eax, (%esi, %edi)
 	add	$4, %edi
 	add	$0x1000, %eax
@@ -192,7 +192,7 @@ _multiboot_entry:
 
 	/*
 	 * Set up the PDBR
-	 */	
+	 */
 	movl	$(V2P(startup_pagedirectory)), %eax
 	movl	%eax, %cr3
 
@@ -205,16 +205,16 @@ _multiboot_entry:
 
 	/*
 	 * Do an absolute jump because we now want to execute above 0xc0000000
-	 */	
+	 */
 	movl	$.l2, %eax
 	jmp	*%eax
 .l2:
-	
+
 	/*
 	 * Load the GDTR and IDTR with new tables located above
 	 * 0xc0000000
 	 */
-	
+
 	/* FIXME: Application processors should have their own GDT/IDT */
 	lgdt	_KiGdtDescriptor
 	lidt	_KiIdtDescriptor
@@ -232,8 +232,8 @@ _multiboot_entry:
 
 #ifdef MP
 
-	cmpl    $AP_MAGIC, %edx
-	jne     .m2
+	cmpl	$AP_MAGIC, %edx
+	jne	.m2
 
 	/*
 	 * This is an application processor executing
@@ -265,7 +265,7 @@ _multiboot_entry:
 .l8:
 	jmp	.l8
 
-	
+
 .m2:
 
 #endif /* MP */
@@ -297,7 +297,7 @@ _multiboot_entry:
 	pushl	$KERNEL_CS
 	pushl	$__main
 	lret
-	
+
 	/*
 	 * Catch illegal returns from main, try bug checking the system,
 	 * if that fails then loop forever.
@@ -311,7 +311,7 @@ _multiboot_entry:
 .l6:
 	jmp	.l6
 
-	
+
 	/*
 	 * This needs to be page aligned so put it at the beginning of the bss
 	 * segment
@@ -325,7 +325,7 @@ lowmem_pagetable:
 	.fill 4096, 1, 0
 
 kernel_pagetable:
-	.fill 2*4096, 1, 0	
+	.fill 2*4096, 1, 0
 
 kernelmap_pagetable:
 	.fill 4096, 1, 0
@@ -333,25 +333,25 @@ _pae_pagedirtable:
 	.fill 4096, 1, 0
 #ifdef MP
 apic_pagetable:
-	.fill 4096, 1, 0	
+	.fill 4096, 1, 0
 #endif /* MP */
 
 kpcr_pagetable:
-	.fill 4096, 1, 0	
+	.fill 4096, 1, 0
 _pagetable_end:
 _unmap_me:
 	.fill 4096, 1, 0
-	
+
 _init_stack:
 	.fill 3*4096, 1, 0
-_init_stack_top: 
+_init_stack_top:
 
-_unmap_me2:	
+_unmap_me2:
 	.fill 4096, 1, 0
-	
-_trap_stack:	
+
+_trap_stack:
 	.fill 3*4096, 1, 0
-_trap_stack_top:	
-	
-_unmap_me3:	
-	.fill 4096, 1, 0			
+_trap_stack_top:
+
+_unmap_me3:
+	.fill 4096, 1, 0

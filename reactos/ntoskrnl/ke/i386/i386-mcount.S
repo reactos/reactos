@@ -27,25 +27,25 @@
 /* dwelch: Altered for ReactOS to output the files to port 0xe9 for processing
 	by bochs. */
 
-	
-.globl _mcount
-_mcount:	
-	/* Save the caller-clobbered registers.  */
-	pushl %eax
-	pushl %ecx
-	pushl %edx
 
-	movw $0xe9, %dx
-	movl 4(%ebp), %eax
-	outl %eax, %dx
-	movl 12(%esp), %eax
-	outl %eax, %dx
+.globl _mcount
+_mcount:
+	/* Save the caller-clobbered registers.  */
+	pushl	%eax
+	pushl	%ecx
+	pushl	%edx
+
+	movw	$0xe9, %dx
+	movl	4(%ebp), %eax
+	outl	%eax, %dx
+	movl	12(%esp), %eax
+	outl	%eax, %dx
 
 	/* Pop the saved registers.  Please note that `mcount' has no
 	   return value.  */
-	popl %edx
-	popl %ecx
-	popl %eax
+	popl	%edx
+	popl	%ecx
+	popl	%eax
 	ret
 
 

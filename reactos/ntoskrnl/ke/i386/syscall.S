@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: syscall.S,v 1.17 2004/08/21 21:13:45 tamlin Exp $
+/* $Id: syscall.S,v 1.18 2004/10/31 19:46:10 ekohl Exp $
  *
  * FILE:            ntoskrnl/ke/i386/syscall.S
  * PURPOSE:         2E trap handler
@@ -149,92 +149,94 @@ new_serviceInRange:
 #ifdef DBG
 	/* GDB thinks the function starts here and
 	   wants a standard prolog, so let's give it */
-	pushl %ebp
-	movl  %esp,%ebp
-	popl  %ebp
+	pushl	%ebp
+	movl	%esp,%ebp
+	popl	%ebp
 #endif
 
 	/*  Allocate room for argument list from kernel stack  */
-	movl  %es:_KeServiceDescriptorTable + 12, %ecx
-	movb  %es:(%ecx, %eax), %cl
-	movzx %cl, %ecx
-	subl  %ecx, %esp
+	movl	%es:_KeServiceDescriptorTable + 12, %ecx
+	movb	%es:(%ecx, %eax), %cl
+	movzx	%cl, %ecx
+	subl	%ecx, %esp
 
 	/*  Copy the arguments from the user stack to the kernel stack  */
-	movl  %esp,%edi
+	movl	%esp,%edi
 	cld
-	rep   movsb
+	rep	movsb
 
 	/*  DS is now also kernel segment  */
-	movw  %bx, %ds
+	movw	%bx, %ds
 
 	/* Call system call hook */
-	pushl %eax
-	call  _KiSystemCallHook
-	popl  %eax
+	pushl	%eax
+	call	_KiSystemCallHook
+	popl	%eax
 
 	/*  Make the system service call  */
-	movl  %es:_KeServiceDescriptorTable, %ecx
-	movl  %es:(%ecx, %eax, 4), %eax
-	call  *%eax
-	movl  %eax, KTRAP_FRAME_EAX(%ebp) /* save our return value in PKTRAP_FRAME->Eax */
+	movl	%es:_KeServiceDescriptorTable, %ecx
+	movl	%es:(%ecx, %eax, 4), %eax
+	call	*%eax
+	movl	%eax, KTRAP_FRAME_EAX(%ebp) /* save our return value in PKTRAP_FRAME->Eax */
 
 #if CHECKED
 	/*  Bump Service Counter  */
 #endif
 
-	jmp   KeDeallocateStackAndReturnFromSystemCallWithHook
+	jmp	KeDeallocateStackAndReturnFromSystemCallWithHook
 
 new_useShadowTable:
 
-	subl  $0x1000, %eax
+	subl	$0x1000, %eax
 
 	/*  Check to see if EAX is valid/inrange  */
-	cmpl  %es:_KeServiceDescriptorTableShadow + 24, %eax
-	jbe   new_shadowServiceInRange
-	movl  $STATUS_INVALID_SYSTEM_SERVICE, %eax
-	movl  %eax, KTRAP_FRAME_EAX(%ebp) /* save our return value in PKTRAP_FRAME->Eax */
-	jmp   KeReturnFromSystemCall
+	cmpl	%es:_KeServiceDescriptorTableShadow + 24, %eax
+	jbe	new_shadowServiceInRange
+	movl	$STATUS_INVALID_SYSTEM_SERVICE, %eax
+	movl	%eax, KTRAP_FRAME_EAX(%ebp) /* save our return value in PKTRAP_FRAME->Eax */
+	jmp	KeReturnFromSystemCall
 
 new_shadowServiceInRange:
 
 #ifdef DBG
-	/* GDB thinks the function starts here and
-	   wants a standard prolog, so let's give it */
-	pushl %ebp
-	movl  %esp,%ebp
-	popl  %ebp
+	/*
+	 * GDB thinks the function starts here and
+	 * wants a standard prolog, so let's give it
+	 */
+	pushl	%ebp
+	movl	%esp,%ebp
+	popl	%ebp
 #endif
 
 	/*  Allocate room for argument list from kernel stack  */
-	movl  %es:_KeServiceDescriptorTableShadow + 28, %ecx
-	movb  %es:(%ecx, %eax), %cl
-	movzx %cl, %ecx
-	subl  %ecx, %esp
+	movl	%es:_KeServiceDescriptorTableShadow + 28, %ecx
+	movb	%es:(%ecx, %eax), %cl
+	movzx	%cl, %ecx
+	subl	%ecx, %esp
 
 	/*  Copy the arguments from the user stack to the kernel stack  */
-	movl  %esp,%edi
+	movl	%esp,%edi
 	cld
-	rep   movsb
+	rep	movsb
 
 	/*  DS is now also kernel segment  */
-	movw  %bx,%ds
+	movw	%bx,%ds
 
 	/* Call system call hook */
-//	pushl %eax
-//	call  _KiSystemCallHook
-//	popl  %eax
+//	pushl	%eax
+//	call	_KiSystemCallHook
+//	popl	%eax
 
 	/* Call service check routine */
-	pushl %eax
-	call  _KiServiceCheck
-	popl  %eax
+	pushl	%eax
+	call	_KiServiceCheck
+	popl	%eax
 
 	/*  Make the system service call  */
-	movl  %es:_KeServiceDescriptorTableShadow + 16, %ecx
-	movl  %es:(%ecx, %eax, 4), %eax
-	call  *%eax
-	movl  %eax, KTRAP_FRAME_EAX(%ebp) /* save our return value in PKTRAP_FRAME->Eax */
+	movl	%es:_KeServiceDescriptorTableShadow + 16, %ecx
+	movl	%es:(%ecx, %eax, 4), %eax
+	call	*%eax
+	movl	%eax, KTRAP_FRAME_EAX(%ebp) /* save our return value in PKTRAP_FRAME->Eax */
 
 #if CHECKED
 	/* Bump Service Counter  */
@@ -242,59 +244,59 @@ new_shadowServiceInRange:
 
 KeDeallocateStackAndReturnFromSystemCallWithHook:
 	/* Deallocate the kernel stack frame  */
-	movl %ebp,%esp
+	movl	%ebp,%esp
 
 KeReturnFromSystemCallWithHook:
 	/* Call the post system call hook and deliver any pending APCs */
-	pushl %esp
-	call  _KiAfterSystemCallHook
-	addl  $4,%esp
+	pushl	%esp
+	call	_KiAfterSystemCallHook
+	addl	$4,%esp
 
 KeReturnFromSystemCall:
 
 	/* Restore the user context */
 	/* Get a pointer to the current thread */
-	movl  %fs:0x124, %esi
+	movl	%fs:0x124, %esi
 
 	/* Restore the old trap frame pointer */
-	movl  KTRAP_FRAME_EDX(%esp), %ebx
-	movl  %ebx, KTHREAD_TRAP_FRAME(%esi)
+	movl	KTRAP_FRAME_EDX(%esp), %ebx
+	movl	%ebx, KTHREAD_TRAP_FRAME(%esi)
 
 KiRosTrapReturn:
 
 #if 0
-	mov   KTRAP_FRAME_RESERVED1(%ebp), %ax
-	cmp   %ax, SSIDX_NTCONTINUE
-	jnz   KeNoEpilogPrint
-	movl  KTRAP_FRAME_ESP(%ebp), %ecx
-	movl  KTRAP_FRAME_EBP(%ebp), %edx
-	call  @KeRosPrintEspEbp@8
+	mov	KTRAP_FRAME_RESERVED1(%ebp), %ax
+	cmp	%ax, SSIDX_NTCONTINUE
+	jnz	KeNoEpilogPrint
+	movl	KTRAP_FRAME_ESP(%ebp), %ecx
+	movl	KTRAP_FRAME_EBP(%ebp), %edx
+	call	@KeRosPrintEspEbp@8
 KeNoEpilogPrint:
 #endif
 
 	/* Skip debug information and unsaved registers */
-	addl  $0x30, %esp
-	popl  %gs
-	popl  %es
-	popl  %ds
-	popl  %edx
-	popl  %ecx
-	popl  %eax
+	addl	$0x30, %esp
+	popl	%gs
+	popl	%es
+	popl	%ds
+	popl	%edx
+	popl	%ecx
+	popl	%eax
 
 	/* Restore the old previous mode */
-	popl  %ebx
-	movb  %bl, %ss:KTHREAD_PREVIOUS_MODE(%esi)
+	popl	%ebx
+	movb	%bl, %ss:KTHREAD_PREVIOUS_MODE(%esi)
 
 	/* Restore the old exception handler list */
-	popl  %ebx
-	movl  %ebx, %fs:KPCR_EXCEPTION_LIST
+	popl	%ebx
+	movl	%ebx, %fs:KPCR_EXCEPTION_LIST
 
-	popl  %fs
-	popl  %edi
-	popl  %esi
-	popl  %ebx
-	popl  %ebp
-	addl  $0x4, %esp  /* Ignore error code */
+	popl	%fs
+	popl	%edi
+	popl	%esi
+	popl	%ebx
+	popl	%ebp
+	addl	$0x4, %esp  /* Ignore error code */
 
 	iret
 
@@ -305,18 +307,18 @@ KeNoEpilogPrint:
 @KeRosTrapReturn@8:
 
 	/* point %esp to the trap frame to restore */
-	movl  %ecx, %esp
-	movl  %esp, %ebp
+	movl	%ecx, %esp
+	movl	%esp, %ebp
 
 	/* Call the post system call hook and deliver any pending APCs */
-	pushl %esp
-	call  _KiAfterSystemCallHook
-	addl  $4,%esp
+	pushl	%esp
+	call	_KiAfterSystemCallHook
+	addl	$4,%esp
 
 	/* Restore the user context */
 	/* Get a pointer to the current thread */
-	movl  %fs:0x124, %esi
+	movl	%fs:0x124, %esi
 	/* Restore the old trap frame pointer */
-	movl  %edx, KTHREAD_TRAP_FRAME(%esi)
+	movl	%edx, KTHREAD_TRAP_FRAME(%esi)
 
-	jmp   KiRosTrapReturn;
+	jmp	KiRosTrapReturn;

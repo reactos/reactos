@@ -5,15 +5,6 @@
 #ifndef __INTERNAL_HAL_HAL_H
 #define __INTERNAL_HAL_HAL_H
 
-/*
- * FUNCTION: Probes for a BIOS32 extension
- */
-VOID Hal_bios32_probe(VOID);
-
-/*
- * FUNCTION: Determines if a a bios32 service is present
- */
-BOOLEAN Hal_bios32_is_service_present(ULONG service);
 
 /* display.c */
 VOID FASTCALL HalInitializeDisplay (PLOADER_PARAMETER_BLOCK LoaderBlock);

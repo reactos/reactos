@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: display.c,v 1.17 2004/10/31 15:56:20 navaraf Exp $
+/* $Id: display.c,v 1.18 2004/10/31 19:45:16 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -179,7 +179,7 @@ static ULONG SizeY = 25;
 static BOOLEAN DisplayInitialized = FALSE;
 static BOOLEAN HalOwnsDisplay = TRUE;
 
-static WORD *VideoBuffer = NULL;
+static PUSHORT VideoBuffer = NULL;
 static PUCHAR GraphVideoBuffer = NULL;
 
 static PHAL_RESET_DISPLAY_PARAMETERS HalResetDisplayParameters = NULL;
@@ -191,7 +191,7 @@ static UCHAR SavedTextAcReg[VGA_AC_NUM_REGISTERS];
 static UCHAR SavedTextGcReg[VGA_GC_NUM_REGISTERS];
 static UCHAR SavedTextSeqReg[VGA_SEQ_NUM_REGISTERS];
 static UCHAR SavedTextFont[2][FONT_AMOUNT];
-static BOOL TextPaletteEnabled = FALSE;
+static BOOLEAN TextPaletteEnabled = FALSE;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -214,7 +214,7 @@ HalClearDisplay (UCHAR CharAttribute)
 VOID STATIC
 HalScrollDisplay (VOID)
 {
-  WORD *ptr;
+  PUSHORT ptr;
   int i;
 
   ptr = VideoBuffer + SizeX;
@@ -232,7 +232,7 @@ HalScrollDisplay (VOID)
 VOID STATIC FASTCALL
 HalPutCharacter (CHAR Character)
 {
-  WORD *ptr;
+  PUSHORT ptr;
 
   ptr = VideoBuffer + ((CursorY * SizeX) + CursorX);
   *ptr = (CHAR_ATTRIBUTE << 8) + Character;
@@ -329,7 +329,7 @@ HalReadCrtc(ULONG Index)
 }
 
 VOID STATIC FASTCALL
-HalResetSeq(BOOL Start)
+HalResetSeq(BOOLEAN Start)
 {
   if (Start)
     {
@@ -342,7 +342,7 @@ HalResetSeq(BOOL Start)
 }
 
 VOID STATIC FASTCALL
-HalBlankScreen(BOOL On)
+HalBlankScreen(BOOLEAN On)
 {
   UCHAR Scrn;
 
@@ -577,7 +577,7 @@ HalInitializeDisplay (PLOADER_PARAMETER_BLOCK LoaderBlock)
       ULONG ScanLines;
       ULONG Data;
 
-      VideoBuffer = (WORD *)(0xff3b8000);
+      VideoBuffer = (PUSHORT)(0xff3b8000);
       GraphVideoBuffer = (PUCHAR)(0xff3a0000);
 
       /* Set cursor position */
@@ -620,7 +620,7 @@ HalInitializeDisplay (PLOADER_PARAMETER_BLOCK LoaderBlock)
 /* PUBLIC FUNCTIONS *********************************************************/
 
 VOID STDCALL
-HalReleaseDisplayOwnership()
+HalReleaseDisplayOwnership(VOID)
 /*
  * FUNCTION: Release ownership of display back to HAL
  */
@@ -675,7 +675,7 @@ HalDisplayString(IN PCH String)
   ULONG Flags;
 
   /* See comment at top of file */
-  if (! HalOwnsDisplay)
+  if (!HalOwnsDisplay)
     {
       return;
     }
@@ -780,10 +780,11 @@ HalSetDisplayParameters(IN ULONG CursorPosX,
   CursorY = (CursorPosY < SizeY) ? CursorPosY : SizeY - 1;
 }
 
+
 BOOLEAN STDCALL
-HalQueryDisplayOwnership()
+HalQueryDisplayOwnership(VOID)
 {
-  return ! HalOwnsDisplay;
+  return !HalOwnsDisplay;
 }
 
 /* EOF */

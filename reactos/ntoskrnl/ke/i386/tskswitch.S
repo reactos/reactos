@@ -30,9 +30,9 @@
 #include <internal/ps.h>
 #include <ntos/tss.h>
 #include <internal/ntoskrnl.h>
-		
+
 /* FUNCTIONS ****************************************************************/
-	
+
 .globl _Ki386ContextSwitch
 _Ki386ContextSwitch:
 /* 
@@ -83,10 +83,10 @@ _Ki386ContextSwitch:
 	 */
 	movl	%ebx, %fs:KPCR_CURRENT_THREAD
 
-        /*
+	/*
 	 * Set the current LDT
 	 */
-        xorl	%eax, %eax
+	xorl	%eax, %eax
 	movl	KTHREAD_APCSTATE_PROCESS(%ebx), %edi
 	testw	$0xFFFF, KPROCESS_LDT_DESCRIPTOR0(%edi)
 	jz	.L4
@@ -106,7 +106,7 @@ _Ki386ContextSwitch:
 	 * Load up the iomap offset for this thread in
 	 * preparation for setting it below.
 	 */
-        movl	KPROCESS_IOPM_OFFSET(%edi), %eax
+	movl	KPROCESS_IOPM_OFFSET(%edi), %eax
 
 	/*
 	 * FIXME: Save debugging state.
@@ -120,7 +120,7 @@ _Ki386ContextSwitch:
 	 * Switch stacks
 	 */
 	movl	12(%ebp), %ebx
-	movl	%esp, KTHREAD_KERNEL_STACK(%ebx)	
+	movl	%esp, KTHREAD_KERNEL_STACK(%ebx)
 	movl	8(%ebp), %ebx
 	movl	KTHREAD_KERNEL_STACK(%ebx), %esp
 	movl	KTHREAD_STACK_LIMIT(%ebx), %edi
@@ -130,10 +130,10 @@ _Ki386ContextSwitch:
 	 */
 	movl	%fs:KPCR_TSS, %esi
 
-        /*
-         * Set current IOPM offset in the TSS
-         */
-        movw	%ax, KTSS_IOMAPBASE(%esi)
+	/*
+	 * Set current IOPM offset in the TSS
+	 */
+	movw	%ax, KTSS_IOMAPBASE(%esi)
 
 	movl	KTHREAD_INITIAL_STACK(%ebx), %eax
 	movl	%eax, KTSS_ESP0(%esi)
@@ -157,21 +157,21 @@ _Ki386ContextSwitch:
 	 * Exit the critical section
 	 */
 	sti
-	
+
 	push	$_PiThreadLock
 	call	_KeReleaseSpinLockFromDpcLevel@4
-	
+
 	cmpl	$0, _PiNrThreadsAwaitingReaping
 	je	.L3
 	call	_PiWakeupReaperThread@0
-.L3:	
-	
+.L3:
+
 	/*
 	 * Restore the saved register and exit
 	 */
 	popl	%edi
 	popl	%esi
 	popl	%ebx
-	
-	popl    %ebp
-	ret 
+
+	popl	%ebp
+	ret

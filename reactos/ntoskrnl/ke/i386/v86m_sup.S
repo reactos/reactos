@@ -28,29 +28,29 @@
 #include <ntos/tss.h>
 #include <internal/trap.h>
 #include <internal/ps.h>
-			
+
 .globl _Ki386RetToV86Mode
 .globl _KiV86Complete
-	
+
 	/*
 	 * VOID Ki386RetToV86Mode(KV86M_REGISTERS* InRegs,
 	 *	                  KV86M_REGISTERS* OutRegs);
 	 *
 	 * Starts in v86 mode with the registers set to the
 	 * specified values.
-	 */		
+	 */
 _Ki386RetToV86Mode:
-        /*
+	/*
 	 * Setup a stack frame
 	 */
 	pushl	%ebp
 	movl	%esp, %ebp
-	
+
 	/*
 	 * Save registers
 	 */
 	pusha
-	
+
 	/*
 	 * Get a pointer to IN_REGS
 	 */
@@ -60,7 +60,7 @@ _Ki386RetToV86Mode:
 	 * Save ebp
 	 */
 	pushl   %ebp
-	
+
 	/*
 	 * Save a pointer to IN_REGS which the v86m exception handler will
 	 * use to handle exceptions
@@ -71,7 +71,7 @@ _Ki386RetToV86Mode:
 	 * Since we are going to fiddle with the stack pointer this must be
 	 * a critical section for this processor
 	 */
-	
+
 	/*
 	 * Save the old initial stack
 	 */
@@ -83,15 +83,15 @@ _Ki386RetToV86Mode:
 	 * We also need to set the stack in the kthread structure
 	 */
 	movl	%esp, KTHREAD_INITIAL_STACK(%esi)
-	
+
 	/*
 	 * The stack used for handling exceptions from v86 mode in this thread
 	 * will be the current stack adjusted so we don't overwrite the 
 	 * existing stack frames
 	 */
-	movl    %fs:KPCR_TSS, %esi
+	movl	%fs:KPCR_TSS, %esi
 	movl	%esp, KTSS_ESP0(%esi)
-	
+
 	/*
 	 * Create the stack frame for an iret to v86 mode
 	 */
@@ -120,7 +120,7 @@ _Ki386RetToV86Mode:
 	 * Go to v86 mode
 	 */
 	iret
-		
+
 	/*
 	 * Handle the completion of a vm86 routine. We are called from
 	 * an exception handler with the registers at the point of the
@@ -129,7 +129,7 @@ _Ki386RetToV86Mode:
 _KiV86Complete:
 	/* Restore the original ebp */
 	movl	TF_ORIG_EBP(%esp), %ebp
-	
+
 	/* Get a pointer to the OUT_REGS structure */
 	movl	12(%ebp), %ebx
 
@@ -183,7 +183,7 @@ _KiV86Complete:
 	 * Restore the initial stack
 	 */
 	popl	%eax
-	movl    %fs:KPCR_TSS, %esi
+	movl	%fs:KPCR_TSS, %esi
 	movl	%eax, KTSS_ESP0(%esi)
 
 	/*
@@ -195,21 +195,15 @@ _KiV86Complete:
 
 	/* Exit the critical section */
 	sti
-	
+
 	/* Ignore IN_REGS pointer */
 	addl	$4, %esp
-	
+
 	/* Ignore ebp restored above */
 	addl	$4, %esp
-	
+
 	/* Return to caller */
 	popa
-	movl	%ebp, %esp	
+	movl	%ebp, %esp
 	popl	%ebp
 	ret
-	
-		
-
-
-
-
