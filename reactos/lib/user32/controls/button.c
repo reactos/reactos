@@ -1,4 +1,4 @@
-/* $Id: button.c,v 1.11 2003/09/07 17:36:40 ekohl Exp $
+/* $Id: button.c,v 1.12 2003/10/06 17:53:55 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -142,7 +142,7 @@ inline static WCHAR *get_button_text( HWND hwnd )
         GetWindowTextW( hwnd, buffer, len );
         buffer[len] = 0;
     }
-    DbgPrint("[button] TextLen %d Text = %s\n", len, buffer);
+    DbgPrint("[button] TextLen %d Text = %S\n", len, buffer);
     return buffer;
 }
 

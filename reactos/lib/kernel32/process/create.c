@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.70 2003/09/12 17:51:47 vizzini Exp $
+/* $Id: create.c,v 1.71 2003/10/06 17:53:55 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -326,6 +326,7 @@ _except_handler(
     void * DispatcherContext )
 {
  DPRINT1("Process terminated abnormally due to unhandled exception\n");
+ DPRINT1("Address: %x\n", ExceptionRecord->ExceptionAddress);
 
  if (3 < ++_except_recursion_trap)
     {

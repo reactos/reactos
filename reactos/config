@@ -23,7 +23,7 @@ MP := 0
 #
 # Whether to compile for ACPI compliant systems
 #
-ACPI := 0
+ACPI := 1
 
 #
 # Whether to use Structured Exception Handling
