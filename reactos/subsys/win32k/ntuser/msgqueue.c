@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.42 2003/12/12 14:22:37 gvg Exp $
+/* $Id: msgqueue.c,v 1.43 2003/12/14 00:45:39 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -58,7 +58,7 @@ static ULONG SystemMessageQueueCount = 0;
 static ULONG SystemMessageQueueMouseMove = -1;
 static KSPIN_LOCK SystemMessageQueueLock;
 
-static ULONG HardwareMessageQueueStamp = 0;
+static ULONG volatile HardwareMessageQueueStamp = 0;
 static LIST_ENTRY HardwareMessageQueueHead;
 static FAST_MUTEX HardwareMessageQueueLock;
 
@@ -150,6 +150,8 @@ MsqInsertSystemMessage(MSG* Msg, BOOL RemMouseMoveMsg)
     while (mmov != SystemMessageQueueHead )
     {
       ULONG prev = mmov ? mmov - 1 : SYSTEM_MESSAGE_QUEUE_SIZE - 1;
+      ASSERT(mmov >= 0);
+      ASSERT(mmov < SYSTEM_MESSAGE_QUEUE_SIZE);
       SystemMessageQueue[mmov] = SystemMessageQueue[prev];
       mmov = prev;
     }
@@ -355,12 +357,14 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
   BOOL Accept;
   BOOL MouseClick;
   PLIST_ENTRY CurrentEntry;
-  ULONG ActiveStamp;
   PWINDOW_OBJECT DesktopWindow;
 
   if( !IntGetScreenDC() || 
       PsGetWin32Thread()->MessageQueue == W32kGetPrimitiveMessageQueue() ) 
+  {
     return FALSE;
+  }
+
   DesktopWindow = IntGetWindowObject(IntGetDesktopWindow());
 
   /* Process messages in the message queue itself. */
@@ -402,12 +406,15 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
       PUSER_MESSAGE UserMsg;
       MSG Msg;
 
+      ASSERT(SystemMessageQueueHead < SYSTEM_MESSAGE_QUEUE_SIZE);
       Msg = SystemMessageQueue[SystemMessageQueueHead];
       SystemMessageQueueHead =
 	(SystemMessageQueueHead + 1) % SYSTEM_MESSAGE_QUEUE_SIZE;
       SystemMessageQueueCount--;
       KeReleaseSpinLock(&SystemMessageQueueLock, OldIrql);
       UserMsg = ExAllocateFromPagedLookasideList(&MessageLookasideList);
+      /* What to do if out of memory? For now we just panic a bit in debug */
+      ASSERT(UserMsg);
       UserMsg->Msg = Msg;
       InsertTailList(&HardwareMessageQueueHead, &UserMsg->ListEntry);
       KeAcquireSpinLock(&SystemMessageQueueLock, &OldIrql);
@@ -417,8 +424,8 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
    * this is more efficient and just as effective.
    */
   SystemMessageQueueMouseMove = -1;
-  KeReleaseSpinLock(&SystemMessageQueueLock, OldIrql);
   HardwareMessageQueueStamp++;
+  KeReleaseSpinLock(&SystemMessageQueueLock, OldIrql);
 
   /* Process messages in the queue until we find one to return. */
   CurrentEntry = HardwareMessageQueueHead.Flink;
@@ -428,10 +435,11 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 	CONTAINING_RECORD(CurrentEntry, USER_MESSAGE, ListEntry);
       CurrentEntry = CurrentEntry->Flink;
       RemoveEntryList(&Current->ListEntry);
+      HardwareMessageQueueStamp++;
       if (Current->Msg.message >= WM_MOUSEFIRST &&
 	  Current->Msg.message <= WM_MOUSELAST)
 	{
-	  ActiveStamp = HardwareMessageQueueStamp;
+	  const ULONG ActiveStamp = HardwareMessageQueueStamp;
 	  ExReleaseFastMutex(&HardwareMessageQueueLock);
 	  /* Translate the message. */
 	  Accept = MsqTranslateMouseMessage(hWnd, FilterLow, FilterHigh,
