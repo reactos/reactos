@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.38 2003/04/29 02:16:59 hyperion Exp $
+/* $Id: thread.c,v 1.39 2003/04/30 22:00:41 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -483,27 +483,14 @@ WINBOOL STDCALL
 SetThreadPriority(HANDLE hThread,
 		  int nPriority)
 {
-  THREAD_BASIC_INFORMATION ThreadBasic;
-  ULONG DataWritten;
+  ULONG Prio = nPriority;
   NTSTATUS Status;
 
-  Status = NtQueryInformationThread(hThread,
-				    ThreadBasicInformation,
-				    &ThreadBasic,
-				    sizeof(THREAD_BASIC_INFORMATION),
-				    &DataWritten);
-  if (!NT_SUCCESS(Status))
-    {
-      SetLastErrorByStatus(Status);
-      return(FALSE);
-    }
-
-  ThreadBasic.BasePriority = nPriority;
-
   Status = NtSetInformationThread(hThread,
-				  ThreadBasicInformation,
-				  &ThreadBasic,
-				  sizeof(THREAD_BASIC_INFORMATION));
+				  ThreadBasePriority,
+				  &Prio,
+				  sizeof(ULONG));
+
   if (!NT_SUCCESS(Status))
     {
       SetLastErrorByStatus(Status);
