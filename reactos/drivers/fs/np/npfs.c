@@ -40,7 +40,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
      NpfsSetInformation;
    DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] = 
      NpfsQueryVolumeInformation;
-//   DriverObject->MajorFunction[IRP_MJ_CLEANUP] = NpfsCleanup;
+   DriverObject->MajorFunction[IRP_MJ_CLEANUP] = NpfsCleanup;
    DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = NpfsFlushBuffers;
 //   DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] =
 //     NpfsDirectoryControl;
