@@ -333,17 +333,24 @@ typedef struct
 
 extern MM_STATS MmStats;
 
-NTSTATUS MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
-				PMEMORY_AREA MArea,
-				PVOID Address);
-NTSTATUS MmWritePageVirtualMemory(PMADDRESS_SPACE AddressSpace,
-				  PMEMORY_AREA MArea,
-				  PVOID Address);
-PVOID MmGetDirtyPagesFromWorkingSet(struct _EPROCESS* Process);
-NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PMDL Mdl);
-NTSTATUS MmReadFromSwapPage(SWAPENTRY SwapEntry, PMDL Mdl);
-VOID MmSetFlagsPage(PVOID PhysicalAddress, ULONG Flags);
-ULONG MmGetFlagsPage(PVOID PhysicalAddress);
+NTSTATUS 
+MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
+		       PMEMORY_AREA MArea,
+		       PVOID Address);
+NTSTATUS 
+MmWritePageVirtualMemory(PMADDRESS_SPACE AddressSpace,
+			 PMEMORY_AREA MArea,
+			 PVOID Address);
+PVOID 
+MmGetDirtyPagesFromWorkingSet(struct _EPROCESS* Process);
+NTSTATUS 
+MmWriteToSwapPage(SWAPENTRY SwapEntry, PMDL Mdl);
+NTSTATUS 
+MmReadFromSwapPage(SWAPENTRY SwapEntry, PMDL Mdl);
+VOID 
+MmSetFlagsPage(PVOID PhysicalAddress, ULONG Flags);
+ULONG 
+MmGetFlagsPage(PVOID PhysicalAddress);
 VOID MmSetSavedSwapEntryPage(PVOID PhysicalAddress,
 			     SWAPENTRY SavedSwapEntry);
 SWAPENTRY MmGetSavedSwapEntryPage(PVOID PhysicalAddress);
@@ -374,5 +381,34 @@ ULONG
 MmGetReferenceCountPage(PVOID PhysicalAddress);
 BOOLEAN
 MmIsUsablePage(PVOID PhysicalAddress);
+
+typedef struct _MM_PAGEOP
+{
+  /* Type of operation. */
+  ULONG OpType; 
+  /* Number of threads interested in this operation. */
+  ULONG ReferenceCount;
+  /* Event that will be set when the operation is completed. */
+  KEVENT CompletionEvent;
+  /* Status of the operation once it is completed. */
+  NTSTATUS Status;
+  /* TRUE if the operation was abandoned. */
+  BOOLEAN Abandoned;
+  /* The memory area to be affected by the operation. */
+  PMEMORY_AREA MArea;
+  struct _MM_PAGEOP* Next;
+  /* 
+   * These fields are used to identify the operation if it is against a
+   * virtual memory area.
+   */
+  ULONG Pid;
+  PVOID Address;
+  /*
+   * These fields are used to identify the operation if it is against a
+   * section mapping.
+   */
+  PMM_SECTION_SEGMENT Segment;
+  ULONG Offset;
+} MM_PAGEOP, *PMM_PAGEOP;
 
 #endif
