@@ -238,7 +238,7 @@ KeStallExecutionProcessor(
     ULONG   MicroSeconds);
 
 
-#include "netevent.h"
+#include <ddk/netevent.h>
 #include "ndisoid.h"
 #include "ntddndis.h"
 
