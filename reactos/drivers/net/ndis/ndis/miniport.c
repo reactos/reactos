@@ -1340,7 +1340,6 @@ NdisIStartAdapter(
  *     - break up this 250-line function
  */
 {
-  HANDLE RegKeyHandle;
   NDIS_STATUS NdisStatus;
   NDIS_STATUS OpenErrorStatus;
   NTSTATUS Status;
@@ -1350,19 +1349,20 @@ NdisIStartAdapter(
   BOOLEAN MemError = FALSE;
   KIRQL OldIrql;
   ULONG Size;
+  PWRAPPER_CONTEXT WrapperContext;
 
   Adapter = ExAllocatePool(NonPagedPool, sizeof(LOGICAL_ADAPTER));
-  if (!Adapter) 
+  if (!Adapter)
     {
       NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-      return; 
+      return;
     }
 
   /* This is very important */
   RtlZeroMemory(Adapter, sizeof(LOGICAL_ADAPTER));
 
   Adapter->DeviceName.Buffer = ExAllocatePool(NonPagedPool, DeviceName->Length);
-  if(!Adapter->DeviceName.Buffer)
+  if (!Adapter->DeviceName.Buffer)
     {
       NDIS_DbgPrint(MIN_TRACE,("Insufficient memory\n"));
       ExFreePool(Adapter);
@@ -1371,6 +1371,16 @@ NdisIStartAdapter(
   Adapter->DeviceName.MaximumLength = DeviceName->Length;
   RtlCopyUnicodeString(&Adapter->DeviceName, DeviceName);
 
+  WrapperContext = ExAllocatePool(NonPagedPool, sizeof(WRAPPER_CONTEXT));
+  if (!WrapperContext)
+    {
+      NDIS_DbgPrint(MIN_TRACE,("Insufficient memory\n"));
+      ExFreePool(Adapter->DeviceName.Buffer);
+      ExFreePool(Adapter);
+      return;
+    }
+  WrapperContext->DeviceObject = PhysicalDeviceObject;
+
   NDIS_DbgPrint(MAX_TRACE, ("creating device %wZ\n", DeviceName));
 
   Status = IoCreateDevice(Miniport->DriverObject, 0, &Adapter->DeviceName, FILE_DEVICE_PHYSICAL_NETCARD,
@@ -1378,15 +1388,19 @@ NdisIStartAdapter(
   if (!NT_SUCCESS(Status)) 
     {
       NDIS_DbgPrint(MIN_TRACE, ("Could not create device object.\n"));
+      ExFreePool(WrapperContext);
+      ExFreePool(Adapter->DeviceName.Buffer);
       ExFreePool(Adapter);
       return;
     }
 
   Status = IoOpenDeviceRegistryKey(PhysicalDeviceObject, PLUGPLAY_REGKEY_DRIVER,
-                                   KEY_ALL_ACCESS, &RegKeyHandle);
+                                   KEY_ALL_ACCESS, &WrapperContext->DeviceKeyHandle);
   if(Status != STATUS_SUCCESS)
     {
       NDIS_DbgPrint(MIN_TRACE,("failed to open adapter-specific reg key\n"));
+      ExFreePool(WrapperContext);
+      ExFreePool(Adapter->DeviceName.Buffer);
       ExFreePool(Adapter);
       return;
     }
@@ -1407,6 +1421,7 @@ NdisIStartAdapter(
                       Size, &Adapter->BusNumber, &Size);
   IoGetDeviceProperty(PhysicalDeviceObject, DevicePropertyAddress,
                       Size, &Adapter->SlotNumber, &Size);
+  WrapperContext->BusNumber = Adapter->BusNumber;
 
   /* Set handlers (some NDIS macros require these) */
 
@@ -1429,9 +1444,10 @@ NdisIStartAdapter(
   /* Call MiniportInitialize */
   NDIS_DbgPrint(MID_TRACE, ("calling MiniportInitialize\n"));
   NdisStatus = (*Miniport->Chars.InitializeHandler)( &OpenErrorStatus, &SelectedMediumIndex, &MediaArray[0],
-      MEDIA_ARRAY_SIZE, Adapter, RegKeyHandle);
+      MEDIA_ARRAY_SIZE, Adapter, WrapperContext);
 
-  ZwClose(RegKeyHandle);
+  ZwClose(WrapperContext->DeviceKeyHandle);
+  ExFreePool(WrapperContext);
 
   if ((NdisStatus == NDIS_STATUS_SUCCESS) && (SelectedMediumIndex < MEDIA_ARRAY_SIZE)) 
     {

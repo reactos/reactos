@@ -10,6 +10,12 @@
 
 #include <ndissys.h>
 
+/* WrapperConfigurationContext is a pointer to this structure */
+typedef struct _WRAPPER_CONTEXT {
+  PDEVICE_OBJECT DeviceObject;
+  ULONG BusNumber;
+  HANDLE DeviceKeyHandle;
+} WRAPPER_CONTEXT, *PWRAPPER_CONTEXT;
 
 typedef struct _HARDWARE_ADDRESS {
     union {

@@ -9,9 +9,6 @@
  *   CSH 01/08-2000 Created
  *   25 Aug 2003 Vizzini - NDIS4/5 and PnP additions
  *   3  Oct 2003 Vizzini - formatting and minor bugfixes
- *
- * TODO:
- *    - Fix HalGetBusDataByOffset() param 2 in most calls below
  */
 
 #include <roscfg.h>
@@ -30,7 +27,9 @@ NdisImmediateReadPciSlotInformation(
     IN  PVOID       Buffer,
     IN  ULONG       Length)
 {
-  return HalGetBusDataByOffset (PCIConfiguration, 0, SlotNumber, Buffer, Offset, Length);
+  PWRAPPER_CONTEXT WrapperContext = (PWRAPPER_CONTEXT)WrapperConfigurationContext;
+  return HalGetBusDataByOffset(PCIConfiguration, WrapperContext->BusNumber,
+                               SlotNumber, Buffer, Offset, Length);
 }
 
 
@@ -46,7 +45,9 @@ NdisImmediateWritePciSlotInformation(
     IN  PVOID       Buffer,
     IN  ULONG       Length)
 {
-  return HalSetBusDataByOffset (PCIConfiguration, 0, SlotNumber, Buffer, Offset, Length);
+  PWRAPPER_CONTEXT WrapperContext = (PWRAPPER_CONTEXT)WrapperConfigurationContext;
+  return HalSetBusDataByOffset(PCIConfiguration, WrapperContext->BusNumber,
+                               SlotNumber, Buffer, Offset, Length);
 }
 
 
@@ -90,16 +91,6 @@ NdisMPciAssignResources(
 
 
 /*
- * @implemented
- */
-VOID
-EXPORT
-NdisMQueryAdapterResources(
-    OUT     PNDIS_STATUS        Status,
-    IN      NDIS_HANDLE         WrapperConfigurationContext,
-    OUT     PNDIS_RESOURCE_LIST ResourceList,
-    IN OUT  PUINT               BufferSize)
-/*
  * FUNCTION: returns a nic's hardware resources
  * ARGUMENTS:
  *     Status: on return, contains the status of the operation
@@ -111,7 +102,16 @@ NdisMQueryAdapterResources(
  *     - Must be called at IRQL = PASSIVE_LEVEL;
  * BUGS:
  *     - Needs an implementation; for now i think we are waiting on pnp
+ *
+ * @unimplemented
  */
+VOID
+EXPORT
+NdisMQueryAdapterResources(
+    OUT     PNDIS_STATUS        Status,
+    IN      NDIS_HANDLE         WrapperConfigurationContext,
+    OUT     PNDIS_RESOURCE_LIST ResourceList,
+    IN OUT  PUINT               BufferSize)
 {
   PAGED_CODE();
   ASSERT(Status && ResourceList);
@@ -147,7 +147,7 @@ VOID
 EXPORT
 NdisReadEisaSlotInformation(
     OUT PNDIS_STATUS                    Status,
-    IN  NDIS_HANDLE			            WrapperConfigurationContext,
+    IN  NDIS_HANDLE                     WrapperConfigurationContext,
     OUT PUINT                           SlotNumber,
     OUT PNDIS_EISA_FUNCTION_INFORMATION EisaData)
 {
@@ -186,8 +186,8 @@ NdisReadPciSlotInformation(
   PLOGICAL_ADAPTER AdapterObject = (PLOGICAL_ADAPTER)NdisAdapterHandle;
   /* Slot number is ignored since W2K for all NDIS drivers. */
   NDIS_DbgPrint(MAX_TRACE, ("Slot: %d\n", AdapterObject->SlotNumber));
-  return HalGetBusDataByOffset (PCIConfiguration, 0, AdapterObject->SlotNumber,
-                                Buffer, Offset, Length);
+  return HalGetBusDataByOffset(PCIConfiguration, AdapterObject->BusNumber,
+                               AdapterObject->SlotNumber, Buffer, Offset, Length);
 }
 
 
@@ -206,8 +206,8 @@ NdisWritePciSlotInformation(
   PLOGICAL_ADAPTER AdapterObject = (PLOGICAL_ADAPTER)NdisAdapterHandle;
   /* Slot number is ignored since W2K for all NDIS drivers. */
   NDIS_DbgPrint(MAX_TRACE, ("Slot: %d\n", AdapterObject->SlotNumber));
-  return HalSetBusDataByOffset (PCIConfiguration, 0, AdapterObject->SlotNumber,
-                                Buffer, Offset, Length);
+  return HalSetBusDataByOffset(PCIConfiguration, AdapterObject->BusNumber,
+                               AdapterObject->SlotNumber, Buffer, Offset, Length);
 }
 
 /* EOF */

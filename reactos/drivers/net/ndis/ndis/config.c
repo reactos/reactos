@@ -171,11 +171,11 @@ NdisOpenConfiguration(
 {
     HANDLE KeyHandle;
     PMINIPORT_CONFIGURATION_CONTEXT ConfigurationContext;
-    HANDLE RootKeyHandle = (HANDLE)WrapperConfigurationContext;
+    PWRAPPER_CONTEXT WrapperContext = (PWRAPPER_CONTEXT)WrapperConfigurationContext;
 
     NDIS_DbgPrint(MAX_TRACE, ("Called\n"));
 
-    *Status = ZwDuplicateObject(NtCurrentProcess(), RootKeyHandle,
+    *Status = ZwDuplicateObject(NtCurrentProcess(), WrapperContext->DeviceKeyHandle,
                                 NtCurrentProcess(), &KeyHandle, 0, FALSE,
                                 DUPLICATE_SAME_ACCESS);
     if(!NT_SUCCESS(*Status))
