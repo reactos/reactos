@@ -19,6 +19,7 @@
 VOID INIT_FUNCTION PsInitClientIDManagment(VOID);
 
 PEPROCESS EXPORTED PsInitialSystemProcess = NULL;
+PEPROCESS PsIdleProcess = NULL;
 
 POBJECT_TYPE EXPORTED PsProcessType = NULL;
 
@@ -120,34 +121,36 @@ PsGetNextProcess(PEPROCESS OldProcess)
    
    if (OldProcess == NULL)
      {
-       Status = ObReferenceObjectByPointer(PsInitialSystemProcess,
+       Status = ObReferenceObjectByPointer(PsIdleProcess,
 				           PROCESS_ALL_ACCESS,
 				           PsProcessType,
 				           KernelMode);   
        if (!NT_SUCCESS(Status))
          {
-	   CPRINT("PsGetNextProcess(): ObReferenceObjectByPointer failed for PsInitialSystemProcess\n");
+	   CPRINT("PsGetNextProcess(): ObReferenceObjectByPointer failed for PsIdleProcess\n");
 	   KEBUGCHECK(0);
 	 }
-       return PsInitialSystemProcess;
+       return PsIdleProcess;
      }
    
    ExAcquireFastMutex(&PspActiveProcessMutex);
    NextProcess = OldProcess;
    while (1)
      {
-       if (NextProcess->ProcessListEntry.Blink == &PsActiveProcessHead)
+       PLIST_ENTRY Flink = (NextProcess == PsIdleProcess ? PsActiveProcessHead.Flink :
+                                                           NextProcess->ProcessListEntry.Flink);
+       if (Flink != &PsActiveProcessHead)
          {
-	   NextProcess = CONTAINING_RECORD(PsActiveProcessHead.Blink,
-					   EPROCESS,
-					   ProcessListEntry);
+           NextProcess = CONTAINING_RECORD(Flink,
+			                   EPROCESS,
+			                   ProcessListEntry);
          }
        else
          {
-	   NextProcess = CONTAINING_RECORD(NextProcess->ProcessListEntry.Blink,
-					   EPROCESS,
-					   ProcessListEntry);
+           NextProcess = NULL;
+           break;
          }
+
        Status = ObReferenceObjectByPointer(NextProcess,
 				           PROCESS_ALL_ACCESS,
 				           PsProcessType,
@@ -162,8 +165,7 @@ PsGetNextProcess(PEPROCESS OldProcess)
 	 }
        else if (!NT_SUCCESS(Status))
          {
-	   CPRINT("PsGetNextProcess(): ObReferenceObjectByPointer failed\n");
-	   KEBUGCHECK(0);
+	   continue;
 	 }
      }
 
@@ -363,6 +365,44 @@ PsInitProcessManagment(VOID)
    RtlZeroMemory(PiLoadImageNotifyRoutine, sizeof(PiLoadImageNotifyRoutine));
    
    /*
+    * Initialize the idle process
+    */
+   Status = ObCreateObject(KernelMode,
+			   PsProcessType,
+			   NULL,
+			   KernelMode,
+			   NULL,
+			   sizeof(EPROCESS),
+			   0,
+			   0,
+			   (PVOID*)&PsIdleProcess);
+   if (!NT_SUCCESS(Status))
+     {
+        DPRINT1("Failed to create the idle process object, Status: 0x%x\n", Status);
+        KEBUGCHECK(0);
+        return;
+     }
+
+   RtlZeroMemory(PsIdleProcess, sizeof(EPROCESS));
+   
+   PsIdleProcess->Pcb.Affinity = 0xFFFFFFFF;
+   PsIdleProcess->Pcb.IopmOffset = 0xffff;
+   PsIdleProcess->Pcb.LdtDescriptor[0] = 0;
+   PsIdleProcess->Pcb.LdtDescriptor[1] = 0;
+   PsIdleProcess->Pcb.BasePriority = PROCESS_PRIO_IDLE;
+   PsIdleProcess->Pcb.ThreadQuantum = 6;
+   InitializeListHead(&PsIdleProcess->Pcb.ThreadListHead);
+   InitializeListHead(&PsIdleProcess->ThreadListHead);
+   InitializeListHead(&PsIdleProcess->ProcessListEntry);
+   KeInitializeDispatcherHeader(&PsIdleProcess->Pcb.DispatcherHeader,
+				ProcessObject,
+				sizeof(EPROCESS),
+				FALSE);
+   PsIdleProcess->Pcb.DirectoryTableBase =
+     (LARGE_INTEGER)(LONGLONG)(ULONG)MmGetPageDirectory();
+   strcpy(PsInitialSystemProcess->ImageFileName, "Idle");
+
+   /*
     * Initialize the system process
     */
    Status = ObCreateObject(KernelMode,
@@ -376,7 +416,9 @@ PsInitProcessManagment(VOID)
 			   (PVOID*)&PsInitialSystemProcess);
    if (!NT_SUCCESS(Status))
      {
-	return;
+        DPRINT1("Failed to create the system process object, Status: 0x%x\n", Status);
+        KEBUGCHECK(0);
+        return;
      }
    
    /* System threads may run on any processor. */
@@ -886,7 +928,7 @@ exitdereferenceobjects:
    Process->Win32WindowStation = (HANDLE)0;
 
    ExAcquireFastMutex(&PspActiveProcessMutex);
-   InsertHeadList(&PsActiveProcessHead, &Process->ProcessListEntry);
+   InsertTailList(&PsActiveProcessHead, &Process->ProcessListEntry);
    InitializeListHead(&Process->ThreadListHead);
    ExReleaseFastMutex(&PspActiveProcessMutex);
 

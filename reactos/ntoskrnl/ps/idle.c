@@ -16,6 +16,8 @@
 
 /* GLOBALS *******************************************************************/
 
+extern PEPROCESS PsIdleProcess;
+
 /* FUNCTIONS *****************************************************************/
 
 /** System idle thread procedure
@@ -53,8 +55,8 @@ PsInitIdleThread(VOID)
    NTSTATUS Status;
    PETHREAD IdleThread;
    KIRQL oldIrql;
-   
-   Status = PsInitializeThread(NULL,
+
+   Status = PsInitializeThread(PsIdleProcess,
 			       &IdleThread,
 			       NULL,
 			       KernelMode,

@@ -15,6 +15,7 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+extern PEPROCESS PsIdleProcess;
 extern ULONG NtGlobalFlag; /* FIXME: it should go in a ddk/?.h */
 ULONGLONG STDCALL KeQueryInterruptTime(VOID);
 
@@ -611,13 +612,20 @@ QSI_DEF(SystemProcessInformation)
 		SpiCur->ProcessName.Buffer = (void*)(pCur+curSize);
 
 		// copy name to the end of the struct
-		RtlInitAnsiString(&imgName, pr->ImageFileName);
-		RtlAnsiStringToUnicodeString(&SpiCur->ProcessName, &imgName, FALSE);
+		if(pr != PsIdleProcess)
+		{
+		  RtlInitAnsiString(&imgName, pr->ImageFileName);
+		  RtlAnsiStringToUnicodeString(&SpiCur->ProcessName, &imgName, FALSE);
+		}
+		else
+		{
+                  RtlInitUnicodeString(&SpiCur->ProcessName, NULL);
+		}
 
 		SpiCur->BasePriority = pr->Pcb.BasePriority;
 		SpiCur->ProcessId = pr->UniqueProcessId;
 		SpiCur->InheritedFromProcessId = pr->InheritedFromUniqueProcessId;
-		SpiCur->HandleCount = ObpGetHandleCountByHandleTable(pr->ObjectTable);
+		SpiCur->HandleCount = (pr->ObjectTable ? ObpGetHandleCountByHandleTable(pr->ObjectTable) : 0);
 		SpiCur->VmCounters.PeakVirtualSize = pr->PeakVirtualSize;
 		SpiCur->VmCounters.VirtualSize = pr->VirtualSize.QuadPart;
 		SpiCur->VmCounters.PageFaultCount = pr->LastFaultCount;
@@ -670,10 +678,6 @@ QSI_DEF(SystemProcessInformation)
 	}  while ((pr != syspr) && (pr != NULL));
 
 	*ReqSize = ovlSize;
-	if (pr != NULL)
-	  {
-	    ObDereferenceObject(pr);
-	  }
 	return (STATUS_SUCCESS);
 }
 
@@ -849,7 +853,7 @@ QSI_DEF(SystemHandleInformation)
 
         do
 	  {
-            hCount = hCount + ObpGetHandleCountByHandleTable(pr->ObjectTable);
+            hCount = hCount + (pr->ObjectTable ? ObpGetHandleCountByHandleTable(pr->ObjectTable) : 0);
             pr = PsGetNextProcess(pr);
 
 	    if ((pr == syspr) || (pr == NULL))
@@ -857,11 +861,6 @@ QSI_DEF(SystemHandleInformation)
         } while ((pr != syspr) && (pr != NULL));
 
 	DPRINT("SystemHandleInformation 2\n");
-
-	if (pr != NULL)
-	  {
-	    ObDereferenceObject(pr);
-	  }
 
         curSize = sizeof(SYSTEM_HANDLE_INFORMATION)+
                   (  (sizeof(SYSTEM_HANDLE_TABLE_ENTRY_INFO) * hCount) - 
@@ -883,9 +882,9 @@ QSI_DEF(SystemHandleInformation)
 
 	 do
 	  {
-            int Count = 0, HandleCount = 0;
+            int Count = 0, HandleCount;
 
-            HandleCount = ObpGetHandleCountByHandleTable(pr->ObjectTable);
+            HandleCount = (pr->ObjectTable ? ObpGetHandleCountByHandleTable(pr->ObjectTable) : 0);
 
             for (Count = 0; HandleCount > 0 ; HandleCount--)
                {
@@ -899,12 +898,6 @@ QSI_DEF(SystemHandleInformation)
 	    if ((pr == syspr) || (pr == NULL))
 		break;
 	   } while ((pr != syspr) && (pr != NULL));
-
-
-	if (pr != NULL)
-	  {
-	    ObDereferenceObject(pr);
-	  }
 
 	DPRINT("SystemHandleInformation 4\n");
 	return (STATUS_SUCCESS);

@@ -28,6 +28,7 @@
 /* GLOBALS ******************************************************************/
 
 extern LIST_ENTRY PsActiveProcessHead;
+extern PEPROCESS PsIdleProcess;
 
 POBJECT_TYPE EXPORTED PsThreadType = NULL;
 
@@ -703,7 +704,7 @@ PsPrepareForApplicationProcessorInit(ULONG Id)
   PETHREAD IdleThread;
   PKPRCB Prcb = ((PKPCR)((ULONG_PTR)KPCR_BASE + Id * PAGE_SIZE))->Prcb;
 
-  PsInitializeThread(NULL,
+  PsInitializeThread(PsIdleProcess,
 		     &IdleThread,
 		     NULL,
 		     KernelMode,
