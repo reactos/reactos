@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.80 2003/09/10 23:16:13 gvg Exp $
+/* $Id: dc.c,v 1.81 2003/09/21 06:44:51 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -396,6 +396,17 @@ NtGdiCreatePrimarySurface(LPCWSTR Driver,
   {
     DPRINT("DrvEnablePDEV failed\n");
     return(FALSE);
+  }
+
+  if (0 == PrimarySurface.GDIInfo.ulLogPixelsX)
+  {
+    DPRINT("Adjusting GDIInfo.ulLogPixelsX\n");
+    PrimarySurface.GDIInfo.ulLogPixelsX = 96;
+  }
+  if (0 == PrimarySurface.GDIInfo.ulLogPixelsY)
+  {
+    DPRINT("Adjusting GDIInfo.ulLogPixelsY\n");
+    PrimarySurface.GDIInfo.ulLogPixelsY = 96;
   }
 
   DPRINT("calling completePDev\n");

@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.87 2003/09/11 08:32:06 gvg Exp $
+/* $Id: defwnd.c,v 1.88 2003/09/21 06:44:51 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1314,9 +1314,9 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
   
   WinPosGetMinMaxInfo(hwnd, NULL, NULL, &minTrack, &maxTrack);
   GetWindowRect(hwnd, &sizingRect);
-  origRect = sizingRect;
   if (Style & WS_CHILD)
     {
+      MapWindowPoints( 0, hWndParent, (LPPOINT)&sizingRect, 2 );
       GetClientRect(hWndParent, &mouseRect );
     }
   else 
@@ -1324,6 +1324,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
       SetRect(&mouseRect, 0, 0, GetSystemMetrics(SM_CXSCREEN), 
 	      GetSystemMetrics(SM_CYSCREEN));
     }
+  origRect = sizingRect;
   if (ON_LEFT_BORDER(hittest))
     {
       mouseRect.left  = max( mouseRect.left, sizingRect.right-maxTrack.x );

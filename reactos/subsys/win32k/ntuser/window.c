@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.108 2003/09/13 13:58:38 weiden Exp $
+/* $Id: window.c,v 1.109 2003/09/21 06:44:51 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1249,6 +1249,11 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->WindowRect.top = y;
   WindowObject->WindowRect.right = x + nWidth;
   WindowObject->WindowRect.bottom = y + nHeight;
+  if (0 != (WindowObject->Style & WS_CHILD))
+    {
+      NtGdiOffsetRect(&(WindowObject->WindowRect), WindowObject->Parent->ClientRect.left,
+                      WindowObject->Parent->ClientRect.top);
+    }
   WindowObject->ClientRect = WindowObject->WindowRect;
 
   /*
@@ -1269,6 +1274,11 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->WindowRect.top = y;
   WindowObject->WindowRect.right = x + nWidth;
   WindowObject->WindowRect.bottom = y + nHeight;
+  if (0 != (WindowObject->Style & WS_CHILD))
+    {
+      NtGdiOffsetRect(&(WindowObject->WindowRect), WindowObject->Parent->ClientRect.left,
+                      WindowObject->Parent->ClientRect.top);
+    }
   WindowObject->ClientRect = WindowObject->WindowRect;
 
   /* FIXME: Initialize the window menu. */
@@ -1369,20 +1379,17 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 
       DPRINT("NtUserCreateWindow(): About to send WM_MOVE\n");
 
-      lParam = MAKE_LONG(WindowObject->ClientRect.left,
-          WindowObject->ClientRect.top);
+      if (0 != (WindowObject->Style & WS_CHILD))
+	{
+	  lParam = MAKE_LONG(WindowObject->ClientRect.left - WindowObject->Parent->ClientRect.left,
+	      WindowObject->ClientRect.top - WindowObject->Parent->ClientRect.top);
+	}
+      else
+	{
+	  lParam = MAKE_LONG(WindowObject->ClientRect.left,
+	      WindowObject->ClientRect.top);
+	}
       IntCallWindowProc(NULL, WindowObject->Self, WM_MOVE, 0, lParam);
-    }
-
-  /* Move from parent-client to screen coordinates */
-  if (0 != (WindowObject->Style & WS_CHILD))
-    {
-    NtGdiOffsetRect(&WindowObject->WindowRect,
-		   ParentWindow->ClientRect.left,
-		   ParentWindow->ClientRect.top);
-    NtGdiOffsetRect(&WindowObject->ClientRect,
-		   ParentWindow->ClientRect.left,
-		   ParentWindow->ClientRect.top);
     }
 
   /* Show or maybe minimize or maximize the window. */
@@ -2874,6 +2881,26 @@ NtUserSetWindowPos(
     int cy,
     UINT uFlags)
 {
+  PWINDOW_OBJECT WindowObject;
+  NTSTATUS Status;
+
+  Status = 
+    ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->HandleTable,
+                                   hWnd, otWindow, (PVOID*)&WindowObject);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return FALSE;
+    }
+
+  if (0 != (WindowObject->Style & WS_CHILD))
+    {
+      X += WindowObject->Parent->ClientRect.left;
+      Y += WindowObject->Parent->ClientRect.top;
+    }
+
+  ObmDereferenceObject(WindowObject);
+
   return WinPosSetWindowPos(hWnd, hWndInsertAfter, X, Y, cx, cy, uFlags);
 }
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.30 2003/09/09 09:39:21 gvg Exp $
+/* $Id: winpos.c,v 1.31 2003/09/21 06:44:51 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -389,8 +389,12 @@ WinPosDoNCCALCSize(PWINDOW_OBJECT Window, PWINDOWPOS WinPos,
       params.rgrc[0] = *WindowRect;
       params.rgrc[1] = Window->WindowRect;
       params.rgrc[2] = Window->ClientRect;
-      if (Window->Style & WS_CHILD)
+      if (0 != (Window->Style & WS_CHILD))
 	{
+	  NtGdiOffsetRect(&(params.rgrc[0]), - Window->Parent->ClientRect.left,
+	                      - Window->Parent->ClientRect.top);
+	  NtGdiOffsetRect(&(params.rgrc[1]), - Window->Parent->ClientRect.left,
+	                      - Window->Parent->ClientRect.top);
 	  NtGdiOffsetRect(&(params.rgrc[2]), - Window->Parent->ClientRect.left,
 	                      - Window->Parent->ClientRect.top);
 	}
@@ -446,6 +450,8 @@ WinPosDoWinPosChanging(PWINDOW_OBJECT WindowObject,
 		       PRECT WindowRect,
 		       PRECT ClientRect)
 {
+  INT X, Y;
+
   if (!(WinPos->flags & SWP_NOSENDCHANGING))
     {
       IntSendWINDOWPOSCHANGINGMessage(WindowObject->Self, WinPos);
@@ -464,18 +470,25 @@ WinPosDoWinPosChanging(PWINDOW_OBJECT WindowObject,
 
   if (!(WinPos->flags & SWP_NOMOVE))
     {
-      WindowRect->left = WinPos->x;
-      WindowRect->top = WinPos->y;
-      WindowRect->right += WinPos->x - WindowObject->WindowRect.left;
-      WindowRect->bottom += WinPos->y - WindowObject->WindowRect.top;
+      X = WinPos->x;
+      Y = WinPos->y;
+      if (0 != (WindowObject->Style & WS_CHILD))
+	{
+	  X += WindowObject->Parent->ClientRect.left;
+	  Y += WindowObject->Parent->ClientRect.top;
+	}
+      WindowRect->left = X;
+      WindowRect->top = Y;
+      WindowRect->right += X - WindowObject->WindowRect.left;
+      WindowRect->bottom += Y - WindowObject->WindowRect.top;
       NtGdiOffsetRect(ClientRect,
-        WinPos->x - WindowObject->WindowRect.left,
-        WinPos->y - WindowObject->WindowRect.top);
+        X - WindowObject->WindowRect.left,
+        Y - WindowObject->WindowRect.top);
     }
 
   WinPos->flags |= SWP_NOCLIENTMOVE | SWP_NOCLIENTSIZE;
 
-  return(TRUE);
+  return TRUE;
 }
 
 /***********************************************************************
@@ -510,6 +523,7 @@ WinPosInternalMoveWindow(PWINDOW_OBJECT Window, INT MoveX, INT MoveY)
 }
 
 
+/* x and y are always screen relative */
 BOOLEAN STDCALL
 WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 		   INT cy, UINT flags)
@@ -606,6 +620,11 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
   WinPos.cx = cx;
   WinPos.cy = cy;
   WinPos.flags = flags;
+  if (0 != (Window->Style & WS_CHILD))
+    {
+      WinPos.x -= Window->Parent->ClientRect.left;
+      WinPos.y -= Window->Parent->ClientRect.top;
+    }
 
   WinPosDoWinPosChanging(Window, &WinPos, &NewWindowRect, &NewClientRect);
 
@@ -692,8 +711,12 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 
       /* Determine which pixels can be copied from the old window position
          to the new. Those pixels must be visible in both the old and new
-         position. */
-      if (NULL != VisBefore && NULL != VisAfter && ! (WinPos.flags & SWP_NOCOPYBITS))
+         position. Also, check the class style to see if the windows of this
+         class need to be completely repainted on (horizontal/vertical) size
+         change */
+      if (NULL != VisBefore && NULL != VisAfter && ! (WinPos.flags & SWP_NOCOPYBITS)
+          && ((WinPos.flags & SWP_NOSIZE)
+              || ! (Window->Class->style & (CS_HREDRAW | CS_VREDRAW))))
 	{
 	  CopyRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
 	  RgnType = NtGdiCombineRgn(CopyRgn, VisAfter, VisBefore, RGN_AND);
