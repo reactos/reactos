@@ -794,4 +794,24 @@ WideCharToMultiByte(UINT CodePage, DWORD Flags,
    }
 }
 
+/*
+ * @implemented
+ */
+UINT
+STDCALL
+GetACP (VOID)
+{
+    return AnsiCodePage.CodePageTable.CodePage;
+}
+
+/*
+ * @implemented
+ */
+UINT
+STDCALL
+GetOEMCP (VOID)
+{
+    return OemCodePage.CodePageTable.CodePage;
+}
+
 /* EOF */

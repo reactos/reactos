@@ -1,4 +1,4 @@
-/* $Id: lang.c,v 1.21 2004/08/24 17:21:11 navaraf Exp $
+/* $Id: lang.c,v 1.22 2004/08/26 16:03:09 hbirr Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -315,23 +315,6 @@ EnumUILanguagesW(
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
 }
-
-
-#ifndef _OLE2NLS_IN_BUILD_
-
-/*
- * @unimplemented
- */
-UINT
-STDCALL
-GetACP (VOID)
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 1252;
-}
-
-#endif
-
 
 /*
  * @unimplemented
@@ -776,21 +759,6 @@ INT STDCALL GetLocaleInfoA( LCID lcid, LCTYPE lctype, LPSTR buffer, INT len )
     }
     HeapFree( GetProcessHeap(), 0, bufferW );
     return ret;
-}
-
-
-
-
-
-/*
- * @unimplemented
- */
-UINT
-STDCALL
-GetOEMCP (VOID)
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 437; /* FIXME: call csrss.exe */
 }
 
 
