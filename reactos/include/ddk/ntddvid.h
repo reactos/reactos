@@ -209,6 +209,16 @@ typedef struct _VIDEO_PORT_CONFIG_INFO
   ULONG  DmaPort;
   UCHAR  DmaShareable;
   UCHAR  InterruptShareable;
+  BOOLEAN  Master;
+  DMA_WIDTH  DmaWidth;
+  DMA_SPEED  DmaSpeed;
+  BOOLEAN  bMapBuffers;
+  BOOLEAN  NeedPhysicalAddresses;
+  BOOLEAN  DemandMode;
+  ULONG  MaximumTransferLength;
+  ULONG  NumberOfPhysicalBreaks;
+  BOOLEAN  ScatterGather;
+  ULONG  MaximumScatterGatherChunkSize;
 } VIDEO_PORT_CONFIG_INFO, *PVIDEO_PORT_CONFIG_INFO;
 
 typedef VP_STATUS STDCALL

@@ -1,4 +1,4 @@
-/* $Id: videoprt.c,v 1.3 2003/02/25 23:08:52 gvg Exp $
+/* $Id: videoprt.c,v 1.4 2003/03/03 00:17:24 gvg Exp $
  *
  * VideoPort driver
  *   Written by Rex Jolliff
@@ -337,35 +337,6 @@ VideoPortGetRegistryParameters(IN PVOID  HwDeviceExtension,
 */
 }
 
-typedef struct _VIDEO_PORT_CONFIG_INFO_TODO {
-  ULONG  Length;
-  ULONG  SystemIoBusNumber;
-  INTERFACE_TYPE  AdapterInterfaceType;
-  ULONG  BusInterruptLevel;
-  ULONG  BusInterruptVector;
-  KINTERRUPT_MODE  InterruptMode;
-  ULONG  NumEmulatorAccessEntries;
-  PEMULATOR_ACCESS_ENTRY  EmulatorAccessEntries;
-  ULONG_PTR  EmulatorAccessEntriesContext;
-  PHYSICAL_ADDRESS  VdmPhysicalVideoMemoryAddress;
-  ULONG  VdmPhysicalVideoMemoryLength;
-  ULONG  HardwareStateSize;
-  ULONG  DmaChannel;
-  ULONG  DmaPort;
-  UCHAR  DmaShareable;
-  UCHAR  InterruptShareable;
-  BOOLEAN  Master;
-  DMA_WIDTH  DmaWidth;
-  DMA_SPEED  DmaSpeed;
-  BOOLEAN  bMapBuffers;
-  BOOLEAN  NeedPhysicalAddresses;
-  BOOLEAN  DemandMode;
-  ULONG  MaximumTransferLength;
-  ULONG  NumberOfPhysicalBreaks;
-  BOOLEAN  ScatterGather;
-  ULONG  MaximumScatterGatherChunkSize;
-} VIDEO_PORT_CONFIG_INFO_TODO, *PVIDEO_PORT_CONFIG_INFO_TODO;
-
 ULONG STDCALL
 VideoPortInitialize(IN PVOID  Context1,
                     IN PVOID  Context2,
@@ -380,7 +351,7 @@ VideoPortInitialize(IN PVOID  Context1,
   NTSTATUS  Status;
   PDRIVER_OBJECT  MPDriverObject = (PDRIVER_OBJECT) Context1;
   PDEVICE_OBJECT  MPDeviceObject;
-  VIDEO_PORT_CONFIG_INFO_TODO  ConfigInfo;
+  VIDEO_PORT_CONFIG_INFO  ConfigInfo;
   PVIDEO_PORT_DEVICE_EXTENSION  DeviceExtension;
   ULONG DeviceNumber = 0;
   UNICODE_STRING DeviceName;
@@ -455,8 +426,8 @@ VideoPortInitialize(IN PVOID  Context1,
 	                HwInitializationData->HwDeviceExtensionSize);
 	  DPRINT("Searching on bus %d\n", DeviceExtension->SystemIoBusNumber);
 	  /* Setup configuration info */
-	  RtlZeroMemory(&ConfigInfo, sizeof(VIDEO_PORT_CONFIG_INFO_TODO));
-	  ConfigInfo.Length = sizeof(VIDEO_PORT_CONFIG_INFO_TODO);
+	  RtlZeroMemory(&ConfigInfo, sizeof(VIDEO_PORT_CONFIG_INFO));
+	  ConfigInfo.Length = sizeof(VIDEO_PORT_CONFIG_INFO);
 	  ConfigInfo.AdapterInterfaceType = DeviceExtension->AdapterInterfaceType;
 	  ConfigInfo.SystemIoBusNumber = DeviceExtension->SystemIoBusNumber;
 	  ConfigInfo.InterruptMode = (PCIBus == DeviceExtension->AdapterInterfaceType) ?
@@ -905,9 +876,7 @@ STDCALL
 VideoPortWritePortUlong(IN PULONG Port, 
                         IN ULONG Value)
 {
-#ifdef TODO
   DPRINT("VideoPortWritePortUlong\n");
-#endif
   WRITE_PORT_ULONG(Port, Value);
 }
 
@@ -1148,7 +1117,6 @@ InternalMapMemory(IN PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension,
   ULONG AddressSpace;
   PVOID MappedAddress;
   PLIST_ENTRY Entry;
-  INTERFACE_TYPE BusType = PCIBus;
 
   if (0 != (InIoSpace & VIDEO_MEMORY_SPACE_P6CACHE))
     {
@@ -1174,7 +1142,7 @@ InternalMapMemory(IN PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension,
     }
 
   AddressSpace = (ULONG)InIoSpace;
-  if (HalTranslateBusAddress(BusType,
+  if (HalTranslateBusAddress(DeviceExtension->AdapterInterfaceType,
 			     DeviceExtension->SystemIoBusNumber,
 			     IoAddress,
 			     &AddressSpace,
@@ -1233,7 +1201,7 @@ InternalUnmapMemory(IN PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension,
 	      MmUnmapIoSpace(AddressMapping->MappedAddress,
 	                     AddressMapping->NumberOfUchars);
 #else
-DPRINT1("MmUnmapIoSpace(0x%08x, 0x%08x)\n", AddressMapping->MappedAddress, AddressMapping->NumberOfUchars);
+DPRINT("MmUnmapIoSpace(0x%08x, 0x%08x)\n", AddressMapping->MappedAddress, AddressMapping->NumberOfUchars);
 #endif
 	      RemoveEntryList(Entry);
 	      ExFreePool(AddressMapping);
