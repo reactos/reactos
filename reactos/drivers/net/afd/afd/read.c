@@ -270,7 +270,8 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
 
-    if( FCB->State != SOCKET_STATE_CONNECTED ) {
+    if( FCB->State != SOCKET_STATE_CONNECTED &&
+        FCB->State != SOCKET_STATE_CONNECTING ) {
         AFD_DbgPrint(MID_TRACE,("Called recv on wrong kind of socket (s%x)\n",
                                 FCB->State));
         return STATUS_UNSUCCESSFUL;
