@@ -4,11 +4,10 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cm/registry.c
  * PURPOSE:         Registry functions
+ *
  * PROGRAMMERS:     Rex Jolliff
  *                  Matt Pyne
  *                  Jean Michault
- * UPDATE HISTORY:
- *                  Created 22/05/98
  */
 
 #include <ntoskrnl.h>
@@ -73,7 +72,7 @@ CmiCheckSubKeys(BOOLEAN Verbose,
       BufferSize = sizeof(KEY_NODE_INFORMATION) + 4096;
       KeyInfo = ExAllocatePool(PagedPool, BufferSize);
 
-      Status = NtEnumerateKey(Key,
+      Status = ZwEnumerateKey(Key,
 			      Index,
 			      KeyNodeInformation,
 			      KeyInfo,
@@ -111,7 +110,7 @@ CmiCheckSubKeys(BOOLEAN Verbose,
 				 NULL,
 				 NULL);
 
-      Status = NtOpenKey(&SubKey,
+      Status = ZwOpenKey(&SubKey,
 			 KEY_ALL_ACCESS,
 			 &ObjectAttributes);
 
@@ -119,7 +118,7 @@ CmiCheckSubKeys(BOOLEAN Verbose,
 
       CmiCheckKey(Verbose, SubKey);
 
-      NtClose(SubKey);
+      ZwClose(SubKey);
 
       Index++;
     }
@@ -145,7 +144,7 @@ CmiCheckValues(BOOLEAN Verbose,
       BufferSize = sizeof(KEY_NODE_INFORMATION) + 4096;
       ValueInfo = ExAllocatePool(PagedPool, BufferSize);
 
-      Status = NtEnumerateValueKey(Key,
+      Status = ZwEnumerateValueKey(Key,
 				   Index,
 				   KeyNodeInformation,
 				   ValueInfo,
@@ -209,7 +208,7 @@ CmiCheckByName(BOOLEAN Verbose,
 		NULL,
 		NULL);
 
-  Status = NtOpenKey(&Key,
+  Status = ZwOpenKey(&Key,
 		KEY_ALL_ACCESS,
 		&ObjectAttributes);
 
@@ -225,7 +224,7 @@ CmiCheckByName(BOOLEAN Verbose,
 
   CmiCheckKey(Verbose, Key);
 
-  NtClose(Key);
+  ZwClose(Key);
 }
 
 
@@ -259,8 +258,8 @@ CmInitializeRegistry(VOID)
   CmiKeyType->Tag = TAG('R', 'e', 'g', 'K');
   CmiKeyType->TotalObjects = 0;
   CmiKeyType->TotalHandles = 0;
-  CmiKeyType->MaxObjects = LONG_MAX;
-  CmiKeyType->MaxHandles = LONG_MAX;
+  CmiKeyType->PeakObjects = 0;
+  CmiKeyType->PeakHandles = 0;
   CmiKeyType->PagedPoolCharge = 0;
   CmiKeyType->NonpagedPoolCharge = sizeof(KEY_OBJECT);
   CmiKeyType->Mapping = &CmiKeyMapping;
@@ -316,7 +315,7 @@ CmInitializeRegistry(VOID)
   RootKey->NumberOfSubKeys = 0;
   RootKey->SubKeys = NULL;
   RootKey->SizeOfSubKeys = 0;
-  Status = RtlCreateUnicodeString(&RootKey->Name, L"Registry");
+  Status = RtlpCreateUnicodeString(&RootKey->Name, L"Registry", NonPagedPool);
   ASSERT(NT_SUCCESS(Status));
 
 #if 0
@@ -341,7 +340,7 @@ CmInitializeRegistry(VOID)
 			     0,
 			     RootKeyHandle,
 			     NULL);
-  Status = NtCreateKey(&KeyHandle,
+  Status = ZwCreateKey(&KeyHandle,
 		       STANDARD_RIGHTS_REQUIRED,
 		       &ObjectAttributes,
 		       0,
@@ -358,7 +357,7 @@ CmInitializeRegistry(VOID)
 			     0,
 			     RootKeyHandle,
 			     NULL);
-  Status = NtCreateKey(&KeyHandle,
+  Status = ZwCreateKey(&KeyHandle,
 		       STANDARD_RIGHTS_REQUIRED,
 		       &ObjectAttributes,
 		       0,
@@ -541,7 +540,7 @@ CmiCreateCurrentControlSetLink(VOID)
 			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF | OBJ_OPENLINK,
 			     NULL,
 			     NULL);
-  Status = NtCreateKey(&KeyHandle,
+  Status = ZwCreateKey(&KeyHandle,
 		       KEY_ALL_ACCESS | KEY_CREATE_LINK,
 		       &ObjectAttributes,
 		       0,
@@ -550,13 +549,13 @@ CmiCreateCurrentControlSetLink(VOID)
 		       NULL);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);
+      DPRINT1("ZwCreateKey() failed (Status %lx)\n", Status);
       return(Status);
     }
 
   RtlRosInitUnicodeStringFromLiteral(&LinkValue,
 				  L"SymbolicLinkValue");
-  Status = NtSetValueKey(KeyHandle,
+  Status = ZwSetValueKey(KeyHandle,
 			 &LinkValue,
 			 0,
 			 REG_LINK,
@@ -564,10 +563,10 @@ CmiCreateCurrentControlSetLink(VOID)
 			 TargetNameLength);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+      DPRINT1("ZwSetValueKey() failed (Status %lx)\n", Status);
     }
 
-  NtClose(KeyHandle);
+  ZwClose(KeyHandle);
 
   return Status;
 }
@@ -663,12 +662,12 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 
   DPRINT ("SubName %S\n", SubName);
 
-  Status = RtlCreateUnicodeString(&NewKey->Name,
-				  SubName);
+  Status = RtlpCreateUnicodeString(&NewKey->Name,
+              SubName, NonPagedPool);
   RtlFreeUnicodeString(&RemainingPath);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("RtlCreateUnicodeString() failed (Status %lx)\n", Status);
+      DPRINT1("RtlpCreateUnicodeString() failed (Status %lx)\n", Status);
       if (NewKey->SubKeys != NULL)
 	{
 	  ExFreePool (NewKey->SubKeys);
@@ -721,7 +720,7 @@ CmiDisconnectHive (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 				      KernelMode,
 				      (PVOID*)&KeyObject,
 				      NULL);
-  NtClose (KeyHandle);
+  ZwClose (KeyHandle);
   if (!NT_SUCCESS(Status))
     {
       DPRINT1 ("ObReferenceObjectByName() failed (Status %lx)\n", Status);
@@ -776,7 +775,7 @@ CmiInitControlSetLink (VOID)
 			      OBJ_CASE_INSENSITIVE,
 			      NULL,
 			      NULL);
-  Status = NtCreateKey (&KeyHandle,
+  Status = ZwCreateKey (&KeyHandle,
 			KEY_ALL_ACCESS,
 			&ObjectAttributes,
 			0,
@@ -785,10 +784,10 @@ CmiInitControlSetLink (VOID)
 			NULL);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1 ("NtCreateKey() failed (Status %lx)\n", Status);
+      DPRINT1 ("ZwCreateKey() failed (Status %lx)\n", Status);
       return Status;
     }
-  NtClose (KeyHandle);
+  ZwClose (KeyHandle);
 
   /* Link 'CurrentControlSet' to 'ControlSet001' key */
   RtlRosInitUnicodeStringFromLiteral (&ControlSetLinkName,
@@ -798,7 +797,7 @@ CmiInitControlSetLink (VOID)
 			      OBJ_CASE_INSENSITIVE | OBJ_OPENIF | OBJ_OPENLINK,
 			      NULL,
 			      NULL);
-  Status = NtCreateKey (&KeyHandle,
+  Status = ZwCreateKey (&KeyHandle,
 			KEY_ALL_ACCESS | KEY_CREATE_LINK,
 			&ObjectAttributes,
 			0,
@@ -807,13 +806,13 @@ CmiInitControlSetLink (VOID)
 			NULL);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1 ("NtCreateKey() failed (Status %lx)\n", Status);
+      DPRINT1 ("ZwCreateKey() failed (Status %lx)\n", Status);
       return Status;
     }
 
   RtlRosInitUnicodeStringFromLiteral (&ControlSetValueName,
 				   L"SymbolicLinkValue");
-  Status = NtSetValueKey (KeyHandle,
+  Status = ZwSetValueKey (KeyHandle,
 			  &ControlSetValueName,
 			  0,
 			  REG_LINK,
@@ -821,9 +820,9 @@ CmiInitControlSetLink (VOID)
 			  ControlSetKeyName.Length);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1 ("NtSetValueKey() failed (Status %lx)\n", Status);
+      DPRINT1 ("ZwSetValueKey() failed (Status %lx)\n", Status);
     }
-  NtClose (KeyHandle);
+  ZwClose (KeyHandle);
 
   return STATUS_SUCCESS;
 }
@@ -859,12 +858,12 @@ CmiInitHives(BOOLEAN SetupBoot)
 				 OBJ_CASE_INSENSITIVE,
 				 NULL,
 				 NULL);
-      Status =  NtOpenKey(&KeyHandle,
+      Status =  ZwOpenKey(&KeyHandle,
 			  KEY_ALL_ACCESS,
 			  &ObjectAttributes);
       if (!NT_SUCCESS(Status))
 	{
-	  DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
+	  DPRINT1("ZwOpenKey() failed (Status %lx)\n", Status);
 	  return(Status);
 	}
 
@@ -876,17 +875,17 @@ CmiInitHives(BOOLEAN SetupBoot)
 				 BufferSize);
       if (ValueInfo == NULL)
 	{
-	  NtClose(KeyHandle);
+	  ZwClose(KeyHandle);
 	  return(STATUS_INSUFFICIENT_RESOURCES);
 	}
 
-      Status = NtQueryValueKey(KeyHandle,
+      Status = ZwQueryValueKey(KeyHandle,
 			       &ValueName,
 			       KeyValuePartialInformation,
 			       ValueInfo,
 			       BufferSize,
 			       &ResultSize);
-      NtClose(KeyHandle);
+      ZwClose(KeyHandle);
       if (!NT_SUCCESS(Status))
 	{
 	  ExFreePool(ValueInfo);

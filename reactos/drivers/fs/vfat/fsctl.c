@@ -26,14 +26,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntos/kefuncs.h>
-#include <rosrtl/string.h>
-#include <wchar.h>
-
 #define NDEBUG
-#include <debug.h>
-
 #include "vfat.h"
 
 /* FUNCTIONS ****************************************************************/
@@ -56,7 +49,7 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
    LARGE_INTEGER Offset;
    struct _BootSector* Boot;
    struct _BootSectorFatX* BootFatX;
-   BOOL PartitionInfoIsValid = FALSE;
+   BOOLEAN PartitionInfoIsValid = FALSE;
 
    DPRINT("VfatHasFileSystem\n");
 
@@ -123,153 +116,143 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
          *RecognizedFS = TRUE;
       }
    }
-   /*
-    * Floppy disk driver can return Unknown as media type if it
-    * doesn't know yet what floppy in the drive really is. This is
-    * perfectly correct to do under Windows.
-    */
-   if (DiskGeometry.MediaType == Unknown)
+   else if (DiskGeometry.MediaType == Unknown)
    {
+      /*
+       * Floppy disk driver can return Unknown as media type if it
+       * doesn't know yet what floppy in the drive really is. This is
+       * perfectly correct to do under Windows.
+       */
       *RecognizedFS = TRUE;
       DiskGeometry.BytesPerSector = 512;
    }
-   if (DiskGeometry.MediaType > Unknown && DiskGeometry.MediaType < RemovableMedia )
+   else
    {
       *RecognizedFS = TRUE;
-   }
-   if (*RecognizedFS == FALSE)
+   }  
+   if (*RecognizedFS)
    {
-      return STATUS_SUCCESS;
-   }
 
-   Boot = ExAllocatePool(NonPagedPool, DiskGeometry.BytesPerSector);
-   if (Boot == NULL)
-   {
-      *RecognizedFS=FALSE;
-      return STATUS_INSUFFICIENT_RESOURCES;
-   }
+      Boot = ExAllocatePool(NonPagedPool, DiskGeometry.BytesPerSector);
+      if (Boot == NULL)
+      {
+         return STATUS_INSUFFICIENT_RESOURCES;
+      }
 
-   Offset.QuadPart = 0;
+      Offset.QuadPart = 0;
    
-   /* Try to recognize FAT12/FAT16/FAT32 partitions */
-   Status = VfatReadDisk(DeviceToMount, &Offset, DiskGeometry.BytesPerSector, (PUCHAR) Boot, FALSE);
-   if (NT_SUCCESS(Status))
-   {
-      if (Boot->Signatur1 != 0xaa55)
+      /* Try to recognize FAT12/FAT16/FAT32 partitions */
+      Status = VfatReadDisk(DeviceToMount, &Offset, DiskGeometry.BytesPerSector, (PUCHAR) Boot, FALSE);
+      if (NT_SUCCESS(Status))
       {
-         BootFatX = (struct _BootSectorFatX *) Boot;
-         if (BootFatX->SysType[0] != 'F' ||
-             BootFatX->SysType[1] != 'A' ||
-             BootFatX->SysType[2] != 'T' ||
-             BootFatX->SysType[3] != 'X')
+         if (Boot->Signatur1 != 0xaa55)
          {
-            DPRINT1("Signature %04x\n", Boot->Signatur1);
-         }
-         *RecognizedFS=FALSE;
-      }
-      if (*RecognizedFS &&
-	       Boot->BytesPerSector != 512 &&
-	       Boot->BytesPerSector != 1024 &&
-          Boot->BytesPerSector != 2048 && 
-	       Boot->BytesPerSector != 4096)
-      {
-         DPRINT1("BytesPerSector %d\n", Boot->BytesPerSector);
-         *RecognizedFS=FALSE;
-      }
-
-      if (*RecognizedFS &&
-          Boot->FATCount != 1 && 
-	       Boot->FATCount != 2)
-      {
-         DPRINT1("FATCount %d\n", Boot->FATCount);
-         *RecognizedFS=FALSE;
-      }
-
-      if (*RecognizedFS &&
-          Boot->Media != 0xf0 && 
-          Boot->Media != 0xf8 &&
-          Boot->Media != 0xf9 &&
-          Boot->Media != 0xfa && 
-          Boot->Media != 0xfb &&
-          Boot->Media != 0xfc &&
-          Boot->Media != 0xfd &&
-          Boot->Media != 0xfe && 
-          Boot->Media != 0xff)
-      {
-         DPRINT1("Media             %02x\n", Boot->Media);
-         *RecognizedFS=FALSE;
-      }
-
-      if (*RecognizedFS &&
-          Boot->SectorsPerCluster != 1 &&
-          Boot->SectorsPerCluster != 2 &&
-          Boot->SectorsPerCluster != 4 && 
-          Boot->SectorsPerCluster != 8 &&
-          Boot->SectorsPerCluster != 16 &&
-          Boot->SectorsPerCluster != 32 && 
-          Boot->SectorsPerCluster != 64 &&
-          Boot->SectorsPerCluster != 128)
-      {
-         DPRINT1("SectorsPerCluster %02x\n", Boot->SectorsPerCluster);
-         *RecognizedFS=FALSE;
-      }
-
-      if (*RecognizedFS &&
-          Boot->BytesPerSector * Boot->SectorsPerCluster > 32 * 1024)
-      {
-         DPRINT1("ClusterSize %dx\n", Boot->BytesPerSector * Boot->SectorsPerCluster);
-         *RecognizedFS=FALSE;
-      }
-
-      if (*RecognizedFS)
-      {
-         FatInfo.VolumeID = Boot->VolumeID;
-         FatInfo.FATStart = Boot->ReservedSectors;
-         FatInfo.FATCount = Boot->FATCount;
-         FatInfo.FATSectors = Boot->FATSectors ? Boot->FATSectors : ((struct _BootSector32*) Boot)->FATSectors32;
-         FatInfo.BytesPerSector = Boot->BytesPerSector;
-         FatInfo.SectorsPerCluster = Boot->SectorsPerCluster;
-         FatInfo.BytesPerCluster = FatInfo.BytesPerSector * FatInfo.SectorsPerCluster;
-         FatInfo.rootDirectorySectors = ((Boot->RootEntries * 32) + Boot->BytesPerSector - 1) / Boot->BytesPerSector;
-         FatInfo.rootStart = FatInfo.FATStart + FatInfo.FATCount * FatInfo.FATSectors;
-         FatInfo.dataStart = FatInfo.rootStart + FatInfo.rootDirectorySectors;
-         FatInfo.Sectors = Sectors = Boot->Sectors ? Boot->Sectors : Boot->SectorsHuge;
-         Sectors -= Boot->ReservedSectors + FatInfo.FATCount * FatInfo.FATSectors + FatInfo.rootDirectorySectors;
-         FatInfo.NumberOfClusters = Sectors / Boot->SectorsPerCluster;
-         if (FatInfo.NumberOfClusters < 4085)
-         {
-            DPRINT("FAT12\n");
-            FatInfo.FatType = FAT12;
-         }
-         else if (FatInfo.NumberOfClusters >= 65525)
-         {
-            DPRINT("FAT32\n");
-            FatInfo.FatType = FAT32;
-            FatInfo.RootCluster = ((struct _BootSector32*) Boot)->RootCluster;
-            FatInfo.rootStart = FatInfo.dataStart + ((FatInfo.RootCluster - 2) * FatInfo.SectorsPerCluster);
-            FatInfo.VolumeID = ((struct _BootSector32*) Boot)->VolumeID;
-         }
-         else
-         {
-            DPRINT("FAT16\n");
-            FatInfo.FatType = FAT16;
-         }
-         if (PartitionInfoIsValid &&
-	         FatInfo.Sectors > PartitionInfo.PartitionLength.QuadPart / FatInfo.BytesPerSector)
-         {
-	         CHECKPOINT1;
             *RecognizedFS = FALSE;
          }
-	    
-         if (pFatInfo && *RecognizedFS)
+         if (*RecognizedFS &&
+	     Boot->BytesPerSector != 512 &&
+	     Boot->BytesPerSector != 1024 &&
+             Boot->BytesPerSector != 2048 && 
+	     Boot->BytesPerSector != 4096)
          {
-            *pFatInfo = FatInfo;
+            DPRINT1("BytesPerSector %d\n", Boot->BytesPerSector);
+            *RecognizedFS = FALSE;
+         }
+
+         if (*RecognizedFS &&
+             Boot->FATCount != 1 && 
+	     Boot->FATCount != 2)
+         {
+            DPRINT1("FATCount %d\n", Boot->FATCount);
+            *RecognizedFS = FALSE;
+         }
+
+         if (*RecognizedFS &&
+             Boot->Media != 0xf0 && 
+             Boot->Media != 0xf8 &&
+             Boot->Media != 0xf9 &&
+             Boot->Media != 0xfa && 
+             Boot->Media != 0xfb &&
+             Boot->Media != 0xfc &&
+             Boot->Media != 0xfd &&
+             Boot->Media != 0xfe && 
+             Boot->Media != 0xff)
+         {
+            DPRINT1("Media             %02x\n", Boot->Media);
+            *RecognizedFS = FALSE;
+         }
+
+         if (*RecognizedFS &&
+             Boot->SectorsPerCluster != 1 &&
+             Boot->SectorsPerCluster != 2 &&
+             Boot->SectorsPerCluster != 4 && 
+             Boot->SectorsPerCluster != 8 &&
+             Boot->SectorsPerCluster != 16 &&
+             Boot->SectorsPerCluster != 32 && 
+             Boot->SectorsPerCluster != 64 &&
+             Boot->SectorsPerCluster != 128)
+         {
+            DPRINT1("SectorsPerCluster %02x\n", Boot->SectorsPerCluster);
+            *RecognizedFS = FALSE;
+         }
+
+         if (*RecognizedFS &&
+             Boot->BytesPerSector * Boot->SectorsPerCluster > 32 * 1024)
+         {
+            DPRINT1("ClusterSize %dx\n", Boot->BytesPerSector * Boot->SectorsPerCluster);
+            *RecognizedFS = FALSE;
+         }
+
+         if (*RecognizedFS)
+         {
+            FatInfo.VolumeID = Boot->VolumeID;
+            FatInfo.FATStart = Boot->ReservedSectors;
+            FatInfo.FATCount = Boot->FATCount;
+            FatInfo.FATSectors = Boot->FATSectors ? Boot->FATSectors : ((struct _BootSector32*) Boot)->FATSectors32;
+            FatInfo.BytesPerSector = Boot->BytesPerSector;
+            FatInfo.SectorsPerCluster = Boot->SectorsPerCluster;
+            FatInfo.BytesPerCluster = FatInfo.BytesPerSector * FatInfo.SectorsPerCluster;
+            FatInfo.rootDirectorySectors = ((Boot->RootEntries * 32) + Boot->BytesPerSector - 1) / Boot->BytesPerSector;
+            FatInfo.rootStart = FatInfo.FATStart + FatInfo.FATCount * FatInfo.FATSectors;
+            FatInfo.dataStart = FatInfo.rootStart + FatInfo.rootDirectorySectors;
+            FatInfo.Sectors = Sectors = Boot->Sectors ? Boot->Sectors : Boot->SectorsHuge;
+            Sectors -= Boot->ReservedSectors + FatInfo.FATCount * FatInfo.FATSectors + FatInfo.rootDirectorySectors;
+            FatInfo.NumberOfClusters = Sectors / Boot->SectorsPerCluster;
+            if (FatInfo.NumberOfClusters < 4085)
+            {
+               DPRINT("FAT12\n");
+               FatInfo.FatType = FAT12;
+            }
+            else if (FatInfo.NumberOfClusters >= 65525)
+            {
+               DPRINT("FAT32\n");
+               FatInfo.FatType = FAT32;
+               FatInfo.RootCluster = ((struct _BootSector32*) Boot)->RootCluster;
+               FatInfo.rootStart = FatInfo.dataStart + ((FatInfo.RootCluster - 2) * FatInfo.SectorsPerCluster);
+               FatInfo.VolumeID = ((struct _BootSector32*) Boot)->VolumeID;
+            }
+            else
+            {
+               DPRINT("FAT16\n");
+               FatInfo.FatType = FAT16;
+            }
+            if (PartitionInfoIsValid &&
+	        FatInfo.Sectors > PartitionInfo.PartitionLength.QuadPart / FatInfo.BytesPerSector)
+            {
+	       CHECKPOINT1;
+               *RecognizedFS = FALSE;
+            }
+	    
+            if (pFatInfo && *RecognizedFS)
+            {
+               *pFatInfo = FatInfo;
+            }
          }
       }
+
+      ExFreePool(Boot);
    }
 
-   ExFreePool(Boot);
-   
    if (!*RecognizedFS && PartitionInfoIsValid)
    {
       BootFatX = ExAllocatePool(NonPagedPool, sizeof(struct _BootSectorFatX));
@@ -315,8 +298,8 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
             FatInfo.SectorsPerCluster = BootFatX->SectorsPerCluster;
             FatInfo.rootDirectorySectors = BootFatX->SectorsPerCluster;
             FatInfo.BytesPerCluster = BootFatX->SectorsPerCluster * DiskGeometry.BytesPerSector;
-            FatInfo.NumberOfClusters = PartitionInfo.PartitionLength.QuadPart / FatInfo.BytesPerCluster;
-            if (FatInfo.NumberOfClusters < 65525)
+	    FatInfo.Sectors = PartitionInfo.PartitionLength.QuadPart / DiskGeometry.BytesPerSector;
+            if (FatInfo.Sectors / FatInfo.SectorsPerCluster < 65525)
             {
                DPRINT("FATX16\n");
                FatInfo.FatType = FATX16;
@@ -329,13 +312,14 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
             FatInfo.VolumeID = BootFatX->VolumeID;
             FatInfo.FATStart = sizeof(struct _BootSectorFatX) / DiskGeometry.BytesPerSector;
             FatInfo.FATCount = BootFatX->FATCount;
-            FatInfo.FATSectors =
-                  ROUND_UP(FatInfo.NumberOfClusters * (FatInfo.FatType == FATX16 ? 2 : 4), 4096) /
+            FatInfo.FATSectors = 
+                  ROUND_UP(FatInfo.Sectors / FatInfo.SectorsPerCluster * (FatInfo.FatType == FATX16 ? 2 : 4), 4096) /
                   FatInfo.BytesPerSector;
             FatInfo.rootStart = FatInfo.FATStart + FatInfo.FATCount * FatInfo.FATSectors;
             FatInfo.dataStart = FatInfo.rootStart + FatInfo.rootDirectorySectors;
-            FatInfo.Sectors = PartitionInfo.PartitionLength.QuadPart / FatInfo.BytesPerSector;
-            if (pFatInfo && *RecognizedFS)
+            FatInfo.NumberOfClusters = (FatInfo.Sectors - FatInfo.dataStart) / FatInfo.SectorsPerCluster;
+	    
+	    if (pFatInfo && *RecognizedFS)
             {
                *pFatInfo = FatInfo;
             }
@@ -386,7 +370,8 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    PVFATFCB VolumeFcb = NULL;
    PVFATCCB Ccb = NULL;
    PDEVICE_OBJECT DeviceToMount;
-   UNICODE_STRING NameU;
+   UNICODE_STRING NameU = RTL_CONSTANT_STRING(L"\\$$Fat$$");
+   UNICODE_STRING VolumeNameU = RTL_CONSTANT_STRING(L"\\$$Volume$$");
 
    DPRINT("VfatMount(IrpContext %x)\n", IrpContext);
 
@@ -496,7 +481,6 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    DPRINT("FsDeviceObject %lx\n", DeviceObject);
 
    DeviceExt->FATFileObject = IoCreateStreamFileObject(NULL, DeviceExt->StorageDevice);
-   RtlRosInitUnicodeStringFromLiteral(&NameU, L"\\$$Fat$$");
    Fcb = vfatNewFCB(DeviceExt, &NameU);
    if (Fcb == NULL)
    {
@@ -511,7 +495,6 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    }
 
    RtlZeroMemory(Ccb, sizeof (VFATCCB));
-   DeviceExt->FATFileObject->Flags = DeviceExt->FATFileObject->Flags | FO_FCB_IS_VALID | FO_DIRECT_CACHE_PAGING_READ;
    DeviceExt->FATFileObject->FsContext = Fcb;
    DeviceExt->FATFileObject->FsContext2 = Ccb;
    DeviceExt->FATFileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
@@ -525,6 +508,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    Fcb->RFCB.ValidDataLength = Fcb->RFCB.FileSize;
    Fcb->RFCB.AllocationSize = Fcb->RFCB.FileSize;
 
+#ifdef USE_ROS_CC_AND_FS
    if (DeviceExt->FatInfo.FatType != FAT12)
    {
       Status = CcRosInitializeFileCache(DeviceExt->FATFileObject, CACHEPAGESIZE(DeviceExt));
@@ -538,14 +522,21 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
       DPRINT1 ("CcRosInitializeFileCache failed\n");
       goto ByeBye;
    }
+#else
+   /* FIXME: Guard by SEH. */
+   CcInitializeCacheMap(DeviceExt->FATFileObject,
+                        (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
+                        FALSE,
+                        &VfatGlobalData->CacheMgrCallbacks,
+                        Fcb);
+#endif
    DeviceExt->LastAvailableCluster = 2;
    ExInitializeResourceLite(&DeviceExt->DirResource);
    ExInitializeResourceLite(&DeviceExt->FatResource);
 
    InitializeListHead(&DeviceExt->FcbListHead);
-   RtlRosInitUnicodeStringFromLiteral(&NameU, L"\\$$Volume$$");
 
-   VolumeFcb = vfatNewFCB(DeviceExt, &NameU);
+   VolumeFcb = vfatNewFCB(DeviceExt, &VolumeNameU);
    if (VolumeFcb == NULL)
    {
       Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -655,9 +646,9 @@ VfatGetVolumeBitmap(PVFAT_IRP_CONTEXT IrpContext)
 static NTSTATUS 
 VfatGetRetrievalPointers(PVFAT_IRP_CONTEXT IrpContext)
 {
-  PIO_STACK_LOCATION Stack;
+   PIO_STACK_LOCATION Stack;
    LARGE_INTEGER Vcn;
-   PGET_RETRIEVAL_DESCRIPTOR RetrievalPointers;
+   PRETRIEVAL_POINTERS_BUFFER RetrievalPointers;
    PFILE_OBJECT FileObject;
    ULONG MaxExtentCount;
    PVFATFCB Fcb;
@@ -678,7 +669,7 @@ VfatGetRetrievalPointers(PVFAT_IRP_CONTEXT IrpContext)
       return STATUS_INVALID_PARAMETER;
    }
    if (IrpContext->Irp->UserBuffer == NULL ||
-       Stack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(GET_RETRIEVAL_DESCRIPTOR) + sizeof(MAPPING_PAIR))
+       Stack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(RETRIEVAL_POINTERS_BUFFER))
    {
       return STATUS_BUFFER_TOO_SMALL;
    }
@@ -690,7 +681,7 @@ VfatGetRetrievalPointers(PVFAT_IRP_CONTEXT IrpContext)
    Vcn = *(PLARGE_INTEGER)Stack->Parameters.DeviceIoControl.Type3InputBuffer;
    RetrievalPointers = IrpContext->Irp->UserBuffer;
 
-   MaxExtentCount = ((Stack->Parameters.DeviceIoControl.OutputBufferLength - sizeof(GET_RETRIEVAL_DESCRIPTOR)) / sizeof(MAPPING_PAIR));
+   MaxExtentCount = ((Stack->Parameters.DeviceIoControl.OutputBufferLength - sizeof(RetrievalPointers->ExtentCount) - sizeof(RetrievalPointers->StartingVcn)) / sizeof(RetrievalPointers->Extents[0]));
 
 
    if (Vcn.QuadPart >= Fcb->RFCB.AllocationSize.QuadPart / DeviceExt->FatInfo.BytesPerCluster)
@@ -708,11 +699,12 @@ VfatGetRetrievalPointers(PVFAT_IRP_CONTEXT IrpContext)
       goto ByeBye;
    }
 
-   RetrievalPointers->StartVcn = Vcn.QuadPart;
-   RetrievalPointers->NumberOfPairs = 0;
-   RetrievalPointers->Pair[0].Lcn = CurrentCluster - 2;
+   RetrievalPointers->StartingVcn = Vcn;
+   RetrievalPointers->ExtentCount = 0;
+   RetrievalPointers->Extents[0].Lcn.u.HighPart = 0;
+   RetrievalPointers->Extents[0].Lcn.u.LowPart = CurrentCluster - 2;
    LastCluster = 0;
-   while (CurrentCluster != 0xffffffff && RetrievalPointers->NumberOfPairs < MaxExtentCount)
+   while (CurrentCluster != 0xffffffff && RetrievalPointers->ExtentCount < MaxExtentCount)
    {
 
       LastCluster = CurrentCluster;
@@ -725,16 +717,17 @@ VfatGetRetrievalPointers(PVFAT_IRP_CONTEXT IrpContext)
       
       if (LastCluster + 1 != CurrentCluster)
       {
-	 RetrievalPointers->Pair[RetrievalPointers->NumberOfPairs].Vcn = Vcn.QuadPart;
-	 RetrievalPointers->NumberOfPairs++;
-	 if (RetrievalPointers->NumberOfPairs < MaxExtentCount)
+	 RetrievalPointers->Extents[RetrievalPointers->ExtentCount].NextVcn = Vcn;
+	 RetrievalPointers->ExtentCount++;
+	 if (RetrievalPointers->ExtentCount < MaxExtentCount)
 	 {
-	    RetrievalPointers->Pair[RetrievalPointers->NumberOfPairs].Lcn = CurrentCluster - 2;
+	    RetrievalPointers->Extents[RetrievalPointers->ExtentCount].Lcn.u.HighPart = 0;
+	    RetrievalPointers->Extents[RetrievalPointers->ExtentCount].Lcn.u.LowPart = CurrentCluster - 2;
 	 }
       }
    }
    
-   IrpContext->Irp->IoStatus.Information = sizeof(GET_RETRIEVAL_DESCRIPTOR) + sizeof(MAPPING_PAIR) * RetrievalPointers->NumberOfPairs;
+   IrpContext->Irp->IoStatus.Information = sizeof(RETRIEVAL_POINTERS_BUFFER) + (sizeof(RetrievalPointers->Extents[0]) * (RetrievalPointers->ExtentCount - 1));
    Status = STATUS_SUCCESS;
 
 ByeBye:
@@ -751,6 +744,7 @@ VfatMoveFile(PVFAT_IRP_CONTEXT IrpContext)
    return STATUS_INVALID_DEVICE_REQUEST;
 }
 
+#ifdef USE_ROS_CC_AND_FS
 static NTSTATUS
 VfatRosQueryLcnMapping(PVFAT_IRP_CONTEXT IrpContext)
 {
@@ -758,7 +752,7 @@ VfatRosQueryLcnMapping(PVFAT_IRP_CONTEXT IrpContext)
    PROS_QUERY_LCN_MAPPING LcnQuery;
    PIO_STACK_LOCATION Stack;
 
-   DPRINT("VfatGetRetrievalPointers(IrpContext %x)\n", IrpContext);
+   DPRINT("VfatRosQueryLcnMapping(IrpContext %x)\n", IrpContext);
 
    DeviceExt = IrpContext->DeviceExt;
    Stack = IrpContext->Stack;
@@ -772,6 +766,7 @@ VfatRosQueryLcnMapping(PVFAT_IRP_CONTEXT IrpContext)
    IrpContext->Irp->IoStatus.Information = sizeof(ROS_QUERY_LCN_MAPPING);
    return(STATUS_SUCCESS);
 }
+#endif
 
 NTSTATUS VfatFileSystemControl(PVFAT_IRP_CONTEXT IrpContext)
 /*
@@ -803,9 +798,11 @@ NTSTATUS VfatFileSystemControl(PVFAT_IRP_CONTEXT IrpContext)
 	    case FSCTL_MOVE_FILE:
 	       Status = VfatMoveFile(IrpContext);
 	       break;
+#ifdef USE_ROS_CC_AND_FS
  	    case FSCTL_ROS_QUERY_LCN_MAPPING:
 	       Status = VfatRosQueryLcnMapping(IrpContext);
 	       break;
+#endif
 	    default:
 	       Status = STATUS_INVALID_DEVICE_REQUEST;
 	 }

@@ -1,8 +1,13 @@
 /* $Id$
+ * 
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/ex/i386/interlck.c
+ * PURPOSE:         No purpose listed.
  *
- * reactos/ntoskrnl/ex/i386/interlck.c
- *
+ * PROGRAMMERS:     No programmer listed.
  */
+
 #include <ntoskrnl.h>
 
 #ifdef LOCK
@@ -11,7 +16,7 @@
 
 #if defined(__GNUC__)
 
-#ifdef MP
+#ifdef CONFIG_SMP
 #define LOCK "lock ; "
 #else
 #define LOCK ""
@@ -19,7 +24,7 @@
 
 #elif defined(_MSC_VER)
 
-#ifdef MP
+#ifdef CONFIG_SMP
 #define LOCK lock
 #else
 #define LOCK 

@@ -62,7 +62,7 @@ typedef struct _LPC_DBG_MESSAGE
 typedef struct _LPC_TERMINATION_MESSAGE
 {
    LPC_MESSAGE Header;
-   TIME CreationTime;
+   LARGE_INTEGER CreationTime;
 } LPC_TERMINATION_MESSAGE, *PLPC_TERMINATION_MESSAGE;
 
 #endif /* __INCLUDE_NAPI_DBG_H */

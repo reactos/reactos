@@ -900,7 +900,7 @@ GC_blit_from_DIB(GC *Gc,
 {
    int Result;
    HDC hSrcDC;
-   HBITMAP hOldBitmap;
+   HBITMAP hOldBitmap = NULL;
 
    DBG("GC_blit_from_DIB(0x%x, 0x%x, 0x%x, 0x%x)\n", Gc, Dib, X, Y);
 
@@ -1165,7 +1165,7 @@ GI_messagebox(s_window *Window,
       MbFlags = MB_YESNOCANCEL;
    else if (Flags & WGF_MB_YESNO)
       MbFlags = MB_YESNO;
-   else if (Flags & WGF_MB_OK)
+   else /* if (Flags & WGF_MB_OK) */
       MbFlags = MB_OK;
    MbFlags |= (Flags & WGF_MB_ICON_INFO) ? MB_ICONASTERISK : 0;
    MbFlags |= (Flags & WGF_MB_ICON_ASK) ? MB_ICONQUESTION : 0;

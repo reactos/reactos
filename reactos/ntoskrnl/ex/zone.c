@@ -1,10 +1,11 @@
 /* $Id$
  *
- * COPYRIGHT:     See COPYING in the top level directory
- * PROJECT:       ReactOS kernel
- * FILE:          ntoskrnl/mm/zone.c
- * PURPOSE:       Implements zone buffers
- * PROGRAMMER:    David Welch (welch@mcmail.com)
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/mm/zone.c
+ * PURPOSE:         Implements zone buffers
+ * 
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
 /* INCLUDES ****************************************************************/

@@ -42,15 +42,12 @@
 #include "shlguid.h"
 #include "wingdi.h"
 #include "shlobj.h"
-#include "olectl.h"
 #include "shellapi.h"
 #include "commdlg.h"
 #include "wine/unicode.h"
-#include "servprov.h"
 #include "winreg.h"
 #include "wine/debug.h"
 #include "shlwapi.h"
-#include "winnt.h"
 
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
@@ -611,7 +608,7 @@ HRESULT WINAPI GetAcceptLanguagesA( LPSTR langbuf, LPDWORD buflen)
                                   *buflen, NULL, NULL);
     *buflen = buflenW ? convlen : 0;
 
-    if(langbufW) HeapFree(GetProcessHeap(), 0, langbufW);
+    HeapFree(GetProcessHeap(), 0, langbufW);
     return retval;
 }
 
@@ -621,9 +618,9 @@ HRESULT WINAPI GetAcceptLanguagesA( LPSTR langbuf, LPDWORD buflen)
  * Convert a GUID to a string.
  *
  * PARAMS
- *  guid [I] GUID to convert
- *  str  [O] Destination for string
- *  cmax [I] Length of output buffer
+ *  guid     [I] GUID to convert
+ *  lpszDest [O] Destination for string
+ *  cchMax   [I] Length of output buffer
  *
  * RETURNS
  *  The length of the string created.
@@ -651,15 +648,35 @@ INT WINAPI SHStringFromGUIDA(REFGUID guid, LPSTR lpszDest, INT cchMax)
 /*************************************************************************
  *      @	[SHLWAPI.24]
  *
- * Unicode version of SHStringFromGUIDA.
+ * Convert a GUID to a string.
+ *
+ * PARAMS
+ *  guid [I] GUID to convert
+ *  str  [O] Destination for string
+ *  cmax [I] Length of output buffer
+ *
+ * RETURNS
+ *  The length of the string created.
  */
 INT WINAPI SHStringFromGUIDW(REFGUID guid, LPWSTR lpszDest, INT cchMax)
 {
-  char xguid[40];
-  INT iLen = SHStringFromGUIDA(guid, xguid, cchMax);
+  WCHAR xguid[40];
+  INT iLen;
+  static const WCHAR wszFormat[] = {'{','%','0','8','l','X','-','%','0','4','X','-','%','0','4','X','-',
+      '%','0','2','X','%','0','2','X','-','%','0','2','X','%','0','2','X','%','0','2','X','%','0','2',
+      'X','%','0','2','X','%','0','2','X','}',0};
 
-  if (iLen)
-    MultiByteToWideChar(CP_ACP, 0, xguid, -1, lpszDest, cchMax);
+  TRACE("(%s,%p,%d)\n", debugstr_guid(guid), lpszDest, cchMax);
+
+  sprintfW(xguid, wszFormat, guid->Data1, guid->Data2, guid->Data3,
+          guid->Data4[0], guid->Data4[1], guid->Data4[2], guid->Data4[3],
+          guid->Data4[4], guid->Data4[5], guid->Data4[6], guid->Data4[7]);
+
+  iLen = strlenW(xguid) + 1;
+
+  if (iLen > cchMax)
+    return 0;
+  memcpy(lpszDest, xguid, iLen*sizeof(WCHAR));
   return iLen;
 }
 
@@ -1940,7 +1957,7 @@ HMENU WINAPI SHGetMenuFromID(HMENU hMenu, UINT uID)
   mi.fMask = MIIM_SUBMENU;
 
   if (!GetMenuItemInfoA(hMenu, uID, 0, &mi))
-    return (HMENU)NULL;
+    return NULL;
 
   return mi.hSubMenu;
 }
@@ -2422,8 +2439,8 @@ HWND WINAPI SHCreateWorkerWindowA(LONG wndProc, HWND hWndParent, DWORD dwExStyle
   wc.cbClsExtra    = 0;
   wc.cbWndExtra    = 4;
   wc.hInstance     = shlwapi_hInstance;
-  wc.hIcon         = (HICON)0;
-  wc.hCursor       = LoadCursorA((HINSTANCE)0, (LPSTR)IDC_ARROW);
+  wc.hIcon         = NULL;
+  wc.hCursor       = LoadCursorA(NULL, (LPSTR)IDC_ARROW);
   wc.hbrBackground = (HBRUSH)COLOR_BTNSHADOW;
   wc.lpszMenuName  = NULL;
   wc.lpszClassName = szClass;
@@ -2709,8 +2726,8 @@ HWND WINAPI SHCreateWorkerWindowW(LONG wndProc, HWND hWndParent, DWORD dwExStyle
   wc.cbClsExtra    = 0;
   wc.cbWndExtra    = 4;
   wc.hInstance     = shlwapi_hInstance;
-  wc.hIcon         = (HICON)0;
-  wc.hCursor       = LoadCursorA((HINSTANCE)0, (LPSTR)IDC_ARROW);
+  wc.hIcon         = NULL;
+  wc.hCursor       = LoadCursorW(NULL, (LPWSTR)IDC_ARROW);
   wc.hbrBackground = (HBRUSH)COLOR_BTNSHADOW;
   wc.lpszMenuName  = NULL;
   wc.lpszClassName = szClass;
@@ -2723,10 +2740,10 @@ HWND WINAPI SHCreateWorkerWindowW(LONG wndProc, HWND hWndParent, DWORD dwExStyle
                          hWndParent, hMenu, shlwapi_hInstance, 0);
   if (hWnd)
   {
-    SetWindowLongA(hWnd, DWL_MSGRESULT, z);
+    SetWindowLongW(hWnd, DWL_MSGRESULT, z);
 
     if (wndProc)
-      SetWindowLongPtrA(hWnd, GWLP_WNDPROC, wndProc);
+      SetWindowLongPtrW(hWnd, GWLP_WNDPROC, wndProc);
   }
   return hWnd;
 }

@@ -270,18 +270,6 @@ IntEngTransparentBlt(BITMAPOBJ *DestObj,
                             &OutputRect, SourceRect, iTransColor, Reserved);
   }
   
-  if(Ret)
-  {
-    /* Dummy BitBlt to let driver know that something has changed.
-       0x00AA0029 is the Rop for D (no-op) */
-    if (DestObj->flHooks & HOOK_BITBLT)
-    {
-      GDIDEVFUNCS(DestSurf).BitBlt(
-                          DestSurf, NULL, NULL, Clip, ColorTranslation,
-                          &OutputRect, NULL, NULL, NULL, NULL, ROP_NOOP);
-    }
-  }
-  
   MouseSafetyOnDrawEnd(DestSurf);
   if(SourceSurf != DestSurf)
   {

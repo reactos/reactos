@@ -352,7 +352,7 @@ static DWORD WINAPI proc_PlaySound(LPVOID arg)
     TRACE("Chunk Found ckid=%.4s fccType=%.4s cksize=%08lX\n",
 	  (LPSTR)&mmckInfo.ckid, (LPSTR)&mmckInfo.fccType, mmckInfo.cksize);
 
-    s.hEvent = CreateEventA(NULL, FALSE, FALSE, NULL);
+    s.hEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
 
     if (waveOutOpen(&hWave, WAVE_MAPPER, lpWaveFormat, (DWORD)PlaySound_Callback,
 		    (DWORD)&s, CALLBACK_FUNCTION) != MMSYSERR_NOERROR)
@@ -374,9 +374,9 @@ static DWORD WINAPI proc_PlaySound(LPVOID arg)
     }
 
     s.dwEventCount = 1L; /* for first buffer */
+    index = 0;
 
     do {
-	index = 0;
 	left = mmckInfo.cksize;
 
 	mmioSeek(hmmio, mmckInfo.dwDataOffset, SEEK_SET);
@@ -410,8 +410,8 @@ static DWORD WINAPI proc_PlaySound(LPVOID arg)
 errCleanUp:
     TRACE("Done playing='%s' => %s!\n", debugstr_w(wps->pszSound), bRet ? "ok" : "ko");
     CloseHandle(s.hEvent);
-    if (waveHdr)        HeapFree(GetProcessHeap(), 0, waveHdr);
-    if (lpWaveFormat)   HeapFree(GetProcessHeap(), 0, lpWaveFormat);
+    HeapFree(GetProcessHeap(), 0, waveHdr);
+    HeapFree(GetProcessHeap(), 0, lpWaveFormat);
     if (hWave)		while (waveOutClose(hWave) == WAVERR_STILLPLAYING) Sleep(100);
     if (hmmio) 		mmioClose(hmmio, 0);
 

@@ -30,24 +30,35 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
     PIRP Irp;
     PMDL Mdl;
 
+    TI_DbgPrint(MID_TRACE,("Handling signalled state on %x (%x)\n",
+                           Connection, Connection->SocketContext));
+                
     /* Things that can happen when we try the initial connection */
-    if( ((NewState & SEL_CONNECT) || (NewState & SEL_FIN)) &&
-	!(Connection->State & (SEL_CONNECT | SEL_FIN)) ) {
+    if( NewState & SEL_CONNECT ) {
 	while( !IsListEmpty( &Connection->ConnectRequest ) ) {
-	    Connection->State |= NewState & (SEL_CONNECT | SEL_FIN);
-	    Entry = RemoveHeadList( &Connection->ConnectRequest );
-	    Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
-	    Complete = Bucket->Request.RequestNotifyObject;
-	    TI_DbgPrint(DEBUG_TCP,
-			("Completing Connect Request %x\n", Bucket->Request));
-	    if( NewState & SEL_FIN ) Status = STATUS_CONNECTION_REFUSED;
-	    Complete( Bucket->Request.RequestContext, Status, 0 );
-	    /* Frees the bucket allocated in TCPConnect */
-	    PoolFreeBuffer( Bucket );
-	}
+            Connection->State |= NewState;
+            Entry = RemoveHeadList( &Connection->ConnectRequest );
+            TI_DbgPrint(DEBUG_TCP, ("Connect Event\n"));
+            
+            Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
+            Complete = Bucket->Request.RequestNotifyObject;
+            TI_DbgPrint(DEBUG_TCP,
+                        ("Completing Request %x\n", Bucket->Request));
+            
+            if( (NewState & (SEL_CONNECT | SEL_FIN)) == 
+                (SEL_CONNECT | SEL_FIN) ) 
+                Status = STATUS_CONNECTION_REFUSED;
+            else
+                Status = STATUS_SUCCESS;
+            
+            Complete( Bucket->Request.RequestContext, Status, 0 );
+            
+            /* Frees the bucket allocated in TCPConnect */
+            PoolFreeBuffer( Bucket );
+        }
     }
 
-    if( (NewState & SEL_ACCEPT) ) {
+    if( NewState & SEL_ACCEPT ) {
 	/* Handle readable on a listening socket -- 
 	 * TODO: Implement filtering 
 	 */
@@ -84,7 +95,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
     }
 
     /* Things that happen after we're connected */
-    if( (NewState & SEL_READ) ) {
+    if( NewState & SEL_READ ) {
 	TI_DbgPrint(DEBUG_TCP,("Readable: irp list %s\n",
 			       IsListEmpty(&Connection->ReceiveRequest) ?
 			       "empty" : "nonempty"));
@@ -142,6 +153,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
 	    }
 	}
     }
+
     if( NewState & SEL_FIN ) {
 	TI_DbgPrint(DEBUG_TCP, ("EOF From socket\n"));
 	
@@ -529,7 +541,8 @@ NTSTATUS TCPReceiveData
     NTSTATUS Status;
     PTDI_BUCKET Bucket;
 
-    TI_DbgPrint(DEBUG_TCP,("Called for %d bytes\n", ReceiveLength));
+    TI_DbgPrint(DEBUG_TCP,("Called for %d bytes (on socket %x)\n", 
+                           ReceiveLength, Connection->SocketContext));
 
     ASSERT_KM_POINTER(Connection->SocketContext);
 
@@ -616,12 +629,37 @@ VOID TCPTimeout(VOID) {
 UINT TCPAllocatePort( UINT HintPort ) {
     if( HintPort ) {
 	if( AllocatePort( &TCPPorts, HintPort ) ) return HintPort; 
-	else return (UINT)-1;
+	else {
+            TI_DbgPrint
+                (MID_TRACE,("We got a hint port but couldn't allocate it\n"));
+            return (UINT)-1;
+        }
     } else return AllocatePortFromRange( &TCPPorts, 1024, 5000 );
 }
 
 VOID TCPFreePort( UINT Port ) {
     DeallocatePort( &TCPPorts, Port );
+}
+
+NTSTATUS TCPGetPeerAddress
+( PCONNECTION_ENDPOINT Connection,
+  PTRANSPORT_ADDRESS Address ) {
+    OSK_UINT LocalAddress, RemoteAddress;
+    OSK_UI16 LocalPort, RemotePort;
+    PTA_IP_ADDRESS AddressIP = (PTA_IP_ADDRESS)Address;
+
+    OskitTCPGetAddress
+        ( Connection->SocketContext,
+          &LocalAddress, &LocalPort,
+          &RemoteAddress, &RemotePort );
+
+    AddressIP->TAAddressCount = 1;
+    AddressIP->Address[0].AddressLength = TDI_ADDRESS_LENGTH_IP;
+    AddressIP->Address[0].AddressType = TDI_ADDRESS_TYPE_IP;
+    AddressIP->Address[0].Address[0].sin_port = RemotePort;
+    AddressIP->Address[0].Address[0].in_addr = RemoteAddress;
+    
+    return STATUS_SUCCESS;
 }
 
 /* EOF */

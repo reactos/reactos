@@ -2,7 +2,7 @@
 #
 # This file contains port numbers for well-known services defined by IANA
 #
-# The Well Known Ports are thuse from 0 through 1023
+# The Well Known Ports are those from 0 through 1023
 # The Registered Ports are those from 1024 through 49151
 # The Dynamic and/or Private Ports are those from 49152 through 65535
 #

@@ -52,10 +52,10 @@
 VOID CALLBACK
 ServiceMain(DWORD argc, LPTSTR *argv)
 {
-  DPRINT1("ServiceMain() called\n");
+  DPRINT("ServiceMain() called\n");
 
 
-  DPRINT1("ServiceMain() done\n");
+  DPRINT("ServiceMain() done\n");
 }
 
 

@@ -158,15 +158,18 @@ typedef struct _SECTION_OBJECT
 
 typedef struct _SECTION_OBJECT *PSECTION_OBJECT;
 
+typedef struct _EPROCESS_QUOTA_ENTRY {
+    ULONG Usage;
+    ULONG Limit;
+    ULONG Peak;
+    ULONG Return;
+} EPROCESS_QUOTA_ENTRY, *PEPROCESS_QUOTA_ENTRY;
+
 typedef struct _EPROCESS_QUOTA_BLOCK {
-KSPIN_LOCK      QuotaLock;
-ULONG           ReferenceCount;
-ULONG           QuotaPeakPoolUsage[2];
-ULONG           QuotaPoolUsage[2];
-ULONG           QuotaPoolLimit[2];
-ULONG           PeakPagefileUsage;
-ULONG           PagefileUsage;
-ULONG           PagefileLimit;
+    EPROCESS_QUOTA_ENTRY    QuotaEntry[3];
+    LIST_ENTRY              QuotaList;
+    ULONG                   ReferenceCount;
+    ULONG                   ProcessCount;
 } EPROCESS_QUOTA_BLOCK, *PEPROCESS_QUOTA_BLOCK;
 
 /*
@@ -293,7 +296,7 @@ typedef struct _MM_PAGEOP
    * These fields are used to identify the operation if it is against a
    * virtual memory area.
    */
-  ULONG Pid;
+  HANDLE Pid;
   PVOID Address;
   /*
    * These fields are used to identify the operation if it is against a
@@ -450,9 +453,9 @@ VOID MmBuildMdlFromPages(PMDL Mdl, PULONG Pages);
 
 VOID MiShutdownMemoryManager(VOID);
 
-VOID MmInit1(ULONG FirstKernelPhysAddress, 
-	     ULONG LastKernelPhysAddress,
-	     ULONG LastKernelAddress,
+VOID MmInit1(ULONG_PTR FirstKernelPhysAddress, 
+	     ULONG_PTR LastKernelPhysAddress,
+	     ULONG_PTR LastKernelAddress,
 	     PADDRESS_RANGE BIOSMemoryMap,
 	     ULONG AddressRangeCount,
 	     ULONG MaxMemInMeg);
@@ -504,11 +507,11 @@ NTSTATUS MmPageFault(ULONG Cs,
 /* mm.c **********************************************************************/
 
 NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
-		       ULONG Address,
+		       ULONG_PTR Address,
 		       BOOLEAN FromMdl);
 
 NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
-			   ULONG Address,
+			   ULONG_PTR Address,
 			   BOOLEAN FromMdl);
 
 /* anonmem.c *****************************************************************/
@@ -548,8 +551,6 @@ PVOID ExAllocatePage(VOID);
 
 VOID ExUnmapPage(PVOID Addr);
 
-VOID MiInitKernelMap(VOID);
-
 PVOID ExAllocatePageWithPhysPage(PFN_TYPE Page);
 
 NTSTATUS MiCopyFromUserPage(PFN_TYPE Page, PVOID SourceAddress);
@@ -568,10 +569,10 @@ VOID
 MmReleasePageOp(PMM_PAGEOP PageOp);
 
 PMM_PAGEOP
-MmGetPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
+MmGetPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
 	    PMM_SECTION_SEGMENT Segment, ULONG Offset, ULONG OpType, BOOL First);
 PMM_PAGEOP
-MmCheckForPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
+MmCheckForPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
 		 PMM_SECTION_SEGMENT Segment, ULONG Offset);
 VOID
 MmInitializePageOp(VOID);
@@ -630,10 +631,10 @@ VOID MmUnlockPage(PFN_TYPE Page);
 
 ULONG MmGetLockCountPage(PFN_TYPE Page);
 
-PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
-		           PVOID LastPhysKernelAddress,
+PVOID MmInitializePageList(ULONG_PTR FirstPhysKernelAddress,
+		           ULONG_PTR LastPhysKernelAddress,
 			   ULONG MemorySizeInPages,
-			   ULONG LastKernelBase,
+			   ULONG_PTR LastKernelBase,
 			   PADDRESS_RANGE BIOSMemoryMap,
 			   ULONG AddressRangeCount);
 
@@ -645,6 +646,12 @@ PFN_TYPE MmGetContinuousPages(ULONG NumberOfBytes,
 NTSTATUS MmInitZeroPageThread(VOID);
 
 /* i386/page.c *********************************************************/
+
+PVOID MmCreateHyperspaceMapping(PFN_TYPE Page);
+
+PFN_TYPE MmChangeHyperspaceMapping(PVOID Address, PFN_TYPE Page);
+
+PFN_TYPE MmDeleteHyperspaceMapping(PVOID Address);
 
 NTSTATUS MmCreateVirtualMappingForKernel(PVOID Address, 
 					 ULONG flProtect,
@@ -693,6 +700,12 @@ VOID MmTransferOwnershipPage(PFN_TYPE Page, ULONG NewConsumer);
 VOID MmSetDirtyPage(PEPROCESS Process, PVOID Address);
 
 PFN_TYPE MmAllocPage(ULONG Consumer, SWAPENTRY SavedSwapEntry);
+
+LONG MmAllocPagesSpecifyRange(ULONG Consumer,
+                              PHYSICAL_ADDRESS LowestAddress,
+                              PHYSICAL_ADDRESS HighestAddress,
+                              ULONG NumberOfPages,
+                              PPFN_TYPE Pages);
 
 VOID MmDereferencePage(PFN_TYPE Page);
 

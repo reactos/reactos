@@ -104,7 +104,7 @@ RegisterServicesProcess(DWORD ServicesProcessId)
   NTSTATUS Status;
 
   Request.Type = CSRSS_REGISTER_SERVICES_PROCESS;
-  Request.Data.RegisterServicesProcessRequest.ProcessId = ServicesProcessId;
+  Request.Data.RegisterServicesProcessRequest.ProcessId = (HANDLE)ServicesProcessId;
 
   Status = CsrClientCallServer(&Request,
 			       &Reply,

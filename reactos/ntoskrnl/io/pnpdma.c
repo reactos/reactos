@@ -1,12 +1,11 @@
 /* $Id$
  *
- * COPYRIGHT:      See COPYING in the top level directory
- * PROJECT:        ReactOS kernel
- * FILE:           ntoskrnl/io/pnpmgr.c
- * PURPOSE:        PnP manager DMA routines
- * PROGRAMMER:     Filip Navara (xnavara@volny.cz)
- * UPDATE HISTORY:
- *   22/09/2003 FiN Created
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/io/pnpdma.c
+ * PURPOSE:         PnP manager DMA routines
+ * 
+ * PROGRAMMERS:     Filip Navara (xnavara@volny.cz)
  */
 
 /* INCLUDES ******************************************************************/

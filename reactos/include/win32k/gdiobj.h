@@ -51,6 +51,8 @@
 #define GDI_OBJECT_TYPE_MEMDC       0x00750000
 #define GDI_OBJECT_TYPE_DCE         0x00770000
 #define GDI_OBJECT_TYPE_DONTCARE    0x007f0000
+/** Not really an object type. Forces GDI_FreeObj to be silent. */
+#define GDI_OBJECT_TYPE_SILENT      0x80000000
 /*@}*/
 
 typedef PVOID PGDIOBJ;

@@ -63,7 +63,7 @@ VOID DispCancelComplete(
  *     Context = Pointer to context information (FILE_OBJECT)
  */
 {
-    KIRQL OldIrql;
+    /*KIRQL OldIrql;*/
     PFILE_OBJECT FileObject;
     PTRANSPORT_CONTEXT TranContext;
     
@@ -76,79 +76,11 @@ VOID DispCancelComplete(
     KeSetEvent(&TranContext->CleanupEvent, 0, FALSE);
 
     /* We are expected to release the cancel spin lock */
-    IoReleaseCancelSpinLock(OldIrql);
+    /*IoReleaseCancelSpinLock(OldIrql);*/
 
     TI_DbgPrint(DEBUG_IRP, ("Leaving.\n"));
 }
 
-
-VOID DDKAPI DispCancelRequest(
-    PDEVICE_OBJECT Device,
-    PIRP Irp)
-/*
- * FUNCTION: Cancels an IRP
- * ARGUMENTS:
- *     Device = Pointer to device object
- *     Irp    = Pointer to an I/O request packet
- */
-{
-    PIO_STACK_LOCATION IrpSp;
-    PTRANSPORT_CONTEXT TranContext;
-    PFILE_OBJECT FileObject;
-    UCHAR MinorFunction;
-    NTSTATUS Status = STATUS_SUCCESS;
-
-    TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
-
-    IrpSp         = IoGetCurrentIrpStackLocation(Irp);
-    FileObject    = IrpSp->FileObject;
-    TranContext   = (PTRANSPORT_CONTEXT)FileObject->FsContext;
-    MinorFunction = IrpSp->MinorFunction;
-
-    TI_DbgPrint(DEBUG_IRP, ("IRP at (0x%X)  MinorFunction (0x%X)  IrpSp (0x%X).\n", Irp, MinorFunction, IrpSp));
-
-#ifdef DBG
-    if (!Irp->Cancel)
-        TI_DbgPrint(MIN_TRACE, ("Irp->Cancel is FALSE, should be TRUE.\n"));
-#endif
-
-    IoReleaseCancelSpinLock(Irp->CancelIrql);
-
-    /* Try canceling the request */
-    switch(MinorFunction) {
-    case TDI_SEND:
-    case TDI_RECEIVE:
-        /* FIXME: Close connection */
-        break;
-
-    case TDI_SEND_DATAGRAM:
-        if (FileObject->FsContext2 != (PVOID)TDI_TRANSPORT_ADDRESS_FILE) {
-            TI_DbgPrint(MIN_TRACE, ("TDI_SEND_DATAGRAM, but no address file.\n"));
-            break;
-        }
-
-        /*DGCancelSendRequest(TranContext->Handle.AddressHandle, Irp);*/
-        break;
-
-    case TDI_RECEIVE_DATAGRAM:
-        if (FileObject->FsContext2 != (PVOID)TDI_TRANSPORT_ADDRESS_FILE) {
-            TI_DbgPrint(MIN_TRACE, ("TDI_RECEIVE_DATAGRAM, but no address file.\n"));
-            break;
-        }
-
-        /*DGCancelReceiveRequest(TranContext->Handle.AddressHandle, Irp);*/
-        break;
-
-    default:
-        TI_DbgPrint(MIN_TRACE, ("Unknown IRP. MinorFunction (0x%X).\n", MinorFunction));
-        break;
-    }
-
-    if (Status != STATUS_PENDING)
-        DispCancelComplete(FileObject);
-
-    TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
-}
 
 VOID DispDataRequestComplete(
     PVOID Context,
@@ -201,6 +133,89 @@ VOID DispDataRequestComplete(
     IRPFinish(Irp, Irp->IoStatus.Status);
 
     TI_DbgPrint(DEBUG_IRP, ("Done Completing IRP\n"));
+}
+
+
+VOID DDKAPI DispCancelRequest(
+    PDEVICE_OBJECT Device,
+    PIRP Irp)
+/*
+ * FUNCTION: Cancels an IRP
+ * ARGUMENTS:
+ *     Device = Pointer to device object
+ *     Irp    = Pointer to an I/O request packet
+ */
+{
+    PIO_STACK_LOCATION IrpSp;
+    PTRANSPORT_CONTEXT TranContext;
+    PFILE_OBJECT FileObject;
+    UCHAR MinorFunction;
+    /*NTSTATUS Status = STATUS_SUCCESS;*/
+
+    TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
+
+    IrpSp         = IoGetCurrentIrpStackLocation(Irp);
+    FileObject    = IrpSp->FileObject;
+    TranContext   = (PTRANSPORT_CONTEXT)FileObject->FsContext;
+    MinorFunction = IrpSp->MinorFunction;
+
+    TI_DbgPrint(DEBUG_IRP, ("IRP at (0x%X)  MinorFunction (0x%X)  IrpSp (0x%X).\n", Irp, MinorFunction, IrpSp));
+
+#ifdef DBG
+    if (!Irp->Cancel)
+        TI_DbgPrint(MIN_TRACE, ("Irp->Cancel is FALSE, should be TRUE.\n"));
+#endif
+
+    /* Try canceling the request */
+    switch(MinorFunction) {
+    case TDI_SEND:
+        TCPDisconnect
+            ( TranContext->Handle.ConnectionContext,
+              TDI_DISCONNECT_RELEASE,
+              NULL,
+              NULL,
+              DispDataRequestComplete,
+              Irp );
+        break;
+
+    case TDI_RECEIVE:
+        TCPDisconnect
+            ( TranContext->Handle.ConnectionContext,
+              TDI_DISCONNECT_ABORT | TDI_DISCONNECT_RELEASE,
+              NULL,
+              NULL,
+              DispDataRequestComplete,
+              Irp );
+        break;
+
+    case TDI_SEND_DATAGRAM:
+        if (FileObject->FsContext2 != (PVOID)TDI_TRANSPORT_ADDRESS_FILE) {
+            TI_DbgPrint(MIN_TRACE, ("TDI_SEND_DATAGRAM, but no address file.\n"));
+            break;
+        }
+
+        /*DGCancelSendRequest(TranContext->Handle.AddressHandle, Irp);*/
+        break;
+
+    case TDI_RECEIVE_DATAGRAM:
+        if (FileObject->FsContext2 != (PVOID)TDI_TRANSPORT_ADDRESS_FILE) {
+            TI_DbgPrint(MIN_TRACE, ("TDI_RECEIVE_DATAGRAM, but no address file.\n"));
+            break;
+        }
+
+        /*DGCancelReceiveRequest(TranContext->Handle.AddressHandle, Irp);*/
+        break;
+
+    default:
+        TI_DbgPrint(MIN_TRACE, ("Unknown IRP. MinorFunction (0x%X).\n", MinorFunction));
+        break;
+    }
+
+    IoReleaseCancelSpinLock(Irp->CancelIrql);
+    
+    DispCancelComplete(FileObject);
+
+    TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
 
 
@@ -580,7 +595,9 @@ NTSTATUS DispTdiQueryInformation(
             break;
 
           case TDI_CONNECTION_FILE:
-            AddrFile = ((PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext)->AddressFile;
+            AddrFile = 
+              ((PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext)->
+              AddressFile;
             break;
 
           default:
@@ -605,12 +622,52 @@ NTSTATUS DispTdiQueryInformation(
         Address->Address[0].AddressLength = TDI_ADDRESS_LENGTH_IP;
         Address->Address[0].AddressType = TDI_ADDRESS_TYPE_IP;
         Address->Address[0].Address[0].sin_port = AddrFile->Port;
-        Address->Address[0].Address[0].in_addr = AddrFile->Address.Address.IPv4Address;        
+        Address->Address[0].Address[0].in_addr = 
+          AddrFile->Address.Address.IPv4Address;        
         RtlZeroMemory(
           &Address->Address[0].Address[0].sin_zero,
           sizeof(Address->Address[0].Address[0].sin_zero));
 
         return STATUS_SUCCESS;
+      }
+
+    case TDI_QUERY_CONNECTION_INFO:
+      {
+        PTDI_CONNECTION_INFORMATION AddressInfo;
+        PADDRESS_FILE AddrFile;
+        PCONNECTION_ENDPOINT Endpoint = NULL;
+
+        AddressInfo = (PTDI_CONNECTION_INFORMATION)
+          MmGetSystemAddressForMdl(Irp->MdlAddress);
+
+        switch ((ULONG)IrpSp->FileObject->FsContext2) {
+          case TDI_TRANSPORT_ADDRESS_FILE:
+            AddrFile = (PADDRESS_FILE)TranContext->Handle.AddressHandle;
+            break;
+
+          case TDI_CONNECTION_FILE:
+            Endpoint = 
+              (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
+            break;
+
+          default:
+            TI_DbgPrint(MIN_TRACE, ("Invalid transport context\n"));
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        if (!Endpoint) {
+          TI_DbgPrint(MID_TRACE, ("No connection object.\n"));
+          return STATUS_INVALID_PARAMETER;
+        }
+
+        if (MmGetMdlByteCount(Irp->MdlAddress) <
+            (FIELD_OFFSET(TDI_CONNECTION_INFORMATION, RemoteAddress) +
+             sizeof(PVOID))) {
+          TI_DbgPrint(MID_TRACE, ("MDL buffer too small (ptr).\n"));
+          return STATUS_BUFFER_OVERFLOW;
+        }
+
+        return TCPGetPeerAddress( Endpoint, AddressInfo->RemoteAddress );
       }
   }
 
@@ -867,12 +924,15 @@ NTSTATUS DispTdiSendDatagram(
 		    ("About to call send routine %x\n", 
 		     (*((PADDRESS_FILE)Request.Handle.AddressHandle)->Send)));
 	
-        Status = (*((PADDRESS_FILE)Request.Handle.AddressHandle)->Send)(
-            Request.Handle.AddressHandle, 
-	    DgramInfo->SendDatagramInformation,
-	    DataBuffer,
-	    BufferSize,
-	    &Irp->IoStatus.Information);
+        if( (*((PADDRESS_FILE)Request.Handle.AddressHandle)->Send) ) 
+            Status = (*((PADDRESS_FILE)Request.Handle.AddressHandle)->Send)(
+                Request.Handle.AddressHandle, 
+                DgramInfo->SendDatagramInformation,
+                DataBuffer,
+                BufferSize,
+                &Irp->IoStatus.Information);
+        else
+            Status = STATUS_UNSUCCESSFUL;
 
         if (Status != STATUS_PENDING) {
             DispDataRequestComplete(Irp, Status, Irp->IoStatus.Information);

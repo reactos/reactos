@@ -28,8 +28,8 @@
 
 #include "windef.h"
 #include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
+#define NO_SHLWAPI_REG
+#include "shlwapi.h"
 
 #include "wine/debug.h"
 
@@ -284,7 +284,7 @@ static UINT WPRINTF_GetLen( WPRINTF_FORMAT *format, WPRINTF_DATA *arg,
  *  Success: The number of characters written.
  *  Failure: -1.
  */
-INT WINAPI wvnsprintfA( LPSTR buffer, UINT maxlen, LPCSTR spec, va_list args )
+INT WINAPI wvnsprintfA( LPSTR buffer, INT maxlen, LPCSTR spec, va_list args )
 {
     WPRINTF_FORMAT format;
     LPSTR p = buffer;
@@ -389,7 +389,7 @@ INT WINAPI wvnsprintfA( LPSTR buffer, UINT maxlen, LPCSTR spec, va_list args )
  *
  * See wvnsprintfA.
  */
-INT WINAPI wvnsprintfW( LPWSTR buffer, UINT maxlen, LPCWSTR spec, va_list args )
+INT WINAPI wvnsprintfW( LPWSTR buffer, INT maxlen, LPCWSTR spec, va_list args )
 {
     WPRINTF_FORMAT format;
     LPWSTR p = buffer;

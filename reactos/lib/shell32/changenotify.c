@@ -27,9 +27,7 @@
 #include "winbase.h"
 #include "wine/debug.h"
 #include "wingdi.h"
-#include "pidl.h"
 #include "shell32_main.h"
-#include "undocshell.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -180,8 +178,6 @@ void FreeChangeNotifications(void)
         DeleteNode( head );
 
     LeaveCriticalSection(&SHELL32_ChangenotifyCS);
-
-    DeleteCriticalSection(&SHELL32_ChangenotifyCS);
 }
 
 /*************************************************************************

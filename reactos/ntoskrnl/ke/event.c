@@ -1,11 +1,11 @@
-/*
+/* $Id$
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/event.c
  * PURPOSE:         Implements events
- * PROGRAMMER:      David Welch (welch@mcmail.com)
- * UPDATE HISTORY:
- *                  Created 22/05/98
+ * 
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
 /* INCLUDES *****************************************************************/
@@ -87,9 +87,9 @@ LONG STDCALL KeSetEvent (PKEVENT		Event,
 
   OldIrql = KeAcquireDispatcherDatabaseLock();
 
-  ret = InterlockedExchange(&(Event->Header.SignalState),1);
+  ret = InterlockedExchange(&Event->Header.SignalState,1);
 
-  KiDispatcherObjectWake((DISPATCHER_HEADER *)Event);
+  KiDispatcherObjectWake(&Event->Header, Increment);
 
   if (Wait == FALSE)
     {
@@ -108,17 +108,18 @@ LONG STDCALL KeSetEvent (PKEVENT		Event,
 /*
  * @implemented
  */
-NTSTATUS STDCALL KePulseEvent (PKEVENT		Event,
-			       KPRIORITY	Increment,
-			       BOOLEAN		Wait)
+LONG STDCALL
+KePulseEvent (IN PKEVENT	Event,
+              IN KPRIORITY	Increment,
+              IN BOOLEAN	Wait)
 {
    KIRQL OldIrql;
-   int ret;
+   LONG Ret;
 
    DPRINT("KePulseEvent(Event %x, Wait %x)\n",Event,Wait);
    OldIrql = KeAcquireDispatcherDatabaseLock();
-   ret = InterlockedExchange(&(Event->Header.SignalState),1);
-   KiDispatcherObjectWake((DISPATCHER_HEADER *)Event);
+   Ret = InterlockedExchange(&Event->Header.SignalState,1);
+   KiDispatcherObjectWake(&Event->Header, Increment);
    InterlockedExchange(&(Event->Header.SignalState),0);
 
   if (Wait == FALSE)
@@ -132,7 +133,7 @@ NTSTATUS STDCALL KePulseEvent (PKEVENT		Event,
       Thread->WaitIrql = OldIrql;
     }
 
-   return ((NTSTATUS)ret);
+   return Ret;
 }
 
 /*

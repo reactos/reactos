@@ -36,13 +36,14 @@
 /* Security descriptor control. */
 #define SECURITY_DESCRIPTOR_REVISION	(1)
 #define SECURITY_DESCRIPTOR_MIN_LENGTH	(20)
-#define SE_OWNER_DEFAULTED	(1)
-#define SE_GROUP_DEFAULTED	(2)
-#define SE_DACL_PRESENT	(4)
-#define SE_DACL_DEFAULTED	(8)
-#define SE_SACL_PRESENT	(16)
-#define SE_SACL_DEFAULTED	(32)
-#define SE_SELF_RELATIVE	(32768)
+#define SE_OWNER_DEFAULTED	(0x0001)
+#define SE_GROUP_DEFAULTED	(0x0002)
+#define SE_DACL_PRESENT		(0x0004)
+#define SE_DACL_DEFAULTED	(0x0008)
+#define SE_SACL_PRESENT		(0x0010)
+#define SE_SACL_DEFAULTED	(0x0020)
+#define SE_RM_CONTROL_VALID	(0x4000)
+#define SE_SELF_RELATIVE	(0x8000)
 #endif
 
 /* This is defined in the Win 32 API headers as something else: */
@@ -74,6 +75,11 @@ typedef struct _SECURITY_DESCRIPTOR_CONTEXT
 
 #ifndef __USE_W32API
 
+#define SYSTEM_LUID                     { 0x3E7, 0x0 }
+#define ANONYMOUS_LOGON_LUID            { 0x3e6, 0x0 }
+#define LOCALSERVICE_LUID               { 0x3e5, 0x0 }
+#define NETWORKSERVICE_LUID             { 0x3e4, 0x0 }
+    
 /* SID Auhority */
 #define SECURITY_NULL_SID_AUTHORITY		{0,0,0,0,0,0}
 #define SECURITY_WORLD_SID_AUTHORITY		{0,0,0,0,0,1}
@@ -227,7 +233,9 @@ typedef struct _SID
   UCHAR  SubAuthorityCount;
   SID_IDENTIFIER_AUTHORITY IdentifierAuthority;
   ULONG SubAuthority[1];
-} SID, *PSID;
+} SID, *PISID;
+
+typedef PVOID PSID;
 
 typedef struct _ACL
 {
@@ -274,6 +282,17 @@ typedef struct _SECURITY_DESCRIPTOR
   PACL Sacl;
   PACL Dacl;
 } SECURITY_DESCRIPTOR, *PSECURITY_DESCRIPTOR;
+
+typedef struct _SECURITY_DESCRIPTOR_RELATIVE
+{
+  UCHAR  Revision;
+  UCHAR  Sbz1;
+  SECURITY_DESCRIPTOR_CONTROL Control;
+  ULONG Owner;
+  ULONG Group;
+  ULONG Sacl;
+  ULONG Dacl;
+} SECURITY_DESCRIPTOR_RELATIVE, *PSECURITY_DESCRIPTOR_RELATIVE;
 
 typedef struct _LUID_AND_ATTRIBUTES
 {

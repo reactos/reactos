@@ -755,7 +755,7 @@ VOID MpsSpuriousHandler(VOID)
 {
   ULONG tmp;
 
-  DPRINT1("Spurious interrupt on CPU(%d)\n", ThisCPU());
+  DPRINT("Spurious interrupt on CPU(%d)\n", ThisCPU());
   
   tmp = APICRead(APIC_ISR + ((SPURIOUS_VECTOR & ~0x1f) >> 1));
   if (tmp & (1 << (SPURIOUS_VECTOR & 0x1f)))

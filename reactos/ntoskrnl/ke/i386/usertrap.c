@@ -1,28 +1,11 @@
-/*
- *  ReactOS kernel
- *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
+/* $Id$
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/*
- * PROJECT:              ReactOS kernel
- * FILE:                 ntoskrnl/ke/i386/usertrap.c
- * PURPOSE:              Handling usermode exceptions.
- * PROGRAMMER:           David Welch (welch@cwcom.net)
- * REVISION HISTORY:
- *              18/11/01: Split from ntoskrnl/ke/i386/exp.c
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/ke/i386/usertrap.c
+ * PURPOSE:         Handling usermode exceptions.
+ * 
+ * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
 /* INCLUDES *****************************************************************/
@@ -71,7 +54,7 @@ print_user_address(PVOID address)
 	  CONTAINING_RECORD(current_entry, LDR_MODULE, InLoadOrderModuleList);
 	
 	if (address >= (PVOID)current->BaseAddress &&
-	    address < (PVOID)((char*)current->BaseAddress + current->SizeOfImage))
+	    address < (PVOID)((char*)current->BaseAddress + current->ResidentSize))
 	  {
             RelativeAddress = 
 	      (ULONG_PTR) address - (ULONG_PTR)current->BaseAddress;
@@ -131,10 +114,8 @@ KiUserTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
       Er.NumberParameters = 0;
     }
   
-
-  Er.ExceptionFlags = ((NTSTATUS) STATUS_SINGLE_STEP == (NTSTATUS) Er.ExceptionCode ||
-    (NTSTATUS) STATUS_BREAKPOINT == (NTSTATUS) Er.ExceptionCode) ?
-    EXCEPTION_NONCONTINUABLE : 0;
+  /* FIXME: Which exceptions are noncontinuable? */
+  Er.ExceptionFlags = 0;
 
   KiDispatchException(&Er, 0, Tf, UserMode, TRUE);
   return(0);

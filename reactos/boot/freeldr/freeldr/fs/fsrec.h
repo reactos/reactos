@@ -20,10 +20,10 @@
 #ifndef __FSREC_H
 #define __FSREC_H
 
-BOOL	FsRecognizeVolume(U32 DriveNumber, U32 VolumeStartSector, U8* VolumeType);
-BOOL	FsRecIsIso9660(U32 DriveNumber);
-BOOL	FsRecIsExt2(U32 DriveNumber, U32 VolumeStartSector);
-BOOL	FsRecIsFat(U32 DriveNumber, U32 VolumeStartSector);
-BOOL	FsRecIsNtfs(U32 DriveNumber, U32 VolumeStartSector);
+BOOL	FsRecognizeVolume(ULONG DriveNumber, ULONG VolumeStartSector, UCHAR* VolumeType);
+BOOL	FsRecIsIso9660(ULONG DriveNumber);
+BOOL	FsRecIsExt2(ULONG DriveNumber, ULONG VolumeStartSector);
+BOOL	FsRecIsFat(ULONG DriveNumber, ULONG VolumeStartSector);
+BOOL	FsRecIsNtfs(ULONG DriveNumber, ULONG VolumeStartSector);
 
 #endif // #defined __FSREC_H

@@ -1,10 +1,12 @@
-/*
- * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * FILE:             ntoskrnl/cm/ntfunc.c
- * PURPOSE:          Ntxxx function for registry access
- * UPDATE HISTORY:
-*/
+/* $Id$
+ * 
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/cm/ntfunc.c
+ * PURPOSE:         Ntxxx function for registry access
+ *
+ * PROGRAMMERS:     No programmer listed.
+ */
 
 /* INCLUDES *****************************************************************/
 
@@ -30,23 +32,22 @@ static BOOLEAN CmiRegistryInitialized = FALSE;
  */
 NTSTATUS STDCALL
 CmRegisterCallback(IN PEX_CALLBACK_FUNCTION Function,
-                   IN PVOID                 Context,
-                   IN OUT PLARGE_INTEGER    Cookie
-                    )
+                   IN PVOID Context,
+                   IN OUT PLARGE_INTEGER Cookie)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+  UNIMPLEMENTED;
+  return STATUS_NOT_IMPLEMENTED;
 }
+
 
 /*
  * @unimplemented
  */
-
 NTSTATUS STDCALL
-CmUnRegisterCallback(IN LARGE_INTEGER    Cookie)
+CmUnRegisterCallback(IN LARGE_INTEGER Cookie)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+  UNIMPLEMENTED;
+  return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -63,8 +64,8 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   PKEY_OBJECT KeyObject;
   NTSTATUS Status;
   PVOID Object;
-  PWSTR End;
   PWSTR Start;
+  unsigned i;
 
   DPRINT("NtCreateKey (Name %wZ  KeyHandle %x  Root %x)\n",
 	 ObjectAttributes->ObjectName,
@@ -77,18 +78,20 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 			CmiKeyType);
   if (!NT_SUCCESS(Status))
     {
+      DPRINT("ObFindObject failed, Status: 0x%x\n", Status);
       return(Status);
     }
 
   DPRINT("RemainingPath %wZ\n", &RemainingPath);
 
-  if ((RemainingPath.Buffer == NULL) || (RemainingPath.Buffer[0] == 0))
+  if (RemainingPath.Length == 0)
     {
       /* Fail if the key has been deleted */
       if (((PKEY_OBJECT) Object)->Flags & KO_MARKED_FOR_DELETE)
 	{
 	  ObDereferenceObject(Object);
 	  RtlFreeUnicodeString(&RemainingPath);
+	  DPRINT("Object marked for delete!\n");
 	  return(STATUS_UNSUCCESSFUL);
 	}
 
@@ -101,24 +104,27 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 			      TRUE,
 			      KeyHandle);
 
-      DPRINT("Status %x\n", Status);
+      DPRINT("ObCreateHandle failed Status 0x%x\n", Status);
       ObDereferenceObject(Object);
       RtlFreeUnicodeString(&RemainingPath);
       return Status;
     }
 
   /* If RemainingPath contains \ we must return error
-     because NtCreateKey don't create trees */
+     because NtCreateKey doesn't create trees */
   Start = RemainingPath.Buffer;
   if (*Start == L'\\')
     Start++;
 
-  End = wcschr(Start, L'\\');
-  if (End != NULL)
+  for (i = 1; i < RemainingPath.Length / sizeof(WCHAR); i++)
     {
-      ObDereferenceObject(Object);
-      RtlFreeUnicodeString(&RemainingPath);
-      return STATUS_OBJECT_NAME_NOT_FOUND;
+      if (L'\\' == RemainingPath.Buffer[i])
+        {
+          ObDereferenceObject(Object);
+          DPRINT1("NtCreateKey() doesn't create trees! (found \'\\\' in remaining path: \"%wZ\"!)\n", &RemainingPath);
+          RtlFreeUnicodeString(&RemainingPath);
+          return STATUS_OBJECT_NAME_NOT_FOUND;
+        }
     }
 
   DPRINT("RemainingPath %S  ParentObject %x\n", RemainingPath.Buffer, Object);
@@ -134,6 +140,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 			  (PVOID*)&KeyObject);
   if (!NT_SUCCESS(Status))
     {
+      DPRINT1("ObCreateObject() failed!\n");
       return(Status);
     }
 
@@ -147,6 +154,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
     {
       ObDereferenceObject(KeyObject);
       RtlFreeUnicodeString(&RemainingPath);
+      DPRINT1("ObInsertObject() failed!\n");
       return(Status);
     }
 
@@ -192,8 +200,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
     }
   else
     {
-      RtlCreateUnicodeString(&KeyObject->Name,
-			     Start);
+      RtlpCreateUnicodeString(&KeyObject->Name, Start, NonPagedPool);
       RtlFreeUnicodeString(&RemainingPath);
     }
 
@@ -237,16 +244,19 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 NTSTATUS STDCALL
 NtDeleteKey(IN HANDLE KeyHandle)
 {
+  KPROCESSOR_MODE PreviousMode;
   PKEY_OBJECT KeyObject;
   NTSTATUS Status;
 
   DPRINT1("NtDeleteKey(KeyHandle %x) called\n", KeyHandle);
+  
+  PreviousMode = ExGetPreviousMode();
 
   /* Verify that the handle is valid and is a registry key */
   Status = ObReferenceObjectByHandle(KeyHandle,
 				     DELETE,
 				     CmiKeyType,
-				     UserMode,
+				     PreviousMode,
 				     (PVOID *)&KeyObject,
 				     NULL);
   if (!NT_SUCCESS(Status))
@@ -899,14 +909,17 @@ NtFlushKey(IN HANDLE KeyHandle)
   NTSTATUS Status;
   PKEY_OBJECT  KeyObject;
   PREGISTRY_HIVE  RegistryHive;
+  KPROCESSOR_MODE  PreviousMode;
 
   DPRINT("NtFlushKey (KeyHandle %lx) called\n", KeyHandle);
+  
+  PreviousMode = ExGetPreviousMode();
 
   /* Verify that the handle is valid and is a registry key */
   Status = ObReferenceObjectByHandle(KeyHandle,
 				     KEY_QUERY_VALUE,
 				     CmiKeyType,
-				     UserMode,
+				     PreviousMode,
 				     (PVOID *)&KeyObject,
 				     NULL);
   if (!NT_SUCCESS(Status))
@@ -947,14 +960,38 @@ NtOpenKey(OUT PHANDLE KeyHandle,
 	  IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
   UNICODE_STRING RemainingPath;
-  NTSTATUS Status;
+  KPROCESSOR_MODE PreviousMode;
   PVOID Object;
+  HANDLE hKey;
+  NTSTATUS Status = STATUS_SUCCESS;
 
   DPRINT("NtOpenKey(KH %x  DA %x  OA %x  OA->ON '%wZ'\n",
 	 KeyHandle,
 	 DesiredAccess,
 	 ObjectAttributes,
 	 ObjectAttributes ? ObjectAttributes->ObjectName : NULL);
+
+  PreviousMode = ExGetPreviousMode();
+
+  if(PreviousMode != KernelMode)
+  {
+    _SEH_TRY
+    {
+      ProbeForWrite(KeyHandle,
+                    sizeof(HANDLE),
+                    sizeof(ULONG));
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    
+    if(!NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+  }
 
   RemainingPath.Buffer = NULL;
   Status = ObFindObject(ObjectAttributes,
@@ -990,7 +1027,7 @@ NtOpenKey(OUT PHANDLE KeyHandle,
 			  Object,
 			  DesiredAccess,
 			  TRUE,
-			  KeyHandle);
+			  &hKey);
   ObDereferenceObject(Object);
 
   if (!NT_SUCCESS(Status))
@@ -998,7 +1035,17 @@ NtOpenKey(OUT PHANDLE KeyHandle,
       return(Status);
     }
 
-  return(STATUS_SUCCESS);
+  _SEH_TRY
+  {
+    *KeyHandle = hKey;
+  }
+  _SEH_HANDLE
+  {
+    Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
+
+  return Status;
 }
 
 
@@ -1593,7 +1640,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
       KeyCell->Flags |= REG_KEY_LINK_CELL;
     }
 
-  NtQuerySystemTime (&KeyCell->LastWriteTime);
+  KeQuerySystemTime (&KeyCell->LastWriteTime);
   CmiMarkBlockDirty (RegistryHive, KeyObject->KeyCellOffset);
 
   ExReleaseResourceLite(&CmiRegistryLock);
@@ -1638,7 +1685,7 @@ NtDeleteValueKey (IN HANDLE KeyHandle,
 				 KeyObject->KeyCellOffset,
 				 ValueName);
 
-  NtQuerySystemTime (&KeyObject->KeyCell->LastWriteTime);
+  KeQuerySystemTime (&KeyObject->KeyCell->LastWriteTime);
   CmiMarkBlockDirty (KeyObject->RegistryHive, KeyObject->KeyCellOffset);
 
   /* Release hive lock */
@@ -1702,7 +1749,7 @@ NtLoadKey2 (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
       if (Buffer == NULL)
 	return STATUS_INSUFFICIENT_RESOURCES;
 
-      Status = NtQueryObject (FileObjectAttributes->RootDirectory,
+      Status = ZwQueryObject (FileObjectAttributes->RootDirectory,
 			      ObjectNameInformation,
 			      Buffer,
 			      BufferSize,
@@ -1796,10 +1843,10 @@ NtNotifyChangeKey (IN HANDLE KeyHandle,
 		   IN PVOID ApcContext OPTIONAL,
 		   OUT PIO_STATUS_BLOCK IoStatusBlock,
 		   IN ULONG CompletionFilter,
-		   IN BOOLEAN Asynchroneous,
-		   OUT PVOID ChangeBuffer,
+		   IN BOOLEAN WatchSubtree,
+		   OUT PVOID Buffer,
 		   IN ULONG Length,
-		   IN BOOLEAN WatchSubtree)
+		   IN BOOLEAN Asynchronous)
 {
 	UNIMPLEMENTED;
 	return(STATUS_NOT_IMPLEMENTED);

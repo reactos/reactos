@@ -20,6 +20,7 @@
 #include <ntos/synch.h>
 #include <ntos/keyboard.h>
 #include <ntos/ntdef.h>
+#include <ntos/ntpnp.h>
 #include <rosrtl/minmax.h>
 #include <rosrtl/string.h>
 #include <ddk/halfuncs.h>
@@ -48,7 +49,6 @@
 #include <internal/kd.h>
 #include <internal/ex.h>
 #include <internal/ob.h>
-#include <internal/nt.h>
 #include "internal/xhal.h"
 #include <internal/v86m.h>
 #include <internal/ifs.h>
@@ -62,5 +62,7 @@
 #include <napi/dbg.h>
 #include <napi/teb.h>
 #include <napi/win32.h>
+
+#include <pseh.h>
 
 #endif /* INCLUDE_NTOSKRNL_H */

@@ -1,5 +1,5 @@
 /*
- * Copyright 2003, 2004 Martin Fuchs
+ * Copyright 2003, 2004, 2005 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -522,11 +522,11 @@ bool DesktopShellView::InitDragDrop()
 	return true;
 }
 
-LRESULT	DesktopShellView::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
+LRESULT DesktopShellView::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	switch(nmsg) {
 	  case WM_CONTEXTMENU:
-		if (!DoContextMenu(GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam)))
+		if (!DoContextMenu(GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam), _cm_ifs))
 			DoDesktopContextMenu(GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 		break;
 
@@ -558,7 +558,7 @@ int DesktopShellView::Notify(int id, NMHDR* pnmh)
 	return super::Notify(id, pnmh);
 }
 
-bool DesktopShellView::DoContextMenu(int x, int y)
+bool DesktopShellView::DoContextMenu(int x, int y, CtxMenuInterfaces& cm_ifs)
 {
 	IDataObject* selection;
 
@@ -588,7 +588,7 @@ bool DesktopShellView::DoContextMenu(int x, int y)
 	for(int i=pida->cidl; i>0; --i)
 		apidl[i-1] = (LPCITEMIDLIST) ((LPBYTE)pida+pida->aoffset[i]);
 
-	hr = ShellFolderContextMenu(ShellFolder(parent_pidl), _hwnd, pida->cidl, apidl, x, y);
+	hr = ShellFolderContextMenu(ShellFolder(parent_pidl), _hwnd, pida->cidl, apidl, x, y, cm_ifs);
 
 	selection->Release();
 
@@ -604,6 +604,8 @@ HRESULT DesktopShellView::DoDesktopContextMenu(int x, int y)
 	HRESULT hr = DesktopFolder()->GetUIObjectOf(_hwnd, 0, NULL, IID_IContextMenu, NULL, (LPVOID*)&pcm);
 
 	if (SUCCEEDED(hr)) {
+		pcm = _cm_ifs.query_interfaces(pcm);
+
 		HMENU hmenu = CreatePopupMenu();
 
 		if (hmenu) {
@@ -614,6 +616,8 @@ HRESULT DesktopShellView::DoDesktopContextMenu(int x, int y)
 				AppendMenu(hmenu, 0, FCIDM_SHVIEWLAST-1, ResString(IDS_ABOUT_EXPLORER));
 
 				UINT idCmd = TrackPopupMenu(hmenu, TPM_LEFTALIGN|TPM_RETURNCMD|TPM_RIGHTBUTTON, x, y, 0, _hwnd, NULL);
+
+				_cm_ifs.reset();
 
 				if (idCmd == FCIDM_SHVIEWLAST-1) {
 					explorer_about(_hwnd);

@@ -188,7 +188,7 @@ unsigned long CCFDATAStorage::Truncate()
         return CAB_STATUS_FAILURE;
 #else /* !WIN32 */
     fclose(FileHandle);
-    FileHandle = fopen(FullName, "w+b"); 
+    FileHandle = tmpfile();
     if (FileHandle == NULL) {
         DPRINT(MID_TRACE, ("ERROR '%d'.\n", (unsigned int)errno));
         return CAB_STATUS_FAILURE;
@@ -532,6 +532,7 @@ bool CCabinet::SetCabinetReservedFile(char* FileName)
         return false;
     }
 #else /* !WIN32 */
+    
     FileHandle = fopen(ConvertPath(FileName, true), "rb"); 
     if (FileHandle == NULL) {
         DPRINT(MID_TRACE, ("Cannot open cabinet reserved file.\n"));

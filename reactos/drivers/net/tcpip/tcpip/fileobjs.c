@@ -43,6 +43,20 @@ PADDRESS_FILE AddrSearchFirst(
     return AddrSearchNext(SearchContext);
 }
 
+BOOLEAN AddrIsBroadcast( 
+    PIP_ADDRESS PossibleMatch,
+    PIP_ADDRESS TargetAddress ) {
+    IF_LIST_ITER(IF);
+
+    ForEachInterface(IF) {
+        if( AddrIsEqual( &IF->Unicast, PossibleMatch ) &&
+            AddrIsEqual( &IF->Broadcast, TargetAddress ) )
+            return TRUE;
+    } EndFor(IF);
+
+    return FALSE;
+}
+
 /*
  * FUNCTION: Searches through address file entries to find next match
  * ARGUMENTS:
@@ -80,10 +94,11 @@ PADDRESS_FILE AddrSearchNext(
             A2S(SearchContext->Address)));
 
         /* See if this address matches the search criteria */
-        if (((Current->Port    == SearchContext->Port) &&
+        if ((Current->Port    == SearchContext->Port) &&
             (Current->Protocol == SearchContext->Protocol) &&
-            (AddrIsEqual(IPAddress, SearchContext->Address))) ||
-            (AddrIsUnspecified(IPAddress))) {
+            (AddrIsEqual(IPAddress, SearchContext->Address) ||
+             AddrIsBroadcast(IPAddress, SearchContext->Address) ||
+             AddrIsUnspecified(IPAddress))) {
             /* We've found a match */
             Found = TRUE;
             break;
@@ -268,16 +283,18 @@ NTSTATUS FileOpenAddress(
   /* Protocol specific handling */
   switch (Protocol) {
   case IPPROTO_TCP:
-    /* FIXME: If specified port is 0, a port is chosen dynamically */
-    AddrFile->Port = TCPAllocatePort(Address->Address[0].Address[0].sin_port);
-    AddrFile->Send = NULL; /* TCPSendData */
-    break;
+      AddrFile->Port = 
+          TCPAllocatePort(Address->Address[0].Address[0].sin_port);
+      AddrFile->Send = NULL; /* TCPSendData */
+      break;
 
   case IPPROTO_UDP:
       TI_DbgPrint(MID_TRACE,("Allocating udp port\n"));
       AddrFile->Port = 
 	  UDPAllocatePort(Address->Address[0].Address[0].sin_port);
-      TI_DbgPrint(MID_TRACE,("Setting port %d\n", AddrFile->Port));
+      TI_DbgPrint(MID_TRACE,("Setting port %d (wanted %d)\n", 
+                             AddrFile->Port, 
+                             Address->Address[0].Address[0].sin_port));
       AddrFile->Send = UDPSendDatagram;
       break;
 

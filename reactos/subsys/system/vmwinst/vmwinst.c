@@ -280,6 +280,8 @@ IsVmwSVGAEnabled(VOID)
   return (Value == 1);
 }
 
+
+
 BOOL
 SaveResolutionSettings(DWORD ResX, DWORD ResY, DWORD ColDepth)
 {

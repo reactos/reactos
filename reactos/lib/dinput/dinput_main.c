@@ -744,13 +744,13 @@ HRESULT WINAPI DINPUT_DllCanUnloadNow(void)
 HRESULT WINAPI DINPUT_DllGetClassObject(REFCLSID rclsid, REFIID riid,
 					LPVOID *ppv)
 {
-    TRACE("(%p,%p,%p)\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
+    TRACE("(%s,%s,%p)\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
     if ( IsEqualCLSID( &IID_IClassFactory, riid ) ) {
     	*ppv = (LPVOID)&DINPUT_CF;
 	IClassFactory_AddRef((IClassFactory*)*ppv);
     return S_OK;
     }
 
-    FIXME("(%p,%p,%p): no interface found.\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
+    FIXME("(%s,%s,%p): no interface found.\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
     return CLASS_E_CLASSNOTAVAILABLE;
 }

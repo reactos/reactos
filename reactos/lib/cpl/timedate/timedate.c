@@ -102,14 +102,35 @@ SetTimeZoneName(HWND hwnd)
 {
   TIME_ZONE_INFORMATION TimeZoneInfo;
   WCHAR TimeZoneString[128];
+  WCHAR TimeZoneText[128];
+  WCHAR TimeZoneName[128];
   DWORD TimeZoneId;
 
   TimeZoneId = GetTimeZoneInformation(&TimeZoneInfo);
 
-  wsprintf(TimeZoneString,
-	   L"Current time zone: %s\n",
-	   (TimeZoneId == TIME_ZONE_ID_DAYLIGHT) ? TimeZoneInfo.DaylightName : TimeZoneInfo.StandardName);
+  LoadString(hApplet, IDS_TIMEZONETEXT, TimeZoneText, 128);
 
+  switch (TimeZoneId)
+  {
+    case TIME_ZONE_ID_STANDARD:
+      wcscpy(TimeZoneName, TimeZoneInfo.StandardName);
+      break;
+
+    case TIME_ZONE_ID_DAYLIGHT:
+      wcscpy(TimeZoneName, TimeZoneInfo.DaylightName);
+      break;
+
+    case TIME_ZONE_ID_UNKNOWN:
+      LoadString(hApplet, IDS_TIMEZONEUNKNOWN, TimeZoneName, 128);
+      break;
+
+    case TIME_ZONE_ID_INVALID:
+    default:
+      LoadString(hApplet, IDS_TIMEZONEINVALID, TimeZoneName, 128);
+      break;
+  }
+
+  wsprintf(TimeZoneString, TimeZoneText, TimeZoneName);
   SendDlgItemMessageW(hwnd, IDC_TIMEZONE, WM_SETTEXT, 0, (LPARAM)TimeZoneString);
 }
 

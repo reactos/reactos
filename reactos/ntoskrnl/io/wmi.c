@@ -4,9 +4,8 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/wmi.c
  * PURPOSE:         Windows Management Instrumentation
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
- * UPDATE HISTORY:
- *                  Created 23/06/04
+ * 
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */
 
 /* INCLUDES *****************************************************************/

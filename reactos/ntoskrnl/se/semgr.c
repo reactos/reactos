@@ -1,12 +1,11 @@
 /* $Id$
  *
- * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
- * PURPOSE:           Security manager
- * FILE:              kernel/se/semgr.c
- * PROGRAMER:         ?
- * REVISION HISTORY:
- *                 26/07/98: Added stubs for security functions
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/se/semgr.c
+ * PURPOSE:         Security manager
+ * 
+ * PROGRAMMERS:     No programmer listed.
  */
 
 /* INCLUDES *****************************************************************/
@@ -84,7 +83,7 @@ SeInitSRM(VOID)
 			     OBJ_PERMANENT,
 			     0,
 			     NULL);
-  Status = NtCreateDirectoryObject(&DirectoryHandle,
+  Status = ZwCreateDirectoryObject(&DirectoryHandle,
 				   DIRECTORY_ALL_ACCESS,
 				   &ObjectAttributes);
   if (!NT_SUCCESS(Status))
@@ -101,7 +100,7 @@ SeInitSRM(VOID)
 			     OBJ_PERMANENT,
 			     DirectoryHandle,
 			     SePublicDefaultSd);
-  Status = NtCreateEvent(&EventHandle,
+  Status = ZwCreateEvent(&EventHandle,
 			 EVENT_ALL_ACCESS,
 			 &ObjectAttributes,
 			 SynchronizationEvent,
@@ -113,8 +112,8 @@ SeInitSRM(VOID)
       return FALSE;
     }
 
-  NtClose(EventHandle);
-  NtClose(DirectoryHandle);
+  ZwClose(EventHandle);
+  ZwClose(DirectoryHandle);
 
   /* FIXME: Create SRM port and listener thread */
 
@@ -320,7 +319,7 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
 		 POOL_TYPE PoolType)
 {
   PSECURITY_DESCRIPTOR Descriptor;
-  PACCESS_TOKEN Token;
+  PTOKEN Token;
   ULONG OwnerLength = 0;
   ULONG GroupLength = 0;
   ULONG DaclLength = 0;
@@ -557,10 +556,11 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
 
 
 static BOOLEAN
-SepSidInToken(PACCESS_TOKEN Token,
+SepSidInToken(PACCESS_TOKEN _Token,
 	      PSID Sid)
 {
   ULONG i;
+  PTOKEN Token = (PTOKEN)_Token;
 
   if (Token->UserAndGroupCount == 0)
   {
@@ -793,7 +793,7 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 {
   SECURITY_SUBJECT_CONTEXT SubjectSecurityContext;
   KPROCESSOR_MODE PreviousMode;
-  PACCESS_TOKEN Token;
+  PTOKEN Token;
   NTSTATUS Status;
 
   DPRINT("NtAccessCheck() called\n");

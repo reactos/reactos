@@ -60,11 +60,11 @@ FindApmBios(VOID)
 
 
 VOID
-DetectApmBios(HKEY SystemKey, U32 *BusNumber)
+DetectApmBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
 {
   char Buffer[80];
-  HKEY BiosKey;
-  S32 Error;
+  FRLDRHKEY BiosKey;
+  LONG Error;
 
   if (FindApmBios())
     {
@@ -95,7 +95,7 @@ DetectApmBios(HKEY SystemKey, U32 *BusNumber)
       Error = RegSetValue(BiosKey,
 			  "Identifier",
 			  REG_SZ,
-			  (PU8)"APM",
+			  (PUCHAR)"APM",
 			  4);
       if (Error != ERROR_SUCCESS)
 	{

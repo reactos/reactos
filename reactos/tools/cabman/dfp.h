@@ -32,7 +32,7 @@ typedef enum {
     TokenPeriod,
     TokenBackslash,
     TokenEnd,
-} TOKEN;
+} DFP_TOKEN;
 
 
 typedef enum {
@@ -86,7 +86,7 @@ private:
     unsigned long PerformCommand();
     unsigned long PerformFileCopy();
     void SkipSpaces();
-    bool IsNextToken(TOKEN Token, bool NoSpaces);
+    bool IsNextToken(DFP_TOKEN Token, bool NoSpaces);
     bool ReadLine();
     void NextToken();
     /* Parsing */
@@ -100,7 +100,7 @@ private:
     unsigned long CurrentLine;
     unsigned long CurrentChar;
     /* Token */
-    TOKEN CurrentToken;
+    DFP_TOKEN CurrentToken;
     unsigned long CurrentInteger;
     char CurrentString[256];
 

@@ -96,3 +96,14 @@ RtlGetNtVersionNumbers(LPDWORD major, LPDWORD minor, LPDWORD build)
 		*build = (0xF0000000 | pPeb->OSBuildNumber);
 	}
 }
+
+/*
+* @implemented
+*/
+ULONG
+STDCALL
+RtlGetNtGlobalFlags(VOID)
+{   
+	PPEB pPeb = NtCurrentPeb();
+	return pPeb->NtGlobalFlag;
+}

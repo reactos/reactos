@@ -9,6 +9,8 @@ TARGET_NAME = videoprt
 TARGET_CFLAGS += -Wall -Werror -D__USE_W32API -I$(PATH_TO_TOP)/ntoskrnl/include
 
 TARGET_OBJECTS = \
+	agp.o \
+	ddc.o \
 	dispatch.o \
 	dma.o \
 	event.o \

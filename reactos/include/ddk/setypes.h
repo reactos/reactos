@@ -50,55 +50,88 @@
 #define FAILED_ACCESS_ACE_FLAG       (0x80)
 
 /* SECURITY_DESCRIPTOR_CONTROL */
-#define SECURITY_DESCRIPTOR_REVISION	(1)
-#define SECURITY_DESCRIPTOR_REVISION1	(1)
-#define SECURITY_DESCRIPTOR_MIN_LENGTH	(20)
-#define SE_OWNER_DEFAULTED	(1)
-#define SE_GROUP_DEFAULTED	(2)
-#define SE_DACL_PRESENT	(4)
-#define SE_DACL_DEFAULTED	(8)
-#define SE_SACL_PRESENT	(16)
-#define SE_SACL_DEFAULTED	(32)
-#define SE_SELF_RELATIVE	(32768)
+#define SECURITY_DESCRIPTOR_REVISION    (1)
+#define SECURITY_DESCRIPTOR_REVISION1   (1)
+#define SECURITY_DESCRIPTOR_MIN_LENGTH  (20)
+#define SE_OWNER_DEFAULTED              (0x0001)
+#define SE_GROUP_DEFAULTED              (0x0002)
+#define SE_DACL_PRESENT                 (0x0004)
+#define SE_DACL_DEFAULTED               (0x0008)
+#define SE_SACL_PRESENT                 (0x0010)
+#define SE_SACL_DEFAULTED               (0x0020)
+#define SE_RM_CONTROL_VALID             (0x4000)
+#define SE_SELF_RELATIVE                (0x8000)
 
 /* PRIVILEGE_SET */
-#define SE_PRIVILEGE_ENABLED_BY_DEFAULT	(0x1L)
-#define SE_PRIVILEGE_ENABLED	(0x2L)
-#define SE_PRIVILEGE_USED_FOR_ACCESS	(0x80000000L)
-#define PRIVILEGE_SET_ALL_NECESSARY	(0x1)
+#define SE_PRIVILEGE_ENABLED_BY_DEFAULT (0x1L)
+#define SE_PRIVILEGE_ENABLED            (0x2L)
+#define SE_PRIVILEGE_USED_FOR_ACCESS    (0x80000000L)
+#define PRIVILEGE_SET_ALL_NECESSARY     (0x1)
 
 /* SID */
 #define SID_REVISION		(1)
 #define SID_MAX_SUB_AUTHORITIES	(15)
 
-typedef struct _ACCESS_TOKEN
-{
-  TOKEN_SOURCE			TokenSource;               /* 0x00 */
+typedef struct _SEP_AUDIT_POLICY_CATEGORIES {
+    UCHAR System:4;
+    UCHAR Logon:4;
+    UCHAR ObjectAccess:4;
+    UCHAR PrivilegeUse:4;
+    UCHAR DetailedTracking:4;
+    UCHAR PolicyChange:4;
+    UCHAR AccountManagement:4;
+    UCHAR DirectoryServiceAccess:4;
+    UCHAR AccountLogon:4;
+} SEP_AUDIT_POLICY_CATEGORIES, *PSEP_AUDIT_POLICY_CATEGORIES;
+
+typedef struct _SEP_AUDIT_POLICY_OVERLAY {
+    ULONGLONG PolicyBits:36;
+    UCHAR SetBit:1;
+} SEP_AUDIT_POLICY_OVERLAY, *PSEP_AUDIT_POLICY_OVERLAY;
+
+typedef struct _SEP_AUDIT_POLICY {
+    union {
+        SEP_AUDIT_POLICY_CATEGORIES PolicyElements;
+        SEP_AUDIT_POLICY_OVERLAY PolicyOverlay;
+        ULONGLONG Overlay;
+    };
+} SEP_AUDIT_POLICY, *PSEP_AUDIT_POLICY;
+ 
+typedef struct _TOKEN {
+  TOKEN_SOURCE		TokenSource;               /* 0x00 */
   LUID				TokenId;                   /* 0x10 */
   LUID				AuthenticationId;          /* 0x18 */
-  LARGE_INTEGER			ExpirationTime;            /* 0x20 */
-  LUID				ModifiedId;                /* 0x28 */
-  ULONG				UserAndGroupCount;         /* 0x30 */
-  ULONG				PrivilegeCount;            /* 0x34 */
-  ULONG				VariableLength;            /* 0x38 */
-  ULONG				DynamicCharged;            /* 0x3C */
-  ULONG				DynamicAvailable;          /* 0x40 */
-  ULONG				DefaultOwnerIndex;         /* 0x44 */
-  PSID_AND_ATTRIBUTES		UserAndGroups;             /* 0x48 */
-  PSID				PrimaryGroup;              /* 0x4C */
-  PLUID_AND_ATTRIBUTES		Privileges;                /* 0x50 */
-  ULONG				Unknown1;                  /* 0x54 */
-  PACL				DefaultDacl;               /* 0x58 */
-  TOKEN_TYPE			TokenType;                 /* 0x5C */
-  SECURITY_IMPERSONATION_LEVEL	ImpersonationLevel;        /* 0x60 */
-  UCHAR				TokenFlags;                /* 0x64 */
-  UCHAR				TokenInUse;                /* 0x65 */
-  UCHAR				Unused[2];                 /* 0x66 */
-  PVOID				ProxyData;                 /* 0x68 */
-  PVOID				AuditData;                 /* 0x6c */
-  UCHAR				VariablePart[1];           /* 0x70 */
-} ACCESS_TOKEN, *PACCESS_TOKEN;
+  LUID              ParentTokenId;             /* 0x20 */
+  LARGE_INTEGER		ExpirationTime;            /* 0x28 */
+  struct _ERESOURCE *TokenLock;                /* 0x30 */
+  ULONG             Padding;                   /* 0x34 */
+  SEP_AUDIT_POLICY  AuditPolicy;               /* 0x38 */
+  LUID				ModifiedId;                /* 0x40 */
+  ULONG             SessionId;                 /* 0x48 */
+  ULONG				UserAndGroupCount;         /* 0x4C */
+  ULONG             RestrictedSidCount;        /* 0x50 */
+  ULONG				PrivilegeCount;            /* 0x54 */
+  ULONG				VariableLength;            /* 0x58 */
+  ULONG				DynamicCharged;            /* 0x5C */
+  ULONG				DynamicAvailable;          /* 0x60 */
+  ULONG				DefaultOwnerIndex;         /* 0x64 */
+  PSID_AND_ATTRIBUTES UserAndGroups;           /* 0x68 */
+  PSID_AND_ATTRIBUTES RestrictedSids;          /* 0x6C */
+  PSID				PrimaryGroup;              /* 0x70 */
+  PLUID_AND_ATTRIBUTES Privileges;             /* 0x74 */
+  PULONG            DynamicPart;               /* 0x78 */
+  PACL				DefaultDacl;               /* 0x7C */
+  TOKEN_TYPE		TokenType;                 /* 0x80 */
+  SECURITY_IMPERSONATION_LEVEL	ImpersonationLevel;  /* 0x84 */
+  ULONG				TokenFlags;                /* 0x88 */
+  ULONG			    TokenInUse;                /* 0x8C */
+  PVOID				ProxyData;                 /* 0x90 */
+  PVOID				AuditData;                 /* 0x94 */
+  LUID              OriginatingLogonSession;   /* 0x98 */
+  UCHAR				VariablePart[1];           /* 0xA0 */
+} TOKEN, *PTOKEN;
 
+typedef PVOID PACCESS_TOKEN;
 
 typedef struct _SECURITY_SUBJECT_CONTEXT
 {
@@ -111,12 +144,12 @@ typedef struct _SECURITY_SUBJECT_CONTEXT
 
 typedef struct _SECURITY_CLIENT_CONTEXT
 {
-  SECURITY_QUALITY_OF_SERVICE SecurityQos;	/* 0x00 */
-  PACCESS_TOKEN Token;				/* 0x0C */
-  BOOLEAN DirectlyAccessClientToken;		/* 0x10 */
-  BOOLEAN DirectAccessEffectiveOnly;		/* 0x11 */
-  BOOLEAN ServerIsRemote;			/* 0x12 */
-  TOKEN_CONTROL ClientTokenControl;		/* 0x14 */
+    SECURITY_QUALITY_OF_SERVICE SecurityQos;
+    PACCESS_TOKEN               ClientToken;
+    BOOLEAN                     DirectlyAccessClientToken;
+    BOOLEAN                     DirectAccessEffectiveOnly;
+    BOOLEAN                     ServerIsRemote;
+    TOKEN_CONTROL               ClientTokenControl;
 } SECURITY_CLIENT_CONTEXT, *PSECURITY_CLIENT_CONTEXT;
 
 

@@ -49,8 +49,8 @@ NtGdiBitBlt(
 	HPALETTE SourcePalette = 0, DestPalette = 0;
 	PGDIBRUSHOBJ BrushObj;
 	GDIBRUSHINST BrushInst;
-	BOOL UsesSource = ROP_USES_SOURCE(ROP);
-	BOOL UsesPattern = ROP_USES_PATTERN(ROP);
+	BOOL UsesSource = ROP3_USES_SOURCE(ROP);
+	BOOL UsesPattern = ROP3_USES_PATTERN(ROP);
 
 	DCDest = DC_LockDc(hDCDest);
 	if (NULL == DCDest)
@@ -201,7 +201,8 @@ NtGdiBitBlt(
 
 	/* Perform the bitblt operation */
 	Status = IntEngBitBlt(BitmapDest, BitmapSrc, NULL, DCDest->CombinedClip, XlateObj,
-		&DestRect, &SourcePoint, NULL, BrushObj ? &BrushInst.BrushObject : NULL, &BrushOrigin, ROP);
+	                      &DestRect, &SourcePoint, NULL, BrushObj ? &BrushInst.BrushObject : NULL,
+	                      &BrushOrigin, ROP3_TO_ROP4(ROP));
 
 	if (UsesSource && XlateObj != NULL)
 		EngDeleteXlate(XlateObj);

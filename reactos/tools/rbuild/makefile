@@ -90,11 +90,6 @@ $(RBUILD_COMMON_OBJECTS): %.o: %.cpp
 $(RBUILD_SPECIAL_OBJECTS): %.o: %.cpp
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
-.PHONY: rbuild
-
-rbuild: $(RBUILD_TARGET)
-	-
-
 $(RBUILD_TEST_TARGET): $(RBUILD_TEST_OBJECTS)
 	${host_gpp} $(RBUILD_TEST_OBJECTS) $(RBUILD_HOST_LFLAGS) -o $(RBUILD_TEST_TARGET)
 

@@ -1,12 +1,12 @@
 /* $Id$
  *
- * COPYRIGHT:              See COPYING in the top level directory
- * PROJECT:                ReactOS kernel
- * FILE:                   ntoskrnl/ps/i386/continue.c
- * PURPOSE:                i386 implementation of NtContinue()
- * PROGRAMMER:             Royce Mitchell III, kjk_hyperion
- * REVISION HISTORY:
- *               29/06/04: Created
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/ps/i386/continue.c
+ * PURPOSE:         i386 implementation of NtContinue()
+ *
+ * PROGRAMMERS:     Royce Mitchell III,
+ *                  kjk_hyperion
  */
 
 /* INCLUDES ****************************************************************/
@@ -14,10 +14,6 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
-
-VOID
-FASTCALL
-KeRosTrapReturn ( PKTRAP_FRAME TrapFrame, PKTRAP_FRAME PrevTrapFrame );
 
 VOID STDCALL
 KeRosDumpStackFrames ( PULONG Frame, ULONG FrameCount );
@@ -30,8 +26,9 @@ NtContinue (
 	IN PCONTEXT Context,
 	IN BOOLEAN TestAlert)
 {
-	PKTRAP_FRAME TrapFrame = KeGetCurrentThread()->TrapFrame;
-	PKTRAP_FRAME PrevTrapFrame = (PKTRAP_FRAME)TrapFrame->Edx;
+    PKTHREAD Thread = KeGetCurrentThread();
+	PKTRAP_FRAME TrapFrame = Thread->TrapFrame;
+	PKTRAP_FRAME PrevTrapFrame = (PKTRAP_FRAME)TrapFrame->Edx;   
 	PFX_SAVE_AREA FxSaveArea;
 	KIRQL oldIrql;
 
@@ -65,12 +62,12 @@ NtContinue (
         /* Put the floating point context into the thread's FX_SAVE_AREA
          * and make sure it is reloaded when needed.
          */
-        FxSaveArea = (PFX_SAVE_AREA)((ULONG_PTR)KeGetCurrentThread()->InitialStack - sizeof(FX_SAVE_AREA));
+        FxSaveArea = (PFX_SAVE_AREA)((ULONG_PTR)Thread->InitialStack - sizeof(FX_SAVE_AREA));
         if (KiContextToFxSaveArea(FxSaveArea, Context))
           {
-            KeGetCurrentThread()->NpxState = NPX_STATE_VALID;
+            Thread->NpxState = NPX_STATE_VALID;
             KeRaiseIrql(DISPATCH_LEVEL, &oldIrql);
-            if (KeGetCurrentKPCR()->PrcbData.NpxThread == KeGetCurrentThread())
+            if (KeGetCurrentKPCR()->PrcbData.NpxThread == Thread)
               {
                 KeGetCurrentKPCR()->PrcbData.NpxThread = NULL;
                 Ke386SetCr0(Ke386GetCr0() | X86_CR0_TS);
@@ -82,7 +79,9 @@ NtContinue (
             KeLowerIrql(oldIrql);
           }
 
-	KeRosTrapReturn ( TrapFrame, PrevTrapFrame );
+    /* Restore the user context */
+    Thread->TrapFrame = PrevTrapFrame;
+     __asm__("mov %%ebx, %%esp;\n" "jmp _KiServiceExit": : "b" (TrapFrame));
 
 	return STATUS_SUCCESS; /* this doesn't actually happen b/c KeRosTrapReturn() won't return */
 }

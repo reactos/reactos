@@ -348,7 +348,7 @@ BEGIN
         MENUITEM "&Suchen...\tF1",              ID_HELP
         MENUITEM "Hilfe &verwenden\tF1",        ID_HELP_USING
         MENUITEM SEPARATOR
-        MENUITEM "Info about &Winefile...",     ID_ABOUT_WINEFILE
+        MENUITEM "&Info about ReactOS Explorer...",     ID_ABOUT_WINEFILE
     END
 END
 
@@ -386,8 +386,8 @@ BEGIN
     POPUP "&Hilfe"
     BEGIN
         MENUITEM "Explorer &FAQ...",            ID_EXPLORER_FAQ
-        MENUITEM "&About Explorer...",          ID_ABOUT_EXPLORER
-        MENUITEM "About &OS...",                ID_ABOUT_WINDOWS
+        MENUITEM "&Über ReactOS Explorer...",          ID_ABOUT_EXPLORER
+        MENUITEM "Über React&OS...",                ID_ABOUT_WINDOWS
     END
 END
 
@@ -620,7 +620,7 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_STARTMENU           "Startmenu"
+    IDS_STARTMENU           "Startmenü"
     IDS_MINIMIZE_ALL        "alle Fenster minimieren"
     IDS_DESKTOP_NUM         "Desktop %d"
     IDS_VOLUME              "Lautstärke"
@@ -773,8 +773,8 @@ BEGIN
         MENUITEM "&Status Bar",                 ID_VIEW_STATUSBAR, CHECKED
         MENUITEM "F&ull Screen\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
         MENUITEM SEPARATOR
-        MENUITEM "&Symbol nach Programmstart",  65535
-        MENUITEM "&Einstellungen beim Beenden speichern", 511
+        MENUITEM "&Symbol after Running",  65535
+        MENUITEM "&Save Changes on Exit", 511
     END
     POPUP "&Security"
     BEGIN
@@ -1099,7 +1099,7 @@ BEGIN
     IDS_CONTROL_PANEL       "Control Panel"
     IDS_PRINTERS            "Printers"
     IDS_BROWSE              "Browse Files"
-    IDS_SEARCH_PRG          "Search Programm..."
+    IDS_SEARCH_PRG          "Search Program..."
     IDS_ALL_USERS           "All Users\\"
     IDS_SEARCH              "Search"
     IDS_ABOUT_EXPLORER      "&About Explorer..."

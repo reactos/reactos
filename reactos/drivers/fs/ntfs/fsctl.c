@@ -370,7 +370,6 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
   RtlZeroMemory(Ccb,
 		sizeof(CCB));
 
-  DeviceExt->StreamFileObject->Flags = DeviceExt->StreamFileObject->Flags | FO_FCB_IS_VALID | FO_DIRECT_CACHE_PAGING_READ;
   DeviceExt->StreamFileObject->FsContext = Fcb;
   DeviceExt->StreamFileObject->FsContext2 = Ccb;
   DeviceExt->StreamFileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;

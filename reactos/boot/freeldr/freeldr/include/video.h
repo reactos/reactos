@@ -22,42 +22,25 @@
 
 typedef struct
 {
-  U8 Red;
-  U8 Green;
-  U8 Blue;
+  UCHAR Red;
+  UCHAR Green;
+  UCHAR Blue;
 } PACKED PALETTE_ENTRY, *PPALETTE_ENTRY;
 
 extern	PVOID	VideoOffScreenBuffer;
 
-U16		BiosIsVesaSupported(VOID);						// Implemented in i386vid.S, returns the VESA version
+USHORT		BiosIsVesaSupported(VOID);						// Implemented in i386vid.S, returns the VESA version
 
 PVOID	VideoAllocateOffScreenBuffer(VOID);				// Returns a pointer to an off-screen buffer sufficient for the current video mode
 
-#if 0 /* Not used */
-U32	VideoGetMemoryBankForPixel(U32 X, U32 Y);
-U32	VideoGetMemoryBankForPixel16(U32 X, U32 Y);
-U32	VideoGetBankOffsetForPixel(U32 X, U32 Y);
-U32	VideoGetBankOffsetForPixel16(U32 X, U32 Y);
-VOID	VideoSetMemoryBank(U16 BankNumber);
-U32	VideoGetOffScreenMemoryOffsetForPixel(U32 X, U32 Y);
-#endif
 VOID	VideoCopyOffScreenBufferToVRAM(VOID);
 
-VOID	VideoSavePaletteState(PPALETTE_ENTRY Palette, U32 ColorCount);
-VOID	VideoRestorePaletteState(PPALETTE_ENTRY Palette, U32 ColorCount);
+VOID	VideoSavePaletteState(PPALETTE_ENTRY Palette, ULONG ColorCount);
+VOID	VideoRestorePaletteState(PPALETTE_ENTRY Palette, ULONG ColorCount);
 
-#if 0 /* Not used */
-VOID	VideoSetPixel16(U32 X, U32 Y, U8 Color);
-VOID	VideoSetPixel256(U32 X, U32 Y, U8 Color);
-VOID	VideoSetPixelRGB(U32 X, U32 Y, U8 Red, U8 Green, U8 Blue);
-VOID	VideoSetPixel16_OffScreen(U32 X, U32 Y, U8 Color);
-VOID	VideoSetPixel256_OffScreen(U32 X, U32 Y, U8 Color);
-VOID	VideoSetPixelRGB_OffScreen(U32 X, U32 Y, U8 Red, U8 Green, U8 Blue);
-#endif
-
-VOID	VideoSetAllColorsToBlack(U32 ColorCount);
-VOID	VideoFadeIn(PPALETTE_ENTRY Palette, U32 ColorCount);
-VOID	VideoFadeOut(U32 ColorCount);
+VOID	VideoSetAllColorsToBlack(ULONG ColorCount);
+VOID	VideoFadeIn(PPALETTE_ENTRY Palette, ULONG ColorCount);
+VOID	VideoFadeOut(ULONG ColorCount);
 
 
 #endif  // defined __VIDEO_H

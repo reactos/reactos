@@ -156,8 +156,6 @@ HRESULT WINAPI FTMarshalImpl_GetMarshalSizeMax (LPMARSHAL iface, REFIID riid, vo
     hres = IMarshal_GetMarshalSizeMax (pMarshal, riid, pv, dwDestContext, pvDestContext, mshlflags, pSize);
     IMarshal_Release (pMarshal);
     return hres;
-
-    return S_OK;
 }
 
 HRESULT WINAPI FTMarshalImpl_MarshalInterface (LPMARSHAL iface, IStream * pStm, REFIID riid, void *pv,

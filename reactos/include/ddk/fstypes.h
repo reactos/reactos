@@ -30,6 +30,12 @@ typedef NTSTATUS (*PCOMPLETE_LOCK_IRP_ROUTINE) (
     IN PIRP     Irp
 );
 
+typedef VOID (*PFSRTL_STACK_OVERFLOW_ROUTINE) (
+    IN PVOID Context,
+    IN PKEVENT Event
+);
+
+    
 typedef VOID (*PUNLOCK_ROUTINE) (
     IN PVOID            Context,
     IN PFILE_LOCK_INFO  FileLockInfo

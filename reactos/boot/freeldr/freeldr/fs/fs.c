@@ -36,7 +36,7 @@
 // DATA
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-U32			FileSystemType = 0;	// Type of filesystem on boot device, set by FsOpenVolume()
+ULONG			FsType = 0;	// Type of filesystem on boot device, set by FsOpenVolume()
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS
@@ -51,7 +51,7 @@ VOID FileSystemError(PUCHAR ErrorString)
 
 /*
  *
- * BOOL FsOpenVolume(U32 DriveNumber, U32 PartitionNumber);
+ * BOOL FsOpenVolume(ULONG DriveNumber, ULONG PartitionNumber);
  *
  * This function is called to open a disk volume for file access.
  * It must be called before any of the file functions will work.
@@ -64,11 +64,11 @@ VOID FileSystemError(PUCHAR ErrorString)
  *            If it is zero then it opens the active (bootable) partition
  *
  */
-BOOL FsOpenVolume(U32 DriveNumber, U32 PartitionNumber)
+BOOL FsOpenVolume(ULONG DriveNumber, ULONG PartitionNumber)
 {
 	PARTITION_TABLE_ENTRY	PartitionTableEntry;
 	UCHAR					ErrorText[80];
-	U8						VolumeType;
+	UCHAR						VolumeType;
 
 	DbgPrint((DPRINT_FILESYSTEM, "FsOpenVolume() DriveNumber: 0x%x PartitionNumber: 0x%x\n", DriveNumber, PartitionNumber));
 
@@ -78,7 +78,7 @@ BOOL FsOpenVolume(U32 DriveNumber, U32 PartitionNumber)
 	{
 		DbgPrint((DPRINT_FILESYSTEM, "Drive is a floppy diskette drive. Assuming FAT12 file system.\n"));
 
-		FileSystemType = FS_FAT;
+		FsType = FS_FAT;
 		return FatOpenVolume(DriveNumber, 0, 0);
 	}
 
@@ -87,7 +87,7 @@ BOOL FsOpenVolume(U32 DriveNumber, U32 PartitionNumber)
 	{
 		DbgPrint((DPRINT_FILESYSTEM, "Drive is a cdrom drive. Assuming ISO-9660 file system.\n"));
 
-		FileSystemType = FS_ISO9660;
+		FsType = FS_ISO9660;
 		return IsoOpenVolume(DriveNumber);
 	}
 
@@ -137,16 +137,16 @@ BOOL FsOpenVolume(U32 DriveNumber, U32 PartitionNumber)
 	case PARTITION_XINT13:
 	case PARTITION_FAT32:
 	case PARTITION_FAT32_XINT13:
-		FileSystemType = FS_FAT;
+		FsType = FS_FAT;
 		return FatOpenVolume(DriveNumber, PartitionTableEntry.SectorCountBeforePartition, PartitionTableEntry.PartitionSectorCount);
 	case PARTITION_EXT2:
-		FileSystemType = FS_EXT2;
+		FsType = FS_EXT2;
 		return Ext2OpenVolume(DriveNumber, PartitionTableEntry.SectorCountBeforePartition);
 	case PARTITION_NTFS:
-		FileSystemType = FS_NTFS;
+		FsType = FS_NTFS;
 		return NtfsOpenVolume(DriveNumber, PartitionTableEntry.SectorCountBeforePartition);
 	default:
-		FileSystemType = 0;
+		FsType = 0;
 		sprintf(ErrorText, "Unsupported file system. Type: 0x%x", VolumeType);
 		FileSystemError(ErrorText);
 		return FALSE;
@@ -175,7 +175,7 @@ PFILE FsOpenFile(PUCHAR FileName)
 	//
 	// Check file system type and pass off to appropriate handler
 	//
-	switch (FileSystemType)
+	switch (FsType)
 	{
 	case FS_FAT:
 		FileHandle = FatOpenFile(FileName);
@@ -219,9 +219,9 @@ VOID FsCloseFile(PFILE FileHandle)
  * ReadFile()
  * returns number of bytes read or EOF
  */
-BOOL FsReadFile(PFILE FileHandle, U32 BytesToRead, U32* BytesRead, PVOID Buffer)
+BOOL FsReadFile(PFILE FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer)
 {
-	U64		BytesReadBig;
+	ULONGLONG		BytesReadBig;
 	BOOL	Success;
 
 	//
@@ -232,7 +232,7 @@ BOOL FsReadFile(PFILE FileHandle, U32 BytesToRead, U32* BytesRead, PVOID Buffer)
 		*BytesRead = 0;
 	}
 
-	switch (FileSystemType)
+	switch (FsType)
 	{
 	case FS_FAT:
 
@@ -246,7 +246,7 @@ BOOL FsReadFile(PFILE FileHandle, U32 BytesToRead, U32* BytesRead, PVOID Buffer)
 
 		//return Ext2ReadFile(FileHandle, BytesToRead, BytesRead, Buffer);
 		Success = Ext2ReadFile(FileHandle, BytesToRead, &BytesReadBig, Buffer);
-		*BytesRead = (U32)BytesReadBig;
+		*BytesRead = (ULONG)BytesReadBig;
 		return Success;
 
 	case FS_NTFS:
@@ -262,9 +262,9 @@ BOOL FsReadFile(PFILE FileHandle, U32 BytesToRead, U32* BytesRead, PVOID Buffer)
 	return FALSE;
 }
 
-U32 FsGetFileSize(PFILE FileHandle)
+ULONG FsGetFileSize(PFILE FileHandle)
 {
-	switch (FileSystemType)
+	switch (FsType)
 	{
 	case FS_FAT:
 
@@ -290,9 +290,9 @@ U32 FsGetFileSize(PFILE FileHandle)
 	return 0;
 }
 
-VOID FsSetFilePointer(PFILE FileHandle, U32 NewFilePointer)
+VOID FsSetFilePointer(PFILE FileHandle, ULONG NewFilePointer)
 {
-	switch (FileSystemType)
+	switch (FsType)
 	{
 	case FS_FAT:
 
@@ -320,9 +320,9 @@ VOID FsSetFilePointer(PFILE FileHandle, U32 NewFilePointer)
 	}
 }
 
-U32 FsGetFilePointer(PFILE FileHandle)
+ULONG FsGetFilePointer(PFILE FileHandle)
 {
-	switch (FileSystemType)
+	switch (FsType)
 	{
 	case FS_FAT:
 
@@ -369,10 +369,10 @@ BOOL FsIsEndOfFile(PFILE FileHandle)
  * This function parses a path in the form of dir1\dir2\file1.ext
  * and returns the number of parts it has (i.e. 3 - dir1,dir2,file1.ext)
  */
-U32 FsGetNumPathParts(PUCHAR Path)
+ULONG FsGetNumPathParts(PUCHAR Path)
 {
-	U32		i;
-	U32		num;
+	ULONG		i;
+	ULONG		num;
 
 	for (i=0,num=0; i<(int)strlen(Path); i++)
 	{
@@ -396,7 +396,7 @@ U32 FsGetNumPathParts(PUCHAR Path)
  */
 VOID FsGetFirstNameFromPath(PUCHAR Buffer, PUCHAR Path)
 {
-	U32		i;
+	ULONG		i;
 
 	// Copy all the characters up to the end of the
 	// string or until we hit a '\' character

@@ -22,7 +22,7 @@ NTSTATUS DDKAPI SendComplete
     PLIST_ENTRY NextIrpEntry;
     PIRP NextIrp = NULL;
     PIO_STACK_LOCATION NextIrpSp;
-    PAFD_SEND_INFO SendReq;
+    PAFD_SEND_INFO SendReq = NULL;
     PAFD_MAPBUF Map;
     UINT TotalBytesCopied = 0, SpaceAvail, i, CopySize = 0;
 
@@ -165,6 +165,9 @@ NTSTATUS DDKAPI PacketSocketSendComplete
     /* It's ok if the FCB already died */
     if( !SocketAcquireStateLock( FCB ) ) return STATUS_SUCCESS;
 
+    FCB->PollState |= AFD_EVENT_SEND;
+    PollReeval( FCB->DeviceExt, FCB->FileObject );
+
     FCB->SendIrp.InFlightRequest = NULL; 
     /* Request is not in flight any longer */
 
@@ -208,6 +211,12 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         if( !(SendReq = LockRequest( Irp, IrpSp )) ) 
             return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp, 0,
                                            NULL, FALSE );
+
+        /* Must lock buffers before handing off user data */
+        SendReq->BufferArray = LockBuffers( SendReq->BufferArray,
+                                            SendReq->BufferCount,
+                                            NULL, NULL,
+                                            FALSE, FALSE );
     
         TdiBuildConnectionInfo( &TargetAddress, FCB->RemoteAddress );
 
@@ -260,7 +269,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 					SendReq->BufferCount,
 					NULL, NULL,
 					FALSE, FALSE );
-    
+
     AFD_DbgPrint(MID_TRACE,("FCB->Send.BytesUsed = %d\n", 
 			    FCB->Send.BytesUsed));
 
@@ -355,6 +364,7 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
 
     FCB->EventsFired &= ~AFD_EVENT_SEND;
+    FCB->PollState &= ~AFD_EVENT_SEND;
 
     /* Check that the socket is bound */
     if( FCB->State != SOCKET_STATE_BOUND ) 

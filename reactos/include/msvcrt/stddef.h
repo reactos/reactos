@@ -154,7 +154,11 @@ typedef __WINT_TYPE__       wint_t;
 #if defined (__MSVCRT_STDDEF_H_) || defined (__need_NULL)
 
 #undef NULL
+#ifdef __cplusplus
 #define NULL (0)
+#else
+#define NULL ((void *)0)
+#endif
 #endif /* __MSVCRT_STDDEF_H_ or __need_NULL */
 
 #undef  __need_NULL

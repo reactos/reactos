@@ -4,9 +4,8 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ob/symlink.c
  * PURPOSE:         Implements symbolic links
- * PROGRAMMER:      David Welch (welch@mcmail.com)
- * UPDATE HISTORY:
- *                  Created 22/05/98
+ * 
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
 /* INCLUDES *****************************************************************/
@@ -165,8 +164,8 @@ ObInitSymbolicLinkImplementation (VOID)
   ObSymbolicLinkType->Tag = TAG('S', 'Y', 'M', 'T');
   ObSymbolicLinkType->TotalObjects = 0;
   ObSymbolicLinkType->TotalHandles = 0;
-  ObSymbolicLinkType->MaxObjects = ULONG_MAX;
-  ObSymbolicLinkType->MaxHandles = ULONG_MAX;
+  ObSymbolicLinkType->PeakObjects = 0;
+  ObSymbolicLinkType->PeakHandles = 0;
   ObSymbolicLinkType->PagedPoolCharge = 0;
   ObSymbolicLinkType->NonpagedPoolCharge = sizeof(SYMLINK_OBJECT);
   ObSymbolicLinkType->Mapping = &ObpSymbolicLinkMapping;
@@ -256,7 +255,7 @@ NtCreateSymbolicLinkObject(OUT PHANDLE LinkHandle,
 
   DPRINT("DeviceName %S\n", SymbolicLink->TargetName.Buffer);
 
-  NtQuerySystemTime (&SymbolicLink->CreateTime);
+  ZwQuerySystemTime (&SymbolicLink->CreateTime);
 
   DPRINT("%s() = STATUS_SUCCESS\n",__FUNCTION__);
   ObDereferenceObject(SymbolicLink);

@@ -143,4 +143,4 @@ _PsBeginThreadWithContextInternal:
 
 	/* Load the rest of the thread's user mode context. */
 	movl	$0, %eax
-	jmp	KeReturnFromSystemCallWithHook
+	jmp	_KiServiceExit

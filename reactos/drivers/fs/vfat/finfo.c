@@ -12,13 +12,56 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <wchar.h>
-
 #define NDEBUG
-#include <debug.h>
-
 #include "vfat.h"
+
+/* GLOBALS ******************************************************************/
+
+const char* FileInformationClassNames[] = 
+{
+  "??????",
+  "FileDirectoryInformation",
+  "FileFullDirectoryInformation",
+  "FileBothDirectoryInformation",
+  "FileBasicInformation",
+  "FileStandardInformation",
+  "FileInternalInformation",
+  "FileEaInformation",
+  "FileAccessInformation",
+  "FileNameInformation",
+  "FileRenameInformation",
+  "FileLinkInformation",
+  "FileNamesInformation",
+  "FileDispositionInformation",
+  "FilePositionInformation",
+  "FileFullEaInformation",
+  "FileModeInformation",
+  "FileAlignmentInformation",
+  "FileAllInformation",
+  "FileAllocationInformation",
+  "FileEndOfFileInformation",
+  "FileAlternateNameInformation",
+  "FileStreamInformation",
+  "FilePipeInformation",
+  "FilePipeLocalInformation",
+  "FilePipeRemoteInformation",
+  "FileMailslotQueryInformation",
+  "FileMailslotSetInformation",
+  "FileCompressionInformation",
+  "FileObjectIdInformation",
+  "FileCompletionInformation",
+  "FileMoveClusterInformation",
+  "FileQuotaInformation",
+  "FileReparsePointInformation",
+  "FileNetworkOpenInformation",
+  "FileAttributeTagInformation",
+  "FileTrackingInformation",
+  "FileIdBothDirectoryInformation",
+  "FileIdFullDirectoryInformation",
+  "FileValidDataLengthInformation",
+  "FileShortNameInformation",
+  "FileMaximumInformation"
+};
 
 /* FUNCTIONS ****************************************************************/
 
@@ -226,8 +269,9 @@ VfatSetDispositionInformation(PFILE_OBJECT FileObject,
 			      PFILE_DISPOSITION_INFORMATION DispositionInfo)
 {
   NTSTATUS Status = STATUS_SUCCESS;
-
+#ifdef DBG
   PDEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
+#endif
 
   DPRINT ("FsdSetDispositionInformation()\n");
 
@@ -248,13 +292,13 @@ VfatSetDispositionInformation(PFILE_OBJECT FileObject,
       return STATUS_ACCESS_DENIED;
     }
 
-  if (DispositionInfo->DoDeleteFile)
+  if (DispositionInfo->DeleteFile)
     {
       if (MmFlushImageSection (FileObject->SectionObjectPointer, MmFlushForDelete))
         {
-          if (FCB->RefCount > 1)
+          if (FCB->OpenHandleCount > 1)
             {
-	      DPRINT1("%d %x\n", FCB->RefCount, CcGetFileObjectFromSectionPtrs(FileObject->SectionObjectPointer));
+	      DPRINT1("%d %x\n", FCB->OpenHandleCount, CcGetFileObjectFromSectionPtrs(FileObject->SectionObjectPointer));
               Status = STATUS_ACCESS_DENIED;
             }
           else
@@ -479,7 +523,7 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
   ULONG ClusterSize = DeviceExt->FatInfo.BytesPerCluster;
   ULONG NewSize = AllocationSize->u.LowPart;
   ULONG NCluster;
-  BOOL AllocSizeChanged = FALSE;
+  BOOLEAN AllocSizeChanged = FALSE;
 
   DPRINT("VfatSetAllocationSizeInformation()\n");
 
@@ -654,6 +698,10 @@ NTSTATUS VfatQueryInformation(PVFAT_IRP_CONTEXT IrpContext)
   FileInformationClass = IrpContext->Stack->Parameters.QueryFile.FileInformationClass;
   FCB = (PVFATFCB) IrpContext->FileObject->FsContext;
 
+  DPRINT("VfatQueryInformation is called for '%s'\n", 
+         FileInformationClass >= FileMaximumInformation - 1 ? "????" : FileInformationClassNames[FileInformationClass]);
+
+
   SystemBuffer = IrpContext->Irp->AssociatedIrp.SystemBuffer;
   BufferLength = IrpContext->Stack->Parameters.QueryFile.Length;
 
@@ -746,7 +794,7 @@ NTSTATUS VfatSetInformation(PVFAT_IRP_CONTEXT IrpContext)
   PVFATFCB FCB = NULL;
   NTSTATUS RC = STATUS_SUCCESS;
   PVOID SystemBuffer;
-  BOOL CanWait = IrpContext->Flags & IRPCONTEXT_CANWAIT;
+  BOOLEAN CanWait = (IrpContext->Flags & IRPCONTEXT_CANWAIT) != 0;
   
   /* PRECONDITION */
   ASSERT(IrpContext);
@@ -758,6 +806,9 @@ NTSTATUS VfatSetInformation(PVFAT_IRP_CONTEXT IrpContext)
     IrpContext->Stack->Parameters.SetFile.FileInformationClass;
   FCB = (PVFATFCB) IrpContext->FileObject->FsContext;
   SystemBuffer = IrpContext->Irp->AssociatedIrp.SystemBuffer;
+
+  DPRINT("VfatSetInformation is called for '%s'\n", 
+         FileInformationClass >= FileMaximumInformation - 1 ? "????" : FileInformationClassNames[ FileInformationClass]);
   
   DPRINT("FileInformationClass %d\n", FileInformationClass);
   DPRINT("SystemBuffer %x\n", SystemBuffer);

@@ -1,0 +1,11 @@
+<module name="smdll" type="win32dll">
+	<importlibrary definition="smdll.def" />
+	<include base="smdll">.</include>
+	<define name="_DISABLE_TIDENTS" />
+	<library>ntdll</library>
+	<file>dllmain.c</file>
+	<file>connect.c</file>
+	<file>execpgm.c</file>
+	<file>compses.c</file>
+	<file>smdll.rc</file>
+</module>

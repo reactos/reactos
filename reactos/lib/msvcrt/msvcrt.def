@@ -108,7 +108,7 @@ __RTtypeid=MSVCRT___RTtypeid
 __argc DATA
 __argv DATA
 __badioinfo DATA
-__crtCompareStringA ;=NTDLL.RtlCompareString
+;__crtCompareStringA ;=NTDLL.RtlCompareString
 ;__crtGetLocaleInfoW
 __crtLCMapStringA
 __dllonexit
@@ -117,8 +117,8 @@ __fpecode
 __getmainargs
 __initenv DATA
 __isascii=NTDLL.__isascii
-__iscsym
-__iscsymf
+__iscsym=NTDLL.__iscsym
+__iscsymf=NTDLL.__iscsymf
 __lc_codepage
 __lc_collate_cp
 __lc_handle
@@ -126,7 +126,7 @@ __lc_handle
 __mb_cur_max DATA
 __p___argc
 __p___argv
-__p___wargv
+;__p___wargv
 __p___initenv
 __p___mb_cur_max
 __p___winitenv
@@ -154,14 +154,14 @@ __p__winminor
 __p__winver
 ;__p__wpgmptr
 __pioinfo
-;__pxcptinfoptrs
+__pxcptinfoptrs
 __set_app_type
 __setlc_active DATA
 __setusermatherr
 __threadhandle
 __threadid
-__toascii
-__unDName
+__toascii=NTDLL.__toascii
+;__unDName
 ;__unDNameEx
 __unguarded_readlc_active DATA
 __wargv
@@ -205,7 +205,7 @@ _aexit_rtn
 _amsg_exit
 _assert
 ;_atodbl
-_atoi64
+_atoi64=NTDLL._atoi64
 ;_atoldbl
 _beep
 _beginthread
@@ -281,7 +281,7 @@ _findnexti64
 _finite
 _flsbuf
 _flushall
-_fmode DATA
+_fmode=__fmode DATA
 _fpclass
 _fpieee_flt
 _fpreset
@@ -311,7 +311,7 @@ _getdrives
 ;_getmaxstdio
 ;_getmbcp
 _getpid
-;_getsystime
+_getsystime
 _getw
 ;_getwch
 ;_getwche
@@ -325,8 +325,8 @@ _heapset
 ;_heapused
 _heapwalk
 _hypot
-_i64toa
-_i64tow
+_i64toa=NTDLL._i64toa
+_i64tow=NTDLL._i64tow
 _initterm
 ;_inp
 ;_inpd
@@ -364,8 +364,8 @@ _ismbcupper
 _ismbslead
 _ismbstrail
 _isnan
-_itoa
-_itow
+_itoa=NTDLL._itoa
+_itow=NTDLL._itow
 _j0
 _j1
 _jn
@@ -382,7 +382,7 @@ _lrotr
 _lsearch
 _lseek
 _lseeki64
-_ltoa
+_ltoa=NTDLL._ltoa
 _ltow
 _makepath
 _mbbtombc
@@ -441,7 +441,7 @@ _mbstok
 _mbstrlen
 _mbsupr
 _memccpy
-_memicmp
+_memicmp=NTDLL._memicmp
 _mkdir
 _mktemp
 ;_mktime64
@@ -481,7 +481,7 @@ _scalb
 ;_scprintf
 ;_scwprintf
 _searchenv
-_seh_longjmp_unwind
+_seh_longjmp_unwind=_seh_longjmp_unwind@4
 ;_set_error_mode
 ;_set_SSE2_enable
 ;_set_sbh_threshold
@@ -491,12 +491,12 @@ _setjmp3
 ;_setmaxstdio
 _setmbcp
 _setmode
-;_setsystime
+_setsystime
 _sleep
-_snprintf=msvcrt__snprintf
+_snprintf=crt__snprintf
 ;_snscanf
 ;_snwscanf
-_snwprintf=msvcrt__snwprintf
+_snwprintf=crt__snwprintf
 _sopen
 _spawnl
 _spawnle
@@ -506,7 +506,7 @@ _spawnv
 _spawnve
 _spawnvp
 _spawnvpe
-_splitpath
+_splitpath=NTDLL._splitpath
 _stat
 ;_stat64
 _stati64
@@ -515,11 +515,11 @@ _strcmpi
 _strdate
 _strdup
 _strerror
-_stricmp
+_stricmp=NTDLL.stricmp
 _stricoll
-_strlwr
+_strlwr=NTDLL._strlwr
 _strncoll
-_strnicmp
+_strnicmp=NTDLL.strnicmp
 _strnicoll
 _strnset
 _strrev
@@ -536,14 +536,14 @@ _telli64
 _tempnam
 ;_time64
 _timezone DATA
-_tolower
-_toupper
+_tolower=NTDLL._tolower
+_toupper=NTDLL._toupper
 _tzname DATA
 _tzset
-_ui64toa
-_ui64tow
-_ultoa
-_ultow
+_ui64toa=NTDLL._i64toa
+_ui64tow=NTDLL._i64tow
+_ultoa=NTDLL._ultoa
+_ultow=NTDLL._ultow
 _umask
 _ungetch
 ;_ungetwch
@@ -554,8 +554,8 @@ _utime
 ;_utime64
 ;_vscprintf
 ;_vscwprintf
-_vsnprintf=msvcrt__vsnprintf
-_vsnwprintf=msvcrt__vsnwprintf
+_vsnprintf=crt__vsnprintf
+_vsnwprintf=crt__vsnwprintf
 _waccess
 _wasctime
 _wchdir
@@ -637,8 +637,8 @@ _wstrtime
 _wtempnam
 _wtmpnam
 ;_wtof
-_wtoi
-_wtoi64
+_wtoi=NTDLL._wtoi
+_wtoi64=NTDLL._wtoi64
 _wtol
 _wunlink
 _wutime
@@ -647,29 +647,29 @@ _y0
 _y1
 _yn
 abort
-abs
+abs=NTDLL.abs
 acos
 asctime
 asin
-atan
+atan=NTDLL.atan
 atan2
 atexit
 atof
-atoi
-atol
-bsearch
+atoi=NTDLL.atoi
+atol=NTDLL.atol
+bsearch=NTDLL.bsearch
 calloc
-ceil
+ceil=NTDLL.ceil
 clearerr
 clock
-cos
+cos=NTDLL.cos
 cosh
 ctime
 difftime
 div
 exit
 exp
-fabs
+fabs=NTDLL.fabs
 fclose
 feof
 ferror
@@ -679,7 +679,7 @@ fgetpos
 fgets
 fgetwc
 fgetws
-floor
+floor=NTDLL.floor
 fmod
 fopen
 fprintf
@@ -707,41 +707,41 @@ getwchar
 gmtime
 is_wctype
 isalnum=NTDLL.isalnum
-isalpha
+isalpha=NTDLL.isalpha
 iscntrl=NTDLL.iscntrl
-isdigit
+isdigit=NTDLL.isdigit
 isgraph=NTDLL.isgraph
 isleadbyte
-islower
+islower=NTDLL.islower
 isprint=NTDLL.isprint
 ispunct=NTDLL.ispunct
-isspace
+isspace=NTDLL.isspace
 isupper=NTDLL.isupper
 iswalnum
-iswalpha
+iswalpha=NTDLL.iswalpha
 iswascii
 iswcntrl
-iswctype
-iswdigit
+iswctype=NTDLL.iswctype
+iswdigit=NTDLL.iswdigit
 iswgraph
-iswlower
+iswlower=NTDLL.iswlower
 iswprint
 iswpunct
-iswspace
+iswspace=NTDLL.iswspace
 iswupper
-iswxdigit
-isxdigit
-labs
+iswxdigit=NTDLL.iswxdigit
+isxdigit=NTDLL.isxdigit
+labs=NTDLL.labs
 ldexp
 ldiv
 localeconv
 localtime
-log
+log=NTDLL.log
 log10
 longjmp
 malloc
 mblen
-mbstowcs
+mbstowcs=NTDLL.mbstowcs
 mbtowc
 memchr
 memcmp
@@ -758,7 +758,7 @@ putchar
 puts
 putwc
 putwchar
-qsort
+qsort=NTDLL.qsort
 raise
 rand
 realloc
@@ -770,15 +770,15 @@ setbuf
 setlocale
 setvbuf
 signal
-sin
+sin=NTDLL.sin
 sinh
-sprintf=msvcrt_sprintf
-sqrt
+sprintf=crt_sprintf
+sqrt=NTDLL.sqrt
 srand
-sscanf=msvcrt_sscanf
+sscanf=crt_sscanf
 strcat
 strchr
-strcmp
+strcmp=NTDLL.strcmp
 strcoll
 strcpy
 strcspn
@@ -794,27 +794,27 @@ strspn
 strstr
 strtod
 strtok
-strtol
+strtol=NTDLL.strtol
 strtoul
 strxfrm
-swprintf=msvcrt_swprintf
+swprintf=crt_swprintf
 swscanf
 system
-tan
+tan=NTDLL.tan
 tanh
 time
 tmpfile
 tmpnam
 tolower
-toupper
-towlower
-towupper
+toupper=NTDLL.toupper
+towlower=NTDLL.towlower
+towupper=NTDLL.towupper
 ungetc
 ungetwc
 vfprintf
 vfwprintf
 vprintf
-vsprintf=msvcrt_vsprintf
+vsprintf=crt_vsprintf
 vswprintf
 vwprintf
 wcscat
@@ -834,9 +834,9 @@ wcsspn
 wcsstr
 wcstod
 wcstok
-wcstol
+wcstol=NTDLL.wcstol
 wcstombs
-wcstoul
+wcstoul=NTDLL.wcstoul
 wcsxfrm
 wctomb
 wprintf

@@ -1679,7 +1679,7 @@ MsqGetTimerMessage(PUSER_MESSAGE_QUEUE MessageQueue,
     {
       Timer = CONTAINING_RECORD(MessageQueue->TimerListHead.Flink,
                                 TIMER_ENTRY, ListEntry);
-      DPRINT("Checking timer %p wnd %x expiry %I64d\n", Timer, Timer->wnd,
+      DPRINT("Checking timer %p wnd %x expiry %I64d\n", Timer, Timer->Wnd,
              Timer->ExpiryTime.QuadPart);
       EnumEntry = EnumEntry->Flink;
       if ((NULL == WndFilter || Timer->Wnd == WndFilter) &&

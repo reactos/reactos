@@ -10,21 +10,16 @@
 
 */
 
-#include <ddk/ntddk.h>
-#include <wchar.h>
-
 #define NDEBUG
-#include <debug.h>
-
 #include "vfat.h"
 
 
 // function like DosDateTimeToFileTime
-BOOL
-FsdDosDateTimeToSystemTime (PDEVICE_EXTENSION DeviceExt, WORD wDosDate, WORD wDosTime, PLARGE_INTEGER SystemTime)
+BOOLEAN
+FsdDosDateTimeToSystemTime (PDEVICE_EXTENSION DeviceExt, USHORT DosDate, USHORT DosTime, PLARGE_INTEGER SystemTime)
 {
-  PDOSTIME pdtime = (PDOSTIME) & wDosTime;
-  PDOSDATE pddate = (PDOSDATE) & wDosDate;
+  PDOSTIME pdtime = (PDOSTIME) &DosTime;
+  PDOSDATE pddate = (PDOSDATE) &DosDate;
   TIME_FIELDS TimeFields;
   LARGE_INTEGER LocalTime;
 
@@ -47,11 +42,11 @@ FsdDosDateTimeToSystemTime (PDEVICE_EXTENSION DeviceExt, WORD wDosDate, WORD wDo
 }
 
 // function like FileTimeToDosDateTime
-BOOL
-FsdSystemTimeToDosDateTime (PDEVICE_EXTENSION DeviceExt, PLARGE_INTEGER SystemTime, WORD * pwDosDate, WORD * pwDosTime)
+BOOLEAN
+FsdSystemTimeToDosDateTime (PDEVICE_EXTENSION DeviceExt, PLARGE_INTEGER SystemTime, USHORT *pDosDate, USHORT *pDosTime)
 {
-  PDOSTIME pdtime = (PDOSTIME) pwDosTime;
-  PDOSDATE pddate = (PDOSDATE) pwDosDate;
+  PDOSTIME pdtime = (PDOSTIME) pDosTime;
+  PDOSDATE pddate = (PDOSDATE) pDosDate;
   TIME_FIELDS TimeFields;
   LARGE_INTEGER LocalTime;
 
@@ -72,13 +67,13 @@ FsdSystemTimeToDosDateTime (PDEVICE_EXTENSION DeviceExt, PLARGE_INTEGER SystemTi
     {
       pddate->Day = TimeFields.Day;
       pddate->Month = TimeFields.Month;
-      pddate->Year = TimeFields.Year - DeviceExt->BaseDateYear;
+      pddate->Year = (USHORT) (TimeFields.Year - DeviceExt->BaseDateYear);
     }
 
   return TRUE;
 }
 
-#define DWORD_ROUND_UP(x)   ROUND_UP((x), (sizeof(DWORD)))
+#define ULONG_ROUND_UP(x)   ROUND_UP((x), (sizeof(ULONG)))
 
 NTSTATUS
 VfatGetFileNameInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
@@ -88,7 +83,7 @@ VfatGetFileNameInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
     return STATUS_BUFFER_OVERFLOW;
   pInfo->FileNameLength = DirContext->LongNameU.Length;
   pInfo->NextEntryOffset =
-    DWORD_ROUND_UP (sizeof (FILE_DIRECTORY_INFORMATION) + DirContext->LongNameU.Length);
+    ULONG_ROUND_UP (sizeof (FILE_DIRECTORY_INFORMATION) + DirContext->LongNameU.Length);
   RtlCopyMemory (pInfo->FileName, DirContext->LongNameU.Buffer, DirContext->LongNameU.Length);
   return STATUS_SUCCESS;
 }
@@ -103,7 +98,7 @@ VfatGetFileDirectoryInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
     return STATUS_BUFFER_OVERFLOW;
   pInfo->FileNameLength = DirContext->LongNameU.Length;
   pInfo->NextEntryOffset =
-    DWORD_ROUND_UP (sizeof (FILE_DIRECTORY_INFORMATION) + DirContext->LongNameU.Length);
+    ULONG_ROUND_UP (sizeof (FILE_DIRECTORY_INFORMATION) + DirContext->LongNameU.Length);
   RtlCopyMemory (pInfo->FileName, DirContext->LongNameU.Buffer, DirContext->LongNameU.Length);
 //      pInfo->FileIndex=;
   if (DeviceExt->Flags & VCB_IS_FATX)
@@ -166,14 +161,14 @@ VfatGetFileDirectoryInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
 NTSTATUS
 VfatGetFileFullDirectoryInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
 				     PDEVICE_EXTENSION DeviceExt,
-				     PFILE_FULL_DIRECTORY_INFORMATION pInfo,
+				     PFILE_FULL_DIR_INFORMATION pInfo,
 				     ULONG BufferLength)
 {
-  if ((sizeof (FILE_FULL_DIRECTORY_INFORMATION) + DirContext->LongNameU.Length) > BufferLength)
+  if ((sizeof (FILE_FULL_DIR_INFORMATION) + DirContext->LongNameU.Length) > BufferLength)
     return STATUS_BUFFER_OVERFLOW;
   pInfo->FileNameLength = DirContext->LongNameU.Length;
   pInfo->NextEntryOffset =
-    DWORD_ROUND_UP (sizeof (FILE_FULL_DIRECTORY_INFORMATION) + DirContext->LongNameU.Length);
+    ULONG_ROUND_UP (sizeof (FILE_FULL_DIR_INFORMATION) + DirContext->LongNameU.Length);
   RtlCopyMemory (pInfo->FileName, DirContext->LongNameU.Buffer, DirContext->LongNameU.Length);
 //      pInfo->FileIndex=;
   if (DeviceExt->Flags & VCB_IS_FATX)
@@ -220,10 +215,10 @@ VfatGetFileFullDirectoryInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
 NTSTATUS
 VfatGetFileBothInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
 			    PDEVICE_EXTENSION DeviceExt,
-			    PFILE_BOTH_DIRECTORY_INFORMATION pInfo,
+			    PFILE_BOTH_DIR_INFORMATION pInfo,
 			    ULONG BufferLength)
 {
-  if ((sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + DirContext->LongNameU.Length) > BufferLength)
+  if ((sizeof (FILE_BOTH_DIR_INFORMATION) + DirContext->LongNameU.Length) > BufferLength)
     return STATUS_BUFFER_OVERFLOW;
   
   if (DeviceExt->Flags & VCB_IS_FATX)
@@ -231,7 +226,7 @@ VfatGetFileBothInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
     pInfo->FileNameLength = DirContext->LongNameU.Length;
     RtlCopyMemory(pInfo->FileName, DirContext->LongNameU.Buffer, DirContext->LongNameU.Length);
     pInfo->NextEntryOffset = 
-      DWORD_ROUND_UP (sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + DirContext->LongNameU.Length);
+      ULONG_ROUND_UP (sizeof (FILE_BOTH_DIR_INFORMATION) + DirContext->LongNameU.Length);
     pInfo->ShortName[0] = 0;
     pInfo->ShortNameLength = 0;
     //      pInfo->FileIndex=;
@@ -264,7 +259,7 @@ VfatGetFileBothInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
   {
     pInfo->FileNameLength = DirContext->LongNameU.Length;
     pInfo->NextEntryOffset = 
-      DWORD_ROUND_UP (sizeof (FILE_BOTH_DIRECTORY_INFORMATION) + DirContext->LongNameU.Length);
+      ULONG_ROUND_UP (sizeof (FILE_BOTH_DIR_INFORMATION) + DirContext->LongNameU.Length);
     RtlCopyMemory(pInfo->ShortName, DirContext->ShortNameU.Buffer, DirContext->ShortNameU.Length);
     pInfo->ShortNameLength = DirContext->ShortNameU.Length;
     RtlCopyMemory (pInfo->FileName, DirContext->LongNameU.Buffer, DirContext->LongNameU.Length);
@@ -311,7 +306,7 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
   BOOLEAN First = FALSE;
   BOOLEAN FirstCall;
   VFAT_DIRENTRY_CONTEXT DirContext;
-  WCHAR LongNameBuffer[MAX_PATH];
+  WCHAR LongNameBuffer[LONGNAME_MAX_LENGTH + 1];
   WCHAR ShortNameBuffer[13];
 
   PIO_STACK_LOCATION Stack = IrpContext->Stack;
@@ -344,7 +339,13 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
     }
 
   /* Obtain the callers parameters */
+#ifdef _MSC_VER
+  /* HACKHACK: Bug in the MS ntifs.h header:
+   * FileName is really a PUNICODE_STRING, not a PSTRING */
+  pSearchPattern = (PUNICODE_STRING)Stack->Parameters.QueryDirectory.FileName;
+#else
   pSearchPattern = Stack->Parameters.QueryDirectory.FileName;
+#endif
   FileInformationClass =
     Stack->Parameters.QueryDirectory.FileInformationClass;
   FileIndex = Stack->Parameters.QueryDirectory.FileIndex;
@@ -427,13 +428,13 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
              case FileFullDirectoryInformation:
                RC = VfatGetFileFullDirectoryInformation (&DirContext, 
 	                                                 IrpContext->DeviceExt,
-						         (PFILE_FULL_DIRECTORY_INFORMATION) Buffer, 
+						         (PFILE_FULL_DIR_INFORMATION) Buffer, 
 						         BufferLength);
                break;
              case FileBothDirectoryInformation:
                RC = VfatGetFileBothInformation (&DirContext, 
 	                                        IrpContext->DeviceExt,
-					        (PFILE_BOTH_DIRECTORY_INFORMATION) Buffer, 
+					        (PFILE_BOTH_DIR_INFORMATION) Buffer, 
 					        BufferLength);
                break;
              default:

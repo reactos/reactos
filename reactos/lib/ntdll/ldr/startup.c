@@ -37,14 +37,12 @@ static CRITICAL_SECTION LoaderLock;
 static RTL_BITMAP TlsBitMap;
 PLDR_MODULE ExeModule;
 
-ULONG NtGlobalFlag = 0;
-
 NTSTATUS LdrpAttachThread (VOID);
 
 
 #define VALUE_BUFFER_SIZE 256
 
-BOOL FASTCALL
+BOOLEAN FASTCALL
 ReadCompatibilitySetting(HANDLE Key, LPWSTR Value, PKEY_VALUE_PARTIAL_INFORMATION ValueInfo, DWORD *Buffer)
 {
 	UNICODE_STRING ValueName;
@@ -102,13 +100,12 @@ LoadImageFileExecutionOptions(PPEB Peb)
 	 *   read more options 
          */
       }
-    NtGlobalFlag = Peb->NtGlobalFlag;
 }
 
 
 	    
 	
-BOOL FASTCALL
+BOOLEAN FASTCALL
 LoadCompatibilitySettings(PPEB Peb)
 {
 	NTSTATUS Status;
@@ -225,7 +222,6 @@ finish:
 	return FALSE;
 }
 
-
 /* FUNCTIONS *****************************************************************/
 
 VOID STDCALL
@@ -242,6 +238,8 @@ __true_LdrInitializeThunk (ULONG Unknown1,
    PLDR_MODULE NtModule;  // ntdll
    NLSTABLEINFO NlsTable;
    WCHAR FullNtDllPath[MAX_PATH];
+   SYSTEM_BASIC_INFORMATION SystemInformation;
+   NTSTATUS Status;
 
    DPRINT("LdrInitializeThunk()\n");
    if (NtCurrentPeb()->Ldr == NULL || NtCurrentPeb()->Ldr->Initialized == FALSE)
@@ -259,6 +257,7 @@ __true_LdrInitializeThunk (ULONG Unknown1,
        /*  If MZ header exists  */
        PEDosHeader = (PIMAGE_DOS_HEADER) ImageBase;
        DPRINT("PEDosHeader %x\n", PEDosHeader);
+
        if (PEDosHeader->e_magic != IMAGE_DOS_MAGIC ||
            PEDosHeader->e_lfanew == 0L ||
            *(PULONG)((PUCHAR)ImageBase + PEDosHeader->e_lfanew) != IMAGE_PE_MAGIC)
@@ -279,6 +278,21 @@ __true_LdrInitializeThunk (ULONG Unknown1,
 
        NTHeaders = (PIMAGE_NT_HEADERS)(ImageBase + PEDosHeader->e_lfanew);
 
+       /* Get number of processors */
+       Status = ZwQuerySystemInformation(SystemBasicInformation,
+	                                 &SystemInformation,
+					 sizeof(SYSTEM_BASIC_INFORMATION),
+					 NULL);
+       if (!NT_SUCCESS(Status))
+         {
+	   ZwTerminateProcess(NtCurrentProcess(), Status);
+	 }
+
+       Peb->NumberOfProcessors = SystemInformation.NumberProcessors;
+
+       /* Initialize Critical Section Data */
+       RtlpInitDeferedCriticalSection();
+
        /* create process heap */
        RtlInitializeHeapManager();
        Peb->ProcessHeap = RtlCreateHeap(HEAP_GROWABLE,
@@ -292,7 +306,7 @@ __true_LdrInitializeThunk (ULONG Unknown1,
            DPRINT1("Failed to create process heap\n");
            ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
          }
-
+            
        /* initalize peb lock support */
        RtlInitializeCriticalSection (&PebLock);
        Peb->FastPebLock = &PebLock;
@@ -311,7 +325,7 @@ __true_LdrInitializeThunk (ULONG Unknown1,
          RtlAllocateHeap(RtlGetProcessHeap(),
                          0,
                          sizeof(PVOID) * (USER32_CALLBACK_MAXIMUM + 1));
-
+       
        /* initalize loader lock */
        RtlInitializeCriticalSection (&LoaderLock);
        Peb->LoaderLock = &LoaderLock;
@@ -367,7 +381,7 @@ __true_LdrInitializeThunk (ULONG Unknown1,
        NtModule->CheckSum = 0;
 
        NTHeaders = RtlImageNtHeader (NtModule->BaseAddress);
-       NtModule->SizeOfImage = NTHeaders->OptionalHeader.SizeOfImage;
+       NtModule->ResidentSize = LdrpGetResidentSize(NTHeaders);
        NtModule->TimeDateStamp = NTHeaders->FileHeader.TimeDateStamp;
 
        InsertTailList(&Peb->Ldr->InLoadOrderModuleList,
@@ -415,7 +429,7 @@ __true_LdrInitializeThunk (ULONG Unknown1,
        ExeModule->CheckSum = 0;
 
        NTHeaders = RtlImageNtHeader (ExeModule->BaseAddress);
-       ExeModule->SizeOfImage = NTHeaders->OptionalHeader.SizeOfImage;
+       ExeModule->ResidentSize = LdrpGetResidentSize(NTHeaders);
        ExeModule->TimeDateStamp = NTHeaders->FileHeader.TimeDateStamp;
 
        InsertHeadList(&Peb->Ldr->InLoadOrderModuleList,

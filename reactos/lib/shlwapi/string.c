@@ -599,7 +599,7 @@ LPWSTR WINAPI StrRStrIW(LPCWSTR lpszStr, LPCWSTR lpszEnd, LPCWSTR lpszSearch)
 
   while (lpszStr <= lpszEnd  && *lpszStr)
   {
-    if (!ChrCmpIA(*lpszSearch, *lpszStr))
+    if (!ChrCmpIW(*lpszSearch, *lpszStr))
     {
       if (!StrCmpNIW(lpszStr, lpszSearch, iLen))
         lpszRet = (LPWSTR)lpszStr;
@@ -2186,7 +2186,7 @@ INT WINAPI StrCmpLogicalW(LPCWSTR lpszStr, LPCWSTR lpszComp)
         return 1;
       else
       {
-        iDiff = SHLWAPI_ChrCmpHelperA(*lpszStr,*lpszComp,NORM_IGNORECASE);
+        iDiff = SHLWAPI_ChrCmpHelperW(*lpszStr,*lpszComp,NORM_IGNORECASE);
         if (iDiff > 0)
           return 1;
         else if (iDiff < 0)
@@ -2208,12 +2208,12 @@ typedef struct tagSHLWAPI_BYTEFORMATS
   LONGLONG dLimit;
   double   dDivisor;
   double   dNormaliser;
-  LPCSTR   lpszFormat;
-  CHAR     wPrefix;
+  LPCWSTR   lpwszFormat;
+  WCHAR     wPrefix;
 } SHLWAPI_BYTEFORMATS;
 
 /*************************************************************************
- * StrFormatByteSize64A	[SHLWAPI.@]
+ * StrFormatByteSizeW	[SHLWAPI.@]
  *
  * Create a string containing an abbreviated byte count of up to 2^63-1.
  *
@@ -2228,12 +2228,12 @@ typedef struct tagSHLWAPI_BYTEFORMATS
  * NOTES
  *  There is no StrFormatByteSize64W function, it is called StrFormatByteSizeW().
  */
-LPSTR WINAPI StrFormatByteSize64A(LONGLONG llBytes, LPSTR lpszDest, UINT cchMax)
+LPWSTR WINAPI StrFormatByteSizeW(LONGLONG llBytes, LPWSTR lpszDest, UINT cchMax)
 {
-  static const char szBytes[] = "%ld bytes";
-  static const char sz3_0[] = "%3.0f";
-  static const char sz3_1[] = "%3.1f";
-  static const char sz3_2[] = "%3.2f";
+  static const WCHAR wszBytes[] = {'%','l','d',' ','b','y','t','e','s',0};
+  static const WCHAR wsz3_0[] = {'%','3','.','0','f',0};
+  static const WCHAR wsz3_1[] = {'%','3','.','1','f',0};
+  static const WCHAR wsz3_2[] = {'%','3','.','2','f',0};
 
 #define KB ((ULONGLONG)1024)
 #define MB (KB*KB)
@@ -2243,25 +2243,25 @@ LPSTR WINAPI StrFormatByteSize64A(LONGLONG llBytes, LPSTR lpszDest, UINT cchMax)
 
   static const SHLWAPI_BYTEFORMATS bfFormats[] =
   {
-    { 10*KB, 10.24, 100.0, sz3_2, 'K' }, /* 10 KB */
-    { 100*KB, 102.4, 10.0, sz3_1, 'K' }, /* 100 KB */
-    { 1000*KB, 1024.0, 1.0, sz3_0, 'K' }, /* 1000 KB */
-    { 10*MB, 10485.76, 100.0, sz3_2, 'M' }, /* 10 MB */
-    { 100*MB, 104857.6, 10.0, sz3_1, 'M' }, /* 100 MB */
-    { 1000*MB, 1048576.0, 1.0, sz3_0, 'M' }, /* 1000 MB */
-    { 10*GB, 10737418.24, 100.0, sz3_2, 'G' }, /* 10 GB */
-    { 100*GB, 107374182.4, 10.0, sz3_1, 'G' }, /* 100 GB */
-    { 1000*GB, 1073741824.0, 1.0, sz3_0, 'G' }, /* 1000 GB */
-    { 10*TB, 10485.76, 100.0, sz3_2, 'T' }, /* 10 TB */
-    { 100*TB, 104857.6, 10.0, sz3_1, 'T' }, /* 100 TB */
-    { 1000*TB, 1048576.0, 1.0, sz3_0, 'T' }, /* 1000 TB */
-    { 10*PB, 10737418.24, 100.00, sz3_2, 'P' }, /* 10 PB */
-    { 100*PB, 107374182.4, 10.00, sz3_1, 'P' }, /* 100 PB */
-    { 1000*PB, 1073741824.0, 1.00, sz3_0, 'P' }, /* 1000 PB */
-    { 0, 10995116277.76, 100.00, sz3_2, 'E' } /* EB's, catch all */
+    { 10*KB, 10.24, 100.0, wsz3_2, 'K' }, /* 10 KB */
+    { 100*KB, 102.4, 10.0, wsz3_1, 'K' }, /* 100 KB */
+    { 1000*KB, 1024.0, 1.0, wsz3_0, 'K' }, /* 1000 KB */
+    { 10*MB, 10485.76, 100.0, wsz3_2, 'M' }, /* 10 MB */
+    { 100*MB, 104857.6, 10.0, wsz3_1, 'M' }, /* 100 MB */
+    { 1000*MB, 1048576.0, 1.0, wsz3_0, 'M' }, /* 1000 MB */
+    { 10*GB, 10737418.24, 100.0, wsz3_2, 'G' }, /* 10 GB */
+    { 100*GB, 107374182.4, 10.0, wsz3_1, 'G' }, /* 100 GB */
+    { 1000*GB, 1073741824.0, 1.0, wsz3_0, 'G' }, /* 1000 GB */
+    { 10*TB, 10485.76, 100.0, wsz3_2, 'T' }, /* 10 TB */
+    { 100*TB, 104857.6, 10.0, wsz3_1, 'T' }, /* 100 TB */
+    { 1000*TB, 1048576.0, 1.0, wsz3_0, 'T' }, /* 1000 TB */
+    { 10*PB, 10737418.24, 100.00, wsz3_2, 'P' }, /* 10 PB */
+    { 100*PB, 107374182.4, 10.00, wsz3_1, 'P' }, /* 100 PB */
+    { 1000*PB, 1073741824.0, 1.00, wsz3_0, 'P' }, /* 1000 PB */
+    { 0, 10995116277.76, 100.00, wsz3_2, 'E' } /* EB's, catch all */
   };
-  char szBuff[32];
-  char szAdd[4];
+  WCHAR wszBuff[32];
+  WCHAR wszAdd[] = {' ','?','B',0};
   double dBytes;
   UINT i = 0;
 
@@ -2272,7 +2272,7 @@ LPSTR WINAPI StrFormatByteSize64A(LONGLONG llBytes, LPSTR lpszDest, UINT cchMax)
 
   if (llBytes < 1024)  /* 1K */
   {
-    snprintf (lpszDest, cchMax, szBytes, (long)llBytes);
+    snprintfW(lpszDest, cchMax, wszBytes, (long)llBytes);
     return lpszDest;
   }
 
@@ -2298,30 +2298,26 @@ LPSTR WINAPI StrFormatByteSize64A(LONGLONG llBytes, LPSTR lpszDest, UINT cchMax)
 
   dBytes = floor(dBytes / bfFormats[i].dDivisor) / bfFormats[i].dNormaliser;
 
-  sprintf(szBuff, bfFormats[i].lpszFormat, dBytes);
-  szAdd[0] = ' ';
-  szAdd[1] = bfFormats[i].wPrefix;
-  szAdd[2] = 'B';
-  szAdd[3] = '\0';
-  strcat(szBuff, szAdd);
-  strncpy(lpszDest, szBuff, cchMax);
+  sprintfW(wszBuff, bfFormats[i].lpwszFormat, dBytes);
+  wszAdd[1] = bfFormats[i].wPrefix;
+  strcatW(wszBuff, wszAdd);
+  strncpyW(lpszDest, wszBuff, cchMax);
   return lpszDest;
 }
 
 /*************************************************************************
- * StrFormatByteSizeW	[SHLWAPI.@]
+ * StrFormatByteSize64A	[SHLWAPI.@]
  *
- * See StrFormatByteSize64A.
+ * See StrFormatByteSizeW.
  */
-LPWSTR WINAPI StrFormatByteSizeW(LONGLONG llBytes, LPWSTR lpszDest,
-                                 UINT cchMax)
+LPSTR WINAPI StrFormatByteSize64A(LONGLONG llBytes, LPSTR lpszDest, UINT cchMax)
 {
-  char szBuff[32];
+  WCHAR wszBuff[32];
 
-  StrFormatByteSize64A(llBytes, szBuff, sizeof(szBuff));
+  StrFormatByteSizeW(llBytes, wszBuff, sizeof(wszBuff)/sizeof(WCHAR));
 
   if (lpszDest)
-    MultiByteToWideChar(CP_ACP, 0, szBuff, -1, lpszDest, cchMax);
+    WideCharToMultiByte(CP_ACP, 0, wszBuff, -1, lpszDest, cchMax, 0, 0);
   return lpszDest;
 }
 
@@ -2560,6 +2556,7 @@ INT WINAPI SHUnicodeToAnsiCP(UINT CodePage, LPCWSTR lpSrcStr, LPSTR lpDstStr,
         {
           SHTruncateString(mem, *lpiLen);
           lstrcpynA(lpDstStr, mem, *lpiLen + 1);
+          HeapFree(GetProcessHeap(), 0, mem);
           return *lpiLen + 1;
         }
         HeapFree(GetProcessHeap(), 0, mem);
@@ -2568,7 +2565,6 @@ INT WINAPI SHUnicodeToAnsiCP(UINT CodePage, LPCWSTR lpSrcStr, LPSTR lpDstStr,
       lpDstStr[*lpiLen] = '\0';
       return *lpiLen;
     }
-    break;
   default:
     break;
   }

@@ -34,9 +34,9 @@ VOID LoadAndBootBootSector(PUCHAR OperatingSystemName)
 	PFILE	FilePointer;
 	UCHAR	SettingName[80];
 	UCHAR	SettingValue[80];
-	U32		SectionId;
+	ULONG		SectionId;
 	UCHAR	FileName[260];
-	U32		BytesRead;
+	ULONG		BytesRead;
 
 	// Find all the message box settings and run them
 	UiShowMessageBoxesInSection(OperatingSystemName);
@@ -90,7 +90,7 @@ VOID LoadAndBootBootSector(PUCHAR OperatingSystemName)
 	}
 
 	// Check for validity
-	if (*((U16*)(0x7c00 + 0x1fe)) != 0xaa55)
+	if (*((USHORT*)(0x7c00 + 0x1fe)) != 0xaa55)
 	{
 		UiMessageBox("Invalid boot sector magic (0xaa55)");
 		return;
@@ -113,7 +113,7 @@ VOID LoadAndBootPartition(PUCHAR OperatingSystemName)
 {
 	UCHAR					SettingName[80];
 	UCHAR					SettingValue[80];
-	U32						SectionId;
+	ULONG						SectionId;
 	PARTITION_TABLE_ENTRY	PartitionTableEntry;
 
 	// Find all the message box settings and run them
@@ -159,7 +159,7 @@ VOID LoadAndBootPartition(PUCHAR OperatingSystemName)
 	}
 
 	// Check for validity
-	if (*((U16*)(0x7c00 + 0x1fe)) != 0xaa55)
+	if (*((USHORT*)(0x7c00 + 0x1fe)) != 0xaa55)
 	{
 		UiMessageBox("Invalid boot sector magic (0xaa55)");
 		return;
@@ -182,7 +182,7 @@ VOID LoadAndBootDrive(PUCHAR OperatingSystemName)
 {
 	UCHAR	SettingName[80];
 	UCHAR	SettingValue[80];
-	U32		SectionId;
+	ULONG		SectionId;
 
 	// Find all the message box settings and run them
 	UiShowMessageBoxesInSection(OperatingSystemName);
@@ -211,7 +211,7 @@ VOID LoadAndBootDrive(PUCHAR OperatingSystemName)
 	}
 
 	// Check for validity
-	if (*((U16*)(0x7c00 + 0x1fe)) != 0xaa55)
+	if (*((USHORT*)(0x7c00 + 0x1fe)) != 0xaa55)
 	{
 		UiMessageBox("Invalid boot sector magic (0xaa55)");
 		return;

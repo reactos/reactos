@@ -78,13 +78,14 @@ IntVideoPortAddDevice(
    DriverExtension = IoGetDriverObjectExtension(DriverObject, DriverObject);
 
    /*
-    * Use generic routine to find the adapter and create device object.
+    * Create adapter device object.
     */
 
-   return IntVideoPortFindAdapter(
+   return IntVideoPortCreateAdapterDeviceObject(
       DriverObject,
       DriverExtension,
-      PhysicalDeviceObject);      
+      PhysicalDeviceObject,
+      NULL);
 }
 
 /*
@@ -265,17 +266,148 @@ IntVideoPortDispatchDeviceControl(
 }
 
 NTSTATUS STDCALL
+IntVideoPortPnPStartDevice(
+   IN PDEVICE_OBJECT DeviceObject,
+   IN PIRP Irp)
+{
+   PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
+   PDRIVER_OBJECT DriverObject;
+   PVIDEO_PORT_DRIVER_EXTENSION DriverExtension;
+   PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+   PCM_RESOURCE_LIST AllocatedResources;
+
+   /*
+    * Get the initialization data we saved in VideoPortInitialize.
+    */
+
+   DriverObject = DeviceObject->DriverObject;
+   DriverExtension = IoGetDriverObjectExtension(DriverObject, DriverObject);
+   DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+   /*
+    * Store some resources in the DeviceExtension.
+    */
+
+   AllocatedResources = Stack->Parameters.StartDevice.AllocatedResources;
+   if (AllocatedResources != NULL)
+   {
+      CM_FULL_RESOURCE_DESCRIPTOR *FullList;
+      CM_PARTIAL_RESOURCE_DESCRIPTOR *Descriptor;
+      ULONG ResourceCount;
+      ULONG ResourceListSize;
+
+      /* Save the resource list */
+      ResourceCount = AllocatedResources->List[0].PartialResourceList.Count;
+      ResourceListSize =
+         FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList.
+                      PartialDescriptors[ResourceCount]);
+      DeviceExtension->AllocatedResources = ExAllocatePool(PagedPool, ResourceListSize);
+      if (DeviceExtension->AllocatedResources == NULL)
+      {
+         return STATUS_INSUFFICIENT_RESOURCES;
+      }
+
+      RtlCopyMemory(DeviceExtension->AllocatedResources,
+                    AllocatedResources,
+                    ResourceListSize);
+
+      /* Get the interrupt level/vector - needed by HwFindAdapter sometimes */
+      for (FullList = AllocatedResources->List;
+           FullList < AllocatedResources->List + AllocatedResources->Count;
+           FullList++)
+      {
+         /* FIXME: Is this ASSERT ok for resources from the PNP manager? */
+         ASSERT(FullList->InterfaceType == PCIBus &&
+                FullList->BusNumber == DeviceExtension->SystemIoBusNumber &&
+                1 == FullList->PartialResourceList.Version &&
+                1 == FullList->PartialResourceList.Revision);
+	 for (Descriptor = FullList->PartialResourceList.PartialDescriptors;
+              Descriptor < FullList->PartialResourceList.PartialDescriptors + FullList->PartialResourceList.Count;
+              Descriptor++)
+         {
+            if (Descriptor->Type == CmResourceTypeInterrupt)
+            {
+               DeviceExtension->InterruptLevel = Descriptor->u.Interrupt.Level;
+               DeviceExtension->InterruptVector = Descriptor->u.Interrupt.Vector;
+            }
+         }
+      }
+   }
+   DPRINT("Interrupt level: 0x%x Interrupt Vector: 0x%x\n",
+          DeviceExtension->InterruptLevel,
+          DeviceExtension->InterruptVector);
+
+   /*
+    * Create adapter device object.
+    */
+
+   return IntVideoPortFindAdapter(
+      DriverObject,
+      DriverExtension,
+      DeviceObject);
+}
+
+
+NTSTATUS
+STDCALL
+IntVideoPortForwardIrpAndWaitCompletionRoutine(
+    PDEVICE_OBJECT Fdo,
+    PIRP Irp,
+    PVOID Context)
+{
+  PKEVENT Event = Context;
+
+  if (Irp->PendingReturned)
+    KeSetEvent(Event, IO_NO_INCREMENT, FALSE);
+
+  return STATUS_MORE_PROCESSING_REQUIRED;
+}
+
+
+NTSTATUS
+STDCALL
+IntVideoPortForwardIrpAndWait(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+{
+   KEVENT Event;
+   NTSTATUS Status;
+   PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension =
+                   (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+   KeInitializeEvent(&Event, NotificationEvent, FALSE);
+   IoCopyCurrentIrpStackLocationToNext(Irp);
+   IoSetCompletionRoutine(Irp, IntVideoPortForwardIrpAndWaitCompletionRoutine,
+                          &Event, TRUE, TRUE, TRUE);
+   Status = IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
+   if (Status == STATUS_PENDING)
+   {
+      KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+      Status = Irp->IoStatus.Status;
+   }
+   return Status;
+}
+
+
+NTSTATUS STDCALL
 IntVideoPortDispatchPnp(
    IN PDEVICE_OBJECT DeviceObject,
    IN PIRP Irp)
 {
    PIO_STACK_LOCATION IrpSp;
+   NTSTATUS Status;
 
    IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
    switch (IrpSp->MinorFunction)
    {
       case IRP_MN_START_DEVICE:
+         Status = IntVideoPortForwardIrpAndWait(DeviceObject, Irp);
+         if (NT_SUCCESS(Status) && NT_SUCCESS(Irp->IoStatus.Status))
+            Status = IntVideoPortPnPStartDevice(DeviceObject, Irp);
+         Irp->IoStatus.Status = Status;
+         Irp->IoStatus.Information = 0;
+         IoCompleteRequest(Irp, IO_NO_INCREMENT);
+         break;
+
 
       case IRP_MN_REMOVE_DEVICE:
       case IRP_MN_QUERY_REMOVE_DEVICE:
@@ -283,16 +415,28 @@ IntVideoPortDispatchPnp(
       case IRP_MN_SURPRISE_REMOVAL:
 
       case IRP_MN_STOP_DEVICE:
+         Status = IntVideoPortForwardIrpAndWait(DeviceObject, Irp);
+         if (NT_SUCCESS(Status) && NT_SUCCESS(Irp->IoStatus.Status))
+            Status = STATUS_SUCCESS;
+         Irp->IoStatus.Status = Status;
+         Irp->IoStatus.Information = 0;
+         IoCompleteRequest(Irp, IO_NO_INCREMENT);
+         break;
+
       case IRP_MN_QUERY_STOP_DEVICE:
       case IRP_MN_CANCEL_STOP_DEVICE:
+         Status = STATUS_SUCCESS;
          Irp->IoStatus.Status = STATUS_SUCCESS;
          Irp->IoStatus.Information = 0;
          IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-         return STATUS_SUCCESS;
+         break;
+         
+      default:
+         return STATUS_NOT_IMPLEMENTED;
+         break;
    }
    
-   return STATUS_NOT_IMPLEMENTED;
+   return Status;
 }
 
 NTSTATUS STDCALL

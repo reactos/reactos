@@ -13,13 +13,7 @@
 
 /*  -------------------------------------------------------  INCLUDES  */
 
-#include <ddk/ntddk.h>
-#include <wchar.h>
-#include <limits.h>
-
 #define NDEBUG
-#include <debug.h>
-
 #include "vfat.h"
 
 ULONG 
@@ -45,7 +39,7 @@ vfatDirEntryGetFirstCluster (PDEVICE_EXTENSION  pDeviceExt,
   return  cluster;
 }
 
-BOOL FATIsDirectoryEmpty(PVFATFCB Fcb)
+BOOLEAN FATIsDirectoryEmpty(PVFATFCB Fcb)
 {
    LARGE_INTEGER FileOffset;
    PVOID Context = NULL;
@@ -98,7 +92,7 @@ BOOL FATIsDirectoryEmpty(PVFATFCB Fcb)
    return TRUE;
 }
 
-BOOL FATXIsDirectoryEmpty(PVFATFCB Fcb)
+BOOLEAN FATXIsDirectoryEmpty(PVFATFCB Fcb)
 {
    LARGE_INTEGER FileOffset;
    PVOID Context = NULL;
@@ -144,7 +138,7 @@ BOOL FATXIsDirectoryEmpty(PVFATFCB Fcb)
    return TRUE;
 }
 
-BOOL VfatIsDirectoryEmpty(PVFATFCB Fcb)
+BOOLEAN VfatIsDirectoryEmpty(PVFATFCB Fcb)
 {
    if (Fcb->Flags & FCB_IS_FATX_ENTRY)
       return FATXIsDirectoryEmpty(Fcb);
@@ -181,7 +175,8 @@ NTSTATUS FATGetNextDirEntry(PVOID * pContext,
        {
 	  CcUnpinData(*pContext);
        }
-       if (!CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, pPage))
+       if (FileOffset.u.LowPart >= pDirFcb->RFCB.FileSize.u.LowPart ||
+           !CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, pPage))
        {
 	  *pContext = NULL;
           return STATUS_NO_MORE_ENTRIES;
@@ -210,7 +205,8 @@ NTSTATUS FATGetNextDirEntry(PVOID * pContext,
               {
                 CcUnpinData(*pContext);
                 FileOffset.u.LowPart -= PAGE_SIZE;
-                if (!CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, pPage))
+                if (FileOffset.u.LowPart >= pDirFcb->RFCB.FileSize.u.LowPart ||
+                    !CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, pPage))
                   {
 	            CHECKPOINT;
 	            *pContext = NULL;
@@ -234,7 +230,8 @@ NTSTATUS FATGetNextDirEntry(PVOID * pContext,
 	      {
 	        CcUnpinData(*pContext);
 	        FileOffset.u.LowPart += PAGE_SIZE;
-	        if (!CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, pPage))
+	        if (FileOffset.u.LowPart >= pDirFcb->RFCB.FileSize.u.LowPart || 
+	            !CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, pPage))
 	          {
 		    CHECKPOINT;
 		    *pContext = NULL;
@@ -331,7 +328,8 @@ NTSTATUS FATGetNextDirEntry(PVOID * pContext,
 	  {
 	    CcUnpinData(*pContext);
 	    FileOffset.u.LowPart += PAGE_SIZE;
-	    if (!CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, pPage))
+	    if (FileOffset.u.LowPart >= pDirFcb->RFCB.FileSize.u.LowPart ||
+	        !CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, pPage))
 	      {
 		CHECKPOINT;
 		*pContext = NULL;
@@ -367,7 +365,6 @@ NTSTATUS FATXGetNextDirEntry(PVOID * pContext,
    ULONG DirIndex = DirContext->DirIndex;
 
    FileOffset.u.HighPart = 0;
-   FileOffset.u.LowPart = ROUND_DOWN(DirContext->DirIndex * sizeof(FATX_DIR_ENTRY), PAGE_SIZE);
    
    if (!vfatFCBIsRoot(pDirFcb))
    {
@@ -409,7 +406,9 @@ NTSTATUS FATXGetNextDirEntry(PVOID * pContext,
       {
          CcUnpinData(*pContext);
       }
-      if (!CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, pPage))
+      FileOffset.u.LowPart = ROUND_DOWN(DirIndex * sizeof(FATX_DIR_ENTRY), PAGE_SIZE);
+      if (FileOffset.u.LowPart >= pDirFcb->RFCB.FileSize.u.LowPart ||
+          !CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, pPage))
       {
          *pContext = NULL;
          return STATUS_NO_MORE_ENTRIES;
@@ -418,33 +417,35 @@ NTSTATUS FATXGetNextDirEntry(PVOID * pContext,
 
    fatxDirEntry = (PFATX_DIR_ENTRY)(*pPage) + DirIndex % FATX_ENTRIES_PER_PAGE;
 
-   DirContext->StartIndex = DirIndex;
+   DirContext->StartIndex = DirContext->DirIndex;
 
    while (TRUE)
    {
-	   if (FATX_ENTRY_END(fatxDirEntry))
-	   {
-	      CcUnpinData(*pContext);
-	      *pContext = NULL;
-	      return STATUS_NO_MORE_ENTRIES;
-	   }
+      if (FATX_ENTRY_END(fatxDirEntry))
+      {
+          CcUnpinData(*pContext);
+          *pContext = NULL;
+          return STATUS_NO_MORE_ENTRIES;
+      }	   
 
-	   if (!FATX_ENTRY_DELETED(fatxDirEntry))
-	   {
-         RtlCopyMemory(&DirContext->DirEntry.FatX, fatxDirEntry, sizeof(FATX_DIR_ENTRY));
-		   break;
+      if (!FATX_ENTRY_DELETED(fatxDirEntry))
+      {
+          RtlCopyMemory(&DirContext->DirEntry.FatX, fatxDirEntry, sizeof(FATX_DIR_ENTRY));
+          break;
       }
-   	DirContext->DirIndex++;
-   	DirContext->StartIndex++;
-   	if ((DirContext->DirIndex % FATX_ENTRIES_PER_PAGE) == 0)
+      DirContext->DirIndex++;
+      DirContext->StartIndex++;
+      DirIndex++;
+      if ((DirIndex % FATX_ENTRIES_PER_PAGE) == 0)
       {
          CcUnpinData(*pContext);
          FileOffset.u.LowPart += PAGE_SIZE;
-         if (!CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, pPage))
+         if (FileOffset.u.LowPart >= pDirFcb->RFCB.FileSize.u.LowPart ||
+             !CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, pPage))
          {
             CHECKPOINT;
-   		   *pContext = NULL;
-   		   return STATUS_NO_MORE_ENTRIES;
+            *pContext = NULL;
+   	    return STATUS_NO_MORE_ENTRIES;
          }
          fatxDirEntry = (PFATX_DIR_ENTRY)*pPage;
       }

@@ -165,9 +165,9 @@ public:
 
 
  /// subclassed ShellView window
-struct DesktopShellView : public SubclassedWindow
+struct DesktopShellView : public ExtContextMenuHandlerT<SubclassedWindow>
 {
-	typedef SubclassedWindow super;
+	typedef ExtContextMenuHandlerT<SubclassedWindow> super;
 
 	DesktopShellView(HWND hwnd, IShellView* pShellView);
 
@@ -180,7 +180,7 @@ protected:
 	int		Command(int id, int code);
 	int		Notify(int id, NMHDR* pnmh);
 
-	bool	DoContextMenu(int x, int y);
+	bool	DoContextMenu(int x, int y, CtxMenuInterfaces& cm_ifs);
 	HRESULT DoDesktopContextMenu(int x, int y);
 	void	PositionIcons(int dir=1);
 

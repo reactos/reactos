@@ -38,9 +38,9 @@
 
 static struct
 {
-  U32 SectorCountBeforePartition;
-  U32 PartitionSectorCount;
-  U8 SystemIndicator;
+  ULONG SectorCountBeforePartition;
+  ULONG PartitionSectorCount;
+  UCHAR SystemIndicator;
 } XboxPartitions[] =
 {
   /* This is in the \Device\Harddisk0\Partition.. order used by the Xbox kernel */
@@ -155,17 +155,17 @@ static struct
  *  Data block read and write commands
  */
 #define IDEReadBlock(Address, Buffer, Count) \
-  (READ_PORT_BUFFER_USHORT((PU16)((Address) + IDE_REG_DATA_PORT), (PU16)(Buffer), (Count) / 2))
+  (READ_PORT_BUFFER_USHORT((PUSHORT)((Address) + IDE_REG_DATA_PORT), (PUSHORT)(Buffer), (Count) / 2))
 #define IDEWriteBlock(Address, Buffer, Count) \
-  (WRITE_PORT_BUFFER_USHORT((PU16)((Address) + IDE_REG_DATA_PORT), (PU16)(Buffer), (Count) / 2))
+  (WRITE_PORT_BUFFER_USHORT((PUSHORT)((Address) + IDE_REG_DATA_PORT), (PUSHORT)(Buffer), (Count) / 2))
 
 #define IDEReadBlock32(Address, Buffer, Count) \
-  (READ_PORT_BUFFER_ULONG((PU32)((Address) + IDE_REG_DATA_PORT), (PU32)(Buffer), (Count) / 4))
+  (READ_PORT_BUFFER_ULONG((PULONG)((Address) + IDE_REG_DATA_PORT), (PULONG)(Buffer), (Count) / 4))
 #define IDEWriteBlock32(Address, Buffer, Count) \
-  (WRITE_PORT_BUFFER_ULONG((PU32)((Address) + IDE_REG_DATA_PORT), (PU32)(Buffer), (Count) / 4))
+  (WRITE_PORT_BUFFER_ULONG((PULONG)((Address) + IDE_REG_DATA_PORT), (PULONG)(Buffer), (Count) / 4))
 
 #define IDEReadWord(Address) \
-  (READ_PORT_USHORT((PU16)((Address) + IDE_REG_DATA_PORT)))
+  (READ_PORT_USHORT((PUSHORT)((Address) + IDE_REG_DATA_PORT)))
 
 /*
  *  Access macros for control registers
@@ -180,64 +180,64 @@ static struct
 
 typedef struct _IDE_DRIVE_IDENTIFY
 {
-  U16   ConfigBits;          /*00*/
-  U16   LogicalCyls;         /*01*/
-  U16   Reserved02;          /*02*/
-  U16   LogicalHeads;        /*03*/
-  U16   BytesPerTrack;       /*04*/
-  U16   BytesPerSector;      /*05*/
-  U16   SectorsPerTrack;     /*06*/
-  U8    InterSectorGap;      /*07*/
-  U8    InterSectorGapSize;
-  U8    Reserved08H;         /*08*/
-  U8    BytesInPLO;
-  U16   VendorUniqueCnt;     /*09*/
+  USHORT   ConfigBits;          /*00*/
+  USHORT   LogicalCyls;         /*01*/
+  USHORT   Reserved02;          /*02*/
+  USHORT   LogicalHeads;        /*03*/
+  USHORT   BytesPerTrack;       /*04*/
+  USHORT   BytesPerSector;      /*05*/
+  USHORT   SectorsPerTrack;     /*06*/
+  UCHAR    InterSectorGap;      /*07*/
+  UCHAR    InterSectorGapSize;
+  UCHAR    Reserved08H;         /*08*/
+  UCHAR    BytesInPLO;
+  USHORT   VendorUniqueCnt;     /*09*/
   char  SerialNumber[20];    /*10*/
-  U16   ControllerType;      /*20*/
-  U16   BufferSize;          /*21*/
-  U16   ECCByteCnt;          /*22*/
+  USHORT   ControllerType;      /*20*/
+  USHORT   BufferSize;          /*21*/
+  USHORT   ECCByteCnt;          /*22*/
   char  FirmwareRev[8];      /*23*/
   char  ModelNumber[40];     /*27*/
-  U16   RWMultImplemented;   /*47*/
-  U16   DWordIo;	     /*48*/
-  U16   Capabilities;        /*49*/
+  USHORT   RWMultImplemented;   /*47*/
+  USHORT   DWordIo;	     /*48*/
+  USHORT   Capabilities;        /*49*/
 #define IDE_DRID_STBY_SUPPORTED   0x2000
 #define IDE_DRID_IORDY_SUPPORTED  0x0800
 #define IDE_DRID_IORDY_DISABLE    0x0400
 #define IDE_DRID_LBA_SUPPORTED    0x0200
 #define IDE_DRID_DMA_SUPPORTED    0x0100
-  U16   Reserved50;          /*50*/
-  U16   MinPIOTransTime;     /*51*/
-  U16   MinDMATransTime;     /*52*/
-  U16   TMFieldsValid;       /*53*/
-  U16   TMCylinders;         /*54*/
-  U16   TMHeads;             /*55*/
-  U16   TMSectorsPerTrk;     /*56*/
-  U16   TMCapacityLo;        /*57*/
-  U16   TMCapacityHi;        /*58*/
-  U16   RWMultCurrent;       /*59*/
-  U16   TMSectorCountLo;     /*60*/
-  U16   TMSectorCountHi;     /*61*/
-  U16   DmaModes;            /*62*/
-  U16   MultiDmaModes;       /*63*/
-  U16   Reserved64[5];       /*64*/
-  U16   Reserved69[2];       /*69*/
-  U16   Reserved71[4];       /*71*/
-  U16   MaxQueueDepth;       /*75*/
-  U16   Reserved76[4];       /*76*/
-  U16   MajorRevision;       /*80*/
-  U16   MinorRevision;       /*81*/
-  U16   SupportedFeatures82; /*82*/
-  U16   SupportedFeatures83; /*83*/
-  U16   SupportedFeatures84; /*84*/
-  U16   EnabledFeatures85;   /*85*/
-  U16   EnabledFeatures86;   /*86*/
-  U16   EnabledFeatures87;   /*87*/
-  U16   UltraDmaModes;       /*88*/
-  U16   Reserved89[11];      /*89*/
-  U16   Max48BitAddress[4];  /*100*/
-  U16   Reserved104[151];    /*104*/
-  U16   Checksum;            /*255*/
+  USHORT   Reserved50;          /*50*/
+  USHORT   MinPIOTransTime;     /*51*/
+  USHORT   MinDMATransTime;     /*52*/
+  USHORT   TMFieldsValid;       /*53*/
+  USHORT   TMCylinders;         /*54*/
+  USHORT   TMHeads;             /*55*/
+  USHORT   TMSectorsPerTrk;     /*56*/
+  USHORT   TMCapacityLo;        /*57*/
+  USHORT   TMCapacityHi;        /*58*/
+  USHORT   RWMultCurrent;       /*59*/
+  USHORT   TMSectorCountLo;     /*60*/
+  USHORT   TMSectorCountHi;     /*61*/
+  USHORT   DmaModes;            /*62*/
+  USHORT   MultiDmaModes;       /*63*/
+  USHORT   Reserved64[5];       /*64*/
+  USHORT   Reserved69[2];       /*69*/
+  USHORT   Reserved71[4];       /*71*/
+  USHORT   MaxQueueDepth;       /*75*/
+  USHORT   Reserved76[4];       /*76*/
+  USHORT   MajorRevision;       /*80*/
+  USHORT   MinorRevision;       /*81*/
+  USHORT   SupportedFeatures82; /*82*/
+  USHORT   SupportedFeatures83; /*83*/
+  USHORT   SupportedFeatures84; /*84*/
+  USHORT   EnabledFeatures85;   /*85*/
+  USHORT   EnabledFeatures86;   /*86*/
+  USHORT   EnabledFeatures87;   /*87*/
+  USHORT   UltraDmaModes;       /*88*/
+  USHORT   Reserved89[11];      /*89*/
+  USHORT   Max48BitAddress[4];  /*100*/
+  USHORT   Reserved104[151];    /*104*/
+  USHORT   Checksum;            /*255*/
 } IDE_DRIVE_IDENTIFY, *PIDE_DRIVE_IDENTIFY;
 
 /*  XboxDiskPolledRead
@@ -249,15 +249,15 @@ typedef struct _IDE_DRIVE_IDENTIFY
  *    PASSIVE_LEVEL
  *
  *  ARGUMENTS:
- *    U32   CommandPort   Address of command port for drive
- *    U32   ControlPort   Address of control port for drive
- *    U8    PreComp       Value to write to precomp register
- *    U8    SectorCnt     Value to write to sectorCnt register
- *    U8    SectorNum     Value to write to sectorNum register
- *    U8    CylinderLow   Value to write to CylinderLow register
- *    U8    CylinderHigh  Value to write to CylinderHigh register
- *    U8    DrvHead       Value to write to Drive/Head register
- *    U8    Command       Value to write to Command register
+ *    ULONG   CommandPort   Address of command port for drive
+ *    ULONG   ControlPort   Address of control port for drive
+ *    UCHAR    PreComp       Value to write to precomp register
+ *    UCHAR    SectorCnt     Value to write to sectorCnt register
+ *    UCHAR    SectorNum     Value to write to sectorNum register
+ *    UCHAR    CylinderLow   Value to write to CylinderLow register
+ *    UCHAR    CylinderHigh  Value to write to CylinderHigh register
+ *    UCHAR    DrvHead       Value to write to Drive/Head register
+ *    UCHAR    Command       Value to write to Command register
  *    PVOID Buffer        Buffer for output data
  *
  *  RETURNS:
@@ -265,21 +265,21 @@ typedef struct _IDE_DRIVE_IDENTIFY
  */
 
 static BOOL
-XboxDiskPolledRead(U32 CommandPort,
-                   U32 ControlPort,
-                   U8 PreComp,
-                   U8 SectorCnt,
-                   U8 SectorNum,
-                   U8 CylinderLow,
-                   U8 CylinderHigh,
-                   U8 DrvHead,
-                   U8 Command,
+XboxDiskPolledRead(ULONG CommandPort,
+                   ULONG ControlPort,
+                   UCHAR PreComp,
+                   UCHAR SectorCnt,
+                   UCHAR SectorNum,
+                   UCHAR CylinderLow,
+                   UCHAR CylinderHigh,
+                   UCHAR DrvHead,
+                   UCHAR Command,
                    PVOID Buffer)
 {
-  U32 SectorCount = 0;
-  U32 RetryCount;
+  ULONG SectorCount = 0;
+  ULONG RetryCount;
   BOOL Junk = FALSE;
-  U8 Status;
+  UCHAR Status;
 
   /* Wait for BUSY to clear */
   for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES; RetryCount++)
@@ -289,7 +289,7 @@ XboxDiskPolledRead(U32 CommandPort,
         {
           break;
         }
-      KeStallExecutionProcessor(10);
+      StallExecutionProcessor(10);
     }
   DbgPrint((DPRINT_DISK, "status=0x%x\n", Status));
   DbgPrint((DPRINT_DISK, "waited %d usecs for busy to clear\n", RetryCount * 10));
@@ -301,11 +301,11 @@ XboxDiskPolledRead(U32 CommandPort,
 
   /*  Write Drive/Head to select drive  */
   IDEWriteDriveHead(CommandPort, IDE_DH_FIXED | DrvHead);
-  KeStallExecutionProcessor(500);
+  StallExecutionProcessor(500);
 
   /* Disable interrupts */
   IDEWriteDriveControl(ControlPort, IDE_DC_nIEN);
-  KeStallExecutionProcessor(500);
+  StallExecutionProcessor(500);
 
   /*  Issue command to drive  */
   if (DrvHead & IDE_DH_LBA)
@@ -338,7 +338,7 @@ XboxDiskPolledRead(U32 CommandPort,
 
   /*  Issue the command  */
   IDEWriteCommand(CommandPort, Command);
-  KeStallExecutionProcessor(50);
+  StallExecutionProcessor(50);
 
   /*  wait for DRQ or error  */
   for (RetryCount = 0; RetryCount < IDE_MAX_POLL_RETRIES; RetryCount++)
@@ -349,7 +349,7 @@ XboxDiskPolledRead(U32 CommandPort,
 	  if (Status & IDE_SR_ERR)
 	    {
 	      IDEWriteDriveControl(ControlPort, 0);
-	      KeStallExecutionProcessor(50);
+	      StallExecutionProcessor(50);
 	      IDEReadStatus(CommandPort);
 
 	      return FALSE;
@@ -362,20 +362,20 @@ XboxDiskPolledRead(U32 CommandPort,
 	  else
 	    {
 	      IDEWriteDriveControl(ControlPort, 0);
-	      KeStallExecutionProcessor(50);
+	      StallExecutionProcessor(50);
 	      IDEReadStatus(CommandPort);
 
 	      return FALSE;
 	    }
 	}
-      KeStallExecutionProcessor(10);
+      StallExecutionProcessor(10);
     }
 
   /*  timed out  */
   if (RetryCount >= IDE_MAX_POLL_RETRIES)
     {
       IDEWriteDriveControl(ControlPort, 0);
-      KeStallExecutionProcessor(50);
+      StallExecutionProcessor(50);
       IDEReadStatus(CommandPort);
 
       return FALSE;
@@ -405,7 +405,7 @@ XboxDiskPolledRead(U32 CommandPort,
 	      if (Status & IDE_SR_ERR)
 		{
 		  IDEWriteDriveControl(ControlPort, 0);
-		  KeStallExecutionProcessor(50);
+		  StallExecutionProcessor(50);
 		  IDEReadStatus(CommandPort);
 
 		  return FALSE;
@@ -427,7 +427,7 @@ XboxDiskPolledRead(U32 CommandPort,
                                 SectorCount - SectorCnt));
 		    }
 		  IDEWriteDriveControl(ControlPort, 0);
-		  KeStallExecutionProcessor(50);
+		  StallExecutionProcessor(50);
 		  IDEReadStatus(CommandPort);
 
 		  return TRUE;
@@ -438,10 +438,10 @@ XboxDiskPolledRead(U32 CommandPort,
 }
 
 BOOL
-XboxDiskReadLogicalSectors(U32 DriveNumber, U64 SectorNumber, U32 SectorCount, PVOID Buffer)
+XboxDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer)
 {
-  U32 StartSector;
-  U8 Count;
+  ULONG StartSector;
+  UCHAR Count;
 
   if (DriveNumber < 0x80 || 2 <= (DriveNumber & 0x0f))
     {
@@ -456,7 +456,7 @@ XboxDiskReadLogicalSectors(U32 DriveNumber, U64 SectorNumber, U32 SectorCount, P
       return FALSE;
     }
 
-  StartSector = (U32) SectorNumber;
+  StartSector = (ULONG) SectorNumber;
   while (0 < SectorCount)
     {
       Count = (SectorCount <= 255 ? SectorCount : 255);
@@ -481,9 +481,9 @@ XboxDiskReadLogicalSectors(U32 DriveNumber, U64 SectorNumber, U32 SectorCount, P
 }
 
 BOOL
-XboxDiskGetPartitionEntry(U32 DriveNumber, U32 PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
+XboxDiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
 {
-  U8 SectorData[IDE_SECTOR_BUF_SZ];
+  UCHAR SectorData[IDE_SECTOR_BUF_SZ];
 
   /* This is the Xbox, chances are that there is a Xbox-standard partitionless
    * disk in it so let's check that first */
@@ -491,7 +491,7 @@ XboxDiskGetPartitionEntry(U32 DriveNumber, U32 PartitionNumber, PPARTITION_TABLE
   if (1 <= PartitionNumber && PartitionNumber <= sizeof(XboxPartitions) / sizeof(XboxPartitions[0]) &&
       MachDiskReadLogicalSectors(DriveNumber, XBOX_SIGNATURE_SECTOR, 1, SectorData))
     {
-      if (*((PU32) SectorData) == XBOX_SIGNATURE)
+      if (*((PULONG) SectorData) == XBOX_SIGNATURE)
         {
           memset(PartitionTableEntry, 0, sizeof(PARTITION_TABLE_ENTRY));
           PartitionTableEntry->SystemIndicator = XboxPartitions[PartitionNumber - 1].SystemIndicator;
@@ -506,10 +506,10 @@ XboxDiskGetPartitionEntry(U32 DriveNumber, U32 PartitionNumber, PPARTITION_TABLE
 }
 
 BOOL
-XboxDiskGetDriveGeometry(U32 DriveNumber, PGEOMETRY Geometry)
+XboxDiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY Geometry)
 {
   IDE_DRIVE_IDENTIFY DrvParms;
-  U32 i;
+  ULONG i;
   BOOL Atapi;
 
   Atapi = FALSE; /* FIXME */
@@ -565,8 +565,8 @@ XboxDiskGetDriveGeometry(U32 DriveNumber, PGEOMETRY Geometry)
   return TRUE;
 }
 
-U32
-XboxDiskGetCacheableBlockCount(U32 DriveNumber)
+ULONG
+XboxDiskGetCacheableBlockCount(ULONG DriveNumber)
 {
   /* 64 seems a nice number, it is used by the machpc code for LBA devices */
   return 64;

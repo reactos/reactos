@@ -1,33 +1,16 @@
-/*
- *  ReactOS kernel
- *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
 /* $Id$
  *
- * PROJECT:     ReactOS kernel
- * FILE:        ntoskrnl/mm/virtual.c
- * PURPOSE:     Implementing operations on virtual memory.
- * PROGRAMMER:  David Welch
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/mm/virtual.c
+ * PURPOSE:         Implementing operations on virtual memory.
+ * 
+ * PROGRAMMERS:     David Welch
  */
 
 /* INCLUDE *****************************************************************/
 
 #include <ntoskrnl.h>
-#include <pseh.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -50,8 +33,9 @@ NtFlushVirtualMemory(IN HANDLE ProcessHandle,
  * RETURNS: Status
  */
 {
-   UNIMPLEMENTED;
-   return(STATUS_NOT_IMPLEMENTED);
+  /* This should be implemented once we support network filesystems */
+  DPRINT("NtFlushVirtualMemory is UNIMPLEMENTED\n");
+  return(STATUS_SUCCESS);
 }
 
 
@@ -350,6 +334,61 @@ NtQueryVirtualMemory (IN HANDLE ProcessHandle,
 }
 
 
+NTSTATUS STDCALL
+MiProtectVirtualMemory(IN PEPROCESS Process,
+                       IN OUT PVOID *BaseAddress,
+                       IN OUT PULONG NumberOfBytesToProtect,
+                       IN ULONG NewAccessProtection,
+                       OUT PULONG OldAccessProtection  OPTIONAL)
+{
+   PMEMORY_AREA MemoryArea;
+   PMADDRESS_SPACE AddressSpace;
+   ULONG OldAccessProtection_;
+   NTSTATUS Status;
+
+   *NumberOfBytesToProtect =
+      PAGE_ROUND_UP((*BaseAddress) + (*NumberOfBytesToProtect)) -
+      PAGE_ROUND_DOWN(*BaseAddress);
+   *BaseAddress = (PVOID)PAGE_ROUND_DOWN(*BaseAddress);
+
+   AddressSpace = &Process->AddressSpace;
+
+   MmLockAddressSpace(AddressSpace);
+   MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, *BaseAddress);
+   if (MemoryArea == NULL)
+   {
+      MmUnlockAddressSpace(AddressSpace);
+      return STATUS_UNSUCCESSFUL;
+   }
+
+   if (OldAccessProtection == NULL)
+      OldAccessProtection = &OldAccessProtection_;
+
+   if (MemoryArea->Type == MEMORY_AREA_VIRTUAL_MEMORY)
+   {
+      Status = MmProtectAnonMem(AddressSpace, MemoryArea, *BaseAddress,
+                                *NumberOfBytesToProtect, NewAccessProtection,
+                                OldAccessProtection);
+   }
+   else if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
+   {
+      Status = MmProtectSectionView(AddressSpace, MemoryArea, *BaseAddress,
+                                    *NumberOfBytesToProtect,
+                                    NewAccessProtection,
+                                    OldAccessProtection);
+   }
+   else
+   {
+      /* FIXME: Should we return failure or success in this case? */
+      Status = STATUS_SUCCESS;
+   }
+
+   MmUnlockAddressSpace(AddressSpace);
+
+   return Status;
+}
+
+
 /* (tMk 2004.II.5)
  * FUNCTION:
  * Called from VirtualProtectEx (lib\kernel32\mem\virtual.c)
@@ -357,15 +396,13 @@ NtQueryVirtualMemory (IN HANDLE ProcessHandle,
  */
 NTSTATUS STDCALL
 NtProtectVirtualMemory(IN HANDLE ProcessHandle,
-                       IN PVOID *UnsafeBaseAddress,
-                       IN ULONG *UnsafeNumberOfBytesToProtect,
+                       IN OUT PVOID *UnsafeBaseAddress,
+                       IN OUT ULONG *UnsafeNumberOfBytesToProtect,
                        IN ULONG NewAccessProtection,
                        OUT PULONG UnsafeOldAccessProtection)
 {
-   PMEMORY_AREA MemoryArea;
    PEPROCESS Process;
    NTSTATUS Status;
-   PMADDRESS_SPACE AddressSpace;
    ULONG OldAccessProtection;
    PVOID BaseAddress;
    ULONG NumberOfBytesToProtect;
@@ -377,17 +414,13 @@ NtProtectVirtualMemory(IN HANDLE ProcessHandle,
    if (!NT_SUCCESS(Status))
       return Status;
 
-   // (tMk 2004.II.5) in Microsoft SDK I read:
-   // 'if this parameter is NULL or does not point to a valid variable, the function fails'
+   /* (tMk 2004.II.5) in Microsoft SDK I read:
+    * 'if this parameter is NULL or does not point to a valid variable, the function fails'
+    */
    if(UnsafeOldAccessProtection == NULL)
    {
       return(STATUS_INVALID_PARAMETER);
    }
-
-   NumberOfBytesToProtect =
-      PAGE_ROUND_UP(BaseAddress + NumberOfBytesToProtect) -
-      PAGE_ROUND_DOWN(BaseAddress);
-   BaseAddress = (PVOID)PAGE_ROUND_DOWN(BaseAddress);
 
    Status = ObReferenceObjectByHandle(ProcessHandle,
                                       PROCESS_VM_OPERATION,
@@ -401,32 +434,12 @@ NtProtectVirtualMemory(IN HANDLE ProcessHandle,
       return(Status);
    }
 
-   AddressSpace = &Process->AddressSpace;
+   Status = MiProtectVirtualMemory(Process,
+                                   &BaseAddress,
+                                   &NumberOfBytesToProtect,
+                                   NewAccessProtection,
+                                   &OldAccessProtection);
 
-   MmLockAddressSpace(AddressSpace);
-   MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, BaseAddress);
-   if (MemoryArea == NULL)
-   {
-      MmUnlockAddressSpace(AddressSpace);
-      ObDereferenceObject(Process);
-      return(STATUS_UNSUCCESSFUL);
-   }
-
-   if (MemoryArea->Type == MEMORY_AREA_VIRTUAL_MEMORY)
-   {
-      Status = MmProtectAnonMem(AddressSpace, MemoryArea, BaseAddress,
-                                NumberOfBytesToProtect, NewAccessProtection,
-                                &OldAccessProtection);
-   }
-   else if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
-   {
-      Status = MmProtectSectionView(AddressSpace, MemoryArea, BaseAddress,
-                                    NumberOfBytesToProtect,
-                                    NewAccessProtection,
-                                    &OldAccessProtection);
-   }
-
-   MmUnlockAddressSpace(AddressSpace);
    ObDereferenceObject(Process);
 
    MmCopyToCaller(UnsafeOldAccessProtection, &OldAccessProtection, sizeof(ULONG));
@@ -590,12 +603,15 @@ NtWriteVirtualMemory(IN HANDLE ProcessHandle,
                      IN PVOID BaseAddress,
                      IN PVOID Buffer,
                      IN ULONG NumberOfBytesToWrite,
-                     OUT PULONG NumberOfBytesWritten)
+                     OUT PULONG NumberOfBytesWritten  OPTIONAL)
 {
    NTSTATUS Status;
    PMDL Mdl;
    PVOID SystemAddress;
    PEPROCESS Process;
+   ULONG OldProtection = 0;
+   PVOID ProtectBaseAddress;
+   ULONG ProtectNumberOfBytes;
 
    DPRINT("NtWriteVirtualMemory(ProcessHandle %x, BaseAddress %x, "
           "Buffer %x, NumberOfBytesToWrite %d)\n",ProcessHandle,BaseAddress,
@@ -612,23 +628,62 @@ NtWriteVirtualMemory(IN HANDLE ProcessHandle,
       return(Status);
    }
 
+   /* We have to make sure the target memory is writable.
+    *
+    * I am not sure if it is correct to do this in any case, but it has to be
+    * done at least in some cases because you can use WriteProcessMemory to
+    * write into the .text section of a module where memcpy() would crash.
+    *  -blight (2005/01/09)
+    */
+   ProtectBaseAddress = BaseAddress;
+   ProtectNumberOfBytes = NumberOfBytesToWrite;
+
+   /* Write memory */
    if (Process == PsGetCurrentProcess())
    {
+      Status = MiProtectVirtualMemory(Process,
+                                      &ProtectBaseAddress,
+                                      &ProtectNumberOfBytes,
+                                      PAGE_READWRITE,
+                                      &OldProtection);
+      if (!NT_SUCCESS(Status))
+      {
+         ObDereferenceObject(Process);
+         return Status;
+      }
       memcpy(BaseAddress, Buffer, NumberOfBytesToWrite);
    }
    else
    {
+      /* Create MDL describing the source buffer. */
       Mdl = MmCreateMdl(NULL,
                         Buffer,
                         NumberOfBytesToWrite);
-      MmProbeAndLockPages(Mdl,
-                          UserMode,
-                          IoReadAccess);
       if(Mdl == NULL)
       {
          ObDereferenceObject(Process);
          return(STATUS_NO_MEMORY);
       }
+
+      /* Make the target area writable. */
+      Status = MiProtectVirtualMemory(Process,
+                                      &ProtectBaseAddress,
+                                      &ProtectNumberOfBytes,
+                                      PAGE_READWRITE,
+                                      &OldProtection);
+      if (!NT_SUCCESS(Status))
+      {
+         ObDereferenceObject(Process);
+         ExFreePool(Mdl);
+         return Status;
+      }
+
+      /* Map the MDL. */
+      MmProbeAndLockPages(Mdl,
+                          UserMode,
+                          IoReadAccess);
+
+      /* Copy memory from the mapped MDL into the target buffer. */
       KeAttachProcess(&Process->Pcb);
 
       SystemAddress = MmGetSystemAddressForMdl(Mdl);
@@ -636,6 +691,7 @@ NtWriteVirtualMemory(IN HANDLE ProcessHandle,
 
       KeDetachProcess();
 
+      /* Free the MDL. */
       if (Mdl->MappedSystemVa != NULL)
       {
          MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
@@ -644,9 +700,22 @@ NtWriteVirtualMemory(IN HANDLE ProcessHandle,
       ExFreePool(Mdl);
    }
 
+   /* Reset the protection of the target memory. */
+   Status = MiProtectVirtualMemory(Process,
+                                   &ProtectBaseAddress,
+                                   &ProtectNumberOfBytes,
+                                   OldProtection,
+                                   &OldProtection);
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT1("Failed to reset protection of the target memory! (Status 0x%x)\n", Status);
+      /* FIXME: Should we bugcheck here? */
+   }
+
    ObDereferenceObject(Process);
 
-   *NumberOfBytesWritten = NumberOfBytesToWrite;
+   if (NumberOfBytesWritten != NULL)
+      MmCopyToCaller(NumberOfBytesWritten, &NumberOfBytesToWrite, sizeof(ULONG));
 
    return(STATUS_SUCCESS);
 }
@@ -710,7 +779,7 @@ ProbeForRead (IN CONST VOID *Address,
               IN ULONG Length,
               IN ULONG Alignment)
 {
-   ASSERT(Alignment ==1 || Alignment == 2 || Alignment == 4 || Alignment == 8);
+   ASSERT(Alignment == 1 || Alignment == 2 || Alignment == 4 || Alignment == 8);
 
    if (Length == 0)
       return;
@@ -719,8 +788,8 @@ ProbeForRead (IN CONST VOID *Address,
    {
       ExRaiseStatus (STATUS_DATATYPE_MISALIGNMENT);
    }
-   else if ((ULONG_PTR)Address + Length < (ULONG_PTR)Address ||
-            (ULONG_PTR)Address + Length > (ULONG_PTR)MmUserProbeAddress)
+   else if ((ULONG_PTR)Address + Length - 1 < (ULONG_PTR)Address ||
+            (ULONG_PTR)Address + Length - 1 > (ULONG_PTR)MmUserProbeAddress)
    {
       ExRaiseStatus (STATUS_ACCESS_VIOLATION);
    }
@@ -735,11 +804,10 @@ ProbeForWrite (IN CONST VOID *Address,
                IN ULONG Length,
                IN ULONG Alignment)
 {
-   PULONG Ptr;
-   ULONG x;
-   ULONG i;
+   volatile CHAR *Current;
+   PCHAR Last;
 
-   ASSERT(Alignment ==1 || Alignment == 2 || Alignment == 4 || Alignment == 8);
+   ASSERT(Alignment == 1 || Alignment == 2 || Alignment == 4 || Alignment == 8);
 
    if (Length == 0)
       return;
@@ -748,19 +816,21 @@ ProbeForWrite (IN CONST VOID *Address,
    {
       ExRaiseStatus (STATUS_DATATYPE_MISALIGNMENT);
    }
-   else if ((ULONG_PTR)Address + Length < (ULONG_PTR)Address ||
-            (ULONG_PTR)Address + Length > (ULONG_PTR)MmUserProbeAddress)
+
+   Last = (PCHAR)((ULONG_PTR)Address + Length - 1);
+   if ((ULONG_PTR)Last < (ULONG_PTR)Address ||
+       (ULONG_PTR)Last > (ULONG_PTR)MmUserProbeAddress)
    {
       ExRaiseStatus (STATUS_ACCESS_VIOLATION);
    }
 
    /* Check for accessible pages */
-   for (i = 0; i < Length; i += PAGE_SIZE)
+   Current = (CHAR*)Address;
+   do
    {
-      Ptr = (PULONG)(((ULONG_PTR)Address & ~(PAGE_SIZE - 1)) + i);
-      x = *Ptr;
-      *Ptr = x;
-   }
+     *Current = *Current;
+     Current = (CHAR*)((ULONG_PTR)Current + PAGE_SIZE);
+   } while (Current <= Last);
 }
 
 /* EOF */

@@ -1,12 +1,11 @@
 /* $Id$
  *
- * COPYRIGHT:   See COPYING in the top directory
- * PROJECT:     ReactOS kernel 
- * FILE:        ntoskrnl/mm/mminit.c
- * PURPOSE:     kernel memory managment initialization functions
- * PROGRAMMER:  David Welch (welch@cwcom.net)
- * UPDATE HISTORY:
- *              Created 9/4/98
+ * COPYRIGHT:       See COPYING in the top directory
+ * PROJECT:         ReactOS kernel 
+ * FILE:            ntoskrnl/mm/mminit.c
+ * PURPOSE:         Kernel memory managment initialization functions
+ *
+ * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
 /* INCLUDES *****************************************************************/
@@ -49,6 +48,8 @@ PVOID MiNonPagedPoolStart;
 ULONG MiNonPagedPoolLength;
 //PVOID MiKernelMapStart;
 
+extern ULONG init_stack;
+extern ULONG init_stack_top;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -72,7 +73,7 @@ VOID MiShutdownMemoryManager(VOID)
 {}
 
 VOID INIT_FUNCTION
-MmInitVirtualMemory(ULONG LastKernelAddress,
+MmInitVirtualMemory(ULONG_PTR LastKernelAddress,
                     ULONG KernelLength)
 /*
  * FUNCTION: Intialize the memory areas list
@@ -133,7 +134,7 @@ MmInitVirtualMemory(ULONG LastKernelAddress,
                       BoundaryAddressMultiple);
 
    BaseAddress = (PVOID)KERNEL_BASE;
-   Length = PAGE_ROUND_UP(((ULONG)&_text_end__)) - KERNEL_BASE;
+   Length = PAGE_ROUND_UP(((ULONG_PTR)&_text_end__)) - KERNEL_BASE;
    ParamLength = ParamLength - Length;
 
    /*
@@ -151,10 +152,10 @@ MmInitVirtualMemory(ULONG LastKernelAddress,
                       FALSE,
                       BoundaryAddressMultiple);
 
-   BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG)&_text_end__));
+   BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG_PTR)&_text_end__));
    ASSERT(BaseAddress == (PVOID)&_init_start__);
-   Length = PAGE_ROUND_UP(((ULONG)&_init_end__)) -
-            PAGE_ROUND_UP(((ULONG)&_text_end__));
+   Length = PAGE_ROUND_UP(((ULONG_PTR)&_init_end__)) -
+            PAGE_ROUND_UP(((ULONG_PTR)&_text_end__));
    ParamLength = ParamLength - Length;
 
    MmCreateMemoryArea(NULL,
@@ -168,11 +169,11 @@ MmInitVirtualMemory(ULONG LastKernelAddress,
                       FALSE,
                       BoundaryAddressMultiple);
 
-   Length = PAGE_ROUND_UP(((ULONG)&_bss_end__)) -
-            PAGE_ROUND_UP(((ULONG)&_init_end__));
+   Length = PAGE_ROUND_UP(((ULONG_PTR)&_bss_end__)) -
+            PAGE_ROUND_UP(((ULONG_PTR)&_init_end__));
    ParamLength = ParamLength - Length;
    DPRINT("Length %x\n",Length);
-   BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG)&_init_end__));
+   BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG_PTR)&_init_end__));
    DPRINT("BaseAddress %x\n",BaseAddress);
 
    /*
@@ -190,8 +191,8 @@ MmInitVirtualMemory(ULONG LastKernelAddress,
                       FALSE,
                       BoundaryAddressMultiple);
 
-   BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG)&_bss_end__));
-   Length = LastKernelAddress - (ULONG)BaseAddress;
+   BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG_PTR)&_bss_end__));
+   Length = LastKernelAddress - (ULONG_PTR)BaseAddress;
    MmCreateMemoryArea(NULL,
                       MmGetKernelAddressSpace(),
                       MEMORY_AREA_SYSTEM,
@@ -277,9 +278,9 @@ MmInitVirtualMemory(ULONG LastKernelAddress,
 }
 
 VOID INIT_FUNCTION
-MmInit1(ULONG FirstKrnlPhysAddr,
-        ULONG LastKrnlPhysAddr,
-        ULONG LastKernelAddress,
+MmInit1(ULONG_PTR FirstKrnlPhysAddr,
+        ULONG_PTR LastKrnlPhysAddr,
+        ULONG_PTR LastKernelAddress,
         PADDRESS_RANGE BIOSMemoryMap,
         ULONG AddressRangeCount,
         ULONG MaxMem)
@@ -289,16 +290,12 @@ MmInit1(ULONG FirstKrnlPhysAddr,
 {
    ULONG i;
    ULONG kernel_len;
-#ifndef MP
+   ULONG_PTR MappingAddress;
 
-   extern unsigned int unmap_me, unmap_me2, unmap_me3;
-#endif
-
-   DPRINT("MmInit1(FirstKrnlPhysAddr, %x, LastKrnlPhysAddr %x, LastKernelAddress %x)\n",
+   DPRINT("MmInit1(FirstKrnlPhysAddr, %p, LastKrnlPhysAddr %p, LastKernelAddress %p)\n",
           FirstKrnlPhysAddr,
           LastKrnlPhysAddr,
           LastKernelAddress);
-
 
    if ((BIOSMemoryMap != NULL) && (AddressRangeCount > 0))
    {
@@ -323,10 +320,7 @@ MmInit1(ULONG FirstKrnlPhysAddr,
       KeLoaderBlock.MemHigher = (MaxMem - 1) * 1024;
    }
 
-   /*
-    * FIXME: Set this based on the system command line
-    */
-   MmSystemRangeStart = (PVOID)KERNEL_BASE; // 0xC0000000
+   /* Set memory limits */
    MmUserProbeAddress = 0x7fff0000;
    MmHighestUserAddress = (PVOID)0x7ffeffff;
 
@@ -377,14 +371,12 @@ MmInit1(ULONG FirstKrnlPhysAddr,
    
    MmInitGlobalKernelPageDirectory();
    
-   MiInitKernelMap();
-
-
-
    DbgPrint("Used memory %dKb\n", (MmStats.NrTotalPages * PAGE_SIZE) / 1024);
+   DPRINT1("Kernel Stack Limits. InitTop = 0x%x, Init = 0x%x\n", init_stack_top, init_stack);
 
-   LastKernelAddress = (ULONG)MmInitializePageList((PVOID)FirstKrnlPhysAddr,
-                       (PVOID)LastKrnlPhysAddr,
+   LastKernelAddress = (ULONG_PTR)MmInitializePageList(
+                       FirstKrnlPhysAddr,
+                       LastKrnlPhysAddr,
                        MmStats.NrTotalPages,
                        PAGE_ROUND_UP(LastKernelAddress),
                        BIOSMemoryMap,
@@ -394,35 +386,23 @@ MmInit1(ULONG FirstKrnlPhysAddr,
    /*
     * Unmap low memory
     */
-#ifndef MP
+#ifndef CONFIG_SMP
    /* In SMP mode we unmap the low memory in MmInit3.
       The APIC needs the mapping of the first pages
       while the processors are starting up. */
    MmDeletePageTable(NULL, 0);
 #endif
 
-
-
    DPRINT("Invalidating between %x and %x\n",
           LastKernelAddress, KERNEL_BASE + 0x00600000);
-   for (i=(LastKernelAddress); i<KERNEL_BASE + 0x00600000; i+=PAGE_SIZE)
+   for (MappingAddress = LastKernelAddress;
+        MappingAddress < KERNEL_BASE + 0x00600000;
+        MappingAddress += PAGE_SIZE)
    {
-      MmRawDeleteVirtualMapping((PVOID)(i));
-   }
-
-   extern unsigned int pagetable_start, pagetable_end;
-   for (i = (ULONG_PTR)&pagetable_start; i < (ULONG_PTR)&pagetable_end; i += PAGE_SIZE)
-   {
-      MmDeleteVirtualMapping(NULL, (PVOID)i, FALSE, NULL, NULL);
+      MmRawDeleteVirtualMapping((PVOID)MappingAddress);
    }
 
    DPRINT("Almost done MmInit()\n");
-#ifndef MP
-   /* FIXME: This is broken in SMP mode */
-   MmDeleteVirtualMapping(NULL, (PVOID)&unmap_me, TRUE, NULL, NULL);
-   MmDeleteVirtualMapping(NULL, (PVOID)&unmap_me2, TRUE, NULL, NULL);
-   MmDeleteVirtualMapping(NULL, (PVOID)&unmap_me3, TRUE, NULL, NULL);
-#endif
    /*
     * Intialize memory areas
     */
@@ -446,7 +426,7 @@ MmInit3(VOID)
    /*
     * Unmap low memory
     */
-#ifdef MP
+#ifdef CONFIG_SMP
    /* In SMP mode we can unmap the low memory
       if all processors are started. */
    MmDeletePageTable(NULL, 0);

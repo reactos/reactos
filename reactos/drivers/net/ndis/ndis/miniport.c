@@ -1933,7 +1933,7 @@ NdisMSetAttributes(
  */
 {
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-  NdisMSetAttributesEx(MiniportAdapterContext, MiniportAdapterContext, 0,
+  NdisMSetAttributesEx(MiniportAdapterHandle, MiniportAdapterContext, 0,
                        BusMaster ? NDIS_ATTRIBUTE_BUS_MASTER : 0,
                        AdapterType);
 }

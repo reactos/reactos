@@ -28,6 +28,9 @@
 <directory name="cpl">
 	<xi:include href="cpl/directory.xml" />
 </directory>
+<directory name="crt">
+	<xi:include href="crt/crt.xml" />
+</directory>
 <directory name="crtdll">
 	<xi:include href="crtdll/crtdll.xml" />
 </directory>
@@ -94,6 +97,9 @@
 <directory name="kbddv">
 	<xi:include href="kbddv/kbddv.xml" />
 </directory>
+<directory name="kbdes">
+	<xi:include href="kbdes/kbdes.xml" />
+</directory>
 <directory name="kbdfr">
 	<xi:include href="kbdfr/kbdfr.xml" />
 </directory>
@@ -143,7 +149,6 @@
 	<xi:include href="msimg32/msimg32.xml" />
 </directory>
 <directory name="msvcrt">
-	<xi:include href="msvcrt/crt.xml" />
 	<xi:include href="msvcrt/msvcrt.xml" />
 </directory>
 <directory name="msvcrt20">
@@ -179,6 +184,9 @@
 <directory name="rosrtl">
 	<xi:include href="rosrtl/rosrtl.xml" />
 </directory>
+<directory name="rossym">
+	<xi:include href="rossym/rossym.xml" />
+</directory>
 <directory name="rpcrt4">
 	<xi:include href="rpcrt4/rpcrt4.xml" />
 </directory>
@@ -205,6 +213,9 @@
 </directory>
 <directory name="snmpapi">
 	<xi:include href="snmpapi/snmpapi.xml" />
+</directory>
+<directory name="smdll">
+	<xi:include href="smdll/smdll.xml" />
 </directory>
 <directory name="string">
 	<xi:include href="string/string.xml" />

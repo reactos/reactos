@@ -5,7 +5,7 @@
 #ifndef __INCLUDE_HAL_HALIRQ
 #define __INCLUDE_HAL_HALIRQ
 
-#ifdef MP
+#ifdef CONFIG_SMP
 
 #define FIRST_DEVICE_VECTOR	(0x30)
 #define FIRST_SYSTEM_VECTOR	(0xef)

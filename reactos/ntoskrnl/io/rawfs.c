@@ -4,9 +4,8 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/rawfs.c
  * PURPOSE:         Raw filesystem driver
- * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
- * UPDATE HISTORY:
- *                  Created 13/04/2003
+ *
+ * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
 /* INCLUDES *****************************************************************/
@@ -454,7 +453,6 @@ RawFsCreateFile(IN PRAWFS_IRP_CONTEXT IrpContext)
       	  return (STATUS_INSUFFICIENT_RESOURCES);
       	}
 
-      FileObject->Flags |= FO_FCB_IS_VALID;
       FileObject->SectionObjectPointer = &pFcb->SectionObjectPointers;
       FileObject->FsContext = pFcb;
       FileObject->FsContext2 = pCcb;

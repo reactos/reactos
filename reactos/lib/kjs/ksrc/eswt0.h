@@ -1133,6 +1133,7 @@ case 41:
       case JS_NAN:
       default:
 	nan = 1;
+	l = 0.0;
 	break;
       }
 
@@ -1160,6 +1161,7 @@ case 41:
       case JS_NAN:
       default:
 	nan = 1;
+	r = 0.0;
 	break;
       }
 

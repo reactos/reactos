@@ -30,6 +30,7 @@
 		<file>copybits.c</file>
 		<file>debug.c</file>
 		<file>device.c</file>
+		<file>driverobj.c</file>
 		<file>error.c</file>
 		<file>event.c</file>
 		<file>float.c</file>
@@ -45,6 +46,7 @@
 		<file>sort.c</file>
 		<file>surface.c</file>
 		<file>transblt.c</file>
+		<file>window.c</file>
 		<file>xlate.c</file>
 	</directory>
 	<directory name="ldr">

@@ -52,19 +52,19 @@ VOID NBSendPackets( PNEIGHBOR_CACHE_ENTRY NCE ) {
     }
 }
 
+/* Must be called with table lock acquired */
 VOID NBFlushPacketQueue( PNEIGHBOR_CACHE_ENTRY NCE, 
 			 BOOL CallComplete,
 			 NTSTATUS ErrorCode ) {
     PLIST_ENTRY PacketEntry;
     PNEIGHBOR_PACKET Packet;
 	
-    PacketEntry = ExInterlockedRemoveHeadList(&NCE->PacketQueue,
-                                              &NCE->Table->Lock);
-    while( PacketEntry != NULL ) {
+    while( !IsListEmpty(&NCE->PacketQueue) ) {
+        PacketEntry = RemoveHeadList(&NCE->PacketQueue);
 	Packet = CONTAINING_RECORD
 	    ( PacketEntry, NEIGHBOR_PACKET, Next );
 
-  ASSERT_KM_POINTER(Packet);
+        ASSERT_KM_POINTER(Packet);
 	
 	TI_DbgPrint
 	    (MID_TRACE,
@@ -72,16 +72,14 @@ VOID NBFlushPacketQueue( PNEIGHBOR_CACHE_ENTRY NCE,
 	      PacketEntry, Packet->Packet));
 
 	if( CallComplete )
-    {
-      ASSERT_KM_POINTER(Packet->Complete);
+        {
+            ASSERT_KM_POINTER(Packet->Complete);
 	    Packet->Complete( Packet->Context,
 			      Packet->Packet,
 			      NDIS_STATUS_REQUEST_ABORTED );
-    }
+        }
 	
 	PoolFreeBuffer( Packet );
-	PacketEntry = ExInterlockedRemoveHeadList(&NCE->PacketQueue,
-	                                          &NCE->Table->Lock);
     }
 }
 
@@ -407,10 +405,19 @@ PNEIGHBOR_CACHE_ENTRY NBFindOrCreateNeighbor(
   NCE = NBLocateNeighbor(Address);
   if (NCE == NULL)
     {
-	NCE = NBAddNeighbor(Interface, Address, NULL, 
-			    Interface->AddressLength, NUD_INCOMPLETE);
-	NCE->EventTimer = 1;
-	NCE->EventCount = 0;
+        TI_DbgPrint(MID_TRACE,("BCAST: %s\n", A2S(&Interface->Broadcast)));
+        if( AddrIsEqual(Address, &Interface->Broadcast) ) {
+            TI_DbgPrint(MID_TRACE,("Packet targeted at broadcast addr\n"));
+            NCE = NBAddNeighbor(Interface, Address, NULL,
+                                Interface->AddressLength, NUD_CONNECTED);
+            NCE->EventTimer = 0;
+            NCE->EventCount = 0;
+        } else {
+            NCE = NBAddNeighbor(Interface, Address, NULL, 
+                                Interface->AddressLength, NUD_INCOMPLETE);
+            NCE->EventTimer = 1;
+            NCE->EventCount = 0;
+        }
     }
 
   return NCE;

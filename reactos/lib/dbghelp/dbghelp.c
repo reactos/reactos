@@ -230,14 +230,17 @@ BOOL WINAPI SymInitialize(HANDLE hProcess, PSTR UserSearchPath, BOOL fInvadeProc
 
     if (fInvadeProcess)
     {
+#ifndef __REACTOS__
         if (!elf_read_wine_loader_dbg_info(pcs))
         {
             SymCleanup(hProcess);
             return FALSE;
         }
+#endif
         process_invade(hProcess);
         elf_synchronize_module_list(pcs);
     }
+    DbgPrint("SymInitialize - Success\n");
     return TRUE;
 }
 

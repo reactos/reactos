@@ -401,7 +401,7 @@ BOOL Entry::launch_entry(HWND hwnd, UINT nCmdShow)
 }
 
 
-HRESULT Entry::do_context_menu(HWND hwnd, const POINT& pos)
+HRESULT Entry::do_context_menu(HWND hwnd, const POINT& pos, CtxMenuInterfaces& cm_ifs)
 {
 	ShellPath shell_path = create_absolute_pidl();
 	LPCITEMIDLIST pidl_abs = shell_path;
@@ -419,7 +419,7 @@ HRESULT Entry::do_context_menu(HWND hwnd, const POINT& pos)
 		HRESULT hr = (*SHBindToParent)(pidl_abs, IID_IShellFolder, (LPVOID*)&parentFolder, &pidlLast);
 
 		if (SUCCEEDED(hr)) {
-			hr = ShellFolderContextMenu(parentFolder, hwnd, 1, &pidlLast, pos.x, pos.y);
+			hr = ShellFolderContextMenu(parentFolder, hwnd, 1, &pidlLast, pos.x, pos.y, cm_ifs);
 
 			parentFolder->Release();
 		}
@@ -442,7 +442,7 @@ HRESULT Entry::do_context_menu(HWND hwnd, const POINT& pos)
 		ShellFolder parent_folder = parent_path;
 		return ShellFolderContextMenu(parent_folder, hwnd, 1, &pidl, pos.x, pos.y);
 		*/
-		return ShellFolderContextMenu(GetDesktopFolder(), hwnd, 1, &pidl_abs, pos.x, pos.y);
+		return ShellFolderContextMenu(GetDesktopFolder(), hwnd, 1, &pidl_abs, pos.x, pos.y, cm_ifs);
 	}
 }
 

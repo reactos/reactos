@@ -20,6 +20,7 @@
 #define NDEBUG
 #include <ntdll/ntdll.h>
 
+PPEB STDCALL RtlpCurrentPeb(VOID);
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -511,8 +512,11 @@ RtlQueryEnvironmentVariable_U(PWSTR Environment,
 
    if (Environment == NULL)
    {
-      Environment = NtCurrentPeb()->ProcessParameters->Environment;
-      SysEnvUsed = TRUE;
+      PPEB Peb = RtlpCurrentPeb();
+      if (Peb) {
+          Environment = Peb->ProcessParameters->Environment;
+          SysEnvUsed = TRUE;
+      }
    }
 
    if (Environment == NULL)

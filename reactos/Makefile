@@ -26,23 +26,21 @@ $(ROS_INTERMEDIATE):
 	${nmkdir} $(ROS_INTERMEDIATE)
 endif
 
-Makefile.auto: rmkdir buildno wmc rbuild
-	tools$(SEP)rbuild$(SEP)rbuild$(EXEPOSTFIX) mingw
-#	$(MAKE) $(MAKECMDGOALS)
+include tools/Makefile
+-include Makefile.auto
 
-init:: \
+Makefile.auto: $(RMKDIR_TARGET) $(BUILDNO_TARGET) $(NCI_SERVICE_FILES) $(WMC_TARGET) $(RBUILD_TARGET)
+	tools$(SEP)rbuild$(SEP)rbuild$(EXEPOSTFIX) mingw
+	$(MAKE) $(MAKECMDGOALS)
+
+init: \
 	include$(SEP)reactos$(SEP)bugcodes.h \
 	ntoskrnl$(SEP)bugcodes.rc \
 	include$(SEP)reactos$(SEP)errcodes.h \
 	lib$(SEP)kernel32$(SEP)errcodes.rc
 
-include$(SEP)reactos$(SEP)bugcodes.h ntoskrnl$(SEP)bugcodes.rc: ntoskrnl$(SEP)ntoskrnl.mc
-	$(WMC_TARGET) -H include$(SEP)reactos$(SEP)bugcodes.h -o ntoskrnl$(SEP)bugcodes.rc bugcodes$(SEP)ntoskrnl.mc
+include$(SEP)reactos$(SEP)bugcodes.h ntoskrnl$(SEP)bugcodes.rc: $(WMC_TARGET) ntoskrnl$(SEP)ntoskrnl.mc
+	$(WMC_TARGET) -H include$(SEP)reactos$(SEP)bugcodes.h -o ntoskrnl$(SEP)bugcodes.rc ntoskrnl$(SEP)ntoskrnl.mc
 
-include$(SEP)reactos$(SEP)errcodes.h lib$(SEP)kernel32$(SEP)errcodes.rc: lib$(SEP)kernel32$(SEP)kernel32.mc
+include$(SEP)reactos$(SEP)errcodes.h lib$(SEP)kernel32$(SEP)errcodes.rc: $(WMC_TARGET) lib$(SEP)kernel32$(SEP)kernel32.mc
 	$(WMC_TARGET) -H include$(SEP)reactos$(SEP)errcodes.h -o lib$(SEP)kernel32$(SEP)errcodes.rc lib$(SEP)kernel32$(SEP)kernel32.mc
-
-include tools/Makefile
-include tools/rbuild/makefile
-
-#-include Makefile.auto

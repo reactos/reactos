@@ -684,8 +684,8 @@ typedef struct _PROCESS_BASIC_INFORMATION
 	PPEB PebBaseAddress;
 	KAFFINITY AffinityMask;
 	KPRIORITY BasePriority;
-	ULONG UniqueProcessId;
-	ULONG InheritedFromUniqueProcessId;
+	HANDLE UniqueProcessId;
+	HANDLE InheritedFromUniqueProcessId;
 } PROCESS_BASIC_INFORMATION, *PPROCESS_BASIC_INFORMATION;
 
 // Information class 1
@@ -729,10 +729,10 @@ typedef struct _VM_COUNTERS_
 // Information class 4
 typedef struct _KERNEL_USER_TIMES
 {
-	TIME CreateTime;
-	TIME ExitTime;
-	TIME KernelTime;
-	TIME UserTime;
+	LARGE_INTEGER CreateTime;
+	LARGE_INTEGER ExitTime;
+	LARGE_INTEGER KernelTime;
+	LARGE_INTEGER UserTime;
 } KERNEL_USER_TIMES, *PKERNEL_USER_TIMES;
 
 // Information class 9
@@ -1111,28 +1111,17 @@ typedef struct _FILE_NOTIFY_INFORMATION {
 #define FSCTL_GET_RETRIEVAL_POINTERS		0x90073
 #define FSCTL_MOVE_FILE				0x90074
 
-typedef struct _MAPPING_PAIR
-{
-	ULONGLONG	Vcn;
-	ULONGLONG	Lcn;
-} MAPPING_PAIR, *PMAPPING_PAIR;
-
-typedef struct _GET_RETRIEVAL_DESCRIPTOR
-{
-	ULONG		NumberOfPairs;
-	ULONGLONG	StartVcn;
-	MAPPING_PAIR	Pair[0]; // variable size 
-} GET_RETRIEVAL_DESCRIPTOR, *PGET_RETRIEVAL_DESCRIPTOR;
-
-typedef struct _MOVEFILE_DESCRIPTOR
-{
-	HANDLE            FileHandle;
-	ULONG             Reserved;
-	LARGE_INTEGER     StartVcn;
-	LARGE_INTEGER     TargetLcn;
-	ULONG             NumVcns;
-	ULONG             Reserved1;
-} MOVEFILE_DESCRIPTOR, *PMOVEFILE_DESCRIPTOR;
+/* Structure copied from ntifs.h (Must be in sync!) */
+#include <pshpack8.h>
+typedef struct _RETRIEVAL_POINTERS_BUFFER {
+    ULONG               ExtentCount;
+    LARGE_INTEGER       StartingVcn;
+    struct {
+        LARGE_INTEGER   NextVcn;
+        LARGE_INTEGER   Lcn;
+    } Extents[1];
+} RETRIEVAL_POINTERS_BUFFER, *PRETRIEVAL_POINTERS_BUFFER;
+#include <poppack.h>
 
 typedef struct _SECTION_BASIC_INFORMATION
 {
@@ -1324,13 +1313,13 @@ typedef struct _SYSTEM_PROCESSES_NT4
  SIZE_T         NextEntryDelta;
  ULONG          ThreadCount;
  ULONG          Reserved1[6];
- TIME           CreateTime;
- TIME           UserTime;
- TIME           KernelTime;
+ LARGE_INTEGER  CreateTime;
+ LARGE_INTEGER  UserTime;
+ LARGE_INTEGER  KernelTime;
  UNICODE_STRING ProcessName;
  KPRIORITY      BasePriority;
- ULONG          ProcessId;
- ULONG          InheritedFromProcessId;
+ HANDLE         ProcessId;
+ HANDLE         InheritedFromProcessId;
  ULONG          HandleCount;
  ULONG          Reserved2[2];
  VM_COUNTERS    VmCounters;
@@ -1342,13 +1331,13 @@ typedef struct _SYSTEM_PROCESSES_NT5
  SIZE_T         NextEntryDelta;
  ULONG          ThreadCount;
  ULONG          Reserved1[6];
- TIME           CreateTime;
- TIME           UserTime;
- TIME           KernelTime;
+ LARGE_INTEGER  CreateTime;
+ LARGE_INTEGER  UserTime;
+ LARGE_INTEGER  KernelTime;
  UNICODE_STRING ProcessName;
  KPRIORITY      BasePriority;
- ULONG          ProcessId;
- ULONG          InheritedFromProcessId;
+ HANDLE         ProcessId;
+ HANDLE         InheritedFromProcessId;
  ULONG          HandleCount;
  ULONG          Reserved2[2];
  VM_COUNTERS    VmCounters;
@@ -1659,11 +1648,27 @@ typedef enum _OBJECT_INFORMATION_CLASS
 
 // directory information
 
-typedef struct _DIRECTORY_BASIC_INFORMATION
+typedef struct _OBJECT_DIRECTORY_INFORMATION
 {
 	UNICODE_STRING ObjectName;
 	UNICODE_STRING ObjectTypeName; // Directory, Device ...
-} DIRECTORY_BASIC_INFORMATION, *PDIRECTORY_BASIC_INFORMATION;
+} OBJECT_DIRECTORY_INFORMATION, *POBJECT_DIRECTORY_INFORMATION;
+
+
+/* system battery state */
+typedef struct _SYSTEM_BATTERY_STATE {
+	BOOLEAN  AcOnLine;
+	BOOLEAN  BatteryPresent;
+	BOOLEAN  Charging;
+	BOOLEAN  Discharging;
+	BOOLEAN  Spare1[4];
+	ULONG  MaxCapacity;
+	ULONG  RemainingCapacity;
+	ULONG  Rate;
+	ULONG  EstimatedTime;
+	ULONG  DefaultAlert1;
+	ULONG  DefaultAlert2;
+} SYSTEM_BATTERY_STATE, *PSYSTEM_BATTERY_STATE;
 
 
 // power information levels
@@ -1703,14 +1708,6 @@ typedef enum _POWER_INFORMATION_LEVEL {
 // File System Control commands ( related to defragging )
 
 #define	FSCTL_READ_MFT_RECORD			0x90068 // NTFS only
-
-typedef struct _BITMAP_DESCRIPTOR
-{
-	ULONGLONG	StartLcn;
-	ULONGLONG	ClustersToEndOfVol;
-	BYTE		Map[0]; // variable size
-} BITMAP_DESCRIPTOR, *PBITMAP_DESCRIPTOR;
-
 
 //typedef enum _TIMER_TYPE 
 //{

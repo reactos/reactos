@@ -4,9 +4,8 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ps/kill.c
  * PURPOSE:         Terminating a thread
- * PROGRAMMER:      David Welch (welch@cwcom.net)
- * UPDATE HISTORY:
- *                  Created 22/05/98
+ * 
+ * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
 /* INCLUDES *****************************************************************/
@@ -191,7 +190,7 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
 
    oldIrql = KeAcquireDispatcherDatabaseLock();
    CurrentThread->Tcb.DispatcherHeader.SignalState = TRUE;
-   KiDispatcherObjectWake(&CurrentThread->Tcb.DispatcherHeader);
+   KiDispatcherObjectWake(&CurrentThread->Tcb.DispatcherHeader, IO_NO_INCREMENT);
    KeReleaseDispatcherDatabaseLock (oldIrql);
 
    /* The last thread shall close the door on exit */
@@ -239,6 +238,12 @@ PiTerminateThreadNormalRoutine(PVOID NormalContext,
 			     PVOID SystemArgument1,
 			     PVOID SystemArgument2)
 {
+  PETHREAD EThread = PsGetCurrentThread();
+  if (EThread->HasTerminated)
+  {
+     /* Someone else has already called PsTerminateCurrentThread */
+     return;
+  }
   PsTerminateCurrentThread(PsGetCurrentThread()->ExitStatus);
 }
 
@@ -319,7 +324,7 @@ PiTerminateProcess(PEPROCESS Process,
    }
    OldIrql = KeAcquireDispatcherDatabaseLock ();
    Process->Pcb.DispatcherHeader.SignalState = TRUE;
-   KiDispatcherObjectWake(&Process->Pcb.DispatcherHeader);
+   KiDispatcherObjectWake(&Process->Pcb.DispatcherHeader, IO_NO_INCREMENT);
    KeReleaseDispatcherDatabaseLock (OldIrql);
    ObDereferenceObject(Process);
    return(STATUS_SUCCESS);
@@ -448,7 +453,7 @@ NtRegisterThreadTerminatePort(HANDLE PortHandle)
    
    Status = ObReferenceObjectByHandle(PortHandle,
 				      PORT_ALL_ACCESS,
-				      & LpcPortObjectType,
+				      LpcPortObjectType,
 				      KeGetCurrentThread()->PreviousMode,
 				      (PVOID*)&TerminationPort,
 				      NULL);   

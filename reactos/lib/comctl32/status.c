@@ -455,7 +455,7 @@ STATUSBAR_GetTextLength (STATUS_INFO *infoPtr, INT nPart)
     else
 	part = &infoPtr->parts[nPart];
 
-    if (part->text)
+    if ((~part->style & SBT_OWNERDRAW) && part->text)
 	result = strlenW(part->text);
     else
 	result = 0;
@@ -650,7 +650,7 @@ STATUSBAR_SetTextT (STATUS_INFO *infoPtr, INT nPart, WORD style,
 {
     STATUSWINDOWPART *part=NULL;
     BOOL changed = FALSE;
-    WORD oldStyle;
+    INT oldStyle;
 
     if (style & SBT_OWNERDRAW) {
          TRACE("part %d, text %p\n",nPart,text);
@@ -675,9 +675,12 @@ STATUSBAR_SetTextT (STATUS_INFO *infoPtr, INT nPart, WORD style,
     oldStyle = part->style;
     part->style = style;
     if (style & SBT_OWNERDRAW) {
-	if (part->text == text)
-	    return TRUE;
-	part->text = (LPWSTR)text;
+        if (!(oldStyle & SBT_OWNERDRAW)) {
+            if (part->text)
+                Free (part->text);
+        } else if (part->text == text)
+            return TRUE;
+        part->text = (LPWSTR)text;
     } else {
 	LPWSTR ntext;
 
@@ -1252,7 +1255,6 @@ StatusWindowProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		     msg, wParam, lParam);
 	    return DefWindowProcW (hwnd, msg, wParam, lParam);
     }
-    return 0;
 }
 
 

@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/advapi32/sec/lsa.c
@@ -493,3 +492,19 @@ LsaStorePrivateData(
 {
   return STATUS_NOT_IMPLEMENTED;
 }
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LsaGetUserName(
+    PUNICODE_STRING *UserName,
+    PUNICODE_STRING *DomainName)
+{
+  DPRINT1("LsaGetUserName not implemented\n");
+
+  return STATUS_NOT_IMPLEMENTED;
+}
+
+/* EOF */

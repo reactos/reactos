@@ -1,13 +1,12 @@
 /* $Id$
  *
- * COPYRIGHT:              See COPYING in the top level directory
- * PROJECT:                ReactOS kernel
- * FILE:                   ntoskrnl/ps/thread.c
- * PURPOSE:                Thread managment
- * PROGRAMMER:             David Welch (welch@mcmail.com)
- * REVISION HISTORY: 
- *               23/06/98: Created
- *               12/10/99: Phillip Susi:  Thread priorities, and APC work
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/ps/w32call.c
+ * PURPOSE:         Thread managment
+ * 
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
+ *                  Phillip Susi
  */
 
 /*
@@ -25,7 +24,7 @@
 #include <internal/debug.h>
 
 #if defined(__GNUC__)
-void * alloca(size_t size);
+/* void * alloca(size_t size); */
 #elif defined(_MSC_VER)
 void* _alloca(size_t size);
 #else
@@ -292,7 +291,8 @@ NtW32Call (IN ULONG RoutineIndex,
   memcpy((char*)NewStack + StackSize - sizeof(KTRAP_FRAME) - sizeof(FX_SAVE_AREA),
          Thread->Tcb.TrapFrame, sizeof(KTRAP_FRAME) - (4 * sizeof(DWORD)));
   NewFrame = (PKTRAP_FRAME)((char*)NewStack + StackSize - sizeof(KTRAP_FRAME) - sizeof(FX_SAVE_AREA));
-  NewFrame->Esp -= (ArgumentLength + (4 * sizeof(ULONG)));
+  /* We need the stack pointer to remain 4-byte aligned */
+  NewFrame->Esp -= (((ArgumentLength + 3) & (~ 0x3)) + (4 * sizeof(ULONG)));
   NewFrame->Eip = (ULONG)LdrpGetSystemDllCallbackDispatcher();
   UserEsp = (PULONG)NewFrame->Esp;
   UserEsp[0] = 0;     /* Return address. */

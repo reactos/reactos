@@ -26,7 +26,7 @@ InitializeCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
 {
    NTSTATUS Status;
 
-   Status = RtlInitializeCriticalSection(lpCriticalSection);
+   Status = RtlInitializeCriticalSection((PRTL_CRITICAL_SECTION)lpCriticalSection);
    if (!NT_SUCCESS(Status))
      {
 	RtlRaiseStatus(Status);
@@ -45,7 +45,7 @@ InitializeCriticalSectionAndSpinCount(
 {
     NTSTATUS Status;
     
-    Status = RtlInitializeCriticalSectionAndSpinCount(lpCriticalSection, dwSpinCount);
+    Status = RtlInitializeCriticalSectionAndSpinCount((PRTL_CRITICAL_SECTION)lpCriticalSection, dwSpinCount);
     if (Status)
       {
          RtlRaiseStatus(Status);

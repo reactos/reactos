@@ -227,6 +227,16 @@ void NtObjDirectory::read_directory(int scan_flags)
 			memset(&w32fd, 0, sizeof(WIN32_FIND_DATA));
 
 #ifdef UNICODE
+			if (info->name.string_ptr) {
+				info->name.string_ptr[info->name.string_len / sizeof(WCHAR)] = 0;
+			} else {
+				info->name.string_ptr = TEXT("");
+			}
+			if (info->type.string_ptr) {
+				info->type.string_ptr[info->type.string_len / sizeof(WCHAR)] = 0;
+			} else {
+				info->type.string_ptr = TEXT("");
+			}
 			wcscpyn(p, info->name.string_ptr, _MAX_PATH);
 #else
 			WideCharToMultiByte(CP_ACP, 0, info->name.string_ptr, info->name.string_len, p, MAX_PATH, 0, 0);

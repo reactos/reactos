@@ -4,9 +4,8 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/kd/service.c
  * PURPOSE:         Debug service dispatcher
- * PROGRAMMER:      Eric Kohl (ekohl@abo.rhein-zeitung.de)
- * UPDATE HISTORY:
- *                  17/01/2000: Created
+ * 
+ * PROGRAMMERS:     Eric Kohl (ekohl@abo.rhein-zeitung.de)
  */
 
 #include <ntoskrnl.h>

@@ -4,11 +4,8 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/rtl/ctype.c
  * PURPOSE:         Character type and conversion functions
- * PROGRAMMERS:     ???
- *                  Eric Kohl
- * HISTORY:         ???: Created
- *                  10/01/2000: Added missing functions and changed
- *                              all functions to use ctype table
+ * 
+ * PROGRAMMERS:     Eric Kohl
  */
 #undef __MSVCRT__
 #include <internal/ctype.h>

@@ -77,7 +77,6 @@ RTL_OBJECTS = \
 	rtl/process.o \
 	rtl/propvar.o \
 	rtl/rangelist.o \
-	rtl/registry.o \
 	rtl/resource.o \
 	rtl/teb.o \
 	rtl/thread.o \

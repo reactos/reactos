@@ -217,64 +217,31 @@ static NTSTATUS
 NpfsGetState(PIRP Irp,
 	     PIO_STACK_LOCATION IrpSp)
 {
-  ULONG OutputBufferLength;
   PNPFS_GET_STATE Reply;
-  NTSTATUS Status;
   PNPFS_PIPE Pipe;
   PNPFS_FCB Fcb;
 
-  OutputBufferLength = IrpSp->Parameters.DeviceIoControl.OutputBufferLength;
-
   /* Validate parameters */
-  if (OutputBufferLength >= sizeof(NPFS_GET_STATE))
+  if (IrpSp->Parameters.DeviceIoControl.OutputBufferLength < sizeof(NPFS_GET_STATE))
     {
-      Fcb = IrpSp->FileObject->FsContext;
-      Reply = (PNPFS_GET_STATE)Irp->AssociatedIrp.SystemBuffer;
-      Pipe = Fcb->Pipe;
-
-    if (Pipe->PipeWriteMode == FILE_PIPE_MESSAGE_MODE)
-    {
-      Reply->WriteModeMessage = TRUE;
-    }
-    else
-    {
-      Reply->WriteModeMessage = FALSE;
+      DPRINT("Status (0x%X).\n", STATUS_INVALID_PARAMETER);
+      return STATUS_INVALID_PARAMETER;
     }
 
-    if (Pipe->PipeReadMode == FILE_PIPE_MESSAGE_MODE)
-    {
-      Reply->ReadModeMessage = TRUE;
-    }
-    else
-    {
-      Reply->ReadModeMessage = FALSE;
-    }
+  Fcb = IrpSp->FileObject->FsContext;
+  Reply = (PNPFS_GET_STATE)Irp->AssociatedIrp.SystemBuffer;
+  Pipe = Fcb->Pipe;
 
-    if (Pipe->PipeBlockMode == FILE_PIPE_QUEUE_OPERATION)
-    {
-      Reply->NonBlocking = TRUE;
-    }
-    else
-    {
-      Reply->NonBlocking = FALSE;
-    }
+  Reply->WriteModeMessage = (Pipe->WriteMode == FILE_PIPE_MESSAGE_MODE);
+  Reply->ReadModeMessage = (Pipe->ReadMode == FILE_PIPE_MESSAGE_MODE);
+  Reply->NonBlocking = (Pipe->CompletionMode == FILE_PIPE_QUEUE_OPERATION);
+  Reply->InBufferSize = Pipe->InboundQuota;
+  Reply->OutBufferSize = Pipe->OutboundQuota;
+  Reply->Timeout = Pipe->TimeOut;
 
-    Reply->InBufferSize = Pipe->InboundQuota;
+  DPRINT("Status (0x%X).\n", STATUS_SUCCESS);
 
-    Reply->OutBufferSize = Pipe->OutboundQuota;
-
-    Reply->Timeout = Pipe->TimeOut;
-
-    Status = STATUS_SUCCESS;
-  }
-  else
-  {
-    Status = STATUS_INVALID_PARAMETER;
-  }
-
-  DPRINT("Status (0x%X).\n", Status);
-
-  return Status;
+  return STATUS_SUCCESS;
 }
 
 
@@ -290,64 +257,34 @@ static NTSTATUS
 NpfsSetState(PIRP Irp,
 	     PIO_STACK_LOCATION IrpSp)
 {
-  ULONG InputBufferLength;
   PNPFS_SET_STATE Request;
   PNPFS_PIPE Pipe;
-  NTSTATUS Status;
   PNPFS_FCB Fcb;
 
-  InputBufferLength  = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
-
   /* Validate parameters */
-  if (InputBufferLength >= sizeof(NPFS_SET_STATE))
-  {
-    Fcb = IrpSp->FileObject->FsContext;
-    Request = (PNPFS_SET_STATE)Irp->AssociatedIrp.SystemBuffer;
-    Pipe = Fcb->Pipe;
-
-    if (Request->WriteModeMessage)
+  if (IrpSp->Parameters.DeviceIoControl.InputBufferLength < sizeof(NPFS_SET_STATE))
     {
-      Pipe->PipeWriteMode = FILE_PIPE_MESSAGE_MODE;
-    }
-    else
-    {
-      Pipe->PipeWriteMode = FILE_PIPE_BYTE_STREAM_MODE;
+      DPRINT("Status (0x%X).\n", STATUS_INVALID_PARAMETER);
+      return STATUS_INVALID_PARAMETER;
     }
 
-    if (Request->ReadModeMessage)
-    {
-      Pipe->PipeReadMode = FILE_PIPE_MESSAGE_MODE;
-    }
-    else
-    {
-      Pipe->PipeReadMode = FILE_PIPE_BYTE_STREAM_MODE;
-    }
+  Fcb = IrpSp->FileObject->FsContext;
+  Request = (PNPFS_SET_STATE)Irp->AssociatedIrp.SystemBuffer;
+  Pipe = Fcb->Pipe;
 
-    if (Request->NonBlocking)
-    {
-      Pipe->PipeBlockMode = FILE_PIPE_QUEUE_OPERATION;
-    }
-    else
-    {
-      Pipe->PipeBlockMode = FILE_PIPE_COMPLETE_OPERATION;
-    }
+  Pipe->WriteMode =
+    Request->WriteModeMessage ? FILE_PIPE_MESSAGE_MODE : FILE_PIPE_BYTE_STREAM_MODE;
+  Pipe->ReadMode =
+    Request->WriteModeMessage ? FILE_PIPE_MESSAGE_MODE : FILE_PIPE_BYTE_STREAM_MODE;
+  Pipe->CompletionMode =
+    Request->NonBlocking ? FILE_PIPE_QUEUE_OPERATION : FILE_PIPE_COMPLETE_OPERATION;
+  Pipe->InboundQuota = Request->InBufferSize;
+  Pipe->OutboundQuota = Request->OutBufferSize;
+  Pipe->TimeOut = Request->Timeout;
 
-    Pipe->InboundQuota = Request->InBufferSize;
+  DPRINT("Status (0x%X).\n", STATUS_SUCCESS);
 
-    Pipe->OutboundQuota = Request->OutBufferSize;
-
-    Pipe->TimeOut = Request->Timeout;
-
-    Status = STATUS_SUCCESS;
-  }
-  else
-  {
-    Status = STATUS_INVALID_PARAMETER;
-  }
-
-  DPRINT("Status (0x%X).\n", Status);
-
-  return Status;
+  return STATUS_SUCCESS;
 }
 
 

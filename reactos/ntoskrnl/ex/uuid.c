@@ -1,9 +1,11 @@
 /* $Id$
  *
- * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
- * PURPOSE:           UUID generator
- * FILE:              kernel/ex/uuid.c
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/ex/uuid.c
+ * PURPOSE:         UUID generator
+ *
+ * PROGRAMMERS:     No programmer listed.
  */
 
 /* INCLUDES *****************************************************************/
@@ -72,12 +74,12 @@ ExpLoadUuidSequence(PULONG Sequence)
 			     OBJ_CASE_INSENSITIVE,
 			     NULL,
 			     NULL);
-  Status = NtOpenKey(&KeyHandle,
+  Status = ZwOpenKey(&KeyHandle,
 		     KEY_QUERY_VALUE,
 		     &ObjectAttributes);
   if (!NT_SUCCESS(Status))
   {
-    DPRINT("NtOpenKey() failed (Status %lx)\n", Status);
+    DPRINT("ZwOpenKey() failed (Status %lx)\n", Status);
     return Status;
   }
 
@@ -85,16 +87,16 @@ ExpLoadUuidSequence(PULONG Sequence)
 		       L"UuidSequenceNumber");
 
   ValueInfo = (PKEY_VALUE_PARTIAL_INFORMATION)ValueBuffer;
-  Status = NtQueryValueKey(KeyHandle,
+  Status = ZwQueryValueKey(KeyHandle,
 			   &Name,
 			   KeyValuePartialInformation,
 			   ValueBuffer,
 			   VALUE_BUFFER_SIZE,
 			   &ValueLength);
-  NtClose(KeyHandle);
+  ZwClose(KeyHandle);
   if (!NT_SUCCESS(Status))
   {
-    DPRINT("NtQueryValueKey() failed (Status %lx)\n", Status);
+    DPRINT("ZwQueryValueKey() failed (Status %lx)\n", Status);
     return Status;
   }
 
@@ -122,27 +124,27 @@ ExpSaveUuidSequence(PULONG Sequence)
 			     OBJ_CASE_INSENSITIVE,
 			     NULL,
 			     NULL);
-  Status = NtOpenKey(&KeyHandle,
+  Status = ZwOpenKey(&KeyHandle,
 		     KEY_SET_VALUE,
 		     &ObjectAttributes);
   if (!NT_SUCCESS(Status))
   {
-    DPRINT("NtOpenKey() failed (Status %lx)\n", Status);
+    DPRINT("ZwOpenKey() failed (Status %lx)\n", Status);
     return Status;
   }
 
   RtlInitUnicodeString(&Name,
 		       L"UuidSequenceNumber");
-  Status = NtSetValueKey(KeyHandle,
+  Status = ZwSetValueKey(KeyHandle,
 			 &Name,
 			 0,
 			 REG_DWORD,
 			 Sequence,
 			 sizeof(ULONG));
-  NtClose(KeyHandle);
+  ZwClose(KeyHandle);
   if (!NT_SUCCESS(Status))
   {
-    DPRINT("NtSetValueKey() failed (Status %lx)\n", Status);
+    DPRINT("ZwSetValueKey() failed (Status %lx)\n", Status);
   }
 
   return Status;

@@ -113,7 +113,7 @@ KIRQL STDCALL KeGetCurrentIrql (VOID);
 #ifndef __USE_W32API
 #define KeGetCurrentProcessorNumber() (KeGetCurrentKPCR()->ProcessorNumber)
 ULONG KeGetDcacheFillSize(VOID);
-ULONG STDCALL KeGetPreviousMode (VOID);
+KPROCESSOR_MODE STDCALL KeGetPreviousMode (VOID);
 #endif
 
 struct _KTHREAD* STDCALL KeGetCurrentThread (VOID);
@@ -218,9 +218,9 @@ VOID STDCALL KeLeaveCriticalRegion (VOID);
 
 VOID STDCALL KeLowerIrql (KIRQL	NewIrql);
 
-NTSTATUS STDCALL KePulseEvent (PKEVENT		Event,
-			       KPRIORITY	Increment,
-			       BOOLEAN		Wait);
+LONG STDCALL KePulseEvent (PKEVENT		Event,
+			   KPRIORITY	Increment,
+			   BOOLEAN		Wait);
 
 LARGE_INTEGER
 STDCALL

@@ -1,6 +1,6 @@
 /*
  * Copyright 1995 Jon Tombs
- * Copyright 2004 José Manuel Ferrer Ortiz
+ * Copyright 2004, 2005 José Manuel Ferrer Ortiz
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -139,7 +139,7 @@ FONT 8, "MS Shell Dlg"
     CHECKBOX        "&Subrayado", chx2, 10,94,50,10, BS_AUTOCHECKBOX
     LTEXT           "&Color:", stc4 ,6,110,30,9
     COMBOBOX        cmb4,6,120,84,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
-                    CBS_AUTOHSCROLL |  WS_BORDER | WS_VSCROLL | WS_TABSTOP
+		    CBS_AUTOHSCROLL |  WS_BORDER | WS_VSCROLL | WS_TABSTOP
     GROUPBOX        "Ejemplo",grp2,98,72,120,36,WS_GROUP
     CTEXT           "AaBbYyZzÑñ",stc5,103,80,109,24,SS_NOPREFIX | NOT WS_VISIBLE
     LTEXT           "Codificación:",stc7 ,98,114,80,9
@@ -155,7 +155,7 @@ FONT 8, "MS Shell Dlg"
 {
  LTEXT "Colores &básicos:", 1088, 4, 4, 140, 10
  LTEXT "Colores person&alizados:", 1089, 4, 106, 140, 10
- LTEXT "Color|Sól&ido", 1090, 150, 151, 48, 10
+ LTEXT "Color | Sól&ido", 1090, 150, 151, 48, 10
  LTEXT   "&Rojo:", 726 /*1094*/,249,126,24,10
  EDITTEXT 706, 275,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  LTEXT   "&Verde:",727/*1095*/,249,140,24,10
@@ -178,7 +178,7 @@ FONT 8, "MS Shell Dlg"
  PUSHBUTTON "A&yuda", pshHelp,100,166, 44, 14
  PUSHBUTTON "Añadir a &colores personalizados", 712/*1024*/, 152, 166, 142, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Definir colores personalizados >>", 719/*1025*/,   4, 150, 142, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON  "&i",713,300,200,4,14   /* just a dummy:  'i' is  like  &i in "sol&id" */
+ PUSHBUTTON  "&i",713,300,200,4,14   /* just a dummy:  'i' is  like  &i  in "sol&id"  */
 }
 
 
@@ -267,7 +267,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "Aceptar",IDOK,180,156,48,14,WS_GROUP
     PUSHBUTTON      "Cancelar",IDCANCEL,232,156,48,14
-/*    PUSHBUTTON      "Network...", psh5, 284,156,48,14 */
+/*    PUSHBUTTON      "Red...", psh5, 284,156,48,14 */
 
     GROUPBOX        "Impresora",      grp4,   8,  4, 272,84, WS_GROUP
     PUSHBUTTON      "&Propiedades",   psh2, 212, 17,  60,14, WS_GROUP
@@ -299,9 +299,9 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Página de configuración"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  CONTROL "", rct1, 130, 0x00020006, 80, 8, 80, 80,  SS_WHITERECT
-  CONTROL "", rct2, 130, 0x00020005, 160, 12, 4, 80, SS_GRAYRECT
-  CONTROL "", rct3, 130, 0x00020005, 84, 88, 80, 4,  SS_GRAYRECT
+  CONTROL "", rct1, "Static", SS_WHITERECT, 80, 8, 80, 80
+  CONTROL "", rct2, "Static", SS_GRAYRECT, 160, 12, 4, 80
+  CONTROL "", rct3, "Static", SS_GRAYRECT,  84, 88, 80, 4
   GROUPBOX "Papel", grp2, 8, 96, 224, 56, BS_GROUPBOX
   LTEXT "&Tamaño:", stc2, 16, 112, 36, 8
   COMBOBOX cmb2, 64, 110, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
@@ -409,7 +409,6 @@ desconocido."
 
     PD32_DEFAULT_PRINTER                  "Impresora por defecto; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "Hay %d documentos en la cola"
-    PD32_PRINT_ALL_X_PAGES                "&Todas las %d páginas"
     PD32_MARGINS_IN_INCHES                "Márgenes [pulgadas]"
     PD32_MARGINS_IN_MILIMETERS            "Márgenes [mm]"
     PD32_MILIMETERS                       "mm"
@@ -418,7 +417,7 @@ desconocido."
     PD32_PRINTER_STATUS_PAUSED            "Pausada; "
     PD32_PRINTER_STATUS_ERROR             "Error; "
     PD32_PRINTER_STATUS_PENDING_DELETION  "Borrado pendiente; "
-    PD32_PRINTER_STATUS_PAPER_JAM         "Paper jam; "
+    PD32_PRINTER_STATUS_PAPER_JAM         "Papel atascado; "
     PD32_PRINTER_STATUS_PAPER_OUT         "Sin papel; "
     PD32_PRINTER_STATUS_MANUAL_FEED       "Ponga papel a mano; "
     PD32_PRINTER_STATUS_PAPER_PROBLEM     "Problema con el papel; "
@@ -451,7 +450,7 @@ STRINGTABLE DISCARDABLE /* Color names */
     IDS_COLOR_OLIVE     "Oliva"
     IDS_COLOR_NAVY      "Azul marino"
     IDS_COLOR_PURPLE    "Morado"
-    IDS_COLOR_TEAL      "Teal"
+    IDS_COLOR_TEAL      "Turquesa"
     IDS_COLOR_GRAY      "Gris"
     IDS_COLOR_SILVER    "Plateado"
     IDS_COLOR_RED       "Rojo"
@@ -461,4 +460,9 @@ STRINGTABLE DISCARDABLE /* Color names */
     IDS_COLOR_FUCHSIA   "Fucsia"
     IDS_COLOR_AQUA      "Agua"
     IDS_COLOR_WHITE     "Blanco"
+}
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_FONT_SIZE   "Elija un tamaño de fuente entre %d and %d puntos."
 }

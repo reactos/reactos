@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * reactos/subsys/csrss/win32csr/conio.c
  *
  * Console I/O functions
@@ -81,10 +80,26 @@ ConioConsoleCtrlEvent(DWORD Event, PCSRSS_PROCESS_DATA ProcessData)
 
   if (ProcessData->CtrlDispatcher)
     {
-      Process = OpenProcess(PROCESS_DUP_HANDLE, FALSE, ProcessData->ProcessId);
-      if (NULL == Process)
+      OBJECT_ATTRIBUTES ObjectAttributes;
+      CLIENT_ID ClientId;
+      NTSTATUS Status;
+      
+      ClientId.UniqueThread = NULL;
+      ClientId.UniqueProcess = ProcessData->ProcessId;
+      InitializeObjectAttributes(&ObjectAttributes,
+                                 NULL,
+                                 0,
+                                 NULL,
+                                 NULL);
+
+      /* using OpenProcess is not optimal due to HANDLE vs. DWORD PIDs... */
+      Status = NtOpenProcess(&Process,
+                             PROCESS_DUP_HANDLE,
+                             &ObjectAttributes,
+                             &ClientId);
+      if (!NT_SUCCESS(Status))
         {
-          DPRINT1("Failed for handle duplication\n");
+          DPRINT1("Failed for handle duplication, Status: 0x%x\n", Status);
           return;
         }
 
@@ -139,7 +154,7 @@ CsrInitConsoleScreenBuffer(PCSRSS_CONSOLE Console,
     {
       return STATUS_INSUFFICIENT_RESOURCES;
     }
-  RtlInitializeCriticalSection(&Buffer->Header.Lock);
+  InitializeCriticalSection(&Buffer->Header.Lock);
   ConioInitScreenBuffer(Console, Buffer);
   /* initialize buffer to be empty with default attributes */
   for (Buffer->CurrentY = 0 ; Buffer->CurrentY < Buffer->MaxY; Buffer->CurrentY++)
@@ -193,7 +208,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
       return STATUS_UNSUCCESSFUL;
     }
   Console->PrivateData = NULL;
-  RtlInitializeCriticalSection(&Console->Header.Lock);
+  InitializeCriticalSection(&Console->Header.Lock);
   GuiMode = DtbgIsDesktopVisible();
   if (! GuiMode)
     {
@@ -210,7 +225,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
       if (! NT_SUCCESS(Status))
         {
           RtlFreeUnicodeString(&Console->Title);
-	  RtlDeleteCriticalSection(&Console->Header.Lock);
+	  DeleteCriticalSection(&Console->Header.Lock);
           CloseHandle(Console->ActiveEvent);
           return Status;
         }
@@ -221,7 +236,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
     {
       ConioCleanupConsole(Console);
       RtlFreeUnicodeString(&Console->Title);
-      RtlDeleteCriticalSection(&Console->Header.Lock);
+      DeleteCriticalSection(&Console->Header.Lock);
       CloseHandle(Console->ActiveEvent);
       return STATUS_INSUFFICIENT_RESOURCES;
     }
@@ -230,7 +245,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
     {
       ConioCleanupConsole(Console);
       RtlFreeUnicodeString(&Console->Title);
-      RtlDeleteCriticalSection(&Console->Header.Lock);
+      DeleteCriticalSection(&Console->Header.Lock);
       CloseHandle(Console->ActiveEvent);
       HeapFree(Win32CsrApiHeap, 0, NewBuffer);
       return Status;
@@ -249,6 +264,8 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
 CSR_API(CsrAllocConsole)
 {
   PCSRSS_CONSOLE Console;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  CLIENT_ID ClientId;
   HANDLE Process;
   NTSTATUS Status;
 
@@ -302,10 +319,22 @@ CSR_API(CsrAllocConsole)
       return Reply->Status = Status;
     }
 
-  Process = OpenProcess(PROCESS_DUP_HANDLE, FALSE, ProcessData->ProcessId);
-  if (NULL == Process)
+  ClientId.UniqueThread = NULL;
+  ClientId.UniqueProcess = ProcessData->ProcessId;
+  InitializeObjectAttributes(&ObjectAttributes,
+                             NULL,
+                             0,
+                             NULL,
+                             NULL);
+
+  /* using OpenProcess is not optimal due to HANDLE vs. DWORD PIDs... */
+  Status = NtOpenProcess(&Process,
+                         PROCESS_DUP_HANDLE,
+                         &ObjectAttributes,
+                         &ClientId);
+  if (!NT_SUCCESS(Status))
     {
-      DPRINT1("OpenProcess() failed for handle duplication\n");
+      DPRINT1("NtOpenProcess() failed for handle duplication, Status: 0x%x\n", Status);
       Console->Header.ReferenceCount--;
       ProcessData->Console = 0;
       Win32CsrReleaseObject(ProcessData, Reply->Data.AllocConsoleReply.OutputHandle);
@@ -313,6 +342,7 @@ CSR_API(CsrAllocConsole)
       Reply->Status = Status;
       return Status;
     }
+
   if (! DuplicateHandle(GetCurrentProcess(), ProcessData->Console->ActiveEvent,
                         Process, &ProcessData->ConsoleEvent, EVENT_ALL_ACCESS, FALSE, 0))
     {
@@ -956,7 +986,7 @@ VOID STDCALL
 ConioDeleteScreenBuffer(Object_t *Object)
 {
   PCSRSS_SCREEN_BUFFER Buffer = (PCSRSS_SCREEN_BUFFER) Object;
-  RtlDeleteCriticalSection(&Buffer->Header.Lock);
+  DeleteCriticalSection(&Buffer->Header.Lock);
   HeapFree(Win32CsrApiHeap, 0, Buffer->Buffer);
   HeapFree(Win32CsrApiHeap, 0, Buffer);
 }
@@ -998,7 +1028,7 @@ ConioDeleteConsole(Object_t *Object)
   ConioCleanupConsole(Console);
 
   CloseHandle(Console->ActiveEvent);
-  RtlDeleteCriticalSection(&Console->Header.Lock);
+  DeleteCriticalSection(&Console->Header.Lock);
   RtlFreeUnicodeString(&Console->Title);
   HeapFree(Win32CsrApiHeap, 0, Console);
 }
@@ -1127,7 +1157,7 @@ ConioProcessChar(PCSRSS_CONSOLE Console,
   if (0 == (Console->Mode & ENABLE_LINE_INPUT)
       || Console->EarlyReturn
       || ('\n' == KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar
-          && ! KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown))
+          && KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown))
     {
       if ('\n' == KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar)
         {
@@ -3131,6 +3161,53 @@ CSR_API(CsrSetConsoleOutputCodePage)
     }
   ConioUnlockConsole(Console);
   return Reply->Status = STATUS_UNSUCCESSFUL;
+}
+
+CSR_API(CsrGetProcessList)
+{
+  PHANDLE Buffer;
+  PCSRSS_CONSOLE Console;
+  PCSRSS_PROCESS_DATA current;
+  PLIST_ENTRY current_entry;
+  ULONG nItems, nCopied;
+  NTSTATUS Status;
+
+  DPRINT("CsrGetProcessList\n");
+  
+  Buffer = Reply->Data.GetProcessListReply.ProcessId;
+  Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+  Reply->Header.DataSize = Reply->Header.MessageSize - LPC_MESSAGE_BASE_SIZE;
+  
+  nItems = nCopied = 0;
+  Reply->Data.GetProcessListReply.nProcessIdsCopied = 0;
+  Reply->Data.GetProcessListReply.nProcessIdsTotal = 0;
+  
+  Status = ConioConsoleFromProcessData(ProcessData, &Console);
+  if (! NT_SUCCESS(Status))
+  {
+    return Reply->Status = Status;
+  }
+
+  DPRINT1("Console_Api Ctrl-C\n");
+
+  for(current_entry = Console->ProcessList.Flink;
+      current_entry != &Console->ProcessList;
+      current_entry = current_entry->Flink)
+  {
+    current = CONTAINING_RECORD(current_entry, CSRSS_PROCESS_DATA, ProcessEntry);
+    if(nItems++ < Request->Data.GetProcessListRequest.nMaxIds)
+    {
+      *(Buffer++) = current->ProcessId;
+      nCopied++;
+    }
+  }
+
+  ConioUnlockConsole(Console);
+  
+  Reply->Data.GetProcessListReply.nProcessIdsCopied = nCopied;
+  Reply->Data.GetProcessListReply.nProcessIdsTotal = nItems;
+  
+  return Reply->Status = STATUS_SUCCESS;
 }
 
 /* EOF */

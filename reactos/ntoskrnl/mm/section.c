@@ -1,29 +1,11 @@
-/*
- *  ReactOS kernel
- *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
 /* $Id$
  *
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
  * PURPOSE:         Implements section objects
- * PROGRAMMER:      David Welch (welch@mcmail.com)
- * UPDATE HISTORY:
- *                  Created 22/05/98
+ * 
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
 /* INCLUDES *****************************************************************/
@@ -547,7 +529,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
             return Status;
          }
       }
-      PageAddr = ExAllocatePageWithPhysPage(*Page);
+      PageAddr = MmCreateHyperspaceMapping(*Page);
       CacheSegOffset = BaseOffset + CacheSeg->Bcb->CacheSegmentSize - FileOffset;
       Length = RawLength - SegOffset;
       if (Length <= CacheSegOffset && Length <= PAGE_SIZE)
@@ -570,7 +552,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
                                        &CacheSeg);
          if (!NT_SUCCESS(Status))
          {
-            ExUnmapPage(PageAddr);
+            MmDeleteHyperspaceMapping(PageAddr);
             return(Status);
          }
          if (!UptoDate)
@@ -583,7 +565,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
             if (!NT_SUCCESS(Status))
             {
                CcRosReleaseCacheSegment(Bcb, CacheSeg, FALSE, FALSE, FALSE);
-               ExUnmapPage(PageAddr);
+               MmDeleteHyperspaceMapping(PageAddr);
                return Status;
             }
          }
@@ -597,7 +579,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
          }
       }
       CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, FALSE, FALSE);
-      ExUnmapPage(PageAddr);
+      MmDeleteHyperspaceMapping(PageAddr);
    }
    return(STATUS_SUCCESS);
 }
@@ -665,7 +647,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    /*
     * Get or create a page operation descriptor
     */
-   PageOp = MmGetPageOp(MemoryArea, 0, 0, Segment, Offset, MM_PAGEOP_PAGEIN, FALSE);
+   PageOp = MmGetPageOp(MemoryArea, NULL, 0, Segment, Offset, MM_PAGEOP_PAGEIN, FALSE);
    if (PageOp == NULL)
    {
       DPRINT1("MmGetPageOp failed\n");
@@ -1127,7 +1109,6 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
    PSECTION_OBJECT Section;
    PFN_TYPE OldPage;
    PFN_TYPE NewPage;
-   PVOID NewAddress;
    NTSTATUS Status;
    PVOID PAddress;
    ULONG Offset;
@@ -1188,7 +1169,7 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
    /*
     * Get or create a pageop
     */
-   PageOp = MmGetPageOp(MemoryArea, 0, 0, Segment, Offset,
+   PageOp = MmGetPageOp(MemoryArea, NULL, 0, Segment, Offset,
                         MM_PAGEOP_ACCESSFAULT, FALSE);
    if (PageOp == NULL)
    {
@@ -1242,10 +1223,7 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
    /*
     * Copy the old page
     */
-
-   NewAddress = ExAllocatePageWithPhysPage(NewPage);
-   memcpy(NewAddress, PAddress, PAGE_SIZE);
-   ExUnmapPage(NewAddress);
+   MiCopyFromUserPage(NewPage, PAddress);
 
    /*
     * Delete the old entry.
@@ -2148,8 +2126,8 @@ MmInitSectionImplementation(VOID)
    MmSectionObjectType->Tag = TAG('S', 'E', 'C', 'T');
    MmSectionObjectType->TotalObjects = 0;
    MmSectionObjectType->TotalHandles = 0;
-   MmSectionObjectType->MaxObjects = ULONG_MAX;
-   MmSectionObjectType->MaxHandles = ULONG_MAX;
+   MmSectionObjectType->PeakObjects = 0;
+   MmSectionObjectType->PeakHandles = 0;
    MmSectionObjectType->PagedPoolCharge = 0;
    MmSectionObjectType->NonpagedPoolCharge = sizeof(SECTION_OBJECT);
    MmSectionObjectType->Mapping = &MmpSectionMapping;
@@ -3265,8 +3243,8 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
          return(Status);
       }
 
-      if (0 != InterlockedCompareExchangeUL(&FileObject->SectionObjectPointer->ImageSectionObject,
-                                            ImageSectionObject, 0))
+      if (NULL != InterlockedCompareExchangePointer(&FileObject->SectionObjectPointer->ImageSectionObject,
+                                                    ImageSectionObject, NULL))
       {
          /*
           * An other thread has initialized the some image in the background
@@ -3593,7 +3571,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
    Section = MArea->Data.SectionData.Section;
    Segment = MArea->Data.SectionData.Segment;
 
-   PageOp = MmCheckForPageOp(MArea, 0, NULL, Segment, Offset);
+   PageOp = MmCheckForPageOp(MArea, NULL, NULL, Segment, Offset);
 
    while (PageOp)
    {
@@ -3610,7 +3588,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
       MmLockAddressSpace(&MArea->Process->AddressSpace);
       MmLockSectionSegment(Segment);
       MmspCompleteAndReleasePageOp(PageOp);
-      PageOp = MmCheckForPageOp(MArea, 0, NULL, Segment, Offset);
+      PageOp = MmCheckForPageOp(MArea, NULL, NULL, Segment, Offset);
    }
 
    Entry = MmGetPageEntrySectionSegment(Segment, Offset);
@@ -4089,7 +4067,7 @@ MmAllocateSection (IN ULONG Length, PVOID BaseAddress)
          KEBUGCHECK(0);
       }
       Status = MmCreateVirtualMapping (NULL,
-                                       (PVOID)(Result + (i * PAGE_SIZE)),
+                                       (PVOID)((ULONG_PTR)Result + (i * PAGE_SIZE)),
                                        PAGE_READWRITE,
                                        &Page,
                                        1);
@@ -4201,9 +4179,9 @@ MmMapViewOfSection(IN PVOID SectionObject,
       {
          if (!(SectionSegments[i].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
          {
-            ULONG MaxExtent;
-            MaxExtent = (ULONG)((char*)SectionSegments[i].VirtualAddress +
-                                SectionSegments[i].Length);
+            ULONG_PTR MaxExtent;
+            MaxExtent = (ULONG_PTR)SectionSegments[i].VirtualAddress +
+                        SectionSegments[i].Length;
             ImageSize = max(ImageSize, MaxExtent);
          }
       }

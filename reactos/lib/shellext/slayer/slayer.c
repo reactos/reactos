@@ -860,7 +860,7 @@ RegisterPropSheetHandler(LPTSTR szType, LPWSTR szGuid)
 HRESULT STDCALL
 DllRegisterServer(VOID)
 {
-  LONG e;
+  LONG e = E_ACCESSDENIED;
   HKEY hk;
   WCHAR szGuid[40];
   WCHAR szDescription[255];

@@ -286,7 +286,7 @@ unsigned __gregister_get(unsigned const regnum);
 #define NtCurrentTeb() ((struct _TEB *)__gregister_get(13))
 
 #else
-#error Unsupported architecture or no architecture specified.
+struct _TEB * NtCurrentTeb(void);
 #endif
 
 #endif

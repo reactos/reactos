@@ -2,11 +2,10 @@
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
- * FILE:               mkernel/kernel/work.c
+ * FILE:               ntoskrnl/ex/work.c
  * PURPOSE:            Manage system work queues
- * PROGRAMMER:         David Welch (welch@mcmail.com)
- * REVISION HISTORY:
- *             29/06/98: Created
+ * 
+ * PROGRAMMERS:        David Welch (welch@mcmail.com)
  */
 
 /* INCLUDES ******************************************************************/

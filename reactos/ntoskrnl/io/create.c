@@ -4,9 +4,8 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/create.c
  * PURPOSE:         Handling file create/open apis
- * PROGRAMMER:      David Welch (welch@cwcom.net)
- * UPDATE HISTORY:
- *                  24/05/98: Created
+ * 
+ * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
 /* INCLUDES ***************************************************************/
@@ -86,8 +85,10 @@ IopCreateFile(PVOID			ObjectBody,
   if (ParentObjectType != IoDeviceObjectType &&
       ParentObjectType != IoFileObjectType)
     {
-      CPRINT("Parent is a %S which is neither a file type nor a device type\n",
-	     BODY_TO_HEADER(Parent)->ObjectType->TypeName.Buffer);
+      DPRINT("Parent [%wZ] is a %S which is neither a file type nor a device type ; remaining path = %S\n",
+        &BODY_TO_HEADER(Parent)->Name,
+        BODY_TO_HEADER(Parent)->ObjectType->TypeName.Buffer,
+        RemainingPath);
       return(STATUS_UNSUCCESSFUL);
     }
 
@@ -146,8 +147,8 @@ IopCreateFile(PVOID			ObjectBody,
 	      DeviceObject = DeviceObject->Vpb->DeviceObject;
 	      DPRINT("FsDeviceObject %lx\n", DeviceObject);
 	    }
-	  RtlCreateUnicodeString(&(FileObject->FileName),
-				 RemainingPath);
+	  RtlpCreateUnicodeString(&(FileObject->FileName),
+             RemainingPath, NonPagedPool);
 	}
     }
   else
@@ -164,8 +165,8 @@ IopCreateFile(PVOID			ObjectBody,
 
       FileObject->RelatedFileObject = (PFILE_OBJECT)Parent;
 
-      RtlCreateUnicodeString(&(FileObject->FileName),
-			     RemainingPath);
+      RtlpCreateUnicodeString(&(FileObject->FileName),
+              RemainingPath, NonPagedPool);
     }
 
   DPRINT("FileObject->FileName %wZ\n",
@@ -319,7 +320,7 @@ IoCreateStreamFileObject(PFILE_OBJECT FileObject,
  * @implemented
  */
 NTSTATUS STDCALL
-IoCreateFile(OUT	PHANDLE			FileHandle,
+IoCreateFile(OUT PHANDLE		FileHandle,
 	     IN	ACCESS_MASK		DesiredAccess,
 	     IN	POBJECT_ATTRIBUTES	ObjectAttributes,
 	     OUT PIO_STATUS_BLOCK	IoStatusBlock,
@@ -335,11 +336,15 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
 	     IN	ULONG			Options)
 {
    PFILE_OBJECT		FileObject;
-   NTSTATUS		Status;
    PIRP			Irp;
    PIO_STACK_LOCATION	StackLoc;
    IO_SECURITY_CONTEXT  SecurityContext;
-   KPROCESSOR_MODE PreviousMode;
+   KPROCESSOR_MODE      AccessMode;
+   HANDLE               LocalFileHandle;
+   IO_STATUS_BLOCK      LocalIoStatusBlock;
+   LARGE_INTEGER        SafeAllocationSize;
+   PVOID                SystemEaBuffer = NULL;
+   NTSTATUS		Status = STATUS_SUCCESS;
    
    DPRINT("IoCreateFile(FileHandle %x, DesiredAccess %x, "
 	  "ObjectAttributes %x ObjectAttributes->ObjectName->Buffer %S)\n",
@@ -348,17 +353,89 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
    
    ASSERT_IRQL(PASSIVE_LEVEL);
 
-  if (IoStatusBlock == NULL)
-    return STATUS_ACCESS_VIOLATION;
+   if (IoStatusBlock == NULL || FileHandle == NULL)
+     return STATUS_ACCESS_VIOLATION;
 
-   *FileHandle = 0;
+   LocalFileHandle = 0;
 
-   PreviousMode = ExGetPreviousMode();
+   if(Options & IO_NO_PARAMETER_CHECKING)
+     AccessMode = KernelMode;
+   else
+     AccessMode = ExGetPreviousMode();
+   
+   if(AccessMode != KernelMode)
+   {
+     _SEH_TRY
+     {
+       ProbeForWrite(FileHandle,
+                     sizeof(HANDLE),
+                     sizeof(ULONG));
+       ProbeForWrite(IoStatusBlock,
+                     sizeof(IO_STATUS_BLOCK),
+                     sizeof(ULONG));
+       if(AllocationSize != NULL)
+       {
+         ProbeForRead(AllocationSize,
+                      sizeof(LARGE_INTEGER),
+                      sizeof(ULONG));
+         SafeAllocationSize = *AllocationSize;
+       }
+       else
+         SafeAllocationSize.QuadPart = 0;
 
-   Status = ObCreateObject(PreviousMode,
+       if(EaBuffer != NULL && EaLength > 0)
+       {
+         ProbeForRead(EaBuffer,
+                      EaLength,
+                      sizeof(ULONG));
+
+         /* marshal EaBuffer */
+         SystemEaBuffer = ExAllocatePool(NonPagedPool,
+                                         EaLength);
+         if(SystemEaBuffer == NULL)
+         {
+           Status = STATUS_INSUFFICIENT_RESOURCES;
+           _SEH_LEAVE;
+         }
+
+         RtlCopyMemory(SystemEaBuffer,
+                       EaBuffer,
+                       EaLength);
+       }
+     }
+     _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+     _SEH_END;
+     
+     if(!NT_SUCCESS(Status))
+     {
+       return Status;
+     }
+   }
+   else
+   {
+     if(AllocationSize != NULL)
+       SafeAllocationSize = *AllocationSize;
+     else
+       SafeAllocationSize.QuadPart = 0;
+
+     if(EaBuffer != NULL && EaLength > 0)
+     {
+       SystemEaBuffer = EaBuffer;
+     }
+   }
+
+   if(Options & IO_CHECK_CREATE_PARAMETERS)
+   {
+     DPRINT1("FIXME: IO_CHECK_CREATE_PARAMETERS not yet supported!\n");
+   }
+
+   Status = ObCreateObject(AccessMode,
 			   IoFileObjectType,
 			   ObjectAttributes,
-			   PreviousMode,
+			   AccessMode,
 			   NULL,
 			   sizeof(FILE_OBJECT),
 			   0,
@@ -378,7 +455,7 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
 			    DesiredAccess,
 			    0,
 			    NULL,
-			    FileHandle);
+			    &LocalFileHandle);
    if (!NT_SUCCESS(Status))
      {
 	DPRINT("ObInsertObject() failed! (Status %lx)\n", Status);
@@ -416,22 +493,19 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
    Irp = IoAllocateIrp(FileObject->DeviceObject->StackSize, FALSE);
    if (Irp == NULL)
      {
-	ZwClose(*FileHandle);
+	ZwClose(LocalFileHandle);
 	return STATUS_UNSUCCESSFUL;
      }
 
    //trigger FileObject/Event dereferencing
    Irp->Tail.Overlay.OriginalFileObject = FileObject;
-   Irp->RequestorMode = PreviousMode;
-   Irp->UserIosb = IoStatusBlock;
-   Irp->AssociatedIrp.SystemBuffer = EaBuffer;
+   Irp->RequestorMode = AccessMode;
+   Irp->UserIosb = &LocalIoStatusBlock;
+   Irp->AssociatedIrp.SystemBuffer = SystemEaBuffer;
    Irp->Tail.Overlay.AuxiliaryBuffer = NULL;
    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
    Irp->UserEvent = &FileObject->Event;
-   if (AllocationSize)
-   {
-      Irp->Overlay.AllocationSize = *AllocationSize;
-   }
+   Irp->Overlay.AllocationSize = SafeAllocationSize;
    
    /*
     * Get the stack location for the new
@@ -454,7 +528,7 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
 	  StackLoc->Parameters.Create.Options |= (CreateDisposition << 24);
 	  StackLoc->Parameters.Create.FileAttributes = (USHORT)FileAttributes;
 	  StackLoc->Parameters.Create.ShareAccess = (USHORT)ShareAccess;
-	  StackLoc->Parameters.Create.EaLength = EaLength;
+	  StackLoc->Parameters.Create.EaLength = SystemEaBuffer != NULL ? EaLength : 0;
 	  break;
 	
 	case CreateFileTypeNamedPipe:
@@ -488,10 +562,10 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
      {
 	KeWaitForSingleObject(&FileObject->Event,
 			      Executive,
-			      PreviousMode,
+			      AccessMode,
 			      FALSE,
 			      NULL);
-	Status = IoStatusBlock->Status;
+	Status = LocalIoStatusBlock.Status;
      }
    if (!NT_SUCCESS(Status))
      {
@@ -499,8 +573,27 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
         FileObject->DeviceObject = NULL;
         FileObject->Vpb = NULL;
 
-	ZwClose(*FileHandle);
+	ZwClose(LocalFileHandle);
      }
+   else
+     {
+	 _SEH_TRY
+	   {
+	      *FileHandle = LocalFileHandle;
+	      *IoStatusBlock = LocalIoStatusBlock;
+	   }
+	 _SEH_HANDLE
+	   {
+	      Status = _SEH_GetExceptionCode();
+	   }
+	 _SEH_END;
+     }
+
+   /* cleanup EABuffer if captured */
+   if(AccessMode != KernelMode && SystemEaBuffer != NULL)
+   {
+     ExFreePool(SystemEaBuffer);
+   }
 
    ASSERT_IRQL(PASSIVE_LEVEL);
 

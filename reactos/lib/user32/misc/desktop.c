@@ -177,7 +177,7 @@ SystemParametersInfoA(UINT uiAction,
           }
         }
 
-        RedrawWindow(GetDesktopWindow(), NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+        RedrawWindow(GetShellWindow(), NULL, NULL, RDW_INVALIDATE | RDW_ERASE);
 
         return Ret;
       }
@@ -280,7 +280,7 @@ SystemParametersInfoW(UINT uiAction,
         }
       }
 
-      RedrawWindow(GetDesktopWindow(), NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+      RedrawWindow(GetShellWindow(), NULL, NULL, RDW_INVALIDATE | RDW_ERASE);
 
       return Ret;
     }

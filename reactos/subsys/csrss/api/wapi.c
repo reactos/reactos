@@ -123,18 +123,18 @@ ClientConnectionThread(HANDLE ServerPort)
 	
       if (LpcRequest.Header.MessageType == LPC_PORT_CLOSED)
         {
-          CsrFreeProcessData( (ULONG)LpcRequest.Header.ClientId.UniqueProcess );
+          CsrFreeProcessData( LpcRequest.Header.ClientId.UniqueProcess );
           break;
         }
 
       Request = (PCSRSS_API_REQUEST)&LpcRequest;
       Reply = (PCSRSS_API_REPLY)&LpcReply;
 	
-      ProcessData = CsrGetProcessData((ULONG)LpcRequest.Header.ClientId.UniqueProcess);
+      ProcessData = CsrGetProcessData(LpcRequest.Header.ClientId.UniqueProcess);
       if (ProcessData == NULL)
         {
-          DPRINT1("CSR: Message %d: Unable to find data for process %d\n",
-	          LpcRequest.Header.MessageType, (ULONG)LpcRequest.Header.ClientId.UniqueProcess);
+          DPRINT1("CSR: Message %d: Unable to find data for process 0x%x\n",
+	          LpcRequest.Header.MessageType, LpcRequest.Header.ClientId.UniqueProcess);
 	  break;
         }	          
 
@@ -187,11 +187,11 @@ ServerApiPortThead(PVOID PortHandle)
 	     break;
 	  }
 
-	ProcessData = CsrCreateProcessData((ULONG)Request.Header.ClientId.UniqueProcess);
+	ProcessData = CsrCreateProcessData(Request.Header.ClientId.UniqueProcess);
 	if (ProcessData == NULL)
 	  {
-	     DPRINT1("Unable to allocate or find data for process %d\n",
-	             (ULONG)Request.Header.ClientId.UniqueProcess);
+	     DPRINT1("Unable to allocate or find data for process 0x%x\n",
+	             Request.Header.ClientId.UniqueProcess);
 	     Status = STATUS_UNSUCCESSFUL;
 	     break;
 	  }

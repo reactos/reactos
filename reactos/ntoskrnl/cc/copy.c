@@ -4,9 +4,8 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/copy.c
  * PURPOSE:         Implements cache managers copy interface
- * PROGRAMMER:      Hartmut Birr
- * UPDATE HISTORY:
- *                  Created 05.10.2001
+ *
+ * PROGRAMMERS:     Hartmut Birr
  */
 
 /* INCLUDES ******************************************************************/
@@ -25,7 +24,7 @@ static PFN_TYPE CcZeroPage = 0;
 #define MAX_RW_LENGTH	(256 * 1024)
 
 #if defined(__GNUC__)
-void * alloca(size_t size);
+/* void * alloca(size_t size); */
 #elif defined(_MSC_VER)
 void* _alloca(size_t size);
 #else

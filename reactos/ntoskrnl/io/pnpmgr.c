@@ -1,17 +1,17 @@
 /* $Id$
  *
- * COPYRIGHT:      See COPYING in the top level directory
- * PROJECT:        ReactOS kernel
- * FILE:           ntoskrnl/io/pnpmgr/pnpmgr.c
- * PURPOSE:        Initializes the PnP manager
- * PROGRAMMER:     Casper S. Hornstrup (chorns@users.sourceforge.net)
- * UPDATE HISTORY:
- *  16/04/2001 CSH Created
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/io/pnpmgr.c
+ * PURPOSE:         Initializes the PnP manager
+ * 
+ * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+#include <ddk/wdmguid.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -435,7 +435,7 @@ IoRequestDeviceEject(
 
 BOOLEAN
 IopCreateUnicodeString(
-  PUNICODE_STRING	Destination,
+  PUNICODE_STRING Destination,
   PWSTR Source,
   POOL_TYPE PoolType)
 {
@@ -482,7 +482,7 @@ IopGetSystemPowerDeviceObject(PDEVICE_OBJECT *DeviceObject)
   return STATUS_UNSUCCESSFUL;
 }
 
-/**********************************************************************
+/*
  * DESCRIPTION
  * 	Creates a device node
  *
@@ -791,7 +791,7 @@ IopCreateDeviceKeyPath(PWSTR Path,
 
       DPRINT("Create '%S'\n", KeyName.Buffer);
 
-      Status = NtCreateKey (&KeyHandle,
+      Status = ZwCreateKey (&KeyHandle,
 			    KEY_ALL_ACCESS,
 			    &ObjectAttributes,
 			    0,
@@ -800,7 +800,7 @@ IopCreateDeviceKeyPath(PWSTR Path,
 			    NULL);
       if (!NT_SUCCESS (Status))
 	{
-	  DPRINT ("NtCreateKey() failed with status %x\n", Status);
+	  DPRINT ("ZwCreateKey() failed with status %x\n", Status);
 	  return Status;
 	}
 
@@ -811,7 +811,7 @@ IopCreateDeviceKeyPath(PWSTR Path,
 	}
       else
 	{
-	  NtClose (KeyHandle);
+	  ZwClose (KeyHandle);
 	  *Next = L'\\';
 	}
 
@@ -843,7 +843,7 @@ IopSetDeviceInstanceData(HANDLE InstanceKey,
 			     OBJ_CASE_INSENSITIVE,
 			     InstanceKey,
 			     NULL);
-  Status = NtCreateKey(&LogConfKey,
+  Status = ZwCreateKey(&LogConfKey,
 		       KEY_ALL_ACCESS,
 		       &ObjectAttributes,
 		       0,
@@ -862,7 +862,7 @@ IopSetDeviceInstanceData(HANDLE InstanceKey,
 
 	RtlInitUnicodeString(&KeyName,
 			     L"BootConfig");
-	Status = NtSetValueKey(LogConfKey,
+	Status = ZwSetValueKey(LogConfKey,
 			       &KeyName,
 			       0,
 			       REG_RESOURCE_LIST,
@@ -877,7 +877,7 @@ IopSetDeviceInstanceData(HANDLE InstanceKey,
     {
       RtlInitUnicodeString(&KeyName,
 			   L"BasicConfigVector");
-      Status = NtSetValueKey(LogConfKey,
+      Status = ZwSetValueKey(LogConfKey,
 			     &KeyName,
 			     0,
 			     REG_RESOURCE_REQUIREMENTS_LIST,
@@ -885,7 +885,7 @@ IopSetDeviceInstanceData(HANDLE InstanceKey,
 			     DeviceNode->ResourceRequirements->ListSize);
     }
 
-    NtClose(LogConfKey);
+    ZwClose(LogConfKey);
   }
 
   DPRINT("IopSetDeviceInstanceData() done\n");
@@ -1069,7 +1069,7 @@ IopActionInterrogateDeviceStack(
       /* Set 'Capabilities' value */
       RtlInitUnicodeString(&ValueName,
 			   L"Capabilities");
-      Status = NtSetValueKey(InstanceKey,
+      Status = ZwSetValueKey(InstanceKey,
 			     &ValueName,
 			     0,
 			     REG_DWORD,
@@ -1081,7 +1081,7 @@ IopActionInterrogateDeviceStack(
       {
          RtlInitUnicodeString(&ValueName,
 			      L"UINumber");
-         Status = NtSetValueKey(InstanceKey,
+         Status = ZwSetValueKey(InstanceKey,
 				&ValueName,
 				0,
 				REG_DWORD,
@@ -1120,7 +1120,7 @@ IopActionInterrogateDeviceStack(
 
       RtlInitUnicodeString(&ValueName,
 			   L"HardwareID");
-      Status = NtSetValueKey(InstanceKey,
+      Status = ZwSetValueKey(InstanceKey,
 			     &ValueName,
 			     0,
 			     REG_MULTI_SZ,
@@ -1128,7 +1128,7 @@ IopActionInterrogateDeviceStack(
 			     (TotalLength + 1) * sizeof(WCHAR));
       if (!NT_SUCCESS(Status))
 	{
-	   DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+	   DPRINT1("ZwSetValueKey() failed (Status %lx)\n", Status);
 	}
    }
    else
@@ -1166,7 +1166,7 @@ IopActionInterrogateDeviceStack(
 
       RtlInitUnicodeString(&ValueName,
 			   L"CompatibleIDs");
-      Status = NtSetValueKey(InstanceKey,
+      Status = ZwSetValueKey(InstanceKey,
 			     &ValueName,
 			     0,
 			     REG_MULTI_SZ,
@@ -1174,7 +1174,7 @@ IopActionInterrogateDeviceStack(
 			     (TotalLength + 1) * sizeof(WCHAR));
       if (!NT_SUCCESS(Status))
 	{
-	   DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+	   DPRINT1("ZwSetValueKey() failed (Status %lx)\n", Status);
 	}
    }
    else
@@ -1196,7 +1196,7 @@ IopActionInterrogateDeviceStack(
    {
       RtlInitUnicodeString(&ValueName,
 			   L"DeviceDesc");
-      Status = NtSetValueKey(InstanceKey,
+      Status = ZwSetValueKey(InstanceKey,
 			     &ValueName,
 			     0,
 			     REG_SZ,
@@ -1204,7 +1204,7 @@ IopActionInterrogateDeviceStack(
 			     (wcslen((PWSTR)IoStatusBlock.Information) + 1) * sizeof(WCHAR));
       if (!NT_SUCCESS(Status))
 	{
-	   DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+	   DPRINT1("ZwSetValueKey() failed (Status %lx)\n", Status);
 	}
    }
    else
@@ -1226,7 +1226,7 @@ IopActionInterrogateDeviceStack(
       DPRINT("LocationInformation: %S\n", (PWSTR)IoStatusBlock.Information);
       RtlInitUnicodeString(&ValueName,
 			   L"LocationInformation");
-      Status = NtSetValueKey(InstanceKey,
+      Status = ZwSetValueKey(InstanceKey,
 			     &ValueName,
 			     0,
 			     REG_SZ,
@@ -1234,7 +1234,7 @@ IopActionInterrogateDeviceStack(
 			     (wcslen((PWSTR)IoStatusBlock.Information) + 1) * sizeof(WCHAR));
       if (!NT_SUCCESS(Status))
 	{
-	   DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+	   DPRINT1("ZwSetValueKey() failed (Status %lx)\n", Status);
 	}
    }
    else
@@ -1315,9 +1315,13 @@ IopActionInterrogateDeviceStack(
       IopSetDeviceInstanceData(InstanceKey, DeviceNode);
    }
 
-   NtClose(InstanceKey);
+   ZwClose(InstanceKey);
 
    DeviceNode->Flags |= DNF_PROCESSED;
+
+   /* Report the device to the user-mode pnp manager */
+   IopQueueTargetDeviceEvent(&GUID_DEVICE_ARRIVAL,
+                             &DeviceNode->InstancePath);
 
    return STATUS_SUCCESS;
 }
@@ -1378,6 +1382,13 @@ IopActionConfigureChildServices(
 
    if (!IopDeviceNodeHasFlag(DeviceNode, DNF_DISABLED))
    {
+      WCHAR RegKeyBuffer[MAX_PATH];
+      UNICODE_STRING RegKey;
+      
+      RegKey.Length = 0;
+      RegKey.MaximumLength = sizeof(RegKeyBuffer);
+      RegKey.Buffer = RegKeyBuffer;
+      
       /*
        * Retrieve configuration from Enum key
        */
@@ -1391,8 +1402,11 @@ IopActionConfigureChildServices(
       QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
       QueryTable[0].EntryContext = Service;
 
-      Status = RtlQueryRegistryValues(RTL_REGISTRY_ENUM,
-         DeviceNode->InstancePath.Buffer, QueryTable, NULL, NULL);
+      RtlAppendUnicodeToString(&RegKey, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
+      RtlAppendUnicodeStringToString(&RegKey, &DeviceNode->InstancePath);
+
+      Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
+         RegKey.Buffer, QueryTable, NULL, NULL);
 
       if (!NT_SUCCESS(Status))
       {
@@ -1547,7 +1561,6 @@ IopActionInitAllServices(
  * parent node. This function just calls IopActionInitChildServices with
  * BootDrivers = TRUE.
  */
-
 NTSTATUS
 IopActionInitBootServices(
    PDEVICE_NODE DeviceNode,
@@ -1572,7 +1585,6 @@ IopActionInitBootServices(
  * Return Value
  *    Status
  */
-
 NTSTATUS
 IopInitializePnpServices(
    IN PDEVICE_NODE DeviceNode,
@@ -1721,7 +1733,7 @@ IopInvalidateDeviceRelations(
       NULL,
       NULL);
 
-   Status = NtOpenFile(
+   Status = ZwOpenFile(
       &Handle,
       FILE_ALL_ACCESS,
       &ObjectAttributes,
@@ -1731,7 +1743,7 @@ IopInvalidateDeviceRelations(
  
    BootDrivers = NT_SUCCESS(Status) ? FALSE : TRUE;
 
-   NtClose(Handle);
+   ZwClose(Handle);
 
    /*
     * Initialize services for discovered children. Only boot drivers will
@@ -1759,6 +1771,14 @@ PnpInit(VOID)
 
    KeInitializeSpinLock(&IopDeviceTreeLock);
 
+   /* Initialize PnP-Event notification support */
+   Status = IopInitPlugPlayEvents();
+   if (!NT_SUCCESS(Status))
+   {
+      CPRINT("IopInitPlugPlayEvents() failed\n");
+      KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
+   }
+
    /*
     * Create root device node
     */
@@ -1784,6 +1804,18 @@ PnpInit(VOID)
       CPRINT("Insufficient resources\n");
       KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
    }
+
+   if (!IopCreateUnicodeString(&IopRootDeviceNode->InstancePath,
+       L"HTREE\\Root\\0",
+       PagedPool))
+   {
+     CPRINT("Failed to create the instance path!\n");
+     KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, STATUS_UNSUCCESSFUL, 0, 0, 0);
+   }
+
+   /* Report the device to the user-mode pnp manager */
+   IopQueueTargetDeviceEvent(&GUID_DEVICE_ARRIVAL,
+                             &IopRootDeviceNode->InstancePath);
 
    IopRootDeviceNode->PhysicalDeviceObject->Flags |= DO_BUS_ENUMERATED_DEVICE;
    PnpRootDriverEntry(IopRootDriverObject, NULL);

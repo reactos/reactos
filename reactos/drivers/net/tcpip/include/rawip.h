@@ -7,6 +7,8 @@
 #ifndef __RAWIP_H
 #define __RAWIP_H
 
+
+
 NTSTATUS RawIPSendDatagram(
     PADDRESS_FILE AddrFile,
     PTDI_CONNECTION_INFORMATION ConnInfo,
@@ -23,6 +25,17 @@ NTSTATUS RawIPStartup(
 
 NTSTATUS RawIPShutdown(
     VOID);
+
+NTSTATUS AddGenericHeaderIPv4(
+    PIP_ADDRESS RemoteAddress,
+    USHORT RemotePort,
+    PIP_ADDRESS LocalAddress,
+    USHORT LocalPort,
+    PIP_PACKET IPPacket,
+    UINT DataLength,
+    UINT Protocol,
+    UINT ExtraLength,
+    PVOID *NextHeader );
 
 #endif /* __RAWIP_H */
 

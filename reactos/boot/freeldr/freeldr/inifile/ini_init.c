@@ -29,7 +29,7 @@ BOOL IniFileInitialize(VOID)
 {
 	PFILE	Freeldr_Ini;	// File handle for freeldr.ini
 	PUCHAR	FreeLoaderIniFileData;
-	U32		FreeLoaderIniFileSize;
+	ULONG		FreeLoaderIniFileSize;
 	BOOL	Success;
 
 	// Open freeldr.ini
@@ -87,7 +87,7 @@ BOOL IniFileInitialize(VOID)
 	return Success;
 }
 
-PFILE IniOpenIniFile(U8 BootDriveNumber, U8 BootPartitionNumber)
+PFILE IniOpenIniFile(UCHAR BootDriveNumber, UCHAR BootPartitionNumber)
 {
 	PFILE	IniFileHandle;	// File handle for freeldr.ini
 

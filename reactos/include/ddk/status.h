@@ -669,6 +669,9 @@ Note that !NT_SUCCESS(errCode) is NOT the same as NT_ERROR(errCode)
 
 #define STATUS_RANGE_NOT_FOUND                      ((NTSTATUS)0xC000028C)
 
+#define STATUS_FLOAT_MULTIPLE_FAULTS                ((NTSTATUS)0xC00002B4L)
+#define STATUS_FLOAT_MULTIPLE_TRAPS                 ((NTSTATUS)0xC00002B5L)
+
 #define STATUS_SAM_INIT_FAILURE                     ((NTSTATUS)0xC00002CB)
 
 

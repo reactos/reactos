@@ -26,21 +26,9 @@ extern POBJECT_TYPE IMPORTED MmSectionObjectType;
  *          Size = Size of range
  * RETURNS: The number of pages
  */
-#if 0
-extern inline unsigned int ADDRESS_AND_SIZE_TO_SPAN_PAGES(PVOID Va,
-							  ULONG Size)
-{
-   ULONG HighestAddr;
-   ULONG LowestAddr;
-   
-   HighestAddr = PAGE_ROUND_UP(Size + ((ULONG)Va));
-   LowestAddr = PAGE_ROUND_DOWN((ULONG)Va);
-   return((HighestAddr - LowestAddr) / PAGE_SIZE);
-}
-#endif
 #define ADDRESS_AND_SIZE_TO_SPAN_PAGES(Va, Size) \
-       (ULONG)((PAGE_ROUND_UP((Size) + ((ULONG)(Va))) - \
-                PAGE_ROUND_DOWN((ULONG)(Va))) / PAGE_SIZE)
+       (ULONG)((PAGE_ROUND_UP((Size) + ((ULONG_PTR)(Va))) - \
+                PAGE_ROUND_DOWN((ULONG_PTR)(Va))) / PAGE_SIZE)
 
 /*
  * FUNCTION: Returns FALSE is the pointer is NULL, TRUE otherwise
@@ -50,7 +38,7 @@ extern inline unsigned int ADDRESS_AND_SIZE_TO_SPAN_PAGES(PVOID Va,
 /*
  * FUNCTION: Returns the byte offset of the address within its page
  */
-#define BYTE_OFFSET(va) (((ULONG)va)%PAGE_SIZE)
+#define BYTE_OFFSET(va) (((ULONG_PTR)va)%PAGE_SIZE)
 #define PAGE_OFFSET(va) BYTE_OFFSET(va)
 
 
@@ -59,10 +47,9 @@ extern inline unsigned int ADDRESS_AND_SIZE_TO_SPAN_PAGES(PVOID Va,
  * required to hold it
  */
 #define BYTES_TO_PAGES(Size) \
-  ((ULONG) ((ULONG_PTR) (Size) >> PAGE_SHIFT) + (((ULONG) (Size) & (PAGE_SIZE - 1)) != 0))
+	(((Size) >> PAGE_SHIFT) + (((Size) & (PAGE_SIZE - 1)) != 0))
   
-  
-#define PAGE_ALIGN(va) ( (PVOID) (((ULONG)(va)) & (~(PAGE_SIZE-1))) )
+#define PAGE_ALIGN(va) ( (PVOID) (((ULONG_PTR)(va)) & (~(PAGE_SIZE-1))) )
 #define PAGE_BASE(va) PAGE_ALIGN(va)
 
 NTSTATUS
@@ -331,10 +318,10 @@ MmGrowKernelStack (
 { \
 	(MemoryDescriptorList)->Next = (PMDL)NULL; \
 	(MemoryDescriptorList)->Size = (CSHORT)(sizeof(MDL) + \
-		(ADDRESS_AND_SIZE_TO_SPAN_PAGES((BaseVa),(Length)) * sizeof(ULONG))); \
+		(ADDRESS_AND_SIZE_TO_SPAN_PAGES((BaseVa),(Length)) * sizeof(PFN_NUMBER))); \
 	(MemoryDescriptorList)->MdlFlags = 0; \
-	(MemoryDescriptorList)->StartVa = (PVOID)PAGE_BASE(BaseVa); \
-	(MemoryDescriptorList)->ByteOffset = (ULONG)PAGE_OFFSET(BaseVa); \
+	(MemoryDescriptorList)->StartVa = PAGE_ALIGN(BaseVa); \
+	(MemoryDescriptorList)->ByteOffset = BYTE_OFFSET(BaseVa); \
 	(MemoryDescriptorList)->ByteCount = (Length); \
 }
 

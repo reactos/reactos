@@ -164,6 +164,10 @@ UINT TCPAllocatePort( UINT HintPort );
 
 VOID TCPFreePort( UINT Port );
 
+NTSTATUS TCPGetPeerAddress
+( PCONNECTION_ENDPOINT Connection, 
+  PTRANSPORT_ADDRESS TransportAddress );
+
 NTSTATUS TCPStartup(
   VOID);
 

@@ -1,16 +1,16 @@
 /* $Id$
  * 
- * COPYRIGHT:    See COPYING in the top level directory
- * PROJECT:      ReactOS kernel
- * FILE:         ntoskrnl/mm/pool.c
- * PURPOSE:      Implements the kernel memory pool
- * PROGRAMMER:   David Welch (welch@mcmail.com)
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/mm/pool.c
+ * PURPOSE:         Implements the kernel memory pool
+ * 
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
 /* INCLUDES ****************************************************************/
 
 #include <ntoskrnl.h>
-#include <pseh.h>
 
 #define NDEBUG
 #include <internal/debug.h>

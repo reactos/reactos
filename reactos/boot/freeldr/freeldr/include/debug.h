@@ -37,9 +37,9 @@
 	#define DPRINT_HWDETECT		0x00000400  // OR this with DebugPrintMask to enable hardware detection messages
 
 	VOID	DebugInit(VOID);
-	VOID	DebugPrint(U32 Mask, char *format, ...);
+	VOID	DebugPrint(ULONG Mask, char *format, ...);
 	VOID	DebugPrint1(char *format, ...);
-	VOID	DebugDumpBuffer(U32 Mask, PVOID Buffer, U32 Length);
+	VOID	DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length);
 
 	#define DbgPrint(_x_)					DebugPrint _x_ ;
 	#define DPRINT1						DebugPrint1

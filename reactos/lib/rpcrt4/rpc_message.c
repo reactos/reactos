@@ -447,8 +447,7 @@ RPC_STATUS WINAPI I_RpcGetBuffer(PRPC_MESSAGE pMsg)
      * it, we'll leave deallocating the original buffer to the RPC server */
     pMsg->Buffer = HeapAlloc(GetProcessHeap(), 0, pMsg->BufferLength);
   } else {
-    if (pMsg->Buffer)
-        HeapFree(GetProcessHeap(), 0, pMsg->Buffer);
+    HeapFree(GetProcessHeap(), 0, pMsg->Buffer);
     pMsg->Buffer = HeapAlloc(GetProcessHeap(), 0, pMsg->BufferLength);
   }
   TRACE("Buffer=%p\n", pMsg->Buffer);
@@ -463,9 +462,7 @@ RPC_STATUS WINAPI I_RpcFreeBuffer(PRPC_MESSAGE pMsg)
 {
   TRACE("(%p) Buffer=%p\n", pMsg, pMsg->Buffer);
   /* FIXME: pfnFree? */
-  if (pMsg->Buffer != NULL) {
-    HeapFree(GetProcessHeap(), 0, pMsg->Buffer);
-  }
+  HeapFree(GetProcessHeap(), 0, pMsg->Buffer);
   pMsg->Buffer = NULL;
   return S_OK;
 }

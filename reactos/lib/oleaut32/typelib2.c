@@ -48,10 +48,8 @@
 
 #include "wine/unicode.h"
 #include "objbase.h"
-#include "ole2disp.h"
 #include "typelib.h"
 #include "wine/debug.h"
-#include "variant.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(typelib2);
 /* WINE_DEFAULT_DEBUG_CHANNEL(ole); */
@@ -150,7 +148,7 @@ typedef struct tagICreateTypeLib2Impl
     ICreateTypeLib2Vtbl *lpVtbl;
     ITypeLib2Vtbl       *lpVtblTypeLib2;
 
-    UINT ref;
+    ULONG ref;
 
     WCHAR *filename;
 
@@ -176,7 +174,7 @@ typedef struct tagICreateTypeInfo2Impl
     ICreateTypeInfo2Vtbl *lpVtbl;
     ITypeInfo2Vtbl       *lpVtblTypeInfo2;
 
-    UINT ref;
+    ULONG ref;
 
     ICreateTypeLib2Impl *typelib;
     MSFT_TypeInfoBase *typeinfo;
@@ -979,18 +977,25 @@ static int ctl2_encode_typedesc(
 	break;
 
     case VT_CARRAY:
+      {
 	/* FIXME: Make with the error checking. */
-	FIXME("Array vartype, hacking badly.\n");
+        int num_dims = tdesc->u.lpadesc->cDims, elements = 1, dim;
 
 	ctl2_encode_typedesc(This, &tdesc->u.lpadesc->tdescElem, &target_type, width, alignment, NULL);
-	arrayoffset = ctl2_alloc_segment(This, MSFT_SEG_ARRAYDESC, 16, 0);
+	arrayoffset = ctl2_alloc_segment(This, MSFT_SEG_ARRAYDESC, (2 + 2 * num_dims) * sizeof(int), 0);
 	arraydata = (void *)&This->typelib_segment_data[MSFT_SEG_ARRAYDESC][arrayoffset];
 
 	arraydata[0] = target_type;
-	arraydata[1] = 0x00080001;
-	arraydata[2] = 0x8;
-	arraydata[3] = 0;
+	arraydata[1] = num_dims;
+        arraydata[1] |= ((num_dims * 2 * sizeof(int)) << 16);
+        arraydata += 2;
 
+        for(dim = 0; dim < num_dims; dim++) {
+            arraydata[0] = tdesc->u.lpadesc->rgbounds[dim].cElements;
+            arraydata[1] = tdesc->u.lpadesc->rgbounds[dim].lLbound;
+            elements *= tdesc->u.lpadesc->rgbounds[dim].cElements;
+            arraydata += 2;
+        }
 	typeoffset = ctl2_alloc_segment(This, MSFT_SEG_TYPEDESC, 8, 0);
 	typedata = (void *)&This->typelib_segment_data[MSFT_SEG_TYPEDESC][typeoffset];
 
@@ -998,12 +1003,11 @@ static int ctl2_encode_typedesc(
 	typedata[1] = arrayoffset;
 
 	*encoded_tdesc = typeoffset;
-	*width = 8;
-	*alignment = 1;
-	*decoded_size = sizeof(ARRAYDESC);
+	*width = *width * elements;
+	*decoded_size = sizeof(ARRAYDESC) + (num_dims - 1) * sizeof(SAFEARRAYBOUND);
 
 	break;
-
+      }
     case VT_USERDEFINED:
 	TRACE("USERDEFINED.\n");
 	for (typeoffset = 0; typeoffset < This->typelib_segdir[MSFT_SEG_TYPEDESC].length; typeoffset += 8) {
@@ -1138,10 +1142,11 @@ static HRESULT WINAPI ICreateTypeInfo2_fnQueryInterface(
 static ULONG WINAPI ICreateTypeInfo2_fnAddRef(ICreateTypeInfo2 *iface)
 {
     ICreateTypeInfo2Impl *This = (ICreateTypeInfo2Impl *)iface;
+    ULONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p)->ref was %u\n",This, This->ref);
+    TRACE("(%p)->ref was %lu\n",This, ref - 1);
 
-    return ++(This->ref);
+    return ref;
 }
 
 /******************************************************************************
@@ -1152,12 +1157,11 @@ static ULONG WINAPI ICreateTypeInfo2_fnAddRef(ICreateTypeInfo2 *iface)
 static ULONG WINAPI ICreateTypeInfo2_fnRelease(ICreateTypeInfo2 *iface)
 {
     ICreateTypeInfo2Impl *This = (ICreateTypeInfo2Impl *)iface;
+    ULONG ref = InterlockedDecrement(&This->ref);
 
-    --(This->ref);
+    TRACE("(%p)->(%lu)\n",This, ref);
 
-    TRACE("(%p)->(%u)\n",This, This->ref);
-
-    if (!This->ref) {
+    if (!ref) {
 	if (This->typelib) {
 	    ICreateTypeLib2_fnRelease((ICreateTypeLib2 *)This->typelib);
 	    This->typelib = NULL;
@@ -1168,7 +1172,7 @@ static ULONG WINAPI ICreateTypeInfo2_fnRelease(ICreateTypeInfo2 *iface)
 	return 0;
     }
 
-    return This->ref;
+    return ref;
 }
 
 
@@ -3005,10 +3009,11 @@ static HRESULT WINAPI ICreateTypeLib2_fnQueryInterface(
 static ULONG WINAPI ICreateTypeLib2_fnAddRef(ICreateTypeLib2 *iface)
 {
     ICreateTypeLib2Impl *This = (ICreateTypeLib2Impl *)iface;
+    ULONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p)->ref was %u\n",This, This->ref);
+    TRACE("(%p)->ref was %lu\n",This, ref - 1);
 
-    return ++(This->ref);
+    return ref;
 }
 
 /******************************************************************************
@@ -3019,30 +3024,25 @@ static ULONG WINAPI ICreateTypeLib2_fnAddRef(ICreateTypeLib2 *iface)
 static ULONG WINAPI ICreateTypeLib2_fnRelease(ICreateTypeLib2 *iface)
 {
     ICreateTypeLib2Impl *This = (ICreateTypeLib2Impl *)iface;
+    ULONG ref = InterlockedDecrement(&This->ref);
 
-    --(This->ref);
+    TRACE("(%p)->(%lu)\n",This, ref);
 
-    TRACE("(%p)->(%u)\n",This, This->ref);
-
-    if (!This->ref) {
+    if (!ref) {
 	int i;
 
 	for (i = 0; i < MSFT_SEG_MAX; i++) {
-	    if (This->typelib_segment_data[i]) {
-		HeapFree(GetProcessHeap(), 0, This->typelib_segment_data[i]);
-		This->typelib_segment_data[i] = NULL;
-	    }
+            HeapFree(GetProcessHeap(), 0, This->typelib_segment_data[i]);
+            This->typelib_segment_data[i] = NULL;
 	}
 
-	if (This->filename) {
-	    HeapFree(GetProcessHeap(), 0, This->filename);
-	    This->filename = NULL;
-	}
+        HeapFree(GetProcessHeap(), 0, This->filename);
+        This->filename = NULL;
 
 	while (This->typeinfos) {
 	    ICreateTypeInfo2Impl *typeinfo = This->typeinfos;
 	    This->typeinfos = typeinfo->next_typeinfo;
-	    if (typeinfo->typedata) HeapFree(GetProcessHeap(), 0, typeinfo->typedata);
+            HeapFree(GetProcessHeap(), 0, typeinfo->typedata);
 	    HeapFree(GetProcessHeap(), 0, typeinfo);
 	}
 
@@ -3050,7 +3050,7 @@ static ULONG WINAPI ICreateTypeLib2_fnRelease(ICreateTypeLib2 *iface)
 	return 0;
     }
 
-    return This->ref;
+    return ref;
 }
 
 

@@ -20,7 +20,7 @@
 
 #include <internal/ntoskrnl.h>
 #include <internal/dbg.h>
-#include <roscfg.h>
+
 
 #if defined(_MSC_VER) && (_MSC_VER < 1300)
 /* TODO: Verify which version the MS compiler learned the __FUNCTION__ macro */
@@ -37,8 +37,13 @@
 
 /* Assert only on "checked" version */
 #ifndef NASSERT
+#ifdef CONFIG_SMP
+#define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d for CPU%d\n", __FILE__,__LINE__, KeGetCurrentKPCR()->ProcessorNumber), KeBugCheck(0); }
+#define ASSERT(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d for CPU%d\n", __FILE__,__LINE__, KeGetCurrentKPCR()->ProcessorNumber), KeBugCheck(0); }
+#else
 #define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); KeBugCheck(0); }
 #define ASSERT(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); KeBugCheck(0); }
+#endif
 
 #define assertmsg(_c_, _m_) \
   if (!(_c_)) { \

@@ -1,31 +1,12 @@
-/*
- *  ReactOS kernel
- *  Copyright (C) 2000, 1999, 1998 David Welch <welch@cwcom.net>, 
- *                                 Philip Susi <phreak@iag.net>
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
 /* $Id$
  *
- * PROJECT:                ReactOS kernel
- * FILE:                   ntoskrnl/ps/debug.c
- * PURPOSE:                Thread managment
- * PROGRAMMER:             David Welch (welch@mcmail.com)
- * REVISION HISTORY: 
- *               23/06/98: Created
- *               12/10/99: Phillip Susi:  Thread priorities, and APC work
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/ps/debug.c
+ * PURPOSE:         Thread managment
+ * 
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
+ *                  Phillip Susi
  */
 
 /*
@@ -205,28 +186,43 @@ NtGetContextThread(IN HANDLE ThreadHandle,
 		   OUT PCONTEXT ThreadContext)
 {
   PETHREAD Thread;
-  NTSTATUS Status;
   CONTEXT Context;
   KAPC Apc;
   KEVENT Event;
-  NTSTATUS AStatus;
+  KPROCESSOR_MODE PreviousMode;
+  NTSTATUS Status = STATUS_SUCCESS;
+  
+  PreviousMode = ExGetPreviousMode();
 
-  Status = MmCopyFromCaller(&Context, ThreadContext, sizeof(CONTEXT));
-  if (! NT_SUCCESS(Status))
+  if(PreviousMode != KernelMode)
+  {
+    _SEH_TRY
+    {
+      ProbeForWrite(ThreadContext,
+                    sizeof(CONTEXT),
+                    sizeof(ULONG));
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    if(!NT_SUCCESS(Status))
     {
       return Status;
     }
+  }
+  
   Status = ObReferenceObjectByHandle(ThreadHandle,
                                      THREAD_GET_CONTEXT,
                                      PsThreadType,
-                                     UserMode,
+                                     PreviousMode,
                                      (PVOID*)&Thread,
                                      NULL);
-  if (! NT_SUCCESS(Status))
-    {
-      return Status;
-    }
-  if (Thread == PsGetCurrentThread())
+  if(NT_SUCCESS(Status))
+  {
+    if(Thread == PsGetCurrentThread())
     {
       /*
        * I don't know if trying to get your own context makes much
@@ -234,15 +230,13 @@ NtGetContextThread(IN HANDLE ThreadHandle,
        */
 	
       KeTrapFrameToContext(Thread->Tcb.TrapFrame, &Context);
-      Status = STATUS_SUCCESS;
     }
-  else
+    else
     {
       KeInitializeEvent(&Event,
                         NotificationEvent,
-                        FALSE);	
-      AStatus = STATUS_SUCCESS;
-	
+                        FALSE);
+
       KeInitializeApc(&Apc,
                       &Thread->Tcb,
                       OriginalApcEnvironment,
@@ -253,7 +247,7 @@ NtGetContextThread(IN HANDLE ThreadHandle,
                       (PVOID)&Context);
       if (!KeInsertQueueApc(&Apc,
 			    (PVOID)&Event,
-			    (PVOID)&AStatus,
+			    (PVOID)&Status,
 			    IO_NO_INCREMENT))
 	{
 	  Status = STATUS_THREAD_IS_TERMINATING;
@@ -262,21 +256,27 @@ NtGetContextThread(IN HANDLE ThreadHandle,
 	{
 	  Status = KeWaitForSingleObject(&Event,
 					 0,
-					 UserMode,
+					 KernelMode,
 					 FALSE,
 					 NULL);
-	  if (NT_SUCCESS(Status) && !NT_SUCCESS(AStatus))
-	    {
-	      Status = AStatus;
-	    }
 	}
     }
-  if (NT_SUCCESS(Status))
+    ObDereferenceObject(Thread);
+    
+    if(NT_SUCCESS(Status))
     {
-      Status = MmCopyToCaller(ThreadContext, &Context, sizeof(Context));
+      _SEH_TRY
+      {
+        *ThreadContext = Context;
+      }
+      _SEH_HANDLE
+      {
+        Status = _SEH_GetExceptionCode();
+      }
+      _SEH_END;
     }
-
-  ObDereferenceObject(Thread);
+  }
+  
   return Status;
 }
 
@@ -310,29 +310,45 @@ NtSetContextThread(IN HANDLE ThreadHandle,
 		   IN PCONTEXT ThreadContext)
 {
   PETHREAD Thread;
-  NTSTATUS Status;
   KAPC Apc;
   KEVENT Event;
-  NTSTATUS AStatus;
   CONTEXT Context;
-
-  Status = MmCopyFromCaller(&Context, ThreadContext, sizeof(CONTEXT));
-  if (! NT_SUCCESS(Status))
+  KPROCESSOR_MODE PreviousMode;
+  NTSTATUS Status = STATUS_SUCCESS;
+  
+  PreviousMode = ExGetPreviousMode();
+  
+  if(PreviousMode != KernelMode)
+  {
+    _SEH_TRY
+    {
+      ProbeForRead(ThreadContext,
+                   sizeof(CONTEXT),
+                   sizeof(ULONG));
+      Context = *ThreadContext;
+      ThreadContext = &Context;
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    
+    if(!NT_SUCCESS(Status))
     {
       return Status;
     }
+  }
+
   Status = ObReferenceObjectByHandle(ThreadHandle,
                                      THREAD_SET_CONTEXT,
                                      PsThreadType,
-                                     UserMode,
+                                     PreviousMode,
                                      (PVOID*)&Thread,
                                      NULL);
-  if (!NT_SUCCESS(Status))
-    {
-      return Status;
-    }
-
-  if (Thread == PsGetCurrentThread())
+  if(NT_SUCCESS(Status))
+  {
+    if (Thread == PsGetCurrentThread())
     {
       /*
        * I don't know if trying to set your own context makes much
@@ -340,14 +356,12 @@ NtSetContextThread(IN HANDLE ThreadHandle,
        */
 	
       KeContextToTrapFrame(&Context, Thread->Tcb.TrapFrame);
-      Status = STATUS_SUCCESS;
     }
-  else
+    else
     {
       KeInitializeEvent(&Event,
                         NotificationEvent,
                         FALSE);	
-      AStatus = STATUS_SUCCESS;
 	
       KeInitializeApc(&Apc,
                       &Thread->Tcb,
@@ -359,7 +373,7 @@ NtSetContextThread(IN HANDLE ThreadHandle,
                       (PVOID)&Context);
       if (!KeInsertQueueApc(&Apc,
 			    (PVOID)&Event,
-			    (PVOID)&AStatus,
+			    (PVOID)&Status,
 			    IO_NO_INCREMENT))
 	{
 	  Status = STATUS_THREAD_IS_TERMINATING;
@@ -368,17 +382,14 @@ NtSetContextThread(IN HANDLE ThreadHandle,
 	{
 	  Status = KeWaitForSingleObject(&Event,
 					 0,
-					 UserMode,
+					 KernelMode,
 					 FALSE,
-                                     NULL);
-	  if (NT_SUCCESS(Status) && !NT_SUCCESS(AStatus))
-	    {
-	      Status = AStatus;
-	    }
+                                         NULL);
 	}
     }
-
-  ObDereferenceObject(Thread);
+    ObDereferenceObject(Thread);
+  }
+  
   return Status;
 }
 

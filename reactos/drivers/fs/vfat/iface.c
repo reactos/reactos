@@ -27,12 +27,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <rosrtl/string.h>
-
 #define NDEBUG
-#include <debug.h>
-
 #include "vfat.h"
 
 /* GLOBALS *****************************************************************/
@@ -45,7 +40,7 @@ NTSTATUS STDCALL
 DriverEntry(PDRIVER_OBJECT DriverObject,
 	    PUNICODE_STRING RegistryPath)
 /*
- * FUNCTION: Called by the system to initalize the driver
+ * FUNCTION: Called by the system to initialize the driver
  * ARGUMENTS:
  *           DriverObject = object describing this driver
  *           RegistryPath = path to our configuration entries
@@ -53,7 +48,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
  */
 {
    PDEVICE_OBJECT DeviceObject;
-   UNICODE_STRING DeviceName = ROS_STRING_INITIALIZER(L"\\Fat");
+   UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Fat");
    NTSTATUS Status;
 
    Status = IoCreateDevice(DriverObject,
@@ -65,7 +60,23 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 			   &DeviceObject);
    if (!NT_SUCCESS(Status))
      {
-	return (Status);
+       if (Status == STATUS_OBJECT_NAME_EXISTS ||
+	   Status == STATUS_OBJECT_NAME_COLLISION)
+	 {
+	   /* Try an other name, if 'Fat' is already in use. 'Fat' is also used by fastfat.sys on W2K */
+	   RtlInitUnicodeString(&DeviceName, L"\\RosFat");
+           Status = IoCreateDevice(DriverObject,
+			           sizeof(VFAT_GLOBAL_DATA),
+			           &DeviceName,
+			           FILE_DEVICE_DISK_FILE_SYSTEM,
+			           0,
+			           FALSE,
+			           &DeviceObject);
+	   if (!NT_SUCCESS(Status))
+	     {
+               return (Status);
+	     }
+	 }
      }
    VfatGlobalData = DeviceObject->DeviceExtension;
    RtlZeroMemory (VfatGlobalData, sizeof(VFAT_GLOBAL_DATA));
@@ -91,7 +102,18 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
    DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = VfatBuildRequest;
 
    DriverObject->DriverUnload = NULL;
+   
+   /* Cache manager */
+   VfatGlobalData->CacheMgrCallbacks.AcquireForLazyWrite = VfatAcquireForLazyWrite;
+   VfatGlobalData->CacheMgrCallbacks.ReleaseFromLazyWrite = VfatReleaseFromLazyWrite;
+   VfatGlobalData->CacheMgrCallbacks.AcquireForReadAhead = VfatAcquireForReadAhead;
+   VfatGlobalData->CacheMgrCallbacks.ReleaseFromReadAhead = VfatReleaseFromReadAhead;
+   
+   /* Fast I/O */
+   VfatInitFastIoRoutines(&VfatGlobalData->FastIoDispatch);
+   DriverObject->FastIoDispatch = &VfatGlobalData->FastIoDispatch;
 
+   /* Private lists */
    ExInitializeNPagedLookasideList(&VfatGlobalData->FcbLookasideList, 
                                    NULL, NULL, 0, sizeof(VFATFCB), TAG_FCB, 0);
    ExInitializeNPagedLookasideList(&VfatGlobalData->CcbLookasideList, 

@@ -16,8 +16,8 @@
 #include <rosrtl/string.h>
 
 #ifdef DBG
-//DWORD DebugTraceLevel = DEBUG_ULTRA;
-DWORD DebugTraceLevel = 0;
+DWORD DebugTraceLevel = DEBUG_ULTRA;
+//DWORD DebugTraceLevel = 0;
 #endif /* DBG */
 
 HANDLE GlobalHeap;
@@ -66,7 +66,7 @@ WSPSocket(
 	PHELPER_DATA				HelperData;
 	PVOID						HelperDLLContext;
 	DWORD						HelperEvents;
-	DWORD						IOOptions;
+	DWORD						IOOptions = 0;
 	UNICODE_STRING				TransportName;
 	UNICODE_STRING				DevName;
 	LARGE_INTEGER				GroupData;
@@ -123,8 +123,11 @@ WSPSocket(
 	Socket->SanData = NULL;
 
 	/* Ask alex about this */
-	if( Socket->SharedData.SocketType == SOCK_DGRAM )
+	if( Socket->SharedData.SocketType == SOCK_DGRAM ||
+            Socket->SharedData.SocketType == SOCK_RAW ) {
+            AFD_DbgPrint(MID_TRACE,("Connectionless socket\n"));
 	    Socket->SharedData.ServiceFlags1 |= XP1_CONNECTIONLESS;
+        }
 
 	/* Packet Size */
 	SizeOfPacket = TransportName.Length + sizeof(AFD_CREATE_PACKET) + sizeof(WCHAR);
@@ -133,7 +136,7 @@ WSPSocket(
 	SizeOfEA = SizeOfPacket + sizeof(FILE_FULL_EA_INFORMATION) + AFD_PACKET_COMMAND_LENGTH;
 
 	/* Set up EA Buffer */
-	EABuffer = HeapAlloc(GlobalHeap, 0, (SIZE_T)&SizeOfEA);
+	EABuffer = HeapAlloc(GlobalHeap, 0, SizeOfEA);
 	EABuffer->NextEntryOffset = 0;
 	EABuffer->Flags = 0;
 	EABuffer->EaNameLength = AFD_PACKET_COMMAND_LENGTH;
@@ -248,10 +251,11 @@ WSPSocket(
 	Upcalls.lpWPUModifyIFSHandle(1, (SOCKET)Sock, lpErrno);
 
 	/* Return Socket Handle */
+	AFD_DbgPrint(MID_TRACE,("Success %x\n", Sock));
 	return (SOCKET)Sock;
 
 error:
-	AFD_DbgPrint(MID_TRACE,("Ending\n"));
+	AFD_DbgPrint(MID_TRACE,("Ending %x\n", Status));
 
         if( lpErrno ) *lpErrno = Status;
 
@@ -565,7 +569,6 @@ WSPSelect(
     NTSTATUS				Status;
     ULONG				HandleCount, OutCount = 0;
     ULONG				PollBufferSize;
-    LARGE_INTEGER			uSec;
     PVOID				PollBuffer;
     ULONG				i, j = 0, x;
     HANDLE                              SockEvent;
@@ -598,7 +601,6 @@ WSPSelect(
     } else {
 	PollInfo->Timeout = RtlEnlargedIntegerMultiply
 	    ((timeout->tv_sec * 1000) + timeout->tv_usec, -10000);
-	PollInfo->Timeout.QuadPart += uSec.QuadPart;
     }
     
     /* Number of handles for AFD to Check */
@@ -727,8 +729,8 @@ WSPAccept(
 	NTSTATUS					Status;
 	struct fd_set				ReadSet;
 	struct timeval				Timeout;
-	PVOID						PendingData;
-	ULONG						PendingDataLength;
+	PVOID						PendingData = NULL;
+	ULONG						PendingDataLength = 0;
 	PVOID						CalleeDataBuffer;
 	WSABUF						CallerData, CalleeID, CallerID, CalleeData;
 	PSOCKADDR					RemoteAddress =  NULL;
@@ -972,19 +974,26 @@ WSPAccept(
 	}
 
 	/* Return Address in SOCKADDR FORMAT */
-	RtlCopyMemory (SocketAddress, 
-					&ListenReceiveData->Address.Address[0].AddressType, 
-					sizeof(RemoteAddress));
+        if( SocketAddress ) {
+            RtlCopyMemory (SocketAddress, 
+                           &ListenReceiveData->Address.Address[0].AddressType, 
+                           sizeof(RemoteAddress));
+            if( *SocketAddressLength )
+                *SocketAddressLength = 
+                    ListenReceiveData->Address.Address[0].AddressLength;
+        }
 
 	NtClose( SockEvent );
  
     /* Re-enable Async Event */
     SockReenableAsyncSelectEvent(Socket, FD_ACCEPT);
 
-	AFD_DbgPrint(MID_TRACE,("Socket %x\n", AcceptSocket));
-
-	/* Return Socket */
-	return AcceptSocket;
+    AFD_DbgPrint(MID_TRACE,("Socket %x\n", AcceptSocket));
+    
+    *lpErrno = 0;
+    
+    /* Return Socket */
+    return AcceptSocket;
 }
 
 int
@@ -1286,12 +1295,77 @@ INT
 WSPAPI
 WSPGetPeerName(
     IN      SOCKET s, 
-    OUT     LPSOCKADDR name, 
-    IN OUT  LPINT namelen, 
+    OUT     LPSOCKADDR Name, 
+    IN OUT  LPINT NameLength, 
     OUT     LPINT lpErrno)
 {
- 
-  return 0;
+	IO_STATUS_BLOCK				IOSB;
+	ULONG					TdiAddressSize;
+	PTDI_ADDRESS_INFO			TdiAddress;
+	PTRANSPORT_ADDRESS			SocketAddress;
+	PSOCKET_INFORMATION			Socket = NULL;
+	NTSTATUS				Status;
+	HANDLE                                  SockEvent;
+
+	Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
+				NULL, 1, FALSE );
+
+	if( !NT_SUCCESS(Status) ) return SOCKET_ERROR;
+
+	/* Get the Socket Structure associate to this Socket*/
+	Socket = GetSocketStructure(s);
+
+	/* Allocate a buffer for the address */
+	TdiAddressSize = FIELD_OFFSET(TDI_ADDRESS_INFO,
+	                              Address.Address[0].Address) +
+			 Socket->SharedData.SizeOfLocalAddress;
+	TdiAddress = HeapAlloc(GlobalHeap, 0, TdiAddressSize);
+
+	if ( TdiAddress == NULL ) {
+		NtClose( SockEvent );
+		*lpErrno = WSAENOBUFS;
+		return SOCKET_ERROR;
+	}
+
+	SocketAddress = &TdiAddress->Address;
+
+	/* Send IOCTL */
+	Status = NtDeviceIoControlFile( (HANDLE)Socket->Handle,
+					SockEvent,
+					NULL,
+					NULL,
+					&IOSB,
+					IOCTL_AFD_GET_PEER_NAME,
+					NULL,
+					0,
+					TdiAddress,
+					TdiAddressSize);
+	
+	/* Wait for return */
+	if (Status == STATUS_PENDING) {
+		WaitForSingleObject(SockEvent, INFINITE);
+		Status = IOSB.Status;
+	}
+
+	NtClose( SockEvent );
+
+	if (NT_SUCCESS(Status)) {
+		if (*NameLength >= SocketAddress->Address[0].AddressLength) {
+			Name->sa_family = SocketAddress->Address[0].AddressType;
+			RtlCopyMemory (Name->sa_data,
+			               SocketAddress->Address[0].Address, 
+			               SocketAddress->Address[0].AddressLength);
+			HeapFree(GlobalHeap, 0, TdiAddress);
+			return 0;
+		} else {
+			HeapFree(GlobalHeap, 0, TdiAddress);
+			*lpErrno = WSAEFAULT;
+			return SOCKET_ERROR;
+		}
+	}
+
+	return MsafdReturnWithErrno
+	    ( IOSB.Status, lpErrno, 0, NULL );    
 }
 
 INT

@@ -24,7 +24,7 @@
 
 /* GLOBALS ******************************************************************/
 
-static CRITICAL_SECTION HandleTableCS;
+static RTL_CRITICAL_SECTION HandleTableCS;
 static HANDLE DefaultHandleTable[MAX_DEFAULT_HANDLES];
 static HANDLE ProcessHeap;
 

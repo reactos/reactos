@@ -1353,7 +1353,7 @@ NtUserCreateMenu(BOOL PopupMenu)
   if (!NT_SUCCESS(Status))
   {
     DPRINT("Validation of window station handle (0x%X) failed\n",
-      PROCESS_WINDOW_STATION());
+      PsGetCurrentProcess()->Win32WindowStation);
     SetLastNtError(Status);
     return (HMENU)0;
   }

@@ -376,7 +376,6 @@ STRINGTABLE DISCARDABLE
 
     PD32_DEFAULT_PRINTER                  "Принтер по умолчанию; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "%d документов в очереди"
-    PD32_PRINT_ALL_X_PAGES                "&Все %d страниц"
     PD32_MARGINS_IN_INCHES                "Границы [дюймы)"
     PD32_MARGINS_IN_MILIMETERS            "Границы [мм]"
     PD32_MILIMETERS                       "мм"

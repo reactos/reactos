@@ -4,10 +4,9 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/ppool.c
  * PURPOSE:         Implements the paged pool
- * PROGRAMMER:      David Welch (welch@mcmail.com)
- * UPDATE HISTORY:
- *                  Created 22/05/98
- *                  Complete Rewrite Dec 2004 by Royce Mitchell III
+ *
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
+ *                  Royce Mitchell III
  */
 
 /* INCLUDES *****************************************************************/

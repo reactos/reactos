@@ -25,8 +25,3 @@ $(WMC_TARGET): $(WMC_OBJECTS)
 
 $(WMC_OBJECTS): %.o : %.c
 	${host_gcc} $(WMC_HOST_CXXFLAGS) -c $< -o $@
-
-.PHONY: wmc
-
-wmc: $(WMC_TARGET)
-	-

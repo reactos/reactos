@@ -3,10 +3,13 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/rtl/swprintf.c
- * PURPOSE:         unicode sprintf functions
+ * PURPOSE:         Unicode sprintf functions
+ * 
  * PROGRAMMERS:     David Welch
  *                  Eric Kohl
- *
+ */
+
+/*
  * TODO:
  *   - Verify the implementation of '%Z'.
  */

@@ -1,6 +1,5 @@
 <module name="ntoskrnl" type="kernel">
 	<importlibrary definition="ntoskrnl.def" />
-	<dependency>genntdll</dependency>
 	<define name="_SEH_NO_NATIVE_NLG" />
 	<define name="_DISABLE_TIDENTS" />
 	<define name="__NTOSKRNL__" />
@@ -17,7 +16,7 @@
 	<directory name="ke">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
-				<file first="true">multiboot.S</file>
+				<file first="true">main.S</file>
 				<file>bios.c</file>
 				<file>brkpoint.c</file>
 				<file>bthread.S</file>
@@ -41,8 +40,10 @@
 				<file>usertrap.c</file>
 				<file>v86m.c</file>
 				<file>v86m_sup.S</file>
+				<file>vdm.c</file>
 			</directory>
 		</if>
+		<file>alert.c</file>
 		<file>apc.c</file>
 		<file>bug.c</file>
 		<file>catch.c</file>
@@ -79,7 +80,6 @@
 		<file>regfile.c</file>
 		<file>registry.c</file>
 		<file>regobj.c</file>
-		<file>rtlfunc.c</file>
 	</directory>
 	<directory name="dbg">
 		<if property="ARCH" value="i386">
@@ -116,25 +116,32 @@
 		</if>
 		<file>btree.c</file>
 		<file>callback.c</file>
+		<file>event.c</file>
+		<file>evtpair.c</file>
 		<file>fmutex.c</file>
 		<file>hashtab.c</file>
 		<file>init.c</file>
 		<file>interlck.c</file>
 		<file>list.c</file>
 		<file>lookas.c</file>
+		<file>mutant.c</file>
 		<file>napi.c</file>
 		<file>power.c</file>
+		<file>profile.c</file>
 		<file>resource.c</file>
 		<file>rundown.c</file>
+		<file>sem.c</file>
 		<file>stree.c</file>
 		<file>synch.c</file>
 		<file>sysinfo.c</file>
 		<file>time.c</file>
+		<file>timer.c</file>
 		<file>util.c</file>
 		<file>uuid.c</file>
 		<file>win32k.c</file>
 		<file>work.c</file>
 		<file>zone.c</file>
+		<file>zw.S</file>
 	</directory>
 	<directory name="fs">
 		<file>dbcsname.c</file>
@@ -165,6 +172,7 @@
 		<file>deviface.c</file>
 		<file>dir.c</file>
 		<file>driver.c</file>
+		<file>efi.c</file>
 		<file>errlog.c</file>
 		<file>error.c</file>
 		<file>event.c</file>
@@ -183,6 +191,7 @@
 		<file>npipe.c</file>
 		<file>page.c</file>
 		<file>parttab.c</file>
+		<file>plugplay.c</file>
 		<file>pnpdma.c</file>
 		<file>pnpmgr.c</file>
 		<file>pnpnotify.c</file>
@@ -269,25 +278,9 @@
 		<file>region.c</file>
 		<file>rmap.c</file>
 		<file>section.c</file>
-		<file>slab.c</file>
 		<file>verifier.c</file>
 		<file>virtual.c</file>
 		<file>wset.c</file>
-	</directory>
-	<directory name="nt">
-		<file>channel.c</file>
-		<file>efi.c</file>
-		<file>evtpair.c</file>
-		<file>misc.c</file>
-		<file>mutant.c</file>
-		<file>nt.c</file>
-		<file>ntevent.c</file>
-		<file>ntsem.c</file>
-		<file>nttimer.c</file>
-		<file>plugplay.c</file>
-		<file>profile.c</file>
-		<file>vdm.c</file>
-		<file>zw.c</file>
 	</directory>
 	<directory name="ob">
 		<file>dirobj.c</file>
@@ -344,6 +337,7 @@
 		<file>handle.c</file>
 		<file>libsupp.c</file>
 		<file>message.c</file>
+		<file>misc.c</file>
 		<file>nls.c</file>
 		<file>purecall.c</file>
 		<file>rangelist.c</file>

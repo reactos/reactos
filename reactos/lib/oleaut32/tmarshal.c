@@ -42,11 +42,8 @@
 #include "winuser.h"
 
 #include "ole2.h"
-#include "wine/unicode.h"
-#include "ole2disp.h"
 #include "typelib.h"
 #include "wine/debug.h"
-#include "winternl.h"
 
 static const WCHAR riidW[5] = {'r','i','i','d',0};
 static const WCHAR pdispparamsW[] = {'p','d','i','s','p','p','a','r','a','m','s',0};
@@ -1159,7 +1156,6 @@ _get_funcdesc(
 	}
 	i++;
     }
-    return E_FAIL;
 }
 
 static DWORD
@@ -1183,6 +1179,13 @@ xCall(LPVOID retptr, int method, TMProxyImpl *tpinfo /*, args */)
 	ERR("Did not find typeinfo/funcdesc entry for method %d!\n",method);
         LeaveCriticalSection(&tpinfo->crit);
 	return E_FAIL;
+    }
+
+    if (!tpinfo->chanbuf)
+    {
+        WARN("Tried to use disconnected proxy\n");
+        LeaveCriticalSection(&tpinfo->crit);
+        return RPC_E_DISCONNECTED;
     }
 
     if (relaydeb) {
@@ -1471,6 +1474,7 @@ PSFacBuf_CreateProxy(
     proxy->ref		= 2;
     proxy->tinfo	= tinfo;
     memcpy(&proxy->iid,riid,sizeof(*riid));
+    proxy->chanbuf      = 0;
     *ppv		= (LPVOID)proxy;
     *ppProxy		= (IRpcProxyBuffer *)&(proxy->lpvtbl2);
     return S_OK;

@@ -28,8 +28,8 @@ typedef struct _W32PROCESS
   LIST_ENTRY MenuListHead;
   FAST_MUTEX PrivateFontListLock;
   LIST_ENTRY PrivateFontListHead;
-  FAST_MUTEX CursorIconListLock;
-  LIST_ENTRY CursorIconListHead;
+  FAST_MUTEX DriverObjListLock;
+  LIST_ENTRY DriverObjListHead;
   struct _KBDTABLES* KeyboardLayout;
   ULONG Flags;
   LONG GDIObjects;

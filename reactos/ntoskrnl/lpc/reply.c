@@ -4,9 +4,8 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/lpc/reply.c
  * PURPOSE:         Communication mechanism
- * PROGRAMMER:      David Welch (welch@cwcom.net)
- * UPDATE HISTORY:
- *                  Created 22/05/98
+ *
+ * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
 /* INCLUDES ******************************************************************/
@@ -88,7 +87,7 @@ NtReplyPort (IN	HANDLE		PortHandle,
    
    Status = ObReferenceObjectByHandle(PortHandle,
 				      PORT_ALL_ACCESS,   /* AccessRequired */
-				      & LpcPortObjectType,
+				      LpcPortObjectType,
 				      UserMode,
 				      (PVOID*)&Port,
 				      NULL);
@@ -154,7 +153,7 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
    
    Status = ObReferenceObjectByHandle(PortHandle,
 				      PORT_ALL_ACCESS,
-				      & LpcPortObjectType,
+				      LpcPortObjectType,
 				      UserMode,
 				      (PVOID*)&Port,
 				      NULL);

@@ -4,9 +4,9 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/rtl/sprintf.c
  * PURPOSE:         Single byte sprintf functions
+ * 
  * PROGRAMMERS:     David Welch
  *                  Eric Kohl
- *
  */
 
 /*

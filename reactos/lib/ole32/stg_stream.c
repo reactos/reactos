@@ -447,6 +447,9 @@ HRESULT WINAPI StgStreamImpl_Write(
       return STG_E_ACCESSDENIED;
   }
 
+  if (!pv)
+    return STG_E_INVALIDPOINTER;
+
   /*
    * If the caller is not interested in the number of bytes written,
    * we use another buffer to avoid "if" statements in the code.

@@ -1011,6 +1011,40 @@ CreateProcessW
 	         lpProcessInformation);
    }
 /////////////////////////////////////////
+
+   /*
+    * Get some information about the executable
+    */
+   Status = ZwQuerySection(hSection,
+			   SectionImageInformation,
+			   &Sii,
+			   sizeof(Sii),
+			   &i);
+   if (! NT_SUCCESS(Status))
+   {
+     NtClose(hSection);
+     DPRINT("Unable to get SectionImageInformation, status 0x%x\n", Status);
+     SetLastErrorByStatus(Status);
+     return FALSE;
+   }
+
+   if (0 != (Sii.Characteristics & IMAGE_FILE_DLL))
+   {
+     NtClose(hSection);
+     DPRINT("Can't execute a DLL\n");
+     SetLastError(ERROR_BAD_EXE_FORMAT);
+     return FALSE;
+   }
+
+   if (IMAGE_SUBSYSTEM_WINDOWS_GUI != Sii.Subsystem
+       && IMAGE_SUBSYSTEM_WINDOWS_CUI != Sii.Subsystem)
+   {
+     NtClose(hSection);
+     DPRINT("Invalid subsystem %d\n", Sii.Subsystem);
+     SetLastError(ERROR_CHILD_NOT_COMPLETE);
+     return FALSE;
+   }
+
    /*
     * Initialize the process object attributes
     */
@@ -1133,16 +1167,6 @@ CreateProcessW
 			 DUPLICATE_SAME_ACCESS);
       /* FIXME - handle failure!!!!! */
    }
-
-   /*
-    * Get some information about the executable
-    */
-   Status = ZwQuerySection(hSection,
-			   SectionImageInformation,
-			   &Sii,
-			   sizeof(Sii),
-			   &i);
-   /* FIXME - handle failure!!!!! */
    
    /*
     * Close the section
@@ -1157,9 +1181,9 @@ CreateProcessW
 			     &ProcessBasicInfo,
 			     sizeof(ProcessBasicInfo),
 			     &retlen);
-   DPRINT("ProcessBasicInfo.UniqueProcessId %d\n",
+   DPRINT("ProcessBasicInfo.UniqueProcessId 0x%x\n",
 	  ProcessBasicInfo.UniqueProcessId);
-   lpProcessInformation->dwProcessId = ProcessBasicInfo.UniqueProcessId;
+   lpProcessInformation->dwProcessId = (DWORD)ProcessBasicInfo.UniqueProcessId;
 
    /*
     * Tell the csrss server we are creating a new process

@@ -4,9 +4,8 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/pin.c
  * PURPOSE:         Implements cache managers pinning interface
- * PROGRAMMER:      Hartmut Birr
- * UPDATE HISTORY:
- *                  Created 05.10.2001
+ *
+ * PROGRAMMERS:     Hartmut Birr
  */
 
 /* INCLUDES ******************************************************************/

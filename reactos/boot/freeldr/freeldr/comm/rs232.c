@@ -61,8 +61,8 @@
 
 /* STATIC VARIABLES *********************************************************/
 
-static U32 Rs232ComPort = 0;
-static U32 Rs232BaudRate = 0;
+static ULONG Rs232ComPort = 0;
+static ULONG Rs232BaudRate = 0;
 static PUCHAR Rs232PortBase = (PUCHAR)0;
 
 /* The com port must only be initialized once! */
@@ -73,8 +73,8 @@ static BOOLEAN PortInitialized = FALSE;
 static BOOL Rs232DoesComPortExist(PUCHAR BaseAddress)
 {
         BOOLEAN found;
-        U8 mcr;
-        U8 msr;
+        UCHAR mcr;
+        UCHAR msr;
 
         found = FALSE;
 
@@ -118,12 +118,12 @@ static BOOL Rs232DoesComPortExist(PUCHAR BaseAddress)
 
 /* FUNCTIONS *********************************************************/
 
-BOOL Rs232PortInitialize(U32 ComPort, U32 BaudRate)
+BOOL Rs232PortInitialize(ULONG ComPort, ULONG BaudRate)
 {
-        U32 BaseArray[5] = {0, 0x3F8, 0x2F8, 0x3E8, 0x2E8};
+        ULONG BaseArray[5] = {0, 0x3F8, 0x2F8, 0x3E8, 0x2E8};
         //char buffer[80];
-        U32 divisor;
-        U8 lcr;
+        ULONG divisor;
+        UCHAR lcr;
 
         if (PortInitialized == FALSE)
         {
@@ -146,7 +146,7 @@ BOOL Rs232PortInitialize(U32 ComPort, U32 BaudRate)
                                 sprintf (buffer,
                                          "\nSerial port COM%ld found at 0x%lx\n",
                                          ComPort,
-                                         (U32)PortBase);
+                                         (ULONG)PortBase);
                                 HalDisplayString (buffer);
 #endif*/ /* NDEBUG */
                         }
@@ -158,7 +158,7 @@ BOOL Rs232PortInitialize(U32 ComPort, U32 BaudRate)
                                 sprintf (buffer,
                                          "\nSerial port COM%ld found at 0x%lx\n",
                                          ComPort,
-                                         (U32)PortBase);
+                                         (ULONG)PortBase);
                                 HalDisplayString (buffer);
 #endif*/ /* NDEBUG */
                         }
@@ -180,7 +180,7 @@ BOOL Rs232PortInitialize(U32 ComPort, U32 BaudRate)
                                 sprintf (buffer,
                                          "\nSerial port COM%ld found at 0x%lx\n",
                                          ComPort,
-                                         (U32)PortBase);
+                                         (ULONG)PortBase);
                                 HalDisplayString (buffer);
 #endif*/ /* NDEBUG */
                         }
@@ -222,7 +222,7 @@ BOOL Rs232PortInitialize(U32 ComPort, U32 BaudRate)
         /*
          * set global info
          */
-        //KdComPortInUse = (U32)PortBase;
+        //KdComPortInUse = (ULONG)PortBase;
 
         /*
          * print message to blue screen
@@ -230,7 +230,7 @@ BOOL Rs232PortInitialize(U32 ComPort, U32 BaudRate)
         /*sprintf (buffer,
                  "\nKernel Debugger: COM%ld (Port 0x%lx) BaudRate %ld\n\n",
                  ComPort,
-                 (U32)PortBase,
+                 (ULONG)PortBase,
                  BaudRate);
 
         HalDisplayString (buffer);*/

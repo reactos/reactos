@@ -39,10 +39,12 @@
 #include "fdi.h"
 #include "wine/unicode.h"
 
-#include "msvcrt/fcntl.h"
-#include "msvcrt/share.h"
+#include "fcntl.h"
+#include "share.h"
 
 #include "wine/debug.h"
+
+OSVERSIONINFOW OsVersionInfo;
 
 static HINSTANCE CABINET_hInstance = 0;
 
@@ -674,6 +676,9 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
     switch (fdwReason) {
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls(hinstDLL);
+        OsVersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
+        if (!GetVersionExW(&OsVersionInfo))
+            return FALSE;
         break;
     case DLL_PROCESS_DETACH:
         UnloadCABINETDll();

@@ -415,12 +415,8 @@ HRESULT WINAPI ItemMonikerImpl_Destroy(ItemMonikerImpl* This)
 {
     TRACE("(%p)\n",This);
 
-    if (This->itemName)
-        HeapFree(GetProcessHeap(),0,This->itemName);
-
-    if (This->itemDelimiter)
-        HeapFree(GetProcessHeap(),0,This->itemDelimiter);
-
+    HeapFree(GetProcessHeap(),0,This->itemName);
+    HeapFree(GetProcessHeap(),0,This->itemDelimiter);
     HeapFree(GetProcessHeap(),0,This);
 
     return S_OK;

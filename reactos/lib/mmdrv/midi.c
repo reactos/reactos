@@ -11,6 +11,8 @@
 
 #include "mmdrv.h"
 
+#define NDEBUG
+#include <debug.h>
 
 // MIDI device instance information
 //
@@ -66,7 +68,7 @@ static DWORD OpenMidiDevice(UINT DeviceType, DWORD ID, DWORD User, DWORD Param1,
     MMRESULT Result = MMSYSERR_NOERROR;
     
     // Check ID?
-    printf("OpenMidiDevice()\n");
+    DPRINT("OpenMidiDevice()\n");
     
     switch(DeviceType)
     {
@@ -119,7 +121,7 @@ static DWORD WriteMidi(PBYTE pData, ULONG Length, PMIDIALLOC pClient)
 {
     DWORD BytesReturned;
 
-    printf("IOCTL_MIDI_PLAY == %d [%x]\n", IOCTL_MIDI_PLAY, IOCTL_MIDI_PLAY);
+    DPRINT("IOCTL_MIDI_PLAY == %d [%x]\n", IOCTL_MIDI_PLAY, IOCTL_MIDI_PLAY);
     
     if ( !DeviceIoControl(pClient->DeviceHandle, IOCTL_MIDI_PLAY, (PVOID)pData,
                           Length, NULL, 0, &BytesReturned, NULL))
@@ -174,40 +176,40 @@ static int GetMidiLength(PMIDIALLOC pClient, BYTE b)
 
 APIENTRY DWORD midMessage(DWORD dwId, DWORD dwMessage, DWORD dwUser, DWORD dwParam1, DWORD dwParam2)
 {
-    printf("midMessage\n");
+    DPRINT("midMessage\n");
     return MMSYSERR_NOERROR;
 
     switch (dwMessage) {
         case MIDM_GETNUMDEVS:
-            printf("MIDM_GETNUMDEVS");
+            DPRINT("MIDM_GETNUMDEVS");
             return 0;
 
         case MIDM_GETDEVCAPS:
-            printf("MIDM_GETDEVCAPS");
+            DPRINT("MIDM_GETDEVCAPS");
             return MMSYSERR_NOERROR;
 
         case MIDM_OPEN:
-            printf("MIDM_OPEN");
+            DPRINT("MIDM_OPEN");
             return MMSYSERR_NOERROR;
 
         case MIDM_CLOSE:
-            printf("MIDM_CLOSE");
+            DPRINT("MIDM_CLOSE");
             return MMSYSERR_NOERROR;
 
         case MIDM_ADDBUFFER:
-            printf("MIDM_ADDBUFFER");
+            DPRINT("MIDM_ADDBUFFER");
             return MMSYSERR_NOERROR;
 
         case MIDM_STOP:
-            printf("MIDM_PAUSE");
+            DPRINT("MIDM_PAUSE");
             return MMSYSERR_NOERROR;
 
         case MIDM_START:
-            printf("MIDM_RESTART");
+            DPRINT("MIDM_RESTART");
             return MMSYSERR_NOERROR;
 
         case MIDM_RESET:
-            printf("MIDM_RESET");
+            DPRINT("MIDM_RESET");
             return MMSYSERR_NOERROR;
 
         default:
@@ -221,27 +223,27 @@ APIENTRY DWORD midMessage(DWORD dwId, DWORD dwMessage, DWORD dwUser, DWORD dwPar
 
 APIENTRY DWORD modMessage(DWORD ID, DWORD Message, DWORD User, DWORD Param1, DWORD Param2)
 {
-    printf("modMessage\n");
+    DPRINT("modMessage\n");
     
     switch(Message)
     {
         case MODM_GETNUMDEVS:
-            printf("MODM_GETNUMDEVS == %d\n", (int)GetDeviceCount(MidiOutDevice));
+            DPRINT("MODM_GETNUMDEVS == %d\n", (int)GetDeviceCount(MidiOutDevice));
             return GetDeviceCount(MidiOutDevice);
         
         case MODM_GETDEVCAPS:
-            printf("MODM_GETDEVCAPS");
+            DPRINT("MODM_GETDEVCAPS");
             return MMSYSERR_NOTSUPPORTED;
             
         case MODM_OPEN :
             return OpenMidiDevice(MidiOutDevice, ID, User, Param1, Param2);
 
         case MODM_CLOSE:
-            printf("MODM_CLOSE");
+            DPRINT("MODM_CLOSE");
             return MMSYSERR_NOTSUPPORTED;
 
         case MODM_DATA:
-            printf("MODM_DATA");
+            DPRINT("MODM_DATA");
 
             int i;
             BYTE b[4];
@@ -253,27 +255,27 @@ APIENTRY DWORD modMessage(DWORD ID, DWORD Message, DWORD User, DWORD Param1, DWO
                                 (PMIDIALLOC)User);
 
         case MODM_LONGDATA:
-            printf("MODM_LONGDATA");
+            DPRINT("MODM_LONGDATA");
             return MMSYSERR_NOTSUPPORTED;
 
         case MODM_RESET:
-            printf("MODM_RESET");
+            DPRINT("MODM_RESET");
             return MMSYSERR_NOTSUPPORTED;
 
         case MODM_SETVOLUME:
-            printf("MODM_SETVOLUME");
+            DPRINT("MODM_SETVOLUME");
             return MMSYSERR_NOTSUPPORTED;
 
         case MODM_GETVOLUME:
-            printf("MODM_GETVOLUME");
+            DPRINT("MODM_GETVOLUME");
             return MMSYSERR_NOTSUPPORTED;
 
         case MODM_CACHEPATCHES:
-            printf("MODM_CACHEPATCHES");
+            DPRINT("MODM_CACHEPATCHES");
             return MMSYSERR_NOTSUPPORTED;
 
         case MODM_CACHEDRUMPATCHES:
-            printf("MODM_CACHEDRUMPATCHES");
+            DPRINT("MODM_CACHEDRUMPATCHES");
             return MMSYSERR_NOTSUPPORTED;
             
     };

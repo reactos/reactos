@@ -94,8 +94,7 @@ static ULONG WINAPI IStream_fnRelease(IStream *iface)
 	{
 	  TRACE(" destroying SHReg IStream (%p)\n",This);
 
-	  if (This->pbBuffer)
-	    HeapFree(GetProcessHeap(),0,This->pbBuffer);
+          HeapFree(GetProcessHeap(),0,This->pbBuffer);
 
 	  if (This->hKey)
 	    RegCloseKey(This->hKey);
@@ -388,8 +387,7 @@ IStream * WINAPI SHOpenRegStream2A(HKEY hKey, LPCSTR pszSubkey,
       dwType == REG_BINARY)
     return IStream_Create(hStrKey, lpBuff, dwLength);
 
-  if (lpBuff)
-    HeapFree (GetProcessHeap(), 0, lpBuff);
+  HeapFree (GetProcessHeap(), 0, lpBuff);
   if (hStrKey)
     RegCloseKey(hStrKey);
   return NULL;
@@ -418,8 +416,7 @@ IStream * WINAPI SHOpenRegStream2W(HKEY hKey, LPCWSTR pszSubkey,
       dwType == REG_BINARY)
     return IStream_Create(hStrKey, lpBuff, dwLength);
 
-  if (lpBuff)
-    HeapFree (GetProcessHeap(), 0, lpBuff);
+  HeapFree (GetProcessHeap(), 0, lpBuff);
   if (hStrKey)
     RegCloseKey(hStrKey);
   return NULL;

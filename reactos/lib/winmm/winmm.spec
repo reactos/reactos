@@ -188,5 +188,3 @@
 @ stdcall waveOutSetVolume(long long)
 @ stdcall waveOutUnprepareHeader(long ptr long)
 @ stdcall waveOutWrite(long ptr long)
-@ stub winmmf_ThunkData32
-@ stub winmmsl_ThunkData32

@@ -20,7 +20,6 @@
 #include "ntos/gditypes.h"
 #include "ntos/fstypes.h"   /* AG */
 #include "ntos/heap.h"
-#include "ntos/kdbgsyms.h"
 #include "ntos/keyboard.h"
 #include "ntos/minmax.h"
 #include "ntos/mm.h"
@@ -61,7 +60,6 @@
 #include "ntos/file.h"
 #include "ntos/gditypes.h"
 #include "ntos/heap.h"
-#include "ntos/kdbgsyms.h"
 #include "ntos/keyboard.h"
 #include "ntos/minmax.h"
 #include "ntos/mm.h"

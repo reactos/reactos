@@ -414,7 +414,6 @@ static BOOL SHDOCVW_TryLoadMozillaControl()
         SHDOCVW_TryDownloadMozillaControl();
         bTried = TRUE;
     }
-    return TRUE;
 }
 
 /*************************************************************************

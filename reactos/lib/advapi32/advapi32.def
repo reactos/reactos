@@ -31,10 +31,10 @@ BackupEventLogA@8
 BackupEventLogW@8
 ;BuildAccessRequestA
 ;BuildAccessRequestW
-;BuildExplicitAccessWithNameA@20
-;BuildExplicitAccessWithNameW@20
-;BuildImpersonateExplicitAccessWithNameA@24
-;BuildImpersonateExplicitAccessWithNameW@24
+BuildExplicitAccessWithNameA@20
+BuildExplicitAccessWithNameW@20
+BuildImpersonateExplicitAccessWithNameA@24
+BuildImpersonateExplicitAccessWithNameW@24
 BuildImpersonateTrusteeA@8
 BuildImpersonateTrusteeW@8
 ;BuildSecurityDescriptorA@36
@@ -45,6 +45,7 @@ BuildTrusteeWithSidA@8
 BuildTrusteeWithSidW@8
 ChangeServiceConfigA@44
 ChangeServiceConfigW@44
+CheckTokenMembership@12
 ClearEventLogA@8
 ClearEventLogW@8
 CloseEventLog@4
@@ -162,6 +163,7 @@ GetSecurityDescriptorDacl@16
 GetSecurityDescriptorGroup@12
 GetSecurityDescriptorLength@4
 GetSecurityDescriptorOwner@12
+GetSecurityDescriptorRMControl@8
 GetSecurityDescriptorSacl@16
 GetSecurityInfo@32
 GetSecurityInfoExA@36
@@ -235,7 +237,7 @@ LsaClose@4
 LsaFreeMemory@4
 ;LsaGetQuotasForAccount@8
 ;LsaGetSystemAccessAccount@8
-;LsaGetUserName@8
+LsaGetUserName@8
 ;LsaICLookupNames@32
 ;LsaICLookupSids@32
 ;LsaLookupNames@20
@@ -255,7 +257,7 @@ LsaQueryInformationPolicy@12
 ;LsaQueryTrustedDomainInfo@16
 ;LsaRemoveAccountRights@20
 ;LsaRemovePrivilegesFromAccount@12
-;LsaRetrievePrivateData@12
+LsaRetrievePrivateData@12
 ;LsaSetInformationPolicy@12
 ;LsaSetInformationTrustedDomain@12
 ;LsaSetQuotasForAccount@8
@@ -263,7 +265,7 @@ LsaQueryInformationPolicy@12
 ;LsaSetSecurityObject@12
 ;LsaSetSystemAccessAccount@8
 ;LsaSetTrustedDomainInformation@16
-;LsaStorePrivateData@12
+LsaStorePrivateData@12
 MakeAbsoluteSD@44
 MakeSelfRelativeSD@12
 MapGenericMask@8
@@ -359,6 +361,8 @@ RegisterEventSourceA@8
 RegisterEventSourceW@8
 RegisterServiceCtrlHandlerA@8
 RegisterServiceCtrlHandlerW@8
+RegisterServiceCtrlHandlerExA@12
+RegisterServiceCtrlHandlerExW@12
 ;ReplaceAllAccessRightsA
 ;ReplaceAllAccessRightsW
 ReportEventA@36
@@ -377,9 +381,11 @@ SetKernelObjectSecurity@12
 SetNamedSecurityInfoA@28
 SetNamedSecurityInfoW@28
 ;SetPrivateObjectSecurity@20
+SetSecurityDescriptorControl@12
 SetSecurityDescriptorDacl@16
 SetSecurityDescriptorGroup@12
 SetSecurityDescriptorOwner@12
+SetSecurityDescriptorRMControl@8
 SetSecurityDescriptorSacl@16
 SetSecurityInfo@28
 SetServiceBits@16

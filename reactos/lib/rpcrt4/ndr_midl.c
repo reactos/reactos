@@ -100,6 +100,13 @@ void WINAPI NdrProxySendReceive(void *This,
   HRESULT hr;
 
   TRACE("(%p,%p)\n", This, pStubMsg);
+
+  if (!pStubMsg->pRpcChannelBuffer)
+  {
+    WARN("Trying to use disconnected proxy %p\n", This);
+    RpcRaiseException(RPC_E_DISCONNECTED);
+  }
+
   pStubMsg->dwStubPhase = PROXY_SENDRECEIVE;
   hr = IRpcChannelBuffer_SendReceive(pStubMsg->pRpcChannelBuffer,
                                     (RPCOLEMESSAGE*)pStubMsg->RpcMsg,

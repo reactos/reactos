@@ -500,6 +500,17 @@ IopMarkLastReinitializeDriver(VOID);
 VOID FASTCALL
 IopReinitializeDrivers(VOID);
 
+
+/* plugplay.c */
+
+NTSTATUS INIT_FUNCTION
+IopInitPlugPlayEvents(VOID);
+
+NTSTATUS
+IopQueueTargetDeviceEvent(const GUID *Guid,
+                          PUNICODE_STRING DeviceIds);
+
+
 /* pnpmgr.c */
 
 NTSTATUS

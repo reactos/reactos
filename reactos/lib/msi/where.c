@@ -137,7 +137,7 @@ static const WCHAR *STRING_evaluate( string_table *st,
 
     switch( expr->type )
     {
-    case EXPR_COL_NUMBER:
+    case EXPR_COL_NUMBER_STRING:
         r = table->ops->fetch_int( table, row, expr->u.col_number, &val );
         if( r != ERROR_SUCCESS )
             return NULL;
@@ -190,6 +190,7 @@ static UINT WHERE_evaluate( MSIDATABASE *db, MSIVIEW *table, UINT row,
 
     switch( cond->type )
     {
+    case EXPR_COL_NUMBER_STRING:
     case EXPR_COL_NUMBER:
         return table->ops->fetch_int( table, row, cond->u.col_number, val );
 
@@ -368,9 +369,19 @@ static UINT WHERE_VerifyCondition( MSIDATABASE *db, MSIVIEW *table, struct expr 
         r = VIEW_find_column( table, cond->u.column, &val );
         if( r == ERROR_SUCCESS )
         {
-            *valid = 1;
-            cond->type = EXPR_COL_NUMBER;
-            cond->u.col_number = val;
+            UINT type = 0;
+            r = table->ops->get_column_info( table, val, NULL, &type );
+            if( r == ERROR_SUCCESS )
+            {
+                if (type&MSITYPE_STRING)
+                    cond->type = EXPR_COL_NUMBER_STRING;
+                else
+                    cond->type = EXPR_COL_NUMBER;
+                cond->u.col_number = val;
+                *valid = 1;
+            }
+            else
+                *valid = 0;
         }
         else
         {
@@ -390,7 +401,9 @@ static UINT WHERE_VerifyCondition( MSIDATABASE *db, MSIVIEW *table, struct expr 
 
         /* check the type of the comparison */
         if( ( cond->u.expr.left->type == EXPR_SVAL ) ||
-            ( cond->u.expr.right->type == EXPR_SVAL ) )
+            ( cond->u.expr.left->type == EXPR_COL_NUMBER_STRING ) ||
+            ( cond->u.expr.right->type == EXPR_SVAL ) ||
+            ( cond->u.expr.right->type == EXPR_COL_NUMBER_STRING ) )
         {
             switch( cond->u.expr.op )
             {

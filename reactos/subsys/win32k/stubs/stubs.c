@@ -129,22 +129,6 @@ EngComputeGlyphSet(
 /*
  * @unimplemented
  */
-HDRVOBJ
-STDCALL
-EngCreateDriverObj(
-	PVOID        pvObj,
-	FREEOBJPROC  pFreeObjProc,
-	HDEV         hdev
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_8svb.htm
-  UNIMPLEMENTED;
-  return NULL;
-}
-
-/*
- * @unimplemented
- */
 PATHOBJ*
 STDCALL
 EngCreatePath ( VOID )
@@ -157,56 +141,11 @@ EngCreatePath ( VOID )
 /*
  * @unimplemented
  */
-WNDOBJ*
-STDCALL
-EngCreateWnd(
-	SURFOBJ          *pso,
-	HWND              hwnd,
-	WNDOBJCHANGEPROC  pfn,
-	FLONG             fl,
-	int               iPixelFormat
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_2ip3.htm
-  UNIMPLEMENTED;
-  return NULL;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-EngDeleteDriverObj(
-	IN HDRVOBJ  hdo,
-	IN BOOL  bCallBack,
-	IN BOOL  bLocked
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_0qlj.htm
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
 VOID
 STDCALL
 EngDeletePath ( IN PATHOBJ *ppo )
 {
   // www.osr.com/ddk/graphics/gdifncs_3fl3.htm
-  UNIMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-EngDeleteWnd ( IN WNDOBJ *pwo )
-{
-  // www.osr.com/ddk/graphics/gdifncs_2z3b.htm
   UNIMPLEMENTED;
 }
 
@@ -425,18 +364,6 @@ EngLoadModuleForWrite(
 /*
  * @unimplemented
  */
-DRIVEROBJ*
-STDCALL
-EngLockDriverObj ( IN HDRVOBJ hdo )
-{
-  // www.osr.com/ddk/graphics/gdifncs_41if.htm
-  UNIMPLEMENTED;
-  return NULL;
-}
-
-/*
- * @unimplemented
- */
 PVOID
 STDCALL
 EngMapModule(
@@ -573,15 +500,6 @@ EngUnloadImage ( IN HANDLE hModule )
 {
   // www.osr.com/ddk/graphics/gdifncs_586f.htm
   UNIMPLEMENTED;
-}
-
-BOOL
-STDCALL
-EngUnlockDriverObj ( IN HDRVOBJ hdo )
-{
-  // www.osr.com/ddk/graphics/gdifncs_0l5z.htm
-  UNIMPLEMENTED;
-  return FALSE;
 }
 
 INT
@@ -1110,44 +1028,6 @@ STROBJ_vEnumStart ( IN STROBJ *pstro )
 
 BOOL
 STDCALL
-WNDOBJ_bEnum(
-	IN WNDOBJ  *pwo,
-	IN ULONG  cj,
-	OUT ULONG  *pul
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_3jqf.htm
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-ULONG
-STDCALL
-WNDOBJ_cEnumStart(
-	IN WNDOBJ  *pwo,
-	IN ULONG  iType,
-	IN ULONG  iDirection,
-	IN ULONG  cLimit
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_18o7.htm
-  UNIMPLEMENTED;
-  return 0;
-}
-
-VOID
-STDCALL
-WNDOBJ_vSetConsumer(
-	IN WNDOBJ  *pwo,
-	IN PVOID  pvConsumer
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_484n.htm
-  UNIMPLEMENTED;
-}
-
-BOOL
-STDCALL
 XFORMOBJ_bApplyXform(
 	IN XFORMOBJ  *pxo,
 	IN ULONG  iMode,
@@ -1270,6 +1150,19 @@ BRUSHOBJ_hGetColorTransform(
 /*
  * @unimplemented
  */
+PVOID STDCALL
+EngAllocPrivateUserMem(
+   IN PDD_SURFACE_LOCAL  psl,
+   IN SIZE_T  cj,
+   IN ULONG  tag)
+{
+   UNIMPLEMENTED;
+   return NULL;
+}
+
+/*
+ * @unimplemented
+ */
 VOID STDCALL
 EngClearEvent(
    IN PEVENT Event)
@@ -1292,8 +1185,9 @@ EngDeleteFile(
  * @unimplemented
  */
 VOID STDCALL
-EngDeleteSafeSemaphore(
-   IN OUT ENGSAFESEMAPHORE *Semaphore)
+EngFreePrivateUserMem(
+   IN PDD_SURFACE_LOCAL  psl,
+   IN PVOID  pv)
 {
    UNIMPLEMENTED;
 }
@@ -1324,17 +1218,6 @@ EngHangNotification(
 {
    UNIMPLEMENTED;
    return EHN_ERROR;
-}
-
-/*
- * @unimplemented
- */
-BOOL STDCALL
-EngInitializeSafeSemaphore(
-   OUT ENGSAFESEMAPHORE *Semaphore)
-{
-   UNIMPLEMENTED;
-   return FALSE;
 }
 
 /*

@@ -24,6 +24,7 @@
 	<file>dirid.c</file>
 	<file>diskspace.c</file>
 	<file>install.c</file>
+	<file>misc.c</file>
 	<file>parser.c</file>
 	<file>queue.c</file>
 	<file>setupcab.c</file>

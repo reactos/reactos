@@ -415,10 +415,8 @@ static	BOOL	MCI_DeleteCommandTable(UINT uTbl)
 	return FALSE;
 
     S_MciCmdTable[uTbl].lpTable = NULL;
-    if (S_MciCmdTable[uTbl].aVerbs) {
-	HeapFree(GetProcessHeap(), 0, S_MciCmdTable[uTbl].aVerbs);
-	S_MciCmdTable[uTbl].aVerbs = 0;
-    }
+    HeapFree(GetProcessHeap(), 0, S_MciCmdTable[uTbl].aVerbs);
+    S_MciCmdTable[uTbl].aVerbs = 0;
     return TRUE;
 }
 
@@ -1090,7 +1088,7 @@ DWORD WINAPI mciSendStringW(LPCWSTR lpwstrCommand, LPWSTR lpwstrRet,
     if (lpwstrRet)
         MultiByteToWideChar( CP_ACP, 0, lpstrRet, -1, lpwstrRet, uRetLen );
     HeapFree(GetProcessHeap(), 0, lpstrCommand);
-    if (lpstrRet) HeapFree(GetProcessHeap(), 0, lpstrRet);
+    HeapFree(GetProcessHeap(), 0, lpstrRet);
     return ret;
 }
 

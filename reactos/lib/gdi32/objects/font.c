@@ -716,7 +716,7 @@ AddFontResourceExA ( LPCSTR lpszFilename, DWORD fl, PVOID pvReserved )
     {
       rc = AddFontResourceExW ( FilenameW, fl, pvReserved );
 
-      HEAP_free ( &FilenameW );
+      HEAP_free ( FilenameW );
     }
   return rc;
 }

@@ -271,6 +271,7 @@ typedef struct _CFProxy {
     DWORD				ref;
 
     IRpcChannelBuffer			*chanbuf;
+    IUnknown *outer_unknown;
 } CFProxy;
 
 static HRESULT WINAPI IRpcProxyBufferImpl_QueryInterface(LPRPCPROXYBUFFER iface,REFIID riid,LPVOID *ppv) {
@@ -317,6 +318,8 @@ static void WINAPI IRpcProxyBufferImpl_Disconnect(LPRPCPROXYBUFFER iface) {
 
 static HRESULT WINAPI
 CFProxy_QueryInterface(LPCLASSFACTORY iface,REFIID riid, LPVOID *ppv) {
+    ICOM_THIS_MULTI(CFProxy,lpvtbl_proxy,iface);
+    if (This->outer_unknown) return IUnknown_QueryInterface(This->outer_unknown, riid, ppv);
     *ppv = NULL;
     if (IsEqualIID(&IID_IClassFactory,riid) || IsEqualIID(&IID_IUnknown,riid)) {
 	*ppv = (LPVOID)iface;
@@ -331,15 +334,22 @@ CFProxy_QueryInterface(LPCLASSFACTORY iface,REFIID riid, LPVOID *ppv) {
 
 static ULONG   WINAPI CFProxy_AddRef(LPCLASSFACTORY iface) {
     ICOM_THIS_MULTI(CFProxy,lpvtbl_cf,iface);
+    if (This->outer_unknown) return IUnknown_AddRef(This->outer_unknown);
     return InterlockedIncrement(&This->ref);
 }
 
 static ULONG   WINAPI CFProxy_Release(LPCLASSFACTORY iface) {
     ULONG ref;
     ICOM_THIS_MULTI(CFProxy,lpvtbl_cf,iface);
-    
-    ref = InterlockedDecrement(&This->ref);
-    if (!ref) HeapFree(GetProcessHeap(),0,This);
+    if (This->outer_unknown)
+        ref = IUnknown_Release(This->outer_unknown);
+    else    
+        ref = InterlockedDecrement(&This->ref);
+
+    if (!ref) {
+      	if (This->chanbuf) IRpcChannelBuffer_Release(This->chanbuf);
+        HeapFree(GetProcessHeap(),0,This);
+    }
     return ref;
 }
 
@@ -425,7 +435,7 @@ static IClassFactoryVtbl cfproxyvt = {
 };
 
 static HRESULT
-CFProxy_Construct(LPVOID *ppv,LPVOID *ppProxy) {
+CFProxy_Construct(IUnknown *pUnkOuter, LPVOID *ppv,LPVOID *ppProxy) {
     CFProxy *cf;
 
     cf = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(CFProxy));
@@ -434,10 +444,13 @@ CFProxy_Construct(LPVOID *ppv,LPVOID *ppProxy) {
 
     cf->lpvtbl_cf	= &cfproxyvt;
     cf->lpvtbl_proxy	= &pspbvtbl;
-    /* 1 reference for the proxy and 1 for the object */
-    cf->ref		= 2;
+    /* 1 reference for the proxy... */
+    cf->ref		= 1;
+    cf->outer_unknown = pUnkOuter;
     *ppv		= &(cf->lpvtbl_cf);
     *ppProxy		= &(cf->lpvtbl_proxy);
+    /* ...and 1 for the object */
+    IUnknown_AddRef((IUnknown *)*ppv);
     return S_OK;
 }
 
@@ -465,7 +478,7 @@ PSFacBuf_CreateProxy(
     if (IsEqualIID(&IID_IClassFactory,riid) ||
 	IsEqualIID(&IID_IUnknown,riid)
     )
-	return CFProxy_Construct(ppv,(LPVOID*)ppProxy);
+	return CFProxy_Construct(pUnkOuter, ppv,(LPVOID*)ppProxy);
     FIXME("proxying not implemented for (%s) yet!\n",debugstr_guid(riid));
     return E_FAIL;
 }

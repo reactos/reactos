@@ -86,6 +86,7 @@ UINT AddrCountPrefixBits( PIP_ADDRESS Netmask ) {
 VOID AddrWidenAddress( PIP_ADDRESS Network, PIP_ADDRESS Source, 
 		       PIP_ADDRESS Netmask ) {
     if( Netmask->Type == IP_ADDRESS_V4 ) {
+        Network->Type = Netmask->Type;
 	Network->Address.IPv4Address = 
 	    Source->Address.IPv4Address & Netmask->Address.IPv4Address;
     } else {
@@ -220,8 +221,10 @@ BOOLEAN AddrIsEqual(
     PIP_ADDRESS Address1,
     PIP_ADDRESS Address2)
 {
-    if (Address1->Type != Address2->Type)
+    if (Address1->Type != Address2->Type) {
+        DbgPrint("AddrIsEqual: Unequal Address Types\n");
         return FALSE;
+    }
 
     switch (Address1->Type) {
         case IP_ADDRESS_V4:
@@ -230,6 +233,10 @@ BOOLEAN AddrIsEqual(
         case IP_ADDRESS_V6:
             return (RtlCompareMemory(&Address1->Address, &Address2->Address,
                 sizeof(IPv6_RAW_ADDRESS)) == sizeof(IPv6_RAW_ADDRESS));
+            break;
+
+        default:
+            DbgPrint("AddrIsEqual: Bad address type\n");
             break;
     }
 

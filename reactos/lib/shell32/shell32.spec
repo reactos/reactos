@@ -169,9 +169,9 @@
  175 stdcall SHGetSpecialFolderPath(long long long long) SHGetSpecialFolderPathAW
  176 stdcall SHSetInstanceExplorer (long)
  177 stub DAD_SetDragImageFromListView
- 178 stub SHObjectProperties
- 179 stub SHGetNewLinkInfoA
- 180 stub SHGetNewLinkInfoW
+ 178 stdcall SHObjectProperties(long long wstr wstr)
+ 179 stdcall SHGetNewLinkInfoA(str str ptr long long)
+ 180 stdcall SHGetNewLinkInfoW(wstr wstr ptr long long)
  181 stdcall RegisterShellHook(long long)
  182 varargs ShellMessageBoxW(long long long str long)
  183 varargs ShellMessageBoxA(long long long str long)
@@ -182,9 +182,9 @@
  188 stdcall ShellDDEInit(long)
  189 stdcall ILCreateFromPathA(str)
  190 stdcall ILCreateFromPathW(wstr)
- 191 stub SHUpdateImageA
+ 191 stdcall SHUpdateImageA(str long long long)
  192 stdcall SHUpdateImageW(wstr long long long)
- 193 stub SHHandleUpdateImage
+ 193 stdcall SHHandleUpdateImage(ptr)
  194 stub SHCreatePropSheetExtArrayEx
  195 stdcall SHFree(ptr)
  196 stdcall SHAlloc(long)
@@ -206,7 +206,7 @@
  212 stub Printers_AddPrinterPropPages
  213 stub Printers_RegisterWindowW
  214 stub Printers_UnregisterWindow
- 215 stub SHStartNetConnectionDialog
+ 215 stdcall SHStartNetConnectionDialog(long str long)
  243 stdcall @(long long) shell32_243
  244 stdcall SHInitRestricted(ptr ptr)
  247 stdcall SHGetDataFromIDListA (ptr ptr long ptr long)
@@ -235,15 +235,15 @@
  288 stdcall ShellAboutA(long str str long)
  289 stdcall ShellAboutW(long wstr wstr long)
  290 stdcall ShellExecuteA(long str str str str long)
- 291 stdcall ShellExecuteEx (long) ShellExecuteExAW
+ 291 stdcall ShellExecuteEx (long) ShellExecuteExA
  292 stdcall ShellExecuteExA (long)
  293 stdcall ShellExecuteExW (long)
  294 stdcall ShellExecuteW (long wstr wstr wstr wstr long)
  296 stdcall Shell_NotifyIcon(long ptr) Shell_NotifyIconA
  297 stdcall Shell_NotifyIconA(long ptr)
  298 stdcall Shell_NotifyIconW(long ptr)
- 299 stub Shl1632_ThunkData32
- 300 stub Shl3216_ThunkData32
+#299 stub Shl1632_ThunkData32
+#300 stub Shl3216_ThunkData32
  301 stdcall StrChrA(str long) shlwapi.StrChrA
  302 stdcall StrChrIA(str long) shlwapi.StrChrIA
  303 stdcall StrChrIW(wstr long) shlwapi.StrChrIW
@@ -338,12 +338,12 @@
 @ stdcall DoEnvironmentSubstW(wstr wstr)
 @ stub DragQueryFileAorW
 @ stdcall DuplicateIcon(long long)
-@ stdcall ExtractAssociatedIconA(long ptr long)
+@ stdcall ExtractAssociatedIconA(long str ptr)
 @ stdcall ExtractAssociatedIconExA(long str long long)
 @ stdcall ExtractAssociatedIconExW(long wstr long long)
-@ stub ExtractAssociatedIconW
+@ stdcall ExtractAssociatedIconW(long wstr ptr)
 @ stdcall ExtractIconA(long str long)
-@ stdcall ExtractIconEx(ptr long ptr ptr long)ExtractIconExAW
+@ stdcall ExtractIconEx(ptr long ptr ptr long) ExtractIconExA
 @ stdcall ExtractIconExA(str long ptr ptr long)
 @ stdcall ExtractIconExW(wstr long ptr ptr long)
 @ stdcall ExtractIconW(long wstr long)
@@ -376,21 +376,21 @@
 @ stdcall SHCreateDirectoryExA(long str ptr)
 @ stdcall SHCreateDirectoryExW(long wstr ptr)
 @ stub ShellHookProc
-@ stub SHEmptyRecycleBinA
-@ stub SHEmptyRecycleBinW
-@ stdcall SHFileOperation(ptr)SHFileOperationAW
+@ stdcall SHEmptyRecycleBinA(long str long)
+@ stdcall SHEmptyRecycleBinW(long wstr long)
+@ stdcall SHFileOperation(ptr) SHFileOperationA
 @ stdcall SHFileOperationA(ptr)
 @ stdcall SHFileOperationW(ptr)
-@ stub SHFormatDrive
+@ stdcall SHFormatDrive(long long long long)
 @ stdcall SHFreeNameMappings(ptr)
 @ stdcall SHGetDesktopFolder(ptr)
-@ stdcall SHGetFileInfo(ptr long ptr long long)SHGetFileInfoAW
+@ stdcall SHGetFileInfo(ptr long ptr long long) SHGetFileInfoA
 @ stdcall SHGetFileInfoA(ptr long ptr long long)
 @ stdcall SHGetFileInfoW(ptr long ptr long long)
 @ stdcall SHGetInstanceExplorer(long)
 @ stdcall SHGetMalloc(ptr)
-@ stub SHGetNewLinkInfo
-@ stdcall SHGetPathFromIDList(ptr ptr)SHGetPathFromIDListAW
+@ stdcall SHGetNewLinkInfo(str str ptr long long) SHGetNewLinkInfoA
+@ stdcall SHGetPathFromIDList(ptr ptr) SHGetPathFromIDListA
 @ stdcall SHGetPathFromIDListA(ptr ptr)
 @ stdcall SHGetPathFromIDListW(ptr ptr)
 @ stdcall SHGetSettings(ptr long)
@@ -399,8 +399,8 @@
 @ stub SHHelpShortcuts_RunDLLA
 @ stub SHHelpShortcuts_RunDLLW
 @ stdcall SHLoadInProc(long)
-@ stub SHQueryRecycleBinA
-@ stub SHQueryRecycleBinW
+@ stdcall SHQueryRecycleBinA(str ptr)
+@ stdcall SHQueryRecycleBinW(wstr ptr)
 @ stub SHUpdateRecycleBinIcon
 @ stub WOWShellExecute
 

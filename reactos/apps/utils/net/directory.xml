@@ -4,6 +4,9 @@
 <directory name="finger">
 	<xi:include href="finger/finger.xml" />
 </directory>
+<directory name="ftp">
+	<xi:include href="ftp/ftp.xml" />
+</directory>
 <directory name="ipconfig">
 	<xi:include href="ipconfig/ipconfig.xml" />
 </directory>
@@ -12,6 +15,9 @@
 </directory>
 <directory name="ping">
 	<xi:include href="ping/ping.xml" />
+</directory>
+<directory name="route">
+	<xi:include href="route/route.xml" />
 </directory>
 <directory name="telnet">
 	<xi:include href="telnet/telnet.xml" />

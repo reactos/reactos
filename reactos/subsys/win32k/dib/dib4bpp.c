@@ -251,8 +251,8 @@ DIB_4BPP_BitBlt(PBLTINFO BltInfo)
       0xFFFFFFFF /* 15 */,
    };
 
-   UsesSource = ROP_USES_SOURCE(BltInfo->Rop4);
-   UsesPattern = ROP_USES_PATTERN(BltInfo->Rop4);
+   UsesSource = ROP4_USES_SOURCE(BltInfo->Rop4);
+   UsesPattern = ROP4_USES_PATTERN(BltInfo->Rop4);
 
    SourceY = BltInfo->SourcePoint.y;
    RoundedRight = BltInfo->DestRect.right -

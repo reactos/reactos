@@ -1,30 +1,11 @@
-/*
- *  ReactOS kernel
- *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
 /* $Id$
  *
- * COPYRIGHT:   See COPYING in the top directory
- * PROJECT:     ReactOS kernel 
- * FILE:        ntoskrnl/mm/rmap.c
- * PURPOSE:     kernel memory managment functions
- * PROGRAMMER:  David Welch (welch@cwcom.net)
- * UPDATE HISTORY:
- *              Created 27/12/01
+ * COPYRIGHT:       See COPYING in the top directory
+ * PROJECT:         ReactOS kernel 
+ * FILE:            ntoskrnl/mm/rmap.c
+ * PURPOSE:         Kernel memory managment functions
+ * 
+ * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
 /* INCLUDES *****************************************************************/
@@ -136,7 +117,7 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
       /*
        * Get or create a pageop
        */
-      PageOp = MmGetPageOp(MemoryArea, 0, 0,
+      PageOp = MmGetPageOp(MemoryArea, NULL, 0,
                            MemoryArea->Data.SectionData.Segment,
                            Offset, MM_PAGEOP_PAGEOUT, TRUE);
 
@@ -163,7 +144,7 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
    }
    else if (Type == MEMORY_AREA_VIRTUAL_MEMORY)
    {
-      PageOp = MmGetPageOp(MemoryArea, Address < (PVOID)KERNEL_BASE ? Process->UniqueProcessId : 0,
+      PageOp = MmGetPageOp(MemoryArea, Address < (PVOID)KERNEL_BASE ? Process->UniqueProcessId : NULL,
                            Address, NULL, 0, MM_PAGEOP_PAGEOUT, TRUE);
 
       if (PageOp == NULL)
@@ -260,7 +241,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
       /*
        * Get or create a pageop
        */
-      PageOp = MmGetPageOp(MemoryArea, 0, 0,
+      PageOp = MmGetPageOp(MemoryArea, NULL, 0,
                            MemoryArea->Data.SectionData.Segment,
                            Offset, MM_PAGEOP_PAGEOUT, TRUE);
       if (PageOp == NULL)
@@ -286,7 +267,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
    }
    else if (Type == MEMORY_AREA_VIRTUAL_MEMORY)
    {
-      PageOp = MmGetPageOp(MemoryArea, Address < (PVOID)KERNEL_BASE ? Process->UniqueProcessId : 0,
+      PageOp = MmGetPageOp(MemoryArea, Address < (PVOID)KERNEL_BASE ? Process->UniqueProcessId : NULL,
                            Address, NULL, 0, MM_PAGEOP_PAGEOUT, TRUE);
       if (PageOp == NULL)
       {

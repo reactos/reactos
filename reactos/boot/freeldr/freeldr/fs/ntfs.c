@@ -37,19 +37,19 @@
 #include "ntfs.h"
 
 PNTFS_BOOTSECTOR NtfsBootSector;
-U32 NtfsClusterSize;
-U32 NtfsMftRecordSize;
-U32 NtfsIndexRecordSize;
-U32 NtfsDriveNumber;
-U32 NtfsSectorOfClusterZero;
+ULONG NtfsClusterSize;
+ULONG NtfsMftRecordSize;
+ULONG NtfsIndexRecordSize;
+ULONG NtfsDriveNumber;
+ULONG NtfsSectorOfClusterZero;
 PNTFS_MFT_RECORD NtfsMasterFileTable;
 NTFS_ATTR_CONTEXT NtfsMFTContext;
 
-PUCHAR NtfsDecodeRun(PUCHAR DataRun, S64 *DataRunOffset, U64 *DataRunLength)
+PUCHAR NtfsDecodeRun(PUCHAR DataRun, LONGLONG *DataRunOffset, ULONGLONG *DataRunLength)
 {
-    U8 DataRunOffsetSize;
-    U8 DataRunLengthSize;
-    S8 i;
+    UCHAR DataRunOffsetSize;
+    UCHAR DataRunLengthSize;
+    CHAR i;
 
     DataRunOffsetSize = (*DataRun >> 4) & 0xF;
     DataRunLengthSize = *DataRun & 0xF;
@@ -75,7 +75,7 @@ PUCHAR NtfsDecodeRun(PUCHAR DataRun, S64 *DataRunOffset, U64 *DataRunLength)
             DataRun++;
         }
         /* The last byte contains sign so we must process it different way. */
-        *DataRunOffset = ((S8)(*(DataRun++)) << (i << 3)) + *DataRunOffset;
+        *DataRunOffset = ((CHAR)(*(DataRun++)) << (i << 3)) + *DataRunOffset;
     }
 
     DbgPrint((DPRINT_FILESYSTEM, "DataRunOffsetSize: %x\n", DataRunOffsetSize));
@@ -87,11 +87,11 @@ PUCHAR NtfsDecodeRun(PUCHAR DataRun, S64 *DataRunOffset, U64 *DataRunLength)
 }
 
 /* FIXME: Add support for attribute lists! */
-BOOL NtfsFindAttribute(PNTFS_ATTR_CONTEXT Context, PNTFS_MFT_RECORD MftRecord, U32 Type, PWCHAR Name)
+BOOL NtfsFindAttribute(PNTFS_ATTR_CONTEXT Context, PNTFS_MFT_RECORD MftRecord, ULONG Type, PWCHAR Name)
 {
     PNTFS_ATTR_RECORD AttrRecord;
     PNTFS_ATTR_RECORD AttrRecordEnd;
-    U32 NameLength;
+    ULONG NameLength;
     PWCHAR AttrName;
 
     AttrRecord = (PNTFS_ATTR_RECORD)((PCHAR)MftRecord + MftRecord->AttributesOffset);
@@ -115,8 +115,8 @@ BOOL NtfsFindAttribute(PNTFS_ATTR_CONTEXT Context, PNTFS_MFT_RECORD MftRecord, U
                     Context->Record = AttrRecord;
                     if (AttrRecord->IsNonResident)
                     {
-                    	S64 DataRunOffset;
-                    	U64 DataRunLength;
+                    	LONGLONG DataRunOffset;
+                    	ULONGLONG DataRunLength;
 
                         Context->CacheRun = (PUCHAR)Context->Record + Context->Record->NonResident.MappingPairsOffset;
                         Context->CacheRunOffset = 0;
@@ -148,9 +148,9 @@ BOOL NtfsFindAttribute(PNTFS_ATTR_CONTEXT Context, PNTFS_MFT_RECORD MftRecord, U
 }
 
 /* FIXME: Optimize for multisector reads. */
-BOOL NtfsDiskRead(U64 Offset, U64 Length, PCHAR Buffer)
+BOOL NtfsDiskRead(ULONGLONG Offset, ULONGLONG Length, PCHAR Buffer)
 {
-    U16 ReadLength;
+    USHORT ReadLength;
 
     DbgPrint((DPRINT_FILESYSTEM, "NtfsDiskRead - Offset: %I64d Length: %I64d\n", Offset, Length));
     RtlZeroMemory((PCHAR)DISKREADBUFFER, 0x1000);
@@ -190,16 +190,16 @@ BOOL NtfsDiskRead(U64 Offset, U64 Length, PCHAR Buffer)
     return TRUE;
 }
 
-U64 NtfsReadAttribute(PNTFS_ATTR_CONTEXT Context, U64 Offset, PCHAR Buffer, U64 Length)
+ULONGLONG NtfsReadAttribute(PNTFS_ATTR_CONTEXT Context, ULONGLONG Offset, PCHAR Buffer, ULONGLONG Length)
 {
-    U64 LastLCN;
+    ULONGLONG LastLCN;
     PUCHAR DataRun;
-    S64 DataRunOffset;
-    U64 DataRunLength;
-    S64 DataRunStartLCN;
-    U64 CurrentOffset;
-    U64 ReadLength;
-    U64 AlreadyRead;
+    LONGLONG DataRunOffset;
+    ULONGLONG DataRunLength;
+    LONGLONG DataRunStartLCN;
+    ULONGLONG CurrentOffset;
+    ULONGLONG ReadLength;
+    ULONGLONG AlreadyRead;
     
     if (!Context->Record->IsNonResident)
     {
@@ -316,31 +316,31 @@ U64 NtfsReadAttribute(PNTFS_ATTR_CONTEXT Context, U64 Offset, PCHAR Buffer, U64 
 
 BOOL NtfsFixupRecord(PNTFS_RECORD Record)
 {
-    U16 *USA;
-    U16 USANumber;
-    U16 USACount;
-    U16 *Block;
+    USHORT *USA;
+    USHORT USANumber;
+    USHORT USACount;
+    USHORT *Block;
 
-    USA = (U16*)((PCHAR)Record + Record->USAOffset);
+    USA = (USHORT*)((PCHAR)Record + Record->USAOffset);
     USANumber = *(USA++);
     USACount = Record->USACount - 1; /* Exclude the USA Number. */
-    Block = (U16*)((PCHAR)Record + NtfsBootSector->BytesPerSector - 2);
+    Block = (USHORT*)((PCHAR)Record + NtfsBootSector->BytesPerSector - 2);
 
     while (USACount)
     {
         if (*Block != USANumber)
             return FALSE;
         *Block = *(USA++);
-        Block = (U16*)((PCHAR)Block + NtfsBootSector->BytesPerSector);
+        Block = (USHORT*)((PCHAR)Block + NtfsBootSector->BytesPerSector);
         USACount--;
     }
 
     return TRUE;
 }
 
-BOOL NtfsReadMftRecord(U32 MFTIndex, PNTFS_MFT_RECORD Buffer)
+BOOL NtfsReadMftRecord(ULONG MFTIndex, PNTFS_MFT_RECORD Buffer)
 {
-    U64 BytesRead;
+    ULONGLONG BytesRead;
     
     BytesRead = NtfsReadAttribute(&NtfsMFTContext, MFTIndex * NtfsMftRecordSize, (PCHAR)Buffer, NtfsMftRecordSize);
     if (BytesRead != NtfsMftRecordSize)
@@ -354,9 +354,9 @@ BOOL NtfsReadMftRecord(U32 MFTIndex, PNTFS_MFT_RECORD Buffer)
 VOID NtfsPrintFile(PNTFS_INDEX_ENTRY IndexEntry)
 {
     PWCHAR FileName;
-    U8 FileNameLength;
+    UCHAR FileNameLength;
     CHAR AnsiFileName[256];
-    U8 i;
+    UCHAR i;
 
     FileName = IndexEntry->FileName.FileName;
     FileNameLength = IndexEntry->FileName.FileNameLength;
@@ -372,8 +372,8 @@ VOID NtfsPrintFile(PNTFS_INDEX_ENTRY IndexEntry)
 BOOL NtfsCompareFileName(PCHAR FileName, PNTFS_INDEX_ENTRY IndexEntry)
 {
     PWCHAR EntryFileName;
-    U8 EntryFileNameLength;
-    U8 i;
+    UCHAR EntryFileNameLength;
+    UCHAR i;
 
     EntryFileName = IndexEntry->FileName.FileName;
     EntryFileNameLength = IndexEntry->FileName.FileNameLength;
@@ -402,21 +402,21 @@ BOOL NtfsCompareFileName(PCHAR FileName, PNTFS_INDEX_ENTRY IndexEntry)
     return TRUE;
 }
 
-BOOL NtfsFindMftRecord(U32 MFTIndex, PCHAR FileName, U32 *OutMFTIndex)
+BOOL NtfsFindMftRecord(ULONG MFTIndex, PCHAR FileName, ULONG *OutMFTIndex)
 {
     PNTFS_MFT_RECORD MftRecord;
-    U32 Magic;
+    ULONG Magic;
     NTFS_ATTR_CONTEXT IndexRootCtx;
     NTFS_ATTR_CONTEXT IndexBitmapCtx;
     NTFS_ATTR_CONTEXT IndexAllocationCtx;
     PNTFS_INDEX_ROOT IndexRoot;
-    U64 BitmapDataSize;
-    U64 IndexAllocationSize;
+    ULONGLONG BitmapDataSize;
+    ULONGLONG IndexAllocationSize;
     PCHAR BitmapData;
     PCHAR IndexRecord;
     PNTFS_INDEX_ENTRY IndexEntry, IndexEntryEnd;
-    U32 RecordOffset;
-    U32 IndexBlockSize;
+    ULONG RecordOffset;
+    ULONG IndexBlockSize;
 
     MftRecord = MmAllocateMemory(NtfsMftRecordSize);
     if (MftRecord == NULL)
@@ -508,8 +508,8 @@ BOOL NtfsFindMftRecord(U32 MFTIndex, PCHAR FileName, U32 *OutMFTIndex)
                 DbgPrint((DPRINT_FILESYSTEM, "RecordOffset: %x IndexAllocationSize: %x\n", RecordOffset, IndexAllocationSize));
                 for (; RecordOffset < IndexAllocationSize;)
                 {
-                    U8 Bit = 1 << ((RecordOffset / IndexBlockSize) & 7);
-                    U32 Byte = (RecordOffset / IndexBlockSize) >> 3;
+                    UCHAR Bit = 1 << ((RecordOffset / IndexBlockSize) & 7);
+                    ULONG Byte = (RecordOffset / IndexBlockSize) >> 3;
                     if ((BitmapData[Byte] & Bit))
                         break;
                     RecordOffset += IndexBlockSize;
@@ -528,7 +528,7 @@ BOOL NtfsFindMftRecord(U32 MFTIndex, PCHAR FileName, U32 *OutMFTIndex)
                 }
 
                 /* FIXME */
-                IndexEntry = (PNTFS_INDEX_ENTRY)(IndexRecord + 0x18 + *(U16 *)(IndexRecord + 0x18));
+                IndexEntry = (PNTFS_INDEX_ENTRY)(IndexRecord + 0x18 + *(USHORT *)(IndexRecord + 0x18));
 	        IndexEntryEnd = (PNTFS_INDEX_ENTRY)(IndexRecord + IndexBlockSize);
 
                 while (IndexEntry < IndexEntryEnd &&
@@ -565,10 +565,10 @@ BOOL NtfsFindMftRecord(U32 MFTIndex, PCHAR FileName, U32 *OutMFTIndex)
 
 BOOL NtfsLookupFile(PUCHAR FileName, PNTFS_MFT_RECORD MftRecord, PNTFS_ATTR_CONTEXT DataContext)
 {
-    U32 NumberOfPathParts;
+    ULONG NumberOfPathParts;
     UCHAR PathPart[261];
-    U32 CurrentMFTIndex;
-    U8 i;
+    ULONG CurrentMFTIndex;
+    UCHAR i;
 
     DbgPrint((DPRINT_FILESYSTEM, "NtfsLookupFile() FileName = %s\n", FileName));
 
@@ -606,7 +606,7 @@ BOOL NtfsLookupFile(PUCHAR FileName, PNTFS_MFT_RECORD MftRecord, PNTFS_ATTR_CONT
     return TRUE;
 }
 
-BOOL NtfsOpenVolume(U32 DriveNumber, U32 VolumeStartSector)
+BOOL NtfsOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector)
 {
     NtfsBootSector = (PNTFS_BOOTSECTOR)DISKREADBUFFER;
 
@@ -703,36 +703,36 @@ FILE* NtfsOpenFile(PUCHAR FileName)
     return (FILE*)FileHandle;
 }
 
-BOOL NtfsReadFile(FILE *File, U32 BytesToRead, U32* BytesRead, PVOID Buffer)
+BOOL NtfsReadFile(FILE *File, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer)
 {
     PNTFS_FILE_HANDLE FileHandle = (PNTFS_FILE_HANDLE)File;
-    U64 BytesRead64;
+    ULONGLONG BytesRead64;
     BytesRead64 = NtfsReadAttribute(&FileHandle->DataContext, FileHandle->Offset, Buffer, BytesToRead);
     if (BytesRead64)
     {
-        *BytesRead = (U32)BytesRead64;
+        *BytesRead = (ULONG)BytesRead64;
         FileHandle->Offset += BytesRead64;
         return TRUE;
     }
     return FALSE;
 }
 
-U32 NtfsGetFileSize(FILE *File)
+ULONG NtfsGetFileSize(FILE *File)
 {
     PNTFS_FILE_HANDLE FileHandle = (PNTFS_FILE_HANDLE)File;
     if (FileHandle->DataContext.Record->IsNonResident)
-        return (U32)FileHandle->DataContext.Record->NonResident.DataSize;
+        return (ULONG)FileHandle->DataContext.Record->NonResident.DataSize;
     else
-        return (U32)FileHandle->DataContext.Record->Resident.ValueLength;
+        return (ULONG)FileHandle->DataContext.Record->Resident.ValueLength;
 }
 
-VOID NtfsSetFilePointer(FILE *File, U32 NewFilePointer)
+VOID NtfsSetFilePointer(FILE *File, ULONG NewFilePointer)
 {
     PNTFS_FILE_HANDLE FileHandle = (PNTFS_FILE_HANDLE)File;
     FileHandle->Offset = NewFilePointer;
 }
 
-U32 NtfsGetFilePointer(FILE *File)
+ULONG NtfsGetFilePointer(FILE *File)
 {
     PNTFS_FILE_HANDLE FileHandle = (PNTFS_FILE_HANDLE)File;
     return FileHandle->Offset;

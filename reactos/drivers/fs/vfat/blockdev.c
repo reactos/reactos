@@ -10,11 +10,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-
 #define NDEBUG
-#include <debug.h>
-
 #include "vfat.h"
 
 /* FUNCTIONS ***************************************************************/
@@ -71,7 +67,7 @@ VfatReadDisk (IN PDEVICE_OBJECT pDeviceObject,
 
   KeInitializeEvent (&event, NotificationEvent, FALSE);
 
-  DPRINT ("VfatReadSectors(pDeviceObject %x, Offset %I64x, Length %d, Buffer %x)\n",
+  DPRINT ("VfatReadDisk(pDeviceObject %x, Offset %I64x, Length %d, Buffer %x)\n",
 	  pDeviceObject, ReadOffset->QuadPart, ReadLength, Buffer);
 
   DPRINT ("Building synchronous FSD Request...\n");
@@ -108,7 +104,7 @@ VfatReadDisk (IN PDEVICE_OBJECT pDeviceObject,
 
   if (!NT_SUCCESS (Status))
     {
-      DPRINT ("IO failed!!! VfatReadSectors : Error code: %x\n", Status);
+      DPRINT ("IO failed!!! VfatReadDisk : Error code: %x\n", Status);
       DPRINT ("(pDeviceObject %x, Offset %I64x, Size %d, Buffer %x\n",
 	      pDeviceObject, ReadOffset->QuadPart, ReadLength, Buffer);
       return (Status);
@@ -134,7 +130,7 @@ VfatReadDiskPartial (IN PVFAT_IRP_CONTEXT IrpContext,
 
   DPRINT ("Building asynchronous FSD Request...\n");
 
-  Buffer = MmGetMdlVirtualAddress(IrpContext->Irp->MdlAddress) + BufferOffset;
+  Buffer = (PCHAR)MmGetMdlVirtualAddress(IrpContext->Irp->MdlAddress) + BufferOffset;
  
   Irp = IoAllocateIrp(IrpContext->DeviceExt->StorageDevice->StackSize, TRUE);
   if (Irp == NULL)
@@ -212,7 +208,7 @@ VfatWriteDiskPartial (IN PVFAT_IRP_CONTEXT IrpContext,
   DPRINT ("VfatWriteDiskPartial(IrpContext %x, WriteOffset %I64x, WriteLength %d, BufferOffset %x, Wait %d)\n",
 	  IrpContext, WriteOffset->QuadPart, WriteLength, BufferOffset, Wait);
 
-  Buffer = MmGetMdlVirtualAddress(IrpContext->Irp->MdlAddress) + BufferOffset;
+  Buffer = (PCHAR)MmGetMdlVirtualAddress(IrpContext->Irp->MdlAddress) + BufferOffset;
 
   DPRINT ("Building asynchronous FSD Request...\n");
   Irp = IoAllocateIrp(IrpContext->DeviceExt->StorageDevice->StackSize, TRUE);

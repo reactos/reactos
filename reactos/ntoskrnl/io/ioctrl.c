@@ -4,13 +4,9 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/ioctrl.c
  * PURPOSE:         Device IO control
- * PROGRAMMER:      David Welch (welch@mcmail.com)
+ * 
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
  *                  Eric Kohl (ekohl@rz-online.de)
- * UPDATE HISTORY:
- *                  Created 22/05/98
- *                  Filled in ZwDeviceIoControlFile 22/02/99
- *                  Fixed IO method handling 08/03/99
- *                  Added APC support 05/11/99
  */
 
 /* INCLUDES *****************************************************************/

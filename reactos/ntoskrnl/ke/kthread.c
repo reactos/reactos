@@ -1,28 +1,11 @@
-/*
- *  ReactOS kernel
- *  Copyright (C) 2000  ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
 /* $Id$
  *
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Microkernel thread support
- * PROGRAMMER:      David Welch (welch@cwcom.net)
- * UPDATE HISTORY:
- *                  Created 22/05/98
+ * 
+ * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
 /* INCLUDES *****************************************************************/
@@ -32,6 +15,21 @@
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/
+
+VOID
+KiServiceCheck (VOID)
+{
+  PETHREAD Thread;
+
+  Thread = PsGetCurrentThread();
+
+  if (Thread->Tcb.ServiceTable != KeServiceDescriptorTableShadow)
+    {
+      PsInitWin32Thread (Thread);
+
+      Thread->Tcb.ServiceTable = KeServiceDescriptorTableShadow;
+    }
+}
 
 /*
  * @unimplemented
@@ -87,7 +85,7 @@ KeReleaseThread(PKTHREAD Thread)
   /* FIXME - lock the process */
   RemoveEntryList(&Thread->ThreadListEntry);
   
-  if (Thread->StackLimit != (ULONG_PTR)&init_stack)
+  if (Thread->StackLimit != (ULONG_PTR)init_stack)
     {       
       MmLockAddressSpace(MmGetKernelAddressSpace());
       MmFreeMemoryAreaByPtr(MmGetKernelAddressSpace(),
@@ -195,10 +193,10 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
     }
   else
     {
-      Thread->InitialStack = (PCHAR)&init_stack_top;
-      Thread->StackBase = (PCHAR)&init_stack_top;
-      Thread->StackLimit = (ULONG_PTR)&init_stack;
-      Thread->KernelStack = (PCHAR)&init_stack_top;
+      Thread->InitialStack = (PCHAR)init_stack_top;
+      Thread->StackBase = (PCHAR)init_stack_top;
+      Thread->StackLimit = (ULONG_PTR)init_stack;
+      Thread->KernelStack = (PCHAR)init_stack_top;
     }
 
   /* 
@@ -309,7 +307,7 @@ VOID
 STDCALL
 KeRevertToUserAffinityThread(VOID)
 {
-#ifdef MP
+#ifdef CONFIG_SMP
 	PKTHREAD CurrentThread;
 	KIRQL oldIrql;
 
@@ -366,7 +364,7 @@ VOID
 STDCALL
 KeSetSystemAffinityThread(IN KAFFINITY Affinity)
 {
-#ifdef MP
+#ifdef CONFIG_SMP
 	PKTHREAD CurrentThread;
 	KIRQL oldIrql;
 

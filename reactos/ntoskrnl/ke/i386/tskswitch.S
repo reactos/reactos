@@ -60,7 +60,7 @@ _Ki386ContextSwitch:
 	 */
 	cli
 	
-#ifdef MP
+#ifdef CONFIG_SMP
 	/*
 	 * Get the pointer to the old thread.
 	 */
@@ -81,7 +81,7 @@ _Ki386ContextSwitch:
 2:
 	movb	$NPX_STATE_VALID, KTHREAD_NPX_STATE(%ebx)
 3:
-#endif /* MP */
+#endif /* CONFIG_SMP */
 
 
 	/*
@@ -182,10 +182,10 @@ _Ki386ContextSwitch:
 	 * Set TS in cr0 to catch FPU code and load the FPU state when needed
 	 * For uni-processor we do this only if NewThread != KPCR->NpxThread
 	 */
-#ifndef MP
+#ifndef CONFIG_SMP
 	cmpl	%ebx, %fs:KPCR_NPX_THREAD
 	je	4f
-#endif /* !MP */
+#endif /* !CONFIG_SMP */
 	movl	%cr0, %eax
 	orl	$X86_CR0_TS, %eax
 	movl	%eax, %cr0

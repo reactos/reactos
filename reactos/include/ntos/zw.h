@@ -1485,14 +1485,14 @@ NTSTATUS STDCALL ZwFreeVirtualMemory(IN HANDLE ProcessHandle,
  *	  IoStatusBlock = Caller should supply storage for 
  *        IoControlCode = Contains the File System Control command. This is an 
  *			index to the structures in InputBuffer and OutputBuffer.
- *		FSCTL_GET_RETRIEVAL_POINTERS  	MAPPING_PAIR
- *		FSCTL_GET_RETRIEVAL_POINTERS  	GET_RETRIEVAL_DESCRIPTOR
- *		FSCTL_GET_VOLUME_BITMAP  	BITMAP_DESCRIPTOR
- *		FSCTL_MOVE_FILE  		MOVEFILE_DESCRIPTOR
+ *		FSCTL_GET_RETRIEVAL_POINTERS  [Input/Output] RETRIEVAL_POINTERS_BUFFER
+ *		FSCTL_GET_VOLUME_BITMAP       [Input]        STARTING_LCN_INPUT_BUFFER
+ *		FSCTL_GET_VOLUME_BITMAP       [Output]       VOLUME_BITMAP_BUFFER
+ *		FSCTL_MOVE_FILE               [Input]        MOVE_FILE_DATA
  *
- *	  InputBuffer = Caller should supply storage for input buffer if FCTL expects one.
+ *	  InputBuffer = Caller should supply storage for input buffer if FSCTL expects one.
  * 	  InputBufferSize = Size of the input bufffer
- *        OutputBuffer = Caller should supply storage for output buffer if FCTL expects one.
+ *        OutputBuffer = Caller should supply storage for output buffer if FSCTL expects one.
  *        OutputBufferSize  = Size of the input bufffer
  * RETURNS: Status [ STATUS_SUCCESS | STATUS_PENDING | STATUS_ACCESS_DENIED | STATUS_INSUFFICIENT_RESOURCES |
  *		STATUS_INVALID_PARAMETER | STATUS_INVALID_DEVICE_REQUEST ]
@@ -1887,10 +1887,10 @@ NtNotifyChangeKey(
 	IN PVOID ApcContext OPTIONAL, 
 	OUT PIO_STATUS_BLOCK IoStatusBlock,
 	IN ULONG CompletionFilter,
-	IN BOOLEAN Asynchroneous, 
-	OUT PVOID ChangeBuffer,
+	IN BOOLEAN WatchSubtree,
+	OUT PVOID Buffer,
 	IN ULONG Length,
-	IN BOOLEAN WatchSubtree
+	IN BOOLEAN Asynchronous
 	);
 
 NTSTATUS
@@ -1902,10 +1902,10 @@ ZwNotifyChangeKey(
 	IN PVOID ApcContext OPTIONAL, 
 	OUT PIO_STATUS_BLOCK IoStatusBlock,
 	IN ULONG CompletionFilter,
-	IN BOOLEAN Asynchroneous, 
-	OUT PVOID ChangeBuffer,
+	IN BOOLEAN WatchSubtree,
+	OUT PVOID Buffer,
 	IN ULONG Length,
-	IN BOOLEAN WatchSubtree
+	IN BOOLEAN Asynchronous
 	);
 
 /*
@@ -2205,14 +2205,14 @@ ZwOpenSection(
 NTSTATUS
 STDCALL
 NtOpenSemaphore(
-	IN HANDLE SemaphoreHandle,
+	OUT PHANDLE SemaphoreHandle,
 	IN ACCESS_MASK DesiredAcces,
 	IN POBJECT_ATTRIBUTES ObjectAttributes
 	);
 NTSTATUS
 STDCALL
 ZwOpenSemaphore(
-	IN HANDLE SemaphoreHandle,
+	OUT PHANDLE SemaphoreHandle,
 	IN ACCESS_MASK DesiredAcces,
 	IN POBJECT_ATTRIBUTES ObjectAttributes
 	);
@@ -2702,7 +2702,7 @@ ZwQueryFullAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
 	  FileNamesInformation			FILE_NAMES_INFORMATION
 	  FileDispositionInformation		FILE_DISPOSITION_INFORMATION
 	  FilePositionInformation		FILE_POSITION_INFORMATION
-	  FileFullEaInformation			FILE_FULL_EA_INFORMATION		
+	  FileFullEaInformation			FILE_FULL_EA_INFORMATION
 	  FileModeInformation			FILE_MODE_INFORMATION
 	  FileAlignmentInformation		FILE_ALIGNMENT_INFORMATION
 	  FileAllInformation			FILE_ALL_INFORMATION
@@ -2715,7 +2715,7 @@ ZwQueryFullAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
 	  FilePipeRemoteInformation		
 	  FileMailslotQueryInformation		
 	  FileMailslotSetInformation		
-	  FileCompressionInformation		FILE_COMPRESSION_INFORMATION		
+	  FileCompressionInformation		FILE_COMPRESSION_INFORMATION
 	  FileCopyOnWriteInformation		
 	  FileCompletionInformation 		IO_COMPLETION_CONTEXT
 	  FileMoveClusterInformation		
@@ -2728,7 +2728,7 @@ ZwQueryFullAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
 	  FileContentIndexInformation		
 	  FileInheritContentIndexInformation	
 	  FileOleInformation			
-	  FileMaximumInformation			
+	  FileMaximumInformation		
 
  * REMARK:
  *	  This procedure maps to the win32 GetShortPathName, GetLongPathName,
@@ -3014,8 +3014,8 @@ ZwQueryMutant(
 /*
  * FUNCTION: Queries the system ( high-resolution ) performance counter.
  * ARGUMENTS: 
- *        Counter = Performance counter
- *	  Frequency = Performance frequency
+ *        PerformanceCounter = Performance counter
+ *	  PerformanceFrequency = Performance frequency
  * REMARKS:
 	This procedure queries a tick count faster than 10ms ( The resolution for  Intel®-based CPUs is about 0.8 microseconds.)
 	This procedure maps to the win32 QueryPerformanceCounter, QueryPerformanceFrequency 
@@ -3025,15 +3025,15 @@ ZwQueryMutant(
 NTSTATUS
 STDCALL
 NtQueryPerformanceCounter(
-	IN PLARGE_INTEGER Counter,
-	IN PLARGE_INTEGER Frequency
+	OUT PLARGE_INTEGER PerformanceCounter,
+	OUT PLARGE_INTEGER PerformanceFrequency  OPTIONAL
 	);
 
 NTSTATUS
 STDCALL
 ZwQueryPerformanceCounter(
-	IN PLARGE_INTEGER Counter,
-	IN PLARGE_INTEGER Frequency
+	OUT PLARGE_INTEGER PerformanceCounter,
+	OUT PLARGE_INTEGER PerformanceFrequency  OPTIONAL
 	);
 
 /*
@@ -3107,19 +3107,19 @@ ZwQuerySymbolicLinkObject(
 NTSTATUS
 STDCALL
 NtQuerySystemEnvironmentValue(
-	IN PUNICODE_STRING Name,
-	OUT PVOID Value,
-	ULONG Length,
-	PULONG ReturnLength
+	IN PUNICODE_STRING VariableName,
+	OUT PWCHAR ValueBuffer,
+	IN ULONG ValueBufferLength,
+	OUT PULONG ReturnLength  OPTIONAL
 	);
 
 NTSTATUS
 STDCALL
 ZwQuerySystemEnvironmentValue(
-	IN PUNICODE_STRING Name,
-	OUT PVOID Value,
-	ULONG Length,
-	PULONG ReturnLength
+	IN PUNICODE_STRING VariableName,
+	OUT PWCHAR ValueBuffer,
+	IN ULONG ValueBufferLength,
+	OUT PULONG ReturnLength  OPTIONAL
 	);
 
 
@@ -4929,21 +4929,6 @@ ZwYieldExecution(
 	VOID
 	);
 
-/* --- PLUG AND PLAY --- */
-
-NTSTATUS
-STDCALL
-NtPlugPlayControl (DWORD Unknown1,
-                   DWORD Unknown2,
-                   DWORD Unknown3);
-
-NTSTATUS
-STDCALL
-NtGetPlugPlayEvent (ULONG Reserved1,
-                    ULONG Reserved2,
-                    PVOID Buffer,
-                    ULONG BufferLength);
-
 /* --- POWER MANAGEMENT --- */
 
 #ifndef __USE_W32API
@@ -5026,12 +5011,6 @@ NtSetLdtEntries (ULONG Selector1,
 		 LDT_ENTRY LdtEntry1,
 		 ULONG Selector2,
 		 LDT_ENTRY LdtEntry2);
-
-NTSTATUS
-STDCALL
-NtQueryOleDirectoryFile (
-	VOID
-	);
 
 /*
  * FUNCTION: Checks a clients access rights to a object
@@ -5240,8 +5219,8 @@ NtCreateThread(
 NTSTATUS
 STDCALL
 NtDelayExecution(
-	IN ULONG Alertable,
-	IN LARGE_INTEGER *Interval
+	IN BOOLEAN Alertable,
+	IN PLARGE_INTEGER DelayInterval
 	);
 
 /*
@@ -6439,7 +6418,7 @@ NTSTATUS
 STDCALL
 ZwDelayExecution(
 	IN BOOLEAN Alertable,
-	IN TIME *Interval
+	IN PLARGE_INTEGER DelayInterval
 	);
 
 /*

@@ -1121,6 +1121,62 @@ SetAutoDaylightInfo(HWND hwnd)
 }
 
 
+static BOOL
+SetSystemLocalTime(HWND hwnd, PSETUPDATA SetupData)
+{
+  HANDLE hToken;
+  TOKEN_PRIVILEGES priv, previouspriv;
+  BOOL Ret = FALSE;
+  
+  /*
+   * enable the SeSystemtimePrivilege privilege
+   */
+  
+  if(OpenProcessToken(GetCurrentProcess(),
+                      TOKEN_ADJUST_PRIVILEGES,
+                      &hToken))
+  {
+    priv.PrivilegeCount = 1;
+    priv.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+    if(LookupPrivilegeValue(NULL,
+                            SE_SYSTEMTIME_NAME,
+                            &priv.Privileges[0].Luid))
+    {
+      if(AdjustTokenPrivileges(hToken,
+                               FALSE,
+                               &priv,
+                               sizeof(previouspriv),
+                               &previouspriv,
+                               0) &&
+         GetLastError() == ERROR_SUCCESS)
+      {
+        /*
+         * we successfully enabled it, we're permitted to change the system time
+         */
+        Ret = SetLocalTime(&SetupData->SystemTime);
+        
+        /*
+         * for the sake of security, restore the previous status again
+         */
+        if(previouspriv.PrivilegeCount > 0)
+        {
+          AdjustTokenPrivileges(hToken,
+                                FALSE,
+                                &previouspriv,
+                                0,
+                                NULL,
+                                0);
+        }
+      }
+    }
+    CloseHandle(hToken);
+  }
+  
+  return Ret;
+}
+
+
 INT_PTR CALLBACK
 DateTimePageDlgProc(HWND hwndDlg,
                     UINT uMsg,
@@ -1167,7 +1223,13 @@ DateTimePageDlgProc(HWND hwndDlg,
                   SetLocalTimeZone(GetDlgItem(hwndDlg, IDC_TIMEZONELIST),
                                    SetupData);
                   SetAutoDaylightInfo(GetDlgItem(hwndDlg, IDC_AUTODAYLIGHT));
-                  SetLocalTime(&SetupData->SystemTime);
+                  if(!SetSystemLocalTime(hwndDlg, SetupData))
+                  {
+                    MessageBox(hwndDlg,
+                               _T("Setup was unable to set the local time."),
+                               _T("ReactOS Setup"),
+                               MB_ICONWARNING | MB_OK);
+                  }
                 }
                 break;
 

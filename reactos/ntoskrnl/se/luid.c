@@ -1,12 +1,11 @@
 /* $Id$
  *
- * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
- * PURPOSE:           Security manager
- * FILE:              ntoskrnl/se/luid.c
- * PROGRAMER:         ?
- * REVISION HISTORY:
- *                 26/07/98: Added stubs for security functions
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/se/luid.c
+ * PURPOSE:         Security manager
+ * 
+ * PROGRAMMERS:     No programmer listed.
  */
 
 /* INCLUDES *****************************************************************/
@@ -20,15 +19,16 @@ static KSPIN_LOCK LuidLock;
 static LARGE_INTEGER LuidIncrement;
 static LARGE_INTEGER LuidValue;
 
-#define SYSTEM_LUID   0x3E7;
-
 /* FUNCTIONS *****************************************************************/
 
 VOID INIT_FUNCTION
 SepInitLuid(VOID)
 {
+  LUID DummyLuidValue = SYSTEM_LUID;
+  
   KeInitializeSpinLock(&LuidLock);
-  LuidValue.QuadPart = SYSTEM_LUID;
+  LuidValue.u.HighPart = DummyLuidValue.HighPart;
+  LuidValue.u.LowPart = DummyLuidValue.LowPart;
   LuidIncrement.QuadPart = 1;
 }
 

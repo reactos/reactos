@@ -4,9 +4,8 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/lpc/create.c
  * PURPOSE:         Communication mechanism
- * PROGRAMMER:      David Welch (welch@cwcom.net)
- * UPDATE HISTORY:
- *                  Created 22/05/98
+ * 
+ * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
 /* INCLUDES *****************************************************************/
@@ -134,7 +133,7 @@ NtCreatePort (PHANDLE		      PortHandle,
 
   /* Ask Ob to create the object */
   Status = ObCreateObject (ExGetPreviousMode(),
-			   & LpcPortObjectType,
+			   LpcPortObjectType,
 			   ObjectAttributes,
 			   ExGetPreviousMode(),
 			   NULL,
@@ -159,7 +158,7 @@ NtCreatePort (PHANDLE		      PortHandle,
       return (Status);
     }
 
-  Status = NiInitializePort (Port, EPORT_TYPE_SERVER_RQST_PORT, NULL);
+  Status = LpcpInitializePort (Port, EPORT_TYPE_SERVER_RQST_PORT, NULL);
   Port->MaxConnectInfoLength = PORT_MAX_DATA_LENGTH;
   Port->MaxDataLength = PORT_MAX_MESSAGE_LENGTH;
   Port->MaxPoolUsage = MaxPoolUsage;

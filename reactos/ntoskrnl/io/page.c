@@ -3,10 +3,9 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/page.c
- * PURPOSE:         
- * PROGRAMMER:      
- * UPDATE HISTORY:
- *                  
+ * PURPOSE:         No purpose listed.
+ * 
+ * PROGRAMMERS:     No programmer listed.
  */
 
 /* INCLUDES *****************************************************************/

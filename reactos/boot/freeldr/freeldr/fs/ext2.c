@@ -35,17 +35,17 @@ GEOMETRY			Ext2DiskGeometry;				// Ext2 file system disk geometry
 PEXT2_SUPER_BLOCK	Ext2SuperBlock = NULL;			// Ext2 file system super block
 PEXT2_GROUP_DESC	Ext2GroupDescriptors = NULL;	// Ext2 file system group descriptors
 
-U8					Ext2DriveNumber = 0;			// Ext2 file system drive number
-U64					Ext2VolumeStartSector = 0;		// Ext2 file system starting sector
-U32					Ext2BlockSizeInBytes = 0;		// Block size in bytes
-U32					Ext2BlockSizeInSectors = 0;		// Block size in sectors
-U32					Ext2FragmentSizeInBytes = 0;	// Fragment size in bytes
-U32					Ext2FragmentSizeInSectors = 0;	// Fragment size in sectors
-U32					Ext2GroupCount = 0;				// Number of groups in this file system
-U32					Ext2InodesPerBlock = 0;			// Number of inodes in one block
-U32					Ext2GroupDescPerBlock = 0;		// Number of group descriptors in one block
+UCHAR					Ext2DriveNumber = 0;			// Ext2 file system drive number
+ULONGLONG					Ext2VolumeStartSector = 0;		// Ext2 file system starting sector
+ULONG					Ext2BlockSizeInBytes = 0;		// Block size in bytes
+ULONG					Ext2BlockSizeInSectors = 0;		// Block size in sectors
+ULONG					Ext2FragmentSizeInBytes = 0;	// Fragment size in bytes
+ULONG					Ext2FragmentSizeInSectors = 0;	// Fragment size in sectors
+ULONG					Ext2GroupCount = 0;				// Number of groups in this file system
+ULONG					Ext2InodesPerBlock = 0;			// Number of inodes in one block
+ULONG					Ext2GroupDescPerBlock = 0;		// Number of group descriptors in one block
 
-BOOL Ext2OpenVolume(U8 DriveNumber, U64 VolumeStartSector)
+BOOL Ext2OpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector)
 {
 
 	DbgPrint((DPRINT_FILESYSTEM, "Ext2OpenVolume() DriveNumber = 0x%x VolumeStartSector = %d\n", DriveNumber, VolumeStartSector));
@@ -93,7 +93,7 @@ FILE* Ext2OpenFile(PUCHAR FileName)
 	PEXT2_FILE_INFO		FileHandle;
 	UCHAR				SymLinkPath[EXT3_NAME_LEN];
 	UCHAR				FullPath[EXT3_NAME_LEN * 2];
-	U32					Index;
+	ULONG					Index;
 
 	DbgPrint((DPRINT_FILESYSTEM, "Ext2OpenFile() FileName = %s\n", FileName));
 
@@ -193,10 +193,10 @@ FILE* Ext2OpenFile(PUCHAR FileName)
 BOOL Ext2LookupFile(PUCHAR FileName, PEXT2_FILE_INFO Ext2FileInfoPointer)
 {
 	int				i;
-	U32				NumberOfPathParts;
+	ULONG				NumberOfPathParts;
 	UCHAR			PathPart[261];
 	PVOID			DirectoryBuffer;
-	U32				DirectoryInode = EXT3_ROOT_INO;
+	ULONG				DirectoryInode = EXT3_ROOT_INO;
 	EXT2_INODE		InodeData;
 	EXT2_DIR_ENTRY	DirectoryEntry;
 
@@ -238,7 +238,7 @@ BOOL Ext2LookupFile(PUCHAR FileName, PEXT2_FILE_INFO Ext2FileInfoPointer)
 		//
 		// Search for file name in directory
 		//
-		if (!Ext2SearchDirectoryBufferForFile(DirectoryBuffer, (U32)Ext2GetInodeFileSize(&InodeData), PathPart, &DirectoryEntry))
+		if (!Ext2SearchDirectoryBufferForFile(DirectoryBuffer, (ULONG)Ext2GetInodeFileSize(&InodeData), PathPart, &DirectoryEntry))
 		{
 			MmFreeMemory(DirectoryBuffer);
 			return FALSE;
@@ -289,9 +289,9 @@ BOOL Ext2LookupFile(PUCHAR FileName, PEXT2_FILE_INFO Ext2FileInfoPointer)
 	return TRUE;
 }
 
-BOOL Ext2SearchDirectoryBufferForFile(PVOID DirectoryBuffer, U32 DirectorySize, PUCHAR FileName, PEXT2_DIR_ENTRY DirectoryEntry)
+BOOL Ext2SearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize, PUCHAR FileName, PEXT2_DIR_ENTRY DirectoryEntry)
 {
-	U32				CurrentOffset;
+	ULONG				CurrentOffset;
 	PEXT2_DIR_ENTRY	CurrentDirectoryEntry;
 
 	DbgPrint((DPRINT_FILESYSTEM, "Ext2SearchDirectoryBufferForFile() DirectoryBuffer = 0x%x DirectorySize = %d FileName = %s\n", DirectoryBuffer, DirectorySize, FileName));
@@ -345,16 +345,16 @@ BOOL Ext2SearchDirectoryBufferForFile(PVOID DirectoryBuffer, U32 DirectorySize, 
  * Reads BytesToRead from open file and
  * returns the number of bytes read in BytesRead
  */
-BOOL Ext2ReadFile(FILE *FileHandle, U64 BytesToRead, U64* BytesRead, PVOID Buffer)
+BOOL Ext2ReadFile(FILE *FileHandle, ULONGLONG BytesToRead, ULONGLONG* BytesRead, PVOID Buffer)
 {
 	PEXT2_FILE_INFO	Ext2FileInfo = (PEXT2_FILE_INFO)FileHandle;
-	U32				BlockNumber;
-	U32				BlockNumberIndex;
-	U32				OffsetInBlock;
-	U32				LengthInBlock;
-	U32				NumberOfBlocks;
+	ULONG				BlockNumber;
+	ULONG				BlockNumberIndex;
+	ULONG				OffsetInBlock;
+	ULONG				LengthInBlock;
+	ULONG				NumberOfBlocks;
 
-	DbgPrint((DPRINT_FILESYSTEM, "Ext2ReadFile() BytesToRead = %d Buffer = 0x%x\n", (U32)BytesToRead, Buffer));
+	DbgPrint((DPRINT_FILESYSTEM, "Ext2ReadFile() BytesToRead = %d Buffer = 0x%x\n", (ULONG)BytesToRead, Buffer));
 
 	if (BytesRead != NULL)
 	{
@@ -529,7 +529,7 @@ BOOL Ext2ReadFile(FILE *FileHandle, U64 BytesToRead, U64* BytesRead, PVOID Buffe
 	return TRUE;
 }
 
-U64 Ext2GetFileSize(FILE *FileHandle)
+ULONGLONG Ext2GetFileSize(FILE *FileHandle)
 {
 	PEXT2_FILE_INFO	Ext2FileHandle = (PEXT2_FILE_INFO)FileHandle;
 
@@ -538,7 +538,7 @@ U64 Ext2GetFileSize(FILE *FileHandle)
 	return Ext2FileHandle->FileSize;
 }
 
-VOID Ext2SetFilePointer(FILE *FileHandle, U64 NewFilePointer)
+VOID Ext2SetFilePointer(FILE *FileHandle, ULONGLONG NewFilePointer)
 {
 	PEXT2_FILE_INFO	Ext2FileHandle = (PEXT2_FILE_INFO)FileHandle;
 
@@ -547,7 +547,7 @@ VOID Ext2SetFilePointer(FILE *FileHandle, U64 NewFilePointer)
 	Ext2FileHandle->FilePointer = NewFilePointer;
 }
 
-U64 Ext2GetFilePointer(FILE *FileHandle)
+ULONGLONG Ext2GetFilePointer(FILE *FileHandle)
 {
 	PEXT2_FILE_INFO	Ext2FileHandle = (PEXT2_FILE_INFO)FileHandle;
 
@@ -556,7 +556,7 @@ U64 Ext2GetFilePointer(FILE *FileHandle)
 	return Ext2FileHandle->FilePointer;
 }
 
-BOOL Ext2ReadVolumeSectors(U8 DriveNumber, U64 SectorNumber, U64 SectorCount, PVOID Buffer)
+BOOL Ext2ReadVolumeSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONGLONG SectorCount, PVOID Buffer)
 {
 	//GEOMETRY	DiskGeometry;
 	//BOOL		ReturnValue;
@@ -734,8 +734,8 @@ BOOL Ext2ReadSuperBlock(VOID)
 
 BOOL Ext2ReadGroupDescriptors(VOID)
 {
-	U32		GroupDescBlockCount;
-	U32		CurrentGroupDescBlock;
+	ULONG		GroupDescBlockCount;
+	ULONG		CurrentGroupDescBlock;
 
 	DbgPrint((DPRINT_FILESYSTEM, "Ext2ReadGroupDescriptors()\n"));
 
@@ -778,7 +778,7 @@ BOOL Ext2ReadGroupDescriptors(VOID)
 	return TRUE;
 }
 
-BOOL Ext2ReadDirectory(U32 Inode, PVOID* DirectoryBuffer, PEXT2_INODE InodePointer)
+BOOL Ext2ReadDirectory(ULONG Inode, PVOID* DirectoryBuffer, PEXT2_INODE InodePointer)
 {
 	EXT2_FILE_INFO	DirectoryFileInfo;
 
@@ -837,7 +837,7 @@ BOOL Ext2ReadDirectory(U32 Inode, PVOID* DirectoryBuffer, PEXT2_INODE InodePoint
 	return TRUE;
 }
 
-BOOL Ext2ReadBlock(U32 BlockNumber, PVOID Buffer)
+BOOL Ext2ReadBlock(ULONG BlockNumber, PVOID Buffer)
 {
 	UCHAR			ErrorString[80];
 
@@ -861,14 +861,14 @@ BOOL Ext2ReadBlock(U32 BlockNumber, PVOID Buffer)
 		return TRUE;
 	}
 
-	return Ext2ReadVolumeSectors(Ext2DriveNumber, (U64)BlockNumber * Ext2BlockSizeInSectors, Ext2BlockSizeInSectors, Buffer);
+	return Ext2ReadVolumeSectors(Ext2DriveNumber, (ULONGLONG)BlockNumber * Ext2BlockSizeInSectors, Ext2BlockSizeInSectors, Buffer);
 }
 
 /*
  * Ext2ReadPartialBlock()
  * Reads part of a block into memory
  */
-BOOL Ext2ReadPartialBlock(U32 BlockNumber, U32 StartingOffset, U32 Length, PVOID Buffer)
+BOOL Ext2ReadPartialBlock(ULONG BlockNumber, ULONG StartingOffset, ULONG Length, PVOID Buffer)
 {
 
 	DbgPrint((DPRINT_FILESYSTEM, "Ext2ReadPartialBlock() BlockNumber = %d StartingOffset = %d Length = %d Buffer = 0x%x\n", BlockNumber, StartingOffset, Length, Buffer));
@@ -883,36 +883,36 @@ BOOL Ext2ReadPartialBlock(U32 BlockNumber, U32 StartingOffset, U32 Length, PVOID
 	return TRUE;
 }
 
-U32 Ext2GetGroupDescBlockNumber(U32 Group)
+ULONG Ext2GetGroupDescBlockNumber(ULONG Group)
 {
 	return (((Group * sizeof(EXT2_GROUP_DESC)) / Ext2GroupDescPerBlock) + Ext2SuperBlock->s_first_data_block + 1);
 }
 
-U32 Ext2GetGroupDescOffsetInBlock(U32 Group)
+ULONG Ext2GetGroupDescOffsetInBlock(ULONG Group)
 {
 	return ((Group * sizeof(EXT2_GROUP_DESC)) % Ext2GroupDescPerBlock);
 }
 
-U32 Ext2GetInodeGroupNumber(U32 Inode)
+ULONG Ext2GetInodeGroupNumber(ULONG Inode)
 {
 	return ((Inode - 1) / Ext2SuperBlock->s_inodes_per_group);
 }
 
-U32 Ext2GetInodeBlockNumber(U32 Inode)
+ULONG Ext2GetInodeBlockNumber(ULONG Inode)
 {
 	return (((Inode - 1) % Ext2SuperBlock->s_inodes_per_group) / Ext2InodesPerBlock);
 }
 
-U32 Ext2GetInodeOffsetInBlock(U32 Inode)
+ULONG Ext2GetInodeOffsetInBlock(ULONG Inode)
 {
 	return (((Inode - 1) % Ext2SuperBlock->s_inodes_per_group) % Ext2InodesPerBlock);
 }
 
-BOOL Ext2ReadInode(U32 Inode, PEXT2_INODE InodeBuffer)
+BOOL Ext2ReadInode(ULONG Inode, PEXT2_INODE InodeBuffer)
 {
-	U32				InodeGroupNumber;
-	U32				InodeBlockNumber;
-	U32				InodeOffsetInBlock;
+	ULONG				InodeGroupNumber;
+	ULONG				InodeBlockNumber;
+	ULONG				InodeOffsetInBlock;
 	UCHAR			ErrorString[80];
 	EXT2_GROUP_DESC	GroupDescriptor;
 
@@ -978,7 +978,7 @@ BOOL Ext2ReadInode(U32 Inode, PEXT2_INODE InodeBuffer)
 	return TRUE;
 }
 
-BOOL Ext2ReadGroupDescriptor(U32 Group, PEXT2_GROUP_DESC GroupBuffer)
+BOOL Ext2ReadGroupDescriptor(ULONG Group, PEXT2_GROUP_DESC GroupBuffer)
 {
 	DbgPrint((DPRINT_FILESYSTEM, "Ext2ReadGroupDescriptor()\n"));
 
@@ -1002,13 +1002,13 @@ BOOL Ext2ReadGroupDescriptor(U32 Group, PEXT2_GROUP_DESC GroupBuffer)
 	return TRUE;
 }
 
-U32* Ext2ReadBlockPointerList(PEXT2_INODE Inode)
+ULONG* Ext2ReadBlockPointerList(PEXT2_INODE Inode)
 {
-	U64		FileSize;
-	U32		BlockCount;
-	U32*	BlockList;
-	U32		CurrentBlockInList;
-	U32		CurrentBlock;
+	ULONGLONG		FileSize;
+	ULONG		BlockCount;
+	ULONG*	BlockList;
+	ULONG		CurrentBlockInList;
+	ULONG		CurrentBlock;
 
 	DbgPrint((DPRINT_FILESYSTEM, "Ext2ReadBlockPointerList()\n"));
 
@@ -1023,13 +1023,13 @@ U32* Ext2ReadBlockPointerList(PEXT2_INODE Inode)
 	BlockCount = (FileSize / Ext2BlockSizeInBytes);
 
 	// Allocate the memory for the block list
-	BlockList = MmAllocateMemory(BlockCount * sizeof(U32));
+	BlockList = MmAllocateMemory(BlockCount * sizeof(ULONG));
 	if (BlockList == NULL)
 	{
 		return NULL;
 	}
 
-	RtlZeroMemory(BlockList, BlockCount * sizeof(U32));
+	RtlZeroMemory(BlockList, BlockCount * sizeof(ULONG));
 	CurrentBlockInList = 0;
 
 	// Copy the direct block pointers
@@ -1072,27 +1072,27 @@ U32* Ext2ReadBlockPointerList(PEXT2_INODE Inode)
 	return BlockList;
 }
 
-U64 Ext2GetInodeFileSize(PEXT2_INODE Inode)
+ULONGLONG Ext2GetInodeFileSize(PEXT2_INODE Inode)
 {
 	if ((Inode->i_mode & EXT2_S_IFMT) == EXT2_S_IFDIR)
 	{
-		return (U64)(Inode->i_size);
+		return (ULONGLONG)(Inode->i_size);
 	}
 	else
 	{
-		return ((U64)(Inode->i_size) | ((U64)(Inode->i_dir_acl) << 32));
+		return ((ULONGLONG)(Inode->i_size) | ((ULONGLONG)(Inode->i_dir_acl) << 32));
 	}
 }
 
-BOOL Ext2CopyIndirectBlockPointers(U32* BlockList, U32* CurrentBlockInList, U32 BlockCount, U32 IndirectBlock)
+BOOL Ext2CopyIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBlockInList, ULONG BlockCount, ULONG IndirectBlock)
 {
-	U32*	BlockBuffer = (U32*)FILESYSBUFFER;
-	U32		CurrentBlock;
-	U32		BlockPointersPerBlock;
+	ULONG*	BlockBuffer = (ULONG*)FILESYSBUFFER;
+	ULONG		CurrentBlock;
+	ULONG		BlockPointersPerBlock;
 
 	DbgPrint((DPRINT_FILESYSTEM, "Ext2CopyIndirectBlockPointers() BlockCount = %d\n", BlockCount));
 
-	BlockPointersPerBlock = Ext2BlockSizeInBytes / sizeof(U32);
+	BlockPointersPerBlock = Ext2BlockSizeInBytes / sizeof(ULONG);
 
 	if (!Ext2ReadBlock(IndirectBlock, BlockBuffer))
 	{
@@ -1108,17 +1108,17 @@ BOOL Ext2CopyIndirectBlockPointers(U32* BlockList, U32* CurrentBlockInList, U32 
 	return TRUE;
 }
 
-BOOL Ext2CopyDoubleIndirectBlockPointers(U32* BlockList, U32* CurrentBlockInList, U32 BlockCount, U32 DoubleIndirectBlock)
+BOOL Ext2CopyDoubleIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBlockInList, ULONG BlockCount, ULONG DoubleIndirectBlock)
 {
-	U32*	BlockBuffer;
-	U32		CurrentBlock;
-	U32		BlockPointersPerBlock;
+	ULONG*	BlockBuffer;
+	ULONG		CurrentBlock;
+	ULONG		BlockPointersPerBlock;
 
 	DbgPrint((DPRINT_FILESYSTEM, "Ext2CopyDoubleIndirectBlockPointers() BlockCount = %d\n", BlockCount));
 
-	BlockPointersPerBlock = Ext2BlockSizeInBytes / sizeof(U32);
+	BlockPointersPerBlock = Ext2BlockSizeInBytes / sizeof(ULONG);
 
-	BlockBuffer = (U32*)MmAllocateMemory(Ext2BlockSizeInBytes);
+	BlockBuffer = (ULONG*)MmAllocateMemory(Ext2BlockSizeInBytes);
 	if (BlockBuffer == NULL)
 	{
 		return FALSE;
@@ -1143,17 +1143,17 @@ BOOL Ext2CopyDoubleIndirectBlockPointers(U32* BlockList, U32* CurrentBlockInList
 	return TRUE;
 }
 
-BOOL Ext2CopyTripleIndirectBlockPointers(U32* BlockList, U32* CurrentBlockInList, U32 BlockCount, U32 TripleIndirectBlock)
+BOOL Ext2CopyTripleIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBlockInList, ULONG BlockCount, ULONG TripleIndirectBlock)
 {
-	U32*	BlockBuffer;
-	U32		CurrentBlock;
-	U32		BlockPointersPerBlock;
+	ULONG*	BlockBuffer;
+	ULONG		CurrentBlock;
+	ULONG		BlockPointersPerBlock;
 
 	DbgPrint((DPRINT_FILESYSTEM, "Ext2CopyTripleIndirectBlockPointers() BlockCount = %d\n", BlockCount));
 
-	BlockPointersPerBlock = Ext2BlockSizeInBytes / sizeof(U32);
+	BlockPointersPerBlock = Ext2BlockSizeInBytes / sizeof(ULONG);
 
-	BlockBuffer = (U32*)MmAllocateMemory(Ext2BlockSizeInBytes);
+	BlockBuffer = (ULONG*)MmAllocateMemory(Ext2BlockSizeInBytes);
 	if (BlockBuffer == NULL)
 	{
 		return FALSE;

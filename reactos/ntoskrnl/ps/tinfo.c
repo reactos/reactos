@@ -4,11 +4,9 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ps/tinfo.c
  * PURPOSE:         Getting/setting thread information
- * PROGRAMMER:      David Welch (welch@mcmail.com)
- * UPDATE HISTORY:
- *                  Created 22/05/98
- *                  Updated 09/08/2003 by Skywing (skywing@valhallalegends.com)
- *                   to suppport thread-eventpairs.
+ * 
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
+ *                  Skywing (skywing@valhallalegends.com)
  */
 
 /* INCLUDES *****************************************************************/
@@ -253,9 +251,9 @@ NtQueryInformationThread (IN	HANDLE		ThreadHandle,
        case ThreadTimes:
 	 u.TTI.KernelTime.QuadPart = Thread->Tcb.KernelTime * 100000LL;
          u.TTI.UserTime.QuadPart = Thread->Tcb.UserTime * 100000LL;
-         u.TTI.CreateTime = (TIME) Thread->CreateTime;
+         u.TTI.CreateTime = Thread->CreateTime;
          /*This works*/
-	 u.TTI.ExitTime = (TIME) Thread->ExitTime;
+	 u.TTI.ExitTime = Thread->ExitTime;
          break;
 
        case ThreadQuerySetWin32StartAddress:
@@ -316,7 +314,7 @@ KeSetPreviousMode (ULONG Mode)
 /*
  * @implemented
  */
-ULONG STDCALL
+KPROCESSOR_MODE STDCALL
 KeGetPreviousMode (VOID)
 {
   return (ULONG)PsGetCurrentThread()->Tcb.PreviousMode;

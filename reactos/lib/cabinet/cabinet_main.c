@@ -121,8 +121,10 @@ HRESULT WINAPI Extract(EXTRACTdest *dest, LPCSTR what)
   TRACE("extracting to dir: %s\n", debugstr_a(dir));
 
   /* FIXME: what to do on failure? */
-  if (!process_cabinet(what, dir, FALSE, FALSE, dest))
+  if (!process_cabinet(what, dir, FALSE, FALSE, dest)) {
+    LocalFree(dir);
     return E_OUTOFMEMORY;
+  }
 
   LocalFree(dir);
 

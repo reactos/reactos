@@ -15,25 +15,52 @@
 #define NDEBUG
 #include "../include/debug.h"
 
-UINT GlobalErrMode = 0;
 LPTOP_LEVEL_EXCEPTION_FILTER GlobalTopLevelExceptionFilter = UnhandledExceptionFilter;
 
-UINT GetErrorMode(void)
+UINT
+STDCALL
+GetErrorMode(VOID)
 {
-	return GlobalErrMode;
+  NTSTATUS Status;
+  UINT ErrMode;
+  
+  Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                     ProcessDefaultHardErrorMode,
+                                     (PVOID)&ErrMode,
+                                     sizeof(ErrMode),
+                                     NULL);
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastErrorByStatus(Status);
+    return 0;
+  }
+  
+  return ErrMode;
 }
-
 
 /*
  * @implemented
  */
 UINT 
 STDCALL
-SetErrorMode(  UINT uMode  )
+SetErrorMode(UINT uMode)
 {
-	UINT OldErrMode = GetErrorMode();
-	GlobalErrMode = uMode;
-	return OldErrMode;
+   UINT PrevErrMode;
+   NTSTATUS Status;
+   
+   PrevErrMode = GetErrorMode();
+   
+   Status = NtSetInformationProcess(NtCurrentProcess(),
+                                    ProcessDefaultHardErrorMode,
+                                    (PVOID)&uMode,
+                                    sizeof(uMode));
+   if(!NT_SUCCESS(Status))
+   {
+     SetLastErrorByStatus(Status);
+     return 0;
+   }
+
+   return PrevErrMode;
 }
 
 

@@ -764,24 +764,24 @@ static inline size_t VARIANT_DataSize(const VARIANT* pv)
   switch (V_TYPE(pv))
   {
   case VT_I1:
-  case VT_UI1:   return sizeof(BYTE); break;
+  case VT_UI1:   return sizeof(BYTE);
   case VT_I2:
-  case VT_UI2:   return sizeof(SHORT); break;
+  case VT_UI2:   return sizeof(SHORT);
   case VT_INT:
   case VT_UINT:
   case VT_I4:
-  case VT_UI4:   return sizeof(LONG); break;
+  case VT_UI4:   return sizeof(LONG);
   case VT_I8:
-  case VT_UI8:   return sizeof(LONGLONG); break;
-  case VT_R4:    return sizeof(float); break;
-  case VT_R8:    return sizeof(double); break;
-  case VT_DATE:  return sizeof(DATE); break;
-  case VT_BOOL:  return sizeof(VARIANT_BOOL); break;
+  case VT_UI8:   return sizeof(LONGLONG);
+  case VT_R4:    return sizeof(float);
+  case VT_R8:    return sizeof(double);
+  case VT_DATE:  return sizeof(DATE);
+  case VT_BOOL:  return sizeof(VARIANT_BOOL);
   case VT_DISPATCH:
   case VT_UNKNOWN:
-  case VT_BSTR:  return sizeof(void*); break;
-  case VT_CY:    return sizeof(CY); break;
-  case VT_ERROR: return sizeof(SCODE); break;
+  case VT_BSTR:  return sizeof(void*);
+  case VT_CY:    return sizeof(CY);
+  case VT_ERROR: return sizeof(SCODE);
   }
   TRACE("Shouldn't be called for vt %s%s!\n", debugstr_VT(pv), debugstr_VF(pv));
   return 0;
@@ -3925,7 +3925,7 @@ HRESULT WINAPI VarNeg(LPVARIANT pVarIn, LPVARIANT pVarOut)
  *  Failure: An HRESULT error code indicating the error.
  *
  * NOTES
- *  - Strictly speaking, this function performs a bitwise ones compliment
+ *  - Strictly speaking, this function performs a bitwise ones complement
  *    on the variants value (after possibly converting to VT_I4, see below).
  *    This only behaves like a boolean not operation if the value in
  *    pVarIn is either VARIANT_TRUE or VARIANT_FALSE and the type is signed.

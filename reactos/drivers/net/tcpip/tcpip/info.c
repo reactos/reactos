@@ -129,10 +129,10 @@ TDI_STATUS InfoTdiQueryInformationEx(
 {
     KIRQL OldIrql;
     UINT i;
-    PVOID context;
+    PVOID context = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
     BOOL FoundEntity = FALSE;
-    InfoRequest_f InfoRequest;
+    InfoRequest_f InfoRequest = NULL;
 
     TI_DbgPrint(MAX_TRACE,
 		("InfoEx Req: %x %x %x!%04x:%d\n",

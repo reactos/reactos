@@ -9,11 +9,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include "vfat.h"
-
 #define NDEBUG
-#include <debug.h>
+#include "vfat.h"
 
 /* FUNCTIONS ****************************************************************/
 

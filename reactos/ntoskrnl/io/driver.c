@@ -1,13 +1,12 @@
 /* $Id$
  *
- * COPYRIGHT:      See COPYING in the top level directory
- * PROJECT:        ReactOS kernel
- * FILE:           ntoskrnl/io/driver.c
- * PURPOSE:        Loading and unloading of drivers
- * PROGRAMMER:     David Welch (welch@cwcom.net)
- *                 Filip Navara (xnavara@volny.cz)
- * UPDATE HISTORY:
- *                 15/05/98: Created
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/io/driver.c
+ * PURPOSE:         Loading and unloading of drivers
+ * 
+ * PROGRAMMERS:     David Welch (welch@cwcom.net)
+ *                  Filip Navara (xnavara@volny.cz)
  */
 
 /* INCLUDES *******************************************************************/
@@ -97,8 +96,8 @@ IopInitDriverImplementation(VOID)
    IoDriverObjectType->Tag = TAG('D', 'R', 'V', 'R');
    IoDriverObjectType->TotalObjects = 0;
    IoDriverObjectType->TotalHandles = 0;
-   IoDriverObjectType->MaxObjects = ULONG_MAX;
-   IoDriverObjectType->MaxHandles = ULONG_MAX;
+   IoDriverObjectType->PeakObjects = 0;
+   IoDriverObjectType->PeakHandles = 0;
    IoDriverObjectType->PagedPoolCharge = 0;
    IoDriverObjectType->NonpagedPoolCharge = sizeof(DRIVER_OBJECT);
    IoDriverObjectType->Dump = NULL;
@@ -181,6 +180,7 @@ IopDeleteDriver(PVOID ObjectBody)
    DPRINT("IopDeleteDriver(ObjectBody %x)\n", ObjectBody);
 
    ExFreePool(Object->DriverExtension);
+   RtlFreeUnicodeString(&Object->DriverName);
 
    OldIrql = KeRaiseIrqlToDpcLevel();
 
@@ -208,6 +208,7 @@ IopCreateDriverObject(
    UNICODE_STRING DriverName;
    OBJECT_ATTRIBUTES ObjectAttributes;
    NTSTATUS Status;
+   PWSTR Buffer = NULL;
 
    DPRINT("IopCreateDriverObject(%p '%wZ' %x %p %x)\n",
       DriverObject, ServiceName, FileSystem, DriverImageStart, DriverImageSize);
@@ -225,6 +226,10 @@ IopCreateDriverObject(
 
       RtlInitUnicodeString(&DriverName, NameBuffer);
       DPRINT("Driver name: '%wZ'\n", &DriverName);
+      
+      Buffer = (PWSTR)ExAllocatePool(NonPagedPool, DriverName.Length);
+      /* If we don't success, it is not a problem. Our driver
+       * object will not have associated driver name... */
    }
    else
    {
@@ -258,6 +263,12 @@ IopCreateDriverObject(
 
    Object->DriverStart = DriverImageStart;
    Object->DriverSize = DriverImageSize;
+   if (Buffer)
+   {
+      Object->DriverName.Buffer = Buffer;
+      Object->DriverName.Length = Object->DriverName.MaximumLength = DriverName.Length;
+      RtlCopyMemory(Object->DriverName.Buffer, DriverName.Buffer, DriverName.Length);
+   }
 
    *DriverObject = Object;
 
@@ -447,6 +458,8 @@ IopLoadServiceModule(
                   (PVOID)KeLoaderModules[i].ModStart,
                   &ServiceImagePath,
                   ModuleObject);
+
+	       KDB_SYMBOLFILE_HOOK(SearchName);
 
                break;
             }
@@ -781,8 +794,7 @@ IopCreateGroupListEntry(PWSTR ValueName,
 
       RtlZeroMemory(Group, sizeof(SERVICE_GROUP));
 
-      if (!RtlCreateUnicodeString(&Group->GroupName,
-				  (PWSTR)ValueData))
+      if (!RtlpCreateUnicodeString(&Group->GroupName, (PWSTR)ValueData, NonPagedPool))
 	{
 	  ExFreePool(Group);
 	  return(STATUS_INSUFFICIENT_RESOURCES);
@@ -947,7 +959,7 @@ IoCreateDriverList(VOID)
 			     NULL,
 			     NULL);
 
-  Status = NtOpenKey(&KeyHandle,
+  Status = ZwOpenKey(&KeyHandle,
 		     0x10001,
 		     &ObjectAttributes);
   if (!NT_SUCCESS(Status))
@@ -959,14 +971,14 @@ IoCreateDriverList(VOID)
   KeyInfo = ExAllocatePool(NonPagedPool, KeyInfoLength);
   if (KeyInfo == NULL)
     {
-      NtClose(KeyHandle);
+      ZwClose(KeyHandle);
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
   Index = 0;
   while (TRUE)
     {
-      Status = NtEnumerateKey(KeyHandle,
+      Status = ZwEnumerateKey(KeyHandle,
 			      Index,
 			      KeyBasicInformation,
 			      KeyInfo,
@@ -994,7 +1006,7 @@ IoCreateDriverList(VOID)
     }
 
   ExFreePool(KeyInfo);
-  NtClose(KeyHandle);
+  ZwClose(KeyHandle);
 
   DPRINT("IoCreateDriverList() done\n");
 
@@ -1135,6 +1147,9 @@ IopInitializeBuiltinDriver(
       return Status;
    }
 
+   /* Load symbols */
+   KDB_SYMBOLFILE_HOOK(FileName);
+
    /*
     * Strip the file extension from ServiceName
     */
@@ -1205,13 +1220,11 @@ IopInitializeBootDrivers(VOID)
       if (Extension == NULL)
          Extension = "";
 
-      if (!_stricmp(Extension, ".sym"))
+      if (!_stricmp(Extension, ".sym") || !_stricmp(Extension, ".dll"))
       {
-         /* Pass symbol files to kernel debugger */
-         KDB_SYMBOLFILE_HOOK((PVOID)ModuleStart, ModuleName, ModuleSize);
-      }
-      else if (!_stricmp(Extension, ".exe") || !_stricmp(Extension, ".dll"))
-      {
+        /* Process symbols for *.exe and *.dll */
+        KDB_SYMBOLFILE_HOOK(ModuleName);
+
         /* Log *.exe and *.dll files */
         RtlCreateUnicodeStringFromAsciiz(&DriverName, ModuleName);
         IopBootLog(&DriverName, TRUE);
@@ -1232,20 +1245,16 @@ IopInitializeBootDrivers(VOID)
          }
          BootDriverCount++;
       }
+   }
 
-      /*
-       * Free memory for all boot files, except ntoskrnl.exe
-       * and symbol files, if the kernel debugger is active
-       */
-      if (i != 0 /* ntoskrnl.exe is always the first module */
-#if defined(DBG) || defined(KDBG)
-          && _stricmp(Extension, ".sym")
-#endif
-         )
-      {
-         MiFreeBootDriverMemory((PVOID)KeLoaderModules[i].ModStart,
-            KeLoaderModules[i].ModEnd - KeLoaderModules[i].ModStart);
-      }
+   /*
+    * Free memory for all boot files, except ntoskrnl.exe.
+    */
+   for (i = 1; i < KeLoaderBlock.ModsCount; i++)
+   {
+
+       MiFreeBootDriverMemory((PVOID)KeLoaderModules[i].ModStart,
+                              KeLoaderModules[i].ModEnd - KeLoaderModules[i].ModStart);
    }
 
    if (BootDriverCount == 0)
@@ -1261,7 +1270,7 @@ IopLoadDriver(PSERVICE Service)
    NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
    IopDisplayLoadingMessage(Service->ServiceName.Buffer);
-   Status = NtLoadDriver(&Service->RegistryPath);
+   Status = ZwLoadDriver(&Service->RegistryPath);
    IopBootLog(&Service->ImagePath, NT_SUCCESS(Status) ? TRUE : FALSE);
    if (!NT_SUCCESS(Status))
    {
@@ -1854,7 +1863,7 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
       Start = DriverServiceName->Buffer;
    else
       Start++;
-   RtlCreateUnicodeString(&DeviceNode->ServiceName, Start);
+   RtlpCreateUnicodeString(&DeviceNode->ServiceName, Start, NonPagedPool);
 
    /*
     * Initialize the driver module

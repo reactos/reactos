@@ -4,6 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ldr/resource.c
  * PURPOSE:         Resource loader
+ *
  * PROGRAMMERS:     Eric Kohl (ekohl@rz-online.de)
  */
 

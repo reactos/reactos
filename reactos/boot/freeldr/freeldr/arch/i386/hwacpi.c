@@ -32,11 +32,11 @@
 static BOOL
 FindAcpiBios(VOID)
 {
-  PU8 Ptr;
+  PUCHAR Ptr;
 
   /* Find the 'Root System Descriptor Table Pointer' */
-  Ptr = (PU8)0xE0000;
-  while ((U32)Ptr < 0x100000)
+  Ptr = (PUCHAR)0xE0000;
+  while ((ULONG)Ptr < 0x100000)
     {
       if (!memcmp(Ptr, "RSD PTR ", 8))
 	{
@@ -45,7 +45,7 @@ FindAcpiBios(VOID)
 	  return TRUE;
 	}
 
-      Ptr = (PU8)((U32)Ptr + 0x10);
+      Ptr = (PUCHAR)((ULONG)Ptr + 0x10);
     }
 
   DbgPrint((DPRINT_HWDETECT, "ACPI not supported\n"));
@@ -55,11 +55,11 @@ FindAcpiBios(VOID)
 
 
 VOID
-DetectAcpiBios(HKEY SystemKey, U32 *BusNumber)
+DetectAcpiBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
 {
   char Buffer[80];
-  HKEY BiosKey;
-  S32 Error;
+  FRLDRHKEY BiosKey;
+  LONG Error;
 
   if (FindAcpiBios())
     {
@@ -90,7 +90,7 @@ DetectAcpiBios(HKEY SystemKey, U32 *BusNumber)
       Error = RegSetValue(BiosKey,
 			  "Identifier",
 			  REG_SZ,
-			  (PU8)"ACPI BIOS",
+			  (PUCHAR)"ACPI BIOS",
 			  10);
       if (Error != ERROR_SUCCESS)
 	{

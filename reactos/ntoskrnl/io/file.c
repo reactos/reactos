@@ -4,9 +4,8 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/file.c
  * PURPOSE:         Graceful system shutdown if a bug is detected
- * PROGRAMMER:      David Welch (welch@mcmail.com)
- * UPDATE HISTORY:
- *                  Created 22/05/98
+ * 
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
 /* INCLUDES *****************************************************************/
@@ -538,7 +537,7 @@ NtQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
   NTSTATUS Status;
 
   /* Open the file */
-  Status = NtOpenFile (&FileHandle,
+  Status = ZwOpenFile (&FileHandle,
 		       SYNCHRONIZE | FILE_READ_ATTRIBUTES,
 		       ObjectAttributes,
 		       &IoStatusBlock,
@@ -546,20 +545,20 @@ NtQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
 		       FILE_SYNCHRONOUS_IO_NONALERT);
   if (!NT_SUCCESS (Status))
     {
-      DPRINT ("NtOpenFile() failed (Status %lx)\n", Status);
+      DPRINT ("ZwOpenFile() failed (Status %lx)\n", Status);
       return Status;
     }
 
   /* Get file attributes */
-  Status = NtQueryInformationFile (FileHandle,
+  Status = ZwQueryInformationFile (FileHandle,
 				   &IoStatusBlock,
 				   FileInformation,
 				   sizeof(FILE_BASIC_INFORMATION),
 				   FileBasicInformation);
-  NtClose (FileHandle);
+  ZwClose (FileHandle);
   if (!NT_SUCCESS (Status))
     {
-      DPRINT ("NtQueryInformationFile() failed (Status %lx)\n", Status);
+      DPRINT ("ZwQueryInformationFile() failed (Status %lx)\n", Status);
     }
 
   return Status;
@@ -575,7 +574,7 @@ NtQueryFullAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
   NTSTATUS Status;
 
   /* Open the file */
-  Status = NtOpenFile (&FileHandle,
+  Status = ZwOpenFile (&FileHandle,
 		       SYNCHRONIZE | FILE_READ_ATTRIBUTES,
 		       ObjectAttributes,
 		       &IoStatusBlock,
@@ -583,20 +582,20 @@ NtQueryFullAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
 		       FILE_SYNCHRONOUS_IO_NONALERT);
   if (!NT_SUCCESS (Status))
     {
-      DPRINT ("NtOpenFile() failed (Status %lx)\n", Status);
+      DPRINT ("ZwOpenFile() failed (Status %lx)\n", Status);
       return Status;
     }
 
   /* Get file attributes */
-  Status = NtQueryInformationFile (FileHandle,
+  Status = ZwQueryInformationFile (FileHandle,
 				   &IoStatusBlock,
 				   FileInformation,
 				   sizeof(FILE_NETWORK_OPEN_INFORMATION),
 				   FileNetworkOpenInformation);
-  NtClose (FileHandle);
+  ZwClose (FileHandle);
   if (!NT_SUCCESS (Status))
     {
-      DPRINT ("NtQueryInformationFile() failed (Status %lx)\n", Status);
+      DPRINT ("ZwQueryInformationFile() failed (Status %lx)\n", Status);
     }
 
   return Status;

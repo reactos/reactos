@@ -19,8 +19,6 @@
 
 #ifdef DBG
 
-extern NTSTATUS DDKAPI MmCopyFromCaller( PVOID Dst, PVOID Src, UINT Size );
-
 /* See debug.h for debug/trace constants */
 //DWORD DebugTraceLevel = DEBUG_ULTRA;
 DWORD DebugTraceLevel = 0;
@@ -132,6 +130,18 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     }
 
     FileObject->FsContext = FCB;
+
+    /* It seems that UDP sockets are writable from inception */
+    if( FCB->Flags & SGID_CONNECTIONLESS ) {
+        AFD_DbgPrint(MID_TRACE,("Packet oriented socket\n"));
+	/* Allocate our backup buffer */
+	FCB->Recv.Window = ExAllocatePool( NonPagedPool, FCB->Recv.Size );
+        FCB->Send.Window = ExAllocatePool( NonPagedPool, FCB->Send.Size );
+	/* A datagram socket is always sendable */
+	FCB->PollState |= AFD_EVENT_SEND; 
+        PollReeval( FCB->DeviceExt, FCB->FileObject );
+    }
+
     Irp->IoStatus.Status = STATUS_SUCCESS;
     IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
 
@@ -140,6 +150,7 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 VOID DestroySocket( PAFD_FCB FCB ) {
     UINT i;
+    BOOLEAN ReturnEarly = FALSE;
     PAFD_IN_FLIGHT_REQUEST InFlightRequest[IN_FLIGHT_REQUESTS];
 
     AFD_DbgPrint(MIN_TRACE,("Called (%x)\n", FCB));
@@ -161,8 +172,7 @@ VOID DestroySocket( PAFD_FCB FCB ) {
 				FCB->ListenIrp.InFlightRequest,
 				FCB->ReceiveIrp.InFlightRequest,
 				FCB->SendIrp.InFlightRequest));
-	SocketStateUnlock( FCB );
-	return;
+        ReturnEarly = TRUE;
     }
 
     /* After PoolReeval, this FCB should not be involved in any outstanding
@@ -181,6 +191,8 @@ VOID DestroySocket( PAFD_FCB FCB ) {
     }
 
     SocketStateUnlock( FCB );
+
+    if( ReturnEarly ) return;
     
     if( FCB->Recv.Window ) 
 	ExFreePool( FCB->Recv.Window );
@@ -213,6 +225,8 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     FCB->PollState |= AFD_EVENT_CLOSE;
     PollReeval( FCB->DeviceExt, FileObject );
+    KillSelectsForFCB( FCB->DeviceExt, FileObject, FALSE );
+
     if( FCB->EventSelect ) ObDereferenceObject( FCB->EventSelect );
 
     FileObject->FsContext = NULL;
@@ -367,7 +381,10 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	    return AfdDisconnect( DeviceObject, Irp, IrpSp );
 
 	case IOCTL_AFD_GET_SOCK_NAME:
-	    return AfdGetSockName( DeviceObject, Irp, IrpSp );
+	    return AfdGetSockOrPeerName( DeviceObject, Irp, IrpSp, TRUE );
+
+        case IOCTL_AFD_GET_PEER_NAME:
+            return AfdGetSockOrPeerName( DeviceObject, Irp, IrpSp, FALSE );
 
 	case IOCTL_AFD_GET_TDI_HANDLES:
 	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_GET_TDI_HANDLES\n"));

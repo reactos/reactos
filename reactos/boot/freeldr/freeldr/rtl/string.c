@@ -19,7 +19,7 @@
 
 #include <rtl.h>
 
-int strlen(char *str)
+size_t strlen(const char *str)
 {
 	int	len;
 
@@ -28,7 +28,7 @@ int strlen(char *str)
 	return len;
 }
 
-char *strcpy(char *dest, char *src)
+char *strcpy(char *dest, const char *src)
 {
 	char	*ret = dest;
 
@@ -39,7 +39,7 @@ char *strcpy(char *dest, char *src)
 	return ret;
 }
 
-char *strncpy(char *dest, char *src, size_t count)
+char *strncpy(char *dest, const char *src, size_t count)
 {
 	char	*ret = dest;
 
@@ -52,7 +52,7 @@ char *strncpy(char *dest, char *src, size_t count)
 	return ret;
 }
 
-char *strcat(char *dest, char *src)
+char *strcat(char *dest, const char *src)
 {
 	char	*ret = dest;
 

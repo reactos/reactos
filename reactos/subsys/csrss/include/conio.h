@@ -139,6 +139,7 @@ CSR_API(CsrGetConsoleCodePage);
 CSR_API(CsrSetConsoleCodePage);
 CSR_API(CsrGetConsoleOutputCodePage);
 CSR_API(CsrSetConsoleOutputCodePage);
+CSR_API(CsrGetProcessList);
 
 #define ConioInitScreenBuffer(Console, Buff) (Console)->Vtbl->InitScreenBuffer((Console), (Buff))
 #define ConioDrawRegion(Console, Region) (Console)->Vtbl->DrawRegion((Console), (Region))

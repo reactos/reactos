@@ -1,30 +1,10 @@
-/*
- *  ReactOS kernel
- *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
 /* $Id$
  *
- * COPYRIGHT:   See COPYING in the top directory
- * PROJECT:     ReactOS kernel 
- * FILE:        ntoskrnl/mm/mm.c
- * PURPOSE:     kernel memory managment functions
- * PROGRAMMER:  David Welch (welch@cwcom.net)
- * UPDATE HISTORY:
- *              Created 9/4/98
+ * COPYRIGHT:       See COPYING in the top directory
+ * PROJECT:         ReactOS kernel 
+ * FILE:            ntoskrnl/mm/mm.c
+ * PURPOSE:         Kernel memory managment functions
+ * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
 /* INCLUDES *****************************************************************/
@@ -55,7 +35,7 @@ MmCopyToCaller(PVOID Dest, const VOID *Src, ULONG NumberOfBytes)
 
   if (ExGetPreviousMode() == UserMode)
     {
-      if ((ULONG)Dest >= KERNEL_BASE)
+      if ((ULONG_PTR)Dest >= KERNEL_BASE)
    {
      return(STATUS_ACCESS_VIOLATION);
    }
@@ -76,7 +56,7 @@ MmCopyFromCaller(PVOID Dest, const VOID *Src, ULONG NumberOfBytes)
 
   if (ExGetPreviousMode() == UserMode)
     {
-      if ((ULONG)Src >= KERNEL_BASE)
+      if ((ULONG_PTR)Src >= KERNEL_BASE)
    {
      return(STATUS_ACCESS_VIOLATION);
    }
@@ -177,7 +157,7 @@ BOOLEAN STDCALL MmIsAddressValid(PVOID VirtualAddress)
    MEMORY_AREA* MemoryArea;
    PMADDRESS_SPACE AddressSpace;
 
-   if ((ULONG)VirtualAddress >= KERNEL_BASE)
+   if ((ULONG_PTR)VirtualAddress >= KERNEL_BASE)
    {
       AddressSpace = MmGetKernelAddressSpace();
    }
@@ -200,7 +180,7 @@ BOOLEAN STDCALL MmIsAddressValid(PVOID VirtualAddress)
 }
 
 NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
-                       ULONG Address, /* FiN TODO: Should be ULONG_PTR! */
+                       ULONG_PTR Address,
                        BOOLEAN FromMdl)
 {
    PMADDRESS_SPACE AddressSpace;
@@ -322,7 +302,7 @@ NTSTATUS MmCommitPagedPoolAddress(PVOID Address, BOOLEAN Locked)
 }
 
 NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
-                           ULONG Address, /* FiN TODO: Should be ULONG_PTR! */
+                           ULONG_PTR Address,
                            BOOLEAN FromMdl)
 {
    PMADDRESS_SPACE AddressSpace;

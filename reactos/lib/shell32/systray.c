@@ -162,7 +162,7 @@ BOOL SYSTRAY_RegisterClass(void)
   WNDCLASSA  wc;
 
   wc.style         = CS_SAVEBITS|CS_DBLCLKS;
-  wc.lpfnWndProc   = (WNDPROC)SYSTRAY_WndProc;
+  wc.lpfnWndProc   = SYSTRAY_WndProc;
   wc.cbClsExtra    = 0;
   wc.cbWndExtra    = 0;
   wc.hInstance     = 0;

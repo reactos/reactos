@@ -36,7 +36,6 @@
 
 #include "undocshell.h"
 #include "wine/winbase16.h"
-#include "shell32_main.h"
 
 #include "wine/debug.h"
 

@@ -30,31 +30,31 @@
 
 typedef struct
 {
-	U8	Signature[4];				// (ret) signature ("VESA")
+	UCHAR	Signature[4];				// (ret) signature ("VESA")
 									// (call) VESA 2.0 request signature ("VBE2"), required to receive
 									// version 2.0 info
-	U16	VesaVersion;				// VESA version number (one-digit minor version -- 0102h = v1.2)
-	U32 OemNamePtr;					// pointer to OEM name
+	USHORT	VesaVersion;				// VESA version number (one-digit minor version -- 0102h = v1.2)
+	ULONG OemNamePtr;					// pointer to OEM name
 									// "761295520" for ATI
-	U32	Capabilities;				// capabilities flags (see #00078)
-	U32	SupportedModeListPtr;		// pointer to list of supported VESA and OEM video modes
+	ULONG	Capabilities;				// capabilities flags (see #00078)
+	ULONG	SupportedModeListPtr;		// pointer to list of supported VESA and OEM video modes
 									// (list of words terminated with FFFFh)
-	U16	TotalVideoMemory;			// total amount of video memory in 64K blocks
+	USHORT	TotalVideoMemory;			// total amount of video memory in 64K blocks
 
 	// ---VBE v1.x ---
-	//U8	Reserved[236];
+	//UCHAR	Reserved[236];
 
 	// ---VBE v2.0 ---
-	U16	OemSoftwareVersion;			// OEM software version (BCD, high byte = major, low byte = minor)
-	U32	VendorNamePtr;				// pointer to vendor name
-	U32	ProductNamePtr;				// pointer to product name
-	U32	ProductRevisionStringPtr;	// pointer to product revision string
-	U16	VBE_AF_Version;				// (if capabilities bit 3 set) VBE/AF version (BCD)
+	USHORT	OemSoftwareVersion;			// OEM software version (BCD, high byte = major, low byte = minor)
+	ULONG	VendorNamePtr;				// pointer to vendor name
+	ULONG	ProductNamePtr;				// pointer to product name
+	ULONG	ProductRevisionStringPtr;	// pointer to product revision string
+	USHORT	VBE_AF_Version;				// (if capabilities bit 3 set) VBE/AF version (BCD)
 									// 0100h for v1.0P
-	U32	AcceleratedModeListPtr;		// (if capabilities bit 3 set) pointer to list of supported
+	ULONG	AcceleratedModeListPtr;		// (if capabilities bit 3 set) pointer to list of supported
 									// accelerated video modes (list of words terminated with FFFFh)
-	U8	Reserved[216];				// reserved for VBE implementation
-	U8	ScratchPad[256];			// OEM scratchpad (for OEM strings, etc.)
+	UCHAR	Reserved[216];				// reserved for VBE implementation
+	UCHAR	ScratchPad[256];			// OEM scratchpad (for OEM strings, etc.)
 } PACKED VESA_SVGA_INFO, *PVESA_SVGA_INFO;
 
 // Bitfields for VESA capabilities:
@@ -106,11 +106,11 @@ VOID BiosSetVideoFont8x16(VOID)
 	Int386(0x10, &Regs, &Regs);
 }
 
-VOID VideoSetTextCursorPosition(U32 X, U32 Y)
+VOID VideoSetTextCursorPosition(ULONG X, ULONG Y)
 {
 }
 
-U32 VideoGetTextCursorPositionX(VOID)
+ULONG VideoGetTextCursorPositionX(VOID)
 {
 	REGS	Regs;
 
@@ -135,7 +135,7 @@ U32 VideoGetTextCursorPositionX(VOID)
 	return Regs.b.dl;
 }
 
-U32 VideoGetTextCursorPositionY(VOID)
+ULONG VideoGetTextCursorPositionY(VOID)
 {
 	REGS	Regs;
 
@@ -160,13 +160,13 @@ U32 VideoGetTextCursorPositionY(VOID)
 	return Regs.b.dh;
 }
 
-U16 BiosIsVesaSupported(VOID)
+USHORT BiosIsVesaSupported(VOID)
 {
 	REGS			Regs;
 	PVESA_SVGA_INFO	SvgaInfo = (PVESA_SVGA_INFO)BIOSCALLBUFFER;
 #ifdef DEBUG
-	//U16*			VideoModes;
-	//U16			Index;
+	//USHORT*			VideoModes;
+	//USHORT			Index;
 #endif // defined DEBUG
 
 	DbgPrint((DPRINT_UI, "BiosIsVesaSupported()\n"));
@@ -227,7 +227,7 @@ U16 BiosIsVesaSupported(VOID)
 	DbgPrint((DPRINT_UI, "SvgaInfo->VBE/AF Version = 0x%x (BCD WORD)\n", SvgaInfo->VBE_AF_Version));
 
 	//DbgPrint((DPRINT_UI, "\nSupported VESA and OEM video modes:\n"));
-	//VideoModes = (U16*)SvgaInfo->SupportedModeListPtr;
+	//VideoModes = (USHORT*)SvgaInfo->SupportedModeListPtr;
 	//for (Index=0; VideoModes[Index]!=0xFFFF; Index++)
 	//{
 	//	DbgPrint((DPRINT_UI, "Mode %d: 0x%x\n", Index, VideoModes[Index]));
@@ -236,7 +236,7 @@ U16 BiosIsVesaSupported(VOID)
 	//if (SvgaInfo->VesaVersion >= 0x0200)
 	//{
 	//	DbgPrint((DPRINT_UI, "\nSupported accelerated video modes (VESA v2.0):\n"));
-	//	VideoModes = (U16*)SvgaInfo->AcceleratedModeListPtr;
+	//	VideoModes = (USHORT*)SvgaInfo->AcceleratedModeListPtr;
 	//	for (Index=0; VideoModes[Index]!=0xFFFF; Index++)
 	//	{
 	//		DbgPrint((DPRINT_UI, "Mode %d: 0x%x\n", Index, VideoModes[Index]));

@@ -255,24 +255,6 @@ SetServiceW(DWORD NameSpace,
 /*
  * @unimplemented
  */
-BOOL
-STDCALL
-TransmitFile(SOCKET Socket,
-             HANDLE File,
-             DWORD NumberOfBytesToWrite,
-             DWORD NumberOfBytesPerSend,
-             LPOVERLAPPED Overlapped,
-             LPTRANSMIT_FILE_BUFFERS TransmitBuffers,
-             DWORD Flags)
-{
-  OutputDebugStringW(L"w32sock TransmitFile stub called\n");
-
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
 int
 STDCALL
 WSARecvEx(SOCKET Sock,

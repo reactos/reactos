@@ -36,7 +36,7 @@ typedef struct _CSRSS_PROCESS_DATA
   PCSRSS_CONSOLE Console;
   ULONG HandleTableSize;
   Object_t ** HandleTable;
-  ULONG ProcessId;
+  HANDLE ProcessId;
   ULONG ShutdownLevel;
   ULONG ShutdownFlags;
   HANDLE ConsoleEvent;
@@ -106,9 +106,9 @@ VOID STDCALL CsrInitConsoleSupport(VOID);
 
 /* api/process.c */
 VOID STDCALL CsrInitProcessData(VOID);
-PCSRSS_PROCESS_DATA STDCALL CsrGetProcessData(ULONG ProcessId);
-PCSRSS_PROCESS_DATA STDCALL CsrCreateProcessData(ULONG ProcessId);
-NTSTATUS STDCALL CsrFreeProcessData( ULONG Pid );
+PCSRSS_PROCESS_DATA STDCALL CsrGetProcessData(HANDLE ProcessId);
+PCSRSS_PROCESS_DATA STDCALL CsrCreateProcessData(HANDLE ProcessId);
+NTSTATUS STDCALL CsrFreeProcessData( HANDLE Pid );
 
 /* api/handle.c */
 NTSTATUS FASTCALL CsrRegisterObjectDefinitions(PCSRSS_OBJECT_DEFINITION NewDefinitions);

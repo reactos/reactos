@@ -11,4 +11,4 @@
 #include <napi/teb.h>
 #include <ntos/heap.h>
 #include <ntdll/ldr.h>
-
+#include <pseh.h>

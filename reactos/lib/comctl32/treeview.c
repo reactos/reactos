@@ -31,7 +31,6 @@
  *      TVN_SETDISPINFO, TVN_SINGLEEXPAND
  *
  *   missing styles: TVS_FULLROWSELECT, TVS_INFOTIP, TVS_RTLREADING,
- *      TVS_TRACKSELECT
  *
  *   missing item styles: TVIS_CUT, TVIS_EXPANDPARTIAL
  *
@@ -132,6 +131,8 @@ typedef struct tagTREEVIEW_INFO
   HFONT         hFont;
   HFONT         hDefaultFont;
   HFONT         hBoldFont;
+  HFONT         hUnderlineFont;
+  HCURSOR       hcurHand;
   HWND          hwndToolTip;
 
   HWND          hwndEdit;
@@ -263,10 +264,24 @@ TREEVIEW_CreateBoldFont(HFONT hOrigFont)
     return CreateFontIndirectW(&font);
 }
 
+static HFONT
+TREEVIEW_CreateUnderlineFont(HFONT hOrigFont)
+{
+    LOGFONTW font;
+
+    GetObjectW(hOrigFont, sizeof(font), &font);
+    font.lfUnderline = TRUE;
+    return CreateFontIndirectW(&font);
+}
+
 static inline HFONT
 TREEVIEW_FontForItem(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *item)
 {
-    return (item->state & TVIS_BOLD) ? infoPtr->hBoldFont : infoPtr->hFont;
+    if ((infoPtr->dwStyle & TVS_TRACKSELECT) && (item == infoPtr->hotItem))
+        return infoPtr->hUnderlineFont;
+    if (item->state & TVIS_BOLD)
+        return infoPtr->hBoldFont;
+    return infoPtr->hFont;
 }
 
 /* for trace/debugging purposes only */
@@ -1814,6 +1829,7 @@ TREEVIEW_SetFont(TREEVIEW_INFO *infoPtr, HFONT hFont, BOOL bRedraw)
 
     DeleteObject(infoPtr->hBoldFont);
     infoPtr->hBoldFont = TREEVIEW_CreateBoldFont(infoPtr->hFont);
+    infoPtr->hUnderlineFont = TREEVIEW_CreateUnderlineFont(infoPtr->hFont);
 
     if (!infoPtr->bHeightSet)
 	infoPtr->uItemHeight = TREEVIEW_NaturalHeight(infoPtr);
@@ -2486,7 +2502,9 @@ TREEVIEW_DrawItem(TREEVIEW_INFO *infoPtr, HDC hdc, TREEVIEW_ITEM *wineItem)
 	    }
 	    else
 	    {
-		if (infoPtr->clrText == -1)
+		if ((infoPtr->dwStyle & TVS_TRACKSELECT) && (wineItem == infoPtr->hotItem))
+		    oldTextColor = SetTextColor(hdc, comctl32_color.clrHighlight);
+		else if (infoPtr->clrText == -1)
 		    oldTextColor =
 			SetTextColor(hdc, GetSysColor(COLOR_WINDOWTEXT));
 		else
@@ -3177,7 +3195,7 @@ TREEVIEW_Expand(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *wineItem,
     TREEVIEW_UpdateScrollBars(infoPtr);
 
     /* Scroll up so that as many children as possible are visible.
-     * This looses when expanding causes an HScroll bar to appear, but we
+     * This fails when expanding causes an HScroll bar to appear, but we
      * don't know that yet, so the last item is obscured. */
     if (wineItem->firstChild != NULL)
     {
@@ -4112,9 +4130,6 @@ TREEVIEW_DoSelectItem(TREEVIEW_INFO *infoPtr, INT action, HTREEITEM newSelect,
     case TVGN_CARET:
 	prevSelect = infoPtr->selectedItem;
 
-	if (prevSelect == newSelect)
-	    return FALSE;
-
 	if (TREEVIEW_SendTreeviewNotify(infoPtr,
 					TVN_SELCHANGINGW,
 					cause,
@@ -4701,7 +4716,6 @@ TREEVIEW_Create(HWND hwnd, const CREATESTRUCTW *lpcs)
 
     infoPtr->hwnd = hwnd;
     infoPtr->dwStyle = GetWindowLongW(hwnd, GWL_STYLE);
-    infoPtr->uInternalStatus = 0;
     infoPtr->Timer = 0;
     infoPtr->uNumItems = 0;
     infoPtr->cdmode = 0;
@@ -4713,6 +4727,7 @@ TREEVIEW_Create(HWND hwnd, const CREATESTRUCTW *lpcs)
     /* No scroll bars yet. */
     infoPtr->clientWidth = rcClient.right;
     infoPtr->clientHeight = rcClient.bottom;
+    infoPtr->uInternalStatus = 0;
 
     infoPtr->treeWidth = 0;
     infoPtr->treeHeight = 0;
@@ -4754,6 +4769,8 @@ TREEVIEW_Create(HWND hwnd, const CREATESTRUCTW *lpcs)
     SystemParametersInfoW(SPI_GETICONTITLELOGFONT, sizeof(lf), &lf, 0);
     infoPtr->hFont = infoPtr->hDefaultFont = CreateFontIndirectW(&lf);
     infoPtr->hBoldFont = TREEVIEW_CreateBoldFont(infoPtr->hFont);
+    infoPtr->hUnderlineFont = TREEVIEW_CreateUnderlineFont(infoPtr->hFont);
+    infoPtr->hcurHand = LoadCursorW(NULL, (LPWSTR)IDC_HAND);
 
     infoPtr->uItemHeight = TREEVIEW_NaturalHeight(infoPtr);
 
@@ -4821,6 +4838,11 @@ TREEVIEW_Create(HWND hwnd, const CREATESTRUCTW *lpcs)
 	infoPtr->stateImageWidth = 16;
 	infoPtr->stateImageHeight = 16;
     }
+
+    /* Make sure actual scrollbar state is consistent with uInternalStatus */
+    ShowScrollBar(hwnd, SB_VERT, FALSE);
+    ShowScrollBar(hwnd, SB_HORZ, FALSE);
+
     return 0;
 }
 
@@ -4844,6 +4866,7 @@ TREEVIEW_Destroy(TREEVIEW_INFO *infoPtr)
 
     DeleteObject(infoPtr->hDefaultFont);
     DeleteObject(infoPtr->hBoldFont);
+    DeleteObject(infoPtr->hUnderlineFont);
     Free(infoPtr);
 
     return 0;
@@ -5012,6 +5035,63 @@ TREEVIEW_KeyDown(TREEVIEW_INFO *infoPtr, WPARAM wParam)
 }
 
 static LRESULT
+TREEVIEW_MouseLeave (TREEVIEW_INFO * infoPtr)
+{
+    if (infoPtr->hotItem)
+    {
+        /* remove hot effect from item */
+        InvalidateRect(infoPtr->hwnd, &infoPtr->hotItem->rect, TRUE);
+        infoPtr->hotItem = NULL;
+    }
+    return 0;
+}
+
+static LRESULT
+TREEVIEW_MouseMove (TREEVIEW_INFO * infoPtr, WPARAM wParam, LPARAM lParam)
+{
+    POINT pt;
+    TRACKMOUSEEVENT trackinfo;
+    TREEVIEW_ITEM * item;
+
+    /* fill in the TRACKMOUSEEVENT struct */
+    trackinfo.cbSize = sizeof(TRACKMOUSEEVENT);
+    trackinfo.dwFlags = TME_QUERY;
+    trackinfo.hwndTrack = infoPtr->hwnd;
+    trackinfo.dwHoverTime = HOVER_DEFAULT;
+
+    /* call _TrackMouseEvent to see if we are currently tracking for this hwnd */
+    _TrackMouseEvent(&trackinfo);
+
+    /* Make sure tracking is enabled so we receive a WM_MOUSELEAVE message */
+    if(!(trackinfo.dwFlags & TME_LEAVE))
+    {
+        trackinfo.dwFlags = TME_LEAVE; /* notify upon leaving */
+
+        /* call TRACKMOUSEEVENT so we receive a WM_MOUSELEAVE message */
+        /* and can properly deactivate the hot item */
+        _TrackMouseEvent(&trackinfo);
+    }
+
+    pt.x = (INT)LOWORD(lParam);
+    pt.y = (INT)HIWORD(lParam);
+
+    item = TREEVIEW_HitTestPoint(infoPtr, pt);
+
+    if (item != infoPtr->hotItem)
+    {
+        /* redraw old hot item */
+        if (infoPtr->hotItem)
+            InvalidateRect(infoPtr->hwnd, &infoPtr->hotItem->rect, TRUE);
+        infoPtr->hotItem = item;
+        /* redraw new hot item */
+        if (infoPtr->hotItem)
+            InvalidateRect(infoPtr->hwnd, &infoPtr->hotItem->rect, TRUE);
+    }
+
+    return 0;
+}
+
+static LRESULT
 TREEVIEW_Notify(TREEVIEW_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 {
     LPNMHDR lpnmh = (LPNMHDR)lParam;
@@ -5105,6 +5185,28 @@ TREEVIEW_StyleChanged(TREEVIEW_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
     TREEVIEW_Invalidate(infoPtr, NULL);
 
     return 0;
+}
+
+static LRESULT
+TREEVIEW_SetCursor(TREEVIEW_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
+{
+    POINT pt;
+    TREEVIEW_ITEM * item;
+
+    GetCursorPos(&pt);
+    ScreenToClient(infoPtr->hwnd, &pt);
+
+    item = TREEVIEW_HitTestPoint(infoPtr, pt);
+
+    /* FIXME: send NM_SETCURSOR */
+
+    if (item && (infoPtr->dwStyle & TVS_TRACKSELECT))
+    {
+        SetCursor(infoPtr->hcurHand);
+        return 0;
+    }
+    else
+        return DefWindowProcW(infoPtr->hwnd, WM_SETCURSOR, wParam, lParam);
 }
 
 static LRESULT
@@ -5329,7 +5431,11 @@ TREEVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	/* WM_MBUTTONDOWN */
 
-	/* WM_MOUSEMOVE */
+    case WM_MOUSELEAVE:
+	return TREEVIEW_MouseLeave(infoPtr);
+
+    case WM_MOUSEMOVE:
+	return TREEVIEW_MouseMove(infoPtr, wParam, lParam);
 
     case WM_NOTIFY:
 	return TREEVIEW_Notify(infoPtr, wParam, lParam);
@@ -5344,6 +5450,9 @@ TREEVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     case WM_RBUTTONDOWN:
 	return TREEVIEW_RButtonDown(infoPtr, lParam);
+
+    case WM_SETCURSOR:
+	return TREEVIEW_SetCursor(infoPtr, wParam, lParam);
 
     case WM_SETFOCUS:
 	return TREEVIEW_SetFocus(infoPtr);
@@ -5388,7 +5497,6 @@ TREEVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 def:
 	return DefWindowProcA(hwnd, uMsg, wParam, lParam);
     }
-    return 0;
 }
 
 

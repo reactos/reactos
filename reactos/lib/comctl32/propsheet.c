@@ -3690,6 +3690,4 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     default:
       return FALSE;
   }
-
-  return FALSE;
 }

@@ -39,7 +39,7 @@ extern HANDLE hProcessHeap;
 extern HANDLE hBaseDir;
 extern HMODULE hCurrentModule;
 
-extern CRITICAL_SECTION DllLock;
+extern RTL_CRITICAL_SECTION DllLock;
 
 extern UNICODE_STRING DllDirectory;
 

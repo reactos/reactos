@@ -1,6 +1,29 @@
 /* $Id$ */
 
 #include <ddk/ntifs.h>
+#include <ddk/ntdddisk.h>
+#include <limits.h>
+#include <debug.h>
+
+#define USE_ROS_CC_AND_FS
+
+/* FIXME */
+#ifdef __USE_W32API
+NTSTATUS NTAPI RtlOemStringToUnicodeString(PUNICODE_STRING, CONST STRING *, BOOLEAN);
+NTSTATUS NTAPI RtlDowncaseUnicodeString(PUNICODE_STRING, PCUNICODE_STRING, BOOLEAN);
+NTSTATUS NTAPI RtlUnicodeStringToOemString(POEM_STRING, PCUNICODE_STRING, BOOLEAN);
+#undef DeleteFile /* FIXME */
+#endif
+
+#ifdef USE_ROS_CC_AND_FS
+NTSTATUS STDCALL CcRosInitializeFileCache(PFILE_OBJECT, ULONG);
+NTSTATUS STDCALL CcRosReleaseFileCache(PFILE_OBJECT);
+#define FSCTL_ROS_QUERY_LCN_MAPPING CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 63, METHOD_BUFFERED, FILE_ANY_ACCESS)
+typedef struct _ROS_QUERY_LCN_MAPPING { LARGE_INTEGER LcnDiskOffset; } ROS_QUERY_LCN_MAPPING, *PROS_QUERY_LCN_MAPPING;
+#endif
+
+#define KEBUGCHECK(a) DbgPrint("KeBugCheck at %s:%i\n",__FILE__,__LINE__), KeBugCheck(a)
+#define KEBUGCHECKEX(a,b,c,d,e) DbgPrint("KeBugCheckEx at %s:%i\n",__FILE__,__LINE__), KeBugCheckEx(a,b,c,d,e)
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 #define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
@@ -75,8 +98,10 @@ struct _FsInfoSector
 
 typedef struct _BootSector BootSector;
 
-#define VFAT_CASE_LOWER_BASE	8			// base is lower case
-#define VFAT_CASE_LOWER_EXT	16			// extension is lower case
+#define VFAT_CASE_LOWER_BASE	8  		// base is lower case
+#define VFAT_CASE_LOWER_EXT 	16 		// extension is lower case
+
+#define LONGNAME_MAX_LENGTH 	256		// max length for a long filename
 
 #define ENTRY_DELETED(DeviceExt, DirEntry) ((DeviceExt)->Flags & VCB_IS_FATX ? FATX_ENTRY_DELETED(&((DirEntry)->FatX)) : FAT_ENTRY_DELETED(&((DirEntry)->Fat)))
 #define ENTRY_VOLUME(DeviceExt, DirEntry)  ((DeviceExt)->Flags & VCB_IS_FATX ? FATX_ENTRY_VOLUME(&((DirEntry)->FatX)) : FAT_ENTRY_VOLUME(&((DirEntry)->Fat)))
@@ -179,7 +204,7 @@ typedef struct
   ULONG NumberOfClusters;
   ULONG FatType;
   ULONG Sectors;
-  BOOL FixedMedia;
+  BOOLEAN FixedMedia;
 } FATINFO, *PFATINFO;
 
 struct _VFATFCB;
@@ -244,6 +269,8 @@ typedef struct
   NPAGED_LOOKASIDE_LIST FcbLookasideList;
   NPAGED_LOOKASIDE_LIST CcbLookasideList;
   NPAGED_LOOKASIDE_LIST IrpContextLookasideList;
+  FAST_IO_DISPATCH FastIoDispatch;
+  CACHE_MANAGER_CALLBACKS CacheMgrCallbacks;
 } VFAT_GLOBAL_DATA, *PVFAT_GLOBAL_DATA;
 
 extern PVFAT_GLOBAL_DATA VfatGlobalData;
@@ -284,7 +311,7 @@ typedef struct _VFATFCB
   UNICODE_STRING PathNameU;
 
   /* buffer for PathNameU */
-  WCHAR PathNameBuffer[MAX_PATH];
+  PWCHAR PathNameBuffer;
 
   /* buffer for ShortNameU */
   WCHAR ShortNameBuffer[13];
@@ -356,17 +383,17 @@ typedef struct _VFATCCB
 
 typedef struct __DOSTIME
 {
-   WORD	Second:5;
-   WORD	Minute:6;
-   WORD Hour:5;
+   USHORT Second:5;
+   USHORT Minute:6;
+   USHORT Hour:5;
 }
 DOSTIME, *PDOSTIME;
 
 typedef struct __DOSDATE
 {
-   WORD	Day:5;
-   WORD	Month:4;
-   WORD Year:5;
+   USHORT Day:5;
+   USHORT Month:4;
+   USHORT Year:5;
 }
 DOSDATE, *PDOSDATE;
 
@@ -441,15 +468,15 @@ NTSTATUS VfatBlockDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS VfatDirectoryControl (PVFAT_IRP_CONTEXT);
 
-BOOL FsdDosDateTimeToSystemTime (PDEVICE_EXTENSION DeviceExt,
-                                 WORD wDosDate,
-                                 WORD wDosTime,
-                                 PLARGE_INTEGER SystemTime);
+BOOLEAN FsdDosDateTimeToSystemTime (PDEVICE_EXTENSION DeviceExt,
+                                    USHORT DosDate,
+                                    USHORT DosTime,
+                                    PLARGE_INTEGER SystemTime);
 
-BOOL FsdSystemTimeToDosDateTime (PDEVICE_EXTENSION DeviceExt,
-                                 PLARGE_INTEGER SystemTime,
-                                 WORD *pwDosDate,
-                                 WORD *pwDosTime);
+BOOLEAN FsdSystemTimeToDosDateTime (PDEVICE_EXTENSION DeviceExt,
+                                    PLARGE_INTEGER SystemTime,
+                                    USHORT *pDosDate,
+                                    USHORT *pDosTime);
 
 /*  --------------------------------------------------------  create.c  */
 
@@ -481,6 +508,25 @@ NTSTATUS VfatCloseFile(PDEVICE_EXTENSION DeviceExt,
 /*  -------------------------------------------------------  cleanup.c  */
 
 NTSTATUS VfatCleanup (PVFAT_IRP_CONTEXT IrpContext);
+
+/*  ---------------------------------------------------------  fastio.c  */
+
+VOID
+VfatInitFastIoRoutines(PFAST_IO_DISPATCH FastIoDispatch);
+
+BOOLEAN NTAPI
+VfatAcquireForLazyWrite(IN PVOID Context,
+                        IN BOOLEAN Wait);
+
+VOID NTAPI
+VfatReleaseFromLazyWrite(IN PVOID Context);
+
+BOOLEAN NTAPI
+VfatAcquireForReadAhead(IN PVOID Context,
+                        IN BOOLEAN Wait);
+
+VOID NTAPI
+VfatReleaseFromReadAhead(IN PVOID Context);
 
 /*  ---------------------------------------------------------  fsctl.c  */
 
@@ -602,7 +648,7 @@ WriteCluster(PDEVICE_EXTENSION DeviceExt,
 ULONG  vfatDirEntryGetFirstCluster (PDEVICE_EXTENSION  pDeviceExt,
                                     PDIR_ENTRY  pDirEntry);
 
-BOOL VfatIsDirectoryEmpty(PVFATFCB Fcb);
+BOOLEAN VfatIsDirectoryEmpty(PVFATFCB Fcb);
 
 NTSTATUS FATGetNextDirEntry(PVOID * pContext,
 			     PVOID * pPage,
@@ -641,9 +687,9 @@ PVFATFCB vfatMakeRootFCB (PDEVICE_EXTENSION  pVCB);
 
 PVFATFCB vfatOpenRootFCB (PDEVICE_EXTENSION  pVCB);
 
-BOOL vfatFCBIsDirectory (PVFATFCB FCB);
+BOOLEAN vfatFCBIsDirectory (PVFATFCB FCB);
 
-BOOL vfatFCBIsRoot(PVFATFCB FCB);
+BOOLEAN vfatFCBIsRoot(PVFATFCB FCB);
 
 NTSTATUS vfatAttachFCBToFileObject (PDEVICE_EXTENSION  vcb,
                                     PVFATFCB  fcb,

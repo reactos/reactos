@@ -29,115 +29,28 @@
 	 * This boots the kernel
 	 */
 	.code32
-EXTERN(_boot_reactos)
-	call	_MachVideoPrepareForReactOS
+    .globl _PageDirectoryStart
+    
+    .globl _startup_pagedirectory
+    .globl _lowmem_pagetable
+    .globl _kernel_pagetable
+    .globl _hyperspace_pagetable
+    .globl _apic_pagetable
+    .globl _kpcr_pagetable
 
-	call	_multi_boot
-
-	// Should never get here
-	cli
-bootloop:
-	hlt
-	jmp	bootloop
-
-
-	/*
-	 * After you have setup the _mb_header and _mb_info structures
-	 * then call this routine to transfer control to the kernel.
-	 */
-EXTERN(_multi_boot)
-
-	cli
-
-	/*
-	 * Load the absolute address of the multiboot information structure
-	 */
-	movl	$_mb_info,%ebx
-
-	/*
-	 * Initalize eflags
-	 */
-	pushl	$0
-	popfl	
-
-	/*
-	 * Load the multiboot magic value into eax
-	 */	
-	movl	$0x2badb002,%eax
-
-	/*
-	 * Jump to start of 32 bit code at 0xc0000000 + 0x1000
-	 */
-
-	pushl	$KERNEL_CS
-	pushl	_mb_entry_addr
-	lretl
-
-
-EXTERN(_mb_header)
-_mb_magic:
-	.long	0		// unsigned long magic;
-_mb_flags:
-  	.long	0		// unsigned long flags;
-_mb_checksum:
-  	.long	0		// unsigned long checksum;
-_mb_header_addr:
-  	.long	0		// unsigned long header_addr;
-_mb_load_addr:
-  	.long	0		// unsigned long load_addr;
-_mb_load_end_addr:
-  	.long	0		// unsigned long load_end_addr;
-_mb_bss_end_addr:
-  	.long	0		// unsigned long bss_end_addr;
-_mb_entry_addr:
-  	.long	0		// unsigned long entry_addr;
+    .globl _startup_pagedirectorytable_pae
+    .globl _startup_pagedirectory_pae
+    .globl _lowmem_pagetable_pae
+    .globl _kernel_pagetable_pae
+    .globl _hyperspace_pagetable_pae
+    .globl _apic_pagetable_pae
+    .globl _kpcr_pagetable_pae
+    
+    .globl _PageDirectoryEnd
 
 	//
 	// Boot information structure
 	//
-
-EXTERN(_mb_info)
-_multiboot_flags:
-	.long	0
-_multiboot_mem_lower:
-	.long	0
-_multiboot_mem_upper:
-	.long	0
-_multiboot_boot_device:
-	.long	0
-_multiboot_cmdline:	
-	.long	0
-_multiboot_mods_count:
-	.long	0
-_multiboot_mods_addr:
-	.long	0
-_multiboot_syms:
-	.rept	12
-	.byte	0
-	.endr
-_multiboot_mmap_length:
-	.long	0
-_multiboot_mmap_addr:
-	.long	0
-_multiboot_drives_count:
-	.long	0
-_multiboot_drives_addr:
-	.long	0
-_multiboot_config_table:
-	.long	0
-_multiboot_boot_loader_name:
-	.long	0
-_multiboot_apm_table:
-	.long	0
-
-EXTERN(_multiboot_modules)
-	.rept	(64 * /*multiboot_module_size*/ 16)
-	.byte	0
-	.endr
-EXTERN(_multiboot_module_strings)
-	.rept	(64*256)
-	.byte	0
-	.endr
 
 EXTERN(_multiboot_memory_map_descriptor_size)
 	.long	0
@@ -147,7 +60,44 @@ EXTERN(_multiboot_memory_map)
 	.byte	0
 	.endr
 
-EXTERN(_multiboot_kernel_cmdline)
-	.rept	255
-	.byte	0
-	.endr
+.bss
+_PageDirectoryStart:
+_startup_pagedirectory:
+	.fill 4096, 1, 0
+
+_lowmem_pagetable:
+	.fill 4096, 1, 0
+
+_kernel_pagetable:
+	.fill 2*4096, 1, 0
+
+_hyperspace_pagetable:
+	.fill 4096, 1, 0
+	
+_apic_pagetable:
+	.fill 4096, 1, 0
+
+_kpcr_pagetable:
+	.fill 4096, 1, 0   
+
+_startup_pagedirectory_pae:
+	.fill 4 * 4096, 1, 0
+
+_lowmem_pagetable_pae:
+	.fill 2 * 4096, 1, 0
+
+_kernel_pagetable_pae:
+	.fill 3*4096, 1, 0
+
+_hyperspace_pagetable_pae:
+	.fill 2*4096, 1, 0
+	
+_apic_pagetable_pae:
+	.fill 2*4096, 1, 0
+
+_kpcr_pagetable_pae:
+	.fill 4*4096, 1, 0   
+	
+_startup_pagedirectorytable_pae:
+	.fill 4096, 1, 0	
+_PageDirectoryEnd:

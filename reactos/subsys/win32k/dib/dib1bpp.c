@@ -349,8 +349,8 @@ DIB_1BPP_BitBlt(PBLTINFO BltInfo)
    ULONG RoundedRight;
 /*   BYTE NoBits;*/
 
-   UsesSource = ROP_USES_SOURCE(BltInfo->Rop4);
-   UsesPattern = ROP_USES_PATTERN(BltInfo->Rop4);
+   UsesSource = ROP4_USES_SOURCE(BltInfo->Rop4);
+   UsesPattern = ROP4_USES_PATTERN(BltInfo->Rop4);
 
    RoundedRight = BltInfo->DestRect.right - 
                   ((BltInfo->DestRect.right - BltInfo->DestRect.left) & 31);

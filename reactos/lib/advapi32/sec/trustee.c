@@ -37,6 +37,96 @@ BuildImpersonateTrusteeW(PTRUSTEE_W pTrustee,
 
 
 /******************************************************************************
+ * BuildExplicitAccessWithNameA [ADVAPI32.@]
+ */
+VOID WINAPI
+BuildExplicitAccessWithNameA(PEXPLICIT_ACCESSA pExplicitAccess,
+                             LPSTR pTrusteeName,
+                             DWORD AccessPermissions,
+                             ACCESS_MODE AccessMode,
+                             DWORD Inheritance)
+{
+    pExplicitAccess->grfAccessPermissions = AccessPermissions;
+    pExplicitAccess->grfAccessMode = AccessMode;
+    pExplicitAccess->grfInheritance = Inheritance;
+
+    pExplicitAccess->Trustee.pMultipleTrustee = NULL;
+    pExplicitAccess->Trustee.MultipleTrusteeOperation = NO_MULTIPLE_TRUSTEE;
+    pExplicitAccess->Trustee.TrusteeForm = TRUSTEE_IS_NAME;
+    pExplicitAccess->Trustee.TrusteeType = TRUSTEE_IS_UNKNOWN;
+    pExplicitAccess->Trustee.ptstrName = pTrusteeName;
+}
+
+
+/******************************************************************************
+ * BuildExplicitAccessWithNameW [ADVAPI32.@]
+ */
+VOID WINAPI
+BuildExplicitAccessWithNameW(PEXPLICIT_ACCESSW pExplicitAccess,
+                             LPWSTR pTrusteeName,
+                             DWORD AccessPermissions,
+                             ACCESS_MODE AccessMode,
+                             DWORD Inheritance)
+{
+    pExplicitAccess->grfAccessPermissions = AccessPermissions;
+    pExplicitAccess->grfAccessMode = AccessMode;
+    pExplicitAccess->grfInheritance = Inheritance;
+
+    pExplicitAccess->Trustee.pMultipleTrustee = NULL;
+    pExplicitAccess->Trustee.MultipleTrusteeOperation = NO_MULTIPLE_TRUSTEE;
+    pExplicitAccess->Trustee.TrusteeForm = TRUSTEE_IS_NAME;
+    pExplicitAccess->Trustee.TrusteeType = TRUSTEE_IS_UNKNOWN;
+    pExplicitAccess->Trustee.ptstrName = pTrusteeName;
+}
+
+
+/******************************************************************************
+ * BuildImpersonateExplicitAccessWithNameA [ADVAPI32.@]
+ */
+VOID WINAPI
+BuildImpersonateExplicitAccessWithNameA(PEXPLICIT_ACCESS_A pExplicitAccess,
+                                        LPSTR pTrusteeName,
+                                        PTRUSTEE_A pTrustee,
+                                        DWORD AccessPermissions,
+                                        ACCESS_MODE AccessMode,
+                                        DWORD Inheritance)
+{
+    pExplicitAccess->grfAccessPermissions = AccessPermissions;
+    pExplicitAccess->grfAccessMode = AccessMode;
+    pExplicitAccess->grfInheritance = Inheritance;
+
+    pExplicitAccess->Trustee.pMultipleTrustee = pTrustee;
+    pExplicitAccess->Trustee.MultipleTrusteeOperation = TRUSTEE_IS_IMPERSONATE;
+    pExplicitAccess->Trustee.TrusteeForm = TRUSTEE_IS_NAME;
+    pExplicitAccess->Trustee.TrusteeType = TRUSTEE_IS_UNKNOWN;
+    pExplicitAccess->Trustee.ptstrName = pTrusteeName;
+}
+
+
+/******************************************************************************
+ * BuildImpersonateExplicitAccessWithNameW [ADVAPI32.@]
+ */
+VOID WINAPI
+BuildImpersonateExplicitAccessWithNameW(PEXPLICIT_ACCESS_W pExplicitAccess,
+                                        LPWSTR pTrusteeName,
+                                        PTRUSTEE_W pTrustee,
+                                        DWORD AccessPermissions,
+                                        ACCESS_MODE AccessMode,
+                                        DWORD Inheritance)
+{
+    pExplicitAccess->grfAccessPermissions = AccessPermissions;
+    pExplicitAccess->grfAccessMode = AccessMode;
+    pExplicitAccess->grfInheritance = Inheritance;
+
+    pExplicitAccess->Trustee.pMultipleTrustee = pTrustee;
+    pExplicitAccess->Trustee.MultipleTrusteeOperation = TRUSTEE_IS_IMPERSONATE;
+    pExplicitAccess->Trustee.TrusteeForm = TRUSTEE_IS_NAME;
+    pExplicitAccess->Trustee.TrusteeType = TRUSTEE_IS_UNKNOWN;
+    pExplicitAccess->Trustee.ptstrName = pTrusteeName;
+}
+
+
+/******************************************************************************
  * BuildTrusteeWithSidA [ADVAPI32.@]
  */
 VOID WINAPI

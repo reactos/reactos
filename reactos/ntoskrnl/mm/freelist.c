@@ -1,12 +1,12 @@
-/*
- * COPYRIGHT:    See COPYING in the top level directory
- * PROJECT:      ReactOS kernel
- * FILE:         ntoskrnl/mm/freelist.c
- * PURPOSE:      Handle the list of free physical pages
- * PROGRAMMER:   David Welch (welch@cwcom.net)
- * UPDATE HISTORY:
- *               27/05/98: Created
- *               18/08/98: Added a fix from Robert Bergkvist
+/* $Id$
+ *
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/mm/freelist.c
+ * PURPOSE:         Handle the list of free physical pages
+ * 
+ * PROGRAMMERS:     David Welch (welch@cwcom.net)
+ *                  Robert Bergkvist
  */
 
 /* INCLUDES ****************************************************************/
@@ -56,9 +56,10 @@ static LIST_ENTRY FreeZeroedPageListHead;
 static LIST_ENTRY FreeUnzeroedPageListHead;
 static LIST_ENTRY BiosPageListHead;
 
-static HANDLE ZeroPageThreadHandle;
+static PETHREAD ZeroPageThread;
 static CLIENT_ID ZeroPageThreadId;
 static KEVENT ZeroPageThreadEvent;
+static BOOLEAN ZeroPageThreadShouldTerminate = FALSE;
 
 static ULONG UnzeroedPageCount = 0;
 
@@ -284,10 +285,10 @@ MiIsPfnRam(PADDRESS_RANGE BIOSMemoryMap,
          
 
 PVOID INIT_FUNCTION
-MmInitializePageList(PVOID FirstPhysKernelAddress,
-                     PVOID LastPhysKernelAddress,
+MmInitializePageList(ULONG_PTR FirstPhysKernelAddress,
+                     ULONG_PTR LastPhysKernelAddress,
                      ULONG MemorySizeInPages,
-                     ULONG LastKernelAddress,
+                     ULONG_PTR LastKernelAddress,
                      PADDRESS_RANGE BIOSMemoryMap,
                      ULONG AddressRangeCount)
 /*
@@ -331,9 +332,9 @@ MmInitializePageList(PVOID FirstPhysKernelAddress,
    DPRINT("Reserved %d\n", Reserved);
 
    LastKernelAddress = PAGE_ROUND_UP(LastKernelAddress);
-   LastKernelAddress = ((ULONG)LastKernelAddress + (Reserved * PAGE_SIZE));
-   LastPhysKernelAddress = (PVOID)PAGE_ROUND_UP(LastPhysKernelAddress);
-   LastPhysKernelAddress = (char*)LastPhysKernelAddress + (Reserved * PAGE_SIZE);
+   LastKernelAddress = ((ULONG_PTR)LastKernelAddress + (Reserved * PAGE_SIZE));
+   LastPhysKernelAddress = (ULONG_PTR)PAGE_ROUND_UP(LastPhysKernelAddress);
+   LastPhysKernelAddress = (ULONG_PTR)LastPhysKernelAddress + (Reserved * PAGE_SIZE);
 
    MmStats.NrTotalPages = 0;
    MmStats.NrSystemPages = 0;
@@ -349,7 +350,7 @@ MmInitializePageList(PVOID FirstPhysKernelAddress,
    LastPage = MmPageArraySize;
    for (i = 0; i < Reserved; i++)
    {
-      PVOID Address = (char*)(ULONG)MmPageArray + (i * PAGE_SIZE);
+      PVOID Address = (char*)MmPageArray + (i * PAGE_SIZE);
       ULONG j, start, end;
       if (!MmIsPagePresent(NULL, Address))
       {
@@ -380,6 +381,11 @@ MmInitializePageList(PVOID FirstPhysKernelAddress,
             DbgPrint("Unable to create virtual mapping\n");
             KEBUGCHECK(0);
          }
+      }
+      else
+      {
+         /* Setting the page protection is necessary to set the global bit on IA32 */
+         MmSetPageProtect(NULL, Address, PAGE_READWRITE);
       }
       memset(Address, 0, PAGE_SIZE);
       
@@ -415,6 +421,17 @@ MmInitializePageList(PVOID FirstPhysKernelAddress,
                MmPageArray[1].ReferenceCount = 0;
                InsertTailList(&BiosPageListHead,
                               &MmPageArray[1].ListEntry);
+	       MmStats.NrReservedPages++;
+	    }
+        /* Protect the Page Directory. This will be changed in r3 */
+        else if (j >= (KeLoaderBlock.PageDirectoryStart / PAGE_SIZE) && j < (KeLoaderBlock.PageDirectoryEnd / PAGE_SIZE))
+	    {
+               MmPageArray[j].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
+               MmPageArray[j].Flags.Zero = 0;
+               MmPageArray[j].Flags.Consumer = MC_NPPOOL;
+               MmPageArray[j].ReferenceCount = 1;
+               InsertTailList(&BiosPageListHead,
+                              &MmPageArray[j].ListEntry);
 	       MmStats.NrReservedPages++;
 	    }
 	    else if (j >= 0xa0000 / PAGE_SIZE && j < 0x100000 / PAGE_SIZE)
@@ -897,8 +914,156 @@ MmAllocPage(ULONG Consumer, SWAPENTRY SavedSwapEntry)
    return PfnOffset;
 }
 
+LONG
+MmAllocPagesSpecifyRange(ULONG Consumer,
+                         PHYSICAL_ADDRESS LowestAddress,
+                         PHYSICAL_ADDRESS HighestAddress,
+                         ULONG NumberOfPages,
+                         PPFN_TYPE Pages)
+{
+   PPHYSICAL_PAGE PageDescriptor;
+   KIRQL oldIrql;
+   PFN_TYPE LowestPage, HighestPage;
+   PFN_TYPE pfn;
+   ULONG NumberOfPagesFound = 0;
+   ULONG i;
 
-NTSTATUS STDCALL
+   DPRINT("MmAllocPagesSpecifyRange()\n"
+          "    LowestAddress = 0x%08x%08x\n"
+          "    HighestAddress = 0x%08x%08x\n"
+          "    NumberOfPages = %d\n",
+          LowestAddress.u.HighPart, LowestAddress.u.LowPart,
+          HighestAddress.u.HighPart, HighestAddress.u.LowPart,
+          NumberOfPages);
+
+   if (NumberOfPages == 0)
+      return 0;
+
+   LowestPage = LowestAddress.QuadPart / PAGE_SIZE;
+   HighestPage = HighestAddress.QuadPart / PAGE_SIZE;
+   if ((HighestAddress.u.LowPart % PAGE_SIZE) != 0)
+      HighestPage++;
+   
+   if (LowestPage >= MmPageArraySize)
+   {
+      DPRINT1("MmAllocPagesSpecifyRange(): Out of memory\n");
+      return -1;
+   }
+   if (HighestPage > MmPageArraySize)
+      HighestPage = MmPageArraySize;
+
+   KeAcquireSpinLock(&PageListLock, &oldIrql);
+   if (LowestPage == 0 && HighestPage == MmPageArraySize)
+   {
+      PLIST_ENTRY ListEntry;
+      while (NumberOfPagesFound < NumberOfPages)
+      {
+         if (!IsListEmpty(&FreeZeroedPageListHead))
+         {
+            ListEntry = RemoveTailList(&FreeZeroedPageListHead);
+         }
+         else if (!IsListEmpty(&FreeUnzeroedPageListHead))
+         {
+            ListEntry = RemoveTailList(&FreeUnzeroedPageListHead);
+            UnzeroedPageCount--;
+         }
+         else
+         {
+            if (NumberOfPagesFound == 0)
+            {
+               KeReleaseSpinLock(&PageListLock, oldIrql);
+               DPRINT1("MmAllocPagesSpecifyRange(): Out of memory\n");
+               return -1;
+            }
+            else
+            {
+               break;
+            }
+         }
+         PageDescriptor = CONTAINING_RECORD(ListEntry, PHYSICAL_PAGE, ListEntry);
+
+         ASSERT(PageDescriptor->Flags.Type == MM_PHYSICAL_PAGE_FREE);
+         ASSERT(PageDescriptor->MapCount == 0);
+         ASSERT(PageDescriptor->ReferenceCount == 0);
+
+         /* Allocate the page */
+         PageDescriptor->Flags.Type = MM_PHYSICAL_PAGE_USED;
+         PageDescriptor->Flags.Consumer = Consumer;
+         PageDescriptor->ReferenceCount = 1;
+         PageDescriptor->LockCount = 0;
+         PageDescriptor->MapCount = 0;
+         PageDescriptor->SavedSwapEntry = 0; /* FIXME: Do we need swap entries? */
+         InsertTailList(&UsedPageListHeads[Consumer], &PageDescriptor->ListEntry);
+
+         MmStats.NrSystemPages++;
+         MmStats.NrFreePages--;
+
+         /* Remember the page */
+         pfn = PageDescriptor - MmPageArray;
+         Pages[NumberOfPagesFound++] = pfn;
+      }
+   }
+   else
+   {
+      INT LookForZeroedPages;
+      for (LookForZeroedPages = 1; LookForZeroedPages >= 0; LookForZeroedPages--)
+      {
+         for (pfn = LowestPage; pfn < HighestPage; pfn++)
+         {
+            PageDescriptor = MmPageArray + pfn;
+
+            if (PageDescriptor->Flags.Type != MM_PHYSICAL_PAGE_FREE)
+               continue;
+            if (PageDescriptor->Flags.Zero != LookForZeroedPages)
+               continue;
+
+            ASSERT(PageDescriptor->MapCount == 0);
+            ASSERT(PageDescriptor->ReferenceCount == 0);
+
+            /* Allocate the page */
+            PageDescriptor->Flags.Type = MM_PHYSICAL_PAGE_USED;
+            PageDescriptor->Flags.Consumer = Consumer;
+            PageDescriptor->ReferenceCount = 1;
+            PageDescriptor->LockCount = 0;
+            PageDescriptor->MapCount = 0;
+            PageDescriptor->SavedSwapEntry = 0; /* FIXME: Do we need swap entries? */
+            RemoveEntryList(&PageDescriptor->ListEntry);
+            InsertTailList(&UsedPageListHeads[Consumer], &PageDescriptor->ListEntry);
+
+            if (!PageDescriptor->Flags.Zero)
+               UnzeroedPageCount--;
+            MmStats.NrSystemPages++;
+            MmStats.NrFreePages--;
+
+            /* Remember the page */
+            Pages[NumberOfPagesFound++] = pfn;
+            if (NumberOfPagesFound == NumberOfPages)
+               break;
+         }
+         if (NumberOfPagesFound == NumberOfPages)
+            break;
+      }
+   }
+   KeReleaseSpinLock(&PageListLock, oldIrql);
+
+   /* Zero unzero-ed pages */
+   for (i = 0; i < NumberOfPagesFound; i++)
+   {
+      pfn = Pages[i];
+      if (MmPageArray[pfn].Flags.Zero == 0)
+      {
+         MiZeroPage(pfn);
+      }
+      else
+      {
+         MmPageArray[pfn].Flags.Zero = 0;
+      }
+   }
+
+   return NumberOfPagesFound;
+}
+
+VOID STDCALL
 MmZeroPageThreadMain(PVOID Ignored)
 {
    NTSTATUS Status;
@@ -906,7 +1071,6 @@ MmZeroPageThreadMain(PVOID Ignored)
    PLIST_ENTRY ListEntry;
    PPHYSICAL_PAGE PageDescriptor;
    PFN_TYPE Pfn;
-   static PVOID Address = NULL;
    ULONG Count;
 
    while(1)
@@ -920,9 +1084,14 @@ MmZeroPageThreadMain(PVOID Ignored)
       {
          DbgPrint("ZeroPageThread: Wait failed\n");
          KEBUGCHECK(0);
-         return(STATUS_UNSUCCESSFUL);
+         return;
       }
 
+      if (ZeroPageThreadShouldTerminate)
+      {
+         DbgPrint("ZeroPageThread: Terminating\n");
+	 return;
+      }
       Count = 0;
       KeAcquireSpinLock(&PageListLock, &oldIrql);
       while (!IsListEmpty(&FreeUnzeroedPageListHead))
@@ -933,27 +1102,9 @@ MmZeroPageThreadMain(PVOID Ignored)
          /* We set the page to used, because MmCreateVirtualMapping failed with unused pages */
          PageDescriptor->Flags.Type = MM_PHYSICAL_PAGE_USED;
          KeReleaseSpinLock(&PageListLock, oldIrql);
-         Count++;
          Pfn = PageDescriptor - MmPageArray;
-         if (Address == NULL)
-         {
-            Address = ExAllocatePageWithPhysPage(Pfn);
-         }
-         else
-         {
-            Status = MmCreateVirtualMapping(NULL,
-                                            Address,
-                                            PAGE_READWRITE | PAGE_SYSTEM,
-                                            &Pfn,
-                                            1);
-            if (!NT_SUCCESS(Status))
-            {
-               DbgPrint("Unable to create virtual mapping\n");
-               KEBUGCHECK(0);
-            }
-         }
-         memset(Address, 0, PAGE_SIZE);
-         MmDeleteVirtualMapping(NULL, (PVOID)Address, FALSE, NULL, NULL);
+         Status = MiZeroPage(Pfn);
+
          KeAcquireSpinLock(&PageListLock, &oldIrql);
          if (PageDescriptor->MapCount != 0)
          {
@@ -962,7 +1113,17 @@ MmZeroPageThreadMain(PVOID Ignored)
          }
 	 PageDescriptor->Flags.Zero = 1;
          PageDescriptor->Flags.Type = MM_PHYSICAL_PAGE_FREE;
-         InsertHeadList(&FreeZeroedPageListHead, ListEntry);
+         if (NT_SUCCESS(Status))
+         {
+            InsertHeadList(&FreeZeroedPageListHead, ListEntry);
+            Count++;
+         }
+         else
+         {
+            InsertHeadList(&FreeUnzeroedPageListHead, ListEntry);
+            UnzeroedPageCount++;
+         }
+
       }
       DPRINT("Zeroed %d pages.\n", Count);
       KeResetEvent(&ZeroPageThreadEvent);
@@ -973,28 +1134,36 @@ MmZeroPageThreadMain(PVOID Ignored)
 NTSTATUS INIT_FUNCTION
 MmInitZeroPageThread(VOID)
 {
-   KPRIORITY Priority;
    NTSTATUS Status;
-
-   Status = PsCreateSystemThread(&ZeroPageThreadHandle,
+   HANDLE ThreadHandle;
+   
+   ZeroPageThreadShouldTerminate = FALSE;
+   Status = PsCreateSystemThread(&ThreadHandle,
                                  THREAD_ALL_ACCESS,
                                  NULL,
                                  NULL,
                                  &ZeroPageThreadId,
-                                 (PKSTART_ROUTINE) MmZeroPageThreadMain,
+                                 MmZeroPageThreadMain,
                                  NULL);
    if (!NT_SUCCESS(Status))
    {
-      return(Status);
+      KEBUGCHECK(0);
    }
 
-   Priority = 1;
-   NtSetInformationThread(ZeroPageThreadHandle,
-                          ThreadPriority,
-                          &Priority,
-                          sizeof(Priority));
+   Status = ObReferenceObjectByHandle(ThreadHandle,
+				      THREAD_ALL_ACCESS,
+				      PsThreadType,
+				      KernelMode,
+				      (PVOID*)&ZeroPageThread,
+				      NULL);
+   if (!NT_SUCCESS(Status))
+     {
+	KEBUGCHECK(0);
+     }
 
-   return(STATUS_SUCCESS);
+   KeSetPriorityThread(&ZeroPageThread->Tcb, LOW_PRIORITY);
+   NtClose(ThreadHandle);
+   return STATUS_SUCCESS;
 }
 
 /* EOF */

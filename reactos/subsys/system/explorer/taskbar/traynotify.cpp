@@ -635,8 +635,10 @@ void NotifyArea::UpdateIcons()
 	UpdateWindow(_hwnd);
 }
 
+#ifndef _NO_ALPHABLEND
 #ifdef _MSC_VER
 #pragma comment(lib, "msimg32")	// for AlphaBlend()
+#endif
 #endif
 
 void NotifyArea::Paint()
@@ -658,17 +660,21 @@ void NotifyArea::Paint()
 		x += NOTIFYICON_DIST;
 	}
 
+#ifndef _NO_ALPHABLEND
 	MemCanvas mem_dc;
 	SelectedBitmap bmp(mem_dc, CreateCompatibleBitmap(canvas, NOTIFYICON_SIZE, NOTIFYICON_SIZE));
 	RECT rect = {0, 0, NOTIFYICON_SIZE, NOTIFYICON_SIZE};
 	BLENDFUNCTION blend = {AC_SRC_OVER, 0, 128, 0};	// 50 % visible
+#endif
 
 	for(NotifyIconSet::const_iterator it=_sorted_icons.begin(); it!=_sorted_icons.end(); ++it) {
+#ifndef _NO_ALPHABLEND
 		if (it->_dwState & NIS_HIDDEN) {
 			FillRect(mem_dc, &rect, GetSysColorBrush(COLOR_BTNFACE));
 			DrawIconEx(mem_dc, 0, 0, it->_hIcon, NOTIFYICON_SIZE, NOTIFYICON_SIZE, 0, 0, DI_NORMAL);
 			AlphaBlend(canvas, x, y, NOTIFYICON_SIZE, NOTIFYICON_SIZE, mem_dc, 0, 0, NOTIFYICON_SIZE, NOTIFYICON_SIZE, blend);
 		} else
+#endif
 			DrawIconEx(canvas, x, y, it->_hIcon, NOTIFYICON_SIZE, NOTIFYICON_SIZE, 0, 0, DI_NORMAL);
 
 		x += NOTIFYICON_DIST;

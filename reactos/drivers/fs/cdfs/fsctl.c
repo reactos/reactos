@@ -345,6 +345,7 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
     goto ByeBye;
 
   NewDeviceObject->Flags = NewDeviceObject->Flags | DO_DIRECT_IO;
+  NewDeviceObject->Flags &= ~DO_VERIFY_VOLUME;
   DeviceExt = (PVOID)NewDeviceObject->DeviceExtension;
   RtlZeroMemory(DeviceExt,
 		sizeof(DEVICE_EXTENSION));
@@ -385,7 +386,6 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
   RtlZeroMemory(Ccb,
 		sizeof(CCB));
 
-  DeviceExt->StreamFileObject->Flags = DeviceExt->StreamFileObject->Flags | FO_FCB_IS_VALID | FO_DIRECT_CACHE_PAGING_READ;
   DeviceExt->StreamFileObject->FsContext = Fcb;
   DeviceExt->StreamFileObject->FsContext2 = Ccb;
   DeviceExt->StreamFileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;

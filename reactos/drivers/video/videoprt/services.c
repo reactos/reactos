@@ -41,6 +41,8 @@ VideoPortQueryServices(
   IN VIDEO_PORT_SERVICES ServicesType,
   IN OUT PINTERFACE Interface)
 {
+   DPRINT("VideoPortQueryServices - ServicesType: 0x%x\n", ServicesType);
+
    switch (ServicesType)
    {
       case VideoPortServicesInt10:
@@ -62,8 +64,22 @@ VideoPortQueryServices(
          break;
 
       case VideoPortServicesAGP:
+         if ((Interface->Version == VIDEO_PORT_AGP_INTERFACE_VERSION_2 &&
+              Interface->Size >= sizeof(VIDEO_PORT_AGP_INTERFACE_2)) ||
+             (Interface->Version == VIDEO_PORT_AGP_INTERFACE_VERSION_1 &&
+              Interface->Size >= sizeof(VIDEO_PORT_AGP_INTERFACE)))
+         {
+            if (NT_SUCCESS(IntAgpGetInterface(HwDeviceExtension, Interface)))
+            {
+               return NO_ERROR;
+            }
+         }
+         break;
+
       case VideoPortServicesI2C:
       case VideoPortServicesHeadless:
+         DPRINT1("VideoPortServices%s is UNIMPLEMENTED!\n",
+                 (ServicesType == VideoPortServicesI2C) ? "I2C" : "Headless");
          return ERROR_CALL_NOT_IMPLEMENTED;
 
       default:
@@ -76,9 +92,24 @@ VideoPortQueryServices(
 BOOLEAN STDCALL
 VideoPortGetAgpServices(
    IN PVOID HwDeviceExtension,
-   IN PVIDEO_PORT_AGP_SERVICES AgpServices)
+   OUT PVIDEO_PORT_AGP_SERVICES AgpServices)
 {
+   VIDEO_PORT_AGP_INTERFACE Interface;
+   VP_STATUS Status;
+
    DPRINT("VideoPortGetAgpServices\n");
-   UNIMPLEMENTED;
-   return FALSE;
+
+   Interface.Size = sizeof(Interface);
+   Interface.Version = VIDEO_PORT_AGP_INTERFACE_VERSION_1;
+
+   Status = VideoPortQueryServices(HwDeviceExtension, VideoPortServicesAGP,
+                                   (PINTERFACE)&Interface);
+   if (Status != NO_ERROR)
+   {
+      DPRINT("VideoPortQueryServices() failed!\n");
+      return FALSE;
+   }
+
+   RtlCopyMemory(AgpServices, &Interface.AgpReservePhysical, sizeof(AgpServices));
+   return TRUE;
 }

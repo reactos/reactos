@@ -828,9 +828,7 @@ struct protoent * PASCAL getprotobyname(const char * name);
 
 /* Microsoft Windows Extension function prototypes */
 
-/* int PASCAL WSAStartup(WORD wVersionRequired, LPWSADATA lpWSAData); */
-int PASCAL WSAStartup(int wVersionRequired, LPWSADATA lpWSAData);
-
+int PASCAL WSAStartup(WORD wVersionRequired, LPWSADATA lpWSAData);
 
 int PASCAL WSACleanup(void);
 

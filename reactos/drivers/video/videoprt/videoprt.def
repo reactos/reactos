@@ -3,7 +3,7 @@
 ; videoprt.def - export definition file for ReactOS
 ;
 EXPORTS
-;VideoPortAcquireDeviceLock
+VideoPortAcquireDeviceLock@4
 VideoPortAcquireSpinLock@12
 VideoPortAcquireSpinLockAtDpcLevel@8
 VideoPortAllocateBuffer@12
@@ -80,7 +80,7 @@ VideoPortReadRegisterBufferUlong@12=NTOSKRNL.READ_REGISTER_BUFFER_ULONG
 VideoPortRegisterBugcheckCallback@16
 VideoPortReleaseBuffer@8
 VideoPortReleaseCommonBuffer@28
-;VideoPortReleaseDeviceLock
+VideoPortReleaseDeviceLock@4
 VideoPortReleaseSpinLock@12
 VideoPortReleaseSpinLockFromDpcLevel@8
 VideoPortScanRom@16

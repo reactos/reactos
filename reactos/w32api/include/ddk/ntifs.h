@@ -1406,6 +1406,7 @@ typedef struct _QUERY_PATH_RESPONSE {
     ULONG LengthAccepted;
 } QUERY_PATH_RESPONSE, *PQUERY_PATH_RESPONSE;
 
+#pragma pack(push,8)
 typedef struct _RETRIEVAL_POINTERS_BUFFER {
     ULONG               ExtentCount;
     LARGE_INTEGER       StartingVcn;
@@ -1414,6 +1415,7 @@ typedef struct _RETRIEVAL_POINTERS_BUFFER {
         LARGE_INTEGER   Lcn;
     } Extents[1];
 } RETRIEVAL_POINTERS_BUFFER, *PRETRIEVAL_POINTERS_BUFFER;
+#pragma pack(pop)
 
 typedef struct _RTL_SPLAY_LINKS {
     struct _RTL_SPLAY_LINKS *Parent;
@@ -3287,7 +3289,7 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 PsLookupProcessByProcessId (
-    IN PVOID        ProcessId,
+    IN HANDLE       ProcessId,
     OUT PEPROCESS   *Process
 );
 
@@ -3345,9 +3347,9 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlAbsoluteToSelfRelativeSD (
-    IN PSECURITY_DESCRIPTOR     AbsoluteSecurityDescriptor,
-    IN OUT PSECURITY_DESCRIPTOR SelfRelativeSecurityDescriptor,
-    IN PULONG                   BufferLength
+    IN PSECURITY_DESCRIPTOR              AbsoluteSecurityDescriptor,
+    IN OUT PSECURITY_DESCRIPTOR_RELATIVE SelfRelativeSecurityDescriptor,
+    IN PULONG                            BufferLength
 );
 
 NTSYSAPI
@@ -3591,17 +3593,17 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlSelfRelativeToAbsoluteSD (
-    IN PSECURITY_DESCRIPTOR     SelfRelativeSD,
-    OUT PSECURITY_DESCRIPTOR    AbsoluteSD,
-    IN PULONG                   AbsoluteSDSize,
-    IN PACL                     Dacl,
-    IN PULONG                   DaclSize,
-    IN PACL                     Sacl,
-    IN PULONG                   SaclSize,
-    IN PSID                     Owner,
-    IN PULONG                   OwnerSize,
-    IN PSID                     PrimaryGroup,
-    IN PULONG                   PrimaryGroupSize
+    IN PSECURITY_DESCRIPTOR_RELATIVE SelfRelativeSD,
+    OUT PSECURITY_DESCRIPTOR         AbsoluteSD,
+    IN PULONG                        AbsoluteSDSize,
+    IN PACL                          Dacl,
+    IN PULONG                        DaclSize,
+    IN PACL                          Sacl,
+    IN PULONG                        SaclSize,
+    IN PSID                          Owner,
+    IN PULONG                        OwnerSize,
+    IN PSID                          PrimaryGroup,
+    IN PULONG                        PrimaryGroupSize
 );
 
 #endif /* (VER_PRODUCTBUILD >= 2195) */

@@ -83,7 +83,7 @@ setup_loader : setupldr.sys
 	$(CP) setupldr.sys $(BOOTCD_DIR)/disk/loader/setupldr.sys
 
 
-COMPILER_OPTIONS = -Wall -Werror -nostdlib -nostdinc -ffreestanding -fno-builtin -fno-inline \
+COMPILER_OPTIONS = -Wall -Werror -nostdlib -ffreestanding -fno-builtin -fno-inline \
                    -fno-zero-initialized-in-bss -O1 -MD
 # FreeLoader does not use any of the standard libraries, includes, or built-in functions
 
@@ -95,7 +95,7 @@ endif
 
 COMPILER_DEFINES = -D__$(TARGET)__ $(COMPILER_DEBUG_DEFINES)
 
-COMPILER_INCLUDES	=	-I$(SRCDIR)/include
+COMPILER_INCLUDES	=	-I$(SRCDIR)/include -I$(PATH_TO_TOP)/w32api/include -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/ntoskrnl/include
 
 CFLAGS = $(COMPILER_OPTIONS) \
          $(COMPILER_DEFINES) \
@@ -262,9 +262,9 @@ all : freeldr.sys setupldr.sys
 	@echo Make ALL done.
 
 
-freeldr.sys : $(ALL_OBJS)
+freeldr.sys : $(ALL_OBJS) $(PATH_TO_TOP)/dk/w32/lib/librossym.a
 	@echo ===================================================== LINKING $@
-	@$(LD) $(LFLAGS) -o freeldr.exe $(F_OBJS)
+	@$(LD) $(LFLAGS) -o freeldr.exe $(F_OBJS) $(PATH_TO_TOP)/dk/w32/lib/librossym.a
 ifeq ($(FULL_MAP),yes)
 	@$(OBJDUMP) -d -S freeldr.exe > freeldr.map
 else

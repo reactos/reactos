@@ -65,7 +65,7 @@ LpcRequestPort (PEPORT		Port,
 NTSTATUS
 STDCALL
 LpcSendTerminationPort (PEPORT	Port,
-			TIME	CreationTime);
+			LARGE_INTEGER	CreationTime);
 
 /* EPORT.Type */
 
@@ -134,13 +134,13 @@ NiCreatePort (PVOID			ObjectBody,
 /* Code in ntoskrnl/lpc/port.c */
 
 NTSTATUS STDCALL
-NiInitializePort (IN OUT  PEPORT	Port,
+LpcpInitializePort (IN OUT  PEPORT	Port,
 		  IN      USHORT        Type,
 		  IN      PEPORT        Parent OPTIONAL);
 NTSTATUS
-NiInitPort (VOID);
+LpcpInitSystem (VOID);
 
-extern OBJECT_TYPE	LpcPortObjectType;
+extern POBJECT_TYPE	LpcPortObjectType;
 extern ULONG		LpcpNextMessageId;
 extern FAST_MUTEX	LpcpLock;
 

@@ -27,7 +27,7 @@
 
 
 #ifdef DEBUG
-U32			AllocationCount = 0;
+ULONG			AllocationCount = 0;
 
 VOID		VerifyHeap(VOID);
 VOID		DumpMemoryAllocMap(VOID);
@@ -36,10 +36,10 @@ VOID		DecrementAllocationCount(VOID);
 VOID		MemAllocTest(VOID);
 #endif // DEBUG
 
-PVOID MmAllocateMemory(U32 MemorySize)
+PVOID MmAllocateMemory(ULONG MemorySize)
 {
-	U32		PagesNeeded;
-	U32		FirstFreePageFromEnd;
+	ULONG		PagesNeeded;
+	ULONG		FirstFreePageFromEnd;
 	PVOID	MemPointer;
 
 	if (MemorySize == 0)
@@ -87,10 +87,10 @@ PVOID MmAllocateMemory(U32 MemorySize)
 	return MemPointer;
 }
 
-PVOID MmAllocateMemoryAtAddress(U32 MemorySize, PVOID DesiredAddress)
+PVOID MmAllocateMemoryAtAddress(ULONG MemorySize, PVOID DesiredAddress)
 {
-	U32		PagesNeeded;
-	U32		StartPageNumber;
+	ULONG		PagesNeeded;
+	ULONG		StartPageNumber;
 	PVOID	MemPointer;
 
 	if (MemorySize == 0)
@@ -139,11 +139,11 @@ PVOID MmAllocateMemoryAtAddress(U32 MemorySize, PVOID DesiredAddress)
 	return MemPointer;
 }
 
-PVOID MmAllocateHighestMemoryBelowAddress(U32 MemorySize, PVOID DesiredAddress)
+PVOID MmAllocateHighestMemoryBelowAddress(ULONG MemorySize, PVOID DesiredAddress)
 {
-	U32		PagesNeeded;
-	U32		FirstFreePageFromEnd;
-	U32		DesiredAddressPageNumber;
+	ULONG		PagesNeeded;
+	ULONG		FirstFreePageFromEnd;
+	ULONG		DesiredAddressPageNumber;
 	PVOID	MemPointer;
 
 	if (MemorySize == 0)
@@ -158,7 +158,7 @@ PVOID MmAllocateHighestMemoryBelowAddress(U32 MemorySize, PVOID DesiredAddress)
 	PagesNeeded = ROUND_UP(MemorySize, MM_PAGE_SIZE) / MM_PAGE_SIZE;
 
 	// Get the page number for their desired address
-	DesiredAddressPageNumber = (U32)DesiredAddress / MM_PAGE_SIZE;
+	DesiredAddressPageNumber = (ULONG)DesiredAddress / MM_PAGE_SIZE;
 
 	// If we don't have enough available mem
 	// then return NULL
@@ -196,9 +196,9 @@ PVOID MmAllocateHighestMemoryBelowAddress(U32 MemorySize, PVOID DesiredAddress)
 
 VOID MmFreeMemory(PVOID MemoryPointer)
 {
-	U32							PageNumber;
-	U32							PageCount;
-	U32							Idx;
+	ULONG							PageNumber;
+	ULONG							PageCount;
+	ULONG							Idx;
 	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTableAddress;
 
 #ifdef DEBUG
@@ -255,9 +255,9 @@ VOID MmFreeMemory(PVOID MemoryPointer)
 #ifdef DEBUG
 VOID VerifyHeap(VOID)
 {
-	U32							Idx;
-	U32							Idx2;
-	U32							Count;
+	ULONG							Idx;
+	ULONG							Idx2;
+	ULONG							Count;
 	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTableAddress;
 
 	if (DUMP_MEM_MAP_ON_VERIFY)
@@ -315,7 +315,7 @@ VOID VerifyHeap(VOID)
 
 VOID DumpMemoryAllocMap(VOID)
 {
-	U32							Idx;
+	ULONG							Idx;
 	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTableAddress;
 
 	DbgPrint((DPRINT_MEMORY, "----------- Memory Allocation Bitmap -----------\n"));
@@ -400,7 +400,7 @@ VOID MemAllocTest(VOID)
 }
 #endif // DEBUG
 
-U32 GetSystemMemorySize(VOID)
+ULONG GetSystemMemorySize(VOID)
 {
 	return (TotalPagesInLookupTable * MM_PAGE_SIZE);
 }

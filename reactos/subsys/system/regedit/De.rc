@@ -255,6 +255,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_ERROR		    "Fehler"
+    IDS_WARNING		    "Warnung"
     IDS_BAD_VALUE           "Kann den Wert '%s' nicht lesen"
     IDS_UNSUPPORTED_TYPE    "Kann den Schlüssel des Typen (%ld) nicht ändern"
     IDS_TOO_BIG_VALUE       "Der Wert (%ld) ist zu groß"

@@ -1,7 +1,11 @@
 /* $Id$
  *
- * reactos/ntoskrnl/fs/unc.c
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/fs/unc.c
+ * PURPOSE:         No purpose listed.
  *
+ * PROGRAMMERS:     No programmer listed.
  */
 
 #include <ntoskrnl.h>

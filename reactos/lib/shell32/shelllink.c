@@ -993,20 +993,11 @@ static ULONG WINAPI IShellLinkA_fnRelease(IShellLinkA * iface)
 
     TRACE("-- destroying IShellLink(%p)\n",This);
 
-    if (This->sIcoPath)
-        HeapFree(GetProcessHeap(), 0, This->sIcoPath);
-
-    if (This->sArgs)
-        HeapFree(GetProcessHeap(), 0, This->sArgs);
-
-    if (This->sWorkDir)
-        HeapFree(GetProcessHeap(), 0, This->sWorkDir);
-
-    if (This->sDescription)
-        HeapFree(GetProcessHeap(), 0, This->sDescription);
-
-    if (This->sPath)
-        HeapFree(GetProcessHeap(),0,This->sPath);
+    HeapFree(GetProcessHeap(), 0, This->sIcoPath);
+    HeapFree(GetProcessHeap(), 0, This->sArgs);
+    HeapFree(GetProcessHeap(), 0, This->sWorkDir);
+    HeapFree(GetProcessHeap(), 0, This->sDescription);
+    HeapFree(GetProcessHeap(),0,This->sPath);
 
     if (This->pPidl)
         ILFree(This->pPidl);
@@ -1080,8 +1071,7 @@ static HRESULT WINAPI IShellLinkA_fnSetDescription(IShellLinkA * iface, LPCSTR p
 
     TRACE("(%p)->(pName=%s)\n", This, pszName);
 
-    if (This->sDescription)
-        HeapFree(GetProcessHeap(), 0, This->sDescription);
+    HeapFree(GetProcessHeap(), 0, This->sDescription);
     This->sDescription = HEAP_strdupAtoW( GetProcessHeap(), 0, pszName);
     if ( !This->sDescription )
         return E_OUTOFMEMORY;
@@ -1112,8 +1102,7 @@ static HRESULT WINAPI IShellLinkA_fnSetWorkingDirectory(IShellLinkA * iface, LPC
 
     TRACE("(%p)->(dir=%s)\n",This, pszDir);
 
-    if (This->sWorkDir)
-        HeapFree(GetProcessHeap(), 0, This->sWorkDir);
+    HeapFree(GetProcessHeap(), 0, This->sWorkDir);
     This->sWorkDir = HEAP_strdupAtoW( GetProcessHeap(), 0, pszDir);
     if ( !This->sWorkDir )
         return E_OUTOFMEMORY;
@@ -1144,8 +1133,7 @@ static HRESULT WINAPI IShellLinkA_fnSetArguments(IShellLinkA * iface, LPCSTR psz
 
     TRACE("(%p)->(args=%s)\n",This, pszArgs);
 
-    if (This->sArgs)
-        HeapFree(GetProcessHeap(), 0, This->sArgs);
+    HeapFree(GetProcessHeap(), 0, This->sArgs);
     This->sArgs = HEAP_strdupAtoW( GetProcessHeap(), 0, pszArgs);
     if( !This->sArgs )
         return E_OUTOFMEMORY;
@@ -1276,8 +1264,7 @@ static HRESULT WINAPI IShellLinkA_fnSetIconLocation(IShellLinkA * iface, LPCSTR 
 
     TRACE("(%p)->(path=%s iicon=%u)\n",This, pszIconPath, iIcon);
 
-    if (This->sIcoPath)
-        HeapFree(GetProcessHeap(), 0, This->sIcoPath);
+    HeapFree(GetProcessHeap(), 0, This->sIcoPath);
     This->sIcoPath = HEAP_strdupAtoW(GetProcessHeap(), 0, pszIconPath);
     if ( !This->sIcoPath )
         return E_OUTOFMEMORY;
@@ -1294,8 +1281,7 @@ static HRESULT WINAPI IShellLinkA_fnSetRelativePath(IShellLinkA * iface, LPCSTR 
 
     FIXME("(%p)->(path=%s %lx)\n",This, pszPathRel, dwReserved);
 
-    if (This->sPathRel)
-        HeapFree(GetProcessHeap(), 0, This->sPathRel);
+    HeapFree(GetProcessHeap(), 0, This->sPathRel);
     This->sPathRel = HEAP_strdupAtoW(GetProcessHeap(), 0, pszPathRel);
     This->bDirty = TRUE;
 
@@ -1354,9 +1340,7 @@ static HRESULT WINAPI IShellLinkA_fnSetPath(IShellLinkA * iface, LPCSTR pszFile)
     if (!GetFullPathNameA(pszFile, MAX_PATH, buffer, &fname))
 	return E_FAIL;
 
-    if (This->sPath)
-        HeapFree(GetProcessHeap(), 0, This->sPath);
-
+    HeapFree(GetProcessHeap(), 0, This->sPath);
     This->sPath = HEAP_strdupAtoW(GetProcessHeap(), 0, buffer);
     if( !This->sPath )
         return E_OUTOFMEMORY;
@@ -1499,8 +1483,7 @@ static HRESULT WINAPI IShellLinkW_fnSetDescription(IShellLinkW * iface, LPCWSTR 
 
     TRACE("(%p)->(desc=%s)\n",This, debugstr_w(pszName));
 
-    if (This->sDescription)
-        HeapFree(GetProcessHeap(), 0, This->sDescription);
+    HeapFree(GetProcessHeap(), 0, This->sDescription);
     This->sDescription = HeapAlloc( GetProcessHeap(), 0,
                                     (lstrlenW( pszName )+1)*sizeof(WCHAR) );
     if ( !This->sDescription )
@@ -1532,8 +1515,7 @@ static HRESULT WINAPI IShellLinkW_fnSetWorkingDirectory(IShellLinkW * iface, LPC
 
     TRACE("(%p)->(dir=%s)\n",This, debugstr_w(pszDir));
 
-    if (This->sWorkDir)
-        HeapFree(GetProcessHeap(), 0, This->sWorkDir);
+    HeapFree(GetProcessHeap(), 0, This->sWorkDir);
     This->sWorkDir = HeapAlloc( GetProcessHeap(), 0,
                                 (lstrlenW( pszDir )+1)*sizeof (WCHAR) );
     if ( !This->sWorkDir )
@@ -1564,8 +1546,7 @@ static HRESULT WINAPI IShellLinkW_fnSetArguments(IShellLinkW * iface, LPCWSTR ps
 
     TRACE("(%p)->(args=%s)\n",This, debugstr_w(pszArgs));
 
-    if (This->sArgs)
-        HeapFree(GetProcessHeap(), 0, This->sArgs);
+    HeapFree(GetProcessHeap(), 0, This->sArgs);
     This->sArgs = HeapAlloc( GetProcessHeap(), 0,
                              (lstrlenW( pszArgs )+1)*sizeof (WCHAR) );
     if ( !This->sArgs )
@@ -1697,8 +1678,7 @@ static HRESULT WINAPI IShellLinkW_fnSetIconLocation(IShellLinkW * iface, LPCWSTR
 
     TRACE("(%p)->(path=%s iicon=%u)\n",This, debugstr_w(pszIconPath), iIcon);
 
-    if (This->sIcoPath)
-        HeapFree(GetProcessHeap(), 0, This->sIcoPath);
+    HeapFree(GetProcessHeap(), 0, This->sIcoPath);
     This->sIcoPath = HeapAlloc( GetProcessHeap(), 0,
                                 (lstrlenW( pszIconPath )+1)*sizeof (WCHAR) );
     if ( !This->sIcoPath )
@@ -1717,8 +1697,7 @@ static HRESULT WINAPI IShellLinkW_fnSetRelativePath(IShellLinkW * iface, LPCWSTR
 
     TRACE("(%p)->(path=%s %lx)\n",This, debugstr_w(pszPathRel), dwReserved);
 
-    if (This->sPathRel)
-        HeapFree(GetProcessHeap(), 0, This->sPathRel);
+    HeapFree(GetProcessHeap(), 0, This->sPathRel);
     This->sPathRel = HeapAlloc( GetProcessHeap(), 0,
                                 (lstrlenW( pszPathRel )+1) * sizeof (WCHAR) );
     if ( !This->sPathRel )
@@ -1781,9 +1760,7 @@ static HRESULT WINAPI IShellLinkW_fnSetPath(IShellLinkW * iface, LPCWSTR pszFile
     if (!GetFullPathNameW(pszFile, MAX_PATH, buffer, &fname))
 	return E_FAIL;
 
-    if (This->sPath)
-        HeapFree(GetProcessHeap(), 0, This->sPath);
-
+    HeapFree(GetProcessHeap(), 0, This->sPath);
     This->sPath = HeapAlloc( GetProcessHeap(), 0,
                              (lstrlenW( buffer )+1) * sizeof (WCHAR) );
     if (!This->sPath)

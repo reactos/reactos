@@ -778,7 +778,7 @@ VOID RICHED32_Register(void)
 
     ZeroMemory(&wndClass, sizeof(WNDCLASSA));
     wndClass.style = CS_HREDRAW | CS_VREDRAW | CS_GLOBALCLASS;
-    wndClass.lpfnWndProc = (WNDPROC)RICHED32_WindowProc;
+    wndClass.lpfnWndProc = RICHED32_WindowProc;
     wndClass.cbClsExtra = 0;
     wndClass.cbWndExtra = RTFInfoOffset + sizeof(RTFControl_Info*);
     wndClass.hCursor = LoadCursorA(0, (LPSTR)IDC_ARROW);

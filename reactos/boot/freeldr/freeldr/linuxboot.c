@@ -40,15 +40,15 @@
 
 PLINUX_BOOTSECTOR	LinuxBootSector = NULL;
 PLINUX_SETUPSECTOR	LinuxSetupSector = NULL;
-U32					SetupSectorSize = 0;
+ULONG					SetupSectorSize = 0;
 BOOL				NewStyleLinuxKernel = FALSE;
-U32					LinuxKernelSize = 0;
-U32					LinuxInitrdSize = 0;
+ULONG					LinuxKernelSize = 0;
+ULONG					LinuxInitrdSize = 0;
 UCHAR				LinuxKernelName[260];
 UCHAR				LinuxInitrdName[260];
 BOOL				LinuxHasInitrd = FALSE;
 UCHAR				LinuxCommandLine[260] = "";
-U32					LinuxCommandLineSize = 0;
+ULONG					LinuxCommandLineSize = 0;
 PVOID				LinuxKernelLoadAddress = NULL;
 PVOID				LinuxInitrdLoadAddress = NULL;
 UCHAR				LinuxBootDescription[80];
@@ -227,7 +227,7 @@ BOOL LinuxParseIniSection(PUCHAR OperatingSystemName)
 {
 	UCHAR	SettingName[260];
 	UCHAR	SettingValue[260];
-	U32		SectionId;
+	ULONG		SectionId;
 
 	// Find all the message box settings and run them
 	UiShowMessageBoxesInSection(OperatingSystemName);
@@ -316,7 +316,7 @@ BOOL LinuxReadBootSector(PFILE LinuxKernelFile)
 
 BOOL LinuxReadSetupSector(PFILE LinuxKernelFile)
 {
-	U8	TempLinuxSetupSector[512];
+	UCHAR	TempLinuxSetupSector[512];
 
 	LinuxSetupSector = (PLINUX_SETUPSECTOR)TempLinuxSetupSector;
 
@@ -382,7 +382,7 @@ BOOL LinuxReadSetupSector(PFILE LinuxKernelFile)
 
 BOOL LinuxReadKernel(PFILE LinuxKernelFile)
 {
-	U32		BytesLoaded;
+	ULONG		BytesLoaded;
 	UCHAR	StatusText[260];
 	PVOID	LoadAddress;
 
@@ -455,7 +455,7 @@ BOOL LinuxCheckKernelVersion(VOID)
 
 BOOL LinuxReadInitrd(PFILE LinuxInitrdFile)
 {
-	U32		BytesLoaded;
+	ULONG		BytesLoaded;
 	UCHAR	StatusText[260];
 
 	sprintf(StatusText, "Loading %s", LinuxInitrdName);
@@ -479,7 +479,7 @@ BOOL LinuxReadInitrd(PFILE LinuxInitrdFile)
 	}
 
 	// Set the information in the setup struct
-	LinuxSetupSector->RamdiskAddress = (U32)LinuxInitrdLoadAddress;
+	LinuxSetupSector->RamdiskAddress = (ULONG)LinuxInitrdLoadAddress;
 	LinuxSetupSector->RamdiskSize = LinuxInitrdSize;
 
 	DbgPrint((DPRINT_LINUX, "RamdiskAddress: 0x%x\n", LinuxSetupSector->RamdiskAddress));

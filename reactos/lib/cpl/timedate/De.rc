@@ -37,4 +37,7 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME "Datum/Zeit"
     IDS_CPLDESCRIPTION "Ändert die Uhrzeit, Datum und Zeitzone."
+    IDS_TIMEZONETEXT "Aktuelle Zeitzone: %s"
+    IDS_TIMEZONEINVALID "Ungültig"
+    IDS_TIMEZONEUNKNOWN "Unbekannt"
 END

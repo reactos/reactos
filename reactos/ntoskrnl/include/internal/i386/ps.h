@@ -27,6 +27,7 @@
 #define KTHREAD_TEB               0x20
 #define KTHREAD_KERNEL_STACK      0x28
 #define KTHREAD_NPX_STATE         0x31
+#define KTHREAD_PENDING_USER_APC  0x34 + 0x16
 #define KTHREAD_APCSTATE_PROCESS  0x44
 #define KTHREAD_SERVICE_TABLE     0xDC
 #define KTHREAD_PREVIOUS_MODE     0x137
@@ -248,7 +249,7 @@ typedef struct _KPCR {
 
 #ifndef __USE_W32API
 
-#ifdef MP
+#ifdef CONFIG_SMP
 
 static inline PKPCR KeGetCurrentKPCR(VOID)
 {

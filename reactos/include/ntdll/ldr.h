@@ -1,9 +1,9 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_LDR_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_LDR_H
 
-#include <ntos/kdbgsyms.h>
 #include <roscfg.h>
 #include <napi/teb.h>
+#include <reactos/rossym.h>
 
 typedef NTSTATUS STDCALL_FUNC (*PEPFUNC)(PPEB);
 
@@ -59,7 +59,7 @@ typedef struct _LDR_MODULE
    LIST_ENTRY     InInitializationOrderModuleList;	/* not used */
    PVOID          BaseAddress;
    ULONG          EntryPoint;
-   ULONG          SizeOfImage;
+   ULONG          ResidentSize;
    UNICODE_STRING FullDllName;
    UNICODE_STRING BaseDllName;
    ULONG          Flags;
@@ -69,7 +69,7 @@ typedef struct _LDR_MODULE
    ULONG          CheckSum;
    ULONG          TimeDateStamp;
 #if defined(DBG) || defined(KDBG)
-  IMAGE_SYMBOL_INFO SymbolInfo;
+   PROSSYM_INFO   RosSymInfo;
 #endif /* KDBG */
 } LDR_MODULE, *PLDR_MODULE;
 
@@ -92,6 +92,9 @@ LdrpLoadUserModuleSymbols(PLDR_MODULE LdrModule);
 
 #endif
 
+ULONG
+LdrpGetResidentSize(PIMAGE_NT_HEADERS NTHeaders);
+
 PEPFUNC LdrPEStartup (PVOID  ImageBase,
 		      HANDLE SectionHandle,
 		      PLDR_MODULE* Module,
@@ -102,7 +105,7 @@ NTSTATUS LdrMapSections(HANDLE ProcessHandle,
 			PIMAGE_NT_HEADERS NTHeaders);
 NTSTATUS LdrMapNTDllForProcess(HANDLE ProcessHandle,
 			       PHANDLE NTDllSectionHandle);
-
+BOOLEAN LdrMappedAsDataFile(PVOID *BaseAddress);
 
 NTSTATUS STDCALL
 LdrDisableThreadCalloutsForDll(IN PVOID BaseAddress);

@@ -10,6 +10,7 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "teb.h"
@@ -334,6 +335,15 @@ ROSGL_ICDForHDC( HDC hdc )
 		}
 		/* load driver (or get a reference) */
 		dcdata->icd = OPENGL32_LoadICD( info.driver_name );
+		if (dcdata->icd == NULL)
+		{
+                        WCHAR Buffer[256];
+                        snwprintf(Buffer, sizeof(Buffer)/sizeof(WCHAR),
+                                  L"Couldn't load driver \"%s\".", driverName);
+			MessageBox(WindowFromDC( hdc ), Buffer,
+			           L"OPENGL32.dll: Warning",
+                                   MB_OK | MB_ICONWARNING);
+                }
 	}
 
 	return dcdata->icd;
@@ -398,7 +408,6 @@ ROSGL_SetContextCallBack( const ICDTable *table )
 	#undef X
 
 	DBGPRINT( "Done." );
-/*	DBGBREAK();*/
 
 	return ERROR_SUCCESS;
 }
@@ -894,7 +903,6 @@ rosglMakeCurrent( HDC hdc, HGLRC hglrc )
 		if (glrc->hglrc != NULL)
 		{
 			DBGPRINT( "Info: Calling DrvSetContext!" );
-			DBGBREAK();
 			icdTable = glrc->icd->DrvSetContext( hdc, glrc->hglrc,
 			                                     ROSGL_SetContextCallBack );
 			if (icdTable == NULL)

@@ -16,7 +16,7 @@ BEGIN
     CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32",
             DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
             144, 17, 90, 12
-    LTEXT "Current time zone: %s", IDC_TIMEZONE, 4, 136, 241, 8
+    LTEXT "", IDC_TIMEZONE, 4, 136, 241, 8
 END
 
 
@@ -36,4 +36,7 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME "Date/Time"
     IDS_CPLDESCRIPTION "Changes date, time and time zone information."
+    IDS_TIMEZONETEXT "Current time zone: %s"
+    IDS_TIMEZONEINVALID "Invalid"
+    IDS_TIMEZONEUNKNOWN "Unknown"
 END

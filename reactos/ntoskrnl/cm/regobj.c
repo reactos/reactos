@@ -1,9 +1,11 @@
-/*
- * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * FILE:             ntoskrnl/cm/regobj.c
- * PURPOSE:          Registry object manipulation routines.
- * UPDATE HISTORY:
+/* $Id$
+ * 
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/cm/regobj.c
+ * PURPOSE:         Registry object manipulation routines.
+ *
+ * PROGRAMMERS:     No programmer listed.
 */
 
 #include <ntoskrnl.h>
@@ -158,8 +160,8 @@ CmiObjectParse(PVOID ParsedObject,
       FoundObject->KeyCell = SubKeyCell;
       FoundObject->KeyCellOffset = BlockOffset;
       FoundObject->RegistryHive = ParsedKey->RegistryHive;
-      RtlCreateUnicodeString(&FoundObject->Name,
-			     KeyName.Buffer);
+      RtlpCreateUnicodeString(&FoundObject->Name,
+              KeyName.Buffer, NonPagedPool);
       CmiAddKeyToList(ParsedKey, FoundObject);
       DPRINT("Created object 0x%x\n", FoundObject);
     }
@@ -246,8 +248,8 @@ CmiObjectCreate(PVOID ObjectBody,
       Start = RemainingPath;
       if(*Start == L'\\')
 	Start++;
-      RtlCreateUnicodeString(&KeyObject->Name,
-			     Start);
+      RtlpCreateUnicodeString(&KeyObject->Name,
+              Start, NonPagedPool);
     }
    else
     {
@@ -287,7 +289,7 @@ CmiObjectDelete(PVOID DeletedObject)
 		      ParentKeyObject,
 		      KeyObject);
 
-      NtQuerySystemTime (&ParentKeyObject->KeyCell->LastWriteTime);
+      KeQuerySystemTime (&ParentKeyObject->KeyCell->LastWriteTime);
       CmiMarkBlockDirty (ParentKeyObject->RegistryHive,
 			 ParentKeyObject->KeyCellOffset);
 

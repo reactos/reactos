@@ -694,7 +694,7 @@ GetFileAttributesExW(LPCWSTR lpFileName,
   NTSTATUS Status;
   WIN32_FILE_ATTRIBUTE_DATA* FileAttributeData;
 
-  DPRINT ("GetFileAttributesExW(%S) called\n", lpFileName);
+  DPRINT("GetFileAttributesExW(%S) called\n", lpFileName);
 
 
   if (fInfoLevelId != GetFileExInfoStandard || lpFileInformation == NULL)
@@ -709,7 +709,7 @@ GetFileAttributesExW(LPCWSTR lpFileName,
 				     NULL,
 				     NULL))
     {
-      DPRINT ("Invalid path\n");
+      DPRINT1 ("Invalid path\n");
       SetLastError (ERROR_BAD_PATHNAME);
       return FALSE;
     }
@@ -731,7 +731,7 @@ GetFileAttributesExW(LPCWSTR lpFileName,
   RtlFreeUnicodeString (&FileName);
   if (!NT_SUCCESS (Status))
     {
-      DPRINT ("NtOpenFile() failed (Status %lx)\n", Status);
+      DPRINT1 ("NtOpenFile() failed  %x (Status %lx)\n", &ObjectAttributes, Status);
       SetLastErrorByStatus (Status);
       return FALSE;
     }
@@ -746,7 +746,7 @@ GetFileAttributesExW(LPCWSTR lpFileName,
 
   if (!NT_SUCCESS (Status))
     {
-      DPRINT ("NtQueryInformationFile() failed (Status %lx)\n", Status);
+      DPRINT1 ("NtQueryInformationFile() failed (Status %lx)\n", Status);
       SetLastErrorByStatus (Status);
       return FALSE;
     }

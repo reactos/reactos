@@ -32,6 +32,7 @@
 #include <windows.h>
 #include <tchar.h>
 
+#include <services/services.h>
 #include "services.h"
 
 #define NDEBUG
@@ -81,7 +82,7 @@ LIST_ENTRY ServiceListHead;
 
 /* FUNCTIONS *****************************************************************/
 
-static NTSTATUS STDCALL 
+static NTSTATUS STDCALL
 CreateGroupOrderListRoutine(PWSTR ValueName,
 			    ULONG ValueType,
 			    PVOID ValueData,
@@ -127,6 +128,7 @@ CreateGroupOrderListRoutine(PWSTR ValueName,
   return STATUS_SUCCESS;
 }
 
+
 static NTSTATUS STDCALL
 CreateGroupListRoutine(PWSTR ValueName,
 		       ULONG ValueType,
@@ -148,15 +150,15 @@ CreateGroupListRoutine(PWSTR ValueName,
 					sizeof(SERVICE_GROUP));
       if (Group == NULL)
 	{
-	  return(STATUS_INSUFFICIENT_RESOURCES);
+	  return STATUS_INSUFFICIENT_RESOURCES;
 	}
 
       if (!RtlCreateUnicodeString(&Group->GroupName,
 				  (PWSTR)ValueData))
 	{
-	  return(STATUS_INSUFFICIENT_RESOURCES);
+	  return STATUS_INSUFFICIENT_RESOURCES;
 	}
-      
+
       RtlZeroMemory(&QueryTable, sizeof(QueryTable));
       QueryTable[0].Name = (PWSTR)ValueData;
       QueryTable[0].QueryRoutine = CreateGroupOrderListRoutine;
@@ -173,7 +175,7 @@ CreateGroupListRoutine(PWSTR ValueName,
 		     &Group->GroupListEntry);
     }
 
-  return(STATUS_SUCCESS);
+  return STATUS_SUCCESS;
 }
 
 
@@ -191,7 +193,7 @@ CreateServiceListEntry(PUNICODE_STRING ServiceName)
 		      sizeof(SERVICE));
   if (Service == NULL)
     {
-      return(STATUS_INSUFFICIENT_RESOURCES);
+      return STATUS_INSUFFICIENT_RESOURCES;
     }
 
   /* Copy service name */
@@ -202,8 +204,9 @@ CreateServiceListEntry(PUNICODE_STRING ServiceName)
   if (Service->ServiceName.Buffer == NULL)
     {
       HeapFree(GetProcessHeap(), 0, Service);
-      return(STATUS_INSUFFICIENT_RESOURCES);
+      return STATUS_INSUFFICIENT_RESOURCES;
     }
+
   RtlCopyMemory(Service->ServiceName.Buffer,
 		ServiceName->Buffer,
 		ServiceName->Length);
@@ -217,8 +220,9 @@ CreateServiceListEntry(PUNICODE_STRING ServiceName)
     {
       HeapFree(GetProcessHeap(), 0, Service->ServiceName.Buffer);
       HeapFree(GetProcessHeap(), 0, Service);
-      return(STATUS_INSUFFICIENT_RESOURCES);
+      return STATUS_INSUFFICIENT_RESOURCES;
     }
+
   wcscpy(Service->RegistryPath.Buffer,
 	 L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\");
   wcscat(Service->RegistryPath.Buffer,
@@ -260,7 +264,7 @@ CreateServiceListEntry(PUNICODE_STRING ServiceName)
       RtlFreeUnicodeString(&Service->RegistryPath);
       RtlFreeUnicodeString(&Service->ServiceName);
       HeapFree(GetProcessHeap(), 0, Service);
-      return(Status);
+      return Status;
     }
 
   DPRINT("ServiceName: '%wZ'\n", &Service->ServiceName);
@@ -273,7 +277,7 @@ CreateServiceListEntry(PUNICODE_STRING ServiceName)
   InsertTailList(&ServiceListHead,
 		 &Service->ServiceListEntry);
 
-  return(STATUS_SUCCESS);
+  return STATUS_SUCCESS;
 }
 
 
@@ -311,7 +315,7 @@ ScmCreateServiceDataBase(VOID)
 				  NULL,
 				  NULL);
   if (!NT_SUCCESS(Status))
-    return(Status);
+    return Status;
 
   RtlRosInitUnicodeStringFromLiteral(&ServicesKeyName,
 		       L"\\Registry\\Machine\\System\\CurrentControlSet\\Services");
@@ -327,7 +331,7 @@ ScmCreateServiceDataBase(VOID)
 			 &ObjectAttributes,
 			 0);
   if (!NT_SUCCESS(Status))
-    return(Status);
+    return Status;
 
   /* Allocate key info buffer */
   KeyInfoLength = sizeof(KEY_BASIC_INFORMATION) + MAX_PATH * sizeof(WCHAR);
@@ -335,7 +339,7 @@ ScmCreateServiceDataBase(VOID)
   if (KeyInfo == NULL)
     {
       NtClose(ServicesKey);
-      return(STATUS_INSUFFICIENT_RESOURCES);
+      return STATUS_INSUFFICIENT_RESOURCES;
     }
 
   Index = 0;
@@ -379,7 +383,7 @@ ScmCreateServiceDataBase(VOID)
 
   DPRINT("ScmCreateServiceDataBase() done\n");
 
-  return(STATUS_SUCCESS);
+  return STATUS_SUCCESS;
 }
 
 
@@ -390,7 +394,7 @@ ScmCheckDriver(PSERVICE Service)
   UNICODE_STRING DirName;
   HANDLE DirHandle;
   NTSTATUS Status;
-  PDIRECTORY_BASIC_INFORMATION DirInfo;
+  POBJECT_DIRECTORY_INFORMATION DirInfo;
   ULONG BufferLength;
   ULONG DataLength;
   ULONG Index;
@@ -421,10 +425,10 @@ ScmCheckDriver(PSERVICE Service)
 				 &ObjectAttributes);
   if (!NT_SUCCESS(Status))
     {
-      return(Status);
+      return Status;
     }
 
-  BufferLength = sizeof(DIRECTORY_BASIC_INFORMATION) +
+  BufferLength = sizeof(OBJECT_DIRECTORY_INFORMATION) +
 		 2 * MAX_PATH * sizeof(WCHAR);
   DirInfo = HeapAlloc(GetProcessHeap(),
 		      HEAP_ZERO_MEMORY,
@@ -485,7 +489,7 @@ ScmCheckDriver(PSERVICE Service)
 	   DirInfo);
   NtClose(DirHandle);
 
-  return(STATUS_SUCCESS);
+  return STATUS_SUCCESS;
 }
 
 
@@ -518,17 +522,222 @@ ScmGetBootAndSystemDriverState(VOID)
 
 
 static NTSTATUS
-ScmStartService(PSERVICE Service,
-		PSERVICE_GROUP Group)
+ScmSendStartCommand(PSERVICE Service, LPWSTR Arguments)
 {
+  PSCM_START_PACKET StartPacket;
+  DWORD TotalLength;
 #if 0
+  DWORD Length;
+#endif
+  PWSTR Ptr;
+  DWORD Count;
+
+  DPRINT("ScmSendStartCommand() called\n");
+
+  /* Calculate the total length of the start command line */
+  TotalLength = wcslen(Service->ServiceName.Buffer) + 1;
+#if 0
+  if (Arguments != NULL)
+  {
+    Ptr = Arguments;
+    while (*Ptr)
+    {
+      Length = wcslen(Ptr) + 1;
+      TotalLength += Length;
+      Ptr += Length;
+    }
+  }
+#endif
+  TotalLength++;
+
+  /* Allocate start command packet */
+  StartPacket = HeapAlloc(GetProcessHeap(),
+			  HEAP_ZERO_MEMORY,
+			  sizeof(SCM_START_PACKET) + (TotalLength - 1) * sizeof(WCHAR));
+  if (StartPacket == NULL)
+    return STATUS_INSUFFICIENT_RESOURCES;
+
+  StartPacket->Command = SCM_START_COMMAND;
+  StartPacket->Size = TotalLength;
+  Ptr = &StartPacket->Arguments[0];
+  wcscpy(Ptr, Service->ServiceName.Buffer);
+  Ptr += (wcslen(Service->ServiceName.Buffer) + 1);
+
+  /* FIXME: Copy argument list */
+
+  *Ptr = 0;
+
+  /* Send the start command */
+  WriteFile(Service->ControlPipeHandle,
+	    StartPacket,
+	    sizeof(SCM_START_PACKET) + (TotalLength - 1) * sizeof(WCHAR),
+	    &Count,
+	    NULL);
+
+  /* FIXME: Read the reply */
+
+  HeapFree(GetProcessHeap(),
+           0,
+           StartPacket);
+
+  DPRINT("ScmSendStartCommand() done\n");
+
+  return STATUS_SUCCESS;
+}
+
+
+static NTSTATUS
+ScmStartUserModeService(PSERVICE Service)
+{
   RTL_QUERY_REGISTRY_TABLE QueryTable[3];
   PROCESS_INFORMATION ProcessInformation;
   STARTUPINFOW StartupInfo;
   UNICODE_STRING ImagePath;
   ULONG Type;
   BOOL Result;
-#endif
+  NTSTATUS Status;
+
+  RtlInitUnicodeString(&ImagePath, NULL);
+
+  /* Get service data */
+  RtlZeroMemory(&QueryTable,
+		sizeof(QueryTable));
+
+  QueryTable[0].Name = L"Type";
+  QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
+  QueryTable[0].EntryContext = &Type;
+
+  QueryTable[1].Name = L"ImagePath";
+  QueryTable[1].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
+  QueryTable[1].EntryContext = &ImagePath;
+
+  Status = RtlQueryRegistryValues(RTL_REGISTRY_SERVICES,
+				  Service->ServiceName.Buffer,
+				  QueryTable,
+				  NULL,
+				  NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
+      return Status;
+    }
+  DPRINT("ImagePath: '%S'\n", ImagePath.Buffer);
+  DPRINT("Type: %lx\n", Type);
+
+  /* Create '\\.\pipe\net\NtControlPipe' instance */
+  Service->ControlPipeHandle = CreateNamedPipeW(L"\\\\.\\pipe\\net\\NtControlPipe",
+						PIPE_ACCESS_DUPLEX,
+						PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
+						100,
+						8000,
+						4,
+						30000,
+						NULL);
+  DPRINT("CreateNamedPipeW() done\n");
+  if (Service->ControlPipeHandle == INVALID_HANDLE_VALUE)
+    {
+      DPRINT1("Failed to create control pipe!\n");
+      return STATUS_UNSUCCESSFUL;
+    }
+
+  StartupInfo.cb = sizeof(StartupInfo);
+  StartupInfo.lpReserved = NULL;
+  StartupInfo.lpDesktop = NULL;
+  StartupInfo.lpTitle = NULL;
+  StartupInfo.dwFlags = 0;
+  StartupInfo.cbReserved2 = 0;
+  StartupInfo.lpReserved2 = 0;
+
+  Result = CreateProcessW(ImagePath.Buffer,
+			  NULL,
+			  NULL,
+			  NULL,
+			  FALSE,
+			  DETACHED_PROCESS | CREATE_SUSPENDED,
+			  NULL,
+			  NULL,
+			  &StartupInfo,
+			  &ProcessInformation);
+  RtlFreeUnicodeString(&ImagePath);
+
+  if (!Result)
+    {
+      /* Close control pipe */
+      CloseHandle(Service->ControlPipeHandle);
+      Service->ControlPipeHandle = INVALID_HANDLE_VALUE;
+
+      DPRINT1("Starting '%S' failed!\n", Service->ServiceName.Buffer);
+      return STATUS_UNSUCCESSFUL;
+    }
+
+  DPRINT("Process Id: %lu  Handle %lx\n",
+	 ProcessInformation.dwProcessId,
+	 ProcessInformation.hProcess);
+  DPRINT("Thread Id: %lu  Handle %lx\n",
+	 ProcessInformation.dwThreadId,
+	 ProcessInformation.hThread);
+
+  /* Get process and thread ids */
+  Service->ProcessId = ProcessInformation.dwProcessId;
+  Service->ThreadId = ProcessInformation.dwThreadId;
+
+  /* Resume Thread */
+  ResumeThread(ProcessInformation.hThread);
+
+  /* Connect control pipe */
+  if (ConnectNamedPipe(Service->ControlPipeHandle, NULL))
+    {
+      DWORD dwProcessId = 0;
+      DWORD dwRead = 0;
+
+      DPRINT("Control pipe connected!\n");
+
+      /* Read thread id from pipe */
+      if (!ReadFile(Service->ControlPipeHandle,
+		    (LPVOID)&dwProcessId,
+		    sizeof(DWORD),
+		    &dwRead,
+		    NULL))
+	{
+	  DPRINT1("Reading the service control pipe failed (Error %lu)\n",
+		  GetLastError());
+	  Status = STATUS_UNSUCCESSFUL;
+	}
+      else
+	{
+	  DPRINT("Received process id %lu\n", dwProcessId);
+
+	  /* FIXME: Send start command */
+
+	  Status = STATUS_SUCCESS;
+	}
+    }
+  else
+    {
+      DPRINT("Connecting control pipe failed!\n");
+
+      /* Close control pipe */
+      CloseHandle(Service->ControlPipeHandle);
+      Service->ControlPipeHandle = INVALID_HANDLE_VALUE;
+      Service->ProcessId = 0;
+      Service->ThreadId = 0;
+      Status = STATUS_UNSUCCESSFUL;
+    }
+
+  ScmSendStartCommand(Service, NULL);
+
+  /* Close process and thread handle */
+  CloseHandle(ProcessInformation.hThread);
+  CloseHandle(ProcessInformation.hProcess);
+
+  return Status;
+}
+
+
+static NTSTATUS
+ScmStartService(PSERVICE Service,
+		PSERVICE_GROUP Group)
+{
   NTSTATUS Status;
 
   DPRINT("ScmStartService() called\n");
@@ -546,123 +755,12 @@ ScmStartService(PSERVICE Service,
     }
   else
     {
-#if 0
-      RtlInitUnicodeString(&ImagePath, NULL);
-
-      /* Get service data */
-      RtlZeroMemory(&QueryTable,
-		    sizeof(QueryTable));
-
-      QueryTable[0].Name = L"Type";
-      QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
-      QueryTable[0].EntryContext = &Type;
-
-      QueryTable[1].Name = L"ImagePath";
-      QueryTable[1].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
-      QueryTable[1].EntryContext = &ImagePath;
-
-      Status = RtlQueryRegistryValues(RTL_REGISTRY_SERVICES,
-				      Service->ServiceName.Buffer,
-				      QueryTable,
-				      NULL,
-				      NULL);
-      if (NT_SUCCESS(Status))
-	{
-	  DPRINT("ImagePath: '%S'\n", ImagePath.Buffer);
-	  DPRINT("Type: %lx\n", Type);
-
-	  /* FIXME: create '\\.\pipe\net\NtControlPipe' instance */
-	  Service->ControlPipeHandle = CreateNamedPipeW(L"\\\\.\\pipe\\net\\NtControlPipe",
-							PIPE_ACCESS_DUPLEX,
-							PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
-							100,
-							8000,
-							4,
-							30000,
-							NULL);
-	  DPRINT("CreateNamedPipeW() done\n");
-	  if (Service->ControlPipeHandle == INVALID_HANDLE_VALUE)
-	    {
-	      DPRINT1("Failed to create control pipe!\n");
-	      Status = STATUS_UNSUCCESSFUL;
-	      goto Done;
-	    }
-
-	  StartupInfo.cb = sizeof(StartupInfo);
-	  StartupInfo.lpReserved = NULL;
-	  StartupInfo.lpDesktop = NULL;
-	  StartupInfo.lpTitle = NULL;
-	  StartupInfo.dwFlags = 0;
-	  StartupInfo.cbReserved2 = 0;
-	  StartupInfo.lpReserved2 = 0;
-
-	  Result = CreateProcessW(ImagePath.Buffer,
-				  NULL,
-				  NULL,
-				  NULL,
-				  FALSE,
-				  DETACHED_PROCESS | CREATE_SUSPENDED,
-				  NULL,
-				  NULL,
-				  &StartupInfo,
-				  &ProcessInformation);
-	  RtlFreeUnicodeString(&ImagePath);
-
-	  if (!Result)
-	    {
-	      /* Close control pipe */
-	      CloseHandle(Service->ControlPipeHandle);
-	      Service->ControlPipeHandle = INVALID_HANDLE_VALUE;
-
-	      DPRINT("Starting '%S' failed!\n", Service->ServiceName.Buffer);
-	      Status = STATUS_UNSUCCESSFUL;
-	    }
-	  else
-	    {
-	      DPRINT("Process Id: %lu  Handle %lx\n",
-		     ProcessInformation.dwProcessId,
-		     ProcessInformation.hProcess);
-	      DPRINT("Thread Id: %lu  Handle %lx\n",
-		     ProcessInformation.dwThreadId,
-		     ProcessInformation.hThread);
-
-	      /* Get process and thread ids */
-	      Service->ProcessId = ProcessInformation.dwProcessId;
-	      Service->ThreadId = ProcessInformation.dwThreadId;
-
-	      /* Resume Thread */
-	      ResumeThread(ProcessInformation.hThread);
-
-	      /* FIXME: connect control pipe */
-	      if (ConnectNamedPipe(Service->ControlPipeHandle, NULL))
-		{
-		  DPRINT("Control pipe connected!\n");
-		  Status = STATUS_SUCCESS;
-		}
-	      else
-		{
-		  DPRINT1("Connecting control pipe failed!\n");
-
-		  /* Close control pipe */
-		  CloseHandle(Service->ControlPipeHandle);
-		  Service->ControlPipeHandle = INVALID_HANDLE_VALUE;
-		  Service->ProcessId = 0;
-		  Service->ThreadId = 0;
-		  Status = STATUS_UNSUCCESSFUL;
-		}
-
-	      /* Close process and thread handle */
-	      CloseHandle(ProcessInformation.hThread);
-	      CloseHandle(ProcessInformation.hProcess);
-	    }
-	}
-#endif
-      Status = STATUS_SUCCESS;
+      /* Start user-mode service */
+      Status = ScmStartUserModeService(Service);
     }
 
-#if 0
-Done:
-#endif
+  DPRINT("ScmStartService() done (Status %lx)\n", Status);
+
   if (NT_SUCCESS(Status))
     {
       if (Group != NULL)
@@ -674,36 +772,34 @@ Done:
 #if 0
   else
     {
-      if (CurrentService->ErrorControl == 1)
+      switch (Service->ErrorControl)
 	{
-	  /* Log error */
+	  case SERVICE_ERROR_NORMAL:
+	    /* FIXME: Log error */
+	    break;
 
-	}
-      else if (CurrentService->ErrorControl == 2)
-	{
-	  if (IsLastKnownGood == FALSE)
-	    {
-	      /* Boot last known good configuration */
+	  case SERVICE_ERROR_SEVERE:
+	    if (IsLastKnownGood == FALSE)
+	      {
+		/* FIXME: Boot last known good configuration */
+	      }
+	    break;
 
-	    }
-	}
-      else if (CurrentService->ErrorControl == 3)
-	{
-	  if (IsLastKnownGood == FALSE)
-	    {
-	      /* Boot last known good configuration */
-
-	    }
-	  else
-	    {
-	      /* BSOD! */
-
-	    }
+	  case SERVICE_ERROR_CRITICAL:
+	    if (IsLastKnownGood == FALSE)
+	      {
+		/* FIXME: Boot last known good configuration */
+	      }
+	    else
+	      {
+		/* FIXME: BSOD! */
+	      }
+	    break;
 	}
     }
 #endif
 
-  return(STATUS_SUCCESS);
+  return Status;
 }
 
 

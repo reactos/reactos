@@ -395,7 +395,7 @@ BOOLEAN STDCALL PsGetVersion (PULONG		MajorVersion	OPTIONAL,
 LARGE_INTEGER STDCALL PsGetProcessExitTime(VOID);
 BOOLEAN STDCALL PsIsThreadTerminating(struct _ETHREAD* Thread);
 
-NTSTATUS STDCALL PsLookupProcessByProcessId(IN PVOID ProcessId,
+NTSTATUS STDCALL PsLookupProcessByProcessId(IN HANDLE ProcessId,
 					    OUT PEPROCESS *Process);
 
 NTSTATUS STDCALL PsLookupProcessThreadByCid(IN PCLIENT_ID Cid,

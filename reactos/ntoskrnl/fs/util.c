@@ -1,7 +1,11 @@
 /* $Id$
  *
- * reactos/ntoskrnl/fs/util.c
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/fs/util.c
+ * PURPOSE:         No purpose listed.
  *
+ * PROGRAMMERS:     No programmer listed.
  */
 
 #include <ntoskrnl.h>
@@ -157,7 +161,8 @@ DWORD
 STDCALL
 FsRtlAllocateResource (VOID)
 {
-	return 0;
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED; 
 }
 
 
@@ -174,13 +179,12 @@ FsRtlAllocateResource (VOID)
  *
  * @unimplemented
  */
-DWORD
+NTSTATUS
 STDCALL
-FsRtlBalanceReads (
-	DWORD	Unknown0
-	)
+FsRtlBalanceReads (PDEVICE_OBJECT TargetDevice)
 {
-	return 0;
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED; 
 }
 
 
@@ -212,6 +216,7 @@ FsRtlCopyRead (
 	IN	PDEVICE_OBJECT		DeviceObject
 	)
 {
+	UNIMPLEMENTED;
 	return FALSE;
 }
 
@@ -244,6 +249,7 @@ FsRtlCopyWrite (
 	IN	PDEVICE_OBJECT		DeviceObject
 	)
 {
+	UNIMPLEMENTED;
 	return FALSE;
 }
 
@@ -341,12 +347,11 @@ FsRtlInsertPerFileObjectContext (
  */
 VOID
 STDCALL
-FsRtlPostPagingFileStackOverflow (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
+FsRtlPostPagingFileStackOverflow(IN PVOID Context, 
+                                 IN PKEVENT Event, 
+                                 IN PFSRTL_STACK_OVERFLOW_ROUTINE StackOverflowRoutine) 
 {
+    UNIMPLEMENTED;
 }
 
 
@@ -364,12 +369,11 @@ FsRtlPostPagingFileStackOverflow (
  */
 VOID
 STDCALL
-FsRtlPostStackOverflow (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
+FsRtlPostStackOverflow (IN PVOID Context, 
+                        IN PKEVENT Event, 
+                        IN PFSRTL_STACK_OVERFLOW_ROUTINE StackOverflowRoutine) 
 {
+    UNIMPLEMENTED;
 }
 
 

@@ -300,9 +300,9 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Setup Page"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  CONTROL "", rct1, 130, 0x00020006, 80, 8, 80, 80,  SS_WHITERECT
-  CONTROL "", rct2, 130, 0x00020005, 160, 12, 4, 80, SS_GRAYRECT
-  CONTROL "", rct3, 130, 0x00020005, 84, 88, 80, 4,  SS_GRAYRECT
+  CONTROL "", rct1, "Static", SS_WHITERECT, 80, 8, 80, 80
+  CONTROL "", rct2, "Static", SS_GRAYRECT, 160, 12, 4, 80
+  CONTROL "", rct3, "Static", SS_GRAYRECT,  84, 88, 80, 4
   GROUPBOX "Paper", grp2, 8, 96, 224, 56, BS_GROUPBOX
   LTEXT "&Size:", stc2, 16, 112, 36, 8
   COMBOBOX cmb2, 64, 110, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
@@ -408,7 +408,6 @@ supported by your printer.\nPlease enter a value between 1 and %d."
 
     PD32_DEFAULT_PRINTER                  "Default Printer; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "There are %d documents in the queue"
-    PD32_PRINT_ALL_X_PAGES                "&All %d pages"
     PD32_MARGINS_IN_INCHES                "Margins [inches]"
     PD32_MARGINS_IN_MILIMETERS            "Margins [mm]"
     PD32_MILIMETERS                       "mm"
@@ -461,6 +460,15 @@ STRINGTABLE DISCARDABLE /* Color names */
     IDS_COLOR_WHITE     "White"
 }
 
+STRINGTABLE DISCARDABLE
+{
+    IDS_FONT_SIZE   "Select a font size between %d and %d points."
+    IDS_SAVE_BUTTON "&Save"
+    IDS_SAVE_IN     "Save &in:"
+    IDS_SAVE        "Save"
+    IDS_SAVE_AS     "Save as"
+    IDS_OPEN_FILE   "Open File"
+}
 
 /****************************************************************/
 /* English neutral resources

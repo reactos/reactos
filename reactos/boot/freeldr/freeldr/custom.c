@@ -46,8 +46,8 @@ UCHAR	CustomBootPrompt[] = "Press ENTER to boot your custom boot setup.";
 VOID OptionMenuCustomBoot(VOID)
 {
 	PUCHAR	CustomBootMenuList[] = { "Disk", "Partition", "Boot Sector File", "ReactOS", "Linux" };
-	U32		CustomBootMenuCount = sizeof(CustomBootMenuList) / sizeof(CustomBootMenuList[0]);
-	U32		SelectedMenuItem;
+	ULONG		CustomBootMenuCount = sizeof(CustomBootMenuList) / sizeof(CustomBootMenuList[0]);
+	ULONG		SelectedMenuItem;
 
 	if (!UiDisplayMenu(CustomBootMenuList, CustomBootMenuCount, 0, -1, &SelectedMenuItem, TRUE, NULL))
 	{
@@ -79,8 +79,8 @@ VOID OptionMenuCustomBootDisk(VOID)
 {
 	UCHAR	SectionName[100];
 	UCHAR	BootDriveString[20];
-	U32	SectionId;
-	U32	Year, Month, Day, Hour, Minute, Second;
+	ULONG	SectionId;
+	ULONG	Year, Month, Day, Hour, Minute, Second;
 
 	RtlZeroMemory(SectionName, sizeof(SectionName));
 	RtlZeroMemory(BootDriveString, sizeof(BootDriveString));
@@ -122,8 +122,8 @@ VOID OptionMenuCustomBootPartition(VOID)
 	UCHAR	SectionName[100];
 	UCHAR	BootDriveString[20];
 	UCHAR	BootPartitionString[20];
-	U32	SectionId;
-	U32	Year, Month, Day, Hour, Minute, Second;
+	ULONG	SectionId;
+	ULONG	Year, Month, Day, Hour, Minute, Second;
 
 	RtlZeroMemory(SectionName, sizeof(SectionName));
 	RtlZeroMemory(BootDriveString, sizeof(BootDriveString));
@@ -178,8 +178,8 @@ VOID OptionMenuCustomBootBootSectorFile(VOID)
 	UCHAR	BootDriveString[20];
 	UCHAR	BootPartitionString[20];
 	UCHAR	BootSectorFileString[200];
-	U32	SectionId;
-	U32	Year, Month, Day, Hour, Minute, Second;
+	ULONG	SectionId;
+	ULONG	Year, Month, Day, Hour, Minute, Second;
 
 	RtlZeroMemory(SectionName, sizeof(SectionName));
 	RtlZeroMemory(BootDriveString, sizeof(BootDriveString));
@@ -248,8 +248,8 @@ VOID OptionMenuCustomBootReactOS(VOID)
 	UCHAR	ReactOSSystemPath[200];
 	UCHAR	ReactOSARCPath[200];
 	UCHAR	ReactOSOptions[200];
-	U32	SectionId;
-	U32	Year, Month, Day, Hour, Minute, Second;
+	ULONG	SectionId;
+	ULONG	Year, Month, Day, Hour, Minute, Second;
 
 	RtlZeroMemory(SectionName, sizeof(SectionName));
 	RtlZeroMemory(BootDriveString, sizeof(BootDriveString));
@@ -321,8 +321,8 @@ VOID OptionMenuCustomBootLinux(VOID)
 	UCHAR	LinuxKernelString[200];
 	UCHAR	LinuxInitrdString[200];
 	UCHAR	LinuxCommandLineString[200];
-	U32	SectionId;
-	U32	Year, Month, Day, Hour, Minute, Second;
+	ULONG	SectionId;
+	ULONG	Year, Month, Day, Hour, Minute, Second;
 
 	RtlZeroMemory(SectionName, sizeof(SectionName));
 	RtlZeroMemory(BootDriveString, sizeof(BootDriveString));

@@ -67,11 +67,11 @@ enum OptionMenuItems
 	REBOOT = 11,
 };
 
-U32		OptionsMenuItemCount = sizeof(OptionsMenuList) / sizeof(OptionsMenuList[0]);
+ULONG		OptionsMenuItemCount = sizeof(OptionsMenuList) / sizeof(OptionsMenuList[0]);
 
 VOID DoOptionsMenu(VOID)
 {
-	U32		SelectedMenuItem;
+	ULONG		SelectedMenuItem;
 
 	if (!UiDisplayMenu(OptionsMenuList, OptionsMenuItemCount, 0, -1, &SelectedMenuItem, TRUE, NULL))
 	{

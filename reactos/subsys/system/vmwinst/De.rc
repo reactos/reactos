@@ -64,7 +64,7 @@ BEGIN
   PUSHBUTTON "Die Bildeinstellungen ändern", IDC_CONFIGSETTINGS, 25, 40, 200, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "Einen anderen Grafiktreiber benutzen", IDC_USEOTHERDRIVER, 25, 55, 200, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "Den VMware(r) SVGA entfernen", IDC_UNINSTALL, 25, 70, 200, 15, BS_AUTORADIOBUTTON
-  LTEXT "Klichen Sie auf  'Weiter' um fortzufahren oder 'Abbrechen' und en Asssistenten zu beenden.", -1, 25, 93, 225, 12
+  LTEXT "Klichen Sie auf 'Weiter' um fortzufahren oder 'Abbrechen' und den Asssistenten zu beenden.", -1, 25, 93, 225, 12
 END
 
 IDD_SELECTDRIVER DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
@@ -72,7 +72,7 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Grafikreiberinstallation"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Wählen Sie bitte den Grafiktreiber aus,d en Sie verwenden wollen:",-1,25,25,225,15
+  LTEXT "Wählen Sie bitte den Grafiktreiber aus, den Sie verwenden wollen:",-1,25,25,225,15
   PUSHBUTTON "ReactOS VGA Treiber", IDC_VGA, 25, 40, 225, 15, BS_AUTORADIOBUTTON
   PUSHBUTTON "ReactOS VBE Treiber (SVGA)", IDC_VBE, 25, 55, 225, 15, BS_AUTORADIOBUTTON
   LTEXT "Klicken Sie auf 'Fertigstellen' um die Installation fertigzustellen oder auf 'Abbrechen' um das Setup ohne Veränderungen zu beenden.", -1, 25, 93, 225, 20
@@ -83,7 +83,7 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Grafikreiberinstallation"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "The ReactOS Setup wird Ihren VMware(r) SVGA Treiber entfernen!!!\n\n\nKlicken Sie auf 'Fertigstellen' um den Treiber zu entfernen oder auf 'Abbrechen' um ihn zu lassen.",-1,25,25,225,85
+  LTEXT "The ReactOS Setup wird Ihren VMware(r) SVGA Treiber entfernen!!!\n\n\nKlicken Sie auf 'Fertigstellen' um den Treiber zu entfernen oder auf 'Abbrechen' um ihn weiterhin zu verwenden.",-1,25,25,225,85
 END
 
 STRINGTABLE

@@ -33,12 +33,12 @@ actions quietly resource-compile-nt
 
 actions quietly resource-compile-mingw
 {
-    windres -o "$(<)" -i "$(>)"
+    windres -D__WINDRES__ -o "$(<)" -i "$(>)"
 }
 
 actions quietly resource-compile-cygwin
 {
-    windres --include-dir "$(>:D)" -o "$(<)" -i "$(>)"
+    windres -D__WINDRES__ --include-dir "$(>:D)" -o "$(<)" -i "$(>)"
 }
 
 actions quietly create-empty-object

@@ -36,7 +36,6 @@
 
 /* GLOBALS ******************************************************************/
 
-extern ULONG NtGlobalFlag;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -69,16 +68,6 @@ RtlGetVersion(RTL_OSVERSIONINFOW *Info)
    }
 
    return STATUS_INVALID_PARAMETER;
-}
-
-/*
-* @implemented
-*/
-ULONG
-STDCALL
-RtlGetNtGlobalFlags(VOID)
-{
-	return(NtGlobalFlag);
 }
 
 /*

@@ -597,8 +597,8 @@ BEGIN
     ID_VIEW_SMALL           "Zeigt Tasks als kleine Symbole an."
     ID_VIEW_DETAILS         "Zeigt Informationen über jeden Task an."
     ID_VIEW_UPDATESPEED_HIGH "Aktualisiert die Anzeige zweimal pro Sekunde."
-    ID_VIEW_UPDATESPEED_NORMAL "Aktualisiert die Anzeige alle zwei Sekunde."
-    ID_VIEW_UPDATESPEED_LOW "Aktualisiert die Anzeige alle vier Sekunde."
+    ID_VIEW_UPDATESPEED_NORMAL "Aktualisiert die Anzeige alle zwei Sekunden."
+    ID_VIEW_UPDATESPEED_LOW "Aktualisiert die Anzeige alle vier Sekunden."
 END
 
 STRINGTABLE DISCARDABLE
@@ -616,10 +616,10 @@ BEGIN
     ID_FILE_EXIT            "Beendet den Task-Manager."
     ID_OPTIONS_SHOW16BITTASKS
                             "Zeigt die 16-Bit Tasks unter der zugehörigen ntvdm.exe an."
-    ID_VIEW_SELECTCOLUMNS   "Legt fest welche Spaletn auf der Registerkarte Prozesse angezeigt werden."
+    ID_VIEW_SELECTCOLUMNS   "Legt fest welche Spalten auf der Registerkarte Prozesse angezeigt werden."
     ID_VIEW_SHOWKERNELTIMES "Zeigt die Kernel-Zeiten in den Systemmonitordiagrammen an."
     ID_VIEW_CPUHISTORY_ONEGRAPHALL
-                            "Zeigt für jede CPU-Auslastung ein Verlausdiagramm an."
+                            "Zeigt für jede CPU-Auslastung ein Verlaufsdiagramm an."
     ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Zeigt die gesamte CPU-Auslastung in einem Verlaufdiagramm an."
     ID_APPLICATION_PAGE_SWITCHTO
                             "Zeigt das Fenster im Vordergrund an und wechselt zu diesem Task."

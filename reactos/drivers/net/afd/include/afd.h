@@ -191,8 +191,8 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    PIO_STACK_LOCATION IrpSp );
 
 NTSTATUS STDCALL
-AfdGetSockName( PDEVICE_OBJECT DeviceObject, PIRP Irp, 
-		PIO_STACK_LOCATION IrpSp );
+AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp, 
+                      PIO_STACK_LOCATION IrpSp, BOOLEAN Local );
 
 /* listen.c */
 NTSTATUS AfdWaitForListen( PDEVICE_OBJECT DeviceObject, PIRP Irp,
@@ -262,6 +262,8 @@ NTSTATUS STDCALL
 AfdEnumEvents( PDEVICE_OBJECT DeviceObject, PIRP Irp, 
 	       PIO_STACK_LOCATION IrpSp );
 VOID PollReeval( PAFD_DEVICE_EXTENSION DeviceObject, PFILE_OBJECT FileObject );
+VOID KillSelectsForFCB( PAFD_DEVICE_EXTENSION DeviceExt,
+                        PFILE_OBJECT FileObject, BOOLEAN ExclusiveOnly );
 
 /* tdi.c */
 

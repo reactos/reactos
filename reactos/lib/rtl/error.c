@@ -991,4 +991,44 @@ RtlNtStatusToPsxErrno(IN NTSTATUS Status)
    return -1; /* generic POSIX error */
 }
 
+
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+RtlGetLastNtStatus(VOID)
+{
+  return NtCurrentTeb()->LastStatusValue;
+}
+
+
+/*
+ * @implemented
+ */
+ULONG STDCALL
+RtlGetLastWin32Error(VOID)
+{
+  return NtCurrentTeb()->LastErrorValue;
+}
+
+
+/*
+ * @implemented
+ */
+VOID STDCALL
+RtlSetLastWin32Error(IN ULONG Error)
+{
+  NtCurrentTeb()->LastErrorValue = Error;
+}
+
+
+/*
+ * @implemented
+ */
+VOID STDCALL
+RtlSetLastWin32ErrorAndNtStatusFromNtStatus(IN NTSTATUS Status)
+{
+  NtCurrentTeb()->LastErrorValue = RtlNtStatusToDosError(Status);
+}
+
 /* EOF */

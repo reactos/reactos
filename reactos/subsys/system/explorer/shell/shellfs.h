@@ -36,7 +36,7 @@ struct ShellEntry : public Entry
 	virtual ShellPath	create_absolute_pidl() const;
 	virtual HRESULT		GetUIObjectOf(HWND hWnd, REFIID riid, LPVOID* ppvOut);
 	virtual BOOL		launch_entry(HWND hwnd, UINT nCmdShow=SW_SHOWNORMAL);
-	virtual HRESULT		do_context_menu(HWND hwnd, LPPOINT pptScreen);
+	virtual HRESULT		do_context_menu(HWND hwnd, LPPOINT pptScreen, CtxMenuInterfaces& cm_ifs);
 
 	IShellFolder*		get_parent_folder() const;
 

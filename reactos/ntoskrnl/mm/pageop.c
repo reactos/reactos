@@ -1,11 +1,11 @@
 /* $Id$
  *
- * COPYRIGHT:    See COPYING in the top level directory
- * PROJECT:      ReactOS kernel
- * FILE:         ntoskrnl/mm/pageop.c
- * PROGRAMMER:   David Welch (welch@cwcom.net)
- * UPDATE HISTORY: 
- *               27/05/98: Created
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/mm/pageop.c
+ * PURPOSE:         No purpose listed.
+ * 
+ * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
 /* INCLUDES ****************************************************************/
@@ -67,10 +67,10 @@ MmReleasePageOp(PMM_PAGEOP PageOp)
 }
 
 PMM_PAGEOP
-MmCheckForPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
+MmCheckForPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
                  PMM_SECTION_SEGMENT Segment, ULONG Offset)
 {
-   ULONG Hash;
+   ULONG_PTR Hash;
    KIRQL oldIrql;
    PMM_PAGEOP PageOp;
 
@@ -79,11 +79,11 @@ MmCheckForPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
     */
    if (MArea->Type == MEMORY_AREA_SECTION_VIEW)
    {
-      Hash = (((ULONG)Segment) | (((ULONG)Offset) / PAGE_SIZE));
+      Hash = (((ULONG_PTR)Segment) | (((ULONG_PTR)Offset) / PAGE_SIZE));
    }
    else
    {
-      Hash = (((ULONG)Pid) | (((ULONG)Address) / PAGE_SIZE));
+      Hash = (((ULONG_PTR)Pid) | (((ULONG_PTR)Address) / PAGE_SIZE));
    }
    Hash = Hash % PAGEOP_HASH_TABLE_SIZE;
 
@@ -129,7 +129,7 @@ MmCheckForPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
 }
 
 PMM_PAGEOP
-MmGetPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
+MmGetPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
             PMM_SECTION_SEGMENT Segment, ULONG Offset, ULONG OpType, BOOL First)
 /*
  * FUNCTION: Get a page operation descriptor corresponding to
@@ -137,7 +137,7 @@ MmGetPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
  * pid, address pair.      
  */
 {
-   ULONG Hash;
+   ULONG_PTR Hash;
    KIRQL oldIrql;
    PMM_PAGEOP PageOp;
 
@@ -146,11 +146,11 @@ MmGetPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
     */
    if (MArea->Type == MEMORY_AREA_SECTION_VIEW)
    {
-      Hash = (((ULONG)Segment) | (((ULONG)Offset) / PAGE_SIZE));
+      Hash = (((ULONG_PTR)Segment) | (((ULONG_PTR)Offset) / PAGE_SIZE));
    }
    else
    {
-      Hash = (((ULONG)Pid) | (((ULONG)Address) / PAGE_SIZE));
+      Hash = (((ULONG_PTR)Pid) | (((ULONG_PTR)Address) / PAGE_SIZE));
    }
    Hash = Hash % PAGEOP_HASH_TABLE_SIZE;
 

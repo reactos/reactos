@@ -1,29 +1,11 @@
-/*
- *  ReactOS kernel
- *  Copyright (C) 2001-2004 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
 /* $Id$
  *
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/kdb.c
  * PURPOSE:         Kernel debugger
- * PROGRAMMER:      David Welch (welch@mcmail.com)
- * UPDATE HISTORY:
- *                  Created 01/03/01
+ * 
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
 /* INCLUDES ******************************************************************/
@@ -60,8 +42,9 @@ static KDB_ACTIVE_BREAKPOINT
 
 static BOOLEAN KdbHandleUmode = FALSE;
 static BOOLEAN KdbHandleHandled = FALSE;
-static BOOLEAN KdbIgnoreNextSingleStep = FALSE;
+static BOOLEAN KdbBreakOnModuleLoad = FALSE;
 
+static BOOLEAN KdbIgnoreNextSingleStep = FALSE;
 static ULONG KdbLastSingleStepFrom = 0xFFFFFFFF;
 static BOOLEAN KdbEnteredOnSingleStep = FALSE;
 
@@ -74,6 +57,8 @@ ULONG
 DbgContCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
 ULONG 
 DbgStopCondition(ULONG Aargc, PCH Argv[], PKTRAP_FRAME Tf);
+ULONG
+DbgModuleLoadedAction(ULONG Aargc, PCH Argv[], PKTRAP_FRAME Tf);
 ULONG
 DbgEchoToggle(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
 ULONG 
@@ -129,7 +114,8 @@ struct
   {"cont", "cont", "Exit the debugger", DbgContCommand},
   {"echo", "echo", "Toggle serial echo", DbgEchoToggle},
   {"condition", "condition [all|umode|kmode]", "Kdbg enter condition", DbgStopCondition},
-   
+  {"module-loaded", "module-loaded [break|continue]", "Module-loaded action", DbgModuleLoadedAction},
+
   {"regs", "regs", "Display general purpose registers", DbgRegsCommand},
   {"dregs", "dregs", "Display debug registers", DbgDRegsCommand},
   {"cregs", "cregs", "Display control registers", DbgCRegsCommand},
@@ -909,9 +895,8 @@ DbgPrintBackTrace(PULONG Frame, ULONG_PTR StackBase, ULONG_PTR StackLimit)
 {
   PVOID Address;
 
-  DbgPrint("Frames:  ");
-  while (Frame != NULL && (ULONG_PTR)Frame >= StackLimit && 
-	 (ULONG_PTR)Frame < StackBase) /* FIXME: why limit this to StackBase/StackLimit? */
+  DbgPrint("Frames:\n");
+  while (Frame != NULL)
     {
       if (!NT_SUCCESS(KdbpSafeReadMemory(&Address, Frame + 1, sizeof (Address))))
         {
@@ -1202,8 +1187,8 @@ DbgBackTraceCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
 	}
       else
 	{
-	  StackBase = (ULONG_PTR)&init_stack_top;
-	  StackLimit = (ULONG_PTR)&init_stack;
+	  StackBase = (ULONG_PTR)init_stack_top;
+	  StackLimit = (ULONG_PTR)init_stack;
 	}
       DbgPrintBackTrace((PULONG)&Tf->DebugEbp, StackBase, StackLimit);
     }
@@ -1348,6 +1333,32 @@ DbgStopCondition(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
     { KdbHandleHandled = FALSE; KdbHandleUmode = TRUE; }
     else if( !strcmp(Argv[1],"kmode") )
     { KdbHandleHandled = FALSE; KdbHandleUmode = FALSE; }
+
+    return(TRUE);
+}
+
+ULONG
+DbgModuleLoadedAction(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
+{
+    if (Argc == 1)
+      {
+	if (KdbBreakOnModuleLoad)
+          DbgPrint("Current setting: break\n");
+	else
+          DbgPrint("Current setting: continue\n");
+      }
+    else if (!strcmp(Argv[1], "break"))
+      {
+        KdbBreakOnModuleLoad = TRUE;
+      }
+    else if (!strcmp(Argv[1], "continue"))
+      {
+        KdbBreakOnModuleLoad = FALSE;
+      }
+    else
+      {
+        DbgPrint("Unknown setting: %s\n", Argv[1]);
+      }
 
     return(TRUE);
 }
@@ -1656,23 +1667,24 @@ KdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
   LONG BreakPointNr;
   ULONG ExpNr = (ULONG)TrapFrame->DebugArgMark;
 
+  /* Always handle beakpoints */
   if (ExpNr != 1 && ExpNr != 3)
     {
       DbgPrint(":KDBG:Entered:%s:%s\n",
                PreviousMode==KernelMode ? "kmode" : "umode",
                AlwaysHandle ? "always" : "if-unhandled");
-    }
-  
-  /* If we aren't handling umode exceptions then return */
-  if (PreviousMode == UserMode && !KdbHandleUmode && !AlwaysHandle)
-    {
-      return kdContinue;
-    }
 
-  /* If the exception would be unhandled (and we care) then handle it */
-  if (PreviousMode == KernelMode && !KdbHandleHandled && !AlwaysHandle)
-    {
-      return kdContinue;
+      /* If we aren't handling umode exceptions then return */
+      if (PreviousMode == UserMode && !KdbHandleUmode && !AlwaysHandle)
+        {
+          return kdHandleException;
+        }
+
+      /* If the exception would be unhandled (and we care) then handle it */
+      if (PreviousMode == KernelMode && !KdbHandleHandled && !AlwaysHandle)
+        {
+          return kdHandleException;
+        }
     }
 
   /* Exception inside the debugger? Game over. */
@@ -1772,3 +1784,14 @@ KdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
       return(kdContinue);
     }
 }
+
+VOID
+KdbModuleLoaded(IN PUNICODE_STRING Name)
+{
+  if (!KdbBreakOnModuleLoad)
+    return;
+    
+  DbgPrint("Module %wZ loaded.\n", Name);
+  DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
+}
+

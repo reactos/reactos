@@ -1,12 +1,11 @@
 /* $Id$
- *
+ * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/kd/kdebug.c
  * PURPOSE:         Kernel debugger
- * PROGRAMMER:      Eric Kohl (ekohl@abo.rhein-zeitung.de)
- * UPDATE HISTORY:
- *                  21/10/99: Created
+ * 
+ * PROGRAMMERS:     Eric Kohl (ekohl@abo.rhein-zeitung.de)
  */
 
 #include <ntoskrnl.h>
@@ -61,7 +60,8 @@ PrintString(char* fmt,...)
   va_list ap;
 
   va_start(ap, fmt);
-  vsprintf(buffer, fmt, ap);
+  _vsnprintf(buffer, sizeof(buffer) - 1, fmt, ap);
+  buffer[sizeof(buffer) - 1] = 0;
   va_end(ap);
 
   HalDisplayString(buffer);
@@ -243,7 +243,7 @@ KdInitSystem(ULONG BootPhase,
 		}
 	    }
 	}
-#ifdef KDBG
+#if defined(KDBG) || defined(DBG)
     else if (!_strnicmp(p2, "PROFILE", 7)  && BootPhase > 0)
       {
         KdbInitProfiling();

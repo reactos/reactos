@@ -244,8 +244,8 @@ DIB_24BPP_BitBlt(PBLTINFO BltInfo)
    BOOL UsesPattern;
    PBYTE DestBits;
 
-   UsesSource = ROP_USES_SOURCE(BltInfo->Rop4);
-   UsesPattern = ROP_USES_PATTERN(BltInfo->Rop4);
+   UsesSource = ROP4_USES_SOURCE(BltInfo->Rop4);
+   UsesPattern = ROP4_USES_PATTERN(BltInfo->Rop4);
       
    SourceY = BltInfo->SourcePoint.y;
    DestBits = (PBYTE)(

@@ -98,7 +98,7 @@ EngCopyBits(SURFOBJ *Dest,
     /* FIXME: Remove the typecast! */
     ret = IntEngBitBlt((BITMAPOBJ*)Dest, (BITMAPOBJ*)Source,
                        NULL, Clip, ColorTranslation, DestRect, SourcePoint,
-                       NULL, NULL, NULL, 0);
+                       NULL, NULL, NULL, ROP3_TO_ROP4(SRCCOPY));
 
     MouseSafetyOnDrawEnd(Dest);
     MouseSafetyOnDrawEnd(Source);

@@ -45,7 +45,6 @@
 #include "shell32_main.h"
 #include "shresdef.h"
 #include "shlwapi.h"
-#include "shellfolder.h"
 #include "wine/debug.h"
 #include "debughlp.h"
 #include "shfldr.h"

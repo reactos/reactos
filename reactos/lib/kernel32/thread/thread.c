@@ -852,4 +852,49 @@ GetThreadIOPendingFlag(HANDLE hThread,
   return FALSE;
 }
 
+
+/*
+ * @implemented
+ */
+VOID STDCALL
+Sleep(DWORD dwMilliseconds)
+{
+  SleepEx(dwMilliseconds, FALSE);
+  return;
+}
+
+
+/*
+ * @implemented
+ */
+DWORD STDCALL
+SleepEx(DWORD dwMilliseconds,
+	BOOL bAlertable)
+{
+  LARGE_INTEGER Interval;
+  NTSTATUS errCode;
+
+  if (dwMilliseconds != INFINITE)
+    {
+      /*
+       * System time units are 100 nanoseconds (a nanosecond is a billionth of
+       * a second).
+       */
+      Interval.QuadPart = -((ULONGLONG)dwMilliseconds * 10000);
+    }
+  else
+    {
+      /* Approximately 292000 years hence */
+      Interval.QuadPart = -0x7FFFFFFFFFFFFFFFLL;
+    }
+
+  errCode = NtDelayExecution ((bAlertable ? TRUE : FALSE), &Interval);
+  if (!NT_SUCCESS(errCode))
+    {
+      SetLastErrorByStatus (errCode);
+      return -1;
+    }
+  return 0;
+}
+
 /* EOF */

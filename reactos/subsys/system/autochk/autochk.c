@@ -76,8 +76,8 @@ NtProcessStartup(PPEB Peb)
   
   Status = NtQueryInformationProcess(NtCurrentProcess(),
                                      ProcessDeviceMap,
-                                     &DeviceMap,
-                                     sizeof(DeviceMap),
+                                     &DeviceMap.Query,
+                                     sizeof(DeviceMap.Query),
                                      NULL);
   if(NT_SUCCESS(Status))
   {

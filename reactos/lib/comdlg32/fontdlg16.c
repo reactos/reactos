@@ -41,7 +41,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
 #include "cdlg.h"
 #include "cdlg16.h"
 
-static void FONT_LogFont16To32A( const LPLOGFONT16 font16, LPLOGFONTA font32 )
+static void FONT_LogFont16To32W( const LPLOGFONT16 font16, LPLOGFONTW font32 )
 {
     font32->lfHeight = font16->lfHeight;
     font32->lfWidth = font16->lfWidth;
@@ -56,35 +56,50 @@ static void FONT_LogFont16To32A( const LPLOGFONT16 font16, LPLOGFONTA font32 )
     font32->lfClipPrecision = font16->lfClipPrecision;
     font32->lfQuality = font16->lfQuality;
     font32->lfPitchAndFamily = font16->lfPitchAndFamily;
-    lstrcpynA( font32->lfFaceName, font16->lfFaceName, LF_FACESIZE );
+    MultiByteToWideChar(CP_ACP, 0, font16->lfFaceName,
+                        LF_FACESIZE, font32->lfFaceName, LF_FACESIZE);
 };
 
-static void FONT_Metrics16To32A( const TEXTMETRIC16 *pm16,
-                                 NEWTEXTMETRICEXA *pnm32a)
+static void FONT_Metrics16To32W( const TEXTMETRIC16 *pm16,
+                                 NEWTEXTMETRICEXW *pnm32w)
 {
-    ZeroMemory( pnm32a, sizeof(NEWTEXTMETRICEXA));
+    ZeroMemory( pnm32w, sizeof(NEWTEXTMETRICEXW));
     /* NOTE: only the fields used by AddFontStyle() are filled in */
-    pnm32a->ntmTm.tmHeight = pm16->tmHeight;
-    pnm32a->ntmTm.tmExternalLeading = pm16->tmExternalLeading;
+    pnm32w->ntmTm.tmHeight = pm16->tmHeight;
+    pnm32w->ntmTm.tmExternalLeading = pm16->tmExternalLeading;
 };
 
-static void CFn_CHOOSEFONT16to32A(LPCHOOSEFONT16 chf16, LPCHOOSEFONTA chf32a)
+static void CFn_CHOOSEFONT16to32W(LPCHOOSEFONT16 chf16, LPCHOOSEFONTW chf32w)
 {
-  chf32a->lStructSize=sizeof(CHOOSEFONTA);
-  chf32a->hwndOwner=HWND_32(chf16->hwndOwner);
-  chf32a->hDC=HDC_32(chf16->hDC);
-  chf32a->iPointSize=chf16->iPointSize;
-  chf32a->Flags=chf16->Flags;
-  chf32a->rgbColors=chf16->rgbColors;
-  chf32a->lCustData=chf16->lCustData;
-  chf32a->lpfnHook=NULL;
-  chf32a->lpTemplateName=MapSL(chf16->lpTemplateName);
-  chf32a->hInstance=HINSTANCE_32(chf16->hInstance);
-  chf32a->lpszStyle=MapSL(chf16->lpszStyle);
-  chf32a->nFontType=chf16->nFontType;
-  chf32a->nSizeMax=chf16->nSizeMax;
-  chf32a->nSizeMin=chf16->nSizeMin;
-  FONT_LogFont16To32A(MapSL(chf16->lpLogFont), chf32a->lpLogFont);
+  int len;
+  if(chf16->lpTemplateName)
+  {
+    len = MultiByteToWideChar(CP_ACP, 0, (LPBYTE)chf16->lpTemplateName, -1, NULL, 0);
+    chf32w->lpTemplateName = HeapAlloc(GetProcessHeap(), 0,len*sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, (LPSTR)MapSL(chf16->lpTemplateName),
+                        -1, (LPWSTR)chf32w->lpTemplateName, len);
+  }
+  if(chf16->lpszStyle)
+  {
+    len = MultiByteToWideChar(CP_ACP, 0, (LPBYTE)chf16->lpszStyle, -1, NULL, 0);
+    chf32w->lpszStyle = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, (LPSTR)MapSL(chf16->lpTemplateName),
+                        -1, chf32w->lpszStyle, len);
+  }
+  chf32w->lStructSize=sizeof(CHOOSEFONTW);
+  chf32w->hwndOwner=HWND_32(chf16->hwndOwner);
+  chf32w->hDC=HDC_32(chf16->hDC);
+  chf32w->iPointSize=chf16->iPointSize;
+  chf32w->Flags=chf16->Flags;
+  chf32w->rgbColors=chf16->rgbColors;
+  chf32w->lCustData=chf16->lCustData;
+  chf32w->lpfnHook=NULL;
+  chf32w->hInstance=HINSTANCE_32(chf16->hInstance);
+  chf32w->lpszStyle=MapSL(chf16->lpszStyle);
+  chf32w->nFontType=chf16->nFontType;
+  chf32w->nSizeMax=chf16->nSizeMax;
+  chf32w->nSizeMin=chf16->nSizeMin;
+  FONT_LogFont16To32W(MapSL(chf16->lpLogFont), chf32w->lpLogFont);
 };
 
 /***********************************************************************
@@ -110,12 +125,12 @@ INT16 WINAPI FontFamilyEnumProc16( SEGPTR logfont, SEGPTR metrics,
   LPCHOOSEFONT16 lpcf=(LPCHOOSEFONT16)GetWindowLongA(hDlg, DWL_USER);
   LOGFONT16 *lplf = MapSL( logfont );
   TEXTMETRIC16 *lpmtrx16 = MapSL(metrics);
-  ENUMLOGFONTEXA elf32a;
-  NEWTEXTMETRICEXA nmtrx32a;
-  FONT_LogFont16To32A(lplf, &(elf32a.elfLogFont));
-  FONT_Metrics16To32A(lpmtrx16, &nmtrx32a);
-  return AddFontFamily(&elf32a, &nmtrx32a, nFontType,
-          (LPCHOOSEFONTA)lpcf->lpTemplateName, hwnd,NULL);
+  ENUMLOGFONTEXW elf32w;
+  NEWTEXTMETRICEXW nmtrx32w;
+  FONT_LogFont16To32W(lplf, &(elf32w.elfLogFont));
+  FONT_Metrics16To32W(lpmtrx16, &nmtrx32w);
+  return AddFontFamily(&elf32w, &nmtrx32w, nFontType,
+          (LPCHOOSEFONTW)lpcf->lpTemplateName, hwnd,NULL);
 }
 
 /***********************************************************************
@@ -130,12 +145,12 @@ INT16 WINAPI FontStyleEnumProc16( SEGPTR logfont, SEGPTR metrics,
   LPCHOOSEFONT16 lpcf=(LPCHOOSEFONT16)GetWindowLongA(hDlg, DWL_USER);
   LOGFONT16 *lplf = MapSL(logfont);
   TEXTMETRIC16 *lpmtrx16 = MapSL(metrics);
-  ENUMLOGFONTEXA elf32a;
-  NEWTEXTMETRICEXA nmtrx32a;
-  FONT_LogFont16To32A(lplf, &(elf32a.elfLogFont));
-  FONT_Metrics16To32A(lpmtrx16, &nmtrx32a);
-  return AddFontStyle(&elf32a, &nmtrx32a, nFontType,
-          (LPCHOOSEFONTA)lpcf->lpTemplateName, hcmb2, hcmb3, hDlg, TRUE);
+  ENUMLOGFONTEXW elf32w;
+  NEWTEXTMETRICEXW nmtrx32w;
+  FONT_LogFont16To32W(lplf, &(elf32w.elfLogFont));
+  FONT_Metrics16To32W(lpmtrx16, &nmtrx32w);
+  return AddFontStyle(&elf32w, &nmtrx32w, nFontType,
+          (LPCHOOSEFONTW)lpcf->lpTemplateName, hcmb2, hcmb3, hDlg, TRUE);
 }
 
 /***********************************************************************
@@ -149,13 +164,13 @@ BOOL16 WINAPI ChooseFont16(LPCHOOSEFONT16 lpChFont)
     BOOL16 bRet = FALSE;
     LPCVOID template;
     FARPROC16 ptr;
-    CHOOSEFONTA cf32a;
-    LOGFONTA lf32a;
+    CHOOSEFONTW cf32w;
+    LOGFONTW lf32w;
     LOGFONT16 *font16;
     SEGPTR lpTemplateName;
 
-    cf32a.lpLogFont=&lf32a;
-    CFn_CHOOSEFONT16to32A(lpChFont, &cf32a);
+    cf32w.lpLogFont=&lf32w;
+    CFn_CHOOSEFONT16to32W(lpChFont, &cf32w);
 
     TRACE("ChooseFont\n");
     if (!lpChFont) return FALSE;
@@ -228,7 +243,7 @@ BOOL16 WINAPI ChooseFont16(LPCHOOSEFONT16 lpChFont)
 
     /* lpTemplateName is not used in the dialog */
     lpTemplateName=lpChFont->lpTemplateName;
-    lpChFont->lpTemplateName=(SEGPTR)&cf32a;
+    lpChFont->lpTemplateName=(SEGPTR)&cf32w;
 
     ptr = GetProcAddress16(GetModuleHandle16("COMMDLG"), (LPCSTR) 16);
     hInst = GetWindowLongPtrA(HWND_32(lpChFont->hwndOwner), GWLP_HINSTANCE);
@@ -242,27 +257,32 @@ BOOL16 WINAPI ChooseFont16(LPCHOOSEFONT16 lpChFont)
     }
     lpChFont->lpTemplateName=lpTemplateName;
 
-    lpChFont->iPointSize = cf32a.iPointSize;
-    lpChFont->Flags = cf32a.Flags;
-    lpChFont->rgbColors = cf32a.rgbColors;
-    lpChFont->lCustData = cf32a.lCustData;
-    lpChFont->nFontType = cf32a.nFontType;
+    lpChFont->iPointSize = cf32w.iPointSize;
+    lpChFont->Flags = cf32w.Flags;
+    lpChFont->rgbColors = cf32w.rgbColors;
+    lpChFont->lCustData = cf32w.lCustData;
+    lpChFont->nFontType = cf32w.nFontType;
 
     font16 = MapSL(lpChFont->lpLogFont);
-    font16->lfHeight = cf32a.lpLogFont->lfHeight;
-    font16->lfWidth = cf32a.lpLogFont->lfWidth;
-    font16->lfEscapement = cf32a.lpLogFont->lfEscapement;
-    font16->lfOrientation = cf32a.lpLogFont->lfOrientation;
-    font16->lfWeight = cf32a.lpLogFont->lfWeight;
-    font16->lfItalic = cf32a.lpLogFont->lfItalic;
-    font16->lfUnderline = cf32a.lpLogFont->lfUnderline;
-    font16->lfStrikeOut = cf32a.lpLogFont->lfStrikeOut;
-    font16->lfCharSet = cf32a.lpLogFont->lfCharSet;
-    font16->lfOutPrecision = cf32a.lpLogFont->lfOutPrecision;
-    font16->lfClipPrecision = cf32a.lpLogFont->lfClipPrecision;
-    font16->lfQuality = cf32a.lpLogFont->lfQuality;
-    font16->lfPitchAndFamily = cf32a.lpLogFont->lfPitchAndFamily;
-    lstrcpynA( font16->lfFaceName, cf32a.lpLogFont->lfFaceName, LF_FACESIZE );
+    font16->lfHeight = cf32w.lpLogFont->lfHeight;
+    font16->lfWidth = cf32w.lpLogFont->lfWidth;
+    font16->lfEscapement = cf32w.lpLogFont->lfEscapement;
+    font16->lfOrientation = cf32w.lpLogFont->lfOrientation;
+    font16->lfWeight = cf32w.lpLogFont->lfWeight;
+    font16->lfItalic = cf32w.lpLogFont->lfItalic;
+    font16->lfUnderline = cf32w.lpLogFont->lfUnderline;
+    font16->lfStrikeOut = cf32w.lpLogFont->lfStrikeOut;
+    font16->lfCharSet = cf32w.lpLogFont->lfCharSet;
+    font16->lfOutPrecision = cf32w.lpLogFont->lfOutPrecision;
+    font16->lfClipPrecision = cf32w.lpLogFont->lfClipPrecision;
+    font16->lfQuality = cf32w.lpLogFont->lfQuality;
+    font16->lfPitchAndFamily = cf32w.lpLogFont->lfPitchAndFamily;
+    WideCharToMultiByte(CP_ACP, 0, cf32w.lpLogFont->lfFaceName,
+                          LF_FACESIZE, font16->lfFaceName, LF_FACESIZE, 0, 0);
+
+    HeapFree(GetProcessHeap(), 0, (LPBYTE)cf32w.lpTemplateName);
+    HeapFree(GetProcessHeap(), 0, cf32w.lpszStyle);
+
     return bRet;
 }
 
@@ -291,7 +311,7 @@ BOOL16 CALLBACK FormatCharDlgProc16(HWND16 hDlg16, UINT16 message,
   else
   {
     lpcf=(LPCHOOSEFONT16)lParam;
-    if (!CFn_WMInitDialog(hDlg, wParam, lParam, (LPCHOOSEFONTA)lpcf->lpTemplateName))
+    if (!CFn_WMInitDialog(hDlg, wParam, lParam, (LPCHOOSEFONTW)lpcf->lpTemplateName))
     {
       TRACE("CFn_WMInitDialog returned FALSE\n");
       return FALSE;
@@ -337,17 +357,16 @@ BOOL16 CALLBACK FormatCharDlgProc16(HWND16 hDlg16, UINT16 message,
         break;
     case WM_COMMAND:
         res=CFn_WMCommand(hDlg, MAKEWPARAM( wParam, HIWORD(lParam) ), LOWORD(lParam),
-                          (LPCHOOSEFONTA)lpcf->lpTemplateName);
+                          (LPCHOOSEFONTW)lpcf->lpTemplateName);
         break;
     case WM_DESTROY:
-        res=CFn_WMDestroy(hDlg, wParam, lParam);
-        break;
+        return TRUE;
     case WM_CHOOSEFONT_GETLOGFONT:
         TRACE("WM_CHOOSEFONT_GETLOGFONT lParam=%08lX\n", lParam);
         FIXME("current logfont back to caller\n");
         break;
     case WM_PAINT:
-        res= CFn_WMPaint(hDlg, wParam, lParam, (LPCHOOSEFONTA)lpcf->lpTemplateName);
+        res= CFn_WMPaint(hDlg, wParam, lParam, (LPCHOOSEFONTW)lpcf->lpTemplateName);
         break;
     }
   return res;

@@ -1,35 +1,14 @@
-/*
- *  ReactOS kernel
- *  Copyright (C) 2000, 1999, 1998 David Welch <welch@cwcom.net>,
- *                                 Philip Susi <phreak@iag.net>,
- *                                 Eric Kohl <ekohl@abo.rhein-zeitung.de>
- *                                 Alex Ionescu <alex@relsoft.net>
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
 /* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/dpc.c
  * PURPOSE:         Handle DPCs (Delayed Procedure Calls)
- * PROGRAMMER:      David Welch (welch@mcmail.com)
- * UPDATE HISTORY:
- *                28/05/98: Created
- *                12/3/99:  Phillip Susi: Fixed IRQL problem
- *                12/11/04: Alex Ionescu - Major rewrite.
+ * 
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
+ *                  Philip Susi (phreak@iag.net)
+ *                  Eric Kohl (ekohl@abo.rhein-zeitung.de)
+ *                  Alex Ionescu (alex@relsoft.net)
  */
 
 /*
@@ -193,7 +172,7 @@ KeInsertQueueDpc (PKDPC	Dpc,
 	//	KeLowerIrql(OldIrql);
 	//}
 
-#ifdef MP
+#ifdef CONFIG_SMP
 	/* Get the right PCR for this CPU */
 	if (Dpc->Number >= MAXIMUM_PROCESSORS) {
 		ASSERT (Dpc->Number - MAXIMUM_PROCESSORS < KeNumberProcessors);
@@ -211,7 +190,7 @@ KeInsertQueueDpc (PKDPC	Dpc,
 	/* Get the DPC Data */
 	if (InterlockedCompareExchangeUL(&Dpc->DpcData, &Pcr->PrcbData.DpcData[0].DpcLock, 0)) {
 		DPRINT("DPC Already Inserted");
-#ifdef MP
+#ifdef CONFIG_SMP
 		KiReleaseSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
 #endif
 		KeLowerIrql(OldIrql);
@@ -242,7 +221,7 @@ KeInsertQueueDpc (PKDPC	Dpc,
 	/* Make sure a DPC isn't executing already and respect rules outlined above. */
 	if ((!Pcr->PrcbData.DpcRoutineActive) && (!Pcr->PrcbData.DpcInterruptRequested)) {
 		
-#ifdef MP	
+#ifdef CONFIG_SMP	
 		/* Check if this is the same CPU */
 		if (Pcr != KeGetCurrentKPCR()) {
 			/* Send IPI if High Importance */
@@ -280,7 +259,7 @@ KeInsertQueueDpc (PKDPC	Dpc,
 		}
 #endif
 	}
-#ifdef MP
+#ifdef CONFIG_SMP
 	KiReleaseSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
 #endif
 	/* Lower IRQL */	
@@ -309,7 +288,7 @@ KeRemoveQueueDpc (PKDPC	Dpc)
 	/* Raise IRQL */
 	DPRINT("Removing DPC: %x\n", Dpc);
 	KeRaiseIrql(HIGH_LEVEL, &OldIrql);
-#ifdef MP
+#ifdef CONFIG_SMP
 	KiAcquireSpinLock(&((PKDPC_DATA)Dpc->DpcData)->DpcLock);
 #endif
 	
@@ -322,7 +301,7 @@ KeRemoveQueueDpc (PKDPC	Dpc)
 		RemoveEntryList(&Dpc->DpcListEntry);
 
 	}
-#ifdef MP
+#ifdef CONFIG_SMP
         KiReleaseSpinLock(&((PKDPC_DATA)Dpc->DpcData)->DpcLock);
 #endif
 
@@ -494,7 +473,7 @@ KiDispatchInterrupt(VOID)
 	if (Pcr->PrcbData.DpcData[0].DpcQueueDepth > 0) {
 		/* Raise IRQL */
 		KeRaiseIrql(HIGH_LEVEL, &OldIrql);
-#ifdef MP		
+#ifdef CONFIG_SMP		
 		KiAcquireSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
 #endif
 	        Pcr->PrcbData.DpcRoutineActive = TRUE;
@@ -511,7 +490,7 @@ KiDispatchInterrupt(VOID)
 			DPRINT("Dpc->DpcListEntry.Flink %x\n", Dpc->DpcListEntry.Flink);
 			Dpc->DpcData = NULL;
 			Pcr->PrcbData.DpcData[0].DpcQueueDepth--;
-#ifdef MP
+#ifdef CONFIG_SMP
 			KiReleaseSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
 #endif
 			/* Disable/Enabled Interrupts and Call the DPC */
@@ -523,7 +502,7 @@ KiDispatchInterrupt(VOID)
 					     Dpc->SystemArgument2);
 			KeRaiseIrql(HIGH_LEVEL, &OldIrql);
 			
-#ifdef MP
+#ifdef CONFIG_SMP
 			KiAcquireSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
 			/* 
 			 * If the dpc routine drops the irql below DISPATCH_LEVEL,
@@ -542,7 +521,7 @@ KiDispatchInterrupt(VOID)
 		/* Clear DPC Flags */
 		Pcr->PrcbData.DpcRoutineActive = FALSE;
 		Pcr->PrcbData.DpcInterruptRequested = FALSE;
-#ifdef MP
+#ifdef CONFIG_SMP
 		KiReleaseSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
 #endif
 		

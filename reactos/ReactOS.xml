@@ -36,14 +36,6 @@
 	<directory name="hal">
 		<xi:include href="hal/directory.xml" />
 	</directory>
-	<directory name="iface">
-		<directory name="addsys">
-			<xi:include href="iface/addsys/addsys.xml" />
-		</directory>
-		<directory name="native">
-			<xi:include href="iface/native/genntdll.xml" />
-		</directory>
-	</directory>
 	<directory name="lib">
 		<xi:include href="lib/directory.xml" />
 	</directory>

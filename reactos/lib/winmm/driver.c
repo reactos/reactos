@@ -368,8 +368,8 @@ HDRVR WINAPI OpenDriverW(LPCWSTR lpDriverName, LPCWSTR lpSectionName, LPARAM lPa
 
     ret = OpenDriverA(dn, sn, lParam);
 
-    if (dn) HeapFree(GetProcessHeap(), 0, dn);
-    if (sn) HeapFree(GetProcessHeap(), 0, sn);
+    HeapFree(GetProcessHeap(), 0, dn);
+    HeapFree(GetProcessHeap(), 0, sn);
     return ret;
 }
 

@@ -4,9 +4,8 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/xhaldisp.c
  * PURPOSE:         Hal dispatch tables
- * PROGRAMMER:      Eric Kohl (ekohl@rz-online.de)
- * UPDATE HISTORY:
- *                  Created 19/06/2000
+ * 
+ * PROGRAMMERS:     Eric Kohl (ekohl@rz-online.de)
  */
 
 /* INCLUDES *****************************************************************/

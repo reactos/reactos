@@ -1,5 +1,4 @@
 <module name="user32" type="win32dll">
-	<dependency>addsys</dependency>
 	<importlibrary definition="user32.def" />
 	<include base="user32">.</include>
 	<include base="user32">include</include>
@@ -40,7 +39,7 @@
 		<file>strpool.c</file>
 		<file>stubs.c</file>
 		<file>timer.c</file>
-		<file>win32k.c</file>
+		<file>win32k.S</file>
 		<file>winhelp.c</file>
 		<file>winsta.c</file>
 		<file>wsprintf.c</file>

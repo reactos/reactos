@@ -25,9 +25,9 @@
 #define RGB_MAX						64
 #define RGB_MAX_PER_ITERATION		64
 
-VOID VideoSetAllColorsToBlack(U32 ColorCount)
+VOID VideoSetAllColorsToBlack(ULONG ColorCount)
 {
-	U32		Color;
+	ULONG		Color;
 
 	MachVideoSync();
 
@@ -37,10 +37,10 @@ VOID VideoSetAllColorsToBlack(U32 ColorCount)
 	}
 }
 
-VOID VideoFadeIn(PPALETTE_ENTRY Palette, U32 ColorCount)
+VOID VideoFadeIn(PPALETTE_ENTRY Palette, ULONG ColorCount)
 {
-	U32				Index;
-	U32				Color;
+	ULONG				Index;
+	ULONG				Color;
 	PALETTE_ENTRY	PaletteColors[ColorCount];
 
 	for (Index=0; Index<RGB_MAX; Index++)
@@ -92,13 +92,13 @@ VOID VideoFadeIn(PPALETTE_ENTRY Palette, U32 ColorCount)
 	}
 }
 
-VOID VideoFadeOut(U32 ColorCount)
+VOID VideoFadeOut(ULONG ColorCount)
 {
-	U32		Index;
-	U32		Color;
-	U8		Red;
-	U8		Green;
-	U8		Blue;
+	ULONG		Index;
+	ULONG		Color;
+	UCHAR		Red;
+	UCHAR		Green;
+	UCHAR		Blue;
 
 	for (Index=0; Index<RGB_MAX; Index++)
 	{

@@ -353,13 +353,7 @@ NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
 	 }
 
        KeReleaseSpinLock(&SourceProcess->HandleTable.ListLock, oldIrql);
-       if (!((ULONG_PTR)SourceHandleEntry->ObjectBody & OB_HANDLE_FLAG_INHERIT))
-         {
-	   ObDereferenceObject(TargetProcess);
-	   ObDereferenceObject(SourceProcess);
-	   ObDereferenceObject(ObjectBody);
-	   return STATUS_INVALID_HANDLE;
-	 }
+
        ObCreateHandle(TargetProcess,
 		      ObjectBody,
 		      DesiredAccess,

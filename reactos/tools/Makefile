@@ -9,7 +9,7 @@ RMKDIR_SOURCES = \
 RMKDIR_OBJECTS = \
 	$(RMKDIR_SOURCES:.c=.o)
 
-RMKDIR_HOST_CXXFLAGS = -g -Werror -Wall
+RMKDIR_HOST_CFLAGS = -g -Werror -Wall
 
 RMKDIR_HOST_LFLAGS = -g
 
@@ -17,12 +17,7 @@ $(RMKDIR_TARGET): $(RMKDIR_OBJECTS)
 	${host_gcc} $(RMKDIR_OBJECTS) $(RMKDIR_HOST_LFLAGS) -o $(RMKDIR_TARGET)
 
 $(RMKDIR_OBJECTS): %.o : %.c
-	${host_gcc} $(RMKDIR_HOST_CXXFLAGS) -c $< -o $@
-
-.PHONY: rmkdir
-
-rmkdir: $(RMKDIR_TARGET)
-	-
+	${host_gcc} $(RMKDIR_HOST_CFLAGS) -c $< -o $@
 
 
 
@@ -37,7 +32,7 @@ BUILDNO_SOURCES = \
 BUILDNO_OBJECTS = \
 	$(BUILDNO_SOURCES:.c=.o)
 
-BUILDNO_HOST_CXXFLAGS = -g -Werror -Wall
+BUILDNO_HOST_CFLAGS = -g -Werror -Wall
 
 BUILDNO_HOST_LFLAGS = -g
 
@@ -45,13 +40,11 @@ $(BUILDNO_TARGET): $(BUILDNO_OBJECTS)
 	${host_gcc} $(BUILDNO_OBJECTS) $(BUILDNO_HOST_LFLAGS) -o $(BUILDNO_TARGET)
 
 $(BUILDNO_OBJECTS): %.o : %.c
-	${host_gcc} $(BUILDNO_HOST_CXXFLAGS) -c $< -o $@
+	${host_gcc} $(BUILDNO_HOST_CFLAGS) -c $< -o $@
 
 include$(SEP)reactos$(SEP)buildno.h: $(BUILDNO_TARGET)
 	$(EXEPREFIX)$(BUILDNO_TARGET) include$(SEP)reactos$(SEP)buildno.h
 
-.PHONY: buildno
-
-buildno: $(BUILDNO_TARGET)
-
+include tools/nci/makefile
+include tools/rbuild/makefile
 include tools/wmc/makefile

@@ -1546,5 +1546,90 @@ BOOL WINAPI SHFindFiles( LPCITEMIDLIST pidlFolder, LPCITEMIDLIST pidlSaveFile )
  */
 void WINAPI SHUpdateImageW(LPCWSTR pszHashItem, int iIndex, UINT uFlags, int iImageIndex)
 {
-    FIXME("%s, %d, 0x%x, %d\n", debugstr_w(pszHashItem), iIndex, uFlags, iImageIndex);
+    FIXME("%s, %d, 0x%x, %d - stub\n", debugstr_w(pszHashItem), iIndex, uFlags, iImageIndex);
+}
+
+VOID WINAPI SHUpdateImageA(LPCSTR pszHashItem, INT iIndex, UINT uFlags, INT iImageIndex)
+{
+    FIXME("%s, %d, 0x%x, %d - stub\n", debugstr_a(pszHashItem), iIndex, uFlags, iImageIndex);
+}
+
+INT WINAPI SHHandleUpdateImage(LPCITEMIDLIST pidlExtra)
+{
+    FIXME("%p - stub\n", pidlExtra);
+
+    return -1;
+}
+
+BOOL WINAPI SHObjectProperties(HWND hwnd, DWORD dwType, LPCWSTR szObject, LPCWSTR szPage)
+{
+    FIXME("%p, 0x%08lx, %s, %s - stub\n", hwnd, dwType, debugstr_w(szObject), debugstr_w(szPage));
+
+    return TRUE;
+}
+
+BOOL WINAPI SHGetNewLinkInfoA(LPCSTR pszLinkTo, LPCSTR pszDir, LPSTR pszName, BOOL *pfMustCopy,
+                              UINT uFlags)
+{
+    FIXME("%s, %s, %p, %p, 0x%08x - stub\n", debugstr_a(pszLinkTo), debugstr_a(pszDir),
+          pszName, pfMustCopy, uFlags);
+
+    return FALSE;
+}
+
+BOOL WINAPI SHGetNewLinkInfoW(LPCWSTR pszLinkTo, LPCWSTR pszDir, LPWSTR pszName, BOOL *pfMustCopy,
+                              UINT uFlags)
+{
+    FIXME("%s, %s, %p, %p, 0x%08x - stub\n", debugstr_w(pszLinkTo), debugstr_w(pszDir),
+          pszName, pfMustCopy, uFlags);
+
+    return FALSE;
+}
+
+HRESULT WINAPI SHStartNetConnectionDialog(HWND hwnd, LPCSTR pszRemoteName, DWORD dwType)
+{
+    FIXME("%p, %s, 0x%08lx - stub\n", hwnd, debugstr_a(pszRemoteName), dwType);
+
+    return S_OK;
+}
+
+HRESULT WINAPI SHEmptyRecycleBinA(HWND hwnd, LPCSTR pszRootPath, DWORD dwFlags)
+{
+    FIXME("%p, %s, 0x%08lx - stub\n", hwnd, debugstr_a(pszRootPath), dwFlags);
+
+    return S_OK;
+}
+
+HRESULT WINAPI SHEmptyRecycleBinW(HWND hwnd, LPCWSTR pszRootPath, DWORD dwFlags)
+{
+    FIXME("%p, %s, 0x%08lx - stub\n", hwnd, debugstr_w(pszRootPath), dwFlags);
+
+    return S_OK;
+}
+
+DWORD WINAPI SHFormatDrive(HWND hwnd, UINT drive, UINT fmtID, UINT options)
+{
+    FIXME("%p, 0x%08x, 0x%08x, 0x%08x - stub\n", hwnd, drive, fmtID, options);
+
+    return SHFMT_NOFORMAT;
+}
+
+HRESULT WINAPI SHQueryRecycleBinA(LPCSTR pszRootPath, LPSHQUERYRBINFO pSHQueryRBInfo)
+{
+    FIXME("%s, %p - stub\n", debugstr_a(pszRootPath), pSHQueryRBInfo);
+
+    pSHQueryRBInfo->i64Size = 0;
+    pSHQueryRBInfo->i64NumItems = 0;
+
+    return S_OK;
+}
+
+HRESULT WINAPI SHQueryRecycleBinW(LPCWSTR pszRootPath, LPSHQUERYRBINFO pSHQueryRBInfo)
+{
+    FIXME("%s, %p - stub\n", debugstr_w(pszRootPath), pSHQueryRBInfo);
+
+    pSHQueryRBInfo->i64Size = 0;
+    pSHQueryRBInfo->i64NumItems = 0;
+
+    return S_OK;
 }

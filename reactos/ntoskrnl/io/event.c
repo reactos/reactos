@@ -4,9 +4,8 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/event.c
  * PURPOSE:         Implements named events
- * PROGRAMMER:      David Welch (welch@mcmail.com)
- * UPDATE HISTORY:
- *                  Created 22/05/98
+ * 
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
 /* INCLUDES *****************************************************************/
@@ -34,7 +33,7 @@ IoCreateNotificationEvent(PUNICODE_STRING EventName,
 			      NULL,
 			      NULL);
 
-   Status = NtCreateEvent(&Handle,
+   Status = ZwCreateEvent(&Handle,
 			  EVENT_ALL_ACCESS,
 			  &ObjectAttributes,
 			  NotificationEvent,
@@ -65,9 +64,12 @@ IoCreateSynchronizationEvent(PUNICODE_STRING EventName,
 			     PHANDLE EventHandle)
 {
    OBJECT_ATTRIBUTES ObjectAttributes;
+   KPROCESSOR_MODE PreviousMode;
    PKEVENT Event;
    HANDLE Handle;
    NTSTATUS Status;
+   
+   PreviousMode = ExGetPreviousMode();
 
    InitializeObjectAttributes(&ObjectAttributes,
 			      EventName,
@@ -75,11 +77,12 @@ IoCreateSynchronizationEvent(PUNICODE_STRING EventName,
 			      NULL,
 			      NULL);
 
-   Status = NtCreateEvent(&Handle,
+   Status = ZwCreateEvent(&Handle,
 			  EVENT_ALL_ACCESS,
 			  &ObjectAttributes,
 			  SynchronizationEvent,
 			  TRUE);
+
    if (!NT_SUCCESS(Status))
      {
 	return NULL;

@@ -46,6 +46,7 @@
 	<file>stg_bigblockfile.c</file>
 	<file>stg_stream.c</file>
 	<file>storage32.c</file>
+	<file>stubmanager.c</file>
 	<file>ole32res.rc</file>
 	<file>ole32.spec</file>
 </module>

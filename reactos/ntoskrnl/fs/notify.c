@@ -1,7 +1,11 @@
 /* $Id$
  *
- * reactos/ntoskrnl/fs/notify.c
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/fs/notify.c
+ * PURPOSE:         No purpose listed.
  *
+ * PROGRAMMERS:     No programmer listed.
  */
 
 #include <ntoskrnl.h>
@@ -313,10 +317,8 @@ FsRtlNotifyVolumeEvent (
  */
 NTSTATUS
 STDCALL
-FsRtlRegisterFileSystemFilterCallbacks (
-    IN PVOID		Unknown1,
-    IN PVOID		Unknown2
-    )
+FsRtlRegisterFileSystemFilterCallbacks(IN PDRIVER_OBJECT FilterDriverObject,
+                                       IN PFS_FILTER_CALLBACKS Callbacks)
 {
 	UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;

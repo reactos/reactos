@@ -1,13 +1,12 @@
-/*
- * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              ReactOS project
- * FILE:                 ntoskrnl/ke/wait.c
- * PURPOSE:              Manages non-busy waiting
- * PROGRAMMER:           David Welch (welch@mcmail.com)
- * REVISION HISTORY:
- *           21/07/98: Created
- *	     12/1/99:  Phillip Susi: Fixed wake code in KeDispatcherObjectWake
- *		   so that things like KeWaitForXXX() return the correct value
+/* $Id$
+ *
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS project
+ * FILE:            ntoskrnl/ke/wait.c
+ * PURPOSE:         Manages non-busy waiting
+ * 
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
+ *                  Phillip Susi
  */
 
 /* NOTES ********************************************************************
@@ -25,8 +24,8 @@
 
 static KSPIN_LOCK DispatcherDatabaseLock;
 
-#define KeDispatcherObjectWakeOne(hdr) KeDispatcherObjectWakeOneOrAll(hdr, FALSE)
-#define KeDispatcherObjectWakeAll(hdr) KeDispatcherObjectWakeOneOrAll(hdr, TRUE)
+#define KeDispatcherObjectWakeOne(hdr, increment) KeDispatcherObjectWakeOneOrAll(hdr, increment, FALSE)
+#define KeDispatcherObjectWakeAll(hdr, increment) KeDispatcherObjectWakeOneOrAll(hdr, increment, TRUE)
 
 extern POBJECT_TYPE EXPORTED ExMutantObjectType;
 extern POBJECT_TYPE EXPORTED ExSemaphoreObjectType;
@@ -227,13 +226,14 @@ BOOLEAN KiAbortWaitThread(PKTHREAD Thread, NTSTATUS WaitStatus)
 
    if (WasWaiting)
    {
-	   PsUnblockThread((PETHREAD)Thread, &WaitStatus);
+	   PsUnblockThread((PETHREAD)Thread, &WaitStatus, 0);
    }
    return WasWaiting;
 }
 
 static BOOLEAN
 KeDispatcherObjectWakeOneOrAll(DISPATCHER_HEADER * hdr,
+                               KPRIORITY increment,
                                BOOLEAN WakeAll)
 {
    PKWAIT_BLOCK Waiter;
@@ -332,7 +332,8 @@ KeDispatcherObjectWakeOneOrAll(DISPATCHER_HEADER * hdr,
 
          WakedAny = TRUE;
          DPRINT("Waking %x status = %x\n", WaiterHead->Thread, Status);
-         PsUnblockThread(CONTAINING_RECORD(WaiterHead->Thread, ETHREAD, Tcb), &Status);
+         PsUnblockThread(CONTAINING_RECORD(WaiterHead->Thread, ETHREAD, Tcb),
+                         &Status, increment);
       }
    }
 
@@ -340,7 +341,7 @@ KeDispatcherObjectWakeOneOrAll(DISPATCHER_HEADER * hdr,
 }
 
 
-BOOLEAN KiDispatcherObjectWake(DISPATCHER_HEADER* hdr)
+BOOLEAN KiDispatcherObjectWake(DISPATCHER_HEADER* hdr, KPRIORITY increment)
 /*
  * FUNCTION: Wake threads waiting on a dispatcher object
  * NOTE: The exact semantics of waking are dependant on the type of object
@@ -355,19 +356,19 @@ BOOLEAN KiDispatcherObjectWake(DISPATCHER_HEADER* hdr)
    switch (hdr->Type)
      {
       case InternalNotificationEvent:
-	return(KeDispatcherObjectWakeAll(hdr));
+	return(KeDispatcherObjectWakeAll(hdr, increment));
 
       case InternalNotificationTimer:
-	return(KeDispatcherObjectWakeAll(hdr));
+	return(KeDispatcherObjectWakeAll(hdr, increment));
 
       case InternalSynchronizationEvent:
-	return(KeDispatcherObjectWakeOne(hdr));
+	return(KeDispatcherObjectWakeOne(hdr, increment));
 
       case InternalSynchronizationTimer:
-	return(KeDispatcherObjectWakeOne(hdr));
+	return(KeDispatcherObjectWakeOne(hdr, increment));
 
       case InternalQueueType:
-   return(KeDispatcherObjectWakeOne(hdr));      
+	return(KeDispatcherObjectWakeOne(hdr, increment));
       
       case InternalSemaphoreType:
 	DPRINT("hdr->SignalState %d\n", hdr->SignalState);
@@ -376,20 +377,20 @@ BOOLEAN KiDispatcherObjectWake(DISPATCHER_HEADER* hdr)
 	    do
 	      {
 		DPRINT("Waking one semaphore waiter\n");
-		Ret = KeDispatcherObjectWakeOne(hdr);
+		Ret = KeDispatcherObjectWakeOne(hdr, increment);
 	      } while(hdr->SignalState > 0 &&  Ret) ;
 	    return(Ret);
 	  }
 	else return FALSE;
 
      case InternalProcessType:
-	return(KeDispatcherObjectWakeAll(hdr));
+	return(KeDispatcherObjectWakeAll(hdr, increment));
 
      case InternalThreadType:
-       return(KeDispatcherObjectWakeAll(hdr));
+       return(KeDispatcherObjectWakeAll(hdr, increment));
 
      case InternalMutexType:
-       return(KeDispatcherObjectWakeOne(hdr));
+       return(KeDispatcherObjectWakeOne(hdr, increment));
      }
    DbgPrint("Dispatcher object %x has unknown type %d\n", hdr, hdr->Type);
    KEBUGCHECK(0);
@@ -488,6 +489,7 @@ KeWaitForMultipleObjects(ULONG Count,
    NTSTATUS Status;
    KIRQL OldIrql;
    BOOLEAN Abandoned;
+   NTSTATUS WaitStatus;
 
    DPRINT("Entering KeWaitForMultipleObjects(Count %lu Object[] %p) "
           "PsGetCurrentThread() %x\n", Count, Object, PsGetCurrentThread());
@@ -539,40 +541,32 @@ KeWaitForMultipleObjects(ULONG Count,
          OldIrql = KeAcquireDispatcherDatabaseLock ();
       }
 
-      /* Alertability 101 
-       * ----------------
-       * A Wait can either be Alertable, or Non-Alertable.
-       * An Alertable Wait means that APCs can "Wake" the Thread, also called UnWaiting
-       * If an APC is Pending however, we must refuse an Alertable Wait. Such a wait would
-       * be pointless since an APC is just about to be delivered.
-       *
-       * There are many ways to check if it's safe to be alertable, and these are the ones
-       * that I could think of:
-       *         - The Thread is already Alerted. So someone beat us to the punch and we bail out.
-       *         - The Thread is Waiting in User-Mode, the APC Queue is not-empty.
-       *           It's defintely clear that we have incoming APCs, so we need to bail out and let the system
-       *           know that there are Pending User APCs (so they can be Delivered and maybe we can try again)
-       *
-       * Furthermore, wether or not we want to be Alertable, if the Thread is waiting in User-Mode, and there
-       * are Pending User APCs, we should bail out, since APCs will be delivered any second.
-       */
-	if (Alertable) {
-		if (CurrentThread->Alerted[(int)WaitMode]) {
-			CurrentThread->Alerted[(int)WaitMode] = FALSE;
-			DPRINT("Alertability failed\n");
-        		KeReleaseDispatcherDatabaseLock(OldIrql);
-			return (STATUS_ALERTED);
-		} else if ((!IsListEmpty(&CurrentThread->ApcState.ApcListHead[UserMode])) && (WaitMode == UserMode)) {
-			DPRINT1("Alertability failed\n");
-			CurrentThread->ApcState.UserApcPending = TRUE;
-        		KeReleaseDispatcherDatabaseLock(OldIrql);
-        		return (STATUS_USER_APC);
-		}
-	} else if ((CurrentThread->ApcState.UserApcPending) && (WaitMode != KernelMode)) {
-		DPRINT1("Alertability failed\n");
-        	KeReleaseDispatcherDatabaseLock(OldIrql);
-        	return (STATUS_USER_APC);
-	}
+    /* Get the current Wait Status */
+    WaitStatus = CurrentThread->WaitStatus;
+   
+    if (Alertable) {
+    
+        /* If the Thread is Alerted, set the Wait Status accordingly */    
+        if (CurrentThread->Alerted[(int)WaitMode]) {
+            
+            CurrentThread->Alerted[(int)WaitMode] = FALSE;
+            DPRINT("Thread was Alerted\n");
+            WaitStatus = STATUS_ALERTED;
+            
+        /* If there are User APCs Pending, then we can't really be alertable */
+        } else if ((!IsListEmpty(&CurrentThread->ApcState.ApcListHead[UserMode])) && 
+                   (WaitMode == UserMode)) {
+            
+            DPRINT1("APCs are Pending\n");
+            CurrentThread->ApcState.UserApcPending = TRUE;
+            WaitStatus = STATUS_USER_APC;
+        }
+        
+    /* If there are User APCs Pending and we are waiting in usermode, then we must notify the caller */
+    } else if ((CurrentThread->ApcState.UserApcPending) && (WaitMode == UserMode)) {
+            DPRINT1("APCs are Pending\n");
+            WaitStatus = STATUS_USER_APC;
+    }
 
       /*
        * Check if the wait is (already) satisfied
@@ -658,7 +652,7 @@ KeWaitForMultipleObjects(ULONG Count,
       /*
        * Set up the wait
        */
-      CurrentThread->WaitStatus = STATUS_UNSUCCESSFUL;
+      CurrentThread->WaitStatus = WaitStatus;;
 
       for (i = 0; i < Count; i++)
       {
@@ -723,7 +717,7 @@ KeWaitForMultipleObjects(ULONG Count,
          if (CurrentThread->Queue->CurrentCount < CurrentThread->Queue->MaximumCount &&
              !IsListEmpty(&CurrentThread->Queue->EntryListHead))
          {
-            KiDispatcherObjectWake(&CurrentThread->Queue->Header);
+            KiDispatcherObjectWake(&CurrentThread->Queue->Header, IO_NO_INCREMENT);
          }
       }
 

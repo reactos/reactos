@@ -19,6 +19,7 @@
  */
 #include "windef.h"
 #include "winbase.h"
+#include "winuser.h"
 #include "mprres.h"
 
 #include "version.rc"

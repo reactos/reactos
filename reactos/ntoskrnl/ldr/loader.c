@@ -4,21 +4,11 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ldr/loader.c
  * PURPOSE:         Loaders for PE executables
+ *
  * PROGRAMMERS:     Jean Michault
  *                  Rex Jolliff (rex@lvcablemodem.com)
  *                  Jason Filby (jasonfilby@yahoo.com)
  *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
- * UPDATE HISTORY:
- *   DW   22/05/98   Created
- *   RJJ  10/12/98   Completed image loader function and added hooks for MZ/PE
- *   RJJ  10/12/98   Built driver loader function and added hooks for PE/COFF
- *   RJJ  10/12/98   Rolled in David's code to load COFF drivers
- *   JM   14/12/98   Built initial PE user module loader
- *   RJJ  06/03/99   Moved user PE loader into NTDLL
- *   JF   26/01/2000 Recoded some parts to retrieve export details correctly
- *   DW   27/06/2000 Removed redundant header files
- *   CSH  11/04/2001 Added automatic loading of module symbols if they exist
- *   KJK  02/04/2003 Nebbet-ized a couple of type names
  */
 
 
@@ -307,7 +297,7 @@ LdrLoadModule(PUNICODE_STRING Filename,
                              NULL,
                              NULL);
   CHECKPOINT;
-  Status = NtOpenFile(&FileHandle,
+  Status = ZwOpenFile(&FileHandle,
                       FILE_ALL_ACCESS,
                       &ObjectAttributes,
                       &IoStatusBlock,
@@ -322,7 +312,7 @@ LdrLoadModule(PUNICODE_STRING Filename,
   CHECKPOINT;
 
   /*  Get the size of the file  */
-  Status = NtQueryInformationFile(FileHandle,
+  Status = ZwQueryInformationFile(FileHandle,
                                   &IoStatusBlock,
                                   &FileStdInfo,
                                   sizeof(FileStdInfo),
@@ -348,7 +338,7 @@ LdrLoadModule(PUNICODE_STRING Filename,
   CHECKPOINT;
 
   /*  Load driver into memory chunk  */
-  Status = NtReadFile(FileHandle,
+  Status = ZwReadFile(FileHandle,
                       0, 0, 0,
                       &IoStatusBlock,
                       ModuleLoadBase,
@@ -363,7 +353,7 @@ LdrLoadModule(PUNICODE_STRING Filename,
     }
   CHECKPOINT;
 
-  NtClose(FileHandle);
+  ZwClose(FileHandle);
 
   Status = LdrProcessModule(ModuleLoadBase,
                             Filename,
@@ -680,7 +670,7 @@ LdrLookupPageProtection(PVOID PageStart,
 	    {
 	       Execute = TRUE;
 	    }
-	    if (Characteristics & (IMAGE_SCN_MEM_WRITE|IMAGE_SCN_LNK_OTHER))
+	    if (Characteristics & (IMAGE_SCN_MEM_WRITE|IMAGE_SCN_CNT_UNINITIALIZED_DATA))
 	    {
 	       Write = TRUE;
 	    }
@@ -910,7 +900,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
 	   Protect = PAGE_EXECUTE_READ;
 	}
      }
-     else if (Characteristics & (IMAGE_SCN_MEM_WRITE|IMAGE_SCN_LNK_OTHER))
+     else if (Characteristics & (IMAGE_SCN_MEM_WRITE|IMAGE_SCN_CNT_UNINITIALIZED_DATA))
      {
         Protect = PAGE_READWRITE;
      }
@@ -1115,7 +1105,7 @@ LdrSafePEProcessModule(PVOID ModuleLoadBase,
 	PageAddress = (PVOID)((ULONG_PTR)PageAddress + PAGE_SIZE);
      }
      if (DriverBase == ModuleLoadBase &&
-	 Characteristics & IMAGE_SCN_LNK_OTHER)
+	 Characteristics & IMAGE_SCN_CNT_UNINITIALIZED_DATA)
      {
         /* For ntoskrnl, we must stop after the bss section */
 	break;
@@ -1587,6 +1577,12 @@ LdrPEFixupImports(PMODULE_OBJECT Module)
    DPRINT("Processeing import directory at %p\n", ImportModuleDirectory);
    while (ImportModuleDirectory->Name)
    {
+      if (Module->Length <= ImportModuleDirectory->Name)
+      {
+         DPRINT1("Invalid import directory in %wZ\n", &Module->FullName);
+         return STATUS_SECTION_NOT_IMAGE;
+      }
+
       /*  Check to make sure that import lib is kernel  */
       ImportedName = (PCHAR) Module->Base + ImportModuleDirectory->Name;
 

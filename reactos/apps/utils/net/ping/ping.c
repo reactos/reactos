@@ -331,7 +331,7 @@ BOOL Setup(VOID)
     }
 	
     if (phe != NULL) {
-        CopyMemory(&Target.sin_addr, phe->h_addr_list, phe->h_length);
+        CopyMemory(&Target.sin_addr, phe->h_addr, phe->h_length);
     } else {
         Target.sin_addr.s_addr = Addr;
     }
@@ -391,19 +391,9 @@ VOID TimeToMsString(LPSTR String, LARGE_INTEGER Time)
     LARGE_INTEGER LargeTime;
 
     LargeTime.QuadPart = Time.QuadPart / TicksPerMs.QuadPart;
+ 
     _i64toa(LargeTime.QuadPart, Convstr, 10);
 	strcpy(String, Convstr);
-    strcat(String, ",");
-
-    LargeTime.QuadPart = (Time.QuadPart % TicksPerMs.QuadPart) / TicksPerUs.QuadPart;
-    _i64toa(LargeTime.QuadPart, Convstr, 10);
-    Length = strlen(Convstr);
-    if (Length < 4) {
-        for (i = 0; i < 4 - Length; i++)
-            strcat(String, "0");
-    }
-
-    strcat(String, Convstr);
     strcat(String, "ms");
 }
 
@@ -417,6 +407,7 @@ BOOL DecodeResponse(PCHAR buffer, UINT size, PSOCKADDR_IN from)
     CHAR              Time[100];
     LARGE_INTEGER     RelativeTime;
     LARGE_INTEGER     LargeTime;
+    CHAR              Sign[1];
 
     IpHeader = (PIPv4_HEADER)buffer;
 
@@ -449,10 +440,17 @@ BOOL DecodeResponse(PCHAR buffer, UINT size, PSOCKADDR_IN from)
 
     RelativeTime.QuadPart = (LargeTime.QuadPart - Icmp->Timestamp.QuadPart);
 
-    TimeToMsString(Time, RelativeTime);
+    if ((RelativeTime.QuadPart / TicksPerMs.QuadPart) < 1) {
+        strcpy(Sign, "<");
+        strcpy(Time, "1ms");
+    } else {
+        strcpy(Sign, "=");
+        TimeToMsString(Time, RelativeTime);
+    }
 
-    printf("Reply from %s: bytes=%d time=%s TTL=%d\n", inet_ntoa(from->sin_addr), 
-      size - IphLength - sizeof(ICMP_ECHO_PACKET), Time, IpHeader->TTL);
+
+    printf("Reply from %s: bytes=%d time%s%s TTL=%d\n", inet_ntoa(from->sin_addr), 
+      size - IphLength - sizeof(ICMP_ECHO_PACKET), Sign, Time, IpHeader->TTL);
     if (RelativeTime.QuadPart < MinRTT.QuadPart) {
 		  MinRTT.QuadPart = RelativeTime.QuadPart;
       MinRTTSet = TRUE;

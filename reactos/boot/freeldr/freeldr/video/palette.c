@@ -21,9 +21,9 @@
 #include <video.h>
 #include <machine.h>
 
-VOID VideoSavePaletteState(PPALETTE_ENTRY Palette, U32 ColorCount)
+VOID VideoSavePaletteState(PPALETTE_ENTRY Palette, ULONG ColorCount)
 {
-	U32		Color;
+	ULONG		Color;
 
 	for (Color=0; Color<ColorCount; Color++)
 	{
@@ -31,9 +31,9 @@ VOID VideoSavePaletteState(PPALETTE_ENTRY Palette, U32 ColorCount)
 	}
 }
 
-VOID VideoRestorePaletteState(PPALETTE_ENTRY Palette, U32 ColorCount)
+VOID VideoRestorePaletteState(PPALETTE_ENTRY Palette, ULONG ColorCount)
 {
-	U32		Color;
+	ULONG		Color;
 
 	MachVideoSync();
 

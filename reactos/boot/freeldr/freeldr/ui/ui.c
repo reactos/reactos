@@ -28,8 +28,8 @@
 #include <version.h>
 #include <video.h>
 
-U32	UiScreenWidth = 80;							// Screen Width
-U32	UiScreenHeight = 25;							// Screen Height
+ULONG	UiScreenWidth = 80;							// Screen Width
+ULONG	UiScreenHeight = 25;							// Screen Height
 
 UCHAR	UiStatusBarFgColor			= COLOR_BLACK;			// Status bar foreground color
 UCHAR	UiStatusBarBgColor			= COLOR_CYAN;			// Status bar background color
@@ -61,10 +61,10 @@ UCHAR	UiMonthNames[12][15] = { "January ", "February ", "March ", "April ", "May
 
 BOOL UiInitialize(BOOLEAN ShowGui)
 {
-	U32	SectionId;
+	ULONG	SectionId;
 	UCHAR	DisplayModeText[260];
 	UCHAR	SettingText[260];
-	U32	Depth;
+	ULONG	Depth;
 
 	if (!ShowGui) {
 		if (!TuiInitialize())
@@ -233,7 +233,7 @@ VOID UiDrawBackdrop(VOID)
 	}
 }
 
-VOID UiFillArea(U32 Left, U32 Top, U32 Right, U32 Bottom, UCHAR FillChar, UCHAR Attr /* Color Attributes */)
+VOID UiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR FillChar, UCHAR Attr /* Color Attributes */)
 {
 	if (VideoTextMode == UiDisplayMode)
 	{
@@ -246,7 +246,7 @@ VOID UiFillArea(U32 Left, U32 Top, U32 Right, U32 Bottom, UCHAR FillChar, UCHAR 
 	}
 }
 
-VOID UiDrawShadow(U32 Left, U32 Top, U32 Right, U32 Bottom)
+VOID UiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom)
 {
 	if (VideoTextMode == UiDisplayMode)
 	{
@@ -259,7 +259,7 @@ VOID UiDrawShadow(U32 Left, U32 Top, U32 Right, U32 Bottom)
 	}
 }
 
-VOID UiDrawBox(U32 Left, U32 Top, U32 Right, U32 Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOL Fill, BOOL Shadow, UCHAR Attr)
+VOID UiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOL Fill, BOOL Shadow, UCHAR Attr)
 {
 	if (VideoTextMode == UiDisplayMode)
 	{
@@ -272,7 +272,7 @@ VOID UiDrawBox(U32 Left, U32 Top, U32 Right, U32 Bottom, UCHAR VertStyle, UCHAR 
 	}
 }
 
-VOID UiDrawText(U32 X, U32 Y, PUCHAR Text, UCHAR Attr)
+VOID UiDrawText(ULONG X, ULONG Y, PUCHAR Text, UCHAR Attr)
 {
 	if (VideoTextMode == UiDisplayMode)
 	{
@@ -285,7 +285,7 @@ VOID UiDrawText(U32 X, U32 Y, PUCHAR Text, UCHAR Attr)
 	}
 }
 
-VOID UiDrawCenteredText(U32 Left, U32 Top, U32 Right, U32 Bottom, PUCHAR TextString, UCHAR Attr)
+VOID UiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PUCHAR TextString, UCHAR Attr)
 {
 	if (VideoTextMode == UiDisplayMode)
 	{
@@ -328,16 +328,16 @@ VOID UiUpdateDateTime(VOID)
 
 VOID UiInfoBox(PUCHAR MessageText)
 {
-	U32		TextLength;
-	U32		BoxWidth;
-	U32		BoxHeight;
-	U32		LineBreakCount;
-	U32		Index;
-	U32		LastIndex;
-	U32		Left;
-	U32		Top;
-	U32		Right;
-	U32		Bottom;
+	ULONG		TextLength;
+	ULONG		BoxWidth;
+	ULONG		BoxHeight;
+	ULONG		LineBreakCount;
+	ULONG		Index;
+	ULONG		LastIndex;
+	ULONG		Left;
+	ULONG		Top;
+	ULONG		Right;
+	ULONG		Bottom;
 
 	TextLength = strlen(MessageText);
 
@@ -465,7 +465,7 @@ UCHAR UiTextToFillStyle(PUCHAR FillStyleText)
 	}
 }
 
-VOID UiDrawProgressBarCenter(U32 Position, U32 Range, PUCHAR ProgressText)
+VOID UiDrawProgressBarCenter(ULONG Position, ULONG Range, PUCHAR ProgressText)
 {
 	if (!UserInterfaceUp) return;
 	
@@ -480,7 +480,7 @@ VOID UiDrawProgressBarCenter(U32 Position, U32 Range, PUCHAR ProgressText)
 	}
 }
 
-VOID UiDrawProgressBar(U32 Left, U32 Top, U32 Right, U32 Bottom, U32 Position, U32 Range, PUCHAR ProgressText)
+VOID UiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PUCHAR ProgressText)
 {
 	if (VideoTextMode == UiDisplayMode)
 	{
@@ -495,12 +495,12 @@ VOID UiDrawProgressBar(U32 Left, U32 Top, U32 Right, U32 Bottom, U32 Position, U
 
 VOID UiShowMessageBoxesInSection(PUCHAR SectionName)
 {
-	U32		Idx;
+	ULONG		Idx;
 	UCHAR	SettingName[80];
 	UCHAR	SettingValue[80];
 	PUCHAR	MessageBoxText;
-	U32		MessageBoxTextSize;
-	U32		SectionId;
+	ULONG		MessageBoxTextSize;
+	ULONG		SectionId;
 
 	if (!IniOpenSection(SectionName, &SectionId))
 	{
@@ -547,7 +547,7 @@ VOID UiShowMessageBoxesInSection(PUCHAR SectionName)
 
 VOID UiEscapeString(PUCHAR String)
 {
-	U32		Idx;
+	ULONG		Idx;
 
 	for (Idx=0; Idx<strlen(String); Idx++)
 	{
@@ -563,7 +563,7 @@ VOID UiEscapeString(PUCHAR String)
 	}
 }
 
-VOID UiTruncateStringEllipsis(PUCHAR StringText, U32 MaxChars)
+VOID UiTruncateStringEllipsis(PUCHAR StringText, ULONG MaxChars)
 {
 	if (strlen(StringText) > MaxChars)
 	{
@@ -571,7 +571,7 @@ VOID UiTruncateStringEllipsis(PUCHAR StringText, U32 MaxChars)
 	}
 }
 
-BOOL UiDisplayMenu(PUCHAR MenuItemList[], U32 MenuItemCount, U32 DefaultMenuItem, S32 MenuTimeOut, U32* SelectedMenuItem, BOOL CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter)
+BOOL UiDisplayMenu(PUCHAR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOL CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter)
 {
 	if (VideoTextMode == UiDisplayMode)
 	{
@@ -611,7 +611,7 @@ VOID UiFadeOut(VOID)
 	}
 }
 
-BOOL UiEditBox(PUCHAR MessageText, PUCHAR EditTextBuffer, U32 Length)
+BOOL UiEditBox(PUCHAR MessageText, PUCHAR EditTextBuffer, ULONG Length)
 {
 	if (VideoTextMode == UiDisplayMode)
 	{

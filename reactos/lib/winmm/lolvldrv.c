@@ -504,6 +504,7 @@ UINT	MMDRV_PhysicalFeatures(LPWINE_MLD mld, UINT uMsg, DWORD dwParam1,
     case DRVM_MAPPER_PREFERRED_GET:
 	/* FIXME: get from registry someday */
         *((LPDWORD)dwParam1) = -1;      /* No preferred device */
+        *((LPDWORD)dwParam2) = 0;
         break;
 
     case DRV_QUERYDEVICEINTERFACE:

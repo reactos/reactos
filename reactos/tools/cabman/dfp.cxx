@@ -1089,7 +1089,7 @@ void CDFParser::SkipSpaces()
 }
 
 
-bool CDFParser::IsNextToken(TOKEN Token, bool NoSpaces)
+bool CDFParser::IsNextToken(DFP_TOKEN Token, bool NoSpaces)
 /*
  * FUNCTION: Checks if next token equals Token
  * ARGUMENTS:

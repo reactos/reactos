@@ -32,6 +32,7 @@
 #include "winuser.h"
 #include "mmddk.h"
 #include "winreg.h"
+#include "wine/unicode.h"
 #include "wine/debug.h"
 
 /*
@@ -80,7 +81,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(msacm);
 
 typedef struct tagMIDIOUTPORT
 {
-    char		name[MAXPNAMELEN];
+    WCHAR		name[MAXPNAMELEN];
     int			loaded;
     HMIDIOUT		hMidi;
     unsigned short	uDevID;
@@ -105,31 +106,36 @@ static	BOOL	MIDIMAP_IsBadData(MIDIMAPDATA* mm)
     return TRUE;
 }
 
-static BOOL	MIDIMAP_FindPort(const char* name, unsigned* dev)
+static BOOL	MIDIMAP_FindPort(const WCHAR* name, unsigned* dev)
 {
     for (*dev = 0; *dev < numMidiOutPorts; (*dev)++)
     {
-	TRACE("%s\n", midiOutPorts[*dev].name);
-	if (strcmp(midiOutPorts[*dev].name, name) == 0)
+	TRACE("%s\n", wine_dbgstr_w(midiOutPorts[*dev].name));
+	if (strcmpW(midiOutPorts[*dev].name, name) == 0)
 	    return TRUE;
     }
     /* try the form #nnn */
     if (*name == '#' && isdigit(name[1]))
     {
-	*dev = atoi(name + 1);
+        const WCHAR*  ptr = name + 1;
+        *dev = 0;
+        do 
+        {
+            *dev = *dev * 10 + *ptr - '0';
+        } while (isdigit(*++ptr));
 	if (*dev < numMidiOutPorts)
 	    return TRUE;
     }
     return FALSE;
 }
 
-static BOOL	MIDIMAP_LoadSettingsDefault(MIDIMAPDATA* mom, const char* port)
+static BOOL	MIDIMAP_LoadSettingsDefault(MIDIMAPDATA* mom, const WCHAR* port)
 {
     unsigned i, dev = 0;
 
     if (port != NULL && !MIDIMAP_FindPort(port, &dev))
     {
-	ERR("Registry glitch: couldn't find midi out (%s)\n", port);
+	ERR("Registry glitch: couldn't find midi out (%s)\n", wine_dbgstr_w(port));
 	dev = 0;
     }
 
@@ -142,11 +148,11 @@ static BOOL	MIDIMAP_LoadSettingsDefault(MIDIMAPDATA* mom, const char* port)
     return TRUE;
 }
 
-static BOOL	MIDIMAP_LoadSettingsScheme(MIDIMAPDATA* mom, const char* scheme)
+static BOOL	MIDIMAP_LoadSettingsScheme(MIDIMAPDATA* mom, const WCHAR* scheme)
 {
     HKEY	hSchemesKey, hKey, hPortKey;
     unsigned	i, idx, dev;
-    char	buffer[256], port[256];
+    WCHAR       buffer[256], port[256];
     DWORD	type, size, mask;
 
     for (i = 0; i < 16; i++)	mom->ChannelMap[i] = NULL;
@@ -157,18 +163,18 @@ static BOOL	MIDIMAP_LoadSettingsScheme(MIDIMAPDATA* mom, const char* scheme)
     {
 	return FALSE;
     }
-    if (RegOpenKeyA(hSchemesKey, scheme, &hKey))
+    if (RegOpenKeyW(hSchemesKey, scheme, &hKey))
     {
 	RegCloseKey(hSchemesKey);
 	return FALSE;
     }
 
-    for (idx = 0; !RegEnumKeyA(hKey, idx, buffer, sizeof(buffer)); idx++)
+    for (idx = 0; !RegEnumKeyW(hKey, idx, buffer, sizeof(buffer)); idx++)
     {
-	if (RegOpenKeyA(hKey, buffer, &hPortKey)) continue;
+	if (RegOpenKeyW(hKey, buffer, &hPortKey)) continue;
 
 	size = sizeof(port);
-	if (RegQueryValueExA(hPortKey, NULL, 0, &type, port, &size)) continue;
+	if (RegQueryValueExW(hPortKey, NULL, 0, &type, (void*)port, &size)) continue;
 
 	if (!MIDIMAP_FindPort(port, &dev)) continue;
 
@@ -206,14 +212,15 @@ static BOOL	MIDIMAP_LoadSettings(MIDIMAPDATA* mom)
     else
     {
 	DWORD	type, size, out;
-	char	buffer[256];
+	WCHAR   buffer[256];
 
 	ret = 2;
 	size = sizeof(out);
 	if (!RegQueryValueExA(hKey, "UseScheme", 0, &type, (void*)&out, &size) && out)
 	{
+            static const WCHAR cs[] = {'C','u','r','r','e','n','t','S','c','h','e','m','e',0};
 	    size = sizeof(buffer);
-	    if (!RegQueryValueExA(hKey, "CurrentScheme", 0, &type, buffer, &size))
+	    if (!RegQueryValueExW(hKey, cs, 0, &type, (void*)buffer, &size))
 	    {
 		if (!(ret = MIDIMAP_LoadSettingsScheme(mom, buffer)))
 		    ret = MIDIMAP_LoadSettingsDefault(mom, NULL);
@@ -225,8 +232,9 @@ static BOOL	MIDIMAP_LoadSettings(MIDIMAPDATA* mom)
 	}
 	if (ret == 2)
 	{
+            static const WCHAR ci[] = {'C','u','r','r','e','n','t','I','n','s','t','r','u','m','e','n','t',0};
 	    size = sizeof(buffer);
-	    if (!RegQueryValueExA(hKey, "CurrentInstrument", 0, &type, buffer, &size) && *buffer)
+	    if (!RegQueryValueExW(hKey, ci, 0, &type, (void*)buffer, &size) && *buffer)
 	    {
 		ret = MIDIMAP_LoadSettingsDefault(mom, buffer);
 	    }
@@ -404,12 +412,13 @@ static	DWORD	modUnprepare(MIDIMAPDATA* mom, LPMIDIHDR lpMidiHdr, DWORD dwParam2)
     return MMSYSERR_NOERROR;
 }
 
-static	DWORD	modGetDevCaps(UINT wDevID, MIDIMAPDATA* mom, LPMIDIOUTCAPSA lpMidiCaps, DWORD size)
+static	DWORD	modGetDevCaps(UINT wDevID, MIDIMAPDATA* mom, LPMIDIOUTCAPSW lpMidiCaps, DWORD size)
 {
+    static const WCHAR name[] = {'W','i','n','e',' ','m','i','d','i',' ','m','a','p','p','e','r',0};
     lpMidiCaps->wMid = 0x00FF;
     lpMidiCaps->wPid = 0x0001;
     lpMidiCaps->vDriverVersion = 0x0100;
-    strcpy(lpMidiCaps->szPname, "Wine midi out mapper");
+    lstrcpyW(lpMidiCaps->szPname, name);
     lpMidiCaps->wTechnology = MOD_MAPPER;
     lpMidiCaps->wVoices = 0;
     lpMidiCaps->wNotes = 0;
@@ -465,7 +474,7 @@ DWORD WINAPI MIDIMAP_modMessage(UINT wDevID, UINT wMsg, DWORD dwUser,
     case MODM_UNPREPARE: 	return modUnprepare	((MIDIMAPDATA*)dwUser, (LPMIDIHDR)dwParam1, 	dwParam2);
     case MODM_RESET:		return modReset		((MIDIMAPDATA*)dwUser);
 
-    case MODM_GETDEVCAPS:	return modGetDevCaps	(wDevID, (MIDIMAPDATA*)dwUser, (LPMIDIOUTCAPSA)dwParam1,dwParam2);
+    case MODM_GETDEVCAPS:	return modGetDevCaps	(wDevID, (MIDIMAPDATA*)dwUser, (LPMIDIOUTCAPSW)dwParam1,dwParam2);
     case MODM_GETNUMDEVS:	return 1;
     case MODM_GETVOLUME:	return MMSYSERR_NOTSUPPORTED;
     case MODM_SETVOLUME:	return MMSYSERR_NOTSUPPORTED;
@@ -484,7 +493,7 @@ DWORD WINAPI MIDIMAP_modMessage(UINT wDevID, UINT wMsg, DWORD dwUser,
  */
 static	DWORD	MIDIMAP_drvOpen(LPSTR str)
 {
-    MIDIOUTCAPSA	moc;
+    MIDIOUTCAPSW	moc;
     unsigned		dev, i;
 
     if (midiOutPorts)
@@ -495,9 +504,9 @@ static	DWORD	MIDIMAP_drvOpen(LPSTR str)
 			     numMidiOutPorts * sizeof(MIDIOUTPORT));
     for (dev = 0; dev < numMidiOutPorts; dev++)
     {
-	if (midiOutGetDevCapsA(dev, &moc, sizeof(moc)) == 0L)
+	if (midiOutGetDevCapsW(dev, &moc, sizeof(moc)) == 0L)
 	{
-	    strcpy(midiOutPorts[dev].name, moc.szPname);
+	    strcpyW(midiOutPorts[dev].name, moc.szPname);
 	    midiOutPorts[dev].loaded = 0;
 	    midiOutPorts[dev].hMidi = 0;
 	    midiOutPorts[dev].uDevID = dev;

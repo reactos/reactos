@@ -442,7 +442,7 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 				Entry* entry = *it;
 
 				if (entry) {
-					CHECKERROR(entry->do_context_menu(_hwnd, screen_pt));	// may close start menu because of focus loss
+					CHECKERROR(entry->do_context_menu(_hwnd, screen_pt, _cm_ifs));	// may close start menu because of focus loss
 					break;	///@todo handle context menu for more than one entry
 				}
 			}
@@ -1254,7 +1254,7 @@ void StartMenu::ActivateEntry(int id, const ShellEntrySet& entries)
 			SHELLEXECUTEINFO shexinfo;
 
 			shexinfo.cbSize = sizeof(SHELLEXECUTEINFO);
-			shexinfo.fMask = SEE_MASK_INVOKEIDLIST;	// SEE_MASK_IDLIST is also possible.
+			shexinfo.fMask = SEE_MASK_IDLIST;	// SEE_MASK_INVOKEIDLIST is also possible.
 			shexinfo.hwnd = hparent;
 			shexinfo.lpVerb = NULL;
 			shexinfo.lpFile = NULL;

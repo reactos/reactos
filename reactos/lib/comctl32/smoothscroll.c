@@ -27,10 +27,7 @@
 #include "winbase.h"
 #include "winreg.h"
 #include "winerror.h"
-#include "wingdi.h"
 #include "winuser.h"
-#include "winnls.h"
-#include "commctrl.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(commctrl);
@@ -75,7 +72,6 @@ BOOL WINAPI SmoothScrollWindow( SMOOTHSCROLLSTRUCT *smooth ) {
    LPRECT	lpupdaterect = smooth->lpupdaterect;
    HRGN		hrgnupdate = smooth->hrgnupdate;
    RECT		tmprect;
-   BOOL		ret = TRUE;
    DWORD	flags = smooth->flags;
 
    if (smooth->dwSize!=sizeof(SMOOTHSCROLLSTRUCT))
@@ -132,5 +128,4 @@ BOOL WINAPI SmoothScrollWindow( SMOOTHSCROLLSTRUCT *smooth ) {
 	   smooth->lpcliprect,hrgnupdate,lpupdaterect,
 	   flags & 0xffff
        );
-   return ret;
 }

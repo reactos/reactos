@@ -62,12 +62,14 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 }
 
 NTSTATUS STDCALL
-AfdGetSockName( PDEVICE_OBJECT DeviceObject, PIRP Irp, 
-		PIO_STACK_LOCATION IrpSp ) {
+AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp, 
+                      PIO_STACK_LOCATION IrpSp, BOOLEAN Local ) {
     NTSTATUS Status = STATUS_SUCCESS;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PMDL Mdl;
+    PMDL Mdl = NULL, SysMdl = NULL;
+    PTDI_CONNECTION_INFORMATION ConnInfo = NULL;
+    PTRANSPORT_ADDRESS TransAddr = NULL;
 
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
 
@@ -94,12 +96,50 @@ AfdGetSockName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	} _SEH_END;
 
 	if( NT_SUCCESS(Status) ) {
-	    Status = TdiQueryInformation
-		( FCB->AddressFile.Object,
-		  TDI_QUERY_ADDRESS_INFO,
-		  Mdl );
-	}
+            if( Local ) {
+                Status = TdiQueryInformation
+                    ( FCB->AddressFile.Object,
+                      TDI_QUERY_ADDRESS_INFO,
+                      Mdl );
+            } else {
+                if( !NT_SUCCESS
+                    ( Status = TdiBuildNullConnectionInfo
+                      ( &ConnInfo, 
+                        FCB->LocalAddress->Address[0].AddressType ) ) ) {
+                    SysMdl = IoAllocateMdl
+                        ( ConnInfo, 
+                          sizeof( TDI_CONNECTION_INFORMATION ) +
+                          TaLengthOfTransportAddress
+                          ( ConnInfo->RemoteAddress ),
+                          FALSE,
+                          FALSE,
+                          NULL );
+                }
 
+                if( SysMdl ) {
+                    MmBuildMdlForNonPagedPool( SysMdl );
+                    Status = TdiQueryInformation
+                        ( FCB->AddressFile.Object,
+                          TDI_QUERY_CONNECTION_INFO,
+                          SysMdl );
+                } else Status = STATUS_NO_MEMORY;
+                
+                if( NT_SUCCESS(Status) ) {
+                    TransAddr = 
+                        (PTRANSPORT_ADDRESS)MmMapLockedPages
+                        ( Mdl, IoModifyAccess );
+                }
+                
+                if( TransAddr ) 
+                    RtlCopyMemory( TransAddr, ConnInfo->RemoteAddress,
+                                   TaLengthOfTransportAddress
+                                   ( ConnInfo->RemoteAddress ) );
+                
+                if( ConnInfo ) ExFreePool( ConnInfo );
+                if( SysMdl ) IoFreeMdl( SysMdl );
+            }
+	}
+        
 	/* MmUnlockPages( Mdl ); */
 	IoFreeMdl( Mdl );
     } else {

@@ -26,23 +26,23 @@
 // ReactOS Loading Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-void LoadAndBootReactOS(PUCHAR OperatingSystemName);
+VOID LoadAndBootReactOS(PUCHAR OperatingSystemName);
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //
 // ReactOS Setup Loader Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-VOID	ReactOSRunSetupLoader(VOID);
+VOID ReactOSRunSetupLoader(VOID);
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //
 // ARC Path Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-BOOL	DissectArcPath(char *ArcPath, char *BootPath, U32* BootDrive, U32* BootPartition);
-void	ConstructArcPath(PUCHAR ArcPath, PUCHAR SystemFolder, U32 Disk, U32 Partition);
-U32		ConvertArcNameToBiosDriveNumber(PUCHAR ArcPath);
+BOOL DissectArcPath(LPSTR ArcPath, LPSTR BootPath, PULONG BootDrive, PULONG BootPartition);
+VOID ConstructArcPath(PUCHAR ArcPath, PUCHAR SystemFolder, ULONG Disk, ULONG Partition);
+ULONG ConvertArcNameToBiosDriveNumber(PUCHAR ArcPath);
 
 
 #endif // defined __REACTOS_H

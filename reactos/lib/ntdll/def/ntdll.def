@@ -77,7 +77,6 @@ NtCloseObjectAuditAlarm@12
 NtCompleteConnectPort@4
 NtConnectPort@32
 NtContinue@8
-NtCreateChannel@8
 NtCreateDirectoryObject@12
 NtCreateEvent@20
 NtCreateEventPair@12
@@ -128,7 +127,6 @@ NtImpersonateClientOfPort@8
 NtImpersonateThread@12
 NtInitializeRegistry@4
 NtIsProcessInJob@8
-NtListenChannel@8
 NtListenPort@8
 NtLoadDriver@4
 NtLoadKey@8
@@ -139,7 +137,6 @@ NtMakeTemporaryObject@4
 NtMapViewOfSection@40
 NtNotifyChangeDirectoryFile@36
 NtNotifyChangeKey@40
-NtOpenChannel@8
 NtOpenDirectoryObject@12
 NtOpenEvent@12
 NtOpenEventPair@12
@@ -157,7 +154,7 @@ NtOpenSymbolicLinkObject@12
 NtOpenThread@16
 NtOpenThreadToken@16
 NtOpenTimer@12
-NtPlugPlayControl@16
+NtPlugPlayControl@12
 NtPrivilegeCheck@12
 NtPrivilegedServiceAuditAlarm@20
 NtPrivilegeObjectAuditAlarm@24
@@ -185,7 +182,6 @@ NtQueryKey@20
 NtQueryMultipleValueKey@24
 NtQueryMutant@20
 NtQueryObject@20
-NtQueryOleDirectoryFile@44
 NtQueryPerformanceCounter@8
 NtQuerySection@20
 NtQuerySecurityObject@20
@@ -212,17 +208,14 @@ NtReleaseSemaphore@12
 NtRemoveIoCompletion@20
 NtReplaceKey@12
 NtReplyPort@8
-NtReplyWaitReceivePort@16
 NtReplyWaitReplyPort@8
-NtReplyWaitSendChannel@12
+NtReplyWaitReceivePort@16
 NtRequestPort@8
 NtRequestWaitReplyPort@12
 NtResetEvent@8
 NtRestoreKey@12
 NtResumeThread@8
 NtSaveKey@8
-NtSendWaitReplyChannel@16
-NtSetContextChannel@4
 NtSetContextThread@8
 NtSetDefaultHardErrorPort@4
 NtSetDefaultLocale@8
@@ -328,7 +321,6 @@ RtlCharToInteger@12
 RtlCheckRegistryKey@8
 RtlClearAllBits@4
 RtlClearBits@12
-;RtlClosePropertySet
 RtlCompactHeap@8
 RtlCompareMemory@12
 RtlCompareMemoryUlong@12
@@ -357,7 +349,6 @@ RtlCreateAtomTable@8
 RtlCreateEnvironment@8
 RtlCreateHeap@24
 RtlCreateProcessParameters@40
-;RtlCreatePropertySet
 RtlCreateQueryDebugBuffer@8
 RtlCreateRegistryKey@8
 RtlCreateSecurityDescriptor@8
@@ -370,7 +361,7 @@ RtlCreateUserProcess@40
 ;RtlCreateUserSecurityObject
 RtlCreateUserThread@40
 RtlCustomCPToUnicodeN@24
-;RtlCutoverTimeToSystemTime
+RtlCutoverTimeToSystemTime@16
 RtlDeNormalizeProcessParams@4
 RtlDecompressBuffer@24
 RtlDecompressFragment@32
@@ -378,8 +369,6 @@ RtlDecompressFragment@32
 RtlDeleteAce@8
 RtlDeleteAtomFromAtomTable@8
 RtlDeleteCriticalSection@4
-RtlDuplicateUnicodeString@12
-RtlSetCriticalSectionSpinCount@8
 ;RtlDeleteElementGenericTable
 ;RtlDeleteNoSplay
 RtlDeleteOwnersRanges@8
@@ -403,6 +392,7 @@ RtlDosSearchPath_U@24
 RtlDowncaseUnicodeChar@4
 RtlDowncaseUnicodeString@12
 RtlDumpResource@4
+RtlDuplicateUnicodeString@12
 RtlEmptyAtomTable@8
 RtlEnlargedIntegerMultiply@8
 RtlEnlargedUnsignedDivide@16
@@ -411,7 +401,6 @@ RtlEnterCriticalSection@4
 RtlEnumProcessHeaps@8
 ;RtlEnumerateGenericTable
 ;RtlEnumerateGenericTableWithoutSplaying
-;RtlEnumerateProperties
 RtlEqualComputerName@8
 RtlEqualDomainName@8
 RtlEqualLuid@8
@@ -442,7 +431,6 @@ RtlFindRange@48
 RtlFindSetBits@12
 RtlFindSetBitsAndClear@12
 RtlFirstFreeAce@8
-;RtlFlushPropertySet
 RtlFormatCurrentUserKeyPath@4
 RtlFormatMessage@32
 RtlFreeAnsiString@4
@@ -465,6 +453,8 @@ RtlGetDaclSecurityDescriptor@16
 RtlGetFirstRange@12
 RtlGetFullPathName_U@16
 RtlGetGroupSecurityDescriptor@12
+RtlGetLastNtStatus@0
+RtlGetLastWin32Error@0
 RtlGetLongestNtPathLength@0
 RtlGetNextRange@12
 RtlGetNtGlobalFlags@0
@@ -473,9 +463,9 @@ RtlGetNtVersionNumbers@12
 RtlGetOwnerSecurityDescriptor@12
 RtlGetProcessHeaps@8
 RtlGetSaclSecurityDescriptor@16
+RtlGetSecurityDescriptorRMControl@8
 ;RtlGetUserInfoHeap
 RtlGetVersion@4
-;RtlGuidToPropertySetName
 RtlIdentifierAuthoritySid@4
 RtlImageDirectoryEntryToData@16
 RtlImageNtHeader@4
@@ -566,7 +556,6 @@ RtlOpenCurrentUser@8
 RtlPinAtomInAtomTable@8
 RtlPrefixString@12
 RtlPrefixUnicodeString@12
-;RtlPropertySetNameToGuid
 ;RtlProtectHeap
 RtlQueryAtomInAtomTable@24
 RtlQueryEnvironmentVariable_U@12
@@ -575,11 +564,8 @@ RtlQueryInformationAcl@16
 RtlQueryProcessDebugInformation@12
 ;RtlQueryProcessHeapInformation
 ;RtlQueryProcessLockInformation
-;RtlQueryProperties
-;RtlQueryPropertyNames
-;RtlQueryPropertySet
 RtlQueryRegistryValues@20
-;RtlQuerySecutityObject
+;RtlQuerySecurityObject
 ;RtlQueryTagHeap
 RtlQueryTimeZoneInformation@4
 RtlRaiseException@4
@@ -593,6 +579,7 @@ RtlReleasePebLock@0
 RtlReleaseResource@4
 ;RtlRemoteCall
 RtlResetRtlTranslations@4
+RtlRestoreLastWin32Error@4=RtlSetLastWin32Error@4
 RtlRunDecodeUnicodeString@8
 RtlRunEncodeUnicodeString@8
 RtlSecondsSince1970ToTime@8
@@ -601,17 +588,19 @@ RtlSelfRelativeToAbsoluteSD@44
 RtlSetAllBits@4
 ;RtlSetAttributesSecurityDescriptor
 RtlSetBits@12
+RtlSetControlSecurityDescriptor@12
+RtlSetCriticalSectionSpinCount@8
 RtlSetCurrentDirectory_U@4
 RtlSetCurrentEnvironment@8
 RtlSetDaclSecurityDescriptor@16
 RtlSetEnvironmentVariable@12
 RtlSetGroupSecurityDescriptor@12
 RtlSetInformationAcl@16
+RtlSetLastWin32Error@4
+RtlSetLastWin32ErrorAndNtStatusFromNtStatus@4
 RtlSetOwnerSecurityDescriptor@12
-;RtlSetProperties
-;RtlSetPropertyNames
-;RtlSetPropertySetClassId
 RtlSetSaclSecurityDescriptor@16
+RtlSetSecurityDescriptorRMControl@8
 ;RtlSetSecurityObject
 RtlSetTimeZoneInformation@4
 ;RtlSetUnicodeCallouts
@@ -704,7 +693,6 @@ ZwCloseObjectAuditAlarm@12
 ZwCompleteConnectPort@4
 ZwConnectPort@32
 ZwContinue@8
-ZwCreateChannel@8
 ZwCreateDirectoryObject@12
 ZwCreateEvent@20
 ZwCreateEventPair@12
@@ -751,7 +739,6 @@ ZwGetTickCount@0
 ZwImpersonateClientOfPort@8
 ZwImpersonateThread@12
 ZwInitializeRegistry@4
-ZwListenChannel@8
 ZwListenPort@8
 ZwLoadDriver@4
 ZwLoadKey@8
@@ -762,7 +749,6 @@ ZwMakeTemporaryObject@4
 ZwMapViewOfSection@40
 ZwNotifyChangeDirectoryFile@36
 ZwNotifyChangeKey@40
-ZwOpenChannel@8
 ZwOpenDirectoryObject@12
 ZwOpenEvent@12
 ZwOpenEventPair@12
@@ -779,7 +765,7 @@ ZwOpenSymbolicLinkObject@12
 ZwOpenThread@16
 ZwOpenThreadToken@16
 ZwOpenTimer@12
-ZwPlugPlayControl@16
+ZwPlugPlayControl@12
 ZwPrivilegeCheck@12
 ZwPrivilegedServiceAuditAlarm@20
 ZwPrivilegeObjectAuditAlarm@24
@@ -807,7 +793,6 @@ ZwQueryKey@20
 ZwQueryMultipleValueKey@24
 ZwQueryMutant@20
 ZwQueryObject@20
-ZwQueryOleDirectoryFile@44
 ZwQueryPerformanceCounter@8
 ZwQuerySection@20
 ZwQuerySecurityObject@20
@@ -835,15 +820,12 @@ ZwReplaceKey@12
 ZwReplyPort@8
 ZwReplyWaitReceivePort@16
 ZwReplyWaitReplyPort@8
-ZwReplyWaitSendChannel@12
 ZwRequestPort@8
 ZwRequestWaitReplyPort@12
 ZwResetEvent@8
 ZwRestoreKey@12
 ZwResumeThread@8
 ZwSaveKey@8
-ZwSendWaitReplyChannel@16
-ZwSetContextChannel@4
 ZwSetContextThread@8
 ZwSetDefaultHardErrorPort@4
 ZwSetDefaultLocale@8

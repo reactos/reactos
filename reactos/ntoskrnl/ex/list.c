@@ -5,10 +5,9 @@
  * FILE:            ntoskrnl/ex/list.c
  * PURPOSE:         Manages double linked lists, single linked lists and
  *                  sequenced lists
+ *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
- * UPDATE HISTORY:
- *   02-07-2001 CSH Implemented sequenced lists
  */
 
 /* INCLUDES *****************************************************************/

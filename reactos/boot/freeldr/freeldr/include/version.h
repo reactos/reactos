@@ -22,7 +22,7 @@
 
 
 /* just some stuff */
-#define VERSION			"FreeLoader v1.9"
+#define VERSION			"FreeLoader v2.0"
 #define COPYRIGHT		"Copyright (C) 1998-2003 Brian Palmer <brianp@sginet.com>"
 #define AUTHOR_EMAIL	"<brianp@sginet.com>"
 #define BY_AUTHOR		"by Brian Palmer"
@@ -34,8 +34,8 @@
 // If you add features then you increment the minor version and zero the patch version
 // If you add major functionality then you increment the major version and zero the minor & patch versions
 //
-#define FREELOADER_MAJOR_VERSION	1
-#define FREELOADER_MINOR_VERSION	9
+#define FREELOADER_MAJOR_VERSION	2
+#define FREELOADER_MINOR_VERSION	0
 #define FREELOADER_PATCH_VERSION	0
 
 

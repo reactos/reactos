@@ -2,7 +2,19 @@
 	<include base="smss">.</include>
 	<define name="_DISABLE_TIDENTS" />
 	<library>ntdll</library>
+	<file>client.c</file>
+	<file>Debug.c</file>
 	<file>init.c</file>
+	<file>initdosdev.c</file>
+	<file>initenv.c</file>
+	<file>initheap.c</file>
+	<file>initmv.c</file>
+	<file>initobdir.c</file>
+	<file>initpage.c</file>
+	<file>initreg.c</file>
+	<file>initrun.c</file>
+	<file>initss.c</file>
+	<file>initwkdll.c</file>
 	<file>smapi.c</file>
 	<file>smss.c</file>
 	<file>smss.rc</file>

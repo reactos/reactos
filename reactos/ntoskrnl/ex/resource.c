@@ -4,9 +4,8 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/resource.c
  * PURPOSE:         Resource synchronization construct
- * PROGRAMMER:      Unknown 
- * UPDATE HISTORY:
- *                  Created 22/05/98
+ * 
+ * PROGRAMMERS:     No programmer listed.
  */
 
 

@@ -1,28 +1,11 @@
-/*
- *  ReactOS kernel
- *  Copyright (C) 2000  ReactOS Team
+/* $Id$
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/*
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ke/gdt.c
+ * FILE:            ntoskrnl/ke/i386/gdt.c
  * PURPOSE:         GDT managment
- * PROGRAMMER:      David Welch (welch@cwcom.net)
- * UPDATE HISTORY:
- *                  Created 22/05/98
+ * 
+ * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
 /* INCLUDES *****************************************************************/
@@ -40,11 +23,11 @@ USHORT KiBootGdt[11 * 4] =
  0x0, 0x0, 0x0, 0x0,              /* Null */
  0xffff, 0x0, 0x9a00, 0xcf,       /* Kernel CS */
  0xffff, 0x0, 0x9200, 0xcf,       /* Kernel DS */
- 0x0, 0x0, 0xfa00, 0xcc,          /* User CS */
- 0x0, 0x0, 0xf200, 0xcc,          /* User DS */
+ 0xffff, 0x0, 0xfa00, 0xcf,       /* User CS */
+ 0xffff, 0x0, 0xf200, 0xcf,       /* User DS */
  0x0, 0x0, 0x0, 0x0,              /* TSS */
- 0x1000, 0x0000, 0x9200, 0xff00,  /* PCR */
- 0x1000, 0x0, 0xf200, 0x0,        /* TEB */
+ 0x0fff, 0x0000, 0x9200, 0xff00,  /* PCR */
+ 0x0fff, 0x0, 0xf200, 0x0,        /* TEB */
  0x0, 0x0, 0x0, 0x0,              /* Reserved */
  0x0, 0x0, 0x0, 0x0,              /* LDT */
  0x0, 0x0, 0x0, 0x0               /* Trap TSS */

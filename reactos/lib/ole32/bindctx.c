@@ -275,8 +275,7 @@ HRESULT WINAPI BindCtxImpl_RevokeObjectBound(IBindCtx* iface, IUnknown* punk)
 
     if(This->bindCtxTable[index].pObj)
         IUnknown_Release(This->bindCtxTable[index].pObj);
-    if(This->bindCtxTable[index].pkeyObj)
-        HeapFree(GetProcessHeap(),0,This->bindCtxTable[index].pkeyObj);
+    HeapFree(GetProcessHeap(),0,This->bindCtxTable[index].pkeyObj);
     
     /* left-shift all elements in the right side of the current revoked object */
     for(j=index; j<This->bindCtxTableLastIndex-1; j++)
@@ -302,8 +301,7 @@ HRESULT WINAPI BindCtxImpl_ReleaseBoundObjects(IBindCtx* iface)
     {
         if(This->bindCtxTable[i].pObj)
             IUnknown_Release(This->bindCtxTable[i].pObj);
-        if(This->bindCtxTable[i].pkeyObj)
-            HeapFree(GetProcessHeap(),0,This->bindCtxTable[i].pkeyObj);
+        HeapFree(GetProcessHeap(),0,This->bindCtxTable[i].pkeyObj);
     }
     
     This->bindCtxTableLastIndex = 0;
@@ -472,8 +470,7 @@ HRESULT WINAPI BindCtxImpl_RevokeObjectParam(IBindCtx* iface,LPOLESTR ppenum)
     /* release the object if it's found */
     if(This->bindCtxTable[index].pObj)
         IUnknown_Release(This->bindCtxTable[index].pObj);
-    if(This->bindCtxTable[index].pkeyObj)
-        HeapFree(GetProcessHeap(),0,This->bindCtxTable[index].pkeyObj);
+    HeapFree(GetProcessHeap(),0,This->bindCtxTable[index].pkeyObj);
     
     /* remove the object from the table with a left-shifting of all objects in the right side */
     for(j=index; j<This->bindCtxTableLastIndex-1; j++)

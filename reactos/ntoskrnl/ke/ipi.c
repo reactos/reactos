@@ -4,10 +4,9 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/ipi.c
  * PURPOSE:         IPI Routines (Inter-Processor Interrupts). NT5+
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
+ *
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  Hartmut Birr    
- * UPDATE HISTORY:
- *                  Created 11/08/2004
  */
 
 /* INCLUDES *****************************************************************/
@@ -157,7 +156,7 @@ KiIpiSendPacket(ULONG TargetSet, VOID STDCALL (*WorkerRoutine)(PVOID), PVOID Arg
 }
 
 VOID
-KeIpiGenericCall(VOID STDCALL (*Function)(PVOID), PVOID Argument)
+KeIpiGenericCall(VOID (STDCALL *Function)(PVOID), PVOID Argument)
 {
    KIRQL oldIrql;
    ULONG TargetSet;

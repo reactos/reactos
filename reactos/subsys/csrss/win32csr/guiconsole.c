@@ -737,7 +737,7 @@ GuiConsoleRightMouseDown(HWND hWnd)
 static LRESULT CALLBACK
 GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-  LRESULT Result;
+  LRESULT Result = 0;
 
   switch(msg)
     {
@@ -746,7 +746,6 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         break;
       case WM_PAINT:
         GuiConsoleHandlePaint(hWnd);
-        Result = 0;
         break;
       case WM_KEYDOWN:
       case WM_KEYUP:
@@ -754,19 +753,15 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
       case WM_SYSKEYUP:
       case WM_CHAR:
         GuiConsoleHandleKey(hWnd, msg, wParam, lParam);
-        Result = 0;
         break;
       case WM_TIMER:
         GuiConsoleHandleTimer(hWnd);
-        Result = 0;
         break;
       case WM_CLOSE:
         GuiConsoleHandleClose(hWnd);
-        Result = 0;
         break;
       case WM_NCDESTROY:
         GuiConsoleHandleNcDestroy(hWnd);
-        Result = 0;
         break;
       case WM_LBUTTONDOWN:
           GuiConsoleLeftMouseDown(hWnd, lParam);
@@ -802,7 +797,7 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         SetWindowLongW(hWnd, GWL_USERDATA, 0);
         return 0;
       case PM_CREATE_CONSOLE:
-        NewWindow = CreateWindowW(L"Win32CsrConsole",
+        NewWindow = CreateWindowW(L"ConsoleWindowClass",
                                   Console->Title.Buffer,
                                   WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
                                   CW_USEDEFAULT,
@@ -911,7 +906,7 @@ GuiInit(VOID)
     }
 
   wc.cbSize = sizeof(WNDCLASSEXW);
-  wc.lpszClassName = L"Win32CsrConsole";
+  wc.lpszClassName = L"ConsoleWindowClass";
   wc.lpfnWndProc = GuiConsoleWndProc;
   wc.style = 0;
   wc.hInstance = (HINSTANCE) GetModuleHandleW(NULL);

@@ -110,7 +110,7 @@ IntGdiLineTo(DC  *dc,
                            Points[0].x, Points[0].y,
                            Points[1].x, Points[1].y,
                            &Bounds,
-                           dc->w.ROPmode);
+                           ROP2_TO_MIX(dc->w.ROPmode));
       }
 
       BITMAPOBJ_UnlockBitmap ( dc->w.hBitmap );
@@ -228,7 +228,7 @@ IntGdiPolyline(DC      *dc,
          IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->XlatePen);
          Ret = IntEngPolyline(BitmapObj, dc->CombinedClip,
      			   &PenBrushInst.BrushObject, Points, Count,
-     			   dc->w.ROPmode);
+     			   ROP2_TO_MIX(dc->w.ROPmode));
 
          BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
          EngFreeMem(Points);

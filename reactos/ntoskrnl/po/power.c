@@ -1,29 +1,11 @@
-/*
- *  ReactOS kernel
- *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
 /* $Id$
+ * 
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/po/power.c
  * PURPOSE:         Power Manager
- * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
- * UPDATE HISTORY:
- *   20/08/1999 EA  Created
- *   16/04/2001 CSH Stubs added
+ * 
+ * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
 #include <ntoskrnl.h>
@@ -245,8 +227,41 @@ NtPowerInformation(
 	IN ULONG OutputBufferLength
 	)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+   NTSTATUS Status;
+
+   DPRINT("NtPowerInformation(PowerInformationLevel 0x%x, InputBuffer 0x%x, "
+          "InputBufferLength 0x%x, OutputBuffer 0x%x, OutputBufferLength 0x%x)\n",
+          PowerInformationLevel,
+          InputBuffer, InputBufferLength,
+          OutputBuffer, OutputBufferLength);
+   switch (PowerInformationLevel)
+   {
+   case SystemBatteryState:
+      {
+      PSYSTEM_BATTERY_STATE BatteryState = (PSYSTEM_BATTERY_STATE)OutputBuffer;
+
+      if (InputBuffer != NULL)
+         return STATUS_INVALID_PARAMETER;
+      if (OutputBufferLength < sizeof(SYSTEM_BATTERY_STATE))
+         return STATUS_BUFFER_TOO_SMALL;
+
+      /* Just zero the struct (and thus set BatteryState->BatteryPresent = FALSE) */
+      RtlZeroMemory(BatteryState, sizeof(SYSTEM_BATTERY_STATE));
+      BatteryState->EstimatedTime = (ULONG)-1;
+
+      Status = STATUS_SUCCESS;
+      break;
+      }
+
+   default:
+      Status = STATUS_NOT_IMPLEMENTED;
+      DPRINT1("PowerInformationLevel 0x%x is UNIMPLEMENTED! Have a nice day.\n",
+              PowerInformationLevel);
+      for (;;);
+      break;
+   }
+
+   return Status;
 }
 
 /* EOF */

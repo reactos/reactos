@@ -30,6 +30,7 @@ CreateProcessAsUserA (HANDLE hToken,
 		      LPSTARTUPINFOA lpStartupInfo,
 		      LPPROCESS_INFORMATION lpProcessInformation)
 {
+  PROCESS_ACCESS_TOKEN AccessToken;
   NTSTATUS Status;
 
   /* Create the process with a suspended main thread */
@@ -47,11 +48,14 @@ CreateProcessAsUserA (HANDLE hToken,
       return FALSE;
     }
 
+  AccessToken.Token = hToken;
+  AccessToken.Thread = NULL;
+
   /* Set the new process token */
   Status = NtSetInformationProcess (lpProcessInformation->hProcess,
 				    ProcessAccessToken,
-				    (PVOID)&hToken,
-				    sizeof (HANDLE));
+				    (PVOID)&AccessToken,
+				    sizeof (AccessToken));
   if (!NT_SUCCESS (Status))
     {
       SetLastError (RtlNtStatusToDosError (Status));
@@ -84,6 +88,7 @@ CreateProcessAsUserW (HANDLE hToken,
 		      LPSTARTUPINFOW lpStartupInfo,
 		      LPPROCESS_INFORMATION lpProcessInformation)
 {
+  PROCESS_ACCESS_TOKEN AccessToken;
   NTSTATUS Status;
 
   /* Create the process with a suspended main thread */
@@ -101,11 +106,14 @@ CreateProcessAsUserW (HANDLE hToken,
       return FALSE;
     }
 
+  AccessToken.Token = hToken;
+  AccessToken.Thread = NULL;
+
   /* Set the new process token */
   Status = NtSetInformationProcess (lpProcessInformation->hProcess,
 				    ProcessAccessToken,
-				    (PVOID)&hToken,
-				    sizeof (HANDLE));
+				    (PVOID)&AccessToken,
+				    sizeof (AccessToken));
   if (!NT_SUCCESS (Status))
     {
       SetLastError (RtlNtStatusToDosError (Status));

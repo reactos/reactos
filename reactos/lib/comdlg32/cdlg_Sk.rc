@@ -378,7 +378,6 @@ supported by your printer.\nPlease enter a value between 1 and %d"
 
     PD32_DEFAULT_PRINTER                  "Implicitná tlaèiareò; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "There are %d documents in queue"
-    PD32_PRINT_ALL_X_PAGES                "&Všetky %d strany"
     PD32_MARGINS_IN_INCHES                "Okraje [palce]"
     PD32_MARGINS_IN_MILIMETERS            "Okraje [mm]"
     PD32_MILIMETERS                       "mm"

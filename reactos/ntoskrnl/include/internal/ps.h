@@ -147,10 +147,10 @@ typedef struct _KTHREAD
 #ifndef __USE_W32API
 typedef struct
 {
-  PACCESS_TOKEN Token;
-  BOOLEAN CopyOnOpen;
-  BOOLEAN EffectiveOnly;
-  SECURITY_IMPERSONATION_LEVEL Level;
+    PACCESS_TOKEN                   Token;
+    BOOLEAN                         CopyOnOpen;
+    BOOLEAN                         EffectiveOnly;
+    SECURITY_IMPERSONATION_LEVEL    ImpersonationLevel;
 } PS_IMPERSONATION_INFORMATION, *PPS_IMPERSONATION_INFORMATION;
 #endif
 
@@ -160,11 +160,11 @@ typedef struct _ETHREAD
 {
   KTHREAD Tcb;
   union {
-  	TIME CreateTime;
+  	LARGE_INTEGER CreateTime;
   	UCHAR NestedFaultCount:2;
   	UCHAR ApcNeeded:1;
   };
-  TIME ExitTime;
+  LARGE_INTEGER ExitTime;
   LIST_ENTRY LpcReplyChain;
   NTSTATUS ExitStatus;
   PVOID OfsChain;
@@ -316,18 +316,14 @@ struct _EPROCESS
   ULONG                 LockCount;                    /* 07C */
 
   /* Time of process creation. */
-#ifdef __USE_W32API
-  LARGE_INTEGER                  CreateTime;                   /* 080 */
-#else
-  TIME                  CreateTime;                   /* 080 */
-#endif
+  LARGE_INTEGER         CreateTime;                   /* 080 */
 
   /* Time of process exit. */
-  TIME                  ExitTime;                     /* 088 */
+  LARGE_INTEGER         ExitTime;                     /* 088 */
   /* Unknown. */
   PKTHREAD              LockOwner;                    /* 090 */
   /* Process id. */
-  ULONG                 UniqueProcessId;              /* 094 */
+  HANDLE                UniqueProcessId;              /* 094 */
   /* Unknown. */
   LIST_ENTRY            ActiveProcessLinks;           /* 098 */
   /* Unknown. */
@@ -532,7 +528,7 @@ VOID
 PsBlockThread(PNTSTATUS Status, UCHAR Alertable, ULONG WaitMode, 
 	      BOOLEAN DispatcherLock, KIRQL WaitIrql, UCHAR WaitReason);
 VOID
-PsUnblockThread(PETHREAD Thread, PNTSTATUS WaitStatus);
+PsUnblockThread(PETHREAD Thread, PNTSTATUS WaitStatus, KPRIORITY Increment);
 VOID
 PsApplicationProcessorInit(VOID);
 VOID

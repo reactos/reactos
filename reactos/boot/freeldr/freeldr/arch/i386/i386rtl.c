@@ -18,9 +18,6 @@
  */
 
 #include <freeldr.h>
-#include <arch.h>
-#include <rtl.h>
-#include <portio.h>
 
 void beep(void)
 {

@@ -55,7 +55,7 @@ typedef struct IMalloc16 *LPMALLOC16;
 
 /**********************************************************************/
 
-extern LPMALLOC16 IMalloc16_Constructor();
+extern LPMALLOC16 IMalloc16_Constructor(void);
 
 /**********************************************************************/
 

@@ -336,7 +336,7 @@ MenuHelp (UINT uMsg, WPARAM wParam, LPARAM lParam, HMENU hMainMenu,
  *     Handle to the window that contains the menu and controls.
  *
  *     uFlags
- *     Identifier of the menu item to receive or loose a check mark.
+ *     Identifier of the menu item to receive or lose a check mark.
  *
  *     lpInfo
  *     The array of integers contains pairs of values. BOTH values of

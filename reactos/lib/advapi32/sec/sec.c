@@ -124,7 +124,7 @@ GetSecurityDescriptorOwner (
 	PSECURITY_DESCRIPTOR	pSecurityDescriptor,
 	PSID			*pOwner,
 	LPBOOL			lpbOwnerDefaulted
-)
+	)
 {
 	BOOLEAN OwnerDefaulted;
 	NTSTATUS Status;
@@ -141,6 +141,23 @@ GetSecurityDescriptorOwner (
 	}
 
 	return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+GetSecurityDescriptorRMControl (
+	PSECURITY_DESCRIPTOR	SecurityDescriptor,
+	PUCHAR			RMControl)
+{
+  if (!RtlGetSecurityDescriptorRMControl(SecurityDescriptor,
+					 RMControl))
+    return ERROR_INVALID_DATA;
+
+  return ERROR_SUCCESS;
 }
 
 
@@ -241,7 +258,7 @@ MakeAbsoluteSD (
 {
 	NTSTATUS Status;
 
-	Status = RtlSelfRelativeToAbsoluteSD (pSelfRelativeSecurityDescriptor,
+	Status = RtlSelfRelativeToAbsoluteSD ((PSECURITY_DESCRIPTOR_RELATIVE)pSelfRelativeSecurityDescriptor,
 	                                      pAbsoluteSecurityDescriptor,
 	                                      lpdwAbsoluteSecurityDescriptorSize,
 	                                      pDacl,
@@ -276,8 +293,33 @@ MakeSelfRelativeSD (
 	NTSTATUS Status;
 
 	Status = RtlAbsoluteToSelfRelativeSD (pAbsoluteSecurityDescriptor,
-	                                      pSelfRelativeSecurityDescriptor,
+	                                      (PSECURITY_DESCRIPTOR_RELATIVE)pSelfRelativeSecurityDescriptor,
 	                                      (PULONG)lpdwBufferLength);
+	if (!NT_SUCCESS(Status))
+	{
+		SetLastError (RtlNtStatusToDosError (Status));
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+SetSecurityDescriptorControl (
+	PSECURITY_DESCRIPTOR		pSecurityDescriptor,
+	SECURITY_DESCRIPTOR_CONTROL	ControlBitsOfInterest,
+	SECURITY_DESCRIPTOR_CONTROL	ControlBitsToSet)
+{
+	NTSTATUS Status;
+
+	Status = RtlSetControlSecurityDescriptor(pSecurityDescriptor,
+	                                         ControlBitsOfInterest,
+	                                         ControlBitsToSet);
 	if (!NT_SUCCESS(Status))
 	{
 		SetLastError (RtlNtStatusToDosError (Status));
@@ -365,6 +407,22 @@ SetSecurityDescriptorOwner (
 	}
 
 	return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+SetSecurityDescriptorRMControl (
+	PSECURITY_DESCRIPTOR	SecurityDescriptor,
+	PUCHAR			RMControl)
+{
+  RtlSetSecurityDescriptorRMControl(SecurityDescriptor,
+				    RMControl);
+
+  return ERROR_SUCCESS;
 }
 
 

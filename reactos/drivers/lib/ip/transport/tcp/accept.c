@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS TCP/IP protocol driver
- * FILE:        transport/tcp/tcp.c
+ * FILE:        transport/tcp/accept.c
  * PURPOSE:     Transmission Control Protocol Listen/Accept code
  * PROGRAMMERS: Art Yerkes (arty@users.sf.net)
  * REVISIONS:
@@ -16,8 +16,7 @@ NTSTATUS TCPServiceListeningSocket( PCONNECTION_ENDPOINT Listener,
     NTSTATUS Status;
     SOCKADDR_IN OutAddr;
     OSK_UINT OutAddrLen;
-    PTA_ADDRESS RequestAddressReturn;
-    SOCKADDR_IN AddressConnecting;
+    PTA_IP_ADDRESS RequestAddressReturn;
     PTDI_CONNECTION_INFORMATION WhoIsConnecting;
 
     /* Unpack TDI info -- We need the return connection information
@@ -38,22 +37,23 @@ NTSTATUS TCPServiceListeningSocket( PCONNECTION_ENDPOINT Listener,
     TI_DbgPrint(DEBUG_TCP,("Status %x\n", Status));
 
     if( NT_SUCCESS(Status) && Status != STATUS_PENDING ) {
+	RequestAddressReturn = WhoIsConnecting->RemoteAddress;
+
 	TI_DbgPrint(DEBUG_TCP,("Copying address to %x (Who %x)\n", 
 			       RequestAddressReturn, WhoIsConnecting));
 	
-	RequestAddressReturn = (PTA_ADDRESS)WhoIsConnecting->RemoteAddress;
-	RequestAddressReturn->AddressLength = OutAddrLen;
-	RequestAddressReturn->AddressType = 
-	    AddressConnecting.sin_family;
-	TI_DbgPrint(DEBUG_TCP,("Copying address proper: from %x to %x,%x\n",
-			       ((PCHAR)&AddressConnecting) + 
-			       sizeof(AddressConnecting.sin_family),
-			       RequestAddressReturn->Address, 
-			       RequestAddressReturn->AddressLength));
-	RtlCopyMemory( RequestAddressReturn->Address,
-		       ((PCHAR)&AddressConnecting) + 
-		       sizeof(AddressConnecting.sin_family),
-		       RequestAddressReturn->AddressLength );
+        RequestAddressReturn->TAAddressCount = 1;
+	RequestAddressReturn->Address[0].AddressLength = OutAddrLen;
+
+        /* BSD uses the first byte of the sockaddr struct as a length.
+         * Since windows doesn't do that we strip it */
+	RequestAddressReturn->Address[0].AddressType = 
+	    (OutAddr.sin_family >> 8) & 0xff;
+
+	RtlCopyMemory( &RequestAddressReturn->Address[0].Address,
+		       ((PCHAR)&OutAddr) + sizeof(USHORT),
+		       sizeof(RequestAddressReturn->Address[0].Address[0]) );
+
 	TI_DbgPrint(DEBUG_TCP,("Done copying\n"));
     }
     
@@ -151,7 +151,7 @@ NTSTATUS TCPAccept
    }
 
    TcpipRecursiveMutexLeave( &TCPLock );
-					       
+
    TI_DbgPrint(DEBUG_TCP,("TCPAccept finished %x\n", Status));
    return Status;
 }

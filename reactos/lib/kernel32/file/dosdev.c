@@ -156,7 +156,7 @@ QueryDosDeviceW(
     DWORD ucchMax
     )
 {
-  PDIRECTORY_BASIC_INFORMATION DirInfo;
+  POBJECT_DIRECTORY_INFORMATION DirInfo;
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING UnicodeString;
   HANDLE DirectoryHandle;
@@ -252,7 +252,7 @@ QueryDosDeviceW(
     RestartScan = TRUE;
     Context = 0;
     Ptr = lpTargetPath;
-    DirInfo = (PDIRECTORY_BASIC_INFORMATION)Buffer;
+    DirInfo = (POBJECT_DIRECTORY_INFORMATION)Buffer;
 
     while (TRUE)
     {

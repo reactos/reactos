@@ -4,12 +4,8 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/lpc/port.c
  * PURPOSE:         Communication mechanism
- * PROGRAMMER:      David Welch (welch@cwcom.net)
- * UPDATE HISTORY:
- *                  Created 22/05/98
- *
- *	2000-06-04 (ea)
- *		ntoskrnl/nt/port.c moved in ntoskrnl/lpc/port.c
+ * 
+ * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
 /* INCLUDES *****************************************************************/
@@ -21,7 +17,7 @@
 
 /* GLOBALS *******************************************************************/
 
-OBJECT_TYPE	LpcPortObjectType = {0, };
+POBJECT_TYPE	LpcPortObjectType = 0;
 ULONG		LpcpNextMessageId = 0; /* 0 is not a valid ID */
 FAST_MUTEX	LpcpLock; /* global internal sync in LPC facility */
 
@@ -35,32 +31,34 @@ static GENERIC_MAPPING ExpPortMapping = {
 
 
 NTSTATUS INIT_FUNCTION
-NiInitPort (VOID)
+LpcpInitSystem (VOID)
 {
-   RtlZeroMemory (& LpcPortObjectType, sizeof (OBJECT_TYPE));
+    /* Allocate Memory for the LPC Object */
+    LpcPortObjectType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
+    RtlZeroMemory (LpcPortObjectType, sizeof (OBJECT_TYPE));
    
-   RtlRosInitUnicodeStringFromLiteral(&LpcPortObjectType.TypeName,L"Port");
+    RtlRosInitUnicodeStringFromLiteral(&LpcPortObjectType->TypeName,L"Port");
    
-   LpcPortObjectType.Tag = TAG('L', 'P', 'R', 'T');
-   LpcPortObjectType.MaxObjects = ULONG_MAX;
-   LpcPortObjectType.MaxHandles = ULONG_MAX;
-   LpcPortObjectType.TotalObjects = 0;
-   LpcPortObjectType.TotalHandles = 0;
-   LpcPortObjectType.PagedPoolCharge = 0;
-   LpcPortObjectType.NonpagedPoolCharge = sizeof(EPORT);
-   LpcPortObjectType.Mapping = &ExpPortMapping;
-   LpcPortObjectType.Dump = NULL;
-   LpcPortObjectType.Open = NULL;
-   LpcPortObjectType.Close = NiClosePort;
-   LpcPortObjectType.Delete = NiDeletePort;
-   LpcPortObjectType.Parse = NULL;
-   LpcPortObjectType.Security = NULL;
-   LpcPortObjectType.QueryName = NULL;
-   LpcPortObjectType.OkayToClose = NULL;
-   LpcPortObjectType.Create = NiCreatePort;
-   LpcPortObjectType.DuplicationNotify = NULL;
+   LpcPortObjectType->Tag = TAG('L', 'P', 'R', 'T');
+   LpcPortObjectType->PeakObjects = 0;
+   LpcPortObjectType->PeakHandles = 0;
+   LpcPortObjectType->TotalObjects = 0;
+   LpcPortObjectType->TotalHandles = 0;
+   LpcPortObjectType->PagedPoolCharge = 0;
+   LpcPortObjectType->NonpagedPoolCharge = sizeof(EPORT);
+   LpcPortObjectType->Mapping = &ExpPortMapping;
+   LpcPortObjectType->Dump = NULL;
+   LpcPortObjectType->Open = NULL;
+   LpcPortObjectType->Close = NiClosePort;
+   LpcPortObjectType->Delete = NiDeletePort;
+   LpcPortObjectType->Parse = NULL;
+   LpcPortObjectType->Security = NULL;
+   LpcPortObjectType->QueryName = NULL;
+   LpcPortObjectType->OkayToClose = NULL;
+   LpcPortObjectType->Create = NiCreatePort;
+   LpcPortObjectType->DuplicationNotify = NULL;
 
-   ObpCreateTypeObject(& LpcPortObjectType);
+   ObpCreateTypeObject(LpcPortObjectType);
    
    LpcpNextMessageId = 0;
 
@@ -89,7 +87,7 @@ NiInitPort (VOID)
  *	otherwise.
  */
 NTSTATUS STDCALL
-NiInitializePort (IN OUT  PEPORT Port,
+LpcpInitializePort (IN OUT  PEPORT Port,
 		  IN      USHORT Type,
 		  IN      PEPORT Parent OPTIONAL)
 {

@@ -390,6 +390,8 @@ DiskClassCheckReadWrite(IN PDEVICE_OBJECT DeviceObject,
 {
   PDEVICE_EXTENSION DeviceExtension;
   PDISK_DATA DiskData;
+  PIO_STACK_LOCATION IrpStack;
+  ULARGE_INTEGER EndingOffset;
 
   DPRINT("DiskClassCheckReadWrite() called\n");
 
@@ -401,6 +403,16 @@ DiskClassCheckReadWrite(IN PDEVICE_OBJECT DeviceObject,
       Irp->IoStatus.Status = STATUS_DEVICE_NOT_READY;
       IoSetHardErrorOrVerifyDevice(Irp,
 				   DeviceObject);
+      return(STATUS_INVALID_PARAMETER);
+    }
+
+  IrpStack = IoGetCurrentIrpStackLocation(Irp);  
+  EndingOffset.QuadPart = IrpStack->Parameters.Read.ByteOffset.QuadPart +
+                          IrpStack->Parameters.Read.Length;
+
+  if (EndingOffset.QuadPart > DeviceExtension->PartitionLength.QuadPart)
+    {
+      Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
       return(STATUS_INVALID_PARAMETER);
     }
 

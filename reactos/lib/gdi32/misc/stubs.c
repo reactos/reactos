@@ -150,25 +150,15 @@ EnumObjects(
 	return 0;
 }
 
-
 /*
  * @unimplemented
  */
 int
 STDCALL
-Escape(
-	HDC		a0,
-	int		a1,
-	int		a2,
-	LPCSTR		a3,
-	LPVOID		a4
-	)
+Escape(HDC hdc, INT escape, INT in_count, LPCSTR in_data, LPVOID out_data)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    return NtGdiEscape(hdc,escape,in_count,in_data,out_data);
 }
-
 
 /*
  * @unimplemented
@@ -273,13 +263,9 @@ GetRasterizerCaps(
  */
 UINT
 STDCALL
-GetSystemPaletteUse(
-	HDC	hDc
-	)
+GetSystemPaletteUse(HDC hDc)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    return NtGdiGetSystemPaletteUse(hDc);
 }
 
 

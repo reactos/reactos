@@ -39,7 +39,6 @@
 
 #include "objbase.h"
 #include "ole2disp.h"
-#include "typelib.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);

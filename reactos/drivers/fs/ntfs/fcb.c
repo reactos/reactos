@@ -235,8 +235,6 @@ NtfsFCBInitializeCache(PVCB Vcb,
   RtlZeroMemory(newCCB,
 		sizeof(CCB));
 
-  FileObject->Flags = FileObject->Flags | FO_FCB_IS_VALID |
-      FO_DIRECT_CACHE_PAGING_READ;
   FileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
   FileObject->FsContext = Fcb;
   FileObject->FsContext2 = newCCB;
@@ -406,8 +404,6 @@ NtfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
     }
   memset(newCCB, 0, sizeof(CCB));
 
-  FileObject->Flags = FileObject->Flags | FO_FCB_IS_VALID |
-      FO_DIRECT_CACHE_PAGING_READ;
   FileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
   FileObject->FsContext = Fcb;
   FileObject->FsContext2 = newCCB;

@@ -194,6 +194,8 @@ typedef struct tagMSIPACKAGE
     UINT loaded_components;
     struct tagMSIFILE *files;
     UINT loaded_files;
+    LPWSTR ActionFormat;
+    LPWSTR LastAction;
 } MSIPACKAGE;
 
 #define MSIHANDLETYPE_ANY 0
@@ -228,6 +230,8 @@ extern MSIHANDLE alloc_msihandle( MSIOBJECTHDR * );
 extern void *alloc_msiobject(UINT type, UINT size, msihandledestructor destroy );
 extern void msiobj_addref(MSIOBJECTHDR *);
 extern int msiobj_release(MSIOBJECTHDR *);
+extern void msiobj_lock(MSIOBJECTHDR *);
+extern void msiobj_unlock(MSIOBJECTHDR *);
 extern MSIHANDLE msiobj_findhandle( MSIOBJECTHDR *hdr );
 
 /* add this table to the list of cached tables in the database */
@@ -269,6 +273,7 @@ extern UINT read_raw_stream_data( MSIDATABASE*, LPCWSTR stname,
                               USHORT **pdata, UINT *psz );
 extern UINT ACTION_DoTopLevelINSTALL( MSIPACKAGE *, LPCWSTR, LPCWSTR );
 extern void ACTION_remove_tracked_tempfiles( MSIPACKAGE* );
+extern void ACTION_free_package_structures( MSIPACKAGE* );
 
 /* record internals */
 extern UINT MSI_RecordSetIStream( MSIRECORD *, unsigned int, IStream *);

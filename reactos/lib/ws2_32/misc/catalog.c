@@ -282,11 +282,11 @@ VOID CreateCatalog(VOID)
 
   Provider->Mapping = HeapAlloc(GlobalHeap,
     0,
-    5 * sizeof(WINSOCK_MAPPING) + 3 * sizeof(DWORD));
+    6 * sizeof(WINSOCK_MAPPING) + 3 * sizeof(DWORD));
   if (!Provider->Mapping)
     return;
 
-  Provider->Mapping->Rows    = 5;
+  Provider->Mapping->Rows    = 6;
   Provider->Mapping->Columns = 3;
 
   Provider->Mapping->Mapping[0].AddressFamily = AF_INET;
@@ -307,7 +307,11 @@ VOID CreateCatalog(VOID)
 
   Provider->Mapping->Mapping[4].AddressFamily = AF_INET;
   Provider->Mapping->Mapping[4].SocketType    = SOCK_RAW;
-  Provider->Mapping->Mapping[4].Protocol      = 0;
+  Provider->Mapping->Mapping[4].Protocol      = IPPROTO_ICMP;
+
+  Provider->Mapping->Mapping[5].AddressFamily = AF_INET;
+  Provider->Mapping->Mapping[5].SocketType    = SOCK_RAW;
+  Provider->Mapping->Mapping[5].Protocol      = 0;
 #endif
 }
 

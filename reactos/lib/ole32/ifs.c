@@ -394,10 +394,11 @@ static ULONG WINAPI IMallocSpy_fnAddRef (LPMALLOCSPY iface)
 {
 
     _MallocSpy *This = (_MallocSpy *)iface;
+    ULONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE ("(%p)->(count=%lu)\n", This, This->ref);
+    TRACE ("(%p)->(count=%lu)\n", This, ref - 1);
 
-    return ++(This->ref);
+    return ref;
 }
 
 /******************************************************************************
@@ -410,13 +411,14 @@ static ULONG WINAPI IMallocSpy_fnRelease (LPMALLOCSPY iface)
 {
 
     _MallocSpy *This = (_MallocSpy *)iface;
+    ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE ("(%p)->(count=%lu)\n", This, This->ref);
+    TRACE ("(%p)->(count=%lu)\n", This, ref + 1);
 
-    if (!--(This->ref)) {
+    if (!ref) {
         /* our allocation list MUST be empty here */
     }
-    return This->ref;
+    return ref;
 }
 
 static ULONG WINAPI IMallocSpy_fnPreAlloc(LPMALLOCSPY iface, ULONG cbRequest)

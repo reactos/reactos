@@ -68,6 +68,7 @@ _do_debug:
 _RtlpCaptureContext:
 	pushl   %ebp
     movl	%esp, %ebp
+    pushl   %ebx
 	movl	RCC_CONTEXT(%ebp), %edx		// EDX = Address of context structure
 
 	cld
@@ -117,6 +118,7 @@ _RtlpCaptureContext:
 	addl	$8, %ebx
 	movl	%ebx, CONTEXT_ESP(%edx)	// ESP = EBP of caller of caller + 8
 
+    popl    %ebx
     movl	%ebp, %esp
     popl	%ebp
     ret

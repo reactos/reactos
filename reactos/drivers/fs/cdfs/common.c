@@ -191,6 +191,19 @@ CdfsDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
      *OutputBufferSize = IoStatus.Information;
     }
 
+  if (Status == STATUS_VERIFY_REQUIRED)
+    {
+      PDEVICE_OBJECT DeviceToVerify;
+      NTSTATUS NewStatus;
+
+      DPRINT1("STATUS_VERIFY_REQUIRED\n");
+      DeviceToVerify = IoGetDeviceToVerify(PsGetCurrentThread());
+      IoSetDeviceToVerify(PsGetCurrentThread(), NULL);
+
+      NewStatus = IoVerifyVolume(DeviceToVerify, FALSE);
+      DPRINT1("IoVerifyVolume() retuned (Status %lx)\n", NewStatus);
+    }
+
   DPRINT("Returning Status %x\n", Status);
 
   return Status;

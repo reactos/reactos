@@ -54,4 +54,6 @@ UINT CALLBACK QUEUE_callback_WtoA( void *context, UINT notification, UINT_PTR, U
 #define _S_IWRITE 0x0080
 #define _S_IREAD  0x0100
 
+extern OSVERSIONINFOW OsVersionInfo;
+
 #endif /* __SETUPAPI_PRIVATE_H */

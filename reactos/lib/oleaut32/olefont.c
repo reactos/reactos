@@ -454,8 +454,7 @@ static void OLEFontImpl_Destroy(OLEFontImpl* fontDesc)
 {
   TRACE("(%p)\n", fontDesc);
 
-  if (fontDesc->description.lpstrName!=0)
-    HeapFree(GetProcessHeap(), 0, fontDesc->description.lpstrName);
+  HeapFree(GetProcessHeap(), 0, fontDesc->description.lpstrName);
 
   if (fontDesc->gdiFont!=0)
     DeleteObject(fontDesc->gdiFont);
@@ -1594,8 +1593,7 @@ static HRESULT WINAPI OLEFontImpl_Load(
   if (cbRead!=bStringSize)
     return E_FAIL;
 
-  if (this->description.lpstrName!=0)
-    HeapFree(GetProcessHeap(), 0, this->description.lpstrName);
+  HeapFree(GetProcessHeap(), 0, this->description.lpstrName);
 
   len = MultiByteToWideChar( CP_ACP, 0, readBuffer, bStringSize, NULL, 0 );
   this->description.lpstrName = HeapAlloc( GetProcessHeap(), 0, (len+1) * sizeof(WCHAR) );

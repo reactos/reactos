@@ -596,7 +596,7 @@ NtUserCreateDesktop(
    */
 
   Status = ObCreateObject(
-    ExGetPreviousMode(),
+    KernelMode,
     ExDesktopObjectType,
     &ObjectAttributes,
     ExGetPreviousMode(),

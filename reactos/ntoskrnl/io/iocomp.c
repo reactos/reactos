@@ -1,12 +1,11 @@
-/*
+/* $Id$
+ * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ke/iocomp.c
- * PURPOSE:         
- * PROGRAMMER:      David Welch (welch@mcmail.com)
- * UPDATE HISTORY:
- *                  Created 22/05/98
-		    Changed NtQueryIoCompletion 
+ * FILE:            ntoskrnl/io/iocomp.c
+ * PURPOSE:         No purpose listed.
+ * 
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
 /* INCLUDES *****************************************************************/
@@ -33,14 +32,14 @@ static GENERIC_MAPPING ExIoCompletionMapping =
 
 NTSTATUS 
 STDCALL
-NtpCreateIoCompletion(
+IopCreateIoCompletion(
    PVOID                ObjectBody,
    PVOID                Parent,
    PWSTR                RemainingPath,
    POBJECT_ATTRIBUTES   ObjectAttributes
    )
 {
-   DPRINT("NtpCreateIoCompletion(ObjectBody %x, Parent %x, RemainingPath %S)\n",
+   DPRINT("IopCreateIoCompletion(ObjectBody %x, Parent %x, RemainingPath %S)\n",
       ObjectBody, Parent, RemainingPath);
 
    if (RemainingPath != NULL && wcschr(RemainingPath+1, '\\') != NULL)
@@ -52,11 +51,11 @@ NtpCreateIoCompletion(
 }
 
 VOID STDCALL
-NtpDeleteIoCompletion(PVOID ObjectBody)
+IopDeleteIoCompletion(PVOID ObjectBody)
 {
    PKQUEUE Queue = ObjectBody;
 
-   DPRINT("NtpDeleteIoCompletion()\n");
+   DPRINT("IopDeleteIoCompletion()\n");
 
    KeRundownQueue(Queue);
 }
@@ -120,11 +119,11 @@ IopInitIoCompletionImplementation(VOID)
 {
    ExIoCompletionType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
    
-   RtlCreateUnicodeString(&ExIoCompletionType->TypeName, L"IoCompletion");
+   RtlpCreateUnicodeString(&ExIoCompletionType->TypeName, L"IoCompletion", NonPagedPool);
    
    ExIoCompletionType->Tag = IOC_TAG;
-   ExIoCompletionType->MaxObjects = ULONG_MAX;
-   ExIoCompletionType->MaxHandles = ULONG_MAX;
+   ExIoCompletionType->PeakObjects = 0;
+   ExIoCompletionType->PeakHandles = 0;
    ExIoCompletionType->TotalObjects = 0;
    ExIoCompletionType->TotalHandles = 0;
    ExIoCompletionType->PagedPoolCharge = 0;
@@ -133,12 +132,12 @@ IopInitIoCompletionImplementation(VOID)
    ExIoCompletionType->Dump = NULL;
    ExIoCompletionType->Open = NULL;
    ExIoCompletionType->Close = NULL;
-   ExIoCompletionType->Delete = NtpDeleteIoCompletion;
+   ExIoCompletionType->Delete = IopDeleteIoCompletion;
    ExIoCompletionType->Parse = NULL;
    ExIoCompletionType->Security = NULL;
    ExIoCompletionType->QueryName = NULL;
    ExIoCompletionType->OkayToClose = NULL;
-   ExIoCompletionType->Create = NtpCreateIoCompletion;
+   ExIoCompletionType->Create = IopCreateIoCompletion;
    ExIoCompletionType->DuplicationNotify = NULL;
 
    ExInitializeNPagedLookasideList(&IoCompletionPacketLookaside,

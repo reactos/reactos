@@ -1,30 +1,11 @@
-/*
- *  ReactOS kernel
- *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
 /* $Id$
  *
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/process.c
  * PURPOSE:         Microkernel process management
- * PROGRAMMER:      David Welch (welch@cwcom.net)
- * PORTABILITY:     No.
- * UPDATE HISTORY:
- *                  Created 22/05/98
+ * 
+ * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
 /* INCLUDES *****************************************************************/
@@ -270,4 +251,46 @@ KeUnstackDetachProcess (
 	KeReleaseDispatcherDatabaseLock(OldIrql);
 }
 
+// This function should be used by win32k.sys to add its own user32/gdi32 services
+// TableIndex is 0 based
+// ServiceCountTable its not used at the moment
+/*
+ * @implemented
+ */
+BOOLEAN STDCALL
+KeAddSystemServiceTable (
+	PSSDT	SSDT,
+	PULONG	ServiceCounterTable,
+	ULONG	NumberOfServices,
+	PSSPT	SSPT,
+	ULONG	TableIndex
+	)
+{
+    /* check if descriptor table entry is free */
+    if ((TableIndex > SSDT_MAX_ENTRIES - 1) ||    
+        (KeServiceDescriptorTable[TableIndex].SSDT != NULL) ||
+        (KeServiceDescriptorTableShadow[TableIndex].SSDT != NULL))
+        return FALSE;
+
+    /* initialize the shadow service descriptor table */
+    KeServiceDescriptorTableShadow[TableIndex].SSDT = SSDT;
+    KeServiceDescriptorTableShadow[TableIndex].SSPT = SSPT;
+    KeServiceDescriptorTableShadow[TableIndex].NumberOfServices = NumberOfServices;
+    KeServiceDescriptorTableShadow[TableIndex].ServiceCounterTable = ServiceCounterTable;
+    
+    return TRUE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+STDCALL
+KeRemoveSystemServiceTable(
+    IN PUCHAR Number
+)
+{
+	UNIMPLEMENTED;
+	return FALSE;
+}
 /* EOF */
