@@ -687,96 +687,91 @@ NTSTATUS AfdDispConnect(
  *     Status of operation
  */
 {
-  NTSTATUS Status;
-  UINT InputBufferLength;
-  UINT OutputBufferLength;
-  PFILE_REQUEST_CONNECT Request;
-  PFILE_REPLY_CONNECT Reply;
-  AFD_CONNECT_REQUEST ConnectRequest = { 0 };
-  PAFDFCB FCB;
-  SOCKADDR_IN LocalAddress;
-
-  AFD_DbgPrint(MIN_TRACE, ("\n"));
-
-  InputBufferLength  = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
-  OutputBufferLength = IrpSp->Parameters.DeviceIoControl.OutputBufferLength;
-
-  /* Validate parameters */
-  Status = STATUS_INVALID_PARAMETER;
-  if ((InputBufferLength >= sizeof(FILE_REQUEST_CONNECT)) &&
-      (OutputBufferLength >= sizeof(FILE_REPLY_CONNECT))) {
-    FCB = IrpSp->FileObject->FsContext;
-    
-    Request = (PFILE_REQUEST_CONNECT)Irp->AssociatedIrp.SystemBuffer;
-    Reply   = (PFILE_REPLY_CONNECT)Irp->AssociatedIrp.SystemBuffer;
+    NTSTATUS Status;
+    UINT InputBufferLength;
+    UINT OutputBufferLength;
+    PFILE_REQUEST_CONNECT Request;
+    PFILE_REPLY_CONNECT Reply;
+    /* AFD_CONNECT_REQUEST ConnectRequest = { 0 }; */
+    PAFDFCB FCB;
+    SOCKADDR_IN LocalAddress;
     
     AFD_DbgPrint(MIN_TRACE, ("\n"));
     
-    if (FCB->State == SOCKET_STATE_CONNECTED) {
-	Reply->Status = WSAEISCONN;
-    } else {
-      /* We have an unbound socket so go ahead and create an address
-         file object and a connection endpoint and associate the two */
-      
-      AFD_DbgPrint(MIN_TRACE, ("\n"));
-      
-      /* FIXME: Get from client */
-      LocalAddress.sin_family = AF_INET;
-      LocalAddress.sin_port = AfdpGetAvailablePort( &FCB->TdiDeviceName );
-      LocalAddress.sin_addr.S_un.S_addr = 0x0; /* Dynamically allocate */
-      
-      Status = TdiOpenAddressFile(
-	  &FCB->TdiDeviceName,
-	  (LPSOCKADDR)&LocalAddress,
-	  &FCB->TdiAddressObjectHandle,
-	  &FCB->TdiAddressObject);
-      
-      if (NT_SUCCESS(Status)) {
-        AfdRegisterEventHandlers(FCB);
-        FCB->State = SOCKET_STATE_BOUND;
-      }
-      
-      AFD_DbgPrint(MIN_TRACE, ("\n"));
-      
-      if (NT_SUCCESS(Status)) {
-        Status = TdiOpenConnectionEndpointFile
-	  (&FCB->TdiDeviceName,
-	   &FCB->TdiConnectionObjectHandle,
-	   &FCB->TdiConnectionObject);
-      }
-      
-      AFD_DbgPrint(MIN_TRACE, ("\n"));
-      
-      if (NT_SUCCESS(Status)) {
-        Status = TdiAssociateAddressFile
-	  (FCB->TdiAddressObjectHandle,
-	   FCB->TdiConnectionObject);
-      }
-      
-      AFD_DbgPrint(MIN_TRACE, ("\n"));
-      
-      if (NT_SUCCESS(Status) && FCB->State != SOCKET_STATE_CONNECTED) 
-	{
-	    AfdpMakeWork( AFD_OP_CONNECT_REQUEST, Irp, IrpSp, 
-			  (PCHAR)&ConnectRequest, sizeof(ConnectRequest) );
-
-	    Status = TdiConnect
-		(FCB->TdiConnectionObject,
-		 Request->name);
+    InputBufferLength  = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
+    OutputBufferLength = IrpSp->Parameters.DeviceIoControl.OutputBufferLength;
+    
+    /* Validate parameters */
+    Status = STATUS_INVALID_PARAMETER;
+    if ((InputBufferLength >= sizeof(FILE_REQUEST_CONNECT)) &&
+	(OutputBufferLength >= sizeof(FILE_REPLY_CONNECT))) {
+	FCB = IrpSp->FileObject->FsContext;
+	
+	Request = (PFILE_REQUEST_CONNECT)Irp->AssociatedIrp.SystemBuffer;
+	Reply   = (PFILE_REPLY_CONNECT)Irp->AssociatedIrp.SystemBuffer;
+	
+	AFD_DbgPrint(MIN_TRACE, ("\n"));
+	
+	if (FCB->State == SOCKET_STATE_CONNECTED) {
+	    Reply->Status = WSAEISCONN;
+	} else {
+	    /* We have an unbound socket so go ahead and create an address
+	       file object and a connection endpoint and associate the two */
 	    
-	    AFD_DbgPrint(MIN_TRACE, ("FIXME: Status (0x%X).\n", Status));
+	    AFD_DbgPrint(MIN_TRACE, ("\n"));
+	    
+	    /* FIXME: Get from client */
+	    LocalAddress.sin_family = AF_INET;
+	    LocalAddress.sin_port = 
+		AfdpGetAvailablePort( &FCB->TdiDeviceName );
+	    LocalAddress.sin_addr.S_un.S_addr = 0x0; /* Dynamically allocate */
+	    
+	    Status = TdiOpenAddressFile(
+		&FCB->TdiDeviceName,
+		(LPSOCKADDR)&LocalAddress,
+		&FCB->TdiAddressObjectHandle,
+		&FCB->TdiAddressObject);
+	    
+	    if (NT_SUCCESS(Status)) {
+		AfdRegisterEventHandlers(FCB);
+		FCB->State = SOCKET_STATE_BOUND;
+	    }
+	    
+	    AFD_DbgPrint(MIN_TRACE, ("\n"));
+	    
+	    if (NT_SUCCESS(Status)) {
+		Status = TdiOpenConnectionEndpointFile
+		    (&FCB->TdiDeviceName,
+		     &FCB->TdiConnectionObjectHandle,
+		     &FCB->TdiConnectionObject);
+	    }
+	    
+	    AFD_DbgPrint(MIN_TRACE, ("\n"));
+	    
+	    if (NT_SUCCESS(Status)) {
+		Status = TdiAssociateAddressFile
+		    (FCB->TdiAddressObjectHandle,
+		     FCB->TdiConnectionObject);
+	    }
+	    
+	    AFD_DbgPrint(MIN_TRACE, ("\n"));
+	    
+	    if (NT_SUCCESS(Status) && FCB->State != SOCKET_STATE_CONNECTED) {
+		Status = TdiConnect
+		    (FCB->TdiConnectionObject,
+		     Request->name);
+		
+		AFD_DbgPrint(MIN_TRACE, ("FIXME: Status (0x%X).\n", Status));
+	    } else {
+		/* FIXME: Cleanup from TdiOpenConnectionEndpointFile */
+		Status = STATUS_NO_MEMORY;
+	    }
 	}
-      else
-      {
-	  /* FIXME: Cleanup from TdiOpenConnectionEndpointFile */
-	  Status = STATUS_NO_MEMORY;
-      }
-    }
-  } 
-
-  AFD_DbgPrint(MAX_TRACE, ("Status (0x%X).\n", Status));
-  
-  return Status;
+    } 
+    
+    AFD_DbgPrint(MAX_TRACE, ("Status (0x%X).\n", Status));
+    
+    return Status;
 }
 
 

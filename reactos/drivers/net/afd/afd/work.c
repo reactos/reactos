@@ -34,8 +34,12 @@ NTSTATUS AfdpMakeWork( UINT Opcode,
 	return STATUS_NO_MEMORY;
     
     FCB = IrpSp->FileObject->FsContext;
-    
-    Request->Opcode      = AFD_OP_ACCEPT_REQUEST;
+
+    AFD_DbgPrint(MAX_TRACE,
+		 ("Added work item: Request: %x, Opcode %d, Irp %x, PayloadSize %d\n",
+		  Request, Opcode, Irp, PayloadSize));
+
+    Request->Opcode      = Opcode;
     Request->Irp         = Irp;
     Request->IrpSp       = IrpSp;
     if( PayloadSize ) RtlCopyMemory(Request->Payload, Payload, PayloadSize);
@@ -402,30 +406,43 @@ WORK_PERFORM_FUN WorkPerform[] = { AfdpTryToSatisfyAcceptRequest,
 				   AfdpTryToSatisfyConnectRequest };
 
 VOID AfdpWorkOnFcb( PAFDFCB FCB ) {
-    PAFD_WORK_REQUEST WorkRequest;
-    PLIST_ENTRY ListEntry = 0, NextListEntry = 0;
     KIRQL OldIrql;
+    PAFD_WORK_REQUEST WorkRequest;
+    PLIST_ENTRY ListEntry = FCB->WorkQueue.Flink;
 
-    KeAcquireSpinLock( &FCB->WorkQueueLock, &OldIrql );
-    ListEntry = FCB->WorkQueue.Flink;
-    
     while( ListEntry != &FCB->WorkQueue ) {
-	AFD_DbgPrint(MID_TRACE, ("Got item %x...\n", ListEntry));
-	WorkRequest = CONTAINING_RECORD(&FCB->WorkQueue,
+	WorkRequest = CONTAINING_RECORD(ListEntry,
 					AFD_WORK_REQUEST, 
 					ListEntry);
+
 	AFD_DbgPrint(MID_TRACE, ("With request %x...\n", WorkRequest));
-	NextListEntry = ListEntry->Flink;
-	KeReleaseSpinLock( &FCB->WorkQueueLock, OldIrql );
-    
+	
+	AFD_DbgPrint(MAX_TRACE,
+		     ("Got work item: Request: %x, Opcode %d, Irp %x, PayloadSize %d\n",
+		      WorkRequest,
+		      WorkRequest->Opcode, 
+		      WorkRequest->Irp, 
+		      WorkRequest->PayloadSize));
+	
 	if( WorkPerform[WorkRequest->Opcode]( FCB, WorkRequest ) ) {
+	    AFD_DbgPrint(MID_TRACE, ("Request should be removed.\n"));
 	    IoCompleteRequest( WorkRequest->Irp, IO_NETWORK_INCREMENT );
+	    AFD_DbgPrint(MID_TRACE, ("Locking the work queue.\n"));
+	    KeAcquireSpinLock( &FCB->WorkQueueLock, &OldIrql );
+	    AFD_DbgPrint(MID_TRACE, ("Removing.\n"));
 	    RemoveEntryList( ListEntry );
-	    ListEntry = NextListEntry;
+	    AFD_DbgPrint(MID_TRACE, ("Unlocking.\n"));
+	    KeReleaseSpinLock( &FCB->WorkQueueLock, OldIrql );
+	    AFD_DbgPrint(MID_TRACE, ("Freeing.\n"));
+	    ExFreePool( WorkRequest );
+	    ListEntry = &FCB->WorkQueue;
+	} else {
+	    AFD_DbgPrint(MID_TRACE, ("Request should be left.\n"));
+	    KeAcquireSpinLock( &FCB->WorkQueueLock, &OldIrql );
+	    ListEntry = ListEntry->Flink;
+	    KeReleaseSpinLock( &FCB->WorkQueueLock, OldIrql );
 	}
-	KeAcquireSpinLock( &FCB->WorkQueueLock, &OldIrql );
     }
-    KeReleaseSpinLock( &FCB->WorkQueueLock, OldIrql );
 }
 
 VOID AfdpWork( PDEVICE_OBJECT DriverObject, PVOID Data ) {
@@ -446,7 +463,6 @@ VOID AfdpWork( PDEVICE_OBJECT DriverObject, PVOID Data ) {
     }
     
     AfdpWorkOnFcb( FCB );
-
     
     AFD_DbgPrint(MID_TRACE, ("... Done\n"));
 }

@@ -194,7 +194,7 @@ sysctl_rdstruct(oldp, oldlenp, newp, sp, len)
  * normally, this is a builtin function in gcc
  * net/if.c doesn't seem to get it, though
  */
-int
+static int
 memcmp(const void *s1v, const void *s2v, size_t size)
 {
         register const char *s1 = s1v, *s2 = s2v;

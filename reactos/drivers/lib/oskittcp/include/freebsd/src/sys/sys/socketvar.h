@@ -181,11 +181,11 @@ struct socket {
 		((sb)->sb_flags |= SB_LOCK), 0)
 
 /* release lock on sockbuf sb */
-#define	sbunlock(sb) { \
+#define	sbunlock(so, sb) { \
 	(sb)->sb_flags &= ~SB_LOCK; \
 	if ((sb)->sb_flags & SB_WANT) { \
 		(sb)->sb_flags &= ~SB_WANT; \
-		wakeup((caddr_t)&(sb)->sb_flags); \
+		wakeup(so, &(sb)->sb_sel, (caddr_t)&(sb)->sb_flags); \
 	} \
 }
 
@@ -195,6 +195,7 @@ struct socket {
 			}
 
 #define	sowwakeup(so)	sowakeup((so), &(so)->so_snd)
+#define	socwakeup(so)	sowakeup((so), &(so)->so_snd)
 
 #ifdef KERNEL
 extern u_long	sb_max;

@@ -351,7 +351,7 @@ union mcluster {
 	  if ((m)->m_flags & M_EXT) { \
 		MCLFREE((m)->m_ext.ext_buf); \
 	  } \
-	  (nn) = (m)->m_next; \
+	  /* (nn) = (m)->m_next; */ \
 	  FREE((m), mbtypes[(m)->m_type]); \
 	}
 #endif /* OSKIT */

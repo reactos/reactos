@@ -54,9 +54,6 @@ void RegisterOskitTCPEventHandlers( POSKITTCP_EVENT_HANDLERS EventHandlers ) {
     if( OtcpEvent.PacketSend ) 
 	OS_DbgPrint(OSK_MID_TRACE,("SendPacket handler registered: %x\n",
 				   OtcpEvent.PacketSend));
-    if( OtcpEvent.Bind )
-	OS_DbgPrint(OSK_MID_TRACE,("Bind handler registered: %x\n",
-				   OtcpEvent.Bind));
 }
 
 void OskitDumpBuffer( OSK_PCHAR Data, OSK_UINT Len ) {
@@ -85,42 +82,49 @@ int OskitTCPSocket( void *context,
 	*aso = so;
     }
     return error;
-#if 0
-    register struct protosw *prp;
-    register struct socket *so;
-    register int error;
-
-    if (proto) {
-	prp = pffindproto(domain, proto, type);
-    } else {
-	prp = pffindtype(domain, type);
-    }
-    if (prp == 0 || prp->pr_usrreq == 0) {
-	return (EPROTONOSUPPORT);
-    }
-    if (prp->pr_type != type) {
-	return (EPROTOTYPE);
-    }
-    MALLOC(so, struct socket *, sizeof(*so), M_SOCKET, M_WAIT);
-    bzero((caddr_t)so, sizeof(*so));
-    so->so_type = type;
-    so->so_proto = prp;
-    error =
-	(*prp->pr_usrreq)(so, PRU_ATTACH,
-			  (struct mbuf *)0, 
-			  (struct mbuf *)proto, 
-			  (struct mbuf *)0);
-    if (error) {
-	so->so_state |= SS_NOFDREF;
-	sofree(so);
-	return (error);
-    }
-    *aso = so;
-    OS_DbgPrint(OSK_MAX_TRACE,("Returning Socket %x\n", so));
-    return STATUS_SUCCESS;
-#endif
 }
 
+int OskitTCPRecv( void *connection,
+		  void *Addr,
+		  OSK_PCHAR Data,
+		  OSK_UINT Len,
+		  OSK_UINT *OutLen,
+		  OSK_UINT Flags ) {
+    struct mbuf *paddr = 0;
+    struct mbuf m, *mp;
+    struct uio uio = { 0 };
+    int error = 0;
+    int tcp_flags = 0;
+
+    if( Flags & OSK_MSG_OOB )      tcp_flags |= MSG_OOB;
+    if( Flags & OSK_MSG_DONTWAIT ) tcp_flags |= MSG_DONTWAIT;
+    if( Flags & OSK_MSG_PEEK )     tcp_flags |= MSG_PEEK;
+
+    uio.uio_resid = Len;
+    m.m_len = Len;
+    m.m_data = Data;
+    m.m_type = MT_DATA;
+    m.m_flags = M_PKTHDR | M_EOR;
+
+    mp = &m;
+
+    OS_DbgPrint(OSK_MID_TRACE,("Reading %d bytes from TCP:\n", Len));
+	
+    error = soreceive( connection, &paddr, &uio, &mp, NULL /* SCM_RIGHTS */, 
+		       &tcp_flags );
+
+    if( error == 0 ) {
+	OS_DbgPrint(OSK_MID_TRACE,("Successful read from TCP:\n"));
+	OskitDumpBuffer( m.m_data, uio.uio_resid );
+    }
+
+    if( paddr )
+	memcpy( Addr, paddr, min(sizeof(struct sockaddr),paddr->m_len) );
+
+    *OutLen = uio.uio_resid;
+    return error;
+}
+		  
 static int
 getsockaddr(namp, uaddr, len)
 /* [<][>][^][v][top][bottom][index][help] */
@@ -209,10 +213,13 @@ done:
     return (error);    
 }
 
-DWORD OskitTCPClose( VOID *socket ) {
+DWORD OskitTCPClose( void *socket ) {
+    struct socket *so = socket;
+    so->so_connection = 0;
+    soclose( so );
 }
 
-DWORD OskitTCPSend( VOID *socket, OSK_PCHAR Data, OSK_UINT Len, int flags ) {
+DWORD OskitTCPSend( void *socket, OSK_PCHAR Data, OSK_UINT Len, int flags ) {
     OskitDumpBuffer( Data, Len );
     struct mbuf mb;
     mb.m_data = Data;
@@ -220,11 +227,17 @@ DWORD OskitTCPSend( VOID *socket, OSK_PCHAR Data, OSK_UINT Len, int flags ) {
     return sosend( socket, NULL, NULL, (struct mbuf *)&mb, NULL, 0 );
 }
 
-void OskitTCPReceive( VOID *socket, PVOID AddrOut, 
-		      OSK_PCHAR Data, OSK_UINT Len, OSK_UINT *OutLen ) {
-}
+void *OskitTCPAccept( void *socket, 
+		      void *AddrOut, 
+		      OSK_UINT AddrLen,
+		      OSK_UINT *OutAddrLen ) {
+    struct mbuf nam;
+    int error;
 
-VOID *OskitTCPAccept( VOID *socket, PVOID AddrOut ) {
+    nam.m_data = AddrOut;
+    nam.m_len  = AddrLen;
+
+    return soaccept( socket, &nam );
 }
 
 void OskitTCPReceiveDatagram( OSK_PCHAR Data, OSK_UINT Len, 
@@ -246,13 +259,11 @@ void OskitTCPReceiveDatagram( OSK_PCHAR Data, OSK_UINT Len,
     /* The buffer Ip is freed by tcp_input */
 }
 
-void OskitTCPBind( VOID *socket, PVOID name ) {
+void OskitTCPListen( void *socket, int backlog ) {
+    return solisten( socket, backlog );
 }
 
-void OskitTCPListen( VOID *socket, int backlog ) {
-}
-
-void OskitTCPSetAddress( VOID *socket, 
+void OskitTCPSetAddress( void *socket, 
 			 ULONG LocalAddress,
 			 USHORT LocalPort,
 			 ULONG RemoteAddress,
@@ -268,7 +279,7 @@ void OskitTCPSetAddress( VOID *socket,
 	     RemoteAddress, RemotePort);
 }
 
-void OskitTCPGetAddress( VOID *socket, 
+void OskitTCPGetAddress( void *socket, 
 			 PULONG LocalAddress,
 			 PUSHORT LocalPort,
 			 PULONG RemoteAddress,
@@ -290,3 +301,4 @@ void oskittcp_die( const char *file, int line ) {
     DbgPrint("\n\n*** OSKITTCP: Panic Called at %s:%d ***\n", file, line);
     KeBugCheck(0);
 }
+
