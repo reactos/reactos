@@ -1,4 +1,4 @@
-/* $Id: stubsw.c,v 1.2 2000/02/20 22:52:48 ea Exp $
+/* $Id: stubsw.c,v 1.3 2000/06/16 07:34:15 jfilby Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -33,25 +33,6 @@ CopyMetaFileW(
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
-}
-
-
-HDC
-STDCALL
-CreateDCW (
-	LPCWSTR		lpwszDriver,
-	LPCWSTR		lpwszDevice,
-	LPCWSTR		lpwszOutput,
-	CONST DEVMODE	* lpInitData
-	)
-{
-	/* FIXME: is this a forward-only call? */
-	return W32kCreateDC (
-			lpwszDriver,
-			lpwszDevice,
-			lpwszOutput,
-			lpInitData
-			);
 }
 
 
@@ -466,21 +447,6 @@ GetObjectW(
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
-}
-
-
-BOOL
-STDCALL
-TextOutW(
-	HDC		hdc, 
-	int		a1, 
-	int		a2, 
-	LPCWSTR		a3, 
-	int		a4
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: stubsa.c,v 1.3 2000/02/27 11:04:36 jfilby Exp $
+/* $Id: stubsa.c,v 1.4 2000/06/16 07:34:15 jfilby Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -36,66 +36,6 @@ CopyMetaFileA(
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
-}
-
-
-HDC
-STDCALL
-CreateDCA (
-	LPCSTR		lpszDriver,
-	LPCSTR		lpszDevice,
-	LPCSTR		lpszOutput,
-	CONST DEVMODE	* lpInitData
-	)
-{
-        ANSI_STRING DriverA, DeviceA, OutputA;
-        UNICODE_STRING DriverU, DeviceU, OutputU;
-	HDC	hDC;
-
-	/*
-	 * If needed, convert to Unicode
-	 * any string parameter.
-	 */
-
-	if (NULL != lpszDriver)
-	{
-		RtlInitAnsiString(&DriverA, (LPSTR)lpszDriver);
-		RtlAnsiStringToUnicodeString(&DriverU, &DriverA, TRUE);
-	}
-	if (NULL != lpszDevice)
-	{
-		RtlInitAnsiString(&DeviceA, (LPSTR)lpszDevice);
-		RtlAnsiStringToUnicodeString(&DeviceU, &DeviceA, TRUE);
-	}
-	if (NULL != lpszOutput)
-	{
-		RtlInitAnsiString(&OutputA, (LPSTR)lpszOutput);
-		RtlAnsiStringToUnicodeString(&OutputU, &OutputA, TRUE);
-	}
-
-	/*
-	 * Call the Unicode version
-	 * of CreateDC.
-	 */
-
-	hDC = CreateDCW (
-		DriverU.Buffer,
-		DeviceU.Buffer,
-		OutputU.Buffer,
-		lpInitData
-		);
-	/*
-	 * Free Unicode parameters.
-	 */
-	RtlFreeUnicodeString(&DriverU);
-	RtlFreeUnicodeString(&DeviceU);
-	RtlFreeUnicodeString(&OutputU);
-
-	/*
-	 * Return the possible DC handle.
-	 */
-
-	return hDC;
 }
 
 
@@ -511,21 +451,6 @@ GetObjectA(
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
-}
-
-
-BOOL  
-STDCALL 
-TextOutA(
-	HDC		hdc, 
-	int		a1, 
-	int		a2, 
-	LPCSTR		a3, 
-	int		a4
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
 }
 
 

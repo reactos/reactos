@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.10 2000/02/27 11:04:36 jfilby Exp $
+# $Id: makefile,v 1.11 2000/06/16 07:34:15 jfilby Exp $
 #
 # Makefile for ReactOS gdi32.dll
 #
@@ -19,12 +19,11 @@ endif
 all: $(DLLTARGET)
 
 MAIN_OBJECTS = main/dllmain.o
-
 MISC_OBJECTS = misc/stubs.o misc/stubsa.o misc/stubsw.o misc/win32k.o
-
 RESOURCE_OBJECTS = $(TARGET).coff
+OBJECTS_OBJECTS = objects/dc.o objects/line.o objects/pen.o objects/bitblt.o objects/text.o
 
-OBJECTS = $(MAIN_OBJECTS) $(MISC_OBJECTS) $(RESOURCE_OBJECTS)
+OBJECTS = $(MAIN_OBJECTS) $(MISC_OBJECTS) $(RESOURCE_OBJECTS) $(OBJECTS_OBJECTS)
 
 $(TARGET).a: $(OBJECTS)
 	$(AR) csr $(TARGET).a $(OBJECTS)

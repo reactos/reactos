@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.2 2000/02/13 16:05:12 dwelch Exp $
+/* $Id: stubs.c,v 1.3 2000/06/16 07:34:15 jfilby Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -40,26 +40,6 @@ Arc(
 	int	a6,
 	int	a7,
 	int	a8
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-
-BOOL
-STDCALL
-BitBlt(
-	HDC	a0,
-	int	a1,
-	int	a2,
-	int	a3,
-	int	a4,
-	HDC	a5,
-	int	a6,
-	int	a7,
-	DWORD	a8
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -140,95 +120,10 @@ CombineRgn(
 
 
 
-HBITMAP
-STDCALL
-CreateBitmap(
-	int		a0,
-	int		a1,
-	UINT		a2,
-	UINT		a3,
-	CONST VOID	*a4
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
-HBITMAP
-STDCALL
-CreateBitmapIndirect(
-	CONST BITMAP	*a0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
 HBRUSH
 STDCALL
 CreateBrushIndirect(
 	CONST LOGBRUSH	*a0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
-HBITMAP
-STDCALL
-CreateCompatibleBitmap(
-	HDC	a0,
-	int	a1,
-	int	a2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
-HBITMAP
-STDCALL
-CreateDiscardableBitmap(
-	HDC	a0,
-	int	a1,
-	int	a2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
-HDC
-STDCALL
-CreateCompatibleDC(
-	HDC	a0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
-HBITMAP
-STDCALL
-CreateDIBitmap(
-	HDC			a0,
-	CONST BITMAPINFOHEADER	*a1,
-	DWORD			a2,
-	CONST VOID		*a3,
-	CONST BITMAPINFO	*a4,
-	UINT			a5
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -307,32 +202,6 @@ HPALETTE
 STDCALL
 CreatePalette(
 	CONST LOGPALETTE	*a0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
-HPEN
-STDCALL
-CreatePen(
-	int		a0,
-	int		a1,
-	COLORREF	a2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
-HPEN
-STDCALL
-CreatePenIndirect(
-	CONST LOGPEN	*a0
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -707,33 +576,6 @@ GetBkMode(
 
 
 
-LONG
-STDCALL
-GetBitmapBits(
-	HBITMAP	a0,
-	LONG	a1,
-	LPVOID	a2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
-BOOL
-STDCALL
-GetBitmapDimensionEx(
-	HBITMAP	a0,
-	LPSIZE	a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-
 UINT
 STDCALL
 GetBoundsRect(
@@ -837,24 +679,6 @@ GetDeviceCaps(
 	return 0;
 }
 
-
-
-
-int
-STDCALL
-GetDIBits(
-	HDC		a0,
-	HBITMAP		a1,
-	UINT		a2,
-	UINT		a3,
-	LPVOID		a4,
-	LPBITMAPINFO	a5,
-	UINT		a6
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
 
 
@@ -1278,63 +1102,6 @@ LineDDA(
 
 
 
-BOOL
-STDCALL
-LineTo(
-	HDC	a0,
-	int	a1,
-	int	a2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-
-BOOL
-STDCALL
-MaskBlt(
-	HDC	a0,
-	int	a1,
-	int	a2,
-	int	a3,
-	int	a4,
-	HDC	a5,
-	int	a6,
-	int	a7,
-	HBITMAP	a8,
-	int	a9,
-	int	a10,
-	DWORD	a11
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-
-BOOL
-STDCALL
-PlgBlt(
-	HDC		a0,
-	CONST POINT	*a1,
-	HDC		a2,
-	int		a3,
-	int		a4,
-	int		a5,
-	int		a6,
-	HBITMAP		a7,
-	int		a8,
-	int		a9
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
 
 int
 STDCALL
@@ -1498,22 +1265,6 @@ RectVisible(
 
 BOOL
 STDCALL
-Rectangle(
-	HDC	a0,
-	int	a1,
-	int	a2,
-	int	a3,
-	int	a4
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-
-BOOL
-STDCALL
 RestoreDC(
 	HDC	a0,
 	int	a1
@@ -1619,19 +1370,6 @@ SetMetaRgn(
 
 
 
-HGDIOBJ
-STDCALL
-SelectObject(
-	HDC	a0,
-	HGDIOBJ	a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
 HPALETTE
 STDCALL
 SelectPalette(
@@ -1672,67 +1410,12 @@ SetBkMode(
 
 
 
-LONG
-STDCALL
-SetBitmapBits(
-	HBITMAP		a0,
-	DWORD		a1,
-	CONST VOID	*a2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
 UINT
 STDCALL
 SetBoundsRect(
 	HDC		a0,
 	CONST RECT	*a1,
 	UINT		a2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
-int
-STDCALL
-SetDIBits(
-	HDC			a0,
-	HBITMAP			a1,
-	UINT			a2,
-	UINT			a3,
-	CONST VOID		*a4,
-	CONST BITMAPINFO	*a5,
-	UINT			a6
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
-int
-STDCALL
-SetDIBitsToDevice(
-	HDC			a0,
-	int			a1,
-	int			a2,
-	DWORD			a3,
-	DWORD			a4,
-	int			a5,
-	int			a6,
-	UINT			a7,
-	UINT			a8,
-	CONST VOID		*a9,
-	CONST BITMAPINFO	*a10,
-	UINT			a11
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1800,21 +1483,6 @@ SetPaletteEntries(
 	UINT			a1, 
 	UINT			a2, 
 	CONST PALETTEENTRY	*a3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
- 
-COLORREF 
-STDCALL 
-SetPixel(
-	HDC		a0, 
-	int		a1, 
-	int		a2, 
-	COLORREF	a3
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1899,30 +1567,6 @@ SetRectRgn(
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
-}
-
-
- 
-int   
-STDCALL 
-StretchDIBits(
-	HDC			a0,
-	int			a1,
-	int			a2,
-	int			a3,
-	int			a4,
-	int			a5,
-	int			a6,
-	int			a7,
-	int			a8,
-	CONST VOID		*a9, 
-	CONST BITMAPINFO	*a10, 
-	UINT			a11, 
-	DWORD			a12
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
 }
 
 
@@ -2331,23 +1975,6 @@ CombineTransform(
 
 
  
-HBITMAP 
-STDCALL 
-CreateDIBSection(
-	HDC			hdc, 
-	CONST BITMAPINFO	*a1, 
-	UINT			a2, 
-	VOID			**a3, 
-	HANDLE			a4, 
-	DWORD			a5
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
- 
 UINT 
 STDCALL 
 GetDIBColorTable(
@@ -2728,20 +2355,6 @@ GetArcDirection(
 
 
  
-BOOL  
-STDCALL 
-MoveToEx(
-	HDC		hdc, 
-	int		a1, 
-	int		a2, 
-	LPPOINT		a3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
 HRGN
 STDCALL
 CreatePolygonRgn(
