@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.34 2003/12/17 19:56:13 weiden Exp $
+/* $Id: menu.c,v 1.35 2003/12/21 22:09:07 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -133,7 +133,14 @@ PMENU_OBJECT FASTCALL
 IntGetMenuObject(HMENU hMenu)
 {
   PMENU_OBJECT MenuObject;
-  NTSTATUS Status = ObmReferenceObjectByHandle(PsGetWin32Process()->
+  PW32PROCESS W32Process = PsGetWin32Process();
+  
+  if(!W32Process)
+  {
+    return NULL;
+  }
+  
+  NTSTATUS Status = ObmReferenceObjectByHandle(W32Process->
                       WindowStation->HandleTable, hMenu, otMenu, 
                       (PVOID*)&MenuObject);
   if (!NT_SUCCESS(Status))
