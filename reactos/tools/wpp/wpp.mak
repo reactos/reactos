@@ -17,25 +17,28 @@ WPP_OBJECTS = \
 
 WPP_HOST_CFLAGS = -D__USE_W32API -I$(WPP_BASE) -Iinclude -Iinclude/wine -g
 
+.PHONY: wpp
+wpp: $(WPP_TARGET)
+
 $(WPP_TARGET): $(INTERMEDIATE)$(WPP_BASE) $(WPP_OBJECTS)
 	$(ECHO_AR)
 	${host_ar} -rc $(WPP_TARGET) $(WPP_OBJECTS)
 
-$(INTERMEDIATE)$(WPP_BASE)$(SEP)lex.yy.o: $(INTERMEDIATE)$(WPP_BASE) $(WPP_BASE)$(SEP)lex.yy.c
+$(INTERMEDIATE)$(WPP_BASE)$(SEP)lex.yy.o: $(WPP_BASE)$(SEP)lex.yy.c $(INTERMEDIATE)$(WPP_BASE)
 	$(ECHO_CC)
-	${host_gcc} $(WPP_HOST_CFLAGS) -c $(WPP_BASE)$(SEP)lex.yy.c -o $(INTERMEDIATE)$(WPP_BASE)$(SEP)lex.yy.o
+	${host_gcc} $(WPP_HOST_CFLAGS) -c $< -o $@
 
-$(INTERMEDIATE)$(WPP_BASE)$(SEP)preproc.o: $(INTERMEDIATE)$(WPP_BASE) $(WPP_BASE)$(SEP)preproc.c
+$(INTERMEDIATE)$(WPP_BASE)$(SEP)preproc.o: $(WPP_BASE)$(SEP)preproc.c $(INTERMEDIATE)$(WPP_BASE)
 	$(ECHO_CC)
-	${host_gcc} $(WPP_HOST_CFLAGS) -c $(WPP_BASE)$(SEP)preproc.c -o $(INTERMEDIATE)$(WPP_BASE)$(SEP)preproc.o
+	${host_gcc} $(WPP_HOST_CFLAGS) -c $< -o $@
 
-$(INTERMEDIATE)$(WPP_BASE)$(SEP)wpp.o: $(INTERMEDIATE)$(WPP_BASE) $(WPP_BASE)$(SEP)wpp.c
+$(INTERMEDIATE)$(WPP_BASE)$(SEP)wpp.o: $(WPP_BASE)$(SEP)wpp.c $(INTERMEDIATE)$(WPP_BASE)
 	$(ECHO_CC)
-	${host_gcc} $(WPP_HOST_CFLAGS) -c $(WPP_BASE)$(SEP)wpp.c -o $(INTERMEDIATE)$(WPP_BASE)$(SEP)wpp.o
+	${host_gcc} $(WPP_HOST_CFLAGS) -c $< -o $@
 
-$(INTERMEDIATE)$(WPP_BASE)$(SEP)wpp.tab.o: $(INTERMEDIATE)$(WPP_BASE) $(WPP_BASE)$(SEP)wpp.tab.c
+$(INTERMEDIATE)$(WPP_BASE)$(SEP)wpp.tab.o: $(WPP_BASE)$(SEP)wpp.tab.c $(INTERMEDIATE)$(WPP_BASE)
 	$(ECHO_CC)
-	${host_gcc} $(WPP_HOST_CFLAGS) -c $(WPP_BASE)$(SEP)wpp.tab.c -o $(INTERMEDIATE)$(WPP_BASE)$(SEP)wpp.tab.o
+	${host_gcc} $(WPP_HOST_CFLAGS) -c $< -o $@
 
 .PHONY: wpp_clean
 wpp_clean:
