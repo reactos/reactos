@@ -10,6 +10,5 @@
 #include <pseh.h>
 #include "net/lan.h"
 #include "lan.h"
-#include "arp.h"
 
 #endif/*_LAN_PRECOMP_H*/
