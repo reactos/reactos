@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.55 2002/01/09 03:00:21 dwelch Exp $
+/* $Id: virtual.c,v 1.56 2002/05/07 22:36:46 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -296,6 +296,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
 	*/
        if (PageOp->OpType != MM_PAGEOP_PAGEIN)
 	 {
+           MmLockAddressSpace(AddressSpace);
 	   MmReleasePageOp(PageOp);
 	   return(STATUS_MM_RESTART_OPERATION);
 	 }
@@ -304,6 +305,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
 	*/
        if (!NT_SUCCESS(PageOp->Status))
 	 {
+           MmLockAddressSpace(AddressSpace);
 	   MmReleasePageOp(PageOp);
 	   return(Status);
 	 }
