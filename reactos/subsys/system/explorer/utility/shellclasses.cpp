@@ -73,7 +73,7 @@ void HandleException(COMException& e, HWND hwnd)
 	TCHAR msg[4*BUFFER_LEN];
 	LPTSTR p = msg;
 
-	p += _stprintf(TEXT("%s"), e.ErrorMessage());
+	p += _stprintf(p, TEXT("%s"), e.ErrorMessage());
 
 	if (e._ctx)
 		p += _stprintf(p, TEXT("\nContext: %s"), e._ctx);
@@ -85,7 +85,7 @@ void HandleException(COMException& e, HWND hwnd)
 #ifdef UNICODE
 		p += _stprintf(p, TEXT("\nLocation: %hs(%d)"), e._file, e._line);
 #else
-		p += _stprintf(p, TEXT("\nLocation: %s(%d)"), e._file, e._line);
+		p += _stprintf(p, TEXT("\nLocation: %s, line %d"), e._file, e._line);
 #endif
 
 	SetLastError(0);
