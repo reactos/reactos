@@ -98,6 +98,7 @@ _filbuf(FILE *f)
     return EOF;
   }
 
+  f->_cnt--;
   return *f->_ptr++ & 0377;
 }
 
