@@ -172,27 +172,29 @@ VfatWriteFAT(IN HANDLE FileHandle,
   PUCHAR Buffer;
   LARGE_INTEGER FileOffset;
   ULONG i;
+  ULONG Size;
+  ULONG Sectors;
 
   /* Allocate buffer */
   Buffer = (PUCHAR)RtlAllocateHeap(RtlGetProcessHeap(),
     0,
-    BootSector->BytesPerSector);
+    64 * 1024);
   if (Buffer == NULL)
     return(STATUS_INSUFFICIENT_RESOURCES);
 
   /* Zero the buffer */
-  memset(Buffer, 0, BootSector->BytesPerSector);
+  memset(Buffer, 0, 64 * 1024);
 
   /* FAT cluster 0 */
   Buffer[0] = 0xf8; /* Media type */
   Buffer[1] = 0xff;
   Buffer[2] = 0xff;
-  Buffer[3] = 0xff;
+  Buffer[3] = 0x0f;
   /* FAT cluster 1 */
-  Buffer[4] = 0xcf; /* Clean shutdown, no disk read/write errors, end-of-cluster (EOC) mark */
+  Buffer[4] = 0xff; /* Clean shutdown, no disk read/write errors, end-of-cluster (EOC) mark */
   Buffer[5] = 0xff;
   Buffer[6] = 0xff;
-  Buffer[7] = 0xf7;
+  Buffer[7] = 0x0f; 
   /* FAT cluster 2 */
   Buffer[8] = 0xff; /* End of root directory */
   Buffer[9] = 0xff;
@@ -217,21 +219,28 @@ VfatWriteFAT(IN HANDLE FileHandle,
       return(Status);
     }
 
-  /* Zero the buffer */
-  memset(Buffer, 0, BootSector->BytesPerSector);
+  /* Zero the begin of the buffer */
+  memset(Buffer, 0, 12);
 
   /* Zero the rest of the FAT */
-  for (i = 1; i < BootSector->FATSectors32 - 1; i++)
+  Sectors = 64 * 1024 / BootSector->BytesPerSector;
+  for (i = 1; i < BootSector->FATSectors32; i += Sectors)
     {
-      /* Zero one sector of the FAT */
+      /* Zero some sectors of the FAT */
       FileOffset.QuadPart = (SectorOffset + BootSector->ReservedSectors + i) * BootSector->BytesPerSector;
+      Size = BootSector->FATSectors32 - i;
+      if (Size > Sectors)
+        {
+	  Size = Sectors;
+        }
+      Size *= BootSector->BytesPerSector;
       Status = NtWriteFile(FileHandle,
         NULL,
         NULL,
         NULL,
         &IoStatusBlock,
         Buffer,
-        BootSector->BytesPerSector,
+	Size,
         &FileOffset,
         NULL);
       if (!NT_SUCCESS(Status))
@@ -332,6 +341,7 @@ VfatFormat(
   ULONG RootDirSectors;
   ULONG TmpVal1;
   ULONG TmpVal2;
+  ULONG TmpVal3;
 
   DPRINT("VfatFormat(DriveRoot '%S')\n", DriveRoot->Buffer);
 
@@ -376,7 +386,7 @@ VfatFormat(
       DPRINT("TracksPerCylinder %d\n", DiskGeometry.TracksPerCylinder);
       DPRINT("SectorsPerTrack %d\n", DiskGeometry.SectorsPerTrack);
       DPRINT("BytesPerSector %d\n", DiskGeometry.BytesPerSector);
-      DPRINT("DiskSize %d\n",
+      DPRINT("DiskSize %I64d\n",
         DiskGeometry.Cylinders.QuadPart *
         (ULONGLONG)DiskGeometry.TracksPerCylinder *
         (ULONGLONG)DiskGeometry.SectorsPerTrack *
@@ -400,8 +410,8 @@ VfatFormat(
         }
 
 	    DPRINT("PartitionType 0x%x\n", PartitionInfo.PartitionType);
-	    DPRINT("StartingOffset %d\n", PartitionInfo.StartingOffset);
-	    DPRINT("PartitionLength %d\n", PartitionInfo.PartitionLength);
+	    DPRINT("StartingOffset %I64d\n", PartitionInfo.StartingOffset);
+	    DPRINT("PartitionLength %I64d\n", PartitionInfo.PartitionLength);
 	    DPRINT("HiddenSectors %d\n", PartitionInfo.HiddenSectors);
 	    DPRINT("PartitionNumber %d\n", PartitionInfo.PartitionNumber);
 	    DPRINT("BootIndicator 0x%x\n", PartitionInfo.BootIndicator);
@@ -459,9 +469,22 @@ VfatFormat(
   TmpVal2 = (256 * BootSector.SectorsPerCluster) + BootSector.FATCount;
   if (TRUE /* FAT32 */)
     {
-      TmpVal2 /= 2;
-      BootSector.FATSectors = 0;
-      BootSector.FATSectors32 = (TmpVal1 + (TmpVal2 - 1)) / TmpVal2;
+      TmpVal2 = 0;
+      do
+        {
+          if (TmpVal2 == 0)
+	    {
+	      TmpVal3 = 0xffffffff;
+	    }
+	  else
+	    {
+	      TmpVal3 = TmpVal2;
+	    }
+          TmpVal2 = ((TmpVal1 - TmpVal2 * BootSector.FATCount) / BootSector.SectorsPerCluster) + 2;
+	  TmpVal2 = (sizeof(ULONG) * TmpVal2 + BootSector.BytesPerSector - 1) / BootSector.BytesPerSector;
+        }
+      while (TmpVal3 > TmpVal2);
+      BootSector.FATSectors32 = TmpVal2;
     }
 
   Status = VfatWriteBootSector(FileHandle,
