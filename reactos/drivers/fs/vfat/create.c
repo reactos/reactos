@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.60 2003/06/26 22:01:02 hbirr Exp $
+/* $Id: create.c,v 1.61 2003/07/09 19:59:21 hbirr Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             services/fs/vfat/create.c
@@ -573,7 +573,9 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
   c = FileObject->FileName.Buffer;
   while (*c != 0)
     {
-      if (*c == L'*' || *c == L'?' || (*c == L'\\' && c[1] == L'\\'))
+	if (*c == L'*' || *c == L'?' || *c == L'<' || *c == L'>' || 
+	    *c == L'/' || *c == L'|' || *c == L':' || *c == L'"' || 
+	    (*c == L'\\' && c[1] == L'\\'))
 	{
 	  return(STATUS_OBJECT_NAME_INVALID);
 	}
