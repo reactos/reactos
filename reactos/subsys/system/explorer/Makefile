@@ -140,7 +140,7 @@ notifyhook.dll: notifyhook/notifyhook.c notifyhook/notifyhook.h
 	$(CC) -D_WIN32_IE=0x0600 -Wall -D_NOTIFYHOOK_IMPL -Os -s notifyhook/notifyhook.c -shared -o $@
 
 clean:
-	$(TOOLS_PATH)/rdel $(TARGET) $(OBJECTS) $(PROGRAM)$(RES_SUFFIX)
+	$(TOOLS_PATH)/rdel $(TARGET) $(OBJECTS) $(PROGRAM)$(RES_SUFFIX) $(DEP_FILES)
 
 LIVECD_DIR=$(PATH_TO_TOP)/../livecd/disk
 
