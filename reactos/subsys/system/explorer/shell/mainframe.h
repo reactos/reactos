@@ -76,7 +76,7 @@ protected:
 	int		Command(int id, int code);
 	int		Notify(int id, NMHDR* pnmh);
 
-	void	toggle_child(HWND hwnd, UINT cmd, HWND hchild);
+	void	toggle_child(HWND hwnd, UINT cmd, HWND hchild, int band_idx=-1);
 	bool	activate_drive_window(LPCTSTR path);
 	bool	activate_child_window(LPCTSTR filesys);
 
