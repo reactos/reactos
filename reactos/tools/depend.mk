@@ -3,6 +3,7 @@
 # $DEP_OBJECTS contain a list of object files that are checked for dependancies
 
 ifneq ($(DEPENDENCIES),no)
+ifneq ($(MAKECMDGOALS),implib)
 
 DEP_FILTERED := $(filter-out $(DEP_EXCLUDE_FILTER), $(DEP_OBJECTS:.o=.d))
 DEP_FILES := $(join $(dir $(DEP_FILTERED)), $(addprefix ., $(notdir $(DEP_FILTERED))))
@@ -35,4 +36,5 @@ endif
 .%.d: %.asm $(PATH_TO_TOP)/tools/depends$(EXE_POSTFIX) $(GENERATED_HEADER_FILES)
 	$(NASM_CMD) $(NFLAGS) -M $< | $(DEPENDS_PATH)$(SEP)depends$(EXE_POSTFIX) $(@D) $@
 
+endif
 endif
