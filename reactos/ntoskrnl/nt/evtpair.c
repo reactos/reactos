@@ -1,4 +1,4 @@
-/* $Id: evtpair.c,v 1.16 2003/09/14 09:18:04 hbirr Exp $
+/* $Id: evtpair.c,v 1.17 2003/09/25 20:06:32 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -101,23 +101,37 @@ NtCreateEventPair(OUT PHANDLE EventPairHandle,
    NTSTATUS Status;
 
    DPRINT("NtCreateEventPair()\n");
-   Status = ObRosCreateObject(EventPairHandle,
-			   DesiredAccess,
-			   ObjectAttributes,
+   Status = ObCreateObject(ExGetPreviousMode(),
 			   ExEventPairObjectType,
+			   ObjectAttributes,
+			   ExGetPreviousMode(),
+			   NULL,
+			   sizeof(KEVENT_PAIR),
+			   0,
+			   0,
 			   (PVOID*)&EventPair);
    if (!NT_SUCCESS(Status))
      {
 	return(Status);
      }
+
    KeInitializeEvent(&EventPair->LowEvent,
 		     SynchronizationEvent,
 		     FALSE);
    KeInitializeEvent(&EventPair->HighEvent,
 		     SynchronizationEvent,
 		     FALSE);
+
+   Status = ObInsertObject ((PVOID)EventPair,
+			    NULL,
+			    DesiredAccess,
+			    0,
+			    NULL,
+			    EventPairHandle);
+
    ObDereferenceObject(EventPair);
-   return(STATUS_SUCCESS);
+
+   return Status;
 }
 
 

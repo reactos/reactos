@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.12 2003/07/11 01:23:15 royce Exp $
+/* $Id: create.c,v 1.13 2003/09/25 20:04:59 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -112,17 +112,34 @@ NtCreatePort (PHANDLE		      PortHandle,
     {
       return (Status);
     }
+
   /* Ask Ob to create the object */
-  Status = ObRosCreateObject (PortHandle,
-			   PORT_ALL_ACCESS,
-			   ObjectAttributes,
+  Status = ObCreateObject (ExGetPreviousMode(),
 			   ExPortType,
+			   ObjectAttributes,
+			   ExGetPreviousMode(),
+			   NULL,
+			   sizeof(EPORT),
+			   0,
+			   0,
 			   (PVOID*)&Port);
   if (!NT_SUCCESS(Status))
     {
       return (Status);
     }
-  
+
+  Status = ObInsertObject ((PVOID)Port,
+			   NULL,
+			   PORT_ALL_ACCESS,
+			   0,
+			   NULL,
+			   PortHandle);
+  if (!NT_SUCCESS(Status))
+    {
+      ObDereferenceObject (Port);
+      return (Status);
+    }
+
   Status = NiInitializePort (Port);
   Port->MaxConnectInfoLength = 260; /* FIXME: use a macro! */
   Port->MaxDataLength = 328; /* FIXME: use a macro! */

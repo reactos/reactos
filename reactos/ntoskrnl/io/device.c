@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.59 2003/09/25 15:54:42 navaraf Exp $
+/* $Id: device.c,v 1.60 2003/09/25 20:04:27 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -281,7 +281,6 @@ IopCreateDriverObject(PDRIVER_OBJECT *DriverObject,
 		      ULONG DriverImageSize)
 {
   PDRIVER_OBJECT Object;
-  HANDLE DriverHandle = 0;
   ULONG i;
   WCHAR NameBuffer[MAX_PATH];
   UNICODE_STRING DriverName;
@@ -314,18 +313,20 @@ IopCreateDriverObject(PDRIVER_OBJECT *DriverObject,
 			     NULL,
 			     NULL);
 
-  /* Create module object */
-  Status = ObRosCreateObject(&DriverHandle,
-                          STANDARD_RIGHTS_REQUIRED,
-                          &ObjectAttributes,
+  /* Create driver object */
+  Status = ObCreateObject(KernelMode,
                           IoDriverObjectType,
+                          &ObjectAttributes,
+                          KernelMode,
+                          NULL,
+                          sizeof(DRIVER_OBJECT),
+                          0,
+                          0,
                           (PVOID*)&Object);
   if (!NT_SUCCESS(Status))
     {
       return(Status);
     }
-
-  NtClose(DriverHandle);
 
   /* Create driver extension */
   Object->DriverExtension = (PDRIVER_EXTENSION)
@@ -763,18 +764,26 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
    if (DeviceName != NULL)
      {
 	InitializeObjectAttributes(&ObjectAttributes,DeviceName,0,NULL,NULL);
-	Status = ObRosCreateObject(NULL,
-				0,
-				&ObjectAttributes,
+	Status = ObCreateObject(KernelMode,
 				IoDeviceObjectType,
+				&ObjectAttributes,
+				KernelMode,
+				NULL,
+				sizeof(DEVICE_OBJECT),
+				0,
+				0,
 				(PVOID*)&CreatedDeviceObject);
      }
    else
      {
-	Status = ObRosCreateObject(NULL,
-				0,
-				NULL,
+	Status = ObCreateObject(KernelMode,
 				IoDeviceObjectType,
+				NULL,
+				KernelMode,
+				NULL,
+				sizeof(DEVICE_OBJECT),
+				0,
+				0,
 				(PVOID*)&CreatedDeviceObject);
      }
    
@@ -782,7 +791,7 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
    
    if (!NT_SUCCESS(Status))
      {
-	DPRINT("IoCreateDevice() ObRosCreateObject failed, status: 0x%08X\n", Status);
+	DPRINT("IoCreateDevice() ObCreateObject failed, status: 0x%08X\n", Status);
 	return(Status);
      }
   

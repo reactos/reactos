@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.127 2003/08/20 00:02:31 dwelch Exp $
+/* $Id: section.c,v 1.128 2003/09/25 20:05:44 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -2201,16 +2201,32 @@ MmCreatePageFileSection(PHANDLE SectionHandle,
   /*
    * Create the section
    */
-  Status = ObRosCreateObject(SectionHandle,
-			  DesiredAccess,
-			  ObjectAttributes,
+  Status = ObCreateObject(ExGetPreviousMode(),
 			  MmSectionObjectType,
+			  ObjectAttributes,
+			  ExGetPreviousMode(),
+			  NULL,
+			  sizeof(SECTION_OBJECT),
+			  0,
+			  0,
 			  (PVOID*)&Section);
   if (!NT_SUCCESS(Status))
     {
       return(Status);
     }
-  
+
+  Status = ObInsertObject ((PVOID)Section,
+			   NULL,
+			   DesiredAccess,
+			   0,
+			   NULL,
+			   SectionHandle);
+  if (!NT_SUCCESS(Status))
+    {
+      ObDereferenceObject(Section);
+      return(Status);
+    }
+
   /*
    * Initialize it
    */
@@ -2296,16 +2312,32 @@ MmCreateDataFileSection(PHANDLE SectionHandle,
   /*
    * Create the section
    */
-  Status = ObRosCreateObject(SectionHandle,
-			  DesiredAccess,
-			  ObjectAttributes,
+  Status = ObCreateObject(ExGetPreviousMode(),
 			  MmSectionObjectType,
+			  ObjectAttributes,
+			  ExGetPreviousMode(),
+			  NULL,
+			  sizeof(SECTION_OBJECT),
+			  0,
+			  0,
 			  (PVOID*)&Section);
   if (!NT_SUCCESS(Status))
     {
       return(Status);
     }
-  
+
+  Status = ObInsertObject ((PVOID)Section,
+			   NULL,
+			   DesiredAccess,
+			   0,
+			   NULL,
+			   SectionHandle);
+  if (!NT_SUCCESS(Status))
+    {
+      ObDereferenceObject(Section);
+      return(Status);
+    }
+
   /*
    * Initialize it
    */
@@ -2654,13 +2686,31 @@ MmCreateImageSection(PHANDLE SectionHandle,
       /*
        * Create the section
        */
-        Status = ObRosCreateObject(SectionHandle,
-			           DesiredAccess,
-			           ObjectAttributes,
-			           MmSectionObjectType,
-			           (PVOID*)&Section);
+        Status = ObCreateObject (ExGetPreviousMode(),
+				 MmSectionObjectType,
+				 ObjectAttributes,
+				 ExGetPreviousMode(),
+				 NULL,
+				 sizeof(SECTION_OBJECT),
+				 0,
+				 0,
+				 (PVOID*)&Section);
         if (!NT_SUCCESS(Status))
           {
+            ObDereferenceObject(FileObject);
+            ExFreePool(ImageSections);
+            return(Status);
+          }
+
+        Status = ObInsertObject ((PVOID)Section,
+				 NULL,
+				 DesiredAccess,
+				 0,
+				 NULL,
+				 SectionHandle);
+        if (!NT_SUCCESS(Status))
+          {
+            ObDereferenceObject(Section);
             ObDereferenceObject(FileObject);
             ExFreePool(ImageSections);
             return(Status);
@@ -2840,13 +2890,30 @@ MmCreateImageSection(PHANDLE SectionHandle,
       /*
        * Create the section
        */
-      Status = ObRosCreateObject(SectionHandle,
-			         DesiredAccess,
-			         ObjectAttributes,
-			         MmSectionObjectType,
-			         (PVOID*)&Section);
+      Status = ObCreateObject (ExGetPreviousMode(),
+			       MmSectionObjectType,
+			       ObjectAttributes,
+			       ExGetPreviousMode(),
+			       NULL,
+			       sizeof(SECTION_OBJECT),
+			       0,
+			       0,
+			       (PVOID*)&Section);
       if (!NT_SUCCESS(Status))
         {
+          ObDereferenceObject(FileObject);
+          return(Status);
+        }
+
+      Status = ObInsertObject ((PVOID)Section,
+			       NULL,
+			       DesiredAccess,
+			       0,
+			       NULL,
+			        SectionHandle);
+      if (!NT_SUCCESS(Status))
+        {
+          ObDereferenceObject(Section);
           ObDereferenceObject(FileObject);
           return(Status);
         }

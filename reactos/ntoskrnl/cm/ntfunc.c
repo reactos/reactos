@@ -103,13 +103,29 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 
   DPRINT("RemainingPath %S  ParentObject %x\n", RemainingPath.Buffer, Object);
 
-  Status = ObRosCreateObject(KeyHandle,
-			  DesiredAccess,
-			  NULL,
+  Status = ObCreateObject(ExGetPreviousMode(),
 			  CmiKeyType,
+			  NULL,
+			  ExGetPreviousMode(),
+			  NULL,
+			  sizeof(KEY_OBJECT),
+			  0,
+			  0,
 			  (PVOID*)&KeyObject);
   if (!NT_SUCCESS(Status))
     {
+      return(Status);
+    }
+
+  Status = ObInsertObject((PVOID)KeyObject,
+			  NULL,
+			  DesiredAccess,
+			  0,
+			  NULL,
+			  KeyHandle);
+  if (!NT_SUCCESS(Status))
+    {
+      ObDereferenceObject(KeyObject);
       return(Status);
     }
 

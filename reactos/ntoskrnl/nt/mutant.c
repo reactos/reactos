@@ -114,20 +114,33 @@ NtCreateMutant(OUT PHANDLE MutantHandle,
   PKMUTEX Mutant;
   NTSTATUS Status;
 
-  Status = ObRosCreateObject(MutantHandle,
-			  DesiredAccess,
-			  ObjectAttributes,
+  Status = ObCreateObject(ExGetPreviousMode(),
 			  ExMutantObjectType,
+			  ObjectAttributes,
+			  ExGetPreviousMode(),
+			  NULL,
+			  sizeof(KMUTANT),
+			  0,
+			  0,
 			  (PVOID*)&Mutant);
   if (!NT_SUCCESS(Status))
     {
       return(Status);
     }
+
   KeInitializeMutant(Mutant,
 		     InitialOwner);
+
+  Status = ObInsertObject ((PVOID)Mutant,
+			   NULL,
+			   DesiredAccess,
+			   0,
+			   NULL,
+			   MutantHandle);
+
   ObDereferenceObject(Mutant);
 
-  return(STATUS_SUCCESS);
+  return Status;
 }
 
 

@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_OBTYPES_H
 #define _INCLUDE_DDK_OBTYPES_H
-/* $Id: obtypes.h,v 1.3 2003/06/02 10:02:16 ekohl Exp $ */
+/* $Id: obtypes.h,v 1.4 2003/09/25 20:00:25 ekohl Exp $ */
 struct _DIRECTORY_OBJECT;
 struct _OBJECT_ATTRIBUTES;
 
@@ -160,6 +160,7 @@ typedef struct _OBJECT_HEADER
    LONG HandleCount;
    BOOLEAN CloseInProcess;
    BOOLEAN Permanent;
+   BOOLEAN Inherit;
    struct _DIRECTORY_OBJECT* Parent;
    POBJECT_TYPE ObjectType;
    

@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.107 2003/07/21 21:53:51 royce Exp $
+/* $Id: registry.c,v 1.108 2003/09/25 20:03:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -290,18 +290,22 @@ CmInitializeRegistry(VOID)
   /* Create '\Registry' key. */
   RtlInitUnicodeString(&KeyName, REG_ROOT_KEY_NAME);
   InitializeObjectAttributes(&ObjectAttributes, &KeyName, 0, NULL, NULL);
-  Status = ObRosCreateObject(&RootKeyHandle,
-		STANDARD_RIGHTS_REQUIRED,
-		&ObjectAttributes,
-		CmiKeyType,
-		(PVOID *) &RootKey);
+  Status = ObCreateObject(KernelMode,
+			  CmiKeyType,
+			  &ObjectAttributes,
+			  KernelMode,
+			  NULL,
+			  sizeof(KEY_OBJECT),
+			  0,
+			  0,
+			  (PVOID *) &RootKey);
   assert(NT_SUCCESS(Status));
-  Status = ObReferenceObjectByHandle(RootKeyHandle,
-				     STANDARD_RIGHTS_REQUIRED,
-				     CmiKeyType,
-				     KernelMode,
-				     (PVOID *)&RootKey,
-				     NULL);
+  Status = ObInsertObject(RootKey,
+			  NULL,
+			  STANDARD_RIGHTS_REQUIRED,
+			  0,
+			  NULL,
+			  &RootKeyHandle);
   assert(NT_SUCCESS(Status));
   RootKey->RegistryHive = CmiVolatileHive;
   RootKey->BlockOffset = CmiVolatileHive->HiveHeader->RootKeyCell;
@@ -544,19 +548,18 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
   DPRINT("RemainingPath %wZ  ParentKey %p\n",
 	 &RemainingPath, ParentKey);
 
-  Status = ObRosCreateObject(NULL,
-			  STANDARD_RIGHTS_REQUIRED,
-			  NULL,
+  Status = ObCreateObject(KernelMode,
 			  CmiKeyType,
+			  NULL,
+			  KernelMode,
+			  NULL,
+			  sizeof(KEY_OBJECT),
+			  0,
+			  0,
 			  (PVOID*)&NewKey);
   if (!NT_SUCCESS(Status))
     {
-      return Status;
-    }
-
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1 ("ObRosCreateObject() failed (Status %lx)\n", Status);
+      DPRINT1 ("ObCreateObject() failed (Status %lx)\n", Status);
       ObDereferenceObject (ParentKey);
       return Status;
     }

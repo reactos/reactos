@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.153 2003/09/25 15:54:42 navaraf Exp $
+; $Id: ntoskrnl.edf,v 1.154 2003/09/25 20:02:09 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -612,11 +612,10 @@ ObAssignSecurity=ObAssignSecurity@16
 ;ObCheckCreateObjectAccess=ObCheckCreateObjectAccess@28
 ;ObCheckObjectAccess=ObCheckObjectAccess@20
 ObCreateObject=ObCreateObject@36
-ObRosCreateObject=ObRosCreateObject@20
 ;ObFindHandleForObject=ObFindHandleForObject@20
 ObGetObjectPointerCount=ObGetObjectPointerCount@4
 ObGetObjectSecurity=ObGetObjectSecurity@12
-;ObInsertObject=ObInsertObject@24
+ObInsertObject=ObInsertObject@24
 ObMakeTemporaryObject=ObMakeTemporaryObject@4
 ObOpenObjectByName=ObOpenObjectByName@28
 ObOpenObjectByPointer=ObOpenObjectByPointer@28

@@ -114,20 +114,37 @@ NtCreateIoCompletion(
 {
    PKQUEUE     Queue;
    NTSTATUS    Status;
-   
-   Status = ObRosCreateObject(IoCompletionHandle,
-                           DesiredAccess,
-                           ObjectAttributes,
-                           ExIoCompletionType,
-                           (PVOID*)&Queue);
 
-   if (NT_SUCCESS(Status))
+   Status = ObCreateObject(ExGetPreviousMode(),
+                           ExIoCompletionType,
+                           ObjectAttributes,
+                           ExGetPreviousMode(),
+                           NULL,
+                           sizeof(KQUEUE),
+                           0,
+                           0,
+                           (PVOID*)&Queue);
+   if (!NT_SUCCESS(Status))
    {
-      (void) KeInitializeQueue(Queue, NumberOfConcurrentThreads);
-      ObDereferenceObject(Queue);
+     return Status;
    }
 
-   return Status;
+   Status = ObInsertObject ((PVOID)Queue,
+			    NULL,
+			    DesiredAccess,
+			    0,
+			    NULL,
+			    IoCompletionHandle);
+   if (!NT_SUCCESS(Status))
+   {
+     ObDereferenceObject(Queue);
+     return Status;
+   }
+
+   KeInitializeQueue(Queue, NumberOfConcurrentThreads);
+   ObDereferenceObject(Queue);
+
+   return STATUS_SUCCESS;
    /*
 
   CompletionPort = NULL OR ExistingCompletionPort

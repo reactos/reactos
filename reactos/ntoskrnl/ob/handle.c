@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: handle.c,v 1.50 2003/09/14 09:19:07 hbirr Exp $
+/* $Id: handle.c,v 1.51 2003/09/25 20:07:46 ekohl Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -774,17 +774,26 @@ NTSTATUS STDCALL NtClose(HANDLE Handle)
  * @implemented
  */
 NTSTATUS STDCALL
-ObInsertObject(PVOID Object,
-	       PACCESS_STATE PassedAccessState,
-	       ACCESS_MASK DesiredAccess,
-	       ULONG AdditionalReferences,
-	       PVOID* ReferencedObject,
-	       PHANDLE Handle)
+ObInsertObject(IN PVOID Object,
+	       IN PACCESS_STATE PassedAccessState OPTIONAL,
+	       IN ACCESS_MASK DesiredAccess,
+	       IN ULONG AdditionalReferences,
+	       OUT PVOID* ReferencedObject OPTIONAL,
+	       OUT PHANDLE Handle)
 {
+  POBJECT_HEADER ObjectHeader;
+  ACCESS_MASK Access;
+
+  Access = DesiredAccess;
+  ObjectHeader = BODY_TO_HEADER(Object);
+
+  RtlMapGenericMask(&Access,
+		    ObjectHeader->ObjectType->Mapping);
+
   return(ObCreateHandle(PsGetCurrentProcess(),
 			Object,
-			DesiredAccess,
-			FALSE,
+			Access,
+			ObjectHeader->Inherit,
 			Handle));
 }
 

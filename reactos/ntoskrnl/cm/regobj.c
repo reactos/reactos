@@ -147,10 +147,14 @@ CmiObjectParse(PVOID ParsedObject,
 
       /* Create new key object and put into linked list */
       DPRINT("CmiObjectParse: %s\n", Path);
-      Status = ObRosCreateObject(NULL,
-			      STANDARD_RIGHTS_REQUIRED,
-			      NULL,
+      Status = ObCreateObject(KernelMode,
 			      CmiKeyType,
+			      NULL,
+			      KernelMode,
+			      NULL,
+			      sizeof(KEY_OBJECT),
+			      0,
+			      0,
 			      (PVOID*)&FoundObject);
       if (!NT_SUCCESS(Status))
 	{

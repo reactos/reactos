@@ -8,6 +8,17 @@ ObAssignSecurity(IN PACCESS_STATE AccessState,
 		 IN PVOID Object,
 		 IN POBJECT_TYPE Type);
 
+NTSTATUS STDCALL
+ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
+		IN POBJECT_TYPE ObjectType,
+		IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+		IN KPROCESSOR_MODE AccessMode,
+		IN OUT PVOID ParseContext OPTIONAL,
+		IN ULONG ObjectSize,
+		IN ULONG PagedPoolCharge OPTIONAL,
+		IN ULONG NonPagedPoolCharge OPTIONAL,
+		OUT PVOID *Object);
+
 VOID FASTCALL
 ObfDereferenceObject(IN PVOID Object);
 

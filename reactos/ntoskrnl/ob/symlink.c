@@ -1,4 +1,4 @@
-/* $Id: symlink.c,v 1.3 2003/09/03 15:12:16 ekohl Exp $
+/* $Id: symlink.c,v 1.4 2003/09/25 20:07:46 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -228,14 +228,30 @@ NtCreateSymbolicLinkObject(OUT PHANDLE SymbolicLinkHandle,
 	 ObjectAttributes,
 	 DeviceName);
 
-  Status = ObRosCreateObject(SymbolicLinkHandle,
-			  DesiredAccess,
-			  ObjectAttributes,
+  Status = ObCreateObject(ExGetPreviousMode(),
 			  ObSymbolicLinkType,
+			  ObjectAttributes,
+			  ExGetPreviousMode(),
+			  NULL,
+			  sizeof(SYMLNK_OBJECT),
+			  0,
+			  0,
 			  (PVOID*)&SymbolicLink);
   if (!NT_SUCCESS(Status))
     {
       return(Status);
+    }
+
+  Status = ObInsertObject ((PVOID)SymbolicLink,
+			   NULL,
+			   DesiredAccess,
+			   0,
+			   NULL,
+			   SymbolicLinkHandle);
+  if (!NT_SUCCESS(Status))
+    {
+      ObDereferenceObject (SymbolicLink);
+      return Status;
     }
 
   SymbolicLink->TargetName.Length = 0;

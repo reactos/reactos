@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.66 2003/09/14 10:50:29 hbirr Exp $
+/* $Id: create.c,v 1.67 2003/09/25 20:08:36 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -370,15 +370,31 @@ PsInitializeThread(HANDLE ProcessHandle,
    /*
     * Create and initialize thread
     */
-   Status = ObRosCreateObject(ThreadHandle,
-			   DesiredAccess,
-			   ThreadAttributes,
+   Status = ObCreateObject(UserMode,
 			   PsThreadType,
+			   ThreadAttributes,
+			   UserMode,
+			   NULL,
+			   sizeof(ETHREAD),
+			   0,
+			   0,
 			   (PVOID*)&Thread);
    if (!NT_SUCCESS(Status))
      {
 	return(Status);
      }
+
+  Status = ObInsertObject ((PVOID)Thread,
+			   NULL,
+			   DesiredAccess,
+			   0,
+			   NULL,
+			   ThreadHandle);
+  if (!NT_SUCCESS(Status))
+    {
+      ObDereferenceObject (Thread);
+      return Status;
+    }
 
    DPRINT("Thread = %x\n",Thread);
    

@@ -458,10 +458,14 @@ NtCreateProfile(OUT PHANDLE UnsafeProfileHandle,
   /*
    * Create the object
    */
-  Status = ObRosCreateObject(&ProfileHandle,
-			  STANDARD_RIGHTS_ALL,
-			  NULL,
+  Status = ObCreateObject(ExGetPreviousMode(),
 			  ExProfileObjectType,
+			  NULL,
+			  ExGetPreviousMode(),
+			  NULL,
+			  sizeof(KPROFILE),
+			  0,
+			  0,
 			  (PVOID*)&Profile);
   if (!NT_SUCCESS(Status))
      {
@@ -486,6 +490,18 @@ NtCreateProfile(OUT PHANDLE UnsafeProfileHandle,
    * Insert the profile into the profile list data structures
    */
   KiInsertProfile(Profile);
+
+  Status = ObInsertObject ((PVOID)Profile,
+			   NULL,
+			   STANDARD_RIGHTS_ALL,
+			   0,
+			   NULL,
+			   &ProfileHandle);
+  if (!NT_SUCCESS(Status))
+    {
+      ObDereferenceObject (Profile);
+      return Status;
+    }
 
   /*
    * Copy the created handle back to the caller

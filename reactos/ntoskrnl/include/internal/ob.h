@@ -63,7 +63,7 @@ enum
 };
 
 
-#define OBJECT_ALLOC_SIZE(type) (type->NonpagedPoolCharge+sizeof(OBJECT_HEADER)-sizeof(COMMON_BODY_HEADER))
+#define OBJECT_ALLOC_SIZE(ObjectSize) ((ObjectSize)+sizeof(OBJECT_HEADER)-sizeof(COMMON_BODY_HEADER))
 
 
 extern PDIRECTORY_OBJECT NameSpaceRoot;

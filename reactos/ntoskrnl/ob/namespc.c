@@ -1,4 +1,4 @@
-/* $Id: namespc.c,v 1.39 2003/07/10 21:34:29 royce Exp $
+/* $Id: namespc.c,v 1.40 2003/09/25 20:07:46 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -399,10 +399,14 @@ ObInit(VOID)
 		       L"ObjectType");
 
   /* create root directory */
-  ObRosCreateObject(NULL,
-		 STANDARD_RIGHTS_REQUIRED,
-		 NULL,
+  ObCreateObject(KernelMode,
 		 ObDirectoryType,
+		 NULL,
+		 KernelMode,
+		 NULL,
+		 sizeof(DIRECTORY_OBJECT),
+		 0,
+		 0,
 		 (PVOID*)&NameSpaceRoot);
 
   /* create '\ObjectTypes' directory */
@@ -413,10 +417,14 @@ ObInit(VOID)
 			     OBJ_PERMANENT,
 			     NULL,
 			     NULL);
-  ObRosCreateObject(NULL,
-		 STANDARD_RIGHTS_REQUIRED,
-		 &ObjectAttributes,
+  ObCreateObject(KernelMode,
 		 ObDirectoryType,
+		 &ObjectAttributes,
+		 KernelMode,
+		 NULL,
+		 sizeof(DIRECTORY_OBJECT),
+		 0,
+		 0,
 		 NULL);
 
   ObpCreateTypeObject(ObDirectoryType);
@@ -447,10 +455,14 @@ ObpCreateTypeObject(POBJECT_TYPE ObjectType)
 			     OBJ_PERMANENT,
 			     NULL,
 			     NULL);
-  Status = ObRosCreateObject(NULL,
-			  STANDARD_RIGHTS_REQUIRED,
-			  &ObjectAttributes,
+  Status = ObCreateObject(KernelMode,
 			  ObTypeObjectType,
+			  &ObjectAttributes,
+			  KernelMode,
+			  NULL,
+			  sizeof(TYPE_OBJECT),
+			  0,
+			  0,
 			  (PVOID*)&TypeObject);
   if (NT_SUCCESS(Status))
     {

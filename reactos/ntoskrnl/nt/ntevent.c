@@ -150,10 +150,14 @@ NtCreateEvent(OUT PHANDLE UnsafeEventHandle,
        ObjectAttributes = NULL;
      }
 
-   Status = ObRosCreateObject(&EventHandle,
-			   DesiredAccess,
-			   ObjectAttributes,
+   Status = ObCreateObject(ExGetPreviousMode(),
 			   ExEventObjectType,
+			   ObjectAttributes,
+			   ExGetPreviousMode(),
+			   NULL,
+			   sizeof(KEVENT),
+			   0,
+			   0,
 			   (PVOID*)&Event);
    if (!NT_SUCCESS(Status))
      {
@@ -162,7 +166,18 @@ NtCreateEvent(OUT PHANDLE UnsafeEventHandle,
    KeInitializeEvent(Event,
 		     ManualReset ? NotificationEvent : SynchronizationEvent,
 		     InitialState);
+
+   Status = ObInsertObject ((PVOID)Event,
+			    NULL,
+			    DesiredAccess,
+			    0,
+			    NULL,
+			    &EventHandle);
    ObDereferenceObject(Event);
+   if (!NT_SUCCESS(Status))
+     {
+	return Status;
+     }
 
    Status = MmCopyToCaller(UnsafeEventHandle, &EventHandle, sizeof(HANDLE));
    if (!NT_SUCCESS(Status))

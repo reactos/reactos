@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.68 2003/09/25 05:12:24 vizzini Exp $
+/* $Id: object.c,v 1.69 2003/09/25 20:07:46 ekohl Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -37,46 +37,6 @@ POBJECT_HEADER BODY_TO_HEADER(PVOID body)
 {
    PCOMMON_BODY_HEADER chdr = (PCOMMON_BODY_HEADER)body;
    return(CONTAINING_RECORD((&(chdr->Type)),OBJECT_HEADER,Type));
-}
-
-
-/**********************************************************************
- * NAME							PRIVATE
- * 	ObInitializeObject
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- */
-VOID ObInitializeObject(POBJECT_HEADER ObjectHeader,
-			PHANDLE Handle,
-			ACCESS_MASK DesiredAccess,
-			POBJECT_TYPE Type,
-			POBJECT_ATTRIBUTES ObjectAttributes)
-{
-   ObjectHeader->HandleCount = 0;
-   ObjectHeader->RefCount = 1;
-   ObjectHeader->ObjectType = Type;
-   if (ObjectAttributes != NULL &&
-       ObjectAttributes->Attributes & OBJ_PERMANENT)
-     {
-	ObjectHeader->Permanent = TRUE;
-     }
-   else
-     {
-	ObjectHeader->Permanent = FALSE;
-     }
-   RtlInitUnicodeString(&(ObjectHeader->Name),NULL);
-   if (Handle != NULL)
-     {
-	ObCreateHandle(PsGetCurrentProcess(),
-		       HEADER_TO_BODY(ObjectHeader),
-		       DesiredAccess,
-		       ObjectAttributes && (ObjectAttributes->Attributes & OBJ_INHERIT) ? TRUE : FALSE,
-		       Handle);
-     }
 }
 
 
@@ -351,21 +311,26 @@ ObQueryNameString (IN PVOID Object,
 
 /**********************************************************************
  * NAME							EXPORTED
- * 	ObRosCreateObject@20
+ * 	ObCreateObject@36
  *
  * DESCRIPTION
  *
  * ARGUMENTS
  *
- * NOTE
- *   Internal ReactOS function
  * RETURN VALUE
+ *	Status
+ *
+ * @implemented
  */
 NTSTATUS STDCALL
-ObRosCreateObject (OUT PHANDLE Handle,
-		IN ACCESS_MASK DesiredAccess,
-		IN POBJECT_ATTRIBUTES ObjectAttributes,
+ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
 		IN POBJECT_TYPE Type,
+		IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+		IN KPROCESSOR_MODE AccessMode,
+		IN OUT PVOID ParseContext OPTIONAL,
+		IN ULONG ObjectSize,
+		IN ULONG PagedPoolCharge OPTIONAL,
+		IN ULONG NonPagedPoolCharge OPTIONAL,
 		OUT PVOID *Object)
 {
   PVOID Parent = NULL;
@@ -378,7 +343,7 @@ ObRosCreateObject (OUT PHANDLE Handle,
 
   assert_irql(APC_LEVEL);
 
-  DPRINT("ObRosCreateObject(Handle %x, ObjectAttributes %x, Type %x)\n",
+  DPRINT("ObCreateObject(Handle %x, ObjectAttributes %x, Type %x)\n",
 	 Handle, ObjectAttributes, Type);
 
   if (ObjectAttributes != NULL &&
@@ -400,17 +365,37 @@ ObRosCreateObject (OUT PHANDLE Handle,
       RtlInitUnicodeString(&RemainingPath, NULL);
     }
 
-  RtlMapGenericMask(&DesiredAccess,
-		    Type->Mapping);
-
   Header = (POBJECT_HEADER)ExAllocatePoolWithTag(NonPagedPool,
-						 OBJECT_ALLOC_SIZE(Type),
+						 OBJECT_ALLOC_SIZE(ObjectSize),
 						 Type->Tag);
-  ObInitializeObject(Header,
-		     NULL,
-		     DesiredAccess,
-		     Type,
-		     ObjectAttributes);
+  if (Header == NULL)
+    return STATUS_INSUFFICIENT_RESOURCES;
+
+  /* Initialize the object header */
+  Header->HandleCount = 0;
+  Header->RefCount = 1;
+  Header->ObjectType = Type;
+  if (ObjectAttributes != NULL &&
+      ObjectAttributes->Attributes & OBJ_PERMANENT)
+    {
+      Header->Permanent = TRUE;
+    }
+  else
+    {
+      Header->Permanent = FALSE;
+    }
+
+  if (ObjectAttributes != NULL &&
+      ObjectAttributes->Attributes & OBJ_INHERIT)
+    {
+      Header->Inherit = TRUE;
+    }
+  else
+    {
+      Header->Inherit = FALSE;
+    }
+
+  RtlInitUnicodeString(&(Header->Name),NULL);
 
   if (Parent != NULL)
     {
@@ -463,44 +448,9 @@ ObRosCreateObject (OUT PHANDLE Handle,
       *Object = HEADER_TO_BODY(Header);
     }
 
-  if (Handle != NULL)
-  {
-     ObCreateHandle(PsGetCurrentProcess(),
-		    *Object,
-		    DesiredAccess,
-		    ObjectAttributes && (ObjectAttributes->Attributes & OBJ_INHERIT) ? TRUE : FALSE,
-		    Handle);
-  }
-
   return(STATUS_SUCCESS);
 }
 
-/**********************************************************************
- * NAME							EXPORTED
- * 	ObCreateObject@36
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
- * @unimplemented
- */
-NTSTATUS STDCALL
-ObCreateObject (IN KPROCESSOR_MODE      ObjectAttributesAccessMode OPTIONAL,
-  IN POBJECT_TYPE         ObjectType,
-  IN POBJECT_ATTRIBUTES   ObjectAttributes OPTIONAL,
-  IN KPROCESSOR_MODE      AccessMode,
-  IN OUT PVOID            ParseContext OPTIONAL,
-  IN ULONG                ObjectSize,
-  IN ULONG                PagedPoolCharge OPTIONAL,
-  IN ULONG                NonPagedPoolCharge OPTIONAL,
-  OUT PVOID               *Object)
-{
-  UNIMPLEMENTED
-  return STATUS_NOT_IMPLEMENTED;
-}
 
 /*
  * @implemented

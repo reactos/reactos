@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.67 2003/07/11 01:23:14 royce Exp $
+/* $Id: create.c,v 1.68 2003/09/25 20:04:27 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -211,7 +211,6 @@ PFILE_OBJECT STDCALL
 IoCreateStreamFileObject(PFILE_OBJECT FileObject,
 			 PDEVICE_OBJECT DeviceObject)
 {
-  HANDLE		FileHandle;
   PFILE_OBJECT	CreatedFileObject;
   NTSTATUS Status;
 
@@ -220,10 +219,14 @@ IoCreateStreamFileObject(PFILE_OBJECT FileObject,
 
   assert_irql(PASSIVE_LEVEL);
 
-  Status = ObRosCreateObject(&FileHandle,
-			  STANDARD_RIGHTS_REQUIRED,
-			  NULL,
+  Status = ObCreateObject(KernelMode,
 			  IoFileObjectType,
+			  NULL,
+			  KernelMode,
+			  NULL,
+			  sizeof(FILE_OBJECT),
+			  0,
+			  0,
 			  (PVOID*)&CreatedFileObject);
   if (!NT_SUCCESS(Status))
     {
@@ -247,9 +250,7 @@ IoCreateStreamFileObject(PFILE_OBJECT FileObject,
   // shouldn't we initialize the lock event, and several other things here too?
   KeInitializeEvent(&CreatedFileObject->Event, NotificationEvent, FALSE);
 
-  ZwClose(FileHandle);
-
-  return(CreatedFileObject);
+  return CreatedFileObject;
 }
 
 
@@ -354,16 +355,34 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
    
    *FileHandle = 0;
 
-   Status = ObRosCreateObject(FileHandle,
-			   DesiredAccess,
-			   ObjectAttributes,
+   Status = ObCreateObject(ExGetPreviousMode(),
 			   IoFileObjectType,
+			   ObjectAttributes,
+			   ExGetPreviousMode(),
+			   NULL,
+			   sizeof(FILE_OBJECT),
+			   0,
+			   0,
 			   (PVOID*)&FileObject);
    if (!NT_SUCCESS(Status))
      {
-	DPRINT("ObRosCreateObject() failed! (Status %lx)\n", Status);
+	DPRINT("ObCreateObject() failed! (Status %lx)\n", Status);
 	return(Status);
      }
+
+   Status = ObInsertObject ((PVOID)FileObject,
+			    NULL,
+			    DesiredAccess,
+			    0,
+			    NULL,
+			    FileHandle);
+   if (!NT_SUCCESS(Status))
+     {
+	DPRINT("ObInsertObject() failed! (Status %lx)\n", Status);
+	ObDereferenceObject (FileObject);
+	return(Status);
+     }
+
    if (CreateOptions & FILE_SYNCHRONOUS_IO_ALERT)
      {
 	FileObject->Flags |= (FO_ALERTABLE_IO | FO_SYNCHRONOUS_IO);

@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.26 2003/07/11 01:23:16 royce Exp $
+/* $Id: token.c,v 1.27 2003/09/25 20:09:11 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -145,14 +145,18 @@ SepDuplicateToken(PACCESS_TOKEN Token,
 
   PACCESS_TOKEN AccessToken;
 
-  Status = ObRosCreateObject(0,
-			  TOKEN_ALL_ACCESS,
-			  ObjectAttributes,
+  Status = ObCreateObject(PreviousMode,
 			  SepTokenObjectType,
+			  ObjectAttributes,
+			  PreviousMode,
+			  NULL,
+			  sizeof(ACCESS_TOKEN),
+			  0,
+			  0,
 			  (PVOID*)&AccessToken);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("ObRosCreateObject() failed (Status %lx)\n");
+      DPRINT1("ObCreateObject() failed (Status %lx)\n");
       return(Status);
     }
 
@@ -1061,11 +1065,19 @@ SepCreateSystemProcessToken(struct _EPROCESS* Process)
  /*
   * Initialize the token
   */
-  Status = ObRosCreateObject(NULL,
-			 TOKEN_ALL_ACCESS,
-			 NULL,
-			 SepTokenObjectType,
-			 (PVOID*)&AccessToken);
+  Status = ObCreateObject(KernelMode,
+			  SepTokenObjectType,
+			  NULL,
+			  KernelMode,
+			  NULL,
+			  sizeof(ACCESS_TOKEN),
+			  0,
+			  0,
+			  (PVOID*)&AccessToken);
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
 
   Status = NtAllocateLocallyUniqueId(&AccessToken->TokenId);
   if (!NT_SUCCESS(Status))
@@ -1277,15 +1289,32 @@ NtCreateToken(OUT PHANDLE UnsafeTokenHandle,
   if (!NT_SUCCESS(Status))
     return(Status);
 
-  Status = ObRosCreateObject(&TokenHandle,
-			  DesiredAccess,
-			  ObjectAttributes,
+  Status = ObCreateObject(ExGetPreviousMode(),
 			  SepTokenObjectType,
+			  ObjectAttributes,
+			  ExGetPreviousMode(),
+			  NULL,
+			  sizeof(ACCESS_TOKEN),
+			  0,
+			  0,
 			  (PVOID*)&AccessToken);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("ObRosCreateObject() failed (Status %lx)\n");
+      DPRINT1("ObCreateObject() failed (Status %lx)\n");
       return(Status);
+    }
+
+  Status = ObInsertObject ((PVOID)AccessToken,
+			   NULL,
+			   DesiredAccess,
+			   0,
+			   NULL,
+			   &TokenHandle);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("ObInsertObject() failed (Status %lx)\n");
+      ObDereferenceObject (AccessToken);
+      return Status;
     }
 
   RtlCopyLuid(&AccessToken->TokenSource.SourceIdentifier,
@@ -1309,7 +1338,7 @@ NtCreateToken(OUT PHANDLE UnsafeTokenHandle,
 
   /*
    * Normally we would just point these members into the variable information
-   * area; however, our ObRosCreateObject() call can't allocate a variable information
+   * area; however, our ObCreateObject() call can't allocate a variable information
    * area, so we allocate them seperately and provide a destroy function.
    */
 

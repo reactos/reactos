@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.115 2003/09/14 10:52:33 hbirr Exp $
+/* $Id: process.c,v 1.116 2003/09/25 20:08:36 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -269,10 +269,14 @@ PsInitProcessManagment(VOID)
    /*
     * Initialize the system process
     */
-   Status = ObRosCreateObject(NULL,
-			   PROCESS_ALL_ACCESS,
-			   NULL,
+   Status = ObCreateObject(KernelMode,
 			   PsProcessType,
+			   NULL,
+			   KernelMode,
+			   NULL,
+			   sizeof(EPROCESS),
+			   0,
+			   0,
 			   (PVOID*)&PsInitialSystemProcess);
    if (!NT_SUCCESS(Status))
      {
@@ -593,17 +597,35 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 	return(Status);
      }
 
-   Status = ObRosCreateObject(ProcessHandle,
-			   DesiredAccess,
-			   ObjectAttributes,
+   Status = ObCreateObject(ExGetPreviousMode(),
 			   PsProcessType,
+			   ObjectAttributes,
+			   ExGetPreviousMode(),
+			   NULL,
+			   sizeof(EPROCESS),
+			   0,
+			   0,
 			   (PVOID*)&Process);
    if (!NT_SUCCESS(Status))
      {
 	ObDereferenceObject(ParentProcess);
-	DPRINT("ObRosCreateObject() = %x\n",Status);
+	DPRINT("ObCreateObject() = %x\n",Status);
 	return(Status);
      }
+
+  Status = ObInsertObject ((PVOID)Process,
+			   NULL,
+			   DesiredAccess,
+			   0,
+			   NULL,
+			   ProcessHandle);
+  if (!NT_SUCCESS(Status))
+    {
+      ObDereferenceObject (Process);
+      ObDereferenceObject (ParentProcess);
+      DPRINT("ObInsertObject() = %x\n",Status);
+      return Status;
+    }
 
    KeInitializeDispatcherHeader(&Process->Pcb.DispatcherHeader,
 				InternalProcessType,

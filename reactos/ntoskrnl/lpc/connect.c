@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.19 2003/08/07 11:47:33 silverblade Exp $
+/* $Id: connect.c,v 1.20 2003/09/25 20:04:59 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -63,10 +63,14 @@ EiConnectPort(IN PEPORT* ConnectedPort,
   /*
    * Create a port to represent our side of the connection
    */
-  Status = ObRosCreateObject (NULL,
-			   PORT_ALL_ACCESS,
-			   NULL,
+  Status = ObCreateObject (KernelMode,
 			   ExPortType,
+			   NULL,
+			   KernelMode,
+			   NULL,
+			   sizeof(EPORT),
+			   0,
+			   0,
 			   (PVOID*)&OurPort);
   if (!NT_SUCCESS(Status))
     {
@@ -548,10 +552,14 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
    */
   if (AcceptIt)
     {
-      Status = ObRosCreateObject(ServerPortHandle,
-			      PORT_ALL_ACCESS,
-			      NULL,
+      Status = ObCreateObject(ExGetPreviousMode(),
 			      ExPortType,
+			      NULL,
+			      ExGetPreviousMode(),
+			      NULL,
+			      sizeof(EPORT),
+			      0,
+			      0,
 			      (PVOID*)&OurPort);
       if (!NT_SUCCESS(Status))
 	{
@@ -559,9 +567,24 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
 	  ObDereferenceObject(NamedPort);
 	  return(Status);
 	}
+
+      Status = ObInsertObject ((PVOID)OurPort,
+			       NULL,
+			       PORT_ALL_ACCESS,
+			       0,
+			       NULL,
+			       ServerPortHandle);
+      if (!NT_SUCCESS(Status))
+	{
+	  ObDereferenceObject(OurPort);
+	  ExFreePool(CReply);
+	  ObDereferenceObject(NamedPort);
+	  return(Status);
+	}
+
       NiInitializePort(OurPort);
     }
-  
+
   /*
    * Dequeue the connection request
    */

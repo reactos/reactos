@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winsta.c,v 1.35 2003/09/24 18:39:34 weiden Exp $
+/* $Id: winsta.c,v 1.36 2003/09/25 20:09:56 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -332,15 +332,33 @@ NtUserCreateWindowStation(PUNICODE_STRING lpszWindowStationName,
   
   DPRINT("Creating window station (%wZ)\n", &WindowStationName);
 
-  Status = ObRosCreateObject(&WinSta,
-			  STANDARD_RIGHTS_REQUIRED,
-			  &ObjectAttributes,
+  Status = ObCreateObject(ExGetPreviousMode(),
 			  ExWindowStationObjectType,
+			  &ObjectAttributes,
+			  ExGetPreviousMode(),
+			  NULL,
+			  sizeof(WINSTATION_OBJECT),
+			  0,
+			  0,
 			  (PVOID*)&WinStaObject);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("Failed creating window station (%wZ)\n", &WindowStationName);
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
+      return (HWINSTA)0;
+    }
+
+  Status = ObInsertObject ((PVOID)WinStaObject,
+			   NULL,
+			   STANDARD_RIGHTS_REQUIRED,
+			   0,
+			   NULL,
+			   &WinSta);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("Failed creating window station (%wZ)\n", &WindowStationName);
+      SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
+      ObDereferenceObject(WinStaObject);
       return (HWINSTA)0;
     }
 
@@ -674,10 +692,14 @@ NtUserCreateDesktop(PUNICODE_STRING lpszDesktopName,
 
   DPRINT("Status for open operation (0x%X)\n", Status);
 
-  Status = ObRosCreateObject(&Desktop,
-			  STANDARD_RIGHTS_REQUIRED,
-			  &ObjectAttributes,
+  Status = ObCreateObject(ExGetPreviousMode(),
 			  ExDesktopObjectType,
+			  &ObjectAttributes,
+			  ExGetPreviousMode(),
+			  NULL,
+			  sizeof(DESKTOP_OBJECT),
+			  0,
+			  0,
 			  (PVOID*)&DesktopObject);
   if (!NT_SUCCESS(Status))
     {
@@ -685,13 +707,27 @@ NtUserCreateDesktop(PUNICODE_STRING lpszDesktopName,
       SetLastNtError(STATUS_UNSUCCESSFUL);
       return((HDESK)0);
     }
-  
+
   /* Initialize some local (to win32k) desktop state. */
   DesktopObject->ActiveMessageQueue = NULL;  
   DesktopObject->DesktopWindow = 
     IntCreateDesktopWindow(DesktopObject->WindowStation,
 			    DesktopWindowClass,
 			    640, 480);
+
+  Status = ObInsertObject ((PVOID)DesktopObject,
+			   NULL,
+			   STANDARD_RIGHTS_REQUIRED,
+			   0,
+			   NULL,
+			   &Desktop);
+  ObDereferenceObject(DesktopObject);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("Failed to create desktop handle\n");
+      SetLastNtError(STATUS_UNSUCCESSFUL);
+      return((HDESK)0);
+    }
 
   return((HDESK)Desktop);
 }
