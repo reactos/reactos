@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.131 2003/10/18 09:35:11 hbirr Exp $
+/* $Id: section.c,v 1.132 2003/10/19 17:33:32 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -33,6 +33,7 @@
 #include <ntos.h>
 #include <internal/mm.h>
 #include <internal/io.h>
+#include <internal/ob.h>
 #include <internal/ps.h>
 #include <internal/pool.h>
 #include <internal/cc.h>
@@ -2169,6 +2170,7 @@ MmInitSectionImplementation(VOID)
     * the object manager it not initialized yet!
     * The section object type will be created in ObInit().
     */
+   ObpCreateTypeObject(MmSectionObjectType);
 
    return(STATUS_SUCCESS);
 }

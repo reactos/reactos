@@ -1,4 +1,4 @@
-/* $Id: namespc.c,v 1.42 2003/10/12 17:05:48 hbirr Exp $
+/* $Id: namespc.c,v 1.43 2003/10/19 17:33:54 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -432,9 +432,6 @@ ObInit(VOID)
 
   /* Create 'symbolic link' object type */
   ObInitSymbolicLinkImplementation();
-
-  /* Create 'section' object type */
-  ObpCreateTypeObject(MmSectionObjectType);
 }
 
 
