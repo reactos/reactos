@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.55 2004/06/05 09:35:52 navaraf Exp $
+/* $Id: init.c,v 1.56 2004/10/24 15:26:14 weiden Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -943,7 +943,7 @@ InitSessionManager(HANDLE Children[])
   Status = NtCreateEvent(&CsrssInitEvent,
 			 EVENT_ALL_ACCESS,
 			 &ObjectAttributes,
-			 TRUE,
+			 NotificationEvent,
 			 FALSE);
   if (!NT_SUCCESS(Status))
     {

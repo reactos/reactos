@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.48 2004/10/22 20:48:00 ekohl Exp $
+/* $Id: semgr.c,v 1.49 2004/10/24 15:26:14 weiden Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -104,7 +104,7 @@ SeInitSRM(VOID)
   Status = NtCreateEvent(&EventHandle,
 			 EVENT_ALL_ACCESS,
 			 &ObjectAttributes,
-			 FALSE,
+			 SynchronizationEvent,
 			 FALSE);
   if (!NT_SUCCESS(Status))
     {

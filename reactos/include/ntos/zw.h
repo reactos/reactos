@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.30 2004/08/21 13:20:25 tamlin Exp $
+/* $Id: zw.h,v 1.31 2004/10/24 15:26:13 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -533,8 +533,8 @@ STDCALL
 NtCreateEvent(
 	OUT PHANDLE EventHandle,
 	IN ACCESS_MASK DesiredAccess,
-	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	IN BOOLEAN ManualReset,
+	IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
+	IN EVENT_TYPE EventType,
 	IN BOOLEAN InitialState
 	);
 
@@ -543,8 +543,8 @@ STDCALL
 ZwCreateEvent(
 	OUT PHANDLE EventHandle,
 	IN ACCESS_MASK DesiredAccess,
-	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	IN BOOLEAN ManualReset,
+	IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
+	IN EVENT_TYPE EventType,
 	IN BOOLEAN InitialState
 	);
 
@@ -2443,14 +2443,14 @@ NTSTATUS
 STDCALL
 NtPulseEvent(
 	IN HANDLE EventHandle,
-	IN PULONG PulseCount OPTIONAL
+	OUT PLONG PreviousState OPTIONAL
 	);
 
 NTSTATUS
 STDCALL
 ZwPulseEvent(
 	IN HANDLE EventHandle,
-	IN PULONG PulseCount OPTIONAL
+	OUT PLONG PreviousState OPTIONAL
 	);
 
 /*
@@ -2659,7 +2659,7 @@ NtQueryEvent(
 	IN EVENT_INFORMATION_CLASS EventInformationClass,
 	OUT PVOID EventInformation,
 	IN ULONG EventInformationLength,
-	OUT PULONG ReturnLength
+	OUT PULONG ReturnLength  OPTIONAL
 	);
 NTSTATUS
 STDCALL
@@ -2668,7 +2668,7 @@ ZwQueryEvent(
 	IN EVENT_INFORMATION_CLASS EventInformationClass,
 	OUT PVOID EventInformation,
 	IN ULONG EventInformationLength,
-	OUT PULONG ReturnLength
+	OUT PULONG ReturnLength  OPTIONAL
 	);
 
 NTSTATUS STDCALL
@@ -3668,13 +3668,13 @@ NTSTATUS
 STDCALL
 NtResetEvent(
 	HANDLE EventHandle,
-	PULONG NumberOfWaitingThreads OPTIONAL
+	OUT PLONG PreviousState OPTIONAL
 	);
 NTSTATUS
 STDCALL
 ZwResetEvent(
 	HANDLE EventHandle,
-	PULONG NumberOfWaitingThreads OPTIONAL
+	OUT PLONG PreviousState OPTIONAL
 	);
 //draft
 NTSTATUS
@@ -3899,14 +3899,14 @@ NTSTATUS
 STDCALL
 NtSetEvent(
 	IN HANDLE EventHandle,
-	PULONG NumberOfThreadsReleased
+	OUT PLONG PreviousState  OPTIONAL
 	);
 
 NTSTATUS
 STDCALL
 ZwSetEvent(
 	IN HANDLE EventHandle,
-	PULONG NumberOfThreadsReleased
+	OUT PLONG PreviousState  OPTIONAL
 	);
 
 /*

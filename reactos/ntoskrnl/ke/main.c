@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.201 2004/10/24 12:00:01 ekohl Exp $
+/* $Id: main.c,v 1.202 2004/10/24 15:26:14 weiden Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -746,7 +746,7 @@ ExpInitializeExecutive(VOID)
   Status = NtCreateEvent(&InitDoneEventHandle,
     EVENT_ALL_ACCESS,
     &ObjectAttributes,
-    FALSE,              /* Synchronization event */
+    SynchronizationEvent,
     FALSE);             /* Not signalled */
   if (!NT_SUCCESS(Status))
     {

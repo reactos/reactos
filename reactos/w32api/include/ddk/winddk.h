@@ -8651,8 +8651,8 @@ DDKAPI
 NtCreateEvent(
   OUT PHANDLE  EventHandle,
   IN ACCESS_MASK  DesiredAccess,
-  IN POBJECT_ATTRIBUTES  ObjectAttributes,
-  IN BOOLEAN  ManualReset,
+  IN POBJECT_ATTRIBUTES  ObjectAttributes  OPTIONAL,
+  IN EVENT_TYPE  EventType,
   IN BOOLEAN  InitialState);
 
 NTOSAPI
@@ -8661,8 +8661,8 @@ DDKAPI
 ZwCreateEvent(
   OUT PHANDLE  EventHandle,
   IN ACCESS_MASK  DesiredAccess,
-  IN POBJECT_ATTRIBUTES  ObjectAttributes,
-  IN BOOLEAN  ManualReset,
+  IN POBJECT_ATTRIBUTES  ObjectAttributes  OPTIONAL,
+  IN EVENT_TYPE  EventType,
   IN BOOLEAN  InitialState);
 
 NTOSAPI
@@ -8935,14 +8935,14 @@ NTSTATUS
 DDKAPI
 NtSetEvent(
   IN HANDLE  EventHandle,
-  IN PULONG  NumberOfThreadsReleased);
+  OUT PLONG  PreviousState  OPTIONAL);
 
 NTOSAPI
 NTSTATUS
 DDKAPI
 ZwSetEvent(
   IN HANDLE  EventHandle,
-  IN PULONG  NumberOfThreadsReleased);
+  OUT PLONG  PreviousState  OPTIONAL);
 
 NTOSAPI
 NTSTATUS

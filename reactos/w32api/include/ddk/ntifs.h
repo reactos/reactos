@@ -4393,7 +4393,7 @@ NTSTATUS
 NTAPI
 ZwPulseEvent (
     IN HANDLE   EventHandle,
-    OUT PULONG  PreviousState OPTIONAL
+    OUT PLONG   PreviousState OPTIONAL
 );
 
 NTSYSAPI
@@ -4543,7 +4543,7 @@ NTSTATUS
 NTAPI
 ZwResetEvent (
     IN HANDLE   EventHandle,
-    OUT PULONG  PreviousState OPTIONAL
+    OUT PLONG   PreviousState OPTIONAL
 );
 
 #if (VER_PRODUCTBUILD >= 2195)
@@ -4601,7 +4601,7 @@ NTSTATUS
 NTAPI
 ZwSetEvent (
     IN HANDLE   EventHandle,
-    OUT PULONG  PreviousState OPTIONAL
+    OUT PLONG   PreviousState OPTIONAL
 );
 
 NTSYSAPI

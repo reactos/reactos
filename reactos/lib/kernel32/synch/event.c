@@ -1,4 +1,4 @@
-/* $Id: event.c,v 1.19 2004/10/24 12:16:54 weiden Exp $
+/* $Id: event.c,v 1.20 2004/10/24 15:26:14 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -90,9 +90,9 @@ CreateEventW(LPSECURITY_ATTRIBUTES lpEventAttributes,
      }
 
    Status = NtCreateEvent(&hEvent,
-			  STANDARD_RIGHTS_ALL|EVENT_READ_ACCESS|EVENT_WRITE_ACCESS,
+			  STANDARD_RIGHTS_ALL | EVENT_READ_ACCESS | EVENT_WRITE_ACCESS,
 			  &ObjectAttributes,
-			  bManualReset,
+			  (bManualReset ? NotificationEvent : SynchronizationEvent),
 			  bInitialState);
    DPRINT( "Called\n" );
    if (!NT_SUCCESS(Status))
@@ -188,11 +188,9 @@ OpenEventW(DWORD dwDesiredAccess,
 BOOL STDCALL
 PulseEvent(HANDLE hEvent)
 {
-   ULONG Count;
    NTSTATUS Status;
 
-   Status = NtPulseEvent(hEvent,
-			 &Count);
+   Status = NtPulseEvent(hEvent, NULL);
    if (!NT_SUCCESS(Status))
      {
 	SetLastErrorByStatus (Status);
@@ -210,10 +208,8 @@ BOOL STDCALL
 ResetEvent(HANDLE hEvent)
 {
    NTSTATUS Status;
-   ULONG Count;
 
-   Status = NtResetEvent(hEvent,
-			 &Count);
+   Status = NtClearEvent(hEvent);
    if (!NT_SUCCESS(Status))
      {
 	SetLastErrorByStatus(Status);
@@ -231,10 +227,8 @@ BOOL STDCALL
 SetEvent(HANDLE hEvent)
 {
    NTSTATUS Status;
-   ULONG Count;
 
-   Status = NtSetEvent(hEvent,
-		       &Count);
+   Status = NtSetEvent(hEvent, NULL);
    if (!NT_SUCCESS(Status))
      {
 	SetLastErrorByStatus(Status);

@@ -118,31 +118,26 @@ NtClearEvent(IN HANDLE EventHandle)
  * @implemented
  */
 NTSTATUS STDCALL
-NtCreateEvent(OUT PHANDLE UnsafeEventHandle,
+NtCreateEvent(OUT PHANDLE EventHandle,
 	      IN ACCESS_MASK DesiredAccess,
-	      IN POBJECT_ATTRIBUTES UnsafeObjectAttributes,
-	      IN BOOLEAN ManualReset,
+	      IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
+	      IN EVENT_TYPE EventType,
 	      IN BOOLEAN InitialState)
 {
    PKEVENT Event;
-   HANDLE EventHandle;
+   HANDLE hEvent;
    NTSTATUS Status;
    OBJECT_ATTRIBUTES SafeObjectAttributes;
-   POBJECT_ATTRIBUTES ObjectAttributes;
    
-   if (UnsafeObjectAttributes != NULL)
+   if (ObjectAttributes != NULL)
      {
-       Status = MmCopyFromCaller(&SafeObjectAttributes, UnsafeObjectAttributes,
+       Status = MmCopyFromCaller(&SafeObjectAttributes, ObjectAttributes,
 				 sizeof(OBJECT_ATTRIBUTES));
        if (!NT_SUCCESS(Status))
 	 {
 	   return(Status);
 	 }
        ObjectAttributes = &SafeObjectAttributes;
-     }
-   else
-     {
-       ObjectAttributes = NULL;
      }
 
    Status = ObCreateObject(ExGetPreviousMode(),
@@ -159,7 +154,7 @@ NtCreateEvent(OUT PHANDLE UnsafeEventHandle,
 	return(Status);
      }
    KeInitializeEvent(Event,
-		     ManualReset ? NotificationEvent : SynchronizationEvent,
+		     EventType,
 		     InitialState);
 
    Status = ObInsertObject ((PVOID)Event,
@@ -167,17 +162,17 @@ NtCreateEvent(OUT PHANDLE UnsafeEventHandle,
 			    DesiredAccess,
 			    0,
 			    NULL,
-			    &EventHandle);
+			    &hEvent);
    ObDereferenceObject(Event);
    if (!NT_SUCCESS(Status))
      {
 	return Status;
      }
 
-   Status = MmCopyToCaller(UnsafeEventHandle, &EventHandle, sizeof(HANDLE));
+   Status = MmCopyToCaller(EventHandle, &hEvent, sizeof(HANDLE));
    if (!NT_SUCCESS(Status))
      {
-	ZwClose(EventHandle);
+	ZwClose(hEvent);
 	return(Status);
      }
    return(STATUS_SUCCESS);
@@ -185,12 +180,12 @@ NtCreateEvent(OUT PHANDLE UnsafeEventHandle,
 
 
 NTSTATUS STDCALL
-NtOpenEvent(OUT PHANDLE UnsafeEventHandle,
+NtOpenEvent(OUT PHANDLE EventHandle,
 	    IN ACCESS_MASK DesiredAccess,
 	    IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
    NTSTATUS Status;
-   HANDLE EventHandle;
+   HANDLE hEvent;
 
    DPRINT("ObjectName '%wZ'\n", ObjectAttributes->ObjectName);
 
@@ -200,14 +195,14 @@ NtOpenEvent(OUT PHANDLE UnsafeEventHandle,
 			       UserMode,
 			       DesiredAccess,
 			       NULL,
-			       &EventHandle);
+			       &hEvent);
              
   if (!NT_SUCCESS(Status))
   {
     return(Status);
   }
 
-   Status = MmCopyToCaller(UnsafeEventHandle, &EventHandle, sizeof(HANDLE));
+   Status = MmCopyToCaller(EventHandle, &hEvent, sizeof(HANDLE));
    if (!NT_SUCCESS(Status))
      {
        ZwClose(EventHandle);
@@ -220,7 +215,7 @@ NtOpenEvent(OUT PHANDLE UnsafeEventHandle,
 
 NTSTATUS STDCALL
 NtPulseEvent(IN HANDLE EventHandle,
-	     IN PULONG UnsafePulseCount OPTIONAL)
+	     OUT PLONG PreviousState  OPTIONAL)
 {
    PKEVENT Event;
    NTSTATUS Status;
@@ -249,14 +244,14 @@ NtPulseEvent(IN HANDLE EventHandle,
 NTSTATUS STDCALL
 NtQueryEvent(IN HANDLE EventHandle,
 	     IN EVENT_INFORMATION_CLASS EventInformationClass,
-	     OUT PVOID UnsafeEventInformation,
+	     OUT PVOID EventInformation,
 	     IN ULONG EventInformationLength,
-	     OUT PULONG UnsafeReturnLength)
+	     OUT PULONG ReturnLength  OPTIONAL)
 {
    EVENT_BASIC_INFORMATION Info;
    PKEVENT Event;
    NTSTATUS Status;
-   ULONG ReturnLength;
+   ULONG RetLen;
 
    if (EventInformationClass > EventBasicInformation)
      return STATUS_INVALID_INFO_CLASS;
@@ -279,7 +274,7 @@ NtQueryEvent(IN HANDLE EventHandle,
      Info.EventType = SynchronizationEvent;
    Info.EventState = KeReadStateEvent(Event);
 
-   Status = MmCopyToCaller(UnsafeEventInformation, &Event, 
+   Status = MmCopyToCaller(EventInformation, &Event,
 			   sizeof(EVENT_BASIC_INFORMATION));
    if (!NT_SUCCESS(Status))
      {
@@ -287,8 +282,8 @@ NtQueryEvent(IN HANDLE EventHandle,
        return(Status);
      }
 
-   ReturnLength = sizeof(EVENT_BASIC_INFORMATION);
-   Status = MmCopyToCaller(UnsafeReturnLength, &ReturnLength, sizeof(ULONG));
+   RetLen = sizeof(EVENT_BASIC_INFORMATION);
+   Status = MmCopyToCaller(ReturnLength, &RetLen, sizeof(ULONG));
    if (!NT_SUCCESS(Status))
      {
        ObDereferenceObject(Event);
@@ -303,7 +298,7 @@ NtQueryEvent(IN HANDLE EventHandle,
 
 NTSTATUS STDCALL
 NtResetEvent(IN HANDLE EventHandle,
-	     OUT PULONG UnsafeNumberOfWaitingThreads OPTIONAL)
+	     OUT PLONG PreviousState  OPTIONAL)
 {
    PKEVENT Event;
    NTSTATUS Status;
@@ -331,7 +326,7 @@ NtResetEvent(IN HANDLE EventHandle,
  */
 NTSTATUS STDCALL
 NtSetEvent(IN HANDLE EventHandle,
-	   OUT PULONG UnsafeNumberOfThreadsReleased)
+	   OUT PLONG PreviousState  OPTIONAL)
 {
    PKEVENT Event;
    NTSTATUS Status;
