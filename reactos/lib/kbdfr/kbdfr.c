@@ -444,7 +444,7 @@ ROSDATA KBDTABLES keyboard_layout_table = {
   vk_to_wchar_master_table,
   
   /* diacritical marks -- currently implemented by wine code */
-  &deadkey,
+  deadkey,
 
   /* Key names */
   (VSC_LPWSTR *)key_names,
