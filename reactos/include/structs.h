@@ -3184,7 +3184,7 @@ typedef struct tagTEXTMETRICW {
   WCHAR tmFirstChar;
   WCHAR tmLastChar;
   WCHAR tmDefaultChar;
-  BCHAR tmBreakChar;
+  WCHAR tmBreakChar;
   BYTE tmItalic;
   BYTE tmUnderlined;
   BYTE tmStruckOut;
