@@ -1,4 +1,4 @@
-# $Id: Makefile.ros-template,v 1.4 2004/07/12 22:03:09 gvg Exp $
+# $Id: Makefile.ros-template,v 1.5 2004/08/01 23:27:55 navaraf Exp $
 
 TARGET_NAME = shell32
 
@@ -13,6 +13,8 @@ TARGET_BASE = $(TARGET_BASE_LIB_SHELL32)
 TARGET_RC_SRCS = @RC_SRCS@
 TARGET_RC_BINSRC = @RC_BINSRC@
 TARGET_RC_BINARIES = @RC_BINARIES@
+
+TARGET_CLEAN = authors.c
 
 default: all
 

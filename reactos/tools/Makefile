@@ -144,6 +144,8 @@ clean:
 	$(MAKE) -C wine2ros clean
 	$(MAKE) -C winebuild clean
 	$(MAKE) -C bin2res clean
+	$(MAKE) -C ../lib/zlib -f Makefile.host clean
+	@rm ../include/reactos/buildno.h
 	@rm mkconfig
 	@rm $(TOOLS)
 endif
@@ -158,6 +160,8 @@ clean:
 	$(MAKE) -C wine2ros clean
 	$(MAKE) -C winebuild clean
 	$(MAKE) -C bin2res clean
+	$(MAKE) -C ../lib/zlib -f Makefile.host clean
+	-@del ..\include\reactos\buildno.h
 	-@del *$(EXE_POSTFIX)
 endif
 

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.82 2004/07/08 00:40:30 weiden Exp $
+# $Id: makefile,v 1.83 2004/08/01 23:27:55 navaraf Exp $
 
 PATH_TO_TOP = ../..
 
@@ -23,7 +23,7 @@ TARGET_GCCLIBS = gcc
 
 TARGET_PCH = k32.h
 
-TARGET_CLEAN = errcodes.rc msg?????.bin
+TARGET_CLEAN = errcodes.rc $(PATH_TO_TOP)/include/reactos/errcodes.h msg?????.bin
 
 SYNCH_OBJECTS = synch/critical.o synch/event.o synch/intrlck.o synch/mutex.o \
                 synch/sem.o synch/timer.o synch/wait.o

@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.71 2004/07/23 20:03:25 chorns Exp $
+# $Id: helper.mk,v 1.72 2004/08/01 23:27:56 navaraf Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -502,7 +502,7 @@ endif
 
 ifeq ($(TARGET_RC_SRCS),)
   MK_RES_SRC := $(TARGET_PATH)/$(MK_RES_BASE).rc
-  MK_RESOURCE := $(MK_RES_BASE).coff
+  MK_RESOURCE := $(TARGET_PATH)/$(MK_RES_BASE).coff
 else
   MK_RES_SRC := $(TARGET_RC_SRCS)
   MK_RESOURCE := $(TARGET_RC_SRCS:.rc=.coff)
@@ -548,7 +548,7 @@ endif
 ifeq ($(TARGET_NORC),yes)
   MK_FULLRES :=
 else
-  MK_FULLRES := $(TARGET_PATH)/$(MK_RESOURCE)
+  MK_FULLRES := $(MK_RESOURCE)
 endif
 
 ifneq ($(TARGET_TYPE),winedll)
@@ -907,7 +907,7 @@ MK_CLEANFILTERED := $(MK_OBJECTS:.o=.d)
 MK_CLEANDEPS := $(join $(dir $(MK_CLEANFILTERED)), $(addprefix ., $(notdir $(MK_CLEANFILTERED))))
 
 clean: $(MK_REGTESTS_CLEAN) $(SUBDIRS:%=%_clean)
-	- $(RM) *.o depend.d *.pch $(MK_BASENAME).sym $(MK_BASENAME).a $(MK_RESOURCE) \
+	- $(RM) *.o depend.d *.pch *.gch $(MK_BASENAME).sym $(MK_BASENAME).a $(MK_RESOURCE) \
 	  $(MK_FULLNAME) $(MK_NOSTRIPNAME) $(MK_CLEANFILES) $(MK_CLEANDEPS) $(MK_BASENAME).map \
 	  junk.tmp base.tmp temp.exp $(MK_RC_BINARIES) $(MK_SPECDEF) $(MK_GENERATED_MAKEFILE) \
 	  $(TARGET_CLEAN)

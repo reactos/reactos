@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.239 2004/07/23 21:54:53 chorns Exp $
+# $Id: Makefile,v 1.240 2004/08/01 23:27:54 navaraf Exp $
 #
 # Global makefile
 #
@@ -367,7 +367,7 @@ dk:
 	$(RMKDIR) $(SDK_PATH_INC)
 	$(RMKDIR) $(XDK_PATH)
 	$(RMKDIR) $(XDK_PATH_LIB)
-	$(RMKDIR) $(XDK_PATH_INC)
+#	$(RMKDIR) $(XDK_PATH_INC)
 
 dk_implib:
 

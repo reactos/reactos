@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.6 2003/11/19 05:47:28 vizzini Exp $
+# $Id: Makefile,v 1.7 2004/08/01 23:27:55 navaraf Exp $
 
 PATH_TO_TOP = ../..
 
@@ -7,7 +7,7 @@ TARGET_TYPE = library
 TARGET_NAME = zlib
 
 TARGET_CFLAGS = \
- -MMD -O3 -Wall -Wwrite-strings -Wpointer-arith -Wconversion \
+ -O3 -Wall -Wwrite-strings -Wpointer-arith -Wconversion \
  -Wstrict-prototypes -Wmissing-prototypes -Werror
 
 # require os code to explicitly request A/W version of structs/functions

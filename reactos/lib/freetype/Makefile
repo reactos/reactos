@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.9 2004/02/15 21:45:28 gvg Exp $
+# $Id: Makefile,v 1.10 2004/08/01 23:27:55 navaraf Exp $
 
 PATH_TO_TOP = ../..
 
@@ -26,6 +26,8 @@ TARGET_CFLAGS += -D_DISABLE_TIDENTS
 ROS_OBJECTS = rosglue.o i386/setjmplongjmp.o
 
 TARGET_OBJECTS = objs/*.o $(ROS_OBJECTS)
+
+TARGET_CLEAN = objs/libfreetype.a
 
 include $(PATH_TO_TOP)/rules.mak
 

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.10 2003/07/24 18:14:58 royce Exp $
+# $Id: makefile,v 1.11 2004/08/01 23:27:55 navaraf Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -9,25 +9,6 @@ TARGET_NAME = acpi
 TARGET_CFLAGS = -I./include -I./ospm/include
 
 TARGET_DDKLIBS = ntoskrnl.a
-
-OBJECTS_PATH = objects
-
-TARGET_OBJECTS = $(OBJECTS_PATH)/$(TARGET_NAME).o
-
-TARGET_CLEAN = \
-  $(OBJECTS_PATH)/*.o \
-  dispatcher/*.o \
-  events/*.o \
-  executer/*.o \
-  hardware/*.o \
-  namespace/*.o \
-  ospm/*.o \
-  ospm/busmgr/*.o \
-  parser/*.o \
-  resource/*.o \
-  tables/*.o \
-  utils/*.o
-
 
 OBJECTS_OSPM_BUSMGR = \
   ospm/busmgr/bm.o \
@@ -159,90 +140,12 @@ OBJECTS_UTILS = \
   utils/cmutils.o \
   utils/cmxface.o
 
+TARGET_OBJECTS = \
+  $(OBJECTS_OSPM) $(OBJECTS_DISPATCHER) $(OBJECTS_EVENTS) \
+  $(OBJECTS_EXECUTER) $(OBJECTS_HARDWARE) $(OBJECTS_NAMESPACE) \
+  $(OBJECTS_PARSER) $(OBJECTS_RESOURCE) $(OBJECTS_TABLES) \
+  $(OBJECTS_UTILS)
 
 include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
-
-
-#
-# Build intermediate objects
-#
-$(OBJECTS_PATH)/ospm.o: $(OBJECTS_OSPM)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/ospm.o \
-		$(OBJECTS_OSPM)
-
-$(OBJECTS_PATH)/dispatcher.o: $(OBJECTS_DISPATCHER)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/dispatcher.o \
-		$(OBJECTS_DISPATCHER)
-
-$(OBJECTS_PATH)/events.o: $(OBJECTS_EVENTS)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/events.o \
-		$(OBJECTS_EVENTS)
-
-$(OBJECTS_PATH)/executer.o: $(OBJECTS_EXECUTER)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/executer.o \
-		$(OBJECTS_EXECUTER)
-
-$(OBJECTS_PATH)/hardware.o: $(OBJECTS_HARDWARE)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/hardware.o \
-		$(OBJECTS_HARDWARE)
-
-$(OBJECTS_PATH)/namespace.o: $(OBJECTS_NAMESPACE)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/namespace.o \
-		$(OBJECTS_NAMESPACE)
-
-$(OBJECTS_PATH)/parser.o: $(OBJECTS_PARSER)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/parser.o \
-		$(OBJECTS_PARSER)
-
-$(OBJECTS_PATH)/resource.o: $(OBJECTS_RESOURCE)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/resource.o \
-		$(OBJECTS_RESOURCE)
-
-$(OBJECTS_PATH)/tables.o: $(OBJECTS_TABLES)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/tables.o \
-		$(OBJECTS_TABLES)
-
-$(OBJECTS_PATH)/utils.o: $(OBJECTS_UTILS)
-	$(LD) \
-		-r \
-		-o $(OBJECTS_PATH)/utils.o \
-		$(OBJECTS_UTILS)
-
-
-OBJECTS = \
-  $(OBJECTS_PATH)/ospm.o \
-	$(OBJECTS_PATH)/dispatcher.o \
-	$(OBJECTS_PATH)/events.o \
-	$(OBJECTS_PATH)/executer.o \
-	$(OBJECTS_PATH)/hardware.o \
-	$(OBJECTS_PATH)/namespace.o \
-	$(OBJECTS_PATH)/parser.o \
-	$(OBJECTS_PATH)/resource.o \
-	$(OBJECTS_PATH)/tables.o \
-	$(OBJECTS_PATH)/utils.o
-
-$(OBJECTS_PATH)/$(TARGET_NAME).o: $(OBJECTS_PATH) $(OBJECTS)
-	$(LD) -r $(OBJECTS) -o $(OBJECTS_PATH)/$(TARGET_NAME).o
-
-$(OBJECTS_PATH):
-	mkdir $(OBJECTS_PATH)

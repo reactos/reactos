@@ -22,7 +22,7 @@ all: $(PROGS)
 implib:
 
 clean:
-	- $(RM) lpcsrv.o lpcsrv.exe lpcsrv.sym lpcclt.o lpcclt.exe lpcsrv.sym
+	- $(RM) lpcsrv.o lpcsrv.exe lpcsrv.sym lpcclt.o lpcclt.exe lpcclt.sym
 	
 .phony: implib clean
 
