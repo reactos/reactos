@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.72 2004/08/12 16:43:12 ion Exp $
+/* $Id: device.c,v 1.73 2004/08/14 22:47:08 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -40,6 +40,7 @@ IopInitializeDevice(
    IO_STATUS_BLOCK IoStatusBlock;
    IO_STACK_LOCATION Stack;
    PDEVICE_OBJECT Fdo;
+   PCM_RESOURCE_LIST ResourceList = NULL;
    NTSTATUS Status;
 
    if (DriverObject->DriverExtension->AddDevice)
@@ -72,10 +73,25 @@ IopInitializeDevice(
 
       IopDeviceNodeSetFlag(DeviceNode, DNF_ADDED);
 
+      /* Query resource list from PDO */
+      Status = IopInitiatePnpIrp(
+         DeviceNode->Pdo,
+         &IoStatusBlock,
+         IRP_MN_QUERY_RESOURCES,
+         &Stack);
+
+      if (!NT_SUCCESS(Status))
+      {
+         DPRINT("IopInitiatePnpIrp() failed\n");
+         ObDereferenceObject(Fdo);
+         return Status;
+      }
+      ResourceList = (PCM_RESOURCE_LIST)IoStatusBlock.Information;
+
       DPRINT("Sending IRP_MN_START_DEVICE to driver\n");
 
-      /* FIXME: Put some resources in the IRP for the device */
-      Stack.Parameters.StartDevice.AllocatedResources = NULL;
+      Stack.Parameters.StartDevice.AllocatedResources = ResourceList;
+      /* FIXME: Translate the resource list */
       Stack.Parameters.StartDevice.AllocatedResourcesTranslated = NULL;
 
       Status = IopInitiatePnpIrp(
@@ -87,6 +103,8 @@ IopInitializeDevice(
       if (!NT_SUCCESS(Status))
       {
           DPRINT("IopInitiatePnpIrp() failed\n");
+          if (ResourceList != NULL)
+             ExFreePool(ResourceList);
           ObDereferenceObject(Fdo);
           return Status;
       }
@@ -99,6 +117,8 @@ IopInitializeDevice(
 
          if (!NT_SUCCESS(Status))
          {
+            if (ResourceList != NULL)
+               ExFreePool(ResourceList);
             ObDereferenceObject(Fdo);
             return Status;
          }
@@ -116,6 +136,10 @@ IopInitializeDevice(
          }
 #endif /* ACPI */
       }
+
+      if (ResourceList != NULL)
+         ExFreePool(ResourceList);
+
       ObDereferenceObject(Fdo);
    }
 
