@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.22 2003/07/10 18:50:51 chorns Exp $
+/* $Id: env.c,v 1.23 2004/01/12 11:05:38 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -285,7 +285,7 @@ GetVersionExW(
    wcsncpy
    (
     lpVersionInformation->szCSDVersion,
-    L"ReactOS " KERNEL_VERSION_STR,
+    L"ReactOS " KERNEL_VERSION_STR L" (Build " KERNEL_VERSION_BUILD_STR L")",
     sizeof(lpVersionInformation->szCSDVersion) / sizeof(WCHAR)
    );
 
