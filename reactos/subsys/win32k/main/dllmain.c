@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.54 2003/11/24 00:22:53 arty Exp $
+/* $Id: dllmain.c,v 1.55 2003/11/25 22:06:31 gvg Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -40,6 +40,7 @@
 #include <include/text.h>
 #include <include/caret.h>
 #include <include/hotkey.h>
+#include <include/guicheck.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -87,6 +88,8 @@ Win32kProcessCallback (struct _EPROCESS *Process,
 		       "process.\n");
 	    }
 	}
+
+      Win32Process->CreatedWindowOrDC = FALSE;
     }
   else
     {
@@ -98,6 +101,8 @@ Win32kProcessCallback (struct _EPROCESS *Process,
       IntCleanupMenus(Process, Win32Process);
 
       CleanupForProcess(Process, Process->UniqueProcessId);
+
+      IntGraphicsCheck(FALSE);
     }
 
   return STATUS_SUCCESS;

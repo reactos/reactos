@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: winsta.c,v 1.46 2003/11/24 16:15:00 gvg Exp $
+ *  $Id: winsta.c,v 1.47 2003/11/25 22:06:31 gvg Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -49,6 +49,7 @@
 #include <include/color.h>
 #include <include/mouse.h>
 #include <include/callback.h>
+#include <include/guicheck.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -279,28 +280,40 @@ IntValidateDesktopHandle(
    return Status;
 }
 
-VOID FASTCALL
+BOOL FASTCALL
 IntInitializeDesktopGraphics(VOID)
 {
-   ScreenDeviceContext = NtGdiCreateDC(L"DISPLAY", NULL, NULL, NULL);
-   GDIOBJ_MarkObjectGlobal(ScreenDeviceContext);
-   EnableMouse(ScreenDeviceContext);
-   /* not the best place to load the cursors but it's good for now */
-   IntLoadDefaultCursors(FALSE);
-   NtUserAcquireOrReleaseInputOwnership(FALSE);
+  if (! IntCreatePrimarySurface())
+    {
+      return FALSE;
+    }
+  ScreenDeviceContext = NtGdiCreateDC(L"DISPLAY", NULL, NULL, NULL);
+  if (NULL == ScreenDeviceContext)
+    {
+      IntDestroyPrimarySurface();
+      return FALSE;
+    }
+  GDIOBJ_MarkObjectGlobal(ScreenDeviceContext);
+  EnableMouse(ScreenDeviceContext);
+  /* not the best place to load the cursors but it's good for now */
+  IntLoadDefaultCursors(FALSE);
+  NtUserAcquireOrReleaseInputOwnership(FALSE);
+
+  return TRUE;
 }
 
 VOID FASTCALL
 IntEndDesktopGraphics(VOID)
 {
-   NtUserAcquireOrReleaseInputOwnership(TRUE);
-   EnableMouse(FALSE);
-   if (NULL != ScreenDeviceContext)
-   {
+  NtUserAcquireOrReleaseInputOwnership(TRUE);
+  EnableMouse(FALSE);
+  if (NULL != ScreenDeviceContext)
+    {
       GDIOBJ_UnmarkObjectGlobal(ScreenDeviceContext);
       NtGdiDeleteDC(ScreenDeviceContext);
       ScreenDeviceContext = NULL;
-   }
+    }
+  IntDestroyPrimarySurface();
 }
 
 HDC FASTCALL

@@ -21,6 +21,7 @@ typedef struct _W32PROCESS
   struct _WINSTATION_OBJECT* WindowStation;
   WORD GDIObjects;
   WORD UserObjects;
+  BOOL CreatedWindowOrDC;
 } W32PROCESS, *PW32PROCESS;
 
 PW32THREAD STDCALL

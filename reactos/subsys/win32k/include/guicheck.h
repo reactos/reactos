@@ -4,8 +4,9 @@
 #include <windows.h>
 #include <ddk/ntddk.h>
 
-VOID FASTCALL
-IntGraphicsCheck(BOOL Create);
+BOOL FASTCALL IntGraphicsCheck(BOOL Create);
+BOOL FASTCALL IntCreatePrimarySurface();
+VOID FASTCALL IntDestroyPrimarySurface();
 
 #endif /* _WIN32K_GUICHECK_H */
 

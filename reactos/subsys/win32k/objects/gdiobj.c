@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.50 2003/11/19 12:25:03 weiden Exp $
+ * $Id: gdiobj.c,v 1.51 2003/11/25 22:06:31 gvg Exp $
  *
  */
 
@@ -454,6 +454,7 @@ GDIOBJ_MarkObjectGlobal(HGDIOBJ ObjectHandle)
     {
       W32Process->GDIObjects--;
     }
+  ObDereferenceObject(Process);
   }
   
   ObjHdr->hProcessId = GDI_GLOBAL_PROCESS;

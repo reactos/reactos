@@ -46,7 +46,7 @@ IntDesktopWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 HDC FASTCALL
 IntGetScreenDC(VOID);
 
-VOID FASTCALL
+BOOL FASTCALL
 IntInitializeDesktopGraphics(VOID);
 
 VOID FASTCALL

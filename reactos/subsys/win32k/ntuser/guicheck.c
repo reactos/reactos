@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: guicheck.c,v 1.14 2003/08/19 11:48:49 weiden Exp $
+/* $Id: guicheck.c,v 1.15 2003/11/25 22:06:31 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -51,29 +51,44 @@ static ULONG NrGuiApplicationsRunning = 0;
 
 /* FUNCTIONS *****************************************************************/
 
-VOID FASTCALL
+BOOL FASTCALL
 IntGraphicsCheck(BOOL Create)
 {
+  PW32PROCESS W32Data;
+
+  W32Data = PsGetWin32Process();
   if (Create)
     {
-      if (0 == NrGuiApplicationsRunning)
-	{
-	  IntInitializeDesktopGraphics();
-	}
-      NrGuiApplicationsRunning++;
+      if (! W32Data->CreatedWindowOrDC)
+        {
+          W32Data->CreatedWindowOrDC = TRUE;
+          if (0 == NrGuiApplicationsRunning++)
+            {
+              if (! IntInitializeDesktopGraphics())
+                {
+                  W32Data->CreatedWindowOrDC = FALSE;
+                  NrGuiApplicationsRunning--;
+                  return FALSE;
+                }
+            }
+        }
     }
   else
     {
-      if (0 < NrGuiApplicationsRunning)
-	{
-	  NrGuiApplicationsRunning--;
-	}
-      if (0 == NrGuiApplicationsRunning)
-	{
-	  IntEndDesktopGraphics();
-	}
+      if (W32Data->CreatedWindowOrDC)
+        {
+          if (0 < NrGuiApplicationsRunning)
+	    {
+              NrGuiApplicationsRunning--;
+            }
+          if (0 == NrGuiApplicationsRunning)
+            {
+              IntEndDesktopGraphics();
+            }
+        }
     }
-    
+
+  return TRUE;
 }
 
 /* EOF */
