@@ -37,8 +37,8 @@
 static char OutputBuffer[OUTPUT_BUFFER_SIZE];
 static unsigned OutputPtr = 0;
 
-static void
-FlushOutput()
+VOID
+XenConsFlush()
 {
   ctrl_msg_t Msg;
 
@@ -69,7 +69,7 @@ PutCharInBuffer(int Ch)
 {
   if (OUTPUT_BUFFER_SIZE <= OutputPtr)
     {
-      FlushOutput();
+      XenConsFlush();
     }
   OutputBuffer[OutputPtr++] = Ch;
 }
@@ -81,7 +81,7 @@ XenConsPutChar(int Ch)
     {
       PutCharInBuffer('\r');
       PutCharInBuffer('\n');
-      FlushOutput();
+      XenConsFlush();
     }
   else
     {

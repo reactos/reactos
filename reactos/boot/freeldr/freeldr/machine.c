@@ -43,6 +43,7 @@
 #undef MachDiskGetCacheableBlockCount
 #undef MachRTCGetCurrentDateTime
 #undef MachHwDetect
+#undef MachDie
 
 MACHVTBL MachVtbl;
 
@@ -182,6 +183,12 @@ VOID
 MachHwDetect(VOID)
 {
   MachVtbl.HwDetect();
+}
+
+VOID
+MachDie(VOID)
+{
+  MachVtbl.Die();
 }
 
 /* EOF */

@@ -60,6 +60,8 @@ VOID XboxRTCGetCurrentDateTime(PULONG Year, PULONG Month, PULONG Day, PULONG Hou
 
 VOID XboxHwDetect(VOID);
 
+VOID XboxDie(VOID);
+
 #endif /* __I386_HWXBOX_H_ */
 
 /* EOF */

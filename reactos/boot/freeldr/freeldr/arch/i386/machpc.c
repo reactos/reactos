@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  *  FreeLoader
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -54,6 +53,19 @@ PcMachInit(VOID)
   MachVtbl.DiskGetCacheableBlockCount = PcDiskGetCacheableBlockCount;
   MachVtbl.RTCGetCurrentDateTime = PcRTCGetCurrentDateTime;
   MachVtbl.HwDetect = PcHwDetect;
+  MachVtbl.Die = PcDie;
+}
+
+VOID
+PcDie()
+{
+  while (1)
+    {
+      __asm__ __volatile__(
+        " cli\n"
+        " hlt\n"
+      );
+    }
 }
 
 /* EOF */

@@ -204,7 +204,7 @@ XenMemInit(start_info_t *StartInfo)
       if (0 != HYPERVISOR_mmu_update(&MmuReq, 1, NULL))
         {
           HYPERVISOR_console_io(CONSOLEIO_write, sizeof(ErrMsg), ErrMsg);
-          HYPERVISOR_shutdown();
+          XenDie();
         }
     }
 
@@ -217,7 +217,7 @@ XenMemInit(start_info_t *StartInfo)
   if (0 != HYPERVISOR_mmu_update(&MmuReq, 1, NULL))
     {
       HYPERVISOR_console_io(CONSOLEIO_write, sizeof(ErrMsg), ErrMsg);
-      HYPERVISOR_shutdown();
+      XenDie();
     }
   XenPageDir = (PPDE) HighAddr;
 
@@ -231,7 +231,7 @@ XenMemInit(start_info_t *StartInfo)
   if (0 != HYPERVISOR_mmu_update(&MmuReq, 1, NULL))
     {
       HYPERVISOR_console_io(CONSOLEIO_write, sizeof(ErrMsg), ErrMsg);
-      HYPERVISOR_shutdown();
+      XenDie();
     }
 
   /* Map the page tables near the top of mem */
@@ -247,7 +247,7 @@ XenMemInit(start_info_t *StartInfo)
       if (0 != HYPERVISOR_mmu_update(&MmuReq, 1, NULL))
         {
           HYPERVISOR_console_io(CONSOLEIO_write, sizeof(ErrMsg), ErrMsg);
-          HYPERVISOR_shutdown();
+          XenDie();
         }
     }
 
@@ -276,7 +276,7 @@ XenMemInit(start_info_t *StartInfo)
           if (0 != HYPERVISOR_mmu_update(&MmuReq, 1, NULL))
             {
               HYPERVISOR_console_io(CONSOLEIO_write, sizeof(ErrMsg), ErrMsg);
-              HYPERVISOR_shutdown();
+              XenDie();
             }
         }
     }
@@ -296,7 +296,7 @@ XenMemInit(start_info_t *StartInfo)
   if (0 != HYPERVISOR_mmu_update(&MmuReq, 1, NULL))
     {
       HYPERVISOR_console_io(CONSOLEIO_write, sizeof(ErrMsg), ErrMsg);
-      HYPERVISOR_shutdown();
+      XenDie();
     }
 }
 

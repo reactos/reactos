@@ -26,58 +26,6 @@
 
 #define SCREEN_ATTR 0x1f			/* Bright white on blue background */
 
-.macro SAVE_CPU_REGS
-	movl	%eax,i386_EAX
-	movl	%ebx,i386_EBX
-	movl	%ecx,i386_ECX
-	movl	%edx,i386_EDX
-	movl	%esp,i386_ESP
-	movl	%ebp,i386_EBP
-	movl	%esi,i386_ESI
-	movl	%edi,i386_EDI
-	movw	%ds,%ax
-	movw	%ax,i386_DS
-	movw	%es,%ax
-	movw	%ax,i386_ES
-	movw	%fs,%ax
-	movw	%ax,i386_FS
-	movw	%gs,%ax
-	movw	%ax,i386_GS
-	movw	%ss,%ax
-	movw	%ax,i386_SS
-	popl	%eax
-	movl	%eax,i386_EIP
-	popl	%eax
-	movw	%ax,i386_CS
-	popl	%eax
-	movl	%eax,i386_EFLAGS
-	movl	%cr0,%eax
-	movl	%eax,i386_CR0
-	//movl	%cr1,%eax
-	//movl	%eax,i386_CR1
-	movl	%cr2,%eax
-	movl	%eax,i386_CR2
-	movl	%cr3,%eax
-	movl	%eax,i386_CR3
-	movl	%dr0,%eax
-	movl	%eax,i386_DR0
-	movl	%dr1,%eax
-	movl	%eax,i386_DR1
-	movl	%dr2,%eax
-	movl	%eax,i386_DR2
-	movl	%dr3,%eax
-	movl	%eax,i386_DR3
-	movl	%dr6,%eax
-	movl	%eax,i386_DR6
-	movl	%dr7,%eax
-	movl	%eax,i386_DR7
-	sgdt	i386_GDTR
-	sidt	i386_IDTR
-	sldt	i386_LDTR
-	str		i386_TR
-.endm
-
-
 
 i386ExceptionHandlerText:
 	.ascii "An error occured in FreeLoader\n"
@@ -260,6 +208,10 @@ i386_LDTR:
 i386_TR:
 	.word	0
 
+/* Hook to save debug registers */
+EXTERN(i386TrapSaveDRHook)
+	.long	0
+
 /* Used to store the current X and Y position on the screen */
 i386_ScreenPosX:
 	.long	0
@@ -270,7 +222,69 @@ i386_ScreenPosY:
 i386CommonExceptionHandler:
 	.code32
 
-	SAVE_CPU_REGS
+	movl	%eax,i386_EAX
+	movl	%ebx,i386_EBX
+	movl	%ecx,i386_ECX
+	movl	%edx,i386_EDX
+	movl	%esp,i386_ESP
+	movl	%ebp,i386_EBP
+	movl	%esi,i386_ESI
+	movl	%edi,i386_EDI
+	movw	%ds,%ax
+	movw	%ax,i386_DS
+	movw	%es,%ax
+	movw	%ax,i386_ES
+	movw	%fs,%ax
+	movw	%ax,i386_FS
+	movw	%gs,%ax
+	movw	%ax,i386_GS
+	movw	%ss,%ax
+	movw	%ax,i386_SS
+	popl	%eax
+	movl	%eax,i386_EIP
+	popl	%eax
+	movw	%ax,i386_CS
+	popl	%eax
+	movl	%eax,i386_EFLAGS
+	movl	%cr0,%eax
+	movl	%eax,i386_CR0
+	//movl	%cr1,%eax
+	//movl	%eax,i386_CR1
+	movl	%cr2,%eax
+	movl	%eax,i386_CR2
+	movl	%cr3,%eax
+	movl	%eax,i386_CR3
+
+/* Check for a hook to save debug regs (it's here for the benefit of Xen) */
+	movl	i386TrapSaveDRHook,%eax
+	test	%eax,%eax
+	jz	save_dr
+	
+/* Hook present, call it */
+	pushl	$i386_DR0
+	call	*%eax
+	jmp	end_save_dr
+
+save_dr:
+/* No hook present, we can save the regs ourselves */
+	movl	%dr0,%eax
+	movl	%eax,i386_DR0
+	movl	%dr1,%eax
+	movl	%eax,i386_DR1
+	movl	%dr2,%eax
+	movl	%eax,i386_DR2
+	movl	%dr3,%eax
+	movl	%eax,i386_DR3
+	movl	%dr6,%eax
+	movl	%eax,i386_DR6
+	movl	%dr7,%eax
+	movl	%eax,i386_DR7
+
+end_save_dr:
+	sgdt	i386_GDTR
+	sidt	i386_IDTR
+	sldt	i386_LDTR
+	str	i386_TR
 
 	pushl	$SCREEN_ATTR
 	call	MachVideoClearScreen
@@ -444,9 +458,8 @@ i386CommonExceptionHandler:
 	incl	i386_ScreenPosY
 	incl	i386_ScreenPosY
 
-	cli
 i386ExceptionHandlerHang:
-	hlt
+	call	MachDie
 	jmp	i386ExceptionHandlerHang
 
 	iret

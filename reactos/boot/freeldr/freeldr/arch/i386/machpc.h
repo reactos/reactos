@@ -57,6 +57,8 @@ VOID PcRTCGetCurrentDateTime(PULONG Year, PULONG Month, PULONG Day, PULONG Hour,
 
 VOID PcHwDetect(VOID);
 
+VOID PcDie(VOID);
+
 #endif /* __I386_MACHPC_H_ */
 
 /* EOF */

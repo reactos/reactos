@@ -45,6 +45,7 @@ BOOL XenCtrlIfTransmitterEmpty();
 VOID XenConsPutChar(int Ch);
 BOOL XenConsKbHit();
 int XenConsGetCh();
+VOID XenConsFlush();
 
 VOID XenVideoClearScreen(UCHAR Attr);
 VIDEODISPLAYMODE XenVideoSetDisplayMode(char *DisplayMode, BOOL Init);
@@ -70,6 +71,8 @@ ULONG XenDiskGetCacheableBlockCount(ULONG DriveNumber);
 VOID XenRTCGetCurrentDateTime(PULONG Year, PULONG Month, PULONG Day, PULONG Hour, PULONG Minute, PULONG Second);
 
 VOID XenHwDetect(VOID);
+
+VOID XenDie(VOID);
 
 #endif /* __I386_MACHXEN_H_ */
 

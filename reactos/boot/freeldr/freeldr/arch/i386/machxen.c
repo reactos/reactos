@@ -21,13 +21,13 @@
 
 #include "freeldr.h"
 #include "machxen.h"
+#include "i386.h"
 
 #include <rosxen.h>
 #include <xen.h>
 #include <hypervisor.h>
 
 BOOL XenActive = FALSE;
-int XenCtrlIfEvtchn;
 
 VOID
 XenMachInit(VOID)
@@ -57,6 +57,53 @@ XenMachInit(VOID)
   MachVtbl.DiskGetCacheableBlockCount = XenDiskGetCacheableBlockCount;
   MachVtbl.RTCGetCurrentDateTime = XenRTCGetCurrentDateTime;
   MachVtbl.HwDetect = XenHwDetect;
+  MachVtbl.Die = XenDie;
+}
+
+VOID
+XenDie()
+{
+  XenConsFlush();
+  while (1)
+    {
+      HYPERVISOR_shutdown();
+    }
+}
+
+extern void (*i386TrapSaveDRHook)(unsigned long *DRRegs);
+extern void i386Breakpoint();
+
+static trap_info_t trap_table[] = {
+        {  0, 0, FLAT_RING1_CS, (unsigned long)i386DivideByZero           },
+        {  1, 0, FLAT_RING1_CS, (unsigned long)i386DebugException         },
+        {  2, 0, FLAT_RING1_CS, (unsigned long)i386NMIException           },
+        {  3, 3, FLAT_RING1_CS, (unsigned long)i386Breakpoint             },
+        {  4, 3, FLAT_RING1_CS, (unsigned long)i386Overflow               },
+        {  5, 3, FLAT_RING1_CS, (unsigned long)i386BoundException         },
+        {  6, 0, FLAT_RING1_CS, (unsigned long)i386InvalidOpcode          },
+        {  7, 0, FLAT_RING1_CS, (unsigned long)i386FPUNotAvailable        },
+        {  8, 0, FLAT_RING1_CS, (unsigned long)i386DoubleFault            },
+        {  9, 0, FLAT_RING1_CS, (unsigned long)i386CoprocessorSegment     },
+        { 10, 0, FLAT_RING1_CS, (unsigned long)i386InvalidTSS             },
+        { 11, 0, FLAT_RING1_CS, (unsigned long)i386SegmentNotPresent      },
+        { 12, 0, FLAT_RING1_CS, (unsigned long)i386StackException         },
+        { 13, 0, FLAT_RING1_CS, (unsigned long)i386GeneralProtectionFault },
+        { 14, 0, FLAT_RING1_CS, (unsigned long)i386PageFault              },
+        { 16, 0, FLAT_RING1_CS, (unsigned long)i386CoprocessorError       },
+        { 17, 0, FLAT_RING1_CS, (unsigned long)i386AlignmentCheck         },
+        { 18, 0, FLAT_RING1_CS, (unsigned long)i386MachineCheck           },
+        {  0, 0,             0, 0                                         }
+};
+
+static void
+XenTrapSaveDR(unsigned long *DRRegs)
+{
+  unsigned Reg;
+
+  for (Reg = 0; Reg < 8; Reg++)
+    {
+      DRRegs[Reg] = HYPERVISOR_get_debugreg(Reg);
+    }
 }
 
 /* _start is the default name ld will use as the entry point.  When xen
@@ -95,18 +142,21 @@ void _start()
   __asm__ __volatile__("mov %%eax,%%esp\n" : : "a"(NewStackPtr));
   /* Don't use stack based variables after this */
 
+  i386TrapSaveDRHook = XenTrapSaveDR;
+  HYPERVISOR_set_trap_table(trap_table);
+
   /* Start freeldr */
   XenActive = TRUE;
   BootDrive = 0x80;
   BootMain(XenStartInfo->cmd_line);
 
   /* Shouldn't get here */
-  HYPERVISOR_shutdown();
+  XenDie();
 }
 
 #define XEN_UNIMPLEMENTED(routine) \
   printf(routine " unimplemented. Shutting down\n"); \
-  HYPERVISOR_shutdown()
+  XenDie()
 
 BOOL
 XenConsKbHit()
@@ -120,12 +170,6 @@ XenConsGetCh()
   {
     XEN_UNIMPLEMENTED("XenConsGetCh");
     return 0;
-  }
-
-VOID
-XenVideoClearScreen(UCHAR Attr)
-  {
-    XEN_UNIMPLEMENTED("XenVideoClearScreen");
   }
 
 VIDEODISPLAYMODE
@@ -158,12 +202,6 @@ VOID
 XenVideoHideShowTextCursor(BOOL Show)
   {
     XEN_UNIMPLEMENTED("XenVideoHideShowTextCursor");
-  }
-
-VOID
-XenVideoPutChar(int Ch, UCHAR Attr, unsigned X, unsigned Y)
-  {
-    XEN_UNIMPLEMENTED("XenVideoPutChar");
   }
 
 VOID

@@ -174,6 +174,7 @@ ARCH_I386_OBJS = fathelp.o	\
   xencons.o \
   xenctrlif.o \
   xenmem.o \
+  xenvideo.o \
   _alloca.o # For Mingw32 builds
 
 ARCH_OBJS	= $(addprefix i386/,$(ARCH_I386_OBJS))

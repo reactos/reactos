@@ -64,6 +64,8 @@ typedef struct tagMACHVTBL
   VOID (*RTCGetCurrentDateTime)(PULONG Year, PULONG Month, PULONG Day, PULONG Hour, PULONG Minute, PULONG Second);
 
   VOID (*HwDetect)(VOID);
+
+  VOID (*Die)(VOID);
 } MACHVTBL, *PMACHVTBL;
 
 VOID MachInit(VOID);
@@ -93,6 +95,7 @@ extern MACHVTBL MachVtbl;
 #define MachDiskGetCacheableBlockCount(Drive)	MachVtbl.DiskGetCacheableBlockCount(Drive)
 #define MachRTCGetCurrentDateTime(Y, Mo, D, H, Mi, S)	MachVtbl.RTCGetCurrentDateTime((Y), (Mo), (D), (H), (Mi), (S));
 #define MachHwDetect()				MachVtbl.HwDetect()
+#define MachDie()				MachVtbl.Die()
 
 #endif /* __MACHINE_H_ */
 

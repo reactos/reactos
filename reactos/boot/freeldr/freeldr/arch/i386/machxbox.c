@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  *  FreeLoader
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -52,4 +51,19 @@ XboxMachInit(VOID)
   MachVtbl.DiskGetCacheableBlockCount = XboxDiskGetCacheableBlockCount;
   MachVtbl.RTCGetCurrentDateTime = XboxRTCGetCurrentDateTime;
   MachVtbl.HwDetect = XboxHwDetect;
+  MachVtbl.Die = XboxDie;
 }
+
+VOID
+XboxDie()
+{
+  while (1)
+    {
+      __asm__ __volatile__(
+        " cli\n"
+        " hlt\n"
+      );
+    }
+}
+
+/* EOF */
