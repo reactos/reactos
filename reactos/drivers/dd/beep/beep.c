@@ -1,11 +1,13 @@
-/*
+/* $Id: beep.c,v 1.4 1999/10/16 12:41:42 ekohl Exp $
+ *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
- * FILE:                         services/dd/beep/beep.c
+ * FILE:                 services/dd/beep/beep.c
  * PURPOSE:              BEEP device driver
  * PROGRAMMER:           Eric Kohl (ekohl@abo.rhein-zeitung.de)
  * UPDATE HISTORY:
- *                       Created 30/01/99
+ *                       30/01/99 Created
+ *                       16/10/99 Minor fixes
  */
 
 /* INCLUDES ****************************************************************/
@@ -19,12 +21,11 @@
 
 /* TYEPEDEFS ***************************************************************/
 
-typedef struct _BEEP_DEVICE_EXTENSION
+typedef struct tagBEEP_DEVICE_EXTENSION
 {
     KDPC   Dpc;
     KTIMER Timer;
     KEVENT Event;
-//    LONG   BeepOn;
     BOOL   BeepOn;
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
@@ -38,7 +39,6 @@ VOID BeepDPC (PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVOID Sys
 
     DPRINT ("BeepDPC() called!\n");
     HalMakeBeep (0);
-//    InterlockedExchange (&(DeviceExtension->BeepOn), FALSE);
     DeviceExtension->BeepOn = FALSE;
     KeSetEvent (&(DeviceExtension->Event), 0, TRUE);
 
@@ -157,7 +157,9 @@ NTSTATUS BeepDeviceControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
             if (pbsp->Frequency >= BEEP_FREQUENCY_MINIMUM &&
                 pbsp->Frequency <= BEEP_FREQUENCY_MAXIMUM)
             {
-                LARGE_INTEGER DueTime = 0;
+                LARGE_INTEGER DueTime;
+
+                DueTime.QuadPart = 0;
 
                 /* do the beep!! */
                 DPRINT ("Beep:\n  Freq: %lu Hz\n  Dur: %lu ms\n",
@@ -165,14 +167,13 @@ NTSTATUS BeepDeviceControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
                 if (pbsp->Duration >= 0)
                 {
-                    DueTime = (LARGE_INTEGER)pbsp->Duration * 10000;
+                    DueTime.QuadPart = (LONGLONG)pbsp->Duration * -10000;
 
                     KeSetTimer (&DeviceExtension->Timer,
-                                -DueTime,
+                                DueTime,
                                 &DeviceExtension->Dpc);
 
                     HalMakeBeep (pbsp->Frequency);
-//                    InterlockedExchange (&(DeviceExtension->BeepOn), TRUE);
                     DeviceExtension->BeepOn = TRUE;
                     KeWaitForSingleObject (&(DeviceExtension->Event),
                                            Executive,
@@ -185,13 +186,11 @@ NTSTATUS BeepDeviceControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
                     if (DeviceExtension->BeepOn)
                     {
                         HalMakeBeep (0);
-//                        InterlockedExchange (&(DeviceExtension->BeepOn), FALSE);
                         DeviceExtension->BeepOn = FALSE;
                     }
                     else
                     {
                         HalMakeBeep (pbsp->Frequency);
-//                        InterlockedExchange (&(DeviceExtension->BeepOn), TRUE);
                         DeviceExtension->BeepOn = TRUE;
                     }
                 }
@@ -228,6 +227,8 @@ NTSTATUS BeepUnload(PDRIVER_OBJECT DriverObject)
 }
 
 
+STDCALL NTSTATUS
+DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 /*
  * FUNCTION:  Called by the system to initalize the driver
  * ARGUMENTS:
@@ -235,9 +236,6 @@ NTSTATUS BeepUnload(PDRIVER_OBJECT DriverObject)
  *            RegistryPath = path to our configuration entries
  * RETURNS:   Success or failure
  */
-
-STDCALL NTSTATUS
-DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
     PDEVICE_OBJECT    DeviceObject;
     PDEVICE_EXTENSION DeviceExtension;
@@ -247,7 +245,7 @@ DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
     ANSI_STRING asymlink_name;
     UNICODE_STRING symlink_name;
 
-    DbgPrint ("Beep Device Driver 0.0.1\n");
+    DbgPrint ("Beep Device Driver 0.0.2\n");
 
     RtlInitAnsiString (&ansi_device_name, "\\Device\\Beep");
     RtlAnsiStringToUnicodeString (&device_name, &ansi_device_name, TRUE);
@@ -275,7 +273,6 @@ DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
     DriverObject->DriverUnload = BeepUnload;
 
     /* set up device extension */
-//    DeviceObject->Flags = DO_BUFFERED_IO;
     DeviceExtension = DeviceObject->DeviceExtension;
     DeviceExtension->BeepOn = FALSE;
 
@@ -290,3 +287,4 @@ DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
     return (STATUS_SUCCESS);
 }
 
+/* EOF */
