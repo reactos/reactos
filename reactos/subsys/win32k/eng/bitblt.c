@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.61 2004/12/12 23:08:09 navaraf Exp $
+/* $Id: bitblt.c,v 1.62 2004/12/14 03:23:14 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -514,7 +514,7 @@ IntEngBitBlt(BITMAPOBJ *DestObj,
   UsesSource = ((Rop4 & 0xCC0000) >> 2) != (Rop4 & 0x330000);
   if (UsesSource)
     {
-      if (NULL == SourcePoint || NULL == SourceObj)
+      if (NULL == SourcePoint || NULL == SourceSurf)
         {
           return FALSE;
         }
