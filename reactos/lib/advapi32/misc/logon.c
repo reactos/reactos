@@ -1,4 +1,4 @@
-/* $Id: logon.c,v 1.9 2004/07/10 21:15:26 ekohl Exp $
+/* $Id: logon.c,v 1.10 2004/08/10 21:18:16 gvg Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -597,9 +597,11 @@ LogonUserW (LPWSTR lpszUsername,
   ObjectAttributes.SecurityDescriptor = NULL;
   ObjectAttributes.SecurityQualityOfService = &Qos;
 
-//  AuthenticationId = SYSTEM_LUID;
-  AuthenticationId.LowPart = 1000;
-  AuthenticationId.HighPart = 0;
+  Status = NtAllocateLocallyUniqueId(&AuthenticationId);
+  if (!NT_SUCCESS(Status))
+    {
+      return FALSE;
+    }
   ExpirationTime.QuadPart = -1;
 
   /* Get the user SID from the registry */
