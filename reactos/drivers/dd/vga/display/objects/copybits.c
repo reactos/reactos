@@ -1,8 +1,8 @@
 #include <ddk/winddi.h>
-#include <internal\i386\io.h>
+#include "../../../../ntoskrnl/include/internal/i386/io.h"
 
-#include "..\vgaddi.h"
-#include "..\vgavideo\vgavideo.h"
+#include "../vgaddi.h"
+#include "../vgavideo/vgavideo.h"
 
 // FIXME: There's a lot of redundancy in here -- break into functions
 // FIXME: All functions involving the screen use terribly slow vgaPutPixel -- use something better

@@ -125,7 +125,7 @@ VGAFindAdapter(PVOID  DeviceExtension,
 {
   /* FIXME: Determine if the adapter is present  */
   *Again = FALSE;
-  return  ERROR_DEV_NOT_EXIST;
+  return  STATUS_DEVICE_DOES_NOT_EXIST;
   
   /* FIXME: Claim any necessary memory/IO resources for the adapter  */
   /* FIXME: Map resources into system memory for the adapter  */
@@ -302,7 +302,7 @@ VGAStartIO(PVOID  DeviceExtension,
 #endif    
       
     default:
-      RequestPacket->StatusBlock->Status = ERROR_INVALID_FUNCTION;
+      RequestPacket->StatusBlock->Status = STATUS_NOT_IMPLEMENTED;
       break;
     }
   

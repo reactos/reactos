@@ -1,4 +1,4 @@
-#include "..\vgaddi.h"
+#include "../vgaddi.h"
 
 static WORD PaletteBuffer[] = {
    16, 0, // 16 entries, start with 0

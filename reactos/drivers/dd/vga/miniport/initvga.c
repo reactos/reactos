@@ -1,6 +1,6 @@
-#include <internal/i386/io.h>
+#include "../../../../ntoskrnl/include/internal/i386/io.h"
 
-#include "vgaVideo.h"
+#include "vgavideo.h"
 
 void outxay(USHORT ad, UCHAR x, UCHAR y)
 {

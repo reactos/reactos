@@ -1,9 +1,10 @@
 #include <ddk/ntddk.h>
 #include <ddk/ntddvid.h>
 #include <ddk/winddi.h>
+#include <ntos/minmax.h>
 #include "vgavideo.h"
 
-#include <internal/i386/io.h>
+#include "../../../../ntoskrnl/include/internal/i386/io.h"
 
 INT abs(INT nm)
 {

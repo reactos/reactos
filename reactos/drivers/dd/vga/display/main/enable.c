@@ -1,15 +1,15 @@
 /*
  * entry.c
  *
- * $Revision: 1.6 $
- * $Author: jfilby $
- * $Date: 2000/06/16 07:28:19 $
+ * $Revision: 1.7 $
+ * $Author: dwelch $
+ * $Date: 2000/07/01 23:18:58 $
  *
  */
 
 #include "gdiinfo.h"
-#include "..\vgavideo\vgavideo.h"
-#include <internal/debug.h>
+#include "../vgavideo/vgavideo.h"
+#include <debug.h>
 
 #define  DBG_PREFIX  "VGADDI: "
 

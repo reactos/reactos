@@ -1,5 +1,5 @@
-#include "..\vgaddi.h"
-#include "..\vgavideo\vgavideo.h"
+#include "../vgaddi.h"
+#include "../vgavideo/vgavideo.h"
 #include "brush.h"
 #include "bitblt.h"
 

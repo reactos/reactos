@@ -1,5 +1,5 @@
-#include "..\vgaddi.h"
-#include "..\vgavideo\vgavideo.h"
+#include "../vgaddi.h"
+#include "../vgavideo/vgavideo.h"
 #include "brush.h"
 
 BOOL VGADDIFillSolid(SURFOBJ *Surface, RECTL Dimensions, ULONG iColor)

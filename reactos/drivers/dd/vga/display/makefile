@@ -1,11 +1,11 @@
-# $Id: makefile,v 1.6 2000/05/13 14:56:47 ea Exp $
+# $Id: makefile,v 1.7 2000/07/01 23:18:58 dwelch Exp $
 #
 # Makefile for ReactOS vgaddi.dll
 #
 TARGET=vgaddi
 
-BASE_CFLAGS = -I../../../../include
-
+BASE_CFLAGS = -I../../../../include -I.
+ 
 ifneq ($(HOST),mingw32-windows)
   ifneq ($(HOST),mingw32-linux)
     DLLTARGET=$(TARGET).a

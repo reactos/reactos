@@ -1,4 +1,4 @@
-#include "..\vgaddi.h"
+#include "../vgaddi.h"
 
 GDIINFO gaulCap = {
    GDI_DRIVER_VERSION,
