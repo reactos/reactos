@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.43 2003/12/07 22:25:34 weiden Exp $
+/* $Id: class.c,v 1.44 2003/12/07 23:01:01 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -627,6 +627,13 @@ NtUserUnregisterClass(LPCWSTR ClassNameOrAtom,
   Status = ClassReferenceClassByNameOrAtom(&Class, ClassNameOrAtom);
   if(!NT_SUCCESS(Status))
   {
+    SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
+    return FALSE;
+  }
+  
+  if(Class->hInstance && (Class->hInstance != hInstance))
+  {
+    ObmDereferenceObject(Class);
     SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
     return FALSE;
   }
