@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.87 2004/11/27 16:47:05 hbirr Exp $
+/* $Id: kill.c,v 1.88 2004/12/04 15:49:20 blight Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -142,8 +142,13 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
    /* If the ProcessoR Control Block's NpxThread points to the current thread
     * unset it.
     */
+#ifdef _WIN64
+   InterlockedCompareExchange64((LONGLONG *)&KeGetCurrentKPCR()->PrcbData.NpxThread,
+                                (LONGLONG)NULL, (LONGLONG)ETHREAD_TO_KTHREAD(CurrentThread));
+#else
    InterlockedCompareExchange((LONG *)&KeGetCurrentKPCR()->PrcbData.NpxThread,
                               (LONG)NULL, (LONG)ETHREAD_TO_KTHREAD(CurrentThread));
+#endif
 
    KeReleaseSpinLock(&PiThreadLock, oldIrql);
  
