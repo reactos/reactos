@@ -21,15 +21,9 @@
  *        Redirection ready!
  */
 
-#include "config.h"
+#include "precomp.h"
 
 #ifdef INCLUDE_CMD_BEEP
-
-#include "precomp.h"
-#include <tchar.h>
-#include <string.h>
-
-#include "batch.h"
 
 
 INT cmd_beep (LPTSTR cmd, LPTSTR param)

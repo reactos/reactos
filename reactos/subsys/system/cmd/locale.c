@@ -11,12 +11,7 @@
  *        Unicode safe!
  */
 
-#include "config.h"
-
 #include "precomp.h"
-#include <tchar.h>
-#include <string.h>
-#include <stdlib.h>
 
 
 TCHAR cDateSeparator;

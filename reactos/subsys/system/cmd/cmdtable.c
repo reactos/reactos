@@ -17,10 +17,7 @@
  *        Unicode ready!
  */
 
-#include "config.h"
-
 #include "precomp.h"
-#include <tchar.h>
 
 
 /* a list of all the internal commands, associating their command names */

@@ -8,14 +8,9 @@
  *        Started.
  */
 
-#include "config.h"
+#include "precomp.h"
 
 #ifdef INCLUDE_CMD_MEMORY
-
-#include "precomp.h"
-#include <tchar.h>
-#include <string.h>
-#include <ctype.h>
 
 
 /*

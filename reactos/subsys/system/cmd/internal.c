@@ -124,13 +124,7 @@
  *        Improved chdir/cd command.
  */
 
-#include "config.h"
-
 #include "precomp.h"
-#include <tchar.h>
-#include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
 
 
 #ifdef INCLUDE_CMD_CHDIR

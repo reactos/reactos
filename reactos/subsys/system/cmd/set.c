@@ -31,14 +31,9 @@
  *        Fixed little bug.
  */
 
-#include "config.h"
+#include "precomp.h"
 
 #ifdef INCLUDE_CMD_SET
-
-#include "precomp.h"
-#include <tchar.h>
-#include <string.h>
-#include <stdlib.h>
 
 
 /* initial size of environment variable buffer */

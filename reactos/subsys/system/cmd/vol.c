@@ -20,13 +20,9 @@
  *        Redirection ready!
  */
 
-#include "config.h"
+#include "precomp.h"
 
 #ifdef INCLUDE_CMD_VOL
-
-#include "precomp.h"
-#include <tchar.h>
-#include <string.h>
 
 
 static INT

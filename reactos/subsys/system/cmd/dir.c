@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.11 2004/08/15 22:15:23 chorns Exp $
+/* $Id: dir.c,v 1.12 2004/11/08 02:16:06 weiden Exp $
  *
  *  DIR.C - dir internal command.
  *
@@ -121,15 +121,9 @@
  *        Fix /w to print long names.
  */
 
-#include "config.h"
+#include "precomp.h"
 
 #ifdef INCLUDE_CMD_DIR
-#include "precomp.h"
-#include <tchar.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <ctype.h>
 
 
 /* flag definitions */

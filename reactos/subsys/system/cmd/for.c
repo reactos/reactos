@@ -27,15 +27,7 @@
  *        code in other files fixed, too.
  */
 
-#include "config.h"
-
 #include "precomp.h"
-#include <tchar.h>
-#include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
-
-#include "batch.h"
 
 
 /*

@@ -43,14 +43,7 @@
  *    24-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Fixed Win32 environment handling.
  */
-
-#include "config.h"
-
 #include "precomp.h"
-#include <tchar.h>
-#include <string.h>
-#include <ctype.h>
-
 
 /*
  * print the command-line prompt

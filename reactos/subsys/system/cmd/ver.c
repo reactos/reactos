@@ -21,12 +21,7 @@
  *        New version info and some output changes.
  */
 
-#include "config.h"
-
 #include "precomp.h"
-#include <tchar.h>
-#include <string.h>
-#include <ctype.h>
 
 
 VOID ShortVersion (VOID)

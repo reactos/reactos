@@ -9,15 +9,9 @@
  *
  */
 
-#include "config.h"
+#include "precomp.h"
 
 #ifdef INCLUDE_CMD_CHCP
-
-#include "precomp.h"
-#include <tchar.h>
-#include <stdlib.h>
-#include <string.h>
-
 
 INT CommandChcp (LPTSTR cmd, LPTSTR param)
 {

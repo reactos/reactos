@@ -22,16 +22,9 @@
  *    24-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Fixed Win32 environment handling.
  */
-
-#include "config.h"
+#include "precomp.h"
 
 #ifdef INCLUDE_CMD_PATH
-
-#include "precomp.h"
-#include <tchar.h>
-#include <string.h>
-#include <stdlib.h>
-
 
 /* size of environment variable buffer */
 #define ENV_BUFFER_SIZE 1024

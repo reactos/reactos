@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.19 2004/08/22 20:47:20 hbirr Exp $
+/* $Id: cmd.c,v 1.20 2004/11/08 02:16:06 weiden Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -131,24 +131,11 @@
  *       Added ShellExecute call when all else fails to be able to "launch" any file.
  */
 
-#include "config.h"
-
 #include "precomp.h"
-#include <tchar.h>
-#include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <stdio.h>
-#include <winnt.h>
-#include <winternl.h>
 
 #ifndef NT_SUCCESS
 #define NT_SUCCESS(StatCode)  ((NTSTATUS)(StatCode) >= 0)
 #endif
-
-#include "batch.h"
-
-#include <shellapi.h>
 
 typedef NTSTATUS (STDCALL *NtQueryInformationProcessProc)(HANDLE, PROCESSINFOCLASS,
                                                           PVOID, ULONG, PULONG);

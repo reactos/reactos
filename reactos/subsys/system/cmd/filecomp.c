@@ -20,14 +20,7 @@
  *       Now expands lfn even when trailing " is omitted.
  */
 
-#include "config.h"
-
 #include "precomp.h"
-#include <tchar.h>
-#include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <stdio.h>
 
 
 #ifdef FEATURE_UNIX_FILENAME_COMPLETION

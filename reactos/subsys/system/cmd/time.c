@@ -21,14 +21,9 @@
  *        Fixed time input bug.
  */
 
-#include "config.h"
+#include "precomp.h"
 
 #ifdef INCLUDE_CMD_TIME
-
-#include "precomp.h"
-#include <tchar.h>
-#include <string.h>
-#include <ctype.h>
 
 
 static BOOL ParseTime (LPTSTR s)

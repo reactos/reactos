@@ -23,14 +23,9 @@
  *        Redirection ready!
  */
 
-#include "config.h"
+#include "precomp.h"
 
 #ifdef INCLUDE_CMD_CLS
-
-#include "precomp.h"
-#include <tchar.h>
-#include <string.h>
-
 
 INT cmd_cls (LPTSTR cmd, LPTSTR param)
 {

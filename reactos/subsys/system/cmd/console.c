@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.9 2004/11/02 20:47:05 weiden Exp $
+/* $Id: console.c,v 1.10 2004/11/08 02:16:06 weiden Exp $
  *
  *  CONSOLE.C - console input/output functions.
  *
@@ -9,13 +9,7 @@
  *        started
  */
 
-#include "config.h"
-
 #include "precomp.h"
-#include <tchar.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
 
 
 #define OUTPUT_BUFFER_SIZE  4096

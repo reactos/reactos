@@ -1,4 +1,4 @@
-/* $Id: color.c,v 1.5 2004/08/15 22:15:23 chorns Exp $
+/* $Id: color.c,v 1.6 2004/11/08 02:16:06 weiden Exp $
  *
  *  COLOR.C - color internal command.
  *
@@ -18,13 +18,9 @@
  *        4nt's syntax implemented
  */
 
-#include "config.h"
+#include "precomp.h"
 
 #ifdef INCLUDE_CMD_COLOR
-#include "precomp.h"
-#include <tchar.h>
-#include <string.h>
-#include <stdlib.h>
 
 
 static VOID ColorHelp (VOID)
