@@ -1,7 +1,0 @@
-stretchblt.exe
-stretchblt.nostrip.exe
-stretchblt.sym
-stretchblt.coff
-*.d
-*.o
-*.map

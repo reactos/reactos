@@ -1,7 +1,0 @@
-statst2.exe
-statst2.nostrip.exe
-statst2.sym
-statst2.coff
-.*.d
-*.o
-*.map

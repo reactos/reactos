@@ -1,1 +1,0 @@
-BOOL FASTCALL InitFontSupport(VOID);

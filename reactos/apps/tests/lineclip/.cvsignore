@@ -1,7 +1,0 @@
-lineclip.exe
-lineclip.nostrip.exe
-lineclip.sym
-lineclip.coff
-*.d
-*.o
-*.map
