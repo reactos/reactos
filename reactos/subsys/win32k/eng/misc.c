@@ -123,6 +123,20 @@ IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,
     *OutputObj = DestObj;
     }
 
+  if (NULL != *OutputObj
+      && 0 != (((BITMAPOBJ*) *OutputObj)->flHooks & HOOK_SYNCHRONIZE))
+    {
+      if (NULL != GDIDEVFUNCS(*OutputObj).SynchronizeSurface)
+        {
+          GDIDEVFUNCS(*OutputObj).SynchronizeSurface(*OutputObj, DestRect, 0);
+        }
+      else if (STYPE_BITMAP == (*OutputObj)->iType
+               && NULL != GDIDEVFUNCS(*OutputObj).Synchronize)
+        {
+          GDIDEVFUNCS(*OutputObj).Synchronize((*OutputObj)->dhpdev, DestRect);
+        }
+    }
+
   EnterLeave->DestObj = DestObj;
   EnterLeave->OutputObj = *OutputObj;
   EnterLeave->ReadOnly = ReadOnly;

@@ -239,6 +239,7 @@ BOOL DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED,
     DRIVER_FUNCTION(DisableDirectDraw);
     DRIVER_FUNCTION(QuerySpoolType);
     DRIVER_FUNCTION(GradientFill);
+    DRIVER_FUNCTION(SynchronizeSurface);
 
   END_FUNCTION_MAP();
 
