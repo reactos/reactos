@@ -1,4 +1,4 @@
-/* $Id: types.h,v 1.3 2002/03/22 01:26:28 hyperion Exp $
+/* $Id: types.h,v 1.4 2002/03/31 04:37:19 sedwards Exp $
  */
 /*
  * sys/types.h
@@ -84,7 +84,6 @@ typedef unsigned long ulong;
 typedef unsigned char unchar;
 
 typedef char *caddr_t;
-typedef int key_t;
 
 /* CONSTANTS */
 
