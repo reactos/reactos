@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: binhive.c,v 1.4 2003/05/18 13:50:58 ekohl Exp $
+/* $Id: binhive.c,v 1.5 2003/07/30 21:22:51 royce Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/binhive.c
@@ -1319,6 +1319,7 @@ CmiWriteHive(PREGISTRY_HIVE Hive,
   FILE *File;
   ULONG i;
 
+#if 0
   /* Check for existing hive file */
   File = fopen (FileName, "rb");
   if (File != NULL)
@@ -1327,6 +1328,7 @@ CmiWriteHive(PREGISTRY_HIVE Hive,
       fclose (File);
       return TRUE;
     }
+#endif
 
   /* Create new hive file */
   File = fopen (FileName, "w+b");
