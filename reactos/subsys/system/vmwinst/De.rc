@@ -38,7 +38,8 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Grafikreiberinstallation"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Das ReactOS Setup hat festgestellt, das Sie ReactOS in VMware(r) installierem.\n\n\nWenn Sie den VMware(r) SVGA Treiber installieren möchten, klicken Sie auf 'Weiter', ansonsten auf 'Abbrechen'.",-1,25,25,225,85
+  LTEXT "Das ReactOS Setup hat festgestellt, das Sie ReactOS in VMware(r) installieren.", -1, 115, 8, 160, 24
+  LTEXT "Wenn Sie den VMware(r) SVGA Treiber installieren möchten, klicken Sie auf 'Weiter', ansonsten auf 'Abbrechen'.", -1, 115, 140, 160, 17
 END
 
 IDD_INSERT_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT

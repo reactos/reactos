@@ -38,7 +38,8 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Instalación del Controlador de Video"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "El instalador de ReactOS ha detectado que husted está ejecutando ReactOS sobre el emulador VMware(r).\n\n\nSi husted desea instalar el controlador SVGA VMware(r), haga click en 'Siguiente', de lo contrario haga click en 'Cancelar'.",-1,25,25,225,85
+  LTEXT "El instalador de ReactOS ha detectado que husted está ejecutando ReactOS sobre el emulador VMware(r).", -1, 115, 8, 160, 24
+  LTEXT "Si husted desea instalar el controlador SVGA VMware(r), haga click en 'Siguiente', de lo contrario haga click en 'Cancelar'.", -1, 115, 140, 160, 17
 END
 
 IDD_INSERT_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT

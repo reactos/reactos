@@ -18,7 +18,7 @@
  *
  * VMware is a registered trademark of VMware, Inc.
  */
-/* $Id: vmwinst.c,v 1.9 2004/08/14 00:50:27 weiden Exp $
+/* $Id: vmwinst.c,v 1.10 2004/09/24 20:18:15 weiden Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS VMware(r) driver installation utility
@@ -70,6 +70,7 @@ DetectVMware(int *Version)
   magic = 0;
   ver = 0;
   
+return TRUE;
   /* Try using a VMware I/O port. If not running in VMware this'll throw an
      exception! */
   __asm__ __volatile__("inl  %%dx, %%eax"
@@ -358,11 +359,11 @@ EnableVmwareDriver(BOOL VBE, BOOL VGA, BOOL VMX)
 /* GUI */
 
 void
-InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
+InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DWORD Flags, DLGPROC DlgProc)
 {
   ZeroMemory(psp, sizeof(PROPSHEETPAGE));
   psp->dwSize = sizeof(PROPSHEETPAGE);
-  psp->dwFlags = PSP_DEFAULT;
+  psp->dwFlags = PSP_DEFAULT | Flags;
   psp->hInstance = hAppInstance;
   psp->pszTemplate = MAKEINTRESOURCE(idDlg);
   psp->pfnDlgProc = DlgProc;
@@ -862,7 +863,7 @@ PageSelectDriverProc(
   switch(uMsg)
   {
     case WM_INITDIALOG:
-      SendDlgItemMessage(hwndDlg, IDC_VGA, BM_SETCHECK, BST_CHECKED, 0);
+      SendDlgItemMessage(hwndDlg, IDC_VBE, BM_SETCHECK, BST_CHECKED, 0);
       break;
     case WM_NOTIFY:
     {
@@ -975,7 +976,7 @@ CreateWizard(VOID)
   
   ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
   psh.dwSize = sizeof(PROPSHEETHEADER);
-  psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_WIZARD;
+  psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_WIZARD97 | PSH_WATERMARK | PSH_HEADER;
   psh.hwndParent = NULL;
   psh.hInstance = hAppInstance;
   psh.hIcon = 0;
@@ -983,15 +984,17 @@ CreateWizard(VOID)
   psh.nPages = 7;
   psh.nStartPage = (StartVMwConfigWizard ? 5 : 0);
   psh.ppsp = psp;
+  psh.pszbmWatermark = MAKEINTRESOURCE(IDB_WATERMARK);
+  psh.pszbmHeader = MAKEINTRESOURCE(IDB_HEADER);
   
-  InitPropSheetPage(&psp[0], IDD_WELCOMEPAGE, PageWelcomeProc);
-  InitPropSheetPage(&psp[1], IDD_INSERT_VMWARE_TOOLS, PageInsertDiscProc);
-  InitPropSheetPage(&psp[2], IDD_INSTALLING_VMWARE_TOOLS, PageInstallingProc);
-  InitPropSheetPage(&psp[3], IDD_CONFIG, PageConfigProc);
-  InitPropSheetPage(&psp[4], IDD_INSTALLATION_FAILED, PageInstallFailedProc);
-  InitPropSheetPage(&psp[5], IDD_CHOOSEACTION, PageChooseActionProc);
-  InitPropSheetPage(&psp[6], IDD_SELECTDRIVER, PageSelectDriverProc);
-  InitPropSheetPage(&psp[7], IDD_DOUNINSTALL, PageDoUninstallProc);
+  InitPropSheetPage(&psp[0], IDD_WELCOMEPAGE, PSP_HIDEHEADER, PageWelcomeProc);
+  InitPropSheetPage(&psp[1], IDD_INSERT_VMWARE_TOOLS, PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE, PageInsertDiscProc);
+  InitPropSheetPage(&psp[2], IDD_INSTALLING_VMWARE_TOOLS, PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE, PageInstallingProc);
+  InitPropSheetPage(&psp[3], IDD_CONFIG, PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE, PageConfigProc);
+  InitPropSheetPage(&psp[4], IDD_INSTALLATION_FAILED, PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE, PageInstallFailedProc);
+  InitPropSheetPage(&psp[5], IDD_CHOOSEACTION, PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE, PageChooseActionProc);
+  InitPropSheetPage(&psp[6], IDD_SELECTDRIVER, PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE, PageSelectDriverProc);
+  InitPropSheetPage(&psp[7], IDD_DOUNINSTALL, PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE, PageDoUninstallProc);
   
   return (LONG)(PropertySheet(&psh) != -1);
 }
