@@ -52,7 +52,7 @@ const PALETTEENTRY COLOR_sysPalTemplate[NB_RESERVED_COLORS] =
 
 const PALETTEENTRY* COLOR_GetSystemPaletteTemplate(void)
 {
-  return COLOR_sysPalTemplate;
+  return &COLOR_sysPalTemplate;
 }
 
 BOOL STDCALL W32kAnimatePalette(HPALETTE  hpal,
@@ -125,9 +125,10 @@ HPALETTE STDCALL W32kCreatePalette(CONST PLOGPALETTE palette)
 
   PalObj = AccessUserObject(NewPalette);
 
-  size = sizeof(LOGPALETTE) + (palette->palNumEntries - 1) * sizeof(PALETTEENTRY);
-  memcpy(&PalObj->logpalette, palette, size);
-  PALETTE_ValidateFlags(PalObj->logpalette.palPalEntry, PalObj->logpalette.palNumEntries);
+  size = sizeof(LOGPALETTE) + (palette->palNumEntries * sizeof(PALETTEENTRY));
+  PalObj->logpalette = ExAllocatePool(NonPagedPool, size);
+  memcpy(PalObj->logpalette, palette, size);
+  PALETTE_ValidateFlags(PalObj->logpalette->palPalEntry, PalObj->logpalette->palNumEntries);
   PalObj->logicalToSystem = NULL;
 
   return NewPalette;
@@ -155,8 +156,8 @@ COLORREF STDCALL W32kGetNearestColor(HDC  hDC,
       return nearest;
     }
 
-    nearest = COLOR_LookupNearestColor(palObj->logpalette.palPalEntry,
-                                       palObj->logpalette.palNumEntries, Color);
+    nearest = COLOR_LookupNearestColor(palObj->logpalette->palPalEntry,
+                                       palObj->logpalette->palNumEntries, Color);
 
 //    GDI_ReleaseObj( hpal );
 //    GDI_ReleaseObj( hdc );
@@ -174,7 +175,7 @@ UINT STDCALL W32kGetNearestPaletteIndex(HPALETTE  hpal,
   if( palObj )
   {
     // Return closest match for the given RGB color
-    index = COLOR_PaletteLookupPixel(palObj->logpalette.palPalEntry, palObj->logpalette.palNumEntries, NULL, Color, FALSE);
+    index = COLOR_PaletteLookupPixel(palObj->logpalette->palPalEntry, palObj->logpalette->palNumEntries, NULL, Color, FALSE);
 //    GDI_ReleaseObj( hpalette );
   }
 
@@ -192,7 +193,7 @@ UINT STDCALL W32kGetPaletteEntries(HPALETTE  hpal,
   palPtr = AccessUserObject(hpal);
   if (!palPtr) return 0;
 
-  numEntries = palPtr->logpalette.palNumEntries;
+  numEntries = palPtr->logpalette->palNumEntries;
   if (StartIndex + Entries > numEntries) Entries = numEntries - StartIndex;
   if (pe)
   { 
@@ -201,7 +202,7 @@ UINT STDCALL W32kGetPaletteEntries(HPALETTE  hpal,
 //      GDI_ReleaseObj( hpalette );
       return 0;
     }
-    memcpy(pe, &palPtr->logpalette.palPalEntry[StartIndex], Entries * sizeof(PALETTEENTRY));
+    memcpy(pe, &palPtr->logpalette->palPalEntry[StartIndex], Entries * sizeof(PALETTEENTRY));
     for(numEntries = 0; numEntries < Entries ; numEntries++)
       if (pe[numEntries].peFlags & 0xF0)
         pe[numEntries].peFlags = 0;
@@ -285,7 +286,7 @@ A logical palette is a buffer between color-intensive applications and the syste
   sysGDI = AccessInternalObject(systemPalette);
 
   // Step 1: Create mapping of system palette\DC palette
-  realized = PALETTE_SetMapping(palPtr, 0, palPtr->logpalette.palNumEntries,
+  realized = PALETTE_SetMapping(palPtr, 0, palPtr->logpalette->palNumEntries,
                (dc->w.hPalette != hPrimaryPalette) ||
                (dc->w.hPalette == W32kGetStockObject(DEFAULT_PALETTE)));
 
@@ -300,7 +301,7 @@ A logical palette is a buffer between color-intensive applications and the syste
   } else {
     if(SurfGDI->SetPalette)
     {
-      success = SurfGDI->SetPalette(dc->PDev, sysPtr, 0, 0, sysPtr->logpalette.palNumEntries);
+      success = SurfGDI->SetPalette(dc->PDev, sysPtr, 0, 0, sysPtr->logpalette->palNumEntries);
     }
   }
 
@@ -326,8 +327,8 @@ BOOL STDCALL W32kResizePalette(HPALETTE  hpal,
   PXLATEOBJ XlateObj = NULL;
 
   if(!palPtr) return FALSE;
-  cPrevEnt = palPtr->logpalette.palNumEntries;
-  prevVer = palPtr->logpalette.palVersion;
+  cPrevEnt = palPtr->logpalette->palNumEntries;
+  prevVer = palPtr->logpalette->palVersion;
   prevsize = sizeof(LOGPALETTE) + (cPrevEnt - 1) * sizeof(PALETTEENTRY) + sizeof(int*) + sizeof(GDIOBJHDR);
   size += sizeof(int*) + sizeof(GDIOBJHDR);
   XlateObj = palPtr->logicalToSystem;
@@ -352,8 +353,8 @@ BOOL STDCALL W32kResizePalette(HPALETTE  hpal,
     memset( (BYTE*)palPtr + prevsize, 0, size - prevsize );
     PALETTE_ValidateFlags((PALETTEENTRY*)((BYTE*)palPtr + prevsize), cEntries - cPrevEnt );
   }
-  palPtr->logpalette.palNumEntries = cEntries;
-  palPtr->logpalette.palVersion = prevVer;
+  palPtr->logpalette->palNumEntries = cEntries;
+  palPtr->logpalette->palVersion = prevVer;
 //    GDI_ReleaseObj( hPal );
   return TRUE; */
 
@@ -392,15 +393,15 @@ UINT STDCALL W32kSetPaletteEntries(HPALETTE  hpal,
   palPtr = AccessUserObject(hpal);
   if (!palPtr) return 0;
 
-  numEntries = palPtr->logpalette.palNumEntries;
+  numEntries = palPtr->logpalette->palNumEntries;
   if (Start >= numEntries)
   {
 //    GDI_ReleaseObj( hpalette );
     return 0;
   }
   if (Start + Entries > numEntries) Entries = numEntries - Start;
-  memcpy(&palPtr->logpalette.palPalEntry[Start], pe, Entries * sizeof(PALETTEENTRY));
-  PALETTE_ValidateFlags(palPtr->logpalette.palPalEntry, palPtr->logpalette.palNumEntries);
+  memcpy(&palPtr->logpalette->palPalEntry[Start], pe, Entries * sizeof(PALETTEENTRY));
+  PALETTE_ValidateFlags(palPtr->logpalette->palPalEntry, palPtr->logpalette->palNumEntries);
   ExFreePool(palPtr->logicalToSystem);
   palPtr->logicalToSystem = NULL;
 //  GDI_ReleaseObj( hpalette );

@@ -31,8 +31,8 @@ HPALETTE EngCreatePalette(ULONG  Mode,
 
   if(Colors != NULL)
   {
-    PalGDI->IndexedColors = ExAllocatePool(NonPagedPool, sizeof(ULONG)*NumColors);
-    RtlCopyMemory(PalGDI->IndexedColors, Colors, sizeof(ULONG)*NumColors);
+    PalGDI->IndexedColors = ExAllocatePool(NonPagedPool, sizeof(PALETTEENTRY) * NumColors);
+    RtlCopyMemory(PalGDI->IndexedColors, Colors, sizeof(PALETTEENTRY) * NumColors);
   }
 
   if(Mode==PAL_INDEXED)

@@ -1,7 +1,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.7 2001/03/31 15:35:08 jfilby Exp $
+ * $Id: gdiobj.c,v 1.8 2001/06/04 14:54:40 jfilby Exp $
  *
  */
 
@@ -208,6 +208,7 @@ HGDIOBJ  GDIOBJ_SetNextObject (HGDIOBJ Obj, WORD Magic, HGDIOBJ NextObj)
 VOID CreateStockObjects(void)
 {
   // Create GDI Stock Objects from the logical structures we've defined
+
   StockObjects[WHITE_BRUSH] =  W32kCreateBrushIndirect(&WhiteBrush);
   StockObjects[LTGRAY_BRUSH] = W32kCreateBrushIndirect(&LtGrayBrush);
   StockObjects[GRAY_BRUSH] =   W32kCreateBrushIndirect(&GrayBrush);

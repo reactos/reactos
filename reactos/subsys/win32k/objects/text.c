@@ -60,8 +60,8 @@ W32kAddFontResource(LPCWSTR  Filename)
   ANSI_STRING StringA;
   UNICODE_STRING StringU;
 
-  FontObj = EngAllocMem(FL_ZERO_MEMORY, sizeof(XLATEOBJ), NULL);
-  FontGDI = EngAllocMem(FL_ZERO_MEMORY, sizeof(XLATEGDI), NULL);
+  FontObj = EngAllocMem(FL_ZERO_MEMORY, sizeof(FONTOBJ), NULL);
+  FontGDI = EngAllocMem(FL_ZERO_MEMORY, sizeof(FONTGDI), NULL);
   NewFont = CreateGDIHandle(FontGDI, FontObj);
 
   RtlCreateUnicodeString(&uFileName, Filename);
@@ -132,10 +132,10 @@ W32kAddFontResource(LPCWSTR  Filename)
 
   // Add this font resource to the font table
   FontTable[FontsLoaded].hFont = NewFont;
-  FontTable[FontsLoaded].FaceName = ExAllocatePool(NonPagedPool, (StringU.Length + 1) * 2);
 
   RtlInitAnsiString(&StringA, (LPSTR)face->family_name);
   RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
+  FontTable[FontsLoaded].FaceName = ExAllocatePool(NonPagedPool, (StringU.Length + 1) * 2);
   wcscpy(FontTable[FontsLoaded].FaceName, StringU.Buffer);
   RtlFreeUnicodeString(&StringU);
 
