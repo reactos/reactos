@@ -53,16 +53,22 @@ HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\NT4SP5"
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\NT4SP5","MinorVersion",0x00010001,0x00000000
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\NT4SP5","BuildNumber",0x00010001,0x00000565
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\NT4SP5","PlatformId",0x00010001,0x00000002
+HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\NT4SP5","SPMajorVersion",0x00010001,0x00000006
+HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\NT4SP5","SPMinorVersion",0x00010001,0x00000000
 ; application compatibility settings for Windows 2000
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\WIN2000","MajorVersion",0x00010001,0x00000005
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\WIN2000","MinorVersion",0x00010001,0x00000000
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\WIN2000","BuildNumber",0x00010001,0x00000893
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\WIN2000","PlatformId",0x00010001,0x00000002
+HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\WIN2000","SPMajorVersion",0x00010001,0x00000003
+HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\WIN2000","SPMinorVersion",0x00010001,0x00000000
 ; application compatibility settings for Windows XP
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\WINXP","MajorVersion",0x00010001,0x00000005
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\WINXP","MinorVersion",0x00010001,0x00000001
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\WINXP","BuildNumber",0x00010001,0x00000A28
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\WINXP","PlatformId",0x00010001,0x00000002
+HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\WINXP","SPMajorVersion",0x00010001,0x00000001
+HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\WINXP","SPMinorVersion",0x00010001,0x00000000
 
 ; GUI Setup
 
