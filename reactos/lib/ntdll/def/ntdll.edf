@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.116 2004/08/09 18:17:22 jimtabor Exp $
+; $Id: ntdll.edf,v 1.117 2004/08/11 09:30:23 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -372,7 +372,6 @@ RtlDeleteAce=RtlDeleteAce@8
 RtlDeleteAtomFromAtomTable=RtlDeleteAtomFromAtomTable@8
 RtlDeleteCriticalSection=RtlDeleteCriticalSection@4
 RtlDuplicateUnicodeString=RtlDuplicateUnicodeString@12
-RtlSetCriticalSectionSpinCount=RtlSetCriticalSectionSpinCount@8
 ;RtlDeleteElementGenericTable
 ;RtlDeleteNoSplay
 RtlDeleteOwnersRanges=RtlDeleteOwnersRanges@8
@@ -437,7 +436,7 @@ RtlFindSetBitsAndClear=RtlFindSetBitsAndClear@12
 RtlFirstFreeAce=RtlFirstFreeAce@8
 ;RtlFlushPropertySet
 RtlFormatCurrentUserKeyPath=RtlFormatCurrentUserKeyPath@4
-;RtlFormatMessage
+RtlFormatMessage=RtlFormatMessage@32
 RtlFreeAnsiString=RtlFreeAnsiString@4
 RtlFreeHandle=RtlFreeHandle@8
 RtlFreeHeap=RtlFreeHeap@12
@@ -555,7 +554,7 @@ RtlQueryProcessDebugInformation=RtlQueryProcessDebugInformation@12
 ;RtlQueryPropertyNames
 ;RtlQueryPropertySet
 RtlQueryRegistryValues=RtlQueryRegistryValues@20
-;RtlQuerySecutityObject
+;RtlQuerySecurityObject
 ;RtlQueryTagHeap
 RtlQueryTimeZoneInformation=RtlQueryTimeZoneInformation@4
 RtlRaiseException=RtlRaiseException@4
@@ -577,6 +576,7 @@ RtlSelfRelativeToAbsoluteSD=RtlSelfRelativeToAbsoluteSD@44
 RtlSetAllBits=RtlSetAllBits@4
 ;RtlSetAttributesSecurityDescriptor
 RtlSetBits=RtlSetBits@12
+RtlSetCriticalSectionSpinCount=RtlSetCriticalSectionSpinCount@8
 RtlSetCurrentDirectory_U=RtlSetCurrentDirectory_U@4
 RtlSetCurrentEnvironment=RtlSetCurrentEnvironment@8
 RtlSetDaclSecurityDescriptor=RtlSetDaclSecurityDescriptor@16

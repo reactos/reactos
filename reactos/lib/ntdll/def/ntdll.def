@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.126 2004/08/09 18:17:22 jimtabor Exp $
+; $Id: ntdll.def,v 1.127 2004/08/11 09:30:23 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -163,9 +163,9 @@ NtPrivilegedServiceAuditAlarm@20
 NtPrivilegeObjectAuditAlarm@24
 NtProtectVirtualMemory@20
 NtPulseEvent@8
-NtQueryAttributesFile@8	
-NtQueryDefaultLocale@8	
-NtQueryDirectoryFile@44	
+NtQueryAttributesFile@8
+NtQueryDefaultLocale@8
+NtQueryDirectoryFile@44
 NtQueryDirectoryObject@28
 NtQueryEaFile@36
 NtQueryEvent@20
@@ -437,7 +437,7 @@ RtlFindSetBitsAndClear@12
 RtlFirstFreeAce@8
 ;RtlFlushPropertySet
 RtlFormatCurrentUserKeyPath@4
-;RtlFormatMessage@36
+RtlFormatMessage@32
 RtlFreeAnsiString@4
 RtlFreeHandle@8
 RtlFreeHeap@12

@@ -1,10 +1,10 @@
-/* $Id: message.c,v 1.6 2004/07/03 17:40:23 navaraf Exp $
+/* $Id: message.c,v 1.7 2004/08/11 09:30:04 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Message table functions
  * FILE:              lib/ntdll/rtl/message.c
- * PROGRAMER:         Eric Kohl <ekohl@zr-online.de>
+ * PROGRAMER:         Eric Kohl
  * REVISION HISTORY:
  *                    29/05/2001: Created
  */
@@ -19,6 +19,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlFindMessage(PVOID BaseAddress,
 	       ULONG Type,
@@ -46,7 +49,7 @@ RtlFindMessage(PVOID BaseAddress,
 			      &ResourceDataEntry);
    if (!NT_SUCCESS(Status))
      {
-	return(Status);
+	return Status;
      }
 
    DPRINT("ResourceDataEntry: %p\n", ResourceDataEntry);
@@ -57,7 +60,7 @@ RtlFindMessage(PVOID BaseAddress,
 			      NULL);
    if (!NT_SUCCESS(Status))
      {
-	return(Status);
+	return Status;
      }
 
    DPRINT("MessageTable: %p\n", MessageTable);
@@ -112,12 +115,46 @@ RtlFindMessage(PVOID BaseAddress,
 	*MessageResourceEntry = MessageEntry;
      }
 
-   return(STATUS_SUCCESS);
+   return STATUS_SUCCESS;
 }
 
 
-/*
-RtlFormatMessage
+/**********************************************************************
+ *	RtlFormatMessage  (NTDLL.@)
+ *
+ * Formats a message (similar to sprintf).
+ *
+ * PARAMS
+ *   Message          [I] Message to format.
+ *   MaxWidth         [I] Maximum width in characters of each output line.
+ *   IgnoreInserts    [I] Whether to copy the message without processing inserts.
+ *   Ansi             [I] Whether Arguments may have ANSI strings.
+ *   ArgumentsIsArray [I] Whether Arguments is actually an array rather than a va_list *.
+ *   Arguments        [I]
+ *   Buffer           [O] Buffer to store processed message in.
+ *   BufferSize       [I] Size of Buffer (in bytes?).
+ *
+ * RETURNS
+ *      NTSTATUS code.
+ *
+ * @unimplemented
  */
+NTSTATUS STDCALL
+RtlFormatMessage(PWSTR Message,
+		 UCHAR MaxWidth,
+		 BOOLEAN IgnoreInserts,
+		 BOOLEAN Ansi,
+		 BOOLEAN ArgumentIsArray,
+		 va_list *Arguments,
+		 PWSTR Buffer,
+		 ULONG BufferSize)
+{
+  DPRINT1("RtlFormatMessage(%S, %u, %s, %s, %s, %s, %p, %lu)\n",
+	  Message, MaxWidth, IgnoreInserts ? "TRUE" : "FALSE", Ansi ? "TRUE" : "FALSE",
+	  ArgumentIsArray ? "TRUE" : "FALSE", Arguments, Buffer, BufferSize);
+
+  UNIMPLEMENTED;
+  return STATUS_NOT_IMPLEMENTED;
+}
 
 /* EOF */
