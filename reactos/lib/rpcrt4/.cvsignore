@@ -1,0 +1,10 @@
+*.coff
+*.dll
+*.d
+*.a
+*.o
+*.sym
+*.map
+*.tmp
+Makefile.ros
+rpcrt4.spec.def

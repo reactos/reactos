@@ -42,7 +42,7 @@ reactos/lib/mpr                 # Synced to Wine-20040408
 reactos/lib/ole32               # Synced to Wine-20040408
 reactos/lib/oledlg              # Synced to Wine-20040408
 reactos/lib/richedit		# Synced to Wine-20040408
-reactos/lib/rpcrt4		# Out of date+Hack. In need of new merge
+reactos/lib/rpcrt4		# Synced to Wine-20040504
 reactos/lib/shell32             # 2004/04/16: Heavy syncing in progress
 reactos/lib/shlwapi             # Synced to Wine-20040408
 reactos/lib/twain		# Out of sync
@@ -67,3 +67,4 @@ reactos/lib/user32/windows/mdi.c
 reactos/lib/gdi32/objects/linedda.c
 reactos/lib/kernel32/misc/errormsg.c
 reactos/lib/msvcrt/wine/* - C++ exception handing
+                                                         `

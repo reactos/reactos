@@ -1,0 +1,62 @@
+--- rpc_server.c	Tue May  4 17:37:56 2004
++++ rpc_server.c	Tue May  4 19:54:24 2004
+@@ -184,6 +184,7 @@
+   return packet;
+ }
+ 
++#ifndef __REACTOS__
+ typedef struct {
+   PRPC_MESSAGE msg;
+   void* buf;
+@@ -204,20 +205,25 @@
+   TRACE("returning failure packet\n");
+   return EXCEPTION_EXECUTE_HANDLER;
+ }
++#endif
+ 
+ static void RPCRT4_process_packet(RpcConnection* conn, RpcPktHdr* hdr, RPC_MESSAGE* msg)
+ {
+   RpcServerInterface* sif;
+   RPC_DISPATCH_FUNCTION func;
++#ifndef __REACTOS__
+   packet_state state;
++#endif
+   UUID *object_uuid;
+   RpcPktHdr *response;
+   void *buf = msg->Buffer;
+   RPC_STATUS status;
+ 
++#ifndef __REACTOS__
+   state.msg = msg;
+   state.buf = buf;
+   TlsSetValue(worker_tls, &state);
++#endif
+ 
+   switch (hdr->common.ptype) {
+     case PKT_BIND:
+@@ -303,11 +309,15 @@
+                   MAKEWORD(hdr->common.drep[2], hdr->common.drep[3]));
+ 
+       /* dispatch */
++#ifndef __REACTOS__
+       __TRY {
+         if (func) func(msg);
+       } __EXCEPT(rpc_filter) {
+         /* failure packet was created in rpc_filter */
+       } __ENDTRY
++#else
++      if (func) func(msg);
++#endif
+ 
+       /* send response packet */
+       I_RpcSend(msg);
+@@ -331,7 +341,9 @@
+   I_RpcFreeBuffer(msg);
+   msg->Buffer = NULL;
+   RPCRT4_FreeHeader(hdr);
++#ifndef __REACTOS__
+   TlsSetValue(worker_tls, NULL);
++#endif
+ }
+ 
+ static DWORD CALLBACK RPCRT4_worker_thread(LPVOID the_arg)

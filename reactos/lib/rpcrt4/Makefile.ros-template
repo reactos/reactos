@@ -1,0 +1,22 @@
+# $Id: Makefile.ros-template,v 1.1 2004/05/04 20:06:26 navaraf Exp $
+
+TARGET_NAME = rpcrt4
+
+TARGET_OBJECTS = @C_SRCS@
+
+TARGET_CFLAGS = @EXTRADEFS@ -D__REACTOS__ -Wall -DDBG -DYDEBUG
+
+TARGET_SDKLIBS = @IMPORTS@ winmm.a libwine.a wine_uuid.a ntdll.a
+
+TARGET_BASE = 0x76000000
+
+TARGET_RC_BINSRC = @RC_BINSRC@
+TARGET_RC_BINARIES = @RC_BINARIES@
+
+TARGET_NORC = yes
+
+default: all
+
+DEP_OBJECTS = $(TARGET_OBJECTS)
+
+include $(TOOLS_PATH)/depend.mk
