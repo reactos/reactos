@@ -7,10 +7,15 @@
 #include <stdio.h>
 #include <io.h>
 #include <assert.h>
+#include <direct.h>
 #include "rbuild.h"
 
 using std::string;
 using std::vector;
+
+#ifdef WIN32
+#define getcwd _getcwd
+#endif//WIN32
 
 #ifdef _MSC_VER
 unsigned __int64
@@ -32,6 +37,86 @@ filelen ( FILE* f )
 static const char* WS = " \t\r\n";
 static const char* WSEQ = " =\t\r\n";
 
+Path::Path()
+{
+	string s;
+	s.resize ( _MAX_PATH );
+	s[0] = 0;
+	getcwd ( &s[0], s.size() );
+	s.resize ( strlen ( s.c_str() ) );
+	const char* p = strtok ( &s[0], "/\\" );
+	while ( p )
+	{
+		if ( *p )
+			path.push_back ( p );
+		p = strtok ( NULL, "/\\" );
+	}
+}
+
+Path::Path ( const Path& cwd, const string& file )
+{
+	string s ( cwd.Fixup ( file, false ) );
+	const char* p = strtok ( &s[0], "/\\" );
+	while ( p )
+	{
+		if ( *p )
+			path.push_back ( p );
+		p = strtok ( NULL, "/\\" );
+	}
+}
+
+string Path::Fixup ( const string& file, bool include_filename ) const
+{
+	if ( strchr ( "/\\", file[0] )
+#ifdef WIN32
+		// this squirreliness is b/c win32 has drive letters and *nix doesn't...
+		|| file[1] == ':'
+#endif//WIN32
+		)
+	{
+		return file;
+	}
+	vector<string> pathtmp ( path );
+	string tmp ( file );
+	const char* prev = strtok ( &tmp[0], "/\\" );
+	const char* p = strtok ( NULL, "/\\" );
+	while ( p )
+	{
+		if ( !strcmp ( prev, "." ) )
+			; // do nothing
+		else if ( !strcmp ( prev, ".." ) )
+		{
+			// this squirreliness is b/c win32 has drive letters and *nix doesn't...
+#ifdef WIN32
+			if ( pathtmp.size() > 1 )
+#else
+			if ( pathtmp.size() )
+#endif
+				pathtmp.resize ( pathtmp.size() - 1 );
+		}
+		else
+			pathtmp.push_back ( prev );
+		prev = p;
+		p = strtok ( NULL, "/\\" );
+	}
+	if ( include_filename )
+		pathtmp.push_back ( prev );
+
+	// reuse tmp variable to return recombined path
+	tmp.resize(0);
+	for ( size_t i = 0; i < pathtmp.size(); i++ )
+	{
+		// this squirreliness is b/c win32 has drive letters and *nix doesn't...
+#ifdef WIN32
+		if ( i ) tmp += "/";
+#else
+		tmp += "/";
+#endif
+		tmp += pathtmp[i];
+	}
+	return tmp;
+}
+
 XMLFile::XMLFile()
 {
 }
@@ -47,10 +132,10 @@ void XMLFile::close()
 	_p = _end = NULL;
 }
 
-bool XMLFile::open(const char* filename)
+bool XMLFile::open(const string& filename)
 {
 	close();
-	FILE* f = fopen ( filename, "r" );
+	FILE* f = fopen ( filename.c_str(), "rb" );
 	if ( !f )
 		return false;
 	unsigned long len = (unsigned long)filelen(f);
@@ -205,7 +290,8 @@ bool XMLElement::Parse(const string& token,
 	return !( *p == '/' ) && !end_tag;
 }
 
-const XMLAttribute* XMLElement::GetAttribute ( const string& attribute ) const
+const XMLAttribute* XMLElement::GetAttribute ( const string& attribute,
+                                               bool required ) const
 {
 	// this would be faster with a tree-based container, but our attribute
 	// lists are likely to stay so short as to not be an issue.
@@ -213,6 +299,11 @@ const XMLAttribute* XMLElement::GetAttribute ( const string& attribute ) const
 	{
 		if ( attribute == attributes[i]->name )
 			return attributes[i];
+	}
+	if ( required )
+	{
+		printf ( "syntax error: attribute '%s' required for <%s>\n",
+			attribute.c_str(), name.c_str() );
 	}
 	return NULL;
 }
@@ -226,6 +317,7 @@ const XMLAttribute* XMLElement::GetAttribute ( const string& attribute ) const
 // it's parsed data. Keep calling this function until it returns NULL
 // (no more data)
 XMLElement* XMLParse(XMLFile& f,
+                     const Path& path,
                      bool* pend_tag = NULL)
 {
 	string token;
@@ -233,7 +325,34 @@ XMLElement* XMLParse(XMLFile& f,
 		return NULL;
 	XMLElement* e = new XMLElement;
 	bool end_tag;
-	if ( !e->Parse ( token, end_tag ) )
+
+	bool bNeedEnd = e->Parse ( token, end_tag );
+
+	if ( e->name == "xi:include" )
+	{
+		const XMLAttribute* att;
+		att = e->GetAttribute("href",true);
+		if ( att )
+		{
+			string file ( path.Fixup(att->value,true) );
+			XMLFile fInc;
+			if ( !fInc.open ( file ) )
+				printf ( "xi:include error, couldn't find file '%s'\n", file.c_str() );
+			else
+			{
+				Path path2 ( path, att->value );
+				for ( ;; )
+				{
+					XMLElement* e2 = XMLParse ( fInc, path2 );
+					if ( !e2 )
+						break;
+					e->subElements.push_back ( e2 );
+				}
+			}
+		}
+	}
+
+	if ( !bNeedEnd )
 	{
 		if ( pend_tag )
 			*pend_tag = end_tag;
@@ -249,7 +368,7 @@ XMLElement* XMLParse(XMLFile& f,
 	{
 		if ( f.next_is_text() )
 		{
-			if ( !f.get_token ( token ) )
+			if ( !f.get_token ( token ) || !token.size() )
 			{
 				printf ( "internal tool error - get_token() failed when more_tokens() returned true\n" );
 				break;
@@ -266,7 +385,7 @@ XMLElement* XMLParse(XMLFile& f,
 		}
 		else
 		{
-			XMLElement* e2 = XMLParse ( f, &end_tag );
+			XMLElement* e2 = XMLParse ( f, path, &end_tag );
 			if ( end_tag )
 			{
 				if ( e->name != e2->name )
@@ -292,7 +411,7 @@ void Project::ProcessXML ( const XMLElement& e, const string& path )
 	string subpath(path);
 	if ( e.name == "project" )
 	{
-		att = e.GetAttribute ( "name" );
+		att = e.GetAttribute ( "name", false );
 		if ( !att )
 			name = "Unnamed";
 		else
@@ -300,24 +419,18 @@ void Project::ProcessXML ( const XMLElement& e, const string& path )
 	}
 	else if ( e.name == "module" )
 	{
-		att = e.GetAttribute ( "name" );
+		att = e.GetAttribute ( "name", true );
 		if ( !att )
-		{
-			printf ( "syntax error: 'name' attribute required for <module>\n" );
 			return;
-		}
 		Module* module = new Module ( e, att->value, path );
 		modules.push_back ( module );
 		return; // REM TODO FIXME no processing of modules... yet
 	}
 	else if ( e.name == "directory" )
 	{
-		const XMLAttribute* att = e.GetAttribute("name");
+		const XMLAttribute* att = e.GetAttribute ( "name", true );
 		if ( !att )
-		{
-			printf ( "syntax error: 'name' attribute required for <directory>\n" );
 			return;
-		}
 		subpath = path + "/" + att->value;
 	}
 	for ( size_t i = 0; i < e.subElements.size(); i++ )
@@ -327,6 +440,7 @@ void Project::ProcessXML ( const XMLElement& e, const string& path )
 int main ( int argc, char** argv )
 {
 	XMLFile f;
+	Path path;
 	if ( !f.open ( "ReactOS.xml" ) )
 	{
 		printf ( "couldn't open ReactOS.xml!\n" );
@@ -335,7 +449,7 @@ int main ( int argc, char** argv )
 
 	for ( ;; )
 	{
-		XMLElement* head = XMLParse ( f );
+		XMLElement* head = XMLParse ( f, path );
 		if ( !head )
 			break; // end of file
 

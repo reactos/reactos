@@ -4,13 +4,22 @@
 #include <string>
 #include <vector>
 
+class Path
+{
+	std::vector<std::string> path;
+public:
+	Path(); // initializes path to getcwd();
+	Path ( const Path& cwd, const std::string& filename );
+	std::string Fixup ( const std::string& filename, bool include_filename ) const;
+};
+
 class XMLFile
 {
 	friend class XMLElement;
 public:
 	XMLFile();
 	void close();
-	bool open(const char* filename);
+	bool open(const std::string& filename);
 	void next_token();
 	bool next_is_text();
 	bool more_tokens();
@@ -47,7 +56,8 @@ public:
 	~XMLElement();
 	bool Parse(const std::string& token,
 	           bool& end_tag);
-	const XMLAttribute* GetAttribute ( const std::string& attribute ) const;
+	const XMLAttribute* GetAttribute ( const std::string& attribute,
+	           bool required) const;
 };
 
 class Project;
