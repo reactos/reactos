@@ -269,8 +269,7 @@ static UINT WHERE_close( struct tagMSIVIEW *view )
     if( !wv->table )
          return ERROR_FUNCTION_FAILED;
 
-    if( wv->reorder )
-        HeapFree( GetProcessHeap(), 0, wv->reorder );
+    HeapFree( GetProcessHeap(), 0, wv->reorder );
     wv->reorder = NULL;
 
     return wv->table->ops->close( wv->table );
@@ -308,16 +307,17 @@ static UINT WHERE_get_column_info( struct tagMSIVIEW *view,
     return wv->table->ops->get_column_info( wv->table, n, name, type );
 }
 
-static UINT WHERE_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode, MSIHANDLE hrec)
+static UINT WHERE_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode,
+                MSIRECORD *rec )
 {
     MSIWHEREVIEW *wv = (MSIWHEREVIEW*)view;
 
-    TRACE("%p %d %ld\n", wv, eModifyMode, hrec );
+    TRACE("%p %d %p\n", wv, eModifyMode, rec );
 
     if( !wv->table )
          return ERROR_FUNCTION_FAILED;
 
-    return wv->table->ops->modify( wv->table, eModifyMode, hrec );
+    return wv->table->ops->modify( wv->table, eModifyMode, rec );
 }
 
 static UINT WHERE_delete( struct tagMSIVIEW *view )
@@ -329,8 +329,7 @@ static UINT WHERE_delete( struct tagMSIVIEW *view )
     if( wv->table )
         wv->table->ops->delete( wv->table );
 
-    if( wv->reorder )
-        HeapFree( GetProcessHeap(), 0, wv->reorder );
+    HeapFree( GetProcessHeap(), 0, wv->reorder );
     wv->reorder = NULL;
     wv->row_count = 0;
 

@@ -393,8 +393,7 @@ UINT msi_string2idA( string_table *st, LPCSTR buffer, UINT *id )
     MultiByteToWideChar( st->codepage, 0, buffer, -1, str, sz );
 
     r = msi_string2idW( st, str, id );
-    if( str )
-        HeapFree( GetProcessHeap(), 0, str );
+    HeapFree( GetProcessHeap(), 0, str );
 
     return r;
 }

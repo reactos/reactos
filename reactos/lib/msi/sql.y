@@ -499,18 +499,17 @@ constlist:
             }
             $$ = vals;
         }
-  | constlist TK_COMMA const_val
+  | const_val TK_COMMA constlist
         {
             value_list *vals;
 
             vals = HeapAlloc( GetProcessHeap(), 0, sizeof *vals );
             if( vals )
             {
-                vals->val = $3;
-                vals->next = NULL;
+                vals->val = $1;
+                vals->next = $3;
             }
-            $1->next = vals;
-            $$ = $1;
+            $$ = vals;
         }
     ;
 

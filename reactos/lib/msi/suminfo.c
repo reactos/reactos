@@ -67,8 +67,7 @@ UINT WINAPI MsiGetSummaryInformationA(MSIHANDLE hDatabase,
 
     ret = MsiGetSummaryInformationW(hDatabase, szwDatabase, uiUpdateCount, phSummaryInfo);
 
-    if( szwDatabase )
-        HeapFree( GetProcessHeap(), 0, szwDatabase );
+    HeapFree( GetProcessHeap(), 0, szwDatabase );
 
     return ret;
 }
@@ -225,9 +224,72 @@ UINT WINAPI MsiSummaryInfoGetPropertyW(
       MSIHANDLE hSummaryInfo, UINT uiProperty, UINT *puiDataType, INT *piValue,
       FILETIME *pftValue, LPWSTR szValueBuf, DWORD *pcchValueBuf)
 {
-    FIXME("%ld %d %p %p %p %p %p\n",
+    MSISUMMARYINFO *suminfo;
+    HRESULT r;
+    PROPSPEC spec;
+    PROPVARIANT var;
+
+    TRACE("%ld %d %p %p %p %p %p\n",
         hSummaryInfo, uiProperty, puiDataType, piValue,
         pftValue, szValueBuf, pcchValueBuf);
-    
+
+    suminfo = msihandle2msiinfo( hSummaryInfo, MSIHANDLETYPE_SUMMARYINFO );
+    if( !suminfo )
+        return ERROR_INVALID_HANDLE;
+
+    spec.ulKind = PRSPEC_PROPID;
+    spec.u.propid = uiProperty;
+
+    r = IPropertyStorage_ReadMultiple( suminfo->propstg, 1, &spec, &var);
+    if( FAILED(r) )
+        return ERROR_FUNCTION_FAILED;
+
+    if( puiDataType )
+        *puiDataType = var.vt;
+
+    switch( var.vt )
+    {
+    case VT_I4:
+        if( piValue )
+            *piValue = var.u.lVal;
+        break;
+    case VT_LPSTR:
+        if( pcchValueBuf && szValueBuf )
+        {
+            MultiByteToWideChar(CP_ACP, 0,  var.u.pszVal, -1, szValueBuf, 
+                                *pcchValueBuf );
+            *pcchValueBuf = lstrlenA( var.u.pszVal );
+        }
+        break;
+    case VT_FILETIME:
+        if( pftValue )
+            memcpy(pftValue, &var.u.filetime, sizeof (FILETIME) );
+        break;
+    case VT_EMPTY:
+        break;
+    default:
+        FIXME("Unknown property variant type\n");
+        break;
+    }
+
+    return ERROR_SUCCESS;
+}
+
+UINT WINAPI MsiSummaryInfoSetPropertyA( MSIHANDLE hSummaryInfo, UINT uiProperty,
+                                       UINT uiDataType, INT iValue, 
+                                       FILETIME* pftValue, LPSTR szValue)
+{
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+UINT WINAPI MsiSummaryInfoSetPropertyW( MSIHANDLE hSummaryInfo, UINT uiProperty,
+                                       UINT uiDataType, INT iValue, 
+                                       FILETIME* pftValue, LPWSTR szValue)
+{
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+UINT WINAPI MsiSummaryInfoPersist(MSIHANDLE hSummaryInfo)
+{
     return ERROR_CALL_NOT_IMPLEMENTED;
 }

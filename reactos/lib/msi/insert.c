@@ -44,7 +44,7 @@ typedef struct tagMSIINSERTVIEW
     MSIDATABASE     *db;
     BOOL             bIsTemp;
     MSIVIEW         *sv;
-    value_list      *vals;   /* looks like these may be ignored... */
+    value_list      *vals;
 } MSIINSERTVIEW;
 
 static UINT INSERT_fetch_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT *val )
@@ -56,11 +56,62 @@ static UINT INSERT_fetch_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT 
     return ERROR_FUNCTION_FAILED;
 }
 
+/*
+ * INSERT_merge_record
+ *
+ * Merge a value_list and a record to create a second record.
+ * Replace wildcard entries in the valuelist with values from the record
+ */
+static MSIRECORD *INSERT_merge_record( UINT fields, value_list *vl, MSIRECORD *rec )
+{
+    MSIRECORD *merged;
+    DWORD wildcard_count = 1, i;
+    const WCHAR *str;
+
+    merged = MSI_CreateRecord( fields );
+    for( i=1; i <= fields; i++ )
+    {
+        if( !vl )
+        {
+            TRACE("Not enough elements in the list to insert\n");
+            goto err;
+        }
+        switch( vl->val->type )
+        {
+        case EXPR_SVAL:
+            TRACE("field %ld -> %s\n", i, debugstr_w(vl->val->u.sval));
+            MSI_RecordSetStringW( merged, i, vl->val->u.sval );
+            break;
+        case EXPR_IVAL:
+            MSI_RecordSetInteger( merged, i, vl->val->u.ival );
+            break;
+        case EXPR_WILDCARD:
+            if( !rec )
+                goto err;
+            if( MSI_RecordIsNull( rec, wildcard_count ) )
+                goto err;
+            str = MSI_RecordGetString( rec, wildcard_count );
+            MSI_RecordSetStringW( merged, i, str );
+            wildcard_count++;
+            break;
+        default:
+            ERR("Unknown expression type %d\n", vl->val->type);
+        }
+        vl = vl->next;
+    }
+
+    return merged;
+err:
+    msiobj_release( &merged->hdr );
+    return NULL;
+}
+
 static UINT INSERT_execute( struct tagMSIVIEW *view, MSIRECORD *record )
 {
     MSIINSERTVIEW *iv = (MSIINSERTVIEW*)view;
     UINT n, type, val, r, row, col_count = 0;
     MSIVIEW *sv;
+    MSIRECORD *values = NULL;
 
     TRACE("%p %p\n", iv, record );
 
@@ -77,12 +128,13 @@ static UINT INSERT_execute( struct tagMSIVIEW *view, MSIRECORD *record )
     if( r )
         goto err;
 
-    n = MSI_RecordGetFieldCount( record );
-    if( n != col_count )
-    {
-        ERR("Number of fields do not match\n");
+    /*
+     * Merge the wildcard values into the list of values provided
+     * in the query, and create a record containing both.
+     */
+    values = INSERT_merge_record( col_count, iv->vals, record );
+    if( !values )
         goto err;
-    }
 
     row = -1;
     r = sv->ops->insert_row( sv, &row );
@@ -98,12 +150,12 @@ static UINT INSERT_execute( struct tagMSIVIEW *view, MSIRECORD *record )
 
         if( type & MSITYPE_STRING )
         {
-            const WCHAR *str = MSI_RecordGetString( record, n );
+            const WCHAR *str = MSI_RecordGetString( values, n );
             val = msi_addstringW( iv->db->strings, 0, str, -1, 1 );
         }
         else
         {
-            val = MSI_RecordGetInteger( record, n );
+            val = MSI_RecordGetInteger( values, n );
             val |= 0x8000;
         }
         r = sv->ops->set_int( sv, row, n, val );
@@ -112,6 +164,9 @@ static UINT INSERT_execute( struct tagMSIVIEW *view, MSIRECORD *record )
     }
 
 err:
+    if( values )
+        msiobj_release( &values->hdr );
+
     return ERROR_SUCCESS;
 }
 
@@ -159,11 +214,11 @@ static UINT INSERT_get_column_info( struct tagMSIVIEW *view,
     return sv->ops->get_column_info( sv, n, name, type );
 }
 
-static UINT INSERT_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode, MSIHANDLE hrec)
+static UINT INSERT_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode, MSIRECORD *rec)
 {
     MSIINSERTVIEW *iv = (MSIINSERTVIEW*)view;
 
-    TRACE("%p %d %ld\n", iv, eModifyMode, hrec );
+    TRACE("%p %d %p\n", iv, eModifyMode, rec );
 
     return ERROR_FUNCTION_FAILED;
 }

@@ -187,8 +187,7 @@ static UINT ORDER_close( struct tagMSIVIEW *view )
     if( !ov->table )
          return ERROR_FUNCTION_FAILED;
 
-    if( ov->reorder )
-        HeapFree( GetProcessHeap(), 0, ov->reorder );
+    HeapFree( GetProcessHeap(), 0, ov->reorder );
     ov->reorder = NULL;
 
     return ov->table->ops->close( ov->table );
@@ -219,16 +218,17 @@ static UINT ORDER_get_column_info( struct tagMSIVIEW *view,
     return ov->table->ops->get_column_info( ov->table, n, name, type );
 }
 
-static UINT ORDER_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode, MSIHANDLE hrec)
+static UINT ORDER_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode,
+                MSIRECORD *rec )
 {
     MSIORDERVIEW *ov = (MSIORDERVIEW*)view;
 
-    TRACE("%p %d %ld\n", ov, eModifyMode, hrec );
+    TRACE("%p %d %p\n", ov, eModifyMode, rec );
 
     if( !ov->table )
          return ERROR_FUNCTION_FAILED;
 
-    return ov->table->ops->modify( ov->table, eModifyMode, hrec );
+    return ov->table->ops->modify( ov->table, eModifyMode, rec );
 }
 
 static UINT ORDER_delete( struct tagMSIVIEW *view )
@@ -240,8 +240,7 @@ static UINT ORDER_delete( struct tagMSIVIEW *view )
     if( ov->table )
         ov->table->ops->delete( ov->table );
 
-    if( ov->reorder )
-        HeapFree( GetProcessHeap(), 0, ov->reorder );
+    HeapFree( GetProcessHeap(), 0, ov->reorder );
     ov->reorder = NULL;
 
     msiobj_release( &ov->db->hdr );

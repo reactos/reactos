@@ -157,7 +157,7 @@ void msiobj_addref( MSIOBJECTHDR *info )
         return;
     }
 
-    info->refcount++;
+    InterlockedIncrement(&info->refcount);
 }
 
 void msiobj_lock( MSIOBJECTHDR *info )
@@ -185,12 +185,12 @@ int msiobj_release( MSIOBJECTHDR *info )
         return -1;
     }
 
-    ret = info->refcount--;
-    if (info->refcount == 0)
+    ret = InterlockedDecrement( &info->refcount );
+    if( ret==0 )
     {
-    if( info->destructor )
+        if( info->destructor )
             info->destructor( info );
-    HeapFree( GetProcessHeap(), 0, info );
+        HeapFree( GetProcessHeap(), 0, info );
         TRACE("object %p destroyed\n", info);
     }
 

@@ -168,16 +168,17 @@ static UINT SELECT_get_column_info( struct tagMSIVIEW *view,
     return sv->table->ops->get_column_info( sv->table, n, name, type );
 }
 
-static UINT SELECT_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode, MSIHANDLE hrec)
+static UINT SELECT_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode,
+                MSIRECORD *rec )
 {
     MSISELECTVIEW *sv = (MSISELECTVIEW*)view;
 
-    TRACE("%p %d %ld\n", sv, eModifyMode, hrec );
+    TRACE("%p %d %p\n", sv, eModifyMode, rec );
 
     if( !sv->table )
          return ERROR_FUNCTION_FAILED;
 
-    return sv->table->ops->modify( sv->table, eModifyMode, hrec );
+    return sv->table->ops->modify( sv->table, eModifyMode, rec );
 }
 
 static UINT SELECT_delete( struct tagMSIVIEW *view )
