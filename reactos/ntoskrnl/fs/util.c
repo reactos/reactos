@@ -1,4 +1,4 @@
-/* $Id: util.c,v 1.2 1999/12/26 16:36:45 ea Exp $
+/* $Id: util.c,v 1.3 2000/01/10 22:46:38 ea Exp $
  *
  * reactos/ntoskrnl/fs/util.c
  *
@@ -108,6 +108,196 @@ FsRtlNormalizeNtstatus (
 		(TRUE == FsRtlIsNtstatusExpected(NtStatusToNormalize))
 		? NtStatusToNormalize
 		: NormalizedNtStatus;
+}
+
+
+/**********************************************************************
+ *	Miscellanea (they may fit somewhere else)
+ *********************************************************************/
+
+
+/**********************************************************************
+ * NAME							EXPORTED
+ *	FsRtlAllocateResource@0
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ * 
+ */
+DWORD
+STDCALL
+FsRtlAllocateResource (VOID)
+{
+	return 0;
+}
+
+
+/**********************************************************************
+ * NAME							EXPORTED
+ *	FsRtlBalanceReads@4
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ * 
+ */
+DWORD
+STDCALL
+FsRtlBalanceReads (
+	DWORD	Unknown0
+	)
+{
+	return 0;
+}
+
+
+/**********************************************************************
+ * NAME							EXPORTED
+ *	FsRtlCopyRead@32
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ * 
+ */
+BOOLEAN
+STDCALL
+FsRtlCopyRead (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3,
+	DWORD	Unknown4,
+	DWORD	Unknown5,
+	DWORD	Unknown6,
+	DWORD	Unknown7
+	)
+{
+	return FALSE;
+}
+
+
+/**********************************************************************
+ * NAME							EXPORTED
+ *	FsRtlCopyWrite@32
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ * 
+ */
+BOOLEAN
+STDCALL
+FsRtlCopyWrite (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3,
+	DWORD	Unknown4,
+	DWORD	Unknown5,
+	DWORD	Unknown6,
+	DWORD	Unknown7
+	)
+{
+	return FALSE;
+}
+
+
+/**********************************************************************
+ * NAME							EXPORTED
+ *	FsRtlGetFileSize@8
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ * 
+ */
+DWORD
+STDCALL
+FsRtlGetFileSize (
+	DWORD	Unknown0,
+	DWORD	Unknown1
+	)
+{
+	return 0;
+}
+
+
+/**********************************************************************
+ * NAME							EXPORTED
+ *	FsRtlPostPagingFileStackOverflow@12
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ * 
+ */
+VOID
+STDCALL
+FsRtlPostPagingFileStackOverflow (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2
+	)
+{
+}
+
+
+/**********************************************************************
+ * NAME							EXPORTED
+ *	FsRtlPostStackOverflow@12
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ * 
+ */
+VOID
+STDCALL
+FsRtlPostStackOverflow (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2
+	)
+{
+}
+
+
+/**********************************************************************
+ * NAME							EXPORTED
+ *	FsRtlSyncVolumes@12
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ * 
+ */
+NTSTATUS
+STDCALL
+FsRtlSyncVolumes (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2
+	)
+{
+	return STATUS_SUCCESS;
 }
 
 

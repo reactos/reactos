@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.37 1999/12/30 14:38:12 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.38 2000/01/10 22:46:37 ea Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -77,6 +77,11 @@ ExSystemTimeToLocalTime
 ExTryToAcquireResourceExclusiveLite
 FsRtlAddLargeMcbEntry@28
 FsRtlAddMcbEntry@16
+FsRtlAllocateResource@0
+FsRtlBalanceReads@4
+FsRtlCopyRead@32
+FsRtlCopyWrite@32
+FsRtlGetFileSize@8
 FsRtlGetNextLargeMcbEntry@20
 FsRtlGetNextMcbEntry@20
 FsRtlInitializeLargeMcb@8
@@ -90,9 +95,12 @@ FsRtlLookupMcbEntry@20
 FsRtlNormalizeNtstatus@8
 FsRtlNumberOfRunsInLargeMcb@4
 FsRtlNumberOfRunsInMcb@4
+FsRtlPostPagingFileStackOverflow@12
+FsRtlPostStackOverflow@12
 FsRtlRemoveLargeMcbEntry@20
 FsRtlRemoveMcbEntry@12
 FsRtlSplitLargeMcb@20
+FsRtlSyncVolumes@12
 FsRtlTruncateLargeMcb@12
 FsRtlTruncateMcb@8
 FsRtlUninitializeLargeMcb@4

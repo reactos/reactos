@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.44 1999/12/29 01:36:34 ekohl Exp $
+# $Id: makefile_rex,v 1.45 2000/01/10 22:46:37 ea Exp $
 #
 # ReactOS Operating System
 #
@@ -201,7 +201,9 @@ $(TARGET).exe: $(OBJECTS) $(TARGET).def
 	$(NM) --numeric-sort $(TARGET).exe > $(TARGET).sym
 
 $(TARGET).o: $(OBJECTS)
-	$(LD) -r $(OBJECTS) -o $(TARGET).o
+	$(LD) \
+		-r $(OBJECTS) \
+		-o $(TARGET).o
 
 $(TARGET).a: $(TARGET).def
 	$(DLLTOOL) \

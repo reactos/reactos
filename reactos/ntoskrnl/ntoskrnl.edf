@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.24 1999/12/30 14:38:12 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.25 2000/01/10 22:46:37 ea Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -77,6 +77,11 @@ ExSystemTimeToLocalTime
 ExTryToAcquireResourceExclusiveLite
 FsRtlAddLargeMcbEntry=FsRtlAddLargeMcbEntry@28
 FsRtlAddMcbEntry=FsRtlAddMcbEntry@16
+FsRtlAllocateResource=FsRtlAllocateResource@0
+FsRtlBalanceReads=FsRtlBalanceReads@4
+FsRtlCopyRead=FsRtlCopyRead@32
+FsRtlCopyWrite=FsRtlCopyWrite@32
+FsRtlGetFileSize=FsRtlGetFileSize@8
 FsRtlGetNextLargeMcbEntry=FsRtlGetNextLargeMcbEntry@20
 FsRtlGetNextMcbEntry=FsRtlGetNextMcbEntry@20
 FsRtlInitializeLargeMcb=FsRtlInitializeLargeMcb@8
@@ -90,9 +95,12 @@ FsRtlLookupMcbEntry=FsRtlLookupMcbEntry@20
 FsRtlNormalizeNtstatus=FsRtlNormalizeNtstatus@8
 FsRtlNumberOfRunsInLargeMcb=FsRtlNumberOfRunsInLargeMcb@4
 FsRtlNumberOfRunsInMcb=FsRtlNumberOfRunsInMcb@4
+FsRtlPostPagingFileStackOverflow=FsRtlPostPagingFileStackOverflow@12
+FsRtlPostStackOverflow=FsRtlPostStackOverflow@12
 FsRtlRemoveLargeMcbEntry=FsRtlRemoveLargeMcbEntry@20
 FsRtlRemoveMcbEntry=FsRtlRemoveMcbEntry@12
 FsRtlSplitLargeMcb=FsRtlSplitLargeMcb@20
+FsRtlSyncVolumes=FsRtlSyncVolumes@12
 FsRtlTruncateLargeMcb=FsRtlTruncateLargeMcb@12
 FsRtlTruncateMcb=FsRtlTruncateMcb@8
 FsRtlUninitializeLargeMcb=FsRtlUninitializeLargeMcb@4
