@@ -17,6 +17,7 @@ BACKEND_BASE_OBJECTS = \
 
 BASE_OBJECTS = \
 	$(BACKEND_BASE_OBJECTS) \
+	automaticdependency.o \
 	compilerflag.o \
 	define.o \
 	exception.o \
@@ -37,7 +38,8 @@ TESTS = \
 	tests/invoketest.o \
 	tests/linkerflagtest.o \
 	tests/moduletest.o \
-	tests/projecttest.o
+	tests/projecttest.o \
+	tests/sourcefiletest.o
 
 TEST_OBJECTS = $(BASE_OBJECTS) $(TESTS) tests/alltests.o
 

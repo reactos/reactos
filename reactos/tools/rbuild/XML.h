@@ -8,6 +8,13 @@
 void
 InitWorkingDirectory();
 
+#ifdef _MSC_VER
+unsigned __int64
+#else
+unsigned long long
+#endif
+filelen ( FILE* f );
+
 class Path
 {
 	std::vector<std::string> path;

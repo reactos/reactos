@@ -177,6 +177,7 @@ private:
 		tests.push_back(new LinkerFlagTest());
 		tests.push_back(new IfTest());
 		tests.push_back(new FunctionTest());
+		tests.push_back(new SourceFileTest());
 	}
 };
 

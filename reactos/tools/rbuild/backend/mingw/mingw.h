@@ -27,6 +27,9 @@ private:
 	void GenerateGlobalVariables () const;
 	bool IncludeInAllTarget ( const Module& module ) const;
 	void GenerateAllTarget () const;
+	void GenerateAutomaticDependencies () const;
+	void GenerateAutomaticDependenciesForFile ( SourceFile* sourceFile,
+	                                            std::string& dependencies ) const;
 	FILE* fMakefile;
 };
 

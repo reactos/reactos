@@ -30,7 +30,8 @@ main ( int argc, char** argv )
 	{
 		string projectFilename ( "ReactOS.xml" );
 		Project project ( projectFilename );
-		Backend* backend = Backend::Factory::Create ( buildtarget, project );
+		Backend* backend = Backend::Factory::Create ( buildtarget,
+		                                              project );
 		backend->Process ();
 		delete backend;
 

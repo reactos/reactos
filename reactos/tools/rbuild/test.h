@@ -96,7 +96,15 @@ public:
 	void Run();
 };
 
+
 class FunctionTest : public BaseTest
+{
+public:
+	void Run();
+};
+
+
+class SourceFileTest : public BaseTest
 {
 public:
 	void Run();

@@ -35,6 +35,9 @@ class If;
 class CompilerFlag;
 class LinkerFlag;
 class Property;
+class AutomaticDependency;
+
+class SourceFileTest;
 
 class Project
 {
@@ -342,6 +345,58 @@ public:
 
 	void ProcessXML();
 };
+
+
+class SourceFile
+{
+public:
+	SourceFile ( AutomaticDependency* automaticDependency,
+	             Module& module,
+	             const std::string& filename );
+	SourceFile* ParseFile ( const std::string& normalizedFilename );
+	void Parse ();
+	std::string Location () const;
+	std::vector<SourceFile*> files;
+	AutomaticDependency* automaticDependency;
+	Module& module;
+	std::string filename;
+private:
+	void Close ();
+	void Open ();
+	void SkipWhitespace ();
+	bool ReadInclude ( std::string& filename );
+	std::string buf;
+	const char *p;
+	const char *end;
+};
+
+
+class AutomaticDependency
+{
+	friend class SourceFileTest;
+public:
+	const Project& project;
+
+	AutomaticDependency ( const Project& project );
+	~AutomaticDependency ();
+	void Process ();
+	bool LocateIncludedFile ( const std::string& directory,
+	                          const std::string& includedFilename,
+	                          std::string& resolvedFilename );
+	bool LocateIncludedFile ( Module& module,
+	                          const std::string& includedFilename,
+	                          std::string& resolvedFilename );
+	SourceFile* RetrieveFromCacheOrParse ( Module& module,
+	                                       const std::string& filename );
+	SourceFile* RetrieveFromCache ( Module& module,
+	                                const std::string& filename );
+private:
+	void ProcessModule ( Module& module );
+	void ProcessFile ( Module& module,
+	                   const File& file );
+	std::map<std::string, SourceFile*> sourcefile_map;
+};
+
 
 extern std::string
 FixSeparator ( const std::string& s );

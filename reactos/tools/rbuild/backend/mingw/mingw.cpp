@@ -35,6 +35,7 @@ MingwBackend::Process ()
 		Module& module = *ProjectNode.modules[i];
 		ProcessModule ( module );
 	}
+	//GenerateAutomaticDependencies ();
 	CloseMakefile ();
 }
 
@@ -237,6 +238,52 @@ MingwBackend::GenerateAllTarget () const
 		}
 	}
 	fprintf ( fMakefile, "\n\t\n\n" );
+}
+
+void
+MingwBackend::GenerateAutomaticDependencies () const
+{
+	AutomaticDependency automaticDependency ( ProjectNode );
+	automaticDependency.Process ();
+	
+	for ( size_t mi = 0; mi < ProjectNode.modules.size (); mi++ )
+	{
+		Module& module = *ProjectNode.modules[mi];
+		for ( size_t fi = 0; fi < module.files.size (); fi++ )
+		{
+			File& file = *module.files[fi];
+			string normalizedFilename = NormalizeFilename ( file.name );
+			SourceFile* sourceFile = automaticDependency.RetrieveFromCache ( module,
+			                                                                 normalizedFilename );
+			if ( sourceFile != NULL )
+			{
+				string dependencies ( "" );
+				GenerateAutomaticDependenciesForFile ( sourceFile,
+	                                                   dependencies );
+				fprintf ( fMakefile,
+				          "%s:: %s",
+				          normalizedFilename.c_str (),
+				          dependencies.c_str () );
+			}
+		}
+	}
+}
+
+void
+MingwBackend::GenerateAutomaticDependenciesForFile ( SourceFile* sourceFile,
+	                                                 string& dependencies ) const
+{
+	if ( dependencies.size () > 0 )
+		dependencies += " ";
+	dependencies += sourceFile->filename;
+
+	for ( size_t i = 0; i < sourceFile->files.size (); i++)
+	{
+		SourceFile* childSourceFile = sourceFile->files[0];
+		
+		GenerateAutomaticDependenciesForFile ( childSourceFile,
+		                                       dependencies );
+	}
 }
 
 void
