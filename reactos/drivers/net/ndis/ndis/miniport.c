@@ -1176,6 +1176,7 @@ NdisMRegisterMiniport(
 
         IoDeleteDevice(Adapter->NdisMiniportBlock.DeviceObject);
         ExFreePool(Adapter);
+		NDIS_DbgPrint(MIN_TRACE, ("MiniportInitialize() failed.\n"));
         return NDIS_STATUS_FAILURE;
     }
 
