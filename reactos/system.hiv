@@ -165,17 +165,17 @@ REGEDIT4
 "Start"=dword:00000001
 "Type"=dword:00000002
 
-[\Registry\Machine\SYSTEM\ControlSet001\Services\Ne2000]
-"ErrorControl"=dword:00000001
-"Group"="NDIS"
-"ImagePath"=expand:"system32\drivers\ne2000.sys"
-"Start"=dword:00000004
-"Type"=dword:00000001
-
 [\Registry\Machine\SYSTEM\ControlSet001\Services\Ndis]
 "ErrorControl"=dword:00000001
 "Group"="NDIS"
 "ImagePath"=expand:"system32\drivers\ndis.sys"
+"Start"=dword:00000001
+"Type"=dword:00000001
+
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Ne2000]
+"ErrorControl"=dword:00000001
+"Group"="NDIS"
+"ImagePath"=expand:"system32\drivers\ne2000.sys"
 "Start"=dword:00000001
 "Type"=dword:00000001
 
@@ -227,6 +227,13 @@ REGEDIT4
 "Start"=dword:00000002
 "Type"=dword:00000001
 
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Packet]
+"ErrorControl"=dword:00000001
+"Group"="PNP_TDI"
+"ImagePath"=expand:"system32\drivers\packet.sys"
+"Start"=dword:00000002
+"Type"=dword:00000001
+
 [\Registry\Machine\SYSTEM\ControlSet001\Services\Vfatfs]
 "ErrorControl"=dword:00000000
 "Group"="Boot File System"
@@ -255,6 +262,33 @@ REGEDIT4
 "Start"=dword:00000001
 "Type"=dword:00000001
 
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Serial]
+"ErrorControl"=dword:00000000
+"ImagePath"=expand:"system32\drivers\serial.sys"
+"Start"=dword:00000001
+"Type"=dword:00000001
+
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Tcpip\Linkage]
+"Bind"=expand:"\Device\ne2000"
+"Export"=expand:"\Device\tcpip"
+"Route"=expand:""
+
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Tcpip\Parameters]
+"DataBasePath"="DataBasePath"
+"Domain"=""
+"Hostname"="ROSHost"
+"NameServer"="203.13.174.1"
+"ForwardBroadcasts"=dword:00000000
+"IPEnableRouter"=dword:00000000
+"SearchList"=""
+"EnableSecurityFilters"=dword:00000000
+
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Packet\Linkage]
+"Bind"=expand:"\Device\ne2000"
+"Export"=expand:"\Device\packet"
+
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Tcpip\Parameters\PersistentRoutes]
+
 [\Registry\Machine\SYSTEM\ControlSet002]
 
 [\Registry\Machine\SYSTEM\Select]
@@ -264,3 +298,7 @@ REGEDIT4
 "LastKnownGood"=dword:00000000
 
 [\Registry\Machine\SYSTEM\Setup]
+"CmdLine"="setup -newsetup"
+"OsLoaderPath"="\"
+"SetupType"=dword:00000000
+"SystemPartition"="\Device\HarddiskVolume1"
