@@ -12,7 +12,7 @@ TARGET_APPTYPE = console
 
 TARGET_NAME = ctm
 
-TARGET_SDKLIBS = ntdll.a
+TARGET_SDKLIBS = epsapi.a ntdll.a
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 

@@ -1,7 +1,7 @@
-/* $Id: epsapi.h,v 1.1 2003/04/13 03:24:27 hyperion Exp $
+/* $Id: epsapi.h,v 1.2 2003/04/13 03:57:41 hyperion Exp $
 */
 /*
- * internal/psapi.h
+ * epsapi.h
  *
  * Process Status Helper API, native interface
  *

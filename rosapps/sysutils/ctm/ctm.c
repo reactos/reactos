@@ -37,6 +37,9 @@
 #include <process.h>
 #include <stdio.h>
 
+#include <ddk/ntddk.h>
+#include <epsapi.h>
+
 #include "ctm.h"
 
 #define MAX_PROC 17
@@ -69,10 +72,12 @@ int scrolled=0;		// offset from which process start showing
 
 #define NEW_CONSOLE
 
+void *PsaiMalloc(SIZE_T size) { return malloc(size); }
+void *PsaiRealloc(void *ptr, SIZE_T size) { return realloc(ptr, size); }
+void PsaiFree(void *ptr) { free(ptr); }
+
 // Prototypes
 unsigned int GetKeyPressed();
-
-
 
 void GetInputOutputHandles()
 {
@@ -311,14 +316,14 @@ void PerfDataRefresh()
 	ULONG							Idx, Idx2;
 	HANDLE							hProcess;
 	HANDLE							hProcessToken;
-	PSYSTEM_PROCESS_INFORMATION		pSPI;
+	PSYSTEM_PROCESSES		pSPI;
 	PPERFDATA						pPDOld;
 	TCHAR							szTemp[MAX_PATH];
 	DWORD							dwSize;
 	double							CurrentKernelTime;
 	PSYSTEM_PROCESSORTIME_INFO		SysProcessorTimeInfo;
-	SYSTEM_PERFORMANCE_INFORMATION	SysPerfInfo;
-	SYSTEM_TIME_INFORMATION			SysTimeInfo;
+	SYSTEM_PERFORMANCE_INFO	SysPerfInfo;
+	SYSTEM_TIMEOFDAY_INFORMATION            SysTimeInfo;
 
 #ifdef TIMES
 	// Get new system time
@@ -333,27 +338,11 @@ void PerfDataRefresh()
 #endif
 	// Get processor information	
 	SysProcessorTimeInfo = (PSYSTEM_PROCESSORTIME_INFO)malloc(sizeof(SYSTEM_PROCESSORTIME_INFO) * 1/*SystemBasicInfo.bKeNumberProcessors*/);
-	status = NtQuerySystemInformation(SystemProcessorTimeInformation, SysProcessorTimeInfo, sizeof(SYSTEM_PROCESSORTIME_INFO) * 1/*SystemBasicInfo.bKeNumberProcessors*/, &ulSize);
+	status = NtQuerySystemInformation(SystemProcessorTimes, SysProcessorTimeInfo, sizeof(SYSTEM_PROCESSORTIME_INFO) * 1/*SystemBasicInfo.bKeNumberProcessors*/, &ulSize);
 
 
 	// Get process information
-	// We don't know how much data there is so just keep
-	// increasing the buffer size until the call succeeds
-	BufferSize = 0;
-	do
-	{
-		BufferSize += 0x10000;
-		//pBuffer = new BYTE[BufferSize];
-		pBuffer = (LPBYTE)malloc(BufferSize);
-
-		status = NtQuerySystemInformation(SystemProcessInformation, pBuffer, BufferSize, &ulSize);
-
-		if (status == 0xC0000004 /*STATUS_INFO_LENGTH_MISMATCH*/) {
-			//delete[] pBuffer;
-			free(pBuffer);
-		}
-
-	} while (status == 0xC0000004 /*STATUS_INFO_LENGTH_MISMATCH*/);
+	PsaCaptureProcessesAndThreads((PSYSTEM_PROCESSES *)&pBuffer);
 
 #ifdef TIMES
 	for (CurrentKernelTime=0, Idx=0; Idx<1/*SystemBasicInfo.bKeNumberProcessors*/; Idx++) {
@@ -367,7 +356,7 @@ void PerfDataRefresh()
 		// CurrentValue = NewValue - OldValue
 		dbIdleTime = Li2Double(SysPerfInfo.liIdleTime) - Li2Double(liOldIdleTime);
 		dbKernelTime = CurrentKernelTime - OldKernelTime;
-		dbSystemTime = Li2Double(SysTimeInfo.liKeSystemTime) - Li2Double(liOldSystemTime);
+		dbSystemTime = Li2Double(SysTimeInfo.CurrentTime) - Li2Double(liOldSystemTime);
 
 		// CurrentCpuIdle = IdleTime / SystemTime
 		dbIdleTime = dbIdleTime / dbSystemTime;
@@ -380,21 +369,20 @@ void PerfDataRefresh()
 
 	// Store new CPU's idle and system time
 	liOldIdleTime = SysPerfInfo.liIdleTime;
-	liOldSystemTime = SysTimeInfo.liKeSystemTime;
+	liOldSystemTime = SysTimeInfo.CurrentTime;
 	OldKernelTime = CurrentKernelTime;
 #endif
 
 	// Determine the process count
-	// We loop through the data we got from NtQuerySystemInformation
-	// and count how many structures there are (until RelativeOffset is 0)
+	// We loop through the data we got from PsaCaptureProcessesAndThreads
+	// and count how many structures there are (until PsaWalkNextProcess
+        // returns NULL)
 	ProcessCountOld = ProcessCount;
 	ProcessCount = 0;
-	pSPI = (PSYSTEM_PROCESS_INFORMATION)pBuffer;
+        pSPI = PsaWalkFirstProcess((PSYSTEM_PROCESSES)pBuffer);
 	while (pSPI) {
 		ProcessCount++;
-		if (pSPI->RelativeOffset == 0)
-			break;
-		pSPI = (PSYSTEM_PROCESS_INFORMATION)((LPBYTE)pSPI + pSPI->RelativeOffset);
+		pSPI = PsaWalkNextProcess(pSPI);
 	}
 
 	// Now alloc a new PERFDATA array and fill in the data
@@ -405,7 +393,7 @@ void PerfDataRefresh()
 	pPerfDataOld = pPerfData;
 	//pPerfData = new PERFDATA[ProcessCount];
 	pPerfData = (PPERFDATA)malloc(sizeof(PERFDATA) * ProcessCount);
-	pSPI = (PSYSTEM_PROCESS_INFORMATION)pBuffer;
+        pSPI = PsaWalkFirstProcess((PSYSTEM_PROCESSES)pBuffer);
 	for (Idx=0; Idx<ProcessCount; Idx++) {
 		// Get the old perf data for this process (if any)
 		// so that we can establish delta values
@@ -420,8 +408,8 @@ void PerfDataRefresh()
 		// Clear out process perf data structure
 		memset(&pPerfData[Idx], 0, sizeof(PERFDATA));
 
-		if (pSPI->Name.Buffer)
-			wcsncpy(pPerfData[Idx].ImageName, pSPI->Name.Buffer, pSPI->Name.MaximumLength);
+		if (pSPI->ProcessName.Buffer)
+			wcsncpy(pPerfData[Idx].ImageName, pSPI->ProcessName.Buffer, pSPI->ProcessName.MaximumLength);
 		else
 			wcscpy(pPerfData[Idx].ImageName, L"System Idle Process");
 
@@ -441,24 +429,24 @@ void PerfDataRefresh()
 		}
 
 		pPerfData[Idx].CPUTime.QuadPart = pSPI->UserTime.QuadPart + pSPI->KernelTime.QuadPart;
-		pPerfData[Idx].WorkingSetSizeBytes = pSPI->TotalWorkingSetSizeBytes;
-		pPerfData[Idx].PeakWorkingSetSizeBytes = pSPI->PeakWorkingSetSizeBytes;
+		pPerfData[Idx].WorkingSetSizeBytes = pSPI->VmCounters.WorkingSetSize;
+		pPerfData[Idx].PeakWorkingSetSizeBytes = pSPI->VmCounters.PeakWorkingSetSize;
 		if (pPDOld)
-			pPerfData[Idx].WorkingSetSizeDelta = labs((LONG)pSPI->TotalWorkingSetSizeBytes - (LONG)pPDOld->WorkingSetSizeBytes);
+			pPerfData[Idx].WorkingSetSizeDelta = labs((LONG)pSPI->VmCounters.WorkingSetSize - (LONG)pPDOld->WorkingSetSizeBytes);
 		else
 			pPerfData[Idx].WorkingSetSizeDelta = 0;
-		pPerfData[Idx].PageFaultCount = pSPI->PageFaultCount;
+		pPerfData[Idx].PageFaultCount = pSPI->VmCounters.PageFaultCount;
 		if (pPDOld)
-			pPerfData[Idx].PageFaultCountDelta = labs((LONG)pSPI->PageFaultCount - (LONG)pPDOld->PageFaultCount);
+			pPerfData[Idx].PageFaultCountDelta = labs((LONG)pSPI->VmCounters.PageFaultCount - (LONG)pPDOld->PageFaultCount);
 		else
 			pPerfData[Idx].PageFaultCountDelta = 0;
-		pPerfData[Idx].VirtualMemorySizeBytes = pSPI->TotalVirtualSizeBytes;
-		pPerfData[Idx].PagedPoolUsagePages = pSPI->TotalPagedPoolUsagePages;
-		pPerfData[Idx].NonPagedPoolUsagePages = pSPI->TotalNonPagedPoolUsagePages;
+		pPerfData[Idx].VirtualMemorySizeBytes = pSPI->VmCounters.VirtualSize;
+		pPerfData[Idx].PagedPoolUsagePages = pSPI->VmCounters.QuotaPagedPoolUsage;
+		pPerfData[Idx].NonPagedPoolUsagePages = pSPI->VmCounters.QuotaNonPagedPoolUsage;
 		pPerfData[Idx].BasePriority = pSPI->BasePriority;
 		pPerfData[Idx].HandleCount = pSPI->HandleCount;
 		pPerfData[Idx].ThreadCount = pSPI->ThreadCount;
-		pPerfData[Idx].SessionId = pSPI->SessionId;
+		//pPerfData[Idx].SessionId = pSPI->SessionId;
 
 #ifdef EXTRA_INFO
 		hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pSPI->ProcessId);
@@ -491,10 +479,10 @@ int MultiByteToWideChar(
 		pPerfData[Idx].UserTime.QuadPart = pSPI->UserTime.QuadPart;
 		pPerfData[Idx].KernelTime.QuadPart = pSPI->KernelTime.QuadPart;
 #endif
-		pSPI = (PSYSTEM_PROCESS_INFORMATION)((LPBYTE)pSPI + pSPI->RelativeOffset);
+		pSPI = PsaWalkNextProcess(pSPI);
 	}
 	//delete[] pBuffer;
-	free(pBuffer);
+	PsaFreeCapture(pBuffer);
 
 	free(SysProcessorTimeInfo);
 }
