@@ -138,6 +138,7 @@ echo installing user-mode dlls (3)...
 copy lib\ws2help\ws2help.dll %ROS_INSTALL%\system32
 copy lib\wshirda\wshirda.dll %ROS_INSTALL%\system32
 copy lib\wsock32\wsock32.dll %ROS_INSTALL%\system32
+copy lib\kbdus\kbdus.dll %ROS_INSTALL%\system32
 
 rem copy lib\winmm\winmm.dll %ROS_INSTALL%\system32
 rem copy lib\shell32\roshel32.dll %ROS_INSTALL%\system32
