@@ -323,12 +323,12 @@ asmlinkage void exception_handler(unsigned int edi,
     }
    else
      {
-#if 0
+#if 1
 	DbgPrint("SS:ESP %x:%x\n",ss0,esp0);
         stack=(PULONG)(esp0);
        
         DbgPrint("Stack:\n");
-        for (i=0; i<16; i++)
+        for (i=0; i<64; i++)
         {
 	   if (MmIsPagePresent(NULL,&stack[i]))
 	     {

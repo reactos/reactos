@@ -8,29 +8,36 @@ typedef struct
 
 typedef struct
 {
-   PVOID Buffer;
-   ULONG Size;
-   LIST_ENTRY ListEntry;
-} NPFS_MSG, *PNPFS_MSG;
-
-typedef struct
-{
-   LIST_ENTRY ListEntry;
-   PWSTR Name;
-   ULONG FileAttributes;
-   ULONG OpenMode;
-   ULONG PipeType;
-   ULONG PipeRead;
-   ULONG PipeWait;
+   PWCHAR Name;
+   LIST_ENTRY PipeListEntry;
+   KSPIN_LOCK FcbListLock;
+   LIST_ENTRY FcbListHead;
+   ULONG ReferenceCount;
    ULONG MaxInstances;
+   LARGE_INTEGER TimeOut;   
+} NPFS_PIPE, *PNPFS_PIPE;
+
+typedef struct _NPFS_FCB
+{
+   LIST_ENTRY FcbListEntry;
+   BOOLEAN WriteModeMessage;
+   BOOLEAN ReadModeMessage;
+   BOOLEAN NonBlocking;
    ULONG InBufferSize;
    ULONG OutBufferSize;
-   LARGE_INTEGER Timeout;
-   KSPIN_LOCK MsgListLock;
-   LIST_ENTRY MsgListHead;
-} NPFS_FSCONTEXT, *PNPFS_FSCONTEXT;
+   PNPFS_PIPE Pipe;
+   struct _NPFS_FCB* OtherSide;
+   BOOLEAN IsServer;
+} NPFS_FCB, *PNPFS_FCB;
 
-extern LIST_ENTRY PipeListHead;
-extern KSPIN_LOCK PipeListLock;
+VOID NpfsPipeList(VOID);
+
+#define KeLockMutex(x) KeWaitForSingleObject(x, \
+                                             UserRequest, \
+                                             KernelMode, \
+                                             FALSE, \
+                                             NULL);
+
+#define KeUnlockMutex(x) KeReleaseMutex(x, FALSE);
 
 #endif /* __SERVICES_FS_NP_NPFS_H */

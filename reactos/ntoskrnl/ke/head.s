@@ -1,3 +1,5 @@
+#include <internal/ntoskrnl.h>
+
 #define NR_TASKS 128
 
 .globl _stext
@@ -36,14 +38,11 @@ _gdt_descr:
         .word ((8+NR_TASKS)*8)-1
         .long _KiGdt
 
-/*_idt:
-        .fill 256,8,0 */
-
 .text
 
 .align 8
 _init_stack:
-        .fill 16384,1,0
+        .fill MM_STACK_SIZE,1,0
 _init_stack_top:
 
 _stext:

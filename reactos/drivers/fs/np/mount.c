@@ -1,4 +1,4 @@
-/* $Id: mount.c,v 1.3 2000/03/26 22:00:09 dwelch Exp $
+/* $Id: mount.c,v 1.4 2000/05/13 13:51:08 dwelch Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -19,9 +19,6 @@
 /* GLOBALS *******************************************************************/
 
 static PDRIVER_OBJECT DriverObject;
-
-LIST_ENTRY PipeListHead;
-KSPIN_LOCK PipeListLock;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -74,8 +71,12 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT _DriverObject,
      NpfsQuerySecurity;
    DeviceObject->MajorFunction[IRP_MJ_SET_SECURITY] =
      NpfsSetSecurity;
+   DeviceObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] =
+     NpfsFileSystemControl;
    
    DriverObject->DriverUnload = NULL;
+   
+   NpfsInitPipeList();
    
    return(STATUS_SUCCESS);
 }

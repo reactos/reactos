@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.15 2000/04/25 23:22:54 ea Exp $
+/* $Id: stubs.c,v 1.16 2000/05/13 13:50:57 dwelch Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -319,17 +319,6 @@ CompareStringW (
 }
 
 
-WINBOOL
-STDCALL
-ConnectNamedPipe (
-	HANDLE		hNamedPipe,
-	LPOVERLAPPED	lpOverlapped
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
 
 BOOL
 STDCALL
@@ -337,6 +326,19 @@ ConsoleMenuControl (
 	HANDLE	hConsole,
 	DWORD	Unknown1,
 	DWORD	Unknown2
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+
+WINBOOL
+STDCALL
+ContinueDebugEvent (
+	DWORD	dwProcessId,
+	DWORD	dwThreadId,
+	DWORD	dwContinueStatus
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -383,40 +385,6 @@ CreateMailslotW (
 }
 
 
-HANDLE
-STDCALL
-CreateNamedPipeW (
-	LPCWSTR			lpName,
-	DWORD			dwOpenMode,
-	DWORD			dwPipeMode,
-	DWORD			nMaxInstances,
-	DWORD			nOutBufferSize,
-	DWORD			nInBufferSize,
-	DWORD			nDefaultTimeOut,
-	LPSECURITY_ATTRIBUTES	lpSecurityAttributes
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return INVALID_HANDLE_VALUE;
-}
-
-
-HANDLE
-STDCALL
-CreateNamedPipeA (
-	LPCSTR			lpName,
-	DWORD			dwOpenMode,
-	DWORD			dwPipeMode,
-	DWORD			nMaxInstances,
-	DWORD			nOutBufferSize,
-	DWORD			nInBufferSize,
-	DWORD			nDefaultTimeOut,
-	LPSECURITY_ATTRIBUTES	lpSecurityAttributes
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return INVALID_HANDLE_VALUE;
-}
 
 
 DWORD
@@ -3448,13 +3416,12 @@ SetMailslotInfo (
 }
 
 
+
 WINBOOL
 STDCALL
-SetNamedPipeHandleState (
-	HANDLE	hNamedPipe,
-	LPDWORD	lpMode,
-	LPDWORD	lpMaxCollectionCount,
-	LPDWORD	lpCollectDataTimeout
+SetPriorityClass (
+	HANDLE	hProcess,
+	DWORD	dwPriorityClass
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -3743,26 +3710,15 @@ WaitCommEvent (
 
 WINBOOL
 STDCALL
-WaitNamedPipeA (
-	LPCSTR	lpNamedPipeName,
-	DWORD	nTimeOut
+WaitForDebugEvent (
+	LPDEBUG_EVENT	lpDebugEvent,
+	DWORD		dwMilliseconds
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
 
-
-WINBOOL
-STDCALL
-WaitNamedPipeW (
-	LPCWSTR	lpNamedPipeName,
-	DWORD	nTimeOut
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
 int

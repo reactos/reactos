@@ -1,4 +1,4 @@
-/* $Id: shmsrv.c,v 1.3 1999/12/30 01:51:36 dwelch Exp $
+/* $Id: shmsrv.c,v 1.4 2000/05/13 13:50:54 dwelch Exp $
  *
  * FILE  : reactos/apps/shm/shmsrv.c
  * AUTHOR: David Welch
@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
    printf("Copying %s\n", GetCommandLineA());
    strcpy(BaseAddress, GetCommandLineA());
    
-   for(;;);
+   Sleep(INFINITE);
 
    return 0;
 }

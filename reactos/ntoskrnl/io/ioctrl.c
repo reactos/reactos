@@ -1,4 +1,4 @@
-/* $Id: ioctrl.c,v 1.9 2000/04/24 04:17:55 phreak Exp $
+/* $Id: ioctrl.c,v 1.10 2000/05/13 13:51:02 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -28,20 +28,16 @@ ULONG IoGetFunctionCodeFromCtlCode(ULONG ControlCode)
 }
 
 
-NTSTATUS
-STDCALL
-NtDeviceIoControlFile (
-	IN	HANDLE			DeviceHandle,
-	IN	HANDLE			Event		OPTIONAL,
-	IN	PIO_APC_ROUTINE		UserApcRoutine,
-	IN	PVOID			UserApcContext	OPTIONAL,
-	OUT	PIO_STATUS_BLOCK	IoStatusBlock,
-	IN	ULONG			IoControlCode,
-	IN	PVOID			InputBuffer,
-	IN	ULONG			InputBufferSize,
-	OUT	PVOID			OutputBuffer,
-	IN	ULONG			OutputBufferSize
-	)
+NTSTATUS STDCALL NtDeviceIoControlFile (IN HANDLE DeviceHandle,
+					IN HANDLE Event,
+					IN PIO_APC_ROUTINE UserApcRoutine,
+					IN PVOID UserApcContext,
+					OUT PIO_STATUS_BLOCK IoStatusBlock,
+					IN ULONG IoControlCode,
+					IN PVOID InputBuffer,
+					IN ULONG InputBufferSize,
+					OUT PVOID OutputBuffer,
+					IN ULONG OutputBufferSize)
 {
    NTSTATUS Status;
    PFILE_OBJECT FileObject;
@@ -50,8 +46,6 @@ NtDeviceIoControlFile (
    PIO_STACK_LOCATION StackPtr;
    KEVENT KEvent;
 
-   assert_irql(PASSIVE_LEVEL);
-   
    DPRINT("NtDeviceIoControlFile(DeviceHandle %x Event %x UserApcRoutine %x "
           "UserApcContext %x IoStatusBlock %x IoControlCode %x "
           "InputBuffer %x InputBufferSize %x OutputBuffer %x "
@@ -66,14 +60,13 @@ NtDeviceIoControlFile (
 				      KernelMode,
 				      (PVOID *) &FileObject,
 				      NULL);
-
-   if (Status != STATUS_SUCCESS)
-   {
-      return(Status);
-   }
-
+   
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
+   
    DeviceObject = FileObject->DeviceObject;
-   assert(DeviceObject != NULL);
 
    KeInitializeEvent(&KEvent,NotificationEvent,TRUE);
 

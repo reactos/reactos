@@ -1,4 +1,4 @@
-/* $Id: mm.c,v 1.28 2000/04/07 02:24:00 dwelch Exp $
+/* $Id: mm.c,v 1.29 2000/05/13 13:51:05 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -133,115 +133,6 @@ VOID MmInitVirtualMemory(boot_param* bp)
    DPRINT("MmInitVirtualMemory() done\n");
 }
 
-NTSTATUS MmCommitedSectionHandleFault(PMADDRESS_SPACE AddressSpace,
-				      MEMORY_AREA* MemoryArea, 
-				      PVOID Address)
-{
-   if (MmIsPagePresent(NULL, Address))
-     {
-	return(STATUS_SUCCESS);
-     }
-   
-   MmSetPage(PsGetCurrentProcess(),
-	     Address,
-	     MemoryArea->Attributes,
-	     (ULONG)MmAllocPage());
-   
-   return(STATUS_SUCCESS);
-}
-
-NTSTATUS MmSectionHandleFault(PMADDRESS_SPACE AddressSpace,
-			      MEMORY_AREA* MemoryArea, 
-			      PVOID Address)
-{
-   LARGE_INTEGER Offset;
-   IO_STATUS_BLOCK IoStatus;
-   PMDL Mdl;
-   PVOID Page;
-   NTSTATUS Status;
-   ULONG PAddress;
-   
-   DPRINT("MmSectionHandleFault(MemoryArea %x, Address %x)\n",
-	   MemoryArea,Address);
-   
-   if (MmIsPagePresent(NULL, Address))
-     {
-	return(STATUS_SUCCESS);
-     }
-   
-   DPRINT("Page isn't present\n");
-   PAddress = (ULONG)PAGE_ROUND_DOWN(((ULONG)Address));
-   DPRINT("PAddress %x\n", PAddress);
-   Offset.QuadPart = (PAddress - (ULONG)MemoryArea->BaseAddress) +
-     MemoryArea->Data.SectionData.ViewOffset;
-   
-   DPRINT("MemoryArea->Data.SectionData.Section->FileObject %x\n",
-	    MemoryArea->Data.SectionData.Section->FileObject);
-   DPRINT("MemoryArea->Data.SectionData.ViewOffset %x\n",
-	  MemoryArea->Data.SectionData.ViewOffset);
-   DPRINT("Offset.QuadPart %x\n", (ULONG)Offset.QuadPart);
-   DPRINT("MemoryArea->BaseAddress %x\n", MemoryArea->BaseAddress);
-   
-   if (MemoryArea->Data.SectionData.Section->FileObject == NULL)
-     {
-	ULONG Page;
-	
-	Page = (ULONG)MiTryToSharePageInSection(
-			       MemoryArea->Data.SectionData.Section,
-						(ULONG)Offset.QuadPart);
-	
-	if (Page == 0)
-	  {
-	     Page = (ULONG)MmAllocPage();
-	  }
-	
-	MmSetPage(PsGetCurrentProcess(),
-		  Address,
-		  MemoryArea->Attributes,
-		  Page);
-	return(STATUS_SUCCESS);
-     }
-   
-   DPRINT("Creating mdl\n");
-   Mdl = MmCreateMdl(NULL, NULL, PAGESIZE);
-   DPRINT("Building mdl\n");
-   MmBuildMdlFromPages(Mdl);
-   DPRINT("Getting page address\n");
-   Page = MmGetMdlPageAddress(Mdl, 0);
-   DPRINT("Unlocking address space\n");
-   MmUnlockAddressSpace(AddressSpace);
-   DPRINT("Reading page\n");
-   Status = IoPageRead(MemoryArea->Data.SectionData.Section->FileObject,
-		       Mdl,
-		       &Offset,
-		       &IoStatus);
-   DPRINT("Read page\n");
-   if (!NT_SUCCESS(Status))
-     {
-	DPRINT("Failed to read page\n");
-	return(Status);
-     }
-     
-   DPRINT("Locking address space\n");
-   MmLockAddressSpace(AddressSpace);
-   
-   DPRINT("Testing if page is present\n");
-   if (MmIsPagePresent(NULL, Address))
-     {
-	return(STATUS_SUCCESS);
-     }
-   
-   DPRINT("Setting page\n");
-   MmSetPage(NULL,
-	     Address,
-	     MemoryArea->Attributes,
-	     (ULONG)Page);
-   
-   DPRINT("Returning from MmSectionHandleFault()\n");
-   
-   return(STATUS_SUCCESS);
-}
-
 NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
 		       ULONG Address)
 {
@@ -255,7 +146,7 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
    MEMORY_AREA* MemoryArea;
    NTSTATUS Status;
    
-   DPRINT("MmNotPresentFault(Mode %d, Address %x)\n", Mode, Address);
+   DPRINT1("MmNotPresentFault(Mode %d, Address %x)\n", Mode, Address);
    
    if (KeGetCurrentIrql() >= DISPATCH_LEVEL)
      {
@@ -304,15 +195,15 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
 	break;
 	
       case MEMORY_AREA_SECTION_VIEW_COMMIT:
-	Status = MmSectionHandleFault(AddressSpace,
-				      MemoryArea, 
-				      (PVOID)Address);
+	Status = MmNotPresentFaultSectionView(AddressSpace,
+					      MemoryArea, 
+					      (PVOID)Address);
 	break;
 	
       case MEMORY_AREA_COMMIT:
-	Status = MmCommitedSectionHandleFault(AddressSpace,
-					      MemoryArea,
-					      (PVOID)Address);
+	Status = MmNotPresentFaultVirtualMemory(AddressSpace,
+						MemoryArea,
+						(PVOID)Address);
 	break;
 	
       default:

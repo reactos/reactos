@@ -30,6 +30,9 @@
 /* GLOBALS *******************************************************************/
 
 static PVOID SystemDllEntryPoint = NULL;
+//static PVOID SystemDllApcDispatcher = NULL;
+//static PVOID SystemDllCallbackDispatcher = NULL;
+//static PVOID SystemDllExceptionDispatcher = NULL;
 
 /* FUNCTIONS *****************************************************************/
 

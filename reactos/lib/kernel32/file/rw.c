@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.11 2000/04/03 21:54:35 dwelch Exp $
+/* $Id: rw.c,v 1.12 2000/05/13 13:50:56 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -157,22 +157,19 @@ VOID ApcRoutine(PVOID ApcContext,
    LPOVERLAPPED_COMPLETION_ROUTINE  lpCompletionRoutine = 
      (LPOVERLAPPED_COMPLETION_ROUTINE)ApcContext;
    
-   dwErrorCode = RtlNtStatusToDosError( IoStatusBlock->Status);
+   dwErrorCode = RtlNtStatusToDosError(IoStatusBlock->Status);
    lpCompletionRoutine(dwErrorCode, 
 		       NumberOfBytesTransfered, 
 		       (LPOVERLAPPED)IoStatusBlock);
 }
 
 
-WINBOOL
-STDCALL
-WriteFileEx (
-	HANDLE				hFile,
-	LPCVOID				lpBuffer,
-	DWORD				nNumberOfBytesToWrite,
-	LPOVERLAPPED			lpOverLapped,
-	LPOVERLAPPED_COMPLETION_ROUTINE	lpCompletionRoutine
-	)
+WINBOOL STDCALL WriteFileEx (HANDLE				hFile,
+			     LPCVOID				lpBuffer,
+			     DWORD				nNumberOfBytesToWrite,
+			     LPOVERLAPPED			lpOverLapped,
+			     LPOVERLAPPED_COMPLETION_ROUTINE	lpCompletionRoutine
+			     )
 {
 
    LARGE_INTEGER Offset;

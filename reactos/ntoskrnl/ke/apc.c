@@ -54,46 +54,52 @@ BOOLEAN KiTestAlert(PKTHREAD Thread,
 {
    PLIST_ENTRY current_entry;
    PKAPC Apc;
-   PULONG Esp = (PULONG)UserContext->Esp;
+   PULONG Esp;
    KIRQL oldlvl;
+   CONTEXT SavedContext;
+   ULONG Top;
    
    DPRINT("KiTestAlert(Thread %x, UserContext %x)\n");
-   KeAcquireSpinLock( &PiApcLock, &oldlvl );
+   KeAcquireSpinLock(&PiApcLock, &oldlvl);
    current_entry = Thread->ApcState.ApcListHead[1].Flink;
    
    if (current_entry == &Thread->ApcState.ApcListHead[1])
      {
-	KeReleaseSpinLock( &PiApcLock, oldlvl );
+	KeReleaseSpinLock(&PiApcLock, oldlvl);
 	return(FALSE);
      }
    
-   while (current_entry != &Thread->ApcState.ApcListHead[1])
-     {
-	Apc = CONTAINING_RECORD(current_entry, KAPC, ApcListEntry);
+   current_entry = RemoveHeadList(&Thread->ApcState.ApcListHead[1]);
+   Apc = CONTAINING_RECORD(current_entry, KAPC, ApcListEntry);
 	
-	DPRINT("Esp %x\n", Esp);
-	DPRINT("Apc->NormalContext %x\n", Apc->NormalContext);
-	DPRINT("Apc->SystemArgument1 %x\n", Apc->SystemArgument1);
-	DPRINT("Apc->SystemArgument2 %x\n", Apc->SystemArgument2);
-	DPRINT("UserContext->Eip %x\n", UserContext->Eip);
+   DPRINT("Esp %x\n", Esp);
+   DPRINT("Apc->NormalContext %x\n", Apc->NormalContext);
+   DPRINT("Apc->SystemArgument1 %x\n", Apc->SystemArgument1);
+   DPRINT("Apc->SystemArgument2 %x\n", Apc->SystemArgument2);
+   DPRINT("UserContext->Eip %x\n", UserContext->Eip);
+   
+   Esp = (PULONG)UserContext->Esp;
+   
+   memcpy(&SavedContext, UserContext, sizeof(CONTEXT));
+   
+   /*
+    * Now call for the kernel routine for the APC, which will free
+    * the APC data structure
+    */
+   KeCallKernelRoutineApc(Apc);
+   
+   Esp = Esp - (sizeof(CONTEXT) + (4 * sizeof(ULONG)));
+   memcpy(Esp, &SavedContext, sizeof(CONTEXT));
+   Top = sizeof(CONTEXT) / 4;
+   Esp[Top] = (ULONG)Apc->SystemArgument2;
+   Esp[Top + 1] = (ULONG)Apc->SystemArgument1;
+   Esp[Top + 2] = (ULONG)Apc->NormalContext;
+   Esp[Top + 3] = (ULONG)Apc->NormalRoutine;
+   UserContext->Eip = 0;
 	
-	Esp = Esp - 16;
-	Esp[3] = (ULONG)Apc->SystemArgument2;
-	Esp[2] = (ULONG)Apc->SystemArgument1;
-	Esp[1] = (ULONG)Apc->NormalContext;
-	Esp[0] = UserContext->Eip;
-	UserContext->Eip = (ULONG)Apc->NormalRoutine;
-	
-	current_entry = current_entry->Flink;
-	
-	/*
-	 * Now call for the kernel routine for the APC, which will free
-	 * the APC data structure
-	 */
-	KeCallKernelRoutineApc(Apc);
-     }
-   UserContext->Esp = (ULONG)Esp;
-   InitializeListHead(&Thread->ApcState.ApcListHead[1]);
+   current_entry = current_entry->Flink;
+   
+
    return(TRUE);
 }
 

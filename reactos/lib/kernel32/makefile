@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.33 2000/04/25 23:22:53 ea Exp $
+# $Id: makefile,v 1.34 2000/05/13 13:50:56 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -32,7 +32,8 @@ MISC_OBJECTS = misc/error.o misc/atom.o misc/handle.o misc/env.o misc/dllmain.o 
 FILE_OBJECTS = file/file.o file/curdir.o file/lfile.o file/dir.o \
                file/iocompl.o file/volume.o file/deviceio.o file/dosdev.o \
 	       file/create.o file/find.o file/copy.o file/pipe.o \
-	       file/move.o file/lock.o file/rw.o file/delete.o
+	       file/move.o file/lock.o file/rw.o file/delete.o \
+	       file/npipe.o
 
 MEM_OBJECTS = mem/virtual.o mem/heap.o mem/utils.o mem/section.o mem/isbad.o mem/procmem.o
 
@@ -59,7 +60,8 @@ NLS_OBJECTS =  nls/codepage.o nls/cpmisc.o nls/cptable.o\
 
 THREAD_OBJECTS = thread/thread.o thread/tls.o
 
-PROCESS_OBJECTS = process/proc.o process/cmdline.o process/create.o
+PROCESS_OBJECTS = process/proc.o process/cmdline.o process/create.o \
+                  process/lib.o
 
 STRING_OBJECTS = string/lstring.o
 

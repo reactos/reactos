@@ -23,13 +23,13 @@ NTSTATUS STDCALL NtCreateNamedPipeFile(
 	IN	ACCESS_MASK		DesiredAccess,               
 	IN	POBJECT_ATTRIBUTES	ObjectAttributes,     
 	OUT	PIO_STATUS_BLOCK	IoStatusBlock,    
-	IN	ULONG			FileAttributes,
-	IN	ULONG			ShareAccess,
-	IN	ULONG			OpenMode,  
-	IN	ULONG			PipeType, 
-	IN	ULONG			PipeRead, 
-	IN	ULONG			PipeWait, 
-	IN	ULONG			MaxInstances,
+	ULONG ShareAccess,
+	ULONG CreateDisposition,
+	ULONG CreateOptions,
+	BOOLEAN WriteModeMessage,
+        BOOLEAN ReadModeMessage,
+	BOOLEAN NonBlocking,
+	ULONG MaxInstances,
 	IN	ULONG			InBufferSize,
 	IN	ULONG			OutBufferSize,
 	IN	PLARGE_INTEGER		TimeOut)
@@ -58,12 +58,12 @@ NTSTATUS STDCALL NtCreateNamedPipeFile(
 	return(STATUS_UNSUCCESSFUL);
      }
    
-   if (OpenMode & FILE_SYNCHRONOUS_IO_ALERT)
+   if (CreateOptions & FILE_SYNCHRONOUS_IO_ALERT)
      {
 	FileObject->Flags = FileObject->Flags | FO_ALERTABLE_IO;
 	FileObject->Flags = FileObject->Flags | FO_SYNCHRONOUS_IO;
      }
-   if (OpenMode & FILE_SYNCHRONOUS_IO_NONALERT)
+   if (CreateOptions & FILE_SYNCHRONOUS_IO_NONALERT)
      {
 	FileObject->Flags = FileObject->Flags | FO_SYNCHRONOUS_IO;
      }
@@ -85,21 +85,23 @@ NTSTATUS STDCALL NtCreateNamedPipeFile(
    StackLoc->Control = 0;
    StackLoc->DeviceObject = FileObject->DeviceObject;
    StackLoc->FileObject = FileObject;
-   StackLoc->Parameters.CreateNamedPipe.FileAttributes = FileAttributes;
-   StackLoc->Parameters.CreateNamedPipe.OpenMode = OpenMode;
-   StackLoc->Parameters.CreateNamedPipe.PipeType = PipeType;
-   StackLoc->Parameters.CreateNamedPipe.PipeRead = PipeRead;
-   StackLoc->Parameters.CreateNamedPipe.PipeWait = PipeWait;
+   StackLoc->Parameters.CreateNamedPipe.CreateDisposition =
+     CreateDisposition;
+   StackLoc->Parameters.CreateNamedPipe.CreateOptions = CreateOptions;
+   StackLoc->Parameters.CreateNamedPipe.ShareAccess = ShareAccess;
+   StackLoc->Parameters.CreateNamedPipe.WriteModeMessage = WriteModeMessage;
+   StackLoc->Parameters.CreateNamedPipe.ReadModeMessage = ReadModeMessage;
+   StackLoc->Parameters.CreateNamedPipe.NonBlocking = NonBlocking;
    StackLoc->Parameters.CreateNamedPipe.MaxInstances = MaxInstances;
    StackLoc->Parameters.CreateNamedPipe.InBufferSize = InBufferSize;
    StackLoc->Parameters.CreateNamedPipe.OutBufferSize = OutBufferSize;
    if (TimeOut != NULL)
      {
-	StackLoc->Parameters.CreateNamedPipe.Timeout = *TimeOut;
+	StackLoc->Parameters.CreateNamedPipe.TimeOut = *TimeOut;
      }
    else
      {
-	StackLoc->Parameters.CreateNamedPipe.Timeout.QuadPart = 0;
+	StackLoc->Parameters.CreateNamedPipe.TimeOut.QuadPart = 0;
      }
    
    Status = IoCallDriver(FileObject->DeviceObject,Irp);

@@ -30,8 +30,6 @@ STUB(DbgSsInitialize)
 STUB(DbgUiConnectToDbg)
 STUB(DbgUiWaitStateChange)
 STUB(KiRaiseUserExceptionDispatcher)
-STUB(KiUserApcDispatcher)
-STUB(KiUserCallbackDispatcher)
 STUB(KiUserExceptionDispatcher)
 
 STUB(LdrDisableThreadCalloutsForDll)

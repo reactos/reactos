@@ -2,8 +2,10 @@
  * Various useful prototypes
  */
 
-#ifndef __KERNEL_H
-#define __KERNEL_H
+#ifndef __INCLUDE_INTERNAL_NTOSKRNL_H
+#define __INCLUDE_INTERNAL_NTOSKRNL_H
+
+#ifndef __ASM__
 
 typedef struct
 {
@@ -89,4 +91,11 @@ VOID CmInitializeRegistry(VOID);
 VOID CmImportHive(PCHAR);
 VOID KdInitSystem(ULONG Reserved, boot_param* BootParam);
 
-#endif
+#endif /* __ASM__ */
+
+/*
+ * 
+ */
+#define MM_STACK_SIZE             (3*4096)
+
+#endif /* INCLUDE_INTERNAL_NTOSKRNL_H */

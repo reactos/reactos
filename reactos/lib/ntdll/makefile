@@ -1,25 +1,15 @@
-# $Id: makefile,v 1.45 2000/04/15 23:09:39 ekohl Exp $
+# $Id: makefile,v 1.46 2000/05/13 13:50:57 dwelch Exp $
 #
 # ReactOS Operating System
 #
-TARGET=ntdll
+TARGET = ntdll
 
 BASE_CFLAGS = -I../../include -D__NTDLL__
 
 IMAGE_BASE = 0x77f60000
 
-ifneq ($(HOST),mingw32-windows)
-  ifneq ($(HOST),mingw32-linux)
-    DLLTARGET=$(TARGET).a
-    DLLMAIN=
-  else
-    DLLTARGET=$(TARGET).dll
-    DLLMAIN=main/dllmain.o
-  endif
-else
-  DLLTARGET=$(TARGET).dll
-  DLLMAIN=main/dllmain.o
-endif
+DLLTARGET=$(TARGET).dll
+DLLMAIN=main/dllmain.o
 
 all: $(DLLTARGET)
 
@@ -31,7 +21,7 @@ RTL_OBJECTS = rtl/critical.o rtl/error.o rtl/heap.o rtl/largeint.o \
               rtl/math.o rtl/mem.o rtl/nls.o rtl/process.o rtl/sd.o \
               rtl/thread.o rtl/unicode.o rtl/env.o rtl/path.o rtl/ppb.o \
               rtl/bitmap.o rtl/time.o rtl/acl.o rtl/sid.o rtl/image.o \
-              rtl/access.o rtl/luid.o
+              rtl/access.o rtl/apc.o rtl/callback.o luid.o
 
 STDIO_OBJECTS = stdio/sprintf.o stdio/swprintf.o
 

@@ -91,7 +91,7 @@ typedef struct _PEB
    PVOID FastPebLockRoutine;                        // 20h
    PVOID FastPebUnlockRoutine;                      // 24h
    ULONG EnvironmentUpdateCount;                    // 28h
-   PVOID KernelCallbackTable;                       // 2Ch
+   PVOID* KernelCallbackTable;                      // 2Ch
    PVOID EventLogSection;                           // 30h
    PVOID EventLog;                                  // 34h
    PPEB_FREE_BLOCK FreeList;                        // 38h

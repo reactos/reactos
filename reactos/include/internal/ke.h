@@ -34,6 +34,7 @@ VOID KeFreeGdtSelector(ULONG Entry);
 BOOLEAN KiTestAlert(PKTHREAD Thread, PCONTEXT UserContext);
 VOID KeCallApcsThread(VOID);
 VOID KeRemoveAllWaitsThread(PETHREAD Thread, NTSTATUS WaitStatus);
+PULONG KeGetStackTopThread(PETHREAD Thread);
 
 /* INITIALIZATION FUNCTIONS *************************************************/
 

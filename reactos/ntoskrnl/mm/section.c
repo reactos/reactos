@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.29 2000/04/07 02:24:01 dwelch Exp $
+/* $Id: section.c,v 1.30 2000/05/13 13:51:05 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -26,6 +26,20 @@
 POBJECT_TYPE EXPORTED MmSectionObjectType = NULL;
 
 /* FUNCTIONS *****************************************************************/
+
+VOID MmLockSection(PSECTION_OBJECT Section)
+{
+   KeWaitForSingleObject(&Section->Lock,
+			 UserRequest,
+			 KernelMode,
+			 FALSE,
+			 NULL);
+}
+
+VOID MmUnlockSection(PSECTION_OBJECT Section)
+{
+   KeReleaseMutex(&Section->Lock, FALSE);
+}
 
 VOID MmSetPageEntrySection(PSECTION_OBJECT Section,
 			   ULONG Offset,
@@ -66,47 +80,84 @@ PVOID MmGetPageEntrySection(PSECTION_OBJECT Section,
    return(Entry);
 }
 
-PVOID MiTryToSharePageInSection(PSECTION_OBJECT Section,
-				ULONG Offset)
+NTSTATUS MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
+				      MEMORY_AREA* MemoryArea, 
+				      PVOID Address)
 {
-   KIRQL oldIrql;
-   PLIST_ENTRY current_entry;
-   PMEMORY_AREA current;
-   PVOID Address;
-   ULONG PhysPage;
+   LARGE_INTEGER Offset;
+   IO_STATUS_BLOCK IoStatus;
+   PMDL Mdl;
+   PVOID Page;
+   NTSTATUS Status;
+   ULONG PAddress;
+   PSECTION_OBJECT Section;
+   PVOID Entry;
    
-   DPRINT("MiTryToSharePageInSection(Section %x, Offset %x)\n",
-	  Section, Offset);
+   DPRINT("MmSectionHandleFault(MemoryArea %x, Address %x)\n",
+	   MemoryArea,Address);
    
-   KeAcquireSpinLock(&Section->ViewListLock, &oldIrql);
-   
-   current_entry = Section->ViewListHead.Flink;
-   
-   while (current_entry != &Section->ViewListHead)
+   if (MmIsPagePresent(NULL, Address))
      {
-	current = CONTAINING_RECORD(current_entry, MEMORY_AREA,
-				    Data.SectionData.ViewListEntry);
-	
-	if (current->Data.SectionData.ViewOffset <= Offset &&
-	    (current->Data.SectionData.ViewOffset + current->Length) >= Offset)
-	  {
-	     Address = current->BaseAddress + 
-	       (Offset - current->Data.SectionData.ViewOffset);
-	     
-	     PhysPage = MmGetPhysicalAddressForProcess(current->Process,
-						       Address);
-	     MmReferencePage((PVOID)PhysPage);
-	     KeReleaseSpinLock(&Section->ViewListLock, oldIrql);
-	     DPRINT("MiTryToSharePageInSection() = %x\n", PhysPage);
-	     return((PVOID)PhysPage);
-	  }
-	
-	current_entry = current_entry->Flink;
+	return(STATUS_SUCCESS);
      }
    
-   KeReleaseSpinLock(&Section->ViewListLock, oldIrql);
-   DPRINT("MiTryToSharePageInSection() finished\n");
-   return(NULL);
+   PAddress = (ULONG)PAGE_ROUND_DOWN(((ULONG)Address));
+   Offset.QuadPart = (PAddress - (ULONG)MemoryArea->BaseAddress) +
+     MemoryArea->Data.SectionData.ViewOffset;
+   
+   Section = MemoryArea->Data.SectionData.Section;
+   
+   MmLockSection(Section);
+   
+   Entry = MmGetPageEntrySection(Section, Offset.QuadPart);
+   
+   if (Entry == NULL)
+     {   
+	Mdl = MmCreateMdl(NULL, NULL, PAGESIZE);
+	MmBuildMdlFromPages(Mdl);
+	Page = MmGetMdlPageAddress(Mdl, 0);
+	MmUnlockSection(Section);
+	MmUnlockAddressSpace(AddressSpace);
+	Status = IoPageRead(MemoryArea->Data.SectionData.Section->FileObject,
+			    Mdl,
+			    &Offset,
+			    &IoStatus);
+	if (!NT_SUCCESS(Status))
+	  {
+	     return(Status);
+	  }
+     
+	MmLockAddressSpace(AddressSpace);
+	MmLockSection(Section);
+	
+	Entry = MmGetPageEntrySection(Section, Offset.QuadPart);
+	
+	if (Entry == NULL)
+	  {
+	     MmSetPageEntrySection(Section,
+				   Offset.QuadPart,
+				   Page);
+	  }
+	else
+	  {
+	     MmDereferencePage(Page);
+	     Page = Entry;
+	     MmReferencePage(Page);
+	  }	
+     }
+   else
+     {
+	Page = Entry;
+	MmReferencePage(Page);	
+     }
+   
+   MmSetPage(NULL,
+	     Address,
+	     MemoryArea->Attributes,
+	     (ULONG)Page);
+   MmUnlockSection(Section);
+   
+   return(STATUS_SUCCESS);
 }
 
 VOID MmpDeleteSection(PVOID ObjectBody)
@@ -242,6 +293,7 @@ NTSTATUS STDCALL NtCreateSection (OUT PHANDLE SectionHandle,
    Section->AllocateAttributes = AllocationAttributes;
    InitializeListHead(&Section->ViewListHead);
    KeInitializeSpinLock(&Section->ViewListLock);
+   KeInitializeMutex(&Section->Lock, 0);
    
    if (FileHandle != (HANDLE)0xffffffff)
      {
@@ -253,9 +305,6 @@ NTSTATUS STDCALL NtCreateSection (OUT PHANDLE SectionHandle,
 					   NULL);
 	if (!NT_SUCCESS(Status))
 	  {
-	     /*
-	      * Delete section object
-	      */
 	     DPRINT("NtCreateSection() = %x\n",Status);
 	     ZwClose(SectionHandle);
 	     ObDereferenceObject(Section);
@@ -295,8 +344,8 @@ NTSTATUS STDCALL NtOpenSection(PHANDLE			SectionHandle,
 			       ACCESS_MASK		DesiredAccess,
 			       POBJECT_ATTRIBUTES	ObjectAttributes)
 {
-   PVOID		Object;
-   NTSTATUS	Status;
+   PVOID Object;
+   NTSTATUS Status;
    
    *SectionHandle = 0;
 
@@ -377,14 +426,14 @@ NTSTATUS STDCALL NtMapViewOfSection(HANDLE SectionHandle,
 				    ULONG CommitSize,
 				    PLARGE_INTEGER SectionOffset,
 				    PULONG ViewSize,
-				    SECTION_INHERIT	InheritDisposition,
+				    SECTION_INHERIT InheritDisposition,
 				    ULONG AllocationType,
 				    ULONG Protect)
 {
-   PSECTION_OBJECT	Section;
-   PEPROCESS	Process;
-   MEMORY_AREA	* Result;
-   NTSTATUS	Status;
+   PSECTION_OBJECT Section;
+   PEPROCESS Process;
+   MEMORY_AREA* Result;
+   NTSTATUS Status;
    KIRQL oldIrql;
    ULONG ViewOffset;
    PMADDRESS_SPACE AddressSpace;
@@ -412,6 +461,7 @@ NTSTATUS STDCALL NtMapViewOfSection(HANDLE SectionHandle,
      }
    
    DPRINT("Section %x\n",Section);
+   MmLockSection(Section);
    
    Status = ObReferenceObjectByHandle(ProcessHandle,
 				      PROCESS_VM_OPERATION,
@@ -423,6 +473,7 @@ NTSTATUS STDCALL NtMapViewOfSection(HANDLE SectionHandle,
      {
 	DPRINT("ObReferenceObjectByHandle(ProcessHandle, ...) failed (%x)\n",
 	       Status);
+	MmUnlockSection(Section);
 	ObDereferenceObject(Section);		
 	return Status;
      }
@@ -461,6 +512,7 @@ NTSTATUS STDCALL NtMapViewOfSection(HANDLE SectionHandle,
 	
 	MmUnlockAddressSpace(AddressSpace);
 	ObDereferenceObject(Process);
+	MmUnlockSection(Section);
 	ObDereferenceObject(Section);
 	
 	return Status;
@@ -480,13 +532,14 @@ NTSTATUS STDCALL NtMapViewOfSection(HANDLE SectionHandle,
    DPRINT("*BaseAddress %x\n",*BaseAddress);
    MmUnlockAddressSpace(AddressSpace);
    ObDereferenceObject(Process);   
+   MmUnlockSection(Section);
    
    DPRINT("NtMapViewOfSection() returning (Status %x)\n", STATUS_SUCCESS);
    return(STATUS_SUCCESS);
 }
 
 NTSTATUS STDCALL MmUnmapViewOfSection(PEPROCESS Process,
-			      PMEMORY_AREA MemoryArea)
+				      PMEMORY_AREA MemoryArea)
 {
    PSECTION_OBJECT Section;
    KIRQL oldIrql;
@@ -496,9 +549,11 @@ NTSTATUS STDCALL MmUnmapViewOfSection(PEPROCESS Process,
    DPRINT("MmUnmapViewOfSection(Section %x) SectionRC %d\n",
 	   Section, ObGetReferenceCount(Section));
    
+   MmLockSection(Section);
    KeAcquireSpinLock(&Section->ViewListLock, &oldIrql);
    RemoveEntryList(&MemoryArea->Data.SectionData.ViewListEntry);
    KeReleaseSpinLock(&Section->ViewListLock, oldIrql);
+   MmUnlockSection(Section);
    ObDereferenceObject(Section);
    
    return(STATUS_SUCCESS);

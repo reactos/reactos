@@ -1,4 +1,4 @@
-/* $Id: buildirp.c,v 1.20 2000/03/26 19:38:21 ea Exp $
+/* $Id: buildirp.c,v 1.21 2000/05/13 13:50:59 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -144,7 +144,7 @@ IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
  *          NULL on failure
  */
 {
-      PIRP Irp;
+   PIRP Irp;
    PIO_STACK_LOCATION StackPtr;
    
    DPRINT("IoBuildAsynchronousFsdRequest(MajorFunction %x, DeviceObject %x, "
@@ -211,17 +211,15 @@ IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
    return(Irp);
 }
 
-PIRP
-STDCALL
-IoBuildDeviceIoControlRequest(ULONG IoControlCode,
-				   PDEVICE_OBJECT DeviceObject,
-				   PVOID InputBuffer,
-				   ULONG InputBufferLength,
-				   PVOID OutputBuffer,
-				   ULONG OutputBufferLength,
-				   BOOLEAN InternalDeviceIoControl,
-				   PKEVENT Event,
-				   PIO_STATUS_BLOCK IoStatusBlock)
+PIRP STDCALL IoBuildDeviceIoControlRequest(ULONG IoControlCode,
+					  PDEVICE_OBJECT DeviceObject,
+					  PVOID InputBuffer,
+					  ULONG InputBufferLength,
+					  PVOID OutputBuffer,
+					  ULONG OutputBufferLength,
+					  BOOLEAN InternalDeviceIoControl,
+					  PKEVENT Event,
+					  PIO_STATUS_BLOCK IoStatusBlock)
 /*
  * FUNCTION: Allocates and sets up an IRP to be sent to drivers
  * ARGUMENTS:
@@ -245,17 +243,17 @@ IoBuildDeviceIoControlRequest(ULONG IoControlCode,
    ULONG BufferLength;
 
    DPRINT("IoBuildDeviceIoRequest(IoControlCode %x, DeviceObject %x, "
-      "InputBuffer %x, InputBufferLength %x, OutputBuffer %x, "
-      "OutputBufferLength %x, InternalDeviceIoControl %x "
-      "Event %x, IoStatusBlock %x\n",IoControlCode,DeviceObject,
-      InputBuffer,InputBufferLength,OutputBuffer,OutputBufferLength,
-      InternalDeviceIoControl,Event,IoStatusBlock);
+	  "InputBuffer %x, InputBufferLength %x, OutputBuffer %x, "
+	  "OutputBufferLength %x, InternalDeviceIoControl %x "
+	  "Event %x, IoStatusBlock %x\n",IoControlCode,DeviceObject,
+	  InputBuffer,InputBufferLength,OutputBuffer,OutputBufferLength,
+	  InternalDeviceIoControl,Event,IoStatusBlock);
    
    Irp = IoAllocateIrp(DeviceObject->StackSize,TRUE);
    if (Irp==NULL)
-   {
-      return(NULL);
-   }
+     {
+	return(NULL);
+     }
    
    Irp->UserEvent = Event;
    Irp->UserIosb = IoStatusBlock;
@@ -263,7 +261,8 @@ IoBuildDeviceIoControlRequest(ULONG IoControlCode,
    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
 
    StackPtr = IoGetNextIrpStackLocation(Irp);
-   StackPtr->MajorFunction = InternalDeviceIoControl ? IRP_MJ_INTERNAL_DEVICE_CONTROL : IRP_MJ_DEVICE_CONTROL;
+   StackPtr->MajorFunction = InternalDeviceIoControl ? 
+     IRP_MJ_INTERNAL_DEVICE_CONTROL : IRP_MJ_DEVICE_CONTROL;
    StackPtr->MinorFunction = 0;
    StackPtr->Flags = 0;
    StackPtr->Control = 0;
@@ -272,102 +271,114 @@ IoBuildDeviceIoControlRequest(ULONG IoControlCode,
    StackPtr->CompletionRoutine = NULL;
    StackPtr->Parameters.DeviceIoControl.IoControlCode = IoControlCode;
    StackPtr->Parameters.DeviceIoControl.InputBufferLength = InputBufferLength;
-   StackPtr->Parameters.DeviceIoControl.OutputBufferLength = OutputBufferLength;
+   StackPtr->Parameters.DeviceIoControl.OutputBufferLength = 
+     OutputBufferLength;
 
    switch (IO_METHOD_FROM_CTL_CODE(IoControlCode))
-   {
-    case METHOD_BUFFERED:
-      DPRINT("Using METHOD_BUFFERED!\n");
+     {
+      case METHOD_BUFFERED:
+	DPRINT("Using METHOD_BUFFERED!\n");
       
-      BufferLength = (InputBufferLength>OutputBufferLength)?InputBufferLength:OutputBufferLength;
-      if (BufferLength)
-         {
-            Irp->AssociatedIrp.SystemBuffer = (PVOID)
-	      ExAllocatePool(NonPagedPool,BufferLength);
+	if (InputBufferLength > OutputBufferLength)
+	  {
+	     BufferLength = InputBufferLength;
+	  }
+	else
+	  {
+	     BufferLength = OutputBufferLength;
+	  }
+	if (BufferLength)
+	  {
+	     Irp->AssociatedIrp.SystemBuffer = (PVOID)
+	       ExAllocatePool(NonPagedPool,BufferLength);
 	    
-            if (Irp->AssociatedIrp.SystemBuffer==NULL)
-	      {
-		 IoFreeIrp(Irp);
-		 return(NULL);
-	      }
-         }
+	     if (Irp->AssociatedIrp.SystemBuffer == NULL)
+	       {
+		  IoFreeIrp(Irp);
+		  return(NULL);
+	       }
+	  }
       
-      if (InputBuffer && InputBufferLength)
-	{
-	   RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
-			 InputBuffer,
-			 InputBufferLength);
-	}
-      Irp->UserBuffer = OutputBuffer;
-      break;
-
-    case METHOD_IN_DIRECT:
-      DPRINT("Using METHOD_IN_DIRECT!\n");
-      
-      /* build input buffer (control buffer) */
-      if (InputBuffer && InputBufferLength)
-	{
-	   Irp->AssociatedIrp.SystemBuffer = (PVOID)
+	if (InputBuffer && InputBufferLength)
+	  {
+	     RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
+			   InputBuffer,
+			   InputBufferLength);
+	  }
+	Irp->UserBuffer = OutputBuffer;
+	break;
+	
+      case METHOD_IN_DIRECT:
+	DPRINT("Using METHOD_IN_DIRECT!\n");
+	
+	/* build input buffer (control buffer) */
+	if (InputBuffer && InputBufferLength)
+	  {
+	     Irp->AssociatedIrp.SystemBuffer = (PVOID)
                ExAllocatePool(NonPagedPool,InputBufferLength);
-	   
-	   if (Irp->AssociatedIrp.SystemBuffer==NULL)
-            {
-               IoFreeIrp(Irp);
-               return(NULL);
-            }
+	     
+	     if (Irp->AssociatedIrp.SystemBuffer == NULL)
+	       {
+		  IoFreeIrp(Irp);
+		  return(NULL);
+	       }
 
-            RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
-               InputBuffer,
-               InputBufferLength);
-         }
-
+	     RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
+			   InputBuffer,
+			   InputBufferLength);
+	  }
+	
          /* build output buffer (data transfer buffer) */
-         if (OutputBuffer && OutputBufferLength)
-         {
-            Irp->MdlAddress = IoAllocateMdl (OutputBuffer,OutputBufferLength,FALSE,FALSE,Irp);
-            MmProbeAndLockPages (Irp->MdlAddress,UserMode,IoReadAccess);
-         }
-         break;
-
+	if (OutputBuffer && OutputBufferLength)
+	  {
+	     Irp->MdlAddress = IoAllocateMdl(OutputBuffer,
+					     OutputBufferLength,
+					     FALSE,
+					     FALSE,
+					     Irp);
+	     MmProbeAndLockPages (Irp->MdlAddress,UserMode,IoReadAccess);
+	  }
+	break;
+	
       case METHOD_OUT_DIRECT:
-         DPRINT("Using METHOD_OUT_DIRECT!\n");
-
-         /* build input buffer (control buffer) */
-         if (InputBuffer && InputBufferLength)
-         {
+	DPRINT("Using METHOD_OUT_DIRECT!\n");
+	
+	/* build input buffer (control buffer) */
+	if (InputBuffer && InputBufferLength)
+	  {
             Irp->AssociatedIrp.SystemBuffer = (PVOID)
                ExAllocatePool(NonPagedPool,InputBufferLength);
-
-            if (Irp->AssociatedIrp.SystemBuffer==NULL)
-            {
-               IoFreeIrp(Irp);
-               return(NULL);
-            }
-
+	     
+	     if (Irp->AssociatedIrp.SystemBuffer==NULL)
+	       {
+		  IoFreeIrp(Irp);
+		  return(NULL);
+	       }
+	     
             RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
-               InputBuffer,
-               InputBufferLength);
-         }
-
-         /* build output buffer (data transfer buffer) */
+			  InputBuffer,
+			  InputBufferLength);
+	  }
+	
+	/* build output buffer (data transfer buffer) */
          if (OutputBuffer && OutputBufferLength)
-         {
-            Irp->MdlAddress = IoAllocateMdl(OutputBuffer,
-					    OutputBufferLength,
-					    FALSE,
-					    FALSE,
+	  {
+	     Irp->MdlAddress = IoAllocateMdl(OutputBuffer,
+					     OutputBufferLength,
+					     FALSE,
+					     FALSE,
 					    Irp);
-            MmProbeAndLockPages(Irp->MdlAddress,UserMode,IoWriteAccess);
-         }
-         break;
-
+	     MmProbeAndLockPages(Irp->MdlAddress,UserMode,IoWriteAccess);
+	  }
+	break;
+	
       case METHOD_NEITHER:
-         DPRINT("Using METHOD_NEITHER!\n");
-
-         Irp->UserBuffer = OutputBuffer;
-         StackPtr->Parameters.DeviceIoControl.Type3InputBuffer = InputBuffer;
-         break;
-   }
+	DPRINT("Using METHOD_NEITHER!\n");
+	
+	Irp->UserBuffer = OutputBuffer;
+	StackPtr->Parameters.DeviceIoControl.Type3InputBuffer = InputBuffer;
+	break;
+     }
 
    return(Irp);
 }

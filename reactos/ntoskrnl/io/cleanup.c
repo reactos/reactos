@@ -27,7 +27,13 @@ VOID IopCompleteRequest1(struct _KAPC* Apc,
 			 PVOID* SystemArgument1,
 			 PVOID* SystemArgument2)
 {
+   PIRP Irp;
+   
    DPRINT("IopCompleteRequest1()\n");
+   
+   Irp = (PIRP)(*SystemArgument1);
+   (*SystemArgument1) = (PVOID)Irp->UserIosb;
+   (*SystemArgument2) = (PVOID)Irp->IoStatus.Information;
    IoFreeIrp((PIRP)(*SystemArgument1));
 }
 
@@ -179,19 +185,23 @@ VOID IoSecondStageCompletion(PIRP Irp, CCHAR PriorityBoost)
    if (Irp->Overlay.AsynchronousParameters.UserApcRoutine != NULL)
      {
 	PKTHREAD Thread;
+	PKNORMAL_ROUTINE UserApcRoutine;
+	PVOID UserApcContext;
 	
    	DPRINT("Dispatching APC\n");
 	Thread = &Irp->Tail.Overlay.Thread->Tcb;
+	UserApcRoutine = (PKNORMAL_ROUTINE)
+	  Irp->Overlay.AsynchronousParameters.UserApcRoutine;
+	UserApcContext = (PVOID)
+	  Irp->Overlay.AsynchronousParameters.UserApcRoutine;
 	KeInitializeApc(&Irp->Tail.Apc,
 			Thread,
 			0,
 			IopCompleteRequest1,
 			NULL,
-			(PKNORMAL_ROUTINE)
-			Irp->Overlay.AsynchronousParameters.UserApcRoutine,
+			UserApcRoutine,
 			UserMode,
-			(PVOID)
-			   Irp->Overlay.AsynchronousParameters.UserApcContext);
+			UserApcContext);
 	KeInsertQueueApc(&Irp->Tail.Apc,
 			 Irp,
 			 NULL,

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.14 2000/04/07 02:24:02 dwelch Exp $
+/* $Id: create.c,v 1.15 2000/05/13 13:51:07 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -264,9 +264,9 @@ static VOID PiTimeoutThread(struct _KDPC *dpc,
    KeRemoveAllWaitsThread((PETHREAD)Context, Status);
 }
 
-VOID PiBeforeBeginThread(VOID)
+VOID PiBeforeBeginThread(CONTEXT c)
 {
-   DPRINT("PiBeforeBeginThread()\n");
+   DPRINT1("PiBeforeBeginThread(Eip %x)\n", c.Eip);
    //KeReleaseSpinLock(&PiThreadListLock, PASSIVE_LEVEL);
    KeLowerIrql(PASSIVE_LEVEL);
 }

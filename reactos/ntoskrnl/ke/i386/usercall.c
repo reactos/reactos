@@ -1,4 +1,4 @@
-/* $Id: usercall.c,v 1.10 2000/03/08 01:53:59 ekohl Exp $
+/* $Id: usercall.c,v 1.11 2000/05/13 13:51:05 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -57,15 +57,15 @@ void PsBeginThreadWithContextInternal(void);
 
 VOID KiSystemCallHook(ULONG Nr, ...)
 {
-#ifdef TRACE_SYSTEM_CALLS
+#if 1
    va_list ap;
    ULONG i;
 
    va_start(ap, Nr);
 
-   DbgPrint("%x/%d ", _SystemServiceTable[Nr].Function,Nr);
-   DbgPrint("%x (", _SystemServiceTable[Nr].ParametersSize);
-   for (i = 0; i < _SystemServiceTable[Nr].ParametersSize / 4; i++)
+   DbgPrint("%x/%d ", KeServiceDescriptorTable[0].SSDT[Nr].SysCallPtr, Nr);
+   DbgPrint("%x (", KeServiceDescriptorTable[0].SSPT[Nr].ParamBytes);
+   for (i = 0; i < KeServiceDescriptorTable[0].SSPT[Nr].ParamBytes / 4; i++)
      {
 	DbgPrint("%x, ", va_arg(ap, ULONG));
      }

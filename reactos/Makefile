@@ -234,6 +234,7 @@ $(SUBSYS:%=%_dist): %_dist:
 install: all
 	./install.sh /mnt/hda1
 	./install.sh /mnt/hda4
+	./install.bochs
 	
 make_floppy_dirs:
 ifeq ($(DOSCLI),yes)

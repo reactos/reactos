@@ -170,5 +170,12 @@ NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
 		       ULONG Address);
 NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
 			   ULONG Address);
+NTSTATUS MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
+					MEMORY_AREA* MemoryArea, 
+					PVOID Address);
+NTSTATUS MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
+				      MEMORY_AREA* MemoryArea, 
+				      PVOID Address);
+
 
 #endif

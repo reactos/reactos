@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.45 2000/04/07 02:24:02 dwelch Exp $
+/* $Id: thread.c,v 1.46 2000/05/13 13:51:08 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -541,7 +541,13 @@ NTSTATUS STDCALL NtSuspendThread (IN HANDLE ThreadHandle,
 NTSTATUS STDCALL NtContinue(IN PCONTEXT	Context,
 			    IN CINT IrqLevel)
 {
-   UNIMPLEMENTED;
+   PULONG StackTop;
+   
+   StackTop = KeGetStackTopThread(PsGetCurrentThread());
+   
+   memcpy(StackTop, Context, sizeof(CONTEXT));
+   
+   return(STATUS_SUCCESS);
 }
 
 

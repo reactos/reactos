@@ -39,6 +39,7 @@ static type types[255] = {
      {"byte", BYTE_TYPE, 0},
      {"char", CHAR_TYPE, UNSIGNED_TYPE_OPTION},
      {"double", DOUBLE_TYPE, 0},
+     {"enum", ENUM_TYPE, 0},
      {"error_status_t", ERROR_STATUS_TYPE, UNSIGNED_TYPE_OPTION},
      {"float", FLOAT_TYPE, 0},
      {"handle_t", HANDLE_TYPE, 0},

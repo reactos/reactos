@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.27 2000/04/07 02:24:01 dwelch Exp $
+/* $Id: virtual.c,v 1.28 2000/05/13 13:51:06 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -26,6 +26,24 @@
 #include <internal/debug.h>
 
 /* FUNCTIONS ****************************************************************/
+
+NTSTATUS MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
+					MEMORY_AREA* MemoryArea, 
+					PVOID Address)
+{
+   if (MmIsPagePresent(NULL, Address))
+     {
+	
+	return(STATUS_SUCCESS);
+     }
+   
+   MmSetPage(PsGetCurrentProcess(),
+	     Address,
+	     MemoryArea->Attributes,
+	     (ULONG)MmAllocPage());
+   
+   return(STATUS_SUCCESS);
+}
 
 NTSTATUS MmReleaseMemoryArea(PEPROCESS Process, PMEMORY_AREA Marea)
 {

@@ -9,6 +9,7 @@ char* id;
 int number;
 char* uuid;
 char operator;
+char* string;
 struct
 {
 int minor;
@@ -16,10 +17,16 @@ int major;
 } version;
 }
 
-%token <id> ID_TOKEN
-%token <uuid> UUID_TOKEN
-%token NUMBER_TOKEN
-%token <version> VERSION_TOKEN
+%token <id> ID_LITERAL
+%token <uuid> UUID_LITERAL
+%token NUMBER_LITERAL
+%token <version> VERSION_LITERAL
+%token STRING_LITERAL
+
+%token ENDPOINT_KEYWORD
+%token EXCEPTIONS_KEYWORD
+%token LOCAL_KEYWORD
+%token IMPORT_KEYWORD
 
 %token UUID_KEYWORD
 %token VERSION_KEYWORD
@@ -78,24 +85,46 @@ option:
                                  { set_uuid($3); }
      | VERSION_KEYWORD LEFT_BRACKET VERSION_TOKEN RIGHT_BRACKET
                             { set_version($3.major, $3.minor); }
+     | ENDPOINT_KEYWORD LEFT_BRACKET port_specs RIGHT_BRACKET
+     | EXCEPTIONS_KEYWORD LEFT_BRACKET excep_names RIGHT_BRACKET
+     | LOCAL_KEYWORD
      | POINTER_DEFAULT_KEYWORD LEFT_BRACKET UNIQUE_KEYWORD RIGHT_BRACKET
-                                 { set_pointer_default($3); }
+                        { set_pointer_default($3); }
+     ;
+
+port_specs:
+     | STRING_TOKEN COMMA port_specs
+     ;
+
+excep_names: ID_TOKEN             { }
+     | ID_TOKEN COMMA excep_names { }
      ;
 
 interface: { start_interface(); } 
-           INTERFACE_KEYWORD ID_TOKEN LCURLY_BRACKET functions RCURLY_BRACKET
+           INTERFACE_KEYWORD ID_TOKEN LCURLY_BRACKET interface_components 
+	   RCURLY_BRACKET
            { end_interface($3); }
 
-functions:                                               
-	| function LINE_TERMINATOR functions
-	| TYPEDEF_KEYWORD typedef LINE_TERMINATOR functions
-	| const LINE_TERMINATOR functions
-	| STRUCT_KEYWORD struct_def RCURLY_BRACKET LINE_TERMINATOR functions
+interface_components: 
+        | interface_component LINE_TERMINATOR interface_components
+
+interface_component:
+        | IMPORT_KEYWORD import_list
+	| function
+	| TYPEDEF_KEYWORD typedef
+	| CONST_KEYWORD type ID_TOKEN ASSIGNMENT const_expr
+	| STRUCT_KEYWORD struct_def RCURLY_BRACKET 
 	;
 
-const: CONST_KEYWORD type ID_TOKEN ASSIGNMENT ID_TOKEN
-     | CONST_KEYWORD type ID_TOKEN ASSIGNMENT NUMBER_TOKEN
-     ;
+import_list: STRING_TOKEN
+          |  STRING_TOKEN COMMA import_list
+	  ;
+
+const_expr: NUMBER_TOKEN 
+          | STRING_TOKEN
+	  ;
+
+
 
 typedef: type ID_TOKEN { add_typedef($2, $1); };
 

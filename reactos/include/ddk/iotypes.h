@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.16 2000/05/09 16:12:47 ekohl Exp $
+/* $Id: iotypes.h,v 1.17 2000/05/13 13:50:55 dwelch Exp $
  * 
  */
 
@@ -144,6 +144,13 @@ typedef struct _IO_STACK_LOCATION
 	  } DeviceIoControl;
 	struct
 	  {
+	     ULONG OutputBufferLength;
+	     ULONG InputBufferLength;
+	     ULONG IoControlCode;
+	     PVOID Type3InputBuffer;
+	  } FileSystemControl;
+	struct
+	  {
 	     struct _VPB* Vpb;
 	     struct _DEVICE_OBJECT* DeviceObject;
 	  } Mount;
@@ -181,15 +188,16 @@ typedef struct _IO_STACK_LOCATION
 	  } QueryDirectory;
 	struct
 	  {
-	     ULONG FileAttributes;
-	     ULONG OpenMode;
-	     ULONG PipeType;
-	     ULONG PipeRead;
-	     ULONG PipeWait;
+	     ULONG CreateDisposition;
+	     ULONG CreateOptions;
+	     ULONG ShareAccess;
+	     BOOLEAN WriteModeMessage;
+	     BOOLEAN ReadModeMessage;
+	     BOOLEAN NonBlocking;
 	     ULONG MaxInstances;
 	     ULONG InBufferSize;
 	     ULONG OutBufferSize;
-	     LARGE_INTEGER Timeout;
+	     LARGE_INTEGER TimeOut;
 	  } CreateNamedPipe;
      } Parameters;
    

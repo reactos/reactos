@@ -1,4 +1,4 @@
-/* $Id: pagefile.c,v 1.3 2000/03/26 19:38:32 ea Exp $
+/* $Id: pagefile.c,v 1.4 2000/05/13 13:51:05 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -14,6 +14,7 @@
 #include <ddk/ntddk.h>
 #include <internal/bitops.h>
 #include <internal/io.h>
+#include <napi/core.h>
 
 #include <internal/debug.h>
 
@@ -44,6 +45,11 @@ static KSPIN_LOCK PagingFileListLock;
 static ULONG MiFreeSwapPages;
 static ULONG MiUsedSwapPages;
 static ULONG MiReservedSwapPages;
+
+#if 0
+static PVOID MmCoreDumpPageFrame;
+static BYTE MmCoreDumpHeader[PAGESIZE];
+#endif
 
 /* FUNCTIONS *****************************************************************/
 
@@ -156,6 +162,28 @@ SWAPENTRY MmAllocSwapPage(VOID)
    KeReleaseSpinLock(&PagingFileListLock, oldIrql);
    return(0);
 }
+
+#if 0
+NTSTATUS STDCALL MmDumpToPagingFile(PCONTEXT Context,
+				    ULONG BugCode,
+				    ULONG ExceptionCode,
+				    ULONG Cr2)
+{
+   ((PMM_CORE_DUMP_HEADER)MmCoreDumpHeader)->Magic = 
+     MM_CORE_DUMP_HEADER_MAGIC;
+   ((PMM_CORE_DUMP_HEADER)MmCoreDumpHeader)->Version = 
+     MM_CORE_DUMP_HEADER_VERSION;
+   memcpy(&((PMM_CORE_DUMP_HEADER)MmCoreDumpHeader)->Context,
+	  Context,
+	  sizeof(CONTEXT));
+   ((PMM_CORE_DUMP_HEADER)MmCoreDumpHeader)->DumpLength = 0;
+   ((PMM_CORE_DUMP_HEADER)MmCoreDumpHeader)->BugCode = BugCode;
+   ((PMM_CORE_DUMP_HEADER)MmCoreDumpHeader)->ExceptionCode = 
+     ExceptionCode;
+   ((PMM_CORE_DUMP_HEADER)MmCoreDumpHeader)->Cr2 = Cr2;
+   ((PMM_CORE_DUMP_HEADER)MmCoreDumpHeader)->Cr3 = 0;
+}
+#endif
 
 NTSTATUS STDCALL NtCreatePagingFile(IN	PUNICODE_STRING	PageFileName,
 				    IN	ULONG		MinimumSize,

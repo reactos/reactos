@@ -151,7 +151,7 @@ NTSTATUS HalReleaseTask(PETHREAD Thread)
  * NOTE: The thread had better not be running when this is called
  */
 {
-   extern BYTE init_stack[16384];
+   extern BYTE init_stack[MM_STACK_SIZE];
    
    KeFreeGdtSelector(Thread->Tcb.Context.nr / 8);
    if (Thread->Tcb.Context.KernelStackBase != init_stack)
@@ -194,8 +194,7 @@ NTSTATUS HalInitTaskWithContext(PETHREAD Thread, PCONTEXT Context)
       
    length = sizeof(hal_thread_state) - 1;
    base = (unsigned int)(&(Thread->Tcb.Context));
-//   kernel_stack = ExAllocatePool(NonPagedPool,PAGESIZE);
-   kernel_stack = ExAllocatePool(NonPagedPool, 6*PAGESIZE);
+   kernel_stack = ExAllocatePool(NonPagedPool, MM_STACK_SIZE);
    
    /*
     * Setup a TSS descriptor
@@ -209,7 +208,7 @@ NTSTATUS HalInitTaskWithContext(PETHREAD Thread, PCONTEXT Context)
 	return(STATUS_UNSUCCESSFUL);
      }
    
-   stack_start = kernel_stack + 6*PAGESIZE - sizeof(CONTEXT);
+   stack_start = kernel_stack + MM_STACK_SIZE - sizeof(CONTEXT);
    
    DPRINT("stack_start %x kernel_stack %x\n",
 	  stack_start, kernel_stack);
@@ -246,6 +245,11 @@ NTSTATUS HalInitTaskWithContext(PETHREAD Thread, PCONTEXT Context)
    return(STATUS_SUCCESS);
 }
 
+PULONG KeGetStackTopThread(PETHREAD Thread)
+{
+   return((PULONG)(Thread->Tcb.Context.KernelStackBase + MM_STACK_SIZE));
+}
+
 NTSTATUS HalInitTask(PETHREAD thread, PKSTART_ROUTINE fn, PVOID StartContext)
 /*
  * FUNCTION: Initializes the HAL portion of a thread object
@@ -259,7 +263,6 @@ NTSTATUS HalInitTask(PETHREAD thread, PKSTART_ROUTINE fn, PVOID StartContext)
    unsigned int desc;
    unsigned int length = sizeof(hal_thread_state) - 1;
    unsigned int base = (unsigned int)(&(thread->Tcb.Context));
-//   PULONG KernelStack = ExAllocatePool(NonPagedPool,4096);
    PULONG KernelStack;
    ULONG GdtDesc[2];
    extern BYTE init_stack[16384];
@@ -270,7 +273,7 @@ NTSTATUS HalInitTask(PETHREAD thread, PKSTART_ROUTINE fn, PVOID StartContext)
    
    if (fn != NULL)
      {
-	KernelStack = ExAllocatePool(NonPagedPool, 3*PAGESIZE);
+	KernelStack = ExAllocatePool(NonPagedPool, MM_STACK_SIZE);
      }
    else
      {

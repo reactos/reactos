@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.29 2000/04/25 23:22:49 ea Exp $
+/* $Id: zw.h,v 1.30 2000/05/13 13:50:55 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -18,7 +18,8 @@
 #define __DDK_ZW_H
 
 #include <security.h>
-  
+#include <napi/npipe.h>
+
 #define LCID ULONG
 //#define SECURITY_INFORMATION ULONG
 //typedef ULONG SECURITY_INFORMATION;
@@ -336,17 +337,13 @@ ZwAllocateVirtualMemory (
  * RETURN Status
  */
 //FIXME: this function might need 3 parameters
-NTSTATUS
-STDCALL
-NtCallbackReturn(
-		VOID
-	);
+NTSTATUS STDCALL NtCallbackReturn(PVOID Result,
+				  ULONG ResultLength,
+				  NTSTATUS Status);
 
-NTSTATUS
-STDCALL
-ZwCallbackReturn(
-		VOID
-	);
+NTSTATUS STDCALL ZwCallbackReturn(PVOID Result,
+				  ULONG ResultLength,
+				  NTSTATUS Status);
 
 /*
  * FUNCTION: Cancels a IO request
@@ -729,66 +726,6 @@ ZwCreateMutant(
 	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes,
 	IN BOOLEAN InitialOwner
-	);
-
-/*
- * FUNCTION: Creates a named pipe
- * ARGUMENTS:
- *        NamedPipeFileHandle (OUT) = Caller supplied storage for the resulting handle
- *        DesiredAccess = Specifies the allowed or desired access to the mutex
- *        ObjectAttributes = Contains the name of the mutex.
- *        IoStatusBlock = 
- *        FileAttributes =
- *        ShareAccess =
- *        OpenMode =
- *        PipeType =
- *        PipeRead =
- *        PipeWait =
- *        MaxInstances =
- *        InBufferSize =
- *        OutBufferSize =
- *        TimeOut =
- * REMARKS: This funciton maps to the win32 function CreateNamedPipe
- * RETURNS:
- *	Status
- */
-
-NTSTATUS
-STDCALL
-NtCreateNamedPipeFile(
-	OUT PHANDLE NamedPipeFileHandle,
-	IN ACCESS_MASK DesiredAccess,
-	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	OUT PIO_STATUS_BLOCK IoStatusBlock,
-	IN ULONG FileAttributes,
-	IN ULONG ShareAccess,
-	IN ULONG OpenMode,
-	IN ULONG PipeType,
-	IN ULONG PipeRead,
-	IN ULONG PipeWait,
-	IN ULONG MaxInstances,
-	IN ULONG InBufferSize,
-	IN ULONG OutBufferSize,
-	IN PLARGE_INTEGER TimeOut
-	);
-
-NTSTATUS
-STDCALL
-ZwCreateNamedPipeFile(
-	OUT PHANDLE NamedPipeFileHandle,
-	IN ACCESS_MASK DesiredAccess,
-	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	OUT PIO_STATUS_BLOCK IoStatusBlock,
-	IN ULONG FileAttributes,
-	IN ULONG ShareAccess,
-	IN ULONG OpenMode,
-	IN ULONG PipeType,
-	IN ULONG PipeRead,
-	IN ULONG PipeWait,
-	IN ULONG MaxInstances,
-	IN ULONG InBufferSize,
-	IN ULONG OutBufferSize,
-	IN PLARGE_INTEGER TimeOut
 	);
 
 
