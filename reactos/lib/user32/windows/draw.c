@@ -45,6 +45,8 @@
 #define SPI_SETFOCUSBORDERWIDTH	(8207)
 #define SPI_GETFOCUSBORDERHEIGHT	(8208)
 #define SPI_SETFOCUSBORDERHEIGHT	(8209)
+#define COLOR_MENUHILIGHT	(29)
+#define COLOR_MENUBAR	(30)
 
 /* GLOBALS *******************************************************************/
 
@@ -1823,13 +1825,18 @@ INT STDCALL
 FillRect(HDC hDC, CONST RECT *lprc, HBRUSH hbr)
 {
    HBRUSH prevhbr;
-   if ((DWORD)hbr < 0x4000)
-      hbr = GetSysColorBrush((DWORD)hbr);
-   if ((prevhbr = SelectObject(hDC, hbr)) == NULL)
+   
+   if (hbr <= (HBRUSH)(COLOR_MENUBAR + 1))
+   {
+      hbr = GetSysColorBrush((int)hbr - 1);
+   }
+   if ((prevhbr = NtGdiSelectObject(hDC, hbr)) == NULL)
+   {
       return FALSE;
-   PatBlt(hDC, lprc->left, lprc->top, lprc->right - lprc->left,
+   }
+   NtGdiPatBlt(hDC, lprc->left, lprc->top, lprc->right - lprc->left,
       lprc->bottom - lprc->top, PATCOPY);
-   SelectObject(hDC, prevhbr);
+   NtGdiSelectObject(hDC, prevhbr);
    return TRUE;
 }
 
