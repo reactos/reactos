@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.22 2003/07/31 18:24:43 royce Exp $
+/* $Id: rw.c,v 1.23 2003/11/30 19:50:42 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -38,6 +38,16 @@ WriteFile(HANDLE hFile,
 
    DPRINT("WriteFile(hFile %x)\n",hFile);
    
+  if (lpOverLapped == NULL && lpNumberOfBytesWritten == NULL)
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+  }  
+   
+  if (lpNumberOfBytesWritten)
+  {
+    *lpNumberOfBytesWritten = 0;
+  }
+   
    if (IsConsoleHandle(hFile))
      {
 	return(WriteConsoleA(hFile,
@@ -60,7 +70,6 @@ WriteFile(HANDLE hFile,
      {
 	ptrOffset = NULL;
 	IoStatusBlock = &IIosb;
-        Offset.QuadPart = 0;
      }
 
    errCode = NtWriteFile(hFile,
@@ -72,18 +81,20 @@ WriteFile(HANDLE hFile,
 			 nNumberOfBytesToWrite,
 			 ptrOffset,
 			 NULL);
-   if (!NT_SUCCESS(errCode))
-     {
-	SetLastErrorByStatus (errCode);
-	DPRINT("WriteFile() failed\n");
-	return FALSE;
-     }
-   if (lpNumberOfBytesWritten != NULL )
-     {
-	*lpNumberOfBytesWritten = IoStatusBlock->Information;
-     }
-   DPRINT("WriteFile() succeeded\n");
-   return(TRUE);
+       
+  if (!NT_SUCCESS(errCode) || errCode == STATUS_PENDING)
+  {
+    SetLastErrorByStatus (errCode);
+    return FALSE;
+  }
+     
+  if (lpNumberOfBytesWritten != NULL )
+  {
+    *lpNumberOfBytesWritten = IoStatusBlock->Information;
+  }
+     
+  DPRINT("WriteFile() succeeded\n");
+  return(TRUE);
 }
 
 
@@ -91,11 +102,13 @@ WriteFile(HANDLE hFile,
  * @implemented
  */
 WINBOOL STDCALL
-ReadFile(HANDLE hFile,
-			 LPVOID lpBuffer,
-			 DWORD nNumberOfBytesToRead,
-			 LPDWORD lpNumberOfBytesRead,
-			 LPOVERLAPPED lpOverLapped)
+ReadFile(
+  HANDLE hFile,
+  LPVOID lpBuffer,
+  DWORD nNumberOfBytesToRead,
+  LPDWORD lpNumberOfBytesRead,
+  LPOVERLAPPED lpOverLapped
+  )
 {
    HANDLE hEvent = NULL;
    LARGE_INTEGER Offset;
@@ -103,30 +116,40 @@ ReadFile(HANDLE hFile,
    IO_STATUS_BLOCK IIosb;
    PIO_STATUS_BLOCK IoStatusBlock;
    PLARGE_INTEGER ptrOffset;
+
+  if (lpOverLapped == NULL && lpNumberOfBytesRead == NULL)
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+  }  
+
+  if (lpNumberOfBytesRead)
+  {
+    *lpNumberOfBytesRead = 0;
+  }
    
-   if (IsConsoleHandle(hFile))
-     {
-	return(ReadConsoleA(hFile,
+  if (IsConsoleHandle(hFile))
+  {
+    return(ReadConsoleA(hFile,
 			    lpBuffer,
 			    nNumberOfBytesToRead,
 			    lpNumberOfBytesRead,
 			    NULL));
-     }
+  }
    
-   if (lpOverLapped != NULL) 
-     {
-        Offset.u.LowPart = lpOverLapped->Offset;
-        Offset.u.HighPart = lpOverLapped->OffsetHigh;
-	lpOverLapped->Internal = STATUS_PENDING;
-	hEvent = lpOverLapped->hEvent;
-	IoStatusBlock = (PIO_STATUS_BLOCK)lpOverLapped;
-	ptrOffset = &Offset;
-     }
-   else 
-     {
-	ptrOffset = NULL;
-	IoStatusBlock = &IIosb;
-     }
+  if (lpOverLapped) 
+  {
+    Offset.u.LowPart = lpOverLapped->Offset;
+    Offset.u.HighPart = lpOverLapped->OffsetHigh;
+    lpOverLapped->Internal = STATUS_PENDING;
+    hEvent = lpOverLapped->hEvent;
+    IoStatusBlock = (PIO_STATUS_BLOCK)lpOverLapped;
+    ptrOffset = &Offset;
+  }
+  else 
+  {
+    ptrOffset = NULL;
+    IoStatusBlock = &IIosb;
+  }
    
    errCode = NtReadFile(hFile,
 			hEvent,
@@ -137,32 +160,43 @@ ReadFile(HANDLE hFile,
 			nNumberOfBytesToRead,
 			ptrOffset,
 			NULL);
+
+  /* for non-overlapped io, a end-of-file error is translated to
+  a successful operation with zero bytes read */
+  if (!lpOverLapped && errCode == STATUS_END_OF_FILE)
+  {
+    /* IoStatusBlock->Information should contain zero in case of an error, but to be safe,
+    set lpNumberOfBytesRead to zero manually instead of using IoStatusBlock->Information */
+    *lpNumberOfBytesRead = 0;
+    return TRUE;
+  }
    
-   if (errCode != STATUS_PENDING && lpNumberOfBytesRead != NULL)
-     {
-	*lpNumberOfBytesRead = IoStatusBlock->Information;
-     }
-   
-   if (!NT_SUCCESS(errCode) && errCode != STATUS_END_OF_FILE)  
-     {
-	SetLastErrorByStatus (errCode);
-	return(FALSE);
-     }
-   return(TRUE);
+  if (!NT_SUCCESS(errCode) || errCode == STATUS_PENDING)
+  {
+    SetLastErrorByStatus (errCode);
+    return FALSE;
+  }
+
+  if (lpNumberOfBytesRead != NULL)
+  {
+    *lpNumberOfBytesRead = IoStatusBlock->Information;
+  }
+  
+  return(TRUE);
 }
 
 VOID STDCALL
 ApcRoutine(PVOID ApcContext, 
 		struct _IO_STATUS_BLOCK* IoStatusBlock, 
-		ULONG NumberOfBytesTransfered)
+		ULONG Reserved)
 {
    DWORD dwErrorCode;
    LPOVERLAPPED_COMPLETION_ROUTINE  lpCompletionRoutine = 
      (LPOVERLAPPED_COMPLETION_ROUTINE)ApcContext;
-   
+     
    dwErrorCode = RtlNtStatusToDosError(IoStatusBlock->Status);
    lpCompletionRoutine(dwErrorCode, 
-		       NumberOfBytesTransfered, 
+           IoStatusBlock->Information, 
 		       (LPOVERLAPPED)IoStatusBlock);
 }
 
@@ -185,9 +219,6 @@ WriteFileEx (HANDLE				hFile,
    
    DPRINT("WriteFileEx(hFile %x)\n",hFile);
    
-   if (lpOverLapped == NULL) 
-	return FALSE;
-
    Offset.u.LowPart = lpOverLapped->Offset;
    Offset.u.HighPart = lpOverLapped->OffsetHigh;
    lpOverLapped->Internal = STATUS_PENDING;
@@ -203,12 +234,22 @@ WriteFileEx (HANDLE				hFile,
 			 nNumberOfBytesToWrite,
 			 ptrOffset,
 			 NULL);
-   if (!NT_SUCCESS(errCode))
+       
+   if (NT_ERROR(errCode))
      {
 	SetLastErrorByStatus (errCode);
 	DPRINT("WriteFileEx() failed\n");
 	return FALSE;
      }
+     
+  if (NT_WARNING(errCode))
+  {
+    SetLastErrorByStatus(errCode);
+  }
+  else
+  {
+    SetLastError(0);
+  }
   
    DPRINT("WriteFileEx() succeeded\n");
    return(TRUE);
@@ -230,9 +271,6 @@ ReadFileEx(HANDLE hFile,
    PIO_STATUS_BLOCK IoStatusBlock;
    PLARGE_INTEGER ptrOffset;
    
-   if (lpOverLapped == NULL) 
-	return FALSE;
-
    Offset.u.LowPart = lpOverLapped->Offset;
    Offset.u.HighPart = lpOverLapped->OffsetHigh;
    lpOverLapped->Internal = STATUS_PENDING;
@@ -249,11 +287,21 @@ ReadFileEx(HANDLE hFile,
 			ptrOffset,
 			NULL);
 
-   if (!NT_SUCCESS(errCode))  
+   if (NT_ERROR(errCode))  
      {
 	SetLastErrorByStatus (errCode);
 	return(FALSE);
      }
+     
+  if (NT_WARNING(errCode))
+  {
+    SetLastErrorByStatus(errCode);
+  }
+  else
+  {
+    SetLastError(0);
+  }
+     
    return(TRUE);
 }
 
