@@ -44,7 +44,6 @@ EngCreatePalette(ULONG Mode,
   if(Mode==PAL_INDEXED)
   {
     PalGDI->NumColors     = NumColors;
-    PalGDI->IndexedColors = (PULONG)Colors;
   } else
   if(Mode==PAL_BITFIELDS)
   {

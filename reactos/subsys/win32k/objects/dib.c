@@ -719,10 +719,26 @@ RGBQUAD *DIB_MapPaletteColors(PDC dc, LPBITMAPINFO lpbmi)
   return lpRGB;
 }
 
+PALETTEENTRY *DIBColorTableToPaletteEntries(PALETTEENTRY *palEntries, const RGBQUAD *DIBColorTable, ULONG ColorCount)
+{
+  ULONG i;
+
+  for(i=0; i<ColorCount; i++)
+  {
+    palEntries->peRed   = DIBColorTable->rgbRed;
+    palEntries->peGreen = DIBColorTable->rgbGreen;
+    palEntries->peBlue  = DIBColorTable->rgbBlue;
+    palEntries++;
+    DIBColorTable++;
+  }
+}
+
 HPALETTE BuildDIBPalette(BITMAPINFO *bmi, PINT paletteType)
 {
   BYTE bits;
-  ULONG ColourCount;
+  ULONG ColorCount;
+  PALETTEENTRY *palEntries;
+  HPALETTE hPal;
 
   // Determine Bits Per Pixel
   bits = bmi->bmiHeader.biBitCount;
@@ -736,18 +752,23 @@ HPALETTE BuildDIBPalette(BITMAPINFO *bmi, PINT paletteType)
   {
     *paletteType = PAL_BITFIELDS;
   } else {
-    *paletteType = PAL_RGB; // FIXME: This could be BGR, must still check
+    *paletteType = PAL_RGB; // Would it be BGR, considering the BGR nature of the DIB color table?
   }
 
   if (bmi->bmiHeader.biClrUsed == 0 &&
       bmi->bmiHeader.biBitCount <= 8)
     {
-      ColourCount = 1 << bmi->bmiHeader.biBitCount;
+      ColorCount = 1 << bmi->bmiHeader.biBitCount;
     }
   else
     {
-      ColourCount = bmi->bmiHeader.biClrUsed;
+      ColorCount = bmi->bmiHeader.biClrUsed;
     }
 
-  return EngCreatePalette(*paletteType, ColourCount, bmi->bmiColors, 0, 0, 0);
+  palEntries = ExAllocatePool(NonPagedPool, sizeof(PALETTEENTRY)*ColorCount);
+  DIBColorTableToPaletteEntries(palEntries, bmi->bmiColors, ColorCount);
+  hPal = EngCreatePalette(*paletteType, ColorCount, palEntries, 0, 0, 0);
+  ExFreePool(palEntries);
+
+  return hPal;
 }
