@@ -1,4 +1,4 @@
-/* $Id: extypes.h,v 1.7 2002/03/22 20:58:23 chorns Exp $ */
+/* $Id: extypes.h,v 1.8 2002/03/23 13:53:21 chorns Exp $ */
 
 #ifndef __INCLUDE_DDK_EXTYPES_H
 #define __INCLUDE_DDK_EXTYPES_H
@@ -169,8 +169,15 @@ typedef struct _BINARY_TREE
 {
   struct _BINARY_TREE_NODE  * RootNode;
   PKEY_COMPARATOR  Compare;
-  PAGED_LOOKASIDE_LIST  LookasideList;
-  FAST_MUTEX  Lock;
+  BOOLEAN  UseNonPagedPool;
+  union {
+    NPAGED_LOOKASIDE_LIST  NonPaged;
+    PAGED_LOOKASIDE_LIST  Paged;
+  } List;
+  union {
+    KSPIN_LOCK  NonPaged;
+    FAST_MUTEX  Paged;
+  } Lock;
 } BINARY_TREE, *PBINARY_TREE;
 
 
@@ -181,19 +188,32 @@ typedef struct _SPLAY_TREE
   struct _SPLAY_TREE_NODE  * RootNode;
   PKEY_COMPARATOR  Compare;
   BOOLEAN  Weighted;
-  PAGED_LOOKASIDE_LIST  LookasideList;
-  FAST_MUTEX  Lock;
+  BOOLEAN  UseNonPagedPool;
+  union {
+    NPAGED_LOOKASIDE_LIST  NonPaged;
+    PAGED_LOOKASIDE_LIST  Paged;
+  } List;
+  union {
+    KSPIN_LOCK  NonPaged;
+    FAST_MUTEX  Paged;
+  } Lock;
   PVOID  Reserved[4];
 } SPLAY_TREE, *PSPLAY_TREE;
 
 
 typedef struct _HASH_TABLE
 {
-  // Lock for this structure
-  FAST_MUTEX  Lock;
-
   // Size of hash table in number of bits
   ULONG  HashTableSize;
+
+  // Use non-paged pool memory?
+  BOOLEAN  UseNonPagedPool;
+
+  // Lock for this structure
+  union {
+    KSPIN_LOCK  NonPaged;
+    FAST_MUTEX  Paged;
+  } Lock;
 
   // Pointer to array of hash buckets with splay trees
   PSPLAY_TREE  HashTrees;

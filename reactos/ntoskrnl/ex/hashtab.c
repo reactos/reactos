@@ -99,6 +99,42 @@ ExpHash(PUCHAR Key,
 
 
 /*
+ * Lock the hash table 
+ */
+inline VOID
+ExpLockHashTable(PHASH_TABLE HashTable,
+  PKIRQL OldIrql)
+{
+	if (HashTable->UseNonPagedPool)
+	  {
+      KeAcquireSpinLock(&HashTable->Lock.NonPaged, OldIrql);
+	  }
+	else
+		{
+      ExAcquireFastMutex(&HashTable->Lock.Paged);
+		}
+}
+
+
+/*
+ * Unlock the hash table
+ */
+inline VOID
+ExpUnlockHashTable(PHASH_TABLE HashTable,
+  PKIRQL OldIrql)
+{
+	if (HashTable->UseNonPagedPool)
+	  {
+      KeReleaseSpinLock(&HashTable->Lock.NonPaged, *OldIrql);
+	  }
+	else
+		{
+      ExReleaseFastMutex(&HashTable->Lock.Paged);
+		}
+}
+
+
+/*
  * Insert a value in a hash table.
  */
 inline VOID STDCALL
@@ -155,7 +191,8 @@ ExpRemoveHashTable(IN PHASH_TABLE  HashTable,
 BOOLEAN STDCALL
 ExInitializeHashTable(IN PHASH_TABLE  HashTable,
   IN ULONG  HashTableSize,
-  IN PKEY_COMPARATOR  Compare  OPTIONAL)
+  IN PKEY_COMPARATOR  Compare  OPTIONAL,
+  IN BOOLEAN  UseNonPagedPool)
 {
   BOOLEAN Status;
   LONG Index;
@@ -164,9 +201,18 @@ ExInitializeHashTable(IN PHASH_TABLE  HashTable,
 
   HashTable->HashTableSize = HashTableSize;
 
-  ExInitializeFastMutex(&HashTable->Lock);
+  HashTable->UseNonPagedPool = UseNonPagedPool;
 
-  HashTable->HashTrees = ExAllocatePool(PagedPool, ExpHashTableSize(HashTableSize) * sizeof(SPLAY_TREE));
+  if (UseNonPagedPool)
+    {
+      KeInitializeSpinLock(&HashTable->Lock.NonPaged);
+      HashTable->HashTrees = ExAllocatePool(NonPagedPool, ExpHashTableSize(HashTableSize) * sizeof(SPLAY_TREE));
+		}
+		else
+		{
+      ExInitializeFastMutex(&HashTable->Lock.Paged);
+      HashTable->HashTrees = ExAllocatePool(PagedPool, ExpHashTableSize(HashTableSize) * sizeof(SPLAY_TREE));
+		}
 
   if (HashTable->HashTrees == NULL)
 		{
@@ -175,7 +221,7 @@ ExInitializeHashTable(IN PHASH_TABLE  HashTable,
 
   for (Index = 0; Index < ExpHashTableSize(HashTableSize); Index++)
     {
-      Status = ExInitializeSplayTree(&HashTable->HashTrees[Index], Compare, FALSE);
+      Status = ExInitializeSplayTree(&HashTable->HashTrees[Index], Compare, FALSE, UseNonPagedPool);
 
       if (!Status)
 				{
@@ -222,11 +268,13 @@ ExInsertHashTable(IN PHASH_TABLE  HashTable,
   IN ULONG  KeyLength,
   IN PVOID  Value)
 {
+  KIRQL OldIrql;
+
   /* FIXME: Use SEH for error reporting */
 
-  ExAcquireFastMutex(&HashTable->Lock);
+  ExpLockHashTable(HashTable, &OldIrql);
   ExpInsertHashTable(HashTable, Key, KeyLength, Value);
-  ExReleaseFastMutex(&HashTable->Lock);
+  ExpUnlockHashTable(HashTable, &OldIrql);
 }
 
 
@@ -240,10 +288,11 @@ ExSearchHashTable(IN PHASH_TABLE  HashTable,
   OUT PVOID  * Value)
 {
   BOOLEAN Status;
+  KIRQL OldIrql;
 
-  ExAcquireFastMutex(&HashTable->Lock);
+  ExpLockHashTable(HashTable, &OldIrql);
   Status = ExpSearchHashTable(HashTable, Key, KeyLength, Value);
-  ExReleaseFastMutex(&HashTable->Lock);
+  ExpUnlockHashTable(HashTable, &OldIrql);
 
   return Status;
 }
@@ -259,10 +308,11 @@ ExRemoveHashTable(IN PHASH_TABLE  HashTable,
   IN PVOID  * Value)
 {
   BOOLEAN Status;
+  KIRQL OldIrql;
 
-  ExAcquireFastMutex(&HashTable->Lock);
+  ExpLockHashTable(HashTable, &OldIrql);
   Status = ExpRemoveHashTable(HashTable, Key, KeyLength, Value);
-  ExReleaseFastMutex(&HashTable->Lock);
+  ExpUnlockHashTable(HashTable, &OldIrql);
 
   return Status;
 }

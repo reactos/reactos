@@ -824,7 +824,8 @@ ExHookException (
 
 BOOLEAN STDCALL
 ExInitializeBinaryTree(IN PBINARY_TREE  Tree,
-  IN PKEY_COMPARATOR  Compare);
+  IN PKEY_COMPARATOR  Compare,
+  IN BOOLEAN  UseNonPagedPool);
 
 VOID STDCALL
 ExDeleteBinaryTree(IN PBINARY_TREE  Tree);
@@ -847,7 +848,8 @@ ExRemoveBinaryTree(IN PBINARY_TREE  Tree,
 BOOLEAN STDCALL
 ExInitializeSplayTree(IN PSPLAY_TREE  Tree,
   IN PKEY_COMPARATOR  Compare,
-  IN BOOLEAN  Weighted);
+  IN BOOLEAN  Weighted,
+  IN BOOLEAN  UseNonPagedPool);
 
 VOID STDCALL
 ExDeleteSplayTree(IN PSPLAY_TREE  Tree);
@@ -874,7 +876,8 @@ ExWeightOfSplayTree(IN PSPLAY_TREE  Tree,
 BOOLEAN STDCALL
 ExInitializeHashTable(IN PHASH_TABLE  HashTable,
   IN ULONG  HashTableSize,
-  IN PKEY_COMPARATOR  Compare  OPTIONAL);
+  IN PKEY_COMPARATOR  Compare  OPTIONAL,
+  IN BOOLEAN  UseNonPagedPool);
 
 VOID STDCALL
 ExDeleteHashTable(IN PHASH_TABLE  HashTable);

@@ -102,6 +102,42 @@ typedef PSPLAY_TREE_NODE (*PSPLAY_TREE_REMOVE)(PSPLAY_TREE Tree,
 
 
 /*
+ * Lock the splay tree 
+ */
+inline VOID
+ExpLockSplayTree(PSPLAY_TREE Tree,
+  PKIRQL OldIrql)
+{
+	if (Tree->UseNonPagedPool)
+	  {
+      KeAcquireSpinLock(&Tree->Lock.NonPaged, OldIrql);
+	  }
+	else
+		{
+      ExAcquireFastMutex(&Tree->Lock.Paged);
+		}
+}
+
+
+/*
+ * Unlock the splay tree 
+ */
+inline VOID
+ExpUnlockSplayTree(PSPLAY_TREE Tree,
+  PKIRQL OldIrql)
+{
+	if (Tree->UseNonPagedPool)
+	  {
+      KeReleaseSpinLock(&Tree->Lock.NonPaged, *OldIrql);
+	  }
+	else
+		{
+      ExReleaseFastMutex(&Tree->Lock.Paged);
+		}
+}
+
+
+/*
  * Allocate resources for a new node and initialize it.
  */
 inline PSPLAY_TREE_NODE
@@ -110,7 +146,14 @@ ExpCreateSplayTreeNode(PSPLAY_TREE Tree,
 {
   PSPLAY_TREE_NODE Node;
 
-  Node = (PSPLAY_TREE_NODE) ExAllocateFromPagedLookasideList(&Tree->LookasideList);
+	if (Tree->UseNonPagedPool)
+	  {
+      Node = (PSPLAY_TREE_NODE) ExAllocateFromNPagedLookasideList(&Tree->List.NonPaged);
+	  }
+	else
+		{
+      Node = (PSPLAY_TREE_NODE) ExAllocateFromPagedLookasideList(&Tree->List.Paged);
+		}
 
   if (Node)
 		{
@@ -129,7 +172,14 @@ inline VOID
 ExpDestroySplayTreeNode(PSPLAY_TREE Tree,
   PSPLAY_TREE_NODE Node)
 {
-  ExFreeToPagedLookasideList(&Tree->LookasideList, Node);
+	if (Tree->UseNonPagedPool)
+	  {
+      ExFreeToNPagedLookasideList(&Tree->List.NonPaged, Node);
+	  }
+	else
+		{
+      ExFreeToPagedLookasideList(&Tree->List.Paged, Node);
+		}
 }
 
 
@@ -913,7 +963,8 @@ ExpSplayTreeDefaultCompare(IN PVOID  Key1,
 BOOLEAN STDCALL
 ExInitializeSplayTree(IN PSPLAY_TREE  Tree,
   IN PKEY_COMPARATOR  Compare,
-  IN BOOLEAN  Weighted)
+  IN BOOLEAN  Weighted,
+  IN BOOLEAN  UseNonPagedPool)
 {
   RtlZeroMemory(Tree, sizeof(SPLAY_TREE));
 
@@ -937,16 +988,34 @@ ExInitializeSplayTree(IN PSPLAY_TREE  Tree,
       Tree->Reserved[REMOVE_INDEX] = (PVOID) ExpRemoveSplayTreeNoWeight;
 		}
 
-  ExInitializePagedLookasideList(
-    &Tree->LookasideList,           /* Lookaside list */
-    NULL,                           /* Allocate routine */
-    NULL,                           /* Free routine */
-    0,                              /* Flags */
-    sizeof(SPLAY_TREE_NODE),        /* Size of each entry */
-    TAG('E','X','S','T'),           /* Tag */
-    0);                             /* Depth */
+  Tree->UseNonPagedPool = UseNonPagedPool;
 
-  ExInitializeFastMutex(&Tree->Lock);
+  if (UseNonPagedPool)
+    {
+		  ExInitializeNPagedLookasideList(
+		    &Tree->List.NonPaged,           /* Lookaside list */
+		    NULL,                           /* Allocate routine */
+		    NULL,                           /* Free routine */
+		    0,                              /* Flags */
+		    sizeof(SPLAY_TREE_NODE),        /* Size of each entry */
+		    TAG('E','X','S','T'),           /* Tag */
+		    0);                             /* Depth */
+
+      KeInitializeSpinLock(&Tree->Lock.NonPaged);
+		}
+		else
+		{
+		  ExInitializePagedLookasideList(
+		    &Tree->List.Paged,              /* Lookaside list */
+		    NULL,                           /* Allocate routine */
+		    NULL,                           /* Free routine */
+		    0,                              /* Flags */
+		    sizeof(SPLAY_TREE_NODE),       /* Size of each entry */
+		    TAG('E','X','S','T'),           /* Tag */
+		    0);                             /* Depth */
+
+      ExInitializeFastMutex(&Tree->Lock.Paged);
+		}
 
   return TRUE;
 }
@@ -973,7 +1042,14 @@ ExDeleteSplayTree(IN PSPLAY_TREE  Tree)
         }
     }
 
-  ExDeletePagedLookasideList(&Tree->LookasideList);
+  if (Tree->UseNonPagedPool)
+    {
+      ExDeleteNPagedLookasideList(&Tree->List.NonPaged);
+	  }
+	else
+		{
+      ExDeletePagedLookasideList(&Tree->List.Paged);
+		}
 }
 
 
@@ -987,15 +1063,16 @@ ExInsertSplayTree(IN PSPLAY_TREE  Tree,
 {
   PSPLAY_TREE_NODE Node;
   PSPLAY_TREE_NODE NewNode;
+  KIRQL OldIrql;
 
   /* FIXME: Use SEH for error reporting */
 
   NewNode = ExpCreateSplayTreeNode(Tree, Value);
 
-  ExAcquireFastMutex(&Tree->Lock);
+  ExpLockSplayTree(Tree, &OldIrql);
   Node = ExpInsertSplayTree(Tree, Key, ExpSplayTreeRootNode(Tree), NewNode);
   ExpSplayTreeRootNode(Tree) = Node;
-  ExReleaseFastMutex(&Tree->Lock);
+  ExpUnlockSplayTree(Tree, &OldIrql);
 }
 
 
@@ -1009,20 +1086,21 @@ ExSearchSplayTree(IN PSPLAY_TREE  Tree,
 {
   PSPLAY_TREE_NODE Node;
   BOOLEAN Status;
+  KIRQL OldIrql;
 
-  ExAcquireFastMutex(&Tree->Lock);
+  ExpLockSplayTree(Tree, &OldIrql);
   Status = ExpSearchSplayTree(Tree, Key, ExpSplayTreeRootNode(Tree), &Node);
 
   if (Status)
     {
       ExpSplayTreeRootNode(Tree) = Node;
       *Value = ExpSplayTreeNodeValue(Node);
-      ExReleaseFastMutex(&Tree->Lock);
+      ExpUnlockSplayTree(Tree, &OldIrql);
 		  return TRUE;
 	  }
 	else
 	  {
-      ExReleaseFastMutex(&Tree->Lock);
+      ExpUnlockSplayTree(Tree, &OldIrql);
 	    return FALSE;
 	  }
 }
@@ -1038,11 +1116,12 @@ ExRemoveSplayTree(IN PSPLAY_TREE  Tree,
 {
   PSPLAY_TREE_NODE RemovedNode;
   PSPLAY_TREE_NODE Node;
+  KIRQL OldIrql;
 
-  ExAcquireFastMutex(&Tree->Lock);
+  ExpLockSplayTree(Tree, &OldIrql);
   Node = ExpRemoveSplayTree(Tree, Key, ExpSplayTreeRootNode(Tree), &RemovedNode);
   ExpSplayTreeRootNode(Tree) = Node;
-  ExReleaseFastMutex(&Tree->Lock);
+  ExpUnlockSplayTree(Tree, &OldIrql);
 
   if (RemovedNode != NULL)
 		{
@@ -1065,16 +1144,19 @@ BOOLEAN STDCALL
 ExWeightOfSplayTree(IN PSPLAY_TREE  Tree,
   OUT PULONG  Weight)
 {
-  ExAcquireFastMutex(&Tree->Lock);
+  KIRQL OldIrql;
+
+  ExpLockSplayTree(Tree, &OldIrql);
 
 	if (!Tree->Weighted)
 		{
-      ExReleaseFastMutex(&Tree->Lock);
+      ExpUnlockSplayTree(Tree, &OldIrql);
       return FALSE;	
  		}
 
   *Weight = ExpSplayTreeNodeWeight(ExpSplayTreeRootNode(Tree));
-  ExReleaseFastMutex(&Tree->Lock);
+  ExpUnlockSplayTree(Tree, &OldIrql);
+
   return TRUE;
 }
 

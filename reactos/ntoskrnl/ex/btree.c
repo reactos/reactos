@@ -57,6 +57,42 @@ typedef struct _BINARY_TREE_NODE
 
 
 /*
+ * Lock the binary tree 
+ */
+inline VOID
+ExpLockBinaryTree(PBINARY_TREE Tree,
+ PKIRQL OldIrql)
+{
+	if (Tree->UseNonPagedPool)
+	  {
+      KeAcquireSpinLock(&Tree->Lock.NonPaged, OldIrql);
+	  }
+	else
+		{
+      ExAcquireFastMutex(&Tree->Lock.Paged);
+		}
+}
+
+
+/*
+ * Unlock the binary tree 
+ */
+inline VOID
+ExpUnlockBinaryTree(PBINARY_TREE Tree,
+  PKIRQL OldIrql)
+{
+	if (Tree->UseNonPagedPool)
+	  {
+      KeReleaseSpinLock(&Tree->Lock.NonPaged, *OldIrql);
+	  }
+	else
+		{
+      ExReleaseFastMutex(&Tree->Lock.Paged);
+		}
+}
+
+
+/*
  * Allocate resources for a new node and initialize it.
  */
 inline PBINARY_TREE_NODE
@@ -66,7 +102,14 @@ ExpCreateBinaryTreeNode(PBINARY_TREE Tree,
 {
   PBINARY_TREE_NODE Node;
 
-  Node = (PBINARY_TREE_NODE) ExAllocateFromPagedLookasideList(&Tree->LookasideList);
+	if (Tree->UseNonPagedPool)
+	  {
+      Node = (PBINARY_TREE_NODE) ExAllocateFromNPagedLookasideList(&Tree->List.NonPaged);	    
+	  }
+	else
+		{
+      Node = (PBINARY_TREE_NODE) ExAllocateFromPagedLookasideList(&Tree->List.Paged);
+		}
 
   if (Node)
 		{
@@ -87,7 +130,14 @@ inline VOID
 ExpDestroyBinaryTreeNode(PBINARY_TREE Tree,
   PBINARY_TREE_NODE  Node)
 {
-  ExFreeToPagedLookasideList(&Tree->LookasideList, Node);
+	if (Tree->UseNonPagedPool)
+	  {
+      ExFreeToNPagedLookasideList(&Tree->List.NonPaged, Node);
+	  }
+	else
+		{
+      ExFreeToPagedLookasideList(&Tree->List.Paged, Node);
+		}
 }
 
 
@@ -273,29 +323,55 @@ ExpBinaryTreeDefaultCompare(PVOID  Key1,
  */
 BOOLEAN STDCALL
 ExInitializeBinaryTree(IN PBINARY_TREE  Tree,
-  IN PKEY_COMPARATOR  Compare)
+  IN PKEY_COMPARATOR  Compare,
+  IN BOOLEAN  UseNonPagedPool)
 {
   RtlZeroMemory(Tree, sizeof(BINARY_TREE));
 
   Tree->Compare = (Compare == NULL)
     ? ExpBinaryTreeDefaultCompare : Compare;
 
-  ExInitializePagedLookasideList(
-    &Tree->LookasideList,           /* Lookaside list */
-    NULL,                           /* Allocate routine */
-    NULL,                           /* Free routine */
-    0,                              /* Flags */
-    sizeof(BINARY_TREE_NODE),       /* Size of each entry */
-    TAG('E','X','B','T'),           /* Tag */
-    0);                             /* Depth */
+  Tree->UseNonPagedPool = UseNonPagedPool;
 
-  ExInitializeFastMutex(&Tree->Lock);
+  if (UseNonPagedPool)
+    {
+		  ExInitializeNPagedLookasideList(
+		    &Tree->List.NonPaged,           /* Lookaside list */
+		    NULL,                           /* Allocate routine */
+		    NULL,                           /* Free routine */
+		    0,                              /* Flags */
+		    sizeof(BINARY_TREE_NODE),       /* Size of each entry */
+		    TAG('E','X','B','T'),           /* Tag */
+		    0);                             /* Depth */
+
+      KeInitializeSpinLock(&Tree->Lock.NonPaged);
+		}
+		else
+		{
+		  ExInitializePagedLookasideList(
+		    &Tree->List.Paged,              /* Lookaside list */
+		    NULL,                           /* Allocate routine */
+		    NULL,                           /* Free routine */
+		    0,                              /* Flags */
+		    sizeof(BINARY_TREE_NODE),       /* Size of each entry */
+		    TAG('E','X','B','T'),           /* Tag */
+		    0);                             /* Depth */
+
+      ExInitializeFastMutex(&Tree->Lock.Paged);
+		}
 
   ExpBinaryTreeRootNode(Tree) = ExpCreateBinaryTreeNode(Tree, NULL, NULL);
 
   if (ExpBinaryTreeRootNode(Tree) == NULL)
 		{
-      ExDeletePagedLookasideList(&Tree->LookasideList);
+		  if (UseNonPagedPool)
+		    {
+          ExDeleteNPagedLookasideList(&Tree->List.NonPaged);
+			  }
+			else
+				{
+          ExDeletePagedLookasideList(&Tree->List.Paged);
+				}
       return FALSE;
 		}
   else
@@ -314,7 +390,14 @@ ExDeleteBinaryTree(IN PBINARY_TREE  Tree)
   /* Remove all nodes */
   ExpDeleteBinaryTree(Tree, ExpBinaryTreeRootNode(Tree));
 
-  ExDeletePagedLookasideList(&Tree->LookasideList);
+  if (Tree->UseNonPagedPool)
+    {
+      ExDeleteNPagedLookasideList(&Tree->List.NonPaged);
+	  }
+	else
+		{
+      ExDeletePagedLookasideList(&Tree->List.Paged);
+		}
 }
 
 
@@ -327,10 +410,11 @@ ExInsertBinaryTree(IN PBINARY_TREE  Tree,
   IN PVOID  Value)
 {
   PBINARY_TREE_NODE Node;
+  KIRQL OldIrql;
 
   /* FIXME: Use SEH for error reporting */
 
-  ExAcquireFastMutex(&Tree->Lock);
+  ExpLockBinaryTree(Tree, &OldIrql);
   Node = ExpBinaryTreeRootNode(Tree);
   do
     {
@@ -348,7 +432,7 @@ ExInsertBinaryTree(IN PBINARY_TREE  Tree,
   ExpExpandExternalBinaryTreeNode(Tree, Node);
   ExpBinaryTreeNodeKey(Node)   = Key;
   ExpBinaryTreeNodeValue(Node) = Value;
-  ExReleaseFastMutex(&Tree->Lock);
+  ExpUnlockBinaryTree(Tree, &OldIrql);
 }
 
 
@@ -361,19 +445,20 @@ ExSearchBinaryTree(IN PBINARY_TREE  Tree,
   OUT PVOID  * Value)
 {
   PBINARY_TREE_NODE Node;
+  KIRQL OldIrql;
 
-  ExAcquireFastMutex(&Tree->Lock);
+  ExpLockBinaryTree(Tree, &OldIrql);
   Node = ExpSearchBinaryTree(Tree, Key, ExpBinaryTreeRootNode(Tree));
 
   if (ExpIsInternalBinaryTreeNode(Node))
     {
 	    *Value = ExpBinaryTreeNodeValue(Node);
-      ExReleaseFastMutex(&Tree->Lock);
+      ExpUnlockBinaryTree(Tree, &OldIrql);
 	    return TRUE;
 	  }
 	else
 		{
-      ExReleaseFastMutex(&Tree->Lock);
+      ExpUnlockBinaryTree(Tree, &OldIrql);
       return FALSE;
 		}
 }
@@ -388,13 +473,15 @@ ExRemoveBinaryTree(IN PBINARY_TREE  Tree,
   IN PVOID  * Value)
 {
   PBINARY_TREE_NODE Node;
+  KIRQL OldIrql;
 
-  ExAcquireFastMutex(&Tree->Lock);
+  ExpLockBinaryTree(Tree, &OldIrql);
+
   Node = ExpSearchBinaryTree(Tree, Key, ExpBinaryTreeRootNode(Tree));
 
   if (ExpIsExternalBinaryTreeNode(Node))
 		{
-      ExReleaseFastMutex(&Tree->Lock);
+      ExpUnlockBinaryTree(Tree, &OldIrql);
       return FALSE;
 		}
 	else
@@ -422,7 +509,7 @@ ExRemoveBinaryTree(IN PBINARY_TREE  Tree,
         }
 
       ExpRemoveAboveExternalBinaryTreeNode(Tree, Node);
-      ExReleaseFastMutex(&Tree->Lock);
+      ExpUnlockBinaryTree(Tree, &OldIrql);
       return TRUE;
 		}
 }
