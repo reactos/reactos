@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.88 2004/09/22 10:49:07 weiden Exp $
+/* $Id: stubs.c,v 1.89 2004/09/22 10:58:06 weiden Exp $
  *
  * KERNEL32.DLL stubs (STUB functions)
  * Remove from this file, if you implement them.
@@ -15,7 +15,7 @@
   DPRINT1("%s() is UNIMPLEMENTED!\n", __FUNCTION__)
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -26,7 +26,7 @@ BaseAttachCompleteThunk (VOID)
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 VOID STDCALL
 BaseDumpAppcompatCache(VOID)
@@ -35,7 +35,7 @@ BaseDumpAppcompatCache(VOID)
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 VOID STDCALL
 BaseFlushAppcompatCache(VOID)
@@ -44,7 +44,7 @@ BaseFlushAppcompatCache(VOID)
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 VOID STDCALL
 BaseCheckAppcompatCache(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3, ULONG Unknown4)
@@ -53,7 +53,7 @@ BaseCheckAppcompatCache(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3, ULONG Un
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 VOID STDCALL
 BaseUpdateAppcompatCache(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3)
@@ -62,7 +62,7 @@ BaseUpdateAppcompatCache(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3)
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -76,7 +76,7 @@ CmdBatNotification (
 
 
 /*
- * @STUB
+ * @unimplemented
  */
 int
 STDCALL
@@ -95,7 +95,7 @@ CompareStringA (
 
 
 /*
- * @STUB
+ * @unimplemented
  */
 int
 STDCALL
@@ -150,7 +150,7 @@ CompareStringW (
 
 
 /*
- * @STUB
+ * @unimplemented
  */
 DWORD
 STDCALL
@@ -166,7 +166,7 @@ CreateVirtualBuffer (
 
 
 /*
- * @STUB
+ * @unimplemented
  */
 DWORD
 STDCALL
@@ -181,7 +181,7 @@ ExitVDM (
 
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -196,7 +196,7 @@ ExtendVirtualBuffer (
 
 
 /*
- * @STUB
+ * @unimplemented
  */
 int
 STDCALL
@@ -214,7 +214,7 @@ FoldStringW (
 
 
 /*
- * @STUB
+ * @unimplemented
  */
 int
 STDCALL
@@ -232,7 +232,7 @@ FoldStringA (
 
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -246,7 +246,7 @@ FreeVirtualBuffer (
 
 
 /*
- * @STUB
+ * @unimplemented
  */
 DWORD
 STDCALL
@@ -260,7 +260,7 @@ GetNextVDMCommand (
 
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -278,7 +278,7 @@ GetStringTypeExW (
 
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -296,7 +296,7 @@ GetStringTypeExA (
 
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -313,7 +313,7 @@ GetStringTypeW (
 
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -331,7 +331,7 @@ GetStringTypeA (
 
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -345,7 +345,7 @@ GetSystemPowerStatus (
 
 
 /*
- * @STUB
+ * @unimplemented
  */
 DWORD
 STDCALL
@@ -360,7 +360,7 @@ GetVDMCurrentDirectories (
 
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -384,7 +384,7 @@ RegisterConsoleVDM (
 
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -398,7 +398,7 @@ RegisterWowBaseHandlers (
 
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -412,7 +412,7 @@ RegisterWowExec (
 
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL STDCALL
 SetSystemPowerState (
@@ -426,7 +426,7 @@ SetSystemPowerState (
 
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -441,7 +441,7 @@ SetVDMCurrentDirectories (
 
 
 /*
- * @STUB
+ * @unimplemented
  */
 DWORD
 STDCALL
@@ -455,7 +455,7 @@ TrimVirtualBuffer (
 
 
 /*
- * @STUB
+ * @unimplemented
  */
 DWORD
 STDCALL
@@ -470,7 +470,7 @@ VDMConsoleOperation (
 
 
 /*
- * @STUB
+ * @unimplemented
  */
 DWORD
 STDCALL
@@ -484,7 +484,7 @@ VDMOperationStarted (
 
 
 /*
- * @STUB
+ * @unimplemented
  */
 DWORD
 STDCALL
@@ -500,7 +500,7 @@ VerLanguageNameA (
 
 
 /*
- * @STUB
+ * @unimplemented
  */
 DWORD
 STDCALL
@@ -516,7 +516,7 @@ VerLanguageNameW (
 
 
 /*
- * @STUB
+ * @unimplemented
  */
 DWORD
 STDCALL
@@ -531,7 +531,7 @@ VirtualBufferExceptionHandler (
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -545,7 +545,7 @@ ActivateActCtx(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 VOID
 STDCALL
@@ -557,7 +557,7 @@ AddRefActCtx(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -572,7 +572,7 @@ AllocateUserPhysicalPages(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -586,7 +586,7 @@ AssignProcessToJobObject(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -601,7 +601,7 @@ BindIoCompletionCallback (
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -615,7 +615,7 @@ CancelDeviceWakeupRequest(
 
 
 /*
- * @STUB
+ * @unimplemented
  */
 HANDLE
 STDCALL
@@ -628,7 +628,7 @@ CreateActCtxA(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 HANDLE
 STDCALL
@@ -641,7 +641,7 @@ CreateActCtxW(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -655,7 +655,7 @@ CreateJobSet (
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -669,7 +669,7 @@ DeactivateActCtx(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -686,7 +686,7 @@ FindActCtxSectionGuid(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -699,7 +699,7 @@ FindVolumeClose(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -712,7 +712,7 @@ FindVolumeMountPointClose(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -727,7 +727,7 @@ FreeUserPhysicalPages(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -739,7 +739,7 @@ GetCurrentActCtx(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -753,7 +753,7 @@ GetDevicePowerState(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 VOID
 STDCALL
@@ -765,7 +765,7 @@ GetNativeSystemInfo(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -778,7 +778,7 @@ GetNumaHighestNodeNumber(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -792,7 +792,7 @@ GetNumaNodeProcessorMask(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -806,7 +806,7 @@ GetNumaProcessorNode(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -820,7 +820,7 @@ GetThreadIOPendingFlag(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 UINT
 STDCALL
@@ -838,7 +838,7 @@ GetWriteWatch(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -855,7 +855,7 @@ HeapQueryInformation (
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -871,7 +871,7 @@ HeapSetInformation (
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -886,7 +886,7 @@ IsProcessInJob (
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -899,7 +899,7 @@ IsSystemResumeAutomatic(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -913,7 +913,7 @@ IsWow64Process(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -928,7 +928,7 @@ MapUserPhysicalPages(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -943,7 +943,7 @@ MapUserPhysicalPagesScatter(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -962,7 +962,7 @@ QueryActCtxW(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -979,7 +979,7 @@ QueryInformationJobObject(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 DWORD
 STDCALL
@@ -994,7 +994,7 @@ QueueUserAPC(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1009,7 +1009,7 @@ QueueUserWorkItem(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1029,7 +1029,7 @@ ReadDirectoryChangesW(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1046,7 +1046,7 @@ ReadFileScatter(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1064,7 +1064,7 @@ RegisterWaitForSingleObject(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 HANDLE
 STDCALL
@@ -1081,7 +1081,7 @@ RegisterWaitForSingleObjectEx(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 VOID
 STDCALL
@@ -1093,7 +1093,7 @@ ReleaseActCtx(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 ULONG
 STDCALL
@@ -1106,7 +1106,7 @@ RemoveVectoredExceptionHandler(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1119,7 +1119,7 @@ RequestDeviceWakeup(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1132,7 +1132,7 @@ RequestWakeupLatency(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 UINT
 STDCALL
@@ -1146,7 +1146,7 @@ ResetWriteWatch(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 VOID
 STDCALL
@@ -1159,7 +1159,7 @@ RestoreLastError(
 
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1175,7 +1175,7 @@ SetInformationJobObject(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1189,7 +1189,7 @@ SetMessageWaitingIndicator(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 EXECUTION_STATE
 STDCALL
@@ -1202,7 +1202,7 @@ SetThreadExecutionState(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1216,7 +1216,7 @@ TerminateJobObject(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1231,7 +1231,7 @@ TzSpecificLocalTimeToSystemTime(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1244,7 +1244,7 @@ UnregisterWait(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1258,7 +1258,7 @@ UnregisterWaitEx(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1275,7 +1275,7 @@ WriteFileGather(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 DWORD
 STDCALL
@@ -1286,7 +1286,7 @@ WTSGetActiveConsoleSessionId(VOID)
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1299,7 +1299,7 @@ ZombifyActCtx(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 HANDLE
 STDCALL
@@ -1313,7 +1313,7 @@ CreateJobObjectW(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1326,7 +1326,7 @@ DeleteVolumeMountPointW(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1341,7 +1341,7 @@ DnsHostnameToComputerNameW (
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1358,7 +1358,7 @@ FindActCtxSectionStringW(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 HANDLE
 STDCALL
@@ -1372,7 +1372,7 @@ FindFirstVolumeW(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 HANDLE
 STDCALL
@@ -1387,7 +1387,7 @@ FindFirstVolumeMountPointW(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1402,7 +1402,7 @@ FindNextVolumeW(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1417,7 +1417,7 @@ FindNextVolumeMountPointW(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 DWORD
 STDCALL
@@ -1431,7 +1431,7 @@ GetDllDirectoryW(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 DWORD
 STDCALL
@@ -1447,7 +1447,7 @@ GetFirmwareEnvironmentVariableW(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 DWORD
 STDCALL
@@ -1462,7 +1462,7 @@ GetLongPathNameW(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1477,7 +1477,7 @@ GetModuleHandleExW(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 UINT
 STDCALL
@@ -1491,7 +1491,7 @@ GetSystemWow64DirectoryW(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1506,7 +1506,7 @@ GetVolumeNameForVolumeMountPointW(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1521,7 +1521,7 @@ GetVolumePathNameW(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1537,7 +1537,7 @@ GetVolumePathNamesForVolumeNameW(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 HANDLE
 STDCALL
@@ -1552,7 +1552,7 @@ OpenJobObjectW(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1570,7 +1570,7 @@ ReplaceFileW(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1584,7 +1584,7 @@ SetComputerNameExW (
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1597,7 +1597,7 @@ SetDllDirectoryW(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1613,7 +1613,7 @@ SetFirmwareEnvironmentVariableW(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1627,7 +1627,7 @@ SetVolumeMountPointW(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1642,7 +1642,7 @@ VerifyVersionInfoW(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 HANDLE
 STDCALL
@@ -1656,7 +1656,7 @@ CreateJobObjectA(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1669,7 +1669,7 @@ DeleteVolumeMountPointA(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1684,7 +1684,7 @@ DnsHostnameToComputerNameA (
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1701,7 +1701,7 @@ FindActCtxSectionStringA(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 HANDLE
 STDCALL
@@ -1715,7 +1715,7 @@ FindFirstVolumeA(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 HANDLE
 STDCALL
@@ -1730,7 +1730,7 @@ FindFirstVolumeMountPointA(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1745,7 +1745,7 @@ FindNextVolumeA(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1760,7 +1760,7 @@ FindNextVolumeMountPointA(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 DWORD
 STDCALL
@@ -1774,7 +1774,7 @@ GetDllDirectoryA(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 DWORD
 STDCALL
@@ -1790,7 +1790,7 @@ GetFirmwareEnvironmentVariableA(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 DWORD
 STDCALL
@@ -1805,7 +1805,7 @@ GetLongPathNameA(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1820,7 +1820,7 @@ GetModuleHandleExA(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 UINT
 STDCALL
@@ -1834,7 +1834,7 @@ GetSystemWow64DirectoryA(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1849,7 +1849,7 @@ GetVolumeNameForVolumeMountPointA(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1864,7 +1864,7 @@ GetVolumePathNameA(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1880,7 +1880,7 @@ GetVolumePathNamesForVolumeNameA(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 HANDLE
 STDCALL
@@ -1895,7 +1895,7 @@ OpenJobObjectA(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1913,7 +1913,7 @@ ReplaceFileA(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1927,7 +1927,7 @@ SetComputerNameExA (
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1940,7 +1940,7 @@ SetDllDirectoryA(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1956,7 +1956,7 @@ SetFirmwareEnvironmentVariableA(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1970,7 +1970,7 @@ SetVolumeMountPointA(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1985,7 +1985,7 @@ VerifyVersionInfoA(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1999,7 +1999,7 @@ EnumSystemLanguageGroupsW(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 ULONGLONG
 STDCALL
@@ -2014,7 +2014,7 @@ VerSetConditionMask(
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL STDCALL GetConsoleKeyboardLayoutNameA(LPSTR name)
 {
@@ -2023,7 +2023,7 @@ BOOL STDCALL GetConsoleKeyboardLayoutNameA(LPSTR name)
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL STDCALL GetConsoleKeyboardLayoutNameW(LPWSTR name)
 {
@@ -2032,7 +2032,7 @@ BOOL STDCALL GetConsoleKeyboardLayoutNameW(LPWSTR name)
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 DWORD STDCALL GetHandleContext(HANDLE hnd)
 {
@@ -2041,7 +2041,7 @@ DWORD STDCALL GetHandleContext(HANDLE hnd)
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 HANDLE STDCALL CreateSocketHandle(VOID)
 {
@@ -2050,7 +2050,7 @@ HANDLE STDCALL CreateSocketHandle(VOID)
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL STDCALL SetHandleContext(HANDLE hnd,DWORD context)
 {
@@ -2059,7 +2059,7 @@ BOOL STDCALL SetHandleContext(HANDLE hnd,DWORD context)
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL STDCALL SetConsoleInputExeNameA(LPCSTR name)
 {
@@ -2068,7 +2068,7 @@ BOOL STDCALL SetConsoleInputExeNameA(LPCSTR name)
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL STDCALL SetConsoleInputExeNameW(LPCWSTR name)
 {
@@ -2077,7 +2077,7 @@ BOOL STDCALL SetConsoleInputExeNameW(LPCWSTR name)
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL STDCALL UTRegister( HMODULE hModule, LPSTR lpsz16BITDLL,
                         LPSTR lpszInitName, LPSTR lpszProcName,
@@ -2089,7 +2089,7 @@ BOOL STDCALL UTRegister( HMODULE hModule, LPSTR lpsz16BITDLL,
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 VOID STDCALL UTUnRegister( HMODULE hModule )
 {
@@ -2097,7 +2097,7 @@ VOID STDCALL UTUnRegister( HMODULE hModule )
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 #if 0
 FARPROC STDCALL DelayLoadFailureHook(unsigned int dliNotify, PDelayLoadInfo pdli)
@@ -2110,7 +2110,7 @@ FARPROC STDCALL DelayLoadFailureHook(unsigned int dliNotify, PVOID pdli)
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 NTSTATUS STDCALL CreateNlsSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,ULONG Size,ULONG AccessMask)
 {
@@ -2119,7 +2119,7 @@ NTSTATUS STDCALL CreateNlsSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescri
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL STDCALL GetConsoleInputExeNameA(ULONG length,LPCSTR name)
 {
@@ -2128,7 +2128,7 @@ BOOL STDCALL GetConsoleInputExeNameA(ULONG length,LPCSTR name)
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL STDCALL GetConsoleInputExeNameW(ULONG length,LPCWSTR name)
 {
@@ -2137,7 +2137,7 @@ BOOL STDCALL GetConsoleInputExeNameW(ULONG length,LPCWSTR name)
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL STDCALL IsValidUILanguage(LANGID langid)
 {
@@ -2146,7 +2146,7 @@ BOOL STDCALL IsValidUILanguage(LANGID langid)
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 VOID STDCALL NlsConvertIntegerToString(ULONG Value,ULONG Base,ULONG strsize, LPWSTR str, ULONG strsize2)
 {
@@ -2154,7 +2154,7 @@ VOID STDCALL NlsConvertIntegerToString(ULONG Value,ULONG Base,ULONG strsize, LPW
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 UINT STDCALL SetCPGlobal(UINT CodePage)
 {
@@ -2163,7 +2163,7 @@ UINT STDCALL SetCPGlobal(UINT CodePage)
 }
 
 /*
- * @STUB
+ * @unimplemented
  */
 BOOL
 STDCALL
