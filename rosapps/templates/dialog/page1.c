@@ -127,18 +127,44 @@ static void OnDrawItem(HWND hWnd, LPARAM lParam)
     } 
 }
 
+
+void OnSetFont(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+	RECT rc;
+	WINDOWPOS wp;
+
+	GetWindowRect(hWnd, &rc);
+	wp.hwnd = hWnd;
+	wp.cx = rc.right - rc.left;
+	wp.cy = rc.bottom - rc.top;
+	wp.flags = SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOZORDER;
+	SendMessage(hWnd, WM_WINDOWPOSCHANGED, 0, (LPARAM)&wp);
+}
+
+void OnMeasureItem(LPMEASUREITEMSTRUCT lpMeasureItemStruct)
+{
+    HFONT hFont; 
+	LOGFONT lf;
+
+    hFont = GetStockObject(SYSTEM_FONT); 
+    GetObject(hFont, sizeof(LOGFONT), &lf);
+	if (lf.lfHeight < 0)
+		lpMeasureItemStruct->itemHeight = -lf.lfHeight; 
+	else
+		lpMeasureItemStruct->itemHeight = lf.lfHeight; 
+}
+
 LRESULT CALLBACK PageWndProc1(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    LPMEASUREITEMSTRUCT lpmis; 
-
     switch (message) {
     case WM_INITDIALOG:
         InitListCtrl(hDlg);
         return TRUE;
+    case WM_SETFONT: 
+        OnSetFont(hDlg, wParam, lParam);
+        return TRUE;
     case WM_MEASUREITEM: 
-        lpmis = (LPMEASUREITEMSTRUCT)lParam; 
-        // Set the height of the list box items. 
-        lpmis->itemHeight = 20; 
+        OnMeasureItem((LPMEASUREITEMSTRUCT)lParam);
         return TRUE; 
     case WM_DRAWITEM: 
         OnDrawItem(hDlg, lParam);
@@ -155,4 +181,3 @@ LRESULT CALLBACK PageWndProc1(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
