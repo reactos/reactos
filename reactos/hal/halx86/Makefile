@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.8 2003/04/05 09:37:44 chorns Exp $
+# $Id: Makefile,v 1.9 2003/04/27 18:12:15 ekohl Exp $
 
 PATH_TO_TOP = ../..
 
@@ -42,7 +42,6 @@ endif
 HAL_OBJECTS = \
 	adapter.o \
 	beep.o \
-	bios32.o \
 	bus.o \
 	display.o \
 	dma.o \
