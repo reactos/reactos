@@ -1,4 +1,4 @@
-/* $Id: wapi.c,v 1.23 2002/10/29 03:49:32 mdill Exp $
+/* $Id: wapi.c,v 1.24 2002/10/31 01:50:00 ekohl Exp $
  * 
  * reactos/subsys/csrss/api/wapi.c
  *
@@ -148,7 +148,7 @@ void Thread_Api(PVOID PortHandle)
 	     NtTerminateThread(NtCurrentThread(), Status);
 	  }
 
-	ProcessData = CsrGetProcessData(Request.Header.Cid.UniqueProcess);
+	ProcessData = CsrGetProcessData((ULONG)Request.Header.Cid.UniqueProcess);
 	ProcessData->CsrSectionViewBase = LpcRead.ViewBase;
 	ProcessData->CsrSectionViewSize = LpcRead.ViewSize;
 	

@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.17 2002/09/08 10:23:44 chorns Exp $
+/* $Id: init.c,v 1.18 2002/10/31 01:49:39 ekohl Exp $
  * 
  * reactos/subsys/csrss/init.c
  *
@@ -13,6 +13,7 @@
 #include <ddk/ntddk.h>
 #include <ntdll/rtl.h>
 #include <csrss/csrss.h>
+#include <win32k/win32k.h>
 
 #include "api.h"
 
