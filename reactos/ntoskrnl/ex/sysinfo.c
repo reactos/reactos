@@ -854,8 +854,12 @@ QSI_DEF(SystemHandleInformation)
 
            if (curSize > Size)
              {
-               *ReqSize = curSize;
                DPRINT1("SystemHandleInformation 2\n");
+               *ReqSize = curSize;
+               if (pr != NULL)
+	         {
+	            ObDereferenceObject(pr);
+	         }
                return (STATUS_INFO_LENGTH_MISMATCH);
              }
 
