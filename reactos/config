@@ -14,7 +14,7 @@ ARCH := i386
 # be optimized for. 
 #
 
-OARCH := i486
+OARCH := i586
 
 #
 # Whether to compile in the kernel debugger
