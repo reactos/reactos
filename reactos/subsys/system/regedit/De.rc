@@ -1,0 +1,339 @@
+/*
+ * Regedit resources
+ *
+ * Copyright 2002 Robert Dickenson
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+LANGUAGE LANG_GERMAN, SUBLANG_DEFAULT
+
+/*
+ * Menu
+ */
+
+IDC_REGEDIT MENU DISCARDABLE
+BEGIN
+    POPUP "&Datei"
+    BEGIN
+        MENUITEM "&Beenden",                       ID_REGISTRY_EXIT
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Über ...",                  ID_HELP_ABOUT
+    END
+END
+
+IDR_REGEDIT_MENU MENU DISCARDABLE
+BEGIN
+    POPUP "&Registry"
+    BEGIN
+        MENUITEM "Registry &importieren...",    ID_REGISTRY_IMPORTREGISTRYFILE
+
+        MENUITEM "Registry &exportieren...",    ID_REGISTRY_EXPORTREGISTRYFILE
+
+        MENUITEM SEPARATOR
+        MENUITEM "&Mit Neztwerkregistry verbinden...",
+                                                ID_REGISTRY_CONNECTNETWORKREGISTRY
+        , GRAYED
+        MENUITEM "&Von Netzwerkregistry trennen...",
+                                                ID_REGISTRY_DISCONNECTNETWORKREGISTRY
+        , GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Drucken\tStrg+P",              ID_REGISTRY_PRINT, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Beenden",                       ID_REGISTRY_EXIT
+    END
+    POPUP "&Bearbeiten"
+    BEGIN
+        MENUITEM "&Ändern",                     ID_EDIT_MODIFY
+        MENUITEM SEPARATOR
+        POPUP "&Neu"
+        BEGIN
+            MENUITEM "&Schlüssel",                        ID_EDIT_NEW_KEY
+            MENUITEM SEPARATOR
+            MENUITEM "&Zeichenkette",               ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Binärwert",               ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&DWORD Wert",                ID_EDIT_NEW_DWORDVALUE
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Löschen\tEntf",                ID_EDIT_DELETE
+        MENUITEM "&Unbenennen",                     ID_EDIT_RENAME
+        MENUITEM SEPARATOR
+        MENUITEM "Schlüsselname &kopieren",              ID_EDIT_COPYKEYNAME
+        MENUITEM SEPARATOR
+        MENUITEM "&Suchen\tStrg+F",               ID_EDIT_FIND, GRAYED
+        MENUITEM "&Nächstes finden\tF3",              ID_EDIT_FINDNEXT, GRAYED
+    END
+    POPUP "&Ansicht"
+    BEGIN
+        MENUITEM "Status&leiste",                 ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "&Trennen",                      ID_VIEW_SPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Aktualisieren\tF5",                ID_VIEW_REFRESH
+    END
+    POPUP "&Favoriten"
+    BEGIN
+        MENUITEM "Zu den Favoriten &hinzugügen",          ID_FAVOURITES_ADDTOFAVOURITES
+        , GRAYED
+        MENUITEM "Von den Favoriten &löschen",           ID_FAVOURITES_REMOVEFAVOURITE
+        , GRAYED
+    END
+    POPUP "&Hilfe"
+    BEGIN
+        MENUITEM "&Hilfethemen\tF1",            ID_HELP_HELPTOPICS
+        MENUITEM SEPARATOR
+        MENUITEM "&Über Registry Editor",      ID_HELP_ABOUT
+    END
+END
+
+IDR_POPUP_MENUS MENU DISCARDABLE
+BEGIN
+  POPUP ""
+  BEGIN
+	MENUITEM "&Ändern",                     ID_EDIT_MODIFY
+	MENUITEM "Binäre Daten ändern",          ID_EDIT_MODIFY_BIN
+	MENUITEM SEPARATOR
+	MENUITEM "&Löschen\tEntf",                ID_EDIT_DELETE
+	MENUITEM "&Umbennenen",                     ID_EDIT_RENAME
+  END
+  POPUP ""
+  BEGIN
+        POPUP "&Neu"
+        BEGIN
+            MENUITEM "&Schlüssel",                  ID_EDIT_NEW_KEY
+            MENUITEM SEPARATOR
+            MENUITEM "&Zeichenkette",               ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Binärwert",                  ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&DWORD Wert",                 ID_EDIT_NEW_DWORDVALUE
+        END
+  END
+END
+
+
+/*
+ * Dialog
+ */
+
+IDD_EDIT_STRING DIALOG  32, 24, 252, 84
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | 
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Zeichenkette ändern"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Name:",IDC_STATIC,6,6,134,8
+    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "&Daten:",IDC_STATIC,6,35,161,8
+    EDITTEXT        IDC_VALUE_DATA,6,46,240,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,142,64,50,14
+    PUSHBUTTON      "Abbrechen",IDCANCEL,196,64,50,14
+END
+
+IDD_EDIT_MULTI_STRING DIALOG  32, 24, 252, 174
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | 
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Multi-Stringwert editieren"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Name:",IDC_STATIC,6,6,134,8
+    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "&Daten:",IDC_STATIC,6,35,161,8
+    EDITTEXT        IDC_VALUE_DATA,6,46,240,102,ES_AUTOHSCROLL | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,142,154,50,14
+    PUSHBUTTON      "Abbrechen",IDCANCEL,196,154,50,14
+END
+
+IDD_EDIT_BIN_DATA DIALOG  32, 24, 252, 174
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | 
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Binärwert editieren"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Name:",IDC_STATIC,6,6,134,8
+    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "&Daten:",IDC_STATIC,6,35,161,8
+    CONTROL         "",IDC_VALUE_DATA,"HexEdit32",WS_VSCROLL | WS_BORDER | WS_TABSTOP,6,46,240,102
+    DEFPUSHBUTTON   "OK",IDOK,142,154,50,14
+    PUSHBUTTON      "Abbrechen",IDCANCEL,196,154,50,14
+END
+
+
+IDD_EDIT_DWORD DIALOG  32, 24, 252, 104
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | 
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "DWORD Wert editieren"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Name:",IDC_STATIC,6,6,134,8
+    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "&Daten:",IDC_STATIC,6,35,161,8
+    EDITTEXT        IDC_VALUE_DATA,6,46,116,12,ES_AUTOHSCROLL
+    GROUPBOX        "Basis",IDC_STATIC,130,35,116,39
+    AUTORADIOBUTTON "&Hexadezimal",IDC_FORMAT_HEX,141,46,60,10,WS_GROUP
+    AUTORADIOBUTTON "&Dezimal",IDC_FORMAT_DEC,141,59,60,10
+    DEFPUSHBUTTON   "OK",IDOK,142,82,50,14
+    PUSHBUTTON      "Abbrechen",IDCANCEL,196,82,50,14
+END
+
+/*
+ * String Table
+ */
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_LIST_COLUMN_NAME    "Name"
+    IDS_LIST_COLUMN_TYPE    "Typ"
+    IDS_LIST_COLUMN_DATA    "Daten"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_APP_TITLE           "Registry Editor"
+    IDC_REGEDIT             "REGEDIT"
+    IDC_REGEDIT_FRAME       "REGEDIT_FRAME"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_REGISTRY_MENU        "Befehle für für das Bearbeiten der ganzen Registry"
+    ID_EDIT_MENU            "Befehle für um Schlüssel oder Werte zu ändern"
+    ID_VIEW_MENU            "Befehle um das Fenster anzupassen"
+    ID_FAVOURITES_MENU      "Befehle für die Favoriten"
+    ID_HELP_MENU            "Befehle um die Hilfe oder Informationen über das Programm anzuzeigen"
+    ID_EDIT_NEW_MENU        "Befehle für das Erstellen von neuen Schlüsseln oder Daten"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_EDIT_MODIFY          "Ändert die Daten eines Wertes"
+    ID_EDIT_NEW_KEY   "Fügt einen neuen Schlüssel hinzu"
+    ID_EDIT_NEW_STRINGVALUE "Fügt einen neuen Zeichenkette hinzu "
+    ID_EDIT_NEW_BINARYVALUE "Fügt einen neuen Binärwärt hinzu"
+    ID_EDIT_NEW_DWORDVALUE  "Fügt einen neuen DWORT Wert hinzu"
+    ID_REGISTRY_IMPORTREGISTRYFILE "Importiert eine Textddatei in die Registry"
+    ID_REGISTRY_EXPORTREGISTRYFILE
+                            "Exportiert Teile oder die ganze Registry in eine Textdatei"
+    ID_REGISTRY_CONNECTNETWORKREGISTRY
+                            "Verbindet zu einer Registry eines Fremdcomputers"
+    ID_REGISTRY_DISCONNECTNETWORKREGISTRY
+                            "Trennt die Verbindung zu der Registry eines Fremdcomputers"
+    ID_REGISTRY_PRINT       "Druckt Teile oder die gesamte Registry aus"
+/*    ID_HELP_HELPTOPICS      "Öffnet die Hilfe" */
+    ID_HELP_ABOUT           "Zeigt Programmname, Version und Copyright an"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_REGISTRY_EXIT        "Beendet den Registry Editor"
+    ID_FAVOURITES_ADDTOFAVOURITES "Fügt Schlüssel to den Favoriten hinzu"
+    ID_FAVOURITES_REMOVEFAVOURITE "Löscht Schlüssel von den Favoriten"
+    ID_VIEW_STATUSBAR       "Zeigt oder versteckt die Statusleiste"
+    ID_VIEW_SPLIT           "Ändert die Position das Fensterteilers"
+    ID_VIEW_REFRESH         "Aktualisiert das Fenster"
+    ID_EDIT_DELETE          "Löscht die Auswahl"
+    ID_EDIT_RENAME          "Bennent die Auswahl um"
+    ID_EDIT_COPYKEYNAME     "Kopiert den Schlüsselnamen in die Zwischenablage"
+    ID_EDIT_FIND            "Findet eine Zeichenkette in einem Schlüssel, einem Namen oder in Daten"
+    ID_EDIT_FINDNEXT        "Findet nächste Zeichenkette"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ERROR		    "Fehler"
+    IDS_BAD_VALUE           "Kann den Wert '%s' nicht lesen"
+    IDS_UNSUPPORTED_TYPE    "Kann Schlüssel von diesem Typ (%ld) nicht ändern"
+    IDS_TOO_BIG_VALUE       "Der Wert ist zu groß (%ld)"
+    IDS_MULTI_SZ_EMPTY_STRING "Daten vom Typ REG_MULTI_SZ können keine leere Zeichenketten enthalten.\nDie leeren Zeichenkette wurden von der Liste gelöscht."
+    IDS_QUERY_DELETE_ONE    "Diesen Wert wirklich löschen?"
+    IDS_QUERY_DELETE_MORE   "Diese Werte wirklich löschen?"
+    IDS_QUERY_DELETE_CONFIRM "Löschen bestätigen"
+    IDS_ERR_DELVAL_CAPTION  "Fehler beim Löschen von Werten"
+    IDS_ERR_DELETEVALUE     "Es konnten nicht alle Werte gelöscht werden!"
+    IDS_ERR_RENVAL_CAPTION  "Fehler beim Umbennnen des Wertes"
+    IDS_ERR_RENVAL_TOEMPTY  "Kann %s nicht umbennenen. Der angebene Name ist leer."
+
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_BINARY_EMPTY	    "(lerrer Binärwert)"
+    IDS_DEFAULT_VALUE_NAME  "(Standard)"
+    IDS_VALUE_NOT_SET       "(Wert nicht gesetzt)"
+    IDS_UNKNOWN_TYPE        "Unbekannter Typ: (0x%lx)"
+    IDS_MY_COMPUTER         "Arbeitsplatz"
+    IDS_IMPORT_REG_FILE     "Registry importieren"
+    IDS_EXPORT_REG_FILE     "Registry exportieren"
+    IDS_INVALID_DWORD       "(ungültiger DWORD Wert)"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_FLT_REGFILES        "Registrierungsdateien"
+    IDS_FLT_REGFILES_FLT    "*.reg"
+    IDS_FLT_REGEDIT4        "Win9x/NT4 Registrierungsdateien (REGEDIT4)"
+    IDS_FLT_REGEDIT4_FLT    "*.reg"
+    IDS_FLT_ALLFILES        "Alle Dateien (*.*)"
+    IDS_FLT_ALLFILES_FLT    "*.*"
+END
+
+/*****************************************************************/
+
+
+/*
+ * Dialog
+ */
+
+IDD_DIALOG1 DIALOG DISCARDABLE  50, 50, 268, 98
+STYLE DS_3DLOOK | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
+    WS_BORDER
+FONT 8, "MS Sans Serif"
+BEGIN
+END
+
+IDD_DIALOG2 DIALOG DISCARDABLE  0, 0, 187, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,130,7,50,14
+    PUSHBUTTON      "Abbrechen",IDCANCEL,130,24,50,14
+END
+
+
+/*
+ * TEXTINCLUDE
+ */
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "resource.h\0"
+END
+
+
+
+/*
+ * String Table
+ */
+
+/*
+ *STRINGTABLE DISCARDABLE
+ *BEGIN
+ *    ID_HELP_HELPTOPICS      "Öffnet die Hilfe."
+ *    ID_HELP_ABOUT           "Zeigt Programmname, Version und Copyright an"
+ *END
+ */
+
+/*****************************************************************/

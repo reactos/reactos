@@ -763,7 +763,7 @@ HEXEDIT_WM_KEYDOWN(PHEXEDIT_DATA hed, INT VkCode)
   
   switch(VkCode)
   {
-    case VK_LEFT:MessageBox(0, L"", L"", 0);
+    case VK_LEFT:
       if(hed->Position > 0)
       {
         if(--hed->CaretCol < 0)
