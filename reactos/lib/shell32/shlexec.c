@@ -153,7 +153,7 @@ static BOOL SHELL_ArgifyW(WCHAR* out, int len, const WCHAR* fmt, const WCHAR* lp
 		break;
 
 	      /*
-	       * IE uses this alot for activating things such as windows media
+	       * IE uses this a lot for activating things such as windows media
 	       * player. This is not verified to be fully correct but it appears
 	       * to work just fine.
 	       */
@@ -933,7 +933,7 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW psei, SHELL_ExecuteW32 execfu
     static const WCHAR wExplorer[] = {'e','x','p','l','o','r','e','r','.','e','x','e',0};
 
     WCHAR wszApplicationName[MAX_PATH+2], wszParameters[1024], wszDir[MAX_PATH];
-    SHELLEXECUTEINFOW sei_tmp;	/* modifyable copy of SHELLEXECUTEINFO struct */
+    SHELLEXECUTEINFOW sei_tmp;	/* modifiable copy of SHELLEXECUTEINFO struct */
     WCHAR wfileName[MAX_PATH];
     void *env;
     WCHAR wszProtocol[256];
@@ -1130,7 +1130,7 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW psei, SHELL_ExecuteW32 execfu
 	    LPWSTR dst = wfileName;
 	    LPWSTR end;
 
-	    /* copy the unquoted executabe path to 'wfileName' */
+	    /* copy the unquoted executable path to 'wfileName' */
 	    while(*src && *src!='"')
 		*dst++ = *src++;
 
