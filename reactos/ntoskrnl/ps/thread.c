@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.109 2003/04/25 18:37:44 fireball Exp $
+/* $Id: thread.c,v 1.110 2003/04/28 14:32:36 fireball Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -511,6 +511,7 @@ KeSetAffinityThread(PKTHREAD	Thread,
  * Sets thread's affinity
  */
 {
+	DPRINT1("KeSetAffinityThread() is a stub returning STATUS_SUCCESS");
 	return STATUS_SUCCESS; // FIXME: Use function below
 	//return ZwSetInformationThread(handle, ThreadAffinityMask,<pointer to affinity mask>,sizeof(KAFFINITY));
 }
