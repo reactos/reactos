@@ -1,4 +1,4 @@
-/* $Id: wait.c,v 1.21 2003/03/06 13:01:15 ekohl Exp $
+/* $Id: wait.c,v 1.22 2003/05/18 19:37:20 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -249,8 +249,8 @@ SignalObjectAndWait(HANDLE hObjectToSignal,
 
   Status = NtSignalAndWaitForSingleObject (hObjectToSignal,
 					   hObjectToWaitOn,
-					   TimePtr,
-					   (BOOLEAN)bAlertable);
+					   (BOOLEAN)bAlertable,
+					   TimePtr);
   if (!NT_SUCCESS(Status))
     {
       SetLastErrorByStatus (Status);
