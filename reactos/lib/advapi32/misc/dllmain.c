@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.3 2001/06/17 20:20:21 ekohl Exp $
+/* $Id: dllmain.c,v 1.4 2002/08/15 16:11:01 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -21,8 +21,6 @@ DllMain(PVOID hinstDll,
 	ULONG dwReason,
 	PVOID reserved)
 {
-   DPRINT("ADVAPI32: DllMain() called\n");
-
    switch (dwReason)
      {
      case DLL_PROCESS_ATTACH:
@@ -34,8 +32,6 @@ DllMain(PVOID hinstDll,
 	RegCleanup();
 	break;
      }
-
-   DPRINT1("ADVAPI32: DllMain() done\n");
 
    return TRUE;
 }

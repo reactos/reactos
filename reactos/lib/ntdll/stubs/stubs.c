@@ -10,9 +10,7 @@
 // ?Allocate@CBufferAllocator@@UAEPAXK@Z
 
 STUB(KiRaiseUserExceptionDispatcher)
-
 STUB(LdrEnumResources)
-STUB(LdrFindResourceDirectory_U)
 STUB(LdrProcessRelocationBlock)
 STUB(LdrQueryImageFileExecutionOptions)
 STUB(LdrVerifyImageMatchesChecksum)
