@@ -156,6 +156,59 @@ DECL_WINELIB_SETUPAPI_TYPE_AW(PSP_FILE_CALLBACK)
 #define MAX_SUBTITLE_LEN            256
 #define SP_MAX_MACHINENAME_LENGTH   (MAX_PATH + 3)
 
+typedef UINT DI_FUNCTION;
+
+typedef struct _SP_CLASSINSTALL_HEADER
+{
+  DWORD       cbSize;
+  DI_FUNCTION InstallFunction;
+} SP_CLASSINSTALL_HEADER, *PSP_CLASSINSTALL_HEADER;
+
+typedef struct _SP_PROPCHANGE_PARAMS
+{
+  SP_CLASSINSTALL_HEADER  ClassInstallHeader;
+  DWORD  StateChange;
+  DWORD  Scope;
+  DWORD  HwProfile;
+} SP_PROPCHANGE_PARAMS, *PSP_PROPCHANGE_PARAMS;
+
+#define DICS_ENABLE      0x00000001
+#define DICS_DISABLE     0x00000002
+#define DICS_PROPCHANGE  0x00000003
+#define DICS_START       0x00000004
+#define DICS_STOP        0x00000005
+
+typedef struct _SP_DEVINSTALL_PARAMS_A
+{
+    DWORD               cbSize;
+    DWORD               Flags;
+    DWORD               FlagsEx;
+    HWND                hwndParent;
+    PSP_FILE_CALLBACK_A InstallMsgHandler;
+    PVOID               InstallMsgHandlerContext;
+    HSPFILEQ            FileQueue;
+    ULONG_PTR           ClassInstallReserved;
+    DWORD               Reserved;
+    CHAR                DriverPath[MAX_PATH];
+} SP_DEVINSTALL_PARAMS_A, *PSP_DEVINSTALL_PARAMS_A;
+
+typedef struct _SP_DEVINSTALL_PARAMS_W
+{
+    DWORD               cbSize;
+    DWORD               Flags;
+    DWORD               FlagsEx;
+    HWND                hwndParent;
+    PSP_FILE_CALLBACK_W InstallMsgHandler;
+    PVOID               InstallMsgHandlerContext;
+    HSPFILEQ            FileQueue;
+    ULONG_PTR           ClassInstallReserved;
+    DWORD               Reserved;
+    WCHAR               DriverPath[MAX_PATH];
+} SP_DEVINSTALL_PARAMS_W, *PSP_DEVINSTALL_PARAMS_W;
+
+DECL_WINELIB_SETUPAPI_TYPE_AW(SP_DEVINSTALL_PARAMS)
+DECL_WINELIB_SETUPAPI_TYPE_AW(PSP_DEVINSTALL_PARAMS)
+
 /* Device Information structure (references a device instance that is a member
    of a device information set) */
 typedef struct _SP_DEVINFO_DATA
@@ -397,7 +450,6 @@ DECL_WINELIB_SETUPAPI_TYPE_AW(PFILEPATHS)
 #define FLG_REGSVR_DLLREGISTER           0x00000001
 #define FLG_REGSVR_DLLINSTALL            0x00000002
 
-/* */
 #define DI_NOVCP 0x00000008
 
 /* Class installer function codes */
@@ -559,7 +611,7 @@ DECL_WINELIB_SETUPAPI_TYPE_AW(PFILEPATHS)
 #define ERROR_NO_SUCH_INTERFACE_DEVICE    ERROR_NO_SUCH_DEVICE_INTERFACE
 #define ERROR_NOT_INSTALLED               (APPLICATION_ERROR_MASK|ERROR_SEVERITY_ERROR|0x1000)
 
-/* Flags for SetupDiGetClassDevs */
+/* flags for SetupDiGetClassDevs */
 #define DIGCF_DEFAULT         0x00000001
 #define DIGCF_PRESENT         0x00000002
 #define DIGCF_ALLCLASSES      0x00000004
@@ -611,14 +663,6 @@ DECL_WINELIB_SETUPAPI_TYPE_AW(PFILEPATHS)
 #define SPDRP_REMOVAL_POLICY_OVERRIDE     0x00000021
 #define SPDRP_INSTALL_STATE               0x00000022
 #define SPDRP_MAXIMUM_PROPERTY            0x00000023
-
-
-LPWSTR   WINAPI DuplicateString(LPCWSTR lpSrc);
-VOID     WINAPI MyFree(LPVOID lpMem);
-LPVOID   WINAPI MyMalloc(DWORD dwSize);
-LPVOID   WINAPI MyRealloc(LPVOID lpSrc, DWORD dwSize);
-
-LONG     WINAPI QueryRegistryValue(HKEY, LPCWSTR, LPBYTE *, LPDWORD, LPDWORD);
 
 void     WINAPI InstallHinfSectionA( HWND hwnd, HINSTANCE handle, LPCSTR cmdline, INT show );
 void     WINAPI InstallHinfSectionW( HWND hwnd, HINSTANCE handle, LPCWSTR cmdline, INT show );
@@ -738,7 +782,6 @@ BOOL     WINAPI SetupDiGetClassDescriptionExW(const GUID*, PWSTR, DWORD, PDWORD,
 HDEVINFO WINAPI SetupDiGetClassDevsA(CONST GUID *,LPCSTR,HWND,DWORD);
 HDEVINFO WINAPI SetupDiGetClassDevsW(CONST GUID *,LPCWSTR,HWND,DWORD);
 #define         SetupDiGetClassDevs WINELIB_NAME_AW(SetupDiGetClassDevs)
-
 BOOL     WINAPI SetupDiGetDeviceInterfaceDetailA(HDEVINFO, PSP_DEVICE_INTERFACE_DATA, PSP_DEVICE_INTERFACE_DETAIL_DATA_A,
                                                  DWORD, PDWORD, PSP_DEVINFO_DATA);
 BOOL     WINAPI SetupDiGetDeviceInterfaceDetailW(HDEVINFO, PSP_DEVICE_INTERFACE_DATA, PSP_DEVICE_INTERFACE_DETAIL_DATA_W,
@@ -752,7 +795,6 @@ HKEY     WINAPI SetupDiOpenClassRegKey(const GUID*, REGSAM);
 HKEY     WINAPI SetupDiOpenClassRegKeyExA(const GUID*, REGSAM, DWORD, PCSTR, PVOID);
 HKEY     WINAPI SetupDiOpenClassRegKeyExW(const GUID*, REGSAM, DWORD, PCWSTR, PVOID);
 #define         SetupDiOpenClassRegKeyEx WINELIB_NAME_AW(SetupDiOpenClassRegKeyEx)
-
 BOOL     WINAPI SetupInstallFilesFromInfSectionA( HINF, HINF, HSPFILEQ, PCSTR, PCSTR, UINT );
 BOOL     WINAPI SetupInstallFilesFromInfSectionW( HINF, HINF, HSPFILEQ, PCWSTR, PCWSTR, UINT );
 #define         SetupInstallFilesFromInfSection WINELIB_NAME_AW(SetupInstallFilesFromInfSection)
