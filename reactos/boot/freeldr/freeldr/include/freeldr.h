@@ -66,8 +66,8 @@ typedef U8 *PU8;
 typedef U16 *PU16;
 typedef U32 *PU32;
 
-#define ROUND_UP(N, S) ((N) + (S) - ((N) % (S)))
-#define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
+#define ROUND_UP(N, S) (((N) + (S) - 1) & ~((S) - 1))
+#define ROUND_DOWN(N, S) ((N) & ~((S) - 1))
 
 #define PACKED __attribute__((packed))
 
