@@ -1,4 +1,4 @@
-; $Id: opengl32.edf,v 1.1 2004/02/01 07:11:06 royce Exp $
+; $Id: opengl32.edf,v 1.2 2004/02/01 17:07:16 royce Exp $
 ;
 ; opengl32.edf
 ;
@@ -12,7 +12,7 @@ glAccum=glAccum@8
 glAlphaFunc=glAlphaFunc@8
 glAreTexturesResident=glAreTexturesResident@12
 glArrayElement=glArrayElement@4
-glBegin=glBegin@0
+glBegin=glBegin@4
 glBindTexture=glBindTexture@8
 glBitmap=glBitmap@28
 glBlendFunc=glBlendFunc@8

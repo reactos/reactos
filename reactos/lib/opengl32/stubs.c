@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.1 2004/02/01 07:11:06 royce Exp $
+/* $Id: stubs.c,v 1.2 2004/02/01 17:07:16 royce Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -18,7 +18,7 @@ GLFUNCLIST*
 OPENGL32_GetFuncList(); // see bottom of this file...
 
 /*
- * @unimplemented
+ * @implemented
  */
 void
 WINAPI
@@ -26,11 +26,14 @@ glAccum (
 	GLenum op,
 	GLfloat value )
 {
-	UNIMPLEMENTED; /* FIXME */
+	GLFUNCLIST* list = OPENGL32_GetFuncList();
+	/* FIXME - jump directly to target... */
+	if ( list )
+		(*list->glAccum)(op,value);
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 static // not exported, except via wglGetProcAddress
 void
@@ -41,11 +44,11 @@ glAddSwapHintRectWIN (
 	GLsizei width,
 	GLsizei height )
 {
-	UNIMPLEMENTED; /* FIXME */
+	(*OPENGL32_GetFuncList()->glAddSwapHintRectWIN)(x,y,width,height);
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 void
 WINAPI
@@ -53,7 +56,7 @@ glAlphaFunc (
 	GLenum func,
 	GLclampf ref )
 {
-	UNIMPLEMENTED; /* FIXME */
+	(*OPENGL32_GetFuncList()->glAlphaFunc)(func,ref);
 }
 
 /*
@@ -511,23 +514,7 @@ wglUseFontOutlinesW=wglUseFontOutlinesW@32
 GLFUNCLIST*
 OPENGL32_GetFuncList()
 {
-	/* FIXME - this is sooooo not right, but it's close... */
-	static GLFUNCLIST* list = NULL;
-	if ( !list )
-	{
-		list = malloc ( sizeof(GLFUNCLIST) );
-		memset ( list, 0, sizeof(GLFUNCLIST) );
-		list->glAccum = glAccum;
-		list->glAddSwapHintRectWIN = glAddSwapHintRectWIN;
-		list->glArrayElement = glArrayElement;
-		list->glBegin = glBegin;
-		list->glBindTexture = glBindTexture;
-		list->glEnd = glEnd;
-		/* FIXME - add more */
-		/* FIXME - query registry looking for drivers, we actually
-			need multiple GLFUNCLIST objects depending on which driver
-			the end-user is currently interacting with
-		*/
-	}
-	return list;
+	threaddata = (OPENGL32_ThreadData*)TlsGetValue ( OPENGL32_tls );
+	ASSERT(threaddata);
+	return threaddata->list;
 }

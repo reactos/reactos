@@ -1,4 +1,4 @@
-/* $Id: opengl32.h,v 1.1 2004/02/01 07:11:06 royce Exp $
+/* $Id: opengl32.h,v 1.2 2004/02/01 17:07:16 royce Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -59,5 +59,21 @@ typedef struct tagGLFUNCLIST
 
 	PGLEND glEnd;
 } GLFUNCLIST;
+
+typedef struct tagGLPROCESSDATA
+{
+	int funclist_count;
+	GLFUNCLIST* lists; // array of GLFUNCLIST pointers
+} GLPROCESSDATA;
+
+typedef struct tagGLTHREADDATA
+{
+	HDC hdc; // current HDC
+	GLFUNCLIST* list; // *current* func list
+	/* FIXME - what else do we need here? */
+}; GLTHREADDATA;
+
+extern DWORD OPENGL32_tls;
+extern GLPROCESSDATA OPENGL32_processdata;
 
 #endif//OPENGL32_PRIVATE_H
