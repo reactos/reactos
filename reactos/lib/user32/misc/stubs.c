@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.58 2004/04/09 20:03:14 navaraf Exp $
+/* $Id: stubs.c,v 1.59 2004/04/29 20:26:35 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -248,39 +248,6 @@ WaitForInputIdle(
 {
   UNIMPLEMENTED;
   return 0;
-}
-
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-keybd_event(
-	    BYTE bVk,
-	    BYTE bScan,
-	    DWORD dwFlags,
-	    DWORD dwExtraInfo)
-
-
-{
-  UNIMPLEMENTED
-}
-
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-mouse_event(
-	    DWORD dwFlags,
-	    DWORD dx,
-	    DWORD dy,
-	    DWORD cButtons,
-	    DWORD dwExtraInfo)
-{
-  UNIMPLEMENTED
 }
 
 /******************************************************************************

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.23 2004/01/26 08:44:51 weiden Exp $
+/* $Id: input.c,v 1.24 2004/04/29 20:26:35 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -62,13 +62,12 @@ ActivateKeyboardLayout(HKL hkl,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 BlockInput(BOOL fBlockIt)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return NtUserBlockInput(fBlockIt);
 }
 
 
@@ -526,7 +525,7 @@ VkKeyScanW(WCHAR ch)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 UINT
 STDCALL
@@ -535,8 +534,7 @@ SendInput(
   LPINPUT pInputs,
   int cbSize)
 {
-  UNIMPLEMENTED;
-  return 0;
+  return NtUserSendInput(nInputs, pInputs, cbSize);
 }
 
 /*
@@ -557,6 +555,57 @@ STDCALL
 PrivateCsrssAcquireOrReleaseInputOwnership(BOOL Release)
 {
   NtUserAcquireOrReleaseInputOwnership(Release);
+}
+
+/*
+ * @implemented
+ */
+VOID
+STDCALL
+keybd_event(
+	    BYTE bVk,
+	    BYTE bScan,
+	    DWORD dwFlags,
+	    ULONG_PTR dwExtraInfo)
+
+
+{
+  INPUT Input;
+  
+  Input.type = INPUT_KEYBOARD;
+  Input.ki.wVk = bVk;
+  Input.ki.wScan = bScan;
+  Input.ki.dwFlags = dwFlags;
+  Input.ki.time = 0;
+  Input.ki.dwExtraInfo = dwExtraInfo;
+  
+  NtUserSendInput(1, &Input, sizeof(INPUT));
+}
+
+
+/*
+ * @implemented
+ */
+VOID
+STDCALL
+mouse_event(
+	    DWORD dwFlags,
+	    DWORD dx,
+	    DWORD dy,
+	    DWORD dwData,
+	    ULONG_PTR dwExtraInfo)
+{
+  INPUT Input;
+  
+  Input.type = INPUT_MOUSE;
+  Input.mi.dx = dx;
+  Input.mi.dy = dy;
+  Input.mi.mouseData = dwData;
+  Input.mi.dwFlags = dwFlags;
+  Input.mi.time = 0;
+  Input.mi.dwExtraInfo = dwExtraInfo;
+  
+  NtUserSendInput(1, &Input, sizeof(INPUT));
 }
 
 /* EOF */

@@ -72,10 +72,10 @@ NtUserBitBltSysBmp(
   DWORD Unknown6,
   DWORD Unknown7);
 
-DWORD
+BOOL
 STDCALL
 NtUserBlockInput(
-  DWORD Unknown0);
+  BOOL BlockIt);
 
 ULONG
 STDCALL
@@ -1152,12 +1152,12 @@ DWORD STDCALL
 NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *rect,
    const RECT *clipRect, HRGN hrgnUpdate, LPRECT rcUpdate, UINT flags);
 
-DWORD
+UINT
 STDCALL
 NtUserSendInput(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+  UINT nInputs,
+  LPINPUT pInput,
+  INT cbSize);
 
 typedef struct tagNTUSERSENDMESSAGEINFO
 {

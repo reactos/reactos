@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.44 2004/01/24 08:26:25 ekohl Exp $
+/* $Id: stubs.c,v 1.45 2004/04/29 20:26:35 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -53,17 +53,6 @@ NtUserBitBltSysBmp(
 
   return 0;
 }
-
-DWORD
-STDCALL
-NtUserBlockInput(
-  DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
 
 DWORD
 STDCALL
@@ -603,18 +592,6 @@ NtUserSBGetParms(
   DWORD Unknown1,
   DWORD Unknown2,
   DWORD Unknown3)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserSendInput(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
 {
   UNIMPLEMENTED
 

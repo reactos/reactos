@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.68 2004/04/09 20:03:18 navaraf Exp $
+/* $Id: dllmain.c,v 1.69 2004/04/29 20:26:35 weiden Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -199,6 +199,7 @@ Win32kThreadCallback (struct _ETHREAD *Thread,
       RemoveTimersThread(Thread->Cid.UniqueThread);
       UnregisterThreadHotKeys(Thread);
       DestroyThreadWindows(Thread);
+      IntBlockInput(Win32Thread, FALSE);
     }
 
   return STATUS_SUCCESS;

@@ -59,6 +59,7 @@ typedef struct _WINSTATION_OBJECT
   UINT CaretBlinkRate;
   HANDLE ShellWindow;
   HANDLE ShellListView;
+  BOOL DesktopLocked;
   struct _DESKTOP_OBJECT* ActiveDesktop;
   /* FIXME: Clipboard */
   LIST_ENTRY HotKeyListHead;
@@ -87,6 +88,8 @@ typedef struct _DESKTOP_OBJECT
   /* Handle of the desktop window. */
   HANDLE DesktopWindow;
   HANDLE PrevActiveWindow;
+  /* Thread blocking input */
+  PVOID BlockInputThread;
 } DESKTOP_OBJECT, *PDESKTOP_OBJECT;
 
 

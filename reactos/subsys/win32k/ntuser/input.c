@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.27 2004/02/10 18:11:12 navaraf Exp $
+/* $Id: input.c,v 1.28 2004/04/29 20:26:35 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -31,6 +31,7 @@
 
 #include <ddk/ntddk.h>
 #include <win32k/win32k.h>
+#include <internal/safe.h>
 #include <include/class.h>
 #include <include/error.h>
 #include <include/winsta.h>
@@ -468,6 +469,135 @@ NtUserDragDetect(
 {
   UNIMPLEMENTED
   return 0;
+}
+
+BOOL FASTCALL
+IntBlockInput(PW32THREAD W32Thread, BOOL BlockIt)
+{
+  PW32THREAD OldBlock;
+  ASSERT(W32Thread);
+  
+  if(W32Thread->IsExiting && BlockIt)
+  {
+    /*
+     * fail blocking if exiting the thread
+     */
+    
+    return FALSE;
+  }
+  
+  /*
+   * FIXME - check access rights of the window station
+   *         e.g. services running in the service window station cannot block input
+   */
+  if(!ThreadHasInputAccess(W32Thread) ||
+     !IntIsActiveDesktop(W32Thread->Desktop))
+  {
+    SetLastWin32Error(ERROR_ACCESS_DENIED);
+    return FALSE;
+  }
+  
+  ASSERT(W32Thread->Desktop);
+  OldBlock = W32Thread->Desktop->BlockInputThread;
+  if(OldBlock)
+  {
+    if(OldBlock != W32Thread)
+    {
+      SetLastWin32Error(ERROR_ACCESS_DENIED);
+      return FALSE;
+    }
+    W32Thread->Desktop->BlockInputThread = (BlockIt ? W32Thread : NULL);
+    return OldBlock == NULL;
+  }
+  
+  W32Thread->Desktop->BlockInputThread = (BlockIt ? W32Thread : NULL);
+  return OldBlock == NULL;
+}
+
+BOOL
+STDCALL
+NtUserBlockInput(
+  BOOL BlockIt)
+{
+  return IntBlockInput(PsGetWin32Thread(), BlockIt);
+}
+
+BOOL FASTCALL
+IntMouseInput(MOUSEINPUT *mi)
+{
+  return FALSE;
+}
+
+BOOL FASTCALL
+IntKeyboardInput(KEYBDINPUT *ki)
+{
+  return FALSE;
+}
+
+UINT
+STDCALL
+NtUserSendInput(
+  UINT nInputs,
+  LPINPUT pInput,
+  INT cbSize)
+{
+  UINT cnt;
+  
+  if(!nInputs || !pInput || (cbSize != sizeof(INPUT)))
+  {
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return 0;
+  }
+  
+  /*
+   * FIXME - check access rights of the window station
+   *         e.g. services running in the service window station cannot block input
+   */
+  if(!ThreadHasInputAccess(W32Thread) ||
+     !IntIsActiveDesktop(PsGetWin32Thread()->Desktop))
+  {
+    SetLastWin32Error(ERROR_ACCESS_DENIED);
+    return 0;
+  }
+  
+  cnt = 0;
+  while(nInputs--)
+  {
+    INPUT SafeInput;
+    NTSTATUS Status;
+    
+    Status = MmCopyFromCaller(&SafeInput, pInput++, sizeof(INPUT));
+    if(!NT_SUCCESS(Status))
+    {
+      SetLastNtError(Status);
+      return cnt;
+    }
+    
+    switch(SafeInput.type)
+    {
+      case INPUT_MOUSE:
+        if(IntMouseInput(&SafeInput.mi))
+        {
+          cnt++;
+        }
+        break;
+      case INPUT_KEYBOARD:
+        if(IntKeyboardInput(&SafeInput.ki))
+        {
+          cnt++;
+        }
+        break;
+      case INPUT_HARDWARE:
+        break;
+#ifndef NDEBUG
+      default:
+        DPRINT1("SendInput(): Invalid input type: 0x%x\n", SafeInput.type);
+        break;
+#endif
+    }
+  }
+  
+  return cnt;
 }
 
 /* EOF */

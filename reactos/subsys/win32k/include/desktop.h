@@ -46,6 +46,9 @@ IntShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height);
 NTSTATUS FASTCALL
 IntHideDesktop(PDESKTOP_OBJECT Desktop);
 
+#define IntIsActiveDesktop(Desktop) \
+  ((Desktop)->WindowStation->ActiveDesktop == (Desktop))
+
 #endif /* _WIN32K_DESKTOP_H */
 
 /* EOF */
