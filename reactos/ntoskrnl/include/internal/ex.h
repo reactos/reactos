@@ -35,6 +35,7 @@ typedef struct _SYSTEM_CURSORINFO
   UINT CurrentCursor;
   LONG x, y;
   BOOL SafetySwitch, SafetySwitch2;
+  FAST_MUTEX CursorMutex;
   CURSORCLIP_INFO CursorClipInfo;
   SYSCURSOR SystemCursors[SYSCURSORCOUNT];
 } SYSTEM_CURSORINFO, *PSYSTEM_CURSORINFO;

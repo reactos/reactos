@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.32 2003/08/24 23:52:29 weiden Exp $
+/* $Id: mouse.c,v 1.33 2003/08/25 00:28:22 weiden Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -30,6 +30,7 @@
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <ddk/ntddmou.h>
+#include <win32k/win32k.h>
 #include <win32k/dc.h>
 #include "objects.h"
 #include "include/msgqueue.h"
@@ -45,11 +46,6 @@
 
 /* GLOBALS *******************************************************************/
 
-//static BOOLEAN SafetySwitch = FALSE;
-//static BOOLEAN SafetySwitch2 = FALSE;
-//static BOOLEAN MouseEnabled = FALSE;
-//static LONG mouse_x, mouse_y;
-//static LONG mouse_width = 0, mouse_height = 0;
 static ULONG PointerStatus;
 
 static UCHAR DefaultCursor[256] = {
@@ -201,8 +197,10 @@ MouseSafetyOnDrawStart(PSURFOBJ SurfObj, PSURFGDI SurfGDI, LONG HazardX1,
       ((CurInfo->y + SysCursor->cy) >= HazardY1) && (CurInfo->y <= HazardY2))
     {
       /* Mouse is not allowed to move if GDI is busy drawing */
+      ExAcquireFastMutexUnsafe(&CurInfo->CursorMutex);
       CurInfo->SafetySwitch = TRUE;
       SurfGDI->MovePointer(SurfObj, -1, -1, &MouseRect);
+      ExReleaseFastMutexUnsafe(&CurInfo->CursorMutex);
     }
     
   ObDereferenceObject(InputWindowStation);
@@ -254,8 +252,10 @@ MouseSafetyOnDrawEnd(PSURFOBJ SurfObj, PSURFGDI SurfGDI)
 
   if (CurInfo->SafetySwitch)
     {
+      ExAcquireFastMutexUnsafe(&CurInfo->CursorMutex);
       SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &MouseRect);
       CurInfo->SafetySwitch = FALSE;
+      ExReleaseFastMutexUnsafe(&CurInfo->CursorMutex);
     }
   
   CurInfo->SafetySwitch2 = FALSE;
@@ -276,6 +276,7 @@ MouseMoveCursor(LONG X, LONG Y)
   MSG Msg;
   LARGE_INTEGER LargeTickCount;
   ULONG TickCount;
+  static ULONG ButtonsDown = 0;
   
   hDC = IntGetScreenDC();
   
@@ -289,13 +290,13 @@ MouseMoveCursor(LONG X, LONG Y)
     SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
     DC_UnlockDc( hDC );
     CurInfo = &InputWindowStation->SystemCursor;
-    CheckClipCursor(&X, &X, CurInfo);
+    CheckClipCursor(&X, &Y, CurInfo);
     if((X != CurInfo->x) || (Y != CurInfo->y))
     {
       /* send MOUSEMOVE message */
       KeQueryTickCount(&LargeTickCount);
       TickCount = LargeTickCount.u.LowPart;
-      Msg.wParam = 0;
+      Msg.wParam = ButtonsDown;
       Msg.lParam = MAKELPARAM(X, Y);
       Msg.message = WM_MOUSEMOVE;
       Msg.time = TickCount;
@@ -307,7 +308,9 @@ MouseMoveCursor(LONG X, LONG Y)
       CurInfo->y = Y;
       if(!CurInfo->SafetySwitch && !CurInfo->SafetySwitch2 && CurInfo->Enabled)
       {
+        ExAcquireFastMutexUnsafe(&CurInfo->CursorMutex);
         SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &MouseRect);
+        ExReleaseFastMutexUnsafe(&CurInfo->CursorMutex);
       }
       res = TRUE;
     }
@@ -439,7 +442,9 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
     if (!CurInfo->SafetySwitch && !CurInfo->SafetySwitch2 &&
         ((mouse_ox != CurInfo->x) || (mouse_oy != CurInfo->y)))
     {
+      ExAcquireFastMutexUnsafe(&CurInfo->CursorMutex);
       SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &MouseRect);
+      ExReleaseFastMutexUnsafe(&CurInfo->CursorMutex);
     }
   }
 
@@ -466,6 +471,7 @@ EnableMouse(HDC hDisplayDC)
        InputWindowStation->SystemCursor.Enabled = FALSE;
        return;
     }
+    
     CurInfo = &InputWindowStation->SystemCursor;
     SysCursor = &CurInfo->SystemCursors[CurInfo->CurrentCursor];
     

@@ -235,7 +235,6 @@ NtUserClipCursor(
   
   PWINSTATION_OBJECT WinStaObject;
   PSYSTEM_CURSORINFO CurInfo;
-  LONG newx, newy;
 
   NTSTATUS Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
 				       KernelMode,
@@ -258,14 +257,7 @@ NtUserClipCursor(
     CurInfo->CursorClipInfo.Right = lpRect->right;
     CurInfo->CursorClipInfo.Bottom = lpRect->bottom;
     
-    newx = CurInfo->x;
-    newy = CurInfo->y;
-    CheckClipCursor(&newx, &newy, CurInfo);  
-    if((newx != CurInfo->x) || (newy != CurInfo->y))
-    {
-      MouseMoveCursor(newx, newy);
-    }
-    
+    MouseMoveCursor(CurInfo->x, CurInfo->y);  
   }
   else
     WinStaObject->SystemCursor.CursorClipInfo.IsClipped = FALSE;

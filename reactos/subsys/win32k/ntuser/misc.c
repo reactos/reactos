@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.11 2003/08/24 23:52:29 weiden Exp $
+/* $Id: misc.c,v 1.12 2003/08/25 00:28:23 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -166,7 +166,7 @@ NtUserCallTwoParam(
         CurInfo = &WinStaObject->SystemCursor;
         /* FIXME - check if process has WINSTA_WRITEATTRIBUTES */
         
-        CheckClipCursor(&Pos->x, &Pos->y, CurInfo);  
+        //CheckClipCursor(&Pos->x, &Pos->y, CurInfo);  
         if((Pos->x != CurInfo->x) || (Pos->y != CurInfo->y))
         {
           MouseMoveCursor(Pos->x, Pos->y);
