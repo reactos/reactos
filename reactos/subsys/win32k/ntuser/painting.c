@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.57 2003/12/30 18:19:20 weiden Exp $
+ *  $Id: painting.c,v 1.58 2004/01/10 21:59:05 gvg Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -798,6 +798,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
    RECT ClientRect;
    RECT ClipRect;
    INT DcxFlags;
+   PDC DC;
 
    if (!(Window = IntGetWindowObject(hWnd)))
    {
@@ -838,7 +839,14 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
 
    IntGetClientRect(Window, &ClientRect);
    IntGdiGetClipBox(lPs->hdc, &ClipRect);
-   NtGdiLPtoDP(lPs->hdc, (LPPOINT)&ClipRect, 2);
+   DC = DC_LockDc(lPs->hdc);
+   if (NULL == DC)
+     {
+       IntReleaseWindowObject(Window);
+       return NULL;
+     }
+   IntLPtoDP(DC, (LPPOINT)&ClipRect, 2);
+   DC_UnlockDc(lPs->hdc);
    NtGdiIntersectRect(&lPs->rcPaint, &ClientRect, &ClipRect);
    NtGdiDPtoLP(lPs->hdc, (LPPOINT)&lPs->rcPaint, 2);
 
@@ -1049,30 +1057,37 @@ NtUserScrollDC(HDC hDC, INT dx, INT dy, const RECT *lprcScroll,
    const RECT *lprcClip, HRGN hrgnUpdate, LPRECT lprcUpdate)
 {
    RECT rSrc, rClipped_src, rClip, rDst, offset;
+   PDC DC;
 
    /*
     * Compute device clipping region (in device coordinates).
     */
 
+   DC = DC_LockDc(hDC);
+   if (NULL == DC)
+     {
+       return FALSE;
+     }
    if (lprcScroll)
       rSrc = *lprcScroll;
    else
       IntGdiGetClipBox(hDC, &rSrc);
-   NtGdiLPtoDP(hDC, (LPPOINT)&rSrc, 2);
+   IntLPtoDP(DC, (LPPOINT)&rSrc, 2);
 
    if (lprcClip)
       rClip = *lprcClip;
    else
       IntGdiGetClipBox(hDC, &rClip);
-   NtGdiLPtoDP(hDC, (LPPOINT)&rClip, 2);
+   IntLPtoDP(DC, (LPPOINT)&rClip, 2);
 
    NtGdiIntersectRect(&rClipped_src, &rSrc, &rClip);
 
    rDst = rClipped_src;
    NtGdiSetRect(&offset, 0, 0, dx, dy);
-   NtGdiLPtoDP(hDC, (LPPOINT)&offset, 2);
+   IntLPtoDP(DC, (LPPOINT)&offset, 2);
    NtGdiOffsetRect(&rDst, offset.right - offset.left,  offset.bottom - offset.top);
    NtGdiIntersectRect(&rDst, &rDst, &rClip);
+   DC_UnlockDc(hDC);
 
    /*
     * Copy bits, if possible.
