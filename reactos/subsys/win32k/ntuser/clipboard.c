@@ -308,8 +308,9 @@ NtUserSetClipboardData(UINT uFormat, HANDLE hMem, DWORD Unknown2)
 HWND STDCALL
 NtUserSetClipboardViewer(HWND hWndNewViewer)
 {
-   UNIMPLEMENTED
-   return 0;
+    HWND hwndPrev = 0;
+    DbgPrint("NtUserSetClipboardViewer is UNIMPLEMENTED (%p): returning %p\n", hWndNewViewer, hwndPrev);
+    return hwndPrev;
 }
 
 /* EOF */
