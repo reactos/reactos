@@ -1,4 +1,4 @@
-/* $Id: null.c,v 1.6 2002/02/08 02:57:08 chorns Exp $
+/* $Id: null.c,v 1.7 2002/04/29 23:06:42 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -6,100 +6,159 @@
  * PURPOSE:          NULL device driver
  * PROGRAMMER:       David Welch (welch@mcmail.com)
  * UPDATE HISTORY:
- *              13/08/98: Created
+ *              13/08/1998: Created
+ *              29/04/2002: Fixed bugs, added zero-stream device
  */
 
-/* INCLUDES ****************************************************************/
-
+/* INCLUDES */
 #include <ddk/ntddk.h>
+#include "null.h"
 
-/* FUNCTIONS **************************************************************/
+/* OBJECTS */
+static const NULL_EXTENSION nxNull = NullBitBucket;
+static const NULL_EXTENSION nxZero = NullZeroStream;
 
-NTSTATUS NullWrite(PIRP Irp, PIO_STACK_LOCATION stk)
-{
-   Irp->IoStatus.Information = stk->Parameters.Write.Length;
-   return(STATUS_SUCCESS);
-}
-
-NTSTATUS NullRead(PIRP Irp, PIO_STACK_LOCATION stk)
-{
-   Irp->IoStatus.Information = 0;
-   return(STATUS_END_OF_FILE);
-}
-
+/* FUNCTIONS */
 NTSTATUS STDCALL
 NullDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
-/*
- * FUNCTION: Handles user mode requests
- * ARGUMENTS:
- *           DeviceObject = Device for request
- *           Irp = I/O request packet describing request
- * RETURNS: Success or failure
- */
 {
-   PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
-   NTSTATUS status;
-   
-   switch (Stack->MajorFunction)
-     {
-      case IRP_MJ_CREATE:
-      case IRP_MJ_CLOSE:
-	status = STATUS_SUCCESS;
-	break;
-	
-      case IRP_MJ_WRITE:
-	status = NullWrite(Irp,Stack);
-        break;
-	
-      case IRP_MJ_READ:
-	status = NullRead(Irp,Stack);
-        break;
-	
-      default:
-        status = STATUS_NOT_IMPLEMENTED;
-     }
+ PIO_STACK_LOCATION piosStack = IoGetCurrentIrpStackLocation(Irp);
+ NTSTATUS nErrCode;
+ 
+ nErrCode = STATUS_SUCCESS;
 
-   Irp->IoStatus.Status = status;
-   IoCompleteRequest(Irp,IO_NO_INCREMENT);
-   return(status);
+ switch(piosStack->MajorFunction)
+ {
+  /* opening and closing handles to the device */
+  case IRP_MJ_CREATE:
+  case IRP_MJ_CLOSE:
+  {
+   break;
+  }
+
+  /* write data */
+  case IRP_MJ_WRITE:
+  {
+   switch(NULL_DEVICE_TYPE(DeviceObject))
+   {
+    case NullBitBucket:
+     Irp->IoStatus.Information = piosStack->Parameters.Write.Length;
+     break;
+
+    case NullZeroStream:
+    default:
+     Irp->IoStatus.Information = 0;
+     nErrCode = STATUS_NOT_IMPLEMENTED;
+   }
+
+   break;
+  }
+
+  /* read data */
+  case IRP_MJ_READ:
+  {
+   switch(NULL_DEVICE_TYPE(DeviceObject))
+   {
+    case NullBitBucket:
+     Irp->IoStatus.Information = 0;
+     nErrCode = STATUS_END_OF_FILE;
+     break;
+
+    case NullZeroStream:
+     RtlZeroMemory(Irp->AssociatedIrp.SystemBuffer, piosStack->Parameters.Read.Length);
+     Irp->IoStatus.Information = piosStack->Parameters.Read.Length;
+     break;
+
+    default:
+     Irp->IoStatus.Information = 0;
+     nErrCode = STATUS_NOT_IMPLEMENTED;
+   }
+
+   break;
+  }
+
+  /* unsupported operations */
+  default:
+  {
+   nErrCode = STATUS_NOT_IMPLEMENTED;
+  }
+ }
+
+ Irp->IoStatus.Status = nErrCode;
+ IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+ return (nErrCode);
 }
 
 NTSTATUS STDCALL
 NullUnload(PDRIVER_OBJECT DriverObject)
 {
-   return(STATUS_SUCCESS);
+ return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL
+NTSTATUS STDCALL 
 DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
-/*
- * FUNCTION: Called by the system to initalize the driver
- * ARGUMENTS:
- *           DriverObject = object describing this driver
- *           RegistryPath = path to our configuration entries
- * RETURNS: Success or failure
- */
 {
-   PDEVICE_OBJECT DeviceObject;
-   UNICODE_STRING DeviceName;
-   NTSTATUS Status;
-   
-   DeviceObject->Flags=0;
-   DriverObject->MajorFunction[IRP_MJ_CLOSE] = NullDispatch;
-   DriverObject->MajorFunction[IRP_MJ_CREATE] = NullDispatch;
-   DriverObject->MajorFunction[IRP_MJ_WRITE] = NullDispatch;
-   DriverObject->MajorFunction[IRP_MJ_READ] = NullDispatch;
-   DriverObject->DriverUnload = NullUnload;
-   
-   RtlInitUnicodeString(&DeviceName,
-                        L"\\Device\\Null");
-   Status = IoCreateDevice(DriverObject,
-                           0,
-                           &DeviceName,
-                           FILE_DEVICE_NULL,
-                           0,
-                           FALSE,
-                           &DeviceObject);
-   return (Status);
+ PDEVICE_OBJECT pdoNullDevice;
+ PDEVICE_OBJECT pdoZeroDevice;
+ UNICODE_STRING wstrDeviceName;
+ NTSTATUS nErrCode;
+
+ /* register driver routines */
+ DriverObject->MajorFunction[IRP_MJ_CLOSE] = NullDispatch;
+ DriverObject->MajorFunction[IRP_MJ_CREATE] = NullDispatch;
+ DriverObject->MajorFunction[IRP_MJ_WRITE] = NullDispatch;
+ DriverObject->MajorFunction[IRP_MJ_READ] = NullDispatch;
+ /* DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] = NullDispatch; */
+ DriverObject->DriverUnload = NullUnload;
+
+ /* create null device */
+ RtlInitUnicodeString(&wstrDeviceName, L"\\Device\\Null");
+
+ nErrCode = IoCreateDevice
+ (
+  DriverObject,
+  sizeof(NULL_EXTENSION),
+  &wstrDeviceName,
+  FILE_DEVICE_NULL,
+  0,
+  FALSE,
+  &pdoNullDevice
+ );
+
+ /* failure */
+ if(!NT_SUCCESS(nErrCode))
+ {
+  return (nErrCode);
+ }
+
+ pdoNullDevice->DeviceExtension = (PVOID)&nxNull;
+
+ /* create zero device */
+ RtlInitUnicodeString(&wstrDeviceName, L"\\Device\\Zero");
+
+ nErrCode = IoCreateDevice
+ (
+  DriverObject,
+  sizeof(NULL_EXTENSION),
+  &wstrDeviceName,
+  FILE_DEVICE_NULL,
+  FILE_READ_ONLY_DEVICE, /* zero device is read-only */
+  FALSE,
+  &pdoZeroDevice
+ );
+
+ /* failure */
+ if(!NT_SUCCESS(nErrCode))
+ {
+  IoDeleteDevice(pdoNullDevice);
+  return (nErrCode);
+ }
+
+ pdoZeroDevice->DeviceExtension = (PVOID)&nxZero;
+ pdoZeroDevice->Flags |= DO_BUFFERED_IO;
+
+ return (nErrCode);
 }
 
+/* EOF */
