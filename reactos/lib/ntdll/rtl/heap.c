@@ -461,9 +461,10 @@ static void HEAP_MakeInUseBlockFree( SUBHEAP *subheap, ARENA_INUSE *pArena,
         subheap->magic = 0;
 	if (!(flags & HEAP_NO_VALLOC))
 	  {
+	    ULONG dummySize = 0;
 	    ZwFreeVirtualMemory(NtCurrentProcess(),
 				(PVOID*)&subheap,
-				0,
+				&dummySize,
 				MEM_RELEASE);
 	  }
         return;
@@ -622,9 +623,10 @@ static SUBHEAP *HEAP_CreateSubHeap(PVOID BaseAddress,
     {
       if (!(flags & HEAP_NO_VALLOC))
 	{
+	  ULONG dummySize = 0;
 	  ZwFreeVirtualMemory(NtCurrentProcess(),
 			      address,
-			      0,
+			      &dummySize,
 			      MEM_RELEASE);
 	  return NULL;
 	}
@@ -940,11 +942,15 @@ static BOOL HEAP_IsRealArena(
                               + sizeof(ARENA_INUSE)))
         {
             if (quiet == NOISY) 
+	    {
                 ERR("Heap %08lx: block %08lx is not inside heap\n",
                      (DWORD)heap, (DWORD)block );
+	    }
             else if (WARN_ON(heap)) 
+	    {
                 WARN("Heap %08lx: block %08lx is not inside heap\n",
                      (DWORD)heap, (DWORD)block );
+	    }
             ret = FALSE;
         } else
             ret = HEAP_ValidateInUseArena( subheap, (ARENA_INUSE *)block - 1, quiet );
@@ -1064,9 +1070,10 @@ RtlDestroyHeap(HANDLE heap) /* [in] Handle of heap */
 
 	if (!(heapPtr->flags & HEAP_NO_VALLOC))
 	  {
+	    ULONG dummySize = 0;
 	    ZwFreeVirtualMemory(NtCurrentProcess(),
 				(PVOID*)&subheap,
-				0,
+				&dummySize,
 				MEM_RELEASE);
 	  }
         subheap = next;
@@ -1557,7 +1564,7 @@ RtlInitializeHeapManager(VOID)
    Peb = NtCurrentPeb();
    
    Peb->NumberOfHeaps = 0;
-   Peb->MaximumNumberOfHeaps = (PAGESIZE - sizeof(PPEB)) / sizeof(HANDLE);
+   Peb->MaximumNumberOfHeaps = (PAGESIZE - sizeof(PEB)) / sizeof(HANDLE);
    Peb->ProcessHeaps = (PVOID)Peb + sizeof(PEB);
    
    RtlInitializeCriticalSection(&RtlpProcessHeapsListLock);
