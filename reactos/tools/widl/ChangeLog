@@ -1,5 +1,12 @@
 ChangeLog
 
+2005-03-27 Jacek Caban (from WINE)
+
+  tools/widl/parser.y
+  tools/widl/y.tab.c
+
+Added handling of unsigned type
+
 2005-03-25 ekohl
 
    tools/widl/client.c
