@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.52 2000/07/06 14:34:52 dwelch Exp $
+/* $Id: thread.c,v 1.52.2.1 2000/07/21 22:06:34 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -417,12 +417,8 @@ VOID PsInitThreadManagment(VOID)
  * Sets thread's base priority relative to the process' base priority
  * Should only be passed in THREAD_PRIORITY_ constants in pstypes.h
  */
-LONG
-STDCALL
-KeSetBasePriorityThread (
-	PKTHREAD	Thread,
-	LONG		Increment
-	)
+LONG STDCALL
+KeSetBasePriorityThread (PKTHREAD Thread, LONG Increment)
 {
    Thread->BasePriority = ((PETHREAD)Thread)->ThreadsProcess->Pcb.BasePriority + Increment;
    if( Thread->BasePriority < 0 )
@@ -434,12 +430,8 @@ KeSetBasePriorityThread (
 }
 
 
-KPRIORITY
-STDCALL
-KeSetPriorityThread (
-	PKTHREAD	Thread,
-	KPRIORITY	Priority
-	)
+KPRIORITY STDCALL
+KeSetPriorityThread (PKTHREAD	Thread, KPRIORITY	Priority)
 {
    KPRIORITY OldPriority;
    KIRQL oldIrql;
