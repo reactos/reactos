@@ -31,7 +31,7 @@ all : $(TOOLS)
 
 %$(EXE_POSTFIX): %.c
 	@echo ===================================================== Compiling $*
-	@$(CC) -Wall -O3 -o $@ $<
+	@$(HOST_CC) -Wall -O3 -o $@ $<
 
 
 .PHONY : clean
