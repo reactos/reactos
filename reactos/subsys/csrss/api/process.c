@@ -59,6 +59,9 @@ PCSRSS_PROCESS_DATA STDCALL CsrCreateProcessData(HANDLE ProcessId)
 {
    ULONG hash;
    PCSRSS_PROCESS_DATA pProcessData;
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   CLIENT_ID ClientId;
+   NTSTATUS Status;
 
    hash = (ULONG_PTR)ProcessId % (sizeof(ProcessData) / sizeof(*ProcessData));
    
@@ -80,6 +83,27 @@ PCSRSS_PROCESS_DATA STDCALL CsrCreateProcessData(HANDLE ProcessId)
 	 pProcessData->ProcessId = ProcessId;
 	 pProcessData->next = ProcessData[hash];
 	 ProcessData[hash] = pProcessData;
+
+         ClientId.UniqueThread = NULL;
+         ClientId.UniqueProcess = pProcessData->ProcessId;
+         InitializeObjectAttributes(&ObjectAttributes,
+                                    NULL,
+                                    0,
+                                    NULL,
+                                    NULL);
+
+         /* using OpenProcess is not optimal due to HANDLE vs. DWORD PIDs... */
+         Status = NtOpenProcess(&pProcessData->Process,
+                                PROCESS_DUP_HANDLE | PROCESS_VM_OPERATION |
+                                PROCESS_VM_WRITE | PROCESS_CREATE_THREAD,
+                                &ObjectAttributes,
+                                &ClientId);
+         if (!NT_SUCCESS(Status))
+         {
+            ProcessData[hash] = pProcessData->next;
+	    RtlFreeHeap(CsrssApiHeap, 0, pProcessData);
+	    pProcessData = NULL;
+        }
       }
    }
    else
@@ -115,6 +139,10 @@ NTSTATUS STDCALL CsrFreeProcessData(HANDLE Pid)
   if (pProcessData)
     {
       DPRINT("CsrFreeProcessData pid: %d\n", Pid);
+      if (pProcessData->Process)
+      {
+         NtClose(pProcessData->Process);
+      }
       if (pProcessData->Console)
         {
           RtlEnterCriticalSection(&ProcessDataLock);

@@ -37,6 +37,7 @@ typedef struct _CSRSS_PROCESS_DATA
   ULONG HandleTableSize;
   Object_t ** HandleTable;
   HANDLE ProcessId;
+  HANDLE Process;
   ULONG ShutdownLevel;
   ULONG ShutdownFlags;
   HANDLE ConsoleEvent;

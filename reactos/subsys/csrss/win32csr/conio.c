@@ -74,49 +74,22 @@ ConioConsoleFromProcessData(PCSRSS_PROCESS_DATA ProcessData, PCSRSS_CONSOLE *Con
 VOID FASTCALL
 ConioConsoleCtrlEvent(DWORD Event, PCSRSS_PROCESS_DATA ProcessData)
 {
-  HANDLE Process, Thread;
+  HANDLE Thread;
 	
   DPRINT("ConioConsoleCtrlEvent Parent ProcessId = %x\n",	ProcessData->ProcessId);
 
   if (ProcessData->CtrlDispatcher)
     {
-      OBJECT_ATTRIBUTES ObjectAttributes;
-      CLIENT_ID ClientId;
-      NTSTATUS Status;
-      
-      ClientId.UniqueThread = NULL;
-      ClientId.UniqueProcess = ProcessData->ProcessId;
-      InitializeObjectAttributes(&ObjectAttributes,
-                                 NULL,
-                                 0,
-                                 NULL,
-                                 NULL);
 
-      /* using OpenProcess is not optimal due to HANDLE vs. DWORD PIDs... */
-      Status = NtOpenProcess(&Process,
-                             PROCESS_DUP_HANDLE | PROCESS_VM_OPERATION |
-                             PROCESS_VM_WRITE | PROCESS_CREATE_THREAD,
-                             &ObjectAttributes,
-                             &ClientId);
-      if (!NT_SUCCESS(Status))
-        {
-          DPRINT1("Failed for handle duplication, Status: 0x%x\n", Status);
-          return;
-        }
-
-      DPRINT("ConioConsoleCtrlEvent Process Handle = %x\n", Process);
-
-      Thread = CreateRemoteThread(Process, NULL, 0,
+      Thread = CreateRemoteThread(ProcessData->Process, NULL, 0,
                                   (LPTHREAD_START_ROUTINE) ProcessData->CtrlDispatcher,
                                   (PVOID) Event, 0, NULL);
       if (NULL == Thread)
         {
           DPRINT1("Failed thread creation (Error: 0x%x)\n", GetLastError());
-          CloseHandle(Process);
           return;
         }
       CloseHandle(Thread);
-      CloseHandle(Process);
     }
 }
 
