@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.232 2004/07/01 02:40:21 hyperion Exp $
+# $Id: Makefile,v 1.233 2004/07/02 08:06:46 arty Exp $
 #
 # Global makefile
 #
@@ -187,6 +187,7 @@ bootcd_install_before:
 	$(CP) media/nls/c_1252.nls $(BOOTCD_DIR)/reactos/c_1252.nls
 	$(CP) media/nls/c_437.nls $(BOOTCD_DIR)/reactos/c_437.nls
 	$(CP) media/nls/l_intl.nls $(BOOTCD_DIR)/reactos/l_intl.nls
+	$(CP) media/drivers/etc/services $(BOOTCD_DIR)/reactos/services
 
 bootcd_basic: bootcd_directory_layout bootcd_bootstrap_files bootcd_install_before
 
@@ -829,6 +830,7 @@ install_dirs:
 	$(RMKDIR) $(INSTALL_DIR)/system32
 	$(RMKDIR) $(INSTALL_DIR)/system32/config
 	$(RMKDIR) $(INSTALL_DIR)/system32/drivers
+	$(RMKDIR) $(INSTALL_DIR)/system32/drivers/etc
 
 install_before:
 	$(CP) bootc.lst $(INSTALL_DIR)/bootc.lst
@@ -839,6 +841,8 @@ install_before:
 	$(CP) media/nls/c_1252.nls $(INSTALL_DIR)/system32/ansi.nls
 	$(CP) media/nls/c_437.nls $(INSTALL_DIR)/system32/oem.nls
 	$(CP) media/nls/l_intl.nls $(INSTALL_DIR)/system32/casemap.nls
+	$(CP) media/drivers/etc/services \
+		$(INSTALL_DIR)/system32/drivers/etc/services
 
 .PHONY: install_clean install_dirs install_before
 

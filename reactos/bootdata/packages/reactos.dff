@@ -17,6 +17,7 @@ Signature = "$ReactOS$"
 2 = system32\drivers
 3 = media\fonts
 4 = .
+5 = system32\drivers\etc
 
 .InfEnd
 
@@ -182,3 +183,4 @@ media\nls\c_28596.nls                   1
 media\nls\c_28597.nls                   1
 media\nls\c_28598.nls                   1
 media\nls\c_28599.nls                   1
+media\drivers\etc\services		5
