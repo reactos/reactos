@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.41 2002/09/08 10:47:44 chorns Exp $
+/* $Id: iotypes.h,v 1.42 2002/10/03 19:26:47 robd Exp $
  *
  */
 
@@ -370,6 +370,12 @@ typedef struct __attribute__((packed)) _IO_STACK_LOCATION
 	{
 	  PDEVICE_CAPABILITIES Capabilities;
 	} DeviceCapabilities;
+
+      // Parameters for IRP_MN_FILTER_RESOURCE_REQUIREMENTS
+      struct
+	{
+      PIO_RESOURCE_REQUIREMENTS_LIST IoResourceRequirementList;
+    } FilterResourceRequirements;
 
       // Parameters for IRP_MN_QUERY_ID
       struct

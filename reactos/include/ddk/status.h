@@ -183,6 +183,8 @@
 #define STATUS_OBJECT_NAME_INVALID                  (0xc0000033)
 #define STATUS_OBJECT_NAME_NOT_FOUND                (0xc0000034)
 #define STATUS_OBJECT_NAME_COLLISION                (0xc0000035)
+#define STATUS_OBJECT_NAME_EXISTS                   (0x40000000)
+
 
 #define STATUS_PORT_DISCONNECTED                    (0xc0000037)
 #define STATUS_DEVICE_ALREADY_ATTACHED              (0xc0000038)
