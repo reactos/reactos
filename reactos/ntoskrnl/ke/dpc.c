@@ -35,7 +35,13 @@ INIT_FUNCTION
 KeInitDpc(PKPRCB Prcb)
 {
    InitializeListHead(&Prcb->DpcData[0].DpcListHead);
+#if 0   
+   /*
+    * FIXME:
+    *   Prcb->DpcEvent is a NULL pointer.
+    */
    KeInitializeEvent(Prcb->DpcEvent, 0, 0);
+#endif
    KeInitializeSpinLock(&Prcb->DpcData[0].DpcLock);
    Prcb->MaximumDpcQueueDepth = 4;
    Prcb->MinimumDpcRate = 3;
@@ -428,6 +434,11 @@ KiQuantumEnd(VOID)
     
     /* Set DPC Event if requested */
     if (Prcb->DpcSetEventRequest) {
+        /*
+         * FIXME:
+         *   Prcb->DpcEvent is not initialized.
+         */
+        KEBUGCHECK(0);
         KeSetEvent(Prcb->DpcEvent, 0, 0);
     }
     
