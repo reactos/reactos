@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.83 2004/09/21 17:41:24 weiden Exp $
+/* $Id: stubs.c,v 1.84 2004/09/21 19:17:26 weiden Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -665,19 +665,6 @@ CreateJobSet (
 /*
  * @unimplemented
  */
-HANDLE
-STDCALL
-CreateMemoryResourceNotification(
-    MEMORY_RESOURCE_NOTIFICATION_TYPE NotificationType
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
 BOOL
 STDCALL
 DeactivateActCtx(
@@ -1022,20 +1009,6 @@ QueryInformationJobObject(
     LPVOID lpJobObjectInformation,
     DWORD cbJobObjectInformationLength,
     LPDWORD lpReturnLength
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-QueryMemoryResourceNotification(
-     HANDLE ResourceNotificationHandle,
-    PBOOL  ResourceState
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.84 2004/08/24 17:21:10 navaraf Exp $
+# $Id: makefile,v 1.85 2004/09/21 19:17:26 weiden Exp $
 
 PATH_TO_TOP = ../..
 
@@ -45,7 +45,7 @@ FILE_OBJECTS = file/file.o file/curdir.o file/lfile.o file/dir.o \
                file/cnotify.o file/hardlink.o file/bintype.o
 
 MEM_OBJECTS = mem/global.o mem/heap.o mem/isbad.o mem/local.o \
-              mem/procmem.o mem/section.o mem/virtual.o
+              mem/procmem.o mem/resnotify.o mem/section.o mem/virtual.o
 
 NLS_OBJECTS =
 
