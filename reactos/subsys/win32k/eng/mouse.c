@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.14 2002/10/31 00:03:30 dwelch Exp $
+/* $Id: mouse.c,v 1.15 2002/11/01 11:29:57 dwelch Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -141,8 +141,8 @@ MouseSafetyOnDrawStart(PSURFOBJ SurfObj, PSURFGDI SurfGDI, LONG HazardX1,
       tmp = HazardY2; HazardY2 = HazardY1; HazardY1 = tmp; 
     }
 
-  if ((mouse_x + mouse_width >= HazardX1)  && (mouse_x <= HazardX2) &&
-      (mouse_y + mouse_height >= HazardY1) && (mouse_y <= HazardY2))
+  if (((mouse_x + mouse_width) >= HazardX1)  && (mouse_x <= HazardX2) &&
+      ((mouse_y + mouse_height) >= HazardY1) && (mouse_y <= HazardY2))
     {
       SurfGDI->MovePointer(SurfObj, -1, -1, &MouseRect);
       SafetySwitch = TRUE;

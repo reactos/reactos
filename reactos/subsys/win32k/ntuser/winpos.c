@@ -1,4 +1,4 @@
-/* $Id: winpos.c,v 1.6 2002/10/31 00:03:31 dwelch Exp $
+/* $Id: winpos.c,v 1.7 2002/11/01 11:29:58 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -813,6 +813,10 @@ WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, POINT WinPoint,
       return(HitTest);
     }
 
+  if ((*Window) == NULL)
+    {
+      return(HTNOWHERE);
+    }
   if ((*Window)->MessageQueue == PsGetWin32Thread()->MessageQueue)
     {
       HitTest = W32kSendMessage((*Window)->Self, WM_NCHITTEST, 0,

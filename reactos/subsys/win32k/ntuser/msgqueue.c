@@ -1,4 +1,4 @@
-/* $Id: msgqueue.c,v 1.6 2002/10/31 00:03:31 dwelch Exp $
+/* $Id: msgqueue.c,v 1.7 2002/11/01 11:29:58 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -112,6 +112,11 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
 
   *HitTest = WinPosWindowFromPoint(ScopeWin, Message->Msg.pt, &Window);
   
+  if (Window == NULL)
+    {
+      ExFreePool(Message);
+      return(FALSE);
+    }
   if (Window->MessageQueue != PsGetWin32Thread()->MessageQueue)
     {      
       ExAcquireFastMutex(&Window->MessageQueue->Lock);
