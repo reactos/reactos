@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.63 2004/12/14 03:28:34 royce Exp $
+/* $Id: bitblt.c,v 1.64 2004/12/14 03:36:46 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -746,23 +746,29 @@ IntEngStretchBlt(BITMAPOBJ *DestObj,
   BOOLEAN ret;
   COLORADJUSTMENT ca;
   POINT MaskOrigin;
-  SURFOBJ *DestSurf = &DestObj->SurfObj;
+  SURFOBJ *DestSurf;
   SURFOBJ *SourceSurf = SourceObj ? &SourceObj->SurfObj : NULL;
   SURFOBJ *MaskSurf = MaskObj ? &MaskObj->SurfObj : NULL;
+
+  ASSERT(DestObj);
+  DestSurf = &DestObj->SurfObj;
+  ASSERT(DestSurf);
 
   if (pMaskOrigin != NULL)
     {
       MaskOrigin.x = pMaskOrigin->x; MaskOrigin.y = pMaskOrigin->y;
     }
 
-  if (NULL != SourceObj)
+  if (NULL != SourceSurf)
     {
+    ASSERT(SourceRect);
     MouseSafetyOnDrawStart(SourceSurf, SourceRect->left, SourceRect->top,
                            SourceRect->right, SourceRect->bottom);
     }
 
   /* No success yet */
   ret = FALSE;
+  ASSERT(DestRect);
   MouseSafetyOnDrawStart(DestSurf, DestRect->left, DestRect->top,
                          DestRect->right, DestRect->bottom);
 
@@ -1109,6 +1115,7 @@ IntEngMaskBlt(SURFOBJ *DestObj,
 
   /* No success yet */
   ret = FALSE;
+  ASSERT(DestObj);
   MouseSafetyOnDrawStart(DestObj, OutputRect.left, OutputRect.top,
                          OutputRect.right, OutputRect.bottom);
 
