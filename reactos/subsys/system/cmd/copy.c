@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.3 2003/08/07 09:27:42 hbirr Exp $
+/* $Id: copy.c,v 1.4 2003/08/11 00:22:04 royce Exp $
  *
  *  COPY.C -- copy internal command.
  *
@@ -31,6 +31,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <tchar.h>
 
 #include "cmd.h"
 #include "batch.h"
