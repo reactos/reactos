@@ -304,7 +304,7 @@ typedef struct {
 typedef struct _BLOB {
   ULONG   cbSize;
   BYTE    *pBlobData;
-} BLOB;
+} BLOB, *PBLOB,*LPBLOB;
 #endif
 
 typedef struct _SHITEMID {
