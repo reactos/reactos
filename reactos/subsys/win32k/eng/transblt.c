@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: transblt.c,v 1.15 2004/04/06 21:53:48 weiden Exp $
+/* $Id: transblt.c,v 1.16 2004/04/07 22:17:36 weiden Exp $
  * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -250,6 +250,10 @@ IntEngTransparentBlt(PSURFOBJ Dest,
     {
       return TRUE;
     }
+    SourceRect->left += OutputRect.left - DestRect->left;
+    SourceRect->top += OutputRect.top - DestRect->top;
+    SourceRect->right += OutputRect.left - DestRect->left;
+    SourceRect->bottom += OutputRect.top - DestRect->top;
   }
   else
   {
