@@ -25,17 +25,22 @@
 #define CONSOLE_OUTPUT_MODE_VALID (0x03)
 
 typedef struct _CONSOLE_SCREEN_BUFFER_INFO {
-  COORD      dwSize; 
-  COORD      dwCursorPosition; 
-  WORD       wAttributes; 
-  SMALL_RECT srWindow; 
-  COORD      dwMaximumWindowSize; 
-} CONSOLE_SCREEN_BUFFER_INFO, *PCONSOLE_SCREEN_BUFFER_INFO ; 
+  COORD      dwSize;
+  COORD      dwCursorPosition;
+  WORD       wAttributes;
+  SMALL_RECT srWindow;
+  COORD      dwMaximumWindowSize;
+} CONSOLE_SCREEN_BUFFER_INFO, *PCONSOLE_SCREEN_BUFFER_INFO ;
 
 typedef struct _CONSOLE_CURSOR_INFO {
-  DWORD  dwSize; 
-  BOOL   bVisible; 
-} CONSOLE_CURSOR_INFO, *PCONSOLE_CURSOR_INFO; 
+  DWORD  dwSize;
+  BOOL   bVisible;
+} CONSOLE_CURSOR_INFO, *PCONSOLE_CURSOR_INFO;
+
+typedef struct _CONSOLE_FONT_INFO {
+  DWORD nFont;
+  COORD dwFontSize;
+} CONSOLE_FONT_INFO, *PCONSOLE_FONT_INFO;
 
 #endif /* __INCLUDE_CONSOLE_H */
 

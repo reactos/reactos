@@ -246,6 +246,19 @@ typedef struct
   CHAR_INFO  Fill;
 } CSRSS_SCROLL_CONSOLE_SCREEN_BUFFER_REQUEST, *PCSRSS_SCROLL_CONSOLE_SCREEN_BUFFER_REQUEST;
 
+typedef struct
+{
+  HANDLE ConsoleHandle;
+  DWORD NumCharsToRead;
+  COORD ReadCoord;
+}CSRSS_READ_CONSOLE_OUTPUT_CHAR_REQUEST, *PCSRSS_READ_CONSOLE_OUTPUT_CHAR_REQUEST;
+
+typedef struct
+{
+  COORD EndCoord;
+  CHAR String[1];
+}CSRSS_READ_CONSOLE_OUTPUT_CHAR_REPLY, *PCSRSS_READ_CONSOLE_OUTPUT_CHAR_REPLY;
+
 
 #define CSRSS_MAX_WRITE_CONSOLE_REQUEST       \
       (MAX_MESSAGE_DATA - sizeof(ULONG) - sizeof(CSRSS_WRITE_CONSOLE_REQUEST))
@@ -257,6 +270,8 @@ typedef struct
 #define CSRSS_MAX_WRITE_CONSOLE_OUTPUT_ATTRIB   ((MAX_MESSAGE_DATA - sizeof( ULONG ) - sizeof( CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB_REQUEST )) / 2)
 
 #define CSRSS_MAX_READ_CONSOLE_REQUEST        (MAX_MESSAGE_DATA - sizeof( ULONG ) - sizeof( CSRSS_READ_CONSOLE_REQUEST ))
+
+#define CSRSS_MAX_READ_CONSOLE_OUTPUT_CHAR    (MAX_MESSAGE_DATA - sizeof(ULONG) - sizeof(HANDLE) - sizeof(DWORD) - sizeof(CSRSS_READ_CONSOLE_OUTPUT_CHAR_REQUEST))
 
 // FIXME: it should be 80. Is this a limit due to LPC msg size?
 #define CSRSS_MAX_TITLE_LENGTH          50
@@ -287,6 +302,8 @@ typedef struct
 #define CSRSS_WRITE_CONSOLE_OUTPUT          (0x17)
 #define CSRSS_FLUSH_INPUT_BUFFER            (0x18)
 #define CSRSS_SCROLL_CONSOLE_SCREEN_BUFFER  (0x19)
+#define CSRSS_READ_CONSOLE_OUTPUT_CHAR      (0x1A)
+
 
 /* Keep in sync with definition below. */
 #define CSRSS_REQUEST_HEADER_SIZE (sizeof(LPC_MESSAGE_HEADER) + sizeof(ULONG))
@@ -321,6 +338,7 @@ typedef struct
     CSRSS_FLUSH_INPUT_BUFFER_REQUEST FlushInputBufferRequest;
     CSRSS_SCROLL_CONSOLE_SCREEN_BUFFER_REQUEST 
     ScrollConsoleScreenBufferRequest;
+    CSRSS_READ_CONSOLE_OUTPUT_CHAR_REQUEST ReadConsoleOutputCharRequest;
   } Data;
 } CSRSS_API_REQUEST, *PCSRSS_API_REQUEST;
 
@@ -344,6 +362,7 @@ typedef struct
     CSRSS_CREATE_SCREEN_BUFFER_REPLY CreateScreenBufferReply;
     CSRSS_GET_TITLE_REPLY GetTitleReply;
     CSRSS_WRITE_CONSOLE_OUTPUT_REPLY WriteConsoleOutputReply;
+    CSRSS_READ_CONSOLE_OUTPUT_CHAR_REPLY ReadConsoleOutputCharReply;
   } Data;
 } CSRSS_API_REPLY, *PCSRSS_API_REPLY;
 

@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.31 2002/08/20 20:37:16 hyperion Exp $
+/* $Id: conio.c,v 1.32 2002/08/22 15:21:57 ekohl Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -1885,7 +1885,7 @@ CSR_API(CsrScrollConsoleScreenBuffer)
       DoFill = TRUE;
     }
 
-  if( Buff == ActiveConsole->ActiveBuffer )
+  if (Buff == ActiveConsole->ActiveBuffer)
     {
       /* Draw destination region */
       CsrpDrawRegion(ActiveConsole->ActiveBuffer, DstRegion);
@@ -1897,8 +1897,71 @@ CSR_API(CsrScrollConsoleScreenBuffer)
         }
     }
 
-   UNLOCK;
-   return (Reply->Status = STATUS_SUCCESS);
+  UNLOCK;
+  return(Reply->Status = STATUS_SUCCESS);
+}
+
+
+CSR_API(CsrReadConsoleOutputChar)
+{
+  NTSTATUS Status;
+  PCSRSS_SCREEN_BUFFER ScreenBuffer;
+  DWORD Xpos, Ypos;
+  BYTE* ReadBuffer;
+  DWORD i;
+
+  Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+  Reply->Header.DataSize = Reply->Header.MessageSize - sizeof(LPC_MESSAGE_HEADER);
+  ReadBuffer = Reply->Data.ReadConsoleOutputCharReply.String;
+
+  LOCK;
+
+  Status = CsrGetObject(ProcessData, Request->Data.ReadConsoleOutputCharRequest.ConsoleHandle, (Object_t**)&ScreenBuffer);
+  if (!NT_SUCCESS(Status))
+    {
+      Reply->Status = Status;
+      UNLOCK;
+      return(Reply->Status);
+    }
+
+  if (ScreenBuffer->Header.Type != CSRSS_SCREEN_BUFFER_MAGIC)
+    {
+      Reply->Status = STATUS_INVALID_HANDLE;
+      UNLOCK;
+      return(Reply->Status);
+    }
+
+  Xpos = Request->Data.ReadConsoleOutputCharRequest.ReadCoord.X + ScreenBuffer->ShowX;
+  Ypos = Request->Data.ReadConsoleOutputCharRequest.ReadCoord.Y + ScreenBuffer->ShowY;
+
+  for (i = 0; i < Request->Data.ReadConsoleOutputCharRequest.NumCharsToRead; ++i)
+    {
+      *ReadBuffer = ScreenBuffer->Buffer[(Xpos * 2) + (Ypos * 2 * ScreenBuffer->MaxX)];
+
+      ReadBuffer++;
+      Xpos++;
+
+      if (Xpos == ScreenBuffer->MaxX)
+	{
+	  Xpos = 0;
+	  Ypos++;
+
+	  if (Ypos == ScreenBuffer->MaxY)
+	    Ypos = 0;
+	}
+    }
+
+  *ReadBuffer = 0;
+
+  Reply->Status = STATUS_SUCCESS;
+  Reply->Data.ReadConsoleOutputCharReply.EndCoord.X = Xpos - ScreenBuffer->ShowX;
+  Reply->Data.ReadConsoleOutputCharReply.EndCoord.Y = Ypos - ScreenBuffer->ShowY;
+  Reply->Header.MessageSize += Request->Data.ReadConsoleOutputCharRequest.NumCharsToRead;
+  Reply->Header.DataSize += Request->Data.ReadConsoleOutputCharRequest.NumCharsToRead;
+
+  UNLOCK;
+
+  return(Reply->Status);
 }
 
 /* EOF */

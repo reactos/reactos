@@ -119,6 +119,7 @@ CSR_API(CsrGetTitle);
 CSR_API(CsrWriteConsoleOutput);
 CSR_API(CsrFlushInputBuffer);
 CSR_API(CsrScrollConsoleScreenBuffer);
+CSR_API(CsrReadConsoleOutputChar);
 
 /* print.c */
 VOID STDCALL DisplayString(LPCWSTR lpwString);
