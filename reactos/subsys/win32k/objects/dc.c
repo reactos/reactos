@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.67 2003/08/04 00:18:21 royce Exp $
+/* $Id: dc.c,v 1.68 2003/08/04 19:10:52 royce Exp $
  *
  * DC.C - Device context functions
  *
@@ -544,7 +544,10 @@ W32kDeleteDC(HDC  DCHandle)
     W32kSelectObject (DCHandle, STOCK_WHITE_BRUSH);
     W32kSelectObject (DCHandle, STOCK_SYSTEM_FONT);
     DC_LockDC (DCHandle); W32kSelectObject does not recognize stock objects yet  */
-    BITMAPOBJ_ReleasePtr(DCToDelete->w.hBitmap);
+    if ( DCToDelete->w.hBitmap != NULL )
+    {
+      BITMAPOBJ_ReleasePtr(DCToDelete->w.hBitmap);
+    }
     if (DCToDelete->w.flags & DC_MEMORY)
     {
       EngDeleteSurface (DCToDelete->Surface);
