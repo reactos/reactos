@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.55 2003/12/08 20:58:44 chorns Exp $ */
+/* $Id: text.c,v 1.56 2003/12/12 20:51:42 gvg Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -30,6 +30,7 @@
 #include <include/error.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include <freetype/tttables.h>
 
 #include "../eng/handle.h"
 
@@ -917,6 +918,7 @@ NtGdiGetTextMetrics(HDC hDC,
   NTSTATUS Status = STATUS_SUCCESS;
   TEXTMETRICW SafeTm;
   FT_Face Face;
+  TT_OS2 *pOS2;
   ULONG Error;
 
   dc = DC_LockDc(hDC);
@@ -947,6 +949,16 @@ NtGdiGetTextMetrics(HDC hDC,
         else
 	  {
 	  memcpy(&SafeTm, &FontGDI->TextMetric, sizeof(TEXTMETRICW));
+          pOS2 = FT_Get_Sfnt_Table(Face, ft_sfnt_os2);
+          if (NULL == pOS2)
+            {
+              DPRINT1("Can't find OS/2 table - not TT font?\n");
+              Status = STATUS_UNSUCCESSFUL;
+            }
+          else
+            {
+              SafeTm.tmAveCharWidth = (pOS2->xAvgCharWidth + 32) / 64;
+            }
   	  SafeTm.tmAscent = (Face->size->metrics.ascender + 32) / 64; // units above baseline
 	  SafeTm.tmDescent = (- Face->size->metrics.descender + 32) / 64; // units below baseline
 	  SafeTm.tmHeight = SafeTm.tmAscent + SafeTm.tmDescent;
