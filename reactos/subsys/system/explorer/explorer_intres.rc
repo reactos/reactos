@@ -14,6 +14,105 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
+// Romanian resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ROM)
+#ifdef _WIN32
+LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
+#pragma code_page(1250)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_MAINFRAME MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "&Fiºier"
+    BEGIN
+        MENUITEM "&Ieºire",                     ID_FILE_EXIT
+    END
+    POPUP "&Prezentare"
+    BEGIN
+        MENUITEM "&Bara cu instrumente",        ID_VIEW_TOOL_BAR
+        MENUITEM "&Bara de stare",              ID_VIEW_STATUSBAR
+    END
+    POPUP "&Fereastrã"
+    BEGIN
+        MENUITEM "&Fereastrã Nouã",             ID_WINDOW_NEW
+        MENUITEM "Cascading\tCtrl+F5",          ID_WINDOW_CASCADE
+        MENUITEM "Aliniazã &Orizontal",         ID_WINDOW_TILE_HORZ
+        MENUITEM "Aliniazã &Vertical\tCtrl+F4", ID_WINDOW_TILE_VERT
+        MENUITEM "Aranjeazã automat",           ID_WINDOW_AUTOSORT
+        MENUITEM "Aranjeazã &Simbolurile",      ID_WINDOW_ARRANGE
+        MENUITEM "&Resetare\tF5",               ID_REFRESH
+    END
+    POPUP "&Ajutor"
+    BEGIN
+        MENUITEM "&Despre Explorer...",         ID_ABOUT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_EXECUTE DIALOG FIXED IMPURE  15, 13, 210, 63
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Execute"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",101,"Static",SS_SIMPLE | SS_NOPREFIX,3,6,162,10
+    CONTROL         "&Comanda:",-1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,3,
+                    18,60,10
+    EDITTEXT        201,3,29,134,12,ES_AUTOHSCROLL
+    CONTROL         "Ca &Simbol",214,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,
+                    45,71,12
+    DEFPUSHBUTTON   "OK",1,158,6,47,14
+    PUSHBUTTON      "Anulare",2,158,23,47,14
+    PUSHBUTTON      "&Ajutor",254,158,43,47,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_TITLE               "ReactOS Explorer"
+    IDS_START               "Începe"
+    IDS_LOGOFF              "Închide sesiunea ..."
+    IDS_SHUTDOWN            "Oprire calculator ..."
+    IDS_LAUNCH              "Pornire ..."
+    IDS_START_HELP          "Ajutor"
+    IDS_SEARCH              "Cãutare..."
+    IDS_DOCUMENTS           "Documente"
+    IDS_FAVORITES           "Preferinþe"
+    IDS_PROGRAMS            "Programe"
+    IDS_SETTINGS            "Setãri"
+    IDS_EXPLORE             "Explorare"
+    IDS_EMPTY               "(Empty)"
+    IDS_RECENT              "Documente Recente"
+    IDS_ADMIN               "Administrare"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NETWORK             "Reþea"
+    IDS_CONNECTIONS         "Conecþii"
+    IDS_DRIVES              "Discuri"
+END
+
+#endif    // Romanian resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
 // Neutral resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEU)
@@ -56,47 +155,6 @@ END
 LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 #pragma code_page(1252)
 #endif //_WIN32
-
-#ifdef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// TEXTINCLUDE
-//
-
-1 TEXTINCLUDE DISCARDABLE 
-BEGIN
-    "explorer_intres.h\0"
-END
-
-2 TEXTINCLUDE DISCARDABLE 
-BEGIN
-    "#ifndef _ROS_\r\n"
-    "#include ""afxres.h""\r\n"
-    "#endif\0"
-END
-
-3 TEXTINCLUDE DISCARDABLE 
-BEGIN
-    "\r\n"
-    "\0"
-END
-
-#endif    // APSTUDIO_INVOKED
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Icon
-//
-
-// Icon with lowest ID value placed first to ensure application icon
-// remains consistent on all systems.
-IDI_REACTOS             ICON    DISCARDABLE     "res/reactos.ico"
-IDI_EXPLORER            ICON    DISCARDABLE     "res/explorer.ico"
-IDI_STARTMENU           ICON    DISCARDABLE     "res/startmenu.ico"
-IDI_LOGOFF              ICON    DISCARDABLE     "res/logoff.ico"
-IDI_ARROW               ICON    DISCARDABLE     "res/arrow.ico"
-IDI_ARROW_SELECTED      ICON    DISCARDABLE     "res/arrowsel.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -235,6 +293,47 @@ BEGIN
 END
 
 
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "explorer_intres.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#ifndef _ROS_\r\n"
+    "#include ""afxres.h""\r\n"
+    "#endif\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_REACTOS             ICON    DISCARDABLE     "res/reactos.ico"
+IDI_EXPLORER            ICON    DISCARDABLE     "res/explorer.ico"
+IDI_STARTMENU           ICON    DISCARDABLE     "res/startmenu.ico"
+IDI_LOGOFF              ICON    DISCARDABLE     "res/logoff.ico"
+IDI_ARROW               ICON    DISCARDABLE     "res/arrow.ico"
+IDI_ARROW_SELECTED      ICON    DISCARDABLE     "res/arrowsel.ico"
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // String Table
@@ -244,26 +343,26 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_TITLE               "Reactos Explorer"
     IDS_START               "Start"
-    IDS_LOGOFF              "Log Off..."
-    IDS_SHUTDOWN            "Turn Off..."
-    IDS_LAUNCH              "Run..."
-    IDS_START_HELP          "Help"
-    IDS_SEARCH              "Search..."
-    IDS_DOCUMENTS           "Documents"
-    IDS_FAVORITES           "Favorites"
-    IDS_PROGRAMS            "Programs"
-    IDS_SETTINGS            "Settings"
+    IDS_LOGOFF              "Abmelden..."
+    IDS_SHUTDOWN            "Herunterfahren..."
+    IDS_LAUNCH              "Starten..."
+    IDS_START_HELP          "Hilfe"
+    IDS_SEARCH              "Suche..."
+    IDS_DOCUMENTS           "Dokumente"
+    IDS_FAVORITES           "Bookmarks"
+    IDS_PROGRAMS            "Programme"
+    IDS_SETTINGS            "Einstellungen"
     IDS_EXPLORE             "Explore"
     IDS_EMPTY               "(Empty)"
-    IDS_RECENT              "Recent Documents"
-    IDS_ADMIN               "Administration"
+    IDS_RECENT              "Aktuelle Dokumente"
+    IDS_ADMIN               "Verwaltung"
 END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_NETWORK             "Network"
-    IDS_CONNECTIONS         "Connections"
-    IDS_DRIVES              "Drives"
+    IDS_NETWORK             "Netzwerk"
+    IDS_CONNECTIONS         "Verbindungen"
+    IDS_DRIVES              "Verzeichnisse"
 END
 
 #endif    // German (Germany) resources
@@ -440,6 +539,38 @@ BEGIN
     DEFPUSHBUTTON   "OK",1,158,6,47,14
     PUSHBUTTON      "Cancel",2,158,23,47,14
     PUSHBUTTON      "&Help",254,158,43,47,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_TITLE               "Reactos Explorer"
+    IDS_START               "Start"
+    IDS_LOGOFF              "Log Off..."
+    IDS_SHUTDOWN            "Turn Off..."
+    IDS_LAUNCH              "Run..."
+    IDS_START_HELP          "Help"
+    IDS_SEARCH              "Search..."
+    IDS_DOCUMENTS           "Documents"
+    IDS_FAVORITES           "Favorites"
+    IDS_PROGRAMS            "Programs"
+    IDS_SETTINGS            "Settings"
+    IDS_EXPLORE             "Explore"
+    IDS_EMPTY               "(Empty)"
+    IDS_RECENT              "Recent Documents"
+    IDS_ADMIN               "Administration"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NETWORK             "Network"
+    IDS_CONNECTIONS         "Connections"
+    IDS_DRIVES              "Drives"
 END
 
 #endif    // English (U.S.) resources
