@@ -30,7 +30,7 @@
 
 #include <ddk/ntddk.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 /* FIXME: this should appear in a kernel header file  */
@@ -902,8 +902,7 @@ LdrCOFFGetSymbolValueByName(module *Module,
 
 #define STACK_TOP (0xb0000000)
 
-NTSTATUS 
-LdrLoadImage(HANDLE ProcessHandle, PUNICODE_STRING Filename)
+NTSTATUS LdrLoadImage(HANDLE ProcessHandle, PUNICODE_STRING Filename)
 {
   char BlockBuffer[1024];
   DWORD ImageBase, LdrStartupAddr, StackBase;
@@ -915,12 +914,14 @@ LdrLoadImage(HANDLE ProcessHandle, PUNICODE_STRING Filename)
   ANSI_STRING AnsiString;
   UNICODE_STRING DllPathname;
   PIMAGE_DOS_HEADER DosHeader;
-  PIMAGE_NT_HEADERS NTHeaders;
+   PIMAGE_NT_HEADERS NTHeaders;
    ULONG BytesWritten;
+   ULONG InitialViewSize;
+   ULONG i;
+   HANDLE DupSectionHandle;
    
     /*  Locate and open NTDLL to determine ImageBase and LdrStartup  */
-  RtlInitAnsiString(&AnsiString, "\\??\\C:\\reactos\\system\\ntdll.dll"); 
-  RtlAnsiStringToUnicodeString(&DllPathname, &AnsiString, TRUE);
+  RtlInitUnicodeString(&DllPathname,L"\\??\\C:\\reactos\\system\\ntdll.dll"); 
   InitializeObjectAttributes(&FileObjectAttributes,
                              &DllPathname, 
                              0,
@@ -928,7 +929,6 @@ LdrLoadImage(HANDLE ProcessHandle, PUNICODE_STRING Filename)
                              NULL);
   DPRINT("Opening NTDLL\n");
   Status = ZwOpenFile(&FileHandle, FILE_ALL_ACCESS, &FileObjectAttributes, NULL, 0, 0);
-  RtlFreeUnicodeString(&DllPathname);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("NTDLL open failed ");
@@ -957,7 +957,7 @@ LdrLoadImage(HANDLE ProcessHandle, PUNICODE_STRING Filename)
       return STATUS_UNSUCCESSFUL;
     }
   NTHeaders = (PIMAGE_NT_HEADERS)(BlockBuffer + DosHeader->e_lfanew);
-  ImageBase = NTHeaders->OptionalHeader.ImageBase;
+   ImageBase = NTHeaders->OptionalHeader.ImageBase;
   ImageSize = NTHeaders->OptionalHeader.SizeOfImage;
     /* FIXME: retrieve the offset of LdrStartup from NTDLL  */
    DPRINT("ImageBase %x\n",ImageBase);
@@ -981,13 +981,15 @@ LdrLoadImage(HANDLE ProcessHandle, PUNICODE_STRING Filename)
     }
 
   /*  Map the NTDLL into the process  */
+   InitialViewSize = DosHeader->e_lfanew + sizeof(IMAGE_NT_HEADERS) 
+     + sizeof(IMAGE_SECTION_HEADER) * NTHeaders->FileHeader.NumberOfSections;
   Status = ZwMapViewOfSection(SectionHandle,
                               ProcessHandle,
                               (PVOID *)&ImageBase,
                               0,
-                              ImageSize,
+                              InitialViewSize,
                               NULL,
-                              &ImageSize,
+                              &InitialViewSize,
                               0,
                               MEM_COMMIT,
                               PAGE_READWRITE);
@@ -1002,6 +1004,37 @@ LdrLoadImage(HANDLE ProcessHandle, PUNICODE_STRING Filename)
 
       return Status;
     }
+   for (i=0; i<NTHeaders->FileHeader.NumberOfSections; i++)
+     {
+	PIMAGE_SECTION_HEADER Sections;
+	LARGE_INTEGER Offset;
+	ULONG Base;
+	
+	Sections = (PIMAGE_SECTION_HEADER)SECHDROFFSET(BlockBuffer);
+	Base = Sections[i].VirtualAddress + ImageBase;
+	SET_LARGE_INTEGER_HIGH_PART(Offset,0);
+	SET_LARGE_INTEGER_LOW_PART(Offset,Sections[i].PointerToRawData);
+	Status = ZwMapViewOfSection(SectionHandle,
+				    ProcessHandle,
+				    (PVOID *)&Base,
+				    0,
+				    Sections[i].Misc.VirtualSize,
+				    &Offset,
+				    &Sections[i].Misc.VirtualSize,
+				    0,
+				    MEM_COMMIT,
+				    PAGE_READWRITE);
+	if (!NT_SUCCESS(Status))
+	  {
+	     DPRINT("NTDLL map view of secion failed ");
+	     DbgPrintErrorMessage(Status);
+
+	     /* FIXME: destroy the section here  */
+	     
+	     ZwClose(FileHandle);
+	     return Status;
+	  }
+     }
   ZwClose(FileHandle);
 
     /*  Open process image to determine ImageBase and StackBase/Size  */
@@ -1064,16 +1097,19 @@ LdrLoadImage(HANDLE ProcessHandle, PUNICODE_STRING Filename)
     }
 
     /*  Map the image into the process  */
-  Status = ZwMapViewOfSection(SectionHandle,
-                              ProcessHandle,
-                              (PVOID *)&ImageBase,
-                              0,
-                              ImageSize,
-                              NULL,
-                              &ImageSize,
-                              0,
-                              MEM_COMMIT,
-                              PAGE_READWRITE);
+   InitialViewSize = DosHeader->e_lfanew + sizeof(IMAGE_NT_HEADERS) 
+     + sizeof(IMAGE_SECTION_HEADER) * NTHeaders->FileHeader.NumberOfSections;
+   DPRINT("InitialViewSize %x\n",InitialViewSize);
+   Status = ZwMapViewOfSection(SectionHandle,
+			       ProcessHandle,
+			       (PVOID *)&ImageBase,
+			       0,
+			       InitialViewSize,
+			       NULL,
+			       &InitialViewSize,
+			       0,
+			       MEM_COMMIT,
+			       PAGE_READWRITE);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("Image map view of section failed ");
@@ -1106,20 +1142,30 @@ LdrLoadImage(HANDLE ProcessHandle, PUNICODE_STRING Filename)
 
       return Status;
     }
-
-  /* FIXME: should commit the first stack page here  */
-  /* FIXME: reserve virtual memory for heap  */
+   
+   ZwDuplicateObject(NtCurrentProcess(),
+		     &SectionHandle,
+		     ProcessHandle,
+		     &DupSectionHandle,
+		     0,
+		     FALSE,
+		     DUPLICATE_SAME_ACCESS);
    
    ZwWriteVirtualMemory(ProcessHandle,
 			STACK_TOP - 4,
 			&ImageBase,
 			sizeof(ImageBase),
 			&BytesWritten);
+   ZwWriteVirtualMemory(ProcessHandle,
+			STACK_TOP - 8,
+			&DupSectionHandle,
+			sizeof(DupSectionHandle),
+			&BytesWritten);
    
     /*  Initialize context to point to LdrStartup  */
   memset(&Context,0,sizeof(CONTEXT));
   Context.SegSs = USER_DS;
-  Context.Esp = STACK_TOP - 8;
+  Context.Esp = STACK_TOP - 12;
   Context.EFlags = 0x202;
   Context.SegCs = USER_CS;
   Context.Eip = LdrStartupAddr;
@@ -1153,8 +1199,7 @@ LdrLoadImage(HANDLE ProcessHandle, PUNICODE_STRING Filename)
   return STATUS_SUCCESS;
 }
 
-NTSTATUS
-LdrLoadInitialProcess(VOID)
+NTSTATUS LdrLoadInitialProcess(VOID)
 {
   NTSTATUS Status;
   HANDLE ProcessHandle;

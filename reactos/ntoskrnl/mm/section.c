@@ -16,7 +16,7 @@
 #include <internal/io.h>
 #include <internal/ps.h>
 
-// #define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -289,7 +289,7 @@ NTSTATUS STDCALL ZwMapViewOfSection(HANDLE SectionHandle,
    
    DPRINT("ZwMapViewOfSection(Section:%08lx, Process:%08lx,\n"
           "  Base:%08lx, ZeroBits:%08lx, CommitSize:%08lx,\n"
-          "  SectionOffs:%08lx, ViewSize:%08lx, InheritDisp:%08lx,\n"
+          "  SectionOffs:%08lx, *ViewSize:%08lx, InheritDisp:%08lx,\n"
           "  AllocType:%08lx, Protect:%08lx)\n",
 	  SectionHandle, 
           ProcessHandle,
@@ -297,7 +297,7 @@ NTSTATUS STDCALL ZwMapViewOfSection(HANDLE SectionHandle,
           ZeroBits,
           CommitSize,
           SectionOffset,
-          ViewSize,
+          *ViewSize,
           InheritDisposition,
           AllocationType,
           Protect);
@@ -314,7 +314,8 @@ NTSTATUS STDCALL ZwMapViewOfSection(HANDLE SectionHandle,
 	DPRINT("ObReference failed rc=%x\n",Status);
 	return(Status);
      }
-   DPRINT("Section handle reference fetched\n");
+   
+   DPRINT("Section %x\n",Section);
    
    Status = ObReferenceObjectByHandle(ProcessHandle,
 				      PROCESS_VM_OPERATION,
@@ -326,22 +327,29 @@ NTSTATUS STDCALL ZwMapViewOfSection(HANDLE SectionHandle,
      {
 	return(Status);
      }
-   DPRINT("Process handle reference fetched\n");
-   DPRINT("Section %x\n",Section);
+   
+   DPRINT("ViewSize %x\n",ViewSize);
    if ((*ViewSize) > GET_LARGE_INTEGER_LOW_PART(Section->MaximumSize))
      {
 	(*ViewSize) = GET_LARGE_INTEGER_LOW_PART(Section->MaximumSize);
      }
    
-   MmCreateMemoryArea(UserMode,
-		      Process,
-		      MEMORY_AREA_SECTION_VIEW_COMMIT,
-		      BaseAddress,
-		      *ViewSize,
-		      Protect,
-		      &Result);
-   DPRINT("Result %x\n",Result);
+   Status = MmCreateMemoryArea(UserMode,
+			       Process,
+			       MEMORY_AREA_SECTION_VIEW_COMMIT,
+			       BaseAddress,
+			       *ViewSize,
+			       Protect,
+			       &Result);
+   if (!NT_SUCCESS(Status))
+     {
+	DPRINT("ZwMapViewOfSection() = %x\n",Status);
+	return(Status);
+     }
    Result->Data.SectionData.Section = Section;
+   
+   DPRINT("SectionOffset %x\n",SectionOffset);
+   
    if (SectionOffset == NULL)
      {
 	Result->Data.SectionData.ViewOffset = 0;
@@ -353,8 +361,6 @@ NTSTATUS STDCALL ZwMapViewOfSection(HANDLE SectionHandle,
      }
    
    DPRINT("*BaseAddress %x\n",*BaseAddress);
-   DPRINT("Result->Data.SectionData.Section->FileObject %x\n",
-	    Result->Data.SectionData.Section->FileObject);
    
    return(STATUS_SUCCESS);
 }

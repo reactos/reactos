@@ -121,9 +121,13 @@ ntoskrnl.exe: $(OBJECTS) ntoskrnl.def
 	$(LD) -r $(OBJECTS) -o ntoskrnl.o
 	$(DLLTOOL) --dllname ntoskrnl.exe --def ntoskrnl.def \
 	           --output-lib ntoskrnl.a
-	$(CC) -specs=../specs -mdll -o junk.tmp -Wl,--defsym,_end=end \
-	      -Wl,--defsym,_edata=__data_end__ -Wl,--defsym,_etext=etext \
-	      -Wl,--base-file,base.tmp ntoskrnl.o
+	$(CC) -specs=../specs -mdll -o junk.tmp \
+	      -Wl,--image-base,0xc0000000 \
+	      -Wl,--file-alignment,0x1000 \
+	      -Wl,--section-alignment,0x1000 \
+	      -Wl,--defsym,_end=end \
+	      -Wl,--defsym,_edata=__data_end__ \
+	      -Wl,--defsym,_etext=etext -Wl,--base-file,base.tmp ntoskrnl.o
 	- $(RM) junk.tmp
 	$(DLLTOOL) --dllname ntoskrnl.exe --base-file base.tmp \
 	           --output-exp temp.exp --def ntoskrnl.def

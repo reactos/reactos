@@ -174,6 +174,7 @@ NTSTATUS STDCALL ZwDelayExecution(IN BOOLEAN Alertable,
 				  IN TIME *Interval)
 {
    KeBugCheck(0);
+   return(STATUS_UNSUCCESSFUL);
 }
 
 NTSTATUS KeDelayExecutionThread(KPROCESSOR_MODE WaitMode,

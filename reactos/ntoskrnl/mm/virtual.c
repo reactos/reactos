@@ -12,8 +12,6 @@
  
 /* INCLUDE *****************************************************************/
 
-#include <windows.h>
-
 #include <internal/i386/segment.h>
 #include <internal/mm.h>
 #include <internal/mmhal.h>
@@ -21,7 +19,7 @@
 #include <internal/io.h>
 #include <internal/ps.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 /* TYPES *******************************************************************/

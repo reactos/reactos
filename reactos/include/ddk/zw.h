@@ -321,16 +321,13 @@ NtAllocateVirtualMemory(
 	IN ULONG  Protect
 	);
 
-NTSTATUS
-STDCALL
-ZwAllocateVirtualMemory( 
-	IN HANDLE ProcessHandle,
-	IN OUT PVOID *BaseAddress,
-	IN ULONG  ZeroBits,
-	IN OUT PULONG  RegionSize,
-	IN ULONG  AllocationType, 
-	IN ULONG  Protect
-	);
+NTSTATUS STDCALL ZwAllocateVirtualMemory(IN HANDLE ProcessHandle,
+					 IN OUT PVOID *BaseAddress,
+					 IN ULONG  ZeroBits,
+					 IN OUT PULONG  RegionSize,
+					 IN ULONG  AllocationType, 
+					 IN ULONG  Protect);
+
 /*
  * FUNCTION: Returns from a callback into user mode
  * ARGUMENTS:

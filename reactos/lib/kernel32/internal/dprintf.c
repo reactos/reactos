@@ -4,34 +4,26 @@
 
 VOID STDCALL OutputDebugStringA(LPCSTR lpOutputString)
 {
-   NtDisplayString(lpOutputString);
-   #if 0
-	WCHAR DebugStringW[161];
-	int i,j;
-	i = 0;
+   WCHAR DebugStringW[161];
+   int i,j;
+   i = 0;
+   j = 0;
+   while ( lpOutputString[i] != 0 )
+     {
+	while ( j < 160 && lpOutputString[i] != 0 )
+	  {
+	     DebugStringW[j] = (WCHAR)lpOutputString[i];		
+	     i++;
+	     j++;
+	  }
+	DebugStringW[j] = 0;
+	OutputDebugStringW(DebugStringW);
 	j = 0;
-	while ( lpOutputString[i] != 0 )
-	{
-		while ( j < 160 && lpOutputString[i] != 0 )
-		{
-			DebugStringW[j] = (WCHAR)lpOutputString[i];		
-			i++;
-			j++;
-		}
-		DebugStringW[j] = 0;
-		OutputDebugStringW(DebugStringW);
-		j = 0;
-	}
-   
-	return;
-   #endif
+     }   
+   return;
 }
 
-VOID
-STDCALL
-OutputDebugStringW(
-    LPCWSTR lpOutputString
-    )
+VOID STDCALL OutputDebugStringW(LPCWSTR lpOutputString)
 {
    UNICODE_STRING UnicodeOutput;
 
@@ -60,6 +52,6 @@ void aprintf(char* fmt, ...)
    
    va_start(va_args,fmt);
    vsprintf(buffer,fmt,va_args);
-   OutputDebugString(buffer);
+   OutputDebugStringA(buffer);
    va_end(fmt);
 }

@@ -125,9 +125,8 @@ void HalSwitchToBlueScreen(void)
 
 NTSTATUS STDCALL NtDisplayString(IN PUNICODE_STRING DisplayString)
 {
-//   DbgPrint("DisplayString %x\n",DisplayString);
-   DbgPrint("%s",DisplayString);
-//   DbgPrint("Returning from NtDisplayString()\n");
+//   DbgPrint("NtDisplayString(%w)\n",DisplayString->Buffer);
+   DbgPrint("%w",DisplayString->Buffer);
    return(STATUS_SUCCESS);
 }
 
