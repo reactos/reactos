@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: winsta.c,v 1.66 2004/11/20 16:46:06 weiden Exp $
+ *  $Id: winsta.c,v 1.67 2004/11/21 13:02:02 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -806,7 +806,7 @@ IntGetWinStaObj(VOID)
    * just a temporary hack, this will be gone soon
    */
   
-  if(PsGetWin32Thread()->Desktop != NULL)
+  if(PsGetWin32Thread() != NULL && PsGetWin32Thread()->Desktop != NULL)
   {
     WinStaObj = PsGetWin32Thread()->Desktop->WindowStation;
     ObReferenceObjectByPointer(WinStaObj, KernelMode, ExWindowStationObjectType, 0);
