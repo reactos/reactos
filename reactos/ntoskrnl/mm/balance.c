@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: balance.c,v 1.5 2002/01/08 00:49:00 dwelch Exp $
+/* $Id: balance.c,v 1.6 2002/02/28 17:44:48 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -243,12 +243,12 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait, PVOID* AllocatedPag
 	    }
 	  InsertTailList(&AllocationListHead, &Request.ListEntry);
 	  KeReleaseSpinLock(&AllocationListLock, oldIrql);
-	  KeWaitForSingleObject(&Request.Event,
-				0,
-				KernelMode,
-				FALSE,
-				NULL);
 	}
+      KeWaitForSingleObject(&Request.Event,
+			    0,
+			    KernelMode,
+			    FALSE,
+			    NULL);
 
       Page = Request.Page;
       if (Page == NULL)
