@@ -1,6 +1,9 @@
-#include <ddk/ntddk.h>
+#include <windows.h>
 #include <stdarg.h>
 #include <string.h>
+#include <stdio.h>
+#include <ctype.h>
+
 
 HANDLE InputHandle, OutputHandle;
 
@@ -8,15 +11,20 @@ void debug_printf(char* fmt, ...)
 {
    va_list args;
    char buffer[255];
-   
+
    va_start(args,fmt);
    vsprintf(buffer,fmt,args);
    WriteConsoleA(OutputHandle, buffer, strlen(buffer), NULL, NULL);
    va_end(args);
 }
 
+void ExecuteVer(void)
+{
+    debug_printf("Reactos Simple Shell\n");
+}
+
 void ExecuteCd(char* cmdline)
-{  
+{
    if (!SetCurrentDirectoryA(cmdline))
      {
 	debug_printf("Invalid directory\n");
@@ -25,13 +33,13 @@ void ExecuteCd(char* cmdline)
 
 void ExecuteDir(char* cmdline)
 {
- HANDLE shandle;
- WIN32_FIND_DATA FindData;
- int nFile=0,nRep=0;
- TIME_FIELDS fTime;
+   HANDLE shandle;
+   WIN32_FIND_DATA FindData;
+   int nFile=0, nRep=0;
+//   TIME_FIELDS fTime;
 
-  shandle = FindFirstFile("*",&FindData);
-   
+   shandle = FindFirstFile("*",&FindData);
+
    if (shandle==INVALID_HANDLE_VALUE)
      {
 	debug_printf("Invalid directory\n");
@@ -41,7 +49,7 @@ void ExecuteDir(char* cmdline)
      {
 	debug_printf("%-15.15s",FindData.cAlternateFileName);
 	if(FindData.dwFileAttributes &FILE_ATTRIBUTE_DIRECTORY)
-	  debug_printf("<REP>       "),nRep++;
+          debug_printf("<DIR>       "),nRep++;
 	else
 	  debug_printf(" %10d ",FindData.nFileSizeLow),nFile++;
 	//    RtlTimeToTimeFields(&FindData.ftLastWriteTime  ,&fTime);
@@ -59,7 +67,7 @@ void ExecuteType(char* cmdline)
    HANDLE FileHandle;
    char c;
    DWORD Result;
-   
+
    FileHandle = CreateFile(cmdline,
 			   FILE_GENERIC_READ,
 			   0,
@@ -90,11 +98,11 @@ int ExecuteProcess(char* name, char* cmdline)
    STARTUPINFO StartupInfo;
    char arguments;
    BOOL ret;
-   
+
    memset(&StartupInfo,0,sizeof(StartupInfo));
    StartupInfo.cb = sizeof(STARTUPINFO);
    StartupInfo.lpTitle = name;
-  
+
    ret = CreateProcessA(name,
 			 cmdline,
 			 NULL,
@@ -117,7 +125,7 @@ void ExecuteCommand(char* line)
 {
    char* cmd;
    char* tail;
-   
+
    if (isalpha(line[0]) && line[1] == ':' && line[2] == 0)
      {
 	line[2] = '\\';
@@ -125,7 +133,7 @@ void ExecuteCommand(char* line)
 	SetCurrentDirectoryA(line);
 	return;
      }
-   
+
    tail = line;
    while ((*tail)!=' ' && (*tail)!=0)
      {
@@ -137,8 +145,8 @@ void ExecuteCommand(char* line)
 	tail++;
      }
    cmd = line;
-  
-   
+
+
    if (cmd==NULL)
      {
 	return;
@@ -156,6 +164,11 @@ void ExecuteCommand(char* line)
    if (strcmp(cmd,"type")==0)
      {
 	ExecuteType(tail);	
+	return;
+     }
+   if (strcmp(cmd,"ver")==0)
+     {
+        ExecuteVer(); 
 	return;
      }
    if (strcmp(cmd,"validate")==0)
@@ -188,15 +201,16 @@ void ReadLine(char* line)
    KEY_EVENT_RECORD KeyEvent;
    DWORD Result;
    UCHAR CurrentDir[255];
-   char ch;
-   
+   char  ch;
+   int   length = 0;
+
    GetCurrentDirectoryA(255,CurrentDir);
-   debug_printf(CurrentDir);
-   
+   debug_printf("%s>", CurrentDir);
+
    do
      {
 	if (!ReadConsoleA(InputHandle,
-			  &ch,                     
+			  &ch,
 			  1,
 			  &Result,
 			  NULL))
@@ -204,9 +218,23 @@ void ReadLine(char* line)
 	     debug_printf("Failed to read from console\n");
 	     for(;;);
 	  }
-	debug_printf("%c", ch);
-	*line = ch;	
-	line++;
+        switch (ch)
+          {
+            case '\b':
+              if (length > 0)
+              {
+                debug_printf("\b \b");
+                line--;
+                length--;
+              }
+              break;
+
+            default:
+              debug_printf("%c", ch);
+              *line = ch; 
+              line++;
+              length++;
+          }
      } while (ch != '\n');
    line--;
    *line = 0;
@@ -215,15 +243,15 @@ void ReadLine(char* line)
 void main()
 {
    static char line[255];
-   
+
    AllocConsole();
    InputHandle = GetStdHandle(STD_INPUT_HANDLE);
    OutputHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 
    debug_printf("Shell Starting...\n");
-      
+     
    SetCurrentDirectoryA("C:\\");
-   
+
    for(;;)
      {
 	ReadLine(line);
