@@ -1,4 +1,4 @@
-/* $Id: pci.c,v 1.9 2003/04/26 07:06:54 hbirr Exp $
+/* $Id: pci.c,v 1.10 2003/11/05 22:39:01 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -611,9 +611,10 @@ HalpAssignPciSlotResources(IN PBUS_HANDLER BusHandler,
 			   IN ULONG SlotNumber,
 			   IN OUT PCM_RESOURCE_LIST *AllocatedResources)
 {
+  ULONG DataSize;
+  PCI_COMMON_CONFIG PciConfig;
   UINT Address;
-  UINT NoAddresses;
-  ULONG BaseAddresses[PCI_TYPE0_ADDRESSES];
+  UINT ResourceCount;
   ULONG Size[PCI_TYPE0_ADDRESSES];
   NTSTATUS Status = STATUS_SUCCESS;
   UCHAR Offset;
@@ -621,85 +622,97 @@ HalpAssignPciSlotResources(IN PBUS_HANDLER BusHandler,
 
   /* FIXME: Should handle 64-bit addresses */
 
+  DataSize = HalpGetPciData(BusHandler,
+                            BusNumber,
+                            SlotNumber,
+                            &PciConfig,
+                            0,
+                            PCI_COMMON_HDR_LENGTH);
+  if (PCI_COMMON_HDR_LENGTH != DataSize)
+    {
+      return STATUS_UNSUCCESSFUL;
+    }
+
   /* Read the PCI configuration space for the device and store base address and
      size information in temporary storage. Count the number of valid base addresses */
-  NoAddresses = 0;
+  ResourceCount = 0;
   for (Address = 0; Address < PCI_TYPE0_ADDRESSES; Address++)
     {
-      Offset = offsetof(PCI_COMMON_CONFIG, u.type0.BaseAddresses[Address]);
-      Status = ReadPciConfigUlong(BusNumber, SlotNumber,
-                                  Offset, BaseAddresses + Address);
-      if (! NT_SUCCESS(Status))
+      if (0xffffffff == PciConfig.u.type0.BaseAddresses[Address])
 	{
-	  return Status;
+	  PciConfig.u.type0.BaseAddresses[Address] = 0;
 	}
-      if (0xffffffff == BaseAddresses[Address])
+      if (0 != PciConfig.u.type0.BaseAddresses[Address])
 	{
-	  BaseAddresses[Address] = 0;
-	}
-      if (0 != BaseAddresses[Address])
-	{
-	  NoAddresses++;
+	  ResourceCount++;
+          Offset = offsetof(PCI_COMMON_CONFIG, u.type0.BaseAddresses[Address]);
 	  Status = WritePciConfigUlong(BusNumber, SlotNumber, Offset, 0xffffffff);
 	  if (! NT_SUCCESS(Status))
 	    {
-	      WritePciConfigUlong(BusNumber, SlotNumber, Offset, BaseAddresses[Address]);
+	      WritePciConfigUlong(BusNumber, SlotNumber, Offset,
+                                  PciConfig.u.type0.BaseAddresses[Address]);
 	      return Status;
 	    }
 	  Status = ReadPciConfigUlong(BusNumber, SlotNumber,
 	                              Offset, Size + Address);
 	  if (! NT_SUCCESS(Status))
 	    {
-	      WritePciConfigUlong(BusNumber, SlotNumber, Offset, BaseAddresses[Address]);
+	      WritePciConfigUlong(BusNumber, SlotNumber, Offset,
+                                  PciConfig.u.type0.BaseAddresses[Address]);
 	      return Status;
 	    }
-	  Status = WritePciConfigUlong(BusNumber, SlotNumber, Offset, BaseAddresses[Address]);
+	  Status = WritePciConfigUlong(BusNumber, SlotNumber, Offset,
+                                       PciConfig.u.type0.BaseAddresses[Address]);
 	  if (! NT_SUCCESS(Status))
 	    {
 	      return Status;
 	    }
-
 	}
+    }
+
+  if (0 != PciConfig.u.type0.InterruptLine)
+    {
+      ResourceCount++;
     }
 
   /* Allocate output buffer and initialize */
   *AllocatedResources = ExAllocatePoolWithTag(PagedPool,
                                               sizeof(CM_RESOURCE_LIST) +
-                                              (NoAddresses - 1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR),
+                                              (ResourceCount - 1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR),
                                               TAG_PCI);
   if (NULL == *AllocatedResources)
     {
-    return STATUS_NO_MEMORY;
+      return STATUS_NO_MEMORY;
     }
   (*AllocatedResources)->Count = 1;
   (*AllocatedResources)->List[0].InterfaceType = PCIBus;
   (*AllocatedResources)->List[0].BusNumber = BusNumber;
   (*AllocatedResources)->List[0].PartialResourceList.Version = 1;
   (*AllocatedResources)->List[0].PartialResourceList.Revision = 1;
-  (*AllocatedResources)->List[0].PartialResourceList.Count = NoAddresses;
+  (*AllocatedResources)->List[0].PartialResourceList.Count = ResourceCount;
   Descriptor = (*AllocatedResources)->List[0].PartialResourceList.PartialDescriptors;
 
   /* Store configuration information */
   for (Address = 0; Address < PCI_TYPE0_ADDRESSES; Address++)
     {
-      if (0 != BaseAddresses[Address])
+      if (0 != PciConfig.u.type0.BaseAddresses[Address])
 	{
 	  if (PCI_BASE_ADDRESS_SPACE_MEMORY ==
-              (BaseAddresses[Address] & PCI_BASE_ADDRESS_SPACE))
+              (PciConfig.u.type0.BaseAddresses[Address] & PCI_BASE_ADDRESS_SPACE))
 	    {
 	      Descriptor->Type = CmResourceTypeMemory;
 	      Descriptor->ShareDisposition = CmResourceShareDeviceExclusive; /* FIXME I have no idea... */
 	      Descriptor->Flags = CM_RESOURCE_MEMORY_READ_WRITE;             /* FIXME Just a guess */
-	      Descriptor->u.Memory.Start.QuadPart = (BaseAddresses[Address] & PCI_BASE_ADDRESS_MEM_MASK);
+	      Descriptor->u.Memory.Start.QuadPart = (PciConfig.u.type0.BaseAddresses[Address] & PCI_BASE_ADDRESS_MEM_MASK);
 	      Descriptor->u.Memory.Length = PciSize(Size[Address], PCI_BASE_ADDRESS_MEM_MASK);
 	    }
 	  else if (PCI_BASE_ADDRESS_SPACE_IO ==
-                   (BaseAddresses[Address] & PCI_BASE_ADDRESS_SPACE))
+                   (PciConfig.u.type0.BaseAddresses[Address] & PCI_BASE_ADDRESS_SPACE))
 	    {
 	      Descriptor->Type = CmResourceTypePort;
 	      Descriptor->ShareDisposition = CmResourceShareDeviceExclusive; /* FIXME I have no idea... */
 	      Descriptor->Flags = CM_RESOURCE_PORT_IO;                       /* FIXME Just a guess */
-	      Descriptor->u.Port.Start.QuadPart = BaseAddresses[Address] &= PCI_BASE_ADDRESS_IO_MASK;
+	      Descriptor->u.Port.Start.QuadPart = PciConfig.u.type0.BaseAddresses[Address] &= PCI_BASE_ADDRESS_IO_MASK;
 	      Descriptor->u.Port.Length = PciSize(Size[Address], PCI_BASE_ADDRESS_IO_MASK & 0xffff);
 	    }
 	  else
@@ -711,7 +724,19 @@ HalpAssignPciSlotResources(IN PBUS_HANDLER BusHandler,
 	}
     }
 
-  assert(Descriptor == (*AllocatedResources)->List[0].PartialResourceList.PartialDescriptors + NoAddresses);
+  if (0 != PciConfig.u.type0.InterruptLine)
+    {
+      Descriptor->Type = CmResourceTypeInterrupt;
+      Descriptor->ShareDisposition = CmResourceShareShared;          /* FIXME Just a guess */
+      Descriptor->Flags = CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE;     /* FIXME Just a guess */
+      Descriptor->u.Interrupt.Level = PciConfig.u.type0.InterruptLine;
+      Descriptor->u.Interrupt.Vector = PciConfig.u.type0.InterruptLine;
+      Descriptor->u.Interrupt.Affinity = 0xFFFFFFFF;
+
+      Descriptor++;
+    }
+
+  assert(Descriptor == (*AllocatedResources)->List[0].PartialResourceList.PartialDescriptors + ResourceCount);
 
   /* FIXME: Should store the resources in the registry resource map */
 
