@@ -73,7 +73,7 @@ typedef struct _OBJECT_TYPE
     * PURPOSE: Called when an open attempts to open a file apparently
     * residing within the object
     */
-   VOID (*Parse)(VOID);
+   PVOID (*Parse)(struct _OBJECT *ParsedObject, PWSTR UnparsedSection);
    
    /*
     */
