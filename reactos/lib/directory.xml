@@ -22,6 +22,9 @@
 <directory name="comctl32">
 	<xi:include href="comctl32/comctl32.xml" />
 </directory>
+<directory name="comdlg32">
+	<xi:include href="comdlg32/comdlg32.xml" />
+</directory>
 <directory name="dnsapi">
 	<xi:include href="dnsapi/dnsapi.xml" />
 </directory>
@@ -52,6 +55,9 @@
 <directory name="ole32">
 	<xi:include href="ole32/ole32.xml" />
 </directory>
+<directory name="oleaut32">
+	<xi:include href="oleaut32/oleaut32.xml" />
+</directory>
 <directory name="pseh">
 	<xi:include href="pseh/pseh.xml" />
 </directory>
@@ -64,8 +70,17 @@
 <directory name="rtl">
 	<xi:include href="rtl/rtl.xml" />
 </directory>
+<directory name="shell32">
+	<xi:include href="shell32/shell32.xml" />
+</directory>
+<directory name="shlwapi">
+	<xi:include href="shlwapi/shlwapi.xml" />
+</directory>
 <directory name="string">
 	<xi:include href="string/string.xml" />
+</directory>
+<directory name="unicode">
+	<xi:include href="unicode/unicode.xml" />
 </directory>
 <directory name="user32">
 	<xi:include href="user32/user32.xml" />
@@ -78,6 +93,9 @@
 </directory>
 <directory name="winmm">
 	<xi:include href="winmm/winmm.xml" />
+</directory>
+<directory name="winspool">
+	<xi:include href="winspool/winspool.xml" />
 </directory>
 <directory name="ws2_32">
 	<xi:include href="ws2_32/ws2_32.xml" />
