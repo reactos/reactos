@@ -118,9 +118,39 @@
 <directory name="libwine">
 	<xi:include href="libwine/libwine.xml" />
 </directory>
+<directory name="lzexpand">
+	<xi:include href="lzexpand/lz32.xml" />
+</directory>
+<directory name="mesa32">
+	<xi:include href="mesa32/mesa32.xml" />
+</directory>
+<directory name="midimap">
+	<xi:include href="midimap/midimap.xml" />
+</directory>
+<directory name="mmdrv">
+	<xi:include href="mmdrv/mmdrv.xml" />
+</directory>
+<directory name="mpr">
+	<xi:include href="mpr/mpr.xml" />
+</directory>
+<directory name="msafd">
+	<xi:include href="msafd/msafd.xml" />
+</directory>
+<directory name="msgina">
+	<xi:include href="msgina/msgina.xml" />
+</directory>
+<directory name="msimg32">
+	<xi:include href="msimg32/msimg32.xml" />
+</directory>
 <directory name="msvcrt">
 	<xi:include href="msvcrt/crt.xml" />
 	<xi:include href="msvcrt/msvcrt.xml" />
+</directory>
+<directory name="msvcrt20">
+	<xi:include href="msvcrt20/msvcrt20.xml" />
+</directory>
+<directory name="netapi32">
+	<xi:include href="netapi32/netapi32.xml" />
 </directory>
 <directory name="ntdll">
 	<xi:include href="ntdll/ntdll.xml" />
@@ -131,11 +161,17 @@
 <directory name="oleaut32">
 	<xi:include href="oleaut32/oleaut32.xml" />
 </directory>
+<directory name="olepro32">
+	<xi:include href="olepro32/olepro32.xml" />
+</directory>
 <directory name="psapi">
 	<xi:include href="psapi/psapi.xml" />
 </directory>
 <directory name="pseh">
 	<xi:include href="pseh/pseh.xml" />
+</directory>
+<directory name="richedit">
+	<xi:include href="richedit/riched32.xml" />
 </directory>
 <directory name="rosrtl">
 	<xi:include href="rosrtl/rosrtl.xml" />
@@ -145,6 +181,15 @@
 </directory>
 <directory name="rtl">
 	<xi:include href="rtl/rtl.xml" />
+</directory>
+<directory name="samlib">
+	<xi:include href="samlib/samlib.xml" />
+</directory>
+<directory name="secur32">
+	<xi:include href="secur32/secur32.xml" />
+</directory>
+<directory name="setupapi">
+	<xi:include href="setupapi/setupapi.xml" />
 </directory>
 <directory name="shell32">
 	<xi:include href="shell32/shell32.xml" />
