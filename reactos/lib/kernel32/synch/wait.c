@@ -1,4 +1,4 @@
-/* $Id: wait.c,v 1.28 2004/03/07 18:06:29 arty Exp $
+/* $Id: wait.c,v 1.29 2004/07/18 23:52:31 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -125,19 +125,13 @@ WaitForSingleObjectEx(HANDLE hHandle,
   if (CloseWaitHandle)
     NtClose(hHandle);
 
-  if (Status == STATUS_TIMEOUT)
+  if (HIWORD(Status))
     {
-      return WAIT_TIMEOUT;
-    }
-  else if ((Status == WAIT_OBJECT_0) ||
-	   (Status == WAIT_ABANDONED_0))
-    {
-      return Status;
+      SetLastErrorByStatus (Status);
+      return WAIT_FAILED;
     }
 
-  SetLastErrorByStatus (Status);
-
-  return WAIT_FAILED;
+  return Status;
 }
 
 
