@@ -393,6 +393,23 @@ CmiObjectSecurity(PVOID ObjectBody,
 		  PSECURITY_DESCRIPTOR SecurityDescriptor,
 		  PULONG BufferLength);
 
+NTSTATUS
+CmiImportHiveBins(PREGISTRY_HIVE Hive,
+		  PUCHAR ChunkPtr);
+
+VOID
+CmiFreeHiveBins(PREGISTRY_HIVE Hive);
+
+NTSTATUS
+CmiCreateHiveFreeCellList(PREGISTRY_HIVE Hive);
+
+VOID
+CmiFreeHiveFreeCellList(PREGISTRY_HIVE Hive);
+
+NTSTATUS
+CmiCreateHiveBitmap(PREGISTRY_HIVE Hive);
+
+
 VOID
 CmiAddKeyToList(PKEY_OBJECT ParentKey,
   IN PKEY_OBJECT  NewKey);

@@ -1343,8 +1343,8 @@ NtSetValueKey(IN HANDLE KeyHandle,
 
 
 NTSTATUS STDCALL
-NtDeleteValueKey(IN HANDLE KeyHandle,
-		 IN PUNICODE_STRING ValueName)
+NtDeleteValueKey (IN HANDLE KeyHandle,
+		  IN PUNICODE_STRING ValueName)
 {
   PKEY_OBJECT KeyObject;
   NTSTATUS Status;
@@ -1381,16 +1381,17 @@ NtDeleteValueKey(IN HANDLE KeyHandle,
   return Status;
 }
 
+
 /*
  * NOTE:
  * KeyObjectAttributes->RootDirectory specifies the handle to the parent key and
  * KeyObjectAttributes->Name specifies the name of the key to load.
  */
 NTSTATUS STDCALL
-NtLoadKey(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
-	  IN POBJECT_ATTRIBUTES FileObjectAttributes)
+NtLoadKey (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
+	   IN POBJECT_ATTRIBUTES FileObjectAttributes)
 {
-  return NtLoadKey2(KeyObjectAttributes, FileObjectAttributes, 0);
+  return NtLoadKey2 (KeyObjectAttributes, FileObjectAttributes, 0);
 }
 
 
@@ -1400,9 +1401,9 @@ NtLoadKey(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
  * KeyObjectAttributes->Name specifies the name of the key to load.
  */
 NTSTATUS STDCALL
-NtLoadKey2(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
-	   IN POBJECT_ATTRIBUTES FileObjectAttributes,
-	   IN ULONG Flags)
+NtLoadKey2 (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
+	    IN POBJECT_ATTRIBUTES FileObjectAttributes,
+	    IN ULONG Flags)
 {
   UNIMPLEMENTED;
   return STATUS_NOT_IMPLEMENTED;
@@ -1410,29 +1411,28 @@ NtLoadKey2(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 
 
 NTSTATUS STDCALL
-NtNotifyChangeKey(
-	IN	HANDLE  KeyHandle,
-	IN	HANDLE  Event,
-	IN	PIO_APC_ROUTINE	 ApcRoutine  OPTIONAL,
-	IN	PVOID  ApcContext  OPTIONAL,
-	OUT	PIO_STATUS_BLOCK  IoStatusBlock,
-	IN	ULONG  CompletionFilter,
-	IN	BOOLEAN  Asynchroneous,
-	OUT	PVOID  ChangeBuffer,
-	IN	ULONG  Length,
-	IN	BOOLEAN  WatchSubtree)
+NtNotifyChangeKey (IN HANDLE KeyHandle,
+		   IN HANDLE Event,
+		   IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+		   IN PVOID ApcContext OPTIONAL,
+		   OUT PIO_STATUS_BLOCK IoStatusBlock,
+		   IN ULONG CompletionFilter,
+		   IN BOOLEAN Asynchroneous,
+		   OUT PVOID ChangeBuffer,
+		   IN ULONG Length,
+		   IN BOOLEAN WatchSubtree)
 {
-	UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
 
 NTSTATUS STDCALL
-NtQueryMultipleValueKey(IN HANDLE KeyHandle,
-			IN OUT PKEY_VALUE_ENTRY ValueList,
-			IN ULONG NumberOfValues,
-			OUT PVOID Buffer,
-			IN OUT PULONG Length,
-			OUT PULONG ReturnLength)
+NtQueryMultipleValueKey (IN HANDLE KeyHandle,
+			 IN OUT PKEY_VALUE_ENTRY ValueList,
+			 IN ULONG NumberOfValues,
+			 OUT PVOID Buffer,
+			 IN OUT PULONG Length,
+			 OUT PULONG ReturnLength)
 {
   PREGISTRY_HIVE RegistryHive;
   PVALUE_CELL ValueCell;
@@ -1543,10 +1543,9 @@ NtQueryMultipleValueKey(IN HANDLE KeyHandle,
 
 
 NTSTATUS STDCALL
-NtReplaceKey(
-	IN	POBJECT_ATTRIBUTES	ObjectAttributes,
-	IN	HANDLE  Key,
-	IN	POBJECT_ATTRIBUTES	ReplacedObjectAttributes
+NtReplaceKey (IN POBJECT_ATTRIBUTES ObjectAttributes,
+	      IN HANDLE Key,
+	      IN POBJECT_ATTRIBUTES ReplacedObjectAttributes
 	)
 {
 	UNIMPLEMENTED;
@@ -1554,31 +1553,27 @@ NtReplaceKey(
 
 
 NTSTATUS STDCALL
-NtRestoreKey(
-	IN	HANDLE	KeyHandle,
-	IN	HANDLE	FileHandle,
-	IN	ULONG	RestoreFlags
-	)
+NtRestoreKey (IN HANDLE KeyHandle,
+	      IN HANDLE FileHandle,
+	      IN ULONG RestoreFlags)
 {
 	UNIMPLEMENTED;
 }
 
 
 NTSTATUS STDCALL
-NtSaveKey(
-	IN	HANDLE	KeyHandle,
-	IN	HANDLE	FileHandle)
+NtSaveKey (IN HANDLE KeyHandle,
+	   IN HANDLE FileHandle)
 {
 	UNIMPLEMENTED;
 }
 
 
 NTSTATUS STDCALL
-NtSetInformationKey(
-	IN	HANDLE	KeyHandle,
-	IN	CINT	KeyInformationClass,
-	IN	PVOID	 KeyInformation,
-	IN	ULONG	 KeyInformationLength)
+NtSetInformationKey (IN HANDLE KeyHandle,
+		     IN CINT KeyInformationClass,
+		     IN PVOID KeyInformation,
+		     IN ULONG KeyInformationLength)
 {
   UNIMPLEMENTED;
 }
@@ -1590,14 +1585,14 @@ NtSetInformationKey(
  * KeyObjectAttributes->Name specifies the name of the key to unload.
  */
 NTSTATUS STDCALL
-NtUnloadKey(IN POBJECT_ATTRIBUTES KeyObjectAttributes)
+NtUnloadKey (IN POBJECT_ATTRIBUTES KeyObjectAttributes)
 {
   UNIMPLEMENTED;
 }
 
 
 NTSTATUS STDCALL
-NtInitializeRegistry(IN BOOLEAN SetUpBoot)
+NtInitializeRegistry (IN BOOLEAN SetUpBoot)
 {
   NTSTATUS Status = STATUS_ACCESS_DENIED;
 

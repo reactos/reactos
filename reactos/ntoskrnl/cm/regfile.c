@@ -364,64 +364,6 @@ CmiVerifyRegistryHive(PREGISTRY_HIVE RegistryHive)
 }
 
 
-#if 0
-static NTSTATUS
-CmiPopulateHive(HANDLE FileHandle)
-{
-  IO_STATUS_BLOCK IoStatusBlock;
-  LARGE_INTEGER FileOffset;
-  PCELL_HEADER FreeCell;
-  NTSTATUS Status;
-  PHBIN BinCell;
-  PCHAR tBuf;
-  ULONG i;
-
-  tBuf = (PCHAR) ExAllocatePool(NonPagedPool, REG_BLOCK_SIZE);
-  if (tBuf == NULL)
-    return STATUS_INSUFFICIENT_RESOURCES;
-
-  BinCell = (PHBIN) tBuf;
-  FreeCell = (PCELL_HEADER) (tBuf + REG_HBIN_DATA_OFFSET);
-
-  CmiCreateDefaultBinCell(BinCell);
-
-  // The whole block is free
-  FreeCell->CellSize = REG_BLOCK_SIZE - REG_HBIN_DATA_OFFSET;
-
-  // Add free blocks so we don't need to expand
-  // the file for a while
-  for (i = 1; i < 50; i++)
-    {
-      // Block offset of this bin
-      BinCell->BlockOffset = i * REG_BLOCK_SIZE;
-
-      FileOffset.u.HighPart = 0;
-      FileOffset.u.LowPart  = (i + 1) * REG_BLOCK_SIZE;
-
-      Status = NtWriteFile(FileHandle,
-			   NULL,
-			   NULL,
-			   NULL,
-			   &IoStatusBlock,
-			   tBuf,
-			   REG_BLOCK_SIZE,
-			   &FileOffset,
-			   NULL);
-      assertmsg(NT_SUCCESS(Status), ("Status: 0x%X\n", Status));
-      if (!NT_SUCCESS(Status))
-	{
-	  ExFreePool(tBuf);
-	  return Status;
-	}
-    }
-
-  ExFreePool(tBuf);
-
-  return Status;
-}
-#endif
-
-
 static NTSTATUS
 CmiCreateNewRegFile(HANDLE FileHandle)
 {
@@ -473,13 +415,6 @@ CmiCreateNewRegFile(HANDLE FileHandle)
     {
       return(Status);
     }
-
-#if 0
-  if (NT_SUCCESS(Status))
-    {
-      CmiPopulateHive(FileHandle);
-    }
-#endif
 
   Status = NtFlushBuffersFile(FileHandle,
 			      &IoStatusBlock);
@@ -743,6 +678,183 @@ ByeBye:
 #endif
 
 
+NTSTATUS
+CmiImportHiveBins(PREGISTRY_HIVE Hive,
+		  PUCHAR ChunkPtr)
+{
+  BLOCK_OFFSET BlockOffset;
+  ULONG BlockIndex;
+  PHBIN Bin;
+  ULONG j;
+
+  BlockIndex = 0;
+  BlockOffset = 0;
+  while (BlockIndex < Hive->BlockListSize)
+    {
+      Bin = (PHBIN)((ULONG_PTR)ChunkPtr + BlockOffset);
+
+      if (Bin->BlockId != REG_BIN_ID)
+	{
+	  DPRINT1 ("Bad BlockId %x, offset %x\n", Bin->BlockId, BlockOffset);
+	  /* FIXME: */
+	  assert(FALSE);
+//	  return STATUS_INSUFFICIENT_RESOURCES;
+	}
+
+      assertmsg((Bin->BlockSize % 4096) == 0,
+		("BlockSize (0x%.08x) must be multiple of 4K\n",
+		Bin->BlockSize));
+
+      /* Allocate the hive block */
+      Hive->BlockList[BlockIndex] = ExAllocatePool (PagedPool,
+						    Bin->BlockSize);
+      if (Hive->BlockList[BlockIndex] == NULL)
+	{
+	  DPRINT1 ("ExAllocatePool() failed\n");
+	  return STATUS_INSUFFICIENT_RESOURCES;
+	}
+
+      /* Import the Bin */
+      RtlCopyMemory (Hive->BlockList[BlockIndex],
+		     Bin,
+		     Bin->BlockSize);
+
+      if (Bin->BlockSize > 4096)
+	{
+	  for (j = 1; j < Bin->BlockSize / 4096; j++)
+	    {
+	      Hive->BlockList[BlockIndex + j] = Hive->BlockList[BlockIndex];
+	    }
+	}
+
+      BlockIndex += Bin->BlockSize / 4096;
+      BlockOffset += Bin->BlockSize;
+    }
+
+  return STATUS_SUCCESS;
+}
+
+
+VOID
+CmiFreeHiveBins (PREGISTRY_HIVE Hive)
+{
+  ULONG i;
+  PHBIN Bin;
+
+  Bin = NULL;
+  for (i = 0; i < Hive->BlockListSize; i++)
+    {
+      if (Hive->BlockList[i] == NULL)
+	continue;
+
+      if (Hive->BlockList[i] != Bin)
+	{
+	  Bin = Hive->BlockList[i];
+	  ExFreePool (Hive->BlockList[i]);
+	}
+      Hive->BlockList[i] = NULL;
+    }
+}
+
+
+NTSTATUS
+CmiCreateHiveFreeCellList(PREGISTRY_HIVE Hive)
+{
+  BLOCK_OFFSET BlockOffset;
+  PCELL_HEADER FreeBlock;
+  ULONG BlockIndex;
+  ULONG FreeOffset;
+  PHBIN Bin;
+  NTSTATUS Status;
+
+  /* Initialize the free cell list */
+  Hive->FreeListSize = 0;
+  Hive->FreeListMax = 0;
+  Hive->FreeList = NULL;
+  Hive->FreeListOffset = NULL;
+
+  BlockOffset = 0;
+  BlockIndex = 0;
+  while (BlockIndex < Hive->BlockListSize)
+    {
+      Bin = Hive->BlockList[BlockIndex];
+
+      /* Search free blocks and add to list */
+      FreeOffset = REG_HBIN_DATA_OFFSET;
+      while (FreeOffset < Bin->BlockSize)
+	{
+	  FreeBlock = (PCELL_HEADER) ((ULONG_PTR) Bin + FreeOffset);
+	  if (FreeBlock->CellSize > 0)
+	    {
+	      Status = CmiAddFree(Hive,
+				  FreeBlock,
+				  Bin->BlockOffset + FreeOffset,
+				  FALSE);
+
+	      if (!NT_SUCCESS(Status))
+		{
+		  return Status;
+		}
+
+	      FreeOffset += FreeBlock->CellSize;
+	    }
+	  else
+	    {
+	      FreeOffset -= FreeBlock->CellSize;
+	    }
+	}
+
+      BlockIndex += Bin->BlockSize / 4096;
+      BlockOffset += Bin->BlockSize;
+    }
+
+  return STATUS_SUCCESS;
+}
+
+
+VOID
+CmiFreeHiveFreeCellList(PREGISTRY_HIVE Hive)
+{
+  ExFreePool (Hive->FreeList);
+  ExFreePool (Hive->FreeListOffset);
+
+  Hive->FreeListSize = 0;
+  Hive->FreeListMax = 0;
+  Hive->FreeList = NULL;
+  Hive->FreeListOffset = NULL;
+}
+
+
+NTSTATUS
+CmiCreateHiveBitmap(PREGISTRY_HIVE Hive)
+{
+  ULONG BitmapSize;
+
+  /* Calculate bitmap size in bytes (always a multiple of 32 bits) */
+  BitmapSize = ROUND_UP(Hive->BlockListSize, sizeof(ULONG) * 8) / 8;
+  DPRINT("Hive->BlockListSize: %lu\n", Hive->BlockListSize);
+  DPRINT("BitmapSize:  %lu Bytes  %lu Bits\n", BitmapSize, BitmapSize * 8);
+
+  /* Allocate bitmap */
+  Hive->BitmapBuffer = (PULONG)ExAllocatePool(PagedPool,
+					      BitmapSize);
+  if (Hive->BitmapBuffer == NULL)
+    {
+      return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+  RtlInitializeBitMap(&Hive->DirtyBitMap,
+		      Hive->BitmapBuffer,
+		      BitmapSize * 8);
+
+  /* Initialize bitmap */
+  RtlClearAllBits(&Hive->DirtyBitMap);
+  Hive->HiveDirty = FALSE;
+
+  return STATUS_SUCCESS;
+}
+
+
 static NTSTATUS
 CmiInitNonVolatileRegistryHive(PREGISTRY_HIVE RegistryHive,
 			       PWSTR Filename,
@@ -750,17 +862,14 @@ CmiInitNonVolatileRegistryHive(PREGISTRY_HIVE RegistryHive,
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   FILE_STANDARD_INFORMATION fsi;
-  PCELL_HEADER FreeBlock;
   LARGE_INTEGER FileOffset;
   BLOCK_OFFSET BlockOffset;
   ULONG CreateDisposition;
   IO_STATUS_BLOCK IoSB;
   HANDLE FileHandle;
-  ULONG FreeOffset;
   NTSTATUS Status;
   PHBIN tmpBin;
   ULONG i, j;
-  ULONG BitmapSize;
 
   DPRINT("CmiInitNonVolatileRegistryHive(%p, %S, %d) called\n",
 	 RegistryHive, Filename, CreateNew);
@@ -862,7 +971,7 @@ CmiInitNonVolatileRegistryHive(PREGISTRY_HIVE RegistryHive,
   /* Read hive header */
   FileOffset.u.HighPart = 0;
   FileOffset.u.LowPart = 0;
-  DPRINT("    Attempting to ZwReadFile(%d) for %d bytes into %p\n", FileHandle, sizeof(HIVE_HEADER), RegistryHive->HiveHeader);
+  DPRINT("    Attempting to NtReadFile(%d) for %d bytes into %p\n", FileHandle, sizeof(HIVE_HEADER), RegistryHive->HiveHeader);
   Status = NtReadFile(FileHandle,
 		      0,
 		      0,
@@ -950,10 +1059,6 @@ CmiInitNonVolatileRegistryHive(PREGISTRY_HIVE RegistryHive,
 
   NtClose(FileHandle);
 
-  RegistryHive->FreeListSize = 0;
-  RegistryHive->FreeListMax = 0;
-  RegistryHive->FreeList = NULL;
-
   BlockOffset = 0;
   for (i = 0; i < RegistryHive->BlockListSize; i++)
     {
@@ -977,52 +1082,28 @@ CmiInitNonVolatileRegistryHive(PREGISTRY_HIVE RegistryHive,
 	  i = i + j - 1;
 	}
 
-      /* Search free blocks and add to list */
-      FreeOffset = REG_HBIN_DATA_OFFSET;
-      while (FreeOffset < tmpBin->BlockSize)
-	{
-	  FreeBlock = (PCELL_HEADER) ((ULONG_PTR) RegistryHive->BlockList[i] + FreeOffset);
-	  if (FreeBlock->CellSize > 0)
-	    {
-	      Status = CmiAddFree(RegistryHive,
-				  FreeBlock,
-				  RegistryHive->BlockList[i]->BlockOffset + FreeOffset,
-				  FALSE);
-
-	      if (!NT_SUCCESS(Status))
-		{
-		  /* FIXME: */
-		  assert(FALSE);
-		}
-
-	      FreeOffset += FreeBlock->CellSize;
-	    }
-	  else
-	    {
-	      FreeOffset -= FreeBlock->CellSize;
-	    }
-	}
+//      BlockIndex += Bin->BlockSize / 4096;
       BlockOffset += tmpBin->BlockSize;
+    }
+
+
+  /* Initialize the free cell list */
+  Status = CmiCreateHiveFreeCellList (RegistryHive);
+  if (!NT_SUCCESS(Status))
+    {
+      /* FIXME: */
+      assert (FALSE);
     }
 
   /*
    * Create block bitmap and clear all bits
    */
-  /* Calculate bitmap size in bytes (always a multiple of 32 bits) */
-  BitmapSize = ROUND_UP(RegistryHive->BlockListSize, sizeof(ULONG) * 8) / 8;
-  DPRINT("RegistryHive->BlockListSize: %lu\n", RegistryHive->BlockListSize);
-  DPRINT("BitmapSize:  %lu Bytes  %lu Bits\n", BitmapSize, BitmapSize * 8);
-
-  /* Allocate bitmap */
-  RegistryHive->BitmapBuffer = (PULONG)ExAllocatePool(PagedPool,
-						      BitmapSize);
-  RtlInitializeBitMap(&RegistryHive->DirtyBitMap,
-		      RegistryHive->BitmapBuffer,
-		      BitmapSize * 8);
-
-  /* Initialize bitmap */
-  RtlClearAllBits(&RegistryHive->DirtyBitMap);
-  RegistryHive->HiveDirty = FALSE;
+  Status = CmiCreateHiveBitmap (RegistryHive);
+  if (!NT_SUCCESS(Status))
+    {
+      /* FIXME: */
+      assert (FALSE);
+    }
 
   DPRINT("CmiInitNonVolatileRegistryHive(%p, %S, %d) - Finished.\n",
 	 RegistryHive, Filename, CreateNew);
