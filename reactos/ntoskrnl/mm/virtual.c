@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.31 2000/07/06 14:34:51 dwelch Exp $
+/* $Id: virtual.c,v 1.32 2000/07/07 10:30:56 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -26,6 +26,97 @@
 #include <internal/debug.h>
 
 /* FUNCTIONS ****************************************************************/
+
+NTSTATUS MmWritePageVirtualMemory(PMADDRESS_SPACE AddressSpace,
+				  PMEMORY_AREA MArea,
+				  PVOID Address)
+{
+   SWAPENTRY se;
+   ULONG Flags;
+   PHYSICAL_ADDRESS PhysicalAddress;
+   PMDL Mdl;
+   NTSTATUS Status;
+   
+   /*
+    * FIXME: What should we do if an i/o operation is pending on
+    * this page
+    */
+   
+   /*
+    * If the memory area is readonly then there is nothing to do
+    */
+   if (MArea->Attributes & PAGE_READONLY ||
+       MArea->Attributes & PAGE_EXECUTE_READ)
+     {
+	return(STATUS_SUCCESS);
+     }
+   /*
+    * Set the page to readonly. This ensures the current contents aren't
+    * modified while we are writing it to swap.
+    */
+   MmSetPageProtect(AddressSpace->Process,
+		    Address,
+		    PAGE_READONLY);
+   /*
+    * If the page isn't dirty then there is nothing to do.
+    */
+   if (!MmIsPageDirty(AddressSpace->Process, Address))
+     {
+	MmSetPageProtect(AddressSpace->Process,
+			 Address,
+			 MArea->Attributes);
+	return(STATUS_SUCCESS);	
+     }
+   PhysicalAddress = MmGetPhysicalAddress(Address);
+   /*
+    * If we haven't already allocated a swap entry for this page
+    * then allocate one
+    */
+   if ((se = MmGetSavedSwapEntryPage((PVOID)PhysicalAddress.u.LowPart)) != 0)
+     {
+	se = MmAllocSwapPage();
+	if (se == 0)
+	  {
+	     MmSetPageProtect(AddressSpace->Process,
+			      Address,
+			      MArea->Attributes);
+	     return(STATUS_UNSUCCESSFUL);
+	  }
+	MmSetSavedSwapEntryPage((PVOID)PhysicalAddress.u.LowPart, se);
+     }
+   /*
+    * Set the flags so other threads will know what we are doing
+    */
+   Flags = MmGetFlagsPage((PVOID)PhysicalAddress.u.LowPart);
+   Flags = Flags | MM_PHYSICAL_PAGE_MPW_PENDING;
+   MmSetFlagsPage((PVOID)PhysicalAddress.u.LowPart, Flags);
+   /*
+    * Build an mdl to hold the page for writeout
+    */
+   Mdl = MmCreateMdl(NULL, NULL, PAGESIZE);
+   MmBuildMdlFromPages(Mdl, (PULONG)&PhysicalAddress.u.LowPart);
+   /*
+    * Unlock the address space and write out the page to swap.
+    */
+   MmUnlockAddressSpace(AddressSpace);
+   Status = MmWriteToSwapPage(se, Mdl);
+   /*
+    * Cleanup 
+    */
+   MmLockAddressSpace(AddressSpace);
+   Flags = MmGetFlagsPage((PVOID)PhysicalAddress.u.LowPart);
+   Flags = Flags & (~MM_PHYSICAL_PAGE_MPW_PENDING);
+   MmSetFlagsPage((PVOID)PhysicalAddress.u.LowPart,Flags);
+   /*
+    * If we successfully wrote the page then reset the dirty bit
+    */
+   if (NT_SUCCESS(Status))
+     {
+	MmSetCleanPage(AddressSpace->Process, Address);
+     }
+   return(Status);
+}
+
 
 ULONG MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
 			     PMEMORY_AREA MemoryArea,

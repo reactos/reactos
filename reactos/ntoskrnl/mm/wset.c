@@ -1,4 +1,4 @@
-/* $Id: wset.c,v 1.2 2000/07/06 14:34:51 dwelch Exp $
+/* $Id: wset.c,v 1.3 2000/07/07 10:30:57 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,6 +18,11 @@
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/
+
+PVOID MmGetDirtyPagesFromWorkingSet(struct _EPROCESS* Process)
+{
+   return(NULL);
+}
 
 VOID MmLockWorkingSet(PEPROCESS Process)
 {

@@ -253,4 +253,37 @@ PVOID MmMustAllocPage(SWAPENTRY SavedSwapEntry);
 PVOID MmAllocPageMaybeSwap(SWAPENTRY SavedSwapEntry);
 NTSTATUS MmCreatePageTable(PVOID PAddress);
 
+typedef struct
+{
+   ULONG NrTotalPages;
+   ULONG NrSystemPages;
+   ULONG NrReservedPages;
+   ULONG NrUserPages;
+   ULONG NrFreePages;
+   ULONG NrDirtyPages;
+   ULONG PagingRequestsInLastMinute;
+   ULONG PagingRequestsInLastFiveMinutes;
+   ULONG PagingRequestsInLastFifteenMinutes;
+} MM_STATS;
+
+extern MM_STATS MmStats;
+
+NTSTATUS MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
+				PMEMORY_AREA MArea,
+				PVOID Address);
+NTSTATUS MmWritePageVirtualMemory(PMADDRESS_SPACE AddressSpace,
+				  PMEMORY_AREA MArea,
+				  PVOID Address);
+PVOID MmGetDirtyPagesFromWorkingSet(struct _EPROCESS* Process);
+NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PMDL Mdl);
+NTSTATUS MmReadFromSwapPage(SWAPENTRY SwapEntry, PMDL Mdl);
+VOID MmSetFlagsPage(PVOID PhysicalAddress, ULONG Flags);
+ULONG MmGetFlagsPage(PVOID PhysicalAddress);
+VOID MmSetSavedSwapEntryPage(PVOID PhysicalAddress,
+			     SWAPENTRY SavedSwapEntry);
+SWAPENTRY MmGetSavedSwapEntryPage(PVOID PhysicalAddress);
+VOID MmSetCleanPage(struct _EPROCESS* Process, PVOID Address);
+
+#define MM_PHYSICAL_PAGE_MPW_PENDING     (0x8)
+
 #endif

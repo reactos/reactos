@@ -114,6 +114,7 @@ VOID KiSideEffectsBeforeWake(DISPATCHER_HEADER* hdr,
 				       KMUTEX,
 				       Header);
 	     hdr->SignalState--;
+	     assert(hdr->SignalState <= 1);
 	     Mutex->OwnerThread = Thread;
 	  }
 	break;

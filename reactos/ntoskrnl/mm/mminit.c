@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.2 2000/07/04 11:11:04 dwelch Exp $
+/* $Id: mminit.c,v 1.3 2000/07/07 10:30:56 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -156,7 +156,13 @@ VOID MmInit1(PLOADER_PARAMETER_BLOCK bp, ULONG LastKernelAddress)
    
    DPRINT("MmInit1(bp %x, LastKernelAddress %x)\n", bp, 
 	  LastKernelAddress);
-
+   
+   /*
+    * FIXME: Set this based on the system command line
+    */
+   MmUserProbeAddress = (PVOID)0x7fff0000;
+   MmHighestUserAddress = (PVOID)0x7ffeffff;
+   
    MmInitializeKernelAddressSpace();
    
    /*

@@ -1,4 +1,4 @@
-/* $Id: page.c,v 1.11 2000/07/06 14:34:51 dwelch Exp $
+/* $Id: page.c,v 1.12 2000/07/07 10:30:57 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -299,6 +299,24 @@ PULONG MmGetPageEntry(PVOID PAddress)
 BOOLEAN MmIsPageDirty(PEPROCESS Process, PVOID Address)
 {
    return((MmGetPageEntryForProcess(Process, Address)) & PA_DIRTY);
+}
+
+VOID MmSetCleanPage(PEPROCESS Process, PVOID Address)
+{
+   PULONG PageEntry;
+   PEPROCESS CurrentProcess = PsGetCurrentProcess();
+   
+   if (Process != CurrentProcess)
+     {
+	KeAttachProcess(Process);
+     }
+   PageEntry = MmGetPageEntry(Address);
+   (*PageEntry) = (*PageEntry) & (~PA_DIRTY);
+   FLUSH_TLB;
+   if (Process != CurrentProcess)
+     {
+	KeDetachProcess();
+     }
 }
 
 BOOLEAN MmIsPagePresent(PEPROCESS Process, PVOID Address)

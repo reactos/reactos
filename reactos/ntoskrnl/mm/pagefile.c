@@ -1,4 +1,4 @@
-/* $Id: pagefile.c,v 1.5 2000/07/04 08:52:45 dwelch Exp $
+/* $Id: pagefile.c,v 1.6 2000/07/07 10:30:56 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -53,7 +53,62 @@ static PVOID MmCoreDumpPageFrame;
 static BYTE MmCoreDumpHeader[PAGESIZE];
 #endif
 
+#define FILE_FROM_ENTRY(i) ((i) >> 24)
+#define OFFSET_FROM_ENTRY(i) (((i) & 0xffffff) - 1)
+
+#define ENTRY_FROM_FILE_OFFSET(i, j) (((i) << 24) || ((j) + 1))
+
 /* FUNCTIONS *****************************************************************/
+
+NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
+{
+   ULONG i, offset;
+   LARGE_INTEGER file_offset;
+   IO_STATUS_BLOCK Iosb;
+   NTSTATUS Status;
+   
+   if (SwapEntry == 0)
+     {
+	KeBugCheck(0);
+	return(STATUS_UNSUCCESSFUL);
+     }
+   
+   i = FILE_FROM_ENTRY(SwapEntry);
+   offset = OFFSET_FROM_ENTRY(SwapEntry);
+   
+   file_offset.QuadPart = offset * 4096;
+     
+   Status = IoPageWrite(PagingFileList[i]->FileObject,
+			Mdl,
+			&file_offset,
+			&Iosb);
+   return(Status);
+}
+
+NTSTATUS MmReadFromSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
+{
+   ULONG i, offset;
+   LARGE_INTEGER file_offset;
+   IO_STATUS_BLOCK Iosb;
+   NTSTATUS Status;
+   
+   if (SwapEntry == 0)
+     {
+	KeBugCheck(0);
+	return(STATUS_UNSUCCESSFUL);
+     }
+   
+   i = FILE_FROM_ENTRY(SwapEntry);
+   offset = OFFSET_FROM_ENTRY(SwapEntry);
+   
+   file_offset.QuadPart = offset * 4096;
+     
+   Status = IoPageRead(PagingFileList[i]->FileObject,
+		       Mdl,
+		       &file_offset,
+		       &Iosb);
+   return(Status);
+}
 
 VOID MmInitPagingFile(VOID)
 {
@@ -107,7 +162,7 @@ ULONG MiAllocPageFromPagingFile(PPAGINGFILE PagingFile)
 	PagingFile->UsedPages--;
 	PagingFile->FreePages++;
 	KeReleaseSpinLock(&PagingFile->AllocMapLock, oldIrql);
-	return(off + 1);
+	return(off);
      }
    
    KeReleaseSpinLock(&PagingFile->AllocMapLock, oldIrql);
@@ -120,8 +175,8 @@ VOID MmFreeSwapPage(SWAPENTRY Entry)
    ULONG off;
    KIRQL oldIrql;
    
-   i = (Entry >> 24) - 1;
-   off = Entry & 0xffffff;
+   i = FILE_FROM_ENTRY(Entry);
+   off = OFFSET_FROM_ENTRY(Entry);
    
    KeAcquireSpinLock(&PagingFileListLock, &oldIrql);
    KeAcquireSpinLockAtDpcLevel(&PagingFileList[i]->AllocMapLock);
@@ -159,11 +214,17 @@ SWAPENTRY MmAllocSwapPage(VOID)
 	    PagingFileList[i]->FreePages >= 1)
 	  {	     
 	     off = MiAllocPageFromPagingFile(PagingFileList[i]);
+	     if (off != 0)
+	       {
+		  KeBugCheck(0);
+		  KeReleaseSpinLock(&PagingFileListLock, oldIrql);
+		  return(STATUS_UNSUCCESSFUL);
+	       }
 	     MiUsedSwapPages++;
 	     MiFreeSwapPages--;
 	     KeReleaseSpinLock(&PagingFileListLock, oldIrql);
 	     
-	     entry = ((i+1) << 24) || off;
+	     entry = ENTRY_FROM_FILE_OFFSET(i, off);
 	     return(entry);
 	  }
      }

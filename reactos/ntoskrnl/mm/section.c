@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.36 2000/07/06 14:34:51 dwelch Exp $
+/* $Id: section.c,v 1.37 2000/07/07 10:30:56 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -27,6 +27,13 @@
 POBJECT_TYPE EXPORTED MmSectionObjectType = NULL;
 
 /* FUNCTIONS *****************************************************************/
+
+NTSTATUS MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
+				PMEMORY_AREA MArea,
+				PVOID Address)
+{
+   return(STATUS_UNSUCCESSFUL);
+}
 
 VOID MmLockSection(PSECTION_OBJECT Section)
 {
@@ -132,8 +139,9 @@ NTSTATUS MmUnalignedLoadPageForSection(PMADDRESS_SPACE AddressSpace,
 		       Mdl,
 		       &Offset,
 		       &IoStatus);
-   if (!NT_SUCCESS(Status))
+   if (!NT_SUCCESS(Status) && Status != STATUS_END_OF_FILE)
      {
+	MmLockAddressSpace(AddressSpace);
 	return(Status);
      }
    
@@ -148,106 +156,6 @@ NTSTATUS MmUnalignedLoadPageForSection(PMADDRESS_SPACE AddressSpace,
    
    return(STATUS_SUCCESS);
 
-}
-
-NTSTATUS MmOldNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
-					 MEMORY_AREA* MemoryArea, 
-					 PVOID Address)
-{
-   LARGE_INTEGER Offset;
-   IO_STATUS_BLOCK IoStatus;
-   PMDL Mdl;
-   PVOID Page;
-   NTSTATUS Status;
-   ULONG PAddress;
-   PSECTION_OBJECT Section;
-   ULONG Entry;
-   
-   DPRINT("MmSectionHandleFault(MemoryArea %x, Address %x)\n",
-	   MemoryArea,Address);
-   
-   if (MmIsPagePresent(NULL, Address))
-     {
-	DPRINT("Page is already present\n");
-	return(STATUS_SUCCESS);
-     }
-   
-   PAddress = (ULONG)PAGE_ROUND_DOWN(((ULONG)Address));
-   Offset.QuadPart = (PAddress - (ULONG)MemoryArea->BaseAddress) +
-     MemoryArea->Data.SectionData.ViewOffset;
-   
-   if ((MemoryArea->Data.SectionData.ViewOffset % PAGESIZE) != 0)
-     {
-	return(MmUnalignedLoadPageForSection(AddressSpace, 
-					     MemoryArea, 
-					     Address));
-     }
-   
-   DPRINT("MemoryArea->BaseAddress %x\n", MemoryArea->BaseAddress);
-   DPRINT("MemoryArea->Data.SectionData.ViewOffset %x\n",
-	   MemoryArea->Data.SectionData.ViewOffset);
-   DPRINT("Got offset %x\n", Offset.QuadPart);
-   
-   Section = MemoryArea->Data.SectionData.Section;
-   
-   DPRINT("Section %x\n", Section);
-   
-   MmLockSection(Section);
-   
-   Entry = MmGetPageEntrySection(Section, Offset.u.LowPart);
-   
-   DPRINT("Entry %x\n", Entry);
-   
-   if (Entry == 0)
-     {   
-	Page = MmAllocPageMaybeSwap(0);
-
-	
-	Mdl = MmCreateMdl(NULL, NULL, PAGESIZE);
-	MmBuildMdlFromPages(Mdl, (PULONG)&Page);
-	MmUnlockSection(Section);
-	MmUnlockAddressSpace(AddressSpace);
-	DPRINT("Reading file offset %x\n", Offset.QuadPart);
-	Status = IoPageRead(MemoryArea->Data.SectionData.Section->FileObject,
-			    Mdl,
-			    &Offset,
-			    &IoStatus);
-	if (!NT_SUCCESS(Status))
-	  {
-	     return(Status);
-	  }
-     
-	MmLockAddressSpace(AddressSpace);
-	MmLockSection(Section);
-	
-	Entry = MmGetPageEntrySection(Section, Offset.QuadPart);
-	
-	if (Entry == 0)
-	  {
-	     MmSetPageEntrySection(Section,
-				   Offset.QuadPart,
-				   (ULONG)Page);
-	  }
-	else
-	  {
-	     MmDereferencePage(Page);
-	     Page = (PVOID)Entry;
-	     MmReferencePage(Page);
-	  }	
-     }
-   else
-     {
-	Page = (PVOID)Entry;
-	MmReferencePage(Page);	
-     }
-   
-   MmSetPage(NULL,
-	     Address,
-	     MemoryArea->Attributes,
-	     (ULONG)Page);
-   MmUnlockSection(Section);
-   
-   return(STATUS_SUCCESS);
 }
 
 NTSTATUS MmWaitForPendingOperationSection(PMADDRESS_SPACE AddressSpace,
@@ -484,7 +392,7 @@ NTSTATUS MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 			    Mdl,
 			    &Offset,
 			    &IoStatus);
-	if (!NT_SUCCESS(Status))
+	if (!NT_SUCCESS(Status) && Status != STATUS_END_OF_FILE)
 	  {
 	     /*
 	      * FIXME: What do we know in this case?

@@ -1,8 +1,8 @@
-/* $Id: mpw.c,v 1.1 2000/07/04 08:52:42 dwelch Exp $
+/* $Id: mpw.c,v 1.2 2000/07/07 10:30:56 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
- * FILE:         ntoskrnl/mm/pager.c
+ * FILE:         ntoskrnl/mm/mpw.c
  * PURPOSE:      Writes data that has been modified in memory but not on
  *               the disk
  * PROGRAMMER:   David Welch (welch@cwcom.net)
@@ -29,75 +29,122 @@ static CLIENT_ID MpwThreadId;
 static KEVENT MpwThreadEvent;
 static PEPROCESS LastProcess;
 static volatile BOOLEAN MpwThreadShouldTerminate;
-static KEVENT MpwWroteOne;
-static ULONG MmDirtyPagesInMemory;
+static ULONG CountToWrite;
 
 /* FUNCTIONS *****************************************************************/
 
-BOOLEAN MmShouldIWrite(BOOLEAN Wait)
+VOID MmStartWritingPages(VOID)
 {
-   if ((MmDirtyPagesInMemory*3) > 
+   CountToWrite = CountToWrite + MmStats.NrDirtyPages;
 }
 
-VOID MmTryPageOutFromProcess(PEPROCESS Process)
+ULONG MmWritePage(PMADDRESS_SPACE AddressSpace,
+		  PVOID Address)
 {
-   MmLockAddressSpace(&Process->Pcb.AddressSpace);
-   PageCount = PageCout - MmTrimWorkingSet(Process);
-   MmUnlockAddressSpace(&Process->Pcb.AddressSpace);
+   PMEMORY_AREA MArea;
+   NTSTATUS Status;
+   
+   MArea = MmOpenMemoryAreaByAddress(AddressSpace, Address);
+   
+   switch(MArea->Type)
+     {
+      case MEMORY_AREA_SYSTEM:
+	return(STATUS_UNSUCCESSFUL);
+	     
+      case MEMORY_AREA_SECTION_VIEW_COMMIT:
+	Status = MmWritePageSectionView(AddressSpace,
+					MArea,
+					Address);
+	return(Status);
+		  
+      case MEMORY_AREA_COMMIT:
+	Status = MmWritePageVirtualMemory(AddressSpace,
+					  MArea,
+					  Address);
+	return(Status);
+	
+     }
+   return(STATUS_UNSUCCESSFUL);
 }
 
-NTSTATUS MmPagerThreadMain(PVOID Ignored)
+VOID MmWritePagesInProcess(PEPROCESS Process)
+{
+   PVOID Address;
+   NTSTATUS Status;
+   
+   MmLockAddressSpace(&Process->AddressSpace);
+   
+   while ((Address = MmGetDirtyPagesFromWorkingSet(Process)) != NULL)
+     {
+	Status = MmWritePage(&Process->AddressSpace, Address);
+	if (NT_SUCCESS(Status))
+	  {
+	     CountToWrite = CountToWrite - 1;
+	     if (CountToWrite == 0)
+	       {
+		  MmUnlockAddressSpace(&Process->AddressSpace);
+		  return;
+	       }	     
+	  }
+     }
+   
+   MmUnlockAddressSpace(&Process->AddressSpace);
+}
+
+NTSTATUS MmMpwThreadMain(PVOID Ignored)
 {
    NTSTATUS Status;
       
    for(;;)
      {
-	Status = KeWaitForSingleObject(&PagerThreadEvent,
+	Status = KeWaitForSingleObject(&MpwThreadEvent,
 				       0,
 				       KernelMode,
 				       FALSE,
 				       NULL);
 	if (!NT_SUCCESS(Status))
 	  {
-	     DbgPrint("PagerThread: Wait failed\n");
+	     DbgPrint("MpwThread: Wait failed\n");
 	     KeBugCheck(0);
+	     return(STATUS_UNSUCCESSFUL);
 	  }
-	if (PagerThreadShouldTerminate)
+	if (MpwThreadShouldTerminate)
 	  {
-	     DbgPrint("PagerThread: Terminating\n");
+	     DbgPrint("MpwThread: Terminating\n");
 	     return(STATUS_SUCCESS);
 	  }
 	
-	while (PageCount > 0)
+	do
 	  {
 	     KeAttachProcess(LastProcess);
-	     MmTryPageOutFromProcess(LastProcess);
+	     MmWritePagesInProcess(LastProcess);
 	     KeDetachProcess();
-	     if (PageCount != 0)
+	     if (CountToWrite != 0)
 	       {
 		  LastProcess = PsGetNextProcess(LastProcess);
 	       }
-	  }
+	  } while (CountToWrite > 0 &&
+		   LastProcess != PsInitialSystemProcess);
      }
 }
 
-NTSTATUS MmInitPagerThread(VOID)
+NTSTATUS MmInitMpwThread(VOID)
 {
    NTSTATUS Status;
    
-   PageCount = 0;
+   CountToWrite = 0;
    LastProcess = PsInitialSystemProcess;
-   PagerThreadShouldTerminate = FALSE;
-   KeInitializeEvent(&PagerThreadEvent,
+   MpwThreadShouldTerminate = FALSE;
+   KeInitializeEvent(&MpwThreadEvent,
 		     SynchronizationEvent,
 		     FALSE);
    
-   Status = PsCreateSystemThread(&PagerThreadHandle,
+   Status = PsCreateSystemThread(&MpwThreadHandle,
 				 THREAD_ALL_ACCESS,
 				 NULL,
 				 NULL,
-				 &PagerThreadId,
-				 MmPagerThreadMain,
+				 &MpwThreadId,
+				 MmMpwThreadMain,
 				 NULL);
    if (!NT_SUCCESS(Status))
      {

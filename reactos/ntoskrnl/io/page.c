@@ -1,4 +1,4 @@
-/* $Id: page.c,v 1.8 2000/04/07 02:23:59 dwelch Exp $
+/* $Id: page.c,v 1.9 2000/07/07 10:30:55 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,6 +18,54 @@
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/
+
+NTSTATUS STDCALL IoPageWrite(PFILE_OBJECT FileObject,
+			    PMDL Mdl,
+			    PLARGE_INTEGER Offset,
+			    PIO_STATUS_BLOCK StatusBlock)
+{
+   PIRP Irp;
+   KEVENT Event;
+   PIO_STACK_LOCATION StackPtr;
+   NTSTATUS Status;
+   
+   DPRINT("IoPageWrite(FileObject %x, Mdl %x)\n",
+	  FileObject, Mdl);
+   
+   ObReferenceObjectByPointer(FileObject,
+			      STANDARD_RIGHTS_REQUIRED,
+			      IoFileObjectType,
+			      UserMode);
+   
+   KeInitializeEvent(&Event,NotificationEvent,FALSE);
+   Irp = IoBuildSynchronousFsdRequestWithMdl(IRP_MJ_WRITE,
+					     FileObject->DeviceObject,
+					     Mdl,
+					     Offset,
+					     &Event,
+					     StatusBlock);
+   StackPtr = IoGetNextIrpStackLocation(Irp);
+   StackPtr->FileObject = FileObject;
+   DPRINT("Before IoCallDriver\n");
+   Status = IoCallDriver(FileObject->DeviceObject,Irp);
+   DPRINT("Status %d STATUS_PENDING %d\n",Status,STATUS_PENDING);
+   if (Status==STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
+     {
+	DPRINT("Waiting for io operation\n");
+	if (FileObject->Flags & FO_ALERTABLE_IO)
+	  {
+	     KeWaitForSingleObject(&Event,Executive,KernelMode,TRUE,NULL);
+	  }
+	else
+	  {
+	     DPRINT("Non-alertable wait\n");
+	     KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
+	  }
+	Status = StatusBlock->Status;
+     }
+   return(Status);
+}
+
 
 NTSTATUS STDCALL IoPageRead(PFILE_OBJECT FileObject,
 			    PMDL Mdl,

@@ -24,7 +24,7 @@
 
 #define PHYSICAL_PAGE_FREE    (0x1)
 #define PHYSICAL_PAGE_INUSE   (0x2)
-#define PHYSICAL_PAGE_BIOS    (0x4)
+#define PHYSICAL_PAGE_BIOS    (0x3)
 
 typedef struct _PHYSICAL_PAGE
 {
@@ -214,6 +214,42 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 		       &MmPageArray[i].ListEntry);
      }  
    return((PVOID)LastKernelAddress);
+}
+
+VOID MmSetFlagsPage(PVOID PhysicalAddress,
+		    ULONG Flags)
+{
+   ULONG Start = (ULONG)PhysicalAddress / PAGESIZE;
+   KIRQL oldIrql;
+   
+   KeAcquireSpinLock(&PageListLock, &oldIrql);
+   MmPageArray[Start].Flags = Flags;
+   KeReleaseSpinLock(&PageListLock, oldIrql);
+}
+
+ULONG MmGetFlagsPage(PVOID PhysicalAddress)
+{
+   ULONG Start = (ULONG)PhysicalAddress / PAGESIZE;
+   KIRQL oldIrql;
+   ULONG Flags;
+   
+   KeAcquireSpinLock(&PageListLock, &oldIrql);
+   Flags = MmPageArray[Start].Flags;
+   KeReleaseSpinLock(&PageListLock, oldIrql);
+   
+   return(Flags);
+}
+
+
+VOID MmSetSavedSwapEntryPage(PVOID PhysicalAddress,
+			     SWAPENTRY SavedSwapEntry)
+{
+   ULONG Start = (ULONG)PhysicalAddress / PAGESIZE;
+   KIRQL oldIrql;
+   
+   KeAcquireSpinLock(&PageListLock, &oldIrql);
+   MmPageArray[Start].SavedSwapEntry = SavedSwapEntry;
+   KeReleaseSpinLock(&PageListLock, oldIrql);
 }
 
 SWAPENTRY MmGetSavedSwapEntryPage(PVOID PhysicalAddress)

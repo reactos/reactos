@@ -1,9 +1,17 @@
-/* $Id: mmtypes.h,v 1.8 2000/07/04 08:52:34 dwelch Exp $ */
+/* $Id: mmtypes.h,v 1.9 2000/07/07 10:30:54 dwelch Exp $ */
 
 #ifndef _INCLUDE_DDK_MMTYPES_H
 #define _INCLUDE_DDK_MMTYPES_H
 
 #include <ntos/mm.h>
+
+#ifdef __NTOSKRNL__
+PVOID EXPORTED MmUserProbeAddress;
+PVOID EXPORTED MmHighestUserAddress;
+#else
+PVOID IMPORTED MmUserProbeAddress;
+PVOID IMPORTED MmHighestUserAddress;
+#endif
 
 #ifdef __NTOSKRNL__
 extern POBJECT_TYPE EXPORTED MmSectionObjectType;

@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.17 2000/07/04 08:52:34 dwelch Exp $ */
+/* $Id: iofuncs.h,v 1.18 2000/07/07 10:30:54 dwelch Exp $ */
 
 /* --- EXPORTED BY NTOSKRNL --- */
 
@@ -774,14 +774,6 @@ IoOpenDeviceInstanceKey (
 	DWORD	Unknown2,
 	DWORD	Unknown3,
 	DWORD	Unknown4
-	);
-NTSTATUS
-STDCALL
-IoPageRead (
-	PFILE_OBJECT		FileObject,
-	PMDL			Mdl,
-	PLARGE_INTEGER		Offset,
-	PIO_STATUS_BLOCK	StatusBlock
 	);
 NTSTATUS
 STDCALL

@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.22 2000/07/06 14:34:51 dwelch Exp $
+/* $Id: mdl.c,v 1.23 2000/07/07 10:30:56 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -100,7 +100,7 @@ VOID STDCALL MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
 {
    DPRINT("MmUnmapLockedPages(BaseAddress %x, Mdl %x)\n", Mdl, BaseAddress);
    (void)MmFreeMemoryArea(MmGetKernelAddressSpace(),
-			  BaseAddress-Mdl->ByteOffset,
+			  BaseAddress - Mdl->ByteOffset,
 			  Mdl->ByteCount,
 			  FALSE);
    Mdl->MdlFlags = Mdl->MdlFlags & ~MDL_MAPPED_TO_SYSTEM_VA;
@@ -188,12 +188,8 @@ VOID STDCALL MmProbeAndLockPages (PMDL		Mdl,
 }
 
 
-ULONG
-STDCALL
-MmSizeOfMdl (
-	PVOID	Base,
-	ULONG	Length
-	)
+ULONG STDCALL MmSizeOfMdl (PVOID	Base,
+			   ULONG	Length)
 /*
  * FUNCTION: Returns the number of bytes to allocate for an MDL describing
  * the given address range
@@ -209,11 +205,7 @@ MmSizeOfMdl (
 }
 
 
-VOID
-STDCALL
-MmBuildMdlForNonPagedPool (
-	PMDL	Mdl
-	)
+VOID STDCALL MmBuildMdlForNonPagedPool (PMDL	Mdl)
 /*
  * FUNCTION: Fills in the corresponding physical page array of a given 
  * MDL for a buffer in nonpaged system space
@@ -233,13 +225,9 @@ MmBuildMdlForNonPagedPool (
 }
 
 
-PMDL
-STDCALL
-MmCreateMdl (
-	PMDL	MemoryDescriptorList,
-	PVOID	Base,
-	ULONG	Length
-	)
+PMDL STDCALL MmCreateMdl (PMDL	MemoryDescriptorList,
+			  PVOID	Base,
+			  ULONG	Length)
 /*
  * FUNCTION: Allocates and initalizes an MDL
  * ARGUMENTS:

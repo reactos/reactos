@@ -1,4 +1,4 @@
-/* $Id: mm.c,v 1.33 2000/07/04 08:52:42 dwelch Exp $
+/* $Id: mm.c,v 1.34 2000/07/07 10:30:56 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -30,8 +30,9 @@
 
 /* GLOBALS *****************************************************************/
 
-ULONG EXPORTED MmUserProbeAddress [PAGESIZE] = {0,}; /* FIXME */
-PVOID EXPORTED MmHighestUserAddress = NULL; /* FIXME */
+PVOID EXPORTED MmUserProbeAddress = NULL; 
+PVOID EXPORTED MmHighestUserAddress = NULL;
+MM_STATS MmStats; 
 
 /* FUNCTIONS ****************************************************************/
 
