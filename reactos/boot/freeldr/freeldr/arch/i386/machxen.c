@@ -1,5 +1,4 @@
-/* $Id: machpc.c 12672 2005-01-01 00:42:18Z chorns $
- *
+/*
  *  FreeLoader
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -28,8 +27,6 @@
 #include <hypervisor.h>
 
 BOOL XenActive = FALSE;
-ctrl_front_ring_t XenCtrlIfTxRing;
-ctrl_back_ring_t XenCtrlIfRxRing;
 int XenCtrlIfEvtchn;
 
 VOID
@@ -65,12 +62,10 @@ XenMachInit(VOID)
 /* _start is the default name ld will use as the entry point.  When xen
  * loads the domain, it will start execution at the elf entry point.  */
 
-void *dummy;
 void _start()
 {
   extern void *start;               /* Where is freeldr loaded? */
   start_info_t *StartInfo;
-  control_if_t *CtrlIf;
   void *OldStackPtr, *NewStackPtr;
   void *OldStackPage, *NewStackPage;
 
@@ -87,15 +82,7 @@ void _start()
    */
   XenMemInit(StartInfo);
 
-  /*
-   * Setup control interface
-   */
-  XenCtrlIfEvtchn = XenStartInfo->domain_controller_evtchn;
-  CtrlIf = ((control_if_t *)((char *)XenSharedInfo + 2048));
-
-  /* Sync up with shared indexes. */
-  FRONT_RING_ATTACH(&XenCtrlIfTxRing, &CtrlIf->tx_ring);
-  BACK_RING_ATTACH(&XenCtrlIfRxRing, &CtrlIf->rx_ring);
+  XenCtrlIfInit();
 
   /* Now move the stack to low mem */
   /* Copy the stack page */
@@ -110,6 +97,7 @@ void _start()
 
   /* Start freeldr */
   XenActive = TRUE;
+  BootDrive = 0x80;
   BootMain(XenStartInfo->cmd_line);
 
   /* Shouldn't get here */
@@ -258,8 +246,15 @@ XenHwDetect(VOID)
     XEN_UNIMPLEMENTED("XenHwDetect");
   }
 
-/* emit the elf segment Xen builder expects in kernel image */ asm(".section __xen_guest;"
-    ".ascii \"GUEST_OS=linux,GUEST_VER=2.6,XEN_VER=3.0,VIRT_BASE=0x00008000\";"
+/* emit the elf segment Xen builder expects in kernel image */
+asm(".section __xen_guest;"
+    ".ascii \"GUEST_OS=linux,GUEST_VER=2.6\";"
+#if XEN_VER == 2
+    ".ascii \",XEN_VER=2.0\";"
+#else
+    ".ascii \",XEN_VER=3.0\";"
+#endif
+    ".ascii \",VIRT_BASE=0x00008000\";"
     ".ascii \",LOADER=generic\";"
     ".ascii \",PT_MODE_WRITABLE\";"
     ".byte  0;"

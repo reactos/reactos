@@ -1,5 +1,4 @@
-/* $Id: machpc.c 12672 2005-01-01 00:42:18Z chorns $
- *
+/*
  *  FreeLoader
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -34,37 +33,32 @@
         (_r)->rsp_cons = (_r)->sring->rsp_prod;                         \
     } while (0)
 
-#define OUTPUT_BUFFER_SIZE 128
+#define OUTPUT_BUFFER_SIZE sizeof(((ctrl_msg_t *) NULL)->msg)
 static char OutputBuffer[OUTPUT_BUFFER_SIZE];
 static unsigned OutputPtr = 0;
 
 static void
 FlushOutput()
 {
-  ctrl_msg_t *msg;
+  ctrl_msg_t Msg;
 
-  while (0 != OutputPtr)
+  while (0 != OutputPtr || ! XenCtrlIfTransmitterEmpty())
     {
-      RING_DROP_PENDING_RESPONSES(&XenCtrlIfTxRing);
+      XenCtrlIfDiscardResponses();
 
-      if (! RING_FULL(&XenCtrlIfTxRing))
+      if (0 == OutputPtr)
         {
-          /*
-           * Put message on the control interface ring and trigger virtual
-           * console writer.
-           */
-          msg = RING_GET_REQUEST(&XenCtrlIfTxRing,
-                                  XenCtrlIfTxRing.req_prod_pvt);
+          continue;
+        }
 
-          msg->type = CMSG_CONSOLE;
-          msg->subtype = CMSG_CONSOLE_DATA;
-          msg->length = OutputPtr;
-          memcpy(msg->msg, OutputBuffer, OutputPtr);
-          msg->id      = 0xff;
-          XenCtrlIfTxRing.req_prod_pvt++;
-          RING_PUSH_REQUESTS(&XenCtrlIfTxRing);
-          notify_via_evtchn(XenCtrlIfEvtchn);
+      Msg.type = CMSG_CONSOLE;
+      Msg.subtype = CMSG_CONSOLE_DATA;
+      Msg.length = OutputPtr;
+      memcpy(Msg.msg, OutputBuffer, OutputPtr);
+      Msg.id      = 0xff;
 
+      if (XenCtrlIfSendMessageNoblock(&Msg))
+        {
           OutputPtr = 0;
         }
     }

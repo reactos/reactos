@@ -27,17 +27,20 @@
 
 #include <rosxen.h>
 #include <xen.h>
+#include <ctrl_if.h>
 #include <io/domain_controller.h>
 
 extern BOOL XenActive;
-extern ctrl_front_ring_t XenCtrlIfTxRing;
-extern ctrl_back_ring_t XenCtrlIfRxRing;
-extern int XenCtrlIfEvtchn;
 extern start_info_t *XenStartInfo;
 extern shared_info_t *XenSharedInfo;
 
 VOID XenMachInit(VOID);
 VOID XenMemInit(start_info_t *StartInfo);
+
+VOID XenCtrlIfInit();
+BOOL XenCtrlIfSendMessageNoblock(ctrl_msg_t *Msg);
+VOID XenCtrlIfDiscardResponses();
+BOOL XenCtrlIfTransmitterEmpty();
 
 VOID XenConsPutChar(int Ch);
 BOOL XenConsKbHit();
@@ -68,6 +71,6 @@ VOID XenRTCGetCurrentDateTime(PULONG Year, PULONG Month, PULONG Day, PULONG Hour
 
 VOID XenHwDetect(VOID);
 
-#endif /* __I386_MACHPC_H_ */
+#endif /* __I386_MACHXEN_H_ */
 
 /* EOF */

@@ -21,6 +21,8 @@ PATH_TO_TOP = ../../..
 
 include ../rules.mak
 
+include $(PATH_TO_TOP)/config
+
 CC = gcc
 LD = ld
 
@@ -99,17 +101,27 @@ endif
 
 COMPILER_DEFINES = -D__$(TARGET)__ $(COMPILER_DEBUG_DEFINES)
 
+ifeq ($(XEN),2)
+XEN_CFLAGS = -I$(PATH_TO_TOP)/include/xen2 \
+             -I$(PATH_TO_TOP)/include/xen2/public \
+             -I$(PATH_TO_TOP)/include/xen2/private \
+             -DXEN_VER=2
+else
+XEN_CFLAGS = -I$(PATH_TO_TOP)/include/xen3 \
+             -I$(PATH_TO_TOP)/include/xen3/public \
+             -I$(PATH_TO_TOP)/include/xen3/private \
+             -DXEN_VER=3
+endif
+
 COMPILER_INCLUDES = -I$(SRCDIR)/include \
                     -I$(PATH_TO_TOP)/w32api/include \
                     -I$(PATH_TO_TOP)/include \
-                    -I$(PATH_TO_TOP)/ntoskrnl/include \
-                    -I$(PATH_TO_TOP)/include/xen3 \
-                    -I$(PATH_TO_TOP)/include/xen3/public \
-                    -I$(PATH_TO_TOP)/include/xen3/private
+                    -I$(PATH_TO_TOP)/ntoskrnl/include
 
 CFLAGS = $(COMPILER_OPTIONS) \
          $(COMPILER_DEFINES) \
-         $(COMPILER_INCLUDES)
+         $(COMPILER_INCLUDES) \
+         $(XEN_CFLAGS)
 
 LINKER_OPTIONS = -N -Ttext=0x8000
 
@@ -160,6 +172,7 @@ ARCH_I386_OBJS = fathelp.o	\
   xboxrtc.o	\
   xboxvideo.o	\
   xencons.o \
+  xenctrlif.o \
   xenmem.o \
   _alloca.o # For Mingw32 builds
 
