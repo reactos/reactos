@@ -372,6 +372,7 @@ SWAPENTRY MmGetSavedSwapEntryPage(PHYSICAL_ADDRESS PhysicalAddress);
 VOID MmSetCleanPage(struct _EPROCESS* Process, PVOID Address);
 VOID MmLockPage(PHYSICAL_ADDRESS PhysicalPage);
 VOID MmUnlockPage(PHYSICAL_ADDRESS PhysicalPage);
+ULONG MmGetLockCountPage(PHYSICAL_ADDRESS PhysicalPage);
 
 NTSTATUS MmSafeCopyFromUser(PVOID Dest, const VOID *Src, ULONG Count);
 NTSTATUS MmSafeCopyToUser(PVOID Dest, const VOID *Src, ULONG Count);

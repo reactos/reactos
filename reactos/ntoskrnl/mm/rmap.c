@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rmap.c,v 1.24 2003/10/12 17:05:48 hbirr Exp $
+/* $Id: rmap.c,v 1.25 2003/10/22 18:26:34 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -229,7 +229,7 @@ MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
 
   ExAcquireFastMutex(&RmapListLock);
   entry = MmGetRmapListHeadPage(PhysicalAddress);
-  if (entry == NULL)
+  if (entry == NULL || MmGetLockCountPage(PhysicalAddress) != 0)
     {
       ExReleaseFastMutex(&RmapListLock);
       return(STATUS_UNSUCCESSFUL);
@@ -437,8 +437,8 @@ MmInsertRmap(PHYSICAL_ADDRESS PhysicalAddress, PEPROCESS Process,
     {
       DPRINT1("Insert rmap (%d, 0x%.8X) 0x%.8X which doesn't match physical "
 	      "address 0x%.8X\n", Process->UniqueProcessId, Address, 
-	      MmGetPhysicalAddressForProcess(Process, Address), 
-	      PhysicalAddress)
+	      MmGetPhysicalAddressForProcess(Process, Address).u.LowPart, 
+	      PhysicalAddress.u.LowPart)
       KEBUGCHECK(0);
     }
 
