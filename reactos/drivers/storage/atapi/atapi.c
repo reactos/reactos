@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.15 2002/03/22 20:31:26 ekohl Exp $
+/* $Id: atapi.c,v 1.16 2002/03/22 23:05:13 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -1333,6 +1333,7 @@ AtapiSendAtapiCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
   UCHAR ByteCountHigh;
   UCHAR ByteCountLow;
   ULONG Retries;
+  ULONG CdbSize;
   UCHAR Status;
 
   DPRINT("AtapiSendAtapiCommand() called!\n");
@@ -1461,10 +1462,13 @@ AtapiSendAtapiCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
       ScsiPortStallExecution(10);
     }
 
+  CdbSize = (DeviceExtension->DeviceParams[Srb->TargetId].ConfigBits & 0x3 == 1) ? 16 : 12;
+  DPRINT("CdbSize: %lu\n", CdbSize);
+
   /* Write command packet */
   IDEWriteBlock(DeviceExtension->CommandPortBase,
 		(PUSHORT)Srb->Cdb,
-		12);
+		CdbSize);
 
   DeviceExtension->ExpectingInterrupt = TRUE;
 
