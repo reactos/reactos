@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.16 2002/06/07 22:59:42 ekohl Exp $
+/* $Id: token.c,v 1.17 2002/06/17 22:52:32 joeg Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -17,6 +17,7 @@
 #include <internal/se.h>
 #include <internal/safe.h>
 
+#define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -27,6 +28,8 @@ static GENERIC_MAPPING SepTokenMapping = {TOKEN_READ,
 					  TOKEN_WRITE,
 					  TOKEN_EXECUTE,
 					  TOKEN_ALL_ACCESS};
+
+#define SYSTEM_LUID                      0x3E7;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -66,16 +69,253 @@ NTSTATUS SeExchangePrimaryToken(PEPROCESS Process,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS SepDuplicationToken(PACCESS_TOKEN Token,
-			     POBJECT_ATTRIBUTES ObjectAttributes,
-			     TOKEN_TYPE TokenType,
-			     SECURITY_IMPERSONATION_LEVEL Level,
-			     SECURITY_IMPERSONATION_LEVEL ExistingLevel,
-			     KPROCESSOR_MODE PreviousMode,
-			     PACCESS_TOKEN* NewAccessToken)
+
+NTSTATUS
+RtlCopySidAndAttributesArray(ULONG Count,			// ebp + 8
+			     PSID_AND_ATTRIBUTES Src,		// ebp + C
+			     ULONG SidAreaSize,			// ebp + 10
+			     PSID_AND_ATTRIBUTES Dest,		// ebp + 14
+			     PVOID SidArea,			// ebp + 18
+			     PVOID* RemainingSidArea,		// ebp + 1C
+			     PULONG RemainingSidAreaSize)	// ebp + 20
 {
-   UNIMPLEMENTED;
+   ULONG Length; // ebp - 4
+   ULONG i;
+   
+   Length = SidAreaSize;
+   
+   for (i=0; i<Count; i++)
+     {
+	if (RtlLengthSid(Src[i].Sid) > Length)
+	  {
+	     return(STATUS_BUFFER_TOO_SMALL);
+	  }
+	Length = Length - RtlLengthSid(Src[i].Sid);
+	Dest[i].Sid = SidArea;
+	Dest[i].Attributes = Src[i].Attributes;
+	RtlCopySid(RtlLengthSid(Src[i].Sid), SidArea, Src[i].Sid);
+	SidArea = SidArea + RtlLengthSid(Src[i].Sid);
+     }
+   *RemainingSidArea = SidArea;
+   *RemainingSidAreaSize = Length;
+   return(STATUS_SUCCESS);
 }
+
+
+static ULONG
+RtlLengthSidAndAttributes(ULONG Count,
+			  PSID_AND_ATTRIBUTES Src)
+{
+  ULONG i;
+  ULONG uLength;
+
+  uLength = Count * sizeof(SID_AND_ATTRIBUTES);
+  for (i = 0; i < Count; i++)
+    uLength += RtlLengthSid(Src[i].Sid);
+
+  return(uLength);
+}
+
+
+NTSTATUS
+SepFindPrimaryGroupAndDefaultOwner(PACCESS_TOKEN Token,
+				   PSID PrimaryGroup,
+				   PSID DefaultOwner)
+{
+  ULONG i;
+
+  Token->PrimaryGroup = 0;
+
+  if (DefaultOwner)
+    {
+      Token->DefaultOwnerIndex = Token->UserAndGroupCount;
+    }
+
+  /* Validate and set the primary group and user pointers */
+  for (i = 0; i < Token->UserAndGroupCount; i++)
+    {
+      if (DefaultOwner &&
+	  RtlEqualSid(Token->UserAndGroups[i].Sid, DefaultOwner))
+	{
+	  Token->DefaultOwnerIndex = i;
+	}
+
+      if (RtlEqualSid(Token->UserAndGroups[i].Sid, PrimaryGroup))
+	{
+	  Token->PrimaryGroup = Token->UserAndGroups[i].Sid;
+	}
+    }
+
+  if (Token->DefaultOwnerIndex == Token->UserAndGroupCount)
+    {
+      return(STATUS_INVALID_OWNER);
+    }
+
+  if (Token->PrimaryGroup == 0)
+    {
+      return(STATUS_INVALID_PRIMARY_GROUP);
+    }
+
+  return(STATUS_SUCCESS);
+}
+
+
+NTSTATUS
+SepDuplicateToken(PACCESS_TOKEN Token,
+		  POBJECT_ATTRIBUTES ObjectAttributes,
+		  TOKEN_TYPE TokenType,
+		  SECURITY_IMPERSONATION_LEVEL Level,
+		  SECURITY_IMPERSONATION_LEVEL ExistingLevel,
+		  KPROCESSOR_MODE PreviousMode,
+		  PACCESS_TOKEN* NewAccessToken)
+{
+  NTSTATUS Status;
+  ULONG uLength;
+  ULONG i;
+  
+  PVOID EndMem;
+
+  PACCESS_TOKEN AccessToken;
+
+  Status = ObCreateObject(0,
+			  TOKEN_ALL_ACCESS,
+			  ObjectAttributes,
+			  SepTokenObjectType,
+			  (PVOID*)&AccessToken);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("ObCreateObject() failed (Status %lx)\n");
+      return(Status);
+    }
+
+  Status = ZwAllocateLocallyUniqueId(&AccessToken->TokenId);
+  if (!NT_SUCCESS(Status))
+    {
+      ObDereferenceObject(AccessToken);
+      return(Status);
+    }
+
+  Status = ZwAllocateLocallyUniqueId(&AccessToken->ModifiedId);
+  if (!NT_SUCCESS(Status))
+    {
+      ObDereferenceObject(AccessToken);
+      return(Status);
+    }
+
+  AccessToken->TokenInUse = 0;
+  AccessToken->TokenType  = TokenType;
+  AccessToken->ImpersonationLevel = Level;
+  AccessToken->AuthenticationId.QuadPart = SYSTEM_LUID;
+
+  AccessToken->TokenSource.SourceIdentifier.QuadPart = Token->TokenSource.SourceIdentifier.QuadPart;
+  memcpy(AccessToken->TokenSource.SourceName, Token->TokenSource.SourceName, sizeof(Token->TokenSource.SourceName));
+  AccessToken->ExpirationTime.QuadPart = Token->ExpirationTime.QuadPart;
+  AccessToken->UserAndGroupCount = Token->UserAndGroupCount;
+  AccessToken->DefaultOwnerIndex = Token->DefaultOwnerIndex;
+
+  uLength = sizeof(SID_AND_ATTRIBUTES) * AccessToken->UserAndGroupCount;
+  for (i = 0; i < Token->UserAndGroupCount; i++)
+    uLength += RtlLengthSid(Token->UserAndGroups[i].Sid);
+
+  AccessToken->UserAndGroups = 
+    (PSID_AND_ATTRIBUTES)ExAllocatePoolWithTag(NonPagedPool,
+					       uLength,
+					       TAG('T', 'O', 'K', 'u'));
+
+  EndMem = &AccessToken->UserAndGroups[AccessToken->UserAndGroupCount];
+
+  Status = RtlCopySidAndAttributesArray(AccessToken->UserAndGroupCount,
+					Token->UserAndGroups,
+					uLength,
+					AccessToken->UserAndGroups,
+					EndMem,
+					&EndMem,
+					&uLength);
+  if (NT_SUCCESS(Status))
+    {
+      Status = SepFindPrimaryGroupAndDefaultOwner(
+	AccessToken,
+	Token->PrimaryGroup,
+	0);
+    }
+
+  if (NT_SUCCESS(Status))
+    {
+      AccessToken->PrivilegeCount = Token->PrivilegeCount;
+
+      uLength = AccessToken->PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES);
+      AccessToken->Privileges =
+	(PLUID_AND_ATTRIBUTES)ExAllocatePoolWithTag(NonPagedPool,
+						    uLength,
+						    TAG('T', 'O', 'K', 'p'));
+
+      for (i = 0; i < AccessToken->PrivilegeCount; i++)
+	{
+	  RtlCopyLuid(&AccessToken->Privileges[i].Luid,
+	    &Token->Privileges[i].Luid);
+	  AccessToken->Privileges[i].Attributes = 
+	    Token->Privileges[i].Attributes;
+	}
+
+      if ( Token->DefaultDacl )
+	{
+	  AccessToken->DefaultDacl =
+	    (PACL) ExAllocatePoolWithTag(NonPagedPool,
+					 Token->DefaultDacl->AclSize,
+					 TAG('T', 'O', 'K', 'd'));
+	  memcpy(AccessToken->DefaultDacl,
+		 Token->DefaultDacl,
+		 Token->DefaultDacl->AclSize);
+	}
+      else
+	{
+	  AccessToken->DefaultDacl = 0;
+	}
+    }
+
+  if ( NT_SUCCESS(Status) )
+    {
+      *NewAccessToken = AccessToken;
+      return(STATUS_SUCCESS);
+    }
+
+  ObDereferenceObject(AccessToken);
+  return(Status);
+}
+
+
+NTSTATUS
+SepInitializeNewProcess(struct _EPROCESS* NewProcess,
+			struct _EPROCESS* ParentProcess)
+{
+  NTSTATUS Status;
+  PACCESS_TOKEN pNewToken;
+  PACCESS_TOKEN pParentToken;
+  
+  OBJECT_ATTRIBUTES ObjectAttributes;
+
+  pParentToken = (PACCESS_TOKEN) ParentProcess->Token;
+
+  InitializeObjectAttributes(&ObjectAttributes,
+			    NULL,
+			    0,
+			    NULL,
+			    NULL);
+
+  Status = SepDuplicateToken(pParentToken,
+			     &ObjectAttributes,
+			     TokenPrimary,
+			     pParentToken->ImpersonationLevel,
+			     pParentToken->ImpersonationLevel,
+			     KernelMode,
+			     &pNewToken);
+  if ( ! NT_SUCCESS(Status) )
+    return Status;
+
+  NewProcess->Token = pNewToken;
+  return(STATUS_SUCCESS);
+}
+
 
 NTSTATUS SeCopyClientToken(PACCESS_TOKEN Token,
 			   SECURITY_IMPERSONATION_LEVEL Level,
@@ -90,7 +330,7 @@ NTSTATUS SeCopyClientToken(PACCESS_TOKEN Token,
 			      0,
 			      NULL,
 			      NULL);
-   Status = SepDuplicationToken(Token,
+   Status = SepDuplicateToken(Token,
 				&ObjectAttributes,
 				0,
 				SecurityIdentification,
@@ -261,53 +501,6 @@ SepInitializeTokenImplementation(VOID)
 }
 
 
-NTSTATUS
-RtlCopySidAndAttributesArray(ULONG Count,			// ebp + 8
-			     PSID_AND_ATTRIBUTES Src,		// ebp + C
-			     ULONG SidAreaSize,			// ebp + 10
-			     PSID_AND_ATTRIBUTES Dest,		// ebp + 14
-			     PVOID SidArea,			// ebp + 18
-			     PVOID* RemainingSidArea,		// ebp + 1C
-			     PULONG RemainingSidAreaSize)	// ebp + 20
-{
-   ULONG Length; // ebp - 4
-   ULONG i;
-   
-   Length = SidAreaSize;
-   
-   for (i=0; i<Count; i++)
-     {
-	if (RtlLengthSid(Src[i].Sid) > Length)
-	  {
-	     return(STATUS_BUFFER_TOO_SMALL);
-	  }
-	Length = Length - RtlLengthSid(Src[i].Sid);
-	Dest[i].Sid = SidArea;
-	Dest[i].Attributes = Src[i].Attributes;
-	RtlCopySid(RtlLengthSid(Src[i].Sid), SidArea, Src[i].Sid);
-	SidArea = SidArea + RtlLengthSid(Src[i].Sid);
-     }
-   *RemainingSidArea = SidArea;
-   *RemainingSidAreaSize = Length;
-   return(STATUS_SUCCESS);
-}
-
-
-static ULONG
-RtlLengthSidAndAttributes(ULONG Count,
-			  PSID_AND_ATTRIBUTES Src)
-{
-  ULONG i;
-  ULONG uLength;
-
-  uLength = Count * sizeof(SID_AND_ATTRIBUTES);
-  for (i = 0; i < Count; i++)
-    uLength += RtlLengthSid(Src[i].Sid);
-
-  return(uLength);
-}
-
-
 NTSTATUS STDCALL
 NtQueryInformationToken(IN HANDLE TokenHandle,
 			IN TOKEN_INFORMATION_CLASS TokenInformationClass,
@@ -338,6 +531,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
   switch (TokenInformationClass)
     {
       case TokenUser:
+        DPRINT("NtQueryInformationToken(TokenUser)\n");
 	uLength = RtlLengthSidAndAttributes(1, Token->UserAndGroups);
 	if (TokenInformationLength < uLength)
 	  {
@@ -363,6 +557,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 	break;
 	
       case TokenGroups:
+        DPRINT("NtQueryInformationToken(TokenGroups)\n");
 	uLength = RtlLengthSidAndAttributes(Token->UserAndGroupCount - 1, &Token->UserAndGroups[1]) + sizeof(DWORD);
 	if (TokenInformationLength < uLength)
 	  {
@@ -391,6 +586,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 	break;
 
       case TokenPrivileges:
+        DPRINT("NtQueryInformationToken(TokenPrivileges)\n");
 	uLength = sizeof(DWORD) + Token->PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES);
 	if (TokenInformationLength < uLength)
 	  {
@@ -414,6 +610,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 	break;
 
       case TokenOwner:
+        DPRINT("NtQueryInformationToken(TokenOwner)\n");
 	uLength = RtlLengthSid(Token->UserAndGroups[Token->DefaultOwnerIndex].Sid) + sizeof(TOKEN_OWNER);
 	if (TokenInformationLength < uLength)
 	  {
@@ -433,6 +630,8 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 	break;
 
       case TokenPrimaryGroup:
+        DPRINT("NtQueryInformationToken(TokenPrimaryGroup),"
+	       "Token->PrimaryGroup = 0x%08x\n", Token->PrimaryGroup);
 	uLength = RtlLengthSid(Token->PrimaryGroup) + sizeof(TOKEN_PRIMARY_GROUP);
 	if (TokenInformationLength < uLength)
 	  {
@@ -452,6 +651,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 	break;
 
       case TokenDefaultDacl:
+        DPRINT("NtQueryInformationToken(TokenDefaultDacl)\n");
 	PtrDefaultDacl = (PTOKEN_DEFAULT_DACL) TokenInformation;
 	uLength = (Token->DefaultDacl ? Token->DefaultDacl->AclSize : 0) + sizeof(TOKEN_DEFAULT_DACL);
 	if (TokenInformationLength < uLength)
@@ -476,6 +676,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 	break;
 
       case TokenSource:
+        DPRINT("NtQueryInformationToken(TokenSource)\n");
 	if (TokenInformationLength < sizeof(TOKEN_SOURCE))
 	  {
 	    uLength = sizeof(TOKEN_SOURCE);
@@ -490,6 +691,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 	break;
 
       case TokenType:
+        DPRINT("NtQueryInformationToken(TokenType)\n");
 	if (TokenInformationLength < sizeof(TOKEN_TYPE))
 	  {
 	    uLength = sizeof(TOKEN_TYPE);
@@ -504,6 +706,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 	break;
 
       case TokenImpersonationLevel:
+        DPRINT("NtQueryInformationToken(TokenImpersonationLevel)\n");
 	if (TokenInformationLength < sizeof(SECURITY_IMPERSONATION_LEVEL))
 	  {
 	    uLength = sizeof(SECURITY_IMPERSONATION_LEVEL);
@@ -518,6 +721,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 	break;
 
       case TokenStatistics:
+        DPRINT("NtQueryInformationToken(TokenStatistics)\n");
 	if (TokenInformationLength < sizeof(TOKEN_STATISTICS))
 	  {
 	    uLength = sizeof(TOKEN_STATISTICS);
@@ -575,7 +779,7 @@ NtDuplicateToken(IN HANDLE ExistingTokenHandle,
    ULONG ExistingImpersonationLevel;
    
    Status = ObReferenceObjectByHandle(ExistingTokenHandle,
-				      ?,
+				      TOKEN_DUPLICATE,
 				      SepTokenObjectType,
 				      UserMode,
 				      (PVOID*)&Token,
@@ -745,6 +949,196 @@ NtAdjustPrivilegesToken(IN HANDLE TokenHandle,
 }
 
 
+NTSTATUS
+SepCreateSystemProcessToken(struct _EPROCESS* Process)
+{
+  NTSTATUS Status;
+  ULONG uSize;
+  ULONG i;
+
+  ULONG uLocalSystemLength = RtlLengthSid(SeLocalSystemSid);
+  ULONG uWorldLength       = RtlLengthSid(SeWorldSid);
+  ULONG uAuthUserLength    = RtlLengthSid(SeAuthenticatedUserSid);
+  ULONG uAdminsLength      = RtlLengthSid(SeAliasAdminsSid);
+
+  PACCESS_TOKEN AccessToken;
+
+  PVOID SidArea;
+
+ /*
+  * Initialize the token
+  */
+  Status = ObCreateObject(NULL,
+			 TOKEN_ALL_ACCESS,
+			 NULL,
+			 SepTokenObjectType,
+			 (PVOID*)&AccessToken);
+
+  Status = ZwAllocateLocallyUniqueId(&AccessToken->TokenId);
+  if (!NT_SUCCESS(Status))
+    {
+      ObDereferenceObject(AccessToken);
+      return(Status);
+    }
+
+  Status = ZwAllocateLocallyUniqueId(&AccessToken->ModifiedId);
+  if (!NT_SUCCESS(Status))
+    {
+      ObDereferenceObject(AccessToken);
+      return(Status);
+    }
+
+  AccessToken->AuthenticationId.QuadPart = SYSTEM_LUID;
+
+  AccessToken->TokenType = TokenPrimary;
+  AccessToken->ImpersonationLevel = SecurityDelegation;
+  AccessToken->TokenSource.SourceIdentifier.QuadPart = 0;
+  memcpy(AccessToken->TokenSource.SourceName, "SeMgr\0\0\0", 8);
+  AccessToken->ExpirationTime.QuadPart = -1;
+  AccessToken->UserAndGroupCount = 4;
+
+  uSize = sizeof(SID_AND_ATTRIBUTES) * AccessToken->UserAndGroupCount;
+  uSize += uLocalSystemLength;
+  uSize += uWorldLength;
+  uSize += uAuthUserLength;
+  uSize += uAdminsLength;
+
+  AccessToken->UserAndGroups = 
+    (PSID_AND_ATTRIBUTES)ExAllocatePoolWithTag(NonPagedPool,
+					       uSize,
+					       TAG('T', 'O', 'K', 'u'));
+  SidArea = &AccessToken->UserAndGroups[AccessToken->UserAndGroupCount];
+
+  i = 0;
+  AccessToken->UserAndGroups[i].Sid = (PSID) SidArea;
+  AccessToken->UserAndGroups[i++].Attributes = 0;
+  RtlCopySid(uLocalSystemLength, SidArea, SeLocalSystemSid);
+  SidArea += uLocalSystemLength;
+
+  AccessToken->DefaultOwnerIndex = i;
+  AccessToken->UserAndGroups[i].Sid = (PSID) SidArea;
+  AccessToken->PrimaryGroup = (PSID) SidArea;
+  AccessToken->UserAndGroups[i++].Attributes = SE_GROUP_ENABLED|SE_GROUP_ENABLED_BY_DEFAULT;
+  Status = RtlCopySid(uAdminsLength, SidArea, SeAliasAdminsSid);
+  SidArea += uAdminsLength;
+
+  AccessToken->UserAndGroups[i].Sid = (PSID) SidArea;
+  AccessToken->UserAndGroups[i++].Attributes = SE_GROUP_ENABLED|SE_GROUP_ENABLED_BY_DEFAULT|SE_GROUP_MANDATORY;
+  RtlCopySid(uWorldLength, SidArea, SeWorldSid);
+  SidArea += uWorldLength;
+
+  AccessToken->UserAndGroups[i].Sid = (PSID) SidArea;
+  AccessToken->UserAndGroups[i++].Attributes = SE_GROUP_ENABLED|SE_GROUP_ENABLED_BY_DEFAULT|SE_GROUP_MANDATORY;
+  RtlCopySid(uAuthUserLength, SidArea, SeAuthenticatedUserSid);
+  SidArea += uAuthUserLength;
+
+  AccessToken->PrivilegeCount = 20;
+
+  uSize = AccessToken->PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES);
+  AccessToken->Privileges =
+	(PLUID_AND_ATTRIBUTES)ExAllocatePoolWithTag(NonPagedPool,
+						    uSize,
+						    TAG('T', 'O', 'K', 'p'));
+
+  i = 0;
+  AccessToken->Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
+  AccessToken->Privileges[i++].Luid = SeTcbPrivilege;
+
+  AccessToken->Privileges[i].Attributes = 0;
+  AccessToken->Privileges[i++].Luid = SeCreateTokenPrivilege;
+
+  AccessToken->Privileges[i].Attributes = 0;
+  AccessToken->Privileges[i++].Luid = SeTakeOwnershipPrivilege;
+  
+  AccessToken->Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
+  AccessToken->Privileges[i++].Luid = SeCreatePagefilePrivilege;
+  
+  AccessToken->Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
+  AccessToken->Privileges[i++].Luid = SeLockMemoryPrivilege;
+  
+  AccessToken->Privileges[i].Attributes = 0;
+  AccessToken->Privileges[i++].Luid = SeAssignPrimaryTokenPrivilege;
+  
+  AccessToken->Privileges[i].Attributes = 0;
+  AccessToken->Privileges[i++].Luid = SeIncreaseQuotaPrivilege;
+  
+  AccessToken->Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
+  AccessToken->Privileges[i++].Luid = SeIncreaseBasePriorityPrivilege;
+  
+  AccessToken->Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
+  AccessToken->Privileges[i++].Luid = SeCreatePermanentPrivilege;
+  
+  AccessToken->Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
+  AccessToken->Privileges[i++].Luid = SeDebugPrivilege;
+  
+  AccessToken->Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
+  AccessToken->Privileges[i++].Luid = SeAuditPrivilege;
+  
+  AccessToken->Privileges[i].Attributes = 0;
+  AccessToken->Privileges[i++].Luid = SeSecurityPrivilege;
+  
+  AccessToken->Privileges[i].Attributes = 0;
+  AccessToken->Privileges[i++].Luid = SeSystemEnvironmentPrivilege;
+  
+  AccessToken->Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
+  AccessToken->Privileges[i++].Luid = SeChangeNotifyPrivilege;
+  
+  AccessToken->Privileges[i].Attributes = 0;
+  AccessToken->Privileges[i++].Luid = SeBackupPrivilege;
+  
+  AccessToken->Privileges[i].Attributes = 0;
+  AccessToken->Privileges[i++].Luid = SeRestorePrivilege;
+  
+  AccessToken->Privileges[i].Attributes = 0;
+  AccessToken->Privileges[i++].Luid = SeShutdownPrivilege;
+  
+  AccessToken->Privileges[i].Attributes = 0;
+  AccessToken->Privileges[i++].Luid = SeLoadDriverPrivilege;
+  
+  AccessToken->Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
+  AccessToken->Privileges[i++].Luid = SeProfileSingleProcessPrivilege;
+  
+  AccessToken->Privileges[i].Attributes = 0;
+  AccessToken->Privileges[i++].Luid = SeSystemtimePrivilege;
+#if 0
+  AccessToken->Privileges[i].Attributes = 0;
+  AccessToken->Privileges[i++].Luid = SeUndockPrivilege;
+
+  AccessToken->Privileges[i].Attributes = 0;
+  AccessToken->Privileges[i++].Luid = SeManageVolumePrivilege;
+#endif
+
+  assert( i == 20 );
+
+  uSize = sizeof(ACL);
+  uSize += sizeof(ACE_HEADER) + uLocalSystemLength;
+  uSize += sizeof(ACE_HEADER) + uAdminsLength;
+  uSize = (uSize & (~3)) + 8;
+  AccessToken->DefaultDacl =
+    (PACL) ExAllocatePoolWithTag(NonPagedPool,
+				 uSize,
+				 TAG('T', 'O', 'K', 'd'));
+  Status = RtlCreateAcl(AccessToken->DefaultDacl, uSize, ACL_REVISION);
+  if ( NT_SUCCESS(Status) )
+    {
+      Status = RtlAddAccessAllowedAce(AccessToken->DefaultDacl, ACL_REVISION, GENERIC_ALL, SeLocalSystemSid);
+    }
+
+  if ( NT_SUCCESS(Status) )
+    {
+      Status = RtlAddAccessAllowedAce(AccessToken->DefaultDacl, ACL_REVISION, GENERIC_READ|GENERIC_EXECUTE|READ_CONTROL, SeAliasAdminsSid);
+    }
+
+  if ( ! NT_SUCCESS(Status) )
+    {
+      ObDereferenceObject(AccessToken);
+      return Status;
+    }
+
+  Process->Token = AccessToken;
+  return(STATUS_SUCCESS);
+}
+
 NTSTATUS STDCALL
 NtCreateToken(OUT PHANDLE UnsafeTokenHandle,
 	      IN ACCESS_MASK DesiredAccess,
@@ -815,6 +1209,7 @@ NtCreateToken(OUT PHANDLE UnsafeTokenHandle,
   AccessToken->Privileges        = 0;
 
   AccessToken->TokenType = TokenType;
+  AccessToken->ImpersonationLevel = ObjectAttributes->SecurityQualityOfService->ImpersonationLevel;
 
   /*
    * Normally we would just point these members into the variable information
@@ -854,24 +1249,10 @@ NtCreateToken(OUT PHANDLE UnsafeTokenHandle,
 
   if (NT_SUCCESS(Status))
     {
-      AccessToken->DefaultOwnerIndex = AccessToken->UserAndGroupCount;
-      AccessToken->PrimaryGroup = 0;
-
-      /* Validate and set the primary group and user pointers */
-      for (i = 0; i < AccessToken->UserAndGroupCount; i++)
-	{
-	  if (RtlEqualSid(AccessToken->UserAndGroups[i].Sid, TokenOwner->Owner))
-	    AccessToken->DefaultOwnerIndex = i;
-
-	  if (RtlEqualSid(AccessToken->UserAndGroups[i].Sid, TokenPrimaryGroup->PrimaryGroup))
-	    AccessToken->PrimaryGroup = AccessToken->UserAndGroups[i].Sid;
-	}
-
-      if (AccessToken->DefaultOwnerIndex == AccessToken->UserAndGroupCount)
-	Status = STATUS_INVALID_OWNER;
-
-      if (AccessToken->PrimaryGroup == 0)
-	Status = STATUS_INVALID_PRIMARY_GROUP;
+      Status = SepFindPrimaryGroupAndDefaultOwner(
+	AccessToken, 
+	TokenPrimaryGroup->PrimaryGroup,
+	TokenOwner->Owner);
     }
 
   if (NT_SUCCESS(Status))

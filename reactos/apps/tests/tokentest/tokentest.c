@@ -485,17 +485,23 @@ CreateInitialSystemToken(HANDLE* phSystemToken)
 int
 main(int argc, char** argv[])
 {
-	NTSTATUS status;
+	NTSTATUS Status;
 	HANDLE hSystemToken;
 	CHAR buffer[512];
 
-//#define DUMP_THIS_PROCESS
-#ifdef DUMP_THIS_PROCESS
+        printf("Current process Token:\n");
+
 	HANDLE hOurToken;
-	OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY|TOKEN_QUERY_SOURCE, &hOurToken);
-	DisplayToken(hOurToken);
-	CloseHandle(hOurToken);
-#endif
+        Status=ZwOpenProcessToken(GetCurrentProcess(), TOKEN_QUERY|TOKEN_QUERY_SOURCE, &hOurToken);
+	if ( NT_SUCCESS(Status) )
+	{
+	  DisplayToken(hOurToken);
+	  CloseHandle(hOurToken);
+	}
+	else
+	{
+	  printf("ZwOpenProcessToken() failed: 0x%08x\n", Status);
+	}
 
 //#define ENABLE_PRIVILEGE
 #ifdef ENABLE_PRIVILEGE
@@ -503,8 +509,8 @@ main(int argc, char** argv[])
 #endif
 
 	// Now do the other one
-	status = CreateInitialSystemToken(&hSystemToken);
-	if ( NT_SUCCESS(status) )
+	Status = CreateInitialSystemToken(&hSystemToken);
+	if ( NT_SUCCESS(Status) )
 	{
 		printf("System Token: 0x%08x\n", hSystemToken);
 		DisplayToken(hSystemToken);
@@ -512,7 +518,7 @@ main(int argc, char** argv[])
 	}
 	else
 	{
-		printf("CreateInitialSystemToken() return: 0x%08x\n", status);
+		printf("CreateInitialSystemToken() return: 0x%08x\n", Status);
 	}
 
 	printf("press return");

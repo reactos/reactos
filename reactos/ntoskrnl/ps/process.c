@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.82 2002/06/17 22:16:34 joeg Exp $
+/* $Id: process.c,v 1.83 2002/06/17 22:52:31 joeg Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -26,6 +26,7 @@
 #include <internal/dbg.h>
 #include <internal/pool.h>
 #include <roscfg.h>
+#include <internal/se.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -267,6 +268,8 @@ PsInitProcessManagment(VOID)
    
    strcpy(PsInitialSystemProcess->ImageFileName, "SYSTEM");
 
+   SepCreateSystemProcessToken(PsInitialSystemProcess);
+
    ObCreateHandle(PsInitialSystemProcess,
 		  PsInitialSystemProcess,
 		  PROCESS_ALL_ACCESS,
@@ -332,6 +335,9 @@ PiDeleteProcess(PVOID ObjectBody)
 #ifdef KDBG
    PiFreeSymbols(Process->Peb);
 #endif /* KDBG */
+
+
+   ObDereferenceObject(Process->Token);
 
    (VOID)MmReleaseMmInfo(Process);
    ObDeleteHandleTable(Process);
@@ -657,6 +663,18 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 	ImageBase = NULL;
      }
    
+  /*
+   * Duplicate the token
+   */
+  Status = SepInitializeNewProcess(Process, ParentProcess);
+  if (!NT_SUCCESS(Status))
+    {
+       DbgPrint("SepInitializeNewProcess failed (Status %x)\n", Status);
+       ObDereferenceObject(Process);
+       ObDereferenceObject(ParentProcess);
+       return(Status);
+    }
+
    /*
     * 
     */
