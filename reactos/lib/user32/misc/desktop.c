@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.30 2004/02/28 03:02:08 rcampbell Exp $
+/* $Id: desktop.c,v 1.31 2004/03/07 11:59:43 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -89,28 +89,6 @@ SystemParametersInfoA(UINT uiAction,
 }
 
 
-BOOL IntGetFontMetricSetting(LPCWSTR lpKey, PLOGFONTW font) 
-{ 
-     HKEY hKey; 
-     DWORD dwType = REG_BINARY; 
-     DWORD dwSize = sizeof(LOGFONTW); 
-	 BOOL bRet = FALSE;
-	 if ( RegOpenKeyExW(HKEY_CURRENT_USER, L"Control Panel\\Desktop\\WindowMetrics", 0, KEY_ALL_ACCESS, &hKey) == ERROR_SUCCESS ) 
-     { 
-          if ( RegQueryValueExW(hKey, lpKey, NULL, &dwType, (LPBYTE)font, &dwSize) == ERROR_SUCCESS )
-              bRet = TRUE;
-              
-          if (font->lfHeight < 0)
-          {
-            DbgPrint("WARNING! WARNING! WARNING! Ugly hack alert:  ROS doesn't handle pixel sizes for fonts correctly.  As a result we must convert to point sizes.\n");
-            font->lfHeight = abs(font->lfHeight);
-          }
-	 } 
-		  
-     RegCloseKey(hKey);
-     return bRet;
-}
-
 /*
  * @implemented
  */
@@ -120,59 +98,7 @@ SystemParametersInfoW(UINT uiAction,
 		      PVOID pvParam,
 		      UINT fWinIni)
 {
-  static LOGFONTW IconFont;
-  static NONCLIENTMETRICSW pMetrics;
-  static BOOL bInitialized = FALSE;
-  
-  if (!bInitialized)
-  {
-    ZeroMemory(&IconFont, sizeof(LOGFONTW)); 
-    ZeroMemory(&pMetrics, sizeof(NONCLIENTMETRICSW));
-    
-    IntGetFontMetricSetting(L"CaptionFont", &pMetrics.lfCaptionFont);
-    IntGetFontMetricSetting(L"SmCaptionFont", &pMetrics.lfSmCaptionFont);
-    IntGetFontMetricSetting(L"MenuFont", &pMetrics.lfMenuFont);
-    IntGetFontMetricSetting(L"StatusFont", &pMetrics.lfStatusFont);
-    IntGetFontMetricSetting(L"MessageFont", &pMetrics.lfMessageFont);
-    IntGetFontMetricSetting(L"IconFont", &IconFont);
-    
-    pMetrics.iBorderWidth = 1;
-    pMetrics.iScrollWidth = NtUserGetSystemMetrics(SM_CXVSCROLL);
-    pMetrics.iScrollHeight = NtUserGetSystemMetrics(SM_CYHSCROLL);
-    pMetrics.iCaptionWidth = NtUserGetSystemMetrics(SM_CXSIZE);
-    pMetrics.iCaptionHeight = NtUserGetSystemMetrics(SM_CYSIZE);
-    pMetrics.iSmCaptionWidth = NtUserGetSystemMetrics(SM_CXSMSIZE);
-    pMetrics.iSmCaptionHeight = NtUserGetSystemMetrics(SM_CYSMSIZE);
-    pMetrics.iMenuWidth = NtUserGetSystemMetrics(SM_CXMENUSIZE);
-    pMetrics.iMenuHeight = NtUserGetSystemMetrics(SM_CYMENUSIZE);
-    pMetrics.cbSize = sizeof(LPNONCLIENTMETRICSW);
-    
-    bInitialized = TRUE;
-  }
-  switch(uiAction)
-  {
-    
-    case SPI_GETICONTITLELOGFONT:
-    {
-        memcpy(pvParam, (PVOID)&IconFont, sizeof(LOGFONTW));
-        return TRUE;
-    } 
-    case SPI_GETNONCLIENTMETRICS:
-    {
-        /* FIXME:  Is this windows default behavior? */
-        LPNONCLIENTMETRICSW lpMetrics = (LPNONCLIENTMETRICSW)pvParam;
-        if ( lpMetrics->cbSize != sizeof(NONCLIENTMETRICSW) || 
-             uiParam != sizeof(NONCLIENTMETRICSW ))
-        {
-            return FALSE;
-        }
-        DbgPrint("FontName: %S, Size:  %i\n",pMetrics.lfMessageFont.lfFaceName, pMetrics.lfMessageFont.lfHeight);
-        memcpy(pvParam, (PVOID)&pMetrics, sizeof(NONCLIENTMETRICSW));
-        return TRUE;
-    }
-    default:
-      return NtUserSystemParametersInfo(uiAction, uiParam, pvParam, fWinIni);
-  }
+  return NtUserSystemParametersInfo(uiAction, uiParam, pvParam, fWinIni);
 }
 
 

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.35 2004/02/16 01:30:38 rcampbell Exp $
+# $Id: Makefile,v 1.36 2004/03/07 11:59:43 navaraf Exp $
 
 PATH_TO_TOP = ../..
 
@@ -8,7 +8,7 @@ TARGET_NAME = user32
 
 TARGET_BASE = 0x77e70000
 
-TARGET_SDKLIBS = libwine.a ntdll.a kernel32.a gdi32.a rosrtl.a advapi32.a
+TARGET_SDKLIBS = libwine.a ntdll.a kernel32.a gdi32.a rosrtl.a
 
 TARGET_CFLAGS = \
  -I./include \

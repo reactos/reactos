@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.53 2004/02/19 21:12:09 weiden Exp $
+/* $Id: misc.c,v 1.54 2004/03/07 11:59:43 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -442,6 +442,36 @@ NtUserGetThreadState(
    return 0;
 }
 
+VOID FASTCALL
+IntGetFontMetricSetting(LPWSTR lpValueName, PLOGFONTW font) 
+{ 
+   RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+   NTSTATUS Status;
+   static LOGFONTW DefaultFont = {
+      11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+      0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS,
+      L"Bitstream Vera Sans"
+   };
+
+   RtlZeroMemory(&QueryTable, sizeof(QueryTable));
+
+   QueryTable[0].Name = lpValueName;
+   QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
+   QueryTable[0].EntryContext = font;
+
+   Status = RtlQueryRegistryValues(
+      RTL_REGISTRY_USER,
+      L"Control Panel\\Desktop\\WindowMetrics",
+      QueryTable,
+      NULL,
+      NULL);
+
+   if (!NT_SUCCESS(Status))
+   {
+      RtlCopyMemory(font, &DefaultFont, sizeof(LOGFONTW));
+   }
+}
+
 /*
  * @implemented
  */
@@ -456,7 +486,37 @@ NtUserSystemParametersInfo(
   static BOOL GradientCaptions = TRUE;
   NTSTATUS Status;
   PWINSTATION_OBJECT WinStaObject;
+
+  static BOOL bInitialized = FALSE;
+  static LOGFONTW IconFont;
+  static NONCLIENTMETRICSW pMetrics;
   
+  if (!bInitialized)
+  {
+    ZeroMemory(&IconFont, sizeof(LOGFONTW)); 
+    ZeroMemory(&pMetrics, sizeof(NONCLIENTMETRICSW));
+    
+    IntGetFontMetricSetting(L"CaptionFont", &pMetrics.lfCaptionFont);
+    IntGetFontMetricSetting(L"SmCaptionFont", &pMetrics.lfSmCaptionFont);
+    IntGetFontMetricSetting(L"MenuFont", &pMetrics.lfMenuFont);
+    IntGetFontMetricSetting(L"StatusFont", &pMetrics.lfStatusFont);
+    IntGetFontMetricSetting(L"MessageFont", &pMetrics.lfMessageFont);
+    IntGetFontMetricSetting(L"IconFont", &IconFont);
+    
+    pMetrics.iBorderWidth = 1;
+    pMetrics.iScrollWidth = NtUserGetSystemMetrics(SM_CXVSCROLL);
+    pMetrics.iScrollHeight = NtUserGetSystemMetrics(SM_CYHSCROLL);
+    pMetrics.iCaptionWidth = NtUserGetSystemMetrics(SM_CXSIZE);
+    pMetrics.iCaptionHeight = NtUserGetSystemMetrics(SM_CYSIZE);
+    pMetrics.iSmCaptionWidth = NtUserGetSystemMetrics(SM_CXSMSIZE);
+    pMetrics.iSmCaptionHeight = NtUserGetSystemMetrics(SM_CYSMSIZE);
+    pMetrics.iMenuWidth = NtUserGetSystemMetrics(SM_CXMENUSIZE);
+    pMetrics.iMenuHeight = NtUserGetSystemMetrics(SM_CYMENUSIZE);
+    pMetrics.cbSize = sizeof(LPNONCLIENTMETRICSW);
+    
+    bInitialized = TRUE;
+  }
+
   switch(uiAction)
   {
     case SPI_SETDOUBLECLKWIDTH:
@@ -594,6 +654,24 @@ NtUserSystemParametersInfo(
         }
         return TRUE;
       }
+    case SPI_GETICONTITLELOGFONT:
+    {
+        MmCopyToCaller(pvParam, (PVOID)&IconFont, sizeof(LOGFONTW));
+        return TRUE;
+    } 
+    case SPI_GETNONCLIENTMETRICS:
+    {
+        /* FIXME:  Is this windows default behavior? */
+        LPNONCLIENTMETRICSW lpMetrics = (LPNONCLIENTMETRICSW)pvParam;
+        if ( lpMetrics->cbSize != sizeof(NONCLIENTMETRICSW) || 
+             uiParam != sizeof(NONCLIENTMETRICSW ))
+        {
+            return FALSE;
+        }
+        DPRINT("FontName: %S, Size:  %i\n",pMetrics.lfMessageFont.lfFaceName, pMetrics.lfMessageFont.lfHeight);
+        MmCopyToCaller(pvParam, (PVOID)&pMetrics, sizeof(NONCLIENTMETRICSW));
+        return TRUE;
+    }
   }
   return FALSE;
 }
