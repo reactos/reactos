@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.69 2003/09/25 20:07:46 ekohl Exp $
+/* $Id: object.c,v 1.70 2003/10/04 20:26:45 ekohl Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -343,8 +343,8 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
 
   assert_irql(APC_LEVEL);
 
-  DPRINT("ObCreateObject(Handle %x, ObjectAttributes %x, Type %x)\n",
-	 Handle, ObjectAttributes, Type);
+  DPRINT("ObCreateObject(Type %p ObjectAttributes %p, Object %p)\n",
+	 Type, ObjectAttributes, Object);
 
   if (ObjectAttributes != NULL &&
       ObjectAttributes->ObjectName != NULL &&
