@@ -102,16 +102,15 @@ WINE_OTHER = unicode library
 WINE_TOOLS = bin2res wrc winebuild
 
 WINE_DLLS = comcat crtdll comctl32 commdlg dsound dplayx imagehlp ole32 richedit \
-shlwapi shell32 shdocvw twain winspool
+shlwapi shell32 shdocvw twain wininet urlmon winspool \
+rpcrt4 mapi32 # needed to make rcprt4 implib 
 
-#wininet urlmon winspool \
-#rpcrt4 # needed to make rcprt4 implib 
-
-# mapi32 oleaut32 oledlg olepro32 olecli olesvr shfolder
-# winmm ddraw dinput dplay serialui tapi32 urlmon wintrust 
+# oleaut32 oledlg olepro32 olecli olesvr shfolder
+# winmm ddraw dinput dplay serialui tapi32 wintrust 
 # msinfo lzexpand (missing imports)
 
-WINE_PROGS = control expand osversioncheck regedit regsvr32 winver uninstaller
+WINE_PROGS = control expand osversioncheck regedit regsvr32 winver
+# uninstaller
 # (waiting on wrc fix for the rest of these)
 # clock cmdlgtst  notepad  progman wcmd  
 # winefile winemine winetest uninstaller
