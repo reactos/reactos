@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib1bpp.c,v 1.11 2003/10/06 16:25:53 gvg Exp $ */
+/* $Id: dib1bpp.c,v 1.12 2003/10/29 22:45:45 gvg Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -37,7 +37,7 @@ DIB_1BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c)
 
   if(c == 0)
   {
-    *addr = (*addr ^ mask1Bpp[x % 8]);
+    *addr = (*addr & (~ mask1Bpp[x % 8]));
   }
     else
   {
