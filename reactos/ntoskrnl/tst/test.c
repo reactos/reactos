@@ -23,6 +23,8 @@
 
 #include <in.h>
 
+#define IDE_SECTOR_SZ 512
+
 /* GLOBALS ******************************************************************/
 
 static KEVENT event = {};
@@ -217,20 +219,21 @@ typedef struct _ROOT_DIR_ENTRY {
 void TstIDERead(void)
 {
   BOOLEAN TestFailed;
-  int Entry, i, j;
+  int Entry, i, j, BufferSize;
   HANDLE FileHandle;
   NTSTATUS Status;
   LARGE_INTEGER BlockOffset;
   ANSI_STRING AnsiDeviceName;
   UNICODE_STRING UnicodeDeviceName;
   OBJECT_ATTRIBUTES ObjectAttributes;
-// static  char SectorBuffer2[512 ];
-static  char SectorBuffer[512 * 10];
+  char *SectorBuffer;
   PBOOT_BLOCK BootBlock;
   ROOT_DIR_ENTRY DirectoryBlock[ENTRIES_PER_BLOCK];
 
   DbgPrint("IDE Read Test\n");
   TestFailed = FALSE;
+  BufferSize = IDE_SECTOR_SZ * 300;
+  SectorBuffer = ExAllocatePool(NonPagedPool, BufferSize);
 
     /*  open the first partition  */
   DbgPrint("Opening Partition1\n");
@@ -241,7 +244,12 @@ static  char SectorBuffer[512 * 10];
                              0,
                              NULL,
                              NULL);
-  Status = ZwOpenFile(&FileHandle, 0, &ObjectAttributes, NULL, 0, 0);
+  Status = ZwOpenFile(&FileHandle, 
+                      FILE_ALL_ACCESS, 
+                      &ObjectAttributes, 
+                      NULL, 
+                      0, 
+                      FILE_SYNCHRONOUS_IO_ALERT);
   if (!NT_SUCCESS(Status))
     {
       DbgPrint("Failed to open partition1\n");
@@ -374,55 +382,58 @@ static  char SectorBuffer[512 * 10];
   if (!TestFailed)
     {
       DbgPrint("Reading data from blocks 10000-4 from Partition1\n");
-      RtlFillMemory(SectorBuffer, sizeof(SectorBuffer), 0xea);
+      RtlFillMemory(SectorBuffer, BufferSize, 0xea);
       BlockOffset.HighPart = 0;
-      BlockOffset.LowPart = 10000 * 512;
+      BlockOffset.LowPart = 10000 * IDE_SECTOR_SZ;
       Status = ZwReadFile(FileHandle,
                           NULL,
                           NULL,
                           NULL,
                           NULL,
                           SectorBuffer,
-                          512 * 5,
+                          BufferSize,
                           &BlockOffset,
                           0);
       if (!NT_SUCCESS(Status))
         {
-          DbgPrint("Failed to read blocks 10000-4 from partition1 status:%x\n", 
+          DbgPrint("Failed to read %d bytes of data to offset 10000 from partition1 status:%x\n", 
+                   BufferSize,
                    Status);
           TestFailed = TRUE;
         }
       else
         {
-          for (j = 0; j < 10; j++)
+          DbgPrint("%d bytes read from offset 10000 of partition1\n", BufferSize);
+          for (j = 0; j < BufferSize; j += IDE_SECTOR_SZ)
             {
-              DbgPrint("%04x: ", j * 256);
-              for (i = 0; i < 16; i++)
+              DbgPrint("%02x", (unsigned char)SectorBuffer[j]);
+              SectorBuffer[j]++;
+              if (((j / IDE_SECTOR_SZ + 1) % 30) == 0)
                 {
-                  DbgPrint("%02x ", (unsigned char)SectorBuffer[j * 256 + i]);
-                  SectorBuffer[j * 256 + i]++;
+                  DbgPrint("\n");
                 }
-              DbgPrint("\n");
             }
-//for(;;);
+          DbgPrint("\n");
+//RtlZeroMemory(SectorBuffer, BufferSize);
           Status = ZwWriteFile(FileHandle,
                                NULL,
                                NULL,
                                NULL,
                                NULL,
                                SectorBuffer,
-                               512 * 5,
+                               BufferSize,
                                &BlockOffset,
                                0);
           if (!NT_SUCCESS(Status))
             {
-              DbgPrint("Failed to write blocks 10000-4 to partition1 status:%x\n", 
+              DbgPrint("Failed to write %d bytes of data to offset 10000 of partition1 status:%x\n", 
+                       BufferSize, 
                        Status);
               TestFailed = TRUE;
             }
           else
             {
-              DbgPrint("Block written\n");
+              DbgPrint("%d bytes written\n", BufferSize);
             }
         }
     }  
@@ -481,6 +492,44 @@ TstKeyboard(void)
     }
 }
 
+static int TTcnt = 0;
+
+VOID TstTimerDpc(struct _KDPC* Dpc, 
+                 PVOID DeferredContext, 
+		 PVOID SystemArgument1, 
+                 PVOID SystemArgument2)
+{
+  TTcnt++;
+
+  DPRINT("Timer DPC cnt:%d\n", TTcnt);
+
+}
+
+void
+TstTimer(void)
+{
+   PIO_TIMER Timer = ExAllocatePool(NonPagedPool,sizeof(IO_TIMER));
+   long long int lli = -10000000;
+   LARGE_INTEGER li = *(LARGE_INTEGER *)&lli;
+   
+   CHECKPOINT;
+   KeInitializeTimer(&Timer->timer);
+   CHECKPOINT;
+   KeInitializeDpc(&Timer->dpc, TstTimerDpc, NULL);
+   CHECKPOINT;
+   KeSetTimerEx(&Timer->timer,
+                li,
+                1000,
+		&Timer->dpc);
+   CHECKPOINT;
+   while (TTcnt < 100)
+     ;
+   CHECKPOINT;
+   KeCancelTimer(&Timer->timer);
+   CHECKPOINT;
+
+}
+
 void TstBegin()
 {
    ExExecuteShell();
@@ -491,5 +540,6 @@ void TstBegin()
 //   TstIDERead();
 //   TstKeyboardRead();
 //   TstShell();
+//   TstTimer();
 }
 
