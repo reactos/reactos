@@ -262,15 +262,15 @@ NtUserClipCursor(
   CurInfo = &WinStaObject->SystemCursor;
   if(UnsafeRect)
   {
-    if((Rect.right >= Rect.left) &&
-       (Rect.bottom >= Rect.top))
+    if((Rect.right > Rect.left) &&
+       (Rect.bottom > Rect.top))
     {
       DesktopWindow = IntGetWindowObject(WinStaObject->ActiveDesktop->DesktopWindow);
       CurInfo->CursorClipInfo.IsClipped = TRUE;
       CurInfo->CursorClipInfo.Left = max(Rect.left, DesktopWindow->WindowRect.left);
       CurInfo->CursorClipInfo.Top = max(Rect.top, DesktopWindow->WindowRect.top);
-      CurInfo->CursorClipInfo.Right = min(Rect.right, DesktopWindow->WindowRect.right);
-      CurInfo->CursorClipInfo.Bottom = min(Rect.bottom, DesktopWindow->WindowRect.bottom);
+      CurInfo->CursorClipInfo.Right = min(Rect.right - 1, DesktopWindow->WindowRect.right - 1);
+      CurInfo->CursorClipInfo.Bottom = min(Rect.bottom - 1, DesktopWindow->WindowRect.bottom - 1);
       IntReleaseWindowObject(DesktopWindow);
     
       MouseMoveCursor(CurInfo->x, CurInfo->y);  
