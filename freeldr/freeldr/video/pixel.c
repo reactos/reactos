@@ -34,6 +34,16 @@
 // get this code to work and I have absolutely
 // no idea why...
 //
+// Someone else can take up this portion of the
+// boot loader because my give up...
+//
+// I was going to store the offscreen buffer as
+// a big array of bytes (as opposed to four bits)
+// and that makes it a bit easier to set a pixel
+// on the offscreen buffer, but will have to be
+// handled in the VideoCopyOffScreenBufferToVRAM()
+// function.
+//
 VOID VideoSetPixel16(U32 X, U32 Y, U8 Color)
 {
 	U8		CurrentColor;

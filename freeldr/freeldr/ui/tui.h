@@ -43,8 +43,8 @@ VOID	TuiSaveScreen(PUCHAR Buffer);							// Saves the screen so that it can be r
 VOID	TuiRestoreScreen(PUCHAR Buffer);						// Restores the screen from a previous save
 VOID	TuiMessageBox(PUCHAR MessageText);						// Displays a message box on the screen with an ok button
 VOID	TuiMessageBoxCritical(PUCHAR MessageText);				// Displays a message box on the screen with an ok button using no system resources
-VOID	TuiDrawProgressBarCenter(U32 Position, U32 Range);			// Draws the progress bar showing nPos percent filled
-VOID	TuiDrawProgressBar(U32 Left, U32 Top, U32 Right, U32 Bottom, U32 Position, U32 Range);			// Draws the progress bar showing nPos percent filled
+VOID	TuiDrawProgressBarCenter(U32 Position, U32 Range, PUCHAR ProgressText);			// Draws the progress bar showing nPos percent filled
+VOID	TuiDrawProgressBar(U32 Left, U32 Top, U32 Right, U32 Bottom, U32 Position, U32 Range, PUCHAR ProgressText);			// Draws the progress bar showing nPos percent filled
 
 UCHAR	TuiTextToColor(PUCHAR ColorText);						// Converts the text color into it's equivalent color value
 UCHAR	TuiTextToFillStyle(PUCHAR FillStyleText);				// Converts the text fill into it's equivalent fill value

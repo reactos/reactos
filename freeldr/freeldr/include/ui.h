@@ -67,8 +67,8 @@ VOID	UiInfoBox(PUCHAR MessageText);							// Displays a info box on the screen
 VOID	UiMessageBox(PUCHAR MessageText);						// Displays a message box on the screen with an ok button
 VOID	UiMessageBoxCritical(PUCHAR MessageText);				// Displays a message box on the screen with an ok button using no system resources
 VOID	UiMessageLine(PUCHAR MessageText);						// Adds a line of text to the message box buffer
-VOID	UiDrawProgressBarCenter(U32 Position, U32 Range);			// Draws the progress bar showing nPos percent filled
-VOID	UiDrawProgressBar(U32 Left, U32 Top, U32 Right, U32 Bottom, U32 Position, U32 Range);			// Draws the progress bar showing nPos percent filled
+VOID	UiDrawProgressBarCenter(U32 Position, U32 Range, PUCHAR ProgressText);			// Draws the progress bar showing nPos percent filled
+VOID	UiDrawProgressBar(U32 Left, U32 Top, U32 Right, U32 Bottom, U32 Position, U32 Range, PUCHAR ProgressText);			// Draws the progress bar showing nPos percent filled
 VOID	UiShowMessageBoxesInSection(PUCHAR SectionName);		// Displays all the message boxes in a given section
 
 UCHAR	UiTextToColor(PUCHAR ColorText);						// Converts the text color into it's equivalent color value

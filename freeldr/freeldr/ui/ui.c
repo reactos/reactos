@@ -503,29 +503,29 @@ UCHAR UiTextToFillStyle(PUCHAR FillStyleText)
 	}
 }
 
-VOID UiDrawProgressBarCenter(U32 Position, U32 Range)
+VOID UiDrawProgressBarCenter(U32 Position, U32 Range, PUCHAR ProgressText)
 {
 	if (UiDisplayMode == DISPLAYMODE_TEXT)
 	{
-		TuiDrawProgressBarCenter(Position, Range);
+		TuiDrawProgressBarCenter(Position, Range, ProgressText);
 	}
 	else
 	{
 		UNIMPLEMENTED();
-		//GuiDrawProgressBarCenter(Position, Range);
+		//GuiDrawProgressBarCenter(Position, Range, ProgressText);
 	}
 }
 
-VOID UiDrawProgressBar(U32 Left, U32 Top, U32 Right, U32 Bottom, U32 Position, U32 Range)
+VOID UiDrawProgressBar(U32 Left, U32 Top, U32 Right, U32 Bottom, U32 Position, U32 Range, PUCHAR ProgressText)
 {
 	if (UiDisplayMode == DISPLAYMODE_TEXT)
 	{
-		TuiDrawProgressBar(Left, Top, Right, Bottom, Position, Range);
+		TuiDrawProgressBar(Left, Top, Right, Bottom, Position, Range, ProgressText);
 	}
 	else
 	{
 		UNIMPLEMENTED();
-		//GuiDrawProgressBar(Left, Top, Right, Bottom, Position, Range);
+		//GuiDrawProgressBar(Left, Top, Right, Bottom, Position, Range, ProgressText);
 	}
 }
 

@@ -71,7 +71,7 @@ LoadKernel(PCHAR szFileName, int nPos)
    */
   MultiBootLoadKernel(FilePointer);
 
-  UiDrawProgressBarCenter(nPos, 100);
+  UiDrawProgressBarCenter(nPos, 100, "Loading ReactOS...");
 
   return(TRUE);
 }
@@ -135,7 +135,7 @@ LoadSymbolFile(PCHAR szSystemRoot,
    */
   MultiBootLoadModule(FilePointer, SymbolFileName, NULL);
 
-  UiDrawProgressBarCenter(nPos, 100);
+  UiDrawProgressBarCenter(nPos, 100, "Loading ReactOS...");
 
   return (TRUE);
 }
@@ -172,7 +172,7 @@ LoadDriver(PCHAR szFileName, int nPos)
    */
   MultiBootLoadModule(FilePointer, szFileName, NULL);
 
-  UiDrawProgressBarCenter(nPos, 100);
+  UiDrawProgressBarCenter(nPos, 100, "Loading ReactOS...");
 
   return(TRUE);
 }
@@ -527,7 +527,7 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 
 	UiDrawBackdrop();
 	UiDrawStatusText("Loading...");
-	UiDrawProgressBarCenter(0, 100);
+	UiDrawProgressBarCenter(0, 100, "Loading ReactOS...");
 
 	/*
 	 * Try to open boot drive
@@ -654,7 +654,7 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	RegInitializeRegistry();
 	RegImportHive(Base, Size);
 
-	UiDrawProgressBarCenter(15, 100);
+	UiDrawProgressBarCenter(15, 100, "Loading ReactOS...");
 	DbgPrint((DPRINT_REACTOS, "SystemHive loaded at 0x%x size %u", (unsigned)Base, (unsigned)Size));
 
 	/*
@@ -666,7 +666,7 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	RegExportHive("\\Registry\\Machine\\HARDWARE", Base, &Size);
 	MultiBootCloseModule(Base, Size);
 #endif
-	UiDrawProgressBarCenter(20, 100);
+	UiDrawProgressBarCenter(20, 100, "Loading ReactOS...");
 
 	/*
 	 * Initialize the 'currentControlSet' link
@@ -687,7 +687,7 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
   LoadSymbolFile(szBootPath, szKernelName, 25);
   LoadSymbolFile(szBootPath, szHalName, 25);
 
-	UiDrawProgressBarCenter(25, 100);
+	UiDrawProgressBarCenter(25, 100, "Loading ReactOS...");
 
 	/*
 	 * Load boot drivers

@@ -50,6 +50,7 @@ UCHAR				LinuxCommandLine[260] = "";
 U32					LinuxCommandLineSize = 0;
 PVOID				LinuxKernelLoadAddress = NULL;
 PVOID				LinuxInitrdLoadAddress = NULL;
+UCHAR				LinuxBootDescription[80];
 
 VOID LoadAndBootLinux(PUCHAR OperatingSystemName)
 {
@@ -59,14 +60,14 @@ VOID LoadAndBootLinux(PUCHAR OperatingSystemName)
 
 	UiDrawBackdrop();
 
-	UiDrawStatusText("Loading Linux...");
-	UiDrawProgressBarCenter(0, 100);
-
 	// Parse the .ini file section
 	if (!LinuxParseIniSection(OperatingSystemName))
 	{
 		goto LinuxBootFailed;
 	}
+
+	UiDrawStatusText(LinuxBootDescription);
+	UiDrawProgressBarCenter(0, 100, LinuxBootDescription);
 
 	// Open the boot volume
 	if (!FsOpenVolume(BootDrive, BootPartition))
@@ -147,11 +148,13 @@ VOID LoadAndBootLinux(PUCHAR OperatingSystemName)
 		LinuxSetupSector->LoadFlags = 0;
 	}
 
+	getch();
 	RtlCopyMemory((PVOID)0x90000, LinuxBootSector, 512);
 	RtlCopyMemory((PVOID)0x90200, LinuxSetupSector, SetupSectorSize);
 	RtlCopyMemory((PVOID)0x99000, LinuxCommandLine, LinuxCommandLineSize);
 
 	UiUnInitialize("Booting Linux...");
+	getch();
 
 	DiskStopFloppyMotor();
 
@@ -226,6 +229,16 @@ BOOL LinuxParseIniSection(PUCHAR OperatingSystemName)
 	{
 		UiMessageBox("Boot drive not specified for selected OS!");
 		return FALSE;
+	}
+
+	if (IniReadSettingByName(SectionId, "Name", SettingValue, 260))
+	{
+		RemoveQuotes(SettingValue);
+		sprintf(LinuxBootDescription, "Loading %s...");
+	}
+	else
+	{
+		strcpy(LinuxBootDescription, "Loading Linux...");
 	}
 
 	BootDrive = atoi(SettingValue);
@@ -392,7 +405,7 @@ BOOL LinuxReadKernel(PFILE LinuxKernelFile)
 		BytesLoaded += LINUX_READ_CHUNK_SIZE;
 		LoadAddress += LINUX_READ_CHUNK_SIZE;
 
-		UiDrawProgressBarCenter(BytesLoaded, LinuxKernelSize + LinuxInitrdSize);
+		UiDrawProgressBarCenter(BytesLoaded, LinuxKernelSize + LinuxInitrdSize, LinuxBootDescription);
 	}
 
 	return TRUE;
@@ -465,7 +478,7 @@ BOOL LinuxReadInitrd(PFILE LinuxInitrdFile)
 		BytesLoaded += LINUX_READ_CHUNK_SIZE;
 		LinuxInitrdLoadAddress += LINUX_READ_CHUNK_SIZE;
 
-		UiDrawProgressBarCenter(BytesLoaded + LinuxKernelSize, LinuxInitrdSize + LinuxKernelSize);
+		UiDrawProgressBarCenter(BytesLoaded + LinuxKernelSize, LinuxInitrdSize + LinuxKernelSize, LinuxBootDescription);
 	}
 
 	return TRUE;

@@ -608,7 +608,7 @@ VOID TuiMessageBoxCritical(PUCHAR MessageText)
 }
 
 
-VOID TuiDrawProgressBarCenter(U32 Position, U32 Range)
+VOID TuiDrawProgressBarCenter(U32 Position, U32 Range, PUCHAR ProgressText)
 {
 	U32		Left, Top, Right, Bottom;
 	U32		Width = 50; // Allow for 50 "bars"
@@ -620,13 +620,16 @@ VOID TuiDrawProgressBarCenter(U32 Position, U32 Range)
 	Top += 2;
 	Bottom = Top + Height + 1;
 
-	TuiDrawProgressBar(Left, Top, Right, Bottom, Position, Range);
+	TuiDrawProgressBar(Left, Top, Right, Bottom, Position, Range, ProgressText);
 }
 
-VOID TuiDrawProgressBar(U32 Left, U32 Top, U32 Right, U32 Bottom, U32 Position, U32 Range)
+VOID TuiDrawProgressBar(U32 Left, U32 Top, U32 Right, U32 Bottom, U32 Position, U32 Range, PUCHAR ProgressText)
 {
 	U32		i;
 	U32		ProgressBarWidth = (Right - Left) - 3;
+
+	// First make sure the progress bar text fits
+	UiTruncateStringEllipsis(ProgressText, ProgressBarWidth - 4);
 
 	if (Position > Range)
 	{
@@ -637,7 +640,8 @@ VOID TuiDrawProgressBar(U32 Left, U32 Top, U32 Right, U32 Bottom, U32 Position, 
 	TuiDrawBox(Left, Top, Right, Bottom, VERT, HORZ, TRUE, TRUE, ATTR(UiMenuFgColor, UiMenuBgColor));
 
 	// Draw the "Loading..." text
-	TuiDrawText(70/2, Top+1, "Loading...", ATTR(UiTextColor, UiMenuBgColor));
+	//TuiDrawText(70/2, Top+1, "Loading...", ATTR(UiTextColor, UiMenuBgColor));
+	TuiDrawCenteredText(Left + 2, Top + 2, Right - 2, Top + 2, ProgressText, ATTR(UiTextColor, UiMenuBgColor));
 
 	// Draw the percent complete
 	for (i=0; i<(Position*ProgressBarWidth)/Range; i++)
