@@ -74,19 +74,13 @@ NTSTATUS STDCALL NtCreateEvent (OUT PHANDLE			EventHandle,
 				IN BOOLEAN	InitialState)
 {
    PKEVENT Event;
-   
+   DbgPrint( "Creating Event\n" );
    Event = ObCreateObject(EventHandle,
 			  DesiredAccess,
 			  ObjectAttributes,
 			  ExEventType);
-   if (ManualReset == TRUE)
-     {
-	KeInitializeEvent(Event,NotificationEvent,InitialState);
-     }
-   else
-     {
-	KeInitializeEvent(Event,SynchronizationEvent,InitialState);
-     }
+   KeInitializeEvent( Event, ManualReset ? NotificationEvent : SynchronizationEvent, InitialState );
+   OnDereferenceObject( Event );
    return(STATUS_SUCCESS);
 }
 
