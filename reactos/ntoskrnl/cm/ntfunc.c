@@ -63,8 +63,8 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   PKEY_OBJECT KeyObject;
   NTSTATUS Status;
   PVOID Object;
-  PWSTR End;
   PWSTR Start;
+  unsigned i;
 
   DPRINT("NtCreateKey (Name %wZ  KeyHandle %x  Root %x)\n",
 	 ObjectAttributes->ObjectName,
@@ -83,7 +83,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 
   DPRINT("RemainingPath %wZ\n", &RemainingPath);
 
-  if ((RemainingPath.Buffer == NULL) || (RemainingPath.Buffer[0] == 0))
+  if (RemainingPath.Length == 0)
     {
       /* Fail if the key has been deleted */
       if (((PKEY_OBJECT) Object)->Flags & KO_MARKED_FOR_DELETE)
@@ -110,18 +110,20 @@ NtCreateKey(OUT PHANDLE KeyHandle,
     }
 
   /* If RemainingPath contains \ we must return error
-     because NtCreateKey don't create trees */
+     because NtCreateKey doesn't create trees */
   Start = RemainingPath.Buffer;
   if (*Start == L'\\')
     Start++;
 
-  End = wcschr(Start, L'\\');
-  if (End != NULL)
+  for (i = 1; i < RemainingPath.Length / sizeof(WCHAR); i++)
     {
-      ObDereferenceObject(Object);
-      DPRINT1("NtCreateKey() can't create trees! (found \'\\\' in remaining path: \"%wZ\"!)\n", &RemainingPath);
-      RtlFreeUnicodeString(&RemainingPath);
-      return STATUS_OBJECT_NAME_NOT_FOUND;
+      if (L'\\' == RemainingPath.Buffer[i])
+        {
+          ObDereferenceObject(Object);
+          DPRINT1("NtCreateKey() doesn't create trees! (found \'\\\' in remaining path: \"%wZ\"!)\n", &RemainingPath);
+          RtlFreeUnicodeString(&RemainingPath);
+          return STATUS_OBJECT_NAME_NOT_FOUND;
+        }
     }
 
   DPRINT("RemainingPath %S  ParentObject %x\n", RemainingPath.Buffer, Object);
