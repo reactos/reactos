@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.2 1999/11/07 08:03:28 ea Exp $
+# $Id: makefile,v 1.3 1999/12/01 15:18:54 ekohl Exp $
 #
 # Session Manager
 #
@@ -8,7 +8,7 @@ TARGET=smss
 
 BASE_CFLAGS = -I../../include
 
-OBJECTS = $(TARGET).o init.o $(TARGET).coff
+OBJECTS = $(TARGET).o init.o smapi.o $(TARGET).coff
 
 LIBS = ../../lib/ntdll/ntdll.a
 

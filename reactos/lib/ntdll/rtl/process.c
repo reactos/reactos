@@ -1,4 +1,5 @@
-/*
+/* $Id: process.c,v 1.4 1999/12/01 15:14:59 ekohl Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/ntdll/rtl/process.c
@@ -19,6 +20,7 @@
 #include <ntdll/ldr.h>
 #include <internal/teb.h>
 #include <ntdll/base.h>
+#include <ntdll/rtl.h>
 
 #define NDEBUG
 #include <ntdll/ntdll.h>
@@ -390,6 +392,22 @@ RtlCreateUserProcess(PUNICODE_STRING ApplicationName,
         *ThreadHandle = hThread;
 
     return STATUS_SUCCESS;
+}
+
+
+VOID
+STDCALL
+RtlAcquirePebLock (VOID)
+{
+
+}
+
+
+VOID
+STDCALL
+RtlReleasePebLock (VOID)
+{
+
 }
 
 /* EOF */

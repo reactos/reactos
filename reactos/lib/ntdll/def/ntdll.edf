@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.15 1999/11/27 03:32:17 ekohl Exp $
+; $Id: ntdll.edf,v 1.16 1999/12/01 15:16:05 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -428,6 +428,7 @@ ZwWriteRequestData=ZwWriteRequestData@24
 ZwWriteVirtualMemory=ZwWriteVirtualMemory@20
 ZwW32Call=ZwW32Call@20
 ZwYieldExecution=ZwYieldExecution@0
+RtlAcquirePebLock=RtlAcquirePebLock@0
 RtlAllocateHeap=RtlAllocateHeap@12
 RtlAnsiCharToUnicodeChar=RtlAnsiCharToUnicodeChar@4
 RtlAnsiStringToUnicodeSize=RtlAnsiStringToUnicodeSize@4
@@ -435,6 +436,7 @@ RtlAnsiStringToUnicodeString=RtlAnsiStringToUnicodeString@12
 RtlAppendUnicodeStringToString=RtlAppendUnicodeStringToString@8
 RtlAppendUnicodeToString=RtlAppendUnicodeToString@8
 RtlCharToInteger=RtlCharToInteger@12
+RtlCreateEnvironment=RtlCreateEnvironment@8
 RtlCreateHeap=RtlCreateHeap@24
 RtlCreateUnicodeString=RtlCreateUnicodeString@8
 RtlCreateUnicodeStringFromAsciiz=RtlCreateUnicodeStringFromAsciiz@8
@@ -447,6 +449,7 @@ RtlConvertLongToLargeInteger=RtlConvertLongToLargeInteger@4
 RtlConvertUlongToLargeInteger=RtlConvertUlongToLargeInteger@4
 RtlCopyString=RtlCopyString@8
 RtlCopyUnicodeString=RtlCopyUnicodeString@8
+RtlDestroyEnvironment=RtlDestroyEnvironment@4
 RtlDestroyHeap=RtlDestroyHeap@4
 RtlDowncaseUnicodeString=RtlDowncaseUnicodeString@12
 RtlEnlargedIntegerMultiply=RtlEnlargedIntegerMultiply@8
@@ -481,7 +484,13 @@ RtlLockHeap=RtlLockHeap@4
 RtlMoveMemory=RtlMoveMemory@12
 RtlMultiByteToUnicodeN=RtlMultiByteToUnicodeN@20
 RtlNtStatusToDosError
+RtlOemStringToUnicodeSize=RtlOemStringToUnicodeSize@4
+RtlOemStringToUnicodeString=RtlOemStringToUnicodeString@12
+RtlOemToUnicodeN=RtlOemToUnicodeN@20
+RtlQueryEnvironmentVariable_U=RtlQueryEnvironmentVariable_U@12
 RtlReAllocateHeap=RtlReAllocateHeap@16
+RtlReleasePebLock=RtlReleasePebLock@0
+RtlSetEnvironmentVariable=RtlSetEnvironmentVariable@12
 RtlSizeHeap=RtlSizeHeap@12
 RtlUnlockHeap=RtlUnlockHeap@4
 RtlUnicodeStringToAnsiSize=RtlUnicodeStringToAnsiSize@4

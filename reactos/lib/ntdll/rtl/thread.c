@@ -14,6 +14,7 @@
 #include <ddk/ntddk.h>
 #include <internal/i386/segment.h>
 #include <string.h>
+#include <ntdll/rtl.h>
 
 #define NDEBUG
 #include <ntdll/ntdll.h>

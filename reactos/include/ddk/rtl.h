@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.19 1999/11/27 03:29:20 ekohl Exp $
+/* $Id: rtl.h,v 1.20 1999/12/01 15:17:12 ekohl Exp $
  * 
  */
 
@@ -59,6 +59,12 @@ typedef struct _RTL_BITMAP
    ULONG  SizeOfBitMap;
    PULONG Buffer;
 } RTL_BITMAP, *PRTL_BITMAP;
+
+typedef struct {
+	ULONG		Length;
+	ULONG		Unknown[11];
+} RTL_HEAP_DEFINITION, *PRTL_HEAP_DEFINITION;
+
 
 /*
  * PURPOSE: Flags for RtlQueryRegistryValues
@@ -124,12 +130,12 @@ extern BOOLEAN NLS_MB_OEM_CODE_PAGE_TAG;
 /*
  * VOID
  * InitializeObjectAttributes (
- *      POBJECT_ATTRIBUTES   InitializedAttributes,
- *      PUNICODE_STRING      ObjectName,
- *      ULONG                Attributes,
- *      HANDLE               RootDirectory,
- *      PSECURITY_DESCRIPTOR SecurityDescriptor
- *      );
+ *	POBJECT_ATTRIBUTES	InitializedAttributes,
+ *	PUNICODE_STRING		ObjectName,
+ *	ULONG			Attributes,
+ *	HANDLE			RootDirectory,
+ *	PSECURITY_DESCRIPTOR	SecurityDescriptor
+ *	);
  *
  * FUNCTION: Sets up a parameter of type OBJECT_ATTRIBUTES for a 
  * subsequent call to ZwCreateXXX or ZwOpenXXX
@@ -151,7 +157,6 @@ extern BOOLEAN NLS_MB_OEM_CODE_PAGE_TAG;
 	(p)->SecurityDescriptor = s; \
 	(p)->SecurityQualityOfService = NULL; \
 }
-
 
 VOID
 InitializeListHead (
@@ -272,6 +277,13 @@ RtlCheckRegistryKey (
 	PWSTR	Path
 	);
 
+UINT
+STDCALL
+RtlCompactHeap (
+	HANDLE	hheap,
+	DWORD	flags
+	);
+
 ULONG
 STDCALL
 RtlCompareMemory (
@@ -336,6 +348,17 @@ RtlCopyUnicodeString (
 	PUNICODE_STRING	SourceString
 	);
 
+HANDLE
+STDCALL
+RtlCreateHeap (
+	ULONG			Flags,
+	PVOID			BaseAddress,
+	ULONG			SizeToReserve,
+	ULONG			SizeToCommit,
+	PVOID			Unknown,
+	PRTL_HEAP_DEFINITION	Definition
+	);
+
 NTSTATUS
 STDCALL
 RtlCreateRegistryKey (
@@ -369,6 +392,12 @@ RtlDeleteRegistryValue (
 	ULONG	RelativeTo,
 	PWSTR	Path,
 	PWSTR	ValueName
+	);
+
+BOOL
+STDCALL
+RtlDestroyHeap (
+	HANDLE	hheap
 	);
 
 NTSTATUS
@@ -417,13 +446,6 @@ RtlEqualUnicodeString (
 	BOOLEAN		CaseInSensitive
 	);
 
-/* RtlEraseUnicodeString is exported by ntdll.dll only! */
-VOID
-STDCALL
-RtlEraseUnicodeString (
-	IN	PUNICODE_STRING	String
-	);
-
 LARGE_INTEGER
 STDCALL
 RtlExtendedIntegerMultiply (
@@ -469,6 +491,14 @@ RtlFreeAnsiString (
 	PANSI_STRING	AnsiString
 	);
 
+BOOLEAN
+STDCALL
+RtlFreeHeap (
+	HANDLE	Heap,
+	ULONG	Flags,
+	PVOID	Address
+	);
+
 VOID
 STDCALL
 RtlFreeOemString (
@@ -482,10 +512,21 @@ RtlFreeUnicodeString (
 	);
 
 VOID
+RtlGetCallersAddress (
+	PVOID	* CallersAddress
+	);
+
+VOID
 STDCALL
 RtlGetDefaultCodePage (
 	PUSHORT AnsiCodePage,
 	PUSHORT OemCodePage
+	);
+
+HANDLE
+STDCALL
+RtlGetProcessHeap (
+	VOID
 	);
 
 VOID
@@ -543,19 +584,19 @@ RtlLargeIntegerAdd (
 	LARGE_INTEGER	Addend2
 	);
 
+/*
+ * VOID
+ * RtlLargeIntegerAnd (
+ *	PLARGE_INTEGER	Result,
+ *	LARGE_INTEGER	Source,
+ *	LARGE_INTEGER	Mask
+ *	);
+ */
 #define RtlLargeIntegerAnd(Result, Source, Mask) \
 { \
 	Result.HighPart = Source.HighPart & Mask.HighPart; \
 	Result.LowPart = Source.LowPart & Mask.LowPart; \
 }
-/*
-VOID
-RtlLargeIntegerAnd (
-	PLARGE_INTEGER	Result,
-	LARGE_INTEGER	Source,
-	LARGE_INTEGER	Mask
-	);
-*/
 
 LARGE_INTEGER
 STDCALL
@@ -572,105 +613,105 @@ RtlLargeIntegerDivide (
 	PLARGE_INTEGER	Remainder
 	);
 
+/*
+ * BOOLEAN
+ * RtlLargeIntegerEqualTo (
+ *	LARGE_INTEGER	Operand1,
+ *	LARGE_INTEGER	Operand2
+ *	);
+ */
 #define RtlLargeIntegerEqualTo(X,Y) \
 	(!(((X).LowPart ^ (Y).LowPart) | ((X).HighPart ^ (Y).HighPart)))
-/*
-BOOLEAN
-RtlLargeIntegerEqualTo (
-	LARGE_INTEGER	Operand1,
-	LARGE_INTEGER	Operand2
-	);
-*/
 
+/*
+ * BOOLEAN
+ * RtlLargeIntegerEqualToZero (
+ *	LARGE_INTEGER	Operand
+ *	);
+ */
 #define RtlLargeIntegerEqualToZero(X) \
 	(!((X).LowPart | (X).HighPart))
-/*
-BOOLEAN
-RtlLargeIntegerEqualToZero (
-	LARGE_INTEGER	Operand
-	);
-*/
 
+/*
+ * BOOLEAN
+ * RtlLargeIntegerGreaterThan (
+ *	LARGE_INTEGER	Operand1,
+ *	LARGE_INTEGER	Operand2
+ *	);
+ */
 #define RtlLargeIntegerGreaterThan(X,Y) \
 	((((X).HighPart == (Y).HighPart) && ((X).LowPart > (Y).LowPart)) || \
 	  ((X).HighPart > (Y).HighPart))
-/*
-BOOLEAN
-RtlLargeIntegerGreaterThan (
-	LARGE_INTEGER	Operand1,
-	LARGE_INTEGER	Operand2
-	);
-*/
 
+/*
+ * BOOLEAN
+ * RtlLargeIntegerGreaterThanOrEqualTo (
+ *	LARGE_INTEGER	Operand1,
+ *	LARGE_INTEGER	Operand2
+ *	);
+ */
 #define RtlLargeIntegerGreaterThanOrEqualTo(X,Y) \
 	((((X).HighPart == (Y).HighPart) && ((X).LowPart >= (Y).LowPart)) || \
 	  ((X).HighPart > (Y).HighPart))
-/*
-BOOLEAN
-RtlLargeIntegerGreaterThanOrEqualTo (
-	LARGE_INTEGER	Operand1,
-	LARGE_INTEGER	Operand2
-	);
-*/
 
+/*
+ * BOOLEAN
+ * RtlLargeIntegerGreaterThanOrEqualToZero (
+ *	LARGE_INTEGER	Operand1
+ *	);
+ */
 #define RtlLargeIntegerGreaterOrEqualToZero(X) \
 	((X).HighPart >= 0)
-/*
-BOOLEAN
-RtlLargeIntegerGreaterThanOrEqualToZero (
-	LARGE_INTEGER	Operand1
-	);
-*/
 
+/*
+ * BOOLEAN
+ * RtlLargeIntegerGreaterThanZero (
+ *	LARGE_INTEGER	Operand1
+ *	);
+ */
 #define RtlLargeIntegerGreaterThanZero(X) \
 	((((X).HighPart == 0) && ((X).LowPart > 0)) || \
 	  ((X).HighPart > 0 ))
-/*
-BOOLEAN
-RtlLargeIntegerGreaterThanZero (
-	LARGE_INTEGER	Operand1
-	);
-*/
 
+/*
+ * BOOLEAN
+ * RtlLargeIntegerLessThan (
+ *	LARGE_INTEGER	Operand1,
+ *	LARGE_INTEGER	Operand2
+ *	);
+ */
 #define RtlLargeIntegerLessThan(X,Y) \
 	((((X).HighPart == (Y).HighPart) && ((X).LowPart < (Y).LowPart)) || \
 	  ((X).HighPart < (Y).HighPart))
-/*
-BOOLEAN
-RtlLargeIntegerLessThan (
-	LARGE_INTEGER	Operand1,
-	LARGE_INTEGER	Operand2
-	);
-*/
 
+/*
+ * BOOLEAN
+ * RtlLargeIntegerLessThanOrEqualTo (
+ *	LARGE_INTEGER	Operand1,
+ *	LARGE_INTEGER	Operand2
+ *	);
+ */
 #define RtlLargeIntegerLessThanOrEqualTo(X,Y) \
 	((((X).HighPart == (Y).HighPart) && ((X).LowPart <= (Y).LowPart)) || \
 	  ((X).HighPart < (Y).HighPart))
-/*
-BOOLEAN
-RtlLargeIntegerLessThanOrEqualTo (
-	LARGE_INTEGER	Operand1,
-	LARGE_INTEGER	Operand2
-	);
-*/
 
+/*
+ * BOOLEAN
+ * RtlLargeIntegerLessThanOrEqualToZero (
+ *	LARGE_INTEGER	Operand
+ *	);
+ */
 #define RtlLargeIntegerLessOrEqualToZero(X) \
 	(((X).HighPart < 0) || !((X).LowPart | (X).HighPart))
-/*
-BOOLEAN
-RtlLargeIntegerLessThanOrEqualToZero (
-	LARGE_INTEGER	Operand
-	);
-*/
 
+/*
+ * BOOLEAN
+ * RtlLargeIntegerLessThanZero (
+ *	LARGE_INTEGER	Operand
+ *	);
+ */
 #define RtlLargeIntegerLessThanZero(X) \
 	(((X).HighPart < 0))
-/*
-BOOLEAN
-RtlLargeIntegerLessThanZero (
-	LARGE_INTEGER	Operand
-	);
-*/
 
 LARGE_INTEGER
 STDCALL
@@ -678,24 +719,24 @@ RtlLargeIntegerNegate (
 	LARGE_INTEGER	Subtrahend
 	);
 
+/*
+ * BOOLEAN
+ * RtlLargeIntegerNotEqualTo (
+ *	LARGE_INTEGER	Operand1,
+ *	LARGE_INTEGER	Operand2
+ *	);
+ */
 #define RtlLargeIntegerNotEqualTo(X,Y) \
 	((((X).LowPart ^ (Y).LowPart) | ((X).HighPart ^ (Y).HighPart)))
-/*
-BOOLEAN
-RtlLargeIntegerNotEqualTo (
-	LARGE_INTEGER	Operand1,
-	LARGE_INTEGER	Operand2
-	);
-*/
 
+/*
+ * BOOLEAN
+ * RtlLargeIntegerNotEqualToZero (
+ *	LARGE_INTEGER	Operand
+ *	);
+ */
 #define RtlLargeIntegerNotEqualToZero(X) \
 	(((X).LowPart | (X).HighPart))
-/*
-BOOLEAN
-RtlLargeIntegerNotEqualToZero (
-	LARGE_INTEGER	Operand
-	);
-*/
 
 LARGE_INTEGER
 STDCALL
@@ -721,6 +762,12 @@ RtlLargeIntegerSubtract (
 ULONG
 RtlLengthSecurityDescriptor (
 	PSECURITY_DESCRIPTOR	SecurityDescriptor
+	);
+
+BOOL
+STDCALL
+RtlLockHeap (
+	HANDLE	hheap
 	);
 
 VOID
@@ -749,6 +796,11 @@ RtlMultiByteToUnicodeSize (
 	ULONG  MbSize
 	);
 
+DWORD
+RtlNtStatusToDosError (
+	NTSTATUS	StatusCode
+	);
+
 ULONG
 STDCALL
 RtlOemStringToUnicodeSize (
@@ -766,11 +818,11 @@ RtlOemStringToUnicodeString (
 NTSTATUS
 STDCALL
 RtlOemToUnicodeN (
-	PWCHAR UnicodeString,
-	ULONG  UnicodeSize,
-	PULONG ResultSize,
-	PCHAR  OemString,
-	ULONG  OemSize
+	PWCHAR	UnicodeString,
+	ULONG	UnicodeSize,
+	PULONG	ResultSize,
+	PCHAR	OemString,
+	ULONG	OemSize
 	);
 
 NTSTATUS
@@ -781,6 +833,15 @@ RtlQueryRegistryValues (
 	PRTL_QUERY_REGISTRY_TABLE	QueryTable,
 	PVOID				Context,
 	PVOID				Environment
+	);
+
+LPVOID
+STDCALL
+RtlReAllocateHeap (
+	HANDLE	hheap,
+	DWORD	flags,
+	LPVOID	ptr,
+	DWORD	size
 	);
 
 VOID
@@ -803,8 +864,29 @@ RtlSetDaclSecurityDescriptor (
 	BOOLEAN			DaclDefaulted
 	);
 
+DWORD
+STDCALL
+RtlSizeHeap (
+	HANDLE	hheap,
+	DWORD	flags,
+	PVOID	pmem
+	);
+
+PWSTR
+RtlStrtok (
+	PUNICODE_STRING	_string,
+	PWSTR		_sep,
+	PWSTR		* temp
+	);
+
 VOID
 RtlStoreLong (
+	PULONG	Address,
+	ULONG	Value
+	);
+
+VOID
+RtlStoreUlong (
 	PULONG	Address,
 	ULONG	Value
 	);
@@ -825,52 +907,6 @@ VOID
 RtlTimeToTimeFields (
 	PLARGE_INTEGER	Time,
 	PTIME_FIELDS	TimeFields
-	);
-
-PWSTR
-RtlStrtok (
-	PUNICODE_STRING	_string,
-	PWSTR		_sep,
-	PWSTR		* temp
-	);
-
-VOID
-RtlGetCallersAddress (
-	PVOID	* CallersAddress
-	);
-
-VOID
-STDCALL
-RtlZeroMemory (
-	PVOID	Destination,
-	ULONG	Length
-	);
-
-typedef struct {
-	ULONG		Length;
-	ULONG		Unknown[11];
-} RTL_HEAP_DEFINITION, *PRTL_HEAP_DEFINITION;
-
-// Heap creation routine
-
-HANDLE
-STDCALL
-RtlCreateHeap (
-	ULONG			Flags,
-	PVOID			BaseAddress,
-	ULONG			SizeToReserve,
-	ULONG			SizeToCommit,
-	PVOID			Unknown,
-	PRTL_HEAP_DEFINITION	Definition
-	);
-
-
-BOOLEAN
-STDCALL
-RtlFreeHeap (
-	HANDLE	Heap,
-	ULONG	Flags,
-	PVOID	Address
 	);
 
 ULONG
@@ -912,29 +948,35 @@ RtlUnicodeStringToOemString (
 NTSTATUS
 STDCALL
 RtlUnicodeToMultiByteN (
-	PCHAR  MbString,
-	ULONG  MbSize,
-	PULONG ResultSize,
-	PWCHAR UnicodeString,
-	ULONG  UnicodeSize
+	PCHAR	MbString,
+	ULONG	MbSize,
+	PULONG	ResultSize,
+	PWCHAR	UnicodeString,
+	ULONG	UnicodeSize
 	);
 
 NTSTATUS
 STDCALL
 RtlUnicodeToMultiByteSize (
-	PULONG MbSize,
-	PWCHAR UnicodeString,
-	ULONG UnicodeSize
+	PULONG	MbSize,
+	PWCHAR	UnicodeString,
+	ULONG	UnicodeSize
 	);
 
 NTSTATUS
 STDCALL
 RtlUnicodeToOemN (
-	PCHAR  OemString,
-	ULONG  OemSize,
-	PULONG ResultSize,
-	PWCHAR UnicodeString,
-	ULONG  UnicodeSize
+	PCHAR	OemString,
+	ULONG	OemSize,
+	PULONG	ResultSize,
+	PWCHAR	UnicodeString,
+	ULONG	UnicodeSize
+	);
+
+BOOL
+STDCALL
+RtlUnlockHeap (
+	HANDLE	hheap
 	);
 
 WCHAR
@@ -1000,6 +1042,14 @@ RtlUpperString (
 	PSTRING	SourceString
 	);
 
+BOOL
+STDCALL
+RtlValidateHeap (
+	HANDLE	hheap,
+	DWORD	flags,
+	PVOID	pmem
+	);
+
 BOOLEAN
 RtlValidSecurityDescriptor (
 	PSECURITY_DESCRIPTOR	SecurityDescriptor
@@ -1017,71 +1067,10 @@ RtlWriteRegistryValue (
 	);
 
 VOID
-RtlStoreUlong (
-	PULONG	Address,
-	ULONG	Value
-	);
-
-
-DWORD
-RtlNtStatusToDosError (
-	NTSTATUS	StatusCode
-	);
-
-
-
-BOOL
 STDCALL
-RtlDestroyHeap (
-	HANDLE	hheap
-	);
-
-LPVOID
-STDCALL
-RtlReAllocateHeap (
-	HANDLE	hheap,
-	DWORD	flags,
-	LPVOID	ptr, 
-	DWORD	size
-	);
-
-HANDLE
-STDCALL
-RtlGetProcessHeap (VOID);
-
-BOOL
-STDCALL
-RtlLockHeap (
-	HANDLE	hheap
-	);
-
-BOOL
-WINAPI
-RtlUnlockHeap (
-	HANDLE	hheap
-	);
-
-UINT
-STDCALL
-RtlCompactHeap (
-	HANDLE	hheap,
-	DWORD	flags
-	);
-
-DWORD
-WINAPI
-RtlSizeHeap (
-	HANDLE	hheap,
-	DWORD	flags,
-	PVOID	pmem
-	);
-
-BOOL
-WINAPI
-RtlValidateHeap (
-	HANDLE	hheap,
-	DWORD	flags,
-	PVOID	pmem
+RtlZeroMemory (
+	PVOID	Destination,
+	ULONG	Length
 	);
 
 ULONG
@@ -1109,48 +1098,6 @@ RtlxUnicodeStringToOemSize (
 	);
 
 
-/* NtProcessStartup */
-
-VOID
-WINAPI
-RtlDestroyProcessParameters(
-	IN OUT	PSTARTUP_ARGUMENT	pArgument
-	);
-VOID
-WINAPI
-RtlDenormalizeProcessParams (
-	IN OUT	PSTARTUP_ARGUMENT	pArgument
-	);
-
-
-
-
-NTSTATUS STDCALL
-RtlCreateUserThread(
-        IN      HANDLE                  ProcessHandle,
-        IN      PSECURITY_DESCRIPTOR    SecurityDescriptor,
-        IN      BOOLEAN                 CreateSuspended,
-        IN      LONG                    StackZeroBits,
-        IN OUT  PULONG                  StackReserved,
-        IN OUT  PULONG                  StackCommit,
-        IN      PTHREAD_START_ROUTINE   StartAddress,
-        IN      PVOID                   Parameter,
-        IN OUT  PHANDLE                 ThreadHandle,
-        IN OUT  PCLIENT_ID              ClientId
-        );
-
-
-NTSTATUS
-STDCALL
-RtlCreateUserProcess(PUNICODE_STRING ApplicationName,
-                     PSECURITY_DESCRIPTOR ProcessSd,
-                     PSECURITY_DESCRIPTOR ThreadSd,
-                     WINBOOL bInheritHandles,
-                     DWORD dwCreationFlags,
-                     PCLIENT_ID ClientId,
-                     PHANDLE ProcessHandle,
-                     PHANDLE ThreadHandle);
-
 /*  functions exported from NTOSKRNL.EXE which are considered RTL  */
 #if 0
 _stricmp
@@ -1171,8 +1118,8 @@ wchar_t * _wcsrev(wchar_t *s);
 wchar_t *_wcsupr(wchar_t *x);
 
 #if 0
-;atoi
-;atol
+atoi
+atol
 isdigit
 islower
 isprint

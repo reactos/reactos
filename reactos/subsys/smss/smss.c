@@ -1,4 +1,4 @@
-/* $Id: smss.c,v 1.1 1999/09/05 12:29:50 ekohl Exp $
+/* $Id: smss.c,v 1.2 1999/12/01 15:18:54 ekohl Exp $
  *
  * smss.c - Session Manager
  * 
@@ -27,9 +27,8 @@
  * 		Compiled successfully with egcs 1.1.2
  */
 #include <ddk/ntddk.h>
-#include <wchar.h>
 
-BOOL InitSessionManager(HANDLE Children[]); /* ./init.c */
+#include "smss.h"
 
 
 void
@@ -37,10 +36,8 @@ DisplayString( LPCWSTR lpwString )
 {
 	UNICODE_STRING us;
 
-	us.Buffer = (LPWSTR) lpwString;
-	us.Length = wcslen(lpwString) * sizeof (WCHAR);
-	us.MaximumLength = us.Length + sizeof (WCHAR);
-	NtDisplayString( & us );
+	RtlInitUnicodeString (&us, lpwString);
+	NtDisplayString (&us);
 }
 
 
@@ -59,13 +56,7 @@ NtProcessStartup( PSTARTUP_ARGUMENT StartupArgument )
 		LARGE_INTEGER	Time = {{(DWORD)-1,(DWORD)-1}}; /* infinite? */
 		NTSTATUS	wws;
 
-                DisplayString( L"SM: Waiting for process termination...\n" );
-
-                wws = NtWaitForSingleObject (
-                                Children[0],
-				TRUE,	/* alertable */
-				& Time 
-				);
+		DisplayString( L"SM: Waiting for process termination...\n" );
 
 #if 0
 		wws = NtWaitForMultipleObjects (
@@ -76,16 +67,24 @@ NtProcessStartup( PSTARTUP_ARGUMENT StartupArgument )
 				& Time 
 				);
 #endif
-		if (!NT_SUCCESS(wws))
+		wws = NtWaitForSingleObject (
+				Children[CHILD_WINLOGON],
+				TRUE,	/* alertable */
+				& Time 
+				);
+
+
+//		if (!NT_SUCCESS(wws))
+		if (wws > 1)
 		{
 			DisplayString( L"SM: NtWaitForMultipleObjects failed!\n" );
 			/* FIXME: CRASH THE SYSTEM (BSOD) */
 		}
-                else
-                {
-                        DisplayString( L"SM: Process terminated!\n" );
+		else
+		{
+			DisplayString( L"SM: Process terminated!\n" );
 			/* FIXME: CRASH THE SYSTEM (BSOD) */
-                }
+		}
 	}
 	else
 	{
@@ -98,8 +97,13 @@ NtProcessStartup( PSTARTUP_ARGUMENT StartupArgument )
 	 * OK: CSRSS asked to shutdown the system;
 	 * We die.
 	 */
+#if 0
+	NtRaiseHardError (
+		STATUS_SYSTEM_PROCESS_TERMINATED,
+		...);
+#endif
+
 	NtTerminateProcess( NtCurrentProcess(), 0 );
 }
-
 
 /* EOF */
