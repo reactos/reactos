@@ -89,7 +89,7 @@ OBJECTS = \
 	quicklaunch.o \
 	settings.o
 
-LIBS = gdi32 comctl32 ole32 uuid wsock32
+LIBS = gdi32 comctl32 ole32 uuid
 
 .PHONY: all depends implib clean install dist bootcd depends
 
