@@ -5,6 +5,7 @@
 #include <ddk/ntddk.h>
 #include <include/class.h>
 #include <include/msgqueue.h>
+#include <include/window.h>
 
 /* PaintRedrawWindow() control flags */
 #define RDW_EX_USEHRGN		0x0001

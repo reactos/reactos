@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.63 2003/07/14 17:36:59 gvg Exp $
+/* $Id: dc.c,v 1.64 2003/07/17 07:49:15 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -258,9 +258,11 @@ BOOL STDCALL W32kCreatePrimarySurface(LPCWSTR Driver,
   PGD_ENABLEDRIVER GDEnableDriver;
   DRVENABLEDATA DED;
   PSURFOBJ SurfObj;
+  PSURFGDI SurfGDI;
   UNICODE_STRING DriverFileNames;
   PWSTR CurrentName;
   BOOL GotDriver;
+  extern void FASTCALL W32kInitDesktopWindow(ULONG Width, ULONG Height);
 
   /*  Open the miniport driver  */
   if ((PrimarySurface.DisplayDevice = DRIVER_FindMPDriver(Driver)) == NULL)
@@ -381,6 +383,8 @@ BOOL STDCALL W32kCreatePrimarySurface(LPCWSTR Driver,
 
   SurfObj = (PSURFOBJ)AccessUserObject((ULONG) PrimarySurface.Handle);
   SurfObj->dhpdev = PrimarySurface.PDev;
+  SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) PrimarySurface.Handle);
+  W32kInitDesktopWindow(SurfGDI->SurfObj.sizlBitmap.cx, SurfGDI->SurfObj.sizlBitmap.cy);
 
   return TRUE;
 }
@@ -414,16 +418,17 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
   NewDC = DC_HandleToPtr( hNewDC );
   ASSERT( NewDC );
 
-  if (!PrimarySurfaceCreated)
+  if (! PrimarySurfaceCreated)
     {
+      PrimarySurfaceCreated = TRUE;
       if (!W32kCreatePrimarySurface(Driver, Device))
 	{
+	  PrimarySurfaceCreated = FALSE;
 	  DC_ReleasePtr( hNewDC );
 	  DC_FreeDC(hNewDC);
 	  return  NULL;
 	}
     }
-  PrimarySurfaceCreated = TRUE;
   NewDC->DMW = PrimarySurface.DMW;
   NewDC->DevInfo = &PrimarySurface.DevInfo;
   NewDC->GDIInfo = &PrimarySurface.GDIInfo;

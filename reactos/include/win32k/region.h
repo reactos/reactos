@@ -20,7 +20,7 @@ BOOL FASTCALL RGNDATA_InternalDelete( PROSRGNDATA Obj );
 
 /*  User entry points */
 HRGN STDCALL
-W32kUnionRectWithRgn(HRGN hDest, const RECT* Rect);
+W32kUnionRectWithRgn(HRGN hDest, CONST PRECT Rect);
 
 INT
 STDCALL
@@ -150,10 +150,9 @@ W32kGetRegionData(HRGN hrgn,
 						LPRGNDATA rgndata);
 
 HRGN STDCALL REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lpPt);
-HRGN STDCALL
-UnsafeW32kCreateRectRgnIndirect(CONST PRECT rc);
-INT STDCALL
-UnsafeW32kGetRgnBox(HRGN  hRgn,
-		    LPRECT  pRect);
+
+HRGN STDCALL UnsafeW32kCreateRectRgnIndirect(CONST PRECT rc);
+INT STDCALL UnsafeW32kGetRgnBox(HRGN  hRgn, LPRECT pRect);
+HRGN FASTCALL UnsafeW32kUnionRectWithRgn(HRGN hDest, CONST PRECT Rect);
 #endif
 

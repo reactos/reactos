@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.69 2003/07/12 12:45:29 gvg Exp $
+# $Id: makefile,v 1.70 2003/07/17 07:49:15 gvg Exp $
 
 PATH_TO_TOP = ../..
 
@@ -51,7 +51,7 @@ NTUSER_OBJECTS = ntuser/class.o ntuser/guicheck.o ntuser/hook.o \
 		 ntuser/input.o ntuser/keyboard.o ntuser/callback.o \
 		 ntuser/winpos.o ntuser/painting.o ntuser/metric.o \
 		 ntuser/windc.o ntuser/prop.o ntuser/scrollbar.o \
-		 ntuser/timer.o ntuser/misc.o
+		 ntuser/timer.o ntuser/misc.o ntuser/vis.o
 
 OBJECTS_OBJECTS = objects/bitmaps.o objects/brush.o objects/cliprgn.o  \
                   objects/color.o objects/coord.o objects/dc.o  \

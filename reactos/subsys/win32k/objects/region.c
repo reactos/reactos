@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.28 2003/07/15 08:55:52 gvg Exp $ */
+/* $Id: region.c,v 1.29 2003/07/17 07:49:15 gvg Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -30,7 +30,7 @@
 #include <include/rect.h>
 #include <include/object.h>
 #include <include/inteng.h>
-
+#include <include/error.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -347,7 +347,7 @@ HRGN STDCALL REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lpP
 	  Lock[0].hObj = hNewDst;
   }
 
-  GDIOBJ_LockMultipleObj( Lock, 2 );
+  GDIOBJ_LockMultipleObj(Lock, 2);
   rgnDst = Lock[0].pObj;
   objSrc = Lock[1].pObj;
 
@@ -369,7 +369,7 @@ HRGN STDCALL REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lpP
 	  }
     }
   }
-  GDIOBJ_UnlockMultipleObj( Lock, 2 );
+  GDIOBJ_UnlockMultipleObj(Lock, 2);
   return hRet;
 }
 
@@ -1011,62 +1011,74 @@ static void FASTCALL REGION_UnionO (ROSRGNDATA *pReg, RECT *r1, RECT *r1End,
 static void FASTCALL REGION_UnionRegion(ROSRGNDATA *newReg, ROSRGNDATA *reg1,
 			       ROSRGNDATA *reg2)
 {
-    /*  checks all the simple cases */
+  /*  checks all the simple cases */
 
-    /*
-     * Region 1 and 2 are the same or region 1 is empty
-     */
-    if ( (reg1 == reg2) || (!(reg1->rdh.nCount)) )
+  /*
+   * Region 1 and 2 are the same or region 1 is empty
+   */
+  if (reg1 == reg2 || 0 == reg1->rdh.nCount ||
+      reg1->rdh.rcBound.right <= reg1->rdh.rcBound.left ||
+      reg1->rdh.rcBound.bottom <= reg1->rdh.rcBound.top)
     {
-		if (newReg != reg2)
-		    REGION_CopyRegion(newReg, reg2);
-		return;
+      if (newReg != reg2)
+	{
+	  REGION_CopyRegion(newReg, reg2);
+	}
+      return;
     }
 
     /*
      * if nothing to union (region 2 empty)
      */
-    if (!(reg2->rdh.nCount))
+  if (0 == reg2->rdh.nCount ||
+      reg2->rdh.rcBound.right <= reg2->rdh.rcBound.left ||
+      reg2->rdh.rcBound.bottom <= reg2->rdh.rcBound.top)
     {
-		if (newReg != reg1)
-		    REGION_CopyRegion(newReg, reg1);
-		return;
+      if (newReg != reg1)
+	{
+	  REGION_CopyRegion(newReg, reg1);
+	}
+      return;
     }
 
-    /*
-     * Region 1 completely subsumes region 2
-     */
-    if ((reg1->rdh.nCount == 1) &&
-		(reg1->rdh.rcBound.left <= reg2->rdh.rcBound.left) &&
-		(reg1->rdh.rcBound.top <= reg2->rdh.rcBound.top) &&
-		(reg1->rdh.rcBound.right >= reg2->rdh.rcBound.right) &&
-		(reg1->rdh.rcBound.bottom >= reg2->rdh.rcBound.bottom))
+  /*
+   * Region 1 completely subsumes region 2
+   */
+  if (1 == reg1->rdh.nCount &&
+      reg1->rdh.rcBound.left <= reg2->rdh.rcBound.left &&
+      reg1->rdh.rcBound.top <= reg2->rdh.rcBound.top &&
+      reg2->rdh.rcBound.right <= reg1->rdh.rcBound.right &&
+      reg2->rdh.rcBound.bottom <= reg1->rdh.rcBound.bottom)
     {
-		if (newReg != reg1)
-		    REGION_CopyRegion(newReg, reg1);
-		return;
+      if (newReg != reg1)
+	{
+	  REGION_CopyRegion(newReg, reg1);
+	}
+      return;
     }
 
-    /*
-     * Region 2 completely subsumes region 1
-     */
-    if ((reg2->rdh.nCount == 1) &&
-		(reg2->rdh.rcBound.left <= reg1->rdh.rcBound.left) &&
-		(reg2->rdh.rcBound.top <= reg1->rdh.rcBound.top) &&
-		(reg2->rdh.rcBound.right >= reg1->rdh.rcBound.right) &&
-		(reg2->rdh.rcBound.bottom >= reg1->rdh.rcBound.bottom))
+  /*
+   * Region 2 completely subsumes region 1
+   */
+  if (1 == reg2->rdh.nCount &&
+      reg2->rdh.rcBound.left <= reg1->rdh.rcBound.left &&
+      reg2->rdh.rcBound.top <= reg1->rdh.rcBound.top &&
+      reg1->rdh.rcBound.right <= reg2->rdh.rcBound.right &&
+      reg1->rdh.rcBound.bottom <= reg2->rdh.rcBound.bottom)
     {
-		if (newReg != reg2)
-		    REGION_CopyRegion(newReg, reg2);
-		return;
+      if (newReg != reg2)
+	{
+	  REGION_CopyRegion(newReg, reg2);
+	}
+      return;
     }
 
-    REGION_RegionOp (newReg, reg1, reg2, REGION_UnionO,
-		REGION_UnionNonO, REGION_UnionNonO);
-    newReg->rdh.rcBound.left = min(reg1->rdh.rcBound.left, reg2->rdh.rcBound.left);
-    newReg->rdh.rcBound.top = min(reg1->rdh.rcBound.top, reg2->rdh.rcBound.top);
-    newReg->rdh.rcBound.right = max(reg1->rdh.rcBound.right, reg2->rdh.rcBound.right);
-    newReg->rdh.rcBound.bottom = max(reg1->rdh.rcBound.bottom, reg2->rdh.rcBound.bottom);
+  REGION_RegionOp(newReg, reg1, reg2, REGION_UnionO,
+		  REGION_UnionNonO, REGION_UnionNonO);
+  newReg->rdh.rcBound.left = min(reg1->rdh.rcBound.left, reg2->rdh.rcBound.left);
+  newReg->rdh.rcBound.top = min(reg1->rdh.rcBound.top, reg2->rdh.rcBound.top);
+  newReg->rdh.rcBound.right = max(reg1->rdh.rcBound.right, reg2->rdh.rcBound.right);
+  newReg->rdh.rcBound.bottom = max(reg1->rdh.rcBound.bottom, reg2->rdh.rcBound.bottom);
 }
 
 /***********************************************************************
@@ -1427,7 +1439,7 @@ W32kCombineRgn(HRGN  hDest,
   GDIMULTILOCK Lock[3] = {{hDest, 0, GO_REGION_MAGIC}, {hSrc1, 0, GO_REGION_MAGIC}, {hSrc2, 0, GO_REGION_MAGIC}};
   PROSRGNDATA destRgn, src1Rgn, src2Rgn;
 
-  GDIOBJ_LockMultipleObj( &Lock, 3 );
+  GDIOBJ_LockMultipleObj(Lock, 3);
 
   destRgn = (PROSRGNDATA) Lock[0].pObj;
   src1Rgn = (PROSRGNDATA) Lock[1].pObj;
@@ -1468,7 +1480,7 @@ W32kCombineRgn(HRGN  hDest,
       DPRINT("W32kCombineRgn: hDest unavailable\n");
 	  result = ERROR;
   }
-  GDIOBJ_UnlockMultipleObj( &Lock, 3 );
+  GDIOBJ_UnlockMultipleObj(Lock, 3);
   return result;
 }
 
@@ -1923,21 +1935,36 @@ W32kSetRectRgn(HRGN  hRgn,
   return TRUE;
 }
 
-HRGN STDCALL
-W32kUnionRectWithRgn(HRGN hDest, const RECT* unsafeRect)
+HRGN FASTCALL
+UnsafeW32kUnionRectWithRgn(HRGN hDest, CONST PRECT Rect)
 {
-	PRECT pRect;
-	PROSRGNDATA pRgn;
+  PROSRGNDATA pRgn;
 
-	if( !NT_SUCCESS( MmCopyFromCaller( pRect, (PRECT)unsafeRect, sizeof( RECT ) ) ) )
-		return NULL;
+  pRgn = RGNDATA_LockRgn(hDest);
+  if (NULL == pRgn)
+    {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return NULL;
+    }
 
-	if( !(pRgn = RGNDATA_LockRgn( hDest ) ) )
-		return NULL;
+  REGION_UnionRectWithRegion(Rect, pRgn);
+  RGNDATA_UnlockRgn(hDest);
 
-	REGION_UnionRectWithRegion( pRect, pRgn );
-	RGNDATA_UnlockRgn( hDest );
-	return hDest;
+  return hDest;
+}
+
+HRGN STDCALL
+W32kUnionRectWithRgn(HRGN hDest, CONST PRECT UnsafeRect)
+{
+  RECT SafeRect;
+
+  if (! NT_SUCCESS(MmCopyFromCaller(&SafeRect, UnsafeRect, sizeof(RECT))))
+    {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return NULL;
+    }
+
+  return UnsafeW32kUnionRectWithRgn(hDest, &SafeRect);
 }
 
 /*!

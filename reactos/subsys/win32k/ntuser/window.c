@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.63 2003/07/11 17:08:44 chorns Exp $
+/* $Id: window.c,v 1.64 2003/07/17 07:49:15 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -45,6 +45,7 @@
 #include <include/paint.h>
 #include <include/painting.h>
 #include <include/scroll.h>
+#include <include/vis.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -298,20 +299,17 @@ W32kGetWindowRect(HWND hWnd, LPRECT Rect)
 {
   PWINDOW_OBJECT WindowObject;
 
-  ASSERT( Rect );
+  ASSERT(NULL != Rect);
 
   WindowObject = W32kGetWindowObject(hWnd);
   if (WindowObject == NULL)
     {
-      return(FALSE);
+      return FALSE;
     }
   *Rect = WindowObject->WindowRect;
-  if (WindowObject->Style & WS_CHILD)
-    {
-      DbgBreakPoint();
-    }
   W32kReleaseWindowObject(WindowObject);
-  return(TRUE);
+
+  return TRUE;
 }
 
 /*!
@@ -326,10 +324,12 @@ NtUserGetWindowRect(HWND hWnd, LPRECT Rect)
   BOOL bRet;
 
   bRet = W32kGetWindowRect(hWnd, &SafeRect);
-  if (! NT_SUCCESS(MmCopyToCaller(Rect, &SafeRect, sizeof(RECT)))){
-    return(FALSE);
-  }
-  return( bRet );
+  if (! NT_SUCCESS(MmCopyToCaller(Rect, &SafeRect, sizeof(RECT))))
+    {
+      return FALSE;
+    }
+
+  return bRet;
 }
 
 /*!
@@ -499,6 +499,27 @@ W32kCreateDesktopWindow(PWINSTATION_OBJECT WindowStation,
   RtlInitUnicodeString(&WindowObject->WindowName, WindowName);
 
   return(Handle);
+}
+
+VOID FASTCALL
+W32kInitDesktopWindow(ULONG Width, ULONG Height)
+{
+  PWINDOW_OBJECT DesktopWindow;
+  HRGN DesktopRgn;
+  
+  DesktopWindow = W32kGetWindowObject(PsGetWin32Thread()->Desktop->DesktopWindow);
+  if (NULL == DesktopWindow)
+    {
+      return;
+    }
+  DesktopWindow->WindowRect.right = Width;
+  DesktopWindow->WindowRect.bottom = Height;
+  DesktopWindow->ClientRect = DesktopWindow->WindowRect;
+
+  DesktopRgn = UnsafeW32kCreateRectRgnIndirect(&(DesktopWindow->WindowRect));
+  VIS_WindowLayoutChanged(PsGetWin32Thread()->Desktop, DesktopWindow, DesktopRgn);
+  W32kDeleteObject(DesktopRgn);
+  W32kReleaseWindowObject(DesktopWindow);
 }
 
 HWND STDCALL

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.14 2003/07/11 17:08:44 chorns Exp $
+/* $Id: windc.c,v 1.15 2003/07/17 07:49:15 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -40,6 +40,7 @@
 #include <include/window.h>
 #include <include/rect.h>
 #include <include/dce.h>
+#include <include/vis.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -53,219 +54,70 @@ static PDCE FirstDce = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
-VOID STATIC FASTCALL
-DceOffsetVisRgn(HDC hDC, HRGN hVisRgn)
-{
-  DC *dc = DC_HandleToPtr(hDC);
-  if (dc == NULL)
-    {
-      return;
-    }
-  W32kOffsetRgn(hVisRgn, dc->w.DCOrgX, dc->w.DCOrgY);
-  DC_ReleasePtr(hDC);
-}
-
-BOOL STATIC STDCALL
-DceGetVisRect(PWINDOW_OBJECT Window, BOOL ClientArea, RECT* Rect)
-{
-  if (ClientArea)
-    {
-      *Rect = Window->ClientRect;
-    }
-  else
-    {
-      *Rect = Window->WindowRect;
-    }
-
-  if (Window->Style & WS_VISIBLE)
-    {
-      INT XOffset = Rect->left;
-      INT YOffset = Rect->top;
-
-      while ((Window = Window->Parent) != NULL)
-	{
-	  if ((Window->Style & (WS_ICONIC | WS_VISIBLE)) != WS_VISIBLE)
-	    {
-	      W32kSetEmptyRect(Rect);
-	      return(FALSE);
-	    }
-	  XOffset += Window->ClientRect.left;
-	  YOffset += Window->ClientRect.top;
-	  W32kOffsetRect(Rect, Window->ClientRect.left, 
-			 Window->ClientRect.top);
-	  if (Window->ClientRect.left >= Window->ClientRect.right ||
-	      Window->ClientRect.top >= Window->ClientRect.bottom ||
-	      Rect->left >= Window->ClientRect.right ||
-	      Rect->right <= Window->ClientRect.left ||
-	      Rect->top >= Window->ClientRect.bottom ||
-	      Rect->bottom <= Window->ClientRect.top)
-	    {
-	      W32kSetEmptyRect(Rect);
-	      return(FALSE);
-	    }
-	  Rect->left = max(Rect->left, Window->ClientRect.left);
-	  Rect->right = min(Rect->right, Window->ClientRect.right);
-	  Rect->top = max(Rect->top, Window->ClientRect.top);
-	  Rect->bottom = min(Rect->bottom, Window->ClientRect.bottom);
-	}
-      W32kOffsetRect(Rect, -XOffset, -YOffset);
-      return(TRUE);
-    }
-  W32kSetEmptyRect(Rect);
-  return(FALSE);
-}
-
-BOOL STDCALL
-DceAddClipRects(PWINDOW_OBJECT Parent, PWINDOW_OBJECT End, 
-		HRGN ClipRgn, PRECT Rect, INT XOffset, INT YOffset)
-{
-  PLIST_ENTRY ChildListEntry;
-  PWINDOW_OBJECT Child;
-  RECT Rect1;
-
-
-  ExAcquireFastMutexUnsafe(&Parent->ChildrenListLock);
-  ChildListEntry = Parent->ChildrenListHead.Flink;
-  while (ChildListEntry != &Parent->ChildrenListHead)
-    {
-      Child = CONTAINING_RECORD(ChildListEntry, WINDOW_OBJECT, 
-				SiblingListEntry);
-      if (Child == End)
-	{
-	  ExReleaseFastMutexUnsafe(&Parent->ChildrenListLock);
-	  return(TRUE);
-	}
-      if (Child->Style & WS_VISIBLE)
-	{
-	  Rect1.left = Child->WindowRect.left + XOffset;
-	  Rect1.top = Child->WindowRect.top + YOffset;
-	  Rect1.right = Child->WindowRect.right + XOffset;
-	  Rect1.bottom = Child->WindowRect.bottom + YOffset;
-
-	  if (W32kIntersectRect(&Rect1, &Rect1, Rect))
-	    {
-	      W32kUnionRectWithRgn(ClipRgn, &Rect1);
-	    }
-	}
-      ChildListEntry = ChildListEntry->Flink;
-    }
-  ExReleaseFastMutexUnsafe(&Parent->ChildrenListLock);
-  return(FALSE);
-}
-
 HRGN STDCALL
 DceGetVisRgn(HWND hWnd, ULONG Flags, HWND hWndChild, ULONG CFlags)
 {
   PWINDOW_OBJECT Window;
   PWINDOW_OBJECT Child;
   HRGN VisRgn;
-  RECT Rect;
+  HRGN VisChild;
+  HRGN ChildRect;
+  HRGN ParentRect;
 
   Window = W32kGetWindowObject(hWnd);
-  Child = W32kGetWindowObject(hWndChild);
 
-  if (Window != NULL && DceGetVisRect(Window, !(Flags & DCX_WINDOW), &Rect))
+  if (NULL == Window)
     {
-      if ((VisRgn = UnsafeW32kCreateRectRgnIndirect(&Rect)) != NULL)
-	{
-	  HRGN ClipRgn = W32kCreateRectRgn(0, 0, 0, 0);
-	  INT XOffset, YOffset;
+      return NULL;
+    }
 
-	  if (ClipRgn != NULL)
+  VisRgn = VIS_ComputeVisibleRegion(PsGetWin32Thread()->Desktop, Window,
+                                    0 == (Flags & DCX_WINDOW),
+                                    0 != (Flags & DCX_CLIPCHILDREN),
+                                    0 != (Flags & DCX_CLIPSIBLINGS));
+  if (NULL != hWndChild && 0 != (CFlags & DCX_CLIPCHILDREN))
+    {
+      /* We need to filter out the child windows of hWndChild */
+      Child = W32kGetWindowObject(hWnd);
+      if (NULL != Child)
+ 	{
+	  if (! IsListEmpty(&Child->ChildrenListHead))
 	    {
-	      if (Flags & DCX_CLIPCHILDREN && 
-		  !IsListEmpty(&Window->ChildrenListHead))
+	      /* Compute the visible region of the child */
+	      VisChild = VIS_ComputeVisibleRegion(PsGetWin32Thread()->Desktop,
+	                                          Child, FALSE, TRUE, FALSE);
+	      /* If the child doesn't obscure the whole window, we need to
+                 extend it. First compute the difference between window and child */
+	      ChildRect = UnsafeW32kCreateRectRgnIndirect(&(Child->ClientRect));
+	      if (0 == (Flags & DCX_WINDOW))
 		{
-		  if (Flags & DCX_WINDOW)
-		    {
-		      XOffset = Window->ClientRect.left -
-			Window->WindowRect.left;
-		      YOffset = Window->ClientRect.top -
-			Window->WindowRect.top;
-		    }		
-		  else
-		    {
-		      XOffset = YOffset = 0;
-		    }
-		  DceAddClipRects(Window, NULL, ClipRgn, &Rect,
-				  XOffset, YOffset);
-		}
-
-	      if (CFlags & DCX_CLIPCHILDREN && Child &&
-		  !IsListEmpty(&Child->ChildrenListHead))
-		{
-		  if (Flags & DCX_WINDOW)
-		    {
-		      XOffset = Window->ClientRect.left -
-			Window->WindowRect.left;
-		      YOffset = Window->ClientRect.top -
-			Window->WindowRect.top;
-		    }
-		  else
-		    {
-		      XOffset = YOffset = 0;
-		    }
-
-		  XOffset += Child->ClientRect.left;
-		  YOffset += Child->ClientRect.top;
-
-		  DceAddClipRects(Child, NULL, ClipRgn, &Rect,
-				  XOffset, YOffset);
-		}
-
-	      if (Flags & DCX_WINDOW)
-		{
-		  XOffset = -Window->WindowRect.left;
-		  YOffset = -Window->WindowRect.top;
+		  ParentRect = UnsafeW32kCreateRectRgnIndirect(&(Window->ClientRect));
 		}
 	      else
 		{
-		  XOffset = -Window->ClientRect.left;
-		  YOffset = -Window->ClientRect.top;
+		  ParentRect = UnsafeW32kCreateRectRgnIndirect(&(Window->WindowRect));
 		}
+	      W32kCombineRgn(ChildRect, ParentRect, ChildRect, RGN_DIFF);
 
-	      if (Flags & DCX_CLIPSIBLINGS && Window->Parent != NULL)
-		{
-		  DceAddClipRects(Window->Parent, Window, ClipRgn,
-				  &Rect, XOffset, YOffset);
-		}
-	      
-	      while (Window->Style & WS_CHILD)
-		{
-		  Window = Window->Parent;
-		  XOffset -= Window->ClientRect.left;
-		  YOffset -= Window->ClientRect.top;
-		  if (Window->Style & WS_CLIPSIBLINGS && 
-		      Window->Parent != NULL)
-		    {
-		      DceAddClipRects(Window->Parent, Window, ClipRgn,
-				      &Rect, XOffset, YOffset);
-		    }
-		}
+	      /* Now actually extend the child by adding the difference */
+	      W32kCombineRgn(VisChild, VisChild, ChildRect, RGN_OR);
 
-	      W32kCombineRgn(VisRgn, VisRgn, ClipRgn, RGN_DIFF);
-	      W32kDeleteObject(ClipRgn);
+	      /* Clip the childs children */
+	      W32kCombineRgn(VisRgn, VisRgn, VisChild, RGN_AND);
 	    }
-	  else
-	    {
-	      W32kDeleteObject(VisRgn);
-	      VisRgn = 0;
-	    }
+	  W32kReleaseWindowObject(Child);
 	}
     }
-  else
-    {
-      VisRgn = W32kCreateRectRgn(0, 0, 0, 0);
-    }
+
   W32kReleaseWindowObject(Window);
-  W32kReleaseWindowObject(Child);
-  return(VisRgn);
+
+  return VisRgn;
 }
 
 INT STDCALL
 NtUserReleaseDC(HWND hWnd, HDC hDc)
 {
-  
+  return 1;  
 }
 
 HDC STDCALL
@@ -505,19 +357,6 @@ NtUserGetDCEx(HWND hWnd, HANDLE hRegion, ULONG Flags)
 		}
 	      hRgnVisible = DceGetVisRgn(Parent->Self, DcxFlags, 
 					 Window->Self, Flags);
-	      if (Flags & DCX_WINDOW)
-		{
-		  W32kOffsetRgn(hRgnVisible,
-		                Parent->WindowRect.left - Window->WindowRect.left,
-		                Parent->WindowRect.top - Window->WindowRect.top);
-		}
-	      else
-		{
-		  W32kOffsetRgn(hRgnVisible,
-		                Parent->ClientRect.left - Window->ClientRect.left,
-		                Parent->ClientRect.top - Window->ClientRect.top);
-		}
-	      DceOffsetVisRgn(Dce->hDC, hRgnVisible);
 	    }
 	  else
 	    {
@@ -536,7 +375,6 @@ NtUserGetDCEx(HWND hWnd, HANDLE hRegion, ULONG Flags)
 	  else
 	    {
 	      hRgnVisible = DceGetVisRgn(hWnd, Flags, 0, 0);
-	      DceOffsetVisRgn(Dce->hDC, hRgnVisible);
 	    }
 	}
 
