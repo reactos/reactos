@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.14 2002/10/31 00:03:31 dwelch Exp $
+/* $Id: class.c,v 1.15 2003/05/03 14:12:14 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -20,7 +20,7 @@
 #include <include/guicheck.h>
 #include <include/window.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/

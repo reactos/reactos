@@ -1,4 +1,4 @@
-/* $Id: windc.c,v 1.8 2003/03/08 13:16:51 gvg Exp $
+/* $Id: windc.c,v 1.9 2003/05/03 14:12:14 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -249,9 +249,7 @@ NtUserReleaseDC(HWND hWnd, HDC hDc)
 HDC STDCALL
 NtUserGetDC(HWND hWnd)
 {
-    if (!hWnd)
-        return NtUserGetDCEx(0, 0, DCX_CACHE | DCX_WINDOW);
-    return NtUserGetDCEx(hWnd, 0, DCX_USESTYLE);
+    return NtUserGetDCEx(hWnd, NULL, NULL == hWnd ? DCX_CACHE | DCX_WINDOW : DCX_USESTYLE);
 }
 
 DCE* DceAllocDCE(HWND hWnd, DCE_TYPE Type)
@@ -331,15 +329,23 @@ NtUserGetDCEx(HWND hWnd, HANDLE hRegion, ULONG Flags)
   BOOL UpdateClipOrigin = FALSE;
   HANDLE hRgnVisible = NULL;
 
-  if ((Window = W32kGetWindowObject(hWnd)) == NULL)
+if (NULL == hWnd)
+__asm__("int $3\n");
+  if (NULL == hWnd)
+    {
+      Flags &= ~DCX_USESTYLE;
+      Window = NULL;
+    }
+  else if (NULL == (Window = W32kGetWindowObject(hWnd)))
     {
       return(0);
     }
 
-  if (Window->Dce == NULL)
+  if (NULL == Window || NULL == Window->Dce)
     {
       Flags |= DCX_CACHE;
     }
+
 
   if (Flags & DCX_USESTYLE)
     {
@@ -380,7 +386,7 @@ NtUserGetDCEx(HWND hWnd, HANDLE hRegion, ULONG Flags)
       Flags = (Flags & ~DCX_CLIPCHILDREN) | DCX_CACHE;
     }
 
-  if (!(Window->Style & WS_CHILD) || Window->Parent == NULL)
+  if (NULL == Window || !(Window->Style & WS_CHILD) || NULL == Window->Parent)
     {
       Flags &= ~DCX_PARENTCLIP;
     }
@@ -444,7 +450,7 @@ NtUserGetDCEx(HWND hWnd, HANDLE hRegion, ULONG Flags)
       DbgBreakPoint();
     }
 
-  if (Dce == NULL)
+  if (NULL == Dce && NULL != Window)
     {
       W32kReleaseWindowObject(Window);
       return(NULL);
@@ -525,7 +531,11 @@ NtUserGetDCEx(HWND hWnd, HANDLE hRegion, ULONG Flags)
     {
       W32kDeleteObject(hRgnVisible);
     }
-  W32kReleaseWindowObject(Window);
+  if (NULL != Window)
+    {
+      W32kReleaseWindowObject(Window);
+    }
+
   return(Dce->hDC);
 }
 
