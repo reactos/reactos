@@ -63,7 +63,14 @@ typedef struct _KPCR
   KTSS* TSS;                         /* 28 */
   UCHAR Reserved3[0xF8];             /* 2C */
   struct _KTHREAD* CurrentThread;    /* 124 */
-} __attribute__((packed)) KPCR, *PKPCR;
+} __attribute__((packed)) KPCR;
+
+#ifndef __USE_W32API
+
+typedef struct _KPCR *PKPCR;
+
+#endif /* __USE_W32API */
+
 
 #ifndef __USE_W32API
 

@@ -1,6 +1,6 @@
 #ifndef _NTOS_H
 #define _NTOS_H
-/* $Id: ntos.h,v 1.9 2003/05/28 18:09:09 chorns Exp $ */
+/* $Id: ntos.h,v 1.10 2003/06/01 14:59:01 chorns Exp $ */
 
 #if defined(NTOS_MODE_USER)
 // include windows.h before ntddk.h to get user mode prototype for InterlockedXxx functions
@@ -44,10 +44,10 @@
 #include "ntdll/registry.h"
 #include "ntdll/rtl.h"
 #include "ntdll/trace.h"
+#include "rosrtl/thread.h"
 #include "kernel32/error.h"
 #else // Assume kernel mode
 #include <ddk/ntddk.h>
-//#include "ntos/types.h" // robd
 #include <ddk/ntifs.h>
 #include "ntos/types.h"
 #include "ntos/cdrom.h"
@@ -83,6 +83,7 @@
 #include "ntos/haltypes.h"
 #include "ntos/obtypes.h"
 #include "ntos/tss.h"
+#include "rosrtl/thread.h"
 #endif
 
 #endif /* ndef _NTOS_H */

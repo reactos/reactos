@@ -1,4 +1,4 @@
-/* $Id: win32.c,v 1.8 2003/04/13 03:24:26 hyperion Exp $
+/* $Id: win32.c,v 1.9 2003/06/01 14:59:02 chorns Exp $
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -73,7 +73,7 @@ typedef struct _ENUM_DEVICE_DRIVERS_CONTEXT
 /* callback routine */
 NTSTATUS STDCALL EnumDeviceDriversCallback
 (
- IN PSYSTEM_MODULE_INFORMATION CurrentModule,
+ IN PSYSTEM_MODULE_INFORMATION_ENTRY CurrentModule,
  IN OUT PVOID CallbackContext
 )
 {
@@ -308,7 +308,7 @@ typedef struct _GET_DEVICE_DRIVER_NAME_CONTEXT
 /* common callback routine */
 NTSTATUS STDCALL GetDeviceDriverNameCallback
 (
- IN PSYSTEM_MODULE_INFORMATION CurrentModule,
+ IN PSYSTEM_MODULE_INFORMATION_ENTRY CurrentModule,
  IN OUT PVOID CallbackContext
 )
 {
@@ -325,7 +325,7 @@ NTSTATUS STDCALL GetDeviceDriverNameCallback
   if(pgddncContext->bFullName)
    pcModuleName = &CurrentModule->ImageName[0];
   else
-   pcModuleName = &CurrentModule->ImageName[CurrentModule->ModuleNameOffset];
+   pcModuleName = &CurrentModule->ImageName[CurrentModule->PathLength];
 
   /* get the length of the name */
   l = strlen(pcModuleName);

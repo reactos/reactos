@@ -1,4 +1,4 @@
-/* $Id: drivers.c,v 1.1 2003/04/13 03:24:27 hyperion Exp $
+/* $Id: drivers.c,v 1.2 2003/06/01 14:59:01 chorns Exp $
 */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -14,9 +14,12 @@
  *                          and improve reusability
  */
 
-#include <ddk/ntddk.h>
-#include <debug.h>
 #include <stddef.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
+
+#define NDEBUG
+#include <debug.h>
 
 #include <epsapi.h>
 
@@ -29,7 +32,7 @@ PsaEnumerateSystemModules
 )
 {
  register NTSTATUS nErrCode = STATUS_SUCCESS;
- PSYSTEM_MODULES psmModules = NULL;
+ PSYSTEM_MODULE_INFORMATION psmModules = NULL;
 
 #if 0
  __try
@@ -67,12 +70,12 @@ NTSTATUS
 NTAPI
 PsaCaptureSystemModules
 (
- OUT PSYSTEM_MODULES * SystemModules
+ OUT PSYSTEM_MODULE_INFORMATION * SystemModules
 )
 {
  SIZE_T nSize = 0;
  register NTSTATUS nErrCode;
- register PSYSTEM_MODULES psmModules = (PSYSTEM_MODULES)&nSize;
+ register PSYSTEM_MODULE_INFORMATION psmModules = (PSYSTEM_MODULE_INFORMATION)&nSize;
 
 #if 0
  __try
@@ -174,7 +177,7 @@ NTSTATUS
 NTAPI
 PsaWalkSystemModules
 (
- IN PSYSTEM_MODULES SystemModules,
+ IN PSYSTEM_MODULE_INFORMATION SystemModules,
  IN PSYSMOD_ENUM_ROUTINE Callback,
  IN OUT PVOID CallbackContext
 )
@@ -186,7 +189,7 @@ PsaWalkSystemModules
  for(i = 0; i < SystemModules->Count; ++ i)
  {
   /* return current module to the callback */
-  nErrCode = Callback(&(SystemModules->Modules[i]), CallbackContext);
+  nErrCode = Callback(&(SystemModules->Module[i]), CallbackContext);
   
   if(!NT_SUCCESS(nErrCode))
    /* failure */
@@ -197,29 +200,29 @@ PsaWalkSystemModules
  return STATUS_SUCCESS;
 }
 
-PSYSTEM_MODULE_INFORMATION
+PSYSTEM_MODULE_INFORMATION_ENTRY
 FASTCALL
 PsaWalkFirstSystemModule
 (
- IN PSYSTEM_MODULES SystemModules
+ IN PSYSTEM_MODULE_INFORMATION SystemModules
 )
 { 
- return &(SystemModules->Modules[0]);
+ return &(SystemModules->Module[0]);
 }
 
-PSYSTEM_MODULE_INFORMATION
+PSYSTEM_MODULE_INFORMATION_ENTRY
 FASTCALL
 PsaWalkNextSystemModule
 (
  IN PSYSTEM_MODULE_INFORMATION CurrentSystemModule
 )
 {
- return (PSYSTEM_MODULE_INFORMATION)
+ return (PSYSTEM_MODULE_INFORMATION_ENTRY)
  (
   (ULONG_PTR)CurrentSystemModule +
   (
-   offsetof(SYSTEM_MODULES, Modules[1]) -
-   offsetof(SYSTEM_MODULES, Modules[0])
+   offsetof(SYSTEM_MODULE_INFORMATION, Module[1]) -
+   offsetof(SYSTEM_MODULE_INFORMATION, Module[0])
   )
  );
 }

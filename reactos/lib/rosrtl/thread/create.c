@@ -1,11 +1,11 @@
-/* $Id: create.c,v 1.2 2003/05/29 00:36:41 hyperion Exp $
+/* $Id: create.c,v 1.3 2003/06/01 14:59:02 chorns Exp $
 */
 /*
 */
 
 #include <stdarg.h>
-#include <ddk/ntddk.h>
-#include <rosrtl/thread.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
 
 #define NDEBUG
 #include <ntdll/ntdll.h>

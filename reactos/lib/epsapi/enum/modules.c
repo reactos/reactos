@@ -1,4 +1,4 @@
-/* $Id: modules.c,v 1.1 2003/04/13 03:24:27 hyperion Exp $
+/* $Id: modules.c,v 1.2 2003/06/01 14:59:01 chorns Exp $
 */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -19,9 +19,11 @@
  *                          and improve reusability
  */
 
-#include <ddk/ntddk.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
+
+#define NDEBUG
 #include <debug.h>
-#include <ntdll/ldr.h>
 
 #include <epsapi.h>
 

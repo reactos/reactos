@@ -1,10 +1,10 @@
-/* $Id: context.c,v 1.2 2003/05/29 00:36:41 hyperion Exp $
+/* $Id: context.c,v 1.3 2003/06/01 14:59:02 chorns Exp $
 */
 /*
 */
 
-#include <ddk/ntddk.h>
-#include <rosrtl/thread.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
 
 #if defined(_M_IX86)
 #include <napi/i386/segment.h>

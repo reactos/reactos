@@ -18,10 +18,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <napi/teb.h>
-#include <ntdll/rtl.h>
-#include <rosrtl/thread.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
 
 #define NDEBUG
 #include <ntdll/ntdll.h>

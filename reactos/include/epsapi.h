@@ -1,4 +1,4 @@
-/* $Id: epsapi.h,v 1.2 2003/04/13 03:57:41 hyperion Exp $
+/* $Id: epsapi.h,v 1.3 2003/06/01 14:59:01 chorns Exp $
 */
 /*
  * epsapi.h
@@ -26,8 +26,8 @@
 #define __INTERNAL_PSAPI_H_INCLUDED__
 
 /* INCLUDES */
-#include <ddk/ntddk.h>
-#include <ntdll/ldr.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
 
 /* OBJECTS */
 
@@ -46,7 +46,7 @@ typedef NTSTATUS NTAPI (*PTHREAD_ENUM_ROUTINE)
 
 typedef NTSTATUS NTAPI (*PSYSMOD_ENUM_ROUTINE)
 (
- IN PSYSTEM_MODULE_INFORMATION CurrentModule,
+ IN PSYSTEM_MODULE_INFORMATION_ENTRY CurrentModule,
  IN OUT PVOID CallbackContext
 );
 
@@ -169,26 +169,26 @@ NTSTATUS
 NTAPI
 PsaCaptureSystemModules
 (
- OUT PSYSTEM_MODULES * SystemModules
+ OUT PSYSTEM_MODULE_INFORMATION * SystemModules
 );
 
 NTSTATUS
 NTAPI
 PsaWalkSystemModules
 (
- IN PSYSTEM_MODULES SystemModules,
+ IN PSYSTEM_MODULE_INFORMATION SystemModules,
  IN PSYSMOD_ENUM_ROUTINE Callback,
  IN OUT PVOID CallbackContext
 );
 
-PSYSTEM_MODULE_INFORMATION
+PSYSTEM_MODULE_INFORMATION_ENTRY
 FASTCALL
 PsaWalkFirstSystemModule
 (
- IN PSYSTEM_MODULES SystemModules
+ IN PSYSTEM_MODULE_INFORMATION SystemModules
 );
 
-PSYSTEM_MODULE_INFORMATION
+PSYSTEM_MODULE_INFORMATION_ENTRY
 FASTCALL
 PsaWalkNextSystemModule
 (

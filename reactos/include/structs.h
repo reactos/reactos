@@ -282,8 +282,8 @@ typedef struct {
   DWORD        bV4GammaBlue;
 } BITMAPV4HEADER,   *LPBITMAPV4HEADER, *PBITMAPV4HEADER;
 
-#ifndef _BLOB_DEFINED
-#define _BLOB_DEFINED
+#ifndef __BLOB_T_DEFINED
+#define __BLOB_T_DEFINED
 typedef struct _BLOB {
   ULONG   cbSize;
   BYTE    *pBlobData;

@@ -88,7 +88,7 @@ typedef struct _MM_SECTION_SEGMENT
   BOOLEAN WriteCopy;
 } MM_SECTION_SEGMENT, *PMM_SECTION_SEGMENT;
 
-typedef struct
+typedef struct _SECTION_OBJECT
 {
   CSHORT Type;
   CSHORT Size;
@@ -111,7 +111,13 @@ typedef struct
   ULONG ImageCharacteristics;
   USHORT Machine;
   BOOLEAN Executable;
-} SECTION_OBJECT, *PSECTION_OBJECT;
+} SECTION_OBJECT;
+
+#ifndef __USE_W32API
+
+typedef struct _SECTION_OBJECT *PSECTION_OBJECT;
+
+#endif /* __USE_W32API */
 
 typedef struct
 {

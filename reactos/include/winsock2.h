@@ -650,8 +650,8 @@ typedef struct WSAData {
     CHAR FAR* lpVendorInfo;
 } WSADATA, FAR* LPWSADATA;
 
-#ifndef _BLOB_DEFINED
-#define _BLOB_DEFINED
+#ifndef __BLOB_T_DEFINED
+#define __BLOB_T_DEFINED
 typedef struct _BLOB {
     ULONG cbSize;
     BYTE *pBlobData;

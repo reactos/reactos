@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_OBTYPES_H
 #define _INCLUDE_DDK_OBTYPES_H
-/* $Id: obtypes.h,v 1.1 2003/05/28 18:35:35 chorns Exp $ */
+/* $Id: obtypes.h,v 1.2 2003/06/01 14:59:01 chorns Exp $ */
 struct _DIRECTORY_OBJECT;
 struct _OBJECT_ATTRIBUTES;
 
@@ -128,7 +128,13 @@ typedef struct _OBJECT_TYPE
   VOID STDCALL_FUNC (*DuplicationNotify)(PEPROCESS DuplicateTo,
 				    PEPROCESS DuplicateFrom,
 				    PVOID Object);
-} OBJECT_TYPE, *POBJECT_TYPE;
+} OBJECT_TYPE;
+
+#ifndef __USE_W32API
+
+typedef struct _OBJECT_TYPE *POBJECT_TYPE;
+
+#endif /* __USE_W32API */
 
 
 typedef struct _OBJECT_HEADER
@@ -178,7 +184,13 @@ typedef struct _HANDLE_TABLE
 {
    LIST_ENTRY ListHead;
    KSPIN_LOCK ListLock;
-} HANDLE_TABLE, *PHANDLE_TABLE;
+} HANDLE_TABLE;
+
+#ifndef __USE_W32API
+
+typedef struct _HANDLE_TABLE *PHANDLE_TABLE;
+
+#endif /* __USE_W32API */
 
 extern POBJECT_TYPE ObDirectoryType;
 

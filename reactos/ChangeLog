@@ -1,3 +1,35 @@
+2003-06-01  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	Changes for compiling with w32api
+
+	* include/ntos/zwtypes.h (SYSTEM_MODULES): Rename to
+	SYSTEM_MODULE_INFORMATION. Match w32api structure fieldnames.
+	(SYSTEM_MODULE_INFORMATION):  Rename to SYSTEM_MODULE_INFORMATION_ENTRY.
+	Match w32api structure fieldnames.
+	* include/epsapi.h: Include <ntos.h>.
+	(PSYSMOD_ENUM_ROUTINE, PsaCaptureSystemModules, PsaWalkSystemModules,
+	PsaWalkFirstSystemModule, PsaWalkNextSystemModule): Use
+	SYSTEM_MODULE_INFORMATION_ENTRY and SYSTEM_MODULE_INFORMATION structures.
+	* lib/epsapi/enum/drivers.c: Use SYSTEM_MODULE_INFORMATION_ENTRY and
+	SYSTEM_MODULE_INFORMATION structures.
+	* lib/psapi/misc/win32.c: Ditto.
+	* ntoskrnl/ldr/loader.c: Ditto.
+	* lib/epsapi/enum/modules.c: Include <ntos.h>.
+	* lib/ntdll/rtl/thread.c: Ditto.
+	* lib/rosrtl/thread/context.c: Ditto.
+	* lib/rosrtl/thread/create.c: Ditto.
+	* lib/rosrtl/thread/stack.c: Ditto.
+	* include/ntos.h: Include "rosrtl/thread.h".
+	* include/structs.h (_BLOB_DEFINED): Rename to __BLOB_T_DEFINED.
+	* include/winsock2.h: Ditto.
+	* include/ntos/obtypes.h (POBJECT_TYPE): Make a pointer to struct
+	_OBJECT_TYPE.
+	(PHANDLE_TABLE): Make a pointer to struct _HANDLE_TABLE.
+	* ntoskrnl/include/internal/mm.h (PSECTION_OBJECT): Make a pointer to
+	struct _SECTION_OBJECT.
+	* ntoskrnl/include/internal/i386/ps.h (PKPCR): Make a pointer to struct
+	_KPCR.
+
 2003-05-28  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* Makefile: Update bootcd target.
