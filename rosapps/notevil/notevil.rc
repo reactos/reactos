@@ -1,4 +1,4 @@
-/* $Id: notevil.rc,v 1.12 2003/07/20 06:51:29 royce Exp $ */
+/* $Id: notevil.rc,v 1.13 2003/10/11 21:06:18 gvg Exp $ */
 #include <windows.h>
 #include "../../reactos/include/reactos/resource.h"
 
@@ -67,6 +67,10 @@ BEGIN
  13, "Brian Palmer"
  14, "Matt Pyne"
  15, "Jason Weiler"
+END
+
+STRINGTABLE MOVEABLE
+BEGIN
  16, "David Welch"
  17, "Emanuele Aliberti"
  18, "Phillip Susi"
@@ -82,10 +86,22 @@ BEGIN
  28, "Jurgen van Gael"
  29, "Marty Dill"
  30, "Ge van Geldorp"
+END
+
+STRINGTABLE MOVEABLE
+BEGIN
  31, "Richard Campbell"
  32, "Gunnar Andre' Dalsnes"
  33, "Aleksey Bragin"
  34, "Royce Mitchell III"
+ 35, "Mark Tempel"
+ 36, "Art Yerkes"
+ 37, "Martin Fuchs"
+ 38, "Vizzini"
+ 39, "Filip Navara"
+ 40, "Andrew Greenwood"
+ 41, "Thomas Weidenmueller"
+ 42, "Jonathan Wilson"
 END
 
 /* EOF */
