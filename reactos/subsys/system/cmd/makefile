@@ -13,6 +13,8 @@ TARGET_APPTYPE = console
 
 TARGET_NAME = cmd
 
+TARGET_INSTALLDIR = system32
+
 WINE_MODE = yes
 
 WINE_RC = $(TARGET_NAME)
