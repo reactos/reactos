@@ -36,14 +36,10 @@
 HANDLE hSmApiPort = (HANDLE) 0;
 
 
-/* TODO: this file should be totally rewritten
+/* TODO:
  *
  * a) look if a special option is set for smss.exe in
  *    HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options
- *
- * d) make smss initialize Debug (DBGSS) and Windows (CSRSS) as described
- *    in the registry key Required="Debug Windows"
- *    HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\SubSystems
  */
 
 /**********************************************************************
@@ -51,7 +47,7 @@ HANDLE hSmApiPort = (HANDLE) 0;
  *
  * DESCRIPTION
  *	Make smss register with itself for IMAGE_SUBSYSTEM_NATIVE
- *	(programmatically). This also open hSmApiPort to be used
+ *	(programmatically). This also opens hSmApiPort to be used
  *	in loading required subsystems.
  */
 
