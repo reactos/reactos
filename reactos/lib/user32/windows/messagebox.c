@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: messagebox.c,v 1.21 2003/10/31 16:25:08 navaraf Exp $
+/* $Id: messagebox.c,v 1.22 2003/10/31 20:49:45 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/messagebox.c
@@ -373,7 +373,7 @@ MessageBoxTimeoutIndirectW(
     
     if(Icon)
     {
-      bufsize += sizeof(DLGITEMTEMPLATE) + (3 * sizeof(WORD)); /* icon */
+      bufsize += sizeof(DLGITEMTEMPLATE)+3 + (5 * sizeof(WORD)); /* icon */
     }
     
     bufsize += sizeof(DLGTEMPLATE) + 
@@ -382,7 +382,7 @@ MessageBoxTimeoutIndirectW(
                ((nButtons + 1) * sizeof(DLGITEMTEMPLATE)) + /* text and controls */
                ((textlen + 1) * sizeof(WCHAR));             /* text */
     
-    
+    bufsize += 1024; /* FIXME */
     buf = RtlAllocateHeap(RtlGetProcessHeap(), 0, bufsize);
     if(!buf)
     {
@@ -411,17 +411,17 @@ MessageBoxTimeoutIndirectW(
     dest = (BYTE *)(tpl + 1);
     
     *(WORD*)dest = 0; /* no menu */
-    *(WORD*)(dest + 1) = 0; /* use default window class */
+    *(((WORD*)dest) + 1) = 0; /* use default window class */
     dest += 2 * sizeof(WORD);
     memcpy(dest, caption, caplen * sizeof(WCHAR));
     dest += caplen * sizeof(WCHAR);
     *(WORD*)dest = 0;
-    dest += sizeof(WORD);
+    dest += sizeof(WCHAR);
     
     /* Create icon */
     if(Icon)
     {
-      dest = (BYTE*)(((DWORD)dest + 3) & ~3);
+      dest = (BYTE*)(((ULONG_PTR)dest + 3) & ~3);
       iico = (DLGITEMTEMPLATE *)dest;
       iico->style = WS_CHILD | WS_VISIBLE | SS_ICON;
       iico->dwExtendedStyle = 0;
@@ -497,6 +497,11 @@ MessageBoxTimeoutIndirectW(
       DrawTextW(hDC, ButtonText[i], btnlen, &btnrect, DT_LEFT | DT_SINGLELINE | DT_CALCRECT);
       btnsize.cx = max(btnsize.cx, btnrect.right);
       btnsize.cy = max(btnsize.cy, btnrect.bottom);
+    }
+
+	if ( (ULONG_PTR)dest > ((ULONG_PTR)buf + (ULONG_PTR)bufsize) ) 
+    { 
+      DbgPrint ( "buffer overrun in messagebox.c ( bufsize = %lu, but used %lu )\n", bufsize, (ULONG_PTR)dest-(ULONG_PTR)buf );
     }
     
     /* make first button the default button if no other is */
@@ -710,17 +715,38 @@ MessageBoxIndirectA(
     int ret;
 
     if (HIWORD((UINT)lpMsgBoxParams->lpszText))
+    {
         RtlCreateUnicodeStringFromAsciiz(&textW, (PCSZ)lpMsgBoxParams->lpszText);
+        /*
+         * UNICODE_STRING objects are always allocated with an extra byte so you
+         * can null-term if you want
+         */
+        textW.Buffer[textW.Length] = L'\0';
+    }
     else
         textW.Buffer = (LPWSTR)lpMsgBoxParams->lpszText;
 
     if (HIWORD((UINT)lpMsgBoxParams->lpszCaption))
+    {
         RtlCreateUnicodeStringFromAsciiz(&captionW, (PCSZ)lpMsgBoxParams->lpszCaption);
+        /*
+         * UNICODE_STRING objects are always allocated with an extra byte so you
+         * can null-term if you want
+         */
+        captionW.Buffer[captionW.Length] = L'\0';
+    }
     else
         captionW.Buffer = (LPWSTR)lpMsgBoxParams->lpszCaption;
 
     if (HIWORD((UINT)lpMsgBoxParams->lpszIcon))
+    {
         RtlCreateUnicodeStringFromAsciiz(&iconW, (PCSZ)lpMsgBoxParams->lpszIcon);
+        /*
+         * UNICODE_STRING objects are always allocated with an extra byte so you
+         * can null-term if you want
+         */
+        iconW.Buffer[iconW.Length] = L'\0';
+    }
     else
         iconW.Buffer = (LPWSTR)lpMsgBoxParams->lpszIcon;
 
