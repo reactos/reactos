@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.51 2004/03/31 03:34:55 jimtabor Exp $
+/* $Id: class2.c,v 1.52 2004/04/01 17:29:53 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1172,6 +1172,13 @@ ScsiClassInterpretSenseInfo(IN PDEVICE_OBJECT DeviceObject,
 	      {
 		case SCSI_ADSENSE_MEDIUM_CHANGED:
 		  DPRINT("SCSI_ADSENSE_MEDIUM_CHANGED\n");
+                  if(DeviceExtension->MediaChangeEvent != NULL)
+                    {
+                    KeSetEvent(DeviceExtension->MediaChangeEvent,
+                               0,
+                               FALSE);
+                    DeviceExtension->MediaChangeNoMedia = FALSE;
+                    }
 		  break;
 
 		case SCSI_ADSENSE_BUS_RESET:
