@@ -6,6 +6,8 @@
  * PROGRAMMER:           David Welch (welch@mcmail.com)
  * REVISION HISTORY:
  *           21/07/98: Created
+ *			 12/1/99:  Phillip Susi: Fixed wake code in KeDispatcherObjectWake
+ *				so that things like KeWaitForXXX() return the correct value
  */
 
 /* NOTES ********************************************************************
@@ -134,14 +136,21 @@ static BOOLEAN KeDispatcherObjectWakeAll(DISPATCHER_HEADER* hdr)
    
    while (!IsListEmpty(&(hdr->WaitListHead)))
      {
-	current_entry = RemoveHeadList(&hdr->WaitListHead);
-	current = CONTAINING_RECORD(current_entry,KWAIT_BLOCK,
+		NTSTATUS Status = STATUS_WAIT_0;
+		current_entry = RemoveHeadList(&hdr->WaitListHead);
+		current = CONTAINING_RECORD(current_entry,KWAIT_BLOCK,
 					    WaitListEntry);
         DPRINT("Waking %x\n",current->Thread);
 
         if (current->WaitType == WaitAny)
           {
              DPRINT("WaitAny: Remove all wait blocks.\n");
+			 //count the number of the wait block that is waking us, and set that as the wake status
+			 for( PrevBlock = current->Thread->WaitBlockList; PrevBlock; ++Status, PrevBlock = PrevBlock->NextWaitBlock )
+				if( PrevBlock == current )
+					break;
+			 if( PrevBlock == 0 )
+				DbgPrint( "WaitOne: Wait Block not in list! Wait result will be corrupt\n" );
              current->Thread->WaitBlockList = NULL;
           }
         else
@@ -180,7 +189,7 @@ static BOOLEAN KeDispatcherObjectWakeAll(DISPATCHER_HEADER* hdr)
 	KiSideEffectsBeforeWake(hdr);
 	
 	PsResumeThread(CONTAINING_RECORD(current->Thread,ETHREAD,Tcb),
-		       NULL);
+		       &Status);
      };
    return(TRUE);
 }
@@ -190,6 +199,7 @@ static BOOLEAN KeDispatcherObjectWakeOne(DISPATCHER_HEADER* hdr)
    PKWAIT_BLOCK current;
    PLIST_ENTRY current_entry;
    PKWAIT_BLOCK PrevBlock;
+   NTSTATUS Status = STATUS_WAIT_0;
 
    DPRINT("KeDispatcherObjectWakeOn(hdr %x)\n",hdr);
    DPRINT("hdr->WaitListHead.Flink %x hdr->WaitListHead.Blink %x\n",
@@ -207,7 +217,13 @@ static BOOLEAN KeDispatcherObjectWakeOne(DISPATCHER_HEADER* hdr)
    if (current->WaitType == WaitAny)
      {
         DPRINT("WaitAny: Remove all wait blocks.\n");
-        current->Thread->WaitBlockList = NULL;
+		//count the number of the wait block that is waking us, and set that as the wake status
+        for( PrevBlock = current->Thread->WaitBlockList; PrevBlock; ++Status, PrevBlock = PrevBlock->NextWaitBlock )
+			if( PrevBlock == current )
+				break;
+		if( PrevBlock == 0 )
+			DbgPrint( "WaitOne: Wait Block not in list! Wait result will be corrupt\n" );
+		current->Thread->WaitBlockList = NULL;
      }
    else
      {
@@ -246,7 +262,7 @@ static BOOLEAN KeDispatcherObjectWakeOne(DISPATCHER_HEADER* hdr)
    KiSideEffectsBeforeWake(hdr);
    
    PsResumeThread(CONTAINING_RECORD(current->Thread,ETHREAD,Tcb),
-		  NULL);
+		  &Status);
    return(TRUE);
 }
 
@@ -363,9 +379,9 @@ NTSTATUS KeWaitForSingleObject(PVOID Object,
    blk.WaitKey = 0;
    blk.WaitType = WaitAny;
    blk.NextWaitBlock = NULL;
+   DPRINT("hdr->WaitListHead.Flink %x hdr->WaitListHead.Blink %x blk.WaitListEntry = %x\n",
+          hdr->WaitListHead.Flink,hdr->WaitListHead.Blink, blk.WaitListEntry );
    InsertTailList(&(hdr->WaitListHead),&(blk.WaitListEntry));
-//   DPRINT("hdr->WaitListHead.Flink %x hdr->WaitListHead.Blink %x\n",
-//          hdr->WaitListHead.Flink,hdr->WaitListHead.Blink);
    KeReleaseDispatcherDatabaseLock(FALSE);
    DPRINT("Waiting at %s:%d with irql %d\n", __FILE__, __LINE__, 
 	  KeGetCurrentIrql());
@@ -387,9 +403,8 @@ NTSTATUS KeWaitForSingleObject(PVOID Object,
 	DPRINT("Current thread is alertable and APCs are pending\n");
 	return(STATUS_USER_APC);
      }
-   
    DPRINT("Returning from KeWaitForSingleObject()\n");
-   return(Status);
+   return Status;
 }
 
 
@@ -513,16 +528,6 @@ NTSTATUS KeWaitForMultipleObjects(ULONG Count,
     }
 
     DPRINT("Returning from KeWaitForMultipleObjects()\n");
-
-    if (WaitType == WaitAny)
-    {
-        for (i = 0; i < Count; i++)
-        {
-            if (((DISPATCHER_HEADER *)Object[i])->SignalState)
-                return(STATUS_WAIT_0+i);
-        }
-    }
-
     return(Status);
 }
 

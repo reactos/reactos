@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.21 1999/11/24 11:51:50 dwelch Exp $
+/* $Id: timer.c,v 1.22 1999/12/04 07:40:53 phreak Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -7,6 +7,7 @@
  * PROGRAMMER:     David Welch (welch@mcmail.com)
  * UPDATE HISTORY:
  *                 28/05/98: Created
+ *                 12/3/99:  Phillip Susi: enabled the timers, fixed spin lock
  */
 
 /* NOTES ******************************************************************/
@@ -73,6 +74,8 @@ volatile ULONGLONG KiTimerTicks;
  */
 static LIST_ENTRY TimerListHead;
 static KSPIN_LOCK TimerListLock;
+
+/* must raise IRQL to HIGH_LEVEL and grab spin lock there, to sync with ISR */
 
 extern ULONG PiNrRunnableThreads;
 
@@ -239,7 +242,8 @@ BOOLEAN KeSetTimerEx(PKTIMER Timer, LARGE_INTEGER DueTime, LONG Period,
    
    DPRINT("KeSetTimerEx(Timer %x)\n",Timer);
    
-   KeAcquireSpinLock(&TimerListLock,&oldlvl);
+   KeRaiseIrql( HIGH_LEVEL, &oldlvl );
+   KeAcquireSpinLockAtDpcLevel(&TimerListLock);
    
    Timer->Dpc = Dpc;
    if (DueTime.QuadPart < 0)
@@ -276,7 +280,8 @@ BOOLEAN KeCancelTimer(PKTIMER Timer)
    
    DPRINT("KeCancelTimer(Timer %x)\n",Timer);
    
-   KeAcquireSpinLock(&TimerListLock, &oldlvl);
+   KeRaiseIrql( HIGH_LEVEL, &oldlvl );
+   KeAcquireSpinLockAtDpcLevel( &TimerListLock );
 		     
    if (Timer->TimerListEntry.Flink == NULL)
      {
@@ -381,13 +386,8 @@ VOID KeExpireTimers(VOID)
    PLIST_ENTRY current_entry = NULL;
    PKTIMER current = NULL;
    KIRQL oldlvl;
-   
-//   DPRINT("KeExpireTimers()\n");
-   
-   if (TimerInitDone == FALSE)
-     {
-	return;
-     }
+
+   DPRINT("KeExpireTimers()\n");
    
    current_entry = TimerListHead.Flink;
    
@@ -396,7 +396,8 @@ VOID KeExpireTimers(VOID)
 //   DPRINT("current_entry->Flink %x\n",current_entry->Flink);
 //   DPRINT("current_entry->Flink->Flink %x\n",current_entry->Flink->Flink);
        
-   KeAcquireSpinLock(&TimerListLock, &oldlvl);
+   KeRaiseIrql( HIGH_LEVEL, &oldlvl );
+   KeAcquireSpinLockAtDpcLevel(&TimerListLock);
    
    while (current_entry!=(&TimerListHead))
      {
@@ -410,7 +411,7 @@ VOID KeExpireTimers(VOID)
 	  }      
      }
    
-   KeReleaseSpinLock(&TimerListLock,oldlvl);
+   KeReleaseSpinLock( &TimerListLock, oldlvl );
 //   DPRINT("Finished KeExpireTimers()\n");
 }
 
@@ -429,6 +430,10 @@ VOID KiTimerInterrupt(VOID)
    extern unsigned int EiUsedNonPagedPool;
    extern ULONG MiNrFreePages;
    
+   if (TimerInitDone == FALSE)
+     {
+	return;
+     }
    /*
     * Increment the number of timers ticks 
     */
@@ -456,9 +461,9 @@ VOID KiTimerInterrupt(VOID)
 //   sprintf(str,"%.8u %.8u",(unsigned int)EiNrUsedBlocks,
 //	   (unsigned int)EiFreeNonPagedPool);
 //   sprintf(str,"%.8u %.8u",EiFreeNonPagedPool,EiUsedNonPagedPool);
-//   sprintf(str,"%.8u %.8u",PiNrRunnableThreads,KiTimerTicks);
-   sprintf(str,"%.8u %.8u", (unsigned int)PiNrRunnableThreads,
-	   (unsigned int)MiNrFreePages);
+   sprintf(str,"%.8u %.8u",(unsigned int)PiNrRunnableThreads,(unsigned int)KiTimerTicks);
+//   sprintf(str,"%.8u %.8u", (unsigned int)PiNrRunnableThreads,
+//	   (unsigned int)MiNrFreePages);
    for (i=0;i<17;i++)
      {
 	*vidmem=str[i];
@@ -466,6 +471,7 @@ VOID KiTimerInterrupt(VOID)
 	*vidmem=0x7;
 	vidmem++;
      }
+   KeExpireTimers();
 }
 
 
