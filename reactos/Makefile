@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.275 2004/12/20 22:26:18 greatlrd Exp $
+# $Id: Makefile,v 1.276 2004/12/24 17:31:07 ekohl Exp $
 #
 # Global makefile
 #
@@ -99,7 +99,7 @@ STORAGE_DRIVERS = atapi cdrom class2 disk floppy scsiport diskdump
 # autochk cmd format services setup usetup welcome winlogon msiexec 
 SYS_APPS = autochk calc cmd explorer expand format regedt32 regsvr32 \
   services setup taskmgr userinit usetup welcome vmwinst winlogon \
-  regedit winefile notepad
+  regedit winefile notepad reactos
 
 # System services
 # rpcss eventlog
@@ -223,6 +223,8 @@ bootcd_install_before:
 	$(CP) bootdata/icon.ico $(BOOTCD_DIR)/icon.ico
 	$(HALFVERBOSEECHO) [COPY]    subsys/system/welcome/welcome.exe  to $(BOOTCD_DIR)/reactos/welcome.exe
 	$(CP) subsys/system/welcome/welcome.exe $(BOOTCD_DIR)/reactos/welcome.exe
+	$(HALFVERBOSEECHO) [COPY]    subsys/system/reactos/reactos.exe  to $(BOOTCD_DIR)/reactos/reactos.exe
+	$(CP) subsys/system/reactos/reactos.exe $(BOOTCD_DIR)/reactos/reactos.exe
 	$(HALFVERBOSEECHO) [COPY]    media/nls/c_1252.nls to $(BOOTCD_DIR)/reactos/c_1252.nls
 	$(CP) media/nls/c_1252.nls $(BOOTCD_DIR)/reactos/c_1252.nls
 	$(HALFVERBOSEECHO) [COPY]    media/nls/c_437.nls to $(BOOTCD_DIR)/reactos/c_437.nls
