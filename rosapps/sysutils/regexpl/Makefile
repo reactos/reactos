@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.13 2004/12/29 00:31:45 gvg Exp $
+# $Id$
 #
 #  ReactOS makefile for RegExpl
 #
@@ -9,7 +9,7 @@ include $(PATH_TO_TOP)/rules.mak
 
 TARGET_NAME=regexpl
 
-all: $(TARGET_NAME)$(EXE_POSTFIX)
+all: $(TARGET_NAME).exe
 
 ROS_DIR=../../../reactos
 ROS_INC=$(ROS_DIR)/include
@@ -52,12 +52,12 @@ OBJECTS = \
 
 CLEAN_FILES = \
 	*.o				\
-	$(TARGET_NAME)$(EXE_POSTFIX)	\
+	$(TARGET_NAME).exe		\
 	$(TARGET_NAME).sym		
 
-$(TARGET_NAME)$(EXE_POSTFIX): $(OBJECTS)
-	$(CXX) -Wl,--subsystem,console -o $(TARGET_NAME)$(EXE_POSTFIX) $(OBJECTS)$(IMPORT_KERNEL32) $(IMPORT_USER32)
-	$(NM) --numeric-sort $(TARGET_NAME)$(EXE_POSTFIX) > $(TARGET_NAME).sym
+$(TARGET_NAME).exe: $(OBJECTS)
+	$(CXX) -Wl,--subsystem,console -o $(TARGET_NAME).exe $(OBJECTS)$(IMPORT_KERNEL32) $(IMPORT_USER32)
+	$(NM) --numeric-sort $(TARGET_NAME).exe > $(TARGET_NAME).sym
 
 clean: $(CLEAN_FILES:%=%_clean)
 
