@@ -74,8 +74,8 @@ all: $(TARGET)
 $(TARGET): $(OBJECTS) $(PROGRAM)$(RES_SUFFIX)
 	$(LINK) $(LFLAGS) -o $@ $^ $(addprefix -l,$(LIBS))
 
-explorer$(RES_SUFFIX): $(PROGRAM)_intres.rc
-	windres $(RCFLAGS) -o $@ $^
+explorer$(RES_SUFFIX): $(PROGRAM)_intres.rc res/*.bmp res/*.ico
+	windres $(RCFLAGS) -o $@ $(PROGRAM)_intres.rc
 
 clean:
 	rm -f $(TARGET) $(OBJECTS) $(PROGRAM)$(RES_SUFFIX)
