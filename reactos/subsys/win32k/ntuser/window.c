@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.182 2004/02/08 10:53:17 navaraf Exp $
+/* $Id: window.c,v 1.183 2004/02/15 07:39:12 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -432,6 +432,70 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
   return 0;
 }
 
+static BOOL FASTCALL
+IntSetMenu(
+   PWINDOW_OBJECT WindowObject,
+   HMENU Menu,
+   BOOL *Changed)
+{
+  PMENU_OBJECT OldMenuObject, NewMenuObject;
+
+  *Changed = (WindowObject->IDMenu != (UINT) Menu);
+  if (! *Changed)
+    {
+      return TRUE;
+    }
+
+  if (0 != WindowObject->IDMenu)
+    {
+      OldMenuObject = IntGetMenuObject((HMENU) WindowObject->IDMenu);
+      ASSERT(NULL == OldMenuObject || OldMenuObject->MenuInfo.Wnd == WindowObject->Self);
+    }
+  else
+    {
+      OldMenuObject = NULL;
+    }
+
+  if (NULL != Menu)
+    {
+      NewMenuObject = IntGetMenuObject(Menu);
+      if (NULL == NewMenuObject)
+        {
+          if (NULL != OldMenuObject)
+            {
+              IntReleaseMenuObject(OldMenuObject);
+            }
+          SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
+          return FALSE;
+        }
+      if (NULL != NewMenuObject->MenuInfo.Wnd)
+        {
+          /* Can't use the same menu for two windows */
+          if (NULL != OldMenuObject)
+            {
+              IntReleaseMenuObject(OldMenuObject);
+            }
+          SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
+          return FALSE;
+        }
+ 
+    }
+
+  WindowObject->IDMenu = (UINT) Menu;
+  if (NULL != NewMenuObject)
+    {
+      NewMenuObject->MenuInfo.Wnd = WindowObject->Self;
+      IntReleaseMenuObject(NewMenuObject);
+    }
+  if (NULL != OldMenuObject)
+    {
+      OldMenuObject->MenuInfo.Wnd = NULL;
+      IntReleaseMenuObject(OldMenuObject);
+    }
+
+  return TRUE;
+}
+
 
 /* INTERNAL ******************************************************************/
 
@@ -557,8 +621,8 @@ IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert, BOOL RetMenu)
       NewMenuObject = IntCloneMenu(MenuObject);
       if(NewMenuObject)
       {
-        WindowObject->SystemMenu = NewMenuObject->Self;
-        NewMenuObject->IsSystemMenu = TRUE;
+        WindowObject->SystemMenu = NewMenuObject->MenuInfo.Self;
+        NewMenuObject->MenuInfo.Flags |= MF_SYSMENU;
         ret = NewMenuObject;
         //IntReleaseMenuObject(NewMenuObject);
       }
@@ -576,8 +640,8 @@ IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert, BOOL RetMenu)
       NewMenuObject = IntCloneMenu(MenuObject);
       if(NewMenuObject)
       {
-        WindowObject->SystemMenu = NewMenuObject->Self;
-        NewMenuObject->IsSystemMenu = TRUE;
+        WindowObject->SystemMenu = NewMenuObject->MenuInfo.Self;
+        NewMenuObject->MenuInfo.Flags |= MF_SYSMENU;
         ret = NewMenuObject;
         //IntReleaseMenuObject(NewMenuObject);
       }
@@ -726,6 +790,7 @@ IntSetParent(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndNewParent)
    PWINDOW_OBJECT WndOldParent;
    HWND hWnd, hWndNewParent, hWndOldParent;
    BOOL WasVisible;
+   BOOL MenuChanged;
 
    hWnd = Wnd->Self;
    hWndNewParent = WndNewParent->Self;
@@ -757,7 +822,7 @@ IntSetParent(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndNewParent)
          if (!(Wnd->Style & WS_CHILD))
          {
             //if ( Wnd->Menu ) DestroyMenu ( Wnd->menu );
-            Wnd->IDMenu = 0;
+            IntSetMenu(Wnd, NULL, &MenuChanged);
          }
       }
    }
@@ -791,7 +856,7 @@ IntSetSystemMenu(PWINDOW_OBJECT WindowObject, PMENU_OBJECT MenuObject)
     OldMenuObject = IntGetMenuObject(WindowObject->SystemMenu);
     if(OldMenuObject)
     {
-      OldMenuObject->IsSystemMenu = FALSE;
+      OldMenuObject->MenuInfo.Flags &= ~ MF_SYSMENU;
       IntReleaseMenuObject(OldMenuObject);
     }
   }
@@ -799,8 +864,8 @@ IntSetSystemMenu(PWINDOW_OBJECT WindowObject, PMENU_OBJECT MenuObject)
   if(MenuObject)
   {
     /* FIXME check window style, propably return FALSE ? */
-    WindowObject->SystemMenu = MenuObject->Self;
-    MenuObject->IsSystemMenu = TRUE;
+    WindowObject->SystemMenu = MenuObject->MenuInfo.Self;
+    MenuObject->MenuInfo.Flags |= MF_SYSMENU;
   }
   else
     WindowObject->SystemMenu = (HMENU)0;
@@ -1096,6 +1161,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   CREATESTRUCTW Cs;
   CBT_CREATEWNDW CbtCreate;
   LRESULT Result;
+  BOOL MenuChanged;
 
   DPRINT("NtUserCreateWindowEx(): (%d,%d-%d,%d)\n", x, y, nWidth, nHeight);
 
@@ -1211,9 +1277,10 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   
   WindowObject->SystemMenu = (HMENU)0;
   WindowObject->ContextHelpId = 0;
-  WindowObject->IDMenu = (UINT)hMenu;
+  WindowObject->IDMenu = 0;
   WindowObject->Instance = hInstance;
   WindowObject->Self = Handle;
+  IntSetMenu(WindowObject, hMenu, &MenuChanged);
   WindowObject->MessageQueue = PsGetWin32Thread()->MessageQueue;
   WindowObject->Parent = ParentWindow;
   WindowObject->Owner = IntGetWindowObject(OwnerWindowHandle);
@@ -1275,7 +1342,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
     SystemMenu = IntGetSystemMenu(WindowObject, TRUE, TRUE);
     if(SystemMenu)
     {
-      WindowObject->SystemMenu = SystemMenu->Self;
+      WindowObject->SystemMenu = SystemMenu->MenuInfo.Self;
       IntReleaseMenuObject(SystemMenu);
     }
   }
@@ -3038,53 +3105,35 @@ NtUserSetLogonNotifyWindow(DWORD Unknown0)
  */
 BOOL STDCALL
 NtUserSetMenu(
-   HWND hWnd,
-   HMENU hMenu,
-   BOOL bRepaint)
+   HWND Wnd,
+   HMENU Menu,
+   BOOL Repaint)
 {
-   PWINDOW_OBJECT WindowObject;
-   PMENU_OBJECT MenuObject;
-   BOOL Changed = FALSE;
+  PWINDOW_OBJECT WindowObject;
+  BOOL Changed;
 
-   WindowObject = IntGetWindowObject((HWND)hWnd);
-   if (!WindowObject)
-   {
+  WindowObject = IntGetWindowObject((HWND) Wnd);
+  if (NULL == WindowObject)
+    {
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       return FALSE;
-   }
+    }
   
-   if (hMenu)
-   {
-      /* assign new menu handle */
-      MenuObject = IntGetMenuObject((HWND)hMenu);
-      if (!MenuObject)
-      {
-         IntReleaseWindowObject(WindowObject);
-         SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
-         return FALSE;
-      }
-    
-      Changed = (WindowObject->IDMenu != (UINT)hMenu);
-      WindowObject->IDMenu = (UINT)hMenu;
-    
-      IntReleaseMenuObject(MenuObject);
-   }
-   else
-   {
-      /* remove the menu handle */
-      Changed = (WindowObject->IDMenu != 0);
-      WindowObject->IDMenu = 0;
-   }
+  if (! IntSetMenu(WindowObject, Menu, &Changed))
+    {
+      IntReleaseWindowObject(WindowObject);
+      return FALSE;
+    }
   
-   IntReleaseWindowObject(WindowObject);
+  IntReleaseWindowObject(WindowObject);
   
-   if (Changed && bRepaint)
-   {
-      WinPosSetWindowPos(hWnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
+  if (Changed && Repaint)
+    {
+      WinPosSetWindowPos(Wnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
                          SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED);
-   }
+    }
   
-   return TRUE;
+  return TRUE;
 }
 
 

@@ -3,6 +3,7 @@
 
 #include <ddk/ntddk.h>
 #include <napi/win32.h>
+#include <win32k/menu.h>
 
 #define IS_ATOM(x) \
   (((ULONG_PTR)(x) > 0x0) && ((ULONG_PTR)(x) < 0x10000))
@@ -27,21 +28,17 @@ typedef struct _MENU_ITEM
   UNICODE_STRING Text;
   HBITMAP hbmpItem;
   RECT Rect;
+  UINT XTab;
 } MENU_ITEM, *PMENU_ITEM;
 
 typedef struct _MENU_OBJECT
 {
-  HANDLE Self;
   PW32PROCESS W32Process;
   LIST_ENTRY ListEntry;
-  int MenuItemCount;
   FAST_MUTEX MenuItemsLock;
   PMENU_ITEM MenuItemList;
-  MENUINFO MenuInfo;
+  ROSMENUINFO MenuInfo;
   BOOL RtoL;
-  BOOL IsSystemMenu;
-  BOOL IsMenuBar;
-  int Height;
 } MENU_OBJECT, *PMENU_OBJECT;
 
 PMENU_OBJECT FASTCALL
@@ -77,27 +74,17 @@ BOOL FASTCALL
 IntSetMenuContextHelpId(PMENU_OBJECT MenuObject, DWORD dwContextHelpId);
 
 BOOL FASTCALL
-IntGetMenuInfo(PMENU_OBJECT MenuObject, LPMENUINFO lpmi);
+IntGetMenuInfo(PMENU_OBJECT MenuObject, PROSMENUINFO lpmi);
 
 BOOL FASTCALL
 IntIsMenu(HMENU hMenu);
 
 BOOL FASTCALL
-IntSetMenuInfo(PMENU_OBJECT MenuObject, LPMENUINFO lpmi);
+IntSetMenuInfo(PMENU_OBJECT MenuObject, PROSMENUINFO lpmi);
 
 int FASTCALL
 IntGetMenuItemByFlag(PMENU_OBJECT MenuObject, UINT uSearchBy, UINT fFlag, 
                       PMENU_ITEM *MenuItem, PMENU_ITEM *PrevMenuItem);
-
-BOOL FASTCALL
-IntGetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, LPMENUITEMINFOW lpmii);
-
-BOOL FASTCALL
-IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, LPCMENUITEMINFOW lpmii);
-
-BOOL FASTCALL
-IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, BOOL fByPosition,
-                   LPCMENUITEMINFOW lpmii);
                    
 UINT FASTCALL
 IntEnableMenuItem(PMENU_OBJECT MenuObject, UINT uIDEnableItem, UINT uEnable);

@@ -84,14 +84,6 @@ NtUserBuildHwndList(
   HWND* pWnd,
   ULONG nBufSize);
 
-DWORD
-STDCALL
-NtUserBuildMenuItemList(
- HMENU hMenu,
- PVOID Buffer,
- ULONG nBufSize,
- DWORD Reserved);
-
 NTSTATUS STDCALL
 NtUserBuildNameList(
    HWINSTA hWinSta,
@@ -225,13 +217,6 @@ NtUserChangeDisplaySettings(
   DWORD dwflags,
   LPVOID lParam);
 
-DWORD
-STDCALL
-NtUserCheckMenuItem(
-  HMENU hmenu,
-  UINT uIDCheckItem,
-  UINT uCheck);
-
 HWND STDCALL
 NtUserChildWindowFromPointEx(HWND Parent,
 			     LONG x,
@@ -311,10 +296,6 @@ NtUserCreateLocalMemHandle(
   DWORD Unknown2,
   DWORD Unknown3);
 
-HMENU
-STDCALL
-NtUserCreateMenu(BOOL PopupMenu);
-
 HWND
 STDCALL
 NtUserCreateWindowEx(
@@ -378,13 +359,6 @@ NtUserDeferWindowPos(HDWP WinPosInfo,
 BOOL STDCALL
 NtUserDefSetText(HWND WindowHandle, PANSI_STRING Text);
 
-BOOL
-STDCALL
-NtUserDeleteMenu(
-  HMENU hMenu,
-  UINT uPosition,
-  UINT uFlags);
-
 BOOLEAN
 STDCALL
 NtUserDestroyAcceleratorTable(
@@ -395,11 +369,6 @@ STDCALL
 NtUserDestroyCursorIcon(
   HANDLE Handle,
   DWORD Unknown);
-
-BOOL
-STDCALL
-NtUserDestroyMenu(
-  HMENU hMenu);
 
 BOOLEAN STDCALL
 NtUserDestroyWindow(HWND Wnd);
@@ -469,32 +438,7 @@ NtUserDrawIconEx(
 
 DWORD
 STDCALL
-NtUserDrawMenuBarTemp(
-  HWND hWnd,
-  HDC hDC,
-  PRECT hRect,
-  HMENU hMenu,
-  HFONT hFont);
-
-DWORD
-STDCALL
 NtUserEmptyClipboard(VOID);
-
-UINT
-STDCALL
-NtUserEnableMenuItem(
-  HMENU hMenu,
-  UINT uIDEnableItem,
-  UINT uEnable);
-  
-DWORD
-STDCALL
-NtUserInsertMenuItem(
-  HMENU hMenu,
-  UINT uItem,
-  BOOL fByPosition,
-  LPCMENUITEMINFOW lpmii);
-
 
 BOOL
 STDCALL
@@ -508,10 +452,6 @@ STDCALL
 NtUserEndDeferWindowPosEx(
   DWORD Unknown0,
   DWORD Unknown1);
-
-BOOL
-STDCALL
-NtUserEndMenu(VOID);
 
 BOOL STDCALL
 NtUserEndPaint(HWND hWnd, CONST PAINTSTRUCT* lPs);
@@ -693,16 +633,17 @@ STDCALL
 NtUserGetCursorInfo(
   PCURSORINFO pci);
 
-UINT STDCALL
-NtUserGetMenuDefaultItem(
-  HMENU hMenu,
-  UINT fByPos,
-  UINT gmdiFlags);
+HDC
+STDCALL
+NtUserGetDC(
+  HWND hWnd);
 
-HDC STDCALL
-NtUserGetDC(HWND hWnd);
-
-HDC STDCALL NtUserGetDCEx(HWND hWnd, HANDLE hRegion, ULONG Flags);
+HDC
+STDCALL
+NtUserGetDCEx(
+  HWND hWnd,
+  HANDLE hRegion,
+  ULONG Flags);
 
 UINT
 STDCALL
@@ -784,28 +725,6 @@ NtUserGetListBoxInfo(
 
 BOOL
 STDCALL
-NtUserGetMenuBarInfo(
-  HWND hwnd,
-  LONG idObject,
-  LONG idItem,
-  PMENUBARINFO pmbi);
-
-UINT
-STDCALL
-NtUserGetMenuIndex(
-  HMENU hMenu,
-  UINT wID);
-
-BOOL
-STDCALL
-NtUserGetMenuItemRect(
-  HWND hWnd,
-  HMENU hMenu,
-  UINT uItem,
-  LPRECT lprcItem);
-
-BOOL
-STDCALL
 NtUserGetMessage(
   LPMSG lpMsg,
   HWND hWnd,
@@ -858,12 +777,6 @@ NtUserGetScrollInfo(
   int fnBar, 
   LPSCROLLINFO lpsi);
 
-HMENU
-STDCALL
-NtUserGetSystemMenu(
-  HWND hWnd,
-  BOOL bRevert);
-
 HDESK
 STDCALL
 NtUserGetThreadDesktop(
@@ -912,14 +825,6 @@ BOOL
 STDCALL
 NtUserHideCaret(
   HWND hWnd);
-
-BOOL
-STDCALL
-NtUserHiliteMenuItem(
-  HWND hwnd,
-  HMENU hmenu,
-  UINT uItemHilite,
-  UINT uHilite);
 
 DWORD
 STDCALL
@@ -1023,32 +928,6 @@ NtUserMapVirtualKeyEx( UINT keyCode,
 		       UINT transType,
 		       DWORD keyboardId,
 		       HKL dwhkl );
-
-BOOL
-STDCALL
-NtUserMenuInfo(
- HMENU hmenu,
- LPMENUINFO lpmi,
- BOOL fsog
-);
-
-int
-STDCALL
-NtUserMenuItemFromPoint(
-  HWND hWnd,
-  HMENU hMenu,
-  DWORD X,
-  DWORD Y);
-
-BOOL
-STDCALL
-NtUserMenuItemInfo(
- HMENU hMenu,
- UINT uItem,
- BOOL fByPosition,
- LPMENUITEMINFOW lpmii,
- BOOL fsog
-);
 
 DWORD
 STDCALL
@@ -1225,13 +1104,6 @@ NtUserRegisterTasklist(
 
 UINT STDCALL
 NtUserRegisterWindowMessage(PUNICODE_STRING MessageName);
-
-BOOL
-STDCALL
-NtUserRemoveMenu(
-  HMENU hMenu,
-  UINT uPosition,
-  UINT uFlags);
 
 HANDLE STDCALL
 NtUserRemoveProp(HWND hWnd, ATOM Atom);
@@ -1421,31 +1293,6 @@ NtUserSetLogonNotifyWindow(
 
 BOOL
 STDCALL
-NtUserSetMenu(
-  HWND hWnd,
-  HMENU hMenu,
-  BOOL bRepaint);
-
-BOOL
-STDCALL
-NtUserSetMenuContextHelpId(
-  HMENU hmenu,
-  DWORD dwContextHelpId);
-
-BOOL
-STDCALL
-NtUserSetMenuDefaultItem(
-  HMENU hMenu,
-  UINT uItem,
-  UINT fByPos);
-
-BOOL
-STDCALL
-NtUserSetMenuFlagRtoL(
-  HMENU hMenu);
-
-BOOL
-STDCALL
 NtUserSetObjectInformation(
   HANDLE hObject,
   DWORD nIndex,
@@ -1503,12 +1350,6 @@ STDCALL
 NtUserSetSystemCursor(
   HCURSOR hcur,
   DWORD id);
-
-BOOL
-STDCALL
-NtUserSetSystemMenu(
-  HWND hWnd,
-  HMENU hMenu);
 
 BOOL
 STDCALL
@@ -1653,22 +1494,6 @@ NtUserSystemParametersInfo(
   PVOID pvParam,
   UINT fWinIni);
 
-DWORD
-STDCALL
-NtUserThunkedMenuInfo(
-  HMENU hMenu,
-  LPCMENUINFO lpcmi);
-
-DWORD
-STDCALL
-NtUserThunkedMenuItemInfo(
-  HMENU hMenu,
-  UINT uItem,
-  BOOL fByPosition,
-  BOOL bInsert,
-  LPMENUITEMINFOW lpmii,
-  PUNICODE_STRING lpszCaption);
-
 int
 STDCALL
 NtUserToUnicodeEx(
@@ -1684,16 +1509,6 @@ DWORD
 STDCALL
 NtUserTrackMouseEvent(
   DWORD Unknown0);
-
-BOOL
-STDCALL
-NtUserTrackPopupMenuEx(
-  HMENU hmenu,
-  UINT fuFlags,
-  int x,
-  int y,
-  HWND hwnd,
-  LPTPMPARAMS lptpm);
 
 int
 STDCALL
@@ -1875,13 +1690,6 @@ NtUserSetScrollBarInfo(
   HWND hwnd,
   LONG idObject,
   SETSCROLLBARINFO *info);
-
-typedef struct _SETMENUITEMRECT
-{
-  UINT uItem;
-  BOOL fByPosition;
-  RECT rcRect;
-} SETMENUITEMRECT, *PSETMENUITEMRECT;
 
 #endif /* __WIN32K_NTUSER_H */
 

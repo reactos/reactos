@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.48 2004/01/31 14:57:58 rcampbell Exp $
+/* $Id: misc.c,v 1.49 2004/02/15 07:39:12 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -205,11 +205,11 @@ NtUserCallTwoParam(
       
       if(Param2 > 0)
       {
-        Ret = (MenuObject->Height == (int)Param2);
-        MenuObject->Height = (int)Param2;
+        Ret = (MenuObject->MenuInfo.Height == (int)Param2);
+        MenuObject->MenuInfo.Height = (int)Param2;
       }
       else
-        Ret = (DWORD)MenuObject->Height;
+        Ret = (DWORD)MenuObject->MenuInfo.Height;
       IntReleaseMenuObject(MenuObject);
       return Ret;
     }
