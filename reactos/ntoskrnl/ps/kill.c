@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.52 2002/04/27 19:25:16 hbirr Exp $
+/* $Id: kill.c,v 1.53 2002/06/05 19:38:08 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -364,7 +364,7 @@ NtRegisterThreadTerminatePort(HANDLE TerminationPortHandle)
 	return(Status);
      }
    
-   Request = ExAllocatePool(NonPagedPool, sizeof(Request));
+   Request = ExAllocatePool(NonPagedPool, sizeof(EPORT_TERMINATION_REQUEST));
    Request->Port = TerminationPort;
    Thread = PsGetCurrentThread();
    KeAcquireSpinLock(&Thread->ActiveTimerListLock, &oldIrql);
