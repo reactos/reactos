@@ -1087,7 +1087,7 @@ NtUserRealChildWindowFromPoint(
   DWORD Unknown1,
   DWORD Unknown2);
 
-BOOL STDCALL
+NTSTATUS STDCALL
 NtUserRedrawWindow(HWND hWnd, CONST RECT *lprcUpdate, HRGN hrgnUpdate, UINT flags);
 
 

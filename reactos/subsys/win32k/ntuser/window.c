@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.33 2003/03/18 07:19:17 rcampbell Exp $
+/* $Id: window.c,v 1.34 2003/03/18 09:16:44 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -24,7 +24,7 @@
 #include <include/msgqueue.h>
 #include <include/rect.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <win32k/debug1.h>
 #include <debug.h>
 
@@ -897,10 +897,24 @@ NtUserRealChildWindowFromPoint(DWORD Unknown0,
   return 0;
 }
 
-BOOL STDCALL
+NTSTATUS STDCALL
 NtUserRedrawWindow(HWND hWnd, CONST RECT *lprcUpdate, HRGN hrgnUpdate, UINT flags)
 {
-  return PaintRedrawWindow(hWnd, lprcUpdate, hrgnUpdate, flags);
+  RECT SafeUpdateRect;
+  NTSTATUS Status;
+
+  if (NULL != lprcUpdate)
+    {
+      Status = MmCopyFromCaller(&SafeUpdateRect, lprcUpdate, sizeof(RECT));
+      if (! NT_SUCCESS(Status))
+	{
+	  return Status;
+	}
+    }
+
+  return PaintRedrawWindow(hWnd, NULL == lprcUpdate ? NULL : &SafeUpdateRect, hrgnUpdate,
+                           flags, 0) ? STATUS_SUCCESS : STATUS_INVALID_PARAMETER;
+;
 }
 
 UINT STDCALL
