@@ -24,6 +24,7 @@
 #include <windows.h>
 #include <tchar.h>
 
+#include "resource.h"
 #include "button.h"
 
 
@@ -199,12 +200,20 @@ void DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
         DrawButtonText(hdc, &offset_button_rect, buffer, CLR_BTN_WHITE);
         DrawButtonText(hdc, &button_rect, buffer, CLR_BTN_DGREY);
     } else {
-        DrawButtonText(hdc, &button_rect, buffer, text_colour);
+        if (lpDrawItemStruct->CtlID >= ID_RED_START && lpDrawItemStruct->CtlID <= ID_RED_FINISH) {
+            DrawButtonText(hdc, &button_rect, buffer, RGB(255,0,0));
+        } else
+        if (lpDrawItemStruct->CtlID >= ID_PURPLE_START && lpDrawItemStruct->CtlID <= ID_PURPLE_FINISH) {
+            DrawButtonText(hdc, &button_rect, buffer, RGB(0,128,128));
+        } else
+        if (lpDrawItemStruct->CtlID >= ID_BLUE_START && lpDrawItemStruct->CtlID <= ID_BLUE_FINISH) {
+            DrawButtonText(hdc, &button_rect, buffer, RGB(0,0,255));
+        } else {
+            DrawButtonText(hdc, &button_rect, buffer, text_colour);
+        }
     }
 
     if (state & ODS_FOCUS) {
         DrawFocusRect(lpDrawItemStruct->hDC, (LPRECT)&focus_rect);
     }
 } 
-
-

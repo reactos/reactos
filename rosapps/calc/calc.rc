@@ -117,81 +117,211 @@ END
 // Dialog
 //
 
-IDD_STANDARD DIALOG DISCARDABLE  0, 0, 207, 160
-STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_STANDARD DIALOG DISCARDABLE  0, 0, 170, 126
+STYLE DS_MODALFRAME | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
 CAPTION "ReactOS Calculator"
 MENU IDR_CALC_STANDARD
 FONT 8, "MS Sans Serif"
 BEGIN
-    CONTROL         "1",IDC_BUTTON1,"Button",BS_OWNERDRAW | WS_TABSTOP,47,99,
-                    19,17
-    CONTROL         "2",IDC_BUTTON2,"Button",BS_OWNERDRAW | WS_TABSTOP,69,99,
-                    19,17
-    EDITTEXT        IDC_EDIT1,7,7,193,15,ES_RIGHT | ES_AUTOHSCROLL | 
-                    ES_WANTRETURN
+    CONTROL         "M+",IDC_MPLUS,"Button",BS_OWNERDRAW,5,106,
+                    23,16
+    CONTROL         "MS",IDC_MS,"Button",BS_OWNERDRAW,5,85,23,
+                    16
+    CONTROL         "MR",IDC_MR,"Button",BS_OWNERDRAW,5,65,23,
+                    16
+    CONTROL         "MC",IDC_MC,"Button",BS_OWNERDRAW,5,45,23,
+                    16
+    CONTROL         "0",IDC_0,"Button",BS_OWNERDRAW,37,106,23,
+                    16
+    CONTROL         "1",IDC_1,"Button",BS_OWNERDRAW,37,85,23,16
+    CONTROL         "4",IDC_4,"Button",BS_OWNERDRAW,37,65,23,16
+    CONTROL         "7",IDC_7,"Button",BS_OWNERDRAW,37,45,23,16
+    CONTROL         "+/-",IDC_PLUSMINUS,"Button",BS_OWNERDRAW,
+                    63,106,23,16
+    CONTROL         "2",IDC_2,"Button",BS_OWNERDRAW,63,85,23,16
+    CONTROL         "5",IDC_5,"Button",BS_OWNERDRAW,63,65,23,16
+    CONTROL         "8",IDC_8,"Button",BS_OWNERDRAW,63,45,23,16
+    CONTROL         ".",IDC_DECPOINT,"Button",BS_OWNERDRAW,89,
+                    106,23,16
+    CONTROL         "3",IDC_3,"Button",BS_OWNERDRAW,89,85,23,16
+    CONTROL         "6",IDC_6,"Button",BS_OWNERDRAW,89,65,23,16
+    CONTROL         "9",IDC_9,"Button",BS_OWNERDRAW,89,45,23,16
+    CONTROL         "+",IDC_PLUS,"Button",BS_OWNERDRAW,115,106,
+                    23,16
+    CONTROL         "-",IDC_MINUS,"Button",BS_OWNERDRAW,115,85,
+                    23,16
+    CONTROL         "*",IDC_MULTIPLY,"Button",BS_OWNERDRAW,115,
+                    65,23,16
+    CONTROL         "/",IDC_DIVIDE,"Button",BS_OWNERDRAW,115,45,
+                    23,16
+    CONTROL         "=",IDC_EQUALS,"Button",BS_OWNERDRAW,142,
+                    106,23,16
+    CONTROL         "1/x",IDC_INVERT,"Button",BS_OWNERDRAW,142,
+                    85,23,16
+    CONTROL         "%",IDC_PERCENT,"Button",BS_OWNERDRAW,142,
+                    65,23,16
+    CONTROL         "sqrt",IDC_SQRT,"Button",BS_OWNERDRAW,142,
+                    45,23,16
+    CONTROL         "C",IDC_CLEAR,"Button",BS_OWNERDRAW,126,23,
+                    39,16
+    CONTROL         "CE",IDC_CE,"Button",BS_OWNERDRAW,83,23,39,
+                    16
+    CONTROL         "Backspace",IDC_BSPACE,"Button",BS_OWNERDRAW,38,23,41,16
+    CTEXT           "M",IDC_MEMTEXT,7,23,19,16,SS_CENTERIMAGE | SS_SUNKEN
+    EDITTEXT        IDC_RESULT,7,0,157,15,ES_RIGHT | ES_AUTOHSCROLL
 END
 
-IDD_SCIENTIFIC DIALOG DISCARDABLE  0, 0, 325, 156
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_SCIENTIFIC DIALOG DISCARDABLE  0, 0, 313, 161
+STYLE DS_MODALFRAME | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS Scientific Calculator"
 MENU IDR_CALC_SCIENTIFIC
 FONT 8, "MS Sans Serif"
 BEGIN
-    CONTROL         "1",IDC_BUTTON1,"Button",BS_OWNERDRAW | WS_TABSTOP,47,99,
-                    19,17
-    CONTROL         "2",IDC_BUTTON2,"Button",BS_OWNERDRAW | WS_TABSTOP,69,99,
-                    19,17
-    EDITTEXT        IDC_EDIT1,7,7,310,15,ES_RIGHT | ES_AUTOHSCROLL | 
-                    ES_WANTRETURN
+    CONTROL         "M+",IDC_MPLUS,"Button",BS_OWNERDRAW,122,
+                    121,23,16
+    CONTROL         "MS",IDC_MS,"Button",BS_OWNERDRAW,122,101,
+                    23,16
+    CONTROL         "MR",IDC_MR,"Button",BS_OWNERDRAW,122,81,23,
+                    16
+    CONTROL         "MC",IDC_MC,"Button",BS_OWNERDRAW,122,61,23,
+                    16
+    CONTROL         "0",IDC_0,"Button",BS_OWNERDRAW,156,121,23,
+                    16
+    CONTROL         "1",IDC_1,"Button",BS_OWNERDRAW,156,101,23,
+                    16
+    CONTROL         "4",IDC_4,"Button",BS_OWNERDRAW,156,81,23,
+                    16
+    CONTROL         "7",IDC_7,"Button",BS_OWNERDRAW,156,61,23,
+                    16
+    CONTROL         "+/-",IDC_PLUSMINUS,"Button",BS_OWNERDRAW,
+                    182,121,23,16
+    CONTROL         "2",IDC_2,"Button",BS_OWNERDRAW,182,101,23,
+                    16
+    CONTROL         "5",IDC_5,"Button",BS_OWNERDRAW,182,81,23,
+                    16
+    CONTROL         "8",IDC_8,"Button",BS_OWNERDRAW,182,61,23,
+                    16
+    CONTROL         ".",IDC_DECPOINT,"Button",BS_OWNERDRAW,208,
+                    121,23,16
+    CONTROL         "3",IDC_3,"Button",BS_OWNERDRAW,208,101,23,
+                    16
+    CONTROL         "6",IDC_6,"Button",BS_OWNERDRAW,208,81,23,
+                    16
+    CONTROL         "9",IDC_9,"Button",BS_OWNERDRAW,208,61,23,
+                    16
+    CONTROL         "+",IDC_PLUS,"Button",BS_OWNERDRAW,234,121,
+                    23,16
+    CONTROL         "-",IDC_MINUS,"Button",BS_OWNERDRAW,234,101,
+                    23,16
+    CONTROL         "*",IDC_MULTIPLY,"Button",BS_OWNERDRAW,234,
+                    81,23,16
+    CONTROL         "/",IDC_DIVIDE,"Button",BS_OWNERDRAW,234,61,
+                    23,16
+    CONTROL         "=",IDC_EQUALS,"Button",BS_OWNERDRAW,260,
+                    121,23,16
+    CONTROL         "Lsh",IDC_LSH,"Button",BS_OWNERDRAW,260,101,
+                    23,16
+    CONTROL         "Or",IDC_OR,"Button",BS_OWNERDRAW,260,81,23,
+                    16
+    CONTROL         "Mod",IDC_MOD,"Button",BS_OWNERDRAW,260,61,
+                    23,16
+    CONTROL         "C",IDC_CLEAR,"Button",BS_OWNERDRAW,268,38,
+                    41,16
+    CONTROL         "CE",IDC_CE,"Button",BS_OWNERDRAW,224,38,40,
+                    16
+    CONTROL         "Backspace",IDC_BSPACE,"Button",BS_OWNERDRAW,178,38,42,16
+    CTEXT           "M",IDC_MEMTEXT,123,38,19,16,SS_CENTERIMAGE | SS_SUNKEN
+    CONTROL         "Int",IDC_INT,"Button",BS_OWNERDRAW,286,121,
+                    23,16
+    CONTROL         "Not",IDC_NOT,"Button",BS_OWNERDRAW,286,101,
+                    23,16
+    CONTROL         "Xor",IDC_XOR,"Button",BS_OWNERDRAW,286,81,
+                    23,16
+    CONTROL         "And",IDC_AND,"Button",BS_OWNERDRAW,286,61,
+                    23,16
+    CONTROL         "pi",IDC_PI,"Button",BS_OWNERDRAW,122,142,
+                    23,16
+    CONTROL         "A",IDC_A,"Button",BS_OWNERDRAW,156,142,23,
+                    16
+    CONTROL         "B",IDC_B,"Button",BS_OWNERDRAW,182,142,23,
+                    16
+    CONTROL         "C",IDC_C,"Button",BS_OWNERDRAW,208,142,23,
+                    16
+    CONTROL         "D",IDC_D,"Button",BS_OWNERDRAW,234,142,23,
+                    16
+    CONTROL         "E",IDC_E,"Button",BS_OWNERDRAW,260,142,23,
+                    16
+    CONTROL         "F",IDC_F,"Button",BS_OWNERDRAW,286,142,23,
+                    16
+    CONTROL         "cos",IDC_COS,"Button",BS_OWNERDRAW,37,121,
+                    23,16
+    CONTROL         "sin",IDC_SIN,"Button",BS_OWNERDRAW,37,101,
+                    23,16
+    CONTROL         "dms",IDC_DMS,"Button",BS_OWNERDRAW,37,81,
+                    23,16
+    CONTROL         "F-E",IDC_FE,"Button",BS_OWNERDRAW,37,61,23,
+                    16
+    CONTROL         "x^3",IDC_CUBE,"Button",BS_OWNERDRAW,63,121,
+                    23,16
+    CONTROL         "x^y",IDC_POWER,"Button",BS_OWNERDRAW,63,
+                    101,23,16
+    CONTROL         "Exp",IDC_EXP,"Button",BS_OWNERDRAW,63,81,
+                    23,16
+    CONTROL         "(",IDC_OPENBKT,"Button",BS_OWNERDRAW,63,61,
+                    23,16
+    CONTROL         "n!",IDC_BANG,"Button",BS_OWNERDRAW,89,121,
+                    23,16
+    CONTROL         "log",IDC_LOG,"Button",BS_OWNERDRAW,89,101,
+                    23,16
+    CONTROL         "ln",IDC_LN,"Button",BS_OWNERDRAW,89,81,23,
+                    16
+    CONTROL         ")",IDC_CLOSEBK,"Button",BS_OWNERDRAW,89,61,
+                    23,16
+    CONTROL         "tan",IDC_TAN,"Button",BS_OWNERDRAW,37,142,
+                    23,16
+    CONTROL         "x^2",IDC_SQUARE,"Button",BS_OWNERDRAW,63,
+                    142,23,16
+    CONTROL         "1/x",IDC_INVERT,"Button",BS_OWNERDRAW,89,
+                    142,23,16
+    CONTROL         "s",IDC_S,"Button",BS_OWNERDRAW,4,121,23,16
+    CONTROL         "Sum",IDC_SUM,"Button",BS_OWNERDRAW,4,101,
+                    23,16
+    CONTROL         "Ave",IDC_AVE,"Button",BS_OWNERDRAW,4,81,23,
+                    16
+    CONTROL         "Sta",IDC_STA,"Button",BS_OWNERDRAW,4,61,23,
+                    16
+    CONTROL         "Dat",IDC_DAT,"Button",BS_OWNERDRAW,4,142,
+                    23,16
+    CTEXT           "9",IDC_BKTTEXT,91,38,19,16,SS_CENTERIMAGE | SS_SUNKEN
+    GROUPBOX        "",IDC_INVHYP,6,34,80,22,WS_GROUP
+    CONTROL         "Inv",IDC_INV,"Button",BS_AUTOCHECKBOX,9,42,26,10
+    CONTROL         "Hyp",IDC_HYP,"Button",BS_AUTOCHECKBOX,47,41,29,10
+    GROUPBOX        "",IDC_BASE,6,13,141,22,WS_GROUP
+    CONTROL         "Hex",IDC_HEX,"Button",BS_AUTORADIOBUTTON,8,21,29,10
+    CONTROL         "Dec",IDC_DEC,"Button",BS_AUTORADIOBUTTON,42,21,29,10
+    CONTROL         "Oct",IDC_OCT,"Button",BS_AUTORADIOBUTTON,76,21,27,10
+    CONTROL         "Bin",IDC_BIN,"Button",BS_AUTORADIOBUTTON,109,21,26,10
+    GROUPBOX        "",IDC_UNITS,150,13,160,22,WS_GROUP
+    CONTROL         "Degrees",IDC_DEGREES,"Button",BS_AUTORADIOBUTTON,152,21,
+                    43,10
+    CONTROL         "Radians",IDC_RADIANS,"Button",BS_AUTORADIOBUTTON,204,21,
+                    42,10
+    CONTROL         "Grads",IDC_GRADS,"Button",BS_AUTORADIOBUTTON,255,21,35,
+                    10
+    EDITTEXT        IDC_RESULT,6,0,303,15,ES_RIGHT | ES_AUTOHSCROLL
 END
 
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// DESIGNINFO
-//
-
-#ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE 
-BEGIN
-    IDD_STANDARD, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 200
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 153
-    END
-END
-#endif    // APSTUDIO_INVOKED
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Accelerator
-//
-
-#ifdef _MSC_VER
-IDR_ACCELERATOR ACCELERATORS DISCARDABLE 
-BEGIN
-    VK_F2,          ID_VIEW_DEGREES,    VIRTKEY, NOINVERT
-    VK_F3,          ID_VIEW_RADIANS,    VIRTKEY, NOINVERT
-    VK_F4,          ID_VIEW_GRADS,      VIRTKEY, NOINVERT
-    VK_F5,          ID_VIEW_HEX,        VIRTKEY, NOINVERT
-    VK_F6,          ID_VIEW_DECIMAL,    VIRTKEY, NOINVERT
-    VK_F7,          ID_VIEW_OCTAL,      VIRTKEY, NOINVERT
-    VK_F8,          ID_VIEW_BINARY,     VIRTKEY, NOINVERT
-END
-#endif // _MSC_VER
-
-
+#ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
 //
 // Version
 //
 
-VS_VERSION_INFO VERSIONINFO
-	FILEVERSION	RES_UINT_FV_MAJOR,RES_UINT_FV_MINOR,RES_UINT_FV_REVISION,RES_UINT_FV_BUILD
-	PRODUCTVERSION	RES_UINT_PV_MAJOR,RES_UINT_PV_MINOR,RES_UINT_PV_REVISION,RES_UINT_PV_BUILD
+(1) VERSIONINFO
+ FILEVERSION 0,0,19,147
+ PRODUCTVERSION 0,0,19,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -207,7 +337,7 @@ BEGIN
         BLOCK "040904b0"
         BEGIN
             VALUE "Comments", "Absolutely no warranties whatsoever - Use at your own risk\0"
-            VALUE "CompanyName", RES_STR_COMPANY_NAME
+            VALUE "CompanyName", "ReactOS Development Team\0"
             VALUE "FileDescription", "ReactOS Calculator by Robert Dickenson\0"
             VALUE "FileVersion", "1, 0, 0, 1\0"
             VALUE "InternalName", "calc\0"
@@ -215,8 +345,8 @@ BEGIN
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "calc.exe\0"
             VALUE "PrivateBuild", "\0"
-            VALUE "ProductName",	RES_STR_PRODUCT_NAME
-            VALUE "ProductVersion",	RES_STR_PRODUCT_VERSION
+            VALUE "ProductName", "ReactOS Operating System\0"
+            VALUE "ProductVersion", "0.0.19\0"
             VALUE "SpecialBuild", "Non-versioned Development Beta Release\0"
         END
     END
@@ -225,6 +355,8 @@ BEGIN
         VALUE "Translation", 0xc09, 1200
     END
 END
+
+#endif    // !_MAC
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -236,8 +368,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_APP_TITLE           "ReactOS Calculator"
     IDS_APP_REG_KEY         "\\Calculator"
-    IDS_APP_REG_PATH        RES_STR_ROSAPP_REGISTRY_ROOT
-
+    IDS_APP_REG_PATH        "Software\\ReactWare"
 END
 
 #endif    // English (Australia) resources

@@ -30,7 +30,7 @@
 #include "settings.h"
 
 
-static BOOL CheckResult(LONG error)
+BOOL CheckResult(LONG error)
 {
     if (error != ERROR_SUCCESS) {
     	PTSTR msg;
@@ -56,7 +56,7 @@ static BOOL CreateRegistryPath(LPTSTR szRegPath, int nMaxLen)
     szRegPath[nLength] = _T('\\');
 
     // walk the registry path string creating the tree if required
-    while (pRegPath = _tcschr(pRegPath, _T('\\'))) {
+    while ((pRegPath = _tcschr(pRegPath, _T('\\')))) {
         LONG  result;
         HKEY  hKey = NULL;
         *pRegPath = _T('\0');

@@ -65,12 +65,12 @@ BOOL OnCreate(HWND hWnd)
 
 void OnEditCopy(void)
 {
-    SendMessage(GetDlgItem(hDlgWnd, IDC_EDIT1), WM_COMMAND, MAKELONG(ID_EDIT_COPY, 0), 0);
+    SendMessage(GetDlgItem(hDlgWnd, IDC_RESULT), WM_COMMAND, MAKELONG(ID_EDIT_COPY, 0), 0);
 }
 
 void OnEditPaste(void)
 {
-    SendMessage(GetDlgItem(hDlgWnd, IDC_EDIT1), WM_COMMAND, MAKELONG(ID_EDIT_PASTE, 0), 0);
+    SendMessage(GetDlgItem(hDlgWnd, IDC_RESULT), WM_COMMAND, MAKELONG(ID_EDIT_PASTE, 0), 0);
 }
 
 void OnViewStandard(void)
