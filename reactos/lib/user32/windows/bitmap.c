@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmap.c,v 1.25 2003/12/16 06:51:02 rcampbell Exp $
+/* $Id: bitmap.c,v 1.26 2003/12/31 19:25:51 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -78,143 +78,150 @@ LoadImageA(HINSTANCE hinst,
 HANDLE STATIC
 LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
 {
-  HANDLE hResource;
-  HANDLE h2Resource;
-  HANDLE hfRes;
-  HANDLE hFile;
-  HANDLE hSection;
-  CURSORICONDIR* IconDIR;
-  HDC hScreenDc;
-  HANDLE hIcon;
-  ULONG HeaderSize;
-  ULONG ColourCount;
-  PVOID Data;
-  CURSORICONDIRENTRY* dirEntry;
-  ICONIMAGE* SafeIconImage;
-  GRPCURSORICONDIR* IconResDir;
-  INT id;
-  ICONIMAGE *ResIcon;
+   HANDLE hResource;
+   HANDLE h2Resource;
+   HANDLE hfRes;
+   HANDLE hFile;
+   HANDLE hSection;
+   CURSORICONDIR *IconDIR;
+   HDC hScreenDc;
+   HANDLE hIcon;
+   ULONG HeaderSize;
+   ULONG ColourCount;
+   PVOID Data;
+   CURSORICONDIRENTRY* dirEntry;
+   ICONIMAGE* SafeIconImage;
+   GRPCURSORICONDIR* IconResDir;
+   INT id;
+   ICONIMAGE *ResIcon;
+   UINT Colors;
   
-  if (!(fuLoad & LR_LOADFROMFILE))
-  {
+   if (!(fuLoad & LR_LOADFROMFILE))
+   {
       if (hinst == NULL)
-	  {
-	    hinst = GetModuleHandleW(L"USER32");
-	  }
+      {
+         hinst = GetModuleHandleW(L"USER32");
+      }
       hResource = hfRes = FindResourceW(hinst, lpszName, RT_GROUP_CURSOR);
       if (hResource == NULL)
-	  {
-	    return(NULL);
-	  }
-	  
-	  if (fuLoad & LR_SHARED)
       {
-        /* FIXME - pass size! */
-        hIcon = (HANDLE)NtUserFindExistingCursorIcon(hinst, (HRSRC)hfRes, 0, 0);
-        if(hIcon)
-          return hIcon;
+         return NULL;
+      }
+	  
+      if (fuLoad & LR_SHARED)
+      {
+         /* FIXME - pass size! */
+         hIcon = (HANDLE)NtUserFindExistingCursorIcon(hinst, (HRSRC)hfRes, 0, 0);
+         if (hIcon)
+         {
+            return hIcon;
+         }
       }
 
       hResource = LoadResource(hinst, hResource);
       if (hResource == NULL)
-	  {
-	    return(NULL);
-	  }
+      {
+         return NULL;
+      }
       IconResDir = LockResource(hResource);
       if (IconResDir == NULL)
-	  {
-	    return(NULL);
-	  }
+      {
+         return NULL;
+      }
 
-      //find the best fitting in the IconResDir for this resolution
-      id = LookupIconIdFromDirectoryEx((PBYTE) IconResDir, TRUE,
-                32, 32, fuLoad & (LR_DEFAULTCOLOR | LR_MONOCHROME));
+      /* Find the best fitting in the IconResDir for this resolution. */
+      id = LookupIconIdFromDirectoryEx((PBYTE)IconResDir, TRUE,
+         32, 32, fuLoad & (LR_DEFAULTCOLOR | LR_MONOCHROME));
 
-	  h2Resource = FindResourceW(hinst,
-                     MAKEINTRESOURCEW(id),
-                     MAKEINTRESOURCEW(RT_CURSOR));
+      h2Resource = FindResourceW(hinst, MAKEINTRESOURCEW(id),
+         MAKEINTRESOURCEW(RT_CURSOR));
 
       hResource = LoadResource(hinst, h2Resource);
       if (hResource == NULL)
-	  {
-	    return(NULL);
-	  }
+      {
+         return NULL;
+      }
 
       ResIcon = LockResource(hResource);
       if (ResIcon == NULL)
-	  {
-	    return(NULL);
-	  }
-      hIcon = (HANDLE)CreateIconFromResourceEx((PBYTE) ResIcon,
-                        SizeofResource(hinst, h2Resource), FALSE, 0x00030000,
-                        32, 32, fuLoad & (LR_DEFAULTCOLOR | LR_MONOCHROME));
-      if(hIcon)
       {
-        NtUserSetCursorIconData((HICON)hIcon, NULL, NULL, hinst, (HRSRC)hfRes, 
-                                (HRSRC)NULL);
+         return NULL;
       }
+
+      hIcon = (HANDLE)CreateIconFromResourceEx((PBYTE)ResIcon,
+         SizeofResource(hinst, h2Resource), FALSE, 0x00030000,
+         32, 32, fuLoad & (LR_DEFAULTCOLOR | LR_MONOCHROME));
+      if (hIcon)
+      {
+         NtUserSetCursorIconData((HICON)hIcon, NULL, NULL, hinst, (HRSRC)hfRes, 
+                                 (HRSRC)NULL);
+      }
+
       return hIcon;
-  }
-  else
-  {
+   }
+   else
+   {
       if (fuLoad & LR_SHARED)
       {
-        DbgPrint("FIXME: need LR_SHARED support loading cursor images from files\n");
+         DbgPrint("FIXME: need LR_SHARED support loading cursor images from files\n");
       }
       
-      hFile = CreateFileW(lpszName,
-			 GENERIC_READ,
-			 FILE_SHARE_READ,
-			 NULL,
-			 OPEN_EXISTING,
-			 0,
-			 NULL);
+      hFile = CreateFileW(lpszName, GENERIC_READ, FILE_SHARE_READ, NULL,
+         OPEN_EXISTING, 0, NULL);
       if (hFile == NULL)
-	  {
-	    return(NULL);
-	  }
+      {
+         return NULL;
+      }
 
-      hSection = CreateFileMappingW(hFile,
-				   NULL,
-				   PAGE_READONLY,
-				   0,
-				   0,
-				   NULL);
-
+      hSection = CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
       CloseHandle(hFile);
       if (hSection == NULL)
-	  {
-	    return(NULL);
-	  }
-      IconDIR = MapViewOfFile(hSection,
-				 FILE_MAP_READ,
-				 0,
-				 0,
-				 0);
+      {
+         return NULL;
+      }
 
+      IconDIR = MapViewOfFile(hSection, FILE_MAP_READ, 0, 0, 0);
       CloseHandle(hSection);
       if (IconDIR == NULL)
-	  {
-	    return(NULL);
-	  }
+      {
+         return NULL;
+      }
 
-      //pick the best size.
-      dirEntry = (CURSORICONDIRENTRY *)  CURSORICON_FindBestIcon( IconDIR, 32, 32, 1);
+      /* 
+       * Get a handle to the screen dc, the icon we create is going to be
+       * compatable with it.
+       */
+      hScreenDc = CreateCompatibleDC(0);
+      if (hScreenDc == NULL)
+      {
+         UnmapViewOfFile(IconDIR);
+         return NULL;
+      }
 
+      if (fuLoad & LR_MONOCHROME)
+      {
+         Colors = 2;
+      }
+      else
+      {
+         Colors = GetDeviceCaps(hScreenDc, BITSPIXEL);
+         if (Colors > 8)
+            Colors = 256;
+         else
+            Colors = 1 << Colors;
+      }
 
+      /* Pick the best size. */
+      dirEntry = (CURSORICONDIRENTRY *)CURSORICON_FindBestIcon(IconDIR, 32, 32, Colors);
       if (!dirEntry)
-	  {
-         if (fuLoad & LR_LOADFROMFILE)
-		 {
-	       UnmapViewOfFile(IconDIR);
-		 }
+      {
+         UnmapViewOfFile(IconDIR);
          return(NULL);
-	  }
+      }
 
       SafeIconImage = RtlAllocateHeap(RtlGetProcessHeap(), 0, dirEntry->dwBytesInRes); 
-
       memcpy(SafeIconImage, ((PBYTE)IconDIR) + dirEntry->dwImageOffset, dirEntry->dwBytesInRes);
-  }
+   }
 
   //at this point we have a copy of the icon image to play with
 
@@ -239,20 +246,8 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
   //make data point to the start of the XOR image data
   Data = (PBYTE)SafeIconImage + HeaderSize;
 
-
-  //get a handle to the screen dc, the icon we create is going to be compatable with this
-  hScreenDc = CreateDCW(L"DISPLAY", NULL, NULL, NULL);
-  if (hScreenDc == NULL)
-  {
-      if (fuLoad & LR_LOADFROMFILE)
-	  {
-	  	RtlFreeHeap(RtlGetProcessHeap(), 0, SafeIconImage);
-        UnmapViewOfFile(IconDIR);
-	  }
-      return(NULL);
-  }
-
   hIcon = ICON_CreateCursorFromData(hScreenDc, Data, SafeIconImage, 32, 32, dirEntry->Info.cursor.wXHotspot, dirEntry->Info.cursor.wYHotspot);
+  DeleteDC(hScreenDc);
   RtlFreeHeap(RtlGetProcessHeap(), 0, SafeIconImage);
   return hIcon;
 }

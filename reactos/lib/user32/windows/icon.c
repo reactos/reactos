@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: icon.c,v 1.16 2003/12/09 20:58:16 weiden Exp $
+/* $Id: icon.c,v 1.17 2003/12/31 19:25:51 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/icon.c
@@ -305,6 +305,7 @@ CreateIconFromResourceEx(
   else
     hIcon = ICON_CreateCursorFromData(hScreenDc, Data, SafeIconImage, cxDesired, cyDesired, wXHotspot, wYHotspot);
   RtlFreeHeap(RtlGetProcessHeap(), 0, SafeIconImage);
+  DeleteDC(hScreenDc);
 
   return hIcon;
 }
@@ -558,8 +559,7 @@ CURSORICON_FindBestIcon( GRPCURSORICONDIR *dir, int width, int height, int color
 /*
  * @implemented
  */
-int
-STDCALL
+INT STDCALL
 LookupIconIdFromDirectoryEx(
   PBYTE presbits,
   WINBOOL fIcon,
@@ -567,38 +567,38 @@ LookupIconIdFromDirectoryEx(
   int cyDesired,
   UINT Flags)
 {
-    GRPCURSORICONDIR *dir = (GRPCURSORICONDIR*)presbits;
-    UINT retVal = 0;
+   GRPCURSORICONDIR *dir = (GRPCURSORICONDIR*)presbits;
+   UINT retVal = 0;
 
-    if( dir && !dir->idReserved && (dir->idType & 3) )
-    {
-	GRPCURSORICONDIRENTRY* entry;
-	HDC hdc;
-	UINT palEnts;
-	int colors;
-	hdc = GetDC(0);
-#if 0
-	palEnts = GetSystemPaletteEntries(hdc, 0, 0, NULL);
-	if (palEnts == 0)
-	palEnts = 256;
-#endif
-	palEnts = 16;  //use this until GetSystemPaletteEntries works
-	colors = (Flags & LR_MONOCHROME) ? 2 : palEnts;
+   if (dir && !dir->idReserved && (dir->idType & 3))
+   {
+      GRPCURSORICONDIRENTRY *entry;
+      HDC hdc;
+      int colors;
 
-	ReleaseDC(0, hdc);
+      hdc = GetDC(0);
+      if (Flags & LR_MONOCHROME)
+      {
+         colors = 2;
+      }
+      else
+      {
+         colors = GetDeviceCaps(hdc, BITSPIXEL);
+         if (colors > 8)
+            colors = 256;
+         else
+            colors = 1 << colors;
+      }
+      ReleaseDC(0, hdc);
 
-	entry = (GRPCURSORICONDIRENTRY*)CURSORICON_FindBestIcon( dir,
-	                                                   cxDesired,
-	                                                   cyDesired,
-	                                                   colors );
+      entry = CURSORICON_FindBestIcon( dir, cxDesired, cyDesired, colors );
 
-	if( entry )
-	    retVal = entry->nID;
-    }
-    else
-    {
+      if (entry)
+         retVal = entry->nID;
+   }
+   else
+   {
        DbgPrint("invalid resource directory\n");
-    }
-    return retVal;
+   }
+   return retVal;
 }
-
