@@ -30,6 +30,12 @@ private:
 };
 
 
+enum ModuleType
+{
+	BuildTool,
+	KernelModeDLL
+};
+
 class Module
 {
 public:
@@ -37,10 +43,12 @@ public:
 	std::string name;
 	std::string path;
 	std::vector<File*> files;
+	ModuleType type;
 
 	Module ( const XMLElement& moduleNode,
 	         const std::string& moduleName,
 	         const std::string& modulePath );
+	ModuleType GetModuleType (const XMLAttribute& attribute );
 
 	~Module();
 

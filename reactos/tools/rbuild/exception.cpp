@@ -63,5 +63,13 @@ RequiredAttributeNotFoundException::RequiredAttributeNotFoundException(const std
 	                              attributeName.c_str (),
 	                              elementName.c_str ())
 {
+}
+
+InvalidAttributeValueException::InvalidAttributeValueException(const std::string& name,
+	                                                           const std::string& value)
+	: InvalidBuildFileException ( "Attribute '%s' has an invalid value '%s'.",
+	                              name.c_str (),
+	                              value.c_str ())
+{
 	
 }

@@ -6,7 +6,7 @@
 		</module>
 	</directory>
 	<directory name="dir2">
-		<module name="module2" type="buildtool">
+		<module name="module2" type="kernelmodedll">
 			<file>file3.c</file>
 			<file>file4.c</file>
 		</module>

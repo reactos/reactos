@@ -9,11 +9,13 @@ void ModuleTest::Run()
 	ARE_EQUAL(2, project.modules.size());
 
 	Module& module1 = *project.modules[0];
+	IS_TRUE(module1.type == BuildTool);
 	ARE_EQUAL(2, module1.files.size());
 	ARE_EQUAL("./dir1/file1.c", module1.files[0]->name);
 	ARE_EQUAL("./dir1/file2.c", module1.files[1]->name);
 	
 	Module& module2 = *project.modules[1];
+	IS_TRUE(module2.type == KernelModeDLL);
 	ARE_EQUAL(2, module2.files.size());
 	ARE_EQUAL("./dir2/file3.c", module2.files[0]->name);
 	ARE_EQUAL("./dir2/file4.c", module2.files[1]->name);

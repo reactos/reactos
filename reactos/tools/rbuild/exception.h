@@ -48,4 +48,12 @@ public:
 	                                   const std::string& elementName);
 };
 
+
+class InvalidAttributeValueException : public InvalidBuildFileException
+{
+public:
+	InvalidAttributeValueException(const std::string& name,
+	                               const std::string& value);
+};
+
 #endif /* __EXCEPTION_H */
