@@ -1,4 +1,4 @@
-/* $Id: getc.c,v 1.8 2003/01/11 22:40:24 gvg Exp $
+/* $Id: getc.c,v 1.9 2003/07/11 21:58:09 royce Exp $
  *
  *  ReactOS msvcrt library
  *
@@ -58,6 +58,9 @@ int getc(FILE *fp)
 	return c;
 }
 
+/*
+ * @implemented
+ */
 wint_t getwc(FILE *fp)
 {
     wint_t c = -1;

@@ -14,6 +14,9 @@ int _isinf(double x);
 int __vfprintf(FILE*, const char*, va_list);
 
 
+/*
+ * @implemented
+ */
 int vfprintf(FILE* f, const char* fmt, va_list ap)
 {
     int len;

@@ -3,6 +3,9 @@
 #include <msvcrt/stdlib.h>
 
 
+/*
+ * @implemented
+ */
 char *_getcwd(char* buffer, int maxlen)
 {
     char *cwd;

@@ -2,6 +2,9 @@
 #include <msvcrt/string.h>
 
 #if 1
+/*
+ * @implemented
+ */
 size_t strxfrm( char *dest, const char *src, size_t n )
 {
    strncpy(dest, src, n);

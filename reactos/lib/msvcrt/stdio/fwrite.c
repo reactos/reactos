@@ -7,6 +7,9 @@
 #include <msvcrt/msvcrtdbg.h>
 
 
+/*
+ * @implemented
+ */
 size_t fwrite(const void *vptr, size_t size, size_t count, FILE *iop)
 {
   size_t to_write, n_written;

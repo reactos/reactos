@@ -12,6 +12,9 @@
 #include <msvcrt/ctype.h>
 
 int colldif(unsigned short c1, unsigned short c2);
+/*
+ * @implemented
+ */
 int _mbsicoll(const unsigned char *str1, const unsigned char *str2)
 {
 	unsigned char *s1 = (unsigned char *)str1;

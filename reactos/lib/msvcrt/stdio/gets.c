@@ -1,4 +1,4 @@
-/* $Id: gets.c,v 1.4 2002/11/24 18:42:24 robd Exp $
+/* $Id: gets.c,v 1.5 2003/07/11 21:58:09 royce Exp $
  *
  *  ReactOS msvcrt library
  *
@@ -45,7 +45,11 @@ char* gets(char* s)
 #define	WEOF	(wchar_t)(0xFFFF)
 #endif
 
-// Get a line from the stdin stream.
+/*
+ * Get a line from the stdin stream.
+ *
+ * @implemented
+ */
 wchar_t* _getws(wchar_t* s)
 {
     wchar_t c;

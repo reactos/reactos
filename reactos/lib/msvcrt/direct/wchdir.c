@@ -3,6 +3,9 @@
 #include <msvcrt/direct.h>
 
 
+/*
+ * @implemented
+ */
 int _wchdir (const wchar_t *_path)
 {
     if (_path[1] == L':')

@@ -14,6 +14,9 @@ MsvcrtDebug(ULONG Value)
     //DbgPrint("MsvcrtDebug 0x%.08x\n", Value);
 }
 
+/*
+ * @implemented
+ */
 EXCEPTION_DISPOSITION
 _except_handler2(
 struct _EXCEPTION_RECORD *ExceptionRecord,

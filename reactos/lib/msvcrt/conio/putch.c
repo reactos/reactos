@@ -10,6 +10,9 @@
 #include <windows.h>
 #include <msvcrt/conio.h>
 
+/*
+ * @implemented
+ */
 int _putch(int c)
 {
   DWORD NumberOfCharsWritten;

@@ -8,6 +8,9 @@
 
 extern int BlockEnvToEnviron(); // defined in misc/dllmain.c
 
+/*
+ * @implemented
+ */
 int _putenv(const char* val)
 {
     char* buffer;

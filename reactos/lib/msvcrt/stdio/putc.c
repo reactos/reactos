@@ -1,4 +1,4 @@
-/* $Id: putc.c,v 1.7 2002/12/08 16:14:28 robd Exp $
+/* $Id: putc.c,v 1.8 2003/07/11 21:58:09 royce Exp $
  *
  *  ReactOS msvcrt library
  *
@@ -62,6 +62,9 @@ int putc(int c, FILE* fp)
 }
 
 //wint_t putwc(wint_t c, FILE* fp)
+/*
+ * @implemented
+ */
 int putwc(wint_t c, FILE* fp)
 {
     // valid stream macro should check that fp is dword aligned

@@ -1,6 +1,9 @@
 #include <msvcrt/stdio.h>
 #include <msvcrt/conio.h>
 
+/*
+ * @unimplemented
+ */
 int
 _cprintf(const char *fmt, ...)
 {

@@ -3,6 +3,9 @@
 int _ismbbalpha(unsigned char c);
 int _ismbbalnum(unsigned char c);
 
+/*
+ * @implemented
+ */
 int _ismbcalnum( unsigned int c )
 {
 	if ((c & 0xFF00) != 0) {
@@ -15,6 +18,9 @@ int _ismbcalnum( unsigned int c )
 	return 0;
 }
 
+/*
+ * @implemented
+ */
 int _ismbcalpha( unsigned int c )
 {
 	if ((c & 0xFF00) != 0) {
@@ -27,6 +33,9 @@ int _ismbcalpha( unsigned int c )
 	return 0;
 }
   
+/*
+ * @implemented
+ */
 int _ismbcdigit( unsigned int c )
 {
 	if ((c & 0xFF00) != 0) {
@@ -40,6 +49,9 @@ int _ismbcdigit( unsigned int c )
 	return 0;
 }
 
+/*
+ * @unimplemented
+ */
 int _ismbcprint( unsigned int c )
 {
 	if ((c & 0xFF00) != 0) {
@@ -53,6 +65,9 @@ int _ismbcprint( unsigned int c )
 	return 0;
 }
 
+/*
+ * @unimplemented
+ */
 int _ismbcsymbol( unsigned int c )
 {
 	if ((c & 0xFF00) != 0) {
@@ -66,6 +81,9 @@ int _ismbcsymbol( unsigned int c )
 	return 0;
 }
 
+/*
+ * @unimplemented
+ */
 int _ismbcspace( unsigned int c )
 {
 	if ((c & 0xFF00) != 0) {
@@ -78,6 +96,9 @@ int _ismbcspace( unsigned int c )
 
 	return 0;
 }
+/*
+ * @implemented
+ */
 int _ismbclegal(unsigned int c)
 {
 	if ((c & 0xFF00) != 0) {
@@ -89,16 +110,25 @@ int _ismbclegal(unsigned int c)
 	return 0;
 }
 
+/*
+ * @unimplemented
+ */
 int _ismbcl0(unsigned int c)
 {
   return 0;
 }
 
+/*
+ * @unimplemented
+ */
 int _ismbcl1(unsigned int c)
 {
   return 0;
 }
 
+/*
+ * @unimplemented
+ */
 int _ismbcl2(unsigned int c)
 {
   return 0;

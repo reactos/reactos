@@ -4,6 +4,9 @@
 FILE* __alloc_file(void);
 
 
+/*
+ * @implemented
+ */
 FILE* _wfdopen(int handle, wchar_t* mode)
 {
   FILE* file;

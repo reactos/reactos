@@ -20,6 +20,9 @@
 FILE *	__alloc_file(void);
 
 
+/*
+ * @implemented
+ */
 FILE* _fsopen(const char *file, const char *mode, int shflag)
 {
   FILE *f;
@@ -98,6 +101,9 @@ FILE* _fsopen(const char *file, const char *mode, int shflag)
   return f;
 }
 
+/*
+ * @implemented
+ */
 FILE* _wfsopen(const wchar_t *file, const wchar_t *mode, int shflag)
 {
   FILE *f;

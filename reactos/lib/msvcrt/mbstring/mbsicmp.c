@@ -11,6 +11,9 @@
 #include <msvcrt/mbctype.h>
 #include <msvcrt/ctype.h>
 
+/*
+ * @implemented
+ */
 int _mbsicmp(const unsigned char *str1, const unsigned char *str2)
 {
 	unsigned char *s1 = (unsigned char *)str1;

@@ -1,4 +1,4 @@
-/* $Id: errno.c,v 1.8 2002/09/08 10:22:57 chorns Exp $
+/* $Id: errno.c,v 1.9 2003/07/11 21:58:09 royce Exp $
  *
  */
 
@@ -6,11 +6,17 @@
 #include <msvcrt/internal/tls.h>
 #include <msvcrt/internal/file.h>
 
+/*
+ * @implemented
+ */
 int* __doserrno(void)
 {
   return(&GetThreadData()->tdoserrno);
 }
 
+/*
+ * @implemented
+ */
 int *_errno(void)
 {
   return(&GetThreadData()->terrno);

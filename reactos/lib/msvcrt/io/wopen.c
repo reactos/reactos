@@ -1,4 +1,4 @@
-/* $Id: wopen.c,v 1.2 2002/12/05 15:30:44 robd Exp $
+/* $Id: wopen.c,v 1.3 2003/07/11 21:57:54 royce Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -29,6 +29,9 @@
 #include <msvcrt/msvcrtdbg.h>
 
 
+/*
+ * @implemented
+ */
 int _wopen(const wchar_t* _path, int _oflag, ...)
 {
 #if !defined(NDEBUG) && defined(DBG)
@@ -134,6 +137,9 @@ int _wopen(const wchar_t* _path, int _oflag, ...)
     return __fileno_alloc(hFile,_oflag);
 }
 
+/*
+ * @implemented
+ */
 int _wsopen(wchar_t* path, int access, int shflag, int mode)
 {
     return _wopen((path), (access)|(shflag), (mode));

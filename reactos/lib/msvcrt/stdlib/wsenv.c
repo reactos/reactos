@@ -6,6 +6,9 @@
 #include <msvcrt/msvcrtdbg.h>
 
 
+/*
+ * @implemented
+ */
 void _wsearchenv(const wchar_t* file,const wchar_t* var,wchar_t* path)
 {
     wchar_t* env = _wgetenv(var);

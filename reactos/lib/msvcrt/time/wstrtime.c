@@ -13,6 +13,9 @@
 #include <msvcrt/internal/file.h>
 
 
+/*
+ * @implemented
+ */
 wchar_t* _wstrtime(wchar_t* buf)
 {
     time_t t;

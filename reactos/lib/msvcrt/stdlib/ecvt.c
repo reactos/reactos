@@ -4,6 +4,9 @@
 
 char *ecvtbuf (double, int, int *, int *, char *);
 
+/*
+ * @implemented
+ */
 char *
 _ecvt (double value, int ndigits, int *decpt, int *sign)
 {

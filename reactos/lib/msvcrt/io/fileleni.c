@@ -2,6 +2,9 @@
 #include <msvcrt/io.h>
 
 
+/*
+ * @implemented
+ */
 __int64 _filelengthi64(int _fd)
 {
     long lo_length, hi_length;

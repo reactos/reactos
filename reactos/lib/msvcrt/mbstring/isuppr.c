@@ -11,7 +11,11 @@
 #include <msvcrt/mbctype.h>
 #include <msvcrt/ctype.h>
 
-// code page 952 only
+/*
+ * code page 952 only
+ *
+ * @implemented
+ */
 int _ismbcupper( unsigned int c )
 {
 	if ((c & 0xFF00) != 0) {

@@ -2,6 +2,9 @@
 #include <msvcrt/direct.h>
 
 
+/*
+ * @implemented
+ */
 wchar_t* _wgetdcwd(int nDrive, wchar_t* caBuffer, int nBufLen)
 {
     int i =0;

@@ -3,6 +3,9 @@
 
 unsigned _unMode_dll = 022;
 
+/*
+ * @implemented
+ */
 unsigned _umask (unsigned unMode)
 {
   unsigned old_mask = _unMode_dll;

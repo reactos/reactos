@@ -3,12 +3,18 @@
 
 
 #undef isxdigit
+/*
+ * @implemented
+ */
 int isxdigit(int c)
 {
     return _isctype(c, _HEX);
 }
 
 #undef iswxdigit
+/*
+ * @implemented
+ */
 int iswxdigit(wint_t c)
 {
     return iswctype(c, _HEX);

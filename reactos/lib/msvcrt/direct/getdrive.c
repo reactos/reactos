@@ -5,6 +5,9 @@
 
 extern int cur_drive;
 
+/*
+ * @implemented
+ */
 int _getdrive(void)
 {
     char Buffer[MAX_PATH];
@@ -16,6 +19,9 @@ int _getdrive(void)
     return cur_drive;
 }
 
+/*
+ * @unimplemented
+ */
 unsigned long _getdrives(void)
 {
     //fixme get logical drives

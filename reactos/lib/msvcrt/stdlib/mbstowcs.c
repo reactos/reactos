@@ -2,6 +2,9 @@
 #include <msvcrt/stdlib.h>
 
 #if 1
+/*
+ * @unimplemented
+ */
 size_t mbstowcs(wchar_t* wcstr, const char* mbstr, size_t count)
 {
 	size_t size;

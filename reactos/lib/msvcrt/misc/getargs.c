@@ -87,6 +87,9 @@ int expand(char* name, int flag)
     return 0;
 }
 
+/*
+ * @unimplemented
+ */
 int __getmainargs(int* argc, char*** argv, char*** env, int flag)
 {
     int i, afterlastspace, ignorespace, len;
@@ -137,11 +140,17 @@ int __getmainargs(int* argc, char*** argv, char*** env, int flag)
     return 0;
 }
 
+/*
+ * @implemented
+ */
 int* __p___argc(void)
 {
     return &__argc;
 }
 
+/*
+ * @implemented
+ */
 char*** __p___argv(void)
 {
     return &__argv;

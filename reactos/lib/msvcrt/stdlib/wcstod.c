@@ -3,6 +3,9 @@
 #include <msvcrt/stdlib.h>
 
 
+/*
+ * @implemented
+ */
 double wcstod(const wchar_t *s, wchar_t **sret)
 {
   long double r;		/* result */

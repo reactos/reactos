@@ -1,4 +1,4 @@
-/* $Id: fstat.c,v 1.14 2002/11/29 15:59:05 robd Exp $
+/* $Id: fstat.c,v 1.15 2003/07/11 21:58:09 royce Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -17,6 +17,9 @@
 #include <msvcrt/internal/file.h>
 
 
+/*
+ * @implemented
+ */
 int _fstat(int fd, struct stat* statbuf)
 {
   BY_HANDLE_FILE_INFORMATION  FileInformation;

@@ -3,6 +3,9 @@
 #include <msvcrt/stdlib.h>
 
 
+/*
+ * @implemented
+ */
 char* _tempnam(const char* dir,const char* prefix)
 {
     char* TempFileName = malloc(MAX_PATH);

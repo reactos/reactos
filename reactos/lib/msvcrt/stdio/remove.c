@@ -5,6 +5,9 @@
 #define NDEBUG
 #include <msvcrt/msvcrtdbg.h>
 
+/*
+ * @implemented
+ */
 int remove(const char *fn)
 {
   int result = 0;
@@ -15,6 +18,9 @@ int remove(const char *fn)
   return result;
 }
 
+/*
+ * @implemented
+ */
 int _wremove(const wchar_t *fn)
 {
   DPRINT("_wremove('%S')\n", fn);

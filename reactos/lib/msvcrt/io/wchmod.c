@@ -7,6 +7,9 @@
 #define mode_t int
 
 
+/*
+ * @implemented
+ */
 int _wchmod(const wchar_t* filename, mode_t mode)
 {
     DWORD FileAttributes = 0;

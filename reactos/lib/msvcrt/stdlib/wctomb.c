@@ -37,6 +37,9 @@ WideCharToMultiByte(
     LPBOOL   lpUsedDefaultChar);
 
 
+/*
+ * @unimplemented
+ */
 int wctomb(char* dst, wchar_t ch)
 {
 #if 0

@@ -14,6 +14,9 @@
 
 VOID STDCALL GetSystemTimeAsFileTime(LPFILETIME  lpSystemTimeAsFileTime );
 
+/*
+ * @implemented
+ */
 clock_t clock ( void )
 {
   FILETIME CreationTime;

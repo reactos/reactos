@@ -2,6 +2,9 @@
 #include <msvcrt/stdlib.h>
 #include <msvcrt/internal/atexit.h>
 
+/*
+ * @implemented
+ */
 int
 atexit(void (*a)(void))
 {

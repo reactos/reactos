@@ -12,12 +12,18 @@
 
 
 #undef isspace
+/*
+ * @implemented
+ */
 int isspace(int c)
 {
   return _isctype(c,_SPACE);
 }
 
 #undef iswspace
+/*
+ * @implemented
+ */
 int iswspace(wint_t c)
 {
   return iswctype(c,_SPACE);

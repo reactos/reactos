@@ -1,6 +1,9 @@
 #include <msvcrt/stdlib.h>
 
 
+/*
+ * @implemented
+ */
 long wcstol(const wchar_t *cp,wchar_t **endp,int base)
 {
 	long result = 0,value;

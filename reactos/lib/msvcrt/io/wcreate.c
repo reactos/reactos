@@ -5,6 +5,9 @@
 #include <msvcrt/msvcrtdbg.h>
 
 
+/*
+ * @implemented
+ */
 int _wcreat(const wchar_t* filename, int mode)
 {
     DPRINT("_wcreat('%S', mode %x)\n", filename, mode);

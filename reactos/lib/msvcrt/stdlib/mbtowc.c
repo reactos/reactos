@@ -5,6 +5,9 @@
 
 #if 1
 
+/*
+ * @implemented
+ */
 int mbtowc(wchar_t *dst, const char *str, size_t n)
 {
 //    printf("\t\t\tmbtowc(%p, %p, %d) called.\n", dst, str, n);

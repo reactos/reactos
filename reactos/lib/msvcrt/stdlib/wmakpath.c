@@ -1,9 +1,12 @@
-/* $Id: wmakpath.c,v 1.1 2002/11/24 18:42:25 robd Exp $
+/* $Id: wmakpath.c,v 1.2 2003/07/11 21:58:09 royce Exp $
  */
 #include <msvcrt/stdlib.h>
 #include <msvcrt/string.h>
 
 
+/*
+ * @implemented
+ */
 void _wmakepath(wchar_t* path, const wchar_t* drive, const wchar_t* dir, const wchar_t* fname, const wchar_t* ext)
 {
     int dir_len;

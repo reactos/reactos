@@ -3,12 +3,18 @@
 
 
 #undef isdigit
+/*
+ * @implemented
+ */
 int isdigit(int c)
 {
    return _isctype(c, _DIGIT);
 }
 
 #undef iswdigit
+/*
+ * @implemented
+ */
 int iswdigit(wint_t c)
 {
    return iswctype(c, _DIGIT);

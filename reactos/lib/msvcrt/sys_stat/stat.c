@@ -8,6 +8,9 @@
 #include <msvcrt/internal/file.h>
 
 
+/*
+ * @implemented
+ */
 int _stat(const char* path, struct stat* buffer)
 {
   WIN32_FILE_ATTRIBUTE_DATA fileAttributeData;
@@ -58,6 +61,9 @@ int _stat(const char* path, struct stat* buffer)
   return 0;
 }
 
+/*
+ * @implemented
+ */
 __int64 _stati64 (const char *path, struct _stati64 *buffer)
 {
   WIN32_FILE_ATTRIBUTE_DATA fileAttributeData;

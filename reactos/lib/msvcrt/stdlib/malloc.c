@@ -37,21 +37,33 @@ MSVCRT_new_handler_func MSVCRT__set_new_handler(MSVCRT_new_handler_func func)
   return old_handler;
 }
 
+/*
+ * @implemented
+ */
 void* malloc(size_t _size)
 {
    return HeapAlloc(hHeap, HEAP_ZERO_MEMORY, _size);
 }
 
+/*
+ * @implemented
+ */
 void free(void* _ptr)
 {
    HeapFree(hHeap,0,_ptr);
 }
 
+/*
+ * @implemented
+ */
 void* calloc(size_t _nmemb, size_t _size)
 {
    return HeapAlloc(hHeap, HEAP_ZERO_MEMORY, _nmemb*_size);
 }
 
+/*
+ * @implemented
+ */
 void* realloc(void* _ptr, size_t _size)
 {
    return HeapReAlloc(hHeap, 0, _ptr, _size);

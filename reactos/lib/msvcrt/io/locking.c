@@ -2,6 +2,9 @@
 #include <msvcrt/io.h>
 
 
+/*
+ * @implemented
+ */
 int _locking(int _fd, int mode, long nbytes)
 {
   long offset = _lseek(_fd, 0L, 1);

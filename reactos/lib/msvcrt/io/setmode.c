@@ -1,4 +1,4 @@
-/* $Id: setmode.c,v 1.8 2002/11/24 18:42:22 robd Exp $
+/* $Id: setmode.c,v 1.9 2003/07/11 21:57:54 royce Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -17,6 +17,9 @@
 #include <msvcrt/msvcrtdbg.h>
 
 
+/*
+ * @implemented
+ */
 int _setmode(int _fd, int _newmode)
 {
     DPRINT("_setmod(fd %d, newmode %x)\n", _fd, _newmode);

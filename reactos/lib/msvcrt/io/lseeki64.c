@@ -5,6 +5,9 @@
 
 //#define SETFILEPOINTEREX_AVAILABLE
 
+/*
+ * @implemented
+ */
 __int64 _lseeki64(int _fildes, __int64 _offset, int _whence)
 {
 #ifdef SETFILEPOINTEREX_AVAILABLE

@@ -1,4 +1,4 @@
-/* $Id: fopen.c,v 1.7 2002/11/24 18:42:24 robd Exp $
+/* $Id: fopen.c,v 1.8 2003/07/11 21:58:09 royce Exp $
  *
  *  ReactOS msvcrt library
  *
@@ -101,6 +101,9 @@ FILE* fopen(const char *file, const char *mode)
   return f;
 }
 
+/*
+ * @implemented
+ */
 FILE* _wfopen(const wchar_t *file, const wchar_t *mode)
 {
   FILE *f;

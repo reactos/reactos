@@ -2,11 +2,17 @@
 
 #include <msvcrt/float.h>
 
+/*
+ * @implemented
+ */
 unsigned int _controlfp(unsigned int unNew, unsigned int unMask)
 {
   return _control87(unNew,unMask);
 }
 
+/*
+ * @implemented
+ */
 unsigned int _control87(unsigned int unNew, unsigned int unMask)
 {
 register unsigned int __res;

@@ -2,6 +2,9 @@
 #include <msvcrt/string.h>
 
 
+/*
+ * @implemented
+ */
 void _splitpath(const char* path, char* drive, char* dir, char* fname, char* ext)
 {
     char* tmp_drive;

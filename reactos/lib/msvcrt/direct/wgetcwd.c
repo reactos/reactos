@@ -3,6 +3,9 @@
 #include <msvcrt/stdlib.h>
 
 
+/*
+ * @implemented
+ */
 wchar_t* _wgetcwd(wchar_t* buffer, int maxlen)
 {
     wchar_t *cwd;

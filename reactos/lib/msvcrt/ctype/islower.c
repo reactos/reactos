@@ -3,11 +3,17 @@
 
 
 #undef islower
+/*
+ * @implemented
+ */
 int islower(int c)
 {
     return _isctype(c, _LOWER);
 }
 
+/*
+ * @implemented
+ */
 int iswlower(wint_t c)
 {
     return iswctype(c, _LOWER);

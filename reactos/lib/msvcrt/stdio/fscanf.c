@@ -26,6 +26,9 @@ Cambridge, MA 02139, USA.  */
 
 /* Read formatted input from STREAM according to the format string FORMAT.  */
 /* VARARGS2 */
+/*
+ * @implemented
+ */
 int fscanf(FILE *stream,const char *format, ...)
 {
   va_list arg;
@@ -38,6 +41,9 @@ int fscanf(FILE *stream,const char *format, ...)
   return done;
 }
 
+/*
+ * @implemented
+ */
 int
 fwscanf(FILE *stream, const wchar_t *fmt, ...)
 {

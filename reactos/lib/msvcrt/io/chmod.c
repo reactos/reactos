@@ -7,6 +7,9 @@
 #define mode_t int
 
 
+/*
+ * @implemented
+ */
 int _chmod(const char* filename, mode_t mode)
 {
     DWORD FileAttributes = 0;

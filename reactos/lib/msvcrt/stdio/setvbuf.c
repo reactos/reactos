@@ -8,6 +8,9 @@
 #include <msvcrt/internal/file.h>
 
 
+/*
+ * @implemented
+ */
 int setvbuf(FILE *f, char *buf, int type, size_t len)
 {
   int mine=0;

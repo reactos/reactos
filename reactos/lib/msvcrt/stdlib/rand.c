@@ -2,6 +2,9 @@
 #include <msvcrt/stdlib.h>
 #include <msvcrt/internal/tls.h>
 
+/*
+ * @implemented
+ */
 int
 rand(void)
 {
@@ -15,6 +18,9 @@ rand(void)
   return (int)((ThreadData->tnext >> 16) & RAND_MAX);
 }
 
+/*
+ * @implemented
+ */
 void
 srand(unsigned int seed)
 {

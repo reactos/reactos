@@ -1,5 +1,8 @@
 #include <windows.h>
 
+/*
+ * @implemented
+ */
 void __cdecl
 _global_unwind2(PEXCEPTION_REGISTRATION RegistrationFrame)
 {

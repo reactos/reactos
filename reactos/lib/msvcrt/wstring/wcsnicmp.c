@@ -1,5 +1,8 @@
 #include <msvcrt/wchar.h>
 
+/*
+ * @implemented
+ */
 int _wcsnicmp (const wchar_t *cs, const wchar_t *ct, size_t count)
 {
 	if (count == 0)

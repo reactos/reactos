@@ -7,6 +7,9 @@
 int cur_drive = 0;
 
 
+/*
+ * @implemented
+ */
 int _chdrive(int drive)
 {
     char d[3];

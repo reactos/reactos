@@ -1,4 +1,4 @@
-/* $Id: fstati64.c,v 1.1 2002/11/24 18:42:25 robd Exp $
+/* $Id: fstati64.c,v 1.2 2003/07/11 21:58:16 royce Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -17,6 +17,9 @@
 #include <msvcrt/internal/file.h>
 
 
+/*
+ * @implemented
+ */
 __int64 _fstati64(int fd, struct _stati64* statbuf)
 {
   BY_HANDLE_FILE_INFORMATION FileInformation;

@@ -3,6 +3,9 @@
 #include <msvcrt/direct.h>
 
 
+/*
+ * @implemented
+ */
 unsigned int _getdiskfree(unsigned int _drive, struct _diskfree_t* _diskspace)
 {
     char RootPathName[10];

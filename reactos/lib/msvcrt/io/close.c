@@ -5,6 +5,9 @@
 #define NDEBUG
 #include <msvcrt/msvcrtdbg.h>
 
+/*
+ * @implemented
+ */
 int _close(int _fd)
 {
   DPRINT("_close(fd %d)\n", _fd);

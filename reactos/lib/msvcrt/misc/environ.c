@@ -1,4 +1,4 @@
-/* $Id: environ.c,v 1.3 2003/06/01 17:08:03 hbirr Exp $
+/* $Id: environ.c,v 1.4 2003/07/11 21:58:09 royce Exp $
  *
  * dllmain.c
  *
@@ -30,6 +30,9 @@ int __mb_cur_max = 1;
 int _commode = _IOCOMMIT;
 
 
+/*
+ * @implemented
+ */
 int *__p__commode(void) // not exported by NTDLL
 {
    return &_commode;
@@ -74,51 +77,81 @@ int BlockEnvToEnviron(void)
     return 0;
 }
 
+/*
+ * @implemented
+ */
 void __set_app_type(int app_type)
 {
     __app_type = app_type;
 }
 
+/*
+ * @implemented
+ */
 char **__p__acmdln(void)
 {
     return &_acmdln;
 }
 
+/*
+ * @implemented
+ */
 char ***__p__environ(void)
 {
     return _environ_dll;
 }
 
+/*
+ * @implemented
+ */
 char ***__p___initenv(void)
 {
     return &__initenv;
 }
 
+/*
+ * @implemented
+ */
 int *__p___mb_cur_max(void)
 {
     return &__mb_cur_max;
 }
 
+/*
+ * @implemented
+ */
 unsigned int *__p__osver(void)
 {
     return &_osver;
 }
 
+/*
+ * @implemented
+ */
 char **__p__pgmptr(void)
 {
     return &_pgmptr;
 }
 
+/*
+ * @implemented
+ */
 unsigned int *__p__winmajor(void)
 {
     return &_winmajor;
 }
 
+/*
+ * @implemented
+ */
 unsigned int *__p__winminor(void)
 {
     return &_winminor;
 }
 
+/*
+ * @implemented
+ */
 unsigned int *__p__winver(void)
 {
     return &_winver;

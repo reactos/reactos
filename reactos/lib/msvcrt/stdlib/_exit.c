@@ -6,6 +6,9 @@
 
 struct __atexit *__atexit_ptr = 0;
 
+/*
+ * @implemented
+ */
 void exit(int status) 
 {
   //int i;
@@ -29,17 +32,26 @@ void exit(int status)
 }
 
 
+/*
+ * @implemented
+ */
 void _exit(int _status)
 {
 	ExitProcess(_status);
 	for(;;);
 }
 
+/*
+ * @unimplemented
+ */
 void _cexit( void )
 {
 	// flush
 }
 
+/*
+ * @unimplemented
+ */
 void _c_exit( void )
 {
 	// reset interup vectors

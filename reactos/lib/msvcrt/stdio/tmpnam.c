@@ -3,6 +3,9 @@
 #include <msvcrt/string.h>
 
 
+/*
+ * @implemented
+ */
 char* tmpnam(char* s)
 {
     char PathName[MAX_PATH];

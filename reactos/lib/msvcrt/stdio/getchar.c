@@ -1,4 +1,4 @@
-/* $Id: getchar.c,v 1.4 2002/11/24 18:42:24 robd Exp $
+/* $Id: getchar.c,v 1.5 2003/07/11 21:58:09 royce Exp $
  *
  *  ReactOS msvcrt library
  *
@@ -36,6 +36,9 @@ getchar(void)
   return getc(stdin);
 }
 
+/*
+ * @implemented
+ */
 wint_t
 getwchar(void)
 {

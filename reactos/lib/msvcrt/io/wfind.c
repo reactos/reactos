@@ -4,6 +4,9 @@
 #include <msvcrt/internal/file.h>
 
 
+/*
+ * @implemented
+ */
 int _wfindfirst(const wchar_t* _name, struct _wfinddata_t* result)
 {
     WIN32_FIND_DATAW FindFileData;
@@ -45,6 +48,9 @@ int _wfindfirst(const wchar_t* _name, struct _wfinddata_t* result)
     return hFindFile;
 }
 
+/*
+ * @implemented
+ */
 int _findfirsti64(const char *_name, struct _finddatai64_t *result)
 {
   WIN32_FIND_DATAA FindFileData;
@@ -90,6 +96,9 @@ int _findfirsti64(const char *_name, struct _finddatai64_t *result)
   return hFindFile;
 }
 
+/*
+ * @implemented
+ */
 int _findnexti64(int handle, struct _finddatai64_t *result)
 {
   WIN32_FIND_DATAA FindFileData;
@@ -112,6 +121,9 @@ int _findnexti64(int handle, struct _finddatai64_t *result)
   return 0;
 }
 
+/*
+ * @implemented
+ */
 int _wfindfirsti64(const wchar_t *_name, struct _wfinddatai64_t *result)
 {
   WIN32_FIND_DATAW FindFileData;
@@ -159,6 +171,9 @@ int _wfindfirsti64(const wchar_t *_name, struct _wfinddatai64_t *result)
   return hFindFile;
 }
 
+/*
+ * @implemented
+ */
 int _wfindnext(int handle, struct _wfinddata_t *result)
 {
   WIN32_FIND_DATAW FindFileData;
@@ -180,6 +195,9 @@ int _wfindnext(int handle, struct _wfinddata_t *result)
   return 0;
 }
 
+/*
+ * @implemented
+ */
 int _wfindnexti64(int handle, struct _wfinddatai64_t *result)
 {
   WIN32_FIND_DATAW FindFileData;

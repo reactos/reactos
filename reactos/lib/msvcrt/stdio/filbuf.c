@@ -13,6 +13,9 @@
 
 int _readcnv(int fn, void* buf, size_t siz);
 
+/*
+ * @implemented
+ */
 int _filbuf(FILE* f)
 {
   int size;

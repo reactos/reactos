@@ -9,11 +9,17 @@
 void perror(const char *s);
 #endif
 
+/*
+ * @implemented
+ */
 void perror(const char *s)
 {
   fprintf(stderr, "%s: %s\n", s, _strerror(NULL));
 }
 
+/*
+ * @implemented
+ */
 void _wperror(const wchar_t *s)
 {
   fwprintf(stderr, L"%s: %S\n", s, _strerror(NULL));

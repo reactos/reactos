@@ -5,6 +5,9 @@
 #include <msvcrt/msvcrtdbg.h>
 
 
+/*
+ * @implemented
+ */
 int _access( const char *_path, int _amode )
 {
     DWORD Attributes = GetFileAttributesA(_path);

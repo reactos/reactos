@@ -6,11 +6,17 @@
    less than, equal to or greater than the collated form of S2.  */
 
 #if 1
+/*
+ * @unimplemented
+ */
 int strcoll(const char* s1, const char* s2)
 {
     return strcmp(s1, s2);
 }
 
+/*
+ * @unimplemented
+ */
 int _stricoll(const char* s1, const char* s2)
 {
     return _stricmp(s1, s2);

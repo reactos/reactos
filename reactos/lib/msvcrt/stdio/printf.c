@@ -21,6 +21,9 @@
 #include <msvcrt/wchar.h>
 
 
+/*
+ * @implemented
+ */
 int printf(const char* format, ...)
 {
     va_list arg;
@@ -32,6 +35,9 @@ int printf(const char* format, ...)
     return done;
 }
 
+/*
+ * @implemented
+ */
 int wprintf(const wchar_t* format, ...)
 {
     va_list arg;

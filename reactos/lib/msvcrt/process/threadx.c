@@ -1,4 +1,4 @@
-/* $Id: threadx.c,v 1.2 2003/04/20 19:42:50 gvg Exp $
+/* $Id: threadx.c,v 1.3 2003/07/11 21:58:09 royce Exp $
  *
  */
 #include <windows.h>
@@ -6,6 +6,9 @@
 #include <msvcrt/process.h>
 
 
+/*
+ * @unimplemented
+ */
 unsigned long _beginthreadex(
     void* security,
     unsigned stack_size,
@@ -31,6 +34,9 @@ unsigned long _beginthreadex(
 }
 
 
+/*
+ * @implemented
+ */
 void _endthreadex(unsigned retval)
 {
   /*

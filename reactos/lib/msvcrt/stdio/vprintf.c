@@ -29,6 +29,9 @@ Cambridge, MA 02139, USA.  */
 
 #ifndef _USE_VARARG_
 
+/*
+ * @implemented
+ */
 int vprintf(const char* format, va_list arg)
 {
     int ret;
@@ -38,6 +41,9 @@ int vprintf(const char* format, va_list arg)
     return ret;
 }
 
+/*
+ * @implemented
+ */
 int vwprintf(const wchar_t* format, va_list arg)
 {
     int ret;

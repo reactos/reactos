@@ -9,6 +9,9 @@ const char *_current_locale;
 
 int parse_locale(char *locale, char *lang, char *country, char *code_page);
 
+/*
+ * @implemented
+ */
 char *setlocale(int category, const char *locale)
 {
 	char lang[100];
@@ -135,6 +138,9 @@ struct lconv _lconv = {
 127      // n_sign_posn;
 };
 
+/*
+ * @implemented
+ */
 struct lconv *localeconv(void)
 {
   return (struct lconv *) &_lconv;

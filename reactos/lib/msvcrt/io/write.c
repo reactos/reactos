@@ -32,6 +32,9 @@ void ReportLastError(void)
     }
 }
  */
+/*
+ * @implemented
+ */
 size_t _write(int _fd, const void* _buf, size_t _nbyte)
 {
    char *tmp, *in, *out;

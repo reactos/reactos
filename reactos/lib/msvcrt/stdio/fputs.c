@@ -1,4 +1,4 @@
-/* $Id: fputs.c,v 1.5 2002/11/24 18:42:24 robd Exp $
+/* $Id: fputs.c,v 1.6 2003/07/11 21:58:09 royce Exp $
  *
  *  ReactOS msvcrt library
  *
@@ -61,6 +61,9 @@ fputs(const char *s, FILE *f)
   return(r);
 }
 
+/*
+ * @implemented
+ */
 int
 fputws(const wchar_t* s, FILE* f)
 {

@@ -11,6 +11,9 @@
 #include <msvcrt/stdlib.h>
 
 
+/*
+ * @implemented
+ */
 char* _fullpath(char* absPath, const char* relPath, size_t maxLength)
 {
     char* lpFilePart;

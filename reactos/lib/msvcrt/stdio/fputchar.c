@@ -1,4 +1,4 @@
-/* $Id: fputchar.c,v 1.4 2002/11/24 18:42:24 robd Exp $
+/* $Id: fputchar.c,v 1.5 2003/07/11 21:58:09 royce Exp $
  *
  *  ReactOS msvcrt library
  *
@@ -29,6 +29,9 @@ int _fputchar(int c)
   return putc(c, stdout);
 }
 
+/*
+ * @implemented
+ */
 int _fputwchar(wchar_t c)
 {
   return putwc(c, stdout);

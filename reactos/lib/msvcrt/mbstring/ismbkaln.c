@@ -10,6 +10,9 @@
 #include <msvcrt/mbctype.h>
 #include <msvcrt/ctype.h>
 
+/*
+ * @implemented
+ */
 int _ismbbkalnum( unsigned int c )
 {
   return ((_jctype+1)[(unsigned char)(c)] & (_KNJ_P));

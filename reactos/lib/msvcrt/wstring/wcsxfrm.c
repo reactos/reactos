@@ -1,5 +1,8 @@
 #include <msvcrt/string.h>
 
+/*
+ * @implemented
+ */
 size_t wcsxfrm(wchar_t *dst,const wchar_t *src, size_t n)
 {
   size_t r = 0;

@@ -8,6 +8,9 @@
 #undef putwchar
 
 
+/*
+ * @implemented
+ */
 int puts(const char *s)
 {
     int c;
@@ -18,6 +21,9 @@ int puts(const char *s)
     return putchar('\n');
 }
 
+/*
+ * @implemented
+ */
 int _putws(const wchar_t *s)
 {
     wint_t c;

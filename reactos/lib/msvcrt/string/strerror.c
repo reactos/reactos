@@ -67,6 +67,9 @@ int __sys_nerr = sizeof(_sys_errlist) / sizeof(_sys_errlist[0]);
 
 int* _sys_nerr = &__sys_nerr;
 
+/*
+ * @implemented
+ */
 char *strerror(int errnum)
 {
   static char ebuf[40];		/* 64-bit number + slop */
@@ -99,6 +102,9 @@ char *strerror(int errnum)
 }
 
 
+/*
+ * @implemented
+ */
 char *_strerror(const char *s)
 {
 	if ( s == NULL )

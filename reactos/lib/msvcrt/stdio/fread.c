@@ -5,6 +5,9 @@
 #include <msvcrt/internal/file.h>
 
 
+/*
+ * @implemented
+ */
 size_t fread(void *vptr, size_t size, size_t count, FILE *iop)
 {
   unsigned char *ptr = (unsigned char *)vptr;

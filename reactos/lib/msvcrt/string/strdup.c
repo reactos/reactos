@@ -3,6 +3,9 @@
 #include <msvcrt/stdlib.h>
 
 
+/*
+ * @implemented
+ */
 char *_strdup(const char *_s)
 {
   char *rv;

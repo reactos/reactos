@@ -5,6 +5,9 @@
 #include <msvcrt/internal/file.h>
 
 
+/*
+ * @implemented
+ */
 int _wutime(const wchar_t* filename, struct _utimbuf* buf)
 {
     int fn;

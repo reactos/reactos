@@ -11,6 +11,9 @@
 #include <msvcrt/stdlib.h>
 #include <msvcrt/crttypes.h>
 
+/*
+ * @implemented
+ */
 unsigned int _rotl( unsigned int value, int shift )
 {
 	int max_bits = sizeof(unsigned int)<<3;
@@ -22,6 +25,9 @@ unsigned int _rotl( unsigned int value, int shift )
 	return (value << shift) | (value >> (max_bits-shift));
 }
 
+/*
+ * @implemented
+ */
 unsigned int _rotr( unsigned int value, int shift )
 {
 	int max_bits = sizeof(unsigned int)<<3;
@@ -34,6 +40,9 @@ unsigned int _rotr( unsigned int value, int shift )
 }
 
 
+/*
+ * @implemented
+ */
 unsigned long _lrotl( unsigned long value, int shift )
 {
 	int max_bits = sizeof(unsigned long)<<3;
@@ -45,6 +54,9 @@ unsigned long _lrotl( unsigned long value, int shift )
 	return (value << shift) | (value >> (max_bits-shift));
 }
 
+/*
+ * @implemented
+ */
 unsigned long _lrotr( unsigned long value, int shift )
 {
 	int max_bits = sizeof(unsigned long)<<3;

@@ -1,6 +1,9 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 #include <msvcrt/stdlib.h>
 
+/*
+ * @implemented
+ */
 ldiv_t
 ldiv(long num, long denom)
 {

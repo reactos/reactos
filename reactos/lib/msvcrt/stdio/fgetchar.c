@@ -1,4 +1,4 @@
-/* $Id: fgetchar.c,v 1.5 2002/11/24 18:42:24 robd Exp $
+/* $Id: fgetchar.c,v 1.6 2003/07/11 21:58:09 royce Exp $
  *
  *  ReactOS msvcrt library
  *
@@ -29,6 +29,9 @@ int _fgetchar(void)
     return getc(stdin);
 }
 
+/*
+ * @implemented
+ */
 wint_t _fgetwchar(void)
 {
     return getwc(stdin);

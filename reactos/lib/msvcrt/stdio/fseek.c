@@ -9,6 +9,9 @@
 #include <msvcrt/internal/file.h>
 
 
+/*
+ * @implemented
+ */
 int fseek(FILE *f, long offset, int ptrname)
 {
   long p = -1;			/* can't happen? */

@@ -36,6 +36,9 @@ FILE _iob[5] =
 }
 };
 
+/*
+ * @implemented
+ */
 FILE *__p__iob(void)
 {
   return &_iob[0];

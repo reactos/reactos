@@ -19,6 +19,9 @@ int char_avail = 0;
 int ungot_char = 0;
 
 
+/*
+ * @implemented
+ */
 int _ungetch(int c)
 {
   if (char_avail)

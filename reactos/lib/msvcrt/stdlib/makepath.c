@@ -1,8 +1,11 @@
-/* $Id: makepath.c,v 1.10 2002/11/24 18:42:25 robd Exp $
+/* $Id: makepath.c,v 1.11 2003/07/11 21:58:09 royce Exp $
  */
 #include <msvcrt/stdlib.h>
 #include <msvcrt/string.h>
 
+/*
+ * @implemented
+ */
 void _makepath(char* path, const char* drive, const char* dir, const char* fname, const char* ext)
 {
     int dir_len;

@@ -11,6 +11,9 @@
 #include <msvcrt/mbstring.h>
 #include <msvcrt/mbctype.h>
 
+/*
+ * @implemented
+ */
 int _mbbtype(unsigned char c , int type)
 {
 	if ( type == 1 ) {
@@ -38,6 +41,9 @@ int _mbbtype(unsigned char c , int type)
 	return 0;	
 }
 
+/*
+ * @implemented
+ */
 int _mbsbtype( const unsigned char *str, size_t n )
 {
 	if ( str == NULL )

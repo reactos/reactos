@@ -5,6 +5,9 @@
 #include <msvcrt/msvcrtdbg.h>
 
 
+/*
+ * @implemented
+ */
 char *getenv(const char *name)
 {
 	char *buffer = (char*)0xffffffff;
@@ -20,6 +23,9 @@ char *getenv(const char *name)
 	return buffer;
 }
 
+/*
+ * @implemented
+ */
 wchar_t *_wgetenv(const wchar_t *name)
 {
 	wchar_t *buffer = (wchar_t*)0xffffffff;

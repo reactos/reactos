@@ -1,4 +1,4 @@
-/* $Id: popen.c,v 1.4 2002/09/08 10:22:56 chorns Exp $ */
+/* $Id: popen.c,v 1.5 2003/07/11 21:58:09 royce Exp $ */
 #include <windows.h>
 #include <msvcrt/io.h>
 #include <msvcrt/errno.h>
@@ -10,6 +10,9 @@
 #include <msvcrt/msvcrtdbg.h>
 
 
+/*
+ * @implemented
+ */
 FILE *_popen (const char *cm, const char *md) /* program name, pipe mode */
 {
   char *szCmdLine=NULL;
@@ -114,6 +117,9 @@ FILE *_popen (const char *cm, const char *md) /* program name, pipe mode */
 }
 
 
+/*
+ * @implemented
+ */
 int _pclose (FILE *pp)
 {
   fclose(pp);
@@ -123,6 +129,9 @@ int _pclose (FILE *pp)
 }
 
 
+/*
+ * @implemented
+ */
 FILE *_wpopen (const wchar_t *cm, const wchar_t *md) /* program name, pipe mode */
 {
   wchar_t *szCmdLine=NULL;

@@ -10,6 +10,9 @@
 
 #include <msvcrt/mbstring.h>
 
+/*
+ * @implemented
+ */
 int _mbsncmp(const unsigned char *str1, const unsigned char *str2, size_t n)
 {
 	unsigned char *s1 = (unsigned char *)str1;
@@ -56,6 +59,9 @@ int _mbsncmp(const unsigned char *str1, const unsigned char *str2, size_t n)
 	return 0;
 }
 
+/*
+ * @implemented
+ */
 int _mbsnbcmp(const unsigned char *str1, const unsigned char *str2, size_t n)
 {
 	unsigned char *s1 = (unsigned char *)str1;

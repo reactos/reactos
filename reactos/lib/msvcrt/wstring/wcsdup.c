@@ -4,6 +4,9 @@
 #include <msvcrt/internal/file.h>
 
 
+/*
+ * @implemented
+ */
 wchar_t* _wcsdup(const wchar_t* ptr)
 {
     wchar_t* dup;

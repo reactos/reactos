@@ -166,6 +166,8 @@ qst(PTHREADDATA pThreadData, char *base, char *max)
  * First, set up some global parameters for qst to share.  Then, quicksort
  * with qst(), and then a cleanup insertion sort ourselves.  Sound simple?
  * It's not...
+ *
+ * @implemented
  */
 void
 qsort(const void *base0, size_t n, size_t size, _pfunccmp_t compar)

@@ -18,6 +18,9 @@ int
 __vfwprintf(FILE *fp, const wchar_t *fmt0, va_list argp);
 
 
+/*
+ * @implemented
+ */
 int
 vfwprintf(FILE *f, const wchar_t *fmt, va_list ap)
 {

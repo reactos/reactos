@@ -1,9 +1,12 @@
-/* $Id: dup.c,v 1.4 2002/09/08 10:22:50 chorns Exp $ */
+/* $Id: dup.c,v 1.5 2003/07/11 21:57:54 royce Exp $ */
 #include <windows.h>
 #include <msvcrt/io.h>
 #include <msvcrt/internal/file.h>
 
 
+/*
+ * @implemented
+ */
 int _dup(int handle)
 {
   HANDLE hFile;

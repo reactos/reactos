@@ -1,4 +1,4 @@
-/* $Id: open.c,v 1.14 2002/12/26 17:26:41 robd Exp $
+/* $Id: open.c,v 1.15 2003/07/11 21:57:54 royce Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -91,6 +91,9 @@ char __is_text_file(FILE* p)
    return (!((p)->_flag&_IOSTRG) && (__pioinfo[(p)->_file].mode&O_TEXT));
 }
 
+/*
+ * @implemented
+ */
 int _open(const char* _path, int _oflag,...)
 {
 #if !defined(NDEBUG) && defined(DBG)
@@ -279,11 +282,17 @@ int __fileno_close(int _fd)
     return 0;
 }
 
+/*
+ * @implemented
+ */
 int _open_osfhandle(void* osfhandle, int flags)
 {
     return __fileno_alloc((HANDLE)osfhandle, flags);
 }
 
+/*
+ * @implemented
+ */
 void* _get_osfhandle( int fileno )
 {
     return filehnd(fileno);

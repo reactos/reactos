@@ -12,6 +12,9 @@
 
 int colldif(unsigned short c1, unsigned short c2);
 
+/*
+ * @implemented
+ */
 int _mbscoll(const unsigned char *str1, const unsigned char *str2)
 {
 	unsigned char *s1 = (unsigned char *)str1;

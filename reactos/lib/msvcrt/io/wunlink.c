@@ -14,6 +14,9 @@
 #include <msvcrt/msvcrtdbg.h>
 
 
+/*
+ * @implemented
+ */
 int _wunlink(const wchar_t* filename)
 {
     DPRINT("_wunlink('%S')\n", filename);

@@ -19,7 +19,11 @@ Cambridge, MA 02139, USA.  */
 #include <msvcrt/stdio.h>
 
 
-/* Read a word (int) from STREAM.  */
+/*
+ * Read a word (int) from STREAM.
+ *
+ * @implemented
+ */
 int _getw(FILE *stream)
 {
   int w;

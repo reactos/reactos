@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.5 2002/11/29 15:59:04 robd Exp $
+/* $Id: thread.c,v 1.6 2003/07/11 21:58:09 royce Exp $
  *
  */
 #include <windows.h>
@@ -6,6 +6,9 @@
 #include <msvcrt/process.h>
 
 
+/*
+ * @unimplemented
+ */
 unsigned long _beginthread(
     void (__cdecl *start_address)(void*),
     unsigned stack_size,
@@ -15,6 +18,9 @@ unsigned long _beginthread(
     return (unsigned long)-1;
 }
 
+/*
+ * @unimplemented
+ */
 void _endthread(void)
 {
 }

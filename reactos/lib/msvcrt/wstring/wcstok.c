@@ -1,6 +1,9 @@
 #include <msvcrt/string.h>
 #include <msvcrt/internal/tls.h>
 
+/*
+ * @implemented
+ */
 wchar_t *wcstok(wchar_t *s, const wchar_t *ct)
 {
 	const wchar_t *spanp;

@@ -15,6 +15,9 @@
 #undef putwc
 #undef putwchar
 
+/*
+ * @implemented
+ */
 int putchar(int c)
 {
   int r = putc(c, stdout);
@@ -23,6 +26,9 @@ int putchar(int c)
   return r;
 }
 
+/*
+ * @implemented
+ */
 wint_t putwchar(wint_t c)
 {
   wint_t r = putwc(c, stdout);

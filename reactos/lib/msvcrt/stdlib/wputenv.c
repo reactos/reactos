@@ -8,6 +8,9 @@
 
 extern int BlockEnvToEnviron(); // defined in misc/dllmain.c
 
+/*
+ * @implemented
+ */
 int _wputenv(const wchar_t* val)
 {
     wchar_t* buffer;

@@ -10,6 +10,9 @@
 #include <msvcrt/mbctype.h>
 #include <msvcrt/ctype.h>
 
+/*
+ * @implemented
+ */
 int _ismbbalpha(unsigned char c)
 {
   return (isalpha(c) || _ismbbkalnum(c));

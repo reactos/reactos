@@ -2,6 +2,9 @@
 #include <msvcrt/stdlib.h>
 #include <msvcrt/crttypes.h>
 
+/*
+ * @implemented
+ */
 long
 labs(long j)
 {
