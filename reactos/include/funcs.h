@@ -7297,6 +7297,12 @@ SetConsoleOutputCP(
     UINT wCodePageID
     );
 
+BOOL
+STDCALL
+VerifyConsoleIoHandle(
+    HANDLE Handle
+    );
+
 DWORD STDCALL
 WNetConnectionDialog(
     HWND  hwnd,

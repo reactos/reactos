@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.53 2003/03/02 01:23:19 mdill Exp $
+/* $Id: console.c,v 1.54 2003/03/05 22:51:48 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -500,15 +500,38 @@ ShowConsoleCursor (DWORD	Unknown0,
   return 0;
 }
 
-DWORD STDCALL
-VerifyConsoleIoHandle (DWORD	Unknown0)
-     /*
-      * Undocumented
-      */
+
+/*
+ * FUNCTION: Checks whether the given handle is a valid console handle.
+ * ARGUMENTS:
+ *      Handle - Handle to be checked
+ * RETURNS:
+ *      TRUE: Handle is a valid console handle
+ *      FALSE: Handle is not a valid console handle.
+ * STATUS: Officially undocumented
+ */
+BOOL STDCALL
+VerifyConsoleIoHandle(HANDLE Handle)
 {
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return 0;
+  CSRSS_API_REQUEST Request;
+  CSRSS_API_REPLY Reply;
+  NTSTATUS Status;
+
+  Request.Type = CSRSS_VERIFY_HANDLE;
+  Request.Data.VerifyHandleRequest.Handle = Handle;
+  Status = CsrClientCallServer(&Request,
+			       &Reply,
+			       sizeof(CSRSS_API_REQUEST),
+			       sizeof(CSRSS_API_REPLY));
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      return FALSE;
+    }
+
+  return (BOOL)NT_SUCCESS(Reply.Status);
 }
+
 
 DWORD STDCALL
 WriteConsoleInputVDMA (DWORD	Unknown0,
@@ -530,7 +553,7 @@ WriteConsoleInputVDMW (DWORD	Unknown0,
   return 0;
 }
 
-WINBOOL STDCALL 
+WINBOOL STDCALL
 CloseConsoleHandle(HANDLE Handle)
      /*
       * Undocumented
@@ -552,17 +575,15 @@ CloseConsoleHandle(HANDLE Handle)
 			       &Reply,
 			       sizeof(CSRSS_API_REQUEST),
 			       sizeof(CSRSS_API_REPLY));
+  if (!NT_SUCCESS(Status))
+    {
+       SetLastErrorByStatus(Status);
+       return FALSE;
+    }
 
-  if (NT_SUCCESS(Status))
-  {
-     return TRUE;
-  }
-  else
-  {
-     SetLastErrorByStatus(Status);
-     return FALSE;
-  }
+  return TRUE;
 }
+
 
 BOOLEAN STDCALL 
 IsConsoleHandle(HANDLE Handle)
@@ -586,14 +607,20 @@ GetStdHandle(DWORD nStdHandle)
       */
 {
   PRTL_USER_PROCESS_PARAMETERS Ppb;
-  
-  Ppb = NtCurrentPeb()->ProcessParameters;  
+
+  Ppb = NtCurrentPeb()->ProcessParameters;
   switch (nStdHandle)
     {
-    case STD_INPUT_HANDLE:	return Ppb->hStdInput;
-    case STD_OUTPUT_HANDLE:	return Ppb->hStdOutput;
-    case STD_ERROR_HANDLE:	return Ppb->hStdError;
+      case STD_INPUT_HANDLE:
+	return Ppb->hStdInput;
+
+      case STD_OUTPUT_HANDLE:
+	return Ppb->hStdOutput;
+
+      case STD_ERROR_HANDLE:
+	return Ppb->hStdError;
     }
+
   SetLastError (ERROR_INVALID_PARAMETER);
   return INVALID_HANDLE_VALUE;
 }
@@ -611,29 +638,33 @@ SetStdHandle(DWORD nStdHandle,
       */
 {
   PRTL_USER_PROCESS_PARAMETERS Ppb;
-   
+
   Ppb = NtCurrentPeb()->ProcessParameters;
-  
+
   /* More checking needed? */
   if (hHandle == INVALID_HANDLE_VALUE)
     {
       SetLastError (ERROR_INVALID_HANDLE);
       return FALSE;
     }
-   
+
   SetLastError(ERROR_SUCCESS); /* OK */
+
   switch (nStdHandle)
     {
-    case STD_INPUT_HANDLE:
-      Ppb->hStdInput = hHandle;
-      return TRUE;
-    case STD_OUTPUT_HANDLE:
-      Ppb->hStdOutput = hHandle;
-      return TRUE;
-    case STD_ERROR_HANDLE:
-      Ppb->hStdError = hHandle;
-      return TRUE;
+      case STD_INPUT_HANDLE:
+	Ppb->hStdInput = hHandle;
+	return TRUE;
+
+      case STD_OUTPUT_HANDLE:
+	Ppb->hStdOutput = hHandle;
+	return TRUE;
+
+      case STD_ERROR_HANDLE:
+	Ppb->hStdError = hHandle;
+	return TRUE;
     }
+
   SetLastError (ERROR_INVALID_PARAMETER);
   return FALSE;
 }
@@ -654,7 +685,7 @@ WriteConsoleA(HANDLE hConsoleOutput,
   NTSTATUS Status;
   USHORT Size;
   ULONG MessageSize;
-  
+
   Request = RtlAllocateHeap(GetProcessHeap(),
 			    HEAP_ZERO_MEMORY,
 			    sizeof(CSRSS_API_REQUEST) + 
@@ -664,7 +695,7 @@ WriteConsoleA(HANDLE hConsoleOutput,
       SetLastError(ERROR_OUTOFMEMORY);
       return(FALSE);
     }
-  
+
   Request->Type = CSRSS_WRITE_CONSOLE;
   Request->Data.WriteConsoleRequest.ConsoleHandle = hConsoleOutput;
   if (lpNumberOfCharsWritten != NULL)
@@ -680,7 +711,7 @@ WriteConsoleA(HANDLE hConsoleOutput,
 	  Size = nNumberOfCharsToWrite;
 	}
       Request->Data.WriteConsoleRequest.NrCharactersToWrite = Size;
-      
+
       memcpy(Request->Data.WriteConsoleRequest.Buffer, lpBuffer, Size);
 
       MessageSize = CSRSS_REQUEST_HEADER_SIZE + 
@@ -689,7 +720,7 @@ WriteConsoleA(HANDLE hConsoleOutput,
 				   &Reply,
 				   MessageSize,
 				   sizeof(CSRSS_API_REPLY));
-      
+
       if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
 	{
 	  RtlFreeHeap(GetProcessHeap(), 0, Request);
@@ -699,7 +730,9 @@ WriteConsoleA(HANDLE hConsoleOutput,
       nNumberOfCharsToWrite -= Size;
       lpBuffer += Size;
     }
+
   RtlFreeHeap(GetProcessHeap(), 0, Request);
+
   return TRUE;
 }
 

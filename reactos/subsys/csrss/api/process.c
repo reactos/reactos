@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.24 2003/02/24 23:20:15 hbirr Exp $
+/* $Id: process.c,v 1.25 2003/03/05 22:50:24 ekohl Exp $
  *
  * reactos/subsys/csrss/api/process.c
  *
@@ -346,5 +346,21 @@ CSR_API(CsrCloseHandle)
    }
    return Reply->Status;
 }
-   
+
+CSR_API(CsrVerifyHandle)
+{
+   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
+
+   if (ProcessData == NULL)
+   {
+      Reply->Status = STATUS_INVALID_PARAMETER;
+   }
+   else
+   {
+      Reply->Status = CsrVerifyObject(ProcessData, Request->Data.VerifyHandleRequest.Handle);
+   }
+   return Reply->Status;
+}
+
 /* EOF */

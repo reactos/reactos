@@ -135,6 +135,7 @@ CSR_API(CsrWriteConsoleInput);
 CSR_API(CsrGetInputHandle);
 CSR_API(CsrGetOutputHandle);
 CSR_API(CsrCloseHandle);
+CSR_API(CsrVerifyHandle);
 
 /* print.c */
 VOID STDCALL DisplayString(LPCWSTR lpwString);
@@ -163,6 +164,7 @@ NTSTATUS STDCALL CsrInsertObject( PCSRSS_PROCESS_DATA ProcessData, PHANDLE Handl
 NTSTATUS STDCALL CsrGetObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle, Object_t **Object );
 BOOL STDCALL CsrServerInitialization (ULONG ArgumentCount, PWSTR *ArgumentArray);
 NTSTATUS STDCALL CsrReleaseObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Object );
+NTSTATUS STDCALL CsrVerifyObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Object );
 VOID STDCALL CsrDrawConsole( PCSRSS_SCREEN_BUFFER Console );
 NTSTATUS STDCALL CsrpWriteConsole( PCSRSS_SCREEN_BUFFER Buff, CHAR *Buffer, DWORD Length, BOOL Attrib );
 

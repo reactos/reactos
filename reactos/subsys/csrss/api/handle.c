@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.12 2002/09/08 10:23:45 chorns Exp $
+/* $Id: handle.c,v 1.13 2003/03/05 22:50:24 ekohl Exp $
  *
  * reactos/subsys/csrss/api/handle.c
  *
@@ -89,5 +89,16 @@ NTSTATUS STDCALL CsrInsertObject( PCSRSS_PROCESS_DATA ProcessData, PHANDLE Handl
    return(STATUS_SUCCESS);
 }
 
+NTSTATUS STDCALL CsrVerifyObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle )
+{
+  ULONG h = (((ULONG)Handle) >> 2) - 1;
+
+  if (h >= ProcessData->HandleTableSize)
+    {
+      return STATUS_INVALID_HANDLE;
+    }
+
+  return ProcessData->HandleTable[h] ? STATUS_SUCCESS : STATUS_INVALID_HANDLE;
+}
 
 /* EOF */
