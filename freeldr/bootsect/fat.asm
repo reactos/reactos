@@ -144,6 +144,7 @@ CalcDriveSize:
         ; DX:AX now has the number of the starting sector of the root directory
 
         ; Now calculate the size of the root directory
+		xor dx,dx
         mov ax,0020h							; Size of dir entry
         mul si									; Times the number of entries
         mov bx,[BYTE bp+BytesPerSector]
@@ -257,7 +258,7 @@ ReadCluster:
         add   ax,[BYTE bp-DataAreaStartLow]		; Add start of data area
         adc   dx,[BYTE bp-DataAreaStartHigh]	; Now we have DX:AX with the logical start sector of OSLOADER.SYS
         xor   bx,bx								; We will load it to [ES:0000], ES loaded before function call
-		mov   cl,BYTE [BYTE bp+SectsPerCluster]
+		;mov   cl,BYTE [BYTE bp+SectsPerCluster]; Sectors per cluster still in CX
 		;call  ReadSectors
 		;ret
 
@@ -277,12 +278,14 @@ ReadSectors:
 		adc dx,byte 0
 
 		cmp dx,WORD [BYTE bp-BiosCHSDriveSizeHigh]	; Check if they are reading a sector within CHS range
-		jb ReadSectorsCHS							; Yes - go to the old CHS routine
+		ja  ReadSectorsLBA							; No - go to the LBA routine
+		jb  ReadSectorsCHS							; Yes - go to the old CHS routine
 		cmp ax,WORD [BYTE bp-BiosCHSDriveSizeLow]	; Check if they are reading a sector within CHS range
 		jbe ReadSectorsCHS							; Yes - go to the old CHS routine
 
 ReadSectorsLBA:
 		popa
+ReadSectorsLBALoop:
 		pusha									; Save logical sector number & sector count
 
 		o32 push byte 0
@@ -323,11 +326,13 @@ ReadSectorsLBA:
         inc  ax									; Increment Sector to Read
 		adc  dx,byte 0
 
-        mov  dx,es
-        add  dx,byte 20h						; Increment read buffer for next sector
-        mov  es,dx
+        push bx
+        mov  bx,es
+        add  bx,byte 20h						; Increment read buffer for next sector
+        mov  es,bx
+        pop  bx
 												
-        loop ReadSectorsLBA						; Read next sector
+        loop ReadSectorsLBALoop					; Read next sector
 
         ret   
 
