@@ -1089,6 +1089,11 @@ ObpGetNextHandleByProcessCount(PSYSTEM_HANDLE_TABLE_ENTRY_INFO pshi,
 
 //      pshi->HandleValue;
 
+/* 
+   This will never work with ROS! M$, I guess uses 0 -> 65535.
+   Ros uses 0 -> 4294967295!
+ */
+
       P = (ULONG) Process->UniqueProcessId;
       pshi->UniqueProcessId = (USHORT) P;
 
