@@ -210,9 +210,25 @@ VOID NTAPI DeviceIoctlPassive(PDRIVE_INFO DriveInfo,
 
     case IOCTL_DISK_CHECK_VERIFY:
       KdPrint(("floppy: IOCTL_DISK_CHECK_VERIFY called\n"));
-      *((PULONG)OutputBuffer) = DriveInfo->DiskChangeCount;
-      Irp->IoStatus.Status = STATUS_SUCCESS;
-      Irp->IoStatus.Information = sizeof(ULONG);
+      if (OutputLength != 0)
+        {
+	  if (OutputLength < sizeof(ULONG))
+	    {
+	      Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+              Irp->IoStatus.Information = 0;
+	    }
+	  else
+	    {
+	      *((PULONG)OutputBuffer) = DriveInfo->DiskChangeCount;
+              Irp->IoStatus.Status = STATUS_SUCCESS;
+              Irp->IoStatus.Information = sizeof(ULONG);
+	    }
+	}
+      else
+        {
+          Irp->IoStatus.Status = STATUS_SUCCESS;
+          Irp->IoStatus.Information = 0;
+	}
       break;
 
     case IOCTL_DISK_GET_DRIVE_GEOMETRY:
