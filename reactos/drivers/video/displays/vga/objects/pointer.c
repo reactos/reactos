@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pointer.c,v 1.1 2004/01/10 14:39:20 navaraf Exp $
+/* $Id: pointer.c,v 1.2 2004/01/16 13:18:23 gvg Exp $
  *
  * PROJECT:         ReactOS VGA16 display driver
  * FILE:            drivers/dd/vga/display/objects/pointer.c
@@ -28,12 +28,15 @@
 #include "../vgaddi.h"
 #include "../vgavideo/vgavideo.h"
 
+#define NDEBUG
+#include <debug.h>
+
 /* GLOBALS *******************************************************************/
 
 static LONG oldx, oldy;
 static PSAVED_SCREEN_BITS ImageBehindCursor = NULL;
-VOID VGADDI_HideCursor(PPDEV ppdev);
-VOID VGADDI_ShowCursor(PPDEV ppdev);
+static VOID VGADDI_HideCursor(PPDEV ppdev);
+static VOID VGADDI_ShowCursor(PPDEV ppdev, PRECTL prcl);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -194,7 +197,6 @@ DrvMovePointer(IN SURFOBJ* pso,
 {
   PPDEV ppdev = (PPDEV)pso->dhpdev;
 
-
   if (x < 0 && 0 == (ppdev->flCursor & CURSOR_DOWN))
     {
       /* x < 0 and y < 0 indicates we must hide the cursor */
@@ -207,11 +209,8 @@ DrvMovePointer(IN SURFOBJ* pso,
 
   if (0 == (ppdev->flCursor & CURSOR_DOWN))
     {
-      VGADDI_ShowCursor(ppdev);
+      VGADDI_ShowCursor(ppdev, prcl);
     }
-
-  /* Give feedback on the new cursor rectangle */
-  /*if (prcl != NULL) ComputePointerRect(ppdev, prcl);*/
 }
 
 
@@ -300,55 +299,67 @@ DrvSetPointerShape(SURFOBJ* pso,
   ppdev->xyHotSpot.y = yHot;
 
   /* Show the cursor */
-  VGADDI_ShowCursor(ppdev);
+  VGADDI_ShowCursor(ppdev, prcl);
 
   return SPS_ACCEPT_EXCLUDE;
 }
 
-VOID
-VGADDI_HideCursor(PPDEV ppdev)
+static VOID FASTCALL
+VGADDI_ComputePointerRect(PPDEV ppdev, LONG X, LONG Y, PRECTL Rect)
 {
   ULONG SizeX, SizeY;
 
+  SizeX = min(((X + ppdev->pPointerAttributes->Width) + 7) & ~0x7, ppdev->sizeSurf.cx);
+  SizeX -= (X & ~0x7);
+  SizeY = min(ppdev->pPointerAttributes->Height, ppdev->sizeSurf.cy - Y);
+
+  Rect->left = max(X, 0) & ~0x7;
+  Rect->top = max(Y, 0);
+  Rect->right = Rect->left + SizeX;
+  Rect->bottom = Rect->top + SizeY;
+}
+
+static VOID
+VGADDI_HideCursor(PPDEV ppdev)
+{
+  RECTL Rect;
+
+  VGADDI_ComputePointerRect(ppdev, oldx, oldy, &Rect);
+  
   /* Display what was behind cursor */
-  SizeX = min(((oldx + ppdev->pPointerAttributes->Width) + 7) & ~0x7, ppdev->sizeSurf.cx);
-  SizeX -= (oldx & ~0x7);
-  SizeY = min(ppdev->pPointerAttributes->Height, ppdev->sizeSurf.cy - oldy);
-  VGADDI_BltFromSavedScreenBits(max(oldx, 0) & ~0x7,
-				max(oldy, 0),
-				ImageBehindCursor,
-				SizeX,
-				SizeY);
+  VGADDI_BltFromSavedScreenBits(Rect.left,
+                                Rect.top,
+                                ImageBehindCursor,
+                                Rect.right - Rect.left,
+                                Rect.bottom - Rect.top);
 
   ppdev->pPointerAttributes->Enable = 0;
 }
 
-VOID
-VGADDI_ShowCursor(PPDEV ppdev)
+static VOID
+VGADDI_ShowCursor(PPDEV ppdev, PRECTL prcl)
 {
   LONG cx, cy;
   PUCHAR AndMask, XorMask;
   ULONG SizeX, SizeY;
+  RECTL Rect;
 
   if (ppdev->pPointerAttributes->Enable != 0)
     {
       VGADDI_HideCursor(ppdev);
     }
 
-  /* Capture pixels behind the cursor */
   cx = ppdev->xyCursor.x - ppdev->xyHotSpot.x;
   cy = ppdev->xyCursor.y - ppdev->xyHotSpot.y;
 
-  /* Used to repaint background */
-  SizeX = min(((cx + ppdev->pPointerAttributes->Width) + 7) & ~0x7, ppdev->sizeSurf.cx);
-  SizeX -= (cx & ~0x7);
-  SizeY = min(ppdev->pPointerAttributes->Height, ppdev->sizeSurf.cy - cy);
+  /* Capture pixels behind the cursor */
+  VGADDI_ComputePointerRect(ppdev, cx, cy, &Rect);
 
   VGADDI_BltToSavedScreenBits(ImageBehindCursor,
-			      max(cx, 0) & ~0x7,
-			      max(cy, 0),
-			      SizeX,
-			      SizeY);
+                              Rect.left,
+                              Rect.top,
+                              Rect.right - Rect.left,
+                              Rect.bottom - Rect.top);
 
   /* Display the cursor. */
   SizeX = min(ppdev->pPointerAttributes->Width, ppdev->sizeSurf.cx - cx);
@@ -379,4 +390,9 @@ VGADDI_ShowCursor(PPDEV ppdev)
 
   /* Mark the cursor as currently displayed. */
   ppdev->pPointerAttributes->Enable = 1;
+
+  if (NULL != prcl)
+    {
+      *prcl = Rect;
+    }
 }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.40 2003/12/18 23:04:54 gvg Exp $ */
+/* $Id: cursoricon.c,v 1.41 2004/01/16 13:18:23 gvg Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -94,7 +94,6 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor, BOOL Fo
   PSURFOBJ SurfObj;
   PSURFGDI SurfGDI;
   SIZEL MouseSize;
-  RECTL MouseRect;
   PDEVINFO DevInfo;
   PBITMAPOBJ MaskBmpObj;
   PSYSTEM_CURSORINFO CurInfo;
@@ -137,7 +136,7 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor, BOOL Fo
                                                       0,
                                                       CurInfo->x, 
                                                       CurInfo->y, 
-                                                      &MouseRect,
+                                                      &CurInfo->PointerRect,
                                                       SPS_CHANGE);
     
     CurInfo->CurrentCursorObject = NewCursor; /* i.e. CurrentCursorObject = NULL */
@@ -211,7 +210,7 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor, BOOL Fo
                                                       NewCursor->IconInfo.yHotspot,
                                                       CurInfo->x, 
                                                       CurInfo->y, 
-                                                      &MouseRect,
+                                                      &CurInfo->PointerRect,
                                                       SPS_CHANGE);
     
     if(hMask)

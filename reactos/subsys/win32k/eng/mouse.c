@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.52 2004/01/15 16:29:10 gvg Exp $
+/* $Id: mouse.c,v 1.53 2004/01/16 13:18:23 gvg Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -83,7 +83,6 @@ MouseSafetyOnDrawStart(PSURFOBJ SurfObj, PSURFGDI SurfGDI, LONG HazardX1,
  * a rectangle on a particular surface.
  */
 {
-  RECTL MouseRect;
   LONG tmp;
   PSYSTEM_CURSORINFO CurInfo;
   BOOL MouseEnabled = FALSE;
@@ -136,10 +135,10 @@ MouseSafetyOnDrawStart(PSURFOBJ SurfObj, PSURFGDI SurfGDI, LONG HazardX1,
       tmp = HazardY2; HazardY2 = HazardY1; HazardY1 = tmp;
     }
 
-  if (CurInfo->x - (INT) Cursor->IconInfo.xHotspot + Cursor->Size.cx >= HazardX1
-      && CurInfo->x - (INT) Cursor->IconInfo.xHotspot <= HazardX2
-      && CurInfo->y - (INT) Cursor->IconInfo.yHotspot + Cursor->Size.cy >= HazardY1
-      && CurInfo->y - (INT) Cursor->IconInfo.yHotspot <= HazardY2)
+  if (CurInfo->PointerRect.right >= HazardX1
+      && CurInfo->PointerRect.left <= HazardX2
+      && CurInfo->PointerRect.bottom  >= HazardY1
+      && CurInfo->PointerRect.top <= HazardY2)
     {
       /* Mouse is not allowed to move if GDI is busy drawing */
       ExAcquireFastMutex(&CurInfo->CursorMutex);
@@ -151,7 +150,7 @@ MouseSafetyOnDrawStart(PSURFOBJ SurfObj, PSURFGDI SurfGDI, LONG HazardX1,
           return FALSE;
         }
       CurInfo->SafetySwitch = TRUE;
-      SurfGDI->MovePointer(SurfObj, -1, -1, &MouseRect);
+      SurfGDI->MovePointer(SurfObj, -1, -1, NULL);
       ExReleaseFastMutex(&CurInfo->CursorMutex);
     }
     
@@ -165,7 +164,6 @@ MouseSafetyOnDrawEnd(PSURFOBJ SurfObj, PSURFGDI SurfGDI)
  * FUNCTION: Notify the mouse driver that drawing has finished on a surface.
  */
 {
-  RECTL MouseRect;
   PSYSTEM_CURSORINFO CurInfo;
   BOOL MouseEnabled = FALSE;
     
@@ -210,7 +208,7 @@ MouseSafetyOnDrawEnd(PSURFOBJ SurfObj, PSURFGDI SurfGDI)
           ObDereferenceObject(InputWindowStation);
           return FALSE;
         }
-      SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &MouseRect);
+      SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &CurInfo->PointerRect);
       CurInfo->SafetySwitch = FALSE;
     }
 
@@ -224,7 +222,6 @@ MouseMoveCursor(LONG X, LONG Y)
 {
   HDC hDC;
   PDC dc;
-  RECTL MouseRect;
   BOOL res = FALSE;
   PSURFOBJ SurfObj;
   PSURFGDI SurfGDI;
@@ -263,7 +260,7 @@ MouseMoveCursor(LONG X, LONG Y)
       if(CurInfo->Enabled)
       {
         ExAcquireFastMutex(&CurInfo->CursorMutex);
-        SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &MouseRect);
+        SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &CurInfo->PointerRect);
         ExReleaseFastMutex(&CurInfo->CursorMutex);
       }
       /* send MOUSEMOVE message */
@@ -303,7 +300,6 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
   PDC dc;
   PSURFOBJ SurfObj;
   PSURFGDI SurfGDI;
-  RECTL MouseRect;
   MSG Msg;
   
   hDC = IntGetScreenDC();
@@ -421,7 +417,7 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
               ((mouse_ox != CurInfo->x) || (mouse_oy != CurInfo->y)))
           {
             ExAcquireFastMutex(&CurInfo->CursorMutex);
-            SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &MouseRect);
+            SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &CurInfo->PointerRect);
             ExReleaseFastMutex(&CurInfo->CursorMutex);
             mouse_cx = 0;
             mouse_cy = 0;
@@ -448,7 +444,7 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
         ((mouse_ox != CurInfo->x) || (mouse_oy != CurInfo->y)))
     {
       ExAcquireFastMutex(&CurInfo->CursorMutex);
-      SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &MouseRect);
+      SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &CurInfo->PointerRect);
       ExReleaseFastMutex(&CurInfo->CursorMutex);
     }
   }
