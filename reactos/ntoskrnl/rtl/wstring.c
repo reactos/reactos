@@ -61,17 +61,19 @@ wcschr(const wchar_t *str, wchar_t ch)
   return NULL;
 }
 
+#if 0
 wchar_t towupper(wchar_t w)
 {
    if (w < L'A')
      {
-	return(w+'A');
+	return(w + 'A');
      }
    else     
      {
 	return(w);
      }
 }
+#endif
 
 int wcsicmp(const wchar_t* cs, const wchar_t* ct)
 {
@@ -521,7 +523,7 @@ UNIMPLEMENTED;
 
 #endif
 
-unsigned long wstrlen(PWSTR s)
+size_t wstrlen(const wchar_t *s)
 {
     return wcslen(s);
 }

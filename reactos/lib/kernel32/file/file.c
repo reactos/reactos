@@ -16,7 +16,7 @@
 #include <ddk/ntddk.h>
 #include <wstring.h>
 #include <string.h>
-#include <kernel32/li.h>
+#include <ddk/li.h>
 #include <ddk/rtl.h>
 
 #define LPPROGRESS_ROUTINE void*
@@ -88,31 +88,26 @@ WINBOOL STDCALL WriteFile(HANDLE  hFile,
 		       LPOVERLAPPED lpOverLapped)
 {
 
-   PLARGE_INTEGER Offset;
-   LARGE_INTEGER ByteOffset;
+   LARGE_INTEGER Offset;
    HANDLE hEvent = NULL;
    NTSTATUS errCode;
-   PIO_STATUS_BLOCK IoStatusBlock;
-   IO_STATUS_BLOCK IIosb;
-   if ( lpOverLapped != NULL )
+
+   WCHAR Buffer[1000];
+
+  //printk("%.*s",nNumberOfBytesToWrite,lpBuffer);
+	
+   if (lpOverLapped != NULL ) 
      {
-	SET_LARGE_INTEGER_LOW_PART(ByteOffset, lpOverLapped->Offset);
-	SET_LARGE_INTEGER_HIGH_PART(ByteOffset, lpOverLapped->OffsetHigh);
-	Offset = &ByteOffset;
+	SET_LARGE_INTEGER_LOW_PART(Offset, lpOverLapped->Offset);
+	SET_LARGE_INTEGER_HIGH_PART(Offset, lpOverLapped->OffsetHigh);
 	lpOverLapped->Internal = STATUS_PENDING;
-	hEvent = lpOverLapped->hEvent;
-	IoStatusBlock = (PIO_STATUS_BLOCK)lpOverLapped;
-     }
-   else
-     {
-	IoStatusBlock = &IIosb;
-	Offset = NULL;
+	hEvent= lpOverLapped->hEvent;
      }
    errCode = NtWriteFile(hFile,hEvent,NULL,NULL,
 			 (PIO_STATUS_BLOCK)lpOverLapped,
 			 (PVOID)lpBuffer, 
 			 nNumberOfBytesToWrite,
-             Offset,
+			 &Offset,
 			 NULL);
    if (!NT_SUCCESS(errCode))
      {
@@ -137,7 +132,7 @@ WINBOOL STDCALL ReadFile(HANDLE hFile,
    PIO_STATUS_BLOCK IoStatusBlock;
    IO_STATUS_BLOCK IIosb;
 
-   
+  
    if ( lpOverLapped != NULL )
      {
 	SET_LARGE_INTEGER_LOW_PART(ByteOffset, lpOverLapped->Offset);
@@ -167,6 +162,8 @@ WINBOOL STDCALL ReadFile(HANDLE hFile,
 	SetLastError(RtlNtStatusToDosError(errCode));
 	return FALSE;
      }
+
+ 
    return TRUE;  
 }
 
@@ -675,7 +672,7 @@ OpenFile(
    
    	FileNameString.Length = lstrlenW(PathNameW)*sizeof(WCHAR);
    	FileNameString.Buffer = PathNameW;
-   	FileNameString.MaximumLength = FileNameString.Length;
+   	FileNameString.MaximumLength = FileNameString.Length+sizeof(WCHAR);
    
 
     	
@@ -857,27 +854,30 @@ DeleteFileW(
 	NTSTATUS errCode;
 	WCHAR PathNameW[MAX_PATH];
 	UINT Len;
-
-	Len =  GetCurrentDirectoryW(MAX_PATH,PathNameW);
-	if ( Len == 0 )
-		return FALSE;
-	if ( PathNameW[Len-1] != L'\\' ) {
-		PathNameW[Len] = L'\\';
-		PathNameW[Len+1] = 0;
+	if ( lpFileName[1] != ':' ) {
+		Len =  GetCurrentDirectoryW(MAX_PATH,PathNameW);
+		if ( Len == 0 )
+			return FALSE;
+		if ( PathNameW[Len-1] != L'\\' ) {
+			PathNameW[Len] = L'\\';
+			PathNameW[Len+1] = 0;
+		}
 	}
+	else
+		PathNameW[0] = 0;
 	lstrcatW(PathNameW,lpFileName); 
         FileNameString.Length = lstrlenW( PathNameW)*sizeof(WCHAR);
    	if ( FileNameString.Length == 0 )
 		return FALSE;
 
-   	if ( FileNameString.Length > MAX_PATH )
+   	if ( FileNameString.Length > MAX_PATH*sizeof(WCHAR) )
 		return FALSE;
    
 
 	
    
    	FileNameString.Buffer = (WCHAR *)PathNameW;
-   	FileNameString.MaximumLength = FileNameString.Length;
+   	FileNameString.MaximumLength = FileNameString.Length+sizeof(WCHAR);
    
 
     	
@@ -1200,6 +1200,69 @@ GetFileAttributesW(
 		
 }
 
+WINBOOL
+STDCALL
+SetFileAttributesA(
+    LPCSTR lpFileName,
+    DWORD dwFileAttributes
+    )
+{
+	ULONG i;
+	WCHAR FileNameW[MAX_PATH];
+    	i = 0;
+   	while ((*lpFileName)!=0 && i < MAX_PATH)
+     	{
+		FileNameW[i] = *lpFileName;
+		lpFileName++;
+		i++;
+     	}
+   	FileNameW[i] = 0;
+	return SetFileAttributesW(FileNameW, dwFileAttributes);
+}
+
+
+WINBOOL
+STDCALL
+SetFileAttributesW(
+    LPCWSTR lpFileName,
+    DWORD dwFileAttributes
+    )
+{
+	IO_STATUS_BLOCK IoStatusBlock;
+	FILE_BASIC_INFORMATION FileBasic;
+	HANDLE hFile;
+	NTSTATUS errCode;
+
+
+	hFile = CreateFileW(
+  		lpFileName,	
+    		GENERIC_READ,	
+    		FILE_SHARE_READ,	
+    		NULL,	
+    		OPEN_EXISTING,	
+    		FILE_ATTRIBUTE_NORMAL,	
+    		NULL 
+   	);
+
+	
+	errCode = NtQueryInformationFile(hFile,&IoStatusBlock,&FileBasic, sizeof(FILE_BASIC_INFORMATION),FileBasicInformation);
+	if ( !NT_SUCCESS(errCode) ) {
+		CloseHandle(hFile);
+		SetLastError(RtlNtStatusToDosError(errCode));
+		return FALSE;
+	}
+	FileBasic.FileAttributes = dwFileAttributes;
+	errCode = NtSetInformationFile(hFile,&IoStatusBlock,&FileBasic, sizeof(FILE_BASIC_INFORMATION),FileBasicInformation);
+	if ( !NT_SUCCESS(errCode) ) {
+		CloseHandle(hFile);
+		SetLastError(RtlNtStatusToDosError(errCode));
+		return FALSE;
+	}
+	CloseHandle(hFile);
+	return TRUE;
+		
+}
+
 
 
 DWORD
@@ -1207,9 +1270,10 @@ GetCurrentTime(VOID)
 {
 	NTSTATUS errCode;
 	FILETIME CurrentTime;
-	errCode = NtQuerySystemTime (
-		(TIME *)&CurrentTime
-	);
+memset(&CurrentTime,sizeof(FILETIME),0);
+//	errCode = NtQuerySystemTime (
+//		(TIME *)&CurrentTime
+//	);
 	return CurrentTime.dwLowDateTime;
 }
 
@@ -1230,10 +1294,10 @@ GetTempFileNameA(
 
   	if (uUnique == 0)
     		uUnique = GetCurrentTime();
-  
-  	wsprintfA(lpTempFileName,"%s\\%c%.3s%4.4x%s",
+  /*
+  	sprintf(lpTempFileName,"%s\\%c%.3s%4.4x%s",
 	  lpPathName,'~',lpPrefixString,uUnique,".tmp");
-  
+  */
   	if (unique)
 		return uUnique;
   
@@ -1241,8 +1305,8 @@ GetTempFileNameA(
 			     CREATE_NEW, FILE_ATTRIBUTE_TEMPORARY,
 			     0)) == INVALID_HANDLE_VALUE)
     	{
-    		wsprintfA(lpTempFileName,"%s\\%c%.3s%4.4x%s",
-	  	lpPathName,'~',lpPrefixString,++uUnique,".tmp");
+  //  		wsprintfA(lpTempFileName,"%s\\%c%.3s%4.4x%s",
+//	  	lpPathName,'~',lpPrefixString,++uUnique,".tmp");
     	}
 
   	CloseHandle((HANDLE)hFile);
@@ -1268,8 +1332,8 @@ GetTempFileNameW(
   	if (uUnique == 0)
     		uUnique = GetCurrentTime();
   
-  	wsprintfW(lpTempFileName,L"%s\\%c%.3s%4.4x%s",
-	  lpPathName,'~',lpPrefixString,uUnique,L".tmp");
+  //	swprintf(lpTempFileName,L"%s\\%c%.3s%4.4x%s",
+//	  lpPathName,'~',lpPrefixString,uUnique,L".tmp");
   
   	if (unique)
 		return uUnique;
@@ -1278,8 +1342,8 @@ GetTempFileNameW(
 			     CREATE_NEW, FILE_ATTRIBUTE_TEMPORARY,
 			     0)) == INVALID_HANDLE_VALUE)
     	{
-    		wsprintfW(lpTempFileName,L"%s\\%c%.3s%4.4x%s",
-	  	lpPathName,'~',lpPrefixString,++uUnique,L".tmp");
+//    		wsprintfW(lpTempFileName,L"%s\\%c%.3s%4.4x%s",
+//	  	lpPathName,'~',lpPrefixString,++uUnique,L".tmp");
     	}
 
   	CloseHandle((HANDLE)hFile);
@@ -1340,4 +1404,15 @@ SetFileTime(
 	}
 	
 	return TRUE;
+}
+
+WINBOOL
+STDCALL
+SetEndOfFile(
+	     HANDLE hFile
+	     )
+{
+	int x = -1;
+	DWORD Num;
+	return WriteFile(hFile,&x,1,&Num,NULL);
 }

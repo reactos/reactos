@@ -30,7 +30,7 @@ LOADERS = dos
 #
 # Select the device drivers and filesystems you want
 #
-KERNEL_SERVICES = parallel keyboard null mouse serial sound ide test sdisk \
+KERNEL_SERVICES = parallel keyboard blues null mouse serial sound ide test sdisk \
                   minix vfat
 
 APPS = hello shell
@@ -73,7 +73,6 @@ minix: dummy
 template: dummy
 	make -C services/fs/template
 
-
 ide-test: dummy
 	make -C services/dd/ide-test
 
@@ -94,6 +93,9 @@ parallel: dummy
 
 keyboard: dummy
 	make -C services/dd/keyboard
+
+blues: dummy
+	make -C services/dd/blue
 
 mouse: dummy
 	make -C services/dd/mouse

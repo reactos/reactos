@@ -310,3 +310,4 @@ NTSTATUS STDCALL ZwSetInformationProcess(IN HANDLE ProcessHandle,
 {
    UNIMPLEMENTED;
 }
+

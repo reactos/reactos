@@ -1,5 +1,18 @@
 all: crtdll.a
 
+
+CTYPE_OBJECTS = ctype/ct_flags.o ctype/ct_lower.o ctype/ct_upper.o ctype/isalnum.o \
+		ctype/isalpha.o ctype/isascii.o ctype/iscntrl.o ctype/isdigit.o ctype/isgraph.o \
+		ctype/islower.o ctype/isprint.o ctype/ispunct.o ctype/isspace.o ctype/isupper.o \
+		ctype/isxdigit.o ctype/toascii.o ctype/tolower.o ctype/toupper.o
+
+CONIO_OBJECTS = conio/cputs.o conio/getch.o conio/getche.o conio/putch.o conio/ungetch.o
+
+DIRECT_OBJECTS = direct/chdir.o direct/chdrive.o direct/getcwd.o direct/getdrive.o \
+		 direct/rmdir.o direct/mkdir.o direct/getdfree.o
+
+MISC_OBJECTS =  misc/sleep.o misc/crt1.o misc/getargs.o misc/crtfmode.o
+
 STRING_OBJECTS = string/memchr.o string/memcmp.o string/strcat.o \
                  string/strchr.o string/strcmp.o string/strcoll.o \
 		 string/strcpy.o string/strcspn.o string/memcpy.o \
@@ -7,18 +20,60 @@ STRING_OBJECTS = string/memchr.o string/memcmp.o string/strcat.o \
 		 string/strncpy.o string/strpbrk.o string/strrchr.o \
 		 string/strspn.o string/strstr.o string/strtok.o \
 		 string/strxfrm.o string/memmove.o string/memset.o \
-		 string/strdup.o
+		 string/strdup.o string/strlwr.o string/strupr.o \
+		 string/str_old.o string/strerror.o
+
+WCHAR_OBJECTS = wchar/wcscat.o wchar/wcschr.o wchar/wcscmp.o \
+		 wchar/wcscoll.o wchar/wcscpy.o wchar/wcscspn.o \
+		 wchar/wcsdup.o wchar/wcsicmp.o wchar/wcslen.o \
+		 wchar/wcslwr.o wchar/wcsncat.o wchar/wcsncmp.o \
+		 wchar/wcsncpy.o
+
+STDIO_OBJECTS = stdio/vsprintf.o  stdio/getenv.o stdio/doprnt.o stdio/doscan.o  \
+		stdio/puts.o stdio/fclose.o stdio/feof.o stdio/ferror.o \
+		stdio/fflush.o stdio/fgetc.o stdio/fgetpos.o stdio/fgets.o stdio/flsbuf.o \
+		stdio/fopen.o stdio/fprintf.o stdio/fputc.o stdio/fputs.o \
+		stdio/fread.o stdio/freopen.o  stdio/fscanf.o stdio/fseek.o \
+		stdio/fsetpos.o stdio/ftell.o stdio/fwalk.o stdio/fwrite.o stdio/getc.o \
+		stdio/getchar.o stdio/gets.o stdio/getw.o stdio/perror.o stdio/printf.o \
+		stdio/putc.o stdio/putchar.o stdio/puts.o stdio/putw.o \
+		stdio/remove.o stdio/rename.o stdio/rewind.o stdio/allocfil.o\
+		stdio/scanf.o stdio/setbuf.o stdio/setbuffe.o \
+		stdio/setlineb.o stdio/setvbuf.o stdio/sprintf.o stdio/sscanf.o \
+		stdio/stdiohk.o stdio/stdhnd.o stdio/tempnam.o stdio/tmpfile.o stdio/tmpnam.o \
+		stdio/ungetc.o stdio/vfprintf.o stdio/vprintf.o stdio/vsprintf.o
 
 
-STDIO_OBJECTS = stdio/vsprintf.o
+IO_OBJECTS = io/access.o io/close.o io/create.o io/dup.o io/dup2.o io/find.o io/isatty.o io/lseek.o \
+		io/open.o io/read.o io/setmode.o io/unlink.o io/write.o io/fmode.o
 
-STDLIB_OBJECTS = stdlib/malloc.o
+STDLIB_OBJECTS = stdlib/abort.o stdlib/abs.o stdlib/atexit.o stdlib/atof.o stdlib/atoi.o stdlib/atold.o \
+		 stdlib/bsearch.o stdlib/calloc.o stdlib/div.o stdlib/errno.o  stdlib/exit.o \
+		 stdlib/fullpath.o stdlib/labs.o stdlib/ldiv.o stdlib/llabs.o stdlib/lldiv.o \
+		 stdlib/makepath.o stdlib/malloc.o stdlib/putenv.o stdlib/qsort.o \
+		 stdlib/rand.o stdlib/senv.o stdlib/splitp.o stdlib/strtod.o stdlib/strtol.o \
+		 stdlib/strtoul.o stdlib/strtold.o 
 
-OBJECTS = $(STRING_OBJECTS) $(STDIO_OBJECTS) $(STDLIB_OBJECTS)
+PROCESS_OBJECTS = process/spawnl.o process/spawnlp.o process/spawnlpe.o  process/spawnvpe.o process/spawnvp.o \
+		process/spawnv.o process/spawnve.o process/spawnle.o process/execl.o process/execlp.o process/execlpe.o  \
+		process/execvpe.o process/execvp.o process/execv.o process/execle.o
+
+TIME_OBJECTS = time/ctime.o time/difftime.o time/strftime.o time/time.o 
+
+FLOAT_OBJECTS = float/fpreset.o 
+
+SYS_STAT_OBJECTS = sys_stat/fstat.o sys_stat/stat.o 
+
+OBJECTS = $(CTYPE_OBJECTS) $(CONIO_OBJECTS) $(DIRECT_OBJECTS) $(MISC_OBJECTS) \
+	  $(STRING_OBJECTS) $(WCHAR_OBJECTS) $(STDIO_OBJECTS) $(STDLIB_OBJECTS) \
+	  $(IO_OBJECTS) $(PROCESS_OBJECTS) $(TIME_OBJECTS) $(FLOAT_OBJECTS) \
+	  $(SYS_STAT_OBJECTS)
+
 
 crtdll.a: $(OBJECTS)
-	$(AR) rcs crtdll.a $(OBJECTS)
+	$(CC) $(CFLAGS) -c $< -o $@
+	$(AR) vrcs crtdll.a $(OBJECTS)
 
 dummy:
 
-include ../../rules.mak
+include ../../Rules.mak

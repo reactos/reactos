@@ -7,27 +7,38 @@
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
-
-/* INCLUDES *****************************************************************/
-
 #include <windows.h>
 #include <wstring.h>
+#include <string.h>
 #include <ddk/ntddk.h>
 
-#define NDEBUG
-#include <kernel32/kernel32.h>
 
-/* TYPES ********************************************************************/
 
-typedef struct _KERNEL32_FIND_FILE_DATA
+
+
+
+
+
+typedef struct _FIND_FILE_INFO
 {
-   HANDLE DirectoryHandle;
-   FILE_DIRECTORY_INFORMATION FileInfo;
-   WCHAR FileNameExtra[MAX_PATH];
-   UNICODE_STRING PatternStr;
-} KERNEL32_FIND_FILE_DATA, *PKERNEL32_FIND_FILE_DATA;
+  ULONG Offset;
+  WCHAR PathName[MAX_PATH];
+  WCHAR FileName[MAX_PATH];
+  FILE_DIRECTORY_INFORMATION *FileDirectory;
+} FIND_FILE_INFO;
 
-typedef struct _WIN32_FIND_DATA_UNICODE {
+typedef struct _NOTIFY_INFO
+{
+  HANDLE Event;
+  HANDLE FileHandle;
+  DWORD dwNotifyFilter;
+  WINBOOL bWatchSubtree;
+} NOTIFY_INFO;
+
+
+
+
+typedef struct _WIN32_FIND_DATAW { 
   DWORD dwFileAttributes; 
   FILETIME ftCreationTime; 
   FILETIME ftLastAccessTime; 
@@ -38,221 +49,415 @@ typedef struct _WIN32_FIND_DATA_UNICODE {
   DWORD    dwReserved1; 
   WCHAR    cFileName[ MAX_PATH ]; 
   WCHAR    cAlternateFileName[ 14 ]; 
-} WIN32_FIND_DATA_UNICODE, *PWIN32_FIND_DATA_UNICODE; 
-
-typedef struct _WIN32_FIND_DATA_ASCII { 
-  DWORD dwFileAttributes; 
-  FILETIME ftCreationTime; 
-  FILETIME ftLastAccessTime; 
-  FILETIME ftLastWriteTime; 
-  DWORD    nFileSizeHigh; 
-  DWORD    nFileSizeLow; 
-  DWORD    dwReserved0; 
-  DWORD    dwReserved1; 
-  CHAR    cFileName[ MAX_PATH ]; 
-  CHAR    cAlternateFileName[ 14 ]; 
-} WIN32_FIND_DATA_ASCII, *PWIN32_FIND_DATA_ASCII; 
+} WIN32_FIND_DATAW, *LPWIN32_FIND_DATAW, *PWIN32_FIND_DATAW; 
 
 
-/* FUNCTIONS *****************************************************************/
-
-WINBOOL STDCALL InternalFindNextFile(HANDLE hFindFile,
-                                     LPWIN32_FIND_DATA lpFindFileData)
+WINBOOL
+STDCALL
+FindClose(
+	  HANDLE hFind
+	  )
 {
-   IO_STATUS_BLOCK IoStatusBlock;
-   NTSTATUS Status;
-   PKERNEL32_FIND_FILE_DATA IData;
-   
-   IData = (PKERNEL32_FIND_FILE_DATA)hFindFile;
-   
-   Status = NtQueryDirectoryFile(IData->DirectoryHandle,
-                                 NULL,
-                                 NULL,
-                                 NULL,
-                                 &IoStatusBlock,
-                                 (PVOID)&IData->FileInfo,
-                                 sizeof(IData->FileInfo) +
-                                 sizeof(IData->FileNameExtra),
-                                 FileDirectoryInformation,
-                                 TRUE,
-                                 &(IData->PatternStr),
-                                 FALSE);
-   DPRINT("Found %w\n",IData->FileInfo.FileName);
-   lpFindFileData->dwFileAttributes = IData->FileInfo.FileAttributes;
-   if (Status != STATUS_SUCCESS)
-   {
-        return(FALSE);
-   }
-   return(TRUE);
+	
+	if ( hFind == NULL)
+    		return FALSE;
+	if ( hFind == (HANDLE)-1)
+    		return FALSE;
+	
+	HeapFree(GetProcessHeap(),0,((FIND_FILE_INFO *)hFind)->FileDirectory);
+	HeapFree(GetProcessHeap(),0,hFind);
+	return TRUE;
 }
 
-HANDLE STDCALL InternalFindFirstFile(LPCWSTR lpFileName, 
-                                      LPWIN32_FIND_DATA lpFindFileData)
+
+
+HANDLE
+STDCALL
+FindFirstFileA(
+    LPCSTR lpFileName,
+    LPWIN32_FIND_DATA lpFindFileData
+    )
 {
-   WCHAR CurrentDirectory[MAX_PATH];
-   WCHAR Pattern[MAX_PATH];
-   WCHAR Directory[MAX_PATH];
-   PWSTR End;
-   PKERNEL32_FIND_FILE_DATA IData;
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   UNICODE_STRING DirectoryNameStr;
-   IO_STATUS_BLOCK IoStatusBlock;
-   
-   DPRINT("FindFirstFileW(lpFileName %w, lpFindFileData %x)\n",
-	   lpFileName, lpFindFileData);
-   
-   GetCurrentDirectoryW(MAX_PATH, CurrentDirectory);
-   Directory[0] = '\\';
-   Directory[1] = '?';
-   Directory[2] = '?';
-   Directory[3] = '\\';
-   Directory[4] = 0;
-   DPRINT("Directory %w\n",Directory);
-   wcscat(Directory, CurrentDirectory);
-   DPRINT("Directory %w\n",Directory);
-   wcscat(Directory, lpFileName);
-   DPRINT("Directory %w\n",Directory);
-   End = wcsrchr(Directory, '\\');
-   *End = 0;
-   
-   wcscpy(Pattern, End+1);
-   
-   DPRINT("Directory %w Pattern %w\n",Directory,Pattern);
-   
-   IData = HeapAlloc(GetProcessHeap(), 
-		     HEAP_ZERO_MEMORY, 
-		     sizeof(KERNEL32_FIND_FILE_DATA));
-   
-   RtlInitUnicodeString(&DirectoryNameStr, Directory);
-   InitializeObjectAttributes(&ObjectAttributes,
-			      &DirectoryNameStr,
-			      0,
-			      NULL,
-			      NULL);
-   
-   if (ZwOpenFile(&IData->DirectoryHandle,
-		  FILE_LIST_DIRECTORY,
-		  &ObjectAttributes,
-		  &IoStatusBlock,
-		  0,
-		  OPEN_EXISTING)!=STATUS_SUCCESS)
-     {
-	return(NULL);
-     }
-   
-   RtlInitUnicodeString(&(IData->PatternStr), Pattern);
-   
-   NtQueryDirectoryFile(IData->DirectoryHandle,
-			NULL,
-			NULL,
-			NULL,
-			&IoStatusBlock,
-			(PVOID)&IData->FileInfo,
-			sizeof(IData->FileInfo) +
-			sizeof(IData->FileNameExtra),
-			FileDirectoryInformation,
-			TRUE,
-                        &(IData->PatternStr),
-			FALSE);
-   DPRINT("Found %w\n",IData->FileInfo.FileName);
-   
-   lpFindFileData->dwFileAttributes = IData->FileInfo.FileAttributes;
-   return(IData);
+	WIN32_FIND_DATAW FindFileDataW;
+	WCHAR FileNameW[MAX_PATH];
+	ULONG i;
+	HANDLE hFind;
+
+	i = 0;
+   	while ((*lpFileName)!=0 && i < MAX_PATH)
+     	{
+		FileNameW[i] = *lpFileName;
+		lpFileName++;
+		i++;
+     	}
+   	FileNameW[i] = 0;
+	hFind = FindFirstFileW(FileNameW,(WIN32_FIND_DATA *)&FindFileDataW);
+
+  	lpFindFileData->dwFileAttributes = FindFileDataW.dwFileAttributes; 
+  	memcpy(&lpFindFileData->ftCreationTime,&FindFileDataW.ftCreationTime,sizeof(FILETIME)); 
+	memcpy(&lpFindFileData->ftLastAccessTime,&FindFileDataW.ftLastAccessTime,sizeof(FILETIME)); 
+	memcpy(&lpFindFileData->ftLastWriteTime,&FindFileDataW.ftLastWriteTime,sizeof(FILETIME)); 
+	lpFindFileData->nFileSizeHigh = FindFileDataW.nFileSizeHigh; 
+	lpFindFileData->nFileSizeLow = FindFileDataW.nFileSizeLow; 
+	lpFindFileData->dwReserved0= FindFileDataW.dwReserved0; 
+	lpFindFileData->dwReserved1= FindFileDataW.dwReserved1; 
+	i = 0;
+   	while ((lpFindFileData->cFileName[i])!=0 && i < MAX_PATH)
+   	{
+		lpFindFileData->cFileName[i] = (char)FindFileDataW.cFileName[i];
+		i++;
+   	}
+   	lpFindFileData->cFileName[i] = 0;
+
+	i = 0;
+   	while ((lpFindFileData->cAlternateFileName[i])!=0 && i < 14)
+   	{
+		lpFindFileData->cAlternateFileName[i] = (char)FindFileDataW.cAlternateFileName[i];
+		i++;
+   	}
+   	lpFindFileData->cAlternateFileName[i] = 0;
+	
+  
+	return hFind;
 }
 
-HANDLE FindFirstFileA(LPCTSTR lpFileName, LPWIN32_FIND_DATA lpFindFileData)
+HANDLE
+STDCALL
+FindFirstFileW(
+    LPCWSTR lpFileName,
+    LPWIN32_FIND_DATA lpFindFileData
+    )
 {
-   WCHAR lpFileNameW[MAX_PATH];
-   ULONG i;
-   PKERNEL32_FIND_FILE_DATA IData;
-   PWIN32_FIND_DATA_ASCII Ret;
+	NTSTATUS errCode;
+	IO_STATUS_BLOCK IoStatusBlock; 
+	HANDLE FileHandle = NULL;
+	FIND_FILE_INFO *hFind;
+	WCHAR *FilePart;
+	UNICODE_STRING FileNameString, PathNameString;
+	OBJECT_ATTRIBUTES ObjectAttributes;
 
-   i = 0;
-   while (lpFileName[i]!=0)
-     {
-        lpFileNameW[i] = lpFileName[i];
-	i++;
-     }
-   lpFileNameW[i] = 0;
+
+	ACCESS_MASK DesiredAccess=FILE_READ_DATA;
+      
+     	ULONG FileAttributes=FILE_ATTRIBUTE_DIRECTORY;
+     	ULONG ShareAccess=FILE_SHARE_READ | FILE_SHARE_WRITE |  FILE_SHARE_DELETE;
+     	ULONG CreateDisposition=FILE_OPEN;
+     	ULONG CreateOptions=FILE_DIRECTORY_FILE;
+
+
+	hFind = HeapAlloc(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,sizeof(FIND_FILE_INFO));
+
+	hFind->FileDirectory = HeapAlloc(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,8192);
+
+
+
+	/* Try to find a path and a filename in the passed filename */
+
+    	lstrcpyW(hFind->PathName, lpFileName);
+    	FilePart = wcsrchr(hFind->PathName, '\\');
+ 
+    	if (FilePart == NULL){
+       		GetCurrentDirectoryW(MAX_PATH, hFind->PathName);
+       		lstrcpyW(hFind->FileName, lpFileName);
+    	}
+    	else {
+       		lstrcpyW(hFind->FileName, &FilePart[1]);
+    	}
+
+  	hFind->Offset = 0;
+	
+
+	PathNameString.Length = lstrlenW(hFind->PathName)*sizeof(WCHAR);
+   	PathNameString.Buffer = hFind->PathName;
+   	PathNameString.MaximumLength = FileNameString.Length+sizeof(WCHAR);
    
-   IData = InternalFindFirstFile(lpFileNameW,lpFindFileData);
-   Ret = (PWIN32_FIND_DATA_ASCII)lpFindFileData;
 
-   for (i=0; i<IData->FileInfo.FileNameLength; i++)
-   {
-        Ret->cFileName[i] = IData->FileInfo.FileName[i];
-   }
-   Ret->cFileName[i] = 0;
-   
-   return(IData);
+    	FileNameString.Length = lstrlenW(hFind->FileName)*sizeof(WCHAR);
+   	FileNameString.Buffer = hFind->FileName;
+   	FileNameString.MaximumLength = FileNameString.Length+sizeof(WCHAR);
+
+
+  	ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
+	ObjectAttributes.RootDirectory = NULL;
+   	ObjectAttributes.ObjectName = &PathNameString;
+	ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE| OBJ_INHERIT;
+	ObjectAttributes.SecurityDescriptor = NULL;
+	ObjectAttributes.SecurityQualityOfService = NULL;
+
+	
+
+
+ 
+
+	errCode = NtCreateFile(
+                &FileHandle,
+                DesiredAccess,
+                &ObjectAttributes,
+                &IoStatusBlock,
+                NULL,                           
+                FileAttributes,
+                ShareAccess,
+                CreateDisposition,
+                CreateOptions,
+                NULL,                          
+                0);                                     //
+
+	if ( !NT_SUCCESS(errCode) ) {
+		
+		return NULL;
+	}
+
+	errCode = NtQueryDirectoryFile(
+		FileHandle,
+		NULL,
+		NULL,
+		NULL,
+		&IoStatusBlock,
+		hFind->FileDirectory,
+		8192,
+		FileDirectoryInformation,
+		FALSE,
+		&FileNameString,
+		FALSE
+	);
+	if ( !NT_SUCCESS(errCode) ) {
+	//	printf("%x\n",errCode);
+		return NULL;
+	}
+
+
+
+
+	if ( FindNextFileW(hFind,lpFindFileData) )
+		return hFind;
+	else {
+		FindClose(hFind);
+		return NULL;
+	}
+	return NULL;
 }
 
-WINBOOL FindNextFileA(HANDLE hFindFile, LPWIN32_FIND_DATA lpFindFileData)
+WINBOOL
+STDCALL
+FindNextFileA(
+    HANDLE hFind,
+    LPWIN32_FIND_DATA lpFindFileData
+    )
 {
-   PWIN32_FIND_DATA_ASCII Ret;
-   PKERNEL32_FIND_FILE_DATA IData;
-   ULONG i;
+	WIN32_FIND_DATAW FindFileDataW;
+	ULONG i;
+	
+	
+	hFind = FindNextFileW(hFind,(WIN32_FIND_DATA *)&FindFileDataW);
 
-   IData = (PKERNEL32_FIND_FILE_DATA)hFindFile;   
-   if (!InternalFindNextFile(hFindFile, lpFindFileData))
-   {
-        return(FALSE);
-   }
+ 	lpFindFileData->dwFileAttributes = FindFileDataW.dwFileAttributes; 
+  	memcpy(&lpFindFileData->ftCreationTime,&FindFileDataW.ftCreationTime,sizeof(FILETIME)); 
+	memcpy(&lpFindFileData->ftLastAccessTime,&FindFileDataW.ftLastAccessTime,sizeof(FILETIME)); 
+	memcpy(&lpFindFileData->ftLastWriteTime,&FindFileDataW.ftLastWriteTime,sizeof(FILETIME)); 
+	lpFindFileData->nFileSizeHigh = FindFileDataW.nFileSizeHigh; 
+	lpFindFileData->nFileSizeLow = FindFileDataW.nFileSizeLow; 
+	lpFindFileData->dwReserved0= FindFileDataW.dwReserved0; 
+	lpFindFileData->dwReserved1= FindFileDataW.dwReserved1; 
+	i = 0;
+   	while ((lpFindFileData->cFileName[i])!=0 && i < MAX_PATH)
+   	{
+		lpFindFileData->cFileName[i] = (char)FindFileDataW.cFileName[i];
+		i++;
+   	}
+   	lpFindFileData->cFileName[i] = 0;
 
-   Ret = (PWIN32_FIND_DATA_ASCII)lpFindFileData;
-
-   for (i=0; i<IData->FileInfo.FileNameLength; i++)
-   {
-        Ret->cFileName[i] = IData->FileInfo.FileName[i];
-   }
-   Ret->cFileName[i] = 0;
-                                           
-   return(TRUE);
+	i = 0;
+   	while ((lpFindFileData->cAlternateFileName[i])!=0 && i < 14)
+   	{
+		lpFindFileData->cAlternateFileName[i] = (char)FindFileDataW.cAlternateFileName[i];
+		i++;
+   	}
+   	lpFindFileData->cAlternateFileName[i] = 0;
+	
+  
+	return hFind;
 }
 
-BOOL FindClose(HANDLE hFindFile)
+WINBOOL
+STDCALL
+FindNextFileW(
+    HANDLE hFind,
+    LPWIN32_FIND_DATA lpFindFileData
+    )
 {
-   PKERNEL32_FIND_FILE_DATA IData;
-   
-   IData = (PKERNEL32_FIND_FILE_DATA)hFindFile;
-   NtClose(IData->DirectoryHandle);
-   HeapFree(GetProcessHeap(), 0, IData);
-   return(TRUE);
+
+
+	LPWIN32_FIND_DATAW  lpFindFileDataW = (LPWIN32_FIND_DATAW)lpFindFileData; 	
+
+	FIND_FILE_INFO *FindPtr = hFind;
+	FILE_DIRECTORY_INFORMATION *FileDirectory=NULL;
+ 
+	if ( FindPtr == NULL )
+    		return FALSE;
+	if ( FileDirectory->NextEntryOffset == 0 ) 
+		return FALSE;	
+
+  	/* Try to find a file */
+	FileDirectory = FindPtr->Offset + FindPtr->FileDirectory;
+ 
+	
+     
+     	
+     	FindPtr->Offset += FileDirectory->NextEntryOffset;
+	
+				/* We found one! */
+	if (FindPtr->PathName[0] != L'\0')
+	{
+		wcscpy(lpFindFileDataW->cFileName, FindPtr->PathName);
+		wcscat(lpFindFileDataW->cFileName, L"\\");
+		wcscat(lpFindFileDataW->cFileName, FileDirectory->FileName);
+	}
+	else
+          	wcscpy(lpFindFileDataW->cFileName, FileDirectory->FileName);
+
+	
+		
+        wcscpy(lpFindFileDataW->cAlternateFileName, L"");
+	lpFindFileData->dwReserved0 = 0;
+	lpFindFileData->dwReserved1 = 0;
+	return TRUE;
+  
 }
 
-HANDLE STDCALL FindFirstFileW(LPCWSTR lpFileName, 
-			      LPWIN32_FIND_DATA lpFindFileData)
+
+
+
+
+
+HANDLE
+STDCALL
+FindFirstChangeNotificationA(
+    LPCSTR lpPathName,
+    WINBOOL bWatchSubtree,
+    DWORD dwNotifyFilter
+    )
 {
-   PWIN32_FIND_DATA_UNICODE Ret;
-   PKERNEL32_FIND_FILE_DATA IData;
-   
-   IData = InternalFindFirstFile(lpFileName,lpFindFileData);
-   Ret = (PWIN32_FIND_DATA_UNICODE)lpFindFileData;
+	ULONG i;
 
-   memcpy(Ret->cFileName, IData->FileInfo.FileName, 
-	  IData->FileInfo.FileNameLength);
-   memset(Ret->cAlternateFileName, 0, 14);
+	WCHAR PathNameW[MAX_PATH];
+	
 
-   return(IData);
+	
+
+    	i = 0;
+   	while ((*lpPathName)!=0 && i < MAX_PATH)
+     	{
+		PathNameW[i] = *lpPathName;
+		lpPathName++;
+		i++;
+     	}
+   	PathNameW[i] = 0;
+	return FindFirstChangeNotificationW(PathNameW, bWatchSubtree, dwNotifyFilter );
+
 }
 
-WINBOOL STDCALL FindNextFileW(HANDLE hFindFile,
-			      LPWIN32_FIND_DATA lpFindFileData)
+HANDLE
+STDCALL
+FindFirstChangeNotificationW(
+    LPCWSTR lpPathName,
+    WINBOOL bWatchSubtree,
+    DWORD dwNotifyFilter
+    )
 {
-   PWIN32_FIND_DATA_UNICODE Ret;
-   PKERNEL32_FIND_FILE_DATA IData;
+	NTSTATUS errCode;
 
-   IData = (PKERNEL32_FIND_FILE_DATA)hFindFile;   
-   if (!InternalFindNextFile(hFindFile, lpFindFileData))
-   {
-        return(FALSE);
-   }
+	
+	IO_STATUS_BLOCK IoStatusBlock;
+	NOTIFY_INFO *NotifyHandle;
+	WCHAR Buffer[100];
+	ULONG BufferSize = 100;
 
-   Ret = (PWIN32_FIND_DATA_UNICODE)lpFindFileData;
+	NotifyHandle = HeapAlloc(GetProcessHeap(),0,sizeof(NOTIFY_INFO));
 
-   memcpy(Ret->cFileName, IData->FileInfo.FileName, 
-	  IData->FileInfo.FileNameLength);
-   memset(Ret->cAlternateFileName, 0, 14);
+	NotifyHandle->Event = CreateEventW(NULL,FALSE,FALSE,NULL);
+	NotifyHandle->FileHandle = CreateFileW(lpPathName,GENERIC_READ,FILE_SHARE_READ | FILE_SHARE_WRITE,NULL,OPEN_EXISTING,
+		FILE_ATTRIBUTE_NORMAL, NULL);
 
-   return(TRUE);
+	NotifyHandle->dwNotifyFilter = dwNotifyFilter;
+	NotifyHandle->bWatchSubtree = bWatchSubtree;
+
+	errCode = NtNotifyChangeDirectoryFile(
+		NotifyHandle->FileHandle,
+		NotifyHandle->Event, 
+		NULL, 
+		NULL, 
+		&IoStatusBlock,
+		Buffer,
+		BufferSize,
+		NotifyHandle->dwNotifyFilter,
+		NotifyHandle->bWatchSubtree
+	);
+	return NotifyHandle;
 }
+
+WINBOOL 
+STDCALL
+FindNextChangeNotification(
+	HANDLE hChangeHandle 	
+	)
+{
+		NTSTATUS errCode;
+
+	
+	IO_STATUS_BLOCK IoStatusBlock;
+	NOTIFY_INFO *NotifyHandle = hChangeHandle;
+
+	WCHAR Buffer[100];
+	ULONG BufferSize = 100;
+	EVENT_BASIC_INFORMATION EventBasic;
+	ULONG ReturnLength;
+	
+	
+
+	NtQueryEvent(NotifyHandle->Event,EventBasicInformation,&EventBasic,sizeof(EVENT_BASIC_INFORMATION),&ReturnLength);
+	
+	if ( EventBasic.Signaled == TRUE ) {
+		ResetEvent(NotifyHandle->Event);
+		return TRUE;
+	}
+
+	errCode = NtNotifyChangeDirectoryFile(
+		NotifyHandle->FileHandle,
+		NotifyHandle->Event, 
+		NULL, 
+		NULL, 
+		&IoStatusBlock,
+		Buffer,
+		BufferSize,
+		NotifyHandle->dwNotifyFilter,
+		(BOOLEAN)NotifyHandle->bWatchSubtree
+	);
+		
+	return FALSE;
+}
+
+WINBOOL
+STDCALL
+FindCloseChangeNotification(
+			    HANDLE hChangeHandle
+			    )
+{
+	HeapFree(GetProcessHeap(),0,hChangeHandle);
+	return TRUE;
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

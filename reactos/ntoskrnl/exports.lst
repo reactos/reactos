@@ -7,6 +7,11 @@
 #
 #
 #
+__putchar
+__goxy
+__wherex
+__wherey
+__getscreensize
 free_page
 get_dma_page
 DbgPrint

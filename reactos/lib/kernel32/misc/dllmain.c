@@ -10,6 +10,7 @@
 
 #include <windows.h>
 #include <ddk/ntddk.h>
+#include <wstring.h>
 #include <kernel32/proc.h>
 
 WINBOOL   
@@ -20,13 +21,12 @@ DllMain (
 	LPVOID lpReserved );
 
 
-NT_PEB Peb;
 
-
-
-NT_PEB *CurrentPeb;
 NT_TEB *Teb;
-PROCESSINFOW ProcessInfo;
+
+
+
+
 
 
 
@@ -37,12 +37,17 @@ DllMain (
 	ULONG ul_reason_for_call,
 	LPVOID lpReserved )
 {
+ 
     switch( ul_reason_for_call ) {
     	case DLL_PROCESS_ATTACH:
 	{
-		CurrentPeb = &Peb;
-		CurrentPeb->ProcessHeap = HeapCreate(HEAP_GENERATE_EXCEPTIONS,8192,0);
+		
+		GetCurrentPeb()->ProcessHeap = HeapCreate(HEAP_GENERATE_EXCEPTIONS,8192,0);
 		InitAtomTable(13);
+		SetCurrentDirectoryW(L"C:");
+	//	SetSystemDirectoryW(L"C:\\Reactos\\System");
+	//	SetWindowsDirectoryW(L"C:\\Reactos");
+		
 	}
     	case DLL_THREAD_ATTACH:
 	{

@@ -1,6 +1,6 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 #include <string.h>
-//#include <stdlib.h>
+#include <stdlib.h>
 
 char *
 strdup(const char *_s)

@@ -1,34 +1,37 @@
-/*
- * COPYRIGHT:      See COPYING in the top level directory
- * PROJECT:        ReactOS system libraries
- * FILE:           lib/crtdll/stdlib/malloc.c
- * PURPOSE:        stdc memory allocation functions
- * PROGRAMMER:     ??
- */
-
-/* INCLUDES ******************************************************************/
-
 #include <windows.h>
-#include <types.h>
+#include <stdlib.h>
+//#include <types.h>
+#include <ddk/ntddk.h>
 
-/* FUNCTIONS *****************************************************************/
-
-void* malloc(size_t size)
+void* malloc(size_t _size)
 {
-   return(HeapAlloc(GetProcessHeap(), 0, size));
+   return(HeapAlloc(GetProcessHeap(),
+		    0,
+		    _size));
 }
 
-void free(void* ptr)
+void free(void* _ptr)
 {
-   HeapFree(GetProcessHeap(), 0, ptr);
+   HeapFree(GetProcessHeap(),
+	    0,
+	    _ptr);
 }
 
-void* calloc(size_t nmemb, size_t size)
+void* calloc(size_t _nmemb, size_t _size)
 {
-   return(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nmemb*size));
+   return(HeapAlloc(GetProcessHeap(),
+		       HEAP_ZERO_MEMORY,
+		       _nmemb*_size));
 }
 
-void* realloc(void* ptr, size_t size)
+void* realloc(void* _ptr, size_t _size)
 {
-   return(HeapReAlloc(GetProcessHeap(), 0, ptr, size));
+    ExFreePool(_ptr);
+ return ExAllocatePool(NonPagedPool,_size );
+#if 0
+   return(HeapReAlloc(GetProcessHeap(),
+		      0,
+		      _ptr,
+		      _size));
+#endif
 }

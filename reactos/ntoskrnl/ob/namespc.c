@@ -177,9 +177,9 @@ NTSTATUS ZwQueryDirectoryObject(IN HANDLE DirObjHandle,
 	current = CONTAINING_RECORD(current_entry,OBJECT_HEADER,Entry);
 	DPRINT("Scanning %w\n",current->Name.Buffer);
 	DirObjInformation[i].ObjectName.Buffer = 
-	               ExAllocatePool(NonPagedPool,(current->Name.Length+1)*2);
+	               ExAllocatePool(NonPagedPool, current->Name.Length + sizeof(WCHAR));
 	DirObjInformation[i].ObjectName.Length = current->Name.Length;
-	DirObjInformation[i].ObjectName.MaximumLength = current->Name.Length;
+	DirObjInformation[i].ObjectName.MaximumLength = current->Name.Length + sizeof(WCHAR);
 	DPRINT("DirObjInformation[i].ObjectName.Buffer %x\n",
 	       DirObjInformation[i].ObjectName.Buffer);
 	RtlCopyUnicodeString(&DirObjInformation[i].ObjectName,
@@ -552,3 +552,4 @@ NTSTATUS ObLookupObject(HANDLE rootdir, PWSTR string, PVOID* Object,
    return(Status);
 }
  
+

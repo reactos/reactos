@@ -529,35 +529,8 @@ TstTimer(void)
 
 }
 
-void TstDriverLoad(void)
-{
-  NTSTATUS Status;
-  ANSI_STRING AnsiDriverName;
-  UNICODE_STRING DriverName;
-
-  RtlInitAnsiString(&AnsiDriverName,"\\??\\C:\\reactos\\system\\keyboard.o"); 
-  RtlAnsiStringToUnicodeString(&DriverName, &AnsiDriverName, TRUE);
-  Status = LdrLoadDriver(&DriverName);
-  RtlFreeUnicodeString(&DriverName);
-  if (!NT_SUCCESS(Status))
-    {
-      DbgPrint("driver load failed, status;%d(%x)\n", Status, Status);
-      DbgPrintErrorMessage(Status);
-    }
-  RtlInitAnsiString(&AnsiDriverName,"\\??\\C:\\reactos\\system\\beep.sys"); 
-  RtlAnsiStringToUnicodeString(&DriverName, &AnsiDriverName, TRUE);
-  Status = LdrLoadDriver(&DriverName);
-  RtlFreeUnicodeString(&DriverName);
-  if (!NT_SUCCESS(Status))
-    {
-      DbgPrint("driver load failed, status;%d(%x)\n", Status, Status);
-      DbgPrintErrorMessage(Status);
-    }
-}
-
 void TstBegin()
 {
-   TstDriverLoad();
    ExExecuteShell();
 //   TstFileRead();
 //   TstGeneralWrite();

@@ -39,6 +39,11 @@ extern descriptor gdt[256];
 /*
  * printf style functions
  */
+void __putchar(char c);
+void __goxy(unsigned x, unsigned y);
+unsigned __wherex (void);
+unsigned __wherey (void);
+void __getscreensize (unsigned *maxx, unsigned *maxy);
 asmlinkage void printk(const char* fmt, ...);
 int vsprintf(char *buf, const char *fmt, va_list args);
 int sprintf(char* buf, const char* fmt, ...);
@@ -85,5 +90,11 @@ void PsInit(void);
 void TstBegin(void);
 VOID KeInit(VOID);
 VOID HalInitConsole(boot_param* bp);
+
+/*
+ * Loader functions (called in main())
+ */
+VOID LdrInitModuleManagement(VOID);
+VOID LdrLoadAutoConfigDrivers(VOID);
 
 #endif

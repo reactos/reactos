@@ -26,16 +26,13 @@
  * Put the type definitions of the heap in a seperate header. Boudewijn Dekker
  */
 
-/* INCLUDES *****************************************************************/
-
-#define NDEBUG
-#include <kernel32/kernel32.h>
-
 #include <kernel32/proc.h>
+#include <kernel32/kernel32.h>
 #include <kernel32/heap.h>
 #include <internal/string.h>
 
-/* GLOBALS ******************************************************************/
+#include <ddk/ntddk.h>
+
 
 static HEAP_BUCKET __HeapDefaultBuckets[]=
 {
@@ -49,9 +46,7 @@ static HEAP_BUCKET __HeapDefaultBuckets[]=
   { NULL, 256, 15, 4088 },
 };
 
-PHEAP	__ProcessHeap = NULL;
-
-/* FUNCTIONS ****************************************************************/
+PHEAP	__ProcessHeap;
 
 static BOOL   __HeapCommit(PHEAP pheap, LPVOID start, LPVOID end);
 static BOOL   __HeapDecommit(PHEAP pheap, LPVOID start, LPVOID end);
@@ -68,6 +63,8 @@ static BOOL   __HeapFreeFragment(PHEAP pheap, ULONG flags, LPVOID ptr);
 static PHEAP  __HeapPrepare(LPVOID base, ULONG minsize, ULONG maxsize,
                             ULONG flags);
 
+
+
 /*********************************************************************
 *                      __HeapCommit                                  *
 *                                                                    *
@@ -75,8 +72,8 @@ static PHEAP  __HeapPrepare(LPVOID base, ULONG minsize, ULONG maxsize,
 *********************************************************************/
 static BOOL __HeapCommit(PHEAP pheap, LPVOID start, LPVOID end)
 {
-   DPRINT("__HeapCommit( 0x%lX, 0x%lX, 0x%lX)\n",
-	  (ULONG) pheap, (ULONG) start, (ULONG) end);
+   dprintf("__HeapCommit( 0x%lX, 0x%lX, 0x%lX)\n",
+           (ULONG) pheap, (ULONG) start, (ULONG) end);
 
    if(end >= pheap->LastBlock)
       pheap->LastBlock=end;
@@ -94,7 +91,7 @@ static BOOL __HeapCommit(PHEAP pheap, LPVOID start, LPVOID end)
 *********************************************************************/
 static BOOL __HeapDecommit(PHEAP pheap, LPVOID start, LPVOID end)
 {
-   DPRINT("__HeapDecommit( 0x%lX, 0x%lX, 0x%lX)\n",
+   dprintf("__HeapDecommit( 0x%lX, 0x%lX, 0x%lX)\n",
            (ULONG) pheap, (ULONG) start, (ULONG) end);
 #ifdef NOT
    __VirtualDump();
@@ -120,7 +117,7 @@ static LPVOID __HeapAlloc(PHEAP pheap, ULONG flags, ULONG size, ULONG tag)
    ULONG	freesize;
    ULONG	allocsize;
    
-   DPRINT("__HeapAlloc(pheap %x, flags %x, size %d, tag %x)\n",
+   dprintf("__HeapAlloc(pheap %x, flags %x, size %d, tag %x)\n",
 	   pheap,flags,size,tag);
    
    pfree=&(pheap->Start);
@@ -242,7 +239,7 @@ static LPVOID __HeapReAlloc(PHEAP pheap, ULONG flags, LPVOID pold, DWORD size)
     */
    if(size==0)
    {
-      DPRINT("__HeapReAlloc: freeing memory\n");
+      dprintf("__HeapReAlloc: freeing memory\n");
       __HeapFree(pheap, flags, pold);
       return NULL;
    }
@@ -258,7 +255,7 @@ static LPVOID __HeapReAlloc(PHEAP pheap, ULONG flags, LPVOID pold, DWORD size)
 #endif
    else if(newsize < allocsize )
    {
-      DPRINT("__HeapReAlloc: shrinking memory\n");
+      dprintf("__HeapReAlloc: shrinking memory\n");
       /* free remaining region of memory */
       prealloc->Size=size | HEAP_NORMAL_TAG;
       pnext=HEAP_NEXT(prealloc);
@@ -274,7 +271,7 @@ static LPVOID __HeapReAlloc(PHEAP pheap, ULONG flags, LPVOID pold, DWORD size)
    }
    else if(newsize == allocsize )
    {
-      DPRINT("__HeapReAlloc: no changes\n");
+      dprintf("__HeapReAlloc: no changes\n");
       /* nothing to do */
       prealloc->Size= size | HEAP_NORMAL_TAG;
       return pold;
@@ -287,7 +284,7 @@ static LPVOID __HeapReAlloc(PHEAP pheap, ULONG flags, LPVOID pold, DWORD size)
       if(((LPVOID) pnext< pheap->End)&& HEAP_ISFREE(pnext) &&
          (HEAP_SIZE(pnext) + HEAP_ADMIN_SIZE >=newsize-allocsize))
       {
-         DPRINT("__HeapReAlloc: joining memory\n");
+         dprintf("__HeapReAlloc: joining memory\n");
          oldsize=HEAP_SIZE(prealloc);
          prealloc->Size=size | HEAP_NORMAL_TAG;
 
@@ -311,7 +308,7 @@ static LPVOID __HeapReAlloc(PHEAP pheap, ULONG flags, LPVOID pold, DWORD size)
       {
          if((flags&HEAP_REALLOC_IN_PLACE_ONLY)==0)
          {
-            DPRINT("__HeapReAlloc: allocating new memory\n");
+            dprintf("__HeapReAlloc: allocating new memory\n");
             /* alloc a new piece of memory */
             oldsize=HEAP_SIZE(prealloc);
             pmem=__HeapAlloc(pheap, flags, size, HEAP_NORMAL_TAG);
@@ -539,7 +536,7 @@ static BOOL __HeapFreeFragment(PHEAP pheap, ULONG flags, LPVOID pfree )
    PHEAP_BUCKET		pbucket;
    PHEAP_SUBALLOC	psub;
    PHEAP_FRAGMENT	pfrag=(PHEAP_FRAGMENT)
-                               ((LPVOID)pfree-HEAP_FRAG_ADMIN_SIZE);
+                               ((DWORD)pfree - HEAP_FRAG_ADMIN_SIZE);
    INT			nalloc;
 
    /* sanity checks */
@@ -585,6 +582,7 @@ static BOOL __HeapFreeFragment(PHEAP pheap, ULONG flags, LPVOID pfree )
          pfrag->FreeNext=NULL;
       }
    }
+
    return TRUE;
 }
 
@@ -597,7 +595,7 @@ PHEAP __HeapPrepare(LPVOID base, ULONG minsize, ULONG maxsize,  ULONG flags)
 {
    PHEAP pheap=(PHEAP) base;
    
-   DPRINT("__HeapPrepare(base %x, minsize %d, maxsize %d, flags %x)\n",
+   dprintf("__HeapPrepare(base %x, minsize %d, maxsize %d, flags %x)\n",
 	   base,minsize,maxsize,flags);
    
    pheap->Magic=MAGIC_HEAP;
@@ -630,10 +628,9 @@ PHEAP __HeapPrepare(LPVOID base, ULONG minsize, ULONG maxsize,  ULONG flags)
 
 VOID WINAPI __HeapInit(LPVOID base, ULONG minsize, ULONG maxsize)
 {
-   base = VirtualAlloc(base,maxsize,MEM_RESERVE,PAGE_READWRITE);
-   VirtualAlloc(base,PAGESIZE,MEM_COMMIT,PAGE_READWRITE);
-   
-   __HeapPrepare(base, minsize, maxsize, 0);
+  __ProcessHeap = VirtualAlloc(base, maxsize, MEM_RESERVE, PAGE_READWRITE);
+  VirtualAlloc(__ProcessHeap, PAGESIZE, MEM_COMMIT, PAGE_READWRITE);
+  __HeapPrepare(__ProcessHeap, minsize, maxsize, 0);
 }
 
 
@@ -674,10 +671,11 @@ BOOL WINAPI HeapDestroy(HANDLE hheap)
 *********************************************************************/
 LPVOID STDCALL HeapAlloc(HANDLE hheap, DWORD flags, DWORD size)
 {
+
    PHEAP    pheap=hheap;
    LPVOID   retval;
 
-   DPRINT("HeapAlloc( 0x%lX, 0x%lX, 0x%lX )\n",
+   aprintf("HeapAlloc( 0x%lX, 0x%lX, 0x%lX )\n",
            (ULONG) hheap, flags, (ULONG) size );
 #ifdef NOT
    HeapValidate(hheap, 0, 0);
@@ -693,8 +691,9 @@ LPVOID STDCALL HeapAlloc(HANDLE hheap, DWORD flags, DWORD size)
    if( (flags | pheap->Flags) & HEAP_NO_SERIALIZE )
       LeaveCriticalSection(&(pheap->Synchronize));
 
-   DPRINT("HeapAlloc returns 0x%lX\n", (ULONG) retval);
+   aprintf("HeapAlloc returns 0x%lX\n", (ULONG) retval);
    return retval;
+
 
 }
 
@@ -703,11 +702,12 @@ LPVOID STDCALL HeapAlloc(HANDLE hheap, DWORD flags, DWORD size)
 *********************************************************************/
 LPVOID STDCALL HeapReAlloc(HANDLE hheap, DWORD flags, LPVOID ptr, DWORD size)
 {
+
    PHEAP            pheap=hheap;
    PHEAP_BLOCK      pfree=((PHEAP_BLOCK)ptr-1);
    LPVOID           retval;
 
-   DPRINT("HeapReAlloc( 0x%lX, 0x%lX, 0x%lX, 0x%lX )\n",
+   aprintf("HeapReAlloc( 0x%lX, 0x%lX, 0x%lX, 0x%lX )\n",
            (ULONG) hheap, flags, (ULONG) ptr, size );
 #ifdef NOT
    HeapValidate(hheap, 0, 0);
@@ -726,6 +726,8 @@ LPVOID STDCALL HeapReAlloc(HANDLE hheap, DWORD flags, LPVOID ptr, DWORD size)
       LeaveCriticalSection(&(pheap->Synchronize));
 
    return retval;
+
+
 }
 
 /*********************************************************************
@@ -733,11 +735,12 @@ LPVOID STDCALL HeapReAlloc(HANDLE hheap, DWORD flags, LPVOID ptr, DWORD size)
 *********************************************************************/
 WINBOOL STDCALL HeapFree(HANDLE hheap, DWORD flags, LPVOID ptr)
 {
+
    PHEAP            pheap=hheap;
-   PHEAP_BLOCK      pfree=(PHEAP_BLOCK)((LPVOID)ptr-HEAP_ADMIN_SIZE);
+   PHEAP_BLOCK      pfree=(PHEAP_BLOCK)((DWORD)ptr-HEAP_ADMIN_SIZE);
    BOOL             retval;
 
-   DPRINT("HeapFree( 0x%lX, 0x%lX, 0x%lX )\n",
+   aprintf("HeapFree( 0x%lX, 0x%lX, 0x%lX )\n",
            (ULONG) hheap, flags, (ULONG) ptr );
 #ifdef NOT
    HeapValidate(hheap, 0, 0);
@@ -746,16 +749,23 @@ WINBOOL STDCALL HeapFree(HANDLE hheap, DWORD flags, LPVOID ptr)
       EnterCriticalSection(&(pheap->Synchronize));
 
    if(HEAP_ISNORMAL(pfree))
-      retval=__HeapFree(pheap, flags, ptr);
+      {
+         retval=__HeapFree(pheap, flags, ptr);
+      }
    else if(HEAP_ISFRAG(pfree))
-      retval=__HeapFreeFragment(pheap, flags, ptr);
+      { 
+         retval=__HeapFreeFragment(pheap, flags, ptr);
+      }
    else
-      retval=__ErrorReturnFalse(ERROR_INVALID_PARAMETER);
+      {
+         retval=__ErrorReturnFalse(ERROR_INVALID_PARAMETER);
+      }
 
    if( (flags| pheap->Flags) & HEAP_NO_SERIALIZE )
       LeaveCriticalSection(&(pheap->Synchronize));
 
    return retval;
+
 }
 
 /*********************************************************************
@@ -763,7 +773,7 @@ WINBOOL STDCALL HeapFree(HANDLE hheap, DWORD flags, LPVOID ptr)
 *********************************************************************/
 HANDLE WINAPI GetProcessHeap(VOID)
 {
-   DPRINT("GetProcessHeap()\n");
+   aprintf("GetProcessHeap()\n");
    return (HANDLE) __ProcessHeap;
 }
 
@@ -778,7 +788,7 @@ DWORD WINAPI GetProcessHeaps(DWORD maxheaps, PHANDLE phandles )
    DWORD retval;
    PHEAP pheap;
 
-   DPRINT("GetProcessHeaps( %u, 0x%lX )\n", maxheaps, (ULONG) phandles );
+   aprintf("GetProcessHeaps( %u, 0x%lX )\n", maxheaps, (ULONG) phandles );
 
    pheap= __ProcessHeap;
    retval=0;
@@ -808,7 +818,7 @@ BOOL WINAPI HeapLock(HANDLE hheap)
 {
    PHEAP pheap=hheap;
 
-   DPRINT("HeapLock( 0x%lX )\n", (ULONG) hheap );
+   aprintf("HeapLock( 0x%lX )\n", (ULONG) hheap );
 
    EnterCriticalSection(&(pheap->Synchronize));
    return TRUE;
@@ -822,7 +832,7 @@ BOOL WINAPI HeapUnlock(HANDLE hheap)
 {
    PHEAP pheap=hheap;
 
-   DPRINT("HeapUnlock( 0x%lX )\n", (ULONG) hheap );
+   aprintf("HeapUnlock( 0x%lX )\n", (ULONG) hheap );
 
    LeaveCriticalSection(&(pheap->Synchronize));
    return TRUE;
@@ -873,7 +883,7 @@ DWORD WINAPI HeapSize(HANDLE hheap, DWORD flags, LPCVOID pmem)
    PHEAP_BLOCK	palloc=((PHEAP_BLOCK)pmem-1);
    DWORD	retval=0;
 
-   DPRINT("HeapSize( 0x%lX, 0x%lX, 0x%lX )\n",
+   aprintf("HeapSize( 0x%lX, 0x%lX, 0x%lX )\n",
            (ULONG) hheap, flags, (ULONG) pmem );
 
    if(pheap->Magic!=MAGIC_HEAP)
@@ -931,7 +941,7 @@ BOOL WINAPI HeapValidate(HANDLE hheap, DWORD flags, LPCVOID pmem)
          pnext=HEAP_NEXT(pcheck);
          if((pprev)&&(HEAP_PREV(pcheck)!=pprev))
          {
-            DPRINT("HeapValidate: linked list invalid, region 0x%lX,"
+            dprintf("HeapValidate: linked list invalid, region 0x%lX,"
                     " previous region 0x%lX, list says 0x%lX\n",
                      (ULONG)pcheck, (ULONG)pprev, (ULONG) HEAP_PREV(pcheck));
             return FALSE;
@@ -955,13 +965,13 @@ BOOL WINAPI HeapValidate(HANDLE hheap, DWORD flags, LPCVOID pmem)
                pnextfrag=(PHEAP_FRAGMENT)((LPVOID)pfrag+add);
                if(pfrag->Magic!=HEAP_FRAG_MAGIC)
                {
-                  DPRINT("HeapValidate: fragment %d magic invalid, region 0x%lX,"
+                  dprintf("HeapValidate: fragment %d magic invalid, region 0x%lX,"
                           " previous region 0x%lX\n", i, (ULONG)pcheck, (ULONG)pprev);
                   return FALSE;
                }
                if(pfrag->Number!=i)
                {
-                  DPRINT("HeapValidate: fragment %d number invalid, region 0x%lX,"
+                  dprintf("HeapValidate: fragment %d number invalid, region 0x%lX,"
                           " previous region 0x%lX\n", i, (ULONG)pcheck, (ULONG)pprev);
                   return FALSE;
                }
@@ -969,7 +979,7 @@ BOOL WINAPI HeapValidate(HANDLE hheap, DWORD flags, LPCVOID pmem)
                   number++;
                if(pfrag->Sub!=psub)
                {
-                  DPRINT("HeapValidate: fragment %d suballoc invalid, region 0x%lX,"
+                  dprintf("HeapValidate: fragment %d suballoc invalid, region 0x%lX,"
                           " previous region 0x%lX\n", i, (ULONG)pcheck, (ULONG)pprev);
                   return FALSE;
                }
@@ -978,11 +988,11 @@ BOOL WINAPI HeapValidate(HANDLE hheap, DWORD flags, LPCVOID pmem)
             }
             if(number!=psub->NumberFree)
             {
-               DPRINT("HeapValidate: invalid number of free fragments, region 0x%lX,"
+               dprintf("HeapValidate: invalid number of free fragments, region 0x%lX,"
                        " previous region 0x%lX\n", (ULONG)pcheck, (ULONG)pprev);
                return FALSE;
             }
-            DPRINT("HeapValidate: [0x%08lX-0x%08lX] suballocated,"
+            dprintf("HeapValidate: [0x%08lX-0x%08lX] suballocated,"
                     " bucket size=%d, bitmap=0x%08lX\n",
                     (ULONG) pcheck, (ULONG) pnext, pbucket->Size, psub->Bitmap);
          }
@@ -990,22 +1000,22 @@ BOOL WINAPI HeapValidate(HANDLE hheap, DWORD flags, LPCVOID pmem)
          {
             if(HEAP_RSIZE(pcheck)!=HEAP_SIZE(pcheck))
             {
-               DPRINT("HeapValidate: invalid size of free region 0x%lX,"
+               dprintf("HeapValidate: invalid size of free region 0x%lX,"
                        " previous region 0x%lX\n",
                        (ULONG) pcheck, (ULONG) pprev);
                return FALSE;
             }
-            DPRINT("HeapValidate: [0x%08lX-0x%08lX] free\n",
+            dprintf("HeapValidate: [0x%08lX-0x%08lX] free\n",
                     (ULONG) pcheck, (ULONG) pnext );
          }
          else if(HEAP_ISNORMAL(pcheck))
          {
-            DPRINT("HeapValidate: [0x%08lX-0x%08lX] allocated\n",
+            dprintf("HeapValidate: [0x%08lX-0x%08lX] allocated\n",
                     (ULONG) pcheck, (ULONG) pnext );
          }
          else
          {
-            DPRINT("HeapValidate: invalid tag %x, region 0x%lX,"
+            dprintf("HeapValidate: invalid tag %x, region 0x%lX,"
                     " previous region 0x%lX\n", pcheck->Size>>28,
                      (ULONG)pcheck, (ULONG)pprev);
             return FALSE;

@@ -8,6 +8,7 @@ DWORD RtlNtStatusToDosError(NTSTATUS Status)
    return(0);
 }
 
+
 VOID SetLastError(DWORD dwErrorCode)
 {
    LastError = dwErrorCode;

@@ -271,3 +271,43 @@ GetVolumeInformationW(
 	
 }
 
+WINBOOL
+STDCALL
+SetVolumeLabelA(
+    LPCSTR lpRootPathName,
+    LPCSTR lpVolumeName
+    )
+{
+	WCHAR RootPathNameW[MAX_PATH];
+	WCHAR VolumeNameW[MAX_PATH];
+	UINT i;
+
+   	i = 0;
+   	while ((*lpRootPathName)!=0 && i < MAX_PATH)
+     	{
+		RootPathNameW[i] = *lpRootPathName;
+		lpRootPathName++;
+		i++;
+     	}
+   	RootPathNameW[i] = 0;
+
+	i = 0;
+   	while ((*lpVolumeName)!=0 && i < MAX_PATH)
+     	{
+		VolumeNameW[i] = *lpVolumeName;
+		lpVolumeName++;
+		i++;
+     	}
+   	VolumeNameW[i] = 0;
+	return SetVolumeLabelW(RootPathNameW,VolumeNameW);
+}
+
+WINBOOL
+STDCALL
+SetVolumeLabelW(
+    LPCWSTR lpRootPathName,
+    LPCWSTR lpVolumeName
+    )
+{
+	return FALSE;
+}

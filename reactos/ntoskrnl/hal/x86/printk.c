@@ -160,7 +160,7 @@ void HalDisplayString(char* string)
    printk("%s",string);
 }
 
-static void putchar(char c)
+void __putchar(char c)
 /*
  * FUNCTION: Writes a character to the console and updates the cursor position
  * ARGUMENTS: 
@@ -281,7 +281,7 @@ asmlinkage void printk(const char* fmt, ...)
    
    while ((*str)!=0)
      {
-	putchar(*str);
+	__putchar(*str);
 	str++;
      }
    
@@ -324,7 +324,7 @@ ULONG DbgPrint(PCH Format, ...)
    
    while ((*str)!=0)
      {
-	putchar(*str);
+	__putchar(*str);
 	str++;
      }
    
@@ -356,4 +356,31 @@ void HalInitConsole(boot_param* bp)
 
         cursorx=bp->cursorx;
         cursory=bp->cursory;
+}
+
+
+void __goxy(unsigned x, unsigned y)
+{
+ 
+  cursorx = x;
+  cursory = y;
+
+}
+
+unsigned __wherex (void)
+{
+   return cursorx;
+}
+
+
+unsigned __wherey (void)
+{
+   return cursory;
+}
+
+void __getscreensize (unsigned *maxx, unsigned *maxy)
+{
+  
+    *maxx = (unsigned)(NR_COLUMNS);
+    *maxy = (unsigned)(NR_ROWS);
 }

@@ -14,17 +14,43 @@
 #include <string.h>
 
 #define MAX_ENVIRONMENT_VARS 255
+#define MAX_VALUE 1024
 
 typedef struct _ENV_ELEMENT 
 {
 	UNICODE_STRING Name;
 	UNICODE_STRING Value;
+	WINBOOL Valid;
 } ENV_ELEMENT;
 
 ENV_ELEMENT Environment[MAX_ENVIRONMENT_VARS+1];
 UINT nEnvVar = 0;
 
-int wcsncmp2(CONST WCHAR *s, CONST WCHAR *t,UINT n);
+DWORD
+STDCALL
+GetEnvironmentVariableA(
+    LPCSTR lpName,
+    LPSTR lpBuffer,
+    DWORD nSize
+    )
+{
+	WCHAR BufferW[MAX_VALUE];
+	WCHAR NameW[MAX_PATH];
+	DWORD RetValue;
+	int i=0;
+	while ((*lpName)!=0 && i < MAX_PATH)
+     	{
+		NameW[i] = *lpName;
+		lpName++;
+		i++;
+     	}
+   	NameW[i] = 0;
+
+	RetValue = GetEnvironmentVariableW(NameW,BufferW,nSize);
+	for(i=0;i<nSize;i++)
+		lpBuffer[i] = (char)BufferW[i];	
+	return RetValue;
+}
 
 DWORD
 STDCALL
@@ -41,10 +67,10 @@ GetEnvironmentVariableW(
 
 	while (i < nEnvVar) 
 	{
-		if ( wcsncmp2(Environment[i].Name.Buffer,lpName,min(NameLen,Environment[i].Name.Length)) != 0 ) {
-			lstrcpynW(lpBuffer,Environment[i].Value.Buffer,min(nSize,Environment[i].Value.Length));
+		if ( wcsnicmp(Environment[i].Name.Buffer,lpName,min(NameLen,Environment[i].Name.Length/sizeof(WCHAR))) != 0 ) {
+			lstrcpynW(lpBuffer,Environment[i].Value.Buffer,min(nSize,Environment[i].Value.Length/sizeof(WCHAR)));
 			
-			return lstrlenW(lpBuffer);
+			return lstrlenW(Environment[i].Value.Buffer);
 			
 		}
 		i++;
@@ -54,14 +80,39 @@ GetEnvironmentVariableW(
 }
 
 
-int wcsncmp2(CONST WCHAR *s, CONST WCHAR *t,UINT n)
-{
-	for(;towupper(*s) == towupper(*t) && n > 0; s++, t++, n--)
-		if ( *s == 0 )
-			return 0;
-	return *s - *t;
-} 
 
+WINBOOL
+STDCALL
+SetEnvironmentVariableA(
+    LPCSTR lpName,
+    LPCSTR lpValue
+    )
+{
+	WCHAR NameW[MAX_PATH];
+	WCHAR ValueW[MAX_VALUE];
+
+	int i=0;
+	while ((*lpName)!=0 && i < MAX_PATH)
+     	{
+		NameW[i] = *lpName;
+		lpName++;
+		i++;
+     	}
+   	NameW[i] = 0;
+
+	i = 0;
+	
+	while ((*lpValue)!=0 && i < MAX_PATH)
+     	{
+		ValueW[i] = *lpValue;
+		lpValue++;
+		i++;
+     	}
+   	ValueW[i] = 0;
+	return SetEnvironmentVariableW(NameW,ValueW);
+
+	
+}
 
 WINBOOL
 STDCALL
@@ -80,31 +131,54 @@ SetEnvironmentVariableW(
 
 	while (i < nEnvVar) 
 	{
-		if ( wcsncmp2(Environment[i].Name.Buffer,lpName,min(NameLen,Environment[i].Name.Length)) != 0 ) {
-			lstrcpynW(Environment[i].Value.Buffer,lpValue,min(ValueLen,Environment[i].Value.MaximumLength));
-			return TRUE;
+		if ( wcsnicmp(Environment[i].Name.Buffer,lpName,min(NameLen,Environment[i].Name.Length/sizeof(WCHAR))) != 0 ) {
+			if ( lpValue != NULL ) {
+				lstrcpynW(Environment[i].Value.Buffer,lpValue,min(ValueLen,Environment[i].Value.MaximumLength/sizeof(WCHAR)));
+				return TRUE;
+			}
+			else {
+				Environment[i].Valid = FALSE;
+				Environment[i].Value.Length = 0;
+				Environment[i].Name.Length = 0;
+				return FALSE;
+			}
+				
+				
 			
 		}
 		i++;
 	}
 
-	if ( nEnvVar > MAX_ENVIRONMENT_VARS )
+	if ( nEnvVar >= MAX_ENVIRONMENT_VARS )
 		return FALSE;
-	NameBuffer = (WCHAR *)HeapAlloc(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,MAX_PATH*sizeof(WCHAR));
-	ValueBuffer = (WCHAR *)HeapAlloc(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,1024*sizeof(WCHAR));
-	
-	Environment[i].Name.Buffer = NameBuffer;
-	Environment[i].Name.MaximumLength = MAX_PATH;
-	lstrcpynW(Environment[i].Name.Buffer,lpValue,min(NameLen,Environment[i].Name.MaximumLength));
-	Environment[i].Name.Length = NameLen;
 
-	Environment[i].Value.Buffer = ValueBuffer;
-	Environment[i].Value.MaximumLength = 1024;
-	lstrcpynW(Environment[i].Value.Buffer,lpValue,min(ValueLen,Environment[i].Value.MaximumLength));
-	Environment[i].Value.Length = ValueLen;
+	while (i < nEnvVar) 
+	{
+		if ( Environment[i].Valid == FALSE ) 
+			break;
+		i++;
+	}
+	if ( i == nEnvVar ) {
+		NameBuffer = (WCHAR *)HeapAlloc(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,MAX_PATH*sizeof(WCHAR) );
+		ValueBuffer = (WCHAR *)HeapAlloc(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,MAX_VALUE*sizeof(WCHAR) );
+	
+		Environment[i].Name.Buffer = NameBuffer;
+		Environment[i].Name.MaximumLength = MAX_PATH*sizeof(WCHAR);
+
+		Environment[i].Value.Buffer = ValueBuffer;
+		Environment[i].Value.MaximumLength = MAX_VALUE*sizeof(WCHAR);
+		nEnvVar++;
+	}
+	Environment[i].Valid = TRUE;
+
+	lstrcpynW(Environment[i].Name.Buffer,lpValue,min(NameLen,(Environment[i].Name.MaximumLength-sizeof(WCHAR))/sizeof(WCHAR)));
+	Environment[i].Name.Length = NameLen*sizeof(WCHAR);
+
+	
+	lstrcpynW(Environment[i].Value.Buffer,lpValue,min(ValueLen,(Environment[i].Value.MaximumLength-sizeof(WCHAR)))/sizeof(WCHAR));
+	Environment[i].Value.Length = ValueLen*sizeof(WCHAR);
 	
 	
-	nEnvVar++;
 	
 	return TRUE;
 
@@ -140,7 +214,7 @@ GetVersionExW(
 	lpVersionInformation->dwMinorVersion = 0;
 	lpVersionInformation->dwBuildNumber = 12;
 	lpVersionInformation->dwPlatformId = VER_PLATFORM_WIN32_NT;
-	lstrcpyW((WCHAR *)lpVersionInformation->szCSDVersion,L"ReactOs Pre-Alpha 12");
+	lstrcpyW((WCHAR *)lpVersionInformation->szCSDVersion,L"Ariadne was here...");
 	return TRUE;
 }
 
@@ -155,7 +229,153 @@ GetVersionExA(
 	lpVersionInformation->dwMinorVersion = 0;
 	lpVersionInformation->dwBuildNumber = 12;
 	lpVersionInformation->dwPlatformId = VER_PLATFORM_WIN32_NT;
-	lstrcpyA((char *)lpVersionInformation->szCSDVersion,"ReactOs Pre-Alpha 12");
+	lstrcpyA((char *)lpVersionInformation->szCSDVersion,"ReactOs Pre-Alpha");
+	return TRUE;
+}
+
+VOID GetSystemTime(
+    LPSYSTEMTIME  lpSystemTime 	
+   )
+{
+	NTSTATUS errCode;
+memset(lpSystemTime,sizeof(SYSTEMTIME),0);
+//	errCode = NtQuerySystemTime (
+//		(TIME *)lpSystemTime
+//	);
+	return;
+}
+
+WINBOOL
+STDCALL
+SetSystemTime(
+	      CONST SYSTEMTIME *lpSystemTime
+	      )
+{
+	NTSTATUS errCode;
+	LARGE_INTEGER NewSystemTime;
+	errCode = NtSetSystemTime (
+		(LARGE_INTEGER *)lpSystemTime,
+		&NewSystemTime
+	);
+	if ( !NT_SUCCESS(errCode) )
+		return FALSE;
+	return TRUE;
+}
+
+
+
+
+
+
+VOID
+STDCALL
+GetLocalTime(
+	     LPSYSTEMTIME lpSystemTime
+	     )
+{
+	GetSystemTime(lpSystemTime);
+}
+
+
+WINBOOL
+STDCALL
+SetLocalTime(
+	     CONST SYSTEMTIME *lpSystemTime
+	     )
+{
+	return SetSystemTime(lpSystemTime);
+}
+
+LPSTR
+STDCALL
+GetEnvironmentStringsA(
+		       VOID
+		       )
+{
+	WCHAR *EnvironmentStringsW;
+	char *EnvironmentStringsA;
+	int size = 0;
+	int i;
+	EnvironmentStringsW = GetEnvironmentStringsW();
+	EnvironmentStringsA = (char *)EnvironmentStringsW;
+
+	for(i=0;i<nEnvVar;i++) {
+		if ( Environment[i].Valid ) {
+			size += Environment[i].Name.Length;
+			size += sizeof(WCHAR); // =
+			size += Environment[i].Value.Length;
+			size += sizeof(WCHAR); // zero
+		}
+	}
+	size += sizeof(WCHAR);
+	size /= sizeof(WCHAR);
+	for(i=0;i<size;i++)
+		EnvironmentStringsA[i] = (char)EnvironmentStringsW[i];	
+	return EnvironmentStringsA;
+}
+
+
+LPWSTR
+STDCALL
+GetEnvironmentStringsW(
+    VOID
+    )
+{
+	int size = 0;
+	int i;
+	WCHAR *EnvironmentString;
+	WCHAR *EnvironmentStringSave;
+	for(i=0;i<nEnvVar;i++) {
+		if ( Environment[i].Valid ) {
+			size += Environment[i].Name.Length;
+			size += sizeof(WCHAR); // =
+			size += Environment[i].Value.Length;
+			size += sizeof(WCHAR); // zero
+		}
+	}
+	size += sizeof(WCHAR); // extra zero
+	EnvironmentString =  (WCHAR *)HeapAlloc(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,size);
+	EnvironmentStringSave = EnvironmentString;
+	for(i=0;i<nEnvVar;i++) {
+		if ( Environment[i].Valid ) {
+			wcscpy(EnvironmentString,Environment[i].Name.Buffer);
+			wcscat(EnvironmentString,L"=");
+			wcscat(EnvironmentString,Environment[i].Value.Buffer);
+
+			size = Environment[i].Name.Length;
+			size += sizeof(WCHAR); // =
+			size += Environment[i].Value.Length;
+			size += sizeof(WCHAR); // zero
+			EnvironmentString += (size/sizeof(WCHAR));
+		}
+	}
+	EnvironmentString++;
+	*EnvironmentString = 0;
+	return EnvironmentStringSave;
+}
+
+
+WINBOOL
+STDCALL
+FreeEnvironmentStringsA(
+			LPSTR EnvironmentStrings
+			)
+{
+	if ( EnvironmentStrings == NULL )
+		return FALSE;
+	HeapFree(GetProcessHeap(),0,EnvironmentStrings);
+	return TRUE;
+}
+
+WINBOOL
+STDCALL
+FreeEnvironmentStringsW(
+    LPWSTR EnvironmentStrings
+    )
+{
+	if ( EnvironmentStrings == NULL )
+		return FALSE;
+	HeapFree(GetProcessHeap(),0,EnvironmentStrings);
 	return TRUE;
 }
 

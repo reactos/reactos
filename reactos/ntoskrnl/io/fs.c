@@ -13,7 +13,7 @@
 #include <ddk/ntddk.h>
 #include <internal/io.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 /* TYPES *******************************************************************/
@@ -35,7 +35,7 @@ NTSTATUS
 STDCALL
 NtFsControlFile(
 	IN HANDLE DeviceHandle,
-	IN HANDLE Event OPTIONAL, 
+	IN HANDLE EventHandle OPTIONAL, 
 	IN PIO_APC_ROUTINE ApcRoutine OPTIONAL, 
 	IN PVOID ApcContext OPTIONAL, 
 	OUT PIO_STATUS_BLOCK IoStatusBlock, 
@@ -47,7 +47,7 @@ NtFsControlFile(
 	)
 {
    return(ZwFsControlFile(DeviceHandle,
-			  Event,
+			  EventHandle,
 			  ApcRoutine,
 			  ApcContext,
 			  IoStatusBlock,
@@ -62,7 +62,7 @@ NTSTATUS
 STDCALL
 ZwFsControlFile(
 	IN HANDLE DeviceHandle,
-	IN HANDLE Event OPTIONAL, 
+	IN HANDLE EventHandle OPTIONAL, 
 	IN PIO_APC_ROUTINE ApcRoutine OPTIONAL, 
 	IN PVOID ApcContext OPTIONAL, 
 	OUT PIO_STATUS_BLOCK IoStatusBlock, 
@@ -73,7 +73,88 @@ ZwFsControlFile(
 	IN ULONG OutputBufferSize
 	)
 {
-   UNIMPLEMENTED;
+   NTSTATUS Status = -1;
+   PFILE_OBJECT FileObject;
+   PIRP Irp;
+   PIO_STACK_LOCATION StackPtr;
+   KEVENT Event;
+
+ 
+   if ( InputBufferSize > 0 ) { 
+   
+   	Status = ObReferenceObjectByHandle(DeviceHandle,
+				      FILE_WRITE_DATA|FILE_READ_DATA,
+				      NULL,
+				      UserMode,
+				      (PVOID *) &FileObject,
+				      NULL);
+   	if (Status != STATUS_SUCCESS)
+     	{
+		return(Status);
+     	}
+   
+   	KeInitializeEvent(&Event,NotificationEvent,FALSE);
+   	Irp = IoBuildSynchronousFsdRequest(IRP_MJ_DEVICE_CONTROL,
+				      FileObject->DeviceObject,
+				      InputBuffer,
+				      InputBufferSize,
+				      0,
+				      &Event,
+				      IoStatusBlock);
+   	StackPtr = IoGetNextIrpStackLocation(Irp);
+	if ( StackPtr == NULL )
+		return -1;
+   	StackPtr->Parameters.DeviceIoControl.IoControlCode = IoControlCode;
+	StackPtr->FileObject = FileObject;
+   	StackPtr->Parameters.Write.Length = InputBufferSize;
+   	DPRINT("FileObject->DeviceObject %x\n",FileObject->DeviceObject);
+   	Status = IoCallDriver(FileObject->DeviceObject,Irp);
+   	if (Status==STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
+     	{
+		KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
+        	return Irp->IoStatus.Status;
+     	}
+  }
+
+  if ( OutputBufferSize > 0 ) { 
+	CHECKPOINT;
+  	Status = ObReferenceObjectByHandle(DeviceHandle,
+				      FILE_WRITE_DATA|FILE_READ_DATA,
+				      NULL,
+				      UserMode,
+				      (PVOID *) &FileObject,
+				      NULL);
+   	if (Status != STATUS_SUCCESS)
+     	{
+		return(Status);
+     	}
+	CHECKPOINT;
+	KeInitializeEvent(&Event,NotificationEvent,FALSE);
+	CHECKPOINT;
+      	Irp = IoBuildSynchronousFsdRequest(IRP_MJ_DEVICE_CONTROL,
+				      FileObject->DeviceObject,
+				      OutputBuffer,
+				      OutputBufferSize,
+				      0,
+				      &Event,
+				      IoStatusBlock);
+	CHECKPOINT;
+   	StackPtr = IoGetNextIrpStackLocation(Irp);
+	if ( StackPtr == NULL )
+		return -1;
+   	StackPtr->Parameters.DeviceIoControl.IoControlCode = IoControlCode;
+	StackPtr->FileObject = FileObject;
+   	StackPtr->Parameters.Read.Length = OutputBufferSize;
+   	DPRINT("FileObject->DeviceObject %x\n",FileObject->DeviceObject);
+   	Status = IoCallDriver(FileObject->DeviceObject,Irp);
+   	if (Status==STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
+     	{
+		KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
+        	return Irp->IoStatus.Status;
+     	}
+   }
+   CHECKPOINT;
+   return(Status);
 }
 
 VOID IoInitFileSystemImplementation(VOID)
@@ -155,9 +236,7 @@ NTSTATUS IoTryToMountStorageDevice(PDEVICE_OBJECT DeviceObject)
 	     current_entry = current_entry->Flink;
 	  }
      }
-CHECKPOINT;
    KeReleaseSpinLock(&FileSystemListLock,oldlvl);
-CHECKPOINT;
    return(STATUS_UNRECOGNIZED_VOLUME);
 }
 

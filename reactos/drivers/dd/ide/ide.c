@@ -907,7 +907,7 @@ IDECreateDevice(IN PDRIVER_OBJECT DriverObject,
                 IN DWORD Offset, 
                 IN DWORD Size) 
 {
-  WORD                   UnicodeBuffer[IDE_MAX_NAME_LENGTH];
+  WCHAR                  UnicodeBuffer[IDE_MAX_NAME_LENGTH];
   NTSTATUS               RC;
   ANSI_STRING            AnsiName, AnsiSymLink;
   UNICODE_STRING         UnicodeName, SymLink;
@@ -915,7 +915,7 @@ IDECreateDevice(IN PDRIVER_OBJECT DriverObject,
 
     // Create a unicode device name
   RtlInitAnsiString(&AnsiName, DeviceName);
-  UnicodeName.MaximumLength = IDE_MAX_NAME_LENGTH;
+  UnicodeName.MaximumLength = IDE_MAX_NAME_LENGTH * sizeof(WCHAR);
   UnicodeName.Buffer = UnicodeBuffer;
   RtlAnsiStringToUnicodeString(&UnicodeName, &AnsiName, FALSE);
 

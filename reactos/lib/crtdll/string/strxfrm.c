@@ -2,10 +2,7 @@
 #include <string.h>
 
 size_t
-strxfrm(dst, src, n)
-     char *dst;
-     const char *src;
-     size_t n;
+strxfrm(char *dst,const char *src, size_t n)
 {
   size_t r = 0;
   int c;

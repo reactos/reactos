@@ -1,9 +1,10 @@
-
 #include <internal/mmhal.h>
 
 #include <ddk/ntddk.h>
 #include <stdarg.h>
 #include <string.h>
+
+HANDLE InputHandle, OutputHandle;
 
 void debug_printf(char* fmt, ...)
 {
@@ -12,11 +13,9 @@ void debug_printf(char* fmt, ...)
    
    va_start(args,fmt);
    vsprintf(buffer,fmt,args);
-   OutputDebugStringA(buffer);
+   WriteConsoleA(OutputHandle, buffer, strlen(buffer), NULL, NULL);
    va_end(args);
 }
-
-HANDLE KeyboardHandle;
 
 void ExecuteCd(char* cmdline)
 {
@@ -182,19 +181,19 @@ void ReadLine(char* line)
    
    do
      {
-	ReadFile(KeyboardHandle,
-		 &KeyEvent,
-		 sizeof(KEY_EVENT_RECORD),
-		 &Result,
-		 NULL);
+	ReadConsoleA(InputHandle,
+                     &KeyEvent,
+                     sizeof(KEY_EVENT_RECORD),
+                     &Result,
+                     NULL);
 	if (KeyEvent.bKeyDown && KeyEvent.AsciiChar != 0)
 	  {
-	     debug_printf("%c",KeyEvent.AsciiChar);
+	     debug_printf("%c", KeyEvent.AsciiChar);
 	     *line = KeyEvent.AsciiChar;
 	     line++;
 	  }
      } while (!(KeyEvent.bKeyDown && KeyEvent.AsciiChar == '\n'));
-   ReadFile(KeyboardHandle,
+   ReadFile(InputHandle,
 	    &KeyEvent,
 	    sizeof(KEY_EVENT_RECORD),
 	    &Result,
@@ -209,16 +208,12 @@ void main()
    
    KERNEL32_Init();
    
-   NtDisplayString("Shell Starting...\n");
+   AllocConsole();
+   InputHandle = GetStdHandle(STD_INPUT_HANDLE);
+   OutputHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+
+   debug_printf("Shell Starting...\n");
       
-   KeyboardHandle = CreateFile("Keyboard",
-			       FILE_GENERIC_READ,
-			       0,
-			       NULL,
-			       OPEN_EXISTING,
-			       0,
-			       NULL);
-   
    SetCurrentDirectoryA("C:\\");
    
    for(;;)
@@ -227,3 +222,4 @@ void main()
 	ExecuteCommand(line);
      }
 }
+

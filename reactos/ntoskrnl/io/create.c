@@ -136,6 +136,8 @@ NTSTATUS ZwCreateFile(PHANDLE FileHandle,
 	FileObject->FileName.Buffer = ExAllocatePool(NonPagedPool,
 					ObjectAttributes->ObjectName->Length);
 	FileObject->FileName.Length = ObjectAttributes->ObjectName->Length;
+	FileObject->FileName.MaximumLength = 
+          ObjectAttributes->ObjectName->MaximumLength;
 	RtlCopyUnicodeString(&(FileObject->FileName),
 			     ObjectAttributes->ObjectName);
      }

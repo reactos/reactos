@@ -16,8 +16,8 @@
 #include <ntdll/pagesize.h>
 
 /* definitions */
-#define HEAP_ADMIN_SIZE		8
-#define HEAP_FRAG_ADMIN_SIZE	8
+#define HEAP_ADMIN_SIZE		(sizeof(HEAP_BLOCK))
+#define HEAP_FRAG_ADMIN_SIZE	(sizeof(HEAP_FRAGMENT))
 #define HEAP_ROUNDVAL     (2*(HEAP_ADMIN_SIZE)-1)
 #define HEAP_FRAGMENT_THRESHOLD 256
 

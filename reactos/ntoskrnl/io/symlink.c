@@ -159,12 +159,13 @@ NTSTATUS IoCreateSymbolicLink(PUNICODE_STRING SymbolicLinkName,
 	return(STATUS_UNSUCCESSFUL);
      }
    
-   SymbolicLink->TargetName.Buffer = ExAllocatePool(NonPagedPool,
-					 ((wstrlen(DeviceName->Buffer)+1)*2));
-   SymbolicLink->TargetName.MaximumLength = wstrlen(DeviceName->Buffer);
    SymbolicLink->TargetName.Length = 0;
-   RtlCopyUnicodeString(&(SymbolicLink->TargetName),DeviceName);
-   DPRINT("DeviceName %w\n",SymbolicLink->TargetName.Buffer);
+   SymbolicLink->TargetName.MaximumLength = 
+     ((wstrlen(DeviceName->Buffer) + 1) * sizeof(WCHAR));
+   SymbolicLink->TargetName.Buffer = ExAllocatePool(NonPagedPool,
+                                                    SymbolicLink->TargetName.MaximumLength);
+   RtlCopyUnicodeString(&(SymbolicLink->TargetName), DeviceName);
+   DPRINT("DeviceName %w\n", SymbolicLink->TargetName.Buffer);
    InitializeObjectAttributes(&(SymbolicLink->Target),
 			      &(SymbolicLink->TargetName),0,NULL,NULL);
    DPRINT("%s() = STATUS_SUCCESS\n",__FUNCTION__);

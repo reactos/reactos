@@ -21,6 +21,7 @@
 extern "C" {
 #endif
 
+#define __kernel_size_t size_t
 
 char * ___strtok; // removed extern specifier 02-06-98, BD
 
@@ -46,6 +47,13 @@ extern void * memcpy(void *,const void *,__kernel_size_t);
 extern void * memmove(void *,const void *,__kernel_size_t);
 extern void * memscan(void *,int,__kernel_size_t);
 extern int memcmp(const void *,const void *,__kernel_size_t);
+
+char *strerror( int errnum );
+char *_strerror( const char *string );
+
+// obsolete
+int strcasecmp (const char* sz1, const char* sz2);
+int strncasecmp	(const char* sz1, const char* sz2, size_t sizeMaxCompare);
 
 
 /*

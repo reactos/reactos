@@ -25,7 +25,7 @@
 
 #include <ddk/ntddk.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 /* MACROS ********************************************************************/
@@ -36,6 +36,7 @@ POBJECT_TYPE ObModuleType = NULL;
 
 /* FORWARD DECLARATIONS ******************************************************/
 
+NTSTATUS LdrLoadDriver(PUNICODE_STRING Filename);
 NTSTATUS LdrProcessDriver(PVOID ModuleLoadBase);
 
 /*  PE Driver load support  */
@@ -58,7 +59,7 @@ static NTSTATUS LdrProcessBinImage(HANDLE ProcessHandle, HANDLE ModuleHandle, HA
 
 /* FUNCTIONS *****************************************************************/
 
-VOID LdrInitModuleManagment(VOID)
+VOID LdrInitModuleManagement(VOID)
 {
   ANSI_STRING AnsiString;
 
@@ -80,6 +81,36 @@ VOID LdrInitModuleManagment(VOID)
   ObModuleType->OkayToClose = NULL;
   RtlInitAnsiString(&AnsiString, "Module");
   RtlAnsiStringToUnicodeString(&ObModuleType->TypeName, &AnsiString, TRUE);
+}
+
+/*
+ * load the auto config drivers.
+ */
+VOID LdrLoadAutoConfigDrivers(VOID)
+{
+  NTSTATUS Status;
+  ANSI_STRING AnsiDriverName;
+  UNICODE_STRING DriverName;
+
+  RtlInitAnsiString(&AnsiDriverName,"\\??\\C:\\reactos\\system\\drivers\\keyboard.o"); 
+  RtlAnsiStringToUnicodeString(&DriverName, &AnsiDriverName, TRUE);
+  Status = LdrLoadDriver(&DriverName);
+  RtlFreeUnicodeString(&DriverName);
+  if (!NT_SUCCESS(Status))
+    {
+      DbgPrint("driver load failed, status;%d(%x)\n", Status, Status);
+      DbgPrintErrorMessage(Status);
+    }
+  RtlInitAnsiString(&AnsiDriverName,"\\??\\C:\\reactos\\system\\drivers\\blues.o"); 
+  RtlAnsiStringToUnicodeString(&DriverName, &AnsiDriverName, TRUE);
+  Status = LdrLoadDriver(&DriverName);
+  RtlFreeUnicodeString(&DriverName);
+  if (!NT_SUCCESS(Status))
+    {
+      DbgPrint("driver load failed, status;%d(%x)\n", Status, Status);
+      DbgPrintErrorMessage(Status);
+    }
+ 
 }
 
 /*

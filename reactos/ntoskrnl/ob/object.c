@@ -148,13 +148,14 @@ PVOID ObGenericCreateObject(PHANDLE Handle,
 //   DbgPrint("ObjectAttributes->ObjectName->MaximumLength %d\n",
 //	    ObjectAttributes->ObjectName->MaximumLength);
    Buffer = ExAllocatePool(NonPagedPool,
-			   ((ObjectAttributes->ObjectName->Length+1)*2));   
+                           ((ObjectAttributes->ObjectName->Length + 1) * 
+                             sizeof(WCHAR)));   
    if (Buffer==NULL)
      {
 	return(NULL);	
      }
    memcpy(Buffer, ObjectAttributes->ObjectName->Buffer,
-	  (ObjectAttributes->ObjectName->Length+1)*2);
+	  (ObjectAttributes->ObjectName->Length + 1) * sizeof(WCHAR));
    
    /*
     * Seperate the name into a path and name 
@@ -385,3 +386,4 @@ NTSTATUS ObReferenceObjectByHandle(HANDLE Handle,
    
    return(STATUS_SUCCESS);
 }
+

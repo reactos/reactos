@@ -3,6 +3,7 @@
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/file/curdir.c
  * PURPOSE:         Current directory functions
+ * PROGRAMMER:      David Welch (welch@mcmail.com)
  * UPDATE HISTORY:
  *                  Created 30/09/98
  */
@@ -12,17 +13,14 @@
 
 #include <windows.h>
 
-#define NDEBUG
-#include <kernel32/kernel32.h>
-
 /* GLOBALS *******************************************************************/
 
 
-static unsigned short CurrentDirectoryW[MAX_PATH] = {0,};
+WCHAR CurrentDirectoryW[MAX_PATH] = {0,};
 
-static unsigned short SystemDirectoryW[MAX_PATH];
+WCHAR SystemDirectoryW[MAX_PATH];
 
-static unsigned short WindowsDirectoryW[MAX_PATH];
+WCHAR WindowsDirectoryW[MAX_PATH];
 
 /* FUNCTIONS *****************************************************************/
  
@@ -48,7 +46,7 @@ DWORD STDCALL GetCurrentDirectoryW(DWORD nBufferLength, LPWSTR lpBuffer)
 {
    UINT uSize;
    
-   DPRINT("CurrentDirectoryW %w\n",CurrentDirectoryW);
+   dprintf("CurrentDirectoryW %w\n",CurrentDirectoryW);
    
    if ( lpBuffer == NULL ) 
 	return 0;
@@ -56,7 +54,7 @@ DWORD STDCALL GetCurrentDirectoryW(DWORD nBufferLength, LPWSTR lpBuffer)
    if ( nBufferLength > uSize )
    	lstrcpynW(lpBuffer,CurrentDirectoryW,uSize);
    
-   DPRINT("GetCurrentDirectoryW() = %w\n",lpBuffer);
+   dprintf("GetCurrentDirectoryW() = %w\n",lpBuffer);
    
    return uSize;
 }
@@ -65,7 +63,7 @@ BOOL STDCALL SetCurrentDirectoryA(LPCSTR lpPathName)
 {
    UINT i;
 
-   DPRINT("SetCurrentDirectoryA(lpPathName %s)\n",lpPathName);
+   dprintf("SetCurrentDirectoryA(lpPathName %s)\n",lpPathName);
    
    if ( lpPathName == NULL )
 	return FALSE;
@@ -79,13 +77,17 @@ BOOL STDCALL SetCurrentDirectoryA(LPCSTR lpPathName)
    }
    CurrentDirectoryW[i] = 0;
    
-   DPRINT("CurrentDirectoryW = '%w'\n",CurrentDirectoryW);
+   dprintf("CurrentDirectoryW = '%w'\n",CurrentDirectoryW);
    
    return(TRUE);
 }
 
 
-WINBOOL STDCALL SetCurrentDirectoryW(LPCWSTR lpPathName)
+WINBOOL
+STDCALL
+SetCurrentDirectoryW(
+    LPCWSTR lpPathName
+    )
 {
    if ( lpPathName == NULL )
 	return FALSE;

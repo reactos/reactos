@@ -14,7 +14,12 @@
 #include <kernel32\thread.h>
 #include <wstring.h>
 #include <string.h>
-// RJJ: (we dont have it) #include <stdlib.h>
+//#include <stdlib.h>
+
+
+
+
+
 
 /* system global and local atom tables */
 
@@ -319,7 +324,7 @@ AWGLAddAtom(
 	if(lpfree && atomlen) {
 		lpfree->q = q;
 		lpfree->refcnt = 1;
-		wcsncpy(&at->AtomData[lpfree->idx],lpString,atomlen);
+		lstrcpynW(&at->AtomData[lpfree->idx],lpString,atomlen);
 		return freeindex + ATOMBASE;
 	}
 
@@ -396,7 +401,7 @@ AWGLFindAtom(
 		if(lp->q == q) {	
 			if(HIWORD(lpString) == 0)
 				return ATOMBASE + index;
-			if(wcsicmp(&at->AtomData[lp->idx],lpString) == 0)
+			if(lstrcmpiW(&at->AtomData[lp->idx],lpString) == 0)
 				return ATOMBASE + index;
 		}
 	}
@@ -421,7 +426,7 @@ AWGLGetAtomName(ATOMTABLE *at, ATOM atom, WCHAR *lpString,int len)
 			if (atomlen < len)
 			    lstrcpyW(lpString,atomstr);
 			else {
-			    wcsncpy(lpString,atomstr,len-1);
+			    lstrcpynW(lpString,atomstr,len-1);
 			    lpString[len-1] = '\0';
 			}
 			return (UINT)lstrlenW(lpString);

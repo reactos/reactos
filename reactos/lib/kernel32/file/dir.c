@@ -37,16 +37,13 @@ CreateDirectoryExA(
 	WCHAR NewDirectoryW[MAX_PATH];
 	ULONG i;
 	i = 0;
-    if(lpTemplateDirectory)
-    {
-      while ((*lpTemplateDirectory)!=0 && i < MAX_PATH)
+   	while ((*lpTemplateDirectory)!=0 && i < MAX_PATH)
      	{
 		TemplateDirectoryW[i] = *lpTemplateDirectory;
 		lpTemplateDirectory++;
 		i++;
      	}
-      TemplateDirectoryW[i] = 0;
-    }
+   	TemplateDirectoryW[i] = 0;
 
 	i = 0;
    	while ((*lpNewDirectory)!=0 && i < MAX_PATH)
@@ -83,28 +80,15 @@ CreateDirectoryExW(
 	HANDLE DirectoryHandle;
 	OBJECT_ATTRIBUTES ObjectAttributes;
 	UNICODE_STRING DirectoryNameString;
-   WCHAR PathNameW[MAX_PATH],CurrentDir[MAX_PATH];
 
 	if ( lpTemplateDirectory != NULL ) {
 		// get object attributes from template directory
 	}
-   PathNameW[0] = '\\';
-   PathNameW[1] = '?';
-   PathNameW[2] = '?';
-   PathNameW[3] = '\\';
-   PathNameW[4] = 0;
-   
-   if (lpNewDirectory[0] != L'\\' && lpNewDirectory[1] != L':')
-     {
-    GetCurrentDirectoryW(MAX_PATH,CurrentDir);
-	lstrcatW(PathNameW,CurrentDir);
-     }
-   lstrcatW(PathNameW,lpNewDirectory);
 
 
-    DirectoryNameString.Length = lstrlenW(PathNameW)*sizeof(WCHAR);
-    DirectoryNameString.Buffer = (WCHAR *)PathNameW;
-	DirectoryNameString.MaximumLength = DirectoryNameString.Length;
+	DirectoryNameString.Length = lstrlenW(lpNewDirectory)*sizeof(WCHAR);
+	DirectoryNameString.Buffer = (WCHAR *)lpNewDirectory;
+	DirectoryNameString.MaximumLength = DirectoryNameString.Length+sizeof(WCHAR);
 	
 	ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
 	ObjectAttributes.RootDirectory = NULL;
@@ -114,17 +98,11 @@ CreateDirectoryExW(
 	ObjectAttributes.SecurityQualityOfService = NULL;
 
 
-   errCode = NtCreateFile(&DirectoryHandle,
-             FILE_LIST_DIRECTORY,
-			 &ObjectAttributes,
-             NULL,
-			 NULL,
-             FILE_ATTRIBUTE_NORMAL,
-             0,
-             FILE_CREATE,
-             FILE_DIRECTORY_FILE,
-			 NULL,
-			 0);
+	errCode = NtCreateDirectoryObject(
+    		&DirectoryHandle,
+    		GENERIC_ALL,
+    		&ObjectAttributes
+    	);
 	if (!NT_SUCCESS(errCode) ) {
 		SetLastError(RtlNtStatusToDosError(errCode));
 		return FALSE;
@@ -166,7 +144,7 @@ RemoveDirectoryW(
 
 	PathNameString.Length = lstrlenW(lpPathName)*sizeof(WCHAR);
 	PathNameString.Buffer = (WCHAR *)lpPathName;
-	PathNameString.MaximumLength = PathNameString.Length;
+	PathNameString.MaximumLength = PathNameString.Length+sizeof(WCHAR);
 	
 	ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
 	ObjectAttributes.RootDirectory = NULL;
@@ -197,6 +175,7 @@ GetFullPathNameA(
 	
 }
 
+#define IS_END_OF_NAME(ch)  (!(ch) || ((ch) == L'/') || ((ch) == L'\\'))
 
 
 DWORD
@@ -208,7 +187,80 @@ GetFullPathNameW(
     LPWSTR *lpFilePart
     )
 {
+
+	WCHAR buffer[MAX_PATH];
+     	WCHAR *p;
+
+     	if (!lpFileName || !lpBuffer) return 0;
+
+     	p = buffer;
+     
+     	if (IS_END_OF_NAME(*lpFileName) && (*lpFileName))  /* Absolute path */
+     	{
+         	while (*lpFileName == L'\\') 
+			lpFileName++;
+     	}
+     	else  /* Relative path or empty path */
+     	{
+		if ( GetCurrentDirectoryW(MAX_PATH,p) == 0 )
+			wcscpy( p, L"C:");
+         	if (*p) 
+			p += wcslen(p); 
+     	}
+     	if (!*lpFileName) /* empty path */
+       		*p++ = '\\';
+     	*p = '\0';
+
+     	while (*lpFileName)
+     	{
+		if (*lpFileName == '.')
+		{
+			if (IS_END_OF_NAME(lpFileName[1]))
+			{
+                 		lpFileName++;
+                 		while (*lpFileName == L'\\' ) lpFileName++;
+                 		continue;
+             		}
+             		else if ((lpFileName[1] == L'.') && IS_END_OF_NAME(lpFileName[2]))
+             		{
+                 		lpFileName += 2;
+                 		while ((*lpFileName == '\\') ) lpFileName++;
+                		while ((p > buffer + 2) && (*p != '\\')) p--;
+                 		*p = '\0';  /* Remove trailing separator */
+                 		continue;
+            		 }
+         	}
+         	if (p >= buffer + sizeof(buffer) - 1)
+         	{
+             		//DOS_ERROR( ER_PathNotFound, EC_NotFound, SA_Abort, EL_Disk);
+             		return 0;
+         	}
+         	*p++ = '\\';
+         	while (!IS_END_OF_NAME(*lpFileName) && (p < buffer + sizeof(buffer) -1))
+             		*p++ = *lpFileName++;
+        	*p = '\0';
+         	while ((*lpFileName == '\\') ) lpFileName++;
+	}
+
+	if (!buffer[2])
+     	{
+        	buffer[2] = '\\';
+        	buffer[3] = '\0';
+     	}
+ 
+     
+	wcsncpy( lpBuffer, buffer, nBufferLength);
+
+	//TRACE(dosfs, "returning %s\n", buffer );
+	return wcslen(buffer);
 }
+
+
+
+
+	
+		
+
 
 DWORD
 STDCALL
@@ -253,6 +305,49 @@ SearchPathA(
     LPSTR *lpFilePart
     )
 {
+	WCHAR PathW[MAX_PATH];
+	WCHAR FileNameW[MAX_PATH];
+	WCHAR ExtensionW[MAX_PATH];
+
+	WCHAR BufferW[MAX_PATH];
+	WCHAR *FilePartW;
+
+	ULONG i;
+	DWORD RetValue;
+
+	i = 0;
+	while ((*lpPath)!=0 && i < MAX_PATH)
+     	{
+		PathW[i] = *lpPath;
+		lpPath++;
+		i++;
+     	}
+   	PathW[i] = 0;
+  	
+	i = 0;
+	while ((*lpFileName)!=0 && i < MAX_PATH)
+     	{
+		FileNameW[i] = *lpFileName;
+		lpFileName++;
+		i++;
+     	}
+   	FileNameW[i] = 0;
+
+	i = 0;
+	while ((*lpExtension)!=0 && i < MAX_PATH)
+     	{
+		ExtensionW[i] = *lpExtension;
+		lpExtension++;
+		i++;
+     	}
+   	ExtensionW[i] = 0;
+
+	RetValue = SearchPathW(PathW,FileNameW,ExtensionW,nBufferLength,BufferW,&FilePartW);
+	for(i=0;i<nBufferLength;i++)
+		lpBuffer[i] = (char)BufferW[i];
+
+	lpFilePart = strrchr(lpBuffer,'\\')+1;
+	return RetValue;
 }
 
 DWORD 
@@ -267,12 +362,7 @@ SearchPathW(
    )
 {
 	
- //1.	The directory from which the application loaded. 
- //2.	The current directory. 
- //3.	Windows NT: The 32-bit Windows system directory. Use the GetSystemDirectory function to get the path of this directory. The name of this directory is SYSTEM32.
- //4.	Windows NT only: The 16-bit Windows system directory. There is no Win32 function that obtains the path of this directory, but it is searched. The name of this directory is SYSTEM.
- //5.	The Windows directory. Use the GetWindowsDirectory function to get the path of this directory. 
- //6.	The directories that are listed in the PATH environment variable. 
+
 	NTSTATUS errCode;
 	DWORD retCode = 0;
 	HANDLE FileHandle = NULL;
@@ -287,12 +377,11 @@ SearchPathW(
 	OBJECT_ATTRIBUTES ObjectAttributes;
 	IO_STATUS_BLOCK IoStatusBlock;
 
+	dprintf("SearchPath\n");
 
-
-
-
+	
 	if ( lpPath == NULL )  {
-
+		
 		// check the directory from which the application loaded
 
 		if ( GetCurrentDirectoryW( MAX_PATH, BufferW  ) > 0 ) {
@@ -350,40 +439,38 @@ SearchPathW(
 
 		if ( lpExtension != NULL ) {
 			if ( lpFileName[i-4] != L'.' ) {
-				memcpy(FileAndExtensionW,lpFileName,(i+1)*sizeof(WCHAR));
-				lstrcatW(FileAndExtensionW,lpExtension);
+				wcscpy(FileAndExtensionW,lpFileName);
+				wcscat(FileAndExtensionW,lpExtension);
 			}
 			else
-				memcpy(FileAndExtensionW,lpFileName,(i+1)*sizeof(WCHAR));
+				wcscpy(FileAndExtensionW,lpFileName);
 		}
 		else
-			memcpy(FileAndExtensionW,lpFileName,(i+1)*sizeof(WCHAR));
+			wcscpy(FileAndExtensionW,lpFileName);
 
 		
 		
-		if ( lpPath[0] == L'\\' ) 
-			lstrcatW(lpBuffer,lpPath);
-		else {
-			lstrcatW(lpBuffer,L"\\??\\");
-			lstrcatW(lpBuffer,lpPath);
-		}
+		
+		lstrcatW(BufferW,L"\\??\\");
+		lstrcatW(BufferW,lpPath);
+		
 	
 		//printf("%S\n",FileAndExtensionW);
 
 
-		i = lstrlenW(lpBuffer);
-		if ( lpBuffer[i-1] != L'\\' ) {
-			lpBuffer[i] = L'\\';
-			lpBuffer[i+1] = 0;
+		i = wcslen(BufferW);
+		if ( BufferW[i-1] != L'\\' ) {
+			BufferW[i] = L'\\';
+			BufferW[i+1] = 0;
 		}
 		if ( lpFilePart != NULL )
-			*lpFilePart = &lpBuffer[lstrlenW(lpBuffer)+1];
-		lstrcatW(lpBuffer,FileAndExtensionW);
+			*lpFilePart = &BufferW[wcslen(BufferW)+1];
+		wcscat(BufferW,FileAndExtensionW);
 		//printf("%S\n",lpBuffer);
 
-		PathString.Buffer = lpBuffer;
+		PathString.Buffer = BufferW;
 		PathString.Length = lstrlenW(PathString.Buffer)*sizeof(WCHAR);
-   		PathString.MaximumLength = PathString.Length;
+   		PathString.MaximumLength = PathString.Length + sizeof(WCHAR);
    
    
     	
@@ -409,10 +496,15 @@ SearchPathW(
 		if ( !NT_SUCCESS(errCode) ) {
 			return 0;
 		}
-
+		else {
+			NtClose(FileHandle);
+			wcscpy(lpBuffer,&BufferW[4]);
+			lpFilePart = wcsrchr(lpBuffer,'\\')+1;
+		}
 
 	}
 
 	return lstrlenW(lpBuffer);
 
 }
+

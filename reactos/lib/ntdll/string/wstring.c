@@ -488,7 +488,7 @@ UNIMPLEMENTED;
 
 #endif
 
-unsigned long wstrlen(PWSTR s)
+size_t wstrlen(const wchar_t *s)
 {
     return wcslen(s);
 }
