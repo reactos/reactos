@@ -889,6 +889,7 @@ NTSTATUS LdrLoadLibrary(HANDLE ProcessHandle,
                         PCHAR Name)
 {
 #if 0
+  /* FIXME: delete this function from the kernel, it has moved into ntdll */
   NTSTATUS Status;
   ANSI_STRING afilename;
   UNICODE_STRING ufilename,umodName;
@@ -946,7 +947,8 @@ NTSTATUS LdrLoadLibrary(HANDLE ProcessHandle,
 
 /*   LdrLoadImage
  * FUNCTION:
- *   Loads a module into the specified process
+ *   Builds the initial environment for a process.  Should be used
+ *   to load the initial user process.
  * ARGUMENTS:
  *   HANDLE   ProcessHandle  handle of the process to load the module into
  *   PHANDLE  ModuleHandle   handle of the loaded module
@@ -960,14 +962,23 @@ LdrLoadImage(HANDLE ProcessHandle,
              PHANDLE ModuleHandle, 
              PUNICODE_STRING Filename)
 {
+#if 0
+  /* FIXME: locate and open NTDLL to determine ImageBase and LdrStartup */
+  /* FIXME: map NTDLL into Process at ImageBase  */
+  /* FIXME: open process image to determine ImageBase and StackBase/Size */
+  /* FIXME: map process image at ImageBase  */
+  /* FIXME: create page backed section for stack  */
+  /* FIXME: initialize context to point to LdrStartup  */
+  /* FIXME: Create process and let 'er rip  */
+#endif
+  
+#if 0
   char BlockBuffer[1024];
   NTSTATUS Status;
   OBJECT_ATTRIBUTES FileObjectAttributes;
   HANDLE FileHandle;
   PMODULE Module;
   PIMAGE_DOS_HEADER PEDosHeader;
-
-  /*  FIXME: should DLLs be named sections?  */
 
   /*  Open the image file  */
   InitializeObjectAttributes(&FileObjectAttributes,
@@ -1036,6 +1047,8 @@ LdrLoadImage(HANDLE ProcessHandle,
   ZwClose(FileHandle);
 
   return Status;
+#endif
+  return STATUS_NOT_IMPLEMENTED;
 }
 
 static NTSTATUS 
