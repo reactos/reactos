@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.16 2000/01/21 23:06:26 phreak Exp $
+/* $Id: create.c,v 1.17 2000/01/21 23:17:47 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -118,8 +118,6 @@ HANDLE STDCALL CreateFileW(LPCWSTR lpFileName,
 	    lpFileName[3] == (WCHAR)'\\')
      {
 	wcscpy(PathNameW, lpFileName+4);
-    OutputDebugStringA( "Fuck off\n" );
-    DPRINT1( "Fucking String: %S\n", PathNameW );
      }
    else if (lpFileName[0] == (WCHAR)'\\')
      {
