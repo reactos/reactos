@@ -1,2 +1,4 @@
 .*.d
 *.o
+freetype.dll
+freetype.nostrip.dll
