@@ -10,8 +10,8 @@ int _mbsnicmp(const unsigned char *s1, const unsigned char *s2, size_t n)
   do {
     if (_mbbtoupper(*s1) != _mbbtoupper(*s2))
       return _mbbtoupper(*(unsigned const char *)s1) - _mbbtoupper(*(unsigned const char *)s2);
-    *s1 += _mbclen2(*s1);
-    *s2 += _mbclen2(*s2);
+    s1 += _mbclen2(*s1);
+    s2 += _mbclen2(*s2);
 
     if (*s1 == 0)
       break;
