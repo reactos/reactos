@@ -1145,7 +1145,7 @@ static void TAB_SetItemBounds (HWND hwnd)
     /* Set the leftmost position of the tab. */
     infoPtr->items[curItem].rect.left = curItemLeftPos;
 
-    if (lStyle & TCS_FIXEDWIDTH)
+    if ((lStyle & TCS_FIXEDWIDTH) || !infoPtr->items[curItem].pszText)
     {
       infoPtr->items[curItem].rect.right = infoPtr->items[curItem].rect.left +
         max(infoPtr->tabWidth, icon_width);
@@ -1682,8 +1682,11 @@ TAB_DrawItemInterior
     rcText.left = rcText.top = rcText.right = rcText.bottom = 0;
 
     /* get the rectangle that the text fits in */
-    DrawTextW(hdc, infoPtr->items[iItem].pszText, -1,
-              &rcText, DT_CALCRECT);
+    if (infoPtr->items[iItem].pszText)
+    {
+      DrawTextW(hdc, infoPtr->items[iItem].pszText, -1,
+                &rcText, DT_CALCRECT);
+    }
     /*
      * If not owner draw, then do the drawing ourselves.
      *
@@ -1824,14 +1827,17 @@ TAB_DrawItemInterior
       hFont = CreateFontIndirectA(&logfont);
       SelectObject(hdc, hFont);
 
-      ExtTextOutW(hdc,
-      (lStyle & TCS_BOTTOM) ? drawRect->right : drawRect->left,
-      (!(lStyle & TCS_BOTTOM)) ? drawRect->bottom : drawRect->top,
-      ETO_CLIPPED,
-      drawRect,
-      infoPtr->items[iItem].pszText,
-      lstrlenW(infoPtr->items[iItem].pszText),
-      0);
+      if (infoPtr->items[iItem].pszText)
+      {
+        ExtTextOutW(hdc,
+        (lStyle & TCS_BOTTOM) ? drawRect->right : drawRect->left,
+        (!(lStyle & TCS_BOTTOM)) ? drawRect->bottom : drawRect->top,
+        ETO_CLIPPED,
+        drawRect,
+        infoPtr->items[iItem].pszText,
+        lstrlenW(infoPtr->items[iItem].pszText),
+        0);
+      }
 
       DeleteObject(hFont);
     }
@@ -1841,14 +1847,17 @@ TAB_DrawItemInterior
 	  debugstr_w(infoPtr->items[iItem].pszText), center_offset_h, center_offset_v,
 	  drawRect->left, drawRect->top, drawRect->right, drawRect->bottom,
 	  (rcText.right-rcText.left));
-      DrawTextW
-      (
-        hdc,
-        infoPtr->items[iItem].pszText,
-        lstrlenW(infoPtr->items[iItem].pszText),
-        drawRect,
-        DT_LEFT | DT_SINGLELINE
+      if (infoPtr->items[iItem].pszText)
+      {
+        DrawTextW
+        (
+          hdc,
+          infoPtr->items[iItem].pszText,
+          lstrlenW(infoPtr->items[iItem].pszText),
+          drawRect,
+          DT_LEFT | DT_SINGLELINE
         );
+      }
     }
 
     *drawRect = rcTemp; /* restore drawRect */

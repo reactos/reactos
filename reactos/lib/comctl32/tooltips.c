@@ -130,6 +130,12 @@ typedef struct
 
 #define TOOLTIPS_GetInfoPtr(hWindow) ((TOOLTIPS_INFO *)GetWindowLongA (hWindow, 0))
 
+/* offsets from window edge to start of text */
+#define NORMAL_TEXT_MARGIN 2
+#define BALLOON_TEXT_MARGIN (NORMAL_TEXT_MARGIN+10)
+/* value used for CreateRoundRectRgn that specifies how much
+ * each corner is curved */
+#define BALLOON_ROUNDEDNESS 20
 
 LRESULT CALLBACK
 TOOLTIPS_SubclassProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uId, DWORD_PTR dwRef);
@@ -144,6 +150,8 @@ TOOLTIPS_Refresh (HWND hwnd, HDC hdc)
     HFONT hOldFont;
     HBRUSH hBrush;
     UINT uFlags = DT_EXTERNALLEADING;
+    HRGN hRgn = NULL;
+    DWORD dwStyle = GetWindowLongW(hwnd, GWL_STYLE);
 
     if (infoPtr->nMaxTipWidth > -1)
 	uFlags |= DT_WORDBREAK;
@@ -151,25 +159,63 @@ TOOLTIPS_Refresh (HWND hwnd, HDC hdc)
 	uFlags |= DT_NOPREFIX;
     GetClientRect (hwnd, &rc);
 
-    /* fill the background */
-    hBrush = CreateSolidBrush (infoPtr->clrBk);
-    FillRect (hdc, &rc, hBrush);
-    DeleteObject (hBrush);
+    hBrush = CreateSolidBrush(infoPtr->clrBk);
 
-    /* calculate text rectangle */
-    rc.left   += (2 + infoPtr->rcMargin.left);
-    rc.top    += (2 + infoPtr->rcMargin.top);
-    rc.right  -= (2 + infoPtr->rcMargin.right);
-    rc.bottom -= (2 + infoPtr->rcMargin.bottom);
+    if (dwStyle & TTS_BALLOON)
+    {
+        /* create a region to store result into */
+        hRgn = CreateRectRgn(0, 0, 0, 0);
 
-    /* draw text */
+        GetWindowRgn(hwnd, hRgn);
+
+        /* fill the background */
+        FillRgn(hdc, hRgn, hBrush);
+        DeleteObject(hBrush);
+        hBrush = NULL;
+
+        /* calculate text rectangle */
+        rc.left   += (BALLOON_TEXT_MARGIN + infoPtr->rcMargin.left);
+        rc.top    += (BALLOON_TEXT_MARGIN + infoPtr->rcMargin.top);
+        rc.right  -= (BALLOON_TEXT_MARGIN + infoPtr->rcMargin.right);
+        rc.bottom -= (BALLOON_TEXT_MARGIN + infoPtr->rcMargin.bottom);
+    }
+    else
+    {
+        /* fill the background */
+        FillRect(hdc, &rc, hBrush);
+        DeleteObject(hBrush);
+        hBrush = NULL;
+
+        /* calculate text rectangle */
+        rc.left   += (NORMAL_TEXT_MARGIN + infoPtr->rcMargin.left);
+        rc.top    += (NORMAL_TEXT_MARGIN + infoPtr->rcMargin.top);
+        rc.right  -= (NORMAL_TEXT_MARGIN + infoPtr->rcMargin.right);
+        rc.bottom -= (NORMAL_TEXT_MARGIN + infoPtr->rcMargin.bottom);
+    }
+
+    /* already drawn the background; don't need to draw it again
+     * when drawing text */
     oldBkMode = SetBkMode (hdc, TRANSPARENT);
     SetTextColor (hdc, infoPtr->clrText);
     hOldFont = SelectObject (hdc, infoPtr->hFont);
+    /* draw text */
     DrawTextW (hdc, infoPtr->szTipText, -1, &rc, uFlags);
+    /* be polite and reset the things we changed in the dc */
     SelectObject (hdc, hOldFont);
-    if (oldBkMode != TRANSPARENT)
-	SetBkMode (hdc, oldBkMode);
+    SetBkMode (hdc, oldBkMode);
+
+    if (dwStyle & TTS_BALLOON)
+    {
+        /* frame region because default window proc doesn't do it */
+        INT width = GetSystemMetrics(SM_CXDLGFRAME) - GetSystemMetrics(SM_CXEDGE);
+        INT height = GetSystemMetrics(SM_CYDLGFRAME) - GetSystemMetrics(SM_CYEDGE);
+
+        hBrush = GetSysColorBrush(COLOR_WINDOWFRAME);
+        FrameRgn(hdc, hRgn, hBrush, width, height);
+    }
+
+    if (hRgn)
+        DeleteObject(hRgn);
 }
 
 static void TOOLTIPS_GetDispInfoA(HWND hwnd, TOOLTIPS_INFO *infoPtr, TTTOOL_INFO *toolPtr)
@@ -322,10 +368,20 @@ TOOLTIPS_CalcTipSize (HWND hwnd, TOOLTIPS_INFO *infoPtr, LPSIZE lpSize)
     SelectObject (hdc, hOldFont);
     ReleaseDC (hwnd, hdc);
 
-    lpSize->cx = rc.right - rc.left + 4 +
-		 infoPtr->rcMargin.left + infoPtr->rcMargin.right;
-    lpSize->cy = rc.bottom - rc.top + 4 +
-		 infoPtr->rcMargin.bottom + infoPtr->rcMargin.top;
+    if (GetWindowLongW(hwnd, GWL_STYLE) & TTS_BALLOON)
+    {
+        lpSize->cx = rc.right - rc.left + 2*BALLOON_TEXT_MARGIN +
+                       infoPtr->rcMargin.left + infoPtr->rcMargin.right;
+        lpSize->cy = rc.bottom - rc.top + 2*BALLOON_TEXT_MARGIN +
+                       infoPtr->rcMargin.bottom + infoPtr->rcMargin.top;
+    }
+    else
+    {
+        lpSize->cx = rc.right - rc.left + 2*NORMAL_TEXT_MARGIN +
+                       infoPtr->rcMargin.left + infoPtr->rcMargin.right;
+        lpSize->cy = rc.bottom - rc.top + 2*NORMAL_TEXT_MARGIN +
+                       infoPtr->rcMargin.bottom + infoPtr->rcMargin.top;
+    }
 }
 
 
@@ -411,6 +467,18 @@ TOOLTIPS_Show (HWND hwnd, TOOLTIPS_INFO *infoPtr)
 
     AdjustWindowRectEx (&rect, GetWindowLongA (hwnd, GWL_STYLE),
 			FALSE, GetWindowLongA (hwnd, GWL_EXSTYLE));
+
+    if (GetWindowLongW(hwnd, GWL_STYLE) & TTS_BALLOON)
+    {
+        HRGN hRgn;
+
+        /* FIXME: need to add pointy bit using CreatePolyRgn & CombinRgn */
+        hRgn = CreateRoundRectRgn(0, 0, rect.right - rect.left, rect.bottom - rect.top, BALLOON_ROUNDEDNESS, BALLOON_ROUNDEDNESS);
+
+        SetWindowRgn(hwnd, hRgn, FALSE);
+        /* we don't free the region handle as the system deletes it when 
+         * it is no longer needed */
+    }
 
     SetWindowPos (hwnd, HWND_TOP, rect.left, rect.top,
 		    rect.right - rect.left, rect.bottom - rect.top,
@@ -530,6 +598,18 @@ TOOLTIPS_TrackShow (HWND hwnd, TOOLTIPS_INFO *infoPtr)
 
     AdjustWindowRectEx (&rect, GetWindowLongA (hwnd, GWL_STYLE),
 			FALSE, GetWindowLongA (hwnd, GWL_EXSTYLE));
+
+    if (GetWindowLongW(hwnd, GWL_STYLE) & TTS_BALLOON)
+    {
+        HRGN hRgn;
+
+        /* FIXME: need to add pointy bit using CreatePolyRgn & CombinRgn */
+        hRgn = CreateRoundRectRgn(0, 0, rect.right - rect.left, rect.bottom - rect.top, BALLOON_ROUNDEDNESS, BALLOON_ROUNDEDNESS);
+
+        SetWindowRgn(hwnd, hRgn, FALSE);
+        /* we don't free the region handle as the system deletes it when 
+         * it is no longer needed */
+    }
 
     SetWindowPos (hwnd, HWND_TOP, rect.left, rect.top,
 		    rect.right - rect.left, rect.bottom - rect.top,
@@ -2025,22 +2105,6 @@ TOOLTIPS_Destroy (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 
 static LRESULT
-TOOLTIPS_EraseBackground (HWND hwnd, WPARAM wParam, LPARAM lParam)
-{
-    TOOLTIPS_INFO *infoPtr = TOOLTIPS_GetInfoPtr (hwnd);
-    RECT rect;
-    HBRUSH hBrush;
-
-    hBrush = CreateSolidBrush (infoPtr->clrBk);
-    GetClientRect (hwnd, &rect);
-    FillRect ((HDC)wParam, &rect, hBrush);
-    DeleteObject (hBrush);
-
-    return FALSE;
-}
-
-
-static LRESULT
 TOOLTIPS_GetFont (HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
     TOOLTIPS_INFO *infoPtr = TOOLTIPS_GetInfoPtr (hwnd);
@@ -2068,6 +2132,11 @@ TOOLTIPS_NCCreate (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
     dwStyle &= 0x0000FFFF;
     dwStyle |= (WS_POPUP | WS_BORDER | WS_CLIPSIBLINGS);
+
+    /* WS_BORDER only draws a border round the window rect, not the
+     * window region, therefore it is useless to us in balloon mode */
+    if (dwStyle & TTS_BALLOON) dwStyle &= ~WS_BORDER;
+
     SetWindowLongA (hwnd, GWL_STYLE, dwStyle);
 
     dwExStyle |= WS_EX_TOOLWINDOW;
@@ -2405,7 +2474,8 @@ TOOLTIPS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    return TOOLTIPS_Destroy (hwnd, wParam, lParam);
 
 	case WM_ERASEBKGND:
-	    return TOOLTIPS_EraseBackground (hwnd, wParam, lParam);
+	    /* we draw the background in WM_PAINT */
+	    return 0;
 
 	case WM_GETFONT:
 	    return TOOLTIPS_GetFont (hwnd, wParam, lParam);

@@ -4,7 +4,7 @@ RCS file: /home/wine/wine/dlls/comctl32/comctl32.spec,v
 retrieving revision 1.44
 diff -u -r1.44 comctl32.spec
 --- comctl32.spec	17 May 2004 20:51:27 -0000	1.44
-+++ comctl32.spec	16 Jun 2004 06:51:02 -0000
++++ comctl32.spec	8 Aug 2004 13:10:59 -0000
 @@ -106,13 +106,13 @@
  412 stdcall RemoveWindowSubclass(long ptr long)
  413 stdcall DefSubclassProc(long long long long)
@@ -26,34 +26,13 @@ diff -u -r1.44 comctl32.spec
  
  # Functions imported by name
  
-Index: imagelist.c
-===================================================================
-RCS file: /home/wine/wine/dlls/comctl32/imagelist.c,v
-retrieving revision 1.85
-diff -u -r1.85 imagelist.c
---- imagelist.c	27 Feb 2004 04:40:08 -0000	1.85
-+++ imagelist.c	16 Jun 2004 06:51:02 -0000
-@@ -1146,11 +1146,13 @@
-     	PatBlt(hBlendMaskDC, 0, 0, cx, cy, PATCOPY);
-     	SelectObject(hBlendMaskDC, hOldBrush);
- 
-+#if 0
-     	/* Modify the blend mask if an Image Mask exist */
-     	if(himl->hbmMask) {
- 	    BitBlt(hBlendMaskDC, 0, 0, cx, cy, hMaskListDC, lx, ly, 0x220326); /* NOTSRCAND */
- 	    BitBlt(hBlendMaskDC, 0, 0, cx, cy, hBlendMaskDC, 0, 0, NOTSRCCOPY);
- 	}
-+#endif
- 	
- 	/* now apply blend to the current image given the BlendMask */
-         if (clrBlend == CLR_DEFAULT) clrBlend = GetSysColor (COLOR_HIGHLIGHT);
 Index: listview.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/comctl32/listview.c,v
-retrieving revision 1.389
-diff -u -r1.389 listview.c
---- listview.c	4 Jun 2004 17:58:29 -0000	1.389
-+++ listview.c	16 Jun 2004 06:51:06 -0000
+retrieving revision 1.390
+diff -u -r1.390 listview.c
+--- listview.c	6 Jul 2004 21:27:34 -0000	1.390
++++ listview.c	8 Aug 2004 13:11:03 -0000
 @@ -147,6 +147,7 @@
  #include <assert.h>
  #include <ctype.h>
@@ -62,13 +41,33 @@ diff -u -r1.389 listview.c
  #include <stdlib.h>
  #include <stdarg.h>
  #include <stdio.h>
+@@ -2023,7 +2024,8 @@
+ 		         infoPtr->iconSize.cy + ICON_BOTTOM_PADDING;
+ 	    Label.right = Label.left + labelSize.cx;
+ 	    Label.bottom = Label.top + infoPtr->nItemHeight;
+-	    if (!oversizedBox && labelSize.cy > infoPtr->ntmHeight)
++	    if (!oversizedBox && labelSize.cy > infoPtr->ntmHeight &&
++	        infoPtr->ntmHeight)
+ 	    {
+ 		labelSize.cy = min(Box.bottom - Label.top, labelSize.cy);
+ 		labelSize.cy /= infoPtr->ntmHeight;
+@@ -9517,7 +9519,8 @@
+         hOldFont = SelectObject(hdc, infoPtr->hFont);
+ 
+     /*Get String Length in pixels */
+-    GetTextExtentPoint32W(hdc, text, lstrlenW(text), &sz);
++    if(!GetTextExtentPoint32W(hdc, text, lstrlenW(text), &sz))
++        sz.cx = 0;
+ 
+     /*Add Extra spacing for the next character */
+     GetTextMetricsW(hdc, &textMetric);
 Index: string.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/comctl32/string.c,v
 retrieving revision 1.4
 diff -u -r1.4 string.c
 --- string.c	17 May 2004 20:51:27 -0000	1.4
-+++ string.c	16 Jun 2004 06:51:06 -0000
++++ string.c	8 Aug 2004 13:11:03 -0000
 @@ -254,7 +254,7 @@
  {
    TRACE("(%s,%s)\n", debugstr_w(lpszStr), debugstr_w(lpszSearch));

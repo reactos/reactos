@@ -2491,6 +2491,133 @@ static void PROPSHEET_SetWizButtons(HWND hwndDlg, DWORD dwFlags)
 }
 
 /******************************************************************************
+ *            PROPSHEET_InsertPage
+ */
+static BOOL PROPSHEET_InsertPage(HWND hwndDlg, HPROPSHEETPAGE hpageInsertAfter, HPROPSHEETPAGE hpage)
+{
+    if (!HIWORD(hpageInsertAfter))
+        FIXME("(%p, %d, %p): stub\n", hwndDlg, LOWORD(hpageInsertAfter), hpage);
+    else
+        FIXME("(%p, %p, %p): stub\n", hwndDlg, hpageInsertAfter, hpage);
+    return FALSE;
+}
+
+/******************************************************************************
+ *            PROPSHEET_SetHeaderTitleW
+ */
+static void PROPSHEET_SetHeaderTitleW(HWND hwndDlg, int iPageIndex, LPCWSTR pszHeaderTitle)
+{
+    FIXME("(%p, %d, %s): stub\n", hwndDlg, iPageIndex, debugstr_w(pszHeaderTitle));
+}
+
+/******************************************************************************
+ *            PROPSHEET_SetHeaderTitleA
+ */
+static void PROPSHEET_SetHeaderTitleA(HWND hwndDlg, int iPageIndex, LPCSTR pszHeaderTitle)
+{
+    FIXME("(%p, %d, %s): stub\n", hwndDlg, iPageIndex, debugstr_a(pszHeaderTitle));
+}
+
+/******************************************************************************
+ *            PROPSHEET_SetHeaderSubTitleW
+ */
+static void PROPSHEET_SetHeaderSubTitleW(HWND hwndDlg, int iPageIndex, LPCWSTR pszHeaderSubTitle)
+{
+    FIXME("(%p, %d, %s): stub\n", hwndDlg, iPageIndex, debugstr_w(pszHeaderSubTitle));
+}
+
+/******************************************************************************
+ *            PROPSHEET_SetHeaderSubTitleA
+ */
+static void PROPSHEET_SetHeaderSubTitleA(HWND hwndDlg, int iPageIndex, LPCSTR pszHeaderSubTitle)
+{
+    FIXME("(%p, %d, %s): stub\n", hwndDlg, iPageIndex, debugstr_a(pszHeaderSubTitle));
+}
+
+/******************************************************************************
+ *            PROPSHEET_HwndToIndex
+ */
+static LRESULT PROPSHEET_HwndToIndex(HWND hwndDlg, HWND hPageDlg)
+{
+    int index;
+    PropSheetInfo * psInfo = (PropSheetInfo*) GetPropW(hwndDlg,
+                                                       PropSheetInfoStr);
+
+    TRACE("(%p, %p)\n", hwndDlg, hPageDlg);
+
+    for (index = 0; index < psInfo->nPages; index++)
+        if (psInfo->proppage[index].hwndPage == hPageDlg)
+            return index;
+
+    WARN("%p not found\n", hPageDlg);
+
+    return -1;
+}
+
+/******************************************************************************
+ *            PROPSHEET_IndexToHwnd
+ */
+static LRESULT PROPSHEET_IndexToHwnd(HWND hwndDlg, int iPageIndex)
+{
+    FIXME("(%p, %d): stub\n", hwndDlg, iPageIndex);
+    return 0;
+}
+
+/******************************************************************************
+ *            PROPSHEET_PageToIndex
+ */
+static LRESULT PROPSHEET_PageToIndex(HWND hwndDlg, HPROPSHEETPAGE hPage)
+{
+    FIXME("(%p, %p): stub\n", hwndDlg, hPage);
+    return -1;
+}
+
+/******************************************************************************
+ *            PROPSHEET_IndexToPage
+ */
+static LRESULT PROPSHEET_IndexToPage(HWND hwndDlg, int iPageIndex)
+{
+    FIXME("(%p, %d): stub\n", hwndDlg, iPageIndex);
+    return 0;
+}
+
+/******************************************************************************
+ *            PROPSHEET_IdToIndex
+ */
+static LRESULT PROPSHEET_IdToIndex(HWND hwndDlg, int iPageId)
+{
+    FIXME("(%p, %d): stub\n", hwndDlg, iPageId);
+    return -1;
+}
+
+/******************************************************************************
+ *            PROPSHEET_IndexToId
+ */
+static LRESULT PROPSHEET_IndexToId(HWND hwndDlg, int iPageIndex)
+{
+    FIXME("(%p, %d): stub\n", hwndDlg, iPageIndex);
+    return 0;
+}
+
+/******************************************************************************
+ *            PROPSHEET_GetResult
+ */
+static LRESULT PROPSHEET_GetResult(HWND hwndDlg)
+{
+    FIXME("(%p): stub\n", hwndDlg);
+    return -1;
+}
+
+/******************************************************************************
+ *            PROPSHEET_RecalcPageSizes
+ */
+static BOOL PROPSHEET_RecalcPageSizes(HWND hwndDlg)
+{
+    FIXME("(%p): stub\n", hwndDlg);
+    return FALSE;
+}
+
+/******************************************************************************
  *            PROPSHEET_GetPageIndex
  *
  * Given a HPROPSHEETPAGE, returns the index of the corresponding page from
@@ -3347,6 +3474,85 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     case PSM_SETFINISHTEXTW:
         PROPSHEET_SetFinishTextW(hwnd, (LPCWSTR) lParam);
         return FALSE;
+
+    case PSM_INSERTPAGE:
+    {
+        BOOL msgResult = PROPSHEET_InsertPage(hwnd, (HPROPSHEETPAGE)wParam, (HPROPSHEETPAGE)lParam);
+        SetWindowLongW(hwnd, DWL_MSGRESULT, msgResult);
+        return TRUE;
+    }
+
+    case PSM_SETHEADERTITLEW:
+        PROPSHEET_SetHeaderTitleW(hwnd, (int)wParam, (LPCWSTR)lParam);
+        return TRUE;
+
+    case PSM_SETHEADERTITLEA:
+        PROPSHEET_SetHeaderTitleA(hwnd, (int)wParam, (LPCSTR)lParam);
+        return TRUE;
+
+    case PSM_SETHEADERSUBTITLEW:
+        PROPSHEET_SetHeaderSubTitleW(hwnd, (int)wParam, (LPCWSTR)lParam);
+        return TRUE;
+
+    case PSM_SETHEADERSUBTITLEA:
+        PROPSHEET_SetHeaderSubTitleA(hwnd, (int)wParam, (LPCSTR)lParam);
+        return TRUE;
+
+    case PSM_HWNDTOINDEX:
+    {
+        LRESULT msgResult = PROPSHEET_HwndToIndex(hwnd, (HWND)wParam);
+        SetWindowLongW(hwnd, DWL_MSGRESULT, msgResult);
+        return TRUE;
+    }
+
+    case PSM_INDEXTOHWND:
+    {
+        LRESULT msgResult = PROPSHEET_IndexToHwnd(hwnd, (int)wParam);
+        SetWindowLongW(hwnd, DWL_MSGRESULT, msgResult);
+        return TRUE;
+    }
+
+    case PSM_PAGETOINDEX:
+    {
+        LRESULT msgResult = PROPSHEET_PageToIndex(hwnd, (HPROPSHEETPAGE)wParam);
+        SetWindowLongW(hwnd, DWL_MSGRESULT, msgResult);
+        return TRUE;
+    }
+
+    case PSM_INDEXTOPAGE:
+    {
+        LRESULT msgResult = PROPSHEET_IndexToPage(hwnd, (int)wParam);
+        SetWindowLongW(hwnd, DWL_MSGRESULT, msgResult);
+        return TRUE;
+    }
+
+    case PSM_IDTOINDEX:
+    {
+        LRESULT msgResult = PROPSHEET_IdToIndex(hwnd, (int)lParam);
+        SetWindowLongW(hwnd, DWL_MSGRESULT, msgResult);
+        return TRUE;
+    }
+
+    case PSM_INDEXTOID:
+    {
+        LRESULT msgResult = PROPSHEET_IndexToId(hwnd, (int)wParam);
+        SetWindowLongW(hwnd, DWL_MSGRESULT, msgResult);
+        return TRUE;
+    }
+
+    case PSM_GETRESULT:
+    {
+        LRESULT msgResult = PROPSHEET_GetResult(hwnd);
+        SetWindowLongW(hwnd, DWL_MSGRESULT, msgResult);
+        return TRUE;
+    }
+
+    case PSM_RECALCPAGESIZES:
+    {
+        LRESULT msgResult = PROPSHEET_RecalcPageSizes(hwnd);
+        SetWindowLongW(hwnd, DWL_MSGRESULT, msgResult);
+        return TRUE;
+    }
 
     default:
       return FALSE;

@@ -407,7 +407,7 @@ TOOLBAR_GetImageListForDrawing (TOOLBAR_INFO *infoPtr, TBUTTON_INFO *btnPtr, IMA
 
     if (!TOOLBAR_IsValidBitmapIndex(infoPtr,btnPtr->iBitmap)) {
 	if (btnPtr->iBitmap == I_IMAGENONE) return NULL;
-	ERR("index %d,%d is not valid, max %d\n",
+	ERR("bitmap for ID %d, index %d is not valid, number of bitmaps in imagelist: %d\n",
 	    HIWORD(btnPtr->iBitmap), LOWORD(btnPtr->iBitmap), infoPtr->nNumBitmaps);
 	return NULL;
     }
@@ -634,61 +634,53 @@ TOOLBAR_DrawPattern (LPRECT lpRect, NMTBCUSTOMDRAW *tbcd)
     INT cy = lpRect->bottom - lpRect->top;
     clrTextOld = SetTextColor(hdc, tbcd->clrBtnHighlight);
     clrBkOld = SetBkColor(hdc, tbcd->clrBtnFace);
-    PatBlt (hdc, lpRect->left, lpRect->top, cx, cy, PATCOPY);
+    PatBlt (hdc, lpRect->left + 2, lpRect->top + 2, cx - 4, cy - 4, PATCOPY);
     SetBkColor(hdc, clrBkOld);
     SetTextColor(hdc, clrTextOld);
     SelectObject (hdc, hbr);
 }
 
 
-static void TOOLBAR_DrawMasked(TOOLBAR_INFO *infoPtr, TBUTTON_INFO *btnPtr,
-                               HDC hdc, INT x, INT y)
+static void TOOLBAR_DrawMasked(HIMAGELIST himl, int index, HDC hdc, INT x, INT y, UINT draw_flags)
 {
-    int index;
-    HIMAGELIST himl = 
-        TOOLBAR_GetImageListForDrawing(infoPtr, btnPtr, IMAGE_LIST_DEFAULT, &index);
+    INT cx, cy;
+    HBITMAP hbmMask, hbmImage;
+    HDC hdcMask, hdcImage;
 
-    if (himl)
-    {
-        INT cx, cy;
-        HBITMAP hbmMask, hbmImage;
-        HDC hdcMask, hdcImage;
+    ImageList_GetIconSize(himl, &cx, &cy);
 
-        ImageList_GetIconSize(himl, &cx, &cy);
+    /* Create src image */
+    hdcImage = CreateCompatibleDC(hdc);
+    hbmImage = CreateBitmap(cx, cy, GetDeviceCaps(hdc,PLANES),
+                            GetDeviceCaps(hdc,BITSPIXEL), NULL);
+    SelectObject(hdcImage, hbmImage);
+    ImageList_DrawEx(himl, index, hdcImage, 0, 0, cx, cy,
+                     RGB(0xff, 0xff, 0xff), RGB(0,0,0), draw_flags);
 
-        /* Create src image */
-        hdcImage = CreateCompatibleDC(hdc);
-        hbmImage = CreateBitmap(cx, cy, GetDeviceCaps(hdc,PLANES),
-                                GetDeviceCaps(hdc,BITSPIXEL), NULL);
-        SelectObject(hdcImage, hbmImage);
-        ImageList_DrawEx(himl, index, hdcImage, 0, 0, cx, cy,
-                         RGB(0xff, 0xff, 0xff), RGB(0,0,0), ILD_NORMAL);
+    /* Create Mask */
+    hdcMask = CreateCompatibleDC(0);
+    hbmMask = CreateBitmap(cx, cy, 1, 1, NULL);
+    SelectObject(hdcMask, hbmMask);
 
-        /* Create Mask */
-        hdcMask = CreateCompatibleDC(0);
-        hbmMask = CreateBitmap(cx, cy, 1, 1, NULL);
-        SelectObject(hdcMask, hbmMask);
+    /* Remove the background and all white pixels */
+    SetBkColor(hdcImage, ImageList_GetBkColor(himl));
+    BitBlt(hdcMask, 0, 0, cx, cy, hdcImage, 0, 0, SRCCOPY);
+    SetBkColor(hdcImage, RGB(0xff, 0xff, 0xff));
+    BitBlt(hdcMask, 0, 0, cx, cy, hdcImage, 0, 0, NOTSRCERASE);
 
-        /* Remove the background and all white pixels */
-        SetBkColor(hdcImage, ImageList_GetBkColor(himl));
-        BitBlt(hdcMask, 0, 0, cx, cy, hdcImage, 0, 0, SRCCOPY);
-        SetBkColor(hdcImage, RGB(0xff, 0xff, 0xff));
-        BitBlt(hdcMask, 0, 0, cx, cy, hdcImage, 0, 0, NOTSRCERASE);
+    /* draw the new mask 'etched' to hdc */
+    SetBkColor(hdc, RGB(255, 255, 255));
+    SelectObject(hdc, GetSysColorBrush(COLOR_3DHILIGHT));
+    /* E20746 op code is (Dst ^ (Src & (Pat ^ Dst))) */
+    BitBlt(hdc, x + 1, y + 1, cx, cy, hdcMask, 0, 0, 0xE20746);
+    SelectObject(hdc, GetSysColorBrush(COLOR_3DSHADOW));
+    BitBlt(hdc, x, y, cx, cy, hdcMask, 0, 0, 0xE20746);
 
-        /* draw the new mask 'etched' to hdc */
-        SetBkColor(hdc, RGB(255, 255, 255));
-        SelectObject(hdc, GetSysColorBrush(COLOR_3DHILIGHT));
-        /* E20746 op code is (Dst ^ (Src & (Pat ^ Dst))) */
-        BitBlt(hdc, x + 1, y + 1, cx, cy, hdcMask, 0, 0, 0xE20746);
-        SelectObject(hdc, GetSysColorBrush(COLOR_3DSHADOW));
-        BitBlt(hdc, x, y, cx, cy, hdcMask, 0, 0, 0xE20746);
-
-        /* Cleanup */
-        DeleteObject(hbmImage);
-        DeleteDC(hdcImage);
-        DeleteObject (hbmMask);
-        DeleteDC(hdcMask);
-    }
+    /* Cleanup */
+    DeleteObject(hbmImage);
+    DeleteDC(hdcImage);
+    DeleteObject (hbmMask);
+    DeleteDC(hdcMask);
 }
 
 
@@ -721,7 +713,10 @@ TOOLBAR_DrawImage(TOOLBAR_INFO *infoPtr, TBUTTON_INFO *btnPtr, INT left, INT top
     {
         himl = TOOLBAR_GetImageListForDrawing(infoPtr, btnPtr, IMAGE_LIST_DISABLED, &index);
         if (!himl)
-           draw_masked = TRUE;
+        {
+            himl = TOOLBAR_GetImageListForDrawing(infoPtr, btnPtr, IMAGE_LIST_DEFAULT, &index);
+            draw_masked = TRUE;
+        }
     }
     else if ((tbcd->nmcd.uItemState & CDIS_HOT) && (infoPtr->dwStyle & TBSTYLE_FLAT))
     {
@@ -733,6 +728,9 @@ TOOLBAR_DrawImage(TOOLBAR_INFO *infoPtr, TBUTTON_INFO *btnPtr, INT left, INT top
 	}
     else
         himl = TOOLBAR_GetImageListForDrawing(infoPtr, btnPtr, IMAGE_LIST_DEFAULT, &index);
+
+    if (!himl)
+        return;
 
     if (!(infoPtr->dwItemCDFlag & TBCDRF_NOOFFSET) && 
         (tbcd->nmcd.uItemState & (CDIS_SELECTED | CDIS_CHECKED)))
@@ -746,8 +744,8 @@ TOOLBAR_DrawImage(TOOLBAR_INFO *infoPtr, TBUTTON_INFO *btnPtr, INT left, INT top
       index, himl, left, top, offset);
 
     if (draw_masked)
-        TOOLBAR_DrawMasked (infoPtr, btnPtr, tbcd->nmcd.hdc, left + offset, top + offset);
-    else if (himl)
+        TOOLBAR_DrawMasked (himl, index, tbcd->nmcd.hdc, left + offset, top + offset, draw_flags);
+    else
         ImageList_Draw (himl, index, tbcd->nmcd.hdc, left + offset, top + offset, draw_flags);
 }
 
@@ -5312,6 +5310,8 @@ TOOLBAR_LButtonDown (HWND hwnd, WPARAM wParam, LPARAM lParam)
     INT   nHit;
     NMTOOLBARA nmtb;
     BOOL bDragKeyPressed;
+
+    TRACE("\n");
 
     if (infoPtr->dwStyle & TBSTYLE_ALTDRAG)
         bDragKeyPressed = (GetKeyState(VK_MENU) < 0);

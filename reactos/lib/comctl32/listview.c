@@ -8954,6 +8954,8 @@ LISTVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
   /* case LVM_GETTILEVIEWINFO: */
 
   case LVM_GETTOOLTIPS:
+    if( !infoPtr->hwndToolTip )
+        infoPtr->hwndToolTip = COMCTL32_CreateToolTip( hwnd );
     return (LRESULT)infoPtr->hwndToolTip;
 
   case LVM_GETTOPINDEX:
