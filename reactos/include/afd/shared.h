@@ -57,6 +57,7 @@ typedef struct _AFD_RECV_REQ {
     ULONG BufferCount;
     ULONG AfdFlags;
     ULONG TdiFlags;
+    TDI_CONNECTION_INFORMATION Address;
 } AFD_RECV_REQ, *PAFD_RECV_REQ, AFD_SEND_REQ, *PAFD_SEND_REQ;
 
 typedef struct _AFD_POLL_HANDLE {
