@@ -1,4 +1,4 @@
-/* $Id: wait.c,v 1.31 2004/11/14 18:47:10 hbirr Exp $
+/* $Id: wait.c,v 1.32 2004/12/04 19:31:26 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -220,22 +220,13 @@ WaitForMultipleObjectsEx(DWORD nCount,
       RtlFreeHeap(RtlGetProcessHeap(), 0, HandleBuffer);
     }
 
-  if (Status == STATUS_TIMEOUT)
+  if (HIWORD(Status))
     {
-      return WAIT_TIMEOUT;
-    }
-  else if (((Status >= WAIT_OBJECT_0) &&
-	    (Status <= WAIT_OBJECT_0 + nCount - 1)) ||
-	   ((Status >= WAIT_ABANDONED_0) &&
-	    (Status <= WAIT_ABANDONED_0 + nCount - 1)))
-    {
-      return Status;
+      SetLastErrorByStatus (Status);
+      return WAIT_FAILED;
     }
 
-  DPRINT("Status %lx\n", Status);
-  SetLastErrorByStatus (Status);
-
-  return WAIT_FAILED;
+  return Status;
 }
 
 
