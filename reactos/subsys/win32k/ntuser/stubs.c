@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.10 2003/05/18 17:16:17 ea Exp $
+/* $Id: stubs.c,v 1.11 2003/05/26 18:52:37 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -177,18 +177,6 @@ STDCALL
 NtUserCallOneParam(
   DWORD Unknown0,
   DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserCallTwoParam(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
 {
   UNIMPLEMENTED
 
@@ -1023,18 +1011,6 @@ NtUserGetTitleBarInfo(
 DWORD
 STDCALL
 NtUserGetUpdateRect(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserGetUpdateRgn(
   DWORD Unknown0,
   DWORD Unknown1,
   DWORD Unknown2)

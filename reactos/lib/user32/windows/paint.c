@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: paint.c,v 1.13 2003/05/12 19:30:00 jfilby Exp $
+/* $Id: paint.c,v 1.14 2003/05/26 18:52:37 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -78,8 +78,7 @@ GetUpdateRgn(
   HRGN hRgn,
   WINBOOL bErase)
 {
-  UNIMPLEMENTED;
-  return 0;
+  return NtUserGetUpdateRgn(hWnd, hRgn, bErase);
 }
 
 WINBOOL
@@ -170,8 +169,9 @@ ValidateRgn(
   HWND hWnd,
   HRGN hRgn)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return (WINBOOL) NtUserCallTwoParam((DWORD) hWnd,
+                                      (DWORD) hRgn,
+                                      TWOPARAM_ROUTINE_VALIDATERGN);
 }
 
 int

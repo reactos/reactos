@@ -22,4 +22,6 @@ BOOL STDCALL
 PaintHaveToDelayNCPaint(PWINDOW_OBJECT Window, ULONG Flags);
 HRGN STDCALL
 PaintUpdateNCRegion(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags);
+BOOL STDCALL
+NtUserValidateRgn(HWND hWnd, HRGN hRgn);
 #endif /* __WIN32K_PAINTING_H */

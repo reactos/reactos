@@ -149,12 +149,17 @@ NtUserCallOneParam(
   DWORD Unknown0,
   DWORD Unknown1);
 
+#define TWOPARAM_ROUTINE_ENABLEWINDOW       0x53
+#define TWOPARAM_ROUTINE_UNKNOWN            0x54
+#define TWOPARAM_ROUTINE_SHOWOWNEDPOPUPS    0x55
+#define TWOPARAM_ROUTINE_SWITCHTOTHISWINDOW 0x56
+#define TWOPARAM_ROUTINE_VALIDATERGN        0x57
 DWORD
 STDCALL
 NtUserCallTwoParam(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+  DWORD Param1,
+  DWORD Param2,
+  DWORD Routine);
 
 DWORD
 STDCALL
@@ -808,12 +813,12 @@ NtUserGetUpdateRect(
   DWORD Unknown1,
   DWORD Unknown2);
 
-DWORD
+int
 STDCALL
 NtUserGetUpdateRgn(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+  HWND hWnd,
+  HRGN hRgn,
+  WINBOOL bErase);
 
 DWORD
 STDCALL
