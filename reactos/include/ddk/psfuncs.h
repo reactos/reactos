@@ -1,4 +1,4 @@
-/* $Id: psfuncs.h,v 1.16 2001/11/29 16:39:45 ekohl Exp $
+/* $Id: psfuncs.h,v 1.17 2002/01/03 14:01:16 ekohl Exp $
  */
 #ifndef _INCLUDE_DDK_PSFUNCS_H
 #define _INCLUDE_DDK_PSFUNCS_H
@@ -38,6 +38,15 @@ NTSTATUS STDCALL PsCreateSystemProcess(PHANDLE ProcessHandle,
 				       ACCESS_MASK DesiredAccess,
 				       POBJECT_ATTRIBUTES ObjectAttributes);
 
+NTSTATUS STDCALL PsCreateWin32Process(PEPROCESS Process);
+
+VOID STDCALL PsEstablishWin32Callouts(PVOID Param1,
+				      PVOID Param2,
+				      PVOID Param3,
+				      PVOID Param4,
+				      PVOID Param5,
+				      ULONG W32ProcessSize);
+
 struct _ETHREAD* STDCALL PsGetCurrentThread(VOID);
 struct _EPROCESS* STDCALL PsGetCurrentProcess(VOID);
 PACCESS_TOKEN STDCALL PsReferenceImpersonationToken(struct _ETHREAD* Thread,
@@ -65,6 +74,18 @@ VOID STDCALL PsDispatchThread(ULONG NewThreadStatus);
 
 LARGE_INTEGER STDCALL PsGetProcessExitTime(VOID);
 BOOLEAN STDCALL PsIsThreadTerminating(struct _ETHREAD* Thread);
+
+NTSTATUS STDCALL PsLookupProcessByProcessId(IN PVOID ProcessId,
+					    OUT PEPROCESS *Process);
+
+NTSTATUS STDCALL PsLookupProcessThreadByCid(IN PCLIENT_ID Cid,
+					    OUT PEPROCESS *Process OPTIONAL,
+					    OUT struct _ETHREAD **Thread);
+//					    OUT PETHREAD *Thread);
+
+NTSTATUS STDCALL PsLookupThreadByThreadId(IN PVOID ThreadId,
+					  OUT struct _ETHREAD **Thread);
+//					  OUT PETHREAD *Thread);
 
 #endif
 

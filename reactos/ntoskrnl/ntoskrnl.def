@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.120 2001/11/29 16:41:22 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.121 2002/01/03 14:02:04 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -601,9 +601,9 @@ PsGetVersion@16
 PsImpersonateClient@20
 PsInitialSystemProcess DATA
 PsIsThreadTerminating@4
-;PsLookupProcessByProcessId@8
-;PsLookupProcessThreadByCid@12
-;PsLookupThreadByThreadId@8
+PsLookupProcessByProcessId@8
+PsLookupProcessThreadByCid@12
+PsLookupThreadByThreadId@8
 PsProcessType DATA
 PsReferenceImpersonationToken@16
 PsReferencePrimaryToken@4

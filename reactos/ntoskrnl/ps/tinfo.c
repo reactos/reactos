@@ -1,4 +1,4 @@
-/* $Id: tinfo.c,v 1.16 2001/09/07 21:35:45 ea Exp $
+/* $Id: tinfo.c,v 1.17 2002/01/03 14:03:05 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -30,7 +30,7 @@ NtSetInformationThread(HANDLE		ThreadHandle,
    Status = ObReferenceObjectByHandle(ThreadHandle,
 				      THREAD_SET_INFORMATION,
 				      PsThreadType,
-				      UserMode,
+				      ExGetPreviousMode(),
 				      (PVOID*)&Thread,
 				      NULL);
    if (!NT_SUCCESS(Status))
@@ -112,8 +112,10 @@ NtSetInformationThread(HANDLE		ThreadHandle,
 	break;
 		
       case ThreadZeroTlsCell:
-	Status = STATUS_NOT_IMPLEMENTED;
-	break;
+	{
+	  Status = STATUS_NOT_IMPLEMENTED;
+	  break;
+	}
 	
       case ThreadPerformanceCount:
 	/* Can only be queried */
@@ -167,7 +169,7 @@ NtQueryInformationThread (IN	HANDLE		ThreadHandle,
    Status = ObReferenceObjectByHandle(ThreadHandle,
 				      THREAD_QUERY_INFORMATION,
 				      PsThreadType,
-				      UserMode,
+				      ExGetPreviousMode(),
 				      (PVOID*)&Thread,
 				      NULL);
    if (!NT_SUCCESS(Status))

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.106 2001/11/29 16:41:22 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.107 2002/01/03 14:02:04 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -590,9 +590,9 @@ PsAssignImpersonationToken=PsAssignImpersonationToken@8
 ;PsChargePoolQuota=PsChargePoolQuota@12
 PsCreateSystemProcess=PsCreateSystemProcess@12
 PsCreateSystemThread=PsCreateSystemThread@28
-;PsCreateWin32Process
+;PsCreateWin32Process=PsCreateWin32Process@4
 PsDispatchThread=PsDispatchThread@4
-;PsEstablishWin32Callouts
+;PsEstablishWin32Callouts=PsEstablishWin32Callouts@24
 PsGetCurrentProcessId=PsGetCurrentProcessId@0
 PsGetCurrentThreadId=PsGetCurrentThreadId@0
 PsGetCurrentThread=PsGetCurrentThread@0
@@ -601,9 +601,9 @@ PsGetVersion=PsGetVersion@16
 PsImpersonateClient=PsImpersonateClient@20
 PsInitialSystemProcess DATA
 PsIsThreadTerminating=PsIsThreadTerminating@4
-;PsLookupProcessByProcessId
-;PsLookupProcessThreadByCid
-;PsLookupThreadByThreadId
+PsLookupProcessByProcessId=PsLookupProcessByProcessId@8
+PsLookupProcessThreadByCid=PsLookupProcessThreadByCid@12
+PsLookupThreadByThreadId=PsLookupThreadByThreadId@8
 PsProcessType DATA
 PsReferenceImpersonationToken=PsReferenceImpersonationToken@16
 PsReferencePrimaryToken=PsReferencePrimaryToken@4

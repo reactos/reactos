@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.73 2002/01/03 12:48:02 chorns Exp $
+/* $Id: process.c,v 1.74 2002/01/03 14:03:05 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -66,11 +66,11 @@ PsGetNextProcess(PEPROCESS OldProcess)
      {
 	NextProcess = CONTAINING_RECORD(PsProcessListHead.Flink,
 					EPROCESS,
-					ProcessListEntry);	
+					ProcessListEntry);
      }
    else
      {
-	NextProcess = CONTAINING_RECORD(OldProcess->ProcessListEntry.Flink, 
+	NextProcess = CONTAINING_RECORD(OldProcess->ProcessListEntry.Flink,
 					EPROCESS,
 					ProcessListEntry);
      }
@@ -1150,6 +1150,37 @@ BOOLEAN STDCALL
 PsIsThreadTerminating(IN PETHREAD Thread)
 {
   return(Thread->DeadThread);
+}
+
+
+NTSTATUS STDCALL
+PsLookupProcessByProcessId(IN PVOID ProcessId,
+			   OUT PEPROCESS *Process)
+{
+  KIRQL oldIrql;
+  PLIST_ENTRY current_entry;
+  PEPROCESS current;
+
+  KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
+
+  current_entry = PsProcessListHead.Flink;
+  while (current_entry != &PsProcessListHead)
+    {
+      current = CONTAINING_RECORD(current_entry,
+				  EPROCESS,
+				  ProcessListEntry);
+      if (current->UniqueProcessId == (ULONG)ProcessId)
+	{
+	  *Process = current;
+	  KeReleaseSpinLock(&PsProcessListLock, oldIrql);
+	  return(STATUS_SUCCESS);
+	}
+      current_entry = current_entry->Flink;
+    }
+
+  KeReleaseSpinLock(&PsProcessListLock, oldIrql);
+
+  return(STATUS_INVALID_PARAMETER);
 }
 
 /* EOF */

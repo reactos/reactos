@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.81 2001/12/31 19:06:48 dwelch Exp $
+/* $Id: thread.c,v 1.82 2002/01/03 14:03:05 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -534,12 +534,79 @@ NtContinue(IN PCONTEXT	Context,
 }
 
 
-NTSTATUS STDCALL 
+NTSTATUS STDCALL
 NtYieldExecution(VOID)
 {
   PsDispatchThread(THREAD_STATE_RUNNABLE);
   return(STATUS_SUCCESS);
 }
 
+
+NTSTATUS STDCALL
+PsLookupProcessThreadByCid(IN PCLIENT_ID Cid,
+			   OUT PEPROCESS *Process OPTIONAL,
+			   OUT PETHREAD *Thread)
+{
+  KIRQL oldIrql;
+  PLIST_ENTRY current_entry;
+  PETHREAD current;
+
+  KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
+
+  current_entry = PiThreadListHead.Flink;
+  while (current_entry != &PiThreadListHead)
+    {
+      current = CONTAINING_RECORD(current_entry,
+				  ETHREAD,
+				  Tcb.ThreadListEntry);
+      if (current->Cid.UniqueThread == Cid->UniqueThread &&
+	  current->Cid.UniqueProcess == Cid->UniqueProcess)
+	{
+	  if (Process != NULL)
+	    *Process = current->ThreadsProcess;
+	  *Thread = current;
+	  KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+	  return(STATUS_SUCCESS);
+	}
+
+      current_entry = current_entry->Flink;
+    }
+
+  KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+
+  return(STATUS_INVALID_PARAMETER);
+}
+
+
+NTSTATUS STDCALL
+PsLookupThreadByThreadId(IN PVOID ThreadId,
+			 OUT PETHREAD *Thread)
+{
+  KIRQL oldIrql;
+  PLIST_ENTRY current_entry;
+  PETHREAD current;
+
+  KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
+
+  current_entry = PiThreadListHead.Flink;
+  while (current_entry != &PiThreadListHead)
+    {
+      current = CONTAINING_RECORD(current_entry,
+				  ETHREAD,
+				  Tcb.ThreadListEntry);
+      if (current->Cid.UniqueThread == (HANDLE)ThreadId)
+	{
+	  *Thread = current;
+	  KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+	  return(STATUS_SUCCESS);
+	}
+
+      current_entry = current_entry->Flink;
+    }
+
+  KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+
+  return(STATUS_INVALID_PARAMETER);
+}
 
 /* EOF */
