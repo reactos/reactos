@@ -131,7 +131,7 @@ static void ccf_search(adns_state ads, const char *fn, int lno, const char *buf)
   while (nextword(&bufp,&word,&l)) { count++; tl += l+1; }
 
   newptrs= malloc(sizeof(char*)*count);  if (!newptrs) { saveerr(ads,errno); return; }
-  newchars= malloc(tl);  if (!newchars) { saveerr(ads,errno); free(newptrs); return; }
+  newchars= malloc((size_t) tl);  if (!newchars) { saveerr(ads,errno); free(newptrs); return; }
 
   bufp= buf;
   pp= newptrs;
@@ -457,7 +457,7 @@ static void readconfigenvtext(adns_state ads, const char *envvar) {
 int adns__setnonblock(adns_state ads, ADNS_SOCKET fd) {
 #ifdef ADNS_JGAA_WIN32
    unsigned long Val = 1;
-   return (ioctlsocket (fd, FIONBIO, &Val) == 0) ? 0 : -1;
+   return (ioctlsocket (fd, (long) FIONBIO, &Val) == 0) ? 0 : -1;
 #else
   int r;
   
@@ -488,7 +488,7 @@ static int init_begin(adns_state *ads_r, adns_initflags flags, FILE *diagfile) {
   LIST_INIT(ads->output);
   ads->forallnext= 0;
   ads->nextid= 0x311f;
-  ads->udpsocket= ads->tcpsocket= -1;
+  ads->udpsocket= ads->tcpsocket= ((unsigned) -1);
   adns__vbuf_init(&ads->tcpsend);
   adns__vbuf_init(&ads->tcprecv);
   ads->tcprecv_skip= 0;
