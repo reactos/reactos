@@ -313,10 +313,11 @@ static int numberf(FILE * f, double __n, wchar_t exp_sign,  int size, int precis
 		}
 		else {
 			while ( intr > 0.0 ) {
-				intr/=10.0L;
-				p = modf(intr, &intr);
+				p = intr;
+                                intr/=10.0L;
+				modf(intr, &intr);
 
-				p *=10;
+				p -= 10.0*intr;
 
 				buf[i++] = (int)p + L'0';
 				size--;
@@ -515,10 +516,11 @@ static int numberfl(FILE * f, long double __n, wchar_t exp_sign,  int size, int 
 		}
 		else {
 			while ( intr > 0.0 ) {
+				p = intr;
 				intr/=10.0L;
-				p = modfl(intr, &intr);
+				modfl(intr, &intr);
 
-				p *=10;
+				p -=10.0*intr;
 
 				buf[i++] = (int)p + L'0';
 				size--;
