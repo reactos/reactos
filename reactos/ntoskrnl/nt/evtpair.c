@@ -1,4 +1,4 @@
-/* $Id: evtpair.c,v 1.6 2001/01/28 15:14:19 ekohl Exp $
+/* $Id: evtpair.c,v 1.7 2001/05/27 23:03:51 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -56,7 +56,7 @@ VOID NtInitializeEventPairImplementation(VOID)
 {
    ExEventPairObjectType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
    
-   RtlCreateUnicodeString(&ExEventObjectType->TypeName, L"EventPair");
+   RtlCreateUnicodeString(&ExEventPairObjectType->TypeName, L"EventPair");
    
    ExEventPairObjectType->MaxObjects = ULONG_MAX;
    ExEventPairObjectType->MaxHandles = ULONG_MAX;
