@@ -34,36 +34,21 @@ HANDLE STDCALL CreateFileA (LPCSTR			lpFileName,
 			    DWORD			dwFlagsAndAttributes,
 			    HANDLE			hTemplateFile)
 {
-   UNICODE_STRING FileNameU;
-   ANSI_STRING FileName;
+   PWCHAR FileNameW;
    HANDLE FileHandle;
    
    DPRINT("CreateFileA(lpFileName %s)\n",lpFileName);
    
-   RtlInitAnsiString (&FileName,
-		      (LPSTR)lpFileName);
-   
-   /* convert ansi (or oem) string to unicode */
-   if (bIsFileApiAnsi)
-     RtlAnsiStringToUnicodeString (&FileNameU,
-				   &FileName,
-				   TRUE);
-   else
-     RtlOemStringToUnicodeString (&FileNameU,
-				  &FileName,
-				  TRUE);
+   if (!(FileNameW = FilenameA2W(lpFileName, FALSE)))
+      return INVALID_HANDLE_VALUE;
 
-   FileHandle = CreateFileW (FileNameU.Buffer,
+   FileHandle = CreateFileW (FileNameW,
 			     dwDesiredAccess,
 			     dwShareMode,
 			     lpSecurityAttributes,
 			     dwCreationDisposition,
 			     dwFlagsAndAttributes,
 			     hTemplateFile);
-   
-   RtlFreeHeap (RtlGetProcessHeap (),
-		0,
-		FileNameU.Buffer);
    
    return FileHandle;
 }
