@@ -24,18 +24,28 @@
 #define KJK_PSEH_FRAMEBASED_H_
 
 #include <pseh/framebased/internal.h>
-#include <excpt.h>
 
-#ifdef _SEH_NO_NATIVE_NLG
-#include <pseh/setjmp.h>
-#define longjmp _SEHLongJmp
-#define setjmp _SEHSetJmp
-#define jmp_buf _SEHJmpBuf_t
-#else
-#include <setjmp.h>
+/* Safeguards against broken SDK/CRT headers */
+#ifndef _SEH_NO_SYSTEM_HEADERS
+# include <excpt.h>
 #endif
 
-#include <stddef.h>
+#ifndef offsetof
+# include <stddef.h>
+#endif
+
+/*
+ Fall back to non-optimal, non-native NLG implementation for environments
+ without their own (e.g., currently, kernel-mode ReactOS/Windows)
+*/
+#ifdef _SEH_NO_NATIVE_NLG
+# include <pseh/setjmp.h>
+# define longjmp _SEHLongJmp
+# define setjmp _SEHSetJmp
+# define jmp_buf _SEHJmpBuf_t
+#else
+# include <setjmp.h>
+#endif
 
 typedef struct __SEHFrame
 {
