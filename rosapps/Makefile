@@ -25,8 +25,6 @@ APPS = 	calc \
 	net$(SEP)niclist \
 	net$(SEP)whois \
 	net$(SEP)arp \
-	net$(SEP)netstat \
-	net$(SEP)ipconfig \
 	net$(SEP)ncftp \
 	regedt32 \
 	welcome \
@@ -40,6 +38,8 @@ APPS = 	calc \
 # Removed because it doesn't build correctly
 #
 #	sysutils$(SEP)tlist \
+#     net$(SEP)netstat \
+#	net$(SEP)ipconfig \
 #
 
 all: $(APPS)
