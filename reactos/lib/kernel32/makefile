@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.61 2003/02/17 16:27:31 ekohl Exp $
+# $Id: makefile,v 1.62 2003/04/02 00:23:12 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -25,7 +25,7 @@ MISC_OBJECTS = misc/error.o misc/atom.o misc/handle.o misc/env.o \
 	       misc/dllmain.o misc/comm.o misc/errormsg.o \
 	       misc/console.o misc/time.o misc/toolhelp.o \
 	       misc/stubs.o misc/ldr.o misc/res.o \
-	       misc/debug.o misc/sysinfo.o misc/profile.o \
+	       misc/sysinfo.o misc/profile.o \
 	       misc/mbchars.o misc/muldiv.o misc/getname.o \
 	       misc/perfcnt.o
 
@@ -90,9 +90,11 @@ STRING_OBJECTS = string/lstring.o
 
 EXCEPT_OBJECTS = except/except.o
 
+DEBUG_OBJECTS = debug/debugger.o debug/output.o debug/break.o
+
 TARGET_OBJECTS = $(MISC_OBJECTS) $(FILE_OBJECTS) $(THREAD_OBJECTS) \
           	$(PROCESS_OBJECTS) $(STRING_OBJECTS) $(MEM_OBJECTS) \
-          	$(SYNCH_OBJECTS) $(EXCEPT_OBJECTS)
+          	$(SYNCH_OBJECTS) $(EXCEPT_OBJECTS) $(DEBUG_OBJECTS)
 
 #$(NLS_OBJECTS)
 
