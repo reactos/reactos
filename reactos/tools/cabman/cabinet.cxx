@@ -3092,7 +3092,7 @@ unsigned long CCabinet::GetFileTimes(FILEHANDLE FileHandle, PCFFILE_NODE File)
 #if defined(WIN32)
     FILETIME FileTime;
 
-    if (GetFileTime(FileHandle, NULL, &FileTime, NULL))
+    if (GetFileTime(FileHandle, NULL, NULL, &FileTime))
         FileTimeToDosDateTime(&FileTime,
             &File->File.FileDate,
             &File->File.FileTime);
