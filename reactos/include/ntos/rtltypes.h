@@ -1,4 +1,4 @@
-/* $Id: rtltypes.h,v 1.5 2003/04/26 23:13:27 hyperion Exp $
+/* $Id: rtltypes.h,v 1.6 2003/05/15 11:01:02 ekohl Exp $
  * 
  */
 
@@ -153,36 +153,32 @@ typedef struct _RTL_ATOM_TABLE
   LIST_ENTRY Slot[0];
 } RTL_ATOM_TABLE, *PRTL_ATOM_TABLE;
 
-typedef struct _LB_RANGE
-{
-  UCHAR upper;
-  UCHAR lower;
-} LB_RANGE;
 
-typedef struct _RTL_NLS_DATA
-{
-  USHORT   CodePage;
-  USHORT   MaxCharacterSize;  // SBCS = 1, DBCS = 2
-  WCHAR    DefaultCharacter;
-  WCHAR    char1;
-  WCHAR    char2;
-  WCHAR    char3;
-  USHORT   DbcsFlag;
-  LB_RANGE LeadByteRange[6];
-  USHORT   reserved;
-  PWCHAR   MultiByteToUnicode;
-  PCHAR    UnicodeToMultiByte;
-  PWCHAR   DosMultiByteToUnicode;
-  PCHAR    DbcsTags;
-} RTL_NLS_DATA, *PRTL_NLS_DATA;
+#define MAXIMUM_LEADBYTES 12
 
-typedef struct _RTL_NLS_TABLE
+typedef struct _CPTABLEINFO
 {
-  RTL_NLS_DATA OemInfo;
-  RTL_NLS_DATA AnsiInfo;
-  PWCHAR UpcaseTable;
-  PWCHAR DowncaseTable;
-} RTL_NLS_TABLE, *PRTL_NLS_TABLE;
+  USHORT  CodePage;
+  USHORT  MaximumCharacterSize;  // SBCS = 1, DBCS = 2
+  USHORT  DefaultCharacter;
+  USHORT  UniDefaultChar;
+  USHORT  TransDefaultChar;
+  USHORT  TransUniDefaultChar;
+  USHORT  DBCSCodePage;
+  UCHAR   LeadByte[MAXIMUM_LEADBYTES];
+  PUSHORT MultiByteTable;
+  PVOID   WideCharTable;
+  PUSHORT DBCSRanges;
+  PUSHORT DBCSOffsets;
+} CPTABLEINFO, *PCPTABLEINFO;
+
+typedef struct _NLSTABLEINFO
+{
+  CPTABLEINFO OemTableInfo;
+  CPTABLEINFO AnsiTableInfo;
+  PUSHORT UpperCaseTable;
+  PUSHORT LowerCaseTable;
+} NLSTABLEINFO, *PNLSTABLEINFO;
 
 
 typedef struct _RTL_GENERIC_TABLE

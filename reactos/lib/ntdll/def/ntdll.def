@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.98 2003/04/29 02:16:59 hyperion Exp $
+; $Id: ntdll.def,v 1.99 2003/05/15 11:02:03 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -441,8 +441,8 @@ RtlImageRvaToSection@12
 RtlImageRvaToVa@16
 RtlImpersonateSelf@4
 RtlInitAnsiString@8
-;RtlInitCodePageTable
-;RtlInitNlsTables
+RtlInitCodePageTable@8
+RtlInitNlsTables@16
 RtlInitString@8
 RtlInitUnicodeString@8
 ;RtlInitializeAtomPackage
@@ -526,7 +526,7 @@ RtlReAllocateHeap@16
 RtlReleasePebLock@0
 RtlReleaseResource@4
 ;RtlRemoteCall
-;RtlResetRtlTranslations
+RtlResetRtlTranslations@4
 RtlRunDecodeUnicodeString@8
 RtlRunEncodeUnicodeString@8
 RtlSecondsSince1970ToTime@8

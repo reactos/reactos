@@ -1,4 +1,4 @@
-/* $Id: exception.c,v 1.13 2003/04/07 23:10:08 gvg Exp $
+/* $Id: exception.c,v 1.14 2003/05/15 11:03:20 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -70,6 +70,6 @@ RtlBaseProcessStart(PTHREAD_START_ROUTINE StartAddress,
   ExitStatus = (NTSTATUS) (StartAddress)(Parameter);
 
   NtTerminateProcess(NtCurrentProcess(), ExitStatus);
- }
+}
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.97 2003/04/26 23:13:33 hyperion Exp $
+/* $Id: process.c,v 1.98 2003/05/15 11:06:24 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -28,9 +28,11 @@
 #include <roscfg.h>
 #include <internal/se.h>
 #include <internal/kd.h>
+#include <internal/nls.h>
 
 #define NDEBUG
 #include <internal/debug.h>
+
 
 /* GLOBALS ******************************************************************/
 
@@ -54,10 +56,10 @@ static ULONG PiProcessNotifyRoutineCount = 0;
 static PCREATE_PROCESS_NOTIFY_ROUTINE
 PiProcessNotifyRoutine[MAX_PROCESS_NOTIFY_ROUTINE_COUNT];
 
+
 /* FUNCTIONS *****************************************************************/
 
-
-PEPROCESS 
+PEPROCESS
 PsGetNextProcess(PEPROCESS OldProcess)
 {
    KIRQL oldIrql;
@@ -295,57 +297,87 @@ PiDeleteProcess(PVOID ObjectBody)
 			        (HANDLE)Process->UniqueProcessId,
 			        FALSE);
     }
-   RemoveEntryList(&Process->ProcessListEntry);
-   KeReleaseSpinLock(&PsProcessListLock, oldIrql);
+  RemoveEntryList(&Process->ProcessListEntry);
+  KeReleaseSpinLock(&PsProcessListLock, oldIrql);
 
-   /* KDB hook */
-   KDB_DELETEPROCESS_HOOK(Process);
+  /* KDB hook */
+  KDB_DELETEPROCESS_HOOK(Process);
 
-   ObDereferenceObject(Process->Token);
-   ObDeleteHandleTable(Process);
+  ObDereferenceObject(Process->Token);
+  ObDeleteHandleTable(Process);
 
-   (VOID)MmReleaseMmInfo(Process);
+  (VOID)MmReleaseMmInfo(Process);
 }
 
 
 static NTSTATUS
 PsCreatePeb(HANDLE ProcessHandle,
-	    PVOID ImageBase,
-	    PVOID* RPeb)
+	    PEPROCESS Process,
+	    PVOID ImageBase)
 {
-   NTSTATUS Status;
-   PVOID PebBase;
-   ULONG PebSize;
-   PEB Peb;
-   ULONG BytesWritten;
-   
-   memset(&Peb, 0, sizeof(Peb));
-   Peb.ImageBaseAddress = ImageBase;
-   
-   PebBase = (PVOID)PEB_BASE;
-   PebSize = 0x1000;
-   Status = NtAllocateVirtualMemory(ProcessHandle,
-				    &PebBase,
-				    0,
-				    &PebSize,
-				    MEM_RESERVE | MEM_COMMIT,
-				    PAGE_READWRITE);
-   if (!NT_SUCCESS(Status))
-     {
-	return(Status);
-     }
-   
-   NtWriteVirtualMemory(ProcessHandle,
-			(PVOID)PEB_BASE,
-			&Peb,
-			sizeof(Peb),
-			&BytesWritten);
+  LARGE_INTEGER SectionOffset;
+  ULONG PebSize;
+  PPEB Peb;
+  PUCHAR BaseAddress;
+  ULONG ViewSize;
+  NTSTATUS Status;
 
-   DPRINT("PsCreatePeb: Peb created at %x\n", PebBase);
-   
-   *RPeb = PebBase;
-   
-   return(STATUS_SUCCESS);
+  /* Allocate the Process Environment Block (PEB) */
+  Peb = (PPEB)PEB_BASE;
+  PebSize = PAGE_SIZE;
+  Status = NtAllocateVirtualMemory(ProcessHandle,
+				   (PVOID*)&Peb,
+				   0,
+				   &PebSize,
+				   MEM_RESERVE | MEM_COMMIT,
+				   PAGE_READWRITE);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("NtAllocateVirtualMemory() failed (Status %lx)\n", Status);
+      return(Status);
+    }
+  DPRINT("Peb %p  PebSize %lu\n", Peb, PebSize);
+
+  KeAttachProcess(Process);
+
+  /* Map the NLS section into the new process */
+  BaseAddress = NULL;
+  ViewSize = 0;
+  SectionOffset.QuadPart = 0LL;
+  Status = MmMapViewOfSection(NlsSection,
+			      Process,
+			      (PVOID*)&BaseAddress,
+			      0,
+			      0,
+			      &SectionOffset,
+			      &ViewSize,
+			      ViewShare,
+			      SEC_NO_CHANGE | MEM_TOP_DOWN,
+			      PAGE_READONLY);
+  if (!NT_SUCCESS(Status))
+    {
+	DPRINT1("MmMapViewOfSection() failed (Status %lx)\n", Status);
+	KeDetachProcess();
+	return(Status);
+    }
+
+  DPRINT("BaseAddress %p  ViewSize %lu\n", BaseAddress, ViewSize);
+
+  /* Initialize the PEB */
+  RtlZeroMemory(Peb, sizeof(PEB));
+  Peb->ImageBaseAddress = ImageBase;
+
+  /* FIXME: Initialize more PEB variables */
+  Peb->AnsiCodePageData = BaseAddress;
+//  Peb->OemCodePageData =
+
+
+  Process->Peb = Peb;
+  KeDetachProcess();
+
+  DPRINT("PsCreatePeb: Peb created at %p\n", Peb);
+
+  return(STATUS_SUCCESS);
 }
 
 
@@ -355,13 +387,13 @@ KeGetCurrentProcess(VOID)
  * FUNCTION: Returns a pointer to the current process
  */
 {
-   return(&(PsGetCurrentProcess()->Pcb));
+  return(&(PsGetCurrentProcess()->Pcb));
 }
 
 HANDLE STDCALL
 PsGetCurrentProcessId(VOID)
 {
-   return((HANDLE)PsGetCurrentProcess()->UniqueProcessId);
+  return((HANDLE)PsGetCurrentProcess()->UniqueProcessId);
 }
 
 /*
@@ -434,7 +466,6 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
    KIRQL oldIrql;
    PVOID LdrStartupAddr;
    PVOID ImageBase;
-   PVOID Peb;
    PEPORT DebugPort;
    PEPORT ExceptionPort;
    PVOID BaseAddress;
@@ -658,8 +689,8 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
     */
    DPRINT("Creating PEB\n");
    Status = PsCreatePeb(*ProcessHandle,
-			ImageBase,
-			&Peb);
+			Process,
+			ImageBase);
    if (!NT_SUCCESS(Status))
      {
         DbgPrint("NtCreateProcess() Peb creation failed: Status %x\n",Status);
@@ -669,7 +700,6 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 	*ProcessHandle = NULL;
 	return(Status);
      }
-   Process->Peb = Peb;
    
    /*
     * Maybe send a message to the creator process's debugger

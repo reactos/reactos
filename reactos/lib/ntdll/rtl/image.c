@@ -1,4 +1,4 @@
-/* $Id: image.c,v 1.4 2002/09/08 10:23:05 chorns Exp $
+/* $Id: image.c,v 1.5 2003/05/15 11:03:21 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -20,22 +20,23 @@
 PIMAGE_NT_HEADERS STDCALL
 RtlImageNtHeader (IN PVOID BaseAddress)
 {
-	PIMAGE_NT_HEADERS NtHeader;
-	PIMAGE_DOS_HEADER DosHeader = (PIMAGE_DOS_HEADER)BaseAddress;
+  PIMAGE_NT_HEADERS NtHeader;
+  PIMAGE_DOS_HEADER DosHeader = (PIMAGE_DOS_HEADER)BaseAddress;
 
-	if (DosHeader && DosHeader->e_magic != IMAGE_DOS_SIGNATURE)
-	{
-		DPRINT1("DosHeader->e_magic %x\n", DosHeader->e_magic);
-		DPRINT1("NtHeader %x\n", (BaseAddress + DosHeader->e_lfanew));
-	}
+  if (DosHeader && DosHeader->e_magic != IMAGE_DOS_SIGNATURE)
+    {
+      DPRINT1("DosHeader->e_magic %x\n", DosHeader->e_magic);
+      DPRINT1("NtHeader %x\n", (BaseAddress + DosHeader->e_lfanew));
+    }
 
-//	if (DosHeader && DosHeader->e_magic == IMAGE_DOS_SIGNATURE)
-//	{
-		NtHeader = (PIMAGE_NT_HEADERS)(BaseAddress + DosHeader->e_lfanew);
-		if (NtHeader->Signature == IMAGE_NT_SIGNATURE)
-			return NtHeader;
-//	}
-	return NULL;
+  if (DosHeader && DosHeader->e_magic == IMAGE_DOS_SIGNATURE)
+    {
+      NtHeader = (PIMAGE_NT_HEADERS)(BaseAddress + DosHeader->e_lfanew);
+      if (NtHeader->Signature == IMAGE_NT_SIGNATURE)
+	return NtHeader;
+    }
+
+  return NULL;
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: nls.c,v 1.10 2002/11/10 13:36:59 robd Exp $
+/* $Id: nls.c,v 1.11 2003/05/15 11:07:07 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -20,24 +20,20 @@
  *   4) Add multi-byte translation code.
  */
 
-#ifdef WIN32_REGDBG
-#include "cm_win32.h"
-#else
-
 #include <ddk/ntddk.h>
-//#include <internal/nls.h>
+#include <internal/mm.h>
+#include <internal/nls.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
-#endif
 
 /* GLOBALS *******************************************************************/
 
 BOOLEAN NlsMbCodePageTag = FALSE;
 BOOLEAN NlsMbOemCodePageTag = FALSE;
 
-BYTE NlsLeadByteInfo = 0; /* ? */
+UCHAR NlsLeadByteInfo = 0; /* ? */
 
 USHORT NlsOemLeadByteInfo = 0;
 
@@ -52,6 +48,8 @@ PCHAR UnicodeToOemTable =NULL; /* size: 65536*sizeof(CHAR) */
 
 PWCHAR UnicodeUpcaseTable = NULL; /* size: 65536*sizeof(WCHAR) */
 PWCHAR UnicodeLowercaseTable = NULL; /* size: 65536*sizeof(WCHAR) */
+
+PSECTION_OBJECT NlsSection = NULL;
 
 
 /* FUNCTIONS *****************************************************************/
@@ -150,78 +148,81 @@ RtlpInitNlsTables(VOID)
 
 
 NTSTATUS
-RtlpInitNlsSections(ULONG Mod1Start,
-		    ULONG Mod1End,
-		    ULONG Mod2Start,
-		    ULONG Mod2End,
-		    ULONG Mod3Start,
-		    ULONG Mod3End)
+RtlpInitNlsSection(VOID)
 {
-  UNICODE_STRING UnicodeString;
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  HANDLE DirectoryHandle;
   HANDLE SectionHandle;
-  NTSTATUS Status;
   LARGE_INTEGER SectionSize;
+  NTSTATUS Status;
 
-  DPRINT("Ansi section start: 0x%08lX\n", Mod1Start);
-  DPRINT("Ansi section end: 0x%08lX\n", Mod1End);
-  DPRINT("Oem section start: 0x%08lX\n", Mod2Start);
-  DPRINT("Oem section end: 0x%08lX\n", Mod2End);
-  DPRINT("Upcase section start: 0x%08lX\n", Mod3Start);
-  DPRINT("Upcase section end: 0x%08lX\n", Mod3End);
+  PUCHAR MappedBuffer;
+  ULONG Size;
+  ULONG ViewSize;
 
-  /* Create the '\NLS' directory */
-  RtlInitUnicodeStringFromLiteral(&UnicodeString,
-		       L"\\NLS");
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &UnicodeString,
-			     OBJ_PERMANENT,
-			     NULL,
-			     NULL);
-  Status = NtCreateDirectoryObject(&DirectoryHandle,
-				   0,
-				   &ObjectAttributes);
-  if (!NT_SUCCESS(Status))
-    return(Status);
+  DPRINT1("RtlpInitNlsSection() called\n");
 
-  /* Create the 'NlsSectionUnicode' section */
-  RtlInitUnicodeStringFromLiteral(&UnicodeString,
-		       L"NlsSectionUnicode");
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &UnicodeString,
-			     OBJ_PERMANENT,
-			     DirectoryHandle,
-			     NULL);
-  SectionSize.QuadPart = (Mod1End - Mod1Start) +
-    (Mod2End - Mod2Start) + (Mod3End - Mod3Start);
-  DPRINT("NlsSectionUnicode size: 0x%I64X\n", SectionSize.QuadPart);
+  Size = 4096;
 
+  DPRINT("Nls section size: 0x%lx\n", Size);
+
+  /* Create the nls section */
+  SectionSize.QuadPart = (ULONGLONG)Size;
   Status = NtCreateSection(&SectionHandle,
 			   SECTION_ALL_ACCESS,
-			   &ObjectAttributes,
+			   NULL,
 			   &SectionSize,
 			   PAGE_READWRITE,
-			   0,
+			   SEC_COMMIT,
 			   NULL);
   if (!NT_SUCCESS(Status))
-    return(Status);
+    {
+      DPRINT1("NtCreateSection() failed (Status %lx)\n", Status);
+      KeBugCheck(0);
+      return(Status);
+    }
 
-
-  /* create and initialize code page table */
-
-  /* map the nls table into the 'NlsSectionUnicode' section */
-
-
+  /* Get the pointer to the nls section object */
+  Status = ObReferenceObjectByHandle(SectionHandle,
+				     SECTION_ALL_ACCESS,
+				     MmSectionObjectType,
+				     KernelMode,
+				     (PVOID*)&NlsSection,
+				     NULL);
   NtClose(SectionHandle);
-  NtClose(DirectoryHandle);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("ObReferenceObjectByHandle() failed (Status %lx)\n", Status);
+      KeBugCheck(0);
+      return(Status);
+    }
+
+  /* Map the nls section into system address space */
+  ViewSize = 4096;
+  Status = MmMapViewInSystemSpace(NlsSection,
+				  (PVOID*)&MappedBuffer,
+				  &ViewSize);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("MmMapViewInSystemSpace() failed (Status %lx)\n", Status);
+      KeBugCheck(0);
+      return(Status);
+    }
+
+  DPRINT1("BaseAddress %p\n", MappedBuffer);
+
+  strcpy(MappedBuffer, "This is a teststring!");
+
+  /* ... */
+
+
+
+  DPRINT1("RtlpInitNlsSection() done\n");
 
   return(STATUS_SUCCESS);
 }
 
 
 NTSTATUS STDCALL
-RtlCustomCPToUnicodeN(PRTL_NLS_DATA NlsData,
+RtlCustomCPToUnicodeN(IN PCPTABLEINFO CustomCP,
 		      PWCHAR UnicodeString,
 		      ULONG UnicodeSize,
 		      PULONG ResultSize,
@@ -231,7 +232,7 @@ RtlCustomCPToUnicodeN(PRTL_NLS_DATA NlsData,
   ULONG Size = 0;
   ULONG i;
 
-  if (NlsData->DbcsFlag == FALSE)
+  if (CustomCP->DBCSCodePage == 0)
     {
       /* single-byte code page */
       if (CustomSize > (UnicodeSize / sizeof(WCHAR)))
@@ -244,7 +245,7 @@ RtlCustomCPToUnicodeN(PRTL_NLS_DATA NlsData,
 
       for (i = 0; i < Size; i++)
 	{
-	  *UnicodeString = NlsData->MultiByteToUnicode[(unsigned int)*CustomString];
+	  *UnicodeString = CustomCP->MultiByteTable[(unsigned int)*CustomString];
 	  UnicodeString++;
 	  CustomString++;
 	}
@@ -265,6 +266,24 @@ RtlGetDefaultCodePage(PUSHORT AnsiCodePage,
 {
   *AnsiCodePage = NlsAnsiCodePage;
   *OemCodePage = NlsOemCodePage;
+}
+
+
+VOID STDCALL
+RtlInitCodePageTable(IN PUSHORT TableBase,
+		     OUT PCPTABLEINFO CodePageTable)
+{
+  UNIMPLEMENTED;
+}
+
+
+VOID STDCALL
+RtlInitNlsTables(OUT PNLSTABLEINFO NlsTable,
+		 IN PUSHORT CaseTableBase,
+		 IN PUSHORT OemTableBase,
+		 IN PUSHORT AnsiTableBase)
+{
+  UNIMPLEMENTED;
 }
 
 
@@ -364,8 +383,15 @@ RtlOemToUnicodeN(PWCHAR UnicodeString,
 }
 
 
+VOID STDCALL
+RtlResetRtlTranslations(IN PNLSTABLEINFO NlsTable)
+{
+  UNIMPLEMENTED;
+}
+
+
 NTSTATUS STDCALL
-RtlUnicodeToCustomCPN(PRTL_NLS_DATA NlsData,
+RtlUnicodeToCustomCPN(IN PCPTABLEINFO CustomCP,
 		      PCHAR CustomString,
 		      ULONG CustomSize,
 		      PULONG ResultSize,
@@ -375,7 +401,7 @@ RtlUnicodeToCustomCPN(PRTL_NLS_DATA NlsData,
   ULONG Size = 0;
   ULONG i;
 
-  if (NlsData->DbcsFlag == 0)
+  if (CustomCP->DBCSCodePage == 0)
     {
       /* single-byte code page */
       if (UnicodeSize > (CustomSize * sizeof(WCHAR)))
@@ -388,7 +414,7 @@ RtlUnicodeToCustomCPN(PRTL_NLS_DATA NlsData,
 
       for (i = 0; i < Size; i++)
 	{
-	  *CustomString = NlsData->UnicodeToMultiByte[(unsigned int)*UnicodeString];
+	  *CustomString = ((PCHAR)CustomCP->WideCharTable)[(unsigned int)*UnicodeString];
 	  CustomString++;
 	  UnicodeString++;
 	}
@@ -501,7 +527,7 @@ RtlUnicodeToOemN(PCHAR OemString,
 
 
 NTSTATUS STDCALL
-RtlUpcaseUnicodeToCustomCPN(PRTL_NLS_DATA NlsData,
+RtlUpcaseUnicodeToCustomCPN(IN PCPTABLEINFO CustomCP,
 			    PCHAR CustomString,
 			    ULONG CustomSize,
 			    PULONG ResultSize,
@@ -512,7 +538,7 @@ RtlUpcaseUnicodeToCustomCPN(PRTL_NLS_DATA NlsData,
   ULONG i;
   WCHAR wc;
 
-  if (NlsData->DbcsFlag == 0)
+  if (CustomCP->DBCSCodePage == 0)
     {
       /* single-byte code page */
       if (UnicodeSize > (CustomSize * sizeof(WCHAR)))
@@ -526,7 +552,7 @@ RtlUpcaseUnicodeToCustomCPN(PRTL_NLS_DATA NlsData,
       for (i = 0; i < Size; i++)
 	{
 	  wc = UnicodeUpcaseTable[(unsigned int)*UnicodeString];
-	  *CustomString = NlsData->UnicodeToMultiByte[(unsigned int)wc];
+	  *CustomString = ((PCHAR)CustomCP->WideCharTable)[(unsigned int)wc];
 	  CustomString++;
 	  UnicodeString++;
 	}

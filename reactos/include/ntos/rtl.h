@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.7 2003/04/26 23:13:27 hyperion Exp $
+/* $Id: rtl.h,v 1.8 2003/05/15 11:01:02 ekohl Exp $
  * 
  */
 
@@ -921,7 +921,7 @@ RtlCreateUnicodeStringFromAsciiz (OUT	PUNICODE_STRING	Destination,
 NTSTATUS
 STDCALL
 RtlCustomCPToUnicodeN (
-	PRTL_NLS_DATA	NlsData,
+	IN	PCPTABLEINFO	CustomCP,
 	PWCHAR		UnicodeString,
 	ULONG		UnicodeSize,
 	PULONG		ResultSize,
@@ -1181,7 +1181,7 @@ RtlImageDirectoryEntryToData (
 PIMAGE_NT_HEADERS
 STDCALL
 RtlImageNtHeader (
-	PVOID	BaseAddress
+	IN	PVOID	BaseAddress
 	);
 
 PIMAGE_SECTION_HEADER
@@ -1206,6 +1206,22 @@ STDCALL
 RtlInitAnsiString (
 	PANSI_STRING	DestinationString,
 	PCSZ		SourceString
+	);
+
+VOID
+STDCALL
+RtlInitCodePageTable (
+	IN	PUSHORT		TableBase,
+	OUT	PCPTABLEINFO	CodePageTable
+	);
+
+VOID
+STDCALL
+RtlInitNlsTables (
+	OUT	PNLSTABLEINFO	NlsTable,
+	IN	PUSHORT		CaseTableBase,
+	IN	PUSHORT		OemTableBase,
+	IN	PUSHORT		AnsiTableBase
 	);
 
 VOID
@@ -1282,15 +1298,21 @@ RtlIsGenericTableEmpty (
 	IN	PRTL_GENERIC_TABLE	Table
 	);
 
-BOOLEAN STDCALL
-RtlIsNameLegalDOS8Dot3(IN PUNICODE_STRING UnicodeName,
-		       IN PANSI_STRING AnsiName,
-		       OUT PBOOLEAN SpacesFound);
+BOOLEAN
+STDCALL
+RtlIsNameLegalDOS8Dot3 (
+	IN	PUNICODE_STRING	UnicodeName,
+	IN	PANSI_STRING	AnsiName,
+	OUT	PBOOLEAN	SpacesFound
+	);
 
-ULONG STDCALL
-RtlIsTextUnicode (PVOID Buffer,
-		  ULONG Length,
-		  ULONG *Flags);
+ULONG
+STDCALL
+RtlIsTextUnicode (
+	PVOID	Buffer,
+	ULONG	Length,
+	ULONG	*Flags
+	);
 
 LARGE_INTEGER
 STDCALL
@@ -1626,12 +1648,21 @@ RtlReAllocateHeap (
 	DWORD	size
 	);
 
-NTSTATUS STDCALL
-RtlReserveChunk(IN USHORT CompressionFormat,
-		IN OUT PUCHAR *CompressedBuffer,
-		IN PUCHAR EndOfCompressedBufferPlus1,
-		OUT PUCHAR *ChunkBuffer,
-		IN ULONG ChunkSize);
+NTSTATUS
+STDCALL
+RtlReserveChunk (
+	IN	USHORT	CompressionFormat,
+	IN OUT	PUCHAR	*CompressedBuffer,
+	IN	PUCHAR	EndOfCompressedBufferPlus1,
+	OUT	PUCHAR	*ChunkBuffer,
+	IN	ULONG	ChunkSize
+	);
+
+VOID
+STDCALL
+RtlResetRtlTranslations (
+	IN	PNLSTABLEINFO	NlsTable
+	);
 
 /*
  * VOID
@@ -1835,7 +1866,7 @@ RtlUnicodeStringToOemString (
 NTSTATUS
 STDCALL
 RtlUnicodeToCustomCPN (
-	PRTL_NLS_DATA	NlsData,
+	IN	PCPTABLEINFO	CustomCP,
 	PCHAR		MbString,
 	ULONG		MbSize,
 	PULONG		ResultSize,
@@ -1927,7 +1958,7 @@ RtlUpcaseUnicodeStringToOemString (
 NTSTATUS
 STDCALL
 RtlUpcaseUnicodeToCustomCPN (
-	PRTL_NLS_DATA	NlsData,
+	IN	PCPTABLEINFO	CustomCP,
 	PCHAR		MbString,
 	ULONG		MbSize,
 	PULONG		ResultSize,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.153 2003/05/13 21:28:26 chorns Exp $
+/* $Id: main.c,v 1.154 2003/05/15 11:05:20 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -47,6 +47,7 @@
 #include <internal/trap.h>
 #include "../dbg/kdb.h"
 #include <internal/registry.h>
+#include <internal/nls.h>
 #include <reactos/bugcodes.h>
 
 #ifdef HALDBG
@@ -333,7 +334,7 @@ ExpInitializeExecutive(VOID)
 	  (PADDRESS_RANGE)&KeMemoryMap,
 	  KeMemoryMapRangeCount);
   
-  /* create default nls tables */
+  /* Create default nls tables */
   RtlpInitNlsTables();
   
   /*
@@ -425,6 +426,10 @@ ExpInitializeExecutive(VOID)
   CmInitializeRegistry();
   NtInit();
   MmInit3();
+
+  /* Create the nls section */
+  RtlpInitNlsSection();
+
   CcInit();
   KdInit2();
   FsRtlpInitFileLockingImplementation();
@@ -442,42 +447,6 @@ ExpInitializeExecutive(VOID)
        KeLoaderModules[i].String,
        KeLoaderModules[i].ModStart,
        KeLoaderModules[i].ModEnd - KeLoaderModules[i].ModStart);
-    }
-
-  /*  Pass 1: load nls files  */
-  for (i = 1; i < KeLoaderBlock.ModsCount; i++)
-    {
-      name = (PCHAR)KeLoaderModules[i].String;
-      if (RtlpCheckFileNameExtension(name, ".nls"))
-	{
-	  ULONG Mod2Start = 0;
-	  ULONG Mod2End = 0;
-	  ULONG Mod3Start = 0;
-	  ULONG Mod3End = 0;
-
-	  name = (PCHAR)KeLoaderModules[i+1].String;
-	  if (RtlpCheckFileNameExtension(name, ".nls"))
-	    {
-	      Mod2Start = (ULONG)KeLoaderModules[i+1].ModStart;
-	      Mod2End = (ULONG)KeLoaderModules[i+1].ModEnd;
-
-	      name = (PCHAR)KeLoaderModules[i+2].String;
-	      if (RtlpCheckFileNameExtension(name, ".nls"))
-	        {
-		  Mod3Start = (ULONG)KeLoaderModules[i+2].ModStart;
-		  Mod3End = (ULONG)KeLoaderModules[i+2].ModEnd;
-	        }
-	    }
-
-	  /* Initialize nls sections */
-	  RtlpInitNlsSections((ULONG)KeLoaderModules[i].ModStart,
-			      (ULONG)KeLoaderModules[i].ModEnd,
-			      Mod2Start,
-			      Mod2End,
-			      Mod3Start,
-			      Mod3End);
-	  break;
-	}
     }
 
   /*  Pass 2: import system hive registry chunk  */
@@ -629,6 +598,7 @@ ExpInitializeExecutive(VOID)
     {
       KeBugCheckEx(SESSION4_INITIALIZATION_FAILED, Status, 0, 0, 0);
     }
+
   /*
    * Crash the system if the initial process terminates within 5 seconds.
    */

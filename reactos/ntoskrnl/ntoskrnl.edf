@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.137 2003/04/25 18:36:10 fireball Exp $
+; $Id: ntoskrnl.edf,v 1.138 2003/05/15 11:07:51 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -757,7 +757,7 @@ RtlGetGroupSecurityDescriptor=RtlGetGroupSecurityDescriptor@12
 RtlGetOwnerSecurityDescriptor=RtlGetOwnerSecurityDescriptor@12
 RtlImageNtHeader=RtlImageNtHeader@4
 RtlInitAnsiString=RtlInitAnsiString@8
-;RtlInitCodePageTable
+RtlInitCodePageTable=RtlInitCodePageTable@8
 RtlInitString=RtlInitString@8
 RtlInitUnicodeString=RtlInitUnicodeString@8
 RtlInitializeBitMap=RtlInitializeBitMap@12

@@ -1,4 +1,4 @@
-/* $Id: nls.c,v 1.7 2003/03/16 13:07:02 chorns Exp $
+/* $Id: nls.c,v 1.8 2003/05/15 11:03:21 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -60,67 +60,75 @@ PWCHAR NlsUnicodeLowercaseTable = NULL;
 /* FUNCTIONS *****************************************************************/
 
 /*
- * Missing functions:
- *   RtlInitCodePageTable
- *   RtlInitNlsTables
- *   RtlResetRtlTranslations
- */
-
-/*
  * RtlConsoleMultiByteToUnicodeN@24
  */
 
+
 NTSTATUS
 STDCALL
-RtlCustomCPToUnicodeN (
-	PRTL_NLS_DATA	NlsData,
-	PWCHAR		UnicodeString,
-	ULONG		UnicodeSize,
-	PULONG		ResultSize,
-	PCHAR		CustomString,
-	ULONG		CustomSize)
+RtlCustomCPToUnicodeN(IN PCPTABLEINFO CustomCP,
+		      PWCHAR UnicodeString,
+		      ULONG UnicodeSize,
+		      PULONG ResultSize,
+		      PCHAR CustomString,
+		      ULONG CustomSize)
 {
-	ULONG Size = 0;
-	ULONG i;
+  ULONG Size = 0;
+  ULONG i;
 
-	if (NlsData->DbcsFlag == FALSE)
+  if (CustomCP->DBCSCodePage == 0)
+    {
+      /* single-byte code page */
+      if (CustomSize > (UnicodeSize / sizeof(WCHAR)))
+	Size = UnicodeSize / sizeof(WCHAR);
+      else
+	Size = CustomSize;
+
+      if (ResultSize != NULL)
+	*ResultSize = Size * sizeof(WCHAR);
+
+      for (i = 0; i < Size; i++)
 	{
-		/* single-byte code page */
-		if (CustomSize > (UnicodeSize / sizeof(WCHAR)))
-			Size = UnicodeSize / sizeof(WCHAR);
-		else
-			Size = CustomSize;
-
-		if (ResultSize != NULL)
-			*ResultSize = Size * sizeof(WCHAR);
-
-		for (i = 0; i < Size; i++)
-		{
-			*UnicodeString = NlsData->MultiByteToUnicode[(int)*CustomString];
-			UnicodeString++;
-			CustomString++;
-		}
+	  *UnicodeString = CustomCP->MultiByteTable[(int)*CustomString];
+	  UnicodeString++;
+	  CustomString++;
 	}
-	else
-	{
-		/* multi-byte code page */
-		/* FIXME */
-    assert(FALSE);
-	}
+    }
+  else
+    {
+      /* multi-byte code page */
+      /* FIXME */
+      assert(FALSE);
+    }
 
-	return STATUS_SUCCESS;
+  return STATUS_SUCCESS;
 }
 
 
-VOID
-STDCALL
-RtlGetDefaultCodePage (
-	PUSHORT	AnsiCodePage,
-	PUSHORT	OemCodePage
-	)
+VOID STDCALL
+RtlGetDefaultCodePage(PUSHORT AnsiCodePage,
+		      PUSHORT OemCodePage)
 {
-	*AnsiCodePage = NlsAnsiCodePage;
-	*OemCodePage = NlsOemCodePage;
+  *AnsiCodePage = NlsAnsiCodePage;
+  *OemCodePage = NlsOemCodePage;
+}
+
+
+VOID STDCALL
+RtlInitCodePageTable(IN PUSHORT TableBase,
+		     OUT PCPTABLEINFO CodePageTable)
+{
+  UNIMPLEMENTED;
+}
+
+
+VOID STDCALL
+RtlInitNlsTables(OUT PNLSTABLEINFO NlsTable,
+		 IN PUSHORT CaseTableBase,
+		 IN PUSHORT OemTableBase,
+		 IN PUSHORT AnsiTableBase)
+{
+  UNIMPLEMENTED;
 }
 
 
@@ -240,46 +248,50 @@ RtlOemToUnicodeN (
 }
 
 
-NTSTATUS
-STDCALL
-RtlUnicodeToCustomCPN (
-	PRTL_NLS_DATA	NlsData,
-	PCHAR		CustomString,
-	ULONG		CustomSize,
-	PULONG		ResultSize,
-	PWCHAR		UnicodeString,
-	ULONG		UnicodeSize
-	)
+VOID STDCALL
+RtlResetRtlTranslations(IN PNLSTABLEINFO NlsTable)
 {
-	ULONG Size = 0;
-	ULONG i;
+  UNIMPLEMENTED;
+}
 
-	if (NlsData->DbcsFlag == 0)
+
+NTSTATUS STDCALL
+RtlUnicodeToCustomCPN(IN PCPTABLEINFO CustomCP,
+		      PCHAR CustomString,
+		      ULONG CustomSize,
+		      PULONG ResultSize,
+		      PWCHAR UnicodeString,
+		      ULONG UnicodeSize)
+{
+  ULONG Size = 0;
+  ULONG i;
+
+  if (CustomCP->DBCSCodePage == 0)
+    {
+      /* single-byte code page */
+      if (UnicodeSize > (CustomSize * sizeof(WCHAR)))
+	Size = CustomSize;
+      else
+	Size = UnicodeSize / sizeof(WCHAR);
+
+      if (ResultSize != NULL)
+	*ResultSize = Size;
+
+      for (i = 0; i < Size; i++)
 	{
-		/* single-byte code page */
-		if (UnicodeSize > (CustomSize * sizeof(WCHAR)))
-			Size = CustomSize;
-		else
-			Size = UnicodeSize / sizeof(WCHAR);
-
-		if (ResultSize != NULL)
-			*ResultSize = Size;
-
-		for (i = 0; i < Size; i++)
-		{
-			*CustomString = NlsData->UnicodeToMultiByte[*UnicodeString];
-			CustomString++;
-			UnicodeString++;
-		}
+	  *CustomString = ((PCHAR)CustomCP->WideCharTable)[*UnicodeString];
+	  CustomString++;
+	  UnicodeString++;
 	}
-	else
-	{
-		/* multi-byte code page */
-		/* FIXME */
-    assert(FALSE);
-	}
+    }
+  else
+    {
+      /* multi-byte code page */
+      /* FIXME */
+      assert(FALSE);
+    }
 
-	return STATUS_SUCCESS;
+  return STATUS_SUCCESS;
 }
 
 
@@ -400,51 +412,48 @@ RtlUnicodeToOemN (
 }
 
 
-NTSTATUS
-STDCALL
-RtlUpcaseUnicodeToCustomCPN (
-	PRTL_NLS_DATA	NlsData,
-	PCHAR		CustomString,
-	ULONG		CustomSize,
-	PULONG		ResultSize,
-	PWCHAR		UnicodeString,
-	ULONG		UnicodeSize
-	)
+NTSTATUS STDCALL
+RtlUpcaseUnicodeToCustomCPN(IN PCPTABLEINFO CustomCP,
+			    PCHAR CustomString,
+			    ULONG CustomSize,
+			    PULONG ResultSize,
+			    PWCHAR UnicodeString,
+			    ULONG UnicodeSize)
 {
-	WCHAR UpcaseChar;
-	ULONG Size = 0;
-	ULONG i;
+  WCHAR UpcaseChar;
+  ULONG Size = 0;
+  ULONG i;
 
-	if (NlsData->DbcsFlag == 0)
+  if (CustomCP->DBCSCodePage == 0)
+    {
+      /* single-byte code page */
+      if (UnicodeSize > (CustomSize * sizeof(WCHAR)))
+	Size = CustomSize;
+      else
+	Size = UnicodeSize / sizeof(WCHAR);
+
+      if (ResultSize != NULL)
+	*ResultSize = Size;
+
+      for (i = 0; i < Size; i++)
 	{
-		/* single-byte code page */
-		if (UnicodeSize > (CustomSize * sizeof(WCHAR)))
-			Size = CustomSize;
-		else
-			Size = UnicodeSize / sizeof(WCHAR);
-
-		if (ResultSize != NULL)
-			*ResultSize = Size;
-
-		for (i = 0; i < Size; i++)
-		{
-			*CustomString = NlsData->UnicodeToMultiByte[*UnicodeString];
+	  *CustomString = ((PCHAR)CustomCP->WideCharTable)[*UnicodeString];
 #if 0
-			UpcaseChar = NlsUnicodeUpcaseTable[*UnicodeString];
-			*CustomString = NlsData->UnicodeToMultiByte[UpcaseChar];
+	  UpcaseChar = NlsUnicodeUpcaseTable[*UnicodeString];
+	  *CustomString = NlsData->UnicodeToMultiByte[UpcaseChar];
 #endif
-			CustomString++;
-			UnicodeString++;
-		}
+	  CustomString++;
+	  UnicodeString++;
 	}
-	else
-	{
-		/* multi-byte code page */
-		/* FIXME */
-    assert(FALSE);
-	}
+    }
+  else
+    {
+      /* multi-byte code page */
+      /* FIXME */
+      assert(FALSE);
+    }
 
-	return STATUS_SUCCESS;
+  return STATUS_SUCCESS;
 }
 
 
