@@ -130,9 +130,8 @@ W32kAddFontResource(LPCWSTR  Filename)
   FontGDI->TextMetric.tmDescent = face->size->metrics.descender; // units below baseline
   FontGDI->TextMetric.tmHeight = FontGDI->TextMetric.tmAscent + FontGDI->TextMetric.tmDescent;
 
-  DbgPrint("Family name: %s\n", face->family_name);
-  DbgPrint("Style name: %s\n", face->style_name);
-  DbgPrint("Num glyphs: %u\n", face->num_glyphs);
+  DbgPrint("Win32k: Font loaded: %s (%s)\n", face->family_name, face->style_name);
+  DPRINT("Num glyphs: %u\n", face->num_glyphs);
 
   // Add this font resource to the font table
   FontTable[FontsLoaded].hFont = NewFont;
