@@ -858,16 +858,21 @@ NdisMRegisterIoPortRange(
 
   memset(&PortAddress, 0, sizeof(PortAddress));
 
+  /*
+   * FIXME: NDIS 5+ completely ignores the InitialPort parameter, but
+   * currently Adapter->BaseIoAddress isn't initialized anywhere.
+   */
+#if 1
   /* this might be a hack - ndis5 miniports seem to specify 0 */
   if(InitialPort)
       PortAddress = RtlConvertUlongToLargeInteger(InitialPort);
   else
+#endif
       PortAddress = Adapter->BaseIoAddress;
 
   NDIS_DbgPrint(MAX_TRACE, ("Translating address 0x%x 0x%x\n", PortAddress.u.HighPart, PortAddress.u.LowPart));
 
-  /* FIXME: hard-coded bus number */
-  if(!HalTranslateBusAddress(Adapter->BusType, 0, PortAddress, &AddressSpace, &TranslatedAddress))
+  if(!HalTranslateBusAddress(Adapter->BusType, Adapter->BusNumber, PortAddress, &AddressSpace, &TranslatedAddress))
     {
       NDIS_DbgPrint(MIN_TRACE, ("Unable to translate address\n"));
       return NDIS_STATUS_RESOURCES;
