@@ -143,8 +143,10 @@ void FindProgramTopicDlg::collect_programs_callback(ShellFolder& folder, const S
 				String lwr_path = path;
 				String lwr_name = entry->_display_name;
 
+#ifndef __WINE__ //TODO
 				_tcslwr((LPTSTR)lwr_path.c_str());
 				_tcslwr((LPTSTR)lwr_name.c_str());
+#endif
 
 				if (_tcsstr(lwr_path, _T(".exe")) &&	//@@ filter on ".exe" suffix
 					!_tcsstr(lwr_name, _T("uninstal")) && !_tcsstr(lwr_name, _T("deinstal"))) {	//@@ filter out deinstallation links
