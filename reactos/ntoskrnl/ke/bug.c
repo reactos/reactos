@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
+ *  Copyright (C) 1998, 1999, 2000, 2001, 2002 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bug.c,v 1.18 2001/04/17 04:11:00 dwelch Exp $
+/* $Id: bug.c,v 1.19 2002/01/10 00:59:32 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/bug.c
@@ -45,25 +45,25 @@ VOID PsDumpThreads(VOID);
 
 /* FUNCTIONS *****************************************************************/
 
-VOID 
+VOID
 KeInitializeBugCheck(VOID)
 {
-   InitializeListHead(&BugcheckCallbackListHead);
-   InBugCheck = 0;
+  InitializeListHead(&BugcheckCallbackListHead);
+  InBugCheck = 0;
 }
 
 BOOLEAN STDCALL
-KeDeregisterBugCheckCallback (PKBUGCHECK_CALLBACK_RECORD CallbackRecord)
+KeDeregisterBugCheckCallback(PKBUGCHECK_CALLBACK_RECORD CallbackRecord)
 {
   UNIMPLEMENTED;
 }
 
 BOOLEAN STDCALL
-KeRegisterBugCheckCallback (PKBUGCHECK_CALLBACK_RECORD CallbackRecord,
-			    PKBUGCHECK_CALLBACK_ROUTINE	CallbackRoutine,
-			    PVOID Buffer,
-			    ULONG Length,
-			    PUCHAR Component)
+KeRegisterBugCheckCallback(PKBUGCHECK_CALLBACK_RECORD CallbackRecord,
+			   PKBUGCHECK_CALLBACK_ROUTINE	CallbackRoutine,
+			   PVOID Buffer,
+			   ULONG Length,
+			   PUCHAR Component)
 {
   InsertTailList(&BugcheckCallbackListHead, &CallbackRecord->Entry);
   CallbackRecord->Length = Length;
@@ -74,11 +74,11 @@ KeRegisterBugCheckCallback (PKBUGCHECK_CALLBACK_RECORD CallbackRecord,
 }
 
 VOID STDCALL
-KeBugCheckEx (ULONG BugCheckCode,
-	      ULONG BugCheckParameter1,
-	      ULONG BugCheckParameter2,
-	      ULONG BugCheckParameter3,
-	      ULONG BugCheckParameter4)
+KeBugCheckEx(ULONG BugCheckCode,
+	     ULONG BugCheckParameter1,
+	     ULONG BugCheckParameter2,
+	     ULONG BugCheckParameter3,
+	     ULONG BugCheckParameter4)
 /*
  * FUNCTION: Brings the system down in a controlled manner when an 
  * inconsistency that might otherwise cause corruption has been detected
@@ -88,38 +88,71 @@ KeBugCheckEx (ULONG BugCheckCode,
  * RETURNS: Doesn't
  */
 {
+  PRTL_MESSAGE_RESOURCE_ENTRY Message;
+  NTSTATUS Status;
+  
   /* PJS: disable interrupts first, then do the rest */
-  __asm__("cli\n\t");      
-   DbgPrint("Bug detected (code %x param %x %x %x %x)\n",BugCheckCode,
-	  BugCheckParameter1,BugCheckParameter2,BugCheckParameter3,
-	  BugCheckParameter4);
-   if (PsGetCurrentProcess() != NULL)
-     {
-	DbgPrint("Pid: %x <", PsGetCurrentProcess()->UniqueProcessId);
-	DbgPrint("%.8s> ", PsGetCurrentProcess()->ImageFileName);
-     }
-   if (PsGetCurrentThread() != NULL)
-     {
-	DbgPrint("Thrd: %x Tid: %x\n",
-		 PsGetCurrentThread(),
-		 PsGetCurrentThread()->Cid.UniqueThread);
-     }
+  __asm__("cli\n\t");
+  DbgPrint("Bug detected (code %x param %x %x %x %x)\n",
+	   BugCheckCode,
+	   BugCheckParameter1,
+	   BugCheckParameter2,
+	   BugCheckParameter3,
+	   BugCheckParameter4);
+
+  Status = RtlFindMessage((PVOID)KERNEL_BASE, //0xC0000000,
+			  11, //RT_MESSAGETABLE,
+			  0x09, //0x409,
+			  BugCheckCode,
+			  &Message);
+  if (NT_SUCCESS(Status))
+    {
+      if (Message->Flags == 0)
+	DbgPrint("  %s\n", Message->Text);
+      else
+	DbgPrint("  %S\n", (PWSTR)Message->Text);
+    }
+  else
+    {
+      DbgPrint("  No message text found!\n\n");
+    }
+
+  if (InBugCheck == 1)
+    {
+      DbgPrint("Recursive bug check halting now\n");
+      for (;;)
+	{
+	  __asm__("hlt\n\t");
+	}
+    }
+  InBugCheck = 1;
+  if (PsGetCurrentProcess() != NULL)
+    {
+      DbgPrint("Pid: %x <", PsGetCurrentProcess()->UniqueProcessId);
+      DbgPrint("%.8s> ", PsGetCurrentProcess()->ImageFileName);
+    }
+  if (PsGetCurrentThread() != NULL)
+    {
+      DbgPrint("Thrd: %x Tid: %x\n",
+	       PsGetCurrentThread(),
+	       PsGetCurrentThread()->Cid.UniqueThread);
+    }
 //   PsDumpThreads();
-   KeDumpStackFrames((PULONG)__builtin_frame_address(0));
-   
+  KeDumpStackFrames((PULONG)__builtin_frame_address(0));
+  
 #if 1
-   for(;;)
-     {
-       /* PJS: use HLT instruction, rather than busy wait */
-       __asm__("hlt\n\t");	
-     }
+  for(;;)
+    {
+      /* PJS: use HLT instruction, rather than busy wait */
+      __asm__("hlt\n\t");
+    }
 #else
-   for(;;);
-#endif   
+  for(;;);
+#endif
 }
 
 VOID STDCALL
-KeBugCheck (ULONG BugCheckCode)
+KeBugCheck(ULONG BugCheckCode)
 /*
  * FUNCTION: Brings the system down in a controlled manner when an 
  * inconsistency that might otherwise cause corruption has been detected
@@ -128,35 +161,7 @@ KeBugCheck (ULONG BugCheckCode)
  * RETURNS: Doesn't
  */
 {
-   __asm__("cli\n\t");
-   DbgPrint("Bug detected (code %x)\n", BugCheckCode);
-   if (InBugCheck == 1)
-     {
-	DbgPrint("Recursive bug check halting now\n");
-	for(;;);
-     }
-   InBugCheck = 1;
-   if (PsGetCurrentProcess() != NULL)
-     {
-	DbgPrint("Pid: %x <", PsGetCurrentProcess()->UniqueProcessId);
-	DbgPrint("%.8s> ", PsGetCurrentProcess()->ImageFileName);
-     }
-   if (PsGetCurrentThread() != NULL)
-     {
-	DbgPrint("Thrd: %x Tid: %x\n",
-		 PsGetCurrentThread(),
-		 PsGetCurrentThread()->Cid.UniqueThread);
-     }
-//   PsDumpThreads();
-   KeDumpStackFrames((PULONG)__builtin_frame_address(0));
-#if 1
-   for(;;)
-     {
-	__asm__("hlt\n\t");
-     }
-#else
-   for(;;);
-#endif
+  KeBugCheckEx(BugCheckCode, 0, 0, 0, 0);
 }
 
 /* EOF */
