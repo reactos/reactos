@@ -140,6 +140,7 @@ subsys\system\explorer\explorer.exe     4
 subsys\system\explorer\explorer-cfg-template.xml 4
 subsys\system\explorer\notifyhook\notifyhook.dll 1
 subsys\system\format\format.exe         1
+subsys\system\notepad\notepad.exe       1
 subsys\system\regedit\regedit.exe       4
 subsys\system\regedt32\regedt32.exe     1
 subsys\system\regsvr32\regsvr32.exe     1
