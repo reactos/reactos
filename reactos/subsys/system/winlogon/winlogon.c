@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.6 2000/08/12 19:33:23 dwelch Exp $
+/* $Id: winlogon.c,v 1.1 2000/12/05 02:38:08 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -31,9 +31,9 @@ BOOLEAN StartServices(VOID)
    PROCESS_INFORMATION ProcessInformation;
    
    ServicesInitEvent = CreateEvent(NULL,
-				TRUE,
-				FALSE,
-		                "\\ServicesInitDone");				
+				   TRUE,
+				   FALSE,
+				   "\\ServicesInitDone");
    
    if (ServicesInitEvent == NULL)
      {
@@ -85,7 +85,7 @@ BOOLEAN StartLsass(VOID)
    LsassInitEvent = CreateEvent(NULL,
 				TRUE,
 				FALSE,
-				"\\LsassInitDone");				
+				"\\LsassInitDone");
    
    if (LsassInitEvent == NULL)
      {
@@ -160,9 +160,9 @@ VOID DoLoginUser(PCHAR Name, PCHAR Password)
 }
 
 int STDCALL
-WinMain(HINSTANCE hInstance, 
+WinMain(HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,
-	LPSTR lpCmdLine, 
+	LPSTR lpCmdLine,
 	int nShowCmd)
 {
 #if 0
@@ -173,7 +173,7 @@ WinMain(HINSTANCE hInstance,
 #endif
    CHAR LoginPrompt[] = "login:";
    CHAR PasswordPrompt[] = "password:";
-   ULONG Result;
+   DWORD Result;
    CHAR LoginName[255];
    CHAR Password[255];
    ULONG i;
@@ -182,9 +182,10 @@ WinMain(HINSTANCE hInstance,
     * FIXME: Create WindowStations here. At the moment lsass and services
     * share ours
     */
-   
+#if 0
    StartLsass();
    StartServices();
+#endif
    
    /* FIXME: What name does the real WinLogon use? */
 #if 0
@@ -206,7 +207,8 @@ WinMain(HINSTANCE hInstance,
 	/* Display login prompt */
 	WriteConsole(GetStdHandle(STD_OUTPUT_HANDLE),
 		     LoginPrompt,
-		     wcslen(LoginPrompt),
+//		     wcslen(LoginPrompt),
+		     strlen(LoginPrompt),
 		     &Result,
 		     NULL);
 	i = 0;
@@ -224,7 +226,8 @@ WinMain(HINSTANCE hInstance,
 	/* Display password prompt */
 	WriteConsole(GetStdHandle(STD_OUTPUT_HANDLE),
 		     PasswordPrompt,
-		     wcslen(PasswordPrompt),
+//		     wcslen(PasswordPrompt),
+		     strlen(PasswordPrompt),
 		     &Result,
 		     NULL);
 	i = 0;

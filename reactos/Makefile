@@ -46,8 +46,12 @@ NET_DRIVERS = ndis tcpip tditest wshtcpip
 # ne2000
 NET_DEVICE_DRIVERS = ne2000
 
+#
+# system applications (required for startup)
+#
+SYS_APPS = shell winlogon services
 
-APPS = args hello shell test cat bench apc shm lpc thread event file gditest \
+APPS = args hello test cat bench apc shm lpc thread event file gditest \
        pteb consume dump_shared_data vmtest regtest
 #       objdir
 
@@ -57,12 +61,12 @@ NET_APPS = ping
 
 KERNEL_SERVICES = $(DEVICE_DRIVERS) $(INPUT_DRIVERS) $(FS_DRIVERS) $(NET_DRIVERS) $(NET_DEVICE_DRIVERS)
 
-all: buildno $(COMPONENTS) $(DLLS) $(SUBSYS) $(LOADERS) $(KERNEL_SERVICES) $(APPS) $(NET_APPS)
+all: buildno $(COMPONENTS) $(DLLS) $(SUBSYS) $(LOADERS) $(KERNEL_SERVICES) $(SYS_APPS) $(APPS) $(NET_APPS)
 
 .PHONY: all
 
 clean: buildno_clean $(COMPONENTS:%=%_clean) $(DLLS:%=%_clean) $(LOADERS:%=%_clean) \
-       $(KERNEL_SERVICES:%=%_clean) $(SUBSYS:%=%_clean) $(APPS:%=%_clean)
+       $(KERNEL_SERVICES:%=%_clean) $(SUBSYS:%=%_clean) $(SYS_APPS:%=%_clean) $(APPS:%=%_clean)
 
 .PHONY: clean
 
@@ -88,11 +92,11 @@ endif
 install: rcopy$(EXE_POSTFIX) rmkdir$(EXE_POSTFIX) make_install_dirs autoexec_install $(COMPONENTS:%=%_install) \
         $(DLLS:%=%_install) $(LOADERS:%=%_install) \
         $(KERNEL_SERVICES:%=%_install) $(SUBSYS:%=%_install) \
-        $(APPS:%=%_install)
+        $(SYS_APPS:%=%_install) $(APPS:%=%_install)
 
 dist: rcopy$(EXE_POSTFIX) clean_dist_dir make_dist_dirs $(COMPONENTS:%=%_dist) $(DLLS:%=%_dist) \
       $(LOADERS:%=%_dist) $(KERNEL_SERVICES:%=%_dist) $(SUBSYS:%=%_dist) \
-      $(APPS:%=%_dist)
+      $(SYS_APPS:%=%_dist) $(APPS:%=%_dist)
 
 #
 # Build number generator
@@ -108,6 +112,23 @@ buildno_dist:
 buildno_install:
 
 .PHONY: buildno buildno_clean buildno_dist buildno_install
+
+#
+# System Applications
+#
+$(SYS_APPS): %:
+	make -C apps/system/$*
+
+$(SYS_APPS:%=%_clean): %_clean:
+	make -C apps/system/$* clean
+
+$(SYS_APPS:%=%_dist): %_dist:
+	make -C apps/system/$* dist
+
+$(SYS_APPS:%=%_install): %_install:
+	make -C apps/system/$* install
+
+.PHONY: $(SYS_APPS) $(SYS_APPS:%=%_clean) $(SYS_APPS:%=%_install) $(SYS_APPS:%=%_dist)
 
 #
 # Applications

@@ -1,4 +1,4 @@
-/* $Id: shell.c,v 1.41 2000/07/11 04:40:00 phreak Exp $
+/* $Id: shell.c,v 1.1 2000/12/05 02:38:08 ekohl Exp $
  *
  * PROJECT    : ReactOS Operating System
  * DESCRIPTION: ReactOS' Native Shell
