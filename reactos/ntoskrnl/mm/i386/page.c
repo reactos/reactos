@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.67 2004/08/01 07:27:25 hbirr Exp $
+/* $Id: page.c,v 1.68 2004/08/10 19:57:58 hbirr Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -54,7 +54,6 @@
 #define PA_WT        (1 << PA_BIT_WT)
 #define PA_CD        (1 << PA_BIT_CD)
 #define PA_ACCESSED  (1 << PA_BIT_ACCESSED)
-#define PA_DIRTY     (1 << PA_BIT_DIRTY)
 
 #define PAGETABLE_MAP     (0xf0000000)
 #define PAGEDIRECTORY_MAP (0xf0000000 + (PAGETABLE_MAP / (1024)))
@@ -254,7 +253,7 @@ VOID MmFreePageTable(PEPROCESS Process, PVOID Address)
    }
 }
 
-PULONG MmGetPageEntry(PVOID PAddress, BOOL CreatePde)
+static PULONG MmGetPageEntry(PVOID PAddress, BOOL CreatePde)
 /*
  * FUNCTION: Get a pointer to the page table entry for a virtual address
  */
@@ -325,7 +324,7 @@ PULONG MmGetPageEntry(PVOID PAddress, BOOL CreatePde)
    return (PULONG)ADDR_TO_PTE(PAddress);
 }
 
-ULONG MmGetPageEntryForProcess(PEPROCESS Process, PVOID Address)
+static ULONG MmGetPageEntryForProcess(PEPROCESS Process, PVOID Address)
 {
    PULONG Pte;
    ULONG oldPte;
@@ -945,10 +944,17 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
    }
 
    Attributes = ProtectToPTE(flProtect);
+   if (Address >= (PVOID)KERNEL_BASE)
+   {
+      Attributes &= ~PA_USER;
+   }
+   else
+   {
+      Attributes |= PA_USER;
+   }
 
    if (Process != NULL && Process != CurrentProcess)
    {
-      CHECKPOINT1;
       KeAttachProcess(Process);
    }
 
@@ -1036,13 +1042,29 @@ MmGetPageProtect(PEPROCESS Process, PVOID Address)
    {
       Protect = PAGE_NOACCESS;
    }
-   else if (Entry & PA_READWRITE)
+   else 
    {
-      Protect = PAGE_READWRITE;
-   }
-   else
-   {
-      Protect = PAGE_EXECUTE_READ;
+      if (Entry & PA_READWRITE)
+      {
+         Protect = PAGE_READWRITE;
+      }
+      else
+      {
+         Protect = PAGE_EXECUTE_READ;
+      }
+      if (Entry & PA_CD)
+      {
+         Protect |= PAGE_NOCACHE;
+      }
+      if (Entry & PA_WT)
+      {
+         Protect |= PAGE_WRITETHROUGH;
+      }
+      if (!(Entry & PA_USER))
+      {
+         Protect |= PAGE_SYSTEM;
+      }
+      		
    }
    return(Protect);
 }
@@ -1058,6 +1080,14 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
           Process, Address, flProtect);
 
    Attributes = ProtectToPTE(flProtect);
+   if (Address >= (PVOID)KERNEL_BASE)
+   {
+      Attributes &= ~PA_USER;
+   }
+   else
+   {
+      Attributes |= PA_USER;
+   }
    if (Process != NULL && Process != CurrentProcess)
    {
       KeAttachProcess(Process);
@@ -1067,7 +1097,7 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
    {
       KEBUGCHECK(0);
    }
-   *Pte = PAGE_MASK(*Pte) | Attributes;
+   *Pte = PAGE_MASK(*Pte) | Attributes | (*Pte & (PA_ACCESSED|PA_DIRTY));
    FLUSH_TLB_ONE(Address);
    if (Process != NULL && Process != CurrentProcess)
    {
