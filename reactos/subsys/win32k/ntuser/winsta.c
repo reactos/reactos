@@ -324,7 +324,7 @@ NtUserCreateWindowStation(
    DPRINT("Creating window station (%wZ)\n", &WindowStationName);
 
    Status = ObCreateObject(
-      ExGetPreviousMode(),
+      KernelMode,
       ExWindowStationObjectType,
       &ObjectAttributes,
       ExGetPreviousMode(),
@@ -336,7 +336,7 @@ NtUserCreateWindowStation(
 
    if (!NT_SUCCESS(Status))
    {
-      DPRINT("Failed creating window station (%wZ)\n", &WindowStationName);
+      DPRINT1("Failed creating window station (%wZ)\n", &WindowStationName);
       ExFreePool(WindowStationName.Buffer);
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
       return 0;

@@ -307,7 +307,7 @@ LdrLoadModule(PUNICODE_STRING Filename,
                              NULL,
                              NULL);
   CHECKPOINT;
-  Status = NtOpenFile(&FileHandle,
+  Status = ZwOpenFile(&FileHandle,
                       FILE_ALL_ACCESS,
                       &ObjectAttributes,
                       &IoStatusBlock,
@@ -322,7 +322,7 @@ LdrLoadModule(PUNICODE_STRING Filename,
   CHECKPOINT;
 
   /*  Get the size of the file  */
-  Status = NtQueryInformationFile(FileHandle,
+  Status = ZwQueryInformationFile(FileHandle,
                                   &IoStatusBlock,
                                   &FileStdInfo,
                                   sizeof(FileStdInfo),
@@ -348,7 +348,7 @@ LdrLoadModule(PUNICODE_STRING Filename,
   CHECKPOINT;
 
   /*  Load driver into memory chunk  */
-  Status = NtReadFile(FileHandle,
+  Status = ZwReadFile(FileHandle,
                       0, 0, 0,
                       &IoStatusBlock,
                       ModuleLoadBase,
@@ -363,7 +363,7 @@ LdrLoadModule(PUNICODE_STRING Filename,
     }
   CHECKPOINT;
 
-  NtClose(FileHandle);
+  ZwClose(FileHandle);
 
   Status = LdrProcessModule(ModuleLoadBase,
                             Filename,

@@ -124,58 +124,77 @@ NtCreateEvent(OUT PHANDLE EventHandle,
 	      IN EVENT_TYPE EventType,
 	      IN BOOLEAN InitialState)
 {
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+NtCreateEvent(OUT PHANDLE EventHandle,
+	      IN ACCESS_MASK DesiredAccess,
+	      IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
+	      IN EVENT_TYPE EventType,
+	      IN BOOLEAN InitialState)
+{
+   KPROCESSOR_MODE PreviousMode;
    PKEVENT Event;
    HANDLE hEvent;
-   NTSTATUS Status;
-   OBJECT_ATTRIBUTES SafeObjectAttributes;
-   
-   if (ObjectAttributes != NULL)
+   NTSTATUS Status = STATUS_SUCCESS;
+ 
+   PreviousMode = ExGetPreviousMode();
+ 
+   if(PreviousMode == UserMode)
+   {
+     _SEH_TRY
      {
-       Status = MmCopyFromCaller(&SafeObjectAttributes, ObjectAttributes,
-				 sizeof(OBJECT_ATTRIBUTES));
-       if (!NT_SUCCESS(Status))
-	 {
-	   return(Status);
-	 }
-       ObjectAttributes = &SafeObjectAttributes;
+       ProbeForWrite(EventHandle,
+                     sizeof(HANDLE),
+                     sizeof(ULONG));
      }
-
-   Status = ObCreateObject(ExGetPreviousMode(),
-			   ExEventObjectType,
-			   ObjectAttributes,
-			   ExGetPreviousMode(),
-			   NULL,
-			   sizeof(KEVENT),
-			   0,
-			   0,
-			   (PVOID*)&Event);
-   if (!NT_SUCCESS(Status))
+     _SEH_HANDLE
      {
-	return(Status);
+       Status = _SEH_GetExceptionCode();
      }
-   KeInitializeEvent(Event,
-		     EventType,
-		     InitialState);
-
-   Status = ObInsertObject ((PVOID)Event,
-			    NULL,
-			    DesiredAccess,
-			    0,
-			    NULL,
-			    &hEvent);
-   ObDereferenceObject(Event);
-   if (!NT_SUCCESS(Status))
+     _SEH_END;
+   }
+ 
+   Status = ObCreateObject(PreviousMode,
+                           ExEventObjectType,
+                           ObjectAttributes,
+                           PreviousMode,
+                           NULL,
+                           sizeof(KEVENT),
+                           0,
+                           0,
+                           (PVOID*)&Event);
+   if(NT_SUCCESS(Status))
+   {
+     KeInitializeEvent(Event,
+                       EventType,
+                       InitialState);
+ 
+ 
+     Status = ObInsertObject((PVOID)Event,
+                             NULL,
+                             DesiredAccess,
+                             0,
+                             NULL,
+                             &hEvent);
+     ObDereferenceObject(Event);
+ 
+     if(NT_SUCCESS(Status))
      {
-	return Status;
+       _SEH_TRY
+       {
+         *EventHandle = hEvent;
+       }
+       _SEH_HANDLE
+       {
+         Status = _SEH_GetExceptionCode();
+       }
+       _SEH_END;
      }
-
-   Status = MmCopyToCaller(EventHandle, &hEvent, sizeof(HANDLE));
-   if (!NT_SUCCESS(Status))
-     {
-	ZwClose(hEvent);
-	return(Status);
-     }
-   return(STATUS_SUCCESS);
+   }
+ 
+   return Status;
 }
 
 

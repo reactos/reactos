@@ -1579,21 +1579,12 @@ NtCreateToken(OUT PHANDLE UnsafeTokenHandle,
   HANDLE TokenHandle;
   PTOKEN AccessToken;
   NTSTATUS Status;
-  OBJECT_ATTRIBUTES SafeObjectAttributes;
   POBJECT_ATTRIBUTES ObjectAttributes;
   LUID TokenId;
   LUID ModifiedId;
   PVOID EndMem;
   ULONG uLength;
   ULONG i;
-
-  Status = MmCopyFromCaller(&SafeObjectAttributes,
-			    UnsafeObjectAttributes,
-			    sizeof(OBJECT_ATTRIBUTES));
-  if (!NT_SUCCESS(Status))
-    return(Status);
-
-  ObjectAttributes = &SafeObjectAttributes;
 
   Status = ZwAllocateLocallyUniqueId(&TokenId);
   if (!NT_SUCCESS(Status))

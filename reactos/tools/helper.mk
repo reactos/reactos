@@ -618,8 +618,10 @@ endif
 # if needed, until their problems can be found
 #
 ifeq ($(OPTIMIZED), 1)
-  MK_CFLAGS += -O2 -Wno-strict-aliasing
-  MK_CPPFLAGS += -O2 -Wno-strict-aliasing
+  ifneq ($(TARGET_NAME), bootvid)
+    MK_CFLAGS += -O2 -Wno-strict-aliasing
+    MK_CPPFLAGS += -O2 -Wno-strict-aliasing
+  endif
 endif
 
 ifneq ($(TARGET_LIBS),)

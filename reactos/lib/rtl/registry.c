@@ -44,7 +44,7 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
 
   if (RelativeTo & RTL_REGISTRY_HANDLE)
     {
-      Status = NtDuplicateObject(NtCurrentProcess(),
+      Status = ZwDuplicateObject(NtCurrentProcess(),
 				 (HANDLE)Path,
 				 NtCurrentProcess(),
 				 KeyHandle,
@@ -129,7 +129,7 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
 
   if (Create == TRUE)
     {
-      Status = NtCreateKey(KeyHandle,
+      Status = ZwCreateKey(KeyHandle,
 			   KEY_ALL_ACCESS,
 			   &ObjectAttributes,
 			   0,
@@ -139,7 +139,7 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
     }
   else
     {
-      Status = NtOpenKey(KeyHandle,
+      Status = ZwOpenKey(KeyHandle,
 			 KEY_ALL_ACCESS,
 			 &ObjectAttributes);
     }
@@ -165,7 +165,7 @@ RtlCheckRegistryKey(IN ULONG RelativeTo,
   if (!NT_SUCCESS(Status))
     return(Status);
 
-  NtClose(KeyHandle);
+  ZwClose(KeyHandle);
 
   return(STATUS_SUCCESS);
 }
@@ -188,7 +188,7 @@ RtlCreateRegistryKey(IN ULONG RelativeTo,
   if (!NT_SUCCESS(Status))
     return(Status);
 
-  NtClose(KeyHandle);
+  ZwClose(KeyHandle);
 
   return(STATUS_SUCCESS);
 }
@@ -216,10 +216,10 @@ RtlDeleteRegistryValue(IN ULONG RelativeTo,
   RtlInitUnicodeString(&Name,
 		       ValueName);
 
-  Status = NtDeleteValueKey(KeyHandle,
+  Status = ZwDeleteValueKey(KeyHandle,
 			    &Name);
 
-  NtClose(KeyHandle);
+  ZwClose(KeyHandle);
 
   return(Status);
 }
@@ -240,7 +240,7 @@ RtlFormatCurrentUserKeyPath (OUT PUNICODE_STRING KeyPath)
 
   DPRINT ("RtlFormatCurrentUserKeyPath() called\n");
 
-  Status = NtOpenThreadToken (NtCurrentThread (),
+  Status = ZwOpenThreadToken (NtCurrentThread (),
 			      TOKEN_READ,
 			      TRUE,
 			      &TokenHandle);
@@ -248,30 +248,30 @@ RtlFormatCurrentUserKeyPath (OUT PUNICODE_STRING KeyPath)
     {
       if (Status != STATUS_NO_TOKEN)
 	{
-	  DPRINT1 ("NtOpenThreadToken() failed (Status %lx)\n", Status);
+	  DPRINT1 ("ZwOpenThreadToken() failed (Status %lx)\n", Status);
 	  return Status;
 	}
 
-      Status = NtOpenProcessToken (NtCurrentProcess (),
+      Status = ZwOpenProcessToken (NtCurrentProcess (),
 				   TOKEN_READ,
 				   &TokenHandle);
       if (!NT_SUCCESS (Status))
 	{
-	  DPRINT1 ("NtOpenProcessToken() failed (Status %lx)\n", Status);
+	  DPRINT1 ("ZwOpenProcessToken() failed (Status %lx)\n", Status);
 	  return Status;
 	}
     }
 
   SidBuffer = (PSID_AND_ATTRIBUTES)Buffer;
-  Status = NtQueryInformationToken (TokenHandle,
+  Status = ZwQueryInformationToken (TokenHandle,
 				    TokenUser,
 				    (PVOID)SidBuffer,
 				    256,
 				    &Length);
-  NtClose (TokenHandle);
+  ZwClose (TokenHandle);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1 ("NtQueryInformationToken() failed (Status %lx)\n", Status);
+      DPRINT1 ("ZwQueryInformationToken() failed (Status %lx)\n", Status);
       return Status;
     }
 
@@ -329,7 +329,7 @@ RtlOpenCurrentUser(IN ACCESS_MASK DesiredAccess,
 				 OBJ_CASE_INSENSITIVE,
 				 NULL,
 				 NULL);
-      Status = NtOpenKey(KeyHandle,
+      Status = ZwOpenKey(KeyHandle,
 			 DesiredAccess,
 			 &ObjectAttributes);
       RtlFreeUnicodeString(&KeyPath);
@@ -346,7 +346,7 @@ RtlOpenCurrentUser(IN ACCESS_MASK DesiredAccess,
 			     OBJ_CASE_INSENSITIVE,
 			     NULL,
 			     NULL);
-  Status = NtOpenKey(KeyHandle,
+  Status = ZwOpenKey(KeyHandle,
 		     DesiredAccess,
 		     &ObjectAttributes);
 
@@ -403,7 +403,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
       if (((QueryEntry->Flags & (RTL_QUERY_REGISTRY_SUBKEY | RTL_QUERY_REGISTRY_TOPKEY)) != 0) &&
 	  (BaseKeyHandle != CurrentKeyHandle))
 	{
-	  NtClose(CurrentKeyHandle);
+	  ZwClose(CurrentKeyHandle);
 	  CurrentKeyHandle = BaseKeyHandle;
 	}
 
@@ -418,7 +418,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 				     OBJ_CASE_INSENSITIVE,
 				     BaseKeyHandle,
 				     NULL);
-	  Status = NtOpenKey(&CurrentKeyHandle,
+	  Status = ZwOpenKey(&CurrentKeyHandle,
 			     KEY_ALL_ACCESS,
 			     &ObjectAttributes);
 	  if (!NT_SUCCESS(Status))
@@ -439,7 +439,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 	      break;
 	    }
 
-	  Status = NtQueryValueKey(CurrentKeyHandle,
+	  Status = ZwQueryValueKey(CurrentKeyHandle,
 				   &KeyName,
 				   KeyValuePartialInformation,
 				   ValueInfo,
@@ -601,7 +601,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		  break;
 		}
 
-	      Status = NtQueryValueKey(CurrentKeyHandle,
+	      Status = ZwQueryValueKey(CurrentKeyHandle,
 				       &KeyName,
 				       KeyValuePartialInformation,
 				       ValueInfo,
@@ -725,7 +725,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 	      Index = 0;
 	      while (TRUE)
 		{
-		  Status = NtEnumerateValueKey(CurrentKeyHandle,
+		  Status = ZwEnumerateValueKey(CurrentKeyHandle,
 					       Index,
 					       KeyValueFullInformation,
 					       FullValueInfo,
@@ -848,9 +848,9 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
     }
 
   if (CurrentKeyHandle != BaseKeyHandle)
-    NtClose(CurrentKeyHandle);
+    ZwClose(CurrentKeyHandle);
 
-  NtClose(BaseKeyHandle);
+  ZwClose(BaseKeyHandle);
 
   return(Status);
 }
@@ -881,14 +881,14 @@ RtlWriteRegistryValue(IN ULONG RelativeTo,
   RtlInitUnicodeString(&Name,
 		       ValueName);
 
-  Status = NtSetValueKey(KeyHandle,
+  Status = ZwSetValueKey(KeyHandle,
 			 &Name,
 			 0,
 			 ValueType,
 			 ValueData,
 			 ValueLength);
   if (NT_SUCCESS(Status))
-    NtClose(KeyHandle);
+    ZwClose(KeyHandle);
 
   return(Status);
 }
@@ -908,7 +908,7 @@ RtlpNtCreateKey(OUT HANDLE KeyHandle,
   if (ObjectAttributes != NULL)
     ObjectAttributes->Attributes &= ~(OBJ_PERMANENT | OBJ_EXCLUSIVE);
 
-  return(NtCreateKey(KeyHandle,
+  return(ZwCreateKey(KeyHandle,
 		     DesiredAccess,
 		     ObjectAttributes,
 		     0,
@@ -941,7 +941,7 @@ RtlpNtEnumerateSubKey(IN HANDLE KeyHandle,
 	return(STATUS_NO_MEMORY);
     }
 
-  Status = NtEnumerateKey(KeyHandle,
+  Status = ZwEnumerateKey(KeyHandle,
 			  Index,
 			  KeyBasicInformation,
 			  KeyInfo,
@@ -978,7 +978,7 @@ RtlpNtEnumerateSubKey(IN HANDLE KeyHandle,
 NTSTATUS STDCALL
 RtlpNtMakeTemporaryKey(IN HANDLE KeyHandle)
 {
-  return(NtDeleteKey(KeyHandle));
+  return(ZwDeleteKey(KeyHandle));
 }
 
 
@@ -994,7 +994,7 @@ RtlpNtOpenKey(OUT HANDLE KeyHandle,
   if (ObjectAttributes != NULL)
     ObjectAttributes->Attributes &= ~(OBJ_PERMANENT | OBJ_EXCLUSIVE);
 
-  return(NtOpenKey(KeyHandle,
+  return(ZwOpenKey(KeyHandle,
 		   DesiredAccess,
 		   ObjectAttributes));
 }
@@ -1027,7 +1027,7 @@ RtlpNtQueryValueKey(IN HANDLE KeyHandle,
   if (ValueInfo == NULL)
     return(STATUS_NO_MEMORY);
 
-  Status = NtQueryValueKey(KeyHandle,
+  Status = ZwQueryValueKey(KeyHandle,
 			   &ValueName,
 			   KeyValuePartialInformation,
 			   ValueInfo,
@@ -1068,7 +1068,7 @@ RtlpNtSetValueKey(IN HANDLE KeyHandle,
 
   RtlInitUnicodeString(&ValueName,
 		       NULL);
-  return(NtSetValueKey(KeyHandle,
+  return(ZwSetValueKey(KeyHandle,
 		       &ValueName,
 		       0,
 		       Type,
