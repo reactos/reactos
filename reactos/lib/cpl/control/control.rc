@@ -44,7 +44,7 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_MAINICON            ICON    DISCARDABLE     "resources\config.ico"
+IDI_MAINICON            ICON    DISCARDABLE     "resources/config.ico"
 /////////////////////////////////////////////////////////////////////////////
 
 

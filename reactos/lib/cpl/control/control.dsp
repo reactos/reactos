@@ -114,7 +114,7 @@ SOURCE="$(InputPath)"
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=.\control.cpp
+SOURCE=.\control.c
 # End Source File
 # End Group
 # Begin Group "Header Files"

@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: control.cpp,v 1.1 2004/06/18 20:43:44 kuehng Exp $
+/* $Id: control.c,v 1.1 2004/06/19 00:11:44 kuehng Exp $
  *
  * PROJECT:         ReactOS System Control Panel
  * FILE:            lib/cpl/system/control.cpp
@@ -78,17 +78,17 @@ void PopulateCPLList(HWND hLisCtrl)
 	WIN32_FIND_DATA fd;
 	HANDLE hFind;
 	TCHAR pszSearchPath[MAX_PATH];
+	HIMAGELIST hImgListSmall;
+	HIMAGELIST hImgListLarge;
 	GetSystemDirectory(pszSearchPath,MAX_PATH);
 	_tcscat(pszSearchPath,_T("\\*.cpl"));
 	hFind = FindFirstFile(pszSearchPath,&fd);
-	HIMAGELIST hImgListSmall;
-	HIMAGELIST hImgListLarge;
 	hImgListSmall = ImageList_Create(16,16,ILC_COLOR,256,1000);
 	hImgListLarge = ImageList_Create(32,32,ILC_COLOR,256,1000);
 	while(hFind != INVALID_HANDLE_VALUE)
 	{
-		CTL_DEBUG((_T("Found %s\r\n"),fd.cFileName));
 		CPLLISTENTRY *pEntry;
+		CTL_DEBUG((_T("Found %s\r\n"),fd.cFileName));
 		pEntry = (CPLLISTENTRY*)malloc(sizeof(CPLLISTENTRY));
 		if(!pEntry)
 			break;
@@ -103,17 +103,19 @@ void PopulateCPLList(HWND hLisCtrl)
 		CTL_DEBUG((_T("CPLFunc %08X\r\n"),pEntry->pFunc));
 		if(pEntry->pFunc && pEntry->pFunc(hLisCtrl,CPL_INIT,0,0))
 		{
-			for(int i=0;i<pEntry->pFunc(hLisCtrl,CPL_GETCOUNT,0,0);i++)
+			int i;
+			for(i=0;i<pEntry->pFunc(hLisCtrl,CPL_GETCOUNT,0,0);i++)
 			{
+				HICON hIcon;
+				TCHAR Name[MAX_PATH];
+				int index;
 				pEntry->pFunc(hLisCtrl,CPL_INQUIRE,0,(LPARAM)&pEntry->CPLInfo);
 
-				HICON hIcon = LoadIcon(pEntry->hDLL,MAKEINTRESOURCE(pEntry->CPLInfo.idIcon));
-				int index;
+				hIcon = LoadIcon(pEntry->hDLL,MAKEINTRESOURCE(pEntry->CPLInfo.idIcon));
 				index = ImageList_AddIcon(hImgListSmall,hIcon);
 				ImageList_AddIcon(hImgListLarge,hIcon);
 
 				
-				TCHAR Name[MAX_PATH];
 				LoadString(pEntry->hDLL,pEntry->CPLInfo.idName,Name,MAX_PATH);
 				if(_tcslen(Name))
 				{
@@ -147,12 +149,13 @@ LRESULT CALLBACK MyWindowProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	switch(uMsg)
 	{
 	case WM_CREATE:
+		{		
 		RECT rect;
+		LV_COLUMN column;
 		GetClientRect(hWnd,&rect);
 		hListView = CreateWindow(WC_LISTVIEW,_T(""),LVS_REPORT | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL   | WS_VISIBLE | WS_CHILD|WS_BORDER|WS_TABSTOP,0,0,rect.right ,rect.bottom,hWnd,NULL,hInst,0);
 		CTL_DEBUG((_T("Listview Window %08X\r\n"),hListView));
 
-		LV_COLUMN column;
 		memset(&column,0x00,sizeof(column));
 		column.mask=LVCF_FMT | LVCF_WIDTH | LVCF_SUBITEM|LVCF_TEXT;
 		column.fmt=LVCFMT_LEFT;
@@ -167,21 +170,29 @@ LRESULT CALLBACK MyWindowProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		PopulateCPLList(hListView);
 		ListView_SetColumnWidth(hListView,2,LVSCW_AUTOSIZE_USEHEADER);
 	    ListView_Update(hListView,0);
+		}
 		break;
 	case WM_DESTROY:
 		PostQuitMessage(0);	
 		break;
 	case WM_SIZE:
+		{		
+		RECT rect;
 		GetClientRect(hWnd,&rect);
 		MoveWindow(hListView,0,0,rect.right,rect.bottom,TRUE);
+		}
 		break;
 	case WM_NOTIFY:
+		{		
 		NMHDR *phdr;
 		phdr = (NMHDR*)lParam;
 		switch(phdr->code)
 		{
 		case NM_DBLCLK:
+			{
 			int nSelect;
+			LV_ITEM lvi;
+			CPLLISTENTRY *pEntry;
 			nSelect=SendMessage(hListView,LVM_GETNEXTITEM,(WPARAM)-1,LVNI_FOCUSED); 
 			
 			if(nSelect==-1) // no items
@@ -190,12 +201,10 @@ LRESULT CALLBACK MyWindowProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				break;
 			}
 			CTL_DEBUG((_T("Select %d\r\n"),nSelect));
-			LV_ITEM lvi;
 			memset(&lvi,0x00,sizeof(lvi));
 			lvi.iItem = nSelect;
 			lvi.mask = LVIF_PARAM;
 			ListView_GetItem(hListView,&lvi);
-			CPLLISTENTRY *pEntry;
 			pEntry = (CPLLISTENTRY *)lvi.lParam;
 			CTL_DEBUG((_T("Listview DblClk Entry %08X\r\n"),pEntry));
 			if(pEntry) {
@@ -203,6 +212,8 @@ LRESULT CALLBACK MyWindowProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			}
 			if(pEntry && pEntry->pFunc)
 				pEntry->pFunc(hListView,CPL_DBLCLK,pEntry->CPLInfo.lData,0);
+			}
+		}
 		}
 		break;
 	case WM_COMMAND:
@@ -241,9 +252,9 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,char *lpCmdLine,i
 #endif
 {
 	MSG msg;
+	WNDCLASS wc;
 	hInst = hInstance;
 	CTL_DEBUG((_T("My Control Panel\r\n")));
-	WNDCLASS wc;
 	memset(&wc,0x00,sizeof(wc));
 	wc.hIcon = LoadIcon(hInst,MAKEINTRESOURCE(IDI_MAINICON));
 	wc.lpszClassName = MYWNDCLASS;
