@@ -1781,6 +1781,9 @@ NtUserYieldTask(VOID);
 DWORD STDCALL
 NtUserGetWindowThreadProcessId(HWND hWnd, LPDWORD UnsafePid);
 
+DWORD STDCALL
+NtUserGetQueueStatus(BOOL ClearChanges);
+
 #endif /* __WIN32K_NTUSER_H */
 
 /* EOF */
