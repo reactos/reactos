@@ -440,7 +440,7 @@ IntDestroyCurIconObject(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT Object,
   Search = Object->ProcessList.Flink;
   while (Search != &Object->ProcessList)
     {
-    Current = CONTAINING_RECORD(Object->ProcessList.Flink, CURICON_PROCESS, ListEntry);
+    Current = CONTAINING_RECORD(Search, CURICON_PROCESS, ListEntry);
     if (Current->Process == W32Process)
       {
       break;
