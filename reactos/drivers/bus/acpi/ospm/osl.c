@@ -219,6 +219,11 @@ acpi_os_install_interrupt_handler(u32 irq, OSD_HANDLER handler, void *context)
     &DIrql,
     &Affinity);
 
+  AcpiIrqNumber = irq;
+  AcpiIrqHandler = handler;
+  AcpiIrqContext = context;
+  AcpiInterruptHandlerRegistered = TRUE;
+
   Status = IoConnectInterrupt(
     &AcpiInterrupt,
     OslIsrStub,
@@ -235,11 +240,6 @@ acpi_os_install_interrupt_handler(u32 irq, OSD_HANDLER handler, void *context)
     DPRINT("Could not connect to interrupt %d\n", Vector);
     return AE_ERROR;
   }
-
-  AcpiIrqNumber = irq;
-  AcpiIrqHandler = handler;
-  AcpiIrqContext = context;
-  AcpiInterruptHandlerRegistered = TRUE;
 
 	return AE_OK;
 }
