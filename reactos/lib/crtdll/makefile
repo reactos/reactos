@@ -75,7 +75,7 @@ MATH_OBJECTS = math/acos.o math/acosh.o math/asin.o math/asinh.o math/atan.o mat
 		math/atanh.o math/ceil.o math/cos.o math/cosh.o math/exp.o math/fabs.o\
 		math/floor.o math/fmod.o math/frexp.o math/huge_val.o math/hypot.o\
 		math/ldexp.o math/log.o math/log10.o math/modf.o math/modfl.o math/pow.o\
-		math/pow10.o math/pow2.o math/sin.o math/sinh.o math/sqrt.o math/tan.o\
+		math/sin.o math/sinh.o math/sqrt.o math/tan.o\
 		math/tanh.o
 
 
