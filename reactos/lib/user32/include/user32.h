@@ -55,6 +55,9 @@ void DrawCaret(HWND hWnd, PTHRDCARETINFO CaretInfo);
 #define NtUserSetMenuBarHeight(menu, height) \
   (BOOL)NtUserCallTwoParam((DWORD)menu, (DWORD)height, TWOPARAM_ROUTINE_SETMENUBARHEIGHT)
 
+#define NtUserGetWindowInfo(hwnd, pwi) \
+  (BOOL)NtUserCallTwoParam((DWORD)hwnd, (DWORD)pwi, TWOPARAM_ROUTINE_GETWINDOWINFO)
+
 #define NtUserSetCaretBlinkTime(uMSeconds) \
   (BOOL)NtUserCallOneParam((DWORD)uMSeconds, ONEPARAM_ROUTINE_SETCARETBLINKTIME)
 

@@ -108,6 +108,17 @@ typedef struct _WINDOW_OBJECT
 #define WINDOWSTATUS_DESTROYING         (0x1)
 #define WINDOWSTATUS_DESTROYED          (0x2)
 
+#define HAS_DLGFRAME(Style, ExStyle) \
+            (((ExStyle) & WS_EX_DLGMODALFRAME) || \
+            (((Style) & WS_DLGFRAME) && (!((Style) & WS_THICKFRAME))))
+
+#define HAS_THICKFRAME(Style, ExStyle) \
+            (((Style) & WS_THICKFRAME) && \
+            (!(((Style) & (WS_DLGFRAME | WS_BORDER)) == WS_DLGFRAME)))
+
+#define HAS_THINFRAME(Style, ExStyle) \
+            (((Style) & WS_BORDER) || (!((Style) & (WS_CHILD | WS_POPUP))))
+
 #define IntIsDesktopWindow(WndObj) \
   (WndObj->Parent == NULL)
 
@@ -193,6 +204,12 @@ IntGetWindowRgn(HWND hWnd, HRGN hRgn);
 
 INT FASTCALL
 IntGetWindowRgnBox(HWND hWnd, RECT *Rect);
+
+BOOL FASTCALL
+IntGetWindowInfo(PWINDOW_OBJECT WindowObject, PWINDOWINFO pwi);
+
+VOID FASTCALL
+IntGetWindowBorderMeasures(PWINDOW_OBJECT WindowObject, INT *cx, INT *cy);
 
 DWORD IntRemoveWndProcHandle(WNDPROC Handle);
 DWORD IntRemoveProcessWndProcHandles(HANDLE ProcessID);

@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.102 2004/03/14 11:27:33 gvg Exp $
+/* $Id: window.c,v 1.103 2004/04/02 20:51:07 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -890,14 +890,13 @@ GetTopWindow(HWND hWnd)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 GetWindowInfo(HWND hwnd,
 	      PWINDOWINFO pwi)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return NtUserGetWindowInfo(hwnd, pwi);
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.55 2004/03/23 21:47:37 weiden Exp $
+/* $Id: misc.c,v 1.56 2004/04/02 20:51:08 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -369,6 +369,40 @@ NtUserCallTwoParam(
     
     case TWOPARAM_ROUTINE_SETCARETPOS:
       return (DWORD)IntSetCaretPos((int)Param1, (int)Param2);
+    
+    case TWOPARAM_ROUTINE_GETWINDOWINFO:
+    {
+      WINDOWINFO wi;
+      DWORD Ret;
+      
+      if(!(WindowObject = IntGetWindowObject((HWND)Param1)))
+      {
+        SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+        return FALSE;
+      }
+      
+      Status = MmCopyFromCaller(&wi.cbSize, (PVOID)Param2, sizeof(wi.cbSize));
+      if(!NT_SUCCESS(Status))
+      {
+        IntReleaseWindowObject(WindowObject);
+        SetLastNtError(Status);
+        return FALSE;
+      }
+      
+      if((Ret = (DWORD)IntGetWindowInfo(WindowObject, &wi)))
+      {
+        Status = MmCopyToCaller((PVOID)Param2, &wi, sizeof(WINDOWINFO));
+        if(!NT_SUCCESS(Status))
+        {
+          IntReleaseWindowObject(WindowObject);
+          SetLastNtError(Status);
+          return FALSE;
+        }
+      }
+      
+      IntReleaseWindowObject(WindowObject);
+      return Ret;
+    }
   }
   DPRINT1("Calling invalid routine number 0x%x in NtUserCallTwoParam()\n Param1=0x%x Parm2=0x%x\n",
           Routine, Param1, Param2);

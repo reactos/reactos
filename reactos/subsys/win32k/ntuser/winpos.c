@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.107 2004/04/01 23:16:21 gvg Exp $
+/* $Id: winpos.c,v 1.108 2004/04/02 20:51:08 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -65,17 +65,6 @@
     (SWP_AGG_NOPOSCHANGE | SWP_FRAMECHANGED | SWP_HIDEWINDOW | SWP_SHOWWINDOW)
 
 /* FUNCTIONS *****************************************************************/
-
-#define HAS_DLGFRAME(Style, ExStyle) \
-            (((ExStyle) & WS_EX_DLGMODALFRAME) || \
-            (((Style) & WS_DLGFRAME) && (!((Style) & WS_THICKFRAME))))
-
-#define HAS_THICKFRAME(Style, ExStyle) \
-            (((Style) & WS_THICKFRAME) && \
-            (!(((Style) & (WS_DLGFRAME | WS_BORDER)) == WS_DLGFRAME)))
-
-#define HAS_THINFRAME(Style, ExStyle) \
-            (((Style) & WS_BORDER) || (!((Style) & (WS_CHILD | WS_POPUP))))
 
 BOOL FASTCALL
 IntGetClientOrigin(HWND hWnd, LPPOINT Point)
@@ -223,25 +212,7 @@ WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT *pt, PRECT RestoreRect)
         return NULL;
       }
       WindowObject->InternalPos->NormalRect = WindowObject->WindowRect;
-      if (HAS_DLGFRAME(WindowObject->Style, WindowObject->ExStyle) && !(WindowObject->Style & WS_MINIMIZE))
-      {
-        XInc = NtUserGetSystemMetrics(SM_CXDLGFRAME);
-        YInc = NtUserGetSystemMetrics(SM_CYDLGFRAME);
-      }
-      else
-      {
-        XInc = YInc = 0;
-        if (HAS_THICKFRAME(WindowObject->Style, WindowObject->ExStyle)&& !(WindowObject->Style & WS_MINIMIZE))
-        {
-          XInc += NtUserGetSystemMetrics(SM_CXFRAME);
-          YInc += NtUserGetSystemMetrics(SM_CYFRAME);
-        }
-        else if (HAS_THINFRAME(WindowObject->Style, WindowObject->ExStyle))
-	{
-	  XInc += NtUserGetSystemMetrics(SM_CXBORDER);
-	  YInc += NtUserGetSystemMetrics(SM_CYBORDER);
-	}
-      }
+      IntGetWindowBorderMeasures(WindowObject, &XInc, &YInc);
       WindowObject->InternalPos->MaxPos.x = WorkArea.left - XInc;
       WindowObject->InternalPos->MaxPos.y = WorkArea.top - YInc;
       WindowObject->InternalPos->IconPos.x = WorkArea.left;
@@ -385,25 +356,7 @@ WinPosFillMinMaxInfoStruct(PWINDOW_OBJECT Window, MINMAXINFO *Info)
   Info->ptMaxTrackSize.x = Info->ptMaxSize.x;
   Info->ptMaxTrackSize.y = Info->ptMaxSize.y;
 
-  if (HAS_DLGFRAME(Window->Style, Window->ExStyle))
-    {
-      XInc = NtUserGetSystemMetrics(SM_CXDLGFRAME);
-      YInc = NtUserGetSystemMetrics(SM_CYDLGFRAME);
-    }
-  else
-    {
-      XInc = YInc = 0;
-      if (HAS_THICKFRAME(Window->Style, Window->ExStyle))
-	{
-	  XInc += NtUserGetSystemMetrics(SM_CXFRAME);
-	  YInc += NtUserGetSystemMetrics(SM_CYFRAME);
-	}
-      else if (HAS_THINFRAME(Window->Style, Window->ExStyle))
-	{
-	  XInc += NtUserGetSystemMetrics(SM_CXBORDER);
-	  YInc += NtUserGetSystemMetrics(SM_CYBORDER);
-	}
-    }
+  IntGetWindowBorderMeasures(Window, &XInc, &YInc);
   Info->ptMaxSize.x += 2 * XInc;
   Info->ptMaxSize.y += 2 * YInc;
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.207 2004/03/31 19:44:34 weiden Exp $
+/* $Id: window.c,v 1.208 2004/04/02 20:51:08 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -428,6 +428,48 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
   IntReleaseWindowObject(Window);
 
   return 0;
+}
+
+VOID FASTCALL
+IntGetWindowBorderMeasures(PWINDOW_OBJECT WindowObject, INT *cx, INT *cy)
+{
+  if(HAS_DLGFRAME(WindowObject->Style, WindowObject->ExStyle) && !(WindowObject->Style & WS_MINIMIZE))
+  {
+    *cx = NtUserGetSystemMetrics(SM_CXDLGFRAME);
+    *cy = NtUserGetSystemMetrics(SM_CYDLGFRAME);
+  }
+  else
+  {
+    if(HAS_THICKFRAME(WindowObject->Style, WindowObject->ExStyle)&& !(WindowObject->Style & WS_MINIMIZE))
+    {
+      *cx = NtUserGetSystemMetrics(SM_CXFRAME);
+      *cy = NtUserGetSystemMetrics(SM_CYFRAME);
+    }
+    else if(HAS_THINFRAME(WindowObject->Style, WindowObject->ExStyle))
+    {
+      *cx = NtUserGetSystemMetrics(SM_CXBORDER);
+      *cy = NtUserGetSystemMetrics(SM_CYBORDER);
+    }
+    else
+    {
+      *cx = *cy = 0;
+    }
+  }
+}
+
+BOOL FASTCALL
+IntGetWindowInfo(PWINDOW_OBJECT WindowObject, PWINDOWINFO pwi)
+{
+  pwi->cbSize = sizeof(WINDOWINFO);
+  pwi->rcWindow = WindowObject->WindowRect;
+  pwi->rcClient = WindowObject->ClientRect;
+  pwi->dwStyle = WindowObject->Style;
+  pwi->dwExStyle = WindowObject->ExStyle;
+  pwi->dwWindowStatus = (NtUserGetForegroundWindow() == WindowObject->Self); /* WS_ACTIVECAPTION */
+  IntGetWindowBorderMeasures(WindowObject, &pwi->cxWindowBorders, &pwi->cyWindowBorders);
+  pwi->atomWindowType = (WindowObject->Class ? WindowObject->Class->Atom : 0);
+  pwi->wCreatorVersion = 0x400; /* FIXME - return a real version number */
+  return TRUE;
 }
 
 static BOOL FASTCALL
