@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.106 2003/09/25 15:54:42 navaraf Exp $
+# $Id: Makefile,v 1.107 2003/10/23 13:16:17 hbirr Exp $
 #
 # ReactOS Operating System
 #
@@ -655,8 +655,12 @@ $(TARGETNAME).sym: $(TARGETNAME).nostrip.exe
 TAGS: $(TAG_OBJECTS)
 	etags $(addprefix -i , $(TAG_OBJECTS))
 
-ntoskrnl.map: $(TARGETNAME).nostrip.exe
-	$(NM) --numeric-sort $(TARGETNAME).nostrip.exe > ntoskrnl.map
+$(TARGETNAME).map: $(TARGETNAME).nostrip.exe
+ifeq ($(FULL_MAP),yes)
+	$(OBJDUMP) -d -S $(TARGETNAME).nostrip.exe > $(TARGETNAME).map
+else
+	$(NM) --numeric-sort $(TARGETNAME).nostrip.exe > $(TARGETNAME).map
+endif
 
 $(TARGETNAME).o: $(OBJECTS)
 	$(LD) \
