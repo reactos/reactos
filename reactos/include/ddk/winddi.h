@@ -1042,6 +1042,8 @@ DWORD APIENTRY EngDeviceIoControl(
 
 VOID STDCALL EngFreeMem(PVOID Mem);
 
+VOID STDCALL EngFreeUserMem(PVOID pv);
+
 /*
 EngDeleteClip
 EngDeleteDriverObj
@@ -1057,7 +1059,6 @@ EngFillPath
 EngFindImageProcAddress
 EngFindResource
 EngFreeModule
-EngFreeUserMem
 EngGetCurrentCodePage
 EngGetDriverName
 EngGetFileChangeTime
