@@ -1,0 +1,19 @@
+# $Id: Makefile.ros-template,v 1.1 2004/12/23 08:55:00 gvg Exp $
+
+TARGET_NAME = shdocvw
+
+TARGET_OBJECTS = @C_SRCS@
+
+TARGET_CFLAGS = @EXTRADEFS@
+
+TARGET_SDKLIBS = @IMPORTS@ wine.a wine_uuid.a ntdll.a
+
+TARGET_BASE = $(TARGET_BASE_LIB_SHDOCVW)
+
+TARGET_NORC = yes
+
+default: all
+
+DEP_OBJECTS = $(TARGET_OBJECTS)
+
+include $(TOOLS_PATH)/depend.mk

@@ -58,6 +58,7 @@ reactos/lib/richedit		# Synced to Wine-20041201
 reactos/lib/rpcrt4		# Synced to Wine-20041201
 reactos/lib/setupapi		# Out of sync
 reactos/lib/shell32             # Synced to Wine-20041201
+reactos/lib/shdocvw             # Synced to Wine-20041201
 reactos/lib/shlwapi             # Synced to Wine-20041201
 reactos/lib/twain		# Out of sync
 reactos/lib/unicode		# Dependancy on this lib needs to be removed. Synced to Wine-20041201

@@ -16,6 +16,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <basetyps.h>
+#include <objbase.h>
+
 #ifndef GUID_DEFINED
 #define GUID_DEFINED
 typedef struct _GUID
@@ -37,9 +40,6 @@ typedef struct _GUID
 #define DEFINE_GUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
     extern const GUID name;
 #endif
-
-#define DEFINE_OLEGUID(name, l, w1, w2) \
-	DEFINE_GUID(name, l, w1, w2, 0xC0,0,0,0,0,0,0,0x46)
 
 #ifndef _GUIDDEF_H_
 #define _GUIDDEF_H_
@@ -68,8 +68,6 @@ typedef GUID FMTID,*LPFMTID;
 #else /* defined(__cplusplus) && !defined(CINTERFACE) */
 #define IsEqualGUID(rguid1, rguid2) (!memcmp(rguid1, rguid2, sizeof(GUID)))
 #endif /* defined(__cplusplus) && !defined(CINTERFACE) */
-#define IsEqualIID(riid1, riid2) IsEqualGUID(riid1, riid2)
-#define IsEqualCLSID(rclsid1, rclsid2) IsEqualGUID(rclsid1, rclsid2)
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
 #include <string.h>
