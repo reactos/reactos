@@ -1,4 +1,4 @@
-/* $Id: button.c,v 1.10 2003/09/07 13:16:55 ekohl Exp $
+/* $Id: button.c,v 1.11 2003/09/07 17:36:40 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -137,7 +137,11 @@ inline static WCHAR *get_button_text( HWND hwnd )
     DbgPrint("[button] In get_button_text()\n");
     len = GetWindowTextLengthW( hwnd );
     buffer = HeapAlloc( GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR) );
-    if (buffer) GetWindowTextW( hwnd, buffer, len + 1 );
+    if (buffer)
+    {
+        GetWindowTextW( hwnd, buffer, len );
+        buffer[len] = 0;
+    }
     DbgPrint("[button] TextLen %d Text = %s\n", len, buffer);
     return buffer;
 }
@@ -183,7 +187,7 @@ static LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
     case WM_CREATE:
         DbgPrint("[button] WM_CREATE\n");
 
-        checkBoxWidth  = 14;
+        checkBoxWidth  = 13;
         checkBoxHeight = 13;
 
         if (btn_type >= MAX_BTN_TYPE)
@@ -542,12 +546,14 @@ static UINT BUTTON_CalcLabelRect(HWND hwnd, HDC hdc, RECT *rc)
    WCHAR *text;
    ICONINFO    iconInfo;
    BITMAP      bm;
-   UINT        dtStyle = BUTTON_BStoDT(style);
+   UINT        dtStyle;
    RECT        r = *rc;
    INT         n;
 
    DbgPrint("[button] In BUTTON_CalcLabelRect()\n");
-   style = GetWindowLongA( hwnd, GWL_STYLE );
+   style = GetWindowLongW( hwnd, GWL_STYLE );
+
+   dtStyle = BUTTON_BStoDT(style);
 
    /* Calculate label rectangle according to label type */
    switch (style & (BS_ICON|BS_BITMAP))
@@ -751,22 +757,22 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
 
     uState = DFCS_BUTTONPUSH | DFCS_ADJUSTRECT;
 
-        if (style & BS_FLAT)
-            uState |= DFCS_MONO;
-        else if (pushedState)
-	{
-	    if (get_button_type(style) == BS_DEFPUSHBUTTON )
-	        uState |= DFCS_FLAT;
-	    else
-	        uState |= DFCS_PUSHED;
-	}
+    if (style & BS_FLAT)
+        uState |= DFCS_MONO;
+    else if (pushedState)
+    {
+        if (get_button_type(style) == BS_DEFPUSHBUTTON )
+            uState |= DFCS_FLAT;
+        else
+            uState |= DFCS_PUSHED;
+    }
 
-        if (state & (BUTTON_CHECKED | BUTTON_3STATE))
-            uState |= DFCS_CHECKED;
+    if (state & (BUTTON_CHECKED | BUTTON_3STATE))
+        uState |= DFCS_CHECKED;
 
-	DrawFrameControl( hDC, &rc, DFC_BUTTON, uState );
+    DrawFrameControl( hDC, &rc, DFC_BUTTON, uState );
 
-	focus_rect = rc;
+    focus_rect = rc;
 
     /* draw button label */
     DbgPrint("[button] About to calculate label rectangle\n");
@@ -777,7 +783,7 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
     {
         DbgPrint("[button] JUMPING TO CLEANUP!\n");
        goto cleanup;
-   }
+    }
 
     if (pushedState)
        OffsetRect(&r, 1, 1);
@@ -806,7 +812,7 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
     SelectObject( hDC, hOldPen );
     SelectObject( hDC, hOldBrush );
     SetBkMode(hDC, oldBkMode);
-    
+
     DbgPrint("[button] Quitting\n");
 }
 
