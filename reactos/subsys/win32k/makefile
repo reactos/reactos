@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.53 2002/11/24 20:13:44 jfilby Exp $
+# $Id: makefile,v 1.54 2002/11/24 20:18:35 jfilby Exp $
 
 PATH_TO_TOP = ../..
 
@@ -31,8 +31,7 @@ NTUSER_OBJECTS = ntuser/class.o ntuser/guicheck.o ntuser/hook.o \
                  ntuser/userobj.o ntuser/window.o ntuser/winsta.o \
 		 ntuser/input.o ntuser/keyboard.o ntuser/callback.o \
 		 ntuser/winpos.o ntuser/painting.o ntuser/metric.o \
-		 ntuser/windc.o ntuser/prop.o ntuser/scrollbar.o \
-		 ntuser/uitools.o
+		 ntuser/windc.o ntuser/prop.o ntuser/scrollbar.o
 OBJECTS_OBJECTS = objects/bitmaps.o objects/brush.o objects/cliprgn.o  \
                   objects/color.o objects/coord.o objects/dc.o  \
                   objects/fillshap.o objects/gdiobj.o objects/icm.o  \
