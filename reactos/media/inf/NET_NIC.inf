@@ -23,4 +23,4 @@ HKR, , Installer32,     0, "NetCfgx.dll,NetClassInstaller"
 
 [Strings]
 ReactOS = "ReactOS Team"
-DisplayClassName = "Network adapters"
+DisplayClassName = "Network Adapters"
