@@ -87,8 +87,8 @@ const struct builtin_class_descr COMBO_builtin_class =
 {
     L"ComboBox",           /* name */
     CS_GLOBALCLASS | CS_PARENTDC | CS_DBLCLKS, /* style  */
-    (WNDPROC) ComboWndProcA,        /* procA */
     (WNDPROC) ComboWndProcW,        /* procW */
+    (WNDPROC) ComboWndProcA,        /* procA */
     sizeof(HEADCOMBO *),  /* extra */
     (LPCWSTR) IDC_ARROW,            /* cursor */
     0                     /* brush */
