@@ -14,7 +14,7 @@
 
 #define NTOS_MODE_USER
 #include <windows.h>
-#include <accctrl.h>
+// #include <accctrl.h>
 #include <ntos.h>
 
 
@@ -474,7 +474,7 @@ SetFileSecurityA (
  */
 STDCALL DWORD GetSecurityInfo (
     HANDLE handle,
-    SE_OBJECT_TYPE ObjectType,
+    UINT ObjectType,        // SE_OBJECT_TYPE
     SECURITY_INFORMATION SecurityInfo,
     PSID *ppsidOwner,
     PSID *ppsidGroup,
@@ -492,12 +492,12 @@ STDCALL DWORD GetSecurityInfo (
  */
 STDCALL DWORD GetSecurityInfoExA(
     HANDLE hObject,
-    SE_OBJECT_TYPE ObjectType,
+    UINT ObjectType,        // SE_OBJECT_TYPE
     SECURITY_INFORMATION SecurityInfo,
     LPCSTR lpProvider,
     LPCSTR lpProperty,
-    PACTRL_ACCESS *ppAccessList,
-    PACTRL_AUDIT *ppAuditList,
+    VOID *ppAccessList,     // PACTRL_ACCESS
+    VOID *ppAuditList,      // PACTRL_AUDIT
     LPCSTR *lppOwner,
     LPCSTR *lppGroup
     )
@@ -511,12 +511,12 @@ STDCALL DWORD GetSecurityInfoExA(
  */
 STDCALL DWORD GetSecurityInfoExW(
     HANDLE hObject,
-    SE_OBJECT_TYPE ObjectType,
+    UINT ObjectType,        // SE_OBJECT_TYPE
     SECURITY_INFORMATION SecurityInfo,
     LPCWSTR lpProvider,
     LPCWSTR lpProperty,
-    PACTRL_ACCESS *ppAccessList,
-    PACTRL_AUDIT *ppAuditList,
+    VOID *ppAccessList,     // PACTRL_ACCESS
+    VOID *ppAuditList,      // PACTRL_AUDIT
     LPWSTR *lppOwner,
     LPWSTR *lppGroup
     )

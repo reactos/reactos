@@ -16,17 +16,16 @@ __ret_label:
 }
 
 
-// This is broken, and dragged over from WINE:
-/*
+// This is dragged over from WINE:
 
 typedef struct __EXCEPTION_FRAME
 {
   struct __EXCEPTION_FRAME *Prev;
   PEXCEPTION_HANDLER       Handler;
 } EXCEPTION_FRAME, *PEXCEPTION_FRAME;
-*/
+
 /* VC++ extensions to Win32 SEH */
-/*typedef struct _SCOPETABLE
+typedef struct _SCOPETABLE
 {
   int previousTryLevel;
   int (*lpfnFilter)(PEXCEPTION_POINTERS);
@@ -55,17 +54,16 @@ typedef struct __JUMP_BUFFER
     unsigned long Eip;
     unsigned long Registration;
     unsigned long TryLevel;
-*/    /* Start of new struct members */
-/*    unsigned long Cookie;
+    /* Start of new struct members */
+    unsigned long Cookie;
     unsigned long UnwindFunc;
     unsigned long UnwindData[6];
 } _JUMP_BUFFER;
-*/
 
 /*
- * @unimplemented
+ * @implemented
 */
 void __stdcall _seh_longjmp_unwind(_JUMP_BUFFER *jmp)
 {
-//    _local_unwind2((MSVCRT_EXCEPTION_FRAME*) jmp->Registration, jmp->TryLevel);
+    _local_unwind2((MSVCRT_EXCEPTION_FRAME*) jmp->Registration, jmp->TryLevel);
 }
