@@ -22,14 +22,14 @@ long ftell(FILE *f)
 
   if (f->_cnt < 0)
     f->_cnt = 0;
-  else if (f->_flag&_IOREAD)
-    {
-      adjust = - f->_cnt;
-    }
   else if (f->_flag&(_IOWRT))
     {
       if (f->_base && (f->_flag&_IONBF)==0)
         adjust = f->_ptr - f->_base;
+    }
+  else if (f->_flag&_IOREAD)
+    {
+      adjust = - f->_cnt;
     }
   else
     return -1;
