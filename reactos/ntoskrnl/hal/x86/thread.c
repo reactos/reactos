@@ -13,6 +13,7 @@
 #include <ddk/ntddk.h>
 #include <internal/ntoskrnl.h>
 #include <internal/ps.h>
+#include <string.h>
 #include <internal/string.h>
 #include <internal/hal.h>
 #include <internal/i386/segment.h>

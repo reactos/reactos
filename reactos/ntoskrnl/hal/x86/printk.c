@@ -12,6 +12,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <internal/ntoskrnl.h>
+#include <string.h>
 #include <internal/string.h>
 #include <internal/mmhal.h>
 #include <internal/halio.h>

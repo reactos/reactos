@@ -15,6 +15,7 @@
 #include <internal/ntoskrnl.h>
 #include <internal/version.h>
 #include <internal/mm.h>
+#include <string.h>
 #include <internal/string.h>
 #include <internal/symbol.h>
 #include <internal/module.h>

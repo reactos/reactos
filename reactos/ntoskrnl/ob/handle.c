@@ -13,6 +13,7 @@
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
+#include <string.h>
 #include <internal/string.h>
 
 #define NDEBUG

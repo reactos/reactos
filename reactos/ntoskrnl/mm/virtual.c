@@ -21,7 +21,7 @@
 #include <internal/io.h>
 #include <internal/ps.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 /* TYPES *******************************************************************/
@@ -317,7 +317,7 @@ ZwAllocateVirtualMemory(
    NTSTATUS Status;
    
    DPRINT("ZwAllocateVirtualMemory(ProcessHandle %x, *BaseAddress %x, "
-	    "ZeroBits %d, RegionSize %d, AllocationType %x, Protect %x)\n",
+	    "ZeroBits %d, *RegionSize %x, AllocationType %x, Protect %x)\n",
 	    ProcessHandle,*BaseAddress,ZeroBits,*RegionSize,AllocationType,
 	    Protect);
    

@@ -13,6 +13,7 @@
 #include <ddk/ntddk.h>
 #include <internal/mm.h>
 #include <internal/mmhal.h>
+#include <string.h>
 #include <internal/string.h>
 
 #define NDEBUG

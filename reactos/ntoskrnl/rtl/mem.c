@@ -10,8 +10,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <internal/string.h>
 #include <ddk/ntddk.h>
+#include <string.h>
+#include <internal/string.h>
 
 #define NDEBUG
 #include <internal/debug.h>

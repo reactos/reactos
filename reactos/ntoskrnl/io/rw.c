@@ -10,9 +10,9 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <windows.h>
 #include <ddk/ntddk.h>
 #include <internal/io.h>
+#include <string.h>
 #include <internal/string.h>
 #include <internal/ob.h>
 

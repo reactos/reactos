@@ -14,6 +14,7 @@
 
 #include <internal/io.h>
 #include <internal/ob.h>
+#include <string.h>
 #include <internal/string.h>
 
 #define NDEBUG

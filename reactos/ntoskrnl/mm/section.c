@@ -227,16 +227,16 @@ NTSTATUS ZwOpenSection(PHANDLE SectionHandle,
    return(Status);
 }
 
-NTSTATUS NtMapViewOfSection(HANDLE SectionHandle,
-			    HANDLE ProcessHandle,
-			    PVOID* BaseAddress,
-			    ULONG ZeroBits,
-			    ULONG CommitSize,
-			    PLARGE_INTEGER SectionOffset,
-			    PULONG ViewSize,
-			    SECTION_INHERIT InheritDisposition,
-			    ULONG AllocationType,
-			    ULONG Protect)
+NTSTATUS STDCALL NtMapViewOfSection(HANDLE SectionHandle,
+				    HANDLE ProcessHandle,
+				    PVOID* BaseAddress,
+				    ULONG ZeroBits,
+				    ULONG CommitSize,
+				    PLARGE_INTEGER SectionOffset,
+				    PULONG ViewSize,
+				    SECTION_INHERIT InheritDisposition,
+				    ULONG AllocationType,
+				    ULONG Protect)
 {
    return(ZwMapViewOfSection(SectionHandle,
 			     ProcessHandle,
@@ -250,16 +250,16 @@ NTSTATUS NtMapViewOfSection(HANDLE SectionHandle,
 			     Protect));
 }
 
-NTSTATUS ZwMapViewOfSection(HANDLE SectionHandle,
-			    HANDLE ProcessHandle,
-			    PVOID* BaseAddress,
-			    ULONG ZeroBits,
-			    ULONG CommitSize,
-			    PLARGE_INTEGER SectionOffset,
-			    PULONG ViewSize,
-			    SECTION_INHERIT InheritDisposition,
-			    ULONG AllocationType,
-			    ULONG Protect)
+NTSTATUS STDCALL ZwMapViewOfSection(HANDLE SectionHandle,
+				    HANDLE ProcessHandle,
+				    PVOID* BaseAddress,
+				    ULONG ZeroBits,
+				    ULONG CommitSize,
+				    PLARGE_INTEGER SectionOffset,
+				    PULONG ViewSize,
+				    SECTION_INHERIT InheritDisposition,
+				    ULONG AllocationType,
+				    ULONG Protect)
 /*
  * FUNCTION: Maps a view of a section into the virtual address space of a 
  *           process
@@ -327,7 +327,7 @@ NTSTATUS ZwMapViewOfSection(HANDLE SectionHandle,
 	return(Status);
      }
    DPRINT("Process handle reference fetched\n");
-   
+   DPRINT("Section %x\n",Section);
    if ((*ViewSize) > GET_LARGE_INTEGER_LOW_PART(Section->MaximumSize))
      {
 	(*ViewSize) = GET_LARGE_INTEGER_LOW_PART(Section->MaximumSize);
@@ -340,8 +340,17 @@ NTSTATUS ZwMapViewOfSection(HANDLE SectionHandle,
 		      *ViewSize,
 		      Protect,
 		      &Result);
+   DPRINT("Result %x\n",Result);
    Result->Data.SectionData.Section = Section;
-   Result->Data.SectionData.ViewOffset = GET_LARGE_INTEGER_LOW_PART(*SectionOffset);
+   if (SectionOffset == NULL)
+     {
+	Result->Data.SectionData.ViewOffset = 0;
+     }
+   else
+     {
+	Result->Data.SectionData.ViewOffset =
+     GET_LARGE_INTEGER_LOW_PART(*SectionOffset);
+     }
    
    DPRINT("*BaseAddress %x\n",*BaseAddress);
    DPRINT("Result->Data.SectionData.Section->FileObject %x\n",

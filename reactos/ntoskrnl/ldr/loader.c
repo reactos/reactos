@@ -24,6 +24,7 @@
 #include <internal/ntoskrnl.h>
 #include <internal/ob.h>
 #include <internal/ps.h>
+#include <string.h>
 #include <internal/string.h>
 #include <internal/symbol.h>
 
@@ -359,10 +360,10 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
     {
       NumRelocs = (RelocDir->SizeOfBlock - sizeof(RELOCATION_DIRECTORY)) / 
         sizeof(WORD);
-      DPRINT("RelocDir at %08lx for VA %08lx with %08lx relocs\n",
+/*      DPRINT("RelocDir at %08lx for VA %08lx with %08lx relocs\n",
              RelocDir, 
              RelocDir->VirtualAddress,
-             NumRelocs);
+             NumRelocs);*/
       RelocEntry = (PRELOCATION_ENTRY) ((DWORD)RelocDir + 
         sizeof(RELOCATION_DIRECTORY));
       for (Idx = 0; Idx < NumRelocs; Idx++)
@@ -375,12 +376,12 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
 	   Type = (RelocEntry[Idx].TypeOffset >> 12) & 0xf;
 	   RelocItem = (PDWORD)(DriverBase + RelocDir->VirtualAddress + 
 				Offset);
-	   DPRINT("  reloc at %08lx %x %s old:%08lx new:%08lx\n", 
+/*	   DPRINT("  reloc at %08lx %x %s old:%08lx new:%08lx\n", 
 		  RelocItem,
 		  Type,
 		  Type ? "HIGHLOW" : "ABS",
 		  *RelocItem,
-		  (*RelocItem) + RelocDelta);
+		  (*RelocItem) + RelocDelta); */
           if (Type == 3)
             {
               (*RelocItem) += RelocDelta;
@@ -394,7 +395,7 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
       TotalRelocs += RelocDir->SizeOfBlock;
       RelocDir = (PRELOCATION_DIRECTORY)((DWORD)RelocDir + 
         RelocDir->SizeOfBlock);
-      DPRINT("TotalRelocs: %08lx  CurrentSize: %08lx\n", TotalRelocs, CurrentSize);
+//      DPRINT("TotalRelocs: %08lx  CurrentSize: %08lx\n", TotalRelocs, CurrentSize);
     }
    
   DPRINT("PEOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT] %x\n",
@@ -420,7 +421,7 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
           Library = NULL;
           pName = (PCHAR) DriverBase + 
             ImportModuleDirectory->dwRVAModuleName;
-          DPRINT("Import module: %s\n", pName);
+//          DPRINT("Import module: %s\n", pName);
           if (strcmp(pName, "ntoskrnl.exe")!=0 && 
               strcmp(pName, "HAL.dll")!=0)
             {
@@ -448,7 +449,7 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
             {
               if ((*FunctionNameList) & 0x80000000) // hint
                 {
-                  DPRINT("  Hint: %08lx\n", *FunctionNameList);
+//                  DPRINT("  Hint: %08lx\n", *FunctionNameList);
                   if (Library == NULL)
                     {
                       DPRINT("Hints for kernel symbols are not handled.\n");
@@ -460,7 +461,7 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
                   pName = (PCHAR)((DWORD)DriverBase+ 
                                   *FunctionNameList + 2);
                   pHint = (PWORD)((DWORD)DriverBase + *FunctionNameList);
-                  DPRINT("  Hint:%04x  Name:%s\n", pHint, pName);
+ //                 DPRINT("  Hint:%04x  Name:%s\n", pHint, pName);
                   
                   /*  Get address for symbol  */
                   if (Library == NULL)
@@ -899,6 +900,8 @@ LdrCOFFGetSymbolValueByName(module *Module,
  *   NTSTATUS
  */
 
+#define STACK_TOP (0xb0000000)
+
 NTSTATUS 
 LdrLoadImage(HANDLE ProcessHandle, PUNICODE_STRING Filename)
 {
@@ -913,7 +916,8 @@ LdrLoadImage(HANDLE ProcessHandle, PUNICODE_STRING Filename)
   UNICODE_STRING DllPathname;
   PIMAGE_DOS_HEADER DosHeader;
   PIMAGE_NT_HEADERS NTHeaders;
-
+   ULONG BytesWritten;
+   
     /*  Locate and open NTDLL to determine ImageBase and LdrStartup  */
   RtlInitAnsiString(&AnsiString, "\\??\\C:\\reactos\\system\\ntdll.dll"); 
   RtlAnsiStringToUnicodeString(&DllPathname, &AnsiString, TRUE);
@@ -956,7 +960,8 @@ LdrLoadImage(HANDLE ProcessHandle, PUNICODE_STRING Filename)
   ImageBase = NTHeaders->OptionalHeader.ImageBase;
   ImageSize = NTHeaders->OptionalHeader.SizeOfImage;
     /* FIXME: retrieve the offset of LdrStartup from NTDLL  */
-  LdrStartupAddr = 0x80001be0;
+   DPRINT("ImageBase %x\n",ImageBase);
+  LdrStartupAddr = ImageBase + NTHeaders->OptionalHeader.AddressOfEntryPoint;
 
     /* Create a section for NTDLL */
   Status = ZwCreateSection(&SectionHandle,
@@ -1005,7 +1010,9 @@ LdrLoadImage(HANDLE ProcessHandle, PUNICODE_STRING Filename)
                              0,
                              NULL,
                              NULL);
-  Status = ZwOpenFile(&FileHandle, FILE_ALL_ACCESS, &FileObjectAttributes, NULL, 0, 0);
+   DPRINT("Opening image file %w\n",FileObjectAttributes.ObjectName->Buffer);
+  Status = ZwOpenFile(&FileHandle, FILE_ALL_ACCESS, &FileObjectAttributes, 
+		      NULL, 0, 0);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("Image open failed ");
@@ -1081,13 +1088,13 @@ LdrLoadImage(HANDLE ProcessHandle, PUNICODE_STRING Filename)
   ZwClose(FileHandle);
 
     /*  Create page backed section for stack  */
-  StackBase = (0x80000000 - NTHeaders->OptionalHeader.SizeOfStackReserve);
+  StackBase = (STACK_TOP - NTHeaders->OptionalHeader.SizeOfStackReserve);
   StackSize = NTHeaders->OptionalHeader.SizeOfStackReserve;
   Status = ZwAllocateVirtualMemory(ProcessHandle,
                                    (PVOID *)&StackBase,
                                    0,
                                    &StackSize,
-                                   MEM_RESERVE,
+                                   MEM_COMMIT,
                                    PAGE_READWRITE);
   if (!NT_SUCCESS(Status))
     {
@@ -1103,10 +1110,16 @@ LdrLoadImage(HANDLE ProcessHandle, PUNICODE_STRING Filename)
   /* FIXME: should commit the first stack page here  */
   /* FIXME: reserve virtual memory for heap  */
    
+   ZwWriteVirtualMemory(ProcessHandle,
+			STACK_TOP - 4,
+			&ImageBase,
+			sizeof(ImageBase),
+			&BytesWritten);
+   
     /*  Initialize context to point to LdrStartup  */
   memset(&Context,0,sizeof(CONTEXT));
   Context.SegSs = USER_DS;
-  Context.Esp = StackBase;
+  Context.Esp = STACK_TOP - 8;
   Context.EFlags = 0x202;
   Context.SegCs = USER_CS;
   Context.Eip = LdrStartupAddr;
@@ -1114,7 +1127,8 @@ LdrLoadImage(HANDLE ProcessHandle, PUNICODE_STRING Filename)
   Context.SegEs = USER_DS;
   Context.SegFs = USER_DS;
   Context.SegGs = USER_DS;
-
+   
+   DPRINT("LdrStartupAddr %x\n",LdrStartupAddr);
   /* FIXME: Create process and let 'er rip  */
   Status = ZwCreateThread(&ThreadHandle,
                           THREAD_ALL_ACCESS,
@@ -1161,7 +1175,7 @@ LdrLoadInitialProcess(VOID)
       return Status;
     }
 
-  RtlInitAnsiString(&ProcessName, "\\??\\C:\\reactos\\system\\shell.exe"); 
+  RtlInitAnsiString(&AnsiString, "\\??\\C:\\reactos\\system\\shell.exe"); 
   RtlAnsiStringToUnicodeString(&ProcessName, &AnsiString, TRUE);
   
   Status = LdrLoadImage(ProcessHandle, &ProcessName);

@@ -12,6 +12,7 @@
 
 #include <internal/mmhal.h>
 #include <internal/mm.h>
+#include <string.h>
 #include <internal/string.h>
 #include <internal/bitops.h>
 #include <ddk/ntddk.h>

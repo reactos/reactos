@@ -13,6 +13,7 @@
 #include <ddk/ntddk.h>
 
 #include <internal/debug.h>
+#include <string.h>
 #include <internal/string.h>
 #include <internal/ntoskrnl.h> /* for sprintf */
 

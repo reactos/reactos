@@ -32,17 +32,17 @@ NTSTATUS STDCALL ZwDeleteFile(IN POBJECT_ATTRIBUTES ObjectAttributes)
    UNIMPLEMENTED;
 }
 
-NTSTATUS NtCreateFile(PHANDLE FileHandle,
-		      ACCESS_MASK DesiredAccess,
-		      POBJECT_ATTRIBUTES ObjectAttributes,
-		      PIO_STATUS_BLOCK IoStatusBlock,
-		      PLARGE_INTEGER AllocateSize,
-		      ULONG FileAttributes,
-		      ULONG ShareAccess,
-		      ULONG CreateDisposition,
-		      ULONG CreateOptions,
-		      PVOID EaBuffer,
-		      ULONG EaLength)
+NTSTATUS STDCALL NtCreateFile(PHANDLE FileHandle,
+			      ACCESS_MASK DesiredAccess,
+			      POBJECT_ATTRIBUTES ObjectAttributes,
+			      PIO_STATUS_BLOCK IoStatusBlock,
+			      PLARGE_INTEGER AllocateSize,
+			      ULONG FileAttributes,
+			      ULONG ShareAccess,
+			      ULONG CreateDisposition,
+			      ULONG CreateOptions,
+			      PVOID EaBuffer,
+			      ULONG EaLength)
 {
    return(ZwCreateFile(FileHandle,
 		       DesiredAccess,
@@ -120,17 +120,17 @@ NTSTATUS IopCreateFile(PVOID ObjectBody,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS ZwCreateFile(PHANDLE FileHandle,
-		      ACCESS_MASK DesiredAccess,
-		      POBJECT_ATTRIBUTES ObjectAttributes,
-		      PIO_STATUS_BLOCK IoStatusBlock,
-		      PLARGE_INTEGER AllocateSize,
-		      ULONG FileAttributes,
-		      ULONG ShareAccess,
-		      ULONG CreateDisposition,
-		      ULONG CreateOptions,
-		      PVOID EaBuffer,
-		      ULONG EaLength)
+NTSTATUS STDCALL ZwCreateFile(PHANDLE FileHandle,
+			      ACCESS_MASK DesiredAccess,
+			      POBJECT_ATTRIBUTES ObjectAttributes,
+			      PIO_STATUS_BLOCK IoStatusBlock,
+			      PLARGE_INTEGER AllocateSize,
+			      ULONG FileAttributes,
+			      ULONG ShareAccess,
+			      ULONG CreateDisposition,
+			      ULONG CreateOptions,
+			      PVOID EaBuffer,
+			      ULONG EaLength)
 /*
  * FUNCTION: Either causes a new file or directory to be created, or it opens
  * an existing file, device, directory or volume, giving the caller a handle
@@ -224,12 +224,12 @@ NTSTATUS ZwCreateFile(PHANDLE FileHandle,
    return(Status);
 }
 
-NTSTATUS NtOpenFile(PHANDLE FileHandle,
-		    ACCESS_MASK DesiredAccess,
-		    POBJECT_ATTRIBUTES ObjectAttributes,
-		    PIO_STATUS_BLOCK IoStatusBlock,
-		    ULONG ShareAccess,
-		    ULONG OpenOptions)
+NTSTATUS STDCALL NtOpenFile(PHANDLE FileHandle,
+			    ACCESS_MASK DesiredAccess,
+			    POBJECT_ATTRIBUTES ObjectAttributes,
+			    PIO_STATUS_BLOCK IoStatusBlock,
+			    ULONG ShareAccess,
+			    ULONG OpenOptions)
 {
    return(ZwOpenFile(FileHandle,
 		     DesiredAccess,
@@ -239,12 +239,12 @@ NTSTATUS NtOpenFile(PHANDLE FileHandle,
 		     OpenOptions));
 }
 
-NTSTATUS ZwOpenFile(PHANDLE FileHandle,
-		    ACCESS_MASK DesiredAccess,
-		    POBJECT_ATTRIBUTES ObjectAttributes,
-		    PIO_STATUS_BLOCK IoStatusBlock,
-		    ULONG ShareAccess,
-		    ULONG OpenOptions)
+NTSTATUS STDCALL ZwOpenFile(PHANDLE FileHandle,
+			    ACCESS_MASK DesiredAccess,
+			    POBJECT_ATTRIBUTES ObjectAttributes,
+			    PIO_STATUS_BLOCK IoStatusBlock,
+			    ULONG ShareAccess,
+			    ULONG OpenOptions)
 /*
  * FUNCTION: Opens a file (simpler than ZwCreateFile)
  * ARGUMENTS:
