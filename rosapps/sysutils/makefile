@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.6 2000/09/11 20:17:02 ea Exp $
+# $Id: makefile,v 1.7 2000/10/04 21:04:30 ea Exp $
 #
 # ReactOS System Utilities
 #
@@ -42,9 +42,11 @@ TARGET=\
 	pedump.exe	\
 	shutdown.exe	\
 	chkdsk.exe	\
-	format.exe
+	format.exe	\
+	regexpl/regexpl$(EXE_POSTFIX)
 
 all: $(TARGET)
+
 
 # By Mark Russinovich
 
@@ -143,6 +145,11 @@ ldd.exe: ldd.o win32err.o ldd.coff
 	$(NM) --numeric-sort ldd.exe > ldd.sym
 
 ldd.o: ldd.c
+
+# By Nedko Arnaoudov
+
+regexpl/regexpl$(EXE_POSTFIX):
+	make -C regexpl
 
 #---
 
