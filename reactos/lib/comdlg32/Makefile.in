@@ -1,0 +1,48 @@
+TOPSRCDIR = @top_srcdir@
+TOPOBJDIR = ../..
+SRCDIR    = @srcdir@
+VPATH     = @srcdir@
+MODULE    = comdlg32.dll
+IMPORTS   = shell32 shlwapi comctl32 winspool user32 gdi32 kernel32 ntdll
+ALTNAMES  = commdlg.dll
+EXTRALIBS = $(LIBUUID)
+
+SPEC_SRCS16 = $(ALTNAMES:.dll=.spec)
+
+C_SRCS = \
+	cdlg32.c \
+	colordlg.c \
+	filedlg.c \
+	filedlgbrowser.c \
+	finddlg32.c \
+	filetitle.c \
+	fontdlg.c \
+	printdlg.c
+
+C_SRCS16 = \
+	colordlg16.c \
+	filedlg16.c \
+	finddlg.c \
+	fontdlg16.c \
+	generic.c \
+	printdlg16.c
+
+RC_SRCS = rsrc.rc
+RC_BINSRC = cdlg_xx.rc
+RC_BINARIES = \
+	800.bmp \
+	cdrom.ico \
+	floppy.ico \
+	folder.ico \
+	folder2.ico \
+	fontpics.bmp \
+	hdisk.ico \
+	network.ico \
+	pd32_collate.ico \
+	pd32_landscape.ico \
+	pd32_nocollate.ico \
+	pd32_portrait.ico 
+
+@MAKE_DLL_RULES@
+
+### Dependencies:
