@@ -1811,11 +1811,11 @@ NtUserWin32PoolAllocationStats(
   DWORD Unknown4,
   DWORD Unknown5);
 
-DWORD
+HWND
 STDCALL
 NtUserWindowFromPoint(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  LONG X,
+  LONG Y);
 
 DWORD
 STDCALL
