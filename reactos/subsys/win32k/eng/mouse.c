@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.50 2003/12/21 20:06:44 weiden Exp $
+/* $Id: mouse.c,v 1.51 2003/12/21 21:26:29 weiden Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -305,7 +305,6 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
   PSURFGDI SurfGDI;
   RECTL MouseRect;
   MSG Msg;
-  LARGE_INTEGER LargeTickCount;
   
   hDC = IntGetScreenDC();
   
@@ -331,8 +330,6 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
   SurfObj = (PSURFOBJ)AccessUserObject((ULONG) dc->Surface);
   SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
   DC_UnlockDc( hDC );
-  
-  KeQueryTickCount(&LargeTickCount);
 
   /* Compile the total mouse movement change and dispatch button events. */
   for (i = 0; i < InputCount; i++)
@@ -362,32 +359,27 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
       {
       	CurInfo->ButtonsDown |= (CurInfo->SwapButtons ? MK_RBUTTON : MK_LBUTTON);
         Msg.message = (CurInfo->SwapButtons ? WM_RBUTTONDOWN : WM_LBUTTONDOWN);
-        CurInfo->LastBtnDown = LargeTickCount.u.LowPart;
       }
       if ((Data[i].ButtonFlags & MOUSE_MIDDLE_BUTTON_DOWN) > 0)
       {
       	CurInfo->ButtonsDown |= MK_MBUTTON;
         Msg.message = WM_MBUTTONDOWN;
-        CurInfo->LastBtnDown = LargeTickCount.u.LowPart;
       }
       if ((Data[i].ButtonFlags & MOUSE_RIGHT_BUTTON_DOWN) > 0)
       {
       	CurInfo->ButtonsDown |= (CurInfo->SwapButtons ? MK_LBUTTON : MK_RBUTTON);
         Msg.message = (CurInfo->SwapButtons ? WM_LBUTTONDOWN : WM_RBUTTONDOWN);
-        CurInfo->LastBtnDown = LargeTickCount.u.LowPart;
       }
       
       if ((Data[i].ButtonFlags & MOUSE_BUTTON_4_DOWN) > 0)
       {
       	CurInfo->ButtonsDown |= MK_XBUTTON1;
         Msg.message = WM_XBUTTONDOWN;
-        CurInfo->LastBtnDown = LargeTickCount.u.LowPart;
       }
       if ((Data[i].ButtonFlags & MOUSE_BUTTON_5_DOWN) > 0)
       {
       	CurInfo->ButtonsDown |= MK_XBUTTON2;
         Msg.message = WM_XBUTTONDOWN;
-        CurInfo->LastBtnDown = LargeTickCount.u.LowPart;
       }
 
       if ((Data[i].ButtonFlags & MOUSE_LEFT_BUTTON_UP) > 0)
