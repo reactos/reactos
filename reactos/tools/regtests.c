@@ -175,7 +175,7 @@ register_test(char *filename,
       memset(ext, 0, sizeof(ext));
       strncpy(&ext[0], &filename[i], strlen(&filename[i]));
 
-      if ((strncmp(ext, ".c", 2) != 0) && (strncmp(ext, ".C", 2) != 0))
+      if (strcasecmp(ext, ".c") != 0)
         {
           return;
         }
@@ -609,73 +609,87 @@ create_stubs_and_hooks(
   FILE *stubs_out,
   FILE *hooks_out)
 {
-  char line[INPUT_BUFFER_SIZE];
-  char *s;
-  char *dllname;
-  char *decoratedname_and_forward;
-  int stub_index;
-
-  write_stubs_header(stubs_out);
-
-  write_hooks_header(hooks_out);
+    char line[INPUT_BUFFER_SIZE];
+    char *s, *start;
+    char *dllname;
+    char *decoratedname_and_forward;
+    int stub_index;
+  
+    write_stubs_header(stubs_out);
+    
+    write_hooks_header(hooks_out);
+    
+    /*
+     * Scan the database. The database is a text file; each
+     * line is a record, which contains data for one stub.
+     * Each record has two columns:
+     *
+     * DLLNAME (e.g. ntdll.dll)
+     * DECORATED NAME (e.g. NtCreateProcess@32, @InterlockedIncrement@4 or printf)
+     */
+    stub_index = 0; /* First stub has index zero */
+    
+    for (
+	;
+	/* Go on until EOF or read zero bytes */
+	((!feof(in)) && (fgets(line, sizeof line, in) != NULL));
+	/* Next stub index */
+	)
+    {
+	/*
+	 * Ignore leading blanks
+	 */
+	for( start = line; *start && isspace(*start); start++ );
+	    
+	/*
+	 * Strip comments, eols
+	 */
+	for( s = start; *s && !strchr("#\n\r", *s); s++ );
+	
+	*s = '\0';
 
 	/*
-	 * Scan the database. The database is a text file; each
-   * line is a record, which contains data for one stub.
-	 * Each record has two columns:
-	 *
-	 * DLLNAME (e.g. ntdll.dll)
-	 * DECORATED NAME (e.g. NtCreateProcess@32, @InterlockedIncrement@4 or printf)
+	 * Remove trailing blanks.  Backup off the char that ended our
+	 * run before.
 	 */
-  stub_index = 0; /* First stub has index zero */
+	for( s--; s > start && isspace(*s); s-- ) *s = '\0';
 
-	for (
-    ;
-		/* Go on until EOF or read zero bytes */
-		((!feof(in)) && (fgets(line, sizeof line, in) != NULL));
-		/* Next stub index */
-	  )
-  	{
-  		/*
-  		 * Remove, if present, the trailing LF.
-  		 */
-  		if ((s = (char *) strchr(line,'\n')) != NULL)
-  		  {
-  			  *s = '\0';
-  	    }
-
-  		/*
-  		 * Remove, if present, the trailing CR.
-  		 */
-  		if ((s = (char *) strchr(line,'\r')) != NULL)
-  		  {
-  			  *s = '\0';
-  	    }
-
-  		/*
-  		 * Skip comments (#) and empty lines.
-  		 */
-  		s = & line[0];
-  		if ((*s) != '#' && (*s) != '\0')
-  		{
-        /* Extract the DLL name */
-        dllname = (char *) strtok(s, " \t");
-        if (dllname != NULL && strlen(dllname) > 0)
-          {
-       		  /*
-             * Extract the decorated function name and possibly forwarded export.
-             * Format:
-             *   decoratedname=forwardedexport (no DLL name)
-             */
-  	     	  decoratedname_and_forward = (char *) strtok(NULL, " \t");
-  			    /* Extract the argument count */
-  			    write_stub(stubs_out, hooks_out, dllname, decoratedname_and_forward, stub_index);
-            stub_index++;
-          }
-  		}
-  	}
-
-  write_hooks_footer(hooks_out, stub_index);
+	/*
+	 * Skip empty lines 
+	 */
+	if (s > start)
+	{
+	    /* Extract the DLL name */
+	    dllname = (char *) strtok(start, " \t");
+	    if (dllname != NULL && strlen(dllname) > 0)
+	    {
+		/*
+		 * Extract the decorated function name and possibly forwarded export.
+		 * Format:
+		 *   decoratedname=forwardedexport (no DLL name)
+		 */
+		decoratedname_and_forward = (char *) strtok(NULL, " \t");
+		/* Extract the argument count */
+		
+		/* Something went wrong finding the separator ... 
+		 * print an error and bail. */
+		if( !decoratedname_and_forward ) {
+		    fprintf
+			( stderr, 
+			  "Could not find separator between decorated "
+			  "function name and dll name.\n"
+			  "Format entries as <dllname> <import>\n"
+			  "Legal comments start with #\n");
+		    exit(1);
+		}
+		
+		write_stub(stubs_out, hooks_out, dllname, decoratedname_and_forward, stub_index);
+		stub_index++;
+	    }
+	}
+    }
+    
+    write_hooks_footer(hooks_out, stub_index);
 }
 
 int run_stubs(int argc,
@@ -684,7 +698,7 @@ int run_stubs(int argc,
   FILE *in;
   FILE *stubs_out;
   FILE *hooks_out;
-
+  
 	in = fopen(argv[2], "rb");
 	if (in == NULL)
   	{
