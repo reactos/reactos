@@ -266,10 +266,20 @@ static BOOL PcDiskReadLogicalSectorsCHS(U32 DriveNumber, U64 SectorNumber, U32 S
 
 static BOOL PcDiskInt13ExtensionsSupported(U32 DriveNumber)
 {
+	static U32	LastDriveNumber = 0xffffffff;
+	static BOOL	LastSupported;
 	REGS	RegsIn;
 	REGS	RegsOut;
 
 	DbgPrint((DPRINT_DISK, "PcDiskInt13ExtensionsSupported()\n"));
+
+	if (DriveNumber == LastDriveNumber)
+	{
+		DbgPrint((DPRINT_DISK, "Using cached value %s for drive 0x%x\n", LastSupported ? "TRUE" : "FALSE", DriveNumber));
+		return LastSupported;
+	}
+
+	LastDriveNumber = DriveNumber;
 
 	// IBM/MS INT 13 Extensions - INSTALLATION CHECK
 	// AH = 41h
@@ -305,12 +315,14 @@ static BOOL PcDiskInt13ExtensionsSupported(U32 DriveNumber)
 	if (!INT386_SUCCESS(RegsOut))
 	{
 		// CF set on error (extensions not supported)
+		LastSupported = FALSE;
 		return FALSE;
 	}
 
 	if (RegsOut.w.bx != 0xAA55)
 	{
 		// BX = AA55h if installed
+		LastSupported = FALSE;
 		return FALSE;
 	}
 
@@ -323,17 +335,21 @@ static BOOL PcDiskInt13ExtensionsSupported(U32 DriveNumber)
 	{
 		// CX = API subset support bitmap
 		// Bit 0, extended disk access functions (AH=42h-44h,47h,48h) supported
+		LastSupported = FALSE;
 		return FALSE;
 	}
 #endif
 
-	// Use this relaxed check instead
-	if (RegsOut.w.cx == 0x0000)
+	// Use this relaxed check instead (most BIOSes seem to use 0x9f as CD-Rom)
+	if (RegsOut.w.cx == 0x0000 && DriveNumber != 0x9f)
 	{
 		// CX = API subset support bitmap
-		return FALSE;
+		printf("Suspicious API subset support bitmap 0x%x on device 0x%x\n", RegsOut.w.cx, DriveNumber);
+		LastSupported = FALSE;
+		return LastSupported;
 	}
 
+	LastSupported = TRUE;
 	return TRUE;
 }
 
