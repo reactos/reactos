@@ -1,7 +1,0 @@
-LIBRARY msimg32.dll
-EXPORTS
-AlphaBlend@44=GDI32.GdiAlphaBlend @1
-DllInitialize=DllMain@12 @2
-GradientFill@24=GDI32.GdiGradientFill @3
-TransparentBlt@44=GDI32.GdiTransparentBlt @4
-vSetDdrawflag@0 @5
