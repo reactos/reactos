@@ -159,8 +159,6 @@ static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValB
 
     index = ListView_InsertItem(hwndLV, &item);
     if (index != -1) {
-        /*        LPTSTR pszText = NULL; */
-        LPTSTR pszText = _T("value");
         switch (dwValType) {
         case REG_SZ:
         case REG_EXPAND_SZ:
@@ -182,14 +180,18 @@ static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValB
 		      /* concatenate all srings */
                       while(*src != _T('\0'))
                       {
-                          _tcscat(str, _T(" "));
 			  _tcscat(str, src);
+			  _tcscat(str, _T(" "));
 			  src += _tcslen(src) + 1;
                       }
                       ListView_SetItemText(hwndLV, index, 2, str);
 		      HeapFree(GetProcessHeap(), 0, str);
                   }
+                  else
+                    ListView_SetItemText(hwndLV, index, 2, _T(""));
               }
+              else
+                ListView_SetItemText(hwndLV, index, 2, _T(""));
             }
             break;
         case REG_DWORD: {
@@ -212,8 +214,7 @@ static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValB
             }
             break;
         default:
-            /*            lpsRes = convertHexToHexCSV(lpbData, dwLen); */
-            ListView_SetItemText(hwndLV, index, 2, pszText);
+            ListView_SetItemText(hwndLV, index, 2, _T("(value)"));
             break;
         }
     }

@@ -142,6 +142,20 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,196,64,50,14
 END
 
+IDD_EDIT_MULTI_STRING DIALOG  32, 24, 252, 174
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | 
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Edit Multi-String"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Value &name:",IDC_STATIC,6,6,134,8
+    EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "&Value data:",IDC_STATIC,6,35,161,8
+    EDITTEXT        IDC_VALUE_DATA,6,46,240,102,ES_AUTOHSCROLL | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,142,154,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,196,154,50,14
+END
+
 
 IDD_EDIT_DWORD DIALOG  32, 24, 252, 104
 STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | 
@@ -225,9 +239,11 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_ERROR		    "Error"
+    IDS_WARNING		    "Warning"
     IDS_BAD_VALUE           "Can't query value '%s'"
     IDS_UNSUPPORTED_TYPE    "Can't edit keys of this type (%ld)"
     IDS_TOO_BIG_VALUE       "Value is too big (%ld)"
+    IDS_MULTI_SZ_EMPTY_STRING "Data of type REG_MULTI_SZ cannot contain empty strings.\nThe empty strings have been removed from the list."
 END
 
 /*****************************************************************/

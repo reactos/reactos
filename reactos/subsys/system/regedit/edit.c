@@ -71,7 +71,93 @@ void error(HWND hwnd, INT resId, ...)
     MessageBox(hwnd, errstr, title, MB_OK | MB_ICONERROR);
 }
 
+void warning(HWND hwnd, INT resId, ...)
+{
+    va_list ap;
+    TCHAR title[256];
+    TCHAR errfmt[1024];
+    TCHAR errstr[1024];
+    HINSTANCE hInstance;
+
+    hInstance = GetModuleHandle(0);
+
+    if (!LoadString(hInstance, IDS_WARNING, title, COUNT_OF(title)))
+        lstrcpy(title, "Error");
+
+    if (!LoadString(hInstance, resId, errfmt, COUNT_OF(errfmt)))
+        lstrcpy(errfmt, "Unknown error string!");
+
+    va_start(ap, resId);
+    _vsntprintf(errstr, COUNT_OF(errstr), errfmt, ap);
+    va_end(ap);
+
+    MessageBox(hwnd, errstr, title, MB_OK | MB_ICONSTOP);
+}
+
 INT_PTR CALLBACK modify_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    TCHAR* valueData;
+    HWND hwndValue;
+    int len;
+
+    switch(uMsg) {
+    case WM_INITDIALOG:
+        if(editValueName && strcmp(editValueName, _T("")))
+        {
+          SetDlgItemText(hwndDlg, IDC_VALUE_NAME, editValueName);
+        }
+        else
+        {
+          SetDlgItemText(hwndDlg, IDC_VALUE_NAME, _T("(Default)"));
+        }
+        SetDlgItemText(hwndDlg, IDC_VALUE_DATA, stringValueData);
+        SetFocus(GetDlgItem(hwndDlg, IDC_VALUE_DATA));
+        return FALSE;
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+        case IDOK:
+            if ((hwndValue = GetDlgItem(hwndDlg, IDC_VALUE_DATA)))
+            {
+                if ((len = GetWindowTextLength(hwndValue)))
+                {
+                    if (stringValueData)
+                    {
+                        if ((valueData = HeapReAlloc(GetProcessHeap(), 0, stringValueData, (len + 1) * sizeof(TCHAR))))
+                        {
+                            stringValueData = valueData;
+                            if (!GetWindowText(hwndValue, stringValueData, len + 1))
+                                *stringValueData = 0;
+                        }
+                    }
+                    else
+                    {
+                        if ((valueData = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(TCHAR))))
+                        {
+                            stringValueData = valueData;
+                            if (!GetWindowText(hwndValue, stringValueData, len + 1))
+                                *stringValueData = 0;
+                        }
+                    }
+                }
+                else
+                {
+                  if (stringValueData)
+                    *stringValueData = 0;
+                }
+            }
+            EndDialog(hwndDlg, IDOK);
+            break;
+        case IDCANCEL:
+            EndDialog(hwndDlg, IDCANCEL);
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+
+INT_PTR CALLBACK modify_multi_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     TCHAR* valueData;
     HWND hwndValue;
@@ -353,6 +439,112 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName)
             if (stringValueData)
             {
                 lRet = RegSetValueEx(hKey, valueName, 0, type, stringValueData, lstrlen(stringValueData) + 1);
+            }
+            else
+            {
+                lRet = RegSetValueEx(hKey, valueName, 0, type, NULL, 0);
+            }
+            if (lRet == ERROR_SUCCESS)
+                result = TRUE;
+        }
+    }
+    else if (type == REG_MULTI_SZ)
+    {
+        if (valueDataLen > 0)
+        {
+            DWORD NewLen, llen, listlen, nl_len;
+            LPTSTR src, lines = NULL;
+            
+	    if (!(stringValueData = HeapAlloc(GetProcessHeap(), 0, valueDataLen)))
+            {
+                error(hwnd, IDS_TOO_BIG_VALUE, valueDataLen);
+                goto done;
+            }
+            lRet = RegQueryValueEx(hKey, valueName, 0, 0, stringValueData, &valueDataLen);
+            if (lRet != ERROR_SUCCESS)
+            {
+                error(hwnd, IDS_BAD_VALUE, valueName);
+                goto done;
+            }
+            
+	    /* convert \0 to \r\n */
+            NewLen = valueDataLen;
+            src = stringValueData;
+            nl_len = _tcslen(_T("\r\n")) * sizeof(TCHAR);
+            listlen = sizeof(TCHAR);
+            lines = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, listlen + sizeof(TCHAR));
+            while(*src != _T('\0'))
+            {
+                llen = _tcslen(src);
+                if(llen == 0)
+                  break;
+                listlen += (llen * sizeof(TCHAR)) + nl_len;
+		lines = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, lines, listlen);
+		_tcscat(lines, src);
+		_tcscat(lines, _T("\r\n"));
+		src += llen + 1;
+            }
+            HeapFree(GetProcessHeap(), 0, stringValueData);
+            stringValueData = lines;
+        }
+        else
+        {
+            stringValueData = NULL;
+        }
+
+        if (DialogBox(0, MAKEINTRESOURCE(IDD_EDIT_MULTI_STRING), hwnd, modify_multi_string_dlgproc) == IDOK)
+        {
+            if (stringValueData)
+            {
+                /* convert \r\n to \0 */
+                BOOL EmptyLines = FALSE;
+                LPTSTR src, lines, nl;
+                DWORD linechars, buflen, c_nl, dest;
+                
+                src = stringValueData;
+                buflen = sizeof(TCHAR);
+                lines = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, buflen + sizeof(TCHAR));
+                c_nl = _tcslen(_T("\r\n"));
+                dest = 0;
+                while(*src != _T('\0'))
+                {
+                    if((nl = _tcsstr(src, _T("\r\n"))))
+                    {
+                        linechars = (nl - src) / sizeof(TCHAR);
+                        if(nl == src)
+                        {
+                            EmptyLines = TRUE;
+			    src = nl + c_nl;
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        linechars = _tcslen(src);
+                    }
+                    if(linechars > 0)
+                    {
+			buflen += ((linechars + 1) * sizeof(TCHAR));
+                        lines = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, lines, buflen);
+                        memcpy((lines + dest), src, linechars * sizeof(TCHAR));
+                        dest += linechars;
+                        lines[dest++] = _T('\0');
+                    }
+                    else
+                    {
+                        EmptyLines = TRUE;
+                    }
+                    src += linechars + (nl != NULL ? c_nl : 0);
+                }
+                lines[++dest] = _T('\0');
+                
+                if(EmptyLines)
+                {
+                    warning(hwnd, IDS_MULTI_SZ_EMPTY_STRING);
+                }
+                
+		lRet = RegSetValueEx(hKey, valueName, 0, type, lines, buflen);
+		HeapFree(GetProcessHeap(), 0, lines);
             }
             else
             {
