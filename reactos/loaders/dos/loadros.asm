@@ -189,6 +189,29 @@ entry:
 	;;
 	cmp	byte [di], '/'
 	jne	.no_next_module
+
+	mov	si, _multiboot_kernel_cmdline
+.find_end:
+	cmp	byte [si], 0
+	je	.line_end
+	inc	si
+	jmp	.find_end
+
+.line_end
+	mov	byte [si], ' '
+	inc	si
+.line_copy
+	cmp	di, [dos_cmdline_end]
+	je	.done_copy
+	cmp	byte [di], 0
+	je	.done_copy
+	mov	al, byte [di]
+	mov	byte [si], al
+	inc	di
+	inc	si
+	jmp	.line_copy
+.done_copy:
+	mov	byte [si], 0	
 	jmp	.next_module
 .no_next_module:
 
@@ -1213,7 +1236,7 @@ _multiboot_address_ranges:
 	times (64*multiboot_address_range_size) db 0
 
 _multiboot_kernel_cmdline:
-	db 'multi(0)disk(0)rdisk(0)partition(1)\reactos /DEBUGPORT=SCREEN'
+	db 'multi(0)disk(0)rdisk(0)partition(1)\reactos'
 	times 255-($-_multiboot_kernel_cmdline) db 0
 
 	;;
