@@ -20,7 +20,7 @@
  * MA 02139, USA.  
  *
  */
-/* $Id: udelay.c,v 1.7 2001/03/16 18:11:21 dwelch Exp $
+/* $Id: udelay.c,v 1.8 2001/04/13 16:12:25 chorns Exp $
  *
  * PROJECT:        ReactOS kernel
  * FILE:           ntoskrnl/hal/x86/udelay.c
@@ -34,7 +34,7 @@
 
 #include <ddk/ntddk.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS ******************************************************************/
@@ -77,6 +77,8 @@ static unsigned int delay_count = 1;
 #define		TMR_CH1		0x4	/*    Channel 1 bit 		*/
 #define		TMR_CH0		0x2	/*    Channel 0 bit 		*/
 
+static BOOLEAN UdelayCalibrated = FALSE;
+
 /* FUNCTIONS **************************************************************/
 
 void init_pit(float h, unsigned char channel)
@@ -98,7 +100,7 @@ void init_pit(float h, unsigned char channel)
 VOID STDCALL
 __KeStallExecutionProcessor(ULONG Loops)
 {
-   unsigned int i;
+   register unsigned int i;
    for (i=0; i<Loops;i++);
 }
 
@@ -108,74 +110,107 @@ VOID STDCALL KeStallExecutionProcessor(ULONG Microseconds)
 }
 
 #define HZ (100)
-#define CLOCK_TICK_RATE (1193180)
-#define LATCH ((CLOCK_TICK_RATE + HZ/2) / HZ)
+#define CLOCK_TICK_RATE (1193182)
+#define LATCH (CLOCK_TICK_RATE / HZ)
+
+static ULONG Read8254Timer(VOID)
+{
+	ULONG Count;
+
+	WRITE_PORT_UCHAR((PUCHAR)0x43, 0x00);
+	Count = READ_PORT_UCHAR((PUCHAR)0x40);
+	Count |= READ_PORT_UCHAR((PUCHAR)0x40) << 8;
+	return Count;
+}
+
+
+static VOID WaitFor8254Wraparound(VOID)
+{
+	ULONG CurCount, PrevCount = ~0;
+	LONG Delta;
+
+	CurCount = Read8254Timer();
+
+	do {
+		PrevCount = CurCount;
+		CurCount = Read8254Timer();
+		Delta = CurCount - PrevCount;
+
+	/*
+	 * This limit for delta seems arbitrary, but it isn't, it's
+	 * slightly above the level of error a buggy Mercury/Neptune
+	 * chipset timer can cause.
+	 */
+
+	} while (Delta < 300);
+}
 
 VOID HalpCalibrateStallExecution(VOID)
 {
-   unsigned int prevtick;
-   unsigned int i;
-   unsigned int calib_bit;
-   extern volatile ULONG KiRawTicks;
-   
+   ULONG i;
+   ULONG calib_bit;
+	 ULONG CurCount;
+
+   if (UdelayCalibrated)
+      return;
+
+   UdelayCalibrated = TRUE;
+
    DbgPrint("Calibrating delay loop... [");
-   
+
    /* Initialise timer interrupt with MILLISECOND ms interval        */
-   //init_pit(FREQ, 0);
    WRITE_PORT_UCHAR((PUCHAR)0x43, 0x34);  /* binary, mode 2, LSB/MSB, ch 0 */
    WRITE_PORT_UCHAR((PUCHAR)0x40, LATCH & 0xff); /* LSB */
    WRITE_PORT_UCHAR((PUCHAR)0x40, LATCH >> 8); /* MSB */
-   
+
    /* Stage 1:  Coarse calibration                                   */
-   
+
+   WaitFor8254Wraparound();
+
+   delay_count = 1;
+
    do {
-      delay_count <<= 1;          /* Next delay count to try        */
-      
-      prevtick=KiRawTicks;             /* Wait for the start of the next */
-      while(prevtick==KiRawTicks);     /* timer tick                     */
-      
-      prevtick=KiRawTicks;             /* Start measurement now          */
-      __KeStallExecutionProcessor(delay_count);       /* Do the delay                   */
-   } while(prevtick == KiRawTicks);     /* Until delay is just too big    */
-   
+      delay_count <<= 1;                  /* Next delay count to try */
+
+      WaitFor8254Wraparound();
+
+      __KeStallExecutionProcessor(delay_count);      /* Do the delay */
+
+	    CurCount = Read8254Timer();
+   } while (CurCount > LATCH / 2);
+
    delay_count >>= 1;              /* Get bottom value for delay     */
-   
+
    /* Stage 2:  Fine calibration                                     */
    DbgPrint("delay_count: %d", delay_count);
-   
+
    calib_bit = delay_count;        /* Which bit are we going to test */
 
    for(i=0;i<PRECISION;i++) {
-      calib_bit >>= 1;            /* Next bit to calibrate          */
-      if(!calib_bit) break;       /* If we have done all bits, stop */
-      
-      delay_count |= calib_bit;   /* Set the bit in delay_count     */
-      
-      prevtick=KiRawTicks;             /* Wait for the start of the next */
-      while(prevtick==KiRawTicks);     /* timer tick                     */
-      
-      prevtick=KiRawTicks;             /* Start measurement now          */
-      __KeStallExecutionProcessor(delay_count);       /* Do the delay                   */
-      
-      if(prevtick != KiRawTicks)       /* If a tick has passed, turn the */
-	delay_count &= ~calib_bit;     /* calibrated bit back off */
+      calib_bit >>= 1;             /* Next bit to calibrate          */
+      if(!calib_bit) break;        /* If we have done all bits, stop */
+
+      delay_count |= calib_bit;        /* Set the bit in delay_count */
+
+      WaitFor8254Wraparound();
+
+      __KeStallExecutionProcessor(delay_count);      /* Do the delay */
+
+	    CurCount = Read8254Timer();
+      if (CurCount <= LATCH / 2)   /* If a tick has passed, turn the */
+        delay_count &= ~calib_bit; /* calibrated bit back off        */
    }
-   
+
    /* We're finished:  Do the finishing touches                      */
-   
-   delay_count /= MILLISEC;       /* Calculate delay_count for 1ms   */
-   
+
+   delay_count /= (MILLISEC / 2);   /* Calculate delay_count for 1ms */
+
    DbgPrint("]\n");
    DbgPrint("delay_count: %d\n", delay_count);
-   DbgPrint("CPU speed: %d\n", delay_count/500);
+   DbgPrint("CPU speed: %d\n", delay_count/250);
 #if 0
    DbgPrint("About to start delay loop test\n");
-   for (i = 0; i < (10*1000*20); i++)
-     {
-	KeStallExecutionProcessor(50);
-     }
    DbgPrint("Waiting for five minutes...");
-   KeStallExecutionProcessor(5*60*1000*1000);
    for (i = 0; i < (5*60*1000*20); i++)
      {
 	KeStallExecutionProcessor(50);

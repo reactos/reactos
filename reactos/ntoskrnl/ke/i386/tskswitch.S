@@ -72,10 +72,16 @@ _Ki386ContextSwitch:
 	popl	%ebx
 
 	/*
+	 * Load the PCR selector
+	 */
+	movl	$PCR_SELECTOR, %eax
+	movl	%eax, %fs
+
+	/*
 	 * Set the current thread information in the PCR
 	 */
-	movl	%ebx, (KPCR_BASE + KPCR_CURRENT_THREAD)
-	
+  movl	%ebx, %fs:KPCR_CURRENT_THREAD
+
 	/*
 	 * FIXME: Save debugging state.
 	 */
@@ -97,19 +103,13 @@ _Ki386ContextSwitch:
 	 */
 	movl	KTHREAD_INITIAL_STACK(%ebx), %eax
 	movl	%eax, (_KiTss + KTSS_ESP0)
-	
+
 	/*
 	 * Change the address space
 	 */
 	movl	ETHREAD_THREADS_PROCESS(%ebx), %ebx
 	movl	KPROCESS_PAGE_TABLE_DIRECTORY(%ebx), %eax
 	movl	%eax, %cr3 
-
-	/*
-	 * Load the PCR selector
-	 */
-	movl	$PCR_SELECTOR, %eax
-	movl	%eax, %fs
 
 	/*
 	 * FIXME: Restore floating point state

@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.43 2001/03/18 19:35:13 dwelch Exp $
+/* $Id: timer.c,v 1.44 2001/04/13 16:12:25 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -125,7 +125,7 @@ NTSTATUS STDCALL NtDelayExecution(IN ULONG Alertable,
 	  Alertable, Internal, Timeout);
    
    DPRINT("Execution delay is %d/%d\n", 
-	  Timeout.u.Highpart, Timeout.u.LowPart);
+	  Timeout.u.HighPart, Timeout.u.LowPart);
    Status = KeDelayExecutionThread(UserMode, Alertable, &Timeout);
    return(Status);
 }
@@ -462,17 +462,12 @@ KeInitializeTimerImpl(VOID)
 {
    TIME_FIELDS TimeFields;
    LARGE_INTEGER SystemBootTime;
-   extern VOID HalpCalibrateStallExecution (VOID);
-   
+
    DPRINT("KeInitializeTimerImpl()\n");
-   
-   HalpCalibrateStallExecution ();
-   
    InitializeListHead(&TimerListHead);
    KeInitializeSpinLock(&TimerListLock);
    KeInitializeDpc(&ExpireTimerDpc, KeExpireTimers, 0);
    TimerInitDone = TRUE;
-   
    /*
     * Calculate the starting time for the system clock
     */
@@ -480,6 +475,6 @@ KeInitializeTimerImpl(VOID)
    RtlTimeFieldsToTime(&TimeFields, &SystemBootTime);
    boot_time=SystemBootTime.QuadPart;
    system_time=boot_time;
-   
+
    DPRINT("Finished KeInitializeTimerImpl()\n");
 }

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.33 2001/04/11 22:13:21 dwelch Exp $
+# $Id: Makefile,v 1.34 2001/04/13 16:12:24 chorns Exp $
 #
 # ReactOS Operating System
 #
@@ -11,6 +11,7 @@ PATH_TO_TOP := ..
 #
 # Include details of the kernel configuration
 #
+
 include config
 
 #
@@ -55,12 +56,6 @@ all: $(EXE_PREFIX)depends$(EXE_POSTFIX) \
 
 $(EXE_PREFIX)depends$(EXE_POSTFIX): depends.c
 	$(HOST_CC) -o depends$(EXE_POSTFIX) depends.c
-
-#
-# Hardware Abstraction Layer (Hal)
-# Defines $(OBJECTS_HAL)
-#
-include hal/x86/sources
 
 #
 # Architecture specific Makefile
@@ -110,7 +105,6 @@ OBJECTS_RTL = \
 	rtl/memcmp.o
 
 # Kernel (Ke)
-# Note: head.o MUST be the first file!!!
 OBJECTS_KE = \
 	ke/apc.o \
 	ke/bug.o \
@@ -451,7 +445,7 @@ $(OBJECTS_PATH)/kd.o: $(OBJECTS_KD)
 $(TARGETNAME).coff: $(TARGETNAME).rc ../include/reactos/resource.h
 
 
-# Note: ke.o MUST be the first file!!!
+# Note: arch.o MUST be the first file!!!
 OBJECTS := \
 	$(OBJECTS_PATH)/arch.o \
 	$(OBJECTS_PATH)/ke.o \
@@ -601,6 +595,9 @@ ke/main.o: ke/main.c ../include/reactos/buildno.h
 mkconfig$(EXE_SUFFIX): mkconfig.c
 	$(HOST_CC) -g -o mkconfig$(EXE_SUFFIX) mkconfig.c
 
+config:
+	$(EXE_PREFIX)mkconfig$(EXE_SUFFIX) include/internal/config.h $(CONFIG)
+
 include/internal/config.h: config mkconfig$(EXE_SUFFIX)
 	$(EXE_PREFIX)mkconfig$(EXE_SUFFIX) include/internal/config.h$(CONFIG)
 
@@ -617,6 +614,7 @@ endif
 .%.d: %.S
 	$(CC) $(CFLAGS) -M $< | $(EXE_PREFIX)depends$(EXE_POSTFIX) $(@D) $@
 
-
+.%.d: %.asm
+	$(NASM_CMD) $< | $(EXE_PREFIX)depends$(EXE_POSTFIX) $(@D) $@
 
 # EOF

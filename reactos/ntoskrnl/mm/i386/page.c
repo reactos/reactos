@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.25 2001/03/26 20:46:53 dwelch Exp $
+/* $Id: page.c,v 1.26 2001/04/13 16:12:26 chorns Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -589,10 +589,19 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
 			     ULONG flProtect,
 			     ULONG PhysicalAddress)
 {
-   PEPROCESS CurrentProcess = PsGetCurrentProcess();
-   ULONG Attributes = 0;
+   PEPROCESS CurrentProcess;
+   ULONG Attributes;
    PULONG Pte;
    NTSTATUS Status;
+
+  if (Process != NULL)
+    {
+      CurrentProcess = PsGetCurrentProcess();
+    }
+  else
+    {
+      CurrentProcess = NULL;
+    }
    
    if (Process == NULL && Address < (PVOID)KERNEL_BASE)
      {
@@ -652,11 +661,12 @@ MmCreateVirtualMapping(PEPROCESS Process,
 		       ULONG flProtect,
 		       ULONG PhysicalAddress)
 {
-   if (!MmIsUsablePage((PVOID)PhysicalAddress))
+	 if (!MmIsUsablePage((PVOID)PhysicalAddress))
      {
-       DPRINT1("Page not usable\n");
+       DPRINT1("Page at address %x not usable\n", PhysicalAddress);
        KeBugCheck(0);
      }
+
    return(MmCreateVirtualMappingUnsafe(Process,
 				       Address,
 				       flProtect,
@@ -692,9 +702,11 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
    ULONG Attributes = 0;
    PULONG PageEntry;
    PEPROCESS CurrentProcess = PsGetCurrentProcess();
-   
-   Attributes = ProtectToPTE(flProtect);
 
+   DPRINT("MmSetPageProtect(Process %x  Address %x  flProtect %x)\n",
+     Process, Address, flProtect);
+
+   Attributes = ProtectToPTE(flProtect);
    if (Process != CurrentProcess)
      {
 	KeAttachProcess(Process);

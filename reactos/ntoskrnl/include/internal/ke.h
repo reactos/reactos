@@ -172,6 +172,7 @@ VOID KeInitDispatcher(VOID);
 VOID KeInitializeDispatcher(VOID);
 VOID KeInitializeTimerImpl(VOID);
 VOID KeInitializeBugCheck(VOID);
+VOID Phase1Initialization(PVOID Context);
 
 VOID KeInit1(VOID);
 VOID KeInit2(VOID);

@@ -1,4 +1,4 @@
-/* $Id: psmgr.c,v 1.7 2000/06/03 21:36:32 ekohl Exp $
+/* $Id: psmgr.c,v 1.8 2001/04/13 16:12:26 chorns Exp $
  *
  * COPYRIGHT:               See COPYING in the top level directory
  * PROJECT:                 ReactOS kernel
@@ -10,6 +10,7 @@
 /* INCLUDES **************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/ke.h>
 #include <internal/ps.h>
 #include <reactos/version.h>
 
@@ -26,10 +27,32 @@ VOID PiShutdownProcessManager(VOID)
 
 VOID PiInitProcessManager(VOID)
 {
+#ifndef MP
+   HANDLE Phase1InitializationHandle;
+   NTSTATUS Status;
+#endif
+
    PsInitProcessManagment();
    PsInitThreadManagment();
    PsInitIdleThread();
    PiInitApcManagement();
+#ifndef MP
+   /* Create thread for Phase1Initialization */
+   Status = PsCreateSystemThread(
+      &Phase1InitializationHandle,           /* Thread handle */
+      0,                                     /* Desired access */
+      NULL,                                  /* Object attributes */
+      NULL,                                  /* Process handle */
+      NULL,                                  /* Client id */
+      (PKSTART_ROUTINE)Phase1Initialization, /* Start routine */
+      NULL);                                 /* Start context */
+   if (!NT_SUCCESS(Status)) {
+      DPRINT1("Could not create system thread (Status 0x%X)\n", Status);
+      KeBugCheck(0);
+   }
+
+   ZwClose(Phase1InitializationHandle);
+#endif
 }
 
 

@@ -40,9 +40,10 @@
 
 #define KPROCESS_PAGE_TABLE_DIRECTORY 0x10
 
-#define KPCR_BASE                 0xFFDFF000
+#define KPCR_BASE                 0xFF000000
 
 #define KPCR_EXCEPTION_LIST       0x0
+#define KPCR_SELF                 0x18
 #define KPCR_CURRENT_THREAD       0x124	
 
 #ifndef __ASM__
@@ -51,6 +52,10 @@
 
 struct _KTHREAD;
 struct _KTRAPFRAME;
+
+/* FIXME: This does not work if we have more than 24 IRQs (ie. more than one I/O APIC) */
+#define VECTOR2IRQ(vector) (((vector) - 0x31) / 8)
+#define VECTOR2IRQL(vector) (4 + VECTOR2IRQ(vector))
 
 /*
  * Processor Control Region
@@ -64,11 +69,29 @@ typedef struct _KPCR
    PVOID Reserved1;                   /* 10 */
    PVOID ArbitraryUserPointer;        /* 14 */
    struct _KPCR* Self;                /* 18 */
-   UCHAR Reserved2[0x108];            /* 1C */
+   UCHAR ProcessorNumber;             /* 1C */
+   KIRQL Irql;                        /* 1D */
+   UCHAR Reserved2[0x2];              /* 1E */
+   PUSHORT IDT;                       /* 20 */
+   PUSHORT GDT;                       /* 24 */
+   UCHAR Reserved3[0xFC];             /* 28 */
    struct _KTHREAD* CurrentThread;    /* 124 */
-} KPCR, *PKPCR;
+} __attribute__((packed)) KPCR, *PKPCR;
 
-#define CURRENT_KPCR ((PKPCR)KPCR_BASE)
+static inline PKPCR KeGetCurrentKPCR(VOID)
+{
+  ULONG value;
+
+  __asm__ __volatile__ ("movl %%fs:0x18, %0\n\t"
+	  : "=r" (value)
+    : /* no inputs */
+    );
+  return((PKPCR)value);
+}
+
+#define CURRENT_KPCR KeGetCurrentKPCR()
+
+#define KeGetCurrentProcessorNumber (KeGetCurrentKPCR()->ProcessorNumber)
 
 extern HANDLE SystemProcessHandle;
 

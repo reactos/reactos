@@ -10,6 +10,7 @@
 
 #include <ddk/ntddk.h>
 #include <string.h>
+#include <internal/hal/mps.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -38,13 +39,15 @@ static BYTE
 HalQueryCMOS (BYTE Reg)
 {
     BYTE Val;
+    ULONG Flags;
 
     Reg |= 0x80;
+    pushfl(Flags);
     __asm__("cli\n");  // AP unsure as to whether to do this here
     WRITE_PORT_UCHAR((PUCHAR)0x70, Reg);
     Val = READ_PORT_UCHAR((PUCHAR)0x71);
     WRITE_PORT_UCHAR((PUCHAR)0x70, 0);
-    __asm__("sti\n");  // AP unsure about this too..
+    popfl(Flags);
 
     return(Val);
 }
@@ -53,12 +56,15 @@ HalQueryCMOS (BYTE Reg)
 static VOID
 HalSetCMOS (BYTE Reg, BYTE Val)
 {
+    ULONG Flags;
+
     Reg |= 0x80;
+    pushfl(Flags);
     __asm__("cli\n");  // AP unsure as to whether to do this here
     WRITE_PORT_UCHAR((PUCHAR)0x70, Reg);
     WRITE_PORT_UCHAR((PUCHAR)0x71, Val);
     WRITE_PORT_UCHAR((PUCHAR)0x70, 0);
-    __asm__("sti\n");  // AP unsure about this too..
+    popfl(Flags);
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.17 2001/03/28 14:24:05 dwelch Exp $
+/* $Id: mminit.c,v 1.18 2001/04/13 16:12:26 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -12,6 +12,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/config.h>
 #include <internal/i386/segment.h>
 #include <internal/mm.h>
 #include <internal/ntoskrnl.h>
@@ -31,7 +32,7 @@
 #define EXTENDED_MEMORY_SIZE  (3*1024*1024)
 
 /*
- * Compiler defined symbol s
+ * Compiler defined symbols
  */
 extern unsigned int _text_start__;
 extern unsigned int _text_end__;
@@ -79,7 +80,7 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
    ULONG ParamLength = KernelLength;
    NTSTATUS Status;
    
-   DPRINT("MmInitVirtualMemory(%x)\n",bp);
+   DPRINT("MmInitVirtualMemory(%x, %x)\n",LastKernelAddress, KernelLength);
    
    LastKernelAddress = PAGE_ROUND_UP(LastKernelAddress);
    
@@ -87,7 +88,7 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
 //   ExInitNonPagedPool(KERNEL_BASE + PAGE_ROUND_UP(kernel_len) + PAGESIZE);
    ExInitNonPagedPool(LastKernelAddress + PAGESIZE);
    
-   
+
    /*
     * Setup the system area descriptor list
     */
@@ -102,7 +103,6 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
 		      0,
 		      &kernel_text_desc,
 		      FALSE);
-   
    Length = PAGE_ROUND_UP(((ULONG)&_bss_end__)) - 
             PAGE_ROUND_UP(((ULONG)&_text_end__));
    ParamLength = ParamLength - Length;
@@ -151,6 +151,7 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
 		      0,
 		      &kernel_shared_data_desc,
 		      FALSE);
+
    MmSharedDataPagePhysicalAddress = MmAllocPage(0);
    Status = MmCreateVirtualMapping(NULL,
 				   (PVOID)KERNEL_SHARED_DATA_BASE,
@@ -176,10 +177,14 @@ VOID MmInit1(ULONG FirstKrnlPhysAddr,
 {
    ULONG i;
    ULONG kernel_len;
+ #ifndef MP
    extern unsigned int unmap_me, unmap_me2, unmap_me3;
-   
-   DPRINT("MmInit1(bp %x, LastKernelAddress %x)\n", bp, 
-	  LastKernelAddress);
+#endif 
+
+   DPRINT("MmInit1(FirstKrnlPhysAddr, %x, LastKrnlPhysAddr %x, LastKernelAddress %x)\n",
+		  FirstKrnlPhysAddr,
+		  LastKrnlPhysAddr,
+		  LastKernelAddress);
    
    /*
     * FIXME: Set this based on the system command line
@@ -205,12 +210,14 @@ VOID MmInit1(ULONG FirstKrnlPhysAddr,
     * Initialize the kernel address space
     */
    MmInitializeKernelAddressSpace();
-   
+
    /*
     * Unmap low memory
     */
+#ifndef MP
+   /* FIXME: This is broken in SMP mode */
    MmDeletePageTable(NULL, 0);
-   
+#endif
    /*
     * Free all pages not used for kernel memory
     * (we assume the kernel occupies a continuous range of physical
@@ -247,30 +254,31 @@ VOID MmInit1(ULONG FirstKrnlPhysAddr,
     * segment
     */
    CHECKPOINT;
-   DPRINT("stext %x etext %x\n",(int)&stext,(int)&etext);
+   DPRINT("_text_start__ %x _text_end__ %x\n",(int)&_text_start__,(int)&_text_end__);
    for (i=PAGE_ROUND_UP(((int)&_text_start__));
 	i<PAGE_ROUND_DOWN(((int)&_text_end__));i=i+PAGESIZE)
      {
 	MmSetPageProtect(NULL,
 			 (PVOID)i,
 			 PAGE_EXECUTE_READ);
-     }
-   
+   }
+
    DPRINT("Invalidating between %x and %x\n",
 	  LastKernelAddress,
 	  KERNEL_BASE + PAGE_TABLE_SIZE);
    for (i=(LastKernelAddress); 
-	i<(KERNEL_BASE + PAGE_TABLE_SIZE); 
-	i=i+PAGESIZE)
+	 i<(KERNEL_BASE + PAGE_TABLE_SIZE); 
+	 i=i+PAGESIZE)
      {
-	MmDeleteVirtualMapping(NULL, (PVOID)(i), FALSE, NULL, NULL);
+	 MmDeleteVirtualMapping(NULL, (PVOID)(i), FALSE, NULL, NULL);
      }
    DPRINT("Almost done MmInit()\n");
-
+#ifndef MP
+   /* FIXME: This is broken in SMP mode */
    MmDeleteVirtualMapping(NULL, (PVOID)&unmap_me, FALSE, NULL, NULL);
    MmDeleteVirtualMapping(NULL, (PVOID)&unmap_me2, FALSE, NULL, NULL);
    MmDeleteVirtualMapping(NULL, (PVOID)&unmap_me3, FALSE, NULL, NULL);
-   
+#endif
    /*
     * Intialize memory areas
     */

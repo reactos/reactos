@@ -1,3 +1,4 @@
+#include <internal/config.h>
 #include <internal/ntoskrnl.h>
 #include <internal/i386/segment.h>
 
@@ -8,7 +9,12 @@
 #define MULTIBOOT_HEADER_FLAGS (0x00010003)
 
 #define V2P(x) (x - 0xc0000000 + 0x200000)
-	
+
+#ifdef MP
+
+#define AP_MAGIC (0x12481020)
+
+#endif /* MP */
 	
 .globl _NtProcessStartup
 .globl _start
@@ -19,11 +25,14 @@
 .globl _unmap_me
 .globl _unmap_me2
 .globl _unmap_me3
+.globl _unmap_me4
 		
 	/*
 	 * This is called by the realmode loader, with protected mode
 	 * enabled, paging disabled and the segment registers pointing
 	 * a 4Gb, 32-bit segment starting at zero.
+	 *
+	 *    EAX = Multiboot magic or application processor magic
 	 *
 	 *    EBX = Points to a structure in lowmem with data from the
 	 *    loader
@@ -65,6 +74,18 @@ _multiboot_entry:
 	 */
 	cld
 
+#ifdef MP
+
+   /*
+    * Save the multiboot or application processor magic
+    */
+   movl    %eax, %edx
+
+   cmpl    $AP_MAGIC, %edx
+   je      .m1
+
+#endif /* MP */
+
 	/*
 	 * Zero the BSS
 	 */
@@ -87,6 +108,10 @@ _multiboot_entry:
 	movl	$(V2P(kernel_pagetable) + 0x7), 0xC00(%esi)
 	movl	$(V2P(lowmem_pagetable) + 0x7), 0xD00(%esi)
 	movl	$(V2P(startup_pagedirectory) + 0x7), 0xF00(%esi) 
+#ifdef MP
+  movl	$(V2P(apic_pagetable) + 0x7), 0xFEC(%esi)
+#endif /* MP */
+  movl	$(V2P(kpcr_pagetable) + 0x7), 0xFF0(%esi)
 
 	/*
 	 * Initialize the page table that maps low memory
@@ -114,6 +139,39 @@ _multiboot_entry:
 	cmpl	$2048, %edi
 	jl	.l4
 	
+#ifdef  MP
+
+	/*
+	 * Initialize the page table that maps the APIC register address space
+	 */
+	 
+  /* FIXME: APIC register address space can be non-standard so do the mapping later */
+
+	movl	$V2P(apic_pagetable), %esi
+	movl	$0, %edi
+	movl	$0xFEC0001B, %eax
+	movl	%eax, (%esi, %edi)
+	movl	$0x800, %edi
+	movl	$0xFEE0001B, %eax
+	movl	%eax, (%esi, %edi)
+
+#endif /* MP */
+
+	/*
+	 * Initialize the page table that maps the initial KPCR (at FF000000)
+	 */
+	movl	$V2P(kpcr_pagetable), %esi
+	movl	$0, %edi
+	movl	$0x1007, %eax
+	movl	%eax, (%esi, %edi)
+
+#ifdef MP
+
+.m1:
+
+#endif /* MP */
+
+
 	/*
 	 * Set up the PDBR
 	 */	
@@ -138,6 +196,9 @@ _multiboot_entry:
 	 * Load the GDTR and IDTR with new tables located above
 	 * 0xc0000000
 	 */
+	 
+  /* FIXME: Application processors should have their own GDT/IDT */
+  
 	lgdt	_KiGdtDescriptor
 	lidt	_KiIdtDescriptor
 
@@ -147,9 +208,37 @@ _multiboot_entry:
 	movl	$KERNEL_DS, %eax
 	movl	%eax, %ds
 	movl	%eax, %es
-	movl	%eax, %fs
 	movl	%eax, %gs
 	movl	%eax, %ss
+	movl	$PCR_SELECTOR, %eax
+	movl	%eax, %fs
+
+#ifdef MP
+
+  cmpl    $AP_MAGIC, %edx
+  jne     .m2
+
+  /*
+   * This is an application processor executing
+   */
+
+	/*
+	 * Initialize EFLAGS
+	 */
+	pushl	$0
+	popfl
+
+	/*
+	 * Call the application processor initialization code
+	 */
+	pushl	$0
+	pushl	$KERNEL_CS
+	pushl	$_KiSystemStartup
+  lret
+
+.m2:
+
+#endif /* MP */
 
 	/*
 	 * Load the initial ring0 stack
@@ -185,7 +274,15 @@ lowmem_pagetable:
 
 kernel_pagetable:
 	.fill 4096, 1, 0	
-	
+
+#ifdef MP
+apic_pagetable:
+	.fill 4096, 1, 0	
+#endif /* MP */
+
+kpcr_pagetable:
+	.fill 4096, 1, 0	
+
 _unmap_me:
 	.fill 4096, 1, 0
 	
@@ -202,5 +299,3 @@ _trap_stack_top:
 	
 _unmap_me3:	
 	.fill 4096, 1, 0			
-
-

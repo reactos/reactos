@@ -45,42 +45,31 @@ ULONG KiPcrInitDone = 0;
 VOID 
 KeInit1(VOID)
 {
+   PKPCR KPCR;
+   extern USHORT KiGdt[];
+
    KiCheckFPU();
 
    KeInitExceptions ();
    KeInitInterrupts ();
+
+   /* Initialize the initial PCR region. We can't allocate a page
+      with MmAllocPage() here because MmInit1() has not yet been
+      called, so we use a predefined page in low memory */
+   KPCR = (PKPCR)KPCR_BASE;
+   memset(KPCR, 0, PAGESIZE);
+   KPCR->Self = (PKPCR)KPCR_BASE;
+   KPCR->Irql = HIGH_LEVEL;
+   KPCR->GDT = (PUSHORT)&KiGdt;
+   KPCR->IDT = (PUSHORT)&KiIdt;
+   KiPcrInitDone = 1;
 }
 
 VOID 
 KeInit2(VOID)
 {
-   PVOID PcrPage;
-   
    KeInitDpc();
    KeInitializeBugCheck();
    KeInitializeDispatcher();
    KeInitializeTimerImpl();
-   
-   /*
-    * Initialize the PCR region. 
-    * FIXME: This should be per-processor.
-    */
-   PcrPage = MmAllocPage(0);
-   if (PcrPage == NULL)
-     {
-	DPRINT1("No memory for PCR page\n");
-	KeBugCheck(0);
-     }
-   MmCreateVirtualMapping(NULL,
-			  (PVOID)KPCR_BASE,
-			  PAGE_READWRITE,
-			  (ULONG)PcrPage);
-   memset((PVOID)KPCR_BASE, 0, 4096);
-   KiPcrInitDone = 1;
 }
-
-
-
-
-
-

@@ -193,7 +193,15 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
    InsertTailList(&BiosPageListHead,
 		  &MmPageArray[0].ListEntry); 
 
-   i = 1;
+   /*
+    * Page one is reserved for the initial KPCR
+    */
+   MmPageArray[1].Flags = MM_PHYSICAL_PAGE_BIOS;
+   MmPageArray[1].ReferenceCount = 0;
+   InsertTailList(&BiosPageListHead,
+      &MmPageArray[1].ListEntry); 
+
+   i = 2;
    if ((ULONG)FirstPhysKernelAddress < 0xa0000)
      {
 	MmStats.NrFreePages += (((ULONG)FirstPhysKernelAddress/PAGESIZE) - 1);

@@ -27,11 +27,11 @@
 /*
  * Defines a descriptor as it appears in the processor tables
  */
-typedef struct
+typedef struct _DESCRIPTOR
 {
-        unsigned int a;
-        unsigned int b;
-} IDT_DESCRIPTOR, GDT_DESCRIPTOR;
+  ULONG a;
+  ULONG b;
+} __attribute__ ((packed)) IDT_DESCRIPTOR, GDT_DESCRIPTOR;
 
 extern IDT_DESCRIPTOR KiIdt[256];
 //extern GDT_DESCRIPTOR KiGdt[256];

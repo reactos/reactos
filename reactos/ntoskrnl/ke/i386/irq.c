@@ -1,4 +1,4 @@
-/* $Id: irq.c,v 1.8 2001/03/16 16:05:34 dwelch Exp $
+/* $Id: irq.c,v 1.9 2001/04/13 16:12:26 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -19,16 +19,113 @@
 /* INCLUDES ****************************************************************/
 
 #include <ddk/ntddk.h>
-
+#include <internal/config.h>
 #include <internal/ke.h>
 #include <internal/ps.h>
 #include <internal/i386/segment.h>
 #include <internal/pool.h>
 
+#ifdef MP
+#include <internal/hal/mps.h>
+#endif /* MP */
+
 #define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS *****************************************************************/
+
+#ifdef MP
+
+#define IRQ_BASE  FIRST_DEVICE_VECTOR
+#define NR_IRQS   0x100 - 0x30
+
+#define __STR(x) #x
+#define STR(x) __STR(x)
+
+#define INT_NAME(intnum) _KiUnexpectedInterrupt##intnum
+#define INT_NAME2(intnum) KiUnexpectedInterrupt##intnum
+
+#define BUILD_COMMON_INTERRUPT_HANDLER() \
+__asm__( \
+  "_KiCommonInterrupt:\n\t" \
+  "cld\n\t" \
+  "pushl %ds\n\t" \
+  "pushl %es\n\t" \
+  "pushl %fs\n\t" \
+  "pushl %gs\n\t" \
+  "movl	$0xceafbeef,%eax\n\t" \
+  "pushl %eax\n\t" \
+  "movl	$" STR(KERNEL_DS) ",%eax\n\t" \
+  "movl	%eax,%ds\n\t" \
+  "movl	%eax,%es\n\t" \
+  "movl	$" STR(PCR_SELECTOR) ",%eax\n\t" \
+  "movl	%eax,%fs\n\t" \
+  "pushl %esp\n\t" \
+  "pushl %ebx\n\t" \
+  "call	_KiInterruptDispatch\n\t" \
+  "popl	%eax\n\t" \
+  "popl	%eax\n\t" \
+  "popl	%eax\n\t" \
+  "popl	%gs\n\t" \
+  "popl	%fs\n\t" \
+  "popl	%es\n\t" \
+  "popl	%ds\n\t" \
+  "popa\n\t" \
+  "iret\n\t");
+
+#define BUILD_INTERRUPT_HANDLER(intnum) \
+VOID INT_NAME2(intnum)(VOID); \
+__asm__( \
+  STR(INT_NAME(intnum)) ":\n\t" \
+  "pusha\n\t" \
+  "movl $0x" STR(intnum) ",%ebx\n\t" \
+  "jmp _KiCommonInterrupt");
+
+
+/* Interrupt handlers and declarations */
+
+#define B(x,y) \
+  BUILD_INTERRUPT_HANDLER(x##y)
+
+#define B16(x) \
+  B(x,0) B(x,1) B(x,2) B(x,3) \
+  B(x,4) B(x,5) B(x,6) B(x,7) \
+  B(x,8) B(x,9) B(x,A) B(x,B) \
+  B(x,C) B(x,D) B(x,E) B(x,F)
+
+
+BUILD_COMMON_INTERRUPT_HANDLER()
+B16(3) B16(4) B16(5) B16(6)
+B16(7) B16(8) B16(9) B16(A)
+B16(B) B16(C) B16(D) B16(E)
+B16(F)
+
+#undef B;
+#undef B16;
+
+
+/* Interrupt handler list */
+
+#define L(x,y) \
+  (ULONG)&##INT_NAME2(x##y)
+
+#define L16(x) \
+	L(x,0), L(x,1), L(x,2), L(x,3), \
+	L(x,4), L(x,5), L(x,6), L(x,7), \
+	L(x,8), L(x,9), L(x,A), L(x,B), \
+	L(x,C), L(x,D), L(x,E), L(x,F)
+
+static ULONG irq_handler[NR_IRQS] = {
+  L16(3), L16(4), L16(5), L16(6),
+  L16(7), L16(8), L16(9), L16(A),
+  L16(B), L16(C), L16(D), L16(E),
+  L16(F)
+};
+
+#undef L;
+#undef L16;
+
+#else /* MP */
 
 #define NR_IRQS         (16)
 #define IRQ_BASE        (0x40)
@@ -70,6 +167,8 @@ static unsigned int irq_handler[NR_IRQS]=
                 (int)&irq_handler_15,
         };
 
+#endif /* MP */
+
 /*
  * PURPOSE: Object describing each isr 
  * NOTE: The data in this table is only modified at passsive level but can
@@ -91,9 +190,22 @@ static KSPIN_LOCK isr_table_lock = {0,};
 VOID KeInitInterrupts (VOID)
 {
    int i;
-   
-   DPRINT("KeInitInterrupts ()\n",0);
-   
+
+#ifdef MP
+
+   /*
+    * Setup the IDT entries to point to the interrupt handlers
+    */
+   for (i=0;i<NR_IRQS;i++)
+     {
+	KiIdt[0x30+i].a=(irq_handler[i]&0xffff)+(KERNEL_CS<<16);
+	KiIdt[0x30+i].b=(irq_handler[i]&0xffff0000)+PRESENT+
+	                    I486_INTERRUPT_GATE;
+	InitializeListHead(&isr_table[i]);
+     }
+
+#else
+
    /*
     * Setup the IDT entries to point to the interrupt handlers
     */
@@ -104,6 +216,9 @@ VOID KeInitInterrupts (VOID)
 	                    I486_INTERRUPT_GATE;
 	InitializeListHead(&isr_table[i]);
      }
+
+#endif
+
 }
 
 typedef struct _KIRQ_TRAPFRAME
@@ -125,6 +240,95 @@ typedef struct _KIRQ_TRAPFRAME
    ULONG Eflags;
 } KIRQ_TRAPFRAME, *PKIRQ_TRAPFRAME;
 
+#ifdef MP
+
+VOID
+KiInterruptDispatch (ULONG Vector, PKIRQ_TRAPFRAME Trapframe)
+/*
+ * FUNCTION: Calls the irq specific handler for an irq
+ * ARGUMENTS:
+ *         Vector    = Interrupt vector
+ *         Trapframe = CPU context
+ */
+{
+   KIRQL old_level;
+   PKINTERRUPT isr;
+   PLIST_ENTRY current;
+   ULONG irq;
+
+   DPRINT("I(%d) ", Vector);
+
+   /*
+    * Notify the rest of the kernel of the raised irq level
+    */
+   HalBeginSystemInterrupt (Vector,
+			    VECTOR2IRQL(Vector),
+			    &old_level);
+
+   irq = VECTOR2IRQ(Vector);
+
+   /*
+    * Enable interrupts
+    * NOTE: Only higher priority interrupts will get through
+    */
+   __asm__("sti\n\t");
+
+
+      DPRINT("KiInterruptDispatch(Vector %d)\n", Vector);
+      /*
+       * Iterate the list until one of the isr tells us its device interrupted
+       */
+      current = isr_table[irq].Flink;
+      isr = CONTAINING_RECORD(current,KINTERRUPT,Entry);
+      //DPRINT("current %x isr %x\n",current,isr);
+      while (current!=(&isr_table[irq]) && 
+	     !isr->ServiceRoutine(isr,isr->ServiceContext))
+	{
+	   current = current->Flink;
+	   isr = CONTAINING_RECORD(current,KINTERRUPT,Entry);
+	   //DPRINT("current %x isr %x\n",current,isr);
+	}
+
+   /*
+    * Disable interrupts
+    */
+   __asm__("cli\n\t");
+
+   /*
+    * Unmask the related irq
+    */
+   HalEnableSystemInterrupt (Vector, 0, 0);
+
+   /*
+    * If the processor level will drop below dispatch level on return then
+    * issue a DPC queue drain interrupt
+    */
+   if (old_level < DISPATCH_LEVEL)
+     {
+
+  HalEndSystemInterrupt (DISPATCH_LEVEL, 0);
+	__asm__("sti\n\t");
+
+	if (KeGetCurrentThread() != NULL)
+	  {
+	     KeGetCurrentThread()->LastEip = Trapframe->Eip;
+	  }
+	KiDispatchInterrupt();
+
+	if (KeGetCurrentThread() != NULL &&
+	    KeGetCurrentThread()->Alerted[1] != 0 &&
+	    Trapframe->Cs != KERNEL_CS)
+	  {
+	    HalEndSystemInterrupt (APC_LEVEL, 0);
+	    KiDeliverNormalApc();
+	  }
+
+  }
+  HalEndSystemInterrupt (old_level, 0);
+}
+
+#else /* MP */
+
 VOID 
 KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
 /*
@@ -136,16 +340,14 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
    KIRQL old_level;
    PKINTERRUPT isr;
    PLIST_ENTRY current;
-   
-//   DbgPrint("{");
-   
+
    /*
     * Notify the rest of the kernel of the raised irq level
     */
    HalBeginSystemInterrupt (irq+IRQ_BASE,
 			    HIGH_LEVEL-irq,
 			    &old_level);
-   
+
    /*
     * Enable interrupts
     * NOTE: Only higher priority interrupts will get through
@@ -214,6 +416,7 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
    HalEndSystemInterrupt (old_level, 0);
 }
 
+#endif /* MP */
 
 static VOID 
 KeDumpIrqList(VOID)
