@@ -17,7 +17,8 @@ TOOLS = \
 
 CLEAN_FILES = $(TOOLS)
 
-all: $(TOOLS) zlib_target wmc_target cabman_target cdmake_target mkhive_target rgenstat_target
+all: $(TOOLS) zlib_target wmc_target cabman_target cdmake_target mkhive_target rgenstat_target \
+	pipetools_target
 
 buildno$(EXE_POSTFIX): buildno.c ../include/reactos/version.h
 	$(HOST_CC) $(CFLAGS) -o buildno$(EXE_POSTFIX) buildno.c
@@ -114,25 +115,32 @@ mkhive_target:
 rgenstat_target:
 	$(MAKE) -C rgenstat rgenstat$(EXE_POSTFIX)
 
-.PHONY: wmc_target cdmake_target mkhive_target rgenstat_target
+pipetools_target:
+	$(MAKE) -C pipetools
+
+.PHONY: wmc_target cdmake_target mkhive_target rgenstat_target pipetools_target
 
 
 ifeq ($(HOST),mingw32-linux)
 clean:
+	$(MAKE) -C cabman clean
 	$(MAKE) -C cdmake clean
 	$(MAKE) -C mkhive clean
 	$(MAKE) -C wmc clean
 	$(MAKE) -C rgenstat clean
+	$(MAKE) -C pipetools clean
 	rm mkconfig
 	rm $(TOOLS)
 endif
 ifeq ($(HOST),mingw32-windows)
 clean:
+	$(MAKE) -C cabman clean
 	$(MAKE) -C cdmake clean
 	$(MAKE) -C mkhive clean
 	$(MAKE) -C wmc clean
 	$(MAKE) -C rgenstat clean
-	del *$(EXE_POSTFIX)
+	$(MAKE) -C pipetools clean
+	-del *$(EXE_POSTFIX)
 endif
 
 .PHONY: all clean
