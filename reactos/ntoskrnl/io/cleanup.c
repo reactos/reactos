@@ -44,7 +44,6 @@ VOID IoDeviceControlCompletion(PDEVICE_OBJECT DeviceObject,
            OutputBufferLength = Irp->IoStatus.Information;
            if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < OutputBufferLength)
              {
-               Irp->IoStatus.Status = STATUS_DATA_OVERRUN;
                OutputBufferLength = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
              }
          }
