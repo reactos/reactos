@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.26 2004/09/26 21:15:51 sedwards Exp $
+/* $Id: misc.c,v 1.27 2004/11/21 20:14:36 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -896,6 +896,47 @@ GetSecurityInfo(HANDLE handle,
 {
   DPRINT1("GetSecurityInfo: stub\n");
   return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+
+/******************************************************************************
+ * GetSecurityInfoExW         EXPORTED
+ */
+DWORD WINAPI GetSecurityInfoExA(
+   HANDLE hObject, 
+   SE_OBJECT_TYPE ObjectType, 
+   SECURITY_INFORMATION SecurityInfo, 
+   LPCSTR lpProvider,
+   LPCSTR lpProperty, 
+   PACTRL_ACCESSA *ppAccessList, 
+   PACTRL_AUDITA *ppAuditList, 
+   LPSTR *lppOwner, 
+   LPSTR *lppGroup
+   )
+{
+  DPRINT1("GetSecurityInfoExA stub!\n");
+  return ERROR_BAD_PROVIDER; 
+}
+
+
+/******************************************************************************
+ * GetSecurityInfoExW         EXPORTED
+ */
+DWORD WINAPI GetSecurityInfoExW(
+   HANDLE hObject, 
+   SE_OBJECT_TYPE ObjectType, 
+   SECURITY_INFORMATION SecurityInfo, 
+   LPCWSTR lpProvider,
+   LPCWSTR lpProperty, 
+   PACTRL_ACCESSW *ppAccessList, 
+   PACTRL_AUDITW *ppAuditList, 
+   LPWSTR *lppOwner, 
+   LPWSTR *lppGroup
+   )
+{
+  DPRINT1("GetSecurityInfoExW stub!\n");
+  return ERROR_BAD_PROVIDER; 
 }
 
 
