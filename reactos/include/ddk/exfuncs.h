@@ -700,6 +700,7 @@ ExInitializeNPagedLookasideList (
 	ULONG			Tag,
 	USHORT			Depth
 	);
+
 VOID
 STDCALL
 ExInitializePagedLookasideList (
@@ -712,52 +713,53 @@ ExInitializePagedLookasideList (
 	USHORT			Depth
 	);
 
+ULONG FASTCALL
+ExfInterlockedAddUlong(IN PULONG Addend,
+		       IN ULONG Increment,
+		       IN PKSPIN_LOCK Lock);
 
-ULONG
-FASTCALL
-ExfInterlockedAddUlong (
-	IN	PULONG		Addend,
-	IN	ULONG		Increment,
-	IN	PKSPIN_LOCK	Lock
-	);
+PLIST_ENTRY FASTCALL
+ExfInterlockedInsertHeadList(IN PLIST_ENTRY ListHead,
+			     IN PLIST_ENTRY ListEntry,
+			     IN PKSPIN_LOCK Lock);
 
-INTERLOCKED_RESULT
-FASTCALL
-Exfi386InterlockedIncrementLong (
-	IN	PLONG	Addend
-	);
+PLIST_ENTRY FASTCALL
+ExfInterlockedInsertTailList(IN PLIST_ENTRY ListHead,
+			     IN PLIST_ENTRY ListEntry,
+			     IN PKSPIN_LOCK Lock);
 
-INTERLOCKED_RESULT
-FASTCALL
-Exfi386InterlockedDecrementLong (
-	IN	PLONG	Addend
-	);
+PSINGLE_LIST_ENTRY FASTCALL
+ExfInterlockedPopEntryList(IN PSINGLE_LIST_ENTRY ListHead,
+			   IN PKSPIN_LOCK Lock);
 
-ULONG
-FASTCALL
-Exfi386InterlockedExchangeUlong (
-	IN	PULONG	Target,
-	IN	ULONG	Value
-	);
+PSINGLE_LIST_ENTRY FASTCALL
+ExfInterlockedPushEntryList(IN PSINGLE_LIST_ENTRY ListHead,
+			    IN PSINGLE_LIST_ENTRY ListEntry,
+			    IN PKSPIN_LOCK Lock);
 
-INTERLOCKED_RESULT
-STDCALL
-Exi386InterlockedIncrementLong (
-	IN	PLONG	Addend
-	);
+PLIST_ENTRY FASTCALL
+ExfInterlockedRemoveHeadList(IN PLIST_ENTRY Head,
+			     IN PKSPIN_LOCK Lock);
 
-INTERLOCKED_RESULT
-STDCALL
-Exi386InterlockedDecrementLong (
-	IN	PLONG	Addend
-	);
+INTERLOCKED_RESULT FASTCALL
+Exfi386InterlockedIncrementLong(IN PLONG Addend);
 
-ULONG
-STDCALL
-Exi386InterlockedExchangeUlong (
-	IN	PULONG	Target,
-	IN	ULONG	Value
-	);
+INTERLOCKED_RESULT FASTCALL
+Exfi386InterlockedDecrementLong(IN PLONG Addend);
+
+ULONG FASTCALL
+Exfi386InterlockedExchangeUlong(IN PULONG Target,
+				IN ULONG Value);
+
+INTERLOCKED_RESULT STDCALL
+Exi386InterlockedIncrementLong(IN PLONG Addend);
+
+INTERLOCKED_RESULT STDCALL
+Exi386InterlockedDecrementLong(IN PLONG Addend);
+
+ULONG STDCALL
+Exi386InterlockedExchangeUlong(IN PULONG Target,
+			       IN ULONG Value);
 
 /*
 LONG

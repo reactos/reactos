@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.138 2002/07/25 13:18:31 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.139 2002/07/27 13:02:37 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -113,11 +113,11 @@ ExInsertHashTable@16
 ExSearchHashTable@16
 ExRemoveHashTable@16
 @ExfInterlockedAddUlong@12
-;@ExfInterlockedInsertHeadList
-;@ExfInterlockedInsertTailList
-;@ExfInterlockedPopEntryList
-;@ExfInterlockedPushEntryList
-;@ExfInterlockedRemoveHeadList
+@ExfInterlockedInsertHeadList@12
+@ExfInterlockedInsertTailList@12
+@ExfInterlockedPopEntryList@8
+@ExfInterlockedPushEntryList@12
+@ExfInterlockedRemoveHeadList@8
 @Exfi386InterlockedDecrementLong@4
 @Exfi386InterlockedExchangeUlong@8
 @Exfi386InterlockedIncrementLong@4
