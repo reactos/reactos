@@ -1,4 +1,4 @@
-/* $Id: dma.c,v 1.3 2002/09/08 10:22:24 chorns Exp $
+/* $Id: dma.c,v 1.4 2003/06/07 12:25:53 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -17,10 +17,10 @@
 #include <hal.h>
 
 ADAPTER_OBJECT AdapterObjects[] = {
-  { 0, (PVOID)0x87, (PVOID)0x1, (PVOID)0x0, { 0 }, NULL },
-  { 1, (PVOID)0x83, (PVOID)0x3, (PVOID)0x2, { 0 }, NULL },
-  { 2, (PVOID)0x81, (PVOID)0x5, (PVOID)0x4, { 0 }, NULL },
-  { 3, (PVOID)0x82, (PVOID)0x7, (PVOID)0x6, { 0 }, NULL } };
+  { 0, (PVOID)0x87, (PVOID)0x1, (PVOID)0x0, 0, NULL },
+  { 1, (PVOID)0x83, (PVOID)0x3, (PVOID)0x2, 0, NULL },
+  { 2, (PVOID)0x81, (PVOID)0x5, (PVOID)0x4, 0, NULL },
+  { 3, (PVOID)0x82, (PVOID)0x7, (PVOID)0x6, 0, NULL } };
 
 
 /* FUNCTIONS *****************************************************************/
