@@ -1,3 +1,28 @@
+2004-10-18  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* lib/kernel32/makefile (TARGET_BUILDENV_TEST): Set to yes.
+	* lib/kernel32/tests/Makefile: New target run.
+	* lib/kernel32/tests/tests/file-1.c: Remove.
+	* lib/kernel32/tests/tests/CreateFile.c: New file.
+	* lib/kernel32/tests/stubs.tst: New file.
+	* lib/gdiplus/tests/tests/test-1.c: Update.
+	* lib/gdiplus/tests/stubs.tst: Update.
+	* lib/gdiplus/tests/Makefile: Update.
+	* lib/tools/helper.mk: Better support for TARGET_BUILDENV_TEST.
+	* tools/regtests.c: Terminate process after running tests.
+	* regtests/shared/regtests.c (PerformTest): Increase buffer sizes.
+	* regtests/Makefile: Update.
+	* regtests/kmregtests/*: Remove.
+	* regtests/kmrtint/*: Remove.
+	* regtests/regtests/*: Remove.
+	* regtests/win32base/*: Remove.
+	* subsys/win32k/tests/tests/eng-mem-1.c: Update.
+	* subsys/win32k/tests/stubs.tst: New file.
+	* drivers/net/tcpip/tests/Makefile: Update.
+	* drivers/net/tcpip/makefile: Update.
+	* drivers/net/tcpip/stubs.tst: New file.
+	* drivers/net/tcpip/tests/Makefile: Update.
+
 2004-10-04  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* tools/helper.mk: Support for kernel TARGET_TYPE.

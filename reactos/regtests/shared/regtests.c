@@ -45,8 +45,8 @@ InitializeTests()
 VOID
 PerformTest(TestOutputRoutine OutputRoutine, PROS_TEST Test, LPSTR TestName)
 {
-  char OutputBuffer[200];
-  char Buffer[200];
+  char OutputBuffer[5000];
+  char Buffer[5000];
   char Name[200];
   int Result;
 

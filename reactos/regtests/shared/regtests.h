@@ -19,6 +19,9 @@
 #define TS_OK             0
 #define TS_FAILED         1
 
+static int _Result;
+static char *_Buffer;
+
 /* Macros to simplify tests */
 #define DISPATCHER(FunctionName, TestName) \
 int \
@@ -28,7 +31,10 @@ FunctionName(int Command, \
   switch (Command) \
     { \
     case TESTCMD_RUN: \
-      return RunTest(Buffer); \
+      _Result = TS_OK; \
+      _Buffer = Buffer; \
+      RunTest(); \
+      return _Result; \
     case TESTCMD_TESTNAME: \
       strcpy(Buffer, TestName); \
       return TS_OK; \
@@ -49,6 +55,48 @@ FunctionName(int Command, \
 #define FAIL_IF_NOT_EQUAL(GivenValue, FailValue, ErrorMessage)     if (GivenValue != FailValue) { FAIL(ErrorMessage); }
 #define FAIL_IF_LESS_EQUAL(GivenValue, FailValue, ErrorMessage)    if (GivenValue <= FailValue) { FAIL(ErrorMessage); }
 #define FAIL_IF_GREATER_EQUAL(GivenValue, FailValue, ErrorMessage) if (GivenValue >= FailValue) { FAIL(ErrorMessage); }
+
+static inline void AppendAssertion(char *message)
+{
+  if (strlen(_Buffer) != 0)
+    strcat(_Buffer, "\n");
+  strcat(_Buffer, message);
+  _Result = TS_FAILED;
+}
+
+#define _AssertEqualValue(_Expected, _Actual) \
+{ \
+  if ((_Expected) != (_Actual)) \
+    { \
+      char _message[100]; \
+      sprintf(_message, "Expected %d/0x%.08x was %d/0x%.08x at %s:%d", \
+        (_Expected), (_Expected), (_Actual), (_Actual), __FILE__, __LINE__); \
+      AppendAssertion(_message); \
+    } \
+}
+
+#define _AssertEqualWideString(_Expected, _Actual) \
+{ \
+  if (wcscmp((_Expected), (_Actual)) != 0) \
+    { \
+      char _message[100]; \
+      sprintf(_message, "Expected %S was %S at %s:%d", \
+        (_Expected), (_Actual), __FILE__, __LINE__); \
+      AppendAssertion(_message); \
+    } \
+}
+
+#define _AssertNotEqualValue(_Expected, _Actual) \
+{ \
+  if ((_Expected) == (_Actual)) \
+    { \
+      char _message[100]; \
+      sprintf(_message, "Actual value expected to be different from %d/0x%.08x at %s:%d", \
+        (_Expected), (_Expected), __FILE__, __LINE__); \
+      AppendAssertion(_message); \
+    } \
+}
+
 
 /*
  * Test routine prototype
@@ -135,7 +183,18 @@ FrameworkGetHookInternal(ULONG index)
   if (ExternalDependencies[index].FunctionAddress != NULL)
     return ExternalDependencies[index].FunctionAddress;
 
+  printf("Calling function '%s' in DLL '%s'.\n",
+    ExternalDependencies[index].FunctionName,
+    ExternalDependencies[index].FileName);
+
   address = FrameworkGetFunction(&ExternalDependencies[index]);
+ 
+  if (address == NULL)
+    {
+      printf("Function '%s' not found in DLL '%s'.\n",
+        ExternalDependencies[index].FunctionName,
+        ExternalDependencies[index].FileName);
+    }
   ExternalDependencies[index].FunctionAddress = address;
  
   return address;
@@ -149,12 +208,12 @@ _SetHook(PCHAR name,
   PAPI_DESCRIPTION api;
   ULONG index;
 
-  for (index = 0; index <= MaxExternalDependency; index++)
+  for (index = 0; index < MaxExternalDependency; index++)
     {
       api = &ExternalDependencies[index];
       if (strcmp(api->FunctionName, name) == 0)
         {
-          api->FunctionAddress = address;
+          api->MockFunctionAddress = address;
           return;
         }
     }
@@ -172,8 +231,12 @@ _SetHooks(PHOOK hookTable)
   PHOOK hook;
 
   hook = &hookTable[0];
-  _SetHook(hook->FunctionName,
-    hook->FunctionAddress);
+  while (hook->FunctionName != NULL)
+    {
+      _SetHook(hook->FunctionName,
+        hook->FunctionAddress);
+      hook++;
+    }
 }
 
 static inline VOID
@@ -182,6 +245,23 @@ _UnsetHooks(PHOOK hookTable)
   PHOOK hook;
 
   hook = &hookTable[0];
-  _SetHook(hook->FunctionName,
-    NULL);
+  while (hook->FunctionName != NULL)
+    {
+      _SetHook(hook->FunctionName,
+        NULL);
+      hook++;
+    }
+}
+
+static inline VOID
+_ResetAllHooks()
+{
+  PAPI_DESCRIPTION api;
+  ULONG index;
+
+  for (index = 0; index < MaxExternalDependency; index++)
+    {
+      api = &ExternalDependencies[index];
+      api->MockFunctionAddress = NULL;
+    }
 }

@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.86 2004/10/04 20:04:49 chorns Exp $
+# $Id: helper.mk,v 1.87 2004/10/18 19:11:09 chorns Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -653,6 +653,10 @@ else
 endif
 
 ifeq ($(TARGET_REGTESTS),yes)
+ifeq ($(TARGET_BUILDENV_TEST),yes)
+  REGTEST_TARGETS := tests/_hooks.c tests/_regtests.c tests/_stubs.S tests/Makefile.tests tests/_rtstub.c
+  MK_REGTESTS_CLEAN := clean_regtests
+else
   REGTEST_TARGETS := tests/_regtests.c tests/Makefile.tests tests/_rtstub.c 
 ifeq ($(MK_MODE),user)
   MK_LIBS := $(SDK_PATH_LIB)/rtshared.a $(MK_LIBS)
@@ -660,6 +664,7 @@ endif
   MK_REGTESTS_CLEAN := clean_regtests
   MK_OBJECTS += tests/_rtstub.o tests/regtests.a
   TARGET_CFLAGS += -I$(REGTESTS_PATH_INC)
+endif
 else
   REGTEST_TARGETS :=
   MK_REGTESTS_CLEAN :=
@@ -794,7 +799,10 @@ else
   MK_EXTRACMD :=
 endif
 
-$(MK_NOSTRIPNAME): $(MK_EXTRADEP) $(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS)
+$(MK_BASENAME).a: $(MK_OBJECTS)
+	$(AR) -r $(MK_BASENAME).a $(MK_OBJECTS)
+
+$(MK_NOSTRIPNAME): $(MK_EXTRADEP) $(MK_FULLRES) $(MK_BASENAME).a $(MK_LIBS)
 	$(LD_CC) -Wl,--base-file,base.tmp \
 		-Wl,--entry,$(TARGET_ENTRY) \
 		$(TARGET_LFLAGS) \
@@ -822,7 +830,7 @@ else
 	$(NM) --numeric-sort $(MK_NOSTRIPNAME) > $(MK_BASENAME).map
 endif
 
-$(MK_FULLNAME): $(MK_EXTRADEP) $(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS) $(MK_NOSTRIPNAME)
+$(MK_FULLNAME): $(MK_EXTRADEP) $(MK_FULLRES) $(MK_BASENAME).a $(MK_LIBS) $(MK_NOSTRIPNAME)
 	-
 ifneq ($(TARGET_CPPAPP),yes)
 	$(LD) --strip-debug -r -o $(MK_STRIPPED_OBJECT) $(MK_OBJECTS)
@@ -1000,13 +1008,12 @@ endif
 REGTEST_TESTS = $(wildcard tests/tests/*.c)
 
 $(REGTEST_TARGETS): $(REGTEST_TESTS)
-ifeq ($(MK_MODE),user)
 ifeq ($(TARGET_BUILDENV_TEST),yes)
 	$(REGTESTS) ./tests/tests ./tests/_regtests.c ./tests/Makefile.tests -e ./tests/_rtstub.c
 	$(REGTESTS) -s ./tests/stubs.tst ./tests/_stubs.S ./tests/_hooks.c
 else
+ifeq ($(MK_MODE),user)
 	$(REGTESTS) ./tests/tests ./tests/_regtests.c ./tests/Makefile.tests -u ./tests/_rtstub.c
-endif
 	$(MAKE) -C tests TARGET_REGTESTS=no all
 else
 ifeq ($(MK_MODE),kernel)
@@ -1014,10 +1021,16 @@ ifeq ($(MK_MODE),kernel)
 	$(MAKE) -C tests TARGET_REGTESTS=no all
 endif
 endif
+endif
 
 clean_regtests:
+ifeq ($(TARGET_BUILDENV_TEST),yes)
+	- $(MAKE) -C tests TARGET_REGTESTS=no clean
+	- $(RM) ./tests/_rtstub.c ./tests/_hooks.c ./tests/_regtests.c ./tests/_stubs.S ./tests/Makefile.tests
+else
 	$(MAKE) -C tests TARGET_REGTESTS=no clean
 	$(RM) ./tests/_rtstub.c ./tests/_regtests.c ./tests/_hooks.c ./tests/_stubs.S ./tests/Makefile.tests
+endif
 
 .PHONY: all depends implib clean install dist bootcd depends gen_regtests clean_regtests
 

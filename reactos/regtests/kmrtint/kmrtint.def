@@ -1,3 +1,0 @@
-LIBRARY kmrtint.dll
-EXPORTS
-RegTestMain@8

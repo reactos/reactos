@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.13 2004/02/22 09:59:17 chorns Exp $
+# $Id: Makefile,v 1.14 2004/10/18 19:11:07 chorns Exp $
 
 PATH_TO_TOP = ../..
 
@@ -21,8 +21,6 @@ TARGET_TYPE = hal
 TARGET_BASENAME = hal
 
 TARGET_DEFNAME = ../hal/hal
-
-TARGET_IMPLIBPATH = .
 
 TARGET_ASFLAGS = -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/ntoskrnl/include -D__ASM__
 

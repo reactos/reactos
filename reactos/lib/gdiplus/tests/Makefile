@@ -20,6 +20,7 @@ TARGET_CFLAGS = \
 -include Makefile.tests
 
 TARGET_OBJECTS = \
+  _rtstub.o \
   _regtests.o \
   _hooks.o \
   _stubs.o \
@@ -32,6 +33,6 @@ include $(TOOLS_PATH)/helper.mk
 LIBS = ../gdiplus.a
 
 run: all
-	@$(CC) -o _runtest.exe _rtstub.o regtests.a $(SDK_PATH_LIB)/rtshared.a $(LIBS)
+	@$(CC) -o _runtest.exe _rtstub.o regtests.a $(SDK_PATH_LIB)/rtshared.a $(LIBS) -lntdll
 	@_runtest.exe
 	@$(RM) _runtest.exe

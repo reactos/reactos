@@ -1,8 +1,10 @@
-# $Id: makefile,v 1.27 2004/10/08 01:28:32 arty Exp $
+# $Id: makefile,v 1.28 2004/10/18 19:11:06 chorns Exp $
 
 PATH_TO_TOP = ../../..
 
 TARGET_REGTESTS = yes
+
+TARGET_BUILDENV_TEST = yes
 
 TARGET_TYPE = export_driver
 
