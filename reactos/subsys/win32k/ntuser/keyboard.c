@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: keyboard.c,v 1.19 2003/11/30 20:03:47 navaraf Exp $
+/* $Id: keyboard.c,v 1.20 2003/12/13 06:19:59 arty Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -62,7 +62,8 @@
 #define KNUMP         0x400 
 
 /* Lock the keyboard state to prevent unusual concurrent access */ 
-KSPIN_LOCK QueueStateLock;
+/* This really should be a mutex. */
+FAST_MUTEX QueueStateLock;
 
 BYTE QueueKeyStateTable[256];
 
@@ -70,7 +71,7 @@ BYTE QueueKeyStateTable[256];
 
 /* Initialization -- Right now, just zero the key state and init the lock */
 NTSTATUS FASTCALL InitKeyboardImpl(VOID) {
-  KeInitializeSpinLock(&QueueStateLock);
+  ExInitializeFastMutex(&QueueStateLock);
   RtlZeroMemory(&QueueKeyStateTable,0x100);
   return STATUS_SUCCESS;
 }
@@ -290,16 +291,15 @@ STDCALL
 NtUserGetKeyState(
   DWORD key)
 {
-  KIRQL OldIrql;
   DWORD ret = 0;
 
-  KeAcquireSpinLock(&QueueStateLock, &OldIrql);
+  ExAcquireFastMutex(&QueueStateLock);
   if( key < 0x100 ) {
     ret = ((DWORD)(QueueKeyStateTable[key] & KS_DOWN_BIT) << 8 ) |
       (QueueKeyStateTable[key] & KS_EXT_BIT) |
       (QueueKeyStateTable[key] & KS_LOCK_BIT);
   }
-  KeReleaseSpinLock(&QueueStateLock, OldIrql);
+  ExReleaseFastMutex(&QueueStateLock);
   return ret;
 }
 
@@ -310,10 +310,9 @@ int STDCALL ToUnicodeEx( UINT wVirtKey,
 			 int cchBuff,
 			 UINT wFlags,
 			 HKL dwhkl ) {
-  KIRQL OldIrql;
   int ToUnicodeResult = 0;
 
-  KeAcquireSpinLock(&QueueStateLock, &OldIrql);
+  ExAcquireFastMutex(&QueueStateLock);
   ToUnicodeResult = ToUnicodeInner( wVirtKey,
 				    wScanCode,
 				    lpKeyState,
@@ -322,7 +321,7 @@ int STDCALL ToUnicodeEx( UINT wVirtKey,
 				    wFlags,
 				    PsGetWin32Thread() ? 
 				    PsGetWin32Thread()->KeyboardLayout : 0 );
-  KeReleaseSpinLock(&QueueStateLock, OldIrql);
+  ExReleaseFastMutex(&QueueStateLock);
 
   return ToUnicodeResult;
 }
@@ -579,7 +578,6 @@ BOOL STDCALL
 NtUserTranslateMessage(LPMSG lpMsg,
 		       HKL dwhkl) /* Used to pass the kbd layout */
 {
-  KIRQL OldIrql;
   static INT dead_char = 0;
   LONG UState = 0;
   WCHAR wp[2] = { 0 };
@@ -603,7 +601,7 @@ NtUserTranslateMessage(LPMSG lpMsg,
 
   ScanCode = (InMsg.lParam >> 16) & 0xff;
 
-  KeAcquireSpinLock(&QueueStateLock, &OldIrql);
+  ExAcquireFastMutex(&QueueStateLock);
 
   UState = ToUnicodeInner(InMsg.wParam, HIWORD(InMsg.lParam) & 0xff,
 			  QueueKeyStateTable, wp, 2, 0, 
@@ -666,7 +664,7 @@ NtUserTranslateMessage(LPMSG lpMsg,
       Result = TRUE;
     }
 
-  KeReleaseSpinLock(&QueueStateLock, OldIrql);
+  ExReleaseFastMutex(&QueueStateLock);
   return Result;
 }
 
@@ -675,15 +673,14 @@ STDCALL
 NtUserGetKeyboardState(
   LPBYTE lpKeyState)
 {
-  KIRQL OldIrql;
   BOOL Result = TRUE;
 
-  KeAcquireSpinLock(&QueueStateLock, &OldIrql);
+  ExAcquireFastMutex(&QueueStateLock);
   if (lpKeyState) {
 	if(!NT_SUCCESS(MmCopyToCaller(lpKeyState, QueueKeyStateTable, 256)))
 	  Result = FALSE;
   }
-  KeReleaseSpinLock(&QueueStateLock, OldIrql);
+  ExReleaseFastMutex(&QueueStateLock);
   return Result;
 }
 
@@ -692,15 +689,14 @@ STDCALL
 NtUserSetKeyboardState(
   LPBYTE lpKeyState)
 {
-  KIRQL OldIrql;
   BOOL Result = TRUE;
 
-  KeAcquireSpinLock(&QueueStateLock, &OldIrql);
+  ExAcquireFastMutex(&QueueStateLock);
   if (lpKeyState) {
     if(! NT_SUCCESS(MmCopyFromCaller(QueueKeyStateTable, lpKeyState, 256)))
       Result = FALSE;
   }
-  KeReleaseSpinLock(&QueueStateLock, OldIrql);
+  ExReleaseFastMutex(&QueueStateLock);
   
   return Result;
 }
@@ -939,7 +935,6 @@ static DWORD FASTCALL GetShiftBit( PKBDTABLES pkKT ) {
  */
 
 VOID FASTCALL W32kKeyProcessMessage(LPMSG Msg, PKBDTABLES KeyboardLayout) {
-  KIRQL OldIrql;
   DWORD ScanCode = 0, ModifierBits = 0;
   DWORD i = 0;
   DWORD BaseMapping = 0;
@@ -965,7 +960,7 @@ VOID FASTCALL W32kKeyProcessMessage(LPMSG Msg, PKBDTABLES KeyboardLayout) {
       return;
     }
 
-  KeAcquireSpinLock(&QueueStateLock, &OldIrql);
+  ExAcquireFastMutex(&QueueStateLock);
 
   /* arty -- handle numpad -- On real windows, the actual key produced 
    * by the messaging layer is different based on the state of numlock. */
@@ -1009,6 +1004,6 @@ VOID FASTCALL W32kKeyProcessMessage(LPMSG Msg, PKBDTABLES KeyboardLayout) {
 		   FALSE ); /* Release key */
     }
 
-  KeReleaseSpinLock(&QueueStateLock, OldIrql);
+  ExReleaseFastMutex(&QueueStateLock);
 }
 /* EOF */
