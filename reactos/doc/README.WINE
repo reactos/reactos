@@ -14,8 +14,10 @@ reactos/lib/comctl32
 reactos/lib/imagehlp
 reactos/lib/imm32
 reactos/lib/msvcrt20
-reactos/lib/ole32 - Out of date, needs a new merge
+reactos/lib/ole32
 reactos/lib/richedit
+reactos/lib/rpcrt4 - In need of new merge
+reactos/lib/shlwapi
 reactos/lib/twain
 reactos/lib/winmm
 
