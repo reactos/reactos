@@ -24,15 +24,20 @@
  *
  *    28-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        FileGetString() seems to be working now.
+ *
+ *    06-Nov-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *        Added PagePrompt() and FilePrompt().
  */
 
 #include "config.h"
 
 #include <windows.h>
-#include <tchar.h>
+#include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
-#include <ctype.h>
+//#include <stdarg.h>
+#include <stdio.h>
+#include <tchar.h>
 
 #include "cmd.h"
 
@@ -328,5 +333,170 @@ HWND GetConsoleWindow (VOID)
 	return h;
 }
 #endif
+
+
+INT PagePrompt (VOID)
+{
+	INPUT_RECORD ir;
+
+	ConOutPrintf ("Press a key to continue...\n");
+
+	RemoveBreakHandler ();
+	ConInDisable ();
+
+	do
+	{
+		ConInKey (&ir);
+	}
+	while ((ir.Event.KeyEvent.wVirtualKeyCode == VK_SHIFT) ||
+	       (ir.Event.KeyEvent.wVirtualKeyCode == VK_MENU) ||
+	       (ir.Event.KeyEvent.wVirtualKeyCode == VK_CONTROL));
+
+	AddBreakHandler ();
+	ConInEnable ();
+
+	if ((ir.Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE) ||
+	    ((ir.Event.KeyEvent.wVirtualKeyCode == 'C') &&
+	     (ir.Event.KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))))
+		return PROMPT_BREAK;
+
+	return PROMPT_YES;
+}
+
+
+INT FilePromptYN (LPTSTR szFormat, ...)
+{
+        TCHAR szOut[512];
+	va_list arg_ptr;
+//        TCHAR cKey = 0;
+//        LPTSTR szKeys = _T("yna");
+
+        TCHAR szIn[10];
+	LPTSTR p;
+
+	va_start (arg_ptr, szFormat);
+	_vstprintf (szOut, szFormat, arg_ptr);
+	va_end (arg_ptr);
+
+        ConOutPrintf (szFormat);
+
+/* preliminary fix */
+        ConInString (szIn, 10);
+        ConOutPrintf (_T("\n"));
+
+        _tcsupr (szIn);
+        for (p = szIn; _istspace (*p); p++)
+		;
+
+	if (*p == _T('Y'))
+		return PROMPT_YES;
+	else if (*p == _T('N'))
+		return PROMPT_NO;
+#if 0
+	else if (*p == _T('\03'))
+		return PROMPT_BREAK;
+#endif
+
+	return PROMPT_NO;
+
+
+/* unfinished sollution */
+#if 0
+	RemoveBreakHandler ();
+	ConInDisable ();
+
+	do
+	{
+		ConInKey (&ir);
+                cKey = _totlower (ir.Event.KeyEvent.uChar.AsciiChar);
+                if (_tcschr (szKeys, cKey[0]) == NULL)
+                        cKey = 0;                        
+
+
+	}
+	while ((ir.Event.KeyEvent.wVirtualKeyCode == VK_SHIFT) ||
+	       (ir.Event.KeyEvent.wVirtualKeyCode == VK_MENU) ||
+	       (ir.Event.KeyEvent.wVirtualKeyCode == VK_CONTROL));
+
+	AddBreakHandler ();
+	ConInEnable ();
+
+	if ((ir.Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE) ||
+	    ((ir.Event.KeyEvent.wVirtualKeyCode == 'C') &&
+	     (ir.Event.KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))))
+		return PROMPT_BREAK;
+
+	return PROMPT_YES;
+#endif
+}
+
+
+INT FilePromptYNA (LPTSTR szFormat, ...)
+{
+        TCHAR szOut[512];
+	va_list arg_ptr;
+//        TCHAR cKey = 0;
+//        LPTSTR szKeys = _T("yna");
+
+        TCHAR szIn[10];
+	LPTSTR p;
+
+	va_start (arg_ptr, szFormat);
+	_vstprintf (szOut, szFormat, arg_ptr);
+	va_end (arg_ptr);
+
+        ConOutPrintf (szFormat);
+
+/* preliminary fix */
+        ConInString (szIn, 10);
+        ConOutPrintf (_T("\n"));
+
+        _tcsupr (szIn);
+        for (p = szIn; _istspace (*p); p++)
+		;
+
+	if (*p == _T('Y'))
+		return PROMPT_YES;
+	else if (*p == _T('N'))
+		return PROMPT_NO;
+	if (*p == _T('A'))
+		return PROMPT_ALL;
+#if 0
+	else if (*p == _T('\03'))
+		return PROMPT_BREAK;
+#endif
+
+	return PROMPT_NO;
+
+
+/* unfinished sollution */
+#if 0
+	RemoveBreakHandler ();
+	ConInDisable ();
+
+	do
+	{
+		ConInKey (&ir);
+                cKey = _totlower (ir.Event.KeyEvent.uChar.AsciiChar);
+                if (_tcschr (szKeys, cKey[0]) == NULL)
+                        cKey = 0;                        
+
+
+	}
+	while ((ir.Event.KeyEvent.wVirtualKeyCode == VK_SHIFT) ||
+	       (ir.Event.KeyEvent.wVirtualKeyCode == VK_MENU) ||
+	       (ir.Event.KeyEvent.wVirtualKeyCode == VK_CONTROL));
+
+	AddBreakHandler ();
+	ConInEnable ();
+
+	if ((ir.Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE) ||
+	    ((ir.Event.KeyEvent.wVirtualKeyCode == 'C') &&
+	     (ir.Event.KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))))
+		return PROMPT_BREAK;
+
+	return PROMPT_YES;
+#endif
+}
 
 /* EOF */

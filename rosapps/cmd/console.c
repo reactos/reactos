@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.12 1999/10/23 18:17:37 ekohl Exp $
+/* $Id: console.c,v 1.13 1999/12/15 00:50:41 ekohl Exp $
  *
  *  CONSOLE.C - console input/output functions.
  *
@@ -34,7 +34,7 @@ VOID DebugPrintf (LPTSTR szFormat, ...)
 	_vstprintf (szOut, szFormat, arg_ptr);
 	va_end (arg_ptr);
 
-        WriteFile (GetStdHandle (STD_ERROR_HANDLE),
+	WriteFile (GetStdHandle (STD_ERROR_HANDLE),
 	           szOut,
 	           _tcslen(szOut) * sizeof(TCHAR),
 	           &dwWritten,
@@ -44,6 +44,28 @@ VOID DebugPrintf (LPTSTR szFormat, ...)
 #endif
 }
 #endif /* _DEBUG */
+
+
+VOID ConInDisable (VOID)
+{
+	HANDLE hInput = GetStdHandle (STD_INPUT_HANDLE);
+	DWORD dwMode;
+
+	GetConsoleMode (hInput, &dwMode);
+	dwMode &= ~ENABLE_PROCESSED_INPUT;
+	SetConsoleMode (hInput, dwMode);
+}
+
+
+VOID ConInEnable (VOID)
+{
+	HANDLE hInput = GetStdHandle (STD_INPUT_HANDLE);
+	DWORD dwMode;
+
+	GetConsoleMode (hInput, &dwMode);
+	dwMode |= ENABLE_PROCESSED_INPUT;
+	SetConsoleMode (hInput, dwMode);
+}
 
 
 VOID ConInDummy (VOID)

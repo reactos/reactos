@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.16 1999/12/07 18:17:17 paolopan Exp $
+/* $Id: cmd.c,v 1.17 1999/12/15 00:50:41 ekohl Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -107,6 +107,9 @@
  *
  *    22-Oct-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Added break handler.
+ *
+ *    15-Dec-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *        Fixed current directory
  */
 
 #include "config.h"
@@ -166,13 +169,44 @@ Execute (LPTSTR first, LPTSTR rest)
 	TCHAR szFullName[MAX_PATH];
 	DWORD dwExitCode = 0;
 
+#ifdef _DEBUG
+	DebugPrintf ("Execute: \'%s\' \'%s\'\n", first, rest);
+#endif
+
 	/* check for a drive change */
-	if (!_tcscmp (first + 1, _T(":")) && _istalpha (*first))
+	if ((_istalpha (first[0])) && (!_tcscmp (first + 1, _T(":"))))
 	{
 		TCHAR szPath[MAX_PATH];
+		TCHAR szVar[5];
 
-		_tcscpy (szPath, _T("A:"));
-		szPath[0] = _totupper (*first);
+#ifdef _DEBUG
+		DebugPrintf ("Drive change to drive %s\n", first);
+#endif
+		/* save curent directory in environment variable */
+		GetCurrentDirectory (MAX_PATH, szPath);
+
+		_tcscpy (szVar, _T("=A:"));
+		szVar[1] = _totupper (szPath[0]);
+
+		SetEnvironmentVariable (szVar, szPath);
+
+
+		/* check for current directory of new drive */
+		_tcscpy (szVar, _T("=A:"));
+		szVar[1] = _totupper (*first);
+
+		if (GetEnvironmentVariable (szVar, szPath, MAX_PATH) == 0)
+		{
+			/* no environment variable found */
+			_tcscpy (szPath, _T("A:\\"));
+			szPath[0] = _totupper (*first);
+		}
+
+#ifdef _DEBUG
+		DebugPrintf ("Drive change to drive %s\n", szPath);
+#endif
+
+		/* set new current directory */
 		SetCurrentDirectory (szPath);
 		GetCurrentDirectory (MAX_PATH, szPath);
 		if (szPath[0] != (TCHAR)_totupper (*first))
@@ -289,6 +323,10 @@ DoCommand (LPTSTR line)
 	INT cl;
 	LPCOMMAND cmdptr;
 
+#ifdef _DEBUG
+	DebugPrintf ("DoCommand: (\'%s\')\n", line);
+#endif /* DEBUG */
+
 	/* Skip over initial white space */
 	while (isspace (*rest))
 		rest++;
@@ -383,7 +421,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 	s = &cmdline[0];
 
 #ifdef _DEBUG
-	DebugPrintf ("ParseCommandLine: (\'%s\')]\n", s);
+	DebugPrintf ("ParseCommandLine: (\'%s\')\n", s);
 #endif /* DEBUG */
 
 #ifdef FEATURE_ALIASES
@@ -822,6 +860,23 @@ BOOL BreakHandler (DWORD dwCtrlType)
 }
 
 
+VOID AddBreakHandler (VOID)
+{
+#ifndef __REACTOS__
+	SetConsoleCtrlHandler ((PHANDLER_ROUTINE)&BreakHandler,
+	                       TRUE);
+#endif
+}
+
+
+VOID RemoveBreakHandler (VOID)
+{
+#ifndef __REACTOS__
+	SetConsoleCtrlHandler (NULL, FALSE);
+#endif
+}
+
+
 /*
  * show commands and options that are available.
  *
@@ -1036,10 +1091,7 @@ Initialize (int argc, char *argv[])
 #endif
 
 	/* add ctrl break handler */
-#ifndef __REACTOS__
-	SetConsoleCtrlHandler ((PHANDLER_ROUTINE)&BreakHandler,
-	                       TRUE);
-#endif
+	AddBreakHandler ();
 }
 
 
@@ -1092,9 +1144,7 @@ static VOID Cleanup (int argc, char *argv[])
 
 
 	/* remove ctrl break handler */
-#ifndef __REACTOS__
-	SetConsoleCtrlHandler (NULL, FALSE);
-#endif
+	RemoveBreakHandler ();
 }
 
 
@@ -1126,3 +1176,5 @@ int main (int argc, char *argv[])
 
 	return nExitCode;
 }
+
+/* EOF */

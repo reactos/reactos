@@ -611,9 +611,9 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 	int files;
 	int copied;
 
-	LPFILES sources;
+	LPFILES sources = NULL;
+	LPFILES start = NULL;
 	FILES dest;
-	LPFILES start;
 	BOOL bMultiple;
 	BOOL bWildcards;
 	BOOL bDestFound;
@@ -738,7 +738,8 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 		copied = setup_copy (sources->next, p, bMultiple, drive_d, dir_d, file_d, ext_d, &append, &dwFlags) + 1;
 	}
 
-	DeleteFileList (start);
+//        DeleteFileList (start);
+        DeleteFileList (sources);
 	freep (p);
 	ConOutPrintf (_T("        %d file(s) copied\n"), copied);
 

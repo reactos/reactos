@@ -89,7 +89,7 @@ COMMAND cmds[] =
 #endif
 
 #ifdef INCLUDE_CMD_DIR
-	{_T("dir"), CMD_SPECIAL, cmd_dir},
+	{_T("dir"), CMD_SPECIAL, CommandDir},
 #endif
 
 #ifdef FEATURE_DIRECTORY_STACK

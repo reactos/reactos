@@ -1,4 +1,5 @@
-/*
+/* $Id: dir.c,v 1.9 1999/12/15 00:50:41 ekohl Exp $
+ *
  *  DIR.C - dir internal command.
  *
  *
@@ -315,7 +316,7 @@ DirReadParam (LPTSTR line, LPTSTR *param, LPDWORD lpFlags)
 static VOID
 ExtendFilespec (LPTSTR file)
 {
-        INT len = 0;
+	INT len = 0;
 
 	if (!file)
 		return;
@@ -341,13 +342,13 @@ ExtendFilespec (LPTSTR file)
 		return;
 	}
 
-        /* if last character is '.' add '*' */
-        len = _tcslen (file);
-        if (file[len - 1] == _T('.'))
-        {
-                _tcscat (file, _T("*"));
-                return;
-        }
+	/* if last character is '.' add '*' */
+	len = _tcslen (file);
+	if (file[len - 1] == _T('.'))
+	{
+		_tcscat (file, _T("*"));
+		return;
+	}
 }
 
 
@@ -463,39 +464,25 @@ DirParsePathspec (LPTSTR szPathspec, LPTSTR szPath, LPTSTR szFilespec)
 
 
 /*
- * pause
- *
- * pause until a key is pressed
- */
-static INT
-Pause (VOID)
-{
-	cmd_pause ("", "");
-
-	return 0;
-}
-
-
-/*
  * incline
  *
  * increment our line if paginating, display message at end of screen
  */
-static INT
+static BOOL
 IncLine (LPINT pLine, DWORD dwFlags)
 {
 	if (!(dwFlags & DIR_PAGE))
-		return 0;
+		return FALSE;
 
 	(*pLine)++;
 
 	if (*pLine >= (int)maxy - 2)
 	{
 		*pLine = 0;
-		return Pause ();
+		return (PagePrompt () == PROMPT_BREAK);
 	}
 
-	return 0;
+	return FALSE;
 }
 
 
@@ -517,7 +504,7 @@ PrintDirectoryHeader (LPTSTR szPath, LPINT pLine, DWORD dwFlags)
 	/* get the media ID of the drive */
 	szRootName[0] = szPath[0];
 	if (!GetVolumeInformation (szRootName, szVolName, 80, &dwSerialNr,
-							   NULL, NULL, NULL, 0))
+	                           NULL, NULL, NULL, 0))
 	{
 		error_invalid_drive();
 		return FALSE;
@@ -536,7 +523,8 @@ PrintDirectoryHeader (LPTSTR szPath, LPINT pLine, DWORD dwFlags)
 
 	/* print the volume serial number if the return was successful */
 	ConOutPrintf (_T(" Volume Serial Number is %04X-%04X\n"),
-				  HIWORD(dwSerialNr), LOWORD(dwSerialNr));
+	              HIWORD(dwSerialNr),
+	              LOWORD(dwSerialNr));
 	if (IncLine (pLine, dwFlags))
 		return FALSE;
 
@@ -673,11 +661,11 @@ PrintSummary (LPTSTR szPath, ULONG ulFiles, ULONG ulDirs, ULARGE_INTEGER bytes,
 	/* print number of files and bytes */
 	ConvertULong (ulFiles, buffer, sizeof(buffer));
 	ConOutPrintf (_T("          %6s File%c"),
-                      buffer, ulFiles == 1 ? _T(' ') : _T('s'));
+	              buffer, ulFiles == 1 ? _T(' ') : _T('s'));
 
 	ConvertULargeInteger (bytes, buffer, sizeof(buffer));
 	ConOutPrintf (_T("  %15s byte%c\n"),
-                      buffer, bytes.QuadPart == 1 ? _T(' ') : _T('s'));
+	              buffer, bytes.QuadPart == 1 ? _T(' ') : _T('s'));
 
 	if (IncLine (pLine, dwFlags))
 		return 1;
@@ -685,7 +673,7 @@ PrintSummary (LPTSTR szPath, ULONG ulFiles, ULONG ulDirs, ULARGE_INTEGER bytes,
 	/* print number of dirs and bytes free */
 	ConvertULong (ulDirs, buffer, sizeof(buffer));
 	ConOutPrintf (_T("          %6s Dir%c"),
-                      buffer, ulDirs == 1 ? _T(' ') : _T('s'));
+	              buffer, ulDirs == 1 ? _T(' ') : _T('s'));
 
 
 	if (!(dwFlags & DIR_RECURSE))
@@ -699,7 +687,7 @@ PrintSummary (LPTSTR szPath, ULONG ulFiles, ULONG ulDirs, ULARGE_INTEGER bytes,
 
 		szRoot[0] = szPath[0];
 		GetDiskFreeSpace (szRoot, &dwSecPerCl, &dwBytPerSec, &dwFreeCl, &dwTotCl);
-                uliFree.QuadPart = dwSecPerCl * dwBytPerSec * dwFreeCl;
+		                  uliFree.QuadPart = dwSecPerCl * dwBytPerSec * dwFreeCl;
 		ConvertULargeInteger (uliFree, buffer, sizeof(buffer));
 		ConOutPrintf (_T("   %15s bytes free\n"), buffer);
 	}
@@ -745,9 +733,10 @@ DirList (LPTSTR szPath, LPTSTR szFilespec, LPINT pLine, DWORD dwFlags)
 		 */
 		if ((dwFlags & DIR_RECURSE) == 0)
 		{
-			error_file_not_found ();
-			IncLine (pLine, dwFlags);
 			FindClose (hFile);
+			error_file_not_found ();
+			if (IncLine (pLine, dwFlags))
+				return 0;
 			return 1;
 		}
 		FindClose (hFile);
@@ -1085,7 +1074,7 @@ DirRecurse (LPTSTR szPath, LPTSTR szSpec, LPINT pLine, DWORD dwFlags)
  *
  * internal dir command
  */
-INT cmd_dir (LPTSTR first, LPTSTR rest)
+INT CommandDir (LPTSTR first, LPTSTR rest)
 {
 	DWORD  dwFlags = DIR_NEW | DIR_FOUR;
 	TCHAR  dircmd[256];
@@ -1120,7 +1109,8 @@ INT cmd_dir (LPTSTR first, LPTSTR rest)
 
 	if (dwFlags & DIR_RECURSE)
 	{
-		IncLine (&nLine, dwFlags);
+		if (IncLine (&nLine, dwFlags))
+			return 0;
 		if (DirRecurse (szPath, szFilespec, &nLine, dwFlags))
 			return 1;
 		return 0;
@@ -1137,3 +1127,5 @@ INT cmd_dir (LPTSTR first, LPTSTR rest)
 }
 
 #endif
+
+/* EOF */

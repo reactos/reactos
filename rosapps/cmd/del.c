@@ -45,12 +45,6 @@
 #include "batch.h"
 
 
-#define PROMPT_NO		0
-#define PROMPT_YES		1
-#define PROMPT_ALL		2
-#define PROMPT_BREAK	3
-
-
 enum
 {
 	DEL_ATTRIBUTES = 0x001,   /* /A : not implemented */
@@ -67,64 +61,6 @@ enum
 };
 
 
-
-static BOOL ConfirmDeleteAll (VOID)
-{
-	TCHAR inp[10];
-	LPTSTR p;
-
-	ConOutPrintf (_T("All files in directory will be deleted!\n"
-	                 "Are you sure (Y/N)? "));
-	ConInString (inp, 10);
-
-	_tcsupr (inp);
-	for (p = inp; _istspace (*p); p++)
-		;
-
-	if (*p == _T('Y'))
-		return PROMPT_YES;
-	else if (*p == _T('N'))
-		return PROMPT_NO;
-
-#if 0
-	if (*p == _T('A'))
-		return PROMPT_ALL;
-	else if (*p == _T('\03'))
-		return PROMPT_BREAK;
-#endif
-
-	return PROMPT_NO;
-}
-
-
-#if 0
-static INT Prompt (LPTSTR str)
-{
-	TCHAR inp[10];
-	LPTSTR p;
-
-	ConOutPrintf (_T("Delete %s (Yes/No)? "), str);
-	ConInString (inp, 10);
-
-	_tcsupr (inp);
-	for (p = inp; _istspace (*p); p++)
-		;
-
-	if (*p == _T('Y'))
-		return PROMPT_YES;
-	else if (*p == _T('N'))
-		return PROMPT_NO;
-
-#if 0
-	if (*p == _T('A'))
-		return PROMPT_ALL;
-	else if (*p == _T('\03'))
-		return PROMPT_BREAK;
-#endif
-
-	return PROMPT_NO;
-}
-#endif
 
 static BOOL
 RemoveFile (LPTSTR lpFileName, DWORD dwFlags)
@@ -239,11 +175,15 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 		for (i = 0; i < args; i++)
 		{
 			if (!_tcscmp (arg[i], _T("*")) ||
-				!_tcscmp (arg[i], _T("*.*")))
+                            !_tcscmp (arg[i], _T("*.*")))
 			{
-				if (!ConfirmDeleteAll ())
-					break;
+                                INT res;
 
+                                res = FilePromptYN (_T("All files in directory will be deleted!\n"
+                                                       "Are you sure (Y/N)?"));
+                                if ((res == PROMPT_NO) ||
+                                    (res == PROMPT_BREAK))
+					break;
 			}
 
 			if (*arg[i] != _T('/'))

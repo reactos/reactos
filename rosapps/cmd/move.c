@@ -79,33 +79,33 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 	{
 #if 0
 		ConOutPuts (_T("Moves files and renames files and directories.\n\n"
-					   "To move one or more files:\n"
-					   "MOVE [/N][/Y|/-Y][drive:][path]filename1[,...] destination\n"
-					   "\n"
-					   "To rename a directory:\n"
-					   "MOVE [/N][/Y|/-Y][drive:][path]dirname1 dirname2\n"
-					   "\n"
-					   "  [drive:][path]filename1  Specifies the location and name of the file\n"
-					   "                           or files you want to move.\n"
-					   "  /N                       Nothing. Don everthing but move files or direcories.\n"
-					   "  /Y\n"
-					   "  /-Y\n"
-					   "..."));
+		               "To move one or more files:\n"
+		               "MOVE [/N][/Y|/-Y][drive:][path]filename1[,...] destination\n"
+		               "\n"
+		               "To rename a directory:\n"
+		               "MOVE [/N][/Y|/-Y][drive:][path]dirname1 dirname2\n"
+		               "\n"
+		               "  [drive:][path]filename1  Specifies the location and name of the file\n"
+		               "                           or files you want to move.\n"
+		               "  /N                       Nothing. Don everthing but move files or direcories.\n"
+		               "  /Y\n"
+		               "  /-Y\n"
+		               "..."));
 #else
 		ConOutPuts (_T("Moves files and renames files and directories.\n\n"
-					   "To move one or more files:\n"
-					   "MOVE [/N][drive:][path]filename1[,...] destination\n"
-					   "\n"
-					   "To rename a directory:\n"
-					   "MOVE [/N][drive:][path]dirname1 dirname2\n"
-					   "\n"
-					   "  [drive:][path]filename1  Specifies the location and name of the file\n"
-					   "                           or files you want to move.\n"
-					   "  /N                       Nothing. Don everthing but move files or direcories.\n"
-					   "\n"
-					   "Current limitations:\n"
-					   "  - You can't move a file or directory from one drive to another.\n"
-					   ));
+		               "To move one or more files:\n"
+		               "MOVE [/N][drive:][path]filename1[,...] destination\n"
+		               "\n"
+		               "To rename a directory:\n"
+		               "MOVE [/N][drive:][path]dirname1 dirname2\n"
+		               "\n"
+		               "  [drive:][path]filename1  Specifies the location and name of the file\n"
+		               "                           or files you want to move.\n"
+		               "  /N                       Nothing. Don everthing but move files or direcories.\n"
+		               "\n"
+		               "Current limitations:\n"
+		               "  - You can't move a file or directory from one drive to another.\n"
+		               ));
 #endif
 		return 0;
 	}
@@ -256,7 +256,6 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 
 		FindClose (hFile);
 	}
-
 
 	freep (arg);
 

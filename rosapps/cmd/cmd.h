@@ -1,4 +1,5 @@
-/*
+/* $Id: cmd.h,v 1.17 1999/12/15 00:50:41 ekohl Exp $
+ *
  *  CMD.H - header file for the modules in CMD.EXE
  *
  *
@@ -57,7 +58,7 @@
 #define ERROR_E2BIG     "ERROR: Argument list too long"
 #define ERROR_EINVAL    "ERROR: Invalid argument"
 
-#define SHELLINFO       "ReactOS Command Line Interface"
+#define SHELLINFO       "ReactOS Command Line Interpreter"
 
 
 #define D_ON         "on"
@@ -65,7 +66,7 @@
 
 
 
-/* Prototypes for CMD.C */
+/* global variables */
 extern HANDLE hOut;
 extern HANDLE hIn;
 extern WORD   wColor;
@@ -78,9 +79,6 @@ extern SHORT  maxx;
 extern SHORT  maxy;
 extern OSVERSIONINFO osvi;
 
-void command(char *);
-VOID ParseCommandLine (LPTSTR);
-int  c_brk(void);
 
 
 /* Prototypes for ALIAS.C */
@@ -114,6 +112,13 @@ INT CommandChoice (LPTSTR, LPTSTR);
 INT cmd_cls (LPTSTR, LPTSTR);
 
 
+/* Prototypes for CMD.C */
+//void command(char *);
+VOID ParseCommandLine (LPTSTR);
+VOID AddBreakHandler (VOID);
+VOID RemoveBreakHandler (VOID);
+
+
 /* Prototypes for CMDINPUT.C */
 VOID ReadCommand (LPTSTR, INT);
 
@@ -144,6 +149,8 @@ VOID DebugPrintf (LPTSTR, ...);
 #endif /* _DEBUG */
 
 VOID ConInDummy (VOID);
+VOID ConInDisable (VOID);
+VOID ConInEnable (VOID);
 VOID ConInFlush (VOID);
 VOID ConInKey (PINPUT_RECORD);
 
@@ -183,8 +190,7 @@ INT CommandDelay (LPTSTR, LPTSTR);
 
 
 /* Prototypes for DIR.C */
-//int incline(int *line, unsigned flags);
-INT cmd_dir (LPTSTR, LPTSTR);
+INT CommandDir (LPTSTR, LPTSTR);
 
 
 /* Prototypes for DIRSTACK.C */
@@ -300,6 +306,15 @@ BOOL   FileGetString (HANDLE, LPTSTR, INT);
 #ifndef __REACTOS__
 HWND   GetConsoleWindow(VOID);
 #endif
+
+#define PROMPT_NO    0
+#define PROMPT_YES   1
+#define PROMPT_ALL   2
+#define PROMPT_BREAK 3
+
+INT PagePrompt (VOID);
+INT FilePromptYN (LPTSTR, ...);
+INT FilePromptYNA (LPTSTR, ...);
 
 
 /* Prototypes for MOVE.C */
