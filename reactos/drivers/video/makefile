@@ -2,14 +2,19 @@ DISPLAY_DRIVERS = vga framebuf
 MINIPORT_DRIVERS = vga vbe
 
 all: $(DISPLAY_DRIVERS:%=DD%) $(MINIPORT_DRIVERS:%=MP%)
+	$(MAKE) -C videoprt all
 
 implib: $(DISPLAY_DRIVERS:%=DD%_implib) $(MINIPORT_DRIVERS:%=MP%_implib)
+	$(MAKE) -C videoprt implib
 
 clean: $(DISPLAY_DRIVERS:%=DD%_clean) $(MINIPORT_DRIVERS:%=MP%_clean)
+	$(MAKE) -C videoprt clean
 
 install: $(DISPLAY_DRIVERS:%=DD%_install) $(MINIPORT_DRIVERS:%=MP%_install)
+	$(MAKE) -C videoprt install
 
 bootcd: $(DISPLAY_DRIVERS:%=DD%_bootcd) $(MINIPORT_DRIVERS:%=MP%_bootcd)
+	$(MAKE) -C videoprt bootcd
 
 #
 # Video display driver rules

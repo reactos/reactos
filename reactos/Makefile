@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.205 2004/01/16 04:35:07 mtempel Exp $
+# $Id: Makefile,v 1.206 2004/01/19 15:56:53 navaraf Exp $
 #
 # Global makefile
 #
@@ -65,8 +65,8 @@ DRIVERS_LIB = bzip2
 
 # Kernel mode device drivers
 # Obsolete: ide
-# beep blue floppy null parallel ramdrv serenum serial videoprt
-DEVICE_DRIVERS = beep blue debugout floppy null serial videoprt bootvid
+# beep blue floppy null parallel ramdrv serenum serial
+DEVICE_DRIVERS = beep blue debugout floppy null serial bootvid
 
 # Kernel mode input drivers
 INPUT_DRIVERS = keyboard mouclass psaux sermouse

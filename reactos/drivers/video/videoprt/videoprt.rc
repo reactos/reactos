@@ -22,7 +22,7 @@ BEGIN
         BLOCK "040904b0"
         BEGIN
             VALUE "CompanyName",	RES_STR_COMPANY_NAME
-            VALUE "FileDescription",	"Videort Driver\0"
+            VALUE "FileDescription",	"Videoport Driver\0"
             VALUE "FileVersion",	"0.0.0\0"
             VALUE "InternalName",	"vidport\0"
             VALUE "LegalCopyright",	RES_STR_LEGAL_COPYRIGHT

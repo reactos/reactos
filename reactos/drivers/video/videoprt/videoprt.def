@@ -1,4 +1,4 @@
-; $Id: videoprt.def,v 1.1 2003/02/15 19:16:32 gvg Exp $
+; $Id: videoprt.def,v 1.1 2004/01/19 15:56:53 navaraf Exp $
 ;
 ; vidport.def - export definition file for ReactOS
 ;
@@ -57,4 +57,3 @@ VideoPortWriteRegisterBufferUshort@12
 VideoPortWriteRegisterBufferUlong@12
 VideoPortZeroMemory@8
 VideoPortZeroDeviceMemory@8
-

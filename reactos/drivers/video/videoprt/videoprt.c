@@ -1,74 +1,31 @@
-/* $Id: videoprt.c,v 1.15 2003/12/03 18:58:41 navaraf Exp $
- *
+/*
  * VideoPort driver
- *   Written by Rex Jolliff
  *
+ * Copyright (C) 2002, 2003, 2004 ReactOS Team
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; see the file COPYING.LIB.
+ * If not, write to the Free Software Foundation,
+ * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * $Id: videoprt.c,v 1.1 2004/01/19 15:56:53 navaraf Exp $
  */
 
-#include <errors.h>
-#include <roskrnl.h>
-#include <ddk/ntddvid.h>
+#include "videoprt.h"
 
-#include "internal/v86m.h"
-#include "internal/ps.h"
-
-#define NDEBUG
-#include <debug.h>
-
-#define VERSION "0.0.0"
-
-#define TAG_VIDEO_PORT  TAG('V', 'I', 'D', 'P')
-
-typedef struct _VIDEO_PORT_ADDRESS_MAPPING
-{
-  LIST_ENTRY List;
-
-  PVOID MappedAddress;
-  ULONG NumberOfUchars;
-  PHYSICAL_ADDRESS IoAddress;
-  ULONG SystemIoBusNumber;
-  UINT MappingCount;
-} VIDEO_PORT_ADDRESS_MAPPING, *PVIDEO_PORT_ADDRESS_MAPPING;
-
-typedef struct _VIDEO_PORT_DEVICE_EXTENSTION
-{
-  PDEVICE_OBJECT DeviceObject;
-  PKINTERRUPT InterruptObject;
-  KSPIN_LOCK InterruptSpinLock;
-  ULONG InterruptVector;
-  ULONG InterruptLevel;
-  PVIDEO_HW_INITIALIZE HwInitialize;
-  PVIDEO_HW_RESET_HW HwResetHw;
-  PVIDEO_HW_TIMER HwTimer;
-  PVIDEO_HW_INTERRUPT HwInterrupt;
-  LIST_ENTRY AddressMappingListHead;
-  INTERFACE_TYPE AdapterInterfaceType;
-  ULONG SystemIoBusNumber;
-  UNICODE_STRING RegistryPath;
-
-  UCHAR MiniPortDeviceExtension[1]; /* must be the last entry */
-} VIDEO_PORT_DEVICE_EXTENSION, *PVIDEO_PORT_DEVICE_EXTENSION;
-
-
-static NTSTATUS STDCALL VidDispatchOpen(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
-static NTSTATUS STDCALL VidDispatchClose(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
-static NTSTATUS STDCALL VidDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-static PVOID STDCALL InternalMapMemory(IN PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension,
-                                       IN PHYSICAL_ADDRESS  IoAddress,
-                                       IN ULONG NumberOfUchars,
-                                       IN UCHAR InIoSpace);
-static VOID STDCALL InternalUnmapMemory(IN PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension,
-                                        IN PVOID MappedAddress);
-
-static BOOLEAN CsrssInitialized = FALSE;
-static PEPROCESS Csrss = NULL;
-static PVIDEO_PORT_DEVICE_EXTENSION ResetDisplayParametersDeviceExtension = NULL;
-
-PBYTE ReturnCsrssAddress(void)
-{
-  DPRINT("ReturnCsrssAddress()\n");
-  return (PBYTE)Csrss;
-}
+BOOLEAN CsrssInitialized = FALSE;
+PEPROCESS Csrss = NULL;
+PVIDEO_PORT_DEVICE_EXTENSION ResetDisplayParametersDeviceExtension = NULL;
 
 //  -------------------------------------------------------  Public Interface
 
@@ -89,7 +46,7 @@ PBYTE ReturnCsrssAddress(void)
 //  RETURNS:
 //    NTSTATUS  
 
-STDCALL NTSTATUS
+NTSTATUS STDCALL
 DriverEntry(IN PDRIVER_OBJECT DriverObject,
             IN PUNICODE_STRING RegistryPath)
 {
@@ -101,7 +58,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
  * @implemented
  */
 VOID
-VideoPortDebugPrint(IN ULONG DebugPrintLevel,
+VideoPortDebugPrint(IN VIDEO_DEBUG_LEVEL DebugPrintLevel,
                     IN PCHAR DebugMessage, ...)
 {
 	char Buffer[256];
@@ -694,59 +651,6 @@ VideoPortInitialize(IN PVOID  Context1,
   return  STATUS_SUCCESS;
 }
 
-int dummy;
-/*
- * @implemented
- */
-VP_STATUS STDCALL
-VideoPortInt10(IN PVOID  HwDeviceExtension,
-               IN PVIDEO_X86_BIOS_ARGUMENTS  BiosArguments)
-{
-  KV86M_REGISTERS Regs;
-  NTSTATUS Status;
-  PEPROCESS CallingProcess;
-  PEPROCESS PrevAttachedProcess;
-
-  DPRINT("VideoPortInt10\n");
-
-  CallingProcess = PsGetCurrentProcess();
-  if (CallingProcess != Csrss)
-    {
-      if (NULL != PsGetCurrentThread()->OldProcess)
-        {
-          PrevAttachedProcess = CallingProcess;
-          KeDetachProcess();
-        }
-      else
-        {
-          PrevAttachedProcess = NULL;
-        }
-      KeAttachProcess(Csrss);
-    }
-
-  memset(&Regs, 0, sizeof(Regs));
-  Regs.Eax = BiosArguments->Eax;
-  Regs.Ebx = BiosArguments->Ebx;
-  Regs.Ecx = BiosArguments->Ecx;
-  Regs.Edx = BiosArguments->Edx;
-  Regs.Esi = BiosArguments->Esi;
-  Regs.Edi = BiosArguments->Edi;
-  Regs.Ebp = BiosArguments->Ebp;
-  Status = Ke386CallBios(0x10, &Regs);
-
-  if (CallingProcess != Csrss)
-    {
-      KeDetachProcess();
-      if (NULL != PrevAttachedProcess)
-        {
-          KeAttachProcess(PrevAttachedProcess);
-        }
-    }
-
-  return(Status);
-}
-
-
 /*
  * @unimplemented
  */
@@ -809,162 +713,6 @@ VideoPortMapMemory(IN PVOID  HwDeviceExtension,
                                       *Length, *InIoSpace);
 
   return NULL == *VirtualAddress ? STATUS_NO_MEMORY : STATUS_SUCCESS;
-}
-
-
-/*
- * @implemented
- */
-UCHAR 
-STDCALL
-VideoPortReadPortUchar(IN PUCHAR  Port)
-{
-  DPRINT("VideoPortReadPortUchar\n");
-  return READ_PORT_UCHAR(Port);
-}
-
-
-/*
- * @implemented
- */
-USHORT 
-STDCALL
-VideoPortReadPortUshort(IN PUSHORT Port)
-{
-  DPRINT("VideoPortReadPortUshort\n");
-  return READ_PORT_USHORT(Port);
-}
-
-
-/*
- * @implemented
- */
-ULONG 
-STDCALL
-VideoPortReadPortUlong(IN PULONG Port)
-{
-  DPRINT("VideoPortReadPortUlong\n");
-  return READ_PORT_ULONG(Port);
-}
-
-
-/*
- * @implemented
- */
-VOID 
-STDCALL
-VideoPortReadPortBufferUchar(IN PUCHAR  Port, 
-                             OUT PUCHAR  Buffer, 
-                             IN ULONG  Count)
-{
-  DPRINT("VideoPortReadPortBufferUchar\n");
-  READ_PORT_BUFFER_UCHAR(Port, Buffer, Count);
-}
-
-
-/*
- * @implemented
- */
-VOID 
-STDCALL
-VideoPortReadPortBufferUshort(IN PUSHORT Port, 
-                              OUT PUSHORT Buffer, 
-                              IN ULONG Count)
-{
-  DPRINT("VideoPortReadPortBufferUshort\n");
-  READ_PORT_BUFFER_USHORT(Port, Buffer, Count);
-}
-
-
-/*
- * @implemented
- */
-VOID 
-STDCALL
-VideoPortReadPortBufferUlong(IN PULONG Port, 
-                             OUT PULONG Buffer, 
-                             IN ULONG Count)
-{
-  DPRINT("VideoPortReadPortBufferUlong\n");
-  READ_PORT_BUFFER_ULONG(Port, Buffer, Count);
-}
-
-
-/*
- * @implemented
- */
-UCHAR 
-STDCALL
-VideoPortReadRegisterUchar(IN PUCHAR Register)
-{
-  DPRINT("VideoPortReadPortRegisterUchar\n");
-  return READ_REGISTER_UCHAR(Register);
-}
-
-
-/*
- * @implemented
- */
-USHORT 
-STDCALL
-VideoPortReadRegisterUshort(IN PUSHORT Register)
-{
-  DPRINT("VideoPortReadPortRegisterUshort\n");
-  return  READ_REGISTER_USHORT(Register);
-}
-
-
-/*
- * @implemented
- */
-ULONG 
-STDCALL
-VideoPortReadRegisterUlong(IN PULONG Register)
-{
-  DPRINT("VideoPortReadPortRegisterUlong\n");
-  return  READ_REGISTER_ULONG(Register);
-}
-
-
-/*
- * @implemented
- */
-VOID 
-STDCALL
-VideoPortReadRegisterBufferUchar(IN PUCHAR  Register, 
-                                 OUT PUCHAR  Buffer, 
-                                 IN ULONG  Count)
-{
-  DPRINT("VideoPortReadPortRegisterBufferUchar\n");
-  READ_REGISTER_BUFFER_UCHAR(Register, Buffer, Count);
-}
-
-
-/*
- * @implemented
- */
-VOID 
-STDCALL
-VideoPortReadRegisterBufferUshort(IN PUSHORT  Register, 
-                                  OUT PUSHORT  Buffer, 
-                                  IN ULONG  Count)
-{
-  DPRINT("VideoPortReadPortRegisterBufferUshort\n");
-  READ_REGISTER_BUFFER_USHORT(Register, Buffer, Count);
-}
-
-
-/*
- * @implemented
- */
-VOID 
-STDCALL
-VideoPortReadRegisterBufferUlong(IN PULONG  Register, 
-                                 OUT PULONG  Buffer, 
-                                 IN ULONG  Count)
-{
-  DPRINT("VideoPortReadPortRegisterBufferUlong\n");
-  READ_REGISTER_BUFFER_ULONG(Register, Buffer, Count);
 }
 
 
@@ -1197,177 +945,6 @@ VideoPortVerifyAccessRanges(IN PVOID  HwDeviceExtension,
 
 
 /*
- * @implemented
- */
-VOID 
-STDCALL
-VideoPortWritePortUchar(IN PUCHAR  Port, 
-                        IN UCHAR  Value)
-{
-  DPRINT("VideoPortWritePortUchar\n");
-  WRITE_PORT_UCHAR(Port, Value);
-}
-
-
-/*
- * @implemented
- */
-VOID 
-STDCALL
-VideoPortWritePortUshort(IN PUSHORT  Port, 
-                         IN USHORT  Value)
-{
-  DPRINT("VideoPortWritePortUshort\n");
-  WRITE_PORT_USHORT(Port, Value);
-}
-
-
-/*
- * @implemented
- */
-VOID 
-STDCALL
-VideoPortWritePortUlong(IN PULONG Port, 
-                        IN ULONG Value)
-{
-  DPRINT("VideoPortWritePortUlong\n");
-  WRITE_PORT_ULONG(Port, Value);
-}
-
-
-/*
- * @implemented
- */
-VOID 
-STDCALL
-VideoPortWritePortBufferUchar(IN PUCHAR  Port, 
-                              IN PUCHAR  Buffer, 
-                              IN ULONG  Count)
-{
-  DPRINT("VideoPortWritePortBufferUchar\n");
-  WRITE_PORT_BUFFER_UCHAR(Port, Buffer, Count);
-}
-
-
-/*
- * @implemented
- */
-VOID 
-STDCALL
-VideoPortWritePortBufferUshort(IN PUSHORT  Port, 
-                               IN PUSHORT  Buffer, 
-                               IN ULONG  Count)
-{
-  DPRINT("VideoPortWritePortBufferUshort\n");
-  WRITE_PORT_BUFFER_USHORT(Port, Buffer, Count);
-}
-
-
-/*
- * @implemented
- */
-VOID 
-STDCALL
-VideoPortWritePortBufferUlong(IN PULONG  Port, 
-                              IN PULONG  Buffer, 
-                              IN ULONG  Count)
-{
-  DPRINT("VideoPortWritePortBufferUlong\n");
-  WRITE_PORT_BUFFER_ULONG(Port, Buffer, Count);
-}
-
-
-/*
- * @implemented
- */
-VOID 
-STDCALL
-VideoPortWriteRegisterUchar(IN PUCHAR  Register, 
-                            IN UCHAR  Value)
-{
-  DPRINT("VideoPortWriteRegisterUchar\n");
-  WRITE_REGISTER_UCHAR(Register, Value);
-}
-
-
-/*
- * @implemented
- */
-VOID 
-STDCALL
-VideoPortWriteRegisterUshort(IN PUSHORT  Register, 
-                             IN USHORT  Value)
-{
-  DPRINT("VideoPortWriteRegisterUshort\n");
-  WRITE_REGISTER_USHORT(Register, Value);
-}
-
-
-/*
- * @implemented
- */
-VOID 
-STDCALL
-VideoPortWriteRegisterUlong(IN PULONG  Register, 
-                            IN ULONG  Value)
-{
-  DPRINT("VideoPortWriteRegisterUlong\n");
-  WRITE_REGISTER_ULONG(Register, Value);
-}
-
-
-/*
- * @implemented
- */
-VOID 
-STDCALL
-VideoPortWriteRegisterBufferUchar(IN PUCHAR  Register, 
-                                  IN PUCHAR  Buffer, 
-                                  IN ULONG  Count)
-{
-  DPRINT("VideoPortWriteRegisterBufferUchar\n");
-  WRITE_REGISTER_BUFFER_UCHAR(Register, Buffer, Count);
-}
-
-
-/*
- * @implemented
- */
-VOID STDCALL
-VideoPortWriteRegisterBufferUshort(IN PUSHORT  Register,
-                                   IN PUSHORT  Buffer,
-                                   IN ULONG  Count)
-{
-  DPRINT("VideoPortWriteRegisterBufferUshort\n");
-  WRITE_REGISTER_BUFFER_USHORT(Register, Buffer, Count);
-}
-
-
-/*
- * @implemented
- */
-VOID STDCALL
-VideoPortWriteRegisterBufferUlong(IN PULONG  Register,
-                                  IN PULONG  Buffer,
-                                  IN ULONG  Count)
-{
-  DPRINT("VideoPortWriteRegisterBufferUlong\n");
-  WRITE_REGISTER_BUFFER_ULONG(Register, Buffer, Count);
-}
-
-
-/*
- * @implemented
- */
-VOID STDCALL
-VideoPortZeroDeviceMemory(OUT PVOID  Destination,
-			  IN ULONG  Length)
-{
-  DPRINT("VideoPortZeroDeviceMemory\n");
-  RtlZeroMemory(Destination, Length);
-}
-
-/*
  * Reset display to blue screen
  */
 static BOOLEAN STDCALL
@@ -1392,6 +969,33 @@ VideoPortResetDisplayParameters(Columns, Rows)
   return TRUE;
 }
 
+/*
+ * @implemented
+ */
+
+PVOID
+STDCALL
+VideoPortAllocatePool(
+   IN PVOID HwDeviceExtension,
+   IN VP_POOL_TYPE PoolType,
+   IN SIZE_T NumberOfBytes,
+   IN ULONG Tag)
+{
+   return ExAllocatePoolWithTag(PoolType, NumberOfBytes, Tag);
+}
+
+/*
+ * @implemented
+ */
+
+VOID
+STDCALL
+VideoPortFreePool(
+   IN PVOID HwDeviceExtension,
+   IN PVOID Ptr)
+{
+   ExFreePool(Ptr);
+}
 
 //    VidDispatchOpen
 //
@@ -1408,7 +1012,7 @@ VideoPortResetDisplayParameters(Columns, Rows)
 //    NTSTATUS
 //
 
-static NTSTATUS STDCALL
+NTSTATUS STDCALL
 VidDispatchOpen(IN PDEVICE_OBJECT pDO,
                 IN PIRP Irp)
 {
@@ -1467,7 +1071,7 @@ VidDispatchOpen(IN PDEVICE_OBJECT pDO,
 //    NTSTATUS
 //
 
-static NTSTATUS STDCALL
+NTSTATUS STDCALL
 VidDispatchClose(IN PDEVICE_OBJECT pDO,
                  IN PIRP Irp)
 {
@@ -1507,7 +1111,7 @@ VidDispatchClose(IN PDEVICE_OBJECT pDO,
 //    NTSTATUS
 //
 
-static NTSTATUS STDCALL
+NTSTATUS STDCALL
 VidDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
                          IN PIRP Irp)
 {
@@ -1535,7 +1139,7 @@ VidDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
   vrp->OutputBufferLength = IrpStack->Parameters.DeviceIoControl.OutputBufferLength;
 
   /* Call the Miniport Driver with the VRP */
-  DeviceObject->DriverObject->DriverStartIo((PVOID) &DeviceExtension->MiniPortDeviceExtension, (PIRP)vrp);
+  ((PDRIVER_STARTIO)DeviceObject->DriverObject->DriverStartIo)((PVOID) &DeviceExtension->MiniPortDeviceExtension, (PIRP)vrp);
 
   /* Free the VRP */
   ExFreePool(vrp);
@@ -1545,7 +1149,7 @@ VidDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
   return STATUS_SUCCESS;
 }
 
-static PVOID STDCALL
+PVOID STDCALL
 InternalMapMemory(IN PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension,
                   IN PHYSICAL_ADDRESS IoAddress,
                   IN ULONG NumberOfUchars,
@@ -1617,7 +1221,7 @@ InternalMapMemory(IN PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension,
   return MappedAddress;
 }
 
-static VOID STDCALL
+VOID STDCALL
 InternalUnmapMemory(IN PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension,
                     IN PVOID MappedAddress)
 {
