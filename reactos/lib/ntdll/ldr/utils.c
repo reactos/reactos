@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.89.2.2 2004/06/25 19:01:51 ekohl Exp $
+/* $Id: utils.c,v 1.89.2.3 2004/06/26 11:24:42 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1285,6 +1285,7 @@ static NTSTATUS LdrPerformRelocations (PIMAGE_NT_HEADERS        NTHeaders,
               RelocationRVA += RelocationDir->SizeOfBlock;
               RelocationDir =
                 (PRELOCATION_DIRECTORY) (ImageBase + RelocationRVA);
+              RelocationBlockOffset += RelocationDir->SizeOfBlock;
               continue;
             }
 
