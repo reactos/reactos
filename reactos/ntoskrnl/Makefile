@@ -558,6 +558,8 @@ ex/napi.o: ex/napi.c $(PATH_TO_TOP)/include/ntdll/napi.h
 
 ke/main.o: ke/main.c $(PATH_TO_TOP)/include/reactos/buildno.h
 
+$(TARGET_PCH): $(PATH_TO_TOP)/include/reactos/bugcodes.h
+
 
 .%.TAG: %.S
 	etags -o $@ $<
