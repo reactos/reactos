@@ -29,6 +29,8 @@ HANDLE SystemProcessHandle = NULL;
 
 POBJECT_TYPE PsProcessType = NULL;
 
+static LIST_ENTRY PsProcessListHead;
+static KSPIN_LOCK PsProcessListLock;
 static ULONG PiNextProcessUniqueId = 0;
 
 /* FUNCTIONS *****************************************************************/
@@ -37,6 +39,7 @@ VOID PsInitProcessManagment(VOID)
 {
    ANSI_STRING AnsiString;
    PKPROCESS KProcess;
+   KIRQL oldIrql;
    
    /*
     * Register the process object type
@@ -62,6 +65,9 @@ VOID PsInitProcessManagment(VOID)
    RtlInitAnsiString(&AnsiString,"Process");
    RtlAnsiStringToUnicodeString(&PsProcessType->TypeName,&AnsiString,TRUE);
    
+   InitializeListHead(&PsProcessListHead);
+   KeInitializeSpinLock(&PsProcessListLock);
+   
    /*
     * Initialize the system process
     */
@@ -82,6 +88,10 @@ VOID PsInitProcessManagment(VOID)
    KProcess->PageTableDirectory = get_page_directory();
    SystemProcess->UniqueProcessId = 
      InterlockedIncrement(&PiNextProcessUniqueId);
+   
+   KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
+   InsertHeadList(&PsProcessListHead, &KProcess->ProcessListEntry);
+   KeReleaseSpinLock(&PsProcessListLock, oldIrql);
    
    ObCreateHandle(SystemProcess,
 		  SystemProcess,
@@ -169,6 +179,7 @@ NTSTATUS STDCALL ZwCreateProcess(
    PEPROCESS ParentProcess;
    PKPROCESS KProcess;
    NTSTATUS Status;
+   KIRQL oldIrql;
    
    DPRINT("ZwCreateProcess(ObjectAttributes %x)\n",ObjectAttributes);
 
@@ -203,7 +214,11 @@ NTSTATUS STDCALL ZwCreateProcess(
 		       Process);
    MmCopyMmInfo(ParentProcess, Process);
    Process->UniqueProcessId = InterlockedIncrement(&PiNextProcessUniqueId);
-
+   
+   KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
+   InsertHeadList(&PsProcessListHead, &KProcess->ProcessListEntry);
+   KeReleaseSpinLock(&PsProcessListLock, oldIrql);
+   
    /*
     * FIXME: I don't what I'm supposed to know with a section handle
     */
@@ -236,7 +251,71 @@ NTSTATUS STDCALL ZwOpenProcess (OUT PHANDLE ProcessHandle,
 				IN POBJECT_ATTRIBUTES ObjectAttributes,
 				IN PCLIENT_ID ClientId)
 {
-   UNIMPLEMENTED;
+   /*
+    * Not of the exact semantics 
+    */
+   if (ObjectAttributes != NULL)
+     {
+	NTSTATUS Status;
+	PEPROCESS Process;
+		
+	Status = ObReferenceObjectByName(ObjectAttributes->ObjectName,
+					 ObjectAttributes->Attributes,
+					 NULL,
+					 DesiredAccess,
+					 PsProcessType,
+					 UserMode,
+					 NULL,
+					 (PVOID*)&Process);
+	if (Status != STATUS_SUCCESS)
+	  {
+	     return(Status);
+	  }
+	
+	Status = ObCreateHandle(PsGetCurrentProcess(),
+				Process,
+				DesiredAccess,
+				FALSE,
+				ProcessHandle);
+	ObDereferenceObject(Process);
+   
+	return(Status);
+     }
+   else
+     {
+	KIRQL oldIrql;
+	PLIST_ENTRY current_entry;
+	PEPROCESS current;
+	NTSTATUS Status;
+	
+	KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
+	current_entry = PsProcessListHead.Flink;
+	while (current_entry != &PsProcessListHead)
+	  {
+	     current = CONTAINING_RECORD(current_entry, EPROCESS, 
+					 Pcb.ProcessListEntry);
+	     if (current->UniqueProcessId == (ULONG)ClientId->UniqueProcess)
+	       {
+		  ObReferenceObjectByPointer(current,
+					     DesiredAccess,
+					     PsProcessType,
+					     UserMode);
+		  KeReleaseSpinLock(&PsProcessListLock, oldIrql);
+		  Status = ObCreateHandle(PsGetCurrentProcess(),
+					  current,
+					  DesiredAccess,
+					  FALSE,
+					  ProcessHandle);
+		  ObDereferenceObject(current);
+		  
+		  return(Status);			  
+	       }
+	     current_entry = current_entry->Flink;
+	  }
+	KeReleaseSpinLock(&PsProcessListLock, oldIrql);
+	return(STATUS_UNSUCCESSFUL);
+     }
+   return(STATUS_UNSUCCESSFUL);
 }
 
 NTSTATUS STDCALL NtQueryInformationProcess(IN HANDLE ProcessHandle,

@@ -312,6 +312,7 @@ typedef struct _KPROCESS
     */
    LIST_ENTRY           MemoryAreaList;
    HANDLE_TABLE         HandleTable;
+   LIST_ENTRY           ProcessListEntry;
 } KPROCESS, *PKPROCESS;
 
 typedef struct _EPROCESS

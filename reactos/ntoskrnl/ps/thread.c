@@ -180,6 +180,10 @@ VOID PsDispatchThread(VOID)
 	if (Candidate == CurrentThread)
 	  {
              DPRINT("Scheduling current thread\n");
+	     if (PiNrRunnableThreads > 2)
+	       {
+		  DbgPrint(".");
+	       }
              KeQueryTickCount(&TickCount);
              CurrentThread->Tcb.LastTick = TickCount.u.LowPart;
 	     CurrentThread->Tcb.State = THREAD_STATE_RUNNING;
