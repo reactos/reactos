@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.48 2003/04/18 08:26:50 gvg Exp $
+/* $Id: stubs.c,v 1.49 2003/04/20 19:42:11 gvg Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -317,12 +317,26 @@ GetBinaryTypeA (
 WINBOOL
 STDCALL
 GetCPInfo (
-    UINT        a0,
-    LPCPINFO    a1
+    UINT        CodePage,
+    LPCPINFO    CodePageInfo
     )
 {
+    unsigned i;
+
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+
+    CodePageInfo->MaxCharSize = 1;
+    CodePageInfo->DefaultChar[0] = '?';
+    for (i = 1; i < MAX_DEFAULTCHAR; i++)
+	{
+	CodePageInfo->DefaultChar[i] = '\0';
+	}
+    for (i = 0; i < MAX_LEADBYTES; i++)
+	{
+	CodePageInfo->LeadByte[i] = '\0';
+	}
+
+    return TRUE;
 }
 
 #endif
