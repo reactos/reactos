@@ -131,7 +131,7 @@ void vgaShowCursor(PPDEV ppdev)
                            ppdev->pPointerAttributes->Width,
                            ppdev->pPointerAttributes->Height,
                            ppdev->pPointerAttributes->Pixels,
-                           ppdev->pPointerAttributes->WidthInBytes);
+                           ppdev->pPointerAttributes->WidthInBytes, 5);
 
   ppdev->pPointerAttributes->Enable = 1;
 }

@@ -504,10 +504,8 @@ void DFB_BltFromVGA(int x, int y, int w, int h, void *b, int bw)
   ASSIGNMK4(x, y, maskP)
   get_masks(x, w);
   WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x05);  // read mode 0
-  saved_GC_mode = READ_PORT_UCHAR((PUCHAR)GRA_D);
   WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0x00);
   WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x04);  // read map select
-  saved_GC_rmap = READ_PORT_UCHAR((PUCHAR)GRA_D);
 
   // clear buffer
   bp=b;
@@ -567,13 +565,7 @@ void DFB_BltFromVGA(int x, int y, int w, int h, void *b, int bw)
       vpY += byte_per_line;
     }
   }
-
-  // reset GC register
-  WRITE_PORT_UCHAR((PUCHAR)GRA_D, saved_GC_rmap);
-  WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x05);
-  WRITE_PORT_UCHAR((PUCHAR)GRA_D, saved_GC_mode);
 }
-
 
 void DFB_BltToVGA(int x, int y, int w, int h, void *b, int bw)
 
@@ -591,14 +583,12 @@ void DFB_BltToVGA(int x, int y, int w, int h, void *b, int bw)
   ASSIGNVP4(x, y, vpX)
   ASSIGNMK4(x, y, mask)
   byte_per_line = SCREEN_X >> 3;
+
   WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x05);      // write mode 2
-  saved_GC_mode = READ_PORT_UCHAR((PUCHAR)GRA_D);
   WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0x02);
   WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x03);      // replace
-  saved_GC_fun = READ_PORT_UCHAR((PUCHAR)GRA_D);
   WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0x00);
   WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x08);      // bit mask
-  saved_GC_mask = READ_PORT_UCHAR((PUCHAR)GRA_D);
 
   for (i=w; i>0; i--) {
     WRITE_PORT_UCHAR((PUCHAR)GRA_D, mask);
@@ -616,16 +606,9 @@ void DFB_BltToVGA(int x, int y, int w, int h, void *b, int bw)
       mask = 0x80;
     }
   }
-
-  // reset GC register
-  WRITE_PORT_UCHAR((PUCHAR)GRA_D, saved_GC_mask);
-  WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x03);
-  WRITE_PORT_UCHAR((PUCHAR)GRA_D, saved_GC_fun);
-  WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x05);
-  WRITE_PORT_UCHAR((PUCHAR)GRA_D, saved_GC_mode);
 }
 
-void DFB_BltToVGA_Transparent(int x, int y, int w, int h, void *b, int bw)
+void DFB_BltToVGA_Transparent(int x, int y, int w, int h, void *b, int bw, char Trans)
 
 //  This algorithm goes from goes from left to right, and inside that loop, top to bottom.
 //  It also stores each 4BPP pixel in an entire byte.
@@ -641,21 +624,19 @@ void DFB_BltToVGA_Transparent(int x, int y, int w, int h, void *b, int bw)
   ASSIGNVP4(x, y, vpX)
   ASSIGNMK4(x, y, mask)
   byte_per_line = SCREEN_X >> 3;
+
   WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x05);      // write mode 2
-  saved_GC_mode = READ_PORT_UCHAR((PUCHAR)GRA_D);
   WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0x02);
   WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x03);      // replace
-  saved_GC_fun = READ_PORT_UCHAR((PUCHAR)GRA_D);
   WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0x00);
   WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x08);      // bit mask
-  saved_GC_mask = READ_PORT_UCHAR((PUCHAR)GRA_D);
 
   for (i=w; i>0; i--) {
     WRITE_PORT_UCHAR((PUCHAR)GRA_D, mask);
     bp = bpX;
     vp = vpX;
     for (j=h; j>0; j--) {
-      if (*bp != 0)
+      if (*bp != Trans)
       {
         dummy = *vp;
         *vp = *bp;
@@ -669,13 +650,6 @@ void DFB_BltToVGA_Transparent(int x, int y, int w, int h, void *b, int bw)
       mask = 0x80;
     }
   }
-
-  // reset GC register
-  WRITE_PORT_UCHAR((PUCHAR)GRA_D, saved_GC_mask);
-  WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x03);
-  WRITE_PORT_UCHAR((PUCHAR)GRA_D, saved_GC_fun);
-  WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x05);
-  WRITE_PORT_UCHAR((PUCHAR)GRA_D, saved_GC_mode);
 }
 
 void DFB_BltToDIB(int x, int y, int w, int h, void *b, int bw, void *bdib, int dibw)
