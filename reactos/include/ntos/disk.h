@@ -1,4 +1,4 @@
-/* $Id: disk.h,v 1.15 2003/08/25 01:37:47 sedwards Exp $
+/* $Id: disk.h,v 1.16 2004/08/19 18:12:28 navaraf Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -65,6 +65,7 @@
 #define PARTITION_PREP                  0x41
 #define PARTITION_LDM                   0x42
 #define PARTITION_UNIX                  0x63
+#define PARTITION_EXT2                  0x83
 
 #define PARTITION_NTFT                  0x80
 #define VALID_NTFT                      0xC0
@@ -116,7 +117,8 @@
      (P) == PARTITION_IFS          || \
      (P) == PARTITION_FAT32        || \
      (P) == PARTITION_FAT32_XINT13 || \
-     (P) == PARTITION_XINT13)
+     (P) == PARTITION_XINT13       || \
+     (P) == PARTITION_EXT2)
 
 #define IsContainerPartition(P)  \
     ((P) == PARTITION_EXTENDED || \
