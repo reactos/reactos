@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.39 2004/08/10 20:13:42 gvg Exp $
+/* $Id: token.c,v 1.40 2004/08/10 20:30:35 gvg Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -809,7 +809,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 	break;
 
       case TokenOrigin:
-	DPRINT1("NtQueryInformationToken(TokenOrigin)\n");
+	DPRINT("NtQueryInformationToken(TokenOrigin)\n");
 	if (TokenInformationLength < sizeof(TOKEN_ORIGIN))
 	  {
 	    Status = STATUS_BUFFER_TOO_SMALL;
