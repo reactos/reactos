@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: xlate.c,v 1.41 2004/07/14 20:48:57 navaraf Exp $
+/* $Id: xlate.c,v 1.42 2004/07/15 21:14:51 navaraf Exp $
  * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -374,6 +374,20 @@ IntEngCreateSrcMonoXlate(HPALETTE PaletteDest,
 
    XlateGDI->translationTable[0] = ShiftAndMask(XlateGDI, BackgroundColor);
    XlateGDI->translationTable[1] = ShiftAndMask(XlateGDI, ForegroundColor);
+
+   if (XlateObj->iDstType == PAL_INDEXED)
+   {
+      XlateGDI->translationTable[0] =
+         ClosestColorMatch(XlateGDI,
+                           (LPPALETTEENTRY)&XlateGDI->translationTable[0],
+                           DestPalGDI->IndexedColors,
+                           DestPalGDI->NumColors);
+      XlateGDI->translationTable[1] = 
+         ClosestColorMatch(XlateGDI,
+                           (LPPALETTEENTRY)&XlateGDI->translationTable[1],
+                           DestPalGDI->IndexedColors,
+                           DestPalGDI->NumColors);
+   }
 
    PALETTE_UnlockPalette(PaletteDest);
 
