@@ -2110,8 +2110,8 @@ REFIID _ILGetGUIDPointer(LPCITEMIDLIST pidl)
 }
 
 /**************************************************************************
- *  _ILGetTextPointer()
- * gets a pointer to the long filename string stored in the pidl
+ *  _ILGetCPanelPointer()
+ * gets a pointer to the control panel struct stored in the pidl
  */
 PIDLCPanelStruct* _ILGetCPanelPointer(LPCITEMIDLIST pidl)
 {

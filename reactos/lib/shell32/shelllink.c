@@ -53,6 +53,7 @@
 #include "pidl.h"
 #include "shell32_main.h"
 #include "shlguid.h"
+#include "shlwapi.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -822,17 +823,30 @@ HRESULT WINAPI IShellLink_Constructor (
 	return S_OK;
 }
 
+static BOOL SHELL_ExistsFileW(LPCWSTR path)
+{
+    HANDLE hfile = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+
+    if (hfile != INVALID_HANDLE_VALUE) {
+	CloseHandle(hfile);
+	return TRUE;
+    } else
+        return FALSE;
+}
+
 /**************************************************************************
- *  _IShellLink_UpdatePath
+ *  SHELL_ShellLink_UpdatePath
  *	update absolute path in sPath using relative path in sPathRel
  */
-static HRESULT _IShellLink_UpdatePath(LPWSTR sPathRel, LPCWSTR path, LPWSTR* psPath)
+static HRESULT SHELL_ShellLink_UpdatePath(LPWSTR sPathRel, LPCWSTR path, LPCWSTR sWorkDir, LPWSTR* psPath)
 {
     if (!path || !psPath)
 	return E_INVALIDARG;
 
     if (!*psPath && sPathRel) {
 	WCHAR buffer[2*MAX_PATH], abs_path[2*MAX_PATH];
+
+	/* first try if [directory of link file] + [relative path] finds an existing file */
 	LPCWSTR src = path;
 	LPWSTR last_slash = NULL;
 	LPWSTR dest = buffer;
@@ -848,8 +862,26 @@ static HRESULT _IShellLink_UpdatePath(LPWSTR sPathRel, LPCWSTR path, LPWSTR* psP
 
 	lstrcpyW(last_slash? last_slash+1: buffer, sPathRel);
 
-	if (!GetFullPathNameW(buffer, MAX_PATH, abs_path, &final))
-	    lstrcpyW(abs_path, buffer);
+	*abs_path = '\0';
+
+	if (SHELL_ExistsFileW(buffer)) {
+	    if (!GetFullPathNameW(buffer, MAX_PATH, abs_path, &final))
+		lstrcpyW(abs_path, buffer);
+	} else {
+	    /* try if [working directory] + [relative path] finds an existing file */
+	    if (sWorkDir) {
+		lstrcpyW(buffer, sWorkDir);
+		lstrcpyW(PathAddBackslashW(buffer), sPathRel);
+
+		if (SHELL_ExistsFileW(buffer))
+		    if (!GetFullPathNameW(buffer, MAX_PATH, abs_path, &final))
+			lstrcpyW(abs_path, buffer);
+	    }
+	}
+
+	/* FIXME: This is even not enough - not all shell links can be resolved using this algorithm. */
+	if (!*abs_path)
+	    lstrcpyW(abs_path, sPathRel);
 
 	*psPath = HeapAlloc(GetProcessHeap(), 0, (lstrlenW(abs_path)+1)*sizeof(WCHAR));
 	if (!*psPath)
@@ -893,17 +925,17 @@ HRESULT WINAPI IShellLink_ConstructFromFile (
 
 		    /*
 			The following code is here, not in IPersistStream_fnLoad() because
-			we need to know the path of the shell link file to convert the
-			relative path into the absolute path.
+			to be able to convert the relative path into the absolute path,
+			we need to know the path of the shell link file.
 		    */
 		    if (IsEqualIID(riid, &IID_IShellLinkW)) {
 			_ICOM_THIS_From_IShellLinkW(IShellLinkImpl, psl);
 
-			hr = _IShellLink_UpdatePath(This->sPathRel, path, &This->sPath);
+			hr = SHELL_ShellLink_UpdatePath(This->sPathRel, path, This->sWorkDir, &This->sPath);
 		    } else {
 			ICOM_THIS(IShellLinkImpl, psl);
 
-			hr = _IShellLink_UpdatePath(This->sPathRel, path, &This->sPath);
+			hr = SHELL_ShellLink_UpdatePath(This->sPathRel, path, This->sWorkDir, &This->sPath);
 		    }
 		}
 	    }
@@ -1194,7 +1226,7 @@ static HRESULT WINAPI IShellLinkA_fnSetShowCmd(IShellLinkA * iface, INT iShowCmd
     return NOERROR;
 }
 
-static HRESULT _PidlGeticonLocationA(IShellFolder* psf, LPITEMIDLIST pidl, LPSTR pszIconPath, int cchIconPath, int* piIcon)
+static HRESULT SHELL_PidlGeticonLocationA(IShellFolder* psf, LPITEMIDLIST pidl, LPSTR pszIconPath, int cchIconPath, int* piIcon)
 {
     LPCITEMIDLIST pidlLast;
 
@@ -1240,7 +1272,7 @@ static HRESULT WINAPI IShellLinkA_fnGetIconLocation(IShellLinkA * iface, LPSTR p
 	if (SUCCEEDED(hr)) {
 	    /* first look for an icon using the PIDL (if present) */
 	    if (This->pPidl)
-		hr = _PidlGeticonLocationA(pdsk, This->pPidl, pszIconPath, cchIconPath, piIcon);
+		hr = SHELL_PidlGeticonLocationA(pdsk, This->pPidl, pszIconPath, cchIconPath, piIcon);
 	    else
 		hr = E_FAIL;
 
@@ -1251,7 +1283,7 @@ static HRESULT WINAPI IShellLinkA_fnGetIconLocation(IShellLinkA * iface, LPSTR p
 		hr = IShellFolder_ParseDisplayName(pdsk, 0, NULL, This->sPath, NULL, &pidl, NULL);
 
 		if (SUCCEEDED(hr)) {
-		    hr = _PidlGeticonLocationA(pdsk, pidl, pszIconPath, cchIconPath, piIcon);
+		    hr = SHELL_PidlGeticonLocationA(pdsk, pidl, pszIconPath, cchIconPath, piIcon);
 
 		    SHFree(pidl);
 		}
@@ -1295,7 +1327,7 @@ static HRESULT WINAPI IShellLinkA_fnSetRelativePath(IShellLinkA * iface, LPCSTR 
     This->sPathRel = HEAP_strdupAtoW(GetProcessHeap(), 0, pszPathRel);
     This->bDirty = TRUE;
 
-    return _IShellLink_UpdatePath(This->sPathRel, This->sPath, &This->sPath);
+    return SHELL_ShellLink_UpdatePath(This->sPathRel, This->sPath, This->sWorkDir, &This->sPath);
 }
 
 static HRESULT WINAPI IShellLinkA_fnResolve(IShellLinkA * iface, HWND hwnd, DWORD fFlags)
@@ -1617,7 +1649,7 @@ static HRESULT WINAPI IShellLinkW_fnSetShowCmd(IShellLinkW * iface, INT iShowCmd
     return S_OK;
 }
 
-static HRESULT _PidlGeticonLocationW(IShellFolder* psf, LPITEMIDLIST pidl, LPWSTR pszIconPath, int cchIconPath, int* piIcon)
+static HRESULT SHELL_PidlGeticonLocationW(IShellFolder* psf, LPITEMIDLIST pidl, LPWSTR pszIconPath, int cchIconPath, int* piIcon)
 {
     LPCITEMIDLIST pidlLast;
 
@@ -1663,7 +1695,7 @@ static HRESULT WINAPI IShellLinkW_fnGetIconLocation(IShellLinkW * iface, LPWSTR 
 	if (SUCCEEDED(hr)) {
 	    /* first look for an icon using the PIDL (if present) */
 	    if (This->pPidl)
-		hr = _PidlGeticonLocationW(pdsk, This->pPidl, pszIconPath, cchIconPath, piIcon);
+		hr = SHELL_PidlGeticonLocationW(pdsk, This->pPidl, pszIconPath, cchIconPath, piIcon);
 	    else
 		hr = E_FAIL;
 
@@ -1674,7 +1706,7 @@ static HRESULT WINAPI IShellLinkW_fnGetIconLocation(IShellLinkW * iface, LPWSTR 
 		hr = IShellFolder_ParseDisplayName(pdsk, 0, NULL, This->sPath, NULL, &pidl, NULL);
 
 		if (SUCCEEDED(hr)) {
-		    hr = _PidlGeticonLocationW(pdsk, pidl, pszIconPath, cchIconPath, piIcon);
+		    hr = SHELL_PidlGeticonLocationW(pdsk, pidl, pszIconPath, cchIconPath, piIcon);
 
 		    SHFree(pidl);
 		}
@@ -1724,7 +1756,7 @@ static HRESULT WINAPI IShellLinkW_fnSetRelativePath(IShellLinkW * iface, LPCWSTR
     lstrcpyW( This->sPathRel, pszPathRel );
     This->bDirty = TRUE;
 
-    return _IShellLink_UpdatePath(This->sPathRel, This->sPath, &This->sPath);
+    return SHELL_ShellLink_UpdatePath(This->sPathRel, This->sPath, This->sWorkDir, &This->sPath);
 }
 
 static HRESULT WINAPI IShellLinkW_fnResolve(IShellLinkW * iface, HWND hwnd, DWORD fFlags)
