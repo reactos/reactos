@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.25 2003/07/10 21:36:39 jimtabor Exp $ */
+/* $Id: region.c,v 1.26 2003/07/11 00:16:47 chorns Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -1655,7 +1655,7 @@ PROSRGNDATA rgn;
         }
         W32kPatBlt(hDC, rgn->rdh.rcBound.left, rgn->rdh.rcBound.top,
                         rgn->rdh.rcBound.right - rgn->rdh.rcBound.left,
-                        rgn->rdh.rcBound.bottom - rgn->rdh.rcBound.top, PATCOPY
+                        rgn->rdh.rcBound.bottom - rgn->rdh.rcBound.top, PATCOPY);
 
         W32kSelectObject(hDC, oldhBrush);
         RGNDATA_UnlockRgn( hRgn );
