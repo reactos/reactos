@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.37 2001/07/15 21:19:02 rex Exp $
+# $Id: makefile,v 1.38 2001/08/02 20:22:24 phreak Exp $
 #
 # WIN32K.SYS build spec
 #
@@ -116,6 +116,15 @@ dist: $(DIST_DIR)/drivers/$(TARGET).sys
 
 $(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
 	$(CP) $(TARGET).sys ../../$(DIST_DIR)/drivers/$(TARGET).sys
+
+.dummy:
+
+%/TAGS: .dummy
+	etags $(@D)/\*.c -o $(@D)/TAGS
+
+etags: TAGS
+TAGS: main/TAGS eng/TAGS ldr/TAGS misc/TAGS objects/TAGS stubs/TAGS ntuser/TAGS dib/TAGS freetype/TAGS
+	etags -i main/TAGS -i eng/TAGS -i ldr/TAGS -i misc/TAGS -i objects/TAGS -i stubs/TAGS -i ntuser/TAGS -i dib/TAGS -i freetype/TAGS
 
 #WITH_DEBUGGING = yes
 #WIN32_LEAN_AND_MEAN = yes
