@@ -1,4 +1,4 @@
-/* $Id: reply.c,v 1.22 2004/09/13 19:10:45 gvg Exp $
+/* $Id: reply.c,v 1.23 2004/10/31 20:27:08 ea Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,8 +16,6 @@
 #include <internal/debug.h>
 
 /* GLOBALS *******************************************************************/
-
-#define TAG_LPC_MESSAGE   TAG('L', 'P', 'C', 'M')
 
 /* FUNCTIONS *****************************************************************/
 
@@ -58,7 +56,7 @@ EiReplyOrRequestPort (IN	PEPORT		Port,
    MessageReply->Message.ClientId.UniqueProcess = PsGetCurrentProcessId();
    MessageReply->Message.ClientId.UniqueThread = PsGetCurrentThreadId();
    MessageReply->Message.MessageType = MessageType;
-   MessageReply->Message.MessageId = InterlockedIncrement((LONG *)&EiNextLpcMessageId);
+   MessageReply->Message.MessageId = InterlockedIncrement((LONG *)&LpcpNextMessageId);
    
    KeAcquireSpinLock(&Port->Lock, &oldIrql);
    EiEnqueueMessagePort(Port, MessageReply);

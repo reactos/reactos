@@ -1,4 +1,4 @@
-/* $Id: port.c,v 1.19 2004/08/15 16:39:06 chorns Exp $
+/* $Id: port.c,v 1.20 2004/10/31 20:27:08 ea Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -22,7 +22,8 @@
 /* GLOBALS *******************************************************************/
 
 POBJECT_TYPE	ExPortType = NULL;
-ULONG		EiNextLpcMessageId = 0;
+ULONG		LpcpNextMessageId = 0; /* 0 is not a valid ID */
+FAST_MUTEX	LpcpLock; /* global internal sync in LPC facility */
 
 static GENERIC_MAPPING ExpPortMapping = {
 	STANDARD_RIGHTS_READ,
@@ -36,7 +37,7 @@ static GENERIC_MAPPING ExpPortMapping = {
 NTSTATUS INIT_FUNCTION
 NiInitPort (VOID)
 {
-   ExPortType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
+   ExPortType = ExAllocatePoolWithTag(NonPagedPool,sizeof(OBJECT_TYPE),TAG_OBJECT_TYPE);
    
    RtlRosInitUnicodeStringFromLiteral(&ExPortType->TypeName,L"Port");
    
@@ -61,7 +62,9 @@ NiInitPort (VOID)
 
    ObpCreateTypeObject(ExPortType);
    
-   EiNextLpcMessageId = 0;
+   LpcpNextMessageId = 0;
+
+   ExInitializeFastMutex (& LpcpLock);
    
    return(STATUS_SUCCESS);
 }
@@ -77,6 +80,9 @@ NiInitPort (VOID)
  *
  * ARGUMENTS
  *	Port	Pointer to an EPORT object to initialize.
+ *	Type	connect (RQST), or communication port (COMM)
+ *	Parent	OPTIONAL connect port a communication port
+ *		is created from
  *
  * RETURN VALUE
  *	STATUS_SUCCESS if initialization succedeed. An error code

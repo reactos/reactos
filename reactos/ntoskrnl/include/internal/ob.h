@@ -12,6 +12,8 @@
 #define NTOS_MODE_KERNEL
 #include <ntos.h>
 
+#define TAG_OBJECT_TYPE TAG('O', 'b', 'j', 'T')
+
 struct _EPROCESS;
 
 typedef struct
