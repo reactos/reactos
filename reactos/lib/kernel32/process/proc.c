@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.19 1999/08/29 06:59:03 ea Exp $
+/* $Id: proc.c,v 1.20 1999/09/12 20:58:29 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -319,7 +319,7 @@ SleepEx (
 	TIME Interval;
 	NTSTATUS errCode;	
 
-        Interval.QuadPart = dwMilliseconds * 1000;
+	Interval.QuadPart = dwMilliseconds * 1000;
 
 	errCode = NtDelayExecution(bAlertable,&Interval);
 	if ( !NT_SUCCESS(errCode) )
