@@ -295,7 +295,7 @@ RtlFormatCurrentUserKeyPath (OUT PUNICODE_STRING KeyPath)
 				    KeyPath->MaximumLength);
   if (KeyPath->Buffer == NULL)
     {
-      DPRINT1 ("RtlAllocateHeap() failed\n");
+      DPRINT1 ("ExAllocatePool() failed\n");
       RtlFreeUnicodeString (&SidString);
       return STATUS_NO_TOKEN;
     }
@@ -362,7 +362,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		       IN PCWSTR Path,
 		       IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
 		       IN PVOID Context,
-		       IN PVOID Environment)
+		       IN PVOID Environment OPTIONAL)
 {
   NTSTATUS Status;
   HANDLE BaseKeyHandle;
@@ -751,9 +751,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		      /* Should not happen, because the name length is limited to 255 characters */
 		      ExFreePool(ValueName);
 		      ValueNameSize = FullValueInfo->NameLength + sizeof(WCHAR);
-		      ValueName = RtlAllocateHeap(RtlGetProcessHeap(),
-						  0,
-						  ValueNameSize);
+		      ValueName = ExAllocatePool(PagedPool, ValueNameSize);
 		      if (ValueName == NULL)
 		        {
 		          Status = STATUS_NO_MEMORY;
@@ -938,9 +936,7 @@ RtlpNtEnumerateSubKey(IN HANDLE KeyHandle,
     {
       BufferLength = SubKeyName->MaximumLength +
 		     sizeof(KEY_BASIC_INFORMATION);
-      KeyInfo = RtlAllocateHeap(RtlGetProcessHeap(),
-				0,
-				BufferLength);
+      KeyInfo = ExAllocatePool(PagedPool,	BufferLength);
       if (KeyInfo == NULL)
 	return(STATUS_NO_MEMORY);
     }
@@ -969,9 +965,7 @@ RtlpNtEnumerateSubKey(IN HANDLE KeyHandle,
 
   if (KeyInfo != NULL)
     {
-      RtlFreeHeap(RtlGetProcessHeap(),
-		  0,
-		  KeyInfo);
+      ExFreePool(KeyInfo);
     }
 
   return(Status);
@@ -1029,9 +1023,7 @@ RtlpNtQueryValueKey(IN HANDLE KeyHandle,
   if (DataLength != NULL)
     BufferLength = *DataLength;
 
-  ValueInfo = RtlAllocateHeap(RtlGetProcessHeap(),
-			      0,
-			      BufferLength);
+  ValueInfo = ExAllocatePool(PagedPool, BufferLength);
   if (ValueInfo == NULL)
     return(STATUS_NO_MEMORY);
 
@@ -1057,9 +1049,7 @@ RtlpNtQueryValueKey(IN HANDLE KeyHandle,
 	}
     }
 
-  RtlFreeHeap(RtlGetProcessHeap(),
-	      0,
-	      ValueInfo);
+  ExFreePool(ValueInfo);
 
   return(Status);
 }
