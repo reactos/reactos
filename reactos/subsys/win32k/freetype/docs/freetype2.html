@@ -1,0 +1,352 @@
+<html>
+<head>
+<title>FreeType 2 Introduction</title>
+<basefont face="Georgia, Arial, Helvetica, Geneva">
+<style content="text/css">
+  P { text-align=justify }
+  H1 { text-align=center }
+  H2 { text-align=center }
+  LI { text-align=justify }
+</style>
+</head>
+
+<body text="#000000"
+      bgcolor="#FFFFFF"
+      link="#0000EF"
+      vlink="#51188E"
+      alink="#FF0000">
+
+
+<font size=1>http://www.freetype.org</font><p> 
+
+<center>
+  <a href="freetype.html">
+  <img src="image/freetype.jpg" width=550 height=105 alt="The FreeType Project" border=0></a>
+  <h1>An Introduction to FreeType 2</h1>
+</center>
+
+<center><table width=750 cellspacing=10 cellpadding=30><tr><td>
+<hr><p>
+
+DOCUMENT INDEX:<br>
+<ul>
+  <li><a href="#what">What is FreeType 2 ?</a>
+  <li><a href="#features">Features</a>
+  <li><a href="#requirements">Requirements</a>
+  <li><a href="#patents">Patents issues</a>
+</ul><p>
+
+
+<hr><p>
+
+<table width="100%" cellspacing=5><tr bgcolor="#CCCCEE"><td>
+<h2 align=center><a name="what">What is FreeType 2 ?</h2>
+</td></tr><tr><td>
+
+<p>The FreeType project is a team of volunteers who develop free, portable
+and high-quality software solutions for digital typography. We specifically
+target embedded systems and focus on bringing small, efficient and
+ubiquitous products.</p>
+
+<p>the FreeType 2 library is our new software font engine. It has been
+   designed to provide the following important features:</p>
+
+  <ul>
+  <li><p>
+    <b>A universal and simple API to manage font files:</b><br>
+    <ul>
+      <p>The FreeType 2 API is simple and easy to use. It supports both
+         bitmapped and scalable fonts and is well-suited to manage font
+	 files of all formats. Unlike other font libraries, FreeType 2
+	 returns and manages outline font data (images & metrics).</p>
+   </ul>
+   </p></li>
+ 
+  <li><p>
+    <b>Support for several font formats through loadable modules:</b><br>
+    <ul>
+      <p>FreeType 2 uses <em>"font drivers"</em>. Each driver is a loadable
+         module used to support one specific font format. Each driver can also
+	 provide specific extensions used to access format-specific features of
+	 the font.</p>
+    </ul>
+  </p></li>
+  
+  
+  <li><p>
+    <b>High-quality anti-aliasing:</b><br>
+    <ul>
+      <p>FreeType 2 produces etremely smooth outlines at small sizes, with its new
+         anti-aliasing renderer, which produces bitmaps with 256-levels of gray.
+	 It uses a new algorithm that has been specifically designed to render
+	 small complex shapes (like glyphs) at high speed. Indeed, it's even
+	 faster than the monochrome renderer for small character sizes (under
+	 20 pixels) !!
+      </p>
+    </ul>
+
+
+ <li><b>High portability & performance:</b><br>
+     <ul>
+       <p>The FreeType 2 source code is written in ANSI C and runs on any
+          platform with a compliant compiler. Client applications can
+	  provide their own memory manager or input stream to the library
+	  (which means that font files can come from any place: disk,
+	  memory, compressed file, network, etc..).
+       </p>
+     </ul>
+     	    
+  </ul>
+  
+  <p>Note that <em>the beta of FreeType 2 is available <b>now</b></em>. For more
+  info, check our <a href="download.html">Download page</a> or see the source
+  and its diffs through our <a href="cgi-bin/cvsweb.cgi">CVS Web interface</a>.
+  </p>
+</ul>
+
+</td></tr></table>
+
+<table width="100%" cellspacing=5><tr bgcolor="#CCCCEE"><td>
+<h2 align=center><a name="features">Features</h2>
+</td></tr><tr><td>
+
+<h3>Supported font formats</h3>
+
+<p>FreeType 2 readily supports the following font formats:</p>
+
+<ul>
+  <li>TrueType files (.ttf) and collections (.ttc)</li>
+  <li>Type 1 font files both in ASCII (.pfa) or binary (.pfb) format</li>
+  <li>Type 1 Multiple Master fonts. The FreeType 2 API also provides
+      routines to manage design instances easily</li>
+  <li>Type 1 CID-keyed fonts</li>
+  <li>OpenType/CFF (.otf) fonts</li>
+  <li>CFF/Type 2 fonts</li>
+  <li>Adobe CEF fonts (.cef), used to embed fonts in SVG documents
+      with the Adobe SVG viewer plugin.</li>
+  <li>Windows FNT/FON bitmap fonts</li>
+</ul>
+
+<p>Note that Apple's TrueType GX fonts are supported as normal TTFs,
+   (the advanced tables are ignored).</p>
+
+<p>Besides, it's possible to add support for new font formats by providing
+   a specific <em>font driver</em> module. Modules can be added either at
+   build time (when recompiling the library), or at <em>run-time</em>;
+   this allows, for example, applications to register their own
+   font driver to support program-specific formats.</p>
+
+
+<h3>Patent-free automatic hinter</h3>
+
+<p>TrueType fonts are normally renderered (hinted) with the help of a
+   specific bytecode where the behaviour of a few opcodes is patented by
+   Apple. We're currently in contact with Apple to discuss the importance
+   of such patents and their use in open source projects like FreeType.
+   </p>
+   
+<p>In the meantime, we have developped our own alternative technology that
+   is capable of automatically hinting scalable glyph images. It is
+   now part of the FreeType 2 source tree as the "autohint" module,
+   and is used to hint glyphs when the bytecode interpreter is disabled
+   (through a configuration macro when building the engine). Note that
+   the auto-hinter is also used to handle glyphs in other formats like
+   CFF and Type 1.</p>
+
+<p>The auto-hinter provides pretty good results (in some cases, it even
+   significantly improves the output of poorly hinted fonts) but we'll
+   continue to improve it with each new release of FreeType to achieve
+   the highest possible quality.</p>
+
+
+<h3>Modular design:</h3>
+
+<p>The design of FreeType 2 is extremely modular as most features are
+   supported through optional modules. This means it's easily possible to
+   only compile the features you need. As each module is between
+   10 and 20 Kb in size, it's possible to build a bare-bones
+   font engine that supports anti-aliasing in about 30 Kb !!</p>
+   
+<p>Configuration is performed by  modifications of only two header
+   files (one to select global features, another one to select modules)
+   and don't need tweaking of source code. Note that it is however
+   possible to provide your own implementation of certain components.</p>
+   
+<p>For example, when building on Unix, the engine will automatically
+   use memory-mapped files when available on the target platform,
+   thus significantly increasing font file i/o.</p>
+
+
+<p>Due to its very flexible design, it is possible to add, remove and
+   upgrade modules at run-time.</p>
+
+
+
+<h3>Advanced glyph management</h3>
+
+<p>The API comes with a standard extension used to extract individual
+   glyph images from font files. These images can be bitmaps, scalable
+   bezier outlines or even anything else. (e.g. bi-color or metafont
+   glyphs, as long as they're supported by a module).</p>
+   
+<p>Each scalable glyph image can be transformed, measured and
+   rendered into a monochrome or anti-aliased bitmaps easily
+   through a uniform interface.
+
+   This allows client applications to easily cache glyphs or
+   perform text rendering effects with minimal difficulty
+   (look at the FreeType 2 Tutorial to see how to render
+    rotated text with very few lines of code).
+</p>
+
+
+
+<h3>Advanced font access</h3>
+
+<p>The FreeType 2 API is useful to retrieve advanced information from
+   various fonts:</p>
+   
+<ul>
+  <li>vertical metrics are available whenever found in the font file</li>
+  
+  <li>kerning distances are available when found in the font file. It
+      is also possible to "attach" a given additional file to a given
+      font face. This is useful to load kerning distances from an
+      .afm file into a Type 1 face for example.</li>
+
+  <li>provides ASCII glyph names whenever available in the font
+      (TrueType, OpenType, Type1, etc..)</li>
+      
+  <li>provides access to important tables for SFNT-based font formats
+      (i.e. TrueType, OpenType, CEF, etc..), like the name table,
+      font header, maximum profile, etc...</li>
+
+  <li>automatic synthesis of Unicode-based character maps for
+      those fonts or formats that do not provide one. This is
+      extremely useful with Type 1 fonts which are normally
+      limited to a stupid 256-characters encoding.</li>
+</ul>      
+
+  
+<h3>Simple & clean API</h3>
+
+<p>The FreeType 2 high-level API is simple and straightforward, as it
+   has been specifically designed to make the most commmon font operations
+   easy</p>
+   
+<p>As a comparison, the number of function calls needed to perform a
+   the tasks of font face creation/opening and glyph loading/rendering
+   has been reduced by a factor of 4 !!</p>
+
+<p>The API is also independent of any font-format specific issue, though
+   it provides standard extensions to access format-specific tables and
+   information. More extensions can also be easily added through new
+   modules</p>
+   
+
+<h3>Robust & Portable code</h3>
+
+<p>Because it is written in industry-standard ANSI C, FreeType 2 compiles
+   on all platforms with a compliant compiler. Because the default build
+   only relies on the C library, it is free of any system-specific
+   dependencies, even if it is possible to "enhance" certain components
+   by providing a specific implementation.</p>
+
+<p>The code doesn't use global or static variables. Client applications
+   can provide their own memory manager. Font files can be read from
+   a disk file, memory, or through a client-provided input stream. This
+   allows to support compressed font files, remote fonts, fonts embedded
+   in other streams (e.g. Type42 fonts), etc..</p>
+   
+<p>An advanced i/o sub-system is used to optimise file access, as well
+   as reduce memory usage of the library when the file is memory-based
+   ( ROM, RAM, memory-mapped ).</p>
+
+
+<h3>Open Source & Vendor Independence</h3>
+
+<p>Finally, FreeType 2 is released under its own BSD-like open source
+   license, one of the less restricting licenses available, and this
+   means that:</p>
+   
+<ul>
+  <li><p>
+    It can be included in all kinds of products, be they proprietary
+    or not.
+  </p></li>
+  
+  <li><p>
+    As any module can be added or replaced anytime, any third party
+    vendor  has the ability to provide its own set of modules (under
+    its own license) in order to support proprietary font formats or
+    more advanced features (e.g. a new auto-hinter, or a new
+    anti-aliasing renderer for LCDs or TV screens).
+  </p></li>
+</ul>
+
+<p>One could even imagine an application using the FreeType 2 API with
+   a "wrapper" module used to access system-specific fonts (like through
+   the Windows GDI). This would mean native font support with more portable
+   application code (as simply changing the wrapper module would be required
+   to port the application to another system).</p>
+
+</td></tr></table>
+
+<table width="100%" cellspacing=5><tr bgcolor="#CCCCEE"><td>
+<h2 align=center><a name="requirements">Requirements</h2>
+</td></tr><tr><td>
+
+<p>FreeType 2 is written in ANSI&nbsp;C and should compile with no problems
+   on a great variety of platforms. We have taken care of removing all
+   compilation warnings from major compliant compilers. Detailed compilation
+   instructions are provided in the software archive.</p>
+
+<p>This version of the library has been succesfully compiled and run
+   under the following systems: Dos, OS/2, Windows, Macintosh, Unix
+   (including the 64-bits DEC Unix, a.k.a. "True64"). You should not
+   encounter major problems compiling it on any other kind of platform.
+   In all cases, contact us if you do.</p>
+
+<p>Note that a small set of demonstration programs is also separately
+   available. They include a tiny graphics sub-system that is used to
+   display and show-off the library's capabilities on the following
+   platforms: X11, MacOS, OS/2 & Windows.</p>
+
+<p>Please visit our <a href="http://www.freetype.org/download.html">
+   Download section</a> to access the software archives.</p>
+
+</ul>
+
+</td></tr></table>
+
+<table width="100%" cellspacing=5><tr bgcolor="#CCCCEE"><td>
+<h2 align=center><a name="patents">Patents issues</h2>
+</td></tr><tr><td>
+
+<p>The FreeType 2 source code includes a TrueType bytecode interpreter that
+   is covered by the Apple patents. However, this piece of code is never
+   compiled by default in this release (unlike in previous betas) making
+   a default build of the library <em>entirely patent-free !!</em></p>
+   
+<p>Note that in order to compile the interpreter, one needs to define
+   the configuration macro <tt><b>TT_CONFIG_OPTION_BYTECODE_INTERPRETER</b></tt> configuration
+   macro in the file "<tt>ftoption.h</tt>". More details are available in
+   the software archive. Note that the use of the interpreter is normally
+   protected by US, UK and French patents. In the event you'd absolutely
+   need it, you may have to <a href="mailto:patents@apple.org">contact
+   Apple legal department</a> for licensing conditions, depending on your
+   location and the places you distribute/sell your products.</p>
+
+<p>Please do not ask us any detailed information regarding licensing, as
+   we're still discussing with Apple this issue, we're unable to inform
+   the public of what's currently going on..</p>
+
+</td></tr></table>
+
+<hr>
+<p>
+<a href="index.html">Back to FreeType homepage</a><p>
+
+</td></tr></table>
+</body>
+</html>

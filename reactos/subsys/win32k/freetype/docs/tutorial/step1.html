@@ -1,0 +1,956 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <meta http-equiv="Content-Type"
+        content="text/html; charset=iso-8859-1">
+  <meta name="Author"
+        content="David Turner">
+  <title>FreeType 2 Tutorial</title>
+</head>
+
+<body text="#000000"
+      bgcolor="#FFFFFF"
+      link="#0000EF"
+      vlink="#51188E"
+      alink="#FF0000">
+
+<h1 align=center>
+  FreeType 2.0 Tutorial<br>
+  Step 1 - simple glyph loading
+</h1>
+
+<h3 align=center>
+  &copy; 2000 David Turner
+    (<a href="mailto:david@freetype.org">david@freetype.org</a>)<br>
+  &copy; 2000 The FreeType Development Team
+    (<a href="http://www.freetype.org">www.freetype.org</a>)
+</h3>
+
+<center>
+<table width="70%">
+<tr><td>
+
+  <hr>
+
+  <h2>
+    Introduction
+  </h2>
+
+  <p>This is the first section of the FreeType 2 tutorial. It will teach
+  you to do the following:</p>
+  
+  <ul>
+    <li>initialise the library</li>
+    <li>open a font file by creating a new face object</li>
+    <li>select a character size in points or in pixels</li>
+    <li>load a single glyph image and convert it to a bitmap</li>
+    <li>render a very simple string of text</li>
+    <li>render a rotated string of text easily</li>
+  </ul>
+    
+  <hr>
+
+    <h3>
+      1. Header files
+    </h3>
+
+    <p>To include the main FreeType header file, simply say</p>
+
+    <font color="blue">
+    <pre>
+    #include &lt;freetype/freetype.h&gt;</pre>
+    </font>
+
+    <p>in your application code.  Note that other files are available in the
+    FreeType include directory, most of them being included by
+    <tt>"freetype.h"</tt>.  They will be described later in this
+    tutorial.</p>
+
+    <hr>
+
+    <h3>
+      2. Initialize the library
+    </h3>
+
+    <p>Simply create a variable of type <tt>FT_Library</tt> named, for
+    example, <tt>library</tt>, and call the function
+    <tt>FT_Init_FreeType()</tt> as in</p>
+
+    <font color="blue">
+    <pre>
+    #include &lt;freetype/freetype.h&gt;
+
+    FT_Library  library;
+
+    ...
+
+    {
+      ...
+      error = FT_Init_FreeType( &library );
+      if ( error )
+      {
+        ... an error occurred during library initialization ...
+      }
+    }</pre>
+    </font>
+
+    <p>This function is in charge of the following:</p>
+
+    <ul>
+      <li>
+         <p>Creating a new instance of the FreeType&nbsp;2 library, and set
+         the handle <tt>library</tt> to it.</p>
+      </li>
+      <li>
+        <p>Load each modules that FreeType knows about in the library. 
+        This means that by default, your new <tt>library</tt> object is able
+        to handle TrueType, Type&nbsp;1, CID-keyed & OpenType/CFF fonts
+        gracefully.</p>
+      </li>
+    </ul>
+
+    <p>As you can see, the function returns an error code, like most others
+    in the FreeType API.  An error code of&nbsp;0 <em>always</em> means that
+    the operation was successful; otherwise, the value describes the error,
+    and <tt>library</tt> is set to NULL.</p>
+
+    <hr>
+
+    <h3>
+      3. Load a font face
+    </h3>
+
+      <h4>
+        a. From a font file
+      </h4>
+
+      <p>Create a new <em>face</em> object by calling <tt>FT_New_Face</tt>. 
+      A <em>face</em> describes a given typeface and style.  For example,
+      "Times New Roman Regular" and "Times New Roman Italic" correspond to
+      two different faces.</p>
+
+      <font color="blue">
+      <pre>
+    FT_Library   library;   /* handle to library     */
+    FT_Face      face;      /* handle to face object */
+
+    error = FT_Init_FreeType( &library );
+    if ( error ) { ... }
+
+    error = FT_New_Face( library,
+                         "/usr/share/fonts/truetype/arial.ttf",
+                         0,
+                         &face );
+    if ( error == FT_Err_Unknown_File_Format )
+    {
+      ... the font file could be opened and read, but it appears
+      ... that its font format is unsupported
+    }
+    else if ( error )
+    {
+      ... another error code means that the font file could not
+      ... be opened or read, or simply that it is broken...
+    }</pre>
+      </font>
+
+      <p>As you can certainly imagine, <tt>FT_New_Face</tt> opens a font
+      file, then tries to extract one face from it.  Its parameters are</p>
+
+      <table cellpadding=5>
+        <tr valign="top">
+          <td>
+            <tt><b>library</b></tt>
+          </td>
+          <td>
+            <p>handle to the FreeType library instance where the face object
+            is created</p>
+          </td>
+        </tr>
+        <tr valign="top">
+          <td>
+            <tt><b>filepathname</b></tt>
+          </td>
+          <td>
+            <p>the font file pathname (standard C string).</p>
+          </td>
+        </tr>
+        <tr valign="top">
+          <td>
+            <tt><b>face_index</b></tt>
+          </td>
+          <td>
+            <p>Certain font formats allow several font faces to be embedded
+            in a single file.</p>
+
+            <p>This index tells which face you want to load.  An error will
+            be returned if its value is too large.</p>
+
+            <p>Index 0 always work though.</p>
+          </td>
+        </tr>
+        <tr valign="top">
+          <td>
+            <tt><b>face</b></tt>
+          </td>
+          <td>
+            <p>A <em>pointer</em> to the handle that will be set to describe
+            the new face object.</p>
+
+            <p>It is set to NULL in case of error.</p>
+          </td>
+        </tr>
+      </table>
+
+      <p>To know how many faces a given font file contains, simply load its
+      first face (use <tt>face_index</tt>=0), then see the value of
+      <tt>face->num_faces</tt> which indicates how many faces are embedded
+      in the font file.</p>
+
+      <h4>
+        b. From memory
+      </h4>
+
+      <p>In the case where you have already loaded the font file in memory,
+      you can similarly create a new face object for it by calling
+      <tt>FT_New_Memory_Face</tt> as in</p>
+
+      <font color="blue">
+      <pre>
+    FT_Library   library;   /* handle to library     */
+    FT_Face      face;      /* handle to face object */
+
+    error = FT_Init_FreeType( &library );
+    if ( error ) { ... }
+
+    error = FT_New_Memory_Face( library,
+                                buffer,    /* first byte in memory */
+                                size,      /* size in bytes        */
+                                0,         /* face_index           */
+                                &face );
+    if ( error ) { ... }</pre>
+      </font>
+
+      <p>As you can see, <tt>FT_New_Memory_Face()</tt> simply takes a
+      pointer to the font file buffer and its size in bytes instead of a
+      file pathname.  Other than that, it has exactly the same semantics as
+      <tt>FT_New_Face()</tt>.</p>
+
+      <h4>
+        c. From other sources (compressed files, network, etc.)
+      </h4>
+
+      <p>There are cases where using a file pathname or preloading the file
+      in memory is simply not enough.  With FreeType&nbsp;2, it is possible
+      to provide your own implementation of i/o routines.</p>
+
+      <p>This is done through the <tt>FT_Open_Face()</tt> function, which
+      can be used to open a new font face with a custom input stream, select
+      a specific driver for opening, or even pass extra parameters to the
+      font driver when creating the object.  We advise you to refer to the
+      FreeType&nbsp;2 reference manual in order to learn how to use it.</p>
+
+      <p>Note that providing a custom stream might also be used to access a
+      TrueType font embedded in a Postscript Type&nbsp;42 wrapper.</p>
+
+      <hr>
+
+    <h3>
+      4. Accessing face content
+    </h3>
+
+    <p>A <em>face object</em> models all information that globally describes
+    the face.  Usually, this data can be accessed directly by dereferencing
+    a handle, like</p>
+
+    <table cellpadding=5>
+      <tr valign="top">
+        <td>
+          <tt><b>face->num_glyphs</b></tt>
+        </td>
+        <td>
+          <p>Gives the number of <em>glyphs</em> available in the font face.
+          A glyph is simply a character image.  It doesn't necessarily
+          correspond to a <em>character code</em> though.</p>
+        </td>
+      </tr>
+      <tr valign="top">
+        <td>
+          <tt><b>face->flags</b></tt>
+        </td>
+        <td>
+          <p>A 32-bit integer containing bit flags used to describe some
+          face properties.  For example, the flag
+          <tt>FT_FACE_FLAG_SCALABLE</tt> is used to indicate that the face's
+          font format is scalable and that glyph images can be rendered for
+          all character pixel sizes.  For more information on face flags,
+          please read the <a href="#">FreeType&nbsp;2 API Reference</a>.</p>
+        </td>
+      </tr>
+      <tr valign="top">
+        <td>
+          <tt><b>face->units_per_EM</b></tt>
+        </td>
+        <td>
+          <p>This field is only valid for scalable formats (it is set to 0
+          otherwise).  It indicates the number of font units covered by the
+          EM.</p>
+        </td>
+      </tr>
+      <tr valign="top">
+        <td>
+          <tt><b>face->num_fixed_sizes</b></tt>
+        </td>
+        <td>
+          <p>This field gives the number of embedded bitmap <em>strikes</em>
+          in the current face.  A <em>strike</em> is simply a series of
+          glyph images for a given character pixel size.  For example, a
+          font face could include strikes for pixel sizes 10, 12
+          and&nbsp;14.  Note that even scalable font formats can have
+          embedded bitmap strikes!</p>
+        </td>
+      </tr>
+      <tr valign="top">
+        <td>
+          <tt><b>face->fixed_sizes</b></tt>
+        </td>
+        <td>
+          <p>this is a pointer to an array of <tt>FT_Bitmap_Size</tt>
+          elements.  Each <tt>FT_Bitmap_Size</tt> indicates the horizontal
+          and vertical <em>pixel sizes</em> for each of the strikes that are
+          present in the face.</p>
+        </td>
+      </tr>
+    </table>
+
+    <p>For a complete listing of all face properties and fields, please read
+    the <a href="#">FreeType&nbsp;2 API Reference</a>.<p>
+
+    <hr>
+
+    <h3>
+      5. Setting the current pixel size
+    </h3>
+
+    <p>FreeType 2 uses "<em>size objects</em>" to model all
+       information related to a given character size for a given face.
+       For example, a size object will hold the value of certain metrics
+       like the ascender or  text height, expressed in 1/64th of a pixel,
+       for a character size of 12 points.</p>
+
+    <p>When the <tt>FT_New_Face</tt> function is called (or one of its
+       cousins), it <b>automatically</b> creates a new size object for
+       the returned face. This size object is directly accessible as
+       <b><tt>face->size</tt></b>.</p>
+       
+    <p><em>NOTA BENE: a single face object can deal with one or more size
+       objects at a time, however, this is something that few programmers
+       really need to do. We have thus have decided to simplify the API for
+       the most common use (i.e. one size per face), while keeping this
+       feature available through additional fuctions.</em></p>
+    
+    <p>When a new face object is created, its size object defaults to the
+       character size of 10&nbsp;pixels (both horizontally and vertically) for
+       scalable formats.  For fixed-sizes formats, the size is more or less
+       undefined, which is why you must set it before trying to load a
+       glyph.</p>
+
+    <p>To do that, simply call <tt>FT_Set_Char_Size()</tt>.  Here is an
+       example where the character size is set to 16pt for a 300x300&nbsp;dpi
+       device:</p>
+
+    <font color="blue">
+    <pre>
+    error = FT_Set_Char_Size(
+              face,    /* handle to face object           */
+              0,       /* char_width in 1/64th of points  */
+              16*64,   /* char_height in 1/64th of points */
+              300,     /* horizontal device resolution    */
+              300 );   /* vertical device resolution      */</pre>
+    </font>
+
+    <p>You will notice that:</p>
+
+    <ul>
+      <li>
+        <p>The character width and heights are specified in 1/64th of
+        points. A point is a <em>physical</em> distance, equaling 1/72th
+    of an inch, it's not a pixel..<p>
+      </li>
+      <li>
+        <p>The horizontal and vertical device resolutions are expressed in
+        <em>dots-per-inch</em>, or <em>dpi</em>. You can use 72 or
+        96&nbsp;dpi for display devices like the screen. The resolution
+    is used to compute the character pixel size from the character
+    point size.</p>
+      </li>
+      <li>
+        <p>A value of&nbsp;0 for the character width means "<em>same as
+        character height</em>", a value of&nbsp;0 for the character height
+        means "<em>same as character width</em>".  Otherwise, it is possible
+        to specify different char widths and heights.</p>
+      </li>
+      <li>
+        <p>Using a value of 0 for the horizontal or vertical resolution means
+        72&nbsp;dpi, which is the default.</p>
+      </li>
+      <li>
+        <p>The first argument is a handle to a face object, not a size
+       object. That's normal, and must be seen as a convenience.</p>
+      </li>
+    </ul>
+
+    <p>This function computes the character pixel size that corresponds to
+    the character width and height and device resolutions.  However, if you
+    want to specify the pixel sizes yourself, you can simply call
+    <tt>FT_Set_Pixel_Sizes()</tt>, as in</p>
+
+    <font color="blue">
+    <pre>
+    error = FT_Set_Pixel_Sizes(
+              face,   /* handle to face object            */
+              0,      /* pixel_width                      */
+              16 );   /* pixel_height                     */</pre>
+    </font>
+
+    <p>This example will set the character pixel sizes to 16x16&nbsp;pixels. 
+    As previously, a value of&nbsp;0 for one of the dimensions means
+    "<em>same as the other</em>".</p>
+
+    <p>Note that both functions return an error code.  Usually, an error
+    occurs with a fixed-size font format (like FNT or PCF) when trying to
+    set the pixel size to a value that is not listed in the
+    <tt><b>face->fixed_sizes</b></tt> array.</p>
+
+    <hr>
+
+    <h3>
+      6. Loading a glyph image
+    </h3>
+
+      <h4>
+        a. Converting a character code into a glyph index
+      </h4>
+
+      <p>Usually, an application wants to load a glyph image based on its
+      <em>character code</em>, which is a unique value that defines the
+      character for a given <em>encoding</em>.  For example, the character
+      code&nbsp;65 represents the `A' in ASCII encoding.</p>
+
+      <p>A face object contains one or more tables, called
+      <em>charmaps</em>, that are used to convert character codes to glyph
+      indices.  For example, most TrueType fonts contain two charmaps.  One
+      is used to convert Unicode character codes to glyph indices, the other
+      is used to convert Apple Roman encoding into glyph indices.  Such
+      fonts can then be used either on Windows (which uses Unicode) and
+      Macintosh (which uses Apple Roman, bwerk).  Note also that a given
+      charmap might not map to all the glyphs present in the font.</p>
+
+      <p>By default, when a new face object is created, it lists all the
+      charmaps contained in the font face and selects the one that supports
+      Unicode character codes if it finds one.  Otherwise, it tries to find
+      support for Latin-1, then ASCII.</p>
+
+      <p>We will describe later how to look for specific charmaps in a face. 
+      For now, we will assume that the face contains at least a Unicode
+      charmap that was selected during <tt>FT_New_Face()</tt>.  To convert a
+      Unicode character code to a font glyph index, we use
+      <tt>FT_Get_Char_Index()</tt> as in</p>
+
+      <font color="blue">
+      <pre>
+    glyph_index = FT_Get_Char_Index( face, charcode );</pre>
+      </font>
+
+      <p>This will look the glyph index corresponding to the given
+      <tt>charcode</tt> in the charmap that is currently selected for the
+      face.  If charmap is selected, the function simply returns the
+      charcode.</p>
+
+      <p>Note that this is one of the rare FreeType functions that do not
+      return an error code.  However, when a given character code has no
+      glyph image in the face, the value&nbsp;0 is returned.  By convention,
+      it always correspond to a special glyph image called the <b>missing
+      glyph</b>, which usually is represented as a box or a space.</p>
+
+      <h4>
+        b. Loading a glyph from the face
+      </h4>
+
+      <p>Once you have a glyph index, you can load the corresponding glyph
+      image.  The latter can be stored in various formats within the font file.
+      For fixed-size formats like FNT or PCF, each image is a bitmap. Scalable
+      formats like TrueType or Type 1 use vectorial shapes, named "outlines"
+      to describe each glyph. Some formats may have even more exotic ways
+      of representing glyph (e.g. MetaFont). Fortunately, FreeType 2 is
+      flexible enough to support any kind of glyph format through
+      a simple API.</p>
+       
+      <p>The glyph image is always stored in a special object called a
+      <em>glyph slot</em>.  As its name suggests, a glyph slot is simply a
+      container that is able to hold one glyph image at a time, be it a
+      bitmap, an outline, or something else.  Each face object has a single
+      glyph slot object that can be accessed as
+      <b><tt>face->glyph</tt></b>.</p>
+
+      <p>Loading a glyph image into the slot is performed by calling
+      <tt>FT_Load_Glyph()</tt> as in</p>
+
+      <font color="blue">
+      <pre>
+    error = FT_Load_Glyph( 
+              face,          /* handle to face object */
+              glyph_index,   /* glyph index           */
+              load_flags );  /* load flags, see below */</pre>
+      </font>
+
+      <p>The <tt>load_flags</tt> value is a set of bit flags used to
+      indicate some special operations.  The default value
+      <tt>FT_LOAD_DEFAULT</tt> is&nbsp;0.</p>
+      
+      <p>This function will try to load the corresponding glyph image
+         from the face. Basically, this means that:</p>
+     
+      <ul>
+        <li>
+      <p>If a bitmap is found for the corresponding glyph and pixel
+         size, it will be loaded into the slot (embedded bitmaps are always
+         favored over native image formats, because we assume that
+         they are higher-quality versions of the same glyph. This
+         can be ignored by using the FT_LOAD_NO_BITMAP flag)</p>
+    </li>
+    
+    <li>
+      <p>Otherwise, a native image for the glyph will be loaded.
+         It will also be scaled to the current pixel size, as
+         well as hinted for certain formats like TrueType and
+         Type1.</p>
+        </li>
+      </ul>
+      
+      <p>The field <tt><b>glyph->format</b></tt> describe the format
+         used to store the glyph image in the slot. If it is not
+         <tt>ft_glyph_format_bitmap</tt>, one can immediately
+         convert it to a bitmap through <tt>FT_Render_Glyph</tt>,
+         as in:</p>
+
+      <font color="blue">
+      <pre>
+   error = FT_Render_Glyph(
+                  face->glyph,      /* glyph slot  */
+                  render_mode );    /* render mode */
+      </pre>
+      </font>
+     
+      <p>The parameter <tt>render_mode</tt> is a set of bit flags used
+         to specify how to render the glyph image. Set it to 0, or the
+         equivalent <tt>ft_render_mode_normal</tt> to render a high-quality
+         anti-aliased (256 gray levels) bitmap, as this is the default.
+         You can alternatively use <tt>ft_render_mode_mono</tt> if you
+         want to generate a 1-bit monochrome bitmap.</p>
+
+      <p>Once you have a bitmapped glyph image, you can access it directly
+         through <tt><b>glyph->bitmap</b></tt> (a simple bitmap descriptor),
+         and position it through <tt><b>glyph->bitmap_left</b></tt> and
+         <tt><b>glyph->bitmap_top</b></tt>.</p>
+     
+      <p>Note that <tt>bitmap_left</tt> is the horizontal distance from the
+         current pen position to the left-most border of the glyph bitmap,
+         while <tt>bitmap_top</tt> is the vertical distance from the
+         pen position (on the baseline) to the top-most border of the
+         glyph bitmap. <em>It is positive to indicate an upwards
+         distance</em>.</p>
+
+      <p>The next section will detail the content of a glyph slot and
+         how to access specific glyph information (including metrics).</p>
+
+      <h4>
+        c. Using other charmaps
+      </h4>
+
+      <p>As said before, when a new face object is created, it will look for
+      a Unicode, Latin-1, or ASCII charmap and select it.  The currently
+      selected charmap is accessed via <b><tt>face->charmap</tt></b>.  This
+      field is NULL when no charmap is selected, which typically happens
+      when you create a new <tt>FT_Face</tt> object from a font file that
+      doesn't contain an ASCII, Latin-1, or Unicode charmap (rare
+      stuff).</p>
+
+      <p>There are two ways to select a different charmap with FreeType 2.
+         The easiest is when the encoding you need already has a corresponding
+         enumeration defined in <tt>&lt;freetype/freetype.h&gt;</tt>, as
+         <tt>ft_encoding_big5</tt>. In this case, you can simply call
+         <tt>FT_Select_CharMap</tt> as in:</p>
+     
+      <font color="blue"><pre>
+    error = FT_Select_CharMap(
+                    face,                 /* target face object */
+                    ft_encoding_big5 );   /* encoding..         */
+      </pre></font>
+      
+      <p>Another way is to manually parse the list of charmaps for the
+         face, this is accessible through the fields
+         <tt><b>num_charmaps</b></tt> and <tt><b>charmaps</b></tt> 
+         (notice the 's') of the face object. As you could expect,
+         the first is the number of charmaps in the face, while the
+         second is <em>a table of pointers to the charmaps</em>
+         embedded in the face.</p>
+     
+      <p>Each charmap has a few visible fields used to describe it more
+         precisely. Mainly, one will look at
+         <tt><b>charmap->platform_id</b></tt> and
+         <tt><b>charmap->encoding_id</b></tt> that define a pair of
+         values that can be used to describe the charmap in a rather
+         generic way.</p>
+
+      <p>Each value pair corresponds to a given encoding. For example,
+         the pair (3,1) corresponds to Unicode. Their list is
+         defined in the TrueType specification but you can also use the
+         file <tt>&lt;freetype/ftnameid.h&gt;</tt> which defines several
+         helpful constants to deal with them..</p> 
+
+      <p>To look for a specific encoding, you need to find a corresponding
+         value pair in the specification, then look for it in the charmaps
+         list. Don't forget that some encoding correspond to several
+         values pair (yes it's a real mess, but blame Apple and Microsoft
+         on such stupidity..). Here's some code to do it:</p>
+         
+      <font color="blue">
+      <pre>
+    FT_CharMap  found = 0;
+    FT_CharMap  charmap;
+    int         n;
+
+    for ( n = 0; n &lt; face->num_charmaps; n++ )
+    {
+      charmap = face->charmaps[n];
+      if ( charmap->platform_id == my_platform_id &&
+           charmap->encoding_id == my_encoding_id )
+      {
+        found = charmap;
+        break;
+      }
+    }
+
+    if ( !found ) { ... }
+
+    /* now, select the charmap for the face object */
+    error = FT_Set_CharMap( face, found );
+    if ( error ) { ... }</pre>
+      </font>
+
+     <p>Once a charmap has been selected, either through
+        <tt>FT_Select_CharMap</tt> or <tt>FT_Set_CharMap</tt>,
+        it is used by all subsequent calls to
+        <tt>FT_Get_Char_Index()</tt>.</p>
+
+
+      <h4>
+        d. Glyph Transforms:
+      </h4>
+
+      <p>It is possible to specify an affine transformation to be applied
+         to glyph images when they're loaded. Of course, this will only
+     work for scalable (vectorial) font formats.</p>
+     
+      <p>To do that, simply call <tt>FT_Set_Transform</tt>, as in:</p>
+      
+     <font color="blue"><pre>
+   error = FT_Set_Transform(
+                    face,       /* target face object    */
+                    &amp;matrix,    /* pointer to 2x2 matrix */
+                    &amp;delta );   /* pointer to 2d vector  */
+     </pre></font>
+     
+      <p>This function will set the current transform for a given face
+         object. Its second parameter is a pointer to a simple
+         <tt>FT_Matrix</tt> structure that describes a 2x2 affine matrix.
+         The third parameter is a pointer to a <tt>FT_Vector</tt> structure
+         that describe a simple 2d vector that is used to translate the
+         glyph image <em>after</em> the 2x2 transform.</p>
+     
+      <p>Note that the matrix pointer can be set to NULL, (in which case
+         the identity transform will be used). Coefficients of the matrix
+         are otherwise in 16.16 fixed float units.</p>
+     
+      <p>The vector pointer can also be set to NULL (in which case a delta
+         of (0,0) will be used). The vector coordinates are expressed in
+         1/64th of a pixel (also known as 26.6 fixed floats).</p>
+     
+      <font color="red">
+      <p>NOTA BENE: The transform is applied to every glyph that is loaded
+         through <tt>FT_Load_Glyph</tt> and is <b>completely independent
+         of any hinting process.</b> This means that you won't get the same
+         results if you load a glyph at the size of 24 pixels, or a glyph at
+         the size at 12 pixels scaled by 2 through a transform, because the
+         hints will have been computed differently (unless, of course you
+         disabled hints).</em></p></font>
+
+      <p>If you ever need to use a non-orthogonal transform with optimal
+         hints, you first need to decompose your transform into a scaling part
+         and a rotation/shearing part. Use the scaling part to compute a new
+         character pixel size, then the other one to call FT_Set_Transform.
+         This is explained in details in a later section of this tutorial.</p>
+         
+      <p>Note also that loading a glyph bitmap with a non-identity transform
+         will produce an error..</p>
+      <hr>
+
+    <h3>
+      7. Simple Text Rendering:
+    </h3>
+
+    <p>We will now present you with a very simple example used to render
+       a string of 8-bit Latin-1 text, assuming a face that contains a
+       Unicode charmap</p>
+       
+    <p>The idea is to create a loop that will, on each iteration, load one
+       glyph image, convert it to an anti-aliased bitmap, draw it on the
+       target surface, then increment the current pen position</p>
+
+    <h4>a. basic code :</h4>
+
+    <p>The following code performs our simple text rendering with the
+       functions previously described.</p>
+       
+    <font color="blue"><pre>
+       FT_GlyphSlot  slot = face->glyph;  // a small shortcut
+       int           pen_x, pen_y, n;
+
+       .. initialise library ..
+       .. create face object ..
+       .. set character size ..
+       
+       pen_x = 300;
+       pen_y = 200;
+       
+       for ( n = 0; n &lt; num_chars; n++ )
+       {
+         FT_UInt  glyph_index;
+         
+         // retrieve glyph index from character code
+         glyph_index = FT_Get_Char_Index( face, text[n] );
+         
+         // load glyph image into the slot (erase previous one)
+         error = FT_Load_Glyph( face, glyph_index, FT_LOAD_DEFAULT );
+         if (error) continue;  // ignore errors
+         
+         // convert to an anti-aliased bitmap
+         error = FT_Render_Glyph( face->glyph, ft_render_mode_normal );
+         if (error) continue;
+         
+         // now, draw to our target surface
+         my_draw_bitmap( &slot->bitmap,
+                         pen_x + slot->bitmap_left,
+                         pen_y - slot->bitmap_top );
+                         
+         // increment pen position 
+         pen_x += slot->advance.x >> 6;
+         pen_y += slot->advance.y >> 6;   // unuseful for now..
+       }
+    </pre></font>   
+    
+    <p>This code needs a few explanations:</p>
+    <ul>
+      <li><p>
+         we define a handle named <tt>slot</tt> that points to the
+         face object's glyph slot. (the type <tt>FT_GlyphSlot</tt> is
+         a pointer). That's a convenience to avoid using
+         <tt>face->glyph->XXX</tt> every time.
+      </p></li>
+      
+      <li><p>
+         we increment the pen position with the vector <tt>slot->advance</tt>,
+         which correspond to the glyph's <em>advance width</em> (also known
+         as its <em>escapement</em>). The advance vector is expressed in
+         64/th of pixels, and is truncated to integer pixels on each
+         iteration.</p>
+      </p></li>
+      
+      <li><p>
+         The function <tt>my_draw_bitmap</tt> is not part of FreeType, but
+         must be provided by the application to draw the bitmap to the target
+         surface. In this example, it takes a pointer to a FT_Bitmap descriptor
+         and the position of its top-left corner as arguments.
+      </p></li>
+      
+      <li><p>
+         The value of <tt>slot->bitmap_top</tt> is positive for an
+         <em>upwards</em> vertical distance. Assuming that the coordinates
+         taken by <tt>my_draw_bitmap</tt> use the opposite convention
+         (increasing Y corresponds to downwards scanlines), we substract
+         it to <tt>pen_y</tt>, instead of adding it..
+      </p></li>
+      
+    </ul>
+    
+    <h4>b. refined code:</h4>
+    
+    <p>The following code is a refined version of the example above. It
+       uses features and functions of FreeType 2 that have not yet been
+       introduced, and they'll be explained below:</p>
+       
+    <font color="blue"><pre>
+       FT_GlyphSlot  slot = face->glyph;  // a small shortcut
+       FT_UInt       glyph_index;
+       int           pen_x, pen_y, n;
+
+       .. initialise library ..
+       .. create face object ..
+       .. set character size ..
+       
+       pen_x = 300;
+       pen_y = 200;
+       
+       for ( n = 0; n &lt; num_chars; n++ )
+       {
+         // load glyph image into the slot (erase previous one)
+         error = FT_Load_Char( face, text[n], FT_LOAD_RENDER );
+         if (error) continue;  // ignore errors
+         
+         // now, draw to our target surface
+         my_draw_bitmap( &slot->bitmap,
+                         pen_x + slot->bitmap_left,
+                         pen_y - slot->bitmap_top );
+                         
+         // increment pen position 
+         pen_x += slot->advance.x >> 6;
+       }
+    </pre></font>   
+
+    <p>We've reduced the size of our code, but it does exactly the same thing,
+       as:</p>
+       
+    <ul>
+      <li><p>
+          We use the function <tt><b>FT_Load_Char</b></tt> instead of
+          <tt>FT_Load_Glyph</tt>. As you probably imagine, it's equivalent
+          to calling <tt>FT_Get_Char_Index</tt> then <tt>FT_Get_Load_Glyph</tt>.
+      </p></li>
+      
+      <li><p>
+          We do not use <tt>FT_LOAD_DEFAULT</tt> for the loading mode, but
+          the bit flag <tt><b>FT_LOAD_RENDER</b></tt>. It indicates that
+          the glyph image must be immediately converted to an anti-aliased
+          bitmap. This is of course a shortcut that avoids calling
+          <tt>FT_Render_Glyph</tt> explicitely but is strictly equivalent.</p>
+          
+          <p>
+          Note that you can also specify that you want a monochrome bitmap
+          instead by using the addition <tt><b>FT_LOAD_MONOCHROME</b></tt>
+          load flag.
+      </p></li>
+    </ul>  
+    
+    <h4>c. more advanced rendering:</h4>
+    
+    <p>Let's try to render transformed text now (for example through a
+       rotation). We can do this using <tt>FT_Set_Transform</tt>. Here's
+       how to do it:</p>
+
+    <font color="blue"><pre>
+       FT_GlyphSlot  slot = face->glyph;  // a small shortcut
+       FT_Matrix     matrix;              // transformation matrix
+       FT_UInt       glyph_index;
+       FT_Vector     pen;                 // untransformed origin
+       int           pen_x, pen_y, n;
+
+       .. initialise library ..
+       .. create face object ..
+       .. set character size ..
+
+       // set up matrix
+       matrix.xx = (FT_Fixed)( cos(angle)*0x10000);
+       matrix.xy = (FT_Fixed)(-sin(angle)*0x10000);
+       matrix.yx = (FT_Fixed)( sin(angle)*0x10000);
+       matrix.yy = (FT_Fixed)( cos(angle)*0x10000);
+              
+       // the pen position in 26.6 cartesian space coordinates
+       pen.x = 300 * 64;
+       pen.y = ( my_target_height - 200 ) * 64;
+       
+       for ( n = 0; n &lt; num_chars; n++ )
+       {
+         // set transform
+         FT_Set_Transform( face, &matrix, &pen );
+         
+         // load glyph image into the slot (erase previous one)
+         error = FT_Load_Char( face, text[n], FT_LOAD_RENDER );
+         if (error) continue;  // ignore errors
+         
+         // now, draw to our target surface (convert position)
+         my_draw_bitmap( &slot->bitmap,
+                         slot->bitmap_left,
+                         my_target_height - slot->bitmap_top );
+                         
+         // increment pen position 
+         pen.x += slot->advance.x;
+         pen.y += slot->advance.y;
+       }
+    </pre></font>   
+
+    <p>You'll notice that:</p>
+
+    <ul>
+      <li><p>
+          we now use a vector, of type <tt>FT_Vector</tt> to store the pen
+          position, with coordinates expressed as 1/64th of pixels, hence
+          a multiplication. The position is expressed in cartesian space.
+      </p></li>
+
+      <li><p>
+          glyph images are always loaded, transformed and described in the
+          cartesian coordinate system in FreeType (which means that
+          increasing Y corresponds to upper scanlines), unlike the system
+          typically used for bitmaps (where the top-most scanline has
+          coordinate 0). We must thus convert between the two systems
+          when we define the pen position, and when we compute the top-left
+          position of the bitmap.
+      </p></li>
+
+      <li><p>
+          we set the transform on each glyph, to indicate the rotation
+          matrix, as well as a delta that will move the transformed image
+          to the current pen position (in cartesian space, not bitmap space).
+      </p></li>
+
+      <li><p>
+          the advance is always returned transformed, which is why it can
+          be directly added to the current pen position. Note that it is
+          <b>not</b> rounded this time.
+      </p></li>
+
+    </ul>
+    
+    <p>It is important to note that, while this example is a bit more
+       complex than the previous one, it is strictly equivalent
+       for the case where the transform is the identity.. Hence it can
+       be used as a replacement (but a more powerful one).</p>
+
+    <p>It has however a few short comings that we will explain, and solve,
+       in the next part of this tutorial.</p>
+
+    <hr>
+
+    <h3>
+       Conclusion
+    </h3>
+
+    <p>In this first section, you have learned the basics of FreeType 2,
+       as well as sufficient knowledge to know how to render rotated text.
+       Woww ! Congratulations..</p>
+       
+    <p>The next section will dive into more details of the API in order
+       to let you access glyph metrics and images directly, as well as
+       how to deal with scaling, hinting, kerning, etc..</p>
+       
+    <p>The third section will discuss issues like modules, caching and a
+       few other advanced topics like how to use multiple size objects
+       with a single face.
+       </p>
+
+</td></tr>
+</table>
+</center>
+
+</body>
+</html>

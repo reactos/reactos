@@ -1,0 +1,343 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <meta http-equiv="Content-Type"
+        content="text/html; charset=iso-8859-1">
+  <meta name="Author"
+        content="David Turner">
+  <title>FreeType 2 Internals - I/O Frames</title>
+</head>
+
+<body text="#000000"
+      bgcolor="#FFFFFF"
+      link="#0000EF"
+      vlink="#51188E"
+      alink="#FF0000">
+
+<h1 align=center>
+  FreeType 2.0 I/O Frames
+</h1>
+
+<h3 align=center>
+  &copy; 2000 David Turner
+    (<a href="mailto:david@freetype.org">david@freetype.org</a>)<br>
+  &copy; 2000 The FreeType Development Team
+    (<a href="http://www.freetype.org">www.freetype.org</a>)
+</h3>
+
+<center>
+<table width="70%">
+<tr><td>
+
+  <hr>
+
+  <h2>
+    Introduction
+  </h2>
+
+  <p>This document explains the concept of I/O <b>frames</b> as used in the
+  FreeType&nbsp;2 source code.  It also enumerates the various functions and
+  macros that can be used to read them.</p>
+
+  <p>It is targeted to FreeType hackers, or more simply to developers who
+  would like a better understanding of the library's source code.</p>
+
+  <hr>
+
+  <h2>
+    I. What frames are
+  </h2>
+
+  <p>Simply speaking, a frame is an array of bytes in a font file that is
+  `preloaded' into memory in order to be rapidly parsed.  Frames are useful
+  to ensure that every `load' is checked against end-of-file overruns, and
+  provides nice functions to extract data in a variety of distinct
+  formats.</p>
+
+  <p>But an example is certainly more meaningful than anything else.  The
+  following code</p>
+
+  <font color="blue">
+  <pre>
+    error = read_short( stream, &str.value1 );
+    if ( error ) goto ...
+
+    error = read_ulong( stream, &str.value2 );
+    if ( error ) goto ...
+
+    error = read_ulong( stream, &str.value3 );
+    if ( error ) goto ...</pre>
+  </font>
+
+  <p>can easily be replaced with</p>
+
+  <font color="blue">
+  <pre>
+    error = FT_Access_Frame( stream, 2 + 4 + 4 );
+    if ( error ) goto ...
+
+    str.value1 = FT_Get_Short( stream );
+    str.value2 = FT_Get_ULong( stream );
+    str.value3 = FT_Get_ULong( stream );
+
+    FT_Forget_Frame( stream );</pre>
+  </font>
+
+  <p>Here, the call to <code>FT_Access_Frame()</code> will</p>
+
+  <ul>
+    <li>
+      <p>Ensure that there are at least 2+4+4=10 bytes left in the
+      stream.</p>
+    </li>
+    <li>
+      <p>`Preload' (for disk-based streams) 10&nbsp;bytes from the current
+      stream position.</p>
+    </li>
+    <li>
+      <p>Set the frame `cursor' to the first byte in the frame.</p>
+    </li>
+  </ul>
+
+  <p>Each <code>FT_Get_Short()</code> or <code>FT_Get_ULong()</code> call
+  will read a big-endian integer from the stream (2&nbsp;bytes for
+  <code>FT_Get_Short()</code>, 4&nbsp;bytes for <code>FT_Get_ULong</code>)
+  and advance the frame cursor accordingly.</p>
+
+  <p><code>FT_Forget_Frame()</code> `releases' the frame from memory.</p>
+
+  <p>There are several advantages to using frames:</p>
+
+  <ul>
+    <li>
+      <p>Single-check when loading tables.</p>
+    </li>
+    <li>
+      <p><em>Making code clearer</em> by providing simple parsing functions
+      <em>while keeping code safe</em> from file over-runs and invalid
+      offsets.</p>
+    </li>
+  </ul>
+
+  <hr>
+
+  <h2>
+    II. Accessing and reading a frame with macros
+  </h2>
+
+  <p>By convention in the FreeType source code, macros are able to use two
+  implicit variables named <var>error</var> and <var>stream</var>.  This is
+  useful because these two variables are extremely often used in the
+  library, and doing this only reduces our typing requirements and make the
+  source code much clearer.</p>
+
+  <p>Note that <var>error</var> must be a local variable of type
+  <code>FT_Error</code>, while <var>stream</var> must be a local variable or
+  argument of type <code>FT_Stream</code>.</p>
+
+  <p>The macro used to access a frame is <font
+  color="purple"><code><b>ACCESS_Frame(_size_)</b></code></font>, it will
+  translate to</p>
+
+  <font color="blue">
+  <pre>
+    ( error = FT_Access_Frame( stream, _size_ ) )
+        != FT_Err_Ok</pre>
+  </font>
+
+  <p>Similarly, the macro <font
+  color="purple"><b><code>FORGET_Frame()</code></b></font> translates to</p>
+
+  <font color="blue">
+  <pre>
+    FT_Forget_Frame( stream )</pre>
+  </font>
+
+  <p>Extracting integers can be performed with the <code>GET_xxx()</code>
+  macros, like</p>
+
+  <table align=center
+         cellpadding=5>
+    <tr valign="top">
+      <th>
+        Macro name
+      </th>
+      <th>
+        Translation
+      </th>
+      <th>
+        Description
+      </th>
+    </tr>
+    <tr valign="top">
+      <td>
+        <font color="purple"><code><b>GET_Byte()</b></code></font>
+      </td>
+      <td>
+        <font color="blue"><code>FT_Get_Byte(stream)</code></font>
+      </td>
+      <td>
+        <p>Reads an 8-bit unsigned byte.</p>
+      </td>
+    </tr>
+    <tr valign="top">
+      <td>
+        <font color="purple"><code><b>GET_Char()</b></code></font>
+      </td>
+      <td>
+        <font color="blue"><code>(FT_Char)<br>
+        FT_Get_Byte(stream)</code></font>
+      </td>
+      <td>
+        <p>Reads an 8-bit <em>signed</em> byte.</p>
+      </td>
+    </tr>
+    <tr valign="top">
+      <td>
+        <font color="purple"><code><b>GET_Short()</b></code></font>
+      </td>
+      <td>
+        <font color="blue"><code>FT_Get_Short(stream)</code></font>
+      </td>
+      <td>
+        Reads a 16-bit signed big-endian integer.
+      </td>
+    </tr>
+    <tr valign="top">
+      <td>
+        <font color="purple"><code><b>GET_UShort()</b></code></font>
+      </td>
+      <td>
+        <font color="blue"><code>(FT_UShort)<br>
+        FT_Get_Short(stream)</code></font>
+      </td>
+      <td>
+        Reads a 16-bit unsigned big-endian integer.
+      </td>
+    </tr>
+    <tr valign="top">
+      <td>
+        <font color="purple"><code><b>GET_Offset()</b></code></font>
+      </td>
+      <td>
+        <font color="blue"><code>FT_Get_Offset(stream)</code></font>
+      </td>
+      <td>
+        Reads a 24-bit signed big-endian integer.
+      </td>
+    </tr>
+    <tr valign="top">
+      <td>
+        <font color="purple"><code><b>GET_UOffset()</b></code></font>
+      </td>
+      <td>
+        <font color="blue"><code>(FT_UOffset)<br>
+        FT_Get_Offset(stream)</code></font>
+      </td>
+      <td>
+        Reads a 24-bit unsigned big-endian integer.
+      </td>
+    </tr>
+    <tr valign="top">
+      <td>
+        <font color="purple"><code><b>GET_Long()</b></code></font>
+      </td>
+      <td>
+        <font color="blue"><code>FT_Get_Long(stream)</code></font>
+      </td>
+      <td>
+        Reads a 32-bit signed big-endian integer.
+      </td>
+    </tr>
+    <tr valign="top">
+      <td>
+        <font color="purple"><code><b>GET_ULong()</b></code></font>
+      </td>
+      <td>
+        <font color="blue"><code>(FT_ULong)<br>
+        FT_Get_Long(stream)</code></font>
+      </td>
+      <td>
+        Reads a 32-bit unsigned big-endian integer.
+      </td>
+    </tr>
+  </table>
+
+  <p>(Note that an <b>Offset</b> is an integer stored with 3&nbsp;bytes on
+  the file.)</p>
+
+  <p>All this means that the following code</p>
+
+  <font color="blue">
+  <pre>
+    error = FT_Access_Frame( stream, 2 + 4 + 4 );
+    if ( error ) goto ...
+
+    str.value1 = FT_Get_Short( stream );
+    str.value2 = FT_Get_ULong( stream );
+    str.value3 = FT_Get_ULong( stream );
+
+    FT_Forget_Frame( stream );</pre>
+    </font>
+
+    <p>can be simplified with macros:</p>
+
+    <font color="blue">
+    <pre>
+    if ( ACCESS_Frame( 2 +4 + 4 ) ) goto ...
+
+    str.value1 = GET_Short();
+    str.value2 = GET_ULong();
+    str.value3 = GET_ULong();
+
+    FORGET_Frame();</pre>
+    </font>
+
+    <p>Which is clearer.  Notice that <var>error</var> and <var>stream</var>
+    must be defined locally though for this code to work!</p>
+
+    <hr>
+
+  <h2>
+    III. Alternatives
+  </h2>
+
+  <p>It is sometimes useful to read small integers from a font file without
+  using a frame.  Some functions have been introduced in FreeType&nbsp;2 to
+  do just that, and they are of the form <font
+  color="blue"><code>FT_Read_xxxx</code></font>.</p>
+
+  <p>For example, <font color="blue"><code>FT_Read_Short(stream,
+  &error)</code></font> reads and returns a 2-byte big-endian integer from a
+  <var>stream</var>, and places an error code in the <var>error</var>
+  variable.</p>
+
+  <p>Thus, reading a single big-endian integer is shorter than using a frame
+  for it.</p>
+
+  <p>Note that there are also macros <font
+  color="purple"><code>READ_xxx()</code></font> which translate to</p>
+
+  <font color="blue">
+  <pre>
+    FT_Read_xxx( stream, &error ), error != FT_Err_Ok</pre>
+  </font>
+
+  <p>and can be used as in</p>
+
+  <font color="blue">
+  <pre>
+    if ( READ_UShort( variable1 ) ||
+         READ_ULong ( variable2 ) )
+      goto Fail;</pre>
+  </font>
+
+  <p>if <var>error</var> and <var>stream</var> are already defined
+  locally.</p>
+
+</td></tr>
+</table>
+</center>
+
+</body>
+</html>

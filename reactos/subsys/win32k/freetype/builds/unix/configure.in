@@ -1,0 +1,74 @@
+dnl This file is part of the FreeType project.
+dnl
+dnl Process this file with autoconf to produce a configure script.
+dnl
+
+AC_INIT(ftconfig.in)
+
+dnl Configuration file -- stay in 8.3 limit
+AC_CONFIG_HEADER(ftconfig.h:ftconfig.in)
+
+version_info='6:0:0'
+AC_SUBST(version_info)
+
+dnl checks for system type
+AC_CANONICAL_SYSTEM
+
+dnl checks for programs
+AC_PROG_CC
+AC_PROG_CPP
+
+dnl get Compiler flags right.
+if test "x$CC" = xgcc; then
+  XX_CFLAGS="-Wall"
+  XX_ANSIFLAGS="-pedantic -ansi"
+else
+  case "$host" in
+    *-dec-osf*)
+      XX_CFLAGS="-std1 -O2 -g3"
+      XX_ANSIFLAGS=
+      ;;
+    *)
+      XX_CFLAGS=
+      XX_ANSIFLAGS=
+      ;;
+  esac
+fi
+AC_SUBST(XX_CFLAGS)
+AC_SUBST(XX_ANSIFLAGS)
+
+AC_CHECK_PROG(RMF, rm, rm -f)
+AC_CHECK_PROG(RMDIR, rmdir, rmdir)
+AC_PROG_INSTALL
+
+dnl checks for header files
+AC_HEADER_STDC
+AC_CHECK_HEADERS(fcntl.h unistd.h)
+
+dnl checks for typedefs, structures, and compiler characteristics
+AC_C_CONST
+AC_CHECK_SIZEOF(int)
+AC_CHECK_SIZEOF(long)
+
+dnl Checks for library functions.
+
+dnl Here we check whether we can use our mmap file component.
+AC_FUNC_MMAP
+if test "$ac_cv_func_mmap_fixed_mapped" != yes; then
+  FTSYS_SRC='$(BASE_)ftsystem.c'
+else
+  FTSYS_SRC='$(BUILD)/ftsystem.c'
+fi
+AC_SUBST(FTSYS_SRC)
+
+AC_CHECK_FUNCS(memcpy memmove)
+
+AM_PROG_LIBTOOL
+
+dnl create the Unix-specific sub-Makefile `builds/unix/unix.mk' that will be
+dnl used by the build system
+dnl
+AC_OUTPUT(unix.mk:unix.in)
+
+
+dnl end of configure.in

@@ -1,0 +1,1399 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <meta http-equiv="Content-Type"
+        content="text/html; charset=iso-8859-1">
+  <meta name="Author"
+        content="David Turner">
+  <title>FreeType 2 Tutorial</title>
+</head>
+
+<body text="#000000"
+      bgcolor="#FFFFFF"
+      link="#0000EF"
+      vlink="#51188E"
+      alink="#FF0000">
+
+<h1 align=center>
+  FreeType 2.0 Tutorial<br>
+  Step 2 - managing glyphs
+</h1>
+
+<h3 align=center>
+  &copy; 2000 David Turner
+    (<a href="mailto:david@freetype.org">david@freetype.org</a>)<br>
+  &copy; 2000 The FreeType Development Team
+    (<a href="http://www.freetype.org">www.freetype.org</a>)
+</h3>
+
+<center>
+<table width="70%">
+<tr><td>
+
+  <hr>
+
+  <h2>
+    Introduction
+  </h2>
+
+  <p>This is the second section of the FreeType 2 tutorial. It will teach
+     you the following:</p>
+  
+  <ul>
+    <li>how to retrieve glyph metrics</li>
+    <li>how to easily manage glyph images</li>
+    <li>how to retrieve global metrics (including kerning)</li>
+    <li>how to render a simple string of text, with kerning</li>
+    <li>how to render a centered string of text (with kerning)</li>
+    <li>how to render a transformed string of text (with centering)</li>
+    <li>finally, how to access metrics in design font units when needed,
+        and how to scale them to device space.</li>
+  </ul>
+    
+    <hr>
+    
+    <h3>
+      1. Glyph metrics:
+    </h3>
+
+    <p>Glyph metrics are, as their name suggests, certain distances associated
+       to each glyph in order to describe how to use it to layout text.</p>
+
+    <p>There are usually two sets of metrics for a single glyph: those used to
+       layout the glyph in horizontal text layouts (like latin, cyrillic,
+       arabic, hebrew, etc..), and those used to layout the glyph in vertical
+       text layouts (like some layouts of Chinese, Japanese, Korean, and
+       others..).</p>
+
+    <p>Note that only a few font formats provide vertical metrics. You can
+       test wether a given face object contains them by using the macro
+       <tt><b>FT_HAS_VERTICAL(face)</b></tt>, which is true when appropriate.</p>
+       
+    <p>Individual glyph metrics can be accessed by first loading the glyph
+       in a face's glyph slot, then accessing them through the
+       <tt><b>face->glyph->metrics</b></tt> structure. This will be detailed
+       later, for now, we'll see that it contains the following fields:</p>
+    
+    <center><table width="90%" cellpadding=5><tr valign=top><td>
+    <tt><b>width</b></tt>
+    </td><td>
+    <p>This is the width of the glyph image's bounding box. It is independent
+       of layout direction.</p>
+    </td></tr><tr valign=top><td>
+    <tt><b>height</b></tt>
+    </td><td>
+    <p>This is the height of the glyph image's bounding box. It is independent
+       of layout direction.</p>
+    </td></tr><tr valign=top><td>
+    <tt><b>horiBearingX</b></tt>
+    </td><td>
+    <p>For <em>horizontal text layouts</em>, this is the horizontal distance from
+       the current cursor position to the left-most border of the glyph image's
+       bounding box.</p>
+    </td></tr><tr valign=top><td>
+    <tt><b>horiBearingY</b></tt>
+    </td><td>
+    <p>For <em>horizontal text layouts</em>, this is the vertical distance from
+       the current cursor position (on the baseline) to the top-most border of
+       the glyph image's bounding box.</p>
+    </td></tr><tr valign=top><td>
+    <tt><b>horiAdvance</b></tt>
+    </td><td>
+    <p>For <em>horizontal text layouts</em>, this is the horizontal distance
+       used to increment the pen position when the glyph is drawn as part of
+       a string of text.</p>
+    </td></tr><tr valign=top><td>
+    <tt><b>vertBearingX</b></tt>
+    </td><td>
+    <p>For <em>vertical text layouts</em>, this is the horizontal distance from
+       the current cursor position to the left-most border of the glyph image's
+       bounding box.</p>
+    </td></tr><tr valign=top><td>
+    <tt><b>vertBearingY</b></tt>
+    </td><td>
+    <p>For <em>vertical text layouts</em>, this is the vertical distance from
+       the current cursor position (on the baseline) to the top-most border of
+       the glyph image's bounding box.</p>
+    </td></tr><tr valign=top><td>
+    <tt><b>vertAdvance</b></tt>
+    </td><td>
+    <p>For <em>vertical text layouts</em>, this is the vertical distance
+       used to increment the pen position when the glyph is drawn as part of
+       a string of text.</p>
+    </td></tr></table></center>
+
+    <p><font color="red">NOTA BENE: As all fonts do not contain vertical
+       metrics, the values of <tt>vertBearingX</tt>, <tt>vertBearingY</tt>
+       and <tt>vertAdvance</tt> should not be considered reliable when
+       <tt><b>FT_HAS_VERTICAL(face)</b></tt> is false.</font></p>
+
+    <p>The following graphics illustrate the metrics more clearly. First, for
+       horizontal metrics, where the baseline is the horizontal axis :</p>
+       
+    <center><img src="metrics.png" width=388 height=253></center>
+    
+    <p>For vertical text layouts, the baseline is vertical and is the
+       vertical axis:</p>
+                            
+    <center><img src="metrics2.png" width=294 height=278></center>
+
+
+    <p>The metrics found in <tt>face->glyph->metrics</tt> are normally
+       expressed in 26.6 pixels (i.e 1/64th of pixels), unless you use
+       the <tt><b>FT_LOAD_NO_SCALE</b></tt> flag when calling
+       <tt>FT_Load_Glyph</tt> or <tt>FT_Load_Char</tt>. In this case,
+       the metrics will be expressed in original font units.</p>
+           
+    <p>The glyph slot object has also a few other interesting fields
+       that will ease a developer's work. You can access them though
+       <tt><b>face->glyph->???</b></tt> :</p>
+
+    <center><table width="90%" cellpadding=5><tr valign=top><td>
+    <b><tt>advance</tt></b>
+    </td><td>
+    <p>This field is a <tt>FT_Vector</tt> which holds the transformed
+    advance for the glyph. That's useful when you're using a transform
+    through <tt>FT_Set_Transform</tt>, as shown in the rotated text
+    example of section I. Other than that, its value is
+    by default (metrics.horiAdvance,0), unless you specify
+    <tt><b>FT_LOAD_VERTICAL</b></tt> when loading the glyph image;
+    it will then be (0,metrics.vertAdvance)</p>
+    </td></tr><tr valign=top><td>
+    <b><tt>linearHoriAdvance</tt></b>
+    </td><td>
+    <p>
+    This field contains the linearly-scaled value of the glyph's horizontal
+    advance width. Indeed, the value of <tt>metrics.horiAdvance</tt> that is
+    returned in the glyph slot is normally rounded to integer pixel
+    coordinates (i.e., it will be a multiple of 64) by the font driver used
+    to load the glyph image. <tt>linearHoriAdvance</tt> is a 16.16 fixed float
+    number that gives the value of the original glyph advance width in
+    1/65536th of pixels. It can be use to perform pseudo device-independent
+    text layouts.</p>
+    </td></tr><tr valign=top><td>          
+    <b><tt>linearVertAdvance</tt></b>
+    </td><td>
+    <p>This is the same thing as <tt><b>linearHoriAdvance</b></tt> for the
+    glyph's vertical advance height. Its value is only reliable if the font
+    face contains vertical metrics.</p>
+    </td></tr></table></center>
+       
+
+
+  <hr>
+
+  <h3>
+    2. Managing glyph images:
+  </h3>
+
+  <p>The glyph image that is loaded in a glyph slot can be converted into
+     a bitmap, either by using <tt>FT_LOAD_RENDER</tt> when loading it, or
+     by calling <tt>FT_Render_Glyph</tt>. Each time you load a new glyph
+     image, the previous one is erased from the glyph slot.</p>
+    
+  <p>There are times however where you may need to extract this image from
+     the glyph slot, in order to cache it within your application, and
+     even perform additional transforms and measures on it before converting
+     it to a bitmap.
+  </p>
+
+  <p>The FreeType 2 API has a specific extension which is capable of dealing
+     with glyph images in a flexible and generic way. To use it, you first need
+     to include the "<tt>ftglyph.h</tt>" header file, as in:</p>
+     
+  <pre><font color="blue">
+      #include &lt;freetype/ftglyph.h&gt;
+  </font></pre>
+
+  <p>We will now explain how to use the functions defined in this file:</p>
+  
+  <h4>a. Extracting the glyph image:</h4>
+
+  <p>You can extract a single glyph image very easily. Here's some code
+     that shows how to do it:</p>
+
+  <pre><font color="blue">
+       FT_Glyph    glyph;    <font color="gray">// handle to glyph image</font>
+       
+       ....
+       error = FT_Load_Glyph( face, glyph, FT_LOAD_NORMAL );
+       if (error) { .... }
+       
+       error = FT_Get_Glyph( face->glyph, &glyph );
+       if (error) { .... }
+  </font></pre>
+
+  <p>As you see, we have:</p>
+  
+  <ul>
+     <li><p>
+       Created a variable, named <tt>glyph</tt>, of type <tt>FT_Glyph</tt>.
+       This is a handle (pointer) to an individual glyph image.
+     </p></li>
+         
+     <li><p>
+       Loaded the glyph image normally in the face's glyph slot. We did not
+       use <tt>FT_LOAD_RENDER</tt> because we want to grab a scalable glyph
+       image, in order to later transform it.
+     </p></li>
+
+     <li><p>
+       Copy the glyph image from the slot into a new <tt>FT_Glyph</tt> object,
+       by calling <tt><b>FT_Get_Glyph</b></tt>. This function returns an error
+       code and sets <tt>glyph</tt>.
+     </p></li>
+  </ul>
+  
+  <p>It is important to note that the extracted glyph is in the same format
+     than the original one that is still in the slot. For example, if we're
+     loading a glyph from a TrueType font file, the glyph image will really
+     be a scalable vector outline.</p>
+
+  <p>You can access the field <tt><b>glyph->format</b></tt> if you want to
+     know exactly how the glyph is modeled and stored. A new glyph object can
+     be destroyed with a call to <tt><b>FT_Done_Glyph</b></tt>.</p>
+
+  <p>The glyph object contains exactly one glyph image and a 2D vector
+     representing the glyph's advance in 16.16 fixed float coordinates.
+     The latter can be accessed directly as <tt><b>glyph->advance</b></tt>
+     </p>
+
+  <p><font color="red">Note that unlike
+     other FreeType objects, the library doesn't keeps a list of all
+     allocated glyph objects. This means you'll need to destroy them
+     yourself, instead of relying on <tt>FT_Done_FreeType</tt> doing
+     all the clean-up.</font></p>
+     
+  <h4>b. Transforming & copying the glyph image</h4>
+
+  <p>If the glyph image is scalable (i.e. if <tt>glyph->format</tt> is not
+     equal to <tt>ft_glyph_format_bitmap</tt>), it is possible to transform
+     the image anytime by a call to <tt><b>FT_Glyph_Transform</b></tt>.</p>
+     
+  <p>You can also copy a single glyph image with <tt><b>FT_Glyph_Copy</b></tt>.
+     Here's some example code:</p>
+     
+  <pre><font color="blue">
+    FT_Glyph  glyph, glyph2;
+    FT_Matrix matrix;
+    FT_Vector delta;
+    
+    ......
+    .. load glyph image in "glyph" ..
+    
+    <font color="gray">// copy glyph to glyph2
+    //</font>
+    error = FT_Glyph_Copy( glyph, &glyph2 );
+    if (error) { ... could not copy (out of memory) }
+    
+    <font color="gray">// translate "glyph"
+    //</font>    
+    delta.x = -100 * 64;   // coordinates are in 26.6 pixels
+    delta.y =  50  * 64;
+    
+    FT_Glyph_Transform( glyph, 0, &delta );
+    
+    <font color="gray">// transform glyph2 (horizontal shear)
+    //</font>
+    matrix.xx = 0x10000;
+    matrix.xy = 0;
+    matrix.yx = 0.12 * 0x10000;
+    matrix.yy = 0x10000;
+    
+    FT_Glyph_Transform( glyph2, &matrix, 0 );
+  </font></pre>
+
+  <p>Note that the 2x2 transform matrix is always applied to the 16.16
+     advance vector in the glyph, you thus don't need to recompute it..</p>
+
+  <h4>c. Measuring the glyph image</h4>
+  
+  <p>You can also retrieve the control (bounding) box of any glyph image
+     (scalable or not), through the <tt><b>FT_Glyph_Get_CBox</b></tt> function,
+     as in:
+     </p>
+
+  <pre><font color="blue">
+     FT_BBox   bbox;
+     ...
+     FT_Glyph_BBox(  glyph, <em>bbox_mode</em>, &bbox );
+  </font></pre>
+
+  <p>Coordinates are relative to the glyph origin, i.e. (0,0), using the
+     Y_upwards convention. This function takes a special argument, the
+     "bbox mode", that is a set of bit flags used to indicate how
+     box coordinates are expressed. If <tt><b>ft_glyph_bbox_subpixels</b></tt>
+     is set in the bbox mode, the coordinates are returned in 26.6 pixels
+     (i.e. 1/64th of pixels). Otherwise, they're in integer pixels.</p>
+
+  <p>Note that the box's maximum coordinates are exclusive, which means
+     that you can always compute the width and height of the glyph image,
+     be in in integer or 26.6 pixels with:</p>
+     
+  <pre><font color="blue">     
+     width  = bbox.xMax - bbox.xMin;
+     height = bbox.yMax - bbox.yMin;
+  </font></pre>
+
+  <p>Note also that for 26.6 coordinates, if
+     <tt><b>ft_glyph_bbox_gridfit</b></tt> is set in the bbox mode,
+     the coordinates will also be grid-fitted, which corresponds to:</p>
+     
+  <pre><font color="blue">
+     bbox.xMin = FLOOR(bbox.xMin)
+     bbox.yMin = FLOOR(bbox.yMin)
+     bbox.xMax = CEILING(bbox.xMax)
+     bbox.yMax = CEILING(bbox.yMax)
+  </font></pre>
+
+  <p>The default value for the bbox mode, which is 0, corresponds to
+     <b><tt>ft_glyph_bbox_pixels</tt></b> (i.e. integer pixel coordinates).</p>
+
+
+  <h4>d. Converting the glyph image to a bitmap</h4>
+  
+  <p>You may need to convert the glyph object to a bitmap once you have
+     convienently cached or transformed it. This can be done easily with
+     the <b><tt>FT_Glyph_To_Bitmap</tt></b> function. It is chared of
+     converting any glyph object into a bitmap, as in:</p>
+     
+  <pre><font color="blue">
+    FT_Vector  origin;
+    
+    origin.x = 32;   <font color="gray">/* 1/2 pixel in 26.26 format */</font>
+    origin.y = 0;
+    
+    error = FT_Glyph_To_Bitmap( &glyph,
+                                <em>render_mode</em>,
+                                &origin,
+                                1 );        <font color="gray">// destroy original image == true</font>
+  </font></pre>
+
+  <p>We will know details this function's parameters:</p>
+  
+  <ul>
+     <li><p>
+       the first parameter is <em>the address of the source glyph's handle</em>.
+       When the function is called, it reads its to access the source
+       glyph object. After the call, the handle will point to a
+       <b><em>new</em></b> glyph object that contains the rendered bitmap.
+     </p></li>
+     
+     <li><p>
+       the second parameter is a standard render mode, that is used to specify
+       what kind of bitmap we want. It can be <tt>ft_render_mode_default</tt>
+       for an 8-bit anti-aliased pixmap, or <tt>ft_render_mode_mono</tt> for
+       a 1-bit monochrome bitmap.
+     </p></li>
+     
+     <li><p>
+       the third parameter is a pointer to a 2D vector that is used to
+       translate the source glyph image before the conversion. Note that
+       the source image will be translated back to its original position
+       (and will thus be left unchanged) after the call. If you do not need
+       to translate the source glyph before rendering, set this pointer to 0.
+     </p></li>
+     
+     <li><p>
+       the last parameter is a boolean that indicates wether the source
+       glyph object should be destroyed by the function. By default, the
+       original glyph object is never destroyed, even if its handle is
+       lost (it's up to client applications to keep it).
+     </p></li>
+  </ul>
+  
+  <p>The new glyph object always contain a bitmap (when no error is returned),
+     and you must <b><em>typecast</em></b> its handle to the
+     <tt><b>FT_BitmapGlyph</b></tt> type in order to access its content.
+     This type is a sort of "subclass" of <tt>FT_Glyph</tt> that contains
+     additional fields:</p>
+  
+  <center><table width="80%" cellpadding=5><tr valign=top><td>
+  <tt><b>left</b></tt>
+  </td><td>
+  <p>Just like the <tt><b>bitmap_left</b></tt> field of a glyph slot, this is the
+  horizontal distance from the glyph origin (0,0) to the left-most pixel
+  of the glyph bitmap. It is expressed in integer pixels.</p>
+  </td></tr><tr valign=top><td>
+  <tt><b>top</b></tt>
+  </td><td>
+  <p>Just like the <tt><b>bitmap_top</b></tt> field of a glyph slot, this is the
+  vertical distance from the glyph origin (0,0) to the top-most pixel
+  of the glyph bitmap (more exactly, to the pixel just above the bitmap).
+  This distance is expressed in integer pixels, and is positive for upwards
+  Y.</p>
+  </td></tr><tr valign=top><td>
+  <tt><b>bitmap</b></tt>
+  </td><td>
+  <p>This is a bitmap descriptor for the glyph object, just like the
+  <tt><b>bitmap</b></tt> field in a glyph slot.</p>
+  </td></tr></table></center>
+  
+  <hr>
+  <h3>
+    3. Global glyph metrics:
+  </h3>
+  
+  <p>Unlike glyph metrics, global ones are used to describe distances
+     and features of a whole font face. They can be expressed either in
+     26.6 pixels or in design "font units" for scalable formats.</p>
+
+  <h4>
+    a. Design Global Metrics:
+  </h4>
+
+  <p>For scalable formats, all global metrics are expressed in font units
+     in order to be later scaled to device space, according to the rules
+     described in the last chapter of this section of the tutorial. You
+     can access them directly as simple fields of a <tt>FT_Face</tt>
+     handle.</p>
+     
+  <p>However, you need to check that the font face's format is scalable
+     before using them. One can do it by using the macro
+     <tt><b>FT_IS_SCALABLE(face)</b></tt> which returns true when
+     appropriate.</p>
+
+  <p>In this case, you can access the global design metrics as:</p>
+
+  <center><table width="90%" cellpadding=5><tr valign=top><td>
+  <tt><b>units_per_EM</b></tt>
+  </td><td>
+  <p>This is the size of the EM square for the font face. It is used by scalable
+     formats to scale design coordinates to device pixels, as described by the
+     last chapter of this section. Its value usually is 2048 (for TrueType)
+     or 1000 (for Type1), but others are possible too. It is set to 1 for
+     fixed-size formats like FNT/FON/PCF/BDF.</p>
+  </td></tr><tr valign=top><td>
+  <tt><b>global_bbox</b></tt>
+  </td><td>
+  <p>The global bounding box is defined as the largest rectangle that can
+     enclose all the glyphs in a font face. It is defined for horizontal
+     layouts only.</p>
+  </td></tr><tr valign=top><td>
+  <tt><b>ascender</b></tt>
+  </td><td>
+  <p>The ascender is the vertical distance from the horizontal baseline to
+     the highest "character" coordinate in a font face. <em>Unfortunately, font
+     formats define the ascender differently</em>. For some, it represents
+     the ascent of all capital latin characters, without accents, for others
+     it's the ascent of the highest accented character, and finally, other
+     formats define it as being equal to <tt>global_bbox.yMax</tt>.</p>
+  </td></tr><tr valign=top><td>
+  <tt><b>descender</b></tt>
+  </td><td>
+  <p>The descender is the vertical distance from the horizontal baseline to
+     the lowest "character" coordinate in a font face. <em>Unfortunately, font
+     formats define the descender differently</em>. For some, it represents
+     the descent of all capital latin characters, without accents, for others
+     it's the ascent of the lowest accented character, and finally, other
+     formats define it as being equal to <tt>global_bbox.yMin</tt>.
+     <em><b>This field is usually negative</b></em></p>
+  </td></tr><tr valign=top><td>
+  <tt><b>text_height</b></tt>
+  </td><td>
+  <p>This field is simply used to compute a default line spacing (i.e. the
+  baseline-to-baseline distance) when writing text with this font. Note that
+  it usually is larger than the sum of the ascender and descender taken in
+  absolute value. There is also no guarantee that no glyphs can extend
+  above or below subsequent baselines when using this distance.</p>
+  </td></tr><tr valign=top><td>
+  <tt><b>max_advance_width</b></tt>
+  </td><td>
+  <p>This field gives the maximum horizontal cursor advance for all glyphs
+  in the font. It can be used to quickly compute the maximum advance width
+  of a string of text. <em>It doesn't correspond to the maximum glyph image
+  width !!</em></p>
+  </td></tr><tr valign=top><td>
+  <tt><b>max_advance_height</b></tt>
+  </td><td>
+  <p>Same as <tt>max_advance_width</tt> but for vertical text layout. It is
+  only available in fonts providing vertical glyph metrics.</p>
+  </td></tr><tr valign=top><td>
+  <tt><b>underline_position</b></tt>
+  </td><td>
+  <p>When displaying or rendering underlined text, this value corresponds to
+  the vertical position, relative to the baseline, of the underline bar. It
+  noramlly is negative (as it's below the baseline).</p>
+  </td></tr><tr valign=top><td>
+  <tt><b>underline_thickness</b></tt>
+  </td><td>
+  <p>When displaying or rendering underlined text, this value corresponds to
+  the vertical thickness of the underline.</p>
+  </td></tr></table></center>
+  
+  <p>Notice how, unfortunately, the values of the ascender and the descender
+     are not reliable (due to various discrepancies in font formats).</p>       
+  
+  <h4>
+    b. Scaled Global Metrics:
+  </h4>
+
+  <p>Each size object also contains a scaled versions of some of the global
+     metrics described above. They can be accessed directly through the
+     <tt><b>face->size->metrics</b></tt> structure.</p>
+     
+  <p>Note that these values correspond to scaled versions of the design
+     global metrics, <em>with no rounding/grid-fitting performed.</em>.
+     They are also completely independent of any hinting process. In other
+     words, don't rely on them to get exact metrics at the pixel level.
+     They're expressed in 26.6 pixels.</p>
+
+  <center><table width="80%" cellpadding=5><tr valign=top><td>
+  <b><tt>ascender</tt></b>
+  </td><td>
+  <p>This is the scaled version of the original design ascender.</p>
+  </td></tr><tr valign=top><td>
+  <b><tt>descender</tt></b>
+  </td><td>
+  <p>This is the scaled version of the original design descender.</p>
+  </td></tr><tr valign=top><td>
+  <b><tt>height</tt></b>
+  </td><td>
+  <p>This is the scaled version of the original design text height.
+  That probably is the only field you should really use in this structure.</p>
+  </td></tr><tr valign=top><td>
+  <b><tt>max_advance</tt></b>
+  </td><td>
+  <p>Thi is the scaled version of the original design max advance.</p>
+  </td></tr></table></center>
+
+  <p>Note that the <tt><b>face->size->metrics</b></tt> structure contains other
+  fields that are used to scale design coordinates to device space. They're
+  described, in the last chapter.</p>
+
+  <h4>
+    c. Kerning:
+  </h4>  
+  
+  <p>Kerning is the process of adjusting the position of two subsequent
+     glyph images in a string of text, in order to improve the general
+     appearance of text. Basically, it means that when the glyph for an
+     "A" is followed by the glyph for a "V", the space between them can
+     be slightly reduced to avoid extra "diagonal whitespace".</p>
+     
+  <p>Note that in theory, kerning can happen both in the horizontal and
+     vertical direction between two glyphs; however, it only happens in
+     the horizontal direction in nearly all cases except really extreme
+     ones.</p>
+
+  <p>Note all font formats contain kerning information. Instead, they sometimes
+     rely on an additional file that contains various glyph metrics, including
+     kerning, but no glyph images. A good example would be the Type 1 format,
+     where glyph images are stored in a file with extension ".pfa" or ".pfb",
+     and where kerning metrics can be found in an additional file with extension
+     ".afm" or ".pfm".</p>
+     
+  <p>FreeType 2 allows you to deal with this, by providing the
+     <tt><b>FT_Attach_File</b></tt> and <tt><b>FT_Attach_Stream</b></tt> APIs.
+     Both functions are used to load additional metrics into a face object,
+     by reading them from an additional format-specific file. For example,
+     you could open a Type 1 font by doing the following:</p>
+     
+  <pre><font color="blue">
+      error = FT_New_Face( library, "/usr/shared/fonts/cour.pfb", 0, &face );
+      if (error) { ... }
+      
+      error = FT_Attach_File( face, "/usr/shared/fonts/cour.afm" );
+      if (error) { .. could not read kerning and additional metrics .. }
+  </font></pre>
+
+  <p>Note that <tt><b>FT_Attach_Stream</b></tt> is similar to
+     <tt><b>FT_Attach_File</b></tt> except that it doesn't take a C string
+     to name the extra file, but a <tt>FT_Stream</tt> handle. Also,
+     <em>reading a metrics file is in no way, mandatory</em>.</p>
+
+  <p>Finally, the file attachment APIs are very generic and can be used to
+     load any kind of extra information for a given face. The nature of the
+     additional content is entirely font format specific.</p>
+
+  <p>FreeType 2 allows you to retrieve the kerning information between
+     two glyphs through the <tt><b>FT_Get_Kerning</b></tt> function, whose
+     interface looks like:</p>
+     
+  <pre><font color="blue">
+     FT_Vector  kerning;
+     ...
+     error = FT_Get_Kerning( face,                  <font color="gray">// handle to face object</font>
+                             left,                  <font color="gray">// left glyph index</font>
+                             right,                 <font color="gray">// right glyph index</font>
+                             <em>kerning_mode</em>,          <font color="gray">// kerning mode</font>
+                             &kerning );            <font color="gray">// target vector</font>
+  </font></pre>
+
+  <p>As you see, the function takes a handle to a face object, the indices
+     of the left and right glyphs for which the kerning value is desired,
+     as well as an integer, called the "kerning mode", and a pointer to
+     a destination vector that receives the corresponding distances.</p>
+  
+  <p>The kerning mode is very similar to the "bbox mode" described in a
+     previous chapter. It's a enumeration that indicates how the
+     kerning distances are expressed in the target vector.</p>
+     
+  <p>The default value is <tt><b>ft_kerning_mode_default</b></tt> which
+     has value 0. It corresponds to kerning distances expressed in 26.6
+     grid-fitted pixels (which means that the values are multiples of 64).
+     For scalable formats, this means that the design kerning distance is
+     scaled then rounded.</p>
+     
+  <p>The value <tt><b>ft_kerning_mode_unfitted</b></tt> corresponds to kerning
+     distances expressed in 26.6 unfitted pixels (i.e. that do not correspond
+     to integer coordinates). It's the design kerning distance that is simply
+     scaled without rounding.</p>
+     
+  <p>Finally, the value <tt><b>ft_kerning_mode_unscaled</b></tt> is used to
+     return the design kerning distance, expressed in font units. You can
+     later scale it to device space using the computations explained in the
+     last chapter of this section.</p>
+
+  <p>Note that the "left" and "right" positions correspond to the <em>visual
+     order</em> of the glyphs in the string of text. This is important for
+
+     bi-directional text, or simply when writing right-to-left text..</p>
+     
+  <hr>
+
+  <h3>
+    4. Simple text rendering: kerning + centering:
+  </h3>  
+
+  <p>In order to show off what we just learned, we will now show how to modify
+     the example code that was provided in section I to render a string of text,
+     and enhance it to support kerning and delayed rendering.</p>
+
+   <h4>
+     a. Kerning support:
+   </h4>
+   
+   <p>Adding support for kerning to our code is trivial, as long as we consider
+      that we're still dealing with a left-to-right script like Latin. We
+      simply need to retrieve the kerning distance between two glyphs in order
+      to alter the pen position appropriately. The code looks like:</p>
+      
+   <font color="blue"><pre>
+      FT_GlyphSlot  slot = face->glyph;  // a small shortcut
+      FT_UInt       glyph_index;
+      FT_Bool       use_kerning;
+      FT_UInt       previous;
+      int           pen_x, pen_y, n;
+
+      .. initialise library ..
+      .. create face object ..
+      .. set character size ..
+      
+      pen_x = 300;
+      pen_y = 200;
+      
+      use_kerning = FT_HAS_KERNING(face);
+      previous    = 0;
+      
+      for ( n = 0; n &lt; num_chars; n++ )
+      {
+        <font color="gray">// convert character code to glyph index</font>
+        glyph_index = FT_Get_Char_Index( face, text[n] );
+        
+        <font color="gray">// retrieve kerning distance and move pen position</font>
+        if ( use_kerning && previous && glyph_index )
+        {
+          FT_Vector  delta;
+          
+          FT_Get_Kerning( face, previous, glyph_index,
+                          ft_kerning_mode_default, &delta );
+                          
+          pen_x += delta.x >> 6;
+        }
+      
+        <font color="gray">// load glyph image into the slot (erase previous one)</font>
+        error = FT_Load_Glyph( face, glyph_index, FT_LOAD_RENDER );
+        if (error) continue;  <font color="gray">// ignore errors</font>
+        
+        <font color="gray">// now, draw to our target surface</font>
+        my_draw_bitmap( &slot->bitmap,
+                        pen_x + slot->bitmap_left,
+                        pen_y - slot->bitmap_top );
+                        
+        <font color="gray">// increment pen position</font>
+        pen_x += slot->advance.x >> 6;
+        
+        <font color="gray">// record current glyph index</font>
+        previous = glyph_index
+      }
+   </pre></font>   
+
+   <p>That's it. You'll notice that:</p>
+   
+   <ul>
+     <li><p>
+        As kerning is determined from glyph indices, we need to explicitely
+        convert our character code into a glyph index, then later call
+        <tt>FT_Load_Glyph</tt> instead of <tt>FT_Load_Char</tt>. No big
+        deal, if you ask me :-)
+     </p></li>
+     
+     <li><p>
+        We use a boolean named <tt>use_kerning</tt> which is set with the
+        result of the macro <tt><b>FT_HAS_KERNING(face)</b></tt>. It's
+        certainly faster not to call <tt>FT_Get_Kerning</tt> when we know
+        that the font face does not contain kerning information.
+     </p></li>
+     
+     <li><p>
+        We move the position of the pen <em>before</em> a new glyph is drawn.
+     </p></li>
+     
+     <li><p>
+        We did initialize the variable <tt>previous</tt> with the value 0,
+        which always correspond to the "missing glyph" (also called
+        <tt>.notdef</tt> in the Postscript world). There is never any
+        kerning distance associated with this glyph.
+     </p></li>
+     
+     <li><p>
+        We do not check the error code returned by <tt>FT_get_Kerning</tt>.
+        This is because the function always set the content of <tt>delta</tt>
+        to (0,0) when an error occurs.
+     </p></li>
+   </ul>
+
+   <p>As you see, this is not terribly complex :-)</p>
+
+  <h4>
+    b. Centering:
+  </h4>
+
+   <p>Our code begins to become interesting but it's still a bit too simple
+      for normal uses. For example, the position of the pen is determined
+      before we do the rendering when in a normal situation, you would want
+      to layout the text and measure it before computing its final position
+      (e.g. centering) or perform things like word-wrapping.</p>
+      
+   <p>We're thus now going to decompose our text rendering function into two
+      distinct but successive parts: the first one will position individual
+      glyph images on the baseline, while the second one will render the
+      glyphs. As we'll see, this has many advantages.</p>
+      
+   <p>We will thus start by storing individual glyph images, as well as their
+      position on the baseline. This can be done with code like:</p>
+      
+   <font color="blue"><pre>
+      FT_GlyphSlot  slot = face->glyph;  <font color="gray">// a small shortcut</font>
+      FT_UInt       glyph_index;
+      FT_Bool       use_kerning;
+      FT_UInt       previous;
+      int           pen_x, pen_y, n;
+      
+      FT_Glyph      glyphs[ MAX_GLYPHS ];   <font color="gray">// glyph image</font>
+      FT_Vector     pos   [ MAX_GLYPHS ];   <font color="gray">// glyph position</font>
+      FT_UInt       num_glyphs;
+
+      .. initialise library ..
+      .. create face object ..
+      .. set character size ..
+      
+      pen_x = 0;   <font color="gray">/* start at (0,0) !! */</font>
+      pen_y = 0;
+      
+      num_glyphs  = 0;
+      use_kerning = FT_HAS_KERNING(face);
+      previous    = 0;
+      
+      for ( n = 0; n &lt; num_chars; n++ )
+      {
+        <font color="gray">// convert character code to glyph index</font>
+        glyph_index = FT_Get_Char_Index( face, text[n] );
+        
+        <font color="gray">// retrieve kerning distance and move pen position</font>
+        if ( use_kerning && previous && glyph_index )
+        {
+          FT_Vector  delta;
+          
+          FT_Get_Kerning( face, previous, glyph_index,
+                          ft_kerning_mode_default, &delta );
+                          
+          pen_x += delta.x >> 6;
+        }
+      
+        <font color="gray">// store current pen position</font>
+        pos[ num_glyphs ].x = pen_x;
+        pos[ num_glyphs ].y = pen_y;
+      
+        <font color="gray">// load glyph image into the slot. DO NOT RENDER IT !!</font>
+        error = FT_Load_Glyph( face, glyph_index, FT_LOAD_DEFAULT );
+        if (error) continue;  // ignore errors, jump to next glyph
+        
+        <font color="gray">// extract glyph image and store it in our table</font>
+        error = FT_Get_Glyph( face->glyph, & glyphs[num_glyphs] );
+        if (error) continue;  // ignore errors, jump to next glyph
+        
+        <font color="gray">// increment pen position</font>
+        pen_x += slot->advance.x >> 6;
+        
+        <font color="gray">// record current glyph index</font>
+        previous = glyph_index
+        
+        <font color="gray">// increment number of glyphs</font>
+        num_glyphs++;
+      }
+   </pre></font>   
+      
+   <p>As you see, this is a very simple variation of our previous code
+      where we extract each glyph image from the slot, and store it, along
+      with the corresponding position, in our tables.</p>
+   
+   <p>Note also that "pen_x" contains the total advance for the string of
+      text. We can now compute the bounding box of the text string with
+      a simple function like:</p>
+      
+      
+   <font color="blue"><pre>
+      void   compute_string_bbox( FT_BBox  *abbox )
+      {
+        FT_BBox  bbox;
+        
+        <font color="gray">// initialise string bbox to "empty" values</font>
+        bbox.xMin = bbox.yMin =  32000;
+        bbox.xMax = bbox.yMax = -32000;
+        
+        <font color="gray">// for each glyph image, compute its bounding box, translate it,
+        // and grow the string bbox</font>
+        for ( n = 0; n &lt; num_glyphs; n++ )
+        {
+          FT_BBox   glyph_bbox;
+
+          FT_Glyph_Get_CBox( glyphs[n], &glyph_bbox );
+
+          glyph_bbox.xMin += pos[n].x;
+          glyph_bbox.xMax += pos[n].x;
+          glyph_bbox.yMin += pos[n].y;
+          glyph_bbox.yMax += pos[n].y;
+
+          if (glyph_bbox.xMin &lt; bbox.xMin)
+            bbox.xMin = glyph_bbox.xMin;
+
+          if (glyph_bbox.yMin &lt; bbox.yMin)
+            bbox.yMin = glyph_bbox.yMin;
+
+          if (glyph_bbox.xMax &gt; bbox.xMax)
+            bbox.xMax = glyph_bbox.xMax;
+
+          if (glyph_bbox.yMax &gy; bbox.yMax)
+            bbox.yMax = glyph_bbox.yMax;
+        }
+        
+        <font color="gray">// check that we really grew the string bbox</font>
+        if ( bbox.xMin > bbox.xMax )
+        {
+          bbox.xMin = 0;
+          bbox.yMin = 0;
+          bbox.xMax = 0;
+          bbox.yMax = 0;
+        }
+        
+        <font color="gray">// return string bbox</font>
+        *abbox = bbox;
+      }
+   </pre></font>
+
+   <p>The resulting bounding box dimensions can then be used to compute the
+      final pen position before rendering the string as in:</p>
+
+   <font color="blue"><pre>
+      <font color="gray">// compute string dimensions in integer pixels</font>
+      string_width  = (string_bbox.xMax - string_bbox.xMin)/64;
+      string_height = (string_bbox.yMax - string_bbox.yMin)/64;
+   
+      <font color="gray">// compute start pen position in 26.6 cartesian pixels</font>
+      start_x = (( my_target_width  - string_width )/2)*64;
+      start_y = (( my_target_height - string_height)/2)*64;
+      
+      for ( n = 0; n &lt; num_glyphs; n++ )
+      {
+        FT_Glyph  image;
+        FT_Vector pen;
+        
+        image = glyphs[n];
+        
+        pen.x = start_x + pos[n].x;
+        pen.y = start_y + pos[n].y;
+        
+        error = FT_Glyph_To_Bitmap( &image, ft_render_mode_normal,
+                                    &pen.x, 0 );
+        if (!error)
+        {
+          FT_BitmapGlyph  bit = (FT_BitmapGlyph)image;
+          
+          my_draw_bitmap( bitmap->bitmap,
+                          bitmap->left,
+                          my_target_height - bitmap->top );
+                          
+          FT_Done_Glyph( image );
+        }
+      }
+   </pre></font>
+   
+   <p>You'll take note that:</p>
+   
+   <ul>
+     <li><p>
+       The pen position is expressed in the cartesian space (i.e. Y upwards).
+     </p></li>
+     
+     <li><p>
+       We call <tt><b>FT_Glyph_To_Bitmap</b></tt> with the <tt>destroy</tt>
+       parameter set to 0 (false), in order to avoid destroying the original
+       glyph image. The new glyph bitmap is accessed through <tt>image</tt>
+       after the call and is typecasted to a <tt>FT_BitmapGlyph</tt>.
+     </p></li>
+     
+     <li><p>
+       We use translation when calling <tt>FT_Glyph_To_Bitmap</tt>. This
+       ensures that the <tt><b>left</b></tt> and <tt><b>top</b></tt> fields
+       of the bitmap glyph object are already set to the correct pixel
+       coordinates in the cartesian space.
+     </p></li>
+     
+     <li><p>
+       Of course, we still need to convert pixel coordinates from cartesian
+       to device space before rendering, hence the <tt>my_target_height -
+       bitmap->top</tt> in the call to <tt>my_draw_bitmap</tt>.
+     </p></li>
+     
+   </ul>
+   
+   <p>The same loop can be used to render the string anywhere on our display
+      surface, without the need to reload our glyph images each time.. We
+      could also decide to implement word wrapping, and only draw</p>
+
+  <hr>
+  <h3>
+    5. Advanced text rendering:  transform + centering + kerning:
+  </h3>
+
+  <p>We are now going to modify our code in order to be able to easily
+     transform the rendered string, for example to rotate it. We will
+     start by performing a few minor improvements:</p>
+
+  <h4>a. packing & translating glyphs:</h4>
+  
+  <p>We'll start by packing the information related to a single glyph image
+     into a single structure, instead of parallel arrays. We thus define the
+     following structure type:</p>
+     
+  <font color="blue"><pre>
+     typedef struct TGlyph_
+     {
+       FT_UInt    index;    <font color="gray">// glyph index</font>
+       FT_Vector  pos;      <font color="gray">// glyph origin on the baseline</font>
+       FT_Glyph   image;    <font color="gray">// glyph image</font>
+     
+     } TGlyph, *PGlyph;
+  </pre></font>
+
+  <p>We will also translate each glyph image directly after it is loaded
+     to its position on the baseline at load time. As we'll see, this
+     as several advantages. Our glyph sequence loader thus becomes:</p>
+
+   <font color="blue"><pre>
+      FT_GlyphSlot  slot = face->glyph;  <font color="gray">// a small shortcut</font>
+      FT_UInt       glyph_index;
+      FT_Bool       use_kerning;
+      FT_UInt       previous;
+      int           pen_x, pen_y, n;
+      
+      TGlyph        glyphs[ MAX_GLYPHS ];   <font color="gray">// glyphs table</font>
+      PGlyph        glyph;                  <font color="gray">// current glyph in table</font>
+      FT_UInt       num_glyphs;
+
+      .. initialise library ..
+      .. create face object ..
+      .. set character size ..
+      
+      pen_x = 0;   <font color="gray">/* start at (0,0) !! */</font>
+      pen_y = 0;
+      
+      num_glyphs  = 0;
+      use_kerning = FT_HAS_KERNING(face);
+      previous    = 0;
+
+      glyph = glyphs;      
+      for ( n = 0; n &lt; num_chars; n++ )
+      {
+        glyph->index = FT_Get_Char_Index( face, text[n] );
+        
+        if ( use_kerning && previous && glyph->index )
+        {
+          FT_Vector  delta;
+          
+          FT_Get_Kerning( face, previous, glyph->index,
+                          ft_kerning_mode_default, &delta );
+                          
+          pen_x += delta.x >> 6;
+        }
+      
+        <font color="gray">// store current pen position</font>
+        glyph->pos.x = pen_x;
+        glyph->pos.y = pen_y;
+      
+        error = FT_Load_Glyph( face, glyph_index, FT_LOAD_DEFAULT );
+        if (error) continue;
+        
+        error = FT_Get_Glyph( face->glyph, &glyph->image );
+        if (error) continue;
+        
+        <font color="gray">// translate the glyph image now..</font>
+        FT_Glyph_Transform( glyph->image, 0, &glyph->pos );
+        
+        pen_x   += slot->advance.x >> 6;
+        previous = glyph->index
+        
+        <font color="gray">// increment number of glyphs</font>
+        glyph++;
+      }
+      <font color="gray">// count number of glyphs loaded..</font>
+      num_glyphs = glyph - glyphs;
+   </pre></font>   
+
+   <p>Note that translating glyphs now has several advantages. The first
+      one, is that we don't need to translate the glyph bbox when we compute
+      the string's bounding box. The code becomes:</p>
+
+   <font color="blue"><pre>
+      void   compute_string_bbox( FT_BBox  *abbox )
+      {
+        FT_BBox  bbox;
+        
+        bbox.xMin = bbox.yMin =  32000;
+        bbox.xMax = bbox.yMax = -32000;
+        
+        for ( n = 0; n &lt; num_glyphs; n++ )
+        {
+          FT_BBox   glyph_bbox;
+
+          FT_Glyph_Get_CBox( glyphs[n], &glyph_bbox );
+
+          if (glyph_bbox.xMin &lt; bbox.xMin)
+            bbox.xMin = glyph_bbox.xMin;
+
+          if (glyph_bbox.yMin &lt; bbox.yMin)
+            bbox.yMin = glyph_bbox.yMin;
+
+          if (glyph_bbox.xMax &gt; bbox.xMax)
+            bbox.xMax = glyph_bbox.xMax;
+
+          if (glyph_bbox.yMax &gy; bbox.yMax)
+            bbox.yMax = glyph_bbox.yMax;
+        }
+        
+        if ( bbox.xMin > bbox.xMax )
+        {
+          bbox.xMin = 0;
+          bbox.yMin = 0;
+          bbox.xMax = 0;
+          bbox.yMax = 0;
+        }
+        
+        *abbox = bbox;
+      }
+   </pre></font>
+
+   <p>Now take a closer look, the <tt>compute_string_bbox</tt> can now
+      compute the bounding box of a transformed glyph string. For example,
+      we can do something like:</p>
+   
+   <pre><font color="blue">
+      FT_BBox    bbox;
+      FT_Matrix  matrix;
+      FT_Vector  delta;
+   
+      ... load glyph sequence
+      
+      ... setup "matrix" and "delta"
+      
+      <font color="gray">// transform glyphs</font>
+      for ( n = 0; n &lt; num_glyphs; n++ )
+        FT_Glyph_Transform( glyphs[n].image, &matrix, &delta );
+      
+      <font color="gray">// compute bounding box of transformed glyphs</font>
+      compute_string_bbox( &bbox );
+   </font></pre>
+
+  <h4>
+    b. Rendering a transformed glyph sequence:
+  </h4>
+  
+  <p>However, directly transforming the glyphs in our sequence is not an idea
+     if we want to re-use them in order to draw the text string with various
+     angles or transforms. It's better to perform the affine transformation
+     just before the glyph is rendered, as in the following code:</p>
+     
+   <font color="blue"><pre>
+      FT_Vector  start;
+      FT_Matrix  transform;
+   
+      <font color="gray">// get bbox of original glyph sequence</font>
+      compute_string_bbox( &string_bbox );
+   
+      <font color="gray">// compute string dimensions in integer pixels</font>
+      string_width  = (string_bbox.xMax - string_bbox.xMin)/64;
+      string_height = (string_bbox.yMax - string_bbox.yMin)/64;
+   
+      <font color="gray">// set up start position in 26.6 cartesian space</font>
+      start.x = (( my_target_width  - string_width )/2)*64;
+      start.y = (( my_target_height - string_height)/2)*64;
+      
+      <font color="gray">// set up transform (a rotation here)</font>
+      matrix.xx = (FT_Fixed)( cos(angle)*0x10000);
+      matrix.xy = (FT_Fixed)(-sin(angle)*0x10000);
+      matrix.yx = (FT_Fixed)( sin(angle)*0x10000);
+      matrix.yy = (FT_Fixed)( cos(angle)*0x10000);
+      
+      for ( n = 0; n &lt; num_glyphs; n++ )
+      {
+        FT_Glyph  image;
+        FT_Vector pen;
+        FT_BBox   bbox;
+        
+        <font color="gray">// create a copy of the original glyph</font>
+        error = FT_Glyph_Copy( glyphs[n].image, &image );
+        if (error) continue;
+
+        <font color="gray">// transform copy (this will also translate it to the correct
+        // position</font>
+        FT_Glyph_Transform( image, &matrix, &start );
+        
+        <font color="gray">// check bounding box, if the transformed glyph image
+        // is not in our target surface, we can avoid rendering it</font>
+        FT_Glyph_Get_CBox( image, ft_glyph_bbox_pixels, &bbox );
+        if ( bbox.xMax &lt;= 0 || bbox.xMin >= my_target_width  ||
+             bbox.yMax &lt;= 0 || bbox.yMin >= my_target_height )
+          continue;
+        
+        <font color="gray">// convert glyph image to bitmap (destroy the glyph copy !!)
+        //</font>
+        error = FT_Glyph_To_Bitmap( &image,
+                                    ft_render_mode_normal,
+                                    0,      <font color="gray">// no additional translation</font>
+                                    1 );    <font color="gray">// destroy copy in "image"</font>
+        if (!error)
+        {
+          FT_BitmapGlyph  bit = (FT_BitmapGlyph)image;
+          
+          my_draw_bitmap( bitmap->bitmap,
+                          bitmap->left,
+                          my_target_height - bitmap->top );
+                          
+          FT_Done_Glyph( image );
+        }
+      }
+   </pre></font>
+
+   <p>You'll notice a few changes compared to the original version of this
+      code:</p>
+      
+   <ul>
+     <li><p>
+       We keep the original glyph images untouched, by transforming a
+       copy.
+     </p></li>
+     
+     <li><p>
+       We perform clipping computations, in order to avoid rendering &
+       drawing glyphs that are not within our target surface
+     </p></li>
+     
+     <li><p>
+       We always destroy the copy when calling <tt>FT_Glyph_To_Bitmap</tt>
+       in order to get rid of the transformed scalable image. Note that
+       the image is destroyed even when the function returns an error
+       code (which is why <tt>FT_Done_Glyph</tt> is only called within
+       the compound statement.
+     </p></li>
+     
+     <li><p>
+       The translation of the glyph sequence to the start pen position is
+       integrated in the call to <tt>FT_Glyph_Transform</tt> intead of
+       <tt>FT_Glyph_To_Bitmap</tt>.
+     </p></li>
+  </ul>
+
+  <p>It's possible to call this function several times to render the string
+     width different angles, or even change the way "start" is computed in
+     order to move it to different place.</p>
+
+  <p>This code is the basis of the FreeType 2 demonstration program
+     named"<tt>ftstring.c</tt>". It could be easily extended to perform
+     advanced text layout or word-wrapping in the first part, without
+     changing the second one.</p>
+     
+  <p>Note however that a normal implementation would use a glyph cache in
+     order to reduce memory needs. For example, let's assume that our text
+     string is "FreeType". We would store three identical glyph images in
+     our table for the letter "e", which isn't optimal (especially when you
+     consider longer lines of text, or even whole pages..).
+  </p>
+
+  <hr>
+    
+  <h3>
+    6. Accessing metrics in design font units, and scaling them:
+  </h3>
+
+  <p>Scalable font formats usually store a single vectorial image, called
+     an "outline", for each in a face. Each outline is defined in an abstract
+     grid called the "design space", with coordinates expressed in nominal
+     "font units". When a glyph image is loaded, the font driver usually
+     scales the outline to device space according to the current character
+     pixel size found in a <tt>FT_Size</tt> object. The driver may also
+     modify the scaled outline in order to significantly improve its
+     appearance on a pixel-based surface (a process known as "hinting"
+     or "grid-fitting").</p>
+     
+  <p>This chapter describes how design coordinates are scaled to device
+     space, and how to read glyph outlines and metrics in font units. This
+     is important for a number of things:</p>
+     
+  <ul>
+    <li><p>
+      In order to perform "true" WYSIWYG text layout
+    </p></li>
+    
+    <li><p>
+      In order to access font content for conversion or analysis purposes
+    </p></li>
+  </ul>
+
+  <h4>a.Scaling distances to device space:</h4>
+  
+  <p>Design coordinates are scaled to device space using a simple scaling
+     transform, whose coefficients are computed with the help of the
+     <em><b>character pixel size</b></em>:</p>
+     
+  <pre><font color="purple">
+     device_x = design_x * x_scale
+     device_y = design_y * y_scale
+
+     x_scale  = pixel_size_x / EM_size
+     y_scale  = pixel_size_y / EM_size
+  </font></pre>
+
+  <p>Here, the value <b><tt>EM_size</tt></b> is font-specific and correspond
+     to the size of an abstract square of the design space (called the "EM"),
+     which is used by font designers to create glyph images. It is thus
+     expressed in font units. It is also accessible directly for scalable
+     font formats as <tt><b>face->units_per_EM</b></tt>. You should
+     check that a font face contains scalable glyph images by using the
+     <tt><b>FT_IS_SCALABLE(face)</b></tt> macro, which returns true when
+     appropriate.</p>
+
+  <p>When you call the function <tt><b>FT_Set_Pixel_Sizes</b></tt>, you're
+     specifying the value of <tt>pixel_size_x</tt> and <tt>pixel_size_y</tt>
+     you want to use to FreeType, which will immediately compute the values
+     of <tt>x_scale</tt> and <tt>y_scale</tt>.</p>
+
+  <p>When you call the function <tt><b>FT_Set_Char_Size</b></tt>, you're
+     specifying the character size in physical "points", which is used,
+     along with the device's resolutions, to compute the character pixel
+     size, then the scaling factors.</p>
+
+  <p>Note that after calling any of these two functions, you can access
+     the values of the character pixel size and scaling factors as fields
+     of the <tt><b>face->size->metrics</b></tt> structure. These fields are:</p>
+     
+  <center>
+  <table width="80%" cellpadding="5"><tr valign=top><td>
+  <b><tt>x_ppem</t></b>
+  </td><td>
+  <p>Which stands for "X Pixels Per EM", this is the size in integer pixels
+  of the EM square, which also is the <em>horizontal character pixel size</em>,
+  called <tt>pixel_size_x</tt> in the above example.</p>
+  </td></tr><tr valign=top><td>
+  <b><tt>y_ppem</tt></b>
+  </td><td>
+  <p>Which stands for "Y Pixels Per EM", this is the size in integer pixels
+  of the EM square, which also is the <em>vertical character pixel size</em>,
+  called <tt>pixel_size_y</tt> in the above example.</p>
+  </td></tr><tr valign=top><td>
+  <b><tt>x_scale</tt></b>
+  </td><td>
+  <p>This is a 16.16 fixed float scale that is used to directly
+  scale horizontal distances from design space to 1/64th of device pixels.
+  </p>
+  </td></tr><tr valign=top><td>
+  <b><tt>y_scale</tt></b>
+  </td><td>
+  <p>This is a 16.16 fixed float scale that is used to directly scale
+  vertical distances from design space to 1/64th of device pixels.</p>
+  </td></tr>
+  </table>
+  </center>
+
+  <p>Basically, this means that you can scale a distance expressed in
+     font units to 26.6 pixels directly with the help of the <tt>FT_MulFix</tt>
+     function, as in:</p>
+     
+  <pre><font color="blue">
+      <font color="gray">// convert design distances to 1/64th of pixels
+      //</font>
+      pixels_x = FT_MulFix( design_x, face->size->metrics.x_scale );
+      pixels_y = FT_MulFix( design_y, face->size->metrics.y_scale );
+  </font></pre>
+  
+  <p>However, you can also scale the value directly with more accuracy
+     by using doubles and the equations:</p>
+     
+  <pre><font color="blue">
+      FT_Size_Metrics*  metrics = &face->size->metrics;    // shortcut
+      double            pixels_x, pixels_y;
+      double            em_size, x_scale, y_scale;
+
+      <font color="gray">// compute floating point scale factors
+      //</font>
+      em_size = 1.0 * face->units_per_EM;
+      x_scale = metrics->x_ppem / em_size;
+      y_scale = metrics->y_ppem / em_size;
+      
+      <font color="gray">// convert design distances to floating point pixels
+      //</font>
+      pixels_x = design_x * x_scale;
+      pixels_y = design_y * y_scale;
+  </font></pre>
+  
+  <h4>
+    b. Accessing design metrics (glyph & global):
+  </h4>
+  
+  <p>You can access glyph metrics in font units simply by specifying the
+     <tt><b>FT_LOAD_NO_SCALE</b></tt> bit flag in <tt>FT_Load_Glyph</tt>
+     or <tt>FT_Load_Char</tt>. The metrics returned in
+     <tt>face->glyph->metrics</tt> will all be in font units.</p>
+  
+  <p>You can access unscaled kerning data using the
+     <tt><b>ft_kerning_mode_unscaled</b></tt> mode</p>
+
+  <p>Finally, a few global metrics are available directly in font units
+     as fields of the <tt>FT_Face</tt> handle, as described in chapter 3
+     of this section.</p>
+     
+  <hr>
+  
+  <h3>
+    Conclusion
+  </h3>
+  
+  <p>This is the end of the second section of the FreeType 2 tutorial,
+     you're now able to access glyph metrics, manage glyph images, and
+     render text much more intelligently (kerning, measuring, transforming
+     & caching).</p>
+  
+  <p>You have now sufficient knowledge to build a pretty decent text service
+     on top of FreeType 2, and you could possibly stop there if you want.</p>
+  
+  <p>The next section will deal with FreeType 2 internals (like modules,
+     vector outlines, font drivers, renderers), as well as a few font format
+     specific issues (mainly, how to access certain TrueType or Type 1 tables).
+     </p>
+</td></tr>
+</table>
+</center>
+
+</body>
+</html>

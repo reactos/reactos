@@ -1,0 +1,502 @@
+<html>
+<head>
+<title>FreeType 2 FAQ</title>
+<basefont face="Georgia, Arial, Helvetica, Geneva">
+<style content="text/css">
+  P { text-align=justify }
+  H1 { text-align=center }
+  H2 { text-align=center }
+  LI { text-align=justify }
+</style>
+</head>
+
+<body text="#000000"
+      bgcolor="#FFFFFF"
+      link="#0000EF"
+      vlink="#51188E"
+      alink="#FF0000">
+
+
+<font size=1>http://www.freetype.org</font><p>
+
+<center>
+  <a href="freetype.html">
+  <img src="image/freetype.jpg" width=550 height=105 alt="The FreeType Project" border=0></a>
+  <h1>The FreeType 2 FAQ</h1>
+</center>
+
+<center><table width=750 cellspacing=10 cellpadding=30><tr><td>
+<hr><p>
+
+DOCUMENT INDEX:<br>
+<ul>
+  <li><p><a href="#general">General</a>
+    <ul>
+      <li><a href="#general-dead">I thought the FreeType project was dead. It this true?</a></li>
+      <li><a href="#general-long">Why did it take so long to release FreeType 2?</a></li>
+      <li><a href="#general-unix">Is FreeType 2 a Unix-only project?</a></li>
+      <li><a href="#general-x11">When will X11 support anti-aliased glyphs?</a></li>
+      <li><a href="#general-ft1">Is FreeType 2 backwards compatible with 1.x?</a></li>
+      <li><a href="#general-edit">Can I use FreeType 2 to edit fonts or create new ones?</a></li>
+    </ul></p>
+  </li>
+  <li><p><a href="#builds">Compilation & Configuration</a>
+    <ul>
+      <li><a href="#builds-compile">How do I compile the FreeType 2 library?</a></li>
+      <li><a href="#builds-config">How do I configure my library build?</a></li>
+      <li><a href="#builds-modules">How do I select the modules I need?</a></li>
+      <li><a href="#builds-flat">How do I compile all FreeType 2 files in a single directory?</a></li>
+    </ul>
+  </p></li>
+  <li><p><a href="#library">Using the FreeType 2 library</a></p></li>
+  <li><p><a href="#autohint">The FreeType 2 Autohinter</a>
+    <ul>
+      <li><a href="#autohint-license">Under which license is the auto-hinter released ?</a></li>
+      <li><a href="#autohint-work">How does auto-hinting work in FreeType 2 ?</a></li>
+      <li><a href="#autohint-cjk">Why doesn't the auto-hinter work well with CJK fonts ?</a></li>
+    </ul>
+  </p></li>
+  <li><p><a href="#other">Other questions</a>
+    <ul>
+      <li><a href="#other-antialias">What is the anti-aliasing algorithm used in the FreeType 2 renderer?</a></li>
+      <li><a href="#other-opentype">When will FreeType 2 support OpenType ?</a></li>
+    </ul></p>
+  </li>
+</ul><p>
+
+
+<hr><p>
+
+<table width="100%" cellspacing=5><tr bgcolor="#CCCCEE"><td>
+<h2 align=center><a name="general">General questions & answers</h2>
+</td></tr><tr><td>
+
+<a name="general-dead">
+<h3>I.1. I though the FreeType project was dead. Is this true?</h3>
+<ul>
+  <p>Well, not exactly :-) It's true that the TrueType patents issues
+     have been less than a graceful event to handle but it didn't not
+     really killed the project per se, as Apple hasn't made an official
+     statement yet regarding the use of the patented "technology" in
+     open source projects (or other products).</p>
+
+  <p>We have thus continued updating FreeType 1.x, and started developping
+     FreeType 2 with the idea of providing this time a completely patent
+     free font engine. However, we largely preferred not to broadly
+     communicate about it until we've got a satisfying implementation
+     to show.</p>
+</ul>
+
+
+<a name="general-long">
+<h3>I.2. Why did it take so long to release FreeType 2?</h3>
+<ul>
+  <p>Several factors come to mind. The first one is that FreeType 2 is
+     a much more complex and dense project that was mostly developed
+     on non-working hours. And surely some important changes in the
+     life (like marriage, new jobs and kids) of some the FreeType
+     developers cannot be ignored :-)</p>
+
+  <p>A second one is that a first version of the library was designed
+     one year ago (and already worked with a multitude of font drivers),
+     though with a design that was judged by its authors as well as
+     beta testers as not enough flexible or consistent. In short, it worked
+     well but we were not exactly proud of it (call us perfectionists).
+     It has then be significantly reworked to become what we're now
+     distributing as FreeType 2</p>
+
+  <p>Finally, it would have been hard to distribute such a library without
+     an alternative technology to replace the patented bytecode interpreter.
+     This involved significant research work that could only be performed
+     correctly full-time, and we had to found a company to fund such a
+     development and still make it available under a BSD-like license.
+     Huge thanks to <a href="http://www.catharon.com">Catharon Productions, Inc.</a>
+     for their commitment to this project.</p>
+
+  <p>And of course, we added support for more font files, and we'll
+     continue to as long as the specs are available and that we find an
+     interest in it. For example,  FreeType 2 is to date the only
+     software library available on the market that supports the new
+     Adobe "CEF" font format.</p>
+</ul>
+
+<a name="general-unix">
+<h3>I.3. Is FreeType 2 a Unix-only project?</h3>
+<ul>
+  <p>Absolutely not, even though many people still seem to think so :-)
+     FreeType 2, just like version 1.x, can be compiled on any platform with
+     an ANSI compiler. Some beta versions of the library are even heavily
+     used in brand new OSes (see the <a href="http://www.atheos.cx">AtheOS
+     </a> screenshots for examples).</p>
+
+  <p>The library is itself mainly developped on several platforms
+     (Windows & Linux, though a great deal has also been achieved on OS/2)
+     and the code is highly generic and modular to adapt even the most
+     strict environments like low-memory embedded systems.</p>
+
+</ul>
+
+<a name="general-x11">
+<h3>I.4. When will X11/XFree support anti-aliased text?</h3>
+<ul>
+  <p>This question isn't exactly related to FreeType as we have no direct
+     connection to the XFree people, but we've been asked so frequently
+     about it that it deserves a prominent place in this FAQ :-)</p>
+
+  <p>FreeType has been capable of anti-aliasing since version 1.0. The
+     reason why XFree doesn't support it is directly related to the
+     limitations of the design and specification of X11. More specifically:</p>
+
+  <ul>
+    <li><p>
+       X11 assumes that all glyph images are monochrome bitmaps,
+       hence the X font library and server are unable to send anything
+       else to the X server.
+    </p></li>
+
+    <li><p>
+       Even if the X font library/server was able to generate anti-aliased
+       bitmaps (and this has been already done through extensions), the X
+       rendering model doesn't allow translucent composition of "gray" pixmaps
+       onto an arbitrary drawable.
+    </p></li>
+  </ul>
+
+  <p>As both the font and rendering models of X11 are limited, it's basically
+     impossible to draw anti-aliased glyphs without performing <em>huge</em>
+     hacks within the server.</p>
+
+  <p>Note that Keith Packard, from XFree fame, has recently started working
+     on a new rendering model for X11 in order to support new features
+     (mainly transparency and anti-aliased fonts). This will be provided
+     through protocol extensions. The question of knowing wether legacy X
+     applications will be able to display anti-aliased text is still very
+     uncertain.
+     </p>
+</ul>
+
+<a name="general-ft1">
+<h3>I.5. Is FreeType 2 backwards compatible with FreeType 1.x?</h3>
+<ul>
+  <p>Not directly, though we had the project to provide an optional binary
+     compatibility layer on top of it in order to easily re-link applications
+     with the new version. However, this idea has been dropped as it is
+     possible to install and use the two versions independtly on any
+     system (read: no namespace conflicts).</p>
+
+  <p>The FreeType 2 API is a lot simpler than the one in 1.x while being
+     much more powerful. We thus encourage you to adapt your source code
+     to it as this should not involve much work.</p>
+
+</ul>
+
+<a name="general-edit">
+<h3>I.6. Can I use FreeType 2 to edit fonts or create new ones?</h3>
+<ul>
+  <p>The answer is a definitive NO, because the library was specifically
+     designed to <em>read</em> font files with small code size and very
+     low memory usage.</p>
+
+  <p>We thus do not plan to support editing or creation in the font
+     engine in any way, as this would imply a complete rewrite. This
+     doesn't mean that we won't introduce a font editing/creation library
+     in the future, as this really depends on how many people are asking
+     for it (or how much they would be willing to pay for it), as well as
+     the time of the FreeType developers.</p>
+
+  <p>Do not expect anything in this direction until we officially announce
+     something though. There are other axis of development for this project
+     (like text-layout capabilities, glyph caching, etc..) that may be more
+     important to us at the moment..</p>
+</ul>
+
+</td></tr></table>
+
+<table width="100%" cellspacing=5><tr bgcolor="#CCCCEE"><td>
+<h2 align=center><a name="builds">Compilation & Configuration</h2>
+</td></tr><tr><td>
+
+<a name="builds-compile">
+<h3>II.1. How do I compile the FreeType 2 library?</h3>
+<ul>
+  <p>The library can be compiled in various ways, and a detailed documentation
+     is available in the file "<tt>freetype2/docs/BUILD</tt>". However, we'll
+     summarize the process to a few cases:</p>
+
+  <h3>a. by using the command-line 2 build system</h3>
+
+  <p>The engine comes with a sophisticated build system that is used
+     to configure and compile a build of the library. You'll need
+     <em>GNU Make</em> installed on your platform (NOTE: It will <b>not</b>
+     work with other Make tools).</p>
+
+  <p>Basically, you'll need to invoke <tt>make</tt> a first time in the
+     top-level FreeType 2 directory in order to setup the build. This will
+     detect your current platform and choose a configuration sub-makefile to
+     drive the build. A specific compiler can be selected on some platforms
+     by providing an additional target. For example, on Win32:</p>
+
+  <ul>
+    <li><b><tt>make visualc</tt></b> will select the Visual C++ compiler</li>
+    <li><b><tt>make lcc</tt></b> will select the Win32-lcc compiler</li>
+  </ul>
+
+  <p>Note that on Unix, the first time make is called, a configure script
+     located in "<tt>freetype2/builds/unix</tt>" will be run in order to
+     automatically detect the platform & compiler.</p>
+
+  <p>A summary will be displayed showing the detected platform and compiler
+     selected. You'll then be able to start the build by invoking <tt>make</tt>
+     a second time. In case of problem, consult the <tt>BUILD</tt> document.</p>
+
+
+  <h3>b. by direct compilation</h3>
+
+  <p>You can also directly compile the library from the command line by
+     using these simple rules:</p>
+
+  <ul>
+    <li><p>
+       You should place the directories "<tt>freetype2/include</tt>" and
+       "<tt>freetype2/src</tt>" in your include path in order to compile
+       any component of the library. You can also add the system-specific
+       build directory (i.e. "<tt>builds/<em>system</em>/</tt>") in the
+       case where an alternate implementation of some of the components
+       is available there (e.g. the memory-mapped i/o implementation
+       on some Unix systems).
+    </p></li>
+
+    <li><p>
+       The components of the library are located in sub-directories of
+       "<tt>src</tt>", for example: "<tt>src/base</tt>",
+       "<tt>src/truetype</tt>", etc..
+    </p></li>
+
+    <li><p>
+       Each component is normally compiled through a single C file that
+       "wraps" other sources in the component's directory. For example,
+       your should compile the TrueType font driver by compiling the
+       file "<tt>src/truetype/truetype.c</tt>". The list of C files to
+       compile for a feature-complete build of the library is given in
+       the <tt>BUILD</tt> document.
+    </p></li>
+  </ul>
+
+  <h3>c. in a graphical IDE</h3>
+  <ul>
+    <p>Well, the process is vastly similar to the one described in b.,
+       except that you need to set the include paths, source code paths,
+       etc.. in dialog boxes before running the compilation.
+    </p>
+  </ul>
+
+</ul>
+
+<a name="builds-config">
+<h3>II.2. How do I configure my build of the library?</h3>
+<ul>
+  <p>Each build of the library is configured through two header files
+     located in "<tt>include/freetype/config</tt>":</p>
+
+  <ul>
+    <li><p><b><tt>ftoption.h</tt></b><br>
+        This file contains various configuration macros whose definition
+	can be toggled on a per-build basis. Each macro is heavily
+	commented in this file's comment, and we invite you to refer
+	to it directly.</p></li>
+
+    <li><p><b><tt>ftmodule.h</tt></b><br>
+        This file contains the list of all the modules that are initially
+	registered (added) when the function <b><tt>FT_Init_FreeType</tt></b>
+	is called. See the next answer to know how to change it and
+	why it may be important.</p></li>
+  </ul>
+
+  <p>Alternatively, some specific implementations of some FT2 components
+     can be provided in a "<tt>builds/<em>system</em>/</tt>" directory
+     (e.g. the Unix-specific <tt>ftsystem.c</tt> that uses memory-mapped
+     file for i/o).</p>
+</ul>
+
+<a name="builds-modules">
+<h3>II.3. How do I select the modules I need in my build?</h3>
+<ul>
+  <p>The function <tt><b>FT_Init_FreeType</b></tt> creates a new instance
+     of the FT2 library and registers a set of "default" modules before
+     returning to the calling application. Its default implementation
+     is in the file "<tt>src/base/ftinit.c</tt>".</p>
+
+  <p>The list of default modules used by <tt>ftinit.c</tt> is located in
+     the configuration file "<tt>include/freetype/config/ftmodule.h</tt>".
+     It is normally automatically generated by the build system by
+     invoking the "<tt><b>make modules</b></tt>" command in the top
+     level FT2 directory (note: only works with GNU Make, you can
+     edit the file by hand otherwise). It does so by parsing all
+     sub-directories of "<tt>src</tt>" that contain a file named
+     <tt>module.mk</tt>.</p>
+
+  <p>Note that a specific port or project is free to provide its own
+     implementation of <tt>ftinit.c</tt> in order to ensure a different
+     initialisation sequence. For example, one could do something like:</p>
+
+  <ul>
+    <li><p>compile each module as a shared library (DLL or .so) with
+           a common "entry point" to retrieve a pointer to its
+	   module class (there is already some code that allows this
+	   when compiling each module).</p></li>
+
+    <li><p>place these modules in a directory like
+          "<tt>/usr/lib/freetype2/modules/</tt>"</p></li>
+
+    <li><p>provide an implementation of <tt>ftinit.c</tt> that would
+           scan the directory for valid modules.</p></li>
+  </ul>
+
+  <p>This example only emphasize the flexibility that is left to
+     developers when building the library.</p>
+
+</ul>
+
+<a name="builds-flat">
+<h3>II.4. How do I compile all FreeType 2 files in a single directory?</h3>
+<ul>
+  <p>Some projects may need, for the sake of simplicity or ease of
+     building, to compile the FT2 library with all source files
+     copied to a single directory. This is possible.</p>
+
+  <p>To do so, you'll need to copy all source files located under
+     "<tt>src</tt>" to your own directory (you must retain the
+     include files in a distinct hierarchy though), then compile
+     each of the FreeType 2 component with the macro
+     <tt><b>FT_FLAT_COMPILE</b></tt>. This will change the way
+     <tt><b>#include</b></tt> works during the build.</p>
+</ul>
+
+</td></tr></table>
+
+<table width="100%" cellspacing=5><tr bgcolor="#CCCCEE"><td>
+<h2 align=center><a name="library">Using the FreeType 2 library</h2>
+</td></tr><tr><td>
+
+</td></tr></table>
+
+<table width="100%" cellspacing=5><tr bgcolor="#CCCCEE"><td>
+<h2 align=center><a name="autohint">The FreeType 2 auto-hinter</h2>
+</td></tr><tr><td>
+
+<a name="autohint-license">
+<h3>IV.1. Under which license is the FreeType 2 auto-hinter released</h3>
+<ul>
+  <p>The auto-hinter was initially designed and implemented under contract
+     for <a href="http://www.catharon.com">Catharon Productions, Inc</a>
+     which gladly accepted to released it under an open-source license
+     compatible with the FreeType one.</p>
+
+  <p>This license can be found in "<tt>src/autohint/CatharonLicense.txt</tt>"
+     and requires that you cite Catharon Productions in your documentation
+     (just like you do with FreeType) when using the auto-hinting module.</p>
+
+  <p>Other than that, you still have the same freedom than with the good old
+     FreeType license. Enjoy !</p>
+</ul>
+
+<a name="autohint-work">
+<h3>IV.2. How does the auto-hinter works ?</h3>
+<ul>
+  <p>Well, a complete description would be difficult. Have a look at the
+     dedicated <a href="autohinting/index.html">auto-hinter pages</a> on the FreeType
+     site, as they describe most of its details with graphics and explanations.
+     You could also look at the source code if you want to :-)</p>
+
+  <p>To give a few details, the auto-hinter is used to perform grid-fitting
+     on scalable font formats that use bezier outlines as their primary glyph
+     image format (this means nearly all scalable font formats today). When
+     a given font driver doesn't provide its own hinter, the auto-hinter is
+     used by default. When a format-specific hinter is provided, it is still
+     possible to use the auto-hinter using the
+     <tt><b>FT_LOAD_FORCE_AUTOHINT</b></tt> bit flag when calling
+     <tt>FT_Load_Glyph</tt>.</p>
+
+  <p>The auto-hinter currently doesn't use external hints to do its job,
+     as it automatically computes global metrics (when it "opens" a font
+     for the first time) and glyph "hints" from their outline. Note that
+     we plan the ability to specify external hints, given that it is based
+     on a constraint system. That could be used to support native hints
+     in Type 1/Type 2 fonts, for example.</p>
+</ul>
+
+<a name="autohint-cjk">
+<h3>IV.3. Why does the auto-hinter doesn't work correctly with CJK fonts ?</h3>
+<ul>
+  <p>The auto-hinter was first designed to manage and hint latin-based fonts,
+     as they consist of most of the fonts available today. It doesn't hint
+     asian fonts, as well as a few other complex scripts, because we didn't
+     put enough research on the topic yet. Hinting CJK isn't really more
+     difficult than latin, just different with a set of different constraints
+     (basically, more distortion of glyphs is acceptable as long as certain
+     features like triple-stem positions are respected more strictly..).</p>
+
+  <p>We thus plan to handle such a case rather rapidly.. Please be patient.</p>
+</ul>
+
+
+</td></tr></table>
+
+<table width="100%" cellspacing=5><tr bgcolor="#CCCCEE"><td>
+<h2 align=center><a name="other">Other questions</h2>
+</td></tr><tr><td>
+
+<a name="other-antialias">
+<h3>V.1. What is the anti-aliasing algorithm used by FreeType 2 ?</h3>
+<ul>
+  <p>The algorithm has been specifically designed for FreeType. It is
+     based on ideas that were originally found in the implementation
+     of the <a href="http://www.levien.com/libart">libArt</a> graphics
+     library to compute the <em>exact pixel coverage</em> of a vector
+     image with absolutely now sub-sampling/filtering.
+     </p>
+
+  <p>However, these two implementations are radically distinct and use
+     vastly different models. The FreeType 2 renderer is optimized
+     specifically for rendering small complex shapes, like glyphs, at
+     very high speed while using very few memory; while libArt shines
+     at general shape/polygon processing, especially large ones.</p>
+
+  <p>The FT2 anti-aliasing renderer is indeed <em>faster</em> than the
+     monochrome renderer for small character sizes (typically &lt; 20 pixels).
+     This is explained because the monochrome renderer must perform two
+     passes on the outline in order to perform drop-out control according
+     to the TrueType spec (we could drop this requirement later though).</p>
+
+  <p>We'll try to document its design in a later document, though this is
+     not a priority for now.</p>
+</ul>
+
+<a name="other-opentype">
+<h3>V.2. When will FreeType 2 support OpenType ?</h3>
+<ul>
+  <p>Well, the engine already reads OpenType/CFF files perfectly. What it
+     doesn't do is handle "OpenType Layout" tables yet.</p>
+     
+  <p>FreeType 1 comes with a set of extensions that are used to load
+     and manage OpenType Layout tables. It even has a demonstration program
+     named "<tt>ftstrtto</tt>" used to demonstrate its capabilities that
+     runs pretty smooth.</p>
+     
+  <p>For FreeType 2, we have decided that the layout operations provided
+     through these tables is better placed in a specific text-layout library,
+     (many people having asked for such a thing). This new engine would not
+     depend on FT2 explicitely and will be developed as a separate project.
+     We plan to announce it in a few weeks with all gory details,
+     once the definitive 2.0 release of FreeType has been made.</p>
+</ul>
+
+</td></tr></table>
+
+<hr>
+<p>
+<a href="index.html">Back to FreeType homepage</a><p>
+
+</td></tr></table>
+</body>
+</html>

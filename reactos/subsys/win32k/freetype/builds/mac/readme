@@ -1,0 +1,11 @@
+This folder contains supporting code and CodeWarrior Pro 4 project
+files to build the FreeType library.
+
+Notes:
+The library will be built as a static lib in the obj/ folder.
+
+Just van Rossum, <just@letterror.com>
+
+DISCLAIMER: this subdirectory is *not* being maintained by the
+FreeType team, but by Just van Rossum. It's being released under
+the same terms as FreeType (see LICENSE.TXT).

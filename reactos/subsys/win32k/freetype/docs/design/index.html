@@ -1,0 +1,791 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="Author" content="David Turner">
+   <meta name="GENERATOR" content="Mozilla/4.5 [fr] (Win98; I) [Netscape]">
+   <title>FreeType 2 Internals</title>
+</head>
+<body>
+
+<body text="#000000"
+      bgcolor="#FFFFFF"
+      link="#0000EF"
+      vlink="#51188E"
+      alink="#FF0000">
+
+<center>
+<h1>
+FreeType 2.0 Internals</h1></center>
+
+<center>
+<h2>
+Version 1.2</h2></center>
+
+<center>
+<h3>
+&copy; 1999-2000 David Turner (<a href="fichier :///david@freetype.org">david@freetype.org</a>)<br>
+&copy; 1999-2000 The FreeType Development Team (<a href="fichier :///devel@freetype.org">devel@freetype.org</a>)</h3></center>
+
+<p><br>
+<hr WIDTH="100%">
+<br>&nbsp;
+<h2>Introduction:</h2>
+
+<p>This document describes in great deatils the internals of FreeType 2.
+   It is a must read for porters and developers alike. Its purpose is to
+   
+   present the
+<blockquote>This document describes in great details the internals of the
+FreeType 2.0 library. It is a must read for porters and developers alike.
+Its purpose is to present the engine's objects, their roles and interactions.
+It is assumed that the <b><i>FreeType Glyph Conventions</i></b> document
+has been read.
+<p>We advise porters to also read the <b><i>FreeType Porting Guide</i></b>
+after this document. Would-be hackers and maintainers are of course encouraged
+to read the <b><i>FreeType Coding Conventions</i></b> document too. The
+development of a new driver is described in more details in the <b><i>FreeType
+Driver HowTo</i></b> document.</blockquote>
+
+<p><br>
+<hr WIDTH="100%">
+<h2>
+I. Overview :</h2>
+
+<blockquote>
+<h3>
+1. Features (and what's new) :</h3>
+
+<blockquote>FreeType 2.0 has a number of important new features that were
+not found in the 1.x releases :
+<br>&nbsp;
+<blockquote><b>font-format independent API</b>
+<br>FreeType 2.0 is able to support any kind of font format, be it fixed
+or scalable, through the use of pluggable "font drivers". These drivers
+can be added or replaced at run time, while applications use a new font
+format-independent API.
+<p><b>advanced stream caching</b>
+<br>2.0 is able to control the number of concurrently opened streams when
+using fonts. It is thus possible to open dozens or hundreds of font faces
+without running out of system resources.
+<p><b>real reentrancy support</b>
+<br>It is now possible to use FreeType as a shared library with no static
+data in a multi-threaded environment. The synchronization model has also
+been simplified in order to make font driver writing easier. Of course,
+you can build FreeType with no thread support to get a smaller library.
+<p><b>support for cubic beziers and 17-levels anti-aliasing</b>
+<br>The FreeType scan-line converter (a.k.a. raster) now supports cubic
+bezier arcs seamlessly. It also provides a new anti-aliasing mode which
+uses a palette of 17 levels of grays.
+<br>&nbsp;</blockquote>
+It also features the following :
+<blockquote><b>performance improvements :</b>
+<br>The FreeType raster has been optimized, and the generation of anti-aliased
+pixmaps is now 60% faster than in the 1.x release. Moreover, the TrueType
+bytecode interpreter has been profiled and greatly optimised.
+<p><b>easier portability</b>
+<br>Porting and configuring FreeType is now much easier. A single file
+must be provided for system-specific operations (like memory, i/o, thread
+management), and a single configuration header is used to select the build
+you need.
+<br>&nbsp;</blockquote>
+</blockquote>
+
+<h3>
+2. Architecture :</h3>
+
+<blockquote>The engine is now split in several parts, which are :
+<h4>
+a. The base layer :</h4>
+
+<blockquote>This part contains all the font-format independent features
+of the engine which are :
+<ul>
+<li>
+computations/scaling</li>
+
+<li>
+list processing</li>
+
+<li>
+outline processing</li>
+
+<li>
+scan-line converter</li>
+
+<li>
+stream manager</li>
+
+<li>
+base object classes</li>
+
+<li>
+debugging &amp; traces</li>
+
+<li>
+high-level API functions</li>
+
+<li>
+low-level system object (memory, i/o, threads)</li>
+</ul>
+</blockquote>
+
+<h4>
+b. The font drivers :</h4>
+
+<blockquote>Each font format is managed with the use of a single font driver
+object. The base layer is able to manage several drivers, and these can
+be easily added, removed or upgraded at runtime. Each driver has the following
+features and functions :
+<ul>
+<li>
+auto-check font format when opening a font resource (i.e. file)</li>
+
+<li>
+access, load and/or extract all tables and data from the font file</li>
+
+<li>
+grid-fit/hint the glyph outlines (in the case of scalable formats like
+TrueType or Type1)</li>
+
+<li>
+provide extensions to access font format-specific data and tables from
+the font file</li>
+</ul>
+Note that FreeType 2.0 is a font service. Its purpose is to provide a unified
+API for all kinds of fonts and extract individual glyph images and metrics.
+However, it does not render text itself, as this operation is left to the
+developer, or to higher-level libraries built on top of FreeType. Here
+are a few features that are thus not implemented :
+<blockquote>1) Text string rendering
+<br>2) Glyph bitmap/outline caching for improved performance
+<br>3) Synthetic fonts (i.e. italicising, emboldening, underlining)
+<br>4) Contextual glyph substitution and other advanced layout processes</blockquote>
+Note that features 1 through 3 should be provided by the SemTex library,
+which may soon become part of the standard FreeType distribution.</blockquote>
+</blockquote>
+</blockquote>
+
+<p><br>
+<hr WIDTH="100%">
+<h2>
+II. Design :</h2>
+
+<blockquote>
+<h3>
+1. Objects :</h3>
+
+<blockquote>They are several kinds of objects in FreeType, which can be
+described as follows :
+<blockquote><b>Base objects</b>
+<br>These objects do not relate directly to font data, but to the way it
+is organised and managed. It is the basic core and provides functions that
+are heavily used by each font driver. Examples are the resource objects,
+used to describe font files, the system object used to manage low-level
+system operations, or the raster object, used to convert vector outlines
+into bitmaps or anti-aliased pixmaps. Most of the base objects are not
+directly visible for client applications of FreeType.
+<p><b>Font objects</b>
+<br>The font objects directly model the data as it is found in font files.
+The root classes implemented in the base layer like <tt>FT_Face</tt>, <tt>FT_Size</tt>,
+<tt>FT_GlyphSlot</tt>,
+must be derived in each font driver.</blockquote>
+Objects are defined in the files "<tt>base/freetype.h</tt>" and "<tt>base/ftobjs.h</tt>".
+The former contains all the public object definitions usable by client
+applications. The latter contains private definitions used by the rest
+of the base layer and each font driver.</blockquote>
+
+<h3>
+2. List management</h3>
+
+<blockquote>The "<tt>base/ftlist.c</tt>" component a very simple doubly-linked
+list facility which is used by the rest of the engine to create and process
+lists, including iteration and finalisation. The definition of the list
+node and functions are placed in the "<tt>base/freetype.h</tt>" to let
+client applications access listed objects as they like.
+<p>The base list type is <tt>FT_List</tt>, which links nodes of type <tt>FT_ListNode</tt>
+together.
+<br>&nbsp;</blockquote>
+
+<h3>
+3. Limited encapsulation</h3>
+
+<blockquote>Unlike what happened in the 1.x releases, the <tt>FT_Face</tt>,
+<tt>FT_Size</tt>,
+<tt>FT_GlyphSlot</tt> and <tt>FT_CharMap</tt> types are no longer blind
+pointers to opaque types. Rather, the corresponding structures are now
+public (and defined in "<tt>base/freetype.h</tt>", see <tt>FT_FaceRec</tt>,
+<tt>FT_SizeRec</tt>,
+etc..) in order to let client applications read directly the various object
+attributes they're interested in.
+<p>This breaks encapsulation of implementation, famed by OOP, but was chosen
+because:
+<br>&nbsp;
+<ul>
+<li>
+it simplifies a lot the work of client applications and libraries which
+don't need to perform a function call everytime they want to read one important
+object attribute (nor does it force them to cache these attributes in their
+own structures).</li>
+</ul>
+
+<ul>
+<li>
+It reduces greatly the API, as many <tt>FT_Get_XXX</tt> functions are avoided.</li>
+</ul>
+
+<ul>
+<li>
+Higher-level libraries are able to&nbsp; access data directly. When it
+is used frequently, they don't need to cache it in their own structures.</li>
+</ul>
+
+<ul>
+<li>
+It is possible to tightly link FreeType objects with higher-level ones,
+in a clearer and more efficient way. This is very important when one wants
+to write a C++ wrapper or a text rendering library on top of FreeType (actually,
+both projects were performed in an earlier version of FreeType 2.0 which
+featured classic encapsulation through get/set methods. The resulting code
+was ugly and slow. Moving to a limited encapsulation approach simplified
+so many things that the compiled code size was reduced by a factor of two
+!).</li>
+</ul>
+
+<ul>
+<li>
+Finally, the API and font object structures were designed after the creation
+of two scalable font drivers and one bitmap font driver. They are now very
+stable and the public (visible) attributes are not going to change.</li>
+</ul>
+</blockquote>
+</blockquote>
+
+<p><br>
+<hr WIDTH="100%">
+<h2>
+III. Base objects :</h2>
+
+<blockquote>This section describes the FreeType base object classes :
+<br>&nbsp;
+<h3>
+1. System objects :</h3>
+
+<blockquote>The system class is in charge of managing all low-level and
+system-specific operations. This means simply memory management, i/o access
+and thread synchronisation. It is implemented by the "<tt>ftsys.c</tt>"
+component, whose source must be located in the configuration directory
+when building FreeType. (e.g. "<tt>lib/arch/ansi/ftsys.c</tt>" for an ANSI
+build, "<tt>lib/arch/unix/ftsys.c</tt>" for a Unix one, etc..).
+<p>Porting FreeType 2.0 really means providing a new implementation of
+<tt>ftsys</tt>
+(along with a few configuration file changes). Note however that its interface
+is common to all ports, and located in "<tt>base/ftsys.h</tt>".</blockquote>
+
+<h3>
+2. Resources and Streams:</h3>
+
+<blockquote>The concepts of files as storages, and files as streams has
+been separated for FreeType 2.0. The "<b><i>resource</i></b>" concept was
+introduced while the "<b><i>stream</i></b>" one has been redefined. Here
+is how they work together :
+<ul>
+<li>
+a "<b>resource</b>" is an object which models a file, seen as a storage.
+There are several classes of resources, which differ usually in two ways
+: the way their data is accessed by applications, and the way they're named
+within the system.</li>
+</ul>
+
+<ul>For example, when parsing files with the ANSI C library, data has to
+be read (through fseek/fread) into intermediate buffers before it can be
+decoded. This scheme is highly portable, but rather inefficient; when using
+it, we'll describe the file as a disk-based resource.
+<p>As most modern operating systems now provide memory-mapped files, which
+allow direct access while improving performance and reducing memory usage.
+Because data can be read directly in memory, we'll speak of a memory-based
+resource in this case. For embedded systems (like printers, PDAs, etc..),
+ROM-fonts fit into this category as well.
+<p>Regarding naming, most systems use a string to name files in their storage
+hierarchy. Though a typical pathname is an ASCII string (<tt>'c:\windows\fonts\times.ttf'</tt>
+on Windows, <tt>'/home/fonts/times.ttf'</tt> on Unix), some OSes use different
+schemes, varying from Unicode character strings to file i-node numbers.
+These details are platform-specific and must be hidden to the rest of the
+library in resource objects.
+<p>A resource encapsulates the lowest details regarding a file, though
+it should have NO STATE. Note that the nature or type of a resource (i.e.
+disk or memory based) is important to the "stream" component only. The
+rest of the library and font drivers work transparently from their implementation.
+<p>Note also that it is perfectly possible to mix resources of distinct
+natures in a single build</ul>
+
+<ul>
+<li>
+a "<b>stream</b>" is an object which is used to extract bytes from a resource.
+Only resource objects can create streams, through its <i><tt>Open_Stream()</tt></i>
+method. A stream has state, which typically consist of a file "cursor",
+some intermediate buffers, a "current frame" and, of course, methods used
+to extract the data from streams, resolving endianess and alignement issues.</li>
+</ul>
+Data can be extracted from streams through direct reads, or through the
+use of <b>frames</b>. A frame models <i>a run of contiguous bytes</i> starting
+from the current stream position, and of liberal size.
+<p>Methods exist to extract successive integers of any sizes, while resolving
+endianess and alignement issues. Rather than a long rethorical explanation,
+here's how frames are typically used :
+<blockquote><tt>{</tt>
+<br><tt>&nbsp; …</tt>
+<br><tt>&nbsp; FT_Error&nbsp; error;</tt>
+<p><tt>&nbsp; error = FT_Access_Frame( stream, 14 );</tt>
+<br><tt>&nbsp; if (error) goto Fail;</tt>
+<p><tt>&nbsp; val1 = FT_Get_Short(stream);</tt>
+<br><tt>&nbsp; val2 = FT_Get_Long(stream);</tt>
+<br><tt>&nbsp; val3 = FT_Get_Long(stream);</tt>
+<br><tt>&nbsp; val4 = FT_Get_Long(stream);</tt>
+<p><tt>&nbsp; FT_Forget_Frame(stream);</tt>
+<br><tt>&nbsp; …</tt>
+<br><tt>}</tt></blockquote>
+This code does the following :
+<blockquote>
+<ol>
+<li>
+&nbsp;first, it "loads" the next 14 bytes from the current cursor position
+into the stream's frame, using the <tt>FT_Access_Frame</tt> API. An error
+is returned if, for example, less than 14 bytes are left in the stream
+when the call occurs..</li>
+</ol>
+
+<ol>
+<li>
+&nbsp;it extract four integers (one 16-bit short, three 32-bit longs) from
+the frame using <tt>FT_Get_Short</tt> and <tt>FT_Get_Long</tt>. These function
+increment the frame's cursor finally, it "releases" the stream's frame.</li>
+</ol>
+
+<ol>
+<li>
+&nbsp;Each stream has its own frame which can be accessed independently,
+however, nested frame accesses are not allowed. Note also that the bytes
+are effectively read from the stream on the call to <tt>FT_Access_Frame</tt>.
+Any subsequent read will occur after these 14 bytes, even if less are extracted
+through <tt>FT_Get_xxxx</tt> functions.</li>
+</ol>
+</blockquote>
+The implementation of the resource class is located in the system component
+(i.e. "<tt>arch/<i>&lt;system></i>/ftsys.c</tt>") and can thus be tailored
+for a specific port of the engine.
+<p>A resource can be created through the <tt>FT_New_Resource</tt> API;
+however this function only accepts an 8-bit pathname to name the target
+font file, which may be inappropriate for systems using a different naming
+scheme (e.g. UTF-16 pathname, i-node number, etc..). It's up to the porter
+then to provide its own resource creation function (like. <tt>FT_New_UTF16_Resource</tt>,
+for example) in its version of "<tt>ftsys.c</tt>".
+<p>Note that <tt>FT_New_Resource</tt> will fail and return an error code
+if the font file cannot be found, or when its font format isn't recognized
+by one of the drivers installed in the library. The list or resources created
+for a given library instance is thus the list of "installed font files".
+<br>&nbsp;</blockquote>
+
+<h3>
+3. Stream Manager :</h3>
+
+<blockquote>As said before, resources do not bear states, while streams
+do. Stream creation is also a very lengthy process, depending on the target
+operating system (e.g. "<tt>fopen</tt>" is usually very slow).
+<p>Because a typical font driver will want to use a new stream on each
+access to individual glyphs, being able to cache the most recently used
+streams is a requirement in order to avoid considerable performance penalties.
+<p>Stream caching is thus implemented in the "<tt>ftstream</tt>" component.
+It maintains a simple LRU list of the least recently used streams. Each
+stream in the cache is still opened and available for immediate processing.
+When a resource is destroyed, the stream cache is parsed to remove all
+related cached streams.
+<p>Stream caching can also be disabled with a configuration macro when
+using only ROM based resources (where stream opening is really quick).
+It is implemented through a Stream Manager object (see <tt>ftstream.c</tt>).
+<br>&nbsp;</blockquote>
+
+<h3>
+4. Raster :</h3>
+
+<blockquote>The raster is the component is charge of generating bitmaps
+and anti-aliased pixmaps from vectorial outline definitions. It is also
+sometimes called the scan-line converter. It has been completely rewritten
+for FreeType 2.0 in order to support third-order bezier arcs, 17-levels
+anti-aliasing (through 4x4 sub-sampling), improved performance, as well
+as stand-alone compilation (in order to include it in other graphics package
+without requiring the rest of the FreeType engine).
+<p>Because it was designed for easy re-use and embedded systems, the raster
+is a rtaher 'unusual' piece of code, because it doesn't perform a single
+memory allocation, nor contain any static or global variable. Rather, it
+is up to client applications to allocate a raster object in their own heap
+or memory space.
+<p>Each raster object also needs a rather large block of memory called
+its render pool. The pool is used during rendering (and only during it)
+in order to perform the scan-line conversion. Because it accesses and manages
+data directly within the pool, the raster yelds impressive performance
+as well as bounded memory consumption. It can also automatically decompose
+large requests into smaller individual sub-tasks.
+<p>Finally, it never creates bitmaps or pixmaps, but simply renders into
+them (providing clipping too). These must be described to the raster with
+the help of a <tt>FT_Raster_Map</tt> structure (a very simple bitmap/pixmap
+descriptor).
+<p>Note that when rendering anti-aliased pixmaps, the raster doesn't use
+an intermediate bitmap buffer, as filtering is part of the scan-line conversion
+process.
+<br>&nbsp;</blockquote>
+
+<h3>
+5. Library objects :</h3>
+
+<blockquote>A library object models a single instance of the FreeType engine.
+This is useful when FreeType is compiled as a shared object (DLL), as it
+can then be used by several applications, each with its own resources and
+objects.
+<p>The <tt>FT_Library</tt> type is an opaque handle to a library object.
+Such an object is created through a call&nbsp; to <tt>FT_Init_FreeType</tt>.
+Once you don't need it anymore, one can destroy a library object through
+<tt>FT_Done_FreeType</tt>.
+<p>Note that in reentrant builds, several threads can access a single library
+object concurrently. Such a build can be chosen by switching one configuration
+macro in the file '<tt>arch/<i>&lt;system></i>/ftconfig.h</tt>'</blockquote>
+
+<h3>
+6. Driver objects :</h3>
+
+<blockquote>A driver object models an instance of a given font driver,
+i.e. an element of FreeType code in charge of handling a given font format,
+like TrueType, Type1, FNT, PCF, etc..
+<p>Each library object contains a given set of driver objects when it is
+created through FT_Init_FreeType, this set being determined at compile
+time (see the file 'base/ftapi.c'). However, removing or adding drivers
+is possible at run-time, in order to make upgrades easy.</blockquote>
+
+<h3>
+7. Diagram</h3>
+
+<blockquote>This diagram show the object relationships for the sole base
+layer. The library object is the root of the object graph :
+<center>
+<p><img SRC="objects_diagram.png" height=300 width=562></center>
+
+<p>It can be read as follows :
+<br>&nbsp;
+<ul>
+<li>
+Each library object has one system, one raster and one stream manager objects.
+These objects can only belong to one given library.</li>
+</ul>
+
+<ul>
+<li>
+Each library contains one list of 0 or more resources, as well as one list
+of 0 or more driver objects.</li>
+</ul>
+
+<ul>
+<li>
+Each stream manager holds a bounded list ("0..n" where 'n' is the stream
+cache's size) of stream objects. Each stream is related to one given resource
+object. Each resource may be related to zero or one stream.</li>
+</ul>
+
+<ul>
+<li>
+Each resource is related to one driver object. A driver is related to 0
+or more resources.</li>
+</ul>
+</blockquote>
+</blockquote>
+
+<p><br>
+<hr WIDTH="100%">
+<h2>
+IV. Font objects :</h2>
+
+<blockquote>Font objects are used to directly map the information found
+in font files into several categories :
+<br>&nbsp;
+<h3>
+1. Face objects :</h3>
+
+<blockquote>Face objects are used to model individual font faces. They
+encapsulate data which isn't related to a specific character size, or a
+specific glyph or glyph set. Usually, this means :
+<ul>
+<li>
+the font face's family and style names (e.g. "Palatino" + "Regular")</li>
+
+<li>
+some flags indicating which kind of font this is (scalable or fixed ? fixed-width
+or proportional ? horizontal or vertical ? etc…)</li>
+
+<li>
+the number of glyphs, charmaps and eventually fixed character sizes (for
+bitmap formats) found in the font face.</li>
+
+<li>
+for scalable formats, some important metrics like the ascender, descender,
+global font bounding box, maximum advance width, etc.. expressed in notional
+font/grid units (as well as the number of units on the EM grid).</li>
+</ul>
+A face is created from a resource object, with the <tt>FT_New_Face</tt>
+API. Each driver contains a list of opened face objects for the resources
+it manages. When a driver is removed or destroyed, all its child faces
+are discarded automatically with it.</blockquote>
+
+<h3>
+2. Size objects :</h3>
+
+<blockquote>Size objects are used to model a given character dimension
+for a given device resolution (which really means a given character pixel
+dimensions).
+<p>Each size object is created from a parent face object. The object can
+be reset to new dimensions at any time. Each face object holds a list of
+all its child sizes, these are destroyed automatically when the face object
+is discarded.
+<p>The metrics contains metrics, expressed in pixels, for the ascender,
+descender, maximum advance width, etc..
+<br>&nbsp;</blockquote>
+
+<h3>
+3. Glyph Slot objects :</h3>
+
+<blockquote>A glyph slot is a container where one can load individual glyphs,
+be they in vector of bitmap format. Each slot also contains metrics for
+the glyph it contains.
+<p>Each face object contains one or more glyph slot object : the first
+glyph slot is created automatically with its parent face, and it is possible
+to add new glyph slots (this is rarely used outside of debugging purposes).
+<br>&nbsp;</blockquote>
+
+<h3>
+4. CharMap objects :</h3>
+
+<blockquote>A charmap object is a sort of dictionary whose task is to translate
+character codes in a given character encoding (like ShiftJIS, Unicode,
+ANSI, etc..) into glyph indexes in a given font face.
+<p>A face object contains one or more charmap objects. All charmap objects
+are created when the parent face is created, though they're not directly
+visible to client applications (rather, they can be enumerated through
+FT_Get_First_CharMap and FT_Get_Next_CharMap, or more simply picked adequately
+with FT_Find_CharMap for a set of given encodings).
+<br>&nbsp;</blockquote>
+
+<h3>
+5. Diagram</h3>
+
+<blockquote>The following diagram illustrates the relationships between
+font objects :
+<center>
+<p><img SRC="objects_diagram2.png" height=327 width=561></center>
+
+<p>Which can be read as :
+<br>&nbsp;
+<ul>
+<li>
+each resource may have zero or more child face objects "opened" for it.
+The number of faces is bounded by the number of font faces within the font
+resource.</li>
+</ul>
+
+<ul>
+<li>
+each driver holds a list of all the faces opened for the resources it manages.
+When the driver is removed, its child faces are discarded automatically.</li>
+</ul>
+
+<ul>
+<li>
+each face object has one single parent resource, and one single driver.</li>
+</ul>
+
+<ul>
+<li>
+each face has one or more charmaps, and one or more glyph slots</li>
+</ul>
+
+<ul>
+<li>
+each face holds a list of zero or more child size objects</li>
+</ul>
+
+<ul>
+<li>
+each charmap, glyph slot and size is related to one given parent face.
+These objects are destroyed automatically when the parent face is discarded.</li>
+</ul>
+</blockquote>
+</blockquote>
+
+<p><br>
+<hr WIDTH="100%">
+<h2>
+V. Driver Interface :</h2>
+
+<blockquote>A font driver is added to a given library object through the
+<tt>FT_Add_Driver</tt>
+API. This function receives a structure known as a <tt>FT_DriverInterface</tt>,
+which describes the driver's basic properties.
+<p>The <tt>FT_DriverInterface</tt> contains a set of function pointers
+used for the base FreeType functionalities. However, each driver can also
+provide a font-format-specific extended interface to allow client applications
+to use more advanced features.
+<br>&nbsp;
+<h3>
+1. Common Interface</h3>
+
+<blockquote>The structure of <tt>FT_DriverInterface</tt> is rather simple,
+and defined in "<tt>base/ftdriver.h</tt>". It must be well known by any
+developer who wants to write a new driver for the engine. We advise reading
+the <b><i>FreeType Driver HowTo</i></b> as well as the source code of existing
+drivers. Source comments.</blockquote>
+
+<h3>
+2. Driver-specific extensions</h3>
+
+<blockquote>The field of the <tt>FT_DriverInterface</tt> structure is a
+typeless pointer to a format-specific interface. This extended interface
+is usually a structure containing function pointers as well as other kind
+of information related to the driver.
+<p>It is assumed that client applications that wish to use the driver-specific
+extensions are able to <tt>#include</tt> the relevant header files to understand
+the format-specific interface structure.</blockquote>
+</blockquote>
+
+<hr WIDTH="100%">
+<h2>
+VI. Configuration:</h2>
+
+<blockquote>This section relates to the configuration of the FreeType library.
+By configuration, we mean selection of build options as well as the choice
+of font drivers to be used for each new library object.
+<br>&nbsp;
+<h3>
+1. Configuration files :</h3>
+
+<blockquote>A single file is used to configure the FreeType base engine.
+As it is considered system-specific, it is located in the architecture
+directories of the library, under the name "arch/&lt;system>/ftconfig.h".
+Note that the same directory should also contain a platform-specific implementation
+of "ftsys.c".
+<p>The configuration files is a simple C header which is included by the
+engine's sources during compilation. It is not included in "freetype.h",
+and hence doesn't need to be copied when installing the FreeType headers
+on your system.
+<p>It is made of a series of #define or #undef statements, which are used
+to select or turn off a specific option. Each option is documented with
+heavy comments, and some of them are explained below.</blockquote>
+
+<h3>
+2. Building and Makefiles :</h3>
+
+<blockquote>FreeType 2.0 is more complex than its 1.x release. In order
+to facilitate maintenance, as well as ease considerably the writing of
+new font drivers, <b><i>only GNU Make is supported with FreeType 2.0</i></b>.
+However, it is possible to use any compiler, as well as any object or library
+prefix (<tt>.o, .obj, .a, .lib</tt> etc..) with them.
+<p>To build FreeType 2.0, one has to be in the library directory, then
+invoke its platform-specific makefile. For a Unix system, this would be
+:
+<blockquote>
+<blockquote><tt>% cd freetype2/lib</tt>
+<br><tt>% make -f arch/unix/Makefile</tt>
+<p>where '<tt>make</tt>' is really GNU Make !</blockquote>
+</blockquote>
+The system-specific <tt>Makefile</tt> located in '<tt>arch/<i>&lt;system></i></tt>'
+is a tiny file used to define several variables. It then includes the file
+<tt>freetype2/lib/Makefile.lib</tt>,
+which contains all the gory details about library compilation. The system-specific
+<tt>Makefile</tt> can be very easily modified to accomodate a new compiler/platform
+(see the comments within one of these files).
+<p>Each font driver is located in a directory like "<tt>freetype2/lib/drivers/<i>&lt;formatdir></i></tt>".
+For example, the TrueType driver is located in "<tt>drivers/truetype</tt>".
+Each driver directory must contain a <tt>Makefile</tt> which will be included
+by <tt>Makefile.lib</tt>. The former is used to define and build driver
+object files.
+<br>&nbsp;
+<p><br>
+<center>
+<p><img SRC="build_diagram.png" height=284 width=559></center>
+</blockquote>
+
+<h3>
+3. Make options :</h3>
+
+<blockquote>The base layer, as well as each font driver, are made up of
+several C sources. Traditionally, one compiles each source (i.e. '<tt>.c</tt>'
+file) into an object ('<tt>.o</tt>' or '<tt>.obj</tt>') file, and all of
+them are grouped into a library file (i.e. '<tt>.a</tt>' or '<tt>.lib</tt>').
+<p>By default, FreeType takes a slightly different approach when it comes
+to compiling each part of the engine. Usually, a single tiny source is
+compiled, which includes all other component sources. This results in a
+single object files, with the benefits or reduced code size, usually better
+compilation as well as a drastic reduction of the number of symbols exported
+by the library. Of course, it is made possible through the use of specific
+declaration macros in the FreeType source (see the definition of <tt>LOCAL_DEF</tt>
+and <tt>LOCAL_FUNC</tt> in <tt>ftconfig.h</tt> for details).
+<p>For a concrete example, see the source code in "<tt>base/ftbase.c</tt>"
+which generates the whole base layer in a single object file. The same
+build process is applied to font drivers, in order to generate one single
+object file per given font format (e.g. <tt>truetype.o</tt>, <tt>type1.o</tt>,
+etc..).
+<p>Compiling the library and drivers in "normal" mode is possible, through
+the use of the '<tt>multi</tt>' target (which really means &laquo; multiple
+objects &raquo;). For example, calling :
+<blockquote><tt>% make -f arch/ansi/Makefile multi</tt></blockquote>
+Will build the FreeType library by compiling each source file to an individual
+object, then linking them together. You'll notice that the library is significantly
+bigger in this case. Creating a shared dll from a 'multi' build is certainly
+a very poor idea, as this will export a huge quantity of symbols that aren't
+useful to any client application.</blockquote>
+
+<h3>
+4. Adding a driver at compile time</h3>
+
+<blockquote>A driver can be included very easily in the build process by
+including its <tt>Makefile</tt> in <tt>Makefile.lib</tt>. For example,
+the TrueType driver is simply included with the following lines (see <tt>Makefile.lib</tt>):
+<blockquote><tt># TrueType driver rules</tt>
+<br><tt>#</tt>
+<br><tt>include $(DRIVERS_DIR)/truetype/Makefile</tt></blockquote>
+
+<p><br>Where <tt>DRIVERS_DIR</tt> really is "<tt>freetype2/lib/drivers</tt>",
+though this can be redefined. You can, of course specify a different path
+if you want to place your driver sources in another location.
+<p>Note that this only adds the driver's object files to the generated
+library file. A few more steps are needed to make your <tt>FT_Library</tt>
+objects use the driver. They consist in modifying the file "<tt>base/ftinit.c</tt>",
+whose sole purpose is to define the set of driver objects that are to be
+created with each new library object.
+<br>&nbsp;</blockquote>
+
+<h3>
+5. Adding a driver at run time</h3>
+
+<blockquote>New driver objects can be added at run-time through the <tt>FT_Add_Driver</tt>
+API. This function takes a handle to an existing library object, as well
+as a pointer to a given driver interface. This interface is used to create
+a new driver object and register it within the library.
+<p>Similarly, a single driver can be removed from a library anytime through
+<tt>FT_Remove_Driver</tt>.
+This will automatically discard the resources and face objects managed
+by the driver.</blockquote>
+
+<h3>
+6. Custom library objects :</h3>
+
+<blockquote>Finally, it is possible to build custom library objects. You
+need to pass a handle to a valid <tt>FT_System</tt> object to the <tt>FT_Build_Library</tt>
+API. The function will return a handle to the new fresh library object.
+Note that the library has no registered drivers after the call, developers
+have to add them by hand with <tt>FT_Add_Driver</tt>.
+<p>It is thus possible to create two distinct library objects with distinct
+<tt>FT_System</tt>
+implementations in the same session, which can be useful for debugging
+purpose.</blockquote>
+
+<br>&nbsp;</blockquote>
+
+</body>
+</html>
