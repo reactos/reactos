@@ -15,8 +15,6 @@
 
 #ifndef __USE_W32API
 
-#define GENERIC_READ	(0x80000000L)
-#define GENERIC_WRITE	(0x40000000L)
 #define FILE_READ_DATA            ( 0x0001 )    /* file & pipe */
 #define FILE_LIST_DIRECTORY       ( 0x0001 )    /* directory */
 
