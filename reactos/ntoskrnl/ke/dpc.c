@@ -6,8 +6,9 @@
  * PROGRAMMER:      David Welch (welch@mcmail.com)
  * UPDATE HISTORY:
  *                28/05/98: Created
+ *                12/3/99:  Phillip Susi: Fixed IRQL problem
  */
-
+                
 /*
  * NOTE: See also the higher level support routines in ntoskrnl/io/dpc.c
  */
@@ -101,7 +102,8 @@ BOOLEAN KeRemoveQueueDpc(PKDPC Dpc)
 {
    KIRQL oldIrql;
    
-   KeAcquireSpinLock(&DpcQueueLock, &oldIrql);
+   KeAcquireSpinLockAtDpcLevel( &DpcQueueLock );
+   KeRaiseIrql( HIGH_LEVEL, &oldIrql );
    if (!Dpc->Lock)
      {
 	KeReleaseSpinLock(&DpcQueueLock, oldIrql);
@@ -126,6 +128,7 @@ BOOLEAN KeInsertQueueDpc(PKDPC dpc, PVOID SystemArgument1,
  *          FALSE otherwise
  */
 {
+   KIRQL oldlvl;
    DPRINT("KeInsertQueueDpc(dpc %x, SystemArgument1 %x, SystemArgument2 %x)\n",
 	  dpc, SystemArgument1, SystemArgument2);
 
@@ -139,11 +142,12 @@ BOOLEAN KeInsertQueueDpc(PKDPC dpc, PVOID SystemArgument1,
      {
 	return(FALSE);
      }
+   KeRaiseIrql( HIGH_LEVEL, &oldlvl );
    KeAcquireSpinLockAtDpcLevel(&DpcQueueLock);
    InsertHeadList(&DpcQueueHead,&dpc->DpcListEntry);
    DPRINT("dpc->DpcListEntry.Flink %x\n", dpc->DpcListEntry.Flink);
    DpcQueueSize++;
-   KeReleaseSpinLockFromDpcLevel(&DpcQueueLock);
+   KeReleaseSpinLock( &DpcQueueLock, oldlvl );
    dpc->Lock=(PULONG)1;
    DPRINT("DpcQueueHead.Flink %x\n",DpcQueueHead.Flink);
    DPRINT("Leaving KeInsertQueueDpc()\n",0);
