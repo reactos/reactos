@@ -4,3 +4,6 @@
 *.o
 *.sym
 *.map
+*.opt
+*.ncb
+*.plg
