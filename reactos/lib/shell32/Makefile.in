@@ -58,6 +58,11 @@ RC_BINARIES = \
 	drive.ico \
 	folder.ico \
 	folder_open.ico \
+	floppy.ico \
+	netdrive.ico \
+	netdrive2.ico \
+	cdrom.ico \
+	ramdisk.ico \
 	mycomputer.ico
 
 C_SRCS16  = shell.c
