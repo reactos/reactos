@@ -365,7 +365,7 @@ int adns_processreadable(adns_state ads, ADNS_SOCKET fd, const struct timeval *n
 	want= 2;
       }
       ads->tcprecv.used -= ads->tcprecv_skip;
-      memmove(ads->tcprecv.buf,ads->tcprecv.buf+ads->tcprecv_skip,ads->tcprecv.used);
+      memmove(ads->tcprecv.buf,ads->tcprecv.buf+ads->tcprecv_skip, (size_t) ads->tcprecv.used);
       ads->tcprecv_skip= 0;
       if (!adns__vbuf_ensure(&ads->tcprecv,want)) { r= ENOMEM; goto xit; }
       assert(ads->tcprecv.used <= ads->tcprecv.avail);
@@ -485,7 +485,7 @@ int adns_processwriteable(adns_state ads, ADNS_SOCKET fd, const struct timeval *
 	r= 0; goto xit;
       } else if (r>0) {
 	ads->tcpsend.used -= r;
-	memmove(ads->tcpsend.buf,ads->tcpsend.buf+r,ads->tcpsend.used);
+	memmove(ads->tcpsend.buf,ads->tcpsend.buf+r, (size_t) ads->tcpsend.used);
       }
     }
     r= 0;
