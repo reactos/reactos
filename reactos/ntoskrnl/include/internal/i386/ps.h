@@ -26,6 +26,7 @@
 #define KTHREAD_STACK_LIMIT       0x1C
 #define KTHREAD_TEB               0x20
 #define KTHREAD_KERNEL_STACK      0x28
+#define KTHREAD_SERVICE_TABLE     0xDC
 #define KTHREAD_PREVIOUS_MODE     0x137
 #define KTHREAD_TRAP_FRAME        0x128
 #define KTHREAD_CALLBACK_STACK    0x120

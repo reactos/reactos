@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kthread.c,v 1.38 2003/06/05 23:37:00 gdalsnes Exp $
+/* $Id: kthread.c,v 1.39 2003/06/16 16:45:52 ekohl Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Microkernel thread support
@@ -76,7 +76,7 @@ KeReleaseThread(PETHREAD Thread)
   return(STATUS_SUCCESS);
 }
 
-VOID 
+VOID
 KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
 /*
  * FUNCTION: Initialize the microkernel state of the thread
@@ -186,6 +186,9 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
   Thread->KernelApcDisable = 1;
   Thread->UserAffinity = Process->Affinity;
   Thread->SystemAffinityActive = 0;
+  Thread->PowerState = 0;
+  Thread->NpxIrql = 0;
+  Thread->ServiceTable = KeServiceDescriptorTable;
   Thread->Queue = NULL;
   KeInitializeSpinLock(&Thread->ApcQueueLock);
   memset(&Thread->Timer, 0, sizeof(KTIMER));
@@ -214,7 +217,7 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
   Thread->AutoAlignment = 0;
   KeInitializeApc(&Thread->SuspendApc,
 		  Thread,
-        OriginalApcEnvironment,
+		  OriginalApcEnvironment,
 		  PiSuspendThreadKernelRoutine,
 		  PiSuspendThreadRundownRoutine,
 		  PiSuspendThreadNormalRoutine,

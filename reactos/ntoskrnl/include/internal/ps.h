@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.46 2003/06/07 10:14:39 chorns Exp $
+/* $Id: ps.h,v 1.47 2003/06/16 16:45:03 ekohl Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -107,7 +107,10 @@ typedef struct _KTHREAD
    LONG              KernelApcDisable;    /* D0 */
    KAFFINITY         UserAffinity;        /* D4 */
    UCHAR             SystemAffinityActive;/* D8 */
-   UCHAR             Pad[7];              /* D9 */
+   UCHAR             PowerState;          /* D9 */
+   UCHAR             NpxIrql;             /* DA */
+   UCHAR             Pad;                 /* DB */
+   SSDT_ENTRY        *ServiceTable;       /* DC */
    PKQUEUE           Queue;               /* E0 */
    KSPIN_LOCK        ApcQueueLock;        /* E4 */
    KTIMER            Timer;               /* E8 */
