@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.96 2003/11/07 17:40:02 gvg Exp $
+/* $Id: dc.c,v 1.97 2003/11/08 15:00:36 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -765,23 +765,6 @@ NtGdiDeleteDC(HDC  DCHandle)
       return  FALSE;
     }
   DPRINT( "Deleting DC\n" );
-  if (! (DCToDelete->w.flags & DC_MEMORY)  /* Don't reset the display if its a memory DC */
-      && NULL != DCToDelete->DriverName)
-  {
-    if (!DRIVER_UnreferenceDriver (DCToDelete->DriverName))
-    {
-      DPRINT( "No more references to driver, reseting display\n" );
-      DCToDelete->DriverFunctions.AssertMode( DCToDelete->PDev, FALSE );
-      CHECKPOINT;
-      DCToDelete->DriverFunctions.DisableSurface(DCToDelete->PDev);
-      CHECKPOINT;
-      DCToDelete->DriverFunctions.DisablePDev(DCToDelete->PDev);
-
-      ObDereferenceObject(PrimarySurface.VideoDeviceObject);
-
-      PrimarySurfaceCreated = FALSE;
-    }
-  }
   CHECKPOINT;
   /*  First delete all saved DCs  */
   while (DCToDelete->saveLevel)
@@ -1935,7 +1918,23 @@ DC_FreeDC(HDC  DCToFree)
 BOOL FASTCALL
 DC_InternalDeleteDC( PDC DCToDelete )
 {
-  if( DCToDelete->DriverName )
+  if (! (DCToDelete->w.flags & DC_MEMORY)  /* Don't reset the display if its a memory DC */
+      && NULL != DCToDelete->DriverName
+      && ! DRIVER_UnreferenceDriver (DCToDelete->DriverName))
+    {
+      DPRINT( "No more references to driver, reseting display\n" );
+      DCToDelete->DriverFunctions.AssertMode( DCToDelete->PDev, FALSE );
+      CHECKPOINT;
+      DCToDelete->DriverFunctions.DisableSurface(DCToDelete->PDev);
+      CHECKPOINT;
+      DCToDelete->DriverFunctions.DisablePDev(DCToDelete->PDev);
+
+      ObDereferenceObject(PrimarySurface.VideoDeviceObject);
+
+      PrimarySurfaceCreated = FALSE;
+    }
+
+  if (NULL != DCToDelete->DriverName)
     {
       ExFreePool(DCToDelete->DriverName);
     }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.129 2003/11/03 18:52:21 ekohl Exp $
+/* $Id: window.c,v 1.130 2003/11/08 15:00:36 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1344,9 +1344,6 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 
   DPRINT("NtUserCreateWindowEx(): (%d,%d-%d,%d)\n", x, y, nWidth, nHeight);
 
-  /* Initialize gui state if necessary. */
-  IntGraphicsCheck(TRUE);
-
   if (!RtlCreateUnicodeString(&WindowName,
                               NULL == lpWindowName->Buffer ?
                               L"" : lpWindowName->Buffer))
@@ -1354,6 +1351,9 @@ NtUserCreateWindowEx(DWORD dwExStyle,
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
       return((HWND)0);
     }
+
+  /* Initialize gui state if necessary. */
+  IntGraphicsCheck(TRUE);
 
   ParentWindowHandle = PsGetWin32Thread()->Desktop->DesktopWindow;
   OwnerWindowHandle = NULL;
@@ -1375,6 +1375,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
     }
   else if ((dwStyle & (WS_CHILD | WS_POPUP)) == WS_CHILD)
     {
+      IntGraphicsCheck(FALSE);
       return (HWND)0;  /* WS_CHILD needs a parent, but WS_POPUP doesn't */
     }
 
@@ -1388,6 +1389,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
     {
       RtlFreeUnicodeString(&WindowName);
       IntReleaseWindowObject(ParentWindow);
+      IntGraphicsCheck(FALSE);
       return((HWND)0);
     }
 
@@ -1405,6 +1407,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
       IntReleaseWindowObject(ParentWindow);
       DPRINT("Validation of window station handle (0x%X) failed\n",
 	     PROCESS_WINDOW_STATION());
+      IntGraphicsCheck(FALSE);
       return (HWND)0;
     }
 
@@ -1421,6 +1424,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
       ObmDereferenceObject(ClassObject);
       RtlFreeUnicodeString(&WindowName);
       IntReleaseWindowObject(ParentWindow);
+      IntGraphicsCheck(FALSE);
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
       return (HWND)0;
     }
@@ -1585,6 +1589,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
     {
       /* FIXME: Cleanup. */
       IntReleaseWindowObject(ParentWindow);
+      IntGraphicsCheck(FALSE);
       DPRINT("NtUserCreateWindowEx(): NCCREATE message failed.\n");
       return((HWND)0);
     }
@@ -1623,6 +1628,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
     {
       /* FIXME: Cleanup. */
       IntReleaseWindowObject(ParentWindow);
+      IntGraphicsCheck(FALSE);
       DPRINT("NtUserCreateWindowEx(): send CREATE message failed.\n");
       return((HWND)0);
     } 
