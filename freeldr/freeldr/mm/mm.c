@@ -45,6 +45,7 @@ PVOID AllocateMemory(ULONG NumberOfBytes)
 	if (NumberOfBytes == 0)
 	{
 		DbgPrint((DPRINT_MEMORY, "AllocateMemory() called for 0 bytes. Returning NULL.\n"));
+		MessageBox("Memory allocation failed: AllocateMemory() called for 0 bytes.");
 		return NULL;
 	}
 

@@ -131,7 +131,7 @@ VOID BootMain(VOID)
 		}
 		else if (stricmp(SettingValue, "Linux") == 0)
 		{
-			MessageBox("Cannot boot this OS type yet!");
+			LoadAndBootLinux(OperatingSystemSectionNames[SelectedOperatingSystem]);
 		}
 		else if (stricmp(SettingValue, "BootSector") == 0)
 		{

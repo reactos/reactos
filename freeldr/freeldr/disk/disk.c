@@ -73,7 +73,7 @@ BOOL DiskReadLogicalSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG SectorC
 		// LBA is easy, nothing to calculate
 		// Just do the read
 		//
-		if (!BiosInt13ReadExtended(DriveNumber, SectorNumber, 1, Buffer))
+		if (!BiosInt13ReadExtended(DriveNumber, SectorNumber, SectorCount, Buffer))
 		{
 			DiskError("Disk read error.");
 			return FALSE;

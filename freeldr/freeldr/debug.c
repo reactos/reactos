@@ -25,9 +25,10 @@
 #ifdef DEBUG
 
 //ULONG	DebugPrintMask = DPRINT_WARNING | DPRINT_MEMORY | DPRINT_FILESYSTEM |
-//						 DPRINT_UI | DPRINT_DISK | DPRINT_CACHE;
-ULONG	DebugPrintMask = DPRINT_WARNING | DPRINT_MEMORY | DPRINT_FILESYSTEM |
-						 DPRINT_UI | DPRINT_DISK;
+//						 DPRINT_UI | DPRINT_DISK | DPRINT_CACHE | DPRINT_REACTOS |
+//						 DPRINT_LINUX;
+ULONG	DebugPrintMask = DPRINT_WARNING | /*DPRINT_FILESYSTEM |
+						 DPRINT_CACHE |*/ DPRINT_LINUX;
 //ULONG	DebugPrintMask = DPRINT_INIFILE;
 
 #define	SCREEN				0
@@ -153,6 +154,26 @@ VOID DebugPrintHeader(ULONG Mask)
 		DebugPrintChar(':');
 		DebugPrintChar(' ');
 		break;
+	case DPRINT_REACTOS:
+		DebugPrintChar('R');
+		DebugPrintChar('E');
+		DebugPrintChar('A');
+		DebugPrintChar('C');
+		DebugPrintChar('T');
+		DebugPrintChar('O');
+		DebugPrintChar('S');
+		DebugPrintChar(':');
+		DebugPrintChar(' ');
+		break;
+	case DPRINT_LINUX:
+		DebugPrintChar('L');
+		DebugPrintChar('I');
+		DebugPrintChar('N');
+		DebugPrintChar('U');
+		DebugPrintChar('X');
+		DebugPrintChar(':');
+		DebugPrintChar(' ');
+		break;
 	default:
 		DebugPrintChar('U');
 		DebugPrintChar('N');
@@ -233,6 +254,79 @@ VOID DebugPrint(ULONG Mask, char *format, ...)
 		//getch();
 	}
 
+}
+
+VOID DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length)
+{
+	PUCHAR	BufPtr = (PUCHAR)Buffer;
+	ULONG	Idx;
+	ULONG	Idx2;
+	
+	// Mask out unwanted debug messages
+	if (!(Mask & DebugPrintMask))
+	{
+		return;
+	}
+
+	DebugStartOfLine = FALSE; // We don't want line headers
+	DebugPrint(Mask, "Dumping buffer at 0x%x with length of %d bytes:\n", Buffer, Length);
+
+	for (Idx=0; Idx<Length; )
+	{
+		DebugStartOfLine = FALSE; // We don't want line headers
+
+		if (Idx < 0x0010)
+		{
+			DebugPrint(Mask, "000%x:\t", Idx);
+		}
+		else if (Idx < 0x0100)
+		{
+			DebugPrint(Mask, "00%x:\t", Idx);
+		}
+		else if (Idx < 0x1000)
+		{
+			DebugPrint(Mask, "0%x:\t", Idx);
+		}
+		else
+		{
+			DebugPrint(Mask, "%x:\t", Idx);
+		}
+
+		for (Idx2=0; Idx2<16; Idx2++,Idx++)
+		{
+			if (BufPtr[Idx] < 0x10)
+			{
+				DebugPrint(Mask, "0");
+			}
+			DebugPrint(Mask, "%x", BufPtr[Idx]);
+
+			if (Idx2 == 7)
+			{
+				DebugPrint(Mask, "-");
+			}
+			else
+			{
+				DebugPrint(Mask, " ");
+			}
+		}
+
+		Idx -= 16;
+		DebugPrint(Mask, " ");
+
+		for (Idx2=0; Idx2<16; Idx2++,Idx++)
+		{
+			if ((BufPtr[Idx] > 20) && (BufPtr[Idx] < 0x80))
+			{
+				DebugPrint(Mask, "%c", BufPtr[Idx]);
+			}
+			else
+			{
+				DebugPrint(Mask, ".");
+			}
+		}
+
+		DebugPrint(Mask, "\n");
+	}
 }
 
 #endif // defined DEBUG

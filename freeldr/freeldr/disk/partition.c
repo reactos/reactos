@@ -43,7 +43,7 @@ BOOL DiskIsDriveRemovable(ULONG DriveNumber)
 
 BOOL DiskIsDriveCdRom(ULONG DriveNumber)
 {
-	PUCHAR Sector;
+	PUCHAR Sector = (PUCHAR)DISKREADBUFFER;
 	BOOL Result;
 
 	// Hard disks use drive numbers >= 0x80
@@ -51,7 +51,6 @@ BOOL DiskIsDriveCdRom(ULONG DriveNumber)
 	// then return FALSE
 	if ((DriveNumber >= 0x80) && (BiosInt13ExtensionsSupported(DriveNumber)))
 	{
-		Sector = AllocateMemory(2048);
 
 		if (!BiosInt13ReadExtended(DriveNumber, 16, 1, Sector))
 		{
@@ -66,8 +65,6 @@ BOOL DiskIsDriveCdRom(ULONG DriveNumber)
 			  Sector[3] == '0' &&
 			  Sector[4] == '0' &&
 			  Sector[5] == '1');
-
-		FreeMemory(Sector);
 
 		return Result;
 	}

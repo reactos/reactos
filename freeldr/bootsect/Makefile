@@ -44,6 +44,6 @@ bin2c.exe: bin2c.c
 	$(CC) -o bin2c.exe bin2c.c
 
 clean:
-	$(RM) *.bin
-	$(RM) *.exe
-	$(RM) *.h
+	- $(RM) *.bin
+	- $(RM) *.exe
+	- $(RM) *.h

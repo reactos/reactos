@@ -33,6 +33,16 @@ EXTERN(_JumpToBootCode)
 	/* Set the boot drive */
 	movb	(_BootDrive),%dl
 
+	/* Load segment registers */
+	cli
+	movw	$0x0000,%bx
+	movw	%bx,%ds
+	movw	%bx,%es
+	movw	%bx,%fs
+	movw	%bx,%gs
+	movw	%bx,%ss
+	movw	$0x7C00,%sp
+
 	ljmpl	$0x0000,$0x7C00
 
 
@@ -44,4 +54,14 @@ EXTERN(_JumpToLinuxBootCode)
 	/* Set the boot drive */
 	movb	(_BootDrive),%dl
 
-	ljmpl	$0x0200,$0x9000
+	/* Load segment registers */
+	cli
+	movw	$0x9000,%bx
+	movw	%bx,%ds
+	movw	%bx,%es
+	movw	%bx,%fs
+	movw	%bx,%gs
+	movw	%bx,%ss
+	movw	$0x8FF4,%sp
+
+	ljmpl	$0x9020,$0x0000

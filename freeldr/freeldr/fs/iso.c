@@ -186,7 +186,7 @@ static ULONG IsoGetNumPathParts(PUCHAR Path)
 
 	for (i=0,num=0; i<(int)strlen(Path); i++)
 	{
-		if (Path[i] == '\\')
+		if ((Path[i] == '\\') || (Path[i] == '/'))
 		{
 			num++;
 		}
@@ -215,7 +215,7 @@ static VOID IsoGetFirstNameFromPath(PUCHAR Buffer, PUCHAR Path)
 	// and put them in Buffer
 	for (i=0; i<(int)strlen(Path); i++)
 	{
-		if (Path[i] == '\\')
+		if ((Path[i] == '\\') || (Path[i] == '/'))
 		{
 			break;
 		}
@@ -257,7 +257,7 @@ static BOOL IsoLookupFile(PUCHAR FileName, PISO_FILE_INFO IsoFileInfoPointer)
 	//
 	// Check and see if the first character is '\' and remove it if so
 	//
-	while (*FileName == '\\')
+	while ((*FileName == '\\') || (*FileName == '/'))
 	{
 		FileName++;
 	}
@@ -283,7 +283,7 @@ static BOOL IsoLookupFile(PUCHAR FileName, PISO_FILE_INFO IsoFileInfoPointer)
 		//
 		// Advance to the next part of the path
 		//
-		for (; (*FileName != '\\') && (*FileName != '\0'); FileName++)
+		for (; (*FileName != '\\') && (*FileName != '/') && (*FileName != '\0'); FileName++)
 		{
 		}
 		FileName++;
@@ -535,8 +535,8 @@ BOOL IsoReadFile(FILE *FileHandle, ULONG BytesToRead, PULONG BytesRead, PVOID Bu
 		{
 			*BytesRead += BytesToRead;
 		}
-		BytesToRead -= BytesToRead;
 		IsoFileInfo->FilePointer += BytesToRead;
+		BytesToRead -= BytesToRead;
 		Buffer += BytesToRead;
 	}
 

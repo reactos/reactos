@@ -30,17 +30,22 @@
 	#define DPRINT_UI			0x00000010		// OR this with DebugPrintMask to enable user interface messages
 	#define DPRINT_DISK			0x00000020		// OR this with DebugPrintMask to enable disk messages
 	#define DPRINT_CACHE		0x00000040		// OR this with DebugPrintMask to enable cache messages
+	#define DPRINT_REACTOS		0x00000080		// OR this with DebugPrintMask to enable ReactOS messages
+	#define DPRINT_LINUX		0x00000100		// OR this with DebugPrintMask to enable Linux messages
 
 	VOID	DebugInit(VOID);
 	VOID	DebugPrint(ULONG Mask, char *format, ...);
+	VOID	DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length);
 
-	#define DbgPrint(_x_)	DebugPrint _x_
-	#define BugCheck(_x_) { DebugPrint(DPRINT_WARNING, "Fatal Error: %s:%d\n", __FILE__, __LINE__); DebugPrint _x_ ; for (;;); }
+	#define DbgPrint(_x_)					DebugPrint _x_
+	#define BugCheck(_x_)				  { DebugPrint(DPRINT_WARNING, "Fatal Error: %s:%d\n", __FILE__, __LINE__); DebugPrint _x_ ; for (;;); }
+	#define DbgDumpBuffer(_x_, _y_, _z_)	DebugDumpBuffer(_x_, _y_, _z_)
 
 #else
 
 	#define DbgPrint(_x_)
 	#define BugCheck(_x_)
+	#define DbgDumpBuffer(_x_, _y_, _z_)
 
 #endif // defined DEBUG
 
