@@ -29,7 +29,6 @@ http://msdn.microsoft.com/library/default.asp?url=/library/en-us/msi/setup/stand
 #include <stdarg.h>
 #include <stdio.h>
 #include <fcntl.h>
-
 #define COBJMACROS
 
 #include "windef.h"
@@ -157,6 +156,12 @@ static UINT ACTION_PublishProduct(MSIPACKAGE *package);
 static UINT HANDLE_CustomType1(MSIPACKAGE *package, const LPWSTR source, 
                                 const LPWSTR target, const INT type);
 static UINT HANDLE_CustomType2(MSIPACKAGE *package, const LPWSTR source, 
+                                const LPWSTR target, const INT type);
+static UINT HANDLE_CustomType18(MSIPACKAGE *package, const LPWSTR source, 
+                                const LPWSTR target, const INT type);
+static UINT HANDLE_CustomType50(MSIPACKAGE *package, const LPWSTR source, 
+                                const LPWSTR target, const INT type);
+static UINT HANDLE_CustomType34(MSIPACKAGE *package, const LPWSTR source, 
                                 const LPWSTR target, const INT type);
 
 static DWORD deformat_string(MSIPACKAGE *package, WCHAR* ptr,WCHAR** data);
@@ -761,6 +766,9 @@ static UINT ACTION_ProcessExecSequence(MSIPACKAGE *package, BOOL UIran)
 
             rc = ACTION_PerformAction(package,buffer);
 
+            if (rc == ERROR_FUNCTION_NOT_CALLED)
+                rc = ERROR_SUCCESS;
+
             if (rc != ERROR_SUCCESS)
             {
                 ERR("Execution halted due to error (%i)\n",rc);
@@ -851,6 +859,9 @@ static UINT ACTION_ProcessUISequence(MSIPACKAGE *package)
 
             rc = ACTION_PerformAction(package,buffer);
 
+            if (rc == ERROR_FUNCTION_NOT_CALLED)
+                rc = ERROR_SUCCESS;
+
             if (rc != ERROR_SUCCESS)
             {
                 ERR("Execution halted due to error (%i)\n",rc);
@@ -936,7 +947,7 @@ UINT ACTION_PerformAction(MSIPACKAGE *package, const WCHAR *action)
      else if ((rc = ACTION_CustomAction(package,action)) != ERROR_SUCCESS)
      {
         FIXME("UNHANDLED MSI ACTION %s\n",debugstr_w(action));
-        rc = ERROR_SUCCESS;
+        rc = ERROR_FUNCTION_NOT_CALLED;
      }
 
     ui_actioninfo(package, action, FALSE, rc);
@@ -999,6 +1010,15 @@ static UINT ACTION_CustomAction(MSIPACKAGE *package,const WCHAR *action)
             break;
         case 2: /* EXE file stored in a Binary table strem */
             rc = HANDLE_CustomType2(package,source,target,type);
+            break;
+        case 18: /*EXE file installed with package */
+            rc = HANDLE_CustomType18(package,source,target,type);
+            break;
+        case 50: /*EXE file specified by a property value */
+            rc = HANDLE_CustomType50(package,source,target,type);
+            break;
+        case 34: /*EXE to be run in specified directory */
+            rc = HANDLE_CustomType34(package,source,target,type);
             break;
         case 35: /* Directory set with formatted text. */
         case 51: /* Property set with formatted text. */
@@ -1234,7 +1254,6 @@ static UINT HANDLE_CustomType2(MSIPACKAGE *package, const LPWSTR source,
     static const WCHAR spc[] = {' ',0};
 
     memset(&si,0,sizeof(STARTUPINFOW));
-    memset(&info,0,sizeof(PROCESS_INFORMATION));
 
     store_binary_to_temp(package, source, tmp_file);
 
@@ -1258,6 +1277,132 @@ static UINT HANDLE_CustomType2(MSIPACKAGE *package, const LPWSTR source,
     if (!(type & 0xc0))
         WaitForSingleObject(info.hProcess,INFINITE);
 
+    CloseHandle( info.hProcess );
+    CloseHandle( info.hThread );
+    return ERROR_SUCCESS;
+}
+
+static UINT HANDLE_CustomType18(MSIPACKAGE *package, const LPWSTR source, 
+                                const LPWSTR target, const INT type)
+{
+    WCHAR filename[MAX_PATH*2];
+    STARTUPINFOW si;
+    PROCESS_INFORMATION info;
+    BOOL rc;
+    WCHAR *deformated;
+    static const WCHAR spc[] = {' ',0};
+    int index;
+
+    memset(&si,0,sizeof(STARTUPINFOW));
+
+    index = get_loaded_file(package,source);
+    strcpyW(filename,package->files[index].TargetPath);
+
+    strcatW(filename,spc);
+    deformat_string(package,target,&deformated);
+    strcatW(filename,deformated);
+
+    HeapFree(GetProcessHeap(),0,deformated);
+
+    TRACE("executing exe %s \n",debugstr_w(filename));
+
+    rc = CreateProcessW(NULL, filename, NULL, NULL, FALSE, 0, NULL,
+                  c_collen, &si, &info);
+
+    if ( !rc )
+    {
+        ERR("Unable to execute command\n");
+        return ERROR_SUCCESS;
+    }
+
+    if (!(type & 0xc0))
+        WaitForSingleObject(info.hProcess,INFINITE);
+
+    CloseHandle( info.hProcess );
+    CloseHandle( info.hThread );
+    return ERROR_SUCCESS;
+}
+
+static UINT HANDLE_CustomType50(MSIPACKAGE *package, const LPWSTR source, 
+                                const LPWSTR target, const INT type)
+{
+    WCHAR filename[MAX_PATH*2];
+    STARTUPINFOW si;
+    PROCESS_INFORMATION info;
+    BOOL rc;
+    WCHAR *deformated;
+    static const WCHAR spc[] = {' ',0};
+    DWORD sz;
+
+    memset(&si,0,sizeof(STARTUPINFOW));
+
+    sz = MAX_PATH*2;
+    if (MSI_GetPropertyW(package,source,filename,&sz) != ERROR_SUCCESS)
+        return ERROR_FUNCTION_FAILED;
+
+    strcatW(filename,spc);
+    deformat_string(package,target,&deformated);
+    strcatW(filename,deformated);
+
+    HeapFree(GetProcessHeap(),0,deformated);
+
+    TRACE("executing exe %s \n",debugstr_w(filename));
+
+    rc = CreateProcessW(NULL, filename, NULL, NULL, FALSE, 0, NULL,
+                  c_collen, &si, &info);
+
+    if ( !rc )
+    {
+        ERR("Unable to execute command\n");
+        return ERROR_SUCCESS;
+    }
+
+    if (!(type & 0xc0))
+        WaitForSingleObject(info.hProcess,INFINITE);
+
+    CloseHandle( info.hProcess );
+    CloseHandle( info.hThread );
+    return ERROR_SUCCESS;
+}
+
+static UINT HANDLE_CustomType34(MSIPACKAGE *package, const LPWSTR source, 
+                                const LPWSTR target, const INT type)
+{
+    WCHAR filename[MAX_PATH*2];
+    STARTUPINFOW si;
+    PROCESS_INFORMATION info;
+    BOOL rc;
+    WCHAR *deformated;
+
+    memset(&si,0,sizeof(STARTUPINFOW));
+
+    rc = resolve_folder(package, source, filename, FALSE, FALSE, NULL);
+    if (rc != ERROR_SUCCESS)
+        return rc;
+
+    SetCurrentDirectoryW(filename);
+
+    deformat_string(package,target,&deformated);
+    strcpyW(filename,deformated);
+
+    HeapFree(GetProcessHeap(),0,deformated);
+
+    TRACE("executing exe %s \n",debugstr_w(filename));
+
+    rc = CreateProcessW(NULL, filename, NULL, NULL, FALSE, 0, NULL,
+                  c_collen, &si, &info);
+
+    if ( !rc )
+    {
+        ERR("Unable to execute command\n");
+        return ERROR_SUCCESS;
+    }
+
+    if (!(type & 0xc0))
+        WaitForSingleObject(info.hProcess,INFINITE);
+
+    CloseHandle( info.hProcess );
+    CloseHandle( info.hThread );
     return ERROR_SUCCESS;
 }
 
@@ -2118,7 +2263,7 @@ static UINT ACTION_CostFinalize(MSIPACKAGE *package)
                     version = HeapAlloc(GetProcessHeap(),0,versize);
                     GetFileVersionInfoW(file->TargetPath, 0, versize, version);
 
-                    VerQueryValueW(version, name, (LPVOID*)&lpVer, &sz);
+                    VerQueryValueW(version, (LPWSTR) name, (LPVOID*)&lpVer, &sz);
 
                     sprintfW(filever,name_fmt,
                         HIWORD(lpVer->dwFileVersionMS),
@@ -3504,9 +3649,8 @@ static UINT ACTION_RegisterTypeLibraries(MSIPACKAGE *package)
                        debugstr_w(package->files[index].TargetPath));
             }
 
-            if (ptLib){
+            if (ptLib)
                 ITypeLib_Release(ptLib);
-                }
         }
         else
             ERR("Failed to load type library %s\n",

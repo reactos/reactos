@@ -1,19 +1,44 @@
-Only in /root/wine/wine/dlls/msi: .cvsignore
-Only in /root/wine/wine/dlls/msi: CVS
+Only in ./: ,
+Only in /root/wine/wine/dlls/msi/: .#action.c.1.39
+diff -u /root/wine/wine/dlls/msi/.cvsignore ./.cvsignore
+--- /root/wine/wine/dlls/msi/.cvsignore	2004-05-18 15:41:47.000000000 -0500
++++ ./.cvsignore	2004-12-02 14:11:19.000000000 -0600
+@@ -1,8 +1,11 @@
+-Makefile
+-cond.tab.c
+-cond.tab.h
+-msi.dll.dbg.c
++*.coff
++*.dll
++*.d
++*.a
++*.o
++*.sym
++*.map
++*.tmp
++Makefile.ros
+ msi.spec.def
+-sql.tab.c
+-sql.tab.h
+-version.res
++msi.stubs.c
+Only in ./: .cvsignore~
+Common subdirectories: /root/wine/wine/dlls/msi/CVS and ./CVS
 Only in ./: Makefile
 Only in ./: Makefile.ros-template
 diff -u /root/wine/wine/dlls/msi/action.c ./action.c
---- /root/wine/wine/dlls/msi/action.c	2004-10-27 20:43:05.000000000 -0500
-+++ ./action.c	2004-10-30 12:14:17.000000000 -0500
-@@ -28,6 +28,7 @@
+--- /root/wine/wine/dlls/msi/action.c	2004-12-06 00:10:02.000000000 -0600
++++ ./action.c	2004-12-07 01:19:47.000000000 -0600
+@@ -28,7 +28,7 @@
  
  #include <stdarg.h>
  #include <stdio.h>
+-
 +#include <fcntl.h>
- 
  #define COBJMACROS
  
-@@ -39,7 +40,7 @@
+ #include "windef.h"
+@@ -39,7 +39,7 @@
  #include "fdi.h"
  #include "msi.h"
  #include "msiquery.h"
@@ -22,40 +47,70 @@ diff -u /root/wine/wine/dlls/msi/action.c ./action.c
  #include "objbase.h"
  #include "objidl.h"
  #include "msipriv.h"
-@@ -3477,7 +3478,7 @@
-             continue;
-         }
+@@ -2263,7 +2263,7 @@
+                     version = HeapAlloc(GetProcessHeap(),0,versize);
+                     GetFileVersionInfoW(file->TargetPath, 0, versize, version);
  
--        res = LoadTypeLib(package->files[index].TargetPath,&ptLib);
-+//        res = LoadTypeLib(package->files[index].TargetPath,&ptLib);
-         if (SUCCEEDED(res))
-         {
-             WCHAR help[MAX_PATH];
-@@ -3488,7 +3489,7 @@
+-                    VerQueryValueW(version, name, (LPVOID*)&lpVer, &sz);
++                    VerQueryValueW(version, (LPWSTR) name, (LPVOID*)&lpVer, &sz);
  
-             resolve_folder(package,helpid,help,FALSE,FALSE,NULL);
+                     sprintfW(filever,name_fmt,
+                         HIWORD(lpVer->dwFileVersionMS),
+diff -u /root/wine/wine/dlls/msi/msi.c ./msi.c
+--- /root/wine/wine/dlls/msi/msi.c	2004-10-18 13:20:12.000000000 -0500
++++ ./msi.c	2004-12-07 00:24:30.000000000 -0600
+@@ -40,6 +40,9 @@
  
--            res = RegisterTypeLib(ptLib,package->files[index].TargetPath,help);
-+//            res = RegisterTypeLib(ptLib,package->files[index].TargetPath,help);
-             if (!SUCCEEDED(res))
-                 ERR("Failed to register type library %s\n",
-                      debugstr_w(package->files[index].TargetPath));
-@@ -3503,8 +3504,9 @@
-                        debugstr_w(package->files[index].TargetPath));
-             }
+ #include "initguid.h"
  
--            if (ptLib)
--                ITypeLib_Release(ptLib);
-+            if (ptLib){
-+                //ITypeLib_Release(ptLib);
-+                }
-         }
-         else
-             ERR("Failed to load type library %s\n",
++UINT WINAPI MsiGetFileVersionW(LPCWSTR szFilePath, LPWSTR lpVersionBuf, DWORD* pcchVersionBuf, LPWSTR lpLangBuf, DWORD* pcchLangBuf);
++
++
+ WINE_DEFAULT_DEBUG_CHANNEL(msi);
+ 
+ /*
+@@ -1392,7 +1395,7 @@
+           lpVersionBuf, pcchVersionBuf?*pcchVersionBuf:0,
+           lpLangBuf, pcchLangBuf?*pcchLangBuf:0);
+ 
+-    dwVerLen = GetFileVersionInfoSizeW(szFilePath, NULL);
++    dwVerLen = GetFileVersionInfoSizeW( (LPWSTR) szFilePath, NULL);
+     if(!dwVerLen)
+         return GetLastError();
+ 
+@@ -1402,12 +1405,12 @@
+         goto end;
+     }
+ 
+-    if(!GetFileVersionInfoW(szFilePath, 0, dwVerLen, lpVer)) {
++    if(!GetFileVersionInfoW((LPWSTR) szFilePath, 0, dwVerLen, lpVer)) {
+         ret = GetLastError();
+         goto end;
+     }
+     if(lpVersionBuf && pcchVersionBuf && *pcchVersionBuf) {
+-        if(VerQueryValueW(lpVer, szVersionResource, (LPVOID*)&ffi, &puLen) && puLen > 0) {
++        if(VerQueryValueW(lpVer, (LPWSTR) szVersionResource, (LPVOID*)&ffi, &puLen) && puLen > 0) {
+             wsprintfW(tmp, szVersionFormat, HIWORD(ffi->dwFileVersionMS), LOWORD(ffi->dwFileVersionMS), HIWORD(ffi->dwFileVersionLS), LOWORD(ffi->dwFileVersionLS));
+             lstrcpynW(lpVersionBuf, tmp, *pcchVersionBuf);
+             *pcchVersionBuf = strlenW(lpVersionBuf);
 Only in ./: patch.diff
+diff -u /root/wine/wine/dlls/msi/record.c ./record.c
+--- /root/wine/wine/dlls/msi/record.c	2004-12-07 00:09:28.000000000 -0600
++++ ./record.c	2004-10-21 16:00:54.000000000 -0500
+@@ -534,10 +534,7 @@
+     count = 0;
+     r = IStream_Read( stm, buf, *sz, &count );
+     if( FAILED( r ) )
+-    {
+-        *sz = 0;
+         return ERROR_FUNCTION_FAILED;
+-    }
+ 
+     *sz = count;
+ 
 diff -u /root/wine/wine/dlls/msi/suminfo.c ./suminfo.c
 --- /root/wine/wine/dlls/msi/suminfo.c	2004-10-18 13:20:12.000000000 -0500
-+++ ./suminfo.c	2004-10-30 00:09:12.000000000 -0500
++++ ./suminfo.c	2004-12-07 00:58:14.000000000 -0600
 @@ -23,6 +23,8 @@
  #define COBJMACROS
  #define NONAMELESSUNION
@@ -65,3 +120,12 @@ diff -u /root/wine/wine/dlls/msi/suminfo.c ./suminfo.c
  #include "windef.h"
  #include "winbase.h"
  #include "winreg.h"
+@@ -116,6 +118,7 @@
+     ERR("storage = %p propertysetstorage = %p\n", db->storage, psstg);
+ 
+     grfMode = STGM_READ | STGM_SHARE_EXCLUSIVE;
++
+     r = IPropertySetStorage_Open( psstg, &FMTID_SummaryInformation, grfMode, &ps );
+     if( FAILED( r ) )
+     {
+Only in ./: winehq2ros.patch
