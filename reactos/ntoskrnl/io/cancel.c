@@ -204,18 +204,23 @@ BOOLEAN STDCALL
 IoCancelIrp(PIRP Irp)
 {
    KIRQL oldlvl;
+   PDRIVER_CANCEL CancelRoutine;
    
    DPRINT("IoCancelIrp(Irp %x)\n",Irp);
    
    IoAcquireCancelSpinLock(&oldlvl);
+   
    Irp->Cancel = TRUE;
-   if (Irp->CancelRoutine == NULL)
+  
+   CancelRoutine = IoSetCancelRoutine(Irp, NULL);
+   if (CancelRoutine == NULL)
    {
       IoReleaseCancelSpinLock(oldlvl);
       return(FALSE);
    }
+   
    Irp->CancelIrql = oldlvl;
-   Irp->CancelRoutine(IoGetCurrentIrpStackLocation(Irp)->DeviceObject, Irp);
+   CancelRoutine(IoGetCurrentIrpStackLocation(Irp)->DeviceObject, Irp);
    return(TRUE);
 }
 
