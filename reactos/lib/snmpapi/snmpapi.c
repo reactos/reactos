@@ -38,6 +38,10 @@ DWORD DebugTraceLevel = MAX_TRACE;
 
 #endif /* DBG */
 
+
+DWORD dwUptimeStartTicks;
+
+
 /* To make the linker happy */
 //VOID STDCALL KeBugCheck (ULONG	BugCheckCode) {}
 
@@ -109,38 +113,41 @@ LPVOID
 SNMP_FUNC_TYPE
 SnmpUtilMemAlloc(UINT nBytes)
 {
-    UNIMPLEMENTED
-    return NULL;
+	VOID* pMem = NULL;
+	pMem = GlobalAlloc(GPTR, nBytes);
+    return pMem;
 }
 
 VOID
 SNMP_FUNC_TYPE
 SnmpUtilMemFree(LPVOID pMem)
 {
-    UNIMPLEMENTED
+	GlobalFree(pMem);
 }
 
 LPVOID
 SNMP_FUNC_TYPE
 SnmpUtilMemReAlloc(LPVOID pMem, UINT nBytes)
 {
-    UNIMPLEMENTED
-    return 0;
+	pMem = GlobalReAlloc(pMem, nBytes, GPTR);
+    return pMem;
 }
 
 VOID
 SNMP_FUNC_TYPE
 SnmpSvcInitUptime()
 {
-    UNIMPLEMENTED
+    dwUptimeStartTicks = GetTickCount();
 }
 
 DWORD 
 SNMP_FUNC_TYPE
 SnmpSvcGetUptime()
 {
-    UNIMPLEMENTED
-    return 0L;
+	DWORD dwUptime;
+	DWORD dwTickCount = GetTickCount();
+	dwUptime = dwTickCount - dwUptimeStartTicks;
+    return dwUptime;
 }
 
 VOID
@@ -286,10 +293,10 @@ SNMPAPI
 SNMP_FUNC_TYPE
 SnmpUtilOidAppend(AsnObjectIdentifier *pOidDst, AsnObjectIdentifier *pOidSrc)
 {
-    UNIMPLEMENTED
-//    return SNMP_BERAPI_OVERFLOW;
-//    return SNMP_MEM_ALLOC_ERROR;
-    return 0;
+	//SnmpUtilMemReAlloc(pOidDst, sizeof(AsnObjectIdentifier));
+	//SetLastError(SNMP_BERAPI_OVERFLOW);
+	SetLastError(SNMP_MEM_ALLOC_ERROR);
+    return 0; // failed
 }
 
 
