@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.3 2001/01/18 15:00:09 dwelch Exp $
+/* $Id: connect.c,v 1.4 2001/01/29 00:13:21 ea Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -248,5 +248,42 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
   return (STATUS_SUCCESS);
 }
 
+/**********************************************************************
+ * NAME							EXPORTED
+ * 	NtSecureConnectPort@36
+ * 	
+ * DESCRIPTION
+ *	Connect to a named port and wait for the other side to 
+ *	accept the connection. Possibly verify that the server
+ *	matches the ServerSid (trusted server).
+ *	Present in w2k+.
+ *
+ * ARGUMENTS
+ *	ConnectedPort
+ *	PortName
+ *	Qos
+ *	WriteMap
+ *	ServerSid
+ *	ReadMap
+ *	MaxMessageSize
+ *	ConnectInfo
+ *	UserConnectInfoLength
+ * 
+ * RETURN VALUE
+ * 
+ */
+NTSTATUS STDCALL
+NtSecureConnectPort (OUT    PHANDLE				ConnectedPort,
+		     IN     PUNICODE_STRING			PortName,
+		     IN     PSECURITY_QUALITY_OF_SERVICE	Qos,
+		     IN OUT PLPC_SECTION_WRITE			WriteMap		OPTIONAL,
+		     IN     PSID				ServerSid		OPTIONAL,
+		     IN OUT PLPC_SECTION_READ			ReadMap			OPTIONAL,
+		     OUT    PULONG				MaxMessageSize		OPTIONAL,
+		     IN OUT PVOID				ConnectInfo		OPTIONAL,
+		     IN OUT PULONG				UserConnectInfoLength	OPTIONAL)
+{
+	return (STATUS_NOT_IMPLEMENTED);
+}
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: reply.c,v 1.4 2001/01/18 15:00:09 dwelch Exp $
+/* $Id: reply.c,v 1.5 2001/01/29 00:13:22 ea Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -115,10 +115,18 @@ NtReplyPort (IN	HANDLE		PortHandle,
 
 /**********************************************************************
  * NAME							EXPORTED
- *
+ *	NtReplyWaitReceivePortEx
+ *	
  * DESCRIPTION
- *
+ *	Can be used with waitable ports.
+ *	Present only in w2k+.
+ *	
  * ARGUMENTS
+ * 	PortHandle
+ * 	PortId
+ * 	LpcReply
+ * 	LpcMessage
+ * 	Timeout
  *
  * RETURN VALUE
  *
@@ -126,17 +134,18 @@ NtReplyPort (IN	HANDLE		PortHandle,
  *
  */
 NTSTATUS STDCALL
-NtReplyWaitReceivePort (HANDLE		PortHandle,
-			PULONG		PortId,
-			PLPC_MESSAGE	LpcReply,     
-			PLPC_MESSAGE	LpcMessage)
+NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
+			 OUT PULONG		PortId,
+			 IN  PLPC_MESSAGE	LpcReply,     
+			 OUT PLPC_MESSAGE	LpcMessage,
+			 IN  PLARGE_INTEGER	Timeout)
 {
    NTSTATUS Status;
    PEPORT Port;
    KIRQL oldIrql;
    PQUEUEDMESSAGE Request;
    
-   DPRINT("NtReplyWaitReceivePort(PortHandle %x, LpcReply %x, "
+   DPRINT("NtReplyWaitReceivePortEx(PortHandle %x, LpcReply %x, "
 	  "LpcMessage %x)\n", PortHandle, LpcReply, LpcMessage);
    
    Status = ObReferenceObjectByHandle(PortHandle,
@@ -147,7 +156,7 @@ NtReplyWaitReceivePort (HANDLE		PortHandle,
 				      NULL);
    if (!NT_SUCCESS(Status))
      {
-	DPRINT1("NtReplyWaitReceivePort() = %x\n", Status);
+	DPRINT1("NtReplyWaitReceivePortEx() = %x\n", Status);
 	return(Status);
      }
    
@@ -155,7 +164,7 @@ NtReplyWaitReceivePort (HANDLE		PortHandle,
        Port->State != EPORT_CONNECTED_SERVER &&
        LpcReply != NULL)
      {
-       DPRINT1("NtReplyWaitReceivePort() = %x (State was %x)\n", 
+       DPRINT1("NtReplyWaitReceivePortEx() = %x (State was %x)\n", 
 	       STATUS_PORT_DISCONNECTED, Port->State);
        return(STATUS_PORT_DISCONNECTED);
      }
@@ -174,7 +183,7 @@ NtReplyWaitReceivePort (HANDLE		PortHandle,
 	if (!NT_SUCCESS(Status))
 	  {
 	     ObDereferenceObject(Port);
-	     DPRINT1("NtReplyWaitReceivePort() = %x\n", Status);
+	     DPRINT1("NtReplyWaitReceivePortEx() = %x\n", Status);
 	     return(Status);
 	  }
      }
@@ -191,7 +200,7 @@ NtReplyWaitReceivePort (HANDLE		PortHandle,
 				      NULL);
        if (!NT_SUCCESS(Status))
 	 {
-	   DPRINT1("NtReplyWaitReceivePort() = %x\n", Status);
+	   DPRINT1("NtReplyWaitReceivePortEx() = %x\n", Status);
 	   return(Status);
 	 }
 
@@ -231,6 +240,39 @@ NtReplyWaitReceivePort (HANDLE		PortHandle,
    return(STATUS_SUCCESS);
 }
 
+
+/**********************************************************************
+ * NAME						EXPORTED
+ *	NtReplyWaitReceivePort
+ *	
+ * DESCRIPTION
+ *	Can be used with waitable ports.
+ *	
+ * ARGUMENTS
+ * 	PortHandle
+ * 	PortId
+ * 	LpcReply
+ * 	LpcMessage
+ *
+ * RETURN VALUE
+ *
+ * REVISIONS
+ *
+ */
+NTSTATUS STDCALL
+NtReplyWaitReceivePort (IN  HANDLE		PortHandle,
+			OUT PULONG		PortId,
+			IN  PLPC_MESSAGE	LpcReply,     
+			OUT PLPC_MESSAGE	LpcMessage)
+{
+	return NtReplyWaitReceivePortEx (
+			PortHandle,
+			PortId,
+			LpcReply,
+			LpcMessage,
+			NULL
+			);
+}
 
 /**********************************************************************
  * NAME
