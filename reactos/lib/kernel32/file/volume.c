@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.38 2004/01/23 21:16:03 ekohl Exp $
+/* $Id: volume.c,v 1.39 2004/02/21 16:36:02 jfilby Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -21,7 +21,7 @@
 
 #include <k32.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include "../include/debug.h"
 
 
@@ -236,8 +236,8 @@ GetDiskFreeSpaceW(
     else
     {
         GetCurrentDirectoryW (MAX_PATH, RootPathName);
-        RootPathName[3] = 0;
     }
+    RootPathName[3] = 0;
 
   hFile = InternalOpenDirW(RootPathName, FALSE);
   if (INVALID_HANDLE_VALUE == hFile)
@@ -263,6 +263,7 @@ GetDiskFreeSpaceW(
     *lpNumberOfFreeClusters = FileFsSize.AvailableAllocationUnits.u.LowPart;
     *lpTotalNumberOfClusters = FileFsSize.TotalAllocationUnits.u.LowPart;
     CloseHandle(hFile);
+
     return TRUE;
 }
 
@@ -342,8 +343,8 @@ GetDiskFreeSpaceExW(
     else
     {
         GetCurrentDirectoryW (MAX_PATH, RootPathName);
-        RootPathName[3] = 0;
     }
+    RootPathName[3] = 0;
 
     hFile = InternalOpenDirW(RootPathName, FALSE);
     if (INVALID_HANDLE_VALUE == hFile)
@@ -379,6 +380,7 @@ GetDiskFreeSpaceExW(
             BytesPerCluster.QuadPart * FileFsSize.AvailableAllocationUnits.QuadPart;
 
     CloseHandle(hFile);
+
     return TRUE;
 }
 
@@ -610,7 +612,7 @@ GetVolumeInformationW(
 
   HANDLE hFile;
   NTSTATUS errCode;
- 
+
   FileFsVolume = (PFILE_FS_VOLUME_INFORMATION)Buffer;
   FileFsAttribute = (PFILE_FS_ATTRIBUTE_INFORMATION)Buffer;
 
@@ -620,12 +622,12 @@ GetVolumeInformationW(
   if (!lpRootPathName || !wcscmp(lpRootPathName, L""))
   {
       GetCurrentDirectoryW (MAX_PATH, RootPathName);
-      RootPathName[3] = 0;
   }
   else
   {
-      wcsncpy (RootPathName, lpRootPathName, min(MAX_PATH, wcslen(lpRootPathName) + 1));
+      wcsncpy (RootPathName, lpRootPathName, 3);
   }
+  RootPathName[3] = 0;
 
   hFile = InternalOpenDirW(RootPathName, FALSE);
   if (hFile == INVALID_HANDLE_VALUE)
