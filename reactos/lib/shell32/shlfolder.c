@@ -418,7 +418,7 @@ HRESULT SHELL32_CompareIDs (IShellFolder * iface, LPARAM lParam, LPCITEMIDLIST p
       type2;
     char szTemp1[MAX_PATH];
     char szTemp2[MAX_PATH];
-    int nReturn = 0;
+    HRESULT nReturn;
     LPITEMIDLIST firstpidl,
       nextpidl1,
       nextpidl2;
@@ -429,24 +429,28 @@ HRESULT SHELL32_CompareIDs (IShellFolder * iface, LPARAM lParam, LPCITEMIDLIST p
     BOOL isEmpty2 = _ILIsDesktop (pidl2);
 
     if (isEmpty1 && isEmpty2)
-	return 0;
+        return MAKE_HRESULT( SEVERITY_SUCCESS, 0, 0 );
     if (isEmpty1)
-	return -1;
+        return MAKE_HRESULT( SEVERITY_SUCCESS, 0, (WORD)-1 );
     if (isEmpty2)
-	return 1;
+        return MAKE_HRESULT( SEVERITY_SUCCESS, 0, 1 );
 
     /* test for different types. Sort order is the PT_* constant */
     type1 = _ILGetDataPointer (pidl1)->type;
     type2 = _ILGetDataPointer (pidl2)->type;
-    if (type1 != type2)
-	return (type1 - type2);
+    if (type1 < type2)
+        return MAKE_HRESULT( SEVERITY_SUCCESS, 0, (WORD)-1 );
+    else if (type1 > type2)
+        return MAKE_HRESULT( SEVERITY_SUCCESS, 0, 1 );
 
     /* test for name of pidl */
     _ILSimpleGetText (pidl1, szTemp1, MAX_PATH);
     _ILSimpleGetText (pidl2, szTemp2, MAX_PATH);
     nReturn = strcasecmp (szTemp1, szTemp2);
-    if (nReturn != 0)
-	return nReturn;
+    if (nReturn < 0)
+        return MAKE_HRESULT( SEVERITY_SUCCESS, 0, (WORD)-1 );
+    else if (nReturn > 0)
+        return MAKE_HRESULT( SEVERITY_SUCCESS, 0, 1 );
 
     /* test of complex pidls */
     firstpidl = ILCloneFirst (pidl1);
@@ -459,11 +463,11 @@ HRESULT SHELL32_CompareIDs (IShellFolder * iface, LPARAM lParam, LPCITEMIDLIST p
     isEmpty2 = _ILIsDesktop (nextpidl2);
 
     if (isEmpty1 && isEmpty2) {
-	nReturn = 0;
+        return MAKE_HRESULT( SEVERITY_SUCCESS, 0, 0 );
     } else if (isEmpty1) {
-	nReturn = -1;
+        return MAKE_HRESULT( SEVERITY_SUCCESS, 0, (WORD)-1 );
     } else if (isEmpty2) {
-    	nReturn = 1;
+        return MAKE_HRESULT( SEVERITY_SUCCESS, 0, 1 );
     /* optimizing end */
     } else if (SUCCEEDED (IShellFolder_BindToObject (iface, firstpidl, NULL, &IID_IShellFolder, (LPVOID *) & psf))) {
 	nReturn = IShellFolder_CompareIDs (psf, lParam, nextpidl1, nextpidl2);
