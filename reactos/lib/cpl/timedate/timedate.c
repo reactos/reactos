@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timedate.c,v 1.5 2004/11/11 17:46:22 ekohl Exp $
+/* $Id: timedate.c,v 1.6 2004/11/14 12:28:21 ekohl Exp $
  *
  * PROJECT:         ReactOS Timedate Control Panel
  * FILE:            lib/cpl/timedate/timedate.c
@@ -72,6 +72,48 @@ APPLET Applets[NUM_APPLETS] =
 };
 
 
+static VOID
+SetLocalSystemTime(HWND hwnd)
+{
+  SYSTEMTIME Date;
+  SYSTEMTIME Time;
+
+  if (DateTime_GetSystemTime(GetDlgItem(hwnd, IDC_DATEPICKER), &Date) != GDT_VALID)
+    {
+      return;
+    }
+
+  if (DateTime_GetSystemTime(GetDlgItem(hwnd, IDC_TIMEPICKER), &Time) != GDT_VALID)
+    {
+      return;
+    }
+
+  Time.wYear = Date.wYear;
+  Time.wMonth = Date.wMonth;
+  Time.wDayOfWeek = Date.wDayOfWeek;
+  Time.wDay = Date.wDay;
+
+  SetLocalTime(&Time);
+}
+
+
+static VOID
+SetTimeZoneName(HWND hwnd)
+{
+  TIME_ZONE_INFORMATION TimeZoneInfo;
+  WCHAR TimeZoneString[128];
+  DWORD TimeZoneId;
+
+  TimeZoneId = GetTimeZoneInformation(&TimeZoneInfo);
+
+  wsprintf(TimeZoneString,
+	   L"Current time zone: %s\n",
+	   (TimeZoneId == TIME_ZONE_ID_DAYLIGHT) ? TimeZoneInfo.DaylightName : TimeZoneInfo.StandardName);
+
+  SendDlgItemMessageW(hwnd, IDC_TIMEZONE, WM_SETTEXT, 0, (LPARAM)TimeZoneString);
+}
+
+
 /* Property page dialog callback */
 INT_PTR CALLBACK
 DateTimePageProc(HWND hwndDlg,
@@ -81,16 +123,6 @@ DateTimePageProc(HWND hwndDlg,
 {
   switch (uMsg)
   {
-    case WM_INITDIALOG:
-      {
-        TIME_ZONE_INFORMATION TimeZoneInfo;
-
-        GetTimeZoneInformation(&TimeZoneInfo);
-
-        SendDlgItemMessageW(hwndDlg, IDC_TIMEZONE, WM_SETTEXT, 0, (LPARAM)TimeZoneInfo.StandardName);
-      }
-      break;
-
     case WM_NOTIFY:
       {
           LPNMHDR lpnm = (LPNMHDR)lParam;
@@ -104,20 +136,17 @@ DateTimePageProc(HWND hwndDlg,
                 break;
 
               case PSN_SETACTIVE:
-                /* FIXME: Update the time zone name */
+                SetTimeZoneName(hwndDlg);
                 return 0;
 
               case PSN_APPLY:
-
-                /* FIXME: Set date and time */
-
+                SetLocalSystemTime(hwndDlg);
                 SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
                 return TRUE;
 
               default:
                 break;
             }
-
       }
       break;
   }
