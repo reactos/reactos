@@ -40,9 +40,6 @@
 #include <user32.h>
 #include <debug.h>
 
-#define COLOR_MENUHILIGHT	(29)
-#define COLOR_MENUBAR	(30)
-
 /* GLOBALS *******************************************************************/
 
 #define	DSS_DEFAULT	0x0040  /* Make it bold */
