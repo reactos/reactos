@@ -8,6 +8,13 @@
 #define NTOS_MODE_KERNEL
 #include <ntos.h>
 
+typedef enum
+{
+  wmCenter = 0,
+  wmTile,
+  wmStretch
+} WALLPAPER_MODE;
+
 typedef struct _WINSTATION_OBJECT
 {
   CSHORT Type;
@@ -22,6 +29,12 @@ typedef struct _WINSTATION_OBJECT
   UINT CaretBlinkRate;
   HANDLE ShellWindow;
   HANDLE ShellListView;
+
+  /* Wallpaper */
+  HANDLE hbmWallpaper;
+  ULONG cxWallpaper, cyWallpaper;
+  WALLPAPER_MODE WallpaperMode;
+  
   ULONG Flags;
   struct _DESKTOP_OBJECT* ActiveDesktop;
   /* FIXME: Clipboard */

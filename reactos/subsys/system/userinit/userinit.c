@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: userinit.c,v 1.3 2003/12/27 11:09:58 weiden Exp $
+/* $Id: userinit.c,v 1.4 2004/08/17 21:47:36 weiden Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS Userinit Logon Application
@@ -104,12 +104,45 @@ void StartShell(void)
     MessageBox(0, L"Userinit failed to start the shell!\n", NULL, 0);
 }
 
+static
+void SetUserSettings(void)
+{
+  HKEY hKey;
+  DWORD Type, Size;
+  WCHAR szWallpaper[MAX_PATH + 1];
+  
+  if(RegOpenKeyEx(HKEY_CURRENT_USER,
+                  L"Control Panel\\Desktop",
+                  0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+  {
+    Size = sizeof(szWallpaper);
+    if(RegQueryValueEx(hKey,
+                       L"Wallpaper",
+                       NULL,
+                       &Type,
+                       (LPBYTE)szWallpaper,
+                       &Size) == ERROR_SUCCESS
+       && Type == REG_SZ)
+    {
+      /* Change the wallpaper */
+      SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, szWallpaper, SPIF_SENDCHANGE);
+    }
+    else
+    {
+      /* Set the default wallpaper */
+      SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, NULL, SPIF_SENDCHANGE);
+    }
+    RegCloseKey(hKey);
+  }
+}
+
 int WINAPI
 WinMain(HINSTANCE hInst,
 	HINSTANCE hPrevInstance,
 	LPSTR lpszCmdLine,
 	int nCmdShow)
 {
+  SetUserSettings();
   StartShell();
   return 0;
 }

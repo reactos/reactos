@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: desktop.c,v 1.18 2004/08/08 17:57:34 weiden Exp $
+ *  $Id: desktop.c,v 1.19 2004/08/17 21:47:36 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -688,6 +688,7 @@ NtUserPaintDesktop(HDC hDC)
   RECT Rect;
   HBRUSH DesktopBrush, PreviousBrush;
   HWND hWndDesktop;
+  PWINSTATION_OBJECT WinSta = PsGetWin32Thread()->Desktop->WindowStation;
 
   IntGdiGetClipBox(hDC, &Rect);
 
@@ -697,6 +698,46 @@ NtUserPaintDesktop(HDC hDC)
   /*
    * Paint desktop background
    */
+
+  if(WinSta->hbmWallpaper != NULL)
+  {
+    PWINDOW_OBJECT DeskWin;
+    DbgPrint("Paint 1\n");
+    if((DeskWin = IntGetWindowObject(hWndDesktop)))
+    {
+      SIZE sz;
+      int x, y;
+      HDC hWallpaperDC;
+      
+      sz.cx = DeskWin->WindowRect.right - DeskWin->WindowRect.left;
+      sz.cy = DeskWin->WindowRect.bottom - DeskWin->WindowRect.top;
+      IntReleaseWindowObject(DeskWin);
+      DbgPrint("Paint 2\n");
+      x = (sz.cx / 2) - (WinSta->cxWallpaper / 2);
+      y = (sz.cy / 2) - (WinSta->cyWallpaper / 2);
+      
+      hWallpaperDC = NtGdiCreateCompatableDC(hDC);
+      if(hWallpaperDC != NULL)
+      {
+        HBITMAP hOldBitmap;
+        DbgPrint("Paint 3->%d, %d, %d, %d\n", x, y, sz.cx, sz.cy);
+        if(x > 0 || y > 0)
+        {
+          /* FIXME - clip out the bitmap */
+          PreviousBrush = NtGdiSelectObject(hDC, DesktopBrush);
+          NtGdiPatBlt(hDC, Rect.left, Rect.top, Rect.right, Rect.bottom, PATCOPY);
+          NtGdiSelectObject(hDC, PreviousBrush);
+        }
+        
+        hOldBitmap = NtGdiSelectObject(hWallpaperDC, WinSta->hbmWallpaper);
+        NtGdiBitBlt(hDC, x, y, WinSta->cxWallpaper, WinSta->cyWallpaper, hWallpaperDC, 0, 0, SRCCOPY);
+        NtGdiSelectObject(hWallpaperDC, hOldBitmap);
+        
+        NtGdiDeleteDC(hWallpaperDC);
+        if(x <= 0 && y <= 0) return TRUE;
+      }
+    }
+  }
 
   PreviousBrush = NtGdiSelectObject(hDC, DesktopBrush);
   NtGdiPatBlt(hDC, Rect.left, Rect.top, Rect.right, Rect.bottom, PATCOPY);

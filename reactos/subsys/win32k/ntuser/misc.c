@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.83 2004/07/12 20:09:35 gvg Exp $
+/* $Id: misc.c,v 1.84 2004/08/17 21:47:36 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -677,6 +677,8 @@ IntSystemParametersInfo(
     case SPI_SETDOUBLECLKWIDTH:
     case SPI_SETDOUBLECLKHEIGHT:
     case SPI_SETDOUBLECLICKTIME:
+    case SPI_SETDESKWALLPAPER:
+    case SPI_GETDESKWALLPAPER:
     {
       PSYSTEM_CURSORINFO CurInfo;
       
@@ -690,20 +692,67 @@ IntSystemParametersInfo(
         return (DWORD)FALSE;
       }
       
-      CurInfo = IntGetSysCursorInfo(WinStaObject);
       switch(uiAction)
       {
         case SPI_SETDOUBLECLKWIDTH:
+          CurInfo = IntGetSysCursorInfo(WinStaObject);
           /* FIXME limit the maximum value? */
           CurInfo->DblClickWidth = uiParam;
           break;
         case SPI_SETDOUBLECLKHEIGHT:
+          CurInfo = IntGetSysCursorInfo(WinStaObject);
           /* FIXME limit the maximum value? */
           CurInfo->DblClickHeight = uiParam;
           break;
         case SPI_SETDOUBLECLICKTIME:
+          CurInfo = IntGetSysCursorInfo(WinStaObject);
           /* FIXME limit the maximum time to 1000 ms? */
           CurInfo->DblClickSpeed = uiParam;
+          break;
+        case SPI_SETDESKWALLPAPER:
+        {
+          /* This function expects different parameters than the user mode version!
+
+             We let the user mode code load the bitmap, it passed the handle to
+             the bitmap. We'll change it's ownership to system and replace it with
+             the current wallpaper bitmap */
+          HBITMAP hOldBitmap, hNewBitmap;
+          ASSERT(pvParam);
+
+          hNewBitmap = *(HBITMAP*)pvParam;
+          if(hNewBitmap != NULL)
+          {
+            BITMAPOBJ *bmp;
+            /* try to get the size of the wallpaper */
+            if(!(bmp = BITMAPOBJ_LockBitmap(hNewBitmap)))
+            {
+              ObDereferenceObject(WinStaObject);
+              return FALSE;
+            }
+            WinStaObject->cxWallpaper = bmp->SurfObj.sizlBitmap.cx;
+            WinStaObject->cyWallpaper = bmp->SurfObj.sizlBitmap.cy;
+
+            BITMAPOBJ_UnlockBitmap(hNewBitmap);
+            
+            /* change the bitmap's ownership */
+            GDIOBJ_SetOwnership(hNewBitmap, NULL);
+          }
+          hOldBitmap = (HBITMAP)InterlockedExchange((LONG*)&WinStaObject->hbmWallpaper, (LONG)hNewBitmap);
+          if(hOldBitmap != NULL)
+          {
+            /* delete the old wallpaper */
+            NtGdiDeleteObject(hOldBitmap);
+          }
+          break;
+        }
+        case SPI_GETDESKWALLPAPER:
+          /* This function expects different parameters than the user mode version!
+
+             We basically return the current wallpaper handle - if any. The user
+             mode version should load the string from the registry and return it
+             without calling this function */
+          ASSERT(pvParam);
+          *(HBITMAP*)pvParam = (HBITMAP)WinStaObject->hbmWallpaper;
           break;
       }
       
@@ -894,6 +943,37 @@ NtUserSystemParametersInfo(
         return FALSE;
       }
       return TRUE;
+    }
+    case SPI_SETDESKWALLPAPER:
+    {
+      /* !!! As opposed to the user mode version this version accepts a handle
+             to the bitmap! */
+      HBITMAP hbmWallpaper;
+      
+      Status = MmCopyFromCaller(&hbmWallpaper, pvParam, sizeof(HBITMAP));
+      if(!NT_SUCCESS(Status))
+      {
+        SetLastNtError(Status);
+        return FALSE;
+      }
+      return IntSystemParametersInfo(SPI_SETDESKWALLPAPER, 0, &hbmWallpaper, fWinIni);
+    }
+    case SPI_GETDESKWALLPAPER:
+    {
+      /* !!! As opposed to the user mode version this version returns a handle
+             to the bitmap! */
+      HBITMAP hbmWallpaper;
+      BOOL Ret;
+      
+      Ret = IntSystemParametersInfo(SPI_GETDESKWALLPAPER, 0, &hbmWallpaper, fWinIni);
+
+      Status = MmCopyToCaller(pvParam, &hbmWallpaper, sizeof(HBITMAP));
+      if(!NT_SUCCESS(Status))
+      {
+        SetLastNtError(Status);
+        return FALSE;
+      }
+      return Ret;
     }
     case SPI_GETICONTITLELOGFONT:
     {
