@@ -1,4 +1,4 @@
-; $Id: win32k.def,v 1.26 2004/03/07 12:49:27 dwelch Exp $
+; $Id: win32k.def,v 1.26.14.1 2004/09/20 17:47:41 weiden Exp $
 ;
 ; win32k.def
 ;
@@ -32,7 +32,7 @@ EngCreatePalette@24
 EngCreatePath@0
 EngCreateSemaphore@0
 EngCreateWnd@20
-EngDebugBreak@0
+EngDebugBreak@12=NTOSKRNL.DbgBreakPoint
 EngDebugPrint@12
 EngDeleteClip@4
 EngDeleteDriverObj@12
@@ -52,7 +52,7 @@ EngFindResource@16
 EngFreeMem@4
 EngFreeModule@4
 EngFreeUserMem@4
-EngGetCurrentCodePage@8
+EngGetCurrentCodePage@8=ntoskrnl.RtlGetCurrentCodePage
 EngGetCurrentProcessId@0
 EngGetCurrentThreadId@0
 EngGetDriverName@4
@@ -79,11 +79,11 @@ EngMarkBandingSurface@4
 EngModifySurface@32
 EngMovePointer@16
 EngMulDiv@12
-EngMultiByteToUnicodeN@20
+EngMultiByteToUnicodeN@20=ntoskrnl.RtlMultiByteToUnicodeN
 EngMultiByteToWideChar@20
 EngPaint@20
-EngProbeForRead@12
-EngProbeForReadAndWrite@12
+EngProbeForRead@12=NTOSKRNL.ProbeForRead
+EngProbeForReadAndWrite@12=NTOSKRNL.ProbeForWrite
 EngQueryLocalTime@4
 EngQueryPalette@16
 EngQueryPerformanceCounter@4
@@ -104,7 +104,7 @@ EngStrokeAndFillPath@40
 EngStrokePath@32
 EngTextOut@40
 EngTransparentBlt@32
-EngUnicodeToMultiByteN@20
+EngUnicodeToMultiByteN@20=ntoskrnl.RtlUnicodeToMultiByteN
 EngUnloadImage@4
 EngUnlockDriverObj@4
 EngUnlockSurface@4
@@ -149,7 +149,7 @@ FONTOBJ_pxoGetXform@4
 FONTOBJ_vGetInfo@12
 HeapVidMemAllocAligned@20
 HT_ComputeRGBGammaTable@24
-HT_Get8BPPFormatPalette
+HT_Get8BPPFormatPalette@16
 PALOBJ_cGetColors@16
 PATHOBJ_bCloseFigure@4
 PATHOBJ_bEnum@8
@@ -160,14 +160,14 @@ PATHOBJ_bPolyLineTo@12
 PATHOBJ_vEnumStart@4
 PATHOBJ_vEnumStartClipLines@16
 PATHOBJ_vGetBounds@8
-RtlAnsiCharToUnicodeChar@4
-RtlMultiByteToUnicodeN@20
-RtlRaiseException@4
-RtlUnicodeToMultiByteN@20
-RtlUnicodeToMultiByteSize@12
-RtlUnwind@16
-RtlUpcaseUnicodeChar@4
-RtlUpcaseUnicodeToMultiByteN@20
+RtlAnsiCharToUnicodeChar@4=NTOSKRNL.RtlAnsiCharToUnicodeChar
+RtlMultiByteToUnicodeN@20=NTOSKRNL.RtlMultiByteToUnicodeN
+RtlRaiseException@4=NTOSKRNL.RtlRaiseException
+RtlUnicodeToMultiByteN@20=NTOSKRNL.RtlUnicodeToMultiByteN
+RtlUnicodeToMultiByteSize@12=NTOSKRNL.RtlUnicodeToMultiByteSize
+RtlUnwind@16=NTOSKRNL.RtlUnwind
+RtlUpcaseUnicodeChar@4=NTOSKRNL.RtlUpcaseUnicodeChar
+RtlUpcaseUnicodeToMultiByteN@20=NTOSKRNL.RtlUpcaseUnicodeToMultiByteN
 STROBJ_bEnum@12
 STROBJ_dwGetCodePage@4
 STROBJ_vEnumStart@4
@@ -182,8 +182,8 @@ XFORMOBJ_iGetXform@8
 XLATEOBJ_cGetPalette@16
 XLATEOBJ_iXlate@8
 XLATEOBJ_piVector@4
-_abnormal_termination
-_except_handler2
-_global_unwind2
-_local_unwind2
+_abnormal_termination=NTOSKRNL._abnormal_termination
+_except_handler2=NTOSKRNL._except_handler2
+_global_unwind2=NTOSKRNL._global_unwind2
+_local_unwind2=NTOSKRNL._local_unwind2
 ;EOF
