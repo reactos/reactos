@@ -1,4 +1,4 @@
-# Doxyfile 1.3.4
+# Doxyfile 1.3.5
 
 #---------------------------------------------------------------------------
 # Project related configuration options
@@ -208,4 +208,4 @@ DOT_CLEANUP            = YES
 #---------------------------------------------------------------------------
 # Configuration::addtions related to the search engine   
 #---------------------------------------------------------------------------
-SEARCHENGINE           = NO
+SEARCHENGINE           = YES
