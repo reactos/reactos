@@ -88,6 +88,12 @@ VOID KeInit1(VOID);
 VOID KeInit2(VOID);
 
 BOOLEAN KiDeliverUserApc(PKTRAP_FRAME TrapFrame);
+
+VOID FASTCALL
+KiSwapApcEnvironment(
+  struct _KTHREAD* Thread,
+  struct _KPROCESS* NewProcess);
+
 VOID
 KiAddProfileEvent(KPROFILE_SOURCE Source, ULONG Pc);
 VOID 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: process.c,v 1.16 2003/07/21 21:53:51 royce Exp $
+/* $Id: process.c,v 1.17 2003/11/27 01:09:10 gdalsnes Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/process.c
@@ -62,6 +62,8 @@ KeAttachProcess (PEPROCESS Process)
    
    KeRaiseIrql(DISPATCH_LEVEL, &oldlvl);
 
+   KiSwapApcEnvironment(&CurrentThread->Tcb, &Process->Pcb);
+
    /* The stack of the current process may be located in a page which is
       not present in the page directory of the process we're attaching to.
       That would lead to a page fault when this function returns. However,
@@ -82,7 +84,6 @@ KeAttachProcess (PEPROCESS Process)
    __asm__("movl %0,%%cr3\n\t"
 	   : /* no outputs */
 	   : "r" (PageDir));
-   
    
    KeLowerIrql(oldlvl);
 }
@@ -108,6 +109,8 @@ KeDetachProcess (VOID)
      }
    
    KeRaiseIrql(DISPATCH_LEVEL, &oldlvl);
+
+   KiSwapApcEnvironment(&CurrentThread->Tcb, &CurrentThread->OldProcess->Pcb);   
    
    CurrentThread->ThreadsProcess = CurrentThread->OldProcess;
    CurrentThread->OldProcess = NULL;

@@ -103,11 +103,11 @@ struct _KTHREAD* STDCALL KeGetCurrentThread (VOID);
 
 VOID STDCALL KeInitializeApc (IN PKAPC  Apc,
 	IN PKTHREAD  Thread,
-	IN UCHAR  StateIndex,
+  IN KAPC_ENVIRONMENT TargetEnvironment,
 	IN PKKERNEL_ROUTINE  KernelRoutine,
 	IN PKRUNDOWN_ROUTINE  RundownRoutine,
 	IN PKNORMAL_ROUTINE  NormalRoutine,
-	IN UCHAR  Mode,
+  IN KPROCESSOR_MODE  Mode,
 	IN PVOID  Context);
 
 

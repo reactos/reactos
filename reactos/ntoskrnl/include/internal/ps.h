@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.53 2003/10/15 17:04:39 navaraf Exp $
+/* $Id: ps.h,v 1.54 2003/11/27 01:06:48 gdalsnes Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -125,7 +125,7 @@ typedef struct _KTHREAD
    PVOID             CallbackStack;       /* 120 */
    BOOL              Win32Thread;         /* 124 */
    struct _KTRAP_FRAME*      TrapFrame;   /* 128 */
-   PVOID             ApcStatePointer[2];  /* 12C */
+   PKAPC_STATE       ApcStatePointer[2];  /* 12C */
    UCHAR             EnableStackSwap;     /* 134 */
    UCHAR             LargeStack;          /* 135 */
    UCHAR             ResourceIndex;       /* 136 */

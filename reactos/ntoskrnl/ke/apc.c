@@ -461,11 +461,11 @@ VOID STDCALL
 KeInitializeApc(
   IN PKAPC  Apc,
 	IN PKTHREAD  Thread,
-	IN UCHAR  StateIndex,
+  IN KAPC_ENVIRONMENT  TargetEnvironment,
 	IN PKKERNEL_ROUTINE  KernelRoutine,
-	IN PKRUNDOWN_ROUTINE  RundownRoutine,
+	IN PKRUNDOWN_ROUTINE  RundownRoutine OPTIONAL,
 	IN PKNORMAL_ROUTINE  NormalRoutine,
-	IN UCHAR  Mode,
+	IN KPROCESSOR_MODE  Mode,
 	IN PVOID  Context)
 /*
  * FUNCTION: Initialize an APC object
@@ -481,11 +481,9 @@ KeInitializeApc(
  *       Context = Parameter to be passed to the APC routine
  */
 {
-   KAPC_ENVIRONMENT Environment = (KAPC_ENVIRONMENT) StateIndex;
-
    DPRINT("KeInitializeApc(Apc %x, Thread %x, Environment %d, "
 	  "KernelRoutine %x, RundownRoutine %x, NormalRoutine %x, Mode %d, "
-	  "Context %x)\n",Apc,Thread,Environment,KernelRoutine,RundownRoutine,
+    "Context %x)\n",Apc,Thread,TargetEnvironment,KernelRoutine,RundownRoutine,
 	  NormalRoutine,Mode,Context);
 
    memset(Apc, 0, sizeof(KAPC));
@@ -498,18 +496,18 @@ KeInitializeApc(
    Apc->NormalContext = Context;
    Apc->Inserted = FALSE;
 
-   if (Environment == CurrentApcEnvironment)
+   if (TargetEnvironment == CurrentApcEnvironment)
    {
       Apc->ApcStateIndex = Thread->ApcStateIndex;
    }
    else
    {
-      Apc->ApcStateIndex = Environment;   
+      Apc->ApcStateIndex = TargetEnvironment;   
    }
 
    if (Apc->NormalRoutine != NULL)
      {
-	Apc->ApcMode = (KPROCESSOR_MODE) Mode;
+	Apc->ApcMode = Mode;
      }
    else
      {
@@ -590,5 +588,78 @@ VOID INIT_FUNCTION
 PiInitApcManagement(VOID)
 {
    KeInitializeSpinLock(&PiApcLock);
+}
+
+
+VOID FASTCALL
+KiSwapApcEnvironment(
+  PKTHREAD Thread,
+  PKPROCESS NewProcess)
+{
+  /* FIXME: Grab the process apc lock or the PiApcLock? And why does both exist? */
+
+  if (Thread->ApcStateIndex == AttachedApcEnvironment)
+  {
+    /* NewProcess must be the same as in the original-environment */
+    assert(NewProcess == Thread->ApcStatePointer[OriginalApcEnvironment]->Process);
+
+    /*    
+    FIXME: Deliver any pending apc's queued to the attached environment before 
+    switching back to the original environment.
+    This is not crucial thou, since i don't think we'll ever target apc's
+    to attached environments (or?)...   
+    Remove the following asserts if implementing this.
+    -Gunnar
+    */
+
+    /* we don't support targeting apc's at attached-environments (yet)... */
+    assert(IsListEmpty(&Thread->ApcState.ApcListHead[KernelMode]));
+    assert(IsListEmpty(&Thread->ApcState.ApcListHead[UserMode]));
+    assert(Thread->ApcState.KernelApcInProgress == FALSE);
+    assert(Thread->ApcState.KernelApcPending == FALSE);
+    assert(Thread->ApcState.UserApcPending == FALSE);
+    
+    /* restore backup of original environment */
+    Thread->ApcState = Thread->SavedApcState;
+
+    /* update environment pointers */
+    Thread->ApcStatePointer[OriginalApcEnvironment] = &Thread->ApcState;
+    Thread->ApcStatePointer[AttachedApcEnvironment] = &Thread->SavedApcState;
+
+    /* update current-environment index */
+    Thread->ApcStateIndex = OriginalApcEnvironment;
+  }
+  else if (Thread->ApcStateIndex == OriginalApcEnvironment)
+  {
+    /* backup original environment */
+    Thread->SavedApcState = Thread->ApcState;
+
+    /*
+    FIXME: Is it possible to target an apc to an attached environment even if the 
+    thread is not currently attached???? If so, then this is bougus since it 
+    reinitializes the attached apc environment then located in SavedApcState.
+    -Gunnar
+    */
+
+    /* setup a fresh new attached environment */
+    InitializeListHead(&Thread->ApcState.ApcListHead[KernelMode]);
+    InitializeListHead(&Thread->ApcState.ApcListHead[UserMode]);
+    Thread->ApcState.Process = NewProcess;
+    Thread->ApcState.KernelApcInProgress = FALSE;
+    Thread->ApcState.KernelApcPending = FALSE;
+    Thread->ApcState.UserApcPending = FALSE;
+
+    /* update environment pointers */
+    Thread->ApcStatePointer[OriginalApcEnvironment] = &Thread->SavedApcState;
+    Thread->ApcStatePointer[AttachedApcEnvironment] = &Thread->ApcState;
+
+    /* update current-environment index */
+    Thread->ApcStateIndex = AttachedApcEnvironment;
+  }
+  else
+  {
+    KEBUGCHECK(0);
+  }
+
 }
 

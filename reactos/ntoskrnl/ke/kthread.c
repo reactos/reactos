@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kthread.c,v 1.42 2003/07/21 21:53:51 royce Exp $
+/* $Id: kthread.c,v 1.43 2003/11/27 01:02:23 gdalsnes Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Microkernel thread support
@@ -180,10 +180,21 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
   Thread->Quantum = 0;
   memset(Thread->WaitBlock, 0, sizeof(KWAIT_BLOCK)*4);
   Thread->LegoData = 0;
+  
   /*
    * FIXME: Why this?
    */
-  Thread->KernelApcDisable = 1;
+//  Thread->KernelApcDisable = 1;
+/*
+It may be correct to have regular kmode APC disabled
+until the thread has been fully created, BUT the problem is: they are 
+currently never enabled again! So until somone figures out how 
+this really work, I'm setting regular kmode APC's intially enabled.
+-Gunnar
+*/
+
+  Thread->KernelApcDisable = 0;
+  
   Thread->UserAffinity = Process->Affinity;
   Thread->SystemAffinityActive = 0;
   Thread->PowerState = 0;
@@ -202,8 +213,8 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
   Thread->CallbackStack = NULL;
   Thread->Win32Thread = 0;
   Thread->TrapFrame = NULL;
-  Thread->ApcStatePointer[0] = NULL;
-  Thread->ApcStatePointer[1] = NULL;
+  Thread->ApcStatePointer[OriginalApcEnvironment] = &Thread->ApcState;
+  Thread->ApcStatePointer[AttachedApcEnvironment] = &Thread->SavedApcState;
   Thread->EnableStackSwap = 0;
   Thread->LargeStack = 0;
   Thread->ResourceIndex = 0;
@@ -211,9 +222,15 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
   Thread->KernelTime = 0;
   Thread->UserTime = 0;
   memset(&Thread->SavedApcState, 0, sizeof(KAPC_STATE));
+  
+  /* FIXME: is this correct? */
   Thread->Alertable = 1;
-  Thread->ApcStateIndex = 0;
-  Thread->ApcQueueable = 0;
+  
+  Thread->ApcStateIndex = OriginalApcEnvironment;
+  
+  /* FIXME: not all thread are ApcQueueable! */
+  Thread->ApcQueueable = TRUE;
+  
   Thread->AutoAlignment = 0;
   KeInitializeApc(&Thread->SuspendApc,
 		  Thread,
