@@ -1,4 +1,4 @@
-/* $Id: swprintf.c,v 1.13 2003/12/30 18:52:06 fireball Exp $
+/* $Id: swprintf.c,v 1.14 2004/01/10 14:22:14 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -193,7 +193,7 @@ string(wchar_t* buf, wchar_t* end, const char* s, int len, int field_width, int 
 		if (len == -1)
 		{
 			len = 0;
-			while (s[len] && (unsigned int)len < (unsigned int)precision)
+			while ((unsigned int)len < (unsigned int)precision && s[len])
 				len++;
 		}
 		else
@@ -238,7 +238,7 @@ stringw(wchar_t* buf, wchar_t* end, const wchar_t* sw, int len, int field_width,
 		if (len == -1)
 		{
 			len = 0;
-			while (sw[len] && (unsigned int)len < (unsigned int)precision)
+			while ((unsigned int)len < (unsigned int)precision && sw[len])
 				len++;
 		}
 		else

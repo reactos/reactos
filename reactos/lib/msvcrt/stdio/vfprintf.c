@@ -617,7 +617,7 @@ static int string(FILE *f, const char* s, int len, int field_width, int precisio
 		if (len == -1)
 		{
 			len = 0;
-			while (s[len] && (unsigned int)len < (unsigned int)precision)
+			while ((unsigned int)len < (unsigned int)precision && s[len])
 				len++;
 		}
 		else
@@ -661,7 +661,7 @@ static int stringw(FILE *f, const wchar_t* sw, int len, int field_width, int pre
 		if (len == -1)
 		{
 			len = 0;
-			while (sw[len] && (unsigned int)len < (unsigned int)precision)
+			while ((unsigned int)len < (unsigned int)precision && sw[len])
 				len++;
 		}
 		else
