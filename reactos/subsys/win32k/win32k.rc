@@ -22,7 +22,7 @@ BEGIN
         BEGIN
             VALUE "CompanyName",	RES_STR_COMPANY_NAME
             VALUE "FileDescription",	"W32 GDI KM subsystem\0"
-            VALUE "FileVersion",	"0.0.1\0"
+            VALUE "FileVersion",	RES_STR_FILE_VERSION
             VALUE "InternalName",	"win32k\0"
             VALUE "LegalCopyright",	RES_STR_LEGAL_COPYRIGHT
             VALUE "OriginalFilename",	"win32k.sys\0"
