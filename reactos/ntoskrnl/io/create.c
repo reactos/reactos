@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.58 2002/05/23 09:51:11 ekohl Exp $
+/* $Id: create.c,v 1.59 2002/08/28 07:05:14 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -375,6 +375,10 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
    Irp->Tail.Overlay.AuxiliaryBuffer = (PCHAR)ExtraCreateParameters;
    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
    Irp->UserEvent = &FileObject->Event;
+   if (AllocationSize)
+   {
+      Irp->Overlay.AllocationSize = *AllocationSize;
+   }
    
    /*
     * Get the stack location for the new
