@@ -107,10 +107,8 @@ static BOOL argifyA(char* out, int len, const char* fmt, const char* lpFile, LPI
 		    }
 		    else
 		    {
-			/* *res++ = '"'; */
 			while(*args && !isspace(*args))
 			    *res++ = *args++;
-			/* *res++ = '"'; */
 
 			while(isspace(*args))
 			    ++args;
@@ -135,10 +133,8 @@ static BOOL argifyA(char* out, int len, const char* fmt, const char* lpFile, LPI
 			}
 			else
 			{
-			    /* *res++ = '"'; */
 			    strcpy(res, cmd);
 			    res += strlen(cmd);
-			    /* *res++ = '"'; */
 			}
 		    }
 		}
