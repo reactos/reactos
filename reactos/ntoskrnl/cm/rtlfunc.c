@@ -6,6 +6,8 @@
  * UPDATE HISTORY:
 */
 
+/* INCLUDES *****************************************************************/
+
 #ifdef WIN32_REGDBG
 #include "cm_win32.h"
 #else
@@ -22,6 +24,9 @@
 
 #include "cm.h"
 #endif
+
+
+/* FUNCTIONS ****************************************************************/
 
 NTSTATUS STDCALL
 RtlCheckRegistryKey(IN ULONG RelativeTo,

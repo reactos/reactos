@@ -168,6 +168,8 @@ CmiObjectParse(PVOID ParsedObject,
       if ((FoundObject->KeyCell->Type == REG_LINK_KEY_CELL_TYPE) &&
 	  !((Attributes & OBJ_OPENLINK) && (end == NULL)))
 	{
+	  DPRINT("Found link\n");
+
 	  RtlInitUnicodeString(&LinkPath, NULL);
 	  Status = CmiGetLinkTarget(FoundObject->RegistryHive,
 				    FoundObject->KeyCell,
@@ -436,18 +438,22 @@ CmiGetLinkTarget(PREGISTRY_HIVE RegistryHive,
 		 PKEY_CELL KeyCell,
 		 PUNICODE_STRING TargetPath)
 {
+  UNICODE_STRING LinkName = UNICODE_STRING_INITIALIZER(L"SymbolicLinkValue");
   PVALUE_CELL ValueCell;
   PDATA_CELL DataCell;
   NTSTATUS Status;
 
+  DPRINT("CmiGetLinkTarget() called\n");
+
   /* Get Value block of interest */
   Status = CmiScanKeyForValue(RegistryHive,
 			      KeyCell,
-			      "SymbolicLinkValue",
+			      &LinkName,
 			      &ValueCell,
 			      NULL);
   if (!NT_SUCCESS(Status))
     {
+      DPRINT1("CmiScanKeyForValue() failed (Status %lx)\n", Status);
       return(Status);
     }
 
@@ -484,6 +490,8 @@ CmiGetLinkTarget(PREGISTRY_HIVE RegistryHive,
 		    TargetPath->Length);
       TargetPath->Buffer[TargetPath->Length / sizeof(WCHAR)] = 0;
     }
+
+  DPRINT("TargetPath '%wZ'\n", TargetPath);
 
   return(STATUS_SUCCESS);
 }

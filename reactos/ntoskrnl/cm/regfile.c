@@ -1204,7 +1204,7 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
           /* Reallocate the hash table block */
           Status = CmiAllocateHashTableBlock(RegistryHive,
             &NewHashBlock,
-					  &HTOffset,
+            &HTOffset,
             HashBlock->HashTableSize +
             REG_EXTEND_HASH_TABLE_SIZE);
 
@@ -1219,7 +1219,7 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
             &HashBlock->Table[0],
             sizeof(NewHashBlock->Table[0]) * HashBlock->HashTableSize);
           CmiDestroyBlock(RegistryHive, HashBlock, KeyCell->HashTableOffset);
-	        KeyCell->HashTableOffset = HTOffset;
+          KeyCell->HashTableOffset = HTOffset;
           HashBlock = NewHashBlock;
         }
     }
@@ -1237,13 +1237,12 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
 NTSTATUS
 CmiScanKeyForValue(IN PREGISTRY_HIVE RegistryHive,
 	IN PKEY_CELL KeyCell,
-	IN PCHAR ValueName,
+	IN PUNICODE_STRING ValueName,
 	OUT PVALUE_CELL *ValueCell,
 	OUT BLOCK_OFFSET *VBOffset)
 {
   PVALUE_LIST_CELL ValueListCell;
   PVALUE_CELL CurValueCell;
-  ULONG Length;
   ULONG i;
 
   ValueListCell = CmiGetBlock(RegistryHive, KeyCell->ValuesOffset, NULL);
@@ -1261,17 +1260,17 @@ CmiScanKeyForValue(IN PREGISTRY_HIVE RegistryHive,
   for (i = 0; i < KeyCell->NumberOfValues; i++)
     {
       CurValueCell = CmiGetBlock(RegistryHive,
-        ValueListCell->Values[i],
-        NULL);
-      /* FIXME: perhaps we must not ignore case if NtCreateKey has not been */
-      /*        called with OBJ_CASE_INSENSITIVE flag ? */
-      Length = strlen(ValueName);
+				 ValueListCell->Values[i],
+				 NULL);
+
       if ((CurValueCell != NULL) &&
-          (CurValueCell->NameSize == Length) &&
-          (_strnicmp(CurValueCell->Name, ValueName, Length) == 0))
+	  CmiComparePackedNames(ValueName,
+				CurValueCell->Name,
+				CurValueCell->NameSize,
+				CurValueCell->Flags & REG_VALUE_NAME_PACKED))
         {
           *ValueCell = CurValueCell;
-	        if (VBOffset)
+          if (VBOffset)
             *VBOffset = ValueListCell->Values[i];
           //DPRINT("Found value %s\n", ValueName);
           break;
@@ -1280,7 +1279,7 @@ CmiScanKeyForValue(IN PREGISTRY_HIVE RegistryHive,
     }
 
   CmiReleaseBlock(RegistryHive, ValueListCell);
-  
+
   return STATUS_SUCCESS;
 }
 
@@ -1293,7 +1292,7 @@ CmiGetValueFromKeyByIndex(IN PREGISTRY_HIVE RegistryHive,
 {
   PVALUE_LIST_CELL ValueListCell;
   PVALUE_CELL CurValueCell;
- 
+
   ValueListCell = CmiGetBlock(RegistryHive, KeyCell->ValuesOffset, NULL);
 
   *ValueCell = NULL;
@@ -1321,7 +1320,7 @@ CmiGetValueFromKeyByIndex(IN PREGISTRY_HIVE RegistryHive,
 
   CmiReleaseBlock(RegistryHive, CurValueCell);
   CmiReleaseBlock(RegistryHive, ValueListCell);
-  
+
   return STATUS_SUCCESS;
 }
 
@@ -1329,7 +1328,7 @@ CmiGetValueFromKeyByIndex(IN PREGISTRY_HIVE RegistryHive,
 NTSTATUS
 CmiAddValueToKey(IN PREGISTRY_HIVE RegistryHive,
 	IN PKEY_CELL KeyCell,
-	IN PCHAR ValueNameBuf,
+	IN PUNICODE_STRING ValueName,
 	OUT PVALUE_CELL *pValueCell,
 	OUT BLOCK_OFFSET *pVBOffset)
 {
@@ -1343,7 +1342,7 @@ CmiAddValueToKey(IN PREGISTRY_HIVE RegistryHive,
   Status = CmiAllocateValueCell(RegistryHive,
 		&NewValueCell,
 		&VBOffset,
-		ValueNameBuf);
+		ValueName);
   *pVBOffset = VBOffset;
 
   if (!NT_SUCCESS(Status))
@@ -1407,7 +1406,7 @@ CmiAddValueToKey(IN PREGISTRY_HIVE RegistryHive,
 NTSTATUS
 CmiDeleteValueFromKey(IN PREGISTRY_HIVE RegistryHive,
 		      IN PKEY_CELL KeyCell,
-		      IN PCHAR ValueName)
+		      IN PUNICODE_STRING ValueName)
 {
   PVALUE_LIST_CELL ValueListCell;
   PVALUE_CELL CurValueCell;
@@ -1425,9 +1424,12 @@ CmiDeleteValueFromKey(IN PREGISTRY_HIVE RegistryHive,
   for (i = 0; i < KeyCell->NumberOfValues; i++)
     {
       CurValueCell = CmiGetBlock(RegistryHive, ValueListCell->Values[i], NULL);
+
       if ((CurValueCell != NULL) &&
-          (CurValueCell->NameSize == strlen(ValueName)) &&
-          (memcmp(CurValueCell->Name, ValueName, strlen(ValueName)) == 0))
+	  CmiComparePackedNames(ValueName,
+				CurValueCell->Name,
+				CurValueCell->NameSize,
+				CurValueCell->Flags & REG_VALUE_NAME_PACKED))
         {
           if ((KeyCell->NumberOfValues - 1) < i)
             {
@@ -1539,20 +1541,25 @@ NTSTATUS
 CmiAllocateValueCell(PREGISTRY_HIVE RegistryHive,
   PVALUE_CELL *ValueCell,
   BLOCK_OFFSET *VBOffset,
-  IN PCHAR ValueNameBuf)
+  IN PUNICODE_STRING ValueName)
 {
   PVALUE_CELL NewValueCell;
-  ULONG NewValueSize;
   NTSTATUS Status;
+  BOOLEAN Packable;
+  ULONG NameSize;
+  ULONG i;
 
   Status = STATUS_SUCCESS;
 
-  NewValueSize = sizeof(VALUE_CELL) + strlen(ValueNameBuf);
-  Status = CmiAllocateBlock(RegistryHive,
-    (PVOID*) &NewValueCell,
-    NewValueSize,
-    VBOffset);
+  NameSize = CmiGetPackedNameLength(ValueName,
+				    &Packable);
 
+  DPRINT("ValueName->Length %lu  NameSize %lu\n", ValueName->Length, NameSize);
+
+  Status = CmiAllocateBlock(RegistryHive,
+			    (PVOID*) &NewValueCell,
+			    sizeof(VALUE_CELL) + NameSize,
+			    VBOffset);
   if ((NewValueCell == NULL) || (!NT_SUCCESS(Status)))
     {
       Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1560,8 +1567,22 @@ CmiAllocateValueCell(PREGISTRY_HIVE RegistryHive,
   else
     {
       NewValueCell->Id = REG_VALUE_CELL_ID;
-      NewValueCell->NameSize = strlen(ValueNameBuf);
-      memcpy(NewValueCell->Name, ValueNameBuf, strlen(ValueNameBuf));
+      NewValueCell->NameSize = NameSize;
+      if (Packable)
+	{
+	  /* Pack the value name */
+	  for (i = 0; i < NameSize; i++)
+	    NewValueCell->Name[i] = (CHAR)ValueName->Buffer[i];
+	  NewValueCell->Flags |= REG_VALUE_NAME_PACKED;
+	}
+      else
+        {
+	  /* Copy the value name */
+	  RtlCopyMemory(NewValueCell->Name,
+			ValueName->Buffer,
+			NameSize);
+	  NewValueCell->Flags = 0;
+	}
       NewValueCell->DataType = 0;
       NewValueCell->DataSize = 0;
       NewValueCell->DataOffset = 0xffffffff;
@@ -1669,9 +1690,9 @@ CmiAddBin(PREGISTRY_HIVE RegistryHive,
 
 NTSTATUS
 CmiAllocateBlock(PREGISTRY_HIVE RegistryHive,
-	PVOID *Block,
-	LONG BlockSize,
-  BLOCK_OFFSET * pBlockOffset)
+		 PVOID *Block,
+		 LONG BlockSize,
+		 BLOCK_OFFSET * pBlockOffset)
 {
   PCELL_HEADER NewBlock;
   NTSTATUS Status;
@@ -1687,86 +1708,88 @@ CmiAllocateBlock(PREGISTRY_HIVE RegistryHive,
     {
       NewBlock = ExAllocatePool(NonPagedPool, BlockSize);
 
-	    if (NewBlock == NULL)
-		    {
-		      Status = STATUS_INSUFFICIENT_RESOURCES;
-		    }
-	    else
-		    {
-		      RtlZeroMemory(NewBlock, BlockSize);
-		      NewBlock->CellSize = BlockSize;
-		      CmiLockBlock(RegistryHive, NewBlock);
-		      *Block = NewBlock;
-		      if (pBlockOffset)
-            *pBlockOffset = (BLOCK_OFFSET) NewBlock;
-		    }
+      if (NewBlock == NULL)
+	{
+	  Status = STATUS_INSUFFICIENT_RESOURCES;
+	}
+      else
+	{
+	  RtlZeroMemory(NewBlock, BlockSize);
+	  NewBlock->CellSize = BlockSize;
+	  CmiLockBlock(RegistryHive, NewBlock);
+	  *Block = NewBlock;
+	  if (pBlockOffset)
+	    *pBlockOffset = (BLOCK_OFFSET) NewBlock;
+	}
     }
   else
     {
-	    ULONG i;
+      ULONG i;
 
-	    /* first search in free blocks */
-	    NewBlock = NULL;
-	    for (i = 0; i < RegistryHive->FreeListSize; i++)
-		    {
-		      if (RegistryHive->FreeList[i]->CellSize >= BlockSize)
-			      {
-              PVOID Temp;
-							NewBlock = RegistryHive->FreeList[i];
+      /* first search in free blocks */
+      NewBlock = NULL;
+      for (i = 0; i < RegistryHive->FreeListSize; i++)
+	{
+	  if (RegistryHive->FreeList[i]->CellSize >= BlockSize)
+	    {
+	      PVOID Temp;
 
-							if (pBlockOffset)
-				        *pBlockOffset = RegistryHive->FreeListOffset[i];
+	      NewBlock = RegistryHive->FreeList[i];
+	      if (pBlockOffset)
+		*pBlockOffset = RegistryHive->FreeListOffset[i];
 
-			         /* Update time of heap */
-               Temp = CmiGetBlock(RegistryHive, RegistryHive->FreeListOffset[i], &pBin);
+	      /* Update time of heap */
+	      Temp = CmiGetBlock(RegistryHive, RegistryHive->FreeListOffset[i], &pBin);
 
-			         if (Temp)
-			           ZwQuerySystemTime((PTIME) &pBin->DateModified);
+	      if (Temp)
+		ZwQuerySystemTime((PTIME) &pBin->DateModified);
 
-			         if ((i + 1) < RegistryHive->FreeListSize)
-                 {
-			             RtlMoveMemory(&RegistryHive->FreeList[i],
-                     &RegistryHive->FreeList[i + 1],
-				             sizeof(RegistryHive->FreeList[0])
-                       * (RegistryHive->FreeListSize - i - 1));
-			             RtlMoveMemory(&RegistryHive->FreeListOffset[i],
-				             &RegistryHive->FreeListOffset[i + 1],
-				             sizeof(RegistryHive->FreeListOffset[0])
-                       * (RegistryHive->FreeListSize - i - 1));
-                 }
-			         RegistryHive->FreeListSize--;
-			         break;
-			      }
-		    }
+	      if ((i + 1) < RegistryHive->FreeListSize)
+		{
+		  RtlMoveMemory(&RegistryHive->FreeList[i],
+				&RegistryHive->FreeList[i + 1],
+				sizeof(RegistryHive->FreeList[0])
+				  * (RegistryHive->FreeListSize - i - 1));
+		  RtlMoveMemory(&RegistryHive->FreeListOffset[i],
+				&RegistryHive->FreeListOffset[i + 1],
+				sizeof(RegistryHive->FreeListOffset[0])
+				  * (RegistryHive->FreeListSize - i - 1));
+		}
+	      RegistryHive->FreeListSize--;
+	      break;
+	    }
+	}
 
-	    /* Need to extend hive file : */
-	    if (NewBlock == NULL)
-		    {
-		      /* Add a new block */
-		      Status = CmiAddBin(RegistryHive, (PVOID *) &NewBlock , pBlockOffset);
-		    }
+      /* Need to extend hive file : */
+      if (NewBlock == NULL)
+	{
+	  /* Add a new block */
+	  Status = CmiAddBin(RegistryHive, (PVOID *) &NewBlock , pBlockOffset);
+	}
 
-	    if (NT_SUCCESS(Status))
-		    {
-		      *Block = NewBlock;
+      if (NT_SUCCESS(Status))
+	{
+	  *Block = NewBlock;
 
-		      /* Split the block in two parts */
-		      if (NewBlock->CellSize > BlockSize)
-			      {
-							NewBlock = (PCELL_HEADER) ((ULONG_PTR) NewBlock+BlockSize);
-							NewBlock->CellSize = ((PCELL_HEADER) (*Block))->CellSize - BlockSize;
-							CmiAddFree(RegistryHive, NewBlock, *pBlockOffset + BlockSize);
-			      }
-		      else if (NewBlock->CellSize < BlockSize)
-            {
-			        return STATUS_UNSUCCESSFUL;
-            }
-		      RtlZeroMemory(*Block, BlockSize);
-		      ((PCELL_HEADER) (*Block))->CellSize = -BlockSize;
-		      CmiLockBlock(RegistryHive, *Block);
-		    }
-	  }
-  return  Status;
+	  /* Split the block in two parts */
+	  if (NewBlock->CellSize > BlockSize)
+	    {
+	      NewBlock = (PCELL_HEADER) ((ULONG_PTR) NewBlock+BlockSize);
+	      NewBlock->CellSize = ((PCELL_HEADER) (*Block))->CellSize - BlockSize;
+	      CmiAddFree(RegistryHive, NewBlock, *pBlockOffset + BlockSize);
+	    }
+	  else if (NewBlock->CellSize < BlockSize)
+	    {
+	      return(STATUS_UNSUCCESSFUL);
+	    }
+
+	  RtlZeroMemory(*Block, BlockSize);
+	  ((PCELL_HEADER) (*Block))->CellSize = -BlockSize;
+	  CmiLockBlock(RegistryHive, *Block);
+	}
+    }
+
+  return(Status);
 }
 
 
@@ -1781,27 +1804,27 @@ CmiDestroyBlock(PREGISTRY_HIVE RegistryHive,
   Status = STATUS_SUCCESS;
 
   if (IsVolatileHive(RegistryHive))
-	  {
-	    CmiReleaseBlock(RegistryHive, Block);
-	    ExFreePool(Block);
-	  }
+    {
+      CmiReleaseBlock(RegistryHive, Block);
+      ExFreePool(Block);
+    }
   else
-	  {
-	    PCELL_HEADER pFree = Block;
+    {
+      PCELL_HEADER pFree = Block;
 
-	    if (pFree->CellSize < 0)
-	      pFree->CellSize = -pFree->CellSize;
+      if (pFree->CellSize < 0)
+        pFree->CellSize = -pFree->CellSize;
 
-	    CmiAddFree(RegistryHive, Block, Offset);
-	    CmiReleaseBlock(RegistryHive, Block);
+      CmiAddFree(RegistryHive, Block, Offset);
+      CmiReleaseBlock(RegistryHive, Block);
 
-	    /* Update time of heap */
-	    if (IsPermanentHive(RegistryHive) && CmiGetBlock(RegistryHive, Offset,&pBin))
-	      ZwQuerySystemTime((PTIME) &pBin->DateModified);
+      /* Update time of heap */
+      if (IsPermanentHive(RegistryHive) && CmiGetBlock(RegistryHive, Offset,&pBin))
+	ZwQuerySystemTime((PTIME) &pBin->DateModified);
 
-	      /* FIXME: Set first dword to block_offset of another free block ? */
-	      /* FIXME: Concatenate with previous and next block if free */
-	  }
+      /* FIXME: Set first dword to block_offset of another free block ? */
+      /* FIXME: Concatenate with previous and next block if free */
+    }
 
   return Status;
 }
@@ -1825,29 +1848,29 @@ CmiAddFree(PREGISTRY_HIVE RegistryHive,
     FreeBlock, FreeOffset);
 DPRINT("\n");
   if ((RegistryHive->FreeListSize + 1) > RegistryHive->FreeListMax)
-	  {
+    {
 DPRINT("\n");
-	    tmpList = ExAllocatePool(PagedPool,
+      tmpList = ExAllocatePool(PagedPool,
 			  sizeof(PCELL_HEADER) * (RegistryHive->FreeListMax + 32));
 DPRINT("\n");
 
-	    if (tmpList == NULL)
-        return STATUS_INSUFFICIENT_RESOURCES;
+      if (tmpList == NULL)
+	return STATUS_INSUFFICIENT_RESOURCES;
 DPRINT("\n");
 
-	    tmpListOffset = ExAllocatePool(PagedPool,
+      tmpListOffset = ExAllocatePool(PagedPool,
 			  sizeof(BLOCK_OFFSET *) * (RegistryHive->FreeListMax + 32));
 DPRINT("\n");
 
-	    if (tmpListOffset == NULL)
-        {
-          ExFreePool(tmpList);
-          return STATUS_INSUFFICIENT_RESOURCES;
-        }
+      if (tmpListOffset == NULL)
+	{
+	  ExFreePool(tmpList);
+	  return STATUS_INSUFFICIENT_RESOURCES;
+	}
 DPRINT("\n");
 
-	    if (RegistryHive->FreeListMax)
-	    {
+      if (RegistryHive->FreeListMax)
+	{
 DPRINT("\n");
         RtlMoveMemory(tmpList, RegistryHive->FreeList,
           sizeof(PCELL_HEADER) * (RegistryHive->FreeListMax));
@@ -1986,3 +2009,80 @@ CmiReleaseBlock(PREGISTRY_HIVE RegistryHive,
       /* FIXME: Implement */
     }
 }
+
+
+ULONG
+CmiGetPackedNameLength(IN PUNICODE_STRING Name,
+		       OUT PBOOLEAN Packable)
+{
+  ULONG i;
+
+  if (Packable != NULL)
+    *Packable = TRUE;
+
+  for (i = 0; i < Name->Length; i++)
+    {
+      if (Name->Buffer[i] > 0xFF)
+	{
+	  if (Packable != NULL)
+	    *Packable = FALSE;
+	  return(Name->Length);
+	}
+    }
+
+  return(Name->Length / sizeof(WCHAR));
+}
+
+
+BOOLEAN
+CmiComparePackedNames(IN PUNICODE_STRING Name,
+		      IN PCHAR NameBuffer,
+		      IN USHORT NameBufferSize,
+		      IN BOOLEAN NamePacked)
+{
+  PWCHAR UNameBuffer;
+  ULONG i;
+
+  if (NamePacked)
+    {
+      if (Name->Length != NameBufferSize * sizeof(WCHAR))
+	{
+	return(FALSE);
+	}
+
+      for (i = 0; i < Name->Length / sizeof(WCHAR); i++)
+	{
+	  if (RtlUpcaseUnicodeChar(Name->Buffer[i]) != RtlUpcaseUnicodeChar((WCHAR)NameBuffer[i]))
+	    return(FALSE);
+	}
+    }
+  else
+    {
+      if (Name->Length != NameBufferSize)
+	return(FALSE);
+
+      UNameBuffer = (PWCHAR)NameBuffer;
+
+      for (i = 0; i < Name->Length / sizeof(WCHAR); i++)
+	{
+	  if (RtlUpcaseUnicodeChar(Name->Buffer[i]) != RtlUpcaseUnicodeChar(UNameBuffer[i]))
+	    return(FALSE);
+	}
+    }
+
+  return(TRUE);
+}
+
+
+VOID
+CmiCopyPackedName(PWCHAR NameBuffer,
+		  PCHAR PackedNameBuffer,
+		  ULONG PackedNameSize)
+{
+  ULONG i;
+
+  for (i = 0; i < PackedNameSize; i++)
+    NameBuffer[i] = (WCHAR)PackedNameBuffer[i];
+}
+
+/* EOF */

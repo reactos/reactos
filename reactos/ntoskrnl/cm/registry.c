@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.78 2002/11/26 15:31:41 ekohl Exp $
+/* $Id: registry.c,v 1.79 2002/11/30 14:46:27 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -20,6 +20,7 @@
 #include <string.h>
 #include <internal/pool.h>
 #include <internal/registry.h>
+#include <reactos/bugcodes.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -204,7 +205,7 @@ CmiCheckByName(BOOLEAN Verbose,
   wcscpy(KeyPathBuffer, L"\\Registry\\");
   wcscat(KeyPathBuffer, KeyName);
 
-	RtlInitUnicodeString(&KeyPath, KeyPathBuffer);
+  RtlInitUnicodeString(&KeyPath, KeyPathBuffer);
 
   InitializeObjectAttributes(&ObjectAttributes,
 		&KeyPath,
@@ -219,11 +220,11 @@ CmiCheckByName(BOOLEAN Verbose,
   if (CHECKED)
     {
       if (!NT_SUCCESS(Status))
-				{
+	{
           DbgPrint("KeyPath %wZ  Status: %.08x", KeyPath, Status);
           DbgPrint("KeyPath %S  Status: %.08x", KeyPath.Buffer, Status);
           assert(NT_SUCCESS(Status));
-				}
+	}
     }
 
   CmiCheckKey(Verbose, Key);
@@ -484,6 +485,7 @@ CmInit2(PCHAR CommandLine)
 {
   PCHAR p1, p2;
   ULONG PiceStart;
+  NTSTATUS Status;
 
   /* FIXME: Store system start options */
 
@@ -515,12 +517,17 @@ CmInit2(PCHAR CommandLine)
       p1 = p2;
     }
 #ifndef WIN32_REGDBG
-  RtlWriteRegistryValue(RTL_REGISTRY_SERVICES,
-			L"\\Pice",
-			L"Start",
-			REG_DWORD,
-			&PiceStart,
-			sizeof(ULONG));
+  Status = RtlWriteRegistryValue(RTL_REGISTRY_SERVICES,
+				 L"\\Pice",
+				 L"Start",
+				 REG_DWORD,
+				 &PiceStart,
+				 sizeof(ULONG));
+  if (!NT_SUCCESS(Status))
+    {
+
+      KeBugCheck(CONFIG_INITIALIZATION_FAILED);
+    }
 #endif
 }
 
@@ -602,12 +609,12 @@ CmiCreateCurrentControlSetLink(VOID)
 
   RtlInitUnicodeStringFromLiteral(&LinkValue,
 		       L"SymbolicLinkValue");
-  Status=NtSetValueKey(KeyHandle,
-		       &LinkValue,
-		       0,
-		       REG_LINK,
-		       (PVOID)TargetNameBuffer,
-		       TargetNameLength);
+  Status = NtSetValueKey(KeyHandle,
+			 &LinkValue,
+			 0,
+			 REG_LINK,
+			 (PVOID)TargetNameBuffer,
+			 TargetNameLength);
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);

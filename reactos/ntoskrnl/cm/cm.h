@@ -42,9 +42,6 @@
 #define  REG_KEY_CELL_ID               0x6b6e
 #define  REG_HASH_TABLE_BLOCK_ID       0x666c
 #define  REG_VALUE_CELL_ID             0x6b76
-#define  REG_LINK_KEY_CELL_TYPE        0x10
-#define  REG_KEY_CELL_TYPE             0x20
-#define  REG_ROOT_KEY_CELL_TYPE        0x2c
 #define  REG_HIVE_ID                   0x66676572
 
 #define  REGISTRY_FILE_MAGIC    "REGEDIT4"
@@ -191,6 +188,12 @@ typedef struct _KEY_CELL
   UCHAR  Name[0];
 } __attribute__((packed)) KEY_CELL, *PKEY_CELL;
 
+/* KEY_CELL.Type constants */
+#define  REG_LINK_KEY_CELL_TYPE        0x10
+#define  REG_KEY_CELL_TYPE             0x20
+#define  REG_ROOT_KEY_CELL_TYPE        0x2c
+
+
 // hash record :
 // HashValue=four letters of value's name
 typedef struct _HASH_RECORD
@@ -225,6 +228,10 @@ typedef struct _VALUE_CELL
   USHORT Unused1;
   UCHAR  Name[0]; /* warning : not zero terminated */
 } __attribute__((packed)) VALUE_CELL, *PVALUE_CELL;
+
+/* VALUE_CELL.Flags constants */
+#define REG_VALUE_NAME_PACKED             0x0001
+
 
 typedef struct _DATA_CELL
 {
@@ -427,7 +434,7 @@ CmiAddSubKey(IN PREGISTRY_HIVE  RegistryHive,
 NTSTATUS
 CmiScanKeyForValue(IN PREGISTRY_HIVE  RegistryHive,
   IN PKEY_CELL  KeyCell,
-  IN PCHAR  ValueName,
+  IN PUNICODE_STRING  ValueName,
   OUT PVALUE_CELL  *ValueCell,
   OUT BLOCK_OFFSET *VBOffset);
 
@@ -440,14 +447,14 @@ CmiGetValueFromKeyByIndex(IN PREGISTRY_HIVE  RegistryHive,
 NTSTATUS
 CmiAddValueToKey(IN PREGISTRY_HIVE  RegistryHive,
   IN PKEY_CELL  KeyCell,
-  IN PCHAR  ValueNameBuf,
-	OUT PVALUE_CELL *pValueCell,
-	OUT BLOCK_OFFSET *pVBOffset);
+  IN PUNICODE_STRING ValueName,
+  OUT PVALUE_CELL *pValueCell,
+  OUT BLOCK_OFFSET *pVBOffset);
 
 NTSTATUS
 CmiDeleteValueFromKey(IN PREGISTRY_HIVE  RegistryHive,
   IN PKEY_CELL  KeyCell,
-  IN PCHAR  ValueName);
+  IN PUNICODE_STRING ValueName);
 
 NTSTATUS
 CmiAllocateHashTableBlock(IN PREGISTRY_HIVE  RegistryHive,
@@ -468,9 +475,9 @@ CmiAddKeyToHashTable(PREGISTRY_HIVE  RegistryHive,
 
 NTSTATUS
 CmiAllocateValueCell(IN PREGISTRY_HIVE  RegistryHive,
- OUT PVALUE_CELL  *ValueCell,
- OUT BLOCK_OFFSET  *VBOffset,
- IN PCHAR  ValueNameBuf);
+  OUT PVALUE_CELL  *ValueCell,
+  OUT BLOCK_OFFSET  *VBOffset,
+  IN PUNICODE_STRING ValueName);
 
 NTSTATUS
 CmiDestroyValueCell(PREGISTRY_HIVE  RegistryHive,
@@ -508,5 +515,20 @@ CmiAddFree(PREGISTRY_HIVE  RegistryHive,
 
 NTSTATUS
 CmiInitHives(BOOLEAN SetUpBoot);
+
+ULONG
+CmiGetPackedNameLength(IN PUNICODE_STRING Name,
+		       OUT PBOOLEAN Packable);
+
+BOOLEAN
+CmiComparePackedNames(IN PUNICODE_STRING Name,
+		      IN PCHAR NameBuffer,
+		      IN USHORT NameBufferSize,
+		      IN BOOLEAN NamePacked);
+
+VOID
+CmiCopyPackedName(PWCHAR NameBuffer,
+		  PCHAR PackedNameBuffer,
+		  ULONG PackedNameSize);
 
 #endif /*__INCLUDE_CM_H*/
