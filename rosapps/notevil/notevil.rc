@@ -1,4 +1,4 @@
-/* $Id: notevil.rc,v 1.5 2001/10/16 21:02:02 ea Exp $ */
+/* $Id: notevil.rc,v 1.6 2002/03/09 16:04:50 ea Exp $ */
 #include "../../reactos/include/defines.h"
 #include "../../reactos/include/reactos/resource.h"
 
@@ -70,6 +70,8 @@ BEGIN
  20, "Hernan Ochoa"
  21, "Casper Hornstrup"
  22, "Hartmut Birr"
+ 23, "Steven Edwards"
+ 24, "KJK::Hyperion"
 END
 
 /* EOF */
