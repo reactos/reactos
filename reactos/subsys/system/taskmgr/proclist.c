@@ -20,8 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
     
-#define WIN32_LEAN_AND_MEAN    /* Exclude rarely-used stuff from Windows headers */
-#include <windows.h>
+#include "precomp.h"
 #include <commctrl.h>
 #include <stdlib.h>
 #include <malloc.h>
@@ -30,7 +29,6 @@
 #include <stdio.h>
 #include <winnt.h>
     
-#include "taskmgr.h"
 #include "procpage.h"
 #include "proclist.h"
 #include "perfdata.h"

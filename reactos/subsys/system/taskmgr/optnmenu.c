@@ -26,8 +26,7 @@
  * Menu item handlers for the options menu.
  */
 
-#define WIN32_LEAN_AND_MEAN    /* Exclude rarely-used stuff from Windows headers */
-#include <windows.h>
+#include "precomp.h"
 #include <commctrl.h>
 #include <stdlib.h>
 #include <malloc.h>
@@ -35,7 +34,6 @@
 #include <tchar.h>
 #include <stdio.h>
     
-#include "taskmgr.h"
 #include "optnmenu.h"
 #include "procpage.h"
 
