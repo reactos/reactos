@@ -377,33 +377,23 @@ VOID SerialMouseIsrDpc(PKDPC Dpc, PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID C
 
 void InitializeSerialPort(ULONG Port)
 {
-	ULONG LineControl;
-
-	/* Read old value from line control register */
-        LineControl = READ_PORT_UCHAR((PUCHAR)Port + 3);
-        /* NOT SURE WHAT IS THIS SUPPOSED TO DO! */
-	WRITE_PORT_UCHAR((PUCHAR)Port + 1, 0);
-	WRITE_PORT_UCHAR((PUCHAR)Port + 2, 0);
+        /* DLAB off */
+        WRITE_PORT_UCHAR((PUCHAR)Port + 3, 0);
+        WRITE_PORT_UCHAR((PUCHAR)Port + 2, 0);  /* FCR: disable FIFO */
+        WRITE_PORT_UCHAR((PUCHAR)Port + 1, 0);  /* IER: disable ints */
         /* Set DLAB on */
 	WRITE_PORT_UCHAR((PUCHAR)Port + 3, 0x80);
 	/* Set serial port speed */
 	WRITE_PORT_UCHAR((PUCHAR)Port, 0x60);
 	WRITE_PORT_UCHAR((PUCHAR)Port + 1, 0);
-        /* Set DLAB off and restore the old value of line control reg. */
-	WRITE_PORT_UCHAR((PUCHAR)Port + 3, LineControl & ~0x80);
+        /* Set DLAB off and set LCR */
+	WRITE_PORT_UCHAR((PUCHAR)Port + 3, 2);
 
 	WRITE_PORT_UCHAR((PUCHAR)Port + 4, 0x09);  /* DR int enable */
-	(void) READ_PORT_UCHAR((PUCHAR)Port + 5);  /* clear error bits */
-	KeStallExecutionProcessor(150000);         /* Wait > 100 ms */
 }
 
 ULONG DetectMicrosoftMouse(ULONG Port)
 {
-	/*
-	 * Detection method number two. CuteMouse (GPL DOS Mouse driver
-	 * cutemouse.sourceforge.net) assembler port to C by Logan_V8_TT
-	 */
-
 	CHAR Buffer[4];
         ULONG i;
 	UCHAR LCR, MCR;
@@ -414,11 +404,13 @@ ULONG DetectMicrosoftMouse(ULONG Port)
 
         /* Reset UART */
         WRITE_PORT_UCHAR((PUCHAR)Port + 4, 0);  /* MCR: DTR/RTS/OUT2 off */
-        WRITE_PORT_UCHAR((PUCHAR)Port + 2, 0);  /* FCR: disable FIFO */
-        KeStallExecutionProcessor(150000);      /* Wait > 100 ms */
 
         /* Set communications parameters */
         InitializeSerialPort(Port);
+
+        /* Flush receive buffer */
+        (void) READ_PORT_UCHAR((PUCHAR)Port);
+        KeStallExecutionProcessor(150000);      /* Wait > 100 ms */
 
 	/* Enable DTR/RTS (OUT2 disabled) */
 	WRITE_PORT_UCHAR((PUCHAR)Port + 4, 3);
@@ -426,7 +418,7 @@ ULONG DetectMicrosoftMouse(ULONG Port)
 	/* Discard serial buffer data */
 	while (READ_PORT_UCHAR((PUCHAR)Port + 5) & 0x01)
 		(void)READ_PORT_UCHAR((PUCHAR)Port);
-	KeStallExecutionProcessor(100000);      /* Wait */
+        KeStallExecutionProcessor(200000);      /* Wait */
 
 	/* Read the data */
 	for (i = 0; i < 4; i++)
