@@ -95,6 +95,7 @@ cp lib/ws2_32/ws2_32.dll $ROS_INSTALL/system32
 cp lib/ws2help/ws2help.dll $ROS_INSTALL/system32
 cp lib/wshirda/wshirda.dll $ROS_INSTALL/system32
 cp lib/wsock32/wsock32.dll $ROS_INSTALL/system32
+cp lib/kbdus/kbdus.dll $ROS_INSTALL/system32
 cp subsys/smss/smss.exe $ROS_INSTALL/system32
 cp subsys/csrss/csrss.exe $ROS_INSTALL/system32
 cp subsys/ntvdm/ntvdm.exe $ROS_INSTALL/system32
