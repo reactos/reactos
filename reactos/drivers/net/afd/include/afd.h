@@ -87,6 +87,7 @@ typedef struct _AFDFCB {
 typedef struct _AFD_BUFFER {
   LIST_ENTRY ListEntry;
   WSABUF Buffer;
+  UINT   Offset;
 } AFD_BUFFER, *PAFD_BUFFER;
 
 typedef struct _AFD_READ_REQUEST {
@@ -324,7 +325,8 @@ NTSTATUS FillWSABuffers(
     PAFDFCB FCB,
     LPWSABUF Buffers,
     DWORD BufferCount,
-    PULONG BytesCopied);
+    PULONG BytesCopied,
+    BOOL Continuous);
 
 VOID BuildIPv4Header(
     PIPv4_HEADER IPHeader,

@@ -13,7 +13,8 @@ NTSTATUS AfdpDispRecv(
     PIRP Irp,
     PAFDFCB FCB,
     PFILE_REQUEST_RECVFROM Request,
-    PFILE_REPLY_RECVFROM Reply)
+    PFILE_REPLY_RECVFROM Reply,
+    BOOL Continuous)
 /*
  * FUNCTION: Receives data
  * ARGUMENTS:
@@ -64,7 +65,8 @@ NTSTATUS AfdpDispRecv(
       FCB,
       Request->Buffers,
       Request->BufferCount,
-      &Count);
+      &Count,
+      Continuous); /* I.E. Packets are exhausted on short recv if not */
     KeReleaseSpinLock(&FCB->ReceiveQueueLock, OldIrql);
 
     Reply->NumberOfBytesRecvd = Count;
@@ -490,7 +492,8 @@ NTSTATUS AfdDispRecvFrom(
       Irp,
       FCB,
       Request,
-      Reply);
+      Reply,
+      FALSE);
   } else {
     Status = STATUS_INVALID_PARAMETER;
   }
@@ -761,7 +764,6 @@ NTSTATUS AfdDispRecv(
  *     Status of operation
  */
 {
-#if 0
   NTSTATUS Status;
   UINT InputBufferLength;
   UINT OutputBufferLength;
@@ -786,9 +788,9 @@ NTSTATUS AfdDispRecv(
     Status = AfdpDispRecv(
       Irp,
       FCB,
-      Request->Buffers,
-      Request->BufferCount,
-      &NumberOfBytesRecvd);
+      (PFILE_REQUEST_RECVFROM)Request,
+      (PFILE_REPLY_RECVFROM)Reply,
+      TRUE);
     Reply->NumberOfBytesRecvd = NumberOfBytesRecvd;
     Reply->Status = NO_ERROR;
   } else {
@@ -798,9 +800,6 @@ NTSTATUS AfdDispRecv(
   AFD_DbgPrint(MAX_TRACE, ("Status (0x%X).\n", Status));
 
   return Status;
-#else
-  return STATUS_SUCCESS;
-#endif
 }
 
 

@@ -91,7 +91,8 @@ NTSTATUS FillWSABuffers(
     PAFDFCB FCB,
     LPWSABUF Buffers,
     DWORD BufferCount,
-    PULONG BytesCopied)
+    PULONG BytesCopied,
+    BOOL Continuous)
 {
   PUCHAR DstData, SrcData;
   UINT DstSize, SrcSize;
@@ -108,8 +109,8 @@ NTSTATUS FillWSABuffers(
 
   Entry = RemoveHeadList(&FCB->ReceiveQueue);
   SrcBuffer = CONTAINING_RECORD(Entry, AFD_BUFFER, ListEntry);
-  SrcData = SrcBuffer->Buffer.buf;
-  SrcSize = SrcBuffer->Buffer.len;
+  SrcData = SrcBuffer->Buffer.buf + SrcBuffer->Offset;
+  SrcSize = SrcBuffer->Buffer.len - SrcBuffer->Offset;
 
   DstData = Buffers->buf;
   DstSize = Buffers->len;
@@ -169,6 +170,7 @@ NTSTATUS FillWSABuffers(
     ExFreePool(SrcBuffer);
   }
 
+  SrcBuffer->Offset += Total;
   *BytesCopied = Total;
 
   return STATUS_SUCCESS;
