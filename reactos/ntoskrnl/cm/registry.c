@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.123 2004/03/13 12:14:44 ekohl Exp $
+/* $Id: registry.c,v 1.124 2004/05/30 21:40:47 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -362,53 +362,104 @@ CmInitializeRegistry(VOID)
 VOID INIT_FUNCTION
 CmInit2(PCHAR CommandLine)
 {
-  PCHAR p1, p2;
-  ULONG PiceStart;
+  ULONG PiceStart = 4;
+  BOOL MiniNT = FALSE;
+  PWCHAR SystemBootDevice;
+  PWCHAR SystemStartOptions;
+  ULONG Position;
   NTSTATUS Status;
-
-  /* FIXME: Store system start options */
-
-
 
   /* Create the 'CurrentControlSet' link. */
   Status = CmiCreateCurrentControlSetLink();
   if (!NT_SUCCESS(Status))
+    KEBUGCHECK(CONFIG_INITIALIZATION_FAILED);
+
+  /*
+   * Parse the system boot device.
+   */
+  Position = 0;
+  SystemBootDevice = ExAllocatePool(PagedPool, (strlen(CommandLine) + 1) * sizeof(WCHAR));
+  if (SystemBootDevice == NULL)
+    KEBUGCHECK(CONFIG_INITIALIZATION_FAILED);
+  while (*CommandLine != 0 && *CommandLine != ' ')
+    SystemBootDevice[Position++] = *(CommandLine++);
+  SystemBootDevice[Position++] = 0;
+
+  /*
+   * Write the system boot device to registry.
+   */
+  Status = RtlWriteRegistryValue(
+    RTL_REGISTRY_ABSOLUTE,
+    L"\\Registry\\Machine\\System\\CurrentControlSet\\Control",
+    L"SystemBootDevice",
+    REG_SZ,
+    SystemBootDevice,
+    Position * sizeof(WCHAR));
+  if (!NT_SUCCESS(Status))
+    KEBUGCHECK(CONFIG_INITIALIZATION_FAILED);
+
+  /*
+   * Parse the system start options.
+   */
+  Position = 0;
+  SystemStartOptions = SystemBootDevice;
+  while ((CommandLine = strchr(CommandLine, '/')) != NULL)
     {
-      KEBUGCHECK(CONFIG_INITIALIZATION_FAILED);
+      /* Skip over the slash */
+      CommandLine++;
+
+      /* Special options */
+      if (!_strnicmp(CommandLine, "MININT", 6))
+        MiniNT = TRUE;
+      else if (!_strnicmp(CommandLine, "DEBUGPORT=PICE", 14))
+        PiceStart = 1;
+      
+      /* Add a space between the options */
+      if (Position != 0)
+        SystemStartOptions[Position++] = L' ';
+
+      /* Copy the command */
+      while (*CommandLine != 0 && *CommandLine != ' ')
+        SystemStartOptions[Position++] = *(CommandLine++);
+    }
+  SystemStartOptions[Position++] = 0;
+
+  /*
+   * Write the system start options to registry.
+   */
+  Status = RtlWriteRegistryValue(
+    RTL_REGISTRY_ABSOLUTE,
+    L"\\Registry\\Machine\\System\\CurrentControlSet\\Control",
+    L"SystemStartOptions",
+    REG_SZ,
+    SystemStartOptions,
+    Position * sizeof(WCHAR));
+  if (!NT_SUCCESS(Status))
+    KEBUGCHECK(CONFIG_INITIALIZATION_FAILED);
+
+  /*
+   * Create a CurrentControlSet\Control\MiniNT key that is used
+   * to detect WinPE/MiniNT systems.
+   */
+  if (MiniNT)
+    {
+      Status = RtlCreateRegistryKey(RTL_REGISTRY_CONTROL, L"MiniNT");
+      if (!NT_SUCCESS(Status))
+        KEBUGCHECK(CONFIG_INITIALIZATION_FAILED);
     }
 
   /* Set PICE 'Start' value to 1, if PICE debugging is enabled */
-  PiceStart = 4;
-  p1 = (PCHAR)CommandLine;
-  while (p1 && (p2 = strchr(p1, '/')))
-    {
-      p2++;
-      if (_strnicmp(p2, "DEBUGPORT", 9) == 0)
-	{
-	  p2 += 9;
-	  if (*p2 == '=')
-	    {
-	      p2++;
-	      if (_strnicmp(p2, "PICE", 4) == 0)
-		{
-		  p2 += 4;
-		  PiceStart = 1;
-		}
-	    }
-	}
-      p1 = p2;
-    }
-
-  Status = RtlWriteRegistryValue(RTL_REGISTRY_SERVICES,
-				 L"\\Pice",
-				 L"Start",
-				 REG_DWORD,
-				 &PiceStart,
-				 sizeof(ULONG));
+  Status = RtlWriteRegistryValue(
+    RTL_REGISTRY_SERVICES,
+    L"\\Pice",
+    L"Start",
+    REG_DWORD,
+    &PiceStart,
+    sizeof(ULONG));
   if (!NT_SUCCESS(Status))
-    {
-      KEBUGCHECK(CONFIG_INITIALIZATION_FAILED);
-    }
+    KEBUGCHECK(CONFIG_INITIALIZATION_FAILED);
+
+  ExFreePool(SystemBootDevice);
 }
 
 
