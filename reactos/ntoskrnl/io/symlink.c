@@ -1,4 +1,4 @@
-/* $Id: symlink.c,v 1.24 2002/02/19 00:09:22 ekohl Exp $
+/* $Id: symlink.c,v 1.25 2002/02/19 14:06:36 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,7 +13,6 @@
 
 #include <limits.h>
 #include <ddk/ntddk.h>
-//#include <internal/ob.h>
 #include <internal/pool.h>
 
 #define NDEBUG
@@ -207,11 +206,6 @@ NtOpenSymbolicLinkObject(OUT PHANDLE LinkHandle,
 			 IN ACCESS_MASK DesiredAccess,
 			 IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
-#if 0
-	NTSTATUS	Status;
-	PVOID		Object;
-#endif
-
   DPRINT("NtOpenSymbolicLinkObject (Name %wZ)\n",
 	 ObjectAttributes->ObjectName);
 
@@ -222,36 +216,6 @@ NtOpenSymbolicLinkObject(OUT PHANDLE LinkHandle,
 			    DesiredAccess,
 			    NULL,
 			    LinkHandle));
-#if 0
-	Status = ObReferenceObjectByName(
-			ObjectAttributes->ObjectName,
-			ObjectAttributes->Attributes,
-			NULL,
-			DesiredAccess,
-			IoSymbolicLinkType,
-			UserMode,
-			NULL,
-			& Object
-			);
-	if (!NT_SUCCESS(Status))
-	{
-		return Status;
-	}
-
-	Status = ObCreateHandle(
-			PsGetCurrentProcess(),
-			Object,
-			DesiredAccess,
-			FALSE,
-			LinkHandle
-			);
-	if (!NT_SUCCESS(Status))
-	{
-		return Status;
-	}
-
-	return STATUS_SUCCESS;
-#endif
 }
 
 
@@ -273,29 +237,29 @@ NtQuerySymbolicLinkObject(IN HANDLE LinkHandle,
 			  IN OUT PUNICODE_STRING LinkTarget,
 			  OUT PULONG ReturnedLength OPTIONAL)
 {
-   PSYMLNK_OBJECT SymlinkObject;
-   NTSTATUS Status;
-   
-   Status = ObReferenceObjectByHandle(LinkHandle,
-				      SYMBOLIC_LINK_QUERY,
-				      IoSymbolicLinkType,
-				      UserMode,
-				      (PVOID *)&SymlinkObject,
-				      NULL);
-   if (!NT_SUCCESS(Status))
-     {
-	return(Status);
-     }
-   
-   RtlCopyUnicodeString(LinkTarget,
-			SymlinkObject->Target.ObjectName);
-   if (ReturnedLength != NULL)
-     {
-	*ReturnedLength = SymlinkObject->Target.Length;
-     }
-   ObDereferenceObject(SymlinkObject);
-   
-   return(STATUS_SUCCESS);
+  PSYMLNK_OBJECT SymlinkObject;
+  NTSTATUS Status;
+  
+  Status = ObReferenceObjectByHandle(LinkHandle,
+				     SYMBOLIC_LINK_QUERY,
+				     IoSymbolicLinkType,
+				     UserMode,
+				     (PVOID *)&SymlinkObject,
+				     NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
+  
+  RtlCopyUnicodeString(LinkTarget,
+		       SymlinkObject->Target.ObjectName);
+  if (ReturnedLength != NULL)
+    {
+      *ReturnedLength = SymlinkObject->Target.Length;
+    }
+  ObDereferenceObject(SymlinkObject);
+  
+  return(STATUS_SUCCESS);
 }
 
 
@@ -316,8 +280,8 @@ NTSTATUS STDCALL
 IoCreateUnprotectedSymbolicLink(PUNICODE_STRING SymbolicLinkName,
 				PUNICODE_STRING DeviceName)
 {
-   return IoCreateSymbolicLink(SymbolicLinkName,
-			       DeviceName);
+  return(IoCreateSymbolicLink(SymbolicLinkName,
+			      DeviceName));
 }
 
 
