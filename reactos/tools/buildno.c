@@ -1,4 +1,4 @@
-/* $Id: buildno.c,v 1.1 2001/08/23 21:41:35 ekohl Exp $
+/* $Id: buildno.c,v 1.2 2003/10/15 02:56:02 vizzini Exp $
  *
  * buildno - Generate the build number for ReactOS
  *
@@ -117,7 +117,7 @@ write_h (int build)
 		   KERNEL_VERSION_PATCH_LEVEL);
   s = s + sprintf (s, "#endif\n/* EOF */\n");
 
-  h = fopen (BUILDNO_INCLUDE_FILE, "r");
+  h = fopen (BUILDNO_INCLUDE_FILE, "rb");
   if (h != NULL)
     {
       fseek(h, 0, SEEK_END);
@@ -138,7 +138,7 @@ write_h (int build)
       fclose(h);
     }
 
-  h = fopen (BUILDNO_INCLUDE_FILE, "w");
+  h = fopen (BUILDNO_INCLUDE_FILE, "wb");
   if (!h) 
     {
       fprintf (stderr,

@@ -1,4 +1,4 @@
-# $Id: Makefile.host,v 1.1 2003/08/24 10:36:06 chorns Exp $
+# $Id: Makefile.host,v 1.2 2003/10/15 02:56:02 vizzini Exp $
 PATH_TO_TOP = ../..
 
 TARGET = zlib.host.a
@@ -23,16 +23,18 @@ OBJECTS = \
   infutil.o \
   inffast.o
 
+OBJECTS := $(OBJECTS:%=hostobjs/%)
+
 all: hostobjs $(TARGET)
 
 hostobjs:
 	- $(RMKDIR) hostobjs
 
-%.o: %.c
-	$(HOST_CC) $(CFLAGS) -c $< -o hostobjs/$@
+hostobjs/%.o: %.c
+	$(HOST_CC) $(CFLAGS) -c $< -o $@
 
 $(TARGET): $(OBJECTS)
-	$(HOST_AR) -r $(TARGET) $(addprefix hostobjs/, $(OBJECTS))
+	$(HOST_AR) -r $(TARGET) $^
 
 clean:
 	- $(RM) hostobjs/*
