@@ -178,6 +178,11 @@ PopCircularBufferEntry(
 	IN PCIRCULAR_BUFFER pBuffer,
 	OUT PUCHAR Entry);
 
+NTSTATUS
+IncreaseCircularBufferSize(
+	IN PCIRCULAR_BUFFER pBuffer,
+	IN ULONG NewBufferSize);
+
 /************************************ cleanup.c */
 
 NTSTATUS STDCALL

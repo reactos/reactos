@@ -83,6 +83,7 @@ SerialAddDeviceInternal(
 		DPRINT("Serial: IoAttachDeviceToDeviceStackSafe() failed with status 0x%08x\n", Status);
 		goto ByeBye;
 	}
+	Fdo->Flags |= DO_BUFFERED_IO;
 	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
 	if (pFdo)
 	{

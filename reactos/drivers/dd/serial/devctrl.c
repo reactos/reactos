@@ -60,16 +60,13 @@ SerialSetBaudRate(
 		{
 			UCHAR Lcr;
 			DPRINT("Serial: SerialSetBaudRate(COM%lu, %lu Bauds)\n", DeviceExtension->ComPort, BaudRate);
-			/* FIXME: update DeviceExtension->LowerDevice when modifying LCR? */
 			/* Set Bit 7 of LCR to expose baud registers */
 			Lcr = READ_PORT_UCHAR(SER_LCR(ComPortBase));
-			Lcr |= SR_LCR_DLAB;
-			WRITE_PORT_UCHAR(SER_LCR(ComPortBase), Lcr);
+			WRITE_PORT_UCHAR(SER_LCR(ComPortBase), Lcr | SR_LCR_DLAB);
 			/* Write the baud rate */
 			WRITE_PORT_UCHAR(SER_DLL(ComPortBase), divisor & 0xff);
 			WRITE_PORT_UCHAR(SER_DLM(ComPortBase), divisor >> 8);
 			/* Switch back to normal registers */
-			Lcr ^= SR_LCR_DLAB;
 			WRITE_PORT_UCHAR(SER_LCR(ComPortBase), Lcr);
 			
 			IoReleaseRemoveLock(&DeviceExtension->RemoveLock, (PVOID)DeviceExtension->ComPort);
@@ -77,7 +74,7 @@ SerialSetBaudRate(
 	}
 	
 	if (NT_SUCCESS(Status))
-		DeviceExtension->BaudRate = NewBaudRate;
+		DeviceExtension->BaudRate = BaudRate;
 	return Status;
 }
 
@@ -213,6 +210,25 @@ SerialGetCommProp(
 	return STATUS_SUCCESS;
 }
 
+NTSTATUS
+SerialGetCommStatus(
+	OUT PSERIAL_STATUS pSerialStatus,
+	IN PSERIAL_DEVICE_EXTENSION DeviceExtension)
+{
+	RtlZeroMemory(pSerialStatus, sizeof(SERIAL_STATUS));
+	
+	pSerialStatus->Errors = 0; /* FIXME */
+	pSerialStatus->HoldReasons = 0; /* FIXME */
+	pSerialStatus->AmountInInQueue = (DeviceExtension->InputBuffer.WritePosition + DeviceExtension->InputBuffer.Length
+		- DeviceExtension->InputBuffer.ReadPosition) % DeviceExtension->InputBuffer.Length;
+	pSerialStatus->AmountInOutQueue = (DeviceExtension->OutputBuffer.WritePosition + DeviceExtension->OutputBuffer.Length
+		- DeviceExtension->OutputBuffer.ReadPosition) % DeviceExtension->OutputBuffer.Length;
+	pSerialStatus->EofReceived = FALSE; /* FIXME */
+	pSerialStatus->WaitForImmediate = FALSE; /* FIXME */
+	
+	return STATUS_SUCCESS;
+}
+
 NTSTATUS STDCALL
 SerialDeviceControl(
 	IN PDEVICE_OBJECT DeviceObject,
@@ -289,6 +305,8 @@ SerialDeviceControl(
 		case IOCTL_SERIAL_GET_BAUD_RATE:
 		{
 			DPRINT("Serial: IOCTL_SERIAL_GET_BAUD_RATE\n");
+			/* FIXME: HACK!!! following line MUST NOT be here! */
+			Buffer = Irp->UserBuffer;
 			if (LengthOut < sizeof(SERIAL_BAUD_RATE))
 				Status = STATUS_BUFFER_TOO_SMALL;
 			else if (Buffer == NULL)
@@ -309,9 +327,22 @@ SerialDeviceControl(
 		}
 		case IOCTL_SERIAL_GET_COMMSTATUS:
 		{
-			/* FIXME */
-			DPRINT1("Serial: IOCTL_SERIAL_GET_COMMSTATUS not implemented.\n");
-			Status = STATUS_NOT_IMPLEMENTED;
+			DPRINT("Serial: IOCTL_SERIAL_GET_COMMSTATUS\n");
+			if (LengthOut < sizeof(SERIAL_STATUS))
+			{
+				DPRINT("Serial: return STATUS_BUFFER_TOO_SMALL\n");
+				Status = STATUS_BUFFER_TOO_SMALL;
+			}
+			else if (Buffer == NULL)
+			{
+				DPRINT("Serial: return STATUS_INVALID_PARAMETER\n");
+				Status = STATUS_INVALID_PARAMETER;
+			}
+			else
+			{
+				Status = SerialGetCommStatus((PSERIAL_STATUS)Buffer, DeviceExtension);
+				Information = sizeof(SERIAL_STATUS);
+			}
 			break;
 		}
 		case IOCTL_SERIAL_GET_DTRRTS:
@@ -466,9 +497,18 @@ SerialDeviceControl(
 		}
 		case IOCTL_SERIAL_PURGE:
 		{
-			/* FIXME */
-			DPRINT1("Serial: IOCTL_SERIAL_PURGE not implemented.\n");
-			Status = STATUS_NOT_IMPLEMENTED;
+			DPRINT("Serial: IOCTL_SERIAL_PURGE\n");
+			/* FIXME: lock input and output queues */
+			DeviceExtension->InputBuffer.ReadPosition = DeviceExtension->InputBuffer.WritePosition = 0;
+			DeviceExtension->OutputBuffer.ReadPosition = DeviceExtension->OutputBuffer.WritePosition = 0;
+			/* Clear receive/transmit buffers */
+			if (DeviceExtension->UartType >= Uart16550)
+			{
+				WRITE_PORT_UCHAR(SER_FCR(ComPortBase),
+					SR_FCR_CLEAR_RCVR | SR_FCR_CLEAR_XMIT);
+			}
+			/* FIXME: unlock input and output queues */
+			Status = STATUS_SUCCESS;
 			break;
 		}
 		case IOCTL_SERIAL_RESET_DEVICE:
@@ -572,9 +612,26 @@ SerialDeviceControl(
 		}
 		case IOCTL_SERIAL_SET_QUEUE_SIZE:
 		{
-			/* FIXME */
-			DPRINT1("Serial: IOCTL_SERIAL_SET_QUEUE_SIZE not implemented.\n");
-			Status = STATUS_NOT_IMPLEMENTED;
+			if (LengthIn < sizeof(SERIAL_QUEUE_SIZE ))
+				return STATUS_BUFFER_TOO_SMALL;
+			else if (Buffer == NULL)
+				return STATUS_INVALID_PARAMETER;
+			else
+			{
+				Status = STATUS_SUCCESS;
+				if (((PSERIAL_QUEUE_SIZE)Buffer)->InSize > DeviceExtension->InputBuffer.Length)
+				{
+					/* FIXME: lock input queue */
+					Status = IncreaseCircularBufferSize(&DeviceExtension->InputBuffer, ((PSERIAL_QUEUE_SIZE)Buffer)->InSize);
+					/* FIXME: unlock input queue */
+				}
+				if (NT_SUCCESS(Status) && ((PSERIAL_QUEUE_SIZE)Buffer)->OutSize > DeviceExtension->OutputBuffer.Length)
+				{
+					/* FIXME: lock output queue */
+					Status = IncreaseCircularBufferSize(&DeviceExtension->OutputBuffer, ((PSERIAL_QUEUE_SIZE)Buffer)->OutSize);
+					/* FIXME: unlock output queue */
+				}
+			}
 			break;
 		}
 		case IOCTL_SERIAL_SET_RTS:
