@@ -59,7 +59,6 @@ NtQuerySystemTime (
 
 
 VOID
-STDCALL
 ExLocalTimeToSystemTime (
 	PLARGE_INTEGER	LocalTime, 
 	PLARGE_INTEGER	SystemTime
@@ -71,7 +70,6 @@ ExLocalTimeToSystemTime (
 
 
 VOID
-STDCALL
 ExSystemTimeToLocalTime (
 	PLARGE_INTEGER	SystemTime,
 	PLARGE_INTEGER	LocalTime

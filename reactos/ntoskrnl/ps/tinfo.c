@@ -126,7 +126,6 @@ NtQueryInformationThread (
 
 
 ULONG
-STDCALL
 KeGetPreviousMode (VOID)
 {
 	/* CurrentThread is in ntoskrnl/ps/thread.c */

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.14 1999/07/29 21:25:04 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.15 1999/08/17 12:01:38 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -81,7 +81,7 @@ KeBugCheck
 KeBugCheckEx
 KeFlushIoBuffers
 KeGetCurrentIrql
-KeGetPreviousMode@0
+KeGetPreviousMode
 KeInitializeDpc
 KeInitializeEvent
 KeInitializeSpinLock
