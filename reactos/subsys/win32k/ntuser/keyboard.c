@@ -216,7 +216,7 @@ static BOOL TryToTranslateChar(WORD wVirtKey,
   PVK_TO_WCHAR_TABLE vtwTbl;
   PVK_TO_WCHARS10 vkPtr;
   size_t size_this_entry;
-  int nMod, shift;
+  int nMod;
   DWORD CapsMod = 0, CapsState = 0;
 
   CapsState = ModBits & ~MOD_BITS_MASK;
@@ -228,8 +228,6 @@ static BOOL TryToTranslateChar(WORD wVirtKey,
     {
       return FALSE;
     }
-  shift = keyLayout->pCharModifiers->ModNumber[ModBits];
-  
   for (nMod = 0; keyLayout->pVkToWcharTable[nMod].nModifications; nMod++)
     {
       vtwTbl = &keyLayout->pVkToWcharTable[nMod];
@@ -239,9 +237,10 @@ static BOOL TryToTranslateChar(WORD wVirtKey,
         {
           if( wVirtKey == (vkPtr->VirtualKey & 0xff) )
 	    {
-	      CapsMod = 
-		shift | ((CapsState & CAPITAL_BIT) ? vkPtr->Attributes : 0);
-
+              CapsMod = keyLayout->pCharModifiers->ModNumber
+                  [ModBits ^ 
+                   ((CapsState & CAPITAL_BIT) ? vkPtr->Attributes : 0)];
+              
 	      if( CapsMod > keyLayout->pVkToWcharTable[nMod].nModifications ) {
 		  DWORD MaxBit = 1;
 		  while( MaxBit < 
@@ -256,9 +255,9 @@ static BOOL TryToTranslateChar(WORD wVirtKey,
 	      *pbLigature = vkPtr->wch[CapsMod] == WCH_LGTR;
 	      *pwcTranslatedChar = vkPtr->wch[CapsMod];
 	      
-	      DPRINT("%d %04x: CapsMod %08x CapsState %08x shift %08x Char %04x\n",
+	      DPRINT("%d %04x: CapsMod %08x CapsState %08x Char %04x\n",
 		       nMod, wVirtKey,
-		       CapsMod, CapsState, shift, *pwcTranslatedChar);
+		       CapsMod, CapsState, *pwcTranslatedChar);
 
 	      if( *pbDead ) 
 	        {
@@ -269,7 +268,7 @@ static BOOL TryToTranslateChar(WORD wVirtKey,
 	              DPRINT( "VK: %04x, ADDR: %08x\n", wVirtKey, (int)vkPtr );
 	              return FALSE;
 		    }
-	          *pwcTranslatedChar = vkPtr->wch[shift];
+	          *pwcTranslatedChar = vkPtr->wch[CapsMod];
 	        }
 	        return TRUE;
 	    }
