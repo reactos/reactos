@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.5 2000/04/07 02:24:03 dwelch Exp $
+/* $Id: rw.c,v 1.6 2000/06/17 22:04:08 phreak Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -55,13 +55,11 @@ NTSTATUS FsdReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    FirstCluster=CurrentCluster;
    DPRINT("DeviceExt->BytesPerCluster %x\n",DeviceExt->BytesPerCluster);
 
-   if (ReadOffset >= Fcb->entry.FileSize
-       && !(Fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY))
+   if (ReadOffset >= Fcb->entry.FileSize)
      {
 	return(STATUS_END_OF_FILE);
      }
-   if ((ReadOffset + Length) > Fcb->entry.FileSize
-       && !(Fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY))
+   if ((ReadOffset + Length) > Fcb->entry.FileSize)
      {
 	Length = Fcb->entry.FileSize - ReadOffset;
      }
@@ -353,8 +351,7 @@ NTSTATUS FsdWriteFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
                              &Fcb->entry.UpdateTime);
    Fcb->entry.AccessDate = Fcb->entry.UpdateDate;
 
-   if (Fcb->entry.FileSize < WriteOffset+Length
-       && !(Fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY))
+   if (Fcb->entry.FileSize < WriteOffset+Length)
      {
 	Fcb->entry.FileSize = WriteOffset+Length;
 	/*
