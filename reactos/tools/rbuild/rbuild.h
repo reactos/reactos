@@ -168,8 +168,9 @@ class File
 {
 public:
 	std::string name;
+	bool first;
 
-	File ( const std::string& _name );
+	File ( const std::string& _name, bool _first );
 
 	void ProcessXML();
 };

@@ -102,7 +102,9 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	string subpath ( path );
 	if ( e.name == "file" && e.value.size () > 0 )
 	{
-		File* pFile = new File ( FixSeparator ( path + CSEP + e.value ) );
+		const XMLAttribute* att = e.GetAttribute ( "first", false );
+		File* pFile = new File ( FixSeparator ( path + CSEP + e.value ),
+		                         att != NULL );
 		if ( pIf )
 			pIf->files.push_back ( pFile );
 		else
@@ -323,8 +325,8 @@ Module::GetInvocationTarget ( const int index ) const
 }
 
 
-File::File ( const string& _name )
-	: name(_name)
+File::File ( const string& _name, bool _first )
+	: name(_name), first(_first)
 {
 }
 

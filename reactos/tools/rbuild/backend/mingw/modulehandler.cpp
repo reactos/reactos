@@ -447,6 +447,17 @@ MingwModuleHandler::GenerateMacros (
 	
 	if ( files.size() )
 	{
+		for ( i = 0; i < files.size(); i++ )
+		{
+			if ( files[i]->first )
+			{
+				fprintf ( fMakefile,
+					"%s := %s $(%s)\n",
+					objs_macro.c_str(),
+					GetObjectFilename(files[i]->name).c_str(),
+					objs_macro.c_str() );
+			}
+		}
 		fprintf (
 			fMakefile,
 			"%s %s",
@@ -455,7 +466,9 @@ MingwModuleHandler::GenerateMacros (
 		for ( i = 0; i < files.size(); i++ )
 		{
 			string extension = GetExtension ( files[i]->name );
-			if ( extension != ".spec" && extension != ".SPEC" )
+			if ( extension != ".spec"
+			  && extension != ".SPEC"
+			  && !files[i]->first )
 			{
 				fprintf (
 					fMakefile,

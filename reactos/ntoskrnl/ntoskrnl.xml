@@ -26,10 +26,10 @@
 		</output>
 	</invoke>
 
-	<directory name="ke"> <!-- leave this at the top -->
+	<directory name="ke">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
-				<file>multiboot.S</file> <!-- leave this at the top -->
+				<file first>multiboot.S</file>
 				<file>bios.c</file>
 				<file>brkpoint.c</file>
 				<file>bthread.S</file>
