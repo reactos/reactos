@@ -1818,13 +1818,17 @@ typedef struct _KINTERRUPT
 {
    ULONG Vector;
    KAFFINITY ProcessorEnableMask;
-   PKSPIN_LOCK IrqLock;
+   KSPIN_LOCK SpinLock;
+   PKSPIN_LOCK ActualLock;
    BOOLEAN Shareable;
    BOOLEAN FloatingSave;
+   CHAR ProcessorNumber;
    PKSERVICE_ROUTINE ServiceRoutine;
    PVOID ServiceContext;
    LIST_ENTRY Entry;
+   KIRQL Irql;
    KIRQL SynchLevel;
+   KINTERRUPT_MODE InterruptMode;
 } KINTERRUPT;
 
 #ifndef __USE_W32API

@@ -1,4 +1,4 @@
-/* $Id: spinlock.c,v 1.25 2004/12/24 17:06:58 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -17,6 +17,7 @@
 /* INCLUDES ****************************************************************/
 
 #include <ntoskrnl.h>
+#define NDEBUG
 #include <internal/debug.h>
 
 /* FUNCTIONS ***************************************************************/
@@ -42,19 +43,17 @@ KeSynchronizeExecution (PKINTERRUPT		Interrupt,
    KIRQL oldlvl;
    BOOLEAN ret;
    
-   KeRaiseIrql(Interrupt->SynchLevel, &oldlvl);
-   KiAcquireSpinLock(Interrupt->IrqLock);
+   oldlvl = KeAcquireInterruptSpinLock(Interrupt);
    
    ret = SynchronizeRoutine(SynchronizeContext);
    
-   KiReleaseSpinLock(Interrupt->IrqLock);
-   KeLowerIrql(oldlvl);
+   KeReleaseInterruptSpinLock(Interrupt, oldlvl);
    
    return(ret);
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 KIRQL
 STDCALL
@@ -62,8 +61,11 @@ KeAcquireInterruptSpinLock(
     IN PKINTERRUPT Interrupt
     )
 {
-	UNIMPLEMENTED;
-	return 0;
+   KIRQL oldIrql;
+        
+   KeRaiseIrql(Interrupt->SynchLevel, &oldIrql);
+   KiAcquireSpinLock(Interrupt->ActualLock);
+   return oldIrql;
 }
 
 /*
@@ -195,7 +197,7 @@ KiAcquireSpinLock(PKSPIN_LOCK SpinLock)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 STDCALL
@@ -204,7 +206,8 @@ KeReleaseInterruptSpinLock(
 	IN KIRQL OldIrql
 	)
 {
-	UNIMPLEMENTED;
+   KiReleaseSpinLock(Interrupt->ActualLock);
+   KeLowerIrql(OldIrql);
 }
 
 /*

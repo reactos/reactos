@@ -149,17 +149,17 @@ VOID STDCALL KeInitializeEvent (PKEVENT		Event,
 				EVENT_TYPE	Type,
 				BOOLEAN		State);
 
-NTSTATUS STDCALL KeInitializeInterrupt(PKINTERRUPT InterruptObject,
-				       PKSERVICE_ROUTINE ServiceRoutine,
-				       PVOID ServiceContext,
-				       PKSPIN_LOCK SpinLock,
-				       ULONG Vector,
-				       KIRQL Irql,
-				       KIRQL SynchronizeIrql,
-				       KINTERRUPT_MODE InterruptMode,
-				       BOOLEAN ShareVector,
-				       KAFFINITY ProcessorEnableMask,
-				       BOOLEAN FloatingSave);
+VOID STDCALL KeInitializeInterrupt(PKINTERRUPT InterruptObject,
+				   PKSERVICE_ROUTINE ServiceRoutine,
+				   PVOID ServiceContext,
+				   PKSPIN_LOCK SpinLock,
+				   ULONG Vector,
+				   KIRQL Irql,
+				   KIRQL SynchronizeIrql,
+				   KINTERRUPT_MODE InterruptMode,
+				   BOOLEAN ShareVector,
+				   CHAR ProcessorNumber,
+				   BOOLEAN FloatingSave);
 
 VOID STDCALL KeInitializeMutant(IN PKMUTANT Mutant,
 				IN BOOLEAN InitialOwner);
@@ -366,6 +366,10 @@ KeRosGetStackFrames ( PULONG Frames, ULONG FrameCount );
 
 BOOLEAN STDCALL
 KeRosPrintAddress(PVOID address);
+
+NTSTATUS STDCALL
+KeSetAffinityThread(PKTHREAD	Thread,
+		    KAFFINITY	Affinity);
 
 LONG STDCALL
 KeSetBasePriorityThread(struct _KTHREAD* Thread,
