@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////
-// Deutsch (Austria)
-// resources by Klemens Friedl   frik85 at hotmail dot com  http://www.reactos.net.tc
+// Deutsch
+// resource file by Klemens Friedl   (frik85@reactos.at; http://frik85.reactos.at)
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
@@ -649,5 +649,63 @@ BEGIN
     IDS_LICENSE             "Dieses Programm ist kostenlos; Sie können es frei verteilen mit od. ohne Änderungen unter der GNU Lesser General Public License wie es von der Free Software Foundation veröffentlicht wurde; entweder Version 2.1 der Lizenz, oder eine spätere Version (ihrer Wahl).\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA."
 END
 
-#endif    // Deutsch (Austria) resources by Klemens Friedl
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TAB_APPS                  "Anwendnungen"
+    IDS_TAB_PROCESSES             "Prozesse"
+    IDS_TAB_PERFORMANCE           "Systemleistung"
+    IDS_TAB_TASK                  "Anwendung"
+    IDS_TAB_STATUS                "Status"
+    IDS_TAB_IMAGENAME             "Name"
+    IDS_TAB_PID                   "PID"
+    IDS_TAB_USERNAME              "Benutzername"
+    IDS_TAB_SESSIONID             "Sitzungserkennung"
+    IDS_TAB_CPU                   "CPU-Auslastung"
+    IDS_TAB_CPUTIME               "CPU-Zeit"
+    IDS_TAB_MEMUSAGE              "Speicherauslastung"
+    IDS_TAB_PEAKMEMUSAGE          "Veränd. der Speicherauslastung"
+    IDS_TAB_MEMDELTA              "Maximale Speicherauslastung"
+    IDS_TAB_PAGEFAULT             "Seitenfehler"
+    IDS_TAB_PFDELTA               "Maximale Seitenfehler"
+    IDS_TAB_VMSIZE                "Virtuelle Arbeitsspeichergröße"
+    IDS_TAB_PAGEDPOOL             "Paged Pool"
+    IDS_TAB_NPPOOL                "NP Pool"
+    IDS_TAB_BASEPRI               "Basispri"
+    IDS_TAB_HANDLES               "Handleanzahl"
+    IDS_TAB_THREADS               "Threadanzahl"
+    IDS_TAB_USERPBJECTS           "Benutzer-Objekte"
+    IDS_TAB_GDIOBJECTS            "GDI-Objekte"
+    IDS_TAB_IOREADS               "E/A (Lesen)"
+    IDS_TAB_IOWRITES              "E/A (Schreiben)"
+    IDS_TAB_IOOTHER               "E/A (Andere)"
+    IDS_TAB_IOREADBYTES           "E/A-Bytes (Lesen)"
+    IDS_TAB_IOWRITESBYTES         "E/A-Bytes (Schreiben)" 
+    IDS_TAB_IOOTHERBYTES          "E/A-Bytes (Andere)"
+    IDS_MENU_SELECTCOLUMNS        "&Spalten auswählen..."
+    IDS_MENU_16BITTASK            "&16-Bit-Tasks anzeigen"
+    IDS_MENU_WINDOWS              "&Fenster"
+    IDS_MENU_LARGEICONS           "&Große Symbole"
+    IDS_MENU_SMALLICONS           "Kl&eine Symbole"
+    IDS_MENU_DETAILS              "&Details"
+    IDS_MENU_ONEGRAPHALLCPUS      "&Alle CPUs in einem Diagramm"
+    IDS_MENU_ONEGRAPHPERCPU       "&Ein Diagramm pro CPU"
+    IDS_MENU_CPUHISTORY           "&CPU Verlauf"
+    IDS_MENU_SHOWKERNELTIMES      "&Kernel-Zeiten anzeigen"
+    IDS_CREATENEWTASK             "Neuen Task erstellen"
+    IDS_CREATENEWTASK_DESC        "Geben Sie Programme, Ordner, Dokumente oder Internetressourcen an, die geöffnet werden sollen."
+    IDS_MSG_ACCESSPROCESSAFF      "Unable to Access or Set Process Affinity"
+    IDS_MSG_PROCESSONEPRO         "Der Prozess muss eine Zugehörigkeit zu mindestens einem Prozessor aufweisen."
+    IDS_MSG_INVALIDOPTION         "Ungültige Auswahl"
+    IDS_MSG_UNABLEDEBUGPROCESS    "Unable to Debug Process"
+    IDS_MSG_WARNINGDEBUG          "WARNUNG: Das Debuggen dieses Prozesses kann zu Datenverlust führen.\nSind Sie sicher, dass Sie diesen Prozess debuggen möchten?"
+    IDS_MSG_TASKMGRWARNING        "Warnung vom Task-Manager"
+    IDS_MSG_WARNINGTERMINATING    "WARNUNG: Das Abbrechen eines Prozesses kann zu\nunerwünschten Ergebnissen, einschließlich Datenverlust und\nSysteminstabilität, führen. Zustand und Daten des Prozesses\nwerden nicht mher gespeichert. Sind Sie sicher, dass Sie\nden Prozess abbrechen möchten?"
+    IDS_MSG_UNABLETERMINATEPRO    "Unable to Terminate Process"
+    IDS_MSG_UNABLECHANGEPRIORITY  "Unable to Change Priority"
+    IDS_MSG_WARNINGCHANGEPRIORITY "WARNUNG: Das Ändern der Prioritätsklasse dieses Prozesses\nkann zu unerwünschten Ergebnissen, einschl. Systeminstabilität, führen.\nSind Sie sicher, dass Sie ändern möchten?"
+    IDS_MSG_TRAYICONCPUUSAGE      "CPU-Auslastung: %d%%"
+
+END
+
+#endif
 /////////////////////////////////////////////////////////////////////////////

@@ -4,6 +4,7 @@
  *  priority.c
  *
  *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
+ *                2005         Klemens Friedl <frik85@reactos.at>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -33,6 +34,9 @@
 #include "procpage.h"
 #include "perfdata.h"
 
+TCHAR                szTemp[256];
+TCHAR                szTempA[256];
+
 void ProcessPage_OnSetPriorityRealTime(void)
 {
     LVITEM            lvitem;
@@ -60,7 +64,9 @@ void ProcessPage_OnSetPriorityRealTime(void)
     if ((ListView_GetSelectedCount(hProcessPageListCtrl) != 1) || (dwProcessId == 0))
         return;
 
-    if (MessageBox(hMainWnd, _T("WARNING: Changing the priority class of this process may\ncause undesired results including system instability. Are you\nsure you want to change the priority class?"), _T("Task Manager Warning"), MB_YESNO|MB_ICONWARNING) != IDYES)
+    LoadString(hInst, IDS_MSG_WARNINGCHANGEPRIORITY, szTemp, 256);
+    LoadString(hInst, IDS_MSG_TASKMGRWARNING, szTempA, 256);
+    if (MessageBox(hMainWnd, szTemp, szTempA, MB_YESNO|MB_ICONWARNING) != IDYES)
         return;
 
     hProcess = OpenProcess(PROCESS_SET_INFORMATION, FALSE, dwProcessId);
@@ -68,14 +74,16 @@ void ProcessPage_OnSetPriorityRealTime(void)
     if (!hProcess)
     {
         GetLastErrorText(strErrorText, 260);
-        MessageBox(hMainWnd, strErrorText, _T("Unable to Change Priority"), MB_OK|MB_ICONSTOP);
+        LoadString(hInst, IDS_MSG_UNABLECHANGEPRIORITY, szTemp, 256);
+        MessageBox(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
         return;
     }
 
     if (!SetPriorityClass(hProcess, REALTIME_PRIORITY_CLASS))
     {
         GetLastErrorText(strErrorText, 260);
-        MessageBox(hMainWnd, strErrorText, _T("Unable to Change Priority"), MB_OK|MB_ICONSTOP);
+        LoadString(hInst, IDS_MSG_UNABLECHANGEPRIORITY, szTemp, 256);
+        MessageBox(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
     }
 
     CloseHandle(hProcess);
@@ -108,7 +116,9 @@ void ProcessPage_OnSetPriorityHigh(void)
     if ((ListView_GetSelectedCount(hProcessPageListCtrl) != 1) || (dwProcessId == 0))
         return;
 
-    if (MessageBox(hMainWnd, _T("WARNING: Changing the priority class of this process may\ncause undesired results including system instability. Are you\nsure you want to change the priority class?"), _T("Task Manager Warning"), MB_YESNO|MB_ICONWARNING) != IDYES)
+    LoadString(hInst, IDS_MSG_WARNINGCHANGEPRIORITY, szTemp, 256);
+    LoadString(hInst, IDS_MSG_TASKMGRWARNING, szTempA, 256);
+    if (MessageBox(hMainWnd, szTemp, szTempA, MB_YESNO|MB_ICONWARNING) != IDYES)
         return;
 
     hProcess = OpenProcess(PROCESS_SET_INFORMATION, FALSE, dwProcessId);
@@ -116,14 +126,16 @@ void ProcessPage_OnSetPriorityHigh(void)
     if (!hProcess)
     {
         GetLastErrorText(strErrorText, 260);
-        MessageBox(hMainWnd, strErrorText, _T("Unable to Change Priority"), MB_OK|MB_ICONSTOP);
+        LoadString(hInst, IDS_MSG_UNABLECHANGEPRIORITY, szTemp, 256);
+        MessageBox(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
         return;
     }
 
     if (!SetPriorityClass(hProcess, HIGH_PRIORITY_CLASS))
     {
         GetLastErrorText(strErrorText, 260);
-        MessageBox(hMainWnd, strErrorText, _T("Unable to Change Priority"), MB_OK|MB_ICONSTOP);
+        LoadString(hInst, IDS_MSG_UNABLECHANGEPRIORITY, szTemp, 256);
+        MessageBox(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
     }
 
     CloseHandle(hProcess);
@@ -156,7 +168,9 @@ void ProcessPage_OnSetPriorityAboveNormal(void)
     if ((ListView_GetSelectedCount(hProcessPageListCtrl) != 1) || (dwProcessId == 0))
         return;
 
-    if (MessageBox(hMainWnd, _T("WARNING: Changing the priority class of this process may\ncause undesired results including system instability. Are you\nsure you want to change the priority class?"), _T("Task Manager Warning"), MB_YESNO|MB_ICONWARNING) != IDYES)
+    LoadString(hInst, IDS_MSG_WARNINGCHANGEPRIORITY, szTemp, 256);
+    LoadString(hInst, IDS_MSG_TASKMGRWARNING, szTempA, 256);
+    if (MessageBox(hMainWnd, szTemp, szTempA, MB_YESNO|MB_ICONWARNING) != IDYES)
         return;
 
     hProcess = OpenProcess(PROCESS_SET_INFORMATION, FALSE, dwProcessId);
@@ -164,14 +178,16 @@ void ProcessPage_OnSetPriorityAboveNormal(void)
     if (!hProcess)
     {
         GetLastErrorText(strErrorText, 260);
-        MessageBox(hMainWnd, strErrorText, _T("Unable to Change Priority"), MB_OK|MB_ICONSTOP);
+        LoadString(hInst, IDS_MSG_UNABLECHANGEPRIORITY, szTemp, 256);
+        MessageBox(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
         return;
     }
 
     if (!SetPriorityClass(hProcess, ABOVE_NORMAL_PRIORITY_CLASS))
     {
         GetLastErrorText(strErrorText, 260);
-        MessageBox(hMainWnd, strErrorText, _T("Unable to Change Priority"), MB_OK|MB_ICONSTOP);
+        LoadString(hInst, IDS_MSG_UNABLECHANGEPRIORITY, szTemp, 256);
+        MessageBox(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
     }
 
     CloseHandle(hProcess);
@@ -204,7 +220,9 @@ void ProcessPage_OnSetPriorityNormal(void)
     if ((ListView_GetSelectedCount(hProcessPageListCtrl) != 1) || (dwProcessId == 0))
         return;
 
-    if (MessageBox(hMainWnd, _T("WARNING: Changing the priority class of this process may\ncause undesired results including system instability. Are you\nsure you want to change the priority class?"), _T("Task Manager Warning"), MB_YESNO|MB_ICONWARNING) != IDYES)
+    LoadString(hInst, IDS_MSG_WARNINGCHANGEPRIORITY, szTemp, 256);
+    LoadString(hInst, IDS_MSG_TASKMGRWARNING, szTempA, 256);
+    if (MessageBox(hMainWnd, szTemp, szTempA, MB_YESNO|MB_ICONWARNING) != IDYES)
         return;
 
     hProcess = OpenProcess(PROCESS_SET_INFORMATION, FALSE, dwProcessId);
@@ -212,14 +230,16 @@ void ProcessPage_OnSetPriorityNormal(void)
     if (!hProcess)
     {
         GetLastErrorText(strErrorText, 260);
-        MessageBox(hMainWnd, strErrorText, _T("Unable to Change Priority"), MB_OK|MB_ICONSTOP);
+        LoadString(hInst, IDS_MSG_UNABLECHANGEPRIORITY, szTemp, 256);
+        MessageBox(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
         return;
     }
 
     if (!SetPriorityClass(hProcess, NORMAL_PRIORITY_CLASS))
     {
         GetLastErrorText(strErrorText, 260);
-        MessageBox(hMainWnd, strErrorText, _T("Unable to Change Priority"), MB_OK|MB_ICONSTOP);
+        LoadString(hInst, IDS_MSG_UNABLECHANGEPRIORITY, szTemp, 256);
+        MessageBox(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
     }
 
     CloseHandle(hProcess);
@@ -252,7 +272,9 @@ void ProcessPage_OnSetPriorityBelowNormal(void)
     if ((ListView_GetSelectedCount(hProcessPageListCtrl) != 1) || (dwProcessId == 0))
         return;
 
-    if (MessageBox(hMainWnd, _T("WARNING: Changing the priority class of this process may\ncause undesired results including system instability. Are you\nsure you want to change the priority class?"), _T("Task Manager Warning"), MB_YESNO|MB_ICONWARNING) != IDYES)
+    LoadString(hInst, IDS_MSG_WARNINGCHANGEPRIORITY, szTemp, 256);
+    LoadString(hInst, IDS_MSG_TASKMGRWARNING, szTempA, 256);
+    if (MessageBox(hMainWnd, szTemp, szTempA, MB_YESNO|MB_ICONWARNING) != IDYES)
         return;
 
     hProcess = OpenProcess(PROCESS_SET_INFORMATION, FALSE, dwProcessId);
@@ -260,14 +282,16 @@ void ProcessPage_OnSetPriorityBelowNormal(void)
     if (!hProcess)
     {
         GetLastErrorText(strErrorText, 260);
-        MessageBox(hMainWnd, strErrorText, _T("Unable to Change Priority"), MB_OK|MB_ICONSTOP);
+        LoadString(hInst, IDS_MSG_UNABLECHANGEPRIORITY, szTemp, 256);
+        MessageBox(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
         return;
     }
 
     if (!SetPriorityClass(hProcess, BELOW_NORMAL_PRIORITY_CLASS))
     {
         GetLastErrorText(strErrorText, 260);
-        MessageBox(hMainWnd, strErrorText, _T("Unable to Change Priority"), MB_OK|MB_ICONSTOP);
+        LoadString(hInst, IDS_MSG_UNABLECHANGEPRIORITY, szTemp, 256);
+        MessageBox(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
     }
 
     CloseHandle(hProcess);
@@ -300,7 +324,9 @@ void ProcessPage_OnSetPriorityLow(void)
     if ((ListView_GetSelectedCount(hProcessPageListCtrl) != 1) || (dwProcessId == 0))
         return;
 
-    if (MessageBox(hMainWnd, _T("WARNING: Changing the priority class of this process may\ncause undesired results including system instability. Are you\nsure you want to change the priority class?"), _T("Task Manager Warning"), MB_YESNO|MB_ICONWARNING) != IDYES)
+    LoadString(hInst, IDS_MSG_WARNINGCHANGEPRIORITY, szTemp, 256);
+    LoadString(hInst, IDS_MSG_TASKMGRWARNING, szTempA, 256);
+    if (MessageBox(hMainWnd, szTemp, szTempA, MB_YESNO|MB_ICONWARNING) != IDYES)
         return;
 
     hProcess = OpenProcess(PROCESS_SET_INFORMATION, FALSE, dwProcessId);
@@ -308,14 +334,16 @@ void ProcessPage_OnSetPriorityLow(void)
     if (!hProcess)
     {
         GetLastErrorText(strErrorText, 260);
-        MessageBox(hMainWnd, strErrorText, _T("Unable to Change Priority"), MB_OK|MB_ICONSTOP);
+        LoadString(hInst, IDS_MSG_UNABLECHANGEPRIORITY, szTemp, 256);
+        MessageBox(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
         return;
     }
 
     if (!SetPriorityClass(hProcess, IDLE_PRIORITY_CLASS))
     {
         GetLastErrorText(strErrorText, 260);
-        MessageBox(hMainWnd, strErrorText, _T("Unable to Change Priority"), MB_OK|MB_ICONSTOP);
+        LoadString(hInst, IDS_MSG_UNABLECHANGEPRIORITY, szTemp, 256);
+        MessageBox(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
     }
 
     CloseHandle(hProcess);
