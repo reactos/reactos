@@ -37,17 +37,36 @@ NtResumeThread(IN HANDLE ThreadHandle,
 {
     PETHREAD Thread;
     NTSTATUS Status;
+    ULONG Prev;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
   
     PAGED_CODE();
 
     DPRINT("NtResumeThead(ThreadHandle %lx  SuspendCount %p)\n",
            ThreadHandle, SuspendCount);
+    
+    /* Check buffer validity */
+    if(SuspendCount && PreviousMode == UserMode) {
+        
+        _SEH_TRY {
+            
+            ProbeForWrite(SuspendCount,
+                          sizeof(ULONG),
+                          sizeof(ULONG));
+         } _SEH_HANDLE {
+             
+            Status = _SEH_GetExceptionCode();
+            
+        } _SEH_END;
+
+        if(!NT_SUCCESS(Status)) return Status;
+    }
 
     /* Get the Thread Object */
     Status = ObReferenceObjectByHandle(ThreadHandle,
                                        THREAD_SUSPEND_RESUME,
                                        PsThreadType,
-                                       KeGetPreviousMode(),
+                                       PreviousMode,
                                        (PVOID*)&Thread,
                                        NULL);
     if (!NT_SUCCESS(Status)) {
@@ -56,7 +75,21 @@ NtResumeThread(IN HANDLE ThreadHandle,
     }
     
     /* Call the Kernel Function */
-    *SuspendCount = KeResumeThread(&Thread->Tcb);
+    Prev = KeResumeThread(&Thread->Tcb);
+    
+    /* Return it */        
+    if(SuspendCount) {
+            
+        _SEH_TRY {
+                
+            *SuspendCount = Prev;
+            
+        } _SEH_HANDLE {
+                
+            Status = _SEH_GetExceptionCode();
+            
+        } _SEH_END;
+    }
 
     /* Dereference and Return */
     ObDereferenceObject ((PVOID)Thread);
@@ -83,14 +116,33 @@ NtSuspendThread(IN HANDLE ThreadHandle,
 {
     PETHREAD Thread;
     NTSTATUS Status;
+    ULONG Prev;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
   
     PAGED_CODE();
+    
+    /* Check buffer validity */
+    if(PreviousSuspendCount && PreviousMode == UserMode) {
+        
+        _SEH_TRY {
+            
+            ProbeForWrite(PreviousSuspendCount,
+                          sizeof(ULONG),
+                          sizeof(ULONG));
+         } _SEH_HANDLE {
+             
+            Status = _SEH_GetExceptionCode();
+            
+        } _SEH_END;
+
+        if(!NT_SUCCESS(Status)) return Status;
+    }
 
     /* Get the Thread Object */
     Status = ObReferenceObjectByHandle(ThreadHandle,
                                        THREAD_SUSPEND_RESUME,
                                        PsThreadType,
-                                       KeGetPreviousMode(),
+                                       PreviousMode,
                                        (PVOID*)&Thread,
                                        NULL);
     if (!NT_SUCCESS(Status)) {
@@ -99,7 +151,21 @@ NtSuspendThread(IN HANDLE ThreadHandle,
     }
     
     /* Call the Kernel Function */
-    *PreviousSuspendCount = KeSuspendThread(&Thread->Tcb);
+    Prev = KeSuspendThread(&Thread->Tcb);
+    
+    /* Return it */        
+    if(PreviousSuspendCount) {
+            
+        _SEH_TRY {
+                
+            *PreviousSuspendCount = Prev;
+            
+        } _SEH_HANDLE {
+                
+            Status = _SEH_GetExceptionCode();
+            
+        } _SEH_END;
+    }
 
     /* Dereference and Return */
     ObDereferenceObject((PVOID)Thread);
