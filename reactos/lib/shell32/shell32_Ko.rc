@@ -23,11 +23,11 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "%s에 관하여"
 FONT 10, "MS Shell Dlg"
 {
- DEFPUSHBUTTON "확인", 1, 153, 130, 50, 12
+ DEFPUSHBUTTON "확인", IDOK, 153, 133, 50, 12, WS_TABSTOP
  LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
- ICON "", 1088, 189, 10, 14, 16
+ ICON "", 1088, 10, 10, 14, 16
  LTEXT "", 100, 8, 10, 137, 33
- LTEXT "Wine was brought to you by:", 98, 8, 55, 137, 10
+ LTEXT "ReactOS was brought to you by:", 98, 8, 55, 137, 10
 }
 
 SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
@@ -36,7 +36,7 @@ CAPTION ""
 FONT 8, "MS Shell Dlg"
 {
  ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
- LTEXT "Type the name of a program, folder, document, or Internet resource, and Wine will open it for you.", 12289, 36, 11, 182, 18
+ LTEXT "Type the name of a program, folder, document, or Internet resource, and ReactOS will open it for you.", 12289, 36, 11, 182, 18
  LTEXT "&Open:", 12305, 7, 39, 24, 10
  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
  DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
