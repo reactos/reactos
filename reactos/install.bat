@@ -85,6 +85,7 @@ copy apps\atomtest\atomtest.exe %ROS_INSTALL%\bin
 copy apps\partinfo\partinfo.exe %ROS_INSTALL%\bin
 copy apps\objdir\objdir.exe %ROS_INSTALL%\bin
 copy apps\mutex\mutex.exe %ROS_INSTALL%\bin
+copy apps\net\ncftp\ncftp.exe %ROS_INSTALL%\bin
 copy apps\net\ping\ping.exe %ROS_INSTALL%\bin
 copy apps\net\roshttpd\roshttpd.exe %ROS_INSTALL%\bin
 copy apps\net\telnet\telnet.exe %ROS_INSTALL%\bin

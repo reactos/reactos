@@ -8,7 +8,7 @@ TARGET_TYPE = program
 
 TARGET_APPTYPE = console
 
-TARGET_NAME = ftp
+TARGET_NAME = ncftp
 
 TARGET_SDKLIBS = kernel32.a ws2_32.a
 
