@@ -9,6 +9,7 @@
 #define _WIN32K_KAPI_H
 #include <user32.h>
 #include <strpool.h>
+#include <roscfg.h>
 
 #ifdef DBG
 
