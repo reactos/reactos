@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.26 2003/03/28 19:25:00 rcampbell Exp $
+/* $Id: window.c,v 1.27 2003/05/04 15:41:40 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -14,8 +14,10 @@
 #include <windows.h>
 #include <user32.h>
 #include <window.h>
-#include <debug.h>
 #include <user32/callback.h>
+
+#define NDEBUG
+#include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
 ULONG
@@ -32,15 +34,15 @@ User32SendNCCALCSIZEMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
   SENDNCCALCSIZEMESSAGE_CALLBACK_RESULT Result;
   WNDPROC Proc;
 
-  DbgPrint("User32SendNCCALCSIZEMessageForKernel.\n");
+  DPRINT("User32SendNCCALCSIZEMessageForKernel.\n");
   CallbackArgs = (PSENDNCCALCSIZEMESSAGE_CALLBACK_ARGUMENTS)Arguments;
   if (ArgumentLength != sizeof(SENDNCCALCSIZEMESSAGE_CALLBACK_ARGUMENTS))
     {
-      DbgPrint("Wrong length.\n");
+      DPRINT("Wrong length.\n");
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
   Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
-  DbgPrint("Proc %X\n", Proc);
+  DPRINT("Proc %X\n", Proc);
   /* Call the window procedure; notice kernel messages are always unicode. */
   if (CallbackArgs->Validate)
     {
@@ -55,7 +57,7 @@ User32SendNCCALCSIZEMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
 				      FALSE, (LPARAM)&CallbackArgs->Rect);
       Result.Rect = CallbackArgs->Rect;
     }
-  DbgPrint("Returning result %d.\n", Result);
+  DPRINT("Returning result %d.\n", Result);
   return(ZwCallbackReturn(&Result, sizeof(Result), STATUS_SUCCESS));
 }
 
@@ -66,20 +68,20 @@ User32SendGETMINMAXINFOMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
   SENDGETMINMAXINFO_CALLBACK_RESULT Result;
   WNDPROC Proc;
 
-  DbgPrint("User32SendGETMINAXINFOMessageForKernel.\n");
+  DPRINT("User32SendGETMINAXINFOMessageForKernel.\n");
   CallbackArgs = (PSENDGETMINMAXINFO_CALLBACK_ARGUMENTS)Arguments;
   if (ArgumentLength != sizeof(SENDGETMINMAXINFO_CALLBACK_ARGUMENTS))
     {
-      DbgPrint("Wrong length.\n");
+      DPRINT("Wrong length.\n");
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
   Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
-  DbgPrint("Proc %X\n", Proc);
+  DPRINT("Proc %X\n", Proc);
   /* Call the window procedure; notice kernel messages are always unicode. */
   Result.Result = CallWindowProcW(Proc, CallbackArgs->Wnd, WM_GETMINMAXINFO, 
 				  0, (LPARAM)&CallbackArgs->MinMaxInfo);
   Result.MinMaxInfo = CallbackArgs->MinMaxInfo;
-  DbgPrint("Returning result %d.\n", Result);
+  DPRINT("Returning result %d.\n", Result);
   return(ZwCallbackReturn(&Result, sizeof(Result), STATUS_SUCCESS));
 }
 
@@ -90,19 +92,19 @@ User32SendCREATEMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
   WNDPROC Proc;
   LRESULT Result;
 
-  DbgPrint("User32SendCREATEMessageForKernel.\n");
+  DPRINT("User32SendCREATEMessageForKernel.\n");
   CallbackArgs = (PSENDCREATEMESSAGE_CALLBACK_ARGUMENTS)Arguments;
   if (ArgumentLength != sizeof(SENDCREATEMESSAGE_CALLBACK_ARGUMENTS))
     {
-      DbgPrint("Wrong length.\n");
+      DPRINT("Wrong length.\n");
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
   Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
-  DbgPrint("Proc %X\n", Proc);
+  DPRINT("Proc %X\n", Proc);
   /* Call the window procedure; notice kernel messages are always unicode. */
   Result = CallWindowProcW(Proc, CallbackArgs->Wnd, WM_CREATE, 0, 
 			   (LPARAM)&CallbackArgs->CreateStruct);
-  DbgPrint("Returning result %d.\n", Result);
+  DPRINT("Returning result %d.\n", Result);
   return(ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS));
 }
 
@@ -113,19 +115,19 @@ User32SendNCCREATEMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
   WNDPROC Proc;
   LRESULT Result;
 
-  DbgPrint("User32SendNCCREATEMessageForKernel.\n");
+  DPRINT("User32SendNCCREATEMessageForKernel.\n");
   CallbackArgs = (PSENDNCCREATEMESSAGE_CALLBACK_ARGUMENTS)Arguments;
   if (ArgumentLength != sizeof(SENDNCCREATEMESSAGE_CALLBACK_ARGUMENTS))
     {
-      DbgPrint("Wrong length.\n");
+      DPRINT("Wrong length.\n");
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
   Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
-  DbgPrint("Proc %X\n", Proc);
+  DPRINT("Proc %X\n", Proc);
   /* Call the window procedure; notice kernel messages are always unicode. */
   Result = CallWindowProcW(Proc, CallbackArgs->Wnd, WM_NCCREATE, 0, 
 			   (LPARAM)&CallbackArgs->CreateStruct);
-  DbgPrint("Returning result %d.\n", Result);
+  DPRINT("Returning result %d.\n", Result);
   return(ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS));
 }
 
@@ -134,7 +136,7 @@ User32CallSendAsyncProcForKernel(PVOID Arguments, ULONG ArgumentLength)
 {
   PSENDASYNCPROC_CALLBACK_ARGUMENTS CallbackArgs;
 
-  DbgPrint("User32CallSendAsyncProcKernel()\n");
+  DPRINT("User32CallSendAsyncProcKernel()\n");
   CallbackArgs = (PSENDASYNCPROC_CALLBACK_ARGUMENTS)Arguments;
   if (ArgumentLength != sizeof(WINDOWPROC_CALLBACK_ARGUMENTS))
     {

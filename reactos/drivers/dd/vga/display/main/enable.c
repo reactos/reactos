@@ -1,9 +1,9 @@
 /*
  * entry.c
  *
- * $Revision: 1.27 $
+ * $Revision: 1.28 $
  * $Author: gvg $
- * $Date: 2003/05/03 13:39:05 $
+ * $Date: 2003/05/04 15:41:40 $
  *
  */
 
@@ -185,7 +185,7 @@ DrvEnableDriver(IN ULONG EngineVersion,
 		IN ULONG SizeOfDED,
 		OUT PDRVENABLEDATA DriveEnableData)
 {
-  EngDebugPrint("VGADDI", "DrvEnableDriver called...\n", 0);
+/*  EngDebugPrint("VGADDI", "DrvEnableDriver called...\n", 0); */
 
   vgaPreCalc();
 
@@ -456,7 +456,7 @@ DrvEnableSurface(IN DHPDEV PDev)
   DHSURF dhsurf;
   HSURF hsurf;
 
-  DPRINT1("DrvEnableSurface() called\n");
+  DPRINT("DrvEnableSurface() called\n");
 
   // Initialize the VGA
   if (!VGAInitialized)
@@ -467,7 +467,6 @@ DrvEnableSurface(IN DHPDEV PDev)
 	}
       VGAInitialized = TRUE;
     }
-CHECKPOINT1;
 
   // dhsurf is of type DEVSURF, which is the drivers specialized surface type
   dhsurf = (DHSURF)EngAllocMem(0, sizeof(DEVSURF), ALLOC_TAG);
@@ -515,7 +514,7 @@ CHECKPOINT1;
   if (EngAssociateSurface(hsurf, ppdev->GDIDevHandle, HOOK_BITBLT | HOOK_PAINT | HOOK_LINETO | HOOK_COPYBITS |
     HOOK_TRANSPARENTBLT))
   {
-    EngDebugPrint("VGADDI:", "Successfully associated surface\n", 0);
+/*    EngDebugPrint("VGADDI:", "Successfully associated surface\n", 0); */
     ppdev->SurfHandle = hsurf;
     ppdev->AssociatedSurf = pdsurf;
 

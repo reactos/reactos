@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.58 2003/05/03 13:39:06 gvg Exp $
+/* $Id: dc.c,v 1.59 2003/05/04 15:41:40 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -222,42 +222,6 @@ static BOOL STDCALL FindDriverFileNames(PUNICODE_STRING DriverFileNames)
 
   return TRUE;
 }
-
-#ifdef TODO
-static void
-SetupDevCaps(GDIDEVICE *GDIDev)
-{
-  RtlZeroMemory(&(GDIDev->DevCaps), sizeof(DEVICECAPS));
-  GDIDev->DevCaps.version = GDIDev->GDIInfo.ulVersion;
-  GDIDev->DevCaps.technology = GDIDev->GDIInfo.ulTechnology;
-  GDIDev->DevCaps.horzSize = GDIDev->GDIInfo.ulHorzSize;
-  GDIDev->DevCaps.vertSize = GDIDev->GDIInfo.ulVertSize;
-  GDIDev->DevCaps.horzRes = GDIDev->GDIInfo.ulHorzRes;
-  GDIDev->DevCaps.vertRes = GDIDev->GDIInfo.ulVertRes;
-  GDIDev->DevCaps.bitsPixel = GDIDev->GDIInfo.cBitsPixel;
-  GDIDev->DevCaps.planes = GDIDev->GDIInfo.cPlanes;
-  GDIDev->DevCaps.numBrushes = 0; /* FIXME */
-  GDIDev->DevCaps.numPens = 0; /* FIXME */
-  GDIDev->DevCaps.numMarkers = 0; /* FIXME */
-  GDIDev->DevCaps.numFonts = 0; /* FIXME */
-  GDIDev->DevCaps.numColors = GDIDev->GDIInfo.ulNumColors;
-  GDIDev->DevCaps.pdeviceSize = 0; /* FIXME */
-  GDIDev->DevCaps.curveCaps = 0; /* FIXME */
-  GDIDev->DevCaps.lineCaps = 0; /* FIXME */
-  GDIDev->DevCaps.polygonalCaps = 0; /* FIXME */
-  GDIDev->DevCaps.textCaps = GDIDev->GDIInfo.flTextCaps;
-  GDIDev->DevCaps.clipCaps = 0; /* FIXME */
-  GDIDev->DevCaps.rasterCaps = 0; /* FIXME */
-  GDIDev->DevCaps.aspectX = GDIDev->GDIInfo.ulAspectX;
-  GDIDev->DevCaps.aspectY = GDIDev->GDIInfo.ulAspectY;
-  GDIDev->DevCaps.aspectXY = GDIDev->GDIInfo.ulAspectXY;
-  GDIDev->DevCaps.logPixelsX = GDIDev->GDIInfo.ulLogPixelsX;
-  GDIDev->DevCaps.logPixelsY = GDIDev->GDIInfo.ulLogPixelsY;
-  GDIDev->DevCaps.sizePalette = GDIDev->GDIInfo.ulNumPalReg; /* FIXME not sure */
-  GDIDev->DevCaps.numReserved = 0; /* FIXME */
-  GDIDev->DevCaps.colorRes = 0; /* FIXME */
-}
-#endif
 
 
 BOOL STDCALL W32kCreatePrimarySurface(LPCWSTR Driver,

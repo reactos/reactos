@@ -1,6 +1,8 @@
 #include <ntddk.h>
-#include <debug.h>
 #include "vgavideo.h"
+
+#define NDEBUG
+#include <debug.h>
 
 void outxay(PUSHORT ad, UCHAR x, UCHAR y)
 {

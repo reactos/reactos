@@ -1,4 +1,4 @@
-/* $Id: windc.c,v 1.9 2003/05/03 14:12:14 gvg Exp $
+/* $Id: windc.c,v 1.10 2003/05/04 15:41:40 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -329,8 +329,6 @@ NtUserGetDCEx(HWND hWnd, HANDLE hRegion, ULONG Flags)
   BOOL UpdateClipOrigin = FALSE;
   HANDLE hRgnVisible = NULL;
 
-if (NULL == hWnd)
-__asm__("int $3\n");
   if (NULL == hWnd)
     {
       Flags &= ~DCX_USESTYLE;

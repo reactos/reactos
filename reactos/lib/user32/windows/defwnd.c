@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.42 2003/03/26 01:01:21 rcampbell Exp $
+/* $Id: defwnd.c,v 1.43 2003/05/04 15:41:40 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -14,9 +14,11 @@
 #include <windows.h>
 #include <user32.h>
 #include <window.h>
-#include <debug.h>
 #include <user32/wininternal.h>
 #include <string.h>
+
+#define NDEBUG
+#include <debug.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -498,7 +500,7 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
 
 /*  FIXME: Draw menu bar.  */
 
-  DbgPrint("drawing scrollbars..\n");
+  DPRINT("drawing scrollbars..\n");
 /*  Draw scrollbars */
   if (Style & WS_VSCROLL)
       SCROLL_DrawScrollBar(hWnd, hDC, SB_VERT, TRUE, TRUE);
@@ -996,9 +998,10 @@ User32DefWindowProc(HWND hWnd,
 	return(DefWndPaintNC(hWnd, (HRGN)wParam));
       }
     case WM_WINDOWPOSCHANGING:
-    {
-         DbgPrint("WM_WINDOWPOSCHANGING\n\n");
-    }
+      {
+        DbgPrint("WM_WINDOWPOSCHANGING\n\n");
+        break;
+      }
     case WM_NCHITTEST:
       {
 	POINT Point;
