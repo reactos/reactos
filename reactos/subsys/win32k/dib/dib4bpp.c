@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib4bpp.c,v 1.30 2004/04/07 20:04:22 navaraf Exp $ */
+/* $Id: dib4bpp.c,v 1.31 2004/04/07 20:23:38 navaraf Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -362,14 +362,14 @@ DIB_4BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
          }
          if (UsesPattern)
          {
-            Pattern = DIB_1BPP_GetPixel(PatternObj, i % PatternWidth, PatternY) ? GdiBrush->crFore : GdiBrush->crBack;
-            Pattern |= (DIB_1BPP_GetPixel(PatternObj, (i + 1) % PatternWidth, PatternY) ? GdiBrush->crFore : GdiBrush->crBack) << 4;
-            Pattern |= (DIB_1BPP_GetPixel(PatternObj, (i + 2) % PatternWidth, PatternY) ? GdiBrush->crFore : GdiBrush->crBack) << 8;
-            Pattern |= (DIB_1BPP_GetPixel(PatternObj, (i + 3) % PatternWidth, PatternY) ? GdiBrush->crFore : GdiBrush->crBack) << 12;
-            Pattern |= (DIB_1BPP_GetPixel(PatternObj, (i + 4) % PatternWidth, PatternY) ? GdiBrush->crFore : GdiBrush->crBack) << 16;
-            Pattern |= (DIB_1BPP_GetPixel(PatternObj, (i + 5) % PatternWidth, PatternY) ? GdiBrush->crFore : GdiBrush->crBack) << 20;
-            Pattern |= (DIB_1BPP_GetPixel(PatternObj, (i + 6) % PatternWidth, PatternY) ? GdiBrush->crFore : GdiBrush->crBack) << 24;
-            Pattern |= (DIB_1BPP_GetPixel(PatternObj, (i + 7) % PatternWidth, PatternY) ? GdiBrush->crFore : GdiBrush->crBack) << 28;
+            Pattern = DIB_1BPP_GetPixel(PatternObj, (i + 1) % PatternWidth, j % PatternHeight) ? GdiBrush->crFore : GdiBrush->crBack;
+            Pattern |= (DIB_1BPP_GetPixel(PatternObj, (i + 0) % PatternWidth, j % PatternHeight) ? GdiBrush->crFore : GdiBrush->crBack) << 4;
+            Pattern |= (DIB_1BPP_GetPixel(PatternObj, (i + 3) % PatternWidth, j % PatternHeight) ? GdiBrush->crFore : GdiBrush->crBack) << 8;
+            Pattern |= (DIB_1BPP_GetPixel(PatternObj, (i + 2) % PatternWidth, j % PatternHeight) ? GdiBrush->crFore : GdiBrush->crBack) << 12;
+            Pattern |= (DIB_1BPP_GetPixel(PatternObj, (i + 5) % PatternWidth, j % PatternHeight) ? GdiBrush->crFore : GdiBrush->crBack) << 16;
+            Pattern |= (DIB_1BPP_GetPixel(PatternObj, (i + 4) % PatternWidth, j % PatternHeight) ? GdiBrush->crFore : GdiBrush->crBack) << 20;
+            Pattern |= (DIB_1BPP_GetPixel(PatternObj, (i + 7) % PatternWidth, j % PatternHeight) ? GdiBrush->crFore : GdiBrush->crBack) << 24;
+            Pattern |= (DIB_1BPP_GetPixel(PatternObj, (i + 6) % PatternWidth, j % PatternHeight) ? GdiBrush->crFore : GdiBrush->crBack) << 28;
          }
          *DestBits = DIB_DoRop(Rop4, Dest, Source, Pattern);	    
       }
