@@ -3,8 +3,7 @@
 
 #include <napi/lpc.h>
 
-typedef
-struct _EPORT
+typedef struct _EPORT
 {
 	KSPIN_LOCK	Lock;
 	KEVENT		Event;
@@ -21,30 +20,23 @@ struct _EPORT
 
 	ULONG		MaxDataLength;
 	ULONG		MaxConnectInfoLength;
-
 } EPORT, * PEPORT;
 
 
 typedef struct _EPORT_TERMINATION_REQUEST
 {
 	LIST_ENTRY	ThreadListEntry;
-	PEPORT		Port;
-	
+	PEPORT		Port;	
 } EPORT_TERMINATION_REQUEST, *PEPORT_TERMINATION_REQUEST;
 
 
+NTSTATUS STDCALL
+LpcRequestPort (PEPORT		Port,
+		PLPC_MESSAGE	LpcMessage);
 NTSTATUS
 STDCALL
-LpcRequestPort (
-	PEPORT		Port,
-	PLPC_MESSAGE	LpcMessage
-	);
-NTSTATUS
-STDCALL
-LpcSendTerminationPort (
-	PEPORT	Port,
-	TIME	CreationTime
-	);
+LpcSendTerminationPort (PEPORT	Port,
+			TIME	CreationTime);
 
 
 /* Port Object Access */
@@ -63,14 +55,12 @@ LpcSendTerminationPort (
 #define EPORT_CONNECTED_SERVER        (6)
 #define EPORT_DISCONNECTED            (7)
 
-typedef
-struct _QUEUEDMESSAGE
+typedef struct _QUEUEDMESSAGE
 {
 	PEPORT		Sender;
 	LIST_ENTRY	QueueListEntry;
 	LPC_MESSAGE	Message;
 	UCHAR		MessageData [MAX_MESSAGE_DATA];
-	
 } QUEUEDMESSAGE,  *PQUEUEDMESSAGE;
 
 /* Code in ntoskrnl/lpc/close.h */

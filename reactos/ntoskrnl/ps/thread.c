@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.64 2000/12/26 05:32:44 dwelch Exp $
+/* $Id: thread.c,v 1.65 2001/01/18 15:00:09 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -225,7 +225,11 @@ ULONG PsUnfreezeThread(PETHREAD Thread, PNTSTATUS WaitStatus)
    
    if (WaitStatus != NULL)
      {
-	Thread->Tcb.WaitStatus = *WaitStatus;
+       if (!NT_SUCCESS((*WaitStatus)))
+	 {
+	   KeBugCheck(0);
+	 }
+       Thread->Tcb.WaitStatus = *WaitStatus;
      }
    
    if (r <= 0)

@@ -69,7 +69,7 @@ BOOLEAN KiTestAlert(VOID)
 	KeReleaseSpinLock(&PiApcLock, oldIrql);
 	return(FALSE);
      }
-   KeGetCurrentThread()->ApcState.UserApcPending = 1;
+   KeGetCurrentThread()->ApcState.UserApcPending++;
    KeReleaseSpinLock(&PiApcLock, oldIrql);
    return(TRUE);
 }
@@ -94,7 +94,6 @@ BOOLEAN KiDeliverUserApc(PKTRAP_FRAME TrapFrame)
    DPRINT("KiDeliverUserApc(TrapFrame %x/%x)\n", TrapFrame,
 	  KeGetCurrentThread()->TrapFrame);
    Thread = KeGetCurrentThread();
-   KeAcquireSpinLock(&PiApcLock, &oldlvl);
 
    /*
     * Check for thread termination
@@ -110,6 +109,8 @@ BOOLEAN KiDeliverUserApc(PKTRAP_FRAME TrapFrame)
      {
 	KeReleaseSpinLock(&PiThreadListLock, oldlvl);
      }
+
+   KeAcquireSpinLock(&PiApcLock, &oldlvl);
 
    current_entry = Thread->ApcState.ApcListHead[1].Flink;
    
@@ -225,13 +226,9 @@ VOID STDCALL KiDeliverApc(ULONG Unknown1,
       KeCallKernelRoutineApc(Apc);
       
       KeAcquireSpinLock(&PiApcLock, &oldlvl);
-      DPRINT("Called kernel routine for APC\n");
-//      PsFreezeThread(Thread, NULL, FALSE, KernelMode);
-      DPRINT("Done frozen thread\n");
       Thread->Tcb.ApcState.KernelApcInProgress--;
    }
    KeReleaseSpinLock(&PiApcLock, oldlvl);
-//   Thread->Tcb.WaitStatus = STATUS_KERNEL_APC;
 }
 
 VOID STDCALL 
@@ -285,6 +282,15 @@ KeInsertQueueApc (PKAPC	Apc,
 	KeRemoveAllWaitsThread(CONTAINING_RECORD(TargetThread, ETHREAD, Tcb),
 			       STATUS_KERNEL_APC);
      }
+
+   /*
+    * For user mode APCs if the thread is already waiting then we wait it
+    * up and increment UserApcPending so it will deliver the APC on exit
+    * from kernel mode. If the thread isn't waiting then before it
+    * enters an alertable, user mode wait then it will check for
+    * user mode APCs and if there are any pending then return immediately
+    * and they will be delivered on exit from kernel mode
+    */
    if (Apc->ApcMode == UserMode && TargetThread->Alertable == TRUE &&
        TargetThread->WaitMode == UserMode)
      {

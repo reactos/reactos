@@ -1,4 +1,4 @@
-/* $Id: wapi.c,v 1.9 2000/07/11 04:09:25 phreak Exp $
+/* $Id: wapi.c,v 1.10 2001/01/18 15:00:09 dwelch Exp $
  * 
  * reactos/subsys/csrss/api/wapi.c
  *
@@ -63,12 +63,14 @@ static void Thread_Api2(HANDLE ServerPort)
 					0,
 					&Reply->Header,
 					&LpcRequest.Header);
-	if (!NT_SUCCESS(Status))
+	if (!NT_SUCCESS(Status) &&
+	    Status != STATUS_PORT_DISCONNECTED)
 	  {
 	     DisplayString(L"CSR: NtReplyWaitReceivePort failed\n");
 	  }
 	
-	if (LpcRequest.Header.MessageType == LPC_PORT_CLOSED)
+	if (LpcRequest.Header.MessageType == LPC_PORT_CLOSED ||
+	    Status == STATUS_PORT_DISCONNECTED)
 	  {
 	     CsrFreeProcessData( LpcRequest.Header.Cid.UniqueProcess );
 	     NtClose(ServerPort);

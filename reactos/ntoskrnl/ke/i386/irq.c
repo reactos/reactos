@@ -1,4 +1,4 @@
-/* $Id: irq.c,v 1.3 2000/12/10 23:42:00 dwelch Exp $
+/* $Id: irq.c,v 1.4 2001/01/18 15:00:08 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -190,24 +190,18 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
 	HalEndSystemInterrupt (DISPATCH_LEVEL, 0);
 	__asm__("sti\n\t");
 
-	if (irq == 0)
-	  {
-	     KeExpireTimers();
-	  }
 	if (KeGetCurrentThread() != NULL)
 	  {
 	     KeGetCurrentThread()->LastEip = Trapframe->Eip;
 	  }
 	KiDispatchInterrupt();
-	PsDispatchThread(THREAD_STATE_RUNNABLE);
-     }
-   else
-     {
-//	DbgPrint("$");
+	if (irq == 0)
+	  {
+	    PsDispatchThread(THREAD_STATE_RUNNABLE);
+	  }
      }
 
    HalEndSystemInterrupt (old_level, 0);
-//   DbgPrint("}");
 }
 
 

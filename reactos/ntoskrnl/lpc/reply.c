@@ -1,4 +1,4 @@
-/* $Id: reply.c,v 1.3 2000/12/28 03:38:07 dwelch Exp $
+/* $Id: reply.c,v 1.4 2001/01/18 15:00:09 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -42,6 +42,11 @@ EiReplyOrRequestPort (IN	PEPORT		Port,
    KIRQL oldIrql;
    PQUEUEDMESSAGE MessageReply;
    
+   if (Port == NULL)
+     {
+       KeBugCheck(0);
+     }
+
    MessageReply = ExAllocatePool(NonPagedPool, sizeof(QUEUEDMESSAGE));
    MessageReply->Sender = Sender;
    
@@ -142,10 +147,19 @@ NtReplyWaitReceivePort (HANDLE		PortHandle,
 				      NULL);
    if (!NT_SUCCESS(Status))
      {
-	DPRINT("NtReplyWaitReceivePort() = %x\n", Status);
+	DPRINT1("NtReplyWaitReceivePort() = %x\n", Status);
 	return(Status);
      }
    
+   if (Port->State != EPORT_CONNECTED_CLIENT &&
+       Port->State != EPORT_CONNECTED_SERVER &&
+       LpcReply != NULL)
+     {
+       DPRINT1("NtReplyWaitReceivePort() = %x (State was %x)\n", 
+	       STATUS_PORT_DISCONNECTED, Port->State);
+       return(STATUS_PORT_DISCONNECTED);
+     }
+
    /*
     * Send the reply
     */
@@ -160,6 +174,7 @@ NtReplyWaitReceivePort (HANDLE		PortHandle,
 	if (!NT_SUCCESS(Status))
 	  {
 	     ObDereferenceObject(Port);
+	     DPRINT1("NtReplyWaitReceivePort() = %x\n", Status);
 	     return(Status);
 	  }
      }
@@ -176,6 +191,7 @@ NtReplyWaitReceivePort (HANDLE		PortHandle,
 				      NULL);
        if (!NT_SUCCESS(Status))
 	 {
+	   DPRINT1("NtReplyWaitReceivePort() = %x\n", Status);
 	   return(Status);
 	 }
 
@@ -186,7 +202,7 @@ NtReplyWaitReceivePort (HANDLE		PortHandle,
        Request = EiDequeueMessagePort(Port);
        
        /*
-	* There is a race between the event being set and the port being
+	* There is a race between the event being set and the port lock being
 	* taken in which another thread may dequeue the same request so
 	* we may need to loop.
 	*/

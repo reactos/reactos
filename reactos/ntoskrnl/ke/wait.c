@@ -422,37 +422,36 @@ NTSTATUS STDCALL KeWaitForSingleObject (PVOID		Object,
 	     return(STATUS_WAIT_0);
 	  }
 		
+	CurrentThread->WaitStatus = STATUS_UNSUCCESSFUL;
 	/* Append wait block to the KTHREAD wait block list */
-	CurrentThread->WaitBlockList = &CurrentThread->WaitBlock[0];
-	
+	CurrentThread->WaitBlockList = &CurrentThread->WaitBlock[0];	
 	CurrentThread->WaitBlock[0].Object = Object;
 	CurrentThread->WaitBlock[0].Thread = CurrentThread;
 	CurrentThread->WaitBlock[0].WaitKey = 0;
 	CurrentThread->WaitBlock[0].WaitType = WaitAny;
 	CurrentThread->WaitBlock[0].NextWaitBlock = NULL;
-	DPRINT("hdr->WaitListHead.Flink %x hdr->WaitListHead.Blink %x CurrentThread->WaitBlock[0].WaitListEntry = %x\n",
-	       hdr->WaitListHead.Flink,hdr->WaitListHead.Blink, CurrentThread->WaitBlock[0].WaitListEntry );
-	InsertTailList(&hdr->WaitListHead, &CurrentThread->WaitBlock[0].WaitListEntry);
+	InsertTailList(&hdr->WaitListHead, 
+		       &CurrentThread->WaitBlock[0].WaitListEntry);
 	KeReleaseDispatcherDatabaseLock(FALSE);
 	DPRINT("Waiting for %x with irql %d\n", Object, KeGetCurrentIrql());
+	Status = STATUS_SUCCESS;
 	PsFreezeThread(PsGetCurrentThread(),
 		       &Status,
 		       (UCHAR)Alertable,
 		       WaitMode);
-	DPRINT("Woke from wait\n");
+	if (!NT_SUCCESS(Status))
+	  {
+	    DPRINT1("Woke from wait with status %x\n", Status);
+	  }
      } while (Status == STATUS_KERNEL_APC);
    
    if (Timeout != NULL)
      {
 	KeCancelTimer(&KeGetCurrentThread()->Timer);
      }
-   if (Status == STATUS_USER_APC)
-     {
-	KiTestAlert();
-     }
    
    DPRINT("Returning from KeWaitForSingleObject()\n");
-   return Status;
+   return(Status);
 }
 
 
