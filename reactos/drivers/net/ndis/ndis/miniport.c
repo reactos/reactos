@@ -627,6 +627,7 @@ MiniQueueWorkItem(
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
   ASSERT(Adapter);
+  ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
 
 #if 0
   if (Adapter->WorkQueueLevel < NDIS_MINIPORT_WORK_QUEUE_SIZE - 1) 
@@ -756,6 +757,24 @@ MiniDoRequest(
 }
 
 
+#undef NdisMQueryInformationComplete
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisMQueryInformationComplete(
+    IN  NDIS_HANDLE MiniportAdapterHandle,
+    IN  NDIS_STATUS Status)
+{
+    PNDIS_MINIPORT_BLOCK MiniportBlock = 
+	(PNDIS_MINIPORT_BLOCK)MiniportAdapterHandle;
+    ASSERT(MiniportBlock);
+    if( MiniportBlock->QueryCompleteHandler )
+	(MiniportBlock->QueryCompleteHandler)(MiniportAdapterHandle, Status);
+}
+
+
 VOID STDCALL MiniportDpc(
     IN PKDPC Dpc,
     IN PVOID DeferredContext,
@@ -777,7 +796,6 @@ VOID STDCALL MiniportDpc(
 
   NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
-  /* XXX is adapter lock held here?  should be... */
   NdisStatus = MiniDequeueWorkItem(Adapter, &WorkItemType, &WorkItemContext);
 
   if (NdisStatus == NDIS_STATUS_SUCCESS) 
@@ -853,7 +871,7 @@ VOID STDCALL MiniportDpc(
             switch (((PNDIS_REQUEST)WorkItemContext)->RequestType) 
               {
                 case NdisRequestQueryInformation:
-                  NdisMQueryInformationComplete((NDIS_HANDLE)Adapter, NdisStatus);
+		  NdisMQueryInformationComplete((NDIS_HANDLE)Adapter, NdisStatus);
                   break;
 
                 case NdisRequestSetInformation:
@@ -1044,21 +1062,6 @@ NdisInitializeWrapper(
   ExInterlockedInsertTailList(&MiniportListHead, &Miniport->ListEntry, &MiniportListLock);
 
   *NdisWrapperHandle = Miniport;
-}
-
-#undef NdisMQueryInformationComplete
-
-
-/*
- * @implemented
- */
-VOID
-EXPORT
-NdisMQueryInformationComplete(
-    IN  NDIS_HANDLE MiniportAdapterHandle,
-    IN  NDIS_STATUS Status)
-{
-  (*((PNDIS_MINIPORT_BLOCK)(MiniportAdapterHandle))->QueryCompleteHandler)(MiniportAdapterHandle, Status);
 }
 
 

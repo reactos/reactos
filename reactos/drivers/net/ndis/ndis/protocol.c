@@ -147,13 +147,15 @@ ProRequest(
           Adapter->MiniportBusy = TRUE;
         }
     }
-  KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 
+  /* MiniQueueWorkItem must be called at IRQL >= DISPATCH_LEVEL */
   if (QueueWorkItem) 
     {
       MiniQueueWorkItem(Adapter, NdisWorkItemRequest, (PVOID)NdisRequest);
       return NDIS_STATUS_PENDING;
     } 
+
+  KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 
   /* MiniportQueryInformation (called by MiniDoRequest) runs at DISPATCH_LEVEL */
   /* TODO (?): move the irql raise into MiniDoRequest */
