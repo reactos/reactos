@@ -62,8 +62,9 @@ MingwBackend::GenerateHeader ()
 string
 MingwBackend::GenerateProjectCFLAGS ()
 {
+	size_t i;
 	string clags;
-	for ( size_t i = 0; i < ProjectNode.includes.size (); i++ )
+	for ( i = 0; i < ProjectNode.includes.size (); i++ )
 	{
 		Include& include = *ProjectNode.includes[i];
 		if (clags.length () > 0)
@@ -71,7 +72,7 @@ MingwBackend::GenerateProjectCFLAGS ()
 		clags += "-I" + include.directory;
 	}
 	
-	for ( size_t i = 0; i < ProjectNode.defines.size (); i++ )
+	for ( i = 0; i < ProjectNode.defines.size (); i++ )
 	{
 		Define& define = *ProjectNode.defines[i];
 		if ( clags.length () > 0 )
@@ -89,6 +90,8 @@ MingwBackend::GenerateProjectCFLAGS ()
 void
 MingwBackend::GenerateGlobalVariables ()
 {
+	size_t i;
+
 	fprintf ( fMakefile, "host_gcc = gcc\n" );
 	fprintf ( fMakefile, "host_ar = ar\n" );
 	fprintf ( fMakefile, "host_ld = ld\n" );
@@ -98,6 +101,13 @@ MingwBackend::GenerateGlobalVariables ()
 	fprintf ( fMakefile, "ar = ar\n" );
 	fprintf ( fMakefile, "dlltool = dlltool\n" );
 	fprintf ( fMakefile, "PROJECT_CFLAGS = %s\n", GenerateProjectCFLAGS ().c_str () );
+	for ( i = 0; i < ProjectNode.properties.size(); i++ )
+	{
+		Property& prop = *ProjectNode.properties[i];
+		fprintf ( fMakefile, "%s := %s\n",
+			prop.name.c_str(),
+			prop.value.c_str() );
+	}
 	fprintf ( fMakefile, "\n" );
 }
 

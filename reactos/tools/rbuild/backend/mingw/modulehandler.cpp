@@ -323,7 +323,7 @@ MingwModuleHandler::GenerateMacros (
 
 	if ( ifs && ifs->size() )
 	{
-		for ( size_t i = 0; i < module.ifs.size(); i++ )
+		for ( size_t i = 0; i < ifs->size(); i++ )
 		{
 			If& rIf = *(*ifs)[i];
 			if ( rIf.defines.size() || rIf.files.size() || rIf.ifs.size() )
@@ -377,7 +377,7 @@ MingwModuleHandler::GenerateMacros (
 		{
 			fprintf (
 				fMakefile,
-				"ifeq ($(%s),\"%s\")\n",
+				"ifeq (\"$(%s)\",\"%s\")\n",
 				rIf.property.c_str(),
 				rIf.value.c_str() );
 			GenerateMacros (
@@ -395,11 +395,10 @@ MingwModuleHandler::GenerateMacros (
 				"endif\n\n" );
 		}
 	}
-
 	fprintf (
 		fMakefile,
-		"%s_CFLAGS += $(PROJECT_CFLAGS)\n\n",
-		module.name.c_str () );
+		"%s += $(PROJECT_CFLAGS)\n\n",
+		cflags_macro.c_str () );
 }
 
 string

@@ -171,9 +171,19 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	}
 	else if ( e.name == "if" )
 	{
-		pIf = new If ( e, *this );
-		ifs.push_back ( pIf );
+		If* pOldIf = pIf;
+		pIf = new If ( e, project, this );
+		if ( pOldIf )
+			pOldIf->ifs.push_back ( pIf );
+		else
+			ifs.push_back ( pIf );
 		subs_invalid = false;
+	}
+	else if ( e.name == "property" )
+	{
+		throw InvalidBuildFileException (
+			e.location,
+			"<property> is not a valid sub-element of <module>" );
 	}
 	if ( subs_invalid && e.subElements.size() > 0 )
 		throw InvalidBuildFileException (
@@ -482,8 +492,10 @@ ImportLibrary::ImportLibrary ( const XMLElement& _node,
 }
 
 
-If::If ( const XMLElement& node_, const Module& module_ )
-	: node(node_), module(module_)
+If::If ( const XMLElement& node_,
+         const Project& project_,
+         const Module* module_ )
+	: node(node_), project(project_), module(module_)
 {
 	const XMLAttribute* att;
 
@@ -509,5 +521,27 @@ If::~If ()
 
 void
 If::ProcessXML()
+{
+}
+
+
+Property::Property ( const XMLElement& node_,
+                     const Project& project_,
+                     const Module* module_ )
+	: node(node_), project(project_), module(module_)
+{
+	const XMLAttribute* att;
+
+	att = node.GetAttribute ( "name", true );
+	assert(att);
+	name = att->value;
+
+	att = node.GetAttribute ( "value", true );
+	assert(att);
+	value = att->value;
+}
+
+void
+Property::ProcessXML()
 {
 }

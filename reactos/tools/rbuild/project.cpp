@@ -27,6 +27,10 @@ Project::~Project ()
 		delete includes[i];
 	for ( i = 0; i < defines.size(); i++ )
 		delete defines[i];
+	for ( i = 0; i < properties.size(); i++ )
+		delete properties[i];
+	for ( i = 0; i < ifs.size(); i++ )
+		delete ifs[i];
 	delete head;
 }
 
@@ -77,10 +81,16 @@ Project::ProcessXML ( const string& path )
 		includes[i]->ProcessXML();
 	for ( i = 0; i < defines.size(); i++ )
 		defines[i]->ProcessXML();
+	for ( i = 0; i < properties.size(); i++ )
+		properties[i]->ProcessXML();
+	for ( i = 0; i < ifs.size(); i++ )
+		ifs[i]->ProcessXML();
 }
 
 void
-Project::ProcessXMLSubElement ( const XMLElement& e, const string& path )
+Project::ProcessXMLSubElement ( const XMLElement& e,
+                                const string& path,
+                                If* pIf /*= NULL*/ )
 {
 	bool subs_invalid = false;
 	string subpath(path);
@@ -109,8 +119,30 @@ Project::ProcessXMLSubElement ( const XMLElement& e, const string& path )
 	}
 	else if ( e.name == "define" )
 	{
-		defines.push_back ( new Define ( *this, e ) );
+		Define* define = new Define ( *this, e );
+		if ( pIf )
+			pIf->defines.push_back ( define );
+		else
+			defines.push_back ( define );
 		subs_invalid = true;
+	}
+	else if ( e.name == "if" )
+	{
+		If* pOldIf = pIf;
+		pIf = new If ( e, *this, NULL );
+		if ( pOldIf )
+			pOldIf->ifs.push_back ( pIf );
+		else
+			ifs.push_back ( pIf );
+		subs_invalid = false;
+	}
+	else if ( e.name == "property" )
+	{
+		Property* property = new Property ( e, *this, NULL );
+		if ( pIf )
+			pIf->properties.push_back ( property );
+		else
+			properties.push_back ( property );
 	}
 	if ( subs_invalid && e.subElements.size() )
 		throw InvalidBuildFileException (
@@ -118,7 +150,7 @@ Project::ProcessXMLSubElement ( const XMLElement& e, const string& path )
 			"<%s> cannot have sub-elements",
 			e.name.c_str() );
 	for ( size_t i = 0; i < e.subElements.size (); i++ )
-		ProcessXMLSubElement ( *e.subElements[i], subpath );
+		ProcessXMLSubElement ( *e.subElements[i], subpath, pIf );
 }
 
 Module*

@@ -32,6 +32,7 @@ class InvokeFile;
 class Dependency;
 class ImportLibrary;
 class If;
+class Property;
 
 class Project
 {
@@ -43,6 +44,8 @@ public:
 	std::vector<Module*> modules;
 	std::vector<Include*> includes;
 	std::vector<Define*> defines;
+	std::vector<Property*> properties;
+	std::vector<If*> ifs;
 
 	//Project ();
 	Project ( const std::string& filename );
@@ -53,7 +56,8 @@ public:
 private:
 	void ReadXml ();
 	void ProcessXMLSubElement ( const XMLElement& e,
-	                            const std::string& path );
+	                            const std::string& path,
+	                            If* pIf = NULL );
 
 	// disable copy semantics
 	Project ( const Project& );
@@ -248,15 +252,33 @@ class If
 {
 public:
 	const XMLElement& node;
-	const Module& module;
+	const Project& project;
+	const Module* module;
 	std::string property, value;
 	std::vector<File*> files;
 	std::vector<Define*> defines;
+	std::vector<Property*> properties;
 	std::vector<If*> ifs;
 
 	If ( const XMLElement& node_,
-	     const Module& module_ );
+	     const Project& project_,
+	     const Module* module_ );
 	~If();
+
+	void ProcessXML();
+};
+
+class Property
+{
+public:
+	const XMLElement& node;
+	const Project& project;
+	const Module* module;
+	std::string name, value;
+
+	Property ( const XMLElement& node_,
+	           const Project& project_,
+	           const Module* module_ );
 
 	void ProcessXML();
 };
