@@ -1,4 +1,4 @@
-/* $Id: shell.c,v 1.39 2000/05/26 05:38:42 phreak Exp $
+/* $Id: shell.c,v 1.40 2000/07/05 18:07:08 ekohl Exp $
  *
  * PROJECT    : ReactOS Operating System
  * DESCRIPTION: ReactOS' Native Shell
@@ -133,12 +133,23 @@ int ExecuteProcess(char* name, char* cmdline, BOOL detached)
    PROCESS_INFORMATION	ProcessInformation;
    STARTUPINFO		StartupInfo;
    BOOL			ret;
+   CHAR			fullname[MAX_PATH];
+   PCHAR		p;
    
+   /* append '.exe' if needed */
+   strcpy (fullname, name);
+   p = strrchr (fullname, '.');
+   if ((p == NULL) ||
+       (_stricmp (p, ".exe") != 0))
+     {
+	strcat (fullname, ".exe");
+     }
+
    memset(&StartupInfo, 0, sizeof(StartupInfo));
    StartupInfo.cb = sizeof (STARTUPINFO);
    StartupInfo.lpTitle = name;
 
-   ret = CreateProcessA(name,
+   ret = CreateProcessA(fullname,
 			cmdline,
 			NULL,
 			NULL,
