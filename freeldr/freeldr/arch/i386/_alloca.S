@@ -1,6 +1,7 @@
 /* stuff needed for libgcc on win32.  */
 
-//#ifdef L_chkstk
+/*#ifdef L_chkstk*/
+#ifdef WIN32
 
 	.global ___chkstk
 	.global	__alloca
@@ -29,4 +30,4 @@ done: 	subl   %eax,%ecx
 	jmp    *%eax	
 
 
-//#endif
+#endif
