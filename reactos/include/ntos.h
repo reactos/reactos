@@ -1,6 +1,6 @@
 #ifndef _NTOS_H
 #define _NTOS_H
-/* $Id: ntos.h,v 1.15 2003/08/25 01:37:47 sedwards Exp $ */
+/* $Id: ntos.h,v 1.16 2003/08/27 21:21:59 dwelch Exp $ */
 
 #if defined(NTOS_MODE_USER)
 /* 
@@ -9,7 +9,6 @@
  */
 #include <windows.h>
 #include <ddk/ntddk.h>
-#include <ddk/ntifs.h>
 #include "ntos/types.h"
 #include "ntos/cdrom.h"
 #include "ntos/console.h"
@@ -32,7 +31,6 @@
 #include "ntos/time.h"
 #include "napi/i386/segment.h"
 #include "napi/types.h"
-#include "napi/core.h"
 #include "napi/dbg.h"
 #include "napi/lpc.h"
 #include "napi/npipe.h"
@@ -76,7 +74,6 @@
 #include "ntos/time.h"
 #include "napi/i386/segment.h"
 #include "napi/types.h"
-#include "napi/core.h"
 #include "napi/dbg.h"
 #include "napi/lpc.h"
 #include "napi/npipe.h"
