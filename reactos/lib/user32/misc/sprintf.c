@@ -132,6 +132,10 @@ static INT WPRINTF_ParseFormatA( LPCSTR format, WPRINTF_FORMAT *res )
     case 'u':
         res->type = WPR_UNSIGNED;
         break;
+    case 'p':
+        res->width = 8;
+        res->flags |= WPRINTF_ZEROPAD;
+        /* fall through */
     case 'X':
         res->flags |= WPRINTF_UPPER_HEX;
         /* fall through */
@@ -204,6 +208,10 @@ static INT WPRINTF_ParseFormatW( LPCWSTR format, WPRINTF_FORMAT *res )
     case 'u':
         res->type = WPR_UNSIGNED;
         break;
+    case 'p':
+        res->width = 8;
+        res->flags |= WPRINTF_ZEROPAD;
+        /* fall through */
     case 'X':
         res->flags |= WPRINTF_UPPER_HEX;
         /* fall through */
