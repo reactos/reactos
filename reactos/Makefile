@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.277 2004/12/30 18:31:43 ion Exp $
+# $Id$
 #
 # Global makefile
 #
@@ -22,6 +22,9 @@ IMPLIB =
 else
 IMPLIB = implib
 endif
+
+# Boot loaders
+BOOT_LOADERS = freeldr
 
 # Required to run the system
 COMPONENTS = ntoskrnl
@@ -124,9 +127,8 @@ KERNEL_DRIVERS = $(DRIVERS_LIB) $(DEVICE_DRIVERS) $(INPUT_DRIVERS) $(FS_DRIVERS)
 # Regression tests
 REGTESTS = regtests
 
-all: bootstrap $(COMPONENTS) $(REGTESTS) $(HALS) $(BUS) $(LIB_FSLIB) $(DLLS) $(SUBSYS) \
-     $(KERNEL_DRIVERS) $(SYS_APPS) $(SYS_SVC) \
-     $(APPS) $(EXT_MODULES)
+all: bootstrap $(BOOT_LOADERS) $(COMPONENTS) $(REGTESTS) $(HALS) $(BUS) $(LIB_FSLIB) \
+     $(DLLS) $(SUBSYS) $(KERNEL_DRIVERS) $(SYS_APPS) $(SYS_SVC) $(APPS) $(EXT_MODULES)
 
 bootstrap: dk implib iface_native iface_additional
 
@@ -136,21 +138,21 @@ depends: $(LIB_STATIC:%=%_depends) $(LIB_FSLIB:%=%_depends) msvcrt_depends $(DLL
          $(SUBSYS:%=%_depends) $(SYS_SVC:%=%_depends) \
          $(EXT_MODULES:%=%_depends) $(POSIX_LIBS:%=%_depends)
 
-implib: hallib $(LIB_STATIC) $(COMPONENTS:%=%_implib) $(HALS:%=%_implib) $(BUS:%=%_implib) \
-	      $(LIB_STATIC:%=%_implib) $(LIB_FSLIB:%=%_implib) msvcrt_implib $(DLLS:%=%_implib) \
-	      $(KERNEL_DRIVERS:%=%_implib) $(SUBSYS:%=%_implib) \
-	      $(SYS_APPS:%=%_implib) $(SYS_SVC:%=%_implib) $(EXT_MODULES:%=%_implib) \
-	      $(REGTESTS:%=%_implib)
+implib: hallib $(LIB_STATIC) $(COMPONENTS:%=%_implib) $(HALS:%=%_implib) \
+        $(BUS:%=%_implib) $(LIB_STATIC:%=%_implib) $(LIB_FSLIB:%=%_implib) \
+        msvcrt_implib $(DLLS:%=%_implib) $(KERNEL_DRIVERS:%=%_implib) \
+        $(SUBSYS:%=%_implib) $(SYS_APPS:%=%_implib) $(SYS_SVC:%=%_implib) \
+        $(EXT_MODULES:%=%_implib) $(REGTESTS:%=%_implib)
 
-test: $(COMPONENTS:%=%_test) $(HALS:%=%_test) $(BUS:%=%_test) \
+test: $(BOOT_LOADERS:%=%_test) $(COMPONENTS:%=%_test) $(HALS:%=%_test) $(BUS:%=%_test) \
 	    $(LIB_STATIC:%=%_test) $(LIB_FSLIB:%=%_test) msvcrt_test $(DLLS:%=%_test) \
 	    $(KERNEL_DRIVERS:%=%_test) $(SUBSYS:%=%_test) \
 	    $(SYS_SVC:%=%_test) $(EXT_MODULES:%=%_test)
 
 clean: tools dk_clean iface_native_clean iface_additional_clean hallib_clean \
-       $(HALS:%=%_clean) $(COMPONENTS:%=%_clean) $(BUS:%=%_clean) \
-       $(LIB_STATIC:%=%_clean) $(LIB_FSLIB:%=%_clean) msvcrt_clean \
-       $(DLLS:%=%_clean) $(KERNEL_DRIVERS:%=%_clean) \
+       $(BOOT_LOADERS:%=%_clean) $(HALS:%=%_clean) $(COMPONENTS:%=%_clean) \
+       $(BUS:%=%_clean) $(LIB_STATIC:%=%_clean) $(LIB_FSLIB:%=%_clean) \
+       msvcrt_clean $(DLLS:%=%_clean) $(KERNEL_DRIVERS:%=%_clean) \
        $(SUBSYS:%=%_clean) $(SYS_APPS:%=%_clean) $(SYS_SVC:%=%_clean) \
        $(NET_APPS:%=%_clean) $(APPS:%=%_clean) $(EXT_MODULES:%=%_clean) \
        $(REGTESTS:%=%_clean) clean_after tools_clean
@@ -159,18 +161,14 @@ clean_after:
 	$(HALFVERBOSEECHO) [RM]      /include/roscfg.h
 	$(RM) $(PATH_TO_TOP)/include/roscfg.h
 
-fastinstall: tools install_dirs install_before \
-         $(COMPONENTS:%=%_install) $(HALS:%=%_install) $(BUS:%=%_install) \
-         $(LIB_STATIC:%=%_install) $(LIB_FSLIB:%=%_install) msvcrt_install $(DLLS:%=%_install) \
-         $(KERNEL_DRIVERS:%=%_install) $(SUBSYS:%=%_install) \
-         $(SYS_APPS:%=%_install) $(SYS_SVC:%=%_install) \
+fastinstall: tools install_dirs install_before $(COMPONENTS:%=%_install) $(HALS:%=%_install) \
+         $(BUS:%=%_install) $(LIB_STATIC:%=%_install) $(LIB_FSLIB:%=%_install) \
+         msvcrt_install $(DLLS:%=%_install) $(KERNEL_DRIVERS:%=%_install) \
+         $(SUBSYS:%=%_install) $(SYS_APPS:%=%_install) $(SYS_SVC:%=%_install) \
          $(APPS:%=%_install) $(EXT_MODULES:%=%_install) $(REGTESTS:%=%_install)
 install: fastinstall registry
 
-FREELDR_DIR = ../freeldr
-
-freeldr:
-	$(MAKE) -C $(FREELDR_DIR)
+FREELDR_DIR = boot/freeldr
 
 bootcd_directory_layout:
 	$(HALFVERBOSEECHO) [RMKDIR]  $(BOOTCD_DIR)
@@ -183,26 +181,11 @@ bootcd_directory_layout:
 	$(RMKDIR) $(BOOTCD_DIR)/reactos
 	$(HALFVERBOSEECHO) [RMKDIR]  $(BOOTCD_DIR)/reactos/system32
 	$(RMKDIR) $(BOOTCD_DIR)/reactos/system32
-	$(HALFVERBOSEECHO) [COPY]    ${FREELDR_DIR}/bootsect/isoboot.bin to ${BOOTCD_DIR}/../isoboot.bin
-	$(CP) ${FREELDR_DIR}/bootsect/isoboot.bin ${BOOTCD_DIR}/../isoboot.bin
-	$(HALFVERBOSEECHO) [COPY]    ${FREELDR_DIR}/bootsect/dosmbr.bin to ${BOOTCD_DIR}/loader/dosmbr.bin
-	$(CP) ${FREELDR_DIR}/bootsect/dosmbr.bin ${BOOTCD_DIR}/loader/dosmbr.bin
-	$(HALFVERBOSEECHO) [COPY]    ${FREELDR_DIR}/bootsect/ext2.bin to ${BOOTCD_DIR}/loader/ext2.bin
-	$(CP) ${FREELDR_DIR}/bootsect/ext2.bin ${BOOTCD_DIR}/loader/ext2.bin
-	$(HALFVERBOSEECHO) [COPY]    ${FREELDR_DIR}/bootsect/fat.bin to ${BOOTCD_DIR}/loader/fat.bin
-	$(CP) ${FREELDR_DIR}/bootsect/fat.bin ${BOOTCD_DIR}/loader/fat.bin
-	$(HALFVERBOSEECHO) [COPY]    ${FREELDR_DIR}/bootsect/fat32.bin to ${BOOTCD_DIR}/loader/fat32.bin
-	$(CP) ${FREELDR_DIR}/bootsect/fat32.bin ${BOOTCD_DIR}/loader/fat32.bin
-	$(HALFVERBOSEECHO) [COPY]    ${FREELDR_DIR}/bootsect/isoboot.bin to ${BOOTCD_DIR}/loader/isoboot.bin
-	$(CP) ${FREELDR_DIR}/bootsect/isoboot.bin ${BOOTCD_DIR}/loader/isoboot.bin
-	$(HALFVERBOSEECHO) [COPY]    ${FREELDR_DIR}/freeldr/obj/i386/freeldr.sys to ${BOOTCD_DIR}/loader/freeldr.sys
-	$(CP) ${FREELDR_DIR}/freeldr/obj/i386/freeldr.sys ${BOOTCD_DIR}/loader/freeldr.sys
-	$(HALFVERBOSEECHO) [COPY]    ${FREELDR_DIR}/freeldr/obj/i386/setupldr.sys to ${BOOTCD_DIR}/loader/setupldr.sys
-	$(CP) ${FREELDR_DIR}/freeldr/obj/i386/setupldr.sys ${BOOTCD_DIR}/loader/setupldr.sys
 
-bootcd_bootstrap_files: $(COMPONENTS:%=%_bootcd) $(HALS:%=%_bootcd) $(BUS:%=%_bootcd) \
-	$(LIB_STATIC:%=%_bootcd) $(LIB_FSLIB:%=%_bootcd) msvcrt_bootcd $(DLLS:%=%_bootcd) \
-  $(KERNEL_DRIVERS:%=%_bootcd) $(SUBSYS:%=%_bootcd) $(SYS_APPS:%=%_bootcd)
+bootcd_bootstrap_files: $(BOOT_LOADERS:%=%_bootcd) $(COMPONENTS:%=%_bootcd) \
+	$(HALS:%=%_bootcd) $(BUS:%=%_bootcd) $(LIB_STATIC:%=%_bootcd) \
+	$(LIB_FSLIB:%=%_bootcd) msvcrt_bootcd $(DLLS:%=%_bootcd) \
+	$(KERNEL_DRIVERS:%=%_bootcd) $(SUBSYS:%=%_bootcd) $(SYS_APPS:%=%_bootcd)
 
 bootcd_install_before:
 	$(HALFVERBOSEECHO) [RLINE]   bootdata/autorun.inf to $(BOOTCD_DIR)/autorun.inf
@@ -288,9 +271,27 @@ livecd: livecd_basic livecd_makecd
 registry: tools
 	$(MKHIVE) bootdata $(INSTALL_DIR)/system32/config bootdata/hiveinst.inf
 
-.PHONY: all bootstrap depends implib test clean clean_before install freeldr bootcd_directory_layout \
+.PHONY: all bootstrap depends implib test clean clean_before install bootcd_directory_layout \
 bootcd_bootstrap_files bootcd_install_before bootcd_basic bootcd_makecd ubootcd_unattend bootcd
 
+
+#
+# Boot Loaders
+#
+$(BOOT_LOADERS): %:
+	$(MAKE) -C boot/$*
+
+$(BOOT_LOADERS:%=%_test): %_test:
+	$(MAKE) -C boot/$* test
+
+$(BOOT_LOADERS:%=%_clean): %_clean:
+	$(MAKE) -C boot/$* clean
+
+$(BOOT_LOADERS:%=%_bootcd): %_bootcd:
+	$(MAKE) -C boot/$* bootcd
+
+.PHONY: $(BOOT_LOADERS) $(BOOT_LOADERS:%=%_test) $(BOOT_LOADERS:%=%_clean) \
+        $(BOOT_LOADERS:%=%_bootcd)
 
 $(COMPONENTS): dk
 
