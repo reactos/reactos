@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.51 2004/07/30 19:18:39 jimtabor Exp $
+/* $Id: thread.c,v 1.52 2004/09/19 12:45:55 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -379,10 +379,17 @@ GetThreadTimes(HANDLE hThread,
       return(FALSE);
     }
 
-  memcpy(lpCreationTime, &KernelUserTimes.CreateTime, sizeof(FILETIME));
-  memcpy(lpExitTime, &KernelUserTimes.ExitTime, sizeof(FILETIME));
-  memcpy(lpKernelTime, &KernelUserTimes.KernelTime, sizeof(FILETIME));
-  memcpy(lpUserTime, &KernelUserTimes.UserTime, sizeof(FILETIME));
+  lpCreationTime->dwLowDateTime = KernelUserTimes.CreateTime.u.LowPart;
+  lpCreationTime->dwHighDateTime = KernelUserTimes.CreateTime.u.HighPart;
+  
+  lpExitTime->dwLowDateTime = KernelUserTimes.ExitTime.u.LowPart;
+  lpExitTime->dwHighDateTime = KernelUserTimes.ExitTime.u.HighPart;
+  
+  lpKernelTime->dwLowDateTime = KernelUserTimes.KernelTime.u.LowPart;
+  lpKernelTime->dwHighDateTime = KernelUserTimes.KernelTime.u.HighPart;
+  
+  lpUserTime->dwLowDateTime = KernelUserTimes.UserTime.u.LowPart;
+  lpUserTime->dwHighDateTime = KernelUserTimes.UserTime.u.HighPart;
 
   return(TRUE);
 }
