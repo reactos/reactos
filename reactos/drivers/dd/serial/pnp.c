@@ -138,7 +138,7 @@ SerialPnpStartDevice(
 	ULONG Vector = 0;
 	ULONG i, j;
 	KIRQL Dirql;
-	KAFFINITY Affinity;
+	KAFFINITY Affinity = 0;
 	KINTERRUPT_MODE InterruptMode = Latched;
 	BOOLEAN ShareInterrupt = TRUE;
 	OBJECT_ATTRIBUTES objectAttributes;
