@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.31 2004/04/29 21:13:16 gvg Exp $
+/* $Id: timer.c,v 1.32 2004/05/10 17:07:18 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -30,18 +30,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <win32k/win32k.h>
-#include <win32k/ntuser.h>
-#include <internal/ntoskrnl.h>
-#include <internal/ps.h>
-#include <include/msgqueue.h>
-#include <include/window.h>
-#include <include/error.h>
-#include <include/timer.h>
-#include <include/tags.h>
-#include <messages.h>
-#include <napi/win32.h>
+#include <w32k.h>
 
 #define NDEBUG
 #include <debug.h>

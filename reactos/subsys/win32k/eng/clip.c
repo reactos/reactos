@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: clip.c,v 1.19 2004/04/09 20:03:16 navaraf Exp $
+/* $Id: clip.c,v 1.20 2004/05/10 17:07:17 weiden Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -26,15 +26,7 @@
  * REVISION HISTORY:
  *                 21/8/1999: Created
  */
-
-#include <ddk/winddi.h>
-#include <ddk/ntddk.h>
-#include "objects.h"
-#include "clip.h"
-#include <include/object.h>
-
-#define NDEBUG
-#include <win32k/debug1.h>
+#include <w32k.h>
 
 VOID STDCALL IntEngDeleteClipRegion(CLIPOBJ *ClipObj)
 {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: surface.c,v 1.37 2004/04/09 20:03:16 navaraf Exp $
+/* $Id: surface.c,v 1.38 2004/05/10 17:07:17 weiden Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -30,18 +30,7 @@
  * - Create a GDI bitmap with all formats, perform all drawing operations on them, render to VGA surface
  *   refer to \test\microwin\src\engine\devdraw.c for info on correct pixel plotting for various formats
  */
-
-#include <ddk/winddi.h>
-#include <win32k/dc.h>
-#include <win32k/gdiobj.h>
-#include <include/dib.h>
-#include <include/object.h>
-#include <include/paint.h>
-#include "handle.h"
-#include "../dib/dib.h"
-
-#define NDEBUG
-#include <win32k/debug1.h>
+#include <w32k.h>
 
 enum Rle_EscapeCodes
 {

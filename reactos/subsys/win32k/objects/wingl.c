@@ -16,15 +16,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: wingl.c,v 1.7 2003/08/19 11:48:50 weiden Exp $ */
-
-#undef WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <ddk/ntddk.h>
-#include <win32k/wingl.h>
-
-#define NDEBUG
-#include <win32k/debug1.h>
+/* $Id: wingl.c,v 1.8 2004/05/10 17:07:20 weiden Exp $ */
+#include <w32k.h>
 
 INT
 STDCALL

@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.70 2004/05/08 12:42:46 weiden Exp $
+/* $Id: misc.c,v 1.71 2004/05/10 17:07:18 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -8,30 +8,8 @@
  * REVISION HISTORY:
  *       2003/05/22  Created
  */
-#define __WIN32K__
-#include <ddk/ntddk.h>
-#include <ddk/ntddmou.h>
-#include <win32k/win32k.h>
-#include <win32k/dc.h>
-#include <internal/safe.h>
-#include <include/error.h>
-#include <include/window.h>
-#include <include/menu.h>
-#include <include/painting.h>
-#include <include/dce.h>
-#include <include/inteng.h>
-#include <include/input.h>
-#include <include/intgdi.h>
-#include <include/mouse.h>
-#include <include/winsta.h>
-#include <include/caret.h>
-#include <include/object.h>
-#include <include/focus.h>
-#include <include/clipboard.h>
-#include <include/msgqueue.h>
-#include <include/desktop.h>
-#include <include/text.h>
-#include <include/tags.h>
+
+#include <w32k.h>
 
 #define NDEBUG
 #include <debug.h>

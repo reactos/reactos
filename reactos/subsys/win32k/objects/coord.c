@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: coord.c,v 1.22 2004/02/19 21:12:10 weiden Exp $
+/* $Id: coord.c,v 1.23 2004/05/10 17:07:20 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -26,16 +26,7 @@
  */
 
 /* INCLUDES ******************************************************************/
-
-#include <windows.h>
-#include <ddk/ntddk.h>
-#include <internal/safe.h>
-#include <win32k/coord.h>
-#include <win32k/dc.h>
-#include <include/error.h>
-#include <include/tags.h>
-#define NDEBUG
-#include <win32k/debug1.h>
+#include <w32k.h>
 
 /* FUNCTIONS *****************************************************************/
 

@@ -24,9 +24,8 @@
  * PROGRAMER:        Filip Navara <xnavara@volny.cz>
  */
 
-#include <include/useratom.h>
-#include <include/winsta.h>
-#include <include/error.h>
+#include <w32k.h>
+
 #define NDEBUG
 #include <debug.h>
 

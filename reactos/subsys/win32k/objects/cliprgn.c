@@ -16,22 +16,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cliprgn.c,v 1.36 2004/04/26 19:58:45 weiden Exp $ */
-
-#undef WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <ddk/ntddk.h>
-#include <internal/safe.h>
-#include <win32k/dc.h>
-#include <win32k/region.h>
-#include <win32k/cliprgn.h>
-#include <win32k/coord.h>
-#include <include/error.h>
-#include <include/intgdi.h>
-#include "../eng/clip.h"
-
-#define NDEBUG
-#include <win32k/debug1.h>
+/* $Id: cliprgn.c,v 1.37 2004/05/10 17:07:20 weiden Exp $ */
+#include <w32k.h>
 
 VOID FASTCALL
 CLIPPING_UpdateGCRegion(DC* Dc)

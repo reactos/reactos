@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: prop.c,v 1.10 2004/04/16 21:50:26 weiden Exp $
+/* $Id: prop.c,v 1.11 2004/05/10 17:07:18 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -28,20 +28,7 @@
  */
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <win32k/win32k.h>
-#include <internal/safe.h>
-#include <include/object.h>
-#include <include/guicheck.h>
-#include <include/window.h>
-#include <include/class.h>
-#include <include/error.h>
-#include <include/winsta.h>
-#include <include/winpos.h>
-#include <include/callback.h>
-#include <include/msgqueue.h>
-#include <include/rect.h>
-#include <include/tags.h>
+#include <w32k.h>
 
 //#define NDEBUG
 #include <debug.h>

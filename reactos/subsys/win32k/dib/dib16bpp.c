@@ -16,19 +16,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib16bpp.c,v 1.30 2004/04/25 11:34:12 weiden Exp $ */
-#undef WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <stdlib.h>
-#include <math.h>
-#include <debug.h>
-#include <ddk/winddi.h>
-#include <win32k/bitmaps.h>
-#include <win32k/brush.h>
-#include <win32k/debug.h>
-#include <include/object.h>
-#include "../eng/objects.h"
-#include "dib.h"
+/* $Id: dib16bpp.c,v 1.31 2004/05/10 17:07:17 weiden Exp $ */
+#include <w32k.h>
 
 VOID
 DIB_16BPP_PutPixel(SURFOBJ *SurfObj, LONG x, LONG y, ULONG c)

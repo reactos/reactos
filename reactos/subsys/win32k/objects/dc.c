@@ -16,46 +16,12 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.133 2004/04/28 18:38:07 navaraf Exp $
+/* $Id: dc.c,v 1.134 2004/05/10 17:07:20 weiden Exp $
  *
  * DC.C - Device context functions
  *
  */
-
-#undef WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <ddk/ntddk.h>
-#include <ddk/ntddvdeo.h>
-#include <internal/safe.h>
-#include <win32k/bitmaps.h>
-#include <win32k/brush.h>
-#include <win32k/cliprgn.h>
-#include <win32k/coord.h>
-#include <win32k/dc.h>
-#include <win32k/misc.h>
-#include <win32k/print.h>
-#include <win32k/region.h>
-#include <win32k/gdiobj.h>
-#include <win32k/paint.h>
-#include <win32k/color.h>
-#include <win32k/pen.h>
-#include <win32k/text.h>
-#include "../eng/clip.h"
-#include "../eng/handle.h"
-#include <include/dce.h>
-#include <include/error.h>
-#include <include/inteng.h>
-#include <include/eng.h>
-#include <include/palette.h>
-#include <include/guicheck.h>
-#include <include/desktop.h>
-#include <include/intgdi.h>
-#include <include/cleanup.h>
-#include <include/tags.h>
-#include <include/text.h>
-
-#define NDEBUG
-#include <win32k/debug1.h>
+#include <w32k.h>
 
 #ifndef OBJ_COLORSPACE
 #define OBJ_COLORSPACE	(14)

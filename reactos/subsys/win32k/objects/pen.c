@@ -17,19 +17,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: pen.c,v 1.14 2004/04/05 21:26:25 navaraf Exp $
+ * $Id: pen.c,v 1.15 2004/05/10 17:07:20 weiden Exp $
  */
-
-#undef WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <ddk/ntddk.h>
-#include <ddk/winddi.h>
-#include <win32k/pen.h>
-#include <win32k/bitmaps.h>
-#include <include/error.h>
-#include <internal/safe.h>
-#define NDEBUG
-#include <win32k/debug1.h>
+#include <w32k.h>
 
 /* PRIVATE FUNCTIONS **********************************************************/
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: transblt.c,v 1.17 2004/04/09 20:03:18 navaraf Exp $
+/* $Id: transblt.c,v 1.18 2004/05/10 17:07:17 weiden Exp $
  * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -26,24 +26,7 @@
  * REVISION HISTORY:
  *        4/6/2004: Created
  */
-
-#include <ddk/winddi.h>
-#include <ddk/ntddk.h>
-#include <ddk/ntddmou.h>
-#include <ntos/minmax.h>
-#include <include/dib.h>
-#include <include/eng.h>
-#include <include/object.h>
-#include <include/surface.h>
-#include <include/mouse.h>
-#include <include/inteng.h>
-
-#include "brush.h"
-#include "clip.h"
-#include "objects.h"
-
-#define NDEBUG
-#include <win32k/debug1.h>
+#include <w32k.h>
 
 
 BOOL STDCALL

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.93 2004/05/08 19:35:32 weiden Exp $
+/* $Id: msgqueue.c,v 1.94 2004/05/10 17:07:18 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -29,21 +29,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <win32k/win32k.h>
-#include <include/msgqueue.h>
-#include <include/callback.h>
-#include <include/window.h>
-#include <include/winpos.h>
-#include <include/winsta.h>
-#include <include/desktop.h>
-#include <include/class.h>
-#include <include/object.h>
-#include <include/input.h>
-#include <include/cursoricon.h>
-#include <include/focus.h>
-#include <include/caret.h>
-#include <include/tags.h>
+#include <w32k.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: guicheck.c,v 1.17 2003/12/07 23:02:57 gvg Exp $
+/* $Id: guicheck.c,v 1.18 2004/05/10 17:07:18 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -33,14 +33,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <napi/teb.h>
-#include <win32k/win32k.h>
-#include <include/guicheck.h>
-#include <include/msgqueue.h>
-#include <include/object.h>
-#include <napi/win32.h>
-#include <include/winsta.h>
+#include <w32k.h>
 
 #define NDEBUG
 #include <debug.h>

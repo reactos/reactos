@@ -17,21 +17,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: brush.c,v 1.36 2004/04/25 14:46:54 weiden Exp $
+ * $Id: brush.c,v 1.37 2004/05/10 17:07:20 weiden Exp $
  */
-
-#undef WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <ddk/ntddk.h>
-#include <win32k/bitmaps.h>
-#include <win32k/brush.h>
-#include <internal/safe.h>
-#include <include/object.h>
-#include <include/inteng.h>
-#include <include/error.h>
-#include <include/tags.h>
-#define NDEBUG
-#include <win32k/debug1.h>
+#include <w32k.h>
 
 static const USHORT HatchBrushes[NB_HATCH_STYLES][8] =
 {

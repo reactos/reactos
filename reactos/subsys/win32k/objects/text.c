@@ -22,35 +22,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.90 2004/04/23 21:35:59 weiden Exp $ */
+/* $Id: text.c,v 1.91 2004/05/10 17:07:20 weiden Exp $ */
+#include <w32k.h>
 
-
-#undef WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <ddk/ntddk.h>
-#include <ddk/winddi.h>
-#include <napi/win32.h>
-#include <internal/safe.h>
-#include <win32k/brush.h>
-#include <win32k/dc.h>
-#include <win32k/text.h>
-#include <win32k/font.h>
-#include <include/error.h>
-#include <include/desktop.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include <freetype/tttables.h>
-
-#include "../eng/handle.h"
-
-#include <include/inteng.h>
-#include <include/text.h>
-#include <include/eng.h>
-#include <include/palette.h>
-#include <include/tags.h>
-
-#define NDEBUG
-#include <win32k/debug1.h>
 
 FT_Library  library;
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mem.c,v 1.15 2004/03/15 22:01:17 gvg Exp $
+/* $Id: mem.c,v 1.16 2004/05/10 17:07:17 weiden Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -27,16 +27,7 @@
  *                 3/7/1999: Created
  */
 
-#ifdef __USE_W32API
-#include <windows.h>
-#include <ddk/ntapi.h>
-#endif
-#include <ddk/ntddk.h>
-#include <ddk/winddi.h>
-
-#define NDEBUG
-#include <win32k/debug1.h>
-#include <debug.h>
+#include <w32k.h>
 
 typedef struct _USERMEMHEADER
   {

@@ -15,13 +15,14 @@ IntGdiCreateDIBPatternBrushPt(CONST VOID *PackedDIB,
                               UINT       Usage);
 
 BOOL FASTCALL
-IntPatBlt(DC *dc,
-          INT  XLeft,
-          INT  YLeft,
-          INT  Width,
-          INT  Height,
-          DWORD  ROP,
-          BRUSHOBJ *BrushObj);
+IntPatBlt(
+   PDC dc,
+   INT XLeft,
+   INT YLeft,
+   INT Width,
+   INT Height,
+   DWORD ROP,
+   PGDIBRUSHOBJ BrushObj);
 
 /* Pen functions */
 

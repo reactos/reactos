@@ -9,6 +9,7 @@
  *       25-10-2003  PB  Created
  */
 #include <ddk/ntddk.h>
+#include <win32k/ntddraw.h>
 #include <win32k/win32k.h>
 
 #define NDEBUG

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: event.c,v 1.2 2004/04/09 20:03:16 navaraf Exp $
+/* $Id: event.c,v 1.3 2004/05/10 17:07:17 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -26,18 +26,7 @@
  * REVISION HISTORY:
  *        2/10/1999: Created
  */
-
-#include <stdarg.h>
-#include <windef.h>
-#include <winbase.h>
-#include <ddk/winddi.h>
-#include <ddk/ntddk.h>
-#include <include/eng.h>
-#include <include/inteng.h>
-#include <include/tags.h>
-
-#define NDEBUG
-#include <win32k/debug1.h>
+#include <w32k.h>
 
 BOOL
 STDCALL

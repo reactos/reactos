@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.31 2004/05/01 08:47:14 weiden Exp $
+/* $Id: input.c,v 1.32 2004/05/10 17:07:18 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -29,19 +29,8 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <win32k/win32k.h>
-#include <internal/safe.h>
-#include <include/class.h>
-#include <include/error.h>
-#include <include/winsta.h>
-#include <include/desktop.h>
-#include <include/msgqueue.h>
-#include <ddk/ntddmou.h>
-#include <include/mouse.h>
-#include <include/input.h>
-#include <include/hotkey.h>
-#include <include/eng.h>
+#include <w32k.h>
+
 #include <rosrtl/string.h>
 
 #define NDEBUG

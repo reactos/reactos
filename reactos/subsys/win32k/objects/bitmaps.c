@@ -16,28 +16,16 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.71 2004/04/28 18:38:07 navaraf Exp $ */
-#undef WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <stdlib.h>
-#include <win32k/color.h>
-#include <win32k/gdiobj.h>
-#include <win32k/bitmaps.h>
-#include <win32k/brush.h>
-#include <win32k/region.h>
-//#include <win32k/debug.h>
-#include "../eng/handle.h"
-#include <include/inteng.h>
-#include <include/intgdi.h>
-#include <include/eng.h>
-#include <include/error.h>
-#include <include/surface.h>
-#include <include/palette.h>
-#include <include/tags.h>
-#include <rosrtl/gdimacro.h>
+/* $Id: bitmaps.c,v 1.72 2004/05/10 17:07:20 weiden Exp $ */
+#include <w32k.h>
 
-#define NDEBUG
-#include <win32k/debug1.h>
+#define IN_RECT(r,x,y) \
+( \
+ (x) >= (r).left && \
+ (y) >= (r).top && \
+ (x) < (r).right && \
+ (y) < (r).bottom \
+)
 
 BOOL STDCALL
 NtGdiBitBlt(

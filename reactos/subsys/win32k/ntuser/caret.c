@@ -1,4 +1,4 @@
-/* $Id: caret.c,v 1.11 2004/02/19 21:12:09 weiden Exp $
+/* $Id: caret.c,v 1.12 2004/05/10 17:07:18 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -9,16 +9,7 @@
  *       10/15/2003  Created
  */
 
-#include <win32k/win32k.h>
-#include <ddk/ntddk.h>
-#include <internal/safe.h>
-#include <include/error.h>
-#include <include/window.h>
-#include <include/caret.h>
-#include <include/timer.h>
-#include <include/callback.h>
-#include <include/tags.h>
-#include <rosrtl/string.h>
+#include <w32k.h>
 
 #define NDEBUG
 #include <debug.h>

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.53 2004/04/30 14:22:44 weiden Exp $
+/* $Id: bitblt.c,v 1.54 2004/05/10 17:07:17 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -26,25 +26,7 @@
  * REVISION HISTORY:
  *        2/10/1999: Created
  */
-
-#include <ddk/winddi.h>
-#include <ddk/ntddk.h>
-#include <ddk/ntddmou.h>
-#include <ntos/minmax.h>
-#include "brush.h"
-#include "clip.h"
-#include "objects.h"
-#include "../dib/dib.h"
-#include "misc.h"
-#include <include/mouse.h>
-#include <include/object.h>
-#include <include/dib.h>
-#include <include/surface.h>
-#include <include/eng.h>
-#include <include/inteng.h>
-
-#define NDEBUG
-#include <win32k/debug1.h>
+#include <w32k.h>
 
 typedef BOOLEAN STDCALL (*PBLTRECTFUNC)(SURFOBJ* OutputObj,
                                         SURFGDI* OutputGDI,

@@ -16,20 +16,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: palette.c,v 1.17 2004/04/09 20:03:20 navaraf Exp $ */
-
-#undef WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <win32k/debug.h>
-#include <win32k/debug1.h>
-#include <win32k/bitmaps.h>
-#include <win32k/color.h>
-#include <win32k/gdiobj.h>
-#include <debug.h>
-#include <include/palette.h>
-#include <include/object.h>
-#include <include/color.h>
-#include <include/tags.h>
+/* $Id: palette.c,v 1.18 2004/05/10 17:07:20 weiden Exp $ */
+#include <w32k.h>
 
 #ifndef NO_MAPPING
 static int           PALETTE_firstFree = 0; 

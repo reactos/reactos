@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: hotkey.c,v 1.8 2004/02/24 13:27:03 weiden Exp $
+/* $Id: hotkey.c,v 1.9 2004/05/10 17:07:18 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -29,14 +29,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <win32k/win32k.h>
-#include <internal/ex.h>
-#include <internal/ps.h>
-#include <include/error.h>
-#include <include/msgqueue.h>
-#include <include/hotkey.h>
-#include <include/tags.h>
+#include <w32k.h>
 
 #define NDEBUG
 #include <debug.h>

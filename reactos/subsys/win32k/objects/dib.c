@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.45 2004/04/09 20:03:20 navaraf Exp $
+ * $Id: dib.c,v 1.46 2004/05/10 17:07:20 weiden Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -18,26 +18,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-
-#undef WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <stdlib.h>
-#include <win32k/bitmaps.h>
-#include <win32k/debug.h>
-#include "../eng/handle.h"
-#include <ntos/minmax.h>
-#include <include/error.h>
-#include <include/inteng.h>
-#include <include/eng.h>
-#include <include/dib.h>
-#include <include/color.h>
-#include <internal/safe.h>
-#include <include/surface.h>
-#include <include/palette.h>
-#include <include/tags.h>
-
-#define NDEBUG
-#include <win32k/debug1.h>
+#include <w32k.h>
 
 UINT STDCALL NtGdiSetDIBColorTable(HDC  hDC,
                            UINT  StartIndex,

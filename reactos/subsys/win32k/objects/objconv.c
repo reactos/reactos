@@ -16,27 +16,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: objconv.c,v 1.17 2004/04/09 20:03:20 navaraf Exp $ */
-
-#undef WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <ddk/ntddk.h>
-
-/* FIXME: Surely we should just have one include file that includes all of these.. */
-#include <win32k/bitmaps.h>
-#include <win32k/coord.h>
-#include <win32k/driver.h>
-#include <win32k/dc.h>
-#include <win32k/print.h>
-#include <win32k/region.h>
-#include <win32k/gdiobj.h>
-#include <win32k/pen.h>
-#include "../eng/objects.h"
-#include <include/object.h>
-#include <include/surface.h>
-
-//#define NDEBUG
-#include <win32k/debug1.h>
+/* $Id: objconv.c,v 1.18 2004/05/10 17:07:20 weiden Exp $ */
+#include <w32k.h>
 
 HBITMAP FASTCALL BitmapToSurf(PBITMAPOBJ BitmapObj, HDEV GDIDevice)
 {

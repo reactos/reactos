@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: hook.c,v 1.7 2004/04/07 00:58:05 weiden Exp $
+/* $Id: hook.c,v 1.8 2004/05/10 17:07:18 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -29,17 +29,7 @@
  *                   Copyright (C) 2002 Alexandre Julliard
  */
 
-#include <ddk/ntddk.h>
-#include <win32k/win32k.h>
-#include <include/callback.h>
-#include <include/error.h>
-#include <include/hook.h>
-#include <include/object.h>
-#include <include/msgqueue.h>
-#include <include/winsta.h>
-#include <include/tags.h>
-#include <internal/ps.h>
-#include <internal/safe.h>
+#include <w32k.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>

@@ -16,29 +16,10 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: color.c,v 1.38 2004/05/01 00:51:51 navaraf Exp $ */
+/* $Id: color.c,v 1.39 2004/05/10 17:07:20 weiden Exp $ */
+#include <w32k.h>
 
 // FIXME: Use PXLATEOBJ logicalToSystem instead of int *mapping
-
-#undef WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <ddk/ntddk.h>
-#include <ddk/winddi.h>
-#include <win32k/brush.h>
-#include <win32k/dc.h>
-#include <win32k/color.h>
-#include <win32k/pen.h>
-#include <win32k/ntuser.h>
-#include "../eng/handle.h"
-#include <include/inteng.h>
-#include <include/eng.h>
-#include <include/color.h>
-#include <include/palette.h>
-#include <include/error.h>
-#include <include/dce.h>
-
-#define NDEBUG
-#include <win32k/debug1.h>
 
 int COLOR_gapStart = 256;
 int COLOR_gapEnd = -1;

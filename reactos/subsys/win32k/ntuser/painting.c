@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.81 2004/04/29 21:13:16 gvg Exp $
+ *  $Id: painting.c,v 1.82 2004/05/10 17:07:18 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -30,26 +30,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/safe.h>
-#include <win32k/win32k.h>
-#include <include/object.h>
-#include <include/guicheck.h>
-#include <include/window.h>
-#include <include/desktop.h>
-#include <include/winpos.h>
-#include <include/class.h>
-#include <include/caret.h>
-#include <include/error.h>
-#include <include/winsta.h>
-#include <windows.h>
-#include <include/painting.h>
-#include <user32/wininternal.h>
-#include <include/rect.h>
-#include <win32k/coord.h>
-#include <win32k/region.h>
-#include <include/vis.h>
-#include <include/intgdi.h>
+#include <w32k.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>

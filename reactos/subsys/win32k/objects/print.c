@@ -16,20 +16,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: print.c,v 1.16 2004/04/09 20:03:20 navaraf Exp $ */
-
-#undef WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <ddk/ntddk.h>
-#include <win32k/print.h>
-#include <win32k/dc.h>
-#include <include/error.h>
-#include <include/tags.h>
-#include <include/object.h>
-#include <internal/safe.h>
-
-#define NDEBUG
-#include <win32k/debug1.h>
+/* $Id: print.c,v 1.17 2004/05/10 17:07:20 weiden Exp $ */
+#include <w32k.h>
 
 INT
 STDCALL

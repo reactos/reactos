@@ -16,26 +16,9 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.50 2004/04/24 14:21:37 weiden Exp $ */
-#undef WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <ddk/ntddk.h>
-#include <internal/safe.h>
+/* $Id: region.c,v 1.51 2004/05/10 17:07:20 weiden Exp $ */
+#include <w32k.h>
 #include <win32k/float.h>
-#include <win32k/dc.h>
-#include <win32k/bitmaps.h>
-#include <win32k/region.h>
-#include <win32k/cliprgn.h>
-#include <win32k/brush.h>
-#include <include/rect.h>
-#include <include/object.h>
-#include <include/inteng.h>
-#include <include/intgdi.h>
-#include <include/error.h>
-#include <include/tags.h>
-
-#define NDEBUG
-#include <win32k/debug1.h>
 
 BOOL STDCALL
 IntEngPaint(IN SURFOBJ *Surface,IN CLIPOBJ *ClipRegion,IN BRUSHOBJ *Brush,IN POINTL *BrushOrigin,

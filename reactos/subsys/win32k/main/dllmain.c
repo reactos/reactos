@@ -16,42 +16,11 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.71 2004/05/05 22:47:06 weiden Exp $
+/* $Id: dllmain.c,v 1.72 2004/05/10 17:07:17 weiden Exp $
  *
  *  Entry Point for win32k.sys
  */
-
-#undef WIN32_LEAN_AND_MEAN
-#define WIN32_NO_STATUS
-#include <windows.h>
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
-
-#ifdef __USE_W32API
-#include <ddk/ddrawint.h>
-#endif
-#include <ddk/winddi.h>
-
-#include <win32k/win32k.h>
-
-#include <include/winsta.h>
-#include <include/desktop.h>
-#include <include/class.h>
-#include <include/window.h>
-#include <include/menu.h>
-#include <include/object.h>
-#include <include/input.h>
-#include <include/timer.h>
-#include <include/text.h>
-#include <include/caret.h>
-#include <include/hotkey.h>
-#include <include/accelerator.h>
-#include <include/cursoricon.h>
-#include <include/guicheck.h>
-#include <include/hook.h>
-
-#define NDEBUG
-#include <win32k/debug1.h>
+#include <w32k.h>
 
 #ifdef __USE_W32API
 typedef NTSTATUS (STDCALL *PW32_PROCESS_CALLBACK)(

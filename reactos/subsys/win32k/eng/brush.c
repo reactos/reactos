@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: brush.c,v 1.10 2004/01/30 16:36:16 navaraf Exp $
+/* $Id: brush.c,v 1.11 2004/05/10 17:07:17 weiden Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -26,8 +26,7 @@
  * REVISION HISTORY:
  *                 3/7/1999: Created
  */
-
-#include <ddk/winddi.h>
+#include <w32k.h>
 
 /*
  * @implemented

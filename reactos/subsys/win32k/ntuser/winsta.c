@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: winsta.c,v 1.58 2004/05/01 17:06:55 weiden Exp $
+ *  $Id: winsta.c,v 1.59 2004/05/10 17:07:18 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -35,26 +35,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#define __WIN32K__
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
-#include <ddk/ntddmou.h>
-#include <win32k/win32k.h>
-#include <include/winsta.h>
-#include <include/desktop.h>
-#include <include/object.h>
-#include <include/window.h>
-#include <include/error.h>
-#include <include/cursoricon.h>
-#include <include/hotkey.h>
-#include <include/color.h>
-#include <include/mouse.h>
-#include <include/callback.h>
-#include <include/guicheck.h>
-#include <include/intgdi.h>
-#include <include/tags.h>
-/* Needed for DIRECTORY_OBJECT */
-#include <internal/ob.h>
+#include <w32k.h>
 
 #define NDEBUG
 #include <debug.h>

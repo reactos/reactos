@@ -16,35 +16,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.54 2004/04/30 22:18:00 weiden Exp $ */
-
-#undef WIN32_LEAN_AND_MEAN
-
-#include <ddk/ntddk.h>
-#include <ddk/ntddmou.h>
-#include <win32k/win32k.h>
-#include <windows.h>
-#include <stdlib.h>
-#include <win32k/bitmaps.h>
-#include <win32k/dc.h>
-#include <include/winsta.h>
-#include <include/desktop.h>
-#include <include/error.h>
-#include <include/mouse.h>
-#include <include/window.h>
-#include <include/input.h>
-#include <include/cursoricon.h>
-#include <include/inteng.h>
-#include <include/surface.h>
-#include <include/palette.h>
-#include <include/eng.h>
-#include <include/intgdi.h>
-#include <include/callback.h>
-#include "include/object.h"
-#include <internal/safe.h>
-
-#define NDEBUG
-#include <win32k/debug1.h>
+/* $Id: cursoricon.c,v 1.55 2004/05/10 17:07:20 weiden Exp $ */
+#include <w32k.h>
 
 PCURICON_OBJECT FASTCALL
 IntGetCurIconObject(PWINSTATION_OBJECT WinStaObject, HANDLE Handle)

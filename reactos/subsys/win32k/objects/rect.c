@@ -16,15 +16,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rect.c,v 1.6 2003/08/19 11:48:50 weiden Exp $ */
-#include <windows.h>
-#include <ddk/ntddk.h>
-#include <win32k/region.h>
-#include <win32k/gdiobj.h>
-#include <include/rect.h>
-
-#define NDEBUG
-#include <win32k/debug1.h>
+/* $Id: rect.c,v 1.7 2004/05/10 17:07:20 weiden Exp $ */
+#include <w32k.h>
 
 /* FUNCTIONS *****************************************************************/
 

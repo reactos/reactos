@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: xlate.c,v 1.33 2004/04/28 18:38:07 navaraf Exp $
+/* $Id: xlate.c,v 1.34 2004/05/10 17:07:17 weiden Exp $
  * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -26,20 +26,9 @@
  * REVISION HISTORY:
  *        8/20/1999: Created
  */
+#include <w32k.h>
 
 // TODO: Cache XLATEOBJs that are created by EngCreateXlate by checking if the given palettes match a cached list
-
-#include <ddk/ntddk.h>
-#include <ddk/winddi.h>
-#include <ddk/ntddvdeo.h>
-
-#include <include/object.h>
-#include <include/palette.h>
-#include "handle.h"
-#include <win32k/color.h>
-
-#define NDEBUG
-#include <win32k/debug1.h>
 
 ULONG CCMLastSourceColor = 0, CCMLastColorMatch = 0;
 

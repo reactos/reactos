@@ -16,15 +16,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: icm.c,v 1.9 2003/08/19 11:48:50 weiden Exp $ */
-
-#undef WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <ddk/ntddk.h>
-#include <win32k/icm.h>
-
-#define NDEBUG
-#include <win32k/debug1.h>
+/* $Id: icm.c,v 1.10 2004/05/10 17:07:20 weiden Exp $ */
+#include <w32k.h>
 
 BOOL
 STDCALL

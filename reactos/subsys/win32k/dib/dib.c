@@ -16,14 +16,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib.c,v 1.9 2004/04/06 21:53:48 weiden Exp $ */
-
-#include <windows.h>
-#include <ddk/winddi.h>
-#include <win32k/debug.h>
-#include <debug.h>
-#include "../eng/objects.h"
-#include "dib.h"
+/* $Id: dib.c,v 1.10 2004/05/10 17:07:16 weiden Exp $ */
+#include <w32k.h>
 
 /* Static data */
 

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.97 2004/04/09 20:03:18 navaraf Exp $
+# $Id: makefile,v 1.98 2004/05/10 17:07:18 weiden Exp $
 
 PATH_TO_TOP = ../..
 
@@ -9,6 +9,8 @@ TARGET_NAME = win32k
 TARGET_BASE = 0x0
 
 TARGET_ENTRY = _DllMain@8
+
+TARGET_PCH = w32k.h
 
 TARGET_DDKLIBS = freetype.a
 
@@ -24,11 +26,12 @@ endif
 
 TARGET_CFLAGS =\
  $(CFLAGS_DBG) \
+ -I. \
  -I$(PATH_TO_TOP)/ntoskrnl/include \
  -I$(FREETYPE_DIR)/include \
  -DUNICODE \
  -Wall -Werror \
- -D__USE_W32API -D_WIN32_WINNT=0x0500 \
+ -D__USE_W32API -D_WIN32_WINNT=0x0501 \
  -DWINVER=0x600 -D_WIN32K_
 
 TARGET_LFLAGS =\

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: keyboard.c,v 1.28 2004/04/29 21:13:16 gvg Exp $
+/* $Id: keyboard.c,v 1.29 2004/05/10 17:07:18 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -29,19 +29,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <win32k/win32k.h>
-#include <internal/safe.h>
-#include <internal/kbd.h>
-#include <include/guicheck.h>
-#include <include/msgqueue.h>
-#include <include/window.h>
-#include <include/class.h>
-#include <include/error.h>
-#include <include/object.h>
-#include <include/winsta.h>
-#include <include/tags.h>
-#include <rosrtl/string.h>
+#include <w32k.h>
 
 #define NDEBUG
 #include <debug.h>

@@ -16,32 +16,23 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: path.c,v 1.20 2004/04/24 14:21:37 weiden Exp $ */
-#undef WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <ddk/ntddk.h>
-#include <ddk/winddi.h>
-#include <win32k/brush.h>
-#include <win32k/dc.h>
-#include <win32k/path.h>
-#include <win32k/math.h>
+/* $Id: path.c,v 1.21 2004/05/10 17:07:20 weiden Exp $ */
+#include <w32k.h>
 #include <win32k/float.h>
-#include <win32k/coord.h>
-#include <win32k/line.h>
-#define _WIN32K_PATH_INTERNAL
-#include <include/object.h>
-#include <include/path.h>
-#include <include/tags.h>
-
-#include <math.h>
-#include <float.h>
-
-#define NDEBUG
-#include <win32k/debug1.h>
 
 #define NUM_ENTRIES_INITIAL 16  /* Initial size of points / flags arrays  */
 #define GROW_FACTOR_NUMER    2  /* Numerator of grow factor for the array */
 #define GROW_FACTOR_DENOM    1  /* Denominator of grow factor             */
+
+BOOL FASTCALL PATH_AddEntry (GdiPath *pPath, const POINT *pPoint, BYTE flags);
+BOOL FASTCALL PATH_AddFlatBezier (GdiPath *pPath, POINT *pt, BOOL closed);
+BOOL FASTCALL PATH_DoArcPart (GdiPath *pPath, FLOAT_POINT corners[], double angleStart, double angleEnd, BOOL addMoveTo);
+BOOL FASTCALL PATH_FlattenPath (GdiPath *pPath);
+VOID FASTCALL PATH_GetPathFromDC (PDC dc, GdiPath **ppPath);
+VOID FASTCALL PATH_NormalizePoint (FLOAT_POINT corners[], const FLOAT_POINT *pPoint, double *pX, double *pY);
+BOOL FASTCALL PATH_PathToRegion(const GdiPath *pPath, INT nPolyFillMode, HRGN *pHrgn);
+BOOL FASTCALL PATH_ReserveEntries (GdiPath *pPath, INT numEntries);
+VOID FASTCALL PATH_ScaleNormalizedPoint (FLOAT_POINT corners[], double x, double y, POINT *pPoint);
 
 
 INT FASTCALL

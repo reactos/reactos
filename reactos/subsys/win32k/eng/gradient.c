@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: gradient.c,v 1.8 2004/04/09 20:03:16 navaraf Exp $
+/* $Id: gradient.c,v 1.9 2004/05/10 17:07:17 weiden Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -26,25 +26,7 @@
  * REVISION HISTORY:
  *                 3/7/1999: Created
  */
-
-#include <ddk/winddi.h>
-#include <ddk/ntddmou.h>
-#include <include/eng.h>
-#include <include/inteng.h>
-#include <include/object.h>
-#include <include/paint.h>
-#include <include/surface.h>
-#include <include/rect.h>
-
-#include "objects.h"
-#include <include/mouse.h>
-#include "../dib/dib.h"
-
-#include "brush.h"
-#include "clip.h"
-
-//#define NDEBUG
-#include <win32k/debug1.h>
+#include <w32k.h>
 
 /* MACROS *********************************************************************/
 

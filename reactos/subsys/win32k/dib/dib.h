@@ -1,3 +1,6 @@
+#ifndef _W32K_DIB_DIB_H
+#define _W32K_DIB_DIB_H
+
 extern unsigned char notmask[2];
 extern unsigned char altnotmask[2];
 #define MASK1BPP(x) (1<<(7-((x)&7)))
@@ -118,4 +121,6 @@ BOOLEAN DIB_32BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                                  PSURFGDI DestGDI,  PSURFGDI SourceGDI,
                                  RECTL*  DestRect,  POINTL  *SourcePoint,
                                  XLATEOBJ *ColorTranslation, ULONG iTransColor);
+
+#endif /* _W32K_DIB_DIB_H */
 

@@ -19,29 +19,10 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.66 2004/04/09 20:03:20 navaraf Exp $
+ * $Id: gdiobj.c,v 1.67 2004/05/10 17:07:20 weiden Exp $
  *
  */
-
-#undef WIN32_LEAN_AND_MEAN
-#define WIN32_NO_STATUS
-#include <windows.h>
-#include <ddk/ntddk.h>
-#include <include/dce.h>
-#include <include/object.h>
-#include <win32k/gdiobj.h>
-#include <win32k/brush.h>
-#include <win32k/pen.h>
-#include <win32k/text.h>
-#include <win32k/dc.h>
-#include <win32k/bitmaps.h>
-#include <win32k/region.h>
-#include <win32k/cursoricon.h>
-#include <include/palette.h>
-#include <include/intgdi.h>
-#include <include/tags.h>
-#define NDEBUG
-#include <win32k/debug1.h>
+#include <w32k.h>
 
 /* count all gdi objects */
 #define GDI_COUNT_OBJECTS 1

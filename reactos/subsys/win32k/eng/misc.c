@@ -16,13 +16,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: misc.c,v 1.5 2004/04/09 20:03:16 navaraf Exp $ */
-#include <ddk/winddi.h>
-#include <include/dib.h>
-#include <include/object.h>
-#include <include/surface.h>
-#include "misc.h"
-#include "objects.h"
+/* $Id: misc.c,v 1.6 2004/05/10 17:07:17 weiden Exp $ */
+#include <w32k.h>
 
 BOOL STDCALL
 IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.68 2004/05/01 08:55:04 weiden Exp $
+/* $Id: mouse.c,v 1.69 2004/05/10 17:07:17 weiden Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -26,29 +26,7 @@
  *       06-06-2001  CSH  Created
  */
 /* INCLUDES ******************************************************************/
-
-#include <windows.h>
-#include <ddk/ntddk.h>
-#include <ddk/ntddmou.h>
-#include <ddk/winddi.h>
-#include <win32k/dc.h>
-#include "objects.h"
-#include "include/msgqueue.h"
-#include "include/object.h"
-#include "include/winsta.h"
-#include "include/desktop.h"
-#include "include/window.h"
-#include "include/cursoricon.h"
-#include "include/callback.h"
-#include "include/palette.h"
-#include "include/inteng.h"
-#include "include/eng.h"
-#include "include/tags.h"
-#include <include/mouse.h>
-#include <include/input.h>
-
-#define NDEBUG
-#include <debug.h>
+#include <w32k.h>
 
 /* FUNCTIONS *****************************************************************/
 

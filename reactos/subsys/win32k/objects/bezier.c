@@ -16,11 +16,9 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bezier.c,v 1.7 2004/05/10 13:35:28 weiden Exp $ */
-#include <windows.h>
-#include <ddk/ntddk.h>
-#include <math.h>
-#include <include/tags.h>
+/* $Id: bezier.c,v 1.8 2004/05/10 17:07:20 weiden Exp $ */
+
+#include <w32k.h>
 
 /******************************************************************
  * 

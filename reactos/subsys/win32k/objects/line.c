@@ -16,28 +16,10 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: line.c,v 1.29 2004/04/09 20:03:20 navaraf Exp $ */
+/* $Id: line.c,v 1.30 2004/05/10 17:07:20 weiden Exp $ */
+#include <w32k.h>
 
 // Some code from the WINE project source (www.winehq.com)
-
-#undef WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <ddk/ntddk.h>
-#include <internal/safe.h>
-#include <win32k/dc.h>
-#include <win32k/line.h>
-#include <win32k/path.h>
-#include <win32k/pen.h>
-#include <win32k/region.h>
-#include <include/error.h>
-#include <include/inteng.h>
-#include <include/object.h>
-#include <include/path.h>
-#include <include/intgdi.h>
-#include <include/tags.h>
-
-#define NDEBUG
-#include <win32k/debug1.h>
 
 
 BOOL FASTCALL

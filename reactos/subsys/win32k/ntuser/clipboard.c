@@ -24,14 +24,7 @@
  * PROGRAMER:        Filip Navara <xnavara@volny.cz>
  */
 
-#include <win32k/win32k.h>
-#include <windows.h>
-#include <internal/safe.h>
-#include <include/clipboard.h>
-#include <include/cleanup.h>
-#include <include/error.h>
-#include <include/useratom.h>
-#include <include/tags.h>
+#include <w32k.h>
 
 #define NDEBUG
 #include <debug.h>

@@ -16,17 +16,11 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: focus.c,v 1.21 2004/04/15 23:36:03 weiden Exp $
+ * $Id: focus.c,v 1.22 2004/05/10 17:07:18 weiden Exp $
  */
 
-#include <win32k/win32k.h>
-#include <include/object.h>
-#include <include/window.h>
-#include <include/desktop.h>
-#include <include/focus.h>
-#include <include/error.h>
-#include <include/winpos.h>
-#include <include/msgqueue.h>
+#include <w32k.h>
+
 #define NDEBUG
 #include <win32k/debug1.h>
 #include <debug.h>

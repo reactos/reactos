@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: paint.c,v 1.18 2004/02/24 13:27:02 weiden Exp $
+/* $Id: paint.c,v 1.19 2004/05/10 17:07:17 weiden Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -27,22 +27,7 @@
  *                 3/7/1999: Created
  */
 
-#include <ddk/winddi.h>
-#include <ddk/ntddmou.h>
-#include <include/object.h>
-#include <include/paint.h>
-#include <include/surface.h>
-#include <include/eng.h>
-
-#include "objects.h"
-#include <include/mouse.h>
-#include "../dib/dib.h"
-
-#include "brush.h"
-#include "clip.h"
-
-//#define NDEBUG
-#include <win32k/debug1.h>
+#include <w32k.h>
 
 BOOL STDCALL FillSolid(SURFOBJ *Surface, PRECTL pRect, ULONG iColor)
 {

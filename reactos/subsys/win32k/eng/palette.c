@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: palette.c,v 1.20 2003/12/20 10:31:32 navaraf Exp $
+/* $Id: palette.c,v 1.21 2004/05/10 17:07:17 weiden Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -26,14 +26,7 @@
  * REVISION HISTORY:
  *                 11/7/1999: Created
  */
-
-#include <ddk/winddi.h>
-#include <include/object.h>
-#include <include/palette.h>
-#include "handle.h"
-
-#define NDEBUG
-#include <win32k/debug1.h>
+#include <w32k.h>
 
 /*
  * @implemented

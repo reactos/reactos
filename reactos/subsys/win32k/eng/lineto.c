@@ -16,22 +16,9 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: lineto.c,v 1.32 2004/04/09 20:03:16 navaraf Exp $
+ * $Id: lineto.c,v 1.33 2004/05/10 17:07:17 weiden Exp $
  */
-
-#include <ddk/winddi.h>
-#include <ddk/ntddmou.h>
-#include <include/inteng.h>
-#include <include/eng.h>
-#include <include/dib.h>
-#include "clip.h"
-#include "objects.h"
-#include "../dib/dib.h"
-#include "misc.h"
-
-#include <include/mouse.h>
-#include <include/object.h>
-#include <include/surface.h>
+#include <w32k.h>
 
 static void FASTCALL
 TranslateRects(RECT_ENUM *RectEnum, POINTL* Translate)

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: handle.c,v 1.14 2003/11/24 21:20:34 gvg Exp $
+/* $Id: handle.c,v 1.15 2004/05/10 17:07:17 weiden Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -26,12 +26,7 @@
  * REVISION HISTORY:
  *                 29/8/1999: Created
  */
-
-#include <ddk/winddi.h>
-#include "handle.h"
-
-#define NDEBUG
-#include <win32k/debug1.h>
+#include <w32k.h>
 
 static int LastHandle = MAX_GDI_HANDLES;
 

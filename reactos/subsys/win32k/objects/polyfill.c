@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: polyfill.c,v 1.13 2004/04/09 20:03:20 navaraf Exp $
+/* $Id: polyfill.c,v 1.14 2004/05/10 17:07:20 weiden Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -26,19 +26,7 @@
  * REVISION HISTORY:
  *                 21/2/2003: Created
  */
-
-#undef WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <ddk/ntddk.h>
-#include <win32k/fillshap.h>
-#include <win32k/dc.h>
-#include <win32k/pen.h>
-#include <include/inteng.h>
-#include <include/object.h>
-#include <include/paint.h>
-
-#undef NDEBUG
-#include <win32k/debug1.h>
+#include <w32k.h>
 
 INT abs(INT nm);
 

@@ -16,10 +16,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: sort.c,v 1.2 2003/07/12 14:00:05 gvg Exp $ */
-
-#include <stdlib.h>
-#include <ddk/winddi.h>
+/* $Id: sort.c,v 1.3 2004/05/10 17:07:17 weiden Exp $ */
+#include <w32k.h>
 
 /*
  * @implemented
