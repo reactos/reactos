@@ -1,4 +1,4 @@
-/* $Id: wapi.c,v 1.11 2001/01/21 00:11:54 phreak Exp $
+/* $Id: wapi.c,v 1.12 2001/06/23 19:20:01 phreak Exp $
  * 
  * reactos/subsys/csrss/api/wapi.c
  *
@@ -13,6 +13,7 @@
 #include <ddk/ntddk.h>
 #include <ntdll/rtl.h>
 #include <csrss/csrss.h>
+#include <debug.h>
 
 #include "api.h"
 
@@ -46,6 +47,7 @@ static const CsrFunc CsrFuncs[] = {
    CsrSetConsoleMode,
    CsrCreateScreenBuffer,
    CsrSetScreenBuffer,
+   CsrSetTitle,
    0 };
 
 static void Thread_Api2(HANDLE ServerPort)
@@ -65,18 +67,18 @@ static void Thread_Api2(HANDLE ServerPort)
 					0,
 					&Reply->Header,
 					&LpcRequest.Header);
-	if (!NT_SUCCESS(Status) &&
-	    Status != STATUS_PORT_DISCONNECTED)
+	if ( !NT_SUCCESS( Status ) )
 	  {
 	     DisplayString(L"CSR: NtReplyWaitReceivePort failed\n");
 	  }
 	
-	if (LpcRequest.Header.MessageType == LPC_PORT_CLOSED ||
-	    Status == STATUS_PORT_DISCONNECTED)
+	if ( LpcRequest.Header.MessageType == LPC_PORT_CLOSED )
+
 	  {
 	     CsrFreeProcessData( LpcRequest.Header.Cid.UniqueProcess );
 	     NtClose(ServerPort);
 	     NtTerminateThread(NtCurrentThread(), STATUS_SUCCESS);
+	     continue;
 	  }
 	
 	Request = (PCSRSS_API_REQUEST)&LpcRequest;
