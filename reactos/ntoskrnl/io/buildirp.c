@@ -214,6 +214,8 @@ PIRP IoBuildSynchronousFsdRequest(ULONG MajorFunction,
      }
    
    Irp->UserBuffer = (LPVOID)Buffer;
+   Irp->UserEvent = Event;
+   Irp->UserIosb = IoStatusBlock;
    if (DeviceObject->Flags&DO_BUFFERED_IO)
      {
 	DPRINT("Doing buffer i/o\n",0);
