@@ -364,6 +364,7 @@ CmiVerifyRegistryHive(PREGISTRY_HIVE RegistryHive)
 }
 
 
+#if 0
 static NTSTATUS
 CmiPopulateHive(HANDLE FileHandle)
 {
@@ -418,6 +419,7 @@ CmiPopulateHive(HANDLE FileHandle)
 
   return Status;
 }
+#endif
 
 
 static NTSTATUS
@@ -472,7 +474,7 @@ CmiCreateNewRegFile(HANDLE FileHandle)
       return(Status);
     }
 
-#if 1
+#if 0
   if (NT_SUCCESS(Status))
     {
       CmiPopulateHive(FileHandle);
