@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.11 2001/11/20 20:34:29 ekohl Exp $
+/* $Id: create.c,v 1.12 2002/05/07 22:40:35 hbirr Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -37,7 +37,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
    KIRQL oldIrql;
    ULONG Disposition;
    
-   DPRINT("NpfsCreate(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
+   DPRINT1("NpfsCreate(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
    
    DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
    IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -251,9 +251,9 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
    InitializeListHead(&Pipe->ClientFcbListHead);
    KeInitializeSpinLock(&Pipe->FcbListLock);
 
-   Pipe->PipeType = Buffer->WriteModeMessage;
-   Pipe->PipeWriteMode = Buffer->WriteModeMessage;
-   Pipe->PipeReadMode = Buffer->ReadModeMessage;
+   Pipe->PipeType = Buffer->WriteModeMessage ? FILE_PIPE_MESSAGE_TYPE : FILE_PIPE_BYTE_STREAM_TYPE;
+   Pipe->PipeWriteMode = Buffer->WriteModeMessage ? FILE_PIPE_MESSAGE_MODE : FILE_PIPE_BYTE_STREAM_MODE;
+   Pipe->PipeReadMode = Buffer->ReadModeMessage ? FILE_PIPE_MESSAGE_MODE : FILE_PIPE_BYTE_STREAM_MODE;
    Pipe->PipeBlockMode = Buffer->NonBlocking;
    Pipe->PipeConfiguration = IoStack->Parameters.Create.Options & 0x3;
    Pipe->MaximumInstances = Buffer->MaxInstances;
@@ -339,8 +339,11 @@ NpfsClose(PDEVICE_OBJECT DeviceObject,
   PNPFS_FCB Fcb;
   PNPFS_PIPE Pipe;
   KIRQL oldIrql;
+  PLIST_ENTRY CurrentEntry;
+  PNPFS_PIPE_DATA Current;
 
-  DPRINT("NpfsClose(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
+
+  DPRINT1("NpfsClose(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
   IoStack = IoGetCurrentIrpStackLocation(Irp);
   DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -368,28 +371,71 @@ NpfsClose(PDEVICE_OBJECT DeviceObject,
    if (Fcb->PipeEnd == FILE_PIPE_SERVER_END)
     {
       /* FIXME: Clean up existing connections here ?? */
+      DPRINT("Server\n");
       Pipe->CurrentInstances--;
+      if (Fcb->PipeState == FILE_PIPE_CONNECTED_STATE)
+      {
+	   if (Fcb->OtherSide)
+	   {
+	      Fcb->OtherSide->PipeState = FILE_PIPE_CLOSING_STATE;
+	   }
+           Fcb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
+      }
     }
   Pipe->ReferenceCount--;
 
-  if ((Fcb->PipeEnd == FILE_PIPE_CLIENT_END)
-      && (Fcb->PipeState == FILE_PIPE_CONNECTED_STATE))
-    {
-      Fcb->OtherSide->PipeState = FILE_PIPE_CLOSING_STATE;
-      Fcb->OtherSide->OtherSide = NULL;
-      Fcb->OtherSide = NULL;
-      Fcb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
-    }
+  if (Fcb->PipeEnd == FILE_PIPE_CLIENT_END)
+  {
+      DPRINT("Client\n");
+      if (Fcb->PipeState == FILE_PIPE_CONNECTED_STATE)
+      {
+         if (Fcb->OtherSide)
+	 {
+	    Fcb->OtherSide->PipeState = FILE_PIPE_CLOSING_STATE;
 
-  KeAcquireSpinLock(&Pipe->FcbListLock, &oldIrql);
-  RemoveEntryList(&Fcb->FcbListEntry);
-  KeReleaseSpinLock(&Pipe->FcbListLock, oldIrql);
-
-  ExFreePool(Fcb);
+	    /* Signaling the read event. If is possible that an other
+	     * thread waits of read data.
+	     */
+            KeSetEvent(&Fcb->OtherSide->ReadEvent, IO_NO_INCREMENT, FALSE);
+	 }
+         Fcb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
+      }
+  }
+  
   FileObject->FsContext = NULL;
 
   if (Pipe->ReferenceCount == 0)
     {
+      KeAcquireSpinLock(&Pipe->FcbListLock, &oldIrql);
+      if (Fcb->OtherSide)
+      {
+         RemoveEntryList(&Fcb->OtherSide->FcbListEntry);
+      }
+      RemoveEntryList(&Fcb->FcbListEntry);
+      KeReleaseSpinLock(&Pipe->FcbListLock, oldIrql);
+      if (Fcb->OtherSide)
+      {  
+	 KeAcquireSpinLock(&Fcb->OtherSide->DataListLock, &oldIrql);
+	 while (!IsListEmpty(&Fcb->OtherSide->DataListHead))
+	 {
+	     CurrentEntry = RemoveHeadList(&Fcb->OtherSide->DataListHead);
+	     Current = CONTAINING_RECORD(CurrentEntry, NPFS_PIPE_DATA, ListEntry);
+
+	     NpfsFreePipeData(Current);
+	 }
+         KeReleaseSpinLock(&Fcb->OtherSide->DataListLock, oldIrql);
+         ExFreePool(Fcb->OtherSide);
+      }
+
+      KeAcquireSpinLock(&Fcb->DataListLock, &oldIrql);
+      while (!IsListEmpty(&Fcb->DataListHead))
+      {
+         CurrentEntry = RemoveHeadList(&Fcb->DataListHead);
+	 Current = CONTAINING_RECORD(CurrentEntry, NPFS_PIPE_DATA, ListEntry);
+	 NpfsFreePipeData(Current);
+      }
+      KeReleaseSpinLock(&Fcb->DataListLock, oldIrql);
+      ExFreePool(Fcb);
       RtlFreeUnicodeString(&Pipe->PipeName);
       RemoveEntryList(&Pipe->PipeListEntry);
       ExFreePool(Pipe);
