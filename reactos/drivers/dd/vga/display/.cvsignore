@@ -3,3 +3,4 @@ vgaddi.coff
 *.o
 *.dll
 *.map
+*.tmp
