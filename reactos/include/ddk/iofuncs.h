@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.26 2001/09/16 13:19:31 chorns Exp $ */
+/* $Id: iofuncs.h,v 1.27 2001/12/05 12:13:12 ekohl Exp $ */
 
 /* --- EXPORTED BY NTOSKRNL --- */
 
@@ -1067,14 +1067,14 @@ IoUnregisterFileSystem (
 VOID
 STDCALL
 IoUnregisterFsRegistrationChange (
-	DWORD	Unknown0,
-	DWORD	Unknown1
+	IN	PDRIVER_OBJECT		DriverObject,
+	IN	PFSDNOTIFICATIONPROC	FSDNotificationProc
 	);
 #endif // (_WIN32_WINNT >= 0x0400)
 VOID
 STDCALL
 IoUnregisterShutdownNotification (
-	PDEVICE_OBJECT	DeviceObject
+	IN	PDEVICE_OBJECT	DeviceObject
 	);
 VOID
 STDCALL

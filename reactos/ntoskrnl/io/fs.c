@@ -1,4 +1,4 @@
-/* $Id: fs.c,v 1.19 2001/11/02 22:22:33 hbirr Exp $
+/* $Id: fs.c,v 1.20 2001/12/05 12:14:13 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -22,21 +22,35 @@
 
 typedef struct
 {
-   PDEVICE_OBJECT DeviceObject;
-   LIST_ENTRY Entry;
+  PDEVICE_OBJECT DeviceObject;
+  LIST_ENTRY Entry;
 } FILE_SYSTEM_OBJECT;
+
+typedef struct
+{
+  LIST_ENTRY FsChangeNotifyList;
+  PDRIVER_OBJECT DriverObject;
+  PFSDNOTIFICATIONPROC FSDNotificationProc;
+}  FS_CHANGE_NOTIFY_ENTRY, *PFS_CHANGE_NOTIFY_ENTRY;
 
 /* GLOBALS ******************************************************************/
 
 static KSPIN_LOCK FileSystemListLock;
 static LIST_ENTRY FileSystemListHead;
 
-#define TAG_FILE_SYSTEM     TAG('F', 'S', 'Y', 'S')
+static KSPIN_LOCK FsChangeNotifyListLock;
+static LIST_ENTRY FsChangeNotifyListHead;
+
+#define TAG_FILE_SYSTEM       TAG('F', 'S', 'Y', 'S')
+#define TAG_FS_CHANGE_NOTIFY  TAG('F', 'S', 'C', 'N')
+
+
+static VOID IopNotifyFileSystemChange(PDEVICE_OBJECT DeviceObject,
+				      BOOLEAN DriverActive);
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS
-STDCALL
+NTSTATUS STDCALL
 NtFsControlFile (
 	IN	HANDLE			DeviceHandle,
 	IN	HANDLE			EventHandle	OPTIONAL, 
@@ -118,8 +132,11 @@ NtFsControlFile (
 
 VOID IoInitFileSystemImplementation(VOID)
 {
-   InitializeListHead(&FileSystemListHead);
-   KeInitializeSpinLock(&FileSystemListLock);
+  InitializeListHead(&FileSystemListHead);
+  KeInitializeSpinLock(&FileSystemListLock);
+
+  InitializeListHead(&FsChangeNotifyListHead);
+  KeInitializeSpinLock(&FsChangeNotifyListLock);
 }
 
 VOID IoShutdownRegisteredFileSystems(VOID)
@@ -246,7 +263,8 @@ NTSTATUS IoTryToMountStorageDevice(PDEVICE_OBJECT DeviceObject)
    return(STATUS_UNRECOGNIZED_VOLUME);
 }
 
-VOID STDCALL IoRegisterFileSystem(PDEVICE_OBJECT DeviceObject)
+VOID STDCALL
+IoRegisterFileSystem(PDEVICE_OBJECT DeviceObject)
 {
    FILE_SYSTEM_OBJECT* fs;
    
@@ -256,12 +274,14 @@ VOID STDCALL IoRegisterFileSystem(PDEVICE_OBJECT DeviceObject)
 			      TAG_FILE_SYSTEM);
    assert(fs!=NULL);
    
-   fs->DeviceObject = DeviceObject;   
+   fs->DeviceObject = DeviceObject;
    ExInterlockedInsertTailList(&FileSystemListHead,&fs->Entry,
 			       &FileSystemListLock);
+   IopNotifyFileSystemChange(DeviceObject, TRUE);
 }
 
-VOID STDCALL IoUnregisterFileSystem(PDEVICE_OBJECT DeviceObject)
+VOID STDCALL
+IoUnregisterFileSystem(PDEVICE_OBJECT DeviceObject)
 {
    KIRQL oldlvl;
    PLIST_ENTRY current_entry;
@@ -279,6 +299,7 @@ VOID STDCALL IoUnregisterFileSystem(PDEVICE_OBJECT DeviceObject)
 	     RemoveEntryList(current_entry);
 	     ExFreePool(current);
 	     KeReleaseSpinLock(&FileSystemListLock,oldlvl);
+	     IopNotifyFileSystemChange(DeviceObject, FALSE);
 	     return;
 	  }
 	current_entry = current_entry->Flink;
@@ -303,11 +324,8 @@ VOID STDCALL IoUnregisterFileSystem(PDEVICE_OBJECT DeviceObject)
  * NOTE
  * 	From Bo Branten's ntifs.h v13.
  */
-PDEVICE_OBJECT
-STDCALL
-IoGetBaseFileSystemDeviceObject (
-	IN	PFILE_OBJECT	FileObject
-	)
+PDEVICE_OBJECT STDCALL
+IoGetBaseFileSystemDeviceObject(IN PFILE_OBJECT FileObject)
 {
 	PDEVICE_OBJECT	DeviceObject = NULL;
 	PVPB		Vpb = NULL;
@@ -347,27 +365,76 @@ IoGetBaseFileSystemDeviceObject (
 }
 
 
-NTSTATUS
-STDCALL
-IoRegisterFsRegistrationChange (
-	IN	PDRIVER_OBJECT		DriverObject,
-	IN	PFSDNOTIFICATIONPROC	FSDNotificationProc
-	)
+static VOID
+IopNotifyFileSystemChange(PDEVICE_OBJECT DeviceObject,
+			  BOOLEAN DriverActive)
 {
-	UNIMPLEMENTED;
-	return (STATUS_NOT_IMPLEMENTED);
+  PFS_CHANGE_NOTIFY_ENTRY ChangeEntry;
+  PLIST_ENTRY Entry;
+  KIRQL oldlvl;
+
+  KeAcquireSpinLock(&FsChangeNotifyListLock,&oldlvl);
+  Entry = FsChangeNotifyListHead.Flink;
+  while (Entry != &FsChangeNotifyListHead)
+    {
+      ChangeEntry = CONTAINING_RECORD(Entry, FS_CHANGE_NOTIFY_ENTRY, FsChangeNotifyList);
+
+      (ChangeEntry->FSDNotificationProc)(DeviceObject, DriverActive);
+
+      Entry = Entry->Flink;
+    }
+  KeReleaseSpinLock(&FsChangeNotifyListLock,oldlvl);
 }
 
 
-VOID
-STDCALL
-IoUnregisterFsRegistrationChange (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	)
+NTSTATUS STDCALL
+IoRegisterFsRegistrationChange(IN PDRIVER_OBJECT DriverObject,
+			       IN PFSDNOTIFICATIONPROC FSDNotificationProc)
 {
-	UNIMPLEMENTED;
+  PFS_CHANGE_NOTIFY_ENTRY Entry;
+
+  Entry = ExAllocatePoolWithTag(NonPagedPool,
+				sizeof(FS_CHANGE_NOTIFY_ENTRY),
+				TAG_FS_CHANGE_NOTIFY);
+  if (Entry == NULL)
+    return(STATUS_INSUFFICIENT_RESOURCES);
+
+  Entry->DriverObject = DriverObject;
+  Entry->FSDNotificationProc = FSDNotificationProc;
+
+  ExInterlockedInsertHeadList(&FsChangeNotifyListHead,
+			      &Entry->FsChangeNotifyList,
+			      &FsChangeNotifyListLock);
+
+  return(STATUS_SUCCESS);
 }
 
+
+VOID STDCALL
+IoUnregisterFsRegistrationChange(IN PDRIVER_OBJECT DriverObject,
+				 IN PFSDNOTIFICATIONPROC FSDNotificationProc)
+{
+  PFS_CHANGE_NOTIFY_ENTRY ChangeEntry;
+  PLIST_ENTRY Entry;
+  KIRQL oldlvl;
+
+  Entry = FsChangeNotifyListHead.Flink;
+  while (Entry != &FsChangeNotifyListHead)
+    {
+      ChangeEntry = CONTAINING_RECORD(Entry, FS_CHANGE_NOTIFY_ENTRY, FsChangeNotifyList);
+      if (ChangeEntry->DriverObject == DriverObject &&
+	  ChangeEntry->FSDNotificationProc == FSDNotificationProc)
+	{
+	  KeAcquireSpinLock(&FsChangeNotifyListLock,&oldlvl);
+	  RemoveEntryList(Entry);
+	  KeReleaseSpinLock(&FsChangeNotifyListLock,oldlvl);
+
+	  ExFreePool(Entry);
+	  return;
+	}
+
+      Entry = Entry->Flink;
+    }
+}
 
 /* EOF */
