@@ -30,7 +30,7 @@ DBG := 0
 #
 # Whether to compile with optimizations
 #
-OPTIMIZED := 1
+OPTIMIZED := 0
 
 #
 # Whether to compile a multiprocessor or single processor version
@@ -45,7 +45,7 @@ ACPI := 0
 #
 # whether to use a 3GB User, 1GB Kernel memory map
 #
-3GB := 0
+3GB := 1
 
 #
 # Which version of NDIS do we support up to?
