@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.41 2004/08/28 22:22:39 navaraf Exp $
+/* $Id: semgr.c,v 1.42 2004/08/29 15:50:53 weiden Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -12,7 +12,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 #define TAG_SXPT   TAG('S', 'X', 'P', 'T')
