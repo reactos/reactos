@@ -228,7 +228,6 @@ BOOL vgaHLine(INT x, INT y, INT len, UCHAR c)
   ULONG pre1, i;
   ULONG orgpre1, orgx, midpre1;
   ULONG ileftpix, imidpix, irightpix;
-  double leftpix, midpix, rightpix, temp;
 
   orgx=x;
 
@@ -239,13 +238,9 @@ BOOL vgaHLine(INT x, INT y, INT len, UCHAR c)
   } else {
 
     // Calculate the left mask pixels, middle bytes and right mask pixel
-    leftpix = 8-mod(x, 8);
-    rightpix = mod(x+len, 8);
-    midpix = (len-leftpix-rightpix) / 8;
-
-    ileftpix = leftpix;
-    irightpix = rightpix;
-    imidpix = midpix;
+    ileftpix = 8-mod(x, 8);
+    irightpix = mod(x+len, 8);
+    imidpix = (len-ileftpix-irightpix) / 8;
 
     pre1=xconv[x-(8-ileftpix)]+y80[y];
     orgpre1=pre1;
