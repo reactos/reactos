@@ -4,6 +4,9 @@
 <directory name="dd">
 	<xi:include href="dd/directory.xml" />
 </directory>
+<directory name="fs">
+	<xi:include href="fs/directory.xml" />
+</directory>
 <directory name="lib">
 	<xi:include href="lib/directory.xml" />
 </directory>
