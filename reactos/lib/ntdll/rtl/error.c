@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.8 2001/08/03 17:18:50 ekohl Exp $
+/* $Id: error.c,v 1.9 2001/11/25 15:21:09 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -881,7 +881,9 @@ RtlNtStatusToDosErrorNoTeb(NTSTATUS Status)
 			if (!ret)
 				ret = Status;  /* 0 means 1:1 mapping */
 			else if (ret == ERROR_MR_MID_NOT_FOUND)
-				DbgPrint("RTL: RtlNtStatusToDosErrorNoTeb(0x%lx): no valid W32 error mapping\n", Status);
+			  {
+			    DbgPrint("RTL: RtlNtStatusToDosErrorNoTeb(0x%lx): no valid W32 error mapping\n", Status);
+			  }
 			return ret;
 		}
 		Table++;
@@ -894,7 +896,6 @@ RtlNtStatusToDosErrorNoTeb(NTSTATUS Status)
 		return LOWORD(Status);
 
 	DbgPrint("RTL: RtlNtStatusToDosErrorNoTeb(0x%lx): no valid W32 error mapping\n", Status);
-
 	return ERROR_MR_MID_NOT_FOUND;
 }
 

@@ -1,4 +1,4 @@
-/* $Id: queue.c,v 1.3 2000/12/28 03:38:07 dwelch Exp $
+/* $Id: queue.c,v 1.4 2001/11/25 15:21:10 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -29,6 +29,14 @@ EiEnqueueMessagePort (IN OUT	PEPORT		Port,
   Port->QueueLength++;
 }
 
+VOID STDCALL
+EiEnqueueMessageAtHeadPort (IN OUT	PEPORT		Port,
+			    IN	PQUEUEDMESSAGE	Message)
+{
+  InsertTailList (&Port->QueueListHead,
+		  &Message->QueueListEntry);
+  Port->QueueLength++;
+}
 
 PQUEUEDMESSAGE STDCALL
 EiDequeueMessagePort (IN OUT	PEPORT	Port)

@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.48 2001/10/29 02:39:38 dwelch Exp $
+/* $Id: npool.c,v 1.49 2001/11/25 15:21:11 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -35,9 +35,8 @@
  * Put each block in its own range of pages and position the block at the
  * end of the range so any accesses beyond the end of block are to invalid
  * memory locations. 
- * FIXME: Not implemented yet.
  */
-/* #define WHOLE_PAGE_ALLOCATIONS */
+//#define WHOLE_PAGE_ALLOCATIONS
 
 #ifdef ENABLE_VALIDATE_POOL
 #define VALIDATE_POOL validate_kernel_pool()
@@ -70,6 +69,11 @@ typedef struct _BLOCK_HDR
   BOOLEAN Dumped;
 } BLOCK_HDR;
 
+PVOID STDCALL 
+ExAllocateWholePageBlock(ULONG Size);
+VOID STDCALL
+ExFreeWholePageBlock(PVOID Addr);
+
 /* GLOBALS *****************************************************************/
 
 /*
@@ -87,6 +91,7 @@ static LIST_ENTRY FreeBlockListHead;
  */
 static LIST_ENTRY UsedBlockListHead;
 
+#ifndef WHOLE_PAGE_ALLOCATIONS
 /*
  * Count of free blocks
  */
@@ -96,6 +101,7 @@ static ULONG EiNrFreeBlocks = 0;
  * Count of used blocks
  */
 static ULONG EiNrUsedBlocks = 0;
+#endif
 
 /*
  * Lock that protects the non-paged pool data structures
@@ -117,6 +123,9 @@ ULONG EiUsedNonPagedPool = 0;
  */
 PVOID
 MiAllocNonPagedPoolRegion(unsigned int nr_pages);
+
+VOID
+MiFreeNonPagedPoolRegion(PVOID Addr, ULONG Count, BOOLEAN Free);
 
 #ifdef TAG_STATISTICS_TRACKING
 #define TAG_HASH_TABLE_SIZE       (1024)
@@ -354,6 +363,8 @@ MiDebugDumpNonPagedPool(BOOLEAN NewOnly)
    DbgPrint("***************** Dump Complete ***************\n");
    KeReleaseSpinLock(&MmNpoolLock, oldIrql);
 }
+
+#ifndef WHOLE_PAGE_ALLOCATIONS
 
 #ifdef ENABLE_VALIDATE_POOL
 static void validate_free_list(void)
@@ -813,6 +824,8 @@ static void* take_block(BLOCK_HDR* current, unsigned int size,
    return(block_to_address(current));
 }
 
+#endif /* not WHOLE_PAGE_ALLOCATIONS */
+
 VOID STDCALL ExFreePool (PVOID block)
 /*
  * FUNCTION: Releases previously allocated memory
@@ -820,11 +833,13 @@ VOID STDCALL ExFreePool (PVOID block)
  *        block = block to free
  */
 {
-   BLOCK_HDR* blk=address_to_block(block);
+#ifdef WHOLE_PAGE_ALLOCATIONS /* WHOLE_PAGE_ALLOCATIONS */
    KIRQL oldIrql;
 
-   if( !block )
-     return;
+   if (block == NULL)
+     {
+       return;
+     }
 
    DPRINT("freeing block %x\n",blk);
    
@@ -832,7 +847,27 @@ VOID STDCALL ExFreePool (PVOID block)
             ((PULONG)&block)[-1]);
    
    KeAcquireSpinLock(&MmNpoolLock, &oldIrql);
-      
+
+   ExFreeWholePageBlock(block);
+   KeReleaseSpinLock(&MmNpoolLock, oldIrql);      
+
+#else /* not WHOLE_PAGE_ALLOCATIONS */
+
+   BLOCK_HDR* blk=address_to_block(block);
+   KIRQL oldIrql;
+
+   if (block == NULL)
+     {
+       return;
+     }
+
+   DPRINT("freeing block %x\n",blk);
+   
+   POOL_TRACE("ExFreePool(block %x), size %d, caller %x\n",block,blk->size,
+            ((PULONG)&block)[-1]);
+   
+   KeAcquireSpinLock(&MmNpoolLock, &oldIrql);
+
    VALIDATE_POOL;
    
    if (blk->Magic != BLOCK_HDR_USED_MAGIC)
@@ -861,16 +896,40 @@ VOID STDCALL ExFreePool (PVOID block)
    merge_free_block(blk);
 
    EiUsedNonPagedPool = EiUsedNonPagedPool - blk->Size;
-   EiFreeNonPagedPool = EiFreeNonPagedPool + blk->Size;
-   
+   EiFreeNonPagedPool = EiFreeNonPagedPool + blk->Size;   
    VALIDATE_POOL;
-   
    KeReleaseSpinLock(&MmNpoolLock, oldIrql);
+
+#endif /* WHOLE_PAGE_ALLOCATIONS */
 }
 
 PVOID STDCALL 
 ExAllocateNonPagedPoolWithTag(ULONG Type, ULONG Size, ULONG Tag, PVOID Caller)
 {
+#ifdef WHOLE_PAGE_ALLOCATIONS
+   PVOID block;
+   KIRQL oldIrql;
+   
+   POOL_TRACE("ExAllocatePool(NumberOfBytes %d) caller %x ",
+	      Size,Caller);
+   
+   KeAcquireSpinLock(&MmNpoolLock, &oldIrql);
+   
+   /*
+    * accomodate this useful idiom
+    */
+   if (Size == 0)
+     {
+	POOL_TRACE("= NULL\n");
+	KeReleaseSpinLock(&MmNpoolLock, oldIrql);
+	return(NULL);
+     }
+
+   block = ExAllocateWholePageBlock(Size);
+   KeReleaseSpinLock(&MmNpoolLock, oldIrql);
+   return(block);
+
+#else /* not WHOLE_PAGE_ALLOCATIONS */
    BLOCK_HDR* current = NULL;
    PLIST_ENTRY current_entry;
    PVOID block;
@@ -928,7 +987,57 @@ ExAllocateNonPagedPoolWithTag(ULONG Type, ULONG Size, ULONG Tag, PVOID Caller)
    memset(block, 0, Size);
    KeReleaseSpinLock(&MmNpoolLock, oldIrql);
    return(block);
+#endif /* WHOLE_PAGE_ALLOCATIONS */
 }
 
+#ifdef WHOLE_PAGE_ALLOCATIONS
+
+PVOID STDCALL 
+ExAllocateWholePageBlock(ULONG UserSize)
+{
+  PVOID Address;
+  PVOID Page;
+  ULONG i;
+  ULONG Size;
+  ULONG NrPages;
+
+  Size = sizeof(ULONG) + UserSize;
+  NrPages = ROUND_UP(Size, PAGESIZE) / PAGESIZE;
+
+  Address = MiAllocNonPagedPoolRegion(NrPages + 1);
+
+  for (i = 0; i < NrPages; i++)
+    {
+      Page = MmAllocPage(0);
+      if (Page == NULL)
+	{
+	  KeBugCheck(0);
+	}
+      MmCreateVirtualMapping(NULL, 
+			     Address + (i * PAGESIZE),
+			     PAGE_READWRITE | PAGE_SYSTEM,
+			     (ULONG)Page);
+    }
+
+  *((PULONG)((ULONG)Address + (NrPages * PAGESIZE) - Size)) = NrPages;
+  return((PVOID)((ULONG)Address + (NrPages * PAGESIZE) - UserSize));
+}
+
+VOID STDCALL
+ExFreeWholePageBlock(PVOID Addr)
+{
+  ULONG NrPages;
+  
+  if ((ULONG)Addr < kernel_pool_base ||
+      (ULONG)Addr >= (kernel_pool_base + NONPAGED_POOL_SIZE))
+    {
+      DbgPrint("Block %x found outside pool area\n", Addr);
+      KeBugCheck(0);
+    }
+  NrPages = *(PULONG)((ULONG)Addr - sizeof(ULONG));
+  MiFreeNonPagedPoolRegion((PVOID)PAGE_ROUND_DOWN((ULONG)Addr), NrPages, TRUE);
+}
+
+#endif /* WHOLE_PAGE_ALLOCATIONS */
 
 /* EOF */

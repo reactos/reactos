@@ -1,4 +1,4 @@
-/* $Id: kmap.c,v 1.10 2001/05/05 19:13:10 chorns Exp $
+/* $Id: kmap.c,v 1.11 2001/11/25 15:21:11 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -92,7 +92,7 @@ MiCopyFromUserPage(ULONG DestPhysPage, PVOID SourceAddress)
   return(STATUS_SUCCESS);
 }
 
-PVOID 
+PVOID
 ExAllocatePageWithPhysPage(ULONG PhysPage)
 {
    KIRQL oldlvl;
@@ -101,25 +101,25 @@ ExAllocatePageWithPhysPage(ULONG PhysPage)
    NTSTATUS Status;
 
    KeAcquireSpinLock(&AllocMapLock, &oldlvl);
-   for (i=1; i<ALLOC_MAP_SIZE;i++)
+   for (i = 1; i < ALLOC_MAP_SIZE; i++)
      {
-	if (!test_bit(i%32,&AllocMap[i/32]))
-	  {
-	     DPRINT("i %x\n",i);
-	     set_bit(i%32,&AllocMap[i/32]);
-	     addr = (ULONG)(NonPagedPoolBase + (i*PAGESIZE));
-	     Status = MmCreateVirtualMapping(NULL, 
-					     (PVOID)addr, 
-					     PAGE_READWRITE | PAGE_SYSTEM, 
-					     PhysPage);
-	     if (!NT_SUCCESS(Status))
-	       {
-		  DbgPrint("Unable to create virtual mapping\n");
-		  KeBugCheck(0);
-	       }
-	     KeReleaseSpinLock(&AllocMapLock, oldlvl);
-	     return((PVOID)addr);
-	  }
+       if (!test_bit(i % 32, &AllocMap[i / 32]))
+	 {
+	    DPRINT("i %x\n",i);
+	    set_bit(i % 32, &AllocMap[i / 32]);
+	    addr = (ULONG)(NonPagedPoolBase + (i*PAGESIZE));
+	    Status = MmCreateVirtualMapping(NULL, 
+					    (PVOID)addr, 
+					    PAGE_READWRITE | PAGE_SYSTEM, 
+					    PhysPage);
+	    if (!NT_SUCCESS(Status))
+	      {
+		DbgPrint("Unable to create virtual mapping\n");
+		KeBugCheck(0);
+	      }
+	    KeReleaseSpinLock(&AllocMapLock, oldlvl);
+	    return((PVOID)addr);
+	 }
      }
    KeReleaseSpinLock(&AllocMapLock, oldlvl);
    return(NULL);
@@ -130,6 +130,23 @@ MmInitKernelMap(PVOID BaseAddress)
 {
    NonPagedPoolBase = BaseAddress;
    KeInitializeSpinLock(&AllocMapLock);
+}
+
+VOID
+MiFreeNonPagedPoolRegion(PVOID Addr, ULONG Count, BOOLEAN Free)
+{
+  ULONG i;
+  ULONG Base = (Addr - NonPagedPoolBase) / PAGESIZE;
+
+  for (i = 0; i < Count; i++)
+    {
+      clear_bit((Base + i) % 32, &AllocMap[(Base + i) / 32]);
+      MmDeleteVirtualMapping(NULL, 
+			     Addr + (i * PAGESIZE), 
+			     Free, 
+			     NULL, 
+			     NULL);
+    }
 }
 
 PVOID
@@ -161,7 +178,7 @@ MiAllocNonPagedPoolRegion(ULONG nr_pages)
 		    {
 		       set_bit(j%32,&AllocMap[j/32]);
 		    }
-      DPRINT("returning %x\n",((start*PAGESIZE)+NonPagedPoolBase));
+		  DPRINT("returning %x\n",((start*PAGESIZE)+NonPagedPoolBase));
 		  return(((start*PAGESIZE)+NonPagedPoolBase));
 	       }
 	  }

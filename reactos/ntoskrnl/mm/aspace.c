@@ -1,4 +1,4 @@
-/* $Id: aspace.c,v 1.6 2001/03/07 16:48:43 dwelch Exp $
+/* $Id: aspace.c,v 1.7 2001/11/25 15:21:11 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -29,17 +29,31 @@ STATIC MADDRESS_SPACE KernelAddressSpace;
 VOID 
 MmLockAddressSpace(PMADDRESS_SPACE AddressSpace)
 {
-   (VOID)KeWaitForMutexObject(&AddressSpace->Lock,
-			      0,
-			      KernelMode,
-			      FALSE,
-			      NULL);   
+  /*
+   * Don't bother with locking if we are the first thread.
+   */
+  if (KeGetCurrentThread() == NULL)
+    {
+      return;
+    }
+  (VOID)KeWaitForMutexObject(&AddressSpace->Lock,
+			     0,
+			     KernelMode,
+			     FALSE,
+			     NULL);   
 }
 
 VOID 
 MmUnlockAddressSpace(PMADDRESS_SPACE AddressSpace)
 {
-   KeReleaseMutex(&AddressSpace->Lock, FALSE);
+  /*
+   * Don't bother locking if we are the first thread.
+   */
+  if (KeGetCurrentThread() == NULL)
+    {
+      return;
+    }
+  KeReleaseMutex(&AddressSpace->Lock, FALSE);
 }
 
 VOID 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.108 2001/11/02 09:09:50 ekohl Exp $
+/* $Id: main.c,v 1.109 2001/11/25 15:21:10 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -960,7 +960,7 @@ ExpInitializeExecutive(VOID)
   KeInit2();
   
   KeLowerIrql(PASSIVE_LEVEL);
-  
+
   ObInit();
   PiInitProcessManager();
   
@@ -991,8 +991,10 @@ ExpInitializeExecutive(VOID)
 	}
       /* Allocate a stack for use when booting the processor */
       /* FIXME: The nonpaged memory for the stack is not released after use */
-      ProcessorStack = ExAllocatePool(NonPagedPool, MM_STACK_SIZE) + MM_STACK_SIZE;
-      Ki386InitialStackArray[((int)KeNumberProcessors)] = (PVOID)(ProcessorStack - MM_STACK_SIZE);
+      ProcessorStack = 
+	ExAllocatePool(NonPagedPool, MM_STACK_SIZE) + MM_STACK_SIZE;
+      Ki386InitialStackArray[((int)KeNumberProcessors)] = 
+	(PVOID)(ProcessorStack - MM_STACK_SIZE);
       HalInitializeProcessor(KeNumberProcessors, ProcessorStack);
       KeNumberProcessors++;
     }
@@ -1027,8 +1029,6 @@ ExpInitializeExecutive(VOID)
   
   /* Report all resources used by hal */
   HalReportResourceUsage();
-  
-//  DumpBIOSMemoryMap();
   
   /*
    * Initalize services loaded at boot time
@@ -1162,10 +1162,6 @@ ExpInitializeExecutive(VOID)
    *  - set dos system path, dos device map, etc.
    */
   InitSystemSharedUserPage ((PUCHAR)KeLoaderBlock.CommandLine);
-
-#if 0
-  SEHTest();
-#endif
 
   /*
    *  Launch initial process

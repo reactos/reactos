@@ -237,16 +237,17 @@ typedef struct
 
 typedef struct
 {
-   HANDLE     ConsoleHandle;
-   SMALL_RECT ScrollRectangle;
-   BOOLEAN    UseClipRectangle;
-	 SMALL_RECT ClipRectangle;
-	 COORD      DestinationOrigin;
-   CHAR_INFO  Fill;
+  HANDLE     ConsoleHandle;
+  SMALL_RECT ScrollRectangle;
+  BOOLEAN    UseClipRectangle;
+  SMALL_RECT ClipRectangle;
+  COORD      DestinationOrigin;
+  CHAR_INFO  Fill;
 } CSRSS_SCROLL_CONSOLE_SCREEN_BUFFER_REQUEST, *PCSRSS_SCROLL_CONSOLE_SCREEN_BUFFER_REQUEST;
 
 
-#define CSRSS_MAX_WRITE_CONSOLE_REQUEST       (MAX_MESSAGE_DATA - sizeof( ULONG ) - sizeof( CSRSS_WRITE_CONSOLE_REQUEST))
+#define CSRSS_MAX_WRITE_CONSOLE_REQUEST       \
+      (MAX_MESSAGE_DATA - sizeof(ULONG) - sizeof(CSRSS_WRITE_CONSOLE_REQUEST))
 
 #define CSRSS_MAX_SET_TITLE_REQUEST           (MAX_MESSAGE_DATA - sizeof( HANDLE ) - sizeof( DWORD ) - sizeof( ULONG ) - sizeof( LPC_MESSAGE_HEADER ))
 
@@ -286,60 +287,63 @@ typedef struct
 #define CSRSS_FLUSH_INPUT_BUFFER            (0x18)
 #define CSRSS_SCROLL_CONSOLE_SCREEN_BUFFER  (0x19)
 
+/* Keep in sync with definition below. */
+#define CSRSS_REQUEST_HEADER_SIZE (sizeof(LPC_MESSAGE_HEADER) + sizeof(ULONG))
 
 typedef struct
 {
-   LPC_MESSAGE_HEADER Header;
-   ULONG Type;
-   union
-     {
-	CSRSS_CREATE_PROCESS_REQUEST CreateProcessRequest;
-	CSRSS_CONNECT_PROCESS_REQUEST ConnectRequest;
-	CSRSS_WRITE_CONSOLE_REQUEST WriteConsoleRequest;
-	CSRSS_READ_CONSOLE_REQUEST ReadConsoleRequest;
-	CSRSS_SCREEN_BUFFER_INFO_REQUEST ScreenBufferInfoRequest;
-	CSRSS_SET_CURSOR_REQUEST SetCursorRequest;
-	CSRSS_FILL_OUTPUT_REQUEST FillOutputRequest;
-	CSRSS_READ_INPUT_REQUEST ReadInputRequest;
-	CSRSS_WRITE_CONSOLE_OUTPUT_CHAR_REQUEST WriteConsoleOutputCharRequest;
-	CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB_REQUEST WriteConsoleOutputAttribRequest;
-  CSRSS_FILL_OUTPUT_ATTRIB_REQUEST FillOutputAttribRequest;
-	CSRSS_SET_CURSOR_INFO_REQUEST SetCursorInfoRequest;
-	CSRSS_GET_CURSOR_INFO_REQUEST GetCursorInfoRequest;
-	CSRSS_SET_ATTRIB_REQUEST SetAttribRequest;
-	CSRSS_SET_CONSOLE_MODE_REQUEST SetConsoleModeRequest;
-	CSRSS_GET_CONSOLE_MODE_REQUEST GetConsoleModeRequest;
-	CSRSS_CREATE_SCREEN_BUFFER_REQUEST CreateScreenBufferRequest;
-	CSRSS_SET_ACTIVE_SCREEN_BUFFER_REQUEST SetActiveScreenBufferRequest;
-  CSRSS_SET_TITLE_REQUEST SetTitleRequest;
-  CSRSS_GET_TITLE_REQUEST GetTitleRequest;
-  CSRSS_WRITE_CONSOLE_OUTPUT_REQUEST WriteConsoleOutputRequest;
-  CSRSS_FLUSH_INPUT_BUFFER_REQUEST FlushInputBufferRequest;
-  CSRSS_SCROLL_CONSOLE_SCREEN_BUFFER_REQUEST ScrollConsoleScreenBufferRequest;
-     } Data;
+  LPC_MESSAGE_HEADER Header;
+  ULONG Type;
+  union
+  {
+    CSRSS_CREATE_PROCESS_REQUEST CreateProcessRequest;
+    CSRSS_CONNECT_PROCESS_REQUEST ConnectRequest;
+    CSRSS_WRITE_CONSOLE_REQUEST WriteConsoleRequest;
+    CSRSS_READ_CONSOLE_REQUEST ReadConsoleRequest;
+    CSRSS_SCREEN_BUFFER_INFO_REQUEST ScreenBufferInfoRequest;
+    CSRSS_SET_CURSOR_REQUEST SetCursorRequest;
+    CSRSS_FILL_OUTPUT_REQUEST FillOutputRequest;
+    CSRSS_READ_INPUT_REQUEST ReadInputRequest;
+    CSRSS_WRITE_CONSOLE_OUTPUT_CHAR_REQUEST WriteConsoleOutputCharRequest;
+    CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB_REQUEST WriteConsoleOutputAttribRequest;
+    CSRSS_FILL_OUTPUT_ATTRIB_REQUEST FillOutputAttribRequest;
+    CSRSS_SET_CURSOR_INFO_REQUEST SetCursorInfoRequest;
+    CSRSS_GET_CURSOR_INFO_REQUEST GetCursorInfoRequest;
+    CSRSS_SET_ATTRIB_REQUEST SetAttribRequest;
+    CSRSS_SET_CONSOLE_MODE_REQUEST SetConsoleModeRequest;
+    CSRSS_GET_CONSOLE_MODE_REQUEST GetConsoleModeRequest;
+    CSRSS_CREATE_SCREEN_BUFFER_REQUEST CreateScreenBufferRequest;
+    CSRSS_SET_ACTIVE_SCREEN_BUFFER_REQUEST SetActiveScreenBufferRequest;
+    CSRSS_SET_TITLE_REQUEST SetTitleRequest;
+    CSRSS_GET_TITLE_REQUEST GetTitleRequest;
+    CSRSS_WRITE_CONSOLE_OUTPUT_REQUEST WriteConsoleOutputRequest;
+    CSRSS_FLUSH_INPUT_BUFFER_REQUEST FlushInputBufferRequest;
+    CSRSS_SCROLL_CONSOLE_SCREEN_BUFFER_REQUEST 
+    ScrollConsoleScreenBufferRequest;
+  } Data;
 } CSRSS_API_REQUEST, *PCSRSS_API_REQUEST;
 
 typedef struct
 {
-   LPC_MESSAGE_HEADER Header;
-   NTSTATUS Status;
-   union
-     {
-	CSRSS_CREATE_PROCESS_REPLY CreateProcessReply;
-	CSRSS_CONNECT_PROCESS_REPLY ConnectReply;
-	CSRSS_WRITE_CONSOLE_REPLY WriteConsoleReply;
-	CSRSS_READ_CONSOLE_REPLY ReadConsoleReply;
-	CSRSS_ALLOC_CONSOLE_REPLY AllocConsoleReply;
-	CSRSS_SCREEN_BUFFER_INFO_REPLY ScreenBufferInfoReply;
-	CSRSS_READ_INPUT_REPLY ReadInputReply;
-	CSRSS_WRITE_CONSOLE_OUTPUT_CHAR_REPLY WriteConsoleOutputCharReply;
-	CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB_REPLY WriteConsoleOutputAttribReply;
-	CSRSS_GET_CURSOR_INFO_REPLY GetCursorInfoReply;
-	CSRSS_GET_CONSOLE_MODE_REPLY GetConsoleModeReply;
-	CSRSS_CREATE_SCREEN_BUFFER_REPLY CreateScreenBufferReply;
-  CSRSS_GET_TITLE_REPLY GetTitleReply;
-  CSRSS_WRITE_CONSOLE_OUTPUT_REPLY WriteConsoleOutputReply;
-     } Data;
+  LPC_MESSAGE_HEADER Header;
+  NTSTATUS Status;
+  union
+  {
+    CSRSS_CREATE_PROCESS_REPLY CreateProcessReply;
+    CSRSS_CONNECT_PROCESS_REPLY ConnectReply;
+    CSRSS_WRITE_CONSOLE_REPLY WriteConsoleReply;
+    CSRSS_READ_CONSOLE_REPLY ReadConsoleReply;
+    CSRSS_ALLOC_CONSOLE_REPLY AllocConsoleReply;
+    CSRSS_SCREEN_BUFFER_INFO_REPLY ScreenBufferInfoReply;
+    CSRSS_READ_INPUT_REPLY ReadInputReply;
+    CSRSS_WRITE_CONSOLE_OUTPUT_CHAR_REPLY WriteConsoleOutputCharReply;
+    CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB_REPLY WriteConsoleOutputAttribReply;
+    CSRSS_GET_CURSOR_INFO_REPLY GetCursorInfoReply;
+    CSRSS_GET_CONSOLE_MODE_REPLY GetConsoleModeReply;
+    CSRSS_CREATE_SCREEN_BUFFER_REPLY CreateScreenBufferReply;
+    CSRSS_GET_TITLE_REPLY GetTitleReply;
+    CSRSS_WRITE_CONSOLE_OUTPUT_REPLY WriteConsoleOutputReply;
+  } Data;
 } CSRSS_API_REPLY, *PCSRSS_API_REPLY;
 
 #endif /* __INCLUDE_CSRSS_CSRSS_H */

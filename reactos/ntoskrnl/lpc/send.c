@@ -1,4 +1,4 @@
-/* $Id: send.c,v 1.5 2001/06/23 19:13:33 phreak Exp $
+/* $Id: send.c,v 1.6 2001/11/25 15:21:10 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -15,6 +15,7 @@
 #include <internal/ob.h>
 #include <internal/port.h>
 #include <internal/dbg.h>
+#include <internal/safe.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -75,8 +76,8 @@ LpcSendDebugMessagePort (IN PEPORT Port,
 	ObDereferenceObject(Port);
 	return(Status);
      }
-   KeReleaseSemaphore( &Port->OtherPort->Semaphore, IO_NO_INCREMENT, 1, FALSE );   
-   
+   KeReleaseSemaphore(&Port->OtherPort->Semaphore, IO_NO_INCREMENT, 1, FALSE);
+
    /*
     * Wait for a reply
     */
@@ -183,17 +184,19 @@ NTSTATUS STDCALL NtRequestPort (IN	HANDLE		PortHandle,
  */
 NTSTATUS STDCALL 
 NtRequestWaitReplyPort (IN HANDLE PortHandle,
-			PLPC_MESSAGE LpcRequest,    
-			PLPC_MESSAGE LpcReply)
+			PLPC_MESSAGE UnsafeLpcRequest,    
+			PLPC_MESSAGE UnsafeLpcReply)
 {
    NTSTATUS Status;
    PEPORT Port;
    PQUEUEDMESSAGE Message;
    KIRQL oldIrql;
-   
+   PLPC_MESSAGE LpcRequest;
+   USHORT LpcRequestMessageSize;
+
    DPRINT("NtRequestWaitReplyPort(PortHandle %x, LpcRequest %x, "
 	  "LpcReply %x)\n", PortHandle, LpcRequest, LpcReply);
-   
+
    Status = ObReferenceObjectByHandle(PortHandle,
 				      PORT_ALL_ACCESS, 
 				      ExPortType,
@@ -204,8 +207,48 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
      {
 	return(Status);
      }
-   
-   
+
+   Status = MmCopyFromCaller(&LpcRequestMessageSize,
+			     &UnsafeLpcRequest->MessageSize,
+			     sizeof(USHORT));
+   if (!NT_SUCCESS(Status))
+     {
+       ObDereferenceObject(Port);
+       return(Status);
+     }
+   if (LpcRequestMessageSize > (sizeof(LPC_MESSAGE) + MAX_MESSAGE_DATA))
+     {
+       ObDereferenceObject(Port);
+       return(STATUS_PORT_MESSAGE_TOO_LONG);
+     }
+   LpcRequest = ExAllocatePool(NonPagedPool, LpcRequestMessageSize);
+   if (LpcRequest == NULL)
+     {
+       ObDereferenceObject(Port);
+       return(STATUS_NO_MEMORY);
+     }
+   Status = MmCopyFromCaller(LpcRequest, UnsafeLpcRequest,
+			     LpcRequestMessageSize);
+   if (!NT_SUCCESS(Status))
+     {
+       ExFreePool(LpcRequest);
+       ObDereferenceObject(Port);
+       return(Status);
+     }
+   LpcRequestMessageSize = LpcRequest->MessageSize;
+   if (LpcRequestMessageSize > (sizeof(LPC_MESSAGE) + MAX_MESSAGE_DATA))
+     {
+       ExFreePool(LpcRequest);
+       ObDereferenceObject(Port);
+       return(STATUS_PORT_MESSAGE_TOO_LONG);
+     }
+   if (LpcRequest->DataSize != (LpcRequest->MessageSize - sizeof(LPC_MESSAGE)))
+     {
+       ExFreePool(LpcRequest);
+       ObDereferenceObject(Port);
+       return(STATUS_PORT_MESSAGE_TOO_LONG);
+     }
+
    Status = EiReplyOrRequestPort(Port->OtherPort, 
 				 LpcRequest, 
 				 LPC_REQUEST,
@@ -213,10 +256,13 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
    if (!NT_SUCCESS(Status))
      {
 	DbgPrint("Enqueue failed\n");
+	ExFreePool(LpcRequest);
 	ObDereferenceObject(Port);
 	return(Status);
      }
-   KeReleaseSemaphore( &Port->OtherPort->Semaphore, IO_NO_INCREMENT, 1, FALSE);   
+   ExFreePool(LpcRequest);
+   KeReleaseSemaphore (&Port->OtherPort->Semaphore, IO_NO_INCREMENT, 
+		       1, FALSE);   
    
    /*
     * Wait for a reply
@@ -235,12 +281,13 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
    KeReleaseSpinLock(&Port->Lock, oldIrql);
    DPRINT("Message->Message.MessageSize %d\n",
 	   Message->Message.MessageSize);
-   memcpy(LpcReply, &Message->Message, Message->Message.MessageSize);
+   Status = MmCopyToCaller(UnsafeLpcReply, &Message->Message, 
+			   Message->Message.MessageSize);
    ExFreePool(Message);
    
    ObDereferenceObject(Port);
    
-   return(STATUS_SUCCESS);
+   return(Status);
 }
 
 

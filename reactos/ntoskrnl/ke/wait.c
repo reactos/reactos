@@ -134,7 +134,7 @@ static VOID KiSideEffectsBeforeWake(DISPATCHER_HEADER* hdr,
 		  if (Thread == NULL)
 		    {
 		      DPRINT1("Thread == NULL!\n");
-//		      KeBugCheck(0);
+		      KeBugCheck(0);
 		    }
 		  if (Abandoned != NULL)
 		    *Abandoned = Mutex->Abandoned;

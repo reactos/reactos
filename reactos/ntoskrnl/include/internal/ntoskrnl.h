@@ -22,7 +22,7 @@
 /*
  * Maximum size of the kmalloc area (this is totally arbitary)
  */
-#define NONPAGED_POOL_SIZE   (4*1024*1024)
+#define NONPAGED_POOL_SIZE   (400*1024*1024)
 
 /*
  * Defines a descriptor as it appears in the processor tables

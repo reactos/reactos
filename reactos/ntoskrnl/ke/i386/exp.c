@@ -219,16 +219,22 @@ ULONG
 KiDoubleFaultHandler(VOID)
 {
   unsigned int cr2;
-  unsigned int i;
-  PULONG stack;
+  ULONG i, j;
   ULONG StackLimit;
+  ULONG StackBase;
   ULONG Esp0;
   ULONG ExceptionNr = 8;
   KTSS* OldTss;
+  PULONG Frame;
+  static PVOID StackTrace[MM_STACK_SIZE / sizeof(PVOID)];
+  static ULONG StackRepeatCount[MM_STACK_SIZE / sizeof(PVOID)];
+  static ULONG StackRepeatLength[MM_STACK_SIZE / sizeof(PVOID)];
+  ULONG TraceLength;
+  BOOLEAN FoundRepeat;
   
   /* Use the address of the trap frame as approximation to the ring0 esp */
   OldTss = KeGetCurrentKPCR()->TSS;
-  Esp0 = OldTss->Esp0;
+  Esp0 = OldTss->Esp;
   
   /* Get CR2 */
   __asm__("movl %%cr2,%0\n\t" : "=d" (cr2));
@@ -296,38 +302,95 @@ KiDoubleFaultHandler(VOID)
      }
   if ((OldTss->Cs & 0xffff) == KERNEL_CS)
     {
-       DbgPrint("ESP %x\n", Esp0);
-       stack = (PULONG) (Esp0 + 24);
-       stack = (PULONG)(((ULONG)stack) & (~0x3));
-       if (PsGetCurrentThread() != NULL)
-	 {
-	   StackLimit = (ULONG)PsGetCurrentThread()->Tcb.StackBase;
-	 }
-       else
-	 {
-	   StackLimit = (ULONG)&init_stack_top;
-	 }
-       
-       DbgPrint("stack<%p>: ", stack);
-	 
-       for (i = 0; i < 18 && (((ULONG)&stack[i+5]) < StackLimit); i = i + 6)
-	 {
-	    DbgPrint("%.8x %.8x %.8x %.8x\n", 
-		     stack[i], stack[i+1], 
-		     stack[i+2], stack[i+3], 
-		     stack[i+4], stack[i+5]);
-	 }
-       DbgPrint("Frames:\n");
-       for (i = 0; i < 32 && (((ULONG)&stack[i]) < StackLimit); i++)
-	 {
-	    if (stack[i] > ((unsigned int) &_text_start__) &&
-	      !(stack[i] >= ((ULONG)&init_stack) &&
-		stack[i] <= ((ULONG)&init_stack_top)))
-	      {
-		 print_address((PVOID)stack[i]);
-		 DbgPrint(" ");
-	      }
-	 }
+      DbgPrint("ESP %x\n", Esp0);
+      if (PsGetCurrentThread() != NULL)
+	{
+	  StackLimit = (ULONG)PsGetCurrentThread()->Tcb.StackBase;
+	  StackBase = (ULONG)PsGetCurrentThread()->Tcb.StackLimit;
+	}
+      else
+	{
+	  StackLimit = (ULONG)&init_stack_top;
+	  StackBase = (ULONG)&init_stack;
+	}
+
+      DbgPrint("Frames: ");
+      i = 0;
+      Frame = (PULONG)OldTss->Ebp;
+      while (Frame != NULL && (ULONG)Frame >= StackBase)
+	{
+	  StackTrace[i] = (PVOID)Frame[1];
+	  Frame = (PULONG)Frame[0];
+	  i++;
+	}
+      TraceLength = i;
+
+      i = 0;
+      while (i < TraceLength)
+	{
+	  StackRepeatCount[i] = 0;
+	  j = i + 1;
+	  FoundRepeat = FALSE;
+	  while ((j - i) <= (TraceLength - j) && FoundRepeat == FALSE)
+	    {
+	      if (memcmp(&StackTrace[i], &StackTrace[j], 
+			 (j - i) * sizeof(PVOID)) == 0)
+		{
+		  StackRepeatCount[i] = 2;
+		  StackRepeatLength[i] = j - i;
+		  FoundRepeat = TRUE;
+		}
+	      else
+		{
+		  j++;
+		}
+	    }
+	  if (FoundRepeat == FALSE)
+	    {
+	      i++;
+	      continue;
+	    }
+	  j = j + StackRepeatLength[i];
+	  while ((TraceLength - j) >= StackRepeatLength[i] && 
+		 FoundRepeat == TRUE)
+	    {
+	      if (memcmp(&StackTrace[i], &StackTrace[j], 
+			 StackRepeatLength[i] * sizeof(PVOID)) == 0)
+		{
+		  StackRepeatCount[i]++;
+		  j = j + StackRepeatLength[i];
+		}
+	      else
+		{
+		  FoundRepeat = FALSE;
+		}
+	    }
+	  i = j;
+	}
+
+      i = 0;
+      while (i < TraceLength)
+	{
+	  if (StackRepeatCount[i] == 0)
+	    {
+	      print_address(StackTrace[i]);
+	      i++;
+	    }
+	  else
+	    {
+	      DbgPrint("{");
+	      if (StackRepeatLength[i] == 0)
+		{
+		  for(;;);
+		}
+	      for (j = 0; j < StackRepeatLength[i]; j++)
+		{
+		  print_address(StackTrace[i + j]);
+		}
+	      DbgPrint("}*%d", StackRepeatCount[i]);
+	      i = i + StackRepeatLength[i] * StackRepeatCount[i];
+	    }
+	}
     }
    
    DbgPrint("\n");

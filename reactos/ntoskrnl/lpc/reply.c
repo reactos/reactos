@@ -1,4 +1,4 @@
-/* $Id: reply.c,v 1.7 2001/06/23 19:13:33 phreak Exp $
+/* $Id: reply.c,v 1.8 2001/11/25 15:21:10 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,6 +16,7 @@
 #include <internal/port.h>
 #include <internal/dbg.h>
 #include <internal/pool.h>
+#include <internal/safe.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -227,7 +228,19 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
    Request = EiDequeueMessagePort(Port);
    
    assert( Request );
-   memcpy(LpcMessage, &Request->Message, Request->Message.MessageSize);
+   Status = MmCopyToCaller(LpcMessage, &Request->Message,
+			   Request->Message.MessageSize);
+   if (!NT_SUCCESS(Status))
+     {
+       /*
+	* Copying the message to the caller's buffer failed so 
+	* undo what we did and return.
+	*/
+       EiEnqueueMessageAtHeadPort(Port, Request);
+       KeReleaseSpinLock(&Port->Lock, oldIrql);
+       ObDereferenceObject(Port);
+       return(Status);
+     }
    if (Request->Message.MessageType == LPC_CONNECTION_REQUEST)
      {
        EiEnqueueConnectMessagePort(Port, Request);

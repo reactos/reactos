@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.18 2001/04/04 22:21:30 dwelch Exp $
+/* $Id: dllmain.c,v 1.19 2001/11/25 15:21:09 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -108,8 +108,9 @@ DllMain(HANDLE hInst,
 	     Status = CsrClientConnectToServer();
 	     if (!NT_SUCCESS(Status))
 	       {
-		  DbgPrint("Failed to connect to csrss.exe: expect trouble\n");
-		  //	ZwTerminateProcess(NtCurrentProcess(), Status);
+		  DbgPrint("Failed to connect to csrss.exe: expect trouble "
+			   "Status was %X\n", Status);
+		  ZwTerminateProcess(NtCurrentProcess(), Status);
 	       }
 
 	     hProcessHeap = RtlGetProcessHeap();

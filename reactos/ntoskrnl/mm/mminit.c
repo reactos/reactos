@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.25 2001/08/30 20:38:20 dwelch Exp $
+/* $Id: mminit.c,v 1.26 2001/11/25 15:21:11 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -97,7 +97,10 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
    Length = PAGE_ROUND_UP(((ULONG)&_text_end__)) - KERNEL_BASE;
    ParamLength = ParamLength - Length;
    
-   MmLockAddressSpace(MmGetKernelAddressSpace());
+   /*
+    * No need to lock the address space at this point since no
+    * other threads are running.
+    */
    MmCreateMemoryArea(NULL,
 		      MmGetKernelAddressSpace(),
 		      MEMORY_AREA_SYSTEM,
@@ -106,7 +109,6 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
 		      0,
 		      &kernel_text_desc,
 		      FALSE);
-   MmUnlockAddressSpace(MmGetKernelAddressSpace());
 
    Length = PAGE_ROUND_UP(((ULONG)&_bss_end__)) - 
             PAGE_ROUND_UP(((ULONG)&_text_end__));
@@ -114,7 +116,11 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
    DPRINT("Length %x\n",Length);
    BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG)&_text_end__));
    DPRINT("BaseAddress %x\n",BaseAddress);
-   MmLockAddressSpace(MmGetKernelAddressSpace());
+
+   /*
+    * No need to lock the address space at this point since we are
+    * the only thread running.
+    */
    MmCreateMemoryArea(NULL,
 		      MmGetKernelAddressSpace(),		      
 		      MEMORY_AREA_SYSTEM,
@@ -146,7 +152,10 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
 		      0,
 		      &kernel_pool_desc,
 		      FALSE);
-   
+
+   /*
+    * Create the kernel mapping of the user/kernel shared memory.
+    */
    BaseAddress = (PVOID)KERNEL_SHARED_DATA_BASE;
    Length = PAGESIZE;
    MmCreateMemoryArea(NULL,
@@ -157,7 +166,6 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
 		      0,
 		      &kernel_shared_data_desc,
 		      FALSE);
-   MmUnlockAddressSpace(MmGetKernelAddressSpace());
    MmSharedDataPagePhysicalAddress = MmAllocPage(0);
    Status = MmCreateVirtualMapping(NULL,
 				   (PVOID)KERNEL_SHARED_DATA_BASE,
@@ -169,22 +177,6 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
 	KeBugCheck(0);
      }
    ((PKUSER_SHARED_DATA)KERNEL_SHARED_DATA_BASE)->TickCountLow = 0xdeadbeef;
-#if 0
-  for (i = 0; i < 0x100; i++)
-    {
-  Status = MmCreateVirtualMapping(NULL,
-	  (PVOID)(i*PAGESIZE),
-		PAGE_READWRITE,
-		(ULONG)(i*PAGESIZE));
-   if (!NT_SUCCESS(Status))
-     {
-	DbgPrint("Unable to create virtual mapping\n");
-	KeBugCheck(0);
-     }
-  }
-#endif
-//   MmDumpMemoryAreas();
-   DPRINT("MmInitVirtualMemory() done\n");
 }
 
 VOID MmInit1(ULONG FirstKrnlPhysAddr,

@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.36 2001/11/20 02:29:44 dwelch Exp $
+/* $Id: console.c,v 1.37 2001/11/25 15:21:09 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -643,57 +643,64 @@ SetStdHandle(DWORD nStdHandle,
 /*--------------------------------------------------------------
  *	WriteConsoleA
  */
-WINBOOL STDCALL WriteConsoleA(HANDLE hConsoleOutput,
-			      CONST VOID *lpBuffer,
-			      DWORD nNumberOfCharsToWrite,
-			      LPDWORD lpNumberOfCharsWritten,
-			      LPVOID lpReserved)
+WINBOOL STDCALL 
+WriteConsoleA(HANDLE hConsoleOutput,
+	      CONST VOID *lpBuffer,
+	      DWORD nNumberOfCharsToWrite,
+	      LPDWORD lpNumberOfCharsWritten,
+	      LPVOID lpReserved)
 {
-   PCSRSS_API_REQUEST Request;
-   CSRSS_API_REPLY Reply;
-   NTSTATUS Status;
-   WORD Size;
-   
-   Request = RtlAllocateHeap(GetProcessHeap(),
-		       HEAP_ZERO_MEMORY,
-		       sizeof(CSRSS_API_REQUEST) + CSRSS_MAX_WRITE_CONSOLE_REQUEST);
-   if (Request == NULL)
-     {
-	return(FALSE);
-     }
+  PCSRSS_API_REQUEST Request;
+  CSRSS_API_REPLY Reply;
+  NTSTATUS Status;
+  USHORT Size;
+  ULONG MessageSize;
+  
+  Request = RtlAllocateHeap(GetProcessHeap(),
+			    HEAP_ZERO_MEMORY,
+			    sizeof(CSRSS_API_REQUEST) + 
+			    CSRSS_MAX_WRITE_CONSOLE_REQUEST);
+  if (Request == NULL)
+    {
+      return(FALSE);
+    }
+  
+  Request->Type = CSRSS_WRITE_CONSOLE;
+  Request->Data.WriteConsoleRequest.ConsoleHandle = hConsoleOutput;
+  if (lpNumberOfCharsWritten != NULL)
+    *lpNumberOfCharsWritten = nNumberOfCharsToWrite;
+  while (nNumberOfCharsToWrite)
+    {
+      if (nNumberOfCharsToWrite > CSRSS_MAX_WRITE_CONSOLE_REQUEST)
+	{
+	  Size = CSRSS_MAX_WRITE_CONSOLE_REQUEST;
+	}
+      else
+	{
+	  Size = nNumberOfCharsToWrite;
+	}
+      Request->Data.WriteConsoleRequest.NrCharactersToWrite = Size;
+      
+      memcpy(Request->Data.WriteConsoleRequest.Buffer, lpBuffer, Size);
 
-   Request->Type = CSRSS_WRITE_CONSOLE;
-   Request->Data.WriteConsoleRequest.ConsoleHandle = hConsoleOutput;
-   if (lpNumberOfCharsWritten != NULL)
-      *lpNumberOfCharsWritten = nNumberOfCharsToWrite;
-   while( nNumberOfCharsToWrite )
-      {
-	 Size = nNumberOfCharsToWrite > CSRSS_MAX_WRITE_CONSOLE_REQUEST ? CSRSS_MAX_WRITE_CONSOLE_REQUEST : nNumberOfCharsToWrite;
-
-	 Request->Data.WriteConsoleRequest.NrCharactersToWrite = Size;
-
-	 //   DbgPrint("nNumberOfCharsToWrite %d\n", nNumberOfCharsToWrite);
-	 //   DbgPrint("Buffer %s\n", Request->Data.WriteConsoleRequest.Buffer);
-	 
-	 memcpy( Request->Data.WriteConsoleRequest.Buffer, lpBuffer, Size );
-   
-	 Status = CsrClientCallServer(Request,
-				      &Reply,
-				      sizeof(CSRSS_WRITE_CONSOLE_REQUEST) + 
-				      Size,
-				      sizeof(CSRSS_API_REPLY));
-	 
-	 if (!NT_SUCCESS(Status) || !NT_SUCCESS( Status = Reply.Status ) )
-	    {
-	       RtlFreeHeap( GetProcessHeap(), 0, Request );
-	       SetLastErrorByStatus (Status);
-	       return(FALSE);
-	    }
-	 nNumberOfCharsToWrite -= Size;
-	 lpBuffer += Size;
-      }
-   RtlFreeHeap( GetProcessHeap(), 0, Request );
-   return TRUE;
+      MessageSize = CSRSS_REQUEST_HEADER_SIZE + 
+	sizeof(CSRSS_WRITE_CONSOLE_REQUEST) + Size;
+      Status = CsrClientCallServer(Request,
+				   &Reply,
+				   MessageSize,
+				   sizeof(CSRSS_API_REPLY));
+      
+      if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
+	{
+	  RtlFreeHeap(GetProcessHeap(), 0, Request);
+	  SetLastErrorByStatus(Status);
+	  return(FALSE);
+	}
+      nNumberOfCharsToWrite -= Size;
+      lpBuffer += Size;
+    }
+  RtlFreeHeap(GetProcessHeap(), 0, Request);
+  return TRUE;
 }
 
 
@@ -1133,48 +1140,91 @@ ReadConsoleOutputW(
 /*--------------------------------------------------------------
  * 	WriteConsoleOutputA
  */
-WINBASEAPI
-BOOL
-WINAPI
-WriteConsoleOutputA(
-	HANDLE		 hConsoleOutput,
-	CONST CHAR_INFO	*lpBuffer,
-	COORD		 dwBufferSize,
-	COORD		 dwBufferCoord,
-	PSMALL_RECT	 lpWriteRegion
-	)
+WINBASEAPI BOOL WINAPI
+WriteConsoleOutputA(HANDLE		 hConsoleOutput,
+		    CONST CHAR_INFO	*lpBuffer,
+		    COORD		 dwBufferSize,
+		    COORD		 dwBufferCoord,
+		    PSMALL_RECT	 lpWriteRegion)
 {
-   PCSRSS_API_REQUEST Request;
-   CSRSS_API_REPLY Reply;
-   NTSTATUS Status;
-   DWORD Size;
+  PCSRSS_API_REQUEST Request;
+  CSRSS_API_REPLY Reply;
+  NTSTATUS Status;
+  ULONG Size;
+  BOOLEAN Result;
+  ULONG i, j;
 
-   Size = dwBufferSize.Y * dwBufferSize.X * sizeof(CHAR_INFO);
+  Size = dwBufferSize.Y * dwBufferSize.X * sizeof(CHAR_INFO);
 
-   Request = RtlAllocateHeap(GetProcessHeap(), 0, sizeof(CSRSS_API_REQUEST) + Size);
-   if( !Request )
-     {
-       SetLastError( ERROR_OUTOFMEMORY );
-       return FALSE;
-     }
-   Request->Type = CSRSS_WRITE_CONSOLE_OUTPUT;
-   Request->Data.WriteConsoleOutputRequest.ConsoleHandle = hConsoleOutput;
-   Request->Data.WriteConsoleOutputRequest.BufferSize = dwBufferSize;
-   Request->Data.WriteConsoleOutputRequest.BufferCoord = dwBufferCoord;
-   Request->Data.WriteConsoleOutputRequest.WriteRegion = *lpWriteRegion;
-   RtlCopyMemory(&Request->Data.WriteConsoleOutputRequest.CharInfo, lpBuffer, Size);
+  if ((sizeof(CSRSS_API_REQUEST) + Size) > 
+      (sizeof(LPC_MESSAGE) + MAX_MESSAGE_DATA))
+    {
+      COORD FragDim, FragCoord;
+      SMALL_RECT FragRegion;
+      DWORD SizeX, SizeY;
+      CONST CHAR_INFO* lpFragBuffer;
 
-   Status = CsrClientCallServer( Request, &Reply, sizeof( CSRSS_API_REQUEST ) + Size, sizeof( CSRSS_API_REPLY ) );
-	 if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
+      SizeX = min(dwBufferSize.X - dwBufferCoord.X, 
+		  lpWriteRegion->Right - lpWriteRegion->Left);
+      SizeY = min(dwBufferSize.Y - dwBufferCoord.Y, 
+		  lpWriteRegion->Bottom - lpWriteRegion->Top);
+
+      for (i = dwBufferCoord.Y; i < (dwBufferCoord.Y + SizeY); i++)
+	{
+	  for (j = dwBufferCoord.X; j < (dwBufferCoord.X + SizeX); j++)
 	    {
-         RtlFreeHeap( GetProcessHeap(), 0, Request );
-	       SetLastErrorByStatus ( Status );
-	       return FALSE;
+	      FragDim.X = 1;
+	      FragDim.Y = 1;
+	      FragCoord.X = 0;
+	      FragCoord.Y = 0;
+	      FragRegion.Left = lpWriteRegion->Left + j;
+	      FragRegion.Right = lpWriteRegion->Left + j + 1;
+	      FragRegion.Top = lpWriteRegion->Top + i;
+	      FragRegion.Bottom = lpWriteRegion->Bottom + i + 1;
+
+	      lpFragBuffer = lpBuffer + (i * dwBufferSize.X) + j;
+	      Result = WriteConsoleOutputA(hConsoleOutput,
+					   lpFragBuffer,
+					   FragDim,
+					   FragCoord,
+					   &FragRegion);
+	      if (!Result)
+		{
+		  return(FALSE);
+		}	      
 	    }
-
-   *lpWriteRegion = Reply.Data.WriteConsoleOutputReply.WriteRegion;
-
-   return TRUE;
+	}
+      return(TRUE);
+    }
+  
+  Request = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, 
+			    sizeof(CSRSS_API_REQUEST) + Size);
+  if (Request == NULL)
+    {
+      SetLastError(ERROR_OUTOFMEMORY);
+      return FALSE;
+    }
+  Request->Type = CSRSS_WRITE_CONSOLE_OUTPUT;
+  Request->Data.WriteConsoleOutputRequest.ConsoleHandle = hConsoleOutput;
+  Request->Data.WriteConsoleOutputRequest.BufferSize = dwBufferSize;
+  Request->Data.WriteConsoleOutputRequest.BufferCoord = dwBufferCoord;
+  Request->Data.WriteConsoleOutputRequest.WriteRegion = *lpWriteRegion;
+  RtlCopyMemory(&Request->Data.WriteConsoleOutputRequest.CharInfo, lpBuffer, 
+		Size);
+  
+  Status = CsrClientCallServer(Request, &Reply, 
+			       sizeof(CSRSS_API_REQUEST) + Size, 
+			       sizeof(CSRSS_API_REPLY));
+  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
+    {
+      RtlFreeHeap(GetProcessHeap(), 0, Request);
+      SetLastErrorByStatus(Status);
+      return FALSE;
+    }
+      
+  *lpWriteRegion = Reply.Data.WriteConsoleOutputReply.WriteRegion;
+  RtlFreeHeap(GetProcessHeap(), 0, Request);
+  return(TRUE);
 }
 
 

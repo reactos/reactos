@@ -85,6 +85,9 @@ EiEnqueueMessagePort (
 	IN OUT	PEPORT		Port,
 	IN	PQUEUEDMESSAGE	Message
 	);
+VOID STDCALL
+EiEnqueueMessageAtHeadPort (IN OUT	PEPORT		Port,
+			    IN	PQUEUEDMESSAGE	Message);
 PQUEUEDMESSAGE
 STDCALL
 EiDequeueConnectMessagePort (

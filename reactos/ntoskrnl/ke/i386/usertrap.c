@@ -262,14 +262,14 @@ KiUserTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
   Frame = (PULONG)Tf->Ebp;
   while (Frame != NULL && i < 50)
     {
-      Status = MmCopyFromCaller(&ReturnAddress, &Frame[1], sizeof(ULONG));
+      Status = MmSafeCopyFromUser(&ReturnAddress, &Frame[1], sizeof(ULONG));
       if (!NT_SUCCESS(Status))
 	{
 	  DbgPrint("????????\n");
 	  break;
 	}
       print_user_address((PVOID)ReturnAddress);
-      Status = MmCopyFromCaller(&NextFrame, &Frame[0], sizeof(ULONG));
+      Status = MmSafeCopyFromUser(&NextFrame, &Frame[0], sizeof(ULONG));
       if (!NT_SUCCESS(Status))
 	{
 	  DbgPrint("Frame is inaccessible.\n");
@@ -280,9 +280,9 @@ KiUserTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
 	  DbgPrint("Next frame is in kernel space!\n");
 	  break;
 	}
-      if (NextFrame >= (ULONG)Frame)
+      if (NextFrame != 0 && NextFrame <= (ULONG)Frame)
 	{
-	  DbgPrint("Next frame is not below current frame!\n");
+	  DbgPrint("Next frame is not above current frame!\n");
 	  break;
 	}
       Frame = (PULONG)NextFrame;

@@ -1,4 +1,4 @@
-/* $Id: lpc.c,v 1.2 2001/08/31 20:06:17 ea Exp $
+/* $Id: lpc.c,v 1.3 2001/11/25 15:21:09 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -57,26 +57,20 @@ CsrClientCallServer(PCSRSS_API_REQUEST Request,
 		    ULONG Length,
 		    ULONG ReplyLength)
 {
-   NTSTATUS Status;
-
-   if (INVALID_HANDLE_VALUE == WindowsApiPort)
-   {
-	   DbgPrint ("NTDLL.%s: client not connected to CSRSS!\n", __FUNCTION__);
-	   return (STATUS_UNSUCCESSFUL);
-   }
-   
-//   DbgPrint("CsrClientCallServer(Request %x, Reply %x, Length %d, "
-//	    "ReplyLength %d)\n", Request, Reply, Length, ReplyLength);
-   
-   Request->Header.DataSize = Length;
-   Request->Header.MessageSize = sizeof(LPC_MESSAGE_HEADER) + Length;
+  NTSTATUS Status;
   
+  if (INVALID_HANDLE_VALUE == WindowsApiPort)
+    {
+      DbgPrint ("NTDLL.%s: client not connected to CSRSS!\n", __FUNCTION__);
+      return (STATUS_UNSUCCESSFUL);
+    }
+  
+   Request->Header.DataSize = Length - sizeof(LPC_MESSAGE_HEADER);
+   Request->Header.MessageSize = Length;
    
    Status = NtRequestWaitReplyPort(WindowsApiPort,
 				   &Request->Header,
 				   (Reply?&Reply->Header:&Request->Header));
-   
-//   DbgPrint("Status %x\n", Status);
    
    return(Status);
 }
