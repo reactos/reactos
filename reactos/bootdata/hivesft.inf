@@ -19,10 +19,15 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Common 
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Common Templates",0x00020000,"%ALLUSERSPROFILE%\Templates"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Personal",0x00020000,"%ALLUSERSPROFILE%\My Documents"
 
+; Uninstall Application list
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",,0x00000010
+
+
 ; Version Information
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","CurrentVersion",0x00020000,"4.0"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","CSDVersion",0x00020000,"Service Pack 6"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","CurrentBuildNumber",0x00020000,"1381"
+
 
 ; Image File Execution Options (NtGlobalFlag with FLG_SHOW_LDR_SNAPS set for loadlib.exe) 
 HKLM,"Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\loadlib.exe","GlobalFlag",0x00000000,"0x00000002"
