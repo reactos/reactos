@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.53 2003/12/20 21:45:14 weiden Exp $
+/* $Id: msgqueue.c,v 1.54 2003/12/21 20:06:45 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -136,8 +136,12 @@ MsqInitializeImpl(VOID)
 VOID FASTCALL
 MsqInsertSystemMessage(MSG* Msg, BOOL RemMouseMoveMsg)
 {
+  LARGE_INTEGER LargeTickCount;
   KIRQL OldIrql;
   ULONG mmov = (ULONG)-1;
+  
+  KeQueryTickCount(&LargeTickCount);
+  Msg->time = LargeTickCount.u.LowPart;
 
   KeAcquireSpinLock(&SystemMessageQueueLock, &OldIrql);
 
@@ -174,6 +178,13 @@ MsqInsertSystemMessage(MSG* Msg, BOOL RemMouseMoveMsg)
   }
   KeReleaseSpinLock(&SystemMessageQueueLock, OldIrql);
   KeSetEvent(&HardwareMessageEvent, IO_NO_INCREMENT, FALSE);
+}
+
+BOOL STATIC FASTCALL
+MsqIsDblClk(BOOL Remove, PUSER_MESSAGE Message)
+{
+  /* FIXME */
+  return FALSE;
 }
 
 BOOL STATIC STDCALL
@@ -297,20 +308,21 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
     return(FALSE);
   }
   
-  if (Msg == WM_LBUTTONDBLCLK || Msg == WM_RBUTTONDBLCLK || Msg == WM_MBUTTONDBLCLK || Msg == WM_XBUTTONDBLCLK)
+  switch (Msg)
   {
-    if (((*HitTest) != HTCLIENT) || !(IntGetClassLong(Window, GCL_STYLE, FALSE) & CS_DBLCLKS))
-	{
-      Msg -= (WM_LBUTTONDBLCLK - WM_LBUTTONDOWN);
-      /* FIXME set WindowStation's system cursor variables:
-               LastBtnDown to Msg.time
-      */
-	}
-	else
-	{
-	  /* FIXME check if the dblclick was made in the same window, if
-	           not, change it to a normal click message */
-	}
+    case WM_LBUTTONDOWN:
+    case WM_MBUTTONDOWN:
+    case WM_RBUTTONDOWN:
+    case WM_XBUTTONDOWN:
+    {
+      if ((((*HitTest) != HTCLIENT) || 
+          (IntGetClassLong(Window, GCL_STYLE, FALSE) & CS_DBLCLKS)) &&
+          MsqIsDblClk(Remove, Message))
+      {
+        Msg += WM_LBUTTONDBLCLK - WM_LBUTTONDOWN;
+      }
+      break;
+    }
   }
   
   *ScreenPoint = Message->Msg.pt;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.49 2003/12/20 21:45:14 weiden Exp $
+/* $Id: mouse.c,v 1.50 2003/12/21 20:06:44 weiden Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -65,44 +65,6 @@ IntCheckClipCursor(LONG *x, LONG *y, PSYSTEM_CURSORINFO CurInfo)
     return TRUE;
   }
   return TRUE;
-}
-
-BOOL FASTCALL
-IntDetectDblClick(PSYSTEM_CURSORINFO CurInfo, DWORD TickCount)
-{
-  LONG dX, dY;
-  BOOL res = ((TickCount - CurInfo->LastBtnDown) < CurInfo->DblClickSpeed);
-  if(res)
-  {
-    /* check if the second click is within the DblClickWidth and DblClickHeight values */
-    dX = CurInfo->LastBtnDownX - CurInfo->x;
-    dY = CurInfo->LastBtnDownY - CurInfo->y;
-    if(dX < 0) dX = -dX;
-    if(dY < 0) dY = -dY;
-    
-    res = (dX <= CurInfo->DblClickWidth) &&
-          (dY <= CurInfo->DblClickHeight);
-
-    if(res)
-    {
-      CurInfo->LastBtnDown = 0; /* prevent sending 2 or more DBLCLK messages */
-      CurInfo->LastBtnDownX = CurInfo->x;
-      CurInfo->LastBtnDownY = CurInfo->y;
-    }
-    else
-    {
-      CurInfo->LastBtnDown = TickCount;
-      CurInfo->LastBtnDownX = CurInfo->x;
-      CurInfo->LastBtnDownY = CurInfo->y;
-    }
-  }
-  else
-  {
-    CurInfo->LastBtnDown = TickCount;
-    CurInfo->LastBtnDownX = CurInfo->x;
-    CurInfo->LastBtnDownY = CurInfo->y;
-  }
-  return res;
 }
 
 BOOL FASTCALL
@@ -342,10 +304,8 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
   PSURFOBJ SurfObj;
   PSURFGDI SurfGDI;
   RECTL MouseRect;
-  WORD wp;
   MSG Msg;
   LARGE_INTEGER LargeTickCount;
-  ULONG TickCount;
   
   hDC = IntGetScreenDC();
   
@@ -371,6 +331,8 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
   SurfObj = (PSURFOBJ)AccessUserObject((ULONG) dc->Surface);
   SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
   DC_UnlockDc( hDC );
+  
+  KeQueryTickCount(&LargeTickCount);
 
   /* Compile the total mouse movement change and dispatch button events. */
   for (i = 0; i < InputCount; i++)
@@ -387,72 +349,51 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
     CurInfo->y = min(CurInfo->y, SurfObj->sizlBitmap.cy - 1);
     
     IntCheckClipCursor(&CurInfo->x, &CurInfo->y, CurInfo);
-    
-    KeQueryTickCount(&LargeTickCount);
-    TickCount = LargeTickCount.u.LowPart;
 
     Msg.wParam = CurInfo->ButtonsDown;
     Msg.lParam = MAKELPARAM(CurInfo->x, CurInfo->y);
     Msg.message = WM_MOUSEMOVE;
-    Msg.time = TickCount;
     Msg.pt.x = CurInfo->x;
     Msg.pt.y = CurInfo->y;
     
     if (Data[i].ButtonFlags != 0)
     {
-      wp = 0;
       if ((Data[i].ButtonFlags & MOUSE_LEFT_BUTTON_DOWN) > 0)
       {
-      	CurInfo->ButtonsDown |= CurInfo->SwapButtons ? MK_RBUTTON : MK_LBUTTON;
-      	if(IntDetectDblClick(CurInfo, TickCount))
-          Msg.message = CurInfo->SwapButtons ? WM_RBUTTONDBLCLK : WM_LBUTTONDBLCLK;
-        else
-          Msg.message = CurInfo->SwapButtons ? WM_RBUTTONDOWN : WM_LBUTTONDOWN;
+      	CurInfo->ButtonsDown |= (CurInfo->SwapButtons ? MK_RBUTTON : MK_LBUTTON);
+        Msg.message = (CurInfo->SwapButtons ? WM_RBUTTONDOWN : WM_LBUTTONDOWN);
+        CurInfo->LastBtnDown = LargeTickCount.u.LowPart;
       }
       if ((Data[i].ButtonFlags & MOUSE_MIDDLE_BUTTON_DOWN) > 0)
       {
       	CurInfo->ButtonsDown |= MK_MBUTTON;
-      	if(IntDetectDblClick(CurInfo, TickCount))
-      	  Msg.message = WM_MBUTTONDBLCLK;
-      	else
-          Msg.message = WM_MBUTTONDOWN;
+        Msg.message = WM_MBUTTONDOWN;
+        CurInfo->LastBtnDown = LargeTickCount.u.LowPart;
       }
       if ((Data[i].ButtonFlags & MOUSE_RIGHT_BUTTON_DOWN) > 0)
       {
-      	CurInfo->ButtonsDown |= CurInfo->SwapButtons ? MK_LBUTTON : MK_RBUTTON;
-      	if(IntDetectDblClick(CurInfo, TickCount))
-      	  Msg.message = CurInfo->SwapButtons ? WM_LBUTTONDBLCLK : WM_RBUTTONDBLCLK;
-      	else
-          Msg.message = CurInfo->SwapButtons ? WM_LBUTTONDOWN : WM_RBUTTONDOWN;
+      	CurInfo->ButtonsDown |= (CurInfo->SwapButtons ? MK_LBUTTON : MK_RBUTTON);
+        Msg.message = (CurInfo->SwapButtons ? WM_LBUTTONDOWN : WM_RBUTTONDOWN);
+        CurInfo->LastBtnDown = LargeTickCount.u.LowPart;
       }
       
       if ((Data[i].ButtonFlags & MOUSE_BUTTON_4_DOWN) > 0)
       {
       	CurInfo->ButtonsDown |= MK_XBUTTON1;
-      	if(IntDetectDblClick(CurInfo, TickCount))
-      	{
-      	  Msg.message = WM_XBUTTONDBLCLK;
-      	  wp = XBUTTON1;
-   	}
-      	else
-          Msg.message = WM_XBUTTONDOWN;
+        Msg.message = WM_XBUTTONDOWN;
+        CurInfo->LastBtnDown = LargeTickCount.u.LowPart;
       }
       if ((Data[i].ButtonFlags & MOUSE_BUTTON_5_DOWN) > 0)
       {
       	CurInfo->ButtonsDown |= MK_XBUTTON2;
-      	if(IntDetectDblClick(CurInfo, TickCount))
-      	{
-      	  Msg.message = WM_XBUTTONDBLCLK;
-      	  wp = XBUTTON2;
-   	}
-      	else
-          Msg.message = WM_XBUTTONDOWN;
+        Msg.message = WM_XBUTTONDOWN;
+        CurInfo->LastBtnDown = LargeTickCount.u.LowPart;
       }
 
       if ((Data[i].ButtonFlags & MOUSE_LEFT_BUTTON_UP) > 0)
       {
-      	CurInfo->ButtonsDown &= CurInfo->SwapButtons ? ~MK_RBUTTON : ~MK_LBUTTON;
-        Msg.message = CurInfo->SwapButtons ? WM_RBUTTONUP : WM_LBUTTONUP;
+      	CurInfo->ButtonsDown &= (CurInfo->SwapButtons ? ~MK_RBUTTON : ~MK_LBUTTON);
+        Msg.message = (CurInfo->SwapButtons ? WM_RBUTTONUP : WM_LBUTTONUP);
       }
       if ((Data[i].ButtonFlags & MOUSE_MIDDLE_BUTTON_UP) > 0)
       {
@@ -461,8 +402,8 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
       }
       if ((Data[i].ButtonFlags & MOUSE_RIGHT_BUTTON_UP) > 0)
       {
-      	CurInfo->ButtonsDown &= CurInfo->SwapButtons ? ~MK_LBUTTON : ~MK_RBUTTON;
-        Msg.message = CurInfo->SwapButtons ? WM_LBUTTONUP : WM_RBUTTONUP;
+      	CurInfo->ButtonsDown &= (CurInfo->SwapButtons ? ~MK_LBUTTON : ~MK_RBUTTON);
+        Msg.message = (CurInfo->SwapButtons ? WM_LBUTTONUP : WM_RBUTTONUP);
       }
       if ((Data[i].ButtonFlags & MOUSE_BUTTON_4_UP) > 0)
       {
@@ -500,9 +441,6 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
       }
     }
   }
-  
-  KeQueryTickCount(&LargeTickCount);
-  TickCount = LargeTickCount.u.LowPart;
 
   /* If the mouse moved then move the pointer. */
   if ((mouse_cx != 0 || mouse_cy != 0) && MouseEnabled)
@@ -511,7 +449,6 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
     Msg.message = WM_MOUSEMOVE;
     Msg.pt.x = CurInfo->x;
     Msg.pt.y = CurInfo->y;
-    Msg.time = TickCount;
     Msg.lParam = MAKELPARAM(CurInfo->x, CurInfo->y);
     MsqInsertSystemMessage(&Msg, TRUE);
     
@@ -530,7 +467,6 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
     Msg.message = WM_MOUSEWHEEL;
     Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, dScroll);
     Msg.lParam = MAKELPARAM(CurInfo->x, CurInfo->y);
-    Msg.time = TickCount;
     Msg.pt.x = CurInfo->x;
     Msg.pt.y = CurInfo->y;
     MsqInsertSystemMessage(&Msg, FALSE);
