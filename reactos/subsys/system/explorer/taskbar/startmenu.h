@@ -181,7 +181,7 @@ struct SMBtnInfo
 	bool	_enabled;
 };
 
-typedef list<SMBtnInfo> SMBtnList;
+typedef vector<SMBtnInfo> SMBtnVector;
 
 #endif
 
@@ -235,7 +235,7 @@ protected:
 	StartMenuCreateInfo _create_info;	// copy of the original create info
 
 #ifdef _LIGHT_STARTMENU
-	SMBtnList _buttons;
+	SMBtnVector _buttons;
 	int		_selected_id;
 
 	void	ResizeToButtons();

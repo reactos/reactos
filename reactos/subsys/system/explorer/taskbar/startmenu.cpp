@@ -51,7 +51,7 @@ StartMenu::StartMenu(HWND hwnd)
 	_border_top = 0;
 	_last_pos = WindowRect(hwnd).pos();
 #ifdef _LIGHT_STARTMENU
-	_selected_id = 0;
+	_selected_id = -1;
 #endif
 }
 
@@ -69,7 +69,7 @@ StartMenu::StartMenu(HWND hwnd, const StartMenuCreateInfo& create_info)
 	_border_top = create_info._border_top;
 	_last_pos = WindowRect(hwnd).pos();
 #ifdef _LIGHT_STARTMENU
-	_selected_id = 0;
+	_selected_id = -1;
 #endif
 }
 
@@ -162,7 +162,7 @@ LRESULT	StartMenu::Init(LPCREATESTRUCT pcs)
 #else
 		if (!GetWindow(_hwnd, GW_CHILD))
 #endif
-			AddButton(ResString(IDS_EMPTY), 0, false, -1, false);
+			AddButton(ResString(IDS_EMPTY), 0, false, 0, false);
 
 #ifdef _LIGHT_STARTMENU
 		ResizeToButtons();
@@ -347,7 +347,8 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 void StartMenu::Paint(PaintCanvas& canvas)
 {
-	DrawFloatingButton(canvas);
+	if (_border_top)
+		DrawFloatingButton(canvas);
 
 #ifdef _LIGHT_STARTMENU
 	ClientRect clnt(_hwnd);
@@ -358,7 +359,7 @@ void StartMenu::Paint(PaintCanvas& canvas)
 	FontSelection font(canvas, GetStockFont(DEFAULT_GUI_FONT));
 	BkMode bk_mode(canvas, TRANSPARENT);
 
-	for(SMBtnList::const_iterator it=_buttons.begin(); it!=_buttons.end(); ++it) {
+	for(SMBtnVector::const_iterator it=_buttons.begin(); it!=_buttons.end(); ++it) {
 		const SMBtnInfo& info = *it;
 
 		if (rect.top > canvas.rcPaint.bottom)
@@ -395,7 +396,7 @@ int StartMenu::ButtonHitTest(POINT pt)
 	if (pt.x<rect.left || pt.x>rect.right)
 		return 0;
 
-	for(SMBtnList::const_iterator it=_buttons.begin(); it!=_buttons.end(); ++it) {
+	for(SMBtnVector::const_iterator it=_buttons.begin(); it!=_buttons.end(); ++it) {
 		const SMBtnInfo& info = *it;
 
 		if (rect.top > pt.y)
@@ -420,7 +421,7 @@ void StartMenu::InvalidateSelection()
 	ClientRect clnt(_hwnd);
 	RECT rect = {_border_left, _border_top, clnt.right, STARTMENU_LINE_HEIGHT};
 
-	for(SMBtnList::const_iterator it=_buttons.begin(); it!=_buttons.end(); ++it) {
+	for(SMBtnVector::const_iterator it=_buttons.begin(); it!=_buttons.end(); ++it) {
 		const SMBtnInfo& info = *it;
 
 		rect.bottom = rect.top + (info._id==-1? STARTMENU_SEP_HEIGHT: STARTMENU_LINE_HEIGHT);
@@ -436,7 +437,7 @@ void StartMenu::InvalidateSelection()
 
 const SMBtnInfo* StartMenu::GetButtonInfo(int id) const
 {
-	for(SMBtnList::const_iterator it=_buttons.begin(); it!=_buttons.end(); ++it)
+	for(SMBtnVector::const_iterator it=_buttons.begin(); it!=_buttons.end(); ++it)
 		if (it->_id == id)
 			return &*it;
 
@@ -447,17 +448,21 @@ void StartMenu::SelectButton(int id)
 {
 	InvalidateSelection();
 
-	_selected_id = id;
+	const SMBtnInfo* btn = GetButtonInfo(id);
 
-	InvalidateSelection();
+	if (btn && btn->_enabled) {
+		_selected_id = id;
 
-	 // automatically open submenus
-	if (_selected_id)
-		if (GetButtonInfo(_selected_id)->_hasSubmenu) {
+		InvalidateSelection();
+
+		 // automatically open submenus
+		if (btn->_hasSubmenu) {
 			UpdateWindow(_hwnd);	// draw focused button before waiting on submenu creation
 			Command(_selected_id, BN_CLICKED);
 		} else
 			CloseOtherSubmenus(0);	// close any open submenu
+	} else
+		_selected_id = -1;
 }
 
 #endif
@@ -469,7 +474,7 @@ bool StartMenu::GetButtonRect(int id, PRECT prect)
 	ClientRect clnt(_hwnd);
 	RECT rect = {_border_left, _border_top, clnt.right, STARTMENU_LINE_HEIGHT};
 
-	for(SMBtnList::const_iterator it=_buttons.begin(); it!=_buttons.end(); ++it) {
+	for(SMBtnVector::const_iterator it=_buttons.begin(); it!=_buttons.end(); ++it) {
 		const SMBtnInfo& info = *it;
 
 		rect.bottom = rect.top + (info._id==-1? STARTMENU_SEP_HEIGHT: STARTMENU_LINE_HEIGHT);
@@ -843,7 +848,8 @@ void DrawStartMenuButton(HDC hdc, const RECT& rect, LPCTSTR title, HICON hIcon,
 		static SmallIcon selArrowIcon(IDI_ARROW_SELECTED);
 
 		DrawIconEx(hdc, rect.right-16, iconPos.y,
-					has_focus?selArrowIcon:arrowIcon, 16, 16, 0, bk_brush, DI_NORMAL);
+					has_focus? selArrowIcon: arrowIcon,
+					16, 16, 0, bk_brush, DI_NORMAL);
 	}
 
 	BkMode bk_mode(hdc, TRANSPARENT);
@@ -869,7 +875,7 @@ void StartMenu::ResizeToButtons()
 	int max_width = STARTMENU_WIDTH_MIN;
 	int height = 0;
 
-	for(SMBtnList::const_iterator it=_buttons.begin(); it!=_buttons.end(); ++it) {
+	for(SMBtnVector::const_iterator it=_buttons.begin(); it!=_buttons.end(); ++it) {
 		int w = GetStartMenuBtnTextWidth(canvas, it->_title, _hwnd);
 
 		if (w > max_width)
