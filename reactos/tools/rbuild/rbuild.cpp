@@ -108,39 +108,6 @@ bool XMLFile::get_token(string& token)
 	return true;
 }
 
-#if 0
-bool XMLFile::getc(char& c)
-{
-	while ( _bufidx >= _buf.size() )
-	{
-		static buf[4096];
-		if ( !fgets ( buf, sizeof(buf), _f.back() ) )
-		{
-			fclose ( _f.back() );
-			f.pop_back();
-			continue;
-		}
-		_buf = buf;
-		_bufidx = 0;
-		// REM TODO FIXME - check for and load includes here...
-		/*char* p = &_buf[0];
-		p += strspn ( p, " \t" );
-		if ( *p++ != '#' )
-			break;
-		p += strspn ( p, " \t" );
-		if ( strncmp ( p, "include", 7 ) )
-			break;
-		p += 7;
-		if ( !isspace(*p++) )
-			break;*/
-
-	}
-	c = _buf[_bufidx++];
-	return true;
-}
-#endif
-
-
 XMLAttribute::XMLAttribute()
 {
 }
