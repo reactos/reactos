@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: install.c,v 1.12 2004/04/19 10:54:23 ekohl Exp $
+/* $Id: install.c,v 1.13 2004/06/24 09:17:33 gvg Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -192,6 +192,62 @@ RestartDlgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
    return FALSE;
 }
 
+static VOID
+CreateTempDir(LPCWSTR VarName)
+{
+  WCHAR szTempDir[MAX_PATH];
+  WCHAR szBuffer[MAX_PATH];
+  DWORD dwLength;
+  HKEY hKey;
+
+  if (RegOpenKeyExW (HKEY_LOCAL_MACHINE,
+		     L"SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment",
+		     0,
+		     KEY_ALL_ACCESS,
+		     &hKey))
+    {
+      DebugPrint("Error: %lu\n", GetLastError());
+      return;
+    }
+
+  /* Get temp dir */
+  dwLength = MAX_PATH * sizeof(WCHAR);
+  if (RegQueryValueExW (hKey,
+			VarName,
+			NULL,
+			NULL,
+			(LPBYTE)szBuffer,
+			&dwLength))
+    {
+      DebugPrint("Error: %lu\n", GetLastError());
+      RegCloseKey (hKey);
+      return;
+    }
+
+  /* Expand it */
+  if (!ExpandEnvironmentStringsW (szBuffer,
+				  szTempDir,
+				  MAX_PATH))
+    {
+      DebugPrint("Error: %lu\n", GetLastError());
+      RegCloseKey (hKey);
+      return;
+    }
+
+  /* Create profiles directory */
+  if (!CreateDirectoryW (szTempDir, NULL))
+    {
+      if (GetLastError () != ERROR_ALREADY_EXISTS)
+	{
+	  DebugPrint("Error: %lu\n", GetLastError());
+	  RegCloseKey (hKey);
+	  return;
+	}
+    }
+
+  RegCloseKey (hKey);
+}
+
 DWORD STDCALL
 InstallReactOS (HINSTANCE hInstance)
 {
@@ -283,6 +339,9 @@ InstallReactOS (HINSTANCE hInstance)
 
   RtlFreeSid (AdminSid);
   RtlFreeSid (DomainSid);
+
+  CreateTempDir(L"TEMP");
+  CreateTempDir(L"TMP");
 
 #if 1
   InstallWizard ();
