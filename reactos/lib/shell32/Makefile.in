@@ -13,6 +13,7 @@ SPEC_SRCS16 = $(ALTNAMES:.dll=.spec)
 
 C_SRCS = \
 	authors.c \
+	autocomplete.c \
 	brsfolder.c \
 	changenotify.c \
 	classes.c \

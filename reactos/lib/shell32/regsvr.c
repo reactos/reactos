@@ -489,6 +489,12 @@ static struct regsvr_coclass const coclass_list[] = {
 	"Apartment",
 	SHELLEX_MAYCHANGEDEFAULTMENU
     },
+    {   &CLSID_AutoComplete,
+	"AutoComplete",
+	NULL,
+	"shell32.dll",
+	"Apartment",
+    },
     { NULL }			/* list terminator */
 };
 

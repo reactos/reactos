@@ -71,6 +71,7 @@ extern const GUID IID_IDropTargetHelper;
 extern const GUID IID_IDragSourceHelper;
 #if (_WIN32_IE >= 0x400 || _WIN32_WINNT >= 0x500)
 extern const GUID IID_IPersistFolder2;
+extern const GUID CLSID_AutoComplete;
 #endif
 #if (_WIN32_WINNT >= 0x500)
 extern const GUID IID_IPersistFolder3;

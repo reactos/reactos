@@ -48,6 +48,7 @@ DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 
 #include "shlguid.h"
 #include "shlobj.h"
+#include "shldisp.h"
 #include "comcat.h"
 #if 0 /* FIXME */
 #include "urlmon.h"

@@ -11,6 +11,7 @@ extern "C" {
 #include <ole2.h>
 #include <shlguid.h>
 #include <shellapi.h>
+#include <shtypes.h>
 #pragma pack(push,1)
 #include <commctrl.h>
 
@@ -384,15 +385,6 @@ typedef struct _IDA {
 	UINT cidl;
 	UINT aoffset[1];
 } CIDA,*LPIDA;
-typedef struct _SHITEMID {
-	USHORT	cb;
-	BYTE	abID[1];
-} SHITEMID, * LPSHITEMID;
-typedef const SHITEMID *LPCSHITEMID;
-typedef struct _ITEMIDLIST {
-	SHITEMID mkid;
-} ITEMIDLIST,*LPITEMIDLIST;
-typedef const ITEMIDLIST *LPCITEMIDLIST;
 typedef int (CALLBACK* BFFCALLBACK)(HWND,UINT,LPARAM,LPARAM);
 typedef struct _browseinfoA {
 	HWND	hwndOwner;
@@ -448,14 +440,6 @@ typedef enum tagSHCONTF {
 	SHCONTF_SHAREABLE = 1024,
 	SHCONTF_STORAGE = 2048
 } SHCONTF;
-typedef struct _STRRET {
-	UINT uType;
-	_ANONYMOUS_UNION union {
-		LPWSTR pOleStr;
-		UINT uOffset;
-		char cStr[MAX_PATH];
-	} DUMMYUNIONNAME;
-} STRRET,*LPSTRRET;
 typedef enum {
 	FD_CLSID=1,FD_SIZEPOINT=2,FD_ATTRIBUTES=4,FD_CREATETIME=8,FD_ACCESSTIME=16,
 	FD_WRITESTIME=32,FD_FILESIZE=64,FD_LINKUI=0x8000
@@ -545,12 +529,6 @@ typedef struct
 	DWORD pid;
 } SHCOLUMNID, *LPSHCOLUMNID;
 typedef const SHCOLUMNID *LPCSHCOLUMNID;
-typedef struct _SHELLDETAILS
-{
-	int fmt; 
-	int cxChar;
-	STRRET str;
-} SHELLDETAILS, *LPSHELLDETAILS;
 typedef struct
 {
 	LPITEMIDLIST pidlTargetFolder;

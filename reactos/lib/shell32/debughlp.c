@@ -26,6 +26,7 @@
 #include "wingdi.h"
 #include "pidl.h"
 #include "shlguid.h"
+#include "shldisp.h"
 #include "wine/debug.h"
 #include "debughlp.h"
 #include "docobj.h"
@@ -301,6 +302,8 @@ static struct {
 	{&IID_IExtractIconA,		"IID_IExtractIconA"},
 	{&IID_IExtractIconW,		"IID_IExtractIconW"},
 	{&IID_IDataObject,		"IID_IDataObject"},
+	{&IID_IAutoComplete,            "IID_IAutoComplete"},
+	{&IID_IAutoComplete2,           "IID_IAutoComplete2"},
 	{NULL,NULL}};
 
 const char * shdebugstr_guid( const struct _GUID *id )
