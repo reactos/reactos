@@ -1,4 +1,4 @@
-/* $Id: print.c,v 1.3 2000/05/25 15:50:44 ekohl Exp $
+/* $Id: print.c,v 1.4 2002/03/17 17:48:17 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -30,15 +30,15 @@ ULONG
 DbgPrint(PCH Format, ...)
 {
    ANSI_STRING DebugString;
-   CHAR Buffer[512];
+   CHAR Buffer[4096];
    va_list ap;
 
    /* init ansi string */
    DebugString.Buffer = Buffer;
-   DebugString.MaximumLength = 512;
+   DebugString.MaximumLength = sizeof(Buffer);
 
    va_start (ap, Format);
-   DebugString.Length = _vsnprintf (Buffer, 512, Format, ap);
+   DebugString.Length = _vsnprintf (Buffer, sizeof(Buffer), Format, ap);
    va_end (ap);
 
    DbgService (1, &DebugString, NULL);
