@@ -16,10 +16,11 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib16bpp.c,v 1.11 2003/12/08 18:05:30 fireball Exp $ */
+/* $Id: dib16bpp.c,v 1.12 2003/12/11 22:55:03 fireball Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
+#include <math.h>
 #include <win32k/bitmaps.h>
 #include <win32k/debug.h>
 #include <debug.h>
@@ -338,14 +339,214 @@ DIB_16BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
   return TRUE;
 }
 
+
+/*
+=======================================
+ Stretching functions goes below
+ Some parts of code are based on an
+ article "Bresenhame image scaling"
+ Dr. Dobb Journal, May 2002
+=======================================
+*/
+
+typedef unsigned short PIXEL;
+
+// DON'T FIX BUGS IN THIS FUNCTION YET
+// BUT EMAIL INFO ABOUT IT TO aleksey at studiocerebral.com
+// THIS IS WORK IN PROGRESS !!
+
+/* 16-bit HiColor (565 format) */
+inline unsigned short average(unsigned short a, unsigned short b)
+{
+/*
+  if (a == b) {
+    return a;
+  } else {
+    unsigned short mask = ~ (((a | b) & 0x0410) << 1);
+    return ((a & mask) + (b & mask)) >> 1;
+  }*/ /* if */
+  return a; // FIXME: Temp hack to remove "PCB-effect" from the image
+}
+
+// DON'T FIX BUGS IN THIS FUNCTION YET
+// BUT EMAIL INFO ABOUT IT TO aleksey at studiocerebral.com
+// THIS IS WORK IN PROGRESS !!
+void ScaleLineAvg16(unsigned short *Target, unsigned short *Source, int SrcWidth, int TgtWidth)
+{
+  int NumPixels = TgtWidth;
+  int IntPart = SrcWidth / TgtWidth;
+  int FractPart = SrcWidth % TgtWidth;
+  int Mid = TgtWidth / 2;
+  int E = 0;
+  int skip;
+  WORD p;
+
+  skip = (TgtWidth < SrcWidth) ? 0 : (TgtWidth / (2*SrcWidth) + 1);
+  NumPixels -= skip;
+
+  while (NumPixels-- > 0) {
+    p = *Source;
+    if (E >= Mid)
+      p = average(p, *(Source+1));
+    *Target++ = p;
+    Source += IntPart;
+    E += FractPart;
+    if (E >= TgtWidth) {
+      E -= TgtWidth;
+      Source++;
+    } /* if */
+  } /* while */
+  while (skip-- > 0)
+    *Target++ = *Source;
+}
+
+// DON'T FIX BUGS IN THIS FUNCTION YET
+// BUT EMAIL INFO ABOUT IT TO aleksey at studiocerebral.com
+// THIS IS WORK IN PROGRESS !!
+void ScaleRectAvg(PIXEL *Target, PIXEL *Source, int SrcWidth, int SrcHeight,
+                  int TgtWidth, int TgtHeight, int srcPitch, int dstPitch)
+{
+  int NumPixels = TgtHeight;
+  //int IntPart = ceil(((float)SrcHeight / TgtHeight) * (float)SrcWidth);
+  int IntPart = (SrcHeight / TgtHeight) * SrcWidth;
+  int FractPart = SrcHeight % TgtHeight;
+  int Mid = TgtHeight / 2;
+  int E = 0;
+  int skip;
+  PIXEL *ScanLine, *ScanLineAhead;
+  PIXEL *PrevSource = NULL;
+  PIXEL *PrevSourceAhead = NULL;
+
+  skip = (TgtHeight < SrcHeight) ? 0 : (TgtHeight / (2*SrcHeight) + 1);
+  NumPixels -= skip;
+
+  ScanLine = (PIXEL*)ExAllocatePool(NonPagedPool, TgtWidth*sizeof(PIXEL)); // FIXME: Should we use PagedPool here?
+  ScanLineAhead = (PIXEL *)ExAllocatePool(NonPagedPool, TgtWidth*sizeof(PIXEL));
+
+  while (NumPixels-- > 0) {
+    if (Source != PrevSource) {
+      if (Source == PrevSourceAhead) {
+        /* the next scan line has already been scaled and stored in
+         * ScanLineAhead; swap the buffers that ScanLine and ScanLineAhead
+         * point to
+         */
+        PIXEL *tmp = ScanLine;
+        ScanLine = ScanLineAhead;
+        ScanLineAhead = tmp;
+      } else {
+        ScaleLineAvg16(ScanLine, Source, SrcWidth, TgtWidth);
+      } /* if */
+      PrevSource = Source;
+    } /* if */
+    
+    if (E >= Mid && PrevSourceAhead != (PIXEL *)((BYTE *)Source + srcPitch)) {
+      int x;
+      ScaleLineAvg16(ScanLineAhead, (PIXEL *)((BYTE *)Source + srcPitch), SrcWidth, TgtWidth);
+      for (x = 0; x < TgtWidth; x++)
+        ScanLine[x] = average(ScanLine[x], ScanLineAhead[x]);
+      PrevSourceAhead = (PIXEL *)((BYTE *)Source + srcPitch);
+    } /* if */
+    
+    memcpy(Target, ScanLine, TgtWidth*sizeof(PIXEL));
+    Target = (PIXEL *)((BYTE *)Target + dstPitch);
+    Source += IntPart; // <-----
+    E += FractPart;
+    if (E >= TgtHeight) {
+      E -= TgtHeight;
+      Source = (PIXEL *)((BYTE *)Source + srcPitch);
+    } /* if */
+  } /* while */
+
+  if (skip > 0 && Source != PrevSource)
+    ScaleLineAvg16(ScanLine, Source, SrcWidth, TgtWidth);
+  while (skip-- > 0) {
+    memcpy(Target, ScanLine, TgtWidth*sizeof(PIXEL));
+    Target = (PIXEL *)((BYTE *)Target + dstPitch);
+  } /* while */
+
+  ExFreePool(ScanLine);
+  ExFreePool(ScanLineAhead);
+}
+
+// DON'T FIX BUGS IN THIS FUNCTION YET
+// BUT EMAIL INFO ABOUT IT TO aleksey at studiocerebral.com
+// THIS IS WORK IN PROGRESS !!
 BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                             SURFGDI *DestGDI, SURFGDI *SourceGDI,
                             RECTL* DestRect, RECTL *SourceRect,
                             POINTL* MaskOrigin, POINTL* BrushOrigin,
 			                XLATEOBJ *ColorTranslation, ULONG Mode)
 {
-  DbgPrint("DIB_16BPP_StretchBlt: Source BPP: %u\n", SourceGDI->BitsPerPixel);
-  return FALSE;
+  BYTE *SourceLine, *DestLine;
+  
+  DbgPrint("DIB_16BPP_StretchBlt: Source BPP: %u, srcRect: (%d,%d)-(%d,%d), dstRect: (%d,%d)-(%d,%d)\n",
+     SourceGDI->BitsPerPixel, SourceRect->left, SourceRect->top, SourceRect->right, SourceRect->bottom,
+     DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
+
+    switch(SourceGDI->BitsPerPixel)
+    {
+      case 1:
+         return FALSE;      
+      break;
+  
+      case 4:
+         return FALSE;
+      break;
+  
+      case 8:
+         return FALSE;
+      break;
+
+      case 16:
+	    SourceLine = SourceSurf->pvScan0 + (SourceRect->top * SourceSurf->lDelta) + 2 * SourceRect->left;
+	    DestLine = DestSurf->pvScan0 + (DestRect->top * DestSurf->lDelta) + 2 * DestRect->left;
+	    /*
+	    y=0;
+	    for (j = SourceRect->top; j < SourceRect->bottom; j++)
+        {
+           dday = -1000;
+
+           while (dday < 0)
+           {
+              dday += izoom;
+              x=0;
+		      DestBits = DestLine;
+		      SourceBits = SourceLine;
+	          for (i = SourceRect->left; i < SourceRect->right; i++)
+		      {
+		         *((WORD *)DestBits) = (WORD)XLATEOBJ_iXlate(ColorTranslation, *((WORD *)SourceBits));
+		         SourceBits += 2;
+		         DestBits += 2;
+		         x++;
+              }
+                     
+		      //SourceLine += SourceSurf->lDelta;
+		      DestLine += DestSurf->lDelta;
+		      lines++;
+           }
+           SourceLine += SourceSurf->lDelta;
+        }*/
+        ScaleRectAvg((PIXEL *)DestLine, (PIXEL *)SourceLine,
+           SourceRect->right-SourceRect->left, SourceRect->bottom-SourceRect->top, 
+           DestRect->right-DestRect->left, DestRect->bottom-DestRect->top, SourceSurf->lDelta, DestSurf->lDelta);
+      break;
+    
+      case 24:
+         return FALSE;
+      break;
+      
+      case 32:
+         return FALSE;
+      break;
+      
+      default:
+      //DbgPrint("DIB_16BPP_StretchBlt: Unhandled Source BPP: %u\n", SourceGDI->BitsPerPixel);
+      return FALSE;
+    }
+
+  
+    
+  return TRUE;
 }
 
 /* EOF */
