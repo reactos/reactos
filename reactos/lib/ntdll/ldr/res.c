@@ -1,4 +1,4 @@
-/* $Id: res.c,v 1.6 2003/12/20 21:43:27 navaraf Exp $
+/* $Id: res.c,v 1.7 2004/09/11 17:06:33 gvg Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -7,6 +7,13 @@
  * PROGRAMMERS:     Jean Michault
  *                  Rex Jolliff (rex@lvcablemodem.com)
  *                  Robert Dickenson (robd@mok.lvcm.com)
+ * NOTES:           Parts based on Wine code
+ *                  Copyright 1995 Thomas Sandford
+ *                  Copyright 1996 Martin von Loewis
+ *                  Copyright 2003 Alexandre Julliard
+ *                  Copyright 1993 Robert J. Amstadt
+ *                  Copyright 1995 Alexandre Julliard
+ *                  Copyright 1997 Marcus Meissner
  */
 
 /*
@@ -33,6 +40,52 @@
 
 /* FUNCTIONS *****************************************************************/
 
+static PIMAGE_RESOURCE_DIRECTORY_ENTRY FASTCALL
+FindEntryById(PIMAGE_RESOURCE_DIRECTORY ResDir,
+              ULONG Id)
+{
+    PIMAGE_RESOURCE_DIRECTORY_ENTRY ResEntry;
+    LONG low, high, mid, result;
+
+    /* We use ID number instead of string */
+    ResEntry = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)(ResDir + 1) + ResDir->NumberOfNamedEntries;
+    DPRINT("ResEntry %x - Resource ID number instead of string\n", (ULONG)ResEntry);
+    DPRINT("EntryCount %d\n", (ULONG)ResDir->NumberOfIdEntries);
+
+    low = 0;
+    high = ResDir->NumberOfIdEntries - 1;
+    mid = high/2;
+    while( low <= high ) {
+        result = Id - ResEntry[mid].Name;
+        if(result == 0)
+            return ResEntry + mid;
+        if(result < 0)
+            high = mid - 1;
+        else
+            low = mid + 1;
+				
+        mid = (low + high)/2;
+    }
+
+    return NULL;
+}
+
+static int FASTCALL
+PushLanguage(WORD *list, int pos, WORD lang)
+{
+    int i;
+
+    for (i = 0; i < pos; i++) {
+        if (list[i] == lang) {
+            return pos;
+        }
+    }
+
+    list[pos++] = lang;
+
+    return pos;
+}
+
 /*
 	Status = LdrFindResource_U (hModule,
 				    &ResourceInfo,
@@ -53,6 +106,10 @@ LdrFindResource_U(PVOID BaseAddress,
     ULONG i;
     ULONG Id;
     LONG low, high, mid, result;
+    WORD list[9];  /* list of languages to try */
+    int j, pos = 0;
+    LCID UserLCID, SystemLCID;
+    LANGID UserLangID, SystemLangID;
 
     DPRINT("LdrFindResource_U(%08x, %08x, %d, %08x)\n", BaseAddress, ResourceInfo, Level, ResourceDataEntry);
 
@@ -68,13 +125,10 @@ LdrFindResource_U(PVOID BaseAddress,
     ResBase = ResDir;
 
     /* Let's go into resource tree */
-    for (i = 0; i < Level; i++) {
+    for (i = 0; i < (2 < Level ? 2 : Level); i++) {
         DPRINT("ResDir: %x  Level: %d\n", (ULONG)ResDir, i);
 
         Id = ((PULONG)ResourceInfo)[i];
-//	ResourceInfo.Type = (ULONG)lpType;
-//	ResourceInfo.Name = (ULONG)lpName;
-//	ResourceInfo.Language = (ULONG)wLanguage;
 
         if (Id & 0xFFFF0000) {
             /* Resource name is a unicode string */
@@ -92,7 +146,10 @@ LdrFindResource_U(PVOID BaseAddress,
                /* Need double check for lexical & length */
                if(result == 0) {
                   result = (wcslen((PWCHAR)Id) - (int)*ws);
-                  if(result == 0) goto found;
+                  if(result == 0) {
+                      ResEntry += mid;
+                      goto found;
+                  }
                }
                if(result < 0)
                   high = mid - 1;
@@ -103,23 +160,8 @@ LdrFindResource_U(PVOID BaseAddress,
             }
         } else {
             /* We use ID number instead of string */
-            ResEntry = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)(ResDir + 1) + ResDir->NumberOfNamedEntries;
-            DPRINT("ResEntry %x - Resource ID number instead of string\n", (ULONG)ResEntry);
-            DPRINT("EntryCount %d\n", (ULONG)ResDir->NumberOfIdEntries);
-
-            low = 0;
-            high = ResDir->NumberOfIdEntries - 1;
-            mid = high/2;
-            while( low <= high ) {
-               result = Id - ResEntry[mid].Name;
-               if(result == 0) goto found;
-               if(result < 0)
-                  high = mid - 1;
-               else
-                  low = mid + 1;
-				
-               mid = (low + high)/2;
-             }
+            ResEntry = FindEntryById(ResDir, Id);
+            if (NULL != ResEntry) goto found;
         }
 
         switch (i) {
@@ -146,7 +188,70 @@ LdrFindResource_U(PVOID BaseAddress,
         }
 found:;
         ResDir = (PIMAGE_RESOURCE_DIRECTORY)((ULONG)ResBase +
-                     (ResEntry[mid].OffsetToData & 0x7FFFFFFF));
+                     (ResEntry->OffsetToData & 0x7FFFFFFF));
+    }
+
+    if (3 <= Level) {
+        /* 1. specified language */
+        pos = PushLanguage(list, pos, ResourceInfo->Language );
+
+        /* 2. specified language with neutral sublanguage */
+        pos = PushLanguage(list, pos, MAKELANGID(PRIMARYLANGID(ResourceInfo->Language), SUBLANG_NEUTRAL));
+
+        /* 3. neutral language with neutral sublanguage */
+        pos = PushLanguage(list, pos, MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL));
+
+        /* if no explicitly specified language, try some defaults */
+        if (LANG_NEUTRAL == PRIMARYLANGID(ResourceInfo->Language)) {
+            /* user defaults, unless SYS_DEFAULT sublanguage specified  */
+            if (SUBLANG_SYS_DEFAULT != SUBLANGID(ResourceInfo->Language)) {
+                NtQueryDefaultLocale(TRUE, &UserLCID);
+                UserLangID = LANGIDFROMLCID(UserLCID);
+
+                /* 4. current thread locale language */
+                pos = PushLanguage(list, pos, LANGIDFROMLCID(NtCurrentTeb()->CurrentLocale));
+
+                /* 5. user locale language */
+                pos = PushLanguage(list, pos, UserLangID);
+
+                /* 6. user locale language with neutral sublanguage  */
+                pos = PushLanguage(list, pos, MAKELANGID(PRIMARYLANGID(UserLangID),
+                                                         SUBLANG_NEUTRAL));
+            }
+
+            /* now system defaults */
+            NtQueryDefaultLocale(FALSE, &SystemLCID);
+            SystemLangID = LANGIDFROMLCID(SystemLCID);
+
+            /* 7. system locale language */
+            pos = PushLanguage(list, pos, SystemLangID);
+
+            /* 8. system locale language with neutral sublanguage */
+            pos = PushLanguage(list, pos, MAKELANGID(PRIMARYLANGID(SystemLangID),
+                                                     SUBLANG_NEUTRAL));
+
+            /* 9. English */
+            pos = PushLanguage(list, pos, MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT));
+        }
+
+        ResEntry = NULL;
+        for (j = 0; NULL == ResEntry && j < pos; j++)
+            ResEntry = FindEntryById(ResDir, list[j]);
+        if (NULL == ResEntry) {
+            if (ResDir->NumberOfNamedEntries || ResDir->NumberOfIdEntries) {
+                /* Use the first available language */
+                ResEntry = (IMAGE_RESOURCE_DIRECTORY_ENTRY*)(ResDir + 1);
+            } else {
+                DPRINT("Error - STATUS_RESOURCE_LANG_NOT_FOUND\n", i);
+                return STATUS_RESOURCE_LANG_NOT_FOUND;
+            }
+        }
+        ResDir = (PIMAGE_RESOURCE_DIRECTORY)((ULONG)ResBase +
+                     (ResEntry->OffsetToData & 0x7FFFFFFF));
+        if (3 < Level) {
+            DPRINT("Error - STATUS_INVALID_PARAMETER\n", i);
+            return STATUS_INVALID_PARAMETER;
+        }
     }
     DPRINT("ResourceDataEntry: %x\n", (ULONG)ResDir);
 

@@ -1,4 +1,4 @@
-/* $Id: res.c,v 1.21 2004/06/13 20:04:56 navaraf Exp $
+/* $Id: res.c,v 1.22 2004/09/11 17:06:33 gvg Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -132,12 +132,6 @@ FindResourceExW (
 	ResourceInfo.Type = (ULONG)lpType;
 	ResourceInfo.Name = (ULONG)lpName;
 	ResourceInfo.Language = (ULONG)wLanguage;
-	if (ResourceInfo.Language == (ULONG) MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL)) {
-		ResourceInfo.Language = (ULONG) GetUserDefaultLangID();
-		if (ResourceInfo.Language == (ULONG) MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL)) {
-			ResourceInfo.Language = (ULONG) MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
-		}
-	}
 
 	Status = LdrFindResource_U (hModule,
 				    &ResourceInfo,
