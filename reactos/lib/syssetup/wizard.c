@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: wizard.c,v 1.13 2004/11/12 15:42:36 ekohl Exp $
+/* $Id: wizard.c,v 1.14 2004/11/22 11:01:45 gvg Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -28,6 +28,8 @@
 /* INCLUDES *****************************************************************/
 
 #include <windows.h>
+#include <windowsx.h>
+#include <tchar.h>
 #include <commctrl.h>
 
 #include <string.h>
@@ -98,6 +100,76 @@ CreateTitleFont(VOID)
 
 
 INT_PTR CALLBACK
+GplDlgProc(HWND hwndDlg,
+           UINT uMsg,
+           WPARAM wParam,
+           LPARAM lParam)
+{
+  HRSRC GplTextResource;
+  HGLOBAL GplTextMem;
+  PVOID GplTextLocked;
+  PCHAR GplText;
+  DWORD Size;
+  
+
+  switch (uMsg)
+    {
+      case WM_INITDIALOG:
+        GplTextResource = FindResource(hDllInstance, MAKEINTRESOURCE(IDR_GPL), _T("RT_TEXT"));
+        if (NULL == GplTextResource)
+          {
+            break;
+          }
+        Size = SizeofResource(hDllInstance, GplTextResource);
+        if (0 == Size)
+          {
+            break;
+          }
+        GplText = HeapAlloc(GetProcessHeap(), 0, Size + 1);
+        if (NULL == GplText)
+          {
+            break;
+          }
+        GplTextMem = LoadResource(hDllInstance, GplTextResource);
+        if (NULL == GplTextMem)
+          {
+            HeapFree(GetProcessHeap(), 0, GplText);
+            break;
+          }
+        GplTextLocked = LockResource(GplTextMem);
+        if (NULL == GplTextLocked)
+          {
+            HeapFree(GetProcessHeap(), 0, GplText);
+            break;
+          }
+        memcpy(GplText, GplTextLocked, Size);
+        GplText[Size] = '\0';
+        SendMessageA(GetDlgItem(hwndDlg, IDC_GPL_TEXT), WM_SETTEXT, 0, (LPARAM) GplText);
+        HeapFree(GetProcessHeap(), 0, GplText);
+        SetFocus(GetDlgItem(hwndDlg, IDOK));
+	return FALSE;
+        break;
+
+      case WM_CLOSE:
+        EndDialog(hwndDlg, IDCANCEL);
+        break;
+
+      case WM_COMMAND:
+	if (HIWORD(wParam) == BN_CLICKED && IDOK == LOWORD(wParam))
+	  {
+            EndDialog(hwndDlg, IDOK);
+          }
+        break;
+
+      default:
+        break;
+    }
+
+  return FALSE;
+}
+
+
+INT_PTR CALLBACK
 WelcomeDlgProc(HWND hwndDlg,
                UINT uMsg,
                WPARAM wParam,
@@ -147,6 +219,99 @@ WelcomeDlgProc(HWND hwndDlg,
               case PSN_SETACTIVE:
                 /* Enable the Next button */
                 PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
+                break;
+
+              default:
+                break;
+            }
+        }
+        break;
+
+      default:
+        break;
+    }
+
+  return FALSE;
+}
+
+
+INT_PTR CALLBACK
+AckPageDlgProc(HWND hwndDlg,
+                 UINT uMsg,
+                 WPARAM wParam,
+                 LPARAM lParam)
+{
+  LPNMHDR lpnm;
+  PWCHAR Projects;
+  PWCHAR End, CurrentProject;
+  UINT ProjectsSize;
+  int ProjectsCount;
+
+  switch (uMsg)
+    {
+      case WM_INITDIALOG:
+        {
+          Projects = NULL;
+          ProjectsSize = 256;
+	  do
+            {
+              Projects = HeapAlloc(GetProcessHeap(), 0, ProjectsSize * sizeof(WCHAR));
+              if (NULL == Projects)
+                {
+                  return FALSE;
+                }
+              ProjectsCount =  LoadString(hDllInstance, IDS_ACKPROJECTS, Projects, ProjectsSize);
+              if (0 == ProjectsCount)
+                {
+                  HeapFree(GetProcessHeap(), 0, Projects);
+                  return FALSE;
+                }
+              if (ProjectsCount < ProjectsSize - 1)
+                {
+                  break;
+                }
+              HeapFree(GetProcessHeap(), 0, Projects);
+              ProjectsSize *= 2;
+            }
+          while (1);
+          CurrentProject = Projects;
+          while (L'\0' != *CurrentProject)
+            {
+              End = wcschr(CurrentProject, L'\n');
+              if (NULL != End)
+                {
+                  *End = L'\0';
+                }
+              ListBox_AddString(GetDlgItem(hwndDlg, IDC_PROJECTS), CurrentProject);
+              if (NULL != End)
+                {
+                  CurrentProject = End + 1;
+                }
+              else
+                {
+                  CurrentProject += wcslen(CurrentProject);
+                }
+            }
+          HeapFree(GetProcessHeap(), 0, Projects);
+        }
+        break;
+
+      case WM_COMMAND:
+	if (HIWORD(wParam) == BN_CLICKED && IDC_VIEWGPL == LOWORD(wParam))
+	  {
+            DialogBox(hDllInstance, MAKEINTRESOURCE(IDD_GPL), NULL, GplDlgProc);
+          }
+        break;
+
+      case WM_NOTIFY:
+        {
+          lpnm = (LPNMHDR)lParam;
+
+          switch (lpnm->code)
+            {
+              case PSN_SETACTIVE:
+                /* Enable the Back and Next buttons */
+                PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                 break;
 
               default:
@@ -1050,7 +1215,7 @@ VOID
 InstallWizard(VOID)
 {
   PROPSHEETHEADER psh;
-  HPROPSHEETPAGE ahpsp[6];
+  HPROPSHEETPAGE ahpsp[8];
   PROPSHEETPAGE psp;
 
   /* Clear setup data */
@@ -1066,13 +1231,21 @@ InstallWizard(VOID)
   psp.pszTemplate = MAKEINTRESOURCE(IDD_WELCOMEPAGE);
   ahpsp[0] = CreatePropertySheetPage(&psp);
 
+  /* Create the Acknowledgements page */
+  psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
+  psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_ACKTITLE);
+  psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_ACKSUBTITLE);
+  psp.pszTemplate = MAKEINTRESOURCE(IDD_ACKPAGE);
+  psp.pfnDlgProc = AckPageDlgProc;
+  ahpsp[1] = CreatePropertySheetPage(&psp);
+
   /* Create the Owner page */
   psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
   psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_OWNERTITLE);
   psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_OWNERSUBTITLE);
   psp.pszTemplate = MAKEINTRESOURCE(IDD_OWNERPAGE);
   psp.pfnDlgProc = OwnerPageDlgProc;
-  ahpsp[1] = CreatePropertySheetPage(&psp);
+  ahpsp[2] = CreatePropertySheetPage(&psp);
 
   /* Create the Computer page */
   psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
@@ -1080,7 +1253,7 @@ InstallWizard(VOID)
   psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_COMPUTERSUBTITLE);
   psp.pfnDlgProc = ComputerPageDlgProc;
   psp.pszTemplate = MAKEINTRESOURCE(IDD_COMPUTERPAGE);
-  ahpsp[2] = CreatePropertySheetPage(&psp);
+  ahpsp[3] = CreatePropertySheetPage(&psp);
 
 
   /* Create the Locale page */
@@ -1089,7 +1262,7 @@ InstallWizard(VOID)
   psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_LOCALESUBTITLE);
   psp.pfnDlgProc = LocalePageDlgProc;
   psp.pszTemplate = MAKEINTRESOURCE(IDD_LOCALEPAGE);
-  ahpsp[3] = CreatePropertySheetPage(&psp);
+  ahpsp[4] = CreatePropertySheetPage(&psp);
 
 
   /* Create the DateTime page */
@@ -1098,7 +1271,7 @@ InstallWizard(VOID)
   psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_DATETIMESUBTITLE);
   psp.pfnDlgProc = DateTimePageDlgProc;
   psp.pszTemplate = MAKEINTRESOURCE(IDD_DATETIMEPAGE);
-  ahpsp[4] = CreatePropertySheetPage(&psp);
+  ahpsp[5] = CreatePropertySheetPage(&psp);
 
 
   /* Create the Process page */
@@ -1107,21 +1280,21 @@ InstallWizard(VOID)
   psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_PROCESSSUBTITLE);
   psp.pfnDlgProc = ProcessPageDlgProc;
   psp.pszTemplate = MAKEINTRESOURCE(IDD_PROCESSPAGE);
-  ahpsp[5] = CreatePropertySheetPage(&psp);
+  ahpsp[6] = CreatePropertySheetPage(&psp);
 
 
   /* Create the Finish page */
   psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
   psp.pfnDlgProc = FinishDlgProc;
   psp.pszTemplate = MAKEINTRESOURCE(IDD_FINISHPAGE);
-  ahpsp[6] = CreatePropertySheetPage(&psp);
+  ahpsp[7] = CreatePropertySheetPage(&psp);
 
   /* Create the property sheet */
   psh.dwSize = sizeof(PROPSHEETHEADER);
   psh.dwFlags = PSH_WIZARD97 | PSH_WATERMARK | PSH_HEADER;
   psh.hInstance = hDllInstance;
   psh.hwndParent = NULL;
-  psh.nPages = 7;
+  psh.nPages = 8;
   psh.nStartPage = 0;
   psh.phpage = ahpsp;
   psh.pszbmWatermark = MAKEINTRESOURCE(IDB_WATERMARK);

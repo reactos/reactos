@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.12 2004/11/12 15:42:36 ekohl Exp $
+# $Id: Makefile,v 1.13 2004/11/22 11:01:45 gvg Exp $
 
 PATH_TO_TOP = ../..
 
@@ -22,5 +22,9 @@ TARGET_OBJECTS = dllmain.o install.o logfile.o wizard.o
 
 include $(PATH_TO_TOP)/rules.mak
 include $(TOOLS_PATH)/helper.mk
+
+DEP_OBJECTS = $(TARGET_OBJECTS)
+
+include $(TOOLS_PATH)/depend.mk
 
 # EOF

@@ -1,4 +1,4 @@
-/* $Id: syssetup.rc,v 1.7 2004/10/16 20:27:39 gvg Exp $ */
+/* $Id: syssetup.rc,v 1.8 2004/11/22 11:01:45 gvg Exp $ */
 
 #include <windows.h>
 #include "resource.h"
@@ -14,6 +14,22 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 /* Bitmaps */
 IDB_WATERMARK BITMAP "resources/watermark.bmp"
 IDB_HEADER    BITMAP "resources/header.bmp"
+
+
+STRINGTABLE
+BEGIN
+    IDS_ACKPROJECTS "Wine - http://www.winehq.org\n"\
+                    "FreeType - http://www.freetype.org\n"\
+                    "Expat - http://expat.sourceforge.net\n"\
+                    "DJGPP - http://www.delorie.com/djgpp\n"\
+                    "SYSLINUX - http://syslinux.zytor.com\n"\
+                    "Xbox Linux - http://www.xbox-linux.org\n"\
+                    "MinGW - http://www.mingw.org\n"\
+                    "Bochs - http://bochs.sourceforge.net\n"\
+                    "QEMU - http://fabrice.bellard.free.fr/qemu\n"
+END
+
+IDR_GPL RT_TEXT "COPYING"
 
 
 /*
