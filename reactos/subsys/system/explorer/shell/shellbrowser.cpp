@@ -194,7 +194,7 @@ void ShellBrowserChild::OnTreeItemRClick(int idCtrl, LPNMHDR pnmh)
 
 	if (TVHT_ONITEM & tvhti.flags) {
 		ClientToScreen(_left_hwnd, &tvhti.pt);
-		Tree_DoItemMenu(_left_hwnd, tvhti.hItem , &tvhti.pt);
+		Tree_DoItemMenu(_left_hwnd, tvhti.hItem, &tvhti.pt);
 	}
 }
 

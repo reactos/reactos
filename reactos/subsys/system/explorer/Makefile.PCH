@@ -69,7 +69,7 @@ LIBS = gdi32 comctl32 ole32 uuid
 
 all: precomp.h.gch $(TARGET)
 
-precomp.h.gch:
+precomp.h.gch: *.h utility/*.h shell/*.h desktop/*.h
 	$(CXX) $(CFLAGS) precomp.h
 
 $(TARGET): $(OBJECTS) $(PROGRAM)$(RES_SUFFIX)

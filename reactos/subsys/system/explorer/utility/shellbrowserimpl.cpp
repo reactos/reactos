@@ -81,7 +81,7 @@ HRESULT STDMETHODCALLTYPE IShellBrowserImpl::QueryService(REFGUID guidService, R
 	return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE IShellBrowserImpl::QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[], OLECMDTEXT* pCmdText)
+HRESULT STDMETHODCALLTYPE IShellBrowserImpl::QueryStatus(const GUID* pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[], OLECMDTEXT* pCmdText)
 {
 	return E_FAIL;	///@todo implement IOleCommandTarget
 }
