@@ -163,6 +163,7 @@ KiKernelTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
 
   if (ExceptionNr == 14)
     {
+      Er.ExceptionCode = STATUS_ACCESS_VIOLATION;
       Er.NumberParameters = 2;
       Er.ExceptionInformation[0] = Tf->ErrorCode & 0x1;
       Er.ExceptionInformation[1] = (ULONG)Cr2;

@@ -1,5 +1,10 @@
 2003-03-16  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* ntoskrnl/ke/i386/exp.c (KiKernelTrapHandler): Use exception code
+	STATUS_ACCESS_VIOLATION for exception 14.
+
+2003-03-16  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* ntoskrnl/fs/util.c (FsRtlGetFileSize): Implement.
 
 2003-03-16  Casper S. Hornstrup  <chorns@users.sourceforge.net>
