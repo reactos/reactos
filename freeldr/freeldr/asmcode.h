@@ -56,5 +56,6 @@
 #ifndef ASM
 
 void	enable_a20(void);
+void	stop_floppy(void);
 
 #endif /* ! ASM */
