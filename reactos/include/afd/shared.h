@@ -145,6 +145,7 @@ typedef struct _AFD_DISCONNECT_INFO {
 
 /* AFD Info Flags */
 #define AFD_INFO_BLOCKING_MODE		0x02L
+#define AFD_INFO_SENDS_IN_PROGRESS  0x04L
 #define AFD_INFO_RECEIVE_WINDOW_SIZE	0x06L
 #define AFD_INFO_SEND_WINDOW_SIZE	0x07L
 #define AFD_INFO_GROUP_ID_TYPE	        0x10L
@@ -158,6 +159,7 @@ typedef struct _AFD_DISCONNECT_INFO {
 /* AFD Disconnect Flags */
 #define AFD_DISCONNECT_SEND		0x01L
 #define AFD_DISCONNECT_RECV		0x02L
+#define AFD_DISCONNECT_ABORT	0x04L
 
 /* AFD Event Flags */
 #define AFD_EVENT_RECEIVE		0x1L
