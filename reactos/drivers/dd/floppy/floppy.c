@@ -468,8 +468,43 @@ NTSTATUS STDCALL
 FloppyDispatchDeviceControl(PDEVICE_OBJECT DeviceObject,
 			    PIRP Irp)
 {
+   PIO_STACK_LOCATION IrpStack;
+   ULONG ControlCode, InputLength, OutputLength;
+   NTSTATUS Status;
+
    DPRINT("FloppyDispatchDeviceControl\n");
-   return(STATUS_UNSUCCESSFUL);
+
+   IrpStack = IoGetCurrentIrpStackLocation(Irp);
+   ControlCode = IrpStack->Parameters.DeviceIoControl.IoControlCode;
+   InputLength = IrpStack->Parameters.DeviceIoControl.InputBufferLength;
+   OutputLength = IrpStack->Parameters.DeviceIoControl.OutputBufferLength;
+
+   switch (ControlCode)
+   {
+      case IOCTL_DISK_GET_DRIVE_GEOMETRY:
+         if (OutputLength < sizeof(DISK_GEOMETRY))
+         {
+            Status = STATUS_INVALID_PARAMETER;
+	 }
+	 else
+	 {
+            PDISK_GEOMETRY Geometry = Irp->AssociatedIrp.SystemBuffer;
+            // FIXME: read the first sector of the diskette
+            Geometry->MediaType = F3_1Pt44_512;
+            Geometry->Cylinders.QuadPart = 80;
+            Geometry->TracksPerCylinder = 2 * 18;
+            Geometry->SectorsPerTrack = 18;
+            Geometry->BytesPerSector = 512;
+            Status = STATUS_SUCCESS;
+            Irp->IoStatus.Information = sizeof(DISK_GEOMETRY);
+        }
+        break;
+     default:
+        Status = STATUS_INVALID_DEVICE_REQUEST;
+   }
+   Irp->IoStatus.Status = Status;
+   IoCompleteRequest(Irp, NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT);	
+   return Status;
 }
 
 /*    ModuleEntry
