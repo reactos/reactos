@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kdb.c,v 1.29 2004/08/26 16:04:49 blight Exp $
+/* $Id: kdb.c,v 1.30 2004/08/27 00:14:01 blight Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/kdb.c
@@ -1526,7 +1526,10 @@ KdbInternalEnter(PKTRAP_FRAME Tf)
 {  
   __asm__ __volatile__ ("cli\n\t");
   KbdDisableMouse();
-  HalReleaseDisplayOwnership();
+  if (KdDebugState & KD_DEBUG_SCREEN)
+    {
+      HalReleaseDisplayOwnership();
+    }
   (VOID)KdbMainLoop(Tf);
   KbdEnableMouse();
   __asm__ __volatile__("sti\n\t");
