@@ -88,12 +88,12 @@ bool Bookmark::read(const_XMLPos& pos)
 	_url = pos.get("href").c_str();
 
 	if (pos.go_down("title")) {
-		_name = pos->get_content().c_str();
+		_name = pos->get_content();
 		pos.back();
 	}
 
 	if (pos.go_down("desc")) {
-		_description = pos->get_content().c_str();
+		_description = pos->get_content();
 		pos.back();
 	}
 
@@ -160,19 +160,19 @@ void Bookmark::write(XMLPos& pos) const
 void BookmarkFolder::read(const_XMLPos& pos)
 {
 	if (pos.go_down("title")) {
-		_name = pos->get_content().c_str();
+		_name = pos->get_content();
 		pos.back();
 	}
 
 	if (pos.go_down("desc")) {
-		_description = pos->get_content().c_str();
+		_description = pos->get_content();
 		pos.back();
 	}
 
 	_bookmarks.read(pos);
 }
 
- /// write bookmark folder conten from XBEL formated XML tree
+ /// write bookmark folder content from XBEL formated XML tree
 void BookmarkFolder::write(XMLPos& pos) const
 {
 	pos.create("folder");
@@ -389,7 +389,7 @@ void BookmarkList::import_IE_favorites(ShellDirectory& dir, HWND hwnd)
 		if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 			BookmarkFolder new_folder;
 
-			new_folder._name = name;
+			new_folder._name = DecodeXMLString(name);
 
 			if (entry->_etype == ET_SHELL) {
 				ShellDirectory new_dir(dir._folder, static_cast<ShellEntry*>(entry)->_pidl, hwnd);
@@ -404,7 +404,7 @@ void BookmarkList::import_IE_favorites(ShellDirectory& dir, HWND hwnd)
 		} else {
 			Bookmark bookmark;
 
-			bookmark._name = name;
+			bookmark._name = DecodeXMLString(name);
 
 			entry->get_path(path);
 			_tsplitpath(path, NULL, NULL, NULL, ext);
