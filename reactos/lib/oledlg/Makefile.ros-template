@@ -1,0 +1,21 @@
+# $Id: Makefile.ros-template 11910 2004-12-03 23:37:44Z blight $
+
+TARGET_NAME = oledlg
+
+TARGET_OBJECTS = @C_SRCS@
+
+TARGET_CFLAGS = @EXTRADEFS@
+
+TARGET_SDKLIBS = @IMPORTS@ wine.a wine_uuid.a ntdll.a
+
+TARGET_BASE = $(TARGET_BASE_LIB_OLEDLG)
+
+TARGET_RC_SRCS = @RC_SRCS@
+TARGET_RC_BINSRC = @RC_BINSRC@
+TARGET_RC_BINARIES = @RC_BINARIES@
+
+default: all
+
+DEP_OBJECTS = $(TARGET_OBJECTS)
+
+include $(TOOLS_PATH)/depend.mk

@@ -1,0 +1,16 @@
+TOPSRCDIR = @top_srcdir@
+TOPOBJDIR = ../..
+SRCDIR    = @srcdir@
+VPATH     = @srcdir@
+MODULE    = oledlg.dll
+IMPORTS   = ole32 comdlg32 user32 advapi32 kernel32 ntdll
+
+C_SRCS = \
+	insobjdlg.c \
+	oledlg_main.c
+
+RC_SRCS = rsrc.rc
+
+@MAKE_DLL_RULES@
+
+### Dependencies:

@@ -1,0 +1,5 @@
+# $Id$
+
+TARGET_ARCH_OBJECTS = $(ARCH)/framebased.o $(ARCH)/setjmp.o
+
+# EOF

@@ -1,0 +1,32 @@
+The story so far: 20040819
+
+This is from memory so it might not be completely accurate.
+
+tcp_input is called from OskitTCPReceiveDatagram ... I'm not so sure that
+this part is correct.  I believe that at least the ACK number calculation
+is correct as is.  Reads are wierd and i'm not sure where the problem is.
+We get the wrong number of bytes back in some cases, and strange characters
+received.  I think this is because the ip header is double counted at some
+point the way we do things.  We at least seem to ack the 'right' packet at
+this point.
+
+sosend is currently doing wierd stuff.
+We send data into sosend and it appears to make it intact into tcp_usrreq.
+After that, the data that goes on the wire seems to have the first 20 bytes
+uninitialized, so i believe that something thinks we should submit this data
+differently.  Not sure why it's doing that.
+
+I think we have our timeouts right as retransmission appears to work.  We
+need to verify that all types of retransmission are properly served.
+
+I'm seeing some wierd errors in sbflush and sbappend.  Not sure what these
+mean or why they're happening.  I'm trying to figure out sbappend especially
+by looking over bsd cross-reference but it's one of the more lightly 
+documented parts of bsd.  A wierd thing about sbappend is that it seems to
+want to see an M_EOR flag at the end of the so->so_rcv->sb_mb chain.  When
+it gets there it should append the input chain.
+
+=== NOTES FROM WORKING WITH ROYCE3 ===
+
+tcp_output: between line 511 and 614 m is initialized.  Where i was printing
+it it didn't have data yet.

@@ -1,0 +1,15 @@
+
+Wishlist for ReactOS CMD
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+ - Exclusion wildcards: "del /r *.bak -abcd.bak"
+     Deletes ALL *.bak files EXCEPT abcd.bak.
+
+ - Progress indikator on long file operations (copy/move).
+     Percentage at the right side of the filename.
+
+ - [cd test directory] should change to the subdirectory "test directory".
+
+More ideas?
+
+ Eric Kohl <ekohl@rz-online.de>

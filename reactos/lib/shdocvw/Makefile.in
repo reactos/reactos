@@ -1,0 +1,25 @@
+EXTRADEFS = -D_SHDOCVW_
+TOPSRCDIR = @top_srcdir@
+TOPOBJDIR = ../..
+SRCDIR    = @srcdir@
+VPATH     = @srcdir@
+MODULE    = shdocvw.dll
+IMPORTS   = urlmon ole32 user32 advapi32 kernel32
+EXTRALIBS = -luuid
+
+C_SRCS = \
+	classinfo.c \
+	events.c \
+	factory.c \
+	misc.c \
+	oleobject.c \
+	persist.c \
+	regsvr.c \
+	shdocvw_main.c \
+	webbrowser.c
+
+RC_SRCS = shdocvw.rc
+
+@MAKE_DLL_RULES@
+
+### Dependencies:
