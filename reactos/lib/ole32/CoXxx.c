@@ -261,12 +261,14 @@ WINOLEAPI CoGetClassObject(REFCLSID rclsid, DWORD dwClsContext, VOID* pvReserved
 		return E_FAIL;
 
 	//	fix:	CoGetClassObject should call CoLoadLibrary as stated in the win32 api docs
-	hComDll = LoadLibrary("C:\\MsCom.dll");
+	hComDll = LoadLibrary("C:\\Com.dll");
 	fpDllGetClassObject = (PF) GetProcAddress(hComDll, "DllGetClassObject");
 	
 	
 	//	get the class object
 	fpDllGetClassObject(rclsid, riid, (VOID**) ppv);
+	if(*ppv == NULL)
+		return E_FAIL;
 
 	/*
 	//HKEY		hCLSID;
