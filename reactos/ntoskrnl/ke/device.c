@@ -57,17 +57,17 @@ KeFlushEntireTb(
 {
 	KIRQL OldIrql;
 	PKPROCESS Process = NULL;
-	PKPCR Pcr = NULL;
+	PKPRCB Prcb = NULL;
 	
 	/* Raise the IRQL for the TB Flush */
 	OldIrql = KeRaiseIrqlToSynchLevel();
 	
 	/* All CPUs need to have the TB flushed. */
 	if (CurrentCpuOnly == FALSE) {
-		Pcr = KeGetCurrentKPCR();
-		
+	        Prcb = KeGetCurrentPrcb();
+
 		/* How many CPUs is our caller using? */
-		Process = Pcr->PrcbData.CurrentThread->ApcState.Process;
+		Process = Prcb->CurrentThread->ApcState.Process;
 		
 		/* More then one, so send an IPI */
 		if (Process->ActiveProcessors > 1) {
@@ -83,7 +83,7 @@ KeFlushEntireTb(
 		/* Did we send an IPI? If so, wait for completion */
 		if (Process->ActiveProcessors > 1) {
 			do {
-			} while (Pcr->PrcbData.TargetSet != 0);
+			} while (Prcb->TargetSet != 0);
 		} 
 	} 
 	

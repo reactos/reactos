@@ -63,11 +63,11 @@ PKTHREAD STDCALL KeGetCurrentThread(VOID)
    PKTHREAD Thread;
    Ke386SaveFlags(Flags);
    Ke386DisableInterrupts();
-   Thread = KeGetCurrentKPCR()->PrcbData.CurrentThread;
+   Thread = KeGetCurrentPrcb()->CurrentThread;
    Ke386RestoreFlags(Flags);
    return Thread;
 #else
-   return(KeGetCurrentKPCR()->PrcbData.CurrentThread);
+   return(KeGetCurrentPrcb()->CurrentThread);
 #endif
 }
 
@@ -437,7 +437,7 @@ VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 
 	    OldThread = CurrentThread;
 	    CurrentThread = Candidate;
-	    IdleThread = KeGetCurrentKPCR()->PrcbData.IdleThread;
+	    IdleThread = KeGetCurrentPrcb()->IdleThread;
 
 	    if (&OldThread->Tcb == IdleThread)
 	    {
@@ -464,7 +464,7 @@ PsDispatchThread(ULONG NewThreadStatus)
 {
    KIRQL oldIrql;
 
-   if (!DoneInitYet || KeGetCurrentKPCR()->PrcbData.IdleThread == NULL)
+   if (!DoneInitYet || KeGetCurrentPrcb()->IdleThread == NULL)
      {
 	return;
      }
@@ -777,7 +777,7 @@ PsInitThreadManagment(VOID)
    FirstThread->Tcb.FreezeCount = 0;
    FirstThread->Tcb.UserAffinity = (1 << 0);   /* Set the affinity of the first thread to the boot processor */
    FirstThread->Tcb.Affinity = (1 << 0);
-   KeGetCurrentKPCR()->PrcbData.CurrentThread = (PVOID)FirstThread;
+   KeGetCurrentPrcb()->CurrentThread = (PVOID)FirstThread;
    NtClose(FirstThreadHandle);
 
    DPRINT("FirstThread %x\n",FirstThread);
