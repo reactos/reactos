@@ -1,4 +1,4 @@
-/* $Id: path.c,v 1.4 2000/03/16 18:44:55 dwelch Exp $
+/* $Id: path.c,v 1.5 2000/07/05 18:05:21 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -408,11 +408,10 @@ RtlGetFullPathName_U (
 	if (!len)
 		return 0;
 
-	/* strip trailing path separator */
-	if (IS_PATH_SEPARATOR(DosName[len - 1]))
+	/* strip trailing path separator (but don't change '\') */
+	if ((len > 1) &&
+	    IS_PATH_SEPARATOR(DosName[len - 1]))
 		len--;
-	if (!len)
-		return 0;
 	if (FilePart)
 		*FilePart = L'\0';
 	memset (buf, 0, size);
