@@ -72,9 +72,9 @@ static void draw_desktop_background(HWND hwnd, HDC hdc)
 	rect.right = rect.left + 250;
 	rect.bottom = rect.top + 40;
 
-	SetBkMode(hdc, TRANSPARENT);
+	BkMode bkMode(hdc, TRANSPARENT);
 
-	SetTextColor(hdc, RGB(128,128,192));
+	TextColor textColor(hdc, RGB(128,128,192));
 	DrawText(hdc, BkgndText, -1, &rect, DT_RIGHT);
 
 	SetTextColor(hdc, RGB(255,255,255));

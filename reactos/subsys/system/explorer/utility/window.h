@@ -181,3 +181,87 @@ struct Button
 protected:
 	HWND	_hwnd;
 };
+
+
+ // control message routing for colloered and owner drawn controls
+#define	WM_DISPATCH_CTLCOLOR	(WM_APP+0x07)
+#define	WM_DISPATCH_DRAWITEM	(WM_APP+0x08)
+
+template<typename BASE> struct CtlColorParent : public BASE
+{
+	typedef BASE super;
+
+	CtlColorParent(HWND hwnd)
+	 : super(hwnd) {}
+
+	LRESULT WndProc(UINT message, WPARAM wparam, LPARAM lparam)
+	{
+		switch(message) {
+		  case WM_CTLCOLOR:
+		  case WM_CTLCOLORBTN:
+		  case WM_CTLCOLORDLG:
+		  case WM_CTLCOLORSCROLLBAR:
+		  case WM_CTLCOLORSTATIC: {
+			HWND hctl = (HWND) lparam;
+			return SendMessage(hctl, WM_DISPATCH_CTLCOLOR, wparam, message);
+		  }
+
+		  default:
+			return super::WndProc(message, wparam, lparam);
+		}
+	}
+};
+
+ // for ColorButton and PictureButton 
+template<typename BASE> struct OwnerDrawParent : public BASE
+{
+	typedef BASE super;
+
+	OwnerDrawParent(HWND hwnd)
+	 : super(hwnd) {}
+
+	LRESULT WndProc(UINT message, WPARAM wparam, LPARAM lparam)
+	{
+		switch(message) {
+		  case WM_DRAWITEM:
+			if (wparam) {	// ein Control?
+				HWND hctl = GetDlgItem(_hwnd, wparam);
+
+				if (hctl)
+					return SendMessage(hctl, WM_DISPATCH_DRAWITEM, wparam, lparam);
+			} /*else	// oder ein Menüeintrag?
+				; */
+
+			return 0;
+
+		  default:
+			return super::WndProc(message, wparam, lparam);
+		}
+	}
+};
+
+struct ColorButton : public SubclassedWindow
+{
+	typedef SubclassedWindow super;
+
+	ColorButton(HWND hwnd, COLORREF textColor)
+	 : super(hwnd), _textColor(textColor) {}
+
+protected:
+	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+
+	COLORREF _textColor;
+};
+
+struct PictureButton : public SubclassedWindow
+{
+	typedef SubclassedWindow super;
+
+	PictureButton(HWND hwnd, HICON hicon)
+	 : super(hwnd), _hicon(hicon) {}
+
+protected:
+	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+
+	HICON	_hicon;
+};

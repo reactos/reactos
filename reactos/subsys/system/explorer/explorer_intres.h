@@ -14,6 +14,8 @@
 #define IDM_MAINFRAME                   105
 #define ID_EXECUTE                      105
 #define IDM_WINEFILE                    107
+#define IDB_STARTMENU                   120
+#define IDI_STARTMENU                   121
 #define ID_VIEW_NAME                    401
 #define ID_VIEW_ALL_ATTRIBUTES          402
 #define ID_VIEW_SELECTED_ATTRIBUTES     403
@@ -45,7 +47,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        120
+#define _APS_NEXT_RESOURCE_VALUE        122
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           101

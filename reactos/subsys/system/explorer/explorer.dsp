@@ -433,6 +433,10 @@ SOURCE=.\shell\shellfs.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\startmenu.bmp
+# End Source File
+# Begin Source File
+
 SOURCE=.\shell\startup.c
 # End Source File
 # Begin Source File

@@ -35,9 +35,6 @@
 #include "utility/window.h"
 
 
-#define	BUFFER_LEN				1024
-
-
 #define IDW_STATUSBAR			0x100
 #define IDW_TOOLBAR				0x101
 #define IDW_DRIVEBAR			0x102
@@ -60,17 +57,6 @@
 #define CLASSNAME_CHILDWND		TEXT("WFS_Child")
 #define CLASSNAME_WINEFILETREE	TEXT("WFS_Tree")
 
-
-struct String
-#ifdef UNICODE
- : public wstring
-#else
- : public string
-#endif
-{
-	String& operator=(LPCTSTR s) {assign(s); return *this;}
-	operator LPCTSTR() const {return c_str();}
-};
 
 struct ResString : public String
 {

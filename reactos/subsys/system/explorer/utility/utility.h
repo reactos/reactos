@@ -69,6 +69,9 @@ using namespace _com_util;
 #define	for if (0) {} else for
 
 
+#define	BUFFER_LEN				1024
+
+
 struct CommonControlInit
 {
 	CommonControlInit(DWORD flags=ICC_LISTVIEW_CLASSES)
@@ -106,6 +109,32 @@ struct ClientRect : public RECT
 };
 
 
+struct TextColor
+{
+	TextColor(HDC hdc, COLORREF color)
+	 : _hdc(hdc), _old_color(SetTextColor(hdc, color)) {}
+
+	~TextColor() {SetTextColor(_hdc, _old_color);}
+
+protected:
+	HDC		 _hdc;
+	COLORREF _old_color;
+};
+
+
+struct BkMode
+{
+	BkMode(HDC hdc, int bkmode)
+	 : _hdc(hdc), _old_bkmode(SetBkMode(hdc, bkmode)) {}
+
+	~BkMode() {SetBkMode(_hdc, _old_bkmode);}
+
+protected:
+	HDC		 _hdc;
+	COLORREF _old_bkmode;
+};
+
+
 struct FullScreenParameters {
 	FullScreenParameters()
 	 :	_mode(FALSE)
@@ -115,6 +144,18 @@ struct FullScreenParameters {
 	BOOL	_mode;
 	RECT	_orgPos;
 	BOOL	_wasZoomed;
+};
+
+
+struct String
+#ifdef UNICODE
+ : public wstring
+#else
+ : public string
+#endif
+{
+	String& operator=(LPCTSTR s) {assign(s); return *this;}
+	operator LPCTSTR() const {return c_str();}
 };
 
 

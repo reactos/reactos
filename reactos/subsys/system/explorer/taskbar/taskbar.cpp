@@ -32,6 +32,7 @@
 #include "../explorer.h"
 #include "../globals.h"
 #include "../externals.h"
+#include "../explorer_intres.h"
 
 #include "taskbar.h"
 
@@ -80,7 +81,9 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 	super::Init(pcs);
 
 	 // create start button
-	Button(_hwnd, TEXT("Start"), 2, 2, 50, TASKBAR_HEIGHT-10, IDC_START);//BS_OWNERDRAW
+	new PictureButton(Button(_hwnd, TEXT("Start"), 2, 2, STARTBUTTON_WIDTH, TASKBAR_HEIGHT-10, IDC_START,
+									WS_VISIBLE|WS_CHILD|BS_PUSHBUTTON|BS_OWNERDRAW),
+						LoadIcon(g_Globals._hInstance, MAKEINTRESOURCE(IDI_STARTMENU)));
 
 	 // create task bar
 	WindowClass wcTaskBar(CLASSNAME_TASKBAR);

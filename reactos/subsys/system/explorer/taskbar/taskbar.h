@@ -32,8 +32,9 @@
 #include <set>
 
 
-#define	TASKBAR_HEIGHT	30
-#define	TASKBAR_LEFT	60
+#define	TASKBAR_HEIGHT		30
+#define	STARTBUTTON_WIDTH	90
+#define	TASKBAR_LEFT		100
 //#define TASKBAR_AT_TOP
 
 #define	WM_SHELLHOOK_NOTIFY		(WM_APP+0x10)
@@ -46,9 +47,9 @@
 #define	TITLE_TASKBAR			_T("Running Applications")
 
 
-struct DesktopBar : public Window
+struct DesktopBar : public OwnerDrawParent<Window>
 {
-	typedef Window super;
+	typedef OwnerDrawParent<Window> super;
 
 	DesktopBar(HWND hwnd);
 	~DesktopBar();
