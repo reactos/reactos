@@ -687,6 +687,78 @@ BOOLEAN wstrcmpjoki(PWSTR s1, PWSTR s2)
    return(FALSE);
 }
 
+
+NTSTATUS ReadVolumeLabel(PDEVICE_EXTENSION DeviceExt, PVPB Vpb)
+/*
+ * FUNCTION: Read the volume label
+ */
+{
+   ULONG i, j;
+   ULONG Size;
+   char* block;
+   ULONG StartingSector;
+   ULONG NextCluster;
+
+   Size = DeviceExt->rootDirectorySectors;//FIXME : in fat32, no limit
+   StartingSector = DeviceExt->rootStart;
+   NextCluster=0;
+
+   block = ExAllocatePool(NonPagedPool,BLOCKSIZE);
+   DPRINT("FindFile : start at sector %lx, entry %ld\n",StartingSector,i);
+   for (j=0; j<Size; j++)
+   {
+     VFATReadSectors(DeviceExt->StorageDevice,StartingSector,1,block);
+
+     for (i=0; i<ENTRIES_PER_SECTOR; i++)
+     {
+       if (IsVolEntry((PVOID)block,i))
+       {
+         FATDirEntry *test = (FATDirEntry *)block;
+
+         /* copy volume label */
+         RtlAnsiToUnicode(Vpb->VolumeLabel,test[i].Filename,8);
+         RtlCatAnsiToUnicode(Vpb->VolumeLabel,test[i].Ext,3);
+         Vpb->VolumeLabelLength = wcslen(Vpb->VolumeLabel);
+
+         ExFreePool(block);
+         return(STATUS_SUCCESS);
+       }
+       if (IsLastEntry((PVOID)block,i))
+       {
+         *(Vpb->VolumeLabel) = 0;
+         Vpb->VolumeLabelLength = 0;
+         ExFreePool(block);
+         return(STATUS_UNSUCCESSFUL);
+       }
+     }
+     // not found in this sector, try next :
+
+     /* directory can be fragmented although it is best to keep them
+        unfragmented */
+     StartingSector++;
+     if (DeviceExt->FatType ==FAT32)
+     {
+       if(StartingSector==ClusterToSector(DeviceExt,NextCluster+1))
+       {
+         NextCluster = GetNextCluster(DeviceExt,NextCluster);
+         if (NextCluster == 0||NextCluster==0xffffffff)
+         {
+           *(Vpb->VolumeLabel) = 0;
+           Vpb->VolumeLabelLength = 0;
+           ExFreePool(block);
+           return(STATUS_UNSUCCESSFUL);
+         }
+         StartingSector = ClusterToSector(DeviceExt,NextCluster);
+       }
+     }
+   }
+   *(Vpb->VolumeLabel) = 0;
+   Vpb->VolumeLabelLength = 0;
+   ExFreePool(block);
+   return(STATUS_UNSUCCESSFUL);
+}
+
+
 NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PVfatFCB Fcb,
           PVfatFCB Parent, PWSTR FileToFind,ULONG *StartSector,ULONG *Entry)
 /*
@@ -1583,45 +1655,16 @@ NTSTATUS FsdMount(PDEVICE_OBJECT DeviceToMount)
    DeviceExt->StorageDevice = IoAttachDeviceToDeviceStack(DeviceObject,
 							  DeviceToMount);
 
-   // fill in missing information in vpb
+   /* read serial number */
    if (DeviceExt->FatType == FAT12 || DeviceExt->FatType == FAT16)
-     {
-        struct _BootSector *BootSect = (PVOID)DeviceExt->Boot;
-        PSTR  s = BootSect->VolumeLabel;
-        PWSTR w = DeviceObject->Vpb->VolumeLabel;
-        int n=0;
-
-        // get serial number
-        DeviceObject->Vpb->SerialNumber = BootSect->VolumeID;
-
-        // copy drive label
-        while (*s != ' ' && n < 11)
-          {
-              *w++ = *s++;
-              n++;
-          }
-        *w = 0;
-        DeviceObject->Vpb->VolumeLabelLength = n;
-     }
+       DeviceObject->Vpb->SerialNumber =
+         ((struct _BootSector *)(DeviceExt->Boot))->VolumeID;
    else if (DeviceExt->FatType == FAT32)
-     {
-        struct _BootSector32 *BootSect = (PVOID)DeviceExt->Boot;
-        PSTR  s = BootSect->VolumeLabel;
-        PWSTR w = DeviceObject->Vpb->VolumeLabel;
-        int n=0;
+       DeviceObject->Vpb->SerialNumber =
+         ((struct _BootSector32 *)(DeviceExt->Boot))->VolumeID;
 
-        // get serial number
-        DeviceObject->Vpb->SerialNumber = BootSect->VolumeID;
-
-        // copy drive label
-        while (*s != ' ' && n < 11)
-          {
-              *w++ = *s++;
-              n++;
-          }
-        *w = 0;
-        DeviceObject->Vpb->VolumeLabelLength = n;
-     }
+   /* read volume label */
+   ReadVolumeLabel (DeviceExt, DeviceObject->Vpb);
 
    return(STATUS_SUCCESS);
 }
