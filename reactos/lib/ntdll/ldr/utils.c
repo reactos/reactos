@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.101 2004/11/19 01:30:35 weiden Exp $
+/* $Id: utils.c,v 1.102 2004/12/15 03:00:33 royce Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -68,7 +68,7 @@ static VOID LdrpDetachProcess(BOOL UnloadAll);
 
 /* FUNCTIONS *****************************************************************/
 
-#ifdef KDBG
+#if defined(DBG) || defined(KDBG)
 
 VOID
 LdrpLoadUserModuleSymbols(PLDR_MODULE LdrModule)
@@ -82,7 +82,7 @@ LdrpLoadUserModuleSymbols(PLDR_MODULE LdrModule)
     NULL);
 }
 
-#endif /* DBG */
+#endif /* DBG || KDBG */
 
 static inline LONG LdrpDecrementLoadCount(PLDR_MODULE Module, BOOL Locked)
 {
@@ -2085,9 +2085,9 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
             DPRINT1("LdrFixupImports failed for %wZ, status=%x\n", &(*Module)->BaseDllName, Status);
             return Status;
           }
-#ifdef KDBG
+#if defined(DBG) || defined(KDBG)
         LdrpLoadUserModuleSymbols(*Module);
-#endif
+#endif /* DBG || KDBG */
         RtlEnterCriticalSection(NtCurrentPeb()->LoaderLock);
         InsertTailList(&NtCurrentPeb()->Ldr->InInitializationOrderModuleList,
                        &(*Module)->InInitializationOrderModuleList);
