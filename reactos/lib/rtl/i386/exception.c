@@ -1,4 +1,4 @@
-/* $Id: exception.c,v 1.3 2004/07/07 16:25:00 navaraf Exp $
+/* $Id: exception.c,v 1.4 2004/07/09 20:06:40 navaraf Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -90,8 +90,7 @@ ULONG
 RtlpDispatchException(IN PEXCEPTION_RECORD  ExceptionRecord,
 	IN PCONTEXT  Context)
 {
-  PEXCEPTION_REGISTRATION RegistrationFrame;
-  DWORD DispatcherContext;
+  PEXCEPTION_REGISTRATION RegistrationFrame, NestedFrame = NULL, DispatcherContext;
   DWORD ReturnValue;
 
   DPRINT("RtlpDispatchException()\n");
@@ -107,7 +106,6 @@ RtlpDispatchException(IN PEXCEPTION_RECORD  ExceptionRecord,
   while ((ULONG_PTR)RegistrationFrame != -1)
   {
     EXCEPTION_RECORD ExceptionRecord2;
-    DWORD Temp = 0;
     //PVOID RegistrationFrameEnd = (PVOID)RegistrationFrame + 8;
 
     // Make sure the registration frame is located within the stack
@@ -172,9 +170,10 @@ RtlpDispatchException(IN PEXCEPTION_RECORD  ExceptionRecord,
 		DPRINT("EBP == 0x%.08x\n", sp[6]);
 	}
 #endif
-    if (RegistrationFrame == NULL)
+    if (RegistrationFrame == NestedFrame)
     {
       ExceptionRecord->ExceptionFlags &= ~EXCEPTION_NESTED_CALL;  // Turn off flag
+      NestedFrame = NULL;
     }
 
     if (ReturnValue == ExceptionContinueExecution)
@@ -207,10 +206,10 @@ RtlpDispatchException(IN PEXCEPTION_RECORD  ExceptionRecord,
     {
       DPRINT("ReturnValue == ExceptionNestedException\n");
 
-      ExceptionRecord->ExceptionFlags |= EXCEPTION_EXIT_UNWIND;
-      if (DispatcherContext > Temp)
+      ExceptionRecord->ExceptionFlags |= EXCEPTION_NESTED_CALL;
+      if (NestedFrame < DispatcherContext)
 	  {
-          Temp = DispatcherContext;
+          NestedFrame = DispatcherContext;
 	  }
     }
     else /* if (ReturnValue == ExceptionCollidedUnwind) */
