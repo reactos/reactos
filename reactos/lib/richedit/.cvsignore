@@ -6,3 +6,5 @@
 *.sym
 *.map
 *.tmp
+Makefile.ros
+riched32.spec.def
