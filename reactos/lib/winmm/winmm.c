@@ -3213,7 +3213,7 @@ MMRESULT WINAPI mmTaskCreate(LPTASKCALLBACK cb, HANDLE* ph, DWORD client)
         mms->event = NULL;
     }
 
-    hThread = CreateThread(0, 0, mmTaskRun, (LPVOID)&mms, 0, NULL);
+    hThread = CreateThread(0, 0, mmTaskRun, (LPVOID)mms, 0, NULL);
     if (!hThread) {
         HeapFree(GetProcessHeap(), 0, mms);
         CloseHandle(hEvent);
