@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.35 2002/12/22 11:38:41 gvg Exp $
+/* $Id: atapi.c,v 1.36 2003/01/28 17:34:20 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -89,7 +89,8 @@ typedef struct _ATAPI_MINIPORT_EXTENSION
   PSCSI_REQUEST_BLOCK CurrentSrb;
 
 
-  PUSHORT DataBuffer;
+  PUCHAR DataBuffer;
+  ULONG DataTransferLength;
 } ATAPI_MINIPORT_EXTENSION, *PATAPI_MINIPORT_EXTENSION;
 
 
@@ -933,7 +934,7 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 	  DPRINT("Read data\n");
 
 	  /* Update controller/device state variables */
-	  TargetAddress = Srb->DataBuffer;
+	  TargetAddress = DevExt->DataBuffer;
 
 	  if (IsAtapi)
 	    {
@@ -948,21 +949,21 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 	  DPRINT("TransferLength: %lu\n", Srb->DataTransferLength);
 	  DPRINT("TransferSize: %lu\n", TransferSize);
 
-	  if (Srb->DataTransferLength <= TransferSize)
+	  if (DevExt->DataTransferLength <= TransferSize)
 	    {
 	      if (!IsAtapi)
 	      {
-	         TransferSize = Srb->DataTransferLength;
+	         TransferSize = DevExt->DataTransferLength;
 	      }
-	      Srb->DataTransferLength = 0;
+	      DevExt->DataTransferLength = 0;
 	      IsLastBlock = TRUE;
 	    }
 	  else
 	    {
-	      Srb->DataTransferLength -= TransferSize;
+	      DevExt->DataTransferLength -= TransferSize;
 	      IsLastBlock = FALSE;
 	    }
-	  Srb->DataBuffer += TransferSize;
+	  DevExt->DataBuffer += TransferSize;
 	  DPRINT("IsLastBlock == %s\n", (IsLastBlock) ? "TRUE" : "FALSE");
 
 	  /* Wait for DRQ assertion */
@@ -1010,7 +1011,7 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 	{
 	  DPRINT("Write data\n");
 
-	  if (Srb->DataTransferLength == 0)
+	  if (DevExt->DataTransferLength == 0)
 	    {
 	      /* Check for data overrun */
 	      if (DeviceStatus & IDE_SR_DRQ)
@@ -1027,16 +1028,16 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 	    }
 	  else
 	    {
-	      /* Update SRB data */
+	      /* Update DevExt data */
 	      TransferSize = DevExt->TransferSize[Srb->TargetId];
-	      if (Srb->DataTransferLength < TransferSize)
+	      if (DevExt->DataTransferLength < TransferSize)
 	      {
-		 TransferSize = Srb->DataTransferLength;
+		 TransferSize = DevExt->DataTransferLength;
 	      }
 		 
-	      TargetAddress = Srb->DataBuffer;
-	      Srb->DataBuffer += TransferSize;
-	      Srb->DataTransferLength -= TransferSize;
+	      TargetAddress = DevExt->DataBuffer;
+	      DevExt->DataBuffer += TransferSize;
+	      DevExt->DataTransferLength -= TransferSize;
 
 	      /* Write the sector */
               if (DevExt->DWordIo[Srb->TargetId])
@@ -1146,8 +1147,22 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 			   IDE_DC_nIEN);
       ScsiPortStallExecution(500);
 
+      /* Check if a device is attached to the interface */
+      IDEWriteCylinderHigh(CommandPortBase, 0xaa);
+      IDEWriteCylinderLow(CommandPortBase, 0x55);
+
+      High = IDEReadCylinderHigh(CommandPortBase);
+      Low = IDEReadCylinderLow(CommandPortBase);
+
       IDEWriteCylinderHigh(CommandPortBase, 0);
       IDEWriteCylinderLow(CommandPortBase, 0);
+
+      if (Low != 0x55 || High != 0xaa)
+      {
+         DPRINT("No Drive found. UnitNumber %d CommandPortBase %x\n", UnitNumber, CommandPortBase);
+	 continue;
+      }
+
       IDEWriteCommand(CommandPortBase, IDE_CMD_RESET);
 
       for (Retries = 0; Retries < 20000; Retries++)
@@ -1206,8 +1221,10 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 	      DeviceExtension->DevicePresent[UnitNumber] = TRUE;
 	      DeviceExtension->DeviceAtapi[UnitNumber] = FALSE;
 	      DeviceExtension->TransferSize[UnitNumber] = DeviceExtension->DeviceParams[UnitNumber].BytesPerSector;
-	      if (DeviceExtension->DeviceParams[UnitNumber].RWMultImplemented & 0x8000 && 
-		  DeviceExtension->DeviceParams[UnitNumber].RWMultImplemented & 0xff)
+	      if ((DeviceExtension->DeviceParams[UnitNumber].RWMultImplemented & 0x8000) && 
+		  (DeviceExtension->DeviceParams[UnitNumber].RWMultImplemented & 0xff) &&
+		  (DeviceExtension->DeviceParams[UnitNumber].RWMultCurrent & 0x100) &&
+		  (DeviceExtension->DeviceParams[UnitNumber].RWMultCurrent & 0xff))
 	      {
 		 DeviceExtension->TransferSize[UnitNumber] *= (DeviceExtension->DeviceParams[UnitNumber].RWMultCurrent & 0xff);
 		 DeviceExtension->MultiSectorCommand[UnitNumber] = TRUE;
@@ -1226,6 +1243,14 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 	}
     }
 
+  /* Reset pending interrupts */
+  IDEReadStatus(CommandPortBase);
+  /* Reenable interrupts */
+  IDEWriteDriveControl(ControlPortBase, 0);
+  ScsiPortStallExecution(500);
+  /* Return with drive 0 selected */
+  IDEWriteDriveHead(CommandPortBase, IDE_DH_FIXED);
+  ScsiPortStallExecution(500);
 
   DPRINT("AtapiFindDrives() done (DeviceFound %s)\n", (DeviceFound) ? "TRUE" : "FALSE");
 
@@ -1663,7 +1688,8 @@ AtapiSendAtapiCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
 			Srb));
 
   /* Set pointer to data buffer. */
-  DeviceExtension->DataBuffer = (PUSHORT)Srb->DataBuffer;
+  DeviceExtension->DataBuffer = (PUCHAR)Srb->DataBuffer;
+  DeviceExtension->DataTransferLength = Srb->DataTransferLength;
   DeviceExtension->CurrentSrb = Srb;
 
   /* Wait for BUSY to clear */
@@ -1710,10 +1736,10 @@ AtapiSendAtapiCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
     }
 #endif
 
-  if (Srb->DataTransferLength < 0x10000)
+  if (DeviceExtension->DataTransferLength < 0x10000)
     {
-      ByteCountLow = (UCHAR)(Srb->DataTransferLength & 0xFF);
-      ByteCountHigh = (UCHAR)(Srb->DataTransferLength >> 8);
+      ByteCountLow = (UCHAR)(DeviceExtension->DataTransferLength & 0xFF);
+      ByteCountHigh = (UCHAR)(DeviceExtension->DataTransferLength >> 8);
     }
   else
     {
@@ -2085,7 +2111,8 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
     }
 
   /* Set pointer to data buffer. */
-  DeviceExtension->DataBuffer = (PUSHORT)Srb->DataBuffer;
+  DeviceExtension->DataBuffer = (PUCHAR)Srb->DataBuffer;
+  DeviceExtension->DataTransferLength = Srb->DataTransferLength;
 
   DeviceExtension->CurrentSrb = Srb;
 
@@ -2216,16 +2243,16 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 #endif
 	}
 
-      /* Update SRB data */
+      /* Update DeviceExtension data */
       TransferSize = DeviceExtension->TransferSize[Srb->TargetId];
-      if (Srb->DataTransferLength < TransferSize)
+      if (DeviceExtension->DataTransferLength < TransferSize)
       {
-	 TransferSize = Srb->DataTransferLength;
+	 TransferSize = DeviceExtension->DataTransferLength;
       }
 
-      TargetAddress = Srb->DataBuffer;
-      Srb->DataBuffer += TransferSize;
-      Srb->DataTransferLength -= TransferSize;
+      TargetAddress = DeviceExtension->DataBuffer;
+      DeviceExtension->DataBuffer += TransferSize;
+      DeviceExtension->DataTransferLength -= TransferSize;
 
       /* Write data block */
       if (DeviceExtension->DWordIo[Srb->TargetId])
