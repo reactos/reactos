@@ -1014,9 +1014,14 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 ComputerSettingsPage(PINPUT_RECORD Ir)
 {
+#if 0
   SHORT xScreen;
   SHORT yScreen;
+#endif
 
+  SetTextXY(6, 8, "Computer settings are not implemented yet.");
+
+#if 0
   SetTextXY(6, 8, "You want to change the type of computer to be installed.");
 
   SetTextXY(8, 10, "\x07  Press the UP or DOWN key to select the desired computer type.");
@@ -1032,10 +1037,13 @@ ComputerSettingsPage(PINPUT_RECORD Ir)
 		  18,
 		  xScreen - 3,
 		  yScreen - 3);
+#endif
 
   SetStatusText("   ENTER = Continue   ESC = Cancel   F3 = Quit");
 
+#if 0
   SaveGenericListState(ComputerList);
+#endif
 
   while(TRUE)
     {
@@ -1044,12 +1052,16 @@ ComputerSettingsPage(PINPUT_RECORD Ir)
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN)) /* DOWN */
 	{
+#if 0
 	  ScrollDownGenericList (ComputerList);
+#endif
 	}
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP)) /* UP */
 	{
+#if 0
 	  ScrollUpGenericList (ComputerList);
+#endif
 	}
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
@@ -1061,7 +1073,9 @@ ComputerSettingsPage(PINPUT_RECORD Ir)
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)) /* ESC */
 	{
+#if 0
 	  RestoreGenericListState(ComputerList);
+#endif
 	  return DEVICE_SETTINGS_PAGE;
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
@@ -1077,9 +1091,14 @@ ComputerSettingsPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 DisplaySettingsPage(PINPUT_RECORD Ir)
 {
+#if 0
   SHORT xScreen;
   SHORT yScreen;
+#endif
 
+  SetTextXY(6, 8, "Display settings are not implemented yet.");
+
+#if 0
   SetTextXY(6, 8, "You want to change the type of display to be installed.");
 
   SetTextXY(8, 10, "\x07  Press the UP or DOWN key to select the desired display type.");
@@ -1095,10 +1114,13 @@ DisplaySettingsPage(PINPUT_RECORD Ir)
 		  18,
 		  xScreen - 3,
 		  yScreen - 3);
+#endif
 
   SetStatusText("   ENTER = Continue   ESC = Cancel   F3 = Quit");
 
+#if 0
   SaveGenericListState(DisplayList);
+#endif
 
   while(TRUE)
     {
@@ -1107,12 +1129,16 @@ DisplaySettingsPage(PINPUT_RECORD Ir)
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN)) /* DOWN */
 	{
+#if 0
 	  ScrollDownGenericList (DisplayList);
+#endif
 	}
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP)) /* UP */
 	{
+#if 0
 	  ScrollUpGenericList (DisplayList);
+#endif
 	}
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
@@ -1126,7 +1152,9 @@ DisplaySettingsPage(PINPUT_RECORD Ir)
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)) /* ESC */
 	{
+#if 0
 	  RestoreGenericListState(DisplayList);
+#endif
 	  return DEVICE_SETTINGS_PAGE;
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
@@ -1142,9 +1170,14 @@ DisplaySettingsPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 KeyboardSettingsPage(PINPUT_RECORD Ir)
 {
+#if 0
   SHORT xScreen;
   SHORT yScreen;
+#endif
 
+  SetTextXY(6, 8, "Display settings are not implemented yet.");
+
+#if 0
   SetTextXY(6, 8, "You want to change the type of keyboard to be installed.");
 
   SetTextXY(8, 10, "\x07  Press the UP or DOWN key to select the desired keyboard type.");
@@ -1160,10 +1193,13 @@ KeyboardSettingsPage(PINPUT_RECORD Ir)
 		  18,
 		  xScreen - 3,
 		  yScreen - 3);
+#endif
 
   SetStatusText("   ENTER = Continue   ESC = Cancel   F3 = Quit");
 
+#if 0
   SaveGenericListState(KeyboardList);
+#endif
 
   while(TRUE)
     {
@@ -1172,12 +1208,16 @@ KeyboardSettingsPage(PINPUT_RECORD Ir)
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN)) /* DOWN */
 	{
+#if 0
 	  ScrollDownGenericList (KeyboardList);
+#endif
 	}
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP)) /* UP */
 	{
+#if 0
 	  ScrollUpGenericList (KeyboardList);
+#endif
 	}
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
@@ -1189,7 +1229,9 @@ KeyboardSettingsPage(PINPUT_RECORD Ir)
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)) /* ESC */
 	{
+#if 0
 	  RestoreGenericListState(KeyboardList);
+#endif
 	  return DEVICE_SETTINGS_PAGE;
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
