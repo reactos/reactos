@@ -1,4 +1,4 @@
-echo off
+@echo off
 md c:\reactos
 md c:\reactos\bin
 md c:\reactos\system32
@@ -44,4 +44,3 @@ copy apps\pteb\pteb.exe c:\reactos\bin
 copy apps\consume\consume.exe c:\reactos\bin
 copy apps\vmtest\vmtest.exe c:\reactos\bin
 copy apps\gditest\gditest.exe c:\reactos\bin
-

@@ -6,7 +6,7 @@
 # Select your host
 #
 #HOST = mingw32-linux
-#HOST = mingw32-windows
+HOST = mingw32-windows
 
 PATH_TO_TOP = .
 
