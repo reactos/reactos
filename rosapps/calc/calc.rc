@@ -1,6 +1,0 @@
-/* Do not Make changes here */
-
-#include <windows.h>
-#include <reactos/resource.h>
-
-#include "rsrc.rc"
