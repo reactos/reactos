@@ -86,5 +86,13 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
   SCSI_REQUEST_BLOCK InternalSrb;
   SENSE_DATA InternalSenseData;
 
+  /* DMA related stuff */
+  PADAPTER_OBJECT AdapterObject;
+  ULONG MapRegisterCount;
+
+  PHYSICAL_ADDRESS PhysicalAddress;
+  PVOID VirtualAddress;
+  ULONG CommonBufferLength;
+
   UCHAR MiniPortDeviceExtension[1]; /* must be the last entry */
 } SCSI_PORT_DEVICE_EXTENSION, *PSCSI_PORT_DEVICE_EXTENSION;

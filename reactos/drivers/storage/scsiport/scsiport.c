@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.33 2003/09/04 23:33:55 ekohl Exp $
+/* $Id: scsiport.c,v 1.34 2003/09/05 11:48:03 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -402,7 +402,8 @@ ScsiPortGetPhysicalAddress(IN PVOID HwDeviceExtension,
 			   IN PVOID VirtualAddress,
 			   OUT ULONG *Length)
 {
-  DPRINT("ScsiPortGetPhysicalAddress()\n");
+  DPRINT1("ScsiPortGetPhysicalAddress(%p %p %p %p)\n",
+	  HwDeviceExtension, Srb, VirtualAddress, Length);
   UNIMPLEMENTED;
 }
 
@@ -423,15 +424,74 @@ ScsiPortGetSrb(IN PVOID DeviceExtension,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 PVOID STDCALL
 ScsiPortGetUncachedExtension(IN PVOID HwDeviceExtension,
 			     IN PPORT_CONFIGURATION_INFORMATION ConfigInfo,
 			     IN ULONG NumberOfBytes)
 {
-  DPRINT("ScsiPortGetUncachedExtension()\n");
-  UNIMPLEMENTED;
+  PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+  DEVICE_DESCRIPTION DeviceDescription;
+
+  DPRINT1("ScsiPortGetUncachedExtension(%p %p %lu)\n",
+	  HwDeviceExtension, ConfigInfo, NumberOfBytes);
+
+  DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
+				      SCSI_PORT_DEVICE_EXTENSION,
+				      MiniPortDeviceExtension);
+
+  /* Check for allocated common DMA buffer */
+  if (DeviceExtension->VirtualAddress != NULL)
+    {
+      DPRINT1("The HBA has already got a common DMA buffer!\n");
+      return NULL;
+    }
+
+  /* Check for DMA adapter object */
+  if (DeviceExtension->AdapterObject == NULL)
+    {
+      /* Initialize DMA adapter description */
+      RtlZeroMemory(&DeviceDescription,
+		    sizeof(DEVICE_DESCRIPTION));
+      DeviceDescription.Version = DEVICE_DESCRIPTION_VERSION1;
+      DeviceDescription.Master = ConfigInfo->Master;
+      DeviceDescription.ScatterGather = ConfigInfo->ScatterGather;
+      DeviceDescription.DemandMode = ConfigInfo->DemandMode;
+      DeviceDescription.Dma32BitAddresses = ConfigInfo->Dma32BitAddresses;
+      DeviceDescription.BusNumber = ConfigInfo->SystemIoBusNumber;
+      DeviceDescription.DmaChannel = ConfigInfo->DmaChannel;
+      DeviceDescription.InterfaceType = ConfigInfo->AdapterInterfaceType;
+      DeviceDescription.DmaWidth = ConfigInfo->DmaWidth;
+      DeviceDescription.DmaSpeed = ConfigInfo->DmaSpeed;
+      DeviceDescription.MaximumLength = ConfigInfo->MaximumTransferLength;
+      DeviceDescription.DmaPort = ConfigInfo->DmaPort;
+
+      /* Get a DMA adapter object */
+      DeviceExtension->AdapterObject = HalGetAdapter(&DeviceDescription,
+						     &DeviceExtension->MapRegisterCount);
+      if (DeviceExtension->AdapterObject == NULL)
+	{
+	  DPRINT1("HalGetAdapter() failed\n");
+	  return NULL;
+	}
+    }
+
+  /* Allocate a common DMA buffer */
+  DeviceExtension->CommonBufferLength = NumberOfBytes;
+  DeviceExtension->VirtualAddress =
+    HalAllocateCommonBuffer(DeviceExtension->AdapterObject,
+			    DeviceExtension->CommonBufferLength,
+			    &DeviceExtension->PhysicalAddress,
+			    FALSE);
+  if (DeviceExtension->VirtualAddress == NULL)
+    {
+      DPRINT1("HalAllocateCommonBuffer() failed!\n");
+      DeviceExtension->CommonBufferLength = 0;
+      return NULL;
+    }
+
+  return DeviceExtension->VirtualAddress;
 }
 
 
@@ -506,10 +566,10 @@ ScsiPortInitialize(IN PVOID Argument1,
     return(STATUS_INVALID_PARAMETER);
 
   DriverObject->DriverStartIo = ScsiPortStartIo;
-  DriverObject->MajorFunction[IRP_MJ_CREATE] = ScsiPortCreateClose;
-  DriverObject->MajorFunction[IRP_MJ_CLOSE] = ScsiPortCreateClose;
-  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = ScsiPortDeviceControl;
-  DriverObject->MajorFunction[IRP_MJ_SCSI] = ScsiPortDispatchScsi;
+  DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)ScsiPortCreateClose;
+  DriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH)ScsiPortCreateClose;
+  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = (PDRIVER_DISPATCH)ScsiPortDeviceControl;
+  DriverObject->MajorFunction[IRP_MJ_SCSI] = (PDRIVER_DISPATCH)ScsiPortDispatchScsi;
 
 
   SystemConfig = IoGetConfigurationInformation();
