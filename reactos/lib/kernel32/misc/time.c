@@ -30,19 +30,6 @@ typedef struct __DOSDATE
    WORD Year:5;
 } DOSDATE, *PDOSDATE;
 
-
-#define NSPERSEC	10000000
-
-#define SECOND		1
-#define MINUTE		60*SECOND 
-#define HOUR		60*MINUTE
-#define DAY		24*HOUR
-#define YEAR		(365*DAY)
-#define FOURYEAR	(4*YEAR+DAY)
-#define CENTURY		(25*FOURYEAR-DAY)
-#define MILLENIUM	(100*CENTURY)
-
-
 #define TICKSPERMIN        600000000
 #define TICKSPERSEC        10000000
 #define TICKSPERMSEC       10000
@@ -70,12 +57,12 @@ static __inline int IsLeapYear(int Year)
   return Year % 4 == 0 && (Year % 100 != 0 || Year % 400 == 0) ? 1 : 0;
 }
 
-static __inline void NormalizeTimeFields(CSHORT *FieldToNormalize,
-                                         CSHORT *CarryField,
+static __inline void NormalizeTimeFields(WORD *FieldToNormalize,
+                                         WORD *CarryField,
                                          int Modulus)
 {
-  *FieldToNormalize = (CSHORT) (*FieldToNormalize - Modulus);
-  *CarryField = (CSHORT) (*CarryField + 1);
+  *FieldToNormalize = (WORD) (*FieldToNormalize - Modulus);
+  *CarryField = (WORD) (*CarryField + 1);
 }
 
 
@@ -180,71 +167,67 @@ SystemTimeToFileTime(
    )
 
 {
-        LARGE_INTEGER FileTime;
-	LARGE_INTEGER Year;
-	LARGE_INTEGER Month;
-	LARGE_INTEGER Day;
-	LARGE_INTEGER Hour;
-	LARGE_INTEGER Minute;
-	LARGE_INTEGER Second;
-	LARGE_INTEGER Milliseconds;
-	DWORD LeapDay = 0;
-	DWORD dwMonthDays = 0;
+  int CurYear, CurMonth, MonthLength;
+  long long int rcTime;
+  SYSTEMTIME SystemTime;
 
-	if ( (lpSystemTime->wYear % 4 == 0 && lpSystemTime->wYear % 100 != 0) || lpSystemTime->wYear % 400 == 0)
-		LeapDay = 1;
-	else
-		LeapDay = 0;
+  memcpy (&SystemTime, lpSystemTime, sizeof(SYSTEMTIME));
 
-	
-	Year = RtlEnlargedIntegerMultiply(lpSystemTime->wYear - 1601,YEAR);
-	if ( lpSystemTime->wMonth > 1)
-		dwMonthDays = 31;
-	if ( lpSystemTime->wMonth > 2)
-		dwMonthDays += ( 28 + LeapDay );
-	if ( lpSystemTime->wMonth > 3)
-		dwMonthDays += 31;
-	if ( lpSystemTime->wMonth > 4)
-		dwMonthDays += 30;
-	if ( lpSystemTime->wMonth > 5)
-		dwMonthDays += 31;
-	if ( lpSystemTime->wMonth > 6)
-		dwMonthDays += 30;
-	if ( lpSystemTime->wMonth > 7)
-		dwMonthDays += 31;
-	if ( lpSystemTime->wMonth > 8)
-		dwMonthDays += 31;
-	if ( lpSystemTime->wMonth > 9)
-		dwMonthDays += 30;
-	if ( lpSystemTime->wMonth > 10)
-		dwMonthDays += 31;
-	if ( lpSystemTime->wMonth > 11)
-		dwMonthDays += 30;
+  rcTime = 0;
+  
+    /* FIXME: normalize the TIME_FIELDS structure here */
+  while (SystemTime.wSecond >= SECSPERMIN)
+    {
+      NormalizeTimeFields(&SystemTime.wSecond, 
+                          &SystemTime.wMinute, 
+                          SECSPERMIN);
+    }
+  while (SystemTime.wMinute >= MINSPERHOUR)
+    {
+      NormalizeTimeFields(&SystemTime.wMinute, 
+                          &SystemTime.wHour, 
+                          MINSPERHOUR);
+    }
+  while (SystemTime.wHour >= HOURSPERDAY)
+    {
+      NormalizeTimeFields(&SystemTime.wHour, 
+                          &SystemTime.wDay, 
+                          HOURSPERDAY);
+    }
+  MonthLength =
+    MonthLengths[IsLeapYear(SystemTime.wYear)][SystemTime.wMonth - 1];
+  while (SystemTime.wDay > MonthLength)
+    {
+      NormalizeTimeFields(&SystemTime.wDay, 
+                          &SystemTime.wMonth, 
+                          MonthLength);
+    }
+  while (SystemTime.wMonth > MONSPERYEAR)
+    {
+      NormalizeTimeFields(&SystemTime.wMonth, 
+                          &SystemTime.wYear, 
+                          MONSPERYEAR);
+    }
 
-	Month = RtlEnlargedIntegerMultiply(dwMonthDays,DAY);
+    /* FIXME: handle calendar corrections here */
+  for (CurYear = EPOCHYEAR; CurYear < SystemTime.wYear; CurYear++)
+    {
+      rcTime += YearLengths[IsLeapYear(CurYear)];
+    }
+  for (CurMonth = 1; CurMonth < SystemTime.wMonth; CurMonth++)
+    {
+      rcTime += MonthLengths[IsLeapYear(CurYear)][CurMonth - 1];
+    }
+  rcTime += SystemTime.wDay - 1;
+  rcTime *= SECSPERDAY;
+  rcTime += SystemTime.wHour * SECSPERHOUR +
+            SystemTime.wMinute * SECSPERMIN + SystemTime.wSecond;
+  rcTime *= TICKSPERSEC;
+  rcTime += SystemTime.wMilliseconds * TICKSPERMSEC;
 
-	Day = RtlEnlargedIntegerMultiply(lpSystemTime->wDay,DAY);
+  *lpFileTime = *(FILETIME *)&rcTime;
 
-	Hour = RtlEnlargedIntegerMultiply(lpSystemTime->wHour,HOUR);
-	Minute = RtlEnlargedIntegerMultiply(lpSystemTime->wMinute,MINUTE);
-	Second = RtlEnlargedIntegerMultiply(lpSystemTime->wSecond,DAY);
-
-	Milliseconds =  RtlEnlargedIntegerMultiply(lpSystemTime->wMilliseconds,10000);
-
-        FileTime = RtlLargeIntegerAdd(FileTime,Year);
-        FileTime = RtlLargeIntegerAdd(FileTime,Month);
-        FileTime = RtlLargeIntegerAdd(FileTime,Day);
-        FileTime = RtlLargeIntegerAdd(FileTime,Hour);
-        FileTime = RtlLargeIntegerAdd(FileTime,Minute);
-        FileTime = RtlLargeIntegerAdd(FileTime,Second);
-
-        FileTime = RtlExtendedIntegerMultiply(FileTime,NSPERSEC);
-
-        FileTime = RtlLargeIntegerAdd(FileTime,Milliseconds);
-
-	memcpy(lpFileTime,&FileTime,sizeof(FILETIME));
-
-	return TRUE;
+  return TRUE;
 }
 
 
