@@ -1,4 +1,4 @@
-/* $Id: defedf.c,v 1.1 1999/07/04 11:14:15 ea Exp $
+/* $Id: defedf.c,v 1.2 1999/07/12 21:02:06 ea Exp $
  * 
  * reactos/iface/dll/defedf.c
  *
@@ -106,10 +106,14 @@ ParseInput (
 
 	r = strrchr( InputBuffer, '\n' );
 	if (r) *r = '\0';
+#ifdef DEBUG
 printf("ParseInput(%s)\n",InputBuffer);
+#endif
 	if (0 == strlen(InputBuffer))
 	{
+#ifdef DEBUG
 printf("LineEmpty\n");
+#endif
 		return LineEmpty;
 	}
 	
@@ -120,8 +124,16 @@ printf("LineEmpty\n");
 	if (*r == ';') 
 	{
 		strcpy( InputBuffer, r );
+#ifdef DEBUG
 printf("LineComment\n");
+#endif
 		return LineComment;
+	}
+	r = strchr( InputBuffer, '=' );
+	if (r)
+	{
+		printf( "Fatal error: can not process DEF files with aliases!\n");
+		exit(EXIT_FAILURE);
 	}
 	r = strchr( InputBuffer, '@' );
 	if (r)
@@ -129,11 +141,15 @@ printf("LineComment\n");
 		strcpy( CleanName, InputBuffer );
 		r = strchr( CleanName, '@' );
 		*r = '\0';
+#ifdef DEBUG
 printf("LineSymbol: \"%s\"=\"%s\"\n",InputBuffer,CleanName);
+#endif
 		return LineSymbol;
 	}
 	/* can not recognize it; copy it verbatim */
+#ifdef DEBUG
 printf("LineComment\n");
+#endif
 	return LineComment;
 }
 
