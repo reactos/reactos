@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.43 2004/01/16 19:32:00 gvg Exp $ */
+/* $Id: cursoricon.c,v 1.44 2004/01/17 15:20:25 navaraf Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -227,6 +227,21 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor, BOOL Fo
                                                       &PointerRect,
                                                       SPS_CHANGE);
     ExReleaseFastMutex(SurfGDI->DriverLock);
+
+    if(SurfGDI->PointerStatus == SPS_DECLINE)
+    {
+      SurfGDI->SetPointerShape = EngSetPointerShape;
+      SurfGDI->MovePointer = EngMovePointer;
+      EngSetPointerShape(SurfObj, soMask, soColor, XlateObj,
+                         NewCursor->IconInfo.xHotspot,
+                         NewCursor->IconInfo.yHotspot,
+                         CurInfo->x, 
+                         CurInfo->y, 
+                         &PointerRect,
+                         SPS_CHANGE);
+      DbgPrint("SetCursor: DrvSetPointerShape() returned SPS_DECLINE\n");
+    }
+    
     SetPointerRect(CurInfo, &PointerRect);
     
     if(hMask)
@@ -242,9 +257,7 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor, BOOL Fo
       EngDeleteXlate(XlateObj);
     }
     
-    if(SurfGDI->PointerStatus == SPS_DECLINE)
-      DbgPrint("SetCursor: DrvSetPointerShape() returned SPS_DECLINE\n");
-    else if(SurfGDI->PointerStatus == SPS_ERROR)
+    if(SurfGDI->PointerStatus == SPS_ERROR)
       DbgPrint("SetCursor: DrvSetPointerShape() returned SPS_ERROR\n");
   
   return Ret;

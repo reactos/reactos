@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: objects.h,v 1.25 2004/01/16 19:32:00 gvg Exp $
+/* $Id: objects.h,v 1.26 2004/01/17 15:20:25 navaraf Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -138,7 +138,7 @@ typedef VOID STDCALL (*PFN_Synchronize)(DHPDEV, RECTL *);
 typedef VOID STDCALL (*PFN_MovePointer)(SURFOBJ *, LONG, LONG, RECTL *);
 
 typedef ULONG STDCALL (*PFN_SetPointerShape)(SURFOBJ *, SURFOBJ *, SURFOBJ *, XLATEOBJ *,
-			    LONG, LONG, LONG, LONG, RECTL *, ULONG);
+			    LONG, LONG, LONG, LONG, RECTL *, FLONG);
 
 typedef HBITMAP STDCALL (*PFN_CreateDeviceBitmap)(DHPDEV, SIZEL, ULONG);
 

@@ -1507,10 +1507,33 @@ EngSaveFloatingPointState
 EngSecureMem
 EngSetEvent
 EngSetLastError
-EngSetPointerShape
 EngSetPointerTag
 EngSetPrinterData
 */
+
+ULONG
+STDCALL
+EngSetPointerShape(
+	IN SURFOBJ  *pso,
+	IN SURFOBJ  *psoMask,
+	IN SURFOBJ  *psoColor,
+	IN XLATEOBJ  *pxlo,
+	IN LONG  xHot,
+	IN LONG  yHot,
+	IN LONG  x,
+	IN LONG  y,
+	IN RECTL  *prcl,
+	IN FLONG  fl
+	);
+
+VOID
+STDCALL
+EngMovePointer(
+	IN SURFOBJ  *pso,
+	IN LONG      x,
+	IN LONG      y,
+	IN RECTL    *prcl
+	);
 
 typedef int CDECL (*SORTCOMP)(const void *Elem1, const void *Elem2);
 

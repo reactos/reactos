@@ -531,23 +531,6 @@ EngMarkBandingSurface ( IN HSURF hsurf )
   return FALSE;
 }
 
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-EngMovePointer(
-	IN SURFOBJ  *pso,
-	IN LONG      x,
-	IN LONG      y,
-	IN RECTL    *prcl
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_8wfb.htm
-  UNIMPLEMENTED;
-}
-
-
 INT
 STDCALL
 EngMultiByteToWideChar(
@@ -602,26 +585,6 @@ EngSaveFloatingPointState(
 	)
 {
   // www.osr.com/ddk/graphics/gdifncs_9tif.htm
-  UNIMPLEMENTED;
-  return 0;
-}
-
-ULONG
-STDCALL
-EngSetPointerShape(
-	IN SURFOBJ  *pso,
-	IN SURFOBJ  *psoMask,
-	IN SURFOBJ  *psoColor,
-	IN XLATEOBJ  *pxlo,
-	IN LONG  xHot,
-	IN LONG  yHot,
-	IN LONG  x,
-	IN LONG  y,
-	IN RECTL  *prcl,
-	IN FLONG  fl
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_1y5j.htm
   UNIMPLEMENTED;
   return 0;
 }

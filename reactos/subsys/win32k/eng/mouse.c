@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.55 2004/01/16 19:32:00 gvg Exp $
+/* $Id: mouse.c,v 1.56 2004/01/17 15:20:25 navaraf Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -532,4 +532,41 @@ EnableMouse(HDC hDisplayDC)
     }
   }
 }
+
+ULONG
+STDCALL
+EngSetPointerShape(
+	IN SURFOBJ  *pso,
+	IN SURFOBJ  *psoMask,
+	IN SURFOBJ  *psoColor,
+	IN XLATEOBJ  *pxlo,
+	IN LONG  xHot,
+	IN LONG  yHot,
+	IN LONG  x,
+	IN LONG  y,
+	IN RECTL  *prcl,
+	IN FLONG  fl
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_1y5j.htm
+  UNIMPLEMENTED;
+  return 0;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+EngMovePointer(
+	IN SURFOBJ  *pso,
+	IN LONG      x,
+	IN LONG      y,
+	IN RECTL    *prcl
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_8wfb.htm
+  UNIMPLEMENTED;
+}
+
 /* EOF */
