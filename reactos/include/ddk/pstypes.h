@@ -124,17 +124,26 @@ typedef struct _NT_TIB {
 
 typedef struct _NT_TEB
 {
-	NT_TIB			Tib;    // 0
-	CLIENT_ID		Cid;    // 28
-	HANDLE			RPCHandle;     // 36
+        NT_TIB                  Tib;              // 00h
+        ULONG                   reserved1;        // 1Ch  ???
+        CLIENT_ID               Cid;              // 20h
+        ULONG                   reserved2;        // 28h  ???
+        ULONG                   reserved3;        // 2Ch  ???
+        NT_PEB                  *Peb;             // 30h 
+        DWORD                   LastErrorCode;    // 34h
+
+        HANDLE                  RPCHandle;        // 36
 	PVOID	 		TlsData[TLS_MINIMUM_AVAILABLE]; // 40
-	DWORD 			dwTlsIndex;    // 230
-	NT_PEB			*Peb;   // 234 
-	DWORD			LastErrorCode;  // 238
+        DWORD                   dwTlsIndex;       // 230
 	NTSTATUS		LastStatusValue;  // 242
 	DWORD			LockCount;        // 244
-	UCHAR			HardErrorMode;    // 248 
-} NT_TEB;
+	UCHAR			HardErrorMode;    // 248
+
+        /* reactos only ??? (Eric Kohl) */
+        PVOID                   StackCommit;
+        PVOID                   StackCommitMax;
+        PVOID                   StackReserved;
+} NT_TEB, *PNT_TEB;
 
 struct _KPROCESS;
 
