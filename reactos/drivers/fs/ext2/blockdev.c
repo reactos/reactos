@@ -10,20 +10,19 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <string.h>
-#include <internal/string.h>
 
 //#define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #include "ext2fs.h"
 
 /* FUNCTIONS ***************************************************************/
 
-BOOLEAN Ext2ReadSectors(IN PDEVICE_OBJECT pDeviceObject,
-			IN ULONG	DiskSector,
-                        IN ULONG        SectorCount,
-			IN PVOID	Buffer)
+BOOLEAN
+Ext2ReadSectors(IN PDEVICE_OBJECT pDeviceObject,
+		IN ULONG DiskSector,
+		IN ULONG SectorCount,
+		IN PVOID Buffer)
 {
     LARGE_INTEGER   sectorNumber;
     PIRP            irp;

@@ -11,16 +11,17 @@
 
 #include <ddk/ntddk.h>
 #include <wchar.h>
-#include <internal/string.h>
+#include <string.h>
 
 //#define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #include "ext2fs.h"
 
 /* FUNCTIONS ****************************************************************/
 
-NTSTATUS Ext2SetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL
+Ext2SetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    DPRINT("Ext2SetInformation(DeviceObject %x Irp %x)\n",DeviceObject,Irp);
    
@@ -32,7 +33,8 @@ NTSTATUS Ext2SetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    return(STATUS_UNSUCCESSFUL);
 }
 
-NTSTATUS Ext2QueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL
+Ext2QueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    NTSTATUS Status;
    PIO_STACK_LOCATION Param;
@@ -54,7 +56,7 @@ NTSTATUS Ext2QueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    FileObject = Param->FileObject;
    DeviceExt = DeviceObject->DeviceExtension;
    Length = Param->Parameters.QueryFile.Length;
-   Buffer = Param->AssociatedIrp.SystemBuffer;
+   Buffer = Irp->AssociatedIrp.SystemBuffer;
    
    switch (Param->Parameters.QueryFile.FileInformationClass)
      {
@@ -122,7 +124,7 @@ NTSTATUS Ext2QueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    
    
    Irp->IoStatus.Status = Status;
-   if (NT_SUCCESS(Status)
+   if (NT_SUCCESS(Status))
      Irp->IoStatus.Information =
        Param->Parameters.QueryFile.Length - Length;
    else

@@ -20,7 +20,8 @@
 
 /* FUNCTIONS ****************************************************************/
 
-NTSTATUS MinixWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL
+MinixWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    DPRINT("MinixWrite(DeviceObject %x Irp %x)\n",DeviceObject,Irp);
    
@@ -55,7 +56,8 @@ static NTSTATUS MinixReadFilePage(PDEVICE_OBJECT DeviceObject,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS MinixRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL
+MinixRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    ULONG Length;
    PVOID Buffer;

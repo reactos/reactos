@@ -10,11 +10,9 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <wchar.h>
-#include <internal/string.h>
 
 //#define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #include "ext2fs.h"
 
@@ -24,9 +22,10 @@ static PDRIVER_OBJECT DriverObject;
 
 /* FUNCTIONS ****************************************************************/
 
-NTSTATUS Ext2Close(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL
+Ext2Close(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
-   PIO_STACK_LOCATION Stack;   
+   PIO_STACK_LOCATION Stack;
    PFILE_OBJECT FileObject;
    PDEVICE_EXTENSION DeviceExtension;
    NTSTATUS Status;
@@ -111,14 +110,16 @@ NTSTATUS Ext2Mount(PDEVICE_OBJECT DeviceToMount)
    DeviceExt->FileObject = IoCreateStreamFileObject(NULL, DeviceObject);
    DeviceExt->superblock = superblock;
    CcRosInitializeFileCache(DeviceExt->FileObject,
-			 &DeviceExt->Bcb);
+			    &DeviceExt->Bcb,
+			    PAGESIZE * 3);
    
    DPRINT("Ext2Mount() = STATUS_SUCCESS\n");
    
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS Ext2FileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL
+Ext2FileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
    PVPB	vpb = Stack->Parameters.Mount.Vpb;
@@ -134,8 +135,9 @@ NTSTATUS Ext2FileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    return(Status);
 }
 
-NTSTATUS DriverEntry(PDRIVER_OBJECT _DriverObject,
-		     PUNICODE_STRING RegistryPath)
+NTSTATUS STDCALL
+DriverEntry(PDRIVER_OBJECT _DriverObject,
+	    PUNICODE_STRING RegistryPath)
 /*
  * FUNCTION: Called by the system to initalize the driver
  * ARGUMENTS:
@@ -146,19 +148,18 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT _DriverObject,
 {
    PDEVICE_OBJECT DeviceObject;
    NTSTATUS ret;
-   UNICODE_STRING DeviceNameU;
-   ANSI_STRING DeviceNameA;
+   UNICODE_STRING DeviceName;
    
    DbgPrint("Ext2 FSD 0.0.1\n");
-          
+   
    DriverObject = _DriverObject;
    
-   RtlInitAnsiString(&DeviceNameA,"\\Device\\Ext2Fsd");
-   RtlAnsiStringToUnicodeString(&DeviceNameU,&DeviceNameA,TRUE);
+   RtlInitUnicodeString(&DeviceName,
+			L"\\Device\\Ext2Fsd");
    ret = IoCreateDevice(DriverObject,
 			0,
-			&DeviceNameU,
-                        FILE_DEVICE_FILE_SYSTEM,
+			&DeviceName,
+			FILE_DEVICE_FILE_SYSTEM,
 			0,
 			FALSE,
 			&DeviceObject);

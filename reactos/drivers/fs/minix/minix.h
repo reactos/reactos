@@ -101,10 +101,11 @@ typedef struct
    struct minix_inode inode;
 } MINIX_FSCONTEXT, *PMINIX_FSCONTEXT;
 
-NTSTATUS MinixCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS MinixClose(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS MinixWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS MinixRead(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL MinixCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL MinixClose(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL MinixWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL MinixRead(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL MinixDirectoryControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 ULONG MinixNewInode(PDEVICE_OBJECT Volume,
 		    MINIX_DEVICE_EXTENSION* DeviceExt,

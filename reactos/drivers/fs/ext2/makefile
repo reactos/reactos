@@ -1,13 +1,17 @@
-# $Id: makefile,v 1.9 2001/06/12 12:32:46 ekohl Exp $
+# $Id: makefile,v 1.10 2001/06/13 10:59:29 ekohl Exp $
 #
 # Linux Ext2 IFS Driver
 #
-BASE_CFLAGS = -I../../../include
+PATH_TO_TOP = ../../..
 
 TARGETNAME=ext2fs
 
 OBJECTS = super.o blockdev.o inode.o file.o dir.o rw.o quota.o security.o \
-          attr.o ext2.coff ../../../ntoskrnl/ntoskrnl.a
+          attr.o ext2.coff
+
+LIBS = ../../../ntoskrnl/ntoskrnl.a
+
+CFLAGS = -g -Wall 
 
 all: $(TARGETNAME).sys
 
@@ -23,7 +27,7 @@ clean:
 
 .phony: clean
 
-ext2fs.sys: $(OBJECTS)
+ext2fs.sys: $(OBJECTS) $(LIBS)
 	$(CC) \
 		-specs=../../svc_specs \
 		-mdll \
@@ -32,7 +36,7 @@ ext2fs.sys: $(OBJECTS)
 		-Wl,--defsym,_edata=__data_end__ \
 		-Wl,--defsym,_etext=etext \
 		-Wl,--base-file,base.tmp \
-		$(OBJECTS)
+		$(OBJECTS) $(LIBS)
 	$(RM) junk.tmp
 	$(DLLTOOL) \
 		--dllname $(TARGETNAME).sys \
@@ -46,7 +50,7 @@ ext2fs.sys: $(OBJECTS)
 		-specs=../../svc_specs \
 		-mdll \
 		-o $(TARGETNAME).sys \
-		$(OBJECTS) \
+		$(OBJECTS) $(LIBS) \
 		-Wl,temp.exp
 	$(RM) temp.exp
 

@@ -11,16 +11,17 @@
 
 #include <ddk/ntddk.h>
 #include <wchar.h>
-#include <internal/string.h>
+#include <string.h>
 
 //#define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #include "ext2fs.h"
 
 /* FUNCTIONS ****************************************************************/
 
-NTSTATUS Ext2QueryQuota(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL
+Ext2QueryQuota(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    NTSTATUS Status;
    
@@ -33,7 +34,8 @@ NTSTATUS Ext2QueryQuota(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    return(Status);
 }
 
-NTSTATUS Ext2SetQuota(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL
+Ext2SetQuota(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    NTSTATUS Status;
    

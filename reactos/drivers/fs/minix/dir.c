@@ -156,7 +156,9 @@ NTSTATUS MinixOpen(PDEVICE_OBJECT DeviceObject,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS MinixClose(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL
+MinixClose(PDEVICE_OBJECT DeviceObject,
+	   PIRP Irp)
 {
    PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
    PFILE_OBJECT FileObject = Stack->FileObject;
@@ -172,8 +174,9 @@ NTSTATUS MinixClose(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS MinixDirectoryControl(PDEVICE_OBJECT DeviceObject,
-			       PIRP Irp)
+NTSTATUS STDCALL
+MinixDirectoryControl(PDEVICE_OBJECT DeviceObject,
+		      PIRP Irp)
 {
    PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
 //   PFILE_OBJECT FileObject = Stack->FileObject;
@@ -190,7 +193,9 @@ NTSTATUS MinixDirectoryControl(PDEVICE_OBJECT DeviceObject,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS MinixCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL
+MinixCreate(PDEVICE_OBJECT DeviceObject,
+	    PIRP Irp)
 {
    PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
    PFILE_OBJECT FileObject = Stack->FileObject;

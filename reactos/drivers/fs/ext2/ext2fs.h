@@ -1,3 +1,4 @@
+#include <ddk/ntddk.h>
 #include <ddk/ntifs.h>
 
 BOOLEAN Ext2ReadSectors(IN PDEVICE_OBJECT pDeviceObject,
@@ -16,7 +17,7 @@ struct ext2_super_block {
 	ULONG	s_first_data_block;	/* First Data Block */
 	ULONG	s_log_block_size;	/* Block size */
 	LONG	s_log_frag_size;	/* Fragment size */
-        ULONG	s_blocks_per_group;	/* # Blocks per group */
+	ULONG	s_blocks_per_group;	/* # Blocks per group */
 	ULONG	s_frags_per_group;	/* # Fragments per group */
 	ULONG	s_inodes_per_group;	/* # Inodes per group */
 	ULONG	s_mtime;		/* Mount time */
@@ -263,19 +264,19 @@ NTSTATUS Ext2ReadFile(PDEVICE_EXTENSION DeviceExt,
 		      PVOID Buffer, 
 		      ULONG Length, 
                       LARGE_INTEGER Offset);
-NTSTATUS Ext2Create(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS Ext2DirectoryControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS Ext2QueryQuota(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS Ext2SetQuota(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS Ext2SetSecurity(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS Ext2QuerySecurity(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS Ext2SetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS Ext2QueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS Ext2Read(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS Ext2Write(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS Ext2Cleanup(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS Ext2FlushBuffers(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS Ext2Shutdown(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL Ext2Create(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL Ext2DirectoryControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL Ext2QueryQuota(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL Ext2SetQuota(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL Ext2SetSecurity(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL Ext2QuerySecurity(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL Ext2SetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL Ext2QueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL Ext2Read(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL Ext2Write(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL Ext2Cleanup(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL Ext2FlushBuffers(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL Ext2Shutdown(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 NTSTATUS Ext2ReadPage(PDEVICE_EXTENSION DeviceExt,
 		      PEXT2_FCB Fcb,
 		      PVOID Buffer,

@@ -13,7 +13,7 @@
 #include <string.h>
 
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #include "ext2fs.h"
 
@@ -146,7 +146,8 @@ NTSTATUS Ext2ReadFile(PDEVICE_EXTENSION DeviceExt,
 }
 
 
-NTSTATUS Ext2Write(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL
+Ext2Write(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    DPRINT("Ext2Write(DeviceObject %x Irp %x)\n",DeviceObject,Irp);
    
@@ -155,7 +156,8 @@ NTSTATUS Ext2Write(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    return(STATUS_UNSUCCESSFUL);
 }
 
-NTSTATUS Ext2FlushBuffers(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL
+Ext2FlushBuffers(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    DPRINT("Ext2FlushBuffers(DeviceObject %x Irp %x)\n",DeviceObject,Irp);
    
@@ -164,7 +166,8 @@ NTSTATUS Ext2FlushBuffers(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    return(STATUS_UNSUCCESSFUL);
 }
 
-NTSTATUS Ext2Shutdown(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL
+Ext2Shutdown(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    DPRINT("Ext2Shutdown(DeviceObject %x Irp %x)\n",DeviceObject,Irp);
    
@@ -173,7 +176,8 @@ NTSTATUS Ext2Shutdown(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    return(STATUS_UNSUCCESSFUL);
 }
 
-NTSTATUS Ext2Cleanup(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL
+Ext2Cleanup(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    DbgPrint("Ext2Cleanup(DeviceObject %x Irp %x)\n",DeviceObject,Irp);
    
@@ -185,7 +189,8 @@ NTSTATUS Ext2Cleanup(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    return(STATUS_UNSUCCESSFUL);
 }
 
-NTSTATUS Ext2Read(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL
+Ext2Read(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    ULONG Length;
    PVOID Buffer;

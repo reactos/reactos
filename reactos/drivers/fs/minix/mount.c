@@ -63,7 +63,8 @@ VOID MinixMount(PDEVICE_OBJECT DeviceToMount)
    DeviceExt->FileObject = IoCreateStreamFileObject(NULL, DeviceObject);
 }
 
-NTSTATUS MinixFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL
+MinixFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
 //   PVPB	vpb = Stack->Parameters.Mount.Vpb;
@@ -103,8 +104,9 @@ NTSTATUS MinixFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    return(Status);
 }
 
-NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT _DriverObject, 
-			     PUNICODE_STRING RegistryPath)
+NTSTATUS STDCALL
+DriverEntry(PDRIVER_OBJECT _DriverObject,
+	    PUNICODE_STRING RegistryPath)
 /*
  * FUNCTION: Called by the system to initalize the driver
  * ARGUMENTS:
@@ -115,17 +117,18 @@ NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT _DriverObject,
 {
    PDEVICE_OBJECT DeviceObject;
    NTSTATUS ret;
-   UNICODE_STRING ustr;
-
+   UNICODE_STRING DeviceName;
+   
    DbgPrint("Minix FSD 0.0.1\n");
-          
+   
    DriverObject = _DriverObject;
    
-   RtlInitUnicodeString(&ustr, L"\\Device\\Minix");
+   RtlInitUnicodeString(&DeviceName,
+			L"\\Device\\Minix");
    ret = IoCreateDevice(DriverObject,
 			0,
-			&ustr,
-                        FILE_DEVICE_FILE_SYSTEM,
+			&DeviceName,
+			FILE_DEVICE_FILE_SYSTEM,
 			0,
 			FALSE,
 			&DeviceObject);
@@ -141,6 +144,8 @@ NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT _DriverObject,
    DriverObject->MajorFunction[IRP_MJ_WRITE] = MinixWrite;
    DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] = 
                       MinixFileSystemControl;
+   DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] = 
+                      MinixDirectoryControl;
    DriverObject->DriverUnload = NULL;
 
    IoRegisterFileSystem(DeviceObject);

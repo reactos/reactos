@@ -1,11 +1,11 @@
-# $Id: Makefile,v 1.3 2001/06/12 12:33:10 ekohl Exp $
+# $Id: Makefile,v 1.4 2001/06/13 10:59:50 ekohl Exp $
 #
 #
 PATH_TO_TOP = ../../..
 
 TARGET=minixfs
 
-OBJECTS = $(TARGET).o $(TARGET).coff ../../../ntoskrnl/ntoskrnl.a
+OBJECTS = $(TARGET).o minix.coff ../../../ntoskrnl/ntoskrnl.a
 
 CFLAGS = -I. -g
 
@@ -15,10 +15,11 @@ all: $(TARGET).sys
 
 clean:
 	- $(RM) *.o
-	- $(RM) $(TARGET).coff
+	- $(RM) *.coff
 	- $(RM) junk.tmp
 	- $(RM) base.tmp
 	- $(RM) temp.exp
+	- $(RM) *.sym
 	- $(RM) $(TARGET).sys
 	- $(RM) $(TARGET).sys.unstripped
 
@@ -39,7 +40,9 @@ MOBJECTS = block.o blockdev.o cache.o dir.o inode.o mount.o rw.o bitops.o
 minixfs.o: $(MOBJECTS)
 	$(LD) -r -o minixfs.o $(MOBJECTS)
 
-$(TARGET).sys: $(OBJECTS)
+$(TARGET).sys: $(OBJECTS) minix.coff
+
+minix.coff: ../../../include/reactos/buildno.h minix.rc
 
 WITH_DEBUGGING=yes
 include ../../../rules.mak
