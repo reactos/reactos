@@ -29,14 +29,15 @@ ntfs.sys      = 3
 ntoskrnl.exe  = 2
 scsiport.sys  = 3
 vfatfs.sys    = 3
+ext2.sys      = 3
 
 [Cabinets]
 Cabinet=reactos.cab
 
 [SetupData]
 DefaultPath = \ReactOS
-OsLoadOptions = "/NOGUIBOOT /NODEBUG"
-;OsLoadOptions = "/NOGUIBOOT /DEBUGPORT=COM1"
+;OsLoadOptions = "/NOGUIBOOT /NODEBUG"
+OsLoadOptions = "/NOGUIBOOT /DEBUGPORT=COM1"
 ;OsLoadOptions = "/NOGUIBOOT /DEBUGPORT=SCREEN"
 ;OsLoadOptions = "/NOGUIBOOT /DEBUGPORT=BOCHS"
 
@@ -69,6 +70,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 00010409 = "English (USA-Dvorak)"
 0000040C = "French (France)"
 00000407 = "German (Germany)"
+0000040A = "Spanish (traditional short)"
 0000041D = "Swedish (Sweden)"
 
 [Files.KeyboardLayout]
@@ -79,6 +81,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 0000040C = kbdfr.dll
 0000041D = kbdse.dll
 00000809 = kgbgb.dll
+0000040A = kbdes.dll
 
 [Mouse]
 ;<id> = <user friendly name>,<spare>,<service key name>
