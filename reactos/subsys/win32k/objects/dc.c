@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.129 2004/04/25 11:34:13 weiden Exp $
+/* $Id: dc.c,v 1.130 2004/04/25 12:51:53 weiden Exp $
  *
  * DC.C - Device context functions
  *
@@ -72,6 +72,7 @@ func_type STDCALL  func_name( HDC hdc ) \
   PDC  dc = DC_LockDc( hdc );  \
   if (!dc)                          \
   {                                 \
+    SetLastWin32Error(ERROR_INVALID_HANDLE); \
     return 0;                       \
   }                                 \
   ft = dc->dc_field;                \
@@ -83,22 +84,38 @@ func_type STDCALL  func_name( HDC hdc ) \
  * important that the function has the right signature, for the implementation
  * we can do whatever we want.
  */
-#define DC_GET_VAL_EX( NtGdiFuncName, IntFuncName, ret_x, ret_y, type ) \
-VOID FASTCALL IntFuncName ( PDC dc, LP##type pt )  \
-{                                                  \
-  ASSERT ( dc );                                   \
-  ASSERT ( pt );                                   \
-  ((LPPOINT)pt)->x = dc->ret_x;                    \
-  ((LPPOINT)pt)->y = dc->ret_y;                    \
-}                                                  \
-BOOL STDCALL NtGdiFuncName ( HDC hdc, LP##type pt ) \
-{                                                  \
-  PDC dc = DC_LockDc ( hdc );                 \
-  if ( !dc )                                       \
-    return FALSE;                                  \
-  IntFuncName ( dc, pt );                          \
-  DC_UnlockDc ( hdc );                           \
-  return TRUE;                                     \
+#define DC_GET_VAL_EX( FuncName, ret_x, ret_y, type, ax, ay ) \
+VOID FASTCALL Int##FuncName ( PDC dc, LP##type pt) \
+{ \
+  ASSERT(dc); \
+  ASSERT(pt); \
+  pt->ax = dc->ret_x; \
+  pt->ay = dc->ret_y; \
+} \
+BOOL STDCALL NtGdi##FuncName ( HDC hdc, LP##type pt ) \
+{ \
+  NTSTATUS Status; \
+  type Safept; \
+  PDC dc; \
+  if(!pt) \
+  { \
+    SetLastWin32Error(ERROR_INVALID_PARAMETER); \
+    return FALSE; \
+  } \
+  if(!(dc = DC_LockDc(hdc))) \
+  { \
+    SetLastWin32Error(ERROR_INVALID_HANDLE); \
+    return FALSE; \
+  } \
+  Int##FuncName( dc, &Safept); \
+  DC_UnlockDc(hdc); \
+  Status = MmCopyToCaller(pt, &Safept, sizeof( type )); \
+  if(!NT_SUCCESS(Status)) \
+  { \
+    SetLastNtError(Status); \
+    return FALSE; \
+  } \
+  return TRUE; \
 }
 
 #define DC_SET_MODE( func_name, dc_field, min_val, max_val ) \
@@ -107,10 +124,16 @@ INT STDCALL  func_name( HDC hdc, INT mode ) \
   INT  prevMode;                            \
   PDC  dc;                                  \
   if ((mode < min_val) || (mode > max_val)) \
+  { \
+    SetLastWin32Error(ERROR_INVALID_PARAMETER); \
     return 0;                               \
+  } \
   dc = DC_LockDc ( hdc );              \
   if ( !dc )                                \
+  { \
+    SetLastWin32Error(ERROR_INVALID_HANDLE); \
     return 0;                               \
+  } \
   prevMode = dc->dc_field;                  \
   dc->dc_field = mode;                      \
   DC_UnlockDc ( hdc );                    \
@@ -933,7 +956,7 @@ NtGdiEnumObjects(HDC  hDC,
 
 DC_GET_VAL( COLORREF, NtGdiGetBkColor, w.backgroundColor )
 DC_GET_VAL( INT, NtGdiGetBkMode, w.backgroundMode )
-DC_GET_VAL_EX( NtGdiGetBrushOrgEx, IntGetBrushOrgEx, w.brushOrgX, w.brushOrgY, POINT )
+DC_GET_VAL_EX( GetBrushOrgEx, w.brushOrgX, w.brushOrgY, POINT, x, y )
 DC_GET_VAL( HRGN, NtGdiGetClipRgn, w.hClipRgn )
 
 HGDIOBJ STDCALL
@@ -942,7 +965,7 @@ NtGdiGetCurrentObject(HDC  hDC, UINT  ObjectType)
   UNIMPLEMENTED;
 }
 
-DC_GET_VAL_EX ( NtGdiGetCurrentPositionEx, IntGetCurrentPositionEx, w.CursPosX, w.CursPosY, POINT )
+DC_GET_VAL_EX ( GetCurrentPositionEx, w.CursPosX, w.CursPosY, POINT, x, y )
 
 BOOL FASTCALL
 IntGdiGetDCOrgEx(DC *dc, LPPOINT  Point)
@@ -992,11 +1015,14 @@ COLORREF STDCALL
 NtGdiSetBkColor(HDC hDC, COLORREF color)
 {
   COLORREF oldColor;
-  PDC  dc = DC_LockDc(hDC);
+  PDC dc;
   HBRUSH hBrush;
 
-  if ( !dc )
-    return 0x80000000;
+  if (!(dc = DC_LockDc(hDC)))
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return CLR_INVALID;
+  }
 
   oldColor = dc->w.backgroundColor;
   dc->w.backgroundColor = color;
@@ -1015,6 +1041,7 @@ NtGdiGetDCState(HDC  hDC)
   dc = DC_LockDc(hDC);
   if (dc == NULL)
   {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
     return 0;
   }
 
@@ -1213,8 +1240,11 @@ NtGdiSetDCState ( HDC hDC, HDC hDCSave )
       DC_UnlockDc ( hDCSave );
     } else {
       DC_UnlockDc ( hDC );
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
     }
   }
+  else
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
 }
 
 INT STDCALL
@@ -1228,6 +1258,7 @@ NtGdiGetDeviceCaps(HDC  hDC,
   dc = DC_LockDc(hDC);
   if (dc == NULL)
   {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
     return 0;
   }
 
@@ -1436,6 +1467,7 @@ IntGdiGetObject(HANDLE Handle, INT Count, LPVOID Buffer)
   GdiObject = GDIOBJ_LockObj(Handle, GDI_OBJECT_TYPE_DONTCARE);
   if (NULL == GdiObject)
     {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
       return 0;
     }
   
@@ -1519,7 +1551,10 @@ NtGdiGetObjectType(HANDLE handle)
 
   ptr = GDIOBJ_LockObj(handle, GDI_OBJECT_TYPE_DONTCARE);
   if (ptr == 0)
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
     return 0;
+  }
 
   objectType = GDIOBJ_GetObjectType(handle);
   switch(objectType)
@@ -1576,10 +1611,10 @@ DC_GET_VAL( INT, NtGdiGetROP2, w.ROPmode )
 DC_GET_VAL( INT, NtGdiGetStretchBltMode, w.stretchBltMode )
 DC_GET_VAL( UINT, NtGdiGetTextAlign, w.textAlign )
 DC_GET_VAL( COLORREF, NtGdiGetTextColor, w.textColor )
-DC_GET_VAL_EX( NtGdiGetViewportExtEx, IntGetViewportExtEx, vportExtX, vportExtY, SIZE )
-DC_GET_VAL_EX( NtGdiGetViewportOrgEx, IntGetViewportOrgEx, vportOrgX, vportOrgY, POINT )
-DC_GET_VAL_EX( NtGdiGetWindowExtEx, IntGetWindowExtEx, wndExtX, wndExtY, SIZE )
-DC_GET_VAL_EX( NtGdiGetWindowOrgEx, IntGetWindowOrgEx, wndOrgX, wndOrgY, POINT )
+DC_GET_VAL_EX( GetViewportExtEx, vportExtX, vportExtY, SIZE, cx, cy )
+DC_GET_VAL_EX( GetViewportOrgEx, vportOrgX, vportOrgY, POINT, x, y )
+DC_GET_VAL_EX( GetWindowExtEx, wndExtX, wndExtY, SIZE, cx, cy )
+DC_GET_VAL_EX( GetWindowOrgEx, wndOrgX, wndOrgY, POINT, x, y )
 
 HDC STDCALL
 NtGdiResetDC(HDC  hDC, CONST DEVMODEW *InitData)
@@ -1596,6 +1631,7 @@ NtGdiRestoreDC(HDC  hDC, INT  SaveLevel)
   dc = DC_LockDc(hDC);
   if(!dc)
   {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
     return FALSE;
   }
 
@@ -1664,12 +1700,14 @@ NtGdiSaveDC(HDC  hDC)
   dcs = DC_LockDc (hdcs);
   if (dcs == NULL)
   {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
     return 0;
   }
   dc = DC_LockDc (hDC);
   if (dc == NULL)
   {
     DC_UnlockDc(dc);
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
     return 0;
   }
 
@@ -1925,6 +1963,7 @@ NtGdiSetHookFlags(HDC hDC, WORD Flags)
 
   if (NULL == dc)
     {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
       return 0;
     }
 
