@@ -1,10 +1,31 @@
-/* $Id: rtl.h,v 1.10 2000/02/19 19:33:28 ekohl Exp $
+/* $Id: rtl.h,v 1.11 2000/02/25 23:57:21 ekohl Exp $
  *
  */
 
-VOID WINAPI __RtlInitHeap(PVOID	base,
-			  ULONG	minsize,
-			  ULONG	maxsize);
+
+/*
+ * Preliminary data type!!
+ *
+ * This definition is not finished yet. It will change in the future.
+ */
+typedef struct _RTL_USER_PROCESS_INFO
+{
+	ULONG		Unknown1;		// 0x00
+	HANDLE		ProcessHandle;		// 0x04
+	HANDLE		ThreadHandle;		// 0x08
+	CLIENT_ID	ClientId;		// 0x0C
+	ULONG		Unknown5;		// 0x14
+	LONG		StackZeroBits;		// 0x18
+	LONG		StackReserved;		// 0x1C
+	LONG		StackCommit;		// 0x20
+	ULONG		Unknown9;		// 0x24
+// more data ... ???
+} RTL_USER_PROCESS_INFO, *PRTL_USER_PROCESS_INFO;
+
+
+//VOID WINAPI __RtlInitHeap(PVOID	base,
+//			  ULONG	minsize,
+//			  ULONG	maxsize);
 
 #define HEAP_BASE (0xa0000000)
 
@@ -177,15 +198,15 @@ NTSTATUS
 STDCALL
 RtlCreateUserProcess (
 	PUNICODE_STRING			CommandLine,
-	ULONG				Unknown1,
-	PRTL_USER_PROCESS_PARAMETERS	ProcessParameters,
+	ULONG				Unknown2,
+	PRTL_USER_PROCESS_PARAMETERS	ProcessParameters,	// verified
 	PSECURITY_DESCRIPTOR		ProcessSd,
 	PSECURITY_DESCRIPTOR		ThreadSd,
 	WINBOOL				bInheritHandles,
 	DWORD				dwCreationFlags,
-	PCLIENT_ID			ClientId,
-	PHANDLE				ProcessHandle,
-	PHANDLE				ThreadHandle
+	ULONG				Unknown8,
+	ULONG				Unknown9,
+	PRTL_USER_PROCESS_INFO		ProcessInfo		// verified
 	);
 
 NTSTATUS

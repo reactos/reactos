@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.15 2000/02/19 19:34:49 ekohl Exp $
+/* $Id: process.c,v 1.16 2000/02/25 23:58:03 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -98,7 +98,9 @@ HANDLE STDCALL KlCreateFirstThread(HANDLE ProcessHandle,
    return(ThreadHandle);
 }
 
-static NTSTATUS RtlpMapFile(PUNICODE_STRING ApplicationName,
+static NTSTATUS RtlpMapFile(
+PRTL_USER_PROCESS_PARAMETERS	Ppb,
+//PUNICODE_STRING ApplicationName,
 			    PHANDLE Section)
 {
    HANDLE hFile;
@@ -109,11 +111,16 @@ static NTSTATUS RtlpMapFile(PUNICODE_STRING ApplicationName,
 
    hFile = NULL;
 
+   RtlDeNormalizeProcessParams (Ppb);
+
    InitializeObjectAttributes(&ObjectAttributes,
-			      ApplicationName,
+//			      ApplicationName,
+			      &(Ppb->ImagePathName),
 			      OBJ_CASE_INSENSITIVE,
 			      NULL,
 			      SecurityDescriptor);
+
+   RtlNormalizeProcessParams (Ppb);
 
    /*
     * Try to open the executable
@@ -245,16 +252,20 @@ static NTSTATUS KlInitPeb (HANDLE ProcessHandle,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL RtlCreateUserProcess(PUNICODE_STRING		CommandLine,
-				      ULONG			Unknown1,
-				      PRTL_USER_PROCESS_PARAMETERS Ppb,
-				      PSECURITY_DESCRIPTOR ProcessSd,
-				      PSECURITY_DESCRIPTOR ThreadSd,
-				      WINBOOL bInheritHandles,
-				      DWORD dwCreationFlags,
-				      PCLIENT_ID ClientId,
-				      PHANDLE ProcessHandle,
-				      PHANDLE ThreadHandle)
+NTSTATUS
+STDCALL
+RtlCreateUserProcess (
+	PUNICODE_STRING			CommandLine,		// verified
+	ULONG				Unknown2,
+	PRTL_USER_PROCESS_PARAMETERS	Ppb,			// verified
+	PSECURITY_DESCRIPTOR		ProcessSd,
+	PSECURITY_DESCRIPTOR		ThreadSd,
+	WINBOOL				bInheritHandles,
+	DWORD				dwCreationFlags,
+	ULONG				Unknown8,
+	ULONG				Unknown9,
+	PRTL_USER_PROCESS_INFO		ProcessInfo		// verified
+	)
 {
    HANDLE hSection;
    HANDLE hThread;
@@ -263,16 +274,17 @@ NTSTATUS STDCALL RtlCreateUserProcess(PUNICODE_STRING		CommandLine,
    PROCESS_BASIC_INFORMATION ProcessBasicInfo;
    ULONG retlen;
 
-   DPRINT("CreateProcessW(CommandLine '%w')\n", CommandLine->Buffer);
+   DPRINT("RtlCreateUserProcess\n");
    
-   Status = RtlpMapFile(CommandLine,
+//   Status = RtlpMapFile(CommandLine,
+   Status = RtlpMapFile(Ppb,
 			&hSection);
    
    /*
     * Create a new process
     */
    
-   Status = NtCreateProcess(ProcessHandle,
+   Status = NtCreateProcess(&(ProcessInfo->ProcessHandle),
 			    PROCESS_ALL_ACCESS,
 			    NULL,
 			    NtCurrentProcess(),
@@ -289,23 +301,20 @@ NTSTATUS STDCALL RtlCreateUserProcess(PUNICODE_STRING		CommandLine,
     * Get some information about the process
     */
    
-   ZwQueryInformationProcess(*ProcessHandle,
+   ZwQueryInformationProcess(ProcessInfo->ProcessHandle,
 			     ProcessBasicInformation,
 			     &ProcessBasicInfo,
 			     sizeof(ProcessBasicInfo),
 			     &retlen);
    DPRINT("ProcessBasicInfo.UniqueProcessId %d\n",
 	  ProcessBasicInfo.UniqueProcessId);
-   if (ClientId != NULL)
-     {
-	ClientId->UniqueProcess = (HANDLE)ProcessBasicInfo.UniqueProcessId;
-     }
+   ProcessInfo->ClientId.UniqueProcess = (HANDLE)ProcessBasicInfo.UniqueProcessId;
 
    /*
     * Create Process Environment Block
     */
    DPRINT("Creating peb\n");
-   KlInitPeb(*ProcessHandle, Ppb);
+   KlInitPeb(ProcessInfo->ProcessHandle, Ppb);
 
    DPRINT("Creating thread for process\n");
    lpStartAddress = (LPTHREAD_START_ROUTINE)
@@ -313,12 +322,12 @@ NTSTATUS STDCALL RtlCreateUserProcess(PUNICODE_STRING		CommandLine,
      AddressOfEntryPoint + 
      ((PIMAGE_OPTIONAL_HEADER)OPTHDROFFSET(NTDLL_BASE))->ImageBase;
    
-   hThread =  KlCreateFirstThread(*ProcessHandle,
+   hThread =  KlCreateFirstThread(ProcessInfo->ProcessHandle,
 //				  Headers.OptionalHeader.SizeOfStackReserve,
 				  0x200000,
 				  lpStartAddress,
 				  dwCreationFlags,
-				  ClientId);
+				  &(ProcessInfo->ClientId));
    if (hThread == NULL)
    {
 	DPRINT("Failed to create thread\n");

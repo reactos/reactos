@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.13 2000/02/21 22:43:15 ekohl Exp $
+/* $Id: init.c,v 1.14 2000/02/25 23:58:57 ekohl Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -33,6 +33,8 @@
 
 #define NDEBUG
 
+/* uncomment to run csrss.exe */
+//#define RUN_CSRSS
 
 /* GLOBAL VARIABLES *********************************************************/
 
@@ -126,6 +128,7 @@ InitSessionManager (
 	UNICODE_STRING CmdLineW;
 	UNICODE_STRING CurrentDirectoryW;
 	PRTL_USER_PROCESS_PARAMETERS ProcessParameters;
+	RTL_USER_PROCESS_INFO ProcessInfo;
 
 	/* Create the "\SmApiPort" object (LPC) */
 	RtlInitUnicodeString (&UnicodeString,
@@ -191,18 +194,19 @@ InitSessionManager (
 
 	/* FIXME: Load the well known DLLs */
 
-	/* Create paging files */
 #if 0
+	/* Create paging files */
 	SmCreatePagingFiles ();
 #endif
 
+#if 0
 	/* Load missing registry hives */
-//	NtInitializeRegistry (FALSE);
+	NtInitializeRegistry (FALSE);
+#endif
 
 	/* Set environment variables from registry */
 	SmSetEnvironmentVariables ();
 
-//#if 0
 	/* Load the kernel mode driver win32k.sys */
 	RtlInitUnicodeString (&CmdLineW,
 	                      L"\\??\\C:\\reactos\\system32\\drivers\\win32k.sys");
@@ -212,9 +216,8 @@ InitSessionManager (
 	{
 		return FALSE;
 	}
-//#endif
 
-#if 0
+#ifdef RUN_CSRSS
 	/* Start the Win32 subsystem (csrss.exe) */
 	DisplayString (L"SM: Executing csrss.exe\n");
 
@@ -243,17 +246,19 @@ InitSessionManager (
 	                               NULL,
 	                               FALSE,
 	                               0,
-	                               NULL,
-	                               &Children[CHILD_CSRSS],
-	                               NULL);
+	                               0,
+	                               0,
+	                               &ProcessInfo);
+
+	RtlDestroyProcessParameters (ProcessParameters);
+
 	if (!NT_SUCCESS(Status))
 	{
 		DisplayString (L"SM: Loading csrss.exe failed!\n");
 		return FALSE;
 	}
-
-	RtlDestroyProcessParameters (ProcessParameters);
-#endif
+	Children[CHILD_CSRSS] = ProcessInfo.ProcessHandle;
+#endif /* RUN_CSRSS */
 
 
 	/* Start the simple shell (shell.exe) */
@@ -262,7 +267,8 @@ InitSessionManager (
 	                      L"\\??\\C:\\reactos\\system32\\shell.exe");
 #if 0
 	/* Start the logon process (winlogon.exe) */
-	RtlInitUnicodeString (&CmdLineW,
+	DisplayString (L"SM: Running winlogon\n");
+	RtlInitUnicodeString (&UnicodeString,
 	                      L"\\??\\C:\\reactos\\system32\\winlogon.exe");
 #endif
 
@@ -289,9 +295,9 @@ InitSessionManager (
 	                               NULL,
 	                               FALSE,
 	                               0,
-	                               NULL,
-	                               &Children[CHILD_WINLOGON],
-	                               NULL);
+	                               0,
+	                               0,
+	                               &ProcessInfo);
 
 	RtlDestroyProcessParameters (ProcessParameters);
 
@@ -304,6 +310,7 @@ InitSessionManager (
 #endif
 		return FALSE;
 	}
+	Children[CHILD_WINLOGON] = ProcessInfo.ProcessHandle;
 
 	/* Create the \DbgSsApiPort object (LPC) */
 	RtlInitUnicodeString (&UnicodeString,
