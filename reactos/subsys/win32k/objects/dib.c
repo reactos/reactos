@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.32 2003/08/31 07:56:24 gvg Exp $
+ * $Id: dib.c,v 1.33 2003/09/25 14:40:42 fireball Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -297,7 +297,8 @@ INT STDCALL NtGdiGetDIBits(HDC  hDC,
 	{
 	  if (0 != Info.bmiHeader.biBitCount)
 	    {
-	      UNIMPLEMENTED;
+              DPRINT("NtGdiGetDIBits(): This operation isn't fully implemented yet.");
+	      /*UNIMPLEMENTED;*/
 	    }
 
 	  Info.bmiHeader.biWidth = BitmapObj->bitmap.bmWidth;
