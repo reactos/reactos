@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: anonmem.c,v 1.20 2003/08/25 19:26:10 dwelch Exp $
+/* $Id: anonmem.c,v 1.21 2003/08/29 21:23:06 dwelch Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/anonmem.c
@@ -391,7 +391,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
     */
    Status = MmCreateVirtualMapping(MemoryArea->Process,		      
 				   (PVOID)PAGE_ROUND_DOWN(Address),
-				   MemoryArea->Attributes,
+				   Region->Protect,
 				   Page,
 				   FALSE);
    while (Status == STATUS_NO_MEMORY)
@@ -399,7 +399,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
 	MmUnlockAddressSpace(AddressSpace);
 	Status = MmCreateVirtualMapping(MemoryArea->Process,	      
 					Address,
-					MemoryArea->Attributes,
+					Region->Protect,
 					Page,
 					TRUE);
 	MmLockAddressSpace(AddressSpace);
