@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.39 2003/03/16 23:01:07 rcampbell Exp $
+/* $Id: defwnd.c,v 1.40 2003/03/20 04:03:13 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -329,7 +329,7 @@ static void UserDrawMaxButton( HWND hWnd, HDC hDC, BOOL bDown )
             rect.top + iBmpHeight + FrameSize + 1);
     
     DrawFrameControl( hDC, &rect, DFC_CAPTION,
-                     (IsZoomed(hWnd) ? DFCS_CAPTIONMAX : DFCS_CAPTIONRESTORE) |
+                     (IsZoomed(hWnd) ? DFCS_CAPTIONRESTORE : DFCS_CAPTIONMAX) |
                      (bDown ? DFCS_PUSHED : 0) |
                      (IsMaxBoxActive(hWnd) ? 0 : DFCS_INACTIVE) );
 }
@@ -357,8 +357,7 @@ static void UserDrawMinButton( HWND hWnd, HDC hDC, BOOL bDown )
             rect.top + iBmpHeight + FrameSize + 1 );
 
     DrawFrameControl( hDC, &rect, DFC_CAPTION,
-                     (IsZoomed(hWnd) ? DFCS_CAPTIONMAX : DFCS_CAPTIONRESTORE) |
-                     (bDown ? DFCS_PUSHED : 0) |
+                     DFCS_CAPTIONMIN | (bDown ? DFCS_PUSHED : 0) |
                      (IsMinBoxActive(hWnd) ? 0 : DFCS_INACTIVE) );
 }
 
