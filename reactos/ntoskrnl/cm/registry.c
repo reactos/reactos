@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.118 2004/01/09 19:42:40 ekohl Exp $
+/* $Id: registry.c,v 1.119 2004/01/12 12:52:27 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -31,7 +31,6 @@ POBJECT_TYPE  CmiKeyType = NULL;
 PREGISTRY_HIVE  CmiVolatileHive = NULL;
 KSPIN_LOCK  CmiKeyListLock;
 
-LIST_ENTRY CmiHiveLinkListHead;
 LIST_ENTRY CmiHiveListHead;
 ERESOURCE CmiHiveListLock;
 
@@ -281,9 +280,6 @@ CmInitializeRegistry(VOID)
   RtlInitUnicodeString(&CmiKeyType->TypeName, L"Key");
 
   ObpCreateTypeObject (CmiKeyType);
-
-  /* Initialize the hive link list */
-  InitializeListHead(&CmiHiveLinkListHead);
 
   /* Initialize the hive list */
   InitializeListHead(&CmiHiveListHead);
@@ -600,30 +596,12 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
       return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-  Status = CmiAddKeyToHashTable(ParentKey->RegistryHive,
-				ParentKey->KeyCell,
-				ParentKey->KeyCellOffset,
-				NewKey->RegistryHive,
-				NewKey->KeyCell,
-				NewKey->KeyCellOffset);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("CmiAddKeyToHashTable() failed (Status %lx)\n", Status);
-      if (NewKey->SubKeys != NULL)
-	{
-	  ExFreePool (NewKey->SubKeys);
-	}
-      ObDereferenceObject (NewKey);
-      ObDereferenceObject (ParentKey);
-      return Status;
-    }
-
   CmiAddKeyToList (ParentKey, NewKey);
+  ObDereferenceObject (ParentKey);
 
   VERIFY_KEY_OBJECT(NewKey);
 
   /* Note: Do not dereference NewKey here! */
-  ObDereferenceObject (ParentKey);
 
   return STATUS_SUCCESS;
 }
@@ -636,10 +614,6 @@ CmiDisconnectHive (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
   PKEY_OBJECT KeyObject;
   PREGISTRY_HIVE Hive;
   HANDLE KeyHandle;
-  PLIST_ENTRY Entry;
-  PHIVE_LINK HiveLink;
-  PKEY_CELL ParentKeyCell;
-  PHASH_TABLE_CELL HashCell;
   NTSTATUS Status;
 
   DPRINT("CmiDisconnectHive() called\n");
@@ -689,43 +663,9 @@ CmiDisconnectHive (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
     }
 
   Hive = KeyObject->RegistryHive;
-
   CmiRemoveKeyFromList (KeyObject);
 
-  /* Remove hive link and hash table entry */
-  Entry = CmiHiveLinkListHead.Flink;
-  while (Entry != &CmiHiveLinkListHead)
-    {
-      HiveLink = CONTAINING_RECORD(Entry, HIVE_LINK, Entry);
-      if (HiveLink->SubKeyRegistryHive == Hive &&
-	  HiveLink->SubKeyCellOffset == KeyObject->KeyCellOffset)
-	{
-	  ParentKeyCell = CmiGetCell (HiveLink->ParentKeyRegistryHive,
-				      HiveLink->ParentKeyCellOffset,
-				      NULL);
-	  if (ParentKeyCell != NULL)
-	    {
-	      HashCell = CmiGetCell (HiveLink->ParentKeyRegistryHive,
-				     ParentKeyCell->HashTableOffset,
-				     NULL);
-	      if (HashCell != NULL)
-		{
-		  CmiRemoveKeyFromHashTable(HiveLink->ParentKeyRegistryHive,
-					    HashCell,
-					    (BLOCK_OFFSET)((ULONG)HiveLink | 1));
-		  ParentKeyCell->NumberOfSubKeys--;
-		}
-	    }
-
-	  RemoveEntryList (Entry);
-	  ExFreePool (Entry);
-	  break;
-	}
-
-      Entry = Entry->Flink;
-    }
-
-  /* Note: Dereference the key object twice in order to delete it */
+  /* Dereference KeyObject twice to delete it */
   ObDereferenceObject (KeyObject);
   ObDereferenceObject (KeyObject);
 

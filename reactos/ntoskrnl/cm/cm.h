@@ -52,11 +52,9 @@
 // BLOCK_OFFSET = offset in file after header block
 typedef ULONG BLOCK_OFFSET, *PBLOCK_OFFSET;
 
-
 #include <pshpack1.h>
 
 /* header for registry hive file : */
-
 typedef struct _HIVE_HEADER
 {
   /* Hive identifier "regf" (0x66676572) */
@@ -103,7 +101,6 @@ typedef struct _HIVE_HEADER
   ULONG  Checksum;
 } HIVE_HEADER, *PHIVE_HEADER;
 
-
 typedef struct _HBIN
 {
   /* Bin identifier "hbin" (0x6E696268) */
@@ -125,13 +122,11 @@ typedef struct _HBIN
   ULONG  Unused2;
 } HBIN, *PHBIN;
 
-
 typedef struct _CELL_HEADER
 {
   /* <0 if used, >0 if free */
   LONG  CellSize;
 } CELL_HEADER, *PCELL_HEADER;
-
 
 typedef struct _KEY_CELL
 {
@@ -187,9 +182,8 @@ typedef struct _KEY_CELL
   USHORT ClassSize;
 
   /* Name of key (not zero terminated) */
-  UCHAR  Name[1];
+  UCHAR  Name[0];
 } KEY_CELL, *PKEY_CELL;
-
 
 /* KEY_CELL.Flags constants */
 #define  REG_KEY_ROOT_CELL                 0x0C
@@ -198,12 +192,6 @@ typedef struct _KEY_CELL
 
 /*
  * Hash record
- *
- * KeyOffset:
- *	The least significant bit is used to distinguish
- *	between real key offsets and pointers to registry hives:
- *	  0 : offset
- *	  1 : pointer to registry hive
  *
  * HashValue:
  *	packed name: four letters of value's name
@@ -303,18 +291,6 @@ typedef struct _REGISTRY_HIVE
 #define IsUsedCell(Cell)(Cell->CellSize < 0)
 
 
-typedef struct _HIVE_LINK
-{
-  LIST_ENTRY Entry;
-
-  PREGISTRY_HIVE ParentKeyRegistryHive;
-  BLOCK_OFFSET ParentKeyCellOffset;
-
-  PREGISTRY_HIVE SubKeyRegistryHive;
-  BLOCK_OFFSET SubKeyCellOffset;
-} HIVE_LINK, *PHIVE_LINK;
-
-
 /* KEY_OBJECT.Flags */
 
 /* When set, the key is scheduled for deletion, and all
@@ -370,7 +346,6 @@ extern PREGISTRY_HIVE CmiVolatileHive;
 extern POBJECT_TYPE CmiKeyType;
 extern KSPIN_LOCK CmiKeyListLock;
 
-extern LIST_ENTRY CmiHiveLinkListHead;
 extern LIST_ENTRY CmiHiveListHead;
 extern ERESOURCE CmiHiveListLock;
 
@@ -491,13 +466,12 @@ CmiGetMaxValueDataLength(IN PREGISTRY_HIVE  RegistryHive,
   IN PKEY_CELL  KeyCell);
 
 NTSTATUS
-CmiScanForSubKey(IN PREGISTRY_HIVE ParentKeyRegistryHive,
-		 IN PKEY_CELL ParentKeyCell,
-		 OUT PREGISTRY_HIVE *SubKeyRegistryHive,
-		 OUT PKEY_CELL *SubKeyCell,
-		 OUT BLOCK_OFFSET *SubKeyCellOffset,
+CmiScanForSubKey(IN PREGISTRY_HIVE  RegistryHive,
+		 IN PKEY_CELL  KeyCell,
+		 OUT PKEY_CELL  *SubKeyCell,
+		 OUT BLOCK_OFFSET *BlockOffset,
 		 IN PUNICODE_STRING KeyName,
-		 IN ACCESS_MASK DesiredAccess,
+		 IN ACCESS_MASK  DesiredAccess,
 		 IN ULONG Attributes);
 
 NTSTATUS
@@ -541,23 +515,22 @@ CmiDeleteValueFromKey(IN PREGISTRY_HIVE  RegistryHive,
 		      IN PUNICODE_STRING ValueName);
 
 NTSTATUS
-CmiAllocateHashTableCell(IN PREGISTRY_HIVE RegistryHive,
-			 OUT PHASH_TABLE_CELL *HashCell,
-			 OUT BLOCK_OFFSET *HBOffset,
-			 IN ULONG HashTableSize);
+CmiAllocateHashTableCell(IN PREGISTRY_HIVE  RegistryHive,
+  OUT PHASH_TABLE_CELL  *HashBlock,
+  OUT BLOCK_OFFSET  *HBOffset,
+  IN ULONG  HashTableSize);
 
 PKEY_CELL
 CmiGetKeyFromHashByIndex(PREGISTRY_HIVE RegistryHive,
-			 PHASH_TABLE_CELL HashCell,
-			 ULONG Index);
+PHASH_TABLE_CELL  HashBlock,
+ULONG  Index);
 
 NTSTATUS
 CmiAddKeyToHashTable(PREGISTRY_HIVE RegistryHive,
-		     PKEY_CELL ParentKeyCell,
-		     BLOCK_OFFSET ParentKeyCellOffset,
-		     PREGISTRY_HIVE NewKeyRegistryHive,
-		     PKEY_CELL NewKeyCell,
-		     BLOCK_OFFSET NewKeyCellOffset);
+		     PHASH_TABLE_CELL HashCell,
+		     BLOCK_OFFSET HashCellOffset,
+		     PKEY_CELL  NewKeyCell,
+		     BLOCK_OFFSET  NKBOffset);
 
 NTSTATUS
 CmiRemoveKeyFromHashTable(PREGISTRY_HIVE RegistryHive,

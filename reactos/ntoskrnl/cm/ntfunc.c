@@ -275,7 +275,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
   PKEY_OBJECT  KeyObject;
   PREGISTRY_HIVE  RegistryHive;
   PKEY_CELL  KeyCell, SubKeyCell;
-  PHASH_TABLE_CELL  HashTableCell;
+  PHASH_TABLE_CELL  HashTableBlock;
   PKEY_BASIC_INFORMATION  BasicInformation;
   PKEY_NODE_INFORMATION  NodeInformation;
   PKEY_FULL_INFORMATION  FullInformation;
@@ -314,21 +314,47 @@ NtEnumerateKey(IN HANDLE KeyHandle,
   KeyCell = KeyObject->KeyCell;
   RegistryHive = KeyObject->RegistryHive;
 
+  /* Check for hightest possible sub key index */
+  if (Index >= KeyCell->NumberOfSubKeys + KeyObject->NumberOfSubKeys)
+    {
+      ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+      KeLeaveCriticalRegion();
+      ObDereferenceObject(KeyObject);
+      DPRINT("No more volatile entries\n");
+      return STATUS_NO_MORE_ENTRIES;
+    }
+
   /* Get pointer to SubKey */
   if (Index >= KeyCell->NumberOfSubKeys)
     {
-      if (Index >= KeyObject->NumberOfSubKeys)
+      PKEY_OBJECT CurKey = NULL;
+      ULONG i;
+      ULONG j;
+
+      /* Search for volatile or 'foreign' keys */
+      j = KeyCell->NumberOfSubKeys;
+      for (i = 0; i < KeyObject->NumberOfSubKeys; i++)
+	{
+	  CurKey = KeyObject->SubKeys[i];
+	  if (CurKey->RegistryHive == CmiVolatileHive ||
+	      CurKey->RegistryHive != RegistryHive)
+	    {
+	      if (j == Index)
+		break;
+	      j++;
+	    }
+	}
+
+      if (i >= KeyObject->NumberOfSubKeys)
 	{
 	  ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
 	  KeLeaveCriticalRegion();
 	  ObDereferenceObject(KeyObject);
-	  DPRINT("No more volatile entries\n");
-	  return(STATUS_NO_MORE_ENTRIES);
+	  DPRINT("No more non-volatile entries\n");
+	  return STATUS_NO_MORE_ENTRIES;
 	}
-      else
-	{
-	  SubKeyCell = KeyObject->SubKeys[Index]->KeyCell;
-	}
+
+      SubKeyCell = CurKey->KeyCell;
     }
   else
     {
@@ -337,11 +363,11 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 	  ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
 	  KeLeaveCriticalRegion();
 	  ObDereferenceObject(KeyObject);
-	  return(STATUS_NO_MORE_ENTRIES);
+	  return STATUS_NO_MORE_ENTRIES;
 	}
 
-      HashTableCell = CmiGetCell (RegistryHive, KeyCell->HashTableOffset, NULL);
-      if (HashTableCell == NULL)
+      HashTableBlock = CmiGetCell (RegistryHive, KeyCell->HashTableOffset, NULL);
+      if (HashTableBlock == NULL)
 	{
 	  DPRINT("CmiGetBlock() failed\n");
 	  ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
@@ -349,12 +375,11 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 	  ObDereferenceObject(KeyObject);
 	  return STATUS_UNSUCCESSFUL;
 	}
+
       SubKeyCell = CmiGetKeyFromHashByIndex(RegistryHive,
-					    HashTableCell,
+					    HashTableBlock,
 					    Index);
     }
-
-  DPRINT("SubKeyCell %p\n", SubKeyCell);
 
   if (SubKeyCell == NULL)
     {

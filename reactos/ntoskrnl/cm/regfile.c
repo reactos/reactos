@@ -2262,139 +2262,87 @@ CmiGetMaxValueDataLength(PREGISTRY_HIVE RegistryHive,
 
 
 NTSTATUS
-CmiScanForSubKey(IN PREGISTRY_HIVE ParentKeyRegistryHive,
-		 IN PKEY_CELL ParentKeyCell,
-		 OUT PREGISTRY_HIVE *SubKeyRegistryHive,
+CmiScanForSubKey(IN PREGISTRY_HIVE RegistryHive,
+		 IN PKEY_CELL KeyCell,
 		 OUT PKEY_CELL *SubKeyCell,
-		 OUT BLOCK_OFFSET *SubKeyCellOffset,
+		 OUT BLOCK_OFFSET *BlockOffset,
 		 IN PUNICODE_STRING KeyName,
 		 IN ACCESS_MASK DesiredAccess,
 		 IN ULONG Attributes)
 {
-  PHASH_TABLE_CELL HashCell;
+  PHASH_TABLE_CELL HashBlock;
   PKEY_CELL CurSubKeyCell;
-  PHIVE_LINK HiveLink;
   ULONG i;
 
-  VERIFY_KEY_CELL(ParentKeyCell);
+  VERIFY_KEY_CELL(KeyCell);
 
   DPRINT("Scanning for sub key %wZ\n", KeyName);
 
-  assert(ParentKeyRegistryHive);
+  assert(RegistryHive);
 
   *SubKeyCell = NULL;
 
   /* The key does not have any subkeys */
-  if (ParentKeyCell->HashTableOffset == (BLOCK_OFFSET)-1)
+  if (KeyCell->HashTableOffset == (BLOCK_OFFSET)-1)
     {
       return STATUS_SUCCESS;
     }
 
   /* Get hash table */
-  HashCell = CmiGetCell (ParentKeyRegistryHive, ParentKeyCell->HashTableOffset, NULL);
-  if (HashCell == NULL)
+  HashBlock = CmiGetCell (RegistryHive, KeyCell->HashTableOffset, NULL);
+  if (HashBlock == NULL)
     {
       DPRINT("CmiGetBlock() failed\n");
       return STATUS_UNSUCCESSFUL;
     }
 
-  for (i = 0; (i < ParentKeyCell->NumberOfSubKeys) && (i < HashCell->HashTableSize); i++)
+  for (i = 0; (i < KeyCell->NumberOfSubKeys) && (i < HashBlock->HashTableSize); i++)
     {
       if (Attributes & OBJ_CASE_INSENSITIVE)
 	{
-	  if (HashCell->Table[i].KeyOffset != 0 &&
-	      HashCell->Table[i].KeyOffset != (ULONG_PTR)-1 &&
-	      (HashCell->Table[i].HashValue == 0 ||
-	       CmiCompareHashI(KeyName, (PCHAR)&HashCell->Table[i].HashValue)))
+	  if (HashBlock->Table[i].KeyOffset != 0 &&
+	      HashBlock->Table[i].KeyOffset != (ULONG_PTR)-1 &&
+	      (HashBlock->Table[i].HashValue == 0 ||
+	       CmiCompareHashI(KeyName, (PCHAR)&HashBlock->Table[i].HashValue)))
 	    {
-	      if (HashCell->Table[i].KeyOffset & 1)
+	      CurSubKeyCell = CmiGetCell (RegistryHive,
+					  HashBlock->Table[i].KeyOffset,
+					  NULL);
+	      if (CurSubKeyCell == NULL)
 		{
-		  HiveLink = (PHIVE_LINK)(HashCell->Table[i].KeyOffset & ~1);
-
-		  CurSubKeyCell = CmiGetCell (HiveLink->SubKeyRegistryHive,
-					      HiveLink->SubKeyCellOffset,
-					      NULL);
-		  if (CurSubKeyCell == NULL)
-		    {
-		      DPRINT("CmiGetBlock() failed\n");
-		      return STATUS_UNSUCCESSFUL;
-		    }
-
-		  if (CmiCompareKeyNamesI(KeyName, CurSubKeyCell))
-		    {
-		      *SubKeyRegistryHive = HiveLink->SubKeyRegistryHive;
-		      *SubKeyCell = CurSubKeyCell;
-		      *SubKeyCellOffset = HiveLink->SubKeyCellOffset;
-		      break;
-		    }
+		  DPRINT("CmiGetBlock() failed\n");
+		  return STATUS_UNSUCCESSFUL;
 		}
-	      else
-		{
-		  CurSubKeyCell = CmiGetCell (ParentKeyRegistryHive,
-					      HashCell->Table[i].KeyOffset,
-					      NULL);
-		  if (CurSubKeyCell == NULL)
-		    {
-		      DPRINT("CmiGetBlock() failed\n");
-		      return STATUS_UNSUCCESSFUL;
-		    }
 
-		  if (CmiCompareKeyNamesI(KeyName, CurSubKeyCell))
-		    {
-		      *SubKeyRegistryHive = ParentKeyRegistryHive;
-		      *SubKeyCell = CurSubKeyCell;
-		      *SubKeyCellOffset = HashCell->Table[i].KeyOffset;
-		      break;
-		    }
+	      if (CmiCompareKeyNamesI(KeyName, CurSubKeyCell))
+		{
+		  *SubKeyCell = CurSubKeyCell;
+		  *BlockOffset = HashBlock->Table[i].KeyOffset;
+		  break;
 		}
 	    }
 	}
       else
 	{
-	  if (HashCell->Table[i].KeyOffset != 0 &&
-	      HashCell->Table[i].KeyOffset != (ULONG_PTR) -1 &&
-	      (HashCell->Table[i].HashValue == 0 ||
-	       CmiCompareHash(KeyName, (PCHAR)&HashCell->Table[i].HashValue)))
+	  if (HashBlock->Table[i].KeyOffset != 0 &&
+	      HashBlock->Table[i].KeyOffset != (ULONG_PTR) -1 &&
+	      (HashBlock->Table[i].HashValue == 0 ||
+	       CmiCompareHash(KeyName, (PCHAR)&HashBlock->Table[i].HashValue)))
 	    {
-	      if (HashCell->Table[i].KeyOffset & 1)
+	      CurSubKeyCell = CmiGetCell (RegistryHive,
+					  HashBlock->Table[i].KeyOffset,
+					  NULL);
+	      if (CurSubKeyCell == NULL)
 		{
-		  HiveLink = (PHIVE_LINK)(HashCell->Table[i].KeyOffset & ~1);
-
-		  CurSubKeyCell = CmiGetCell (HiveLink->SubKeyRegistryHive,
-					      HiveLink->SubKeyCellOffset,
-					      NULL);
-		  if (CurSubKeyCell == NULL)
-		    {
-		      DPRINT("CmiGetBlock() failed\n");
-		      return STATUS_UNSUCCESSFUL;
-		    }
-
-		  if (CmiCompareKeyNames(KeyName, CurSubKeyCell))
-		    {
-		      *SubKeyRegistryHive = HiveLink->SubKeyRegistryHive;
-		      *SubKeyCell = CurSubKeyCell;
-		      *SubKeyCellOffset = HiveLink->SubKeyCellOffset;
-		      break;
-		    }
+		  DPRINT("CmiGetBlock() failed\n");
+		  return STATUS_UNSUCCESSFUL;
 		}
-	      else
-		{
-		  CurSubKeyCell = CmiGetCell (ParentKeyRegistryHive,
-					      HashCell->Table[i].KeyOffset,
-					      NULL);
-		  if (CurSubKeyCell == NULL)
-		    {
-		      DPRINT("CmiGetBlock() failed\n");
-		      return STATUS_UNSUCCESSFUL;
-		    }
 
-		  if (CmiCompareKeyNames(KeyName, CurSubKeyCell))
-		    {
-		      *SubKeyRegistryHive = ParentKeyRegistryHive;
-		      *SubKeyCell = CurSubKeyCell;
-		      *SubKeyCellOffset = HashCell->Table[i].KeyOffset;
-		      break;
-		    }
+	      if (CmiCompareKeyNames(KeyName, CurSubKeyCell))
+		{
+		  *SubKeyCell = CurSubKeyCell;
+		  *BlockOffset = HashBlock->Table[i].KeyOffset;
+		  break;
 		}
 	    }
 	}
@@ -2413,6 +2361,7 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
 	     PUNICODE_STRING Class,
 	     ULONG CreateOptions)
 {
+  PHASH_TABLE_CELL HashBlock;
   BLOCK_OFFSET NKBOffset;
   PKEY_CELL NewKeyCell;
   ULONG NewBlockSize;
@@ -2529,19 +2478,69 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
       return(Status);
     }
 
-  Status = CmiAddKeyToHashTable(ParentKey->RegistryHive,
-				ParentKeyCell,
-				ParentKey->KeyCellOffset,
-				NULL,
+  if (ParentKeyCell->HashTableOffset == (ULONG_PTR) -1)
+    {
+      Status = CmiAllocateHashTableCell (RegistryHive,
+					 &HashBlock,
+					 &ParentKeyCell->HashTableOffset,
+					 REG_INIT_HASH_TABLE_SIZE);
+      if (!NT_SUCCESS(Status))
+	{
+	  return(Status);
+	}
+    }
+  else
+    {
+      HashBlock = CmiGetCell (RegistryHive,
+			      ParentKeyCell->HashTableOffset,
+			      NULL);
+      if (HashBlock == NULL)
+	{
+	  DPRINT("CmiGetCell() failed\n");
+	  return STATUS_UNSUCCESSFUL;
+	}
+
+      if (((ParentKeyCell->NumberOfSubKeys + 1) >= HashBlock->HashTableSize))
+	{
+	  PHASH_TABLE_CELL NewHashBlock;
+	  BLOCK_OFFSET HTOffset;
+
+	  /* Reallocate the hash table cell */
+	  Status = CmiAllocateHashTableCell (RegistryHive,
+					     &NewHashBlock,
+					     &HTOffset,
+					     HashBlock->HashTableSize +
+					       REG_EXTEND_HASH_TABLE_SIZE);
+	  if (!NT_SUCCESS(Status))
+	    {
+	      return Status;
+	    }
+
+	  RtlZeroMemory(&NewHashBlock->Table[0],
+			sizeof(NewHashBlock->Table[0]) * NewHashBlock->HashTableSize);
+	  RtlCopyMemory(&NewHashBlock->Table[0],
+			&HashBlock->Table[0],
+			sizeof(NewHashBlock->Table[0]) * HashBlock->HashTableSize);
+	  CmiDestroyCell (RegistryHive,
+			  HashBlock,
+			  ParentKeyCell->HashTableOffset);
+	  ParentKeyCell->HashTableOffset = HTOffset;
+	  HashBlock = NewHashBlock;
+	}
+    }
+
+  Status = CmiAddKeyToHashTable(RegistryHive,
+				HashBlock,
+				ParentKeyCell->HashTableOffset,
 				NewKeyCell,
 				NKBOffset);
-  if (!NT_SUCCESS(Status))
+  if (NT_SUCCESS(Status))
     {
-      return Status;
+      ParentKeyCell->NumberOfSubKeys++;
     }
 
   NtQuerySystemTime (&ParentKeyCell->LastWriteTime);
-  CmiMarkBlockDirty (ParentKey->RegistryHive, ParentKey->KeyCellOffset);
+  CmiMarkBlockDirty (RegistryHive, ParentKey->KeyCellOffset);
 
   return(Status);
 }
@@ -3006,30 +3005,22 @@ CmiAllocateHashTableCell (IN PREGISTRY_HIVE RegistryHive,
 
 PKEY_CELL
 CmiGetKeyFromHashByIndex(PREGISTRY_HIVE RegistryHive,
-			 PHASH_TABLE_CELL HashCell,
+			 PHASH_TABLE_CELL HashBlock,
 			 ULONG Index)
 {
   BLOCK_OFFSET KeyOffset;
-  PHIVE_LINK HiveLink;
   PKEY_CELL KeyCell;
 
-  if (HashCell == NULL)
+  if (HashBlock == NULL)
     return NULL;
 
-  if (HashCell->Table[Index].KeyOffset & 1)
+  if (IsPointerHive(RegistryHive))
     {
-      HiveLink = (PHIVE_LINK)(HashCell->Table[Index].KeyOffset & ~1);
-      KeyCell = CmiGetCell (HiveLink->SubKeyRegistryHive,
-			    HiveLink->SubKeyCellOffset,
-			    NULL);
-    }
-  else if (IsPointerHive(RegistryHive))
-    {
-      KeyCell = (PKEY_CELL) HashCell->Table[Index].KeyOffset;
+      KeyCell = (PKEY_CELL) HashBlock->Table[Index].KeyOffset;
     }
   else
     {
-      KeyOffset = HashCell->Table[Index].KeyOffset;
+      KeyOffset =  HashBlock->Table[Index].KeyOffset;
       KeyCell = CmiGetCell (RegistryHive, KeyOffset, NULL);
     }
 
@@ -3039,93 +3030,18 @@ CmiGetKeyFromHashByIndex(PREGISTRY_HIVE RegistryHive,
 
 NTSTATUS
 CmiAddKeyToHashTable(PREGISTRY_HIVE RegistryHive,
-		     PKEY_CELL ParentKeyCell,
-		     BLOCK_OFFSET ParentKeyCellOffset,
-		     PREGISTRY_HIVE NewKeyRegistryHive,
+		     PHASH_TABLE_CELL HashCell,
+		     BLOCK_OFFSET HashCellOffset,
 		     PKEY_CELL NewKeyCell,
-		     BLOCK_OFFSET NewKeyCellOffset)
+		     BLOCK_OFFSET NKBOffset)
 {
-  PHASH_TABLE_CELL HashCell;
   ULONG i;
-  NTSTATUS Status;
-
-  if (ParentKeyCell->HashTableOffset == (ULONG_PTR) -1)
-    {
-      Status = CmiAllocateHashTableCell (RegistryHive,
-					 &HashCell,
-					 &ParentKeyCell->HashTableOffset,
-					 REG_INIT_HASH_TABLE_SIZE);
-      if (!NT_SUCCESS(Status))
-	{
-	  return(Status);
-	}
-      CmiMarkBlockDirty(RegistryHive, ParentKeyCellOffset);
-    }
-  else
-    {
-      HashCell = CmiGetCell (RegistryHive,
-			     ParentKeyCell->HashTableOffset,
-			     NULL);
-      if (HashCell == NULL)
-	{
-	  DPRINT("CmiGetCell() failed\n");
-	  return STATUS_UNSUCCESSFUL;
-	}
-
-      if (((ParentKeyCell->NumberOfSubKeys + 1) >= HashCell->HashTableSize))
-	{
-	  PHASH_TABLE_CELL NewHashCell;
-	  BLOCK_OFFSET NewHashCellOffset;
-
-	  /* Reallocate the hash table cell */
-	  Status = CmiAllocateHashTableCell (RegistryHive,
-					     &NewHashCell,
-					     &NewHashCellOffset,
-					     HashCell->HashTableSize +
-					       REG_EXTEND_HASH_TABLE_SIZE);
-	  if (!NT_SUCCESS(Status))
-	    {
-	      return Status;
-	    }
-
-	  RtlZeroMemory(&NewHashCell->Table[0],
-			sizeof(NewHashCell->Table[0]) * NewHashCell->HashTableSize);
-	  RtlCopyMemory(&NewHashCell->Table[0],
-			&HashCell->Table[0],
-			sizeof(NewHashCell->Table[0]) * HashCell->HashTableSize);
-	  CmiDestroyCell (RegistryHive,
-			  HashCell,
-			  ParentKeyCell->HashTableOffset);
-	  ParentKeyCell->HashTableOffset = NewHashCellOffset;
-	  HashCell = NewHashCell;
-	  CmiMarkBlockDirty(RegistryHive, ParentKeyCellOffset);
-	}
-    }
 
   for (i = 0; i < HashCell->HashTableSize; i++)
     {
       if (HashCell->Table[i].KeyOffset == 0)
 	{
-	  if (NewKeyRegistryHive != NULL && NewKeyRegistryHive != RegistryHive)
-	    {
-	      PHIVE_LINK HiveLink;
-
-	      HiveLink = ExAllocatePool (NonPagedPool, sizeof(HIVE_LINK));
-	      if (HiveLink == NULL)
-		return STATUS_INSUFFICIENT_RESOURCES;
-
-	      InsertTailList (&CmiHiveLinkListHead, &HiveLink->Entry);
-	      HiveLink->ParentKeyRegistryHive = RegistryHive;
-	      HiveLink->ParentKeyCellOffset = ParentKeyCellOffset;
-	      HiveLink->SubKeyRegistryHive = NewKeyRegistryHive;
-	      HiveLink->SubKeyCellOffset = NewKeyCellOffset;
-
-	      HashCell->Table[i].KeyOffset = (BLOCK_OFFSET)((ULONG)HiveLink | 1);
-	    }
-	  else
-	    {
-	      HashCell->Table[i].KeyOffset = NewKeyCellOffset;
-	    }
+	  HashCell->Table[i].KeyOffset = NKBOffset;
 	  HashCell->Table[i].HashValue = 0;
 	  if (NewKeyCell->Flags & REG_KEY_NAME_PACKED)
 	    {
@@ -3133,9 +3049,7 @@ CmiAddKeyToHashTable(PREGISTRY_HIVE RegistryHive,
 			    NewKeyCell->Name,
 			    min(NewKeyCell->NameSize, sizeof(ULONG)));
 	    }
-	  CmiMarkBlockDirty(RegistryHive, NewKeyCellOffset);
-	  ParentKeyCell->NumberOfSubKeys++;
-	  CmiMarkBlockDirty(RegistryHive, ParentKeyCellOffset);
+	  CmiMarkBlockDirty(RegistryHive, HashCellOffset);
 	  return STATUS_SUCCESS;
 	}
     }
