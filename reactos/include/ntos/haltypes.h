@@ -1,4 +1,4 @@
-/* $Id: haltypes.h,v 1.6 2004/02/10 16:22:56 navaraf Exp $
+/* $Id: haltypes.h,v 1.7 2004/08/19 21:42:44 ekohl Exp $
  *
  * COPYRIGHT:                See COPYING in the top level directory
  * PROJECT:                  ReactOS kernel
@@ -192,6 +192,7 @@ typedef struct _PCI_COMMON_CONFIG
 
 #define PCI_MAX_DEVICES                     32
 #define PCI_MAX_FUNCTION                    8
+#define PCI_MAX_BRIDGE_NUMBER               0xFF
 
 #define PCI_INVALID_VENDORID                0xFFFF
 
@@ -200,6 +201,13 @@ typedef struct _PCI_COMMON_CONFIG
 #define PCI_MULTIFUNCTION                   0x80
 #define PCI_DEVICE_TYPE                     0x00
 #define PCI_BRIDGE_TYPE                     0x01
+#define PCI_CARDBUS_BRIDGE_TYPE             0x02
+
+#define PCI_CONFIGURATION_TYPE(PciData) \
+	(((PPCI_COMMON_CONFIG)(PciData))->HeaderType & ~PCI_MULTIFUNCTION)
+
+#define PCI_MULTIFUNCTION_DEVICE(PciData) \
+	((((PPCI_COMMON_CONFIG)(PciData))->HeaderType & PCI_MULTIFUNCTION) != 0)
 
 
 /* Bit encodings for PCI_COMMON_CONFIG.Command */
@@ -253,6 +261,37 @@ typedef struct _PCI_COMMON_CONFIG
 #define PCI_SUBCLASS_MSC_IPI_CTLR           0x03
 #define PCI_SUBCLASS_MSC_RAID_CTLR          0x04
 #define PCI_SUBCLASS_MSC_OTHER              0x80
+
+
+/* PCI device subclasses for class 2 (network controllers)*/
+
+#define PCI_SUBCLASS_NET_ETHERNET_CTLR      0x00
+#define PCI_SUBCLASS_NET_TOKEN_RING_CTLR    0x01
+#define PCI_SUBCLASS_NET_FDDI_CTLR          0x02
+#define PCI_SUBCLASS_NET_ATM_CTLR           0x03
+#define PCI_SUBCLASS_NET_OTHER              0x80
+
+
+/* PCI device subclasses for class 6 (bridge device)*/
+
+#define PCI_SUBCLASS_BR_HOST                0x00
+#define PCI_SUBCLASS_BR_ISA                 0x01
+#define PCI_SUBCLASS_BR_EISA                0x02
+#define PCI_SUBCLASS_BR_MCA                 0x03
+#define PCI_SUBCLASS_BR_PCI_TO_PCI          0x04
+#define PCI_SUBCLASS_BR_PCMCIA              0x05
+#define PCI_SUBCLASS_BR_NUBUS               0x06
+#define PCI_SUBCLASS_BR_CARDBUS             0x07
+#define PCI_SUBCLASS_BR_OTHER               0x80
+
+
+/* PCI device subclasses for class 0C (serial bus controller)*/
+
+#define PCI_SUBCLASS_SB_IEEE1394            0x00
+#define PCI_SUBCLASS_SB_ACCESS              0x01
+#define PCI_SUBCLASS_SB_SSA                 0x02
+#define PCI_SUBCLASS_SB_USB                 0x03
+#define PCI_SUBCLASS_SB_FIBRE_CHANNEL       0x04
 
 
 /* Bit encodes for PCI_COMMON_CONFIG.u.type0.BaseAddresses */
