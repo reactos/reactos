@@ -4,7 +4,7 @@
 #include "jsconfig.h"
 
 void __kernel_abort() {
-  KeBugCheck(0);
+  KEBUGCHECK(0);
 }
 
 void _assert( const char *expr, const char *file, int line ) {

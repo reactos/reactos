@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.41 2004/03/13 18:21:57 dwelch Exp $
+/* $Id: catch.c,v 1.42 2004/05/07 05:12:10 royce Exp $
  *
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
@@ -169,7 +169,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 	    {
 	      DPRINT("ExceptionRecord->ExceptionAddress = 0x%x\n",
 		     ExceptionRecord->ExceptionAddress );
-              KeBugCheckWithTf(KMODE_EXCEPTION_NOT_HANDLED, 0, 0, 0, 0, Tf);	      
+              KEBUGCHECKWITHTF(KMODE_EXCEPTION_NOT_HANDLED, 0, 0, 0, 0, Tf);	      
 	    }
 	}
     }
