@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.181 2003/11/24 14:36:39 ekohl Exp $
+# $Id: Makefile,v 1.182 2003/11/24 20:36:49 ekohl Exp $
 #
 # Global makefile
 #
@@ -87,8 +87,8 @@ NET_DEVICE_DRIVERS = ne2000 pcnet
 STORAGE_DRIVERS = atapi cdrom class2 disk scsiport diskdump
 
 # System applications
-# autochk cmd format gstart services setup usetup welcome winlogon
-SYS_APPS = autochk cmd format gstart services setup usetup welcome winlogon
+# autochk cmd format services setup usetup welcome winlogon
+SYS_APPS = autochk cmd format services setup usetup welcome winlogon
 
 # System services
 # rpcss eventlog
@@ -144,7 +144,8 @@ install: tools install_dirs install_before \
          $(LIB_STATIC:%=%_install) $(LIB_FSLIB:%=%_install) $(DLLS:%=%_install) $(LOADERS:%=%_install) \
          $(KERNEL_DRIVERS:%=%_install) $(SUBSYS:%=%_install) \
          $(SYS_APPS:%=%_install) $(SYS_SVC:%=%_install) \
-         $(APPS:%=%_install) $(EXT_MODULES:%=%_install) $(REGTESTS:%=%_install)
+         $(APPS:%=%_install) $(EXT_MODULES:%=%_install) $(REGTESTS:%=%_install) \
+         registry
 
 FREELDR_DIR = ../freeldr
 
@@ -201,7 +202,7 @@ ubootcd: bootcd_basic ubootcd_unattend bootcd_makecd
 registry: tools
 	$(TOOLS_PATH)/mkhive/mkhive$(EXE_POSTFIX) bootdata $(INSTALL_DIR)/system32/config
 
-.PHONY: all depends implib clean clean_before install dist freeldr bootcd_directory_layout \
+.PHONY: all depends implib clean clean_before install freeldr bootcd_directory_layout \
 bootcd_bootstrap_files bootcd_install_before bootcd_basic bootcd_makecd ubootcd_unattend bootcd
 
 
