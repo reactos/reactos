@@ -31,7 +31,7 @@ typedef struct _WINSTATION_OBJECT
   PVOID SystemMenuTemplate;
 #endif
   ULONG Flags;
-  struct _DESKTOP_OBJECT* ActiveDesktop;
+  struct _DESKTOP_OBJECT* InputDesktop;
   /* FIXME: Clipboard */
   LIST_ENTRY HotKeyListHead;
   FAST_MUTEX HotKeyListLock;
