@@ -1,4 +1,4 @@
-; $Id: kernel32.edf,v 1.15 2002/10/29 04:05:26 mdill Exp $
+; $Id: kernel32.edf,v 1.16 2002/11/12 00:46:02 mdill Exp $
 ;
 ; kernel32.edf
 ;
@@ -40,6 +40,7 @@ AddConsoleAliasA=AddConsoleAliasA@12
 AddConsoleAliasW=AddConsoleAliasW@12
 AllocConsole=AllocConsole@0
 AreFileApisANSI=AreFileApisANSI@0
+AttachConsole=AttachConsole@4
 BackupRead=BackupRead@28
 BackupSeek=BackupSeek@24
 BackupWrite=BackupWrite@28
@@ -230,7 +231,9 @@ GetConsoleHardwareState=GetConsoleHardwareState@12
 GetConsoleInputWaitHandle=GetConsoleInputWaitHandle@0
 GetConsoleMode=GetConsoleMode@8
 GetConsoleOutputCP=GetConsoleOutputCP@0
+GetConsoleProcessList=GetConsoleProcessList@8
 GetConsoleScreenBufferInfo=GetConsoleScreenBufferInfo@8
+GetConsoleSelectionInfo=GetConsoleSelectionInfo@4
 GetConsoleTitleA=GetConsoleTitleA@8
 GetConsoleTitleW=GetConsoleTitleW@8
 GetCurrencyFormatA=GetCurrencyFormatA@24

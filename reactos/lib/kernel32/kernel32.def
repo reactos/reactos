@@ -36,6 +36,7 @@ AddConsoleAliasA@12
 AddConsoleAliasW@12
 AllocConsole@0
 AreFileApisANSI@0
+AttachConsole@4
 BackupRead@28
 BackupSeek@24
 BackupWrite@28
@@ -227,7 +228,9 @@ GetConsoleHardwareState@12
 GetConsoleInputWaitHandle@0
 GetConsoleMode@8
 GetConsoleOutputCP@0
+GetConsoleProcessList@8
 GetConsoleScreenBufferInfo@8
+GetConsoleSelectionInfo@4
 GetConsoleTitleA@8
 GetConsoleTitleW@8
 GetCurrencyFormatA@24
