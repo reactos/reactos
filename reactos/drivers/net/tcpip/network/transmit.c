@@ -68,7 +68,7 @@ BOOLEAN PrepareNextFragment(
         Header->Checksum = (USHORT)IPv4Checksum(Header, IFC->HeaderSize, 0);
 
         /* Update pointers */
-        (ULONG_PTR)IFC->DatagramData += DataSize;
+        IFC->DatagramData = (PVOID)((ULONG_PTR)IFC->DatagramData + DataSize);
         IFC->Position  += DataSize;
         IFC->BytesLeft -= DataSize;
 

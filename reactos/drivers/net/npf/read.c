@@ -70,26 +70,32 @@ void PacketMoveMem(PVOID Destination, PVOID Source, ULONG Length, UINT	 *Bhead)
 {
 ULONG WordLength;
 UINT n,i,NBlocks;
+PULONG ULSrc, ULDest;
+PUCHAR UCSrc, UCDest;
 
 	WordLength=Length>>2;
 	NBlocks=WordLength>>8;
-	
+
+	ULSrc  = (PULONG) Source;
+	ULDest = (PULONG) Destination;	
 	for(n=0;n<NBlocks;n++){
 		for(i=0;i<256;i++){
-			*((PULONG)Destination)++=*((PULONG)Source)++;
+			*ULDest++ = *ULSrc++;
 		}
 	*Bhead+=1024;
 	}
 
 	n=WordLength-(NBlocks<<8);
 	for(i=0;i<n;i++){
-		*((PULONG)Destination)++=*((PULONG)Source)++;
+		*ULDest++ = *ULSrc++;
 	}
 	*Bhead+=n<<2;
-	
+
+	UCDest = (PUCHAR) ULDest;	
+	UCSrc  = (PUCHAR) ULSrc;	
 	n=Length-(WordLength<<2);
 	for(i=0;i<n;i++){
-		*((PUCHAR)Destination)++=*((PUCHAR)Source)++;
+		*UCDest++ = *UCSrc++;
 	}
 	*Bhead+=n;
 }
@@ -299,7 +305,7 @@ NPF_Read(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
 			PacketMoveMem(packp, CurrBuff+Thead, SizeToCopy, &(Open->Bhead));
 			// Reset the buffer
 			NdisAcquireSpinLock( &Open->BufLock );
-			(INT)Open->BLastByte = -1;
+			Open->BLastByte = (UINT) -1;
  			Open->Bhead = 0;			
 			NdisReleaseSpinLock( &Open->BufLock );
 
@@ -325,9 +331,9 @@ NPF_Read(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
 
 //-------------------------------------------------------------------
 
-NDIS_STATUS NPF_tap (IN NDIS_HANDLE ProtocolBindingContext,IN NDIS_HANDLE MacReceiveContext,
-                        IN PVOID HeaderBuffer,IN UINT HeaderBufferSize,IN PVOID LookAheadBuffer,
-                        IN UINT LookaheadBufferSize,IN UINT PacketSize)
+NDIS_STATUS STDCALL NPF_tap (IN NDIS_HANDLE ProtocolBindingContext,IN NDIS_HANDLE MacReceiveContext,
+                             IN PVOID HeaderBuffer,IN UINT HeaderBufferSize,IN PVOID LookAheadBuffer,
+                             IN UINT LookaheadBufferSize,IN UINT PacketSize)
 {
     POPEN_INSTANCE      Open;
     PNDIS_PACKET        pPacketb;
@@ -641,8 +647,8 @@ NDIS_STATUS NPF_tap (IN NDIS_HANDLE ProtocolBindingContext,IN NDIS_HANDLE MacRec
 
 //-------------------------------------------------------------------
 
-VOID NPF_TransferDataComplete (IN NDIS_HANDLE ProtocolBindingContext,IN PNDIS_PACKET pPacket,
-                                 IN NDIS_STATUS Status,IN UINT BytesTransfered)
+VOID STDCALL NPF_TransferDataComplete (IN NDIS_HANDLE ProtocolBindingContext,IN PNDIS_PACKET pPacket,
+                                       IN NDIS_STATUS Status,IN UINT BytesTransfered)
 {
     POPEN_INSTANCE      Open;
 
@@ -668,7 +674,7 @@ VOID NPF_TransferDataComplete (IN NDIS_HANDLE ProtocolBindingContext,IN PNDIS_PA
 
 //-------------------------------------------------------------------
 
-VOID NPF_ReceiveComplete(IN NDIS_HANDLE ProtocolBindingContext)
+VOID STDCALL NPF_ReceiveComplete(IN NDIS_HANDLE ProtocolBindingContext)
 {
     IF_VERY_LOUD(DbgPrint("NPF: NPF_ReceiveComplete\n");)
     return;

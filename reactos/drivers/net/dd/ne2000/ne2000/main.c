@@ -69,7 +69,7 @@ BOOLEAN MiniportCheckForHang(
 }
 
 
-VOID MiniportDisableInterrupt(
+VOID STDCALL MiniportDisableInterrupt(
     IN  NDIS_HANDLE MiniportAdapterContext)
 /*
  * FUNCTION: Disables interrupts from an adapter
@@ -84,7 +84,7 @@ VOID MiniportDisableInterrupt(
 }
 
 
-VOID MiniportEnableInterrupt(
+VOID STDCALL MiniportEnableInterrupt(
     IN  NDIS_HANDLE MiniportAdapterContext)
 /*
  * FUNCTION: Enables interrupts from an adapter
@@ -99,7 +99,7 @@ VOID MiniportEnableInterrupt(
 }
 
 
-VOID MiniportHalt(
+VOID STDCALL MiniportHalt(
     IN  NDIS_HANDLE MiniportAdapterContext)
 /*
  * FUNCTION: Deallocates resources for and halts an adapter
@@ -139,7 +139,7 @@ VOID MiniportHalt(
 }
 
 
-NDIS_STATUS MiniportInitialize(
+NDIS_STATUS STDCALL MiniportInitialize(
     OUT PNDIS_STATUS    OpenErrorStatus,
     OUT PUINT           SelectedMediumIndex,
     IN  PNDIS_MEDIUM    MediumArray,
@@ -347,7 +347,7 @@ NDIS_STATUS MiniportInitialize(
 }
 
 
-VOID MiniportISR(
+VOID STDCALL MiniportISR(
     OUT PBOOLEAN    InterruptRecognized,
     OUT PBOOLEAN    QueueMiniportHandleInterrupt,
     IN  NDIS_HANDLE MiniportAdapterContext)
@@ -372,7 +372,7 @@ VOID MiniportISR(
 }
 
 
-NDIS_STATUS MiniportQueryInformation(
+NDIS_STATUS STDCALL MiniportQueryInformation(
     IN  NDIS_HANDLE MiniportAdapterContext,
     IN  NDIS_OID    Oid,
     IN  PVOID       InformationBuffer,
@@ -530,7 +530,7 @@ NDIS_STATUS MiniportQueryInformation(
 }
 
 
-NDIS_STATUS MiniportReconfigure(
+NDIS_STATUS STDCALL MiniportReconfigure(
     OUT PNDIS_STATUS    OpenErrorStatus,
     IN  NDIS_HANDLE     MiniportAdapterContext,
     IN  NDIS_HANDLE     WrapperConfigurationContext)
@@ -553,7 +553,7 @@ NDIS_STATUS MiniportReconfigure(
 
 
 
-NDIS_STATUS MiniportReset(
+NDIS_STATUS STDCALL MiniportReset(
     OUT PBOOLEAN    AddressingReset,
     IN  NDIS_HANDLE MiniportAdapterContext)
 /*
@@ -573,7 +573,7 @@ NDIS_STATUS MiniportReset(
 }
 
 
-NDIS_STATUS MiniportSend(
+NDIS_STATUS STDCALL MiniportSend(
     IN  NDIS_HANDLE     MiniportAdapterContext,
     IN  PNDIS_PACKET    Packet,
     IN  UINT            Flags)
@@ -614,7 +614,7 @@ NDIS_STATUS MiniportSend(
 }
 
 
-NDIS_STATUS MiniportSetInformation(
+NDIS_STATUS STDCALL MiniportSetInformation(
     IN  NDIS_HANDLE MiniportAdapterContext,
     IN  NDIS_OID    Oid,
     IN  PVOID       InformationBuffer,
@@ -720,7 +720,7 @@ NDIS_STATUS MiniportSetInformation(
 }
 
 
-NDIS_STATUS MiniportTransferData(
+NDIS_STATUS STDCALL MiniportTransferData(
     OUT PNDIS_PACKET    Packet,
     OUT PUINT           BytesTransferred,
     IN  NDIS_HANDLE     MiniportAdapterContext,
@@ -775,10 +775,10 @@ NDIS_STATUS MiniportTransferData(
 
         NICReadData(Adapter, DstData, SrcData, BytesToCopy);
 
-        BytesCopied        += BytesToCopy;
-        SrcData            += BytesToCopy;
-        (ULONG_PTR)DstData += BytesToCopy;
-        BytesToTransfer    -= BytesToCopy;
+        BytesCopied     += BytesToCopy;
+        SrcData         += BytesToCopy;
+        DstData          = (PUCHAR)((ULONG_PTR) DstData + BytesToCopy);
+        BytesToTransfer -= BytesToCopy;
         if (BytesToTransfer == 0)
             break;
 

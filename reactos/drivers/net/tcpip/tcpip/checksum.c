@@ -44,7 +44,7 @@ ULONG ChecksumCompute(
     {
       Sum += *(PUSHORT)Data;
       Count -= 2;
-      (ULONG_PTR)Data += 2;
+      Data = (PVOID)((ULONG_PTR) Data + 2);
     }
 
   /* Add left-over byte, if any */

@@ -815,8 +815,8 @@ VOID NICReadData(
         /* Transfer as many words as we can without exceeding the buffer length */
         Tmp = Length & 0xFFFE;
         NICReadDataAlign(Adapter, (PUSHORT)Target, Source, Tmp);
-        Source            += Tmp;
-        (ULONG_PTR)Target += Tmp;
+        Source += Tmp;
+        Target  = (PUCHAR)((ULONG_PTR) Target + Tmp);
 
         /* Read one word and keep the LSB */
         NICReadDataAlign(Adapter, &Tmp, Source, 0x02);
@@ -855,7 +855,7 @@ VOID NICWriteData(
         NICWriteDataAlign(Adapter, Target - 1, &Tmp, 0x02);
 
         /* Update pointers */
-        (ULONG_PTR)Source += 1;
+        Source = (PUCHAR) ((ULONG_PTR) Source + 1);
         (ULONG_PTR)Target += 1;
         Length--;
     }
@@ -1030,7 +1030,7 @@ VOID NICWritePacket(
 
         NICWriteData(Adapter, DstData, SrcData, BytesToCopy);
 
-        (ULONG_PTR)SrcData += BytesToCopy;
+        SrcData = (PUCHAR)((ULONG_PTR) SrcData + BytesToCopy);
         SrcSize            -= BytesToCopy;
         DstData            += BytesToCopy;
         DstSize            -= BytesToCopy;
@@ -1291,7 +1291,7 @@ VOID HandleTransmit(
 }
 
 
-VOID MiniportHandleInterrupt(
+VOID STDCALL MiniportHandleInterrupt(
     IN  NDIS_HANDLE MiniportAdapterContext)
 /*
  * FUNCTION: Handler for deferred processing of interrupts

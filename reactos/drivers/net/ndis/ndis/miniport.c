@@ -306,7 +306,7 @@ MiniIndicateReceivePacket(
 }
 
 
-VOID
+VOID STDCALL
 MiniEthReceiveComplete(
     IN  PETH_FILTER Filter)
 /*
@@ -349,7 +349,7 @@ MiniEthReceiveComplete(
 }
 
 
-VOID
+VOID STDCALL
 MiniEthReceiveIndication(
     IN  PETH_FILTER Filter,     /* shouldn't be NDIS_HANDLE? */
     IN  NDIS_HANDLE MacReceiveContext,
@@ -427,7 +427,7 @@ MiniSendResourcesAvailable(
 }
 
 
-VOID
+VOID STDCALL
 MiniTransferDataComplete(
     IN  NDIS_HANDLE     MiniportAdapterHandle,
     IN  PNDIS_PACKET    Packet,

@@ -27,7 +27,7 @@ PNDIS_PACKET LoopQueueTail = (PNDIS_PACKET)NULL;
 KSPIN_LOCK LoopQueueLock;
 
 
-VOID RealTransmit(
+VOID STDCALL RealTransmit(
   PVOID Context)
 /*
  * FUNCTION: Transmits one or more packet(s) in loopback queue to ourselves

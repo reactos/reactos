@@ -152,7 +152,7 @@ VOID FreeAdapter(
 }
 
 
-VOID ProtocolOpenAdapterComplete(
+VOID STDCALL ProtocolOpenAdapterComplete(
     NDIS_HANDLE BindingContext,
     NDIS_STATUS Status,
     NDIS_STATUS OpenErrorStatus)
@@ -172,7 +172,7 @@ VOID ProtocolOpenAdapterComplete(
 }
 
 
-VOID ProtocolCloseAdapterComplete(
+VOID STDCALL ProtocolCloseAdapterComplete(
     NDIS_HANDLE BindingContext,
     NDIS_STATUS Status)
 /*
@@ -192,7 +192,7 @@ VOID ProtocolCloseAdapterComplete(
 }
 
 
-VOID ProtocolResetComplete(
+VOID STDCALL ProtocolResetComplete(
     NDIS_HANDLE BindingContext,
     NDIS_STATUS Status)
 /*
@@ -206,7 +206,7 @@ VOID ProtocolResetComplete(
 }
 
 
-VOID ProtocolRequestComplete(
+VOID STDCALL ProtocolRequestComplete(
     NDIS_HANDLE BindingContext,
     PNDIS_REQUEST NdisRequest,
     NDIS_STATUS Status)
@@ -229,7 +229,7 @@ VOID ProtocolRequestComplete(
 }
 
 
-VOID ProtocolSendComplete(
+VOID STDCALL ProtocolSendComplete(
     NDIS_HANDLE BindingContext,
     PNDIS_PACKET Packet,
     NDIS_STATUS Status)
@@ -251,7 +251,7 @@ VOID ProtocolSendComplete(
 }
 
 
-VOID ProtocolTransferDataComplete(
+VOID STDCALL ProtocolTransferDataComplete(
     NDIS_HANDLE BindingContext,
     PNDIS_PACKET Packet,
     NDIS_STATUS Status,
@@ -310,7 +310,7 @@ VOID ProtocolTransferDataComplete(
 }
 
 
-NDIS_STATUS ProtocolReceive(
+NDIS_STATUS STDCALL ProtocolReceive(
     NDIS_HANDLE BindingContext,
     NDIS_HANDLE MacReceiveContext,
     PVOID HeaderBuffer,
@@ -443,7 +443,7 @@ NDIS_STATUS ProtocolReceive(
 }
 
 
-VOID ProtocolReceiveComplete(
+VOID STDCALL ProtocolReceiveComplete(
     NDIS_HANDLE BindingContext)
 /*
  * FUNCTION: Called by NDIS when we're done receiving data
@@ -455,7 +455,7 @@ VOID ProtocolReceiveComplete(
 }
 
 
-VOID ProtocolStatus(
+VOID STDCALL ProtocolStatus(
     NDIS_HANDLE BindingContext,
     NDIS_STATUS GenerelStatus,
     PVOID StatusBuffer,
@@ -473,7 +473,7 @@ VOID ProtocolStatus(
 }
 
 
-VOID ProtocolStatusComplete(
+VOID STDCALL ProtocolStatusComplete(
     NDIS_HANDLE NdisBindingContext)
 /*
  * FUNCTION: Called by NDIS when a status-change has occurred
@@ -484,7 +484,7 @@ VOID ProtocolStatusComplete(
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
 }
 
-VOID ProtocolBindAdapter(
+VOID STDCALL ProtocolBindAdapter(
     OUT PNDIS_STATUS   Status,
     IN  NDIS_HANDLE    BindContext,
     IN  PNDIS_STRING   DeviceName,

@@ -193,9 +193,9 @@ ULONG ChecksumCompute(
   register ULONG Sum = Seed;
 
   while (Count > 1) {
-    Sum             += *(PUSHORT)Data;
-    Count           -= 2;
-    (ULONG_PTR)Data += 2;
+    Sum   += *(PUSHORT)Data;
+    Count -= 2;
+    Data   = (PVOID) ((ULONG_PTR) Data + 2);
   }
 
   /* Add left-over byte, if any */

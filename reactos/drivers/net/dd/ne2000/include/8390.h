@@ -153,7 +153,7 @@ typedef struct _PACKET_HEADER {
     NdisRawWritePortUchar((Adapter)->IOBase + PG0_IMR, (Adapter)->InterruptMask); \
 }
 
-VOID MiniportHandleInterrupt(
+VOID STDCALL MiniportHandleInterrupt(
     IN  NDIS_HANDLE MiniportAdapterContext);
 
 #endif /* __8390_H */

@@ -39,8 +39,8 @@ __inline ULONG SkipToOffset(
         NdisQueryBuffer(Buffer, (PVOID)Data, Size);
 
         if (Offset < *Size) {
-            ((ULONG_PTR)*Data) += Offset;
-            *Size              -= Offset;
+            *Data  = (PUCHAR) ((ULONG_PTR) *Data + Offset);
+            *Size -= Offset;
             break;
         }
 
@@ -87,8 +87,8 @@ UINT CopyBufferToBufferChain(
         BytesToCopy = MIN(DstSize, Length);
 
         RtlCopyMemory((PVOID)DstData, (PVOID)SrcData, BytesToCopy);
-        BytesCopied        += BytesToCopy;
-        (ULONG_PTR)SrcData += BytesToCopy;
+        BytesCopied += BytesToCopy;
+        SrcData      = (PUCHAR) ((ULONG_PTR) SrcData + BytesToCopy);
 
         Length -= BytesToCopy;
         if (Length == 0)
@@ -146,8 +146,8 @@ UINT CopyBufferChainToBuffer(
         NDIS_DbgPrint(MAX_TRACE, ("Copying (%d) bytes from 0x%X to 0x%X\n", BytesToCopy, SrcData, DstData));
 
         RtlCopyMemory((PVOID)DstData, (PVOID)SrcData, BytesToCopy);
-        BytesCopied        += BytesToCopy;
-        (ULONG_PTR)DstData += BytesToCopy;
+        BytesCopied += BytesToCopy;
+        DstData      = (PUCHAR)((ULONG_PTR) DstData + BytesToCopy);
 
         Length -= BytesToCopy;
         if (Length == 0)

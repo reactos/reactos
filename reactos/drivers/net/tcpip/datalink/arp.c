@@ -90,19 +90,19 @@ PNDIS_PACKET PrepareARPPacket(
 
     /* Our hardware address */
     RtlCopyMemory(DataBuffer, SenderLinkAddress, LinkAddressLength);
-    (ULONG_PTR)DataBuffer += LinkAddressLength;
+    DataBuffer = (PVOID)((ULONG_PTR)DataBuffer + LinkAddressLength);
 
     /* Our protocol address */
     RtlCopyMemory(DataBuffer, SenderProtoAddress, ProtoAddressLength);
 
     if (TargetLinkAddress) {
-        (ULONG_PTR)DataBuffer += ProtoAddressLength;
+        DataBuffer = (PVOID)((ULONG_PTR)DataBuffer + ProtoAddressLength);
         /* Target hardware address */
         RtlCopyMemory(DataBuffer, TargetLinkAddress, LinkAddressLength);
-        (ULONG_PTR)DataBuffer += LinkAddressLength;
+        DataBuffer = (PVOID)((ULONG_PTR)DataBuffer + LinkAddressLength);
     } else
         /* Don't care about target hardware address */
-        (ULONG_PTR)DataBuffer += (ProtoAddressLength + LinkAddressLength);
+        DataBuffer = (PVOID)((ULONG_PTR)DataBuffer + ProtoAddressLength + LinkAddressLength);
 
     /* Target protocol address */
     RtlCopyMemory(DataBuffer, TargetProtoAddress, ProtoAddressLength);

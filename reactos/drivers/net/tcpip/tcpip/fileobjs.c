@@ -173,7 +173,7 @@ VOID DeleteConnectionEndpoint(
 }
 
 
-VOID RequestWorker(
+VOID STDCALL RequestWorker(
   PVOID Context)
 /*
  * FUNCTION: Worker routine for processing address file object requests
