@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.48 2001/07/15 21:18:56 rex Exp $
+# $Id: Makefile,v 1.49 2001/07/21 20:16:09 ea Exp $
 #
 # ReactOS Operating System
 #
@@ -462,7 +462,7 @@ $(OBJECTS_PATH)/kd.o: $(OBJECTS_KD)
 		-o $(OBJECTS_PATH)/kd.o \
 		$(OBJECTS_KD) 
 
-$(TARGETNAME).coff: $(TARGETNAME).rc ../include/reactos/resource.h
+$(TARGETNAME).coff: $(TARGETNAME).rc $(PATH_TO_TOP)/include/reactos/resource.h
 
 
 # Note: arch.o MUST be the first file!!!
@@ -494,12 +494,14 @@ CLEAN_FILES = $(OBJECTS_PATH)/*.o cc/*.o cm/*.o dbg/*.o dbg/i386/*.o ex/*.o hal/
               ke/*.o ldr/*.o mm/*.o nt/*.o ob/*.o ps/*.o rtl/*.o se/*.o \
               ke/i386/*.o mm/i386/*.o fs/*.o po/*.o nls/*.o lpc/*.o \
               kd/*.o $(TARGETNAME).o $(TARGETNAME).a junk.tmp base.tmp temp.exp \
-              $(TARGETNAME).exe $(TARGETNAME).nostrip.exe $(TARGETNAME).sym $(TARGETNAME).coff $(D1_FILES)
+              $(TARGETNAME).exe $(TARGETNAME).nostrip.exe $(TARGETNAME).sym \
+	      $(TARGETNAME).coff $(D1_FILES)
 
 $(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(TARGETNAME).a $(IE_DATA)
 	$(CC) \
 		-Wl,-T,ntoskrnl.lnk \
-		-nostartfiles -nostdlib \
+		-nostartfiles \
+		-nostdlib \
 		-mdll \
 		-o junk.tmp \
 		-Wl,--subsystem,native \
@@ -517,7 +519,8 @@ $(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(TARGETNAME).a $(IE_DATA)
 		--kill-at
 	- $(RM) base.tmp
 	$(CC) \
-		-nostartfiles -nostdlib \
+		-nostartfiles \
+		-nostdlib \
 		-Wl,-T,ntoskrnl.lnk \
 		-mdll \
 		-o $(TARGETNAME).nostrip.exe \
@@ -532,7 +535,8 @@ $(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(TARGETNAME).a $(IE_DATA)
 $(TARGETNAME).exe: $(TARGETNAME).o $(TARGETNAME).a $(LINKER_SCRIPT)
 	$(CC) \
 		-Wl,-T,$(LINKER_SCRIPT) \
-		-nostartfiles -nostdlib \
+		-nostartfiles \
+		-nostdlib \
 		-mdll \
 		-o junk.tmp \
 		-Wl,--subsystem,native \
@@ -551,7 +555,8 @@ $(TARGETNAME).exe: $(TARGETNAME).o $(TARGETNAME).a $(LINKER_SCRIPT)
 	- $(RM) base.tmp
 	$(CC) \
 		-Wl,-T,$(LINKER_SCRIPT) $(STRIP_FLAGS)\
-		-nostartfiles -nostdlib \
+		-nostartfiles \
+		-nostdlib \
 		-mdll \
 		-o $(TARGETNAME).exe \
 		-Wl,--subsystem,native \
@@ -568,7 +573,8 @@ $(TARGETNAME).dbg.o: $(TARGETNAME).o
 $(TARGETNAME).dbg: $(TARGETNAME).dbg.o $(TARGETNAME).a $(TARGETNAME).dbg.lnk
 	$(CC) \
 		-Wl,-T,$(TARGETNAME).dbg.lnk \
-		-nostartfiles -nostdlib \
+		-nostartfiles \
+		-nostdlib \
 		-mdll \
 		-o junk.tmp \
 		-Wl,--subsystem,native \
@@ -587,7 +593,8 @@ $(TARGETNAME).dbg: $(TARGETNAME).dbg.o $(TARGETNAME).a $(TARGETNAME).dbg.lnk
 	- $(RM) base.tmp
 	$(CC) \
 		-Wl,-T,$(TARGETNAME).dbg.lnk \
-		-nostartfiles -nostdlib \
+		-nostartfiles \
+		-nostdlib \
 		-mdll \
 		-o $(TARGETNAME).dbg \
 		-Wl,--subsystem,native \
@@ -626,16 +633,16 @@ $(FLOPPY_DIR)/$(TARGETNAME).exe: $(TARGETNAME).exe
 
 .PHONY: install
 
-dist: ../$(DIST_DIR)/$(TARGETNAME).exe
+dist: $(PATH_TO_TOP)/$(DIST_DIR)/$(TARGETNAME).exe
 
-../$(DIST_DIR)/$(TARGETNAME).exe: $(TARGETNAME).exe
-	$(CP) $(TARGETNAME).exe ../$(DIST_DIR)/$(TARGETNAME).exe
+$(PATH_TO_TOP)/$(DIST_DIR)/$(TARGETNAME).exe: $(TARGETNAME).exe
+	$(CP) $(TARGETNAME).exe $(PATH_TO_TOP)/$(DIST_DIR)/$(TARGETNAME).exe
 
 .PHONY: dist
 
-ex/napi.o: ex/napi.c ../include/ntdll/napi.h
+ex/napi.o: ex/napi.c $(PATH_TO_TOP)/include/ntdll/napi.h
 
-ke/main.o: ke/main.c ../include/reactos/buildno.h
+ke/main.o: ke/main.c $(PATH_TO_TOP)/include/reactos/buildno.h
 
 mkconfig$(EXE_SUFFIX): mkconfig.c
 	$(HOST_CC) -g -o mkconfig$(EXE_SUFFIX) mkconfig.c
