@@ -882,16 +882,17 @@ NtUserInternalGetWindowText(
 DWORD
 STDCALL
 NtUserInvalidateRect(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+HWND hWnd,
+CONST RECT *lpRect,
+WINBOOL bErase);
 
 DWORD
 STDCALL
-NtUserInvalidateRgn(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+  NtUserInvalidateRgn(
+  HWND hWnd,
+  HRGN hRgn,
+  WINBOOL bErase);
+
 
 DWORD
 STDCALL
