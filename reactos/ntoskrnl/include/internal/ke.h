@@ -105,7 +105,7 @@ KeBugCheckWithTf(ULONG BugCheckCode,
 		 ULONG BugCheckParameter3,
 		 ULONG BugCheckParameter4,
 		 PKTRAP_FRAME Tf);
-#define KEBUGCHECKWITHTF(a,b,c,d,e,f) DPRINT1("KeBugCheckWithTf at %s:%i\n",__FILE__,__LINE__), KeBugCheckWithTf(a,b,c,d,e,f)
+#define KEBUGCHECKWITHTF(a,b,c,d,e,f) DbgPrint("KeBugCheckWithTf at %s:%i\n",__FILE__,__LINE__), KeBugCheckWithTf(a,b,c,d,e,f)
 VOID
 KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG ExceptionNr, ULONG cr2);
 
