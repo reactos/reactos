@@ -52,6 +52,8 @@ lib\freetype\freetype.dll               1
 lib\gdi32\gdi32.dll                     1
 lib\iphlpapi\iphlpapi.dll               1
 lib\kbdus\kbdus.dll                     1
+lib\kbdgr\kbdgr.dll                     1
+lib\kbdfr\kbdfr.dll                     1
 lib\kernel32\kernel32.dll               1
 lib\lzexpand\lz32.dll                   1
 lib\msafd\msafd.dll                     1
