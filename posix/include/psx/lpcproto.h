@@ -1,4 +1,4 @@
-/* $Id: lpcproto.h,v 1.6 2002/12/26 18:14:34 robd Exp $
+/* $Id: lpcproto.h,v 1.7 2004/01/18 21:27:32 ea Exp $
  *
  * ReactOS POSIX+ Environment Subsystem
  * LPC protocol spoken by PSXSS.EXE, PSXDLL.DLL, CSRTERM.EXE.
@@ -6,7 +6,8 @@
 #ifndef _PSX_LPCPROTO_H
 #define _PSX_LPCPROTO_H
 
-#include <napi/lpc.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
 
 #ifndef PRIVATE
 #define PRIVATE static

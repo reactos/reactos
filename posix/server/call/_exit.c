@@ -1,4 +1,4 @@
-/* $Id: _exit.c,v 1.3 2002/10/29 04:45:51 rex Exp $
+/* $Id: _exit.c,v 1.4 2004/01/18 21:27:32 ea Exp $
  * 
  * PROJECT    : ReactOS / POSIX+ Environment Subsystem Server
  * FILE       : reactos/subsys/psx/server/call/_exit.c
@@ -28,7 +28,6 @@
 #define NTOS_MODE_USER
 #include <ntos.h>
 #include <ntdll/rtl.h>
-#include <napi/lpc.h>
 #include <psxss.h>
 
 NTSTATUS STDCALL syscall__exit (PPSX_MAX_MESSAGE Msg)

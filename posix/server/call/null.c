@@ -1,4 +1,4 @@
-/* $Id: null.c,v 1.3 2002/10/29 04:45:54 rex Exp $
+/* $Id: null.c,v 1.4 2004/01/18 21:27:32 ea Exp $
  * 
  * PROJECT    : ReactOS / POSIX+ Environment Subsystem Server
  * FILE       : reactos/subsys/psx/server/call/null.c
@@ -28,7 +28,6 @@
 #define NTOS_MODE_USER
 #include <ntos.h>
 #include <ntdll/rtl.h>
-#include <napi/lpc.h>
 #include <psxss.h>
 
 NTSTATUS STDCALL syscall_null (PPSX_MAX_MESSAGE Msg)
