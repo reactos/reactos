@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: dispatch.c,v 1.1.2.2 2004/03/14 19:43:30 navaraf Exp $
+ * $Id: dispatch.c,v 1.1.2.3 2004/03/14 20:04:40 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -466,7 +466,7 @@ VideoPortDispatchDeviceControl(
       return STATUS_NO_MEMORY;
    }
 
-   vrp->StatusBlock = (PSTATUS_BLOCK) &(Irp->IoStatus);
+   vrp->StatusBlock = (PSTATUS_BLOCK)&(Irp->IoStatus);
    vrp->IoControlCode = IrpStack->Parameters.DeviceIoControl.IoControlCode;
 
    DPRINT("- IoControlCode: %x\n", vrp->IoControlCode);
@@ -489,22 +489,22 @@ VideoPortDispatchDeviceControl(
 
    if (Irp->IoStatus.Status != STATUS_SUCCESS) 
    { 
-      /* Map from win32 error codes to ntstatus values. */ 
+      /* Map from win32 error codes to NT status values. */ 
       switch (Irp->IoStatus.Status) 
       { 
-         case ERROR_NOT_ENOUGH_MEMORY: Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES; 
-         case ERROR_MORE_DATA: Irp->IoStatus.Status = STATUS_BUFFER_OVERFLOW; 
-         case ERROR_INVALID_FUNCTION: Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED; 
-         case ERROR_INVALID_PARAMETER: Irp->IoStatus.Status = STATUS_INVALID_PARAMETER; 
-         case ERROR_INSUFFICIENT_BUFFER: Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL; 
-         case ERROR_DEV_NOT_EXIST: Irp->IoStatus.Status = STATUS_DEVICE_DOES_NOT_EXIST; 
-         case ERROR_IO_PENDING: Irp->IoStatus.Status = STATUS_PENDING; 
+         case ERROR_NOT_ENOUGH_MEMORY: Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES; break;
+         case ERROR_MORE_DATA: Irp->IoStatus.Status = STATUS_BUFFER_OVERFLOW; break;
+         case ERROR_INVALID_FUNCTION: Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED; break;
+         case ERROR_INVALID_PARAMETER: Irp->IoStatus.Status = STATUS_INVALID_PARAMETER; break;
+         case ERROR_INSUFFICIENT_BUFFER: Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL; break; 
+         case ERROR_DEV_NOT_EXIST: Irp->IoStatus.Status = STATUS_DEVICE_DOES_NOT_EXIST; break;
+         case ERROR_IO_PENDING: Irp->IoStatus.Status = STATUS_PENDING; break;
       } 
    } 
 
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-   return STATUS_SUCCESS;
+   return /* Irp->IoStatus.Status */ STATUS_SUCCESS;
 }
 
 NTSTATUS STDCALL
