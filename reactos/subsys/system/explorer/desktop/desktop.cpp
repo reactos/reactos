@@ -119,6 +119,34 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 				if (SUCCEEDED(hr)) {
 					_pShellView->UIActivate(SVUIA_ACTIVATE_FOCUS);
 
+				/*
+					IShellView2* pShellView2;
+
+					hr = _pShellView->QueryInterface(IID_IShellView2, (void**)&pShellView2);
+
+					SV2CVW2_PARAMS params;
+					params.cbSize = sizeof(SV2CVW2_PARAMS);
+					params.psvPrev = _pShellView;
+					params.pfs = &fs;
+					params.psbOwner = this;
+					params.prcView = &rect;
+					params.pvid = params.pvid;//@@
+
+					hr = pShellView2->CreateViewWindow2(&params);
+					params.pvid;
+				*/
+
+				/*
+					IFolderView* pFolderView;
+
+					hr = _pShellView->QueryInterface(IID_IFolderView, (void**)&pFolderView);
+
+					if (SUCCEEDED(hr)) {
+						hr = pFolderView->GetAutoArrange();
+						hr = pFolderView->SetCurrentViewMode(FVM_DETAILS);
+					}
+				*/
+
 					HWND hwndFolderView = ::GetNextWindow(hWndView, GW_CHILD);
 
 					ShowWindow(hwndFolderView, SW_SHOW);
