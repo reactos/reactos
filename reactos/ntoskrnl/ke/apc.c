@@ -321,10 +321,6 @@ KeInsertQueueApc (PKAPC	Apc,
 	  "SystemArgument2 %x)\n",Apc,SystemArgument1,
 	  SystemArgument2);
 
-   /* We don't support queuing APCs to the attached environment (yet),
-      see KiSwapApcEnvironment() */
-   assert(OriginalApcEnvironment == Apc->ApcStateIndex);
-
    Apc->SystemArgument1 = SystemArgument1;
    Apc->SystemArgument2 = SystemArgument2;
 
