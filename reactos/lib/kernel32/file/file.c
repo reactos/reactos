@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.57 2004/09/06 15:56:25 weiden Exp $
+/* $Id: file.c,v 1.58 2004/09/22 09:31:01 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -1358,6 +1358,99 @@ SetFileShortNameA(
   
   RtlFreeUnicodeString(&ShortName);
   return Ret;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+CheckNameLegalDOS8Dot3W(
+    LPCWSTR lpName,
+    LPSTR lpOemName OPTIONAL,
+    DWORD OemNameSize OPTIONAL,
+    PBOOL pbNameContainsSpaces OPTIONAL,
+    PBOOL pbNameLegal
+    )
+{
+    UNICODE_STRING Name;
+    ANSI_STRING AnsiName;
+
+    if(lpName == NULL ||
+       (lpOemName == NULL && OemNameSize != 0) ||
+       pbNameLegal == NULL)
+    {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return FALSE;
+    }
+
+    if(lpOemName != NULL)
+    {
+      AnsiName.Buffer = lpOemName;
+      AnsiName.MaximumLength = OemNameSize * sizeof(CHAR);
+      AnsiName.Length = 0;
+    }
+
+    RtlInitUnicodeString(&Name, lpName);
+
+    *pbNameLegal = RtlIsNameLegalDOS8Dot3(&Name,
+                                          (lpOemName ? &AnsiName : NULL),
+                                          (BOOLEAN*)pbNameContainsSpaces);
+
+    return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+CheckNameLegalDOS8Dot3A(
+    LPCSTR lpName,
+    LPSTR lpOemName OPTIONAL,
+    DWORD OemNameSize OPTIONAL,
+    PBOOL pbNameContainsSpaces OPTIONAL,
+    PBOOL pbNameLegal
+    )
+{
+    UNICODE_STRING Name;
+    ANSI_STRING AnsiName, AnsiInputName;
+    NTSTATUS Status;
+
+    if(lpName == NULL ||
+       (lpOemName == NULL && OemNameSize != 0) ||
+       pbNameLegal == NULL)
+    {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return FALSE;
+    }
+
+    if(lpOemName != NULL)
+    {
+      AnsiName.Buffer = lpOemName;
+      AnsiName.MaximumLength = OemNameSize * sizeof(CHAR);
+      AnsiName.Length = 0;
+    }
+
+    RtlInitAnsiString(&AnsiInputName, (LPSTR)lpName);
+    if(bIsFileApiAnsi)
+      Status = RtlAnsiStringToUnicodeString(&Name, &AnsiInputName, TRUE);
+    else
+      Status = RtlOemStringToUnicodeString(&Name, &AnsiInputName, TRUE);
+
+    if(!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      return FALSE;
+    }
+
+    *pbNameLegal = RtlIsNameLegalDOS8Dot3(&Name,
+                                          (lpOemName ? &AnsiName : NULL),
+                                          (BOOLEAN*)pbNameContainsSpaces);
+
+    return TRUE;
 }
 
 /* EOF */

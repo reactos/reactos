@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.86 2004/09/21 22:08:18 weiden Exp $
+/* $Id: stubs.c,v 1.87 2004/09/22 09:31:01 weiden Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -1310,23 +1310,6 @@ ZombifyActCtx(
 /*
  * @unimplemented
  */
-BOOL
-STDCALL
-CheckNameLegalDOS8Dot3W(
-    LPCWSTR lpName,
-    LPSTR lpOemName OPTIONAL,
-    DWORD OemNameSize OPTIONAL,
-    PBOOL pbNameContainsSpaces OPTIONAL,
-    PBOOL pbNameLegal
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
 HANDLE
 STDCALL
 CreateJobObjectW(
@@ -1661,23 +1644,6 @@ VerifyVersionInfoW(
     LPOSVERSIONINFOEXW lpVersionInformation,
     DWORD dwTypeMask,
     DWORDLONG dwlConditionMask
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-CheckNameLegalDOS8Dot3A(
-    LPCSTR lpName,
-    LPSTR lpOemName OPTIONAL,
-    DWORD OemNameSize OPTIONAL,
-    PBOOL pbNameContainsSpaces OPTIONAL,
-    PBOOL pbNameLegal
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
