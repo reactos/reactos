@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.69 2004/12/17 14:44:19 navaraf Exp $
+/* $Id: windc.c,v 1.70 2004/12/17 19:42:46 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -215,6 +215,7 @@ DceDeleteClipRgn(DCE* Dce)
     }
   else if (Dce->hClipRgn > (HRGN) 1)
     {
+      GDIOBJ_SetOwnership(Dce->hClipRgn, PsGetCurrentProcess());
       NtGdiDeleteObject(Dce->hClipRgn);
     }
 
@@ -516,6 +517,7 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
       Dce->hClipRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
       if (Dce->hClipRgn && Window->UpdateRegion)
         {
+          GDIOBJ_SetOwnership(Dce->hClipRgn, NULL);
           NtGdiCombineRgn(Dce->hClipRgn, Window->UpdateRegion, NULL, RGN_COPY);
           if(Window->WindowRegion && !(Window->Style & WS_MINIMIZE))
             NtGdiCombineRgn(Dce->hClipRgn, Dce->hClipRgn, Window->WindowRegion, RGN_AND);
@@ -534,6 +536,7 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
       if (!(Flags & DCX_WINDOW))
         {
           Dce->hClipRgn = UnsafeIntCreateRectRgnIndirect(&Window->ClientRect);
+          GDIOBJ_SetOwnership(Dce->hClipRgn, NULL);
           if(!Window->WindowRegion || (Window->Style & WS_MINIMIZE))
           {
             NtGdiOffsetRgn(Dce->hClipRgn, -Window->ClientRect.left, -Window->ClientRect.top);
@@ -549,6 +552,7 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
       else
         {
           Dce->hClipRgn = UnsafeIntCreateRectRgnIndirect(&Window->WindowRect);
+          GDIOBJ_SetOwnership(Dce->hClipRgn, NULL);
           NtGdiOffsetRgn(Dce->hClipRgn, -Window->WindowRect.left,
              -Window->WindowRect.top);
           if(Window->WindowRegion && !(Window->Style & WS_MINIMIZE))
@@ -560,6 +564,7 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
       Dce->hClipRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
       if (Dce->hClipRgn)
         {
+          GDIOBJ_SetOwnership(Dce->hClipRgn, NULL);
           if(!Window->WindowRegion || (Window->Style & WS_MINIMIZE))
             NtGdiCombineRgn(Dce->hClipRgn, ClipRegion, NULL, RGN_COPY);
           else
@@ -687,6 +692,7 @@ DceFreeDCE(PDCE dce, BOOLEAN Force)
   NtGdiDeleteDC(dce->hDC);
   if (dce->hClipRgn && ! (dce->DCXFlags & DCX_KEEPCLIPRGN))
     {
+      GDIOBJ_SetOwnership(dce->hClipRgn, PsGetCurrentProcess());
       NtGdiDeleteObject(dce->hClipRgn);
     }
 
