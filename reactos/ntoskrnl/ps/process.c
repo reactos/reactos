@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.132 2004/07/07 16:28:35 navaraf Exp $
+/* $Id: process.c,v 1.133 2004/07/16 20:20:53 weiden Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -1125,7 +1125,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 	else
 	{
 	  PULONG HandleCount = (PULONG)ProcessInformation;
-	  *HandleCount = ObpGetHandleCountbyHandleTable(&Process->HandleTable);
+	  *HandleCount = ObpGetHandleCountByHandleTable(&Process->HandleTable);
 	  if (ReturnLength)
 	  {
 	    *ReturnLength = sizeof(ULONG);
