@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.28 2001/02/10 22:25:42 ekohl Exp $
+/* $Id: dir.c,v 1.29 2002/03/25 21:09:18 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -577,151 +577,48 @@ SearchPathW (
  *          On failure, zero.
  */
 {
-	NTSTATUS errCode;
 	DWORD retCode = 0;
-	HANDLE FileHandle = NULL;
-
-	ULONG i,j;
-
-	WCHAR BufferW[MAX_PATH];
-	WCHAR FileAndExtensionW[MAX_PATH];
-	WCHAR *EnvironmentBufferW = NULL;
-
-	UNICODE_STRING PathString;
-	OBJECT_ATTRIBUTES ObjectAttributes;
-	IO_STATUS_BLOCK IoStatusBlock;
+	ULONG pos, len;
+	PWCHAR EnvironmentBufferW = NULL;
+	WCHAR Buffer;
 
 	DPRINT("SearchPath\n");
 
-	if ( lpPath == NULL )
+	if (lpPath == NULL)
 	{
-		// check the directory from which the application loaded
+		len = GetEnvironmentVariableW(L"PATH", &Buffer, 0);
+		len += 1 + GetCurrentDirectoryW(0, &Buffer);
+		len += 1 + GetSystemDirectoryW(&Buffer, 0);
+		len += 1 + GetWindowsDirectoryW(&Buffer, 0);
 
-		if ( GetCurrentDirectoryW( MAX_PATH, BufferW ) > 0 ) {
-			retCode = SearchPathW(BufferW,lpFileName, lpExtension, nBufferLength, lpBuffer, lpFilePart );
-			if ( retCode != 0 )
-				return retCode;
-		}
-		if ( GetSystemDirectoryW( BufferW, MAX_PATH ) > 0 ) {
-			retCode = SearchPathW(BufferW,lpFileName, lpExtension, nBufferLength, lpBuffer, lpFilePart );
-			if ( retCode != 0 )
-				return retCode;
-		}
-
-		if ( GetWindowsDirectoryW( BufferW, MAX_PATH ) > 0 ) {
-			retCode = SearchPathW(BufferW,lpFileName, lpExtension, nBufferLength, lpBuffer, lpFilePart );
-			if ( retCode != 0 )
-				return retCode;
-		}
-	
-		j = GetEnvironmentVariableW(L"Path",EnvironmentBufferW,0);
-		EnvironmentBufferW = (WCHAR *)RtlAllocateHeap(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,(j+1)*sizeof(WCHAR));
-
-		j = GetEnvironmentVariableW(L"Path",EnvironmentBufferW,j+1);
-
-		for(i=0;i<j;i++) {
-			if ( EnvironmentBufferW[i] == L';' )
-				EnvironmentBufferW[i] = 0;
-		}
-		i = 0;
-		while ( retCode == 0  && i < j ) {
-			if ( EnvironmentBufferW[i] != 0 )
-				retCode = SearchPathW(&EnvironmentBufferW[i],lpFileName, lpExtension, nBufferLength, lpBuffer, lpFilePart );
-			i += lstrlenW(&EnvironmentBufferW[i]) + 1;
-		}
-
-		RtlFreeHeap(GetProcessHeap(),0,EnvironmentBufferW);
-
-		return retCode;
-	}
-	else
-	{
-		FileAndExtensionW[0] = 0;
-		lpBuffer[0] = 0;
-		i = lstrlenW(lpFileName);
-		j = lstrlenW(lpPath);
-
-		if ( i + j + 8 < nBufferLength )
-			return i + j + 9;
-
-		if ( lpExtension != NULL )
+		EnvironmentBufferW = (PWCHAR) RtlAllocateHeap(GetProcessHeap(), 
+			                        HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY, 
+						len * sizeof(WCHAR));
+		if (EnvironmentBufferW == NULL)
 		{
-			if ( lpFileName[i-4] != L'.' ) {
-			   wcscpy(FileAndExtensionW,lpFileName);
-			   wcscat(FileAndExtensionW,lpExtension);
-			}
-			else
-			   wcscpy(FileAndExtensionW,lpFileName);
-		}
-		else
-			wcscpy(FileAndExtensionW,lpFileName);
-
-		lstrcatW(BufferW,L"\\??\\");
-		lstrcatW(BufferW,lpPath);
-
-		//printf("%S\n",FileAndExtensionW);
-
-		i = wcslen(BufferW);
-		if ( BufferW[i-1] != L'\\' )
-		{
-			BufferW[i] = L'\\';
-			BufferW[i+1] = 0;
-		}
-		if ( lpFilePart != NULL )
-		{
-			*lpFilePart = &BufferW[wcslen(BufferW)+1];
-			wcscpy(FileAndExtensionW,lpFileName);
-		}
-		else
-			wcscpy(FileAndExtensionW,lpFileName);
-
-		lstrcatW(BufferW,L"\\??\\");
-		lstrcatW(BufferW,lpPath);
-
-		//printf("%S\n",FileAndExtensionW);
-
-		i = wcslen(BufferW);
-		if ( BufferW[i-1] != L'\\' ) {
-			BufferW[i] = L'\\';
-			BufferW[i+1] = 0;
-		}
-		if ( lpFilePart != NULL )
-			*lpFilePart = &BufferW[wcslen(BufferW)+1];
-		wcscat(BufferW,FileAndExtensionW);
-
-		//printf("%S\n",lpBuffer);
-
-		PathString.Buffer = BufferW;
-		PathString.Length = lstrlenW(PathString.Buffer)*sizeof(WCHAR);
-		PathString.MaximumLength = PathString.Length + sizeof(WCHAR);
-
-		ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-		ObjectAttributes.RootDirectory = NULL;
-		ObjectAttributes.ObjectName = &PathString;
-		ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE| OBJ_INHERIT;
-		ObjectAttributes.SecurityDescriptor = NULL;
-		ObjectAttributes.SecurityQualityOfService = NULL;
-
-		errCode = NtOpenFile(
-		&FileHandle,
-		GENERIC_ALL|FILE_LIST_DIRECTORY,
-		&ObjectAttributes,
-		&IoStatusBlock,
-		FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,
-		0
-		);
-
-		if ( !NT_SUCCESS(errCode) ) {
 			return 0;
 		}
-		else {
-			NtClose(FileHandle);
-			wcscpy(lpBuffer,&BufferW[4]);
-			*lpFilePart = wcsrchr(lpBuffer,'\\')+1;
-		}
 
-		return lstrlenW(lpBuffer);
+		pos = GetCurrentDirectoryW(len, EnvironmentBufferW);
+		EnvironmentBufferW[pos++] = L';';
+		EnvironmentBufferW[pos] = 0;
+		pos += GetSystemDirectoryW(&EnvironmentBufferW[pos], len - pos);
+		EnvironmentBufferW[pos++] = L';';
+		EnvironmentBufferW[pos] = 0;
+		pos += GetWindowsDirectoryW(&EnvironmentBufferW[pos], len - pos);
+		EnvironmentBufferW[pos++] = L';';
+		EnvironmentBufferW[pos] = 0;
+		pos += GetEnvironmentVariableW(L"PATH", &EnvironmentBufferW[pos], len - pos);
+		lpPath = EnvironmentBufferW;
 	}
+
+	retCode = RtlDosSearchPath_U ((PWCHAR)lpPath, (PWCHAR)lpFileName, (PWCHAR)lpExtension, nBufferLength, lpBuffer, lpFilePart);
+
+	if (EnvironmentBufferW != NULL)
+	{
+		RtlFreeHeap(GetProcessHeap(), 0, EnvironmentBufferW);
+	}
+	return retCode;
 }
 
 /* EOF */
