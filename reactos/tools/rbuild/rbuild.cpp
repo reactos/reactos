@@ -1,7 +1,7 @@
 // rbuild.cpp
 
 #ifdef _MSC_VER
-#pragma warning ( disable : 4786 )
+#pragma warning ( disable : 4786 ) // identifier was truncated to '255' characters in the debug information
 #endif//_MSC_VER
 
 #include <stdio.h>
@@ -16,6 +16,7 @@ using std::vector;
 #ifdef WIN32
 #define getcwd _getcwd
 #endif//WIN32
+string working_directory;
 
 #ifdef _MSC_VER
 unsigned __int64
@@ -39,11 +40,7 @@ static const char* WSEQ = " =\t\r\n";
 
 Path::Path()
 {
-	string s;
-	s.resize ( _MAX_PATH );
-	s[0] = 0;
-	getcwd ( &s[0], s.size() );
-	s.resize ( strlen ( s.c_str() ) );
+	string s ( working_directory );
 	const char* p = strtok ( &s[0], "/\\" );
 	while ( p )
 	{
@@ -65,7 +62,8 @@ Path::Path ( const Path& cwd, const string& file )
 	}
 }
 
-string Path::Fixup ( const string& file, bool include_filename ) const
+string
+Path::Fixup ( const string& file, bool include_filename ) const
 {
 	if ( strchr ( "/\\", file[0] )
 #ifdef WIN32
@@ -115,6 +113,64 @@ string Path::Fixup ( const string& file, bool include_filename ) const
 		tmp += pathtmp[i];
 	}
 	return tmp;
+}
+
+/*static*/ string
+Path::RelativeFromWorkingDirectory ( const string& path )
+{
+	vector<string> vwork, vpath, vout;
+	Path::Split ( vwork, working_directory, true );
+	Path::Split ( vpath, path, true );
+#ifdef WIN32
+	// this squirreliness is b/c win32 has drive letters and *nix doesn't...
+	// not possible to do relative across different drive letters
+	if ( vwork[0] != vpath[0] )
+		return path;
+#endif
+	size_t i = 0;
+	while ( i < vwork.size() && i < vpath.size() && vwork[i] == vpath[i] )
+		++i;
+	if ( i < vwork.size() )
+	{
+		// path goes above our working directory, we will need some ..'s
+		for ( int j = 0; j < i; j++ )
+			vout.push_back ( ".." );
+	}
+	while ( i < vpath.size() )
+		vout.push_back ( vpath[i++] );
+
+	// now merge vout into a string again
+	string out;
+	for ( i = 0; i < vout.size(); i++ )
+	{
+		// this squirreliness is b/c win32 has drive letters and *nix doesn't...
+#ifdef WIN32
+		if ( i ) out += "/";
+#else
+		out += "/";
+#endif
+		out += vout[i];
+	}
+	return out;
+}
+
+/*static*/ void
+Path::Split ( vector<string>& out,
+              const string& path,
+              bool include_last )
+{
+	string s ( path );
+	const char* prev = strtok ( &s[0], "/\\" );
+	const char* p = strtok ( NULL, "/\\" );
+	out.resize ( 0 );
+	while ( p )
+	{
+		out.push_back ( prev );
+		prev = p;
+		p = strtok ( NULL, "/\\" );
+	}
+	if ( include_last )
+		out.push_back ( prev );
 }
 
 XMLFile::XMLFile()
@@ -290,8 +346,28 @@ bool XMLElement::Parse(const string& token,
 	return !( *p == '/' ) && !end_tag;
 }
 
-const XMLAttribute* XMLElement::GetAttribute ( const string& attribute,
-                                               bool required ) const
+XMLAttribute*
+XMLElement::GetAttribute ( const string& attribute,
+                           bool required )
+{
+	// this would be faster with a tree-based container, but our attribute
+	// lists are likely to stay so short as to not be an issue.
+	for ( int i = 0; i < attributes.size(); i++ )
+	{
+		if ( attribute == attributes[i]->name )
+			return attributes[i];
+	}
+	if ( required )
+	{
+		printf ( "syntax error: attribute '%s' required for <%s>\n",
+			attribute.c_str(), name.c_str() );
+	}
+	return NULL;
+}
+
+const XMLAttribute*
+XMLElement::GetAttribute ( const string& attribute,
+                           bool required ) const
 {
 	// this would be faster with a tree-based container, but our attribute
 	// lists are likely to stay so short as to not be an issue.
@@ -330,11 +406,13 @@ XMLElement* XMLParse(XMLFile& f,
 
 	if ( e->name == "xi:include" )
 	{
-		const XMLAttribute* att;
+		XMLAttribute* att;
 		att = e->GetAttribute("href",true);
 		if ( att )
 		{
 			string file ( path.Fixup(att->value,true) );
+			string top_file ( Path::RelativeFromWorkingDirectory ( file ) );
+			e->attributes.push_back ( new XMLAttribute ( "top_href", top_file ) );
 			XMLFile fInc;
 			if ( !fInc.open ( file ) )
 				printf ( "xi:include error, couldn't find file '%s'\n", file.c_str() );
@@ -439,6 +517,12 @@ void Project::ProcessXML ( const XMLElement& e, const string& path )
 
 int main ( int argc, char** argv )
 {
+	// store the current directory for path calculations
+	working_directory.resize ( _MAX_PATH );
+	working_directory[0] = 0;
+	getcwd ( &working_directory[0], working_directory.size() );
+	working_directory.resize ( strlen ( working_directory.c_str() ) );
+
 	XMLFile f;
 	Path path;
 	if ( !f.open ( "ReactOS.xml" ) )

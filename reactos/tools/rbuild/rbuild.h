@@ -11,6 +11,12 @@ public:
 	Path(); // initializes path to getcwd();
 	Path ( const Path& cwd, const std::string& filename );
 	std::string Fixup ( const std::string& filename, bool include_filename ) const;
+
+	static std::string RelativeFromWorkingDirectory ( const std::string& path );
+
+	static void Split ( std::vector<std::string>& out,
+	                    const std::string& path,
+	                    bool include_last );
 };
 
 class XMLFile
@@ -56,8 +62,10 @@ public:
 	~XMLElement();
 	bool Parse(const std::string& token,
 	           bool& end_tag);
+	XMLAttribute* GetAttribute ( const std::string& attribute,
+	                             bool required);
 	const XMLAttribute* GetAttribute ( const std::string& attribute,
-	           bool required) const;
+	                                   bool required) const;
 };
 
 class Project;
