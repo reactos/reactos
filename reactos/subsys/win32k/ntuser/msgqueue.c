@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.88 2004/04/15 23:36:03 weiden Exp $
+/* $Id: msgqueue.c,v 1.89 2004/04/16 01:27:44 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -540,22 +540,17 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 	      if (!Remove)
 		{
                   IntLockHardwareMessageQueue(MessageQueue);
-                  if((Current->Msg.message == WM_MOUSEMOVE) && MessageQueue->MouseMoveMsg)
-                  {
-                    /* we do not hold more than one WM_MOUSEMOVE message in the queue */
-                    MessageQueue->MouseMoveMsg->Msg = Current->Msg;
-                    *Message = MessageQueue->MouseMoveMsg;
-                    ExFreePool(Current);
-                  }
-                  else
-                  {
-		    InsertTailList(&MessageQueue->HardwareMessagesListHead,
-				   &Current->ListEntry);
-		    if(Current->Msg.message == WM_MOUSEMOVE)
+		  if(Current->Msg.message == WM_MOUSEMOVE)
+		  {
+		    if(MessageQueue->MouseMoveMsg)
 		    {
-		      MessageQueue->MouseMoveMsg = Current;
+		      RemoveEntryList(&MessageQueue->MouseMoveMsg->ListEntry);
+		      ExFreePool(MessageQueue->MouseMoveMsg);
 		    }
+		    MessageQueue->MouseMoveMsg = Current;
 		  }
+		  InsertTailList(&MessageQueue->HardwareMessagesListHead,
+				 &Current->ListEntry);
                   IntUnLockHardwareMessageQueue(MessageQueue);
 		}
 	      IntUnLockSystemHardwareMessageQueueLock(FALSE);
