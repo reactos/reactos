@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: surface.c,v 1.46 2004/12/14 04:55:43 royce Exp $
+/* $Id: surface.c,v 1.47 2004/12/18 17:12:32 royce Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -332,6 +332,9 @@ EngCreateBitmap(IN SIZEL Size,
   HBITMAP NewBitmap;
   
   NewBitmap = IntCreateBitmap(Size, Width, Format, Flags, Bits);
+  if ( !NewBitmap )
+	  return 0;
+
   GDIOBJ_SetOwnership(NewBitmap, NULL);
 
   return NewBitmap;
