@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.48 2004/08/21 21:19:06 tamlin Exp $
+/* $Id: catch.c,v 1.49 2004/10/12 00:56:46 ion Exp $
  *
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
@@ -208,17 +208,29 @@ ExRaiseStatus (IN NTSTATUS Status)
 }
 
 
+
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 STDCALL
 ExRaiseException (
-	PEXCEPTION_RECORD pExcptRec
+	PEXCEPTION_RECORD ExceptionRecord
 	)
 {
-	UNIMPLEMENTED;
+    RtlRaiseException(ExceptionRecord);
 }
+
+/*
+ * @implemented
+ */
+BOOLEAN
+STDCALL
+ExSystemExceptionFilter()
+{
+ 	return KeGetPreviousMode() != KernelMode ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH;
+}
+
 /*
  * @unimplemented
  */
@@ -234,18 +246,6 @@ ExRaiseHardError (
 	)
 {
 	UNIMPLEMENTED;
-}
-
-
-/*
- * @unimplemented
- */
-BOOLEAN
-STDCALL
-ExSystemExceptionFilter()
-{
-	UNIMPLEMENTED;
-	return FALSE;
 }
 
 /*

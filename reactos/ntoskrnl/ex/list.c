@@ -1,4 +1,4 @@
-/* $Id: list.c,v 1.13 2004/08/15 16:39:01 chorns Exp $
+/* $Id: list.c,v 1.14 2004/10/12 00:56:46 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -22,7 +22,7 @@ static KSPIN_LOCK ExpGlobalListLock = { 0, };
 /* FUNCTIONS *************************************************************/
 
 /*
- * @unimplemented
+ * @implemented
  */
 PSLIST_ENTRY
 FASTCALL
@@ -30,10 +30,12 @@ ExInterlockedFlushSList (
     IN PSLIST_HEADER ListHead
     )
 {
-	PSLIST_ENTRY Old = NULL;
+    PSLIST_ENTRY Old;
 
-	UNIMPLEMENTED;
-	return Old;
+    Old = &ListHead->Next;
+    ListHead->Next.Next = 0;
+
+    return Old;
 }
 
 /*

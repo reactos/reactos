@@ -254,15 +254,15 @@ ExfInterlockedCompareExchange64(
 VOID
 STDCALL
 ExGetCurrentProcessorCounts (
-	PVOID	IdleThreadTime,
-	PVOID	SystemTime,
-	PVOID	Number
-	);
+	PULONG	ThreadKernelTime,
+	PULONG	TotalCpuTime,
+	PULONG	ProcessorNumber
+);
 
 VOID
 STDCALL
 ExGetCurrentProcessorCpuUsage (
-	PVOID	RetVal
+	PULONG	CpuUsage
 	);
 
 ULONG

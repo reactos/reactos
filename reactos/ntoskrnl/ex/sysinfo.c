@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.50 2004/10/08 20:02:30 gvg Exp $
+/* $Id: sysinfo.c,v 1.51 2004/10/12 00:56:46 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -44,28 +44,50 @@ ExEnumHandleTable (
 }
 
 /*
- * @unimplemented
- */
-VOID
-STDCALL
-ExGetCurrentProcessorCounts (
-	PVOID	IdleThreadTime,
-	PVOID	SystemTime,
-	PVOID	Number
-	)
-{
-	UNIMPLEMENTED;
-}
-/*
- * @unimplemented
+ * @implemented
  */
 VOID
 STDCALL
 ExGetCurrentProcessorCpuUsage (
-	PVOID	RetVal
+	PULONG	CpuUsage
 	)
 {
-	UNIMPLEMENTED;
+	PKPCR Pcr;
+	ULONG TotalTime;
+	ULONG PercentTime;
+
+	Pcr = KeGetCurrentKPCR();
+
+	TotalTime = Pcr->PrcbData.KernelTime + Pcr->PrcbData.UserTime;
+	PercentTime = 100 - (TotalTime / Pcr->PrcbData.CurrentThread->KernelTime * 100);
+	CpuUsage = &PercentTime;
+}
+
+/*
+ * @implemented
+ */
+VOID
+STDCALL
+ExGetCurrentProcessorCounts (
+	PULONG	ThreadKernelTime,
+	PULONG	TotalCpuTime,
+	PULONG	ProcessorNumber
+	)
+{
+	PKPCR Pcr;
+	ULONG TotalTime;
+	ULONG ThreadTime;
+	ULONG ProcNumber;
+
+	Pcr = KeGetCurrentKPCR();
+
+	TotalTime = Pcr->PrcbData.KernelTime + Pcr->PrcbData.UserTime;
+	ThreadTime = Pcr->PrcbData.CurrentThread->KernelTime;
+	ProcNumber = Pcr->ProcessorNumber;
+
+	ThreadKernelTime = &ThreadTime;
+	TotalCpuTime = &TotalTime;
+	ProcessorNumber = &ProcNumber;
 }
 
 NTSTATUS STDCALL
