@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.83 2003/04/29 02:17:00 hyperion Exp $
+# $Id: makefile,v 1.84 2003/05/27 19:40:20 hbirr Exp $
 
 PATH_TO_TOP = ../..
 
@@ -16,7 +16,7 @@ TARGET_LFLAGS = -Wl,--file-alignment,0x1000 \
   -Wl,--section-alignment,0x1000 \
   -nostartfiles
 
-TARGET_SDKLIBS = rosrtl.a
+TARGET_SDKLIBS = string.a rosrtl.a
 
 TARGET_GCCLIBS = gcc
 
@@ -53,14 +53,13 @@ STDLIB_OBJECTS = stdlib/abs.o stdlib/atoi.o stdlib/atoi64.o stdlib/atol.o \
                  stdlib/wcstoul.o stdlib/wtoi.o stdlib/wtoi64.o stdlib/wtol.o \
                  stdlib/mbstowcs.o stdlib/wcstombs.o stdlib/qsort.o
 
-STRING_OBJECTS = string/ctype.o string/memccpy.o string/memchr.o \
-                 string/memcmp.o string/memcpy.o string/memicmp.o\
-                 string/memmove.o string/memset.o string/strcat.o \
-                 string/strchr.o string/strcmp.o string/strcspn.o \
-                 string/strcpy.o string/stricmp.o string/strlen.o \
-                 string/strlwr.o string/strncat.o string/strncmp.o \
-                 string/strncpy.o string/strnicmp.o string/strnlen.o \
-                 string/strpbrk.o string/strrchr.o string/strspn.o \
+STRING_OBJECTS = string/ctype.o  \
+                 string/memicmp.o\
+                 string/strcspn.o \
+                 string/stricmp.o \
+                 string/strlwr.o  \
+                 string/strnicmp.o \
+                 string/strpbrk.o  string/strspn.o \
                  string/strstr.o string/strupr.o string/wstring.o
 
 ARCH_OBJECTS = \
