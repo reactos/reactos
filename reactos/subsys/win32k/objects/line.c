@@ -7,6 +7,7 @@
 #include <win32k/line.h>
 #include <win32k/path.h>
 #include <win32k/pen.h>
+#include <win32k/region.h>
 
 // #define NDEBUG
 #include <win32k/debug1.h>
@@ -107,7 +108,7 @@ W32kLineTo(HDC  hDC,
   SURFOBJ	*SurfObj = (SURFOBJ*)AccessUserObject(dc->Surface);
   BOOL ret;
   PPENOBJ   pen;
-  PRGNDATA  reg;
+  PROSRGNDATA  reg;
 
   if(!dc) return FALSE;
 
@@ -115,7 +116,7 @@ W32kLineTo(HDC  hDC,
     ret = PATH_LineTo(hDC, XEnd, YEnd);
   } else {
   	pen = (PPENOBJ) GDIOBJ_LockObj(dc->w.hPen, GO_PEN_MAGIC);
-	reg = (PRGNDATA)GDIOBJ_LockObj(dc->w.hGCClipRgn, GO_REGION_MAGIC);
+	reg = (PROSRGNDATA)GDIOBJ_LockObj(dc->w.hGCClipRgn, GO_REGION_MAGIC);
 
 	ASSERT( pen );
 	// not yet implemented ASSERT( reg );

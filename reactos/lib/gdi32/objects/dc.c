@@ -118,10 +118,10 @@ SelectObject(
 	return W32kSelectObject(hDC, hGDIObj);
 }
 
-int   
-STDCALL 
+int
+STDCALL
 SetMapMode(
-	HDC	a0, 
+	HDC	a0,
 	int	a1
 	)
 {
@@ -150,4 +150,14 @@ SetWindowOrgEx(
 	)
 {
   return W32kSetWindowOrgEx( a0, a1, a2, a3 );
+}
+
+
+BOOL
+STDCALL
+DeleteObject(
+	HGDIOBJ		a0
+	)
+{
+	return W32kDeleteObject(a0);
 }

@@ -13,7 +13,7 @@
 HRGN WINAPI SaveVisRgn(HDC hdc)
 {
   HRGN copy;
-  PRGNDATA obj, copyObj;
+  PROSRGNDATA obj, copyObj;
   PDC dc = DC_HandleToPtr(hdc);
 
   if (!dc) return 0;

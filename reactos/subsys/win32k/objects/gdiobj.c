@@ -1,7 +1,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.13 2002/07/18 21:59:18 ei Exp $
+ * $Id: gdiobj.c,v 1.14 2002/07/22 07:55:48 ei Exp $
  *
  */
 
@@ -14,7 +14,8 @@
 #include <win32k/text.h>
 #include <win32k/dc.h>
 #include <win32k/bitmaps.h>
-//#define NDEBUG
+#include <win32k/region.h>
+#define NDEBUG
 #include <win32k/debug1.h>
 
 //  GDI stock objects
@@ -132,7 +133,7 @@ GDIOBJ_iGetHandleEntryForIndex (WORD TableIndex)
 {
   //DPRINT("GDIOBJ_iGetHandleEntryForIndex: TableIndex: %d,\n handle: %x, ptr: %x\n", TableIndex, HandleTable->Handles [TableIndex], &(HandleTable->Handles [TableIndex])  );
   //DPRINT("GIG: HandleTable: %x, Handles: %x, \n TableIndex: %x, pt: %x\n", HandleTable,  HandleTable->Handles, TableIndex, ((PGDI_HANDLE_ENTRY)HandleTable->Handles+TableIndex));
-  DPRINT("GIG: Hndl: %x, mag: %x\n", ((PGDI_HANDLE_ENTRY)HandleTable->Handles+TableIndex), ((PGDI_HANDLE_ENTRY)HandleTable->Handles+TableIndex)->wMagic);
+  //DPRINT("GIG: Hndl: %x, mag: %x\n", ((PGDI_HANDLE_ENTRY)HandleTable->Handles+TableIndex), ((PGDI_HANDLE_ENTRY)HandleTable->Handles+TableIndex)->wMagic);
   return  ((PGDI_HANDLE_ENTRY)HandleTable->Handles+TableIndex);
 }
 
@@ -213,7 +214,7 @@ BOOL  GDIOBJ_FreeObj(HGDIOBJ hObj, WORD Magic)
 	Obj = (PGDIOBJ)((PCHAR)handleEntry->pObject + sizeof(GDIOBJHDR));
 	switch( handleEntry->wMagic ){
  		case GO_REGION_MAGIC:
-			bRet = RGNDATA_InternalDelete( (PRGNDATA) Obj );
+			bRet = RGNDATA_InternalDelete( (PROSRGNDATA) Obj );
 			break;
  		case GO_PEN_MAGIC:
  		case GO_PALETTE_MAGIC:

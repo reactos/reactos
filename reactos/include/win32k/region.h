@@ -4,12 +4,19 @@
 
 #include <win32k/gdiobj.h>
 
+//Internal region data. Can't use RGNDATA structure because buffer is allocated statically
+typedef struct _ROSRGNDATA {
+  RGNDATAHEADER rdh;
+  char*          Buffer;
+} ROSRGNDATA, *PROSRGNDATA, *LPROSRGNDATA;
+
+
 #define  RGNDATA_FreeRgn(hRgn)  GDIOBJ_FreeObj((HGDIOBJ)hRgn, GO_REGION_MAGIC)
-#define  RGNDATA_LockRgn(hRgn) ((PRGNDATA)GDIOBJ_LockObj((HGDIOBJ)hRgn, GO_REGION_MAGIC))
+#define  RGNDATA_LockRgn(hRgn) ((PROSRGNDATA)GDIOBJ_LockObj((HGDIOBJ)hRgn, GO_REGION_MAGIC))
 #define  RGNDATA_UnlockRgn(hRgn) GDIOBJ_UnlockObj((HGDIOBJ)hRgn, GO_REGION_MAGIC)
 HRGN RGNDATA_AllocRgn(INT n);
 
-BOOL RGNDATA_InternalDelete( PRGNDATA Obj );
+BOOL RGNDATA_InternalDelete( PROSRGNDATA Obj );
 
 /*  User entry points */
 HRGN STDCALL
@@ -75,7 +82,7 @@ HRGN
 STDCALL
 W32kExtCreateRegion(CONST PXFORM  Xform,
                           DWORD  Count,
-                          CONST PRGNDATA  RgnData);
+                          CONST PROSRGNDATA  RgnData);
 
 BOOL
 STDCALL
@@ -131,5 +138,10 @@ W32kSetRectRgn(HRGN  hRgn,
                      INT  RightRect,
                      INT  BottomRect);
 
+DWORD
+STDCALL
+W32kGetRegionData(HRGN hrgn,
+						DWORD count,
+						LPRGNDATA rgndata);
 #endif
 

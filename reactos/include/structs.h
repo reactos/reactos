@@ -3450,7 +3450,7 @@ typedef struct _RGNDATAHEADER {
 
 typedef struct _RGNDATA {
   RGNDATAHEADER rdh;
-  char*          Buffer;
+  char          Buffer[1];
 } RGNDATA, *PRGNDATA, *LPRGNDATA;
 
 typedef struct tagSCROLLINFO {

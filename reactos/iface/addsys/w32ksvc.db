@@ -153,6 +153,7 @@ W32kGetROP2				1
 #W32kGetRandomRgn			?
 W32kGetRasterizerCaps			2
 W32kGetRelAbs				1
+W32kGetRegionData			3
 W32kGetRgnBox				2
 W32kGetStockObject			1
 W32kGetStretchBltMode			1

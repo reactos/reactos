@@ -11,7 +11,7 @@ void __stdcall Background (HDC Desktop)
 {
 	HPEN Pen;
 	int x, y;
-	
+
 	Pen = CreatePen(PS_SOLID, 1, RGB(64, 64, 128));
 
 	SelectObject (Desktop, Pen);
@@ -30,8 +30,7 @@ void __stdcall Background (HDC Desktop)
 	}
 }
 
-int main (void)
-{
+void gditest( void ){
   HDC  Desktop, MyDC, DC24;
   HPEN  RedPen, GreenPen, BluePen, WhitePen;
   HBITMAP  MyBitmap, DIB24;
@@ -39,14 +38,12 @@ int main (void)
   BITMAPINFOHEADER BitInf;
   BITMAPINFO BitPalInf;
 
-  printf("Entering GDITest..\n");
-
-   GdiDllInitialize (NULL, DLL_PROCESS_ATTACH, NULL);
-
   // Set up a DC called Desktop that accesses DISPLAY
   Desktop = CreateDCA("DISPLAY", NULL, NULL, NULL);
-  if (Desktop == NULL)
-    return 1;
+  if (Desktop == NULL){
+	printf("Can't create desktop\n");
+    return;
+  }
 
   // Background
   Background (Desktop);
@@ -128,5 +125,161 @@ int main (void)
   // Free up everything
   DeleteDC(Desktop);
   DeleteDC(MyDC);
+}
+
+void DumpRgnData( HRGN hRgn )
+{
+	int size, ret, i;
+	LPRGNDATA rgnData;
+
+	size = GetRegionData( hRgn, 0, NULL );
+	if( size == 0 ){
+		printf("GetRegionData returned 0\n");
+		return;
+	}
+	rgnData = (LPRGNDATA) malloc( size );
+	ret = GetRegionData( hRgn, size, rgnData );
+	if( ret == 0 ){
+		printf("GetRegionData( hRgn, size, rgnData ) returned 0\n");
+		return;
+	}
+	printf("Bounds: left=%d top=%d right=%d bottom=%d, count: %d, type: %i\n\n",
+		rgnData->rdh.rcBound.left, rgnData->rdh.rcBound.top, rgnData->rdh.rcBound.right, rgnData->rdh.rcBound.bottom,
+		rgnData->rdh.nCount, rgnData->rdh.iType);
+	printf("Rects:\t i \t left \t top \t right \t bottom\n");
+	for ( i = 0; i < rgnData->rdh.nCount; i++ ) {
+		PRECT pr = (PRECT) rgnData->Buffer + i;
+		printf("\t %d \t %d \t %d \t %d \t %d\n", i, pr->left, pr->top, pr->right, pr->bottom );
+	}
+	printf("\n");
+}
+
+void rgntest( void )
+{
+	HRGN hRgn1, hRgn2, hRgn3;
+	RECT Rect;
+	int i;
+
+	hRgn1 = CreateRectRgn( 1, 1, 100, 100 );
+	if( hRgn1 == NULL ) {
+		printf("Failed at hRgn1 = CreateRectRgn( 1, 1, 100, 100 )\n");
+		return;
+	}
+	i = GetRgnBox( hRgn1, &Rect );
+	if( i==0 ){
+		printf("Failed GetRgnBox( hRgn1, &Rect )\n");
+		return;
+	}
+	printf("GetRgnBox( hRgn1, &Rect ): i=%d, left=%d top=%d right=%d bottom=%d\n\n",
+		i, Rect.left, Rect.top, Rect.right, Rect.bottom );
+
+	DumpRgnData( hRgn1 );
+
+	hRgn2 = CreateRectRgn( 51, 51, 150, 150 );
+	if( hRgn2 == NULL ) {
+		printf("Failed at hRgn2 = CreateRectRgn( 51, 51, 150, 150 )\n");
+		return;
+	}
+	i = GetRgnBox( hRgn2, &Rect );
+	if( i==0 ){
+		printf("Failed GetRgnBox( hRgn2, &Rect )\n");
+		return;
+	}
+	printf("GetRgnBox( hRgn2, &Rect ): i=%d, left=%d top=%d right=%d bottom=%d\n\n",
+		i, Rect.left, Rect.top, Rect.right, Rect.bottom );
+
+	DumpRgnData( hRgn2 );
+
+	if( EqualRgn( hRgn1, hRgn2 ) == TRUE ){
+		printf("\t hRgn1, hRgn2 are equal\n");
+	}
+	else{
+		printf("\t hRgn1, hRgn2 are NOT equal\n\n");
+	}
+
+	i = OffsetRgn(hRgn1,50,50);
+	if( i==ERROR ){
+		printf("Failed OffsetRgn(hRgn1,50,50)\n");
+		return;
+	}
+
+	i = GetRgnBox( hRgn1, &Rect );
+	if( i==0 ){
+		printf("Failed GetRgnBox( hRgn1, &Rect )\n");
+		return;
+	}
+	printf("After offset\nGetRgnBox( hRgn1, &Rect ): i=%d, left=%d top=%d right=%d bottom=%d\n\n",
+		i, Rect.left, Rect.top, Rect.right, Rect.bottom );
+
+	if( EqualRgn( hRgn1, hRgn2 ) == TRUE ){
+		printf("\t hRgn1, hRgn2 are equal after offset\n");
+	}
+	else{
+		printf("\t hRgn1, hRgn2 are NOT equal after offset!\n\n");
+	}
+
+	i = SetRectRgn(hRgn1, 10, 10, 110, 110 );
+	if( i==0 ){
+		printf("Failed SetRectRgn(hRgn1... )\n");
+		return;
+	}
+	i = GetRgnBox( hRgn1, &Rect );
+	if( i==0 ){
+		printf("Failed GetRgnBox( hRgn1, &Rect )\n");
+		return;
+	}
+	printf("after SetRectRgn(hRgn1, 10, 10, 110, 110 ):\n i=%d, left=%d top=%d right=%d bottom=%d\n\n",
+		i, Rect.left, Rect.top, Rect.right, Rect.bottom );
+
+	hRgn3 = CreateRectRgn( 1, 1, 1, 1);
+	i = CombineRgn( hRgn3, hRgn1, hRgn2, RGN_AND );
+	if( i==ERROR ){
+		printf("Fail: CombineRgn( hRgn3, hRgn1, hRgn2, RGN_AND ). LastError: %d\n", GetLastError);
+		return;
+	}
+
+	if( GetRgnBox( hRgn3, &Rect )==0 ){
+		printf("Failed GetRgnBox( hRgn1, &Rect )\n");
+		return;
+	}
+	printf("After CombineRgn( hRgn3, hRgn1, hRgn2, RGN_AND ): \nGetRgnBox( hRgn3, &Rect ): CR_i=%d, left=%d top=%d right=%d bottom=%d\n\n",
+		i, Rect.left, Rect.top, Rect.right, Rect.bottom );
+	DumpRgnData( hRgn3 );
+/*
+	i = CombineRgn( hRgn3, hRgn1, hRgn2, RGN_OR );
+	if( i==ERROR ){
+		printf("Fail: CombineRgn( hRgn3, hRgn1, hRgn2, RGN_OR ). LastError: %d\n", GetLastError);
+		return;
+	}
+
+	if( GetRgnBox( hRgn3, &Rect )==0 ){
+		printf("Failed GetRgnBox( hRgn1, &Rect )\n");
+		return;
+	}
+	printf("After CombineRgn( hRgn3, hRgn1, hRgn2, RGN_OR ): \nGetRgnBox( hRgn3, &Rect ): CR_i=%d, left=%d top=%d right=%d bottom=%d\n\n",
+		i, Rect.left, Rect.top, Rect.right, Rect.bottom );
+	DumpRgnData( hRgn3 );
+*/
+	DeleteObject( hRgn1 );
+	DeleteObject( hRgn2 );
+	DeleteObject( hRgn3 );
+	printf("region test finished\n");
+}
+
+int main (int argc, char* argv[])
+{
+  printf("Entering GDITest..\n");
+  printf("use gditest for older tests\n");
+  printf("use gditest 1 for region test\n");
+
+  GdiDllInitialize (NULL, DLL_PROCESS_ATTACH, NULL);
+  if( argc < 2 )
+	gditest();
+  else {
+	if( !strncmp( argv[1], "1", 1 ) ) {
+		rgntest();
+	}
+  }
+
   return 0;
 }

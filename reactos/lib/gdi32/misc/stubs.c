@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.6 2001/08/02 20:20:17 phreak Exp $
+/* $Id: stubs.c,v 1.7 2002/07/22 07:55:48 ei Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -105,21 +105,6 @@ CloseMetaFile(
 
 
 
-int
-STDCALL
-CombineRgn(
-	HRGN	a0,
-	HRGN	a1,
-	HRGN	a2,
-	int	a3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
 HBRUSH
 STDCALL
 CreateBrushIndirect(
@@ -210,75 +195,6 @@ CreatePalette(
 
 
 
-HRGN
-STDCALL
-CreatePolyPolygonRgn(
-	CONST POINT	*a0,
-	CONST INT	*a1,
-	int		a2,
-	int		a3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
-HBRUSH
-STDCALL
-CreatePatternBrush(
-	HBITMAP		a0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
-HRGN
-STDCALL
-CreateRectRgn(
-	int		a0,
-	int		a1,
-	int		a2,
-	int		a3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
-HRGN
-STDCALL
-CreateRectRgnIndirect(
-	CONST RECT	*a0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
-HRGN
-STDCALL
-CreateRoundRectRgn(
-	int		a0,
-	int		a1,
-	int		a2,
-	int		a3,
-	int		a4,
-	int		a5
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
 
 HBRUSH
 STDCALL
@@ -295,18 +211,6 @@ BOOL
 STDCALL
 DeleteMetaFile(
 	HMETAFILE	a0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-
-BOOL
-STDCALL
-DeleteObject(
-	HGDIOBJ		a0
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -372,19 +276,6 @@ EnumObjects(
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
-}
-
-
-
-BOOL
-STDCALL
-EqualRgn(
-	HRGN		a0,
-	HRGN		a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
 }
 
 
@@ -827,33 +718,6 @@ GetRasterizerCaps(
 
 
 
-DWORD
-STDCALL
-GetRegionData(
-	HRGN		a0,
-	DWORD		a1,
-	LPRGNDATA	a2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
-int
-STDCALL
-GetRgnBox(
-	HRGN	a0,
-	LPRECT	a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
 HGDIOBJ
 STDCALL
 GetStockObject(
@@ -1101,21 +965,6 @@ OffsetClipRgn(
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
-
-
-
-int
-STDCALL
-OffsetRgn(
-	HRGN	a0,
-	int	a1,
-	int	a2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
 
 
 BOOL
@@ -1411,10 +1260,10 @@ SetBoundsRect(
 
 
 
-DWORD 
-STDCALL 
+DWORD
+STDCALL
 SetMapperFlags(
-	HDC	a0, 
+	HDC	a0,
 	DWORD	a1
 	)
 {
@@ -1423,11 +1272,11 @@ SetMapperFlags(
 }
 
 
- 
-int   
-STDCALL 
+
+int
+STDCALL
 SetGraphicsMode(
-	HDC	hdc, 
+	HDC	hdc,
 	int	iMode
 	)
 {
@@ -1436,11 +1285,11 @@ SetGraphicsMode(
 }
 
 
- 
-HMETAFILE   
-STDCALL 
+
+HMETAFILE
+STDCALL
 SetMetaFileBitsEx(
-	UINT		a0, 
+	UINT		a0,
 	CONST BYTE	*a1
 	)
 {
@@ -1449,13 +1298,13 @@ SetMetaFileBitsEx(
 }
 
 
- 
-UINT  
-STDCALL 
+
+UINT
+STDCALL
 SetPaletteEntries(
-	HPALETTE		a0, 
-	UINT			a1, 
-	UINT			a2, 
+	HPALETTE		a0,
+	UINT			a1,
+	UINT			a2,
 	CONST PALETTEENTRY	*a3
 	)
 {
@@ -1464,13 +1313,13 @@ SetPaletteEntries(
 }
 
 
- 
-BOOL   
-STDCALL 
+
+BOOL
+STDCALL
 SetPixelV(
 	HDC		a0,
-	int		a1, 
-	int		a2, 
+	int		a1,
+	int		a2,
 	COLORREF	a3
 	)
 {
@@ -1479,12 +1328,12 @@ SetPixelV(
 }
 
 
- 
-BOOL  
-STDCALL 
+
+BOOL
+STDCALL
 SetPixelFormat(
-	HDC				a0, 
-	int				a1, 
+	HDC				a0,
+	int				a1,
 	CONST PIXELFORMATDESCRIPTOR	*a2
 	)
 {
@@ -1493,11 +1342,11 @@ SetPixelFormat(
 }
 
 
- 
-int   
-STDCALL 
+
+int
+STDCALL
 SetPolyFillMode(
-	HDC	a0, 
+	HDC	a0,
 	int	a1
 	)
 {
@@ -1506,20 +1355,20 @@ SetPolyFillMode(
 }
 
 
- 
-BOOL   
-STDCALL 
+
+BOOL
+STDCALL
 StretchBlt(
-	HDC	a0, 
-	int	a1, 
-	int	a2, 
-	int	a3, 
-	int	a4, 
-	HDC	a5, 
-	int	a6, 
-	int	a7, 
-	int	a8, 
-	int	a9, 
+	HDC	a0,
+	int	a1,
+	int	a2,
+	int	a3,
+	int	a4,
+	HDC	a5,
+	int	a6,
+	int	a7,
+	int	a8,
+	int	a9,
 	DWORD	a10
 	)
 {
@@ -1528,27 +1377,11 @@ StretchBlt(
 }
 
 
- 
-BOOL   
-STDCALL 
-SetRectRgn(
-	HRGN	a0, 
-	int	a1, 
-	int	a2, 
-	int	a3, 
-	int	a4
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
-
- 
-int   
-STDCALL 
+int
+STDCALL
 SetROP2(
-	HDC	a0, 
+	HDC	a0,
 	int	a1
 	)
 {
@@ -1557,11 +1390,11 @@ SetROP2(
 }
 
 
- 
-int   
-STDCALL 
+
+int
+STDCALL
 SetStretchBltMode(
-	HDC	a0, 
+	HDC	a0,
 	int	a1
 	)
 {
@@ -1570,11 +1403,11 @@ SetStretchBltMode(
 }
 
 
- 
-UINT  
-STDCALL 
+
+UINT
+STDCALL
 SetSystemPaletteUse(
-	HDC	a0, 
+	HDC	a0,
 	UINT	a1
 	)
 {
@@ -1583,11 +1416,11 @@ SetSystemPaletteUse(
 }
 
 
- 
-int   
-STDCALL 
+
+int
+STDCALL
 SetTextCharacterExtra(
-	HDC	a0, 
+	HDC	a0,
 	int	a1
 	)
 {
@@ -1596,11 +1429,11 @@ SetTextCharacterExtra(
 }
 
 
- 
-UINT  
-STDCALL 
+
+UINT
+STDCALL
 SetTextAlign(
-	HDC	a0, 
+	HDC	a0,
 	UINT	a1
 	)
 {
@@ -1609,9 +1442,9 @@ SetTextAlign(
 }
 
 
- 
-BOOL  
-STDCALL 
+
+BOOL
+STDCALL
 SetTextJustification(
 	HDC	a0,
 	int	a1,
@@ -1623,9 +1456,9 @@ SetTextJustification(
 }
 
 
- 
-BOOL  
-STDCALL 
+
+BOOL
+STDCALL
 UpdateColors(
 	HDC	hdc
 	)
@@ -1635,13 +1468,13 @@ UpdateColors(
 }
 
 
- 
-BOOL  
-STDCALL 
+
+BOOL
+STDCALL
 PlayMetaFileRecord(
-	HDC		a0, 
-	LPHANDLETABLE	a1, 
-	LPMETARECORD	a2, 
+	HDC		a0,
+	LPHANDLETABLE	a1,
+	LPMETARECORD	a2,
 	UINT		a3
 	)
 {
@@ -1650,13 +1483,13 @@ PlayMetaFileRecord(
 }
 
 
- 
-BOOL  
-STDCALL 
+
+BOOL
+STDCALL
 EnumMetaFile(
-	HDC			a0, 
-	HMETAFILE		a1, 
-	ENUMMETAFILEPROC	a2, 
+	HDC			a0,
+	HMETAFILE		a1,
+	ENUMMETAFILEPROC	a2,
 	LPARAM			a3
 	)
 {
@@ -1665,9 +1498,9 @@ EnumMetaFile(
 }
 
 
- 
-HENHMETAFILE 
-STDCALL 
+
+HENHMETAFILE
+STDCALL
 CloseEnhMetaFile(
 	HDC	hdc
 	)
@@ -1677,9 +1510,9 @@ CloseEnhMetaFile(
 }
 
 
- 
-BOOL  
-STDCALL 
+
+BOOL
+STDCALL
 DeleteEnhMetaFile(
 	HENHMETAFILE	a0
 	)
@@ -1689,9 +1522,9 @@ DeleteEnhMetaFile(
 }
 
 
- 
-BOOL  
-STDCALL 
+
+BOOL
+STDCALL
 EnumEnhMetaFile(
 	HDC		a0,
 	HENHMETAFILE	a1,
