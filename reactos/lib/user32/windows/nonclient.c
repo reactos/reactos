@@ -790,6 +790,7 @@ DefWndDoButton(HWND hWnd, WPARAM wParam)
   BOOL InBtn, HasBtn = FALSE;
   ULONG Btn, Style;
   WPARAM SCMsg, CurBtn = wParam, OrigBtn = wParam;
+  HDC WindowDC;
   
   Style = GetWindowLongW(hWnd, GWL_STYLE);
   switch(wParam)
@@ -818,7 +819,10 @@ DefWndDoButton(HWND hWnd, WPARAM wParam)
   SetCapture(hWnd);
   
   if(HasBtn)
-    UserDrawCaptionButtonWnd( hWnd, GetWindowDC(hWnd), HasBtn , Btn);
+  {
+    WindowDC = GetWindowDC(hWnd);
+    UserDrawCaptionButtonWnd(hWnd, WindowDC, HasBtn , Btn);
+  }
   
   while(1)
   {
@@ -832,6 +836,8 @@ DefWndDoButton(HWND hWnd, WPARAM wParam)
         else
         {
           ReleaseCapture();
+          if (HasBtn)
+            ReleaseDC(hWnd, WindowDC);
           return;
         }
       case WM_NCMOUSEMOVE:
@@ -841,7 +847,7 @@ DefWndDoButton(HWND hWnd, WPARAM wParam)
           CurBtn = DefWndNCHitTest(hWnd, Msg.pt);
           if(InBtn != (CurBtn == OrigBtn))
           {
-            UserDrawCaptionButtonWnd( hWnd, GetWindowDC(hWnd), (CurBtn == OrigBtn) , Btn);
+            UserDrawCaptionButtonWnd( hWnd, WindowDC, (CurBtn == OrigBtn) , Btn);
           }
           InBtn = CurBtn == OrigBtn;
         }
@@ -850,7 +856,8 @@ DefWndDoButton(HWND hWnd, WPARAM wParam)
   }
   
 done:
-  UserDrawCaptionButtonWnd( hWnd, GetWindowDC(hWnd), FALSE , Btn);
+  UserDrawCaptionButtonWnd( hWnd, WindowDC, FALSE , Btn);
+  ReleaseDC(hWnd, WindowDC);
   ReleaseCapture();
   SendMessageA(hWnd, WM_SYSCOMMAND, SCMsg, 0);
   return;
