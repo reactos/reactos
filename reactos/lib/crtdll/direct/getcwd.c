@@ -16,11 +16,9 @@ char *_getcwd( char *buffer, int maxlen )
 		cwd = buffer;
 		len = maxlen;
 	}
-	
 
-	if ( GetCurrentDirectory(len,cwd) == 0 )
+	if ( GetCurrentDirectoryA(len,cwd) == 0 )
 		return NULL;
-
 
 	return cwd;
 }

@@ -11,7 +11,7 @@ int _getdrive( void )
 	char Buffer[MAX_PATH];
 
 	if ( cur_drive == 0 ) {
-		GetCurrentDirectory(MAX_PATH,Buffer);
+		GetCurrentDirectoryA(MAX_PATH,Buffer);
 		cur_drive = toupper(Buffer[0] - '@');
 	}
 	

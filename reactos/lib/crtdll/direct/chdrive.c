@@ -18,7 +18,7 @@ int _chdrive( int drive )
 		d[0] = toupper(cur_drive + '@');
 		d[1] = ':';
 		d[2] = 0;
-		SetCurrentDirectory(d);
+		SetCurrentDirectoryA(d);
 	}
 
 

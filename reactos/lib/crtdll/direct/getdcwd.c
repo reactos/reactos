@@ -1,7 +1,7 @@
 #include <windows.h>
 #include <crtdll/direct.h>
 
-char*	_getdcwd (int nDrive, char* caBuffer, int nBufLen)
+char* _getdcwd (int nDrive, char* caBuffer, int nBufLen)
 {
 	int i =0;
 	int dr = _getdrive();
