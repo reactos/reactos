@@ -116,6 +116,8 @@ typedef struct _FLOPPY_MEDIA_TYPE
   ULONG BytesPerSector;
 } FLOPPY_MEDIA_TYPE;
 
+extern const FLOPPY_MEDIA_TYPE MediaTypes[];
+
 #define FDP_DEBUG            0x02
 #define FDP_SILENT_DCL_CLEAR 0x04
 #define FDP_MSG              0x10
@@ -123,19 +125,20 @@ typedef struct _FLOPPY_MEDIA_TYPE
 #define FDP_INVERTED_DCL     0x80
 
 // time to hold reset line low
-#define FLOPPY_RESET_TIME          1000
-#define FLOPPY_MOTOR_SPINUP_TIME   -10000000
-#define FLOPPY_MOTOR_SPINDOWN_TIME -30000000
-#define FLOPPY_RECAL_TIMEOUT       -5000000
+#define FLOPPY_RESET_TIME          50000
+#define FLOPPY_MOTOR_SPINUP_TIME   -15000000
+#define FLOPPY_MOTOR_SPINDOWN_TIME -50000000
+#define FLOPPY_RECAL_TIMEOUT       -30000000
 
 typedef BOOLEAN (*FloppyIsrStateRoutine)( PCONTROLLER_OBJECT Controller );
 typedef PIO_DPC_ROUTINE FloppyDpcStateRoutine;
 
 typedef struct _FLOPPY_DEVICE_EXTENSION
 {
-   PCONTROLLER_OBJECT Controller;
-   CHAR DriveSelect;
-   ULONG MediaType;                // Media type index
+  PCONTROLLER_OBJECT Controller;
+  CHAR DriveSelect;
+  CHAR Cyl;                       // current cylinder
+  ULONG MediaType;                // Media type index
 } FLOPPY_DEVICE_EXTENSION, *PFLOPPY_DEVICE_EXTENSION;
 
 typedef struct _FLOPPY_CONTROLLER_EXTENSION
@@ -160,9 +163,6 @@ typedef struct _FLOPPY_CONTROLLER_EXTENSION
   KDPC MotorSpindownDpc;          // DPC for motor spin down
   PADAPTER_OBJECT AdapterObject;  // Adapter object for dma
   PVOID MapRegisterBase;
-  DWORD CurrentOffset;
-  DWORD CurrentLength;            // offset and length of next operation
-  PVOID CurrentVa;                // current VA offset for IoMapTransfer
 } FLOPPY_CONTROLLER_EXTENSION, *PFLOPPY_CONTROLLER_EXTENSION;
 
 typedef struct _FLOPPY_CONTROLLER_PARAMETERS
@@ -201,6 +201,11 @@ VOID FloppyMotorSpinupDpc( PKDPC Dpc,
 			   PVOID Context,
 			   PVOID Arg1,
 			   PVOID Arg2 );
+
+VOID FloppySeekDpc( PKDPC Dpc,
+		    PDEVICE_OBJECT DeviceObject,
+		    PIRP Irp,
+		    PVOID Context );
 
 VOID FloppyMotorSpindownDpc( PKDPC Dpc,
 			     PVOID Context,

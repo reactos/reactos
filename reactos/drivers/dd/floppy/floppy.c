@@ -17,7 +17,7 @@
 #include <ddk/ntddk.h>
 
 #include "floppy.h"
-
+#define NDEBUG
 #include <debug.h>
 
 
@@ -28,7 +28,7 @@ FLOPPY_CONTROLLER_PARAMETERS ControllerParameters[FLOPPY_MAX_CONTROLLERS] =
 };
 
 const FLOPPY_MEDIA_TYPE MediaTypes[] = {
-   { 0x02, 9, 80, 18, 512 },
+   { 0x02, 80, 2, 18, 512 },
    { 0, 0, 0, 0, 0 } };
 
 
@@ -41,6 +41,7 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
    PFLOPPY_CONTROLLER_EXTENSION ControllerExtension;
    PFLOPPY_DEVICE_EXTENSION DeviceExtension;
    UNICODE_STRING DeviceName;
+   UNICODE_STRING arcname;
    UNICODE_STRING SymlinkName;
    NTSTATUS Status;
    PDEVICE_OBJECT DeviceObject;
@@ -182,6 +183,7 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
    DPRINT( "MSTAT: %2x\n", FloppyReadMSTAT( ControllerExtension->PortBase ) );
    FloppyWriteDATA( ControllerExtension->PortBase, FLOPPY_CMD_RECAL );
    DPRINT( "MSTAT: %2x\n", FloppyReadMSTAT( ControllerExtension->PortBase ) );
+   KeStallExecutionProcessor( 10000 );
    FloppyWriteDATA( ControllerExtension->PortBase, 0 ); // drive select
    Timeout.QuadPart = FLOPPY_RECAL_TIMEOUT;
    Status = KeWaitForSingleObject( &ControllerExtension->Event,
@@ -199,6 +201,7 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
        DbgPrint( "Floppy: error recalibrating drive, ST0: %2x\n", (DWORD)ControllerExtension->St0 );
        goto interruptcleanup;
      }
+   DeviceExtension->Cyl = 0;
    // drive is good, and it is now on track 0, turn off the motor
    FloppyWriteDOR( ControllerExtension->PortBase, FLOPPY_DOR_ENABLE | FLOPPY_DOR_DMA );
    /* Initialize the device */
@@ -234,6 +237,9 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
       }
    // Ok, we own the adapter object, from now on we can just IoMapTransfer, and not
    // bother releasing the adapter ever.
+
+   RtlInitUnicodeString( &arcname, L"\\ArcName\\multi(0)disk(0)fdisk(0)" );
+   Status = IoAssignArcName( &arcname, &DeviceName );
    DbgPrint( "Floppy drive initialized\n" );
    return TRUE;
 
@@ -273,13 +279,15 @@ IO_ALLOCATION_ACTION FloppyExecuteReadWrite( PDEVICE_OBJECT DeviceObject,
    PFLOPPY_CONTROLLER_EXTENSION ControllerExtension = (PFLOPPY_CONTROLLER_EXTENSION)DeviceExtension->Controller->ControllerExtension;
    LARGE_INTEGER Timeout;
    BOOLEAN WriteToDevice;
-   UCHAR Cyl, Sector, Head;
+   DWORD Cyl, Sector, Head;
+   PIO_STACK_LOCATION Stk;
 
    ControllerExtension->Irp = Irp = (PIRP)Context;
+   Stk = IoGetCurrentIrpStackLocation( Irp );
    ControllerExtension->Device = DeviceObject;
    Timeout.QuadPart = FLOPPY_MOTOR_SPINUP_TIME;
    CHECKPOINT;
-   WriteToDevice = IoGetCurrentIrpStackLocation( Irp )->MajorFunction == IRP_MJ_WRITE ? TRUE : FALSE;
+   WriteToDevice = Stk->MajorFunction == IRP_MJ_WRITE ? TRUE : FALSE;
    // verify drive is spun up and selected
    if( ControllerExtension->MotorOn != DeviceExtension->DriveSelect )
       {
@@ -296,7 +304,14 @@ IO_ALLOCATION_ACTION FloppyExecuteReadWrite( PDEVICE_OBJECT DeviceObject,
 		       &ControllerExtension->MotorSpinupDpc );
 	 return KeepObject;
       }
-		       
+   else {
+     Timeout.QuadPart = FLOPPY_MOTOR_SPINDOWN_TIME;
+     // motor is already spinning, so reset the spindown timer
+     KeCancelTimer( &ControllerExtension->SpinupTimer );
+     KeSetTimer( &ControllerExtension->SpinupTimer,
+		 Timeout,
+		 &ControllerExtension->MotorSpindownDpc );
+   }
    // verify media content
    if( FloppyReadDIR( ControllerExtension->PortBase ) & FLOPPY_DI_DSKCHNG )
       {
@@ -322,21 +337,37 @@ IO_ALLOCATION_ACTION FloppyExecuteReadWrite( PDEVICE_OBJECT DeviceObject,
       }
    // looks like we have media in the drive.... do the read
    // first, calculate geometry for read
-   Sector = ControllerExtension->CurrentOffset / MediaTypes[DeviceExtension->MediaType].BytesPerSector;
+   Sector = Stk->Parameters.Read.ByteOffset.u.LowPart / MediaTypes[DeviceExtension->MediaType].BytesPerSector;
    // absolute sector right now
    Cyl = Sector / MediaTypes[DeviceExtension->MediaType].SectorsPerTrack;
+   DPRINT( "Sector = %x, Offset = %x, Cyl = %x, Heads = %x MediaType = %x\n", Sector, Irp->Parameters.Read.ByteOffset.u.LowPart, (DWORD)Cyl, (DWORD)MediaTypes[DeviceExtension->MediaType].Heads, (DWORD)DeviceExtension->MediaType );
    Head = Cyl % MediaTypes[DeviceExtension->MediaType].Heads;
+   DPRINT( "Head = %2x\n", Head );
    // convert absolute cyl to relative
    Cyl /= MediaTypes[DeviceExtension->MediaType].Heads;
    // convert absolute sector to relative
    Sector %= MediaTypes[DeviceExtension->MediaType].SectorsPerTrack;
    Sector++;  // track relative sector numbers are 1 based, not 0 based
    DPRINT( "Cyl = %2x, Head = %2x, Sector = %2x\n", Cyl, Head, Sector );
+
+   // seek if we need to seek
+   if( DeviceExtension->Cyl != Cyl )
+     {
+       DPRINT( "Seeking...\n" );
+       ControllerExtension->IsrState = FloppyIsrDetect;
+       ControllerExtension->DpcState = FloppySeekDpc;
+       FloppyWriteDATA( ControllerExtension->PortBase, FLOPPY_CMD_SEEK );
+       KeStallExecutionProcessor( 1000 );
+       FloppyWriteDATA( ControllerExtension->PortBase, DeviceExtension->DriveSelect );
+       KeStallExecutionProcessor( 1000 );
+       FloppyWriteDATA( ControllerExtension->PortBase, Cyl );
+       return KeepObject;
+     }
    //set up DMA and issue read command
    IoMapTransfer( ControllerExtension->AdapterObject,
 		  Irp->MdlAddress,
 		  ControllerExtension->MapRegisterBase,
-		  ControllerExtension->CurrentVa,
+		  Irp->Tail.Overlay.DriverContext[0], // current va
 		  &MediaTypes[DeviceExtension->MediaType].BytesPerSector,
 		  WriteToDevice );
    ControllerExtension->IsrState = FloppyIsrReadWrite;
@@ -386,17 +417,15 @@ NTSTATUS STDCALL FloppyDispatchReadWrite(PDEVICE_OBJECT DeviceObject,
       IoCompleteRequest( Irp, 1 );
       return STATUS_INVALID_PARAMETER;
     }
-  ControllerExtension->CurrentOffset = Stk->Parameters.Read.ByteOffset.u.LowPart;
-  ControllerExtension->CurrentLength = Stk->Parameters.Read.Length;
-  ControllerExtension->CurrentVa = MmGetMdlVirtualAddress( Irp->MdlAddress );
+  // store currentva in drivercontext
+  Irp->Tail.Overlay.DriverContext[0] = MmGetMdlVirtualAddress( Irp->MdlAddress );
   DPRINT( "FloppyDispatchReadWrite: offset = %x, length = %x, va = %x\n",
 	  ControllerExtension->CurrentOffset,
 	  ControllerExtension->CurrentLength,
 	  ControllerExtension->CurrentVa );
-
   // Queue IRP
   Irp->IoStatus.Status = STATUS_SUCCESS;
-  Irp->IoStatus.Information = ControllerExtension->CurrentLength;
+  Irp->IoStatus.Information = Stk->Parameters.Read.Length;
   IoMarkIrpPending( Irp );
   KeRaiseIrql( DISPATCH_LEVEL, &oldlvl );
   IoAllocateController( ((PFLOPPY_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->Controller,
@@ -404,6 +433,7 @@ NTSTATUS STDCALL FloppyDispatchReadWrite(PDEVICE_OBJECT DeviceObject,
 			FloppyExecuteReadWrite,
 			Irp );
   KeLowerIrql( oldlvl );
+  DPRINT( "oldlvl = %x\n", oldlvl );
   return STATUS_PENDING;
 }
 
@@ -473,3 +503,4 @@ NTSTATUS STDCALL DriverEntry(IN PDRIVER_OBJECT DriverObject,
 }
 
 /* EOF */
+

@@ -5,6 +5,7 @@
  ***************************************************************************/
 
 #include <ddk/ntddk.h>
+#define NDEBUG
 #include <debug.h>
 #include "floppy.h"
 
@@ -16,7 +17,6 @@ VOID FloppyDpc( PKDPC Dpc,
 {
    PCONTROLLER_OBJECT Controller = (PCONTROLLER_OBJECT)Context;
    PFLOPPY_CONTROLLER_EXTENSION ControllerExtension = (PFLOPPY_CONTROLLER_EXTENSION)Controller->ControllerExtension;
-   CHECKPOINT1;
    ControllerExtension->DpcState( Dpc,
 				  DeviceObject,
 				  Irp,
@@ -31,7 +31,6 @@ VOID FloppyDpcDetect( PKDPC Dpc,
 {
    PCONTROLLER_OBJECT Controller = (PCONTROLLER_OBJECT)Context;
    PFLOPPY_CONTROLLER_EXTENSION ControllerExtension = (PFLOPPY_CONTROLLER_EXTENSION)Controller->ControllerExtension;
-   CHECKPOINT1;
    KeSetEvent( &ControllerExtension->Event, 0, FALSE );
 }
 
@@ -40,8 +39,8 @@ VOID FloppyDpcFailIrp( PKDPC Dpc,
 		       PIRP Irp,
 		       PVOID Context )
 {
-   CHECKPOINT1;
    Irp->IoStatus.Status = STATUS_DEVICE_NOT_READY;
+   CHECKPOINT;
    IoCompleteRequest( Irp, 0 );
 }
 
@@ -54,7 +53,6 @@ VOID FloppyMotorSpindownDpc( PKDPC Dpc,
    PFLOPPY_CONTROLLER_EXTENSION ControllerExtension = (PFLOPPY_CONTROLLER_EXTENSION)Controller->ControllerExtension;
    PFLOPPY_DEVICE_EXTENSION DeviceExtension = (PFLOPPY_DEVICE_EXTENSION)ControllerExtension->Device->DeviceExtension;
 
-   CHECKPOINT1;
    // queue call to turn off motor
    IoAllocateController( Controller,
 			 ControllerExtension->Device,
@@ -72,7 +70,6 @@ VOID FloppyMotorSpinupDpc( PKDPC Dpc,
    PFLOPPY_DEVICE_EXTENSION DeviceExtension = (PFLOPPY_DEVICE_EXTENSION)ControllerExtension->Device->DeviceExtension;
    LARGE_INTEGER Timeout;
 
-   CHECKPOINT1;
    Timeout.QuadPart = FLOPPY_MOTOR_SPINDOWN_TIME;
    // Motor has had time to spin up, mark motor as spun up and restart IRP
    // don't forget to set the spindown timer
@@ -88,6 +85,38 @@ VOID FloppyMotorSpinupDpc( PKDPC Dpc,
 			 ControllerExtension->Irp );
 }
 
+VOID FloppySeekDpc( PKDPC Dpc,
+		    PDEVICE_OBJECT DeviceObject,
+		    PIRP Irp,
+		    PVOID Context )
+{
+  PFLOPPY_DEVICE_EXTENSION DeviceExtension = (PFLOPPY_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+  PFLOPPY_CONTROLLER_EXTENSION ControllerExtension = (PFLOPPY_CONTROLLER_EXTENSION)DeviceExtension->Controller->ControllerExtension;
+
+  // if the seek failed, fail the IRP
+  if( ControllerExtension->St0 & FLOPPY_ST0_GDMASK )
+    {
+      ControllerExtension->Irp->IoStatus.Status = STATUS_DISK_CORRUPT_ERROR;
+      ControllerExtension->Irp->IoStatus.Information = 0;
+      DPRINT( "Failing IRP: St0 = %2x, St1 = %2x, St2 = %2x\n",
+	      ControllerExtension->St0,
+	      ControllerExtension->St1,
+	      ControllerExtension->St2 );
+      for(;;);
+      IoCompleteRequest( ControllerExtension->Irp, 0 );
+      IoFreeController( DeviceExtension->Controller );
+      return;
+    }
+  KeStallExecutionProcessor( 10000000 );
+  DPRINT( "Seek completed, now on cyl %2x\n", DeviceExtension->Cyl );
+  // now that we are on the right cyl, restart the read
+  if( FloppyExecuteReadWrite( DeviceObject,
+			      ControllerExtension->Irp,
+			      ControllerExtension->MapRegisterBase,
+			      ControllerExtension->Irp ) == DeallocateObject )
+    IoFreeController( DeviceExtension->Controller );
+}
+
 VOID FloppyDpcReadWrite( PKDPC Dpc,
 			 PDEVICE_OBJECT DeviceObject,
 			 PIRP Irp,
@@ -95,26 +124,48 @@ VOID FloppyDpcReadWrite( PKDPC Dpc,
 {
   PCONTROLLER_OBJECT Controller = (PCONTROLLER_OBJECT)Context;
   PFLOPPY_CONTROLLER_EXTENSION ControllerExtension = (PFLOPPY_CONTROLLER_EXTENSION)Controller->ControllerExtension;
+  PFLOPPY_DEVICE_EXTENSION DeviceExtension = (PFLOPPY_DEVICE_EXTENSION)ControllerExtension->Device->DeviceExtension;
   DWORD SectorSize = 128 << ControllerExtension->SectorSizeCode;
+  PIO_STACK_LOCATION Stk = IoGetCurrentIrpStackLocation( ControllerExtension->Irp );
+  BOOLEAN WriteToDevice = Stk->MajorFunction == IRP_MJ_WRITE ? TRUE : FALSE;
 
-  CHECKPOINT1;
   Irp = ControllerExtension->Irp;
   // if the IO failed, fail the IRP
   if( ControllerExtension->St0 & FLOPPY_ST0_GDMASK )
     {
       Irp->IoStatus.Status = STATUS_DISK_CORRUPT_ERROR;
       Irp->IoStatus.Information = 0;
+      DPRINT( "Failing IRP: St0 = %2x, St1 = %2x, St2 = %2x\n",
+	      ControllerExtension->St0,
+	      ControllerExtension->St1,
+	      ControllerExtension->St2 );
+      for(;;);
       IoCompleteRequest( Irp, 0 );
-      CHECKPOINT1;
+      IoFreeController( Controller );
       return;
     }
-  ControllerExtension->CurrentOffset += SectorSize;
-  ControllerExtension->CurrentLength -= SectorSize;
-  (char *)ControllerExtension->CurrentVa += SectorSize;
+  // don't forget to flush the buffers
+  IoFlushAdapterBuffers( ControllerExtension->AdapterObject,
+			 ControllerExtension->Irp->MdlAddress,
+			 ControllerExtension->MapRegisterBase,
+			 ControllerExtension->Irp->Tail.Overlay.DriverContext[0],
+			 MediaTypes[DeviceExtension->MediaType].BytesPerSector,
+			 WriteToDevice );
+  DPRINT( "St0 = %2x, St1  %2x, St2 = %2x\n",
+	  ControllerExtension->St0,
+	  ControllerExtension->St1,
+	  ControllerExtension->St2 );
+  // update buffer info
+  Stk->Parameters.Read.ByteOffset.u.LowPart += SectorSize;
+  Stk->Parameters.Read.Length -= SectorSize;
+  // drivercontext used for current va
+  (DWORD)ControllerExtension->Irp->Tail.Overlay.DriverContext[0] += SectorSize;
+			 
+  DPRINT( "First dword: %x\n", *((DWORD *)ControllerExtension->MapRegisterBase) )
+
   // if there is more IO to be done, restart execute routine to issue next read
-  if( ControllerExtension->CurrentLength )
+  if( Stk->Parameters.Read.Length )
     {
-      CHECKPOINT1;
       if( FloppyExecuteReadWrite( DeviceObject,
 				  Irp,
 				  ControllerExtension->MapRegisterBase,
@@ -122,7 +173,7 @@ VOID FloppyDpcReadWrite( PKDPC Dpc,
 	IoFreeController( Controller );
     }
   else {
-    CHECKPOINT1;
+    IoFreeController( Controller );
     // oetherwise, complete the Irp
     IoCompleteRequest( Irp, 0 );
   }
@@ -134,7 +185,6 @@ VOID FloppyDpcDetectMedia( PKDPC Dpc,
 {
   PCONTROLLER_OBJECT Controller = (PCONTROLLER_OBJECT)Context;
   PFLOPPY_CONTROLLER_EXTENSION ControllerExtension = (PFLOPPY_CONTROLLER_EXTENSION)Controller->ControllerExtension;
-  CHECKPOINT1;
   // If the read ID failed, fail the irp
   if( ControllerExtension->St1 != 0 )
     {
