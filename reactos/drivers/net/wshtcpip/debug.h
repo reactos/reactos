@@ -21,16 +21,11 @@
 
 extern DWORD DebugTraceLevel;
 
-#define Get_DbgPrint(quote...) L##quote
-
 #define WSH_DbgPrint(_t_, _x_) \
     if (((DebugTraceLevel & NORMAL_MASK) >= _t_) || \
         ((DebugTraceLevel & _t_) > NORMAL_MASK)) { \
-        WCHAR _buffer[256]; \
-        swprintf(_buffer, L"(%s:%d)(%s) ", __FILE__, __LINE__, __FUNCTION__); \
-        OutputDebugStringW(_buffer); \
-        swprintf(_buffer, Get_DbgPrint _x_); \
-        OutputDebugStringW(_buffer); \
+        DbgPrint("(%hS:%d)(%hS) ", __FILE__, __LINE__, __FUNCTION__); \
+		DbgPrint _x_; \
     }
 
 #ifdef ASSERT
@@ -64,7 +59,9 @@ extern DWORD DebugTraceLevel;
         please try again later.\n", __FILE__, __LINE__, __FUNCTION__));
 
 #define CHECKPOINT \
-    do { WSH_DbgPrint(MIN_TRACE, ("(%s:%d)\n", __FILE__, __LINE__)); } while(0);
+    WSH_DbgPrint(MIN_TRACE, ("\n"));
+
+#define CP CHECKPOINT
 
 #endif /* __DEBUG_H */
 

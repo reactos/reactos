@@ -9,12 +9,13 @@
  */
 #include <ws2_32.h>
 #include <catalog.h>
+#include <handle.h>
 #include <upcall.h>
 
 #ifdef DBG
 
 /* See debug.h for debug/trace constants */
-DWORD DebugTraceLevel = MIN_TRACE;
+DWORD DebugTraceLevel = MAX_TRACE;
 
 #endif /* DBG */
 
@@ -59,17 +60,24 @@ WSAStartup(
     IN  WORD wVersionRequested,
     OUT LPWSADATA lpWSAData)
 {
-    WS_DbgPrint(MIN_TRACE, ("WSAStartup of ws2_32.dll\n"));
+    WS_DbgPrint(MAX_TRACE, ("WSAStartup of ws2_32.dll\n"));
 
     lpWSAData->wVersion     = wVersionRequested;
     lpWSAData->wHighVersion = 2;
+    CP
     lstrcpyA(lpWSAData->szDescription, "WinSock 2.0");
+    CP
     lstrcpyA(lpWSAData->szSystemStatus, "Running");
+    CP
     lpWSAData->iMaxSockets  = 0;
     lpWSAData->iMaxUdpDg    = 0;
     lpWSAData->lpVendorInfo = NULL;
 
+    CP
+
     WSASETINITIALIZED;
+
+    CP
 
     return NO_ERROR;
 }
@@ -79,13 +87,15 @@ INT
 EXPORT
 WSACleanup(VOID)
 {
-    WS_DbgPrint(MIN_TRACE, ("WSACleanup of ws2_32.dll\n"));
+    WS_DbgPrint(MAX_TRACE, ("WSACleanup of ws2_32.dll\n"));
 
     if (!WSAINITIALIZED) {
+        CP
         WSASetLastError(WSANOTINITIALISED);
         return WSANOTINITIALISED;
     }
 
+    CP
     return NO_ERROR;
 }
 
@@ -108,18 +118,24 @@ WSASocketA(
     UNICODE_STRING StringU;
     ANSI_STRING StringA;
 
+	WS_DbgPrint(MAX_TRACE, ("af (%d)  type (%d)  protocol (%d).\n",
+        af, type, protocol));
+
     if (lpProtocolInfo) {
+        CP
         memcpy(&ProtocolInfoW,
                lpProtocolInfo,
                sizeof(WSAPROTOCOL_INFOA) -
                sizeof(CHAR) * (WSAPROTOCOL_LEN + 1));
-
+        CP
         RtlInitAnsiString(&StringA, (LPSTR)lpProtocolInfo->szProtocol);
+        CP
         RtlInitUnicodeString(&StringU, (LPWSTR)&ProtocolInfoW.szProtocol);
-        RtlAnsiStringToUnicodeString(&StringU,
-		     	                     &StringA,
-			     	                 FALSE);
+        CP
+        RtlAnsiStringToUnicodeString(&StringU, &StringA, FALSE);
+        CP
         p = &ProtocolInfoW;
+        CP
     } else {
         p = NULL;
     }
@@ -143,7 +159,7 @@ WSASocketW(
     IN  GROUP g,
     IN  DWORD dwFlags)
 /*
- * FUNCTION: Creates a new socket
+ * FUNCTION: Creates a new socket descriptor
  * ARGUMENTS:
  *     af             = Address family
  *     type           = Socket type
@@ -152,13 +168,16 @@ WSASocketW(
  *     g              = Reserved
  *     dwFlags        = Socket flags
  * RETURNS:
- *     Created socket, or INVALID_SOCKET if it could not be created
+ *     Created socket descriptor, or INVALID_SOCKET if it could not be created
  */
 {
     INT Status;
     SOCKET Socket;
     PCATALOG_ENTRY Provider;
     WSAPROTOCOL_INFOW ProtocolInfo;
+
+    WS_DbgPrint(MAX_TRACE, ("af (%d)  type (%d)  protocol (%d).\n",
+        af, type, protocol));
 
     if (!WSAINITIALIZED) {
         WSASetLastError(WSANOTINITIALISED);
@@ -188,12 +207,12 @@ WSASocketW(
     }
 
     Socket = Provider->ProcTable.lpWSPSocket(af,
-                                             type,
-                                             protocol,
-                                             lpProtocolInfo,
-                                             g,
-                                             dwFlags,
-                                             &Status);
+        type,
+        protocol,
+        lpProtocolInfo,
+        g,
+        dwFlags,
+        &Status);
     if (Status != NO_ERROR) {
         WSASetLastError(Status);
         return INVALID_SOCKET;
@@ -203,24 +222,146 @@ WSASocketW(
 }
 
 
+INT
+EXPORT
+closesocket(
+    IN  SOCKET s)
+/*
+ * FUNCTION: Closes a socket descriptor
+ * ARGUMENTS:
+ *     s = Socket descriptor
+ * RETURNS:
+ *     0, or SOCKET_ERROR if an error ocurred
+ */
+{
+    PCATALOG_ENTRY Provider;
+    INT Errno;
+    INT Code;
+
+    WS_DbgPrint(MAX_TRACE, ("s (0x%X).\n", s));
+
+    if (!WSAINITIALIZED) {
+        WSASetLastError(WSANOTINITIALISED);
+        return SOCKET_ERROR;
+    }
+
+    if (!ReferenceProviderByHandle((HANDLE)s, &Provider)) {
+        WSASetLastError(WSAENOTSOCK);
+        return SOCKET_ERROR;
+    }
+
+    CloseProviderHandle((HANDLE)s);
+
+    DereferenceProviderByPointer(Provider);
+
+    Code = Provider->ProcTable.lpWSPCloseSocket(s, &Errno);
+    if (Code == SOCKET_ERROR)
+        WSASetLastError(Errno);
+
+    return 0;
+}
+
+
+INT
+EXPORT
+select(
+    IN      INT nfds, 
+    IN OUT  LPFD_SET readfds, 
+    IN OUT  LPFD_SET writefds, 
+    IN OUT  LPFD_SET exceptfds, 
+    IN      CONST LPTIMEVAL timeout)
+/*
+ * FUNCTION: Returns status of one or more sockets
+ * ARGUMENTS:
+ *     nfds      = Always ignored
+ *     readfds   = Pointer to socket set to be checked for readability (optional)
+ *     writefds  = Pointer to socket set to be checked for writability (optional)
+ *     exceptfds = Pointer to socket set to be checked for errors (optional)
+ *     timeout   = Pointer to a TIMEVAL structure indicating maximum wait time
+ *                 (NULL means wait forever)
+ * RETURNS:
+ *     Number of ready socket descriptors, or SOCKET_ERROR if an error ocurred
+ */
+{
+    PCATALOG_ENTRY Provider;
+    INT Count;
+    INT Errno;
+    ULONG i;
+
+    WS_DbgPrint(MAX_TRACE, ("readfds (0x%X)  writefds (0x%X)  exceptfds (0x%X).\n",
+        readfds, writefds, exceptfds));
+
+    if (!WSAINITIALIZED) {
+        WSASetLastError(WSANOTINITIALISED);
+        return SOCKET_ERROR;
+    }
+
+    /* FIXME: Sockets in FD_SETs should be sorted by their provider */
+
+    /* FIXME: For now, assume only one service provider */
+    if ((readfds != NULL) && (readfds->fd_count > 0)) {
+        if (!ReferenceProviderByHandle((HANDLE)readfds->fd_array[0], &Provider)) {
+            WSASetLastError(WSAENOTSOCK);
+            return SOCKET_ERROR;
+        }
+    } else if ((writefds != NULL) && (writefds->fd_count > 0)) {
+        if (!ReferenceProviderByHandle((HANDLE)writefds->fd_array[0], &Provider)) {
+            WSASetLastError(WSAENOTSOCK);
+            return SOCKET_ERROR;
+        }
+    } else if ((exceptfds != NULL) && (exceptfds->fd_count > 0)) {
+        if (!ReferenceProviderByHandle((HANDLE)exceptfds->fd_array[0], &Provider)) {
+            WSASetLastError(WSAENOTSOCK);
+            return SOCKET_ERROR;
+        }
+    } else {
+        WSASetLastError(WSAEINVAL);
+        return SOCKET_ERROR;
+    }
+
+    Count = Provider->ProcTable.lpWSPSelect(nfds, readfds, writefds, exceptfds, timeout, &Errno);
+
+    DereferenceProviderByPointer(Provider);
+
+    WSASetLastError(Errno);
+
+    if (Errno != NO_ERROR)
+        return SOCKET_ERROR;
+
+    return Count;
+}
+
+
 BOOL
 STDCALL
-DllMain(PVOID hInstDll,
+DllMain(HANDLE hInstDll,
         ULONG dwReason,
-        PVOID Reserved)
+        LPVOID lpReserved)
 {
-    WS_DbgPrint(MIN_TRACE, ("DllMain of ws2_32.dll\n"));
+    WS_DbgPrint(MAX_TRACE, ("DllMain of ws2_32.dll.\n"));
 
-#if 0
+	CP
+
     switch (dwReason) {
-    case DLL_PROCESS_ATTACH:
-        GlobalHeap = HeapCreate(0, 0, 0);
-        if (!GlobalHeap)
-            return FALSE;
+    case DLL_PROCESS_ATTACH: {
+		CP
+		GlobalHeap = GetProcessHeap();
+        //GlobalHeap = HeapCreate(0, 0, 0);
+        if (!GlobalHeap) {
+			WS_DbgPrint(MIN_TRACE, ("Insufficient memory.\n"));
+			return FALSE;
+		}
 
-        if (ReadCatalog() != NO_ERROR)
-            return FALSE;
+		CP
 
+        CreateCatalog();
+
+		CP
+
+        InitProviderHandleTable();
+
+		CP
+/*      FIXME: Causes trap
         UpcallTable.lpWPUCloseEvent         = WPUCloseEvent;
         UpcallTable.lpWPUCloseSocketHandle  = WPUCloseSocketHandle;
         UpcallTable.lpWPUCreateEvent        = WPUCreateEvent;
@@ -235,37 +376,64 @@ DllMain(PVOID hInstDll,
         UpcallTable.lpWPUResetEvent         = WPUResetEvent;
         UpcallTable.lpWPUSetEvent           = WPUSetEvent;
         UpcallTable.lpWPUOpenCurrentThread  = WPUOpenCurrentThread;
-        UpcallTable.lpWPUCloseThread        = WPUCloseThread;
-        break;
+        UpcallTable.lpWPUCloseThread        = WPUCloseThread;*/
+
+        /* Fall through to thread attachment handler */
+    }
 
     case DLL_THREAD_ATTACH: {
         PWINSOCK_THREAD_BLOCK p;
 
-        p = HeapAlloc(GlobalHeap, 0, sizeof(WINSOCK_THREAD_BLOCK));
-        if (p) {
-            p->LastErrorValue = NO_ERROR;
-            p->Initialized    = FALSE;
-            NtCurrentTeb()->WinSockData = p;
-        }
+		CP
 
+        p = HeapAlloc(GlobalHeap, 0, sizeof(WINSOCK_THREAD_BLOCK));
+		CP
+        if (!p) {
+			WS_DbgPrint(MIN_TRACE, ("Insufficient memory.\n"));
+			return FALSE;
+		}
+
+		CP
+        p->LastErrorValue = NO_ERROR;
+        p->Initialized    = FALSE;
+		CP
+
+        NtCurrentTeb()->WinSockData = p;
+
+        break;
+    }
+
+    case DLL_PROCESS_DETACH: {
+		CP
+
+        HeapFree(GlobalHeap, 0, NtCurrentTeb()->WinSockData);
+
+        DestroyCatalog();
+
+		CP
+
+        FreeProviderHandleTable();
+
+		CP
+
+        //HeapDestroy(GlobalHeap);
         break;
     }
 
     case DLL_THREAD_DETACH: {
         PWINSOCK_THREAD_BLOCK p = NtCurrentTeb()->WinSockData;
 
+		CP
+
         if (p)
             HeapFree(GlobalHeap, 0, p);
 
         break;
     }
-
-    case DLL_PROCESS_DETACH:
-        DestroyCatalog();
-        HeapDestroy(GlobalHeap);
-        break;
     }
-#endif
+
+	CP
+
     return TRUE;
 }
 

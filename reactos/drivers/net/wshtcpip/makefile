@@ -37,7 +37,6 @@ $(TARGETNAME).dll: $(LIBS) $(OBJECTS) $(TARGETNAME).def
 	$(CC) \
 		$(TARGETNAME).o \
         $(LIBS) \
-		-specs=$(TARGETNAME)_specs \
 		-mdll \
 		-o junk.tmp \
 		-Wl,--base-file,base.tmp 
@@ -50,10 +49,9 @@ $(TARGETNAME).dll: $(LIBS) $(OBJECTS) $(TARGETNAME).def
 	- $(RM) base.tmp
 	$(CC) \
 		$(OBJECTS) $(LIBS) \
-		-specs=$(TARGETNAME)_specs \
 		-mdll \
 		-o $(TARGETNAME).dll \
-		-Wl,--image-base,0x10000 \
+		-Wl,--image-base,0x777C0000 \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
 		-Wl,temp.exp

@@ -14,9 +14,19 @@ EXPORT
 WSACloseEvent(
     IN  WSAEVENT hEvent)
 {
-    UNIMPLEMENTED
+    BOOL Success;
 
-    return FALSE;
+    if (!WSAINITIALIZED) {
+        WSASetLastError(WSANOTINITIALISED);
+        return FALSE;
+    }
+
+    Success = CloseHandle((HANDLE)hEvent);
+
+    if (!Success)
+        WSASetLastError(WSA_INVALID_HANDLE);
+
+    return Success;
 }
 
 
@@ -24,9 +34,19 @@ WSAEVENT
 EXPORT
 WSACreateEvent(VOID)
 {
-    UNIMPLEMENTED
+    HANDLE Event;
 
-    return (WSAEVENT)0;
+    if (!WSAINITIALIZED) {
+        WSASetLastError(WSANOTINITIALISED);
+        return FALSE;
+    }
+
+    Event = CreateEvent(NULL, TRUE, FALSE, NULL);
+
+    if (Event == INVALID_HANDLE_VALUE)
+        WSASetLastError(WSA_INVALID_HANDLE);
+    
+    return (WSAEVENT)Event;
 }
 
 
@@ -35,9 +55,19 @@ EXPORT
 WSAResetEvent(
     IN  WSAEVENT hEvent)
 {
-    UNIMPLEMENTED
+    BOOL Success;
 
-    return FALSE;
+    if (!WSAINITIALIZED) {
+        WSASetLastError(WSANOTINITIALISED);
+        return FALSE;
+    }
+
+    Success = ResetEvent((HANDLE)hEvent);
+
+    if (!Success)
+        WSASetLastError(WSA_INVALID_HANDLE);
+
+    return Success;
 }
 
 
@@ -46,9 +76,19 @@ EXPORT
 WSASetEvent(
     IN  WSAEVENT hEvent)
 {
-    UNIMPLEMENTED
+    BOOL Success;
 
-    return FALSE;
+    if (!WSAINITIALIZED) {
+        WSASetLastError(WSANOTINITIALISED);
+        return FALSE;
+    }
+
+    Success = SetEvent((HANDLE)hEvent);
+
+    if (!Success)
+        WSASetLastError(WSA_INVALID_HANDLE);
+
+    return Success;
 }
 
 
@@ -61,9 +101,28 @@ WSAWaitForMultipleEvents(
     IN  DWORD dwTimeout,
     IN  BOOL fAlertable)
 {
-    UNIMPLEMENTED
+    DWORD Status;
 
-    return 0;
+    if (!WSAINITIALIZED) {
+        WSASetLastError(WSANOTINITIALISED);
+        return FALSE;
+    }
+
+    Status = WaitForMultipleObjectsEx(cEvents, lphEvents, fWaitAll, dwTimeout, fAlertable);
+    if (Status == WAIT_FAILED) {
+        Status = GetLastError();
+
+        if (Status == ERROR_NOT_ENOUGH_MEMORY)
+            WSASetLastError(WSA_NOT_ENOUGH_MEMORY);
+        else if (Status == ERROR_INVALID_HANDLE)
+            WSASetLastError(WSA_INVALID_HANDLE);
+        else
+            WSASetLastError(WSA_INVALID_PARAMETER);
+
+        return WSA_WAIT_FAILED;
+    }
+
+    return Status;
 }
 
 /* EOF */

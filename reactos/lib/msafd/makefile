@@ -1,21 +1,19 @@
-# Makefile for ReactOS WinSock 2 DLL
+# Makefile for ReactOS Ancillary Function Driver DLL
 
 PATH_TO_TOP = ../..
 
-CFLAGS = -Iinclude -DUNICODE -DDBG
+CFLAGS = -I./include -DUNICODE
 
-TARGETNAME=ws2_32
+TARGETNAME=msafd
 
-MISC_OBJECTS = misc/dllmain.o misc/catalog.o misc/event.o misc/handle.o \
-               misc/ns.o misc/sndrcv.o misc/stubs.o misc/upcall.o
+MISC_OBJECTS = misc/dllmain.o misc/helpers.o misc/sndrcv.o misc/stubs.o
 
 RESOURCE_OBJECT = $(TARGETNAME).coff
 
 OBJECTS = $(MISC_OBJECTS) $(RESOURCE_OBJECT)
 
 LIBS = ../ntdll/ntdll.a \
-       ../kernel32/kernel32.a \
-       ../advapi32/advapi32.a
+       ../kernel32/kernel32.a
 
 ifeq ($(DOSCLI),yes)
 CLEAN_FILES = misc\*.o \
@@ -59,7 +57,7 @@ $(TARGETNAME).dll: $(LIBS) $(OBJECTS) $(TARGETNAME).def
         $(LIBS) \
 		-mdll \
 		-o $(TARGETNAME).dll \
-		-Wl,--image-base,0x77780000 \
+		-Wl,--image-base,0x777A0000 \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
 		-Wl,temp.exp
@@ -77,12 +75,20 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 install: $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll
 
 $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll: $(TARGETNAME).dll
+ifeq ($(DOSCLI),yes)
+	$(CP) $(TARGETNAME).dll $(FLOPPY_DIR)\dlls\$(TARGETNAME).dll
+else
 	$(CP) $(TARGETNAME).dll $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll
+endif
 
 dist: $(DIST_DIR)/dlls/$(TARGETNAME).dll
 
 $(DIST_DIR)/dlls/$(TARGETNAME).dll: $(TARGETNAME).dll
+ifeq ($(DOSCLI),yes)
+	$(CP) $(TARGETNAME).dll ..\..\$(DIST_DIR)\dlls\$(TARGETNAME).dll
+else
 	$(CP) $(TARGETNAME).dll ../../$(DIST_DIR)/dlls/$(TARGETNAME).dll
+endif
 
 include ../../rules.mak
 

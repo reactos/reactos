@@ -16,41 +16,43 @@ include rules.mak
 # Required to run the system
 #
 COMPONENTS = iface_native iface_additional ntoskrnl
-DLLS = ntdll kernel32 crtdll advapi32 fmifs gdi32 secur32 user32 ws2_32 msvcrt
+DLLS = ntdll kernel32 crtdll advapi32 fmifs gdi32 secur32 user32 ws2_32 msafd msvcrt
 SUBSYS = smss win32k csrss
 
 #
 # Select the server(s) you want to build
 #
+#SERVERS = posix linux os2
 SERVERS = win32
-# SERVERS = posix linux os2
 
 #
 # Select the loader(s) you want to build
 #
+#LOADERS = boot dos
 LOADERS = dos
-# LOADERS = boot
 
 #
 # Select the device drivers and filesystems you want
 #
+#DEVICE_DRIVERS = beep event floppy ide_test mouse sound test test1 parallel serial
 DEVICE_DRIVERS = vidport vga blue ide null floppy
-# DEVICE_DRIVERS = beep event floppy ide_test mouse sound test test1 parallel serial
 
+#INPUT_DRIVERS = keyboard
 INPUT_DRIVERS = keyboard
 
-FS_DRIVERS = vfat 
-# FS_DRIVERS = minix ext2 template
+#FS_DRIVERS = vfat minix ext2 template
+FS_DRIVERS = vfat
 
-# ndis tdi tcpip tditest wshtcpip
-NET_DRIVERS = ndis tcpip tditest wshtcpip
+#NET_DRIVERS = ndis tdi tcpip tditest wshtcpip afd
+NET_DRIVERS = ndis tcpip tditest wshtcpip afd
 
-# ne2000
+#NET_DEVICE_DRIVERS = ne2000
 NET_DEVICE_DRIVERS = ne2000
 
 #
 # system applications (required for startup)
 #
+#SYS_APPS = shell winlogon services
 SYS_APPS = shell winlogon services
 
 APPS = args hello test cat bench apc shm lpc thread event file gditest \
@@ -58,8 +60,8 @@ APPS = args hello test cat bench apc shm lpc thread event file gditest \
 
 #       objdir
 
-# ping
-NET_APPS = ping
+#NET_APPS = ping roshttpd
+NET_APPS = ping roshttpd
 
 
 KERNEL_SERVICES = $(DEVICE_DRIVERS) $(INPUT_DRIVERS) $(FS_DRIVERS) $(NET_DRIVERS) $(NET_DEVICE_DRIVERS)

@@ -1,0 +1,10 @@
+; MSAFD.DLL - Ancillary Function Driver DLL
+
+LIBRARY msafd.dll
+
+EXPORTS
+WSPGetSockOpt@24
+WSPSetSockOpt@24
+WSPStartup@76
+
+; EOF

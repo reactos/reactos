@@ -14,23 +14,74 @@
 LIST_ENTRY CatalogListHead;
 CRITICAL_SECTION CatalogLock;
 
+VOID ReferenceProviderByPointer(
+    PCATALOG_ENTRY Provider)
+{
+    WS_DbgPrint(MAX_TRACE, ("Provider (0x%X).\n", Provider));
+
+    //EnterCriticalSection(&Provider->Lock);
+    Provider->ReferenceCount++;
+    //LeaveCriticalSection(&Provider->Lock);
+}
+
+
+VOID DereferenceProviderByPointer(
+    PCATALOG_ENTRY Provider)
+{
+    WS_DbgPrint(MAX_TRACE, ("Provider (0x%X).\n", Provider));
+
+#ifdef DBG
+    if (Provider->ReferenceCount <= 0) {
+        WS_DbgPrint(MIN_TRACE, ("Provider at 0x%X has invalid reference count (%ld).\n",
+            Provider, Provider->ReferenceCount));
+    }
+#endif
+
+    //EnterCriticalSection(&Provider->Lock);
+    Provider->ReferenceCount--;
+    //LeaveCriticalSection(&Provider->Lock);
+
+    if (Provider->ReferenceCount == 0) {
+        DestroyCatalogEntry(Provider);
+    }
+}
+
+
 PCATALOG_ENTRY CreateCatalogEntry(
     LPWSTR LibraryName)
 {
     PCATALOG_ENTRY Provider;
 
-    Provider = HeapAlloc(GlobalHeap, 0, sizeof(CATALOG_ENTRY));
-    if (!Provider)
-        return NULL;
+	WS_DbgPrint(MAX_TRACE, ("LibraryName (%S).\n", LibraryName));
 
-    InitializeCriticalSection(&Provider->Lock);
-    Provider->hModule = (HMODULE)INVALID_HANDLE_VALUE;
+    Provider = HeapAlloc(GlobalHeap, 0, sizeof(CATALOG_ENTRY));
+    if (!Provider) {
+		WS_DbgPrint(MIN_TRACE, ("Insufficient memory.\n"));
+        return NULL;
+	}
+
+	CP
+
+    ZeroMemory(Provider, sizeof(CATALOG_ENTRY));
+
+	CP
+    Provider->ReferenceCount = 1;
+
+    //InitializeCriticalSection(&Provider->Lock);
+	CP
+    Provider->hModule = NULL;
+	CP
     lstrcpyW(Provider->LibraryName, LibraryName);
+	CP
     Provider->Mapping = NULL;
 
-    EnterCriticalSection(&CatalogLock);
+	CP
+    //EnterCriticalSection(&CatalogLock);
+	CP
     InsertTailList(&CatalogListHead, &Provider->ListEntry);
-    LeaveCriticalSection(&CatalogLock);
+	CP
+    //LeaveCriticalSection(&CatalogLock);
+	CP
 
     return Provider;
 }
@@ -41,22 +92,27 @@ INT DestroyCatalogEntry(
 {
     INT Status;
 
-    EnterCriticalSection(&CatalogLock);
+    WS_DbgPrint(MAX_TRACE, ("Provider (0x%X).\n", Provider));
+
+CP
+    //EnterCriticalSection(&CatalogLock);
     RemoveEntryList(&Provider->ListEntry);
-    LeaveCriticalSection(&CatalogLock);
-
+    //LeaveCriticalSection(&CatalogLock);
+CP
     HeapFree(GlobalHeap, 0, Provider->Mapping);
-
-    if (Provider->hModule != (HMODULE)INVALID_HANDLE_VALUE) {
+CP
+    if (Provider->hModule) {
+		CP
         Status = UnloadProvider(Provider);
+		CP
     } else {
         Status = NO_ERROR;
     }
-
-    DeleteCriticalSection(&Provider->Lock);
+CP
+    //DeleteCriticalSection(&Provider->Lock);
 
     HeapFree(GlobalHeap, 0, Provider);
-
+CP
     return Status;
 }
 
@@ -68,7 +124,9 @@ PCATALOG_ENTRY LocateProvider(
     PCATALOG_ENTRY Provider;
     UINT i;
 
-    EnterCriticalSection(&CatalogLock);
+	WS_DbgPrint(MAX_TRACE, ("lpProtocolInfo (0x%X).\n", lpProtocolInfo));
+
+    //EnterCriticalSection(&CatalogLock);
     CurrentEntry = CatalogListHead.Flink;
     while (CurrentEntry != &CatalogListHead) {
 	    Provider = CONTAINING_RECORD(CurrentEntry,
@@ -80,14 +138,50 @@ PCATALOG_ENTRY LocateProvider(
                 (lpProtocolInfo->iSocketType    == Provider->Mapping->Mapping[i].SocketType) &&
                 ((lpProtocolInfo->iProtocol     == Provider->Mapping->Mapping[i].Protocol) ||
                 (lpProtocolInfo->iSocketType    == SOCK_RAW))) {
-                LeaveCriticalSection(&CatalogLock);
+                //LeaveCriticalSection(&CatalogLock);
+				WS_DbgPrint(MID_TRACE, ("Returning provider at (0x%X).\n", Provider));
                 return Provider;
             }
         }
 
         CurrentEntry = CurrentEntry->Flink;
     }
-    LeaveCriticalSection(&CatalogLock);
+    //LeaveCriticalSection(&CatalogLock);
+
+	WS_DbgPrint(MID_TRACE, ("Provider was not found.\n"));
+
+    return NULL;
+}
+
+
+PCATALOG_ENTRY LocateProviderById(
+    DWORD CatalogEntryId)
+{
+    PLIST_ENTRY CurrentEntry;
+    PCATALOG_ENTRY Provider;
+    UINT i;
+
+	WS_DbgPrint(MAX_TRACE, ("CatalogEntryId (%d).\n", CatalogEntryId));
+
+    //EnterCriticalSection(&CatalogLock);
+    CurrentEntry = CatalogListHead.Flink;
+    while (CurrentEntry != &CatalogListHead) {
+	    Provider = CONTAINING_RECORD(CurrentEntry,
+                                     CATALOG_ENTRY,
+                                     ListEntry);
+
+        if (Provider->ProtocolInfo.dwCatalogEntryId == CatalogEntryId) {
+            //LeaveCriticalSection(&CatalogLock);
+			WS_DbgPrint(MID_TRACE, ("Returning provider at (0x%X)  Name (%s).\n",
+                Provider, Provider->LibraryName));
+            return Provider;
+        }
+
+        CurrentEntry = CurrentEntry->Flink;
+    }
+    //LeaveCriticalSection(&CatalogLock);
+
+	WS_DbgPrint(MID_TRACE, ("Provider was not found.\n"));
 
     return NULL;
 }
@@ -97,22 +191,30 @@ INT LoadProvider(
     PCATALOG_ENTRY Provider,
     LPWSAPROTOCOL_INFOW lpProtocolInfo)
 {
-    INT Status = NO_ERROR;
+    INT Status;
 
-    WS_DbgPrint(MIN_TRACE, ("Loading provider...\n"));
+    WS_DbgPrint(MAX_TRACE, ("Loading provider at (0x%X)  Name (%S).\n",
+        Provider, Provider->LibraryName));
 
-    if (Provider->hModule == (HMODULE)INVALID_HANDLE_VALUE) {
+    if (!Provider->hModule) {
+        CP
         /* DLL is not loaded so load it now */
         Provider->hModule = LoadLibrary(Provider->LibraryName);
-        if (Provider->hModule != (HMODULE)INVALID_HANDLE_VALUE) {
+
+        CP
+        if (Provider->hModule) {
+            CP
             Provider->WSPStartup = (LPWSPSTARTUP)GetProcAddress(Provider->hModule,
                                                                 "WSPStartup");
+            CP
             if (Provider->WSPStartup) {
-                Status = WSPStartup(MAKEWORD(2, 2),
-                                    &Provider->WSPData,
-                                    lpProtocolInfo,
-                                    UpcallTable,
-                                    &Provider->ProcTable);
+				WS_DbgPrint(MAX_TRACE, ("Calling WSPStartup at (0x%X).\n", Provider->WSPStartup));
+                Status = Provider->WSPStartup(MAKEWORD(2, 2),
+                    &Provider->WSPData,
+                    lpProtocolInfo,
+                    UpcallTable,
+                    &Provider->ProcTable);
+                CP
             } else
                 Status = ERROR_BAD_PROVIDER;
         } else
@@ -120,7 +222,7 @@ INT LoadProvider(
     } else
         Status = NO_ERROR;
 
-    WS_DbgPrint(MIN_TRACE, ("Status %d\n", Status));
+    WS_DbgPrint(MAX_TRACE, ("Status (%d).\n", Status));
 
     return Status;
 }
@@ -131,14 +233,22 @@ INT UnloadProvider(
 {
     INT Status = NO_ERROR;
 
-    if (Provider->hModule != (HMODULE)INVALID_HANDLE_VALUE) {
+    WS_DbgPrint(MAX_TRACE, ("Unloading provider at (0x%X)\n", Provider));
+
+    if (Provider->hModule) {
+        WS_DbgPrint(MAX_TRACE, ("Calling WSPCleanup at (0x%X).\n",
+            Provider->ProcTable.lpWSPCleanup));
         Provider->ProcTable.lpWSPCleanup(&Status);
 
-        if (!FreeLibrary(Provider->hModule))
+        if (!FreeLibrary(Provider->hModule)) {
+            WS_DbgPrint(MIN_TRACE, ("Could not free library.\n"));
             Status = GetLastError();
+        }
 
         Provider->hModule = (HMODULE)INVALID_HANDLE_VALUE;
     }
+
+    WS_DbgPrint(MAX_TRACE, ("Status (%d).\n", Status));
 
     return Status;
 }
@@ -148,25 +258,46 @@ VOID CreateCatalog(VOID)
 {
     PCATALOG_ENTRY Provider;
 
-    InitializeCriticalSection(&CatalogLock);
+	CP
+
+	// FIXME: Crash
+    //InitializeCriticalSection(&CatalogLock);
+
+	CP
 
     InitializeListHead(&CatalogListHead);
+
+	CP
 
     /* FIXME: Read service provider catalog from registry */
 #if 1
     Provider = CreateCatalogEntry(L"msafd.dll");
-    if (!Provider)
+    if (!Provider) {
+		WS_DbgPrint(MIN_TRACE, ("Could not create catalog entry.\n"));
         return;
+	}
+
+	CP
+    /* Assume one Service Provider with id 1 */
+    Provider->ProtocolInfo.dwCatalogEntryId = 1;
+
+	CP
 
     Provider->Mapping = HeapAlloc(GlobalHeap, 0, sizeof(WINSOCK_MAPPING) + 3 * sizeof(DWORD));
-    if (!Provider->Mapping)
+    if (!Provider->Mapping) {
+		WS_DbgPrint(MIN_TRACE, ("Insufficient memory.\n"));
         return;
+	}
+
+	CP
 
     Provider->Mapping->Rows    = 1;
     Provider->Mapping->Columns = 3;
     Provider->Mapping->Mapping[0].AddressFamily = AF_INET;
     Provider->Mapping->Mapping[0].SocketType    = SOCK_RAW;
     Provider->Mapping->Mapping[0].Protocol      = 0;
+
+	CP
 #endif
 }
 
@@ -174,20 +305,19 @@ VOID CreateCatalog(VOID)
 VOID DestroyCatalog(VOID)
 {
     PLIST_ENTRY CurrentEntry;
+	PLIST_ENTRY NextEntry;
     PCATALOG_ENTRY Provider;
 
     CurrentEntry = CatalogListHead.Flink;
     while (CurrentEntry != &CatalogListHead) {
+		NextEntry = CurrentEntry->Flink;
 	    Provider = CONTAINING_RECORD(CurrentEntry,
                                      CATALOG_ENTRY,
                                      ListEntry);
-
         DestroyCatalogEntry(Provider);
-
-        CurrentEntry = CurrentEntry->Flink;
+        CurrentEntry = NextEntry;
     }
-
-    DeleteCriticalSection(&CatalogLock);
+    //DeleteCriticalSection(&CatalogLock);
 }
 
 /* EOF */

@@ -26,6 +26,7 @@ extern WSPUPCALLTABLE UpcallTable;
 typedef struct _WINSOCK_THREAD_BLOCK {
     INT LastErrorValue;     /* Error value from last function that failed */
     BOOL Initialized;       /* TRUE if WSAStartup() has been successfully called */
+    CHAR Intoa[16];         /* Buffer for inet_ntoa() */
 } WINSOCK_THREAD_BLOCK, *PWINSOCK_THREAD_BLOCK;
 
 

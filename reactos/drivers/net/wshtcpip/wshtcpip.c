@@ -12,7 +12,7 @@
 #ifdef DBG
 
 /* See debug.h for debug/trace constants */
-DWORD DebugTraceLevel = MIN_TRACE;
+DWORD DebugTraceLevel = MAX_TRACE;
 
 #endif /* DBG */
 
@@ -22,11 +22,10 @@ VOID STDCALL KeBugCheck (ULONG	BugCheckCode) {}
 
 BOOL
 EXPORT
-DllMain(PVOID hInstDll,
+DllMain(HANDLE hInstDll,
         ULONG dwReason,
         PVOID Reserved)
 {
-    OutputDebugString(_T("Hello from wshtcpip.dll\n"));
     WSH_DbgPrint(MIN_TRACE, ("DllMain of wshtcpip.dll\n"));
 
     switch (dwReason) {
@@ -288,6 +287,8 @@ WSHOpenSocket2(
     PSOCKET_CONTEXT Context;
     UNICODE_STRING String;
     NTSTATUS Status;
+
+    WSH_DbgPrint(MAX_TRACE, ("\n"));
 
     /* FIXME: Raw IP only. Support UDP and TCP */
     ASSERT(*SocketType == SOCK_RAW);

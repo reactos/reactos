@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS WinSock 2 DLL
+ * PROJECT:     ReactOS Ancillary Function Driver DLL
  * FILE:        include/debug.h
  * PURPOSE:     Debugging support macros
  * DEFINES:     DBG     - Enable debug output
@@ -21,7 +21,7 @@
 
 extern DWORD DebugTraceLevel;
 
-#define WS_DbgPrint(_t_, _x_) \
+#define AFD_DbgPrint(_t_, _x_) \
     if (((DebugTraceLevel & NORMAL_MASK) >= _t_) || \
         ((DebugTraceLevel & _t_) > NORMAL_MASK)) { \
         DbgPrint("(%hS:%d)(%hS) ", __FILE__, __LINE__, __FUNCTION__); \
@@ -35,14 +35,14 @@ extern DWORD DebugTraceLevel;
 #ifdef NASSERT
 #define ASSERT(x)
 #else /* NASSERT */
-#define ASSERT(x) if (!(x)) { WS_DbgPrint(MIN_TRACE, ("Assertion "#x" failed at %s:%d\n", __FILE__, __LINE__)); KeBugCheck(0); }
+#define ASSERT(x) if (!(x)) { AFD_DbgPrint(MIN_TRACE, ("Assertion "#x" failed at %s:%d\n", __FILE__, __LINE__)); KeBugCheck(0); }
 #endif /* NASSERT */
 
 #define ASSERT_IRQL(x) ASSERT(KeGetCurrentIrql() <= (x))
 
 #else /* DBG */
 
-#define WS_DbgPrint(_t_, _x_)
+#define AFD_DbgPrint(_t_, _x_)
 
 #define ASSERT_IRQL(x)
 #define ASSERT(x)
@@ -55,10 +55,10 @@ extern DWORD DebugTraceLevel;
 
 
 #define UNIMPLEMENTED \
-    WS_DbgPrint(MIN_TRACE, ("is unimplemented, please try again later.\n"));
+    AFD_DbgPrint(MIN_TRACE, ("is unimplemented, please try again later.\n"));
 
 #define CHECKPOINT \
-    WS_DbgPrint(MIN_TRACE, ("\n"));
+    AFD_DbgPrint(MIN_TRACE, ("\n"));
 
 #define CP CHECKPOINT
 

@@ -402,9 +402,19 @@ EXPORT
 inet_ntoa(
     IN  IN_ADDR in)
 {
-    UNIMPLEMENTED
+    CHAR b[10];
+    PCHAR p;
 
-    return (CHAR FAR*)NULL;
+    p = ((PWINSOCK_THREAD_BLOCK)NtCurrentTeb()->WinSockData)->Intoa;
+    _itoa(in.S_un.S_addr >> 24, b, 10);
+    strcpy(p, b);
+    _itoa(in.S_un.S_addr >> 16, b, 10);
+    strcat(p, b);
+    _itoa(in.S_un.S_addr >> 8, b, 10);
+    strcat(p, b);
+    _itoa(in.S_un.S_addr & 0xFF, b, 10);
+    strcat(p, b);
+    return (CHAR FAR*)p;
 }
 
 

@@ -35,16 +35,6 @@ bind(
 
 INT
 EXPORT
-closesocket(
-    IN  SOCKET s)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
-INT
-EXPORT
 connect(
     IN  SOCKET s,
     IN  CONST LPSOCKADDR name,
@@ -150,76 +140,6 @@ USHORT
 EXPORT
 ntohs(
     IN  USHORT netshort)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
-INT
-EXPORT
-recv(
-    IN  SOCKET s,
-    OUT CHAR FAR* buf,
-    IN  INT len,
-    IN  INT flags)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
-INT
-EXPORT
-recvfrom(
-    IN      SOCKET s,
-    OUT     CHAR FAR* buf,
-    IN      INT len,
-    IN      INT flags,
-    OUT     LPSOCKADDR from,
-    IN OUT  INT FAR* fromlen)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
-INT
-EXPORT
-select(
-    IN      INT nfds, 
-    IN OUT  LPFD_SET readfds, 
-    IN OUT  LPFD_SET writefds, 
-    IN OUT  LPFD_SET exceptfds, 
-    IN      CONST LPTIMEVAL timeout)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
-INT
-EXPORT
-send( 
-    IN  SOCKET s, 
-    IN  CONST CHAR FAR* buf, 
-    IN  INT len, 
-    IN  INT flags)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
-INT
-EXPORT
-sendto(
-    IN  SOCKET s,
-    IN  CONST CHAR FAR* buf,
-    IN  INT len,
-    IN  INT flags,
-    IN  CONST LPSOCKADDR to, 
-    IN  INT tolen)
 {
     UNIMPLEMENTED
 
@@ -499,96 +419,6 @@ WSANtohs(
     IN  SOCKET s,
     IN  USHORT netshort,
     OUT USHORT FAR* lphostshort)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
-INT
-EXPORT
-WSARecv(
-    IN      SOCKET s,
-    IN OUT  LPWSABUF lpBuffers,
-    IN      DWORD dwBufferCount,
-    OUT     LPDWORD lpNumberOfBytesRecvd,
-    IN OUT  LPDWORD lpFlags,
-    IN      LPWSAOVERLAPPED lpOverlapped,
-    IN      LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
-INT
-EXPORT
-WSARecvDisconnect(
-    IN  SOCKET s,
-    OUT LPWSABUF lpInboundDisconnectData)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
-INT
-EXPORT
-WSARecvFrom(
-    IN      SOCKET s,
-    IN OUT  LPWSABUF lpBuffers,
-    IN      DWORD dwBufferCount,
-    OUT     LPDWORD lpNumberOfBytesRecvd,
-    IN OUT  LPDWORD lpFlags,
-    OUT	    LPSOCKADDR lpFrom,
-    IN OUT  LPINT lpFromlen,
-    IN      LPWSAOVERLAPPED lpOverlapped,
-    IN      LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
-INT
-EXPORT
-WSASend(
-    IN  SOCKET s,
-    IN  LPWSABUF lpBuffers,
-    IN  DWORD dwBufferCount,
-    OUT LPDWORD lpNumberOfBytesSent,
-    IN  DWORD dwFlags,
-    IN  LPWSAOVERLAPPED lpOverlapped,
-    IN  LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
-INT
-EXPORT
-WSASendDisconnect(
-    IN  SOCKET s,
-    IN  LPWSABUF lpOutboundDisconnectData)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
-INT
-EXPORT
-WSASendTo(
-    IN  SOCKET s,
-    IN  LPWSABUF lpBuffers,
-    IN  DWORD dwBufferCount,
-    OUT LPDWORD lpNumberOfBytesSent,
-    IN  DWORD dwFlags,
-    IN  CONST LPSOCKADDR lpTo,
-    IN  INT iToLen,
-    IN  LPWSAOVERLAPPED lpOverlapped,
-    IN  LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
 {
     UNIMPLEMENTED
 

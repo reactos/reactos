@@ -8,6 +8,7 @@
  *   CSH 01/09-2000 Created
  */
 #include <ws2_32.h>
+#include <catalog.h>
 
 BOOL
 WSPAPI
@@ -78,7 +79,6 @@ WPUFDIsSet(
     UNIMPLEMENTED
 
     return (SOCKET)0;
-
 }
 
 
@@ -103,9 +103,25 @@ WPUModifyIFSHandle(
     IN  SOCKET ProposedHandle,
     OUT LPINT lpErrno)
 {
-    UNIMPLEMENTED
+    PCATALOG_ENTRY Provider;
+    SOCKET Socket;
 
-    return (SOCKET)0;
+    WS_DbgPrint(MAX_TRACE, ("dwCatalogEntryId (%d)  ProposedHandle (0x%X).\n",
+        dwCatalogEntryId, ProposedHandle));
+
+    Provider = LocateProviderById(dwCatalogEntryId);
+    if (!Provider) {
+        WS_DbgPrint(MIN_TRACE, ("Provider with catalog entry id (%d) was not found.\n",
+            dwCatalogEntryId));
+        *lpErrno = WSAEINVAL;
+        return INVALID_SOCKET;
+    }
+
+    Socket = (SOCKET)CreateProviderHandle(ProposedHandle, Provider);
+
+    *lpErrno = NO_ERROR;
+
+    return Socket;
 }
 
 
