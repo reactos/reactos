@@ -1,10 +1,7 @@
-#include <ddk/ntddk.h>
-#include <stdarg.h>
-#include <string.h>
+#include <stdio.h>
 
-
-void main()
+int main(int argc, char* argv[])
 {  
-   NtDisplayString("Hello world\n");
-   ExitProcess(0);
+   printf("Hello world\n");
+   return(0);
 }

@@ -1,4 +1,4 @@
-all: ntoskrnl.exe utils/pe2bin/pe2bin$(EXE_POSTFIX)
+all: objects ntoskrnl.exe
 
 #
 # Defines $(HAL_OBJECTS)
@@ -45,13 +45,14 @@ SE_OBJECTS = se/semgr.o
 
 CM_OBJECTS = cm/registry.o
 
-TST_OBJECTS = tst/test.o
-
 DBG_OBJECTS = dbg/brkpoint.o dbg/errinfo.o
 
 LDR_OBJECTS = ldr/loader.o
 
 CC_OBJECTS = cc/cacheman.o cc/block.o
+
+objects: ../ntoskrnl/objects
+	mkdir objects
 
 objects/hal.o: $(HAL_OBJECTS)
 	$(LD) -r $(HAL_OBJECTS) -o objects/hal.o
@@ -83,9 +84,6 @@ objects/se.o: $(SE_OBJECTS)
 objects/cm.o: $(CM_OBJECTS)
 	$(LD) -r $(CM_OBJECTS) -o objects/cm.o
 
-objects/tst.o: $(TST_OBJECTS)
-	$(LD) -r $(TST_OBJECTS) -o objects/tst.o
-
 objects/dbg.o: $(DBG_OBJECTS)
 	$(LD) -r $(DBG_OBJECTS) -o objects/dbg.o
 
@@ -100,12 +98,9 @@ objects/cc.o: $(CC_OBJECTS)
 
 OBJECTS = objects/hal.o objects/ke.o objects/rtl.o objects/mm.o \
           objects/io.o objects/ob.o objects/ps.o objects/ex.o \
-	  objects/se.o objects/cm.o objects/tst.o objects/dbg.o\
+	  objects/se.o objects/cm.o objects/dbg.o\
 	  objects/nt.o objects/cc.o objects/ldr.o
 	  
-utils/pe2bin/pe2bin$(EXE_POSTFIX): utils/pe2bin/pe2bin.c
-	$(NATIVE_CC) -I../include -g utils/pe2bin/pe2bin.c -o utils/pe2bin/pe2bin$(EXE_POSTFIX)
-
 utils/export/export$(EXE_POSTFIX): utils/export/export.c
 	$(NATIVE_CC) -g utils/export/export.c -o utils/export/export$(EXE_POSTFIX)
 

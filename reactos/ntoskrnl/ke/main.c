@@ -174,15 +174,8 @@ asmlinkage void _main(boot_param* _bp)
     */
    LdrLoadAutoConfigDrivers();
    
-#ifdef KRNL_TEST
-   /*
-    * Test various features of the kernel
-    */
-   TstBegin();
-#endif
-
   /*
-   *  Launch initial thread
+   *  Launch initial process
    */
   LdrLoadInitialProcess();
 

@@ -17,14 +17,14 @@
 #include <internal/string.h>
 #include <wchar.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <ntdll/ntdll.h>
 
-VOID WINAPI __RtlInitHeap(LPVOID base, ULONG minsize, ULONG maxsize);
+PVOID WINAPI __RtlInitHeap(LPVOID base, ULONG minsize, ULONG maxsize);
 
 /* MACROS ********************************************************************/
 
-#define RVA(m, b) ((ULONG)b + m->BaseAddress)
+#define RVA(m, b) ((ULONG)b + m)
 
 /* TYPEDEFS ******************************************************************/
 
@@ -41,6 +41,8 @@ typedef struct _DLL
 /* GLOBALS *******************************************************************/
 
 static DLL DllListHead;
+
+#define HEAP_BASE (0xa0000000)
 
 /* FORWARD DECLARATIONS ******************************************************/
 
@@ -84,11 +86,125 @@ static NTSTATUS LdrMapSections(PVOID ImageBase, HANDLE SectionHandle,
 
 static NTSTATUS LdrLoadDll(PDLL* Base, PCHAR Name)
 {
+   char fqname[255] = "\\??\\C:\\reactos\\system\\";
+   ANSI_STRING AnsiString;
+   UNICODE_STRING UnicodeString;
+   OBJECT_ATTRIBUTES FileObjectAttributes;
+   char BlockBuffer[1024];
+   PIMAGE_DOS_HEADER DosHeader;
+   NTSTATUS Status;
+   PIMAGE_NT_HEADERS NTHeaders;
+   PEPFUNC DllStartupAddr;
+   ULONG ImageBase, ImageSize, InitialViewSize;
+   HANDLE FileHandle, SectionHandle;
+   PDLL DllDesc;
+   
+   DPRINT("LdrLoadDll(Base %x, Name %s)\n",Base,Name);
+   
+   strcat(fqname, Name);
+   
+   DPRINT("fqname %s\n",fqname);
+   
+   RtlInitAnsiString(&AnsiString,fqname);
+   RtlAnsiStringToUnicodeString(&UnicodeString,&AnsiString,TRUE);
+   
+   InitializeObjectAttributes(&FileObjectAttributes,
+			      &UnicodeString,
+			      0,
+			      NULL,
+			      NULL);
+   DPRINT("Opening dll\n");
+   Status = ZwOpenFile(&FileHandle, FILE_ALL_ACCESS, &FileObjectAttributes, 
+		       NULL, 0, 0);
+   if (!NT_SUCCESS(Status))
+     {
+	DPRINT("Dll open failed ");
+	return Status;
+     }
+   Status = ZwReadFile(FileHandle, 0, 0, 0, 0, BlockBuffer, 1024, 0, 0);
+   if (!NT_SUCCESS(Status))
+     {
+	DPRINT("Dll header read failed ");
+	ZwClose(FileHandle);
+	return Status;
+    }    
+   
+   DosHeader = (PIMAGE_DOS_HEADER) BlockBuffer;
+   if (DosHeader->e_magic != IMAGE_DOS_MAGIC || 
+       DosHeader->e_lfanew == 0L ||
+       *(PULONG)((PUCHAR)BlockBuffer + DosHeader->e_lfanew) != IMAGE_PE_MAGIC)
+     {
+	DPRINT("NTDLL format invalid\n");
+	ZwClose(FileHandle);
+	
+	return STATUS_UNSUCCESSFUL;
+     }
+   NTHeaders = (PIMAGE_NT_HEADERS)(BlockBuffer + DosHeader->e_lfanew);
+   ImageBase = NTHeaders->OptionalHeader.ImageBase;
+   ImageSize = NTHeaders->OptionalHeader.SizeOfImage;
+
+   DPRINT("ImageBase %x\n",ImageBase);
+   DllStartupAddr = ImageBase + NTHeaders->OptionalHeader.AddressOfEntryPoint;
+   
+   /* Create a section for NTDLL */
+   Status = ZwCreateSection(&SectionHandle,
+			    SECTION_ALL_ACCESS,
+			    NULL,
+			    NULL,
+			    PAGE_READWRITE,
+			    MEM_COMMIT,
+			    FileHandle);
+   if (!NT_SUCCESS(Status))
+     {
+	DPRINT("NTDLL create section failed ");
+	ZwClose(FileHandle);       
+	return Status;
+     }
+   
+   /*  Map the NTDLL into the process  */
+   InitialViewSize = DosHeader->e_lfanew + sizeof(IMAGE_NT_HEADERS) 
+     + sizeof(IMAGE_SECTION_HEADER) * NTHeaders->FileHeader.NumberOfSections;
+   Status = ZwMapViewOfSection(SectionHandle,
+			       NtCurrentProcess(),
+			       (PVOID *)&ImageBase,
+			       0,
+			       InitialViewSize,
+			       NULL,
+			       &InitialViewSize,
+			       0,
+			       MEM_COMMIT,
+                              PAGE_READWRITE);
+   if (!NT_SUCCESS(Status))
+     {
+	DPRINT("NTDLL map view of secion failed ");
+	ZwClose(FileHandle);
+	
+	return Status;
+     }
+   ZwClose(FileHandle);
+   
+   DllDesc = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(DLL));
+   DllDesc->Headers = NTHeaders;
+   DllDesc->BaseAddress = ImageBase;
+   DllDesc->Next = DllListHead.Next;
+   DllDesc->Prev = &DllListHead;
+   DllListHead.Next->Prev = DllDesc;
+   DllListHead.Next = DllDesc;
+   
+   LdrPEStartup(ImageBase, SectionHandle);
+   
+   *Base = DllDesc;
+   
+   return(STATUS_SUCCESS);
+}
+
+static NTSTATUS LdrFindDll(PDLL* Base, PCHAR Name)
+{
    PIMAGE_EXPORT_DIRECTORY ExportDir;
    DLL* current;
    PIMAGE_OPTIONAL_HEADER OptionalHeader;
    
-   DPRINT("LdrLoadDll(Name %s)\n",Name);
+   DPRINT("LdrFindDll(Name %s)\n",Name);
    
    current = &DllListHead;
    do
@@ -98,8 +214,6 @@ static NTSTATUS LdrLoadDll(PDLL* Base, PCHAR Name)
                      IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress;
 	ExportDir = ((ULONG)ExportDir + (ULONG)current->BaseAddress);
 	
-	DPRINT("ExportDir %x\n",ExportDir);
-	DPRINT("Scanning %x\n",ExportDir->Name);
 	DPRINT("Scanning %s\n",ExportDir->Name + current->BaseAddress);
 	if (strcmp(ExportDir->Name + current->BaseAddress, Name) == 0)
 	  {
@@ -110,10 +224,10 @@ static NTSTATUS LdrLoadDll(PDLL* Base, PCHAR Name)
 	current = current->Next;
      } while (current != &DllListHead);
    
-   return(STATUS_UNSUCCESSFUL);
+   DPRINT("Failed to find dll %s\n",Name);
+   
+   return(LdrLoadDll(Base, Name));
 }
-
-#define HEAP_BASE (0xa0000000)
 
 /*   LdrStartup
  * FUNCTION:
@@ -125,7 +239,6 @@ VOID LdrStartup(HANDLE SectionHandle, DWORD ImageBase)
 {
    PEPFUNC EntryPoint;
    PIMAGE_DOS_HEADER PEDosHeader;
-   char buffer[512];
    NTSTATUS Status;
    PIMAGE_NT_HEADERS NTHeaders;
    
@@ -161,12 +274,26 @@ VOID LdrStartup(HANDLE SectionHandle, DWORD ImageBase)
 	ZwTerminateProcess(NULL,STATUS_UNSUCCESSFUL);
      }
    
-   DPRINT("Transferring control to image\n");
+   DPRINT("Transferring control to image at %x\n",EntryPoint);
    Status = EntryPoint();
    ZwTerminateProcess(NtCurrentProcess(),Status);
 }
 
-static PVOID LdrGetExport(PDLL Module, PUCHAR SymbolName)
+static PVOID LdrGetExportByOrdinal(PDLL Module, ULONG Ordinal)
+{
+   PIMAGE_EXPORT_DIRECTORY ExportDir;
+   USHORT* ExOrdinals;
+
+   ExportDir = (Module->BaseAddress + 
+		(Module->Headers->OptionalHeader.
+		 DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress));
+   
+   ExOrdinals = (USHORT*)RVA(Module->BaseAddress, 
+			     ExportDir->AddressOfNameOrdinals);
+   return(ExOrdinals[Ordinal - ExportDir->Base]);
+}
+
+static PVOID LdrGetExportByName(PDLL Module, PUCHAR SymbolName)
 {
    PIMAGE_EXPORT_DIRECTORY ExportDir;
    PDWORD* ExFunctions;
@@ -184,196 +311,200 @@ static PVOID LdrGetExport(PDLL Module, PUCHAR SymbolName)
 		 DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress));
    
    /*  Get header pointers  */
-   ExNames = (PDWORD*)RVA(Module, ExportDir->AddressOfNames);
-   ExOrdinals = (USHORT*)RVA(Module, ExportDir->AddressOfNameOrdinals);
-   ExFunctions = (PDWORD*)RVA(Module, ExportDir->AddressOfFunctions);
+   ExNames = (PDWORD*)RVA(Module->BaseAddress, ExportDir->AddressOfNames);
+   ExOrdinals = (USHORT*)RVA(Module->BaseAddress, 
+			     ExportDir->AddressOfNameOrdinals);
+   ExFunctions = (PDWORD*)RVA(Module->BaseAddress, 
+			      ExportDir->AddressOfFunctions);
    for (i=0; i<ExportDir->NumberOfFunctions; i++)
      {
-	ExName = RVA(Module, ExNames[i]);
+	ExName = RVA(Module->BaseAddress, ExNames[i]);
 	if (strcmp(ExName,SymbolName) == 0)
 	  {
 	     Ordinal = ExOrdinals[i];
-	     return(RVA(Module, ExFunctions[Ordinal]));
+	     return(RVA(Module->BaseAddress, ExFunctions[Ordinal]));
 	  }
      }
    return(NULL);
 }
 
-static PEPFUNC LdrPEStartup(DWORD ImageBase, HANDLE SectionHandle)
+static NTSTATUS LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders,
+				      DWORD ImageBase)
 {
-  int i;
-  PVOID SectionBase;
-  NTSTATUS Status;
-  PEPFUNC EntryPoint;
-  PIMAGE_DOS_HEADER DosHeader;
-  PIMAGE_NT_HEADERS NTHeaders;
-  PIMAGE_SECTION_HEADER SectionList;
-   char buffer[512];
-   PDLL Module;
+   USHORT NumberOfEntries;
+   PUSHORT pValue16;
+   ULONG RelocationRVA;
+   ULONG Delta32, Offset;
+   PULONG pValue32;
+   PRELOCATION_DIRECTORY RelocationDir;
+   PRELOCATION_ENTRY RelocationBlock;
+   int i;
    
-  DosHeader = (PIMAGE_DOS_HEADER) ImageBase;
-  NTHeaders = (PIMAGE_NT_HEADERS)(ImageBase + DosHeader->e_lfanew);
-  SectionList = (PIMAGE_SECTION_HEADER) (ImageBase + DosHeader->e_lfanew + 
-    sizeof(ULONG) + sizeof(IMAGE_FILE_HEADER) + sizeof(IMAGE_OPTIONAL_HEADER));
-      
-  /*  Initialize Image sections  */
-   LdrMapSections(ImageBase, SectionHandle, NTHeaders);
-   
-  /* FIXME: if actual load address is different from ImageBase, then reloc  */
-  if (ImageBase != (DWORD) NTHeaders->OptionalHeader.ImageBase)
-    {
-      USHORT NumberOfEntries;
-      PUSHORT pValue16;
-      ULONG RelocationRVA;
-      ULONG Delta32, Offset;
-      PULONG pValue32;
-      PRELOCATION_DIRECTORY RelocationDir;
-      PRELOCATION_ENTRY RelocationBlock;
-
-      RelocationRVA = NTHeaders->OptionalHeader.DataDirectory[
-        IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress;
-      if (RelocationRVA)
-        {
-          RelocationDir = (PRELOCATION_DIRECTORY)
-            ((PCHAR)ImageBase + RelocationRVA);
-          while (RelocationDir->SizeOfBlock)
-            {
-              Delta32 = (unsigned long)(ImageBase - 
-                                        NTHeaders->OptionalHeader.ImageBase);
-              RelocationBlock = (PRELOCATION_ENTRY) 
-                (RelocationRVA + ImageBase + sizeof(RELOCATION_DIRECTORY));
-              NumberOfEntries = 
-                (RelocationDir->SizeOfBlock - sizeof(RELOCATION_DIRECTORY)) / 
-                sizeof(RELOCATION_ENTRY);
-              for (i = 0; i < NumberOfEntries; i++)
-                {
+   RelocationRVA = NTHeaders->OptionalHeader.DataDirectory[
+                      IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress;
+   if (RelocationRVA)
+     {
+	RelocationDir = (PRELOCATION_DIRECTORY)((PCHAR)ImageBase + 
+						RelocationRVA);
+	while (RelocationDir->SizeOfBlock)
+	  {
+	     Delta32 = (unsigned long)(ImageBase - 
+				       NTHeaders->OptionalHeader.ImageBase);
+	     RelocationBlock = (PRELOCATION_ENTRY) 
+	       (RelocationRVA + ImageBase + sizeof(RELOCATION_DIRECTORY));
+	     NumberOfEntries = 
+	       (RelocationDir->SizeOfBlock - sizeof(RELOCATION_DIRECTORY)) / 
+	       sizeof(RELOCATION_ENTRY);
+	     for (i = 0; i < NumberOfEntries; i++)
+	       {
                   Offset = (RelocationBlock[i].TypeOffset & 0xfff) + 
                     RelocationDir->VirtualAddress;
                   switch (RelocationBlock[i].TypeOffset >> 12)
                     {
                       case TYPE_RELOC_ABSOLUTE:
                         break;
-
-                      case TYPE_RELOC_HIGH:
-                        pValue16 = (PUSHORT) (ImageBase + Offset);
-                        *pValue16 += Delta32 >> 16;
-                        break;
-
-                      case TYPE_RELOC_LOW:
-                        pValue16 = (PUSHORT)(ImageBase + Offset);
-                        *pValue16 += Delta32 & 0xffff;
-                        break;
-
-                      case TYPE_RELOC_HIGHLOW:
-                        pValue32 = (PULONG) (ImageBase + Offset);
-                        *pValue32 += Delta32;
-                        break;
-
+		       
+		     case TYPE_RELOC_HIGH:
+		       pValue16 = (PUSHORT) (ImageBase + Offset);
+		       *pValue16 += Delta32 >> 16;
+		       break;
+		       
+		     case TYPE_RELOC_LOW:
+		       pValue16 = (PUSHORT)(ImageBase + Offset);
+		       *pValue16 += Delta32 & 0xffff;
+		       break;
+		       
+		     case TYPE_RELOC_HIGHLOW:
+		       pValue32 = (PULONG) (ImageBase + Offset);
+		       *pValue32 += Delta32;
+		       break;
+		       
                       case TYPE_RELOC_HIGHADJ:
-                        /* FIXME: do the highadjust fixup  */
-                        DPRINT(
-                          "TYPE_RELOC_HIGHADJ fixup not implemented, sorry\n");
-                        return 0;
-                      
+		       /* FIXME: do the highadjust fixup  */
+                        DPRINT("TYPE_RELOC_HIGHADJ fixup not implemented"
+			       ", sorry\n");
+		       return(STATUS_UNSUCCESSFUL);
+		       
                       default:
-                        DPRINT("unexpected fixup type\n");
-                        return 0;
+		       DPRINT("unexpected fixup type\n");
+		       return(STATUS_UNSUCCESSFUL);
                     }
-                }
-              RelocationRVA += RelocationDir->SizeOfBlock;
-              RelocationDir = (PRELOCATION_DIRECTORY)(ImageBase + 
-                                                      RelocationRVA);
-            }
-        }
-    }
+	       }
+	     RelocationRVA += RelocationDir->SizeOfBlock;
+	     RelocationDir = (PRELOCATION_DIRECTORY)(ImageBase + 
+						     RelocationRVA);
+	  }
+     }
+   return(STATUS_SUCCESS);
+}
 
-  /* FIXME: do import fixups/load required libraries  */
-  /*  Resolve Import Library references  */
-  if (NTHeaders->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].
-      VirtualAddress != 0)
-    {
-      PIMAGE_IMPORT_MODULE_DIRECTORY ImportModuleDirectory;
+static NTSTATUS LdrFixupImports(PIMAGE_NT_HEADERS NTHeaders,
+				DWORD ImageBase)
+{
+   PIMAGE_IMPORT_MODULE_DIRECTORY ImportModuleDirectory;
+   ULONG Ordinal;
+   PDLL Module;
+   NTSTATUS Status;
+   
+   /*  Process each import module  */
+   ImportModuleDirectory = (PIMAGE_IMPORT_MODULE_DIRECTORY)
+     (ImageBase + NTHeaders->OptionalHeader.
+      DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress);
+   while (ImportModuleDirectory->dwRVAModuleName)
+     {
+	PVOID *ImportAddressList; 
+	PULONG FunctionNameList;
+	DWORD pName;
+	PWORD pHint;
+	
+	Status = LdrFindDll(&Module,
+			    (PCHAR)(ImageBase +
+				    ImportModuleDirectory->dwRVAModuleName));
+	if (!NT_SUCCESS(Status))
+	  {
+	     return 0;
+	  }    
+	
+	/*  Get the import address list  */
+	ImportAddressList = (PVOID *)
+	  (NTHeaders->OptionalHeader.ImageBase + 
+	   ImportModuleDirectory->dwRVAFunctionAddressList);
+	
+	/*  Get the list of functions to import  */
+	if (ImportModuleDirectory->dwRVAFunctionNameList != 0)
+	  {
+	     FunctionNameList = (PULONG) (ImageBase + 
+					  ImportModuleDirectory->dwRVAFunctionNameList);
+	  }
+	else
+	  {
+	     FunctionNameList = (PULONG) (ImageBase + 
+					  ImportModuleDirectory->dwRVAFunctionAddressList);
+	  }
+	
+	/*  Walk through function list and fixup addresses  */
+	while(*FunctionNameList != 0L)
+	  {
+	     if ((*FunctionNameList) & 0x80000000)
+	       {
+		  Ordinal = (*FunctionNameList) & 0x7fffffff;
+		  *ImportAddressList = LdrGetExportByOrdinal(Module, Ordinal);
+	       }
+	     else 
+	       {
+		  pName = (DWORD)(ImageBase + *FunctionNameList + 2);
+		  pHint = (PWORD)(ImageBase + *FunctionNameList);
+		  		  
+		  *ImportAddressList = LdrGetExportByName(Module,pName);
+		  if ((*ImportAddressList) == NULL)
+		    {
+		       return(STATUS_UNSUCCESSFUL);
+		    }
+	       }
+	     
+	     ImportAddressList++;
+	     FunctionNameList++;
+	  }
+	ImportModuleDirectory++;
+     }
+   return(STATUS_SUCCESS);
+}
 
-      /*  Process each import module  */
-      ImportModuleDirectory = (PIMAGE_IMPORT_MODULE_DIRECTORY)
-        (ImageBase + NTHeaders->OptionalHeader.
-         DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress);
-      while (ImportModuleDirectory->dwRVAModuleName)
-        {
-          DWORD LibraryBase;
-          PIMAGE_DOS_HEADER LibDosHeader;
-          PIMAGE_NT_HEADERS LibNTHeaders;
-          PVOID *ImportAddressList; // was pImpAddr
-          PULONG FunctionNameList;
-          DWORD pName;
-          PWORD pHint;
-
-          Status = LdrLoadDll(&Module,
-                              (PCHAR)(ImageBase +
-                                      ImportModuleDirectory->dwRVAModuleName));
-          if (!NT_SUCCESS(Status))
-            {
-              return 0;
-            }    
-
-          /*  Get the import address list  */
-          ImportAddressList = (PVOID *)
-            (NTHeaders->OptionalHeader.ImageBase + 
-             ImportModuleDirectory->dwRVAFunctionAddressList);
-
-          /*  Get the list of functions to import  */
-          if (ImportModuleDirectory->dwRVAFunctionNameList != 0)
-            {
-              FunctionNameList = (PULONG) (ImageBase + 
-                                ImportModuleDirectory->dwRVAFunctionNameList);
-            }
-          else
-            {
-              FunctionNameList = (PULONG) (ImageBase + 
-                             ImportModuleDirectory->dwRVAFunctionAddressList);
-            }
-
-          /*  Walk through function list and fixup addresses  */
-          while(*FunctionNameList != 0L)
-            {
-              if ((*FunctionNameList) & 0x80000000) // hint
-                {
-//                  *ImportAddressList = LibraryExports[(*FunctionNameList) & 0x7fffffff];
-		   DPRINT("Import by ordinal unimplemented\n");
-		   for(;;);
-                }
-              else // hint-name
-                {
-                  pName = (DWORD)(ImageBase + *FunctionNameList + 2);
-                  pHint = (PWORD)(ImageBase + *FunctionNameList);
-
-                  /* FIXME: verify name  */
-		   
-		   if (strcmp(pName,"vsprintf")==0)
-		     {
-			DPRINT("Fixing up reference to %s at %x\n",
-			       pName,ImportAddressList);
-			DPRINT("pHint %x\n",pHint);
-		     }
-		   
-		   
-		   
-                  *ImportAddressList = LdrGetExport(Module,pName);
-                }
-              /* FIXME: verify value of hint  */
-
-              ImportAddressList++;
-              FunctionNameList++;
-            }
-          ImportModuleDirectory++;
-        }
-    }
-      
-  /* FIXME: locate the entry point for the image  */
-  EntryPoint = NTHeaders->OptionalHeader.ImageBase +
-               NTHeaders->OptionalHeader.AddressOfEntryPoint;
-  
-  return EntryPoint;
+static PEPFUNC LdrPEStartup(DWORD ImageBase, HANDLE SectionHandle)
+{
+   NTSTATUS Status;
+   PEPFUNC EntryPoint;
+   PIMAGE_DOS_HEADER DosHeader;
+   PIMAGE_NT_HEADERS NTHeaders;
+   
+   DosHeader = (PIMAGE_DOS_HEADER) ImageBase;
+   NTHeaders = (PIMAGE_NT_HEADERS)(ImageBase + DosHeader->e_lfanew);
+   
+   /*  Initialize Image sections  */
+   LdrMapSections(ImageBase, SectionHandle, NTHeaders);
+   
+   if (ImageBase != (DWORD) NTHeaders->OptionalHeader.ImageBase)
+     {
+	Status = LdrPerformRelocations(NTHeaders, ImageBase);
+	if (!NT_SUCCESS(Status))
+	  {
+	     return(NULL);
+	  }
+     }
+   
+   if (NTHeaders->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].
+       VirtualAddress != 0)
+     {
+	Status = LdrFixupImports(NTHeaders, ImageBase);
+	if (!NT_SUCCESS(Status))
+	  {
+	     return(NULL);
+	  }
+     }
+   
+   EntryPoint = ImageBase + NTHeaders->OptionalHeader.AddressOfEntryPoint;
+   
+   return(EntryPoint);
 }
 
 

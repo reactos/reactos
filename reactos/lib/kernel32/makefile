@@ -1,4 +1,15 @@
-all: kernel32.a
+
+ifneq ($(HOST),mingw32-windows)
+  ifneq ($(HOST),mingw32-linux)
+    DLLTARGET=kernel32.a
+  else
+    DLLTARGET=kernel32.dll
+  endif
+else
+  DLLTARGET=kernel32.dll
+endif
+
+all: $(DLLTARGET)
 
 SYNCH_OBJECTS = synch/critical.o synch/event.o synch/wait.o
 
@@ -17,7 +28,7 @@ PROCESS_OBJECTS = process/proc.o process/cmdline.o
 
 STRING_OBJECTS = string/lstring.o
 
-INTERNAL_OBJECTS = internal/dprintf.o internal/init.o internal/string.o
+INTERNAL_OBJECTS = internal/dprintf.o internal/string.o
 
 EXCEPT_OBJECTS = except/except.o
 
@@ -25,11 +36,26 @@ EXCEPT_OBJECTS = except/except.o
 OBJECTS = $(MISC_OBJECTS) $(FILE_OBJECTS) $(THREAD_OBJECTS) \
           $(PROCESS_OBJECTS) $(STRING_OBJECTS) $(MEM_OBJECTS) \
 	  $(INTERNAL_OBJECTS) $(SYNCH_OBJECTS) $(EXCEPT_OBJECTS)
-  
 
 kernel32.a: $(OBJECTS)
-	$(AR) rcs kernel32.a $(OBJECTS) 
+	$(AR) csr kernel32.a $(OBJECTS)
 
-dummy:
+kernel32.dll: $(DLLMAIN) $(OBJECTS) kernel32.def
+	$(LD) -r $(OBJECTS) -o kernel32.o
+	$(DLLTOOL) --dllname kernel32.dll --def kernel32.def \
+	           --output-lib kernel32.a
+	$(CC) -specs=k32_specs -mdll -o junk.tmp \
+	      -Wl,--base-file,base.tmp kernel32.o  ../ntdll/ntdll.a
+	- $(RM) junk.tmp
+	$(DLLTOOL) --dllname kernel32.dll --base-file base.tmp \
+	           --output-exp temp.exp --def kernel32.def
+	- $(RM) base.tmp
+	$(CC) -specs=k32_specs -mdll -o kernel32.dll kernel32.o  ../ntdll/ntdll.a\
+	      -Wl,--image-base,0x70000000 \
+	      -Wl,--file-alignment,0x1000 \
+	      -Wl,--section-alignment,0x1000 \
+	      -Wl,temp.exp
+	- $(RM) temp.exp
+	$(NM) --numeric-sort kernel32.dll > kernel32.sym
 
 include ../../rules.mak

@@ -325,6 +325,15 @@ DWORD RtlNtStatusToDosError(NTSTATUS StatusCode);
 
 
 
+BOOL WINAPI RtlDestroyHeap(HANDLE hheap);
+LPVOID STDCALL RtlReAllocHeap(HANDLE hheap, DWORD flags, LPVOID ptr, 
+			      DWORD size);
+HANDLE WINAPI RtlGetProcessHeap(VOID);
+BOOL WINAPI RtlLockHeap(HANDLE hheap);
+BOOL WINAPI RtlUnlockHeap(HANDLE hheap);
+UINT RtlCompactHeap(HANDLE hheap, DWORD flags);
+DWORD WINAPI RtlSizeHeap(HANDLE hheap, DWORD flags, PVOID pmem);
+BOOL WINAPI RtlValidateHeap(HANDLE hheap, DWORD flags, PVOID pmem);
 
 
 #endif /* __DDK_RTL_H */

@@ -420,6 +420,17 @@ ZwReplyWaitSendChannel@12
 ZwSendWaitReplyChannel@16		
 ZwSetContextChannel@4		
 ZwYieldExecution@0
+RtlAllocateHeap@12
+RtlCreateHeap@24
+RtlCompactHeap
+RtlDestroyHeap@4
+RtlFreeHeap@12
+RtlGetProcessHeap@0
+RtlLockHeap@4
+RtlReAllocHeap@16
+RtlSizeHeap@12
+RtlUnlockHeap@4
+RtlValidateHeap@12
 RtlInitAnsiString
 RtlInitUnicodeString
 RtlLargeIntegerDivide
@@ -428,6 +439,7 @@ RtlEnlargedIntegerMultiply
 RtlEnlargedUnsignedMultiply
 RtlExtendedIntegerMultiply
 isalpha
+iswlower
 memcpy
 memset
 strcat
@@ -438,6 +450,7 @@ strncpy
 strlen
 strrchr
 toupper
+towupper
 wcscpy
 wcschr
 wcscat

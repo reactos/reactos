@@ -29,7 +29,7 @@ LOADERS = dos
 #
 # Select the device drivers and filesystems you want
 #
-KERNEL_SERVICES = parallel keyboard blues null mouse serial sound ide test sdisk \
+KERNEL_SERVICES = parallel keyboard blues null mouse serial sound ide \
                   minix vfat ext2
 		  
 APPS = hello shell args
