@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.53 2004/06/23 07:31:22 gvg Exp $
+ * $Id: dib.c,v 1.54 2004/06/28 17:03:35 navaraf Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -1350,27 +1350,6 @@ DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
   return lpRGB;
 }
 
-PPALETTEENTRY STDCALL
-DIBColorTableToPaletteEntries (
-	PPALETTEENTRY palEntries,
-	const RGBQUAD *DIBColorTable,
-	ULONG ColorCount
-	)
-{
-  ULONG i;
-
-  for (i = 0; i < ColorCount; i++)
-    {
-      palEntries->peRed   = DIBColorTable->rgbRed;
-      palEntries->peGreen = DIBColorTable->rgbGreen;
-      palEntries->peBlue  = DIBColorTable->rgbBlue;
-      palEntries++;
-      DIBColorTable++;
-    }
-
-  return palEntries;
-}
-
 HPALETTE FASTCALL
 BuildDIBPalette (PBITMAPINFO bmi, PINT paletteType)
 {
@@ -1407,13 +1386,11 @@ BuildDIBPalette (PBITMAPINFO bmi, PINT paletteType)
 
   if (PAL_INDEXED == *paletteType)
     {
-      palEntries = ExAllocatePoolWithTag(PagedPool, sizeof(PALETTEENTRY)*ColorCount, TAG_COLORMAP);
-      DIBColorTableToPaletteEntries(palEntries, bmi->bmiColors, ColorCount);
+      hPal = PALETTE_AllocPaletteIndexedRGB(ColorCount, (RGBQUAD*)bmi->bmiColors);
     }
-  hPal = PALETTE_AllocPalette( *paletteType, ColorCount, (ULONG*)palEntries, 0, 0, 0 );
-  if (NULL != palEntries)
+  else
     {
-      ExFreePool(palEntries);
+      hPal = PALETTE_AllocPalette( *paletteType, ColorCount, (ULONG*)palEntries, 0, 0, 0 );
     }
 
   return hPal;

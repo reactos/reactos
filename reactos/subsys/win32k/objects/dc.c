@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.139 2004/06/20 00:45:37 navaraf Exp $
+/* $Id: dc.c,v 1.140 2004/06/28 17:03:35 navaraf Exp $
  *
  * DC.C - Device context functions
  *
@@ -1749,9 +1749,8 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
   XLATEOBJ *XlateObj;
   PPALGDI PalGDI;
   DWORD objectType;
-  COLORREF *ColorMap;
   COLORREF MonoColorMap[2];
-  ULONG NumColors, Index;
+  ULONG NumColors;
   HRGN hVisRgn;
   USHORT Mode;
 
@@ -1903,17 +1902,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
           if(pb->dib->dsBmih.biBitCount == 1) { NumColors = 2; } else
           if(pb->dib->dsBmih.biBitCount == 4) { NumColors = 16; } else
           if(pb->dib->dsBmih.biBitCount == 8) { NumColors = 256; }
-
-          ColorMap = ExAllocatePoolWithTag(PagedPool, sizeof(COLORREF) * NumColors, TAG_DC);
-          ASSERT(ColorMap);
-          for (Index = 0; Index < NumColors; Index++)
-          {
-            ColorMap[Index] = RGB(pb->ColorMap[Index].rgbRed,
-                                  pb->ColorMap[Index].rgbGreen,
-                                  pb->ColorMap[Index].rgbBlue);
-          }
-          dc->w.hPalette = PALETTE_AllocPalette(PAL_INDEXED, NumColors, (ULONG *) ColorMap, 0, 0, 0);
-          ExFreePool(ColorMap);
+          dc->w.hPalette = PALETTE_AllocPaletteIndexedRGB(NumColors, pb->ColorMap);
         }
         else if ( 16 == pb->dib->dsBmih.biBitCount )
         {
@@ -1931,7 +1920,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
           {
             MonoColorMap[0] = RGB(0, 0, 0);
             MonoColorMap[1] = RGB(255, 255, 255);
-            dc->w.hPalette = PALETTE_AllocPalette(PAL_INDEXED, 2, MonoColorMap, 0, 0, 0);
+            dc->w.hPalette = PALETTE_AllocPaletteIndexedRGB(2, (RGBQUAD*)MonoColorMap);
           }
         else
           {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: xlate.c,v 1.36 2004/06/28 15:53:17 navaraf Exp $
+/* $Id: xlate.c,v 1.37 2004/06/28 17:03:35 navaraf Exp $
  * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -342,10 +342,10 @@ XLATEOBJ * STDCALL IntEngCreateMonoXlate(
          XlateGDI->BackgroundColor = NtGdiGetNearestPaletteIndex(
             PaletteSource, BackgroundColor);
          break;
-      case PAL_RGB:
+      case PAL_BGR:
          XlateGDI->BackgroundColor = BackgroundColor;
          break;
-      case PAL_BGR:
+      case PAL_RGB:
          XlateGDI->BackgroundColor =
             ((BackgroundColor & 0xFF) << 16) |
             ((BackgroundColor & 0xFF0000) >> 16) |

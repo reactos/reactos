@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: color.c,v 1.43 2004/06/23 15:30:20 weiden Exp $ */
+/* $Id: color.c,v 1.44 2004/06/28 17:03:35 navaraf Exp $ */
 #include <w32k.h>
 
 // FIXME: Use PXLATEOBJ logicalToSystem instead of int *mapping
@@ -200,7 +200,7 @@ UINT STDCALL NtGdiGetNearestPaletteIndex(HPALETTE  hpal,
   if (NULL != palGDI)
     {
       /* Return closest match for the given RGB color */
-      index = COLOR_PaletteLookupPixel((LPPALETTEENTRY)palGDI->IndexedColors, palGDI->NumColors, NULL, Color, FALSE);
+      index = COLOR_PaletteLookupPixel(palGDI->IndexedColors, palGDI->NumColors, NULL, Color, FALSE);
       PALETTE_UnlockPalette(hpal);
     }
 
@@ -233,7 +233,7 @@ UINT STDCALL NtGdiGetPaletteEntries(HPALETTE  hpal,
 	  PALETTE_UnlockPalette(hpal);
 	  return 0;
 	}
-      memcpy(pe, &palGDI->IndexedColors[StartIndex], Entries * sizeof(PALETTEENTRY));
+      memcpy(pe, palGDI->IndexedColors + StartIndex, Entries * sizeof(PALETTEENTRY));
       for (numEntries = 0; numEntries < Entries; numEntries++)
 	{
 	  if (pe[numEntries].peFlags & 0xF0)
@@ -493,7 +493,7 @@ UINT STDCALL NtGdiSetPaletteEntries(HPALETTE  hpal,
     {
       Entries = numEntries - Start;
     }
-  memcpy(&palGDI->IndexedColors[Start], pe, Entries * sizeof(PALETTEENTRY));
+  memcpy(palGDI->IndexedColors + Start, pe, Entries * sizeof(PALETTEENTRY));
   PALETTE_ValidateFlags(palGDI->IndexedColors, palGDI->NumColors);
   ExFreePool(palGDI->logicalToSystem);
   palGDI->logicalToSystem = NULL;
@@ -536,8 +536,10 @@ INT STDCALL COLOR_PaletteLookupPixel(PALETTEENTRY *palPalEntry, INT size,
 
   for( i = 0; i < size && diff ; i++ )
   {
+#if 0
     if(!(palPalEntry[i].peFlags & PC_SYS_USED) || (skipReserved && palPalEntry[i].peFlags  & PC_SYS_RESERVED))
       continue;
+#endif
 
     r = palPalEntry[i].peRed - GetRValue(col);
     g = palPalEntry[i].peGreen - GetGValue(col);
@@ -556,7 +558,6 @@ INT STDCALL COLOR_PaletteLookupPixel(PALETTEENTRY *palPalEntry, INT size,
 
 COLORREF STDCALL COLOR_LookupNearestColor( PALETTEENTRY* palPalEntry, int size, COLORREF color )
 {
-#if 1
    INT index;
 
    index = COLOR_PaletteLookupPixel(palPalEntry, size, NULL, color, FALSE);
@@ -564,29 +565,6 @@ COLORREF STDCALL COLOR_LookupNearestColor( PALETTEENTRY* palPalEntry, int size, 
       palPalEntry[index].peRed,
       palPalEntry[index].peGreen,
       palPalEntry[index].peBlue);
-#else
-  unsigned char spec_type = color >> 24;
-  int i;
-  PALETTEENTRY *COLOR_sysPal = (PALETTEENTRY*)ReturnSystemPalette();
-
-  // we need logical palette for PALETTERGB and PALETTEINDEX colorrefs
-
-  if( spec_type == 2 ) /* PALETTERGB */
-    color = *(COLORREF*)(palPalEntry + COLOR_PaletteLookupPixel(palPalEntry,size,NULL,color,FALSE));
-
-  else if( spec_type == 1 ) /* PALETTEINDEX */
-  {
-    if( (i = color & 0x0000ffff) >= size )
-    {
-      DbgPrint("RGB(%lx) : idx %d is out of bounds, assuming NULL\n", color, i);
-      color = *(COLORREF*)palPalEntry;
-    }
-    else color = *(COLORREF*)(palPalEntry + i);
-  }
-
-  color &= 0x00ffffff;
-  return (0x00ffffff & *(COLORREF*)(COLOR_sysPal + COLOR_PaletteLookupPixel(COLOR_sysPal, 256, NULL, color, FALSE)));
-#endif
 }
 
 int STDCALL COLOR_PaletteLookupExactIndex( PALETTEENTRY* palPalEntry, int size,

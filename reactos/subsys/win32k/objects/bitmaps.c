@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.74 2004/06/20 00:45:37 navaraf Exp $ */
+/* $Id: bitmaps.c,v 1.75 2004/06/28 17:03:35 navaraf Exp $ */
 #include <w32k.h>
 
 #define IN_RECT(r,x,y) \
@@ -193,7 +193,7 @@ NtGdiBitBlt(
 
 		Colors[0] = DCSrc->w.textColor;
 		Colors[1] = DCSrc->w.backgroundColor;
-		Mono = EngCreatePalette(PAL_INDEXED, 2, Colors, 0, 0, 0);
+		Mono = PALETTE_AllocPaletteIndexedRGB(2, (RGBQUAD*)Colors);
 		if (NULL != Mono)
 		{
 			XlateObj = (XLATEOBJ*)IntEngCreateXlate(DestMode, PAL_INDEXED, DestPalette, Mono);
@@ -630,6 +630,7 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 				PalMode = PalGDI->Mode;
 				PALETTE_UnlockPalette(Pal);
 
+				/* FIXME: Verify if it shouldn't be PAL_BGR! */
 				XlateObj = (XLATEOBJ*)IntEngCreateXlate ( PAL_RGB, PalMode, NULL, Pal );
 				if ( XlateObj )
 				{
