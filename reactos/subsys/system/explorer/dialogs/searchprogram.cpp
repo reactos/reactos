@@ -95,7 +95,7 @@ FindProgramDlg::FindProgramDlg(HWND hwnd)
 	_thread(collect_programs_callback, hwnd, this),
 	_sort(_list_ctrl, CompareFunc/*, (LPARAM)this*/)
 {
-	SetWindowIcon(hwnd, IDI_REACTOS/*IDI_SEARCH*/);
+	SetWindowIcon(hwnd, IDI_SEARCH);
 
 	_resize_mgr.Add(IDC_FILTER,			RESIZE_X);
 	_resize_mgr.Add(IDC_CHECK_ENTRIES,	MOVE_X);
