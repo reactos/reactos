@@ -50,4 +50,4 @@ include$(SEP)reactos$(SEP)errcodes.h lib$(SEP)kernel32$(SEP)errcodes.rc: $(WMC_T
 	$(WMC_TARGET) -H include$(SEP)reactos$(SEP)errcodes.h -o lib$(SEP)kernel32$(SEP)errcodes.rc lib$(SEP)kernel32$(SEP)kernel32.mc
 
 clean::
-	-@$(rm) Makefile.auto $(PREAUTO)
+	-@$(rm) Makefile.auto $(PREAUTO) 2>$(NUL)
