@@ -467,7 +467,6 @@ static UINT SHELL_FindExecutableByOperation(LPCWSTR lpPath, LPCWSTR lpFile, LPCW
     if (RegQueryValueW(HKEY_CLASSES_ROOT, filetype, command,
                        &commandlen) == ERROR_SUCCESS)
     {
-	commandlen /= sizeof(WCHAR);
         if (key) strcpyW(key, filetype);
 #if 0
         LPWSTR tmp;
@@ -488,14 +487,10 @@ static UINT SHELL_FindExecutableByOperation(LPCWSTR lpPath, LPCWSTR lpFile, LPCW
 	if (RegQueryValueW(HKEY_CLASSES_ROOT, filetype, param,
 				     &paramlen) == ERROR_SUCCESS)
 	{
-	    paramlen /= sizeof(WCHAR);
             strcatW(command, wSpace);
             strcatW(command, param);
-            commandlen += paramlen;
 	}
 #endif
-
-	command[commandlen] = '\0';
 
 	return 33; /* FIXME see SHELL_FindExecutable() */
     }
@@ -623,11 +618,9 @@ UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOperation,
 	}
 
 	/* Check registry */
-	if (RegQueryValueW(HKEY_CLASSES_ROOT, extension, filetype, 
+	if (RegQueryValueW(HKEY_CLASSES_ROOT, extension, filetype,
 			    &filetypelen) == ERROR_SUCCESS)
 	{
-	    filetypelen /= sizeof(WCHAR);
-	    filetype[filetypelen] = '\0';
 	    TRACE("File type: %s\n", debugstr_w(filetype));
 	}
     }
@@ -637,13 +630,14 @@ UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOperation,
 	if (lpOperation)
 	{
 	    /* pass the operation string to SHELL_FindExecutableByOperation() */
-	    filetype[filetypelen] = '\0';
 	    retval = SHELL_FindExecutableByOperation(lpPath, lpFile, lpOperation, key, filetype, command, sizeof(command));
 	}
 	else
 	{
 	    WCHAR operation[MAX_PATH];
 	    HKEY hkey;
+
+	    filetypelen = strlenW(filetype);
 
 	    /* Looking for ...buffer\shell\<operation>\command */
 	    strcatW(filetype, wszShell);
@@ -861,8 +855,6 @@ static UINT execute_from_key(LPWSTR key, LPCWSTR lpFile, void *env, LPCWSTR szCo
         else
         {
             /* Is there a replace() function anywhere? */
-            cmdlen /= sizeof(WCHAR);
-            cmd[cmdlen] = '\0';
             SHELL_ArgifyW(param, sizeof(param)/sizeof(WCHAR), cmd, lpFile, psei->lpIDList, szCommandline);
             retval = execfunc(param, env, FALSE, psei, psei_out);
         }
@@ -1039,6 +1031,7 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW psei, SHELL_ExecuteW32 execfu
         }
 
         retval = execfunc(buffer, NULL, FALSE, &sei_tmp, psei);
+
         if (retval > 32)
             return TRUE;
         else
@@ -1125,9 +1118,9 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW psei, SHELL_ExecuteW32 execfu
 	if (ExpandEnvironmentStringsW(sei_tmp.lpDirectory, buffer, MAX_PATH))
 	    lstrcpyW(wszDir/*sei_tmp.lpDirectory*/, buffer);
 
-    /* Else, try to execute the filename */
-    TRACE("execute:'%s','%s','%s'\n", debugstr_w(wszApplicationName), debugstr_w(wszCommandline), debugstr_w(wszDir));
 
+    /* Else, try to execute the filename */
+    TRACE("execute:'%s','%s,'%s''\n", debugstr_w(sei_tmp.lpFile), debugstr_w(sei_tmp.lpParameters), debugstr_w(wszDir));
 
     /* separate out command line arguments from executable file name */
     if (!*sei_tmp.lpParameters) {
@@ -1199,6 +1192,7 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW psei, SHELL_ExecuteW32 execfu
     }
 
     retval = execfunc(sei_tmp.lpFile, NULL, FALSE, &sei_tmp, psei);
+
     if (retval > 32)
     {
 	/* Now, that we have successfully launched a process, we can free the PIDL.
@@ -1233,7 +1227,7 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW psei, SHELL_ExecuteW32 execfu
 	    strcatW(wszQuotedCmd, sei_tmp.lpParameters);
         }
 
-        TRACE("%s/%s => %s/%s\n", debugstr_w(wszApplicationName), debugstr_w(buffer), debugstr_w(wszQuotedCmd), debugstr_w(wszProtocol));
+        TRACE("%s/%s => %s/%s\n", debugstr_w(wszApplicationName), debugstr_w(sei_tmp.lpVerb), debugstr_w(wszQuotedCmd), debugstr_w(wszProtocol));
 
         if (*wszProtocol)
             retval = execute_from_key(wszProtocol, lpFile, env, sei_tmp.lpParameters, execfunc, &sei_tmp, psei);
