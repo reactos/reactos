@@ -1,4 +1,4 @@
-/* $Id: pageop.c,v 1.18 2003/10/12 17:05:48 hbirr Exp $
+/* $Id: pageop.c,v 1.19 2004/03/05 11:31:59 hbirr Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -134,7 +134,7 @@ MmCheckForPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
 
 PMM_PAGEOP
 MmGetPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
-	    PMM_SECTION_SEGMENT Segment, ULONG Offset, ULONG OpType)
+	    PMM_SECTION_SEGMENT Segment, ULONG Offset, ULONG OpType, BOOL First)
      /*
       * FUNCTION: Get a page operation descriptor corresponding to
       * the memory area and either the segment, offset pair or the
@@ -191,7 +191,14 @@ MmGetPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
    */
   if (PageOp != NULL)
     {
-      PageOp->ReferenceCount++;
+      if (First)
+        {
+	  PageOp = NULL;
+	}
+      else
+        {
+          PageOp->ReferenceCount++;
+	}
       KeReleaseSpinLock(&MmPageOpHashTableLock, oldIrql);
       return(PageOp);
     }
@@ -203,6 +210,7 @@ MmGetPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
   if (PageOp == NULL)
     {
       KeReleaseSpinLock(&MmPageOpHashTableLock, oldIrql);
+      KEBUGCHECK(0);
       return(NULL);
     }
   

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.145 2004/03/04 00:07:02 navaraf Exp $
+/* $Id: section.c,v 1.146 2004/03/05 11:31:59 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -673,7 +673,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    /*
     * Get or create a page operation descriptor
     */
-   PageOp = MmGetPageOp(MemoryArea, 0, 0, Segment, Offset, MM_PAGEOP_PAGEIN);
+   PageOp = MmGetPageOp(MemoryArea, 0, 0, Segment, Offset, MM_PAGEOP_PAGEIN, FALSE);
    if (PageOp == NULL)
      {
        DPRINT1("MmGetPageOp failed\n");
@@ -1274,7 +1274,7 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
     * Get or create a pageop
     */
    PageOp = MmGetPageOp(MemoryArea, 0, 0, Segment, Offset,
-			MM_PAGEOP_ACCESSFAULT);
+			MM_PAGEOP_ACCESSFAULT, FALSE);
    if (PageOp == NULL)
      {
        DPRINT1("MmGetPageOp failed\n");

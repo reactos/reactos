@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: anonmem.c,v 1.24 2003/12/31 05:33:03 jfilby Exp $
+/* $Id: anonmem.c,v 1.25 2004/03/05 11:31:59 hbirr Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/anonmem.c
@@ -287,7 +287,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
     */
    PageOp = MmGetPageOp(MemoryArea, (ULONG)MemoryArea->Process->UniqueProcessId, 
 			(PVOID)PAGE_ROUND_DOWN(Address), NULL, 0,
-			MM_PAGEOP_PAGEIN);
+			MM_PAGEOP_PAGEIN, FALSE);
    if (PageOp == NULL)
      {
        DPRINT1("MmGetPageOp failed");

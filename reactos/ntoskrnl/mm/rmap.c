@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rmap.c,v 1.26 2003/12/30 18:52:05 fireball Exp $
+/* $Id: rmap.c,v 1.27 2004/03/05 11:31:59 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -140,24 +140,11 @@ MmWritePagePhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
        */
       PageOp = MmGetPageOp(MemoryArea, 0, 0, 
 			   MemoryArea->Data.SectionData.Segment, 
-			   Offset, MM_PAGEOP_PAGEOUT);
+			   Offset, MM_PAGEOP_PAGEOUT, TRUE);
+
       if (PageOp == NULL)
 	{
-	  DPRINT1("MmGetPageOp failed\n");
-	  KEBUGCHECK(0);
-	}
-
-
-      if (PageOp->Thread != PsGetCurrentThread())
-	{
-	  MmUnlockAddressSpace(AddressSpace);
-          Status = KeWaitForSingleObject(&PageOp->CompletionEvent,
-				         0,
-				         KernelMode,
-				         FALSE,
-				         NULL);
-          KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
-	  MmReleasePageOp(PageOp);
+          MmUnlockAddressSpace(AddressSpace);
 	  if (Address < (PVOID)KERNEL_BASE)
 	    {
               ObDereferenceObject(Process);
@@ -179,11 +166,10 @@ MmWritePagePhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
   else if (Type == MEMORY_AREA_VIRTUAL_MEMORY)
     {
       PageOp = MmGetPageOp(MemoryArea, Address < (PVOID)KERNEL_BASE ? Process->UniqueProcessId : 0,
-			   Address, NULL, 0, MM_PAGEOP_PAGEOUT);
+			   Address, NULL, 0, MM_PAGEOP_PAGEOUT, TRUE);
       
-      if (PageOp->Thread != PsGetCurrentThread())
+      if (PageOp == NULL)
 	{
-	  MmReleasePageOp(PageOp);
 	  MmUnlockAddressSpace(AddressSpace);
 	  if (Address < (PVOID)KERNEL_BASE)
 	    {
@@ -278,16 +264,9 @@ MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
        */
       PageOp = MmGetPageOp(MemoryArea, 0, 0, 
 			   MemoryArea->Data.SectionData.Segment, 
-			   Offset, MM_PAGEOP_PAGEOUT);
+			   Offset, MM_PAGEOP_PAGEOUT, TRUE);
       if (PageOp == NULL)
 	{
-	  DPRINT1("MmGetPageOp failed\n");
-	  KEBUGCHECK(0);
-	}
-
-      if (PageOp->Thread != PsGetCurrentThread())
-	{
-	  MmReleasePageOp(PageOp);
 	  MmUnlockAddressSpace(AddressSpace);
 	  if (Address < (PVOID)KERNEL_BASE)
 	    {
@@ -310,17 +289,10 @@ MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
   else if (Type == MEMORY_AREA_VIRTUAL_MEMORY)
     {
       PageOp = MmGetPageOp(MemoryArea, Address < (PVOID)KERNEL_BASE ? Process->UniqueProcessId : 0,
-			   Address, NULL, 0, MM_PAGEOP_PAGEOUT);
-      if (PageOp->Thread != PsGetCurrentThread())
+			   Address, NULL, 0, MM_PAGEOP_PAGEOUT, TRUE);
+      if (PageOp == NULL)
 	{
 	  MmUnlockAddressSpace(AddressSpace);
-          Status = KeWaitForSingleObject(&PageOp->CompletionEvent,
-				         0,
-				         KernelMode,
-				         FALSE,
-				         NULL);
-          KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
-	  MmReleasePageOp(PageOp);
 	  if (Address < (PVOID)KERNEL_BASE)
 	    {
               ObDereferenceObject(Process);

@@ -445,7 +445,7 @@ MmReleasePageOp(PMM_PAGEOP PageOp);
 
 PMM_PAGEOP
 MmGetPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
-	    PMM_SECTION_SEGMENT Segment, ULONG Offset, ULONG OpType);
+	    PMM_SECTION_SEGMENT Segment, ULONG Offset, ULONG OpType, BOOL First);
 PMM_PAGEOP
 MmCheckForPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
 		 PMM_SECTION_SEGMENT Segment, ULONG Offset);

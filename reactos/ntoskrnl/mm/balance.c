@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: balance.c,v 1.25 2003/12/30 18:52:05 fireball Exp $
+/* $Id: balance.c,v 1.26 2004/03/05 11:31:59 hbirr Exp $
  *
  * PROJECT:     ReactOS kernel 
  * FILE:        ntoskrnl/mm/balance.c
@@ -111,6 +111,7 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PHYSICAL_ADDRESS Page)
   PMM_ALLOCATION_REQUEST Request;
   PLIST_ENTRY Entry;
   KIRQL oldIrql;
+  ULONG OldAvailable;
 
 #if defined(__GNUC__)
   if (Page.QuadPart == 0LL)
@@ -126,8 +127,8 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PHYSICAL_ADDRESS Page)
   if (MmGetReferenceCountPage(Page) == 1)
     {
       InterlockedDecrement((LONG *)&MiMemoryConsumers[Consumer].PagesUsed);
-      InterlockedIncrement((LONG *)&MiNrAvailablePages);
-      if (IsListEmpty(&AllocationListHead))
+      OldAvailable = InterlockedIncrement((LONG *)&MiNrAvailablePages);
+      if (IsListEmpty(&AllocationListHead) || OldAvailable + 1 < MiMinimumAvailablePages)
 	{
 	  KeReleaseSpinLock(&AllocationListLock, oldIrql);
 	  MmDereferencePage(Page);
@@ -349,7 +350,7 @@ MiBalancerThread(PVOID Unused)
         {
 	  /* MiBalancerEvent */
 	  CHECKPOINT;
-	  while (MiNrAvailablePages < MiMinimumAvailablePages)
+	  while (MiNrAvailablePages < MiMinimumAvailablePages + 5)
 	    {
 	      for (i = 0; i < MC_MAXIMUM; i++)
 	        {
@@ -370,7 +371,7 @@ MiBalancerThread(PVOID Unused)
       else if (Status == STATUS_SUCCESS + 1)
         {
 	  /* MiBalancerTimer */
-	  ShouldRun = MiNrAvailablePages < MiMinimumAvailablePages ? TRUE : FALSE;
+	  ShouldRun = MiNrAvailablePages < MiMinimumAvailablePages + 5 ? TRUE : FALSE;
 	  for (i = 0; i < MC_MAXIMUM; i++)
 	    {
               if (MiMemoryConsumers[i].Trim != NULL)
