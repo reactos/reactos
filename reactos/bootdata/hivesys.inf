@@ -774,13 +774,6 @@ HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSe
 HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\vmx_svga\Device0","DefaultSettings.YResolution",0x00010001,600
 HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_15AD&DEV_0405&SUBSYS_040515AD&REV_00\0000","Service",0x00000000,"vmx_svga"
 
-; Kernel-mode regression test driver
-HKLM,"SYSTEM\CurrentControlSet\Services\kmregtests","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\kmregtests","Group",0x00000000,"Extended Base"
-HKLM,"SYSTEM\CurrentControlSet\Services\kmregtests","ImagePath",0x00020000,"system32\drivers\kmregtests.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\kmregtests","Start",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\kmregtests","Type",0x00010001,0x00000001
-
 ; ControlSet selection settings
 HKLM,"SYSTEM\Select","Current",0x00010001,0x00000001
 HKLM,"SYSTEM\Select","Default",0x00010001,0x00000001

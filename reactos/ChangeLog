@@ -1,5 +1,9 @@
 2004-11-21  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* bootdata/hivesys.inf: Remove kmregtests.
+
+2004-11-21  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* Makefile (DLLS_KBD): Add kbdda.
 	* bootdata/txtsetup.sif: Add Danish language 406.
 	* bootdata/hivesys.inf: Add kbdda.dll for Danish language 406.
