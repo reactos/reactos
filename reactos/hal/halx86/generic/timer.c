@@ -20,7 +20,7 @@
  * MA 02139, USA.  
  *
  */
-/* $Id: timer.c,v 1.1 2004/12/03 20:10:43 gvg Exp $
+/* $Id: timer.c,v 1.2 2004/12/18 18:04:18 hbirr Exp $
  *
  * PROJECT:        ReactOS kernel
  * FILE:           ntoskrnl/hal/x86/udelay.c
@@ -40,8 +40,6 @@
 #include <internal/debug.h>
 
 /* GLOBALS ******************************************************************/
-
-static unsigned int delay_count = 1;
 
 #define 	TMR_CTRL	0x43	/*	I/O for control		*/
 #define		TMR_CNT0	0x40	/*	I/O for counter 0	*/
@@ -232,55 +230,55 @@ VOID HalpCalibrateStallExecution(VOID)
 
   WaitFor8254Wraparound();
 
-  delay_count = 1;
+  Pcr->StallScaleFactor = 1;
 
   do
     {
-      delay_count <<= 1;                  /* Next delay count to try */
+      Pcr->StallScaleFactor <<= 1;		/* Next delay count to try  */
 
       WaitFor8254Wraparound();
 
-      __KeStallExecutionProcessor(delay_count);      /* Do the delay */
+      __KeStallExecutionProcessor(Pcr->StallScaleFactor);   /* Do the delay */
 
       CurCount = Read8254Timer();
     }
   while (CurCount > LATCH / 2);
 
-  delay_count >>= 1;              /* Get bottom value for delay     */
+  Pcr->StallScaleFactor >>= 1;		    /* Get bottom value for delay   */
 
-  /* Stage 2:  Fine calibration                                     */
-  DbgPrint("delay_count: %d", delay_count);
+  /* Stage 2:  Fine calibration						    */
+  DbgPrint("delay_count: %d", Pcr->StallScaleFactor);
 
-  calib_bit = delay_count;        /* Which bit are we going to test */
+  calib_bit = Pcr->StallScaleFactor;	/* Which bit are we going to test   */
 
   for (i = 0; i < PRECISION; i++)
     {
-      calib_bit >>= 1;            /* Next bit to calibrate          */
+      calib_bit >>= 1;				/* Next bit to calibrate    */
       if (!calib_bit)
 	{
-	  break;                  /* If we have done all bits, stop */
+	  break;			/* If we have done all bits, stop   */
 	}
 
-      delay_count |= calib_bit;   /* Set the bit in delay_count */
+      Pcr->StallScaleFactor |= calib_bit;   /* Set the bit in delay_count   */
 
       WaitFor8254Wraparound();
 
-      __KeStallExecutionProcessor(delay_count);      /* Do the delay */
+      __KeStallExecutionProcessor(Pcr->StallScaleFactor);   /* Do the delay */
 
       CurCount = Read8254Timer();
-      if (CurCount <= LATCH / 2)   /* If a tick has passed, turn the */
-	{                          /* calibrated bit back off        */
-	  delay_count &= ~calib_bit;
+      if (CurCount <= LATCH / 2)	/* If a tick has passed, turn the   */
+	{				/* calibrated bit back off	    */
+	  Pcr->StallScaleFactor &= ~calib_bit;
 	}
     }
 
-  /* We're finished:  Do the finishing touches                      */
+  /* We're finished:  Do the finishing touches				    */
 
-  delay_count /= (MILLISEC / 2);   /* Calculate delay_count for 1ms */
+  Pcr->StallScaleFactor /= (MILLISEC / 2);  /* Calculate delay_count for 1ms */
 
   DbgPrint("]\n");
-  DbgPrint("delay_count: %d\n", delay_count);
-  DbgPrint("CPU speed: %d\n", delay_count / 250);
+  DbgPrint("delay_count: %d\n", Pcr->StallScaleFactor);
+  DbgPrint("CPU speed: %d\n", Pcr->StallScaleFactor / 250);
 #if 0
   DbgPrint("About to start delay loop test\n");
   DbgPrint("Waiting for five minutes...");
