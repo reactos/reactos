@@ -159,6 +159,9 @@ IntGetWindowThreadProcessId(PWINDOW_OBJECT Wnd, PDWORD pid);
 VOID FASTCALL
 IntUnlinkWindow(PWINDOW_OBJECT Wnd);
 
+VOID FASTCALL
+IntLinkWindow(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndParent, PWINDOW_OBJECT WndPrevSibling);
+
 ULONG
 UserHasDlgFrameStyle(ULONG Style, ULONG ExStyle);
 

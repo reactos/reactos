@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.32 2003/10/17 17:38:38 mf Exp $
+/* $Id: winpos.c,v 1.33 2003/10/18 17:35:44 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -662,7 +662,50 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
   WvrFlags = WinPosDoNCCALCSize(Window, &WinPos, &NewWindowRect,
 				&NewClientRect);
 
-  /* FIXME: Relink windows. (also take into account shell window in hwndShellWindow) */
+  /*
+   * FIXME: Relink windows. (also take into account shell window in hwndShellWindow)
+   */
+  if (!(WinPos.flags & SWP_NOZORDER) && WinPos.hwndInsertAfter != WinPos.hwnd)
+    {
+      PWINDOW_OBJECT ParentWindow;
+      PWINDOW_OBJECT InsertAfterWindow;
+
+      ParentWindow = IntGetWindowObject(Window->ParentHandle);
+      if (WndInsertAfter == HWND_TOP)
+      {
+         InsertAfterWindow = NULL;
+      }
+      else if (WndInsertAfter != HWND_BOTTOM)
+      {
+         InsertAfterWindow = ParentWindow->LastChild;
+      }
+      else
+      {
+         InsertAfterWindow = IntGetWindowObject(WinPos.hwndInsertAfter);
+      }
+
+      if (InsertAfterWindow != NULL &&
+          InsertAfterWindow->ParentHandle != Window->ParentHandle)
+        {
+          ExAcquireFastMutexUnsafe(&ParentWindow->ChildrenListLock);
+          IntUnlinkWindow(Window);
+          ExReleaseFastMutexUnsafe(&ParentWindow->ChildrenListLock);
+          ParentWindow = IntGetWindowObject(InsertAfterWindow->ParentHandle);
+          ExAcquireFastMutexUnsafe(&ParentWindow->ChildrenListLock);
+          IntLinkWindow(Window, ParentWindow, InsertAfterWindow);
+          ExReleaseFastMutexUnsafe(&ParentWindow->ChildrenListLock);
+        }
+      else
+        {
+          ExAcquireFastMutexUnsafe(&ParentWindow->ChildrenListLock);
+          IntUnlinkWindow(Window);
+          IntLinkWindow(Window, ParentWindow, InsertAfterWindow);
+          ExReleaseFastMutexUnsafe(&ParentWindow->ChildrenListLock);
+        }
+
+      IntReleaseWindowObject(ParentWindow);
+      IntReleaseWindowObject(InsertAfterWindow);
+    }
 
   /* FIXME: Reset active DCEs */
 
@@ -857,7 +900,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
   /* FIXME: Check some conditions before doing this. */
   IntSendWINDOWPOSCHANGEDMessage(WinPos.hwnd, &WinPos);
 
-  ObmDereferenceObject(Window);
+  IntReleaseWindowObject(Window);
   return(TRUE);
 }
 
