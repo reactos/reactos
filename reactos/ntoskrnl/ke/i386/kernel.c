@@ -43,7 +43,7 @@ BOOLEAN Ke386NoExecute = FALSE;
 BOOLEAN Ke386Pae = FALSE;
 BOOLEAN Ke386PaeEnabled = FALSE;
 BOOLEAN Ke386GlobalPagesEnabled = FALSE;
-ULONG KiFastSystemCallDisable = 0;
+ULONG KiFastSystemCallDisable = 1;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -191,6 +191,18 @@ KeApplicationProcessorInit(VOID)
   KiCheckFPU();
 
   KeInitDpc(Pcr);
+
+  if (Pcr->PrcbData.FeatureBits & X86_FEATURE_SYSCALL)
+  {
+     extern void KiFastCallEntry(void);
+
+     /* CS Selector of the target segment. */
+     Ke386Wrmsr(0x174, KERNEL_CS, 0);
+     /* Target ESP. */
+     Ke386Wrmsr(0x175, 0, 0);
+     /* Target EIP. */
+     Ke386Wrmsr(0x176, (ULONG_PTR)KiFastCallEntry, 0);
+  }
 
   /*
    * It is now safe to process interrupts
@@ -412,6 +424,7 @@ Ki386SetProcessorFeatures(VOID)
    ULONG ResultLength;
    KEY_VALUE_PARTIAL_INFORMATION ValueData;
    NTSTATUS Status;
+   ULONG FastSystemCallDisable = 0;
 
    SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_PRECISION_ERRATA] = FALSE;
    SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_EMULATED] = FALSE;
@@ -457,7 +470,7 @@ Ki386SetProcessorFeatures(VOID)
                                      &ValueData,
                                      sizeof(ValueData),
                                      &ResultLength);
-            RtlMoveMemory(&KiFastSystemCallDisable, ValueData.Data, sizeof(ULONG));
+            RtlMoveMemory(&FastSystemCallDisable, ValueData.Data, sizeof(ULONG));
             
             NtClose(KeyHandle);
         }
@@ -465,21 +478,12 @@ Ki386SetProcessorFeatures(VOID)
     } else {
     
         /* Disable SYSENTER/SYSEXIT, because the CPU doesn't support it */
-        KiFastSystemCallDisable = 1;
+        FastSystemCallDisable = 1;
         
     }
     
-    if (!KiFastSystemCallDisable) {
+    if (FastSystemCallDisable) {
         
-        /* Use SYSENTER */
-        SharedUserData->SystemCall[0] = 0x8B;
-        SharedUserData->SystemCall[1] = 0xD4;
-        SharedUserData->SystemCall[2] = 0x0F;
-        SharedUserData->SystemCall[3] = 0x34;
-        SharedUserData->SystemCall[4] = 0xC3;    
-                  
-    } else {
-    
         /* Use INT2E */   
         SharedUserData->SystemCall[0] = 0x8D;
         SharedUserData->SystemCall[1] = 0x54;
@@ -488,5 +492,17 @@ Ki386SetProcessorFeatures(VOID)
         SharedUserData->SystemCall[4] = 0xCD;
         SharedUserData->SystemCall[5] = 0x2E;
         SharedUserData->SystemCall[6] = 0xC3;
+	                  
+    } else {
+    
+        /* Use SYSENTER */
+        SharedUserData->SystemCall[0] = 0x8B;
+        SharedUserData->SystemCall[1] = 0xD4;
+        SharedUserData->SystemCall[2] = 0x0F;
+        SharedUserData->SystemCall[3] = 0x34;
+        SharedUserData->SystemCall[4] = 0xC3;    
+
+        /* Enable SYSENTER/SYSEXIT */
+        KiFastSystemCallDisable = 0;
     }
 }
