@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.80 2004/12/19 00:03:56 royce Exp $
+ * $Id: gdiobj.c,v 1.81 2004/12/19 05:03:29 royce Exp $
  */
 #include <w32k.h>
 
@@ -212,33 +212,55 @@ GetObjectSize(DWORD ObjectType)
 #ifdef DBG
 
 static int leak_reported = 0;
-#define GDI_STACK_LEVELS 4
-static ULONG GDIHandleAllocator[GDI_STACK_LEVELS][GDI_HANDLE_COUNT];
+#define GDI_STACK_LEVELS 12
+static ULONG GDIHandleAllocator[GDI_HANDLE_COUNT][GDI_STACK_LEVELS];
 struct DbgOpenGDIHandle
 {
-	ULONG loc;
+	ULONG idx;
 	int count;
 };
 #define H 1024
 static struct DbgOpenGDIHandle h[H];
 
-void IntDumpHandleTable ( int which )
+void IntDumpHandleTable()
 {
-	int i, n = 0, j;
+	int i, n = 0, j, k, J;
 
-	/*  step through GDI handle table and find out who our culprit is... */
+	if ( leak_reported )
+	{
+		DPRINT1("gdi handle abusers already reported!\n");
+		return;
+	}
+
+	leak_reported = 1;
+	DPRINT1("reporting gdi handle abusers:\n");
+
+	/* step through GDI handle table and find out who our culprit is... */
 	for ( i = RESERVE_ENTRIES_COUNT; i < GDI_HANDLE_COUNT; i++ )
 	{
 		for ( j = 0; j < n; j++ )
 		{
-			if ( GDIHandleAllocator[which][i] == h[j].loc )
-				break;
+next:
+			J = h[j].idx;
+			for ( k = 0; k < GDI_STACK_LEVELS; k++ )
+			{
+				if ( GDIHandleAllocator[i][k]
+				  != GDIHandleAllocator[J][k] )
+				{
+					if ( ++j == n )
+						goto done;
+					else
+						goto next;
+				}
+			}
+			goto done;
 		}
+done:
 		if ( j < H )
 		{
 			if ( j == n )
 			{
-				h[j].loc = GDIHandleAllocator[which][i];
+				h[j].idx = i;
 				h[j].count = 1;
 				n = n + 1;
 			}
@@ -252,25 +274,30 @@ void IntDumpHandleTable ( int which )
 		if ( h[i].count < h[i+1].count )
 		{
 			struct DbgOpenGDIHandle t;
-			t.loc = h[i+1].loc;
-			t.count = h[i+1].count;
-			h[i+1].loc = h[i].loc;
-			h[i+1].count = h[i].count;
+			t = h[i+1];
+			h[i+1] = h[i];
 			j = i;
 			while ( j > 0 && h[j-1].count < t.count )
 				j--;
 			h[j] = t;
 		}
 	}
-	/* print the first 30 offenders... */
-	DbgPrint ( "Worst GDI Handle leak offenders - stack trace level %i (out of %i unique locations):\n", which, n );
-	for ( i = 0; i < 30 && i < n; i++ )
+	/* print the worst offenders... */
+	DbgPrint ( "Worst GDI Handle leak offenders (out of %i unique locations):\n", n );
+	for ( i = 0; i < n && h[i].count > 1; i++ )
 	{
-		DbgPrint ( "\t" );
-		if ( !KeRosPrintAddress ( (PVOID)h[i].loc ) )
-			DbgPrint ( "<%X>", h[i].loc );
-		DbgPrint ( " (%i allocations)\n", h[i].count );
+		int j;
+		DbgPrint ( " %i allocs: ", h[i].count );
+		for ( j = 0; j < GDI_STACK_LEVELS; j++ )
+		{
+			ULONG Addr = GDIHandleAllocator[h[i].idx][j];
+			if ( !KeRosPrintAddress ( (PVOID)Addr ) )
+				DbgPrint ( "<%X>", Addr );
+		}
+		DbgPrint ( "\n" );
 	}
+	if ( i < n && h[i].count == 1 )
+		DbgPrint ( "(list terminated - the remaining entries have 1 allocation only)\n" );
 }
 #endif /* DBG */
 
@@ -377,14 +404,13 @@ LockHandle:
 #elif defined(_MSC_VER)
             __asm mov [Frame], ebp
 #endif
-			Frame = (PULONG)Frame[0]; /* step out of AllocObj() */
 			for ( which = 0; which < GDI_STACK_LEVELS && Frame[1] != 0 && Frame[1] != 0xDEADBEEF; which++ )
 			{
-	            GDIHandleAllocator[which][Index] = Frame[1]; /* step out of AllocObj() */
+				GDIHandleAllocator[Index][which] = Frame[1];
 				Frame = ((PULONG)Frame[0]);
 			}
 			for ( ; which < GDI_STACK_LEVELS; which++ )
-				GDIHandleAllocator[which][Index] = 0xDEADBEEF;
+				GDIHandleAllocator[Index][which] = 0xDEADBEEF;
           }
 #endif /* DBG */
 
@@ -416,18 +442,7 @@ LockHandle:
       ExFreeToPagedLookasideList(LookasideList, newObject);
       DPRINT1("Failed to insert gdi object into the handle table, no handles left!\n");
 #ifdef DBG
-	  if ( !leak_reported )
-	  {
-		  DPRINT1("reporting gdi handle abusers:\n");
-		  int which;
-		  for ( which = 0; which < GDI_STACK_LEVELS; which++ )
-		      IntDumpHandleTable(which);
-		  leak_reported = 1;
-	  }
-	  else
-	  {
-		  DPRINT1("gdi handle abusers already reported!\n");
-	  }
+      IntDumpHandleTable();
 #endif /* DBG */
     }
     else
