@@ -1,4 +1,4 @@
-/* $Id: pixelsup_i386.S,v 1.1 2003/08/24 12:11:13 dwelch Exp $
+/* $Id: pixelsup_i386.S,v 1.2 2004/03/04 18:55:09 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -52,44 +52,47 @@ _InbvPutPixels:
 .nomask:
 
   /* Compute offset in video memory and put it in EBX
-     offset = (x >> 3) + y80[y]; */
+     offset = (x >> 3) + (y << 4) + (y << 6); */
   movl	0xC(%ebp), %esi   /* y */
-  movl	_y80(,%esi, 4), %ebx
+  movl	%esi, %ebx
+  shll  $0x6, %ebx
+  shll  $0x4, %esi
+  addl	%esi, %ebx
   movl	0x8(%ebp), %eax   /* x */
   shrl  $0x3, %eax
   addl	%eax, %ebx
 
   /* Latch first byte
-    (UCHAR) READ_REGISTER_UCHAR(vidmem + offset+0); */
-  movl	(_vidmem), %esi
+    (UCHAR) READ_REGISTER_UCHAR(VideoMemory + offset+0); */
+  movl	(_VideoMemory), %esi
   addl	%ebx, %esi
   movb  0x0(%esi), %bl
   /* Write color index for first pixel
-     *((PUCHAR)(vidmem + offset+0)) = (c >> 0*8) & 0xff; */
+     *((PUCHAR)(VideoMemory + offset+0)) = (c >> 0*8) & 0xff; */
   movl  0x10(%ebp), %eax
   movb  %al, 0x0(%esi)
 
   /* Latch second byte
-    (UCHAR) READ_REGISTER_UCHAR(vidmem + offset+1); */
+    (UCHAR) READ_REGISTER_UCHAR(VideoMemory + offset+1); */
   movb  0x1(%esi), %bl
   /* Write color index for second pixel
-     *((PUCHAR)(vidmem + offset+1)) = (c >> 1*8) & 0xff; */
+     *((PUCHAR)(VideoMemory + offset+1)) = (c >> 1*8) & 0xff; */
   shrl  $0x8, %eax
   movb  %al, 0x1(%esi)
 
   /* Latch third byte
-    (UCHAR) READ_REGISTER_UCHAR(vidmem + offset+2); */
+    (UCHAR) READ_REGISTER_UCHAR(VideoMemory + offset+2); */
   movb  0x2(%esi), %bl
   /* Write color index for third pixel
-     *((PUCHAR)(vidmem + offset+2)) = (c >> 2*8) & 0xff; */
+     *((PUCHAR)(VideoMemory + offset+2)) = (c >> 2*8) & 0xff; */
   shrl  $0x8, %eax
   movb  %al, 0x2(%esi)
 
   /* Latch fourth byte
-    (UCHAR) READ_REGISTER_UCHAR(vidmem + offset+3); */
+    (UCHAR) READ_REGISTER_UCHAR(VideoMemory + offset+3); */
   movb  0x3(%esi), %bl
   /* Write color index for fourth pixel
-     *((PUCHAR)(vidmem + offset+3)) = (c >> 3*8) & 0xff; */
+     *((PUCHAR)(VideoMemory + offset+3)) = (c >> 3*8) & 0xff; */
   shrl  $0x8, %eax
   movb  %al, 0x3(%esi)
 
