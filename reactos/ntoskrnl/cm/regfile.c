@@ -859,8 +859,8 @@ CmiInitNonVolatileRegistryHive (PREGISTRY_HIVE RegistryHive,
   ULONG ViewSize;
   NTSTATUS Status;
 
-  DPRINT("CmiInitNonVolatileRegistryHive(%p, %S, %d) called\n",
-	 RegistryHive, Filename, CreateNew);
+  DPRINT("CmiInitNonVolatileRegistryHive(%p, %S) called\n",
+	 RegistryHive, Filename);
 
   /* Duplicate Filename */
   Status = RtlCreateUnicodeString(&RegistryHive->HiveFileName,
@@ -1042,8 +1042,8 @@ CmiInitNonVolatileRegistryHive (PREGISTRY_HIVE RegistryHive,
       return Status;
     }
 
-  DPRINT("CmiInitNonVolatileRegistryHive(%p, %S, %d) - Finished.\n",
-	 RegistryHive, Filename, CreateNew);
+  DPRINT("CmiInitNonVolatileRegistryHive(%p, %S) - Finished.\n",
+	 RegistryHive, Filename);
 
   return(STATUS_SUCCESS);
 }

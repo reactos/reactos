@@ -146,7 +146,7 @@ CmiObjectParse(PVOID ParsedObject,
 	}
 
       /* Create new key object and put into linked list */
-      DPRINT("CmiObjectParse: %s\n", cPath);
+      DPRINT("CmiObjectParse: %s\n", Path);
       Status = ObRosCreateObject(NULL,
 			      STANDARD_RIGHTS_REQUIRED,
 			      NULL,
