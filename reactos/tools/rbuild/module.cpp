@@ -20,6 +20,18 @@ FixSeparator ( const string& s )
 }
 
 string
+GetExtension ( const string& filename )
+{
+	size_t index = filename.find_last_of ( '/' );
+	if (index == string::npos) index = 0;
+	string tmp = filename.substr( index, filename.size() - index );
+	size_t ext_index = tmp.find_last_of( '.' );
+	if (ext_index != string::npos) 
+		return filename.substr ( index + ext_index, filename.size() );
+	return "";
+}
+
+string
 NormalizeFilename ( const string& filename )
 {
 	Path path;
@@ -253,6 +265,8 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 		return Win32GUI;
 	if ( attribute.value == "bootloader" )
 		return BootLoader;
+	if ( attribute.value == "iso" )
+		return Iso;
 	throw InvalidAttributeValueException ( location,
 	                                       attribute.name,
 	                                       attribute.value );
@@ -279,6 +293,8 @@ Module::GetDefaultModuleExtension () const
 		case KernelModeDriver:
 		case BootLoader:
 			return ".sys";
+		case Iso:
+			return ".iso";
 	}
 	throw InvalidOperationException ( __FILE__,
 	                                  __LINE__ );
@@ -354,6 +370,20 @@ Module::GetInvocationTarget ( const int index ) const
 	return ssprintf ( "%s_invoke_%d",
 	                  name.c_str (),
 	                  index );
+}
+
+bool
+Module::HasFileWithExtensions ( const std::string& extension1,
+	                            const std::string& extension2 ) const
+{
+	for ( size_t i = 0; i < files.size (); i++ )
+	{
+		File& file = *files[i];
+		string extension = GetExtension ( file.name );
+		if ( extension == extension1 || extension == extension2 )
+			return true;
+	}
+	return false;
 }
 
 

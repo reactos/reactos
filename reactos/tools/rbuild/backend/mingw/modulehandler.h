@@ -22,7 +22,6 @@ protected:
 	const std::string &PassThruCacheDirectory ( const std::string &f ) const;
 	std::string GetWorkingDirectory () const;
         std::string GetDirectory (const std::string& filename ) const;
-	std::string GetExtension ( const std::string& filename ) const;
 	std::string GetBasename ( const std::string& filename ) const;
 	std::string ReplaceExtension ( const std::string& filename,
 	                               const std::string& newExtension ) const;
@@ -114,6 +113,7 @@ private:
 	void GenerateCommands ( const Module& module,
 	                        const std::string& sourceFilename,
 	                        const std::string& cc,
+	                        const std::string& cppc,
 	                        const std::string& cflagsMacro,
 	                        const std::string& nasmflagsMacro,
 	                        const std::string& windresflagsMacro ) const;
@@ -121,11 +121,13 @@ private:
 	                                 const std::vector<File*>& files,
 	                                 const std::vector<If*>& ifs,
 	                                 const std::string& cc,
+	                                 const std::string& cppc,
 	                                 const std::string& cflagsMacro,
 	                                 const std::string& nasmflagsMacro,
 	                                 const std::string& windresflagsMacro ) const;
 	void GenerateObjectFileTargets ( const Module& module,
 	                                 const std::string& cc,
+	                                 const std::string& cppc,
 	                                 const std::string& cflagsMacro,
 	                                 const std::string& nasmflagsMacro,
 	                                 const std::string& windresflagsMacro ) const;
@@ -137,6 +139,7 @@ private:
 	                                    const std::string& objs_macro ) const;
 	void GenerateMacrosAndTargets ( const Module& module,
 	                                const std::string& cc,
+	                                const std::string& cppc,
 	                                const std::string& ar,
 	                                const std::string* clags ) const;
 	std::string GetPreconditionDependenciesName ( const Module& module ) const;
@@ -242,6 +245,16 @@ public:
 	virtual void Process ( const Module& module );
 private:
 	void GenerateBootLoaderModuleTarget ( const Module& module );
+};
+
+
+class MingwIsoModuleHandler : public MingwModuleHandler
+{
+public:
+	MingwIsoModuleHandler ();
+	virtual void Process ( const Module& module );
+private:
+	void GenerateIsoModuleTarget ( const Module& module );
 };
 
 #endif /* MINGW_MODULEHANDLER_H */

@@ -79,7 +79,8 @@ enum ModuleType
 	NativeDLL,
 	Win32DLL,
 	Win32GUI,
-	BootLoader
+	BootLoader,
+	Iso
 };
 
 
@@ -117,6 +118,8 @@ public:
 	std::string GetPathWithPrefix ( const std::string& prefix ) const;
 	std::string GetTargets () const;
 	std::string GetInvocationTarget ( const int index ) const;
+	bool HasFileWithExtensions ( const std::string& extension1,
+	                             const std::string& extension2 ) const;
 	void ProcessXML();
 private:
 	std::string GetDefaultModuleExtension () const;
@@ -338,6 +341,9 @@ public:
 
 extern std::string
 FixSeparator ( const std::string& s );
+
+extern std::string
+GetExtension ( const std::string& filename );
 
 extern std::string
 NormalizeFilename ( const std::string& filename );

@@ -1,0 +1,10 @@
+<module name="cabman" type="buildtool">
+	<include base="cabman">.</include>
+	<include base="zlib">.</include>
+	<library>zlib</library>
+	<file>cabinet.cxx</file>
+	<file>dfp.cxx</file>
+	<file>main.cxx</file>
+	<file>mszip.cxx</file>
+	<file>raw.cxx</file>
+</module>
