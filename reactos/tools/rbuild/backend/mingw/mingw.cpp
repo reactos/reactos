@@ -80,7 +80,7 @@ MingwBackend::GenerateProjectCFlagsMacro ( const char* assignmentOperation,
 			" -I%s",
 			includes[i]->directory.c_str() );
 	}
-	
+
 	for ( i = 0; i < defines.size(); i++ )
 	{
 		Define& d = *defines[i];
@@ -138,7 +138,7 @@ MingwBackend::GenerateGlobalCFlagsAndProperties (
 				rIf.includes,
 				rIf.defines,
 				rIf.ifs );
-			fprintf ( 
+			fprintf (
 				fMakefile,
 				"endif\n\n" );
 		}
@@ -162,37 +162,7 @@ MingwBackend::GenerateProjectLFLAGS () const
 void
 MingwBackend::GenerateGlobalVariables () const
 {
-	fprintf ( fMakefile, "EXEPREFIX = " EXEPREFIX "\n" );
-	fprintf ( fMakefile, "EXEPOSTFIX = " EXEPOSTFIX "\n" );
-	fprintf ( fMakefile, "SEP = " SSEP "$(EMPTY_VAR)\n" );
-	fprintf ( fMakefile, "host_gcc = gcc\n" );
-	fprintf ( fMakefile, "host_gpp = g++\n" );
-	fprintf ( fMakefile, "host_ld = ld\n" );
-	fprintf ( fMakefile, "host_ar = ar\n" );
-	fprintf ( fMakefile, "host_objcopy = objcopy\n" );
-#ifdef WIN32
-	fprintf ( fMakefile, "nmkdir = mkdir\n" );
-	fprintf ( fMakefile, "rm = del /f /q\n" );
-	fprintf ( fMakefile, "gcc = gcc\n" );
-	fprintf ( fMakefile, "gpp = g++\n" );
-	fprintf ( fMakefile, "ld = ld\n" );
-	fprintf ( fMakefile, "ar = ar\n" );
-	fprintf ( fMakefile, "objcopy = objcopy\n" );
-	fprintf ( fMakefile, "dlltool = dlltool\n" );
-	fprintf ( fMakefile, "windres = windres\n" );
-#else
-	fprintf ( fMakefile, "nmkdir = mkdir -p\n" );
-	fprintf ( fMakefile, "rm = rm -f\n" );
-	fprintf ( fMakefile, "gcc = mingw32-gcc\n" );
-	fprintf ( fMakefile, "gpp = mingw32-g++\n" );
-	fprintf ( fMakefile, "ld = mingw32-ld\n" );
-	fprintf ( fMakefile, "ar = mingw32-ar\n" );
-	fprintf ( fMakefile, "objcopy = mingw32-objcopy\n" );
-	fprintf ( fMakefile, "dlltool = mingw32-dlltool\n" );
-	fprintf ( fMakefile, "windres = mingw32-windres\n" );
-#endif
 	fprintf ( fMakefile, "mkdir = tools" SSEP "rmkdir" EXEPOSTFIX "\n" );
-	fprintf ( fMakefile, "NUL=NUL\n" );
 	fprintf ( fMakefile, "winebuild = tools" SSEP "winebuild" SSEP "winebuild" EXEPOSTFIX "\n" );
 	fprintf ( fMakefile, "bin2res = tools" SSEP "bin2res" SSEP "bin2res" EXEPOSTFIX "\n" );
 	fprintf ( fMakefile, "cabman = tools" SSEP "cabman" SSEP "cabman" EXEPOSTFIX "\n" );
@@ -208,8 +178,6 @@ MingwBackend::GenerateGlobalVariables () const
 	fprintf ( fMakefile, "PROJECT_LFLAGS = %s\n",
 	          GenerateProjectLFLAGS ().c_str () );
 	fprintf ( fMakefile, "\n" );
-
-	fprintf ( fMakefile, ".PHONY: clean\n\n" );
 }
 
 bool
@@ -257,7 +225,7 @@ MingwBackend::GetBuildToolDependencies () const
 	}
 	return dependencies;
 }
-	
+
 void
 MingwBackend::GenerateInitTarget () const
 {

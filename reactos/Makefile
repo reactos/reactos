@@ -1,27 +1,47 @@
+host_gcc = gcc
+host_gpp = g++
+host_ld = ld
+host_ar = ar
+host_objcopy = objcopy
 ifeq ($(HOST),mingw32-linux)
+	EXEPREFIX = ./
 	EXEPOSTFIX =
 	SEP = /
-	host_gcc = gcc
-	host_gpp = g++
 	nmkdir = mkdir -p
-	rm = rm
+	gcc = mingw32-gcc
+	gpp = mingw32-g++
+	ld = mingw32-ld
+	ar = mingw32-ar
+	objcopy = mingw32-objcopy
+	dlltool = mingw32-dlltool
+	windres = mingw32-windres
+	rm = rm -f
+	NUL = /dev/null
 else # mingw32-windows
+	EXEPREFIX =
 	EXEPOSTFIX = .exe
 	SEP = \$(EMPTY_VAR)
-	host_gcc = gcc
-	host_gpp = g++
 	nmkdir = mkdir
+	gcc = gcc
+	gpp = g++
+	ld = ld
+	ar = ar
+	objcopy = objcopy
+	dlltool = dlltool
+	windres = windres
 	rm = del /f /q
+	NUL = NUL
 endif
+
+.PHONY: all
+.PHONY: clean
 
 all: Makefile.auto
 
 ifneq ($(ROS_INTERMEDIATE),)
 $(ROS_INTERMEDIATE)tools: $(ROS_INTERMEDIATE)
-else
-$(ROS_INTERMEDIATE)tools:
-endif
 	${nmkdir} $(ROS_INTERMEDIATE)tools
+endif
 
 ifneq ($(ROS_INTERMEDIATE),)
 $(ROS_INTERMEDIATE):
