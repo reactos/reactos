@@ -5,6 +5,9 @@ extern int startup( int argc, char *argv[] );
  // winefile main routine
 extern int winefile_main(HINSTANCE hinstance, HWND hwndParent, int cmdshow);
 
+ // search for windows of a specific clasname
+extern int find_window_class(LPCTSTR classname);
+
  // display file manager window
 extern void ShowFileMgr(HWND hWndParent, int cmdshow);
 

@@ -51,8 +51,8 @@
 
 WINEFILE_GLOBALS Globals;
 
-extern void WineLicense(HWND hWnd);
-extern void WineWarranty(HWND hWnd);
+extern void WineLicense(HWND hwnd);
+extern void WineWarranty(HWND hwnd);
 
 typedef struct _Entry {
 	struct _Entry*	next;
@@ -1068,9 +1068,9 @@ LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 			break;
 
 		case WM_DESTROY:
-#ifndef _ROS_	// dont't exit desktop when closing file manager window
-			PostQuitMessage(0);
-#endif
+			 // dont't exit desktop when closing file manager window
+			if (!Globals.hwndParent)
+				PostQuitMessage(0);
 			break;
 
 		case WM_COMMAND: {
@@ -2820,7 +2820,7 @@ static void InitInstance(HINSTANCE hinstance)
 }
 
 
-void ShowFileMgr(HWND hWndParent, int cmdshow)
+void ShowFileMgr(HWND hwndParent, int cmdshow)
 {
 	TCHAR path[MAX_PATH];
 	ChildWnd* child;
@@ -2830,6 +2830,8 @@ void ShowFileMgr(HWND hWndParent, int cmdshow)
 
 	if (Globals.hMainWnd)
 		return;
+
+	Globals.hwndParent = hwndParent;
 
 	hMenuFrame = LoadMenu(Globals.hInstance, MAKEINTRESOURCE(IDM_WINEFILE));
 	hMenuWindow = GetSubMenu(hMenuFrame, GetMenuItemCount(hMenuFrame)-2);
@@ -2845,7 +2847,7 @@ void ShowFileMgr(HWND hWndParent, int cmdshow)
 	/* create main window */
 	Globals.hMainWnd = CreateWindowEx(0, (LPCTSTR)(int)Globals.hframeClass, _T("Wine File"), WS_OVERLAPPEDWINDOW,
 					CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-					hWndParent, Globals.hMenuFrame, Globals.hInstance, 0/*lpParam*/);
+					hwndParent, Globals.hMenuFrame, Globals.hInstance, 0/*lpParam*/);
 
 
 	Globals.hmdiclient = CreateWindowEx(0, _T("MDICLIENT"), NULL,
@@ -2960,8 +2962,6 @@ void ExitInstance()
 }
 
 
-#ifdef _NO_EXTENSIONS
-
 /* search for already running win[e]files */
 
 static int g_foundPrevInstance = 0;
@@ -2980,7 +2980,16 @@ static BOOL CALLBACK EnumWndProc(HWND hwnd, LPARAM lparam)
 	return TRUE;
 }
 
-#endif
+int find_window_class(LPCTSTR classname)
+{
+	/* allow only one running instance */
+	EnumWindows(EnumWndProc, (LPARAM)classname);
+
+	if (g_foundPrevInstance)
+		return 1;
+
+	return 0;
+}
 
 
 int winefile_main(HINSTANCE hinstance, HWND hwndParent, int cmdshow)
@@ -3022,10 +3031,7 @@ int APIENTRY WinMain(HINSTANCE hinstance,
 					 int	   cmdshow)
 {
 #ifdef _NO_EXTENSIONS
-	/* allow only one running instance */
-	EnumWindows(EnumWndProc, (LPARAM)WINEFILEFRAME);
-
-	if (g_foundPrevInstance)
+	if (find_window_class(WINEFILEFRAME))
 		return 1;
 #endif
 

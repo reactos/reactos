@@ -197,7 +197,7 @@ SOURCE=.\De.rc
 # End Source File
 # Begin Source File
 
-SOURCE=.\drivebar.bmp
+SOURCE=.\res\drivebar.bmp
 # End Source File
 # Begin Source File
 
@@ -230,6 +230,14 @@ SOURCE=.\En.rc
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\images.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\include\resource.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\resource.rc
 
 !IF  "$(CFG)" == "explorer - Win32 Release"
@@ -259,11 +267,31 @@ SOURCE=.\resource.rc
 # End Source File
 # Begin Source File
 
-SOURCE=.\winefile.ico
+SOURCE=.\res\toolbar.bmp
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\winefile.ico
 # End Source File
 # Begin Source File
 
 SOURCE=.\winefile.rc
+# End Source File
+# End Group
+# Begin Group "include"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\include\explorer.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\include\license.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\include\winefile.h
 # End Source File
 # End Group
 # Begin Source File
@@ -276,18 +304,6 @@ SOURCE=.\ex_bar.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\explorer.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\license.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\resource.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\splitpath.c
 # End Source File
 # Begin Source File
@@ -297,10 +313,6 @@ SOURCE=.\startup.c
 # Begin Source File
 
 SOURCE=.\winefile.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\winefile.h
 # End Source File
 # End Target
 # End Project

@@ -75,68 +75,72 @@ int main(int argc, char *argv[])
 {
     int Width, Height;
     WNDCLASSEX wc;
-    HWND Desktop;
+    HWND hwndDesktop = 0;
 
 	STARTUPINFO startupinfo;
 	int nCmdShow = SW_SHOWNORMAL;
 
 	HINSTANCE hInstance = GetModuleHandle(NULL);
-	HWND hwndExplorerBar;
 
-    wc.cbSize       = sizeof(WNDCLASSEX);
-    wc.style        = CS_DBLCLKS;
-    wc.lpfnWndProc  = &DeskWndProc;
-    wc.cbClsExtra   = 0;
-    wc.cbWndExtra   = 0;
-    wc.hInstance    = hInstance;
-    wc.hIcon        = LoadIcon(NULL, IDI_APPLICATION);
-    wc.hCursor      = LoadCursor(NULL, IDC_ARROW);
-    wc.hbrBackground= (HBRUSH) GetStockObject(BLACK_BRUSH);
-    wc.lpszMenuName = NULL;
-    wc.lpszClassName= DesktopClassName;
-    wc.hIconSm      = NULL;
-
-    if (!RegisterClassEx(&wc))
-        return 1; // error
-
-
-    Width = GetSystemMetrics(SM_CXSCREEN);
-    Height = GetSystemMetrics(SM_CYSCREEN);
-
-    Desktop = CreateWindowEx(0, DesktopClassName, TEXT("Desktop"),
-                            WS_VISIBLE | WS_POPUP | WS_CLIPCHILDREN,
-                            0, 0, Width, Height,
-                            NULL, NULL, hInstance, NULL);
-
-    if (! Desktop)
+	 // create desktop window and task var only, if we are the first explorer instance
+	if (!find_window_class(DesktopClassName))
 	{
-		fprintf(stderr,"FATAL: Desktop window could not be initialized properly - Exiting.\n");
-		return 1;   // error
-	}
+		HWND hwndExplorerBar;
 
-	 // call winefile startup routine
-	startupinfo.wShowWindow = SW_SHOWNORMAL;
-	GetStartupInfo(&startupinfo);
+		wc.cbSize       = sizeof(WNDCLASSEX);
+		wc.style        = CS_DBLCLKS;
+		wc.lpfnWndProc  = &DeskWndProc;
+		wc.cbClsExtra   = 0;
+		wc.cbWndExtra   = 0;
+		wc.hInstance    = hInstance;
+		wc.hIcon        = LoadIcon(NULL, IDI_APPLICATION);
+		wc.hCursor      = LoadCursor(NULL, IDC_ARROW);
+		wc.hbrBackground= (HBRUSH) GetStockObject(BLACK_BRUSH);
+		wc.lpszMenuName = NULL;
+		wc.lpszClassName= DesktopClassName;
+		wc.hIconSm      = NULL;
 
-	if (startupinfo.dwFlags & STARTF_USESHOWWINDOW)
-		nCmdShow = startupinfo.wShowWindow;
+		if (!RegisterClassEx(&wc))
+			return 1; // error
 
-	// Initializing the Explorer Bar !
-	if (!(hwndExplorerBar=InitializeExplorerBar(hInstance, nCmdShow)))
-	{
-		fprintf(stderr,"FATAL: Explorer bar could not be initialized properly ! Exiting !\n");
-		return 1;
-	}
 
-	 // Load plugins
-	if (!ExplorerLoadPlugins(hwndExplorerBar))
-	{
-		fprintf(stderr,"WARNING: No plugin for desktop bar could be loaded.\n");
-	}
+		Width = GetSystemMetrics(SM_CXSCREEN);
+		Height = GetSystemMetrics(SM_CYSCREEN);
+
+		hwndDesktop = CreateWindowEx(0, DesktopClassName, TEXT("Desktop"),
+								WS_VISIBLE | WS_POPUP | WS_CLIPCHILDREN,
+								0, 0, Width, Height,
+								NULL, NULL, hInstance, NULL);
+
+		if (!hwndDesktop)
+		{
+			fprintf(stderr,"FATAL: Desktop window could not be initialized properly - Exiting.\n");
+			return 1;   // error
+		}
+
+		 // call winefile startup routine
+		GetStartupInfo(&startupinfo);
+
+		if (startupinfo.dwFlags & STARTF_USESHOWWINDOW)
+			nCmdShow = startupinfo.wShowWindow;
+
+		 // Initializing the Explorer Bar
+		if (!(hwndExplorerBar=InitializeExplorerBar(hInstance, nCmdShow)))
+		{
+			fprintf(stderr,"FATAL: Explorer bar could not be initialized properly ! Exiting !\n");
+			return 1;
+		}
+
+		 // Load plugins
+		if (!ExplorerLoadPlugins(hwndExplorerBar))
+		{
+			fprintf(stderr,"WARNING: No plugin for desktop bar could be loaded.\n");
+		}
 
 #ifndef _DEBUG	//MF: disabled for debugging
-    startup(argc, argv); // invoke the startup groups
+	    startup(argc, argv); // invoke the startup groups
 #endif
+	}
 
-	return winefile_main(hInstance, Desktop, nCmdShow);
+	return winefile_main(hInstance, hwndDesktop, nCmdShow);
 }
