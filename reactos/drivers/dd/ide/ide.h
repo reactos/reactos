@@ -221,8 +221,12 @@ typedef struct _IDE_DRIVE_IDENTIFY {
   WORD  TMCylinders;         /*54*/
   WORD  TMHeads;             /*55*/
   WORD  TMSectorsPerTrk;     /*56*/
-  WORD  TMCapacity;          /*57*/
-  WORD  Reserved53[198];     /*58*/
+  WORD  TMCapacityLo;        /*57*/
+  WORD  TMCapacityHi;        /*58*/
+  WORD  Reserved59;          /*59*/
+  WORD  TMSectorCountLo;     /*60*/
+  WORD  TMSectorCountHi;     /*61*/
+  WORD  Reserved62[194];     /*62*/
 } IDE_DRIVE_IDENTIFY, *PIDE_DRIVE_IDENTIFY;
 
 
