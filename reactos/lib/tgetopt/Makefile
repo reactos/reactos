@@ -7,7 +7,7 @@ TARGET_TYPE = library
 TARGET_NAME = tgetopt
 
 # require os code to explicitly request A/W version of structs/functions
-TARGET_CFLAGS += -D_DISABLE_TIDENTS
+TARGET_CFLAGS += -D__USE_W32API -D_DISABLE_TIDENTS
 
 TARGET_OBJECTS = getopt.o _wgetopt.o
  
