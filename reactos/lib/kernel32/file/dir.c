@@ -183,8 +183,6 @@ WINBOOL STDCALL CreateDirectoryExW(LPCWSTR lpTemplateDirectory,
    return TRUE;
 }
 
-
-
 WINBOOL STDCALL RemoveDirectoryA(LPCSTR lpPathName)
 {
 	WCHAR PathNameW[MAX_PATH];
@@ -204,27 +202,118 @@ WINBOOL STDCALL RemoveDirectoryA(LPCSTR lpPathName)
 WINBOOL STDCALL RemoveDirectoryW(LPCWSTR lpPathName)
 {
    NTSTATUS errCode;
+   HANDLE DirectoryHandle;
+   IO_STATUS_BLOCK IoStatusBlock;
    OBJECT_ATTRIBUTES ObjectAttributes;
-   UNICODE_STRING PathNameString;
+   UNICODE_STRING DirectoryNameString;
+   WCHAR PathNameW[MAX_PATH];
+   WCHAR DirectoryNameW[MAX_PATH];
+   FILE_DISPOSITION_INFORMATION FileDispInfo;
+   UINT Len = 0;
    
-   PathNameString.Length = lstrlenW(lpPathName)*sizeof(WCHAR);
-   PathNameString.Buffer = (WCHAR *)lpPathName;
-   PathNameString.MaximumLength = PathNameString.Length+sizeof(WCHAR);
-   
+   DPRINT("lpPathName %w\n",
+           lpPathName);
+
+   if (lpPathName[1] == (WCHAR)':') 
+     {
+        wcscpy(PathNameW, lpPathName);
+     }
+   else if (wcslen(lpPathName) > 4 &&
+            lpPathName[0] == (WCHAR)'\\' &&
+            lpPathName[1] == (WCHAR)'\\' &&
+            lpPathName[2] == (WCHAR)'.' &&
+            lpPathName[3] == (WCHAR)'\\')
+     {
+        wcscpy(PathNameW, lpPathName);
+     }
+   else if (lpPathName[0] == (WCHAR)'\\')
+     {
+	GetCurrentDriveW(MAX_PATH,PathNameW);
+        wcscat(PathNameW, lpPathName);
+     }
+   else
+     {
+	Len =  GetCurrentDirectoryW(MAX_PATH,PathNameW);
+	if ( Len == 0 )
+	  return NULL;
+	if ( PathNameW[Len-1] != L'\\' ) {
+	   PathNameW[Len] = L'\\';
+	   PathNameW[Len+1] = 0;
+	}
+        wcscat(PathNameW,lpPathName);
+     }
+
+   DirectoryNameW[0] = '\\';
+   DirectoryNameW[1] = '?';
+   DirectoryNameW[2] = '?';
+   DirectoryNameW[3] = '\\';
+   DirectoryNameW[4] = 0;
+   wcscat(DirectoryNameW,PathNameW);
+
+   DirectoryNameString.Length = wcslen (DirectoryNameW)*sizeof(WCHAR);
+
+   if ( DirectoryNameString.Length == 0 )
+        return FALSE;
+
+   if ( DirectoryNameString.Length > MAX_PATH*sizeof(WCHAR) )
+        return FALSE;
+
+   DirectoryNameString.Buffer = (WCHAR *)DirectoryNameW;
+   DirectoryNameString.MaximumLength = DirectoryNameString.Length + sizeof(WCHAR);
+
    ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
    ObjectAttributes.RootDirectory = NULL;
-   ObjectAttributes.ObjectName = &PathNameString;
+   ObjectAttributes.ObjectName = &DirectoryNameString;
    ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE| OBJ_INHERIT;
    ObjectAttributes.SecurityDescriptor = NULL;
    ObjectAttributes.SecurityQualityOfService = NULL;
 
-   errCode = NtDeleteFile(&ObjectAttributes);
+   DPRINT("DirectoryNameW '%w'\n", DirectoryNameW);
+
+   errCode = ZwCreateFile(&DirectoryHandle,
+                          FILE_WRITE_ATTRIBUTES,    /* 0x110080 */
+			  &ObjectAttributes,
+			  &IoStatusBlock,
+			  NULL,
+                          FILE_ATTRIBUTE_DIRECTORY, /* 0x7 */
+			  0,
+                          FILE_OPEN,
+                          FILE_DIRECTORY_FILE,      /* 0x204021 */
+			  NULL,
+			  0);
 
    if (!NT_SUCCESS(errCode))
      {
+        CHECKPOINT;
 	SetLastError(RtlNtStatusToDosError(errCode));
 	return FALSE;
      }
+
+   FileDispInfo.DeleteFile = TRUE;
+
+   errCode = NtSetInformationFile(DirectoryHandle,
+                                  &IoStatusBlock,
+                                  &FileDispInfo,
+                                  sizeof(FILE_DISPOSITION_INFORMATION),
+                                  FileDispositionInformation);
+
+   if (!NT_SUCCESS(errCode))
+     {
+        CHECKPOINT;
+        NtClose(DirectoryHandle);
+	SetLastError(RtlNtStatusToDosError(errCode));
+	return FALSE;
+     }
+
+   errCode = NtClose(DirectoryHandle);
+
+   if (!NT_SUCCESS(errCode))
+     {
+        CHECKPOINT;
+	SetLastError(RtlNtStatusToDosError(errCode));
+	return FALSE;
+     }
+
    return TRUE;
 }
 
