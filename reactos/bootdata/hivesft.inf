@@ -335,7 +335,7 @@ HKCU,"Control Panel\desktop","DragFullWindows",0x00000000,"0"
 ; Show icons for executables in shell views
 HKCR,".exe","",0x00000000,"exefile"
 HKCR,"exefile\Defaulticon","",0x00000000,"%1"
-
+HKCR,"exefile\shell\open\command","",0x00000000,"""%1"" %*"
 ; install notepad as handler for .txt files
 HKCR,".txt","",0x00000000,"txtfile"
 HKCR,".txt","Content Type",0x00000000,"text/plain"
