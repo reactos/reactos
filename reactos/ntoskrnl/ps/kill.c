@@ -133,6 +133,7 @@ VOID PsTerminateCurrentThread(NTSTATUS ExitStatus)
    KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
    
    CurrentThread->ExitStatus = ExitStatus;
+   KeCancelTimer(&KeGetCurrentThread()->Timer);
    KeAcquireDispatcherDatabaseLock(FALSE);
    CurrentThread->Tcb.DispatcherHeader.SignalState = TRUE;
    KeDispatcherObjectWake(&CurrentThread->Tcb.DispatcherHeader);

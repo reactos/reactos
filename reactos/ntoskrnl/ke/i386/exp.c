@@ -48,24 +48,24 @@
 extern void interrupt_handler2e(void);
 extern void interrupt_handler2d(void);
 
-extern void exception_handler0(void);
-extern void exception_handler1(void);
-extern void exception_handler2(void);
-extern void exception_handler3(void);
-extern void exception_handler4(void);
-extern void exception_handler5(void);
-extern void exception_handler6(void);
-extern void exception_handler7(void);
-extern void exception_handler8(void);
-extern void exception_handler9(void);
-extern void exception_handler10(void);
-extern void exception_handler11(void);
-extern void exception_handler12(void);
-extern void exception_handler13(void);
-extern void exception_handler14(void);
-extern void exception_handler15(void);
-extern void exception_handler16(void);
-extern void exception_handler_unknown(void);
+extern VOID KiTrap0(VOID);
+extern VOID KiTrap1(VOID);
+extern VOID KiTrap2(VOID);
+extern VOID KiTrap3(VOID);
+extern VOID KiTrap4(VOID);
+extern VOID KiTrap5(VOID);
+extern VOID KiTrap6(VOID);
+extern VOID KiTrap7(VOID);
+extern VOID KiTrap8(VOID);
+extern VOID KiTrap9(VOID);
+extern VOID KiTrap10(VOID);
+extern VOID KiTrap11(VOID);
+extern VOID KiTrap12(VOID);
+extern VOID KiTrap13(VOID);
+extern VOID KiTrap14(VOID);
+extern VOID KiTrap15(VOID);
+extern VOID KiTrap16(VOID);
+extern VOID KiTrapUnknown(VOID);
 
 extern ULONG init_stack;
 extern ULONG init_stack_top;
@@ -105,7 +105,59 @@ print_address(PVOID address)
 }
 
 ULONG
-exception_handler(struct trap_frame* tf)
+KiUserTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
+{
+  EXCEPTION_RECORD Er;
+
+  if (ExceptionNr == 0)
+    {
+      Er.ExceptionCode = STATUS_INTEGER_DIVIDE_BY_ZERO;
+    }
+  else if (ExceptionNr == 1)
+    {
+      Er.ExceptionCode = STATUS_SINGLE_STEP;
+    }
+  else if (ExceptionNr == 3)
+    {
+      Er.ExceptionCode = STATUS_BREAKPOINT;
+    }
+  else if (ExceptionNr == 4)
+    {
+      Er.ExceptionCode = STATUS_INTEGER_OVERFLOW;
+    }
+  else if (ExceptionNr == 5)
+    {
+      Er.ExceptionCode = STATUS_ARRAY_BOUNDS_EXCEEDED;
+    }
+  else if (ExceptionNr == 6)
+    {
+      Er.ExceptionCode = STATUS_ILLEGAL_INSTRUCTION;
+    }
+  else
+    {
+      Er.ExceptionCode = STATUS_ACCESS_VIOLATION;
+    }
+  Er.ExceptionFlags = 0;
+  Er.ExceptionRecord = NULL;
+  Er.ExceptionAddress = (PVOID)Tf->Eip;
+  if (ExceptionNr == 14)
+    {
+      Er.NumberParameters = 2;
+      Er.ExceptionInformation[0] = Tf->ErrorCode & 0x1;
+      Er.ExceptionInformation[1] = (ULONG)Cr2;
+    }
+  else
+    {
+      Er.NumberParameters = 0;
+    }
+  
+
+  KiDispatchException(&Er, 0, Tf, UserMode, TRUE);
+  return(0);
+}
+
+ULONG
+KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
 /*
  * FUNCTION: Called by the lowlevel execption handlers to print an amusing 
  * message and halt the computer
@@ -118,6 +170,7 @@ exception_handler(struct trap_frame* tf)
 //   unsigned int j, sym;
    PULONG stack;
    NTSTATUS Status;
+   ULONG Esp0;
    static char *TypeStrings[] = 
      {
        "Divide Error",
@@ -139,65 +192,70 @@ exception_handler(struct trap_frame* tf)
        "Alignment Check",
        "Machine Check"
      };
+
+   /* Use the address of the trap frame as approximation to the ring0 esp */
+   Esp0 = (ULONG)Tf;
    
-   __asm__("movl %%cr2,%0\n\t"
-	   : "=d" (cr2));
+   /* Get CR2 */
+   __asm__("movl %%cr2,%0\n\t" : "=d" (cr2));
    
+   /*
+    * If this was a V86 mode exception then handle it specially
+    */
+#if 0
    if (tf->eflags & (1 << 17))
      {
        return(KeV86Exception(tf, cr2));
      }
+#endif
 
+   /*
+    * Check for stack underflow
+    */
    if (PsGetCurrentThread() != NULL &&
-       tf->esp < (ULONG)PsGetCurrentThread()->Tcb.StackLimit)
+       Esp0 < (ULONG)PsGetCurrentThread()->Tcb.StackLimit)
      {
 	DbgPrint("Stack underflow (tf->esp %x Limit %x)\n",
-		 tf->esp, (ULONG)PsGetCurrentThread()->Tcb.StackLimit);
-	tf->type = 12;
+		 Esp0, (ULONG)PsGetCurrentThread()->Tcb.StackLimit);
+	ExceptionNr = 12;
      }
    
-   if (tf->type == 14)
+   if (ExceptionNr == 14)
      {
 	__asm__("sti\n\t");
-	Status = MmPageFault(tf->cs&0xffff,
-			     &tf->eip,
-			     &tf->eax,
+	Status = MmPageFault(Tf->Cs&0xffff,
+			     &Tf->Eip,
+			     &Tf->Eax,
 			     cr2,
-			     tf->error_code);
+			     Tf->ErrorCode);
 	if (NT_SUCCESS(Status))
 	  {
 	     return(0);
 	  }
      }
-   
-   /*
-    * FIXME: Something better
-    */
-   if (tf->type==1)
+
+   if ((Tf->Cs & 0xFFFF) == USER_CS)
      {
-	DbgPrint("Trap at CS:EIP %x:%x\n",tf->cs&0xffff,tf->eip);
-	return(0);
+       return(KiUserTrapHandler(Tf, ExceptionNr, (PVOID)cr2));
      }
    
    /*
     * Print out the CPU registers
     */
-   if (tf->type < 19)
+   if (ExceptionNr < 19)
      {
-	DbgPrint("%s Exception: %d(%x)\n",TypeStrings[tf->type],tf->type,
-		 tf->error_code&0xffff);
+	DbgPrint("%s Exception: %d(%x)\n",TypeStrings[ExceptionNr],
+		 ExceptionNr, Tf->ErrorCode&0xffff);
      }
    else
      {
-	DbgPrint("Exception: %d(%x)\n",tf->type,tf->error_code&0xffff);
+	DbgPrint("Exception: %d(%x)\n", ExceptionNr, Tf->ErrorCode&0xffff);
      }
-   DbgPrint("CS:EIP %x:%x ",tf->cs&0xffff,tf->eip);
-   print_address((PVOID)tf->eip);
+   DbgPrint("CS:EIP %x:%x ", Tf->Cs&0xffff, Tf->Eip);
+   print_address((PVOID)Tf->Eip);
    DbgPrint("\n");
-   __asm__("movl %%cr3,%0\n\t"
-	   : "=d" (cr3));
-   DbgPrint("cr2 %x cr3 %x ",cr2,cr3);
-//   for(;;);
+   __asm__("movl %%cr3,%0\n\t" : "=d" (cr3));
+   DbgPrint("cr2 %x cr3 %x ", cr2, cr3);
    DbgPrint("Proc: %x ",PsGetCurrentProcess());
    if (PsGetCurrentProcess() != NULL)
      {
@@ -211,14 +269,14 @@ exception_handler(struct trap_frame* tf)
 		 PsGetCurrentThread()->Cid.UniqueThread);
      }
    DbgPrint("\n");
-   DbgPrint("DS %x ES %x FS %x GS %x\n", tf->ds&0xffff, tf->es&0xffff,
-	    tf->fs&0xffff, tf->gs&0xfff);
-   DbgPrint("EAX: %.8x   EBX: %.8x   ECX: %.8x\n", tf->eax, tf->ebx, tf->ecx);
-   DbgPrint("EDX: %.8x   EBP: %.8x   ESI: %.8x\n", tf->edx, tf->ebp, tf->esi);
-   DbgPrint("EDI: %.8x   EFLAGS: %.8x ", tf->edi, tf->eflags);
-   if ((tf->cs&0xffff) == KERNEL_CS)
+   DbgPrint("DS %x ES %x FS %x GS %x\n", Tf->Ds&0xffff, Tf->Es&0xffff,
+	    Tf->Fs&0xffff, Tf->Gs&0xfff);
+   DbgPrint("EAX: %.8x   EBX: %.8x   ECX: %.8x\n", Tf->Eax, Tf->Ebx, Tf->Ecx);
+   DbgPrint("EDX: %.8x   EBP: %.8x   ESI: %.8x\n", Tf->Edx, Tf->Ebp, Tf->Esi);
+   DbgPrint("EDI: %.8x   EFLAGS: %.8x ", Tf->Edi, Tf->Eflags);
+   if ((Tf->Cs&0xffff) == KERNEL_CS)
      {
-	DbgPrint("kESP %.8x ", tf->esp);
+	DbgPrint("kESP %.8x ", Esp0);
 	if (PsGetCurrentThread() != NULL)
 	  {
 	     DbgPrint("kernel stack base %x\n",
@@ -228,12 +286,12 @@ exception_handler(struct trap_frame* tf)
      }
    else
      {
-	DbgPrint("kernel ESP %.8x\n", tf->esp);
+	DbgPrint("User ESP %.8x\n", Tf->Esp);
      }
-  if ((tf->cs & 0xffff) == KERNEL_CS)
+  if ((Tf->Cs & 0xffff) == KERNEL_CS)
     {
-       DbgPrint("ESP %x\n", tf->esp);
-       stack = (PULONG) (tf->esp + 24);
+       DbgPrint("ESP %x\n", Esp0);
+       stack = (PULONG) (Esp0 + 24);
        stack = (PULONG)(((ULONG)stack) & (~0x3));
        
        DbgPrint("stack<%p>: ", stack);
@@ -261,8 +319,8 @@ exception_handler(struct trap_frame* tf)
    else
      {
 #if 1
-	DbgPrint("SS:ESP %x:%x\n", tf->ss0, tf->esp0);
-        stack=(PULONG)(tf->esp0);
+	DbgPrint("SS:ESP %x:%x\n", Tf->Ss, Tf->Esp);
+        stack=(PULONG)(Tf->Esp);
        
         DbgPrint("Stack:\n");
         for (i=0; i<64; i++)
@@ -277,11 +335,11 @@ exception_handler(struct trap_frame* tf)
 	     }
         }
 	
-	if (MmIsPagePresent(NULL, (PVOID)tf->eip))
+	if (MmIsPagePresent(NULL, (PVOID)Tf->Eip))
 	  {
 	     unsigned char instrs[512];
 	     
-	     memcpy(instrs, (PVOID)tf->eip, 512);
+	     memcpy(instrs, (PVOID)Tf->Eip, 512);
 	     
 	     DbgPrint("Instrs: ");
 	     
@@ -294,13 +352,12 @@ exception_handler(struct trap_frame* tf)
      }
    
    DbgPrint("\n");
-   if ((tf->cs&0xffff) == USER_CS &&
-       tf->eip < KERNEL_BASE)
+   if ((Tf->Cs&0xffff) == USER_CS &&
+       Tf->Eip < KERNEL_BASE)
      {
 	DbgPrint("Killing current task\n");
-	//   for(;;);
 	KeLowerIrql(PASSIVE_LEVEL);
-	if ((tf->cs&0xffff) == USER_CS)
+	if ((Tf->Cs&0xffff) == USER_CS)
 	  {
 	     ZwTerminateProcess(NtCurrentProcess(),
 				STATUS_NONCONTINUABLE_EXCEPTION);
@@ -366,27 +423,27 @@ void KeInitExceptions(void)
    
    DPRINT("KeInitExceptions()\n",0);
    
-   set_interrupt_gate(0,(int)exception_handler0);
-   set_interrupt_gate(1,(int)exception_handler1);
-   set_interrupt_gate(2,(int)exception_handler2);
-   set_interrupt_gate(3,(int)exception_handler3);
-   set_interrupt_gate(4,(int)exception_handler4);
-   set_interrupt_gate(5,(int)exception_handler5);
-   set_interrupt_gate(6,(int)exception_handler6);
-   set_interrupt_gate(7,(int)exception_handler7);
-   set_interrupt_gate(8,(int)exception_handler8);
-   set_interrupt_gate(9,(int)exception_handler9);
-   set_interrupt_gate(10,(int)exception_handler10);
-   set_interrupt_gate(11,(int)exception_handler11);
-   set_interrupt_gate(12,(int)exception_handler12);
-   set_interrupt_gate(13,(int)exception_handler13);
-   set_interrupt_gate(14,(int)exception_handler14);
-   set_interrupt_gate(15,(int)exception_handler15);
-   set_interrupt_gate(16,(int)exception_handler16);
+   set_interrupt_gate(0, (ULONG)KiTrap0);
+   set_interrupt_gate(1, (ULONG)KiTrap1);
+   set_interrupt_gate(2, (ULONG)KiTrap2);
+   set_interrupt_gate(3, (ULONG)KiTrap3);
+   set_interrupt_gate(4, (ULONG)KiTrap4);
+   set_interrupt_gate(5, (ULONG)KiTrap5);
+   set_interrupt_gate(6, (ULONG)KiTrap6);
+   set_interrupt_gate(7, (ULONG)KiTrap7);
+   set_interrupt_gate(8, (ULONG)KiTrap8);
+   set_interrupt_gate(9, (ULONG)KiTrap9);
+   set_interrupt_gate(10, (ULONG)KiTrap10);
+   set_interrupt_gate(11, (ULONG)KiTrap11);
+   set_interrupt_gate(12, (ULONG)KiTrap12);
+   set_interrupt_gate(13, (ULONG)KiTrap13);
+   set_interrupt_gate(14, (ULONG)KiTrap14);
+   set_interrupt_gate(15, (ULONG)KiTrap15);
+   set_interrupt_gate(16, (ULONG)KiTrap16);
    
    for (i=17;i<256;i++)
         {
-	   set_interrupt_gate(i,(int)exception_handler_unknown);
+	   set_interrupt_gate(i,(int)KiTrapUnknown);
         }
    
    set_system_call_gate(0x2d,(int)interrupt_handler2d);

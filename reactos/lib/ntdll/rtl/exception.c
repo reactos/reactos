@@ -1,4 +1,4 @@
-/* $Id: exception.c,v 1.4 2001/03/17 11:11:11 dwelch Exp $
+/* $Id: exception.c,v 1.5 2001/03/18 19:35:12 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -24,7 +24,7 @@ ULONG
 RtlDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 		     PCONTEXT Context)
 {
-  return(0);
+  
 }
 
 VOID STDCALL

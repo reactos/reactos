@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.24 2001/03/16 23:04:59 dwelch Exp $
+# $Id: Makefile,v 1.25 2001/03/18 19:35:12 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -238,7 +238,8 @@ OBJECTS_CM = \
 OBJECTS_DBG = \
 	dbg/dbgctrl.o \
 	dbg/errinfo.o \
-	dbg/print.o
+	dbg/print.o \
+	dbg/user.o
 
 # Loader
 OBJECTS_LDR = \

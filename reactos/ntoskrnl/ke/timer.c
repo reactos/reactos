@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.42 2001/03/16 16:05:33 dwelch Exp $
+/* $Id: timer.c,v 1.43 2001/03/18 19:35:13 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -113,22 +113,6 @@ NTSTATUS STDCALL NtQueryPerformanceCounter (IN	PLARGE_INTEGER	Counter,
 }
 
 
-NTSTATUS KeAddThreadTimeout(PKTHREAD Thread, PLARGE_INTEGER Interval)
-{
-   assert(Thread != NULL);
-   assert(Interval != NULL);
-
-   DPRINT("KeAddThreadTimeout(Thread %x, Interval %x)\n",Thread,Interval);
-   
-   KeInitializeTimer(&Thread->Timer);
-   KeSetTimer(&Thread->Timer, *Interval, &Thread->TimerDpc);
-
-   DPRINT("Thread->Timer.entry.Flink %x\n",
-	    Thread->Timer.TimerListEntry.Flink);
-   
-   return STATUS_SUCCESS;
-}
-
 
 NTSTATUS STDCALL NtDelayExecution(IN ULONG Alertable,
 				  IN TIME* Interval)
@@ -161,9 +145,11 @@ KeDelayExecutionThread (KPROCESSOR_MODE	WaitMode,
  * RETURNS: Status
  */
 {
-   PKTHREAD CurrentThread = KeGetCurrentThread();
-   KeAddThreadTimeout(CurrentThread, Interval);
-   return (KeWaitForSingleObject(&CurrentThread->Timer,
+   PKTHREAD Thread = KeGetCurrentThread();
+
+   KeInitializeTimer(&Thread->Timer);
+   KeSetTimer(&Thread->Timer, *Interval, NULL);
+   return (KeWaitForSingleObject(&Thread->Timer,
 				 Executive,
 				 UserMode,
 				 Alertable,
@@ -286,7 +272,7 @@ KeCancelTimer (PKTIMER	Timer)
    
    DPRINT("KeCancelTimer(Timer %x)\n",Timer);
    
-   KeRaiseIrql( HIGH_LEVEL, &oldlvl );
+   KeRaiseIrql(HIGH_LEVEL, &oldlvl);
    KeAcquireSpinLockAtDpcLevel( &TimerListLock );
 		     
    if (Timer->TimerListEntry.Flink == NULL)
@@ -367,7 +353,8 @@ KeQueryTickCount (PLARGE_INTEGER	TickCount)
   TickCount->QuadPart = KiTimerTicks;
 }
 
-static void HandleExpiredTimer(PKTIMER current)
+STATIC VOID 
+HandleExpiredTimer(PKTIMER current)
 {
    DPRINT("HandleExpiredTime(current %x)\n",current);
    if (current->Dpc != NULL)
@@ -449,10 +436,6 @@ KiUpdateSystemTime (KIRQL oldIrql, ULONG Eip)
    KiTimerTicks++;
    system_time = system_time + CLOCK_INCREMENT;
    
-   /*
-    * Display the tick count in the top left of the screen as a debugging
-    * aid
-    */
    vidmem[0] = ' ';
    if (oldIrql < DISPATCH_LEVEL)
      {

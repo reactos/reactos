@@ -1,4 +1,4 @@
-/* $Id: send.c,v 1.3 2000/10/22 16:36:51 ekohl Exp $
+/* $Id: send.c,v 1.4 2001/03/18 19:35:13 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -32,16 +32,16 @@
  * REVISIONS
  *
  */
-NTSTATUS STDCALL LpcSendTerminationPort (IN	PEPORT	Port,
-					 IN	TIME	CreationTime)
+NTSTATUS STDCALL 
+LpcSendTerminationPort (IN PEPORT Port,
+			IN TIME	CreationTime)
 {
-	NTSTATUS		Status;
-	LPC_TERMINATION_MESSAGE	Msg;
+  NTSTATUS Status;
+  LPC_TERMINATION_MESSAGE Msg;
    
-	Msg.CreationTime = CreationTime;
-	Status = LpcRequestPort (Port,
-				 &Msg.Header);
-	return(Status);
+  Msg.CreationTime = CreationTime;
+  Status = LpcRequestPort (Port, &Msg.Header);
+  return(Status);
 }
 
 
@@ -57,13 +57,45 @@ NTSTATUS STDCALL LpcSendTerminationPort (IN	PEPORT	Port,
  * REVISIONS
  *
  */
-NTSTATUS STDCALL LpcSendDebugMessagePort (IN	PEPORT			Port,
-					  IN	PLPC_DBG_MESSAGE Message)
+NTSTATUS STDCALL 
+LpcSendDebugMessagePort (IN PEPORT Port,
+			 IN PLPC_DBG_MESSAGE Message,
+			 OUT PLPC_DBG_MESSAGE Reply)
 {
    NTSTATUS Status;
+   KIRQL oldIrql;
+   PQUEUEDMESSAGE ReplyMessage;
    
-   Status = LpcRequestPort(Port, &Message->Header);
-   return(Status);
+   Status = EiReplyOrRequestPort(Port, 
+				 &Message->Header, 
+				 LPC_REQUEST,
+				 Port);
+   if (!NT_SUCCESS(Status))
+     {
+	ObDereferenceObject(Port);
+	return(Status);
+     }
+   KeSetEvent(&Port->OtherPort->Event, IO_NO_INCREMENT, FALSE);   
+   
+   /*
+    * Wait for a reply
+    */
+   KeWaitForSingleObject(&Port->Event,
+			 UserRequest,
+			 UserMode,
+			 FALSE,
+			 NULL);
+   
+   /*
+    * Dequeue the reply
+    */
+   KeAcquireSpinLock(&Port->Lock, &oldIrql);
+   ReplyMessage = EiDequeueMessagePort(Port);
+   KeReleaseSpinLock(&Port->Lock, oldIrql);
+   memcpy(Reply, &ReplyMessage->Message, ReplyMessage->Message.MessageSize);
+   ExFreePool(ReplyMessage);
+
+   return(STATUS_SUCCESS);
 }
 
 
@@ -149,9 +181,10 @@ NTSTATUS STDCALL NtRequestPort (IN	HANDLE		PortHandle,
  * REVISIONS
  *
  */
-NTSTATUS STDCALL NtRequestWaitReplyPort (IN	HANDLE		PortHandle,
-					 PLPC_MESSAGE	LpcRequest,    
-					 PLPC_MESSAGE	LpcReply)
+NTSTATUS STDCALL 
+NtRequestWaitReplyPort (IN HANDLE PortHandle,
+			PLPC_MESSAGE LpcRequest,    
+			PLPC_MESSAGE LpcReply)
 {
    NTSTATUS Status;
    PEPORT Port;
@@ -177,14 +210,13 @@ NTSTATUS STDCALL NtRequestWaitReplyPort (IN	HANDLE		PortHandle,
 				 LpcRequest, 
 				 LPC_REQUEST,
 				 Port);
-   KeSetEvent(&Port->OtherPort->Event, IO_NO_INCREMENT, FALSE);
-   
    if (!NT_SUCCESS(Status))
      {
 	DbgPrint("Enqueue failed\n");
 	ObDereferenceObject(Port);
 	return(Status);
      }
+   KeSetEvent(&Port->OtherPort->Event, IO_NO_INCREMENT, FALSE);   
    
    /*
     * Wait for a reply

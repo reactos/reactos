@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.12 2001/03/17 11:11:11 dwelch Exp $
+/* $Id: catch.c,v 1.13 2001/03/18 19:35:12 dwelch Exp $
  *
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
@@ -29,6 +29,7 @@
 #include <ddk/ntddk.h>
 #include <internal/ke.h>
 #include <internal/ldr.h>
+#include <internal/ps.h>
 
 #include <internal/debug.h>
 
@@ -36,26 +37,31 @@
 
 VOID 
 KiDispatchException(PEXCEPTION_RECORD Er,
-		    ULONG Reserved,
+		    PCONTEXT Context,
 		    PKTRAP_FRAME Tf,
 		    KPROCESSOR_MODE PreviousMode,
 		    BOOLEAN SearchFrames)
 {
-  CONTEXT Context;
+  CONTEXT TContext;
 
-  Context.ContextFlags = CONTEXT_FULL;
-  if (PreviousMode == UserMode)
-    {
-      Context.ContextFlags = Context.ContextFlags | CONTEXT_DEBUGGER;
-    }
-  
   /* PCR->KeExceptionDispatchCount++; */
 
-  //  KeContextFromKframes(Tf, Reserved, &Context);
+  if (Context != NULL)
+    {
+      TContext.ContextFlags = CONTEXT_FULL;
+      if (PreviousMode == UserMode)
+	{
+	  TContext.ContextFlags = TContext.ContextFlags | CONTEXT_DEBUGGER;
+	}
+  
+      KeTrapFrameToContext(Tf, &TContext);
+
+      Context = &TContext;
+    }
 
   if (Er->ExceptionCode == STATUS_BREAKPOINT) 
     {
-      Context.Eip--;
+      Context->Eip--;
     }
 
   if (PreviousMode == UserMode)
@@ -86,7 +92,7 @@ KiDispatchException(PEXCEPTION_RECORD Er,
 	  /* Pointer to CONTEXT structure */
 	  Stack[2] = (ULONG)&Stack[CDest];     
 	  memcpy(&Stack[3], Er, sizeof(EXCEPTION_RECORD));
-	  memcpy(&Stack[CDest], &Context, sizeof(CONTEXT));
+	  memcpy(&Stack[CDest], Context, sizeof(CONTEXT));
 
 	  Tf->Eip = (ULONG)LdrpGetSystemDllExceptionDispatcher();
 	  return;
@@ -94,13 +100,18 @@ KiDispatchException(PEXCEPTION_RECORD Er,
       
       /* FIXME: Forward the exception to the debugger */
 
-      /* FIXME: Forward the exception to the debugger */
+      /* FIXME: Forward the exception to the process exception port */
 
+      /* Terminate the offending thread */
       ZwTerminateThread(NtCurrentThread(), Er->ExceptionCode);
 
+      /* If that fails then bugcheck */
       KeBugCheck(KMODE_EXCEPTION_NOT_HANDLED);
     }
-
+  else
+    {
+      KeBugCheck(KMODE_EXCEPTION_NOT_HANDLED);
+    }
 }
 
 VOID STDCALL
@@ -116,7 +127,7 @@ ExRaiseDatatypeMisalignment (VOID)
 }
 
 VOID STDCALL
-ExRaiseStatus (IN	NTSTATUS	Status)
+ExRaiseStatus (IN NTSTATUS Status)
 {
   DbgPrint("ExRaiseStatus(%x)\n",Status);
   for(;;);
@@ -125,11 +136,16 @@ ExRaiseStatus (IN	NTSTATUS	Status)
 
 
 NTSTATUS STDCALL
-NtRaiseException (IN	PEXCEPTION_RECORD	ExceptionRecord,
-		  IN	PCONTEXT		Context,
-		  IN	BOOL			IsDebugger	OPTIONAL)
+NtRaiseException (IN PEXCEPTION_RECORD ExceptionRecord,
+		  IN PCONTEXT Context,
+		  IN BOOLEAN SearchFrames)
 {
-  UNIMPLEMENTED;
+  KiDispatchException(ExceptionRecord,
+		      Context,
+		      PsGetCurrentThread()->Tcb.TrapFrame,
+		      ExGetPreviousMode(),
+		      SearchFrames);
+  return(STATUS_SUCCESS);
 }
 
 

@@ -91,8 +91,6 @@ VOID KeExpireTimers( PKDPC Apc,
 		     PVOID Arg1,
 		     PVOID Arg2,
 		     PVOID Arg3 );
-NTSTATUS KeAddThreadTimeout(struct _KTHREAD* Thread, 
-			    PLARGE_INTEGER Interval);
 VOID KeInitializeDispatcherHeader(DISPATCHER_HEADER* Header, ULONG Type,
 				  ULONG Size, ULONG SignalState);
 
@@ -129,5 +127,12 @@ VOID
 NtEarlyInitVdm(VOID);
 VOID
 KiAddProfileEvent(KPROFILE_SOURCE Source, ULONG Eip);
-
+VOID 
+KiDispatchException(PEXCEPTION_RECORD Er,
+		    PCONTEXT Context,
+		    PKTRAP_FRAME Tf,
+		    KPROCESSOR_MODE PreviousMode,
+		    BOOLEAN SearchFrames);
+VOID KeTrapFrameToContext(PKTRAP_FRAME TrapFrame,
+			  PCONTEXT Context);
 #endif

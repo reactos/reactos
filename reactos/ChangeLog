@@ -1,3 +1,8 @@
+2001-03-17  David Welch  <welch@cwcom.net>
+
+	* ntoskrnl/ke/catch.c (KiDispatchException): Implementation of
+	exception handling, user-mode only.
+
 2001-03-16  David Welch  <welch@cwcom.net>
 
 	* include/ddk/zw.h: Corrected declarations of NtCreateProfile,

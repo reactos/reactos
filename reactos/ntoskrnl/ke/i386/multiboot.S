@@ -706,6 +706,10 @@ lowmem_pagetable:
 	.long 0x3f0007,0x3f1007,0x3f2007,0x3f3007,0x3f4007,0x3f5007,0x3f6007,0x3f7007
 	.long 0x3f8007,0x3f9007,0x3fa007,0x3fb007,0x3fc007,0x3fd007,0x3fe007,0x3ff007
 
+_init_stack:
+	.fill 3*4096,1,0
+_init_stack_top:
+	
 _gdt_descr:
 	.word (10*8)-1
 	.long _KiGdt
@@ -713,8 +717,4 @@ _gdt_descr:
 _idt_descr:
 	.word (256*8)-1
 	.long _KiIdt
-	
-_init_stack:
-	.fill 4096,1,0
-_init_stack_top:
 

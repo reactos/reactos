@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.58 2001/03/07 16:48:45 dwelch Exp $
+/* $Id: process.c,v 1.59 2001/03/18 19:35:14 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -532,6 +532,7 @@ NtCreateProcess (OUT PHANDLE ProcessHandle,
    /*
     * Maybe send a message to the creator process's debugger
     */
+#if 0
    if (ParentProcess->DebugPort != NULL)
      {
 	LPC_DBG_MESSAGE Message;
@@ -554,6 +555,7 @@ NtCreateProcess (OUT PHANDLE ProcessHandle,
 	Status = LpcSendDebugMessagePort(ParentProcess->DebugPort,
 					 &Message);
      }
+#endif
    
    ObDereferenceObject(Process);
    ObDereferenceObject(ParentProcess);

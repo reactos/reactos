@@ -124,6 +124,7 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
     * FIXME: Think how this might work
     */
    Thread->NpxState = 0;
+
    Thread->Saturation = 0;
    Thread->Priority = 0; 
    InitializeListHead(&Thread->ApcState.ApcListHead[0]);

@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.71 2001/03/16 18:11:24 dwelch Exp $
+/* $Id: thread.c,v 1.72 2001/03/18 19:35:14 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -73,14 +73,6 @@ HANDLE STDCALL PsGetCurrentThreadId(VOID)
 
 VOID PsInsertIntoThreadList(KPRIORITY Priority, PETHREAD Thread)
 {
-//   DPRINT("PsInsertIntoThreadList(Priority %x, Thread %x)\n",Priority,
-//	  Thread);
-//   DPRINT("Offset %x\n", THREAD_PRIORITY_MAX + Priority);
-   
-   if (PiThreadListLock.Lock == 0)
-     {
-	KeBugCheck(0);
-     }
    if (Priority >= MAXIMUM_PRIORITY || Priority < 0)
      {
 	DPRINT1("Invalid thread priority\n");
@@ -128,11 +120,6 @@ static PETHREAD PsScanThreadList (KPRIORITY Priority)
    PLIST_ENTRY current_entry;
    PETHREAD current;
    
-//   DPRINT("PsScanThreadList(Priority %d)\n",Priority);
-   if (PiThreadListLock.Lock == 0)
-     {
-	KeBugCheck(0);
-     }
    current_entry = RemoveHeadList(&PriorityListHead[Priority]);
    if (current_entry != &PriorityListHead[Priority])
      {	
@@ -249,6 +236,36 @@ PsBlockThread(PNTSTATUS Status, UCHAR Alertable, ULONG WaitMode,
       *Status = Thread->Tcb.WaitStatus;
     }
   KeLowerIrql(WaitIrql);
+}
+
+VOID
+PsFreezeAllThreads(PEPROCESS Process)
+     /*
+      * Used by the debugging code to freeze all the process's threads 
+      * while the debugger is examining their state. 
+      */
+{
+  KIRQL oldIrql;
+  PLIST_ENTRY current_entry;
+  PETHREAD current;
+
+  KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
+
+  current_entry = Process->ThreadListHead.Flink;
+  while (current_entry != &Process->ThreadListHead)
+    {
+      current = CONTAINING_RECORD(current_entry, ETHREAD, 
+				  Tcb.ProcessThreadListEntry);
+
+      /*
+       * We have to be careful here, we can't just set the freeze the
+       * thread inside kernel mode since it may be holding a lock.
+       */
+
+      current_entry = current_entry->Flink;
+    }
+  
+  KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 }
 
 VOID 

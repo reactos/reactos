@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.42 2001/03/16 18:11:20 dwelch Exp $
+/* $Id: zw.h,v 1.43 2001/03/18 19:35:11 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -3620,7 +3620,7 @@ STDCALL
 NtRaiseException(
 	IN PEXCEPTION_RECORD ExceptionRecord,
 	IN PCONTEXT Context,
-	IN BOOL IsDebugger OPTIONAL
+	IN BOOLEAN SearchFrames
 	);
 
 NTSTATUS
@@ -3628,7 +3628,7 @@ STDCALL
 ZwRaiseException(
 	IN PEXCEPTION_RECORD ExceptionRecord,
 	IN PCONTEXT Context,
-	IN BOOL IsDebugger OPTIONAL
+	IN BOOLEAN SearchFrames
 	);
 
 /*

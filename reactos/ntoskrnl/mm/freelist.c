@@ -83,13 +83,13 @@ MmGetContinuousPages(ULONG NumberOfBytes,
 		  break;
 	       }	     
 	  }
-	else if (start != -1)
+	else
 	  {
 	     start = -1;
 	     /*
 	      * Fast forward to the base of the next aligned region
 	      */
-	     i = i + (Alignment / PAGESIZE);
+	     i = ROUND_UP((i + 1), (Alignment / PAGESIZE));
 	  }
      }
    if (start == -1 || length != NrPages)
@@ -176,11 +176,19 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 	       }
 	  }
      }
-   
+
+   /*
+    * Page zero is reserved
+    */
+   MmPageArray[0].Flags = MM_PHYSICAL_PAGE_BIOS;
+   MmPageArray[0].ReferenceCount = 0;
+   InsertTailList(&BiosPageListHead,
+		  &MmPageArray[0].ListEntry); 
+
    i = 1;
    if ((ULONG)FirstPhysKernelAddress < 0xa0000)
      {
-	MmStats.NrFreePages += ((ULONG)FirstPhysKernelAddress/PAGESIZE);
+	MmStats.NrFreePages += (((ULONG)FirstPhysKernelAddress/PAGESIZE) - 1);
 	for (; i<((ULONG)FirstPhysKernelAddress/PAGESIZE); i++)
 	  {
 	     MmPageArray[i].Flags = MM_PHYSICAL_PAGE_FREE;
@@ -216,7 +224,7 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
      }
    else
      {
-	MmStats.NrFreePages += (0xa0000 / PAGESIZE);	  
+	MmStats.NrFreePages += ((0xa0000 / PAGESIZE) - 1);	  
 	for (; i<(0xa0000 / PAGESIZE); i++)
 	  {
 	     MmPageArray[i].Flags = MM_PHYSICAL_PAGE_FREE;

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.31 2001/03/16 18:11:24 dwelch Exp $
+/* $Id: create.c,v 1.32 2001/03/18 19:35:13 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -26,6 +26,7 @@
 #include <internal/ps.h>
 #include <internal/ob.h>
 #include <internal/id.h>
+#include <internal/dbg.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -577,27 +578,11 @@ NtCreateThread (PHANDLE		ThreadHandle,
    /*
     * Maybe send a message to the process's debugger
     */
-#if 0
-   if (ParentProcess->DebugPort != NULL)
-     {
-	LPC_DBG_MESSAGE Message;
-	PEPROCESS Process;
-	
-	
-	Message.Header.MessageSize = sizeof(LPC_DBG_MESSAGE);
-	Message.Header.DataSize = sizeof(LPC_DBG_MESSAGE) -
-	  sizeof(LPC_MESSAGE_HEADER);
-	Message.EventCode = DBG_EVENT_CREATE_THREAD;
-	Message.Data.CreateThread.StartAddress =
-	  ;
-	Message.Data.CreateProcess.Base = ImageBase;
-	Message.Data.CreateProcess.EntryPoint = NULL; //
-	
-	Status = LpcSendDebugMessagePort(ParentProcess->DebugPort,
-					 &Message);
-     }
-#endif
+   DbgkCreateThread((PVOID)ThreadContext->Eip);
    
+   /*
+    * Start the thread running
+    */
    if (!CreateSuspended)
      {
 	DPRINT("Not creating suspended\n");

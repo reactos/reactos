@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: syscall.S,v 1.1 2000/12/10 23:42:00 dwelch Exp $
+/* $Id: syscall.S,v 1.2 2001/03/18 19:35:13 dwelch Exp $
  *
  * FILE:            ntoskrnl/hal/x86/syscall.s
  * PURPOSE:         2E trap handler
@@ -96,7 +96,10 @@ L3:
 	   movl  %ebx, %es
 	   movl  %ebx, %gs
 
-           /* Save the old trap frame pointer (over the EDX register??) */
+           /* 
+	    * Save the old trap frame pointer over where we would save the EDX
+	    * register.
+	    */
            movl KTHREAD_TRAP_FRAME(%esi), %ebx
 	   movl %ebx, 0x3C(%esp)
 	

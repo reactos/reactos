@@ -95,7 +95,7 @@ KiDeliverNormalApc(VOID)
      Apc = CONTAINING_RECORD(current, KAPC, ApcListEntry);
      if (Apc->NormalRoutine != NULL)
        {
-	 (void)RemoveTailList(&Thread->Tcb.ApcState.ApcListHead[0]);
+	 (VOID)RemoveTailList(&Thread->Tcb.ApcState.ApcListHead[0]);
 	 Thread->Tcb.ApcState.KernelApcInProgress++;
 	 Thread->Tcb.ApcState.KernelApcPending--;
 
@@ -243,35 +243,39 @@ VOID STDCALL KiDeliverApc(ULONG Unknown1,
  */
 {
    PETHREAD Thread = PsGetCurrentThread();
-   PLIST_ENTRY current;
+   PLIST_ENTRY current_entry;
    PKAPC Apc;
    KIRQL oldlvl;
 
    DPRINT("KiDeliverApc()\n");
    KeAcquireSpinLock(&PiApcLock, &oldlvl);
-   while(!IsListEmpty(&(Thread->Tcb.ApcState.ApcListHead[0])))
-   {
-     current = Thread->Tcb.ApcState.ApcListHead[0].Blink;
-     Apc = CONTAINING_RECORD(current, KAPC, ApcListEntry);
-     if (Apc->NormalRoutine == NULL)
-       {
-	 (void)RemoveTailList(&Thread->Tcb.ApcState.ApcListHead[0]);
-	 Thread->Tcb.ApcState.KernelApcInProgress++;
-	 Thread->Tcb.ApcState.KernelApcPending--;
-
-	 KeReleaseSpinLock(&PiApcLock, oldlvl);
-	 
-	 Apc = CONTAINING_RECORD(current, KAPC, ApcListEntry);
-	 Apc->KernelRoutine(Apc,
-			    &Apc->NormalRoutine,
-			    &Apc->NormalContext,
-			    &Apc->SystemArgument1,
-			    &Apc->SystemArgument2);	 
-
-	 KeAcquireSpinLock(&PiApcLock, &oldlvl);
-	 Thread->Tcb.ApcState.KernelApcInProgress--;
-       }
-   }
+   current_entry = Thread->Tcb.ApcState.ApcListHead[0].Flink;
+   while(current_entry != &Thread->Tcb.ApcState.ApcListHead[0])
+     {
+       Apc = CONTAINING_RECORD(current_entry, KAPC, ApcListEntry);
+       if (Apc->NormalRoutine == NULL)
+	 {
+	   current_entry = current_entry->Flink;
+	   RemoveEntryList(&Apc->ApcListEntry);
+	   Thread->Tcb.ApcState.KernelApcInProgress++;
+	   Thread->Tcb.ApcState.KernelApcPending--;
+	   
+	   KeReleaseSpinLock(&PiApcLock, oldlvl);
+	   
+	   Apc->KernelRoutine(Apc,
+			      &Apc->NormalRoutine,
+			      &Apc->NormalContext,
+			      &Apc->SystemArgument1,
+			      &Apc->SystemArgument2);	 
+	   
+	   KeAcquireSpinLock(&PiApcLock, &oldlvl);
+	   Thread->Tcb.ApcState.KernelApcInProgress--;
+	 }
+       else
+	 {
+	   current_entry = current_entry->Flink;
+	 }
+     }
    KeReleaseSpinLock(&PiApcLock, oldlvl);
 }
 
@@ -320,13 +324,28 @@ KeInsertQueueApc (PKAPC	Apc,
 	TargetThread->ApcState.UserApcPending++;
      }
    Apc->Inserted = TRUE;
-   
+
+   /*
+    * If this is a kernel-mode APC and it is waiting at PASSIVE_LEVEL and
+    * not inside a critical section then wake it up. Otherwise it will
+    * execute the APC as soon as it returns to PASSIVE_LEVEL.
+    * FIXME: Check for sending an APC to the current thread.
+    * FIXME: If the thread is running on another processor then send an
+    * IPI.
+    * FIXME: Check if the thread is terminating.
+    */
    if (Apc->ApcMode == KernelMode && TargetThread->KernelApcDisable >= 1 &&
        TargetThread->WaitIrql < APC_LEVEL && Apc->NormalRoutine == NULL)
      {
 	KeRemoveAllWaitsThread(CONTAINING_RECORD(TargetThread, ETHREAD, Tcb),
 			       STATUS_KERNEL_APC);
      }
+
+   /*
+    * If this is a 'funny' user-mode APC then mark the thread as
+    * alerted so it will execute the APC on exit from kernel mode. If it
+    * is waiting alertably then wake it up so it can return to user mode.
+    */
    if (Apc->ApcMode == KernelMode && Apc->NormalRoutine != NULL)
      {
        TargetThread->Alerted[1] = 1;
@@ -341,12 +360,9 @@ KeInsertQueueApc (PKAPC	Apc,
      }
 
    /*
-    * For user mode APCs if the thread is already waiting then we wait it
-    * up and increment UserApcPending so it will deliver the APC on exit
-    * from kernel mode. If the thread isn't waiting then before it
-    * enters an alertable, user mode wait then it will check for
-    * user mode APCs and if there are any pending then return immediately
-    * and they will be delivered on exit from kernel mode
+    * If the thread is waiting alertably then wake it up and it will
+    * return to to user-mode executing the APC in the process. Otherwise the
+    * thread will execute the APC next time it enters an alertable wait.
     */
    if (Apc->ApcMode == UserMode && TargetThread->Alertable == TRUE &&
        TargetThread->WaitMode == UserMode)
@@ -429,6 +445,7 @@ KeInitializeApc (PKAPC			Apc,
 	  "KernelRoutine %x, RundownRoutine %x, NormalRoutine %x, Mode %d, "
 	  "Context %x)\n",Apc,Thread,StateIndex,KernelRoutine,RundownRoutine,
 	  NormalRoutine,Mode,Context);
+
    memset(Apc, 0, sizeof(KAPC));
    Apc->Thread = Thread;
    Apc->ApcListEntry.Flink = NULL;

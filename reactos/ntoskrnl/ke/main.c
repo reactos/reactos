@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.80 2001/03/16 18:11:23 dwelch Exp $
+/* $Id: main.c,v 1.81 2001/03/18 19:35:12 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -588,7 +588,29 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
 	    LdrProcessDriver((PVOID)start, name);
 	 }
      }
-  
+
+   DbgPrint("About to try MmAllocateContiguousAlignedMemory\n");
+   do
+     {
+extern PVOID STDCALL
+MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
+			          IN PHYSICAL_ADDRESS HighestAcceptableAddress,
+				  IN ULONG Alignment);
+       PVOID v;
+       PHYSICAL_ADDRESS p;
+       p.QuadPart = 16*1024*1024;
+       v = MmAllocateContiguousAlignedMemory(12*1024, p,
+					     64*1024);
+       if (v != NULL)
+	 {
+	   DbgPrint("Worked\n");
+	 }
+       else
+	 {
+	   DbgPrint("Failed\n");
+	 }
+     }
+   while (0);
 
    /* Create the SystemRoot symbolic link */
    DbgPrint("CommandLine: %s\n", (PUCHAR)KeLoaderBlock.CommandLine);
