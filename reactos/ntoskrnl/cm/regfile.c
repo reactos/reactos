@@ -17,6 +17,7 @@
 #include <string.h>
 #include <internal/pool.h>
 #include <internal/registry.h>
+#include <reactos/bugcodes.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -24,10 +25,18 @@
 #include "cm.h"
 #endif
 
+/* uncomment to enable hive checks (incomplete and probably buggy) */
+// #define HIVE_CHECK
+
+/* LOCAL MACROS *************************************************************/
+
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 #define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
 
 BOOLEAN CmiDoVerify = FALSE;
+
+static ULONG
+CmiCalcChecksum(PULONG Buffer);
 
 /* FUNCTIONS ****************************************************************/
 
@@ -77,7 +86,7 @@ CmiCreateDefaultRootKeyCell(PKEY_CELL RootKeyCell)
 #endif
   RootKeyCell->Id = REG_KEY_CELL_ID;
   RootKeyCell->Type = REG_ROOT_KEY_CELL_TYPE;
-  ZwQuerySystemTime((PTIME) &RootKeyCell->LastWriteTime);
+  NtQuerySystemTime((PTIME) &RootKeyCell->LastWriteTime);
   RootKeyCell->ParentKeyOffset = 0;
   RootKeyCell->NumberOfSubKeys = 0;
   RootKeyCell->HashTableOffset = -1;
@@ -393,7 +402,7 @@ CmiPopulateHive(HANDLE FileHandle)
       FileOffset.u.HighPart = 0;
       FileOffset.u.LowPart   = (2 + i) * REG_BLOCK_SIZE;
 
-      Status = ZwWriteFile(FileHandle,
+      Status = NtWriteFile(FileHandle,
 			   NULL,
 			   NULL,
 			   NULL,
@@ -482,6 +491,261 @@ CmiCreateNewRegFile(HANDLE FileHandle)
 }
 
 
+#ifdef HIVE_CHECK
+static NTSTATUS
+CmiCheckAndFixHive(PREGISTRY_HIVE RegistryHive)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  FILE_STANDARD_INFORMATION fsi;
+  IO_STATUS_BLOCK IoStatusBlock;
+  HANDLE HiveHandle = INVALID_HANDLE_VALUE;
+  HANDLE LogHandle = INVALID_HANDLE_VALUE;
+  PHIVE_HEADER HiveHeader = NULL;
+  PHIVE_HEADER LogHeader = NULL;
+  LARGE_INTEGER FileOffset;
+  ULONG FileSize;
+  ULONG BufferSize;
+  ULONG BitmapSize;
+  RTL_BITMAP BlockBitMap;
+  NTSTATUS Status;
+
+  DPRINT("CmiCheckAndFixHive() called\n");
+
+  /* Try to open the hive file */
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &RegistryHive->HiveFileName,
+			     0,
+			     NULL,
+			     NULL);
+
+  Status = NtCreateFile(&HiveHandle,
+			FILE_READ_DATA | FILE_READ_ATTRIBUTES,
+			&ObjectAttributes,
+			&IoStatusBlock,
+			NULL,
+			FILE_ATTRIBUTE_NORMAL,
+			0,
+			FILE_OPEN,
+			FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
+			NULL,
+			0);
+  if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+    {
+      return(STATUS_SUCCESS);
+    }
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("NtCreateFile() failed (Status %lx)\n", Status);
+      return(Status);
+    }
+
+  /* Try to open the log file */
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &RegistryHive->LogFileName,
+			     0,
+			     NULL,
+			     NULL);
+
+  Status = NtCreateFile(&LogHandle,
+			FILE_READ_DATA | FILE_READ_ATTRIBUTES,
+			&ObjectAttributes,
+			&IoStatusBlock,
+			NULL,
+			FILE_ATTRIBUTE_NORMAL,
+			0,
+			FILE_OPEN,
+			FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
+			NULL,
+			0);
+  if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+    {
+      LogHandle = INVALID_HANDLE_VALUE;
+    }
+  else if (!NT_SUCCESS(Status))
+    {
+      DPRINT("NtCreateFile() failed (Status %lx)\n", Status);
+      NtClose(HiveHandle);
+      return(Status);
+    }
+
+  /* Allocate hive header */
+  HiveHeader = ExAllocatePool(PagedPool,
+			      sizeof(HIVE_HEADER));
+  if (HiveHeader == NULL)
+    {
+      DPRINT("ExAllocatePool() failed\n");
+      Status = STATUS_INSUFFICIENT_RESOURCES;
+      goto ByeBye;
+    }
+
+  /* Read hive base block */
+  FileOffset.QuadPart = 0ULL;
+  Status = NtReadFile(HiveHandle,
+		      0,
+		      0,
+		      0,
+		      &IoStatusBlock,
+		      HiveHeader,
+		      sizeof(HIVE_HEADER),
+		      &FileOffset,
+		      0);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("NtReadFile() failed (Status %lx)\n", Status);
+      goto ByeBye;
+    }
+
+  if (LogHandle == INVALID_HANDLE_VALUE)
+    {
+      if (HiveHeader->Checksum != CmiCalcChecksum((PULONG)HiveHeader) ||
+	  HiveHeader->UpdateCounter1 != HiveHeader->UpdateCounter2)
+	{
+	  /* There is no way to fix the hive without log file - BSOD! */
+	  DPRINT("Hive header inconsistent and no log file available!\n");
+	  KeBugCheck(CONFIG_LIST_FAILED);
+	}
+
+      Status = STATUS_SUCCESS;
+      goto ByeBye;
+    }
+  else
+    {
+      /* Allocate hive header */
+      LogHeader = ExAllocatePool(PagedPool,
+				 sizeof(HIVE_HEADER));
+      if (LogHeader == NULL)
+	{
+	  DPRINT("ExAllocatePool() failed\n");
+	  Status = STATUS_INSUFFICIENT_RESOURCES;
+	  goto ByeBye;
+	}
+
+      /* Read log file header */
+      FileOffset.QuadPart = 0ULL;
+      Status = NtReadFile(LogHandle,
+			  0,
+			  0,
+			  0,
+			  &IoStatusBlock,
+			  LogHeader,
+			  sizeof(HIVE_HEADER),
+			  &FileOffset,
+			  0);
+      if (!NT_SUCCESS(Status))
+	{
+	  DPRINT("NtReadFile() failed (Status %lx)\n", Status);
+	  goto ByeBye;
+	}
+
+      /* Check log file header integrity */
+      if (LogHeader->Checksum != CmiCalcChecksum((PULONG)LogHeader) ||
+          LogHeader->UpdateCounter1 != LogHeader->UpdateCounter2)
+	{
+	  if (HiveHeader->Checksum != CmiCalcChecksum((PULONG)HiveHeader) ||
+	      HiveHeader->UpdateCounter1 != HiveHeader->UpdateCounter2)
+	    {
+	      DPRINT("Hive file and log file are inconsistent!\n");
+	      KeBugCheck(CONFIG_LIST_FAILED);
+	    }
+
+	  /* Log file damaged but hive is okay */
+	  Status = STATUS_SUCCESS;
+	  goto ByeBye;
+	}
+
+      if (HiveHeader->UpdateCounter1 == HiveHeader->UpdateCounter2 &&
+	  HiveHeader->UpdateCounter1 == LogHeader->UpdateCounter1)
+	{
+	  /* Hive and log file are up-to-date */
+	  Status = STATUS_SUCCESS;
+	  goto ByeBye;
+	}
+
+      /*
+       * Hive needs an update!
+       */
+
+      /* Get file size */
+      Status = NtQueryInformationFile(LogHandle,
+				      &IoStatusBlock,
+				      &fsi,
+				      sizeof(fsi),
+				      FileStandardInformation);
+      if (!NT_SUCCESS(Status))
+	{
+	  DPRINT("NtQueryInformationFile() failed (Status %lx)\n", Status);
+	  goto ByeBye;
+	}
+      FileSize = fsi.EndOfFile.u.LowPart;
+
+      /* Calculate bitmap and block size */
+      BitmapSize = ROUND_UP((FileSize / 4096) - 1, sizeof(ULONG) * 8) / 8;
+      BufferSize = sizeof(HIVE_HEADER) +
+			  sizeof(ULONG) +
+			  BitmapSize;
+      BufferSize = ROUND_UP(BufferSize, 4096);
+
+      /* Reallocate log header block */
+      ExFreePool(LogHeader);
+      LogHeader = ExAllocatePool(PagedPool,
+				 BufferSize);
+      if (LogHeader == NULL)
+	{
+	  DPRINT("ExAllocatePool() failed\n");
+	  Status = STATUS_INSUFFICIENT_RESOURCES;
+	  goto ByeBye;
+	}
+
+      /* Read log file header */
+      FileOffset.QuadPart = 0ULL;
+      Status = NtReadFile(LogHandle,
+			  0,
+			  0,
+			  0,
+			  &IoStatusBlock,
+			  LogHeader,
+			  BufferSize,
+			  &FileOffset,
+			  0);
+      if (!NT_SUCCESS(Status))
+	{
+	  DPRINT("NtReadFile() failed (Status %lx)\n", Status);
+	  goto ByeBye;
+	}
+
+      /* Initialize bitmap */
+      RtlInitializeBitMap(&BlockBitMap,
+			  (PVOID)((ULONG)LogHeader + 4096 + sizeof(ULONG)),
+			  BitmapSize * 8);
+
+      /* FIXME: Update dirty blocks */
+
+
+      /* FIXME: Update hive header */
+
+
+      Status = STATUS_SUCCESS;
+    }
+
+
+  /* Clean up the mess */
+ByeBye:
+  if (HiveHeader != NULL)
+    ExFreePool(HiveHeader);
+
+  if (LogHeader != NULL)
+    ExFreePool(LogHeader);
+
+  if (LogHandle != INVALID_HANDLE_VALUE)
+    NtClose(LogHandle);
+
+  NtClose(HiveHandle);
+
+  return(Status);
+}
+#endif
+
+
 static NTSTATUS
 CmiInitNonVolatileRegistryHive(PREGISTRY_HIVE RegistryHive,
 			       PWSTR Filename,
@@ -509,8 +773,8 @@ CmiInitNonVolatileRegistryHive(PREGISTRY_HIVE RegistryHive,
 				  Filename);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("CmiInitNonVolatileRegistryHive() - Failed 1.\n");
-      return Status;
+      DPRINT("RtlCreateUnicodeString() failed (Status %lx)\n", Status);
+      return(Status);
     }
 
   /* Create log file name */
@@ -521,13 +785,25 @@ CmiInitNonVolatileRegistryHive(PREGISTRY_HIVE RegistryHive,
   if (RegistryHive->LogFileName.Buffer == NULL)
     {
       RtlFreeUnicodeString(&RegistryHive->HiveFileName);
-      DPRINT1("ExAllocatePool() failed\n");
+      DPRINT("ExAllocatePool() failed\n");
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
   wcscpy(RegistryHive->LogFileName.Buffer,
 	 Filename);
   wcscat(RegistryHive->LogFileName.Buffer,
 	 L".log");
+
+#ifdef HIVE_CHECK
+  /* Check and eventually fix a hive */
+  Status = CmiCheckAndFixHive(RegistryHive);
+  if (!NT_SUCCESS(Status))
+    {
+      RtlFreeUnicodeString(&RegistryHive->HiveFileName);
+      RtlFreeUnicodeString(&RegistryHive->LogFileName);
+      DPRINT1("CmiCheckAndFixHive() failed (Status %lx)\n", Status);
+      return(Status);
+    }
+#endif
 
   InitializeObjectAttributes(&ObjectAttributes,
 			     &RegistryHive->HiveFileName,
@@ -565,7 +841,7 @@ CmiInitNonVolatileRegistryHive(PREGISTRY_HIVE RegistryHive,
     {
       RtlFreeUnicodeString(&RegistryHive->HiveFileName);
       RtlFreeUnicodeString(&RegistryHive->LogFileName);
-      DPRINT1("NtCreateFile() failed (Status %lx)\n", Status);
+      DPRINT("NtCreateFile() failed (Status %lx)\n", Status);
       return(Status);
     }
 
@@ -578,7 +854,7 @@ CmiInitNonVolatileRegistryHive(PREGISTRY_HIVE RegistryHive,
       Status = CmiCreateNewRegFile(FileHandle);
       if (!NT_SUCCESS(Status))
 	{
-	  DPRINT1("CmiCreateNewRegFile() failed (Status %lx)\n", Status);
+	  DPRINT("CmiCreateNewRegFile() failed (Status %lx)\n", Status);
 	  NtClose(FileHandle);
 	  RtlFreeUnicodeString(&RegistryHive->HiveFileName);
 	  RtlFreeUnicodeString(&RegistryHive->LogFileName);
@@ -602,14 +878,12 @@ CmiInitNonVolatileRegistryHive(PREGISTRY_HIVE RegistryHive,
   assertmsg(NT_SUCCESS(Status), ("Status: 0x%X\n", Status));
   if (!NT_SUCCESS(Status))
     {
+      DPRINT("NtReadFile() failed (Status %lx)\n", Status);
       NtClose(FileHandle);
       RtlFreeUnicodeString(&RegistryHive->HiveFileName);
       RtlFreeUnicodeString(&RegistryHive->LogFileName);
-      DPRINT("CmiInitNonVolatileRegistryHive() - Failed 4.\n");
       return Status;
     }
-
-  /* FIXME: Check hive header */
 
   /* Read update counter */
   RegistryHive->UpdateCounter = RegistryHive->HiveHeader->UpdateCounter1;
@@ -622,10 +896,10 @@ CmiInitNonVolatileRegistryHive(PREGISTRY_HIVE RegistryHive,
   assertmsg(NT_SUCCESS(Status), ("Status: 0x%X\n", Status));
   if (!NT_SUCCESS(Status))
     {
+      DPRINT("NtQueryInformationFile() failed (Status %lx)\n", Status);
       NtClose(FileHandle);
       RtlFreeUnicodeString(&RegistryHive->HiveFileName);
       RtlFreeUnicodeString(&RegistryHive->LogFileName);
-      DPRINT("CmiInitNonVolatileRegistryHive() - Failed 5.\n");
       return Status;
     }
 
@@ -634,10 +908,10 @@ CmiInitNonVolatileRegistryHive(PREGISTRY_HIVE RegistryHive,
 //  assert(RegistryHive->FileSize);
   if (RegistryHive->FileSize == 0)
     {
+      DPRINT("CmiInitPermanentRegistryHive() - Failed, zero length hive file.\n");
       NtClose(FileHandle);
       RtlFreeUnicodeString(&RegistryHive->HiveFileName);
       RtlFreeUnicodeString(&RegistryHive->LogFileName);
-      DPRINT("CmiInitPermanentRegistryHive() - Failed, zero length hive file.\n");
       return STATUS_INSUFFICIENT_RESOURCES;
     }
 #endif
@@ -928,12 +1202,12 @@ CmiStartLogUpdate(PREGISTRY_HIVE RegistryHive)
 	       BitmapSize;
   BufferSize = ROUND_UP(BufferSize, 4096);
 
-  DPRINT1("Bitmap size %lu  buffer size: %lu\n", BitmapSize, BufferSize);
+  DPRINT("Bitmap size %lu  buffer size: %lu\n", BitmapSize, BufferSize);
 
   Buffer = (PUCHAR)ExAllocatePool(NonPagedPool, BufferSize);
   if (Buffer == NULL)
     {
-      DPRINT1("ExAllocatePool() failed\n");
+      DPRINT("ExAllocatePool() failed\n");
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
@@ -957,7 +1231,7 @@ CmiStartLogUpdate(PREGISTRY_HIVE RegistryHive)
 			0);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtCreateFile() failed (Status %lx)\n", Status);
+      DPRINT("NtCreateFile() failed (Status %lx)\n", Status);
       ExFreePool(Buffer);
       return(Status);
     }
@@ -993,14 +1267,12 @@ CmiStartLogUpdate(PREGISTRY_HIVE RegistryHive)
 		       NULL);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
+      DPRINT("NtWriteFile() failed (Status %lx)\n", Status);
       NtClose(FileHandle);
       ExFreePool(Buffer);
       return(Status);
     }
-
   ExFreePool(Buffer);
-
 
   /* Write dirty blocks */
   FileOffset.QuadPart = (ULONGLONG)BufferSize;
@@ -1017,15 +1289,15 @@ CmiStartLogUpdate(PREGISTRY_HIVE RegistryHive)
 	  break;
 	}
 
-      DPRINT1("Block %lu is dirty\n", BlockIndex);
+      DPRINT("Block %lu is dirty\n", BlockIndex);
 
       BlockOffset = RegistryHive->BlockList[BlockIndex]->BlockOffset;
-      DPRINT1("Block offset %lx\n", BlockOffset);
+      DPRINT("Block offset %lx\n", BlockOffset);
 
       BlockPtr = RegistryHive->BlockList[BlockIndex] + ((BlockIndex * 4096) - BlockOffset);
-      DPRINT1("BlockPtr %p\n", BlockPtr);
+      DPRINT("BlockPtr %p\n", BlockPtr);
 
-      DPRINT1("File offset %I64x\n", FileOffset.QuadPart);
+      DPRINT("File offset %I64x\n", FileOffset.QuadPart);
 
       /* Write hive block */
       Status = NtWriteFile(FileHandle,
@@ -1039,7 +1311,7 @@ CmiStartLogUpdate(PREGISTRY_HIVE RegistryHive)
 			   NULL);
       if (!NT_SUCCESS(Status))
 	{
-	  DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
+	  DPRINT("NtWriteFile() failed (Status %lx)\n", Status);
 	  NtClose(FileHandle);
 	  return(Status);
 	}
@@ -1057,7 +1329,7 @@ CmiStartLogUpdate(PREGISTRY_HIVE RegistryHive)
 				FileEndOfFileInformation);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtSetInformationFile() failed (Status %lx)\n", Status);
+      DPRINT("NtSetInformationFile() failed (Status %lx)\n", Status);
       NtClose(FileHandle);
       return(Status);
     }
@@ -1070,7 +1342,7 @@ CmiStartLogUpdate(PREGISTRY_HIVE RegistryHive)
 				FileAllocationInformation);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtSetInformationFile() failed (Status %lx)\n", Status);
+      DPRINT("NtSetInformationFile() failed (Status %lx)\n", Status);
       NtClose(FileHandle);
       return(Status);
     }
@@ -1080,7 +1352,7 @@ CmiStartLogUpdate(PREGISTRY_HIVE RegistryHive)
 			      &IoStatusBlock);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtFlushBuffersFile() failed (Status %lx)\n", Status);
+      DPRINT("NtFlushBuffersFile() failed (Status %lx)\n", Status);
     }
 
   NtClose(FileHandle);
@@ -1102,7 +1374,7 @@ CmiFinishLogUpdate(PREGISTRY_HIVE RegistryHive)
   PUCHAR Ptr;
   NTSTATUS Status;
 
-  DPRINT1("CmiFinishLogUpdate() called\n");
+  DPRINT("CmiFinishLogUpdate() called\n");
 
   BitmapSize = ROUND_UP(RegistryHive->BlockListSize, sizeof(ULONG) * 8) / 8;
   BufferSize = sizeof(HIVE_HEADER) +
@@ -1110,12 +1382,12 @@ CmiFinishLogUpdate(PREGISTRY_HIVE RegistryHive)
 	       BitmapSize;
   BufferSize = ROUND_UP(BufferSize, 4096);
 
-  DPRINT1("Bitmap size %lu  buffer size: %lu\n", BitmapSize, BufferSize);
+  DPRINT("Bitmap size %lu  buffer size: %lu\n", BitmapSize, BufferSize);
 
   Buffer = (PUCHAR)ExAllocatePool(NonPagedPool, BufferSize);
   if (Buffer == NULL)
     {
-      DPRINT1("ExAllocatePool() failed\n");
+      DPRINT("ExAllocatePool() failed\n");
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
@@ -1139,7 +1411,7 @@ CmiFinishLogUpdate(PREGISTRY_HIVE RegistryHive)
 			0);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtCreateFile() failed (Status %lx)\n", Status);
+      DPRINT("NtCreateFile() failed (Status %lx)\n", Status);
       ExFreePool(Buffer);
       return(Status);
     }
@@ -1160,9 +1432,6 @@ CmiFinishLogUpdate(PREGISTRY_HIVE RegistryHive)
 		"DIRT",
 		4);
   Ptr += 4;
-//  RtlCopyMemory(Ptr,
-//		RegistryHive->DirtyBitMap.Buffer,
-//		BitmapSize);
   RtlZeroMemory(Ptr,
 		BitmapSize);
 
@@ -1179,7 +1448,7 @@ CmiFinishLogUpdate(PREGISTRY_HIVE RegistryHive)
 		       NULL);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
+      DPRINT("NtWriteFile() failed (Status %lx)\n", Status);
       NtClose(FileHandle);
       ExFreePool(Buffer);
       return(Status);
@@ -1192,7 +1461,7 @@ CmiFinishLogUpdate(PREGISTRY_HIVE RegistryHive)
 			      &IoStatusBlock);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtFlushBuffersFile() failed (Status %lx)\n", Status);
+      DPRINT("NtFlushBuffersFile() failed (Status %lx)\n", Status);
     }
 
   NtClose(FileHandle);
@@ -1213,7 +1482,7 @@ CmiCleanupLogUpdate(PREGISTRY_HIVE RegistryHive)
   ULONG BitmapSize;
   NTSTATUS Status;
 
-  DPRINT1("CmiFinishLogUpdate() called\n");
+  DPRINT("CmiFinishLogUpdate() called\n");
 
   BitmapSize = ROUND_UP(RegistryHive->BlockListSize, sizeof(ULONG) * 8) / 8;
   BufferSize = sizeof(HIVE_HEADER) +
@@ -1221,7 +1490,7 @@ CmiCleanupLogUpdate(PREGISTRY_HIVE RegistryHive)
 	       BitmapSize;
   BufferSize = ROUND_UP(BufferSize, 4096);
 
-  DPRINT1("Bitmap size %lu  buffer size: %lu\n", BitmapSize, BufferSize);
+  DPRINT("Bitmap size %lu  buffer size: %lu\n", BitmapSize, BufferSize);
 
   /* Open log file for writing */
   InitializeObjectAttributes(&ObjectAttributes,
@@ -1243,7 +1512,7 @@ CmiCleanupLogUpdate(PREGISTRY_HIVE RegistryHive)
 			0);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtCreateFile() failed (Status %lx)\n", Status);
+      DPRINT("NtCreateFile() failed (Status %lx)\n", Status);
       return(Status);
     }
 
@@ -1256,7 +1525,7 @@ CmiCleanupLogUpdate(PREGISTRY_HIVE RegistryHive)
 				FileEndOfFileInformation);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtSetInformationFile() failed (Status %lx)\n", Status);
+      DPRINT("NtSetInformationFile() failed (Status %lx)\n", Status);
       NtClose(FileHandle);
       return(Status);
     }
@@ -1269,7 +1538,7 @@ CmiCleanupLogUpdate(PREGISTRY_HIVE RegistryHive)
 				FileAllocationInformation);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtSetInformationFile() failed (Status %lx)\n", Status);
+      DPRINT("NtSetInformationFile() failed (Status %lx)\n", Status);
       NtClose(FileHandle);
       return(Status);
     }
@@ -1279,7 +1548,7 @@ CmiCleanupLogUpdate(PREGISTRY_HIVE RegistryHive)
 			      &IoStatusBlock);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtFlushBuffersFile() failed (Status %lx)\n", Status);
+      DPRINT("NtFlushBuffersFile() failed (Status %lx)\n", Status);
     }
 
   NtClose(FileHandle);
@@ -1322,7 +1591,7 @@ CmiStartHiveUpdate(PREGISTRY_HIVE RegistryHive)
 			0);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtCreateFile() failed (Status %lx)\n", Status);
+      DPRINT("NtCreateFile() failed (Status %lx)\n", Status);
       return(Status);
     }
 
@@ -1343,7 +1612,7 @@ CmiStartHiveUpdate(PREGISTRY_HIVE RegistryHive)
 		       NULL);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
+      DPRINT("NtWriteFile() failed (Status %lx)\n", Status);
       NtClose(FileHandle);
       return(Status);
     }
@@ -1361,16 +1630,16 @@ CmiStartHiveUpdate(PREGISTRY_HIVE RegistryHive)
 	  break;
 	}
 
-      DPRINT1("Block %lu is dirty\n", BlockIndex);
+      DPRINT("Block %lu is dirty\n", BlockIndex);
 
       BlockOffset = RegistryHive->BlockList[BlockIndex]->BlockOffset;
-      DPRINT1("Block offset %lx\n", BlockOffset);
+      DPRINT("Block offset %lx\n", BlockOffset);
 
       BlockPtr = RegistryHive->BlockList[BlockIndex] + ((BlockIndex * 4096) - BlockOffset);
-      DPRINT1("BlockPtr %p\n", BlockPtr);
+      DPRINT("BlockPtr %p\n", BlockPtr);
 
       FileOffset.QuadPart = (ULONGLONG)(BlockIndex + 1) * 4096ULL;
-      DPRINT1("File offset %I64x\n", FileOffset.QuadPart);
+      DPRINT("File offset %I64x\n", FileOffset.QuadPart);
 
 
       /* Write hive block */
@@ -1385,7 +1654,7 @@ CmiStartHiveUpdate(PREGISTRY_HIVE RegistryHive)
 			   NULL);
       if (!NT_SUCCESS(Status))
 	{
-	  DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
+	  DPRINT("NtWriteFile() failed (Status %lx)\n", Status);
 	  NtClose(FileHandle);
 	  return(Status);
 	}
@@ -1397,7 +1666,7 @@ CmiStartHiveUpdate(PREGISTRY_HIVE RegistryHive)
 			      &IoStatusBlock);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtFlushBuffersFile() failed (Status %lx)\n", Status);
+      DPRINT("NtFlushBuffersFile() failed (Status %lx)\n", Status);
     }
 
   NtClose(FileHandle);
@@ -1415,7 +1684,7 @@ CmiFinishHiveUpdate(PREGISTRY_HIVE RegistryHive)
   HANDLE FileHandle;
   NTSTATUS Status;
 
-  DPRINT1("CmiFinishHiveUpdate() called\n");
+  DPRINT("CmiFinishHiveUpdate() called\n");
 
   InitializeObjectAttributes(&ObjectAttributes,
 			     &RegistryHive->HiveFileName,
@@ -1436,7 +1705,7 @@ CmiFinishHiveUpdate(PREGISTRY_HIVE RegistryHive)
 			0);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtCreateFile() failed (Status %lx)\n", Status);
+      DPRINT("NtCreateFile() failed (Status %lx)\n", Status);
       return(Status);
     }
 
@@ -1458,7 +1727,7 @@ CmiFinishHiveUpdate(PREGISTRY_HIVE RegistryHive)
 		       NULL);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
+      DPRINT("NtWriteFile() failed (Status %lx)\n", Status);
       NtClose(FileHandle);
       return(Status);
     }
@@ -1467,7 +1736,7 @@ CmiFinishHiveUpdate(PREGISTRY_HIVE RegistryHive)
 			      &IoStatusBlock);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("NtFlushBuffersFile() failed (Status %lx)\n", Status);
+      DPRINT("NtFlushBuffersFile() failed (Status %lx)\n", Status);
     }
 
   NtClose(FileHandle);
@@ -1488,12 +1757,10 @@ CmiFlushRegistryHive(PREGISTRY_HIVE RegistryHive)
       return(STATUS_SUCCESS);
     }
 
-  DPRINT1("Hive '%wZ' is dirty\n",
+  DPRINT("Hive '%wZ' is dirty\n",
 	 &RegistryHive->HiveFileName);
-
-  DPRINT1("Log file: '%wZ'\n",
+  DPRINT("Log file: '%wZ'\n",
 	 &RegistryHive->LogFileName);
-
 
   /* Update hive header modification time */
   NtQuerySystemTime((PTIME)&RegistryHive->HiveHeader->DateModified);
@@ -1502,7 +1769,7 @@ CmiFlushRegistryHive(PREGISTRY_HIVE RegistryHive)
   Status = CmiStartLogUpdate(RegistryHive);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("CmiStartLogUpdate() failed (Status %lx)\n", Status);
+      DPRINT("CmiStartLogUpdate() failed (Status %lx)\n", Status);
       return(Status);
     }
 
@@ -1510,7 +1777,7 @@ CmiFlushRegistryHive(PREGISTRY_HIVE RegistryHive)
   Status = CmiFinishLogUpdate(RegistryHive);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("CmiFinishLogUpdate() failed (Status %lx)\n", Status);
+      DPRINT("CmiFinishLogUpdate() failed (Status %lx)\n", Status);
       return(Status);
     }
 
@@ -1518,7 +1785,7 @@ CmiFlushRegistryHive(PREGISTRY_HIVE RegistryHive)
   Status = CmiStartHiveUpdate(RegistryHive);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("CmiStartHiveUpdate() failed (Status %lx)\n", Status);
+      DPRINT("CmiStartHiveUpdate() failed (Status %lx)\n", Status);
       return(Status);
     }
 
@@ -1526,7 +1793,7 @@ CmiFlushRegistryHive(PREGISTRY_HIVE RegistryHive)
   Status = CmiFinishHiveUpdate(RegistryHive);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("CmiFinishHiveUpdate() failed (Status %lx)\n", Status);
+      DPRINT("CmiFinishHiveUpdate() failed (Status %lx)\n", Status);
       return(Status);
     }
 
@@ -1534,7 +1801,7 @@ CmiFlushRegistryHive(PREGISTRY_HIVE RegistryHive)
   Status = CmiCleanupLogUpdate(RegistryHive);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("CmiFinishLogUpdate() failed (Status %lx)\n", Status);
+      DPRINT("CmiFinishLogUpdate() failed (Status %lx)\n", Status);
       return(Status);
     }
 
@@ -1545,7 +1812,7 @@ CmiFlushRegistryHive(PREGISTRY_HIVE RegistryHive)
   RtlClearAllBits(&RegistryHive->DirtyBitMap);
   RegistryHive->HiveDirty = FALSE;
 
-  DPRINT1("CmiFlushRegistryHive() done\n");
+  DPRINT("CmiFlushRegistryHive() done\n");
 
   return(STATUS_SUCCESS);
 }
@@ -1940,7 +2207,7 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
   PDATA_CELL DataCell;
   ULONG i;
 
-  DPRINT1("CmiRemoveSubKey() called\n");
+  DPRINT("CmiRemoveSubKey() called\n");
 
   /* Remove all values */
   if (SubKey->KeyCell->NumberOfValues != 0)
@@ -1994,11 +2261,11 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
   /* Remove the key from the parent key's hash block */
   if (ParentKey->KeyCell->HashTableOffset != (BLOCK_OFFSET) -1)
     {
-      DPRINT1("ParentKey HashTableOffset %lx\n", ParentKey->KeyCell->HashTableOffset)
+      DPRINT("ParentKey HashTableOffset %lx\n", ParentKey->KeyCell->HashTableOffset)
       HashBlock = CmiGetBlock(RegistryHive,
 			      ParentKey->KeyCell->HashTableOffset,
 			      NULL);
-      DPRINT1("ParentKey HashBlock %p\n", HashBlock)
+      DPRINT("ParentKey HashBlock %p\n", HashBlock)
       if (HashBlock != NULL)
 	{
 	  CmiRemoveKeyFromHashTable(RegistryHive,
@@ -2012,11 +2279,11 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
   /* Remove the key's hash block */
   if (SubKey->KeyCell->HashTableOffset != (BLOCK_OFFSET) -1)
     {
-      DPRINT1("SubKey HashTableOffset %lx\n", SubKey->KeyCell->HashTableOffset)
+      DPRINT("SubKey HashTableOffset %lx\n", SubKey->KeyCell->HashTableOffset)
       HashBlock = CmiGetBlock(RegistryHive,
 			      SubKey->KeyCell->HashTableOffset,
 			      NULL);
-      DPRINT1("SubKey HashBlock %p\n", HashBlock)
+      DPRINT("SubKey HashBlock %p\n", HashBlock)
       if (HashBlock != NULL)
 	{
 	  CmiDestroyBlock(RegistryHive,
@@ -2029,17 +2296,17 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
   /* Decrement the number of the parent key's sub keys */
   if (ParentKey != NULL)
     {
-      DPRINT1("ParentKey %p\n", ParentKey)
+      DPRINT("ParentKey %p\n", ParentKey)
       ParentKey->KeyCell->NumberOfSubKeys--;
 
       /* Remove the parent key's hash table */
       if (ParentKey->KeyCell->NumberOfSubKeys == 0)
 	{
-	  DPRINT1("ParentKey HashTableOffset %lx\n", ParentKey->KeyCell->HashTableOffset)
+	  DPRINT("ParentKey HashTableOffset %lx\n", ParentKey->KeyCell->HashTableOffset)
 	  HashBlock = CmiGetBlock(RegistryHive,
 				  ParentKey->KeyCell->HashTableOffset,
 				  NULL);
-	  DPRINT1("ParentKey HashBlock %p\n", HashBlock)
+	  DPRINT("ParentKey HashBlock %p\n", HashBlock)
 	  if (HashBlock != NULL)
 	    {
 	      CmiDestroyBlock(RegistryHive,
@@ -2580,11 +2847,11 @@ CmiAddBin(PREGISTRY_HIVE RegistryHive,
   if (NewBlockOffset)
     *NewBlockOffset = tmpBin->BlockOffset + REG_HBIN_DATA_OFFSET;
 
+  /* FIXME: set first dword to block_offset of another free bloc */
+
   /* Mark new bin dirty */
   CmiMarkBinDirty(RegistryHive,
 		  tmpBin->BlockOffset);
-
-  /* FIXME: set first dword to block_offset of another free bloc */
 
   return STATUS_SUCCESS;
 }
