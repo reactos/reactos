@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.63 2004/05/10 17:07:18 weiden Exp $
+/* $Id: message.c,v 1.64 2004/05/14 16:48:04 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -489,9 +489,10 @@ IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *Hit
     else if(ThreadQueue->MoveSize == NULL &&
             ThreadQueue->MenuOwner == NULL)
     {
-      Msg->pt.x -= (WORD)Window->ClientRect.left;
-      Msg->pt.y -= (WORD)Window->ClientRect.top;
-      Msg->lParam = MAKELONG(Msg->pt.x, Msg->pt.y);
+      /* NOTE: Msg->pt should remain in screen coordinates. -- FiN */
+      Msg->lParam = MAKELONG(
+        Msg->pt.x - (WORD)Window->ClientRect.left,
+        Msg->pt.y - (WORD)Window->ClientRect.top);
     }
   }
   
