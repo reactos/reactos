@@ -1,4 +1,4 @@
-/* $Id: sid.c,v 1.3 2002/06/15 10:10:19 ekohl Exp $
+/* $Id: sid.c,v 1.4 2002/07/29 15:36:20 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -18,86 +18,142 @@
 
 /* FUNCTIONS ***************************************************************/
 
-BOOLEAN STDCALL RtlValidSid (PSID Sid)
+BOOLEAN STDCALL
+RtlValidSid(IN PSID Sid)
 {
-   if ((Sid->Revision & 0xf) != 1)
-     {
-	return(FALSE);
-     }
-   if (Sid->SubAuthorityCount > 15)
-     {
-	return(FALSE);
-     }
-   return(TRUE);
+  if ((Sid->Revision & 0xf) != 1)
+    {
+      return(FALSE);
+    }
+  if (Sid->SubAuthorityCount > 15)
+    {
+      return(FALSE);
+    }
+  return(TRUE);
 }
 
-ULONG STDCALL RtlLengthRequiredSid (UCHAR SubAuthorityCount)
+
+ULONG STDCALL
+RtlLengthRequiredSid(IN UCHAR SubAuthorityCount)
 {
-   return(sizeof(SID) + (SubAuthorityCount - 1) * sizeof(ULONG));
+  return(sizeof(SID) + (SubAuthorityCount - 1) * sizeof(ULONG));
 }
 
-NTSTATUS STDCALL RtlInitializeSid (PSID Sid,
-			  PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
-			  UCHAR SubAuthorityCount)
+
+NTSTATUS STDCALL
+RtlInitializeSid(IN PSID Sid,
+		 IN PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
+		 IN UCHAR SubAuthorityCount)
 {
-   Sid->Revision = 1;
-   Sid->SubAuthorityCount = SubAuthorityCount;
-   memcpy(&Sid->IdentifierAuthority, IdentifierAuthority, 
-	  sizeof(SID_IDENTIFIER_AUTHORITY));
-   return(STATUS_SUCCESS);
+  Sid->Revision = 1;
+  Sid->SubAuthorityCount = SubAuthorityCount;
+  memcpy(&Sid->IdentifierAuthority,
+	 IdentifierAuthority,
+	 sizeof(SID_IDENTIFIER_AUTHORITY));
+  return(STATUS_SUCCESS);
 }
 
-PULONG STDCALL RtlSubAuthoritySid (PSID Sid, ULONG SubAuthority)
+
+PULONG STDCALL
+RtlSubAuthoritySid(IN PSID Sid,
+		   IN ULONG SubAuthority)
 {
-   return(&Sid->SubAuthority[SubAuthority]);
+  return(&Sid->SubAuthority[SubAuthority]);
 }
 
-PUCHAR STDCALL RtlSubAuthorityCountSid (PSID Sid)
+
+PUCHAR STDCALL
+RtlSubAuthorityCountSid(IN PSID Sid)
 {
-   return(&Sid->SubAuthorityCount);
+  return(&Sid->SubAuthorityCount);
 }
 
-BOOLEAN STDCALL RtlEqualSid (PSID Sid1, PSID Sid2)
+
+BOOLEAN STDCALL
+RtlEqualSid(IN PSID Sid1,
+	    IN PSID Sid2)
 {
-   if (Sid1->Revision != Sid2->Revision)
-     {
-	return(FALSE);
-     }
-   if ((*RtlSubAuthorityCountSid(Sid1)) !=
-       (*RtlSubAuthorityCountSid(Sid2)))
-     {
-	return(FALSE);
-     }
+  if (Sid1->Revision != Sid2->Revision)
+    {
+      return(FALSE);
+    }
+  if ((*RtlSubAuthorityCountSid(Sid1)) != (*RtlSubAuthorityCountSid(Sid2)))
+    {
+      return(FALSE);
+    }
    if (memcmp(Sid1, Sid2, RtlLengthSid(Sid1)) != 0)
-     {
-	return(FALSE);
-     }
-   return(TRUE);
+    {
+      return(FALSE);
+    }
+  return(TRUE);
 }
 
-ULONG STDCALL RtlLengthSid (PSID Sid)
+
+ULONG STDCALL
+RtlLengthSid(IN PSID Sid)
 {
-   return(sizeof(SID) + (Sid->SubAuthorityCount-1)*4);
+  return(sizeof(SID) + (Sid->SubAuthorityCount-1)*4);
 }
 
-NTSTATUS STDCALL RtlCopySid (ULONG BufferLength, PSID Dest, PSID Src)
+
+NTSTATUS STDCALL
+RtlCopySid(ULONG BufferLength,
+	   PSID Dest,
+	   PSID Src)
 {
-   if (BufferLength < RtlLengthSid(Src))
-     {
-	return(STATUS_UNSUCCESSFUL);
-     }
-   memmove(Dest, Src, RtlLengthSid(Src));
-   return(STATUS_SUCCESS);
+  if (BufferLength < RtlLengthSid(Src))
+    {
+      return(STATUS_UNSUCCESSFUL);
+    }
+  memmove(Dest,
+	  Src,
+	  RtlLengthSid(Src));
+  return(STATUS_SUCCESS);
 }
 
-PSID_IDENTIFIER_AUTHORITY
-STDCALL
-RtlIdentifierAuthoritySid (
-	PSID	Sid
-	)
+
+NTSTATUS STDCALL
+RtlCopySidAndAttributesArray(ULONG Count,
+			     PSID_AND_ATTRIBUTES Src,
+			     ULONG SidAreaSize,
+			     PSID_AND_ATTRIBUTES Dest,
+			     PVOID SidArea,
+			     PVOID* RemainingSidArea,
+			     PULONG RemainingSidAreaSize)
 {
-	return (&Sid->IdentifierAuthority);
+  ULONG SidLength;
+  ULONG Length;
+  ULONG i;
+
+  Length = SidAreaSize;
+
+  for (i=0; i<Count; i++)
+    {
+      if (RtlLengthSid(Src[i].Sid) > Length)
+	{
+	  return(STATUS_BUFFER_TOO_SMALL);
+	}
+      SidLength = RtlLengthSid(Src[i].Sid);
+      Length = Length - SidLength;
+      Dest[i].Sid = SidArea;
+      Dest[i].Attributes = Src[i].Attributes;
+      RtlCopySid(SidLength,
+		 SidArea,
+		 Src[i].Sid);
+      SidArea = SidArea + SidLength;
+    }
+  *RemainingSidArea = SidArea;
+  *RemainingSidAreaSize = Length;
+  return(STATUS_SUCCESS);
 }
+
+
+PSID_IDENTIFIER_AUTHORITY STDCALL
+RtlIdentifierAuthoritySid(IN PSID Sid)
+{
+  return(&Sid->IdentifierAuthority);
+}
+
 
 NTSTATUS
 STDCALL
@@ -162,37 +218,30 @@ RtlAllocateAndInitializeSid (
 }
 
 
-PSID
-STDCALL
-RtlFreeSid (
-	PSID	Sid
-	)
+PSID STDCALL
+RtlFreeSid(IN PSID Sid)
 {
-	RtlFreeHeap (RtlGetProcessHeap (), 0, Sid);
-	return Sid;
+  RtlFreeHeap(RtlGetProcessHeap(),
+	      0,
+	      Sid);
+  return(Sid);
 }
 
 
-BOOLEAN
-STDCALL
-RtlEqualPrefixSid (
-	PSID	Sid1,
-	PSID	Sid2
-	)
+BOOLEAN STDCALL
+RtlEqualPrefixSid(IN PSID Sid1,
+		  IN PSID Sid2)
 {
-	return (Sid1->SubAuthorityCount == Sid2->SubAuthorityCount &&
-	        !memcmp (Sid1, Sid2,
-	                 (Sid1->SubAuthorityCount - 1) * sizeof(DWORD) + 8));
+  return(Sid1->SubAuthorityCount == Sid2->SubAuthorityCount &&
+	 !memcmp(Sid1, Sid2,
+	         (Sid1->SubAuthorityCount - 1) * sizeof(DWORD) + 8));
 }
 
 
-NTSTATUS
-STDCALL
-RtlConvertSidToUnicodeString (
-	PUNICODE_STRING String,
-	PSID		Sid,
-	BOOLEAN		AllocateBuffer
-	)
+NTSTATUS STDCALL
+RtlConvertSidToUnicodeString(PUNICODE_STRING String,
+			     PSID Sid,
+			     BOOLEAN AllocateBuffer)
 {
 	WCHAR Buffer[256];
 	PWSTR wcs;

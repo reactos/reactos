@@ -1,4 +1,4 @@
-/* $Id: sid.c,v 1.9 2002/06/15 10:10:43 ekohl Exp $
+/* $Id: sid.c,v 1.10 2002/07/29 15:34:22 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -513,7 +513,7 @@ RtlSubAuthoritySid(PSID Sid,
 
 
 PUCHAR STDCALL
-RtlSubAuthorityCountSid (PSID Sid)
+RtlSubAuthorityCountSid(PSID Sid)
 {
   return(&Sid->SubAuthorityCount);
 }
@@ -558,6 +558,38 @@ RtlCopySid(ULONG BufferLength,
      }
    memmove(Dest, Src, RtlLengthSid(Src));
    return(STATUS_SUCCESS);
+}
+
+
+NTSTATUS STDCALL
+RtlCopySidAndAttributesArray(ULONG Count,
+			     PSID_AND_ATTRIBUTES Src,
+			     ULONG SidAreaSize,
+			     PSID_AND_ATTRIBUTES Dest,
+			     PVOID SidArea,
+			     PVOID* RemainingSidArea,
+			     PULONG RemainingSidAreaSize)
+{
+  ULONG Length;
+  ULONG i;
+
+  Length = SidAreaSize;
+
+  for (i=0; i<Count; i++)
+    {
+	if (RtlLengthSid(Src[i].Sid) > Length)
+	  {
+	     return(STATUS_BUFFER_TOO_SMALL);
+	  }
+	Length = Length - RtlLengthSid(Src[i].Sid);
+	Dest[i].Sid = SidArea;
+	Dest[i].Attributes = Src[i].Attributes;
+	RtlCopySid(RtlLengthSid(Src[i].Sid), SidArea, Src[i].Sid);
+	SidArea = SidArea + RtlLengthSid(Src[i].Sid);
+    }
+  *RemainingSidArea = SidArea;
+  *RemainingSidAreaSize = Length;
+  return(STATUS_SUCCESS);
 }
 
 

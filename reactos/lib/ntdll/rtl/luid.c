@@ -1,4 +1,4 @@
-/* $Id: luid.c,v 1.2 2000/06/29 23:35:31 dwelch Exp $
+/* $Id: luid.c,v 1.3 2002/07/29 15:36:20 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -15,32 +15,35 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
-STDCALL
-RtlCopyLuid (
-	PLUID LuidDest,
-	PLUID LuidSrc
-	)
+VOID STDCALL
+RtlCopyLuid(PLUID LuidDest,
+	    PLUID LuidSrc)
 {
-	LuidDest->QuadPart = LuidSrc->QuadPart;
+  LuidDest->QuadPart = LuidSrc->QuadPart;
 }
 
-#if 0
-RtlCopyLuidAndAttributesArray (
-	)
-{
 
+VOID STDCALL
+RtlCopyLuidAndAttributesArray(ULONG Count,
+			      PLUID_AND_ATTRIBUTES Src,
+			      PLUID_AND_ATTRIBUTES Dest)
+{
+  ULONG i;
+
+  for (i = 0; i < Count; i++)
+    {
+      RtlCopyMemory(&Dest[i],
+		    &Src[i],
+		    sizeof(LUID_AND_ATTRIBUTES));
+    }
 }
-#endif
 
-BOOLEAN
-STDCALL
-RtlEqualLuid (
-	PLUID	Luid1,
-	PLUID	Luid2
-	)
+
+BOOLEAN STDCALL
+RtlEqualLuid(PLUID Luid1,
+	     PLUID Luid2)
 {
-	return ((Luid1->QuadPart == Luid2->QuadPart) ? TRUE : FALSE);
+  return((Luid1->QuadPart == Luid2->QuadPart) ? TRUE : FALSE);
 }
 
 /* EOF */

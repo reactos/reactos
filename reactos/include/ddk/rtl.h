@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.62 2002/07/25 13:15:08 ekohl Exp $
+/* $Id: rtl.h,v 1.63 2002/07/29 15:33:31 ekohl Exp $
  * 
  */
 
@@ -660,26 +660,36 @@ VOID STDCALL
 RtlCopyLuid(IN PLUID LuidDest,
 	    IN PLUID LuidSrc);
 
-VOID
-STDCALL
-RtlCopyString (
-	PSTRING	DestinationString,
-	PSTRING	SourceString
-	);
+VOID STDCALL
+RtlCopyLuidAndAttributesArray(ULONG Count,
+			      PLUID_AND_ATTRIBUTES Src,
+			      PLUID_AND_ATTRIBUTES Dest);
 
-VOID
-STDCALL
-RtlCopyUnicodeString (
-	PUNICODE_STRING	DestinationString,
-	PUNICODE_STRING	SourceString
-	);
+NTSTATUS STDCALL
+RtlCopySid(ULONG BufferLength,
+	   PSID Dest,
+	   PSID Src);
 
-NTSTATUS
-STDCALL
-RtlCreateAtomTable (
-	IN	ULONG TableSize,
-	IN OUT	PRTL_ATOM_TABLE *AtomTable
-	);
+NTSTATUS STDCALL
+RtlCopySidAndAttributesArray(ULONG Count,
+			     PSID_AND_ATTRIBUTES Src,
+			     ULONG SidAreaSize,
+			     PSID_AND_ATTRIBUTES Dest,
+			     PVOID SidArea,
+			     PVOID* RemainingSidArea,
+			     PULONG RemainingSidAreaSize);
+
+VOID STDCALL
+RtlCopyString(PSTRING DestinationString,
+	      PSTRING SourceString);
+
+VOID STDCALL
+RtlCopyUnicodeString(PUNICODE_STRING DestinationString,
+		     PUNICODE_STRING SourceString);
+
+NTSTATUS STDCALL
+RtlCreateAtomTable(IN ULONG TableSize,
+		   IN OUT PRTL_ATOM_TABLE *AtomTable);
 
 HANDLE
 STDCALL
@@ -2021,7 +2031,6 @@ ULONG STDCALL RtlLengthRequiredSid (UCHAR SubAuthorityCount);
 PSID_IDENTIFIER_AUTHORITY STDCALL RtlIdentifierAuthoritySid (PSID Sid);
 NTSTATUS STDCALL RtlInitializeSid (PSID Sid, PSID_IDENTIFIER_AUTHORITY IdentifierAuthority, UCHAR SubAuthorityCount);
 PULONG STDCALL RtlSubAuthoritySid (PSID Sid, ULONG SubAuthority);
-NTSTATUS STDCALL RtlCopySid (ULONG BufferLength, PSID Dest, PSID Src);
 BOOLEAN STDCALL RtlEqualPrefixSid (PSID Sid1, PSID Sid2);
 BOOLEAN STDCALL RtlEqualSid(PSID Sid1, PSID Sid2);
 PSID STDCALL RtlFreeSid (PSID Sid);

@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.18 2002/07/04 19:56:36 dwelch Exp $
+/* $Id: token.c,v 1.19 2002/07/29 15:34:22 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -68,39 +68,6 @@ NTSTATUS SeExchangePrimaryToken(PEPROCESS Process,
    *OldTokenP = OldToken;
    return(STATUS_SUCCESS);
 }
-
-
-NTSTATUS
-RtlCopySidAndAttributesArray(ULONG Count,			// ebp + 8
-			     PSID_AND_ATTRIBUTES Src,		// ebp + C
-			     ULONG SidAreaSize,			// ebp + 10
-			     PSID_AND_ATTRIBUTES Dest,		// ebp + 14
-			     PVOID SidArea,			// ebp + 18
-			     PVOID* RemainingSidArea,		// ebp + 1C
-			     PULONG RemainingSidAreaSize)	// ebp + 20
-{
-   ULONG Length; // ebp - 4
-   ULONG i;
-   
-   Length = SidAreaSize;
-   
-   for (i=0; i<Count; i++)
-     {
-	if (RtlLengthSid(Src[i].Sid) > Length)
-	  {
-	     return(STATUS_BUFFER_TOO_SMALL);
-	  }
-	Length = Length - RtlLengthSid(Src[i].Sid);
-	Dest[i].Sid = SidArea;
-	Dest[i].Attributes = Src[i].Attributes;
-	RtlCopySid(RtlLengthSid(Src[i].Sid), SidArea, Src[i].Sid);
-	SidArea = SidArea + RtlLengthSid(Src[i].Sid);
-     }
-   *RemainingSidArea = SidArea;
-   *RemainingSidAreaSize = Length;
-   return(STATUS_SUCCESS);
-}
-
 
 static ULONG
 RtlLengthSidAndAttributes(ULONG Count,

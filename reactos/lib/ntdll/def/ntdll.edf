@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.73 2002/07/25 16:58:58 ekohl Exp $
+; $Id: ntdll.edf,v 1.74 2002/07/29 15:37:06 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -322,10 +322,10 @@ RtlConvertSidToUnicodeString=RtlConvertSidToUnicodeString@12
 ;RtlConvertUiListToApiList
 RtlConvertUlongToLargeInteger=RtlConvertUlongToLargeInteger@4
 RtlCopyLuid=RtlCopyLuid@8
-;RtlCopyLuidAndAttributesArray
+RtlCopyLuidAndAttributesArray=RtlCopyLuidAndAttributesArray@12
 ;RtlCopySecurityDescriptor
 RtlCopySid=RtlCopySid@12
-;RtlCopySidAndAttributesArray
+RtlCopySidAndAttributesArray=RtlCopySidAndAttributesArray@28
 RtlCopyString=RtlCopyString@8
 RtlCopyUnicodeString=RtlCopyUnicodeString@8
 RtlCreateAcl=RtlCreateAcl@12
