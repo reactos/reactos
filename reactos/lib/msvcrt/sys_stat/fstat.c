@@ -1,4 +1,4 @@
-/* $Id: fstat.c,v 1.9 2002/05/07 22:31:26 hbirr Exp $
+/* $Id: fstat.c,v 1.10 2002/06/10 21:28:36 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -33,6 +33,8 @@ int _fstat(int fd, struct stat *statbuf)
     __set_errno(EBADF);
     return -1;
   }
+
+  fflush(NULL);
 
   memset (statbuf, 0, sizeof(struct stat));
 
@@ -95,6 +97,8 @@ __int64 _fstati64 (int fd, struct _stati64* statbuf)
     return -1;
   }
   
+  fflush(NULL);
+
   memset(statbuf, 0, sizeof(struct _stati64));
 
   dwFileType = GetFileType(handle);
