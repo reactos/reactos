@@ -119,11 +119,18 @@ BOOL MultiBootLoadModule(FILE *ModuleImage, char *ModuleName)
 	DWORD		dwModuleSize;
 	module_t*	pModule;
 	char*		ModuleNameString;
+	char *          TempName;
 	
 	/*
 	 * Get current module data structure and module name string array
 	 */
 	pModule = &multiboot_modules[mb_info.mods_count];
+	do {
+	  TempName = strchr( ModuleName, '\\' );
+	  if( TempName )
+	    ModuleName = TempName + 1;
+	} while( TempName );
+
 	ModuleNameString = multiboot_module_strings[mb_info.mods_count];
 	
 	dwModuleSize = GetFileSize(ModuleImage);
