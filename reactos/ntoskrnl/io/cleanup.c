@@ -22,6 +22,65 @@
 
 /* FUNCTIONS ***************************************************************/
 
+
+VOID IoDeviceControlCompletion(PDEVICE_OBJECT DeviceObject,
+			       PIRP Irp,
+			       PIO_STACK_LOCATION IoStack)
+{
+   ULONG IoControlCode;
+   
+   IoControlCode = IoStack->Parameters.DeviceIoControl.IoControlCode;
+   
+   switch (IO_METHOD_FROM_CTL_CODE(IoControlCode))
+     {
+      case METHOD_BUFFERED:
+	DPRINT ("Using METHOD_BUFFERED!\n");
+	
+	/* copy output buffer back and free it */
+	if (Irp->AssociatedIrp.SystemBuffer)
+	  {
+	     if (IoStack->Parameters.DeviceIoControl.OutputBufferLength)
+	       {
+		  RtlCopyMemory(Irp->UserBuffer,
+				Irp->AssociatedIrp.SystemBuffer,
+				IoStack->Parameters.DeviceIoControl.
+				OutputBufferLength);
+	       }
+	     ExFreePool (Irp->AssociatedIrp.SystemBuffer);
+	  }
+	break;
+	
+      case METHOD_IN_DIRECT:
+	DPRINT ("Using METHOD_IN_DIRECT!\n");
+	
+	/* free input buffer (control buffer) */
+	if (Irp->AssociatedIrp.SystemBuffer)
+	  ExFreePool (Irp->AssociatedIrp.SystemBuffer);
+	
+	/* free output buffer (data transfer buffer) */
+	if (Irp->MdlAddress)
+	  IoFreeMdl (Irp->MdlAddress);
+	break;
+	
+      case METHOD_OUT_DIRECT:
+	DPRINT ("Using METHOD_OUT_DIRECT!\n");
+	
+	/* free input buffer (control buffer) */
+	if (Irp->AssociatedIrp.SystemBuffer)
+	  ExFreePool (Irp->AssociatedIrp.SystemBuffer);
+	
+	/* free output buffer (data transfer buffer) */
+	if (Irp->MdlAddress)
+	  IoFreeMdl (Irp->MdlAddress);
+	break;
+	
+      case METHOD_NEITHER:
+	DPRINT ("Using METHOD_NEITHER!\n");
+	/* nothing to do */
+	break;
+     }
+}
+
 VOID IoReadWriteCompletion(PDEVICE_OBJECT DeviceObject,
 			   PIRP Irp,
 			   PIO_STACK_LOCATION IoStack)
@@ -59,6 +118,12 @@ VOID IoReadWriteCompletion(PDEVICE_OBJECT DeviceObject,
      }
 }
 
+VOID IoVolumeInformationCompletion(PDEVICE_OBJECT DeviceObject,
+				   PIRP Irp,
+				   PIO_STACK_LOCATION IoStack)
+{
+}
+
 VOID IoSecondStageCompletion(PIRP Irp, CCHAR PriorityBoost)
 /*
  * FUNCTION: Performs the second stage of irp completion for read/write irps
@@ -78,12 +143,23 @@ VOID IoSecondStageCompletion(PIRP Irp, CCHAR PriorityBoost)
    switch (IoStack->MajorFunction)
      {
       case IRP_MJ_CREATE:
-	/* NOP */
+      case IRP_MJ_FLUSH_BUFFERS:
+	  /* NOP */
 	break;
 	
       case IRP_MJ_READ:
       case IRP_MJ_WRITE:
 	IoReadWriteCompletion(DeviceObject,Irp,IoStack);
+	break;
+	
+      case IRP_MJ_DEVICE_CONTROL:
+      case IRP_MJ_INTERNAL_DEVICE_CONTROL:
+	IoDeviceControlCompletion(DeviceObject, Irp, IoStack);
+	break;
+	
+      case IRP_MJ_QUERY_VOLUME_INFORMATION:
+      case IRP_MJ_SET_VOLUME_INFORMATION:
+	IoVolumeInformationCompletion(DeviceObject, Irp, IoStack);
 	break;
 	
       default:

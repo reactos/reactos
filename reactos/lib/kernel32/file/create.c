@@ -17,7 +17,7 @@
 #include <wchar.h>
 #include <string.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <kernel32/kernel32.h>
 
 /* EXTERNS ******************************************************************/

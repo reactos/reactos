@@ -158,7 +158,7 @@ VOID MmDeletePageEntry(PEPROCESS Process, PVOID Address, BOOL FreePage)
 	return;
      }
    page_tlb = ADDR_TO_PTE(Address);
-   if (FreePage)
+   if (FreePage && PAGE_MASK(*page_tlb) != 0)
      {
 	MmFreePage(PAGE_MASK(*page_tlb),1);
      }

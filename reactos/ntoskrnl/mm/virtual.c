@@ -50,7 +50,7 @@ NTSTATUS MmReleaseMmInfo(PEPROCESS Process)
    PLIST_ENTRY CurrentEntry;
    PMEMORY_AREA Current;
    
-   DPRINT("MmReleaseMmInfo(Process %x)\n",Process);
+   DbgPrint("MmReleaseMmInfo(Process %x)\n",Process);
    
    while (!IsListEmpty(&Process->Pcb.MemoryAreaList))
      {
@@ -95,16 +95,12 @@ BOOLEAN MmIsAddressValid(PVOID VirtualAddress)
    return(TRUE);
 }
 
-NTSTATUS
-STDCALL
-NtAllocateVirtualMemory( 
-	IN HANDLE ProcessHandle,
-	IN OUT PVOID *BaseAddress,
-	IN ULONG  ZeroBits,
-	IN OUT PULONG  RegionSize,
-	IN ULONG  AllocationType, 
-	IN ULONG  Protect
-	)
+NTSTATUS STDCALL NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
+					 IN OUT PVOID *BaseAddress,
+					 IN ULONG  ZeroBits,
+					 IN OUT PULONG  RegionSize,
+					 IN ULONG  AllocationType, 
+					 IN ULONG  Protect)
 {
    return(ZwAllocateVirtualMemory(ProcessHandle,
 				  BaseAddress,
@@ -114,16 +110,12 @@ NtAllocateVirtualMemory(
 				  Protect));
 }
 
-NTSTATUS
-STDCALL
-ZwAllocateVirtualMemory( 
-	IN HANDLE ProcessHandle,
-	IN OUT PVOID *BaseAddress,
-	IN ULONG  ZeroBits,
-	IN OUT PULONG  RegionSize,
-	IN ULONG  AllocationType, 
-	IN ULONG  Protect
-	)
+NTSTATUS STDCALL ZwAllocateVirtualMemory(IN HANDLE ProcessHandle,
+					 IN OUT PVOID *BaseAddress,
+					 IN ULONG  ZeroBits,
+					 IN OUT PULONG  RegionSize,
+					 IN ULONG  AllocationType, 
+					 IN ULONG  Protect)
 /*
  * FUNCTION: Allocates a block of virtual memory in the process address space
  * ARGUMENTS:
@@ -317,6 +309,7 @@ NTSTATUS STDCALL ZwFreeVirtualMemory(IN HANDLE ProcessHandle,
    MemoryArea = MmOpenMemoryAreaByAddress(Process,*BaseAddress);
    if (MemoryArea == NULL)
      {
+	ObDereferenceObject(Process);
 	return(STATUS_UNSUCCESSFUL);
      }
    
@@ -423,6 +416,7 @@ NTSTATUS STDCALL ZwProtectVirtualMemory(IN HANDLE ProcessHandle,
    if (MemoryArea == NULL)
      {
 	DPRINT("ZwProtectVirtualMemory() = %x\n",STATUS_UNSUCCESSFUL);
+	ObDereferenceObject(Process);
 	return(STATUS_UNSUCCESSFUL);
      }
 
@@ -493,24 +487,17 @@ NTSTATUS STDCALL ZwReadVirtualMemory(IN HANDLE ProcessHandle,
 				     IN ULONG  NumberOfBytesToRead,
 				     OUT PULONG NumberOfBytesRead)
 {
-   UNIMPLEMENTED;
-}
-
-#if 0
-NTSTATUS STDCALL ZwReadVirtualMemory(IN HANDLE ProcessHandle,
-				     IN PVOID BaseAddress,
-				     OUT PVOID Buffer,
-				     IN ULONG  NumberOfBytesToRead,
-				     OUT PULONG NumberOfBytesRead)
-{
-   PEPROCESS Process;
-   MEMORY_AREA* MemoryArea;
-   ULONG i;
    NTSTATUS Status;
-   PULONG CurrentEntry;
+   PMDL Mdl;
+   PVOID SystemAddress;
+   PEPROCESS Process;
+   
+   DPRINT("ZwReadVirtualMemory(ProcessHandle %x, BaseAddress %x, "
+	    "Buffer %x, NumberOfBytesToRead %d)\n",ProcessHandle,BaseAddress,
+	    Buffer,NumberOfBytesToRead);
    
    Status = ObReferenceObjectByHandle(ProcessHandle,
-				      PROCESS_VM_READ,
+				      PROCESS_VM_WRITE,
 				      NULL,
 				      UserMode,
 				      (PVOID*)(&Process),
@@ -519,32 +506,26 @@ NTSTATUS STDCALL ZwReadVirtualMemory(IN HANDLE ProcessHandle,
      {
 	return(Status);
      }
-
-   MemoryArea = MmOpenMemoryAreaByAddress(Process,BaseAddress);
    
-   if (MemoryArea == NULL)
-     {
-	return(STATUS_UNSUCCESSFUL);
-     }
-   if (MemoryArea->Length > NumberOfBytesToRead)
-     {
-	NumberOfBytesToRead = MemoryArea->Length;
-     }
+   Mdl = MmCreateMdl(NULL, 
+		     Buffer,
+		     NumberOfBytesToRead);
+   MmProbeAndLockPages(Mdl,
+		       UserMode,
+		       IoWriteAccess);
+   
+   KeAttachProcess(Process);
+   
+   SystemAddress = MmGetSystemAddressForMdl(Mdl);
+   memcpy(SystemAddress, BaseAddress, NumberOfBytesToRead);
+   
+   KeDetachProcess();
+   
+   ObDereferenceObject(Process);
    
    *NumberOfBytesRead = NumberOfBytesToRead;
-   
-   for (i=0; i<(NumberOfBytesToRead/PAGESIZE); i++)
-     {
-	CurrentEntry = MmGetPageEntry(Process, 
-				   (PVOID)((DWORD)BaseAddress + (i*PAGESIZE)));
-	RtlCopyMemory(Buffer + (i*PAGESIZE),
-		      (PVOID)physical_to_linear(PAGE_MASK(*CurrentEntry)),
-		      PAGESIZE);
-	
-     }
    return(STATUS_SUCCESS);
 }
-#endif
 
 NTSTATUS STDCALL NtUnlockVirtualMemory(HANDLE ProcessHandle,
 				       PVOID BaseAddress,

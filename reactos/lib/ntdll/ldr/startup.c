@@ -18,7 +18,7 @@
 #include <ntdll/ldr.h>
 #include <ntdll/rtl.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <ntdll/ntdll.h>
 
 /* GLOBALS *******************************************************************/
@@ -84,7 +84,7 @@ VOID LdrStartup(HANDLE SectionHandle,
    NTSTATUS Status;
    PIMAGE_NT_HEADERS NTHeaders;
    
-   dprintf("LdrStartup(ImageBase %x, SectionHandle %x, "
+   DPRINT("LdrStartup(ImageBase %x, SectionHandle %x, "
 	   "NTDllSectionHandle %x)\n",ImageBase,
 	   SectionHandle, NTDllSectionHandle);
    

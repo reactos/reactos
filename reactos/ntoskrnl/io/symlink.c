@@ -165,6 +165,7 @@ NTSTATUS ZwQuerySymbolicLinkObject(IN HANDLE LinkHandle,
      {
 	*ReturnedLength=SymlinkObject->Target.Length;
      }
+   ObDereferenceObject(SymlinkObject);
    return(STATUS_SUCCESS);
 }
 

@@ -17,6 +17,7 @@
 #include <internal/ps.h>
 #include <string.h>
 #include <internal/string.h>
+#include <internal/id.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -66,6 +67,12 @@ VOID PsInitProcessManagment(VOID)
 				  PROCESS_ALL_ACCESS,
 				  NULL,
 				  PsProcessType);
+   KeInitializeDispatcherHeader(&SystemProcess->Pcb.DispatcherHeader,
+				ID_PROCESS_OBJECT,
+				sizeof(EPROCESS),
+				FALSE);
+   DPRINT("SystemProcess->Pcb.Type %x\n",
+	  SystemProcess->Pcb.Type);
    KProcess = &SystemProcess->Pcb;  
    
    InitializeListHead(&(KProcess->MemoryAreaList));
@@ -179,7 +186,7 @@ NTSTATUS STDCALL ZwCreateProcess(
 			    ObjectAttributes,
 			    PsProcessType);
    KeInitializeDispatcherHeader(&Process->Pcb.DispatcherHeader,
-				ProcessType,
+				ID_PROCESS_OBJECT,
 				sizeof(EPROCESS),
 				FALSE);
    KProcess = &(Process->Pcb);
@@ -244,23 +251,31 @@ NTSTATUS STDCALL ZwQueryInformationProcess(IN HANDLE ProcessHandle,
 					   IN ULONG ProcessInformationLength,
 					   OUT PULONG ReturnLength)
 {
-//   PEPROCESS Process;
+   PEPROCESS Process;
    NTSTATUS Status;
+   PPROCESS_BASIC_INFORMATION ProcessBasicInformationP;
    
-/*   Status = ObReferenceObjectByHandle(ProcessHandle,
-				      PROCESS_QUERY_INFORMATION,
+   Status = ObReferenceObjectByHandle(ProcessHandle,
+				      PROCESS_SET_INFORMATION,
 				      PsProcessType,
 				      UserMode,
-				      &ProcessHandle,
+				      (PVOID*)&Process,
 				      NULL);
    if (Status != STATUS_SUCCESS)
      {
 	return(Status);
-     }*/
+     }
    
    switch (ProcessInformationClass)
      {
       case ProcessBasicInformation:
+	ProcessBasicInformationP = (PPROCESS_BASIC_INFORMATION)
+	  ProcessInformation;
+	memset(ProcessBasicInformationP, 0, sizeof(PROCESS_BASIC_INFORMATION));
+	ProcessBasicInformationP->AffinityMask = Process->Pcb.Affinity;
+	Status = STATUS_SUCCESS;
+	break;
+	
       case ProcessQuotaLimits:
       case ProcessIoCounters:
       case ProcessVmCounters:
@@ -284,6 +299,7 @@ NTSTATUS STDCALL ZwQueryInformationProcess(IN HANDLE ProcessHandle,
       default:
 	Status = STATUS_NOT_IMPLEMENTED;
      }
+   ObDereferenceObject(Process);
    return(Status);
 }
 
@@ -303,23 +319,31 @@ NTSTATUS STDCALL ZwSetInformationProcess(IN HANDLE ProcessHandle,
 					 IN PVOID ProcessInformation,
 					 IN ULONG ProcessInformationLength)
 {
-//   PEPROCESS Process;
+   PEPROCESS Process;
    NTSTATUS Status;
+   PPROCESS_BASIC_INFORMATION ProcessBasicInformationP;
    
-/*   Status = ObReferenceObjectByHandle(ProcessHandle,
+   Status = ObReferenceObjectByHandle(ProcessHandle,
 				      PROCESS_SET_INFORMATION,
 				      PsProcessType,
 				      UserMode,
-				      &ProcessHandle,
+				      (PVOID*)&Process,
 				      NULL);
    if (Status != STATUS_SUCCESS)
      {
 	return(Status);
-     }*/
+     }
    
    switch (ProcessInformationClass)
      {
       case ProcessBasicInformation:
+	ProcessBasicInformationP = (PPROCESS_BASIC_INFORMATION)
+	  ProcessInformation;
+	memset(ProcessBasicInformationP, 0, sizeof(PROCESS_BASIC_INFORMATION));
+	Process->Pcb.Affinity = ProcessBasicInformationP->AffinityMask;
+	Status = STATUS_SUCCESS;
+	break;
+	
       case ProcessQuotaLimits:
       case ProcessIoCounters:
       case ProcessVmCounters:
@@ -343,5 +367,6 @@ NTSTATUS STDCALL ZwSetInformationProcess(IN HANDLE ProcessHandle,
       default:
 	Status = STATUS_NOT_IMPLEMENTED;
      }
+   ObDereferenceObject(Process);
    return(Status);
 }

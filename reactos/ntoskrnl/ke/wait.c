@@ -124,6 +124,7 @@ BOOLEAN KeDispatcherObjectWake(DISPATCHER_HEADER* hdr)
    DPRINT("Entering KeDispatcherObjectWake(hdr %x)\n",hdr);
 //   DPRINT("hdr->WaitListHead %x hdr->WaitListHead.Flink %x\n",
 //	  &hdr->WaitListHead,hdr->WaitListHead.Flink);
+   DPRINT("hdr->Type %x\n",hdr->Type);
    switch (hdr->Type)
      {
       case NotificationEvent:
@@ -148,10 +149,10 @@ BOOLEAN KeDispatcherObjectWake(DISPATCHER_HEADER* hdr)
 	}
 	else return FALSE;
 	
-      case ProcessType:
+      case ID_PROCESS_OBJECT:
 	return(KeDispatcherObjectWakeAll(hdr));
      }
-   DbgPrint("Dispatcher object has unknown type\n");
+   DbgPrint("Dispatcher object %x has unknown type\n",hdr);
    KeBugCheck(0);
    return(FALSE);
 }
@@ -196,6 +197,18 @@ NTSTATUS KeWaitForSingleObject(PVOID Object,
 	   
 	 case SemaphoreType:
 	   break;
+	   
+	 case ID_PROCESS_OBJECT:
+	   break;
+	   
+	 case NotificationEvent:
+	   break;
+	   
+	 default:
+	   DbgPrint("(%s:%d) Dispatcher object %x has unknown type\n",
+		    __FILE__,__LINE__,hdr);
+	   KeBugCheck(0);
+	   
 	}
       KeReleaseDispatcherDatabaseLock(FALSE);
       return(STATUS_SUCCESS);

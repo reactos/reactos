@@ -28,7 +28,6 @@ extern ULONG PiNrThreads;
 VOID PiDeleteProcess(PVOID ObjectBody)
 {
    DPRINT("PiDeleteProcess(ObjectBody %x)\n",ObjectBody);
-   /* FIXME: This doesn't work, why? */
    (VOID)MmReleaseMmInfo((PEPROCESS)ObjectBody);
 }
 
@@ -90,9 +89,6 @@ NTSTATUS STDCALL ZwTerminateProcess(IN HANDLE ProcessHandle,
    {
         return(Status);
    }
-   
-   DPRINT("Process %x ReferenceCount %d\n",Process,
-	  ObGetReferenceCount(Process));
    
    PiTerminateProcessThreads(Process, ExitStatus);
    KeRaiseIrql(DISPATCH_LEVEL, &oldlvl);

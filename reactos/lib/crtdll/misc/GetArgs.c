@@ -53,30 +53,32 @@ int __GetMainArgs(int *argc,char ***argv,char ***env,int flag)
    i=0;
    afterlastspace=0;
    
-   
-   while (_acmdln_dll[i]) {
-	if (_acmdln_dll[i]==' ') {
+   while (_acmdln_dll[i]) 
+     {
+	if (_acmdln_dll[i]==' ') 
+	  {
 	     __argc++;
 	     _acmdln_dll[i]='\0';
-	     __argv[__argc-1] = strdup(_acmdln_dll+afterlastspace);
+	     __argv[__argc-1] = strdup(_acmdln_dll + afterlastspace);
 	     i++;
 	     while (_acmdln_dll[i]==' ')
 	       i++;
-	     if (_acmdln_dll[i])
-	       afterlastspace=i;
+	     afterlastspace=i;
 	  } 
 	else
 	  {
 	     i++;
 	  }
      }
-  
    
-   __argc++;
-   _acmdln_dll[i]='\0';
-   __argv[__argc-1] = strdup(_acmdln_dll+afterlastspace);
+   if (_acmdln_dll[afterlastspace] != 0)
+     {
+	__argc++;
+	_acmdln_dll[i]='\0';
+	__argv[__argc-1] = strdup(_acmdln_dll+afterlastspace);
+     }
    HeapValidate(GetProcessHeap(),0,NULL);
-
+   
    _environ = (char **)GetEnvironmentStringsA();;
    _environ_dll = &_environ;    
     

@@ -60,7 +60,8 @@ NTSTATUS MmpCreateSection(PVOID ObjectBody,
      }
    
    ObAddEntryDirectory(Parent, ObjectBody, RemainingPath+1);
-     
+   ObDereferenceObject(Parent);
+   
    return(STATUS_SUCCESS);
 }
 
@@ -326,6 +327,7 @@ NTSTATUS STDCALL ZwMapViewOfSection(HANDLE SectionHandle,
 				      NULL);
    if (Status != STATUS_SUCCESS)
      {
+	ObDereferenceObject(Section);
 	return(Status);
      }
    
@@ -346,6 +348,7 @@ NTSTATUS STDCALL ZwMapViewOfSection(HANDLE SectionHandle,
      {
 	DPRINT("ZwMapViewOfSection() = %x\n",Status);
 	ObDereferenceObject(Process);
+	ObDereferenceObject(Section);
 	return(Status);
      }
    Result->Data.SectionData.Section = Section;
@@ -364,6 +367,7 @@ NTSTATUS STDCALL ZwMapViewOfSection(HANDLE SectionHandle,
    
    DPRINT("*BaseAddress %x\n",*BaseAddress);
    ObDereferenceObject(Process);   
+   ObDereferenceObject(Section);
    return(STATUS_SUCCESS);
 }
 
@@ -387,7 +391,9 @@ NTSTATUS ZwUnmapViewOfSection(HANDLE ProcessHandle, PVOID BaseAddress)
      {
 	return(Status);
      }
-   return(MmFreeMemoryArea(Process,BaseAddress,0,TRUE));
+   Status = MmFreeMemoryArea(Process,BaseAddress,0,TRUE);
+   ObDereferenceObject(Process);
+   return(Status);
 }
 
 NTSTATUS STDCALL NtQuerySection(IN HANDLE SectionHandle,

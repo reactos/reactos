@@ -14,6 +14,7 @@
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
 #include <internal/string.h>
+#include <internal/id.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -195,6 +196,7 @@ NTSTATUS ObReferenceObjectByPointer(PVOID ObjectBody,
      }
    
    ObjectHeader->RefCount++;
+   
    return(STATUS_SUCCESS);
 }
 
@@ -247,7 +249,8 @@ VOID ObDereferenceObject(PVOID ObjectBody)
    
    DPRINT("ObDeferenceObject(ObjectBody %x) RefCount %d\n",ObjectBody,
 	  Header->RefCount);
-   
+      
    Header->RefCount--;
+   
    ObPerformRetentionChecks(Header);
 }

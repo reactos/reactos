@@ -233,8 +233,6 @@ asmlinkage void exception_handler(unsigned int edi,
 	DbgPrint("ESP %.8x\n",esp);
      }
    
-   for(;;);
-   
   if ((cs & 0xffff) == KERNEL_CS)
     {
       DbgPrint("ESP %x\n",esp);
@@ -288,6 +286,12 @@ asmlinkage void exception_handler(unsigned int edi,
 		  }
 	     }
         }
+     }
+   
+   if ((cs&0xffff) == USER_CS)
+     {
+	ZwTerminateProcess(NtCurrentProcess(),
+			   STATUS_NONCONTINUABLE_EXCEPTION);
      }
    
    for(;;);

@@ -66,7 +66,7 @@ QUAD_OBJECTS =  quad/qdivrem.o quad/divdi3.o quad/moddi3.o quad/udivdi3.o quad/u
 IO_OBJECTS = io/access.o io/close.o io/create.o io/dup.o io/dup2.o io/find.o io/isatty.o io/lseek.o \
 		io/open.o io/read.o io/setmode.o io/unlink.o io/write.o io/fmode.o io/mktemp.o\
 		io/chmod.o io/chsize.o io/commit.o io/locking.o io/pipe.o io/sopen.o io/filelen.o\
-		io/umask.o io/tell.o io/eof.o
+		io/umask.o io/tell.o io/eof.o io/utime.o
 
 SEARCH_OBJECTS = search/lsearch.o search/lfind.o
 
@@ -124,7 +124,8 @@ OBJECTS = $(MISC_OBJECTS) $(STDLIB_OBJECTS) $(IO_OBJECTS) \
 	  $(STDIO_OBJECTS) $(CTYPE_OBJECTS) $(MATH_OBJECTS) \
 	  $(STRING_OBJECTS) $(TIME_OBJECTS) $(WCHAR_OBJECTS) \
 	  $(SYS_STAT_OBJECTS) misc/dllmain.o $(MALLOC_OBJECTS) \
-	  $(SEARCH_OBJECTS) $(CONIO_OBJECTS) $(DIRECT_OBJECTS)
+	  $(SEARCH_OBJECTS) $(CONIO_OBJECTS) $(DIRECT_OBJECTS) \
+	  $(SIGNAL_OBJECTS)
 
 
  crtdll.a: $(OBJECTS)

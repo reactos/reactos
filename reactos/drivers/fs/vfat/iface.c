@@ -1585,10 +1585,10 @@ NTSTATUS FsdSetPositionInformation(PFILE_OBJECT FileObject,
 				   PDEVICE_OBJECT DeviceObject,
                                    PFILE_POSITION_INFORMATION PositionInfo)
  {
-    DbgPrint("FsdSetPositionInformation()\n");
+    DPRINT("FsdSetPositionInformation()\n");
     
-    DbgPrint("PositionInfo %x\n", PositionInfo);
-    DbgPrint("Setting position %d\n",GET_LARGE_INTEGER_LOW_PART(
+    DPRINT("PositionInfo %x\n", PositionInfo);
+    DPRINT("Setting position %d\n",GET_LARGE_INTEGER_LOW_PART(
 				   PositionInfo->CurrentByteOffset));
     memcpy(&FileObject->CurrentByteOffset,&PositionInfo->CurrentByteOffset,
 	   sizeof(LARGE_INTEGER));
@@ -1601,11 +1601,11 @@ NTSTATUS FsdGetPositionInformation(PFILE_OBJECT FileObject,
 				   PDEVICE_OBJECT DeviceObject,
                                    PFILE_POSITION_INFORMATION PositionInfo)
  {
-    DbgPrint("FsdGetPositionInformation()\n");
+    DPRINT("FsdGetPositionInformation()\n");
     
     memcpy(&PositionInfo->CurrentByteOffset, &FileObject->CurrentByteOffset,
 	   sizeof(LARGE_INTEGER));
-    DbgPrint("Getting position %x\n",GET_LARGE_INTEGER_LOW_PART(
+    DPRINT("Getting position %x\n",GET_LARGE_INTEGER_LOW_PART(
 				   PositionInfo->CurrentByteOffset));
     return(STATUS_SUCCESS);
  }
@@ -1679,7 +1679,7 @@ NTSTATUS FsdSetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    assert(DeviceObject != NULL);
    assert(Irp != NULL);
    
-   DbgPrint("FsdSetInformation(DeviceObject %x, Irp %x)\n",
+   DPRINT("FsdSetInformation(DeviceObject %x, Irp %x)\n",
 	    DeviceObject,Irp);
    
    /* INITIALIZATION */
@@ -1695,8 +1695,8 @@ NTSTATUS FsdSetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
      SystemBuffer = Irp->UserBuffer;
    //   SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
    
-   DbgPrint("FileInformationClass %d\n",FileInformationClass);
-   DbgPrint("SystemBuffer %x\n",SystemBuffer);
+   DPRINT("FileInformationClass %d\n",FileInformationClass);
+   DPRINT("SystemBuffer %x\n",SystemBuffer);
 
    switch(FileInformationClass) 
      {

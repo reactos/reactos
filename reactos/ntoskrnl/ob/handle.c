@@ -3,7 +3,7 @@
  * PROJECT:            ReactOS kernel
  * FILE:               ntoskrnl/ob/handle.c
  * PURPOSE:            Managing handles
- * PROGRAMMER:         David Welch (welch@mcmail.com)
+ * PROGRAMMER:         David Welch (welch@cwcom.net)
  * REVISION HISTORY:
  *                 17/06/98: Created
  */
@@ -154,6 +154,9 @@ NTSTATUS STDCALL ZwDuplicateObject(IN HANDLE SourceProcessHandle,
      {
 	ZwClose(*SourceHandle);
      }
+   
+   ObDereferenceObject(TargetProcess);
+   ObDereferenceObject(SourceProcess);
    
    return(STATUS_SUCCESS);
 }
@@ -326,12 +329,15 @@ NTSTATUS ObReferenceObjectByHandle(HANDLE Handle,
    DPRINT("ObReferenceObjectByHandle(Handle %x, DesiredAccess %x, "
 	  "ObjectType %x, AccessMode %d, Object %x)\n",Handle,DesiredAccess,
 	  ObjectType,AccessMode,Object);
+
+   
    
    if (Handle == NtCurrentProcess() && 
        (ObjectType == PsProcessType || ObjectType == NULL))
      {
 	BODY_TO_HEADER(PsGetCurrentProcess())->RefCount++;
 	*Object = PsGetCurrentProcess();
+	DPRINT("Referencing current process %x\n", PsGetCurrentProcess());
 	return(STATUS_SUCCESS);
      }
    if (Handle == NtCurrentThread() && 
@@ -350,7 +356,7 @@ NTSTATUS ObReferenceObjectByHandle(HANDLE Handle,
      }
    
    ObjectHeader = BODY_TO_HEADER(HandleRep->ObjectBody);
-   
+
    if (ObjectType != NULL && ObjectType != ObjectHeader->ObjectType)
      {
 	return(STATUS_OBJECT_TYPE_MISMATCH);
@@ -362,7 +368,7 @@ NTSTATUS ObReferenceObjectByHandle(HANDLE Handle,
      }
    
    ObjectHeader->RefCount++;
-   
+
    *Object = HandleRep->ObjectBody;
    
    return(STATUS_SUCCESS);

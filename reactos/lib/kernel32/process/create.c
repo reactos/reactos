@@ -21,7 +21,7 @@
 #include <ntdll/ldr.h>
 #include <internal/teb.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <kernel32/kernel32.h>
 
 /* FUNCTIONS ****************************************************************/

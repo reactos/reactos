@@ -26,6 +26,7 @@
 #include <internal/string.h>
 #include <internal/hal.h>
 #include <internal/ps.h>
+#include <internal/ob.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -63,7 +64,7 @@ PKTHREAD KeGetCurrentThread(VOID)
 
 PETHREAD PsGetCurrentThread(VOID)
 {
-   return((PETHREAD)KeGetCurrentThread());
+   return(CurrentThread);
 }
 
 VOID PiTerminateProcessThreads(PEPROCESS Process, NTSTATUS ExitStatus)
@@ -113,7 +114,7 @@ VOID PsBeginThread(PKSTART_ROUTINE StartRoutine, PVOID StartContext)
    KeReleaseSpinLock(&ThreadListLock,PASSIVE_LEVEL);
    Ret = StartRoutine(StartContext);
    PsTerminateSystemThread(Ret);
-   for(;;);
+   KeBugCheck(0);
 }
 
 static PETHREAD PsScanThreadList(KPRIORITY Priority)
@@ -227,7 +228,7 @@ NTSTATUS PsInitializeThread(HANDLE ProcessHandle,
    Thread->Tcb.CurrentPriority=THREAD_PRIORITY_NORMAL;
    Thread->Tcb.ApcList=ExAllocatePool(NonPagedPool,sizeof(LIST_ENTRY));
    Thread->Tcb.SuspendCount = 1;
-   if (ProcessHandle!=NULL)
+   if (ProcessHandle != NULL)
      {
 	Status = ObReferenceObjectByHandle(ProcessHandle,
 					   PROCESS_CREATE_THREAD,
@@ -266,7 +267,7 @@ NTSTATUS PsInitializeThread(HANDLE ProcessHandle,
    
    *ThreadPtr = Thread;
    
-   ObDereferenceObject(Thread->ThreadsProcess);   
+   ObDereferenceObject(Thread->ThreadsProcess);
    return(STATUS_SUCCESS);
 }
 

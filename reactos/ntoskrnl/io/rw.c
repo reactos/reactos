@@ -63,7 +63,7 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
    
    DPRINT("ZwReadFile(FileHandle %x Buffer %x Length %x ByteOffset %x, "
 	  "IoStatusBlock %x)\n",
-	    FileHandle,Buffer,Length,ByteOffset,IoStatusBlock);
+	  FileHandle,Buffer,Length,ByteOffset,IoStatusBlock);
    
    Status = ObReferenceObjectByHandle(FileHandle,
 				      FILE_READ_DATA,
@@ -77,6 +77,9 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
 	return(Status);
      }
    
+   DPRINT("ByteOffset %x FileObject->CurrentByteOffset %d\n",
+	  ByteOffset,
+	  GET_LARGE_INTEGER_LOW_PART(FileObject->CurrentByteOffset));
    if (ByteOffset==NULL)
      {
 	ByteOffset = &(FileObject->CurrentByteOffset);
@@ -125,8 +128,9 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
    if (Status == STATUS_PENDING  && (FileObject->Flags & FO_SYNCHRONOUS_IO))
      {
        KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
-       return(IoStatusBlock->Status);
+       Status = IoStatusBlock->Status;
      }
+   DPRINT("ZwReadFile() = %x\n",Status);
    return(Status);
 }
 
@@ -205,7 +209,7 @@ NTSTATUS ZwWriteFile(HANDLE FileHandle,
         StackPtr->Parameters.Write.Key = 0;
    }
    Status = IoCallDriver(FileObject->DeviceObject,Irp);
-   if (Status==STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
+   if (Status == STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
      {
 	KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
         Status = Irp->IoStatus.Status;

@@ -25,51 +25,43 @@ ULONG IoGetFunctionCodeFromCtlCode(ULONG ControlCode)
    UNIMPLEMENTED;
 }
 
-NTSTATUS
-STDCALL
-NtDeviceIoControlFile(
-    IN HANDLE DeviceHandle,
-    IN HANDLE Event OPTIONAL,
-    IN PIO_APC_ROUTINE UserApcRoutine OPTIONAL,
-    IN PVOID UserApcContext OPTIONAL,
-    OUT PIO_STATUS_BLOCK IoStatusBlock,
-    IN ULONG IoControlCode,
-    IN PVOID InputBuffer,
-    IN ULONG InputBufferSize,
-    OUT PVOID OutputBuffer,
-    IN ULONG OutputBufferSize
-    )
+NTSTATUS STDCALL NtDeviceIoControlFile(IN HANDLE DeviceHandle,
+				       IN HANDLE Event OPTIONAL,
+				       IN PIO_APC_ROUTINE UserApcRoutine,
+				       IN PVOID UserApcContext OPTIONAL,
+				       OUT PIO_STATUS_BLOCK IoStatusBlock,
+				       IN ULONG IoControlCode,
+				       IN PVOID InputBuffer,
+				       IN ULONG InputBufferSize,
+				       OUT PVOID OutputBuffer,
+				       IN ULONG OutputBufferSize)
 {
     return(ZwDeviceIoControlFile(DeviceHandle,
-            Event,
-            UserApcRoutine,
-            UserApcContext,
-            IoStatusBlock,
-            IoControlCode,
-            InputBuffer,
-            InputBufferSize,
-            OutputBuffer,
-            OutputBufferSize));
+				 Event,
+				 UserApcRoutine,
+				 UserApcContext,
+				 IoStatusBlock,
+				 IoControlCode,
+				 InputBuffer,
+				 InputBufferSize,
+				 OutputBuffer,
+				 OutputBufferSize));
 }
 
 /*
  * NOTES: No apc support yet!
  */
 
-NTSTATUS
-STDCALL
-ZwDeviceIoControlFile(
-    IN HANDLE DeviceHandle,
-    IN HANDLE Event OPTIONAL,
-    IN PIO_APC_ROUTINE UserApcRoutine OPTIONAL,
-    IN PVOID UserApcContext OPTIONAL,
-    OUT PIO_STATUS_BLOCK IoStatusBlock,
-    IN ULONG IoControlCode,
-    IN PVOID InputBuffer,
-    IN ULONG InputBufferSize,
-    OUT PVOID OutputBuffer,
-    IN ULONG OutputBufferSize
-    )
+NTSTATUS STDCALL ZwDeviceIoControlFile(IN HANDLE DeviceHandle,
+				       IN HANDLE Event OPTIONAL,
+				       IN PIO_APC_ROUTINE UserApcRoutine,
+				       IN PVOID UserApcContext OPTIONAL,
+				       OUT PIO_STATUS_BLOCK IoStatusBlock,
+				       IN ULONG IoControlCode,
+				       IN PVOID InputBuffer,
+				       IN ULONG InputBufferSize,
+				       OUT PVOID OutputBuffer,
+				       IN ULONG OutputBufferSize)
 {
    NTSTATUS Status;
    PFILE_OBJECT FileObject;
@@ -79,19 +71,19 @@ ZwDeviceIoControlFile(
    KEVENT KEvent;
    
    assert(KeGetCurrentIrql()==PASSIVE_LEVEL);
-
+   
    DPRINT("ZwDeviceIoControlFile(DeviceHandle %x Event %x UserApcRoutine %x "
           "UserApcContext %x IoStatusBlock %x InputBuffer %x "
           "InputBufferSize %x OutputBuffer %x OutputBufferSize %x)\n",
           DeviceHandle,Event,UserApcRoutine,UserApcContext,IoStatusBlock,
           InputBuffer,InputBufferSize,OutputBuffer,OutputBufferSize);
-
+   
    Status = ObReferenceObjectByHandle(DeviceHandle,
-                      FILE_READ_DATA | FILE_WRITE_DATA,
-                      NULL,
-                      KernelMode,
-                      (PVOID *) &FileObject,
-                      NULL);
+				      FILE_READ_DATA | FILE_WRITE_DATA,
+				      NULL,
+				      KernelMode,
+				      (PVOID *) &FileObject,
+				      NULL);
 
    if (Status != STATUS_SUCCESS)
    {
@@ -104,75 +96,26 @@ ZwDeviceIoControlFile(
    KeInitializeEvent(&KEvent,NotificationEvent,TRUE);
 
    Irp = IoBuildDeviceIoControlRequest(IoControlCode,
-                      DeviceObject,
-                      InputBuffer,
-                      InputBufferSize,
-                      OutputBuffer,
-                      OutputBufferSize,
-                      FALSE,
-                      &KEvent,
-                      IoStatusBlock);
-
+				       DeviceObject,
+				       InputBuffer,
+				       InputBufferSize,
+				       OutputBuffer,
+				       OutputBufferSize,
+				       FALSE,
+				       &KEvent,
+				       IoStatusBlock);
+   
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->DeviceObject = DeviceObject;
    StackPtr->Parameters.DeviceIoControl.InputBufferLength = InputBufferSize;
    StackPtr->Parameters.DeviceIoControl.OutputBufferLength = OutputBufferSize;
 
    Status = IoCallDriver(DeviceObject,Irp);
-   if (Status == STATUS_PENDING)
+   if (Status == STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
    {
       KeWaitForSingleObject(&KEvent,Executive,KernelMode,FALSE,NULL);
       return(IoStatusBlock->Status);
    }
-
-   switch  (IO_METHOD_FROM_CTL_CODE(IoControlCode))
-   {
-      case METHOD_BUFFERED:
-         DPRINT ("Using METHOD_BUFFERED!\n");
-
-         /* copy output buffer back and free it */
-         if (Irp->AssociatedIrp.SystemBuffer)
-         {
-            if (OutputBuffer && OutputBufferSize)
-            {
-               RtlCopyMemory(OutputBuffer,
-                          Irp->AssociatedIrp.SystemBuffer,
-                          OutputBufferSize);
-            }
-            ExFreePool (Irp->AssociatedIrp.SystemBuffer);
-         }
-         break;
-
-      case METHOD_IN_DIRECT:
-         DPRINT ("Using METHOD_IN_DIRECT!\n");
-
-         /* free input buffer (control buffer) */
-         if (Irp->AssociatedIrp.SystemBuffer)
-            ExFreePool (Irp->AssociatedIrp.SystemBuffer);
-
-         /* free output buffer (data transfer buffer) */
-         if (Irp->MdlAddress)
-            IoFreeMdl (Irp->MdlAddress);
-         break;
-
-      case METHOD_OUT_DIRECT:
-         DPRINT ("Using METHOD_OUT_DIRECT!\n");
-
-         /* free input buffer (control buffer) */
-         if (Irp->AssociatedIrp.SystemBuffer)
-            ExFreePool (Irp->AssociatedIrp.SystemBuffer);
-
-         /* free output buffer (data transfer buffer) */
-         if (Irp->MdlAddress)
-            IoFreeMdl (Irp->MdlAddress);
-         break;
-
-      case METHOD_NEITHER:
-         DPRINT ("Using METHOD_NEITHER!\n");
-         /* nothing to do */
-         break;
-   }
-
    return(Status);
 }
 

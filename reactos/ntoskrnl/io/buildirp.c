@@ -262,40 +262,41 @@ PIRP IoBuildDeviceIoControlRequest(ULONG IoControlCode,
 
    switch (IO_METHOD_FROM_CTL_CODE(IoControlCode))
    {
-      case METHOD_BUFFERED:
-         DPRINT("Using METHOD_BUFFERED!\n");
-
-         BufferLength = (InputBufferLength>OutputBufferLength)?InputBufferLength:OutputBufferLength;
-         if (BufferLength)
+    case METHOD_BUFFERED:
+      DPRINT("Using METHOD_BUFFERED!\n");
+      
+      BufferLength = (InputBufferLength>OutputBufferLength)?InputBufferLength:OutputBufferLength;
+      if (BufferLength)
          {
             Irp->AssociatedIrp.SystemBuffer = (PVOID)
-               ExAllocatePool(NonPagedPool,BufferLength);
-
+	      ExAllocatePool(NonPagedPool,BufferLength);
+	    
             if (Irp->AssociatedIrp.SystemBuffer==NULL)
-            {
-               IoFreeIrp(Irp);
-               return(NULL);
-            }
+	      {
+		 IoFreeIrp(Irp);
+		 return(NULL);
+	      }
          }
+      
+      if (InputBuffer && InputBufferLength)
+	{
+	   RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
+			 InputBuffer,
+			 InputBufferLength);
+	}
+      Irp->UserBuffer = OutputBuffer;
+      break;
 
-         if (InputBuffer && InputBufferLength)
-         {
-            RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
-                  InputBuffer,
-                  InputBufferLength);
-         }
-         break;
-
-      case METHOD_IN_DIRECT:
-         DPRINT("Using METHOD_IN_DIRECT!\n");
-
-         /* build input buffer (control buffer) */
-         if (InputBuffer && InputBufferLength)
-         {
-            Irp->AssociatedIrp.SystemBuffer = (PVOID)
+    case METHOD_IN_DIRECT:
+      DPRINT("Using METHOD_IN_DIRECT!\n");
+      
+      /* build input buffer (control buffer) */
+      if (InputBuffer && InputBufferLength)
+	{
+	   Irp->AssociatedIrp.SystemBuffer = (PVOID)
                ExAllocatePool(NonPagedPool,InputBufferLength);
-
-            if (Irp->AssociatedIrp.SystemBuffer==NULL)
+	   
+	   if (Irp->AssociatedIrp.SystemBuffer==NULL)
             {
                IoFreeIrp(Irp);
                return(NULL);
@@ -337,8 +338,12 @@ PIRP IoBuildDeviceIoControlRequest(ULONG IoControlCode,
          /* build output buffer (data transfer buffer) */
          if (OutputBuffer && OutputBufferLength)
          {
-            Irp->MdlAddress = IoAllocateMdl (OutputBuffer,OutputBufferLength,FALSE,FALSE,Irp);
-            MmProbeAndLockPages (Irp->MdlAddress,UserMode,IoWriteAccess);
+            Irp->MdlAddress = IoAllocateMdl(OutputBuffer,
+					    OutputBufferLength,
+					    FALSE,
+					    FALSE,
+					    Irp);
+            MmProbeAndLockPages(Irp->MdlAddress,UserMode,IoWriteAccess);
          }
          break;
 

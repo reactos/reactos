@@ -44,7 +44,7 @@ static NTSTATUS LdrLoadDll(PDLL* Dll, PCHAR Name)
    HANDLE FileHandle, SectionHandle;
    PDLLMAIN_FUNC Entrypoint;
    
-   dprintf("LdrLoadDll(Base %x, Name %s)\n",Dll,Name);
+   DPRINT("LdrLoadDll(Base %x, Name %s)\n",Dll,Name);
    
    strcat(fqname, Name);
    
@@ -140,9 +140,9 @@ static NTSTATUS LdrLoadDll(PDLL* Dll, PCHAR Name)
    Entrypoint = (PDLLMAIN_FUNC)LdrPEStartup(ImageBase, SectionHandle);
    if (Entrypoint != NULL)
      {
-	dprintf("Calling entry point at %x\n",Entrypoint);
+	DPRINT("Calling entry point at %x\n",Entrypoint);
 	Entrypoint(ImageBase, DLL_PROCESS_ATTACH, NULL);
-	dprintf("Successful called entrypoint\n");
+	DPRINT("Successful called entrypoint\n");
      }
    
    return(STATUS_SUCCESS);
