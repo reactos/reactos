@@ -1,128 +1,25 @@
+/*
+ * COPYRIGHT:         See COPYING in the top level directory
+ * PROJECT:           ReactOS kernel
+ * PURPOSE:           Rtl user thread functions
+ * FILE:              lib/ntdll/rtl/thread.c
+ * PROGRAMER:         Eric Kohl
+ * REVISION HISTORY:
+ *                    09/07/99: Created
+ *                    09/10/99: Cleanup and full stack support.
+ */
 
+/* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
 #include <internal/i386/segment.h>
 #include <string.h>
 
-
-//#define NDEBUG
+#define NDEBUG
 #include <ntdll/ntdll.h>
 
 
-
-static NTSTATUS
-RtlpAllocateThreadStack(HANDLE ProcessHandle,
-                        PULONG StackReserve,
-                        PULONG StackCommit,
-                        ULONG StackZeroBits,
-                        PINITIAL_TEB InitialTeb)
-{
-    PVOID StackBase;  /* ebp-4 */
-
-
-    NTSTATUS Status;  /* register */
-
-#if 0
-    Status = NtQuerySystemInformation(...);
-
-    if (!NT_SUCCESS(Status))
-        return Status;
-
-    if (ProcessHandle == CurrentProcess)
-    {
-
-    }
-    else
-    {
-
-    }
-
-
-    /* ... */
-
-    Status = NtAllocateVirtualMemory(ProcessHandle,
-                                     &StackBase,
-                                     ZeroBits,
-                                     StackReserve,
-                                     MEM_RESERVE,
-                                     PAGE_READWRITE);
-
-    if (!NT_SUCCESS(Status))
-        return Status;
-
-    /* ... */
-
-    Status = NtAllocateVirtualMemory(ProcessHandle,
-                                     &StackBase,
-                                     0,
-                                     StackCommit,
-                                     MEM_COMMIT,
-                                     PAGE_READWRITE);
-
-    if (!NT_SUCCESS(Status))
-        return Status;
-
-    InitialTeb->... = StackBase;   /* + 0x0C */
-
-    if (bProtect)
-    {
-
-        Status = NtProtectVirtualMemory(ProcessHandle,
-                                        &StackBase,
-
-        if (!NT_SUCCESS(Status))
-            return Status;
-
-        /* ... */
-    }
-#endif
-
-
-    /* NOTE: This is a simplified implementation */
-
-    StackBase = 0;
-
-    Status = NtAllocateVirtualMemory(ProcessHandle,
-                                     &StackBase,
-                                     0,
-                                     StackCommit,
-                                     MEM_COMMIT,
-                                     PAGE_READWRITE);
-
-    if (!NT_SUCCESS(Status))
-         return Status;
-
-    InitialTeb->StackBase = StackBase;
-    InitialTeb->StackCommit = StackCommit;
-    
-    /* End of simplified implementation */
-
-    return Status;
-}
-
-
-static NTSTATUS
-RtlpFreeThreadStack(HANDLE ProcessHandle,
-                    PINITIAL_TEB InitialTeb)
-{
-    NTSTATUS Status;
-    ULONG RegionSize;
-
-    RegionSize = 0;
-
-    Status = NtFreeVirtualMemory(ProcessHandle,
-                                 InitialTeb->StackBase,
-                                 &RegionSize,
-                                 MEM_RELEASE);
-
-    if (NT_SUCCESS(Status))
-    {
-        InitialTeb->StackBase = NULL;
-        /* ... */
-    }
-
-    return Status;
-}
+/* FUNCTIONS ***************************************************************/
 
 
 NTSTATUS STDCALL
@@ -137,128 +34,134 @@ RtlCreateUserThread(HANDLE ProcessHandle,
                     PHANDLE ThreadHandle,
                     PCLIENT_ID ClientId)
 {
-#if 0
-    HANDLE LocalThreadHandle;
-    CLIENT_ID LocalClientId;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    INITIAL_TEB InitialTeb;
-    CONTEXT Context;
-    NTSTATUS Status;
-
-DPRINT("Checkpoint\n");
-    /* create thread stack */
-    Status = RtlpAllocateThreadStack(ProcessHandle,
-                                     StackReserved,
-                                     StackCommit,
-                                     StackZeroBits,
-                                     &InitialTeb);
-
-    if (!NT_SUCCESS(Status))
-        return Status;
-
-DPRINT("Checkpoint\n");
-
-    /* initialize thread context */
-    RtlInitializeContext (ProcessHandle,
-                          &Context,
-                          DebugPort,
-                          StartAddress,
-                          &InitialTeb);
-DPRINT("Checkpoint\n");
-
-    /* initalize object attributes */
-    ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-    ObjectAttributes.RootDirectory = NULL;
-    ObjectAttributes.ObjectName = NULL;
-    ObjectAttributes.Attributes = 0;
-    ObjectAttributes.SecurityDescriptor = SecurityDescriptor;
-    ObjectAttributes.SecurityQualityOfService = NULL;
-
-    Status = NtCreateThread (&LocalThreadHandle,
-                             0x1F03FF,                  /* ??? */
-                             &ObjectAttributes,
-                             ProcessHandle,
-                             &LocalClientId,
-                             &Context,
-                             &InitialTeb,
-                             CreateSuspended);
-DPRINT("Checkpoint\n");
-
-    if (!NT_SUCCESS(Status))
-    {
-        /* free thread stack */
-        RtlpFreeThreadStack (ProcessHandle,
-                             &InitialTeb);
-
-        return Status;
-    }
-
-#endif
-
-/* Begin of test code */
-
     HANDLE LocalThreadHandle;
     CLIENT_ID LocalClientId;
     OBJECT_ATTRIBUTES ObjectAttributes;
     INITIAL_TEB InitialTeb;
     CONTEXT ThreadContext;
-    PVOID BaseAddress;
-    ULONG LocalStackCommit;
-    ULONG LocalStackReserve;
+    ULONG ReservedSize;
+    ULONG CommitSize;
+    ULONG GuardSize;
     NTSTATUS Status;
 
-   ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-   ObjectAttributes.RootDirectory = NULL;
-   ObjectAttributes.ObjectName = NULL;
-//   ObjectAttributes.Attributes = 0;
-   ObjectAttributes.Attributes = OBJ_INHERIT;
-   ObjectAttributes.SecurityDescriptor = SecurityDescriptor;
-   ObjectAttributes.SecurityQualityOfService = NULL;
+    /* initialize initial teb */
+    if ((StackCommit != NULL) && (*StackCommit > PAGESIZE))
+       CommitSize = *StackCommit;
+    else
+       CommitSize = PAGESIZE;
 
+    if ((StackReserved != NULL) && (*StackReserved > 0x100000))
+       ReservedSize = *StackReserved;
+    else
+       ReservedSize = 0x100000; /* 1MByte */
 
-   if ((StackCommit != NULL) && (*StackCommit > 4096))
-      LocalStackCommit = *StackCommit;
-   else
-      LocalStackCommit = 4096;
+    GuardSize = PAGESIZE;
 
-   BaseAddress = 0;
-   ZwAllocateVirtualMemory(ProcessHandle,
-			   &BaseAddress,
-			   0,
-                           &LocalStackCommit,
-			   MEM_COMMIT,
-			   PAGE_READWRITE);
+    /* Reserve stack */
+    InitialTeb.StackReserved = NULL;
+    Status = NtAllocateVirtualMemory(ProcessHandle,
+                                     &InitialTeb.StackReserved,
+                                     0,
+                                     &ReservedSize,
+                                     MEM_RESERVE,
+                                     PAGE_READWRITE);
 
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("Error reserving stack space!\n");
+        return Status;
+    }
 
-   memset(&ThreadContext,0,sizeof(CONTEXT));
-   ThreadContext.Eip = (LONG)StartAddress;
-   ThreadContext.SegGs = USER_DS;
-   ThreadContext.SegFs = USER_DS;
-   ThreadContext.SegEs = USER_DS;
-   ThreadContext.SegDs = USER_DS;
-   ThreadContext.SegCs = USER_CS;
-   ThreadContext.SegSs = USER_DS;        
-   ThreadContext.Esp = (ULONG)(BaseAddress + LocalStackCommit);
-   ThreadContext.EFlags = (1<<1) + (1<<9);
+    DPRINT("StackReserved: %p ReservedSize: 0x%lx\n",
+           InitialTeb.StackReserved, ReservedSize);
 
+    InitialTeb.StackBase = (PVOID)(InitialTeb.StackReserved + ReservedSize);
+    InitialTeb.StackCommit = (PVOID)(InitialTeb.StackBase - CommitSize);
+    InitialTeb.StackLimit = (PVOID)(InitialTeb.StackCommit - PAGESIZE);
+    InitialTeb.StackCommitMax = (PVOID)(InitialTeb.StackReserved + PAGESIZE);
 
-   Status = NtCreateThread(&LocalThreadHandle,
-                           THREAD_ALL_ACCESS,
-                           &ObjectAttributes,
-                           ProcessHandle,
-                           &LocalClientId,
-                           &ThreadContext,
-                           &InitialTeb,
-                           CreateSuspended);
+    DPRINT("StackBase: %p\n",
+           InitialTeb.StackBase);
 
-/* End of test code */
+    /* Commit stack page */
+    Status = NtAllocateVirtualMemory(ProcessHandle,
+                                     &InitialTeb.StackCommit,
+                                     0,
+                                     &CommitSize,
+                                     MEM_COMMIT,
+                                     PAGE_READWRITE);
 
-    DPRINT("Checkpoint\n");
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("Error committing stack page!\n");
+        return Status;
+    }
 
+    DPRINT("StackCommit: %p CommitSize: 0x%lx\n",
+           InitialTeb.StackCommit, CommitSize);
 
+    /* Commit guard page */
+    Status = NtAllocateVirtualMemory(ProcessHandle,
+                                     &InitialTeb.StackLimit,
+                                     0,
+                                     &GuardSize,
+                                     MEM_COMMIT,
+                                     PAGE_GUARD);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("Error committing guard page!\n");
+        return Status;
+    }
+
+    DPRINT("StackLimit: %p GuardSize: 0x%lx\n",
+           InitialTeb.StackLimit, GuardSize);
+
+    /* initialize thread context */
+    RtlInitializeContext (ProcessHandle,
+                          &ThreadContext,
+                          Parameter,
+                          StartAddress,
+                          &InitialTeb);
+
+    /* create the thread */
+    ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
+    ObjectAttributes.RootDirectory = NULL;
+    ObjectAttributes.ObjectName = NULL;
+//    ObjectAttributes.Attributes = 0;
+    ObjectAttributes.Attributes = OBJ_INHERIT;
+    ObjectAttributes.SecurityDescriptor = SecurityDescriptor;
+    ObjectAttributes.SecurityQualityOfService = NULL;
+
+    Status = NtCreateThread(&LocalThreadHandle,
+                            THREAD_ALL_ACCESS,
+                            &ObjectAttributes,
+                            ProcessHandle,
+                            &LocalClientId,
+                            &ThreadContext,
+                            &InitialTeb,
+                            CreateSuspended);
+
+    if (!NT_SUCCESS(Status))
+    {
+        ULONG RegionSize = 0;
+
+        /* release the stack space */
+        NtFreeVirtualMemory(ProcessHandle,
+                            InitialTeb.StackReserved,
+                            &RegionSize,
+                            MEM_RELEASE);
+
+        return Status;
+    }
+
+    /* return committed stack size */
     if (StackCommit)
-        *StackCommit = LocalStackCommit;
+        *StackCommit = CommitSize;
 
+    /* return reserved stack size */
+    if (StackCommit)
+        *StackCommit = ReservedSize;
 
     /* return thread handle */
     if (ThreadHandle)
@@ -271,8 +174,6 @@ DPRINT("Checkpoint\n");
         ClientId->UniqueThread  = LocalClientId.UniqueThread;
     }
 
-    DPRINT("Checkpoint\n");
-
     return Status;
 }
 
@@ -284,36 +185,42 @@ RtlInitializeContext(HANDLE ProcessHandle,
                      PTHREAD_START_ROUTINE StartAddress,
                      PINITIAL_TEB InitialTeb)
 {
+    ULONG Buffer[2];
+    ULONG BytesWritten;
     NTSTATUS Status;
-
-    /* NOTE: This is a simplified implementation */
 
     memset (Context, 0, sizeof(CONTEXT));
 
-/* #if __X86__ */
-    Context->Eip    = (ULONG)StartAddress;
-    Context->SegGs  = USER_DS;
-    Context->SegFs  = USER_DS;   /* USER_FS */
-    Context->SegEs  = USER_DS;
-    Context->SegDs  = USER_DS;
-    Context->SegCs  = USER_CS;
-    Context->SegSs  = USER_DS;
-    Context->Esp    = (ULONG)InitialTeb->StackBase +
-                      (DWORD)InitialTeb->StackCommit - 8;
-    Context->EFlags = (1<<1)+(1<<9);
+    Context->Eip = (LONG)StartAddress;
+    Context->SegGs = USER_DS;
+    Context->SegFs = USER_DS;
+    Context->SegEs = USER_DS;
+    Context->SegDs = USER_DS;
+    Context->SegCs = USER_CS;
+    Context->SegSs = USER_DS;        
+    Context->Esp = (ULONG)InitialTeb->StackBase - 8;
+    Context->EFlags = (1<<1) + (1<<9);
 
+    /* prepare the thread stack for execution */
+    if (ProcessHandle == NtCurrentProcess())
+    {
+        *((PULONG)(InitialTeb->StackBase - 4)) = (ULONG)Parameter;
+        *((PULONG)(InitialTeb->StackBase - 8)) = 0xdeadbeef;
+    }
+    else
+    {
+        Buffer[0] = (ULONG)Parameter;
+        Buffer[1] = 0xdeadbeef;
+        
+        Status = NtWriteVirtualMemory(ProcessHandle,
+                                      (PVOID)(InitialTeb->StackBase - 4),
+                                      Buffer,
+                                      2 * sizeof(ULONG),
+                                      &BytesWritten);
+        return Status;
+    }
 
-    /* copy Parameter to thread stack */
-    *((PULONG)(InitialTeb->StackBase + (DWORD)InitialTeb->StackCommit - 4))
-        = (DWORD)Parameter;
-
-
-/* #endif */
-
-    Status = STATUS_SUCCESS;
-
-    /* End of simplified implementation */
-
-    return Status;
+    return STATUS_SUCCESS;
 }
 
+/* EOF */
