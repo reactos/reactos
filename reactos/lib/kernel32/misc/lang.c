@@ -1,4 +1,4 @@
-/* $Id: lang.c,v 1.1 2003/09/20 23:37:56 weiden Exp $
+/* $Id: lang.c,v 1.2 2003/09/21 01:47:02 weiden Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -12,10 +12,13 @@
 #define NDEBUG
 #include <kernel32/kernel32.h>
 
+
+static LCID SystemLocale = MAKELCID(LANG_ENGLISH, SORT_DEFAULT);
+
 //#define _OLE2NLS_IN_BUILD_
 
 /*
- * @unimplemented
+ * @implemented
  */
 LCID
 STDCALL
@@ -23,8 +26,20 @@ ConvertDefaultLocale (
     LCID    Locale
     )
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+  switch(Locale)
+  {
+    case LOCALE_SYSTEM_DEFAULT:
+      return GetSystemDefaultLCID();
+    
+    case LOCALE_USER_DEFAULT:
+      return GetUserDefaultLCID();
+    
+    /*case LOCALE_NEUTRAL:
+      return MAKELCID(LANG_NEUTRAL, SUBLANG_NEUTRAL);*/
+  }
+  
+  /* ported from wine, is that right? */
+  return MAKELANGID(PRIMARYLANGID(Locale), SUBLANG_NEUTRAL);
 }
 
 
@@ -228,8 +243,30 @@ EnumSystemGeoID(
     GEOID           ParentGeoId,
     GEO_ENUMPROC    lpGeoEnumProc)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+  if(!lpGeoEnumProc)
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+  
+  switch(GeoClass)
+  {
+    case GEOCLASS_NATION:
+      /*RtlEnterCriticalSection(&DllLock);
+      
+        FIXME - Get GEO IDs calling Csr
+      
+      RtlLeaveCriticalSection(&DllLock);*/
+      
+      SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+      break;
+    
+    default:
+      SetLastError(ERROR_INVALID_FLAGS);
+      return FALSE;
+  }
+ 
+  return FALSE;
 }
 
 
@@ -676,18 +713,13 @@ GetSystemDefaultLangID (VOID)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 LCID
 STDCALL
 GetSystemDefaultLCID (VOID)
 {
-    /* FIXME: ??? */
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return MAKELCID(
-        LANG_ENGLISH,
-        SORT_DEFAULT
-        );
+  return SystemLocale;
 }
 
 #endif

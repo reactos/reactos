@@ -260,6 +260,35 @@ typedef unsigned int WPARAM;
 /*
   Enumerations
 */
+
+
+#define GEOID_NOT_AVAILABLE (-1)
+/*
+  GEO information types for clients to query
+*/
+
+enum SYSGEOTYPE {
+    GEO_NATION            = 0x01,
+    GEO_LATITUDE          = 0x02,
+    GEO_LONGITUDE         = 0x03,
+    GEO_ISO2              = 0x04,
+    GEO_ISO3              = 0x05,
+    GEO_RFC1766           = 0x06,
+    GEO_LCID              = 0x07,
+    GEO_FRIENDLYNAME      = 0x08,
+    GEO_OFFICIALNAME      = 0x09,
+    GEO_TIMEZONES         = 0x0A,
+    GEO_OFFICIALLANGUAGES = 0x0B,
+};
+
+/*
+  More GEOCLASS defines will be listed here
+*/
+
+enum SYSGEOCLASS {
+    GEOCLASS_NATION       = 16,
+    GEOCLASS_REGION       = 14,
+};
  
  
 #define RASCS_DONE 0x2000
