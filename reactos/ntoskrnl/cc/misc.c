@@ -89,15 +89,18 @@ CcSetFileSizes (IN PFILE_OBJECT FileObject,
     {
       current_entry = Bcb->BcbSegmentListHead.Flink;
       while (current_entry != &Bcb->BcbSegmentListHead)
-	{
-	  current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, 
-				      BcbSegmentListEntry);
-	  current_entry = current_entry->Flink;
-	  if (current->FileOffset > FileSizes->AllocationSize.QuadPart)
-	    {
-	      CcRosFreeCacheSegment(Bcb, current);
-	    }
-	}
+      {
+	 current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, 
+			             BcbSegmentListEntry);
+	 current_entry = current_entry->Flink;
+	 if (current->FileOffset > FileSizes->AllocationSize.QuadPart)
+	 {
+            KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
+	    CcRosFreeCacheSegment(Bcb, current);
+            KeAcquireSpinLock(&Bcb->BcbLock, &oldirql);
+            current_entry = Bcb->BcbSegmentListHead.Flink;
+	 }
+      }
     }
   Bcb->AllocationSize = FileSizes->AllocationSize;
   Bcb->FileSize = FileSizes->FileSize;
