@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: clip.c,v 1.14 2003/07/14 09:38:02 gvg Exp $
+/* $Id: clip.c,v 1.15 2003/07/14 17:35:31 gvg Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -267,7 +267,6 @@ CLIPOBJ_cEnumStart(IN PCLIPOBJ ClipObj,
 {
   CLIPGDI *ClipGDI = (CLIPGDI*)AccessInternalObjectFromUserObject(ClipObj);
   SORTCOMP CompareFunc;
-int i;
 
   ClipGDI->EnumPos = 0;
   ClipGDI->EnumMax = (MaxRects > 0) ? MaxRects : ClipGDI->EnumRects.c;
@@ -295,16 +294,11 @@ int i;
 	  break;
 	}
 
-for (i = 0; i < ClipGDI->EnumRects.c; i++)
-DPRINT1("Before %d %p (%d, %d) - (%d, %d)\n", i, ClipGDI->EnumRects.arcl + i, ClipGDI->EnumRects.arcl[i].left, ClipGDI->EnumRects.arcl[i].top, ClipGDI->EnumRects.arcl[i].right, ClipGDI->EnumRects.arcl[i].bottom);
-
       if (NULL != CompareFunc)
 	{
 	  EngSort((PBYTE) ClipGDI->EnumRects.arcl, sizeof(RECTL), ClipGDI->EnumRects.c,
 	          CompareFunc);
 	}
-for (i = 0; i < ClipGDI->EnumRects.c; i++)
-DPRINT1("After %d %p (%d, %d) - (%d, %d)\n", i, ClipGDI->EnumRects.arcl + i, ClipGDI->EnumRects.arcl[i].left, ClipGDI->EnumRects.arcl[i].top, ClipGDI->EnumRects.arcl[i].right, ClipGDI->EnumRects.arcl[i].bottom);
 
       ClipGDI->EnumOrder = BuildOrder;
     }
