@@ -146,23 +146,6 @@ _Ki386ContextSwitch:
 	movl	%eax, %cr3
 
 	/*
-	 * Set up the PDE for the top of the new stack.
-	 */
-	movl	$0, %ebx
-.L2:	movl	%edi, %esi
-	shr	$22, %esi
-	movl	0xF03C0000(,%esi, 4), %eax
-	cmpl	$0, %eax
-	jne	.L1
-	movl	_MmGlobalKernelPageDirectory(,%esi, 4), %eax
-	movl	%eax, 0xF03C0000(,%esi, 4)
-.L1:
-	addl	$4096, %edi
-	incl	%ebx
-	cmp	$(MM_STACK_SIZE / 4096), %ebx
-	jl	.L2
-		
-	/*
 	 * FIXME: Restore floating point state
 	 */
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kthread.c,v 1.49 2004/08/15 16:39:05 chorns Exp $
+/* $Id: kthread.c,v 1.50 2004/08/19 21:51:06 hbirr Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Microkernel thread support
@@ -189,6 +189,8 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
       Thread->KernelStack = (PVOID)&init_stack_top;
     }
   
+  MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread->StackLimit, MM_STACK_SIZE);
+
   /* 
    * The Native API function will initialize the TEB field later 
    */
