@@ -838,8 +838,18 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 	break;
 
       case TokenSessionId:
-	DPRINT1("NtQueryInformationToken(TokenSessionId) not implemented\n");
-	Status = STATUS_NOT_IMPLEMENTED;
+	DPRINT("NtQueryInformationToken(TokenSessionId)\n");
+	if (TokenInformationLength < sizeof(ULONG))
+	  {
+	    Length = sizeof(ULONG);
+	    Status = MmCopyToCaller(ReturnLength, &Length, sizeof(ULONG));
+	    if (NT_SUCCESS(Status))
+	      Status = STATUS_BUFFER_TOO_SMALL;
+	  }
+	else
+	  {
+	    Status = MmCopyToCaller(TokenInformation, &Token->SessionId, sizeof(ULONG));
+	  }
 	break;
 
       default:
