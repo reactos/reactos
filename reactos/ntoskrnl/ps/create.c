@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.21 2000/08/05 18:01:54 dwelch Exp $
+/* $Id: create.c,v 1.22 2000/09/06 03:08:08 phreak Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -383,6 +383,7 @@ NTSTATUS PsInitializeThread(HANDLE ProcessHandle,
 					      &PiNextThreadUniqueId);
    Thread->Cid.UniqueProcess = (HANDLE)Thread->ThreadsProcess->UniqueProcessId;
    Thread->DeadThread = 0;
+   Thread->Win32ThreadData = 0;
    DPRINT("Thread->Cid.UniqueThread %d\n",Thread->Cid.UniqueThread);
    
    *ThreadPtr = Thread;
