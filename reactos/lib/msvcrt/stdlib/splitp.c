@@ -12,40 +12,41 @@ void _splitpath(const char* path, char* drive, char* dir, char* fname, char* ext
     char* tmp_ext;
 
     tmp_drive = (char*)strchr(path,':');
-    if ( tmp_drive != (char*)NULL ) {
-        strncpy(drive,tmp_drive-1,1);
-        *(drive+1) = 0;
+    if (drive) {
+	if (tmp_drive) {
+	    strncpy(drive,tmp_drive-1,2);
+	    *(drive+2) = 0;
+	} else {
+	    *drive = 0;
+	}
     }
-    else {
-        *drive = 0;
-        tmp_drive = (char*)path;
+    if (!tmp_drive) {
+	tmp_drive = (char*)path - 1;
     }
 
     tmp_dir = (char*)strrchr(path,'\\');
-//    if( tmp_dir != NULL && tmp_dir != tmp_drive + 1 ) {
-    if( tmp_dir != NULL ) {
-        strncpy(dir,tmp_drive+1,tmp_dir - tmp_drive);
-        *(dir + (tmp_dir - tmp_drive)) = 0;
+    if (dir) {
+	if (tmp_dir) {
+	    strncpy(dir,tmp_drive+1,tmp_dir-tmp_drive);
+            *(dir+(tmp_dir-tmp_drive)) = 0;
+	} else {
+	    *dir =0;
+	}
     }
-    else
-        *dir =0;
 
-    tmp_ext = ( char* )strrchr(path,'.');
-    if ( tmp_ext != NULL ) {
+    tmp_ext = (char*)strrchr(path,'.');
+    if (!tmp_ext) {
+	tmp_ext = (char*)path+strlen(path);
+    }
+    if (ext) {
         strcpy(ext,tmp_ext);
     }
-    else
-    {
-        *ext = 0;
-        tmp_ext = (char*)path+strlen(path);
-    }
-    if ( tmp_dir != NULL ) {
-        strncpy(fname,tmp_dir+1,tmp_ext - tmp_dir - 1);
-        *(fname + (tmp_ext - tmp_dir -1)) = 0;
-    }
-    else
-    {
-        strncpy(fname,path,tmp_ext - path);
+
+    if (tmp_dir) {
+        strncpy(fname,tmp_dir+1,tmp_ext-tmp_dir-1);
+        *(fname+(tmp_ext-tmp_dir-1)) = 0;
+    } else {
+        strncpy(fname,tmp_drive+1,tmp_ext-tmp_drive-1);
         *(fname+(tmp_ext-path))=0;
     }
 }
