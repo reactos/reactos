@@ -946,14 +946,15 @@ GetCommModemStatus(HANDLE hFile, LPDWORD lpModemStat)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 GetCommProperties(HANDLE hFile, LPCOMMPROP lpCommProp)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+	DWORD dwBytesReturned;
+	return DeviceIoControl(hFile, IOCTL_SERIAL_GET_PROPERTIES, 0, 0, 
+		lpCommProp, sizeof(COMMPROP), &dwBytesReturned, 0);
 }
 
 
@@ -982,14 +983,15 @@ GetCommState(HANDLE hFile, LPDCB lpDCB)
         DPRINT("ERROR: GetCommState() - NULL DCB pointer\n");
 		return FALSE;
 	}
-	if (lpDCB->DCBlength != sizeof(DCB)) {
-        DPRINT("ERROR: GetCommState() - Invalid DCB size\n");
-		return FALSE;
-	}
 
-//    DPRINT("    GetCommState() CALLING DeviceIoControl\n");
-//    result = DeviceIoControl(hFile, IOCTL_SERIAL_GET_COMMSTATUS, NULL, 0, NULL, 0, &dwBytesReturned, NULL);
-//    DPRINT("    GetCommState() DeviceIoControl returned %d\n", result);
+	lpDCB->DCBlength = sizeof(DCB);
+	
+	/* FIXME: need to fill following fields (1 bit):
+	 * fBinary: binary mode, no EOF check
+	 * fParity: enable parity checking
+	 * fOutX  : XON/XOFF out flow control
+	 * fInX   : XON/XOFF in flow control
+	 */
 
 	result = DeviceIoControl(hFile, IOCTL_SERIAL_GET_BAUD_RATE,
 			 NULL, 0, &BaudRate, sizeof(BaudRate),&dwBytesReturned, NULL);
