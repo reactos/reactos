@@ -664,6 +664,7 @@ String FileChildWindow::jump_to_int(LPCTSTR url)
 	if (SplitFileSysURL(url, dir, fname)) {
 		Entry* entry = NULL;
 
+		 // call read_tree() to iterate through the hierarchy and open all folders to reach dir
 		if (_root._entry)
 			switch(_root._entry->_etype) {
 			  case ET_SHELL: {	//@@ separate into FileChildWindow in ShellChildWindow, WinChildWindow, UnixChildWindow ?
@@ -672,27 +673,24 @@ String FileChildWindow::jump_to_int(LPCTSTR url)
 				break;}
 
 #ifdef __WINE__
-			  case ET_UNIX:
-				{
+			  case ET_UNIX: {
 				LPCTSTR path = dir;
 
 				if (!_tcsicmp(path, _root._path, _tcslen(_root._path)))
 					path += _tcslen(_root._path);
 
 				entry = _root.read_tree(path);
-				}
-				break;
+				break;}
 #endif
 
-			  default:	// ET_UNIX, ET_NTOBJS, ET_REGISTRY, ET_FAT, ET_WINDOWS
-				{
+			  default: { // ET_NTOBJS, ET_REGISTRY, ET_FAT, ET_WINDOWS
 				LPCTSTR path = dir;
 
 				if (!_tcsnicmp(path, _root._path, _tcslen(_root._path)))
 					path += _tcslen(_root._path);
 
 				entry = _root.read_tree(path);
-				}
+				break;}
 			}
 
 			if (entry) {
@@ -721,6 +719,8 @@ String FileChildWindow::jump_to_int(LPCTSTR url)
 						SetFocus(_left_hwnd);
 					}
 				}
+
+				///@todo use fname
 
 				return dir;	//FmtString(TEXT("file://%s"), (LPCTSTR)dir);
 			}

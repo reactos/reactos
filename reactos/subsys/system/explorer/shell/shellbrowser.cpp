@@ -107,6 +107,9 @@ LRESULT ShellBrowserChild::Init(LPCREATESTRUCT pcs)
 						_hwnd, (HMENU)IDC_FILETREE, g_Globals._hInstance, 0);
 
 	if (_left_hwnd) {
+		TreeView_SetImageList(_left_hwnd, _himlSmall, TVSIL_NORMAL);
+		TreeView_SetScrollTime(_left_hwnd, 100);
+
 		InitializeTree();
 
 		InitDragDrop();
@@ -120,9 +123,6 @@ LRESULT ShellBrowserChild::Init(LPCREATESTRUCT pcs)
 void ShellBrowserChild::InitializeTree()
 {
 	CONTEXT("ShellBrowserChild::InitializeTree()");
-
-	TreeView_SetImageList(_left_hwnd, _himlSmall, TVSIL_NORMAL);
-	TreeView_SetScrollTime(_left_hwnd, 100);
 
 	TV_INSERTSTRUCT tvInsert;
 
@@ -477,7 +477,7 @@ HRESULT ShellBrowserChild::OnDefaultCommand(LPIDA pida)
 
 					if (entry && (entry->_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY))
 						if (entry->_etype == ET_SHELL)
-							if (expand_folder(static_cast<ShellDirectory*>(entry)))
+							if (_last_sel && select_entry(_last_sel, entry))
 								return S_OK;
 				}
 			}
@@ -496,28 +496,27 @@ HRESULT ShellBrowserChild::OnDefaultCommand(LPIDA pida)
 }
 
 
-bool ShellBrowserChild::expand_folder(ShellDirectory* entry)
+HTREEITEM ShellBrowserChild::select_entry(HTREEITEM hitem, Entry* entry, bool expand)
 {
-	CONTEXT("ShellBrowserChild::expand_folder()");
+	CONTEXT("ShellBrowserChild::select_entry()");
 
-	//HTREEITEM hitem_sel = TreeView_GetSelection(_left_hwnd);
-	if (!_last_sel)
-		return false;
+	if (expand && !TreeView_Expand(_left_hwnd, hitem, TVE_EXPAND))
+		return 0;
 
-	if (!TreeView_Expand(_left_hwnd, _last_sel, TVE_EXPAND))
-		return false;
+	for(hitem=TreeView_GetChild(_left_hwnd,hitem); hitem; hitem=TreeView_GetNextSibling(_left_hwnd,hitem)) {
+		if ((Entry*)TreeView_GetItemData(_left_hwnd,hitem) == entry) {
+			if (TreeView_SelectItem(_left_hwnd, hitem)) {
+				if (expand)
+					TreeView_Expand(_left_hwnd, hitem, TVE_EXPAND);
 
-	for(HTREEITEM hitem=TreeView_GetChild(_left_hwnd,_last_sel); hitem; hitem=TreeView_GetNextSibling(_left_hwnd,hitem)) {
-		if ((ShellDirectory*)TreeView_GetItemData(_left_hwnd,hitem) == entry) {
-			if (TreeView_SelectItem(_left_hwnd, hitem) &&
-				TreeView_Expand(_left_hwnd, hitem, TVE_EXPAND))
-				return true;
+				return hitem;
+			}
 
 			break;
 		}
 	}
 
-	return false;
+	return 0;
 }
 
 
@@ -530,9 +529,13 @@ String ShellBrowserChild::jump_to_int(LPCTSTR url)
 			return url;
 	}
 
-	if (SplitFileSysURL(url, dir, fname))
+	if (SplitFileSysURL(url, dir, fname)) {
+
+		///@todo use fname
+
 		if (jump_to_pidl(ShellPath(dir)))
 			return FmtString(TEXT("file://%s"), (LPCTSTR)dir);
+	}
 
 	return String();
 }
@@ -540,11 +543,31 @@ String ShellBrowserChild::jump_to_int(LPCTSTR url)
 
 bool ShellBrowserChild::jump_to_pidl(LPCITEMIDLIST pidl)
 {
+	if (!_root._entry)
+		return false;
 
-/*@todo
-	we should call read_tree() here to iterate through the hierarchy and open all folders from shell_info._root_shell_path to shell_info._shell_path
-	-> see FileChildWindow::FileChildWindow()
-*/
+	 // iterate through the hierarchy and open all folders to reach pidl
+	WaitCursor wait;
+
+	HTREEITEM hitem = TreeView_GetRoot(_left_hwnd);
+	Entry* entry = _root._entry;
+
+	for(const void*p=pidl;;) {
+		if (!p)
+			return true;
+
+		if (!entry || !hitem)
+			break;
+
+		entry->smart_scan(SORT_NAME);
+
+		Entry* found = entry->find_entry(p);
+		p = entry->get_next_path_component(p);
+
+		hitem = select_entry(hitem, found);
+
+		entry = found;
+	}
 
 	return false;
 }
