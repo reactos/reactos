@@ -80,6 +80,7 @@ private:
 	                              const std::string& nasmflagsMacro ) const;
 	void GenerateObjectFileTargets ( const Module& module,
 	                                 const std::vector<File*>& files,
+	                                 const std::vector<If*>& ifs,
 	                                 const std::string& cc,
 	                                 const std::string& cflagsMacro,
 	                                 const std::string& nasmflagsMacro ) const;
