@@ -540,19 +540,23 @@ void Pane::draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 
 		if (visible_cols & COL_INDEX) {
 			_stprintf(buffer, TEXT("%") LONGLONGARG TEXT("X"), index);
+
 			if (calcWidthCol == -1)
 				_out_wrkr.output_text(dis, _positions, col, buffer, DT_RIGHT);
 			else if (calcWidthCol==col || calcWidthCol==COLUMNS)
 				calc_width(dis, col, buffer);
+
 			++col;
 		}
 
 		if (visible_cols & COL_LINKS) {
 			wsprintf(buffer, TEXT("%d"), entry->_bhfi.nNumberOfLinks);
+
 			if (calcWidthCol == -1)
 				_out_wrkr.output_text(dis, _positions, col, buffer, DT_RIGHT);
 			else if (calcWidthCol==col || calcWidthCol==COLUMNS)
 				calc_width(dis, col, buffer);
+
 			++col;
 		}
 	} else

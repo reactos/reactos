@@ -175,6 +175,7 @@ NotifyArea::NotifyArea(HWND hwnd)
 	_last_icon_count = 0;
 	_show_hidden = false;
 	_hide_inactive = true;
+	_show_button = true;
 }
 
 NotifyArea::~NotifyArea()
@@ -379,6 +380,7 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			PopupMenu menu(IDM_NOTIFYAREA);
 			SetMenuDefaultItem(menu, 0, MF_BYPOSITION);
 			CheckMenuItem(menu, ID_SHOW_HIDDEN_ICONS, MF_BYCOMMAND|(_show_hidden?MF_CHECKED:MF_UNCHECKED));
+			CheckMenuItem(menu, ID_SHOW_ICON_BUTTON, MF_BYCOMMAND|(_show_button?MF_CHECKED:MF_UNCHECKED));
 			menu.TrackPopupMenu(_hwnd, MAKEPOINTS(lparam));
 		}
 		break;}
@@ -458,6 +460,11 @@ int NotifyArea::Command(int id, int code)
 	switch(id) {
 	  case ID_SHOW_HIDDEN_ICONS:
 		_show_hidden = !_show_hidden;
+		UpdateIcons();
+		break;
+
+	  case ID_SHOW_ICON_BUTTON:
+		_show_button = !_show_button;
 		UpdateIcons();
 		break;
 
@@ -804,6 +811,9 @@ TrayNotifyDlg::TrayNotifyDlg(HWND hwnd)
 	_resize_mgr.Add(IDC_PICTURE,		MOVE);
 	_resize_mgr.Add(ID_SHOW_HIDDEN_ICONS,MOVE_Y);
 
+	_resize_mgr.Add(IDC_LABEL6,			MOVE_Y);
+	_resize_mgr.Add(IDC_LAST_CHANGE,	MOVE_Y);
+
 	_resize_mgr.Add(IDOK,				MOVE);
 	_resize_mgr.Add(IDCANCEL,			MOVE);
 
@@ -861,6 +871,8 @@ void TrayNotifyDlg::Refresh()
 	_hitemCurrent_hidden = TreeView_InsertItem(_tree_ctrl, &tvi);
 
 	if (_pNotifyArea) {
+		_info.clear();
+
 		tv.mask |= TVIF_PARAM;
 
 		WindowCanvas canvas(_hwnd);
@@ -913,9 +925,12 @@ void TrayNotifyDlg::InsertItem(HTREEITEM hparent, HTREEITEM after, const NotifyI
 	InsertItem(hparent, after, entry, hdc, entry._hIcon, entry._mode);
 }
 
-void TrayNotifyDlg::InsertItem(HTREEITEM hparent, HTREEITEM after, const NotifyIconConfig& entry,
+void TrayNotifyDlg::InsertItem(HTREEITEM hparent, HTREEITEM after, const NotifyIconDlgInfo& entry,
 								HDC hdc, HICON hicon, NOTIFYICONMODE mode)
 {
+	int idx = _info.size();
+	_info[idx] = entry;
+
 	String mode_str = string_from_mode(mode);
 
 	switch(mode) {
@@ -934,7 +949,7 @@ void TrayNotifyDlg::InsertItem(HTREEITEM hparent, HTREEITEM after, const NotifyI
 	TV_ITEM& tv = tvi.item;
 	tv.mask = TVIF_TEXT|TVIF_IMAGE|TVIF_SELECTEDIMAGE|TVIF_PARAM;
 
-	tv.lParam = (LPARAM)&entry;
+	tv.lParam = (LPARAM)idx;
 	tv.pszText = (LPTSTR)txt.c_str();
 	tv.iSelectedImage = tv.iImage = ImageList_AddAlphaIcon(_himl, hicon, GetStockBrush(WHITE_BRUSH), hdc);
 	TreeView_InsertItem(_tree_ctrl, &tvi);
@@ -1026,13 +1041,18 @@ int TrayNotifyDlg::Notify(int id, NMHDR* pnmh)
 		LPARAM lparam = pnmtv->itemNew.lParam;
 
 		if (lparam) {
-			const NotifyIconConfig& entry = *(NotifyIconConfig*)lparam;
+			const NotifyIconDlgInfo& entry = _info[lparam];
 
 			SetDlgItemText(_hwnd, IDC_NOTIFY_TOOLTIP, entry._tipText);
 			SetDlgItemText(_hwnd, IDC_NOTIFY_TITLE, entry._windowTitle);
 			SetDlgItemText(_hwnd, IDC_NOTIFY_MODULE, entry._modulePath);
 
 			CheckRadioButton(_hwnd, IDC_NOTIFY_SHOW, IDC_NOTIFY_AUTOHIDE, IDC_NOTIFY_SHOW+entry._mode);
+
+			String change_str;
+			if (entry._lastChange)
+				change_str.printf(TEXT("before %d s"), (GetTickCount()-entry._lastChange+500)/1000);
+			SetDlgItemText(_hwnd, IDC_LAST_CHANGE, change_str);
 
 			HICON hicon = 0; //get_window_icon_big(entry._hWnd, false);
 

@@ -1018,7 +1018,7 @@ protected:
 #define	CONTEXT_OBJ __ctx__._obj
 #define	CONTEXT(c) Context __ctx__(c)
 #define	CURRENT_CONTEXT Context::current()
-#define	OBJ_CONTEXT(c, o) Context __ctx__(c, o);
+#define	OBJ_CONTEXT(c, o) Context __ctx__(c, o)
 
 
 extern bool SplitFileSysURL(LPCTSTR url, String& dir_out, String& fname_out);

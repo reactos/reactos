@@ -144,6 +144,7 @@ protected:
 
 	bool	_show_hidden;
 	bool	_hide_inactive;
+	bool	_show_button;
 
 	LRESULT Init(LPCREATESTRUCT pcs);
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
@@ -176,6 +177,20 @@ protected:
 };
 
 
+struct NotifyIconDlgInfo : public NotifyIconConfig
+{
+	typedef NotifyIconConfig super;
+
+	NotifyIconDlgInfo(const NotifyInfo& info) : super(info), _lastChange(info._lastChange) {}
+	NotifyIconDlgInfo(const NotifyIconConfig& cfg) : super(cfg), _lastChange(0) {}
+	NotifyIconDlgInfo() : _lastChange(0) {}
+
+	DWORD	_lastChange;
+};
+
+typedef map<int, NotifyIconDlgInfo> NotifyIconDlgInfoMap;
+
+
  /// configuration dialog for notification icons
 struct TrayNotifyDlg : public ResizeController<Dialog>
 {
@@ -189,6 +204,7 @@ protected:
 	HACCEL	_haccel;
 	HIMAGELIST	_himl;
 	NotifyArea* _pNotifyArea;
+	NotifyIconDlgInfoMap _info;
 
 	typedef pair<NOTIFYICONMODE, DWORD> IconStatePair;
 	typedef map<NotifyIconIndex, IconStatePair> IconStateMap;
@@ -209,7 +225,7 @@ protected:
 
 	void	Refresh();
 	void	InsertItem(HTREEITEM hparent, HTREEITEM after, const NotifyInfo&, HDC);
-	void	InsertItem(HTREEITEM hparent, HTREEITEM after, const NotifyIconConfig&, HDC, HICON, NOTIFYICONMODE);
+	void	InsertItem(HTREEITEM hparent, HTREEITEM after, const NotifyIconDlgInfo&, HDC, HICON, NOTIFYICONMODE);
 	void	SetIconMode(NOTIFYICONMODE mode);
 };
 

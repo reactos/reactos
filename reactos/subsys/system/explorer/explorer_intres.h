@@ -137,7 +137,9 @@
 #define IDC_LABEL3                      1011
 #define IDC_ICON_ALIGN_10               1012
 #define IDC_WWW                         1012
+#define IDC_LABEL6                      1012
 #define IDC_ICON_ALIGN_11               1013
+#define IDC_LAST_CHANGE                 1013
 #define IDC_FILTER                      1017
 #define IDC_PROGRAMS_FOUND              1018
 #define IDC_PICTURE                     1019
@@ -191,6 +193,7 @@
 #define ID_VIEW_MDI                     40019
 #define ID_VIEW_SDI                     40020
 #define ID_TOOLS_OPTIONS                40021
+#define ID_SHOW_ICON_BUTTON             40023
 #define ID_SWITCH_DESKTOP_1             50000
 #define ID_WINDOW_NEW                   0xE130
 #define ID_WINDOW_ARRANGE               0xE131
@@ -209,7 +212,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        166
-#define _APS_NEXT_COMMAND_VALUE         40022
+#define _APS_NEXT_COMMAND_VALUE         40024
 #define _APS_NEXT_CONTROL_VALUE         1033
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

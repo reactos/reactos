@@ -438,7 +438,7 @@ const Icon& IconCache::extract(IExtractIcon* pExtract, LPCTSTR path, int idx)
 
 	HRESULT hr = pExtract->Extract(path, idx, &hIconLarge, &hIcon, MAKELONG(0/*GetSystemMetrics(SM_CXICON)*/,GetSystemMetrics(SM_CXSMICON)));
 
-	if (hr == NOERROR) {
+	if (hr == NOERROR) {	//@@ oder SUCCEEDED(hr) ?
 		if (hIconLarge)
 			DestroyIcon(hIconLarge);
 
