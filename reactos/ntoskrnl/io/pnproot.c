@@ -1,4 +1,4 @@
-/* $Id: pnproot.c,v 1.1 2001/05/01 23:08:19 chorns Exp $
+/* $Id: pnproot.c,v 1.2 2001/08/14 21:05:10 hbirr Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -78,7 +78,7 @@ PnpRootQueryBusRelations(
   PDEVICE_RELATIONS Relations;
   PLIST_ENTRY CurrentEntry;
   PPNPROOT_DEVICE Device;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
   ULONG Size;
   ULONG i;
 

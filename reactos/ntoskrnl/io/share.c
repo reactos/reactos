@@ -1,4 +1,4 @@
-/* $Id: share.c,v 1.3 2001/05/24 22:19:25 ekohl Exp $
+/* $Id: share.c,v 1.4 2001/08/14 21:05:10 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -78,7 +78,7 @@ IoCheckShareAccess(ACCESS_MASK DesiredAccess,
 
    ReadAccess = (DesiredAccess & (FILE_READ_DATA | FILE_EXECUTE));
    WriteAccess = (DesiredAccess & (FILE_READ_DATA | FILE_APPEND_DATA));
-   ReadAccess = (DesiredAccess & DELETE);
+   DeleteAccess = (DesiredAccess & DELETE);
 
    FileObject->ReadAccess = ReadAccess;
    FileObject->WriteAccess = WriteAccess;
@@ -220,7 +220,7 @@ IoSetShareAccess(ACCESS_MASK DesiredAccess,
 
    ReadAccess = (DesiredAccess & (FILE_READ_DATA | FILE_EXECUTE));
    WriteAccess = (DesiredAccess & (FILE_READ_DATA | FILE_APPEND_DATA));
-   ReadAccess = (DesiredAccess & DELETE);
+   DeleteAccess = (DesiredAccess & DELETE);
 
    FileObject->ReadAccess = ReadAccess;
    FileObject->WriteAccess = WriteAccess;
