@@ -1,4 +1,4 @@
-/* $Id: caret.c,v 1.3 2003/10/17 20:31:56 weiden Exp $
+/* $Id: caret.c,v 1.4 2003/11/22 01:49:39 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -47,10 +47,24 @@ IntSetCaretBlinkTime(UINT uMSeconds)
   return FALSE;
 }
 
-UINT FASTCALL
+UINT
 IntGetCaretBlinkTime(VOID)
 {
-  return 500;
+	HKEY hKey;
+	BYTE dwValue[4];
+	DWORD dwType;
+	DWORD dwLen;
+
+
+	if (RegOpenKeyEx( HKEY_CURRENT_USER, "Control Panel\\Desktop", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+	{
+	
+		if (RegQueryValueEx(hKey,"CursorBlinkRate",NULL,&dwType,dwValue,&dwLen) == ERROR_SUCCESS)
+		{
+			return atoi( (char *)dwValue );
+		}
+	}
+	return 0;
 }
 
 BOOL FASTCALL
