@@ -1,4 +1,4 @@
-/* $Id: sd.c,v 1.15 2004/07/18 17:45:28 ion Exp $
+/* $Id: sd.c,v 1.16 2004/07/26 12:44:40 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -143,14 +143,138 @@ SeSetSecurityDescriptorInfo(IN PVOID Object OPTIONAL,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN STDCALL
 SeValidSecurityDescriptor(IN ULONG Length,
 			  IN PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  ULONG SdLength;
+  PSID Sid;
+  PACL Acl;
+
+  if (Length < SECURITY_DESCRIPTOR_MIN_LENGTH)
+    {
+      DPRINT1("Invalid Security Descriptor revision\n");
+      return FALSE;
+    }
+
+  if (SecurityDescriptor->Revision != SECURITY_DESCRIPTOR_REVISION1)
+    {
+      DPRINT1("Invalid Security Descriptor revision\n");
+      return FALSE;
+    }
+
+  if (!(SecurityDescriptor->Control & SE_SELF_RELATIVE))
+    {
+      DPRINT1("No self-relative Security Descriptor\n");
+      return FALSE;
+    }
+
+  SdLength = sizeof(SECURITY_DESCRIPTOR);
+
+  /* Check Owner SID */
+  if (SecurityDescriptor->Owner == NULL)
+    {
+      DPRINT1("No Owner SID\n");
+      return FALSE;
+    }
+
+  if ((ULONG_PTR)SecurityDescriptor->Owner % sizeof(ULONG))
+    {
+      DPRINT1("Invalid Owner SID alignment\n");
+      return FALSE;
+    }
+
+  Sid = (PSID)((ULONG_PTR)SecurityDescriptor + (ULONG_PTR)SecurityDescriptor->Owner);
+  if (Sid->Revision != SID_REVISION)
+    {
+      DPRINT1("Invalid Owner SID revision\n");
+      return FALSE;
+    }
+
+  SdLength += (sizeof(SID) + (Sid->SubAuthorityCount - 1) * sizeof(ULONG));
+  if (Length < SdLength)
+    {
+      DPRINT1("Invalid Owner SID size\n");
+      return FALSE;
+    }
+
+  /* Check Group SID */
+  if (SecurityDescriptor->Group != NULL)
+    {
+      if ((ULONG_PTR)SecurityDescriptor->Group % sizeof(ULONG))
+	{
+	  DPRINT1("Invalid Group SID alignment\n");
+	  return FALSE;
+	}
+
+      Sid = (PSID)((ULONG_PTR)SecurityDescriptor + (ULONG_PTR)SecurityDescriptor->Group);
+      if (Sid->Revision != SID_REVISION)
+	{
+	  DPRINT1("Invalid Group SID revision\n");
+	  return FALSE;
+	}
+
+      SdLength += (sizeof(SID) + (Sid->SubAuthorityCount - 1) * sizeof(ULONG));
+      if (Length < SdLength)
+	{
+	  DPRINT1("Invalid Group SID size\n");
+	  return FALSE;
+	}
+    }
+
+  /* Check DACL */
+  if (SecurityDescriptor->Dacl != NULL)
+    {
+      if ((ULONG_PTR)SecurityDescriptor->Dacl % sizeof(ULONG))
+	{
+	  DPRINT1("Invalid DACL alignment\n");
+	  return FALSE;
+	}
+
+      Acl = (PACL)((ULONG_PTR)SecurityDescriptor + (ULONG_PTR)SecurityDescriptor->Dacl);
+      if ((Acl->AclRevision < MIN_ACL_REVISION) &&
+	  (Acl->AclRevision > MAX_ACL_REVISION))
+	{
+	  DPRINT1("Invalid DACL revision\n");
+	  return FALSE;
+	}
+
+      SdLength += Acl->AclSize;
+      if (Length < SdLength)
+	{
+	  DPRINT1("Invalid DACL size\n");
+	  return FALSE;
+	}
+    }
+
+  /* Check SACL */
+  if (SecurityDescriptor->Sacl != NULL)
+    {
+      if ((ULONG_PTR)SecurityDescriptor->Sacl % sizeof(ULONG))
+	{
+	  DPRINT1("Invalid SACL alignment\n");
+	  return FALSE;
+	}
+
+      Acl = (PACL)((ULONG_PTR)SecurityDescriptor + (ULONG_PTR)SecurityDescriptor->Sacl);
+      if ((Acl->AclRevision < MIN_ACL_REVISION) ||
+	  (Acl->AclRevision > MAX_ACL_REVISION))
+	{
+	  DPRINT1("Invalid SACL revision\n");
+	  return FALSE;
+	}
+
+      SdLength += Acl->AclSize;
+      if (Length < SdLength)
+	{
+	  DPRINT1("Invalid SACL size\n");
+	  return FALSE;
+	}
+    }
+
+  return TRUE;
 }
 
 /* EOF */
