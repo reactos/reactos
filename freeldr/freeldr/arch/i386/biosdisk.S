@@ -182,7 +182,7 @@ EXTERN(_BiosInt13ReadExtended)
 	movl	0x30(%esp),%eax							// Get buffer address in eax
 	shrl	$4,%eax									// Make linear address into segment
 	movw	%ax,_packet_transfer_buffer_segment		// Save segment
-	movl	0x34(%esp),%eax							// Get buffer address in eax
+	movl	0x30(%esp),%eax							// Get buffer address in eax
 	andl	$0x0f,%eax								// Make linear address into offset
 	movw	%ax,_packet_transfer_buffer_offset		// Save offset
 

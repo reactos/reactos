@@ -1,3 +1,8 @@
+Changes in v1.7.9 (9/30/2002) (brianp)
+
+- Fix for bug in BiosInt13ReadExtended() (biosdisk.S)
+  by Christophe Bothamy & Mike Lerwill
+
 Changes in v1.7.8 (9/7/2002) (ekohl)
 
 - Added new 'bootcd' target.
