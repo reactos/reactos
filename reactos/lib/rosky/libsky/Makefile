@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2004/08/13 23:31:12 sedwards Exp $
+# $Id: Makefile,v 1.4 2004/08/14 10:22:10 navaraf Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -31,6 +31,8 @@ TARGET_PCH =
 TARGET_CLEAN = 
 
 TARGET_OBJECTS = libsky.o stubs.o
+
+TARGET_DEFONLY = yes
 
 DEP_OBJECTS = $(TARGET_OBJECTS)
 
