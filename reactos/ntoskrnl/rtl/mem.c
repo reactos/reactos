@@ -1,4 +1,4 @@
-/* $Id: mem.c,v 1.9 2000/10/22 16:36:53 ekohl Exp $
+/* $Id: mem.c,v 1.10 2001/03/16 09:50:38 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -17,6 +17,49 @@
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/
+
+NTSTATUS
+MmCopyToCaller(PVOID Dest, PVOID Src, ULONG NumberOfBytes)
+{
+  NTSTATUS Status;
+
+  if (ExGetPreviousMode() == UserMode)
+    {
+      if ((ULONG)Dest >= KERNEL_BASE)
+	{
+	  return(STATUS_ACCESS_VIOLATION);
+	}
+      Status = MmSafeCopyToUser(Dest, Src, NumberOfBytes);
+      return(Status);
+    }
+  else
+    {
+      memcpy(Dest, Src, NumberOfBytes);
+      return(STATUS_SUCCESS);
+    }
+}
+
+NTSTATUS
+MmCopyFromCaller(PVOID Dest, PVOID Src, ULONG NumberOfBytes)
+{
+  NTSTATUS Status;
+
+  if (ExGetPreviousMode() == UserMode)
+    {
+      if ((ULONG)Src >= KERNEL_BASE)
+	{
+	  return(STATUS_ACCESS_VIOLATION);
+	}
+      Status = MmSafeCopyFromUser(Dest, Src, NumberOfBytes);
+      return(Status);
+    }
+  else
+    {
+      memcpy(Dest, Src, NumberOfBytes);
+      return(STATUS_SUCCESS);
+    }
+}
+
 
 ULONG
 STDCALL

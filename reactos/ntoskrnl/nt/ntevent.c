@@ -1,5 +1,22 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
+ *  ReactOS kernel
+ *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/*
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/nt/event.c
  * PURPOSE:         Named event support
@@ -16,6 +33,7 @@
 #include <internal/id.h>
 #include <ntos/synch.h>
 #include <internal/pool.h>
+#include <internal/safe.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -105,33 +123,50 @@ NtClearEvent(IN HANDLE EventHandle)
 
 
 NTSTATUS STDCALL
-NtCreateEvent(OUT PHANDLE EventHandle,
+NtCreateEvent(OUT PHANDLE UnsafeEventHandle,
 	      IN ACCESS_MASK DesiredAccess,
-	      IN POBJECT_ATTRIBUTES ObjectAttributes,
+	      IN POBJECT_ATTRIBUTES UnsafeObjectAttributes,
 	      IN BOOLEAN ManualReset,
 	      IN BOOLEAN InitialState)
 {
    PKEVENT Event;
+   HANDLE EventHandle;
+   NTSTATUS Status;
+   OBJECT_ATTRIBUTES ObjectAttributes;
 
-   DPRINT("NtCreateEvent()\n");
-   Event = ObCreateObject(EventHandle,
+   Status = MmCopyFromCaller(&ObjectAttribute, UnsafeObjectAttributes,
+			     sizeof(OBJECT_ATTRIBUTES));
+   if (!NT_SUCCESS(Status))
+     {
+       return(Status);
+     }
+
+   Event = ObCreateObject(&EventHandle,
 			  DesiredAccess,
 			  ObjectAttributes,
 			  ExEventObjectType);
    KeInitializeEvent(Event,
 		     ManualReset ? NotificationEvent : SynchronizationEvent,
-		     InitialState );
+		     InitialState);
    ObDereferenceObject(Event);
+
+   Status = MmCopyToCaller(UnsafeEventHandle, &EventHandle, sizeof(HANDLE));
+   if (!NT_SUCCESS(Status))
+     {
+       ZwClose(EventHandle);
+       return(Status);
+     }
    return(STATUS_SUCCESS);
 }
 
 
 NTSTATUS STDCALL
-NtOpenEvent(OUT PHANDLE EventHandle,
+NtOpenEvent(OUT PHANDLE UnsafeEventHandle,
 	    IN ACCESS_MASK DesiredAccess,
 	    IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
    NTSTATUS Status;
+   HANDLE EventHandle;
 
    DPRINT("ObjectName '%wZ'\n", ObjectAttributes->ObjectName);
 
@@ -141,7 +176,14 @@ NtOpenEvent(OUT PHANDLE EventHandle,
 			       UserMode,
 			       DesiredAccess,
 			       NULL,
-			       EventHandle);
+			       &EventHandle);
+
+   Status = MmCopyToCaller(UnsafeEventHandle, &EventHandle, sizeof(HANDLE));
+   if (!NT_SUCCESS(Status))
+     {
+       ZwClose(Handle);
+       return(Status);
+     }
    
    return(Status);
 }
@@ -149,13 +191,13 @@ NtOpenEvent(OUT PHANDLE EventHandle,
 
 NTSTATUS STDCALL
 NtPulseEvent(IN HANDLE EventHandle,
-	     IN PULONG PulseCount OPTIONAL)
+	     IN PULONG UnsafePulseCount OPTIONAL)
 {
    PKEVENT Event;
    NTSTATUS Status;
 
-   DPRINT("NtPulseEvent(EventHandle %x PulseCount %x)\n",
-	  EventHandle, PulseCount);
+   DPRINT("NtPulseEvent(EventHandle %x UnsafePulseCount %x)\n",
+	  EventHandle, UnsafePulseCount);
 
    Status = ObReferenceObjectByHandle(EventHandle,
 				      EVENT_MODIFY_STATE,
@@ -164,9 +206,11 @@ NtPulseEvent(IN HANDLE EventHandle,
 				      (PVOID*)&Event,
 				      NULL);
    if (!NT_SUCCESS(Status))
-     return(Status);
+     {
+       return(Status);
+     }
 
-   KePulseEvent(Event,EVENT_INCREMENT,FALSE);
+   KePulseEvent(Event, EVENT_INCREMENT, FALSE);
 
    ObDereferenceObject(Event);
    return(STATUS_SUCCESS);
@@ -176,15 +220,14 @@ NtPulseEvent(IN HANDLE EventHandle,
 NTSTATUS STDCALL
 NtQueryEvent(IN HANDLE EventHandle,
 	     IN EVENT_INFORMATION_CLASS EventInformationClass,
-	     OUT PVOID EventInformation,
+	     OUT PVOID UnsafeEventInformation,
 	     IN ULONG EventInformationLength,
-	     OUT PULONG ReturnLength)
+	     OUT PULONG UnsafeReturnLength)
 {
-   PEVENT_BASIC_INFORMATION Info;
+   EVENT_BASIC_INFORMATION Info;
    PKEVENT Event;
    NTSTATUS Status;
-
-   Info = (PEVENT_BASIC_INFORMATION)EventInformation;
+   ULONG ReturnLength;
 
    if (EventInformationClass > EventBasicInformation)
      return STATUS_INVALID_INFO_CLASS;
@@ -202,22 +245,36 @@ NtQueryEvent(IN HANDLE EventHandle,
      return Status;
 
    if (Event->Header.Type == InternalNotificationEvent)
-     Info->EventType = NotificationEvent;
+     Info.EventType = NotificationEvent;
    else
-     Info->EventType = SynchronizationEvent;
-   Info->EventState = KeReadStateEvent(Event);
+     Info.EventType = SynchronizationEvent;
+   Info.EventState = KeReadStateEvent(Event);
 
-   *ReturnLength = sizeof(EVENT_BASIC_INFORMATION);
+   Status = MmCopyToCaller(UnsafeEventInformation, &Event, 
+			   sizeof(EVENT_BASIC_INFORMATION));
+   if (!NT_SUCCESS(Status))
+     {
+       ObDereferenceObject(Event);
+       return(Status);
+     }
+
+   ReturnLength = sizeof(EVENT_BASIC_INFORMATION);
+   Status = MmCopyToCaller(UnsafeReturnLength, ReturnLength, sizeof(ULONG));
+   if (!NT_SUCCESS(Status))
+     {
+       ObDereferenceObject(Event);
+       return(Status);
+     }
 
    ObDereferenceObject(Event);
 
-   return STATUS_SUCCESS;
+   return(STATUS_SUCCESS);
 }
 
 
 NTSTATUS STDCALL
 NtResetEvent(IN HANDLE EventHandle,
-	     OUT PULONG NumberOfWaitingThreads OPTIONAL)
+	     OUT PULONG UnsafeNumberOfWaitingThreads OPTIONAL)
 {
    PKEVENT Event;
    NTSTATUS Status;
@@ -242,7 +299,7 @@ NtResetEvent(IN HANDLE EventHandle,
 
 NTSTATUS STDCALL
 NtSetEvent(IN HANDLE EventHandle,
-	   OUT PULONG NumberOfThreadsReleased)
+	   OUT PULONG UnsafeNumberOfThreadsReleased)
 {
    PKEVENT Event;
    NTSTATUS Status;

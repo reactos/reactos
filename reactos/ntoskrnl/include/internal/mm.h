@@ -219,8 +219,6 @@ ULONG MmGetPhysicalAddressForProcess(struct _EPROCESS* Process,
 				     PVOID Address);
 NTSTATUS STDCALL
 MmUnmapViewOfSection(struct _EPROCESS* Process, PVOID BaseAddress);
-NTSTATUS MmSafeCopyFromUser(PVOID Dest, PVOID Src, ULONG NumberOfBytes);
-NTSTATUS MmSafeCopyToUser(PVOID Dest, PVOID Src, ULONG NumberOfBytes);
 VOID MmInitPagingFile(VOID);
 
 /* FIXME: it should be in ddk/mmfuncs.h */
