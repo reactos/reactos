@@ -187,9 +187,9 @@ MingwModuleHandler::GenerateGccIncludeParametersFromVector ( const vector<Includ
 string
 MingwModuleHandler::GenerateGccIncludeParameters ( const Module& module ) const
 {
-	string parameters = GenerateGccIncludeParametersFromVector ( module.project.includes );
-	string s = GenerateGccIncludeParametersFromVector ( module.includes );
-	if (s.length () > 0)
+	string parameters = GenerateGccIncludeParametersFromVector ( module.includes );
+	string s = GenerateGccIncludeParametersFromVector ( module.project.includes );
+	if ( s.length () > 0 )
 	{
 		parameters += " ";
 		parameters += s;
@@ -202,7 +202,7 @@ MingwModuleHandler::GenerateGccParameters ( const Module& module ) const
 {
 	string parameters = GenerateGccDefineParameters ( module );
 	string s = GenerateGccIncludeParameters ( module );
-	if (s.length () > 0)
+	if ( s.length () > 0 )
 	{
 		parameters += " ";
 		parameters += s;
