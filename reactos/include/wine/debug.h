@@ -5,6 +5,11 @@
 #include <stdarg.h>
 #include <wchar.h>
 
+#ifndef __GNUC__
+#define	__FUNCTION__ ""
+#define	inline __inline
+#endif
+
 unsigned long DbgPrint(char *Format,...);
 
 #define DPRINT1 DbgPrint("(%s:%d:%s) ",__FILE__,__LINE__,__FUNCTION__), DbgPrint
@@ -32,6 +37,7 @@ struct _GUID;
 extern const char *wine_dbgstr_an( const char * s, int n );
 extern const char *wine_dbgstr_wn( const wchar_t *s, int n );
 extern const char *wine_dbgstr_guid( const struct _GUID *id );
+extern const char *wine_dbg_sprintf( const char *format, ... );
 
 inline static const char *debugstr_an( const char * s, int n ) { return wine_dbgstr_an( s, n ); }
 inline static const char *debugstr_wn( const wchar_t *s, int n ) { return wine_dbgstr_wn( s, n ); }
