@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.40 2002/08/09 17:23:56 dwelch Exp $
+/* $Id: startup.c,v 1.41 2002/08/17 15:17:59 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -236,10 +236,12 @@ LdrInitializeThunk (ULONG Unknown1,
    else
      {
 	/* FIXME(???): smss.exe doesn't have a process parameter block */
+        wcscpy (FullNtDllPath, SharedUserData->NtSystemRoot);
+	wcscat (FullNtDllPath, L"\\system32\\smss.exe");
 	RtlCreateUnicodeString (&ExeModule->BaseDllName,
 				L"smss.exe");
 	RtlCreateUnicodeString (&ExeModule->FullDllName,
-				L"C:\\reactos\\system32\\smss.exe");
+				FullNtDllPath);
      }
 
    ExeModule->Flags = 0;
