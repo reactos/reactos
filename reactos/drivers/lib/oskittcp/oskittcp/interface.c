@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <oskittcp.h>
 #include <oskitdebug.h>
 #include <sys/param.h>
@@ -56,7 +57,6 @@ void InitOskitTCP() {
     tcp_init();
     OS_DbgPrint(OSK_MID_TRACE,("Init routing\n"));
     domaininit();
-    memset( &OtcpEvent, 0, sizeof( OtcpEvent ) );
     OS_DbgPrint(OSK_MID_TRACE,("Init Finished\n"));
     tcp_iss = 1024;
 }
@@ -455,9 +455,13 @@ struct ifaddr *ifa_ifwithnet(addr)
     struct sockaddr_in *sin;
     struct ifaddr *ifaddr = ifa_iffind(addr, IFF_UNICAST);
 
-    sin = (struct sockaddr *)&ifaddr->ifa_addr;
+    if( ifaddr )
+    {
+       sin = (struct sockaddr *)&ifaddr->ifa_addr;
 
-    OS_DbgPrint(OSK_MID_TRACE,("ifaddr->addr = %x\n", sin->sin_addr.s_addr));
+       OS_DbgPrint(OSK_MID_TRACE,("ifaddr->addr = %x\n", 
+                                  sin->sin_addr.s_addr));
+    }
 
     return ifaddr;
 }
