@@ -140,6 +140,13 @@ subsys\system\winlogon\winlogon.exe     1
 subsys\system\winefile\winefile.exe     1
 services\eventlog\eventlog.exe          1
 services\rpcss\rpcss.exe                1
+apps\utils\net\arp\arp.exe              1
+apps\utils\net\finger\finger.exe        1
+apps\utils\net\ipconfig\ipconfig.exe    1
+apps\utils\net\netstat\netstat.exe      1
+apps\utils\net\ping\ping.exe            1
+apps\utils\net\telnet\telnet.exe        1
+apps\utils\net\whois\whois.exe          1
 media\fonts\c0419bt_.ttf                3
 media\fonts\c0582bt_.ttf                3
 media\fonts\c0583bt_.ttf                3
