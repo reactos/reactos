@@ -1,4 +1,4 @@
-/* $Id: sd.c,v 1.12 2003/10/15 11:02:04 ekohl Exp $
+/* $Id: sd.c,v 1.13 2003/12/30 18:52:06 fireball Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -177,7 +177,7 @@ RtlLengthSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor)
       Dacl = SecurityDescriptor->Dacl;
       if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
 	{
-	  Dacl = (PACL)((ULONG)Dacl + (PVOID)SecurityDescriptor);
+	  Dacl = (PACL)((ULONG)Dacl + (char*)SecurityDescriptor);
 	}
       Length = Length + ((Dacl->AclSize + 3) & 0xfc);
     }
@@ -188,7 +188,7 @@ RtlLengthSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor)
       Sacl = SecurityDescriptor->Sacl;
       if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
 	{
-	  Sacl = (PACL)((ULONG)Sacl + (PVOID)SecurityDescriptor);
+	  Sacl = (PACL)((ULONG)Sacl + (char*)SecurityDescriptor);
 	}
       Length = Length + ((Sacl->AclSize + 3) & 0xfc);
     }
@@ -227,7 +227,7 @@ RtlGetDaclSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
       if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
 	{
 	  *Dacl = (PACL)((ULONG)SecurityDescriptor->Dacl +
-			 (PVOID)SecurityDescriptor);
+			 (char*)SecurityDescriptor);
 	}
       else
 	{
@@ -406,7 +406,7 @@ RtlGetOwnerSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
 	if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
 	  {
 	     *Owner = (PSID)((ULONG)SecurityDescriptor->Owner +
-			     (PVOID)SecurityDescriptor);
+			     (char*)SecurityDescriptor);
 	  }
 	else
 	  {
@@ -477,7 +477,7 @@ RtlGetGroupSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
       if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
 	{
 	  *Group = (PSID)((ULONG)SecurityDescriptor->Group +
-			  (PVOID)SecurityDescriptor);
+			  (char*)SecurityDescriptor);
 	}
       else
 	{
@@ -532,7 +532,7 @@ RtlGetSaclSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
       if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
 	{
 	  *Sacl = (PACL)((ULONG)SecurityDescriptor->Sacl +
-			 (PVOID)SecurityDescriptor);
+			 (char*)SecurityDescriptor);
 	}
       else
 	{

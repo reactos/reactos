@@ -1,4 +1,4 @@
-/* $Id: ntobj.c,v 1.18 2003/11/16 13:47:20 ekohl Exp $
+/* $Id: ntobj.c,v 1.19 2003/12/30 18:52:05 fireball Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -51,7 +51,7 @@ NtSetInformationObject (IN HANDLE ObjectHandle,
   Status = ObReferenceObjectByHandle (ObjectHandle,
 				      0,
 				      NULL,
-				      KeGetPreviousMode (),
+				      (KPROCESSOR_MODE)KeGetPreviousMode (),
 				      &Object,
 				      NULL);
   if (!NT_SUCCESS (Status))
@@ -96,7 +96,7 @@ NtQueryObject (IN HANDLE ObjectHandle,
   Status = ObReferenceObjectByHandle (ObjectHandle,
 				      0,
 				      NULL,
-				      KeGetPreviousMode(),
+				      (KPROCESSOR_MODE)KeGetPreviousMode(),
 				      &Object,
 				      &HandleInfo);
   if (!NT_SUCCESS (Status))
@@ -135,7 +135,11 @@ NtQueryObject (IN HANDLE ObjectHandle,
 	      }
 	    else
 	      {
+#if defined(__GNUC__)
 		BasicInfo->CreateTime.QuadPart = 0ULL;
+#else
+		BasicInfo->CreateTime.QuadPart = 0;
+#endif
 	      }
 	    Status = STATUS_SUCCESS;
 	  }
@@ -255,7 +259,7 @@ NtMakeTemporaryObject (IN HANDLE Handle)
   Status = ObReferenceObjectByHandle(Handle,
 				     0,
 				     NULL,
-				     KeGetPreviousMode(),
+				     (KPROCESSOR_MODE)KeGetPreviousMode(),
 				     & Object,
 				     NULL);
   if (Status != STATUS_SUCCESS)

@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2000, 1999, 1998 David Welch <welch@cwcom.net>, 
+ *  Copyright (C) 2000, 1999, 1998 David Welch <welch@cwcom.net>,
  *                                 Philip Susi <phreak@iag.net>,
  *                                 Eric Kohl <ekohl@abo.rhein-zeitung.de>
  *
@@ -18,7 +18,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dpc.c,v 1.28 2003/10/12 17:05:45 hbirr Exp $
+/* $Id: dpc.c,v 1.29 2003/12/30 18:52:04 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -48,19 +48,19 @@
 
 static LIST_ENTRY DpcQueueHead; /* Head of the list of pending DPCs */
 static KSPIN_LOCK DpcQueueLock; /* Lock for the above list */
-/* 
+/*
  * Number of pending DPCs. This is inspected by
  * the idle thread to determine if the queue needs to
  * be run down
  */
-ULONG DpcQueueSize = 0; 
+ULONG DpcQueueSize = 0;
 
 /* FUNCTIONS ****************************************************************/
 
 /*
  * @implemented
  */
-VOID STDCALL 
+VOID STDCALL
 KeInitializeDpc (PKDPC			Dpc,
 		 PKDEFERRED_ROUTINE	DeferredRoutine,
 		 PVOID			DeferredContext)
@@ -82,7 +82,7 @@ KeInitializeDpc (PKDPC			Dpc,
 /*
  * @implemented
  */
-VOID STDCALL 
+VOID STDCALL
 KiDispatchInterrupt(VOID)
 /*
  * FUNCTION: Called to execute queued dpcs
@@ -91,14 +91,14 @@ KiDispatchInterrupt(VOID)
    PLIST_ENTRY current_entry;
    PKDPC current;
    KIRQL oldlvl;
-   
+
    assert_irql(DISPATCH_LEVEL);
-   
+
    if (DpcQueueSize == 0)
      {
 	return;
      }
-   
+
    KeRaiseIrql(HIGH_LEVEL, &oldlvl);
    KeAcquireSpinLockAtDpcLevel(&DpcQueueLock);
 
@@ -106,9 +106,13 @@ KiDispatchInterrupt(VOID)
    {
       current_entry = RemoveHeadList(&DpcQueueHead);
       DpcQueueSize--;
+
+      assert(DpcQueueSize || IsListEmpty(&DpcQueueHead));
+
       current = CONTAINING_RECORD(current_entry,KDPC,DpcListEntry);
       current->Lock=FALSE;
-      KeReleaseSpinLock(&DpcQueueLock, oldlvl);
+      KeReleaseSpinLockFromDpcLevel(&DpcQueueLock);
+      KeLowerIrql(oldlvl);
       current->DeferredRoutine(current,current->DeferredContext,
 			       current->SystemArgument1,
 			       current->SystemArgument2);
@@ -116,13 +120,14 @@ KiDispatchInterrupt(VOID)
       KeRaiseIrql(HIGH_LEVEL, &oldlvl);
       KeAcquireSpinLockAtDpcLevel(&DpcQueueLock);
    }
-   KeReleaseSpinLock(&DpcQueueLock, oldlvl);
+   KeReleaseSpinLockFromDpcLevel(&DpcQueueLock);
+   KeLowerIrql(oldlvl);
 }
 
 /*
  * @implemented
  */
-BOOLEAN STDCALL 
+BOOLEAN STDCALL
 KeRemoveQueueDpc (PKDPC	Dpc)
 /*
  * FUNCTION: Removes DPC object from the system dpc queue
@@ -133,25 +138,30 @@ KeRemoveQueueDpc (PKDPC	Dpc)
  */
 {
    KIRQL oldIrql;
-   
+   BOOLEAN WasInQueue;
+
    KeRaiseIrql(HIGH_LEVEL, &oldIrql);
    KeAcquireSpinLockAtDpcLevel(&DpcQueueLock);
-   if (!Dpc->Lock)
+   WasInQueue = Dpc->Lock ? TRUE : FALSE;
+   if (WasInQueue)
      {
-	KeReleaseSpinLock(&DpcQueueLock, oldIrql);
-	return(FALSE);
+	RemoveEntryList(&Dpc->DpcListEntry);
+	DpcQueueSize--;
+	Dpc->Lock=0;
      }
-   RemoveEntryList(&Dpc->DpcListEntry);
-   DpcQueueSize--;
-   Dpc->Lock=0;
-   KeReleaseSpinLock(&DpcQueueLock, oldIrql);
-   return(TRUE);
+
+   assert(DpcQueueSize || IsListEmpty(&DpcQueueHead));
+
+   KeReleaseSpinLockFromDpcLevel(&DpcQueueLock);
+   KeLowerIrql(oldIrql);
+
+   return WasInQueue;
 }
 
 /*
  * @implemented
  */
-BOOLEAN STDCALL 
+BOOLEAN STDCALL
 KeInsertQueueDpc (PKDPC	Dpc,
 		  PVOID	SystemArgument1,
 		  PVOID	SystemArgument2)
@@ -181,11 +191,13 @@ KeInsertQueueDpc (PKDPC	Dpc,
      }
    KeRaiseIrql(HIGH_LEVEL, &oldlvl);
    KeAcquireSpinLockAtDpcLevel(&DpcQueueLock);
+   assert(DpcQueueSize || IsListEmpty(&DpcQueueHead));
    InsertHeadList(&DpcQueueHead,&Dpc->DpcListEntry);
    DPRINT("Dpc->DpcListEntry.Flink %x\n", Dpc->DpcListEntry.Flink);
    DpcQueueSize++;
    Dpc->Lock=(PULONG)1;
-   KeReleaseSpinLock( &DpcQueueLock, oldlvl );
+   KeReleaseSpinLockFromDpcLevel(&DpcQueueLock);
+   KeLowerIrql(oldlvl);
    DPRINT("DpcQueueHead.Flink %x\n",DpcQueueHead.Flink);
    DPRINT("Leaving KeInsertQueueDpc()\n",0);
    return(TRUE);

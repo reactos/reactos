@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.4 2003/06/14 09:52:57 gvg Exp $
+/* $Id: handle.c,v 1.5 2003/12/30 18:52:06 fireball Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -77,7 +77,7 @@ RtlpAllocateHandle(PRTL_HANDLE_TABLE HandleTable,
 
 	     /* update handle array pointers */
 	     HandleTable->Handles = (PRTL_HANDLE)ArrayPointer;
-	     HandleTable->Limit = (PRTL_HANDLE)(ArrayPointer + ArraySize);
+	     HandleTable->Limit = (PRTL_HANDLE)((char*)ArrayPointer + ArraySize);
 	     HandleTable->LastUsed = (PRTL_HANDLE)ArrayPointer;
 	  }
 

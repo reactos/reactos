@@ -1,4 +1,4 @@
-/* $Id: ncache.c,v 1.25 2003/07/10 21:05:03 royce Exp $
+/* $Id: ncache.c,v 1.26 2003/12/30 18:52:05 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -79,7 +79,7 @@ MmAllocateNonCachedMemory(IN ULONG NumberOfBytes)
 
        Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &NPage);
        MmCreateVirtualMapping (NULL,
-			       Result + (i * PAGE_SIZE),
+			       (char*)Result + (i * PAGE_SIZE),
 			       Attributes,
 			       NPage,
 			       TRUE);

@@ -30,6 +30,8 @@ PULONG MmGetPageEntry(PVOID Address);
 
 #define KERNEL_BASE        (0xc0000000)
 
+#if defined(__GNUC__)
+
 #define FLUSH_TLB   {				\
 			unsigned int tmp;	\
 			__asm__ __volatile__(	\
@@ -38,6 +40,15 @@ PULONG MmGetPageEntry(PVOID Address);
 			    : "=r" (tmp)	\
 			    :: "memory");	\
 		    }
+
+#elif defined(_MSC_VER)
+/* TODO: Verify that this really WORKS. Perhaps it, as the GCC thing */
+/* above, needs to actually touch some memory too ? */
+#define FLUSH_TLB __asm mov eax, cr3  __asm mov cr3, eax;
+#else
+#error Unknown compiler for inline assembler
+#endif
+
 
 PULONG MmGetPageDirectory(VOID);
 

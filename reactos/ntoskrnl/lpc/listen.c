@@ -1,4 +1,4 @@
-/* $Id: listen.c,v 1.7 2003/07/11 01:23:15 royce Exp $
+/* $Id: listen.c,v 1.8 2003/12/30 18:52:05 fireball Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -43,7 +43,7 @@
  *
  * NOTE
  */
-EXPORTED NTSTATUS STDCALL
+/*EXPORTED*/ NTSTATUS STDCALL
 NtListenPort (IN	HANDLE		PortHandle,
 	      IN	PLPC_MESSAGE	ConnectMsg)
 {

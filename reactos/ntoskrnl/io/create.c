@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.71 2003/12/14 17:44:02 hbirr Exp $
+/* $Id: create.c,v 1.72 2003/12/30 18:52:04 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -457,15 +457,15 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
 	  break;
      }
    StackLoc->MinorFunction = 0;
-   StackLoc->Flags = Options;
+   StackLoc->Flags = (UCHAR)Options;
    StackLoc->Control = 0;
    StackLoc->DeviceObject = FileObject->DeviceObject;
    StackLoc->FileObject = FileObject;
    StackLoc->Parameters.Create.SecurityContext = &SecurityContext;
    StackLoc->Parameters.Create.Options = (CreateOptions & FILE_VALID_OPTION_FLAGS);
    StackLoc->Parameters.Create.Options |= (CreateDisposition << 24);
-   StackLoc->Parameters.Create.FileAttributes = FileAttributes;
-   StackLoc->Parameters.Create.ShareAccess = ShareAccess;
+   StackLoc->Parameters.Create.FileAttributes = (USHORT)FileAttributes;
+   StackLoc->Parameters.Create.ShareAccess = (USHORT)ShareAccess;
    StackLoc->Parameters.Create.EaLength = EaLength;
    
    /*

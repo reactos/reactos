@@ -140,7 +140,7 @@ KdbPrintUserAddress(PVOID address)
 	  CONTAINING_RECORD(current_entry, LDR_MODULE, InLoadOrderModuleList);
 	
 	if (address >= (PVOID)current->BaseAddress &&
-	    address < (PVOID)(current->BaseAddress + current->SizeOfImage))
+	    address < (PVOID)((char*)current->BaseAddress + current->SizeOfImage))
 	  {
             RelativeAddress = (ULONG_PTR) address - (ULONG_PTR)current->BaseAddress;
             Status = LdrGetAddressInformation(&current->SymbolInfo,

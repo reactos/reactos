@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.179 2003/12/14 18:16:18 hbirr Exp $
+/* $Id: main.c,v 1.180 2003/12/30 18:52:04 fireball Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -55,7 +55,12 @@
 #ifdef HALDBG
 #include <internal/ntosdbg.h>
 #else
+#if defined(_MSC_VER) && (_MSC_VER <= 1200)
+#define ps
+#else
 #define ps(args...)
+#endif /* HALDBG */
+
 #endif
 
 #define NDEBUG
@@ -63,12 +68,23 @@
 
 /* GLOBALS *******************************************************************/
 
+#ifdef  __GNUC__
 ULONG EXPORTED NtBuildNumber = KERNEL_VERSION_BUILD;
 ULONG EXPORTED NtGlobalFlag = 0;
 CHAR  EXPORTED KeNumberProcessors;
 LOADER_PARAMETER_BLOCK EXPORTED KeLoaderBlock;
 ULONG EXPORTED KeDcacheFlushCount = 0;
 ULONG EXPORTED KeIcacheFlushCount = 0;
+#else
+/* Microsoft-style declarations */
+EXPORTED ULONG NtBuildNumber = KERNEL_VERSION_BUILD;
+EXPORTED ULONG NtGlobalFlag = 0;
+EXPORTED CHAR  KeNumberProcessors;
+EXPORTED LOADER_PARAMETER_BLOCK KeLoaderBlock;
+EXPORTED ULONG KeDcacheFlushCount = 0;
+EXPORTED ULONG KeIcacheFlushCount = 0;
+#endif	/* __GNUC__ */
+
 static LOADER_MODULE KeLoaderModules[64];
 static UCHAR KeLoaderModuleStrings[64][256];
 static UCHAR KeLoaderCommandLine[256];
@@ -481,9 +497,9 @@ ExpInitializeExecutive(VOID)
       /* Allocate a stack for use when booting the processor */
       /* FIXME: The nonpaged memory for the stack is not released after use */
       ProcessorStack = 
-	ExAllocatePool(NonPagedPool, MM_STACK_SIZE) + MM_STACK_SIZE;
+	(char*)ExAllocatePool(NonPagedPool, MM_STACK_SIZE) + MM_STACK_SIZE;
       Ki386InitialStackArray[((int)KeNumberProcessors)] = 
-	(PVOID)(ProcessorStack - MM_STACK_SIZE);
+	(PVOID)((char*)ProcessorStack - MM_STACK_SIZE);
       HalInitializeProcessor(KeNumberProcessors, ProcessorStack);
       KeNumberProcessors++;
     }
@@ -714,7 +730,11 @@ ExpInitializeExecutive(VOID)
       Handles[1] = ProcessHandle;
 
       /* Wait for the system to be initialized */
+#ifdef __GNUC__
       Timeout.QuadPart = -1200000000LL;  /* 120 second timeout */
+#else
+      Timeout.QuadPart = -1200000000;  /* 120 second timeout */
+#endif
       Status = NtWaitForMultipleObjects(((LONG) sizeof(Handles) / sizeof(HANDLE)),
         Handles,
         WaitAny,
@@ -756,7 +776,11 @@ ExpInitializeExecutive(VOID)
       /*
        * Crash the system if the initial process terminates within 5 seconds.
        */
+#ifdef __GNUC__
       Timeout.QuadPart = -50000000LL;
+#else
+      Timeout.QuadPart = -50000000;
+#endif
       Status = NtWaitForSingleObject(ProcessHandle,
     				 FALSE,
     				 &Timeout);

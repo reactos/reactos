@@ -9,6 +9,7 @@
  * The following flags are used to tell iswctype and _isctype what character
  * types you are looking for.
  */
+
 #define _UPPER      0x0001
 #define _LOWER      0x0002
 #define _DIGIT      0x0004
@@ -24,6 +25,10 @@
 typedef wchar_t wctype_t;
 
 
+#if defined(_MSC_VER)
+#define inline __inline
+typedef wchar_t wint_t;
+#endif
 
 extern inline int isspace(int c);
 extern inline int toupper(int c);

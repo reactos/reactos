@@ -19,11 +19,22 @@
 
 IDT_DESCRIPTOR KiIdt[256];
 
+#if defined(__GNUC__)
 struct
 {
   USHORT Length;
   ULONG Base;
 } __attribute__((packed)) KiIdtDescriptor = {256 * 8, (ULONG)KiIdt};
+#else
+#include <pshpack1.h>
+struct dummyname_for_this_one
+{
+  USHORT Length;
+  ULONG Base;
+};
+#include <poppack.h>
+struct dummyname_for_this_one KiIdtDescriptor = {256 * 8, (ULONG)KiIdt};
+#endif
 
 
 /* FUNCTIONS *****************************************************************/

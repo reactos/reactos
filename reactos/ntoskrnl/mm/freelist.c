@@ -96,7 +96,14 @@ MmGetLRUFirstUserPage(VOID)
   if (NextListEntry == &UsedPageListHeads[MC_USER])
     {
       KeReleaseSpinLock(&PageListLock, oldIrql);
-      return((LARGE_INTEGER)0LL);
+#if defined(__GNUC__)
+      return((PHYSICAL_ADDRESS)0LL);
+#else
+      {
+        const PHYSICAL_ADDRESS dummyJunkNeeded = { 0 };
+        return dummyJunkNeeded;
+      }
+#endif
     }
   PageDescriptor = CONTAINING_RECORD(NextListEntry, PHYSICAL_PAGE, ListEntry);
   Next.QuadPart = (ULONG)((ULONG)PageDescriptor - (ULONG)MmPageArray);
@@ -144,7 +151,14 @@ MmGetLRUNextUserPage(PHYSICAL_ADDRESS PreviousPhysicalAddress)
   if (NextListEntry == &UsedPageListHeads[MC_USER])
     {
       KeReleaseSpinLock(&PageListLock, oldIrql);
-      return((LARGE_INTEGER)0LL);
+#if defined(__GNUC__)
+      return((PHYSICAL_ADDRESS)0LL);
+#else
+      {
+        const PHYSICAL_ADDRESS dummyJunkNeeded = { 0 };
+        return dummyJunkNeeded;
+      }
+#endif
     }
   PageDescriptor = CONTAINING_RECORD(NextListEntry, PHYSICAL_PAGE, ListEntry);
   Next.QuadPart = (ULONG)((ULONG)PageDescriptor - (ULONG)MmPageArray);
@@ -201,7 +215,14 @@ MmGetContinuousPages(ULONG NumberOfBytes,
    if (start == -1 || length != NrPages)
      {
 	KeReleaseSpinLock(&PageListLock, oldIrql);
-	return((LARGE_INTEGER)(LONGLONG)0);
+#if defined(__GNUC__)
+	return((PHYSICAL_ADDRESS)(LONGLONG)0);
+#else
+	{
+	  const PHYSICAL_ADDRESS dummyJunkNeeded = { 0 };
+	  return dummyJunkNeeded;
+      }
+#endif
      }  
    for (i = start; i < (start + length); i++)
      {
@@ -216,7 +237,14 @@ MmGetContinuousPages(ULONG NumberOfBytes,
 		       &MmPageArray[i].ListEntry);
      }
    KeReleaseSpinLock(&PageListLock, oldIrql);
-   return((LARGE_INTEGER)((LONGLONG)start * PAGE_SIZE));
+#if defined(__GNUC__)
+   return((PHYSICAL_ADDRESS)((LONGLONG)start * PAGE_SIZE));
+#else
+   {
+     const PHYSICAL_ADDRESS dummyJunkNeeded = { start * PAGE_SIZE };
+     return dummyJunkNeeded;
+   }
+#endif
 }
 
 VOID INIT_FUNCTION
@@ -349,7 +377,7 @@ MmInitializePageList(PVOID FirstPhysKernelAddress,
    LastKernelAddress = PAGE_ROUND_UP(LastKernelAddress);
    LastKernelAddress = ((ULONG)LastKernelAddress + (Reserved * PAGE_SIZE));
    LastPhysKernelAddress = (PVOID)PAGE_ROUND_UP(LastPhysKernelAddress);
-   LastPhysKernelAddress = LastPhysKernelAddress + (Reserved * PAGE_SIZE);
+   LastPhysKernelAddress = (char*)LastPhysKernelAddress + (Reserved * PAGE_SIZE);
      
    MmStats.NrTotalPages = 0;
    MmStats.NrSystemPages = 0;
@@ -360,17 +388,26 @@ MmInitializePageList(PVOID FirstPhysKernelAddress,
    
    for (i = 0; i < Reserved; i++)
      {
-       PVOID Address = (PVOID)(ULONG)MmPageArray + (i * PAGE_SIZE);
+       PVOID Address = (char*)(ULONG)MmPageArray + (i * PAGE_SIZE);
        if (!MmIsPagePresent(NULL, Address))
 	 {
-	   ULONG PhysicalAddress;
-	   PhysicalAddress = (ULONG)LastPhysKernelAddress - 
+#if !defined(__GNUC__)
+	   const PHYSICAL_ADDRESS dummyJunkNeeded = {
+	       (ULONG)LastPhysKernelAddress - 
+	       (Reserved * PAGE_SIZE) + (i * PAGE_SIZE)
+	     };
+#endif
+	   ULONG PhysicalAddress = (ULONG)LastPhysKernelAddress - 
 	     (Reserved * PAGE_SIZE) + (i * PAGE_SIZE);
 	   Status = 
 	     MmCreateVirtualMappingUnsafe(NULL,
 					  Address,
 					  PAGE_READWRITE,
+#if defined(__GNUC__)
 					  (PHYSICAL_ADDRESS)(LONGLONG)PhysicalAddress,
+#else
+					  dummyJunkNeeded,
+#endif
 					  FALSE);
 	   if (!NT_SUCCESS(Status))
 	     {
@@ -378,7 +415,7 @@ MmInitializePageList(PVOID FirstPhysKernelAddress,
 	       KEBUGCHECK(0);
 	     }
 	 }
-       memset((PVOID)MmPageArray + (i * PAGE_SIZE), 0, PAGE_SIZE);
+       memset((char*)MmPageArray + (i * PAGE_SIZE), 0, PAGE_SIZE);
      }
    
 
@@ -859,7 +896,14 @@ MmAllocPage(ULONG Consumer, SWAPENTRY SavedSwapEntry)
 	{
 	  DPRINT1("MmAllocPage(): Out of memory\n");
 	  KeReleaseSpinLock(&PageListLock, oldIrql);
+#if defined(__GNUC__)
 	  return((PHYSICAL_ADDRESS)0LL);
+#else
+	  {
+	    const PHYSICAL_ADDRESS dummyJunkNeeded = { 0 };
+	    return dummyJunkNeeded;
+	  }
+#endif
 	}
       ListEntry = RemoveTailList(&FreeUnzeroedPageListHead);
       UnzeroedPageCount--;

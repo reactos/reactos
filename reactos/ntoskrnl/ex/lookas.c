@@ -1,4 +1,4 @@
-/* $Id: lookas.c,v 1.12 2003/10/12 17:05:44 hbirr Exp $
+/* $Id: lookas.c,v 1.13 2003/12/30 18:52:03 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -126,7 +126,7 @@ ExpDefaultFree(PVOID Buffer)
  *   Buffer = Pointer to memory to free
  */
 {
-  return ExFreePool(Buffer);
+  ExFreePool(Buffer);
 }
 
 

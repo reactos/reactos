@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bug.c,v 1.40 2003/10/12 17:05:45 hbirr Exp $
+/* $Id: bug.c,v 1.41 2003/12/30 18:52:04 fireball Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/bug.c
@@ -103,7 +103,14 @@ KeBugCheckWithTf(ULONG BugCheckCode,
       KdDebugState |= KD_DEBUG_SCREEN;
     }
 
+#if defined(__GNUC__)
   __asm__("cli\n\t");
+#elif defined(_MSC_VER)
+  __asm cli
+#else
+#error Unknown compiler for inline assembler
+#endif
+
   if (KeGetCurrentIrql() < DISPATCH_LEVEL)
     {
       KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
@@ -137,7 +144,13 @@ KeBugCheckWithTf(ULONG BugCheckCode,
       DbgPrint("Recursive bug check halting now\n");
       for (;;)
 	{
-	  __asm__ ("hlt\n\t");
+#if defined(__GNUC__)
+	  __asm__("hlt\n\t");
+#elif defined(_MSC_VER)
+	  __asm hlt
+#else
+#error Unknown compiler for inline assembler
+#endif
 	}
     }
   InBugCheck = 1;
@@ -148,14 +161,28 @@ KeBugCheckWithTf(ULONG BugCheckCode,
 
   if (KdDebuggerEnabled)
     {
+#if defined(__GNUC__)
       __asm__("sti\n\t");
       DbgBreakPoint();
       __asm__("cli\n\t");
+#elif defined(_MSC_VER)
+      __asm sti
+      DbgBreakPoint();
+      __asm cli
+#else
+#error Unknown compiler for inline assembler
+#endif
     }
 
   for (;;)
     {
+#if defined(__GNUC__)
       __asm__("hlt\n\t");
+#elif defined(_MSC_VER)
+      __asm hlt
+#else
+#error Unknown compiler for inline assembler
+#endif
     }
 }
 
@@ -188,7 +215,13 @@ KeBugCheckEx(ULONG BugCheckCode,
       KdDebugState |= KD_DEBUG_SCREEN;
     }
 
+#if defined(__GNUC__)
   __asm__("cli\n\t");
+#elif defined(_MSC_VER)
+  __asm cli
+#else
+#error Unknown compiler for inline assembler
+#endif
   if (KeGetCurrentIrql() < DISPATCH_LEVEL)
     {
       KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
@@ -222,7 +255,13 @@ KeBugCheckEx(ULONG BugCheckCode,
       DbgPrint("Recursive bug check halting now\n");
       for (;;)
 	{
+#if defined(__GNUC__)
 	  __asm__("hlt\n\t");
+#elif defined(_MSC_VER)
+	  __asm hlt
+#else
+#error Unknown compiler for inline assembler
+#endif
 	}
     }
   InBugCheck = 1;
@@ -237,21 +276,43 @@ KeBugCheckEx(ULONG BugCheckCode,
 	       PsGetCurrentThread(),
 	       PsGetCurrentThread()->Cid.UniqueThread);
     }
+#if defined(__GNUC__)
   KeDumpStackFrames((PULONG)__builtin_frame_address(0));
+#elif defined(_MSC_VER)
+  __asm push ebp
+  __asm call KeDumpStackFrames
+  __asm add esp, 4
+#else
+#error Unknown compiler for inline assembler
+#endif
   MmDumpToPagingFile(BugCheckCode, BugCheckParameter1, 
 		     BugCheckParameter2, BugCheckParameter3,
 		     BugCheckParameter4, NULL);
 
   if (KdDebuggerEnabled)
     {
+#if defined(__GNUC__)
       __asm__("sti\n\t");
       DbgBreakPoint();
       __asm__("cli\n\t");
+#elif defined(_MSC_VER)
+      __asm sti
+      DbgBreakPoint();
+      __asm cli
+#else
+#error Unknown compiler for inline assembler
+#endif
     }
 
   for (;;)
     {
+#if defined(__GNUC__)
       __asm__("hlt\n\t");
+#elif defined(_MSC_VER)
+      __asm hlt
+#else
+#error Unknown compiler for inline assembler
+#endif
     }
 }
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.60 2003/10/12 17:05:48 hbirr Exp $
+/* $Id: page.c,v 1.61 2003/12/30 18:52:05 fireball Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -61,7 +61,16 @@
 
 ULONG MmGlobalKernelPageDirectory[1024] = {0, };
 
+#if defined(__GNUC__)
 #define PTE_TO_PAGE(X) ((LARGE_INTEGER)(LONGLONG)(PAGE_MASK(X)))
+#else
+__inline LARGE_INTEGER PTE_TO_PAGE(ULONG npage)
+{
+    LARGE_INTEGER dummy;
+    dummy.QuadPart = (LONGLONG)(PAGE_MASK(npage));
+    return dummy;
+}
+#endif
 
 /* FUNCTIONS ***************************************************************/
 
@@ -69,8 +78,15 @@ PULONG
 MmGetPageDirectory(VOID)
 {
    unsigned int page_dir=0;
+#if defined(__GNUC__)
    __asm__("movl %%cr3,%0\n\t"
                 : "=r" (page_dir));
+#elif defined(_MSC_VER)
+   __asm mov eax, cr3;
+   __asm mov page_dir, eax;
+#else
+#error Unknown compiler for inline assembler
+#endif
    return((PULONG)page_dir);
 }
 
@@ -140,7 +156,11 @@ NTSTATUS Mmi386ReleaseMmInfo(PEPROCESS Process)
      }
    
    MmReleasePageMemoryConsumer(MC_NPPOOL, Process->Pcb.DirectoryTableBase);
+#if defined(__GNUC__)
    Process->Pcb.DirectoryTableBase.QuadPart = 0LL;
+#else
+   Process->Pcb.DirectoryTableBase.QuadPart = 0;
+#endif
    
    DPRINT("Finished Mmi386ReleaseMmInfo()\n");
    return(STATUS_SUCCESS);
@@ -382,7 +402,14 @@ MmGetPhysicalAddressForProcess(PEPROCESS Process,
    
    if (!(PageEntry & PA_PRESENT))
      {
+#if defined(__GNUC__)
 	return((LARGE_INTEGER)0LL);
+#else
+	{
+	  PHYSICAL_ADDRESS dummy = { 0 };
+	  return dummy;
+	}
+#endif
      }
    return(PTE_TO_PAGE(PageEntry));
 }
@@ -537,7 +564,11 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage,
 	  }
 	if (PhysicalAddr != NULL)
 	  {
+#if defined(__GNUC__)
 	    *PhysicalAddr = (LARGE_INTEGER)0LL;
+#else
+	    PhysicalAddr->QuadPart = 0;
+#endif
 	  }
 	return;
      }
@@ -838,7 +869,7 @@ PULONG MmGetPageEntry(PVOID PAddress)
 
 BOOLEAN MmIsDirtyPage(PEPROCESS Process, PVOID Address)
 {
-   return((MmGetPageEntryForProcess(Process, Address)) & PA_DIRTY);
+   return (BOOLEAN)((MmGetPageEntryForProcess(Process, Address)) & PA_DIRTY);
 }
 
 BOOLEAN 
@@ -867,7 +898,7 @@ MmIsAccessedAndResetAccessPage(PEPROCESS Process, PVOID Address)
      }
 
    PageEntry = MmGetPageEntry(Address);
-   Accessed = (*PageEntry) & PA_ACCESSED;
+   Accessed = (BOOLEAN)((*PageEntry) & PA_ACCESSED);
    if (Accessed)
      {
        (*PageEntry) = (*PageEntry) & (~PA_ACCESSED);
@@ -963,7 +994,7 @@ VOID MmEnableVirtualMapping(PEPROCESS Process, PVOID Address)
 
 BOOLEAN MmIsPagePresent(PEPROCESS Process, PVOID Address)
 {
-   return((MmGetPageEntryForProcess1(Process, Address)) & PA_PRESENT);
+   return (BOOLEAN)((MmGetPageEntryForProcess1(Process, Address)) & PA_PRESENT);
 }
 
 BOOLEAN MmIsPageSwapEntry(PEPROCESS Process, PVOID Address)
@@ -1006,7 +1037,7 @@ MmCreateVirtualMappingDump(PVOID Address,
      {
        KEBUGCHECK(0);
      }
-   *Pte = PhysicalAddress.QuadPart | Attributes;
+   *Pte = (ULONG)(PhysicalAddress.QuadPart | Attributes);
    FLUSH_TLB;
    return(STATUS_SUCCESS);
 }
@@ -1066,7 +1097,7 @@ MmCreateVirtualMappingForKernel(PVOID Address,
      {
        MmMarkPageUnmapped(PTE_TO_PAGE((*Pte)));
      }
-   *Pte = PhysicalAddress.QuadPart | Attributes;
+   *Pte = (ULONG)(PhysicalAddress.QuadPart | Attributes);
    if (Process != NULL && 
        Process->AddressSpace.PageTableRefCountTable != NULL &&
        Address < (PVOID)KERNEL_BASE &&
@@ -1222,7 +1253,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
      {
        MmMarkPageUnmapped(PTE_TO_PAGE((*Pte)));
      }
-   *Pte = PhysicalAddress.QuadPart | Attributes;
+   *Pte = (ULONG)(PhysicalAddress.QuadPart | Attributes);
    if (Process != NULL && 
        Process->AddressSpace.PageTableRefCountTable != NULL &&
        Address < (PVOID)KERNEL_BASE &&
@@ -1341,7 +1372,7 @@ VOID
 MmUpdateStackPageDir(PULONG LocalPageDir, PKTHREAD PThread)
 {
   unsigned EntryBase = ADDR_TO_PDE_OFFSET(PThread->StackLimit);
-  unsigned EntryTop = ADDR_TO_PDE_OFFSET(PThread->InitialStack - PAGE_SIZE);
+  unsigned EntryTop  = ADDR_TO_PDE_OFFSET((char*)PThread->InitialStack - PAGE_SIZE);
 
   if (0 == LocalPageDir[EntryBase])
     {

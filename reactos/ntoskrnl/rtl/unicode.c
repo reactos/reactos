@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.33 2003/12/14 18:06:44 hbirr Exp $
+/* $Id: unicode.c,v 1.34 2003/12/30 18:52:06 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -201,7 +201,7 @@ RtlAppendUnicodeStringToString(IN OUT PUNICODE_STRING Destination,
 	if ((Source->Length + Destination->Length) >= Destination->MaximumLength)
 		return STATUS_BUFFER_TOO_SMALL;
 
-	memcpy((PVOID)Destination->Buffer + Destination->Length, Source->Buffer, Source->Length);
+	memcpy((char*)Destination->Buffer + Destination->Length, Source->Buffer, Source->Length);
 	Destination->Length += Source->Length;
 	Destination->Buffer[Destination->Length / sizeof(WCHAR)] = 0;
 
@@ -223,7 +223,7 @@ RtlAppendUnicodeToString(IN OUT PUNICODE_STRING Destination,
   if (Destination->Length + slen >= Destination->MaximumLength)
     return(STATUS_BUFFER_TOO_SMALL);
 
-  memcpy((PVOID)Destination->Buffer + Destination->Length, Source, slen + sizeof(WCHAR));
+  memcpy((char*)Destination->Buffer + Destination->Length, Source, slen + sizeof(WCHAR));
   Destination->Length += slen;
 
   return(STATUS_SUCCESS);

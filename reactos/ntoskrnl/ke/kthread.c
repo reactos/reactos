@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kthread.c,v 1.44 2003/11/30 19:00:02 gdalsnes Exp $
+/* $Id: kthread.c,v 1.45 2003/12/30 18:52:04 fireball Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Microkernel thread support
@@ -124,15 +124,15 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
 	      KEBUGCHECK(0);
 	    }
 	  Status = MmCreateVirtualMapping(NULL,
-					  KernelStack + (i * PAGE_SIZE),
+					  (char*)KernelStack + (i * PAGE_SIZE),
 					  PAGE_EXECUTE_READWRITE,
 					  Page,
 					  TRUE);
 	}
-      Thread->InitialStack = KernelStack + MM_STACK_SIZE;
-      Thread->StackBase = KernelStack + MM_STACK_SIZE;
-      Thread->StackLimit = (ULONG)KernelStack;
-      Thread->KernelStack = KernelStack + MM_STACK_SIZE;
+      Thread->InitialStack = (char*)KernelStack + MM_STACK_SIZE;
+      Thread->StackBase    = (char*)KernelStack + MM_STACK_SIZE;
+      Thread->StackLimit   = (ULONG)KernelStack;
+      Thread->KernelStack  = (char*)KernelStack + MM_STACK_SIZE;
     }
   else
     {
@@ -208,6 +208,7 @@ crashes. I'm disabling it again, until we fix the APC implementation...
   Thread->Queue = NULL;
   KeInitializeSpinLock(&Thread->ApcQueueLock);
   memset(&Thread->Timer, 0, sizeof(KTIMER));
+  KeInitializeTimer(&Thread->Timer);
   Thread->QueueListEntry.Flink = NULL;
   Thread->QueueListEntry.Blink = NULL;
   Thread->Affinity = Process->Affinity;

@@ -137,14 +137,14 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 		{
 		  Tf->Esp = Tf->Esp - 2;
 		  sp = sp - 1;
-		  sp[0] = Tf->Eflags & 0xFFFF;
+		  sp[0] = (USHORT)(Tf->Eflags & 0xFFFF);
 		  if (VTf->regs->Vif == 1)
 		    {
-		      sp[0] = sp[0] | INTERRUPT_FLAG;
+		      sp[0] = (USHORT)(sp[0] | INTERRUPT_FLAG);
 		    }
 		  else
 		    {
-		      sp[0] = sp[0] & (~INTERRUPT_FLAG);
+		      sp[0] = (USHORT)(sp[0] & (~INTERRUPT_FLAG));
 		    }
 		}
 	      else
@@ -250,7 +250,7 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	    {
 	      DPRINT("outb %d, %x\n", (ULONG)ip[i + 1], Tf->Eax & 0xFF);
 	      WRITE_PORT_UCHAR((PUCHAR)(ULONG)ip[i + 1], 
-			       Tf->Eax & 0xFF);
+			       (UCHAR)(Tf->Eax & 0xFF));
 	      Tf->Eip = Tf->Eip + 2;
 	      return(0);
 	    }
@@ -269,7 +269,7 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	      if (!BigDataPrefix)
 		{
 		  DPRINT("outw %d, %x\n", (ULONG)ip[i + 1], Tf->Eax & 0xFFFF);
-		  WRITE_PORT_USHORT((PUSHORT)(ULONG)ip[1], Tf->Eax & 0xFFFF);
+		  WRITE_PORT_USHORT((PUSHORT)(ULONG)ip[1], (USHORT)(Tf->Eax & 0xFFFF));
 		}
 	      else
 		{
@@ -292,7 +292,7 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	  if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
 	    {
 	      DPRINT("outb %d, %x\n", Tf->Edx & 0xFFFF, Tf->Eax & 0xFF);
-	      WRITE_PORT_UCHAR((PUCHAR)(Tf->Edx & 0xFFFF), Tf->Eax & 0xFF);
+	      WRITE_PORT_UCHAR((PUCHAR)(Tf->Edx & 0xFFFF), (UCHAR)(Tf->Eax & 0xFF));
 	      Tf->Eip = Tf->Eip + 1;
 	      return(0);
 	    }
@@ -312,7 +312,7 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 		{
 		  DPRINT("outw %d, %x\n", Tf->Edx & 0xFFFF, Tf->Eax & 0xFFFF);
 		  WRITE_PORT_USHORT((PUSHORT)(Tf->Edx & 0xFFFF), 
-				    Tf->Eax & 0xFFFF);
+				    (USHORT)(Tf->Eax & 0xFFFF));
 		}
 	      else
 		{
@@ -676,12 +676,12 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	    Tf->Esp = Tf->Esp - 6;
 	    sp = sp - 3;
 	    
-	    sp[0] = (Tf->Eip & 0xFFFF) + 2;
-	    sp[1] = Tf->Cs & 0xFFFF;
-	    sp[2] = Tf->Eflags & 0xFFFF;
+	    sp[0] = (USHORT)((Tf->Eip & 0xFFFF) + 2);
+	    sp[1] = (USHORT)(Tf->Cs & 0xFFFF);
+	    sp[2] = (USHORT)(Tf->Eflags & 0xFFFF);
 	    if (VTf->regs->Vif == 1)
 	      {
-		sp[2] = sp[2] | INTERRUPT_FLAG;
+		sp[2] = (USHORT)(sp[2] | INTERRUPT_FLAG);
 	      }
 	    DPRINT("sp[0] %x sp[1] %x sp[2] %x\n", sp[0], sp[1], sp[2]);
 	    Tf->Eip = entry & 0xFFFF;

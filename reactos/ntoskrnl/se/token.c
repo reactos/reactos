@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.31 2003/12/23 05:06:47 arty Exp $
+/* $Id: token.c,v 1.32 2003/12/30 18:52:06 fireball Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -533,7 +533,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 						  Token->UserAndGroups,
 						  TokenInformationLength,
 						  TokenInformation,
-						  TokenInformation + 8,
+						  (char*)TokenInformation + 8,
 						  &UnusedInfo,
 						  &uLength);
 	    if (NT_SUCCESS(Status))
@@ -555,7 +555,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 	  }
 	else
 	  {
-	    EndMem = TokenInformation + Token->UserAndGroupCount * sizeof(SID_AND_ATTRIBUTES);
+	    EndMem = (char*)TokenInformation + Token->UserAndGroupCount * sizeof(SID_AND_ATTRIBUTES);
 	    PtrTokenGroups = (PTOKEN_GROUPS)TokenInformation;
 	    PtrTokenGroups->GroupCount = Token->UserAndGroupCount - 1;
 	    Status = RtlCopySidAndAttributesArray(Token->UserAndGroupCount - 1,
@@ -1189,24 +1189,24 @@ SepCreateSystemProcessToken(struct _EPROCESS* Process)
   AccessToken->UserAndGroups[i].Sid = (PSID) SidArea;
   AccessToken->UserAndGroups[i++].Attributes = 0;
   RtlCopySid(uLocalSystemLength, SidArea, SeLocalSystemSid);
-  SidArea += uLocalSystemLength;
+  SidArea = (char*)SidArea + uLocalSystemLength;
 
   AccessToken->DefaultOwnerIndex = i;
   AccessToken->UserAndGroups[i].Sid = (PSID) SidArea;
   AccessToken->PrimaryGroup = (PSID) SidArea;
   AccessToken->UserAndGroups[i++].Attributes = SE_GROUP_ENABLED|SE_GROUP_ENABLED_BY_DEFAULT;
   Status = RtlCopySid(uAdminsLength, SidArea, SeAliasAdminsSid);
-  SidArea += uAdminsLength;
+  SidArea = (char*)SidArea + uAdminsLength;
 
   AccessToken->UserAndGroups[i].Sid = (PSID) SidArea;
   AccessToken->UserAndGroups[i++].Attributes = SE_GROUP_ENABLED|SE_GROUP_ENABLED_BY_DEFAULT|SE_GROUP_MANDATORY;
   RtlCopySid(uWorldLength, SidArea, SeWorldSid);
-  SidArea += uWorldLength;
+  SidArea = (char*)SidArea + uWorldLength;
 
   AccessToken->UserAndGroups[i].Sid = (PSID) SidArea;
   AccessToken->UserAndGroups[i++].Attributes = SE_GROUP_ENABLED|SE_GROUP_ENABLED_BY_DEFAULT|SE_GROUP_MANDATORY;
   RtlCopySid(uAuthUserLength, SidArea, SeAuthenticatedUserSid);
-  SidArea += uAuthUserLength;
+  SidArea = (char*)SidArea + uAuthUserLength;
 
   AccessToken->PrivilegeCount = 20;
 

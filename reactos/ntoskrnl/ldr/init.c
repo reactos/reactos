@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: init.c,v 1.44 2003/11/17 02:12:51 hyperion Exp $
+/* $Id: init.c,v 1.45 2003/12/30 18:52:05 fireball Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ldr/init.c
@@ -513,7 +513,7 @@ LdrLoadInitialProcess(PHANDLE ProcessHandle,
   Context.FloatSave.StatusWord = 0xffff0000;
   Context.FloatSave.TagWord = 0xffffffff;
   Context.FloatSave.DataSelector = 0xffff0000;
-  Context.Eip = (ULONG_PTR)(ImageBaseAddress + (ULONG_PTR)Sii.EntryPoint);
+  Context.Eip = (ULONG_PTR)((char*)ImageBaseAddress + (ULONG_PTR)Sii.EntryPoint);
   Context.SegCs = USER_CS;
   Context.SegDs = USER_DS;
   Context.SegEs = USER_DS;

@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.57 2003/11/30 17:17:02 hbirr Exp $
+/* $Id: mminit.c,v 1.58 2003/12/30 18:52:05 fireball Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -39,10 +39,16 @@ extern unsigned int _text_end__;
 extern unsigned int _init_start__;
 extern unsigned int _init_end__;
 
+extern unsigned int _bss_end__;
+
+#if defined(_MSC_VER)
+
+#pragma message("This will never work until we somehow fix these!")
+
+#endif
+
 static BOOLEAN IsThisAnNtAsSystem = FALSE;
 static MM_SYSTEM_SIZE MmSystemSize = MmSmallSystem;
-
-extern unsigned int _bss_end__;
 
 static MEMORY_AREA* kernel_text_desc = NULL;
 static MEMORY_AREA* kernel_init_desc = NULL;
@@ -108,13 +114,13 @@ MmInitVirtualMemory(ULONG LastKernelAddress,
    MmInitMemoryAreas();
 
    /* Don't change the start of kernel map. Pte's must always exist for this region. */
-   MiKernelMapStart = (PVOID)LastKernelAddress + PAGE_SIZE;
+   MiKernelMapStart = (char*)LastKernelAddress + PAGE_SIZE;
    MiKernelMapLength = MM_KERNEL_MAP_SIZE;
 
-   MiNonPagedPoolStart = MiKernelMapStart + MiKernelMapLength + PAGE_SIZE;
+   MiNonPagedPoolStart = (char*)MiKernelMapStart + MiKernelMapLength + PAGE_SIZE;
    MiNonPagedPoolLength = MM_NONPAGED_POOL_SIZE;
 
-   MmPagedPoolBase = MiNonPagedPoolStart + MiNonPagedPoolLength + PAGE_SIZE;
+   MmPagedPoolBase = (char*)MiNonPagedPoolStart + MiNonPagedPoolLength + PAGE_SIZE;
    MmPagedPoolSize = MM_PAGED_POOL_SIZE;
 
 

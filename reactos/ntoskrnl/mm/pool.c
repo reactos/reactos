@@ -1,4 +1,4 @@
-/* $Id: pool.c,v 1.25 2003/12/14 17:44:02 hbirr Exp $
+/* $Id: pool.c,v 1.26 2003/12/30 18:52:05 fireball Exp $
  * 
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -23,7 +23,11 @@
 
 /* FUNCTIONS ***************************************************************/
 
+#if defined(__GNUC__)
 PVOID STDCALL STATIC
+#else
+STATIC PVOID STDCALL
+#endif
 EiAllocatePool(POOL_TYPE PoolType,
 	       ULONG NumberOfBytes,
 	       ULONG Tag,
@@ -90,10 +94,19 @@ ExAllocatePool (POOL_TYPE PoolType, ULONG NumberOfBytes)
  */
 {
    PVOID Block;
+#if defined(__GNUC__)
    Block = EiAllocatePool(PoolType,
 			  NumberOfBytes,
 			  TAG_NONE,
 			  (PVOID)__builtin_return_address(0));
+#elif defined(_MSC_VER)
+   Block = EiAllocatePool(PoolType,
+			  NumberOfBytes,
+			  TAG_NONE,
+			  &ExAllocatePool);
+#else
+#error Unknown compiler
+#endif
    return(Block);
 }
 
@@ -105,10 +118,19 @@ PVOID STDCALL
 ExAllocatePoolWithTag (ULONG PoolType, ULONG NumberOfBytes, ULONG Tag)
 {
    PVOID Block;
+#if defined(__GNUC__)
    Block = EiAllocatePool(PoolType,
 			  NumberOfBytes,
 			  Tag,
 			  (PVOID)__builtin_return_address(0));
+#elif defined(_MSC_VER)
+   Block = EiAllocatePool(PoolType,
+			  NumberOfBytes,
+			  Tag,
+			  &ExAllocatePoolWithTag);
+#else
+#error Unknown compiler
+#endif
    return(Block);
 }
 
@@ -150,7 +172,7 @@ ExAllocatePoolWithQuotaTag (IN	POOL_TYPE	PoolType,
 VOID STDCALL
 ExFreePool(IN PVOID Block)
 {
-  if (Block >= MmPagedPoolBase && Block < (MmPagedPoolBase + MmPagedPoolSize))
+  if (Block >= MmPagedPoolBase && (char*)Block < ((char*)MmPagedPoolBase + MmPagedPoolSize))
     {
       ExFreePagedPool(Block);
     }

@@ -106,7 +106,7 @@ Ke386InitThreadWithContext(PKTHREAD Thread, PCONTEXT Context)
   
   InitSize = 5 * sizeof(DWORD) + sizeof(DWORD) + 6 * sizeof(DWORD) + 
     sizeof(FLOATING_SAVE_AREA) + sizeof(KTRAP_FRAME);
-  KernelStack = (PULONG)(Thread->KernelStack - InitSize);
+  KernelStack = (PULONG)((char*)Thread->KernelStack - InitSize);
 
   /* Set up the initial frame for the return from the dispatcher. */
   KernelStack[0] = 0;      /* EDI */
@@ -132,16 +132,16 @@ Ke386InitThreadWithContext(PKTHREAD Thread, PCONTEXT Context)
 
   /* Set up a trap frame from the context. */
   TrapFrame = (PKTRAP_FRAME)
-    ((PVOID)KernelStack + 12 * sizeof(DWORD) + sizeof(FLOATING_SAVE_AREA));
+    ((char*)KernelStack + 12 * sizeof(DWORD) + sizeof(FLOATING_SAVE_AREA));
   TrapFrame->DebugEbp = (PVOID)Context->Ebp;
   TrapFrame->DebugEip = (PVOID)Context->Eip;
   TrapFrame->DebugArgMark = 0;
   TrapFrame->DebugPointer = 0;
   TrapFrame->TempCs = 0;
   TrapFrame->TempEip = 0;
-  TrapFrame->Gs = Context->SegGs;
-  TrapFrame->Es = Context->SegEs;
-  TrapFrame->Ds = Context->SegDs;
+  TrapFrame->Gs = (USHORT)Context->SegGs;
+  TrapFrame->Es = (USHORT)Context->SegEs;
+  TrapFrame->Ds = (USHORT)Context->SegDs;
   TrapFrame->Edx = Context->Edx;
   TrapFrame->Ecx = Context->Ecx;
   TrapFrame->Eax = Context->Eax;
@@ -158,7 +158,7 @@ Ke386InitThreadWithContext(PKTHREAD Thread, PCONTEXT Context)
   TrapFrame->Eflags = Context->EFlags | FLAG_IF;
   TrapFrame->Eflags &= ~(FLAG_VM | FLAG_NT | FLAG_IOPL);
   TrapFrame->Esp = Context->Esp;
-  TrapFrame->Ss = Context->SegSs;
+  TrapFrame->Ss = (USHORT)Context->SegSs;
   /* FIXME: Should check for a v86 mode context here. */
 
   /* Save back the new value of the kernel stack. */
@@ -181,7 +181,7 @@ Ke386InitThread(PKTHREAD Thread,
    * Setup a stack frame for exit from the task switching routine
    */
   
-  KernelStack = (PULONG)(Thread->KernelStack - (8*4));
+  KernelStack = (PULONG)((char*)Thread->KernelStack - (8*4));
   KernelStack[0] = 0;      /* EDI */
   KernelStack[1] = 0;      /* ESI */
   KernelStack[2] = 0;      /* EBX */

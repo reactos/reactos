@@ -130,10 +130,17 @@ static inline PKPCR KeGetCurrentKPCR(VOID)
 {
   ULONG value;
 
+#if defined(__GNUC__)
   __asm__ __volatile__ ("movl %%fs:0x18, %0\n\t"
 	  : "=r" (value)
     : /* no inputs */
     );
+#elif defined(_MSC_VER)
+  __asm mov eax, fs:0x18;
+  __asm mov value, eax;
+#else
+#error Unknown compiler for inline assembler
+#endif
   return((PKPCR)value);
 }
 

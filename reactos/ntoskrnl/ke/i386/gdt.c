@@ -112,19 +112,20 @@ KiInitializeGdt(PKPCR Pcr)
    */
   Base = (ULONG)Pcr;
   Entry = PCR_SELECTOR / 2;
-  Gdt[Entry + 1] = ((ULONG)Base) & 0xffff;
+  Gdt[Entry + 1] = (USHORT)(((ULONG)Base) & 0xffff);
   
   Gdt[Entry + 2] = Gdt[Entry + 2] & ~(0xff);
-  Gdt[Entry + 2] = Gdt[Entry + 2] | ((((ULONG)Base) & 0xff0000) >> 16);
+  Gdt[Entry + 2] = (USHORT)(Gdt[Entry + 2] | ((((ULONG)Base) & 0xff0000) >> 16));
    
   Gdt[Entry + 3] = Gdt[Entry + 3] & ~(0xff00);
-  Gdt[Entry + 3] = Gdt[Entry + 3] | ((((ULONG)Base) & 0xff000000) >> 16);
+  Gdt[Entry + 3] = (USHORT)(Gdt[Entry + 3] | ((((ULONG)Base) & 0xff000000) >> 16));
 
   /*
    * Load the GDT
    */
   Descriptor.Length = 8 * 11;
   Descriptor.Base = (ULONG)Gdt;
+#if defined(__GNUC__)
   __asm__ ("lgdt %0\n\t" : /* no output */ : "m" (Descriptor));
   
   /*
@@ -142,6 +143,24 @@ KiInitializeGdt(PKPCR Pcr)
 	   ".l4:\n\t"
 	   : /* no output */
 	   : "a" (KERNEL_CS));
+#elif defined(_MSC_VER)
+  __asm
+  {
+	  lgdt Descriptor;
+		mov ax, KERNEL_DS;
+		mov bx, PCR_SELECTOR;
+		mov ds, ax;
+		mov es, ax;
+		mov fs, bx;
+		mov gs, ax;
+		push KERNEL_CS;
+		push offset l4 ; // what the heck...
+		ret
+		l4:
+	}
+#else
+#error Unknown compiler for inline assembler
+#endif
 }
 
 VOID 
@@ -158,15 +177,15 @@ KeSetBaseGdtSelector(ULONG Entry,
    
    Entry = (Entry & (~0x3)) / 2;
    
-   Gdt[Entry + 1] = ((ULONG)Base) & 0xffff;
+   Gdt[Entry + 1] = (USHORT)(((ULONG)Base) & 0xffff);
    
    Gdt[Entry + 2] = Gdt[Entry + 2] & ~(0xff);
-   Gdt[Entry + 2] = Gdt[Entry + 2] |
-     ((((ULONG)Base) & 0xff0000) >> 16);
+   Gdt[Entry + 2] = (USHORT)(Gdt[Entry + 2] |
+     ((((ULONG)Base) & 0xff0000) >> 16));
    
    Gdt[Entry + 3] = Gdt[Entry + 3] & ~(0xff00);
-   Gdt[Entry + 3] = Gdt[Entry + 3] |
-     ((((ULONG)Base) & 0xff000000) >> 16);
+   Gdt[Entry + 3] = (USHORT)(Gdt[Entry + 3] |
+     ((((ULONG)Base) & 0xff000000) >> 16));
    
    DPRINT("%x %x %x %x\n", 
 	   Gdt[Entry + 0],

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: iospace.c,v 1.22 2003/12/20 21:43:21 navaraf Exp $
+/* $Id: iospace.c,v 1.23 2003/12/30 18:52:05 fireball Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/iospace.c
@@ -103,21 +103,34 @@ MmMapIoSpace (IN PHYSICAL_ADDRESS PhysicalAddress,
      }
    for (i = 0; (i < (PAGE_ROUND_UP(NumberOfBytes) / PAGE_SIZE)); i++)
      {
+#if !defined(__GNUC__)
+        PHYSICAL_ADDRESS dummyJunkNeeded;
+	dummyJunkNeeded.QuadPart = PhysicalAddress.QuadPart + (i * PAGE_SIZE);
+#endif
 	Status = 
-	  MmCreateVirtualMappingForKernel(Result + (i * PAGE_SIZE),
+	  MmCreateVirtualMappingForKernel((char*)Result + (i * PAGE_SIZE),
 					  Attributes,
+#if defined(__GNUC__)
 					  (PHYSICAL_ADDRESS)
 					  (PhysicalAddress.QuadPart + 
-					   (i * PAGE_SIZE)));
+					   (i * PAGE_SIZE))
+#else
+					  dummyJunkNeeded
+#endif
+					  );
 	if (!NT_SUCCESS(Status))
 	  {
 	     DbgPrint("Unable to create virtual mapping\n");
 	     KEBUGCHECK(0);
 	  }
+#if defined(__GNUC__)
 	MmMarkPageMapped((PHYSICAL_ADDRESS) (PhysicalAddress.QuadPart + 
 	                                     (i * PAGE_SIZE)));
+#else
+	MmMarkPageMapped(dummyJunkNeeded);
+#endif
      }
-   return ((PVOID)(Result + PhysicalAddress.QuadPart % PAGE_SIZE));
+   return ((PVOID)((char*)Result + PhysicalAddress.QuadPart % PAGE_SIZE));
 }
  
 
@@ -170,7 +183,7 @@ MmMapVideoDisplay (IN	PHYSICAL_ADDRESS	PhysicalAddress,
 		   IN	ULONG			NumberOfBytes,
 		   IN	MEMORY_CACHING_TYPE	CacheType)
 {
-  return MmMapIoSpace (PhysicalAddress, NumberOfBytes, CacheType);
+  return MmMapIoSpace (PhysicalAddress, NumberOfBytes, (BOOLEAN)CacheType);
 }
 
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.69 2003/10/12 17:05:44 hbirr Exp $
+/* $Id: view.c,v 1.70 2003/12/30 18:52:03 fireball Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/view.c
@@ -105,7 +105,14 @@ static HANDLE LazyCloseThreadHandle;
 static CLIENT_ID LazyCloseThreadId;
 static volatile BOOLEAN LazyCloseThreadShouldTerminate;
 
+#if defined(__GNUC__)
 void * alloca(size_t size);
+#elif defined(_MSC_VER)
+void* _alloca(size_t size);
+#else
+#error Unknown compiler for alloca intrinsic stack allocation "function"
+#endif
+
 
 NTSTATUS
 CcRosInternalFreeCacheSegment(PCACHE_SEGMENT CacheSeg);
@@ -275,7 +282,7 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
 	     for (i = 0; i < current->Bcb->CacheSegmentSize / PAGE_SIZE; i++)
 	       {
 	         PHYSICAL_ADDRESS Page;
-		 Page = MmGetPhysicalAddress(current->BaseAddress + i * PAGE_SIZE);
+		 Page = MmGetPhysicalAddress((char*)current->BaseAddress + i * PAGE_SIZE);
                  Status = MmPageOutPhysicalAddress(Page);
 		 if (!NT_SUCCESS(Status))
 		   {
@@ -609,7 +616,7 @@ CcRosCreateCacheSegment(PBCB Bcb,
      }
       
      Status = MmCreateVirtualMapping(NULL,
-				     current->BaseAddress + (i * PAGE_SIZE),
+				     (char*)current->BaseAddress + (i * PAGE_SIZE),
 				     PAGE_READWRITE,
 				     Page,
 				     TRUE);
@@ -638,8 +645,15 @@ CcRosGetCacheSegmentChain(PBCB Bcb,
 
   Length = ROUND_UP(Length, Bcb->CacheSegmentSize);
 
+#if defined(__GNUC__)
   CacheSegList = alloca(sizeof(PCACHE_SEGMENT) * 
 			(Length / Bcb->CacheSegmentSize));
+#elif defined(_MSC_VER)
+  CacheSegList = _alloca(sizeof(PCACHE_SEGMENT) * 
+			(Length / Bcb->CacheSegmentSize));
+#else
+#error Unknown compiler for alloca intrinsic stack allocation "function"
+#endif
 
   /*
    * Look for a cache segment already mapping the same data.
@@ -866,7 +880,11 @@ CcFlushCache(IN PSECTION_OBJECT_POINTERS SectionObjectPointers,
       }
       else 
       {
+#if defined(__GNUC__)
 	 Offset.QuadPart = 0LL;
+#else
+	 Offset.QuadPart = 0;
+#endif
 	 Length = Bcb->FileSize.u.LowPart;
       }
    
@@ -1204,7 +1222,11 @@ CmLazyCloseThreadMain(PVOID Ignored)
 
    while (1)
    {
+#if defined(__GNUC__)
       Timeout.QuadPart += 100000000LL; // 10sec
+#else
+      Timeout.QuadPart += 100000000; // 10sec
+#endif
       Status = KeWaitForSingleObject(&LazyCloseThreadEvent,
 	                             0,
 				     KernelMode,

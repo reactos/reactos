@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.79 2003/12/14 17:56:23 hbirr Exp $
+/* $Id: npool.c,v 1.80 2003/12/30 18:52:05 fireball Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -46,7 +46,11 @@
 #if 0
 #define POOL_TRACE(args...) do { DbgPrint(args); } while(0);
 #else
+#if defined(__GNUC__)
 #define POOL_TRACE(args...)
+#else
+#define POOL_TRACE
+#endif	/* __GNUC__ */
 #endif
 
 /* avl types ****************************************************************/
@@ -778,10 +782,10 @@ MiDumpTagStats(ULONG CurrentTag, ULONG CurrentNrBlocks, ULONG CurrentSize)
 {
   CHAR c1, c2, c3, c4;
   
-  c1 = (CurrentTag >> 24) & 0xFF;
-  c2 = (CurrentTag >> 16) & 0xFF;
-  c3 = (CurrentTag >> 8) & 0xFF;
-  c4 = CurrentTag & 0xFF;
+  c1 = (CHAR)((CurrentTag >> 24) & 0xFF);
+  c2 = (CHAR)((CurrentTag >> 16) & 0xFF);
+  c3 = (CHAR)((CurrentTag >> 8) & 0xFF);
+  c4 = (CHAR)(CurrentTag & 0xFF);
   
   if (isprint(c1) && isprint(c2) && isprint(c3) && isprint(c4))
     {
@@ -897,12 +901,12 @@ MiDebugDumpNonPagedPool(BOOLEAN NewOnly)
        if (!NewOnly || !current->Used.Dumped)
 	 {
 	   CHAR c1, c2, c3, c4;
-	   
-	   c1 = (current->Used.Tag >> 24) & 0xFF;
-	   c2 = (current->Used.Tag >> 16) & 0xFF;
-	   c3 = (current->Used.Tag >> 8) & 0xFF;
-	   c4 = current->Used.Tag & 0xFF;
-	   
+
+	   c1 = (CHAR)((current->Used.Tag >> 24) & 0xFF);
+	   c2 = (CHAR)((current->Used.Tag >> 16) & 0xFF);
+	   c3 = (CHAR)((current->Used.Tag >> 8) & 0xFF);
+	   c4 = (CHAR)(current->Used.Tag & 0xFF);
+
 	   if (isprint(c1) && isprint(c2) && isprint(c3) && isprint(c4))
 	     {
 	       DbgPrint("Size 0x%x Tag 0x%x (%c%c%c%c) Allocator 0x%x\n",
@@ -1182,14 +1186,14 @@ add_to_free_list(BLOCK_HDR* blk)
     }
 
   current = (BLOCK_HDR*)((char*)blk + BLOCK_HDR_SIZE + blk->Size);
-  if ((PVOID)current < MiNonPagedPoolStart + MiNonPagedPoolLength &&
+  if ((char*)current < (char*)MiNonPagedPoolStart + MiNonPagedPoolLength &&
       current->Magic == BLOCK_HDR_FREE_MAGIC)
     {
       remove_from_free_list(current);
       blk->Size += BLOCK_HDR_SIZE + current->Size;
       memset(current, 0xcc, BLOCK_HDR_SIZE);
       current = (BLOCK_HDR*)((char*)blk + BLOCK_HDR_SIZE + blk->Size);
-      if ((PVOID)current < MiNonPagedPoolStart + MiNonPagedPoolLength)
+      if ((char*)current < (char*)MiNonPagedPoolStart + MiNonPagedPoolLength)
         {
 	  current->previous = blk;
 	}
@@ -1241,7 +1245,7 @@ grow_block(BLOCK_HDR* blk, PVOID end)
 
    PVOID start = (PVOID)PAGE_ROUND_UP((ULONG)((char*)blk + BLOCK_HDR_SIZE));
    end = (PVOID)PAGE_ROUND_UP(end);
-   index = (ULONG)(start - MiNonPagedPoolStart) / PAGE_SIZE;
+   index = (ULONG)((char*)start - (char*)MiNonPagedPoolStart) / PAGE_SIZE;
    while (start < end)
      {
        if (!(MiNonPagedPoolAllocMap[index / 32] & (1 << (index % 32))))
@@ -1269,7 +1273,15 @@ grow_block(BLOCK_HDR* blk, PVOID end)
 	   MiNonPagedPoolNrOfPages++;
 	 }
        index++;
+#if defined(__GNUC__)
        start += PAGE_SIZE;
+#else
+       {
+	 char* pTemp = start;
+	 pTemp += PAGE_SIZE;
+	 start = pTemp;
+       }
+#endif
      }
    return result;
 }
@@ -1373,15 +1385,15 @@ static BLOCK_HDR* get_block(unsigned int size, unsigned long alignment)
 	 }
      }
 
-   end = (PVOID)current + BLOCK_HDR_SIZE + size;
-   
+   end = (char*)current + BLOCK_HDR_SIZE + size;
+
    if (current_size >= size + BLOCK_HDR_SIZE + MM_POOL_ALIGNMENT)
      {
        /* create a new free block after our block, if the memory size is >= 4 byte for this block */
        next = (BLOCK_HDR*)((ULONG)current + size + BLOCK_HDR_SIZE);
        next_size = current_size - size - BLOCK_HDR_SIZE;
        current_size = size;
-       end = (PVOID)next + BLOCK_HDR_SIZE;
+       end = (char*)next + BLOCK_HDR_SIZE;
      }
 
    if (previous)
@@ -1400,7 +1412,7 @@ static BLOCK_HDR* get_block(unsigned int size, unsigned long alignment)
        if (next == NULL)
          {
 	   blk = (BLOCK_HDR*)((char*)current + BLOCK_HDR_SIZE + current->Size);
-	   if ((PVOID)blk < MiNonPagedPoolStart + MiNonPagedPoolLength)
+	   if ((char*)blk < (char*)MiNonPagedPoolStart + MiNonPagedPoolLength)
 	     {
 	       blk->previous = current;
 	     }
@@ -1433,7 +1445,7 @@ static BLOCK_HDR* get_block(unsigned int size, unsigned long alignment)
        next->Magic = BLOCK_HDR_FREE_MAGIC;
        next->previous = current;
        blk = (BLOCK_HDR*)((char*)next + BLOCK_HDR_SIZE + next->Size);
-       if ((PVOID)blk < MiNonPagedPoolStart + MiNonPagedPoolLength)
+       if ((char*)blk < (char*)MiNonPagedPoolStart + MiNonPagedPoolLength)
          {
 	   blk->previous = next;
 	 }
@@ -1484,7 +1496,7 @@ VOID STDCALL ExFreeNonPagedPool (PVOID block)
 
    DPRINT("freeing block %x\n",blk);
    
-   POOL_TRACE("ExFreePool(block %x), size %d, caller %x\n",block,blk->size,
+   POOL_TRACE("ExFreePool(block %x), size %d, caller %x\n",block,blk->Size,
             ((PULONG)&block)[-1]);
    
    KeAcquireSpinLock(&MmNpoolLock, &oldIrql);
@@ -1766,7 +1778,15 @@ MiInitializeNonPagedPool(VOID)
            KEBUGCHECK(0);
          }
        MiNonPagedPoolAllocMap[i / 32] |= (1 << (i % 32));
+#if defined(__GNUC__)
        Address += PAGE_SIZE;
+#else
+       {
+	 char* pTemp = Address;
+	 pTemp += PAGE_SIZE;
+	 Address = pTemp;
+       }
+#endif
      }
    /* the first block contains the non paged pool bitmap */
    blk = (BLOCK_HDR*)MiNonPagedPoolStart;
@@ -1784,7 +1804,7 @@ MiInitializeNonPagedPool(VOID)
    /* the second block is the first free block */
    blk = (BLOCK_HDR*)((char*)blk + BLOCK_HDR_SIZE + blk->Size);
    memset(blk, 0, BLOCK_HDR_SIZE);
-   memset((PVOID)blk + BLOCK_HDR_SIZE, 0x0cc, MiNonPagedPoolNrOfPages * PAGE_SIZE - ((ULONG)blk + BLOCK_HDR_SIZE - (ULONG)MiNonPagedPoolStart));
+   memset((char*)blk + BLOCK_HDR_SIZE, 0x0cc, MiNonPagedPoolNrOfPages * PAGE_SIZE - ((ULONG)blk + BLOCK_HDR_SIZE - (ULONG)MiNonPagedPoolStart));
    blk->Magic = BLOCK_HDR_FREE_MAGIC;
    blk->Size = MiNonPagedPoolLength - ((ULONG)blk + BLOCK_HDR_SIZE - (ULONG)MiNonPagedPoolStart);
    blk->previous = (BLOCK_HDR*)MiNonPagedPoolStart;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.40 2003/12/14 17:54:22 hbirr Exp $
+/* $Id: pagefile.c,v 1.41 2003/12/30 18:52:05 fireball Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -175,7 +175,14 @@ MmGetOffsetPageFile(PGET_RETRIEVAL_DESCRIPTOR RetrievalPointers, LARGE_INTEGER O
 	 }
      }
    KEBUGCHECK(0);
+#if defined(__GNUC__)
    return (LARGE_INTEGER)0LL;
+#else
+   {
+	 const LARGE_INTEGER dummy = { 0 };
+	 return dummy;
+   }
+#endif
 }
 
 NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
@@ -497,7 +504,7 @@ MmDumpToPagingFile(ULONG BugCode,
   Headers->BugCheckParameters[3] = BugCodeParameter4;
   Headers->FaultingStackBase = (PVOID)Thread->Tcb.StackLimit;
   Headers->FaultingStackSize = StackSize =
-    (ULONG)(Thread->Tcb.StackBase - Thread->Tcb.StackLimit);
+    (ULONG)((char*)Thread->Tcb.StackBase - Thread->Tcb.StackLimit);
   Headers->PhysicalMemorySize = MmStats.NrTotalPages * PAGE_SIZE;
 
   /* Initialize the dump device. */
@@ -525,7 +532,14 @@ MmDumpToPagingFile(ULONG BugCode,
 
   /* Dump the header. */
   MdlMap[0] = MmGetPhysicalAddress(MmCoreDumpPageFrame).u.LowPart;
+#if defined(__GNUC__)
   DiskOffset = MmGetOffsetPageFile(RetrievalPointers, (LARGE_INTEGER)0LL);
+#else
+  {
+    const LARGE_INTEGER dummy = { 0 };
+    DiskOffset = MmGetOffsetPageFile(RetrievalPointers, dummy);
+  }
+#endif
   DiskOffset.QuadPart += MmCoreDumpLcnMapping.LcnDiskOffset.QuadPart;
   Status = MmCoreDumpFunctions->DumpWrite(DiskOffset, Mdl);
   if (!NT_SUCCESS(Status))
@@ -548,8 +562,16 @@ MmDumpToPagingFile(ULONG BugCode,
 	  MmCreateVirtualMappingDump(MmCoreDumpPageFrame,
 				     PAGE_READWRITE,
 				     PhysicalAddress);
+#if defined(__GNUC__)
 	  DiskOffset = MmGetOffsetPageFile(RetrievalPointers, 
 					   (LARGE_INTEGER)NextOffset);
+#else
+	  {
+	    LARGE_INTEGER dummy;
+	    dummy.QuadPart = NextOffset;
+	    DiskOffset = MmGetOffsetPageFile(RetrievalPointers, dummy);
+	  }
+#endif
 	  DiskOffset.QuadPart += MmCoreDumpLcnMapping.LcnDiskOffset.QuadPart;
 	  Status = MmCoreDumpFunctions->DumpWrite(DiskOffset, Mdl);
 	  if (!NT_SUCCESS(Status))
@@ -789,9 +811,13 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
        return(STATUS_NO_MEMORY);
      }
 
+#if defined(__GNUC__)
    Vcn.QuadPart = 0LL;
+#else
+   Vcn.QuadPart = 0;
+#endif
    ExtentCount = 0;
-   MaxVcn = (InitialSize->QuadPart + BytesPerAllocationUnit - 1) / BytesPerAllocationUnit;
+   MaxVcn = (ULONG)((InitialSize->QuadPart + BytesPerAllocationUnit - 1) / BytesPerAllocationUnit);
    while(1)
      {
        Status = NtFsControlFile(FileHandle,
@@ -858,7 +884,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
    PagingFile->FileObject = FileObject;
    PagingFile->MaximumSize.QuadPart = MaximumSize->QuadPart;
    PagingFile->CurrentSize.QuadPart = InitialSize->QuadPart;
-   PagingFile->FreePages = InitialSize->QuadPart / PAGE_SIZE;
+   PagingFile->FreePages = (ULONG)(InitialSize->QuadPart / PAGE_SIZE);
    PagingFile->UsedPages = 0;
    KeInitializeSpinLock(&PagingFile->AllocMapLock);
    

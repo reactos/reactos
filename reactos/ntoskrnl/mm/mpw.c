@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mpw.c,v 1.16 2003/07/21 21:53:53 royce Exp $
+/* $Id: mpw.c,v 1.17 2003/12/30 18:52:05 fireball Exp $
  *
  * PROJECT:      ReactOS kernel
  * FILE:         ntoskrnl/mm/mpw.c
@@ -54,7 +54,11 @@ MmWriteDirtyPages(ULONG Target, PULONG Actual)
   NTSTATUS Status;
 
   Page = MmGetLRUFirstUserPage();
+#if defined(__GNUC__)
   while (Page.QuadPart != 0LL && Target > 0)
+#else
+  while (Page.QuadPart && Target > 0)
+#endif
     {
       /*
        * FIXME: While the current page is write back it is possible

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: slab.c,v 1.9 2003/07/21 21:53:53 royce Exp $
+/* $Id: slab.c,v 1.10 2003/12/30 18:52:05 fireball Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -123,12 +123,12 @@ ExGrowSlabCache(PSLAB_CACHE Slab)
       return(NULL);
     }
 
-  SlabPage = (PSLAB_CACHE_PAGE)(Page + PAGE_SIZE - sizeof(SLAB_CACHE_PAGE));
+  SlabPage = (PSLAB_CACHE_PAGE)((char*)Page + PAGE_SIZE - sizeof(SLAB_CACHE_PAGE));
   SlabPage->ReferenceCount = 0;
   SlabPage->FirstFreeBuffer = (PSLAB_CACHE_BUFCTL)Page;
   for (i = 0; i < Slab->ObjectsPerPage; i++)
     {
-      BufCtl = (PSLAB_CACHE_BUFCTL)(Page + (i * Slab->ObjectSize));
+      BufCtl = (PSLAB_CACHE_BUFCTL)((char*)Page + (i * Slab->ObjectSize));
       Object = (PVOID)(BufCtl + 1);
       if (Slab->Constructor != NULL)
 	{
@@ -137,7 +137,7 @@ ExGrowSlabCache(PSLAB_CACHE Slab)
       if (i == (Slab->ObjectsPerPage - 1))
 	{
 	  BufCtl->NextFree = 
-	    (PSLAB_CACHE_BUFCTL)(Page + ((i + 1) * Slab->ObjectSize));
+	    (PSLAB_CACHE_BUFCTL)((char*)Page + ((i + 1) * Slab->ObjectSize));
 	}
       else
 	{
@@ -188,7 +188,7 @@ ExAllocateSlabCache(PSLAB_CACHE Slab, BOOLEAN MayWait)
   /*
    * Allocate the first free object from the page.
    */
-  Object = (PVOID)Page->FirstFreeBuffer + sizeof(SLAB_CACHE_BUFCTL);
+  Object = (PVOID)((char*)Page->FirstFreeBuffer + sizeof(SLAB_CACHE_BUFCTL));
   Page->FirstFreeBuffer = Page->FirstFreeBuffer->NextFree;
   Page->ReferenceCount++;
 
@@ -239,7 +239,7 @@ ExFreeFromPageSlabCache(PSLAB_CACHE Slab,
 {
   PSLAB_CACHE_BUFCTL BufCtl;
 
-  BufCtl = (PSLAB_CACHE_BUFCTL)(Object - sizeof(SLAB_CACHE_BUFCTL));
+  BufCtl = (PSLAB_CACHE_BUFCTL)((char*)Object - sizeof(SLAB_CACHE_BUFCTL));
   BufCtl->NextFree = Page->FirstFreeBuffer;
   Page->FirstFreeBuffer = BufCtl;
   Page->ReferenceCount--;
@@ -261,10 +261,10 @@ ExFreeSlabCache(PSLAB_CACHE Slab, PVOID Object)
       current = CONTAINING_RECORD(current_entry,
 				  SLAB_CACHE_PAGE,
 				  PageListEntry);
-      Base = (PVOID)current + sizeof(SLAB_CACHE_PAGE) - PAGE_SIZE;
+      Base = (PVOID)((char*)current + sizeof(SLAB_CACHE_PAGE) - PAGE_SIZE);
       if (Base >= Object && 
-	  (Base + PAGE_SIZE - sizeof(SLAB_CACHE_PAGE)) >= 
-	   (Object + Slab->ObjectSize))
+	  ((char*)Base + PAGE_SIZE - sizeof(SLAB_CACHE_PAGE)) >= 
+	   ((char*)Object + Slab->ObjectSize))
 	{
 	  ExFreeFromPageSlabCache(Slab, current, Object);
 	  /*
@@ -304,12 +304,12 @@ ExDestroySlabCache(PSLAB_CACHE Slab)
       current = CONTAINING_RECORD(current_entry,
 				  SLAB_CACHE_PAGE,
 				  PageListEntry);
-      Base = (PVOID)current + sizeof(SLAB_CACHE_PAGE) - PAGE_SIZE;
+      Base = (PVOID)((char*)current + sizeof(SLAB_CACHE_PAGE) - PAGE_SIZE);
       if (Slab->Destructor != NULL)
 	{
 	  for (i = 0; i < Slab->ObjectsPerPage; i++)
 	    {
-	      Object = Base + (i * Slab->ObjectSize) + 
+	      Object = (char*)Base + (i * Slab->ObjectSize) + 
 		sizeof(SLAB_CACHE_BUFCTL);
 	      Slab->Destructor(Object, Slab->BaseSize);
 	    }

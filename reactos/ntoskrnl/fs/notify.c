@@ -1,4 +1,4 @@
-/* $Id: notify.c,v 1.8 2003/10/11 20:40:21 navaraf Exp $
+/* $Id: notify.c,v 1.9 2003/12/30 18:52:03 fireball Exp $
  *
  * reactos/ntoskrnl/fs/notify.c
  *
@@ -96,7 +96,11 @@ FsRtlNotifyFullChangeDirectory (
 	IN	PSECURITY_SUBJECT_CONTEXT	SubjectContext		OPTIONAL
 	)
 {
+#if defined(__GNUC__) || (defined(_MSC_VER) && _MSC_VER >= 1300)
 	DbgPrint("%s()\n", __FUNCTION__);
+#else
+	DbgPrint("FsRtlNotifyFullChangeDirectory()\n");
+#endif
 }
 
 

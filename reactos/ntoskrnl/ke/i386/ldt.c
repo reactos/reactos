@@ -131,19 +131,26 @@ NtSetLdtEntries (ULONG Selector1,
       memcpy((PVOID) NewLdtBase, (PVOID) LdtBase, LdtLimit+1);
     }
 
-    LdtDescriptor[0] = (--NewLdtSize) & 0xffff;
-    LdtDescriptor[1] = NewLdtBase & 0xffff;
-    LdtDescriptor[2] = ((NewLdtBase & 0xff0000) >> 16) | 0x8200;
-    LdtDescriptor[3] = ((NewLdtSize & 0xf0000) >> 16) |
-                       ((NewLdtBase & 0xff000000) >> 16);
+    LdtDescriptor[0] = (USHORT)((--NewLdtSize) & 0xffff);
+    LdtDescriptor[1] = (USHORT)(NewLdtBase & 0xffff);
+    LdtDescriptor[2] = (USHORT)(((NewLdtBase & 0xff0000) >> 16) | 0x8200);
+    LdtDescriptor[3] = (USHORT)(((NewLdtSize & 0xf0000) >> 16) |
+                                ((NewLdtBase & 0xff000000) >> 16));
 
     KeSetGdtSelector(LDT_SELECTOR,
                      ((PULONG) LdtDescriptor)[0],
                      ((PULONG) LdtDescriptor)[1]);
 
+#if defined(__GNUC__)
     __asm__("lldtw %%ax" 
             : /* no output */
             : "a" (LDT_SELECTOR));
+#elif defined(_MSC_VER)
+    __asm mov ax, LDT_SELECTOR
+    __asm lldt ax 
+#else
+#error Unknown compiler for inline assembler
+#endif
 
     if(LdtBase)
     {
@@ -155,14 +162,14 @@ NtSetLdtEntries (ULONG Selector1,
 
   if(Selector1)
   {
-    memcpy((PVOID) LdtBase + Selector1,
+    memcpy((char*)LdtBase + Selector1,
            &LdtEntry1,
            sizeof(LDT_ENTRY));
   }
 
   if(Selector2)
   {
-    memcpy((PVOID) LdtBase + Selector2,
+    memcpy((char*)LdtBase + Selector2,
            &LdtEntry2,
            sizeof(LDT_ENTRY));
   }

@@ -1,4 +1,4 @@
-/* $Id: stdlib.c,v 1.9 2003/12/14 18:06:44 hbirr Exp $
+/* $Id: stdlib.c,v 1.10 2003/12/30 18:52:06 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -19,7 +19,11 @@
 
 /* GLOBALS   ****************************************************************/
 
+#if defined(__GNUC__)
 static unsigned long long next = 0;
+#else
+static unsigned __int64 next = 0;
+#endif
 
 /* FUNCTIONS ****************************************************************/
 
@@ -154,7 +158,11 @@ char *_itoa (int value, char *string, int radix)
  */
 int rand(void)
 {
+#if defined(__GNUC__)
 	next = next * 0x5deece66dLL + 11;
+#else
+	next = next * 0x5deece66di64 + 11;
+#endif
 	return (int)((next >> 16) & RAND_MAX);
 }
 

@@ -1,4 +1,4 @@
-/* $Id: ppool.c,v 1.23 2003/12/14 18:36:15 navaraf Exp $
+/* $Id: ppool.c,v 1.24 2003/12/30 18:52:05 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -26,7 +26,7 @@
 #undef assert
 #define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); KeBugCheck(0); }
 #define ASSERT_SIZE(n) assert ( (n) <= MmPagedPoolSize && (n) >= 0 )
-#define ASSERT_PTR(p) assert ( ((size_t)(p)) >= ((size_t)MmPagedPoolBase) && ((size_t)(p)) < ((size_t)(MmPagedPoolBase+MmPagedPoolSize)) )
+#define ASSERT_PTR(p) assert ( ((size_t)(p)) >= ((size_t)MmPagedPoolBase) && ((size_t)(p)) < ((size_t)((size_t)MmPagedPoolBase+MmPagedPoolSize)) )
 
 // to disable buffer over/under-run detection, set the following macro to 0
 #define MM_PPOOL_REDZONE_BYTES 4
@@ -221,10 +221,10 @@ ExAllocatePagedPoolWithTag (IN	POOL_TYPE	PoolType,
       while ( CurrentBlock != NULL )
 	{
 	  PVOID Addr = block_to_address(CurrentBlock);
-	  PVOID CurrentBlockEnd = (PVOID)CurrentBlock + CurrentBlock->Size;
+	  PVOID CurrentBlockEnd = (char*)CurrentBlock + CurrentBlock->Size;
 	  /* calculate last size-aligned address available within this block */
-	  PVOID AlignedAddr = MM_ROUND_DOWN(CurrentBlockEnd-NumberOfBytes-MM_PPOOL_REDZONE_BYTES, Alignment);
-	  assert ( AlignedAddr+NumberOfBytes+MM_PPOOL_REDZONE_BYTES <= CurrentBlockEnd );
+	  PVOID AlignedAddr = MM_ROUND_DOWN((char*)CurrentBlockEnd-NumberOfBytes-MM_PPOOL_REDZONE_BYTES, Alignment);
+	  assert ( (char*)AlignedAddr+NumberOfBytes+MM_PPOOL_REDZONE_BYTES <= (char*)CurrentBlockEnd );
 
 	  /* special case, this address is already size-aligned, and the right size */
 	  if ( Addr == AlignedAddr )
@@ -265,7 +265,7 @@ ExAllocatePagedPoolWithTag (IN	POOL_TYPE	PoolType,
 	      PMM_PPOOL_FREE_BLOCK_HEADER NewFreeBlock =
 		(PMM_PPOOL_FREE_BLOCK_HEADER)address_to_block(BestAlignedAddr);
 	      assert ( BestAlignedAddr > Addr );
-	      NewFreeBlock->Size = Addr + BestBlock->Size - BestAlignedAddr;
+	      NewFreeBlock->Size = (char*)Addr + BestBlock->Size - (char*)BestAlignedAddr;
 	      ASSERT_SIZE(NewFreeBlock->Size);
 	      BestBlock->Size = (size_t)NewFreeBlock - (size_t)Addr;
 	      ASSERT_SIZE(BestBlock->Size);

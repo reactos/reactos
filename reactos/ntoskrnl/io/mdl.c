@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.12 2003/07/10 15:47:00 royce Exp $
+/* $Id: mdl.c,v 1.13 2003/12/30 18:52:04 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -49,7 +49,7 @@ IoAllocateMdl(PVOID VirtualAddress,
 				    MmSizeOfMdl(VirtualAddress,Length),
 				    TAG_MDL);
      }
-   MmInitializeMdl(Mdl,VirtualAddress,Length);
+   MmInitializeMdl(Mdl, (char*)VirtualAddress, Length);
    if (Irp!=NULL && !SecondaryBuffer)
      {
 	Irp->MdlAddress = Mdl;

@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.41 2003/12/14 17:56:22 hbirr Exp $
+/* $Id: xhaldrv.c,v 1.42 2003/12/30 18:52:04 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -298,7 +298,11 @@ xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
       return;
     }
 
+#if defined(__GNUC__)
   SectorOffset.QuadPart = 0LL;
+#else
+  SectorOffset.QuadPart = 0;
+#endif
   Status = xHalpReadSector (DeviceObject,
 			    SectorSize,
 			    &SectorOffset,
@@ -686,7 +690,11 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 {
   LARGE_INTEGER RealPartitionOffset;
   ULONGLONG PartitionOffset;
+#if defined(__GNUC__)
   ULONGLONG nextPartitionOffset = 0LL;
+#else
+  ULONGLONG nextPartitionOffset = 0;
+#endif
   ULONGLONG containerOffset;
   NTSTATUS Status;
   PPARTITION_SECTOR PartitionSector;
@@ -754,8 +762,13 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
   RtlZeroMemory(LayoutBuffer,
 		0x1000);
 
+#if defined(__GNUC__)
   PartitionOffset = 0ULL;
   containerOffset = 0ULL;
+#else
+  PartitionOffset = 0;
+  containerOffset = 0;
+#endif
 
   do
     {
@@ -767,7 +780,11 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 	  /* Shift offset by 63 sectors */
 	  RealPartitionOffset.QuadPart = PartitionOffset + (ULONGLONG)(63 * SectorSize);
 	}
+#if defined(__GNUC__)
       else if (DiskManager == EZ_Drive && PartitionOffset == 0ULL)
+#else
+      else if (DiskManager == EZ_Drive && PartitionOffset == 0)
+#endif
 	{
 	  /* Use sector 1 instead of sector 0 */
 	  RealPartitionOffset.QuadPart = (ULONGLONG)SectorSize;
@@ -823,7 +840,11 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 	}
 #endif
 
+#if defined(__GNUC__)
       if (PartitionOffset == 0ULL)
+#else
+      if (PartitionOffset == 0)
+#endif
 	{
 	  LayoutBuffer->Signature = PartitionSector->Signature;
 	  DPRINT("Disk signature: %lx\n", LayoutBuffer->Signature);
@@ -926,7 +947,11 @@ xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
   PPARTITION_SECTOR PartitionSector;
   LARGE_INTEGER RealPartitionOffset;
   ULONGLONG PartitionOffset;
+#if defined(__GNUC__)
   ULONGLONG nextPartitionOffset = 0LL;
+#else
+  ULONGLONG nextPartitionOffset = 0;
+#endif
   ULONGLONG containerOffset;
   NTSTATUS Status;
   ULONG i;
@@ -978,8 +1003,13 @@ xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
       return STATUS_INSUFFICIENT_RESOURCES;
     }
 
+#if defined(__GNUC__)
   PartitionOffset = 0ULL;
   containerOffset = 0ULL;
+#else
+  PartitionOffset = 0;
+  containerOffset = 0;
+#endif
 
   do
     {
@@ -991,7 +1021,11 @@ xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
 	  /* Shift offset by 63 sectors */
 	  RealPartitionOffset.QuadPart = PartitionOffset + (ULONGLONG)(63 * SectorSize);
 	}
+#if defined(__GNUC__)
       else if (DiskManager == EZ_Drive && PartitionOffset == 0ULL)
+#else
+      else if (DiskManager == EZ_Drive && PartitionOffset == 0)
+#endif
 	{
 	  /* Use sector 1 instead of sector 0 */
 	  RealPartitionOffset.QuadPart = (ULONGLONG)SectorSize;
@@ -1051,7 +1085,11 @@ xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
 	  if (IsContainerPartition (PartitionSector->Partition[i].PartitionType))
 	    {
 	      ExtendedFound = TRUE;
+#if defined(__GNUC__)
 	      if (containerOffset == 0ULL)
+#else
+	      if (containerOffset == 0)
+#endif
 		{
 		  containerOffset = PartitionOffset;
 		}
@@ -1105,7 +1143,11 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
   PPARTITION_SECTOR PartitionSector;
   LARGE_INTEGER RealPartitionOffset;
   ULONGLONG PartitionOffset;
+#if defined(__GNUC__)
   ULONGLONG NextPartitionOffset = 0LL;
+#else
+  ULONGLONG NextPartitionOffset = 0;
+#endif
   ULONGLONG ContainerOffset;
   BOOLEAN ContainerEntry;
   DISK_MANAGER DiskManager;
@@ -1174,8 +1216,13 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
     }
 
   Status = STATUS_SUCCESS;
+#if defined(__GNUC__)
   PartitionOffset = 0ULL;
   ContainerOffset = 0ULL;
+#else
+  PartitionOffset = 0;
+  ContainerOffset = 0;
+#endif
   for (i = 0; i < PartitionBuffer->PartitionCount; i += 4)
     {
       DPRINT ("PartitionOffset: %I64u\n", PartitionOffset);
@@ -1187,7 +1234,11 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
 	  /* Shift offset by 63 sectors */
 	  RealPartitionOffset.QuadPart = PartitionOffset + (ULONGLONG)(63 * SectorSize);
 	}
+#if defined(__GNUC__)
       else if (DiskManager == EZ_Drive && PartitionOffset == 0ULL)
+#else
+      else if (DiskManager == EZ_Drive && PartitionOffset == 0)
+#endif
 	{
 	  /* Use sector 1 instead of sector 0 */
 	  RealPartitionOffset.QuadPart = (ULONGLONG)SectorSize;
@@ -1243,8 +1294,13 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
 		    PartitionBuffer->PartitionEntry[i + j].PartitionType;
 
 		  /* Set partition data */
+#if defined(__GNUC__)
 		  if (PartitionBuffer->PartitionEntry[i + j].StartingOffset.QuadPart == 0ULL &&
 		      PartitionBuffer->PartitionEntry[i + j].PartitionLength.QuadPart == 0ULL)
+#else
+		  if (PartitionBuffer->PartitionEntry[i + j].StartingOffset.QuadPart == 0 &&
+		      PartitionBuffer->PartitionEntry[i + j].PartitionLength.QuadPart == 0)
+#endif
 		    {
 		      PartitionSector->Partition[j].StartingBlock = 0;
 		      PartitionSector->Partition[j].SectorCount = 0;
@@ -1266,7 +1322,7 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
 		       */
 
 		      /* Compute starting CHS values */
-		      lba = (PartitionBuffer->PartitionEntry[i + j].StartingOffset.QuadPart) / SectorSize;
+		      lba = (ULONG)((PartitionBuffer->PartitionEntry[i + j].StartingOffset.QuadPart) / SectorSize);
 		      x = lba / SectorsPerTrack;
 		      StartCylinder = (x / NumberOfHeads) %1024;
 		      StartHead = x % NumberOfHeads;
@@ -1275,8 +1331,8 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
 			      lba, StartCylinder, StartHead, StartSector);
 
 		      /* Compute ending CHS values */
-		      lba = (PartitionBuffer->PartitionEntry[i + j].StartingOffset.QuadPart +
-			     (PartitionBuffer->PartitionEntry[i + j].PartitionLength.QuadPart - 1)) / SectorSize;
+		      lba = (ULONG)((PartitionBuffer->PartitionEntry[i + j].StartingOffset.QuadPart +
+			     (PartitionBuffer->PartitionEntry[i + j].PartitionLength.QuadPart - 1)) / SectorSize);
 		      x = lba / SectorsPerTrack;
 		      EndCylinder = (x / NumberOfHeads) % 1024;
 		      EndHead = x % NumberOfHeads;
@@ -1332,7 +1388,11 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
 	      NextPartitionOffset = 
 		PartitionBuffer->PartitionEntry[i + j].StartingOffset.QuadPart;
 
+#if defined(__GNUC__)
 	      if (ContainerOffset == 0ULL)
+#else
+	      if (ContainerOffset == 0)
+#endif
 		{
 		  ContainerOffset = NextPartitionOffset;
 		}

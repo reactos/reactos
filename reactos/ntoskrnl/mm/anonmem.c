@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: anonmem.c,v 1.22 2003/11/30 17:24:22 hbirr Exp $
+/* $Id: anonmem.c,v 1.23 2003/12/30 18:52:05 fireball Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/anonmem.c
@@ -454,19 +454,19 @@ MmModifyAttributes(PMADDRESS_SPACE AddressSpace,
 	  LARGE_INTEGER PhysicalAddr;
 
 	  if (MmIsPageSwapEntry(AddressSpace->Process,
-				BaseAddress + (i * PAGE_SIZE)))
+				(char*)BaseAddress + (i * PAGE_SIZE)))
 	    {
 	      SWAPENTRY SwapEntry;
 	      
 	      MmDeletePageFileMapping(AddressSpace->Process,
-				      BaseAddress + (i * PAGE_SIZE),
+				      (char*)BaseAddress + (i * PAGE_SIZE),
 				      &SwapEntry);
 	      MmFreeSwapPage(SwapEntry);
 	    }
 	  else
 	    {
 	      MmDeleteVirtualMapping(AddressSpace->Process,
-				     BaseAddress + (i*PAGE_SIZE),
+				     (char*)BaseAddress + (i*PAGE_SIZE),
 				     FALSE, NULL, &PhysicalAddr);
 	      if (PhysicalAddr.QuadPart != 0)
 		{
@@ -478,7 +478,7 @@ MmModifyAttributes(PMADDRESS_SPACE AddressSpace,
 		      MmSetSavedSwapEntryPage(PhysicalAddr, 0);
 		    }
 		  MmDeleteRmap(PhysicalAddr, AddressSpace->Process,
-			       BaseAddress + (i * PAGE_SIZE));
+			       (char*)BaseAddress + (i * PAGE_SIZE));
 		  MmReleasePageMemoryConsumer(MC_USER, PhysicalAddr);
 		}
 	    }
@@ -497,10 +497,10 @@ MmModifyAttributes(PMADDRESS_SPACE AddressSpace,
       for (i=0; i < PAGE_ROUND_UP(RegionSize)/PAGE_SIZE; i++)
 	{
 	  if (MmIsPagePresent(AddressSpace->Process, 
-			      BaseAddress + (i*PAGE_SIZE)))
+			      (char*)BaseAddress + (i*PAGE_SIZE)))
 	    {
 	      MmSetPageProtect(AddressSpace->Process,
-			       BaseAddress + (i*PAGE_SIZE), 
+			       (char*)BaseAddress + (i*PAGE_SIZE), 
 			       NewProtect);
 	    }
 	}
@@ -712,7 +712,7 @@ MmFreeVirtualMemory(PEPROCESS Process,
 	    }
 	  
 	  PageOp = MmCheckForPageOp(MemoryArea, Process->UniqueProcessId,
-				    MemoryArea->BaseAddress + (i * PAGE_SIZE),
+				    (char*)MemoryArea->BaseAddress + (i * PAGE_SIZE),
 				    NULL, 0);
 	  if (PageOp != NULL)
 	    {
@@ -882,7 +882,7 @@ MmQueryAnonMem(PMEMORY_AREA MemoryArea,
 			Address, &RegionBase);
   Info->AllocationBase = RegionBase;
   Info->AllocationProtect = Region->Protect;  /* FIXME */
-  Info->RegionSize = RegionBase + Region->Length - Info->BaseAddress;
+  Info->RegionSize = (char*)RegionBase + Region->Length - (char*)Info->BaseAddress;
   Info->State = Region->Type;
   Info->Protect = Region->Protect;
   Info->Type = MEM_PRIVATE;

@@ -1,4 +1,4 @@
-/* $Id: mcb.c,v 1.10 2003/07/10 06:27:13 royce Exp $
+/* $Id: mcb.c,v 1.11 2003/12/30 18:52:03 fireball Exp $
  *
  * reactos/ntoskrnl/fs/mcb.c
  *
@@ -27,7 +27,7 @@ FsRtlAddLargeMcbEntry(IN PLARGE_MCB Mcb,
 		      IN LONGLONG Lbn,
 		      IN LONGLONG SectorCount)
 {
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
   return(FALSE);
 }
 
@@ -58,7 +58,7 @@ FsRtlGetNextLargeMcbEntry(IN PLARGE_MCB Mcb,
 			  OUT PLONGLONG Lbn,
 			  OUT PLONGLONG SectorCount)
 {
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
   return(FALSE);
 }
 
@@ -96,7 +96,7 @@ VOID STDCALL
 FsRtlInitializeLargeMcb(IN PLARGE_MCB Mcb,
 			IN POOL_TYPE PoolType)
 {
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
   Mcb->PoolType = PoolType;
 }
 
@@ -124,7 +124,7 @@ FsRtlLookupLargeMcbEntry(IN PLARGE_MCB Mcb,
 			 OUT PLONGLONG SectorCountFromStartingLbn OPTIONAL,
 			 OUT PULONG Index OPTIONAL)
 {
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
   return(FALSE);
 }
 
@@ -137,7 +137,7 @@ FsRtlLookupLastLargeMcbEntry(IN PLARGE_MCB Mcb,
 			     OUT PLONGLONG Vbn,
 			     OUT PLONGLONG Lbn)
 {
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
   return(FALSE);
 }
 
@@ -150,7 +150,7 @@ FsRtlLookupLastMcbEntry (IN PMCB     Mcb,
 			 OUT PVBN    Vbn,
 			 OUT PLBN    Lbn)
 {
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
   return(FALSE);
 }
 
@@ -165,7 +165,7 @@ FsRtlLookupMcbEntry (IN PMCB     Mcb,
 		     OUT PULONG  SectorCount OPTIONAL,
 		     OUT PULONG  Index)
 {
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
   return(FALSE);
 }
 
@@ -204,7 +204,7 @@ FsRtlRemoveLargeMcbEntry(IN PLARGE_MCB Mcb,
 			 IN LONGLONG Vbn,
 			 IN LONGLONG SectorCount)
 {
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
 }
 
 
@@ -216,7 +216,7 @@ FsRtlRemoveMcbEntry (IN PMCB     Mcb,
 		     IN VBN      Vbn,
 		     IN ULONG    SectorCount)
 {
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
 }
 
 
@@ -228,7 +228,7 @@ FsRtlSplitLargeMcb(IN PLARGE_MCB Mcb,
 		   IN LONGLONG Vbn,
 		   IN LONGLONG Amount)
 {
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
   return(FALSE);
 }
 
@@ -240,7 +240,7 @@ VOID STDCALL
 FsRtlTruncateLargeMcb(IN PLARGE_MCB Mcb,
 		      IN LONGLONG Vbn)
 {
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
 }
 
 

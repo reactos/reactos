@@ -1,4 +1,4 @@
-/* $Id: symlink.c,v 1.7 2003/11/17 02:12:51 hyperion Exp $
+/* $Id: symlink.c,v 1.8 2003/12/30 18:52:05 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -294,7 +294,7 @@ NtOpenSymbolicLinkObject(OUT PHANDLE LinkHandle,
   return(ObOpenObjectByName(ObjectAttributes,
 			    ObSymbolicLinkType,
 			    NULL,
-			    KeGetPreviousMode(),
+			    (KPROCESSOR_MODE)KeGetPreviousMode(),
 			    DesiredAccess,
 			    NULL,
 			    LinkHandle));
@@ -325,7 +325,7 @@ NtQuerySymbolicLinkObject(IN HANDLE LinkHandle,
   Status = ObReferenceObjectByHandle(LinkHandle,
 				     SYMBOLIC_LINK_QUERY,
 				     ObSymbolicLinkType,
-				     KeGetPreviousMode(),
+				     (KPROCESSOR_MODE)KeGetPreviousMode(),
 				     (PVOID *)&SymlinkObject,
 				     NULL);
   if (!NT_SUCCESS(Status))

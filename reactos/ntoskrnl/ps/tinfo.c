@@ -1,4 +1,4 @@
-/* $Id: tinfo.c,v 1.23 2003/09/14 10:53:32 hbirr Exp $
+/* $Id: tinfo.c,v 1.24 2003/12/30 18:52:05 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -366,7 +366,7 @@ NtQueryInformationThread (IN	HANDLE		ThreadHandle,
 
 VOID KeSetPreviousMode(ULONG Mode)
 {
-   PsGetCurrentThread()->Tcb.PreviousMode = Mode;
+   PsGetCurrentThread()->Tcb.PreviousMode = (UCHAR)Mode;
 }
 
 /*
@@ -381,10 +381,10 @@ KeGetPreviousMode (VOID)
 /*
  * @implemented
  */
-ULONG STDCALL
+KPROCESSOR_MODE STDCALL
 ExGetPreviousMode (VOID)
 {
-   return (ULONG)PsGetCurrentThread()->Tcb.PreviousMode;
+   return (KPROCESSOR_MODE)PsGetCurrentThread()->Tcb.PreviousMode;
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: rawfs.c,v 1.8 2003/12/14 17:56:22 hbirr Exp $
+/* $Id: rawfs.c,v 1.9 2003/12/30 18:52:04 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -412,7 +412,7 @@ static NTSTATUS
 RawFsClose(IN PRAWFS_IRP_CONTEXT IrpContext)
 {
   DPRINT("RawFsClose(IrpContext %x)\n", IrpContext);
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
   return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -501,7 +501,7 @@ RawFsCreate(IN PRAWFS_IRP_CONTEXT IrpContext)
 
   IrpContext->Irp->IoStatus.Status = Status;
   IoCompleteRequest(IrpContext->Irp, 
-    NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT);
+    (CCHAR)(NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT));
   RawFsFreeIrpContext(IrpContext);
 
   return Status;
@@ -511,7 +511,7 @@ static NTSTATUS
 RawFsRead(IN PRAWFS_IRP_CONTEXT IrpContext)
 {
   DPRINT("RawFsRead(IrpContext %x)\n", IrpContext);
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
   return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -519,7 +519,7 @@ static NTSTATUS
 RawFsWrite(IN PRAWFS_IRP_CONTEXT IrpContext)
 {
   DPRINT("RawFsWrite(IrpContext %x)\n", IrpContext);
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
   return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -714,7 +714,7 @@ static NTSTATUS
 RawFsQueryInformation(IN PRAWFS_IRP_CONTEXT IrpContext)
 {
   DPRINT("RawFsQueryInformation(IrpContext %x)\n", IrpContext);
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
   return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -722,7 +722,7 @@ static NTSTATUS
 RawFsSetInformation(IN PRAWFS_IRP_CONTEXT IrpContext)
 {
   DPRINT("RawFsSetInformation(IrpContext %x)\n", IrpContext);
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
   return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -730,7 +730,7 @@ static NTSTATUS
 RawFsDirectoryControl(IN PRAWFS_IRP_CONTEXT IrpContext)
 {
   DPRINT("RawFsDirectoryControl(IrpContext %x)\n", IrpContext);
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
   return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -738,7 +738,7 @@ static NTSTATUS
 RawFsQueryVolumeInformation(IN PRAWFS_IRP_CONTEXT IrpContext)
 {
   DPRINT("RawFsQueryVolumeInformation(IrpContext %x)\n", IrpContext);
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
   return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -746,7 +746,7 @@ static NTSTATUS
 RawFsSetVolumeInformation(IN PRAWFS_IRP_CONTEXT IrpContext)
 {
   DPRINT("RawFsSetVolumeInformation(IrpContext %x)\n", IrpContext);
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
   return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -754,7 +754,7 @@ static NTSTATUS
 RawFsLockControl(IN PRAWFS_IRP_CONTEXT IrpContext)
 {
   DPRINT("RawFsLockControl(IrpContext %x)\n", IrpContext);
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
   return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -762,7 +762,7 @@ static NTSTATUS
 RawFsCleanup(IN PRAWFS_IRP_CONTEXT IrpContext)
 {
   DPRINT("RawFsCleanup(IrpContext %x)\n", IrpContext);
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
   return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -770,7 +770,7 @@ static NTSTATUS
 RawFsFlush(IN PRAWFS_IRP_CONTEXT IrpContext)
 {
   DPRINT("RawFsFlush(IrpContext %x)\n", IrpContext);
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
   return STATUS_NOT_IMPLEMENTED;
 }
 

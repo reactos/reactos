@@ -1,4 +1,4 @@
-/* $Id: cont.c,v 1.28 2003/07/11 01:23:15 royce Exp $
+/* $Id: cont.c,v 1.29 2003/12/30 18:52:05 fireball Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -62,7 +62,11 @@ MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
    PBase = MmGetContinuousPages(NumberOfBytes,
 				HighestAcceptableAddress,
 				Alignment);
+#if defined(__GNUC__)
    if (PBase.QuadPart == 0LL)
+#else
+   if (PBase.QuadPart == 0)
+#endif
      {
        MmLockAddressSpace(MmGetKernelAddressSpace());
        MmFreeMemoryArea(MmGetKernelAddressSpace(),
@@ -75,10 +79,18 @@ MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
      }
    for (i = 0; i < (PAGE_ROUND_UP(NumberOfBytes) / 4096); i++)
      {
+#if !defined(__GNUC__)
+	LARGE_INTEGER dummyJunkNeeded;
+	dummyJunkNeeded.QuadPart = PBase.QuadPart + (i * 4096);
+#endif
 	MmCreateVirtualMapping(NULL,
-			       BaseAddress + (i * 4096),
+			       (char*)BaseAddress + (i * 4096),
 			       PAGE_EXECUTE_READWRITE | PAGE_SYSTEM,
+#if defined(__GNUC__)
 			       (LARGE_INTEGER)(PBase.QuadPart + (i * 4096)),
+#else
+			       dummyJunkNeeded,
+#endif
 			       TRUE);
      }
    return(BaseAddress);

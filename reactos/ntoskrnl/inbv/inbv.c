@@ -1,4 +1,4 @@
-/* $Id: inbv.c,v 1.4 2003/11/17 02:12:50 hyperion Exp $
+/* $Id: inbv.c,v 1.5 2003/12/30 18:52:03 fireball Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -85,7 +85,7 @@ InbvDisplayString(IN PCHAR String)
 }
 
 BOOLEAN
-STDCALL_FUNC
+STDCALL
 InbvResetDisplayParameters(ULONG SizeX, ULONG SizeY)
 {
   return(InbvResetDisplay());

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mm.c,v 1.66 2003/07/26 12:45:37 hbirr Exp $
+/* $Id: mm.c,v 1.67 2003/12/30 18:52:05 fireball Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -56,7 +56,7 @@ NTSTATUS MmReleaseMemoryArea(PEPROCESS Process, PMEMORY_AREA Marea)
    DPRINT("MmReleaseMemoryArea(Process %x, Marea %x)\n",Process,Marea);
    
    DPRINT("Releasing %x between %x %x (type %d)\n",
-	   Marea, Marea->BaseAddress, Marea->BaseAddress + Marea->Length,
+	   Marea, Marea->BaseAddress, (char*)Marea->BaseAddress + Marea->Length,
 	   Marea->Type);
    
    switch (Marea->Type)

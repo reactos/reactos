@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.10 2003/11/05 22:49:06 gvg Exp $
+/* $Id: timer.c,v 1.11 2003/12/30 18:52:04 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -78,7 +78,7 @@ IoStartTimer(PDEVICE_OBJECT DeviceObject)
  *       DeviceObject = Device whose timer is to be started
  */
 {
-   long long int lli;
+   LONGLONG lli;
    LARGE_INTEGER li;
    
    lli = -1000000;

@@ -1,4 +1,4 @@
-/* $Id: fpu.c,v 1.11 2003/11/06 20:40:25 gvg Exp $
+/* $Id: fpu.c,v 1.12 2003/12/30 18:52:04 fireball Exp $
  *
  *  ReactOS kernel
  *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
@@ -46,31 +46,60 @@ VOID INIT_FUNCTION
 KiCheckFPU(VOID)
 {
    unsigned short int status;
-   int cr0;
+   int cr0_;
    
    HardwareMathSupport = 0;
    
-   __asm__("movl %%cr0, %0\n\t" : "=a" (cr0));
+#if defined(__GNUC__)
+   __asm__("movl %%cr0, %0\n\t" : "=a" (cr0_));
    /* Set NE and MP. */
-   cr0 = cr0 | 0x22;
+   cr0_ = cr0_ | 0x22;
    /* Clear EM */
-   cr0 = cr0 & (~0x4);
-   __asm__("movl %0, %%cr0\n\t" : : "a" (cr0));
+   cr0_ = cr0_ & (~0x4);
+   __asm__("movl %0, %%cr0\n\t" : : "a" (cr0_));
 
    __asm__("clts\n\t");
    __asm__("fninit\n\t");
    __asm__("fstsw %0\n\t" : "=a" (status));
    if (status != 0)
      {
-	__asm__("movl %%cr0, %0\n\t" : "=a" (cr0));
+	__asm__("movl %%cr0, %0\n\t" : "=a" (cr0_));
 	/* Set the EM flag in CR0 so any FPU instructions cause a trap. */
-	cr0 = cr0 | 0x4;
+	cr0_ = cr0_ | 0x4;
 	__asm__("movl %0, %%cr0\n\t" :
-		: "a" (cr0));
+		: "a" (cr0_));
 	return;
      }
    /* fsetpm for i287, ignored by i387 */
    __asm__(".byte 0xDB, 0xE4\n\t");
+#elif defined(_MSC_VER)
+   __asm mov eax, cr0;
+   __asm mov cr0_, eax;
+   cr0_ |= 0x22;	/* Set NE and MP. */
+   cr0_ &= ~0x4;	/* Clear EM */
+   __asm
+   {
+	   mov eax, cr0_;
+	   mov cr0, eax;
+	   clts;
+	   fninit;
+	   fstsw status
+   }
+   if (status != 0)
+     {
+	__asm mov eax, cr0_;
+	__asm or eax, 4; /* Set the EM flag in CR0 so any FPU instructions cause a trap. */
+	__asm mov cr0, eax;
+	return;
+     }
+   /* fsetpm for i287, ignored by i387 */
+   __asm _emit 0xDB __asm _emit 0xe4
+//   __asm fsetpm;
+//   __asm__(".byte 0xDB, 0xE4\n\t");
+#else
+#error Unknown compiler for inline assembler
+#endif
+
    HardwareMathSupport = 1;
 }
 
@@ -91,7 +120,14 @@ KeSaveFloatingPointState(OUT PKFLOATING_SAVE Save)
     }
   *((PVOID *) Save) = FpState;
 
+#if defined(__GNUC__)
   __asm__("fsave %0\n\t" : "=m" (*FpState));
+#elif defined(_MSC_VER)
+  __asm mov eax, FpState;
+  __asm fsave [eax];
+#else
+#error Unknown compiler for inline assembler
+#endif
 
   return STATUS_SUCCESS;
 }
@@ -101,7 +137,15 @@ KeRestoreFloatingPointState(IN PKFLOATING_SAVE Save)
 {
   char *FpState = *((PVOID *) Save);
 
+#if defined(__GNUC__)
   __asm__("frstor %0\n\t" : "=m" (*FpState));
+#elif defined(_MSC_VER)
+  __asm mov eax, FpState;
+  __asm frstor [eax];
+#else
+#error Unknown compiler for inline assembler
+#endif
+
   ExFreePool(FpState);
 
   return STATUS_SUCCESS;

@@ -297,7 +297,7 @@ BOOLEAN STDCALL
 KeInsertQueueApc (PKAPC	Apc,
 		  PVOID	SystemArgument1,
 		  PVOID	SystemArgument2,
-        KPRIORITY PriorityBoost)
+		  KPRIORITY PriorityBoost)
 /*
  * FUNCTION: Queues an APC for execution
  * ARGUMENTS:
@@ -313,18 +313,23 @@ KeInsertQueueApc (PKAPC	Apc,
    DPRINT("KeInsertQueueApc(Apc %x, SystemArgument1 %x, "
 	  "SystemArgument2 %x)\n",Apc,SystemArgument1,
 	  SystemArgument2);
-   
-   KeAcquireSpinLock(&PiApcLock, &oldlvl);
-   
+
    Apc->SystemArgument1 = SystemArgument1;
    Apc->SystemArgument2 = SystemArgument2;
-   
+
    if (Apc->Inserted)
      {
+#if 0
+       /* TMN: This code is in error */
 	DbgPrint("KeInsertQueueApc(): multiple APC insertations\n");
 	KEBUGCHECK(0);
+#else
+	return FALSE;
+#endif
      }
-   
+
+   KeAcquireSpinLock(&PiApcLock, &oldlvl);
+
    TargetThread = Apc->Thread;
 
    if (TargetThread->State == THREAD_STATE_TERMINATED_1 ||

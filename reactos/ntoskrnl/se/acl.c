@@ -1,4 +1,4 @@
-/* $Id: acl.c,v 1.13 2003/10/12 17:05:50 hbirr Exp $
+/* $Id: acl.c,v 1.14 2003/12/30 18:52:06 fireball Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -147,7 +147,7 @@ RtlFirstFreeAce(PACL Acl,
       return(TRUE);
     }
 
-  AclEnd = Acl->AclSize + (PVOID)Acl;
+  AclEnd = Acl->AclSize + (char*)Acl;
   do
     {
       if ((PVOID)Current >= AclEnd)
@@ -162,7 +162,7 @@ RtlFirstFreeAce(PACL Acl,
 	      return(FALSE);
 	    }
 	}
-      Current = (PACE)((PVOID)Current + (ULONG)Current->Header.AceSize);
+      Current = (PACE)((char*)Current + (ULONG)Current->Header.AceSize);
       i++;
     }
   while (i < Acl->AceCount);
@@ -206,8 +206,8 @@ RtlpAddKnownAce(PACL Acl,
     {
       return(STATUS_UNSUCCESSFUL);
     }
-  if (((PVOID)Ace + RtlLengthSid(Sid) + sizeof(ACE)) >= 
-      ((PVOID)Acl + Acl->AclSize))
+  if (((char*)Ace + RtlLengthSid(Sid) + sizeof(ACE)) >= 
+      ((char*)Acl + Acl->AclSize))
     {
       return(STATUS_BUFFER_TOO_SMALL);
     }
@@ -263,26 +263,26 @@ RtlAddAce(PACL Acl,
      {
 	AclRevision = Acl->AclRevision;
      }
-   if (((PVOID)AceList + AceListLength) <= (PVOID)AceList)
+   if ((PVOID)((char*)AceList + AceListLength) <= (PVOID)AceList)
      {
 	return(STATUS_UNSUCCESSFUL);
      }
    i = 0;
    Current = (PACE)(Acl + 1);
-   while ((PVOID)Current < ((PVOID)AceList + AceListLength))
+   while ((char*)Current < ((char*)AceList + AceListLength))
      {
 	if (AceList->Header.AceType == 4 &&
 	    AclRevision < 3)
 	  {
 	     return(STATUS_UNSUCCESSFUL);
 	  }
-	Current = (PACE)((PVOID)Current + Current->Header.AceSize);
+	Current = (PACE)((char*)Current + Current->Header.AceSize);
      }
    if (Ace == NULL)
      {
 	return(STATUS_UNSUCCESSFUL);
      }
-   if (((PVOID)Ace + AceListLength) >= ((PVOID)Acl + Acl->AclSize))
+   if (((char*)Ace + AceListLength) >= ((char*)Acl + Acl->AclSize))
      {
 	return(STATUS_UNSUCCESSFUL);
      }
@@ -293,7 +293,7 @@ RtlAddAce(PACL Acl,
 	     Current = (PACE)(Acl + 1);
 	     for (j = 0; j < StartingIndex; j++)
 	       {
-		  Current = (PACE)((PVOID)Current + Current->Header.AceSize);
+		  Current = (PACE)((char*)Current + Current->Header.AceSize);
 	       }
 	  }
      }

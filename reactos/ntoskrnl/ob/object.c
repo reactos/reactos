@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.72 2003/11/09 23:20:27 gvg Exp $
+/* $Id: object.c,v 1.73 2003/12/30 18:52:05 fireball Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -36,7 +36,7 @@ typedef struct _RETENTION_CHECK_PARAMS
 
 PVOID HEADER_TO_BODY(POBJECT_HEADER obj)
 {
-   return(((void *)obj)+sizeof(OBJECT_HEADER)-sizeof(COMMON_BODY_HEADER));
+   return(((char*)obj)+sizeof(OBJECT_HEADER)-sizeof(COMMON_BODY_HEADER));
 }
 
 
@@ -228,7 +228,7 @@ ObQueryNameString (IN PVOID Object,
   if (Length < sizeof(OBJECT_NAME_INFORMATION) + sizeof(WCHAR))
     return STATUS_INVALID_BUFFER_SIZE;
 
-  ObjectNameInfo->Name.MaximumLength = Length - sizeof(OBJECT_NAME_INFORMATION);
+  ObjectNameInfo->Name.MaximumLength = (USHORT)(Length - sizeof(OBJECT_NAME_INFORMATION));
   ObjectNameInfo->Name.Length = 0;
   ObjectNameInfo->Name.Buffer =
     (PWCHAR)((ULONG_PTR)ObjectNameInfo + sizeof(OBJECT_NAME_INFORMATION));
@@ -554,7 +554,7 @@ ObOpenObjectByPointer(IN POBJECT Object,
    Status = ObCreateHandle(PsGetCurrentProcess(),
 			   Object,
 			   DesiredAccess,
-			   HandleAttributes & OBJ_INHERIT,
+			   (BOOLEAN)(HandleAttributes & OBJ_INHERIT),
 			   Handle);
    
    ObDereferenceObject(Object);

@@ -1,4 +1,4 @@
-/* $Id: sprintf.c,v 1.14 2003/12/14 18:06:44 hbirr Exp $
+/* $Id: sprintf.c,v 1.15 2003/12/30 18:52:06 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -39,11 +39,25 @@
 #define LARGE   64              /* use 'ABCDEF' instead of 'abcdef' */
 
 
+#if defined(__GNUC__)
+
 #define do_div(n,base) ({ \
 int __res; \
 __res = ((unsigned long long) n) % (unsigned) base; \
 n = ((unsigned long long) n) / (unsigned) base; \
 __res; })
+
+#else	/* __GNUC__ */
+/* n /= base, "returns" remainder */
+__inline int int_do_div(__int64* n, int base)
+{
+	int __res = (int)(((unsigned __int64)*n) % (unsigned) base);
+		   *n = (int)(((unsigned __int64)*n) / (unsigned) base);
+	return __res;
+}
+#define do_div(n,base) int_do_div(&n, base)
+
+#endif	/* __GNUC__ */
 
 
 static int skip_atoi(const char **s)
@@ -57,7 +71,11 @@ static int skip_atoi(const char **s)
 
 
 static char *
+#if defined(__GNUC__)
 number(char *buf, char *end, long long num, int base, int size, int precision, int type)
+#else
+number(char *buf, char *end, __int64 num, int base, int size, int precision, int type)
+#endif
 {
   char c,sign,tmp[66];
   const char *digits;
@@ -246,7 +264,11 @@ stringw(char* buf, char* end, const wchar_t* sw, int len, int field_width, int p
 int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 {
   int len;
+#if defined(__GNUC__)
   unsigned long long num;
+#else
+  unsigned __int64 num;
+#endif
   int base;
   char *str, *end;
   const char *s;
@@ -496,7 +518,11 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
     }
 
     if (qualifier == 'I')
+#if defined(__GNUC__)
       num = va_arg(args, unsigned long long);
+#else
+      num = va_arg(args, unsigned __int64);
+#endif
     else if (qualifier == 'l')
       num = va_arg(args, unsigned long);
     else if (qualifier == 'h') {

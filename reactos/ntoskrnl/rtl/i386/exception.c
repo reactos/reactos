@@ -1,4 +1,4 @@
-/* $Id: exception.c,v 1.8 2003/07/27 11:49:32 dwelch Exp $
+/* $Id: exception.c,v 1.9 2003/12/30 18:52:06 fireball Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -25,6 +25,13 @@ MsvcrtDebug(ULONG Value)
   DbgPrint("KernelDebug 0x%.08x\n", Value);
 }
 #endif
+
+#if !defined(_MSC_VER)
+/*
+ * When compiling this file with MSVC itself, don't compile these functions.
+ * They are replacements for MS compiler and/or C runtime library functions,
+ * which are already provided by the MSVC compiler and C runtime library.
+ */
 
 /*
  * @implemented
@@ -63,6 +70,8 @@ __ret_label:
    // return is important
    return;
 }
+
+#endif	/* _MSC_VER */
 
 
 /* Implemented in except.s */

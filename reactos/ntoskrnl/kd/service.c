@@ -1,4 +1,4 @@
-/* $Id: service.c,v 1.5 2002/09/08 10:23:27 chorns Exp $
+/* $Id: service.c,v 1.6 2003/12/30 18:52:04 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -46,6 +46,8 @@ KdpServiceDispatcher (
 
 #define _STR(x) #x
 #define STR(x) _STR(x)
+
+#if defined(__GNUC__)
 
 void interrupt_handler2d(void);
    __asm__("\n\t.global _interrupt_handler2d\n\t"
@@ -112,5 +114,83 @@ void interrupt_handler2d(void);
 	   "popl %ebp\n\t"       /* Ebp */
 	   
 	   "iret\n\t");
+
+#elif defined(_MSC_VER)
+
+__declspec(naked)
+void interrupt_handler2d()
+{
+	__asm
+	{
+		/* Save the user context */
+		push ebp
+		push eax
+		push ecx
+		push edx
+		push ebx
+		push esi
+		push edi
+
+		push ds
+		push es
+		push fs
+		push gs
+
+		sub esp, 112  /* FloatSave */
+
+		mov eax, dr7; push eax;
+		mov eax, dr6; push eax;
+		mov eax, dr3; push eax;
+		mov eax, dr2; push eax;
+		mov eax, dr1; push eax;
+		mov eax, dr0; push eax;
+
+		push 0		/* ContextFlags */
+
+		/*  Set ES to kernel segment  */
+		mov bx, KERNEL_DS
+		mov es, bx
+
+		/* FIXME: check to see if SS is valid/inrange */
+
+		mov ds, bx	/*  DS is now also kernel segment */
+
+			/* Call debug service dispatcher */
+		push edx
+		push ecx
+		push eax
+		call KdpServiceDispatcher
+		add esp, 12		/* restore stack pointer */
+
+		/*  Restore the user context  */
+		add esp, 4			/* UserContext */
+		pop eax; mov dr0, eax;
+		pop eax; mov dr1, eax;
+		pop eax; mov dr2, eax;
+		pop eax; mov dr3, eax;
+		pop eax; mov dr6, eax;
+		pop eax; mov dr7, eax;
+		add esp, 112		/* FloatingSave */
+		pop gs
+		pop fs
+		pop es
+		pop ds
+
+		pop edi
+		pop esi
+		pop ebx
+		pop edx
+		pop ecx
+		add esp, 4		/* Eax Not restored */
+
+		pop ebp
+
+		iret
+	}
+}
+
+#else
+#error Unknown compiler for inline assembler
+#endif
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.55 2003/11/30 20:01:05 gdalsnes Exp $
+/* $Id: irp.c,v 1.56 2003/12/30 18:52:04 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -386,7 +386,7 @@ IoIsOperationSynchronous(IN PIRP Irp)
 VOID STDCALL
 IoEnqueueIrp(IN PIRP Irp)
 {
-  return IoQueueThreadIrp(Irp);
+  IoQueueThreadIrp(Irp);
 }
 
 

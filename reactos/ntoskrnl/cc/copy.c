@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.19 2003/07/21 21:53:51 royce Exp $
+/* $Id: copy.c,v 1.20 2003/12/30 18:52:03 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -26,7 +26,11 @@
 
 #define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
 
+#if defined(__GNUC__)
 static PHYSICAL_ADDRESS CcZeroPage = (PHYSICAL_ADDRESS)0LL;
+#else
+static PHYSICAL_ADDRESS CcZeroPage = { 0 };
+#endif
 
 /* FUNCTIONS *****************************************************************/
 
@@ -78,7 +82,15 @@ ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
 	{
 	  TempLength = min(Bcb->CacheSegmentSize, Length);
 	  memcpy(Buffer, current->BaseAddress, TempLength);
+#if defined(__GNUC__)
 	  Buffer += TempLength;
+#else
+	  {
+	    char* pTemp = Buffer;
+		pTemp += TempLength;
+		Buffer = pTemp;
+	  }
+#endif
 	  Length = Length - TempLength; 
 	  previous = current;
 	  current = current->NextInChain;
@@ -120,7 +132,7 @@ ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
 		{
 		  PVOID address;
 		  PHYSICAL_ADDRESS page;
-		  address = current2->BaseAddress + (i * PAGE_SIZE);
+		  address = (char*)current2->BaseAddress + (i * PAGE_SIZE);
 		  page = MmGetPhysicalAddressForProcess(NULL, address);
 		  ((PULONG)(Mdl + 1))[offset] = page.u.LowPart;
 		  offset++;
@@ -159,7 +171,15 @@ ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
 	      current = current->NextInChain;
 	      TempLength = min(Bcb->CacheSegmentSize, Length);
 	      memcpy(Buffer, previous->BaseAddress, TempLength);
+#if defined(__GNUC__)
 	      Buffer += TempLength;
+#else
+		  {
+			char* pTemp = Buffer;
+			pTemp += TempLength;
+			Buffer = pTemp;
+		  }
+#endif
 	      Length = Length - TempLength; 
 	      CcRosReleaseCacheSegment(Bcb, previous, TRUE, FALSE, FALSE);
 	    }
@@ -179,7 +199,7 @@ ReadCacheSegment(PCACHE_SEGMENT CacheSeg)
   KEVENT Event;
 
   SegOffset.QuadPart = CacheSeg->FileOffset;
-  Size = CacheSeg->Bcb->AllocationSize.QuadPart - CacheSeg->FileOffset;
+  Size = (ULONG)(CacheSeg->Bcb->AllocationSize.QuadPart - CacheSeg->FileOffset);
   if (Size > CacheSeg->Bcb->CacheSegmentSize)
     {
       Size = CacheSeg->Bcb->CacheSegmentSize;
@@ -201,7 +221,7 @@ ReadCacheSegment(PCACHE_SEGMENT CacheSeg)
     }
   if (CacheSeg->Bcb->CacheSegmentSize > Size)
     {
-      memset (CacheSeg->BaseAddress + Size, 0, 
+      memset ((char*)CacheSeg->BaseAddress + Size, 0, 
 	      CacheSeg->Bcb->CacheSegmentSize - Size);
     }
   return STATUS_SUCCESS;
@@ -219,7 +239,7 @@ WriteCacheSegment(PCACHE_SEGMENT CacheSeg)
 
   CacheSeg->Dirty = FALSE;
   SegOffset.QuadPart = CacheSeg->FileOffset;
-  Size = CacheSeg->Bcb->AllocationSize.QuadPart - CacheSeg->FileOffset;
+  Size = (ULONG)(CacheSeg->Bcb->AllocationSize.QuadPart - CacheSeg->FileOffset);
   if (Size > CacheSeg->Bcb->CacheSegmentSize)
     {
       Size = CacheSeg->Bcb->CacheSegmentSize;
@@ -271,7 +291,7 @@ CcCopyRead (IN PFILE_OBJECT FileObject,
 	 Buffer, IoStatus);
 
   Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
-  ReadOffset = FileOffset->QuadPart;
+  ReadOffset = (ULONG)FileOffset->QuadPart;
   
   DPRINT("AllocationSize %d, FileSize %d\n",
          (ULONG)Bcb->AllocationSize.QuadPart,
@@ -328,13 +348,21 @@ CcCopyRead (IN PFILE_OBJECT FileObject,
 	      return FALSE;
 	    }
 	}
-      memcpy (Buffer, BaseAddress + ReadOffset % Bcb->CacheSegmentSize, 
+      memcpy (Buffer, (char*)BaseAddress + ReadOffset % Bcb->CacheSegmentSize, 
 	      TempLength);
       CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, FALSE, FALSE);
       ReadLength += TempLength;
       Length -= TempLength;
       ReadOffset += TempLength;
+#if defined(__GNUC__)
       Buffer += TempLength;
+#else
+	  {
+		char* pTemp = Buffer;
+		pTemp += TempLength;
+		Buffer = pTemp;
+	  }
+#endif
     }  
   while (Length > 0)
     {
@@ -343,7 +371,15 @@ CcCopyRead (IN PFILE_OBJECT FileObject,
       ReadLength += TempLength;
       Length -= TempLength;
       ReadOffset += TempLength;
+#if defined(__GNUC__)
       Buffer += TempLength;
+#else
+	  {
+		char* pTemp = Buffer;
+		pTemp += TempLength;
+		Buffer = pTemp;
+	  }
+#endif
     }
   IoStatus->Status = STATUS_SUCCESS;
   IoStatus->Information = ReadLength;
@@ -424,13 +460,21 @@ CcCopyWrite (IN PFILE_OBJECT FileObject,
 	       return(FALSE);
 	     }
 	 }
-       memcpy (BaseAddress + WriteOffset % Bcb->CacheSegmentSize, 
+       memcpy ((char*)BaseAddress + WriteOffset % Bcb->CacheSegmentSize, 
 	       Buffer, TempLength);
        CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, TRUE, FALSE);
        
        Length -= TempLength;
        WriteOffset += TempLength;
+#if defined(__GNUC__)
        Buffer += TempLength;
+#else
+	  {
+		char* pTemp = Buffer;
+		pTemp += TempLength;
+		Buffer = pTemp;
+	  }
+#endif
      }
    
    while (Length > 0)
@@ -454,7 +498,15 @@ CcCopyWrite (IN PFILE_OBJECT FileObject,
        CcRosReleaseCacheSegment(Bcb, CacheSeg, TRUE, TRUE, FALSE);
        Length -= TempLength;
        WriteOffset += TempLength;
+#if defined(__GNUC__)
        Buffer += TempLength;
+#else
+	  {
+		char* pTemp = Buffer;
+		pTemp += TempLength;
+		Buffer = pTemp;
+	  }
+#endif
      }
    return(TRUE);
 }
@@ -628,7 +680,7 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
 		    }
 		  TempLength = min (Length, Bcb->CacheSegmentSize - 
 				    Start % Bcb->CacheSegmentSize);
-		  memset (current->BaseAddress + Start % Bcb->CacheSegmentSize,
+		  memset ((char*)current->BaseAddress + Start % Bcb->CacheSegmentSize,
 			  0, TempLength);
 		}
 	      else
@@ -644,7 +696,7 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
 		     count < size; i++)
 		{
 		  PVOID Address;
-		  Address = current->BaseAddress + (i * PAGE_SIZE);
+		  Address = (char*)current->BaseAddress + (i * PAGE_SIZE);
 		  page = 
 		    MmGetPhysicalAddressForProcess(NULL, Address);
 		  ((PULONG)(Mdl + 1))[count++] = page.u.LowPart;

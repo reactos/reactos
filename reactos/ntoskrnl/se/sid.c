@@ -1,4 +1,4 @@
-/* $Id: sid.c,v 1.15 2003/10/12 17:05:50 hbirr Exp $
+/* $Id: sid.c,v 1.16 2003/12/30 18:52:06 fireball Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -609,7 +609,7 @@ RtlCopySidAndAttributesArray(ULONG Count,
 	Dest[i].Sid = SidArea;
 	Dest[i].Attributes = Src[i].Attributes;
 	RtlCopySid(RtlLengthSid(Src[i].Sid), SidArea, Src[i].Sid);
-	SidArea = SidArea + RtlLengthSid(Src[i].Sid);
+	SidArea = (char*)SidArea + RtlLengthSid(Src[i].Sid);
     }
   *RemainingSidArea = SidArea;
   *RemainingSidAreaSize = Length;

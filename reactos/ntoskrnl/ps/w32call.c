@@ -1,4 +1,4 @@
-/* $Id: w32call.c,v 1.9 2003/10/12 17:05:50 hbirr Exp $
+/* $Id: w32call.c,v 1.10 2003/12/30 18:52:05 fireball Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -209,7 +209,7 @@ PsAllocateCallbackStack(ULONG StackSize)
 	  return(NULL);
 	}
       Status = MmCreateVirtualMapping(NULL,
-				      KernelStack + (i * PAGE_SIZE),
+				      (char*)KernelStack + (i * PAGE_SIZE),
 				      PAGE_EXECUTE_READWRITE,
 				      Page,
 				      TRUE);
@@ -240,7 +240,7 @@ NtW32Call (IN ULONG RoutineIndex,
   Thread = PsGetCurrentThread();
 
   /* Set up the new kernel and user environment. */
-  StackSize = (ULONG)(Thread->Tcb.StackBase - Thread->Tcb.StackLimit);  
+  StackSize = (ULONG)((char*)Thread->Tcb.StackBase - Thread->Tcb.StackLimit);
   if (IsListEmpty(&CallbackStackListHead))
     {
       NewStack = PsAllocateCallbackStack(StackSize);
@@ -250,7 +250,7 @@ NtW32Call (IN ULONG RoutineIndex,
     }
   else
     {
-      PLIST_ENTRY StackEntry;      
+      PLIST_ENTRY StackEntry;
 
       StackEntry = RemoveHeadList(&CallbackStackListHead);
       AssignedStack = CONTAINING_RECORD(StackEntry, NTW32CALL_CALLBACK_STACK, 
@@ -258,9 +258,9 @@ NtW32Call (IN ULONG RoutineIndex,
       NewStack = AssignedStack->BaseAddress;
     }
   /* FIXME: Need to check whether we were interrupted from v86 mode. */
-  memcpy(NewStack + StackSize - sizeof(KTRAP_FRAME), Thread->Tcb.TrapFrame,
+  memcpy((char*)NewStack + StackSize - sizeof(KTRAP_FRAME), Thread->Tcb.TrapFrame,
 	 sizeof(KTRAP_FRAME) - (4 * sizeof(DWORD)));
-  NewFrame = (PKTRAP_FRAME)(NewStack + StackSize - sizeof(KTRAP_FRAME));
+  NewFrame = (PKTRAP_FRAME)((char*)NewStack + StackSize - sizeof(KTRAP_FRAME));
   NewFrame->Esp -= (ArgumentLength + (4 * sizeof(ULONG))); 
   NewFrame->Eip = (ULONG)LdrpGetSystemDllCallbackDispatcher();
   UserEsp = (PULONG)NewFrame->Esp;
@@ -280,9 +280,9 @@ NtW32Call (IN ULONG RoutineIndex,
   SavedState.CallbackStatus = &CallbackStatus;
   SavedState.SavedTrapFrame = Thread->Tcb.TrapFrame;
   SavedState.SavedCallbackStack = Thread->Tcb.CallbackStack;
-  Thread->Tcb.InitialStack = Thread->Tcb.StackBase = NewStack + StackSize;
+  Thread->Tcb.InitialStack = Thread->Tcb.StackBase = (char*)NewStack + StackSize;
   Thread->Tcb.StackLimit = (ULONG)NewStack;
-  Thread->Tcb.KernelStack = NewStack + StackSize - sizeof(KTRAP_FRAME);
+  Thread->Tcb.KernelStack = (char*)NewStack + StackSize - sizeof(KTRAP_FRAME);
   KeGetCurrentKPCR()->TSS->Esp0 = (ULONG)Thread->Tcb.InitialStack;
   KePushAndStackSwitchAndSysRet((ULONG)&SavedState, Thread->Tcb.KernelStack);
 

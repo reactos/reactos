@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.32 2003/12/15 17:50:23 ekohl Exp $
+/* $Id: driver.c,v 1.33 2003/12/30 18:52:04 fireball Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -420,7 +420,7 @@ MiFreeBootDriverMemory(PVOID StartAddress, ULONG Length)
 
   for (i = 0; i < PAGE_ROUND_UP(Length)/PAGE_SIZE; i++)
   {
-     MmDeleteVirtualMapping(NULL, StartAddress + i * PAGE_SIZE, TRUE, NULL, NULL);
+     MmDeleteVirtualMapping(NULL, (char*)StartAddress + i * PAGE_SIZE, TRUE, NULL, NULL);
   }
 }
 

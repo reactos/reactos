@@ -40,10 +40,10 @@ VOID KeInitializeDispatcherHeader(DISPATCHER_HEADER* Header,
 				  ULONG Size,
 				  ULONG SignalState)
 {
-   Header->Type = Type;
+   Header->Type = (UCHAR)Type;
    Header->Absolute = 0;
    Header->Inserted = 0;
-   Header->Size = Size;
+   Header->Size = (UCHAR)Size;
    Header->SignalState = SignalState;
    InitializeListHead(&(Header->WaitListHead));
 }
@@ -503,7 +503,6 @@ KeWaitForMultipleObjects(ULONG Count,
     */
    if (Timeout != NULL && Timeout->QuadPart != 0)
    {
-      KeInitializeTimer(&CurrentThread->Timer);
       KeSetTimer(&CurrentThread->Timer, *Timeout, NULL);
    }
 
@@ -622,8 +621,8 @@ KeWaitForMultipleObjects(ULONG Count,
 
          blk->Object = KiGetWaitableObjectFromObject(Object[i]);
          blk->Thread = CurrentThread;
-         blk->WaitKey = STATUS_WAIT_0 + i;
-         blk->WaitType = WaitType;
+         blk->WaitKey = (USHORT)(STATUS_WAIT_0 + i);
+         blk->WaitType = (USHORT)WaitType;
 
          if (i == (Count - 1))
          {
@@ -680,7 +679,7 @@ KeWaitForMultipleObjects(ULONG Count,
          }
       }
 
-      PsBlockThread(&Status, Alertable, WaitMode, TRUE, WaitIrql, WaitReason);
+      PsBlockThread(&Status, Alertable, WaitMode, TRUE, WaitIrql, (UCHAR)WaitReason);
 
       //io completion
       if (CurrentThread->Queue)

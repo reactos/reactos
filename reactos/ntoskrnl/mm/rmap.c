@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rmap.c,v 1.25 2003/10/22 18:26:34 hbirr Exp $
+/* $Id: rmap.c,v 1.26 2003/12/30 18:52:05 fireball Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -133,7 +133,7 @@ MmWritePagePhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
   Type = MemoryArea->Type;
   if (Type == MEMORY_AREA_SECTION_VIEW)
     {
-      Offset = (ULONG)(Address - (ULONG)MemoryArea->BaseAddress);
+      Offset = (ULONG)((char*)Address - (ULONG)MemoryArea->BaseAddress);
 
       /*
        * Get or create a pageop
@@ -271,7 +271,7 @@ MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
   Type = MemoryArea->Type;
   if (Type == MEMORY_AREA_SECTION_VIEW)
     {
-      Offset = (ULONG)(Address - (ULONG)MemoryArea->BaseAddress);
+      Offset = (ULONG)((char*)Address - (ULONG)MemoryArea->BaseAddress);
 
       /*
        * Get or create a pageop
@@ -438,7 +438,7 @@ MmInsertRmap(PHYSICAL_ADDRESS PhysicalAddress, PEPROCESS Process,
       DPRINT1("Insert rmap (%d, 0x%.8X) 0x%.8X which doesn't match physical "
 	      "address 0x%.8X\n", Process->UniqueProcessId, Address, 
 	      MmGetPhysicalAddressForProcess(Process, Address).u.LowPart, 
-	      PhysicalAddress.u.LowPart)
+	      PhysicalAddress.u.LowPart);
       KEBUGCHECK(0);
     }
 

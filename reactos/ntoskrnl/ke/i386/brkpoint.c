@@ -37,7 +37,13 @@
 VOID STDCALL 
 DbgBreakPoint(VOID)
 {
+#if defined(__GNUC__)
    __asm__("int $3\n\t");
+#elif defined(_MSC_VER)
+   __asm int 3;
+#else
+#error Unknown compiler for inline assembler
+#endif
 }
 
 /*
@@ -46,7 +52,14 @@ DbgBreakPoint(VOID)
 VOID STDCALL 
 DbgBreakPointWithStatus(ULONG Status)
 {
+#if defined(__GNUC__)
    __asm__("mov %0, %%eax\n\t"
            "int $3\n\t"
            ::"m"(Status));
+#elif defined(_MSC_VER)
+   __asm mov eax, Status
+   __asm int 3;
+#else
+#error Unknown compiler for inline assembler
+#endif
 }

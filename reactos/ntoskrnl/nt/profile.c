@@ -150,12 +150,12 @@ KiAddProfileEventToProcess(PLIST_ENTRY ListHead, PVOID Eip)
 	  return;
 	}
 
-      if (current->Base <= Eip && (current->Base + current->Size) > Eip &&
+      if (current->Base <= Eip && ((char*)current->Base + current->Size) > (char*)Eip &&
 	  current->Started)
 	{
 	  ULONG Bucket;
 
-	  Bucket = ((ULONG)(Eip - current->Base)) >> current->BucketShift;
+	  Bucket = ((ULONG)((char*)Eip - (char*)current->Base)) >> current->BucketShift;
 
 	  if ((Bucket*4) < current->BufferSize)
 	    {

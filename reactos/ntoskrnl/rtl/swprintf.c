@@ -1,4 +1,4 @@
-/* $Id: swprintf.c,v 1.12 2003/12/14 18:06:44 hbirr Exp $
+/* $Id: swprintf.c,v 1.13 2003/12/30 18:52:06 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -33,6 +33,15 @@
 #include <internal/debug.h>
 
 
+#if defined(__GNUC__)
+typedef          long long SWPRINT_INT64;
+typedef unsigned long long SWPRINT_UINT64;
+#else
+typedef          __int64   SWPRINT_INT64;
+typedef unsigned __int64   SWPRINT_UINT64;
+#endif
+
+
 #define ZEROPAD	1		/* pad with zero */
 #define SIGN	2		/* unsigned/signed long */
 #define PLUS	4		/* show plus */
@@ -42,11 +51,28 @@
 #define LARGE	64		/* use 'ABCDEF' instead of 'abcdef' */
 
 
+#if defined(__GNUC__)
+
 #define do_div(n,base) ({ \
 int __res; \
-__res = ((unsigned long long) n) % (unsigned) base; \
-n = ((unsigned long long) n) / (unsigned) base; \
+__res = ((SWPRINT_UINT64) n) % (unsigned) base; \
+n = ((SWPRINT_UINT64) n) / (unsigned) base; \
 __res; })
+
+#elif defined(_MSC_VER)
+
+static __inline int do_foo_div(SWPRINT_INT64* n, int base)
+{
+	int __res = (int)(((SWPRINT_UINT64) *n) % (unsigned) base);
+	*n        = (int)(((SWPRINT_UINT64) *n) / (unsigned) base);
+	return __res;
+}
+#define do_div(n,base) do_foo_div(&n,base)
+
+#else
+#error Unknown compiler for this special compiler trickery
+#endif
+
 
 
 static int skip_atoi(const wchar_t **s)
@@ -60,7 +86,7 @@ static int skip_atoi(const wchar_t **s)
 
 
 static wchar_t *
-number(wchar_t * buf, wchar_t * end, long long num, int base, int size, int precision, int type)
+number(wchar_t * buf, wchar_t * end, SWPRINT_INT64 num, int base, int size, int precision, int type)
 {
 	wchar_t c,sign, tmp[66];
 	const wchar_t *digits;
@@ -246,7 +272,7 @@ stringw(wchar_t* buf, wchar_t* end, const wchar_t* sw, int len, int field_width,
 int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 {
 	int len;
-	unsigned long long num;
+	SWPRINT_UINT64 num;
 	int base;
 	wchar_t * str, * end;
 	const char *s;
@@ -483,7 +509,7 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 		}
 
 		if (qualifier == 'I')
-			num = va_arg(args, unsigned long long);
+			num = va_arg(args, SWPRINT_UINT64);
 		else if (qualifier == 'l')
 			num = va_arg(args, unsigned long);
 		else if (qualifier == 'h') {

@@ -66,7 +66,7 @@ KeApplicationProcessorInit(VOID)
 				  PAGE_READWRITE,
 				  PcrPages[Offset]);
   memset(KPCR, 0, PAGE_SIZE);
-  KPCR->ProcessorNumber = Offset;
+  KPCR->ProcessorNumber = (UCHAR)Offset;
   KPCR->Self = KPCR;
   KPCR->Irql = HIGH_LEVEL;
 

@@ -1,4 +1,4 @@
-/* $Id: buildirp.c,v 1.37 2003/11/19 21:11:47 gdalsnes Exp $
+/* $Id: buildirp.c,v 1.38 2003/12/30 18:52:04 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -114,7 +114,7 @@ IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
 
    StackPtr = IoGetNextIrpStackLocation(Irp);
-   StackPtr->MajorFunction = MajorFunction;
+   StackPtr->MajorFunction = (UCHAR)MajorFunction;
    StackPtr->MinorFunction = 0;
    StackPtr->Flags = 0;
    StackPtr->Control = 0;
@@ -447,7 +447,7 @@ IoBuildSynchronousFsdRequestWithMdl(ULONG MajorFunction,
      }
    
    StackPtr = IoGetNextIrpStackLocation(Irp);
-   StackPtr->MajorFunction = MajorFunction;
+   StackPtr->MajorFunction = (UCHAR)MajorFunction;
    StackPtr->MinorFunction = 0;
    StackPtr->Flags = 0;
    StackPtr->Control = 0;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: balance.c,v 1.24 2003/11/24 16:15:00 gvg Exp $
+/* $Id: balance.c,v 1.25 2003/12/30 18:52:05 fireball Exp $
  *
  * PROJECT:     ReactOS kernel 
  * FILE:        ntoskrnl/mm/balance.c
@@ -112,7 +112,11 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PHYSICAL_ADDRESS Page)
   PLIST_ENTRY Entry;
   KIRQL oldIrql;
 
+#if defined(__GNUC__)
   if (Page.QuadPart == 0LL)
+#else
+  if (Page.QuadPart == 0)
+#endif
     {
       DPRINT1("Tried to release page zero.\n");
       KEBUGCHECK(0);
@@ -228,7 +232,11 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
   if (Consumer == MC_NPPOOL || MiIsBalancerThread())
     {
       Page = MmAllocPage(Consumer, 0);
+#if defined(__GNUC__)
       if (Page.QuadPart == 0LL)
+#else
+      if (Page.QuadPart == 0)
+#endif
         {
 	  KEBUGCHECK(0);
 	}
@@ -256,7 +264,11 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
 	}
 
       /* Insert an allocation request. */
+#if defined(__GNUC__)
       Request.Page.QuadPart = 0LL;
+#else
+      Request.Page.QuadPart = 0;
+#endif
       KeInitializeEvent(&Request.Event, NotificationEvent, FALSE);
       InterlockedIncrement((LONG *)&MiPagesRequired);
 
@@ -276,7 +288,11 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
 			    NULL);
       
       Page = Request.Page;
+#if defined(__GNUC__)
       if (Page.QuadPart == 0LL)
+#else
+      if (Page.QuadPart == 0)
+#endif
 	{
 	  KEBUGCHECK(0);
 	}
@@ -290,7 +306,11 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
    * Actually allocate the page.
    */
   Page = MmAllocPage(Consumer, 0);
+#if defined(__GNUC__)
   if (Page.QuadPart == 0LL)
+#else
+  if (Page.QuadPart == 0)
+#endif
     {
       KEBUGCHECK(0);
     }
@@ -390,13 +410,21 @@ MiInitBalancerThread(VOID)
 {
   KPRIORITY Priority;
   NTSTATUS Status;
+#if !defined(__GNUC__)
+  LARGE_INTEGER dummyJunkNeeded;
+  dummyJunkNeeded.QuadPart = -20000000;	/* 2 sec */;
+#endif
 
   CHECKPOINT;
 
   KeInitializeEvent(&MiBalancerEvent, SynchronizationEvent, FALSE);
   KeInitializeTimerEx(&MiBalancerTimer, SynchronizationTimer);
   KeSetTimerEx(&MiBalancerTimer, 
+#if defined(__GNUC__)
                (LARGE_INTEGER)(LONGLONG)-20000000LL,	    /* 2 sec */
+#else
+               dummyJunkNeeded,
+#endif
 		2000,					    /* 2 sec */
 		NULL);
 

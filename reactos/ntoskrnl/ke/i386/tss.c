@@ -115,7 +115,7 @@ Ke386QueryIoAccessMap(DWORD MapNumber, PULONG IOMapStart)
 VOID
 Ki386ApplicationProcessorInitializeTSS(VOID)
 {
-  ULONG cr3;
+  ULONG cr3_;
   KTSS* Tss;
   KTSSNOIOPM* TrapTss;
   PVOID TrapStack;
@@ -126,7 +126,14 @@ Ki386ApplicationProcessorInitializeTSS(VOID)
   Id = KeGetCurrentProcessorNumber();
   Gdt = KeGetCurrentKPCR()->GDT;
 
-  __asm__("movl %%cr3,%0\n\t" : "=d" (cr3));
+#if defined(__GNUC__)
+  __asm__("movl %%cr3,%0\n\t" : "=d" (cr3_));
+#elif defined(_MSC_VER)
+  __asm mov eax, cr3;
+  __asm mov cr3_, eax;
+#else
+#error Unknown compiler for inline assembler
+#endif
 
   Tss = ExAllocatePool(NonPagedPool, sizeof(KTSS));
   TrapTss = ExAllocatePool(NonPagedPool, sizeof(KTSSNOIOPM));
@@ -150,11 +157,11 @@ Ki386ApplicationProcessorInitializeTSS(VOID)
   base = (ULONG)Tss;
   length = sizeof(KTSS) - 1;
   
-  Gdt[(TSS_SELECTOR / 2) + 0] = (length & 0xFFFF);
-  Gdt[(TSS_SELECTOR / 2) + 1] = (base & 0xFFFF);
-  Gdt[(TSS_SELECTOR / 2) + 2] = ((base & 0xFF0000) >> 16) | 0x8900;
-  Gdt[(TSS_SELECTOR / 2) + 3] = ((length & 0xF0000) >> 16) |
-    ((base & 0xFF000000) >> 16);
+  Gdt[(TSS_SELECTOR / 2) + 0] = (USHORT)(length & 0xFFFF);
+  Gdt[(TSS_SELECTOR / 2) + 1] = (USHORT)(base & 0xFFFF);
+  Gdt[(TSS_SELECTOR / 2) + 2] = (USHORT)(((base & 0xFF0000) >> 16) | 0x8900);
+  Gdt[(TSS_SELECTOR / 2) + 3] = (USHORT)(((length & 0xF0000) >> 16) |
+    ((base & 0xFF000000) >> 16));
 
   /* Initialize the TSS used for handling double faults. */
   TrapTss->Eflags = 0;
@@ -170,7 +177,7 @@ Ki386ApplicationProcessorInitializeTSS(VOID)
   TrapTss->IoMapBase = 0xFFFF; /* No i/o bitmap */
   TrapTss->IoBitmap[0] = 0xFF;   
   TrapTss->Ldt = 0;
-  TrapTss->Cr3 = cr3;  
+  TrapTss->Cr3 = cr3_;  
 
   /*
    * Initialize a descriptor for the trap TSS.
@@ -178,29 +185,43 @@ Ki386ApplicationProcessorInitializeTSS(VOID)
   base = (ULONG)TrapTss;
   length = sizeof(KTSSNOIOPM) - 1;
 
-  Gdt[(TRAP_TSS_SELECTOR / 2) + 0] = (length & 0xFFFF);
-  Gdt[(TRAP_TSS_SELECTOR / 2) + 1] = (base & 0xFFFF);
-  Gdt[(TRAP_TSS_SELECTOR / 2) + 2] = ((base & 0xFF0000) >> 16) | 0x8900;
-  Gdt[(TRAP_TSS_SELECTOR / 2) + 3] = ((length & 0xF0000) >> 16) |
-    ((base & 0xFF000000) >> 16);
+  Gdt[(TRAP_TSS_SELECTOR / 2) + 0] = (USHORT)(length & 0xFFFF);
+  Gdt[(TRAP_TSS_SELECTOR / 2) + 1] = (USHORT)(base & 0xFFFF);
+  Gdt[(TRAP_TSS_SELECTOR / 2) + 2] = (USHORT)(((base & 0xFF0000) >> 16) | 0x8900);
+  Gdt[(TRAP_TSS_SELECTOR / 2) + 3] = (USHORT)(((length & 0xF0000) >> 16) |
+    ((base & 0xFF000000) >> 16));
 
   /*
    * Load the task register
    */
+#if defined(__GNUC__)
   __asm__("ltr %%ax" 
 	  : /* no output */
 	  : "a" (TSS_SELECTOR));
+#elif defined(_MSC_VER)
+  __asm mov ax, TSS_SELECTOR
+  __asm ltr ax
+#else
+#error Unknown compiler for inline assembler
+#endif
 }
 
 VOID INIT_FUNCTION
 Ki386BootInitializeTSS(VOID)
 {
-  ULONG cr3;
+  ULONG cr3_;
   extern unsigned int init_stack, init_stack_top;
   extern unsigned int trap_stack, trap_stack_top;
   unsigned int base, length;
 
-  __asm__("movl %%cr3,%0\n\t" : "=d" (cr3));
+#if defined(__GNUC__)
+  __asm__("movl %%cr3,%0\n\t" : "=d" (cr3_));
+#elif defined(_MSC_VER)
+  __asm mov eax, cr3;
+  __asm mov cr3_, eax;
+#else
+#error Unknown compiler for inline assembler
+#endif
 
   Ki386TssArray[0] = &KiBootTss;
   Ki386TrapTssArray[0] = &KiBootTrapTss;
@@ -241,7 +262,7 @@ Ki386BootInitializeTSS(VOID)
   KiBootTrapTss.IoMapBase = 0xFFFF; /* No i/o bitmap */
   KiBootTrapTss.IoBitmap[0] = 0xFF;   
   KiBootTrapTss.Ldt = 0x0;
-  KiBootTrapTss.Cr3 = cr3;
+  KiBootTrapTss.Cr3 = cr3_;
   
   /*
    * Initialize a descriptor for the trap TSS.
@@ -258,9 +279,16 @@ Ki386BootInitializeTSS(VOID)
   /*
    * Load the task register
    */
+#if defined(__GNUC__)
   __asm__("ltr %%ax" 
 	  : /* no output */
 	  : "a" (TSS_SELECTOR));
+#elif defined(_MSC_VER)
+  __asm mov ax, TSS_SELECTOR
+  __asm ltr ax
+#else
+#error Unknown compiler for inline assembler
+#endif
 }
 
 

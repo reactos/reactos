@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.54 2003/10/12 17:05:48 hbirr Exp $
+/* $Id: mdl.c,v 1.55 2003/12/30 18:52:05 fireball Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -115,8 +115,15 @@ MmUnlockPages(PMDL Mdl)
    MdlPages = (PULONG)(Mdl + 1);
    for (i=0; i<(PAGE_ROUND_UP(Mdl->ByteCount+Mdl->ByteOffset)/PAGE_SIZE); i++)
      {
+#if defined(__GNUC__)
 	MmUnlockPage((LARGE_INTEGER)(LONGLONG)MdlPages[i]);
 	MmDereferencePage((LARGE_INTEGER)(LONGLONG)MdlPages[i]);
+#else
+	PHYSICAL_ADDRESS dummyJunkNeeded;
+	dummyJunkNeeded.QuadPart = MdlPages[i];
+	MmUnlockPage(dummyJunkNeeded);
+	MmDereferencePage(dummyJunkNeeded);
+#endif
      }   
    Mdl->MdlFlags = Mdl->MdlFlags & (~MDL_PAGES_LOCKED);
 }
@@ -170,7 +177,7 @@ MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
       KEBUGCHECK(0);
    }
 
-   Base = MiMdlMappingRegionBase + StartingOffset * PAGE_SIZE;
+   Base = (char*)MiMdlMappingRegionBase + StartingOffset * PAGE_SIZE;
 
    if (MiMdlMappingRegionHint == StartingOffset)
    {
@@ -184,10 +191,18 @@ MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
    for (i = 0; i < RegionSize; i++)
      {
        NTSTATUS Status;
+#if !defined(__GNUC__)
+	PHYSICAL_ADDRESS dummyJunkNeeded;
+	dummyJunkNeeded.QuadPart = MdlPages[i];
+#endif
        Status = MmCreateVirtualMapping(NULL,
 				       (PVOID)((ULONG)Base+(i*PAGE_SIZE)),
 				       PAGE_READWRITE,
+#if defined(__GNUC__)
 				       (LARGE_INTEGER)(LONGLONG)MdlPages[i],
+#else
+				       dummyJunkNeeded,
+#endif
 				       FALSE);
        if (!NT_SUCCESS(Status))
 	 {
@@ -198,8 +213,8 @@ MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
 
    /* Mark the MDL has having being mapped. */
    Mdl->MdlFlags = Mdl->MdlFlags | MDL_MAPPED_TO_SYSTEM_VA;
-   Mdl->MappedSystemVa = Base + Mdl->ByteOffset;
-   return(Base + Mdl->ByteOffset);
+   Mdl->MappedSystemVa = (char*)Base + Mdl->ByteOffset;
+   return((char*)Base + Mdl->ByteOffset);
 }
 
 /*
@@ -232,13 +247,21 @@ MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
 
   /* Calculate the number of pages we mapped. */
   RegionSize = PAGE_ROUND_UP(Mdl->ByteCount + Mdl->ByteOffset) / PAGE_SIZE;
+#if defined(__GNUC__)
   BaseAddress -= Mdl->ByteOffset;
+#else
+  {
+    char* pTemp = BaseAddress;
+    pTemp -= Mdl->ByteOffset;
+    BaseAddress = pTemp;
+  }
+#endif
 
   /* Unmap all the pages. */
   for (i = 0; i < RegionSize; i++)
     {
       MmDeleteVirtualMapping(NULL, 
-			     BaseAddress + (i * PAGE_SIZE),
+			     (char*)BaseAddress + (i * PAGE_SIZE),
 			     FALSE,
 			     NULL,
 			     NULL);
@@ -246,7 +269,7 @@ MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
 
   KeAcquireSpinLock(&MiMdlMappingRegionLock, &oldIrql);
   /* Deallocate all the pages used. */
-  Base = (ULONG)(BaseAddress - MiMdlMappingRegionBase) / PAGE_SIZE;
+  Base = (ULONG)((char*)BaseAddress - (char*)MiMdlMappingRegionBase) / PAGE_SIZE;
   
   RtlClearBits(&MiMdlMappingRegionAllocMap, Base, RegionSize);
 
@@ -335,7 +358,7 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
      {
 	PVOID Address;
 	
-	Address = Mdl->StartVa + (i*PAGE_SIZE);       
+	Address = (char*)Mdl->StartVa + (i*PAGE_SIZE);
 	
 	if (!MmIsPagePresent(NULL, Address))
 	  {
@@ -344,8 +367,15 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
 	      {
 		for (j = 0; j < i; j++)
 		  {
+#if defined(__GNUC__)
 		    MmUnlockPage((LARGE_INTEGER)(LONGLONG)MdlPages[j]);
 		    MmDereferencePage((LARGE_INTEGER)(LONGLONG)MdlPages[j]);
+#else
+		    PHYSICAL_ADDRESS dummyJunkNeeded;
+		    dummyJunkNeeded.QuadPart = MdlPages[j];
+		    MmUnlockPage(dummyJunkNeeded);
+		    MmDereferencePage(dummyJunkNeeded);
+#endif
 		  }
 		ExRaiseStatus(Status);
 	      }
@@ -362,15 +392,30 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
 	      {
 		for (j = 0; j < i; j++)
 		  {
+#if defined(__GNUC__)
 			MmUnlockPage((LARGE_INTEGER)(LONGLONG)MdlPages[j]);
 			MmDereferencePage(
 					 (LARGE_INTEGER)(LONGLONG)MdlPages[j]);
+#else
+			PHYSICAL_ADDRESS dummyJunkNeeded;
+			dummyJunkNeeded.QuadPart = MdlPages[j];
+			MmUnlockPage(dummyJunkNeeded);
+			MmDereferencePage(dummyJunkNeeded);
+#endif
 		  }
 		ExRaiseStatus(Status);
 	      }
 	  }
 	MdlPages[i] = MmGetPhysicalAddressForProcess(NULL, Address).u.LowPart;
+#if defined(__GNUC__)
 	MmReferencePage((LARGE_INTEGER)(LONGLONG)MdlPages[i]);
+#else
+	{
+	  PHYSICAL_ADDRESS dummyJunkNeeded;
+	  dummyJunkNeeded.QuadPart = MdlPages[i];
+	  MmReferencePage(dummyJunkNeeded);
+	}
+#endif
      }
    MmUnlockAddressSpace(&Mdl->Process->AddressSpace);
    if (Mode == UserMode && Mdl->Process != CurrentProcess)
@@ -421,9 +466,9 @@ MmBuildMdlForNonPagedPool (PMDL	Mdl)
    for (va=0; va < ((Mdl->Size - sizeof(MDL)) / sizeof(ULONG)); va++)
      {
         ((PULONG)(Mdl + 1))[va] =
-            (MmGetPhysicalAddress(Mdl->StartVa + (va * PAGE_SIZE))).u.LowPart;
+            (MmGetPhysicalAddress((char*)Mdl->StartVa + (va * PAGE_SIZE))).u.LowPart;
      }
-   Mdl->MappedSystemVa = Mdl->StartVa + Mdl->ByteOffset;
+   Mdl->MappedSystemVa = (char*)Mdl->StartVa + Mdl->ByteOffset;
 }
 
 
@@ -456,9 +501,9 @@ MmCreateMdl (PMDL	MemoryDescriptorList,
 	     return(NULL);
 	  }
      }
-   
-   MmInitializeMdl(MemoryDescriptorList,Base,Length);
-   
+
+   MmInitializeMdl(MemoryDescriptorList, (char*)Base, Length);
+
    return(MemoryDescriptorList);
 }
 

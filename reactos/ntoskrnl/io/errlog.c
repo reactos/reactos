@@ -1,4 +1,4 @@
-/* $Id: errlog.c,v 1.15 2003/11/21 22:28:50 ekohl Exp $
+/* $Id: errlog.c,v 1.16 2003/12/30 18:52:04 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -121,7 +121,11 @@ IopRestartLogWorker (VOID)
   KeInitializeTimer (&WorkerDpc->Timer);
 
   /* Restart after 30 seconds */
+#if defined(__GNUC__)
   Timeout.QuadPart = -300000000LL;
+#else
+  Timeout.QuadPart = -300000000;
+#endif
   KeSetTimer (&WorkerDpc->Timer,
 	      Timeout,
 	      &WorkerDpc->Dpc);
@@ -274,7 +278,7 @@ IopLogWorker (PVOID Parameter)
       Message->Size =
 	sizeof(IO_ERROR_LOG_MESSAGE) - sizeof(IO_ERROR_LOG_PACKET) +
 	LogEntry->PacketSize + DriverNameLength;
-      Message->DriverNameLength = DriverNameLength;
+      Message->DriverNameLength = (USHORT)DriverNameLength;
       Message->TimeStamp.QuadPart = LogEntry->TimeStamp.QuadPart;
       Message->DriverNameOffset = (DriverName != NULL) ? LogEntry->PacketSize : 0;
 

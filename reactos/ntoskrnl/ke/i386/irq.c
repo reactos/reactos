@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: irq.c,v 1.36 2003/10/12 17:05:45 hbirr Exp $
+/* $Id: irq.c,v 1.37 2003/12/30 18:52:05 fireball Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/irq.c
@@ -275,9 +275,9 @@ VOID
 KeIRQTrapFrameToTrapFrame(PKIRQ_TRAPFRAME IrqTrapFrame,
   PKTRAP_FRAME TrapFrame)
 {
-   TrapFrame->Fs     = IrqTrapFrame->Fs;
-   TrapFrame->Es     = IrqTrapFrame->Es;
-   TrapFrame->Ds     = IrqTrapFrame->Ds;
+   TrapFrame->Fs     = (USHORT)IrqTrapFrame->Fs;
+   TrapFrame->Es     = (USHORT)IrqTrapFrame->Es;
+   TrapFrame->Ds     = (USHORT)IrqTrapFrame->Ds;
    TrapFrame->Eax    = IrqTrapFrame->Eax;
    TrapFrame->Ecx    = IrqTrapFrame->Ecx;
    TrapFrame->Edx    = IrqTrapFrame->Edx;
@@ -480,7 +480,7 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
     * default HAL this will send an EOI to the PIC and alter the IRQL.
     */
    if (!HalBeginSystemInterrupt (irq + IRQ_BASE,
-				 PROFILE_LEVEL - irq,
+				 (KIRQL)(PROFILE_LEVEL - irq),
 				 &old_level))
      {
        return;

@@ -269,9 +269,9 @@ GspGetPacket()
       if (ch == '#')
 	{
 	  ch = KdGetChar ();
-	  XmitChecksum = HexValue (ch) << 4;
+	  XmitChecksum = (CHAR)(HexValue (ch) << 4);
 	  ch = KdGetChar ();
-	  XmitChecksum += HexValue (ch);
+	  XmitChecksum += (CHAR)(HexValue (ch));
 
 	  if (Checksum != XmitChecksum)
 	    {
@@ -430,8 +430,8 @@ GspHex2Mem (PCHAR Buffer,
 
       for (i = 0; i < countinpage && ! GspMemoryError; i++)
         {
-          ch = HexValue (*Buffer++) << 4;
-          ch = ch + HexValue (*Buffer++);
+          ch = (CHAR)(HexValue (*Buffer++) << 4);
+          ch = (CHAR)(ch + HexValue (*Buffer++));
 
           GspAccessLocation = Address;
           *current = ch;
@@ -874,6 +874,7 @@ typedef struct _GsHwBreakPoint
   ULONG Address;
 } GsHwBreakPoint;
 
+#if defined(__GNUC__)
 GsHwBreakPoint GspBreakpoints[4] =
 {
   { Enabled : FALSE },
@@ -881,6 +882,15 @@ GsHwBreakPoint GspBreakpoints[4] =
   { Enabled : FALSE },
   { Enabled : FALSE }
 };
+#else
+GsHwBreakPoint GspBreakpoints[4] =
+{
+  { FALSE },
+  { FALSE },
+  { FALSE },
+  { FALSE }
+};
+#endif
 
 VOID
 GspCorrectHwBreakpoint()
@@ -888,10 +898,11 @@ GspCorrectHwBreakpoint()
   ULONG BreakpointNumber;
   BOOLEAN CorrectIt;
   BOOLEAN Bit;
-  ULONG dr7;
+  ULONG dr7_;
 
+#if defined(__GNUC__)
   asm volatile (
-    "movl %%db7, %0\n" : "=r" (dr7) : );
+    "movl %%db7, %0\n" : "=r" (dr7_) : );
   do
     {
       ULONG addr0, addr1, addr2, addr3;
@@ -904,17 +915,30 @@ GspCorrectHwBreakpoint()
           : "=r" (addr0), "=r" (addr1),
             "=r" (addr2), "=r" (addr3) : );
     } while (FALSE);
+#elif defined(_MSC_VER)
+    __asm
+    {
+	mov eax, dr7; mov dr7_, eax;
+	mov eax, dr0; mov addr0, eax;
+	mov eax, dr1; mov addr1, eax;
+	mov eax, dr2; mov addr2, eax;
+	mov eax, dr3; mov addr3, eax;
+    }
+#else
+#error Unknown compiler for inline assembler
+#endif
     CorrectIt = FALSE;
     for (BreakpointNumber = 0; BreakpointNumber < 3; BreakpointNumber++)
     {
 			Bit = 2 << (BreakpointNumber << 1);
-			if (!(dr7 & Bit) && GspBreakpoints[BreakpointNumber].Enabled) {
+			if (!(dr7_ & Bit) && GspBreakpoints[BreakpointNumber].Enabled) {
 		  CorrectIt = TRUE;
-			dr7 |= Bit;
-			dr7 &= ~(0xf0000 << (BreakpointNumber << 2));
-			dr7 |= (((GspBreakpoints[BreakpointNumber].Length << 2) |
+			dr7_ |= Bit;
+			dr7_ &= ~(0xf0000 << (BreakpointNumber << 2));
+			dr7_ |= (((GspBreakpoints[BreakpointNumber].Length << 2) |
         GspBreakpoints[BreakpointNumber].Type) << 16) << (BreakpointNumber << 2);
     switch (BreakpointNumber) {
+#if defined(__GNUC__)
 			case 0:
 			  asm volatile ("movl %0, %%dr0\n"
 			    : : "r" (GspBreakpoints[BreakpointNumber].Address) );
@@ -934,18 +958,57 @@ GspCorrectHwBreakpoint()
         asm volatile ("movl %0, %%dr3\n"
           : : "r" (GspBreakpoints[BreakpointNumber].Address) );
         break;
+#elif defined(_MSC_VER)
+	case 0:
+	    {
+	      ULONG addr = GspBreakpoints[BreakpointNumber].Address;
+	      __asm mov eax, addr;
+	      __asm mov dr0, eax;
+	    }
+	  break;
+	case 1:
+	    {
+	      ULONG addr = GspBreakpoints[BreakpointNumber].Address;
+	      __asm mov eax, addr;
+	      __asm mov dr1, eax;
+	    }
+	  break;
+	case 2:
+	    {
+	      ULONG addr = GspBreakpoints[BreakpointNumber].Address;
+	      __asm mov eax, addr;
+	      __asm mov dr2, eax;
+	    }
+	  break;
+	case 3:
+	    {
+	      ULONG addr = GspBreakpoints[BreakpointNumber].Address;
+	      __asm mov eax, addr;
+	      __asm mov dr3, eax;
+	    }
+	  break;
+#else
+#error Unknown compiler for inline assembler
+#endif
       }
     }
-    else if ((dr7 & Bit) && !GspBreakpoints[BreakpointNumber].Enabled)
+    else if ((dr7_ & Bit) && !GspBreakpoints[BreakpointNumber].Enabled)
       {
         CorrectIt = TRUE;
-        dr7 &= ~Bit;
-        dr7 &= ~(0xf0000 << (BreakpointNumber << 2));
+        dr7_ &= ~Bit;
+        dr7_ &= ~(0xf0000 << (BreakpointNumber << 2));
       }
   }
   if (CorrectIt)
     {
-	    asm volatile ( "movl %0, %%db7\n" : : "r" (dr7));
+#if defined(__GNUC__)
+	    asm volatile ( "movl %0, %%db7\n" : : "r" (dr7_));
+#elif defined(_MSC_VER)
+	    __asm mov eax, dr7_;
+	    __asm mov dr7, eax;
+#else
+#error Unknown compiler for inline assembler
+#endif
     }
 }
 
@@ -997,7 +1060,13 @@ KdEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
 
   /* FIXME: Stop on other CPUs too */
   /* Disable hardware debugging while we are inside the stub */
+#if defined(__GNUC__)
   __asm__("movl %0,%%db7" : /* no output */ : "r" (0));
+#elif defined(_MSC_VER)
+  __asm mov eax, 0  __asm mov dr7, eax
+#else
+#error Unknown compiler for inline assembler
+#endif
 
   if (STATUS_ACCESS_VIOLATION == (NTSTATUS) ExceptionRecord->ExceptionCode &&
       NULL != GspAccessLocation &&
@@ -1149,7 +1218,7 @@ GspSetSingleRegisterInTrapFrame (ptr, Register, Context, TrapFrame);
             case 'c':
               {
                 ULONG BreakpointNumber;
-                ULONG dr6;
+                ULONG dr6_;
 
                 /* try to read optional parameter, pc unchanged if no parm */
                 if (GspHex2Long (&ptr, &Address))
@@ -1164,12 +1233,18 @@ GspSetSingleRegisterInTrapFrame (ptr, Register, Context, TrapFrame);
                 if (Stepping)
                   Context->EFlags |= 0x100;
 
-                asm volatile ("movl %%db6, %0\n" : "=r" (dr6) : );
-                if (!(dr6 & 0x4000))
+#if defined(__GNUC__)
+                asm volatile ("movl %%db6, %0\n" : "=r" (dr6_) : );
+#elif defined(_MSC_VER)
+                __asm mov eax, dr6  __asm mov dr6_, eax;
+#else
+#error Unknown compiler for inline assembler
+#endif
+                if (!(dr6_ & 0x4000))
                   {
                     for (BreakpointNumber = 0; BreakpointNumber < 4; ++BreakpointNumber)
                       {
-                        if (dr6 & (1 << BreakpointNumber))
+                        if (dr6_ & (1 << BreakpointNumber))
                           {
                             if (GspBreakpoints[BreakpointNumber].Type == 0)
                               {
@@ -1181,7 +1256,13 @@ GspSetSingleRegisterInTrapFrame (ptr, Register, Context, TrapFrame);
                       }
                   }
                 GspCorrectHwBreakpoint();
+#if defined(__GNUC__)
                 asm volatile ("movl %0, %%db6\n" : : "r" (0));
+#elif defined(_MSC_VER)
+                __asm mov eax, 0  __asm mov dr6, eax;
+#else
+#error Unknown compiler for inline assembler
+#endif
 
                 return kdHandleException;
                 break;

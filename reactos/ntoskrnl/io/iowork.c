@@ -1,4 +1,4 @@
-/* $Id: iowork.c,v 1.5 2003/07/11 01:23:14 royce Exp $
+/* $Id: iowork.c,v 1.6 2003/12/30 18:52:04 fireball Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -34,7 +34,7 @@ typedef struct _IO_WORKITEM
 
 /* FUNCTIONS ****************************************************************/
 
-VOID STDCALL STATIC
+VOID STATIC STDCALL
 IoWorkItemCallback(PVOID Parameter)
 {
   PIO_WORKITEM IoWorkItem = (PIO_WORKITEM)Parameter;

@@ -22,7 +22,11 @@
 #include <internal/dbg.h>
 #include <roscfg.h>
 
-#define UNIMPLEMENTED do {DbgPrint("%s at %s:%d is unimplemented, have a nice day\n",__FUNCTION__,__FILE__,__LINE__); for(;;);  } while(0);
+#if defined(_MSC_VER) && (_MSC_VER < 1300)
+/* TODO: Verify which version the MS compiler learned the __FUNCTION__ macro */
+#define __FUNCTION__ "<unknown>"
+#endif
+#define UNIMPLEMENTED do {DbgPrint("%s at %s:%d is unimplemented, have a nice day\n",__FUNCTION__,__FILE__,__LINE__); for(;;);  } while(0)
 
 
 #ifdef DBG
@@ -52,7 +56,11 @@
 #endif
 
 /* Print if using a "checked" version */
-#define CPRINT(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0);
+#ifdef __GNUC__ /* using GNU C/C99 macro ellipsis */
+#define CPRINT(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0)
+#else
+#define CPRINT DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint
+#endif
 
 #else /* DBG */
 
@@ -65,8 +73,13 @@
 
 #endif /* DBG */
 
-#define DPRINT1(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0);
-#define CHECKPOINT1 do { DbgPrint("%s:%d\n",__FILE__,__LINE__); } while(0);
+#ifdef __GNUC__ /* using GNU C/C99 macro ellipsis */
+#define DPRINT1(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0)
+#else
+#define DPRINT1 DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint
+#endif
+
+#define CHECKPOINT1 do { DbgPrint("%s:%d\n",__FILE__,__LINE__); } while(0)
 
 #if defined(KDBG) && defined(NDEBUG) && defined(__NTOSKRNL__)
 
@@ -75,17 +88,25 @@
     DbgPrint("(%s:%d) ",__FILE__,__LINE__); \
     DbgPrint(args); \
   } \
-} while(0);
+} while(0)
 
 #define CHECKPOINT
 
 #else /* KDBG && NDEBUG && __NTOSKRNL__ */
 
 #ifndef NDEBUG
-#define DPRINT(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0);
-#define CHECKPOINT do { DbgPrint("%s:%d\n",__FILE__,__LINE__); ExAllocatePool(NonPagedPool,0); } while(0);
+#ifdef __GNUC__ /* using GNU C/C99 macro ellipsis */
+#define DPRINT(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0)
+#else
+#define DPRINT DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint
+#endif
+#define CHECKPOINT do { DbgPrint("%s:%d\n",__FILE__,__LINE__); ExAllocatePool(NonPagedPool,0); } while(0)
 #else /* NDEBUG */
+#ifdef __GNUC__ /* using GNU C/C99 macro ellipsis */
 #define DPRINT(args...)
+#else
+#define DPRINT
+#endif
 #define CHECKPOINT
 #endif /* NDEBUG */
 

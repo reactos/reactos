@@ -1,4 +1,4 @@
-/* $Id: evtpair.c,v 1.19 2003/10/12 17:05:48 hbirr Exp $
+/* $Id: evtpair.c,v 1.20 2003/12/30 18:52:05 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -342,8 +342,8 @@ NtWaitHighEventPair(IN HANDLE EventPairHandle)
  * eventpair via NtSetInformationThread.
  * @implemented
  */
-NTSYSAPI
 NTSTATUS
+NTSYSAPI
 NTAPI
 NtSetLowWaitHighThread(
 	VOID
@@ -396,8 +396,8 @@ NtSetLowWaitHighThread(
  * eventpair via NtSetInformationThread.
  * @implemented
  */
-NTSYSAPI
 NTSTATUS
+NTSYSAPI
 NTAPI
 NtSetHighWaitLowThread(
 	VOID

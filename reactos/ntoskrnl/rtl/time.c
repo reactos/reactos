@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.17 2003/07/11 01:23:16 royce Exp $
+/* $Id: time.c,v 1.18 2003/12/30 18:52:06 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -32,8 +32,13 @@
 #define DAYSPERLEAPYEAR    366
 #define MONSPERYEAR        12
 
+#if defined(__GNUC__)
 #define TICKSTO1970         0x019db1ded53e8000LL
 #define TICKSTO1980         0x01a8e79fe1d58000LL
+#else
+#define TICKSTO1970         0x019db1ded53e8000i64
+#define TICKSTO1980         0x01a8e79fe1d58000i64
+#endif
 
 
 static const int YearLengths[2] = {DAYSPERNORMALYEAR, DAYSPERLEAPYEAR};
@@ -71,7 +76,11 @@ RtlTimeToTimeFields(
   int LeapSecondCorrections, SecondsInDay, CurYear;
   int LeapYear, CurMonth, GMTOffset;
   long int Days;
+#if defined(__GNUC__)
   long long int Time = (long long int)liTime->QuadPart;
+#else
+  __int64 Time = (__int64)liTime->QuadPart;
+#endif
 
     /* Extract millisecond from time and convert time into seconds */
   TimeFields->Milliseconds = (CSHORT) ((Time % TICKSPERSEC) / TICKSPERMSEC);
@@ -151,7 +160,11 @@ RtlTimeFieldsToTime(
 	PLARGE_INTEGER Time)
 {
   int CurMonth;
+#if defined(__GNUC__)
   long long int rcTime;
+#else
+  __int64 rcTime;
+#endif
   TIME_FIELDS TimeFields = *tfTimeFields;
   const int *Months;
 

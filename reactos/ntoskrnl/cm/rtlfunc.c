@@ -590,7 +590,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		    {
 		      DPRINT("Expand REG_MULTI_SZ type\n");
 
-		      StringPtr = (PWSTR)((PVOID)FullValueInfo + FullValueInfo->DataOffset);
+		      StringPtr = (PWSTR)((char*)FullValueInfo + FullValueInfo->DataOffset);
 		      while (*StringPtr != 0)
 			{
 			  StringLen = (wcslen(StringPtr) + 1) * sizeof(WCHAR);
@@ -609,7 +609,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		    {
 		      Status = QueryEntry->QueryRoutine(ValueName,
 							FullValueInfo->Type,
-							(PVOID)FullValueInfo + FullValueInfo->DataOffset,
+							(char*)FullValueInfo + FullValueInfo->DataOffset,
 							FullValueInfo->DataLength,
 							Context,
 							QueryEntry->EntryContext);

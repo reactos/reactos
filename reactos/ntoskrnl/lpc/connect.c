@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.21 2003/11/20 11:06:35 ekohl Exp $
+/* $Id: connect.c,v 1.22 2003/12/30 18:52:05 fireball Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -514,7 +514,7 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
  *
  * RETURN VALUE
  */
-EXPORTED NTSTATUS STDCALL
+/*EXPORTED*/ NTSTATUS STDCALL
 NtAcceptConnectPort (PHANDLE			ServerPortHandle,
 		     HANDLE			NamedPortHandle,
 		     PLPC_MESSAGE		LpcMessage,

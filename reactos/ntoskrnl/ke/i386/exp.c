@@ -194,7 +194,7 @@ KiKernelTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
 ULONG
 KiDoubleFaultHandler(VOID)
 {
-  unsigned int cr2;
+  unsigned int cr2_;
   ULONG StackLimit;
   ULONG StackBase;
   ULONG Esp0;
@@ -215,12 +215,19 @@ KiDoubleFaultHandler(VOID)
   Esp0 = OldTss->Esp;
 
   /* Get CR2 */
-  __asm__("movl %%cr2,%0\n\t" : "=d" (cr2));
+#if defined(__GNUC__)
+  __asm__("movl %%cr2,%0\n\t" : "=d" (cr2_));
+#elif defined(_MSC_VER)
+  __asm mov eax, cr2;
+  __asm mov cr2_, eax;
+#else
+#error Unknown compiler for inline assembler
+#endif
 
   if (PsGetCurrentThread() != NULL &&
       PsGetCurrentThread()->ThreadsProcess != NULL)
     {
-      OldCr3 = 
+      OldCr3 = (ULONG)
 	PsGetCurrentThread()->ThreadsProcess->Pcb.DirectoryTableBase.QuadPart;
     }
   else
@@ -254,7 +261,7 @@ KiDoubleFaultHandler(VOID)
    DbgPrint("CS:EIP %x:%x ", OldTss->Cs, OldTss->Eip);
    print_address((PVOID)OldTss->Eip);
    DbgPrint("\n");
-   DbgPrint("cr2 %x cr3 %x ", cr2, OldCr3);
+   DbgPrint("cr2 %x cr3 %x ", cr2_, OldCr3);
    DbgPrint("Proc: %x ",PsGetCurrentProcess());
    if (PsGetCurrentProcess() != NULL)
      {
@@ -401,7 +408,7 @@ KiDoubleFaultHandler(VOID)
 VOID
 KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG Parameter1, ULONG Parameter2)
 {
-  ULONG cr3;
+  ULONG cr3_;
   ULONG i;
   ULONG StackLimit;
   PULONG Frame;
@@ -427,8 +434,15 @@ KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG Parameter1, ULONG Parameter2)
 	    Tf->Cs&0xffff, Tf->Eip);
    print_address((PVOID)Tf->Eip);
    DbgPrint("\n");
-   __asm__("movl %%cr3,%0\n\t" : "=d" (cr3));
-   DbgPrint("cr2 %x cr3 %x ", cr2, cr3);
+#if defined(__GNUC__)
+   __asm__("movl %%cr3,%0\n\t" : "=d" (cr3_));
+#elif defined(_MSC_VER)
+  __asm mov eax, cr3;
+  __asm mov cr3_, eax;
+#else
+#error Unknown compiler for inline assembler
+#endif
+   DbgPrint("cr2 %x cr3 %x ", cr2, cr3_);
    DbgPrint("Proc: %x ",PsGetCurrentProcess());
    if (PsGetCurrentProcess() != NULL)
      {
@@ -493,7 +507,7 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
  *        Complete CPU context
  */
 {
-   unsigned int cr2;
+   unsigned int cr2_;
    NTSTATUS Status;
    ULONG Esp0;
 
@@ -504,15 +518,22 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
    Esp0 = (ULONG)&Tf->Eip;
   
    /* Get CR2 */
-   __asm__("movl %%cr2,%0\n\t" : "=d" (cr2));
-   Tf->DebugPointer = (PVOID)cr2;
+#if defined(__GNUC__)
+   __asm__("movl %%cr2,%0\n\t" : "=d" (cr2_));
+#elif defined(_MSC_VER)
+  __asm mov eax, cr2;
+  __asm mov cr2_, eax;
+#else
+#error Unknown compiler for inline assembler
+#endif
+   Tf->DebugPointer = (PVOID)cr2_;
    
    /*
     * If this was a V86 mode exception then handle it specially
     */
    if (Tf->Eflags & (1 << 17))
      {
-       return(KeV86Exception(ExceptionNr, Tf, cr2));
+       return(KeV86Exception(ExceptionNr, Tf, cr2_));
      }
 
    /*
@@ -538,7 +559,7 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
 	Status = MmPageFault(Tf->Cs&0xffff,
 			     &Tf->Eip,
 			     &Tf->Eax,
-			     cr2,
+			     cr2_,
 			     Tf->ErrorCode);
 	if (NT_SUCCESS(Status))
 	  {
@@ -551,11 +572,11 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
     */
    if ((Tf->Cs & 0xFFFF) == USER_CS)
      {
-       return(KiUserTrapHandler(Tf, ExceptionNr, (PVOID)cr2));
+       return(KiUserTrapHandler(Tf, ExceptionNr, (PVOID)cr2_));
      }
    else
     {
-      return(KiKernelTrapHandler(Tf, ExceptionNr, (PVOID)cr2));
+      return(KiKernelTrapHandler(Tf, ExceptionNr, (PVOID)cr2_));
     }
 }
 

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.13 2003/09/25 20:04:59 ekohl Exp $
+/* $Id: create.c,v 1.14 2003/12/30 18:52:05 fireball Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -90,7 +90,7 @@ NiCreatePort (PVOID			ObjectBody,
  * 
  * RETURN VALUE
  */
-EXPORTED NTSTATUS STDCALL 
+/*EXPORTED*/ NTSTATUS STDCALL 
 NtCreatePort (PHANDLE		      PortHandle,
 	      POBJECT_ATTRIBUTES    ObjectAttributes,
 	      ULONG	       MaxConnectInfoLength,
@@ -168,7 +168,7 @@ NtCreatePort (PHANDLE		      PortHandle,
  * 
  * RETURN VALUE
  */
-EXPORTED NTSTATUS STDCALL
+/*EXPORTED*/ NTSTATUS STDCALL
 NtCreateWaitablePort (OUT	PHANDLE			PortHandle,
 		      IN	POBJECT_ATTRIBUTES	ObjectAttributes,
 		      IN	ULONG			MaxConnectInfoLength,

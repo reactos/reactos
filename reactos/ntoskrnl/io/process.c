@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: process.c,v 1.15 2003/07/10 15:47:00 royce Exp $
+/* $Id: process.c,v 1.16 2003/12/30 18:52:04 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -93,10 +93,10 @@ IoGetRequestorProcess(IN PIRP Irp)
  *
  * @implemented
  */
-BOOLEAN STDCALL EXPORTED
+BOOLEAN STDCALL
 IoSetThreadHardErrorMode(IN BOOLEAN HardErrorEnabled)
 {
-  BOOLEAN PreviousHEM = NtCurrentTeb()->HardErrorDisabled;
+  BOOLEAN PreviousHEM = (BOOLEAN)(NtCurrentTeb()->HardErrorDisabled);
 
   NtCurrentTeb()->HardErrorDisabled = ((TRUE == HardErrorEnabled) ? FALSE : TRUE);
 

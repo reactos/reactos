@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.5 2003/01/02 16:41:56 hbirr Exp $
+/* $Id: region.c,v 1.6 2003/12/30 18:52:05 fireball Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/region.c
@@ -86,7 +86,7 @@ MmSplitRegion(PMM_REGION InitialRegion, PVOID InitialBaseAddress,
     }
   NewRegion1->Type = NewType;
   NewRegion1->Protect = NewProtect;
-  InternalLength = (InitialBaseAddress + InitialRegion->Length) - StartAddress;
+  InternalLength = ((char*)InitialBaseAddress + InitialRegion->Length) - (char*)StartAddress;
   InternalLength = min(InternalLength, Length);
   NewRegion1->Length = InternalLength;
   InsertAfterEntry(&InitialRegion->RegionListEntry,
@@ -103,12 +103,12 @@ MmSplitRegion(PMM_REGION InitialRegion, PVOID InitialBaseAddress,
    * If necessary create a new region for the portion of the initial region
    * beyond the range of addresses to alter.
    */
-  if ((InitialBaseAddress + InitialRegion->Length) > (StartAddress + Length))
+  if (((char*)InitialBaseAddress + InitialRegion->Length) > ((char*)StartAddress + Length))
     {
       NewRegion2->Type = InitialRegion->Type;
       NewRegion2->Protect = InitialRegion->Protect;
-      NewRegion2->Length = (InitialBaseAddress + InitialRegion->Length) - 
-	(StartAddress + Length);
+      NewRegion2->Length = ((char*)InitialBaseAddress + InitialRegion->Length) - 
+	((char*)StartAddress + Length);
       InsertAfterEntry(&NewRegion1->RegionListEntry, 
 		       &NewRegion2->RegionListEntry);           
     }
@@ -125,7 +125,7 @@ MmSplitRegion(PMM_REGION InitialRegion, PVOID InitialBaseAddress,
     }
   else
     {
-      InitialRegion->Length = StartAddress - InitialBaseAddress;
+      InitialRegion->Length = (char*)StartAddress - (char*)InitialBaseAddress;
     }
   
   return(NewRegion1);
@@ -150,11 +150,11 @@ MmAlterRegion(PMADDRESS_SPACE AddressSpace, PVOID BaseAddress,
    */
   InitialRegion = MmFindRegion(BaseAddress, RegionListHead, StartAddress,
 			       &InitialBaseAddress);
-  if ((StartAddress + Length) >
-      (InitialBaseAddress + InitialRegion->Length))
+  if (((char*)StartAddress + Length) >
+      ((char*)InitialBaseAddress + InitialRegion->Length))
     {
-      RemainingLength = (StartAddress + Length) - 
-	(InitialBaseAddress + InitialRegion->Length);
+      RemainingLength = ((char*)StartAddress + Length) - 
+	((char*)InitialBaseAddress + InitialRegion->Length);
     }
   else
     {
@@ -185,7 +185,7 @@ MmAlterRegion(PMADDRESS_SPACE AddressSpace, PVOID BaseAddress,
   CurrentEntry = NewRegion->RegionListEntry.Flink;
   CurrentRegion = CONTAINING_RECORD(CurrentEntry, MM_REGION, 
 				    RegionListEntry);
-  CurrentBaseAddress = StartAddress + NewRegion->Length;
+  CurrentBaseAddress = (char*)StartAddress + NewRegion->Length;
   while (RemainingLength > 0 && CurrentRegion->Length <= RemainingLength)
     {
       if (CurrentRegion->Type != NewType &&
@@ -195,7 +195,15 @@ MmAlterRegion(PMADDRESS_SPACE AddressSpace, PVOID BaseAddress,
 		    CurrentRegion->Type, CurrentRegion->Protect,
 		    NewType, NewProtect);
 	}
+#if defined(__GNUC__)
       CurrentBaseAddress += CurrentRegion->Length;
+#else
+      {
+	char* pTemp = CurrentBaseAddress;
+	pTemp += CurrentRegion->Length;
+	CurrentBaseAddress = pTemp;
+      }
+#endif
       NewRegion->Length += CurrentRegion->Length;
       RemainingLength -= CurrentRegion->Length;
       CurrentEntry = CurrentEntry->Flink;      
@@ -289,7 +297,7 @@ MmFindRegion(PVOID BaseAddress, PLIST_ENTRY RegionListHead, PVOID Address,
       current = CONTAINING_RECORD(current_entry, MM_REGION, RegionListEntry);
 
       if (StartAddress <= Address && 
-	  (StartAddress + current->Length) > Address)
+	  ((char*)StartAddress + current->Length) > (char*)Address)
 	{
 	  if (RegionBaseAddress != NULL)
 	    {
@@ -299,7 +307,15 @@ MmFindRegion(PVOID BaseAddress, PLIST_ENTRY RegionListHead, PVOID Address,
 	}
 
       current_entry = current_entry->Flink;
+#if defined(__GNUC__)
       StartAddress += current->Length;
+#else
+      {
+	char* pTemp = StartAddress;
+	pTemp += current->Length;
+	StartAddress = pTemp;
+      }
+#endif
     }
   return(NULL);
 }

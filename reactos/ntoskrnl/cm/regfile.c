@@ -1446,7 +1446,11 @@ CmiStartLogUpdate(PREGISTRY_HIVE RegistryHive)
 		BitmapSize);
 
   /* Write hive block and block bitmap */
+#if defined(__GNUC__)
   FileOffset.QuadPart = 0ULL;
+#else
+  FileOffset.QuadPart = 0;
+#endif
   Status = NtWriteFile(FileHandle,
 		       NULL,
 		       NULL,
@@ -1505,7 +1509,11 @@ CmiStartLogUpdate(PREGISTRY_HIVE RegistryHive)
 	}
 
       BlockIndex++;
+#if defined(__GNUC__)
       FileOffset.QuadPart += 4096ULL;
+#else
+      FileOffset.QuadPart += 4096;
+#endif
     }
 
   /* Truncate log file */
@@ -1624,7 +1632,11 @@ CmiFinishLogUpdate(PREGISTRY_HIVE RegistryHive)
 		BitmapSize);
 
   /* Write hive block and block bitmap */
+#if defined(__GNUC__)
   FileOffset.QuadPart = 0ULL;
+#else
+  FileOffset.QuadPart = 0;
+#endif
   Status = NtWriteFile(FileHandle,
 		       NULL,
 		       NULL,
@@ -1787,7 +1799,11 @@ CmiStartHiveUpdate(PREGISTRY_HIVE RegistryHive)
   RegistryHive->HiveHeader->Checksum = CmiCalcChecksum((PULONG)RegistryHive->HiveHeader);
 
   /* Write hive block */
+#if defined(__GNUC__)
   FileOffset.QuadPart = 0ULL;
+#else
+  FileOffset.QuadPart = 0;
+#endif
   Status = NtWriteFile(FileHandle,
 		       NULL,
 		       NULL,
@@ -1823,7 +1839,11 @@ CmiStartHiveUpdate(PREGISTRY_HIVE RegistryHive)
       BlockPtr = RegistryHive->BlockList[BlockIndex];
       DPRINT("BlockPtr %p\n", BlockPtr);
 
+#if defined(__GNUC__)
       FileOffset.QuadPart = (ULONGLONG)(BlockIndex + 1) * 4096ULL;
+#else
+      FileOffset.QuadPart = (ULONGLONG)(BlockIndex + 1) * 4096;
+#endif
       DPRINT("File offset %I64x\n", FileOffset.QuadPart);
 
       /* Write hive block */
@@ -1899,7 +1919,11 @@ CmiFinishHiveUpdate(PREGISTRY_HIVE RegistryHive)
   RegistryHive->HiveHeader->Checksum = CmiCalcChecksum((PULONG)RegistryHive->HiveHeader);
 
   /* Write hive block */
+#if defined(__GNUC__)
   FileOffset.QuadPart = 0ULL;
+#else
+  FileOffset.QuadPart = 0;
+#endif
   Status = NtWriteFile(FileHandle,
 		       NULL,
 		       NULL,
@@ -2599,7 +2623,7 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
   /* Remove the key from the parent key's hash block */
   if (ParentKey->KeyCell->HashTableOffset != (BLOCK_OFFSET) -1)
     {
-      DPRINT("ParentKey HashTableOffset %lx\n", ParentKey->KeyCell->HashTableOffset)
+      DPRINT("ParentKey HashTableOffset %lx\n", ParentKey->KeyCell->HashTableOffset);
       HashBlock = CmiGetCell (ParentKey->RegistryHive,
 			      ParentKey->KeyCell->HashTableOffset,
 			      NULL);
@@ -2608,7 +2632,7 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
 	  DPRINT("CmiGetCell() failed\n");
 	  return STATUS_UNSUCCESSFUL;
 	}
-      DPRINT("ParentKey HashBlock %p\n", HashBlock)
+      DPRINT("ParentKey HashBlock %p\n", HashBlock);
       if (HashBlock != NULL)
 	{
 	  CmiRemoveKeyFromHashTable(ParentKey->RegistryHive,
@@ -2622,7 +2646,7 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
   /* Remove the key's hash block */
   if (SubKey->KeyCell->HashTableOffset != (BLOCK_OFFSET) -1)
     {
-      DPRINT("SubKey HashTableOffset %lx\n", SubKey->KeyCell->HashTableOffset)
+      DPRINT("SubKey HashTableOffset %lx\n", SubKey->KeyCell->HashTableOffset);
       HashBlock = CmiGetCell (RegistryHive,
 			      SubKey->KeyCell->HashTableOffset,
 			      NULL);
@@ -2631,7 +2655,7 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
 	  DPRINT("CmiGetCell() failed\n");
 	  return STATUS_UNSUCCESSFUL;
 	}
-      DPRINT("SubKey HashBlock %p\n", HashBlock)
+      DPRINT("SubKey HashBlock %p\n", HashBlock);
       if (HashBlock != NULL)
 	{
 	  CmiDestroyCell (RegistryHive,
@@ -2644,13 +2668,13 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
   /* Decrement the number of the parent key's sub keys */
   if (ParentKey != NULL)
     {
-      DPRINT("ParentKey %p\n", ParentKey)
+      DPRINT("ParentKey %p\n", ParentKey);
       ParentKey->KeyCell->NumberOfSubKeys--;
 
       /* Remove the parent key's hash table */
       if (ParentKey->KeyCell->NumberOfSubKeys == 0)
 	{
-	  DPRINT("ParentKey HashTableOffset %lx\n", ParentKey->KeyCell->HashTableOffset)
+	  DPRINT("ParentKey HashTableOffset %lx\n", ParentKey->KeyCell->HashTableOffset);
 	  HashBlock = CmiGetCell (ParentKey->RegistryHive,
 				  ParentKey->KeyCell->HashTableOffset,
 				  NULL);
@@ -2659,7 +2683,7 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
 	      DPRINT("CmiGetCell() failed\n");
 	      return STATUS_UNSUCCESSFUL;
 	    }
-	  DPRINT("ParentKey HashBlock %p\n", HashBlock)
+	  DPRINT("ParentKey HashBlock %p\n", HashBlock);
 	  if (HashBlock != NULL)
 	    {
 	      CmiDestroyCell (ParentKey->RegistryHive,
@@ -3381,7 +3405,7 @@ CmiDestroyCell (PREGISTRY_HIVE RegistryHive,
         pFree->CellSize = -pFree->CellSize;
 
       /* Clear block (except the block size) */
-      RtlZeroMemory(((PVOID)pFree) + sizeof(ULONG),
+      RtlZeroMemory(((char*)pFree) + sizeof(ULONG),
 		    pFree->CellSize - sizeof(ULONG));
 
       /* Add block to the list of free blocks */
@@ -4163,7 +4187,11 @@ CmiSaveTempHive (PREGISTRY_HIVE Hive,
   Hive->HiveHeader->Checksum = CmiCalcChecksum ((PULONG)Hive->HiveHeader);
 
   /* Write hive block */
+#if defined(__GNUC__)
   FileOffset.QuadPart = 0ULL;
+#else
+  FileOffset.QuadPart = 0;
+#endif
   Status = NtWriteFile (FileHandle,
 			NULL,
 			NULL,
@@ -4185,7 +4213,11 @@ CmiSaveTempHive (PREGISTRY_HIVE Hive,
       BlockPtr = Hive->BlockList[BlockIndex];
       DPRINT ("BlockPtr %p\n", BlockPtr);
 
+#if defined(__GNUC__)
       FileOffset.QuadPart = (ULONGLONG)(BlockIndex + 1) * 4096ULL;
+#else
+      FileOffset.QuadPart = (ULONGLONG)(BlockIndex + 1) * 4096;
+#endif
       DPRINT ("File offset %I64x\n", FileOffset.QuadPart);
 
       /* Write hive block */

@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.115 2003/11/27 00:48:11 gdalsnes Exp $
+/* $Id: registry.c,v 1.116 2003/12/30 18:52:03 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1106,7 +1106,11 @@ CmiSyncHives(VOID)
   CmiHiveSyncPending = TRUE;
 
 
+#if defined(__GNUC__)
   Timeout.QuadPart = -50000000LL;
+#else
+  Timeout.QuadPart = -50000000;
+#endif
   KeSetTimer(&CmiHiveSyncTimer,
 	     Timeout,
 	     &CmiHiveSyncDpc);

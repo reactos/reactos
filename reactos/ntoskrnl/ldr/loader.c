@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.137 2003/10/15 17:04:39 navaraf Exp $
+/* $Id: loader.c,v 1.138 2003/12/30 18:52:05 fireball Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -41,7 +41,11 @@
 #ifdef HALDBG
 #include <internal/ntosdbg.h>
 #else
+#ifdef __GNUC__
 #define ps(args...)
+#else
+#define ps
+#endif /* __GNUC__ */
 #endif
 
 #define NDEBUG
@@ -638,7 +642,7 @@ LdrpQueryModuleInformation(PVOID Buffer,
       Smi->Module[ModuleCount].Base = current->Base;
       Smi->Module[ModuleCount].Size = current->Length;
       Smi->Module[ModuleCount].Flags = 0;		/* Flags ??? (GN) */
-      Smi->Module[ModuleCount].Index = ModuleCount;
+      Smi->Module[ModuleCount].Index = (USHORT)ModuleCount;
       Smi->Module[ModuleCount].NameLength = 0;
       Smi->Module[ModuleCount].LoadCount = 0; /* FIXME */
 
@@ -842,8 +846,8 @@ PageNeedsWriteAccess(PVOID PageStart,
 	  Length = 
 	      max(PESectionHeaders[Idx].Misc.VirtualSize,
 	          PESectionHeaders[Idx].SizeOfRawData);
-	  BaseAddress = PESectionHeaders[Idx].VirtualAddress + DriverBase;
-	  NeedsWriteAccess = BaseAddress < PageStart + PAGE_SIZE &&
+	  BaseAddress = PESectionHeaders[Idx].VirtualAddress + (char*)DriverBase;
+	  NeedsWriteAccess = (char*)BaseAddress < (char*)PageStart + PAGE_SIZE &&
 	                     PageStart < (PVOID)((PCHAR) BaseAddress + Length);
 	}
     }
@@ -958,17 +962,17 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
           (IMAGE_SECTION_CHAR_CODE | IMAGE_SECTION_CHAR_DATA))
         {
 	   DPRINT("PESectionHeaders[Idx].VirtualAddress + DriverBase %x\n",
-		  PESectionHeaders[Idx].VirtualAddress + DriverBase);
-           memcpy(PESectionHeaders[Idx].VirtualAddress + DriverBase,
-                  (PVOID)(ModuleLoadBase + PESectionHeaders[Idx].PointerToRawData),
+		  PESectionHeaders[Idx].VirtualAddress + (char*)DriverBase);
+           memcpy(PESectionHeaders[Idx].VirtualAddress + (char*)DriverBase,
+                  (PVOID)((char*)ModuleLoadBase + PESectionHeaders[Idx].PointerToRawData),
                   PESectionHeaders[Idx].Misc.VirtualSize > PESectionHeaders[Idx].SizeOfRawData
                   ? PESectionHeaders[Idx].SizeOfRawData : PESectionHeaders[Idx].Misc.VirtualSize );
         }
       else
         {
 	   DPRINT("PESectionHeaders[Idx].VirtualAddress + DriverBase %x\n",
-		  PESectionHeaders[Idx].VirtualAddress + DriverBase);
-	   memset(PESectionHeaders[Idx].VirtualAddress + DriverBase, 
+		  PESectionHeaders[Idx].VirtualAddress + (char*)DriverBase);
+	   memset(PESectionHeaders[Idx].VirtualAddress + (char*)DriverBase, 
 		  '\0', PESectionHeaders[Idx].Misc.VirtualSize);
 
         }
@@ -998,8 +1002,8 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
 	    DPRINT("Name %.8s PESectionHeader[Idx].PointerToRawData %x\n",
 		   PESectionHeaders[Idx].Name,
 		   PESectionHeaders[Idx].PointerToRawData);
-	    RelocDir = PESectionHeaders[Idx].PointerToRawData +
-	      ModuleLoadBase;
+	    RelocDir = (PRELOCATION_DIRECTORY)(PESectionHeaders[Idx].PointerToRawData +
+	      (char*)ModuleLoadBase);
             CurrentSize = PESectionHeaders[Idx].Misc.VirtualSize;
 	    break;
 	 }
@@ -1029,7 +1033,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
 	   
 	   Offset = RelocEntry[Idx].TypeOffset & 0xfff;
 	   Type = (RelocEntry[Idx].TypeOffset >> 12) & 0xf;
-	   RelocItem = (PDWORD)(DriverBase + RelocDir->VirtualAddress + 
+	   RelocItem = (PDWORD)((char*)DriverBase + RelocDir->VirtualAddress + 
 				Offset);
 /*	   DPRINT("  reloc at %08lx %x %s old:%08lx new:%08lx\n", 
 		  RelocItem,
@@ -1119,7 +1123,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
                   pName = NULL;
 
 
-                  Hint = (*FunctionNameList) & 0xffff;
+                  Hint = (WORD)((*FunctionNameList) & 0xffff);
                 }
               else // hint-name
                 {
@@ -1166,7 +1170,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
 	  Length = 
 	      max(PESectionHeaders[Idx].Misc.VirtualSize,
 	          PESectionHeaders[Idx].SizeOfRawData);
-	  BaseAddress = PESectionHeaders[Idx].VirtualAddress + DriverBase;
+	  BaseAddress = PESectionHeaders[Idx].VirtualAddress + (char*)DriverBase;
 	  PageAddress = (PVOID)PAGE_ROUND_DOWN(BaseAddress);
 	  if (! PageNeedsWriteAccess(PageAddress, DriverBase, PEFileHeader, PESectionHeaders))
 	    {
@@ -1349,16 +1353,16 @@ LdrSafePEProcessModule(PVOID ModuleLoadBase,
 	{
 	  //ps("PESectionHeaders[Idx].VirtualAddress (%X) + DriverBase %x\n",
 	  //PESectionHeaders[Idx].VirtualAddress, PESectionHeaders[Idx].VirtualAddress + DriverBase);
-	  memcpy(PESectionHeaders[Idx].VirtualAddress + DriverBase,
-		 (PVOID)(ModuleLoadBase + PESectionHeaders[Idx].PointerToRawData),
+	  memcpy(PESectionHeaders[Idx].VirtualAddress + (char*)DriverBase,
+		 (PVOID)((char*)ModuleLoadBase + PESectionHeaders[Idx].PointerToRawData),
 		 PESectionHeaders[Idx].Misc.VirtualSize > PESectionHeaders[Idx].SizeOfRawData ?
 		   PESectionHeaders[Idx].SizeOfRawData : PESectionHeaders[Idx].Misc.VirtualSize );
 	}
       else
 	{
 	  ps("PESectionHeaders[Idx].VirtualAddress (%X) + DriverBase %x\n",
-	     PESectionHeaders[Idx].VirtualAddress, PESectionHeaders[Idx].VirtualAddress + DriverBase);
-	  memset(PESectionHeaders[Idx].VirtualAddress + DriverBase, 
+	     PESectionHeaders[Idx].VirtualAddress, PESectionHeaders[Idx].VirtualAddress + (char*)DriverBase);
+	  memset(PESectionHeaders[Idx].VirtualAddress + (char*)DriverBase, 
 		 '\0',
 		 PESectionHeaders[Idx].Misc.VirtualSize);
 	}
@@ -1383,7 +1387,7 @@ LdrSafePEProcessModule(PVOID ModuleLoadBase,
 	  DPRINT("Name %.8s PESectionHeader[Idx].PointerToRawData %x\n",
 		 PESectionHeaders[Idx].Name,
 		 PESectionHeaders[Idx].PointerToRawData);
-	  RelocDir = PESectionHeaders[Idx].PointerToRawData + ModuleLoadBase;
+	  RelocDir = (PRELOCATION_DIRECTORY)(PESectionHeaders[Idx].PointerToRawData + (char*)ModuleLoadBase);
 	  CurrentSize = PESectionHeaders[Idx].Misc.VirtualSize;
 	  break;
 	}
@@ -1406,7 +1410,7 @@ LdrSafePEProcessModule(PVOID ModuleLoadBase,
 
 	  Offset = RelocEntry[Idx].TypeOffset & 0xfff;
 	  Type = (RelocEntry[Idx].TypeOffset >> 12) & 0xf;
-	  RelocItem = (PULONG)(DriverBase + RelocDir->VirtualAddress + Offset);
+	  RelocItem = (PULONG)((char*)DriverBase + RelocDir->VirtualAddress + Offset);
 	  if (Type == 3)
 	    {
 	      (*RelocItem) += RelocDelta;
@@ -1475,7 +1479,7 @@ LdrSafePEProcessModule(PVOID ModuleLoadBase,
 	    {
 	       /* Hint */
 	      pName = NULL;
-	      Hint = (*FunctionNameList) & 0xffff;
+	      Hint = (USHORT)((*FunctionNameList) & 0xffff);
 	    }
 	  else
 	    {
@@ -1523,9 +1527,9 @@ LdrPEGetExportAddress(PMODULE_OBJECT ModuleObject,
 	return NULL;
      }
 
-   FunctionList = (PDWORD)((DWORD)ExportDir->AddressOfFunctions + ModuleObject->Base);
-   NameList = (PDWORD)((DWORD)ExportDir->AddressOfNames + ModuleObject->Base);
-   OrdinalList = (PWORD)((DWORD)ExportDir->AddressOfNameOrdinals + ModuleObject->Base);
+   FunctionList = (PDWORD)((DWORD)ExportDir->AddressOfFunctions + (char*)ModuleObject->Base);
+   NameList = (PDWORD)((DWORD)ExportDir->AddressOfNames + (char*)ModuleObject->Base);
+   OrdinalList = (PWORD)((DWORD)ExportDir->AddressOfNameOrdinals + (char*)ModuleObject->Base);
 
   ExportAddress = 0;
 
@@ -1599,9 +1603,9 @@ LdrSafePEGetExportAddress(PVOID ImportModuleBase,
     ps("ExportDir %x\n", ExportDir);
   }
 
-  FunctionList = (PDWORD)((DWORD)ExportDir->AddressOfFunctions + ImportModuleBase);
-  NameList = (PDWORD)((DWORD)ExportDir->AddressOfNames + ImportModuleBase);
-  OrdinalList = (PWORD)((DWORD)ExportDir->AddressOfNameOrdinals + ImportModuleBase);
+  FunctionList = (PDWORD)((DWORD)ExportDir->AddressOfFunctions + (char*)ImportModuleBase);
+  NameList = (PDWORD)((DWORD)ExportDir->AddressOfNames + (char*)ImportModuleBase);
+  OrdinalList = (PWORD)((DWORD)ExportDir->AddressOfNameOrdinals + (char*)ImportModuleBase);
 
   ExportAddress = 0;
 

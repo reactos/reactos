@@ -1,4 +1,4 @@
-/* $Id: pnproot.c,v 1.18 2003/11/17 02:12:51 hyperion Exp $
+/* $Id: pnproot.c,v 1.19 2003/12/30 18:52:04 fireball Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -49,6 +49,8 @@ typedef enum {
 } PNPROOT_DEVICE_STATE;
 
 
+#if defined(__GNUC__)
+
 typedef struct _PNPROOT_COMMON_DEVICE_EXTENSION
 {
   // Pointer to device object, this device extension is associated with
@@ -61,6 +63,29 @@ typedef struct _PNPROOT_COMMON_DEVICE_EXTENSION
   DEVICE_POWER_STATE DevicePowerState;
 } __attribute((packed)) PNPROOT_COMMON_DEVICE_EXTENSION, *PPNPROOT_COMMON_DEVICE_EXTENSION;
 
+#elif defined(_MSC_VER)
+
+#include <pshpack1.h>
+typedef struct _PNPROOT_COMMON_DEVICE_EXTENSION
+{
+  // Pointer to device object, this device extension is associated with
+  PDEVICE_OBJECT DeviceObject;
+  // Wether this device extension is for an FDO or PDO
+  BOOLEAN IsFDO;
+  // Wether the device is removed
+  BOOLEAN Removed;
+  // Current device power state for the device
+  DEVICE_POWER_STATE DevicePowerState;
+} PNPROOT_COMMON_DEVICE_EXTENSION, *PPNPROOT_COMMON_DEVICE_EXTENSION;
+#include <poppack.h>
+
+#else
+#error Unknown compiler for structure packing
+#endif
+
+
+#if defined(__GNUC__)
+
 /* Physical Device Object device extension for a child device */
 typedef struct _PNPROOT_PDO_DEVICE_EXTENSION
 {
@@ -71,6 +96,27 @@ typedef struct _PNPROOT_PDO_DEVICE_EXTENSION
   // Instance ID
   UNICODE_STRING InstanceID;
 } __attribute((packed)) PNPROOT_PDO_DEVICE_EXTENSION, *PPNPROOT_PDO_DEVICE_EXTENSION;
+
+#elif defined(_MSC_VER)
+
+#include <pshpack1.h>
+typedef struct _PNPROOT_PDO_DEVICE_EXTENSION
+{
+  // Common device data
+  PNPROOT_COMMON_DEVICE_EXTENSION Common;
+  // Device ID
+  UNICODE_STRING DeviceID;
+  // Instance ID
+  UNICODE_STRING InstanceID;
+} PNPROOT_PDO_DEVICE_EXTENSION, *PPNPROOT_PDO_DEVICE_EXTENSION;
+#include <poppack.h>
+
+#else
+#error Unknown compiler for structure packing
+#endif
+
+
+#if defined(__GNUC__)
 
 /* Functional Device Object device extension for the PCI driver device object */
 typedef struct _PNPROOT_FDO_DEVICE_EXTENSION
@@ -91,6 +137,34 @@ typedef struct _PNPROOT_FDO_DEVICE_EXTENSION
   // FIXME: Use fast mutex instead?
   KSPIN_LOCK DeviceListLock;
 } __attribute((packed)) PNPROOT_FDO_DEVICE_EXTENSION, *PPNPROOT_FDO_DEVICE_EXTENSION;
+
+#elif defined(_MSC_VER)
+
+#include <pshpack1.h>
+typedef struct _PNPROOT_FDO_DEVICE_EXTENSION
+{
+  // Common device data
+  PNPROOT_COMMON_DEVICE_EXTENSION Common;
+  // Physical Device Object
+  PDEVICE_OBJECT Pdo;
+  // Lower device object
+  PDEVICE_OBJECT Ldo;
+  // Current state of the driver
+  PNPROOT_DEVICE_STATE State;
+  // Namespace device list
+  LIST_ENTRY DeviceListHead;
+  // Number of (not removed) devices in device list
+  ULONG DeviceListCount;
+  // Lock for namespace device list
+  // FIXME: Use fast mutex instead?
+  KSPIN_LOCK DeviceListLock;
+} PNPROOT_FDO_DEVICE_EXTENSION, *PPNPROOT_FDO_DEVICE_EXTENSION;
+#include <poppack.h>
+
+#else
+#error Unknown compiler for structure packing
+#endif
+
 
 
 PDEVICE_OBJECT PnpRootDeviceObject;

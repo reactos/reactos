@@ -1,4 +1,4 @@
-/* $Id: resource.c,v 1.26 2003/08/14 18:30:28 silverblade Exp $
+/* $Id: resource.c,v 1.27 2003/12/30 18:52:03 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -712,11 +712,11 @@ ExIsResourceAcquiredSharedLite(
    ULONG i;
    if (Resource->OwnerThreads[0].OwnerThread == ExGetCurrentResourceThread())
      {
-    return(Resource->OwnerThreads[0].OwnerCount);
+    return (USHORT)(Resource->OwnerThreads[0].OwnerCount);
      }
    if (Resource->OwnerThreads[1].OwnerThread == ExGetCurrentResourceThread())
      {
-    return(Resource->OwnerThreads[1].OwnerCount);
+    return (USHORT)(Resource->OwnerThreads[1].OwnerCount);
      }
    if (!Resource->OwnerThreads[1].TableSize) 
      {
@@ -726,7 +726,7 @@ ExIsResourceAcquiredSharedLite(
      {
 	if (Resource->OwnerTable[i].OwnerThread==ExGetCurrentResourceThread())
 	  {
-         return Resource->OwnerTable[i].OwnerCount;
+         return (USHORT)Resource->OwnerTable[i].OwnerCount;
 	  }
      }
    return(0);
@@ -768,8 +768,8 @@ ExReleaseResourceLite (
 	PERESOURCE	Resource
 	)
 {
-  return(ExReleaseResourceForThreadLite(Resource,
-					ExGetCurrentResourceThread()));
+  ExReleaseResourceForThreadLite(Resource,
+					ExGetCurrentResourceThread());
 }
 
 
@@ -789,7 +789,7 @@ ExReleaseResourceForThread (
 	ERESOURCE_THREAD	ResourceThreadId
 	)
 {
-  return(ExReleaseResourceForThreadLite(Resource,ResourceThreadId));
+  ExReleaseResourceForThreadLite(Resource,ResourceThreadId);
 }
 
 

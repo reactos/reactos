@@ -1,4 +1,4 @@
-/* $Id: pin.c,v 1.13 2003/07/10 06:27:13 royce Exp $
+/* $Id: pin.c,v 1.14 2003/12/30 18:52:03 fireball Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -53,7 +53,7 @@ CcMapData (IN PFILE_OBJECT FileObject,
 	 " pBcb %x, pBuffer %x)\n", FileObject, (ULONG)FileOffset->QuadPart,
 	 Length, Wait, pBcb, pBuffer);
   
-  ReadOffset = FileOffset->QuadPart;
+  ReadOffset = (ULONG)FileOffset->QuadPart;
   Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
   assert(Bcb);
 
@@ -88,7 +88,15 @@ CcMapData (IN PFILE_OBJECT FileObject,
 	  return(FALSE);
 	}
     }
+#if defined(__GNUC__)
   *pBuffer += ReadOffset % Bcb->CacheSegmentSize;
+#else
+  {
+    char* pTemp = *pBuffer;
+    pTemp += ReadOffset % Bcb->CacheSegmentSize;
+    *pBuffer = pTemp;
+  }
+#endif
   iBcb = ExAllocateFromNPagedLookasideList(&iBcbLookasideList);
   if (iBcb == NULL)
     {
