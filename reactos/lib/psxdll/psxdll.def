@@ -1,4 +1,4 @@
-; $Id: psxdll.def,v 1.2 1999/09/12 21:54:16 ea Exp $
+; $Id: psxdll.def,v 1.3 1999/10/12 21:17:04 ea Exp $
 ;
 ; psxdll.def
 ;
@@ -41,7 +41,7 @@ RtlZeroMemory@8
 __PdxGetCmdLine@0
 __PdxInitializeData@8
 ;__findenv
-;_exit
+_exit
 ;_fdptcheck
 ;_sigjmp_store_mask
 ;accept

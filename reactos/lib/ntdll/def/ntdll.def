@@ -1,8 +1,8 @@
-; $Id: ntdll.def,v 1.15 1999/09/12 22:06:26 ea Exp $
+; $Id: ntdll.def,v 1.16 1999/10/12 21:17:04 ea Exp $
 ;
 ; ReactOS Operating System
 ;
-LIBRARY ntdll
+LIBRARY ntdll.dll
 
 EXPORTS
 InitializeObjectAttributes

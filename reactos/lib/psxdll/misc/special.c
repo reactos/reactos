@@ -1,10 +1,11 @@
-/* $Id: special.c,v 1.1 1999/09/12 21:54:16 ea Exp $
+/* $Id: special.c,v 1.2 1999/10/12 21:17:05 ea Exp $
  * 
  * reactos/subsys/psxdll/misc/special.c
  * 
  * ReactOS Operating System
  * - POSIX+ client side DLL (ReactOS POSIX+ Subsystem)
  */
+#define NTOS_MODE_USER
 #include <ntos.h>
 
 
