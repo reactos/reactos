@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rangelist.c,v 1.5 2004/05/17 13:21:52 ekohl Exp $
+/* $Id: rangelist.c,v 1.6 2004/05/23 11:56:16 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -31,6 +31,7 @@
 #define NDEBUG
 #include <ntdll/ntdll.h>
 
+#define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
 
 typedef struct _RTL_RANGE_ENTRY
 {
@@ -41,7 +42,25 @@ typedef struct _RTL_RANGE_ENTRY
 
 /* FUNCTIONS ***************************************************************/
 
-/*
+/**********************************************************************
+ * NAME							EXPORTED
+ * 	RtlAddRange
+ *
+ * DESCRIPTION
+ *	Adds a range to a range list.
+ *
+ * ARGUMENTS
+ *	RangeList		Range list.
+ *	Start
+ *	End
+ *	Attributes
+ *	Flags
+ *	UserData
+ *	Owner
+ *
+ * RETURN VALUE
+ *	Status
+ *
  * TODO:
  *   - Check for overlapping ranges.
  *
@@ -121,6 +140,10 @@ RtlAddRange (IN OUT PRTL_RANGE_LIST RangeList,
       RangeList->Stamp++;
       return STATUS_SUCCESS;
     }
+
+  RtlFreeHeap (RtlGetProcessHeap(),
+	       0,
+	       RangeEntry);
 
   return STATUS_UNSUCCESSFUL;
 }
@@ -280,8 +303,32 @@ RtlDeleteRange (IN OUT PRTL_RANGE_LIST RangeList,
 }
 
 
-/*
- * @unimplemented
+/**********************************************************************
+ * NAME							EXPORTED
+ * 	RtlFindRange
+ *
+ * DESCRIPTION
+ *	Searches for an unused range.
+ *
+ * ARGUMENTS
+ *	RangeList		Pointer to the range list.
+ *	Minimum
+ *	Maximum
+ *	Length
+ *	Alignment
+ *	Flags
+ *	AttributeAvailableMask
+ *	Context
+ *	Callback
+ *	Start
+ *
+ * RETURN VALUE
+ *	Status
+ *
+ * TODO
+ *	Support shared ranges and callback.
+ *
+ * @implemented
  */
 NTSTATUS STDCALL
 RtlFindRange (IN PRTL_RANGE_LIST RangeList,
@@ -295,34 +342,74 @@ RtlFindRange (IN PRTL_RANGE_LIST RangeList,
 	      IN PRTL_CONFLICT_RANGE_CALLBACK Callback OPTIONAL,
 	      OUT PULONGLONG Start)
 {
-#if 0
-  PRTL_RANGE_ENTRY Current;
+  PRTL_RANGE_ENTRY CurrentEntry;
+  PRTL_RANGE_ENTRY NextEntry;
   PLIST_ENTRY Entry;
+  ULONGLONG RangeMin;
+  ULONGLONG RangeMax;
 
-  Entry = RangeList->ListHead.Flink;
+  if (Alignment == 0 || Length == 0)
+    {
+      return STATUS_INVALID_PARAMETER;
+    }
+
+  if (IsListEmpty(&RangeList->ListHead))
+    {
+      *Start = ROUND_DOWN (Maximum - (Length - 1), Alignment);
+      return STATUS_SUCCESS;
+    }
+
+  NextEntry = NULL;
+  Entry = RangeList->ListHead.Blink;
   while (Entry != &RangeList->ListHead)
     {
-      Current = CONTAINING_RECORD (Entry, RTL_RANGE_ENTRY, Entry);
-      if (Current->Range.Start >= Minimum &&
-	  Current->Range.End <= Maximum)
+      CurrentEntry = CONTAINING_RECORD (Entry, RTL_RANGE_ENTRY, Entry);
+
+      RangeMax = NextEntry ? (NextEntry->Range.Start - 1) : Maximum;
+      if (RangeMax + (Length - 1) < Minimum)
 	{
-	  if (Callback != NULL)
-	    {
-	      Callback (Context,
-			&Current->Range);
-	    }
+	  return STATUS_RANGE_NOT_FOUND;
+	}
 
-	  *Start = Current->Range.Start;
+      RangeMin = ROUND_DOWN (RangeMax - (Length - 1), Alignment);
+      if (RangeMin < Minimum ||
+	  (RangeMax - RangeMin) < (Length - 1))
+	{
+	  return STATUS_RANGE_NOT_FOUND;
+	}
 
+      DPRINT("RangeMax: %I64x\n", RangeMax);
+      DPRINT("RangeMin: %I64x\n", RangeMin);
+
+      if (RangeMin > CurrentEntry->Range.End)
+	{
+	  *Start = RangeMin;
 	  return STATUS_SUCCESS;
 	}
 
-      Entry = Entry->Flink;
+      NextEntry = CurrentEntry;
+      Entry = Entry->Blink;
     }
 
-  return STATUS_RANGE_NOT_FOUND;
-#endif
-  return STATUS_NOT_IMPLEMENTED;
+  RangeMax = NextEntry ? (NextEntry->Range.Start - 1) : Maximum;
+  if (RangeMax + (Length - 1) < Minimum)
+    {
+      return STATUS_RANGE_NOT_FOUND;
+    }
+
+  RangeMin = ROUND_DOWN (RangeMax - (Length - 1), Alignment);
+  if (RangeMin < Minimum ||
+      (RangeMax - RangeMin) < (Length - 1))
+    {
+      return STATUS_RANGE_NOT_FOUND;
+    }
+
+  DPRINT("RangeMax: %I64x\n", RangeMax);
+  DPRINT("RangeMin: %I64x\n", RangeMin);
+
+  *Start = RangeMin;
+
+  return STATUS_SUCCESS;
 }
 
 
@@ -331,7 +418,7 @@ RtlFindRange (IN PRTL_RANGE_LIST RangeList,
  * 	RtlFreeRangeList
  *
  * DESCRIPTION
- *	Deletes all ranges of a range list.
+ *	Deletes all ranges in a range list.
  *
  * ARGUMENTS
  *	RangeList	Pointer to the range list.
@@ -478,7 +565,20 @@ RtlInitializeRangeList (IN OUT PRTL_RANGE_LIST RangeList)
 }
 
 
-/*
+/**********************************************************************
+ * NAME							EXPORTED
+ * 	RtlInvertRangeList
+ *
+ * DESCRIPTION
+ *	Inverts a range list.
+ *
+ * ARGUMENTS
+ *	InvertedRangeList	Inverted range list.
+ *	RangeList		Range list.
+ *
+ * RETURN VALUE
+ *	Status
+ *
  * @unimplemented
  */
 NTSTATUS STDCALL
@@ -489,7 +589,26 @@ RtlInvertRangeList (OUT PRTL_RANGE_LIST InvertedRangeList,
 }
 
 
-/*
+/**********************************************************************
+ * NAME							EXPORTED
+ * 	RtlIsRangeAvailable
+ *
+ * DESCRIPTION
+ *	Checks whether a range is available or not.
+ *
+ * ARGUMENTS
+ *	RangeList		Pointer to the range list.
+ *	Start
+ *	End
+ *	Flags
+ *	AttributeAvailableMask
+ *	Context
+ *	Callback
+ *	Available
+ *
+ * RETURN VALUE
+ *	Status
+ *
  * TODO:
  *   - honor Flags and AttributeAvailableMask.
  *
@@ -535,7 +654,22 @@ RtlIsRangeAvailable (IN PRTL_RANGE_LIST RangeList,
 }
 
 
-/*
+/**********************************************************************
+ * NAME							EXPORTED
+ * 	RtlMergeRangeList
+ *
+ * DESCRIPTION
+ *	Merges two range lists.
+ *
+ * ARGUMENTS
+ *	MergedRangeList	Resulting range list.
+ *	RangeList1	First range list.
+ *	RangeList2	Second range list
+ *	Flags
+ *
+ * RETURN VALUE
+ *	Status
+ *
  * @unimplemented
  */
 NTSTATUS STDCALL
