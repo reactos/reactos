@@ -300,6 +300,7 @@ ROSDATA VK_TO_WCHARS5 key_to_chars_5mod[] = {
 };
 
 ROSDATA VK_TO_WCHARS1 keypad_numbers[] = {
+  { VK_DECIMAL, 0, '.' },
   { VK_NUMPAD0, 0, '0' },
   { VK_NUMPAD1, 0, '1' },
   { VK_NUMPAD2, 0, '2' },
