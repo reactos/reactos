@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.37 2001/02/06 00:11:18 dwelch Exp $
+/* $Id: proc.c,v 1.38 2001/02/10 22:01:50 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -627,6 +627,38 @@ SetPriorityClass (
 	}
 	return (TRUE);
 }
+
+
+DWORD
+STDCALL
+GetProcessVersion (
+	DWORD	ProcessId
+	)
+{
+	DWORD			Version = 0;
+	PIMAGE_NT_HEADERS	NtHeader = NULL;
+	PVOID			BaseAddress = NULL;
+
+	/* Caller's */
+	if (0 == ProcessId)
+	{
+		BaseAddress = (PVOID) NtCurrentPeb()->ImageBaseAddress;
+		NtHeader = RtlImageNtHeader (BaseAddress);
+		if (NULL != NtHeader)
+		{
+			Version =
+				(NtHeader->OptionalHeader.MajorOperatingSystemVersion << 16)
+				| (NtHeader->OptionalHeader.MinorOperatingSystemVersion);
+		}
+	}
+	else /* other process */
+	{
+		/* FIXME: open the other process */
+		SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	}
+	return (Version);
+}
+
 
 
 /* EOF */

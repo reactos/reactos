@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.23 2001/01/20 12:19:57 ekohl Exp $
+/* $Id: stubs.c,v 1.24 2001/02/10 22:01:50 ea Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -1761,17 +1761,6 @@ GetProcessShutdownParameters (
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
-}
-
-
-DWORD
-STDCALL
-GetProcessVersion (
-	DWORD	Unknown0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
 }
 
 

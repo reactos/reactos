@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.2 2000/11/04 13:52:12 ekohl Exp $
+/* $Id: sysinfo.c,v 1.3 2001/02/10 22:01:50 ea Exp $
  *
  * reactos/lib/kernel32/misc/sysinfo.c
  *
@@ -7,6 +7,9 @@
 
 #include <kernel32/kernel32.h>
 #include <kernel32/error.h>
+
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 
 
 #define PV_NT351 0x00030033
@@ -61,34 +64,57 @@ GetSystemInfo (
 	Si->dwActiveProcessorMask	= Sbi.ActiveProcessorsAffinityMask;
 	Si->dwNumberOfProcessors	= Sbi.NumberOfProcessors;
 	/*
-	 * Compatibility:
+	 * Compatibility (no longer relevant):
 	 *	PROCESSOR_INTEL_386	386
 	 *	PROCESSOR_INTEL_486	486
 	 *	PROCESSOR_INTEL_PENTIUM	586
 	 *	PROCESSOR_MIPS_R4000	4000
 	 *	PROCESSOR_ALPHA_21064	21064
 	 */
-#if 0
 	switch (Spi.ProcessorArchitecture)
 	{
-	case :
-#endif
-		Si->dwProcessorType = PROCESSOR_INTEL_PENTIUM;
-#if 0
+	case PROCESSOR_ARCHITECTURE_INTEL:
+		switch (Spi.ProcessorLevel)
+		{
+		case 3:
+			Si->dwProcessorType = PROCESSOR_INTEL_386;
+			break;
+		case 4:
+			Si->dwProcessorType = PROCESSOR_INTEL_486;
+			break;
+		case 5:
+			Si->dwProcessorType = PROCESSOR_INTEL_PENTIUM;
+			break;
+		default:
+			/* FIXME: P2, P3, P4...? */
+			Si->dwProcessorType = PROCESSOR_INTEL_PENTIUM;
+		}
 		break;
+		
+	case PROCESSOR_ARCHITECTURE_MIPS:
+		Si->dwProcessorType = PROCESSOR_MIPS_R4000;
+		break;
+		
+	case PROCESSOR_ARCHITECTURE_ALPHA:
+		Si->dwProcessorType = PROCESSOR_ALPHA_21064;
+		break;
+		
+	case PROCESSOR_ARCHITECTURE_PPC:
+		Si->dwProcessorType = -1; /* FIXME: what value? */
+		break;
+		
 	}
-#endif
+	/* Once hardcoded to 64kb */
 	Si->dwAllocationGranularity	= Sbi.AllocationGranularity;
+	/* */
+	Si->wProcessorLevel		= Spi.ProcessorLevel;
 	Si->wProcessorRevision		= Spi.ProcessorRevision;
 	/*
 	 * Get the version of Windows on which
 	 * the process expects to run.
 	 */
-#if 0
 	ProcessVersion = GetProcessVersion (0); /* current process */
-#endif
-	
-	 /* In NT 3.1, these fields were always zero. */
+	 /* In NT 3.1 and 3.5 these fields were always zero. */
 	if (PV_NT351 > ProcessVersion)
 	{
 		Si->wProcessorLevel = 0;
