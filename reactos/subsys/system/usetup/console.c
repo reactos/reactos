@@ -153,7 +153,7 @@ WriteConsole(PCHAR Buffer,
 /*--------------------------------------------------------------
  *	ReadConsoleA
  */
-WINBOOL
+BOOL
 STDCALL
 ReadConsoleA(HANDLE hConsoleInput,
 			     LPVOID lpBuffer,

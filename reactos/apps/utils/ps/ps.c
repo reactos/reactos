@@ -1,4 +1,4 @@
-/* $Id: ps.c,v 1.1 2003/01/04 18:36:28 robd Exp $
+/* $Id: ps.c,v 1.2 2004/01/23 23:29:29 ekohl Exp $
  *
  *  ReactOS ps - process list console viewer
  *
@@ -60,7 +60,7 @@ int main()
   CloseHandle(pl);
 }
 /*
-WINBOOL
+BOOL
 STDCALL
 FileTimeToDosDateTime(
 		      CONST FILETIME *lpFileTime,
