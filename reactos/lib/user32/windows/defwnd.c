@@ -487,7 +487,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
   
   WinPosGetMinMaxInfo(hwnd, NULL, NULL, &minTrack, &maxTrack);
   GetWindowRect(hwnd, &sizingRect);
-  GetWindowRect(hwnd, &unmodRect);  
+  unmodRect = sizingRect;
   if (Style & WS_CHILD)
     {
       MapWindowPoints( 0, hWndParent, (LPPOINT)&sizingRect, 2 );
