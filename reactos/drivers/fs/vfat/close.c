@@ -1,4 +1,4 @@
-/* $Id: close.c,v 1.7 2001/05/10 04:02:21 rex Exp $
+/* $Id: close.c,v 1.8 2001/08/14 20:47:30 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -18,7 +18,7 @@
 
 /* FUNCTIONS ****************************************************************/
 
-NTSTATUS 
+NTSTATUS
 VfatCloseFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject)
 /*
  * FUNCTION: Closes a file
@@ -26,6 +26,7 @@ VfatCloseFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject)
 {
   PVFATFCB pFcb;
   PVFATCCB pCcb;
+  NTSTATUS Status = STATUS_SUCCESS;
 
   DPRINT ("VfatCloseFile(DeviceExt %x, FileObject %x)\n",
 	  DeviceExt, FileObject);
@@ -38,12 +39,30 @@ VfatCloseFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject)
   {
     return  STATUS_SUCCESS;
   }
+  if (FileObject->FileName.Buffer)
+  {
+    // This a FO, that was created outside from FSD.
+    // Some FO's are created with IoCreateStreamFileObject() insid from FSD.
+    // This FO's haven't a FileName.
+    pFcb = pCcb->pFcb;
+    if (FileObject->DeletePending)
+    {
+      if (pFcb->Flags & FCB_DELETE_PENDING)
+      {
+        delEntry (DeviceExt, FileObject);
+      }
+      else
+       Status = STATUS_DELETE_PENDING;
+    }
+    FileObject->FsContext2 = NULL;
+    vfatReleaseFCB (DeviceExt, pFcb);
+  }
+  else
+    FileObject->FsContext2 = NULL;
 
-  pFcb = pCcb->pFcb;
-  vfatReleaseFCB (DeviceExt, pFcb);
   ExFreePool (pCcb);
 
-  return  STATUS_SUCCESS;
+  return  Status;
 }
 
 NTSTATUS STDCALL
@@ -59,7 +78,9 @@ VfatClose (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
   DPRINT ("VfatClose(DeviceObject %x, Irp %x)\n", DeviceObject, Irp);
 
+  ExAcquireResourceExclusiveLite (&DeviceExtension->DirResource, TRUE);
   Status = VfatCloseFile (DeviceExtension, FileObject);
+  ExReleaseResourceLite (&DeviceExtension->DirResource);
 
   Irp->IoStatus.Status = Status;
   Irp->IoStatus.Information = 0;

@@ -276,8 +276,8 @@ DoQuery (PDEVICE_OBJECT DeviceObject, PIRP Irp, PIO_STACK_LOCATION Stack)
       if (OldSector)
 	pCcb->StartEntry++;
       RC =
-	FindFile (DeviceExt, &tmpFcb, pFcb, pCharPattern, &pCcb->StartSector,
-		  &pCcb->StartEntry);
+	FindFile (DeviceExt, &tmpFcb, pFcb, pCharPattern, &pCcb->StartEntry, NULL);
+    pCcb->StartSector = 1;
       DPRINT ("Found %S,RC=%x, sector %x entry %x\n", tmpFcb.ObjectName, RC,
 	      pCcb->StartSector, pCcb->StartEntry);
       if (NT_SUCCESS (RC))

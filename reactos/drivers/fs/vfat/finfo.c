@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.8 2001/06/12 12:35:42 ekohl Exp $
+/* $Id: finfo.c,v 1.9 2001/08/14 20:47:30 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -145,11 +145,65 @@ VfatSetDispositionInformation(PFILE_OBJECT FileObject,
 			      PDEVICE_OBJECT DeviceObject,
 			      PFILE_DISPOSITION_INFORMATION DispositionInfo)
 {
+  KIRQL oldIrql;
+  VFATFCB tmpFcb;
+  WCHAR star[2];
+  ULONG Index;
+  NTSTATUS Status = STATUS_SUCCESS;
+  int count;
+
+  PDEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
+
   DPRINT ("FsdSetDispositionInformation()\n");
 
-  FileObject->DeletePending = DispositionInfo->DoDeleteFile;
+  assert (DeviceExt != NULL);
+  assert (DeviceExt->BytesPerCluster != 0);
+  assert (FCB != NULL);
 
-  return (STATUS_SUCCESS);
+  if (!wcscmp(FCB->PathName, L"\\") || !wcscmp(FCB->ObjectName, L"..")
+    || !wcscmp(FCB->ObjectName, L"."))
+  {
+    // we cannot delete a '.', '..' or the root directory
+    return STATUS_ACCESS_DENIED;
+  }
+  if (DispositionInfo->DoDeleteFile)
+  {
+    KeAcquireSpinLock (&DeviceExt->FcbListLock, &oldIrql);
+    count = FCB->RefCount;
+    if (FCB->RefCount > 1)
+      Status = STATUS_ACCESS_DENIED;
+    else
+    {
+      FCB->Flags |= FCB_DELETE_PENDING;
+      FileObject->DeletePending = TRUE;
+    }
+    KeReleaseSpinLock(&DeviceExt->FcbListLock, oldIrql);
+    DPRINT("RefCount:%d\n", count);
+    if (NT_SUCCESS(Status) && vfatFCBIsDirectory(DeviceExt, FCB))
+    {
+      memset (&tmpFcb, 0, sizeof(VFATFCB));
+      tmpFcb.ObjectName = tmpFcb.PathName;
+      star[0] = L'*';
+      star[1] = 0;
+      // skip '.' and '..', start by 2
+      Index = 2;
+      Status = FindFile (DeviceExt, &tmpFcb, FCB, star, &Index, NULL);
+      if (NT_SUCCESS(Status))
+      {
+        DPRINT1("found: \'%S\'\n", tmpFcb.PathName);
+        Status = STATUS_DIRECTORY_NOT_EMPTY;
+        FCB->Flags &= ~FCB_DELETE_PENDING;
+        FileObject->DeletePending = FALSE;
+      }
+      else
+      {
+        Status = STATUS_SUCCESS;
+      }
+    }
+  }
+  else
+    FileObject->DeletePending = FALSE;
+  return Status;
 }
 
 static NTSTATUS

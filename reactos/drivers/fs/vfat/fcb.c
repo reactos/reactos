@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.8 2001/07/28 07:05:56 hbirr Exp $
+/* $Id: fcb.c,v 1.9 2001/08/14 20:47:30 hbirr Exp $
  *
  *
  * FILE:             fcb.c
@@ -74,7 +74,7 @@ vfatGrabFCB(PDEVICE_EXTENSION  pVCB, PVFATFCB  pFCB)
   KIRQL  oldIrql;
 
   DPRINT ("grabbing FCB at %x: %S, refCount:%d\n", 
-          pFCB, 
+          pFCB,
           pFCB->PathName,
           pFCB->RefCount);
 
@@ -89,13 +89,13 @@ vfatReleaseFCB(PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB)
   KIRQL  oldIrql;
 
   DPRINT ("releasing FCB at %x: %S, refCount:%d\n", 
-          pFCB, 
+          pFCB,
           pFCB->PathName,
           pFCB->RefCount);
 
   KeAcquireSpinLock (&pVCB->FcbListLock, &oldIrql);
   pFCB->RefCount--;
-  if (pFCB->RefCount <= 0 && !vfatFCBIsDirectory (pVCB, pFCB))
+  if (pFCB->RefCount <= 0 && (!vfatFCBIsDirectory (pVCB, pFCB) || pFCB->Flags & FCB_DELETE_PENDING))
   {
     RemoveEntryList (&pFCB->FcbListEntry);
     CcRosReleaseFileCache (NULL, pFCB->RFCB.Bcb);
@@ -172,9 +172,9 @@ vfatFCBInitializeCache (PVCB  vcb, PVFATFCB  fcb)
   fcb->pDevExt = vcb;
 
   bytesPerCluster = vcb->Boot->SectorsPerCluster * BLOCKSIZE;
-  fileCacheQuantum = (bytesPerCluster >= PAGESIZE) ? 
+  fileCacheQuantum = (bytesPerCluster >= PAGESIZE) ?
       bytesPerCluster : PAGESIZE;
-  status = CcRosInitializeFileCache (fileObject, 
+  status = CcRosInitializeFileCache (fileObject,
                                      &fcb->RFCB.Bcb,
                                      fileCacheQuantum);
   if (!NT_SUCCESS (status))
@@ -183,7 +183,7 @@ vfatFCBInitializeCache (PVCB  vcb, PVFATFCB  fcb)
     KeBugCheck (0);
   }
   ObDereferenceObject (fileObject);
-  fcb->isCacheInitialized = TRUE;
+  fcb->Flags |= FCB_CACHE_INITIALIZED;
 
   return  status;
 }
@@ -216,9 +216,9 @@ vfatRequestAndValidateRegion(PDEVICE_EXTENSION pDeviceExt,
   if (!valid)
   {
     currentCluster = vfatDirEntryGetFirstCluster (pDeviceExt, &pFCB->entry);
-    status = OffsetToCluster (pDeviceExt, 
-                              vfatDirEntryGetFirstCluster (pDeviceExt, &pFCB->entry), 
-                              pOffset, 
+    status = OffsetToCluster (pDeviceExt,
+                              vfatDirEntryGetFirstCluster (pDeviceExt, &pFCB->entry),
+                              pOffset,
                               &currentCluster,
                               pExtend);
     if (!NT_SUCCESS (status))
@@ -230,9 +230,9 @@ vfatRequestAndValidateRegion(PDEVICE_EXTENSION pDeviceExt,
     {
       for (i = 0; i < (PAGESIZE / pDeviceExt->BytesPerCluster); i++)
       {
-        status = VfatRawReadCluster (pDeviceExt, 
+        status = VfatRawReadCluster (pDeviceExt,
                                      vfatDirEntryGetFirstCluster (pDeviceExt, &pFCB->entry),
-                                     ((PCHAR)*pBuffer) + 
+                                     ((PCHAR)*pBuffer) +
                                      (i * pDeviceExt->BytesPerCluster),
                                      currentCluster);
         if (!NT_SUCCESS (status))
@@ -240,9 +240,9 @@ vfatRequestAndValidateRegion(PDEVICE_EXTENSION pDeviceExt,
           CcRosReleaseCacheSegment(pFCB->RFCB.Bcb, *pCacheSegment, FALSE);
           return  status;
         }
-        status = NextCluster (pDeviceExt, 
-                              vfatDirEntryGetFirstCluster (pDeviceExt, &pFCB->entry), 
-                              &currentCluster, 
+        status = NextCluster (pDeviceExt,
+                              vfatDirEntryGetFirstCluster (pDeviceExt, &pFCB->entry),
+                              &currentCluster,
                               pExtend);
         if (!NT_SUCCESS (status))
         {
@@ -257,7 +257,7 @@ vfatRequestAndValidateRegion(PDEVICE_EXTENSION pDeviceExt,
     }
     else
     {
-      status = VfatRawReadCluster (pDeviceExt, 
+      status = VfatRawReadCluster (pDeviceExt,
                                    vfatDirEntryGetFirstCluster (pDeviceExt, &pFCB->entry),
                                    *pBuffer,
                                    currentCluster);
@@ -317,7 +317,7 @@ vfatOpenRootFCB(PDEVICE_EXTENSION  pVCB)
   {
     FCB = vfatMakeRootFCB (pVCB);
   }
-  
+
   return  FCB;
 }
 
@@ -356,15 +356,16 @@ vfatMakeFCBFromDirEntry(PVCB  vcb,
   memcpy (&rcFCB->entry, dirEntry, sizeof (FAT_DIR_ENTRY));
 
   vfatFCBInitializeCache (vcb, rcFCB);
+  rcFCB->RefCount++;
   vfatAddFCBToTable (vcb, rcFCB);
-  vfatGrabFCB (vcb, rcFCB);
+//  vfatGrabFCB (vcb, rcFCB);
   *fileFCB = rcFCB;
 
   return  STATUS_SUCCESS;
 }
 
 NTSTATUS
-vfatAttachFCBToFileObject (PDEVICE_EXTENSION  vcb, 
+vfatAttachFCBToFileObject (PDEVICE_EXTENSION  vcb,
                            PVFATFCB  fcb,
                            PFILE_OBJECT  fileObject)
 {
@@ -387,15 +388,15 @@ vfatAttachFCBToFileObject (PDEVICE_EXTENSION  vcb,
   newCCB->PtrFileObject = fileObject;
   fcb->pDevExt = vcb;
 
-  if (!fcb->isCacheInitialized)
+  if (!(fcb->Flags & FCB_CACHE_INITIALIZED))
   {
     ULONG  bytesPerCluster;
     ULONG  fileCacheQuantum;
 
     bytesPerCluster = vcb->Boot->SectorsPerCluster * BLOCKSIZE;
-    fileCacheQuantum = (bytesPerCluster >= PAGESIZE) ? bytesPerCluster : 
+    fileCacheQuantum = (bytesPerCluster >= PAGESIZE) ? bytesPerCluster :
         PAGESIZE;
-    status = CcRosInitializeFileCache (fileObject, 
+    status = CcRosInitializeFileCache (fileObject,
                                        &fcb->RFCB.Bcb,
                                        fileCacheQuantum);
     if (!NT_SUCCESS (status))
@@ -403,7 +404,7 @@ vfatAttachFCBToFileObject (PDEVICE_EXTENSION  vcb,
       DbgPrint ("CcRosInitializeFileCache failed\n");
       KeBugCheck (0);
     }
-    fcb->isCacheInitialized = TRUE;
+    fcb->Flags |= FCB_CACHE_INITIALIZED;
   }
 
   DPRINT ("file open: fcb:%x file size: %d\n", fcb, fcb->entry.FileSize);
@@ -412,8 +413,8 @@ vfatAttachFCBToFileObject (PDEVICE_EXTENSION  vcb,
 }
 
 NTSTATUS
-vfatDirFindFile (PDEVICE_EXTENSION  pDeviceExt, 
-                 PVFATFCB  pDirectoryFCB, 
+vfatDirFindFile (PDEVICE_EXTENSION  pDeviceExt,
+                 PVFATFCB  pDirectoryFCB,
                  PWSTR  pFileToFind,
                  PVFATFCB * pFoundFCB)
 {
@@ -430,7 +431,7 @@ vfatDirFindFile (PDEVICE_EXTENSION  pDeviceExt,
   assert (pFileToFind);
 
   DPRINT ("vfatDirFindFile(VCB:%08x, dirFCB:%08x, File:%S)\n",
-          pDeviceExt, 
+          pDeviceExt,
           pDirectoryFCB,
           pFileToFind);
   DPRINT ("Dir Path:%S\n", pDirectoryFCB->PathName);
@@ -443,7 +444,7 @@ vfatDirFindFile (PDEVICE_EXTENSION  pDeviceExt,
     pFileToFind = defaultFileName;
   }
 
-  directoryIndex = 0; 
+  directoryIndex = 0;
   finishedScanningDirectory = FALSE;
   while (!finishedScanningDirectory)
   {
@@ -462,7 +463,7 @@ vfatDirFindFile (PDEVICE_EXTENSION  pDeviceExt,
       return  status;
     }
 
-    DPRINT ("  Index:%d  longName:%S\n", 
+    DPRINT ("  Index:%d  longName:%S\n",
             directoryIndex,
             currentLongName);
 
@@ -479,7 +480,7 @@ vfatDirFindFile (PDEVICE_EXTENSION  pDeviceExt,
                                           pFoundFCB);
         return  status;
       }
-      else 
+      else
       {
         vfatGetDirEntryName (&currentDirEntry, currentEntryName);
         DPRINT ("  entryName:%S\n", currentEntryName);
@@ -502,8 +503,8 @@ vfatDirFindFile (PDEVICE_EXTENSION  pDeviceExt,
 }
 
 NTSTATUS
-vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB, 
-                   PVFATFCB  *pParentFCB, 
+vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB,
+                   PVFATFCB  *pParentFCB,
                    PVFATFCB  *pFCB, 
                    const PWSTR  pFileName)
 {
@@ -513,11 +514,11 @@ vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB,
   PWCHAR  currentElement;
   PVFATFCB  FCB;
   PVFATFCB  parentFCB;
-  
+
   DPRINT ("vfatGetFCBForFile (%x,%x,%x,%S)\n",
-          pVCB, 
-          pParentFCB, 
-          pFCB, 
+          pVCB,
+          pParentFCB,
+          pFCB,
           pFileName);
 
   //  Trivial case, open of the root directory on volume
@@ -573,16 +574,16 @@ vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB,
     parentFCB = FCB;
 
     //  Extract next directory level into dirName
-    vfatWSubString (pathName, 
-                    pFileName, 
+    vfatWSubString (pathName,
+                    pFileName,
                     vfatGetNextPathElement (currentElement) - pFileName);
     DPRINT ("  pathName:%S\n", pathName);
 
     FCB = vfatGrabFCBFromTable (pVCB, pathName);
     if (FCB == NULL)
     {
-      vfatWSubString (elementName, 
-                      currentElement, 
+      vfatWSubString (elementName,
+                      currentElement,
                       vfatGetNextPathElement (currentElement) - currentElement);
       DPRINT ("  elementName:%S\n", elementName);
 

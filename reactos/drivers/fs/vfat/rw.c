@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.30 2001/08/08 19:04:13 hbirr Exp $
+/* $Id: rw.c,v 1.31 2001/08/14 20:47:30 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -366,7 +366,7 @@ VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   assert (DeviceExt != NULL);
   assert (DeviceExt->BytesPerCluster != 0);
   assert (FileObject != NULL);
-  assert (FileObject->FsContext != NULL);
+  assert (FileObject->FsContext2 != NULL);
 
   DPRINT("VfatReadFile(DeviceExt %x, FileObject %x, Buffer %x, "
 	 "Length %d, ReadOffset 0x%x)\n", DeviceExt, FileObject, Buffer,

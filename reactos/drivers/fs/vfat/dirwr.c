@@ -1,4 +1,4 @@
-/* $Id: dirwr.c,v 1.20 2001/08/03 19:01:17 hbirr Exp $
+/* $Id: dirwr.c,v 1.21 2001/08/14 20:47:30 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -90,80 +90,57 @@ FillSlot (slot * Slot, WCHAR * FileName)
     }
 }
 
-
 NTSTATUS updEntry (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT pFileObject)
 /*
   update an existing FAT entry
 */
 {
-  WCHAR DirName[MAX_PATH], *FileName, *PathFileName;
-  VFATFCB FileFcb;
-  ULONG Sector = 0, Entry = 0;
-  PUCHAR Buffer;
-  FATDirEntry *pEntries;
+  VFATFCB Fcb;
+  VFATCCB Ccb;
+  ULONG Entry = 0;
   NTSTATUS status;
   FILE_OBJECT FileObject;
-  PVFATCCB pDirCcb;
-  PVFATFCB pDirFcb, pFcb;
-  short i, posCar, NameLen;
+  PVFATFCB pDirFcb = NULL, pFcb = NULL;
+  PWCHAR pName;
 
-  PathFileName = pFileObject->FileName.Buffer;
-  pFcb = ((PVFATCCB) pFileObject->FsContext2)->pFcb;
-  DPRINT ("PathFileName \'%S\'\n", PathFileName);
+  DPRINT ("updEntry PathFileName \'%S\'\n", pFileObject->FileName.Buffer);
 
-  //find last \ in PathFileName
-  posCar = -1;
-  for (i = 0; PathFileName[i]; i++)
-    if (PathFileName[i] == '\\')
-      posCar = i;
-  if (posCar == -1)
-    return STATUS_UNSUCCESSFUL;
-  FileName = &PathFileName[posCar + 1];
-  for (NameLen = 0; FileName[NameLen]; NameLen++);
+  status = vfatGetFCBForFile(DeviceExt, &pDirFcb, &pFcb, pFileObject->FileName.Buffer);
+  if (pFcb != NULL)
+  {
+    vfatReleaseFCB(DeviceExt, pFcb);
+  }
+  if (!NT_SUCCESS(status))
+  {
+    if (pDirFcb != NULL)
+    {
+      vfatReleaseFCB(DeviceExt, pDirFcb);
+    }
+    return status;
+  }
 
-  // extract directory name from pathname
-  if (posCar == 0)
-    {
-      // root dir
-      DirName[0] = L'\\';
-      DirName[1] = 0;
-    }
-  else
-    {
-      memcpy (DirName, PathFileName, posCar * sizeof (WCHAR));
-      DirName[posCar] = 0;
-    }
-  if (FileName[0] == 0 && DirName[0] == 0)
-    return STATUS_SUCCESS;	//root : nothing to do ?
-  memset (&FileObject, 0, sizeof (FILE_OBJECT));
-  DPRINT ("open directory \'%S\' for update of entry \'%S\'\n", DirName,
-	  FileName);
-  status = VfatOpenFile (DeviceExt, &FileObject, DirName);
-  if (!NT_SUCCESS (status))
-    {
-      DbgPrint ("Failed to open \'%S\'. Status %lx\n", DirName, status);
-      return status;
-    }
-  pDirCcb = (PVFATCCB) FileObject.FsContext2;
-  assert (pDirCcb);
-  pDirFcb = pDirCcb->pFcb;
-  assert (pDirFcb);
-  FileFcb.ObjectName = &FileFcb.PathName[0];
-  status = FindFile (DeviceExt, &FileFcb, pDirFcb, FileName, &Sector, &Entry);
+  pName = ((PVFATCCB)(pFileObject->FsContext2))->pFcb->ObjectName;
+  if (*pName == L'\\')
+  {
+    pName ++;
+  }
+  status = FindFile (DeviceExt, &Fcb, pDirFcb, pName, &Entry, NULL);
   if (NT_SUCCESS (status))
     {
-      Buffer = ExAllocatePool (NonPagedPool, BLOCKSIZE);
-      DPRINT ("update entry: sector %d, entry %d\n", Sector, Entry);
-      VfatReadSectors (DeviceExt->StorageDevice, Sector, 1, Buffer);
-      pEntries = (FATDirEntry *) Buffer;
-      memcpy (&pEntries[Entry], &pFcb->entry, sizeof (FATDirEntry));
-      VfatWriteSectors (DeviceExt->StorageDevice, Sector, 1, Buffer);
-      ExFreePool (Buffer);
+      DPRINT ("update entry: %d\n", Entry);
+      memset (&FileObject, 0, sizeof(FILE_OBJECT));
+      memset (&Ccb, 0, sizeof(VFATCCB));
+      FileObject.FsContext2 = &Ccb;
+      FileObject.FsContext = &pDirFcb->RFCB;
+      Ccb.pFcb = pDirFcb;
+      status = VfatWriteFile(DeviceExt, &FileObject, &pFcb->entry,
+                 sizeof(FATDirEntry), Entry  * sizeof(FATDirEntry), FALSE);
+      if (!NT_SUCCESS (status))
+        DbgPrint ("Failed to open \'%S\'. Status %lx\n", pDirFcb->PathName, status);
     }
-  VfatCloseFile (DeviceExt, &FileObject);
+  vfatReleaseFCB(DeviceExt, pDirFcb);
   return status;
 }
-
 
 NTSTATUS
 addEntry (PDEVICE_EXTENSION DeviceExt,
@@ -184,11 +161,9 @@ addEntry (PDEVICE_EXTENSION DeviceExt,
   PUCHAR Buffer, Buffer2;
   BOOLEAN needTilde = FALSE, needLong = FALSE;
   PVFATFCB newFCB;
-  PVFATCCB newCCB;
   ULONG CurrentCluster;
   LARGE_INTEGER SystemTime, LocalTime;
-  ULONG BytesPerCluster;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
   PVFATFCB pFcb;
   PVFATCCB pCcb;
 
@@ -204,8 +179,17 @@ addEntry (PDEVICE_EXTENSION DeviceExt,
   FileName = &PathFileName[posCar + 1];
   for (NameLen = 0; FileName[NameLen]; NameLen++);
   // extract directory name from pathname
-  memcpy (DirName, PathFileName, posCar * sizeof (WCHAR));
-  DirName[posCar] = 0;
+  if (posCar == 0)
+  {
+    // root dir
+    DirName[0] = L'\\';
+    DirName[1] = 0;
+  }
+  else
+  {
+    memcpy (DirName, PathFileName, posCar * sizeof (WCHAR));
+    DirName[posCar] = 0;
+  }
   // open parent directory
   memset (&FileObject, 0, sizeof (FILE_OBJECT));
   status = VfatOpenFile (DeviceExt, &FileObject, DirName);
@@ -420,7 +404,9 @@ addEntry (PDEVICE_EXTENSION DeviceExt,
 	  DPRINT1 ("VfatReadFile did not read a complete directory entry\n");
 	  break;
 	}
-      if (IsDeletedEntry (&FatEntry, 0))
+    if (vfatIsDirEntryEndMarker(&FatEntry))
+      break;
+    if (vfatIsDirEntryDeleted(&FatEntry))
 	nbFree++;
       else
 	nbFree = 0;
@@ -432,7 +418,18 @@ addEntry (PDEVICE_EXTENSION DeviceExt,
 
   if (RequestedOptions & FILE_DIRECTORY_FILE)
     {
-      NextCluster (DeviceExt, 0, &CurrentCluster, TRUE);
+    CurrentCluster = 0xffffffff;
+    status = NextCluster (DeviceExt, 0, &CurrentCluster, TRUE);
+    if (CurrentCluster == 0xffffffff || !NT_SUCCESS(status))
+    {
+      VfatCloseFile (DeviceExt, &FileObject);
+      ExFreePool (Buffer);
+      if (!NT_SUCCESS(status))
+      {
+        return status;
+      }
+      return STATUS_DISK_FULL;
+    }
       // zero the cluster
       Buffer2 = ExAllocatePool (NonPagedPool, DeviceExt->BytesPerCluster);
       memset (Buffer2, 0, DeviceExt->BytesPerCluster);
@@ -452,7 +449,7 @@ addEntry (PDEVICE_EXTENSION DeviceExt,
       status =
 	VfatWriteFile (DeviceExt, &FileObject, Buffer,
 		      sizeof (FATDirEntry) * nbSlots, Offset, FALSE);
-      DPRINT ("VfatWriteFile() returned: %x\n", status);
+    DPRINT ("VfatWriteFile() returned: %x\n", status);
     }
   else
     {				//write at end of directory
@@ -462,40 +459,25 @@ addEntry (PDEVICE_EXTENSION DeviceExt,
 		      sizeof (FATDirEntry) * (nbSlots + 1), Offset, FALSE);
     }
   DPRINT ("write entry offset %d status=%x\n", Offset, status);
-  newCCB = ExAllocatePool (NonPagedPool, sizeof (VFATCCB));
-  memset (newCCB, 0, sizeof (VFATCCB));
-  newFCB = vfatNewFCB (NULL);
-  newCCB->pFcb = newFCB;
-  newCCB->PtrFileObject = pFileObject;
-  newFCB->RefCount++;
-
-  BytesPerCluster = DeviceExt->Boot->SectorsPerCluster * BLOCKSIZE;
-  if (BytesPerCluster >= PAGESIZE)
+  if (!NT_SUCCESS(status))
+  {
+    VfatCloseFile (DeviceExt, &FileObject);
+    if (RequestedOptions & FILE_DIRECTORY_FILE)
     {
-      Status = CcRosInitializeFileCache(pFileObject, &newFCB->RFCB.Bcb,
-				     BytesPerCluster);
+      // free the reserved cluster
+      WriteCluster(DeviceExt, CurrentCluster, 0);
     }
-  else
-    {
-      Status = CcRosInitializeFileCache(pFileObject, &newFCB->RFCB.Bcb,
-				     PAGESIZE);
-    }
+    ExFreePool (Buffer);
+    return status;
+  }
 
-  /*
-   * FIXME : initialize all fields in FCB and CCB
-   */
-  vfatAddFCBToTable (DeviceExt, newFCB);
+  // FEXME: check status
+  vfatMakeFCBFromDirEntry (DeviceExt, pFcb, FileName, pEntry, &newFCB);
+  vfatAttachFCBToFileObject (DeviceExt, newFCB, pFileObject);
 
-  memcpy (&newFCB->entry, pEntry, sizeof (FATDirEntry));
   DPRINT ("new : entry=%11.11s\n", newFCB->entry.Filename);
   DPRINT ("new : entry=%11.11s\n", pEntry->Filename);
-  vfat_wcsncpy (newFCB->PathName, PathFileName, MAX_PATH);
-  newFCB->ObjectName = newFCB->PathName + (PathFileName - FileName);
-  newFCB->pDevExt = DeviceExt;
-  pFileObject->Flags |= FO_FCB_IS_VALID | FO_DIRECT_CACHE_PAGING_READ;
-  pFileObject->SectionObjectPointers = &newFCB->SectionObjectPointers;
-  pFileObject->FsContext = (PVOID)&newFCB->RFCB;
-  pFileObject->FsContext2 = newCCB;
+
   if (RequestedOptions & FILE_DIRECTORY_FILE)
     {
       // create . and ..
@@ -518,6 +500,74 @@ addEntry (PDEVICE_EXTENSION DeviceExt,
   ExFreePool (Buffer);
   DPRINT ("addentry ok\n");
   return STATUS_SUCCESS;
+}
+
+NTSTATUS
+delEntry (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT pFileObject)
+/*
+  deleting an existing FAT entry
+*/
+{
+  VFATFCB Fcb;
+  PVFATFCB pFcb = NULL, pDirFcb = NULL;
+  NTSTATUS status;
+  PWSTR pName;
+  ULONG Entry = 0, startEntry, Read, CurrentCluster, NextCluster, i;
+  FILE_OBJECT FileObject;
+  VFATCCB Ccb;
+  FATDirEntry DirEntry;
+
+  DPRINT ("delEntry PathFileName \'%S\'\n", pFileObject->FileName.Buffer);
+
+  status = vfatGetFCBForFile(DeviceExt, &pDirFcb, &pFcb, pFileObject->FileName.Buffer);
+  if (pFcb != NULL)
+  {
+    vfatReleaseFCB(DeviceExt, pFcb);
+  }
+  if (!NT_SUCCESS(status))
+  {
+    if (pDirFcb != NULL)
+    {
+      vfatReleaseFCB(DeviceExt, pDirFcb);
+    }
+    return status;
+  }
+  pName = ((PVFATCCB)(pFileObject->FsContext2))->pFcb->ObjectName;
+  if (*pName == L'\\')
+  {
+    pName ++;
+  }
+  status = FindFile (DeviceExt, &Fcb, pDirFcb, pName, &Entry, &startEntry);
+
+  if (NT_SUCCESS(status))
+  {
+    DPRINT ("delete entry: %d to %d\n", startEntry, Entry);
+    memset (&FileObject, 0, sizeof(FILE_OBJECT));
+    memset (&Ccb, 0, sizeof(VFATCCB));
+    FileObject.FsContext2 = &Ccb;
+    FileObject.FsContext = &pDirFcb->RFCB;
+    Ccb.pFcb = pDirFcb;
+
+    for (i = startEntry; i <= Entry; i++)
+    {
+      // FIXME: check status
+      VfatReadFile (DeviceExt, &FileObject, &DirEntry, sizeof (FATDirEntry),
+                i * sizeof(FATDirEntry), &Read, FALSE);
+      DirEntry.Filename[0] = 0xe5;
+      // FIXME: check status
+      VfatWriteFile (DeviceExt, &FileObject, &DirEntry, sizeof(FATDirEntry),
+                 i * sizeof(FATDirEntry), FALSE);
+    }
+    CurrentCluster = vfatDirEntryGetFirstCluster (DeviceExt, &DirEntry);
+    while (CurrentCluster && CurrentCluster != 0xffffffff)
+    {
+      GetNextCluster (DeviceExt, CurrentCluster, &NextCluster, FALSE);
+      // FIXME: check status
+      WriteCluster(DeviceExt, CurrentCluster, 0);
+      CurrentCluster = NextCluster;
+    }
+  }
+  return status;
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.34 2001/07/28 07:05:56 hbirr Exp $ */
+/* $Id: vfat.h,v 1.35 2001/08/14 20:47:30 hbirr Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -115,20 +115,23 @@ typedef struct
   ULONG FatType;
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION, VCB, *PVCB;
 
+#define FCB_CACHE_INITIALIZED   0x0001
+#define FCB_DELETE_PENDING      0x0002
+
 typedef struct _VFATFCB
 {
   REACTOS_COMMON_FCB_HEADER RFCB;
   SECTION_OBJECT_POINTERS SectionObjectPointers;
   FATDirEntry entry;
   /* point on filename (250 chars max) in PathName */
-  WCHAR *ObjectName; 
+  WCHAR *ObjectName;
   /* path+filename 260 max */
-  WCHAR PathName[MAX_PATH]; 
+  WCHAR PathName[MAX_PATH];
   LONG RefCount;
   PDEVICE_EXTENSION pDevExt;
   LIST_ENTRY FcbListEntry;
   struct _VFATFCB* parentFcb;
-  BOOL  isCacheInitialized;
+  ULONG Flags;
 } VFATFCB, *PVFATFCB;
 
 typedef struct _VFATCCB
@@ -253,6 +256,8 @@ addEntry(PDEVICE_EXTENSION DeviceExt,
 	 PFILE_OBJECT pFileObject,ULONG RequestedOptions,UCHAR ReqAttr);
 NTSTATUS 
 updEntry(PDEVICE_EXTENSION DeviceExt,PFILE_OBJECT pFileObject);
+NTSTATUS
+delEntry(PDEVICE_EXTENSION, PFILE_OBJECT);
 
 /*
  * String functions
@@ -335,6 +340,7 @@ ULONG  vfatDirEntryGetFirstCluster (PDEVICE_EXTENSION  pDeviceExt,
                                     PFAT_DIR_ENTRY  pDirEntry);
 BOOL  vfatIsDirEntryDeleted (FATDirEntry * pFatDirEntry);
 BOOL  vfatIsDirEntryVolume (FATDirEntry * pFatDirEntry);
+BOOL  vfatIsDirEntryEndMarker (FATDirEntry * pFatDirEntry);
 void  vfatGetDirEntryName (PFAT_DIR_ENTRY pDirEntry,  PWSTR  pEntryName);
 NTSTATUS  vfatGetNextDirEntry (PDEVICE_EXTENSION  pDeviceExt,
                                PVFATFCB  pDirectoryFCB,
@@ -375,6 +381,11 @@ NTSTATUS  vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB,
                              PVFATFCB  *pParentFCB, 
                              PVFATFCB  *pFCB, 
                              const PWSTR  pFileName);
+NTSTATUS vfatMakeFCBFromDirEntry(PVCB  vcb,
+			                     PVFATFCB  directoryFCB,
+			                     PWSTR  longName,
+			                     PFAT_DIR_ENTRY  dirEntry,
+			                     PVFATFCB * fileFCB);
 
 
 
