@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.82 2004/12/12 01:40:38 weiden Exp $ */
+/* $Id: bitmaps.c,v 1.83 2004/12/12 20:58:09 royce Exp $ */
 #include <w32k.h>
 
 #define IN_RECT(r,x,y) \
@@ -1085,7 +1085,7 @@ NtGdiStretchBlt(
 	BitmapDest = BITMAPOBJ_LockBitmap(DCDest->w.hBitmap);
 	if (UsesSource)
 	{
-	        if (DCSrc->w.hBitmap == DCDest->w.hBitmap)
+		if (DCSrc->w.hBitmap == DCDest->w.hBitmap)
 			BitmapSrc = BitmapDest;
 		else
 			BitmapSrc = BITMAPOBJ_LockBitmap(DCSrc->w.hBitmap);
@@ -1093,6 +1093,60 @@ NtGdiStretchBlt(
 	else
 	{
 		BitmapSrc = NULL;
+	}
+
+	if ( UsesSource )
+	{
+		int sw = BitmapSrc->SurfObj.sizlBitmap.cx;
+		int sh = BitmapSrc->SurfObj.sizlBitmap.cy;
+		if ( SourceRect.left < 0 )
+		{
+			DestRect.left = DestRect.right - (DestRect.right-DestRect.left) * (SourceRect.right)/abs(SourceRect.right-SourceRect.left);
+			SourceRect.left = 0;
+		}
+		if ( SourceRect.top < 0 )
+		{
+			DestRect.top = DestRect.bottom - (DestRect.bottom-DestRect.top) * (SourceRect.bottom)/abs(SourceRect.bottom-SourceRect.top);
+			SourceRect.top = 0;
+		}
+		if ( SourceRect.right < -1 )
+		{
+			DestRect.right = DestRect.left + (DestRect.right-DestRect.left) * (-1-SourceRect.left)/abs(SourceRect.right-SourceRect.left);
+			SourceRect.right = -1;
+		}
+		if ( SourceRect.bottom < -1 )
+		{
+			DestRect.bottom = DestRect.top + (DestRect.bottom-DestRect.top) * (-1-SourceRect.top)/abs(SourceRect.bottom-SourceRect.top);
+			SourceRect.bottom = -1;
+		}
+		if ( SourceRect.right > sw )
+		{
+			DestRect.right = DestRect.left + (DestRect.right-DestRect.left) * abs(sw-SourceRect.left) / abs(SourceRect.right-SourceRect.left);
+			SourceRect.right = sw;
+		}
+		if ( SourceRect.bottom > sh )
+		{
+			DestRect.bottom = DestRect.top + (DestRect.bottom-DestRect.top) * abs(sh-SourceRect.top) / abs(SourceRect.bottom-SourceRect.top);
+			SourceRect.bottom = sh;
+		}
+		sw--;
+		sh--;
+		if ( SourceRect.left > sw )
+		{
+			DestRect.left = DestRect.right - (DestRect.right-DestRect.left) * (SourceRect.right-sw) / abs(SourceRect.right-SourceRect.left);
+			SourceRect.left = 0;
+		}
+		if ( SourceRect.top > sh )
+		{
+			DestRect.top = DestRect.bottom - (DestRect.bottom-DestRect.top) * (SourceRect.bottom-sh) / abs(SourceRect.bottom-SourceRect.top);
+			SourceRect.top = 0;
+		}
+		if (0 == (DestRect.right-DestRect.left) || 0 == (DestRect.bottom-DestRect.top) || 0 == (SourceRect.right-SourceRect.left) || 0 == (SourceRect.bottom-SourceRect.top))
+		{
+			SetLastWin32Error(ERROR_INVALID_PARAMETER);
+			Status = FALSE;
+			goto failed;
+		}
 	}
 
 	if (UsesPattern)
@@ -1143,15 +1197,16 @@ NtGdiStretchBlt(
 
 	if (UsesSource)
 		EngDeleteXlate(XlateObj);
-	BITMAPOBJ_UnlockBitmap(DCDest->w.hBitmap);
-	if (UsesSource && DCSrc->w.hBitmap != DCDest->w.hBitmap)
-	{
-		BITMAPOBJ_UnlockBitmap(DCSrc->w.hBitmap);
-	}
 	if (UsesPattern)
 	{
 		BRUSHOBJ_UnlockBrush(DCDest->w.hBrush);
 	}
+failed:
+	if (UsesSource && DCSrc->w.hBitmap != DCDest->w.hBitmap)
+	{
+		BITMAPOBJ_UnlockBitmap(DCSrc->w.hBitmap);
+	}
+	BITMAPOBJ_UnlockBitmap(DCDest->w.hBitmap);
 	if (UsesSource && hDCSrc != hDCDest)
 	{
 		DC_UnlockDc(hDCSrc);
