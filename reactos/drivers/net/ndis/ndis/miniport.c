@@ -1278,6 +1278,10 @@ NdisIPnPStartDevice(
   NDIS_OID AddressOID;
   BOOLEAN Success;
   ULONG ResourceListSize;
+  UNICODE_STRING ParamName;
+  PNDIS_CONFIGURATION_PARAMETER ConfigParam;
+  NDIS_HANDLE ConfigHandle;
+  ULONG Size;
   KIRQL OldIrql;
 
   /*
@@ -1295,7 +1299,8 @@ NdisIPnPStartDevice(
 
   NDIS_DbgPrint(MAX_TRACE, ("opened device reg key\n"));
 
-  WrapperContext.PhysicalDeviceObject = DeviceObject;
+  WrapperContext.PhysicalDeviceObject = 
+     Adapter->NdisMiniportBlock.PhysicalDeviceObject;
 
   /*
    * Store the adapter resources used by HW routines such as
@@ -1333,7 +1338,59 @@ NdisIPnPStartDevice(
                     Stack->Parameters.StartDevice.AllocatedResourcesTranslated,
                     ResourceListSize);
     }
+
+  /*
+   * Store the Bus Type, Bus Number and Slot information. It's used by
+   * the hardware routines then.
+   */
     
+  NdisOpenConfiguration(&NdisStatus, &ConfigHandle, (NDIS_HANDLE)&WrapperContext);
+
+  Size = sizeof(ULONG);
+  Status = IoGetDeviceProperty(Adapter->NdisMiniportBlock.PhysicalDeviceObject,
+                               DevicePropertyLegacyBusType, Size,
+                               &Adapter->NdisMiniportBlock.BusType, &Size);
+  if (!NT_SUCCESS(Status) || Adapter->NdisMiniportBlock.BusType == -1)
+    {
+      NdisInitUnicodeString(&ParamName, L"BusType");
+      NdisReadConfiguration(&NdisStatus, &ConfigParam, ConfigHandle,
+                            &ParamName, NdisParameterInteger);
+      if (NdisStatus == NDIS_STATUS_SUCCESS)
+        Adapter->NdisMiniportBlock.BusType = ConfigParam->ParameterData.IntegerData;
+      else
+        Adapter->NdisMiniportBlock.BusType = Isa;
+    }
+
+  Status = IoGetDeviceProperty(Adapter->NdisMiniportBlock.PhysicalDeviceObject,
+                               DevicePropertyBusNumber, Size,
+                               &Adapter->NdisMiniportBlock.BusNumber, &Size);
+  if (!NT_SUCCESS(Status) || Adapter->NdisMiniportBlock.BusNumber == -1)
+    {
+      NdisInitUnicodeString(&ParamName, L"BusNumber");
+      NdisReadConfiguration(&NdisStatus, &ConfigParam, ConfigHandle,
+                            &ParamName, NdisParameterInteger);
+      if (NdisStatus == NDIS_STATUS_SUCCESS)
+        Adapter->NdisMiniportBlock.BusNumber = ConfigParam->ParameterData.IntegerData;
+      else
+        Adapter->NdisMiniportBlock.BusNumber = 0;
+    }
+
+  Status = IoGetDeviceProperty(Adapter->NdisMiniportBlock.PhysicalDeviceObject,
+                               DevicePropertyAddress, Size,
+                               &Adapter->NdisMiniportBlock.SlotNumber, &Size);
+  if (!NT_SUCCESS(Status) || Adapter->NdisMiniportBlock.SlotNumber == -1)
+    {
+      NdisInitUnicodeString(&ParamName, L"SlotNumber");
+      NdisReadConfiguration(&NdisStatus, &ConfigParam, ConfigHandle,
+                            &ParamName, NdisParameterInteger);
+      if (NdisStatus == NDIS_STATUS_SUCCESS)
+        Adapter->NdisMiniportBlock.SlotNumber = ConfigParam->ParameterData.IntegerData;
+      else
+        Adapter->NdisMiniportBlock.SlotNumber = 0;
+    }
+
+  NdisCloseConfiguration(ConfigHandle);
+
   /*
    * Call MiniportInitialize.
    */
@@ -1531,7 +1588,6 @@ NdisIAddDevice(
   UNICODE_STRING ExportName;
   PDEVICE_OBJECT DeviceObject;
   PLOGICAL_ADAPTER Adapter;
-  ULONG Size;
   NTSTATUS Status;
 
   /*
@@ -1633,16 +1689,6 @@ NdisIAddDevice(
   InitializeListHead(&Adapter->ProtocolListHead);
   Adapter->RefCount = 1;
   Adapter->Miniport = Miniport;
-
-  /* FIXME: Check return values and read it from registry in case of failure
-     (SlotNumber, BusNumber). */
-  Size = sizeof(ULONG);
-  IoGetDeviceProperty(PhysicalDeviceObject, DevicePropertyLegacyBusType,
-                      Size, &Adapter->NdisMiniportBlock.BusType, &Size);
-  IoGetDeviceProperty(PhysicalDeviceObject, DevicePropertyBusNumber,
-                      Size, &Adapter->NdisMiniportBlock.BusNumber, &Size);
-  IoGetDeviceProperty(PhysicalDeviceObject, DevicePropertyAddress,
-                      Size, &Adapter->NdisMiniportBlock.SlotNumber, &Size);
 
   Adapter->NdisMiniportBlock.MiniportName = ExportName;
 
