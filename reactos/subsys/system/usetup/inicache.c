@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: inicache.c,v 1.4 2003/01/30 17:37:13 ekohl Exp $
+/* $Id: inicache.c,v 1.5 2003/07/24 13:52:27 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/inicache.c
@@ -438,7 +438,7 @@ static PCHAR
 IniCacheGetKeyValue(PCHAR Ptr,
 		    PCHAR *DataPtr,
 		    PULONG DataSize,
-		    BOOL String)
+		    BOOLEAN String)
 {
   ULONG Size = 0;
 
@@ -511,7 +511,7 @@ IniCacheGetKeyValue(PCHAR Ptr,
 NTSTATUS
 IniCacheLoad(PINICACHE *Cache,
 	     PUNICODE_STRING FileName,
-	     BOOL String)
+	     BOOLEAN String)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   FILE_STANDARD_INFORMATION FileInfo;
