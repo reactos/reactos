@@ -1,8 +1,8 @@
 //
-//	CardLib - not much of interest in here
+//    CardLib - not much of interest in here
 //
-//	Freeware
-//	Copyright J Brown 2001
+//    Freeware
+//    Copyright J Brown 2001
 //
 #include <windows.h>
 #include "cardlib.h"
@@ -14,27 +14,27 @@ void LoadCardBitmaps(void);
 extern double __CARDZOOMSPEED;
 
 //
-//	Global variables!
+//    Global variables!
 //
 HDC     __hdcCardBitmaps;
 HBITMAP __hbmCardBitmaps;
 
-HDC		__hdcPlaceHolder;
-HBITMAP	__hbmPlaceHolder;
+HDC        __hdcPlaceHolder;
+HBITMAP    __hbmPlaceHolder;
 HPALETTE __holdplacepal;
 
-int		__cardwidth;
-int		__cardheight;
+int        __cardwidth;
+int        __cardheight;
 
 HPALETTE __hPalette;
 
 
 //
-//	Cardlib global functions!
+//    Cardlib global functions!
 //
 void CardLib_SetZoomSpeed(int speed)
 {
-	__CARDZOOMSPEED = (double)speed;
+    __CARDZOOMSPEED = (double)speed;
 }
 
 /*
@@ -44,10 +44,10 @@ void CardLib_SetZoomSpeed(int speed)
   would have unpredicted side-effects.
 
   e.g. Card card(Hearts, 4);
-       if(card == 4)	- how does 4 get converted??
-	                      It uses the Card(int uval) constructor,
-						  which results in a 2 of clubs...
-						  not what was expected
+       if(card == 4)    - how does 4 get converted??
+                          It uses the Card(int uval) constructor,
+                          which results in a 2 of clubs...
+                          not what was expected
 */ 
 /*
 void CardLib_SetAcesHigh(bool fHigh);
@@ -62,55 +62,55 @@ bool operator >= (const Card &lhs, const Card &rhs);
 /*
 void CardLib_SetAcesHigh(bool fHigh)
 {
-	__CARDLIB_ACES_HIGH = fHigh;
+    __CARDLIB_ACES_HIGH = fHigh;
 }
 
 bool operator == (const Card &lhs, const Card &rhs)
 {
-	if(__CARDLIB_ACES_HIGH)
-		return lhs.HiVal() == rhs.HiVal();
-	else
-		return lhs.LoVal() == rhs.LoVal();
+    if(__CARDLIB_ACES_HIGH)
+        return lhs.HiVal() == rhs.HiVal();
+    else
+        return lhs.LoVal() == rhs.LoVal();
 }
 
 bool operator != (const Card &lhs, const Card &rhs)
 {
-	if(__CARDLIB_ACES_HIGH)
-		return lhs.HiVal() != rhs.HiVal();
-	else
-		return lhs.LoVal() != rhs.LoVal();
+    if(__CARDLIB_ACES_HIGH)
+        return lhs.HiVal() != rhs.HiVal();
+    else
+        return lhs.LoVal() != rhs.LoVal();
 }
 
 bool operator > (const Card &lhs, const Card &rhs)
 {
-	if(__CARDLIB_ACES_HIGH)
-		return lhs.HiVal() > rhs.HiVal();
-	else
-		return lhs.LoVal() > rhs.LoVal();
+    if(__CARDLIB_ACES_HIGH)
+        return lhs.HiVal() > rhs.HiVal();
+    else
+        return lhs.LoVal() > rhs.LoVal();
 }
 
 bool operator >= (const Card &lhs, const Card &rhs)
 {
-	if(__CARDLIB_ACES_HIGH)
-		return lhs.HiVal() >= rhs.HiVal();
-	else
-		return lhs.LoVal() >= rhs.LoVal();
+    if(__CARDLIB_ACES_HIGH)
+        return lhs.HiVal() >= rhs.HiVal();
+    else
+        return lhs.LoVal() >= rhs.LoVal();
 }
 
 bool operator < (const Card &lhs, const Card &rhs)
 {
-	if(__CARDLIB_ACES_HIGH)
-		return lhs.HiVal() < rhs.HiVal();
-	else
-		return lhs.LoVal() < rhs.LoVal();
+    if(__CARDLIB_ACES_HIGH)
+        return lhs.HiVal() < rhs.HiVal();
+    else
+        return lhs.LoVal() < rhs.LoVal();
 }
 
 bool operator <= (const Card &lhs, const Card &rhs)
 {
-	if(__CARDLIB_ACES_HIGH)
-		return lhs.HiVal() <= rhs.HiVal();
-	else
-		return lhs.LoVal() <= rhs.LoVal();
+    if(__CARDLIB_ACES_HIGH)
+        return lhs.HiVal() <= rhs.HiVal();
+    else
+        return lhs.LoVal() <= rhs.LoVal();
 }
 */
 
