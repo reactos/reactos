@@ -23,8 +23,8 @@
 #include <conio.h>
 #include <ctype.h>
 #include <io.h>
-#include <sys\types.h>
-#include <sys\stat.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <time.h>
 #include <setjmp.h>
 

@@ -1,5 +1,5 @@
-/* $Id: edit.rc,v 1.1 2000/03/08 22:38:01 ea Exp $ */
-#include <defines.h>
+/* $Id: edit.rc,v 1.2 2002/09/03 18:44:15 chorns Exp $ */
+#include <windows.h>
 #include <reactos/resource.h>
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US

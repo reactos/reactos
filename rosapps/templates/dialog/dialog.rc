@@ -7,8 +7,8 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "defines.h"
-#include "reactos\resource.h"
+#include <windows.h>
+#include <reactos/resource.h>
 #include "resource.h"
 
 /////////////////////////////////////////////////////////////////////////////

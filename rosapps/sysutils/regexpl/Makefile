@@ -1,13 +1,15 @@
-# $Id: Makefile,v 1.6 2001/10/16 21:02:02 ea Exp $
+# $Id: Makefile,v 1.7 2002/09/03 18:44:18 chorns Exp $
 #
 #  ReactOS makefile for RegExpl
 #
 
-include ../../rules.mak
+PATH_TO_TOP = ../..
+
+include $(PATH_TO_TOP)/rules.mak
 
 TARGET_NAME=regexpl
 
-all: $(TARGET_NAME)$(EXE_POSTFIX)
+all: $(TARGET_NAME).exe
 
 include depend.mak
 
@@ -19,7 +21,6 @@ IMPORT_FMIFS=$(ROS_LIB)/fmifs.a
 IMPORT_KERNEL32=$(ROS_LIB)/kernel32.a
 IMPORT_ADVAPI32=$(ROS_LIB)/advapi32.a
 IMPORT_USER32=$(ROS_LIB)/user32.a
-IMPORT_CRTDLL=$(ROS_LIB)/crtdll.a
 
 depend.mak : *.h
 	$(CC) \
@@ -65,11 +66,10 @@ CLEAN_FILES = \
 
 
 $(TARGET_NAME)$(EXE_POSTFIX): $(OBJECTS)
-	$(CC) \
+	$(CPP) \
 		-Wl,--subsystem,console	\
 		-o $@				\
 		$(IMPORT_KERNEL32)	\
-		$(IMPORT_CRTDLL)	\
 		$(IMPORT_USER32)	\
 		$(OBJECTS)
 	$(NM) --numeric-sort $(TARGET_NAME)$(EXE_POSTFIX) > $(TARGET_NAME).sym

@@ -1,4 +1,4 @@
-/* $Id: CrtSupplement.c,v 1.1 2000/10/04 21:04:30 ea Exp $
+/* $Id: CrtSupplement.c,v 1.2 2002/09/03 18:44:18 chorns Exp $
  *
  * Written by EA because ReactOS hasn't yet _ui64toa()
  * (it's in msvcrt.dll, and not in crtdll.dll). 
@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 static
-char DigitMap [36] = "0123456789abcdefghijklmnopqrstuvwxyz";
+char DigitMap [] = "0123456789abcdefghijklmnopqrstuvwxyz";
 
 char *
 _ui64toa (

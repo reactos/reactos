@@ -2,38 +2,30 @@
 # Global makefile for the ROSAPPS package
 #
 
-#
-# Select your host
-#
-#HOST = djgpp-msdos
-HOST = mingw32-windows
-
 include rules.mak
 
 #
 # Available applications
 #
+#net$(SEP)arp
+#net$(SEP)ipconfig
+#net$(SEP)netstat
+#net$(SEP)niclist
+#net$(SEP)telnet
+#net$(SEP)whois
 APPS = 	calc \
 	cmd \
 	cmdutils \
-	cmdutils\touch \
 	dflat32 \
 	hcalc \
 	mc \
 	notevil \
 	sysutils \
-	sysutils\regexpl \
-	sysutils\tlist \
-	net\arp \
-	net\finger \
-	net\ipconfig \
-	net\ipecho \
-	net\ncftp \
-	net\netstat \
-	net\niclist \
-	net\ping \
-	net\telnet \
-	net\whois \
+	sysutils$(SEP)regexpl \
+	sysutils$(SEP)tlist \
+	net$(SEP)finger \
+	net$(SEP)ncftp \
+	net$(SEP)ping \
 	regedit \
 	regedt32 \
 	taskmgr \

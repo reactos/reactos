@@ -1,4 +1,4 @@
-/* $Id: RegistryKey.cpp,v 1.5 2002/01/04 22:07:38 hbirr Exp $
+/* $Id: RegistryKey.cpp,v 1.6 2002/09/03 18:44:18 chorns Exp $
  *
  * regexpl - Console Registry Explorer
  *
@@ -50,7 +50,7 @@ CRegistryKey::CRegistryKey()
 	m_hKey = NULL;
 }
 
-HRESULT CRegistryKey::InitRoot(const TCHAR *pszMachineName = NULL)
+HRESULT CRegistryKey::InitRoot(const TCHAR *pszMachineName)
 {
   if ((pszMachineName)&&
       ((_tcslen(pszMachineName) < 3)||

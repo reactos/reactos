@@ -1,5 +1,5 @@
-/* $Id: notevil.rc,v 1.7 2002/07/07 19:47:04 robd Exp $ */
-#include "../../reactos/include/defines.h"
+/* $Id: notevil.rc,v 1.8 2002/09/03 18:44:17 chorns Exp $ */
+#include <windows.h>
 #include "../../reactos/include/reactos/resource.h"
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US

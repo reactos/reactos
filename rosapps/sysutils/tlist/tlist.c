@@ -1,4 +1,4 @@
-/* $Id: tlist.c,v 1.1 2001/11/04 21:53:20 ea Exp $
+/* $Id: tlist.c,v 1.2 2002/09/03 18:44:18 chorns Exp $
  *
  * ReactOS Project
  * TList
@@ -6,7 +6,7 @@
  * Copyright (c) 2000,2001 Emanuele Aliberti
  */
 #include <reactos/buildno.h>
-#define NTOS_MODE_USER
+#define NTOS_USER_MODE
 #include <ntos.h>
 
 #include <stdio.h>

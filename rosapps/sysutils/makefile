@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.10 2001/10/16 21:02:02 ea Exp $
+# $Id: makefile,v 1.11 2002/09/03 18:44:18 chorns Exp $
 #
 # ReactOS System Utilities
 #
@@ -36,16 +36,16 @@ IMPORT_FMIFS=$(ROS_LIB)/fmifs.a
 IMPORT_KERNEL32=$(ROS_LIB)/kernel32.a
 IMPORT_ADVAPI32=$(ROS_LIB)/advapi32.a
 IMPORT_USER32=$(ROS_LIB)/user32.a
-IMPORT_MSVCRT=$(ROS_LIB)/msvcrt.a
+IMPORT_MSVCRT=
 
 TARGET=\
-	chklib$(EXE_POSTFIX)	\
-	ldd$(EXE_POSTFIX)	\
-	pedump$(EXE_POSTFIX)	\
-	shutdown$(EXE_POSTFIX)	\
-	chkdsk$(EXE_POSTFIX)	\
-	format$(EXE_POSTFIX)	\
-	regexpl/regexpl$(EXE_POSTFIX)
+	chklib.exe \
+	ldd.exe \
+	pedump.exe \
+	shutdown.exe \
+	chkdsk.exe \
+	format.exe \
+	regexpl/regexpl.exe
 
 all: $(TARGET)
 
@@ -126,7 +126,7 @@ ldd.o: ldd.c
 
 # By Nedko Arnaoudov
 
-regexpl/regexpl$(EXE_POSTFIX):
+regexpl/regexpl.exe:
 	make -C regexpl
 
 #---

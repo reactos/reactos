@@ -54,7 +54,7 @@ static char sccsid[] = "@(#)touch.c	5.5 (Berkeley) 3/7/93";
 //#error "__STDC__ defined"
 //#endif
 
-#include <sys\utime.h>
+#include <sys/utime.h>
 #include <io.h>
 #include <fcntl.h>
 #include <getopt.h>

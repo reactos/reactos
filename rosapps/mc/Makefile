@@ -1,7 +1,9 @@
+include ../rules.mak
+
 TARGET_OS=NT
 
-CC=gcc
-LINK=gcc -s
+#CC=gcc
+LINK=$(CC) -lmsvcrt
 OBJ_SUFFIX=o
 OBJ_PLACE=-o
 EXE_PLACE=-o

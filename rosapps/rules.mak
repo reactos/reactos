@@ -8,6 +8,7 @@
 #HOST = mingw32-windows
 #HOST = mingw32-linux
 #
+
 # Windows is default host environment
 ifeq ($(HOST),)
 HOST = mingw32-windows
@@ -22,13 +23,16 @@ endif
 # Choose various options
 #
 ifeq ($(HOST),mingw32-linux)
-PREFIX = i586-mingw32-
+PREFIX = mingw32-
 EXE_POSTFIX = 
 CP = cp
 DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
-FLOPPY_DIR = A/
+RM = rm
+DOSCLI = no
+FLOPPY_DIR = /mnt/floppy
 # DIST_DIR should be relative from the top of the tree
 DIST_DIR = dist
+SEP = /
 endif
 
 
@@ -42,6 +46,7 @@ DOSCLI = yes
 FLOPPY_DIR = A:
 # DIST_DIR should be relative from the top of the tree
 DIST_DIR = dist
+SEP = \$($EMPTY_VAR)
 endif
 
 #
@@ -65,6 +70,7 @@ else
 LEAN_AND_MEAN_DEFINE = 
 endif 
 
+CPP = $(PREFIX)g++
 CC = $(PREFIX)gcc
 NATIVE_CC = gcc
 CFLAGS = \
@@ -84,18 +90,16 @@ NM = $(PREFIX)nm
 OBJCOPY = $(PREFIX)objcopy
 STRIP = $(PREFIX)strip
 AS = $(PREFIX)gcc -c -x assembler-with-cpp
-CPP = $(PREFIX)cpp
 AR = $(PREFIX)ar
 RC = $(PREFIX)windres
-RCINC = --include-dir ../reactos/include --include-dir ../../reactos/include --include-dir ../../../reactos/include
-
+RCINC = --include-dir $(PATH_TO_TOP)/../reactos/include
 TOOLS_PATH = $(PATH_TO_TOP)/../reactos/tools
 RSYM = $(TOOLS_PATH)/rsym
 
 %.o: %.cpp
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CPP) $(CFLAGS) -c $< -o $@
 %.o: %.cc
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CPP) $(CFLAGS) -c $< -o $@
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 %.o: %.asm
