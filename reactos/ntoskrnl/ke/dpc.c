@@ -18,7 +18,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dpc.c,v 1.43 2004/10/31 15:31:40 hbirr Exp $
+/* $Id: dpc.c,v 1.44 2004/10/31 17:02:31 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -63,6 +63,8 @@ KeInitializeDpc (PKDPC			Dpc,
  */
 {
    Dpc->Type = 0;
+   Dpc->Number=0;
+   Dpc->Importance=MediumImportance;
    Dpc->DeferredRoutine = DeferredRoutine;
    Dpc->DeferredContext = DeferredContext;
    Dpc->Lock = 0;
@@ -102,12 +104,18 @@ KiDispatchInterrupt(VOID)
          Pcr->PrcbData.DpcData[0].DpcQueueDepth--;
          Pcr->PrcbData.DpcData[0].DpcCount++;
 
-         ASSERT((Pcr->PrcbData.DpcData[0].DpcQueueDepth == 0 && IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead)) ||
-                (Pcr->PrcbData.DpcData[0].DpcQueueDepth > 0 && !IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead)));	     
+	 if (Pcr->PrcbData.DpcData[0].DpcQueueDepth == 0)
+	 {
+	    ASSERT(IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead));
+	 }
+	 else
+	 {
+	    ASSERT(!IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead));	    
+	 }
 
          current = CONTAINING_RECORD(current_entry,KDPC,DpcListEntry);
          current->Lock=FALSE;
-         Pcr->PrcbData.DpcRoutineActive=1;
+         Pcr->PrcbData.DpcRoutineActive++;
          KiReleaseSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
          KeLowerIrql(oldlvl);
          current->DeferredRoutine(current,current->DeferredContext,
@@ -116,7 +124,20 @@ KiDispatchInterrupt(VOID)
 
          KeRaiseIrql(HIGH_LEVEL, &oldlvl);
          KiAcquireSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
-         Pcr->PrcbData.DpcRoutineActive=0;
+         Pcr->PrcbData.DpcRoutineActive--;
+#ifdef MP
+	 /* 
+	  * If the dpc routine drops the irql below DISPATCH_LEVEL,
+	  * a thread switch can occur and after the next thread switch 
+	  * the execution may start on an other processor.
+	  */
+	 if (Pcr != KeGetCurrentKPCR())
+	 {
+           KiReleaseSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
+	   Pcr = KeGetCurrentKPCR();
+           KiAcquireSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
+	 }
+#endif
        }
 
        KiReleaseSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
@@ -179,7 +200,20 @@ KeRemoveQueueDpc (PKDPC	Dpc)
    PKPCR Pcr;
 
    KeRaiseIrql(HIGH_LEVEL, &oldIrql);
+#ifdef MP
+   if (Dpc->Number >= MAXIMUM_PROCESSORS)
+   {
+      ASSERT (Dpc->Number - MAXIMUM_PROCESSORS < KeNumberProcessors);
+      Pcr = (PKPCR)(KPCR_BASE + (Dpc->Number - MAXIMUM_PROCESSORS) * PAGE_SIZE);
+   }
+   else
+   {
+      ASSERT (Dpc->Number < KeNumberProcessors);
+      Pcr = (PKPCR)(KPCR_BASE + Dpc->Number * PAGE_SIZE);
+   }
+#else
    Pcr = KeGetCurrentKPCR();
+#endif
    KiAcquireSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
    WasInQueue = Dpc->Lock ? TRUE : FALSE;
    if (WasInQueue)
@@ -189,8 +223,14 @@ KeRemoveQueueDpc (PKDPC	Dpc)
 	Dpc->Lock=0;
      }
 
-   ASSERT((Pcr->PrcbData.DpcData[0].DpcQueueDepth == 0 && IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead)) ||
-          (Pcr->PrcbData.DpcData[0].DpcQueueDepth > 0 && !IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead)));	     
+   if (Pcr->PrcbData.DpcData[0].DpcQueueDepth == 0)
+   {
+     ASSERT(IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead));
+   }
+   else
+   {
+     ASSERT(!IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead));	    
+   }
 
    KiReleaseSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
    KeLowerIrql(oldIrql);
@@ -223,8 +263,6 @@ KeInsertQueueDpc (PKDPC	Dpc,
 
    ASSERT(KeGetCurrentIrql()>=DISPATCH_LEVEL);
 
-   Dpc->Number=0;
-   Dpc->Importance=MediumImportance;
    Dpc->SystemArgument1=SystemArgument1;
    Dpc->SystemArgument2=SystemArgument2;
    if (Dpc->Lock)
@@ -233,10 +271,31 @@ KeInsertQueueDpc (PKDPC	Dpc,
      }
 
    KeRaiseIrql(HIGH_LEVEL, &oldlvl);
+#ifdef MP
+   if (Dpc->Number >= MAXIMUM_PROCESSORS)
+   {
+      ASSERT (Dpc->Number - MAXIMUM_PROCESSORS < KeNumberProcessors);
+      Pcr = (PKPCR)(KPCR_BASE + (Dpc->Number - MAXIMUM_PROCESSORS) * PAGE_SIZE);
+   }
+   else
+   {
+      ASSERT (Dpc->Number < KeNumberProcessors);
+      Pcr = KeGetCurrentKPCR();
+      Dpc->Number = KeGetCurrentProcessorNumber();
+   }
+#else
    Pcr = KeGetCurrentKPCR();
+#endif
+
    KiAcquireSpinLock(&Pcr->PrcbData.DpcData[0].DpcLock);
-   ASSERT((Pcr->PrcbData.DpcData[0].DpcQueueDepth == 0 && IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead)) ||
-          (Pcr->PrcbData.DpcData[0].DpcQueueDepth > 0 && !IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead)));	     
+   if (Pcr->PrcbData.DpcData[0].DpcQueueDepth == 0)
+   {
+     ASSERT(IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead));
+   }
+   else
+   {
+     ASSERT(!IsListEmpty(&Pcr->PrcbData.DpcData[0].DpcListHead));	    
+   }
    InsertHeadList(&Pcr->PrcbData.DpcData[0].DpcListHead,&Dpc->DpcListEntry);
    DPRINT("Dpc->DpcListEntry.Flink %x\n", Dpc->DpcListEntry.Flink);
    Pcr->PrcbData.DpcData[0].DpcQueueDepth++;
@@ -281,7 +340,15 @@ VOID STDCALL
 KeSetTargetProcessorDpc (IN	PKDPC	Dpc,
 			 IN	CCHAR	Number)
 {
-	UNIMPLEMENTED;
+   if (Number >= MAXIMUM_PROCESSORS)
+   {
+      Dpc->Number = 0;
+   }
+   else
+   {
+      ASSERT(Number < KeNumberProcessors);
+      Dpc->Number = Number + MAXIMUM_PROCESSORS;
+   }
 }
 
 VOID INIT_FUNCTION
