@@ -491,6 +491,9 @@ static LRESULT COMBO_WindowPosChanging(
     }
   }
 
+  posChanging->cx = max(posChanging->cx, 0);
+  posChanging->cy = max(posChanging->cy, 0);
+
   return 0;
 }
 

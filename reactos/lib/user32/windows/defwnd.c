@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.136 2004/05/12 20:34:38 navaraf Exp $
+/* $Id: defwnd.c,v 1.137 2004/05/13 20:24:26 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -897,6 +897,11 @@ DefWndHandleWindowPosChanging(HWND hWnd, WINDOWPOS* Pos)
             if (Pos->cx < minTrack.x) Pos->cx = minTrack.x;
             if (Pos->cy < minTrack.y) Pos->cy = minTrack.y;
         }
+    }
+    else
+    {
+        Pos->cx = max(Pos->cx, 0);
+        Pos->cy = max(Pos->cy, 0);
     }
     return 0;
 }
