@@ -17,7 +17,7 @@
 #define __INTERNAL_DEBUG
 
 //#define UNIMPLEMENTED do {DbgPrint("%s at %s:%d is unimplemented, have a nice day\n",__FUNCTION__,__FILE__,__LINE__); for(;;);  } while(0);
-#define UNIMPLEMENTED   DbgPrint("WARNING:\t%s at %s:%d is UNIMPLEMENTED!\n",__FUNCTION__,__FILE__,__LINE__);
+#define UNIMPLEMENTED   DbgPrint("WARNING:  %s at %s:%d is UNIMPLEMENTED!\n",__FUNCTION__,__FILE__,__LINE__);
 
 /*  FIXME: should probably remove this later  */
 #if !defined(CHECKED) && !defined(NDEBUG)
