@@ -14,7 +14,7 @@ include rules.mak
 # Required to run the system
 #
 COMPONENTS = iface_native iface_additional ntoskrnl
-DLLS = ntdll kernel32 crtdll advapi32 fmifs gdi32 secur32 user32
+DLLS = ntdll kernel32 crtdll advapi32 fmifs gdi32 secur32 user32 ws2_32
 SUBSYS = smss win32k csrss
 
 #
@@ -38,8 +38,8 @@ DEVICE_DRIVERS = vidport vga blue ide keyboard null parallel serial floppy
 FS_DRIVERS = vfat
 # FS_DRIVERS = minix ext2 template
 
-# ndis tdi tcpip tditest
-NET_DRIVERS = ndis tcpip tditest
+# ndis tdi tcpip tditest wshtcpip
+NET_DRIVERS = ndis tcpip tditest wshtcpip
 
 # ne2000
 NET_DEVICE_DRIVERS = ne2000
@@ -49,9 +49,13 @@ APPS = args hello shell test cat bench apc shm lpc thread event file gditest \
        pteb consume dump_shared_data vmtest regtest
 #       objdir
 
+# ping
+NET_APPS = ping
+
+
 KERNEL_SERVICES = $(DEVICE_DRIVERS) $(FS_DRIVERS) $(NET_DRIVERS) $(NET_DEVICE_DRIVERS)
 
-all: buildno $(COMPONENTS) $(DLLS) $(SUBSYS) $(LOADERS) $(KERNEL_SERVICES) $(APPS)
+all: buildno $(COMPONENTS) $(DLLS) $(SUBSYS) $(LOADERS) $(KERNEL_SERVICES) $(APPS) $(NET_APPS)
 
 .PHONY: all
 
@@ -119,6 +123,23 @@ $(APPS:%=%_install): %_install:
 	make -C apps/$* install
 
 .PHONY: $(APPS) $(APPS:%=%_clean) $(APPS:%=%_install) $(APPS:%=%_dist)
+
+#
+# Network applications
+#
+$(NET_APPS): %:
+	make -C apps/net/$*
+
+$(NET_APPS:%=%_clean): %_clean:
+	make -C apps/net/$* clean
+
+$(NET_APPS:%=%_dist): %_dist:
+	make -C apps/net/$* dist
+
+$(NET_APPS:%=%_install): %_install:
+	make -C apps/net/$* install
+
+.PHONY: $(NET_APPS) $(NET_APPS:%=%_clean) $(NET_APPS:%=%_install) $(NET_APPS:%=%_dist)
 
 #
 # Interfaces
