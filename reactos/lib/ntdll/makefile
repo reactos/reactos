@@ -59,7 +59,6 @@ RTL_I386_OBJECTS = \
 	rtl/i386/aulldiv.o \
 	rtl/i386/aullrem.o \
 	rtl/i386/aullshr.o \
-	rtl/i386/chkstk.o \
 	rtl/i386/float.o \
 	rtl/i386/ftol.o
 

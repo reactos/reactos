@@ -46,6 +46,7 @@ TARGET_OBJECTS = \
 	unicode.o \
 	unicodeprefix.o \
 	version.o \
+	i386/chkstk.o \
 	i386/exception.o \
 	i386/except.o
 

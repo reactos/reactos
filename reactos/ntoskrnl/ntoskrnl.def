@@ -1400,6 +1400,7 @@ ZwYieldExecution@0
 _abnormal_termination
 _alldiv
 _allmul
+_alloca_probe
 _allrem
 _allshl
 _allshr
