@@ -1,4 +1,4 @@
-/* $Id: iface.c,v 1.50 2001/03/06 08:19:58 ekohl Exp $
+/* $Id: iface.c,v 1.51 2001/03/07 13:44:40 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -330,6 +330,7 @@ DriverEntry (PDRIVER_OBJECT _DriverObject, PUNICODE_STRING RegistryPath)
    VfatDriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] =
      VfatQueryVolumeInformation;
    VfatDriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = VfatShutdown;
+   VfatDriverObject->MajorFunction[IRP_MJ_CLEANUP] = VfatCleanup;
 
    VfatDriverObject->DriverUnload = NULL;
 

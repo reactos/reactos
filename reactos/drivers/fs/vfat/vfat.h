@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.26 2001/03/02 15:59:16 cnettel Exp $ */
+/* $Id: vfat.h,v 1.27 2001/03/07 13:44:41 ekohl Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -138,22 +138,30 @@ typedef struct __DOSDATE
 } DOSDATE, *PDOSDATE;
 
 /* functions called by i/o manager : */
-NTSTATUS STDCALL 
+NTSTATUS STDCALL
 DriverEntry(PDRIVER_OBJECT _DriverObject,PUNICODE_STRING RegistryPath);
-NTSTATUS STDCALL 
+NTSTATUS STDCALL
 VfatDirectoryControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS STDCALL 
+NTSTATUS STDCALL
 VfatRead(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS STDCALL 
+NTSTATUS STDCALL
 VfatWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS STDCALL 
+NTSTATUS STDCALL
 VfatCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS STDCALL 
+NTSTATUS STDCALL
 VfatClose(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS STDCALL 
+NTSTATUS STDCALL
 VfatFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS STDCALL 
+NTSTATUS STDCALL
 VfatQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL
+VfatSetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL
+VfatCleanup (PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL
+VfatShutdown(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL
+VfatQueryVolumeInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 
 NTSTATUS
@@ -185,9 +193,6 @@ FindFile(PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
 	 PVFATFCB Parent, PWSTR FileToFind,ULONG *StartSector,ULONG *Entry);
 NTSTATUS 
 VfatCloseFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject);
-NTSTATUS 
-VfatGetStandardInformation(PVFATFCB FCB, PDEVICE_OBJECT DeviceObject,
-                                   PFILE_STANDARD_INFORMATION StandardInfo);
 NTSTATUS 
 VfatOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject, 
 	    PWSTR FileName);
@@ -271,18 +276,6 @@ WriteCluster (PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
 	      ULONG NewValue);
 
 /*
- * functions from volume.c
- */
-NTSTATUS STDCALL 
-VfatQueryVolumeInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-
-/*
- * functions from finfo.c
- */
-NTSTATUS STDCALL 
-VfatSetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-
-/*
  * From create.c
  */
 NTSTATUS 
@@ -290,9 +283,3 @@ ReadVolumeLabel(PDEVICE_EXTENSION DeviceExt, PVPB Vpb);
 NTSTATUS
 VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	      PWSTR FileName);
-
-/*
- * functions from shutdown.c
- */
-NTSTATUS STDCALL VfatShutdown(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-

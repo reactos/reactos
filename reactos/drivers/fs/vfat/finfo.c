@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.6 2001/03/06 23:36:35 cnettel Exp $
+/* $Id: finfo.c,v 1.7 2001/03/07 13:44:40 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -20,8 +20,9 @@
 
 /* FUNCTIONS ****************************************************************/
 
-NTSTATUS
-VfatGetStandardInformation (PVFATFCB FCB, PDEVICE_OBJECT DeviceObject,
+static NTSTATUS
+VfatGetStandardInformation(PVFATFCB FCB,
+			   PDEVICE_OBJECT DeviceObject,
 			   PFILE_STANDARD_INFORMATION StandardInfo)
 /*
  * FUNCTION: Retrieve the standard file information
@@ -61,8 +62,8 @@ VfatGetStandardInformation (PVFATFCB FCB, PDEVICE_OBJECT DeviceObject,
   return STATUS_SUCCESS;
 }
 
-NTSTATUS
-VfatSetPositionInformation (PFILE_OBJECT FileObject,
+static NTSTATUS
+VfatSetPositionInformation(PFILE_OBJECT FileObject,
 			   PVFATFCB FCB,
 			   PDEVICE_OBJECT DeviceObject,
 			   PFILE_POSITION_INFORMATION PositionInfo)
@@ -77,8 +78,8 @@ VfatSetPositionInformation (PFILE_OBJECT FileObject,
   return (STATUS_SUCCESS);
 }
 
-NTSTATUS
-VfatGetPositionInformation (PFILE_OBJECT FileObject,
+static NTSTATUS
+VfatGetPositionInformation(PFILE_OBJECT FileObject,
 			   PVFATFCB FCB,
 			   PDEVICE_OBJECT DeviceObject,
 			   PFILE_POSITION_INFORMATION PositionInfo)
@@ -91,8 +92,8 @@ VfatGetPositionInformation (PFILE_OBJECT FileObject,
   return (STATUS_SUCCESS);
 }
 
-NTSTATUS
-VfatGetBasicInformation (PFILE_OBJECT FileObject,
+static NTSTATUS
+VfatGetBasicInformation(PFILE_OBJECT FileObject,
 			PVFATFCB FCB,
 			PDEVICE_OBJECT DeviceObject,
 			PFILE_BASIC_INFORMATION BasicInfo)
@@ -116,8 +117,8 @@ VfatGetBasicInformation (PFILE_OBJECT FileObject,
 }
 
 
-NTSTATUS
-VfatSetDispositionInformation (PFILE_OBJECT FileObject,
+static NTSTATUS
+VfatSetDispositionInformation(PFILE_OBJECT FileObject,
 			      PVFATFCB FCB,
 			      PDEVICE_OBJECT DeviceObject,
 			      PFILE_DISPOSITION_INFORMATION DispositionInfo)
@@ -257,6 +258,11 @@ VfatSetInformation (PDEVICE_OBJECT DeviceObject, PIRP Irp)
       RC = VfatSetDispositionInformation (FileObject,
 					 FCB, DeviceObject, SystemBuffer);
       break;
+//    case FileBasicInformation:
+//    case FileAllocationInformation:
+//    case FileEndOfFileInformation:
+//    case FileRenameInformation:
+//    case FileLinkInformation:
     default:
       RC = STATUS_NOT_IMPLEMENTED;
     }
