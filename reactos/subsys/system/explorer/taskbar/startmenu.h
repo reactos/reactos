@@ -50,6 +50,7 @@
 #endif
 
 #define	PM_UPDATE_ICONS			(WM_APP+0x15)
+#define	PM_SELECT_ENTRY			(WM_APP+0x16)
 
 
  /// StartMenuDirectory is used to store the base directory of start menus.
@@ -245,12 +246,18 @@ protected:
 #ifdef _LIGHT_STARTMENU
 	SMBtnVector _buttons;
 	int		_selected_id;
+	LPARAM	_last_mouse_pos;
 
 	void	ResizeToButtons();
 	int		ButtonHitTest(POINT pt);
 	void	InvalidateSelection();
 	const SMBtnInfo* GetButtonInfo(int id) const;
-	void	SelectButton(int id);
+	bool	SelectButton(int id, bool open_sub=true);
+	bool	SelectButtonIndex(int idx, bool open_sub=true);
+	int		GetSelectionIndex();
+	virtual void ProcessKey(int vk);
+	bool	Navigate(int step);
+	bool	OpenSubmenu(bool select_first=false);
 #endif
 
 	 // member functions
@@ -268,8 +275,8 @@ protected:
 	void	AddButton(LPCTSTR title, ICON_ID icon_id=ICID_NONE, bool hasSubmenu=false, int id=-1, bool enabled=true);
 	void	AddSeparator();
 
-	bool	CloseSubmenus() {return CloseOtherSubmenus(0);}
-	bool	CloseOtherSubmenus(int id);
+	bool	CloseSubmenus() {return CloseOtherSubmenus();}
+	bool	CloseOtherSubmenus(int id=0);
 	void	CreateSubmenu(int id, LPCTSTR title, CREATORFUNC creator=s_def_creator);
 	void	CreateSubmenu(int id, int folder, LPCTSTR title, CREATORFUNC creator=s_def_creator);
 	void	CreateSubmenu(int id, int folder1, int folder2, LPCTSTR title, CREATORFUNC creator=s_def_creator);
@@ -352,6 +359,7 @@ protected:
 	void	AddEntries();
 	void	Paint(PaintCanvas& canvas);
 	void	CloseStartMenu(int id=0);
+	virtual void ProcessKey(int vk);
 };
 
 

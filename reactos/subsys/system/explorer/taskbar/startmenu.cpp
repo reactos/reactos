@@ -52,6 +52,7 @@ StartMenu::StartMenu(HWND hwnd)
 	_last_pos = WindowRect(hwnd).pos();
 #ifdef _LIGHT_STARTMENU
 	_selected_id = -1;
+	_last_mouse_pos = 0;
 #endif
 }
 
@@ -70,6 +71,7 @@ StartMenu::StartMenu(HWND hwnd, const StartMenuCreateInfo& create_info)
 	_last_pos = WindowRect(hwnd).pos();
 #ifdef _LIGHT_STARTMENU
 	_selected_id = -1;
+	_last_mouse_pos = 0;
 #endif
 }
 
@@ -306,15 +308,18 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 #ifdef _LIGHT_STARTMENU
 	  case WM_MOUSEMOVE: {
 		 // automatically set the focus to startmenu entries when moving the mouse over them
-		int new_id = ButtonHitTest(Point(lparam));
+		if (lparam != _last_mouse_pos) { // don't process WM_MOUSEMOVE when opening submenus using keyboard navigation
+			int new_id = ButtonHitTest(Point(lparam));
 
-		if (new_id != _selected_id)
-			SelectButton(new_id);
+			if (new_id != _selected_id)
+				SelectButton(new_id);
+
+			_last_mouse_pos = lparam;
+		}
 		break;}
 
 	  case WM_KEYDOWN:
-		if (wparam==VK_RETURN && _selected_id)
-			Command(_selected_id, BN_CLICKED);
+		ProcessKey(wparam);
 		break;
 #else
 	  case PM_STARTENTRY_FOCUSED: {	///@todo use TrackMouseEvent() and WM_MOUSEHOVER to wait a bit before opening submenus
@@ -328,7 +333,7 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			Command(GetDlgCtrlID(hctrl), BN_CLICKED);
 		} else {
 			 // close any open submenu
-			CloseOtherSubmenus(0);
+			CloseOtherSubmenus();
 		}
 		break;}
 #endif
@@ -350,6 +355,10 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 	  case PM_STARTMENU_CLOSED:
 		_submenu = 0;
+		break;
+
+	  case PM_SELECT_ENTRY:
+		SelectButtonIndex(0, wparam?true:false);
 		break;
 
 	  default: def:
@@ -418,8 +427,11 @@ const SMBtnInfo* StartMenu::GetButtonInfo(int id) const
 	return NULL;
 }
 
-void StartMenu::SelectButton(int id)
+bool StartMenu::SelectButton(int id, bool open_sub)
 {
+	if (id == -1)
+		return false;
+
 	InvalidateSelection();
 
 	const SMBtnInfo* btn = GetButtonInfo(id);
@@ -431,13 +443,112 @@ void StartMenu::SelectButton(int id)
 
 		 // automatically open submenus
 		if (btn->_hasSubmenu) {
-			//@@ allows destroying of startmenu when processing PM_UPDATE_ICONS -> GPF
-			UpdateWindow(_hwnd);	// draw focused button before waiting on submenu creation
-			Command(_selected_id, BN_CLICKED);
+			if (open_sub)
+				OpenSubmenu();
 		} else
-			CloseOtherSubmenus(0);	// close any open submenu
-	} else
+			CloseOtherSubmenus();	// close any open submenu
+
+		return true;
+	} else {
 		_selected_id = -1;
+		return false;
+	}
+}
+
+bool StartMenu::OpenSubmenu(bool select_first)
+{
+	if (_selected_id == -1)
+		return false;
+
+	InvalidateSelection();
+
+	const SMBtnInfo* btn = GetButtonInfo(_selected_id);
+
+	 // automatically open submenus
+	if (btn->_hasSubmenu) {
+		//@@ allows destroying of startmenu when processing PM_UPDATE_ICONS -> GPF
+		UpdateWindow(_hwnd);	// draw focused button before waiting on submenu creation
+		Command(_selected_id, BN_CLICKED);
+
+		if (select_first && _submenu)
+			SendMessage(_submenu, PM_SELECT_ENTRY, (WPARAM)false, 0);
+
+		return true;
+	} else
+		return false;
+}
+
+
+int StartMenu::GetSelectionIndex()
+{
+	if (_selected_id == -1)
+		return -1;
+
+	for(int i=0; i<(int)_buttons.size(); ++i)
+		if (_buttons[i]._id == _selected_id)
+			return i;
+
+	return -1;
+}
+
+bool StartMenu::SelectButtonIndex(int idx, bool open_sub)
+{
+	if (idx>=0 && idx<(int)_buttons.size())
+		return SelectButton(_buttons[idx]._id, open_sub);
+	else
+		return false;
+}
+
+void StartMenu::ProcessKey(int vk)
+{
+	switch(vk) {
+	  case VK_RETURN:
+		if (_selected_id)
+			Command(_selected_id, BN_CLICKED);
+		break;
+
+	  case VK_UP:
+		Navigate(-1);
+		break;
+
+	  case VK_DOWN:
+		Navigate(+1);
+		break;
+
+	  case VK_LEFT:
+		if (_submenu)
+			CloseOtherSubmenus();
+		else
+			DestroyWindow(_hwnd);
+		break;
+
+	  case VK_RIGHT:
+		OpenSubmenu(true);
+		break;
+	}
+}
+
+bool StartMenu::Navigate(int step)
+{
+	int idx = GetSelectionIndex();
+
+	if (idx == -1)
+		if (step > 0)
+			idx = 0 - step;
+		else
+			idx = _buttons.size() - step;
+
+	for(;;) {
+		idx += step;
+
+		if (idx<0 || idx>(int)_buttons.size())
+			break;
+
+		if (SelectButtonIndex(idx, false))
+			return true;
+	}
+
+	return false;
 }
 
 #endif
@@ -890,7 +1001,7 @@ void StartMenu::ActivateEntry(int id, const ShellEntrySet& entries)
 
 		if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 
-			///@todo If the user explicitely clicked on a submenu, display this folder as floating start menu.
+			///@todo If the user explicitly clicked on a submenu, display this folder as floating start menu.
 
 			if (entry->_etype == ET_SHELL)
 				new_folders.push_back(entry->create_absolute_pidl());
@@ -1375,6 +1486,20 @@ void StartMenuRoot::CloseStartMenu(int id)
 		CloseSubmenus();
 
 	ShowWindow(_hwnd, SW_HIDE);
+}
+
+void StartMenuRoot::ProcessKey(int vk)
+{
+	switch(vk) {
+	  case VK_LEFT:
+		if (_submenu)
+			CloseOtherSubmenus();
+		// don't close start menu root
+		break;
+
+	  default:
+		super::ProcessKey(vk);
+	}
 }
 
 

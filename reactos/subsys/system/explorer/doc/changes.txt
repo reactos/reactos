@@ -54,3 +54,4 @@ If you search for more information, look into the CVS repository.
 03.01.2004	m. fuchs	lazy icon extraction for start menu
 						direct file system access for start menu
 04.01.2004	m. fuchs	implemented icon cache
+11.01.2004	m. fuchs	keyboard navigation in start menu
