@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.24 2003/08/11 21:10:49 royce Exp $
+ * $Id: dib.c,v 1.25 2003/08/13 00:50:24 royce Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -94,23 +94,23 @@ W32kSetDIBits(
 	CONST BITMAPINFO  *bmi,
 	UINT  ColorUse)
 {
-  DC *dc;
-  BITMAPOBJ *bitmap;
-  HBITMAP SourceBitmap, DestBitmap;
-  INT result = 0;
-  BOOL copyBitsResult;
-  PSURFOBJ DestSurf, SourceSurf;
-  PSURFGDI DestGDI;
-  SIZEL	SourceSize;
-  POINTL ZeroPoint;
-  RECTL	DestRect;
-  PXLATEOBJ XlateObj;
-  PPALGDI hDCPalette;
-  RGBQUAD *lpRGB;
-  HPALETTE DDB_Palette, DIB_Palette;
-  ULONG DDB_Palette_Type, DIB_Palette_Type;
-  const BYTE* vBits = (const BYTE*)Bits;
-  INT scanDirection = 1, DIBWidth;
+  DC         *dc;
+  BITMAPOBJ  *bitmap;
+  HBITMAP     SourceBitmap, DestBitmap;
+  INT         result = 0;
+  BOOL        copyBitsResult;
+  PSURFOBJ    DestSurf, SourceSurf;
+  PSURFGDI    DestGDI;
+  SIZEL       SourceSize;
+  POINTL      ZeroPoint;
+  RECTL       DestRect;
+  PXLATEOBJ   XlateObj;
+  PPALGDI     hDCPalette;
+  //RGBQUAD  *lpRGB;
+  HPALETTE    DDB_Palette, DIB_Palette;
+  ULONG       DDB_Palette_Type, DIB_Palette_Type;
+  const BYTE *vBits = (const BYTE*)Bits;
+  INT         scanDirection = 1, DIBWidth;
 
   // Check parameters
   if (!(dc = DC_HandleToPtr(hDC)))
@@ -123,16 +123,16 @@ W32kSetDIBits(
   }
 
   // Get RGB values
-  if (ColorUse == DIB_PAL_COLORS)
-    lpRGB = DIB_MapPaletteColors(hDC, bmi);
-  else
-    lpRGB = &bmi->bmiColors[0];
+  //if (ColorUse == DIB_PAL_COLORS)
+  //  lpRGB = DIB_MapPaletteColors(hDC, bmi);
+  //else
+  //  lpRGB = &bmi->bmiColors[0];
 
   // Create a temporary surface for the destination bitmap
   DestBitmap = BitmapToSurf(bitmap);
 
-  DestSurf   = (PSURFOBJ) AccessUserObject( DestBitmap );
-  DestGDI    = (PSURFGDI) AccessInternalObject( DestBitmap );
+  DestSurf   = (PSURFOBJ) AccessUserObject( (ULONG)DestBitmap );
+  DestGDI    = (PSURFGDI) AccessInternalObject( (ULONG)DestBitmap );
 
   // Create source surface
   SourceSize.cx = bmi->bmiHeader.biWidth;
@@ -152,16 +152,16 @@ W32kSetDIBits(
                                  DIBWidth * scanDirection,
                                  BitmapFormat(bmi->bmiHeader.biBitCount, bmi->bmiHeader.biCompression),
                                  0,
-                                 vBits);
-  SourceSurf = (PSURFOBJ)AccessUserObject(SourceBitmap);
+                                 (PVOID)vBits );
+  SourceSurf = (PSURFOBJ)AccessUserObject((ULONG)SourceBitmap);
 
   // Destination palette obtained from the hDC
-  hDCPalette = (PPALGDI)AccessInternalObject(dc->DevInfo->hpalDefault);
+  hDCPalette = (PPALGDI)AccessInternalObject((ULONG)dc->DevInfo->hpalDefault);
   DDB_Palette_Type = hDCPalette->Mode;
   DDB_Palette = dc->DevInfo->hpalDefault;
 
   // Source palette obtained from the BITMAPINFO
-  DIB_Palette = BuildDIBPalette(bmi, &DIB_Palette_Type);
+  DIB_Palette = BuildDIBPalette ( (PBITMAPINFO)bmi, (PINT)&DIB_Palette_Type );
 
   // Determine XLATEOBJ for color translation
   XlateObj = IntEngCreateXlate(DDB_Palette_Type, DIB_Palette_Type, DDB_Palette, DIB_Palette);
@@ -215,7 +215,8 @@ W32kSetDIBitsToDevice(
 	CONST BITMAPINFO  *bmi,
 	UINT  ColorUse)
 {
-
+  UNIMPLEMENTED;
+  return 0;
 }
 
 UINT STDCALL W32kGetDIBColorTable(HDC  hDC,
@@ -581,8 +582,9 @@ HBITMAP STDCALL W32kCreateDIBSection(HDC hDC,
 
   if ((dc = DC_HandleToPtr(hDC)))
   {
-    hbitmap = DIB_CreateDIBSection(dc, bmi, Usage, Bits, hSection, dwOffset, 0);
-	DC_ReleasePtr(hDC);
+    hbitmap = DIB_CreateDIBSection ( dc, (BITMAPINFO*)bmi, Usage, Bits,
+      hSection, dwOffset, 0);
+    DC_ReleasePtr(hDC);
   }
 
   if (bDesktopDC)
@@ -848,10 +850,11 @@ PBITMAPOBJ FASTCALL DIBtoDDB(HGLOBAL hPackedDIB, HDC hdc) // FIXME: This should 
   // pPackedDIB = (LPBYTE)GlobalLock(hPackedDIB);
   dib = hPackedDIB;
 
-  pbits = (dib + DIB_BitmapInfoSize(&dib->dsBmih, DIB_RGB_COLORS));
+  pbits = (LPBYTE)(dib + DIB_BitmapInfoSize((BITMAPINFO*)&dib->dsBmih, DIB_RGB_COLORS));
 
   // Create a DDB from the DIB
-  hBmp = W32kCreateDIBitmap(hdc, &dib->dsBmih, CBM_INIT, (LPVOID)pbits, &dib->dsBmih, DIB_RGB_COLORS);
+  hBmp = W32kCreateDIBitmap ( hdc, &dib->dsBmih, CBM_INIT,
+    (LPVOID)pbits, (BITMAPINFO*)&dib->dsBmih, DIB_RGB_COLORS);
 
   // GlobalUnlock(hPackedDIB);
 
@@ -869,7 +872,7 @@ DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
   DWORD *lpIndex;
   PPALOBJ palObj;
 
-  palObj = AccessUserObject(dc->DevInfo->hpalDefault);
+  palObj = AccessUserObject ( (ULONG)dc->DevInfo->hpalDefault );
 
   if (palObj == NULL)
   {
@@ -897,7 +900,11 @@ DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
 }
 
 PPALETTEENTRY STDCALL
-DIBColorTableToPaletteEntries(PPALETTEENTRY palEntries, const RGBQUAD *DIBColorTable, ULONG ColorCount)
+DIBColorTableToPaletteEntries (
+	PPALETTEENTRY palEntries,
+	const RGBQUAD *DIBColorTable,
+	ULONG ColorCount
+	)
 {
   ULONG i;
 
@@ -909,9 +916,12 @@ DIBColorTableToPaletteEntries(PPALETTEENTRY palEntries, const RGBQUAD *DIBColorT
     palEntries++;
     DIBColorTable++;
   }
+
+  return palEntries;
 }
 
-HPALETTE FASTCALL BuildDIBPalette (PBITMAPINFO bmi, PINT paletteType)
+HPALETTE FASTCALL
+BuildDIBPalette (PBITMAPINFO bmi, PINT paletteType)
 {
   BYTE bits;
   ULONG ColorCount;
@@ -945,7 +955,7 @@ HPALETTE FASTCALL BuildDIBPalette (PBITMAPINFO bmi, PINT paletteType)
 
   palEntries = ExAllocatePool(NonPagedPool, sizeof(PALETTEENTRY)*ColorCount);
   DIBColorTableToPaletteEntries(palEntries, bmi->bmiColors, ColorCount);
-  hPal = EngCreatePalette(*paletteType, ColorCount, palEntries, 0, 0, 0);
+  hPal = EngCreatePalette ( *paletteType, ColorCount, (ULONG*)palEntries, 0, 0, 0 );
   ExFreePool(palEntries);
 
   return hPal;

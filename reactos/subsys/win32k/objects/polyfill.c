@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: polyfill.c,v 1.5 2003/07/14 09:43:11 gvg Exp $
+/* $Id: polyfill.c,v 1.6 2003/08/13 00:50:25 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -73,7 +73,7 @@ typedef struct _tagPFILL_EDGE
 
 typedef PPFILL_EDGE	PFILL_EDGE_LIST;
 
-static void DEBUG_PRINT_EDGELIST(PFILL_EDGE_LIST list)
+/*static void DEBUG_PRINT_EDGELIST(PFILL_EDGE_LIST list)
 {
     PPFILL_EDGE pThis = list;
     if (0 == list)
@@ -87,7 +87,7 @@ static void DEBUG_PRINT_EDGELIST(PFILL_EDGE_LIST list)
         DPRINT("EDGE: (%d, %d) to (%d, %d)\n", pThis->FromX, pThis->FromY, pThis->ToX, pThis->ToY);
         pThis = pThis->pNext;
     }
-}
+}*/
 
 /*
 **  Hide memory clean up.
