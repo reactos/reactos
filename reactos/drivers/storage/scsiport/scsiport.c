@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.35 2003/09/05 15:05:52 ekohl Exp $
+/* $Id: scsiport.c,v 1.36 2003/09/11 11:51:05 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -40,10 +40,13 @@
 
 #include "scsiport_int.h"
 
+//#define USE_DEVICE_QUEUES
+
 /* TYPES *********************************************************************/
 
 #define IRP_FLAG_COMPLETE	0x00000001
 #define IRP_FLAG_NEXT		0x00000002
+#define IRP_FLAG_NEXT_LU	0x00000004
 
 
 /* GLOBALS *******************************************************************/
@@ -92,11 +95,11 @@ SpiGetLunExtension (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 		    IN UCHAR Lun);
 
 static VOID
-ScsiPortInquire(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension);
+SpiInquirePort (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension);
 
 static ULONG
-SpiGetInquiryData(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
-		  OUT PSCSI_ADAPTER_BUS_INFO AdapterBusInfo);
+SpiGetInquiryData (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+		   OUT PSCSI_ADAPTER_BUS_INFO AdapterBusInfo);
 
 static BOOLEAN STDCALL
 ScsiPortIsr(IN PKINTERRUPT Interrupt,
@@ -117,8 +120,8 @@ ScsiPortInitSenseRequestSrb(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 			    PSCSI_REQUEST_BLOCK OriginalSrb);
 
 static NTSTATUS
-ScsiPortBuildDeviceMap(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
-		       PUNICODE_STRING RegistryPath);
+SpiBuildDeviceMap (PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+		   PUNICODE_STRING RegistryPath);
 
 
 /* FUNCTIONS *****************************************************************/
@@ -494,7 +497,7 @@ ScsiPortGetUncachedExtension(IN PVOID HwDeviceExtension,
       /* Initialize DMA adapter description */
       RtlZeroMemory(&DeviceDescription,
 		    sizeof(DEVICE_DESCRIPTION));
-      DeviceDescription.Version = DEVICE_DESCRIPTION_VERSION1;
+      DeviceDescription.Version = DEVICE_DESCRIPTION_VERSION;
       DeviceDescription.Master = ConfigInfo->Master;
       DeviceDescription.ScatterGather = ConfigInfo->ScatterGather;
       DeviceDescription.DemandMode = ConfigInfo->DemandMode;
@@ -675,6 +678,12 @@ ScsiPortInitialize(IN PVOID Argument1,
 //      RtlZeroMemory(AccessRanges,
 //		    sizeof(ACCESS_RANGE) * PortConfig->NumberOfAccessRanges);
 
+      PseudoDeviceExtension->AdapterObject = NULL;
+      PseudoDeviceExtension->MapRegisterCount = 0;
+      PseudoDeviceExtension->PhysicalAddress.QuadPart = 0ULL;
+      PseudoDeviceExtension->VirtualAddress = NULL;
+      PseudoDeviceExtension->CommonBufferLength = 0;
+
       RtlZeroMemory(PseudoDeviceExtension->MiniPortDeviceExtension,
 		    PseudoDeviceExtension->MiniPortExtensionSize);
 
@@ -707,11 +716,11 @@ ScsiPortInitialize(IN PVOID Argument1,
 	    }
 
 	  /* Get inquiry data */
-	  ScsiPortInquire(RealDeviceExtension);
+	  SpiInquirePort (RealDeviceExtension);
 
 	  /* Build the registry device map */
-	  ScsiPortBuildDeviceMap(RealDeviceExtension,
-				 (PUNICODE_STRING)Argument2);
+	  SpiBuildDeviceMap (RealDeviceExtension,
+			     (PUNICODE_STRING)Argument2);
 
 	  /* Update the configuration info */
 	  SystemConfig->AtDiskPrimaryAddressClaimed = PortConfig->AtdiskPrimaryClaimed;
@@ -804,6 +813,7 @@ ScsiPortNotification(IN SCSI_NOTIFICATION_TYPE NotificationType,
 		     ...)
 {
   PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+  va_list ap;
 
   DPRINT("ScsiPortNotification() called\n");
 
@@ -818,11 +828,19 @@ ScsiPortNotification(IN SCSI_NOTIFICATION_TYPE NotificationType,
   if (DeviceExtension->Initializing == TRUE)
     return;
 
+  va_start(ap, HwDeviceExtension);
+
   switch (NotificationType)
     {
       case RequestComplete:
-	DPRINT("Notify: RequestComplete\n");
-	DeviceExtension->IrpFlags |= IRP_FLAG_COMPLETE;
+	{
+	  PSCSI_REQUEST_BLOCK Srb;
+
+	  Srb = (PSCSI_REQUEST_BLOCK) va_arg (ap, PSCSI_REQUEST_BLOCK);
+
+	  DPRINT("Notify: RequestComplete (Srb %p)\n", Srb);
+	  DeviceExtension->IrpFlags |= IRP_FLAG_COMPLETE;
+	}
 	break;
 
       case NextRequest:
@@ -830,9 +848,36 @@ ScsiPortNotification(IN SCSI_NOTIFICATION_TYPE NotificationType,
 	DeviceExtension->IrpFlags |= IRP_FLAG_NEXT;
 	break;
 
+      case NextLuRequest:
+	{
+	  UCHAR PathId;
+	  UCHAR TargetId;
+	  UCHAR Lun;
+
+	  PathId = (UCHAR) va_arg (ap, int);
+	  TargetId = (UCHAR) va_arg (ap, int);
+	  Lun = (UCHAR) va_arg (ap, int);
+
+	  DPRINT1 ("Notify: NextLuRequest(PathId %u  TargetId %u  Lun %u)\n",
+		   PathId, TargetId, Lun);
+	  /* FIXME: Implement it! */
+
+//	  DeviceExtension->IrpFlags |= IRP_FLAG_NEXT_LU;
+
+	}
+	break;
+
+      case ResetDetected:
+	DPRINT1("Notify: ResetDetected\n");
+	/* FIXME: ??? */
+	break;
+
       default:
+	DPRINT1 ("Unsupported notification %lu\n", NotificationType);
 	break;
     }
+
+  va_end(ap);
 }
 
 
@@ -937,6 +982,7 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
 		     IN PIRP Irp)
 {
   PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+  PSCSI_PORT_LUN_EXTENSION LunExtension;
   PIO_STACK_LOCATION Stack;
   PSCSI_REQUEST_BLOCK Srb;
   NTSTATUS Status = STATUS_SUCCESS;
@@ -965,10 +1011,52 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
   DPRINT("Srb->Function: %lu\n", Srb->Function);
   DPRINT("PathId: %lu  TargetId: %lu  Lun: %lu\n", Srb->PathId, Srb->TargetId, Srb->Lun);
 
+  LunExtension = SpiGetLunExtension(DeviceExtension,
+				    Srb->PathId,
+				    Srb->TargetId,
+				    Srb->Lun);
+  if (LunExtension == NULL)
+    {
+      Status = STATUS_NO_SUCH_DEVICE;
+
+      Srb->SrbStatus = SRB_STATUS_NO_DEVICE;
+      Irp->IoStatus.Status = Status;
+      Irp->IoStatus.Information = 0;
+
+      IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+      return(Status);
+    }
+
   switch (Srb->Function)
     {
       case SRB_FUNCTION_EXECUTE_SCSI:
-	IoStartPacket(DeviceObject, Irp, NULL, NULL);
+      case SRB_FUNCTION_IO_CONTROL:
+#ifdef USE_DEVICE_QUEUES
+	if (Srb->SrbFlags & SRB_FLAGS_BYPASS_FROZEN_QUEUE)
+	  {
+	    IoStartPacket (DeviceObject, Irp, NULL, NULL);
+	  }
+	else
+	  {
+	    KIRQL oldIrql;
+
+	    KeRaiseIrql (DISPATCH_LEVEL,
+			 &oldIrql);
+
+	    if (!KeInsertByKeyDeviceQueue (&LunExtension->DeviceQueue,
+					   &Irp->Tail.Overlay.DeviceQueueEntry,
+					   Srb->QueueSortKey))
+	      {
+		Srb->SrbStatus = SRB_STATUS_SUCCESS;
+		IoStartPacket (DeviceObject, Irp, NULL, NULL);
+	      }
+
+	    KeLowerIrql (oldIrql);
+	  }
+#else
+        IoStartPacket (DeviceObject, Irp, NULL, NULL);
+#endif
 	return(STATUS_PENDING);
 
       case SRB_FUNCTION_SHUTDOWN:
@@ -981,29 +1069,13 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
 	break;
 
       case SRB_FUNCTION_CLAIM_DEVICE:
-	{
-	  PSCSI_PORT_LUN_EXTENSION LunExtension;
+	DPRINT("  SRB_FUNCTION_CLAIM_DEVICE\n");
 
-	  DPRINT("  SRB_FUNCTION_CLAIM_DEVICE\n");
-	  DPRINT("PathId: %lu  TargetId: %lu  Lun: %lu\n", Srb->PathId, Srb->TargetId, Srb->Lun);
-
-	  LunExtension = SpiGetLunExtension(DeviceExtension,
-					    Srb->PathId,
-					    Srb->TargetId,
-					    Srb->Lun);
-	  if (LunExtension != NULL)
-	    {
-	      /* Reference device object and keep the pointer */
-	      ObReferenceObject(DeviceObject);
-	      LunExtension->DeviceObject = DeviceObject;
-	      LunExtension->DeviceClaimed = TRUE;
-	      Srb->DataBuffer = DeviceObject;
-	    }
-	  else
-	    {
-	      Srb->DataBuffer = NULL;
-	    }
-	}
+	/* Reference device object and keep the pointer */
+	ObReferenceObject(DeviceObject);
+	LunExtension->DeviceObject = DeviceObject;
+	LunExtension->DeviceClaimed = TRUE;
+	Srb->DataBuffer = DeviceObject;
 	break;
 
       case SRB_FUNCTION_RELEASE_DEVICE:
@@ -1128,79 +1200,88 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
 		IN PIRP Irp)
 {
   PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+  PSCSI_PORT_LUN_EXTENSION LunExtension;
   PIO_STACK_LOCATION IrpStack;
-  KIRQL OldIrql;
+  PSCSI_REQUEST_BLOCK Srb;
+  KIRQL oldIrql;
+  BOOLEAN Result;
 
   DPRINT("ScsiPortStartIo() called!\n");
 
   DeviceExtension = DeviceObject->DeviceExtension;
   IrpStack = IoGetCurrentIrpStackLocation(Irp);
 
-  // FIXME: implement the supported functions
+  DPRINT("DeviceExtension %p\n", DeviceExtension);
 
-  switch (IrpStack->MajorFunction)
+  if (IrpStack->MajorFunction != IRP_MJ_SCSI)
     {
-      case IRP_MJ_SCSI:
-	{
-	  BOOLEAN Result;
-	  PSCSI_REQUEST_BLOCK Srb;
-	  KIRQL oldIrql;
-
-	  DPRINT("IRP_MJ_SCSI\n");
-
-	  Srb = IrpStack->Parameters.Scsi.Srb;
-
-	  DPRINT("DeviceExtension %p\n", DeviceExtension);
-
-	  Irp->IoStatus.Status = STATUS_SUCCESS;
-	  Irp->IoStatus.Information = Srb->DataTransferLength;
-
-	  DeviceExtension->CurrentIrp = Irp;
-
-	  if (!KeSynchronizeExecution(DeviceExtension->Interrupt,
-				      ScsiPortStartPacket,
-				      DeviceExtension))
-	    {
-	      DPRINT("Synchronization failed!\n");
-
-	      Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-	      Irp->IoStatus.Information = 0;
-	      IoCompleteRequest(Irp,
-				IO_NO_INCREMENT);
-	      IoStartNextPacket(DeviceObject,
-				FALSE);
-	    }
-	  KeAcquireSpinLock(&DeviceExtension->IrpLock, &oldIrql);
-	  if (DeviceExtension->IrpFlags & IRP_FLAG_COMPLETE)
-	    {
-	      DeviceExtension->IrpFlags &= ~IRP_FLAG_COMPLETE;
-	      IoCompleteRequest(Irp,
-				IO_NO_INCREMENT);
-	    }
-
-	  if (DeviceExtension->IrpFlags & IRP_FLAG_NEXT)
-	    {
-	      DeviceExtension->IrpFlags &= ~IRP_FLAG_NEXT;
-	      KeReleaseSpinLock(&DeviceExtension->IrpLock, oldIrql);
-	      IoStartNextPacket(DeviceObject,
-				FALSE);
-	    }
-	  else
-	    {
-	      KeReleaseSpinLock(&DeviceExtension->IrpLock, oldIrql);
-	    }
-	}
-	break;
-
-      default:
-	Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
-	Irp->IoStatus.Information = 0;
-	IoCompleteRequest(Irp,
-			  IO_NO_INCREMENT);
-	IoStartNextPacket(DeviceObject,
-			  FALSE);
-	break;
+      DPRINT("No IRP_MJ_SCSI!\n");
+      Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
+      Irp->IoStatus.Information = 0;
+      IoCompleteRequest (Irp,
+			 IO_NO_INCREMENT);
+      IoStartNextPacket (DeviceObject,
+			 FALSE);
+      return;
     }
+
+  Srb = IrpStack->Parameters.Scsi.Srb;
+
+  LunExtension = SpiGetLunExtension(DeviceExtension,
+				    Srb->PathId,
+				    Srb->TargetId,
+				    Srb->Lun);
+  if (LunExtension == NULL)
+    {
+      DPRINT("No IRP_MJ_SCSI!\n");
+      Irp->IoStatus.Status = STATUS_NO_SUCH_DEVICE;
+      Irp->IoStatus.Information = 0;
+      IoCompleteRequest (Irp,
+			 IO_NO_INCREMENT);
+      IoStartNextPacket (DeviceObject,
+			 FALSE);
+      return;
+    }
+
+  Irp->IoStatus.Status = STATUS_SUCCESS;
+  Irp->IoStatus.Information = Srb->DataTransferLength;
+
+  DeviceExtension->CurrentIrp = Irp;
+
+  if (!KeSynchronizeExecution(DeviceExtension->Interrupt,
+			      ScsiPortStartPacket,
+			      DeviceExtension))
+    {
+      DPRINT("Synchronization failed!\n");
+
+      Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+      Irp->IoStatus.Information = 0;
+      IoCompleteRequest(Irp,
+			IO_NO_INCREMENT);
+      IoStartNextPacket(DeviceObject,
+			FALSE);
+    }
+
+  KeAcquireSpinLock(&DeviceExtension->IrpLock, &oldIrql);
+  if (DeviceExtension->IrpFlags & IRP_FLAG_COMPLETE)
+    {
+      DeviceExtension->IrpFlags &= ~IRP_FLAG_COMPLETE;
+      IoCompleteRequest(Irp,
+			IO_NO_INCREMENT);
+    }
+
+  if (DeviceExtension->IrpFlags & IRP_FLAG_NEXT)
+    {
+      DeviceExtension->IrpFlags &= ~IRP_FLAG_NEXT;
+      KeReleaseSpinLock(&DeviceExtension->IrpLock, oldIrql);
+      IoStartNextPacket(DeviceObject,
+			FALSE);
+    }
+  else
+    {
+      KeReleaseSpinLock(&DeviceExtension->IrpLock, oldIrql);
+    }
+
   DPRINT("ScsiPortStartIo() done\n");
 }
 
@@ -1455,6 +1536,8 @@ SpiAllocateLunExtension (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
   LunExtension->TargetId = TargetId;
   LunExtension->Lun = Lun;
 
+  KeInitializeDeviceQueue (&LunExtension->DeviceQueue);
+
   return LunExtension;
 }
 
@@ -1495,7 +1578,7 @@ SpiGetLunExtension (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 
 
 static VOID
-ScsiPortInquire(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
+SpiInquirePort(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 {
   PSCSI_PORT_LUN_EXTENSION LunExtension;
   SCSI_REQUEST_BLOCK Srb;
@@ -1504,12 +1587,13 @@ ScsiPortInquire(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
   ULONG Lun;
   BOOLEAN Result;
 
-  DPRINT("ScsiPortInquire() called\n");
+  DPRINT("SpiInquirePort() called\n");
 
   DeviceExtension->Initializing = TRUE;
 
   RtlZeroMemory(&Srb,
 		sizeof(SCSI_REQUEST_BLOCK));
+  Srb.SrbFlags = SRB_FLAGS_DATA_IN;
   Srb.DataBuffer = ExAllocatePool(NonPagedPool, 256);
   Srb.Function = SRB_FUNCTION_EXECUTE_SCSI;
   Srb.DataTransferLength = 256;
@@ -1530,7 +1614,7 @@ ScsiPortInquire(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 
 	      Result = DeviceExtension->HwStartIo(&DeviceExtension->MiniPortDeviceExtension,
 						  &Srb);
-	      DPRINT("Result: %s  Srb.SrbStatus %lx\n", (Result)?"True":"False", Srb.SrbStatus);
+	      DPRINT("Result %s  Srb.SrbStatus %lx\n", (Result) ? "TRUE" : "FALSE", Srb.SrbStatus);
 
 	      if (Result == TRUE && Srb.SrbStatus == SRB_STATUS_SUCCESS)
 		{
@@ -1554,7 +1638,7 @@ ScsiPortInquire(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 
   DeviceExtension->Initializing = FALSE;
 
-  DPRINT("ScsiPortInquire() done\n");
+  DPRINT("SpiInquirePort() done\n");
 }
 
 
@@ -1741,7 +1825,6 @@ ScsiPortDpcForIsr(IN PKDPC Dpc,
 
       DeviceExtension->CurrentIrp = NULL;
 
-
 //      DpcIrp->IoStatus.Information = 0;
 //      DpcIrp->IoStatus.Status = STATUS_SUCCESS;
 
@@ -1831,7 +1914,7 @@ ScsiPortFreeSenseRequestSrb(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 
 /**********************************************************************
  * NAME							INTERNAL
- *	ScsiPortBuildDeviceMap
+ *	SpiBuildDeviceMap
  *
  * DESCRIPTION
  *	Builds the registry device map of all device which are attached
@@ -1853,8 +1936,8 @@ ScsiPortFreeSenseRequestSrb(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
  */
 
 static NTSTATUS
-ScsiPortBuildDeviceMap(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
-		       PUNICODE_STRING RegistryPath)
+SpiBuildDeviceMap (PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+		   PUNICODE_STRING RegistryPath)
 {
   PSCSI_PORT_LUN_EXTENSION LunExtension;
   OBJECT_ATTRIBUTES ObjectAttributes;
@@ -1863,11 +1946,11 @@ ScsiPortBuildDeviceMap(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
   WCHAR NameBuffer[64];
   ULONG Disposition;
   HANDLE ScsiKey;
-  HANDLE ScsiPortKey;
-  HANDLE ScsiBusKey;
-  HANDLE ScsiInitiatorKey;
-  HANDLE ScsiTargetKey;
-  HANDLE ScsiLunKey;
+  HANDLE ScsiPortKey = NULL;
+  HANDLE ScsiBusKey = NULL;
+  HANDLE ScsiInitiatorKey = NULL;
+  HANDLE ScsiTargetKey = NULL;
+  HANDLE ScsiLunKey = NULL;
   ULONG BusNumber;
   ULONG Target;
   ULONG CurrentTarget;
@@ -1877,7 +1960,7 @@ ScsiPortBuildDeviceMap(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
   PWCHAR TypeName;
   NTSTATUS Status;
 
-  DPRINT("ScsiPortBuildDeviceMap() called\n");
+  DPRINT("SpiBuildDeviceMap() called\n");
 
   if (DeviceExtension == NULL || RegistryPath == NULL)
     {
@@ -2034,8 +2117,7 @@ ScsiPortBuildDeviceMap(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
       if (!NT_SUCCESS(Status))
 	{
 	  DPRINT("ZwCreateKey() failed (Status %lx)\n", Status);
-	  ZwClose(ScsiPortKey);
-	  return(Status);
+	  goto ByeBye;
 	}
 
       /* Create 'Initiator Id X' key */
@@ -2061,14 +2143,13 @@ ScsiPortBuildDeviceMap(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
       if (!NT_SUCCESS(Status))
 	{
 	  DPRINT("ZwCreateKey() failed (Status %lx)\n", Status);
-	  ZwClose(ScsiBusKey);
-	  ZwClose(ScsiPortKey);
-	  return(Status);
+	  goto ByeBye;
 	}
 
       /* FIXME: Are there any initiator values (??) */
 
       ZwClose(ScsiInitiatorKey);
+      ScsiInitiatorKey = NULL;
 
 
       /* Enumerate targets */
@@ -2115,9 +2196,7 @@ ScsiPortBuildDeviceMap(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 		      if (!NT_SUCCESS(Status))
 			{
 			  DPRINT("ZwCreateKey() failed (Status %lx)\n", Status);
-			  ZwClose(ScsiBusKey);
-			  ZwClose(ScsiPortKey);
-			  return(Status);
+			  goto ByeBye;
 			}
 
 		      CurrentTarget = Target;
@@ -2145,10 +2224,7 @@ ScsiPortBuildDeviceMap(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 		  if (!NT_SUCCESS(Status))
 		    {
 		      DPRINT("ZwCreateKey() failed (Status %lx)\n", Status);
-		      ZwClose(ScsiTargetKey);
-		      ZwClose(ScsiBusKey);
-		      ZwClose(ScsiPortKey);
-		      return(Status);
+		      goto ByeBye;
 		    }
 
 		  /* Set 'Identifier' (REG_SZ) value */
@@ -2169,11 +2245,7 @@ ScsiPortBuildDeviceMap(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 		  if (!NT_SUCCESS(Status))
 		    {
 		      DPRINT("ZwSetValueKey('Identifier') failed (Status %lx)\n", Status);
-		      ZwClose(ScsiLunKey);
-		      ZwClose(ScsiTargetKey);
-		      ZwClose(ScsiBusKey);
-		      ZwClose(ScsiPortKey);
-		      return(Status);
+		      goto ByeBye;
 		    }
 
 		  /* Set 'Type' (REG_SZ) value */
@@ -2222,14 +2294,11 @@ ScsiPortBuildDeviceMap(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 		  if (!NT_SUCCESS(Status))
 		    {
 		      DPRINT("ZwSetValueKey('Type') failed (Status %lx)\n", Status);
-		      ZwClose(ScsiLunKey);
-		      ZwClose(ScsiTargetKey);
-		      ZwClose(ScsiBusKey);
-		      ZwClose(ScsiPortKey);
-		      return(Status);
+		      goto ByeBye;
 		    }
 
 		  ZwClose(ScsiLunKey);
+		  ScsiLunKey = NULL;
 		}
 	    }
 
@@ -2242,13 +2311,28 @@ ScsiPortBuildDeviceMap(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 	}
 
       ZwClose(ScsiBusKey);
+      ScsiBusKey = NULL;
     }
 
-  ZwClose(ScsiPortKey);
+ByeBye:
+  if (ScsiLunKey != NULL)
+    ZwClose (ScsiLunKey);
 
-  DPRINT("ScsiPortBuildDeviceMap() done\n");
+  if (ScsiInitiatorKey != NULL)
+    ZwClose (ScsiInitiatorKey);
 
-  return(Status);
+  if (ScsiTargetKey != NULL)
+    ZwClose (ScsiTargetKey);
+
+  if (ScsiBusKey != NULL)
+    ZwClose (ScsiBusKey);
+
+  if (ScsiPortKey != NULL)
+    ZwClose (ScsiPortKey);
+
+  DPRINT("SpiBuildDeviceMap() done\n");
+
+  return Status;
 }
 
 /* EOF */

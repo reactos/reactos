@@ -37,6 +37,8 @@ typedef struct _SCSI_PORT_LUN_EXTENSION
 
   INQUIRYDATA InquiryData;
 
+  KDEVICE_QUEUE DeviceQueue;
+
   /* More data? */
 
   UCHAR MiniportLunExtension[1]; /* must be the last entry */
