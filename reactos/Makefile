@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.215 2004/04/09 18:27:10 weiden Exp $
+# $Id: Makefile,v 1.216 2004/04/11 16:51:56 gvg Exp $
 #
 # Global makefile
 #
@@ -142,13 +142,13 @@ clean: tools dk_clean $(HALS:%=%_clean) \
 clean_after:
 	$(RM) $(PATH_TO_TOP)/include/roscfg.h
 
-install: tools install_dirs install_before \
+fastinstall: tools install_dirs install_before \
          $(COMPONENTS:%=%_install) $(HALS:%=%_install) $(BUS:%=%_install) \
          $(LIB_STATIC:%=%_install) $(LIB_FSLIB:%=%_install) $(DLLS:%=%_install) $(LOADERS:%=%_install) \
          $(KERNEL_DRIVERS:%=%_install) $(SUBSYS:%=%_install) \
          $(SYS_APPS:%=%_install) $(SYS_SVC:%=%_install) \
-         $(APPS:%=%_install) $(EXT_MODULES:%=%_install) $(REGTESTS:%=%_install) \
-         registry
+         $(APPS:%=%_install) $(EXT_MODULES:%=%_install) $(REGTESTS:%=%_install)
+install: fastinstall registry
 
 FREELDR_DIR = ../freeldr
 
