@@ -29,7 +29,7 @@
 #include "resource.h"
 
 #ifdef _ROS_
-#include "../externals.h"
+#include "externals.h"
 #endif
 
 

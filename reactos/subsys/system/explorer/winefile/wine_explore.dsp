@@ -313,11 +313,11 @@ SOURCE=.\desktop.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\externals.h
+SOURCE=..\explorer.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\explorer.h
+SOURCE=.\externals.h
 # End Source File
 # Begin Source File
 

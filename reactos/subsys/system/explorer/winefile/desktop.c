@@ -10,7 +10,7 @@
 
 #include "../utility/utility.h"
 
-#include "../externals.h"
+#include "externals.h"
 
 
 /* GetShellWindow is already present in the header files
