@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.16 2000/06/29 23:35:26 dwelch Exp $
+/* $Id: thread.c,v 1.17 2000/07/01 17:07:02 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -15,6 +15,7 @@
 #include <ddk/ntddk.h>
 #include <windows.h>
 #include <kernel32/thread.h>
+#include <ntdll/ldr.h>
 #include <string.h>
 #include <napi/i386/segment.h>
 
@@ -362,5 +363,29 @@ int STDCALL GetThreadPriority(HANDLE hThread)
      }
    return ThreadBasic.BasePriority;
 }
+
+
+/* FIXME */
+WINBOOL
+STDCALL
+DisableThreadLibraryCalls (
+	HMODULE	hLibModule
+	)
+{
+	NTSTATUS	Status;
+
+	Status = LdrDisableThreadCalloutsForDll (
+			(PVOID) hLibModule,
+			TRUE
+			);
+	if (!NT_SUCCESS (Status))
+	{
+		SetLastErrorByStatus (Status);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+
 
 /* EOF */

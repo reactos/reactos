@@ -1,4 +1,4 @@
-/* $Id: debug.c,v 1.2 2000/04/14 01:49:40 ekohl Exp $
+/* $Id: debug.c,v 1.3 2000/07/01 17:07:00 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,6 +11,7 @@
 
 #include <ddk/ntddk.h>
 #include <ntdll/dbg.h>
+#include <kernel32/error.h>
 #include <windows.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -36,7 +37,7 @@ ContinueDebugEvent (
 	                        dwContinueStatus);
 	if (!NT_SUCCESS(Status))
 	{
-		SetLastError (RtlNtStatusToDosError(Status));
+		SetLastErrorByStatus (Status);
 		return FALSE;
 	}
 	return TRUE;

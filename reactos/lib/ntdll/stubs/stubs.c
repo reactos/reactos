@@ -28,7 +28,6 @@ STUB(CsrSetPriorityClass)
 STUB(KiRaiseUserExceptionDispatcher)
 STUB(KiUserExceptionDispatcher)
 
-STUB(LdrDisableThreadCalloutsForDll)
 STUB(LdrEnumResources)
 STUB(LdrFindEntryForAddress)
 STUB(LdrFindResourceDirectory_U)

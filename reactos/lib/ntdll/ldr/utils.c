@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.26 2000/06/29 23:35:27 dwelch Exp $
+/* $Id: utils.c,v 1.27 2000/07/01 17:06:22 ea Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1078,5 +1078,17 @@ NTSTATUS LdrAccessResource(DLL *Dll, IMAGE_RESOURCE_DATA_ENTRY *ResourceDataEntr
 
 	return STATUS_SUCCESS;
 }
+
+
+NTSTATUS
+STDCALL
+LdrDisableThreadCalloutsForDll (
+	PVOID	IN	ImageBase,
+	BOOLEAN	IN	Disable
+	)
+{
+	return STATUS_NOT_IMPLEMENTED;
+}
+
 
 /* EOF */

@@ -1,3 +1,6 @@
+#ifndef _INCLUDE_KERNEL32_KERNEL32_H
+#define _INCLUDE_KERNEL32_KERNEL32_H
+
 #include <windows.h>
 
 #define UNIMPLEMENTED DbgPrint("%s at %s:%d is unimplemented\n",__FUNCTION__,__FILE__,__LINE__);
@@ -39,6 +42,8 @@ BOOL KERNEL32_AnsiToUnicode(PWSTR DestStr,
 			    ULONG MaxLen);
 PWSTR InternalAnsiToUnicode(PWSTR Out, LPCSTR In, ULONG MaxLength);
 
-BOOLEAN IsConsoleHandle(HANDLE Handle);
+BOOLEAN STDCALL IsConsoleHandle(HANDLE Handle);
 
 WINBOOL STDCALL CloseConsoleHandle(HANDLE Handle);
+
+#endif /* ndef _INCLUDE_KERNEL32_KERNEL32_H */

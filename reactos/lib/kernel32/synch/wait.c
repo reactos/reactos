@@ -1,4 +1,4 @@
-/* $Id: wait.c,v 1.11 2000/03/18 02:39:12 ekohl Exp $
+/* $Id: wait.c,v 1.12 2000/07/01 17:07:02 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -10,6 +10,7 @@
  */
 
 #include <ddk/ntddk.h>
+#include <kernel32/error.h>
 #include <windows.h>
 #include <wchar.h>
 
@@ -84,7 +85,7 @@ CreateSemaphoreW(
 	);
 	if (!NT_SUCCESS(errCode))
 		{
-		SetLastError(RtlNtStatusToDosError(errCode));
+		SetLastErrorByStatus (errCode);
 		return NULL;
 		}
 
@@ -153,7 +154,7 @@ CreateMutexW (
 	errCode = NtCreateMutant(&MutantHandle,GENERIC_ALL, &ObjectAttributes,(BOOLEAN)bInitialOwner);
 	if (!NT_SUCCESS(errCode))
 	{
-		SetLastError(RtlNtStatusToDosError(errCode));
+		SetLastErrorByStatus (errCode);
 		return NULL;
 	}
 
@@ -182,7 +183,6 @@ WaitForSingleObjectEx(HANDLE hHandle,
    NTSTATUS  errCode;
    PLARGE_INTEGER TimePtr;
    LARGE_INTEGER Time;
-   DWORD retCode;
 
    if (dwMilliseconds == INFINITE)
      {
@@ -206,8 +206,7 @@ WaitForSingleObjectEx(HANDLE hHandle,
         return WAIT_OBJECT_0;
      }
 
-   retCode = RtlNtStatusToDosError(errCode);
-   SetLastError(retCode);
+   SetLastErrorByStatus (errCode);
 
    return 0xFFFFFFFF;
 }
@@ -235,7 +234,6 @@ WaitForMultipleObjectsEx(DWORD nCount,
    NTSTATUS  errCode;
    LARGE_INTEGER Time;
    PLARGE_INTEGER TimePtr;
-   DWORD retCode;
 
    if (dwMilliseconds == INFINITE)
      {
@@ -263,8 +261,7 @@ WaitForMultipleObjectsEx(DWORD nCount,
         return errCode;
      }
 
-   retCode = RtlNtStatusToDosError(errCode);
-   SetLastError(retCode);
+   SetLastErrorByStatus (errCode);
 
    return 0xFFFFFFFF;
 }

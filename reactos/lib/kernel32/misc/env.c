@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.10 2000/02/18 00:49:56 ekohl Exp $
+/* $Id: env.c,v 1.11 2000/07/01 17:07:00 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -17,6 +17,7 @@
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
+#include <kernel32/error.h>
 
 
 /* FUNCTIONS ******************************************************************/
@@ -68,7 +69,7 @@ GetEnvironmentVariableA (
 		/* free unicode variable name string */
 		RtlFreeUnicodeString (&VarNameU);
 
-		SetLastError (RtlNtStatusToDosError(Status));
+		SetLastErrorByStatus (Status);
 		return 0;
 	}
 
@@ -113,7 +114,7 @@ GetEnvironmentVariableW (
 	                                        &VarValue);
 	if (!NT_SUCCESS(Status))
 	{
-		SetLastError (RtlNtStatusToDosError(Status));
+		SetLastErrorByStatus (Status);
 		return 0;
 	}
 
@@ -155,7 +156,7 @@ SetEnvironmentVariableA (
 
 	if (!NT_SUCCESS(Status))
 	{
-		SetLastError (RtlNtStatusToDosError(Status));
+		SetLastErrorByStatus (Status);
 		return FALSE;
 	}
 
@@ -185,7 +186,7 @@ SetEnvironmentVariableW (
 	                                    &VarValue);
 	if (!NT_SUCCESS(Status))
 	{
-		SetLastError (RtlNtStatusToDosError(Status));
+		SetLastErrorByStatus (Status);
 		return FALSE;
 	}
 
@@ -393,7 +394,7 @@ ExpandEnvironmentStringsA (
 		RtlFreeHeap (RtlGetProcessHeap (),
 		             0,
 		             DestinationU.Buffer);
-		SetLastError (RtlNtStatusToDosError (Status));
+		SetLastErrorByStatus (Status);
 		return 0;
 	}
 
@@ -435,7 +436,7 @@ ExpandEnvironmentStringsW (
 	                                        &Length);
 	if (!NT_SUCCESS(Status))
 	{
-		SetLastError (RtlNtStatusToDosError (Status));
+		SetLastErrorByStatus (Status);
 		return 0;
 	}
 

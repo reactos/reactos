@@ -1,4 +1,5 @@
-/*
+/* $Id: atom.c,v 1.9 2000/07/01 17:07:00 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/misc/atom.c

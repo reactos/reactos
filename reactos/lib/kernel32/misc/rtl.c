@@ -1,4 +1,5 @@
-/*
+/* $Id: rtl.c,v 1.3 2000/07/01 17:07:00 ea Exp $
+ *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
  * FILE:                 lib/kernel32/misc/rtl.c
@@ -95,3 +96,6 @@ RtlUnwind (
 		return -1;
 	return Unwind(Unknown0, Unknown1, Unknown2, Unknown3);
 }
+
+
+/* EOF */

@@ -1,4 +1,5 @@
-/*
+/* $Id: virtual.c,v 1.6 2000/07/01 17:07:00 ea Exp $
+ *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
  * FILE:                 lib/kernel32/mem/virtual.c
@@ -9,6 +10,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ddk/ntddk.h>
+#include <kernel32/error.h>
 #include <windows.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -29,7 +31,7 @@ LPVOID STDCALL VirtualAllocEx(HANDLE hProcess,
 				    flProtect);
    if (!NT_SUCCESS(Status))
      {
-        SetLastError(RtlNtStatusToDosError(Status));
+        SetLastErrorByStatus (Status);
 	return(NULL);
      }
    return(lpAddress);
@@ -57,7 +59,7 @@ WINBOOL STDCALL VirtualFreeEx(HANDLE hProcess,
 				dwFreeType);
    if (!NT_SUCCESS(Status))
      {
-	SetLastError(RtlNtStatusToDosError(Status));
+	SetLastErrorByStatus (Status);
 	return(FALSE);
      }
    return(TRUE);
@@ -96,7 +98,7 @@ WINBOOL STDCALL VirtualProtectEx(HANDLE hProcess,
 				   (PULONG)lpflOldProtect);
    if (Status != STATUS_SUCCESS)
      {
-	SetLastError(RtlNtStatusToDosError(Status));
+	SetLastErrorByStatus (Status);
 	return(FALSE);
      }
    return(TRUE);
@@ -115,7 +117,7 @@ VirtualLock (
 	Status = NtLockVirtualMemory(NtCurrentProcess(),lpAddress,dwSize, &BytesLocked);
 	if (!NT_SUCCESS(Status))
         {
-		SetLastError(RtlNtStatusToDosError(Status));
+		SetLastErrorByStatus (Status);
 		return FALSE;
      	}
 	return TRUE;
@@ -154,7 +156,7 @@ VirtualQueryEx (
 	
 	if (!NT_SUCCESS(Status))
         {
-		SetLastError(RtlNtStatusToDosError(Status));
+		SetLastErrorByStatus (Status);
 		return ResultLength;
      	}
 	return ResultLength;
@@ -173,8 +175,10 @@ VirtualUnlock (
 	Status = NtUnlockVirtualMemory(NtCurrentProcess(),lpAddress,dwSize, &BytesLocked);
 	if (!NT_SUCCESS(Status))
         {
-		SetLastError(RtlNtStatusToDosError(Status));
+		SetLastErrorByStatus (Status);
 		return FALSE;
      	}
 	return TRUE;
 }
+
+/* EOF */

@@ -1,4 +1,5 @@
-/*
+/* $Id: procmem.c,v 1.2 2000/07/01 17:07:00 ea Exp $
+ *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
  * FILE:                 lib/kernel32/mem/procmem.c
@@ -10,6 +11,7 @@
 
 
 #include <ddk/ntddk.h>
+#include <kernel32/error.h>
 #include <windows.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -32,7 +34,7 @@ ReadProcessMemory (
 
 	if (!NT_SUCCESS(Status))
      	{
-		SetLastError(RtlNtStatusToDosError(Status));
+		SetLastErrorByStatus (Status);
 		return FALSE;
      	}
 	return TRUE;
@@ -57,8 +59,11 @@ WriteProcessMemory (
 
 	if (!NT_SUCCESS(Status))
      	{
-		SetLastError(RtlNtStatusToDosError(Status));
+		SetLastErrorByStatus (Status);
 		return FALSE;
      	}
 	return TRUE;
 }
+
+
+/* EOF */

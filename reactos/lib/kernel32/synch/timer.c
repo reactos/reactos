@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.4 2000/03/16 21:50:11 ekohl Exp $
+/* $Id: timer.c,v 1.5 2000/07/01 17:07:02 ea Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -10,6 +10,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ddk/ntddk.h>
+#include <kernel32/error.h>
 #include <windows.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -154,7 +155,7 @@ WINBOOL SetWaitableTimer(
 		lpArgToCompletionRoutine, fResume, lPeriod, &pState);
 
 	if ( !NT_SUCCESS(errCode) ) {
-		SetLastError(RtlNtStatusToDosError(errCode));
+		SetLastErrorByStatus (errCode);
 		return FALSE;
 	}
 	return TRUE;
@@ -170,7 +171,7 @@ WINBOOL CancelWaitableTimer(HANDLE hTimer)
 		&CurrentState
 	);
 	if ( !NT_SUCCESS(errCode) ) {
-		SetLastError(RtlNtStatusToDosError(errCode));
+		SetLastErrorByStatus (errCode);
 		return FALSE;
 	}
 	return TRUE;

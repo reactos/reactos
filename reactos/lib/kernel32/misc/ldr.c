@@ -1,4 +1,4 @@
-/* $Id: ldr.c,v 1.5 2000/04/14 01:49:40 ekohl Exp $
+/* $Id: ldr.c,v 1.6 2000/07/01 17:07:00 ea Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -13,6 +13,7 @@
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
+#include <kernel32/error.h>
 
 
 /* FUNCTIONS ****************************************************************/
@@ -116,7 +117,7 @@ LoadLibraryExW (
 	HeapFree(GetProcessHeap(),0,lpDllName);
 	if ( !NT_SUCCESS(Status))
 	{
-		SetLastError(RtlNtStatusToDosError(Status));
+		SetLastErrorByStatus (Status);
 		return NULL;
 	}
 	

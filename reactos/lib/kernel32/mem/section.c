@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.11 2000/06/29 23:35:25 dwelch Exp $
+/* $Id: section.c,v 1.12 2000/07/01 17:07:00 ea Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -10,6 +10,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ddk/ntddk.h>
+#include <kernel32/error.h>
 #include <windows.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -59,7 +60,7 @@ HANDLE STDCALL CreateFileMappingA (
    RtlFreeUnicodeString (&UnicodeName);
    if (!NT_SUCCESS(Status))
      {
-	SetLastError(RtlNtStatusToDosError(Status));
+	SetLastErrorByStatus (Status);
 	return NULL;
      }
    
@@ -111,7 +112,7 @@ CreateFileMappingW (
 			    hFile);
    if (!NT_SUCCESS(Status))
      {
-	SetLastError(RtlNtStatusToDosError(Status));
+	SetLastErrorByStatus (Status);
 	return NULL;
      }
    
@@ -168,7 +169,7 @@ LPVOID STDCALL MapViewOfFileEx(HANDLE	hFileMappingObject,
 
 	if (!NT_SUCCESS(Status))
 	{
-		SetLastError(RtlNtStatusToDosError(Status));
+		SetLastErrorByStatus (Status);
 		return NULL;
 	}
 
@@ -201,7 +202,7 @@ UnmapViewOfFile (
 	
 	if (!NT_SUCCESS(Status))
 	{
-		SetLastError(RtlNtStatusToDosError(Status));
+		SetLastErrorByStatus (Status);
 		return FALSE;
 	}
 
@@ -243,7 +244,7 @@ OpenFileMappingA (
 	RtlFreeUnicodeString (&UnicodeName);
 	if (!NT_SUCCESS(Status))
 	{
-		SetLastError(RtlNtStatusToDosError(Status));
+		SetLastErrorByStatus (Status);
 		return NULL;
 	}
 
@@ -280,7 +281,7 @@ OpenFileMappingW (
 			    &ObjectAttributes);
 	if (!NT_SUCCESS(Status))
 		{
-		SetLastError(RtlNtStatusToDosError(Status));
+		SetLastErrorByStatus (Status);
 		return NULL;
 		}
 
@@ -304,7 +305,7 @@ FlushViewOfFile (
 	
 	if (!NT_SUCCESS(Status))
 	{
-		SetLastError(RtlNtStatusToDosError(Status));
+		SetLastErrorByStatus (Status);
 		return FALSE;
 	}
 	return TRUE;

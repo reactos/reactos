@@ -1,4 +1,5 @@
-/*
+/* $Id: global.c,v 1.4 2000/07/01 17:07:00 ea Exp $
+ *
  * Win32 Global/Local heap functions (GlobalXXX, LocalXXX).
  * These functions included in Win32 for compatibility with 16 bit Windows
  * Especially the moveable blocks and handles are oldish. 
@@ -321,3 +322,4 @@ UINT WINAPI GlobalFlags(HGLOBAL hmem)
    return LocalFlags( (HLOCAL) hmem);
 }
 
+/* EOF */

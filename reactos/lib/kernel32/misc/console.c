@@ -1,4 +1,5 @@
-/*
+/* $Id: console.c,v 1.24 2000/07/01 17:07:00 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/misc/console.c
@@ -23,14 +24,28 @@
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
+#include <kernel32/error.h>
 
 /* FUNCTIONS *****************************************************************/
 
+/*--------------------------------------------------------------
+ *	CloseConsoleHandle
+ */
 WINBOOL STDCALL CloseConsoleHandle(HANDLE Handle)
-{   
+{
+	if (FALSE == IsConsoleHandle (Handle))
+	{
+		SetLastError (ERROR_INVALID_PARAMETER);
+		return FALSE;
+	}
+	/* FIXME: call CSRSS */
+	return FALSE;
 }
 
-BOOLEAN IsConsoleHandle(HANDLE Handle)
+/*--------------------------------------------------------------
+ *	IsConsoleHandle
+ */
+BOOLEAN STDCALL IsConsoleHandle(HANDLE Handle)
 {
    if ((((ULONG)Handle) & 0x10000003) == 0x3)
      {
@@ -146,7 +161,7 @@ WINBOOL STDCALL WriteConsoleA(HANDLE hConsoleOutput,
 	 if (!NT_SUCCESS(Status) || !NT_SUCCESS( Status = Reply.Status ) )
 	    {
 	       HeapFree( GetProcessHeap(), 0, Request );
-	       SetLastError( RtlNtStatusToDosError( Status ) );
+	       SetLastErrorByStatus (Status);
 	       return(FALSE);
 	    }
 	 nNumberOfCharsToWrite -= Size;
@@ -191,7 +206,7 @@ WINBOOL STDCALL ReadConsoleA(HANDLE hConsoleInput,
    if (!NT_SUCCESS(Status) || !NT_SUCCESS( Status = Reply->Status ))
      {
 	DbgPrint( "CSR returned error in ReadConsole\n" );
-	SetLastError( RtlNtStatusToDosError( Status ) );
+	SetLastErrorByStatus ( Status );
 	HeapFree( GetProcessHeap(), 0, Reply );
 	return(FALSE);
      }
@@ -208,7 +223,7 @@ WINBOOL STDCALL ReadConsoleA(HANDLE hConsoleInput,
        Status = CsrClientCallServer( &Request, Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) + nNumberOfCharsToRead );
        if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply->Status ) )
 	 {
-	   SetLastError( RtlNtStatusToDosError( Status ) );
+	   SetLastErrorByStatus ( Status );
 	   HeapFree( GetProcessHeap(), 0, Reply );
 	   return FALSE;
 	 }
@@ -239,7 +254,7 @@ WINBOOL STDCALL AllocConsole(VOID)
    Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
    if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
       {
-	 SetLastError( RtlNtStatusToDosError( Status ) );
+	 SetLastErrorByStatus ( Status );
 	 return FALSE;
       }
    SetStdHandle( STD_INPUT_HANDLE, Reply.Data.AllocConsoleReply.ConsoleHandle );
@@ -278,7 +293,7 @@ GetConsoleScreenBufferInfo(
    Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
    if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
       {
-	 SetLastError( RtlNtStatusToDosError( Status ) );
+	 SetLastErrorByStatus ( Status );
 	 return FALSE;
       }
    *lpConsoleScreenBufferInfo = Reply.Data.ScreenBufferInfoReply.Info;
@@ -306,7 +321,7 @@ SetConsoleCursorPosition(
    Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
    if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
       {
-	 SetLastError( RtlNtStatusToDosError( Status ) );
+	 SetLastErrorByStatus ( Status );
 	 return FALSE;
       }
    return TRUE;
@@ -338,7 +353,7 @@ FillConsoleOutputCharacterA(
    Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
    if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
       {
-	 SetLastError( RtlNtStatusToDosError( Status ) );
+	 SetLastErrorByStatus ( Status );
 	 return FALSE;
       }
    *lpNumberOfCharsWritten = nLength;
@@ -422,7 +437,7 @@ ReadConsoleInputA(
    Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
    if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
       {
-	 SetLastError( RtlNtStatusToDosError( Status ) );
+	 SetLastErrorByStatus ( Status );
 	 return FALSE;
       }
    while( Status == STATUS_PENDING )
@@ -430,13 +445,13 @@ ReadConsoleInputA(
 	 Status = NtWaitForSingleObject( Reply.Data.ReadInputReply.Event, FALSE, 0 );
 	 if( !NT_SUCCESS( Status ) )
 	    {
-	       SetLastError( RtlNtStatusToDosError( Status ) );
+	       SetLastErrorByStatus ( Status );
 	       return FALSE;
 	    }
 	 Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
 	 if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
 	    {
-	       SetLastError( RtlNtStatusToDosError( Status ) );
+	       SetLastErrorByStatus ( Status );
 	       return FALSE;
 	    }
       }
@@ -664,7 +679,7 @@ WriteConsoleOutputCharacterA(
 	 Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
 	 if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
 	    {
-	       SetLastError( RtlNtStatusToDosError( Status ) );
+	       SetLastErrorByStatus ( Status );
 	       return FALSE;
 	    }
 	 nLength -= Size;
@@ -729,7 +744,7 @@ WriteConsoleOutputAttribute(
 	 Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
 	 if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
 	    {
-	       SetLastError( RtlNtStatusToDosError( Status ) );
+	       SetLastErrorByStatus ( Status );
 	       return FALSE;
 	    }
 	 nLength -= Size;
@@ -766,7 +781,7 @@ FillConsoleOutputAttribute(
    Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
    if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
       {
-	 SetLastError( RtlNtStatusToDosError( Status ) );
+	 SetLastErrorByStatus ( Status );
 	 return FALSE;
       }
    if( lpNumberOfAttrsWritten )
@@ -846,7 +861,7 @@ GetConsoleCursorInfo(
    Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
    if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
       {
-	 SetLastError( RtlNtStatusToDosError( Status ) );
+	 SetLastErrorByStatus ( Status );
 	 return FALSE;
       }
    *lpConsoleCursorInfo = Reply.Data.GetCursorInfoReply.Info;
@@ -951,7 +966,7 @@ SetConsoleCursorInfo(
    Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
    if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
       {
-	 SetLastError( RtlNtStatusToDosError( Status ) );
+	 SetLastErrorByStatus ( Status );
 	 return FALSE;
       }
    return TRUE;
@@ -1034,7 +1049,7 @@ SetConsoleTextAttribute(
    Status = CsrClientCallServer( &Request, &Reply, sizeof( CSRSS_API_REQUEST ), sizeof( CSRSS_API_REPLY ) );
    if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
       {
-	 SetLastError( RtlNtStatusToDosError( Status ) );
+	 SetLastErrorByStatus ( Status );
 	 return FALSE;
       }
    return TRUE;

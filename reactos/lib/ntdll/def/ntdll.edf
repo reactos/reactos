@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.44 2000/05/25 15:51:05 ekohl Exp $
+; $Id: ntdll.edf,v 1.45 2000/07/01 17:06:22 ea Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -33,7 +33,7 @@ DbgUserBreakPoint=DbgUserBreakPoint@0
 ;KiUserCallbackDispatcher
 ;KiUserExceptionDispatcher
 LdrAccessResource
-;LdrDisableThreadCalloutsForDll
+LdrDisableThreadCalloutsForDll=LdrDisableThreadCalloutsForDll@8
 ;LdrEnumResources
 ;LdrFindResourceDirectory_U
 LdrFindResource_U

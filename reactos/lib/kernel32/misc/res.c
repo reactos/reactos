@@ -1,4 +1,4 @@
-/* $Id: res.c,v 1.4 2000/04/14 01:50:38 ekohl Exp $
+/* $Id: res.c,v 1.5 2000/07/01 17:07:00 ea Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -11,6 +11,7 @@
 #include <windows.h>
 #include <ntdll/ldr.h>
 #include <kernel32/kernel32.h>
+#include <kernel32/error.h>
 
 
 HRSRC
@@ -141,7 +142,7 @@ FindResourceExW (
 
 	Status = LdrFindResource_U(hModule,&ResourceDataEntry,lpName, nType,wLanguage);
 	if ( !NT_SUCCESS(Status ) ) {
-		SetLastError(RtlNtStatusToDosError(Status));
+		SetLastErrorByStatus (Status);
 		return NULL;
 	}
 	return ResourceDataEntry;

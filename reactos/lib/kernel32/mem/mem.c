@@ -1,4 +1,5 @@
-/*
+/* $Id: mem.c,v 1.2 2000/07/01 17:07:00 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user mode libraries
  * FILE:            kernel32/mem/utils.cc
@@ -21,3 +22,4 @@ VOID CopyMemory(PVOID Destination, CONST VOID* Source, DWORD Length)
 }
 	   
 
+/* EOF */

@@ -1,4 +1,5 @@
-/*
+/* $Id: local.c,v 1.4 2000/07/01 17:07:00 ea Exp $
+ *
  * COPYRIGHT:   See COPYING in the top level directory
  *              Copyright (C) 1996, Onno Hovers, All rights reserved
  * PROJECT:     ReactOS system libraries
@@ -124,3 +125,5 @@ UINT WINAPI LocalShrink(HLOCAL hmem, UINT newsize)
 {
    return (__ProcessHeap->End - (LPVOID) __ProcessHeap);
 }
+
+/* EOF */

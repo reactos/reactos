@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.18 2000/05/14 13:09:59 dwelch Exp $
+/* $Id: stubs.c,v 1.19 2000/07/01 17:07:01 ea Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -409,17 +409,6 @@ DeleteAtom (
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
-}
-
-
-WINBOOL
-STDCALL
-DisableThreadLibraryCalls (
-	HMODULE	hLibModule
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
 }
 
 

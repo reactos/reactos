@@ -33,3 +33,10 @@ LdrGetExportByOrdinal (PDLL Module, ULONG Ordinal );
 
 PVOID
 LdrGetExportByName (PDLL Module, PUCHAR	SymbolName );
+
+NTSTATUS
+STDCALL
+LdrDisableThreadCalloutsForDll (
+	PVOID	IN	ImageBase,
+	BOOLEAN	IN	Disable
+	);

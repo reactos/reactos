@@ -1,4 +1,5 @@
-/*
+/* $Id: handle.c,v 1.5 2000/07/01 17:07:00 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/misc/handle.c
@@ -15,6 +16,7 @@
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
+#include <kernel32/error.h>
 
 /* FUNCTIONS *****************************************************************/
 
@@ -31,7 +33,7 @@ WINBOOL WINAPI GetHandleInformation(HANDLE hObject, LPDWORD lpdwFlags)
 			   &BytesWritten);
    if (!NT_SUCCESS(errCode)) 
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus (errCode);
 	return FALSE;
      }
    if ( HandleInfo.bInheritHandle )
@@ -57,7 +59,7 @@ WINBOOL STDCALL SetHandleInformation(HANDLE hObject,
 			   &BytesWritten);
    if (!NT_SUCCESS(errCode)) 
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus (errCode);
 	return FALSE;
      }
    if (dwMask & HANDLE_FLAG_INHERIT)
@@ -75,7 +77,7 @@ WINBOOL STDCALL SetHandleInformation(HANDLE hObject,
 				    sizeof(OBJECT_DATA_INFORMATION));
    if (!NT_SUCCESS(errCode)) 
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus (errCode);
 	return FALSE;
      }
    
@@ -102,7 +104,7 @@ WINBOOL STDCALL CloseHandle(HANDLE  hObject)
    errCode = NtClose(hObject);
    if (!NT_SUCCESS(errCode)) 
      {     
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus (errCode);
 	return FALSE;
      }
    
@@ -129,7 +131,7 @@ WINBOOL STDCALL DuplicateHandle(HANDLE hSourceProcessHandle,
 			       dwOptions);
    if (!NT_SUCCESS(errCode)) 
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus (errCode);
 	return FALSE;
      }
    
@@ -140,3 +142,6 @@ UINT STDCALL SetHandleCount(UINT nCount)
 {
    return(nCount);
 }
+
+
+/* EOF */

@@ -1,4 +1,4 @@
-/* $Id: event.c,v 1.7 2000/03/16 21:50:11 ekohl Exp $
+/* $Id: event.c,v 1.8 2000/07/01 17:07:02 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -14,6 +14,7 @@
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
+#include <kernel32/error.h>
 
 WINBOOL STDCALL SetEvent(HANDLE hEvent)
 {
@@ -23,7 +24,7 @@ WINBOOL STDCALL SetEvent(HANDLE hEvent)
    errCode = NtSetEvent(hEvent,&Count);
    if (!NT_SUCCESS(errCode))
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus (errCode);
 	return FALSE;
      }
    return TRUE;
@@ -37,7 +38,7 @@ WINBOOL STDCALL ResetEvent(HANDLE hEvent)
    errCode = NtResetEvent(hEvent, &Count);
    if (!NT_SUCCESS(errCode)) 
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus (errCode);
 	return FALSE;
      }
    return TRUE;
@@ -91,7 +92,7 @@ CreateEventW (
    DPRINT( "Called\n" );
    if (!NT_SUCCESS(errCode))
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus (errCode);
 	return INVALID_HANDLE_VALUE;
      }
 
@@ -130,7 +131,7 @@ OpenEventW (
 
 	errCode = NtOpenEvent(hEvent,dwDesiredAccess,&ObjectAttributes);
 	if ( !NT_SUCCESS(errCode) ) {
-		SetLastError(RtlNtStatusToDosError(errCode));
+		SetLastErrorByStatus (errCode);
 		return NULL;
 	}
 
@@ -218,7 +219,7 @@ PulseEvent (
 	NTSTATUS errCode;
 	errCode = NtPulseEvent(hEvent,&Count);
 	if ( !NT_SUCCESS(errCode) ) {
-		SetLastError(RtlNtStatusToDosError(errCode));
+		SetLastErrorByStatus (errCode);
 		return FALSE;
 	}
 	return TRUE;
