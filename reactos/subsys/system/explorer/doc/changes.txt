@@ -1,6 +1,6 @@
-0You will find only major changes in this file.
+You will find only major changes in this file.
 Small bug fixes and developments steps are not listet here.
-If you search for more information, look into the CVS repository.
+If you search for more information, look into the Subversion repository.
 
 14.10.2002	m. fuchs	Korrektur der Anpassungen durch Übernahme in wine: Anzeige der Verzeichnisnamen in Tree Pane
 			m. fuchs	Wieder-Anpassung an natives Übersetzen unter WIN32 mit VC++
