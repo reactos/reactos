@@ -76,27 +76,30 @@ HRESULT DDRAW_Create(
 	LPGUID lpGUID, LPVOID *lplpDD, LPUNKNOWN pUnkOuter, REFIID iid, BOOL ex) 
 {  		      
 	
-	
+	 HRESULT hr;
 
-
-	//HDC desktop;
-	
-    /* BOOL ex == TRUE it is DirectDrawCreateEx call here. */
-	
-	/* TODO: 
+     
+    /* TODO 1: 
 	   check the GUID are right 
 	   add scanner that DirectDrawCreate / DirectDrawCreateEx select right driver.
 	   now we will assume it is the current display driver 
 	*/
 
+	 /* TODO 2: 
+	   do not only use hardware mode.
+	*/
+
+	hr = HAL_DirectDraw_Create(lpGUID, lplpDD, pUnkOuter, iid,  ex);
+
+	/* old code 
+	 //HDC desktop;		
 	
-	/*
 	desktop = GetWindowDC(GetDesktopWindow());
 	lplpDD = OsThunkDdCreateDirectDrawObject(desktop);   
 	if (lplpDD == NULL) return DDERR_NODIRECTDRAWHW;
 	*/
 	 	
-	return DDERR_NODIRECTDRAWHW;
+	return hr;
 }
 
 BOOL WINAPI DllMain(HINSTANCE hInstance,DWORD fwdReason, LPVOID lpvReserved)

@@ -289,10 +289,33 @@ HRESULT WINAPI HAL_DirectDraw_Create(const GUID* pGUID, LPDIRECTDRAW7* pIface,
 			      IUnknown* pUnkOuter, BOOL ex)
 {
    
+      HRESULT hr;
     IDirectDrawImpl* This;    
+
+	/*
+    This = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+		     sizeof(IDirectDrawImpl)
+		     + sizeof(HAL_DirectDrawImpl));
+	 */
+	This = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+		     sizeof(IDirectDrawImpl));
+
+    if (This == NULL) return E_OUTOFMEMORY;
+
+    /* Note that this relation does *not* hold true if the DD object was
+     * CoCreateInstanced then Initialized. */
+    //This->private = (HAL_DirectDrawImpl *)(This+1);
+
+    /* Initialize the DDCAPS structure */
+    This->caps.dwSize = sizeof(This->caps);
+
+    hr = HAL_DirectDraw_Construct(This, ex);
+    if (FAILED(hr))
+	HeapFree(GetProcessHeap(), 0, This);
+    else
 	*pIface = ICOM_INTERFACE(This, IDirectDraw7);
 
-    return DD_OK;
+    return hr;
 }
 
 static IDirectDraw7Vtbl HAL_DirectDraw_VTable =

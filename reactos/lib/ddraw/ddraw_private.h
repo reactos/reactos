@@ -119,10 +119,10 @@ struct IDirectDrawImpl
     ICOM_VFIELD_MULTI(IDirectDraw4);
     ICOM_VFIELD_MULTI(IDirectDraw2);
     ICOM_VFIELD_MULTI(IDirectDraw);
-    // ICOM_VFIELD_MULTI(IDirect3D7);
-    // ICOM_VFIELD_MULTI(IDirect3D3);
-    // ICOM_VFIELD_MULTI(IDirect3D2);
-    // ICOM_VFIELD_MULTI(IDirect3D);
+    ICOM_VFIELD_MULTI(IDirect3D7);
+    ICOM_VFIELD_MULTI(IDirect3D3);
+    ICOM_VFIELD_MULTI(IDirect3D2);
+    ICOM_VFIELD_MULTI(IDirect3D);
 
     DWORD ref;
 
@@ -284,8 +284,8 @@ struct IDirectDrawSurfaceImpl
     ICOM_VFIELD_MULTI(IDirectDrawSurface7);
     ICOM_VFIELD_MULTI(IDirectDrawSurface3);
     ICOM_VFIELD_MULTI(IDirectDrawGammaControl);
-    //ICOM_VFIELD_MULTI(IDirect3DTexture2);
-    //ICOM_VFIELD_MULTI(IDirect3DTexture);
+    ICOM_VFIELD_MULTI(IDirect3DTexture2);
+    ICOM_VFIELD_MULTI(IDirect3DTexture);
     DWORD ref;
 
     struct IDirectDrawSurfaceImpl* attached; /* attached surfaces */
@@ -477,5 +477,6 @@ typedef struct
 
 extern void DDRAW_dump_flags_(DWORD flags, const flag_info* names, size_t num_names, int newline);
 extern void DDRAW_dump_members(DWORD flags, const void* data, const member_info* mems, size_t num_mems);
+ 
 
 #endif /* __WINE_DLLS_DDRAW_DDRAW_PRIVATE_H */
