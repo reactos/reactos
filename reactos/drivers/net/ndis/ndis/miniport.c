@@ -1277,6 +1277,7 @@ NdisIPnPStartDevice(
   UINT SelectedMediumIndex = 0;
   NDIS_OID AddressOID;
   BOOLEAN Success;
+  ULONG ResourceCount;
   ULONG ResourceListSize;
   UNICODE_STRING ParamName;
   PNDIS_CONFIGURATION_PARAMETER ConfigParam;
@@ -1309,11 +1310,11 @@ NdisIPnPStartDevice(
   if (Stack->Parameters.StartDevice.AllocatedResources != NULL &&
       Stack->Parameters.StartDevice.AllocatedResourcesTranslated != NULL)
     {
+      ResourceCount = Stack->Parameters.StartDevice.AllocatedResources->List[0].
+                      PartialResourceList.Count;
       ResourceListSize = 
-        FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors) +
-        Stack->Parameters.StartDevice.AllocatedResources->List[0].
-        PartialResourceList.Count *
-        sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+        FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList.
+                     PartialDescriptors[ResourceCount]);
 
       Adapter->NdisMiniportBlock.AllocatedResources =
         ExAllocatePool(PagedPool, ResourceListSize);
