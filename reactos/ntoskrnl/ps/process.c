@@ -1254,7 +1254,7 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 
       case ProcessDebugPort:
       {
-      	if (ProcessInformationLength != sizeof(ULONG))
+      	if (ProcessInformationLength != sizeof(HANDLE))
 	{
 	  Status = STATUS_INFO_LENGTH_MISMATCH;
 	}
