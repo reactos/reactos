@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.10 2001/10/10 22:17:42 hbirr Exp $
+/* $Id: fcb.c,v 1.11 2001/11/02 22:40:50 hbirr Exp $
  *
  *
  * FILE:             fcb.c
@@ -48,13 +48,16 @@ vfatNewFCB(PWCHAR pFileName)
       rcFCB->ObjectName = rcFCB->PathName;
     }
   }
-
+  ExInitializeResourceLite(&rcFCB->PagingIoResource);
+  ExInitializeResourceLite(&rcFCB->MainResource);
   return  rcFCB;
 }
 
 VOID
 vfatDestroyFCB(PVFATFCB  pFCB)
 {
+  ExDeleteResourceLite(&pFCB->PagingIoResource);
+  ExDeleteResourceLite(&pFCB->MainResource);
   ExFreePool (pFCB);
 }
 
@@ -198,7 +201,7 @@ PVFATFCB
 vfatMakeRootFCB(PDEVICE_EXTENSION  pVCB)
 {
   PVFATFCB  FCB;
-  ULONG FirstCluster, CurrentCluster, Size;
+  ULONG FirstCluster, CurrentCluster, Size = 0;
   NTSTATUS Status = STATUS_SUCCESS;
 
   FCB = vfatNewFCB(L"\\");
