@@ -48,7 +48,7 @@ static int MSVCRT_new_mode;
  */
 void* MSVCRT_operator_new(unsigned long size)
 {
-  void *retval = HeapAlloc(GetProcessHeap(), 0, size);
+  void *retval = malloc(size);
   TRACE("(%ld) returning %p\n", size, retval);
   LOCK_HEAP;
   if(!retval && MSVCRT_new_handler)
@@ -63,7 +63,7 @@ void* MSVCRT_operator_new(unsigned long size)
 void MSVCRT_operator_delete(void *mem)
 {
   TRACE("(%p)\n", mem);
-  HeapFree(GetProcessHeap(), 0, mem);
+  free(mem);
 }
 
 
