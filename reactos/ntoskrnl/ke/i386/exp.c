@@ -656,7 +656,7 @@ KeRosDumpStackFrames ( PULONG Frame, ULONG FrameCount )
 #elif defined(_MSC_VER)
 		__asm mov [Frame], ebp
 #endif
-		Frame = (PULONG)Frame[0]; // step out of KeRosDumpStackFrames
+		//Frame = (PULONG)Frame[0]; // step out of KeRosDumpStackFrames
 	}
 	while ( MmIsAddressValid(Frame) && i++ < FrameCount )
 	{
