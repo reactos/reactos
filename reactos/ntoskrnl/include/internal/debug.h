@@ -99,7 +99,7 @@
 #else
 #define DPRINT DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint
 #endif
-#define CHECKPOINT do { DbgPrint("%s:%d\n",__FILE__,__LINE__); ExAllocatePool(NonPagedPool,0); } while(0)
+#define CHECKPOINT do { DbgPrint("%s:%d\n",__FILE__,__LINE__); } while(0)
 #else /* NDEBUG */
 #ifdef __GNUC__ /* using GNU C/C99 macro ellipsis */
 #define DPRINT(args...)
