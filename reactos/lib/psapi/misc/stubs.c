@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.2 2002/06/18 22:15:58 hyperion Exp $ */
+/* $Id: stubs.c,v 1.3 2002/08/29 23:57:54 hyperion Exp $ */
 #include <windows.h>
 #include <psapi.h>
 
@@ -12,17 +12,6 @@ BOOL STDCALL EnumPageFiles(
  return FALSE;
 }
 #endif
-BOOL STDCALL EnumProcessModules(
-  HANDLE hProcess,      // handle to process
-  HMODULE *lphModule,   // array of module handles
-  DWORD cb,             // size of array
-  LPDWORD lpcbNeeded    // number of bytes required
-)
-{
- SetLastError(ERROR_INVALID_FUNCTION);
- return FALSE;
-}
-
 DWORD STDCALL GetDeviceDriverBaseNameA(
   LPVOID ImageBase,  // driver load address
   LPSTR lpBaseName,  // driver base name buffer

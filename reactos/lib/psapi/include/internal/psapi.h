@@ -1,9 +1,9 @@
-/* $Id: psapi.h,v 1.1 2002/06/18 22:15:57 hyperion Exp $
+/* $Id: psapi.h,v 1.2 2002/08/29 23:57:54 hyperion Exp $
 */
 /*
  * internal/psapi.h
  *
- * Process Status Helper API
+ * Process Status Helper API, native interface
  *
  * This file is part of the ReactOS Operating System.
  *
@@ -27,33 +27,69 @@
 
 /* INCLUDES */
 #include <ddk/ntddk.h>
+#include <ntdll/ldr.h>
 
 /* OBJECTS */
 
 /* TYPES */
+typedef NTSTATUS STDCALL (*PPROC_ENUM_ROUTINE)
+(
+ IN PSYSTEM_PROCESS_INFORMATION CurrentProcess,
+ IN OUT PVOID CallbackContext
+);
+
+typedef NTSTATUS STDCALL (*PSYSMOD_ENUM_ROUTINE)
+(
+ IN ULONG ModuleCount,
+ IN PSYSTEM_MODULE_ENTRY CurrentModule,
+ IN OUT PVOID CallbackContext
+);
+
+typedef NTSTATUS STDCALL (*PPROCMOD_ENUM_ROUTINE)
+(
+ IN HANDLE ProcessHandle,
+ IN PLDR_MODULE CurrentModule,
+ IN OUT PVOID CallbackContext
+);
 
 /* CONSTANTS */
+#define FAILED_WITH_STATUS DEFINE_DBG_MSG("%s() failed, status 0x%08X")
 
 /* PROTOTYPES */
 NTSTATUS
 STDCALL
-PsaEnumerateProcessIds
+PsaEnumerateProcesses
 (
- OUT ULONG * ProcessIds,
- IN ULONG ProcessIdsLength,
- OUT ULONG * ReturnLength OPTIONAL
+ IN PPROC_ENUM_ROUTINE Callback,
+ IN OUT PVOID CallbackContext,
+ IN OUT PVOID AllocatorContext
 );
 
 NTSTATUS
 STDCALL
 PsaEnumerateSystemModules
 (
- OUT PVOID * Modules,
- IN ULONG ModulesLength,
- OUT ULONG * ReturnLength OPTIONAL
+ IN PSYSMOD_ENUM_ROUTINE Callback,
+ IN OUT PVOID CallbackContext,
+ IN OUT PVOID AllocatorContext
 );
 
+NTSTATUS
+STDCALL
+PsaEnumerateProcessModules
+(
+ IN HANDLE ProcessHandle,
+ IN PPROCMOD_ENUM_ROUTINE Callback,
+ IN OUT PVOID CallbackContext
+);
+
+/* the user must provide these */
+PVOID STDCALL PsaMalloc(IN OUT PVOID Context, IN ULONG Size);
+PVOID STDCALL PsaRealloc(IN OUT PVOID Context, IN PVOID Addr, IN ULONG Size);
+VOID STDCALL PsaFree(IN OUT PVOID Context, IN PVOID Addr);
+
 /* MACROS */
+#define DEFINE_DBG_MSG(__str__) "PSAPI: " __str__ "\n"
 
 #endif /* __INTERNAL_PSAPI_H_INCLUDED__ */
 

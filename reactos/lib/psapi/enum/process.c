@@ -1,54 +1,58 @@
-/* $Id: process.c,v 1.1 2002/06/18 22:12:51 hyperion Exp $
+/* $Id: process.c,v 1.2 2002/08/29 23:57:53 hyperion Exp $
 */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
+ * LICENSE:     See LGPL.txt in the top level directory
  * PROJECT:     ReactOS system libraries
  * FILE:        reactos/lib/psapi/enum/process.c
- * PURPOSE:     Enumerate process ids
+ * PURPOSE:     Enumerate processes
  * PROGRAMMER:  KJK::Hyperion <noog@libero.it>
  * UPDATE HISTORY:
  *              10/06/2002: Created
+ *              29/08/2002: Generalized the interface to improve reusability,
+ *                          more efficient use of memory operations
  */
 
-#include <ddk/ntddk.h>
-#include <internal/psapi.h>
 #include <stdlib.h>
+#include <ddk/ntddk.h>
+#include <debug.h>
+#include <internal/psapi.h>
 
 NTSTATUS
 STDCALL
-PsaEnumerateProcessIds
+PsaEnumerateProcesses
 (
- OUT ULONG * ProcessIds,
- IN ULONG ProcessIdsLength,
- OUT ULONG * ReturnLength OPTIONAL
+ IN PPROC_ENUM_ROUTINE Callback,
+ IN OUT PVOID CallbackContext,
+ IN OUT PVOID AllocatorContext
 )
 {
- NTSTATUS nErrCode = STATUS_SUCCESS;
+ register NTSTATUS nErrCode = STATUS_SUCCESS;
+ PSYSTEM_PROCESS_INFORMATION pInfoBuffer = NULL;
+ PSYSTEM_PROCESS_INFORMATION pInfoHead = NULL;
  ULONG nSize = 32768;
- SYSTEM_PROCESS_INFORMATION * pInfoBuffer = NULL;
- SYSTEM_PROCESS_INFORMATION * pInfoHead = NULL;
- ULONG nBufSize;
- ULONG nRetLen = 0;
 
- /* ignore buffer size if buffer is null */
- if(ProcessIds == NULL)
-  ProcessIdsLength = 0;
- /* ignore buffer if buffer size is zero */
- else if(ProcessIdsLength == 0)
-  ProcessIds = NULL;
- 
+ /* FIXME: if the system has loaded several processes and threads, the buffer
+    could get really big. But if there's several processes and threads, the
+    system is already under stress, and a huge buffer could only make things
+    worse. The function should be profiled to see what's the average minimum
+    buffer size, to succeed on the first shot */
  do
  {
   void * pTmp;
   
-  /* resize and/or move the buffer */
-  pTmp = realloc(pInfoBuffer, nSize);
+  /* free the buffer, and reallocate it to the new size. RATIONALE: since we
+     ignore the buffer's contents at this point, there's no point in a realloc()
+     that could end up copying a large chunk of data we'd discard anyway */
+  PsaFree(AllocatorContext, pInfoBuffer);
+  pTmp = PsaMalloc(AllocatorContext, nSize);
   
   if(pTmp == NULL)
   {
    /* failure */
+   DPRINT(FAILED_WITH_STATUS, "malloc", STATUS_NO_MEMORY);
    nErrCode = STATUS_NO_MEMORY;
-   goto end;
+   goto esp_Finalize;
   }
   
   pInfoBuffer = pTmp;
@@ -70,26 +74,23 @@ PsaEnumerateProcessIds
  
  /* failure */
  if(!NT_SUCCESS(nErrCode))
-  goto end;
+ {
+  DPRINT(FAILED_WITH_STATUS, "NtQuerySystemInformation", nErrCode);
+  goto esp_Finalize;
+ }
  
- /* size of ProcessIds in elements */
- nBufSize = ProcessIdsLength / sizeof(*ProcessIds);
  /* list head */
  pInfoHead = pInfoBuffer;
 
- /* repeat until the buffer is empty */
- while(nBufSize > 0)
+ /* scan the list */
+ while(1)
  {
-  /* return the current process id */
-  (*ProcessIds) = pInfoHead->ProcessId;
-  
-  /* move to the next buffer entry */
-  ProcessIds ++;
-  nBufSize --;
-  nRetLen ++;
-  
-  /* end of process list */
-  if(pInfoHead->RelativeOffset == 0)
+  /* notify the callback */
+  nErrCode = Callback(pInfoHead, CallbackContext);
+
+  /* if the callback returned an error or this is the end of the process list,
+     break out */
+  if(!NT_SUCCESS(nErrCode) || pInfoHead->RelativeOffset == 0)
    break;
   
   /* move to the next process */
@@ -98,37 +99,9 @@ PsaEnumerateProcessIds
    ((ULONG)pInfoHead + pInfoHead->RelativeOffset);
  }
 
- if(pInfoHead->RelativeOffset == 0)
-  /* all process ids were returned */
-  nErrCode = STATUS_SUCCESS;
- else
- {
-  /* insufficient buffer */
-  nErrCode = STATUS_INFO_LENGTH_MISMATCH;
-  
-  /* caller doesn't need buffer size */
-  if(ReturnLength == NULL)
-   goto end;
-  
-  /* repeat while there are still processes */
-  while(pInfoHead->RelativeOffset != 0)
-  {
-   pInfoHead =
-    (SYSTEM_PROCESS_INFORMATION*)
-    ((ULONG)pInfoHead + pInfoHead->RelativeOffset);
-
-   nRetLen++;
-  }
-  
- }
-
- /* used buffer size */
- if(ReturnLength)
-  (*ReturnLength) = nRetLen * sizeof(DWORD);
- 
-end:
+esp_Finalize:
  /* free the buffer */
- free(pInfoBuffer);
+ PsaFree(AllocatorContext, pInfoBuffer);
  
  /* return the last status */
  return (nErrCode);
