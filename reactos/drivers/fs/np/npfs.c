@@ -1,4 +1,4 @@
-/* $Id: npfs.c,v 1.1 2001/07/29 16:40:20 ekohl Exp $
+/* $Id: npfs.c,v 1.2 2001/10/21 18:58:31 chorns Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -12,9 +12,10 @@
 #include <ddk/ntddk.h>
 #include "npfs.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
+NPAGED_LOOKASIDE_LIST NpfsPipeDataLookasideList;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -74,7 +75,16 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
    InitializeListHead(&DeviceExtension->PipeListHead);
    KeInitializeMutex(&DeviceExtension->PipeListLock,
 		     0);
-   
+
+  ExInitializeNPagedLookasideList(
+    &NpfsPipeDataLookasideList,
+    NULL,
+    NULL,
+    0,
+    sizeof(NPFS_PIPE_DATA),
+    TAG('N', 'P', 'D', 'A'),
+    0);
+
    return(STATUS_SUCCESS);
 }
 

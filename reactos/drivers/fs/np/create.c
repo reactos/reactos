@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.9 2001/10/20 15:30:07 ekohl Exp $
+/* $Id: create.c,v 1.10 2001/10/21 18:58:31 chorns Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -13,7 +13,7 @@
 
 #include "npfs.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 
@@ -45,7 +45,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
    Disposition = ((IoStack->Parameters.Create.Options >> 24) & 0xff);
    DPRINT("FileObject %p\n", FileObject);
    DPRINT("FileName %wZ\n", &FileObject->FileName);
-   
+
    ClientFcb = ExAllocatePool(NonPagedPool, sizeof(NPFS_FCB));
    if (ClientFcb == NULL)
      {
@@ -178,7 +178,6 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
 {
    PIO_STACK_LOCATION IoStack;
    PFILE_OBJECT FileObject;
-   NTSTATUS Status = STATUS_SUCCESS;
    PNPFS_DEVICE_EXTENSION DeviceExt;
    PNPFS_PIPE Pipe;
    PNPFS_FCB Fcb;
@@ -238,8 +237,14 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
    InitializeListHead(&Pipe->ServerFcbListHead);
    InitializeListHead(&Pipe->ClientFcbListHead);
    KeInitializeSpinLock(&Pipe->FcbListLock);
-   
+
+   InitializeListHead(&Pipe->ServerDataListHead);
+   KeInitializeSpinLock(&Pipe->ServerDataListLock);
+   InitializeListHead(&Pipe->ClientDataListHead);
+   KeInitializeSpinLock(&Pipe->ClientDataListLock);
+
    Pipe->PipeType = Buffer->WriteModeMessage;
+   Pipe->PipeWriteMode = Buffer->WriteModeMessage;
    Pipe->PipeReadMode = Buffer->ReadModeMessage;
    Pipe->PipeBlockMode = Buffer->NonBlocking;
    Pipe->PipeConfiguration = IoStack->Parameters.Create.Options & 0x3;
@@ -300,12 +305,12 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
    
    FileObject->FsContext = Fcb;
    
-   Irp->IoStatus.Status = Status;
+   Irp->IoStatus.Status = STATUS_SUCCESS;
    Irp->IoStatus.Information = 0;
    
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
    
-   return(Status);
+   return(STATUS_SUCCESS);
 }
 
 

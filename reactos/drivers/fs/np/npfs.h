@@ -10,14 +10,29 @@ typedef struct
 
 typedef struct
 {
+  LIST_ENTRY ListEntry;
+  ULONG Size;
+  PVOID Data;
+  ULONG Offset;
+} NPFS_PIPE_DATA, *PNPFS_PIPE_DATA;
+
+typedef struct
+{
    UNICODE_STRING PipeName;
    LIST_ENTRY PipeListEntry;
    KSPIN_LOCK FcbListLock;
    LIST_ENTRY ServerFcbListHead;
    LIST_ENTRY ClientFcbListHead;
+   /* Server posted data */
+   LIST_ENTRY ServerDataListHead;
+   KSPIN_LOCK ServerDataListLock;
+   /* Client posted data */
+   LIST_ENTRY ClientDataListHead;
+   KSPIN_LOCK ClientDataListLock;
    ULONG ReferenceCount;
    ULONG PipeType;
    ULONG PipeReadMode;
+   ULONG PipeWriteMode;
    ULONG PipeBlockMode;
    ULONG PipeConfiguration;
    ULONG MaximumInstances;
@@ -40,6 +55,9 @@ typedef struct _NPFS_FCB
 } NPFS_FCB, *PNPFS_FCB;
 
 
+extern NPAGED_LOOKASIDE_LIST NpfsPipeDataLookasideList;
+
+
 #define KeLockMutex(x) KeWaitForSingleObject(x, \
                                              UserRequest, \
                                              KernelMode, \
@@ -47,6 +65,8 @@ typedef struct _NPFS_FCB
                                              NULL);
 
 #define KeUnlockMutex(x) KeReleaseMutex(x, FALSE);
+
+#define CP DPRINT("\n");
 
 NTSTATUS STDCALL NpfsCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 NTSTATUS STDCALL NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject, PIRP Irp);
