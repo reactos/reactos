@@ -113,7 +113,6 @@ ReadBlock(HANDLE FileHandle,
 		      NULL);
   if (Status == STATUS_PENDING)
     {
-      printf("STATUS_PENDING\n");
       NtWaitForSingleObject(EventHandle, FALSE, NULL);
       Status = IoStatusBlock.Status;
     }
@@ -126,6 +125,7 @@ ReadBlock(HANDLE FileHandle,
     }
   if (!NT_SUCCESS(Status) && Status != STATUS_END_OF_FILE)
     {
+      printf("ReadBlock() failed (Status: %lx)\n", Status);
       return(FALSE);
     }
 
@@ -161,7 +161,7 @@ int main (int argc, char *argv[])
 		     NULL);
   if (hDisk == INVALID_HANDLE_VALUE)
     {
-      printf("CreateFile(): Invalid disk handle!");
+      printf("CreateFile(): Invalid disk handle!\n");
       return 0;
     }
 
@@ -169,7 +169,7 @@ int main (int argc, char *argv[])
   if (Buffer == NULL)
     {
       CloseHandle(hDisk);
-      printf("Out of memory!");
+      printf("Out of memory!\n");
       return 0;
     }
   memset(Buffer, 0, 2048);
@@ -186,7 +186,7 @@ int main (int argc, char *argv[])
     {
       CloseHandle(hDisk);
       free(Buffer);
-      printf("SetFilePointer() failed!");
+      printf("SetFilePointer() failed!\n");
       return 0;
     }
 
@@ -198,7 +198,7 @@ int main (int argc, char *argv[])
     {
       CloseHandle(hDisk);
       free(Buffer);
-      printf("ReadFile() failed!");
+      printf("ReadFile() failed!\n");
       return 0;
     }
 #endif
@@ -211,7 +211,9 @@ int main (int argc, char *argv[])
     {
       CloseHandle(hDisk);
       free(Buffer);
-      printf("ReadBlock() failed!");
+#if 0
+      printf("ReadBlock() failed!\n");
+#endif
       return 0;
     }
 
