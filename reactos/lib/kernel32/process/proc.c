@@ -881,12 +881,12 @@ GetProcessPriorityBoost(HANDLE hProcess,
                         PBOOL pDisablePriorityBoost)
 {
   NTSTATUS Status;
-  BOOL PriorityBoost;
+  ULONG PriorityBoost;
 
   Status = NtQueryInformationProcess(hProcess,
 				     ProcessPriorityBoost,
 				     &PriorityBoost,
-				     sizeof(BOOL),
+				     sizeof(ULONG),
 				     NULL);
   if (NT_SUCCESS(Status))
     {
@@ -908,12 +908,12 @@ SetProcessPriorityBoost(HANDLE hProcess,
                         BOOL bDisablePriorityBoost)
 {
   NTSTATUS Status;
-  BOOL PriorityBoost = (bDisablePriorityBoost ? TRUE : FALSE); /* prevent setting values other than 1 and 0 */
+  ULONG PriorityBoost = (bDisablePriorityBoost ? TRUE : FALSE); /* prevent setting values other than 1 and 0 */
 
   Status = NtSetInformationProcess(hProcess,
 				   ProcessPriorityBoost,
 				   &PriorityBoost,
-				   sizeof(BOOL));
+				   sizeof(ULONG));
   if (!NT_SUCCESS(Status))
     {
       SetLastErrorByStatus(Status);
