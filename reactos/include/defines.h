@@ -4592,6 +4592,22 @@ extern "C" {
 /* GetFileCompressedSize */
 #define INVALID_FILE_SIZE ((DWORD)-1)
 
+/* system ids */
+#define OBJID_WINDOW        ((LONG)0x00000000)
+#define OBJID_SYSMENU       ((LONG)0xFFFFFFFF)
+#define OBJID_TITLEBAR      ((LONG)0xFFFFFFFE)
+#define OBJID_MENU          ((LONG)0xFFFFFFFD)
+#define OBJID_CLIENT        ((LONG)0xFFFFFFFC)
+#define OBJID_VSCROLL       ((LONG)0xFFFFFFFB)
+#define OBJID_HSCROLL       ((LONG)0xFFFFFFFA)
+#define OBJID_SIZEGRIP      ((LONG)0xFFFFFFF9)
+#define OBJID_CARET         ((LONG)0xFFFFFFF8)
+#define OBJID_CURSOR        ((LONG)0xFFFFFFF7)
+#define OBJID_ALERT         ((LONG)0xFFFFFFF6)
+#define OBJID_SOUND         ((LONG)0xFFFFFFF5)
+#define OBJID_QUERYCLASSNAMEIDX ((LONG)0xFFFFFFF4)
+#define OBJID_NATIVEOM      ((LONG)0xFFFFFFF0)
+
 /* --------------------- old stuff, need to organize! --------------- */
 
 /* BEGINNING of windowsx.h stuff from old headers: */

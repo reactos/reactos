@@ -19,3 +19,6 @@ ULONG
 UserHasDlgFrameStyle(ULONG Style, ULONG ExStyle);
 ULONG
 UserHasThickFrameStyle(ULONG Style, ULONG ExStyle);
+
+DWORD
+SCROLL_HitTest( HWND hwnd, INT nBar, POINT pt, BOOL bDragging );

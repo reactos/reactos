@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.81 2003/09/07 17:35:15 ekohl Exp $
+/* $Id: defwnd.c,v 1.82 2003/09/08 02:14:20 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -933,8 +933,14 @@ VOID STATIC
 DefWndDoScrollBarDown(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
   POINT Point;
+  DWORD hit;
   Point.x = SLOWORD(lParam);
   Point.y = SHIWORD(lParam);
+  
+  hit = SCROLL_HitTest(hWnd, (wParam == HTHSCROLL) ? SB_HORZ : SB_VERT, Point, FALSE);
+  
+  if(hit)
+    DbgPrint("SCROLL_HitTest() == 0x%x\n", hit);
   
   SendMessageA(hWnd, WM_SYSCOMMAND, Msg + (UINT)wParam, lParam);
 }

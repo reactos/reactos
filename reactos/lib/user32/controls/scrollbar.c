@@ -1,4 +1,4 @@
-/* $Id: scrollbar.c,v 1.12 2003/09/07 09:55:52 weiden Exp $
+/* $Id: scrollbar.c,v 1.13 2003/09/08 02:14:20 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -54,12 +54,12 @@ static HBITMAP hRgArrowI;
 #define SA_SSI_REPAINT_ARROWS	0x0008
 
 /* Scroll-bar hit testing */
-#define SCROLL_NOWHERE  0x01    /* Outside the scroll bar */
-#define SCROLL_TOP_ARROW    0x02    /* Top or left arrow */
-#define SCROLL_TOP_RECT 0x04    /* Rectangle between the top arrow and the thumb */
-#define SCROLL_THUMB    0x08    /* Thumb rectangle */
-#define SCROLL_BOTTOM_RECT  0x10    /* Rectangle between the thumb and the bottom arrow */
-#define SCROLL_BOTTOM_ARROW 0x20    /* Bottom or right arrow */
+#define SCROLL_NOWHERE  0x00    /* Outside the scroll bar */
+#define SCROLL_TOP_ARROW    0x01    /* Top or left arrow */
+#define SCROLL_TOP_RECT 0x02    /* Rectangle between the top arrow and the thumb */
+#define SCROLL_THUMB    0x03    /* Thumb rectangle */
+#define SCROLL_BOTTOM_RECT  0x04    /* Rectangle between the thumb and the bottom arrow */
+#define SCROLL_BOTTOM_ARROW 0x05    /* Bottom or right arrow */
 
 static BOOL SCROLL_MovingThumb = FALSE; /* Is the moving thumb being displayed? */
 
@@ -75,21 +75,6 @@ static BOOL SCROLL_trackVertical;
 
 HBRUSH DefWndControlColor (HDC hDC, UINT ctlType);
 
-
-DWORD FASTCALL
-SCROLL_HitTest(HWND hwnd, LONG idObject, POINT Point)
-{
-  RECT WindowRect;
-  
-  GetWindowRect(hwnd, &WindowRect);
-  if (!PtInRect(&WindowRect, Point))
-  {      
-    return(SCROLL_NOWHERE);
-  }
-  
-  return SCROLL_NOWHERE;
-}
-
 /* Ported from WINE20020904 */
 /* Draw the scroll bar interior (everything except the arrows). */
 static void
@@ -101,11 +86,11 @@ arrowSize, PSCROLLBARINFO psbi)
   HBRUSH hSaveBrush, hBrush;
   BOOLEAN top_selected = FALSE, bottom_selected = FALSE;
 DbgPrint("[SCROLL_DrawInterior:%d]\n", nBar);
-  if(psbi->rgstate[2] & STATE_SYSTEM_PRESSED)
+  if(psbi->rgstate[SCROLL_TOP_RECT] & STATE_SYSTEM_PRESSED)
   {
     top_selected = TRUE;
   }
-  if(psbi->rgstate[4] & STATE_SYSTEM_PRESSED)
+  if(psbi->rgstate[SCROLL_BOTTOM_RECT] & STATE_SYSTEM_PRESSED)
   {
     bottom_selected = TRUE;
   }
@@ -274,20 +259,20 @@ SCROLL_DrawScrollBar (HWND hwnd, HDC hdc, INT nBar,
   BOOL vertical;
 
   info.cbSize = sizeof(SCROLLBARINFO);
-  NtUserGetScrollBarInfo (hwnd, nBar, &info);
-
-  thumbSize = info.xyThumbBottom - info.xyThumbTop;
 
   switch ( nBar )
   {
   case SB_HORZ:
     vertical = FALSE;
+    NtUserGetScrollBarInfo (hwnd, OBJID_HSCROLL, &info);
     break;
   case SB_VERT:
     vertical = TRUE;
+    NtUserGetScrollBarInfo (hwnd, OBJID_VSCROLL, &info);
     break;
   case SB_CTL:
     vertical = (GetWindowLongW(hwnd,GWL_STYLE)&SBS_VERT) != 0;
+    NtUserGetScrollBarInfo (hwnd, OBJID_CLIENT, &info);
     break;
 #ifdef DBG
   default:
@@ -295,6 +280,8 @@ SCROLL_DrawScrollBar (HWND hwnd, HDC hdc, INT nBar,
     break;
 #endif /* DBG */
   }
+  
+  thumbSize = info.xyThumbBottom - info.xyThumbTop;
 
   if (vertical)
     arrowSize = GetSystemMetrics(SM_CXVSCROLL);
@@ -346,6 +333,82 @@ SCROLL_DrawScrollBar (HWND hwnd, HDC hdc, INT nBar,
     } */
 END:;
 /*    WIN_ReleaseWndPtr(wndPtr); */
+}
+
+static BOOL 
+SCROLL_PtInRectEx( LPRECT lpRect, POINT pt, BOOL vertical )
+{
+  RECT rect = *lpRect;
+
+  if (vertical)
+  {
+    rect.left -= lpRect->right - lpRect->left;
+    rect.right += lpRect->right - lpRect->left;
+  }
+  else
+  {
+    rect.top -= lpRect->bottom - lpRect->top;
+    rect.bottom += lpRect->bottom - lpRect->top;
+  }
+  return PtInRect( &rect, pt );
+}
+
+/*
+DWORD FASTCALL
+SCROLL_HitTest(HWND hwnd, LONG idObject, POINT Point)
+{
+  RECT WindowRect;
+  
+  GetWindowRect(hwnd, &WindowRect);
+  if (!PtInRect(&WindowRect, Point))
+  {      
+    return(SCROLL_NOWHERE);
+  }
+  
+  return SCROLL_NOWHERE;
+}
+*/
+
+DWORD
+SCROLL_HitTest( HWND hwnd, INT nBar, POINT pt, BOOL bDragging )
+{
+  SCROLLBARINFO sbi;
+  RECT wndrect;
+  INT arrowSize, thumbSize, thumbPos;
+  BOOL vertical = (nBar == SB_VERT); /* FIXME - ((Window->Style & SBS_VERT) != 0) */
+  
+  NtUserGetWindowRect(hwnd, &wndrect);
+  
+  sbi.cbSize = sizeof(SCROLLBARINFO);
+  NtUserGetScrollBarInfo(hwnd, vertical ? OBJID_VSCROLL : OBJID_HSCROLL, &sbi);
+
+  OffsetRect(&sbi.rcScrollBar, wndrect.left, wndrect.top);
+
+  if ( (bDragging && !SCROLL_PtInRectEx( &sbi.rcScrollBar, pt, vertical )) ||
+       (!PtInRect( &sbi.rcScrollBar, pt )) ) return SCROLL_NOWHERE;
+       
+
+  if (vertical) 
+  {
+    arrowSize = GetSystemMetrics(SM_CYVSCROLL);
+    if (pt.y < sbi.rcScrollBar.top + arrowSize) return SCROLL_TOP_ARROW;
+    if (pt.y >= sbi.rcScrollBar.bottom - arrowSize) return SCROLL_BOTTOM_ARROW;
+    if (!thumbPos) return SCROLL_TOP_RECT;
+      pt.y -= sbi.rcScrollBar.top;
+    if (pt.y < thumbPos) return SCROLL_TOP_RECT;
+    if (pt.y >= thumbPos + thumbSize) return SCROLL_BOTTOM_RECT;
+  }
+  else  /* horizontal */
+  {
+    arrowSize = GetSystemMetrics(SM_CXHSCROLL);
+    if (pt.x < sbi.rcScrollBar.left + arrowSize) return SCROLL_TOP_ARROW;
+    if (pt.x >= sbi.rcScrollBar.right - arrowSize) return SCROLL_BOTTOM_ARROW;
+    if (!thumbPos) return SCROLL_TOP_RECT;
+    pt.x -= sbi.rcScrollBar.left;
+    if (pt.x < thumbPos) return SCROLL_TOP_RECT;
+    if (pt.x >= thumbPos + thumbSize) return SCROLL_BOTTOM_RECT;
+  }
+  return SCROLL_THUMB;
 }
 
 

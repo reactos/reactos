@@ -468,7 +468,7 @@ NtUserInsertMenuItem(
   LPCMENUITEMINFOW lpmii);
 
 
-DWORD
+BOOL
 STDCALL
 NtUserEnableScrollBar(
   HWND hWnd,

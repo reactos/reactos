@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scrollbar.c,v 1.10 2003/09/07 11:52:54 weiden Exp $
+/* $Id: scrollbar.c,v 1.11 2003/09/08 02:14:20 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -187,12 +187,57 @@ IntDestroyScrollBar(PWINDOW_OBJECT Window, LONG idObject)
   return FALSE;
 }
 
+#define CHANGERGSTATE(item, status) \
+  if(Info->rgstate[(item)] != (status)) \
+    Chg = TRUE; \
+  Info->rgstate[(item)] = (status); 
+
+
+BOOL STDCALL
+IntEnableScrollBar(BOOL Horz, PSCROLLBARINFO Info, UINT wArrows)
+{
+  BOOL Chg = FALSE;
+  switch(wArrows)
+  {
+    case ESB_DISABLE_BOTH:
+      CHANGERGSTATE(SBRG_TOPRIGHTBTN, STATE_SYSTEM_UNAVAILABLE);
+      CHANGERGSTATE(SBRG_BOTTOMLEFTBTN, STATE_SYSTEM_UNAVAILABLE);
+      break;
+    case ESB_DISABLE_RTDN:
+      if(Horz)
+      {
+        CHANGERGSTATE(SBRG_BOTTOMLEFTBTN, STATE_SYSTEM_UNAVAILABLE);
+      }
+      else
+      {
+        CHANGERGSTATE(SBRG_TOPRIGHTBTN, STATE_SYSTEM_UNAVAILABLE);
+      }
+      break;
+    case ESB_DISABLE_LTUP:
+      if(Horz)
+      {
+        CHANGERGSTATE(SBRG_TOPRIGHTBTN, STATE_SYSTEM_UNAVAILABLE);
+      }
+      else
+      {
+        CHANGERGSTATE(SBRG_BOTTOMLEFTBTN, STATE_SYSTEM_UNAVAILABLE);
+      }
+      break;
+    case ESB_ENABLE_BOTH:
+      CHANGERGSTATE(SBRG_TOPRIGHTBTN, 0);
+      CHANGERGSTATE(SBRG_BOTTOMLEFTBTN, 0);
+      break;
+  }
+  return Chg;
+}
+
 
 BOOL
 STDCALL
 NtUserGetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
 {
   PWINDOW_OBJECT Window;
+  INT Bar;
   
   if(!psbi || (psbi->cbSize != sizeof(SCROLLBARINFO)))
   {
@@ -210,23 +255,26 @@ NtUserGetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
 
   switch(idObject)
   {
-    case SB_HORZ:
+    case OBJID_HSCROLL:
       if(Window->pHScroll)
       {
+        Bar = SB_HORZ;
         memcpy(psbi, Window->pHScroll, sizeof(SCROLLBARINFO));
         break;
       }
       /* fall through */
-    case SB_VERT:
+    case OBJID_VSCROLL:
       if(Window->pVScroll)
       {
+        Bar = SB_VERT;
         memcpy(psbi, Window->pVScroll, sizeof(SCROLLBARINFO));
         break;
       }
       /* fall through */
-    case SB_CTL:
+    case OBJID_CLIENT:
       if(Window->wExtra)
       {
+        Bar = SB_CTL;
         memcpy(psbi, Window->wExtra, sizeof(SCROLLBARINFO));
         break;
       }
@@ -237,7 +285,7 @@ NtUserGetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
       return FALSE;
   }
 
-  IntGetScrollBarRect (Window, idObject, &(psbi->rcScrollBar));
+  IntGetScrollBarRect (Window, Bar, &(psbi->rcScrollBar));
 
   IntReleaseWindowObject(Window);
   return TRUE;
@@ -280,7 +328,7 @@ NtUserGetScrollInfo(HWND hwnd, int fnBar, LPSCROLLINFO lpsi)
 }
 
 
-DWORD
+BOOL
 STDCALL
 NtUserEnableScrollBar(
   HWND hWnd, 
@@ -289,6 +337,7 @@ NtUserEnableScrollBar(
 {
   PWINDOW_OBJECT Window;
   PSCROLLBARINFO InfoV = NULL, InfoH = NULL;
+  BOOL Chg = FALSE;
   
   Window = IntGetWindowObject(hWnd);
 
@@ -317,6 +366,15 @@ NtUserEnableScrollBar(
       return FALSE;
   }
   
+  if(InfoV)
+    Chg = IntEnableScrollBar(FALSE, InfoV, wArrows);
+    
+  if(InfoH)
+    Chg = (IntEnableScrollBar(TRUE, InfoH, wArrows) || Chg);
+
+  if(Chg)
+    /* FIXME - repaint scrollbars */
+
   IntReleaseWindowObject(Window);
   return TRUE;
 }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.21 2003/08/29 19:17:32 weiden Exp $
+/* $Id: msgqueue.c,v 1.22 2003/09/08 02:14:20 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -208,8 +208,7 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
 
   if (Msg == WM_LBUTTONDBLCLK || Msg == WM_RBUTTONDBLCLK || Msg == WM_MBUTTONDBLCLK)
   {
-    if (!(IntGetClassLong(Window, GCL_STYLE, FALSE) & CS_DBLCLKS) &&
-        ((*HitTest) == HTCLIENT))
+    if (((*HitTest) != HTCLIENT) || !(IntGetClassLong(Window, GCL_STYLE, FALSE) & CS_DBLCLKS))
 	{
       Msg -= (WM_LBUTTONDBLCLK - WM_LBUTTONDOWN);
       /* FIXME set WindowStation's system cursor variables:
@@ -224,6 +223,7 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
   }
 
   *ScreenPoint = Message->Msg.pt;
+  Point = Message->Msg.pt;
 
   if ((*HitTest) != HTCLIENT)
   {
@@ -232,7 +232,6 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
   }
   else
   {
-    Point = Message->Msg.pt;
     Point.x -= Window->ClientRect.left;
     Point.y -= Window->ClientRect.top;
   }
