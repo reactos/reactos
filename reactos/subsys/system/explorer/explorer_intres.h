@@ -38,6 +38,7 @@
 #define ID_ACTIVATE                     105
 #define IDD_SEARCH_PROGRAM              105
 #define IDB_DRIVEBAR                    106
+#define IDD_DESKBAR_DESKTOP             106
 #define IDB_IMAGES                      107
 #define IDD_EXECUTE                     108
 #define IDR_MAINFRAME                   109
@@ -68,6 +69,8 @@
 #define IDI_NETWORK                     148
 #define IDI_COMPUTER                    149
 #define IDM_DESKTOPBAR                  150
+#define IDD_DESKBAR_TASKBAR             153
+#define IDD_DESKBAR_STARTMENU           154
 #define ID_VIEW_NAME                    401
 #define ID_VIEW_ALL_ATTRIBUTES          402
 #define ID_VIEW_SELECTED_ATTRIBUTES     403
@@ -108,9 +111,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        151
+#define _APS_NEXT_RESOURCE_VALUE        153
 #define _APS_NEXT_COMMAND_VALUE         40006
-#define _APS_NEXT_CONTROL_VALUE         1001
+#define _APS_NEXT_CONTROL_VALUE         1002
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

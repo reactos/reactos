@@ -146,7 +146,7 @@ struct StartMenuCreateInfo
 	StartMenuFolders _folders;
 	int		_border_top;
 	String	_title;
-	Window::CREATORFUNC _creator;
+	Window::CREATORFUNC_INFO _creator;
 };
 
 #define STARTMENU_CREATOR(WND_CLASS) WINDOW_CREATOR_INFO(WND_CLASS, StartMenuCreateInfo)
@@ -216,8 +216,8 @@ struct StartMenu :
 	StartMenu(HWND hwnd, const StartMenuCreateInfo& create_info);
 	~StartMenu();
 
-	static HWND Create(int x, int y, const StartMenuFolders&, HWND hwndParent, LPCTSTR title, CREATORFUNC creator=s_def_creator);
-	static CREATORFUNC s_def_creator;
+	static HWND Create(int x, int y, const StartMenuFolders&, HWND hwndParent, LPCTSTR title, CREATORFUNC_INFO creator=s_def_creator);
+	static CREATORFUNC_INFO s_def_creator;
 
 protected:
 	 // overridden member functions
@@ -277,10 +277,10 @@ protected:
 
 	bool	CloseSubmenus() {return CloseOtherSubmenus();}
 	bool	CloseOtherSubmenus(int id=0);
-	void	CreateSubmenu(int id, LPCTSTR title, CREATORFUNC creator=s_def_creator);
-	void	CreateSubmenu(int id, int folder, LPCTSTR title, CREATORFUNC creator=s_def_creator);
-	void	CreateSubmenu(int id, int folder1, int folder2, LPCTSTR title, CREATORFUNC creator=s_def_creator);
-	void	CreateSubmenu(int id, const StartMenuFolders& new_folders, LPCTSTR title, CREATORFUNC creator=s_def_creator);
+	void	CreateSubmenu(int id, LPCTSTR title, CREATORFUNC_INFO creator=s_def_creator);
+	void	CreateSubmenu(int id, int folder, LPCTSTR title, CREATORFUNC_INFO creator=s_def_creator);
+	void	CreateSubmenu(int id, int folder1, int folder2, LPCTSTR title, CREATORFUNC_INFO creator=s_def_creator);
+	void	CreateSubmenu(int id, const StartMenuFolders& new_folders, LPCTSTR title, CREATORFUNC_INFO creator=s_def_creator);
 	void	ActivateEntry(int id, const ShellEntrySet& entries);
 	virtual void CloseStartMenu(int id=0);
 

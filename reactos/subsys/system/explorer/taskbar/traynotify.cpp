@@ -149,6 +149,9 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	  case PM_GET_WIDTH:
 		return _sorted_icons.size()*NOTIFYICON_DIST + NOTIFYAREA_SPACE + _clock_width;
 
+	  case WM_CONTEXTMENU:
+		break;	// don't let WM_CONTEXTMENU go through to the desktop bar
+
 	  default:
 		if (nmsg>=WM_MOUSEFIRST && nmsg<=WM_MOUSELAST) {
 			 // close startup menu and other popup menus

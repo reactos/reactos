@@ -53,20 +53,21 @@ struct Window : public WindowHandle
 
 	typedef map<HWND,Window*> WindowMap;
 
-	typedef Window* (*CREATORFUNC)(HWND, const void*);
-	typedef Window* (*CREATORFUNC_NO_INFO)(HWND);
+	typedef Window* (*CREATORFUNC)(HWND);
+	typedef Window* (*CREATORFUNC_INFO)(HWND, const void*);
 
 	static HWND Create(CREATORFUNC creator, DWORD dwExStyle,
 				LPCTSTR lpClassName, LPCTSTR lpWindowName,
 				DWORD dwStyle, int x, int y, int w, int h,
 				HWND hwndParent=0, HMENU hMenu=0/*, LPVOID lpParam=0*/);
 
-	static HWND Create(CREATORFUNC creator, const void* info,
+	static HWND Create(CREATORFUNC_INFO creator, const void* info,
 				DWORD dwExStyle, LPCTSTR lpClassName, LPCTSTR lpWindowName,
 				DWORD dwStyle, int x, int y, int w, int h,
 				HWND hwndParent=0, HMENU hMenu=0/*, LPVOID lpParam=0*/);
 
-	static Window* create_mdi_child(HWND hmdiclient, const MDICREATESTRUCT& mcs, CREATORFUNC creator, const void* info=NULL);
+	static Window* create_mdi_child(HWND hmdiclient, const MDICREATESTRUCT& mcs, CREATORFUNC_INFO creator, const void* info=NULL);
+//	static Window* create_property_sheet(struct PropertySheetDialog* ppsd, CREATORFUNC creator, const void* info);
 
 	static LRESULT CALLBACK WindowWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
 	static INT_PTR CALLBACK DialogProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
@@ -120,7 +121,8 @@ protected:
 
 	 // MDI child creation
 	static HHOOK s_hcbtHook;
-	static LRESULT CALLBACK CBTHookProc(int code, WPARAM wparam, LPARAM lparam);
+	static LRESULT CALLBACK MDICBTHookProc(int code, WPARAM wparam, LPARAM lparam);
+	static LRESULT CALLBACK PropSheetCBTHookProc(int code, WPARAM wparam, LPARAM lparam);
 
 	static WindowSet s_pretranslate_windows;
 	static WindowSet s_dialogs;
@@ -172,7 +174,7 @@ protected:
 };
 
 
- /// template class used in macro WINDOW_CREATOR to the define creater functions for Window objects
+ /// template class used in macro WINDOW_CREATOR to define the creater functions for Window objects
 template<typename WND_CLASS> struct WindowCreator
 {
 	static WND_CLASS* window_creator(HWND hwnd)
@@ -182,7 +184,7 @@ template<typename WND_CLASS> struct WindowCreator
 };
 
 #define WINDOW_CREATOR(WND_CLASS) \
-	(Window::CREATORFUNC) WindowCreator<WND_CLASS>::window_creator
+	((Window::CREATORFUNC) WindowCreator<WND_CLASS>::window_creator)
 
 
  /// template class used in macro WINDOW_CREATOR_INFO to the define creater functions for Window objects with additional creation information
@@ -195,7 +197,7 @@ template<typename WND_CLASS, typename INFO_CLASS> struct WindowCreatorInfo
 };
 
 #define WINDOW_CREATOR_INFO(WND_CLASS, INFO_CLASS) \
-	(Window::CREATORFUNC) WindowCreatorInfo<WND_CLASS, INFO_CLASS>::window_creator
+	((Window::CREATORFUNC_INFO) WindowCreatorInfo<WND_CLASS, INFO_CLASS>::window_creator)
 
 
  /**
@@ -276,7 +278,7 @@ struct ChildWindow : public Window
 	ChildWindow(HWND hwnd);
 
 	static ChildWindow* create(HWND hmdiclient, const RECT& rect,
-				CREATORFUNC creator, LPCTSTR classname, LPCTSTR title=NULL, const void* info=NULL);
+				CREATORFUNC_INFO creator, LPCTSTR classname, LPCTSTR title=NULL, const void* info=NULL);
 
 protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
@@ -345,7 +347,7 @@ struct Dialog : public Window
 	~Dialog();
 
 	static int DoModal(UINT nid, CREATORFUNC creator, HWND hwndParent=0);
-	static int DoModal(UINT nid, CREATORFUNC creator, const void* info, HWND hwndParent=0);
+	static int DoModal(UINT nid, CREATORFUNC_INFO creator, const void* info, HWND hwndParent=0);
 
 protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
@@ -355,6 +357,63 @@ protected:
 
 #define	PM_FRM_CALC_CLIENT		(WM_APP+0x03)
 #define	Frame_CalcFrameClient(hwnd, prt) ((BOOL)SNDMSG(hwnd, PM_FRM_CALC_CLIENT, 0, (LPARAM)(PRECT)prt))
+
+
+
+struct PropSheetPage : public PROPSHEETPAGE
+{
+	PropSheetPage(UINT nid, Window::CREATORFUNC dlg_creator);
+
+	void	init(struct PropertySheetDialog*);
+
+protected:
+	friend struct PropSheetPageDlg;
+
+	Window::CREATORFUNC	_dlg_creator;
+};
+
+
+ /// Property Sheet dialog
+struct PropertySheetDialog : public PROPSHEETHEADER
+{
+	PropertySheetDialog(HWND owner);
+
+	void	add(PropSheetPage& psp);
+	int		DoModal(int start_page=0);
+
+	HWND	GetCurrentPage();
+
+protected:
+	typedef vector<PROPSHEETPAGE> Vector;
+	Vector	_pages;
+	HWND	_hwnd;
+};
+
+
+ /// Property Sheet Page (inner dialog)
+struct PropSheetPageDlg : public Dialog
+{
+	typedef Dialog super;
+
+	PropSheetPageDlg(HWND);
+
+protected:
+	friend struct PropertySheetDialog;
+	friend struct PropSheetPage;
+
+	static INT_PTR CALLBACK DialogProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
+};
+
+
+/*
+ /// Property Sheet Dialog (outer dialog)
+struct PropertySheetDlg : public SubclassedWindow
+{
+	typedef SubclassedWindow super;
+
+	PropertySheetDlg(HWND hwnd) : super(hwnd) {}
+};
+*/
 
 
  // Layouting of resizable windows

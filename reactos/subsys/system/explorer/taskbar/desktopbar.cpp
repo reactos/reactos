@@ -230,7 +230,7 @@ int DesktopBar::Command(int id, int code)
 		break;
 
 	  case ID_DESKTOPBAR_SETTINGS:
-		MessageBox(_hwnd, TEXT("Not yet implemented"), ResString(IDS_TITLE), MB_OK);
+		DoPropertySheet();
 		break;
 
 	  default:
@@ -268,6 +268,102 @@ LRESULT DesktopBar::ProcessCopyData(COPYDATASTRUCT* pcd)
 
 		if (notify_area)
 			return notify_area->ProcessTrayNotification(ptr->notify_code, &ptr->nicon_data);
+	}
+
+	return 0;
+}
+
+
+void DesktopBar::DoPropertySheet()
+{
+	PropertySheetDialog ps(_hwnd);
+
+	ps.dwFlags |= PSH_USEICONID | PSH_PROPTITLE;
+	ps.pszIcon = MAKEINTRESOURCE(IDI_REACTOS);
+	ps.pszCaption = TEXT("Explorer");
+
+	PropSheetPage psp1(IDD_DESKBAR_DESKTOP, WINDOW_CREATOR(DesktopSettingsDlg));
+	psp1.dwFlags |= PSP_USETITLE;
+	psp1.pszTitle = TEXT("Desktop");//MAKEINTRESOURCE(IDS_DESKTOP);
+	ps.add(psp1);
+
+	PropSheetPage psp2(IDD_DESKBAR_TASKBAR, WINDOW_CREATOR(TaskbarSettingsDlg));
+	psp2.dwFlags |= PSP_USETITLE;
+	psp2.pszTitle = TEXT("Taskbar");//MAKEINTRESOURCE(IDS_DESKTOP);
+	ps.add(psp2);
+
+	PropSheetPage psp3(IDD_DESKBAR_STARTMENU, WINDOW_CREATOR(StartmenuSettingsDlg));
+	psp3.dwFlags |= PSP_USETITLE;
+	psp3.pszTitle = TEXT("Start Menu");//MAKEINTRESOURCE(IDS_DESKTOP);
+	ps.add(psp3);
+
+	ps.DoModal();
+}
+
+
+DesktopSettingsDlg::DesktopSettingsDlg(HWND hwnd)
+ :	super(hwnd)
+{
+}
+
+LRESULT DesktopSettingsDlg::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
+{
+	switch(nmsg) {
+	  case WM_PAINT:
+		Paint();
+		break;
+
+	  default:
+		return super::WndProc(nmsg, wparam, lparam);
+	}
+
+	return 0;
+}
+
+void DesktopSettingsDlg::Paint()
+{
+	PaintCanvas canvas(_hwnd);
+
+	FillRect(canvas, &canvas.rcPaint, GetStockBrush(WHITE_BRUSH));
+}
+
+
+TaskbarSettingsDlg::TaskbarSettingsDlg(HWND hwnd)
+ :	super(hwnd)
+{
+}
+
+LRESULT TaskbarSettingsDlg::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
+{
+	switch(nmsg) {
+	  case WM_PAINT: {
+		PaintCanvas canvas(_hwnd);
+		FillRect(canvas, &canvas.rcPaint, GetStockBrush(GRAY_BRUSH));
+		break;}
+
+	  default:
+		return super::WndProc(nmsg, wparam, lparam);
+	}
+
+	return 0;
+}
+
+
+StartmenuSettingsDlg::StartmenuSettingsDlg(HWND hwnd)
+ :	super(hwnd)
+{
+}
+
+LRESULT StartmenuSettingsDlg::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
+{
+	switch(nmsg) {
+	  case WM_PAINT: {
+		PaintCanvas canvas(_hwnd);
+		FillRect(canvas, &canvas.rcPaint, GetStockBrush(DKGRAY_BRUSH));
+		break;}
+
+	  default:
+		return super::WndProc(nmsg, wparam, lparam);
 	}
 
 	return 0;

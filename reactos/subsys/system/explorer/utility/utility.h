@@ -62,6 +62,8 @@ extern "C" {
 
 #define	for if (0) {} else for
 
+#define	COUNTOF(x)	(sizeof(x)/sizeof(x[0]))
+
 
 #define	BUFFER_LEN				1024
 
@@ -169,6 +171,8 @@ using namespace std;
 #include <map>
 #include <set>
 #include <list>
+#include <vector>
+
 
 #if _MSC_VER>=1300	// VS.Net
 #define _NO_COMUTIL	//@@

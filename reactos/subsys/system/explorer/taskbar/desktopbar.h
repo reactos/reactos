@@ -87,11 +87,48 @@ protected:
 	void	RegisterHotkeys();
 	void	ProcessHotKey(int id_hotkey);
 	void	ShowStartMenu();
-	LRESULT ProcessCopyData(COPYDATASTRUCT* pcd);
+	LRESULT	ProcessCopyData(COPYDATASTRUCT* pcd);
 
 	WindowHandle _hwndTaskBar;
 	WindowHandle _hwndNotify;
 	WindowHandle _hwndQuickLaunch;
 
 	struct StartMenuRoot* _startMenuRoot;
+
+	void	DoPropertySheet();
+};
+
+
+ /// "Desktopbar Settings" Property Sheet Dialog
+struct DesktopSettingsDlg : public PropSheetPageDlg
+{
+	typedef PropSheetPageDlg super;
+
+	DesktopSettingsDlg(HWND hwnd);
+
+	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+
+	void	Paint();
+};
+
+
+ /// "Desktopbar Settings" Property Sheet Dialog
+struct TaskbarSettingsDlg : public PropSheetPageDlg
+{
+	typedef PropSheetPageDlg super;
+
+	TaskbarSettingsDlg(HWND hwnd);
+
+	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+};
+
+
+ /// "Startmenu Settings" Property Sheet Dialog
+struct StartmenuSettingsDlg : public PropSheetPageDlg
+{
+	typedef PropSheetPageDlg super;
+
+	StartmenuSettingsDlg(HWND hwnd);
+
+	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 };

@@ -72,8 +72,8 @@ BEGIN
     EDITTEXT        201,3,29,134,12,ES_AUTOHSCROLL
     CONTROL         "Ca &Simbol",214,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,
                     45,71,12
-    DEFPUSHBUTTON   "OK",1,158,6,47,14
-    PUSHBUTTON      "Anulare",2,158,23,47,14
+    DEFPUSHBUTTON   "&OK",1,158,6,47,14
+    PUSHBUTTON      "A&nulare",2,158,23,47,14
     PUSHBUTTON      "&Ajutor",254,158,43,47,14
 END
 
@@ -334,8 +334,8 @@ BEGIN
     EDITTEXT        201,3,29,134,12,ES_AUTOHSCROLL
     CONTROL         "Als &Symbol",214,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
                     3,45,71,12
-    DEFPUSHBUTTON   "OK",1,158,6,47,14
-    PUSHBUTTON      "Abbrechen",2,158,23,47,14
+    DEFPUSHBUTTON   "&OK",1,158,6,47,14
+    PUSHBUTTON      "A&bbrechen",2,158,23,47,14
     PUSHBUTTON      "&Hilfe",254,158,43,47,14
 END
 
@@ -348,8 +348,8 @@ BEGIN
     LTEXT           "(c) 2003 Martin Fuchs",IDC_STATIC,90,50,70,8
     LTEXT           "http://www.sky.franken.de/explorer/",IDC_WWW,21,84,104,
                     8
-    CONTROL         "OK",IDOK,"Button",BS_OWNERDRAW | BS_FLAT | WS_GROUP,151,
-                    90,38,12
+    CONTROL         "&OK",IDOK,"Button",BS_OWNERDRAW | BS_FLAT | WS_GROUP,
+                    151,90,38,12
 END
 
 
@@ -651,8 +651,8 @@ BEGIN
     EDITTEXT        201,3,29,134,12,ES_AUTOHSCROLL
     CONTROL         "As &Symbol",214,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,
                     45,71,12
-    DEFPUSHBUTTON   "OK",1,158,6,47,14
-    PUSHBUTTON      "Cancel",2,158,23,47,14
+    DEFPUSHBUTTON   "&OK",1,158,6,47,14
+    PUSHBUTTON      "&Cancel",2,158,23,47,14
     PUSHBUTTON      "&Help",254,158,43,47,14
 END
 
@@ -670,6 +670,30 @@ BEGIN
                     WS_TABSTOP,7,25,130,33
 END
 
+IDD_DESKBAR_DESKTOP DIALOG DISCARDABLE  0, 0, 210, 154
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Desktop Properties"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         130,IDC_STATIC,"Static",SS_BITMAP,74,20,21,98
+END
+
+IDD_DESKBAR_TASKBAR DIALOG DISCARDABLE  0, 0, 210, 154
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Taskbar Properties"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         129,IDC_STATIC,"Static",SS_BITMAP,129,19,21,98
+END
+
+IDD_DESKBAR_STARTMENU DIALOG DISCARDABLE  0, 0, 210, 154
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Startmenu Properties"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         130,IDC_STATIC,"Static",SS_BITMAP,74,20,21,98
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -685,6 +709,30 @@ BEGIN
         RIGHTMARGIN, 137
         TOPMARGIN, 7
         BOTTOMMARGIN, 58
+    END
+
+    IDD_DESKBAR_DESKTOP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 203
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 147
+    END
+
+    IDD_DESKBAR_TASKBAR, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 203
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 147
+    END
+
+    IDD_DESKBAR_STARTMENU, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 203
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 147
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -796,8 +844,8 @@ BEGIN
     EDITTEXT        201,3,29,134,12,ES_AUTOHSCROLL
     CONTROL         "As &Symbol",214,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,
                     45,71,12
-    DEFPUSHBUTTON   "OK",1,158,6,47,14
-    PUSHBUTTON      "Cancel",2,158,23,47,14
+    DEFPUSHBUTTON   "&OK",1,158,6,47,14
+    PUSHBUTTON      "&Cancel",2,158,23,47,14
     PUSHBUTTON      "&Help",254,158,43,47,14
 END
 

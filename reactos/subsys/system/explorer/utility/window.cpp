@@ -104,14 +104,14 @@ HWND Window::Create(CREATORFUNC creator, DWORD dwExStyle,
 							hwndParent, hMenu, g_Globals._hInstance, 0/*lpParam*/);
 }
 
-HWND Window::Create(CREATORFUNC creator, const void* info, DWORD dwExStyle,
+HWND Window::Create(CREATORFUNC_INFO creator, const void* info, DWORD dwExStyle,
 					LPCTSTR lpClassName, LPCTSTR lpWindowName,
 					DWORD dwStyle, int x, int y, int w, int h,
 					HWND hwndParent, HMENU hMenu/*, LPVOID lpParam*/)
 {
 	Lock lock(GetStaticWindowData()._create_crit_sect);	// protect access to s_window_creator and s_new_info
 
-	s_window_creator = creator;
+	s_window_creator = (CREATORFUNC) creator;
 	s_new_info = info;
 
 	return CreateWindowEx(dwExStyle, lpClassName, lpWindowName, dwStyle,
@@ -120,33 +120,29 @@ HWND Window::Create(CREATORFUNC creator, const void* info, DWORD dwExStyle,
 }
 
 
-static Window* s_new_child_wnd = NULL;
-
-Window* Window::create_mdi_child(HWND hmdiclient, const MDICREATESTRUCT& mcs, CREATORFUNC creator, const void* info)
+Window* Window::create_mdi_child(HWND hmdiclient, const MDICREATESTRUCT& mcs, CREATORFUNC_INFO creator, const void* info)
 {
 	Lock lock(GetStaticWindowData()._create_crit_sect);	// protect access to s_window_creator and s_new_info
 
-	s_window_creator = creator;
+	s_window_creator = (CREATORFUNC) creator;
 	s_new_info = info;
-	s_new_child_wnd = NULL;
 
-	s_hcbtHook = SetWindowsHookEx(WH_CBT, CBTHookProc, 0, GetCurrentThreadId());
+	s_hcbtHook = SetWindowsHookEx(WH_CBT, MDICBTHookProc, 0, GetCurrentThreadId());
 
 	HWND hwnd = (HWND) SendMessage(hmdiclient, WM_MDICREATE, 0, (LPARAM)&mcs);
 
 	UnhookWindowsHookEx(s_hcbtHook);
 
-	Window* child = s_new_child_wnd;
+	Window* child = get_window(hwnd);
 	s_new_info = NULL;
-	s_new_child_wnd = NULL;
 
-	if (!hwnd || !child || !child->_hwnd)
+	if (child && (!hwnd || !child->_hwnd))
 		child = NULL;
 
 	return child;
 }
 
-LRESULT CALLBACK Window::CBTHookProc(int code, WPARAM wparam, LPARAM lparam)
+LRESULT CALLBACK Window::MDICBTHookProc(int code, WPARAM wparam, LPARAM lparam)
 {
 	if (code == HCBT_CREATEWND) {
 		HWND hwnd = (HWND)wparam;
@@ -156,9 +152,46 @@ LRESULT CALLBACK Window::CBTHookProc(int code, WPARAM wparam, LPARAM lparam)
 
 		if (!child)
 			child = create_controller(hwnd);
+	}
 
-		if (child)
-			s_new_child_wnd = child;
+	return CallNextHookEx(s_hcbtHook, code, wparam, lparam);
+}
+
+
+/*
+Window* Window::create_property_sheet(PropertySheetDialog* ppsd, CREATORFUNC creator, const void* info)
+{
+	Lock lock(GetStaticWindowData()._create_crit_sect);	// protect access to s_window_creator and s_new_info
+
+	s_window_creator = creator;
+	s_new_info = info;
+
+	s_hcbtHook = SetWindowsHookEx(WH_CBT, PropSheetCBTHookProc, 0, GetCurrentThreadId());
+
+	HWND hwnd = (HWND) PropertySheet(ppsd);
+
+	UnhookWindowsHookEx(s_hcbtHook);
+
+	Window* child = get_window(hwnd);
+	s_new_info = NULL;
+
+	if (child && (!hwnd || !child->_hwnd))
+		child = NULL;
+
+	return child;
+}
+*/
+
+LRESULT CALLBACK Window::PropSheetCBTHookProc(int code, WPARAM wparam, LPARAM lparam)
+{
+	if (code == HCBT_CREATEWND) {
+		HWND hwnd = (HWND)wparam;
+
+		 // create Window controller and associate it with the window handle
+		Window* child = get_window(hwnd);
+
+		if (!child)
+			child = create_controller(hwnd);
 	}
 
 	return CallNextHookEx(s_hcbtHook, code, wparam, lparam);
@@ -186,7 +219,7 @@ Window* Window::get_window(HWND hwnd)
 
 Window* Window::create_controller(HWND hwnd)
 {
-	if (s_window_creator) {	// protect for recursion
+	if (s_window_creator) {	// protect for recursion and create the window object only for the first window
 		Lock lock(GetStaticWindowData()._create_crit_sect);	// protect access to s_window_creator and s_new_info
 
 		const void* info = s_new_info;
@@ -196,9 +229,9 @@ Window* Window::create_controller(HWND hwnd)
 		s_window_creator = NULL;
 
 		if (info)
-			return window_creator(hwnd, info);
+			return CREATORFUNC_INFO(window_creator)(hwnd, info);
 		else
-			return CREATORFUNC_NO_INFO(window_creator)(hwnd);
+			return CREATORFUNC(window_creator)(hwnd);
 	}
 
 	return NULL;
@@ -344,7 +377,7 @@ ChildWindow::ChildWindow(HWND hwnd)
 }
 
 
-ChildWindow* ChildWindow::create(HWND hmdiclient, const RECT& rect, CREATORFUNC creator, LPCTSTR classname, LPCTSTR title, const void* info)
+ChildWindow* ChildWindow::create(HWND hmdiclient, const RECT& rect, CREATORFUNC_INFO creator, LPCTSTR classname, LPCTSTR title, const void* info)
 {
 	MDICREATESTRUCT mcs;
 
@@ -612,11 +645,11 @@ int Dialog::DoModal(UINT nid, CREATORFUNC creator, HWND hwndParent)
 	return DialogBoxParam(g_Globals._hInstance, MAKEINTRESOURCE(nid), hwndParent, DialogProc, 0/*lpParam*/);
 }
 
-int Dialog::DoModal(UINT nid, CREATORFUNC creator, const void* info, HWND hwndParent)
+int Dialog::DoModal(UINT nid, CREATORFUNC_INFO creator, const void* info, HWND hwndParent)
 {
 	Lock lock(GetStaticWindowData()._create_crit_sect);	// protect access to s_window_creator and s_new_info
 
-	s_window_creator = creator;
+	s_window_creator = (CREATORFUNC) creator;
 	s_new_info = NULL;
 
 	return DialogBoxParam(g_Globals._hInstance, MAKEINTRESOURCE(nid), hwndParent, DialogProc, 0/*lpParam*/);
@@ -1171,4 +1204,142 @@ void ListSort::sort()
 		idx = ListView_FindItemPara(_hwnd, param);
 		ListView_EnsureVisible(_hwnd, idx, FALSE);
 	}
+}
+
+
+PropSheetPage::PropSheetPage(UINT nid, Window::CREATORFUNC dlg_creator)
+ :	_dlg_creator(dlg_creator)
+{
+	PROPSHEETPAGE::dwSize		= sizeof(PROPSHEETPAGE);
+	PROPSHEETPAGE::dwFlags		= 0;
+	PROPSHEETPAGE::hInstance	= g_Globals._hInstance;
+	PROPSHEETPAGE::pszTemplate	= MAKEINTRESOURCE(nid);
+	PROPSHEETPAGE::pfnDlgProc	= PropSheetPageDlg::DialogProc;
+	PROPSHEETPAGE::lParam		= (LPARAM) this;
+}
+
+
+#ifndef PSM_GETRESULT	// currently (as of 18.01.2004) missing in MinGW headers
+#define PSM_GETRESULT				(WM_USER + 135)
+#define PropSheet_GetResult(hDlg)	SNDMSG(hDlg, PSM_GETRESULT, 0, 0)
+#endif
+
+
+PropertySheetDialog::PropertySheetDialog(HWND owner)
+ :	_hwnd(0)
+{
+	PROPSHEETHEADER::dwSize = sizeof(PROPSHEETHEADER);
+	PROPSHEETHEADER::dwFlags = PSH_PROPSHEETPAGE | PSH_MODELESS;
+	PROPSHEETHEADER::hwndParent = owner;
+	PROPSHEETHEADER::hInstance = g_Globals._hInstance;
+}
+
+void PropertySheetDialog::add(PropSheetPage& psp)
+{
+	_pages.push_back(psp);
+}
+
+int	PropertySheetDialog::DoModal(int start_page)
+{
+	PROPSHEETHEADER::ppsp = (LPCPROPSHEETPAGE) &_pages[0];
+	PROPSHEETHEADER::nPages = _pages.size();
+	PROPSHEETHEADER::nStartPage = start_page;
+/*
+	Window* pwnd = Window::create_property_sheet(this, WINDOW_CREATOR(PropertySheetDlg), NULL);
+	if (!pwnd)
+		return -1;
+
+	HWND hwndPropSheet = *pwnd;
+*/
+	HWND hwndPropSheet = (HWND) PropertySheet(this);
+	HWND hwndparent = GetParent(hwndPropSheet);
+
+	if (hwndparent)
+		EnableWindow(hwndparent, FALSE);
+
+	int ret = 0;
+	MSG msg;
+
+	while(GetMessage(&msg, 0, 0, 0)) {
+		try {
+			if (Window::pretranslate_msg(&msg))
+				continue;
+
+			if (PropSheet_IsDialogMessage(hwndPropSheet, &msg))
+				continue;
+
+			if (Window::dispatch_dialog_msg(&msg))
+				continue;
+
+			TranslateMessage(&msg);
+
+			try {
+				DispatchMessage(&msg);
+			} catch(COMException& e) {
+				HandleException(e, 0);
+			}
+
+			if (!PropSheet_GetCurrentPageHwnd(hwndPropSheet)) {
+				ret = PropSheet_GetResult(hwndPropSheet);
+				break;
+			}
+		} catch(COMException& e) {
+			HandleException(e, 0);
+		}
+	}
+
+	if (hwndparent)
+		EnableWindow(hwndparent, TRUE);
+
+	DestroyWindow(hwndPropSheet);
+
+	return ret;
+}
+
+HWND PropertySheetDialog::GetCurrentPage()
+{
+	HWND hdlg = PropSheet_GetCurrentPageHwnd(_hwnd);
+	return hdlg;
+}
+
+
+PropSheetPageDlg::PropSheetPageDlg(HWND hwnd)
+ :	super(hwnd)
+{
+}
+
+INT_PTR CALLBACK PropSheetPageDlg::DialogProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
+{
+	PropSheetPageDlg* pThis = GET_WINDOW(PropSheetPageDlg, hwnd);
+
+	if (pThis) {
+		switch(nmsg) {
+		  case WM_COMMAND:
+			pThis->Command(LOWORD(wparam), HIWORD(wparam));
+			return TRUE;	// message has been processed
+
+		  case WM_NOTIFY:
+			pThis->Notify(wparam, (NMHDR*)lparam);
+			return TRUE;	// message has been processed
+
+		  case WM_NCDESTROY:
+			delete pThis;
+			return TRUE;	// message has been processed
+
+		  default:
+			return pThis->WndProc(nmsg, wparam, lparam);
+		}
+	} else if (nmsg == WM_INITDIALOG) {
+		PROPSHEETPAGE* psp = (PROPSHEETPAGE*) lparam;
+		PropSheetPage* ppsp = (PropSheetPage*) psp->lParam;
+
+		if (ppsp->_dlg_creator) {
+			pThis = static_cast<PropSheetPageDlg*>(ppsp->_dlg_creator(hwnd));
+
+			if (pThis)
+				return pThis->Init(NULL);
+		}
+	}
+
+	return FALSE;	// message has not been processed
 }

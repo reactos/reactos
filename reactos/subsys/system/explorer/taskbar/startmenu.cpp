@@ -91,9 +91,9 @@ BtnWindowClass& StartMenu::GetWndClasss()
 }
 
 
-Window::CREATORFUNC StartMenu::s_def_creator = STARTMENU_CREATOR(StartMenu);
+Window::CREATORFUNC_INFO StartMenu::s_def_creator = STARTMENU_CREATOR(StartMenu);
 
-HWND StartMenu::Create(int x, int y, const StartMenuFolders& folders, HWND hwndParent, LPCTSTR title, CREATORFUNC creator)
+HWND StartMenu::Create(int x, int y, const StartMenuFolders& folders, HWND hwndParent, LPCTSTR title, CREATORFUNC_INFO creator)
 {
 	UINT style, ex_style;
 	int top_height;
@@ -948,12 +948,12 @@ bool StartMenu::CloseOtherSubmenus(int id)
 }
 
 
-void StartMenu::CreateSubmenu(int id, LPCTSTR title, CREATORFUNC creator)
+void StartMenu::CreateSubmenu(int id, LPCTSTR title, CREATORFUNC_INFO creator)
 {
 	CreateSubmenu(id, StartMenuFolders(), title, creator);
 }
 
-void StartMenu::CreateSubmenu(int id, int folder_id, LPCTSTR title, CREATORFUNC creator)
+void StartMenu::CreateSubmenu(int id, int folder_id, LPCTSTR title, CREATORFUNC_INFO creator)
 {
 	try {
 		SpecialFolderPath folder(folder_id, _hwnd);
@@ -967,7 +967,7 @@ void StartMenu::CreateSubmenu(int id, int folder_id, LPCTSTR title, CREATORFUNC 
 	}
 }
 
-void StartMenu::CreateSubmenu(int id, int folder_id1, int folder_id2, LPCTSTR title, CREATORFUNC creator)
+void StartMenu::CreateSubmenu(int id, int folder_id1, int folder_id2, LPCTSTR title, CREATORFUNC_INFO creator)
 {
 	StartMenuFolders new_folders;
 
@@ -985,7 +985,7 @@ void StartMenu::CreateSubmenu(int id, int folder_id1, int folder_id2, LPCTSTR ti
 		CreateSubmenu(id, new_folders, title, creator);
 }
 
-void StartMenu::CreateSubmenu(int id, const StartMenuFolders& new_folders, LPCTSTR title, CREATORFUNC creator)
+void StartMenu::CreateSubmenu(int id, const StartMenuFolders& new_folders, LPCTSTR title, CREATORFUNC_INFO creator)
 {
 	 // Only open one submenu at a time.
 	if (!CloseOtherSubmenus(id))
