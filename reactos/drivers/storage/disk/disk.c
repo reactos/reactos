@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2001, 2002 ReactOS Team
+ *  Copyright (C) 2001, 2002, 2003 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.24 2003/04/05 15:36:34 chorns Exp $
+/* $Id: disk.c,v 1.25 2003/04/27 10:50:07 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -40,6 +40,7 @@
 
 typedef struct _DISK_DATA
 {
+  PDEVICE_EXTENSION NextPartition;
   ULONG HiddenSectors;
   ULONG PartitionNumber;
   ULONG PartitionOrdinal;
@@ -47,13 +48,6 @@ typedef struct _DISK_DATA
   BOOLEAN BootIndicator;
   BOOLEAN DriveNotReady;
 } DISK_DATA, *PDISK_DATA;
-
-typedef enum _DISK_MANAGER
-{
-  NoDiskManager,
-  OntrackDiskManager,
-  EZ_Drive
-} DISK_MANAGER;
 
 
 BOOLEAN STDCALL
@@ -89,28 +83,35 @@ NTSTATUS STDCALL
 DiskClassShutdownFlush(IN PDEVICE_OBJECT DeviceObject,
 		       IN PIRP Irp);
 
+static VOID
+DiskClassUpdatePartitionDeviceObjects (IN PDEVICE_OBJECT DeviceObject,
+				       IN PIRP Irp);
 
 
 /* FUNCTIONS ****************************************************************/
 
-//    DriverEntry
-//
-//  DESCRIPTION:
-//    This function initializes the driver, locates and claims 
-//    hardware resources, and creates various NT objects needed
-//    to process I/O requests.
-//
-//  RUN LEVEL:
-//    PASSIVE_LEVEL
-//
-//  ARGUMENTS:
-//    IN  PDRIVER_OBJECT   DriverObject  System allocated Driver Object
-//                                       for this driver
-//    IN  PUNICODE_STRING  RegistryPath  Name of registry driver service 
-//                                       key
-//
-//  RETURNS:
-//    NTSTATUS
+/**********************************************************************
+ * NAME							EXPORTED
+ *	DriverEntry
+ *
+ * DESCRIPTION
+ *	This function initializes the driver, locates and claims 
+ *	hardware resources, and creates various NT objects needed
+ *	to process I/O requests.
+ *
+ * RUN LEVEL
+ *	PASSIVE_LEVEL
+ *
+ * ARGUMENTS
+ *	DriverObject
+ *		System allocated Driver Object for this driver
+ *
+ *	RegistryPath
+ *		Name of registry driver service key
+ *
+ * RETURN VALUE
+ *	Status
+ */
 
 NTSTATUS STDCALL
 DriverEntry(IN PDRIVER_OBJECT DriverObject,
@@ -360,7 +361,7 @@ DiskClassCheckReadWrite(IN PDEVICE_OBJECT DeviceObject,
 
 
 /**********************************************************************
- * NAME							EXPORTED
+ * NAME							INTERNAL
  *	DiskClassCreateDeviceObject
  *
  * DESCRIPTION
@@ -410,7 +411,6 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   ULONG PartitionNumber;
   PVOID MbrBuffer;
   NTSTATUS Status;
-  DISK_MANAGER DiskManager = NoDiskManager;
 
   DPRINT("DiskClassCreateDeviceObject() called\n");
 
@@ -556,29 +556,16 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 		&MbrBuffer);
   if (MbrBuffer != NULL)
     {
+      /* Start disk at sector 63 if the Ontrack Disk Manager was found */
       DPRINT("Found 'Ontrack Disk Manager'!\n");
-      DiskManager = OntrackDiskManager;
+
+      DiskDeviceExtension->DMSkew = 63;
+      DiskDeviceExtension->DMByteSkew =
+	63 * DiskDeviceExtension->DiskGeometry->BytesPerSector;
+      DiskDeviceExtension->DMActive = TRUE;
+
       ExFreePool(MbrBuffer);
       MbrBuffer = NULL;
-    }
-
-  HalExamineMBR(DiskDeviceObject,
-		DiskDeviceExtension->DiskGeometry->BytesPerSector,
-		0x55,
-		&MbrBuffer);
-  if (MbrBuffer != NULL)
-    {
-      DPRINT("Found 'EZ-Drive' disk manager!\n");
-      DiskManager = EZ_Drive;
-      ExFreePool(MbrBuffer);
-      MbrBuffer = NULL;
-    }
-
-  /* Start disk at sector 63 if the Ontrack Disk Manager was found */
-  if (DiskManager == OntrackDiskManager)
-    {
-      DiskDeviceExtension->StartingOffset.QuadPart = 
-	(ULONGLONG)(63 * DiskDeviceExtension->DiskGeometry->BytesPerSector);
     }
 
   if ((DiskDeviceObject->Characteristics & FILE_REMOVABLE_MEDIA) &&
@@ -679,19 +666,13 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 	      PartitionDeviceExtension->DiskGeometry = DiskDeviceExtension->DiskGeometry;
 	      PartitionDeviceExtension->PhysicalDevice = DiskDeviceExtension->PhysicalDevice;
 	      PartitionDeviceExtension->PortCapabilities = Capabilities;
-	      if (DiskManager == OntrackDiskManager)
-		{
-		  PartitionDeviceExtension->StartingOffset.QuadPart =
-		    PartitionEntry->StartingOffset.QuadPart +
-		    (ULONGLONG)(63 * DiskDeviceExtension->DiskGeometry->BytesPerSector);
-		}
-	      else
-		{
-		  PartitionDeviceExtension->StartingOffset.QuadPart =
-		    PartitionEntry->StartingOffset.QuadPart;
-		}
+	      PartitionDeviceExtension->StartingOffset.QuadPart =
+		PartitionEntry->StartingOffset.QuadPart;
 	      PartitionDeviceExtension->PartitionLength.QuadPart =
 		PartitionEntry->PartitionLength.QuadPart;
+	      PartitionDeviceExtension->DMSkew = DiskDeviceExtension->DMSkew;
+	      PartitionDeviceExtension->DMByteSkew = DiskDeviceExtension->DMByteSkew;
+	      PartitionDeviceExtension->DMActive = DiskDeviceExtension->DMActive;
 	      PartitionDeviceExtension->PortNumber = (UCHAR)PortNumber;
 	      PartitionDeviceExtension->PathId = InquiryData->PathId;
 	      PartitionDeviceExtension->TargetId = InquiryData->TargetId;
@@ -702,7 +683,12 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 	      ScsiClassInitializeSrbLookasideList(PartitionDeviceExtension,
 						  8);
 
+	      /* Link current partition device extension to previous disk data */
+	      DiskData->NextPartition = PartitionDeviceExtension;
+
+	      /* Initialize current disk data */
 	      DiskData = (PDISK_DATA)(PartitionDeviceExtension + 1);
+	      DiskData->NextPartition = NULL;
 	      DiskData->PartitionType = PartitionEntry->PartitionType;
 	      DiskData->PartitionNumber = PartitionNumber + 1;
 	      DiskData->PartitionOrdinal = PartitionNumber + 1;
@@ -923,6 +909,11 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	      }
 	    else
 	      {
+		/* Update partition device objects */
+		DiskClassUpdatePartitionDeviceObjects (DeviceObject,
+						       Irp);
+
+		/* Write partition table */
 		Status = IoWritePartitionTable(DeviceExtension->PhysicalDevice,
 					       DeviceExtension->DiskGeometry->BytesPerSector,
 					       DeviceExtension->DiskGeometry->SectorsPerTrack,
@@ -930,8 +921,6 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 					       PartitionList);
 		if (NT_SUCCESS(Status))
 		  {
-		    /* FIXME: Update partition device objects */
-
 		    Information = TableSize;
 		  }
 	      }
@@ -1072,6 +1061,256 @@ DiskClassShutdownFlush(IN PDEVICE_OBJECT DeviceObject,
 
   /* Call port driver */
   return(IoCallDriver(DeviceExtension->PortDeviceObject, Irp));
+}
+
+
+/**********************************************************************
+ * NAME							INTERNAL
+ *	DiskClassUpdatePartitionDeviceObjects
+ *
+ * DESCRIPTION
+ *	Deletes, modifies or creates partition device objects.
+ *
+ * RUN LEVEL
+ *	PASSIVE_LEVEL
+ *
+ * ARGUMENTS
+ *	DeviceObject
+ *		Pointer to the device.
+ *
+ *	Irp
+ *		Pointer to the IRP
+ *
+ * RETURN VALUE
+ *	None
+ */
+
+static VOID
+DiskClassUpdatePartitionDeviceObjects (IN PDEVICE_OBJECT DiskDeviceObject,
+				       IN PIRP Irp)
+{
+  PDRIVE_LAYOUT_INFORMATION PartitionList;
+  PPARTITION_INFORMATION PartitionEntry;
+  PDEVICE_EXTENSION DeviceExtension;
+  PDEVICE_EXTENSION DiskDeviceExtension;
+  PDISK_DATA DiskData;
+  ULONG PartitionCount;
+  ULONG PartitionOrdinal;
+  ULONG PartitionNumber;
+  ULONG LastPartitionNumber;
+  ULONG i;
+  BOOLEAN Found;
+  WCHAR NameBuffer[MAX_PATH];
+  UNICODE_STRING DeviceName;
+  PDEVICE_OBJECT DeviceObject;
+  NTSTATUS Status;
+
+  /* Get partition list */
+  PartitionList = Irp->AssociatedIrp.SystemBuffer;
+
+  /* Round partition count up by 4 */
+  PartitionCount = ((PartitionList->PartitionCount + 3) / 4) * 4;
+
+  /* Remove the partition numbers from the partition list */
+  for (i = 0; i < PartitionCount; i++)
+    {
+      PartitionList->PartitionEntry[i].PartitionNumber = 0;
+    }
+
+  DiskDeviceExtension = DiskDeviceObject->DeviceExtension;
+
+  /* Traverse on-disk partition list */
+  LastPartitionNumber = 0;
+  DeviceExtension = DiskDeviceExtension;
+  DiskData = (PDISK_DATA)(DeviceExtension + 1);
+  while (TRUE)
+    {
+      DeviceExtension = DiskData->NextPartition;
+      if (DeviceExtension == NULL)
+	break;
+
+      /* Get disk data */
+      DiskData = (PDISK_DATA)(DeviceExtension + 1);
+
+      /* Update last partition number */
+      if (DiskData->PartitionNumber > LastPartitionNumber)
+	LastPartitionNumber = DiskData->PartitionNumber;
+
+      /* Ignore unused on-disk partitions */
+      if (DeviceExtension->PartitionLength.QuadPart == 0ULL)
+	continue;
+
+      Found = FALSE;
+      PartitionOrdinal = 0;
+      for (i = 0; i < PartitionCount; i++)
+	{
+	  /* Get current partition entry */
+	  PartitionEntry = &PartitionList->PartitionEntry[i];
+
+	  /* Ignore empty (aka unused) or extended partitions */
+	  if (PartitionEntry->PartitionType == PARTITION_ENTRY_UNUSED ||
+	      IsContainerPartition (PartitionEntry->PartitionType))
+	    continue;
+
+	  PartitionOrdinal++;
+
+	  /* Check for matching partition start offset and length */
+	  if ((PartitionEntry->StartingOffset.QuadPart !=
+	       DeviceExtension->StartingOffset.QuadPart) ||
+	      (PartitionEntry->PartitionLength.QuadPart !=
+	       DeviceExtension->PartitionLength.QuadPart))
+	    continue;
+
+	  DPRINT1("Found matching partition entry for partition %lu\n",
+		  DiskData->PartitionNumber);
+
+	  /* Found matching partition */
+	  Found = TRUE;
+
+	  /* Update partition number in partition list */
+	  PartitionEntry->PartitionNumber = DiskData->PartitionNumber;
+	  break;
+	}
+
+      if (Found == TRUE)
+	{
+	  /* Get disk data for current partition */
+	  DiskData = (PDISK_DATA)(DeviceExtension + 1);
+
+	  /* Update partition type if partiton will be rewritten */
+	  if (PartitionEntry->RewritePartition == TRUE)
+	    DiskData->PartitionType = PartitionEntry->PartitionType;
+
+	  /* Assign new partiton ordinal */
+	  DiskData->PartitionOrdinal = PartitionOrdinal;
+
+	  DPRINT1("Partition ordinal %lu was assigned to partition %lu\n",
+		  DiskData->PartitionOrdinal,
+		  DiskData->PartitionNumber);
+	}
+      else
+	{
+	  /* Delete this partition */
+	  DeviceExtension->PartitionLength.QuadPart = 0ULL;
+
+	  DPRINT1("Deleting partition %lu\n",
+		  DiskData->PartitionNumber);
+	}
+    }
+
+  /* Traverse partiton list and create new partiton devices */
+  PartitionOrdinal = 0;
+  for (i = 0; i < PartitionCount; i++)
+    {
+      /* Get current partition entry */
+      PartitionEntry = &PartitionList->PartitionEntry[i];
+
+      /* Ignore empty (aka unused) or extended partitions */
+      if (PartitionEntry->PartitionType == PARTITION_ENTRY_UNUSED ||
+	  IsContainerPartition (PartitionEntry->PartitionType))
+	continue;
+
+      PartitionOrdinal++;
+
+      /* Ignore unchanged partition entries */
+      if (PartitionEntry->RewritePartition == FALSE)
+	continue;
+
+      /* Check for an unused device object */
+      PartitionNumber = 0;
+      DeviceExtension = DiskDeviceExtension;
+      DiskData = (PDISK_DATA)(DeviceExtension + 1);
+      while (TRUE)
+	{
+	  DeviceExtension = DiskData->NextPartition;
+	  if (DeviceExtension == NULL)
+	    break;
+
+	  /* Get partition disk data */
+	  DiskData = (PDISK_DATA)(DeviceExtension + 1);
+
+	  /* Found a free (unused) partition (device object) */
+	  if (DeviceExtension->PartitionLength.QuadPart == 0ULL)
+	    {
+	      PartitionNumber = DiskData->PartitionNumber;
+	      break;
+	    }
+	}
+
+      if (PartitionNumber == 0)
+	{
+	  /* Create a new partition device object */
+	  DPRINT1("Create new partition device object\n");
+
+	  /* Get new partiton number */
+	  LastPartitionNumber++;
+	  PartitionNumber = LastPartitionNumber;
+
+	  /* Create partition device object */
+	  swprintf(NameBuffer,
+		   L"\\Device\\Harddisk%lu\\Partition%lu",
+		   DiskDeviceExtension->DeviceNumber,
+		   PartitionNumber);
+	  RtlInitUnicodeString(&DeviceName,
+			       NameBuffer);
+
+	  Status = IoCreateDevice(DiskDeviceObject->DriverObject,
+				  sizeof(DEVICE_EXTENSION) + sizeof(DISK_DATA),
+				  &DeviceName,
+				  FILE_DEVICE_DISK,
+				  0,
+				  FALSE,
+				  &DeviceObject);
+	  if (!NT_SUCCESS(Status))
+	    {
+	      DPRINT1("IoCreateDevice() failed (Status %lx)\n", Status);
+	      continue;
+	    }
+
+	  DeviceObject->Flags |= DO_DIRECT_IO;
+	  DeviceObject->StackSize = DiskDeviceObject->StackSize;
+	  DeviceObject->Characteristics = DiskDeviceObject->Characteristics;
+	  DeviceObject->AlignmentRequirement = DiskDeviceObject->AlignmentRequirement;
+
+	  /* Initialize device extension */
+	  DeviceExtension = DeviceObject->DeviceExtension;
+	  RtlCopyMemory(DeviceExtension,
+			DiskDeviceObject->DeviceExtension,
+			sizeof(DEVICE_EXTENSION));
+	  DeviceExtension->DeviceObject = DeviceObject;
+
+	  /* Initialize lookaside list for SRBs */
+	  ScsiClassInitializeSrbLookasideList(DeviceExtension,
+					      8);
+
+	  /* Link current partition device extension to previous disk data */
+	  DiskData->NextPartition = DeviceExtension;
+	  DiskData = (PDISK_DATA)(DeviceExtension + 1);
+	  DiskData->NextPartition = NULL;
+	}
+      else
+	{
+	  /* Reuse an existing partition device object */
+	  DPRINT1("Reuse an exisiting partition device object\n");
+	  DiskData = (PDISK_DATA)(DeviceExtension + 1);
+	}
+
+      /* Update partition data and device extension */
+      DiskData->PartitionNumber = PartitionNumber;
+      DiskData->PartitionOrdinal = PartitionOrdinal;
+      DiskData->PartitionType = PartitionEntry->PartitionType;
+      DiskData->BootIndicator = PartitionEntry->BootIndicator;
+      DiskData->HiddenSectors = PartitionEntry->HiddenSectors;
+      DeviceExtension->StartingOffset = PartitionEntry->StartingOffset;
+      DeviceExtension->PartitionLength = PartitionEntry->PartitionLength;
+
+      /* Update partition number in the partition list */
+      PartitionEntry->PartitionNumber = PartitionNumber;
+
+      DPRINT1("Partition ordinal %lu was assigned to partition %lu\n",
+	      DiskData->PartitionOrdinal,
+	      DiskData->PartitionNumber);
+    }
 }
 
 /* EOF */

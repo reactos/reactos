@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2001, 2002 ReactOS Team
+ *  Copyright (C) 2001, 2002, 2003 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.32 2003/03/21 21:09:41 hbirr Exp $
+/* $Id: class2.c,v 1.33 2003/04/27 10:49:06 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1528,7 +1528,8 @@ ScsiClassReadWrite(IN PDEVICE_OBJECT DeviceObject,
     }
 
   /* Adjust partition-relative starting offset to absolute offset */
-  IrpStack->Parameters.Read.ByteOffset.QuadPart += DeviceExtension->StartingOffset.QuadPart;
+  IrpStack->Parameters.Read.ByteOffset.QuadPart += 
+    (DeviceExtension->StartingOffset.QuadPart + DeviceExtension->DMByteSkew);
 
   /* Calculate number of pages in this transfer */
   CurrentTransferPages =
