@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: toolhelp.c,v 1.8 2004/10/31 19:24:31 weiden Exp $
+/* $Id: toolhelp.c,v 1.9 2004/11/05 11:51:18 weiden Exp $
  *
  * KERNEL32.DLL toolhelp functions
  *
@@ -402,7 +402,7 @@ TH32CreateSnapshotSectionInitialize(DWORD dwFlags,
       {
         lstrcpynW(ProcessListEntry->szExeFile,
                   ProcessInfo->ImageName.Buffer,
-                  min(ProcessInfo->ImageName.Length, sizeof(ProcessListEntry->szExeFile) / sizeof(ProcessListEntry->szExeFile[0])));
+                  min(ProcessInfo->ImageName.Length / sizeof(WCHAR), sizeof(ProcessListEntry->szExeFile) / sizeof(ProcessListEntry->szExeFile[0])));
       }
       else
       {
