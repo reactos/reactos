@@ -102,32 +102,49 @@ VOID BootMain(VOID)
 
 	for (;;)
 	{
+		// Show the operating system list menu
 		if (!DisplayMenu(OperatingSystemDisplayNames, OperatingSystemCount, DefaultOperatingSystem, TimeOut, &SelectedOperatingSystem))
 		{
 			MessageBox("Press ENTER to reboot.\n");
-			return;
+			goto reboot;
 		}
 
-		LoadAndBootReactOS(OperatingSystemSectionNames[SelectedOperatingSystem]);
-
-		/*switch (OSList[nOSToBoot].nOSType)
+		// Try to open the operating system section in the .ini file
+		if (!OpenSection(OperatingSystemSectionNames[SelectedOperatingSystem], &SectionId))
 		{
-		case OSTYPE_REACTOS:
-			LoadAndBootReactOS(OSList[nOSToBoot].name);
-			break;
-		case OSTYPE_LINUX:
+			sprintf(SettingName, "Section [%s] not found in freeldr.ini.\n", OperatingSystemSectionNames[SelectedOperatingSystem]);
+			MessageBox(SettingName);
+			continue;
+		}
+
+		// Try to read the boot type
+		if (!ReadSectionSettingByName(SectionId, "BootType", SettingValue, 80))
+		{
+			sprintf(SettingName, "BootType= line not found in section [%s] in freeldr.ini.\n", OperatingSystemSectionNames[SelectedOperatingSystem]);
+			MessageBox(SettingName);
+			continue;
+		}
+
+		if (stricmp(SettingValue, "ReactOS") == 0)
+		{
+			LoadAndBootReactOS(OperatingSystemSectionNames[SelectedOperatingSystem]);
+		}
+		else if (stricmp(SettingValue, "Linux") == 0)
+		{
 			MessageBox("Cannot boot this OS type yet!");
-			break;
-		case OSTYPE_BOOTSECTOR:
-			LoadAndBootBootSector(nOSToBoot);
-			break;
-		case OSTYPE_PARTITION:
-			LoadAndBootPartition(nOSToBoot);
-			break;
-		case OSTYPE_DRIVE:
-			LoadAndBootDrive(nOSToBoot);
-			break;
-		}*/
+		}
+		else if (stricmp(SettingValue, "BootSector") == 0)
+		{
+			LoadAndBootBootSector(OperatingSystemSectionNames[SelectedOperatingSystem]);
+		}
+		else if (stricmp(SettingValue, "Partition") == 0)
+		{
+			LoadAndBootPartition(OperatingSystemSectionNames[SelectedOperatingSystem]);
+		}
+		else if (stricmp(SettingValue, "Drive") == 0)
+		{
+			LoadAndBootDrive(OperatingSystemSectionNames[SelectedOperatingSystem]);
+		}
 	}
 
 	

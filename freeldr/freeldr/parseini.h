@@ -36,7 +36,6 @@ ULONG	GetNumSectionItems(ULONG SectionId);
 BOOL	ReadSectionSettingByNumber(ULONG SectionId, ULONG SettingNumber, PUCHAR SettingName, ULONG NameSize, PUCHAR SettingValue, ULONG ValueSize);
 BOOL	ReadSectionSettingByName(ULONG SectionId, PUCHAR SettingName, PUCHAR Buffer, ULONG BufferSize);
 BOOL	IsValidSetting(char *setting, char *value);
-void	SetSetting(char *setting, char *value);
 
 
 #endif // defined __PARSEINI_H

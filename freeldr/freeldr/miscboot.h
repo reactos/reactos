@@ -22,8 +22,8 @@
 
 void	JumpToBootCode(void);	// Implemented in boot.S
 
-void	LoadAndBootBootSector(int nOSToBoot);
-void	LoadAndBootPartition(int nOSToBoot);
-void	LoadAndBootDrive(int nOSToBoot);
+VOID	LoadAndBootBootSector(PUCHAR OperatingSystemName);
+VOID	LoadAndBootPartition(PUCHAR OperatingSystemName);
+VOID	LoadAndBootDrive(PUCHAR OperatingSystemName);
 
 #endif // defined __BOOT_H

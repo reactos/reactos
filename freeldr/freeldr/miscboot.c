@@ -25,39 +25,43 @@
 #include "fs.h"
 #include "ui.h"
 #include "parseini.h"
+#include "disk.h"
 
-void LoadAndBootBootSector(int nOSToBoot)
+VOID LoadAndBootBootSector(PUCHAR OperatingSystemName)
 {
-	FILE*	FilePointer;
-	char	name[260];
-	char	value[260];
-	char	szFileName[1024];
-	int		i;
+	PFILE	FilePointer;
+	UCHAR	SettingName[80];
+	UCHAR	SettingValue[80];
+	ULONG	SectionId;
+	UCHAR	FileName[260];
 	ULONG	BytesRead;
 
 	// Find all the message box settings and run them
-	/*for (i=1; i<=GetNumSectionItems(OSList[nOSToBoot].name); i++)
+	ShowMessageBoxesInSection(OperatingSystemName);
+
+	// Try to open the operating system section in the .ini file
+	if (!OpenSection(OperatingSystemName, &SectionId))
 	{
-		ReadSectionSettingByNumber(OSList[nOSToBoot].name, i, name, value);
-		if (stricmp(name, "MessageBox") == 0)
-			MessageBox(value);
-		if (stricmp(name, "MessageLine") == 0)
-			MessageLine(value);
+		sprintf(SettingName, "Section [%s] not found in freeldr.ini.\n", OperatingSystemName);
+		MessageBox(SettingName);
+		return;
 	}
 
-	if (!ReadSectionSettingByName(OSList[nOSToBoot].name, "BootDrive", value))
+	if (!ReadSectionSettingByName(SectionId, "BootDrive", SettingValue, 80))
 	{
 		MessageBox("Boot drive not specified for selected OS!");
 		return;
 	}
 
-	BootDrive = atoi(value);
+	BootDrive = atoi(SettingValue);
 
 	BootPartition = 0;
-	if (ReadSectionSettingByName(OSList[nOSToBoot].name, "BootPartition", value))
-		BootPartition = atoi(value);
+	if (ReadSectionSettingByName(SectionId, "BootPartition", SettingValue, 80))
+	{
+		BootPartition = atoi(SettingValue);
+	}
 
-	if (!ReadSectionSettingByName(OSList[nOSToBoot].name, "BootSector", value))
+	if (!ReadSectionSettingByName(SectionId, "BootSectorFile", FileName, 260))
 	{
 		MessageBox("Boot sector file not specified for selected OS!");
 		return;
@@ -69,20 +73,18 @@ void LoadAndBootBootSector(int nOSToBoot)
 		return;
 	}
 
-	strcpy(szFileName, value);
-
-	FilePointer = OpenFile(szFileName);
+	FilePointer = OpenFile(FileName);
 	if (FilePointer == NULL)
 	{
-		strcat(value, " not found.");
-		MessageBox(value);
+		strcat(FileName, " not found.");
+		MessageBox(FileName);
 		return;
 	}
 
 	// Read boot sector
 	if (!ReadFile(FilePointer, 512, &BytesRead, (void*)0x7c00) || (BytesRead != 512))
 	{
-		MessageBox("Disk Read Error");
+		DiskError("Disk read error.");
 		return;
 	}
 
@@ -93,15 +95,13 @@ void LoadAndBootBootSector(int nOSToBoot)
 		return;
 	}
 
-	RestoreScreen(ScreenBuffer);
+	clrscr();
 	showcursor();
-	gotoxy(CursorXPos, CursorYPos);
-
 	stop_floppy();
-	JumpToBootCode();*/
+	JumpToBootCode();
 }
 
-void LoadAndBootPartition(int nOSToBoot)
+VOID LoadAndBootPartition(PUCHAR OperatingSystemName)
 {
 	char	name[260];
 	char	value[260];
@@ -187,33 +187,34 @@ void LoadAndBootPartition(int nOSToBoot)
 	JumpToBootCode();*/
 }
 
-void LoadAndBootDrive(int nOSToBoot)
+VOID LoadAndBootDrive(PUCHAR OperatingSystemName)
 {
-	char	name[260];
-	char	value[260];
-	int		i;
+	UCHAR	SettingName[80];
+	UCHAR	SettingValue[80];
+	ULONG	SectionId;
 
 	// Find all the message box settings and run them
-	/*for (i=1; i<=GetNumSectionItems(OSList[nOSToBoot].name); i++)
+	ShowMessageBoxesInSection(OperatingSystemName);
+
+	// Try to open the operating system section in the .ini file
+	if (!OpenSection(OperatingSystemName, &SectionId))
 	{
-		ReadSectionSettingByNumber(OSList[nOSToBoot].name, i, name, value);
-		if (stricmp(name, "MessageBox") == 0)
-			MessageBox(value);
-		if (stricmp(name, "MessageLine") == 0)
-			MessageLine(value);
+		sprintf(SettingName, "Section [%s] not found in freeldr.ini.\n", OperatingSystemName);
+		MessageBox(SettingName);
+		return;
 	}
 
-	if (!ReadSectionSettingByName(OSList[nOSToBoot].name, "BootDrive", value))
+	if (!ReadSectionSettingByName(SectionId, "BootDrive", SettingValue, 80))
 	{
 		MessageBox("Boot drive not specified for selected OS!");
 		return;
 	}
 
-	BootDrive = atoi(value);
+	BootDrive = atoi(SettingValue);
 
-	if (!biosdisk(_DISK_READ, BootDrive, 0, 0, 1, 1, (void*)0x7c00))
+	if (!BiosInt13Read(BootDrive, 0, 0, 1, 1, (PVOID)0x7C00))
 	{
-		MessageBox("Disk Read Error");
+		DiskError("Disk read error.");
 		return;
 	}
 
@@ -224,10 +225,8 @@ void LoadAndBootDrive(int nOSToBoot)
 		return;
 	}
 
-	RestoreScreen(ScreenBuffer);
+	clrscr();
 	showcursor();
-	gotoxy(CursorXPos, CursorYPos);
-
 	stop_floppy();
-	JumpToBootCode();*/
+	JumpToBootCode();
 }
