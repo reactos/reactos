@@ -220,7 +220,7 @@ ULONG HandlePageFault(FRAME* ptr)
 					current->Type == MEMORY_AREA_PAGED_POOL ||
 					current->Type == MEMORY_AREA_SHARED_DATA
 						){
-	                Print(OUTPUT_WINDOW,"pICE: VMA Pageable Section.\n");
+	                //ei too much output Print(OUTPUT_WINDOW,"pICE: VMA Pageable Section.\n");
 					//ei DPRINT((2,"return 0 1\n"));
 					return 0; //let the system handle this
 				}
@@ -271,7 +271,7 @@ ULONG HandlePageFault(FRAME* ptr)
 					*/
 
 		        // let the system handle it
-				DPRINT((2,"return 0 5\n"));
+				//DPRINT((0,"return 0 5\n"));
 		        return 0;
 			}
 		}
@@ -279,8 +279,8 @@ ULONG HandlePageFault(FRAME* ptr)
 	}
 
     Print(OUTPUT_WINDOW,"pICE: no virtual memory arena at this address!\n");
-	DPRINT((2,"return 0 6\n"));
-	return 0;
+	DPRINT((0,"return 0 6\n"));
+	return 1;
 
     // let the system handle it
 //    return 0;
@@ -378,7 +378,7 @@ void InstallIntEHook(void)
 		OldIntEHandler=SetGlobalInt(0x0E,(ULONG)LocalIntEHandler);
 	}
 	UnmaskIrqs();
-	DPRINT((2,"OldIntE @ %x\n", OldIntEHandler));
+	DPRINT((0,"OldIntE @ %x\n", OldIntEHandler));
     LEAVE_FUNC();
 }
 

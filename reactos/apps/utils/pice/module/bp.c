@@ -245,23 +245,23 @@ BOOLEAN InstallSWBreakpoint(ULONG ulAddress,BOOLEAN bPermanent,void (*SWBreakpoi
     // TODO: must also check if it's a writable page
     if(IsAddressValid(ulAddress) )
     {
-        DPRINT((2,"InstallSWBreakpoint(): %.8X is valid, writable? %d\n",ulAddress,IsAddressWriteable(ulAddress)));
-		DPRINT((2,"pde: %x, pte: %x\n", *(ADDR_TO_PDE(ulAddress)), *(ADDR_TO_PTE(ulAddress))));
+        DPRINT((0,"InstallSWBreakpoint(): %.8X is valid, writable? %d\n",ulAddress,IsAddressWriteable(ulAddress)));
+		DPRINT((0,"pde: %x, pte: %x\n", *(ADDR_TO_PDE(ulAddress)), *(ADDR_TO_PTE(ulAddress))));
         if((p = FindSwBp(ulAddress))==NULL)
         {
-            DPRINT((2,"InstallSWBreakpoint(): %.8X is free\n",ulAddress));
+            DPRINT((0,"InstallSWBreakpoint(): %.8X is free\n",ulAddress));
             if( (p=FindEmptySwBpSlot()) )
             {
 				BOOLEAN isWriteable;
-                DPRINT((2,"InstallSWBreakpoint(): found empty slot\n"));
-				DPRINT((2,"InstallSWBreakpoint(): %x value: %x", ulAddress, *(PUCHAR)ulAddress));
+                DPRINT((0,"InstallSWBreakpoint(): found empty slot\n"));
+				DPRINT((0,"InstallSWBreakpoint(): %x value: %x", ulAddress, *(PUCHAR)ulAddress));
                 p->ucOriginalOpcode = *(PUCHAR)ulAddress;
 				//allow writing to page
 				if( !( isWriteable = IsAddressWriteable(ulAddress) ) )
 					SetAddressWriteable(ulAddress,TRUE);
-			    DPRINT((2,"writing breakpoint\n"));
+			    DPRINT((0,"writing breakpoint\n"));
 				*(PUCHAR)ulAddress = 0xCC;
-				DPRINT((2,"restoring page access\n"));
+				DPRINT((0,"restoring page access\n"));
 				if( !isWriteable )
 					SetAddressWriteable(ulAddress,FALSE);
 				p->bUsed = TRUE;

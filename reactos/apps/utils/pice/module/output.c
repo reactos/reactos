@@ -152,25 +152,25 @@ void PrintkCallback(void)
 	ULONG countArgs,i,len;
 	PANSI_STRING temp;
 
-	DPRINT((2,"In PrintkCallback:1\n"));
+	DPRINT((0,"In PrintkCallback:1\n"));
 
 	bInPrintk = TRUE;
-	DPRINT((2,"In PrintkCallback:2\n"));
+	DPRINT((0,"In PrintkCallback:2\n"));
 
 	// get the linear address of stack where string resides
 	ulAddress = GetLinearAddress(CurrentSS,CurrentESP);
 	if(ulAddress)
 	{
-		DPRINT((2,"In PrintkCallback: ulAddress: %x\n", ulAddress));
+		DPRINT((0,"In PrintkCallback: ulAddress: %x\n", ulAddress));
 		if(IsAddressValid(ulAddress+sizeof(char *)) )
 		{
 			//KdpPrintString has PANSI_STRING as a parameter
 			temp = (PANSI_STRING)*(PULONG)(ulAddress+sizeof(char *));
-			DPRINT((2,"temp: %x\n", temp));
+			DPRINT((0,"temp: %x\n", temp));
 			fmt = temp->Buffer;
 
 			Print(OUTPUT_WINDOW,fmt);
-			DPRINT((2,"%s\n", fmt));
+			DPRINT((0,"%s\n", fmt));
 			CurrentEIP = (ULONG)PICE_KdpPrintString;
 		}
 	}
@@ -247,8 +247,7 @@ void InstallPrintkHook(void)
 {
 
 	ENTER_FUNC();
-	//ei disabled for now
-	return;
+
 	if( bIsPrintkPatched )
 			return;
 
@@ -272,7 +271,8 @@ void InstallPrintkHook(void)
 void DeInstallPrintkHook(void)
 {
     ENTER_FUNC();
-    DPRINT((0,"enter DeInstallPrintkHook()\n"));
+
+	DPRINT((0,"enter DeInstallPrintkHook()\n"));
     if(bIsPrintkPatched && ulPrintk)
     {
 		// will be done on exit debugger

@@ -460,6 +460,8 @@ COMMAND_PROTOTYPE(StepOver)
 
     ENTER_FUNC();
 
+	DPRINT((0,"StepOver():\n"));
+
     // only no arguments supplied
     // when we have source and current disassembly mod is SOURCE
     // we have to analyse the code block for the source line
@@ -505,7 +507,8 @@ proceed_as_normal:
 		}
 		else
 		{
-	        // modify trace flag
+			DPRINT((0,"no call at breakpoint\n"));
+			// modify trace flag
 	        CurrentEFL|=0x100; // set trace flag (TF)
 
 	        bSingleStep=TRUE;
@@ -1944,7 +1947,7 @@ COMMAND_PROTOTYPE(ShowVirtualMemory)
   PMADDRESS_SPACE vma = NULL;
   MEMORY_AREA* current;
   char filename[64];
-  
+
   DPRINT((0,"ShowVirtualMemory()\n"));
   if( my_current )
     vma = &(my_current->AddressSpace);
@@ -1959,7 +1962,7 @@ COMMAND_PROTOTYPE(ShowVirtualMemory)
 	  while (current_entry != &vma->MAreaListHead)
             {
 	      *filename = 0;
-	      
+
 	      current = CONTAINING_RECORD(current_entry,
 					  MEMORY_AREA,
 					  Entry);
@@ -1971,7 +1974,7 @@ COMMAND_PROTOTYPE(ShowVirtualMemory)
 		  if(IsAddressValid((ULONG)current->Data.SectionData.Section->FileObject->FileName.Buffer) )
 		    PICE_sprintf(filename,"%.64S",current->Data.SectionData.Section->FileObject->FileName.Buffer);
                 }
-	      
+
 	      PICE_sprintf(tempCmd,"%.8X %.8X %.8X %.8X %x %x    %s\n",
 			   (ULONG)current->BaseAddress,
 			   (ULONG)current->BaseAddress+current->Length,
@@ -1980,7 +1983,7 @@ COMMAND_PROTOTYPE(ShowVirtualMemory)
 			   current->Type, current->Attributes,//DecodeVmFlags(current->Type, current->Attributes),
 			   filename);
 	      Print(OUTPUT_WINDOW,tempCmd);
-	      
+
 	      if(WaitForKey()==FALSE)
 		break;
 	      current_entry = current_entry->Flink;
@@ -2477,12 +2480,12 @@ COMMAND_PROTOTYPE(SwitchTables)
     {
       PDEBUG_MODULE pTempMod;
       char temp[DEBUG_MODULE_NAME_LEN];
-      
+
       pCurrentSymbols = (PICE_SYMBOLFILE_HEADER*)pArgs->Value[0];
       CopyWideToAnsi( temp, pCurrentSymbols->name );
-      
-      DPRINT((2,"TableSwitchSym: pCurrentSymbols: %x, Name: %s\n", pCurrentSymbols, temp));
-      
+
+      DPRINT((0,"TableSwitchSym: pCurrentSymbols: %x, Name: %s\n", pCurrentSymbols, temp));
+
       pTempMod = IsModuleLoaded(temp);
       if( pTempMod )
 	pCurrentMod = pTempMod;

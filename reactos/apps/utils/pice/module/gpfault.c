@@ -52,7 +52,7 @@ char tempGP[1024];
 //*************************************************************************
 void HandleGPFault(FRAME* ptr)
 {
-    DPRINT((2,"HandleGPFault(): ptr = %x at eip: %x\n",ptr, ptr->eip));
+    DPRINT((0,"HandleGPFault(): ptr = %x at eip: %x\n",ptr, ptr->eip));
 }
 
 //*************************************************************************

@@ -74,8 +74,8 @@ VOID Pice_dprintf(ULONG DebugLevel, PCHAR DebugMessage, ...)
 	  cli();
 	  PICE_vsprintf(tempDebug, DebugMessage, ap);
 	  //ei DebugSendString(tempDebug);
-	  //Print(OUTPUT_WINDOW, tempDebug);
-	  DbgPrint("%s", tempDebug);
+	  Print(OUTPUT_WINDOW, tempDebug);
+	  //DbgPrint("%s", tempDebug);
 	  restore_flags(ulDebugFlags);
 	}
 	va_end(ap);
