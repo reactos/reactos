@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.24 2003/03/01 09:01:51 rcampbell Exp $
+/* $Id: defwnd.c,v 1.25 2003/03/01 20:39:16 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -254,6 +254,7 @@ static void UserDrawCloseButton ( HWND hWnd, HDC hDC, BOOL down )
 
 static void UserDrawMaxButton( HWND hWnd, HDC hDC, BOOL down )
 { 
+
     RECT rect;
     UINT flags = IsZoomed(hWnd) ? DFCS_CAPTIONRESTORE : DFCS_CAPTIONMAX;
 
@@ -266,6 +267,7 @@ static void UserDrawMaxButton( HWND hWnd, HDC hDC, BOOL down )
 
     if (down) flags |= DFCS_PUSHED;
     DrawFrameControl( hDC, &rect, DFC_CAPTION, flags );
+    
 }
 
 static void UserDrawMinButton( HWND hWnd, HDC hDC, BOOL down)
@@ -278,7 +280,7 @@ static void UserDrawMinButton( HWND hWnd, HDC hDC, BOOL down)
     UserGetInsideRectNC( hWnd, &rect );
     rect.top++;
     rect.right--;
-    rect.left = rect.right - (GetSystemMetrics(SM_CXSIZE) - 2) * 3;
+    rect.left = rect.right - ((GetSystemMetrics(SM_CXSIZE)) * 3) + 4;
     rect.right = rect.left + (GetSystemMetrics(SM_CXSIZE) - 2);
     rect.bottom = rect.top + GetSystemMetrics(SM_CYSIZE) - 4;
     
