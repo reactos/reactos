@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.48 2004/02/10 16:22:56 navaraf Exp $
+/* $Id: class2.c,v 1.49 2004/02/29 11:21:58 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1225,6 +1225,11 @@ ScsiClassInterpretSenseInfo(IN PDEVICE_OBJECT DeviceObject,
 
 	  case SRB_STATUS_DATA_OVERRUN:
 	    *Status = STATUS_DATA_OVERRUN;
+	    Retry = FALSE;
+	    break;
+
+	  case SRB_STATUS_INVALID_REQUEST:
+	    *Status = STATUS_INVALID_DEVICE_REQUEST;
 	    Retry = FALSE;
 	    break;
 
