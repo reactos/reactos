@@ -612,23 +612,6 @@ struct XMLNode : public XS_String
 		return out;
 	}
 
-protected:
-	Children _children;
-	AttributeMap _attributes;
-
-	std::string _leading;
-	std::string _content;
-	std::string _end_leading;
-	std::string _trailing;
-
-	XMLNode* get_first_child() const
-	{
-		if (!_children.empty())
-			return _children.front();
-		else
-			return NULL;
-	}
-
 	XMLNode* find(const XS_String& name, int n=0) const
 	{
 		for(Children::const_iterator it=_children.begin(); it!=_children.end(); ++it)
@@ -686,6 +669,23 @@ protected:
 
 	 /// relative XPath create function
 	XMLNode* create_relative(const char* path);
+
+protected:
+	Children _children;
+	AttributeMap _attributes;
+
+	std::string _leading;
+	std::string _content;
+	std::string _end_leading;
+	std::string _trailing;
+
+	XMLNode* get_first_child() const
+	{
+		if (!_children.empty())
+			return _children.front();
+		else
+			return NULL;
+	}
 
 	void write_worker(std::ostream& out, int indent) const;
 	void pretty_write_worker(std::ostream& out, int indent) const;

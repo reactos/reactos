@@ -44,7 +44,7 @@ exe explorer :
 	dialogs/settings.cpp
 	i386-stub-win32.c
  :	<define>WIN32 <define>_WIN32_IE=0x0600 <define>_WIN32_WINNT=0x0501 <define>WINVER=0x0500
-	<cxxflags>-I$(INCLUDE)
+	<cxxflags>-I$(INCLUDE) <cxxflags>-I.
 #nur für GCC:	<cxxflags>-fexceptions <cxxflags>-Wall
 	<find-shared-library>gdi32
 	<find-shared-library>ole32
