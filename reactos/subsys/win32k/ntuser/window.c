@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.225 2004/05/08 12:42:46 weiden Exp $
+/* $Id: window.c,v 1.226 2004/05/08 12:49:34 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1366,7 +1366,7 @@ IntCalcDefPosSize(PWINDOW_OBJECT Parent, PWINDOW_OBJECT WindowObject, RECT *rc, 
   PDESKTOP_OBJECT Desktop;
   SIZE Sz;
   POINT Pos;
-  DbgPrint("IntCalcDefPosSize: Parent: 0x%x, Window: 0x%x, IncPos: 0x%x\n", Parent, WindowObject, IncPos);
+  
   Desktop = WindowObject->OwnerThread->Win32Thread->Desktop;
   IntGetDesktopWorkArea(Desktop, rc);
   
@@ -1738,7 +1738,6 @@ NtUserCreateWindowEx(DWORD dwExStyle,
     
     ProcessParams = PsGetCurrentProcess()->Peb->ProcessParameters;
     
-    DbgPrint("Creating WS_OVERLAPPED window (0x%x, 0x%x, 0x%x, 0x%x)\n", x, y, nWidth, nHeight);
     if(x == CW_USEDEFAULT || x == CW_USEDEFAULT16)
     {
       CalculatedDefPosSize = IntCalcDefPosSize(ParentWindow, WindowObject, &rc, TRUE);
