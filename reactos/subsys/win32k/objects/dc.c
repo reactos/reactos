@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.17 2000/06/29 23:35:53 dwelch Exp $
+/* $Id: dc.c,v 1.18 2000/07/07 01:20:53 phreak Exp $
  *
  * DC.C - Device context functions
  * 
@@ -256,7 +256,7 @@ int i; // DELETEME
       return  W32kCreateCompatableDC(hDC);
     }
 
-DbgPrint("NAME: %S\n", Driver);
+DPRINT("NAME: %S\n", Driver);
   
   /*  Allocate a DC object  */
   if ((NewDC = DC_AllocDC(Driver)) == NULL)
@@ -267,7 +267,7 @@ DbgPrint("NAME: %S\n", Driver);
   /*  Open the miniport driver  */
   if ((NewDC->DeviceDriver = DRIVER_FindMPDriver(Driver)) == NULL)
     {
-      DbgPrint("FindMPDriver failed\n");
+      DPRINT("FindMPDriver failed\n");
       goto Failure;
     }
 
@@ -275,7 +275,7 @@ DbgPrint("NAME: %S\n", Driver);
   /*  FIXME: Retrieve DDI driver name from registry */
   if ((GDEnableDriver = DRIVER_FindDDIDriver(L"\\??\\C:\\reactos\\system32\\drivers\\vgaddi.dll")) == NULL)
     {
-      DbgPrint("FindDDIDriver failed\n");
+      DPRINT("FindDDIDriver failed\n");
       goto Failure;
     }
 
@@ -284,22 +284,22 @@ DbgPrint("NAME: %S\n", Driver);
 
   if (!GDEnableDriver(DDI_DRIVER_VERSION, sizeof(DED), &DED))
     {
-      DbgPrint("DrvEnableDriver failed\n");
+      DPRINT("DrvEnableDriver failed\n");
       goto Failure;
     }
-DbgPrint("Building DDI Functions\n");
+DPRINT("Building DDI Functions\n");
 
   /*  Construct DDI driver function dispatch table  */
   if (!DRIVER_BuildDDIFunctions(&DED, &NewDC->DriverFunctions))
     {
-      DbgPrint("BuildDDIFunctions failed\n");
+      DPRINT("BuildDDIFunctions failed\n");
       goto Failure;
     }
 
   /*  Allocate a phyical device handle from the driver  */
   if (Device != NULL)
     {
-DbgPrint("Device in u: %u\n", Device);
+DPRINT("Device in u: %u\n", Device);
 //      wcsncpy(NewDC->DMW.dmDeviceName, Device, DMMAXDEVICENAME); FIXME: this crashes everything?
     }
   NewDC->DMW.dmSize = sizeof(NewDC->DMW);
@@ -316,7 +316,7 @@ DbgPrint("Device in u: %u\n", Device);
 
   NewDC->w.bitsPerPixel = 8; // FIXME: set this here??
 
-DbgPrint("Enabling PDev\n");
+DPRINT("Enabling PDev\n");
 
   NewDC->PDev = NewDC->DriverFunctions.EnablePDev(&NewDC->DMW,
                                                   L"",
@@ -331,25 +331,25 @@ DbgPrint("Enabling PDev\n");
                                                   NewDC->DeviceDriver);
   if (NewDC->PDev == NULL)
     {
-      DbgPrint("DrvEnablePDEV failed\n");
+      DPRINT("DrvEnablePDEV failed\n");
       goto Failure;
     }
 
-DbgPrint("calling completePDev\n");
+DPRINT("calling completePDev\n");
 
   /*  Complete initialization of the physical device  */
   NewDC->DriverFunctions.CompletePDev(NewDC->PDev, NewDC);
 
-DbgPrint("calling DRIVER_ReferenceDriver\n");
+DPRINT("calling DRIVER_ReferenceDriver\n");
 
   DRIVER_ReferenceDriver (Driver);
 
-DbgPrint("calling EnableSurface\n");
+DPRINT("calling EnableSurface\n");
 
   /*  Enable the drawing surface  */
   NewDC->Surface = NewDC->DriverFunctions.EnableSurface(NewDC->PDev); // hsurf
 
-DbgPrint("Bits per pel: %u\n", NewDC->w.bitsPerPixel);
+DPRINT("Bits per pel: %u\n", NewDC->w.bitsPerPixel);
 
   /* Test EngXxx functions */
 //  TestEngXxx(NewDC);
@@ -377,20 +377,22 @@ BOOL STDCALL W32kDeleteDC(HDC  DCHandle)
 {
   PDC  DCToDelete;
   
-  UNIMPLEMENTED;
-
   DCToDelete = DC_HandleToPtr(DCHandle);
   if (DCToDelete == NULL)
     {
       return  FALSE;
     }
-  
+  DPRINT( "Deleting DC\n" );
   if (!DRIVER_UnreferenceDriver (DCToDelete->DriverName))
     {
+      DPRINT( "No more references to driver, reseting display\n" );
       DCToDelete->DriverFunctions.DisableSurface(DCToDelete->PDev);
+      CHECKPOINT;
+      DCToDelete->DriverFunctions.AssertMode( DCToDelete->PDev, FALSE );
+      CHECKPOINT;
       DCToDelete->DriverFunctions.DisablePDev(DCToDelete->PDev);
     }
-  
+  CHECKPOINT;
   /*  First delete all saved DCs  */
   while (DCToDelete->saveLevel)
     {
@@ -412,11 +414,11 @@ BOOL STDCALL W32kDeleteDC(HDC  DCHandle)
   /*  Free GDI resources allocated to this DC  */
   if (!(DCToDelete->w.flags & DC_SAVED))
     {
-      DC_UnlockDC (DCToDelete);
-      SelectObject (DCHandle, STOCK_BLACK_PEN);
-      SelectObject (DCHandle, STOCK_WHITE_BRUSH);
-      SelectObject (DCHandle, STOCK_SYSTEM_FONT);
-      DC_LockDC (DCHandle);
+      /*      DC_UnlockDC (DCToDelete);
+      W32kSelectObject (DCHandle, STOCK_BLACK_PEN);
+      W32kSelectObject (DCHandle, STOCK_WHITE_BRUSH);
+      W32kSelectObject (DCHandle, STOCK_SYSTEM_FONT);
+      DC_LockDC (DCHandle); W32kSelectObject does not recognize stock objects yet  */ 
       if (DCToDelete->w.flags & DC_MEMORY) 
         {
           W32kDeleteObject (DCToDelete->w.hFirstBitmap);
@@ -440,12 +442,32 @@ BOOL STDCALL W32kDeleteDC(HDC  DCHandle)
   
   DC_FreeDC (DCToDelete);
   
-  return  STATUS_SUCCESS;
+  return TRUE;
 }
 
 BOOL STDCALL  W32kDeleteObject(HGDIOBJ hObject)
 {
-  UNIMPLEMENTED;
+   PGDIOBJ Obj;
+   PGDIOBJHDR ObjHdr;
+
+   Obj = GDIOBJ_HandleToPtr( hObject, GO_MAGIC_DONTCARE );
+   if( !Obj )
+      return FALSE;
+   ObjHdr = (PGDIOBJHDR)(((PCHAR)Obj) - sizeof (GDIOBJHDR));
+   switch( ObjHdr->wMagic )
+      {
+      case GO_BITMAP_MAGIC: {
+	 DPRINT( "Deleting bitmap\n" );
+	 ExFreePool( ((PBITMAPOBJ)Obj)->bitmap.bmBits );
+	 BITMAPOBJ_FreeBitmap( Obj );
+	 break;
+      }
+      default: {
+	DPRINT( "W32kDeleteObject: Deleting object of unknown type %x\n", ObjHdr->wMagic );
+	return FALSE;
+      }
+      }
+   return TRUE;
 }
 
 INT STDCALL W32kDrawEscape(HDC  hDC,
@@ -845,8 +867,8 @@ HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
 
          // setup mem dc for drawing into bitmap
          pb   = BITMAPOBJ_HandleToPtr(GdiObjHdr);
-         surfobj = ExAllocatePool(NonPagedPool, sizeof(SURFOBJ));
-         surfgdi = ExAllocatePool(NonPagedPool, sizeof(SURFGDI));
+         surfobj = ExAllocatePool(PagedPool, sizeof(SURFOBJ));
+         surfgdi = ExAllocatePool(PagedPool, sizeof(SURFGDI));
          BitmapToSurf(surfgdi, surfobj, pb);
 
          dc->w.hBitmap = (BITMAPOBJ *)GdiObjHdr;
@@ -1024,7 +1046,7 @@ PDC  DC_AllocDC(LPCWSTR  Driver)
     }
   if (Driver != NULL)
     {
-      NewDC->DriverName = ExAllocatePool(NonPagedPool, 
+      NewDC->DriverName = ExAllocatePool(PagedPool, 
                                          (wcslen(Driver) + 1) * sizeof(WCHAR));
       wcscpy(NewDC->DriverName, Driver);
     }
@@ -1057,7 +1079,7 @@ void  DC_FreeDC(PDC  DCToFree)
   ExFreePool(DCToFree->DriverName);
   if (!GDIOBJ_FreeObject((PGDIOBJ)DCToFree, GO_DC_MAGIC))
     {
-       DbgPrint("DC_FreeDC failed\n");
+       DPRINT("DC_FreeDC failed\n");
     }
 }
 
