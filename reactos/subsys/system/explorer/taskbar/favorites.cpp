@@ -414,7 +414,7 @@ void BookmarkList::import_IE_favorites(ShellDirectory& dir, HWND hwnd)
 				push_back(bookmark);
 			} else {
 				///@todo read shell links
-				assert(0);
+				//assert(0);
 			}
 		}
 	}
