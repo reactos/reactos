@@ -10,6 +10,7 @@
 - activate accelerator keys like <DEL> in shell view folders
 - program manager "progman" DDE server
 - command line parameters like "/e,/root,c:\"
+- search functionality in start menu
 - Windows-key combos
 - Application Desktop Toolbars
 - desktop switching
