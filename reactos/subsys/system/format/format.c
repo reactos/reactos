@@ -175,7 +175,10 @@ int ParseCommandLine( int argc, WCHAR *argv[] )
 // can interpret. If we wanted to halt the chkdsk we could return FALSE.
 //
 //----------------------------------------------------------------------
-BOOL __stdcall FormatExCallback( CALLBACKCOMMAND Command, DWORD Modifier, PVOID Argument )
+BOOLEAN STDCALL
+FormatExCallback (CALLBACKCOMMAND Command,
+		  ULONG Modifier,
+		  PVOID Argument)
 {
 	PDWORD percent;
 	PTEXTOUTPUT output;
@@ -318,7 +321,6 @@ int wmain( int argc, WCHAR *argv[] )
 	}
 
 	if( driveType != DRIVE_FIXED ) {
-
 		printf("Insert a new floppy in drive %C:\nand press Enter when ready...",
 			RootDirectory[0] );
 		fgetws( input, sizeof(input)/2, stdin );
@@ -326,10 +328,8 @@ int wmain( int argc, WCHAR *argv[] )
 		media = FMIFS_FLOPPY;
 
 
-driveType = DRIVE_FIXED;
-media = FMIFS_HARDDISK;
-
-
+		driveType = DRIVE_FIXED;
+		media = FMIFS_HARDDISK;
 	}
 
 	//
