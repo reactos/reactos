@@ -13,7 +13,8 @@ typedef enum {
   otMenu,
   otAcceleratorTable,
   otCursorIcon,
-  otHookProc
+  otHookProc,
+  otMonitor
 } USER_OBJECT_TYPE;
 
 typedef struct _USER_OBJECT_HEADER
