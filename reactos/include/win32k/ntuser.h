@@ -899,11 +899,11 @@ STDCALL
 NtUserIsClipboardFormatAvailable(
   DWORD Unknown0);
 
-DWORD
+NTSTATUS
 STDCALL
 NtUserKillTimer(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  HWND hWnd,
+  UINT_PTR IDEvent);
 
 DWORD
 STDCALL
@@ -1415,13 +1415,13 @@ NtUserSetThreadState(
   DWORD Unknown0,
   DWORD Unknown1);
 
-DWORD
+NTSTATUS
 STDCALL
 NtUserSetTimer(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+  HWND hWnd,
+  UINT_PTR * IDEvent,
+  UINT Period,
+  TIMERPROC TimerFunc);
 
 DWORD
 STDCALL

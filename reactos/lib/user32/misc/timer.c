@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.4 2002/09/08 10:23:10 chorns Exp $
+/* $Id: timer.c,v 1.5 2003/04/02 23:29:04 gdalsnes Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/dde.c
@@ -29,6 +29,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <windows.h>
+#include <kernel32/error.h>
 #include <user32.h>
 #include <debug.h>
 
@@ -38,18 +39,44 @@ WINBOOL
 STDCALL
 KillTimer(
   HWND hWnd,
-  UINT_PTR uIDEvent)
+  UINT_PTR IDEvent)
 {
-  return FALSE;
+
+   NTSTATUS Status;
+   
+   Status = NtUserKillTimer(hWnd, IDEvent); 
+   
+   if (!NT_SUCCESS(Status))
+   {
+      SetLastErrorByStatus(Status);
+      return FALSE;
+   }
+
+   return TRUE;
+
 }
+
 UINT_PTR
 STDCALL
 SetTimer(
   HWND hWnd,
-  UINT_PTR nIDEvent,
-  UINT uElapse,
-  TIMERPROC lpTimerFunc)
+  UINT_PTR IDEvent,
+  UINT Period,
+  TIMERPROC TimerFunc)
 {
-  return (UINT_PTR)0;
+   NTSTATUS Status;
+
+   Status = NtUserSetTimer(hWnd, &IDEvent, Period, TimerFunc); 
+   
+   if (!NT_SUCCESS(Status))
+   {
+      SetLastErrorByStatus(Status);
+      return FALSE;
+   }
+
+   if (hWnd == NULL) 
+      return IDEvent;
+
+   return TRUE;
 }
 
