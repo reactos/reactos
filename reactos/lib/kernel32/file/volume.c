@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.29 2003/07/10 18:50:51 chorns Exp $
+/* $Id: volume.c,v 1.30 2003/07/20 09:40:13 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -464,101 +464,127 @@ GetVolumeInformationA(
 	DWORD	nFileSystemNameSize
 	)
 {
-	UNICODE_STRING RootPathNameU;
-	UNICODE_STRING FileSystemNameU;
-	UNICODE_STRING VolumeNameU;
-	ANSI_STRING RootPathName;
-	ANSI_STRING VolumeName;
-	ANSI_STRING FileSystemName;
-	WINBOOL Result;
+  UNICODE_STRING RootPathNameU;
+  UNICODE_STRING FileSystemNameU;
+  UNICODE_STRING VolumeNameU;
+  ANSI_STRING RootPathName;
+  ANSI_STRING VolumeName;
+  ANSI_STRING FileSystemName;
+  WINBOOL Result;
 
-	RtlInitAnsiString (&RootPathName,
-	                   (LPSTR)lpRootPathName);
+  RtlInitAnsiString (&RootPathName,
+	             (LPSTR)lpRootPathName);
 
-	/* convert ansi (or oem) string to unicode */
-	if (bIsFileApiAnsi)
-		RtlAnsiStringToUnicodeString (&RootPathNameU,
-		                              &RootPathName,
-		                              TRUE);
-	else
-		RtlOemStringToUnicodeString (&RootPathNameU,
-		                             &RootPathName,
-		                             TRUE);
+  /* convert ansi (or oem) string to unicode */
+  if (bIsFileApiAnsi)
+    RtlAnsiStringToUnicodeString (&RootPathNameU,
+		                  &RootPathName,
+		                  TRUE);
+  else
+    RtlOemStringToUnicodeString (&RootPathNameU,
+		                 &RootPathName,
+		                 TRUE);
 
-	VolumeNameU.Length = 0;
-	VolumeNameU.MaximumLength = nVolumeNameSize * sizeof(WCHAR);
-	VolumeNameU.Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
-	                                      0,
-	                                      VolumeNameU.MaximumLength);
+  if (lpVolumeNameBuffer)
+    {
+      VolumeNameU.Length = 0;
+      VolumeNameU.MaximumLength = nVolumeNameSize * sizeof(WCHAR);
+      VolumeNameU.Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
+	                                    0,
+	                                    VolumeNameU.MaximumLength);
+    }
 
-	FileSystemNameU.Length = 0;
-	FileSystemNameU.MaximumLength = nFileSystemNameSize * sizeof(WCHAR);
-	FileSystemNameU.Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
-	                                          0,
-	                                          FileSystemNameU.MaximumLength);
+  if (lpFileSystemNameBuffer)
+    {
+      FileSystemNameU.Length = 0;
+      FileSystemNameU.MaximumLength = nFileSystemNameSize * sizeof(WCHAR);
+      FileSystemNameU.Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
+	                                        0,
+	                                        FileSystemNameU.MaximumLength);
+    }
 
-	Result = GetVolumeInformationW (RootPathNameU.Buffer,
-	                                VolumeNameU.Buffer,
-	                                nVolumeNameSize,
-	                                lpVolumeSerialNumber,
-	                                lpMaximumComponentLength,
-	                                lpFileSystemFlags,
-	                                FileSystemNameU.Buffer,
-	                                nFileSystemNameSize);
+  Result = GetVolumeInformationW (RootPathNameU.Buffer,
+	                          lpVolumeNameBuffer ? VolumeNameU.Buffer : NULL,
+	                          nVolumeNameSize,
+	                          lpVolumeSerialNumber,
+	                          lpMaximumComponentLength,
+	                          lpFileSystemFlags,
+				  lpFileSystemNameBuffer ? FileSystemNameU.Buffer : NULL,
+	                          nFileSystemNameSize);
 
-	if (Result)
-	{
-                VolumeNameU.Length = wcslen(VolumeNameU.Buffer) * sizeof(WCHAR);
-		VolumeName.Length = 0;
-		VolumeName.MaximumLength = nVolumeNameSize;
-		VolumeName.Buffer = lpVolumeNameBuffer;
-
-                FileSystemNameU.Length = wcslen(FileSystemNameU.Buffer) * sizeof(WCHAR);
-		FileSystemName.Length = 0;
-		FileSystemName.MaximumLength = nFileSystemNameSize;
-		FileSystemName.Buffer = lpFileSystemNameBuffer;
-
-		/* convert unicode strings to ansi (or oem) */
-		if (bIsFileApiAnsi)
-		{
-			RtlUnicodeStringToAnsiString (&VolumeName,
-			                              &VolumeNameU,
-			                              FALSE);
-			RtlUnicodeStringToAnsiString (&FileSystemName,
-			                              &FileSystemNameU,
-			                              FALSE);
-		}
-		else
-		{
-			RtlUnicodeStringToOemString (&VolumeName,
-			                             &VolumeNameU,
-			                             FALSE);
-			RtlUnicodeStringToOemString (&FileSystemName,
-			                             &FileSystemNameU,
-			                             FALSE);
-		}
+  if (Result)
+    {
+      if (lpVolumeNameBuffer)
+        {
+          VolumeNameU.Length = wcslen(VolumeNameU.Buffer) * sizeof(WCHAR);
+	  VolumeName.Length = 0;
+	  VolumeName.MaximumLength = nVolumeNameSize;
+	  VolumeName.Buffer = lpVolumeNameBuffer;
 	}
 
-	RtlFreeHeap (RtlGetProcessHeap (),
-	             0,
-	             RootPathNameU.Buffer);
-	RtlFreeHeap (RtlGetProcessHeap (),
-	             0,
-	             VolumeNameU.Buffer);
-	RtlFreeHeap (RtlGetProcessHeap (),
-	             0,
-	             FileSystemNameU.Buffer);
+      if (lpFileSystemNameBuffer)
+	{
+	  FileSystemNameU.Length = wcslen(FileSystemNameU.Buffer) * sizeof(WCHAR);
+	  FileSystemName.Length = 0;
+	  FileSystemName.MaximumLength = nFileSystemNameSize;
+	  FileSystemName.Buffer = lpFileSystemNameBuffer;
+	}
 
-	return Result;
+      /* convert unicode strings to ansi (or oem) */
+      if (bIsFileApiAnsi)
+        {
+	  if (lpVolumeNameBuffer)
+	    {
+	      RtlUnicodeStringToAnsiString (&VolumeName,
+			                    &VolumeNameU,
+			                    FALSE);
+	    }
+	  if (lpFileSystemNameBuffer)
+	    {
+	      RtlUnicodeStringToAnsiString (&FileSystemName,
+			                    &FileSystemNameU,
+			                    FALSE);
+	    }
+	}
+      else
+        {
+	  if (lpVolumeNameBuffer)
+	    {
+	      RtlUnicodeStringToOemString (&VolumeName,
+			                   &VolumeNameU,
+			                   FALSE);
+	    }
+          if (lpFileSystemNameBuffer)
+	    {
+	      RtlUnicodeStringToOemString (&FileSystemName,
+			                   &FileSystemNameU,
+			                   FALSE);
+	    }
+	}
+    }
+
+  RtlFreeHeap (RtlGetProcessHeap (),
+	       0,
+	       RootPathNameU.Buffer);
+  if (lpVolumeNameBuffer)
+    {
+      RtlFreeHeap (RtlGetProcessHeap (),
+	           0,
+	           VolumeNameU.Buffer);
+    }
+  if (lpFileSystemNameBuffer)
+    {
+      RtlFreeHeap (RtlGetProcessHeap (),
+	           0,
+	           FileSystemNameU.Buffer);
+    }
+
+  return Result;
 }
 
+#define FS_VOLUME_BUFFER_SIZE (MAX_PATH * sizeof(WCHAR) + sizeof(FILE_FS_VOLUME_INFORMATION))
 
-
-
-#define FS_VOLUME_BUFFER_SIZE (MAX_PATH + sizeof(FILE_FS_VOLUME_INFORMATION))
-
-#define FS_ATTRIBUTE_BUFFER_SIZE (MAX_PATH + sizeof(FILE_FS_ATTRIBUTE_INFORMATION))
-
+#define FS_ATTRIBUTE_BUFFER_SIZE (MAX_PATH * sizeof(WCHAR) + sizeof(FILE_FS_ATTRIBUTE_INFORMATION))
 
 /*
  * @implemented
@@ -575,21 +601,20 @@ GetVolumeInformationW(
     DWORD nFileSystemNameSize
     )
 {
-	PFILE_FS_VOLUME_INFORMATION FileFsVolume;
-	PFILE_FS_ATTRIBUTE_INFORMATION FileFsAttribute;
-	IO_STATUS_BLOCK IoStatusBlock;
-        OBJECT_ATTRIBUTES ObjectAttributes;
-	USHORT Buffer[FS_VOLUME_BUFFER_SIZE];
-	USHORT Buffer2[FS_ATTRIBUTE_BUFFER_SIZE];
+  PFILE_FS_VOLUME_INFORMATION FileFsVolume;
+  PFILE_FS_ATTRIBUTE_INFORMATION FileFsAttribute;
+  IO_STATUS_BLOCK IoStatusBlock;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UCHAR Buffer[max(FS_VOLUME_BUFFER_SIZE, FS_ATTRIBUTE_BUFFER_SIZE)];
 
-	HANDLE hFile;
-	NTSTATUS errCode;
+  HANDLE hFile;
+  NTSTATUS errCode;
+ 
+  FileFsVolume = (PFILE_FS_VOLUME_INFORMATION)Buffer;
+  FileFsAttribute = (PFILE_FS_ATTRIBUTE_INFORMATION)Buffer;
 
-        FileFsVolume = (PFILE_FS_VOLUME_INFORMATION)Buffer;
-        FileFsAttribute = (PFILE_FS_ATTRIBUTE_INFORMATION)Buffer2;
-
-        DPRINT("FileFsVolume %p\n", FileFsVolume);
-        DPRINT("FileFsAttribute %p\n", FileFsAttribute);
+  DPRINT("FileFsVolume %p\n", FileFsVolume);
+  DPRINT("FileFsAttribute %p\n", FileFsAttribute);
 
   hFile = InternalOpenDirW(lpRootPathName, FALSE);
   if (hFile == INVALID_HANDLE_VALUE)
@@ -597,49 +622,73 @@ GetVolumeInformationW(
       return FALSE;
     }
 
-        DPRINT("hFile: %x\n", hFile);
-        errCode = NtQueryVolumeInformationFile(hFile,
-                                               &IoStatusBlock,
-                                               FileFsVolume,
-                                               FS_VOLUME_BUFFER_SIZE,
-                                               FileFsVolumeInformation);
-	if ( !NT_SUCCESS(errCode) ) {
-                DPRINT("Status: %x\n", errCode);
-                CloseHandle(hFile);
-		SetLastErrorByStatus (errCode);
-		return FALSE;
+  DPRINT("hFile: %x\n", hFile);
+  errCode = NtQueryVolumeInformationFile(hFile,
+                                         &IoStatusBlock,
+                                         FileFsVolume,
+                                         FS_VOLUME_BUFFER_SIZE,
+                                         FileFsVolumeInformation);
+  if ( !NT_SUCCESS(errCode) ) 
+    {
+      DPRINT("Status: %x\n", errCode);
+      CloseHandle(hFile);
+      SetLastErrorByStatus (errCode);
+      return FALSE;
+    }
+
+  if (lpVolumeSerialNumber)
+    *lpVolumeSerialNumber = FileFsVolume->VolumeSerialNumber;
+
+  if (lpVolumeNameBuffer)
+    {
+      if (nVolumeNameSize * sizeof(WCHAR) >= FileFsVolume->VolumeLabelLength + sizeof(WCHAR))
+        {
+	  memcpy(lpVolumeNameBuffer, 
+		 FileFsVolume->VolumeLabel, 
+		 FileFsVolume->VolumeLabelLength);
+	  lpVolumeNameBuffer[FileFsVolume->VolumeLabelLength / sizeof(WCHAR)];
 	}
-
-        if (lpVolumeSerialNumber)
-                *lpVolumeSerialNumber = FileFsVolume->VolumeSerialNumber;
-
-	if (lpVolumeNameBuffer)
-	        wcsncpy (lpVolumeNameBuffer,
-	                 FileFsVolume->VolumeLabel,
-	                 min(nVolumeNameSize,MAX_PATH));
-
-	errCode = NtQueryVolumeInformationFile (hFile,
-	                                        &IoStatusBlock,
-	                                        FileFsAttribute,
-	                                        FS_ATTRIBUTE_BUFFER_SIZE,
-	                                        FileFsAttributeInformation);
-	if (!NT_SUCCESS(errCode))
-	{
-		DPRINT("Status: %x\n", errCode);
-		CloseHandle(hFile);
-		SetLastErrorByStatus (errCode);
-		return FALSE;
+      else
+        {
+	  CloseHandle(hFile);
+	  SetLastError(ERROR_MORE_DATA);
+	  return FALSE;
 	}
+    }
 
-        if (lpFileSystemFlags)
-                *lpFileSystemFlags = FileFsAttribute->FileSystemAttributes;
-        if (lpMaximumComponentLength)
-                *lpMaximumComponentLength = FileFsAttribute->MaximumComponentNameLength;
-        if (lpFileSystemNameBuffer)
-                wcsncpy(lpFileSystemNameBuffer, FileFsAttribute->FileSystemName,min(nFileSystemNameSize,MAX_PATH));
+  errCode = NtQueryVolumeInformationFile (hFile,
+	                                  &IoStatusBlock,
+	                                  FileFsAttribute,
+	                                  FS_ATTRIBUTE_BUFFER_SIZE,
+	                                  FileFsAttributeInformation);
+  CloseHandle(hFile);
+  if (!NT_SUCCESS(errCode))
+    {
+      DPRINT("Status: %x\n", errCode);
+      SetLastErrorByStatus (errCode);
+      return FALSE;
+    }
 
-	CloseHandle(hFile);
-	return TRUE;
+  if (lpFileSystemFlags)
+    *lpFileSystemFlags = FileFsAttribute->FileSystemAttributes;
+  if (lpMaximumComponentLength)
+    *lpMaximumComponentLength = FileFsAttribute->MaximumComponentNameLength;
+  if (lpFileSystemNameBuffer)
+    {
+      if (nFileSystemNameSize * sizeof(WCHAR) >= FileFsAttribute->FileSystemNameLength + sizeof(WCHAR))
+        {
+	  memcpy(lpFileSystemNameBuffer, 
+		 FileFsAttribute->FileSystemName, 
+		 FileFsAttribute->FileSystemNameLength);
+	  lpFileSystemNameBuffer[FileFsAttribute->FileSystemNameLength / sizeof(WCHAR)] = 0;
+	}
+      else
+        {
+	  SetLastError(ERROR_MORE_DATA);
+	  return FALSE;
+	}
+    }
+  return TRUE;
 }
 
 
@@ -717,12 +766,16 @@ SetVolumeLabelW(LPCWSTR lpRootPathName,
 			       sizeof(FILE_FS_LABEL_INFORMATION) +
 			       LabelLength);
    LabelInfo->VolumeLabelLength = LabelLength;
-   wcscpy(LabelInfo->VolumeLabel,
-	  lpVolumeName);
+   memcpy(LabelInfo->VolumeLabel,
+	  lpVolumeName,
+	  LabelLength);
 
    hFile = InternalOpenDirW(lpRootPathName, TRUE);
    if (INVALID_HANDLE_VALUE == hFile)
    {
+        RtlFreeHeap(RtlGetProcessHeap(),
+	            0,
+	            LabelInfo);
         return FALSE;
    }
    
