@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.163 2004/09/28 20:58:29 gvg Exp $
+/* $Id: section.c,v 1.164 2004/10/01 20:06:43 gvg Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -913,6 +913,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    /*
     * Get the entry corresponding to the offset within the section
     */
+   Offset += MemoryArea->Data.SectionData.ViewOffset;
    Entry = MmGetPageEntrySectionSegment(Segment, Offset);
 
    if (Entry == 0)
@@ -3175,11 +3176,11 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
 
    Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
-   Offset = ((ULONG)Address - (ULONG)MArea->BaseAddress);
+   Offset = ((ULONG_PTR)Address - (ULONG_PTR)MArea->BaseAddress) +
+            MemoryArea->Data.SectionData.ViewOffset;
 
    Section = MArea->Data.SectionData.Section;
    Segment = MArea->Data.SectionData.Segment;
-
 
    PageOp = MmCheckForPageOp(MArea, 0, NULL, Segment, Offset);
 
@@ -3831,7 +3832,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
                                         &SBaseAddress,
                                         SectionSegments[i].Length,
                                         SectionSegments[i].Protection,
-                                        (ULONG_PTR)SectionSegments[i].VirtualAddress,
+                                        0,
                                         FALSE);
             MmUnlockSectionSegment(&SectionSegments[i]);
             if (!NT_SUCCESS(Status))
