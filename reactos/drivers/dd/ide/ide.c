@@ -1074,7 +1074,7 @@ IDEPolledRead(IN WORD Address,
     {
 
         //  wait for DRQ or error
-      for (RetryCount = 0; RetryCount < IDE_MAX_DRQ_RETRIES; RetryCount++)
+      for (RetryCount = 0; RetryCount < IDE_MAX_POLL_RETRIES; RetryCount++)
         {
           Status = IDEReadStatus(Address);
           if (!(Status & IDE_SR_BUSY)) 
@@ -1091,7 +1091,7 @@ IDEPolledRead(IN WORD Address,
             }
           KeStallExecutionProcessor(10);
         }
-      if (RetryCount >= IDE_MAX_DRQ_RETRIES)
+      if (RetryCount >= IDE_MAX_POLL_RETRIES)
         {
           return IDE_ER_ABRT;
         }
@@ -1453,7 +1453,6 @@ IDEStartController(IN OUT PVOID Context)
         }
       KeStallExecutionProcessor(10);
     }
-Retries = IDE_MAX_BUSY_RETRIES;
   if (Retries >= IDE_MAX_BUSY_RETRIES)
     {
       if (++ControllerExtension->Retries > IDE_MAX_CMD_RETRIES)
@@ -1915,8 +1914,6 @@ IDEIoTimer(PDEVICE_OBJECT DeviceObject,
            PVOID Context) 
 {
   PIDE_CONTROLLER_EXTENSION  ControllerExtension;
-
-DPRINT("entered timer\n");
 
     //  Setup Extension pointer
   ControllerExtension = (PIDE_CONTROLLER_EXTENSION) Context;

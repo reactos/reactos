@@ -21,6 +21,7 @@ extern "C" {
 #define  IDE_SECTOR_BUF_SZ         512
 #define  IDE_MAX_SECTORS_PER_XFER  256
 #define  IDE_MAX_RESET_RETRIES     10000
+#define  IDE_MAX_POLL_RETRIES      100000
 #define  IDE_MAX_WRITE_RETRIES     1000
 #define  IDE_MAX_BUSY_RETRIES      100
 #define  IDE_MAX_DRQ_RETRIES       1000
