@@ -906,7 +906,7 @@ void BuildDef32File(FILE *outfile)
         fprintf( outfile, " @%d", odp->ordinal );
         if (!odp->name) fprintf( outfile, " NONAME" );
         if (is_data) fprintf( outfile, " DATA" );
-#if !defined(WIN32)
+#if !defined(__REACTOS__)
         /* MinGW binutils cannot handle this correctly */
         if (odp->flags & FLAG_PRIVATE) fprintf( outfile, " PRIVATE" );
 #endif
