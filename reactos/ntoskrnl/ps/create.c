@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.79 2004/08/15 16:39:10 chorns Exp $
+/* $Id: create.c,v 1.80 2004/08/31 06:08:38 navaraf Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -475,11 +475,6 @@ PsInitializeThread(HANDLE ProcessHandle,
    
    KeInitializeThread(&Process->Pcb, &Thread->Tcb, First);
    Thread->ThreadsProcess = Process;
-   /*
-    * FIXME: What lock protects this?
-    */
-   InsertTailList(&Thread->ThreadsProcess->ThreadListHead, 
-		  &Thread->Tcb.ProcessThreadListEntry);
    InitializeListHead(&Thread->TerminationPortList);
    KeInitializeSpinLock(&Thread->ActiveTimerListLock);
    InitializeListHead(&Thread->IrpList);
@@ -490,11 +485,6 @@ PsInitializeThread(HANDLE ProcessHandle,
    Thread->Win32Thread = 0;
    DPRINT("Thread->Cid.UniqueThread %d\n",Thread->Cid.UniqueThread);
    
-   *ThreadPtr = Thread;
-   
-   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
-   InsertTailList(&PiThreadListHead, &Thread->Tcb.ThreadListEntry);
-   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 
    Thread->Tcb.BasePriority = (CHAR)Thread->ThreadsProcess->Pcb.BasePriority;
    Thread->Tcb.Priority = Thread->Tcb.BasePriority;
@@ -508,6 +498,14 @@ PsInitializeThread(HANDLE ProcessHandle,
    /* Thread->LpcReceiveMessageId = 0; */
    Thread->LpcExitThreadCalled = FALSE;
    Thread->LpcReceivedMsgIdValid = FALSE;
+
+   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
+   InsertTailList(&Thread->ThreadsProcess->ThreadListHead, 
+		  &Thread->Tcb.ProcessThreadListEntry);
+   InsertTailList(&PiThreadListHead, &Thread->Tcb.ThreadListEntry);
+   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+
+   *ThreadPtr = Thread;
 
    return(STATUS_SUCCESS);
 }
