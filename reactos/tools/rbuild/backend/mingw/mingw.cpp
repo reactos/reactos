@@ -160,13 +160,14 @@ MingwBackend::GenerateProjectLFLAGS () const
 void
 MingwBackend::GenerateGlobalVariables () const
 {
-	fprintf ( fMakefile, "mkdir = $(Q)tools" SSEP "rmkdir" EXEPOSTFIX "\n" );
-	fprintf ( fMakefile, "winebuild = $(Q)tools" SSEP "winebuild" SSEP "winebuild" EXEPOSTFIX "\n" );
-	fprintf ( fMakefile, "bin2res = $(Q)tools" SSEP "bin2res" SSEP "bin2res" EXEPOSTFIX "\n" );
-	fprintf ( fMakefile, "cabman = $(Q)tools" SSEP "cabman" SSEP "cabman" EXEPOSTFIX "\n" );
-	fprintf ( fMakefile, "cdmake = $(Q)tools" SSEP "cdmake" SSEP "cdmake" EXEPOSTFIX "\n" );
-	fprintf ( fMakefile, "rsym = $(Q)tools" SSEP "rsym" EXEPOSTFIX "\n" );
-	fprintf ( fMakefile, "wrc = $(Q)tools" SSEP "wrc" SSEP "wrc" EXEPOSTFIX "\n" );
+#define TOOL_PREFIX "$(Q)." SSEP "tools" SSEP
+	fprintf ( fMakefile, "mkdir = " TOOL_PREFIX "rmkdir" EXEPOSTFIX "\n" );
+	fprintf ( fMakefile, "winebuild = " TOOL_PREFIX "winebuild" SSEP "winebuild" EXEPOSTFIX "\n" );
+	fprintf ( fMakefile, "bin2res = " TOOL_PREFIX "bin2res" SSEP "bin2res" EXEPOSTFIX "\n" );
+	fprintf ( fMakefile, "cabman = " TOOL_PREFIX "cabman" SSEP "cabman" EXEPOSTFIX "\n" );
+	fprintf ( fMakefile, "cdmake = " TOOL_PREFIX "cdmake" SSEP "cdmake" EXEPOSTFIX "\n" );
+	fprintf ( fMakefile, "rsym = " TOOL_PREFIX "rsym" EXEPOSTFIX "\n" );
+	fprintf ( fMakefile, "wrc = " TOOL_PREFIX "wrc" SSEP "wrc" EXEPOSTFIX "\n" );
 	fprintf ( fMakefile, "\n" );
 	GenerateGlobalCFlagsAndProperties (
 		"=",
