@@ -10,21 +10,6 @@
  */
 BOOL
 STDCALL
-GetProcessMemoryInfo(HANDLE Process,
-                     PPROCESS_MEMORY_COUNTERS ppsmemCounters,
-                     DWORD cb)
-{
-  DPRINT1("PSAPI: GetProcessMemoryInfo is UNIMPLEMENTED!\n");
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
 QueryWorkingSet(HANDLE hProcess,
                 PVOID pv,
                 DWORD cb)

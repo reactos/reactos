@@ -1302,4 +1302,67 @@ GetPerformanceInfo(PPERFORMANCE_INFORMATION pPerformanceInformation,
   return TRUE;
 }
 
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+GetProcessMemoryInfo(HANDLE Process,
+                     PPROCESS_MEMORY_COUNTERS ppsmemCounters,
+                     DWORD cb)
+{
+  NTSTATUS Status;
+  VM_COUNTERS vmc;
+  BOOL Ret = FALSE;
+
+  /* XP's implementation secures access to ppsmemCounters in SEH, we should behave
+     similar so we can return the proper error codes when bad pointers are passed
+     to this function! */
+
+  _SEH_TRY
+  {
+    if(cb < sizeof(PROCESS_MEMORY_COUNTERS))
+    {
+      SetLastError(ERROR_INSUFFICIENT_BUFFER);
+      _SEH_LEAVE;
+    }
+
+    /* ppsmemCounters->cb isn't checked at all! */
+
+    Status = NtQueryInformationProcess(Process,
+                                       ProcessVmCounters,
+                                       &vmc,
+                                       sizeof(vmc),
+                                       NULL);
+    if(!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      _SEH_LEAVE;
+    }
+
+    /* fill the structure with the collected information, in case of bad pointers
+       SEH will catch the exception and set the appropriate error code */
+    ppsmemCounters->cb = sizeof(PROCESS_MEMORY_COUNTERS);
+    ppsmemCounters->PageFaultCount = vmc.PageFaultCount;
+    ppsmemCounters->PeakWorkingSetSize = vmc.PeakWorkingSetSize;
+    ppsmemCounters->WorkingSetSize = vmc.WorkingSetSize;
+    ppsmemCounters->QuotaPeakPagedPoolUsage = vmc.QuotaPeakPagedPoolUsage;
+    ppsmemCounters->QuotaPagedPoolUsage = vmc.QuotaPagedPoolUsage;
+    ppsmemCounters->QuotaPeakNonPagedPoolUsage = vmc.QuotaPeakNonPagedPoolUsage;
+    ppsmemCounters->QuotaNonPagedPoolUsage = vmc.QuotaNonPagedPoolUsage;
+    ppsmemCounters->PagefileUsage = vmc.PagefileUsage;
+    ppsmemCounters->PeakPagefileUsage = vmc.PeakPagefileUsage;
+
+    Ret = TRUE;
+  }
+  _SEH_HANDLE
+  {
+    SetLastErrorByStatus(_SEH_GetExceptionCode());
+  }
+  _SEH_END;
+
+  return Ret;
+}
+
 /* EOF */
