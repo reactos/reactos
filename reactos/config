@@ -5,6 +5,18 @@
 # Possible values in the future: alpha,i386,m68k,mips,powerpc
 ARCH := i386
 
+
+#
+# Which cpu should reactos optimze for
+# example : i486, i586, pentium, pentium2, pentum3, pentium4
+#           athlond-xp, athlond-mp, k6-2, 
+#
+# see gcc manual for more cpu name and which cpu it can 
+# be optimze for. 
+#
+
+OARCH := i486
+
 #
 # Whether to compile in the kernel debugger
 #

@@ -136,7 +136,7 @@ export BIN2RES = $(Q)$(TOOLS_PATH)/bin2res/bin2res
 export XSLTPROC = $(Q)xsltproc
 export MS2PS = $(Q)$(TOOLS_PATH)/ms2ps/ms2ps
 
-export STD_CFLAGS = -I$(PATH_TO_TOP)/include -I$(W32API_PATH)/include -pipe -march=i486 -D_M_IX86
+export STD_CFLAGS = -I$(PATH_TO_TOP)/include -I$(W32API_PATH)/include -pipe -march=$(OARCH) -D_M_IX86
 export STD_CPPFLAGS = $(STD_CFLAGS)
 export STD_ASFLAGS = -I$(PATH_TO_TOP)/include -I$(W32API_PATH)/include -D__ASM__ -D_M_IX86
 export STD_RCFLAGS = --include-dir $(PATH_TO_TOP)/include --include-dir $(W32API_PATH)/include
