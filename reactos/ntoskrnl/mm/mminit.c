@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.71 2004/10/22 20:38:22 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -482,7 +482,7 @@ MiFreeInitMemory(VOID)
    MmLockAddressSpace(MmGetKernelAddressSpace());
    MmFreeMemoryArea(MmGetKernelAddressSpace(),
                     (PVOID)&_init_start__,
-                    PAGE_ROUND_UP((ULONG)&_init_end__) - (ULONG)_init_start__,
+                    PAGE_ROUND_UP((ULONG)&_init_end__) - (ULONG)&_init_start__,
                     MiFreeInitMemoryPage,
                     NULL);
    MmUnlockAddressSpace(MmGetKernelAddressSpace());
