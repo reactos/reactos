@@ -19,101 +19,112 @@ int mouse_replies_expected = 0;
 BOOLEAN STDCALL
 ps2_mouse_handler(PKINTERRUPT Interrupt, PVOID ServiceContext)
 {
-  //  char tmpstr[100];
   PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)ServiceContext;
   PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
-
   int state_dx, state_dy, state_buttons;
   unsigned scancode;
   unsigned status = controller_read_status();
   scancode = controller_read_input();
 
-  // Don't handle the mouse event if we aren't connected to the mouse class driver
-  if(DeviceExtension->ClassInformation.CallBack == NULL) return FALSE;
+  /*
+   * Don't handle the mouse event if we aren't connected to the mouse class 
+   * driver
+   */
+  if (DeviceExtension->ClassInformation.CallBack == NULL) 
+    {
+      return FALSE;
+    }
 
-  if((status & CONTROLLER_STATUS_MOUSE_OUTPUT_BUFFER_FULL) != 0)
-  {
-    // mouse_handle_event(scancode); proceed to handle it
-  }
+  if ((status & CONTROLLER_STATUS_MOUSE_OUTPUT_BUFFER_FULL) != 0)
+    {
+      // mouse_handle_event(scancode); proceed to handle it
+    }
   else
-  {
-    return FALSE; // keyboard_handle_event(scancode);
-  }
+    {
+      return FALSE; // keyboard_handle_event(scancode);
+    }
 
   if (mouse_replies_expected > 0) 
-  {
-    if (scancode == MOUSE_ACK) 
     {
-      mouse_replies_expected--;
-      return;
+      if (scancode == MOUSE_ACK) 
+	{
+	  mouse_replies_expected--;
+	  return;
+	}
+      
+      mouse_replies_expected = 0;
     }
-
-    mouse_replies_expected = 0;
-  }
   
   /* Add this scancode to the mouse event queue. */
-
   mouse_buffer[mouse_buffer_position] = scancode;
   mouse_buffer_position++;
-
-  // If the buffer is full, parse this event
+  
+  /* If the buffer is full, parse this event */
   if (mouse_buffer_position == 3)
-  {
-    mouse_buffer_position = 0;
-    //    system_call_debug_print_simple ("We got a mouse event");
+    {
+      mouse_buffer_position = 0;
 
-    state_buttons = (mouse_buffer[0] & 1) * GPM_B_LEFT +
-      (mouse_buffer[0] & 2) * GPM_B_RIGHT +
-      (mouse_buffer[0] & 4) * GPM_B_MIDDLE;
-    
-    /* Some PS/2 mice send reports with negative bit set in data[0] and zero for movement.  I think this is a
-       bug in the mouse, but working around it only causes artifacts when the actual report is -256; they'll
-       be treated as zero. This should be rare if the mouse sampling rate is set to a reasonable value; the
-       default of 100 Hz is plenty.  (Stephen Tell) */
-    
-    if (mouse_buffer[1] == 0)
-    {
-      state_dx = 0;
-    }
-    else
-    {
-      state_dx = (mouse_buffer[0] & 0x10) ?
-        mouse_buffer[1] - 256 :
-        mouse_buffer[1];
-    }
-    
-    if (mouse_buffer[2] == 0)
-    {
-      state_dy = 0;
-    }
-    else
-    {
-      state_dy = -((mouse_buffer[0] & 0x20) ?
-                    mouse_buffer[2] - 256 :
-                    mouse_buffer[2]);
-    }
-
+      state_buttons = (mouse_buffer[0] & 1) * GPM_B_LEFT +
+	(mouse_buffer[0] & 2) * GPM_B_RIGHT +
+	(mouse_buffer[0] & 4) * GPM_B_MIDDLE;
+      
+      /* 
+       * Some PS/2 mice send reports with negative bit set in data[0] and zero
+       * for movement.  I think this is a bug in the mouse, but working around
+       * it only causes artifacts when the actual report is -256; they'll
+       * be treated as zero. This should be rare if the mouse sampling rate is
+       * set to a reasonable value; the default of 100 Hz is plenty.  
+       * (Stephen Tell) 
+       */
+      if (mouse_buffer[1] == 0)
+	{
+	  state_dx = 0;
+	}
+      else
+	{
+	  state_dx = (mouse_buffer[0] & 0x10) ? 
+	    mouse_buffer[1] - 256 :
+	    mouse_buffer[1];
+	}
+      
+      if (mouse_buffer[2] == 0)
+	{
+	  state_dy = 0;
+	}
+      else
+	{
+	  state_dy = -((mouse_buffer[0] & 0x20) ?
+		       mouse_buffer[2] - 256 :
+		       mouse_buffer[2]);
+	}
+      
       if (((state_dx!=0) || (state_dy!=0) || (state_buttons!=0)))
-      {
-         // FIXME: Implement button state, see /include/ntddmous.h
+	{
+	  ULONG Queue;
+	  PMOUSE_INPUT_DATA Input;
 
-         DeviceObject = (PDEVICE_OBJECT)ServiceContext;
-         DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+	  /* FIXME: Implement button state, see /include/ntddmous.h */
+	  
+	  DeviceObject = (PDEVICE_OBJECT)ServiceContext;
+	  DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+	  Queue = DeviceExtension->ActiveQueue % 2;
+	  
+	  if (DeviceExtension->InputDataCount[Queue] == MOUSE_BUFFER_SIZE)
+	    {
+	      return TRUE;
+	    }
 
-         if (DeviceExtension->InputDataCount == MOUSE_BUFFER_SIZE)
-         {
-            return TRUE;
-         }
-
-         DeviceExtension->MouseInputData[DeviceExtension->InputDataCount].RawButtons = state_buttons;
-         DeviceExtension->MouseInputData[DeviceExtension->InputDataCount].ButtonData = state_buttons;
-         DeviceExtension->MouseInputData[DeviceExtension->InputDataCount].LastX = state_dx;
-         DeviceExtension->MouseInputData[DeviceExtension->InputDataCount].LastY = state_dy;
-         DeviceExtension->InputDataCount++;
-
-         KeInsertQueueDpc(&DeviceExtension->IsrDpc, DeviceObject->CurrentIrp, NULL);
-
-         return TRUE;
+	  Input = &DeviceExtension->MouseInputData[Queue]
+	    [DeviceExtension->InputDataCount[Queue]];
+	  Input->RawButtons = state_buttons;
+	  Input->ButtonData = state_buttons;
+	  Input->LastX = state_dx;
+	  Input->LastY = state_dy;
+	  DeviceExtension->InputDataCount[Queue]++;
+	  
+	  KeInsertQueueDpc(&DeviceExtension->IsrDpc, DeviceObject->CurrentIrp,
+			   NULL);
+	  return TRUE;
       }
    }
 }
@@ -200,8 +211,9 @@ BOOLEAN mouse_init (PDEVICE_OBJECT DeviceObject)
 
   has_mouse = TRUE;
 
-  DeviceExtension->InputDataCount = 0;
-  DeviceExtension->MouseInputData = ExAllocatePool(NonPagedPool, sizeof(MOUSE_INPUT_DATA) * MOUSE_BUFFER_SIZE);
+  DeviceExtension->InputDataCount[0] = 0;
+  DeviceExtension->InputDataCount[1] = 0;
+  DeviceExtension->ActiveQueue = 0;
 
   // Enable the PS/2 mouse port
   controller_write_command_word (CONTROLLER_COMMAND_MOUSE_ENABLE);

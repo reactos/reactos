@@ -96,11 +96,6 @@ PS2MouseDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
 VOID PS2MouseInitializeDataQueue(PVOID Context)
 {
-  ;
-/*   PDEVICE_EXTENSION DeviceExtension = (PDEVICE_EXTENSION)DeviceExtension;
-
-   DeviceExtension->InputDataCount = 0;
-   DeviceExtension->MouseInputData = ExAllocatePool(NonPagedPool, sizeof(MOUSE_INPUT_DATA) * MOUSE_BUFFER_SIZE); */
 }
 
 NTSTATUS STDCALL
@@ -143,14 +138,16 @@ PS2MouseInternalDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 VOID PS2MouseIsrDpc(PKDPC Dpc, PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
 {
    PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+   ULONG Queue;
 
+   Queue = DeviceExtension->ActiveQueue % 2;
+   InterlockedIncrement(&DeviceExtension->ActiveQueue);
    (*(PSERVICE_CALLBACK_ROUTINE)DeviceExtension->ClassInformation.CallBack)(
 			DeviceExtension->ClassInformation.DeviceObject,
-			DeviceExtension->MouseInputData,
+			DeviceExtension->MouseInputData[Queue],
 			NULL,
-			&DeviceExtension->InputDataCount);
-
-   DeviceExtension->InputDataCount = 0;
+			&DeviceExtension->InputDataCount[Queue]);
+   DeviceExtension->InputDataCount[Queue] = 0;
 }
 
 NTSTATUS STDCALL
@@ -188,7 +185,6 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 
    DeviceExtension = DeviceObject->DeviceExtension;
    KeInitializeDpc(&DeviceExtension->IsrDpc, (PKDEFERRED_ROUTINE)PS2MouseIsrDpc, DeviceObject);
-   KeInitializeDpc(&DeviceExtension->IsrDpcRetry, (PKDEFERRED_ROUTINE)PS2MouseIsrDpc, DeviceObject);
 
    mouse_init(DeviceObject);
 
