@@ -115,7 +115,7 @@ NtUserGetClipboardData(UINT uFormat, DWORD Unknown1)
 }
 
 INT STDCALL
-NtUserGetClipboardFormatName(UINT format, LPWSTR lpszFormatName,
+NtUserGetClipboardFormatName(UINT format, PUNICODE_STRING FormatName,
    INT cchMaxCount)
 {
    UNIMPLEMENTED

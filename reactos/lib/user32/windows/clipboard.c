@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: clipboard.c,v 1.6 2003/12/14 12:39:32 navaraf Exp $
+/* $Id: clipboard.c,v 1.7 2003/12/14 13:26:20 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -96,6 +96,7 @@ INT STDCALL
 GetClipboardFormatNameA(UINT format, LPSTR lpszFormatName, int cchMaxCount)
 {
    LPWSTR lpBuffer;
+   UNICODE_STRING FormatName;
    INT Length;
 
    lpBuffer = HEAP_alloc(cchMaxCount * sizeof(WCHAR));
@@ -104,7 +105,8 @@ GetClipboardFormatNameA(UINT format, LPSTR lpszFormatName, int cchMaxCount)
       SetLastError(ERROR_OUTOFMEMORY);
       return 0;
    }
-   Length = NtUserGetClipboardFormatName(format, lpBuffer, cchMaxCount);
+   RtlInitUnicodeString(&FormatName, lpBuffer);
+   Length = NtUserGetClipboardFormatName(format, &FormatName, cchMaxCount);
    HEAP_strcpyWtoA(lpszFormatName, lpBuffer, Length);
    HEAP_free(lpBuffer);
    
@@ -117,7 +119,10 @@ GetClipboardFormatNameA(UINT format, LPSTR lpszFormatName, int cchMaxCount)
 INT STDCALL
 GetClipboardFormatNameW(UINT format, LPWSTR lpszFormatName, INT cchMaxCount)
 {
-   return NtUserGetClipboardFormatName(format, lpszFormatName, cchMaxCount);
+   UNICODE_STRING FormatName;
+   
+   RtlInitUnicodeString(&FormatName, lpszFormatName);
+   return NtUserGetClipboardFormatName(format, &FormatName, cchMaxCount);
 }
 
 /*

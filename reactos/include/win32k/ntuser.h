@@ -169,14 +169,15 @@ STDCALL
 NtUserCallNoParam(
   DWORD Routine);
 
-#define ONEPARAM_ROUTINE_GETMENU            0x01
-#define ONEPARAM_ROUTINE_ISWINDOWUNICODE    0x02
-#define ONEPARAM_ROUTINE_WINDOWFROMDC       0x03
-#define ONEPARAM_ROUTINE_GETWNDCONTEXTHLPID 0x04
-#define ONEPARAM_ROUTINE_SWAPMOUSEBUTTON    0x05
-#define ONEPARAM_ROUTINE_SETCARETBLINKTIME  0x06
-#define ONEPARAM_ROUTINE_GETCARETINFO       0x07
-#define ONEPARAM_ROUTINE_SWITCHCARETSHOWING 0x08
+#define ONEPARAM_ROUTINE_GETMENU              0x01
+#define ONEPARAM_ROUTINE_ISWINDOWUNICODE      0x02
+#define ONEPARAM_ROUTINE_WINDOWFROMDC         0x03
+#define ONEPARAM_ROUTINE_GETWNDCONTEXTHLPID   0x04
+#define ONEPARAM_ROUTINE_SWAPMOUSEBUTTON      0x05
+#define ONEPARAM_ROUTINE_SETCARETBLINKTIME    0x06
+#define ONEPARAM_ROUTINE_GETCARETINFO         0x07
+#define ONEPARAM_ROUTINE_SWITCHCARETSHOWING   0x08
+#define ONEPARAM_ROUTINE_ENUMCLIPBOARDFORMATS 0x09
 DWORD
 STDCALL
 NtUserCallOneParam(
@@ -198,11 +199,11 @@ NtUserCallTwoParam(
   DWORD Param2,
   DWORD Routine);
 
-DWORD
+BOOL
 STDCALL
 NtUserChangeClipboardChain(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  HWND hWndRemove,
+  HWND hWndNewNext);
 
 LONG
 STDCALL
@@ -231,7 +232,7 @@ STDCALL
 NtUserClipCursor(
   RECT *lpRect);
 
-DWORD
+BOOL
 STDCALL
 NtUserCloseClipboard(VOID);
 
@@ -610,20 +611,20 @@ NtUserGetClassName(HWND hWnd,
 		   LPWSTR lpClassName,
 		   ULONG nMaxCount);
 
-DWORD
+HANDLE
 STDCALL
 NtUserGetClipboardData(
-  DWORD Unknown0,
+  UINT uFormat,
   DWORD Unknown1);
 
-DWORD
+INT
 STDCALL
 NtUserGetClipboardFormatName(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+  UINT format,
+  PUNICODE_STRING FormatName,
+  INT cchMaxCount);
 
-DWORD
+HWND
 STDCALL
 NtUserGetClipboardOwner(VOID);
 
@@ -631,7 +632,7 @@ DWORD
 STDCALL
 NtUserGetClipboardSequenceNumber(VOID);
 
-DWORD
+HWND
 STDCALL
 NtUserGetClipboardViewer(VOID);
 
@@ -818,15 +819,15 @@ NtUserGetObjectInformation(
   DWORD nLength,
   PDWORD nLengthNeeded);
 
-DWORD
+HWND
 STDCALL
 NtUserGetOpenClipboardWindow(VOID);
 
-DWORD
+INT
 STDCALL
 NtUserGetPriorityClipboardFormat(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  UINT *paFormatPriorityList,
+  INT cFormats);
 
 HWINSTA
 STDCALL
@@ -960,10 +961,10 @@ STDCALL
   WINBOOL bErase);
 
 
-DWORD
+WINBOOL
 STDCALL
 NtUserIsClipboardFormatAvailable(
-  DWORD Unknown0);
+  UINT format);
 
 BOOL
 STDCALL
@@ -1098,10 +1099,10 @@ NtUserNotifyWinEvent(
   DWORD Unknown2,
   DWORD Unknown3);
 
-DWORD
+BOOL
 STDCALL
 NtUserOpenClipboard(
-  DWORD Unknown0,
+  HWND hWnd,
   DWORD Unknown1);
 
 HDESK
@@ -1316,17 +1317,17 @@ NtUserSetClassWord(
   DWORD Unknown1,
   DWORD Unknown2);
 
-DWORD
+HANDLE
 STDCALL
 NtUserSetClipboardData(
-  DWORD Unknown0,
-  DWORD Unknown1,
+  UINT uFormat,
+  HANDLE hMem,
   DWORD Unknown2);
 
-DWORD
+HWND
 STDCALL
 NtUserSetClipboardViewer(
-  DWORD Unknown0);
+  HWND hWndNewViewer);
 
 DWORD
 STDCALL

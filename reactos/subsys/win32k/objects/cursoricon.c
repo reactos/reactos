@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.38 2003/12/13 22:38:29 weiden Exp $ */
+/* $Id: cursoricon.c,v 1.39 2003/12/14 13:26:20 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -120,9 +120,10 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor, BOOL Fo
   /* FIXME use the desktop's HDC instead of using ScreenDeviceContext */
     PDC dc = DC_LockDc(IntGetScreenDC());
   if(!dc)
-    {
-      return Ret;
-    }
+  {
+    return Ret;
+  }
+  
   SurfObj = (PSURFOBJ)AccessUserObject((ULONG) dc->Surface);
   SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
   DevInfo = dc->DevInfo;
@@ -151,7 +152,7 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor, BOOL Fo
 
   /* TODO: Fixme. Logic is screwed above */
 
-  ASSERT(NewCursor);
+    ASSERT(NewCursor);
     MaskBmpObj = BITMAPOBJ_LockBitmap(NewCursor->IconInfo.hbmMask);
     if(MaskBmpObj)
     {
@@ -214,17 +215,17 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor, BOOL Fo
                                                       SPS_CHANGE);
     
     if(hMask)
-  {
+    {
       EngDeleteSurface(hMask);
-  }
+    }
     if(hColor)
-  {
+    {
       EngDeleteSurface(hColor);
-  }
+    }
     if(XlateObj)
-  {
+    {
       EngDeleteXlate(XlateObj);
-  }
+    }
     
     if(SurfGDI->PointerStatus == SPS_DECLINE)
       DbgPrint("SetCursor: DrvSetPointerShape() returned SPS_DECLINE\n");
