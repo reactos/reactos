@@ -1,4 +1,4 @@
-/* $Id: lang.c,v 1.2 2003/09/21 01:47:02 weiden Exp $
+/* $Id: lang.c,v 1.3 2004/01/14 07:22:17 rcampbell Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -11,7 +11,7 @@
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
-
+#include <string.h>
 
 static LCID SystemLocale = MAKELCID(LANG_ENGLISH, SORT_DEFAULT);
 
@@ -756,11 +756,175 @@ GetThreadLocale (VOID)
 
 #endif
 
+INT RosGetTimeFormat(LCID Locale, DWORD dwFlags, CONST SYSTEMTIME *lpTime, LPCWSTR lpFormat, LPWSTR lpTimeStr, int cchTime)
+{
+	INT nPos = 0, nLastFormatPos = 0;
+	BOOL bDrop = FALSE;
+
+	while( *lpFormat )
+	{
+		if (*lpFormat == (WCHAR) '\'')
+		{
+			lpFormat++;
+
+			while(*lpFormat)
+			{
+				if (*lpFormat == (WCHAR) '\'')
+				{
+					lpFormat++;
+					if(*lpFormat != (WCHAR) '\'')
+						break;
+				}
+				if (!cchTime)
+					nPos++;
+				else if(nPos > cchTime)
+				{
+					SetLastError(ERROR_INSUFFICIENT_BUFFER);
+					return 0;
+				}
+				else
+				{
+					if(!bDrop)
+					{
+						lpTimeStr[nPos] = *lpFormat;
+						nPos++;
+					}
+				}
+				*lpFormat++;
+			}
+		}
+		else if(*lpFormat=='H' || *lpFormat=='h' || *lpFormat=='m' || *lpFormat=='s' || *lpFormat=='t' )
+		{
+			int nCount, nBufLen;
+			int nType = *lpFormat;
+			WCHAR Buffer[40];
+			char ch[16];
+
+			bDrop = FALSE;
+
+			Buffer[0] = 0;
+
+			for(nCount = 1; *lpFormat == nType; lpFormat++)
+				nCount++;
+
+			switch(nType)
+			{
+			case 'h':
+				{
+					if(!(dwFlags & TIME_FORCE24HOURFORMAT))
+					{
+						sprintf( ch, "%.*d", nCount > 2 ? 2 : nCount,
+							lpTime->wHour == 0 ? 12 : (lpTime->wHour - 1) % 12 + 1);
+						
+		                MultiByteToWideChar( CP_ACP, 0, ch, -1, Buffer, sizeof(Buffer) / sizeof(WCHAR) );
+
+						break;
+					}
+				}
+			case 'H':
+				{
+					sprintf( ch, "%.*d", nCount > 2 ? 2 : nCount, lpTime->wHour );
+					MultiByteToWideChar( CP_ACP, 0, ch, -1, Buffer, sizeof(Buffer)/sizeof(WCHAR) );
+					
+					break;
+				}
+			case 'm':
+				{
+					if(!(dwFlags & TIME_NOMINUTESORSECONDS))
+					{
+						sprintf( ch, "%.*d", nCount > 2 ? 2 : nCount, lpTime->wMinute );
+						MultiByteToWideChar( CP_ACP, 0, ch, -1, Buffer, sizeof(Buffer) / sizeof(WCHAR) );
+					}
+					else
+						nPos = nLastFormatPos;
+
+					break;
+				}
+			case 's':
+				{
+					if(!(dwFlags & TIME_NOSECONDS) || !(dwFlags & TIME_NOMINUTESORSECONDS))
+					{
+					    sprintf( ch, "%.*d", nCount > 2 ? 2 : nCount, lpTime->wSecond );
+						MultiByteToWideChar( CP_ACP, 0, ch, -1, Buffer, sizeof(Buffer) / sizeof(WCHAR) );				
+					}
+					else
+						nPos = nLastFormatPos;
+
+					break;
+				}
+			case 't':
+				{
+					if(!(dwFlags & TIME_NOTIMEMARKER))
+					{
+						GetLocaleInfoW(Locale, (lpTime->wHour < 12) ? LOCALE_S1159 : LOCALE_S2359, Buffer, sizeof(Buffer) );
+						if(nCount == 1)
+							Buffer[1] = 0;
+					}
+					else
+					{
+						nPos = nLastFormatPos;
+						bDrop = TRUE;
+					}
+					break;
+				}
+			}
+			nBufLen = wcslen(Buffer);
+
+			if(!cchTime)
+			{
+				/* wine does nothing here?!? */
+			}
+			else if(nPos + nBufLen < cchTime)
+				wcscpy( lpTimeStr + nPos, Buffer );
+			else
+			{
+				lstrcpynW( lpTimeStr + nPos, Buffer, cchTime - nPos );
+				
+				SetLastError(ERROR_INSUFFICIENT_BUFFER);
+				return 0;
+			}
+			nPos += nBufLen;
+			nLastFormatPos = nPos;
+		}
+		else
+		{
+			if(!cchTime)
+				nPos++;
+			else if(nPos > cchTime)
+			{
+				SetLastError(ERROR_INSUFFICIENT_BUFFER);
+				return 0;
+			}
+			else
+			{
+				if(!bDrop)
+				{
+					lpTimeStr[nPos] = *lpFormat;
+					nPos++;
+				}
+			}
+		lpFormat++;
+		}
+	}
+
+	if (!cchTime)
+      /* We are counting */;
+	else if (nPos >= cchTime)
+	{
+		SetLastError(ERROR_INSUFFICIENT_BUFFER);
+		return 0;
+	}
+	else
+		lpTimeStr[nPos] = '\0';
+
+	nPos++;
+	return cchTime;
+}
 
 /*
- * @unimplemented
+ * @implemented
  */
-int
+INT
 STDCALL
 GetTimeFormatW (
     LCID            Locale,
@@ -771,8 +935,39 @@ GetTimeFormatW (
     int         cchTime
     )
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+	WCHAR Buffer[40];
+	SYSTEMTIME t;
+
+    if (!Locale)
+		Locale = LOCALE_SYSTEM_DEFAULT;
+        
+	Locale = ConvertDefaultLocale( Locale );
+
+	if (lpFormat == NULL)
+	{
+	  if (dwFlags & LOCALE_NOUSEROVERRIDE)
+		  Locale = GetSystemDefaultLCID();
+	  GetLocaleInfoW(Locale, LOCALE_STIMEFORMAT, Buffer, 40);
+	  lpFormat = Buffer;
+	}
+	if (dwFlags & LOCALE_NOUSEROVERRIDE)
+    {
+		SetLastError(ERROR_INVALID_FLAGS);
+	    return 0;
+    }
+	if (lpTime == NULL)
+	{
+		GetLocalTime(&t);
+		lpTime = &t;
+	}
+	if((lpTime->wHour > 24) || (lpTime->wMinute >= 60) || (lpTime->wSecond >= 60))
+    {
+		SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+	return RosGetTimeFormat(Locale, dwFlags & LOCALE_STIMEFORMAT, lpTime, lpFormat,
+                                    lpTimeStr, cchTime);
 }
 
 
@@ -789,9 +984,7 @@ GetTimeFormatA (
     LPSTR           lpTimeStr,
     int         cchTime
     )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+{    return sizeof(lpTimeStr);
 }
 
 
