@@ -4,4 +4,5 @@ csrss.nostrip.exe
 *.d
 *.o
 *.sym
+*.map
 win32k.c

@@ -1,6 +1,6 @@
-gstart.coff
-gstart.exe
-gstart.nostrip.exe
+*.coff
+*.exe
 *.d
 *.o
 *.sym
+*.map

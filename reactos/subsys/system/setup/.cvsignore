@@ -3,3 +3,4 @@
 *.exe
 *.o
 *.sym
+*.map

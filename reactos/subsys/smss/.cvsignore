@@ -1,6 +1,6 @@
-smss.coff
-smss.exe
-smss.nostrip.exe
+*.coff
+*.exe
 *.d
 *.o
 *.sym
+*.map

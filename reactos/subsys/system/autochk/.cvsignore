@@ -1,6 +1,6 @@
-autochk.coff
-autochk.exe
-autochk.nostrip.exe
+*.coff
+*.exe
 *.d
 *.o
 *.sym
+*.map
