@@ -32,6 +32,11 @@
 #include "traynotify.h"	// for NOTIFYAREA_WIDTH_DEF
 
 
+DynamicFct<BOOL (WINAPI*)(HWND hwnd)> g_SetTaskmanWindow(TEXT("user32"), "SetTaskmanWindow");
+DynamicFct<BOOL (WINAPI*)(HWND hwnd)> g_RegisterShellHookWindow(TEXT("user32"), "RegisterShellHookWindow");
+DynamicFct<BOOL (WINAPI*)(HWND hwnd)> g_DeregisterShellHookWindow(TEXT("user32"), "DeregisterShellHookWindow");
+
+
 TaskBarEntry::TaskBarEntry()
 {
 	_id = 0;
@@ -61,12 +66,13 @@ TaskBar::TaskBar(HWND hwnd)
 
 TaskBar::~TaskBar()
 {
-	DynamicFct<BOOL (WINAPI*)(HWND hwnd)> DeregisterShellHookWindow(TEXT("user32"), "DeregisterShellHookWindow");
-
-	if (DeregisterShellHookWindow)
-		(*DeregisterShellHookWindow)(_hwnd);
+	if (g_DeregisterShellHookWindow)
+		(*g_DeregisterShellHookWindow)(_hwnd);
 	else
 		KillTimer(_hwnd, 0);
+
+	if (g_SetTaskmanWindow)
+		(*g_SetTaskmanWindow)(0);
 }
 
 HWND TaskBar::Create(HWND hwndParent)
@@ -100,15 +106,13 @@ LRESULT TaskBar::Init(LPCREATESTRUCT pcs)
 	_next_id = IDC_FIRST_APP;
 
 	 // register ourselved as task manager window to make the following call to RegisterShellHookWindow working
-	DynamicFct<BOOL (WINAPI*)(HWND hwnd)> SetTaskmanWindow(TEXT("user32"), "SetTaskmanWindow");
-	if (SetTaskmanWindow)
-		(*SetTaskmanWindow)(_hwnd);
+	if (g_SetTaskmanWindow)
+		(*g_SetTaskmanWindow)(_hwnd);
 
-	DynamicFct<BOOL (WINAPI*)(HWND hwnd)> RegisterShellHookWindow(TEXT("user32"), "RegisterShellHookWindow");
-	if (RegisterShellHookWindow) {
+	if (g_RegisterShellHookWindow) {
 		LOG(TEXT("Using shell hooks for notification of shell events."));
 
-		(*RegisterShellHookWindow)(_hwnd);
+		(*g_RegisterShellHookWindow)(_hwnd);
 	} else {
 		LOG(TEXT("Shell hooks not available."));
 		SetTimer(_hwnd, 0, 200, NULL);
@@ -139,23 +143,7 @@ LRESULT TaskBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			break;	// avoid displaying context menu for application button _and_ desktop bar at the same time
 
 		goto def;}
-/*
-//#define PM_SHELLHOOK_NOTIFY		(WM_APP+0x10)
 
-	  case PM_SHELLHOOK_NOTIFY: {
-		int code = lparam;
-
-		switch(code) {
-		  case HSHELL_WINDOWCREATED:
-		  case HSHELL_WINDOWDESTROYED:
-		  case HSHELL_WINDOWACTIVATED:
-		  case HSHELL_WINDOWREPLACED:
-			Refresh();
-			break;
-		}
-		Refresh();
-		break;}
-*/
 	  case PM_GET_LAST_ACTIVE:
 		return (LRESULT)(HWND)_last_foreground_wnd;
 

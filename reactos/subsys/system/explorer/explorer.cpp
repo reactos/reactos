@@ -729,6 +729,14 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 				RegSetValueEx(hkey, TEXT("Shell"), 0, REG_SZ, (LPBYTE)path, l*sizeof(TCHAR));
 				RegCloseKey(hkey);
 			}
+
+			if (!RegOpenKey(HKEY_CURRENT_USER, TEXT("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon"), &hkey)) {
+
+				///@todo save previous shell application in config file
+
+				RegSetValueEx(hkey, TEXT("Shell"), 0, REG_SZ, (LPBYTE)TEXT(""), l*sizeof(TCHAR));
+				RegCloseKey(hkey);
+			}
 		}
 
 		HWND shellWindow = GetShellWindow();

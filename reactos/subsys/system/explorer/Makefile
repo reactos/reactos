@@ -25,8 +25,8 @@ TARGET_CPPFLAGS := $(TARGET_CFLAGS)
 TARGET_RCFLAGS := -D__USE_W32API -DWIN32 -D_ROS_ -D__WINDRES__
 
 TARGET_SDKLIBS := \
-	gdi32.a comctl32.a ole32.a oleaut32.a shell32.a expat.a \
-	notifyhook.a ws2_32.a msimg32.a user32.a
+	gdi32.a user32.a comctl32.a ole32.a oleaut32.a shell32.a expat.a \
+	notifyhook.a ws2_32.a msimg32.a
 
 TARGET_GCCLIBS := stdc++ uuid
 
