@@ -38,15 +38,14 @@
 
 
 #define	IDC_START		0x1000
+#define	IDC_LOGOFF		0x1001
 #define	IDC_FIRST_APP	0x2000
+#define	IDC_FIRST_MENU	0x3000
 
 
 HWND InitializeExplorerBar(HINSTANCE hInstance)
 {
 	RECT rect;
-
-	WindowClass wcExplorerBar(CLASSNAME_EXPLORERBAR);
-	wcExplorerBar.hbrBackground = (HBRUSH)(COLOR_BTNFACE+1);
 
 	rect.left = -2;	// hide left border
 #ifdef TASKBAR_AT_TOP
@@ -58,7 +57,8 @@ HWND InitializeExplorerBar(HINSTANCE hInstance)
 	rect.bottom = rect.top + TASKBAR_HEIGHT + 2;
 
 	return Window::Create(WINDOW_CREATOR(DesktopBar), WS_EX_PALETTEWINDOW,
-							(LPCTSTR)(int)wcExplorerBar.Register(), TITLE_EXPLORERBAR, WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN|WS_VISIBLE,
+							(LPCTSTR)(int)BtnWindowClass(CLASSNAME_EXPLORERBAR).Register(), TITLE_EXPLORERBAR,
+							WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN|WS_VISIBLE,
 							rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, 0);
 }
 
@@ -67,6 +67,7 @@ DesktopBar::DesktopBar(HWND hwnd)
  :	super(hwnd)
 {
 	_hwndTaskBar = 0;
+	_hwndStartMenu = 0;
 }
 
 DesktopBar::~DesktopBar()
@@ -78,19 +79,17 @@ DesktopBar::~DesktopBar()
 
 LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 {
-	super::Init(pcs);
+	if (super::Init(pcs))
+		return 1;
 
 	 // create start button
-	new PictureButton(Button(_hwnd, TEXT("Start"), 2, 2, STARTBUTTON_WIDTH, TASKBAR_HEIGHT-10, IDC_START,
-									WS_VISIBLE|WS_CHILD|BS_PUSHBUTTON|BS_OWNERDRAW),
-						LoadIcon(g_Globals._hInstance, MAKEINTRESOURCE(IDI_STARTMENU)));
+	new PictureButton(Button(_hwnd, ResString(IDS_START), 2, 2, STARTBUTTON_WIDTH, TASKBAR_HEIGHT-8, IDC_START,
+							 WS_VISIBLE|WS_CHILD|BS_PUSHBUTTON|BS_OWNERDRAW),
+						ResIcon(IDI_STARTMENU));
 
 	 // create task bar
-	WindowClass wcTaskBar(CLASSNAME_TASKBAR);
-	wcTaskBar.hbrBackground = (HBRUSH)(COLOR_BTNFACE+1);
-
 	_hwndTaskBar = Window::Create(WINDOW_CREATOR(TaskBar), 0,
-							(LPCTSTR)(int)wcTaskBar.Register(), TITLE_TASKBAR, WS_CHILD|WS_VISIBLE,
+							(LPCTSTR)(int)BtnWindowClass(CLASSNAME_TASKBAR).Register(), TITLE_TASKBAR, WS_CHILD|WS_VISIBLE,
 							TASKBAR_LEFT, 0, ClientRect(_hwnd).right-TASKBAR_LEFT, TASKBAR_HEIGHT, _hwnd);
 
 	TaskBar* taskbar = static_cast<TaskBar*>(Window::get_window(_hwndTaskBar));
@@ -98,6 +97,19 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 	taskbar->_desktop_bar = this;
 
 	return 0;
+}
+
+
+void DesktopBar::create_startmenu()
+{
+	WindowRect my_pos(_hwnd);
+
+	static BtnWindowClass wcStartMenu(CLASSNAME_STARTMENU);
+
+	_hwndStartMenu = Window::Create(WINDOW_CREATOR(StartMenu), 0,
+						(LPCTSTR)(int)wcStartMenu.Register(), TITLE_STARTMENU,
+						WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN|WS_VISIBLE,
+						my_pos.left, my_pos.top-STARTMENU_HEIGHT, STARTMENU_WIDTH, STARTMENU_HEIGHT, _hwnd);
 }
 
 
@@ -149,8 +161,11 @@ LRESULT DesktopBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 int DesktopBar::Command(int id, int code)
 {
-	if (id == IDC_START)
-		DestroyWindow(_hwnd);
+	switch(id) {
+	  case IDC_START:
+		create_startmenu();
+		break;
+	}
 
 	return 0;
 }
@@ -199,7 +214,6 @@ static HBITMAP create_bitmap_from_icon(HICON hicon, HWND hwnd, HBRUSH hbrush_bkg
 }
 
 
-
 TaskBarEntry::TaskBarEntry()
 {
 	_id = 0;
@@ -234,7 +248,8 @@ TaskBar::~TaskBar()
 
 LRESULT TaskBar::Init(LPCREATESTRUCT pcs)
 {
-	super::Init(pcs);
+	if (super::Init(pcs))
+		return 1;
 
 	_htoolbar = CreateToolbarEx(_hwnd,
 		WS_CHILD|WS_VISIBLE|CCS_NODIVIDER|CCS_TOP|
@@ -289,7 +304,7 @@ LRESULT TaskBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		return super::WndProc(nmsg, wparam, lparam);
 	}
 
-	return super::WndProc(nmsg, wparam, lparam);
+	return 0;
 }
 
 int TaskBar::Command(int id, int code)
@@ -457,4 +472,57 @@ TaskBarMap::iterator TaskBarMap::find_id(int id)
 			return it;
 
 	return end();
+}
+
+
+StartMenu::StartMenu(HWND hwnd)
+ :	super(hwnd)
+{
+}
+
+StartMenu::~StartMenu()
+{
+}
+
+LRESULT	StartMenu::Init(LPCREATESTRUCT pcs)
+{
+	if (super::Init(pcs))
+		return 1;
+
+	ClientRect clnt(_hwnd);
+
+	SetWindowFont(*new PictureButton(Button(_hwnd, ResString(IDS_LOGOFF), 2, clnt.bottom-STARTMENU_LINE_HEIGHT, clnt.right-2, STARTMENU_LINE_HEIGHT,
+							IDC_LOGOFF, WS_VISIBLE|WS_CHILD|BS_PUSHBUTTON|BS_OWNERDRAW),
+						ResIcon(IDI_LOGOFF)),
+					GetStockFont(DEFAULT_GUI_FONT), FALSE);
+
+	return 0;
+}
+
+LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
+{
+/*@@
+	switch(nmsg) {
+	  default:
+		return super::WndProc(nmsg, wparam, lparam);
+	}
+
+	return 0;
+*/
+	return super::WndProc(nmsg, wparam, lparam);
+}
+
+int StartMenu::Command(int id, int code)
+{
+	switch(id) {
+	  case IDC_LOGOFF:
+		DestroyWindow(GetParent(_hwnd));
+		break;
+
+	  case IDCANCEL:
+		DestroyWindow(_hwnd);
+		break;
+	}
+
+	return super::Command(id, code);
 }

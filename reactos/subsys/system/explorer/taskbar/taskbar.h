@@ -28,14 +28,15 @@
 
 //#include "shellhook.h"
 
-#include <map>
-#include <set>
 
-
-#define	TASKBAR_HEIGHT		30
-#define	STARTBUTTON_WIDTH	90
-#define	TASKBAR_LEFT		100
+#define	TASKBAR_HEIGHT			30
+#define	STARTBUTTON_WIDTH		60
+#define	TASKBAR_LEFT			70
 //#define TASKBAR_AT_TOP
+
+#define	STARTMENU_WIDTH			150
+#define	STARTMENU_HEIGHT		400
+#define	STARTMENU_LINE_HEIGHT	30
 
 #define	WM_SHELLHOOK_NOTIFY		(WM_APP+0x10)
 
@@ -45,6 +46,9 @@
 
 #define	CLASSNAME_TASKBAR		_T("MSTaskSwWClass")
 #define	TITLE_TASKBAR			_T("Running Applications")
+
+#define	CLASSNAME_STARTMENU		_T("ReactosStartmenuClass")
+#define	TITLE_STARTMENU			_T("Start Menu")
 
 
 struct DesktopBar : public OwnerDrawParent<Window>
@@ -59,7 +63,10 @@ protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 	int		Command(int id, int code);
 
+	void	create_startmenu();
+
 	HWND	_hwndTaskBar;
+	HWND	_hwndStartMenu;
 };
 
 
@@ -90,7 +97,7 @@ struct TaskBar : public Window
 	typedef Window super;
 
 	TaskBar(HWND hwnd);
-	TaskBar::~TaskBar();
+	~TaskBar();
 
 	DesktopBar*	_desktop_bar;
 
@@ -107,4 +114,17 @@ protected:
 	static BOOL CALLBACK EnumWndProc(HWND hwnd, LPARAM lparam);
 
 	void	Refresh();
+};
+
+struct StartMenu : public OwnerDrawParent<Dialog>
+{
+	typedef OwnerDrawParent<Dialog> super;
+
+	StartMenu(HWND hwnd);
+	~StartMenu();
+
+protected:
+	LRESULT	Init(LPCREATESTRUCT pcs);
+	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+	int		Command(int id, int code);
 };

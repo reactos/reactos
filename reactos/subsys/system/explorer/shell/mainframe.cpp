@@ -36,7 +36,7 @@
 
 
 MainFrame::MainFrame(HWND hwnd)
- :	Window(hwnd)
+ :	super(hwnd)
 {
 	_hMenuFrame = GetMenu(hwnd);
 	_hMenuWindow = GetSubMenu(_hMenuFrame, GetMenuItemCount(_hMenuFrame)-2);
@@ -322,7 +322,7 @@ int MainFrame::Command(int id, int code)
 	  case ID_EXECUTE: {
 		ExecuteDialog dlg = {{0}, 0};
 
-		if (DialogBoxParam(g_Globals._hInstance, MAKEINTRESOURCE(IDD_EXECUTE), _hwnd, ExecuteDialog::WndProg, (LPARAM)&dlg) == IDOK) {
+		if (DialogBoxParam(g_Globals._hInstance, MAKEINTRESOURCE(IDD_EXECUTE), _hwnd, ExecuteDialog::WndProc, (LPARAM)&dlg) == IDOK) {
 			HINSTANCE hinst = ShellExecute(_hwnd, NULL/*operation*/, dlg.cmd/*file*/, NULL/*parameters*/, NULL/*dir*/, dlg.cmdshow);
 
 			if ((int)hinst <= 32)

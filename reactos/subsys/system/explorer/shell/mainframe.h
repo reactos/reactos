@@ -26,9 +26,9 @@
  //
 
 
-struct MainFrame : public Window
+struct MainFrame : public PreTranslateWindow
 {
-	typedef Window super;
+	typedef PreTranslateWindow super;
 
 	MainFrame(HWND hwnd);
 	~MainFrame();

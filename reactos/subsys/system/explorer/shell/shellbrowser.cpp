@@ -73,7 +73,8 @@ ShellBrowserChild::~ShellBrowserChild()
 
 LRESULT ShellBrowserChild::Init(LPCREATESTRUCT pcs)
 {
-	super::Init(pcs);
+	if (super::Init(pcs))
+		return 1;
 
 	_hWndFrame = GetParent(pcs->hwndParent);
 

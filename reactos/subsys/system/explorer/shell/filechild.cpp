@@ -475,7 +475,7 @@ int FileChildWindow::Notify(int id, NMHDR* pnmh)
 }
 
 
-BOOL CALLBACK ExecuteDialog::WndProg(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
+BOOL CALLBACK ExecuteDialog::WndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	static struct ExecuteDialog* dlg;
 

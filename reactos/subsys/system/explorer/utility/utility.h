@@ -108,6 +108,14 @@ struct ClientRect : public RECT
 	}
 };
 
+struct WindowRect : public RECT
+{
+	WindowRect(HWND hwnd)
+	{
+		GetWindowRect(hwnd, this);
+	}
+};
+
 
 struct TextColor
 {

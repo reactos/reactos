@@ -27,6 +27,7 @@
 
 
 #include "utility.h"
+#include "shellclasses.h"
 #include "window.h"
 
 #include "../globals.h"
@@ -43,6 +44,16 @@ WindowClass::WindowClass(LPCTSTR classname, UINT style_, WNDPROC wndproc)
 
 	lpszClassName = classname;
 	lpfnWndProc = wndproc;
+
+	_atomClass = 0;
+}
+
+
+IconWindowClass::IconWindowClass(LPCTSTR classname, UINT nid, UINT style, WNDPROC wndproc)
+ :	WindowClass(classname, style, wndproc)
+{
+	hIcon = ResIcon(nid);
+	hIconSm = SmallIcon(nid);
 }
 
 
@@ -51,8 +62,8 @@ Window::WINDOWCREATORFUNC Window::s_window_creator = NULL;
 const void* Window::s_new_info = NULL;
 
 
-HWND Window::Create(WINDOWCREATORFUNC creator,
-					DWORD dwExStyle, LPCTSTR lpClassName, LPCTSTR lpWindowName,
+HWND Window::Create(WINDOWCREATORFUNC creator, DWORD dwExStyle,
+					LPCTSTR lpClassName, LPCTSTR lpWindowName,
 					DWORD dwStyle, int x, int y, int w, int h,
 					HWND hwndParent, HMENU hMenu, LPVOID lpParam)
 {
@@ -64,8 +75,8 @@ HWND Window::Create(WINDOWCREATORFUNC creator,
 							hwndParent, hMenu, g_Globals._hInstance, 0/*lpParam*/);
 }
 
-HWND Window::Create(WINDOWCREATORFUNC creator, const void* info,
-					DWORD dwExStyle, LPCTSTR lpClassName, LPCTSTR lpWindowName,
+HWND Window::Create(WINDOWCREATORFUNC creator, const void* info, DWORD dwExStyle,
+					LPCTSTR lpClassName, LPCTSTR lpWindowName,
 					DWORD dwStyle, int x, int y, int w, int h,
 					HWND hwndParent, HMENU hMenu, LPVOID lpParam)
 {
@@ -190,7 +201,7 @@ int Window::Notify(int id, NMHDR* pnmh)
 
 
 SubclassedWindow::SubclassedWindow(HWND hwnd)
- :	Window(hwnd)
+ :	super(hwnd)
 {
 	_orgWndProc = SubclassWindow(_hwnd, WindowWndProc);
 
@@ -205,7 +216,7 @@ LRESULT SubclassedWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 
 ChildWindow::ChildWindow(HWND hwnd)
- :	Window(hwnd)
+ :	super(hwnd)
 {
 	_left_hwnd = 0;
 	_right_hwnd = 0;
@@ -356,6 +367,98 @@ void ChildWindow::resize_children(int cx, int cy)
 }
 
 
+WindowSet Window::s_pretranslate_windows;
+
+void Window::register_pretranslate(HWND hwnd)
+{
+	s_pretranslate_windows.insert(hwnd);
+}
+
+void Window::unregister_pretranslate(HWND hwnd)
+{
+	s_pretranslate_windows.erase(hwnd);
+}
+
+BOOL Window::pretranslate_msg(LPMSG pmsg)
+{
+	for(WindowSet::const_iterator it=Window::s_pretranslate_windows.begin(); it!=s_pretranslate_windows.end(); ++it)
+		if (SendMessage(*it, WM_TRANSLATE_MSG, 0, (LPARAM)pmsg))
+			return TRUE;
+
+	return FALSE;
+}
+
+
+WindowSet Window::s_dialogs;
+
+void Window::register_dialog(HWND hwnd)
+{
+	s_dialogs.insert(hwnd);
+}
+
+void Window::unregister_dialog(HWND hwnd)
+{
+	s_dialogs.erase(hwnd);
+}
+
+BOOL Window::dispatch_dialog_msg(MSG* pmsg)
+{
+	for(WindowSet::const_iterator it=Window::s_dialogs.begin(); it!=s_dialogs.end(); ++it)
+		if (IsDialogMessage(*it, pmsg))
+			return TRUE;
+
+	return FALSE;
+}
+
+
+PreTranslateWindow::PreTranslateWindow(HWND hwnd)
+ :	super(hwnd)
+{
+	register_pretranslate(hwnd);
+}
+
+PreTranslateWindow::~PreTranslateWindow()
+{
+	unregister_pretranslate(_hwnd);
+}
+
+
+Dialog::Dialog(HWND hwnd)
+ :	super(hwnd)
+{
+	register_dialog(hwnd);
+}
+
+Dialog::~Dialog()
+{
+	unregister_dialog(_hwnd);
+}
+
+
+int Window::MessageLoop()
+{
+	MSG msg;
+
+	while(GetMessage(&msg, 0, 0, 0)) {
+		if (pretranslate_msg(&msg))
+			continue;
+
+		if (dispatch_dialog_msg(&msg))
+			continue;
+
+		TranslateMessage(&msg);
+
+		try {
+			DispatchMessage(&msg);
+		} catch(COMException& e) {
+			HandleException(e, g_Globals._hMainWnd);
+		}
+	}
+
+	return msg.wParam;
+}
+
+
 Button::Button(HWND parent, LPCTSTR text, int left, int top, int width, int height,
 				UINT id, DWORD flags, DWORD ex_flags)
 {
@@ -452,8 +555,8 @@ LRESULT PictureButton::WndProc(UINT message, WPARAM wparam, LPARAM lparam)
 		if (dis->itemState & ODS_DISABLED)
 			style |= DFCS_INACTIVE;
 
-		POINT iconPos = {dis->rcItem.left+2, dis->rcItem.top+2};
-		RECT textRect = {dis->rcItem.left+2, dis->rcItem.top+2, dis->rcItem.right-4, dis->rcItem.bottom-4};
+		POINT iconPos = {dis->rcItem.left+2, (dis->rcItem.top+dis->rcItem.bottom-16)/2};
+		RECT textRect = {dis->rcItem.left+16+2, dis->rcItem.top+2, dis->rcItem.right-4, dis->rcItem.bottom-4};
 
 		if (dis->itemState & ODS_SELECTED) {
 			style |= DFCS_PUSHED;

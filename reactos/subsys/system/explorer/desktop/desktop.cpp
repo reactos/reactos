@@ -29,6 +29,7 @@
 #include "desktop.h"
 
 #include "../externals.h"
+#include "../explorer_intres.h"
 
 
 static BOOL (WINAPI*SetShellWindow)(HWND);
@@ -118,7 +119,8 @@ DesktopWindow::~DesktopWindow()
 
 LRESULT	DesktopWindow::Init(LPCREATESTRUCT pcs)
 {
-	super::Init(pcs);
+	if (super::Init(pcs))
+		return 1;
 
 	HRESULT hr = Desktop()->CreateViewObject(_hwnd, IID_IShellView, (void**)&_pShellView);
 /* also possible:
@@ -230,17 +232,13 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 HWND create_desktop_window(HINSTANCE hInstance)
 {
-	WindowClass wcDesktop(_T("Progman"), CS_DBLCLKS);
-
+	IconWindowClass wcDesktop(_T("Progman"), IDI_REACTOS, CS_DBLCLKS);
 	wcDesktop.hbrBackground = (HBRUSH)(COLOR_BACKGROUND+1);
-	wcDesktop.hIcon			= LoadIcon(0, IDI_APPLICATION);
-
-	ATOM desktopClass = wcDesktop.Register();
 
 	int width = GetSystemMetrics(SM_CXSCREEN);
 	int height = GetSystemMetrics(SM_CYSCREEN);
 
 	return Window::Create(WINDOW_CREATOR(DesktopWindow),
-					WS_EX_TOOLWINDOW, (LPCTSTR)(int)desktopClass, _T("Program Manager"), WS_POPUP|WS_VISIBLE|WS_CLIPCHILDREN,
+					WS_EX_TOOLWINDOW, (LPCTSTR)(int)wcDesktop.Register(), _T("Program Manager"), WS_POPUP|WS_VISIBLE|WS_CLIPCHILDREN,
 					0, 0, width, height, 0);
 }

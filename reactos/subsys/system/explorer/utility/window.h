@@ -26,6 +26,13 @@
  //
 
 
+#include <map>
+#include <set>
+
+
+typedef set<HWND> WindowSet;
+
+
 struct Window
 {
 	Window(HWND hwnd)
@@ -45,8 +52,8 @@ struct Window
 
 	typedef Window* (*WINDOWCREATORFUNC)(HWND, const void*);
 
-	static HWND Create(WINDOWCREATORFUNC creator,
-				DWORD dwExStyle, LPCTSTR lpClassName, LPCTSTR lpWindowName,
+	static HWND Create(WINDOWCREATORFUNC creator, DWORD dwExStyle,
+				LPCTSTR lpClassName, LPCTSTR lpWindowName,
 				DWORD dwStyle, int x, int y, int w, int h,
 				HWND hwndParent=0, HMENU hMenu=0, LPVOID lpParam=0);
 
@@ -59,6 +66,17 @@ struct Window
 
 	static LRESULT CALLBACK WindowWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
 	static Window* get_window(HWND hwnd);
+
+
+	static void register_pretranslate(HWND hwnd);
+	static void unregister_pretranslate(HWND hwnd);
+	static BOOL	pretranslate_msg(LPMSG pmsg);
+
+	static void	register_dialog(HWND hwnd);
+	static void	unregister_dialog(HWND hwnd);
+	static BOOL	dispatch_dialog_msg(LPMSG pmsg);
+
+	static int	MessageLoop();
 
 
 protected:
@@ -77,11 +95,16 @@ protected:
 	 // MDI child creation
 	static HHOOK s_hcbtHook;
 	static LRESULT CALLBACK CBTHookProc(int code, WPARAM wparam, LPARAM lparam);
+
+	static WindowSet s_pretranslate_windows;
+	static WindowSet s_dialogs;
 };
 
 
 struct SubclassedWindow : public Window
 {
+	typedef Window super;
+
 	SubclassedWindow(HWND);
 
 protected:
@@ -121,12 +144,37 @@ struct WindowClass : public WNDCLASSEX
 
 	ATOM Register()
 	{
-		return RegisterClassEx(this);
+		if (!_atomClass)
+			_atomClass = RegisterClassEx(this);
+
+		return _atomClass;
 	}
+
+	operator ATOM() const {return _atomClass;}
+
+protected:
+	ATOM	_atomClass;
+};
+
+ // window class with gray background color
+struct BtnWindowClass : public WindowClass
+{
+	BtnWindowClass(LPCTSTR classname, UINT style=0, WNDPROC wndproc=Window::WindowWndProc)
+	 :	WindowClass(classname, style, wndproc)
+	{
+		hbrBackground = (HBRUSH)(COLOR_BTNFACE+1);
+	}
+};
+
+ // window class with gray background color
+struct IconWindowClass : public WindowClass
+{
+	IconWindowClass(LPCTSTR classname, UINT nid, UINT style=0, WNDPROC wndproc=Window::WindowWndProc);
 };
 
 
 #define	WM_DISPATCH_COMMAND		(WM_APP+0x00)
+#define	WM_TRANSLATE_MSG		(WM_APP+0x01)
 
 
 #define SPLIT_WIDTH 		5
@@ -140,7 +188,7 @@ struct MenuInfo
 	HMENU	_hMenuOptions;
 };
 
-#define	FRM_GET_MENUINFO		(WM_APP+0x01)
+#define	FRM_GET_MENUINFO		(WM_APP+0x02)
 
 #define	Frame_GetMenuInfo(hwnd) ((MenuInfo*)SNDMSG(hwnd, FRM_GET_MENUINFO, 0, 0))
 
@@ -171,6 +219,25 @@ protected:
 };
 
 
+struct PreTranslateWindow : public Window
+{
+	typedef Window super;
+
+	PreTranslateWindow(HWND);
+	~PreTranslateWindow();
+};
+
+
+struct Dialog : public Window
+{
+	typedef Window super;
+
+	Dialog(HWND);
+	~Dialog();
+};
+
+
+ // create button controls
 struct Button
 {
 	Button(HWND parent, LPCTSTR text, int left, int top, int width, int height,
@@ -183,9 +250,10 @@ protected:
 };
 
 
- // control message routing for colloered and owner drawn controls
+/*
+ // control color message routing for ColorStatic and HyperlinkCtrl
+
 #define	WM_DISPATCH_CTLCOLOR	(WM_APP+0x07)
-#define	WM_DISPATCH_DRAWITEM	(WM_APP+0x08)
 
 template<typename BASE> struct CtlColorParent : public BASE
 {
@@ -211,8 +279,13 @@ template<typename BASE> struct CtlColorParent : public BASE
 		}
 	}
 };
+*/
 
- // for ColorButton and PictureButton 
+
+ // owner draw message routing for ColorButton and PictureButton 
+
+#define	WM_DISPATCH_DRAWITEM	(WM_APP+0x08)
+
 template<typename BASE> struct OwnerDrawParent : public BASE
 {
 	typedef BASE super;
@@ -240,6 +313,9 @@ template<typename BASE> struct OwnerDrawParent : public BASE
 	}
 };
 
+
+ // Subclass button controls to paint colored text labels.
+ // The owning window should use the OwnerDrawParent template to route woner draw messages to the buttons.
 struct ColorButton : public SubclassedWindow
 {
 	typedef SubclassedWindow super;
@@ -253,6 +329,10 @@ protected:
 	COLORREF _textColor;
 };
 
+
+ // Subclass button controls to paint pictures left to the labels.
+ // The buttons should have set the style bit BS_OWNERDRAW.
+ // The owning window should use the OwnerDrawParent template to route woner draw messages to the buttons.
 struct PictureButton : public SubclassedWindow
 {
 	typedef SubclassedWindow super;

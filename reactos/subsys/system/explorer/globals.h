@@ -38,3 +38,28 @@ extern struct ExplorerGlobals
 	bool		_desktop_mode;
 } g_Globals;
 
+
+struct ResString : public String
+{
+	ResString(UINT nid);
+};
+
+struct ResIcon
+{
+	ResIcon(UINT nid);
+
+	operator HICON() const {return _hicon;}
+
+protected:
+	HICON	_hicon;
+};
+
+struct SmallIcon
+{
+	SmallIcon(UINT nid);
+
+	operator HICON() const {return _hicon;}
+
+protected:
+	HICON	_hicon;
+};

@@ -88,9 +88,9 @@ public:
 };
 
 
-struct ExecuteDialog {	// TODO: integrate with Window class
+struct ExecuteDialog {	// TODO: integrate dialogs with Window class
 	TCHAR	cmd[MAX_PATH];
 	int		cmdshow;
 
-	static BOOL CALLBACK WndProg(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
+	static BOOL CALLBACK WndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
 };

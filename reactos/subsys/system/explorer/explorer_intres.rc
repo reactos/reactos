@@ -90,8 +90,10 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
+IDI_REACTOS             ICON    DISCARDABLE     "res/reactos.ico"
 IDI_EXPLORER            ICON    DISCARDABLE     "res/explorer.ico"
 IDI_STARTMENU           ICON    DISCARDABLE     "res/startmenu.ico"
+IDI_LOGOFF              ICON    DISCARDABLE     "res/logoff.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -117,7 +119,7 @@ BEGIN
         MENUITEM "&Drucken...",                 102
         MENUITEM "Zuord&nen...",                103
         MENUITEM SEPARATOR
-        MENUITEM "Ver&zeichnis erstellen...",   111
+        MENUITEM "Ver&zeichnis erstellen...",   ID_EXECUTE
         MENUITEM "&Suchen...",                  104
         MENUITEM "Dateien aus&wählen...",       116
         MENUITEM SEPARATOR
@@ -238,6 +240,8 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_TITLE               "Reactos Explorer"
+    IDS_START               "Start"
+    IDS_LOGOFF              "Logoff"
 END
 
 #endif    // German (Germany) resources
@@ -304,7 +308,7 @@ BEGIN
         MENUITEM "&Print...",                   102
         MENUITEM "Associate...",                103
         MENUITEM SEPARATOR
-        MENUITEM "Cr&eate Directory...",        111
+        MENUITEM "Cr&eate Directory...",        ID_EXECUTE
         MENUITEM "Searc&h...",                  104
         MENUITEM "&Select Files...",            116
         MENUITEM SEPARATOR

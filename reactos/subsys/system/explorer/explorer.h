@@ -41,7 +41,6 @@
 #define	IDW_FIRST_CHILD			0xC000	/*0x200*/
 
 
-#define	WM_TRANSLATE_MSG		(WM_APP+0x02)
 #define	WM_GET_FILEWND_PTR		(WM_APP+0x03)
 
 #define	FRM_CALC_CLIENT			(WM_APP+0x04)
@@ -56,12 +55,6 @@
 
 #define CLASSNAME_CHILDWND		TEXT("WFS_Child")
 #define CLASSNAME_WINEFILETREE	TEXT("WFS_Tree")
-
-
-struct ResString : public String
-{
-	ResString(UINT nid);
-};
 
 
 #include "shell/mainframe.h"

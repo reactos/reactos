@@ -3,19 +3,22 @@
 // Used by explorer_intres.rc
 //
 #define IDS_TITLE                       1
-#define IDI_EXPLORER                    100
-#define IDB_TOOLBAR                     101
-#define IDA_EXPLORER                    101
-#define ID_ACTIVATE                     101
-#define IDB_DRIVEBAR                    102
-#define IDB_IMAGES                      103
-#define IDD_EXECUTE                     103
-#define IDR_MAINFRAME                   104
-#define IDM_MAINFRAME                   105
-#define ID_EXECUTE                      105
-#define IDM_WINEFILE                    107
-#define IDB_STARTMENU                   120
-#define IDI_STARTMENU                   121
+#define IDS_START                       2
+#define IDS_LOGOFF                      3
+#define IDI_REACTOS                     100
+#define IDI_EXPLORER                    101
+#define IDI_STARTMENU                   102
+#define IDB_TOOLBAR                     103
+#define IDA_EXPLORER                    104
+#define ID_ACTIVATE                     105
+#define IDB_DRIVEBAR                    106
+#define IDB_IMAGES                      107
+#define IDD_EXECUTE                     108
+#define IDR_MAINFRAME                   109
+#define IDM_MAINFRAME                   110
+#define ID_EXECUTE                      111
+#define IDM_WINEFILE                    112
+#define IDI_LOGOFF                      124
 #define ID_VIEW_NAME                    401
 #define ID_VIEW_ALL_ATTRIBUTES          402
 #define ID_VIEW_SELECTED_ATTRIBUTES     403
@@ -47,7 +50,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        122
+#define _APS_NEXT_RESOURCE_VALUE        125
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           101

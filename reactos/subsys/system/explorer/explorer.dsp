@@ -401,6 +401,14 @@ SOURCE=.\globals.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\icon1.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\logoff.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\shell\mainframe.cpp
 # End Source File
 # Begin Source File
@@ -414,6 +422,10 @@ SOURCE=.\shell\pane.cpp
 # Begin Source File
 
 SOURCE=.\shell\pane.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\reactos.ico
 # End Source File
 # Begin Source File
 

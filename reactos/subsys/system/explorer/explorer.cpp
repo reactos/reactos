@@ -62,6 +62,17 @@ ResString::ResString(UINT nid)
 }
 
 
+ResIcon::ResIcon(UINT nid)
+{
+	_hicon = LoadIcon(g_Globals._hInstance, MAKEINTRESOURCE(nid));
+}
+
+SmallIcon::SmallIcon(UINT nid)
+{
+	_hicon = (HICON)LoadImage(g_Globals._hInstance, MAKEINTRESOURCE(nid), IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED);
+}
+
+
 void explorer_show_frame(HWND hwndDesktop, int cmdshow)
 {
 	if (g_Globals._hMainWnd)
@@ -90,27 +101,14 @@ static void InitInstance(HINSTANCE hInstance)
 {
 	setlocale(LC_COLLATE, "");	// set collating rules to local settings for compareName
 
-
 	 // register frame window class
-
-	WindowClass wcFrame(CLASSNAME_FRAME);
-
-	wcFrame.hIcon		  = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_EXPLORER));
-	wcFrame.hIconSm 	  = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_EXPLORER),
-											 IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED);
-
-	g_Globals._hframeClass = wcFrame.Register();
-
+	g_Globals._hframeClass = IconWindowClass(CLASSNAME_FRAME,IDI_EXPLORER).Register();
 
 	 // register child windows class
-
 	WindowClass(CLASSNAME_CHILDWND, CS_CLASSDC|CS_DBLCLKS|CS_VREDRAW).Register();
 
-
 	 // register tree windows class
-
 	WindowClass(CLASSNAME_WINEFILETREE, CS_CLASSDC|CS_DBLCLKS|CS_VREDRAW).Register();
-
 
 	g_Globals._cfStrFName = RegisterClipboardFormat(CFSTR_FILENAME);
 }
@@ -125,8 +123,6 @@ int explorer_main(HINSTANCE hInstance, HWND hwndDesktop, int cmdshow)
 	CommonControlInit usingCmnCtrl(ICC_LISTVIEW_CLASSES|ICC_TREEVIEW_CLASSES|ICC_BAR_CLASSES);
 
 	try {
-		MSG msg;
-
 		InitInstance(hInstance);
 
 		if (hwndDesktop)
@@ -142,21 +138,7 @@ int explorer_main(HINSTANCE hInstance, HWND hwndDesktop, int cmdshow)
 			explorer_show_frame(hwndDesktop, cmdshow);
 		}
 
-		while(GetMessage(&msg, 0, 0, 0)) {
-			if (g_Globals._hMainWnd && SendMessage(g_Globals._hMainWnd, WM_TRANSLATE_MSG, 0, (LPARAM)&msg))
-				continue;
-
-			TranslateMessage(&msg);
-
-			try {
-				DispatchMessage(&msg);
-			} catch(COMException& e) {
-				HandleException(e, g_Globals._hMainWnd);
-			}
-		}
-
-		return msg.wParam;
-
+		return Window::MessageLoop();
 	} catch(COMException& e) {
 		HandleException(e, g_Globals._hMainWnd);
 	}
