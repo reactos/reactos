@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: lineto.c,v 1.12 2003/07/14 09:43:11 gvg Exp $
+ * $Id: lineto.c,v 1.13 2003/08/11 03:35:06 royce Exp $
  */
 
 #include "../vgaddi.h"
@@ -316,7 +316,7 @@ DrvLineTo(SURFOBJ *DestObj,
     {
       xchange = -1;
       deltax = - deltax;
-      hx = x2;
+      hx = x2+1;
       x--;
     }
   else
@@ -329,7 +329,7 @@ DrvLineTo(SURFOBJ *DestObj,
     {
       ychange = -1;
       deltay = - deltay;
-      vy = y2;
+      vy = y2+1;
       y--;
     }
   else
@@ -350,6 +350,7 @@ DrvLineTo(SURFOBJ *DestObj,
 	          RectEnum.arcl[i].left <= hx + deltax &&
 	          hx < RectEnum.arcl[i].right)
 		{
+
 		  vgaHLine(max(hx, RectEnum.arcl[i].left), y1,
 		           min(hx + deltax, RectEnum.arcl[i].right)
 		           -max(hx, RectEnum.arcl[i].left), Pixel);
