@@ -70,6 +70,11 @@ typedef float *PFLOAT;
 typedef unsigned short *PWCH;
 typedef unsigned short *PWORD;
 
+typedef long long LONGLONG;
+typedef unsigned long long ULONGLONG;
+typedef long long *PLONGLONG;
+typedef unsigned long long *PULONGLONG;
+
 /* Check VOID before defining CHAR, SHORT, and LONG */
 #ifndef VOID
 #define VOID void
@@ -98,7 +103,7 @@ typedef enum tagTOKEN_TYPE {
 #define FALSE 0
 #define TRUE 1
 
-   typedef const unsigned short *PCWSTR;
+typedef const unsigned short *PCWSTR;
 
 typedef char* PCSZ;
    
@@ -125,9 +130,9 @@ typedef HANDLE *PHANDLE;
 typedef DWORD CALLBACK (*PTHREAD_START_ROUTINE) (LPVOID);
 typedef PTHREAD_START_ROUTINE LPTHREAD_START_ROUTINE;
 
-   typedef unsigned short ATOM;
+typedef unsigned short ATOM;
 
-   #ifdef UNICODE
+#ifdef UNICODE
 typedef unsigned short *LPTCH;
 typedef unsigned short *LPTSTR;
 #else
@@ -139,7 +144,7 @@ typedef long *PLONG;
 typedef unsigned short *PWCHAR;
 typedef char *LPSTR;
 
-   typedef enum _MEDIA_TYPE { 
+typedef enum _MEDIA_TYPE { 
   Unknown,                
   F5_1Pt2_512,            
   F3_1Pt44_512,           
@@ -465,10 +470,10 @@ typedef enum _TOKEN_INFORMATION_CLASS {
 #define INDEXTOSTATEIMAGEMASK(i) ((i) << 12)  
 
 #ifdef UNICODE
-#define _T(quote) L##quote 
+#define _T(quote)   L##quote 
 #define TEXT(quote) L##quote 
 #else
-#define _T(quote) L##quote 
+#define _T(quote)   quote 
 #define TEXT(quote) quote
 #endif
 

@@ -32,9 +32,6 @@
 #ifndef _GNU_H_WINDOWS32_STRUCTURES
 #define _GNU_H_WINDOWS32_STRUCTURES
 
-typedef long long int LONGLONG, *PLONGLONG;
-typedef unsigned long long int ULONGLONG, *PULONGLONG;
-
 typedef union _LARGE_INTEGER
 {
   struct
