@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.19 2003/06/03 22:24:51 ekohl Exp $
+/* $Id: stubs.c,v 1.20 2003/06/26 21:52:40 gvg Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -1061,19 +1061,6 @@ int
 STDCALL
 SaveDC(
 	HDC	a0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
-int
-STDCALL
-SelectClipRgn(
-	HDC	a0,
-	HRGN	a1
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cliprgn.c,v 1.15 2003/05/18 17:16:17 ea Exp $ */
+/* $Id: cliprgn.c,v 1.16 2003/06/26 21:52:40 gvg Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -25,6 +25,7 @@
 #include <win32k/region.h>
 #include <win32k/cliprgn.h>
 #include <win32k/coord.h>
+#include <include/error.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -169,9 +170,47 @@ BOOL STDCALL W32kSelectClipPath(HDC  hDC,
 }
 
 int STDCALL W32kSelectClipRgn(HDC  hDC,
-                       HRGN  hrgn)
+                              HRGN hRgn)
 {
-  UNIMPLEMENTED;
+  int Type;
+  PDC dc;
+  HRGN Copy;
+
+  dc = DC_HandleToPtr(hDC);
+  if (NULL == dc)
+    {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return ERROR;
+    }
+
+  if (NULL != hRgn)
+    {
+      Copy = W32kCreateRectRgn(0, 0, 0, 0);
+      if (NULL == Copy)
+	{
+	  return ERROR;
+	}
+      Type = W32kCombineRgn(Copy, hRgn, 0, RGN_COPY);
+      if (ERROR == Type)
+	{
+	  W32kDeleteObject(Copy);
+	  return ERROR;
+	}
+      W32kOffsetRgn(Copy, dc->w.DCOrgX, dc->w.DCOrgX);
+    }
+  else
+    {
+      Copy = NULL;
+    }
+
+  if (NULL != dc->w.hClipRgn)
+    {
+      W32kDeleteObject(dc->w.hClipRgn);
+    }
+  dc->w.hClipRgn = Copy;
+  CLIPPING_UpdateGCRegion(dc);
+
+  return ERROR;
 }
 
 int STDCALL W32kSetMetaRgn(HDC  hDC)
