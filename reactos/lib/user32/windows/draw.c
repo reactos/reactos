@@ -1843,39 +1843,31 @@ DrawAnimatedRects(HWND hWnd, int idAni, CONST RECT *lprcFrom,
 BOOL STDCALL
 DrawFocusRect(HDC hdc, CONST RECT *rect)
 {
-/* FIXME PS_ALTERNATE and R2_XORPEN not yet implemented */
-#if 0 
-   HBRUSH hOldBrush;
-   HPEN hOldPen, hNewPen;
-   INT oldDrawMode, oldBkMode;
-
-   hOldBrush = SelectObject(hdc, GetStockObject(NULL_BRUSH));
-   hNewPen = CreatePen(PS_ALTERNATE, 1, GetSysColor(COLOR_WINDOWTEXT));
-   hOldPen = SelectObject(hdc, hNewPen);
-   oldDrawMode = SetROP2(hdc, R2_XORPEN);
-   oldBkMode = SetBkMode(hdc, TRANSPARENT);
-
-   Rectangle(hdc, rect->left, rect->top, rect->right, rect->bottom);
-
-   SetBkMode(hdc, oldBkMode);
-   SetROP2(hdc, oldDrawMode);
-   SelectObject(hdc, hOldPen);
-   DeleteObject(hNewPen);
-   SelectObject(hdc, hOldBrush);
-
-   return TRUE;
-#else
+   static HBRUSH hFocusRectBrush = NULL;
+   HGDIOBJ OldObj;
+   
+   if(!hFocusRectBrush)
+   {
+      static HBITMAP hFocusPattern = NULL;
+      const DWORD Pattern[4] = {0x5555AAAA, 0x5555AAAA, 0x5555AAAA, 0x5555AAAA};
+      
+      hFocusPattern = CreateBitmap(8, 8, 1, 1, Pattern);
+      hFocusRectBrush = CreatePatternBrush(hFocusPattern);
+   }
+   
+   OldObj = SelectObject(hdc, hFocusRectBrush);
+   
    PatBlt(hdc, rect->left, rect->top,
-      rect->right - rect->left - 1, 1, DSTINVERT);
+      rect->right - rect->left - 1, 1, PATINVERT);
    PatBlt(hdc, rect->left, rect->top + 1, 1,
-      rect->bottom - rect->top - 1, DSTINVERT);
+      rect->bottom - rect->top - 1, PATINVERT);
    PatBlt(hdc, rect->left + 1, rect->bottom - 1,
-      rect->right - rect->left - 1, -1, DSTINVERT);
+      rect->right - rect->left - 1, -1, PATINVERT);
    PatBlt(hdc, rect->right - 1, rect->top, -1,
-      rect->bottom - rect->top - 1, DSTINVERT);
-
+      rect->bottom - rect->top - 1, PATINVERT);
+   
+   SelectObject(hdc, OldObj);
    return TRUE;
-#endif
 }
 
 /*
