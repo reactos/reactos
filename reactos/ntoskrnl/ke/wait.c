@@ -409,6 +409,20 @@ KeWaitForSingleObject(PVOID Object,
 }
 
 
+inline
+PVOID
+KiGetWaitableObjectFromObject(PVOID Object)
+{
+   //special case when waiting on file objects
+   if ( ((PDISPATCHER_HEADER)Object)->Type == InternalFileType)
+   {
+      return &((PFILE_OBJECT)Object)->Event;
+   }
+
+   return Object;
+}
+
+
 NTSTATUS STDCALL
 KeWaitForMultipleObjects(ULONG Count,
                          PVOID Object[],
@@ -485,7 +499,7 @@ KeWaitForMultipleObjects(ULONG Count,
       Abandoned = FALSE;
       for (i = 0; i < Count; i++)
       {
-         hdr = (DISPATCHER_HEADER *) Object[i];
+         hdr = (DISPATCHER_HEADER *) KiGetWaitableObjectFromObject(Object[i]);
 
          if (KiIsObjectSignalled(hdr, CurrentThread))
          {
@@ -518,7 +532,7 @@ KeWaitForMultipleObjects(ULONG Count,
       {
          for (i = 0; i < Count; i++)
          {
-            hdr = (DISPATCHER_HEADER *) Object[i];
+            hdr = (DISPATCHER_HEADER *) KiGetWaitableObjectFromObject(Object[i]);
             Abandoned = KiSideEffectsBeforeWake(hdr, CurrentThread) ? TRUE : Abandoned;
          }
 
@@ -566,9 +580,9 @@ KeWaitForMultipleObjects(ULONG Count,
 
       for (i = 0; i < Count; i++)
       {
-         hdr = (DISPATCHER_HEADER *) Object[i];
+         hdr = (DISPATCHER_HEADER *) KiGetWaitableObjectFromObject(Object[i]);
 
-         blk->Object = Object[i];
+         blk->Object = KiGetWaitableObjectFromObject(Object[i]);
          blk->Thread = CurrentThread;
          blk->WaitKey = STATUS_WAIT_0 + i;
          blk->WaitType = WaitType;
