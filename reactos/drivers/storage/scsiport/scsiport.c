@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.10 2002/03/08 12:03:28 ekohl Exp $
+/* $Id: scsiport.c,v 1.11 2002/03/17 15:47:31 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -467,6 +467,9 @@ ScsiPortInitialize(IN PVOID Argument1,
 
 //      RtlZeroMemory(AccessRanges,
 //		    sizeof(ACCESS_RANGE) * PortConfig->NumberOfAccessRanges);
+
+      RtlZeroMemory(PseudoDeviceExtension->MiniPortDeviceExtension,
+		    PseudoDeviceExtension->MiniPortExtensionSize);
 
       /* Note: HwFindAdapter is called once for each bus */
       Result = (HwInitializationData->HwFindAdapter)(&PseudoDeviceExtension->MiniPortDeviceExtension,
@@ -1197,6 +1200,7 @@ ScsiPortInquire(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 
   /* Copy inquiry data to the port device extension */
   AdapterInfo =(PSCSI_ADAPTER_BUS_INFO)ExAllocatePool(NonPagedPool, 4096);
+  RtlZeroMemory(AdapterInfo, 4096);
   AdapterInfo->NumberOfBuses = DeviceExtension->PortConfig.NumberOfBuses;
 
   UnitInfo = (PSCSI_INQUIRY_DATA)
@@ -1228,7 +1232,7 @@ ScsiPortInquire(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 
 	  Result = DeviceExtension->HwStartIo(&DeviceExtension->MiniPortDeviceExtension,
 					      &Srb);
-	  if (Result == TRUE)
+	  if (Result == TRUE && Srb.SrbStatus == SRB_STATUS_SUCCESS)
 	    {
 	      UnitInfo->PathId = Bus;
 	      UnitInfo->TargetId = Target;
