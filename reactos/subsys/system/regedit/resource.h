@@ -114,4 +114,8 @@
 #define IDC_VALUE_NAME			2001
 #define IDC_VALUE_DATA			2002
 
+#define IDD_EDIT_DWORD			2003
+#define IDC_FORMAT_HEX			2004
+#define IDC_FORMAT_DEC			2005
+
 #define IDC_STATIC                      -1
