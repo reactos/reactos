@@ -13,6 +13,9 @@
 #include <msvcrt/ctype.h>
 #include <msvcrt/io.h>
 
+#define NDEBUG
+#include <msvcrt/msvcrtdbg.h>
+
 
 #ifndef F_OK
  #define F_OK	0x01
@@ -35,7 +38,7 @@ int _fileinfo_dll = 0;
 
 static int
 direct_exec_tail(const char *program, const char *args,
-		 char * const envp[],
+		 const char * envp,
 		PROCESS_INFORMATION *ProcessInformation)
 {
 
@@ -43,13 +46,16 @@ direct_exec_tail(const char *program, const char *args,
 
 	StartupInfo.cb = sizeof(STARTUPINFO);
 	StartupInfo.lpReserved= NULL;
-	StartupInfo.dwFlags = 0;
+	StartupInfo.dwFlags = 0 /*STARTF_USESTDHANDLES*/;
 	StartupInfo.wShowWindow = SW_SHOWDEFAULT; 
 	StartupInfo.lpReserved2 = NULL;
 	StartupInfo.cbReserved2 = 0; 
+	StartupInfo.hStdInput = _get_osfhandle(0);
+	StartupInfo.hStdOutput = _get_osfhandle(1);
+	StartupInfo.hStdError = _get_osfhandle(2);
 
 
-	if (! CreateProcessA((char *)program,(char *)args,NULL,NULL,FALSE,0,(char **)envp,NULL,&StartupInfo,ProcessInformation) ) 
+	if (! CreateProcessA((char *)program,(char *)args,NULL,NULL,TRUE,0,(LPVOID)envp,NULL,&StartupInfo,ProcessInformation) ) 
 	{
 	  __set_errno( GetLastError() );
           return -1;
@@ -78,33 +84,45 @@ static int vdm_exec(const char *program, char **argv, char **envp,
 static int go32_exec(const char *program, char **argv, char **envp,
 	PROCESS_INFORMATION *ProcessInformation)
 {
+	char * penvblock, * ptr;
+	char * args;
+	int i, len, result;
 
-
-	static char args[1024];
-	static char envblock[2048];
-	char * penvblock;
-	int i = 0;
-
-
-	envblock[0] = 0;
-	penvblock=envblock;
-
-	while(envp[i] != NULL ) {
-          strcat(penvblock,envp[i]);
-	  penvblock+=strlen(envp[i])+1;
-          i++; 
+	for (i = 0, len = 0; envp[i]; i++) {
+	  len += strlen(envp[i]) + 1;
 	}
-	penvblock[0]=0;
+	penvblock = ptr = (char*)malloc(len + 1);
+	if (penvblock == NULL)
+	  return -1;
 
-	args[0] = 0;
-        i = 0;
-	while(argv[i] != NULL ) {
+	for(i = 0, *ptr = 0; envp[i]; i++) {
+	   strcpy(ptr, envp[i]);
+	   ptr += strlen(envp[i]) + 1;
+	}
+	*ptr = 0;
+
+	for(i = 0, len = 0; argv[i]; i++) {
+	  len += strlen(argv[i]) + 1;
+	}
+	
+	args = (char*) malloc(len + 1);
+	if (args == NULL)
+	{
+	  free(penvblock);
+	  return -1;
+	}
+
+	for(i = 0, *args = 0; argv[i]; i++) {
           strcat(args,argv[i]);
-          strcat(args," ");
-          i++; 
+	  if (argv[i+1] != NULL) {
+            strcat(args," ");
+	  }
 	}
   
-	return direct_exec_tail(program,args,envp,ProcessInformation);
+	result = direct_exec_tail(program,args,(const char*)penvblock,ProcessInformation);
+	free(args);
+	free(penvblock);
+	return result;
 }
 
 int
@@ -183,14 +201,18 @@ int _spawnve(int mode, const char *path, char *const argv[], char *const envp[])
   int found = 0;
   DWORD ExitCode;
 
+  DPRINT("_spawnve('%s')\n", path);
+
   if (path == 0 || argv[0] == 0)
   {
     errno = EINVAL;
+    DPRINT("??\n");
     return -1;
   }
   if (strlen(path) > FILENAME_MAX - 1)
   {
     errno = ENAMETOOLONG;
+    DPRINT("??\n");
     return -1;
   }
 
@@ -248,6 +270,7 @@ int _spawnve(int mode, const char *path, char *const argv[], char *const envp[])
   }
   if (!found)
   {
+    DPRINT("??\n");
     errno = is_dir ? EISDIR : ENOENT;
     return -1;
   }
@@ -260,6 +283,12 @@ int _spawnve(int mode, const char *path, char *const argv[], char *const envp[])
     WaitForSingleObject(ProcessInformation.hProcess,INFINITE);
     GetExitCodeProcess(ProcessInformation.hProcess,&ExitCode);
     i = (int)ExitCode;
+    CloseHandle(ProcessInformation.hThread);
+    CloseHandle(ProcessInformation.hProcess);
+  }
+  else
+  {
+     CloseHandle(ProcessInformation.hThread);
   }
   return i;
 }
