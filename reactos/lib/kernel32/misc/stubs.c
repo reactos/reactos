@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.61 2004/01/29 23:41:36 navaraf Exp $
+/* $Id: stubs.c,v 1.62 2004/02/15 07:03:56 arty Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -1789,21 +1789,6 @@ FindNextVolumeMountPointW(
 /*
  * @unimplemented
  */
-BOOL
-STDCALL
-GetComputerNameExW (
-    COMPUTER_NAME_FORMAT NameType,
-    LPWSTR lpBuffer,
-    LPDWORD nSize
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
 DWORD
 STDCALL
 GetDllDirectoryW(
@@ -2184,21 +2169,6 @@ FindNextVolumeMountPointA(
     HANDLE hFindVolumeMountPoint,
     LPSTR lpszVolumeMountPoint,
     DWORD cchBufferLength
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GetComputerNameExA (
-    COMPUTER_NAME_FORMAT NameType,
-    LPSTR lpBuffer,
-    LPDWORD nSize
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
