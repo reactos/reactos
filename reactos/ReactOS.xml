@@ -1,13 +1,11 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
 <project name="ReactOS" makefile="Makefile.auto" xmlns:xi="http://www.w3.org/2001/XInclude">
-	<define name="_M_IX86"></define>
+	<define name="_M_IX86" />
 	<include>include</include>
 	<include>w32api/include</include>
 	<directory name="tools">
-		<module name="depends" type="buildtool">
-			<file>depends.c</file>
-		</module>
+		<xi:include href="tools/tools.xml" />
 	</directory>
 	<directory name="iface">
 		<directory name="native">

@@ -27,6 +27,8 @@ class Include;
 class Define;
 class File;
 class Library;
+class Invoke;
+class Dependency;
 
 class Project
 {
@@ -73,7 +75,9 @@ public:
 	std::vector<Library*> libraries;
 	std::vector<Include*> includes;
 	std::vector<Define*> defines;
-
+	std::vector<Invoke*> invocations;
+	std::vector<Dependency*> dependencies;
+	
 	Module ( const Project& project,
 	         const XMLElement& moduleNode,
 	         const std::string& modulePath );
@@ -81,6 +85,8 @@ public:
 	ModuleType GetModuleType (const XMLAttribute& attribute );
 	std::string GetBasePath() const;
 	std::string GetPath () const;
+	std::string GetTargets () const;
+	std::string GetInvocationTarget ( const int index ) const;
 	void ProcessXML();
 private:
 	std::string GetDefaultModuleExtension () const;
@@ -152,6 +158,38 @@ public:
 	Library ( const XMLElement& _node,
 	          const Module& _module,
 	          const std::string& _name );
+
+	void ProcessXML();
+};
+
+
+class Invoke
+{
+public:
+	const XMLElement& node;
+	const Module& module;
+	std::vector<File*> output;
+
+	Invoke ( const XMLElement& _node,
+	         const Module& _module );
+
+	void ProcessXML();
+	std::string GetTargets () const;
+private:
+	void ProcessXMLSubElement ( const XMLElement& e );
+	void ProcessXMLSubElementOutput ( const XMLElement& e );
+};
+
+
+class Dependency
+{
+public:
+	const XMLElement& node;
+	const Module& module;
+	const Module* dependencyModule;
+
+	Dependency ( const XMLElement& _node,
+	             const Module& _module );
 
 	void ProcessXML();
 };

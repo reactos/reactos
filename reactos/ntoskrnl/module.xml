@@ -1,10 +1,11 @@
 <module name="ntoskrnl" type="kernelmodedll" extension=".exe">
+	<dependency>buildno</dependency>
 	<define name="_SEH_NO_NATIVE_NLG" />
 	<define name="_DISABLE_TIDENTS" />
 	<define name="__NTOSKRNL__" />
 	<define name="__3GB__" />
-	<include>.</include>
 	<include base="kjs">./include</include>
+	<include base="ntoskrnl">include</include>
 	<library>kjs</library>
 	<directory name="cc">
 		<file>cacheman.c</file>

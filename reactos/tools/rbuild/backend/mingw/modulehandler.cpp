@@ -33,7 +33,7 @@ MingwModuleHandler::ReplaceExtension ( const string& filename,
 string
 MingwModuleHandler::GetModuleArchiveFilename ( const Module& module ) const
 {
-	return ReplaceExtension ( FixupTargetFilename(module.GetPath ()).c_str (),
+	return ReplaceExtension ( FixupTargetFilename ( module.GetPath () ).c_str (),
 	                          ".a" );
 }
 
@@ -50,7 +50,38 @@ MingwModuleHandler::GetImportLibraryDependencies ( const Module& module ) const
 			dependencies += " ";
 		const Module* importedModule = module.project.LocateModule ( module.libraries[i]->name );
 		assert ( importedModule != NULL );
-		dependencies += FixupTargetFilename(importedModule->GetPath ()).c_str ();
+		dependencies += FixupTargetFilename ( importedModule->GetPath () ).c_str ();
+	}
+	return dependencies;
+}
+
+string
+MingwModuleHandler::GetModuleDependencies ( const Module& module ) const
+{
+	if ( module.dependencies.size () == 0 )
+		return "";
+	
+	string dependencies ( "" );
+	for ( size_t i = 0; i < module.dependencies.size (); i++ )
+	{
+		if ( dependencies.size () > 0 )
+			dependencies += " ";
+		const Dependency* dependency = module.dependencies[i];
+		const Module* dependencyModule = dependency->dependencyModule;
+		dependencies += dependencyModule->GetTargets ();
+	}
+	return dependencies;
+}
+
+string
+MingwModuleHandler::GetAllDependencies ( const Module& module ) const
+{
+	string dependencies = GetImportLibraryDependencies ( module );
+	string s = GetModuleDependencies ( module );
+	if (s.length () > 0)
+	{
+		dependencies += " ";
+		dependencies += s;
 	}
 	return dependencies;
 }
@@ -74,9 +105,8 @@ MingwModuleHandler::GetSourceFilenames ( const Module& module ) const
 string
 MingwModuleHandler::GetObjectFilename ( const string& sourceFilename ) const
 {
-	return
-		FixupTargetFilename ( ReplaceExtension ( sourceFilename,
-		                                         ".o" ) );
+	return FixupTargetFilename ( ReplaceExtension ( sourceFilename,
+		                                            ".o" ) );
 }
 
 string
@@ -144,7 +174,7 @@ string
 MingwModuleHandler::GenerateGccIncludeParametersFromVector ( const vector<Include*>& includes ) const
 {
 	string parameters;
-	for (size_t i = 0; i < includes.size (); i++)
+	for ( size_t i = 0; i < includes.size (); i++ )
 	{
 		Include& include = *includes[i];
 		if (parameters.length () > 0)
@@ -191,10 +221,12 @@ MingwModuleHandler::GenerateObjectFileTargets ( const Module& module,
 	{
 		string sourceFilename = module.files[i]->name;
 		string objectFilename = GetObjectFilename ( sourceFilename );
+		string dependencies = GetModuleDependencies ( module );
 		fprintf ( fMakefile,
-		          "%s: %s\n",
+		          "%s: %s %s\n",
 		          objectFilename.c_str (),
-		          sourceFilename.c_str() );
+		          sourceFilename.c_str (),
+		          dependencies.c_str ());
 		fprintf ( fMakefile,
 		          "\t%s -c %s -o %s %s\n",
 		          cc.c_str (),
@@ -234,10 +266,10 @@ MingwModuleHandler::GenerateArchiveTarget ( const Module& module,
 	          objectFilenames.c_str ());
 
 	fprintf ( fMakefile,
-	         "\t%s -rc %s %s\n\n",
-	         ar.c_str (),
-	         archiveFilename.c_str (),
-	         objectFilenames.c_str ());
+	          "\t%s -rc %s %s\n\n",
+	          ar.c_str (),
+	          archiveFilename.c_str (),
+	          objectFilenames.c_str ());
 }
 
 void
@@ -252,6 +284,52 @@ MingwModuleHandler::GenerateArchiveTargetTarget ( const Module& module ) const
 {
 	GenerateArchiveTarget ( module,
 	                        "${ar}" );
+}
+
+string
+MingwModuleHandler::GetInvocationDependencies ( const Module& module ) const
+{
+	string dependencies;
+	for ( size_t i = 0; i < module.invocations.size (); i++ )
+	{
+		Invoke& invoke = *module.invocations[i];
+		if ( dependencies.length () > 0 )
+			dependencies += " ";
+		string invokeTarget = module.GetInvocationTarget ( i );
+		dependencies += invokeTarget;
+	}
+	return dependencies;
+}
+	
+void
+MingwModuleHandler::GenerateInvocations ( const Module& module ) const
+{
+	if ( module.invocations.size () == 0 )
+		return;
+	
+	if ( module.type != BuildTool )
+		throw InvalidBuildFileException ( module.node.location,
+		                                  "Only modules of type buildtool can be invoked." );
+
+	for ( size_t i = 0; i < module.invocations.size (); i++ )
+	{
+		Invoke& invoke = *module.invocations[i];
+		string invokeTarget = module.GetInvocationTarget ( i );
+		fprintf ( fMakefile,
+		          "%s: %s\n\n",
+   		          invoke.GetTargets ().c_str (),
+		          invokeTarget.c_str () );
+		fprintf ( fMakefile,
+		          "%s: %s\n",
+		          invokeTarget.c_str (),
+		          FixupTargetFilename ( module.GetPath () ).c_str () );
+		fprintf ( fMakefile,
+		          "\t%s\n\n",
+		          FixupTargetFilename ( module.GetPath () ).c_str () );
+		fprintf ( fMakefile,
+		          ".PNONY: %s\n\n",
+		          invokeTarget.c_str () );
+	}
 }
 
 
@@ -270,12 +348,13 @@ void
 MingwBuildToolModuleHandler::Process ( const Module& module )
 {
 	GenerateBuildToolModuleTarget ( module );
+	GenerateInvocations ( module );
 }
 
 void
 MingwBuildToolModuleHandler::GenerateBuildToolModuleTarget ( const Module& module )
 {
-	string target ( FixupTargetFilename(module.GetPath()) );
+	string target ( FixupTargetFilename ( module.GetPath () ) );
 	string archiveFilename = GetModuleArchiveFilename ( module );
 	fprintf ( fMakefile, "%s: %s\n",
 	          target.c_str (),
@@ -304,6 +383,7 @@ void
 MingwKernelModuleHandler::Process ( const Module& module )
 {
 	GenerateKernelModuleTarget ( module );
+	GenerateInvocations ( module );
 }
 
 void
@@ -369,6 +449,7 @@ void
 MingwStaticLibraryModuleHandler::Process ( const Module& module )
 {
 	GenerateStaticLibraryModuleTarget ( module );
+	GenerateInvocations ( module );
 }
 
 void

@@ -27,6 +27,7 @@ OBJECTS = $(BASE_OBJECTS) rbuild.o
 TESTS = \
 	tests/definetest.o \
 	tests/includetest.o \
+	tests/invoketest.o \
 	tests/moduletest.o \
 	tests/projecttest.o
 

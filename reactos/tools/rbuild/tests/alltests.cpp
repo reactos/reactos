@@ -22,6 +22,30 @@ void BaseTest::Assert(const char *message, ...)
 	Fail();
 }
 
+void BaseTest::IsNull(void* reference,
+                      const char* file,
+                      int line)
+{
+	if (reference != NULL)
+	{
+		Assert("Condition was not NULL at %s:%d\n",
+		       file,
+		       line);
+	}
+}
+
+void BaseTest::IsNotNull(void* reference,
+                         const char* file,
+                         int line)
+{
+	if (reference == NULL)
+	{
+		Assert("Condition was NULL at %s:%d\n",
+		       file,
+		       line);
+	}
+}
+
 void BaseTest::IsTrue(bool condition,
                       const char* file,
                       int line)
@@ -149,6 +173,7 @@ private:
 		tests.push_back(new ModuleTest());
 		tests.push_back(new DefineTest());
 		tests.push_back(new IncludeTest());
+		tests.push_back(new InvokeTest());
 	}
 };
 

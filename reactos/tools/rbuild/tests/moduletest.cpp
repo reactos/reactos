@@ -24,6 +24,10 @@ void ModuleTest::Run()
 
 	ARE_EQUAL(1, module2.libraries.size());
 	Library& library1 = *module2.libraries[0];
-
 	ARE_EQUAL("module1", library1.name);
+
+	ARE_EQUAL(1, module2.dependencies.size());
+	Dependency& module1dependency = *module2.dependencies[0];
+	IS_NOT_NULL(module1dependency.dependencyModule);
+	ARE_EQUAL("module1", module1dependency.dependencyModule->name);
 }

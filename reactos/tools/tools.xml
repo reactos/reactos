@@ -1,0 +1,9 @@
+<module name="buildno" type="buildtool">
+	<include base="buildno">.</include>
+	<file>buildno.c</file>
+	<invoke>
+		<output>
+			<outputfile>../include/reactos/buildno.h</outputfile>
+		</output>
+	</invoke>
+</module>

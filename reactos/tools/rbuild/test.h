@@ -12,6 +12,12 @@ public:
 	virtual void Run() = 0;
 protected:
 	void Assert(const char *message, ...);
+	void IsNull(void* reference,
+	            const char* file,
+	            int line);
+	void IsNotNull(void* reference,
+	               const char* file,
+	               int line);
 	void IsTrue(bool condition,
 	            const char* file,
 	            int line);
@@ -34,6 +40,8 @@ private:
 	void Fail();
 };
 
+#define IS_NULL(reference) IsNull((void*)reference,__FILE__,__LINE__)
+#define IS_NOT_NULL(reference) IsNotNull((void*)reference,__FILE__,__LINE__)
 #define IS_TRUE(condition) IsTrue(condition,__FILE__,__LINE__)
 #define IS_FALSE(condition) IsFalse(condition,__FILE__,__LINE__)
 #define ARE_EQUAL(expected,actual) AreEqual(expected,actual,__FILE__,__LINE__)
@@ -61,6 +69,13 @@ public:
 
 
 class IncludeTest : public BaseTest
+{
+public:
+	void Run();
+};
+
+
+class InvokeTest : public BaseTest
 {
 public:
 	void Run();

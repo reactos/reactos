@@ -15,6 +15,8 @@ protected:
 	                               const std::string& newExtension ) const;
 	std::string GetModuleArchiveFilename ( const Module& module ) const;
 	std::string GetImportLibraryDependencies ( const Module& module ) const;
+	std::string GetModuleDependencies ( const Module& module ) const;
+	std::string GetAllDependencies ( const Module& module ) const;
 	std::string GetSourceFilenames ( const Module& module ) const;
 
 	std::string GetObjectFilename ( const std::string& sourceFilename ) const;
@@ -23,6 +25,8 @@ protected:
 	void GenerateObjectFileTargetsTarget ( const Module& module ) const;
 	void GenerateArchiveTargetHost ( const Module& module ) const;
 	void GenerateArchiveTargetTarget ( const Module& module ) const;
+	std::string GetInvocationDependencies ( const Module& module ) const;
+	void GenerateInvocations ( const Module& module ) const;
 	FILE* fMakefile;
 private:
 	std::string ConcatenatePaths ( const std::string& path1,
