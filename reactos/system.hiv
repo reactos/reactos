@@ -281,6 +281,7 @@ REGEDIT4
 "NameServer"="203.13.174.1"
 "ForwardBroadcasts"=dword:00000000
 "IPEnableRouter"=dword:00000000
+"Address"=dword:6400A8C0
 "SearchList"=""
 "EnableSecurityFilters"=dword:00000000
 
