@@ -46,6 +46,7 @@ copy services\net\tcpip\tcpip.sys %ROS_INSTALL%\system32\drivers
 copy services\net\wshtcpip\wshtcpip.dll %ROS_INSTALL%\system32
 copy services\storage\atapi\atapi.sys %ROS_INSTALL%\system32\drivers
 copy services\storage\scsiport\scsiport.sys %ROS_INSTALL%\system32\drivers
+copy services\storage\cdrom\cdrom.sys %ROS_INSTALL%\system32\drivers
 copy services\storage\disk\disk.sys %ROS_INSTALL%\system32\drivers
 copy services\storage\class2\class2.sys %ROS_INSTALL%\system32\drivers
 copy apps\system\shell\shell.exe %ROS_INSTALL%\system32
@@ -92,6 +93,7 @@ copy apps\winhello\winhello.exe %ROS_INSTALL%\bin
 copy apps\pice\module\pice.sys %ROS_INSTALL%\system32\drivers
 copy apps\pice\module\pice.sym %ROS_INSTALL%\symbols
 copy apps\pice\pice.cfg %ROS_INSTALL%\symbols
+copy apps\isotest\isotest.exe %ROS_INSTALL%\bin
 copy media\fonts\helb____.ttf %ROS_INSTALL%\media\fonts
 copy media\fonts\timr____.ttf %ROS_INSTALL%\media\fonts
 copy media\nls\*.nls %ROS_INSTALL%\system32
