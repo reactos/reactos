@@ -1,10 +1,10 @@
-# $Id: Makefile.ros-template,v 1.1 2004/05/04 20:06:26 navaraf Exp $
+# $Id: Makefile.ros-template,v 1.2 2004/05/05 18:30:13 navaraf Exp $
 
 TARGET_NAME = rpcrt4
 
 TARGET_OBJECTS = @C_SRCS@
 
-TARGET_CFLAGS = @EXTRADEFS@ -D__REACTOS__ -Wall -DDBG -DYDEBUG
+TARGET_CFLAGS = @EXTRADEFS@ -D__REACTOS__ -Wall
 
 TARGET_SDKLIBS = @IMPORTS@ winmm.a libwine.a wine_uuid.a ntdll.a
 
