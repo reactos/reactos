@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/crtdll/stdio/rmtmp.c
+ * FILE:            lib/msvcrt/stdio/rmtmp.c
  * PURPOSE:         remove temporary files in current directory
  * PROGRAMMER:      Boudewijn ( ariadne@xs4all.nl)
  * UPDATE HISTORY:

@@ -2,7 +2,7 @@
 #include <msvcrt/stdio.h>
 #include <msvcrt/internal/file.h>
 
-// not exported by crtdll
+// not exported by msvcrt
 __file_rec *__file_rec_list;
 
 void
