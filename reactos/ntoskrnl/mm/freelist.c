@@ -92,6 +92,18 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
    MiNrFreePages = 0;
    MiNrUsedPages = 0;
    
+   for (i = 0; i < Reserved; i++)
+     {
+	if (!MmIsPagePresent(NULL, 
+			     (PVOID)((ULONG)MmPageArray + (i * PAGESIZE))))
+	  {
+	     MmSetPage(NULL,
+		       (PVOID)((ULONG)MmPageArray + (i * PAGESIZE)),
+		       PAGE_READWRITE,
+		       (ULONG)(LastPhysKernelAddress - (i * PAGESIZE)));
+	  }
+     }
+   
    i = 1;
    if ((ULONG)FirstPhysKernelAddress < 0xa0000)
      {
@@ -109,7 +121,7 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 	  }
 	MiNrUsedPages = MiNrUsedPages +
 	  ((((ULONG)LastPhysKernelAddress) / PAGESIZE) - i);
-	for (; i<((ULONG)LastKernelAddress / PAGESIZE); i++)
+	for (; i<((ULONG)LastPhysKernelAddress / PAGESIZE); i++)
 	  {
 	     MmPageArray[i].Flags = PHYSICAL_PAGE_INUSE;
 	     MmPageArray[i].ReferenceCount = 1;

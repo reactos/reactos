@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.48 2000/06/04 19:51:05 ekohl Exp $
+/* $Id: thread.c,v 1.49 2000/06/27 19:20:45 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -553,7 +553,7 @@ NTSTATUS STDCALL NtSuspendThread (IN HANDLE ThreadHandle,
 
 
 NTSTATUS STDCALL NtContinue(IN PCONTEXT	Context,
-			    IN CINT IrqLevel)
+			    IN BOOLEAN TestAlert)
 {
    PULONG StackTop;
    

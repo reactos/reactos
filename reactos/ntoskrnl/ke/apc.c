@@ -81,6 +81,18 @@ BOOLEAN KiTestAlert(PKTHREAD Thread,
    Esp = (PULONG)UserContext->Esp;
    
    memcpy(&SavedContext, UserContext, sizeof(CONTEXT));
+      
+   Esp = Esp - (sizeof(CONTEXT) + (5 * sizeof(ULONG)));
+   memcpy(Esp, &SavedContext, sizeof(CONTEXT));
+   Top = sizeof(CONTEXT) / 4;
+   Esp[Top] = (ULONG)Apc->NormalRoutine;
+   Esp[Top + 1] = (ULONG)Apc->NormalContext;
+   Esp[Top + 2] = (ULONG)Apc->SystemArgument1;
+   Esp[Top + 3] = (ULONG)Apc->SystemArgument2;
+   Esp[Top + 4] = (ULONG)Esp - sizeof(CONTEXT);
+   UserContext->Eip = 0;  // KiUserApcDispatcher
+   
+   KeReleaseSpinLock(&PiApcLock, oldlvl);
    
    /*
     * Now call for the kernel routine for the APC, which will free
@@ -88,18 +100,6 @@ BOOLEAN KiTestAlert(PKTHREAD Thread,
     */
    KeCallKernelRoutineApc(Apc);
    
-   Esp = Esp - (sizeof(CONTEXT) + (4 * sizeof(ULONG)));
-   memcpy(Esp, &SavedContext, sizeof(CONTEXT));
-   Top = sizeof(CONTEXT) / 4;
-   Esp[Top] = (ULONG)Apc->SystemArgument2;
-   Esp[Top + 1] = (ULONG)Apc->SystemArgument1;
-   Esp[Top + 2] = (ULONG)Apc->NormalContext;
-   Esp[Top + 3] = (ULONG)Apc->NormalRoutine;
-   UserContext->Eip = 0;
-	
-   current_entry = current_entry->Flink;
-   
-
    return(TRUE);
 }
 

@@ -28,7 +28,7 @@
 /* GLOBALS *******************************************************************/
 
 static PVOID SystemDllEntryPoint = NULL;
-//static PVOID SystemDllApcDispatcher = NULL;
+static PVOID SystemDllApcDispatcher = NULL;
 //static PVOID SystemDllCallbackDispatcher = NULL;
 //static PVOID SystemDllExceptionDispatcher = NULL;
 
@@ -37,6 +37,11 @@ static PVOID SystemDllEntryPoint = NULL;
 PVOID LdrpGetSystemDllEntryPoint(VOID)
 {
    return(SystemDllEntryPoint);
+}
+
+PVOID LdrpGetSystemDllApcDispatcher(VOID)
+{
+   return(SystemDllApcDispatcher);
 }
 
 NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
@@ -132,6 +137,11 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
      (PVOID)ImageBase + NTHeaders->OptionalHeader.AddressOfEntryPoint;
    DPRINT("LdrStartupAddr %x\n", LdrStartupAddr);
    SystemDllEntryPoint = *LdrStartupAddr;
+   
+   /*
+    * FIXME: retrieve the offset of the APC dispatcher from NTDLL
+    */
+   SystemDllApcDispatcher = NULL;
    
    /*
     * Create a section for NTDLL

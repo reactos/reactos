@@ -1,4 +1,4 @@
-/* $Id: apc.c,v 1.1 2000/05/13 13:50:57 dwelch Exp $
+/* $Id: apc.c,v 1.2 2000/06/27 19:20:43 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -16,11 +16,11 @@
 
 /* FUNCTIONS ***************************************************************/
 
-VOID KiUserApcDispatcher(PIO_APC_ROUTINE ApcRoutine,
-			 PVOID ApcContext,
-			 PIO_STATUS_BLOCK Iosb,
-			 ULONG Reserved,
-			 PCONTEXT Context)
+VOID STDCALL KiUserApcDispatcher(PIO_APC_ROUTINE ApcRoutine,
+				 PVOID ApcContext,
+				 PIO_STATUS_BLOCK Iosb,
+				 ULONG Reserved,
+				 PCONTEXT Context)
 {
    ApcRoutine(ApcContext,
 	      Iosb,

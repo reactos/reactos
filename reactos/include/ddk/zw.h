@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.30 2000/05/13 13:50:55 dwelch Exp $
+/* $Id: zw.h,v 1.31 2000/06/27 19:20:42 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -479,7 +479,7 @@ NTSTATUS
 STDCALL
 NtContinue(
 	IN PCONTEXT Context,
-	IN CINT IrqLevel
+	IN BOOLEAN TestAlert
 	);
 
 NTSTATUS STDCALL ZwContinue(IN PCONTEXT Context, IN CINT IrqLevel);
