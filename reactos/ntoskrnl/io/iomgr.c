@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.51 2004/09/07 11:51:13 ekohl Exp $
+/* $Id: iomgr.c,v 1.52 2004/09/08 11:42:56 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -222,9 +222,40 @@ IopSecurityFile(PVOID ObjectBody,
     {
       case SetSecurityDescriptor:
 	DPRINT("Set security descriptor\n");
-	return STATUS_SUCCESS;
+	KeResetEvent(&FileObject->Event);
+	Irp = IoBuildSynchronousFsdRequest(IRP_MJ_SET_SECURITY,
+					   FileObject->DeviceObject,
+					   NULL,
+					   0,
+					   NULL,
+					   &FileObject->Event,
+					   &IoStatusBlock);
+
+	StackPtr = IoGetNextIrpStackLocation(Irp);
+	StackPtr->FileObject = FileObject;
+
+	StackPtr->Parameters.SetSecurity.SecurityInformation = SecurityInformation;
+	StackPtr->Parameters.SetSecurity.SecurityDescriptor = SecurityDescriptor;
+
+	Status = IoCallDriver(FileObject->DeviceObject, Irp);
+	if (Status == STATUS_PENDING)
+	  {
+	    KeWaitForSingleObject(&FileObject->Event,
+				  Executive,
+				  KernelMode,
+				  FALSE,
+				  NULL);
+	    Status = IoStatusBlock.Status;
+	  }
+
+	if (Status == STATUS_INVALID_DEVICE_REQUEST)
+	  {
+	    Status = STATUS_SUCCESS;
+	  }
+	return Status;
 
       case QuerySecurityDescriptor:
+	DPRINT("Query security descriptor\n");
 	KeResetEvent(&FileObject->Event);
 	Irp = IoBuildSynchronousFsdRequest(IRP_MJ_QUERY_SECURITY,
 					   FileObject->DeviceObject,
@@ -253,16 +284,16 @@ IopSecurityFile(PVOID ObjectBody,
 	    Status = IoStatusBlock.Status;
 	  }
 
-	if (Status == STATUS_BUFFER_TOO_SMALL)
-	  {
-	    /* FIXME: retrieve BufferLength */
-	    *BufferLength = 0;
-	  }
-	else if (Status == STATUS_INVALID_DEVICE_REQUEST)
+	if (Status == STATUS_INVALID_DEVICE_REQUEST)
 	  {
 	    Status = IopSetDefaultSecurityDescriptor(SecurityInformation,
 						     SecurityDescriptor,
 						     BufferLength);
+	  }
+	else
+	  {
+	    /* FIXME: Is this correct?? */
+	    *BufferLength = IoStatusBlock.Information;
 	  }
 	return Status;
 
