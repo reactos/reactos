@@ -1290,14 +1290,14 @@ NdisIPnPStartDevice(
   NTSTATUS Status;
   UINT SelectedMediumIndex = 0;
   NDIS_OID AddressOID;
-  BOOLEAN Success;
+  BOOLEAN Success = FALSE;
   ULONG ResourceCount;
   ULONG ResourceListSize;
   UNICODE_STRING ParamName;
   PNDIS_CONFIGURATION_PARAMETER ConfigParam;
   NDIS_HANDLE ConfigHandle;
   ULONG Size;
-  KIRQL OldIrql;
+/* FIXME - KIRQL OldIrql; */
 
   /*
    * Prepare wrapper context used by HW and configuration routines.
@@ -1461,7 +1461,7 @@ NdisIPnPStartDevice(
         /* FIXME: Support other types of media */
         NDIS_DbgPrint(MIN_TRACE, ("error: unsupported media\n"));
         ASSERT(FALSE);
-        KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
+/* FIXME - KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql); */
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -1564,6 +1564,8 @@ NdisIDispatchPnp(
         break;
 
       case IRP_MN_STOP_DEVICE:
+        /* FIXME */
+        Status = STATUS_UNSUCCESSFUL;
         break;
         Status = NdisIForwardIrpAndWait(Adapter, Irp);
         if (NT_SUCCESS(Status) && NT_SUCCESS(Irp->IoStatus.Status))
@@ -1576,7 +1578,8 @@ NdisIDispatchPnp(
 
       default:
         IoSkipCurrentIrpStackLocation(Irp);
-        return IoCallDriver(Adapter->NdisMiniportBlock.NextDeviceObject, Irp);
+        Status = IoCallDriver(Adapter->NdisMiniportBlock.NextDeviceObject, Irp);
+        break;
     }
 
   return Status;
