@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.27 2003/10/30 22:03:00 mtempel Exp $
+/* $Id: msgqueue.c,v 1.28 2003/10/31 18:25:56 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -181,6 +181,7 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
   POINT Point;
 
   LPARAM SpareLParam;
+  LRESULT Result;
 
   /* handle WM_MOUSEWHEEL messages differently, we don't need to check where
      the mouse cursor is, we just send it to the window with the current focus */
@@ -225,12 +226,25 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
         Window = IntGetWindowObject(Wnd);
         SpareLParam = MAKELONG(WinPosWindowFromPoint(ScopeWin, Message->Msg.pt, &Window), Msg);
         
-        NtUserPostMessage(Wnd, WM_MOUSEACTIVATE, (WPARAM)Window->ParentHandle, (LPARAM)SpareLParam);
-        NtUserPostMessage(Wnd, Msg, Message->Msg.wParam, Message->Msg.lParam);
-        
+        Result = NtUserSendMessage(Wnd, WM_MOUSEACTIVATE, (WPARAM)Window->ParentHandle, (LPARAM)SpareLParam);
+
         IntReleaseWindowObject(Window);
-        
-        return FALSE;   
+
+        switch (Result)
+        {
+            case MA_NOACTIVATEANDEAT:
+                return TRUE;
+            case MA_NOACTIVATE:
+                break;
+            case MA_ACTIVATEANDEAT:
+                IntSetFocusWindow(Wnd);
+                return TRUE;
+/*            case MA_ACTIVATE:
+            case 0:*/
+            default:
+                IntSetFocusWindow(Wnd);
+                break;
+        }
     }
 
   }
