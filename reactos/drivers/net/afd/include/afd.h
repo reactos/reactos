@@ -68,6 +68,7 @@ typedef struct _AFDFCB {
     KSPIN_LOCK          ReceiveQueueLock;
     LIST_ENTRY          ReadRequestQueue;
     KSPIN_LOCK          ReadRequestQueueLock;
+    LIST_ENTRY          ListenRequestQueue;
     /* For WSAEventSelect() */
     WSANETWORKEVENTS    NetworkEvents;
     WSAEVENT            EventObjects[FD_MAX_EVENTS];
@@ -90,6 +91,11 @@ typedef struct _AFD_READ_REQUEST {
   PFILE_REQUEST_RECVFROM RecvFromRequest;
   PFILE_REPLY_RECVFROM RecvFromReply;
 } AFD_READ_REQUEST, *PAFD_READ_REQUEST;
+
+typedef struct _AFD_LISTEN_REQUEST {
+  LIST_ENTRY ListEntry;
+  PAFDFCB Fcb;
+} AFD_LISTEN_REQUEST, *PAFD_LISTEN_REQUEST;
 
 typedef struct IPSNMP_INFO {
 	ULONG Forwarding;
@@ -207,7 +213,7 @@ typedef struct IPv4_HEADER {
 
 extern NPAGED_LOOKASIDE_LIST BufferLookasideList;
 extern NPAGED_LOOKASIDE_LIST ReadRequestLookasideList;
-
+extern NPAGED_LOOKASIDE_LIST ListenRequestLookasideList;
 
 /* Prototypes from dispatch.c */
 
@@ -294,6 +300,9 @@ NTSTATUS STDCALL AfdWrite(
 
 /* Prototypes from routines.c */
 
+VOID DumpName(
+  LPSOCKADDR Name);
+
 ULONG WSABufferSize(
     LPWSABUF Buffers,
     DWORD BufferCount);
@@ -348,6 +357,11 @@ NTSTATUS TdiConnect(
 NTSTATUS TdiAssociateAddressFile(
   HANDLE AddressHandle,
   PFILE_OBJECT ConnectionObject);
+
+NTSTATUS TdiListen(
+  PFILE_OBJECT ConnectionObject,
+  PIO_COMPLETION_ROUTINE  CompletionRoutine,
+  PVOID CompletionContext);
 
 NTSTATUS TdiSetEventHandler(
   PFILE_OBJECT FileObject,

@@ -11,6 +11,16 @@
 #include <debug.h>
 
 
+VOID DumpName(
+  LPSOCKADDR Name)
+{
+  AFD_DbgPrint(MIN_TRACE, ("DumpName:\n"));
+  AFD_DbgPrint(MIN_TRACE, ("  sa_family: %d\n", Name->sa_family));
+  AFD_DbgPrint(MIN_TRACE, ("  sin_port: %d\n", WN2H(((LPSOCKADDR_IN)Name)->sin_port)));
+  AFD_DbgPrint(MIN_TRACE, ("  in_addr: 0x%x\n", WN2H(((LPSOCKADDR_IN)Name)->sin_addr.S_un.S_addr)));
+}
+
+
 ULONG WSABufferSize(
   LPWSABUF Buffers,
   DWORD BufferCount)

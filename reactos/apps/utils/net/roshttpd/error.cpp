@@ -12,5 +12,5 @@
 
 void ReportErrorStr(LPTSTR lpsText)
 {
-    wprintf((__wchar_t*)lpsText);
+    wprintf((wchar_t*)lpsText);
 }

@@ -38,6 +38,25 @@ VOID DisplayBuffer(
 #endif /* DBG */
 
 
+inline DWORD TdiAddressSizeFromType(
+  ULONG Type)
+/*
+ * FUNCTION: Returns the size of a TDI style address of given address type
+ * ARGUMENTS:
+ *     Type = TDI style address type
+ * RETURNS:
+ *     Size of TDI style address, 0 if Type is not valid
+ */
+{
+  switch (Type) {
+  case TDI_ADDRESS_TYPE_IP:
+    return sizeof(TA_IP_ADDRESS);
+  /* FIXME: More to come */
+  }
+  AFD_DbgPrint(MIN_TRACE, ("Unknown TDI address type (%d).\n", Type));
+  return 0;
+}
+
 inline DWORD TdiAddressSizeFromName(
   LPSOCKADDR Name)
 /*
@@ -166,11 +185,50 @@ NTSTATUS TdiBuildConnectionInfo(
     sizeof(TDI_CONNECTION_INFORMATION) +
     TdiAddressSize);
 
+  ConnInfo->OptionsLength = sizeof(ULONG);
   ConnInfo->RemoteAddressLength = TdiAddressSize;
   ConnInfo->RemoteAddress = (PVOID)
     (ConnInfo + sizeof(TDI_CONNECTION_INFORMATION));
 
   TdiBuildAddress(ConnInfo->RemoteAddress, Name);
+
+  *ConnectionInfo = ConnInfo;
+
+  return STATUS_SUCCESS;
+}
+
+
+NTSTATUS TdiBuildNullConnectionInfo(
+  PTDI_CONNECTION_INFORMATION *ConnectionInfo,
+  ULONG Type)
+/*
+ * FUNCTION: Builds a NULL TDI connection information structure
+ * ARGUMENTS:
+ *     ConnectionInfo = Address of buffer to place connection information
+ *     Type           = TDI style address type (TDI_ADDRESS_TYPE_XXX).
+ * RETURNS:
+ *     Status of operation
+ */
+{
+  PTDI_CONNECTION_INFORMATION ConnInfo;
+  ULONG TdiAddressSize;
+
+  TdiAddressSize = TdiAddressSizeFromType(Type);
+
+  ConnInfo = (PTDI_CONNECTION_INFORMATION)
+    ExAllocatePool(NonPagedPool,
+    sizeof(TDI_CONNECTION_INFORMATION) +
+    TdiAddressSize);
+  if (!ConnInfo)
+    return STATUS_INSUFFICIENT_RESOURCES;
+
+  RtlZeroMemory(ConnInfo,
+    sizeof(TDI_CONNECTION_INFORMATION) +
+    TdiAddressSize);
+
+  ConnInfo->OptionsLength = sizeof(ULONG);
+  ConnInfo->RemoteAddressLength = 0;
+  ConnInfo->RemoteAddress = NULL;
 
   *ConnectionInfo = ConnInfo;
 
@@ -320,20 +378,22 @@ NTSTATUS TdiOpenAddressFileIPv4(
   AFD_DbgPrint(MAX_TRACE, ("Called. DeviceName (%wZ)  Name (0x%X)\n",
     DeviceName, Name));
 
+	/* EaName must be 0-terminated, even though TDI_TRANSPORT_ADDRESS_LENGTH does *not* include the 0 */
   EaLength = sizeof(FILE_FULL_EA_INFORMATION) +
              TDI_TRANSPORT_ADDRESS_LENGTH +
-             sizeof(TA_IP_ADDRESS);
+             sizeof(TA_IP_ADDRESS) + 1;
   EaInfo = (PFILE_FULL_EA_INFORMATION)ExAllocatePool(NonPagedPool, EaLength);
   if (!EaInfo)
     return STATUS_INSUFFICIENT_RESOURCES;
 
   RtlZeroMemory(EaInfo, EaLength);
   EaInfo->EaNameLength = TDI_TRANSPORT_ADDRESS_LENGTH;
+  /* Don't copy the terminating 0; we have already zeroed it */
   RtlCopyMemory(EaInfo->EaName,
                 TdiTransportAddress,
                 TDI_TRANSPORT_ADDRESS_LENGTH);
   EaInfo->EaValueLength = sizeof(TA_IP_ADDRESS);
-  Address = (PTA_IP_ADDRESS)(EaInfo->EaName + TDI_TRANSPORT_ADDRESS_LENGTH);
+  Address = (PTA_IP_ADDRESS)(EaInfo->EaName + TDI_TRANSPORT_ADDRESS_LENGTH + 1); /* 0-terminated */
   TdiBuildAddressIPv4(Address, Name);
   Status = TdiOpenDevice(DeviceName,
                          EaLength,
@@ -403,9 +463,10 @@ NTSTATUS TdiOpenConnectionEndpointFile(
 
   AFD_DbgPrint(MAX_TRACE, ("Called. DeviceName (%wZ)\n", DeviceName));
 
+	/* EaName must be 0-terminated, even though TDI_TRANSPORT_ADDRESS_LENGTH does *not* include the 0 */
   EaLength = sizeof(FILE_FULL_EA_INFORMATION) +
              TDI_CONNECTION_CONTEXT_LENGTH +
-             sizeof(PVOID);
+             sizeof(PVOID) + 1;
  
   EaInfo = (PFILE_FULL_EA_INFORMATION)ExAllocatePool(NonPagedPool, EaLength);
   if (!EaInfo)
@@ -413,11 +474,12 @@ NTSTATUS TdiOpenConnectionEndpointFile(
 
   RtlZeroMemory(EaInfo, EaLength);
   EaInfo->EaNameLength = TDI_CONNECTION_CONTEXT_LENGTH;
+  /* Don't copy the terminating 0; we have already zeroed it */
   RtlCopyMemory(EaInfo->EaName,
                 TdiConnectionContext,
                 TDI_CONNECTION_CONTEXT_LENGTH);
   EaInfo->EaValueLength = sizeof(PVOID);
-  ContextArea = (PVOID*)(EaInfo->EaName + TDI_CONNECTION_CONTEXT_LENGTH);
+  ContextArea = (PVOID*)(EaInfo->EaName + TDI_CONNECTION_CONTEXT_LENGTH + 1); /* 0-terminated */
   /* FIXME: Allocate context area */
   *ContextArea = NULL;
   Status = TdiOpenDevice(DeviceName,
@@ -464,6 +526,7 @@ NTSTATUS TdiConnect(
   Status = TdiBuildConnectionInfo(&ReturnConnectionInfo, RemoteAddress);
   if (!NT_SUCCESS(Status)) {
     ExFreePool(RequestConnectionInfo);
+    ExFreePool(ReturnConnectionInfo);
     return Status;
   }
 
@@ -476,6 +539,7 @@ NTSTATUS TdiConnect(
                                          &Iosb);                  /* Status */
   if (!Irp) {
     ExFreePool(RequestConnectionInfo);
+    ExFreePool(ReturnConnectionInfo);
     return STATUS_INSUFFICIENT_RESOURCES;
   }
 
@@ -540,6 +604,69 @@ NTSTATUS TdiAssociateAddressFile(
                            AddressHandle);
 
   Status = TdiCall(Irp, DeviceObject, &Event, &Iosb);
+
+  return Status;
+}
+
+
+NTSTATUS TdiListen(
+  PFILE_OBJECT ConnectionObject,
+  PIO_COMPLETION_ROUTINE  CompletionRoutine,
+  PVOID CompletionContext)
+/*
+ * FUNCTION: Listen on a connection endpoint for a connection request from a remote peer
+ * ARGUMENTS:
+ *     ConnectionObject  = Pointer to connection endpoint file object
+ *     CompletionRoutine = Routine to be called when IRP is completed
+ *     CompletionContext = Context for CompletionRoutine
+ * RETURNS:
+ *     Status of operation
+ *     May return STATUS_PENDING
+ */
+{
+  PTDI_CONNECTION_INFORMATION RequestConnectionInfo;
+  //PTDI_CONNECTION_INFORMATION ReturnConnectionInfo;
+  PDEVICE_OBJECT DeviceObject;
+  IO_STATUS_BLOCK Iosb;
+  NTSTATUS Status;
+  KEVENT Event;
+  PIRP Irp;
+
+  AFD_DbgPrint(MAX_TRACE, ("Called\n"));
+
+  assert(ConnectionObject);
+
+  DeviceObject = IoGetRelatedDeviceObject(ConnectionObject);
+
+  Status = TdiBuildNullConnectionInfo(&RequestConnectionInfo, TDI_ADDRESS_TYPE_IP);
+  if (!NT_SUCCESS(Status))
+     return Status;
+
+  KeInitializeEvent(&Event, NotificationEvent, FALSE);
+
+  Irp = TdiBuildInternalDeviceControlIrp(TDI_LISTEN,              /* Sub function */
+                                         DeviceObject,            /* Device object */
+                                         ConnectionObject,        /* File object */
+                                         &Event,                  /* Event */
+                                         &Iosb);                  /* Status */
+  if (!Irp) {
+    ExFreePool(RequestConnectionInfo);
+    return STATUS_INSUFFICIENT_RESOURCES;
+  }
+
+  TdiBuildListen(Irp,                    /* IRP */
+                 DeviceObject,           /* Device object */
+                 ConnectionObject,       /* File object */
+                 CompletionRoutine,      /* Completion routine */
+                 CompletionContext,      /* Completion routine context */
+                 0,                      /* Flags */
+                 RequestConnectionInfo,  /* Request connection information */
+                 NULL /* ReturnConnectionInfo */);  /* Return connection information */
+
+  Status = TdiCall(Irp, DeviceObject, NULL /* Don't wait for completion */, &Iosb);
+
+  ExFreePool(RequestConnectionInfo);
+  //ExFreePool(ReturnConnectionInfo);
 
   return Status;
 }

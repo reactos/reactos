@@ -21,6 +21,7 @@ DWORD DebugTraceLevel = MID_TRACE;
 
 NPAGED_LOOKASIDE_LIST BufferLookasideList;
 NPAGED_LOOKASIDE_LIST ReadRequestLookasideList;
+NPAGED_LOOKASIDE_LIST ListenRequestLookasideList;
 
 
 NTSTATUS
@@ -196,7 +197,15 @@ DriverEntry(
       TAG('A', 'F', 'D', 'R'),
       0);*/
 
-    
+	ExInitializeNPagedLookasideList(
+      &ListenRequestLookasideList,
+      NULL,
+      NULL,
+      0,
+      sizeof(AFD_LISTEN_REQUEST),
+      TAG('A', 'F', 'D', 'L'),
+      0);
+
     return STATUS_SUCCESS;
 }
 

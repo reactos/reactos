@@ -20,21 +20,21 @@ unsigned long strtoul(const char *nptr, char **endptr, int base);
 #define EXPORT STDCALL
 
 extern HANDLE GlobalHeap;
+extern BOOL Initialized;	/* TRUE if WSAStartup() has been successfully called */
 extern WSPUPCALLTABLE UpcallTable;
 
 
 typedef struct _WINSOCK_THREAD_BLOCK {
     INT LastErrorValue;     /* Error value from last function that failed */
-    BOOL Initialized;       /* TRUE if WSAStartup() has been successfully called */
     CHAR Intoa[16];         /* Buffer for inet_ntoa() */
 } WINSOCK_THREAD_BLOCK, *PWINSOCK_THREAD_BLOCK;
 
 
 /* Macros */
 
-#define WSAINITIALIZED (((PWINSOCK_THREAD_BLOCK)NtCurrentTeb()->WinSockData)->Initialized)
+#define WSAINITIALIZED (Initialized)
 
-#define WSASETINITIALIZED (((PWINSOCK_THREAD_BLOCK)NtCurrentTeb()->WinSockData)->Initialized = TRUE)
+#define WSASETINITIALIZED (Initialized = TRUE)
 
 
 #ifdef LE

@@ -130,6 +130,23 @@ NTSTATUS AfdDispBind(
 }
 
 
+NTSTATUS
+STDCALL
+AfdDispCompleteListen(
+  PDEVICE_OBJECT DeviceObject,
+  PIRP Irp,
+  PVOID Context)
+{
+  PAFD_LISTEN_REQUEST ListenRequest = (PAFD_LISTEN_REQUEST) Context;
+
+  AFD_DbgPrint(MAX_TRACE, ("Called. ListenRequest (0x%X).\n", ListenRequest));
+
+  AFD_DbgPrint(MAX_TRACE, ("Fcb (0x%X).\n", ListenRequest->Fcb));
+
+  return STATUS_SUCCESS;
+}
+
+
 NTSTATUS AfdDispListen(
     PIRP Irp,
     PIO_STACK_LOCATION IrpSp)
@@ -148,6 +165,7 @@ NTSTATUS AfdDispListen(
   PFILE_REQUEST_LISTEN Request;
   PFILE_REPLY_LISTEN Reply;
   PAFDFCB FCB;
+  PAFD_LISTEN_REQUEST ListenRequest;
 
   InputBufferLength  = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
   OutputBufferLength = IrpSp->Parameters.DeviceIoControl.OutputBufferLength;
@@ -161,32 +179,71 @@ NTSTATUS AfdDispListen(
     Request = (PFILE_REQUEST_LISTEN)Irp->AssociatedIrp.SystemBuffer;
     Reply   = (PFILE_REPLY_LISTEN)Irp->AssociatedIrp.SystemBuffer;
 
-    if (FCB->State == SOCKET_STATE_BOUND) {
+    if (FCB->State == SOCKET_STATE_BOUND)
+      {
+        /* We have a bound socket so go ahead and create a connection endpoint
+           and associate it with the address file object */
 
-      /* We have a bound socket so go ahead and create a connection endpoint
-         and associate it with the address file object */
+        Status = TdiOpenConnectionEndpointFile(
+          &FCB->TdiDeviceName,
+          &FCB->TdiConnectionObjectHandle,
+          &FCB->TdiConnectionObject);
 
-      Status = TdiOpenConnectionEndpointFile(
-        &FCB->TdiDeviceName,
-        &FCB->TdiConnectionObjectHandle,
-        &FCB->TdiConnectionObject);
+        if (NT_SUCCESS(Status))
+          {
+            Status = TdiAssociateAddressFile(
+              FCB->TdiAddressObjectHandle,
+              FCB->TdiConnectionObject);
 
-      if (NT_SUCCESS(Status)) {
-        Status = TdiAssociateAddressFile(
-          FCB->TdiAddressObjectHandle,
-          FCB->TdiConnectionObject);
+            if (NT_SUCCESS(Status))
+              {
+		            ListenRequest = ExAllocateFromNPagedLookasideList(&ListenRequestLookasideList);
+                if (ListenRequest != NULL)
+                  {
+                    ListenRequest->Fcb = FCB;
+                    /* FIXME: Protect ListenRequestQueue */
+                    InsertTailList(&FCB->ListenRequestQueue, &ListenRequest->ListEntry);
+
+                    Status = TdiListen(FCB->TdiConnectionObject, AfdDispCompleteListen, ListenRequest);
+                    if ((Status == STATUS_PENDING) || NT_SUCCESS(Status))
+                      {
+                        if (Status != STATUS_PENDING)
+                          {
+                            AFD_DbgPrint(MIN_TRACE, ("FIXME: Status (0x%X).\n", Status));
+                          }
+                      }
+		                else
+		                  {
+                        /* FIXME: Cleanup ListenRequest */
+                        /* FIXME: Cleanup from TdiOpenConnectionEndpointFile */
+		                  }
+                  }
+		            else
+		              {
+                    /* FIXME: Cleanup from TdiOpenConnectionEndpointFile */
+                    Status = STATUS_NO_MEMORY;
+		              }
+              }
+		        else
+		          {
+                /* FIXME: Cleanup from TdiOpenConnectionEndpointFile */
+		          }
+          }
+
+        if (NT_SUCCESS(Status)) {
+          Reply->Status = NO_ERROR;
+        } else {
+          Reply->Status = WSAEINVAL;
+        }
       }
-
-      if (NT_SUCCESS(Status)) {
-        Reply->Status = NO_ERROR;
-      } else {
+    else if (FCB->State == SOCKET_STATE_CONNECTED)
+      {
+        Reply->Status = WSAEISCONN;
+      }
+    else
+      {
         Reply->Status = WSAEINVAL;
       }
-    } else if (FCB->State == SOCKET_STATE_CONNECTED) {
-      Reply->Status = WSAEISCONN;
-    } else {
-      Reply->Status = WSAEINVAL;
-    }
   }
 
   AFD_DbgPrint(MAX_TRACE, ("Status (0x%X).\n", Status));

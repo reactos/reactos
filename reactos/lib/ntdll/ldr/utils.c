@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.75 2003/11/30 20:37:34 gdalsnes Exp $
+/* $Id: utils.c,v 1.76 2003/12/25 14:06:15 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -542,13 +542,14 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
 				   &SectionHandle);
     }
 
-  RtlFreeUnicodeString(&AdjustedName);
-
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("Failed to create or open dll section (Status %lx)\n", Status);
+      DPRINT1("Failed to create or open dll section of '%wZ' (Status %lx)\n", &AdjustedName, Status);
+      RtlFreeUnicodeString(&AdjustedName);
       return Status;
     }
+
+  RtlFreeUnicodeString(&AdjustedName);
 
   /*
    * Map the dll into the process.

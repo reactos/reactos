@@ -36,7 +36,7 @@ CThread::CThread()
 	assert(Data.hFinished != NULL);
 
 	// Create thread
-    hThread = CreateThread(NULL, 0, ThreadEntry, &Data, 0, &dwThreadId);
+    hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ThreadEntry, &Data, 0, &dwThreadId);
 
 	// FIXME: Do some error handling
 	assert(hThread != NULL);

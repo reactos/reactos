@@ -10,9 +10,10 @@
 #include <tcpip.h>
 #include <routines.h>
 #include <pool.h>
+#include <tcp.h>
 
 
-UINT RandomNumber = 0x12345678;
+static UINT RandomNumber = 0x12345678;
 
 
 inline NTSTATUS BuildDatagramSendRequest(
@@ -482,14 +483,13 @@ UINT ResizePacket(
 VOID DisplayIPPacket(
     PIP_PACKET IPPacket)
 {
-#if 0
     UINT i;
     PCHAR p;
     UINT Length;
     PNDIS_BUFFER Buffer;
     PNDIS_BUFFER NextBuffer;
 
-    if ((DebugTraceLevel & DEBUG_BUFFER) == 0) {
+    if ((DebugTraceLevel & (DEBUG_BUFFER | DEBUG_IP)) != (DEBUG_BUFFER | DEBUG_IP)) {
         return;
     }
 
@@ -528,8 +528,79 @@ VOID DisplayIPPacket(
         }
         DbgPrint("\n");
     }
-#endif
 }
-#endif /* DBG */
 
-/* EOF */
+
+static VOID DisplayTCPHeader(
+    PUCHAR Header,
+    UINT Length)
+{
+    /* FIXME: IPv4 only */
+    PIPv4_HEADER IPHeader = (PIPv4_HEADER)Header;
+    PTCP_HEADER TCPHeader;
+
+    if (IPHeader->Protocol != IPPROTO_TCP) {
+        DbgPrint("This is not a TCP datagram. Protocol is %d\n", IPHeader->Protocol);
+        return;
+    }
+
+    DbgPrint("VerIHL: 0x%x\n", IPHeader->VerIHL);
+    TCPHeader = (PTCP_HEADER)((PUCHAR)IPHeader + (IPHeader->VerIHL & 0x0F) * 4);
+
+    DbgPrint("TCP header:\n");
+    DbgPrint("  SourcePort: %d\n", WN2H(TCPHeader->SourcePort));
+    DbgPrint("  DestPort: %d\n", WN2H(TCPHeader->DestPort));
+    DbgPrint("  SeqNum: %d\n", WN2H(TCPHeader->SeqNum));
+    DbgPrint("  AckNum: %d\n", WN2H(TCPHeader->AckNum));
+    DbgPrint("  DataOfs: %d (%d)\n", TCPHeader->DataOfs, TCPHeader->DataOfs & 0x0F);
+    DbgPrint("  Flags: 0x%x (0x%x)\n", TCPHeader->Flags, TCPHeader->Flags & 0x3F);
+    if ((TCPHeader->Flags & TCP_URG) > 0) DbgPrint("    TCP_URG - Urgent Pointer field significant\n");
+    if ((TCPHeader->Flags & TCP_ACK) > 0) DbgPrint("    TCP_ACK - Acknowledgment field significant\n");
+    if ((TCPHeader->Flags & TCP_PSH) > 0) DbgPrint("    TCP_PSH - Push Function\n");
+    if ((TCPHeader->Flags & TCP_RST) > 0) DbgPrint("    TCP_RST - Reset the connection\n");
+    if ((TCPHeader->Flags & TCP_SYN) > 0) DbgPrint("    TCP_SYN - Synchronize sequence numbers\n");
+    if ((TCPHeader->Flags & TCP_FIN) > 0) DbgPrint("    TCP_FIN - No more data from sender\n");
+    DbgPrint("  Window: %d\n", WN2H(TCPHeader->Window));
+    DbgPrint("  Checksum: %d\n", WN2H(TCPHeader->Checksum));
+    DbgPrint("  Urgent: %d\n", WN2H(TCPHeader->Urgent));
+}
+
+
+VOID DisplayTCPPacket(
+    PIP_PACKET IPPacket)
+{
+    UINT Length;
+    PUCHAR Buffer;
+
+    if ((DebugTraceLevel & (DEBUG_BUFFER | DEBUG_TCP)) != (DEBUG_BUFFER | DEBUG_TCP)) {
+        return;
+    }
+
+    if (!IPPacket) {
+        TI_DbgPrint(MIN_TRACE, ("Cannot display null packet.\n"));
+        return;
+    }
+
+    DisplayIPPacket(IPPacket);
+
+	  TI_DbgPrint(MIN_TRACE, ("IPPacket is at (0x%X).\n", IPPacket));
+    TI_DbgPrint(MIN_TRACE, ("Header buffer is at (0x%X).\n", IPPacket->Header));
+    TI_DbgPrint(MIN_TRACE, ("Header size is (%d).\n", IPPacket->HeaderSize));
+    TI_DbgPrint(MIN_TRACE, ("TotalSize (%d).\n", IPPacket->TotalSize));
+    TI_DbgPrint(MIN_TRACE, ("ContigSize (%d).\n", IPPacket->ContigSize));
+    TI_DbgPrint(MIN_TRACE, ("NdisPacket (0x%X).\n", IPPacket->NdisPacket));
+
+    if (IPPacket->NdisPacket) {
+        NdisQueryPacket(IPPacket->NdisPacket, NULL, NULL, NULL, &Length);
+        Buffer = ExAllocatePool(NonPagedPool, Length);
+        Length = CopyPacketToBuffer(Buffer, IPPacket->NdisPacket, 0, Length);
+        DisplayTCPHeader(Buffer, Length);
+        ExFreePool(Buffer);
+    } else {
+        Buffer = IPPacket->Header;
+        Length = IPPacket->ContigSize;
+        DisplayTCPHeader(Buffer, Length);
+    }
+}
+
+#endif /* DBG */

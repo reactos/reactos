@@ -25,6 +25,7 @@ VOID STDCALL KeBugCheck (ULONG	BugCheckCode) {}
 
 
 HANDLE GlobalHeap;
+BOOL Initialized = FALSE;	/* TRUE if WSAStartup() has been successfully called */
 WSPUPCALLTABLE UpcallTable;
 
 
@@ -198,6 +199,8 @@ WSASocketW(
       af, type, protocol));
 
   if (!WSAINITIALIZED) {
+      WS_DbgPrint(MAX_TRACE, ("af (%d)  type (%d)  protocol (%d) = WSANOTINITIALISED.\n",
+          af, type, protocol));
       WSASetLastError(WSANOTINITIALISED);
       return INVALID_SOCKET;
   }
@@ -213,12 +216,16 @@ WSASocketW(
 
   Provider = LocateProvider(lpProtocolInfo);
   if (!Provider) {
+    WS_DbgPrint(MAX_TRACE, ("af (%d)  type (%d)  protocol (%d) = WSAEAFNOSUPPORT.\n",
+      af, type, protocol));
     WSASetLastError(WSAEAFNOSUPPORT);
     return INVALID_SOCKET;
   }
 
   Status = LoadProvider(Provider, lpProtocolInfo);
   if (Status != NO_ERROR) {
+    WS_DbgPrint(MAX_TRACE, ("af (%d)  type (%d)  protocol (%d) = %d.\n",
+      af, type, protocol, Status));
     WSASetLastError(Status);
     return INVALID_SOCKET;
   }
@@ -590,7 +597,6 @@ DllMain(HANDLE hInstDll,
     }
 
     p->LastErrorValue = NO_ERROR;
-    p->Initialized    = FALSE;
 
     NtCurrentTeb()->WinSockData = p;
     break;

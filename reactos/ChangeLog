@@ -1,3 +1,67 @@
+2003-12-25  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* apps/utils/net/roshttpd/error.cpp (ReportErrorStr): Cast to wchar_t*,
+	not __wchar_t*.
+	* apps/utils/net/roshttpd/makefile (TARGET_CPPFLAGS): Add -Wno-deprecated.
+	(TARGET_GCCLIBS): Add stdc++.
+	* apps/utils/net/roshttpd/common/socket.cpp: Include <string.h>.
+	* apps/utils/net/roshttpd/common/thread.cpp (CThread::CThread): Fix
+	warning.
+	* drivers/net/afd/afd/afd.c (ListenRequestLookasideList): New variable.
+	(DriverEntry): Initialize ListenRequestLookasideList.
+	* drivers/net/afd/afd/dispatch.c (AfdDispCompleteListen): New function.
+	(AfdDispListen): Partial implement.
+	* drivers/net/afd/afd/opnclose.c (AfdInitializeFCB): Initialize
+	NewFCB->ListenRequestQueue.
+	(AfdKillListenRequests): New function.
+	(AfdClose): Call AfdKillListenRequests.
+	* drivers/net/afd/afd/routines.c (DumpName): New function.
+	* drivers/net/afd/afd/tdi.c (TdiAddressSizeFromType): New function.
+	(TdiBuildConnectionInfo): Initialize ConnInfo->OptionsLength.
+	(TdiBuildNullConnectionInfo): New function.
+	(TdiOpenAddressFileIPv4, TdiOpenConnectionEndpointFile): EaName is
+	0-terminated.
+	(TdiListen): New function.
+	* drivers/net/afd/include/afd.h (AFDFCB): Add ListenRequestQueue.
+	(AFD_LISTEN_REQUEST): New structure.
+	(ListenRequestLookasideList): Declare.
+	(DumpName, TdiListen): Add prototypes.
+	* drivers/net/tcpip/datalink/lan.c (BindAdapter): Initialize
+	AnsiAddress.Length and AnsiAddress.MaximumLength.
+	* drivers/net/tcpip/include/debug.h: Define DEBUG_TCP.
+	* drivers/net/tcpip/include/routines.h (DisplayTCPPacket): Add
+	prototype.
+	(DISPLAY_TCP_PACKET): Define.
+	* drivers/net/tcpip/include/tcp.h (TCPListen): Add prototype.
+	* drivers/net/tcpip/include/titypes.h (ADDRESS_FILE): Add Connection.
+	* drivers/net/tcpip/network/ip.c (IPLocateNTEOnInterface): Cleanup.
+	* drivers/net/tcpip/tcpip/address.c (AddrSearchNext): Port is in
+	network byte order.
+	* drivers/net/tcpip/tcpip/dispatch.c (DispTdiAssociateAddress):
+	Initialize AddrFile->Connection.
+	(DispTdiListen): Implement.
+	* drivers/net/tcpip/tcpip/fileobjs.c (FileOpenAddress): Don't
+	initialize AddrFile->Connections.
+	* drivers/net/tcpip/tcpip/routines.c: Include <tcp.h>.
+	(DisplayIPPacket): Enable.
+	(DisplayTCPHeader, DisplayTCPPacket): New functions.
+	* drivers/net/tcpip/transport/tcp/tcp.c: Include <routines.h>.
+	(TCPListen, TCPiReceive): New functions.
+	(TCPReceive): Partial implement.
+	* lib/msafd/misc/helpers.c (CreateHelperDLLDatabase): Add
+	{SOCK_STREAM,IPPROTO_TCP,0} and {SOCK_DGRAM,IPPROTO_UDP,0} mappings.
+	* lib/ntdll/ldr/utils.c (LdrLoadDll): Print name of DLL if not found.
+	* lib/ws2_32/include/ws2_32.h (Initialized): Declare.
+	(WINSOCK_THREAD_BLOCK): Remove Initialized member.
+	* (WSAINITIALIZED, WSASETINITIALIZED): Update.
+	* lib/ws2_32/misc/catalog.c (CreateCatalog): Add
+	{SOCK_STREAM,IPPROTO_TCP,0} and {SOCK_DGRAM,IPPROTO_UDP,0} mappings.
+	(Initialized): New variable.
+	(DllMain): Don't initialize p->Initialized.
+	* ntoskrnl/dbg/kdb.c: Include <ctype.h>.
+	* subsys/win32k/ntuser/message.c (NtUserDispatchMessage): Kill noisy
+	message.
+
 2003-12-10  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* tools/wine2ros: New directory.

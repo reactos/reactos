@@ -317,15 +317,15 @@ NTSTATUS FileOpenAddress(
   TI_DbgPrint(MID_TRACE, ("IP protocol number for address file object is %d.\n",
     Protocol));
 
+  TI_DbgPrint(MID_TRACE, ("Port number for address file object is %d.\n",
+    WN2H(AddrFile->Port)));
+
   /* Set protocol */
   AddrFile->Protocol = Protocol;
   
   /* Initialize receive and transmit queues */
   InitializeListHead(&AddrFile->ReceiveQueue);
   InitializeListHead(&AddrFile->TransmitQueue);
-
-  /* Initialize associated connection list */
-  InitializeListHead(&AddrFile->Connections);
 
   /* Initialize work queue item. We use this for pending requests */
   ExInitializeWorkItem(&AddrFile->WorkItem, RequestWorker, AddrFile);

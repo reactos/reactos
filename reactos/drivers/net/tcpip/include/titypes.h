@@ -176,7 +176,9 @@ typedef struct _ADDRESS_FILE {
     DATAGRAM_SEND_ROUTINE Send;           /* Routine to send a datagram */
     LIST_ENTRY ReceiveQueue;              /* List of outstanding receive requests */
     LIST_ENTRY TransmitQueue;             /* List of outstanding transmit requests */
-    LIST_ENTRY Connections;               /* List of associated connections */
+    struct _CONNECTION_ENDPOINT *Connection;
+                                          /* Associated connection or NULL if no
+                                             associated connection exist */
     PIP_ADDRESS AddrCache;                /* One entry address cache (destination
                                              address of last packet transmitted) */
 
@@ -308,10 +310,10 @@ typedef struct _CONNECTION_ENDPOINT {
   CONNECTION_STATE State;     /* Connection state */
 
   PIP_ADDRESS LocalAddress;   /* Pointer to local IP address */
-  USHORT LocalPort;           /* Local port number */
+  USHORT LocalPort;           /* Local port number (network byte order) */
 
   PIP_ADDRESS RemoteAddress;  /* Pointer to remote IP address */
-  USHORT RemotePort;          /* Remote port number */
+  USHORT RemotePort;          /* Remote port number (network byte order) */
 
   /* Send sequence variables */
   ULONG SendUnacknowledged;   /* Highest sequence number that is acknowledged */

@@ -515,10 +515,8 @@ PNET_TABLE_ENTRY IPLocateNTEOnInterface(
     PLIST_ENTRY CurrentEntry;
     PADDRESS_ENTRY Current;
 
-//    TI_DbgPrint(DEBUG_IP, ("Called. IF (0x%X)  Address (0x%X)  AddressType (0x%X).\n",
-//        IF, Address, AddressType));
-
-//    TI_DbgPrint(DEBUG_IP, ("Address (%s)  AddressType (0x%X).\n", A2S(Address)));
+    TI_DbgPrint(DEBUG_IP, ("Called. IF (0x%X)  Address (%s)  AddressType (0x%X).\n",
+        IF, A2S(Address), AddressType));
 
     KeAcquireSpinLock(&IF->Lock, &OldIrql);
 
@@ -536,9 +534,6 @@ PNET_TABLE_ENTRY IPLocateNTEOnInterface(
             *AddressType = Current->Type;
             KeReleaseSpinLock(&IF->Lock, OldIrql);
             return Current->NTE;
-        }
-        else {
-            TI_DbgPrint(DEBUG_IP, ("CurrentEntry = 0x%X != &IF->ADEListHead = 0x%X.\n", CurrentEntry, &IF->ADEListHead));
         }
         CurrentEntry = CurrentEntry->Flink;
     }

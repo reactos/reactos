@@ -326,11 +326,8 @@ NTSTATUS DispTdiAssociateAddress(
   ReferenceObject(AddrFile);
   Connection->AddressFile = AddrFile;
 
-  /* Add connection endpoint to connection list on the address file */
-  ExInterlockedInsertTailList(
-    &AddrFile->Connections,
-    &Connection->AddrFileEntry,
-    &AddrFile->Lock);
+  /* Add connection endpoint to the address file */
+  AddrFile->Connection = Connection;
 
   /* FIXME: Maybe do this in DispTdiDisassociateAddress() instead? */
   ObDereferenceObject(FileObject);
@@ -465,9 +462,44 @@ NTSTATUS DispTdiListen(
  *     Status of operation
  */
 {
+  PCONNECTION_ENDPOINT Connection;
+  PTDI_REQUEST_KERNEL Parameters;
+  PTRANSPORT_CONTEXT TranContext;
+  PIO_STACK_LOCATION IrpSp;
+  TDI_REQUEST Request;
+  NTSTATUS Status;
+
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
-	return STATUS_NOT_IMPLEMENTED;
+  IrpSp = IoGetCurrentIrpStackLocation(Irp);
+
+  /* Get associated connection endpoint file object. Quit if none exists */
+
+  TranContext = IrpSp->FileObject->FsContext;
+  if (!TranContext) {
+    TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
+    return STATUS_INVALID_CONNECTION;
+  }
+
+  Connection = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
+  if (!Connection) {
+    TI_DbgPrint(MID_TRACE, ("No connection endpoint file object.\n"));
+    return STATUS_INVALID_CONNECTION;
+  }
+
+  Parameters = (PTDI_REQUEST_KERNEL)&IrpSp->Parameters;
+
+  /* Initialize a connect request */
+  Request.Handle.ConnectionContext = TranContext->Handle.ConnectionContext;
+  Request.RequestNotifyObject      = DispDataRequestComplete;
+  Request.RequestContext           = Irp;
+
+  Status = TCPListen(
+    &Request,
+    Parameters->RequestConnectionInformation,
+    Parameters->ReturnConnectionInformation);
+
+  return Status;
 }
 
 

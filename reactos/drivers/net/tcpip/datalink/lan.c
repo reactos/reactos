@@ -701,7 +701,6 @@ VOID BindAdapter(
 				UnicodeAddress.MaximumLength = Information->DataLength;
 
 				AnsiLen = RtlUnicodeStringToAnsiSize(&UnicodeAddress);
-				
 				if(!AnsiLen)
 					{
 						TI_DbgPrint(MIN_TRACE, ("Unable to calculate address length\n"));
@@ -711,34 +710,40 @@ VOID BindAdapter(
 					}
 
 				AnsiAddress.Buffer = ExAllocatePoolWithTag(PagedPool, AnsiLen, 0x01020304);
-
 				if(!AnsiAddress.Buffer)
 					{
-						TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+						TI_DbgPrint(MIN_TRACE, ("ExAllocatePoolWithTag() failed.\n"));
+						FreeTDPackets(Adapter);
+						IPDestroyInterface(Adapter->Context);
+						return;
+					}
+        AnsiAddress.Length = AnsiLen;
+        AnsiAddress.MaximumLength = AnsiLen;
+
+				Status = RtlUnicodeStringToAnsiString(&AnsiAddress, &UnicodeAddress, FALSE);
+        if (!NT_SUCCESS(Status))
+					{
+						TI_DbgPrint(MIN_TRACE, ("RtlUnicodeStringToAnsiString() failed with Status 0x%lx.\n", Status));
 						FreeTDPackets(Adapter);
 						IPDestroyInterface(Adapter->Context);
 						return;
 					}
 
-				RtlUnicodeStringToAnsiString(&AnsiAddress, &UnicodeAddress, FALSE);
-
 				AnsiAddress.Buffer[AnsiAddress.Length] = 0;
-
 				Address = AddrBuildIPv4(inet_addr(AnsiAddress.Buffer));
-
 				if (!Address) {
-						TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+						TI_DbgPrint(MIN_TRACE, ("AddrBuildIPv4() failed.\n"));
 						FreeTDPackets(Adapter);
 						IPDestroyInterface(Adapter->Context);
 						return;
 				}
 
-				TI_DbgPrint(MID_TRACE, ("--> Our IP address on this interface: 0x%x\n", inet_addr(AnsiAddress.Buffer)));
+        TI_DbgPrint(MID_TRACE, ("--> Our IP address on this interface: '%s'\n", A2S(Address)));
 			}
 
     /* Create a net table entry for this interface */
     if (!IPCreateNTE(IF, Address, 8)) {
-        TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+        TI_DbgPrint(MIN_TRACE, ("IPCreateNTE() failed.\n"));
         FreeTDPackets(Adapter);
         IPDestroyInterface(IF);
         return;

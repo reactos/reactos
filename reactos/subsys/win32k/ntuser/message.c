@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.40 2003/12/24 10:23:13 navaraf Exp $
+/* $Id: message.c,v 1.41 2003/12/25 14:06:15 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -105,7 +105,7 @@ NtUserDispatchMessage(CONST MSG* UnsafeMsg)
   if(WindowObject->OwnerThread != PsGetCurrentThread())
   {
     IntReleaseWindowObject(WindowObject);
-    DPRINT1("Window doesn't belong to the calling thread!\n");
+    DPRINT("Window doesn't belong to the calling thread!\n");
     return 0;
   }
   /* FIXME: Call hook procedures. */

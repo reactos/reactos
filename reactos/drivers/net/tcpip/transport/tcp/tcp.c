@@ -12,9 +12,10 @@
 #include <pool.h>
 #include <address.h>
 #include <datagram.h>
+#include <routines.h>
 
 
-BOOLEAN TCPInitialized = FALSE;
+static BOOLEAN TCPInitialized = FALSE;
 
 
 NTSTATUS TCPiAddHeaderIPv4(
@@ -395,6 +396,60 @@ NTSTATUS TCPConnect(
 }
 
 
+NTSTATUS TCPListen(
+  PTDI_REQUEST Request,
+  PTDI_CONNECTION_INFORMATION ConnInfo,
+  PTDI_CONNECTION_INFORMATION ReturnInfo)
+/*
+ * FUNCTION: Start listening for a connection from a remote peer
+ * ARGUMENTS:
+ *     Request    = Pointer to TDI request
+ *     ConnInfo   = Pointer to connection information
+ *     ReturnInfo = Pointer to structure for return information
+ * RETURNS:
+ *     Status of operation
+ * NOTES:
+ *     This is the high level interface for listening for connections from remote peers
+ */
+{
+  PDATAGRAM_SEND_REQUEST DGSendRequest;
+  PTCP_SEND_REQUEST TCPSendRequest;
+  PCONNECTION_ENDPOINT Connection;
+  LARGE_INTEGER DueTime;
+  NTSTATUS Status;
+  KIRQL OldIrql;
+
+  TI_DbgPrint(MID_TRACE, ("Called.\n"));
+
+  Connection = Request->Handle.ConnectionContext;
+
+  KeAcquireSpinLock(&Connection->Lock, &OldIrql);
+
+  if (Connection->State != ctClosed) {
+    /* The connection has already been opened so return unsuccessful */
+    KeReleaseSpinLock(&Connection->Lock, OldIrql);
+    return STATUS_UNSUCCESSFUL;
+  }
+
+  Connection->LocalAddress = Connection->AddressFile->ADE->Address;
+  Connection->LocalPort    = Connection->AddressFile->Port;
+
+  TI_DbgPrint(MIN_TRACE, ("Connection->LocalAddress (%s).\n", A2S(Connection->LocalAddress)));
+  TI_DbgPrint(MIN_TRACE, ("Connection->LocalPort (%d).\n", Connection->LocalPort));
+
+  /* Start listening for connection requests */
+  Connection->State = ctListen;
+
+  KeReleaseSpinLock(&Connection->Lock, OldIrql);
+
+  Status = STATUS_PENDING;
+
+  TI_DbgPrint(MAX_TRACE, ("Leaving. Status (0x%X)\n", Status));
+
+  return Status;
+}
+
+
 NTSTATUS TCPSendDatagram(
   PTDI_REQUEST Request,
   PTDI_CONNECTION_INFORMATION ConnInfo,
@@ -415,6 +470,576 @@ NTSTATUS TCPSendDatagram(
 }
 
 
+static VOID TCPiReceive(
+  PADDRESS_FILE AddrFile,
+  PIP_PACKET IPPacket,
+  PTCP_HEADER TCPHeader)
+{
+  register CONNECTION_STATE State;
+
+  if (AddrFile->Connection == NULL || AddrFile->Connection->State == ctClosed)
+    {
+      if ((TCPHeader->Flags & TCP_RST) == 0)
+        {
+          /* FIXME: Send RST
+           * If the ACK bit is off, sequence number zero is used,
+           *
+           * <SEQ=0><ACK=SEG.SEQ+SEG.LEN><CTL=RST,ACK>
+           *
+           * If the ACK bit is on,
+           *
+           * <SEQ=SEG.ACK><CTL=RST>
+           */
+          TI_DbgPrint(MIN_TRACE, ("FIXME: Send RST.\n"));
+        }
+      return;
+    }
+
+  if (AddrFile->Connection->State == ctListen)
+    {
+      if ((TCPHeader->Flags & TCP_RST) > 0)
+        {
+          /* Discard */
+          return;
+        }
+
+      if ((TCPHeader->Flags & TCP_ACK) > 0)
+        {
+          /* FIXME: Send RST
+             <SEQ=SEG.ACK><CTL=RST> */
+          TI_DbgPrint(MIN_TRACE, ("FIXME: Send RST.\n"));
+          return;
+        }
+
+      if ((TCPHeader->Flags & TCP_SYN) > 0)
+        {
+          /* FIXME: If the SEG.PRC is greater than the TCB.PRC then if allowed by
+             the user and the system set TCB.PRC<-SEG.PRC, if not allowed
+             send a reset and return. */
+          if (FALSE)
+            {
+              /* FIXME: Send RST
+               * <SEQ=SEG.ACK><CTL=RST>
+               */
+              TI_DbgPrint(MIN_TRACE, ("FIXME: Send RST.\n"));
+              return;
+            }
+
+           /* Set RCV.NXT to SEG.SEQ+1, IRS is set to SEG.SEQ and any other
+              control or text should be queued for processing later.  ISS
+              should be selected and a SYN segment sent of the form:
+
+                <SEQ=ISS><ACK=RCV.NXT><CTL=SYN,ACK>
+
+              SND.NXT is set to ISS+1 and SND.UNA to ISS.  The connection
+              state should be changed to SYN-RECEIVED.  Note that any other
+              incoming control or data (combined with SYN) will be processed
+              in the SYN-RECEIVED state, but processing of SYN and ACK should
+              not be repeated.  If the listen was not fully specified (i.e.,
+              the foreign socket was not fully specified), then the
+              unspecified fields should be filled in now.
+            */
+          TI_DbgPrint(MIN_TRACE, ("FIXME: Go to ctSynReceived connection state.\n"));
+          return;
+        }
+
+      /* Discard the segment as it is invalid */
+      return;
+    }
+
+  if (AddrFile->Connection->State == ctSynSent)
+    {
+      if ((TCPHeader->Flags & TCP_ACK) > 0)
+        {
+          /* FIXME: If SEG.ACK =< ISS, or SEG.ACK > SND.NXT, send a reset (unless
+             the RST bit is set, if so drop the segment and return)
+             <SEQ=SEG.ACK><CTL=RST> */
+          TI_DbgPrint(MIN_TRACE, ("FIXME: Send RST.\n"));
+          return;
+        }
+
+      /* FIXME: If SND.UNA =< SEG.ACK =< SND.NXT then the ACK is acceptable. */
+
+      if ((TCPHeader->Flags & TCP_RST) > 0)
+        {
+          if (TRUE /* ACK is acceptable */)
+            {
+              AddrFile->Connection->State = ctClosed;
+              /* FIXME: Signal client */
+              TI_DbgPrint(MIN_TRACE, ("FIXME: Signal client.\n"));
+            }
+          else
+            {
+              /* Discard segment */
+            }
+          return;
+        }
+
+      /* FIXME: If the security/compartment in the segment does not exactly
+         match the security/compartment in the TCB */
+      if (FALSE)
+        {
+          if ((TCPHeader->Flags & TCP_ACK) > 0)
+            {
+              /* FIXME: Send RST
+                 <SEQ=SEG.ACK><CTL=RST> */
+              TI_DbgPrint(MIN_TRACE, ("FIXME: Send RST.\n"));
+            }
+          else
+            {
+              /* FIXME: Send RST
+                 <SEQ=0><ACK=SEG.SEQ+SEG.LEN><CTL=RST,ACK> */
+              TI_DbgPrint(MIN_TRACE, ("FIXME: Send RST.\n"));
+            }
+          return;
+        }
+
+      if ((TCPHeader->Flags & TCP_ACK) > 0)
+        {
+          /* FIXME: If the precedence in the segment does not match the precedence in the TCB */
+          if (FALSE)
+            {
+              /* FIXME: Send RST
+                 <SEQ=SEG.ACK><CTL=RST> */
+              TI_DbgPrint(MIN_TRACE, ("FIXME: Send RST.\n"));
+              return;
+            }
+          else
+            {
+              /* FIXME: If the precedence in the segment is higher than the precedence
+                 in the TCB then if allowed by the user and the system raise
+                 the precedence in the TCB to that in the segment, if not
+                 allowed to raise the prec then send a reset. */
+              if (FALSE)
+                {
+                  /* FIXME: Send RST
+                     <SEQ=0><ACK=SEG.SEQ+SEG.LEN><CTL=RST,ACK> */
+                  TI_DbgPrint(MIN_TRACE, ("FIXME: Send RST.\n"));
+                  return;
+                }
+              else
+                {
+                  /* Continue */
+                }
+            }
+          return;
+        }
+
+      /* The ACK is ok, or there is no ACK, and it the segment did not contain a RST */
+
+      if ((TCPHeader->Flags & TCP_SYN) > 0)
+        {
+          /* FIXME: The security/compartment and precedence are acceptable */
+          if (TRUE)
+            {
+              /* FIXME: RCV.NXT is set to SEG.SEQ+1, IRS is set to
+                 SEG.SEQ.  SND.UNA should be advanced to equal SEG.ACK (if there
+                 is an ACK), and any segments on the retransmission queue which
+                 are thereby acknowledged should be removed.
+
+                 If SND.UNA > ISS (our SYN has been ACKed), change the connection
+                 state to ESTABLISHED, form an ACK segment
+
+                   <SEQ=SND.NXT><ACK=RCV.NXT><CTL=ACK>
+
+                 Data or controls which were queued for
+                 transmission may be included.  If there are other controls or
+                 text in the segment then continue processing at the sixth step
+                 below where the URG bit is checked, otherwise return.
+
+                 Otherwise enter SYN-RECEIVED, form a SYN,ACK segment
+
+                    <SEQ=ISS><ACK=RCV.NXT><CTL=SYN,ACK>
+
+                 and send it.  If there are other controls or text in the
+                 segment, queue them for processing after the ESTABLISHED state
+                 has been reached, return. */
+
+              TI_DbgPrint(MIN_TRACE, ("FIXME: Maybe go to ctEstablished connection state.\n"));
+            }
+          else
+            {
+              /* FIXME: What happens here? */
+            }
+        }
+
+      /* FIXME: Send RST
+          <SEQ=SEG.ACK><CTL=RST> */
+      TI_DbgPrint(MIN_TRACE, ("FIXME: Send RST.\n"));
+      return;
+    }
+
+  State = AddrFile->Connection->State;
+  if (State == ctSynReceived
+    || State == ctEstablished
+    || State == ctFinWait1
+    || State == ctFinWait2
+    || State == ctCloseWait
+    || State == ctClosing
+    || State == ctLastAck
+    || State == ctTimeWait)
+    {
+      /* Segments are processed in sequence.  Initial tests on arrival
+          are used to discard old duplicates, but further processing is
+          done in SEG.SEQ order.  If a segment's contents straddle the
+          boundary between old and new, only the new parts should be
+          processed.
+
+          There are four cases for the acceptability test for an incoming
+          segment:
+
+          Segment Receive  Test
+          Length  Window
+          ------- -------  -------------------------------------------
+
+            0       0     SEG.SEQ = RCV.NXT
+
+            0      >0     RCV.NXT =< SEG.SEQ < RCV.NXT+RCV.WND
+
+            >0       0     not acceptable
+
+            >0      >0     RCV.NXT =< SEG.SEQ < RCV.NXT+RCV.WND
+                        or RCV.NXT =< SEG.SEQ+SEG.LEN-1 < RCV.NXT+RCV.WND
+
+          If the RCV.WND is zero, no segments will be acceptable, but
+          special allowance should be made to accept valid ACKs, URGs and
+          RSTs.
+
+          If an incoming segment is not acceptable, an acknowledgment
+          should be sent in reply (unless the RST bit is set, if so drop
+          the segment and return):
+
+            <SEQ=SND.NXT><ACK=RCV.NXT><CTL=ACK>
+
+          After sending the acknowledgment, drop the unacceptable segment
+          and return. */
+
+      if ((TCPHeader->Flags & TCP_RST) > 0)
+        {
+          if (AddrFile->Connection->State == ctSynReceived)
+            {
+              /* FIXME: If this connection was initiated with a passive OPEN (i.e.,
+                  came from the LISTEN state), then return this connection to
+                  LISTEN state and return.  The user need not be informed.  If
+                  this connection was initiated with an active OPEN (i.e., came
+                  from SYN-SENT state) then the connection was refused, signal
+                  the user "connection refused".  In either case, all segments
+                  on the retransmission queue should be removed.  And in the
+                  active OPEN case, enter the CLOSED state and delete the TCB,
+                  and return. */
+              TI_DbgPrint(MIN_TRACE, ("FIXME: Maybe go to ctListen or ctClosed connection state.\n"));
+              return;
+            }
+
+          State = AddrFile->Connection->State;
+          if (State == ctEstablished
+            || State == ctFinWait1
+            || State == ctFinWait2
+            || State == ctCloseWait)
+            {
+              /* FIXME: any outstanding RECEIVEs and SEND
+                  should receive "reset" responses.  All segment queues should be
+                  flushed.  Users should also receive an unsolicited general
+                  "connection reset" signal.  Enter the CLOSED state, delete the
+                  TCB, and return. */
+              TI_DbgPrint(MIN_TRACE, ("FIXME: Go to ctClosed connection state.\n"));
+              return;
+            }
+
+          State = AddrFile->Connection->State;
+          if (State == ctClosing
+            || State == ctLastAck
+            || State == ctTimeWait)
+            {
+              AddrFile->Connection->State = ctClosed;
+              return;
+            }
+
+        }
+
+      /* FIXME: check security and precedence */
+
+      if (AddrFile->Connection->State == ctSynReceived)
+        {
+          /* FIXME: If the security/compartment and precedence in the segment do not
+             exactly match the security/compartment and precedence in the TCB
+             then send a reset, and return. */
+        }
+
+      if (AddrFile->Connection->State == ctSynReceived)
+        {
+          /* FIXME: If the security/compartment and precedence in the segment do not
+              exactly match the security/compartment and precedence in the TCB
+              then send a reset, any outstanding RECEIVEs and SEND should
+              receive "reset" responses.  All segment queues should be
+              flushed.  Users should also receive an unsolicited general
+              "connection reset" signal.  Enter the CLOSED state, delete the
+              TCB, and return. */
+        }
+
+      /* Note the previous check is placed following the sequence check to prevent
+          a segment from an old connection between these ports with a
+          different security or precedence from causing an abort of the
+          current connection. */
+
+      if ((TCPHeader->Flags & TCP_SYN) > 0)
+        {
+          State = AddrFile->Connection->State;
+          if (State == ctSynReceived
+            || State == ctEstablished
+            || State == ctFinWait1
+            || State == ctFinWait2
+            || State == ctCloseWait
+            || State == ctClosing
+            || State == ctLastAck
+            || State == ctTimeWait)
+            {
+              /* FIXME: If the SYN is in the window it is an error, send a reset, any
+                  outstanding RECEIVEs and SEND should receive "reset" responses,
+                  all segment queues should be flushed, the user should also
+                  receive an unsolicited general "connection reset" signal, enter
+                  the CLOSED state, delete the TCB, and return.
+
+                  If the SYN is not in the window this step would not be reached
+                  and an ack would have been sent in the first step (sequence
+                  number check). */
+
+              TI_DbgPrint(MIN_TRACE, ("FIXME: Maybe go to ctClosed connection state.\n"));
+              return;
+            }
+        }
+
+      if ((TCPHeader->Flags & TCP_ACK) == 0)
+        {
+          /* Discard the segment */
+          return;
+        }
+
+      if (AddrFile->Connection->State == ctSynReceived)
+        {
+          /* FIXME: If SND.UNA =< SEG.ACK =< SND.NXT then enter ESTABLISHED state
+              and continue processing.
+
+                If the segment acknowledgment is not acceptable, form a
+                reset segment,
+
+                  <SEQ=SEG.ACK><CTL=RST>
+
+                and send it. */
+          TI_DbgPrint(MIN_TRACE, ("FIXME: Maybe go to ctEstablished connection state.\n"));
+          return;
+        }
+
+      State = AddrFile->Connection->State;
+      if (State == ctEstablished
+        || State == ctCloseWait)
+        {
+          /* FIXME: If SND.UNA < SEG.ACK =< SND.NXT then, set SND.UNA <- SEG.ACK.
+              Any segments on the retransmission queue which are thereby
+              entirely acknowledged are removed.  Users should receive
+              positive acknowledgments for buffers which have been SENT and
+              fully acknowledged (i.e., SEND buffer should be returned with
+              "ok" response).  If the ACK is a duplicate
+              (SEG.ACK < SND.UNA), it can be ignored.  If the ACK acks
+              something not yet sent (SEG.ACK > SND.NXT) then send an ACK,
+              drop the segment, and return.
+
+              If SND.UNA < SEG.ACK =< SND.NXT, the send window should be
+              updated.  If (SND.WL1 < SEG.SEQ or (SND.WL1 = SEG.SEQ and
+              SND.WL2 =< SEG.ACK)), set SND.WND <- SEG.WND, set
+              SND.WL1 <- SEG.SEQ, and set SND.WL2 <- SEG.ACK.
+
+              Note that SND.WND is an offset from SND.UNA, that SND.WL1
+              records the sequence number of the last segment used to update
+              SND.WND, and that SND.WL2 records the acknowledgment number of
+              the last segment used to update SND.WND.  The check here
+              prevents using old segments to update the window. */
+          TI_DbgPrint(MIN_TRACE, ("FIXME: Maybe send ACK.\n"));
+          return;
+        }
+
+      if (AddrFile->Connection->State == ctFinWait1)
+        {
+          /* FIXME: In addition to the processing for the ESTABLISHED state, if
+          our FIN is now acknowledged then enter FIN-WAIT-2 and continue
+          processing in that state. */
+          TI_DbgPrint(MIN_TRACE, ("FIXME: Handle ctFinWait1 connection state.\n"));
+          return;
+        }
+
+      if (AddrFile->Connection->State == ctFinWait2)
+        {
+          /* FIXME: In addition to the processing for the ESTABLISHED state, if
+          the retransmission queue is empty, the user's CLOSE can be
+          acknowledged ("ok") but do not delete the TCB. */
+          TI_DbgPrint(MIN_TRACE, ("FIXME: Handle ctFinWait2 connection state.\n"));
+          return;
+        }
+
+      if (AddrFile->Connection->State == ctClosing)
+        {
+          /* FIXME: In addition to the processing for the ESTABLISHED state, if
+              the ACK acknowledges our FIN then enter the TIME-WAIT state,
+              otherwise ignore the segment. */
+          TI_DbgPrint(MIN_TRACE, ("FIXME: Handle ctClosing connection state.\n"));
+          return;
+        }
+
+      if (AddrFile->Connection->State == ctLastAck)
+        {
+          /* FIXME: The only thing that can arrive in this state is an
+              acknowledgment of our FIN.  If our FIN is now acknowledged,
+              delete the TCB, enter the CLOSED state, and return. */
+          TI_DbgPrint(MIN_TRACE, ("FIXME: Handle ctLastAck connection state.\n"));
+          return;
+        }
+
+      if (AddrFile->Connection->State == ctTimeWait)
+        {
+          /* FIXME: The only thing that can arrive in this state is a
+              retransmission of the remote FIN.  Acknowledge it, and restart
+              the 2 MSL timeout. */
+          TI_DbgPrint(MIN_TRACE, ("FIXME: Handle ctTimeWait connection state.\n"));
+          return;
+        }
+
+      if ((TCPHeader->Flags & TCP_URG) > 0)
+        {
+          State = AddrFile->Connection->State;
+          if (State == ctEstablished
+            || State == ctFinWait1
+            || State == ctFinWait2)
+            {
+              /* FIXME: If the URG bit is set, RCV.UP <- max(RCV.UP,SEG.UP), and signal
+                  the user that the remote side has urgent data if the urgent
+                  pointer (RCV.UP) is in advance of the data consumed.  If the
+                  user has already been signaled (or is still in the "urgent
+                  mode") for this continuous sequence of urgent data, do not
+                  signal the user again. */
+              TI_DbgPrint(MIN_TRACE, ("FIXME: Handle URG flag.\n"));
+              return;
+            }
+
+          State = AddrFile->Connection->State;
+          if (State == ctCloseWait
+            || State == ctClosing
+            || State == ctLastAck
+            || State == ctTimeWait)
+            {
+              /* This should not occur, since a FIN has been received from the
+                 remote side. Ignore the URG. */
+            }
+        }
+
+      State = AddrFile->Connection->State;
+      if (State == ctEstablished
+        || State == ctFinWait1
+        || State == ctFinWait2)
+        {
+          /* FIXME: Once in the ESTABLISHED state, it is possible to deliver segment
+              text to user RECEIVE buffers.  Text from segments can be moved
+              into buffers until either the buffer is full or the segment is
+              empty.  If the segment empties and carries an PUSH flag, then
+              the user is informed, when the buffer is returned, that a PUSH
+              has been received.
+
+              When the TCP takes responsibility for delivering the data to the
+              user it must also acknowledge the receipt of the data.
+
+              Once the TCP takes responsibility for the data it advances
+              RCV.NXT over the data accepted, and adjusts RCV.WND as
+              apporopriate to the current buffer availability.  The total of
+              RCV.NXT and RCV.WND should not be reduced.
+
+              Please note the window management suggestions in section 3.7.
+
+              Send an acknowledgment of the form:
+
+                <SEQ=SND.NXT><ACK=RCV.NXT><CTL=ACK>
+
+              This acknowledgment should be piggybacked on a segment being
+              transmitted if possible without incurring undue delay. */
+          TI_DbgPrint(MIN_TRACE, ("FIXME: Handle data.\n"));
+          return;
+        }
+
+      State = AddrFile->Connection->State;
+      if (State == ctCloseWait
+        || State == ctClosing
+        || State == ctLastAck
+        || State == ctTimeWait)
+        {
+          /* This should not occur, since a FIN has been received from the
+             remote side.  Ignore the segment text. */
+        }
+
+      if ((TCPHeader->Flags & TCP_FIN) > 0)
+        {
+          /* Do not process the FIN if the state is CLOSED, LISTEN or SYN-SENT
+              since the SEG.SEQ cannot be validated; drop the segment and
+              return. */
+          State = AddrFile->Connection->State;
+          if (State == ctClosed
+            || State == ctListen
+            || State == ctSynSent)
+            {
+              /* Discard segment */
+              return;
+            }
+
+          /* FIXME: If the FIN bit is set, signal the user "connection closing" and
+              return any pending RECEIVEs with same message, advance RCV.NXT
+              over the FIN, and send an acknowledgment for the FIN.  Note that
+              FIN implies PUSH for any segment text not yet delivered to the
+              user. */
+
+          TI_DbgPrint(MIN_TRACE, ("FIXME: Handle FIN flag.\n"));
+
+          State = AddrFile->Connection->State;
+          switch (State)
+            {
+              case ctSynReceived:
+              case ctEstablished:
+                {
+                  /* FIXME: Enter ctClosed state */
+                  break;
+                }
+              case ctFinWait1:
+                {
+                  /* FIXME: If our FIN has been ACKed (perhaps in this segment), then
+                      enter TIME-WAIT, start the time-wait timer, turn off the other
+                      timers; otherwise enter the CLOSING state. */
+                  break;
+                }
+              case ctFinWait2:
+                {
+                  /* FIXME: Enter the TIME-WAIT state.  Start the time-wait timer, turn
+                      off the other timers. */
+                  break;
+                }
+              case ctCloseWait:
+              case ctClosing:
+              case ctLastAck:
+                {
+                  /* Remain in ctCloseWait, ctClosing or ctLastAck connection state */
+                  break;
+                }
+              case ctTimeWait:
+                {
+                  /* Remain in ctTimeWait connection state. Restart the 2 MSL time-wait
+                     timeout */
+                  return;
+                }
+              default:
+                ASSERT(FALSE);
+                return;
+            }
+        }
+      return;
+    }
+}
+
+
 VOID TCPReceive(
     PNET_TABLE_ENTRY NTE,
     PIP_PACKET IPPacket)
@@ -427,10 +1052,12 @@ VOID TCPReceive(
  *     This is the low level interface for receiving TCP data
  */
 {
+  AF_SEARCH SearchContext;
   PIPv4_HEADER IPv4Header;
   PADDRESS_FILE AddrFile;
   PTCP_HEADER TCPHeader;
   PIP_ADDRESS DstAddress;
+  UINT DataSize, i;
 
   TI_DbgPrint(MAX_TRACE, ("Called.\n"));
 
@@ -453,7 +1080,35 @@ VOID TCPReceive(
     return;
   }
 
+  DISPLAY_TCP_PACKET(IPPacket);
+
   TCPHeader = (PTCP_HEADER)IPPacket->Data;
+
+  /* FIXME: Calculate and validate TCP checksum */
+
+  /* FIXME: Sanity checks */
+
+    /* Locate the on destination address file object and deliver the
+       packet if one is found. If no matching address file object can be
+       found, drop the packet */
+
+  AddrFile = AddrSearchFirst(DstAddress,
+                             TCPHeader->DestPort,
+                             IPPROTO_TCP,
+                             &SearchContext);
+  if (AddrFile) {
+    /* There can be only one client */
+    TI_DbgPrint(MID_TRACE, ("Found address file object for IPv4 TCP datagram to address (0x%X).\n",
+      DN2H(DstAddress->Address.IPv4Address)));
+    TCPiReceive(AddrFile, IPPacket, TCPHeader);
+  } else {
+    /* There are no open address files that will take this datagram */
+    /* FIXME: IPv4 only */
+    TI_DbgPrint(MID_TRACE, ("Cannot deliver IPv4 TCP datagram to address (0x%X).\n",
+      DN2H(DstAddress->Address.IPv4Address)));
+
+    /* FIXME: Send ICMP reply */
+  }
 
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }

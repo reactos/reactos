@@ -231,24 +231,32 @@ VOID CreateHelperDLLDatabase(VOID)
     HelperDLL->Mapping = HeapAlloc(
       GlobalHeap,
       0,
-      3 * sizeof(WINSOCK_MAPPING) + 3 * sizeof(DWORD));
+      5 * sizeof(WINSOCK_MAPPING) + 3 * sizeof(DWORD));
     if (!HelperDLL->Mapping)
         return;
 
-    HelperDLL->Mapping->Rows    = 3;
+    HelperDLL->Mapping->Rows    = 5;
     HelperDLL->Mapping->Columns = 3;
 
     HelperDLL->Mapping->Mapping[0].AddressFamily = AF_INET;
     HelperDLL->Mapping->Mapping[0].SocketType    = SOCK_STREAM;
-    HelperDLL->Mapping->Mapping[0].Protocol      = IPPROTO_TCP;
+    HelperDLL->Mapping->Mapping[0].Protocol      = 0;
 
     HelperDLL->Mapping->Mapping[1].AddressFamily = AF_INET;
-    HelperDLL->Mapping->Mapping[1].SocketType    = SOCK_DGRAM;
-    HelperDLL->Mapping->Mapping[1].Protocol      = IPPROTO_UDP;
+    HelperDLL->Mapping->Mapping[1].SocketType    = SOCK_STREAM;
+    HelperDLL->Mapping->Mapping[1].Protocol      = IPPROTO_TCP;
 
     HelperDLL->Mapping->Mapping[2].AddressFamily = AF_INET;
-    HelperDLL->Mapping->Mapping[2].SocketType    = SOCK_RAW;
+    HelperDLL->Mapping->Mapping[2].SocketType    = SOCK_DGRAM;
     HelperDLL->Mapping->Mapping[2].Protocol      = 0;
+
+    HelperDLL->Mapping->Mapping[3].AddressFamily = AF_INET;
+    HelperDLL->Mapping->Mapping[3].SocketType    = SOCK_DGRAM;
+    HelperDLL->Mapping->Mapping[3].Protocol      = IPPROTO_UDP;
+
+    HelperDLL->Mapping->Mapping[4].AddressFamily = AF_INET;
+    HelperDLL->Mapping->Mapping[4].SocketType    = SOCK_RAW;
+    HelperDLL->Mapping->Mapping[4].Protocol      = 0;
 
     LoadHelperDLL(HelperDLL);
 }

@@ -69,8 +69,12 @@ UINT ResizePacket(
 VOID DisplayIPPacket(
     PIP_PACKET IPPacket);
 #define DISPLAY_IP_PACKET(x) DisplayIPPacket(x)
+VOID DisplayTCPPacket(
+    PIP_PACKET IPPacket);
+#define DISPLAY_TCP_PACKET(x) DisplayTCPPacket(x)
 #else
 #define DISPLAY_IP_PACKET(x)
+#define DISPLAY_TCP_PACKET(x)
 #endif /* DBG */
 
 #endif /* __ROUTINES_H */

@@ -280,24 +280,32 @@ VOID CreateCatalog(VOID)
 
   Provider->Mapping = HeapAlloc(GlobalHeap,
     0,
-    3 * sizeof(WINSOCK_MAPPING) + 3 * sizeof(DWORD));
+    5 * sizeof(WINSOCK_MAPPING) + 3 * sizeof(DWORD));
   if (!Provider->Mapping)
     return;
 
-  Provider->Mapping->Rows    = 3;
+  Provider->Mapping->Rows    = 5;
   Provider->Mapping->Columns = 3;
 
   Provider->Mapping->Mapping[0].AddressFamily = AF_INET;
   Provider->Mapping->Mapping[0].SocketType    = SOCK_STREAM;
-  Provider->Mapping->Mapping[0].Protocol      = IPPROTO_TCP;
+  Provider->Mapping->Mapping[0].Protocol      = 0;
 
   Provider->Mapping->Mapping[1].AddressFamily = AF_INET;
-  Provider->Mapping->Mapping[1].SocketType    = SOCK_DGRAM;
-  Provider->Mapping->Mapping[1].Protocol      = IPPROTO_UDP;
+  Provider->Mapping->Mapping[1].SocketType    = SOCK_STREAM;
+  Provider->Mapping->Mapping[1].Protocol      = IPPROTO_TCP;
 
   Provider->Mapping->Mapping[2].AddressFamily = AF_INET;
-  Provider->Mapping->Mapping[2].SocketType    = SOCK_RAW;
+  Provider->Mapping->Mapping[2].SocketType    = SOCK_DGRAM;
   Provider->Mapping->Mapping[2].Protocol      = 0;
+
+  Provider->Mapping->Mapping[3].AddressFamily = AF_INET;
+  Provider->Mapping->Mapping[3].SocketType    = SOCK_DGRAM;
+  Provider->Mapping->Mapping[3].Protocol      = IPPROTO_UDP;
+
+  Provider->Mapping->Mapping[4].AddressFamily = AF_INET;
+  Provider->Mapping->Mapping[4].SocketType    = SOCK_RAW;
+  Provider->Mapping->Mapping[4].Protocol      = 0;
 #endif
 }
 

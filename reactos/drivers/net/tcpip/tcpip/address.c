@@ -386,10 +386,10 @@ PADDRESS_FILE AddrSearchNext(
         IPAddress = Current->ADE->Address;
 
         TI_DbgPrint(DEBUG_ADDRFILE, ("Comparing: ((%d, %d, %s), (%d, %d, %s)).\n",
-            Current->Port,
+            WN2H(Current->Port),
             Current->Protocol,
             A2S(IPAddress),
-            SearchContext->Port,
+            WN2H(SearchContext->Port),
             SearchContext->Protocol,
             A2S(SearchContext->Address)));
 

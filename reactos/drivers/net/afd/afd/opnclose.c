@@ -44,6 +44,8 @@ PAFDFCB AfdInitializeFCB(
   InitializeListHead(&NewFCB->ReadRequestQueue);
   KeInitializeSpinLock(&NewFCB->ReadRequestQueueLock);
 
+  InitializeListHead(&NewFCB->ListenRequestQueue);
+
 	if (FileObject)
 		FileObject->FsContext = (PVOID)NewFCB;
 
@@ -191,6 +193,17 @@ AfdCreate(
 }
 
 
+VOID
+AfdKillListenRequests(PAFDFCB FCB)
+{
+  /* FIXME: Implement */
+  AFD_DbgPrint(MIN_TRACE, ("Unimplemented.\n"));
+
+  /*ExFreeToNPagedLookasideList(&ListenRequestLookasideList,
+		(PVOID)ListenRequest);*/
+}
+
+
 NTSTATUS
 STDCALL
 AfdClose(
@@ -217,6 +230,9 @@ AfdClose(
         FCB->ReferenceCount--;
         if (FCB->ReferenceCount < 1) {
             if (!FCB->CommandChannel) {
+                /* Kill outstanding listen requests */
+                AfdKillListenRequests(FCB);
+
                 /* Close TDI connection file object */
                 if (FCB->TdiConnectionObjectHandle != INVALID_HANDLE_VALUE) {
                     TdiCloseDevice(FCB->TdiConnectionObjectHandle, FCB->TdiConnectionObject);
