@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: vmwinst.c,v 1.6 2004/08/10 15:00:22 weiden Exp $
+/* $Id: vmwinst.c,v 1.7 2004/08/10 15:08:05 weiden Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS VMware(r) driver installation utility
@@ -620,6 +620,7 @@ PageInstallingProc(
       }
       break;
     case WM_INSTCOMPLETE:
+      SendDlgItemMessage(hwndDlg, IDC_INSTALLINGPROGRESS, PBM_SETMARQUEE, FALSE, 0);
       PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
       PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_CONFIG);
       break;
