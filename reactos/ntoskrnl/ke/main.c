@@ -139,7 +139,7 @@ asmlinkage void _main(boot_param* _bp)
 	DbgPrint("Reduce the amount of uninitialized data\n");
 	for(;;);
      }   
-   DPRINT("MmGetPhysicalAddress(start) = %x\n",MmGetPhysicalAddress(start));
+   DPRINT("MmGetPhysicalAddress(start) = %x\n",MmGetPhysicalAddress((void *)start));
    DPRINT("bp.module_length[0] %x PAGE_ROUND_UP(bp.module_length[0]) %x\n",
           bp.module_length[0],PAGE_ROUND_UP(bp.module_length[0]));
    start1 = start+PAGE_ROUND_UP(bp.module_length[1]);
