@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.44 2004/01/26 10:09:04 weiden Exp $
+/* $Id: misc.c,v 1.45 2004/01/26 12:46:16 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -196,6 +196,18 @@ NtUserCallTwoParam(
   
   switch(Routine)
   {
+    case TWOPARAM_ROUTINE_SETMENUBARHEIGHT:
+    {
+      DWORD Ret;
+      PMENU_OBJECT MenuObject = IntGetMenuObject((HMENU)Param1);
+      if(!MenuObject)
+        return 0;
+      if(Param2 > 0)
+        MenuObject->Height = (int)Param2;
+      Ret = (DWORD)MenuObject->Height;
+      IntReleaseMenuObject(MenuObject);
+      return Ret;
+    }
     case TWOPARAM_ROUTINE_SETMENUITEMRECT:
     {
       BOOL Ret;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.43 2004/01/26 10:09:04 weiden Exp $
+/* $Id: menu.c,v 1.44 2004/01/26 12:46:16 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -470,7 +470,13 @@ MenuDrawMenuBar(HDC hDC, LPRECT Rect, HWND hWnd, BOOL Draw)
 
 VOID
 MenuTrackMouseMenuBar(HWND hWnd, ULONG Ht, POINT Pt)
-{
+{DbgPrint("MenuTrackMouseMenuBar at %i, %i\n", Pt.x, Pt.y);
+  int Item = NtUserMenuItemFromPoint(hWnd, GetMenu(hWnd), Pt.x, Pt.y);
+  
+  if(Item > -1)
+  {
+  
+  }
 }
 
 
@@ -549,7 +555,7 @@ CheckMenuRadioItem(HMENU hmenu,
 HMENU STDCALL
 CreateMenu(VOID)
 {
-  return NtUserCreateMenu();
+  return NtUserCreateMenu(FALSE);
 }
 
 
@@ -559,8 +565,7 @@ CreateMenu(VOID)
 HMENU STDCALL
 CreatePopupMenu(VOID)
 {
-  /* FIXME - add MF_POPUP style? */
-  return NtUserCreateMenu();
+  return NtUserCreateMenu(TRUE);
 }
 
 
@@ -636,7 +641,7 @@ GetMenu(HWND hWnd)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 GetMenuBarInfo(HWND hwnd,
@@ -644,8 +649,7 @@ GetMenuBarInfo(HWND hwnd,
 	       LONG idItem,
 	       PMENUBARINFO pmbi)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return (BOOL)NtUserGetMenuBarInfo(hwnd, idObject, idItem, pmbi);
 }
 
 
@@ -1158,7 +1162,7 @@ LoadMenuW(HINSTANCE hInstance,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 STDCALL
@@ -1167,8 +1171,7 @@ MenuItemFromPoint(
   HMENU hMenu,
   POINT ptScreen)
 {
-  UNIMPLEMENTED;
-  return 0;
+  return NtUserMenuItemFromPoint(hWnd, hMenu, ptScreen.x, ptScreen.y);
 }
 
 

@@ -44,6 +44,7 @@ Already defined in makefile now.
 #include <menu.h>
 #include <winpos.h>
 #include <user32/wininternal.h>
+#include <user32.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -686,6 +687,8 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
    
    if(!(Style & WS_MINIMIZE))
    {
+     HMENU menu;
+     
      ClientPoint = Point;
      ScreenToClient(hWnd, &ClientPoint);
      GetClientRect(hWnd, &ClientRect);
@@ -695,9 +698,9 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
         return HTCLIENT;
      }
      
-     if (UserHasMenu(hWnd, Style))
+     if ((menu = GetMenu(hWnd)) && !(Style & WS_CHILD))
      {
-        if (Point.y < 0 && Point.x >= 0 && Point.x <= WindowRect.right)
+        if (Point.x > 0 && Point.x < WindowRect.right && ClientPoint.y < 0)
            return HTMENU;
      }
 

@@ -316,7 +316,7 @@ NtUserCreateCaret                       4
 NtUserCreateCursorIconHandle            2
 NtUserCreateDesktop                     5
 NtUserCreateLocalMemHandle              4
-NtUserCreateMenu			0
+NtUserCreateMenu			1
 NtUserCreateWindowEx                    14
 NtUserCreateWindowStation               6
 NtUserDdeGetQualityOfService            3

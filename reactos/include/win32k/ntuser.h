@@ -186,6 +186,7 @@ NtUserCallOneParam(
   DWORD Param,
   DWORD Routine);
 
+#define TWOPARAM_ROUTINE_SETMENUBARHEIGHT   0x50
 #define TWOPARAM_ROUTINE_SETMENUITEMRECT    0x51
 #define TWOPARAM_ROUTINE_SETGUITHRDHANDLE   0x52
   #define TPR_SGTH_ACTIVE         0x01
@@ -312,7 +313,7 @@ NtUserCreateLocalMemHandle(
 
 HMENU
 STDCALL
-NtUserCreateMenu(VOID);
+NtUserCreateMenu(BOOL PopupMenu);
 
 HWND
 STDCALL

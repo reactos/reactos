@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.41 2004/01/26 10:09:04 weiden Exp $
+/* $Id: menu.c,v 1.42 2004/01/26 12:46:16 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -80,6 +80,12 @@
     RtlFreeUnicodeString(&(MenuItem)->Text); \
   } \
 }
+
+#define InRect(r, x, y) \
+      ( ( ((r).right >=  x)) && \
+        ( ((r).left <= x)) && \
+        ( ((r).bottom >=  y)) && \
+        ( ((r).top <= y)) )
 
 NTSTATUS FASTCALL
 InitMenuImpl(VOID)
@@ -250,7 +256,7 @@ IntDestroyMenuObject(PMENU_OBJECT MenuObject,
 }
 
 PMENU_OBJECT FASTCALL
-IntCreateMenu(PHANDLE Handle)
+IntCreateMenu(PHANDLE Handle, BOOL IsMenuBar)
 {
   PMENU_OBJECT MenuObject;
   PW32PROCESS Win32Process = PsGetWin32Process();
@@ -266,6 +272,7 @@ IntCreateMenu(PHANDLE Handle)
   }
   
   MenuObject->Self = *Handle;
+  MenuObject->IsMenuBar = IsMenuBar;
   MenuObject->W32Process = Win32Process;
   MenuObject->RtoL = FALSE; /* default */
   MenuObject->MenuInfo.cbSize = sizeof(MENUINFO); /* not used */
@@ -1165,7 +1172,7 @@ NtUserCheckMenuItem(
  * @unimplemented
  */
 HMENU STDCALL
-NtUserCreateMenu(VOID)
+NtUserCreateMenu(BOOL PopupMenu)
 {
   PWINSTATION_OBJECT WinStaObject;
   HANDLE Handle;
@@ -1183,7 +1190,7 @@ NtUserCreateMenu(VOID)
     return (HMENU)0;
   }
 
-  IntCreateMenu(&Handle);
+  IntCreateMenu(&Handle, !PopupMenu);
 
   ObDereferenceObject(WinStaObject);
   return (HMENU)Handle;
@@ -1456,7 +1463,7 @@ NtUserMenuInfo(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int STDCALL
 NtUserMenuItemFromPoint(
@@ -1465,9 +1472,45 @@ NtUserMenuItemFromPoint(
   DWORD X,
   DWORD Y)
 {
-  UNIMPLEMENTED
-
-  return 0;
+  PMENU_OBJECT MenuObject;
+  PWINDOW_OBJECT WindowObject;
+  PMENU_ITEM mi;
+  int i;
+  
+  MenuObject = IntGetMenuObject(hMenu);
+  if(!MenuObject)
+  {
+    SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
+    return -1;
+  }
+  if(hWnd)
+  {
+    WindowObject = IntGetWindowObject(hWnd);
+    if(!WindowObject)
+    {
+      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+      return -1;
+    }
+  }
+  
+  ExAcquireFastMutexUnsafe(&MenuObject->MenuItemsLock);
+  mi = MenuObject->MenuItemList;
+  for(i = 0; mi; i++)
+  {
+    if(InRect(mi->Rect, X, Y))
+    {
+      break;
+    }
+    mi = mi->Next;
+  }
+  ExReleaseFastMutexUnsafe(&MenuObject->MenuItemsLock);
+  
+  IntReleaseMenuObject(MenuObject);
+  
+  if(hWnd)
+    IntReleaseWindowObject(WindowObject);
+  
+  return (mi ? i : -1);
 }
 
 
