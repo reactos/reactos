@@ -1,4 +1,4 @@
-/* $Id: notevil.c,v 1.3 2001/01/16 20:58:58 phreak Exp $
+/* $Id: notevil.c,v 1.4 2001/01/31 03:03:20 phreak Exp $
  *
  * notevil.c
  * 
@@ -210,12 +210,14 @@ main(
 	char	*argv []
 	)
 {
+        DWORD Written;
+	COORD Coord = { 0, 0 };
 	myself = GetModuleHandle(NULL);
 
 	GetConsoleScreenBufferInfo (GetStdHandle(STD_OUTPUT_HANDLE),
 	                            &ScreenBufferInfo);
-	ScreenBufferInfo.dwSize.X = ScreenBufferInfo.srWindow.Right - ScreenBufferInfo.srWindow.Left;
-	ScreenBufferInfo.dwSize.Y = ScreenBufferInfo.srWindow.Bottom - ScreenBufferInfo.srWindow.Top;
+	ScreenBufferInfo.dwSize.X = ScreenBufferInfo.srWindow.Right - ScreenBufferInfo.srWindow.Left + 1;
+	ScreenBufferInfo.dwSize.Y = ScreenBufferInfo.srWindow.Bottom - ScreenBufferInfo.srWindow.Top + 1;
 	ScreenBuffer = CreateConsoleScreenBuffer(
 			GENERIC_WRITE,
 			0,
@@ -232,7 +234,12 @@ main(
 			);
 		return EXIT_FAILURE;
 	}
-
+	// Fill buffer with black background
+	FillConsoleOutputAttribute( ScreenBuffer,
+				    0,
+				    ScreenBufferInfo.dwSize.X * ScreenBufferInfo.dwSize.Y,
+				    Coord,
+				    &Written );
 	SetConsoleActiveScreenBuffer(ScreenBuffer);
 	MainLoop();
 	CloseHandle(ScreenBuffer);
