@@ -25,6 +25,7 @@
 
 #include <pseh/framebased/internal.h>
 #include <pseh/excpt.h>
+#include <malloc.h>
 
 #ifndef offsetof
 # include <stddef.h>
@@ -98,26 +99,27 @@ static __declspec(noreturn) void __stdcall _SEHCompilerSpecificHandler
 
 #define _SEH_TRY_FILTER_FINALLY(FILTER_, FINALLY_) \
  {                                                                             \
-  static _SEHHandlers_t _SEHHandlers =                                     	 \
+  static _SEHHandlers_t _SEHHandlers =                                         \
   {                                                                            \
-   (NULL),                                                                  	\
+   (NULL),                                                                     \
    _SEHCompilerSpecificHandler,                                                \
-   (NULL)                                                                  	\
+   (NULL)                                                                      \
   };                                                                           \
   _SEHHandlers.SH_Filter = FILTER_;                                            \
   _SEHHandlers.SH_Finally = FINALLY_;                                          \
                                                                                \
-  _SEHFrame_t _SEHFrame;                                                       \
+  _SEHFrame_t * _SEHFrame;                                                     \
   volatile _SEHPortableFrame_t * _SEHPortableFrame;                            \
                                                                                \
-  _SEHFrame.SEH_Header.SPF_Handlers = &_SEHHandlers;                           \
+  _SEHFrame = _alloca(sizeof(_SEHFrame_t));                                    \
+  _SEHFrame->SEH_Header.SPF_Handlers = &_SEHHandlers;                          \
                                                                                \
-  _SEHPortableFrame = &_SEHFrame.SEH_Header;                                   \
+  _SEHPortableFrame = &_SEHFrame->SEH_Header;                                  \
   (void)_SEHPortableFrame;                                                     \
                                                                                \
-  if(setjmp(_SEHFrame.SEH_JmpBuf) == 0)                                        \
+  if(setjmp(_SEHFrame->SEH_JmpBuf) == 0)                                       \
   {                                                                            \
-   _SEHEnter(&_SEHFrame.SEH_Header);                                           \
+   _SEHEnter(&_SEHFrame->SEH_Header);                                          \
                                                                                \
    do                                                                          \
    {
@@ -127,17 +129,17 @@ static __declspec(noreturn) void __stdcall _SEHCompilerSpecificHandler
    }                                                                           \
    while(0);                                                                   \
                                                                                \
-   _SEHLeave(&_SEHFrame.SEH_Header);                                           \
+   _SEHLeave(&_SEHFrame->SEH_Header);                                          \
   }                                                                            \
   else                                                                         \
   {                                                                            \
-   _SEHLeave(&_SEHFrame.SEH_Header);                                           \
+   _SEHLeave(&_SEHFrame->SEH_Header);                                          \
 
 #define _SEH_END \
   }                                                                            \
                                                                                \
   if(_SEHHandlers.SH_Finally)                                                  \
-   _SEHHandlers.SH_Finally(&_SEHFrame.SEH_Header);                             \
+   _SEHHandlers.SH_Finally(&_SEHFrame->SEH_Header);                            \
  }
 
 #define _SEH_LEAVE break
