@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.53 2004/04/07 09:21:01 hbirr Exp $
+/* $Id: scsiport.c,v 1.54 2004/04/16 13:39:46 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -901,14 +901,14 @@ ScsiPortInitialize(IN PVOID Argument1,
 	  MappedIrq = HalGetInterruptVector(PortConfig->AdapterInterfaceType,
 					    PortConfig->SystemIoBusNumber,
 					    PortConfig->BusInterruptLevel,
-#if 1					    
+#if 1
 /* 
  * FIXME:
  *   Something is wrong in our interrupt conecting code. 
  *   The promise Ultra100TX driver returns 0 for BusInterruptVector
  *   and a nonzero value for BusInterruptLevel. The driver does only 
  *   work with this fix.
- */   					    
+ */
 					    PortConfig->BusInterruptLevel,
 #else
 					    PortConfig->BusInterruptVector,
@@ -1872,6 +1872,8 @@ SpiScanAdapter (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 
 	      Cdb->CDB6INQUIRY.LogicalUnitNumber = Lun;
 
+	      RtlZeroMemory(Srb.DataBuffer, 256);
+
 	      LunExtension = SpiAllocateLunExtension (DeviceExtension,
 						      Bus,
 						      Target,
@@ -1885,7 +1887,9 @@ SpiScanAdapter (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 
 	      Status = SpiSendInquiry (DeviceExtension->DeviceObject,
 				       &Srb);
+	      DPRINT ("Target %lu  Lun %lu", Target, Lun);
 	      DPRINT ("Status %lx  Srb.SrbStatus %x\n", Status, Srb.SrbStatus);
+	      DPRINT ("DeviceTypeQualifier %x\n", ((PINQUIRYDATA)Srb.DataBuffer)->DeviceTypeQualifier);
 
 	      if (NT_SUCCESS(Status) &&
 		  (Srb.SrbStatus == SRB_STATUS_SUCCESS ||
@@ -2544,7 +2548,7 @@ SpiProcessRequests(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
    *   Irp->Tail.Overlay.DriverContext[2] -> LunExtension
    *   Irp->Tail.Overlay.DriverContext[3] -> current Srb (original or sense request)
    *   IoStack->Parameters.Scsi.Srb -> original Srb
-   */   
+   */
   PIO_STACK_LOCATION IrpStack;
   PSCSI_PORT_LUN_EXTENSION LunExtension;
   PLIST_ENTRY ListEntry;
