@@ -16,36 +16,19 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.63 2004/07/09 20:09:35 navaraf Exp $ */
+/* $Id: cursoricon.c,v 1.63.2.1 2004/07/15 20:07:19 weiden Exp $ */
 #include <w32k.h>
 
-PCURICON_OBJECT FASTCALL
-IntGetCurIconObject(PWINSTATION_OBJECT WinStaObject, HANDLE Handle)
-{
-   PCURICON_OBJECT Object;
-   NTSTATUS Status;
-
-   Status = ObmReferenceObjectByHandle(WinStaObject->HandleTable,
-      Handle, otCursorIcon, (PVOID*)&Object);
-   if (!NT_SUCCESS(Status))
-   {
-      return NULL;
-   }
-   return Object;
-}
-
 #define COLORCURSORS_ALLOWED FALSE
-HCURSOR FASTCALL
-IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
-   BOOL ForceChange)
+PCURSOR_OBJECT FASTCALL
+IntSetCursor(PCURSOR_OBJECT NewCursor, BOOL ForceChange)
 {
    BITMAPOBJ *BitmapObj;
    SURFOBJ *SurfObj;
    PDEVINFO DevInfo;
    PBITMAPOBJ MaskBmpObj = NULL;
    PSYSTEM_CURSORINFO CurInfo;
-   PCURICON_OBJECT OldCursor;
-   HCURSOR Ret = (HCURSOR)0;
+   PCURSOR_OBJECT OldCursor;
    HBITMAP hColor = (HBITMAP)0;
    HBITMAP hMask = 0;
    SURFOBJ *soMask = NULL, *soColor = NULL;
@@ -53,29 +36,25 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
    RECTL PointerRect;
    HDC Screen;
   
-   CurInfo = IntGetSysCursorInfo(WinStaObject);
+   CurInfo = IntGetSysCursorInfo(PsGetWin32Process()->WindowStation);
    OldCursor = CurInfo->CurrentCursorObject;
-   if (OldCursor)
-   {
-      Ret = (HCURSOR)OldCursor->Self;
-   }
-  
+   
    if (!ForceChange && OldCursor == NewCursor)
    {
-      return Ret;
+      return OldCursor;
    }
   
    {
       if(!(Screen = IntGetScreenDC()))
       {
-        return (HCURSOR)0;
+        return NULL;
       }
       /* FIXME use the desktop's HDC instead of using ScreenDeviceContext */
       PDC dc = DC_LockDc(Screen);
 
       if (!dc)
       {
-         return Ret;
+         return OldCursor;
       }
   
       BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
@@ -93,19 +72,19 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
            GDIDEV(SurfObj)->MovePointer(SurfObj, -1, -1, &PointerRect);
          SetPointerRect(CurInfo, &PointerRect);
       }
-
+      
       GDIDEV(SurfObj)->PointerStatus = SPS_ACCEPT_NOEXCLUDE;
 
       CurInfo->CurrentCursorObject = NewCursor; /* i.e. CurrentCursorObject = NULL */
       CurInfo->ShowingCursor = 0;
       BITMAPOBJ_UnlockBitmap(SurfObj->hsurf);
-      return Ret;
+      return OldCursor;
    }
   
    if (!NewCursor)
    {
       BITMAPOBJ_UnlockBitmap(SurfObj->hsurf);
-      return Ret;
+      return OldCursor;
    }
 
    /* TODO: Fixme. Logic is screwed above */
@@ -119,8 +98,7 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
       if (maskBpp != 1)
       {
          DPRINT1("SetCursor: The Mask bitmap must have 1BPP!\n");
-         BITMAPOBJ_UnlockBitmap(SurfObj->hsurf);
-         return Ret;
+         return OldCursor;
       }
       
       if ((DevInfo->flGraphicsCaps2 & GCAPS2_ALPHACURSOR) && 
@@ -151,7 +129,7 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
           {
             RECTL DestRect = {0, 0, MaskBmpObj->SurfObj.sizlBitmap.cx, MaskBmpObj->SurfObj.sizlBitmap.cy};
             POINTL SourcePoint = {0, 0};
-
+            
             /*
              * NOTE: For now we create the cursor in top-down bitmap,
              * because VMware driver rejects it otherwise. This should
@@ -181,16 +159,14 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
     if (GDIDEVFUNCS(SurfObj).SetPointerShape)
     {
       GDIDEV(SurfObj)->PointerStatus =
-         GDIDEVFUNCS(SurfObj).SetPointerShape(
-                                                        SurfObj, soMask, soColor, XlateObj,
-                                                        NewCursor->IconInfo.xHotspot,
-                                                        NewCursor->IconInfo.yHotspot,
-                                                        CurInfo->x, 
-                                                        CurInfo->y, 
-                                                        &PointerRect,
-                                                        SPS_CHANGE);
-      DPRINT("SetCursor: DrvSetPointerShape() returned %x\n",
-         GDIDEV(SurfObj)->PointerStatus);
+        GDIDEVFUNCS(SurfObj).SetPointerShape(SurfObj, soMask, soColor, XlateObj,
+                                             NewCursor->IconInfo.xHotspot,
+                                             NewCursor->IconInfo.yHotspot,
+                                             CurInfo->x, 
+                                             CurInfo->y, 
+                                             &PointerRect,
+                                             SPS_CHANGE);
+      DPRINT("SetCursor: DrvSetPointerShape() returned %x\n", GDIDEV(SurfObj)->PointerStatus);
     }
     else
     {
@@ -232,67 +208,60 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
     }
     
     if(GDIDEV(SurfObj)->PointerStatus == SPS_ERROR)
+    {
       DPRINT1("SetCursor: DrvSetPointerShape() returned SPS_ERROR\n");
+    }
   
-  return Ret;
+  return OldCursor;
 }
+
+typedef struct _INT_FINDEXISTINGCURSOR
+{
+  HMODULE hModule;
+  HRSRC hRsrc;
+  LONG cx;
+  LONG cy;
+} INT_FINDEXISTINGCURSOR, *PINT_FINDEXISTINGCURSOR;
 
 BOOL FASTCALL
-IntSetupCurIconHandles(PWINSTATION_OBJECT WinStaObject)
+_FindExistingCursorObjectCallBack(PCURSOR_OBJECT CursorObject, PINT_FINDEXISTINGCURSOR FindData)
 {
-  return TRUE;
-}
-
-PCURICON_OBJECT FASTCALL
-IntFindExistingCurIconObject(PWINSTATION_OBJECT WinStaObject, HMODULE hModule, 
-                             HRSRC hRsrc, LONG cx, LONG cy)
-{
-  PUSER_HANDLE_TABLE HandleTable;
-  PLIST_ENTRY CurrentEntry;
-  PUSER_HANDLE_BLOCK Current;
-  PCURICON_OBJECT Object;
-  ULONG i;
-  
-  HandleTable = (PUSER_HANDLE_TABLE)WinStaObject->HandleTable;
-  ObmpLockHandleTable(HandleTable);
-  
-  CurrentEntry = HandleTable->ListHead.Flink;
-  while(CurrentEntry != &HandleTable->ListHead)
+  if(CursorObject->hModule == FindData->hModule && CursorObject->hRsrc == FindData->hRsrc &&
+     (FindData->cx == 0 || (FindData->cx == CursorObject->Size.cx && FindData->cy == CursorObject->Size.cy)))
   {
-    Current = CONTAINING_RECORD(CurrentEntry, USER_HANDLE_BLOCK, ListEntry);
-    for(i = 0; i < HANDLE_BLOCK_ENTRIES; i++)
-    {
-      Object = (PCURICON_OBJECT)Current->Handles[i].ObjectBody;
-      if(Object && (ObmReferenceObjectByPointer(Object, otCursorIcon) == STATUS_SUCCESS))
-      {
-        if((Object->hModule == hModule) && (Object->hRsrc == hRsrc))
-        {
-          if(cx && ((cx != Object->Size.cx) || (cy != Object->Size.cy)))
-          {
-	    ObmDereferenceObject(Object);
-	    continue;
-          }
-          ObmpUnlockHandleTable(HandleTable);
-          return Object;
-        }
-        ObmDereferenceObject(Object);
-      }
-    }
-    CurrentEntry = CurrentEntry->Flink;
+    /* We found the right object */
+    return TRUE;
   }
   
-  ObmpUnlockHandleTable(HandleTable);
-  return NULL;
+  return FALSE;
 }
 
-PCURICON_OBJECT FASTCALL
-IntCreateCurIconHandle(PWINSTATION_OBJECT WinStaObject)
+PCURSOR_OBJECT FASTCALL
+IntFindExistingCursorObject(HMODULE hModule, HRSRC hRsrc, LONG cx, LONG cy)
 {
-  PCURICON_OBJECT Object;
-  HANDLE Handle;
+  INT_FINDEXISTINGCURSOR fec;
+  
+  fec.hModule = hModule;
+  fec.hRsrc = hRsrc;
+  fec.cx = cx;
+  fec.cy = cy;
+  
+  return (PCURSOR_OBJECT)ObmEnumHandles(PsGetWin32Process()->WindowStation->HandleTable,
+                                        otCURSOR, &fec, (PFNENUMHANDLESPROC)_FindExistingCursorObjectCallBack);
+}
+
+PCURSOR_OBJECT FASTCALL
+IntCreateCursorObject(HANDLE *Handle)
+{
+  PCURSOR_OBJECT Object;
   PW32PROCESS Win32Process;
   
-  Object = ObmCreateObject(WinStaObject->HandleTable, &Handle, otCursorIcon, sizeof(CURICON_OBJECT));
+  ASSERT(Handle);
+  
+  Win32Process = PsGetWin32Process();
+  
+  Object = (PCURSOR_OBJECT)ObmCreateObject(Win32Process->WindowStation->HandleTable, 
+                                           Handle, otCURSOR, sizeof(CURSOR_OBJECT));
   
   if(!Object)
   {
@@ -300,45 +269,41 @@ IntCreateCurIconHandle(PWINSTATION_OBJECT WinStaObject)
     return FALSE;
   }
   
-  Win32Process = PsGetWin32Process();
-  
   IntLockProcessCursorIcons(Win32Process);
   InsertTailList(&Win32Process->CursorIconListHead, &Object->ListEntry);
   IntUnLockProcessCursorIcons(Win32Process);
   
-  Object->Self = Handle;
+  Object->Handle = *Handle;
   Object->Process = PsGetWin32Process();
   
   return Object;
 }
 
 BOOL FASTCALL
-IntDestroyCurIconObject(PWINSTATION_OBJECT WinStaObject, HANDLE Handle, BOOL RemoveFromProcess)
+IntDestroyCursorObject(PCURSOR_OBJECT Object, BOOL RemoveFromProcess)
 {
   PSYSTEM_CURSORINFO CurInfo;
-  PCURICON_OBJECT Object;
   HBITMAP bmpMask, bmpColor;
-  NTSTATUS Status;
-  BOOL Ret;
+  PW32PROCESS Win32Process;
   
-  Status = ObmReferenceObjectByHandle(WinStaObject->HandleTable, Handle, otCursorIcon, (PVOID*)&Object);
-  if(!NT_SUCCESS(Status))
+  Win32Process = PsGetWin32Process();
+  
+  ASSERT(Object);
+  
+  if (Object->Process != Win32Process)
   {
     return FALSE;
   }
+
+  CurInfo = IntGetSysCursorInfo(Win32Process->WindowStation);
+
+  ObmReferenceObject(Object);
+  ObmDeleteObject(Win32Process->WindowStation->HandleTable, Object);
   
-  if (Object->Process != PsGetWin32Process())
-  {
-    ObmDereferenceObject(Object);
-    return FALSE;
-  }
-
-  CurInfo = IntGetSysCursorInfo(WinStaObject);
-
   if (CurInfo->CurrentCursorObject == Object)
   {
     /* Hide the cursor if we're destroying the current cursor */
-    IntSetCursor(WinStaObject, NULL, TRUE);
+    IntSetCursor(NULL, TRUE);
   }
   
   bmpMask = Object->IconInfo.hbmMask;
@@ -351,747 +316,162 @@ IntDestroyCurIconObject(PWINSTATION_OBJECT WinStaObject, HANDLE Handle, BOOL Rem
     IntUnLockProcessCursorIcons(Object->Process);
   }
   
-  Ret = NT_SUCCESS(ObmCloseHandle(WinStaObject->HandleTable, Handle));
-  
   /* delete bitmaps */
   if(bmpMask)
     NtGdiDeleteObject(bmpMask);
   if(bmpColor)
     NtGdiDeleteObject(bmpColor);
-
+  
   ObmDereferenceObject(Object);
   
-  return Ret;
+  return TRUE;
 }
 
 VOID FASTCALL
 IntCleanupCurIcons(struct _EPROCESS *Process, PW32PROCESS Win32Process)
 {
   PWINSTATION_OBJECT WinStaObject;
-  PCURICON_OBJECT Current;
+  PCURSOR_OBJECT Current;
   PLIST_ENTRY CurrentEntry, NextEntry;
   
   if(!(WinStaObject = Win32Process->WindowStation))
     return;
+  
+  /* FIXME - we have to lock the environment here! */
   
   IntLockProcessCursorIcons(Win32Process);
   CurrentEntry = Win32Process->CursorIconListHead.Flink;
   while(CurrentEntry != &Win32Process->CursorIconListHead)
   {
     NextEntry = CurrentEntry->Flink;
-    Current = CONTAINING_RECORD(CurrentEntry, CURICON_OBJECT, ListEntry);
+    Current = CONTAINING_RECORD(CurrentEntry, CURSOR_OBJECT, ListEntry);
     RemoveEntryList(&Current->ListEntry);
-    IntDestroyCurIconObject(WinStaObject, Current->Self, FALSE);
+    IntDestroyCursorObject(Current, FALSE);
     CurrentEntry = NextEntry;
   }
   IntUnLockProcessCursorIcons(Win32Process);
 }
 
-/*
- * @implemented
- */
-HANDLE
-STDCALL
-NtUserCreateCursorIconHandle(PICONINFO IconInfo, BOOL Indirect)
+VOID FASTCALL
+IntGetCursorIconInfo(PCURSOR_OBJECT Cursor, PICONINFO IconInfo)
 {
-  PCURICON_OBJECT CurIconObject;
-  PWINSTATION_OBJECT WinStaObject;
+  ASSERT(Cursor);
+  
+  *IconInfo = Cursor->IconInfo;
+  
+  IconInfo->hbmMask = BITMAPOBJ_CopyBitmap(Cursor->IconInfo.hbmMask);
+  IconInfo->hbmColor = BITMAPOBJ_CopyBitmap(Cursor->IconInfo.hbmColor);
+}
+
+
+BOOL FASTCALL
+IntGetCursorIconSize(PCURSOR_OBJECT Cursor,
+                     BOOL *fIcon,
+                     SIZE *Size)
+{
   PBITMAPOBJ bmp;
-  NTSTATUS Status;
-  HANDLE Ret;
+  HBITMAP hbmp;
   
-  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-				                               KernelMode,
-				                               0,
-				                               &WinStaObject);
+  ASSERT(Cursor);
+  ASSERT(fIcon);
+  ASSERT(Size);
   
-  if(!NT_SUCCESS(Status))
+  *fIcon = Cursor->IconInfo.fIcon;
+  
+  hbmp = (Cursor->IconInfo.hbmColor != NULL ? Cursor->IconInfo.hbmColor : Cursor->IconInfo.hbmMask);
+  if(hbmp == NULL || !(bmp = BITMAPOBJ_LockBitmap(hbmp)))
   {
-    SetLastNtError(Status);
-    return (HANDLE)0;
-  }
-  
-  CurIconObject = IntCreateCurIconHandle(WinStaObject);
-  if(CurIconObject)
-  {
-    Ret = CurIconObject->Self;
-    
-    if(IconInfo)
-    {
-      Status = MmCopyFromCaller(&CurIconObject->IconInfo, IconInfo, sizeof(ICONINFO));
-      if(NT_SUCCESS(Status))
-      {
-        if(Indirect)
-        {
-          CurIconObject->IconInfo.hbmMask = BITMAPOBJ_CopyBitmap(CurIconObject->IconInfo.hbmMask);
-          CurIconObject->IconInfo.hbmColor = BITMAPOBJ_CopyBitmap(CurIconObject->IconInfo.hbmColor);
-        }
-        if(CurIconObject->IconInfo.hbmColor && 
-          (bmp = BITMAPOBJ_LockBitmap(CurIconObject->IconInfo.hbmColor)))
-        {
-          CurIconObject->Size.cx = bmp->SurfObj.sizlBitmap.cx;
-          CurIconObject->Size.cy = bmp->SurfObj.sizlBitmap.cy;
-          BITMAPOBJ_UnlockBitmap(CurIconObject->IconInfo.hbmColor);
-        }
-        else
-        {
-          if(CurIconObject->IconInfo.hbmMask && 
-            (bmp = BITMAPOBJ_LockBitmap(CurIconObject->IconInfo.hbmMask)))
-          {
-            CurIconObject->Size.cx = bmp->SurfObj.sizlBitmap.cx;
-            CurIconObject->Size.cy = bmp->SurfObj.sizlBitmap.cy / 2;
-            BITMAPOBJ_UnlockBitmap(CurIconObject->IconInfo.hbmMask);
-          }
-        }
-      }
-      else
-      {
-        SetLastNtError(Status);
-        /* FIXME - Don't exit here */
-      }
-    }
-    
-    ObDereferenceObject(WinStaObject);
-    return Ret;
-  }
-
-  SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-  ObDereferenceObject(WinStaObject);
-  return (HANDLE)0;
-}
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-NtUserGetCursorIconInfo(
-  HANDLE Handle,
-  PICONINFO IconInfo)
-{
-  ICONINFO ii;
-  PCURICON_OBJECT CurIconObject;
-  PWINSTATION_OBJECT WinStaObject;
-  NTSTATUS Status;
-  BOOL Ret = FALSE;
-  
-  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-				                               KernelMode,
-				                               0,
-				                               &WinStaObject);
-  
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastNtError(Status);
+    DPRINT1("Unable to lock bitmap 0x%x for cursor/icon 0x%x\n", hbmp, Cursor->Handle);
     return FALSE;
   }
   
-  CurIconObject = IntGetCurIconObject(WinStaObject, Handle);
-  if(CurIconObject)
-  {
-    if(IconInfo)
-    {
-      RtlCopyMemory(&ii, &CurIconObject->IconInfo, sizeof(ICONINFO));
-      
-      /* Copy bitmaps */
-      ii.hbmMask = BITMAPOBJ_CopyBitmap(ii.hbmMask);
-      ii.hbmColor = BITMAPOBJ_CopyBitmap(ii.hbmColor);      
-      
-      /* Copy fields */
-      Status = MmCopyToCaller(IconInfo, &ii, sizeof(ICONINFO));
-      if(NT_SUCCESS(Status))
-        Ret = TRUE;
-      else
-        SetLastNtError(Status);
-    }
-    else
-    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
-    }
-    
-    IntReleaseCurIconObject(CurIconObject);
-    ObDereferenceObject(WinStaObject);
-    return Ret;
-  }
-
-  SetLastWin32Error(ERROR_INVALID_CURSOR_HANDLE);
-  ObDereferenceObject(WinStaObject);
-  return FALSE;
-}
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-NtUserGetCursorIconSize(
-  HANDLE Handle,
-  BOOL *fIcon,
-  SIZE *Size)
-{
-  PCURICON_OBJECT CurIconObject;
-  PBITMAPOBJ bmp;
-  PWINSTATION_OBJECT WinStaObject;
-  NTSTATUS Status;
-  BOOL Ret = FALSE;
-  SIZE SafeSize;
+  Size->cx = bmp->SurfObj.sizlBitmap.cx;
+  Size->cy = (hbmp != Cursor->IconInfo.hbmMask ? bmp->SurfObj.sizlBitmap.cy : bmp->SurfObj.sizlBitmap.cy / 2);
   
-  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-				                               KernelMode,
-				                               0,
-				                               &WinStaObject);
-  
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastNtError(Status);
-    return FALSE;
-  }
-  
-  CurIconObject = IntGetCurIconObject(WinStaObject, Handle);
-  if(CurIconObject)
-  {
-    /* Copy fields */
-    Status = MmCopyToCaller(fIcon, &CurIconObject->IconInfo.fIcon, sizeof(BOOL));
-    if(!NT_SUCCESS(Status))
-    {
-      SetLastNtError(Status);
-      goto done;
-    }
-    
-    bmp = BITMAPOBJ_LockBitmap(CurIconObject->IconInfo.hbmColor);
-    if(!bmp)
-      goto done;
-
-    SafeSize.cx = bmp->SurfObj.sizlBitmap.cx;
-    SafeSize.cy = bmp->SurfObj.sizlBitmap.cy;
-    Status = MmCopyToCaller(Size, &SafeSize, sizeof(SIZE));
-    if(NT_SUCCESS(Status))
-      Ret = TRUE;
-    else
-      SetLastNtError(Status);
-    
-    BITMAPOBJ_UnlockBitmap(CurIconObject->IconInfo.hbmColor);
-    
-    done:
-    IntReleaseCurIconObject(CurIconObject);
-    ObDereferenceObject(WinStaObject);
-    return Ret;
-  }
-
-  SetLastWin32Error(ERROR_INVALID_CURSOR_HANDLE);
-  ObDereferenceObject(WinStaObject);
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-NtUserGetCursorFrameInfo(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-NtUserGetCursorInfo(
-  PCURSORINFO pci)
-{
-  CURSORINFO SafeCi;
-  PSYSTEM_CURSORINFO CurInfo;
-  PWINSTATION_OBJECT WinStaObject;
-  NTSTATUS Status;
-  PCURICON_OBJECT CursorObject;
-  
-  Status = MmCopyFromCaller(&SafeCi.cbSize, pci, sizeof(DWORD));
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastNtError(Status);
-    return FALSE;
-  }
-  
-  if(SafeCi.cbSize != sizeof(CURSORINFO))
-  {
-    SetLastWin32Error(ERROR_INVALID_PARAMETER);
-    return FALSE;
-  }
-  
-  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-				                               KernelMode,
-				                               0,
-				                               &WinStaObject);
-  
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastNtError(Status);
-    return FALSE;
-  }
-  
-  CurInfo = IntGetSysCursorInfo(WinStaObject);
-  CursorObject = (PCURICON_OBJECT)CurInfo->CurrentCursorObject;
-  
-  SafeCi.flags = ((CurInfo->ShowingCursor && CursorObject) ? CURSOR_SHOWING : 0);
-  SafeCi.hCursor = (CursorObject ? (HCURSOR)CursorObject->Self : (HCURSOR)0);
-  SafeCi.ptScreenPos.x = CurInfo->x;
-  SafeCi.ptScreenPos.y = CurInfo->y;
-  
-  Status = MmCopyToCaller(pci, &SafeCi, sizeof(CURSORINFO));
-  if(!NT_SUCCESS(Status))
-  {
-    ObDereferenceObject(WinStaObject);
-    SetLastNtError(Status);
-    return FALSE;
-  }
-  
-  ObDereferenceObject(WinStaObject);
-  return TRUE;
-}
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-NtUserClipCursor(
-  RECT *UnsafeRect)
-{
-  /* FIXME - check if process has WINSTA_WRITEATTRIBUTES */
-  
-  PWINSTATION_OBJECT WinStaObject;
-  PSYSTEM_CURSORINFO CurInfo;
-  RECT Rect;
-  PWINDOW_OBJECT DesktopWindow = NULL;
-
-  NTSTATUS Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-				       KernelMode,
-				       0,
-				       &WinStaObject);
-  if (!NT_SUCCESS(Status))
-  {
-    DPRINT1("Validation of window station handle (0x%X) failed\n",
-      PROCESS_WINDOW_STATION());
-    SetLastNtError(Status);
-    return FALSE;
-  }
-
-  if (NULL != UnsafeRect && ! NT_SUCCESS(MmCopyFromCaller(&Rect, UnsafeRect, sizeof(RECT))))
-  {
-    ObDereferenceObject(WinStaObject);
-    SetLastWin32Error(ERROR_INVALID_PARAMETER);
-    return FALSE;
-  }
-  
-  CurInfo = IntGetSysCursorInfo(WinStaObject);
-  if(WinStaObject->ActiveDesktop)
-    DesktopWindow = IntGetWindowObject(WinStaObject->ActiveDesktop->DesktopWindow);
-  
-  if((Rect.right > Rect.left) && (Rect.bottom > Rect.top)
-     && DesktopWindow)
-  {
-    MOUSEINPUT mi;
-    
-    CurInfo->CursorClipInfo.IsClipped = TRUE;
-    CurInfo->CursorClipInfo.Left = max(Rect.left, DesktopWindow->WindowRect.left);
-    CurInfo->CursorClipInfo.Top = max(Rect.top, DesktopWindow->WindowRect.top);
-    CurInfo->CursorClipInfo.Right = min(Rect.right - 1, DesktopWindow->WindowRect.right - 1);
-    CurInfo->CursorClipInfo.Bottom = min(Rect.bottom - 1, DesktopWindow->WindowRect.bottom - 1);
-    IntReleaseWindowObject(DesktopWindow);
-    
-    mi.dx = CurInfo->x;
-    mi.dy = CurInfo->y;
-    mi.mouseData = 0;
-    mi.dwFlags = MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE;
-    mi.time = 0;
-    mi.dwExtraInfo = 0;
-    IntMouseInput(&mi);
-    
-    return TRUE;
-  }
-  
-  CurInfo->CursorClipInfo.IsClipped = FALSE;
-  ObDereferenceObject(WinStaObject);
+  BITMAPOBJ_UnlockBitmap(hbmp);
   
   return TRUE;
 }
 
 
-/*
- * @implemented
- */
-BOOL
-STDCALL
-NtUserDestroyCursorIcon(
-  HANDLE Handle,
-  DWORD Unknown)
+BOOL FASTCALL
+IntGetCursorInfo(PCURSORINFO pci)
 {
-  PWINSTATION_OBJECT WinStaObject;
-  NTSTATUS Status;
+  PSYSTEM_CURSORINFO CurInfo;
+  PWINSTATION_OBJECT WinSta;
+  PCURSOR_OBJECT CursorObject;
   
-  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-				                               KernelMode,
-				                               0,
-				                               &WinStaObject);
-  
-  if(!NT_SUCCESS(Status))
+  if(!(WinSta = PsGetWin32Process()->WindowStation))
   {
-    SetLastNtError(Status);
+    DPRINT1("GetCursorInfo: Process isn't attached to a window station!\n");
     return FALSE;
   }
   
-  if(IntDestroyCurIconObject(WinStaObject, Handle, TRUE))
-  {
-    ObDereferenceObject(WinStaObject);
-    return TRUE;
-  }
-
-  SetLastWin32Error(ERROR_INVALID_CURSOR_HANDLE);
-  ObDereferenceObject(WinStaObject);
-  return FALSE;
+  CurInfo = IntGetSysCursorInfo(WinSta);
+  CursorObject = CurInfo->CurrentCursorObject;
+  
+  pci->flags = ((CurInfo->ShowingCursor && CursorObject != NULL) ? CURSOR_SHOWING : 0);
+  pci->hCursor = (CursorObject != NULL ? (HCURSOR)CursorObject->Handle : (HCURSOR)0);
+  pci->ptScreenPos.x = CurInfo->x;
+  pci->ptScreenPos.y = CurInfo->y;
+  
+  return TRUE;
 }
 
 
-/*
- * @implemented
- */
-HICON
-STDCALL
-NtUserFindExistingCursorIcon(
-  HMODULE hModule,
-  HRSRC hRsrc,
-  LONG cx,
-  LONG cy)
-{
-  PCURICON_OBJECT CurIconObject;
-  PWINSTATION_OBJECT WinStaObject;
-  NTSTATUS Status;
-  HANDLE Ret = (HANDLE)0;
-  
-  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-				                               KernelMode,
-				                               0,
-				                               &WinStaObject);
-  
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastNtError(Status);
-    return Ret;
-  }
-  
-  CurIconObject = IntFindExistingCurIconObject(WinStaObject, hModule, hRsrc, cx, cy);
-  if(CurIconObject)
-  {
-    Ret = CurIconObject->Self;
-    
-    IntReleaseCurIconObject(CurIconObject);
-    ObDereferenceObject(WinStaObject);
-    return Ret;
-  }
-  
-  SetLastWin32Error(ERROR_INVALID_CURSOR_HANDLE);
-  ObDereferenceObject(WinStaObject);
-  return (HANDLE)0;
-}
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-NtUserGetClipCursor(
-  RECT *lpRect)
+VOID FASTCALL
+IntGetClipCursor(RECT *lpRect)
 {
   /* FIXME - check if process has WINSTA_READATTRIBUTES */
   PSYSTEM_CURSORINFO CurInfo;
-  PWINSTATION_OBJECT WinStaObject;
-  RECT Rect;
-  NTSTATUS Status;
   
-  if(!lpRect)
-    return FALSE;
-
-  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-	       KernelMode,
-	       0,
-	       &WinStaObject);
-  if (!NT_SUCCESS(Status))
-  {
-    DPRINT("Validation of window station handle (0x%X) failed\n",
-      PROCESS_WINDOW_STATION());
-    SetLastNtError(Status);
-    return FALSE;
-  }
+  ASSERT(lpRect);
   
-  CurInfo = IntGetSysCursorInfo(WinStaObject);
+  CurInfo = IntGetSysCursorInfo(PsGetWin32Process()->WindowStation);
   if(CurInfo->CursorClipInfo.IsClipped)
   {
-    Rect.left = CurInfo->CursorClipInfo.Left;
-    Rect.top = CurInfo->CursorClipInfo.Top;
-    Rect.right = CurInfo->CursorClipInfo.Right;
-    Rect.bottom = CurInfo->CursorClipInfo.Bottom;
+    lpRect->left = CurInfo->CursorClipInfo.Left;
+    lpRect->top = CurInfo->CursorClipInfo.Top;
+    lpRect->right = CurInfo->CursorClipInfo.Right;
+    lpRect->bottom = CurInfo->CursorClipInfo.Bottom;
   }
   else
   {
-    Rect.left = 0;
-    Rect.top = 0;
-    Rect.right = NtUserGetSystemMetrics(SM_CXSCREEN);
-    Rect.bottom = NtUserGetSystemMetrics(SM_CYSCREEN);
+    lpRect->left = 0;
+    lpRect->top = 0;
+    lpRect->right = IntGetSystemMetrics(SM_CXSCREEN);
+    lpRect->bottom = IntGetSystemMetrics(SM_CYSCREEN);
   }
-  
-  Status = MmCopyToCaller((PRECT)lpRect, &Rect, sizeof(RECT));
-  if(!NT_SUCCESS(Status))
-  {
-    ObDereferenceObject(WinStaObject);
-    SetLastNtError(Status);
-    return FALSE;
-  }
-    
-  ObDereferenceObject(WinStaObject);
-  
-  return TRUE;
 }
 
 
-/*
- * @implemented
- */
-HCURSOR
-STDCALL
-NtUserSetCursor(
-  HCURSOR hCursor)
+VOID FASTCALL
+IntSetCursorIconData(PCURSOR_OBJECT Cursor, BOOL *fIcon, POINT *Hotspot,
+                     HMODULE hModule, HRSRC hRsrc, HRSRC hGroupRsrc)
 {
-  PCURICON_OBJECT CurIconObject;
-  HICON OldCursor = (HCURSOR)0;
-  PWINSTATION_OBJECT WinStaObject;
-  NTSTATUS Status;
+  ASSERT(Cursor);
   
-  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-				                               KernelMode,
-				                               0,
-				                               &WinStaObject);
-  if(!NT_SUCCESS(Status))
+  if(fIcon)
   {
-    SetLastNtError(Status);
-    return (HCURSOR)0;
+    Cursor->IconInfo.fIcon = *fIcon;
+  }
+  if(Hotspot)
+  {
+    Cursor->IconInfo.xHotspot = Hotspot->x;
+    Cursor->IconInfo.yHotspot = Hotspot->y;
   }
   
-  CurIconObject = IntGetCurIconObject(WinStaObject, hCursor);
-  if(CurIconObject)
-  {
-    OldCursor = IntSetCursor(WinStaObject, CurIconObject, FALSE);
-    IntReleaseCurIconObject(CurIconObject);
-  }
-  else
-    SetLastWin32Error(ERROR_INVALID_CURSOR_HANDLE);
-  
-  ObDereferenceObject(WinStaObject);
-  return OldCursor;
-}
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-NtUserSetCursorIconContents(
-  HANDLE Handle,
-  PICONINFO IconInfo)
-{
-  PCURICON_OBJECT CurIconObject;
-  PBITMAPOBJ bmp;
-  PWINSTATION_OBJECT WinStaObject;
-  NTSTATUS Status;
-  BOOL Ret = FALSE;
-  
-  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-				                               KernelMode,
-				                               0,
-				                               &WinStaObject);
-  
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastNtError(Status);
-    return FALSE;
-  }
-  
-  CurIconObject = IntGetCurIconObject(WinStaObject, Handle);
-  if(CurIconObject)
-  {
-    /* Copy fields */
-    Status = MmCopyFromCaller(&CurIconObject->IconInfo, IconInfo, sizeof(ICONINFO));
-    if(!NT_SUCCESS(Status))
-    {
-      SetLastNtError(Status);
-      goto done;
-    }
-    
-    bmp = BITMAPOBJ_LockBitmap(CurIconObject->IconInfo.hbmColor);
-    if(bmp)
-    {
-      CurIconObject->Size.cx = bmp->SurfObj.sizlBitmap.cx;
-      CurIconObject->Size.cy = bmp->SurfObj.sizlBitmap.cy;
-      BITMAPOBJ_UnlockBitmap(CurIconObject->IconInfo.hbmColor);
-    }
-    else
-    {
-      bmp = BITMAPOBJ_LockBitmap(CurIconObject->IconInfo.hbmMask);
-      if(!bmp)
-        goto done;
-      
-      CurIconObject->Size.cx = bmp->SurfObj.sizlBitmap.cx;
-      CurIconObject->Size.cy = bmp->SurfObj.sizlBitmap.cy / 2;
-      
-      BITMAPOBJ_UnlockBitmap(CurIconObject->IconInfo.hbmMask);
-    }
-    
-    Ret = TRUE;
-    
-    done:
-    IntReleaseCurIconObject(CurIconObject);
-    ObDereferenceObject(WinStaObject);
-    return Ret;
-  }
-
-  SetLastWin32Error(ERROR_INVALID_CURSOR_HANDLE);
-  ObDereferenceObject(WinStaObject);
-  return FALSE;
-}
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-NtUserSetCursorIconData(
-  HANDLE Handle,
-  PBOOL fIcon,
-  POINT *Hotspot,
-  HMODULE hModule,
-  HRSRC hRsrc,
-  HRSRC hGroupRsrc)
-{
-  PCURICON_OBJECT CurIconObject;
-  PWINSTATION_OBJECT WinStaObject;
-  NTSTATUS Status;
-  POINT SafeHotspot;
-  BOOL Ret = FALSE;
-  
-  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-				                               KernelMode,
-				                               0,
-				                               &WinStaObject);
-  
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastNtError(Status);
-    return FALSE;
-  }
-  
-  CurIconObject = IntGetCurIconObject(WinStaObject, Handle);
-  if(CurIconObject)
-  {
-    CurIconObject->hModule = hModule;
-    CurIconObject->hRsrc = hRsrc;
-    CurIconObject->hGroupRsrc = hGroupRsrc;
-    
-    /* Copy fields */
-    if(fIcon)
-    {
-      Status = MmCopyFromCaller(&CurIconObject->IconInfo.fIcon, fIcon, sizeof(BOOL));
-      if(!NT_SUCCESS(Status))
-      {
-        SetLastNtError(Status);
-        goto done;
-      }
-    }
-    else
-    {
-      if(!Hotspot)
-        Ret = TRUE;
-    }
-    
-    if(Hotspot)
-    {
-      Status = MmCopyFromCaller(&SafeHotspot, Hotspot, sizeof(POINT));
-      if(NT_SUCCESS(Status))
-      {
-        CurIconObject->IconInfo.xHotspot = SafeHotspot.x;
-        CurIconObject->IconInfo.yHotspot = SafeHotspot.y;
-        
-        Ret = TRUE;
-      }
-      else
-        SetLastNtError(Status);
-    }
-    
-    if(!fIcon && !Hotspot)
-    {
-      Ret = TRUE;
-    }
-    
-    done:
-    IntReleaseCurIconObject(CurIconObject);
-    ObDereferenceObject(WinStaObject);
-    return Ret;
-  }
-
-  SetLastWin32Error(ERROR_INVALID_CURSOR_HANDLE);
-  ObDereferenceObject(WinStaObject);
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-NtUserSetSystemCursor(
-  HCURSOR hcur,
-  DWORD id)
-{
-  return FALSE;
+  Cursor->hModule = hModule;
+  Cursor->hRsrc = hRsrc;
+  Cursor->hGroupRsrc = hGroupRsrc;
 }
 
 
 #define CANSTRETCHBLT 0
-/*
- * @implemented
- */
-BOOL
-STDCALL
-NtUserDrawIconEx(
-  HDC hdc,
-  int xLeft,
-  int yTop,
-  HICON hIcon,
-  int cxWidth,
-  int cyWidth,
-  UINT istepIfAniCur,
-  HBRUSH hbrFlickerFreeDraw,
-  UINT diFlags,
-  DWORD Unknown0,
-  DWORD Unknown1)
+BOOL FASTCALL
+IntDrawIconEx(HDC hdc, int xLeft, int yTop, PCURSOR_OBJECT Cursor, int cxWidth, int cyWidth,
+              UINT istepIfAniCur, HBRUSH hbrFlickerFreeDraw, UINT diFlags)
 {
-  PCURICON_OBJECT CurIconObject;
-  PWINSTATION_OBJECT WinStaObject;
-  NTSTATUS Status;
   HBITMAP hbmMask, hbmColor;
   BITMAP bmpMask, bmpColor;
   BOOL DoFlickerFree;
@@ -1105,160 +485,143 @@ NtUserDrawIconEx(
   INT nStretchMode;
   #endif
   
-  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-				                               KernelMode,
-				                               0,
-				                               &WinStaObject);
+  ASSERT(Cursor);
   
-  if(!NT_SUCCESS(Status))
+  hbmMask = Cursor->IconInfo.hbmMask;
+  hbmColor = Cursor->IconInfo.hbmColor;
+  
+  if(istepIfAniCur)
   {
-    SetLastNtError(Status);
-    return FALSE;
+    DPRINT1("NtUserDrawIconEx: istepIfAniCur is not supported!\n");
   }
   
-  CurIconObject = IntGetCurIconObject(WinStaObject, hIcon);
-  if(CurIconObject)
+  if(!hbmMask || !IntGdiGetObject(hbmMask, sizeof(BITMAP), &bmpMask))
+    goto done;
+  
+  if(hbmColor && !IntGdiGetObject(hbmColor, sizeof(BITMAP), &bmpColor))
+    goto done;
+  
+  if(hbmColor)
   {
-    hbmMask = CurIconObject->IconInfo.hbmMask;
-    hbmColor = CurIconObject->IconInfo.hbmColor;
-    IntReleaseCurIconObject(CurIconObject);
+    IconSize.cx = bmpColor.bmWidth;
+    IconSize.cy = bmpColor.bmHeight;
+  }
+  else
+  {
+    IconSize.cx = bmpMask.bmWidth;
+    IconSize.cy = bmpMask.bmHeight / 2;
+  }
+  
+  if(!diFlags)
+    diFlags = DI_NORMAL;
+  
+  if(!cxWidth)
+    cxWidth = ((diFlags & DI_DEFAULTSIZE) ? IntGetSystemMetrics(SM_CXICON) : IconSize.cx);
+  if(!cyWidth)
+    cyWidth = ((diFlags & DI_DEFAULTSIZE) ? IntGetSystemMetrics(SM_CYICON) : IconSize.cy);
+  
+  DoFlickerFree = (hbrFlickerFreeDraw && (NtGdiGetObjectType(hbrFlickerFreeDraw) == OBJ_BRUSH));
+  
+  if(DoFlickerFree)
+  {
+    RECT r;
+    r.right = cxWidth;
+    r.bottom = cyWidth;
     
-    if(istepIfAniCur)
-      DPRINT1("NtUserDrawIconEx: istepIfAniCur is not supported!\n");
-    
-    if(!hbmMask || !IntGdiGetObject(hbmMask, sizeof(BITMAP), &bmpMask))
+    hdcOff = NtGdiCreateCompatableDC(hdc);
+    if(!hdcOff)
       goto done;
     
-    if(hbmColor && !IntGdiGetObject(hbmColor, sizeof(BITMAP), &bmpColor))
-      goto done;
-    
-    if(hbmColor)
+    hbmOff = NtGdiCreateCompatibleBitmap(hdc, cxWidth, cyWidth);
+    if(!hbmOff)
     {
-      IconSize.cx = bmpColor.bmWidth;
-      IconSize.cy = bmpColor.bmHeight;
-    }
-    else
-    {
-      IconSize.cx = bmpMask.bmWidth;
-      IconSize.cy = bmpMask.bmHeight / 2;
-    }
-    
-    if(!diFlags)
-      diFlags = DI_NORMAL;
-    
-    if(!cxWidth)
-      cxWidth = ((diFlags & DI_DEFAULTSIZE) ? NtUserGetSystemMetrics(SM_CXICON) : IconSize.cx);
-    if(!cyWidth)
-      cyWidth = ((diFlags & DI_DEFAULTSIZE) ? NtUserGetSystemMetrics(SM_CYICON) : IconSize.cy);
-    
-    DoFlickerFree = (hbrFlickerFreeDraw && (NtGdiGetObjectType(hbrFlickerFreeDraw) == OBJ_BRUSH));
-    
-    if(DoFlickerFree)
-    {
-      RECT r;
-      r.right = cxWidth;
-      r.bottom = cyWidth;
-      
-      hdcOff = NtGdiCreateCompatableDC(hdc);
-      if(!hdcOff)
-        goto done;
-      
-      hbmOff = NtGdiCreateCompatibleBitmap(hdc, cxWidth, cyWidth);
-      if(!hbmOff)
-      {
-        NtGdiDeleteDC(hdcOff);
-        goto done;
-      }
-      hOldOffBrush = NtGdiSelectObject(hdcOff, hbrFlickerFreeDraw);
-      hOldOffBmp = NtGdiSelectObject(hdcOff, hbmOff);
-      NtGdiPatBlt(hdcOff, 0, 0, r.right, r.bottom, PATCOPY);
-      NtGdiSelectObject(hdcOff, hbmOff);
-    }
-    
-    hdcMem = NtGdiCreateCompatableDC(hdc);
-    if(!hdcMem)
-      goto cleanup;
-    
-    if(!DoFlickerFree)
-      hdcOff = hdc;
-    
-    #if CANSTRETCHBLT
-    nStretchMode = NtGdiSetStretchBltMode(hdcOff, STRETCH_DELETESCANS);
-    #endif
-    oldFg = NtGdiSetTextColor(hdcOff, RGB(0, 0, 0));
-    oldBg = NtGdiSetBkColor(hdcOff, RGB(255, 255, 255));
-    
-    if(diFlags & DI_MASK)
-    {
-      hOldMem = NtGdiSelectObject(hdcMem, hbmMask);
-      #if CANSTRETCHBLT
-      NtGdiStretchBlt(hdcOff, (DoFlickerFree ? 0 : xLeft), (DoFlickerFree ? 0 : yTop),
-                      cxWidth, cyWidth, hdcMem, 0, 0, IconSize.cx, IconSize.cy, 
-                      ((diFlags & DI_IMAGE) ? SRCAND : SRCCOPY));
-      #else
-      NtGdiBitBlt(hdcOff, (DoFlickerFree ? 0 : xLeft), (DoFlickerFree ? 0 : yTop),
-                  cxWidth, cyWidth, hdcMem, 0, 0, ((diFlags & DI_IMAGE) ? SRCAND : SRCCOPY));
-      #endif
-      if(!hbmColor && (bmpMask.bmHeight == 2 * bmpMask.bmWidth) && (diFlags & DI_IMAGE))
-      {
-        #if CANSTRETCHBLT
-        NtGdiStretchBlt(hdcOff, (DoFlickerFree ? 0 : xLeft), (DoFlickerFree ? 0 : yTop),
-                        cxWidth, cyWidth, hdcMem, 0, IconSize.cy, IconSize.cx, IconSize.cy, SRCINVERT);
-        #else
-        NtGdiBitBlt(hdcOff, (DoFlickerFree ? 0 : xLeft), (DoFlickerFree ? 0 : yTop),
-                    cxWidth, cyWidth, hdcMem, 0, IconSize.cy, SRCINVERT);
-        #endif
-        diFlags &= ~DI_IMAGE;
-      }
-      NtGdiSelectObject(hdcMem, hOldMem);
-    }
-    
-    if(diFlags & DI_IMAGE)
-    {
-      hOldMem = NtGdiSelectObject(hdcMem, (hbmColor ? hbmColor : hbmMask));
-      #if CANSTRETCHBLT
-      NtGdiStretchBlt(hdcOff, (DoFlickerFree ? 0 : xLeft), (DoFlickerFree ? 0 : yTop),
-                      cxWidth, cyWidth, hdcMem, 0, (hbmColor ? 0 : IconSize.cy), 
-                      IconSize.cx, IconSize.cy, ((diFlags & DI_MASK) ? SRCINVERT : SRCCOPY));
-      #else
-      NtGdiBitBlt(hdcOff, (DoFlickerFree ? 0 : xLeft), (DoFlickerFree ? 0 : yTop),
-                  cxWidth, cyWidth, hdcMem, 0, (hbmColor ? 0 : IconSize.cy), 
-                  ((diFlags & DI_MASK) ? SRCINVERT : SRCCOPY));
-      #endif
-      NtGdiSelectObject(hdcMem, hOldMem);
-    }
-    
-    if(DoFlickerFree)
-      NtGdiBitBlt(hdc, xLeft, yTop, cxWidth, cyWidth, hdcOff, 0, 0, SRCCOPY);
-    
-    NtGdiSetTextColor(hdcOff, oldFg);
-    NtGdiSetBkColor(hdcOff, oldBg);
-    #if CANSTRETCHBLT
-    SetStretchBltMode(hdcOff, nStretchMode);
-    #endif
-
-    Ret = TRUE;
-    
-    cleanup:
-    if(DoFlickerFree)
-    {
-      
-      NtGdiSelectObject(hdcOff, hOldOffBmp);
-      NtGdiSelectObject(hdcOff, hOldOffBrush);
-      NtGdiDeleteObject(hbmOff);
       NtGdiDeleteDC(hdcOff);
+      goto done;
     }
-    if(hdcMem)
-      NtGdiDeleteDC(hdcMem);
-    
-    done:
-    ObDereferenceObject(WinStaObject);
-    
-    return Ret;
+    hOldOffBrush = NtGdiSelectObject(hdcOff, hbrFlickerFreeDraw);
+    hOldOffBmp = NtGdiSelectObject(hdcOff, hbmOff);
+    NtGdiPatBlt(hdcOff, 0, 0, r.right, r.bottom, PATCOPY);
+    NtGdiSelectObject(hdcOff, hbmOff);
   }
   
-  SetLastWin32Error(ERROR_INVALID_CURSOR_HANDLE);
-  ObDereferenceObject(WinStaObject);
-  return FALSE;
+  hdcMem = NtGdiCreateCompatableDC(hdc);
+  if(!hdcMem)
+    goto cleanup;
+  
+  if(!DoFlickerFree)
+    hdcOff = hdc;
+  
+  #if CANSTRETCHBLT
+  nStretchMode = NtGdiSetStretchBltMode(hdcOff, STRETCH_DELETESCANS);
+  #endif
+  oldFg = NtGdiSetTextColor(hdcOff, RGB(0, 0, 0));
+  oldBg = NtGdiSetBkColor(hdcOff, RGB(255, 255, 255));
+  
+  if(diFlags & DI_MASK)
+  {
+    hOldMem = NtGdiSelectObject(hdcMem, hbmMask);
+    #if CANSTRETCHBLT
+    NtGdiStretchBlt(hdcOff, (DoFlickerFree ? 0 : xLeft), (DoFlickerFree ? 0 : yTop),
+                    cxWidth, cyWidth, hdcMem, 0, 0, IconSize.cx, IconSize.cy, 
+                    ((diFlags & DI_IMAGE) ? SRCAND : SRCCOPY));
+    #else
+    NtGdiBitBlt(hdcOff, (DoFlickerFree ? 0 : xLeft), (DoFlickerFree ? 0 : yTop),
+                cxWidth, cyWidth, hdcMem, 0, 0, ((diFlags & DI_IMAGE) ? SRCAND : SRCCOPY));
+    #endif
+    if(!hbmColor && (bmpMask.bmHeight == 2 * bmpMask.bmWidth) && (diFlags & DI_IMAGE))
+    {
+      #if CANSTRETCHBLT
+      NtGdiStretchBlt(hdcOff, (DoFlickerFree ? 0 : xLeft), (DoFlickerFree ? 0 : yTop),
+                      cxWidth, cyWidth, hdcMem, 0, IconSize.cy, IconSize.cx, IconSize.cy, SRCINVERT);
+      #else
+      NtGdiBitBlt(hdcOff, (DoFlickerFree ? 0 : xLeft), (DoFlickerFree ? 0 : yTop),
+                  cxWidth, cyWidth, hdcMem, 0, IconSize.cy, SRCINVERT);
+      #endif
+      diFlags &= ~DI_IMAGE;
+    }
+    NtGdiSelectObject(hdcMem, hOldMem);
+  }
+  
+  if(diFlags & DI_IMAGE)
+  {
+    hOldMem = NtGdiSelectObject(hdcMem, (hbmColor ? hbmColor : hbmMask));
+    #if CANSTRETCHBLT
+    NtGdiStretchBlt(hdcOff, (DoFlickerFree ? 0 : xLeft), (DoFlickerFree ? 0 : yTop),
+                    cxWidth, cyWidth, hdcMem, 0, (hbmColor ? 0 : IconSize.cy), 
+                    IconSize.cx, IconSize.cy, ((diFlags & DI_MASK) ? SRCINVERT : SRCCOPY));
+    #else
+    NtGdiBitBlt(hdcOff, (DoFlickerFree ? 0 : xLeft), (DoFlickerFree ? 0 : yTop),
+                cxWidth, cyWidth, hdcMem, 0, (hbmColor ? 0 : IconSize.cy), 
+                ((diFlags & DI_MASK) ? SRCINVERT : SRCCOPY));
+    #endif
+    NtGdiSelectObject(hdcMem, hOldMem);
+  }
+  
+  if(DoFlickerFree)
+    NtGdiBitBlt(hdc, xLeft, yTop, cxWidth, cyWidth, hdcOff, 0, 0, SRCCOPY);
+  
+  NtGdiSetTextColor(hdcOff, oldFg);
+  NtGdiSetBkColor(hdcOff, oldBg);
+  #if CANSTRETCHBLT
+  SetStretchBltMode(hdcOff, nStretchMode);
+  #endif
+  
+  Ret = TRUE;
+  
+  cleanup:
+  if(DoFlickerFree)
+  {
+    
+    NtGdiSelectObject(hdcOff, hOldOffBmp);
+    NtGdiSelectObject(hdcOff, hOldOffBrush);
+    NtGdiDeleteObject(hbmOff);
+    NtGdiDeleteDC(hdcOff);
+  }
+  if(hdcMem)
+    NtGdiDeleteDC(hdcMem);
+  
+  done:
+  
+  return Ret;
 }
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scrollbar.c,v 1.34 2004/07/03 17:40:25 navaraf Exp $
+/* $Id: scrollbar.c,v 1.34.4.1 2004/07/15 20:07:18 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -73,7 +73,7 @@ IntGetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, PRECT lprect)
       lprect->left = ClientRect.left - WindowRect.left;
       lprect->top = ClientRect.bottom - WindowRect.top;
       lprect->right = ClientRect.right - WindowRect.left;
-      lprect->bottom = lprect->top + NtUserGetSystemMetrics (SM_CYHSCROLL);
+      lprect->bottom = lprect->top + IntGetSystemMetrics (SM_CYHSCROLL);
       vertical = FALSE;
       break;
 
@@ -81,12 +81,12 @@ IntGetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, PRECT lprect)
       if(Window->ExStyle & WS_EX_LEFTSCROLLBAR)
       {
         lprect->right = ClientRect.left - WindowRect.left;
-        lprect->left = lprect->right - NtUserGetSystemMetrics(SM_CXVSCROLL);
+        lprect->left = lprect->right - IntGetSystemMetrics(SM_CXVSCROLL);
       }
       else
       {
         lprect->left = ClientRect.right - WindowRect.left;
-        lprect->right = lprect->left + NtUserGetSystemMetrics(SM_CXVSCROLL);
+        lprect->right = lprect->left + IntGetSystemMetrics(SM_CXVSCROLL);
       }
       lprect->top = ClientRect.top - WindowRect.top;
       lprect->bottom = ClientRect.bottom - WindowRect.top;
@@ -99,14 +99,13 @@ IntGetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, PRECT lprect)
       break;
 
     default:
-      IntReleaseWindowObject(Window);
       return FALSE;
     }
 
   return vertical;
 }
 
-BOOL FASTCALL
+static BOOL FASTCALL
 IntCalculateThumb(PWINDOW_OBJECT Window, LONG idObject, PSCROLLBARINFO psbi, LPSCROLLINFO psi)
 {
   INT Thumb, ThumbBox, ThumbPos, cxy, mx;
@@ -115,23 +114,23 @@ IntCalculateThumb(PWINDOW_OBJECT Window, LONG idObject, PSCROLLBARINFO psbi, LPS
   switch(idObject)
   {
     case SB_HORZ:
-      Thumb = NtUserGetSystemMetrics(SM_CXHSCROLL);
+      Thumb = IntGetSystemMetrics(SM_CXHSCROLL);
       cxy = psbi->rcScrollBar.right - psbi->rcScrollBar.left;
       break;
     case SB_VERT:
-      Thumb = NtUserGetSystemMetrics(SM_CYVSCROLL);
+      Thumb = IntGetSystemMetrics(SM_CYVSCROLL);
       cxy = psbi->rcScrollBar.bottom - psbi->rcScrollBar.top;
       break;
     case SB_CTL:
       IntGetClientRect (Window, &ClientRect);
       if(Window->Style & SBS_VERT)
       {
-        Thumb = NtUserGetSystemMetrics(SM_CYVSCROLL);
+        Thumb = IntGetSystemMetrics(SM_CYVSCROLL);
         cxy = ClientRect.bottom - ClientRect.top;
       }
       else
       {
-        Thumb = NtUserGetSystemMetrics(SM_CXHSCROLL);
+        Thumb = IntGetSystemMetrics(SM_CXHSCROLL);
         cxy = ClientRect.right - ClientRect.left;
       }
       break;
@@ -150,7 +149,7 @@ IntCalculateThumb(PWINDOW_OBJECT Window, LONG idObject, PSCROLLBARINFO psbi, LPS
   }
   else
   {
-    ThumbBox = psi->nPage ? MINTRACKTHUMB : NtUserGetSystemMetrics(SM_CXHTHUMB);
+    ThumbBox = psi->nPage ? MINTRACKTHUMB : IntGetSystemMetrics(SM_CXHTHUMB);
     cxy -= (2 * Thumb);
     if(cxy >= ThumbBox)
     {
@@ -197,7 +196,7 @@ IntUpdateSBInfo(PWINDOW_OBJECT Window, int wBar)
   IntCalculateThumb(Window, wBar, sbi, psi);
 }
 
-static BOOL FASTCALL
+BOOL FASTCALL
 IntGetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPSCROLLINFO lpsi)
 {
   UINT Mask;
@@ -250,7 +249,7 @@ IntGetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPSCROLLINFO lpsi)
   return TRUE;
 }
 
-static DWORD FASTCALL
+DWORD FASTCALL
 IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
 {
   /*
@@ -369,7 +368,7 @@ IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedr
             }
           else if ((nBar != SB_CTL) && bChangeParams)
             {
-              NtUserShowScrollBar(Window->Self, nBar, FALSE);
+	      IntShowScrollBar(Window, nBar, FALSE);
               return Info->nPos;
             }
         }
@@ -378,7 +377,7 @@ IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedr
 /*         new_flags = 0;*/
           if ((nBar != SB_CTL) && bChangeParams)
             {
-              NtUserShowScrollBar(Window->Self, nBar, TRUE);
+	      IntShowScrollBar(Window, nBar, TRUE);
             }
         }
 
@@ -456,13 +455,13 @@ IntCreateScrollBars(PWINDOW_OBJECT Window)
   Size = 3 * (sizeof(WINDOW_SCROLLINFO));
   if(!(Window->Scroll = ExAllocatePoolWithTag(PagedPool, Size, TAG_SBARINFO)))
   {
-    DPRINT1("Unable to allocate memory for scrollbar information for window 0x%x\n", Window->Self);
+    DPRINT1("Unable to allocate memory for scrollbar information for window 0x%x\n", Window->Handle);
     return FALSE;
   }
   
   RtlZeroMemory(Window->Scroll, Size);
 
-  Result = WinPosGetNonClientSize(Window->Self,
+  Result = WinPosGetNonClientSize(Window,
 				  &Window->WindowRect,
 				  &Window->ClientRect);
   
@@ -496,7 +495,7 @@ IntDestroyScrollBars(PWINDOW_OBJECT Window)
   return FALSE;
 }
 
-BOOL STDCALL
+BOOL FASTCALL
 IntEnableScrollBar(BOOL Horz, PSCROLLBARINFO Info, UINT wArrows)
 {
   BOOL Chg = FALSE;
@@ -534,121 +533,24 @@ IntEnableScrollBar(BOOL Horz, PSCROLLBARINFO Info, UINT wArrows)
   return Chg;
 }
 
-
-BOOL
-STDCALL
-NtUserGetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
+BOOL FASTCALL
+IntEnableWindowScrollBar(PWINDOW_OBJECT Window, 
+                         UINT wSBflags, 
+                         UINT wArrows)
 {
-  NTSTATUS Status;
-  SCROLLBARINFO sbi;
-  PWINDOW_OBJECT Window;
-  BOOL Ret;
-
-  Status = MmCopyFromCaller(&sbi, psbi, sizeof(SCROLLBARINFO));
-  if(!NT_SUCCESS(Status) || (sbi.cbSize != sizeof(SCROLLBARINFO)))
-  {
-    SetLastNtError(Status);
-    return FALSE;
-  }
-
-  Window = IntGetWindowObject(hWnd);
-
-  if(!Window)
-  {
-    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-    return FALSE;
-  }
-
-  Ret = IntGetScrollBarInfo(Window, idObject, &sbi);
-
-  Status = MmCopyToCaller(psbi, &sbi, sizeof(SCROLLBARINFO));
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastNtError(Status);
-    Ret = FALSE;
-  }
-  IntReleaseWindowObject(Window);
-  return Ret;
-}
-
-
-BOOL
-STDCALL
-NtUserGetScrollInfo(HWND hwnd, int fnBar, LPSCROLLINFO lpsi)
-{
-  NTSTATUS Status;
-  PWINDOW_OBJECT Window;
-  SCROLLINFO psi;
-  DWORD sz;
-  BOOL Ret;
-  
-  Status = MmCopyFromCaller(&psi.cbSize, &(lpsi->cbSize), sizeof(UINT));
-  if(!NT_SUCCESS(Status) || 
-     !((psi.cbSize == sizeof(SCROLLINFO)) || (psi.cbSize == sizeof(SCROLLINFO) - sizeof(psi.nTrackPos))))
-  {
-    SetLastNtError(Status);
-    return FALSE;
-  }
-  sz = psi.cbSize;
-  Status = MmCopyFromCaller(&psi, lpsi, sz);
-  if (!NT_SUCCESS(Status))
-  {
-    SetLastNtError(Status);
-    return FALSE;
-  }
-  
-  Window = IntGetWindowObject(hwnd);
-
-  if(!Window)
-  {
-    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-    return FALSE;
-  }
-
-  Ret = IntGetScrollInfo(Window, fnBar, &psi);
-  
-  IntReleaseWindowObject(Window);
-  
-  Status = MmCopyToCaller(lpsi, &psi, sz);
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastNtError(Status);
-    return FALSE;
-  }
-  
-  return Ret;
-}
-
-
-BOOL
-STDCALL
-NtUserEnableScrollBar(
-  HWND hWnd, 
-  UINT wSBflags, 
-  UINT wArrows)
-{
-  PWINDOW_OBJECT Window;
   PSCROLLBARINFO InfoV = NULL, InfoH = NULL;
   BOOL Chg = FALSE;
   
-  Window = IntGetWindowObject(hWnd);
-
-  if(!Window)
-  {
-    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-    return FALSE;
-  }
+  ASSERT(Window);
   
   if(wSBflags == SB_CTL)
   {
     /* FIXME */
-    IntReleaseWindowObject(Window);
     return FALSE;
   }
   
   if(wSBflags != SB_BOTH && !SBID_IS_VALID(wSBflags))
   {
-    IntReleaseWindowObject(Window);
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
     DPRINT1("Trying to set scrollinfo for unknown scrollbar type %d", wSBflags);
     return FALSE;
@@ -656,7 +558,6 @@ NtUserEnableScrollBar(
   
   if(!IntCreateScrollBars(Window))
     {
-      IntReleaseWindowObject(Window);
       return FALSE;
     }
   
@@ -672,7 +573,6 @@ NtUserEnableScrollBar(
       InfoV = IntGetScrollbarInfoFromWindow(Window, SB_VERT);
       break;
     default:
-      IntReleaseWindowObject(Window);
       return FALSE;
   }
   
@@ -684,37 +584,24 @@ NtUserEnableScrollBar(
 
   //if(Chg && (Window->Style & WS_VISIBLE))
     /* FIXME - repaint scrollbars */
-
-  IntReleaseWindowObject(Window);
+  
   return TRUE;
 }
 
-BOOL
-STDCALL
-NtUserSetScrollBarInfo(
-  HWND hwnd,
-  LONG idObject,
-  SETSCROLLBARINFO *info)
+BOOL FASTCALL
+IntSetScrollBarInfo(PWINDOW_OBJECT Window,
+                    LONG idObject,
+                    SETSCROLLBARINFO *info)
 {
-  PWINDOW_OBJECT Window;
-  SETSCROLLBARINFO Safeinfo;
   PSCROLLBARINFO sbi;
   LPSCROLLINFO psi;
-  NTSTATUS Status;
   LONG Obj;
   
-  Window = IntGetWindowObject(hwnd);
-
-  if(!Window)
-  {
-    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-    return FALSE;
-  }
+  ASSERT(Window);
   
   Obj = SBOBJ_TO_SBID(idObject);
   if(!SBID_IS_VALID(Obj))
   {
-    IntReleaseWindowObject(Window);
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
     DPRINT1("Trying to set scrollinfo for unknown scrollbar type %d", Obj);
     return FALSE;
@@ -722,76 +609,26 @@ NtUserSetScrollBarInfo(
 
   if(!IntCreateScrollBars(Window))
     {
-      IntReleaseWindowObject(Window);
       return FALSE;
     }
-  
-  Status = MmCopyFromCaller(&Safeinfo, info, sizeof(SETSCROLLBARINFO));
-  if(!NT_SUCCESS(Status))
-  {
-    IntReleaseWindowObject(Window);
-    SetLastNtError(Status);
-    return FALSE;
-  }
   
   sbi = IntGetScrollbarInfoFromWindow(Window, Obj);
   psi = IntGetScrollInfoFromWindow(Window, Obj);
   
-  psi->nTrackPos = Safeinfo.nTrackPos;
-  sbi->reserved = Safeinfo.reserved;
-  RtlCopyMemory(&sbi->rgstate, &Safeinfo.rgstate, sizeof(Safeinfo.rgstate));
+  psi->nTrackPos = info->nTrackPos;
+  sbi->reserved = info->reserved;
+  RtlCopyMemory(&sbi->rgstate, &info->rgstate, sizeof(info->rgstate));
   
-  IntReleaseWindowObject(Window);
   return TRUE;
 }
 
-DWORD
-STDCALL
-NtUserSetScrollInfo(
-  HWND hwnd, 
-  int fnBar, 
-  LPCSCROLLINFO lpsi, 
-  BOOL bRedraw)
-{
-  PWINDOW_OBJECT Window;
-  NTSTATUS Status;
-  SCROLLINFO ScrollInfo;
-  DWORD Ret;
-  
-  Window = IntGetWindowObject(hwnd);
-
-  if(!Window)
-  {
-    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-    return 0;
-  }
-  
-  Status = MmCopyFromCaller(&ScrollInfo, lpsi, sizeof(SCROLLINFO) - sizeof(ScrollInfo.nTrackPos));
-  if(!NT_SUCCESS(Status))
-  {
-    IntReleaseWindowObject(Window);
-    SetLastNtError(Status);
-    return 0;
-  }
-  
-  Ret = IntSetScrollInfo(Window, fnBar, &ScrollInfo, bRedraw);
-  IntReleaseWindowObject(Window);
-  
-  return Ret;
-}
-
 /* Ported from WINE20020904 (SCROLL_ShowScrollBar) */
-DWORD STDCALL
-NtUserShowScrollBar(HWND hWnd, int wBar, DWORD bShow)
+DWORD FASTCALL
+IntShowScrollBar(PWINDOW_OBJECT Window, int wBar, DWORD bShow)
 {
    DWORD Style, OldStyle;
-   PWINDOW_OBJECT Window = IntGetWindowObject(hWnd);
-
-   if (!Window)
-   {
-      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-      return FALSE;
-   }
+   
+   ASSERT(Window);
    
    switch(wBar)
    {
@@ -808,14 +645,12 @@ NtUserShowScrollBar(HWND hWnd, int wBar, DWORD bShow)
        Style = 0;
        break;
      default:
-       IntReleaseWindowObject(Window);
        SetLastWin32Error(ERROR_INVALID_PARAMETER);
        return FALSE;
    }
    
   if(!IntCreateScrollBars(Window))
     {
-      IntReleaseWindowObject(Window);
       return FALSE;
     }
 
@@ -823,8 +658,7 @@ NtUserShowScrollBar(HWND hWnd, int wBar, DWORD bShow)
    {
       IntUpdateSBInfo(Window, SB_CTL);
       
-      WinPosShowWindow(hWnd, bShow ? SW_SHOW : SW_HIDE);
-      IntReleaseWindowObject(Window);
+      WinPosShowWindow(Window, bShow ? SW_SHOW : SW_HIDE);
       return TRUE;
    }
    
@@ -844,13 +678,11 @@ NtUserShowScrollBar(HWND hWnd, int wBar, DWORD bShow)
      if(Window->Style & WS_VISIBLE)
      {
        /* Frame has been changed, let the window redraw itself */
-       WinPosSetWindowPos(hWnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
+       WinPosSetWindowPos(Window, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
           SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_NOSENDCHANGING);
      }
    }
    
-   IntReleaseWindowObject(Window);
    return TRUE;
 }
 
-/* EOF */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: callback.c,v 1.25 2004/06/20 12:34:20 navaraf Exp $
+/* $Id: callback.c,v 1.25.8.1 2004/07/15 20:07:17 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -37,6 +37,16 @@
 
 #define NDEBUG
 #include <debug.h>
+
+#define UserCallback(StatusVar, a, b, c, d, e) \
+  if(IntUserIsInCritical()) \
+  { \
+    IntUserLeaveCritical(); \
+    StatusVar = NtW32Call(a, b, c, d, e); \
+    IntUserEnterCritical(); \
+  } \
+  else \
+    StatusVar = NtW32Call(a, b, c, d, e) \
 
 /* CALLBACK MEMORY MANAGEMENT ************************************************/
 
@@ -128,11 +138,12 @@ IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
   Arguments.Msg = Msg;
   Arguments.Context = CompletionCallbackContext;
   Arguments.Result = Result;
-  Status = NtW32Call(USER32_CALLBACK_SENDASYNCPROC,
-		     &Arguments,
-		     sizeof(SENDASYNCPROC_CALLBACK_ARGUMENTS),
-		     NULL,
-		     NULL);
+  UserCallback(Status,
+               USER32_CALLBACK_SENDASYNCPROC,
+	       &Arguments,
+	       sizeof(SENDASYNCPROC_CALLBACK_ARGUMENTS),
+	       NULL,
+	       NULL);
   if (!NT_SUCCESS(Status))
     {
       return;
@@ -143,7 +154,7 @@ IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
 LRESULT STDCALL
 IntCallWindowProc(WNDPROC Proc,
                    BOOLEAN IsAnsiProc,
-		   HWND Wnd,
+		   PWINDOW_OBJECT Window,
 		   UINT Message,
 		   WPARAM wParam,
 		   LPARAM lParam,
@@ -176,18 +187,21 @@ IntCallWindowProc(WNDPROC Proc,
     }
   Arguments->Proc = Proc;
   Arguments->IsAnsiProc = IsAnsiProc;
-  Arguments->Wnd = Wnd;
+  Arguments->Wnd = (Window ? Window->Handle : NULL);
   Arguments->Msg = Message;
   Arguments->wParam = wParam;
   Arguments->lParam = lParam;
   Arguments->lParamBufferSize = lParamBufferSize;
   ResultPointer = Arguments;
   ResultLength = ArgumentLength;
-  Status = NtW32Call(USER32_CALLBACK_WINDOWPROC,
-		     Arguments,
-		     ArgumentLength,
-		     &ResultPointer,
-		     &ResultLength);
+  /* FIXME - reference the window */
+  UserCallback(Status,
+               USER32_CALLBACK_WINDOWPROC,
+	       Arguments,
+	       ArgumentLength,
+	       &ResultPointer,
+	       &ResultLength);
+  /* FIXME - check if window is still there and if the process/thread had been killed */
   if (!NT_SUCCESS(Status))
     {
       if (0 < lParamBufferSize)
@@ -219,11 +233,12 @@ IntLoadSysMenuTemplate()
 
   ResultPointer = &Result;
   ResultLength = sizeof(LRESULT);
-  Status = NtW32Call(USER32_CALLBACK_LOADSYSMENUTEMPLATE,
-		     NULL,
-		     0,
-		     &ResultPointer,
-		     &ResultLength);
+  UserCallback(Status,
+               USER32_CALLBACK_LOADSYSMENUTEMPLATE,
+	       NULL,
+	       0,
+	       &ResultPointer,
+	       &ResultLength);
   if (!NT_SUCCESS(Status))
     {
       return(0);
@@ -242,11 +257,12 @@ IntLoadDefaultCursors(VOID)
 
   ResultPointer = &Result;
   ResultLength = sizeof(LRESULT);
-  Status = NtW32Call(USER32_CALLBACK_LOADDEFAULTCURSORS,
-		     &DefaultCursor,
-		     sizeof(BOOL),
-		     &ResultPointer,
-		     &ResultLength);
+  UserCallback(Status,
+               USER32_CALLBACK_LOADDEFAULTCURSORS,
+	       &DefaultCursor,
+	       sizeof(BOOL),
+	       &ResultPointer,
+	       &ResultLength);
   if (!NT_SUCCESS(Status))
     {
       return FALSE;
@@ -352,11 +368,12 @@ IntCallHookProc(INT HookId,
   
   ResultPointer = &Result;
   ResultLength = sizeof(LRESULT);
-  Status = NtW32Call(USER32_CALLBACK_HOOKPROC,
-		     Argument,
-		     ArgumentLength,
-		     &ResultPointer,
-		     &ResultLength);
+  UserCallback(Status,
+               USER32_CALLBACK_HOOKPROC,
+	       Argument,
+	       ArgumentLength,
+	       &ResultPointer,
+	       &ResultLength);
   
   IntCbFreeMemory(Argument);
   

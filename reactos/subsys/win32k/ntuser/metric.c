@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: metric.c,v 1.21 2004/05/14 23:57:32 weiden Exp $
+/* $Id: metric.c,v 1.21.12.1 2004/07/15 20:07:18 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -26,28 +26,28 @@
  * REVISION HISTORY:
  *       06-06-2001  CSH  Created
  */
-
-/* INCLUDES ******************************************************************/
-
 #include <w32k.h>
 
 #define NDEBUG
 #include <debug.h>
 
-/* FUNCTIONS *****************************************************************/
 
-/* FIXME:  Alot of thse values should NOT be hardcoded but they are */
-ULONG STDCALL
-NtUserGetSystemMetrics(ULONG Index)
+INT FASTCALL
+IntGetSystemMetrics(INT nIndex)
 {
-  NTSTATUS Status;
+  PW32PROCESS W32Process = PsGetWin32Process();
   PWINSTATION_OBJECT WinStaObject;
-  PWINDOW_OBJECT DesktopWindow;
-  ULONG Width, Height, Result;
-
-  Result = 0;
-  switch (Index)
-    {
+  
+  WinStaObject = (W32Process != NULL ? W32Process->WindowStation : NULL);
+#ifdef DBG
+  if(WinStaObject == NULL)
+  {
+    DPRINT1("GetSystemMetrics: The Window Station for this process is inaccessible!\n");
+  }
+#endif
+  
+  switch (nIndex)
+  {
     case SM_ARRANGE:
       return(8);
     case SM_CLEANBOOT:
@@ -68,31 +68,25 @@ NtUserGetSystemMetrics(ULONG Index)
     case SM_SWAPBUTTON:
     {
       PSYSTEM_CURSORINFO CurInfo;
-      Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-                                              KernelMode,
-                                              0,
-                                              &WinStaObject);
-      if (!NT_SUCCESS(Status))
-        return 0xFFFFFFFF;
-      
-      CurInfo = IntGetSysCursorInfo(WinStaObject);
-      switch(Index)
+      if(WinStaObject == NULL)
       {
-        case SM_CXDOUBLECLK:
-          Result = CurInfo->DblClickWidth;
-          break;
-        case SM_CYDOUBLECLK:
-          Result = CurInfo->DblClickWidth;
-          break;
-        case SM_SWAPBUTTON:
-          Result = (UINT)CurInfo->SwapButtons;
-          break;
+	return 0;
       }
       
-      ObDereferenceObject(WinStaObject);
-      return Result;
+      CurInfo = IntGetSysCursorInfo(WinStaObject);
+      ASSERT(CurInfo);
+      
+      switch(nIndex)
+      {
+        case SM_CXDOUBLECLK:
+          return CurInfo->DblClickWidth;
+        case SM_CYDOUBLECLK:
+          return CurInfo->DblClickWidth;
+        case SM_SWAPBUTTON:
+          return (UINT)CurInfo->SwapButtons;
+      }
+      return 0;
     }
-    
     case SM_CXDRAG:
     case SM_CYDRAG:
       return(2);
@@ -104,9 +98,9 @@ NtUserGetSystemMetrics(ULONG Index)
       return(4);
     case SM_CXFULLSCREEN:
       /* FIXME: shouldn't we take borders etc into account??? */
-      return NtUserGetSystemMetrics(SM_CXSCREEN);
+      return IntGetSystemMetrics(SM_CXSCREEN);
     case SM_CYFULLSCREEN:
-      return NtUserGetSystemMetrics(SM_CYSCREEN);
+      return IntGetSystemMetrics(SM_CYSCREEN);
     case SM_CXHSCROLL:
     case SM_CYHSCROLL:
       return(16);
@@ -120,18 +114,18 @@ NtUserGetSystemMetrics(ULONG Index)
     case SM_CYICONSPACING:
       return(64);
     case SM_CXMAXIMIZED:
-      return(NtUserGetSystemMetrics(SM_CXSCREEN) + 8); /* This seems to be 8
-                                                          pixels greater than
-                                                          the screen width */
+      return(IntGetSystemMetrics(SM_CXSCREEN) + 8); /* This seems to be 8
+                                                       pixels greater than
+                                                       the screen width */
     case SM_CYMAXIMIZED:
-      return(NtUserGetSystemMetrics(SM_CYSCREEN) - 20); /* This seems to be 20
-                                                           pixels less than 
-                                                           the screen height, 
-                                                           taskbar maybe? */
+      return(IntGetSystemMetrics(SM_CYSCREEN) - 20); /* This seems to be 20
+                                                        pixels less than 
+                                                        the screen height, 
+                                                        taskbar maybe? */
     case SM_CXMAXTRACK:
-      return(NtUserGetSystemMetrics(SM_CYSCREEN) + 12);
+      return(IntGetSystemMetrics(SM_CYSCREEN) + 12);
     case SM_CYMAXTRACK:
-      return(NtUserGetSystemMetrics(SM_CYSCREEN) + 12);
+      return(IntGetSystemMetrics(SM_CYSCREEN) + 12);
     case SM_CXMENUCHECK:
     case SM_CYMENUCHECK:
       return(13);
@@ -156,7 +150,12 @@ NtUserGetSystemMetrics(ULONG Index)
       return(27);
     case SM_CXSCREEN:
     case SM_CYSCREEN:
-      DesktopWindow = IntGetWindowObject(IntGetDesktopWindow());
+    {
+      ULONG Width, Height;
+      PWINDOW_OBJECT DesktopWindow;
+      
+      /* FIXME - make sure we have the lock */
+      DesktopWindow = IntGetDesktopWindow();
       if (NULL != DesktopWindow)
 	  {
 	    Width = DesktopWindow->WindowRect.right;
@@ -167,8 +166,8 @@ NtUserGetSystemMetrics(ULONG Index)
 	    Width = 640;
 	    Height = 480;
 	  }
-      IntReleaseWindowObject(DesktopWindow);
-      return SM_CXSCREEN == Index ? Width : Height;
+      return (SM_CXSCREEN == nIndex ? Width : Height);
+    }
     case SM_CXSIZE:
     case SM_CYSIZE:
       return(18);
@@ -204,9 +203,8 @@ NtUserGetSystemMetrics(ULONG Index)
     case SM_SHOWSOUNDS:        
     case SM_SLOWMACHINE:       
       return(0);
-    default:
-      return(0xFFFFFFFF);
-    }
+  }
+  
+  return 0xFFFFFFFF;
 }
 
-/* EOF */

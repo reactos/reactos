@@ -16,12 +16,14 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.76 2004/05/22 21:12:15 weiden Exp $
+/* $Id: dllmain.c,v 1.76.12.1 2004/07/15 20:07:16 weiden Exp $
  *
  *  Entry Point for win32k.sys
  */
 #include <w32k.h>
-#include <roscfg.h>
+
+#define NDEBUG
+#include <debug.h>
 
 #ifdef __USE_W32API
 typedef NTSTATUS (STDCALL *PW32_PROCESS_CALLBACK)(
@@ -53,22 +55,14 @@ Win32kProcessCallback (struct _EPROCESS *Process,
   PW32PROCESS Win32Process;
   NTSTATUS Status;
 
-#if 0
-  DbgPrint ("Win32kProcessCallback() called\n");
-#endif
+  DPRINT("Win32kProcessCallback() called\n");
 
   Win32Process = Process->Win32Process;
   if (Create)
     {
-#if 0
-      DbgPrint ("  Create process\n");
-#endif
-
-      InitializeListHead(&Win32Process->ClassListHead);
-      ExInitializeFastMutex(&Win32Process->ClassListLock);
+      DPRINT("W32k: Create process\n");
       
-      InitializeListHead(&Win32Process->MenuListHead);
-      ExInitializeFastMutex(&Win32Process->MenuListLock);      
+      InitializeListHead(&Win32Process->ClassListHead);     
 
       InitializeListHead(&Win32Process->PrivateFontListHead);
       ExInitializeFastMutex(&Win32Process->PrivateFontListLock);
@@ -87,8 +81,7 @@ Win32kProcessCallback (struct _EPROCESS *Process,
 					   &Win32Process->WindowStation);
 	  if (!NT_SUCCESS(Status))
 	    {
-	      DbgPrint("Win32K: Failed to reference a window station for "
-		       "process.\n");
+	      DPRINT1("Win32K: Failed to reference a window station for process.\n");
 	    }
 	}
       
@@ -97,13 +90,7 @@ Win32kProcessCallback (struct _EPROCESS *Process,
     }
   else
     {
-#if 0
-      DbgPrint ("  Destroy process\n");
-      DbgPrint ("  IRQ level: %lu\n", KeGetCurrentIrql ());
-#endif
-	  IntRemoveProcessWndProcHandles((HANDLE)Process->UniqueProcessId);
-      IntCleanupMenus(Process, Win32Process);
-      IntCleanupCurIcons(Process, Win32Process);
+      DPRINT("W32k: Destroy process, IRQ level: %lu\n", KeGetCurrentIrql ());
 
       CleanupForProcess(Process, Process->UniqueProcessId);
 
@@ -130,20 +117,16 @@ Win32kThreadCallback (struct _ETHREAD *Thread,
   PW32THREAD Win32Thread;
   NTSTATUS Status;
 
-#if 0
-  DbgPrint ("Win32kThreadCallback() called\n");
-#endif
+  DPRINT("Win32kThreadCallback() called\n");
 
   Process = Thread->ThreadsProcess;
   Win32Thread = Thread->Win32Thread;
   if (Create)
     {
-#if 0
-      DbgPrint ("  Create thread\n");
-#endif
+      DPRINT("W32k: Create thread\n");
 
       Win32Thread->IsExiting = FALSE;
-      IntDestroyCaret(Win32Thread);
+      /* FIXME - destroy caret */
       Win32Thread->MessageQueue = MsqCreateMessageQueue(Thread);
       Win32Thread->KeyboardLayout = W32kGetDefaultKeyLayout();
       Win32Thread->MessagePumpHookValue = 0;
@@ -165,7 +148,7 @@ Win32kThreadCallback (struct _ETHREAD *Thread,
 					     NULL);
 	  if (!NT_SUCCESS(Status))
 	    {
-	      DbgPrint("Win32K: Failed to reference a desktop for thread.\n");
+	      DPRINT1("Win32K: Failed to reference a desktop for thread.\n");
 	    }
 	  
 	  Win32Thread->hDesktop = Process->Win32Desktop;
@@ -173,14 +156,13 @@ Win32kThreadCallback (struct _ETHREAD *Thread,
     }
   else
     {
-#if 0
-      DbgPrint ("  Destroy thread\n");
-#endif
+      DPRINT("W32k: Destroy thread\n");
 
       Win32Thread->IsExiting = TRUE;
+      #if 0
       HOOK_DestroyThreadHooks(Thread);
+      #endif
       RemoveTimersThread(Thread->Cid.UniqueThread);
-      UnregisterThreadHotKeys(Thread);
       DestroyThreadWindows(Thread);
       IntBlockInput(Win32Thread, FALSE);
       MsqDestroyMessageQueue(Win32Thread->MessageQueue);
@@ -218,6 +200,8 @@ DllMain (
       return STATUS_UNSUCCESSFUL;
     }
 
+  IntInitUserResourceLocks();
+
   /*
    * Register our per-process and per-thread structures.
    */
@@ -234,35 +218,21 @@ DllMain (
     DbgPrint("Failed to initialize window station implementation!\n");
     return STATUS_UNSUCCESSFUL;
   }
-
-  Status = InitClassImpl();
-  if (!NT_SUCCESS(Status))
-  {
-    DbgPrint("Failed to initialize window class implementation!\n");
-    return STATUS_UNSUCCESSFUL;
-  }
-
+  
   Status = InitDesktopImpl();
   if (!NT_SUCCESS(Status))
   {
     DbgPrint("Failed to initialize window station implementation!\n");
     return STATUS_UNSUCCESSFUL;
   }
-
-  Status = InitWindowImpl();
+  
+  Status = InitTimerImpl();
   if (!NT_SUCCESS(Status))
   {
-    DbgPrint("Failed to initialize window implementation!\n");
+    DbgPrint("Failed to initialize timer implementation!\n");
     return STATUS_UNSUCCESSFUL;
   }
-
-  Status = InitMenuImpl();
-  if (!NT_SUCCESS(Status))
-  {
-    DbgPrint("Failed to initialize menu implementation!\n");
-    return STATUS_UNSUCCESSFUL;
-  }
-
+  
   Status = InitInputImpl();
   if (!NT_SUCCESS(Status))
     {
@@ -283,21 +253,7 @@ DllMain (
       DbgPrint("Failed to initialize message queue implementation.\n");
       return(Status);
     }
-
-  Status = InitTimerImpl();
-  if (!NT_SUCCESS(Status))
-    {
-      DbgPrint("Failed to initialize timer implementation.\n");
-      return(Status);
-    }
-
-  Status = InitAcceleratorImpl();
-  if (!NT_SUCCESS(Status))
-    {
-      DbgPrint("Failed to initialize accelerator implementation.\n");
-      return(Status);
-    }
-
+  
   InitGdiObjectHandleTable ();
 
   /* Initialize FreeType library */
@@ -321,6 +277,39 @@ BOOLEAN STDCALL
 Win32kInitialize (VOID)
 {
   return TRUE;
+}
+
+NTSTATUS
+IntConvertProcessToGUIProcess(PEPROCESS Process)
+{
+  /* FIXME - Convert process to GUI process! */
+  DPRINT1("FIXME: Convert Process to GUI Process!!!!\n");
+  return STATUS_UNSUCCESSFUL;
+}
+
+inline NTSTATUS
+IntConvertThreadToGUIThread(PETHREAD Thread)
+{
+  NTSTATUS Status;
+  
+  /* FIXME - do this atomic!!! */
+  
+  if(Thread->Win32Thread != NULL)
+  {
+    return STATUS_SUCCESS;
+  }
+  
+  /* FIXME - Convert thread to GUI thread! */
+  Status = STATUS_UNSUCCESSFUL;
+  DPRINT1("FIXME: Convert Thread to GUI Thread!!!!\n");
+  
+  if(NT_SUCCESS(Status) && Thread->ThreadsProcess->Win32Process == NULL)
+  {
+    /* We also need to convert the process */
+    return IntConvertProcessToGUIProcess(Thread->ThreadsProcess);
+  }
+  
+  return Status;
 }
 
 /* EOF */

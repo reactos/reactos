@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.101 2004/07/03 13:55:36 navaraf Exp $
+# $Id: makefile,v 1.101.4.1 2004/07/15 20:07:17 weiden Exp $
 
 PATH_TO_TOP = ../..
 
@@ -53,12 +53,12 @@ MISC_OBJECTS = misc/driver.o misc/error.o misc/math.o misc/object.o
 
 LDR_OBJECTS = ldr/loader.o
 
-NTUSER_OBJECTS = ntuser/accelerator.o ntuser/callback.o ntuser/caret.o ntuser/class.o \
+NTUSER_OBJECTS = ntuser/ntuser.o ntuser/accelerator.o ntuser/callback.o ntuser/caret.o ntuser/class.o \
                  ntuser/clipboard.o ntuser/csr.o ntuser/focus.o ntuser/desktop.o \
                  ntuser/guicheck.o ntuser/hook.o ntuser/hotkey.o ntuser/input.o \
                  ntuser/keyboard.o ntuser/menu.o ntuser/message.o ntuser/metric.o \
                  ntuser/misc.o ntuser/msgqueue.o ntuser/painting.o ntuser/prop.o \
-                 ntuser/scrollbar.o ntuser/stubs.o ntuser/timer.o ntuser/useratom.o \
+                 ntuser/scrollbar.o ntuser/stubs.o ntuser/timer.o ntuser/useratom.o ntuser/userlock.o \
                  ntuser/vis.o ntuser/windc.o ntuser/window.o ntuser/winpos.o ntuser/winsta.o
 
 OBJECTS_OBJECTS = objects/bitmaps.o objects/brush.o objects/cliprgn.o  \

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.36 2004/07/04 01:23:32 navaraf Exp $
+/* $Id: input.c,v 1.36.4.1 2004/07/15 20:07:17 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -135,9 +135,11 @@ KeyboardThreadMain(PVOID StartContext)
   OBJECT_ATTRIBUTES KeyboardObjectAttributes;
   IO_STATUS_BLOCK Iosb;
   NTSTATUS Status;
+#if 0
   MSG msg;
   PUSER_MESSAGE_QUEUE FocusQueue;
   struct _ETHREAD *FocusThread;
+#endif
   
   RtlRosInitUnicodeStringFromLiteral(&KeyboardDeviceName, L"\\??\\Keyboard");
   InitializeObjectAttributes(&KeyboardObjectAttributes,
@@ -178,9 +180,11 @@ KeyboardThreadMain(PVOID StartContext)
 	  KEY_EVENT_RECORD KeyEvent;
 	  LPARAM lParam = 0;
 	  UINT fsModifiers;
+#if 0
 	  struct _ETHREAD *Thread;
 	  HWND hWnd;
 	  int id;
+#endif
 
 	  Status = NtReadFile (KeyboardDeviceHandle,
 			       NULL,
@@ -233,7 +237,7 @@ KeyboardThreadMain(PVOID StartContext)
 	      /* Context mode. 1 if ALT if pressed while the key is pressed */
 	      lParam |= (1 << 29);
 	    }
-	  
+#if 0
 	  if (GetHotKey(InputWindowStation,
 			fsModifiers,
 			KeyEvent.wVirtualKeyCode,
@@ -293,6 +297,7 @@ KeyboardThreadMain(PVOID StartContext)
 	   * Post a keyboard message.
 	   */
 	  MsqPostKeyboardMessage(msg.message,msg.wParam,msg.lParam);
+#endif
 	}
       DPRINT( "KeyboardInput Thread Stopped...\n" );
     }
@@ -445,80 +450,6 @@ CleanupInputImp(VOID)
   return(STATUS_SUCCESS);
 }
 
-BOOL
-STDCALL
-NtUserDragDetect(
-  HWND hWnd,
-  LONG x,
-  LONG y)
-{
-  UNIMPLEMENTED
-  return 0;
-}
-
-BOOL FASTCALL
-IntBlockInput(PW32THREAD W32Thread, BOOL BlockIt)
-{
-  PW32THREAD OldBlock;
-  ASSERT(W32Thread);
-  
-  if(!W32Thread->Desktop || (W32Thread->IsExiting && BlockIt))
-  {
-    /*
-     * fail blocking if exiting the thread
-     */
-    
-    return FALSE;
-  }
-  
-  /*
-   * FIXME - check access rights of the window station
-   *         e.g. services running in the service window station cannot block input
-   */
-  if(!ThreadHasInputAccess(W32Thread) ||
-     !IntIsActiveDesktop(W32Thread->Desktop))
-  {
-    SetLastWin32Error(ERROR_ACCESS_DENIED);
-    return FALSE;
-  }
-  
-  ASSERT(W32Thread->Desktop);
-  OldBlock = W32Thread->Desktop->BlockInputThread;
-  if(OldBlock)
-  {
-    if(OldBlock != W32Thread)
-    {
-      SetLastWin32Error(ERROR_ACCESS_DENIED);
-      return FALSE;
-    }
-    W32Thread->Desktop->BlockInputThread = (BlockIt ? W32Thread : NULL);
-    return OldBlock == NULL;
-  }
-  
-  W32Thread->Desktop->BlockInputThread = (BlockIt ? W32Thread : NULL);
-  return OldBlock == NULL;
-}
-
-BOOL
-STDCALL
-NtUserBlockInput(
-  BOOL BlockIt)
-{
-  return IntBlockInput(PsGetWin32Thread(), BlockIt);
-}
-
-BOOL FASTCALL
-IntSwapMouseButton(PWINSTATION_OBJECT WinStaObject, BOOL Swap)
-{
-  PSYSTEM_CURSORINFO CurInfo;
-  BOOL res;
-  
-  CurInfo = IntGetSysCursorInfo(WinStaObject);
-  res = CurInfo->SwapButtons;
-  CurInfo->SwapButtons = Swap;
-  return res;
-}
-
 BOOL FASTCALL
 IntMouseInput(MOUSEINPUT *mi)
 {
@@ -536,7 +467,6 @@ IntMouseInput(MOUSEINPUT *mi)
   PDC dc;
   RECTL PointerRect;
   PWINDOW_OBJECT DesktopWindow;
-  NTSTATUS Status;
   
 #if 1
   HDC hDC;
@@ -570,7 +500,7 @@ IntMouseInput(MOUSEINPUT *mi)
   
   SwapButtons = CurInfo->SwapButtons;
   DoMove = FALSE;
-
+  
   ExAcquireFastMutex(&CurInfo->CursorMutex);
   MousePos.x = CurInfo->x;
   MousePos.y = CurInfo->y;
@@ -587,17 +517,15 @@ IntMouseInput(MOUSEINPUT *mi)
       MousePos.y += mi->dy;
     }
     
-    Status = ObmReferenceObjectByHandle(WinSta->HandleTable,
-      WinSta->ActiveDesktop->DesktopWindow, otWindow, (PVOID*)&DesktopWindow);
-    if (NT_SUCCESS(Status))
+    DesktopWindow = WinSta->ActiveDesktop->DesktopWindow;
+    if (DesktopWindow != NULL)
     {
       if(MousePos.x >= DesktopWindow->ClientRect.right)
         MousePos.x = DesktopWindow->ClientRect.right - 1;
       if(MousePos.y >= DesktopWindow->ClientRect.bottom)
         MousePos.y = DesktopWindow->ClientRect.bottom - 1;
     }
-    ObmDereferenceObject(DesktopWindow);
-
+    
     if(MousePos.x < 0)
       MousePos.x = 0;
     if(MousePos.y < 0)
@@ -634,26 +562,25 @@ IntMouseInput(MOUSEINPUT *mi)
     {
       hBitmap = dc->w.hBitmap;
       DC_UnlockDc(hDC);
-
+      
       BitmapObj = BITMAPOBJ_LockBitmap(hBitmap);
       if (BitmapObj)
       {
         SurfObj = &BitmapObj->SurfObj;
-
+        
         if (GDIDEV(SurfObj)->MovePointer)
         {
           GDIDEV(SurfObj)->MovePointer(SurfObj, MousePos.x, MousePos.y, &PointerRect);
         }
-
         BITMAPOBJ_UnlockBitmap(hBitmap);
-
+        
         ExAcquireFastMutex(&CurInfo->CursorMutex);
         SetPointerRect(CurInfo, &PointerRect);
         ExReleaseFastMutex(&CurInfo->CursorMutex);
       }
     }
   }
-
+  
   /*
    * Insert the messages into the system queue
    */
@@ -760,9 +687,8 @@ IntKeyboardInput(KEYBDINPUT *ki)
   return FALSE;
 }
 
-UINT
-STDCALL
-NtUserSendInput(
+UINT FASTCALL
+IntSendInput(
   UINT nInputs,
   LPINPUT pInput,
   INT cbSize)
@@ -778,11 +704,9 @@ NtUserSendInput(
     return 0;
   }
   
-  if(!nInputs || !pInput || (cbSize != sizeof(INPUT)))
-  {
-    SetLastWin32Error(ERROR_INVALID_PARAMETER);
-    return 0;
-  }
+  ASSERT(nInputs);
+  ASSERT(pInput);
+  ASSERT(cbSize == sizeof(INPUT));
   
   /*
    * FIXME - check access rights of the window station
@@ -795,18 +719,9 @@ NtUserSendInput(
     return 0;
   }
   
-  cnt = 0;
-  while(nInputs--)
+  for(cnt = 0; nInputs--; pInput++)
   {
     INPUT SafeInput;
-    NTSTATUS Status;
-    
-    Status = MmCopyFromCaller(&SafeInput, pInput++, sizeof(INPUT));
-    if(!NT_SUCCESS(Status))
-    {
-      SetLastNtError(Status);
-      return cnt;
-    }
     
     switch(SafeInput.type)
     {
@@ -833,6 +748,13 @@ NtUserSendInput(
   }
   
   return cnt;
+}
+
+BOOL FASTCALL
+IntBlockInput(PW32THREAD W32Thread, BOOL BlockIt)
+{
+  UNIMPLEMENTED;
+  return FALSE;
 }
 
 /* EOF */

@@ -1,65 +1,38 @@
 #ifndef _WIN32K_OBJECT_H
 #define _WIN32K_OBJECT_H
 
-#include <windows.h>
-#include <win32k/gdiobj.h>
-#include <win32k/bitmaps.h>
-#include <win32k/pen.h>
+/*
+ * User Objects
+ */
+
+#define N_USER_HANDLES	0x4000
 
 typedef enum {
-  otUnknown = 0,
-  otClass,
-  otWindow,
-  otMenu,
-  otAcceleratorTable,
-  otCursorIcon,
-  otHookProc
+  otUNKNOWN = 0,
+  otWINDOW,
+  otMENU,
+  otACCEL,
+  otCURSOR,
+  otHOOK,
+  otDWP
 } USER_OBJECT_TYPE;
 
+typedef struct _USER_OBJECT_HEADER *PUSER_OBJECT_HEADER;
+
 typedef struct _USER_OBJECT_HEADER
-/*
- * Header for user object
- */
 {
   USER_OBJECT_TYPE Type;
-  LONG HandleCount;
+  PUSER_OBJECT_HEADER *Slot;
   LONG RefCount;
-  CSHORT Size;
-} USER_OBJECT_HEADER, *PUSER_OBJECT_HEADER;
-
-typedef struct _USER_HANDLE
-{
-  PVOID ObjectBody;
-} USER_HANDLE, *PUSER_HANDLE;
-
-#define HANDLE_BLOCK_ENTRIES ((PAGE_SIZE-sizeof(LIST_ENTRY))/sizeof(USER_HANDLE))
-
-typedef struct _USER_HANDLE_BLOCK
-{
-  LIST_ENTRY ListEntry;
-  USER_HANDLE Handles[HANDLE_BLOCK_ENTRIES];
-} USER_HANDLE_BLOCK, *PUSER_HANDLE_BLOCK;
+} USER_OBJECT_HEADER;
 
 typedef struct _USER_HANDLE_TABLE
 {
-   LIST_ENTRY ListHead;
-   FAST_MUTEX ListLock;
+  ULONG HandleCount;
+  PUSER_OBJECT_HEADER Handles[N_USER_HANDLES];
 } USER_HANDLE_TABLE, *PUSER_HANDLE_TABLE;
 
-
-#define ObmpLockHandleTable(HandleTable) \
-  ExAcquireFastMutex(&HandleTable->ListLock)
-
-#define ObmpUnlockHandleTable(HandleTable) \
-  ExReleaseFastMutex(&HandleTable->ListLock)
-
-ULONG FASTCALL
-ObmGetReferenceCount(
-  PVOID ObjectBody);
-
-ULONG FASTCALL
-ObmGetHandleCount(
-  PVOID ObjectBody);
+typedef BOOL (FASTCALL *PFNENUMHANDLESPROC)(PVOID ObjectBody, PVOID UserData);
 
 VOID FASTCALL
 ObmReferenceObject(
@@ -69,35 +42,39 @@ VOID FASTCALL
 ObmDereferenceObject(
   PVOID ObjectBody);
 
-NTSTATUS FASTCALL
-ObmReferenceObjectByPointer(
-  PVOID ObjectBody,
-  USER_OBJECT_TYPE ObjectType);
+PVOID FASTCALL
+ObmEnumHandles(
+  PUSER_HANDLE_TABLE HandleTable,
+  USER_OBJECT_TYPE ObjectType,
+  PVOID UserData,
+  PFNENUMHANDLESPROC EnumProc);
+
+BOOL FASTCALL
+ObmObjectDeleted(
+  PVOID ObjectBody);
 
 PVOID FASTCALL
 ObmCreateObject(
   PUSER_HANDLE_TABLE HandleTable,
   PHANDLE Handle,
-	USER_OBJECT_TYPE ObjectType,
+  USER_OBJECT_TYPE ObjectType,
   ULONG ObjectSize);
 
-NTSTATUS FASTCALL
-ObmCreateHandle(
+USER_OBJECT_TYPE FASTCALL
+ObmGetObjectType(
   PUSER_HANDLE_TABLE HandleTable,
-  PVOID ObjectBody,
-	PHANDLE HandleReturn);
+  PVOID ObjectBody);
 
-NTSTATUS FASTCALL
-ObmReferenceObjectByHandle(
+BOOL FASTCALL
+ObmDeleteObject(
+  PUSER_HANDLE_TABLE HandleTable,
+  PVOID ObjectBody);
+
+PVOID FASTCALL
+ObmGetObject(
   PUSER_HANDLE_TABLE HandleTable,
   HANDLE Handle,
-	USER_OBJECT_TYPE ObjectType,
-	PVOID* Object);
-
-NTSTATUS FASTCALL
-ObmCloseHandle(
-  PUSER_HANDLE_TABLE HandleTable,
-  HANDLE Handle);
+  USER_OBJECT_TYPE ObjectType);
 
 VOID FASTCALL
 ObmInitializeHandleTable(
@@ -110,7 +87,15 @@ ObmFreeHandleTable(
 PUSER_HANDLE_TABLE FASTCALL
 ObmCreateHandleTable(VOID);
 
-VOID  FASTCALL ObmDestroyHandleTable (PUSER_HANDLE_TABLE HandleTable);
+VOID FASTCALL
+ObmDestroyHandleTable (PUSER_HANDLE_TABLE HandleTable);
+
+#define IntGetUserObject(ObjectType, Handle) \
+  ObmGetObject(PsGetWin32Process()->WindowStation->HandleTable, (Handle), ot##ObjectType )
+
+/*
+ * GDI
+ */
 
 ULONG FASTCALL CreateGDIHandle (ULONG InternalSize, ULONG UserSize, PVOID *InternalObject, PVOID *UserObject);
 VOID  FASTCALL FreeGDIHandle (ULONG Handle);
@@ -135,3 +120,4 @@ PPOINT FASTCALL GDI_Bezier (const POINT *Points, INT count, PINT nPtsOut);
 #endif /* _WIN32K_OBJECT_H */
 
 /* EOF */
+

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.100 2004/05/22 17:51:08 weiden Exp $
+/* $Id: msgqueue.c,v 1.100.12.1 2004/07/15 20:07:18 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -173,72 +173,24 @@ MsqInsertSystemMessage(MSG* Msg)
 BOOL FASTCALL
 MsqIsDblClk(LPMSG Msg, BOOL Remove)
 {
-  PWINSTATION_OBJECT WinStaObject;
-  PSYSTEM_CURSORINFO CurInfo;
-  NTSTATUS Status;
-  LONG dX, dY;
-  BOOL Res;
-  
-  Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-                                          KernelMode,
-                                          0,
-                                          &WinStaObject);
-  if (!NT_SUCCESS(Status))
-  {
-    return FALSE;
-  }
-  CurInfo = IntGetSysCursorInfo(WinStaObject);
-  Res = (Msg->hwnd == (HWND)CurInfo->LastClkWnd) && 
-        ((Msg->time - CurInfo->LastBtnDown) < CurInfo->DblClickSpeed);
-  if(Res)
-  {
-    
-    dX = CurInfo->LastBtnDownX - Msg->pt.x;
-    dY = CurInfo->LastBtnDownY - Msg->pt.y;
-    if(dX < 0) dX = -dX;
-    if(dY < 0) dY = -dY;
-    
-    Res = (dX <= CurInfo->DblClickWidth) &&
-          (dY <= CurInfo->DblClickHeight);
-  }
-
-  if(Remove)
-  {
-    if (Res)
-    {
-      CurInfo->LastBtnDown = 0;
-      CurInfo->LastBtnDownX = Msg->pt.x;
-      CurInfo->LastBtnDownY = Msg->pt.y;
-      CurInfo->LastClkWnd = NULL;
-    }
-    else
-    {
-      CurInfo->LastBtnDownX = Msg->pt.x;
-      CurInfo->LastBtnDownY = Msg->pt.y;
-      CurInfo->LastClkWnd = (HANDLE)Msg->hwnd;
-      CurInfo->LastBtnDown = Msg->time;
-    }
-  }
-  
-  ObDereferenceObject(WinStaObject);
-  return Res;
+   /* FIXME */
+   return FALSE;
 }
 
 BOOL STATIC STDCALL
-MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT FilterLow, UINT FilterHigh,
+MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWINDOW_OBJECT FilterWindow, UINT FilterLow, UINT FilterHigh,
 			 PUSER_MESSAGE Message, BOOL Remove, PBOOL Freed, 
 			 PWINDOW_OBJECT ScopeWin, PPOINT ScreenPoint, BOOL FromGlobalQueue)
 {
   USHORT Msg = Message->Msg.message;
-  PWINDOW_OBJECT Window = NULL;
-  HWND CaptureWin;
+  PWINDOW_OBJECT CaptureWin, Window = NULL;
   
   CaptureWin = IntGetCaptureWindow();
   if (CaptureWin == NULL)
   {
     if(Msg == WM_MOUSEWHEEL)
     {
-      Window = IntGetWindowObject(IntGetFocusWindow());
+      Window = IntGetFocusWindow();
     }
     else
     {
@@ -246,7 +198,6 @@ MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Filte
       if(Window == NULL)
       {
         Window = ScopeWin;
-        IntReferenceWindowObject(Window);
       }
     }
   }
@@ -254,7 +205,7 @@ MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Filte
   {
     /* FIXME - window messages should go to the right window if no buttons are
                pressed */
-    Window = IntGetWindowObject(CaptureWin);
+    Window = CaptureWin;
   }
 
   if (Window == NULL)
@@ -314,7 +265,7 @@ MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Filte
     
     KeSetEvent(&Window->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
     *Freed = FALSE;
-    IntReleaseWindowObject(Window);
+    
     return(FALSE);
   }
   
@@ -322,7 +273,7 @@ MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Filte
   
   *ScreenPoint = Message->Msg.pt;
   
-  if((hWnd != NULL && Window->Self != hWnd) ||
+  if((FilterWindow != NULL && Window != FilterWindow) ||
      ((FilterLow != 0 || FilterLow != 0) && (Msg < FilterLow || Msg > FilterHigh)))
   {
     /* Reject the message because it doesn't match the filter */
@@ -357,13 +308,12 @@ MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Filte
       IntUnLockHardwareMessageQueue(Window->MessageQueue);
     }
     
-    IntReleaseWindowObject(Window);
     *Freed = FALSE;
     return(FALSE);
   }
   
   /* FIXME - only assign if removing? */
-  Message->Msg.hwnd = Window->Self;
+  Message->Msg.hwnd = Window->Handle;
   Message->Msg.message = Msg;
   Message->Msg.lParam = MAKELONG(Message->Msg.pt.x, Message->Msg.pt.y);
   
@@ -396,13 +346,12 @@ MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Filte
     }
   }
   
-  IntReleaseWindowObject(Window);
   *Freed = FALSE;
   return(TRUE);
 }
 
 BOOL STDCALL
-MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
+MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWINDOW_OBJECT FilterWindow,
 		       UINT FilterLow, UINT FilterHigh, BOOL Remove,
 		       PUSER_MESSAGE* Message)
 {
@@ -433,7 +382,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
     }
   while (NT_SUCCESS(WaitStatus) && STATUS_WAIT_0 != WaitStatus);
 
-  DesktopWindow = IntGetWindowObject(IntGetDesktopWindow());
+  DesktopWindow = IntGetDesktopWindow();
 
   /* Process messages in the message queue itself. */
   IntLockHardwareMessageQueue(MessageQueue);
@@ -446,7 +395,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
       if (Current->Msg.message >= WM_MOUSEFIRST &&
 	  Current->Msg.message <= WM_MOUSELAST)
 	{
-	  Accept = MsqTranslateMouseMessage(MessageQueue, hWnd, FilterLow, FilterHigh,
+	  Accept = MsqTranslateMouseMessage(MessageQueue, FilterWindow, FilterLow, FilterHigh,
 					    Current, Remove, &Freed, 
 					    DesktopWindow, &ScreenPoint, FALSE);
 	  if (Accept)
@@ -458,7 +407,6 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 	      IntUnLockHardwareMessageQueue(MessageQueue);
               IntUnLockSystemHardwareMessageQueueLock(FALSE);
 	      *Message = Current;
-	      IntReleaseWindowObject(DesktopWindow);
 	      return(TRUE);
 	    }
 
@@ -511,7 +459,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 	{
 	  const ULONG ActiveStamp = HardwareMessageQueueStamp;
 	  /* Translate the message. */
-	  Accept = MsqTranslateMouseMessage(MessageQueue, hWnd, FilterLow, FilterHigh,
+	  Accept = MsqTranslateMouseMessage(MessageQueue, FilterWindow, FilterLow, FilterHigh,
 					    Current, Remove, &Freed, 
 					    DesktopWindow, &ScreenPoint, TRUE);
 	  if (Accept)
@@ -547,7 +495,6 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 		}
 	      IntUnLockSystemHardwareMessageQueueLock(FALSE);
 	      *Message = Current;
-	      IntReleaseWindowObject(DesktopWindow);
 	      return(TRUE);
 	    }
 	  /* If the contents of the queue changed then restart processing. */
@@ -558,7 +505,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 	    }
 	}
     }
-  IntReleaseWindowObject(DesktopWindow);
+  
   /* Check if the system message queue is now empty. */
   IntLockSystemMessageQueue(OldIrql);
   if (SystemMessageQueueCount == 0 && IsListEmpty(&HardwareMessageQueueHead))
@@ -586,7 +533,7 @@ MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
   Msg.lParam = lParam;
   /* FIXME: Initialize time and point. */
   
-  FocusMessageQueue = IntGetFocusMessageQueue();
+  FocusMessageQueue = IntGetActiveMessageQueue();
   if( !IntGetScreenDC() ) {
     if( W32kGetPrimitiveMessageQueue() ) {
       MsqPostMessage(W32kGetPrimitiveMessageQueue(), &Msg, FALSE);
@@ -598,9 +545,9 @@ MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return;
       }
     
-    if (FocusMessageQueue->FocusWindow != (HWND)0)
+    if (FocusMessageQueue->FocusWindow != NULL)
       {
-	Msg.hwnd = FocusMessageQueue->FocusWindow;
+	Msg.hwnd = FocusMessageQueue->FocusWindow->Handle;
         DPRINT("Msg.hwnd = %x\n", Msg.hwnd);
 	MsqPostMessage(FocusMessageQueue, &Msg, FALSE);
       }
@@ -612,13 +559,14 @@ MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 }
 
 VOID FASTCALL
-MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
+MsqPostHotKeyMessage(PVOID Thread, PWINDOW_OBJECT Window, WPARAM wParam, LPARAM lParam)
 {
-  PWINDOW_OBJECT Window;
   PW32THREAD Win32Thread;
   PW32PROCESS Win32Process;
   MSG Mesg;
   NTSTATUS Status;
+
+  ASSERT(Window);
 
   Status = ObReferenceObjectByPointer (Thread,
 				       THREAD_ALL_ACCESS,
@@ -641,15 +589,7 @@ MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
       return;
     }
 
-  Status = ObmReferenceObjectByHandle(Win32Process->WindowStation->HandleTable,
-                                      hWnd, otWindow, (PVOID*)&Window);
-  if (!NT_SUCCESS(Status))
-    {
-      ObDereferenceObject ((PETHREAD)Thread);
-      return;
-    }
-
-  Mesg.hwnd = hWnd;
+  Mesg.hwnd = Window->Handle;
   Mesg.message = WM_HOTKEY;
   Mesg.wParam = wParam;
   Mesg.lParam = lParam;
@@ -658,7 +598,7 @@ MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
 //      KeQueryTickCount(&LargeTickCount);
 //      Mesg.time = LargeTickCount.u.LowPart;
   MsqPostMessage(Window->MessageQueue, &Mesg, FALSE);
-  ObmDereferenceObject(Window);
+  
   ObDereferenceObject (Thread);
 
 //  IntLockMessageQueue(pThread->MessageQueue);
@@ -726,6 +666,7 @@ MsqPeekSentMessages(PUSER_MESSAGE_QUEUE MessageQueue)
 BOOLEAN FASTCALL
 MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
 {
+  PWINDOW_OBJECT Window;
   PUSER_SENT_MESSAGE Message;
   PLIST_ENTRY Entry;
   LRESULT Result;
@@ -750,11 +691,18 @@ MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
   
   IntUnLockMessageQueue(MessageQueue);
   
+  Window = IntGetUserObject(WINDOW, Message->Msg.hwnd);
+  ASSERT(Window);
+  
+  ObmReferenceObject(Window);
+  
   /* Call the window procedure. */
-  Result = IntSendMessage(Message->Msg.hwnd,
+  Result = IntSendMessage(Window,
                           Message->Msg.message,
                           Message->Msg.wParam,
                           Message->Msg.lParam);
+  
+  ObmDereferenceObject(Window);
   
   /* remove the message from the local dispatching list, because it doesn't need
      to be cleaned up on thread termination anymore */
@@ -833,7 +781,7 @@ MsqSendNotifyMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 
 NTSTATUS FASTCALL
 MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
-	       HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam,
+	       PWINDOW_OBJECT Window, UINT Msg, WPARAM wParam, LPARAM lParam,
                UINT uTimeout, BOOL Block, ULONG_PTR *uResult)
 {
   PUSER_SENT_MESSAGE Message;
@@ -846,6 +794,8 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 
   if(!(Message = ExAllocatePoolWithTag(PagedPool, sizeof(USER_SENT_MESSAGE), TAG_USRMSG)))
   {
+    /* FIXME - bail from the global lock here! */
+    
     DPRINT1("MsqSendMessage(): Not enough memory to allocate a message");
     return STATUS_INSUFFICIENT_RESOURCES;
   }
@@ -860,7 +810,7 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
   /* FIXME - increase reference counter of sender's message queue here */
   
   Result = 0;
-  Message->Msg.hwnd = Wnd;
+  Message->Msg.hwnd = Window->Handle;
   Message->Msg.message = Msg;
   Message->Msg.wParam = wParam;
   Message->Msg.lParam = lParam;
@@ -868,6 +818,8 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
   Message->Result = &Result;
   Message->SenderQueue = ThreadQueue;
   Message->CompletionCallback = NULL;
+  
+  /* FIXME - bail from the global lock here! */
   
   IntReferenceMessageQueue(MessageQueue);
   
@@ -1032,11 +984,11 @@ MsqPostQuitMessage(PUSER_MESSAGE_QUEUE MessageQueue, ULONG ExitCode)
   IntUnLockMessageQueue(MessageQueue);
 }
 
-BOOLEAN STDCALL
+BOOLEAN FASTCALL
 MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 	       IN BOOLEAN Hardware,
 	       IN BOOLEAN Remove,
-	       IN HWND Wnd,
+	       IN PWINDOW_OBJECT FilterWindow,
 	       IN UINT MsgFilterLow,
 	       IN UINT MsgFilterHigh,
 	       OUT PUSER_MESSAGE* Message)
@@ -1047,7 +999,7 @@ MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 
   if (Hardware)
     {
-      return(MsqPeekHardwareMessage(MessageQueue, Wnd,
+      return(MsqPeekHardwareMessage(MessageQueue, FilterWindow,
 				    MsgFilterLow, MsgFilterHigh,
 				    Remove, Message));
     }
@@ -1059,7 +1011,7 @@ MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
     {
       CurrentMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE,
 					 ListEntry);
-      if ((Wnd == 0 || Wnd == CurrentMessage->Msg.hwnd) &&
+      if ((FilterWindow == NULL || FilterWindow->Handle == CurrentMessage->Msg.hwnd) &&
 	  ((MsgFilterLow == 0 && MsgFilterHigh == 0) ||
 	   (MsgFilterLow <= CurrentMessage->Msg.message &&
 	    MsgFilterHigh >= CurrentMessage->Msg.message)))
@@ -1272,41 +1224,38 @@ MsqGetMessageExtraInfo(VOID)
   return MessageQueue->ExtraInfo;
 }
 
-HWND FASTCALL
-MsqSetStateWindow(PUSER_MESSAGE_QUEUE MessageQueue, ULONG Type, HWND hWnd)
+PWINDOW_OBJECT FASTCALL
+MsqSetStateWindow(PUSER_MESSAGE_QUEUE MessageQueue, ULONG Type, PWINDOW_OBJECT Window)
 {
-  HWND Prev;
+  PWINDOW_OBJECT *Change;
   
   switch(Type)
   {
     case MSQ_STATE_CAPTURE:
-      Prev = MessageQueue->CaptureWindow;
-      MessageQueue->CaptureWindow = hWnd;
-      return Prev;
+      Change = &MessageQueue->CaptureWindow;
+      break;
     case MSQ_STATE_ACTIVE:
-      Prev = MessageQueue->ActiveWindow;
-      MessageQueue->ActiveWindow = hWnd;
-      return Prev;
+      Change = &MessageQueue->ActiveWindow;
+      break;
     case MSQ_STATE_FOCUS:
-      Prev = MessageQueue->FocusWindow;
-      MessageQueue->FocusWindow = hWnd;
-      return Prev;
+      Change = &MessageQueue->FocusWindow;
+      break;
     case MSQ_STATE_MENUOWNER:
-      Prev = MessageQueue->MenuOwner;
-      MessageQueue->MenuOwner = hWnd;
-      return Prev;
+      Change = &MessageQueue->MenuOwner;
+      break;
     case MSQ_STATE_MOVESIZE:
-      Prev = MessageQueue->MoveSize;
-      MessageQueue->MoveSize = hWnd;
-      return Prev;
+      Change = &MessageQueue->MoveSize;
+      break;
     case MSQ_STATE_CARET:
       ASSERT(MessageQueue->CaretInfo);
-      Prev = MessageQueue->CaretInfo->hWnd;
-      MessageQueue->CaretInfo->hWnd = hWnd;
-      return Prev;
+      Change = &MessageQueue->CaretInfo->Window;
+      break;
+    default:
+      DPRINT1("Attempted to change invalid (0x%x) message queue state window!\n", Type);
+      return NULL;
   }
   
-  return NULL;
+  return (PWINDOW_OBJECT)InterlockedExchange((LONG*)Change, (LONG)Window);
 }
 
 /* EOF */

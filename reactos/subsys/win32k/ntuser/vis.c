@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: vis.c,v 1.29 2004/05/14 16:48:47 navaraf Exp $
+ * $Id: vis.c,v 1.29.12.1 2004/07/15 20:07:18 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -77,9 +77,7 @@ VIS_ComputeVisibleRegion(
     * our window.
     */
 
-   PreviousWindow = Window;
-   CurrentWindow = IntGetParentObject(Window);
-   while (CurrentWindow)
+   while ((CurrentWindow = IntGetParentObject(Window)))
    {
       if (!(CurrentWindow->Style & WS_VISIBLE))
       {
@@ -93,7 +91,6 @@ VIS_ComputeVisibleRegion(
       if ((PreviousWindow->Style & WS_CLIPSIBLINGS) ||
           (PreviousWindow == Window && ClipSiblings))
       {
-         IntLockRelatives(CurrentWindow);
          CurrentSibling = CurrentWindow->FirstChild;
          while (CurrentSibling != NULL && CurrentSibling != PreviousWindow)
          {
@@ -112,19 +109,14 @@ VIS_ComputeVisibleRegion(
             }
             CurrentSibling = CurrentSibling->NextSibling;
          }
-         IntUnLockRelatives(CurrentWindow);
       }
 
-      PreviousWindow = CurrentWindow;
       CurrentWindow = IntGetParentObject(CurrentWindow);
-      IntReleaseWindowObject(PreviousWindow);
    }
 
    if (ClipChildren)
    {
-      IntLockRelatives(Window);
-      CurrentWindow = Window->FirstChild;
-      while (CurrentWindow)
+      for (CurrentWindow = Window->FirstChild; CurrentWindow != NULL; CurrentWindow = CurrentWindow->NextSibling)
       {
          if (CurrentWindow->Style & WS_VISIBLE)
          {
@@ -139,9 +131,7 @@ VIS_ComputeVisibleRegion(
             NtGdiCombineRgn(VisRgn, VisRgn, ClipRgn, RGN_DIFF);
             NtGdiDeleteObject(ClipRgn);
          }
-         CurrentWindow = CurrentWindow->NextSibling;
       }
-      IntUnLockRelatives(Window);
    }
    
    if(Window->WindowRegion && !(Window->Style & WS_MINIMIZE))
@@ -176,7 +166,6 @@ VIS_WindowLayoutChanged(
      IntRedrawWindow(Parent, NULL, Temp,
                      RDW_FRAME | RDW_ERASE | RDW_INVALIDATE | 
                      RDW_ALLCHILDREN);
-     IntReleaseWindowObject(Parent);
    }
    NtGdiDeleteObject(Temp);
 }

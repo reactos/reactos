@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: guicheck.c,v 1.19 2004/05/21 10:09:31 weiden Exp $
+/* $Id: guicheck.c,v 1.19.12.1 2004/07/15 20:07:17 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -48,12 +48,12 @@ static BOOL FASTCALL
 AddGuiApp(PW32PROCESS W32Data)
 {
   W32Data->Flags |= W32PF_CREATEDWINORDC;
-  if (0 == NrGuiApplicationsRunning++)
+  if (InterlockedIncrement(&NrGuiApplicationsRunning) == 1)
     {
       if (! IntInitializeDesktopGraphics())
         {
           W32Data->Flags &= ~W32PF_CREATEDWINORDC;
-          NrGuiApplicationsRunning--;
+          InterlockedDecrement(&NrGuiApplicationsRunning);
           return FALSE;
         }
     }
@@ -65,11 +65,7 @@ static void FASTCALL
 RemoveGuiApp(PW32PROCESS W32Data)
 {
   W32Data->Flags &= ~W32PF_CREATEDWINORDC;
-  if (0 < NrGuiApplicationsRunning)
-    {
-      NrGuiApplicationsRunning--;
-    }
-  if (0 == NrGuiApplicationsRunning)
+  if (InterlockedDecrement(&NrGuiApplicationsRunning))
     {
       IntEndDesktopGraphics();
     }

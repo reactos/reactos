@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: winsta.c,v 1.64 2004/06/20 00:45:37 navaraf Exp $
+ *  $Id: winsta.c,v 1.64.8.1 2004/07/15 20:07:18 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -378,7 +378,7 @@ NtUserCreateWindowStation(
    WindowStationObject->HandleTable = ObmCreateHandleTable();
    if (!WindowStationObject->HandleTable)
    {
-      DPRINT("Failed creating handle table\n");
+      DPRINT1("Failed creating handle table\n");
       ExFreePool(CurInfo);
       ExFreePool(WindowStationName.Buffer);
       /* FIXME - Delete window station object */
@@ -386,8 +386,9 @@ NtUserCreateWindowStation(
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
       return 0;
    }
-  
+   #if 0
    InitHotKeys(WindowStationObject);
+   #endif
   
    ExInitializeFastMutex(&CurInfo->CursorMutex);
    CurInfo->Enabled = FALSE;
@@ -408,12 +409,6 @@ NtUserCreateWindowStation(
    CurInfo->DblClickHeight = 4;
    
    WindowStationObject->SystemCursor = CurInfo;
-  
-   if (!IntSetupCurIconHandles(WindowStationObject))
-   {
-       DPRINT1("Setting up the Cursor/Icon Handle table failed!\n");
-       /* FIXME: Complain more loudly? */
-   }
   
    DPRINT("Window station successfully created (%wZ)\n", &WindowStationName);
    ExFreePool(WindowStationName.Buffer);
@@ -540,12 +535,6 @@ NtUserCloseWindowStation(
       DPRINT("Validation of window station handle (0x%X) failed\n", hWinSta);
       return FALSE;
    }
-
-   #if 0
-   /* FIXME - free the cursor information when actually deleting the object!! */
-   ASSERT(Object->SystemCursor);
-   ExFreePool(Object->SystemCursor);
-   #endif
 
    ObDereferenceObject(Object);
 
@@ -820,7 +809,7 @@ NtUserSetProcessWindowStation(HWINSTA hWindowStation)
 
    if (!NT_SUCCESS(Status)) 
    {
-      DPRINT("Validation of window station handle (0x%X) failed\n", 
+      DPRINT1("Validation of window station handle (0x%X) failed\n", 
          hWindowStation);
       return FALSE;
    }
@@ -835,6 +824,7 @@ NtUserSetProcessWindowStation(HWINSTA hWindowStation)
       if (Win32Process->WindowStation != NULL)
          ObDereferenceObject(Win32Process->WindowStation);
       Win32Process->WindowStation = Object;
+      DbgPrint("Window Station is set!\n");
    }
 
    SET_PROCESS_WINDOW_STATION(hWindowStation);

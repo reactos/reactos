@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: desktop.c,v 1.17 2004/07/09 20:57:38 gvg Exp $
+ *  $Id: desktop.c,v 1.17.2.1 2004/07/15 20:07:17 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -29,6 +29,9 @@
 
 /* INCLUDES ******************************************************************/
 #include <w32k.h>
+
+#define NDEBUG
+#include <debug.h>
 
 #if 0
 /* not yet defined in w32api... */
@@ -134,6 +137,14 @@ IntGetActiveDesktop(VOID)
   return InputDesktop;
 }
 
+PWINDOW_OBJECT FASTCALL
+IntGetCurrentThreadDesktopWindow(VOID)
+{
+  PDESKTOP_OBJECT pdo = PsGetWin32Thread()->Desktop;
+  
+  return (pdo != NULL ? pdo->DesktopWindow : NULL);
+}
+
 /*
  * returns or creates a handle to the desktop object
  */
@@ -172,30 +183,53 @@ IntGetDesktopObjectHandle(PDESKTOP_OBJECT DesktopObject)
 }
 
 PUSER_MESSAGE_QUEUE FASTCALL
-IntGetFocusMessageQueue(VOID)
+IntGetActiveMessageQueue(VOID)
 {
    PDESKTOP_OBJECT pdo = IntGetActiveDesktop();
    if (!pdo)
    {
-      DPRINT("No active desktop\n");
+      DPRINT1("No active desktop\n");
       return(NULL);
    }
    return (PUSER_MESSAGE_QUEUE)pdo->ActiveMessageQueue;
 }
 
-VOID FASTCALL
-IntSetFocusMessageQueue(PUSER_MESSAGE_QUEUE NewQueue)
+PWINDOW_OBJECT FASTCALL
+IntGetForegroundWindow(VOID)
 {
-   PDESKTOP_OBJECT pdo = IntGetActiveDesktop();
-   if (!pdo)
-   {
-      DPRINT("No active desktop\n");
-      return;
-   }
-   pdo->ActiveMessageQueue = NewQueue;
+  PUSER_MESSAGE_QUEUE ForegroundQueue = IntGetActiveMessageQueue();
+  return (ForegroundQueue != NULL ? ForegroundQueue->ActiveWindow : NULL);
 }
 
-HWND FASTCALL IntGetDesktopWindow(VOID)
+PUSER_MESSAGE_QUEUE FASTCALL
+IntSetActiveMessageQueue(PUSER_MESSAGE_QUEUE NewQueue)
+{
+   PUSER_MESSAGE_QUEUE Prev;
+   PDESKTOP_OBJECT pdo;
+   
+   if (!(pdo = IntGetActiveDesktop()))
+   {
+      DPRINT1("No active desktop\n");
+      return NULL;
+   }
+   
+   if(NewQueue != NULL)
+   {
+     IntReferenceMessageQueue(NewQueue);
+   }
+   
+   Prev = (PUSER_MESSAGE_QUEUE)InterlockedExchange((LONG*)&pdo->ActiveMessageQueue, (LONG)NewQueue);
+   
+   if(Prev != NULL)
+   {
+     IntDereferenceMessageQueue(Prev);
+   }
+   
+   return Prev;
+}
+
+PWINDOW_OBJECT FASTCALL
+IntGetDesktopWindow(VOID)
 {
    PDESKTOP_OBJECT pdo = IntGetActiveDesktop();
    if (!pdo)
@@ -203,17 +237,6 @@ HWND FASTCALL IntGetDesktopWindow(VOID)
       DPRINT("No active desktop\n");
       return NULL;
    }
-  return pdo->DesktopWindow;
-}
-
-HWND FASTCALL IntGetCurrentThreadDesktopWindow(VOID)
-{
-  PDESKTOP_OBJECT pdo = PsGetWin32Thread()->Desktop;
-  if (NULL == pdo)
-    {
-      DPRINT1("Thread doesn't have a desktop\n");
-      return NULL;
-    }
   return pdo->DesktopWindow;
 }
 
@@ -226,7 +249,7 @@ IntShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height)
   CSRSS_API_REPLY Reply;
 
   Request.Type = CSRSS_SHOW_DESKTOP;
-  Request.Data.ShowDesktopRequest.DesktopWindow = Desktop->DesktopWindow;
+  Request.Data.ShowDesktopRequest.DesktopWindow = Desktop->DesktopWindow->Handle;
   Request.Data.ShowDesktopRequest.Width = Width;
   Request.Data.ShowDesktopRequest.Height = Height;
 
@@ -245,15 +268,7 @@ IntHideDesktop(PDESKTOP_OBJECT Desktop)
 
   return NotifyCsrss(&Request, &Reply);
 #else
-  PWINDOW_OBJECT DesktopWindow;
-
-  DesktopWindow = IntGetWindowObject(Desktop->DesktopWindow);
-  if (! DesktopWindow)
-    {
-      return ERROR_INVALID_WINDOW_HANDLE;
-    }
-  DesktopWindow->Style &= ~WS_VISIBLE;
-
+  Desktop->DesktopWindow->Style &= ~WS_VISIBLE;
   return STATUS_SUCCESS;
 #endif
 }
@@ -637,16 +652,17 @@ NtUserCloseDesktop(HDESK hDesktop)
       return FALSE;
    }
 
-   ObDereferenceObject(Object);
-
    DPRINT("Closing desktop handle (0x%X)\n", hDesktop);
 
    Status = ZwClose(hDesktop);
    if (!NT_SUCCESS(Status))
    {
+      ObDereferenceObject(Object);
       SetLastNtError(Status);
       return FALSE;
    }
+
+   ObDereferenceObject(Object);
 
    return TRUE;
 }
@@ -666,17 +682,21 @@ NtUserCloseDesktop(HDESK hDesktop)
  *    @implemented
  */
 
-BOOL STDCALL
-NtUserPaintDesktop(HDC hDC)
+BOOL FASTCALL
+IntPaintDesktop(HDC hDC)
 {
   RECT Rect;
   HBRUSH DesktopBrush, PreviousBrush;
-  HWND hWndDesktop;
+  PWINDOW_OBJECT WndDesktop;
 
   IntGdiGetClipBox(hDC, &Rect);
 
-  hWndDesktop = IntGetDesktopWindow();
-  DesktopBrush = (HBRUSH)NtUserGetClassLong(hWndDesktop, GCL_HBRBACKGROUND, FALSE);
+  if(!(WndDesktop = IntGetDesktopWindow()))
+  {
+    return FALSE;
+  }
+  
+  DesktopBrush = (HBRUSH)IntGetClassLong(WndDesktop, GCL_HBRBACKGROUND, FALSE);
 
   /*
    * Paint desktop background

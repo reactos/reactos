@@ -51,7 +51,7 @@ typedef struct _DESKTOP_OBJECT
   PUSER_MESSAGE_QUEUE ActiveMessageQueue;
   /* Rectangle of the work area */
   RECT WorkArea;
-  /* Handle of the desktop window. */
+  /* Pointer of the desktop window. */
   PWINDOW_OBJECT DesktopWindow;
   PWINDOW_OBJECT PrevActiveWindow;
 #else

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.33 2004/06/29 23:45:31 navaraf Exp $
+/* $Id: timer.c,v 1.33.4.1 2004/07/15 20:07:18 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -85,7 +85,7 @@ IntInsertTimerAscendingOrder(PMSG_TIMER_ENTRY NewTimer)
 
 //must hold mutex while calling this
 PMSG_TIMER_ENTRY FASTCALL
-IntRemoveTimer(HWND hWnd, UINT_PTR IDEvent, HANDLE ThreadID, BOOL SysTimer)
+IntRemoveTimer(PWINDOW_OBJECT Window, UINT_PTR IDEvent, HANDLE ThreadID, BOOL SysTimer)
 {
   PMSG_TIMER_ENTRY MsgTimer;
   PLIST_ENTRY EnumEntry;
@@ -97,7 +97,7 @@ IntRemoveTimer(HWND hWnd, UINT_PTR IDEvent, HANDLE ThreadID, BOOL SysTimer)
     MsgTimer = CONTAINING_RECORD(EnumEntry, MSG_TIMER_ENTRY, ListEntry);
     EnumEntry = EnumEntry->Flink;
       
-    if (MsgTimer->Msg.hwnd == hWnd && 
+    if (MsgTimer->Msg.hwnd == (Window ? Window->Handle : NULL) && 
         MsgTimer->Msg.wParam == (WPARAM)IDEvent &&
         MsgTimer->ThreadID == ThreadID &&
         (MsgTimer->Msg.message == WM_SYSTIMER) == SysTimer)
@@ -148,7 +148,7 @@ RemoveTimersThread(HANDLE ThreadID)
  * NOTE: It doesn't kill the timer. It just removes them from the list.
  */
 VOID FASTCALL
-RemoveTimersWindow(HWND Wnd)
+RemoveTimersWindow(PWINDOW_OBJECT Window)
 {
   PMSG_TIMER_ENTRY MsgTimer;
   PLIST_ENTRY EnumEntry;
@@ -161,7 +161,7 @@ RemoveTimersWindow(HWND Wnd)
     MsgTimer = CONTAINING_RECORD(EnumEntry, MSG_TIMER_ENTRY, ListEntry);
     EnumEntry = EnumEntry->Flink;
     
-    if (MsgTimer->Msg.hwnd == Wnd)
+    if (MsgTimer->Msg.hwnd == Window->Handle)
     {
       RemoveEntryList(&MsgTimer->ListEntry);
       ExFreePool(MsgTimer);
@@ -173,20 +173,19 @@ RemoveTimersWindow(HWND Wnd)
 
 
 UINT_PTR FASTCALL
-IntSetTimer(HWND hWnd, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc, BOOL SystemTimer)
+IntSetTimer(PWINDOW_OBJECT WindowObject, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc, BOOL SystemTimer)
 {
   PMSG_TIMER_ENTRY MsgTimer = NULL;
   PMSG_TIMER_ENTRY NewTimer;
   LARGE_INTEGER CurrentTime;
-  PWINDOW_OBJECT WindowObject;
   HANDLE ThreadID;
   UINT_PTR Ret = 0;
- 
+  
   ThreadID = PsGetCurrentThreadId();
   KeQuerySystemTime(&CurrentTime);
   IntLockTimerList();
   
-  if((hWnd == NULL) && !SystemTimer)
+  if((WindowObject == NULL) && !SystemTimer)
   {
     /* find a free, window-less timer id */
     nIDEvent = RtlFindClearBitsAndSet(&WindowLessTimersBitMap, 1, HintIndex);
@@ -201,7 +200,6 @@ IntSetTimer(HWND hWnd, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc, B
   }
   else
   {
-    WindowObject = IntGetWindowObject(hWnd);
     if(!WindowObject)
     {
       IntUnLockTimerList();
@@ -209,17 +207,15 @@ IntSetTimer(HWND hWnd, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc, B
       return 0;
     }
     
-    if(WindowObject->OwnerThread != PsGetCurrentThread())
+    if(WindowObject->MessageQueue->Thread != PsGetCurrentThread())
     {
       IntUnLockTimerList();
-      IntReleaseWindowObject(WindowObject);
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return 0;
     }
-    IntReleaseWindowObject(WindowObject);
     
     /* remove timer if already in the queue */
-    MsgTimer = IntRemoveTimer(hWnd, nIDEvent, ThreadID, SystemTimer); 
+    MsgTimer = IntRemoveTimer(WindowObject, nIDEvent, ThreadID, SystemTimer); 
   }
   
   #if 1
@@ -260,7 +256,7 @@ IntSetTimer(HWND hWnd, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc, B
       return 0;
     }
     
-    NewTimer->Msg.hwnd = hWnd;
+    NewTimer->Msg.hwnd = (WindowObject ? WindowObject->Handle : NULL);
     NewTimer->Msg.message = (SystemTimer ? WM_SYSTIMER : WM_TIMER);
     NewTimer->Msg.wParam = (WPARAM)nIDEvent;
     NewTimer->Msg.lParam = (LPARAM)lpTimerFunc;
@@ -284,15 +280,14 @@ IntSetTimer(HWND hWnd, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc, B
 
 
 BOOL FASTCALL
-IntKillTimer(HWND hWnd, UINT_PTR uIDEvent, BOOL SystemTimer)
+IntKillTimer(PWINDOW_OBJECT WindowObject, UINT_PTR uIDEvent, BOOL SystemTimer)
 {
   PMSG_TIMER_ENTRY MsgTimer;
-  PWINDOW_OBJECT WindowObject;
   
   IntLockTimerList();
   
   /* window-less timer? */
-  if((hWnd == NULL) && !SystemTimer)
+  if((WindowObject == NULL) && !SystemTimer)
   {
     if(!RtlAreBitsSet(&WindowLessTimersBitMap, uIDEvent - 1, 1))
     {
@@ -305,24 +300,21 @@ IntKillTimer(HWND hWnd, UINT_PTR uIDEvent, BOOL SystemTimer)
   }
   else
   {
-    WindowObject = IntGetWindowObject(hWnd);
     if(!WindowObject)
     {
       IntUnLockTimerList(); 
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       return FALSE;
     }
-    if(WindowObject->OwnerThread != PsGetCurrentThread())
+    if(WindowObject->MessageQueue->Thread != PsGetCurrentThread())
     {
       IntUnLockTimerList();
-      IntReleaseWindowObject(WindowObject);
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return FALSE;
     }
-    IntReleaseWindowObject(WindowObject);
   }
   
-  MsgTimer = IntRemoveTimer(hWnd, uIDEvent, PsGetCurrentThreadId(), SystemTimer);
+  MsgTimer = IntRemoveTimer(WindowObject, uIDEvent, PsGetCurrentThreadId(), SystemTimer);
   
   IntUnLockTimerList();
   
@@ -473,54 +465,3 @@ InitTimerImpl(VOID)
   return Status;
 }
 
-
-UINT_PTR
-STDCALL
-NtUserSetTimer
-(
- HWND hWnd,
- UINT_PTR nIDEvent,
- UINT uElapse,
- TIMERPROC lpTimerFunc
-)
-{
-  return IntSetTimer(hWnd, nIDEvent, uElapse, lpTimerFunc, FALSE);
-}
-
-
-BOOL
-STDCALL
-NtUserKillTimer
-(
- HWND hWnd,
- UINT_PTR uIDEvent
-)
-{
-  return IntKillTimer(hWnd, uIDEvent, FALSE);
-}
-
-
-UINT_PTR
-STDCALL
-NtUserSetSystemTimer(
- HWND hWnd,
- UINT_PTR nIDEvent,
- UINT uElapse,
- TIMERPROC lpTimerFunc
-)
-{
-  return IntSetTimer(hWnd, nIDEvent, uElapse, lpTimerFunc, TRUE);
-}
-
-
-BOOL
-STDCALL
-NtUserKillSystemTimer(
- HWND hWnd,
- UINT_PTR uIDEvent
-)
-{
-  return IntKillTimer(hWnd, uIDEvent, TRUE);
-}
-
-/* EOF */

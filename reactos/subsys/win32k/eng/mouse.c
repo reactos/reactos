@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.76 2004/07/14 20:48:57 navaraf Exp $
+/* $Id: mouse.c,v 1.76.2.1 2004/07/15 20:07:16 weiden Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -60,12 +60,12 @@ EnableMouse(HDC hDisplayDC)
     CurInfo->x = BitmapObj->SurfObj.sizlBitmap.cx / 2;
     CurInfo->y = BitmapObj->SurfObj.sizlBitmap.cy / 2;
     ExReleaseFastMutex(&CurInfo->CursorMutex);
-
+    
     GdiDev = GDIDEV(&BitmapObj->SurfObj);
     BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
     DC_UnlockDc( hDisplayDC );
-
-    IntSetCursor(InputWindowStation, NULL, TRUE);
+    
+    IntSetCursor(NULL, TRUE);
     
     CurInfo->Enabled = (SPS_ACCEPT_EXCLUDE == GdiDev->PointerStatus ||
                         SPS_ACCEPT_NOEXCLUDE == GdiDev->PointerStatus);
@@ -78,7 +78,7 @@ EnableMouse(HDC hDisplayDC)
   {
     if(IntGetWindowStationObject(InputWindowStation))
     {
-       IntSetCursor(InputWindowStation, NULL, TRUE);
+       IntSetCursor(NULL, TRUE);
        CurInfo->Enabled = FALSE;
        CurInfo->CursorClipInfo.IsClipped = FALSE;
        ObDereferenceObject(InputWindowStation);
@@ -98,7 +98,7 @@ MouseSafetyOnDrawStart(SURFOBJ *SurfObj, LONG HazardX1,
   LONG tmp;
   PSYSTEM_CURSORINFO CurInfo;
   BOOL MouseEnabled = FALSE;
-  PCURICON_OBJECT Cursor;
+  PCURSOR_OBJECT Cursor;
 
 
   /* Mouse is not allowed to move if GDI is busy drawing */
@@ -161,9 +161,9 @@ MouseSafetyOnDrawStart(SURFOBJ *SurfObj, LONG HazardX1,
         }
       CurInfo->SafetySwitch = TRUE;
       if (GDIDEVFUNCS(SurfObj).MovePointer)
-         GDIDEVFUNCS(SurfObj).MovePointer(SurfObj, -1, -1, NULL);
+        GDIDEVFUNCS(SurfObj).MovePointer(SurfObj, -1, -1, NULL);
       else
-         EngMovePointer(SurfObj, -1, -1, NULL);
+        EngMovePointer(SurfObj, -1, -1, NULL);
       ExReleaseFastMutex(&CurInfo->CursorMutex);
     }
     
@@ -231,9 +231,9 @@ MouseSafetyOnDrawEnd(SURFOBJ *SurfObj)
           return FALSE;
         }
       if (GDIDEVFUNCS(SurfObj).MovePointer)
-         GDIDEVFUNCS(SurfObj).MovePointer(SurfObj, CurInfo->x, CurInfo->y, &PointerRect);
+        GDIDEVFUNCS(SurfObj).MovePointer(SurfObj, CurInfo->x, CurInfo->y, &PointerRect);
       else
-         EngMovePointer(SurfObj, CurInfo->x, CurInfo->y, &PointerRect);
+        EngMovePointer(SurfObj, CurInfo->x, CurInfo->y, &PointerRect);
       SetPointerRect(CurInfo, &PointerRect);
       CurInfo->SafetySwitch = FALSE;
     }
@@ -591,13 +591,18 @@ EngSetPointerShape(
       HPALETTE BWPalette, DestPalette;
       ULONG BWColors[] = {0, 0xFFFFFF};
       PDC Dc;
+      PPALGDI PalObj;
+      LONG DestMode;
 
       BWPalette = EngCreatePalette(PAL_INDEXED, sizeof(BWColors) / sizeof(ULONG),
          BWColors, 0, 0, 0);
       Dc = DC_LockDc(IntGetScreenDC());
       DestPalette = Dc->w.hPalette;
+      PalObj = PALETTE_LockPalette(DestPalette);
+      DestMode = PalObj->Mode;
+      PALETTE_UnlockPalette(DestPalette);
       DC_UnlockDc(IntGetScreenDC());
-      ppdev->PointerXlateObject = IntEngCreateXlate(0, PAL_INDEXED,
+      ppdev->PointerXlateObject = IntEngCreateXlate(DestMode, PAL_INDEXED,
          DestPalette, BWPalette);
       EngDeletePalette(BWPalette);
    }
@@ -619,13 +624,27 @@ EngSetPointerShape(
 
       switch (pso->iBitmapFormat)
       {
-         case BMF_1BPP: lDelta = Size.cx >> 3; break;
-         case BMF_4BPP: lDelta = Size.cx >> 1; break;
-         case BMF_8BPP: lDelta = Size.cx; break;
-         case BMF_16BPP: lDelta = Size.cx << 1; break;
-         case BMF_24BPP: lDelta = Size.cx * 3; break; 
-         case BMF_32BPP: lDelta = Size.cx << 2; break;
-         default: lDelta = 0; break;
+         case BMF_1BPP:
+	   lDelta = Size.cx >> 3;
+	   break;
+         case BMF_4BPP:
+	   lDelta = Size.cx >> 1;
+	   break;
+         case BMF_8BPP:
+	   lDelta = Size.cx;
+	   break;
+         case BMF_16BPP:
+	   lDelta = Size.cx << 1;
+	   break;
+         case BMF_24BPP:
+	   lDelta = Size.cx * 3;
+	   break; 
+         case BMF_32BPP:
+	   lDelta = Size.cx << 2;
+	   break;
+         default:
+	   lDelta = 0;
+	   break;
       }
 
       ppdev->PointerSaveSurface = (HSURF)EngCreateBitmap(

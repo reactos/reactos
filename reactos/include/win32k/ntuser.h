@@ -5,14 +5,14 @@
 
 #define WM_SYSTIMER 280
 
-ULONG STDCALL
-NtUserGetSystemMetrics(ULONG Index);
+INT STDCALL
+NtUserGetSystemMetrics(INT Index);
 
 DWORD STDCALL
-NtUserGetClassLong(HWND hWnd, DWORD Offset, BOOL Ansi);
+NtUserGetClassLong(HWND hWnd, INT Offset, BOOL Ansi);
 
 LONG STDCALL
-NtUserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi);
+NtUserGetWindowLong(HWND hWnd, INT Index, BOOL Ansi);
 
 INT STDCALL
 NtUserReleaseDC(HWND hWnd, HDC hDc);
@@ -386,8 +386,8 @@ NtUserDestroyCursorIcon(
   HANDLE Handle,
   DWORD Unknown);
 
-BOOLEAN STDCALL
-NtUserDestroyWindow(HWND Wnd);
+BOOL STDCALL
+NtUserDestroyWindow(HWND hWnd);
 
 typedef struct tagNTUSERDISPATCHMESSAGEINFO
 {
@@ -836,7 +836,7 @@ NtUserGetUpdateRgn(
   HRGN hRgn,
   BOOL bErase);
 
-DWORD
+HDC
 STDCALL
 NtUserGetWindowDC(
   HWND hWnd);
@@ -894,20 +894,25 @@ NtUserInternalGetWindowText(
   LPWSTR lpString,
   INT nMaxCount);
 
-DWORD
+BOOL
 STDCALL
 NtUserInvalidateRect(
-HWND hWnd,
-CONST RECT *lpRect,
-BOOL bErase);
+  HWND hWnd,
+  CONST RECT *lpRect,
+  BOOL bErase);
 
-DWORD
+BOOL
 STDCALL
-  NtUserInvalidateRgn(
+NtUserInvalidateRgn(
   HWND hWnd,
   HRGN hRgn,
   BOOL bErase);
 
+BOOL
+STDCALL
+NtUserValidateRgn(
+  HWND hWnd,
+  HRGN hRgn);
 
 BOOL
 STDCALL
@@ -1240,7 +1245,7 @@ NtUserGetCapture(VOID);
 DWORD STDCALL
 NtUserSetClassLong(
   HWND  hWnd,
-  DWORD Offset,
+  INT Offset,
   LONG  dwNewLong,
   BOOL  Ansi );
 
@@ -1444,7 +1449,7 @@ LONG
 STDCALL
 NtUserSetWindowLong(
   HWND hWnd,
-  DWORD Index,
+  INT Index,
   LONG NewValue,
   BOOL Ansi);
 
@@ -1655,7 +1660,7 @@ STDCALL
 NtUserValidateHandleSecure(
   DWORD Unknown0);
 
-VOID STDCALL
+BOOL STDCALL
 NtUserValidateRect(HWND Wnd, const RECT* Rect);
 
 
@@ -1712,7 +1717,7 @@ HWND STDCALL
 NtUserGetParent(HWND hWnd);
 
 HWND STDCALL
-NtUserGetWindow(HWND hWnd, UINT Relationship);
+NtUserGetWindow(HWND hWnd, UINT uCmd);
 
 HWND STDCALL
 NtUserGetLastActivePopup(HWND hWnd);
