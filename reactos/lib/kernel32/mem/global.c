@@ -1,4 +1,4 @@
-/* $Id: global.c,v 1.18 2003/12/30 23:16:43 sedwards Exp $
+/* $Id: global.c,v 1.19 2004/01/21 18:57:21 navaraf Exp $
  *
  * Win32 Global/Local heap functions (GlobalXXX, LocalXXX).
  * These functions included in Win32 for compatibility with 16 bit Windows
@@ -364,11 +364,12 @@ GlobalMemoryStatus(LPMEMORYSTATUS lpBuffer)
 //    }
 //    cache_lastchecked = GetSystemTimeAsFileTime(NULL);
 
+    lpBuffer->dwLength        = sizeof(MEMORYSTATUS);
     lpBuffer->dwMemoryLoad    = 0;
-    lpBuffer->dwTotalPhys     = 16*1024*1024;
-    lpBuffer->dwAvailPhys     = 16*1024*1024;
-    lpBuffer->dwTotalPageFile = 16*1024*1024;
-    lpBuffer->dwAvailPageFile = 16*1024*1024;
+    lpBuffer->dwTotalPhys     = 32*1024*1024;
+    lpBuffer->dwAvailPhys     = 32*1024*1024;
+    lpBuffer->dwTotalPageFile = 32*1024*1024;
+    lpBuffer->dwAvailPageFile = 32*1024*1024;
 
     /* Some applications (e.g. QuickTime 6) crash if we tell them there
      * is more than 2GB of physical memory.
