@@ -16,9 +16,9 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: syscall.S,v 1.16 2004/07/02 00:47:57 royce Exp $
+/* $Id: syscall.S,v 1.17 2004/08/21 21:13:45 tamlin Exp $
  *
- * FILE:            ntoskrnl/hal/x86/syscall.s
+ * FILE:            ntoskrnl/ke/i386/syscall.S
  * PURPOSE:         2E trap handler
  * PROGRAMMER:      David Welch (david.welch@seh.ox.ac.uk)
  * UPDATE HISTORY:
