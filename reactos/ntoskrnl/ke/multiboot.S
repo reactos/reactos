@@ -7,13 +7,14 @@
 
 #define MULTIBOOT_HEADER_MAGIC (0x1BADB002)
 
-#define MULTIBOOT_HEADER_FLAGS (0x00010003) 
+#define MULTIBOOT_HEADER_FLAGS (0x00010003)
 
+.globl _NtProcessStartup
 .globl _start
 .globl _init_stack
 .globl _init_stack_top
 
-        /*
+	/*
 	 * This is called by the realmode loader, with protected mode
 	 * enabled, paging disabled and the segment registers pointing
 	 * a 4Gb, 32-bit segment starting at zero.
@@ -21,15 +22,16 @@
 	 *    EBX = Points to a structure in lowmem with data from the
 	 *    loader
 	 */
-	 
+
+_NtProcessStartup:
 _start:
-        jmp     _multiboot_entry
-         
+	jmp	_multiboot_entry
+
 	/* Align 32 bits boundary */
 	.align 4
 	
 	/* Multiboot header */
-multiboot_header:	
+multiboot_header:
 	/* magic */
 	.long MULTIBOOT_HEADER_MAGIC
 	/* flags */
@@ -46,84 +48,84 @@ multiboot_header:
 	.long (__bss_end__ + 0x200000 - KERNEL_BASE)
 	/* entry_addr */
 	.long (0x200000 + _start - KERNEL_BASE)
-	 
+
 _multiboot_entry:
 	/*
 	 * This	must be PIC because we haven't set up paging yet
 	 */
 	movl	$(startup_pagedirectory - 0xc0000000 + 0x200000), %edx
 	movl	%edx, %cr3
-        
+
 	/*
 	 * Enable paging
 	 */
 	movl	%cr0, %edx
 	orl	$0x80000000, %edx
 	movl	%edx, %cr0
-	movl    $l2, %edx
+	movl	$l2, %edx
 	jmp	*%edx
-l2:		
-        /*
+l2:
+	/*
 	 * Load the GDTR and IDTR with new tables located above
 	 * 0xc0000000
 	 */
-        lgdt    _gdt_descr
-	lidt    _idt_descr
-	
+	lgdt	_gdt_descr
+	lidt	_idt_descr
+
 	/*
 	 * Reload the data segment registers 
 	 */
-	movl    $KERNEL_DS, %edx
-	movl    %edx, %ds
-	movl    %edx, %es
-	movl    %edx, %fs
-	movl    %edx, %gs
-	movl    %edx, %ss
-	
+	movl	$KERNEL_DS, %edx
+	movl	%edx, %ds
+	movl	%edx, %es
+	movl	%edx, %fs
+	movl	%edx, %gs
+	movl	%edx, %ss
+
 	/*
 	 * Load the initial ring0 stack
 	 */
-	movl    $_init_stack_top, %esp
-	
+	movl	$_init_stack_top, %esp
+
 	/*
 	 * Initialize EFLAGS
 	 */
-	pushl  $0
+	pushl	$0
 	popfl
-	
+
 	/*
 	 * Gcc expects this at all times
 	 */
 	cld
-        
+
 	/*
 	 * Zero the BSS
 	 */
-	movl    %eax, %edx
-	movl    $0, %eax
-	movl    $__bss_end__, %ecx
-	subl    $__bss_start__, %ecx
-	movl    $__bss_start__, %edi
+	movl	%eax, %edx
+	movl	$0, %eax
+	movl	$__bss_end__, %ecx
+	subl	$__bss_start__, %ecx
+	movl	$__bss_start__, %edi
 	rep
 	stosl
-	
+
 	/*
 	 * Call the main ring0 initialization
 	 */
-	pushl   %ebx
-	pushl   %edx
-	pushl   $0
-	pushl   $KERNEL_CS
-	pushl   $__main
-        lret
-	
+	pushl	%ebx
+	pushl	%edx
+	pushl	$0
+	pushl	$KERNEL_CS
+	pushl	$__main
+	lret
+
 	/*
 	 * This needs to be page aligned so put it at the beginning of the data
 	 * segment
 	 */
 .data
-startup_pagedirectory:	
-        /* 0x00000000 */
+startup_pagedirectory:
+	/* 0x00000000 */
 	.long lowmem_pagetable - 0xc0000000 + 0x200000 + 0x7,0x000000,0x000000,0x000000,0x000000,0x000000,0x000000,0x000000
 	/* 0x02000000 */
 	.long 0x000000,0x000000,0x000000,0x000000,0x000000,0x000000,0x000000,0x000000
@@ -381,7 +383,7 @@ startup_pagedirectory:
 	.long 0x000000,0x000000,0x000000,0x000000,0x000000,0x000000,0x000000,0x000000
 
 
-kernel_pagetable:	
+kernel_pagetable:
 	.long 0x200007,0x201007,0x202007,0x203007,0x204007,0x205007,0x206007,0x207007
 	.long 0x208007,0x209007,0x20a007,0x20b007,0x20c007,0x20d007,0x20e007,0x20f007
 	.long 0x210007,0x211007,0x212007,0x213007,0x214007,0x215007,0x216007,0x217007
@@ -511,7 +513,7 @@ kernel_pagetable:
 	.long 0x000000,0x000000,0x000000,0x000000,0x000000,0x000000,0x000000,0x000000
 	.long 0x000000,0x000000,0x000000,0x000000,0x000000,0x000000,0x000000,0x000000
 
-lowmem_pagetable:	
+lowmem_pagetable:
 	.long 0x000007,0x001007,0x002007,0x003007,0x004007,0x005007,0x006007,0x007007
 	.long 0x008007,0x009007,0x00a007,0x00b007,0x00c007,0x00d007,0x00e007,0x00f007
 	.long 0x010007,0x011007,0x012007,0x013007,0x014007,0x015007,0x016007,0x017007
@@ -706,17 +708,14 @@ lowmem_pagetable:
 	.long 0x3f8007,0x3f9007,0x3fa007,0x3fb007,0x3fc007,0x3fd007,0x3fe007,0x3ff007
 
 _gdt_descr:
-        .word ((8+NR_TASKS)*8)-1
+	.word ((8+NR_TASKS)*8)-1
 	.long _KiGdt
 	
 _idt_descr:
-        .word (256*8)-1
+	.word (256*8)-1
 	.long _KiIdt
 	
 _init_stack:
-        .fill   4096,1,0
-_init_stack_top:	
-
-
-
+	.fill 4096,1,0
+_init_stack_top:
 

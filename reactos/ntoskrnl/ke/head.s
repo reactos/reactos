@@ -3,16 +3,12 @@
 #define NR_TASKS 128
 
 .globl _start
-.globl _mainCRTStartup
-.globl start
-.globl _DllMainCRTStartup@12
+.globl _NtProcessStartup
 .globl _init_stack
 .globl _init_stack_top
 
-_DllMainCRTStartup@12:
-_mainCRTStartup:
+_NtProcessStartup:
 _start:
-start:
         lidt    _idt_descr
         lgdt    _gdt_descr
 
