@@ -143,8 +143,15 @@ NTSTATUS ScrWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
     DeviceExtension = DeviceObject->DeviceExtension;
     vidmem  = DeviceExtension->VideoMemory;
-    cursorx = DeviceExtension->CursorX;
-    cursory = DeviceExtension->CursorY;
+//    cursorx = DeviceExtension->CursorX;
+//    cursory = DeviceExtension->CursorY;
+   outb_p(CRTC_COMMAND, CRTC_CURSORPOSHI);
+   offset = inb_p(CRTC_DATA)<<8;
+   outb_p(CRTC_COMMAND, CRTC_CURSORPOSLO);
+   offset += inb_p(CRTC_DATA);
+
+   cursory = offset / NR_COLUMNS;
+   cursorx = offset % NR_COLUMNS;
 
     for (i = 0; i < stk->Parameters.Write.Length; i++, pch++)
     {
