@@ -1,4 +1,4 @@
-/* $Id: session.c,v 1.3 2002/10/29 04:45:58 rex Exp $
+/* $Id: session.c,v 1.4 2003/12/21 20:11:46 ea Exp $
  *
  * PROJECT    : ReactOS / POSIX+ Environment Subsystem Server
  * FILE       : reactos/subsys/psx/server/port/session.c
@@ -40,7 +40,7 @@ ProcessConnectionRequest (PLPC_MAX_MESSAGE pRequest)
     HANDLE                 hConnectedPort;
     ULONG                  ulPortIdentifier;
 
-    debug_print (L"PSXSS: ->"__FUNCTION__);
+    debug_print (L"PSXSS: ->%s", TEXT(__FUNCTION__));
 
     /* Check if the caller is a terminal */
     Status = PsxCheckConnectionRequest (
@@ -60,7 +60,8 @@ ProcessConnectionRequest (PLPC_MAX_MESSAGE pRequest)
         if (!NT_SUCCESS(Status))
 	{
             debug_print(
-	        L"PSXSS: "__FUNCTION__": NtAcceptConnectPort failed with status=%08x",
+	        L"PSXSS: %s: NtAcceptConnectPort failed with status=%08x",
+		TEXT(__FUNCTION__),
 		Status
 		);
 	}
@@ -77,7 +78,7 @@ ProcessConnectionRequest (PLPC_MAX_MESSAGE pRequest)
 		);
     if (!NT_SUCCESS(Status))
     {
-        debug_print(L"PSXSS: "__FUNCTION__": NtAcceptConnectPort failed with status=%08x", Status);
+        debug_print(L"PSXSS: %s: NtAcceptConnectPort failed with status=%08x", TEXT(__FUNCTION__), Status);
         return Status;
     }
     /* OK, now create a new PSX_SESSION object */
@@ -88,16 +89,16 @@ ProcessConnectionRequest (PLPC_MAX_MESSAGE pRequest)
 		);
     if (!NT_SUCCESS(Status))
     {
-        debug_print(L"PSXSS: "__FUNCTION__": PsxCreateSession failed with status=%08x", Status);
+        debug_print(L"PSXSS: %s: PsxCreateSession failed with status=%08x", TEXT(__FUNCTION__), Status);
         return Status;
     }
     Status = NtCompleteConnectPort (hConnectedPort);
     if (!NT_SUCCESS(Status))
     {
-        debug_print(L"PSXSS: "__FUNCTION__": NtCompleteConnectPort failed with status=%08x", Status);
+        debug_print(L"PSXSS: %s: NtCompleteConnectPort failed with status=%08x", TEXT(__FUNCTION__), Status);
         return Status;
     }
-    debug_print (L"PSXSS: <-"__FUNCTION__);
+    debug_print (L"PSXSS: <-%s", TEXT(__FUNCTION__));
     return STATUS_SUCCESS;
 }
 /**********************************************************************
@@ -106,10 +107,10 @@ ProcessConnectionRequest (PLPC_MAX_MESSAGE pRequest)
 PRIVATE NTSTATUS STDCALL
 ProcessRequest (PPSX_MAX_MESSAGE pRequest)
 {
-    debug_print (L"PSXSS: ->"__FUNCTION__);
+    debug_print (L"PSXSS: ->%s", TEXT(__FUNCTION__));
     /* TODO: Read data from the section */
     /* TODO: send data to the process */
-    debug_print (L"PSXSS: <-"__FUNCTION__);
+    debug_print (L"PSXSS: <-%s", TEXT(__FUNCTION__));
     return STATUS_NOT_IMPLEMENTED;
 }
 /**********************************************************************
@@ -136,7 +137,7 @@ SessionPortListener (PVOID pArg)
     PPSX_MAX_MESSAGE Reply = NULL;
     BOOL             NullReply = FALSE;
 
-    debug_print (L"PSXSS: ->"__FUNCTION__" pArg=%d", ulIndex);
+    debug_print (L"PSXSS: ->%s pArg=%d", TEXT(__FUNCTION__), ulIndex);
 
     while (TRUE)
     {

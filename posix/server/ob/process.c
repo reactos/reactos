@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.3 2002/10/29 04:45:54 rex Exp $
+/* $Id: process.c,v 1.4 2003/12/21 20:11:46 ea Exp $
  * 
  * PROJECT    : ReactOS / POSIX+ Environment Subsystem Server
  * FILE       : reactos/subsys/psx/server/ob/session.c
@@ -33,9 +33,9 @@
 NTSTATUS STDCALL
 PsxInitializeProcesses (VOID)
 {
-    debug_print (L"PSXSS: ->"__FUNCTION__);
+    debug_print (L"PSXSS: ->%s", __FUNCTION__);
     /* TODO */
-    debug_print (L"PSXSS: <-"__FUNCTION__);
+    debug_print (L"PSXSS: <-%s", __FUNCTION__);
     return STATUS_SUCCESS;
 }
 /**********************************************************************
@@ -48,9 +48,9 @@ PsxCreateProcess (
     ULONG            ulPortIdentifier
     )
 {
-    debug_print (L"PSXSS: ->"__FUNCTION__);
+    debug_print (L"PSXSS: ->%s", __FUNCTION__);
     /* TODO */
-    debug_print (L"PSXSS: <-"__FUNCTION__);
+    debug_print (L"PSXSS: <-%s", __FUNCTION__);
     return STATUS_SUCCESS;
 }
 /* EOF */

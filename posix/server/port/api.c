@@ -1,4 +1,4 @@
-/* $Id: api.c,v 1.3 2002/10/29 04:45:58 rex Exp $
+/* $Id: api.c,v 1.4 2003/12/21 20:11:46 ea Exp $
  *
  * PROJECT    : ReactOS / POSIX+ Environment Subsystem Server
  * FILE       : reactos/subsys/psx/server/port/api.c
@@ -43,7 +43,7 @@ ProcessConnectionRequest (PLPC_MAX_MESSAGE pRequest)
     HANDLE                 hConnectedPort;
     ULONG                  ulPortIdentifier;
 
-    debug_print (L"PSXSS: ->"__FUNCTION__);
+    debug_print (L"PSXSS: ->%s", __FUNCTION__);
     /* Check if the caller is a process */
     Status = PsxCheckConnectionRequest (
                 pConnectData,
@@ -62,7 +62,8 @@ ProcessConnectionRequest (PLPC_MAX_MESSAGE pRequest)
         if (!NT_SUCCESS(Status))
 	{
             debug_print(
-	        L"PSXSS: "__FUNCTION__": NtAcceptConnectPort failed with status=%08x",
+	        L"PSXSS: %s: NtAcceptConnectPort failed with status=%08x",
+		__FUNCTION__,
 		Status
 		);
 	}
@@ -79,22 +80,22 @@ ProcessConnectionRequest (PLPC_MAX_MESSAGE pRequest)
 		);
     if (!NT_SUCCESS(Status))
     {
-        debug_print(L"PSXSS: "__FUNCTION__": NtAcceptConnectPort failed with status=%08x", Status);
+        debug_print(L"PSXSS: %s: NtAcceptConnectPort failed with status=%08x", __FUNCTION__, Status);
         return Status;
     }
     Status = PsxCreateProcess (pRequest,hConnectedPort,ulPortIdentifier);
     if (!NT_SUCCESS(Status))
     {
-        debug_print(L"PSXSS: "__FUNCTION__": PsxCreateProcess failed with status=%08x", Status);
+        debug_print(L"PSXSS: %s: PsxCreateProcess failed with status=%08x", __FUNCTION__, Status);
         return Status;
     }
     Status = NtCompleteConnectPort (hConnectedPort);
     if (!NT_SUCCESS(Status))
     {
-        debug_print(L"PSXSS: "__FUNCTION__": NtCompleteConnectPort failed with status=%08x", Status);
+        debug_print(L"PSXSS: %s: NtCompleteConnectPort failed with status=%08x", __FUNCTION__, Status);
         return Status;
     }
-    debug_print (L"PSXSS: <-"__FUNCTION__);
+    debug_print (L"PSXSS: <-%s", __FUNCTION__);
     return STATUS_SUCCESS;
 }
 /**********************************************************************
@@ -106,7 +107,7 @@ ProcessConnectionRequest (PLPC_MAX_MESSAGE pRequest)
 PRIVATE NTSTATUS STDCALL
 ProcessRequest (PPSX_MAX_MESSAGE pRequest)
 {
-    debug_print (L"PSXSS: ->"__FUNCTION__);
+    debug_print (L"PSXSS: ->%s", __FUNCTION__);
 
     if (pRequest->PsxHeader.Procedure < PSX_SYSCALL_APIPORT_COUNT)
     {
@@ -137,7 +138,7 @@ ApiPortListener (PVOID pArg)
     PPSX_MAX_MESSAGE Reply = NULL;
     BOOL             NullReply = FALSE;
 
-    debug_print (L"PSXSS: ->"__FUNCTION__" pArg=%d", ulIndex);
+    debug_print (L"PSXSS: ->%s pArg=%d", __FUNCTION__, ulIndex);
 
     while (TRUE)
     {

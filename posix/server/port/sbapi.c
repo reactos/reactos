@@ -1,4 +1,4 @@
-/* $Id: sbapi.c,v 1.3 2002/10/29 04:45:58 rex Exp $
+/* $Id: sbapi.c,v 1.4 2003/12/21 20:11:46 ea Exp $
  *
  * PROJECT    : ReactOS / POSIX+ Environment Subsystem Server
  * FILE       : reactos/subsys/psx/server/port/sbapi.c
@@ -62,7 +62,7 @@ SbApiPortListener (PVOID pArg)
     PSX_MAX_MESSAGE  Request;
     PPSX_MAX_MESSAGE Reply = NULL;
 
-    debug_print (L"PSXSS: ->"__FUNCTION__" pArg=%d", (ULONG) pArg);
+    debug_print (L"PSXSS: ->%s pArg=%d", TEXT(__FUNCTION__), (ULONG) pArg);
 
     RtlZeroMemory (& Request, sizeof Request);
     /* TODO */

@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.3 2002/10/29 04:45:58 rex Exp $
+/* $Id: utils.c,v 1.4 2003/12/21 20:11:46 ea Exp $
  *
  * PROJECT    : ReactOS / POSIX+ Environment Subsystem Server
  * FILE       : reactos/subsys/psx/server/port/utils.c
@@ -45,7 +45,8 @@ PsxCheckConnectionRequest (
     if (ConnectionType != pConnectData->ConnectionType)
     {
         debug_print(
-	    L"PSXSS: "__FUNCTION__": ConnectionType=%d, expected %d",
+	    L"PSXSS: %s: ConnectionType=%d, expected %d",
+	    TEXT(__FUNCTION__),
 	    pConnectData->ConnectionType,
 	    ConnectionType
 	    );
@@ -55,7 +56,8 @@ PsxCheckConnectionRequest (
     if (PSX_LPC_PROTOCOL_VERSION != pConnectData->Version)
     {
         debug_print(
-	    L"PSXSS: "__FUNCTION__": Version=%d, expected %d",
+	    L"PSXSS: %s: Version=%d, expected %d",
+	    TEXT(__FUNCTION__),
             pConnectData->Version,
 	    PSX_LPC_PROTOCOL_VERSION
 	    );

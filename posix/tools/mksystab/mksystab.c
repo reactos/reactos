@@ -1,4 +1,4 @@
-/* $Id: mksystab.c,v 1.1 2003/01/05 18:08:11 robd Exp $
+/* $Id: mksystab.c,v 1.2 2003/12/21 20:11:46 ea Exp $
  *
  * PROJECT    : ReactOS / POSIX+ Subsystem
  * DESCRIPTION: Build the system calls table for
@@ -185,8 +185,8 @@ METHOD_TYPE systab_iter (int self, PPARSER_CONTEXT context)
 
 METHOD_TYPE systab_epilog (int self, PPARSER_CONTEXT context)
 {
-    fprintf (mf[self].fp,  "0\n};\n");
-    fputs ("/* EOF */", mf[self].fp);
+    fprintf (mf[self].fp, "0\n};\n");
+    fprintf (mf[self].fp, "/* EOF */\n");
     return METHOD_SUCCESS;
 }
 
@@ -218,7 +218,7 @@ METHOD_TYPE server_include_iter (int self, PPARSER_CONTEXT context)
 METHOD_TYPE server_include_epilog (int self, PPARSER_CONTEXT context)
 {
     fprintf (mf[self].fp, "#endif /* ndef _SERVER_SYSCALL_H */\n");
-    fputs ("/* EOF */", mf[self].fp);
+    fprintf (mf[self].fp, "/* EOF */\n");
     return METHOD_SUCCESS;
 }
 
@@ -251,7 +251,7 @@ METHOD_TYPE psx_include_epilog (int self, PPARSER_CONTEXT context)
 {
     fprintf (mf[self].fp, "#define PSX_SYSCALL_APIPORT_COUNT %d\n", context->id ++);
     fprintf (mf[self].fp, "#endif /* ndef _PSX_SYSCALL_H */\n");
-    fputs ("/* EOF */", mf[self].fp);
+    fprintf (mf[self].fp, "/* EOF */\n");
     return METHOD_SUCCESS;
 }
 
@@ -287,7 +287,7 @@ METHOD_TYPE stubs_iter (int self, PPARSER_CONTEXT context)
 
 METHOD_TYPE stubs_epilog (int self, PPARSER_CONTEXT context)
 {
-    fputs ("/* EOF */", mf[self].fp);
+    fprintf (mf[self].fp, "/* EOF */\n");
     return METHOD_SUCCESS;
 }
 
