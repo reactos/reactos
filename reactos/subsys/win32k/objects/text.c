@@ -164,7 +164,7 @@ W32kCreateFont(int  Height,
                       DWORD  PitchAndFamily,
                       LPCWSTR  Face)
 {
-  LOGFONT logfont;
+  LOGFONTW logfont;
 
   logfont.lfHeight = Height;
   logfont.lfWidth = Width;
@@ -183,14 +183,14 @@ W32kCreateFont(int  Height,
   if(Face)
     memcpy(logfont.lfFaceName, Face, sizeof(logfont.lfFaceName));
   else
-    logfont.lfFaceName[0] = '\0';
+    logfont.lfFaceName[0] = L'\0';
 
   return W32kCreateFontIndirect(&logfont);
 }
 
 HFONT
 STDCALL
-W32kCreateFontIndirect(CONST LPLOGFONT  lf)
+W32kCreateFontIndirect(CONST LPLOGFONTW  lf)
 {
   HFONT hFont = 0;
   PTEXTOBJ fontPtr;
@@ -202,7 +202,7 @@ W32kCreateFontIndirect(CONST LPLOGFONT  lf)
 	  fontPtr = TEXTOBJ_LockText( hFont );
 	  ASSERT( fontPtr );  //I want to know when this happens
 	  if( fontPtr ){
-      	memcpy(&fontPtr->logfont, lf, sizeof(LOGFONT));
+      	memcpy(&fontPtr->logfont, lf, sizeof(LOGFONTW));
 
       	if (lf->lfEscapement != lf->lfOrientation) {
       	  /* this should really depend on whether GM_ADVANCED is set */
@@ -230,7 +230,7 @@ int
 STDCALL
 W32kEnumFontFamilies(HDC  hDC,
                           LPCWSTR  Family,
-                          FONTENUMPROC  EnumFontFamProc,
+                          FONTENUMPROCW  EnumFontFamProc,
                           LPARAM  lParam)
 {
   UNIMPLEMENTED;
@@ -239,8 +239,8 @@ W32kEnumFontFamilies(HDC  hDC,
 int
 STDCALL
 W32kEnumFontFamiliesEx(HDC  hDC,
-                            LPLOGFONT  Logfont,
-                            FONTENUMPROC  EnumFontFamExProc,
+                            LPLOGFONTW  Logfont,
+                            FONTENUMPROCW  EnumFontFamExProc,
                             LPARAM  lParam,
                             DWORD  Flags)
 {
@@ -251,7 +251,7 @@ int
 STDCALL
 W32kEnumFonts(HDC  hDC,
                    LPCWSTR FaceName,
-                   FONTENUMPROC  FontFunc,
+                   FONTENUMPROCW  FontFunc,
                    LPARAM  lParam)
 {
   UNIMPLEMENTED;
@@ -612,7 +612,7 @@ W32kTextOut(HDC  hDC,
 
   for(i=0; i<FontsLoaded; i++)
   {
-    if(wcscmp(FontTable[i].FaceName, (LPSTR)TextObj->logfont.lfFaceName) == 0)
+    if(wcscmp(FontTable[i].FaceName, TextObj->logfont.lfFaceName) == 0)
      hFont = FontTable[i].hFont;
   }
 

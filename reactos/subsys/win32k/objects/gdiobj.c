@@ -1,7 +1,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.21 2003/03/08 00:46:14 gvg Exp $
+ * $Id: gdiobj.c,v 1.22 2003/03/26 08:11:53 gvg Exp $
  *
  */
 
@@ -52,7 +52,7 @@ static LOGPEN BlackPen =
 static LOGPEN NullPen =
 { PS_NULL, { 0, 0 }, 0 };
 
-static LOGFONT OEMFixedFont =
+static LOGFONTW OEMFixedFont =
 { 0, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, OEM_CHARSET,
   0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"" };
 
@@ -61,38 +61,38 @@ static LOGFONT OEMFixedFont =
    segment, and (c) Solaris assembler is stupid.  */
 static UINT align_OEMFixedFont = 1;
 
-static LOGFONT AnsiFixedFont =
+static LOGFONTW AnsiFixedFont =
 { 0, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
   0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"" };
 
 static UINT align_AnsiFixedFont = 1;
 
-static LOGFONT AnsiVarFont =
+static LOGFONTW AnsiVarFont =
 { 0, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
   0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"MS Sans Serif" };
 
 static UINT align_AnsiVarFont = 1;
 
-static LOGFONT SystemFont =
+static LOGFONTW SystemFont =
 { 0, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
   0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"System" };
 
 static UINT align_SystemFont = 1;
 
-static LOGFONT DeviceDefaultFont =
+static LOGFONTW DeviceDefaultFont =
 { 0, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
   0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"" };
 
 static UINT align_DeviceDefaultFont = 1;
 
-static LOGFONT SystemFixedFont =
+static LOGFONTW SystemFixedFont =
 { 0, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
   0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"" };
 
 static UINT align_SystemFixedFont = 1;
 
 /* FIXME: Is this correct? */
-static LOGFONT DefaultGuiFont =
+static LOGFONTW DefaultGuiFont =
 { 0, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
   0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"MS Sans Serif" };
 

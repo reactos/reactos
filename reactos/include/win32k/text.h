@@ -5,7 +5,8 @@
 /* GDI logical font object */
 typedef struct
 {
-   LOGFONT    logfont;
+   LOGFONTW   logfont;
+   HFONT      GDIFontHandle;
 } TEXTOBJ, *PTEXTOBJ;
 
 /*  Internal interface  */
@@ -45,7 +46,7 @@ W32kCreateFont(int  Height,
 
 HFONT
 STDCALL
-W32kCreateFontIndirect(CONST LPLOGFONT lf);
+W32kCreateFontIndirect(CONST LPLOGFONTW lf);
 
 BOOL
 STDCALL
@@ -64,7 +65,7 @@ W32kEnumFontFamilies(HDC  hDC,
 int
 STDCALL
 W32kEnumFontFamiliesEx(HDC  hDC,
-                            LPLOGFONT  Logfont,
+                            LPLOGFONTW  Logfont,
                             FONTENUMPROC  EnumFontFamExProc,
                             LPARAM  lParam,
                             DWORD  Flags);

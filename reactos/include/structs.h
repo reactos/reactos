@@ -472,7 +472,7 @@ typedef struct {
   LPCTSTR      lpTemplateName;
 } CHOOSECOLOR, *LPCHOOSECOLOR;
 
-typedef struct tagLOGFONT {
+typedef struct tagLOGFONTA {
   LONG lfHeight;
   LONG lfWidth;
   LONG lfEscapement;
@@ -486,8 +486,8 @@ typedef struct tagLOGFONT {
   BYTE lfClipPrecision;
   BYTE lfQuality;
   BYTE lfPitchAndFamily;
-  TCHAR lfFaceName[LF_FACESIZE];
-} LOGFONT, *LPLOGFONT, *PLOGFONT;
+  CHAR lfFaceName[LF_FACESIZE];
+} LOGFONTA, *LPLOGFONTA, *PLOGFONTA;
 
 typedef struct tagLOGFONTW {
   LONG lfHeight;
@@ -506,24 +506,61 @@ typedef struct tagLOGFONTW {
   WCHAR lfFaceName[LF_FACESIZE];
 } LOGFONTW, *LPLOGFONTW, *PLOGFONTW;
 
-typedef struct {
+#ifdef UNICODE
+typedef LOGFONTW LOGFONT;
+typedef LPLOGFONTW LPLOGFONT;
+typedef PLOGFONTW PLOGFONT;
+#else
+typedef LOGFONTA LOGFONT;
+typedef LPLOGFONTA LPLOGFONT;
+typedef PLOGFONTA PLOGFONT;
+#endif
+
+typedef struct tagCHOOSEFONTA {
   DWORD        lStructSize;
   HWND         hwndOwner;
   HDC          hDC;
-  LPLOGFONT    lpLogFont;
+  LPLOGFONTA   lpLogFont;
   INT          iPointSize;
   DWORD        Flags;
   DWORD        rgbColors;
   LPARAM       lCustData;
   LPCFHOOKPROC lpfnHook;
-  LPCTSTR      lpTemplateName;
+  LPCSTR       lpTemplateName;
   HINSTANCE    hInstance;
-  LPTSTR       lpszStyle;
+  LPSTR        lpszStyle;
   WORD         nFontType;
   WORD         ___MISSING_ALIGNMENT__;
   INT          nSizeMin;
   INT          nSizeMax;
-} CHOOSEFONT, *LPCHOOSEFONT;
+} CHOOSEFONTA, *LPCHOOSEFONTA;
+
+typedef struct tagCHOOSEFONTW {
+  DWORD        lStructSize;
+  HWND         hwndOwner;
+  HDC          hDC;
+  LPLOGFONTW   lpLogFont;
+  INT          iPointSize;
+  DWORD        Flags;
+  DWORD        rgbColors;
+  LPARAM       lCustData;
+  LPCFHOOKPROC lpfnHook;
+  LPCWSTR      lpTemplateName;
+  HINSTANCE    hInstance;
+  LPWSTR        lpszStyle;
+  WORD         nFontType;
+  WORD         ___MISSING_ALIGNMENT__;
+  INT          nSizeMin;
+  INT          nSizeMax;
+} CHOOSEFONTW, *LPCHOOSEFONTW;
+
+#ifdef UNICODE
+typedef CHOOSEFONTW CHOOSEFONT;
+typedef LPCHOOSEFONTW LPCHOOSEFONT;
+#else
+typedef CHOOSEFONTA CHOOSEFONT;
+typedef LPCHOOSEFONTA LPCHOOSEFONT;
+#endif
 
 typedef struct _IDA {
   UINT cidl;
@@ -1283,24 +1320,45 @@ typedef struct tagPANOSE {
   BYTE bXHeight;
 } PANOSE;
 
-typedef struct tagEXTLOGFONT {
-    LOGFONT elfLogFont;
+typedef struct tagEXTLOGFONTA {
+    LOGFONTA elfLogFont;
     BCHAR    elfFullName[LF_FULLFACESIZE];
     BCHAR    elfStyle[LF_FACESIZE];
-    DWORD   elfVersion;
-    DWORD   elfStyleSize;
-    DWORD   elfMatch;
-    DWORD   elfReserved;
-    BYTE    elfVendorId[ELF_VENDOR_SIZE];
-    DWORD   elfCulture;
-    PANOSE  elfPanose;
-} EXTLOGFONT;
+    DWORD    elfVersion;
+    DWORD    elfStyleSize;
+    DWORD    elfMatch;
+    DWORD    elfReserved;
+    BYTE     elfVendorId[ELF_VENDOR_SIZE];
+    DWORD    elfCulture;
+    PANOSE   elfPanose;
+} EXTLOGFONTA, *LPEXTLOGFONTA;
+
+typedef struct tagEXTLOGFONTW {
+    LOGFONTW elfLogFont;
+    WCHAR    elfFullName[LF_FULLFACESIZE];
+    WCHAR    elfStyle[LF_FACESIZE];
+    DWORD    elfVersion;
+    DWORD    elfStyleSize;
+    DWORD    elfMatch;
+    DWORD    elfReserved;
+    BYTE     elfVendorId[ELF_VENDOR_SIZE];
+    DWORD    elfCulture;
+    PANOSE   elfPanose;
+} EXTLOGFONTW, *LPEXTLOGFONTW;
+
+#ifdef UNICODE
+typedef EXTLOGFONTW EXTLOGFONT;
+typedef LPEXTLOGFONTW LPEXTLOGFONT;
+#else
+typedef EXTLOGFONTA EXTLOGFONT;
+typedef LPEXTLOGFONTA LPEXTLOGFONT;
+#endif
 
 typedef struct tagEMREXTCREATEFONTINDIRECTW
 {
   EMR         emr;
   DWORD       ihFont;
-  EXTLOGFONT  elfw;
+  EXTLOGFONTW elfw;
 } EMREXTCREATEFONTINDIRECTW,
     PEMREXTCREATEFONTINDIRECTW;
 
@@ -1864,18 +1922,47 @@ typedef struct _ENUM_SERVICE_STATUSW {
 #define LPENUM_SERVICE_STATUS LPENUM_SERVICE_STATUSA
 #endif
 
-typedef struct tagENUMLOGFONT {
-  LOGFONT elfLogFont;
+typedef struct tagENUMLOGFONTA {
+  LOGFONTA elfLogFont;
   BCHAR    elfFullName[LF_FULLFACESIZE];
   BCHAR    elfStyle[LF_FACESIZE];
-} ENUMLOGFONT;
+} ENUMLOGFONTA, *LPENUMLOGFONTA;
 
-typedef struct tagENUMLOGFONTEX {
-  LOGFONT  elfLogFont;
-  BCHAR  elfFullName[LF_FULLFACESIZE];
-  BCHAR  elfStyle[LF_FACESIZE];
-  BCHAR  elfScript[LF_FACESIZE];
-} ENUMLOGFONTEX;
+typedef struct tagENUMLOGFONTW {
+  LOGFONTW elfLogFont;
+  WCHAR    elfFullName[LF_FULLFACESIZE];
+  WCHAR    elfStyle[LF_FACESIZE];
+} ENUMLOGFONTW, *LPENUMLOGFONTW;
+
+#ifdef UNICODE
+typedef ENUMLOGFONTW ENUMLOGFONT;
+typedef LPENUMLOGFONTW LPENUMLOGFONT;
+#else
+typedef ENUMLOGFONTA ENUMLOGFONT;
+typedef LPENUMLOGFONTA LPENUMLOGFONT;
+#endif
+
+typedef struct tagENUMLOGFONTEXA {
+  LOGFONTA elfLogFont;
+  BCHAR    elfFullName[LF_FULLFACESIZE];
+  BCHAR    elfStyle[LF_FACESIZE];
+  BCHAR    elfScript[LF_FACESIZE];
+} ENUMLOGFONTEXA, *LPENUMLOGFONTEXA;
+
+typedef struct tagENUMLOGFONTEXW {
+  LOGFONTW elfLogFont;
+  WCHAR    elfFullName[LF_FULLFACESIZE];
+  WCHAR    elfStyle[LF_FACESIZE];
+  WCHAR    elfScript[LF_FACESIZE];
+} ENUMLOGFONTEXW, *LPENUMLOGFONTEXW;
+
+#ifdef UNICODE
+typedef ENUMLOGFONTEXW ENUMLOGFONTEX;
+typedef LPENUMLOGFONTEXW LPENUMLOGFONTEX;
+#else
+typedef ENUMLOGFONTEXA ENUMLOGFONTEX;
+typedef LPENUMLOGFONTEXA LPENUMLOGFONTEX;
+#endif
 
 typedef struct _EVENTLOGRECORD {
   DWORD  Length;
@@ -2180,13 +2267,29 @@ typedef struct _ICONINFO {
   HBITMAP hbmColor;
 } ICONINFO, *PICONINFO;
 
-typedef struct tagICONMETRICS {
-  UINT    cbSize;
-  int     iHorzSpacing;
-  int     iVertSpacing;
-  int     iTitleWrap;
-  LOGFONT lfFont;
-} ICONMETRICS,   *LPICONMETRICS;
+typedef struct tagICONMETRICSA {
+  UINT     cbSize;
+  int      iHorzSpacing;
+  int      iVertSpacing;
+  int      iTitleWrap;
+  LOGFONTA lfFont;
+} ICONMETRICSA, *LPICONMETRICSA;
+
+typedef struct tagICONMETRICSW {
+  UINT     cbSize;
+  int      iHorzSpacing;
+  int      iVertSpacing;
+  int      iTitleWrap;
+  LOGFONTW lfFont;
+} ICONMETRICSW, *LPICONMETRICSW;
+
+#ifdef UNICODE
+typedef ICONMETRICSW ICONMETRICS;
+typedef LPICONMETRICSW LPICONMETRICS;
+#else
+typedef ICONMETRICSA ICONMETRICS;
+typedef LPICONMETRICSA LPICONMETRICS;
+#endif
 
 typedef struct _IMAGEINFO {
   HBITMAP hbmImage;
@@ -2832,23 +2935,49 @@ typedef struct _NM_UPDOWN {
   int  iDelta;
 } NM_UPDOWNW;
 
-typedef struct tagNONCLIENTMETRICS {
-  UINT    cbSize;
-  int     iBorderWidth;
-  int     iScrollWidth;
-  int     iScrollHeight;
-  int     iCaptionWidth;
-  int     iCaptionHeight;
-  LOGFONT lfCaptionFont;
-  int     iSmCaptionWidth;
-  int     iSmCaptionHeight;
-  LOGFONT lfSmCaptionFont;
-  int     iMenuWidth;
-  int     iMenuHeight;
-  LOGFONT lfMenuFont;
-  LOGFONT lfStatusFont;
-  LOGFONT lfMessageFont;
-} NONCLIENTMETRICS,  * LPNONCLIENTMETRICS;
+typedef struct tagNONCLIENTMETRICSA {
+  UINT     cbSize;
+  int      iBorderWidth;
+  int      iScrollWidth;
+  int      iScrollHeight;
+  int      iCaptionWidth;
+  int      iCaptionHeight;
+  LOGFONTA lfCaptionFont;
+  int      iSmCaptionWidth;
+  int      iSmCaptionHeight;
+  LOGFONTA lfSmCaptionFont;
+  int      iMenuWidth;
+  int      iMenuHeight;
+  LOGFONTA lfMenuFont;
+  LOGFONTA lfStatusFont;
+  LOGFONTA lfMessageFont;
+} NONCLIENTMETRICSA, *LPNONCLIENTMETRICSA;
+
+typedef struct tagNONCLIENTMETRICSW {
+  UINT     cbSize;
+  int      iBorderWidth;
+  int      iScrollWidth;
+  int      iScrollHeight;
+  int      iCaptionWidth;
+  int      iCaptionHeight;
+  LOGFONTW lfCaptionFont;
+  int      iSmCaptionWidth;
+  int      iSmCaptionHeight;
+  LOGFONTW lfSmCaptionFont;
+  int      iMenuWidth;
+  int      iMenuHeight;
+  LOGFONTW lfMenuFont;
+  LOGFONTW lfStatusFont;
+  LOGFONTW lfMessageFont;
+} NONCLIENTMETRICSW, *LPNONCLIENTMETRICSW;
+
+#ifdef UNICODE
+typedef NONCLIENTMETRICSW NONCLIENTMETRICS;
+typedef LPNONCLIENTMETRICSW LPNONCLIENTMETRICS;
+#else
+typedef NONCLIENTMETRICSA NONCLIENTMETRICS;
+typedef LPNONCLIENTMETRICSA LPNONCLIENTMETRICS;
+#endif
 
 typedef struct _SERVICE_ADDRESS {
   DWORD   dwAddressType;
@@ -4298,25 +4427,25 @@ typedef int CALLBACK (*ENUMMETAFILEPROC) (HDC, HANDLETABLE,
 typedef int CALLBACK (*ENHMETAFILEPROC) (HDC, HANDLETABLE,
 					 ENHMETARECORD, int, LPARAM);
 
-typedef int CALLBACK (*ENUMFONTSPROCA) (LPLOGFONT, LPTEXTMETRICA, DWORD, LPARAM);
-typedef int CALLBACK (*ENUMFONTSPROCW) (LPLOGFONT, LPTEXTMETRICW, DWORD, LPARAM);
+typedef int CALLBACK (*ENUMFONTSPROCA) (LPLOGFONTA, LPTEXTMETRICA, DWORD, LPARAM);
+typedef int CALLBACK (*ENUMFONTSPROCW) (LPLOGFONTW, LPTEXTMETRICW, DWORD, LPARAM);
 #ifdef UNICODE
 typedef ENUMFONTSPROCW ENUMFONTSPROC;
 #else
 typedef ENUMFONTSPROCA ENUMFONTSPROC;
 #endif
-typedef int CALLBACK (*FONTENUMPROCA) (ENUMLOGFONT *, NEWTEXTMETRICA *,
+typedef int CALLBACK (*FONTENUMPROCA) (ENUMLOGFONTA *, NEWTEXTMETRICA *,
 				       int, LPARAM);
-typedef int CALLBACK (*FONTENUMPROCW) (ENUMLOGFONT *, NEWTEXTMETRICW *,
+typedef int CALLBACK (*FONTENUMPROCW) (ENUMLOGFONTW *, NEWTEXTMETRICW *,
 				       int, LPARAM);
 #ifdef UNICODE
 typedef FONTENUMPROCW FONTENUMPROC;
 #else
 typedef FONTENUMPROCA FONTENUMPROC;
 #endif
-typedef int CALLBACK (*FONTENUMEXPROCA) (ENUMLOGFONTEX *, NEWTEXTMETRICEXA *,
+typedef int CALLBACK (*FONTENUMEXPROCA) (ENUMLOGFONTEXA *, NEWTEXTMETRICEXA *,
 				         int, LPARAM);
-typedef int CALLBACK (*FONTENUMEXPROCW) (ENUMLOGFONTEX *, NEWTEXTMETRICEXW *,
+typedef int CALLBACK (*FONTENUMEXPROCW) (ENUMLOGFONTEXW *, NEWTEXTMETRICEXW *,
 				         int, LPARAM);
 #ifdef UNICODE
 typedef FONTENUMEXPROCW FONTENUMEXPROC;

@@ -152,20 +152,20 @@ ExtTextOutW(
 HFONT
 STDCALL
 CreateFontIndirectA(
-	CONST LOGFONT		*lf
+	CONST LOGFONTA		*lf
 	)
 {
         ANSI_STRING StringA;
         UNICODE_STRING StringU;
 	HFONT ret;
-        LOGFONT tlf;
+        LOGFONTW tlf;
 
 	RtlInitAnsiString(&StringA, (LPSTR)lf->lfFaceName);
 	RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
-        memcpy(&tlf, lf, sizeof(LOGFONT));
+        memcpy(&tlf, lf, sizeof(LOGFONTA));
         memcpy(&tlf.lfFaceName, &StringU.Buffer, StringU.Length);
 
-        ret = CreateFontIndirectW((CONST LOGFONT *)&lf);
+        ret = CreateFontIndirectW(&tlf);
 
 	RtlFreeUnicodeString(&StringU);
 
@@ -175,10 +175,10 @@ CreateFontIndirectA(
 HFONT
 STDCALL
 CreateFontIndirectW(
-	CONST LOGFONT		*lf
+	CONST LOGFONTW		*lf
 	)
 {
-	return W32kCreateFontIndirect((CONST LPLOGFONT)lf);
+	return W32kCreateFontIndirect((CONST LPLOGFONTW)lf);
 }
 
 HFONT
