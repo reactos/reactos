@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.36 2004/07/06 22:07:26 gvg Exp $
+/* $Id: token.c,v 1.37 2004/07/13 08:43:35 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -827,39 +827,60 @@ NtDuplicateToken(IN HANDLE ExistingTokenHandle,
 		 IN TOKEN_TYPE TokenType,
 		 OUT PHANDLE NewTokenHandle)
 {
-   PACCESS_TOKEN Token;
-   PACCESS_TOKEN NewToken;
-   NTSTATUS Status;
-   ULONG ExistingImpersonationLevel;
-   
-   Status = ObReferenceObjectByHandle(ExistingTokenHandle,
-				      TOKEN_DUPLICATE,
-				      SepTokenObjectType,
-				      UserMode,
-				      (PVOID*)&Token,
-				      NULL);
-   if (!NT_SUCCESS(Status))
+  KPROCESSOR_MODE PreviousMode;
+  PACCESS_TOKEN Token;
+  PACCESS_TOKEN NewToken;
+  NTSTATUS Status;
+  ULONG ExistingImpersonationLevel;
+
+  PreviousMode = KeGetPreviousMode();
+  Status = ObReferenceObjectByHandle(ExistingTokenHandle,
+				     TOKEN_DUPLICATE,
+				     SepTokenObjectType,
+				     PreviousMode,
+				     (PVOID*)&Token,
+				     NULL);
+  if (!NT_SUCCESS(Status))
     {
-      DPRINT1 ("Failed to reference token (Status %lx)\n", Status);
-      return Status;
-    }
-   
-   ExistingImpersonationLevel = Token->ImpersonationLevel;
-   Status = SepDuplicateToken(Token,
-		     ObjectAttributes,
-		     ImpersonationLevel,
-		     TokenType,
-		     ExistingImpersonationLevel,
-		     KeGetPreviousMode(),
-		     &NewToken);
-   if (!NT_SUCCESS(Status))
-    {
-      DPRINT1 ("Failed to duplicate token (Status %lx)\n", Status);
+      DPRINT1("Failed to reference token (Status %lx)\n", Status);
       return Status;
     }
 
-   return STATUS_SUCCESS;
+  ExistingImpersonationLevel = Token->ImpersonationLevel;
+  Status = SepDuplicateToken(Token,
+			     ObjectAttributes,
+			     TokenType,
+			     ImpersonationLevel,
+			     ExistingImpersonationLevel,
+			     PreviousMode,
+			     &NewToken);
+
+  ObDereferenceObject(Token);
+
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("Failed to duplicate token (Status %lx)\n", Status);
+      return Status;
+    }
+
+  Status = ObInsertObject((PVOID)NewToken,
+			  NULL,
+			  DesiredAccess,
+			  0,
+			  NULL,
+			  NewTokenHandle);
+
+  ObDereferenceObject(NewToken);
+
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("Failed to create token handle (Status %lx)\n");
+      return Status;
+    }
+
+  return STATUS_SUCCESS;
 }
+
 
 VOID SepAdjustGroups(PACCESS_TOKEN Token,
 		     ULONG a,
