@@ -4,6 +4,6 @@
  * unistd.h maps (roughly) to io.h
  */
 #ifndef __STRICT_ANSI__
-#include <msvcrt/io.h>
+#include <crtdll/io.h>
 #endif
 
