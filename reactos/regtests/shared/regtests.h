@@ -24,8 +24,18 @@
  */
 typedef int (*TestRoutine)(int Command, char *Buffer);
 
-/* Test driver entry routine */
-typedef VOID STDCALL (*TestDriverMain)(); 
+/*
+ * Test output routine prototype
+ * Buffer - Address of buffer with text to output
+ */
+typedef void (*TestOutputRoutine)(char *Buffer);
+
+/*
+ * Test driver entry routine.
+*  OutputRoutine - Output routine.
+ * TestName - If NULL all tests are run. If non-NULL specifies the test to be run
+ */
+typedef void STDCALL (*TestDriverMain)(TestOutputRoutine OutputRoutine, char *TestName);
 
 typedef struct _ROS_TEST
 {
@@ -37,7 +47,7 @@ extern LIST_ENTRY AllTests;
 
 extern VOID InitializeTests();
 extern VOID RegisterTests();
-extern VOID PerformTests();
+extern VOID PerformTests(TestOutputRoutine OutputRoutine, LPSTR TestName);
 
 /* Routines provided by the driver */
 extern PVOID AllocateMemory(ULONG Size);

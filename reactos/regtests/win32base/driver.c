@@ -55,15 +55,15 @@ RunPrivateTests(LPTSTR FileName)
       /*
        * The module is a core OS component that is already
        * mapped into the current process.
-	   * NOTE: This will cause all core OS components that are already mapped
-	   * into the process to run their regression tests.
+	     * NOTE: This will cause all core OS components that are already mapped
+	     * into the process to run their regression tests.
        */
       hThread = CreateThread(NULL, 0, DummyThreadMain, NULL, 0, NULL);
       if (hThread != NULL)
         {
           DWORD ErrorCode;
-		  ErrorCode = WaitForSingleObject(hEvent, 5000); /* Wait up to 5 seconds */
-	      CloseHandle(hThread);
+		      ErrorCode = WaitForSingleObject(hEvent, 5000); /* Wait up to 5 seconds */
+	        CloseHandle(hThread);
         }
 	}
   else
@@ -81,12 +81,13 @@ RunPrivateTests(LPTSTR FileName)
 
 
 VOID STDCALL
-RegTestMain()
+RegTestMain(TestOutputRoutine OutputRoutine, LPSTR TestName)
 {
   /*
    * Private module regression tests in components already mapped
    * (ntdll.dll, kernel32.dll, msvcrt.dll)
    */
+  /* FIXME: Need to pass TestName to the driver */
   RunPrivateTests(_T("ntdll.dll"));
 
   /* Other private module regression tests */
@@ -94,5 +95,5 @@ RegTestMain()
   /* Cross-module regression tests */
   InitializeTests();
   RegisterTests();
-  PerformTests();
+  PerformTests(OutputRoutine, TestName);
 }

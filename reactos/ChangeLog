@@ -1,3 +1,29 @@
+2004-03-09  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* regtests/Makefile: Make REGTEST_TARGETS depend on *.c.
+	* regtests/kmregtests/driver.c: Update call to PerformTests().
+	* regtests/kmrtint/kmrtint.c (RegTestMain): Update to match prototype.
+	* regtests/kmrtint/kmrtint.def (RegTestMain): Ditto.
+	* regtests/kmrtint/kmrtint.edf (RegTestMain): Ditto.
+	* regtests/win32base/tests/ws2event.c: New file.
+	* regtests/regtests/regtests.c (OUPUT_MODE_DbgPrint,
+	OUPUT_MODE_OutputDebugString, OUPUT_MODE_printf): Define.
+	(OutputMode): New variable.
+	(OutputRoutine): New function.
+	(RunTestDriver): Add TestName parameter.
+	(main): Parse command line to find output routine and test name.
+	* regtests/shared/regtests.c (PerformTest): Use specified output routine
+	if specified. Run only specified test if specified.
+	(PerformTests): Update call to PerformTest().
+	* regtests/shared/regtests.h (TestOutputRoutine): Add prototype.
+	(TestDriverMain): Add OutputRoutine and TestName parameter.
+	(PerformTests): Ditto.
+	* regtests/win32base/Makefile (TARGET_SDKLIBS): Add ws2_32.a.
+	* regtests/win32base/driver.c (RegTestMain): Update to match prototype.
+	* regtests/win32base/win32base.def (RegTestMain): Ditto.
+	* regtests/win32base/win32base.edf (RegTestMain): Ditto.
+	* tools/regtests.c (UMSTUB): Update call to PerformTests().
+
 2004-03-04  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* drivers/net/tcpip/tcpip/i386: New directory.

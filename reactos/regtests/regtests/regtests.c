@@ -7,11 +7,34 @@
  *      06-07-2003  CSH  Created
  */
 #define NTOS_MODE_USER
+#include <stdio.h>
 #include <ntos.h>
 #include "regtests.h"
 
-VOID
-RunTestDriver(LPTSTR FileName)
+#define OUPUT_MODE_DbgPrint 0
+#define OUPUT_MODE_OutputDebugString 1
+#define OUPUT_MODE_printf 2
+
+static int OutputMode = 0;
+
+static void OutputRoutine(char *Buffer)
+{
+  if (OutputMode == OUPUT_MODE_DbgPrint)
+    {
+      DbgPrint(Buffer);
+    }
+  else if (OutputMode == OUPUT_MODE_OutputDebugString)
+    {
+      OutputDebugString(Buffer);
+    }
+  else if (OutputMode == OUPUT_MODE_printf)
+    {
+      printf(Buffer);
+    }
+}
+
+static VOID
+RunTestDriver(LPSTR FileName, LPSTR TestName)
 {
   TestDriverMain Main;
   HMODULE hModule;
@@ -20,9 +43,9 @@ RunTestDriver(LPTSTR FileName)
   if (hModule != NULL) 
     { 
         Main = (TestDriverMain) GetProcAddress(hModule, "RegTestMain");
-        if (Main != NULL) 
+        if (Main != NULL)
           {
-            (Main)(); 
+            (Main)(OutputRoutine, TestName);
           }
         FreeLibrary(hModule); 
     }
@@ -31,7 +54,36 @@ RunTestDriver(LPTSTR FileName)
 int
 main(int argc, char* argv[])
 {
-  RunTestDriver("win32base.dll");
-  RunTestDriver("kmrtint.dll");
+  LPSTR testname = NULL;
+  int i;
+
+  if (argc > 1)
+    {
+      i = 1;
+      if (argv[i][0] == '-')
+        {
+          switch (argv[i][1])
+            {
+              case 'd':
+                OutputMode = OUPUT_MODE_DbgPrint;
+                break;
+              case 'o':
+                OutputMode = OUPUT_MODE_OutputDebugString;
+                break;
+              case 'p':
+                OutputMode = OUPUT_MODE_printf;
+                break;
+              default:
+                printf("Usage: regtests [-dop] [testname]");
+                return 0;
+            }
+          i++;
+        }
+
+      testname = argv[i];
+    }
+
+  RunTestDriver("win32base.dll", testname);
+  RunTestDriver("kmrtint.dll", testname);
   return 0;
 }

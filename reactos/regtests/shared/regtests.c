@@ -7,6 +7,7 @@
  *      06-07-2003  CSH  Created
  */
 #include <roscfg.h>
+#include <stdio.h>
 #define NTOS_MODE_USER
 #include <ntos.h>
 #include "regtests.h"
@@ -40,18 +41,31 @@ InitializeTests()
 }
 
 VOID
-PerformTest(PROS_TEST Test)
+PerformTest(TestOutputRoutine OutputRoutine, PROS_TEST Test, LPSTR TestName)
 {
-  char TestName[200];
+  char OutputBuffer[200];
   char Buffer[200];
+  char Name[200];
   int Result;
 
-  memset(TestName, 0, sizeof(TestName));
+  memset(Name, 0, sizeof(Name));
   memset(Buffer, 0, sizeof(Buffer));
 
-  if (!((Test->Routine)(TESTCMD_TESTNAME, TestName) == 0))
+  if (!((Test->Routine)(TESTCMD_TESTNAME, Name) == 0))
     {
-      strcpy(TestName, "Unnamed");
+      if (TestName != NULL)
+        {
+          return;
+        }
+      strcpy(Name, "Unnamed");
+    }
+
+  if (TestName != NULL)
+    {
+      if (_stricmp(Name, TestName) != 0)
+        {
+          return;
+        }
     }
 
 #ifdef SEH
@@ -67,16 +81,24 @@ PerformTest(PROS_TEST Test)
 
   if (Result != TS_OK)
     {
-      DbgPrint("ROSREGTEST: (%s) Status: Failed (%s)\n", TestName, Buffer);
+      sprintf(OutputBuffer, "ROSREGTEST: (%s) Status: Failed (%s)\n", Name, Buffer);
     }
   else
     {
-      DbgPrint("ROSREGTEST: (%s) Status: Success\n", TestName);
+      sprintf(OutputBuffer, "ROSREGTEST: (%s) Status: Success\n", Name);
+    }
+  if (OutputRoutine != NULL)
+    {
+      (*OutputRoutine)(OutputBuffer);
+    }
+  else
+    {
+      DbgPrint(OutputBuffer);
     }
 }
 
 VOID
-PerformTests()
+PerformTests(TestOutputRoutine OutputRoutine, LPSTR TestName)
 {
   PLIST_ENTRY CurrentEntry;
   PLIST_ENTRY NextEntry;
@@ -87,7 +109,7 @@ PerformTests()
     {
       NextEntry = CurrentEntry->Flink;
       Current = CONTAINING_RECORD(CurrentEntry, ROS_TEST, ListEntry);
-      PerformTest(Current);
+      PerformTest(OutputRoutine, Current, TestName);
       CurrentEntry = NextEntry;
     }
 }

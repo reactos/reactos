@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2004/02/22 18:53:39 dwelch Exp $
+# $Id: Makefile,v 1.4 2004/03/09 22:08:04 chorns Exp $
 
 PATH_TO_TOP = ..
 
@@ -27,7 +27,7 @@ install:
 	$(MAKE) -C kmrtint install
 	$(MAKE) -C regtests install
 
-$(REGTEST_TARGETS): kmregtests/tests/* win32base/tests/*
+$(REGTEST_TARGETS): kmregtests/tests/*.c win32base/tests/*.c
 	$(REGTESTS) ./kmregtests/tests ./kmregtests/_regtests.c ./kmregtests/Makefile.tests
 	$(REGTESTS) ./win32base/tests ./win32base/_regtests.c ./win32base/Makefile.tests
 

@@ -480,7 +480,7 @@ static char UMSTUB[] =
   "	         testsRegistered = 1;\n"
   "          InitializeTests();\n"
   "          RegisterTests();\n"
-  "          PerformTests();\n"
+  "          PerformTests(NULL, NULL);\n"
   "        }\n"
   "    }\n"
   "}\n";

@@ -60,7 +60,7 @@ KMRegTestsRun(
   PIRP Irp,
   PIO_STACK_LOCATION IrpSp)
 {
-  PerformTests();
+  PerformTests(NULL, NULL);
   ShutdownBochs();
 
   Irp->IoStatus.Status = STATUS_SUCCESS;

@@ -53,7 +53,7 @@ OpenDevice()
 }
 
 VOID STDCALL
-RegTestMain()
+RegTestMain(TestOutputRoutine OutputRoutine, LPSTR TestName)
 {
   IO_STATUS_BLOCK Iosb;
   HANDLE DeviceHandle;
