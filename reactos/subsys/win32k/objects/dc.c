@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.92 2003/10/28 19:30:08 gvg Exp $
+/* $Id: dc.c,v 1.93 2003/10/29 22:46:56 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -1656,6 +1656,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
   PPALGDI PalGDI;
   DWORD objectType;
   COLORREF *ColorMap;
+  COLORREF MonoColorMap[2];
   ULONG NumColors, Index;
   HRGN hVisRgn;
   USHORT Mode;
@@ -1806,6 +1807,12 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       else
       {
         dc->w.bitsPerPixel = pb->bitmap.bmBitsPixel;
+        if (1 == dc->w.bitsPerPixel)
+          {
+            MonoColorMap[0] = RGB(0, 0, 0);
+            MonoColorMap[1] = RGB(255, 255, 255);
+            dc->w.hPalette = PALETTE_AllocPalette(PAL_INDEXED, 2, MonoColorMap, 0, 0, 0);
+          }
       }
 
       DC_UnlockDc ( hDC );
