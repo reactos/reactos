@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: paint.c,v 1.19 2003/12/08 18:21:24 navaraf Exp $
+/* $Id: paint.c,v 1.20 2003/12/28 17:22:16 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -36,11 +36,12 @@
 
 static HBRUSH FrameBrushes[13];
 static HBITMAP hHatch;
+const DWORD HatchBitmap[4] = {0x5555AAAA, 0x5555AAAA, 0x5555AAAA, 0x5555AAAA};
 
 /* FUNCTIONS *****************************************************************/
 
-static VOID 
-CreateFrameBrushes()
+VOID 
+CreateFrameBrushes(VOID)
 {
   FrameBrushes[0] = CreateSolidBrush(RGB(0,0,0));
   FrameBrushes[1] = CreateSolidBrush(RGB(0,0,128));
@@ -54,7 +55,7 @@ CreateFrameBrushes()
   FrameBrushes[9] = CreateSolidBrush(RGB(58,110,165));
   FrameBrushes[10] = CreateSolidBrush(RGB(64,64,64));
   FrameBrushes[11] = CreateSolidBrush(RGB(255,255,225));
-  hHatch = LoadBitmapW(NULL,MAKEINTRESOURCEW(DF_HATCH));
+  hHatch = CreateBitmap(8, 8, 1, 1, HatchBitmap);
   FrameBrushes[12] = CreatePatternBrush(hHatch);
 }
 

@@ -26,6 +26,7 @@ typedef struct _THRDCARETINFO
   BYTE Showing;
 } THRDCARETINFO, *PTHRDCARETINFO;
 
+VOID CreateFrameBrushes(VOID);
 VOID DeleteFrameBrushes(VOID);
 void DrawCaret(HWND hWnd, PTHRDCARETINFO CaretInfo);
 

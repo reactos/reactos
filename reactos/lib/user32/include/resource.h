@@ -5,8 +5,6 @@
  * PURPOSE:     Definition of resource ids
  */
 
-#define DF_HATCH	30000
-
 #define IDS_ERROR	(2)
 #define IDS_OK	(800)
 #define IDS_CANCEL	(801)
