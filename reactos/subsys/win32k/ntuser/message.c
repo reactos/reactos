@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.6 2002/06/06 17:50:16 jfilby Exp $
+/* $Id: message.c,v 1.7 2002/07/04 19:56:37 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -21,8 +21,9 @@
 #include <include/object.h>
 #include <include/winsta.h>
 #include <include/callback.h>
+#include <include/painting.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -44,6 +45,9 @@ LRESULT STDCALL
 NtUserDispatchMessage(LPMSG lpMsg)
 {
   LRESULT Result;
+  ULONG PaintingFlag;
+  PWINDOW_OBJECT WindowObject;
+  NTSTATUS Status;
 
   /* Process timer messages. */
   if (lpMsg->message == WM_TIMER)
@@ -62,20 +66,38 @@ NtUserDispatchMessage(LPMSG lpMsg)
 	}
     }
 
-  /* 
-   * FIXME: Check for valid window handle, valid window and valid window 
-   * proc. 
-   */
+  /* Get the window object. */
+  Status = 
+    ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->HandleTable,
+			       lpMsg->hwnd,
+			       otWindow,
+			       (PVOID*)&WindowObject);
+  if (!NT_SUCCESS(Status))
+    {
+      return(0);
+    }
 
   /* FIXME: Check for paint message. */
+  PaintingFlag = (lpMsg->message == WM_PAINT);
+  if (PaintingFlag)
+    {
+      WindowObject->Flags |= WINDOWOBJECT_NEED_BEGINPAINT;
+    }
 
+  /* FIXME: Call hook procedures. */
+
+  /* Call the window procedure. */
   Result = W32kCallWindowProc(NULL /* WndProc */,
 			      lpMsg->hwnd,
 			      lpMsg->message,
 			      lpMsg->wParam,
 			      lpMsg->lParam);
 
-  /* FIXME: Check for paint message. */
+  if (PaintingFlag && WindowObject->Flags & WINDOWOBJECT_NEED_BEGINPAINT &&
+      WindowObject->UpdateRegion)
+    {
+      DbgBreakPoint();
+    }
 
   return(Result);
 }
@@ -108,7 +130,8 @@ NtUserGetMessage(LPMSG lpMsg,
 
   do
     {
-      /* FIXME: Dispatch sent messages here. */
+      /* Dispatch sent messages here. */
+      while (MsqDispatchOneSentMessage(ThreadQueue));
       
       /* Now look for a quit message. */
       /* FIXME: WINE checks the message number filter here. */
@@ -152,9 +175,17 @@ NtUserGetMessage(LPMSG lpMsg,
 	  return(TRUE);
 	}
 
-      /* FIXME: Check for sent messages again. */
+      /* Check for sent messages again. */
+      while (MsqDispatchOneSentMessage(ThreadQueue));
 
-      /* FIXME: Check for paint messages. */
+      /* Check for paint messages. */
+      if (ThreadQueue->PaintPosted)
+	{
+	  lpMsg->hwnd = PaintingFindWinToRepaint(hWnd, PsGetWin32Thread());
+	  lpMsg->message = WM_PAINT;
+	  lpMsg->wParam = lpMsg->lParam = 0;
+	  return(TRUE); 
+	}
 
       /* Nothing found so far. Wait for new messages. */
       Status = MsqWaitForNewMessages(ThreadQueue);
@@ -293,12 +324,71 @@ NtUserQuerySendMessage(DWORD Unknown0)
   return 0;
 }
 
-BOOL STDCALL
+LRESULT STDCALL
 NtUserSendMessage(HWND hWnd,
 		  UINT Msg,
-		  WPARAM Wparam,
+		  WPARAM wParam,
 		  LPARAM lParam)
 {
+  LRESULT Result;
+  NTSTATUS Status;
+  PWINDOW_OBJECT Window;
+
+  /* FIXME: Check for a broadcast or topmost destination. */
+
+  /* FIXME: Call hooks. */
+
+  Status = 
+    ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->HandleTable,
+			       hWnd,
+			       otWindow,
+			       (PVOID*)&Window);
+  if (!NT_SUCCESS(Status))
+    {
+      return(FALSE);
+    }
+
+  /* FIXME: Check for an exiting window. */
+
+  if (Window->MessageQueue == PsGetWin32Thread()->MessageQueue)
+    {
+      Result = W32kCallWindowProc(NULL, hWnd, Msg, wParam, lParam);
+      return(Result);
+    }
+  else
+    {
+      PUSER_SENT_MESSAGE Message;
+      PKEVENT CompletionEvent;
+      
+      CompletionEvent = ExAllocatePool(NonPagedPool, sizeof(KEVENT));
+      KeInitializeEvent(CompletionEvent, NotificationEvent, FALSE);
+
+      Message = ExAllocatePool(NonPagedPool, sizeof(USER_SENT_MESSAGE));
+      Message->Msg.hwnd = hWnd;
+      Message->Msg.message = Msg;
+      Message->Msg.wParam = wParam;
+      Message->Msg.lParam = lParam;
+      Message->CompletionEvent = CompletionEvent;
+      Message->Result = &Result;
+      Message->CompletionQueue = NULL;
+      Message->CompletionCallback = NULL;
+      MsqSendMessage(Window->MessageQueue, Message);
+
+      ObmDereferenceObject(Window);
+      Status = KeWaitForSingleObject(CompletionEvent,
+				     UserRequest,
+				     UserMode,
+				     FALSE,
+				     NULL);
+      if (Status == STATUS_WAIT_0)
+	{
+	  return(Result);
+	}
+      else
+	{
+	  return(FALSE);
+	}
+    }
 }
 
 BOOL STDCALL
@@ -309,9 +399,7 @@ NtUserSendMessageCallback(HWND hWnd,
 			  SENDASYNCPROC lpCallBack,
 			  ULONG_PTR dwData)
 {
-  UNIMPLEMENTED;
-  
-  return 0;
+  return(0);
 }
 
 BOOL STDCALL

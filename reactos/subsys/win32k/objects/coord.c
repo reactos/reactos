@@ -1,13 +1,23 @@
+/* $Id: coord.c,v 1.7 2002/07/04 19:56:37 dwelch Exp $
+ *
+ * COPYRIGHT:        See COPYING in the top level directory
+ * PROJECT:          ReactOS kernel
+ * PURPOSE:          Coordinate systems
+ * FILE:             subsys/win32k/objects/coord.c
+ * PROGRAMER:        Unknown
+ */
 
+/* INCLUDES ******************************************************************/
 
-#undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <win32k/coord.h>
 #include <win32k/dc.h>
 
-// #define NDEBUG
+//#define NDEBUG
 #include <win32k/debug1.h>
+
+/* FUNCTIONS *****************************************************************/
 
 BOOL STDCALL W32kCombineTransform(LPXFORM  XFormResult,
                            CONST LPXFORM  xform1,
@@ -35,11 +45,37 @@ BOOL STDCALL W32kCombineTransform(LPXFORM  XFormResult,
   return  TRUE;
 }
 
-BOOL STDCALL W32kDPtoLP(HDC  hDC,
-                 LPPOINT  Points,
-                 int  Count)
+VOID STATIC
+CoordDPtoLP(PDC Dc, LPPOINT Point)
+{ 
+FLOAT x, y;
+  x = (FLOAT)Point->x;
+  y = (FLOAT)Point->y;
+  Point->x = x * Dc->w.xformVport2World.eM11 +
+    y * Dc->w.xformVport2World.eM21 + Dc->w.xformVport2World.eDx;
+  Point->y = x * Dc->w.xformVport2World.eM12 +
+    y * Dc->w.xformVport2World.eM22 + Dc->w.xformVport2World.eDy; 
+}
+
+BOOL STDCALL 
+W32kDPtoLP(HDC  hDC,
+	   LPPOINT  Points,
+	   int  Count)
 {
-  UNIMPLEMENTED;
+  PDC Dc;  
+  ULONG i;
+  
+  Dc = DC_HandleToPtr (hDC);
+  if (Dc == NULL || !Dc->w.vport2WorldValid) 
+    {
+      return(FALSE);
+    }
+  
+  for (i = 0; i < Count; i++)
+    {
+      CoordDPtoLP(Dc, &Points[i]);
+    }
+  return(TRUE);
 }
 
 int
@@ -81,13 +117,35 @@ W32kGetWorldTransform(HDC  hDC,
   return  TRUE;
 }
 
-BOOL
-STDCALL
-W32kLPtoDP(HDC  hDC,
-                 LPPOINT  Points,
-                 int  Count)
+VOID STATIC
+CoordLPtoDP(PDC Dc, LPPOINT Point)
 {
-  UNIMPLEMENTED;
+  FLOAT x, y;
+  x = (FLOAT)Point->x;
+  y = (FLOAT)Point->y;
+  Point->x = x * Dc->w.xformWorld2Vport.eM11 +
+    y * Dc->w.xformWorld2Vport.eM21 + Dc->w.xformWorld2Vport.eDx;
+  Point->y = x * Dc->w.xformWorld2Vport.eM12 +
+    y * Dc->w.xformWorld2Vport.eM22 + Dc->w.xformWorld2Vport.eDy;
+}
+
+BOOL STDCALL
+W32kLPtoDP(HDC hDC, LPPOINT Points, INT Count)
+{
+  PDC Dc;  
+  ULONG i;
+  
+  Dc = DC_HandleToPtr (hDC);
+  if (Dc == NULL) 
+    {
+      return(FALSE);
+    }
+  
+  for (i = 0; i < Count; i++)
+    {
+      CoordLPtoDP(Dc, &Points[i]);
+    }
+  return(TRUE);
 }
 
 BOOL

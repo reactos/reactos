@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.36 2002/05/08 17:05:32 chorns Exp $
+/* $Id: kdebug.c,v 1.37 2002/07/04 19:56:35 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -140,6 +140,12 @@ KdInitSystem(ULONG Reserved,
 		  KdDebuggerEnabled = TRUE;
 		  KdDebugState |= KD_DEBUG_FILELOG;
 		}
+	      else if (!_strnicmp(p2, "MDA", 3))
+		{
+		  p2 += 3;
+		  KdDebuggerEnabled = TRUE;
+		  KdDebugState |= KD_DEBUG_MDA;
+		}
 	    }
 	}
       else if (!_strnicmp(p2, "DEBUG", 5))
@@ -229,6 +235,8 @@ KdInitSystem(ULONG Reserved,
 
       if (KdDebugState & KD_DEBUG_FILELOG)
 	    PrintString("\n   File log debugging enabled\n\n");
+      if (KdDebugState & KD_DEBUG_MDA)
+	    PrintString("\n   MDA debugging enabled\n\n");
     }
 
   /* Perform any initialization nescessary */
@@ -242,6 +250,9 @@ KdInitSystem(ULONG Reserved,
 
       if (KdDebugState & KD_DEBUG_FILELOG)
 	    DebugLogInit();
+
+      if (KdDebugState & KD_DEBUG_MDA)
+	    KdInitializeMda();
     }
 }
 
@@ -319,6 +330,9 @@ KdpPrintString(PANSI_STRING String)
 
 	if (KdDebugState & KD_DEBUG_FILELOG)
 		DebugLogWrite(pch);
+
+	if (KdDebugState & KD_DEBUG_MDA)
+	        KdPrintMda(pch);
 
 	return((ULONG)String->Length);
 }

@@ -11,5 +11,14 @@ LRESULT STDCALL
 W32kSendNCCREATEMessage(HWND Wnd, CREATESTRUCT* CreateStruct);
 LRESULT STDCALL
 W32kSendCREATEMessage(HWND Wnd, CREATESTRUCT* CreateStruct);
+VOID STDCALL
+W32kCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
+			    HWND hWnd,
+			    UINT Msg,
+			    ULONG_PTR CompletionCallbackContext,
+			    LRESULT Result);
+LRESULT STDCALL
+W32kSendNCCALCSIZEMessage(HWND Wnd, BOOL Validate, RECT Rect1,
+			  RECT Rect2, RECT Rect3, PWINDOWPOS Pos);
 
 #endif /* __SUBSYS_WIN32K_INCLUDE_CALLBACK_H */

@@ -41,7 +41,7 @@ int main (void)
 
   printf("Entering GDITest..\n");
 
-  GdiDllInitialize (NULL, DLL_PROCESS_ATTACH, NULL);
+   GdiDllInitialize (NULL, DLL_PROCESS_ATTACH, NULL);
 
   // Set up a DC called Desktop that accesses DISPLAY
   Desktop = CreateDCA("DISPLAY", NULL, NULL, NULL);

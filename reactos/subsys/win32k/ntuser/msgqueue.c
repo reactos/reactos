@@ -1,4 +1,4 @@
-/* $Id: msgqueue.c,v 1.3 2002/05/06 22:20:32 dwelch Exp $
+/* $Id: msgqueue.c,v 1.4 2002/07/04 19:56:37 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -14,6 +14,7 @@
 #include <ddk/ntddk.h>
 #include <win32k/win32k.h>
 #include <include/msgqueue.h>
+#include <include/callback.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -23,6 +24,28 @@
 static PUSER_MESSAGE_QUEUE CurrentFocusMessageQueue;
 
 /* FUNCTIONS *****************************************************************/
+
+VOID
+MsqIncPaintCountQueue(PUSER_MESSAGE_QUEUE Queue)
+{
+  ExAcquireFastMutex(&Queue->Lock);
+  Queue->PaintCount++;
+  Queue->PaintPosted = TRUE;
+  ExReleaseFastMutex(&Queue->Lock);
+}
+
+VOID
+MsqDecPaintCountQueue(PUSER_MESSAGE_QUEUE Queue)
+{
+  ExAcquireFastMutex(&Queue->Lock);
+  Queue->PaintCount--;
+  if (Queue->PaintCount == 0)
+    {
+      Queue->PaintPosted = FALSE;
+    }
+  ExReleaseFastMutex(&Queue->Lock);
+}
+
 
 NTSTATUS
 MsqInitializeImpl(VOID)
@@ -104,7 +127,7 @@ MsqPeekSentMessages(PUSER_MESSAGE_QUEUE MessageQueue)
   return(!IsListEmpty(&MessageQueue->SentMessagesListHead));
 }
 
-VOID
+BOOLEAN
 MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
 {
   PUSER_SENT_MESSAGE Message;
@@ -113,12 +136,16 @@ MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
   PUSER_SENT_MESSAGE_NOTIFY NotifyMessage;
 
   ExAcquireFastMutex(&MessageQueue->Lock);
+  if (IsListEmpty(&MessageQueue->SentMessagesListHead))
+    {
+      return(FALSE);
+    }
   Entry = RemoveHeadList(&MessageQueue->SentMessagesListHead);
   Message = CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry);
   ExReleaseFastMutex(&MessageQueue->Lock);
 
   /* Call the window procedure. */
-  Result = W32kCallWindowProc(W32kGetWindowProc(Message->Msg.hwnd),
+  Result = W32kCallWindowProc(NULL,
 			      Message->Msg.hwnd,
 			      Message->Msg.message,
 			      Message->Msg.wParam,
@@ -148,10 +175,11 @@ MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
       NotifyMessage->Result = Result;
       NotifyMessage->hWnd = Message->Msg.hwnd;
       NotifyMessage->Msg = Message->Msg.message;
-      MsqSendNotifyMessage(Message->CompletionQueue);
+      MsqSendNotifyMessage(Message->CompletionQueue, NotifyMessage);
     }
 
   ExFreePool(Message);
+  return(TRUE);
 }
 
 VOID

@@ -1,4 +1,4 @@
-/* $Id: genntdll.c,v 1.10 2000/02/21 22:35:12 ekohl Exp $
+/* $Id: genntdll.c,v 1.11 2002/07/04 19:56:33 dwelch Exp $
  *
  * COPYRIGHT:             See COPYING in the top level directory
  * PROJECT:               ReactOS version of ntdll
@@ -27,6 +27,45 @@
 #define INPUT_BUFFER_SIZE 255
 
 /* FUNCTIONS ****************************************************************/
+
+void write_syscall_stub(FILE* out, FILE* out3, char* name, char* name2,
+			unsigned int nr_args, unsigned int sys_call_idx)
+{
+#ifdef PARAMETERIZED_LIBS
+  fprintf(out,"__asm__(\"\\n\\t.global _%s@%s\\n\\t\"\n",name,nr_args);
+  fprintf(out,"\".global _%s@%s\\n\\t\"\n",name2,nr_args);
+  fprintf(out,"\"_%s@%s:\\n\\t\"\n",name,nr_args);
+  fprintf(out,"\"_%s@%s:\\n\\t\"\n",name2,nr_args);
+#else
+  fprintf(out,"__asm__(\"\\n\\t.global _%s\\n\\t\"\n",name);
+  fprintf(out,"\".global _%s\\n\\t\"\n",name2);
+  fprintf(out,"\"_%s:\\n\\t\"\n",name);
+  fprintf(out,"\"_%s:\\n\\t\"\n",name2);
+#endif
+  fprintf(out,"\t\"pushl\t%%ebp\\n\\t\"\n");
+  fprintf(out,"\t\"movl\t%%esp, %%ebp\\n\\t\"\n");
+  fprintf(out,"\t\"mov\t$%d,%%eax\\n\\t\"\n",sys_call_idx);
+  fprintf(out,"\t\"lea\t8(%%ebp),%%edx\\n\\t\"\n");
+  fprintf(out,"\t\"int\t$0x2E\\n\\t\"\n");
+  fprintf(out,"\t\"popl\t%%ebp\\n\\t\"\n");
+  fprintf(out,"\t\"ret\t$%s\\n\\t\");\n\n",nr_args);
+  
+  /*
+   * Now write the NTOSKRNL stub for the
+   * current system call. ZwXXX does NOT
+   * alias the corresponding NtXXX call.
+   */
+  fprintf(out3,"__asm__(\n");
+  fprintf(out3,"\".global _%s@%s\\n\\t\"\n",name2,nr_args);
+  fprintf(out3,"\"_%s@%s:\\n\\t\"\n",name2,nr_args);
+  fprintf(out3,"\t\"pushl\t%%ebp\\n\\t\"\n");
+  fprintf(out3,"\t\"movl\t%%esp, %%ebp\\n\\t\"\n");
+  fprintf(out3,"\t\"mov\t$%d,%%eax\\n\\t\"\n",sys_call_idx);
+  fprintf(out3,"\t\"lea\t8(%%ebp),%%edx\\n\\t\"\n");
+  fprintf(out3,"\t\"int\t$0x2E\\n\\t\"\n");
+  fprintf(out3,"\t\"popl\t%%ebp\\n\\t\"\n");
+  fprintf(out3,"\t\"ret\t$%s\\n\\t\");\n\n",nr_args);
+}
 
 int makeSystemServiceTable(FILE *in, FILE *out)
 {
@@ -257,34 +296,8 @@ process(
 			 * system call: NtXXX and ZwXXX symbols
 			 * are aliases.
 			 */
-#ifdef PARAMETERIZED_LIBS
-			fprintf(out,"__asm__(\"\\n\\t.global _%s@%s\\n\\t\"\n",name,nr_args);
-			fprintf(out,"\".global _%s@%s\\n\\t\"\n",name2,nr_args);
-			fprintf(out,"\"_%s@%s:\\n\\t\"\n",name,nr_args);
-			fprintf(out,"\"_%s@%s:\\n\\t\"\n",name2,nr_args);
-#else
-			fprintf(out,"__asm__(\"\\n\\t.global _%s\\n\\t\"\n",name);
-			fprintf(out,"\".global _%s\\n\\t\"\n",name2);
-			fprintf(out,"\"_%s:\\n\\t\"\n",name);
-			fprintf(out,"\"_%s:\\n\\t\"\n",name2);
-#endif
-			fprintf(out,"\t\"mov\t$%d,%%eax\\n\\t\"\n",sys_call_idx);
-			fprintf(out,"\t\"lea\t4(%%esp),%%edx\\n\\t\"\n");
-			fprintf(out,"\t\"int\t$0x2E\\n\\t\"\n");
-			fprintf(out,"\t\"ret\t$%s\\n\\t\");\n\n",nr_args);
-
-			/*
-			 * Now write the NTOSKRNL stub for the
-			 * current system call. ZwXXX does NOT
-			 * alias the corresponding NtXXX call.
-			 */
-			fprintf(out3,"__asm__(\n");
-			fprintf(out3,"\".global _%s@%s\\n\\t\"\n",name2,nr_args);
-			fprintf(out3,"\"_%s@%s:\\n\\t\"\n",name2,nr_args);
-			fprintf(out3,"\t\"mov\t$%d,%%eax\\n\\t\"\n",sys_call_idx);
-			fprintf(out3,"\t\"lea\t4(%%esp),%%edx\\n\\t\"\n");
-			fprintf(out3,"\t\"int\t$0x2E\\n\\t\"\n");
-			fprintf(out3,"\t\"ret\t$%s\\n\\t\");\n\n",nr_args);
+			write_syscall_stub(out, out3, name, name2,
+					   nr_args, sys_call_idx);
 		}
 	}
 

@@ -1,3 +1,99 @@
+2002-07-04  David Welch  <welch@computer2.darkstar.org>
+
+	* subsys/win32k/include/callback.h: Fixed callback argument
+	definitions.
+	* subsys/win32k/ntuser/winpos.c: Implemented some more of the windows
+	sizing/moving code.
+	* subsys/win32k/ntuser/painting.c: Implemented some more of the
+	window painting code.
+	* subsys/win32k/objects/coord.c: Implemented LPtoDP and DPtoLP.
+	* subsys/win32k/objects/region.c: Added stubs for some more
+	region functions.
+
+2002-07-04  David Welch  <welch@computer2.darkstar.org>
+
+	* ntoskrnl/ps/process.c (NtCreateProcess): Duplicate the
+	process desktop handle as well.
+
+2002-07-04  David Welch  <welch@computer2.darkstar.org>
+
+	* ntoskrnl/se/token.c: Don't call the ZwXXX variant of
+	system calls when in system context.
+
+2002-07-04  David Welch  <welch@computer2.darkstar.org>
+
+	* ntoskrnl/Makefile: Added file with MDA output code.
+	* ntoskrnl/kd/kdebug.c: Recognize MDA as a destination for
+	debug output.
+
+2002-07-04  David Welch  <welch@computer2.darkstar.org>
+
+	* lib/user32/windows/defwnd.c: Implemented some more of the
+	default window handler.
+
+2002-07-04  David Welch  <welch@computer2.darkstar.org>
+
+	* lib/user32/misc/stubs.c: Removed some stubs to seperate files.
+
+2002-07-04  David Welch  <welch@computer2.darkstar.org>
+
+	* lib/user32/user32.def: Export ScreenToClient otherwise we
+	get problems when code in user32 tries to call it.
+
+2002-07-04  David Welch  <welch@computer2.darkstar.org>
+
+	* include/win32k/region.h: Added prototypes for some missing
+	region functions.
+
+2002-07-04  David Welch  <welch@computer2.darkstar.org>
+
+	* include/win32k/ntuser.h: Added prototypes for some missing
+	NtUserXXX functions.
+
+2002-07-04  David Welch  <welch@computer2.darkstar.org>
+
+	* include/user32/wininternal.h: Added some constants for
+	private GetDCEx styles that WINE needs.
+
+2002-07-04  David Welch  <welch@computer2.darkstar.org>
+
+	* include/user32/callback.h: Fixed callbacks for messages with
+	parameters.
+
+2002-07-04  David Welch  <welch@computer2.darkstar.org>
+
+	* include/napi/win32.h (W32THREAD): Added pointer to the
+	thread's desktop.
+	* include/napi/win32.h (W32PROCESS): Removed handle table,
+	added a pointer to the process's window station.
+	* subsys/win32k/ntuser/guicheck.c (W32kGuiCheck): Reference
+	a process's window station on the first win32k system call. Reference
+	a thread's desktop on the first win32k system call.
+
+2002-07-04  David Welch  <welch@computer2.darkstar.org>
+
+	* include/messages.h: Added some missing WM_XXX constants.
+
+2002-07-04  David Welch  <welch@computer2.darkstar.org>
+
+	* drivers/dd/ide/makefile: Compiling with debugging messages
+	needs libgcc to be linked in.
+
+2002-07-04  David Welch  <welch@computer2.darkstar.org>
+
+	* iface/addsys/genw32k.c: Generate a variable with the
+	number of system calls.
+	* iface/native/genntdll.c: Generate a proper stack frame for
+	the user system call stubs.
+	* ntoskrnl/ke/i386/syscall.S: Generate a proper stack frame for
+	the handler for system calls.
+
+2002-07-04  David Welch  <welch@computer2.darkstar.org>
+
+	* Makefile: Build the GUI startup application.
+	* subsys/system/gstart/gstart.c: Application to start up
+	the GUI.
+
 2002-06-18  David Welch  <welch@whitehall1-5.seh.ox.ac.uk>
 
 	* tools/helper.mk: Make an import library a proper target

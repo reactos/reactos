@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.45 2002/06/18 21:51:10 dwelch Exp $
+# $Id: makefile,v 1.46 2002/07/04 19:56:36 dwelch Exp $
 
 PATH_TO_TOP = ../..
 
@@ -23,14 +23,15 @@ TARGET_CFLAGS = $(CFLAGS_DBG) -I$(PATH_TO_TOP)/ntoskrnl/include -DUNICODE -Wall
 ENG_OBJECTS= eng/debug.o eng/mem.o eng/brush.o eng/bitblt.o eng/clip.o \
     eng/copybits.o eng/device.o eng/handle.o eng/lineto.o eng/paint.o \
     eng/palette.o eng/surface.o eng/xlate.o eng/transblt.o eng/mouse.o
-MAIN_OBJECTS = main/dllmain.o
+MAIN_OBJECTS = main/dllmain.o main/svctabm.o
 MISC_OBJECTS = misc/driver.o misc/error.o misc/math.o misc/object.o
 LDR_OBJECTS = ldr/loader.o
 NTUSER_OBJECTS = ntuser/class.o ntuser/guicheck.o ntuser/hook.o \
                  ntuser/message.o ntuser/msgqueue.o ntuser/stubs.o \
                  ntuser/userobj.o ntuser/window.o ntuser/winsta.o \
 		 ntuser/input.o ntuser/keyboard.o ntuser/callback.o \
-		 ntuser/winpos.o
+		 ntuser/winpos.o ntuser/painting.o ntuser/metric.o \
+		 ntuser/windc.o
 OBJECTS_OBJECTS = objects/bitmaps.o objects/brush.o objects/cliprgn.o  \
                   objects/color.o objects/coord.o objects/dc.o  \
                   objects/fillshap.o objects/gdiobj.o objects/icm.o  \
@@ -38,7 +39,7 @@ OBJECTS_OBJECTS = objects/bitmaps.o objects/brush.o objects/cliprgn.o  \
                   objects/path.o objects/pen.o objects/print.o  \
                   objects/region.o objects/text.o objects/wingl.o \
                   objects/bezier.o objects/objconv.o objects/dib.o \
-	          objects/palette.o
+	          objects/palette.o objects/rect.o
 DIB_OBJECTS = dib/dib4bpp.o dib/dib24bpp.o
 FREETYPE_OBJECTS = freetype/ctype.o freetype/grfont.o \
 		freetype/src/base/ftsystem.o freetype/src/base/ftdebug.o \
@@ -56,7 +57,7 @@ TARGET_OBJECTS = \
   $(NTUSER_OBJECTS) $(OBJECTS_OBJECTS) $(STUBS_OBJECTS) \
   $(MATH_OBJECTS) $(FLOAT_OBJECTS) $(FREETYPE_OBJECTS) $(DIB_OBJECTS)
 
-TARGET_CLEAN = \
+TARGET_CLEAN = $(TARGET_OBJECTS:.o=.d) \
   dib/*.o \
   eng/*.o \
   freetype/*.o \
@@ -71,7 +72,12 @@ include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
 
-main/dllmain.o: main/svctab.c
+# Automatic dependency tracking
+DEP_OBJECTS := $(TARGET_OBJECTS)
+DEP_EXCLUDE_FILTER := main/svctabm.d
+include $(PATH_TO_TOP)/tools/depend.mk
+
+misc/svctabm.o: misc/svctab.c
 
 .dummy:
 

@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.7 2002/06/18 21:51:11 dwelch Exp $
+/* $Id: window.c,v 1.8 2002/07/04 19:56:37 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -27,14 +27,33 @@
 
 /* FUNCTIONS *****************************************************************/
 
-BOOL
-W32kOffsetRect(LPRECT Rect, INT x, INT y)
+PWINDOW_OBJECT
+W32kGetWindowObject(HWND hWnd)
 {
-  Rect->left += x;
-  Rect->right += x;
-  Rect->top += y;
-  Rect->bottom += y;
-  return(TRUE);
+  PWINDOW_OBJECT WindowObject;
+  NTSTATUS Status;
+  Status = 
+    ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->
+			       HandleTable,
+			       hWnd,
+			       otWindow,
+			       (PVOID*)&WindowObject);
+  if (!NT_SUCCESS(Status))
+    {
+      return(NULL);
+    }
+  return(WindowObject);
+}
+
+VOID
+W32kReleaseWindowObject(PWINDOW_OBJECT Window)
+{
+  ObmDereferenceObject(Window);
+}
+
+VOID
+W32kGetClientRect(PWINDOW_OBJECT WindowObject, PRECT Rect)
+{
 }
 
 HWND
@@ -128,6 +147,8 @@ NtUserCreateWindowEx(DWORD dwExStyle,
     }
 
   /* Check the window station. */
+  DPRINT("IoGetCurrentProcess() %X\n", IoGetCurrentProcess());
+  DPRINT("PROCESS_WINDOW_STATION %X\n", PROCESS_WINDOW_STATION());
   Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
 				       KernelMode,
 				       0,
@@ -143,8 +164,8 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 
   /* Create the window object. */
   WindowObject = (PWINDOW_OBJECT) 
-    ObmCreateObject(PsGetWin32Process()->HandleTable, &Handle, otWindow, 
-		    sizeof(WINDOW_OBJECT));
+    ObmCreateObject(PsGetWin32Process()->WindowStation->HandleTable, &Handle, 
+		    otWindow, sizeof(WINDOW_OBJECT));
   DPRINT("Created object with handle %X\n", Handle);
   if (!WindowObject) 
     {
@@ -171,6 +192,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->Instance = hInstance;
   WindowObject->Parameters = lpParam;
   WindowObject->Self = Handle;
+  WindowObject->MessageQueue = PsGetWin32Thread()->MessageQueue;
 
   /* FIXME: Add the window parent. */
 
@@ -202,10 +224,12 @@ NtUserCreateWindowEx(DWORD dwExStyle,
     }
 
   /* Insert the window into the process's window list. */
-  ExAcquireFastMutexUnsafe (&PsGetWin32Process()->WindowListLock);
-  InsertTailList (&PsGetWin32Process()->WindowListHead, 
+  ExAcquireFastMutexUnsafe (&PsGetWin32Thread()->WindowListLock);
+  InsertTailList (&PsGetWin32Thread()->WindowListHead, 
 		  &WindowObject->ListEntry);
-  ExReleaseFastMutexUnsafe (&PsGetWin32Process()->WindowListLock);
+  ExReleaseFastMutexUnsafe (&PsGetWin32Thread()->WindowListLock);
+
+  /* FIXME: Insert the window into the desktop window list. */
 
   /* FIXME: Maybe allocate a DCE for this window. */
 
@@ -296,7 +320,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
       lParam = 
 	MAKE_LONG(WindowObject->ClientRect.left,
 		  WindowObject->ClientRect.top);
-      DPRINT("NtUserCreateWindow(): About to send WM_SIZE\n");
+      DPRINT("NtUserCreateWindow(): About to send WM_MOVE\n");
       W32kCallWindowProc(NULL, WindowObject->Self, WM_MOVE, 0, lParam);
     }
 
@@ -318,6 +342,8 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 			 NewPos.right, NewPos.bottom, SwFlag);
     }
 
+  /* FIXME: Need to set up parent window. */
+#if 0
   /* Notify the parent window of a new child. */
   if ((WindowObject->Style & WS_CHILD) ||
       (!(WindowObject->ExStyle & WS_EX_NOPARENTNOTIFY)))
@@ -328,6 +354,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 			 MAKEWPARAM(WM_CREATE, WindowObject->IDMenu),
 			 (LPARAM)WindowObject->Self);
     }
+#endif
 
   if (dwStyle & WS_VISIBLE)
     {
@@ -389,6 +416,7 @@ NtUserFindWindowEx(HWND hwndParent,
 		   PUNICODE_STRING ucWindowName,
 		   DWORD Unknown4)
 {
+#if 0
   NTSTATUS status;
   HWND windowHandle;
   PWINDOW_OBJECT windowObject;
@@ -429,6 +457,7 @@ NtUserFindWindowEx(HWND hwndParent,
   ObmDereferenceObject (classObject);
 
   return  (HWND)0;
+#endif
 }
 
 DWORD STDCALL
@@ -642,10 +671,11 @@ NtUserGetWindowLong(HWND hWnd, DWORD Index)
   
   W32kGuiCheck();
 
-  Status = ObmReferenceObjectByHandle(PsGetWin32Process()->HandleTable,
-				      hWnd,
-				      otWindow,
-				      (PVOID*)&WindowObject);
+  Status = 
+    ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->HandleTable,
+			       hWnd,
+			       otWindow,
+			       (PVOID*)&WindowObject);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("NtUserGetWindowLong(): Bad handle.\n");
@@ -743,21 +773,9 @@ BOOL STDCALL
 NtUserShowWindow(HWND hWnd,
 		 LONG nCmdShow)
 {
-  PWINDOW_OBJECT WindowObject;
-  NTSTATUS Status;
-  
   W32kGuiCheck();
 
-  Status = ObmReferenceObjectByHandle(PsGetWin32Process()->HandleTable,
-				      hWnd,
-				      otWindow,
-				      (PVOID*)&WindowObject);
-  if (!NT_SUCCESS(Status))
-    {
-      return(FALSE);
-    }
-
-  return TRUE;
+  return(WinPosShowWindow(hWnd, nCmdShow));
 }
 
 DWORD STDCALL

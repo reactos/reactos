@@ -25,11 +25,11 @@ typedef struct _DESKTOP_OBJECT
 {   
   CSHORT Type;
   CSHORT Size;
-
   LIST_ENTRY ListEntry;
   KSPIN_LOCK Lock;
   UNICODE_STRING Name;
   struct _WINSTATION_OBJECT *WindowStation;
+  LIST_ENTRY WindowListHead;
 } DESKTOP_OBJECT, *PDESKTOP_OBJECT;
 
 

@@ -1,9 +1,13 @@
+/* Undocumented flags. */
+#define SWP_NOCLIENTMOVE          0x0800
+#define SWP_NOCLIENTSIZE          0x1000
+
 LRESULT
 WinPosGetNonClientSize(HWND Wnd, RECT* WindowRect, RECT* ClientRect);
-VOID
+UINT
 WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
 		    POINT* MinTrack, POINT* MaxTrack);
-VOID
+UINT
 WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos);
 BOOLEAN
 WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.83 2002/06/17 22:52:31 joeg Exp $
+/* $Id: process.c,v 1.84 2002/07/04 19:56:36 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -259,6 +259,7 @@ PsInitProcessManagment(VOID)
    PsInitialSystemProcess->UniqueProcessId = 
      InterlockedIncrement(&PiNextProcessUniqueId);
    PsInitialSystemProcess->Win32WindowStation = (HANDLE)0;
+   PsInitialSystemProcess->Win32Desktop = (HANDLE)0;
    
    KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
    InsertHeadList(&PsProcessListHead, 
@@ -546,7 +547,27 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
      {
        Process->Win32WindowStation = (HANDLE)0;
      }
-   
+   if (ParentProcess->Win32Desktop != (HANDLE)0)
+     {
+       /* Always duplicate the process window station. */
+       Process->Win32Desktop = 0;
+       Status = ObDuplicateObject(ParentProcess,
+				  Process,
+				  ParentProcess->Win32Desktop,
+				  &Process->Win32Desktop,
+				  0,
+				  FALSE,
+				  DUPLICATE_SAME_ACCESS);
+       if (!NT_SUCCESS(Status))
+	 {
+	   KeBugCheck(0);
+	 }
+     }
+   else
+     {
+       Process->Win32Desktop = (HANDLE)0;
+     }
+
    KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
    for (i = 0; i < PiProcessNotifyRoutineCount; i++)
     {

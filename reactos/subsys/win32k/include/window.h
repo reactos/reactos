@@ -4,9 +4,20 @@
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <include/class.h>
+#include <include/msgqueue.h>
+
+typedef struct _INTERNALPOS
+{
+  RECT NormalRect;
+  POINT IconPos;
+  POINT MaxPos;
+  HWND IconTitle;
+} INTERNALPOS, *PINTERNALPOS;
 
 typedef struct _WINDOW_OBJECT
 {
+  /* Internal position. */
+  PINTERNALPOS InternalPos;
   /* Pointer to the window class. */
   PWNDCLASS_OBJECT Class;
   /* Extended style. */
@@ -22,7 +33,6 @@ typedef struct _WINDOW_OBJECT
   INT Height;
   /* Parent window handle. */
   HWND ParentHandle;
-  struct _WINDOW_OBJECT* Parent;
   /* Window menu handle. */
   HMENU Menu;
   /* Handle of the module that created the window. */
@@ -31,6 +41,8 @@ typedef struct _WINDOW_OBJECT
   LPVOID Parameters;
   /* Entry in the thread's list of windows. */
   LIST_ENTRY ListEntry;
+  /* Entry in the global list of windows. */
+  LIST_ENTRY DesktopListEntry;
   /* Pointer to the extra data associated with the window. */
   PULONG ExtraData;
   /* Size of the extra data associated with the window. */
@@ -43,16 +55,42 @@ typedef struct _WINDOW_OBJECT
   HANDLE Self;
   /* Window flags. */
   ULONG Flags;
+  /* FIXME: Don't know. */
   UINT IDMenu;
+  /* Handle of region of the window to be updated. */
+  HANDLE UpdateRegion;
+  /* Pointer to the message queue associated with the window. */
+  PUSER_MESSAGE_QUEUE MessageQueue;
+  /* Head of the list of child windows. */
+  LIST_ENTRY ChildrenListHead;
+  /* Lock for the list of child windows. */
+  FAST_MUTEX ChildrenListLock;
+  /* Entry in the parent's list of child windows. */
+  LIST_ENTRY SiblingListEntry;
+  /* Entry in the list of thread windows. */
+  LIST_ENTRY ThreadListEntry;
+  /* Pointer to the parent window. */
+  struct _WINDOW_OBJECT* Parent;
 } WINDOW_OBJECT, *PWINDOW_OBJECT;
 
+/* Window flags. */
 #define WINDOWOBJECT_NEED_SIZE            (0x00000001)
+#define WINDOWOBJECT_NEED_BEGINPAINT      (0x00000002)
+#define WINDOWOBJECT_NEED_ERASEBACKGRD    (0x00000004)
+#define WINDOWOBJECT_NEED_NCPAINT         (0x00000008)
+#define WINDOWOBJECT_NEED_INTERNALPAINT   (0x00000010)
+#define WINDOWOBJECT_RESTOREMAX           (0x00000020)
 
 NTSTATUS
 InitWindowImpl(VOID);
-
 NTSTATUS
 CleanupWindowImpl(VOID);
+VOID
+W32kGetClientRect(PWINDOW_OBJECT WindowObject, PRECT Rect);
+PWINDOW_OBJECT
+W32kGetWindowObject(HWND hWnd);
+VOID
+W32kReleaseWindowObject(PWINDOW_OBJECT Window);
 
 #endif /* __WIN32K_WINDOW_H */
 

@@ -1,4 +1,4 @@
-/* $Id: callback.c,v 1.4 2002/06/21 04:14:07 ei Exp $
+/* $Id: callback.c,v 1.5 2002/07/04 19:56:37 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -32,12 +32,66 @@ W32kCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
 			    ULONG_PTR CompletionCallbackContext,
 			    LRESULT Result)
 {
+  SENDASYNCPROC_CALLBACK_ARGUMENTS Arguments;
+  NTSTATUS Status;
+
+  Arguments.Callback = CompletionCallback;
+  Arguments.Wnd = hWnd;
+  Arguments.Msg = Msg;
+  Arguments.Context = CompletionCallbackContext;
+  Arguments.Result = Result;
+  Status = NtW32Call(USER32_CALLBACK_SENDASYNCPROC,
+		     &Arguments,
+		     sizeof(SENDASYNCPROC_CALLBACK_ARGUMENTS),
+		     NULL,
+		     NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      return;
+    }
+  return;  
 }
 
 LRESULT STDCALL
-W32kSendNCCALCSIZEMessage(HWND Wnd, BOOL Validate, RECT Rect1,
-			  RECT Rect2, RECT Rect3, PWINDOWPOS Pos)
+W32kSendNCCALCSIZEMessage(HWND Wnd, BOOL Validate, PRECT Rect,
+			  NCCALCSIZE_PARAMS* Params)
 {
+  SENDNCCALCSIZEMESSAGE_CALLBACK_ARGUMENTS Arguments;
+  SENDNCCALCSIZEMESSAGE_CALLBACK_RESULT Result;
+  NTSTATUS Status;
+  PVOID ResultPointer;
+  ULONG ResultLength;
+
+  Arguments.Wnd = Wnd;
+  Arguments.Validate = Validate;
+  if (!Validate)
+    {
+      Arguments.Rect = *Rect;
+    }
+  else
+    {
+      Arguments.Params = *Params;
+    }
+  ResultPointer = &Result;
+  ResultLength = sizeof(SENDNCCALCSIZEMESSAGE_CALLBACK_RESULT);
+  Status = NtW32Call(USER32_CALLBACK_SENDNCCALCSIZE,
+		     &Arguments,
+		     sizeof(SENDNCCALCSIZEMESSAGE_CALLBACK_ARGUMENTS),
+		     &ResultPointer,
+		     &ResultLength);
+  if (!NT_SUCCESS(Status))
+    {
+      return(0);
+    }
+  if (!Validate)
+    {
+      *Rect = Result.Rect;
+    }
+  else
+    {
+      *Params = Result.Params;
+    }
+  return(Result.Result);
 }
 
 LRESULT STDCALL
@@ -114,7 +168,7 @@ W32kCallWindowProc(WNDPROC Proc,
 		     &Arguments,
 		     sizeof(WINDOWPROC_CALLBACK_ARGUMENTS),
 		     &ResultPointer,
-			 &ResultLength);
+		     &ResultLength);
   if (!NT_SUCCESS(Status))
     {
       return(0xFFFFFFFF);

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.71 2002/06/18 21:51:09 dwelch Exp $
+# $Id: Makefile,v 1.72 2002/07/04 19:56:35 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -328,7 +328,7 @@ OBJECTS_KD = \
 	kd/kdebug.o \
 	kd/service.o \
 	kd/dlog.o \
-  kd/gdbstub.o
+  kd/gdbstub.o kd/mda.o
 
 DEP_OBJECTS := $(OBJECTS_NT) $(OBJECTS_MM) $(OBJECTS_ARCH) \
 	$(OBJECTS_IO) $(OBJECTS_KE) $(OBJECTS_OB) \
@@ -340,6 +340,7 @@ DEP_OBJECTS := $(OBJECTS_NT) $(OBJECTS_MM) $(OBJECTS_ARCH) \
 #
 # Include automatic dependancy tracking
 #
+DEP_EXCLUDE_FILTER := ex/napi.% nt/zw.%
 include $(PATH_TO_TOP)/tools/depend.mk
 
 

@@ -32,7 +32,7 @@ User32ConvertString(PCSTR String)
 {
   ANSI_STRING InString;
   UNICODE_STRING OutString;
-  RtlInitAnsiString(&InString, String);
+ RtlInitAnsiString(&InString, String);
   RtlAnsiStringToUnicodeString(&OutString, &InString, TRUE);
   return(OutString.Buffer);
 }

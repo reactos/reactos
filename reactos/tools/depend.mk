@@ -2,7 +2,7 @@
 # Define $DEP_OBJECTS before this file is included
 # $DEP_OBJECTS contain a list of object files that are checked for dependancies
 
-DEP_FILTERED := $(filter-out ex/napi.% nt/zw.%, $(DEP_OBJECTS:.o=.d))
+DEP_FILTERED := $(filter-out $(DEP_EXCLUDE_FILTER), $(DEP_OBJECTS:.o=.d))
 DEP_FILES := $(join $(dir $(DEP_FILTERED)), $(addprefix ., $(notdir $(DEP_FILTERED))))
 
 

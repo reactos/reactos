@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.2 2001/06/29 19:31:59 ekohl Exp $
+/* $Id: desktop.c,v 1.3 2002/07/04 19:56:34 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -21,49 +21,47 @@ CloseDesktop(
   return NtUserCloseDesktop(hDesktop);
 }
 
-HDESK
-STDCALL
-CreateDesktopA(
-  LPCSTR lpszDesktop,
-  LPCSTR lpszDevice,
-  LPDEVMODEA pDevmode,
-  DWORD dwFlags,
-  ACCESS_MASK dwDesiredAccess,
-  LPSECURITY_ATTRIBUTES lpsa)
+HDESK STDCALL
+CreateDesktopA(LPCSTR lpszDesktop,
+	       LPCSTR lpszDevice,
+	       LPDEVMODEA pDevmode,
+	       DWORD dwFlags,
+	       ACCESS_MASK dwDesiredAccess,
+	       LPSECURITY_ATTRIBUTES lpsa)
 {
   ANSI_STRING DesktopNameA;
   UNICODE_STRING DesktopNameU;
   HDESK hDesktop;
 
-	if (lpszDesktop != NULL) {
-		RtlInitAnsiString(&DesktopNameA, (LPSTR)lpszDesktop);
-		RtlAnsiStringToUnicodeString(&DesktopNameU, &DesktopNameA, TRUE);
-  } else {
-    RtlInitUnicodeString(&DesktopNameU, NULL);
-  }
-
-  hDesktop = CreateDesktopW(
-    DesktopNameU.Buffer,
-    NULL,
-    pDevmode,
-    dwFlags,
-    dwDesiredAccess,
-    lpsa);
-
-	RtlFreeUnicodeString(&DesktopNameU);
-
-  return hDesktop;
+  if (lpszDesktop != NULL) 
+    {
+      RtlInitAnsiString(&DesktopNameA, (LPSTR)lpszDesktop);
+      RtlAnsiStringToUnicodeString(&DesktopNameU, &DesktopNameA, TRUE);
+    } 
+  else 
+    {
+      RtlInitUnicodeString(&DesktopNameU, NULL);
+    }
+  /* FIXME: Need to convert the DEVMODE parameter. */
+  
+  hDesktop = CreateDesktopW(DesktopNameU.Buffer,
+			    NULL,
+			    pDevmode,
+			    dwFlags,
+			    dwDesiredAccess,
+			    lpsa);
+  
+  RtlFreeUnicodeString(&DesktopNameU);
+  return(hDesktop);
 }
 
-HDESK
-STDCALL
-CreateDesktopW(
-  LPCWSTR lpszDesktop,
-  LPCWSTR lpszDevice,
-  LPDEVMODEW pDevmode,
-  DWORD dwFlags,
-  ACCESS_MASK dwDesiredAccess,
-  LPSECURITY_ATTRIBUTES lpsa)
+HDESK STDCALL
+CreateDesktopW(LPCWSTR lpszDesktop,
+	       LPCWSTR lpszDevice,
+	       LPDEVMODEW pDevmode,
+	       DWORD dwFlags,
+	       ACCESS_MASK dwDesiredAccess,
+	       LPSECURITY_ATTRIBUTES lpsa)
 {
   UNICODE_STRING DesktopName;
   HWINSTA hWinSta;
@@ -73,14 +71,13 @@ CreateDesktopW(
 
   RtlInitUnicodeString(&DesktopName, lpszDesktop);
 
-  hDesktop = NtUserCreateDesktop(
-    &DesktopName,
-    dwFlags,
-    dwDesiredAccess,
-    lpsa,
-    hWinSta);
+  hDesktop = NtUserCreateDesktop(&DesktopName,
+				 dwFlags,
+				 dwDesiredAccess,
+				 lpsa,
+				 hWinSta);
 
-  return hDesktop;
+  return(hDesktop);
 }
 
 WINBOOL

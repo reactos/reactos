@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.34 2002/06/04 15:26:55 dwelch Exp $
+/* $Id: ps.h,v 1.35 2002/07/04 19:56:35 dwelch Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -460,14 +460,15 @@ struct _EPROCESS
    /*
     * Added by David Welch (welch@mcmail.com)
     */
-   MADDRESS_SPACE       AddressSpace;
-   HANDLE_TABLE         HandleTable;
-   LIST_ENTRY           ProcessListEntry;
+  HANDLE                Win32Desktop;
+  MADDRESS_SPACE        AddressSpace;
+  HANDLE_TABLE          HandleTable;
+  LIST_ENTRY            ProcessListEntry;
    
    /*
     * Added by Philip Susi for list of threads in process
     */
-   LIST_ENTRY           ThreadListHead;
+  LIST_ENTRY           ThreadListHead;
 };
 
 #define PROCESS_STATE_TERMINATED (1)

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.25 2001/08/21 20:13:11 chorns Exp $
+# $Id: makefile,v 1.26 2002/07/04 19:56:32 dwelch Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -9,6 +9,8 @@ TARGET_NAME = ide
 TARGET_OBJECTS = ide.o
 
 TARGET_HEADERS = *.h
+
+TARGET_GCCLIBS = gcc
 
 include $(PATH_TO_TOP)/rules.mak
 

@@ -528,7 +528,7 @@ RemovePropW@8
 ReplyMessage@4
 ;ResolveDesktopForWOW
 ReuseDDElParam@20
-;ScreenToClient
+ScreenToClient
 ;ScrollChildren
 ScrollDC@28
 ScrollWindow@20

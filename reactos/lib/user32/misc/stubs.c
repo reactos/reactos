@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.8 2002/06/13 20:36:40 dwelch Exp $
+/* $Id: stubs.c,v 1.9 2002/07/04 19:56:34 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -10,6 +10,11 @@
  *      08-05-2001  CSH  Created
  */
 #include <windows.h>
+
+WINBOOL STDCALL 
+ScreenToClient(HWND hWnd, LPPOINT lpPoint)
+{
+}
 
 WINBOOL
 STDCALL

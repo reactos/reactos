@@ -20,18 +20,16 @@ NTSTATUS
 CleanupWindowStationImpl(VOID);
 
 NTSTATUS
-ValidateWindowStationHandle(
-  HWINSTA WindowStation,
-  KPROCESSOR_MODE AccessMode,
-  ACCESS_MASK DesiredAccess,
-  PWINSTATION_OBJECT *Object);
+ValidateWindowStationHandle(HWINSTA WindowStation,
+			    KPROCESSOR_MODE AccessMode,
+			    ACCESS_MASK DesiredAccess,
+			    PWINSTATION_OBJECT *Object);
 
 NTSTATUS
-ValidateDesktopHandle(
-  HDESK Desktop,
-  KPROCESSOR_MODE AccessMode,
-  ACCESS_MASK DesiredAccess,
-  PDESKTOP_OBJECT *Object);
+ValidateDesktopHandle(HDESK Desktop,
+		      KPROCESSOR_MODE AccessMode,
+		      ACCESS_MASK DesiredAccess,
+		      PDESKTOP_OBJECT *Object);
 
 #endif /* __WIN32K_WINSTA_H */
 

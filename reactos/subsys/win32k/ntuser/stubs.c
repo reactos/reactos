@@ -38,17 +38,6 @@ NtUserAttachThreadInput(
 
 DWORD
 STDCALL
-NtUserBeginPaint(
-  DWORD Unknown0,
-  DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserBitBltSysBmp(
   DWORD Unknown0,
   DWORD Unknown1,
@@ -580,17 +569,6 @@ NtUserEndMenu(VOID)
 
 DWORD
 STDCALL
-NtUserEndPaint(
-  DWORD Unknown0,
-  DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserEnumDisplayDevices(
   DWORD Unknown0,
   DWORD Unknown1,
@@ -851,18 +829,6 @@ DWORD
 STDCALL
 NtUserGetDC(
   DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserGetDCEx(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
 {
   UNIMPLEMENTED
 

@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.17 2002/06/17 22:52:32 joeg Exp $
+/* $Id: token.c,v 1.18 2002/07/04 19:56:36 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -974,14 +974,14 @@ SepCreateSystemProcessToken(struct _EPROCESS* Process)
 			 SepTokenObjectType,
 			 (PVOID*)&AccessToken);
 
-  Status = ZwAllocateLocallyUniqueId(&AccessToken->TokenId);
+  Status = NtAllocateLocallyUniqueId(&AccessToken->TokenId);
   if (!NT_SUCCESS(Status))
     {
       ObDereferenceObject(AccessToken);
       return(Status);
     }
 
-  Status = ZwAllocateLocallyUniqueId(&AccessToken->ModifiedId);
+  Status = NtAllocateLocallyUniqueId(&AccessToken->ModifiedId);
   if (!NT_SUCCESS(Status))
     {
       ObDereferenceObject(AccessToken);

@@ -2,6 +2,11 @@
 #ifndef __WIN32K_REGION_H
 #define __WIN32K_REGION_H
 
+INT STDCALL
+W32kGetBoxRgn(HRGN hRgn, PRECT Rect);
+HRGN STDCALL
+W32kCropRgn(HRGN hDest, HRGN hSrc, const RECT* Rect, const POINT* Point);
+
 INT
 STDCALL
 W32kCombineRgn(HRGN  hDest,

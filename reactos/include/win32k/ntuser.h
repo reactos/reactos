@@ -1,8 +1,14 @@
 #ifndef __WIN32K_NTUSER_H
 #define __WIN32K_NTUSER_H
 
+ULONG STDCALL
+NtUserGetSystemMetrics(ULONG Index);
+DWORD STDCALL
+NtUserGetClassLong(HWND hWnd, DWORD Offset);
 DWORD STDCALL
 NtUserGetWindowLong(HWND hWnd, DWORD Index);
+INT STDCALL
+NtUserReleaseDC(HWND hWnd, HDC hDc);
 
 NTSTATUS
 STDCALL
@@ -29,11 +35,8 @@ NtUserAttachThreadInput(
   DWORD Unknown1,
   DWORD Unknown2);
 
-DWORD
-STDCALL
-NtUserBeginPaint(
-  DWORD Unknown0,
-  DWORD Unknown1);
+HDC STDCALL
+NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs);
 
 DWORD
 STDCALL
@@ -429,11 +432,8 @@ DWORD
 STDCALL
 NtUserEndMenu(VOID);
 
-DWORD
-STDCALL
-NtUserEndPaint(
-  DWORD Unknown0,
-  DWORD Unknown1);
+BOOL STDCALL
+NtUserEndPaint(HWND hWnd, PAINTSTRUCT* lPs);
 
 DWORD
 STDCALL
@@ -619,12 +619,8 @@ STDCALL
 NtUserGetDC(
   DWORD Unknown0);
 
-DWORD
-STDCALL
-NtUserGetDCEx(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+HDC STDCALL
+NtUserGetDCEx(HWND hWnd, HANDLE hRegion, ULONG Flags);
 
 DWORD
 STDCALL
@@ -1180,6 +1176,12 @@ NtUserSendInput(
   DWORD Unknown0,
   DWORD Unknown1,
   DWORD Unknown2);
+
+LRESULT STDCALL
+NtUserSendMessage(HWND hWnd,
+		  UINT Msg,
+		  WPARAM wParam,
+		  LPARAM lParam);
 
 BOOL
 STDCALL

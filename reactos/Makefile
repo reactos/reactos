@@ -74,7 +74,7 @@ STORAGE_DRIVERS = atapi cdrom class2 disk scsiport
 
 # System applications
 # autochk lsass services shell winlogon
-SYS_APPS = autochk services shell winlogon
+SYS_APPS = autochk services shell winlogon gstart
 
 # System services
 # rpcss eventlog

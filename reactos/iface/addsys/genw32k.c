@@ -1,4 +1,4 @@
-/* $Id: genw32k.c,v 1.1 2000/02/21 22:34:26 ekohl Exp $
+/* $Id: genw32k.c,v 1.2 2002/07/04 19:56:33 dwelch Exp $
  *
  * COPYRIGHT:             See COPYING in the top level directory
  * PROJECT:               ReactOS version of ntdll
@@ -162,6 +162,7 @@ char    *stmp;
 	fprintf(out, "\n\n#define MIN_SYSCALL_NUMBER    0\n");
 	fprintf(out, "#define MAX_SYSCALL_NUMBER    %d\n", sys_call_idx-1);
 	fprintf(out, "#define NUMBER_OF_SYSCALLS    %d\n", sys_call_idx);
+	fprintf(out, "ULONG Win32kNumberOfSysCalls = %d;\n", sys_call_idx);
 
 	return(0);
 }

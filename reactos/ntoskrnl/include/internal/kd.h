@@ -1,4 +1,4 @@
-/* $Id: kd.h,v 1.9 2002/05/16 06:39:30 ekohl Exp $
+/* $Id: kd.h,v 1.10 2002/07/04 19:56:35 dwelch Exp $
  *
  * kernel debugger prototypes
  */
@@ -15,6 +15,7 @@
 #define KD_DEBUG_SERIAL		0x08
 #define KD_DEBUG_BOCHS		0x10
 #define KD_DEBUG_FILELOG	0x20
+#define KD_DEBUG_MDA            0x40
 
 extern ULONG KdDebugState;
 
@@ -61,7 +62,9 @@ KdDebugPrint (LPSTR Message);
 
 KD_CONTINUE_TYPE
 KdEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
-  PCONTEXT Context,
-	PKTRAP_FRAME TrapFrame);
+			 PCONTEXT Context,
+			 PKTRAP_FRAME TrapFrame);
+VOID KdInitializeMda(VOID);
+VOID KdPrintMda(PCH pch);
 
 #endif /* __INCLUDE_INTERNAL_KERNEL_DEBUGGER_H */

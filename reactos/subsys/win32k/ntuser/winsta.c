@@ -1,4 +1,4 @@
-/* $Id: winsta.c,v 1.3 2002/06/11 22:09:03 dwelch Exp $
+/* $Id: winsta.c,v 1.4 2002/07/04 19:56:37 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -172,15 +172,13 @@ NtUserCloseWindowStation(
  *   NtUserCloseWindowStation()
  *   Zero on failure
  */
-HWINSTA
-STDCALL
-NtUserCreateWindowStation(
-  PUNICODE_STRING lpszWindowStationName,
-  ACCESS_MASK dwDesiredAccess,
-  LPSECURITY_ATTRIBUTES lpSecurity,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5)
+HWINSTA STDCALL
+NtUserCreateWindowStation(PUNICODE_STRING lpszWindowStationName,
+			  ACCESS_MASK dwDesiredAccess,
+			  LPSECURITY_ATTRIBUTES lpSecurity,
+			  DWORD Unknown3,
+			  DWORD Unknown4,
+			  DWORD Unknown5)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING WindowStationName;
@@ -197,54 +195,51 @@ NtUserCreateWindowStation(
   DPRINT("Trying to open window station (%wZ)\n", &WindowStationName);
 
   /* Initialize ObjectAttributes for the window station object */
-  InitializeObjectAttributes(
-    &ObjectAttributes,
-    &WindowStationName,
-    0,
-    NULL,
-    NULL);
-
-  Status = ObOpenObjectByName(
-    &ObjectAttributes,
-    ExWindowStationObjectType,
-    NULL,
-    UserMode,
-    dwDesiredAccess,
-    NULL,
-    &WinSta);
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &WindowStationName,
+			     0,
+			     NULL,
+			     NULL);
+  
+  Status = ObOpenObjectByName(&ObjectAttributes,
+			      ExWindowStationObjectType,
+			      NULL,
+			      UserMode,
+			      dwDesiredAccess,
+			      NULL,
+			      &WinSta);
   if (NT_SUCCESS(Status))
-  {
-    DPRINT("Successfully opened window station (%wZ)\n", WindowStationName);
-    return (HWINSTA)WinSta;
-  }
-
+    {
+      DPRINT("Successfully opened window station (%wZ)\n", WindowStationName);
+      return((HWINSTA)WinSta);
+    }
+  
   DPRINT("Creating window station (%wZ)\n", &WindowStationName);
 
-  Status = ObCreateObject(
-    &WinSta,
-    STANDARD_RIGHTS_REQUIRED,
-    &ObjectAttributes,
-    ExWindowStationObjectType,
-    (PVOID*)&WinStaObject);
+  Status = ObCreateObject(&WinSta,
+			  STANDARD_RIGHTS_REQUIRED,
+			  &ObjectAttributes,
+			  ExWindowStationObjectType,
+			  (PVOID*)&WinStaObject);
   if (!NT_SUCCESS(Status))
-  {
-    DPRINT("Failed creating window station (%wZ)\n", &WindowStationName);
-    SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
-    return (HWINSTA)0;
-  }
+    {
+      DPRINT("Failed creating window station (%wZ)\n", &WindowStationName);
+      SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
+      return (HWINSTA)0;
+    }
 
   WinStaObject->HandleTable = ObmCreateHandleTable();
   if (!WinStaObject->HandleTable)
-  {
-    DPRINT("Failed creating handle table\n");
-    ObDereferenceObject(WinStaObject);
-    SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
-    return (HWINSTA)0;
-  }
-
+    {
+      DPRINT("Failed creating handle table\n");
+      ObDereferenceObject(WinStaObject);
+      SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
+      return((HWINSTA)0);
+    }
+  
   DPRINT("Window station successfully created (%wZ)\n", &WindowStationName);
-
-  return (HWINSTA)WinSta;
+  
+  return((HWINSTA)WinSta);
 }
 
 BOOL
@@ -559,15 +554,12 @@ NtUserCreateDesktop(
   return (HDESK)Desktop;
 }
 
-HDESK
-STDCALL
-NtUserGetThreadDesktop(
-  DWORD dwThreadId,
-  DWORD Unknown1)
+HDESK STDCALL
+NtUserGetThreadDesktop(DWORD dwThreadId,
+		       DWORD Unknown1)
 {
-  UNIMPLEMENTED
-
-  return (HDESK)0;
+  UNIMPLEMENTED;
+  return((HDESK)0);
 }
 
 /*
@@ -731,14 +723,10 @@ NtUserResolveDesktopForWOW(
   return 0;
 }
 
-BOOL
-STDCALL
-NtUserSetThreadDesktop(
-  HDESK hDesktop)
+BOOL STDCALL
+NtUserSetThreadDesktop(HDESK hDesktop)
 {
-  UNIMPLEMENTED
-
-  return FALSE;
+  return(FALSE);
 }
 
 /*

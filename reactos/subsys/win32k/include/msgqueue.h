@@ -34,16 +34,30 @@ typedef struct _USER_SENT_MESSAGE_NOTIFY
 
 typedef struct _USER_MESSAGE_QUEUE
 {
+  /* Queue of messages sent to the queue. */
   LIST_ENTRY SentMessagesListHead;
+  /* Queue of messages posted to the queue. */
   LIST_ENTRY PostedMessagesListHead;
+  /* Queue of hardware messages for the queue. */
   LIST_ENTRY HardwareMessagesListHead;
+  /* Queue of sent-message notifies for the queue. */
   LIST_ENTRY NotifyMessagesListHead;
+  /* Lock for the queue. */
   FAST_MUTEX Lock;
+  /* True if a WM_QUIT message is pending. */
   BOOLEAN QuitPosted;
+  /* The quit exit code. */
   ULONG QuitExitCode;
+  /* Set if there are new messages in any of the queues. */
   KEVENT NewMessages;  
+  /* FIXME: Unknown. */
   ULONG QueueStatus;
+  /* Current window with focus for this queue. */
   HWND FocusWindow;
+  /* True if a window needs painting. */
+  BOOLEAN PaintPosted;
+  /* Count of paints pending. */
+  ULONG PaintCount;
 } USER_MESSAGE_QUEUE, *PUSER_MESSAGE_QUEUE;
 
 VOID
@@ -82,6 +96,13 @@ NTSTATUS
 MsqWaitForNewMessage(PUSER_MESSAGE_QUEUE MessageQueue);
 NTSTATUS
 MsqInitializeImpl(VOID);
+BOOLEAN
+MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue);
+NTSTATUS
+MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue);
+VOID
+MsqSendNotifyMessage(PUSER_MESSAGE_QUEUE MessageQueue,
+		     PUSER_SENT_MESSAGE_NOTIFY NotifyMessage);
 
 #define MAKE_LONG(x, y) ((((y) & 0xFFFF) << 16) | ((x) & 0xFFFF))
 

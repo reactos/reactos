@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.6 2002/06/18 21:51:09 dwelch Exp $
+/* $Id: window.c,v 1.7 2002/07/04 19:56:34 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -78,8 +78,8 @@ User32CallSendAsyncProcForKernel(PVOID Arguments, ULONG ArgumentLength)
     {
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
-  CallbackArgs->Proc(CallbackArgs->Wnd, CallbackArgs->Msg,
-		     CallbackArgs->Data, CallbackArgs->Result);
+  CallbackArgs->Callback(CallbackArgs->Wnd, CallbackArgs->Msg,
+			 CallbackArgs->Context, CallbackArgs->Result);
   return(STATUS_SUCCESS);
 }
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: syscall.S,v 1.5 2002/06/11 22:09:02 dwelch Exp $
+/* $Id: syscall.S,v 1.6 2002/07/04 19:56:36 dwelch Exp $
  *
  * FILE:            ntoskrnl/hal/x86/syscall.s
  * PURPOSE:         2E trap handler
@@ -89,8 +89,9 @@ L3:
 	   pushl $0     /* XXX: TempCS */
 	   pushl $0     /* XXX: DebugPointer */
 	   pushl $0     /* XXX: DebugArgMark */
-	   pushl $0     /* XXX: DebugEIP */
-	   pushl $0     /* XXX: DebugEBP */
+	   movl	 0x60(%esp), %ebx
+	   pushl %ebx   /* DebugEIP */
+	   pushl %ebp   /* DebugEBP */
 
            /* Load the segment registers */
 	   movl  $KERNEL_DS, %ebx

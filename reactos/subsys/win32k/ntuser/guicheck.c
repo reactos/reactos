@@ -1,4 +1,4 @@
-/* $Id: guicheck.c,v 1.4 2002/01/27 01:11:24 dwelch Exp $
+ /* $Id: guicheck.c,v 1.5 2002/07/04 19:56:37 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -22,6 +22,7 @@
 #include <include/msgqueue.h>
 #include <include/object.h>
 #include <napi/win32.h>
+#include <include/winsta.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -33,19 +34,46 @@ W32kGuiCheck(VOID)
 {
   if (PsGetWin32Process() == NULL)
     {
+      NTSTATUS Status;
+
       PsCreateWin32Process(PsGetCurrentProcess());
 
       InitializeListHead(&PsGetWin32Process()->ClassListHead);
-      ExInitializeFastMutex(&PsGetWin32Process()->ClassListLock);
-      InitializeListHead(&PsGetWin32Process()->WindowListHead);
-      ExInitializeFastMutex(&PsGetWin32Process()->WindowListLock);
-      PsGetWin32Process()->HandleTable = ObmCreateHandleTable();
+      ExInitializeFastMutex(&PsGetWin32Process()->ClassListLock);      
+
+      Status = 
+	ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+				    UserMode,
+				    GENERIC_ALL,
+				    &PsGetWin32Process()->WindowStation);
+      if (!NT_SUCCESS(Status))
+	{
+	  DbgPrint("W32K: Failed to reference a window station for "
+		   "process.\n");
+	}
     }
 
   if (PsGetWin32Thread() == NULL)
     {
+      NTSTATUS Status;
+
       PsCreateWin32Thread(PsGetCurrentThread());
       PsGetWin32Thread()->MessageQueue = MsqCreateMessageQueue();
+      InitializeListHead(&PsGetWin32Thread()->WindowListHead);
+      ExInitializeFastMutex(&PsGetWin32Thread()->WindowListLock);
+
+      /* By default threads get assigned their process's desktop. */
+      PsGetWin32Thread()->Desktop = NULL;
+      Status = ObReferenceObjectByHandle(PsGetCurrentProcess()->Win32Desktop,
+					 GENERIC_ALL,
+					 ExDesktopObjectType,
+					 UserMode,
+					 &PsGetWin32Thread()->Desktop,
+					 NULL);
+      if (!NT_SUCCESS(Status))
+	{
+	  DbgPrint("W32K: Failed to reference a desktop for thread.\n");
+	}
     }
 }
 

@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.7 2002/06/14 20:56:17 jfilby Exp $
+/* $Id: class.c,v 1.8 2002/07/04 19:56:37 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -17,6 +17,7 @@
 #include <include/error.h>
 #include <include/winsta.h>
 #include <include/object.h>
+#include <include/guicheck.h>
 
 //#define NDEBUG
 #include <debug.h>
@@ -249,6 +250,11 @@ NtUserRegisterClassExWOW(LPWNDCLASSEX lpwcx,
   ObDereferenceObject(WinStaObject);
   
   return(Atom);
+}
+
+DWORD STDCALL
+NtUserGetClassLong(HWND hWnd, DWORD Offset)
+{
 }
 
 DWORD STDCALL
