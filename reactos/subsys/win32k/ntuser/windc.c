@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.54 2004/02/04 22:59:04 gvg Exp $
+/* $Id: windc.c,v 1.55 2004/02/05 23:16:37 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -255,6 +255,18 @@ DceUpdateVisRgn(DCE *Dce, PWINDOW_OBJECT Window, ULONG Flags)
             }
           hRgnVisible = DceGetVisRgn(Parent->Self, DcxFlags, 
                                      Window->Self, Flags);
+          if (0 == (Flags & DCX_WINDOW))
+            {
+              NtGdiOffsetRgn(hRgnVisible,
+                             Parent->ClientRect.left - Window->ClientRect.left,
+                             Parent->ClientRect.top - Window->ClientRect.top);
+            }
+          else
+            {
+              NtGdiOffsetRgn(hRgnVisible,
+                             Parent->WindowRect.left - Window->WindowRect.left,
+                             Parent->WindowRect.top - Window->WindowRect.top);
+            }
         }
       else
         {
