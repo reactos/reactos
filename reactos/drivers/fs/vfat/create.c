@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.26 2001/06/14 21:05:08 jfilby Exp $
+/* $Id: create.c,v 1.27 2001/07/05 01:51:52 rex Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -20,10 +20,6 @@
 #include "vfat.h"
 
 /* GLOBALS *******************************************************************/
-
-#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-
-#define TAG_CCB TAG('V', 'C', 'C', 'B')
 
 /* FUNCTIONS *****************************************************************/
 
@@ -60,7 +56,7 @@ IsDeletedEntry (PVOID Block, ULONG Offset)
 	  (((FATDirEntry *) Block)[Offset].Filename[0] == 0));
 }
 
-static void  vfat8Dot3ToString (PCHAR pBasename, PCHAR pExtension, PWSTR pName)
+void  vfat8Dot3ToString (PCHAR pBasename, PCHAR pExtension, PWSTR pName)
 {
   int  fromIndex, toIndex;
 
@@ -475,195 +471,56 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
  * FUNCTION: Opens a file
  */
 {
-  PWSTR current = NULL;
-  PWSTR next;
-  PWSTR string;
-//  PWSTR buffer; // used to store a pointer while checking MAX_PATH conformance
   PVFATFCB ParentFcb;
   PVFATFCB Fcb;
-  PVFATFCB Temp;
-  PVFATCCB newCCB;
   NTSTATUS Status;
   PWSTR AbsFileName = NULL;
-  ULONG BytesPerCluster, FileCacheQuantum;
 
   DPRINT ("VfatOpenFile(%08lx, %08lx, %S)\n", DeviceExt, FileObject, FileName);
 
-  /* FIXME : treat relative name */
   if (FileObject->RelatedFileObject)
     {
+      DPRINT ("Converting relative filename to absolute filename\n");
       Status = vfatMakeAbsoluteFilename (FileObject->RelatedFileObject,
                                          FileName,
                                          &AbsFileName);
       FileName = AbsFileName;
     }
 
-  /*
-   * try first to find an existing FCB in memory
-   */
-  CHECKPOINT;
+  //FIXME: Get cannonical path name (remove .'s, ..'s and extra separators)
 
+  DPRINT ("PathName to open: %S\n", FileName);
+
+  /*  try first to find an existing FCB in memory  */
+  DPRINT ("Checking for existing FCB in memory\n");
   Fcb = vfatGrabFCBFromTable (DeviceExt, FileName);
-  if (Fcb != NULL)
+  if (Fcb == NULL)
   {
-    FileObject->FsContext = (PVOID)&Fcb->RFCB;
-    newCCB = ExAllocatePoolWithTag (NonPagedPool, sizeof (VFATCCB), TAG_CCB);
-    memset (newCCB, 0, sizeof (VFATCCB));
-    FileObject->Flags = FileObject->Flags | 
-        FO_FCB_IS_VALID | FO_DIRECT_CACHE_PAGING_READ;
-    FileObject->SectionObjectPointers = &Fcb->SectionObjectPointers;
-    FileObject->FsContext2 = newCCB;
-    newCCB->pFcb = Fcb;
-    newCCB->PtrFileObject = FileObject;
-    if (AbsFileName)
-      ExFreePool (AbsFileName);
-    return  STATUS_SUCCESS;
+    DPRINT ("No existing FCB found, making a new one if file exists.\n");
+    Status = vfatGetFCBForFile (DeviceExt, &ParentFcb, &Fcb, FileName);
+    if (ParentFcb != NULL)
+    {
+      vfatReleaseFCB (DeviceExt, ParentFcb);
+    }
+    if (!NT_SUCCESS (Status))
+    {
+      DPRINT ("Could not make a new FCB, status: %x\n", Status);
+
+      if (AbsFileName)
+        ExFreePool (AbsFileName);
+
+      return  Status;
+    }
   }
 
-  DPRINT ("FileName %S\n", FileName);
+  DPRINT ("Attaching FCB to fileObject\n");
+  Status = vfatAttachFCBToFileObject (DeviceExt, Fcb, FileObject);
 
-  string = FileName;
-  ParentFcb = NULL;
-  Fcb = vfatNewFCB (L"\\");
-  next = &string[0];
-
-  CHECKPOINT;
-  if (*next == 0 || *(next+1) == 0)		// root
-    {
-      memset (Fcb->entry.Filename, ' ', 11);
-      Fcb->entry.FileSize = DeviceExt->rootDirectorySectors * BLOCKSIZE;
-      Fcb->entry.Attrib = FILE_ATTRIBUTE_DIRECTORY;
-      if (DeviceExt->FatType == FAT32)
-	Fcb->entry.FirstCluster = 2;
-      else
-	Fcb->entry.FirstCluster = 1;
-      /* FIXME : is 1 the good value for mark root? */
-      ParentFcb = Fcb;
-      DPRINT("%S filename, PathName: %S\n",FileName, ParentFcb->PathName);
-      Fcb = NULL;
-    }
-  else
-    {
-      while (TRUE)
-	{
-	  CHECKPOINT;
-	  *next = '\\';
-	  current = next + 1;
-	  next = wcschr (next + 1, '\\');
-	  if (next != NULL)
-	    {
-	      *next = 0;
-	    }
-	  else
-	    {
-	      /* reached the last path component */
-	      DPRINT ("exiting: current '%S'\n", current);
-	      break;
-	    }
-
-	  DPRINT ("search for (%S) in (%S)\n", current, ParentFcb ? ParentFcb->PathName : L"");
-	  Status = FindFile (DeviceExt, Fcb, ParentFcb, current, NULL, NULL);
-	  if (Status != STATUS_SUCCESS)
-	    {
-	      CHECKPOINT;
-	      if (Fcb != NULL)
-		ExFreePool (Fcb);
-	      if (ParentFcb != NULL)
-		ExFreePool (ParentFcb);
-	      if (AbsFileName)
-		ExFreePool (AbsFileName);
-
-	      DPRINT ("error STATUS_OBJECT_PATH_NOT_FOUND\n");
-	      return STATUS_OBJECT_PATH_NOT_FOUND;
-	    }
-	  Temp = Fcb;
-	  CHECKPOINT;
-	  if (ParentFcb == NULL)
-	    {
-	      CHECKPOINT;
-	      Fcb = vfatNewFCB (L"\\");
-	    }
-	  else
-	      Fcb = ParentFcb;
-
-	  if (*(Temp->ObjectName))
-	  {
-	    vfat_wcsncpy(Fcb->PathName+(Fcb->ObjectName-Fcb->PathName),Temp->PathName+(Fcb->ObjectName-Fcb->PathName), MAX_PATH);
-
-	    Fcb->ObjectName = &Fcb->PathName[wcslen(Fcb->PathName)];
-	    Fcb->ObjectName[0]='\\';
-	    Fcb->ObjectName=&Fcb->ObjectName[1];
-	    Fcb->ObjectName[0]=0;
-	  }
-	  CHECKPOINT;
-	  ParentFcb = Temp;
-	}
-	
-	if( *current != L'\0' ){ //the file name is directory. there will be no last part.
-      /* searching for last path component */
-      DPRINT ("search for (%S) in (%S)\n", current, Fcb ? Fcb->PathName : L"");
-      Status = FindFile (DeviceExt, Fcb, ParentFcb, current, NULL, NULL);
-      if (Status != STATUS_SUCCESS)
-        {
-	  /* file does not exist */
-	  CHECKPOINT;
-	  if (Fcb != NULL)
-	    ExFreePool (Fcb);
-	  if (ParentFcb != NULL)
-	    ExFreePool (ParentFcb);
-	  if (AbsFileName)
-	    ExFreePool (AbsFileName);
-
-          return STATUS_OBJECT_NAME_NOT_FOUND;
-	}
-
-      Temp = Fcb;
-
-      Fcb = ParentFcb;
-      ParentFcb = Temp;
-      ParentFcb->ObjectName = &(wcschr (ParentFcb->ObjectName, '\\'))[1];
-      }
-    }
-
-    FileObject->Flags = FileObject->Flags | 
-    FO_FCB_IS_VALID | FO_DIRECT_CACHE_PAGING_READ;
-  FileObject->SectionObjectPointers = &ParentFcb->SectionObjectPointers;
-  memset(FileObject->SectionObjectPointers, 0, 
-	 sizeof(SECTION_OBJECT_POINTERS));
-  FileObject->FsContext = (PVOID)&ParentFcb->RFCB;
-  newCCB = ExAllocatePoolWithTag (NonPagedPool, sizeof (VFATCCB), TAG_CCB);
-  memset (newCCB, 0, sizeof (VFATCCB));
-  FileObject->FsContext2 = newCCB;
-  newCCB->pFcb = ParentFcb;
-  newCCB->PtrFileObject = FileObject;
-  ParentFcb->RefCount++;
-  ParentFcb->pDevExt = DeviceExt;
-  /* FIXME : initialize all fields in FCB and CCB */
-
-  BytesPerCluster = DeviceExt->Boot->SectorsPerCluster * BLOCKSIZE;
-  FileCacheQuantum = (BytesPerCluster >= PAGESIZE) ? BytesPerCluster : PAGESIZE;
-  Status = CcRosInitializeFileCache(FileObject, 
-                                 &ParentFcb->RFCB.Bcb,
-                                 FileCacheQuantum);
-  if (!NT_SUCCESS(Status))
-    {
-      DbgPrint("CcRosInitializeFileCache failed\n");
-      KeBugCheck(0);
-    }
-  DPRINT ("file open, fcb=%x\n", ParentFcb);
-  DPRINT ("FileSize %d\n", ParentFcb->entry.FileSize);
-
-  vfatAddFCBToTable (DeviceExt, ParentFcb);
-
-  if (Fcb)
-    ExFreePool (Fcb);
   if (AbsFileName)
     ExFreePool (AbsFileName);
-  CHECKPOINT;
 
-  return (STATUS_SUCCESS);
+  return  Status;
 }
-
 
 NTSTATUS
 VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)

@@ -1,12 +1,13 @@
-# $Id: makefile,v 1.31 2001/06/22 12:27:48 ekohl Exp $
+# $Id: makefile,v 1.32 2001/07/05 01:51:52 rex Exp $
 #
 #
 PATH_TO_TOP = ../../..
 
 TARGET=vfatfs
 
-OBJECTS = blockdev.o close.o create.o dir.o dirwr.o iface.o string.o fat.o \
-          rw.o finfo.o volume.o shutdown.o cleanup.o fcb.o $(TARGET).coff
+OBJECTS = blockdev.o cleanup.o close.o create.o dir.o direntry.o dirwr.o  \
+          fat.o fcb.o finfo.o iface.o rw.o shutdown.o string.o volume.o  \
+          $(TARGET).coff
 
 LIBS = $(PATH_TO_TOP)/ntoskrnl/ntoskrnl.a
 

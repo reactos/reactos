@@ -375,3 +375,5 @@ VfatDirectoryControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
   IoCompleteRequest (Irp, IO_NO_INCREMENT);
   return RC;
 }
+
+

@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.3 2001/05/10 06:30:23 rex Exp $
+/* $Id: fcb.c,v 1.4 2001/07/05 01:51:52 rex Exp $
  *
  *
  * FILE:             fcb.c
@@ -54,9 +54,26 @@ void  vfatDestroyFCB (PVFATFCB  pFCB)
   ExFreePool (pFCB);
 }
 
+BOOL
+vfatFCBIsDirectory (PDEVICE_EXTENSION pVCB, PVFATFCB FCB)
+{
+  return  FCB->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY;
+}
+
+BOOL
+vfatFCBIsRoot (PVFATFCB FCB)
+{
+  return  wcscmp (FCB->PathName, L"\\") == 0;
+}
+
 void  vfatGrabFCB (PDEVICE_EXTENSION  pVCB, PVFATFCB  pFCB)
 {
   KIRQL  oldIrql;
+
+  DPRINT ("grabbing FCB at %x: %S, refCount:%d\n", 
+          pFCB, 
+          pFCB->PathName,
+          pFCB->RefCount);
 
   KeAcquireSpinLock (&pVCB->FcbListLock, &oldIrql);
   pFCB->RefCount++;
@@ -66,6 +83,11 @@ void  vfatGrabFCB (PDEVICE_EXTENSION  pVCB, PVFATFCB  pFCB)
 void  vfatReleaseFCB (PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB)
 {
   KIRQL  oldIrql;
+
+  DPRINT ("releasing FCB at %x: %S, refCount:%d\n", 
+          pFCB, 
+          pFCB->PathName,
+          pFCB->RefCount);
 
   KeAcquireSpinLock (&pVCB->FcbListLock, &oldIrql);
   pFCB->RefCount--;
@@ -95,16 +117,11 @@ vfatGrabFCBFromTable (PDEVICE_EXTENSION  pVCB, PWSTR  pFileName)
   PVFATFCB  rcFCB;
   PLIST_ENTRY  current_entry;
 
-  CHECKPOINT;
   KeAcquireSpinLock (&pVCB->FcbListLock, &oldIrql);
-  CHECKPOINT;
   current_entry = pVCB->FcbListHead.Flink;
   while (current_entry != &pVCB->FcbListHead)
   {
     rcFCB = CONTAINING_RECORD (current_entry, VFATFCB, FcbListEntry);
-
-    DPRINT ("Next FCB in list at %x\n", rcFCB);
-    DPRINT ("  PathName:%S\n", rcFCB->PathName);
 
     if (wstrcmpi (pFileName, rcFCB->PathName))
     {
@@ -112,22 +129,156 @@ vfatGrabFCBFromTable (PDEVICE_EXTENSION  pVCB, PWSTR  pFileName)
       KeReleaseSpinLock (&pVCB->FcbListLock, oldIrql);
       return  rcFCB;
     }
+
+    //FIXME: need to compare against short name in FCB here
+
     current_entry = current_entry->Flink;
   }
-  CHECKPOINT;
   KeReleaseSpinLock (&pVCB->FcbListLock, oldIrql);
 
   return  NULL;
 }
 
-PVFATFCB  
-vfatMakeRootFCB (PDEVICE_EXTENSION  pVCB)
+NTSTATUS
+vfatFCBInitializeCache (PVCB  vcb, PVFATFCB  fcb)
 {
   NTSTATUS  status;
-  PVFATFCB  FCB;
   PFILE_OBJECT  fileObject;
   ULONG  bytesPerCluster;
   ULONG  fileCacheQuantum;
+  PVFATCCB  newCCB;
+
+  fileObject = IoCreateStreamFileObject (NULL, vcb->StorageDevice);
+
+  newCCB = ExAllocatePoolWithTag (NonPagedPool, sizeof (VFATCCB), TAG_CCB);
+  if (newCCB == NULL)
+  {
+    return  STATUS_INSUFFICIENT_RESOURCES;
+  }
+  memset (newCCB, 0, sizeof (VFATCCB));
+
+  fileObject->Flags = fileObject->Flags | FO_FCB_IS_VALID |
+      FO_DIRECT_CACHE_PAGING_READ;
+  fileObject->SectionObjectPointers = &fcb->SectionObjectPointers;
+  fileObject->FsContext = (PVOID) &fcb->RFCB;
+  fileObject->FsContext2 = newCCB;
+  newCCB->pFcb = fcb;
+  newCCB->PtrFileObject = fileObject;
+  fcb->pDevExt = vcb;
+
+  bytesPerCluster = vcb->Boot->SectorsPerCluster * BLOCKSIZE;
+  fileCacheQuantum = (bytesPerCluster >= PAGESIZE) ? 
+      bytesPerCluster : PAGESIZE;
+  status = CcRosInitializeFileCache (fileObject, 
+                                     &fcb->RFCB.Bcb,
+                                     fileCacheQuantum);
+  if (!NT_SUCCESS (status))
+  {
+    DbgPrint ("CcRosInitializeFileCache failed\n");
+    KeBugCheck (0);
+  }
+  ObDereferenceObject (fileObject);
+  fcb->isCacheInitialized = TRUE;
+
+  return  status;
+}
+
+NTSTATUS
+vfatRequestAndValidateRegion (PDEVICE_EXTENSION  pDeviceExt, 
+                              PVFATFCB  pFCB, 
+                              ULONG  pOffset,
+                              PVOID * pBuffer,
+                              PCACHE_SEGMENT * pCacheSegment,
+                              BOOL  pExtend)
+{
+  NTSTATUS  status;
+  BOOLEAN  valid;
+  BOOLEAN  isRoot;
+  ULONG  currentCluster;
+  ULONG  i;
+
+  status = CcRosRequestCacheSegment(pFCB->RFCB.Bcb, 
+                                    pOffset,
+                                    pBuffer,
+                                    &valid,
+                                    pCacheSegment);
+  if (!NT_SUCCESS (status))
+  {
+    return  status;
+  }
+
+  isRoot = vfatFCBIsRoot (pFCB);
+  if (!valid)
+  {
+    currentCluster = vfatDirEntryGetFirstCluster (pDeviceExt, &pFCB->entry);
+    status = OffsetToCluster (pDeviceExt, 
+                              vfatDirEntryGetFirstCluster (pDeviceExt, &pFCB->entry), 
+                              pOffset, 
+                              &currentCluster,
+                              pExtend);
+    if (!NT_SUCCESS (status))
+    {
+      return  status;
+    }
+
+    if (PAGESIZE > pDeviceExt->BytesPerCluster)
+    {
+      for (i = 0; i < (PAGESIZE / pDeviceExt->BytesPerCluster); i++)
+      {
+        status = VfatRawReadCluster (pDeviceExt, 
+                                     vfatDirEntryGetFirstCluster (pDeviceExt, &pFCB->entry),
+                                     ((PCHAR)*pBuffer) + 
+                                     (i * pDeviceExt->BytesPerCluster),
+                                     currentCluster);
+        if (!NT_SUCCESS (status))
+        {
+          CcRosReleaseCacheSegment(pFCB->RFCB.Bcb, *pCacheSegment, FALSE);
+          return  status;
+        }
+        status = NextCluster (pDeviceExt, 
+                              vfatDirEntryGetFirstCluster (pDeviceExt, &pFCB->entry), 
+                              &currentCluster, 
+                              pExtend);
+        if (!NT_SUCCESS (status))
+        {
+          CcRosReleaseCacheSegment(pFCB->RFCB.Bcb, *pCacheSegment, FALSE);
+          return  status;
+        }
+        if ((currentCluster) == 0xFFFFFFFF)
+        {
+          break;
+        }
+      }
+    }
+    else
+    {
+      status = VfatRawReadCluster (pDeviceExt, 
+                                   vfatDirEntryGetFirstCluster (pDeviceExt, &pFCB->entry),
+                                   *pBuffer,
+                                   currentCluster);
+      if (!NT_SUCCESS (status))
+      {
+        CcRosReleaseCacheSegment(pFCB->RFCB.Bcb, *pCacheSegment, FALSE);
+        return  status;
+      }
+    }
+  }
+
+  return  STATUS_SUCCESS;
+}
+
+NTSTATUS
+vfatReleaseRegion (PDEVICE_EXTENSION  pDeviceExt,
+                   PVFATFCB  pFCB,
+                   PCACHE_SEGMENT  pCacheSegment)
+{
+  return  CcRosReleaseCacheSegment (pFCB->RFCB.Bcb, pCacheSegment, TRUE);
+}
+
+PVFATFCB  
+vfatMakeRootFCB (PDEVICE_EXTENSION  pVCB)
+{
+  PVFATFCB  FCB;
 
   FCB = vfatNewFCB (L"\\");
   memset (FCB->entry.Filename, ' ', 11);
@@ -142,21 +293,10 @@ vfatMakeRootFCB (PDEVICE_EXTENSION  pVCB)
     FCB->entry.FirstCluster = 1;
   }
   FCB->RefCount = 1;
-  fileObject = IoCreateStreamFileObject (NULL, pVCB->StorageDevice);
 
-  bytesPerCluster = pVCB->Boot->SectorsPerCluster * BLOCKSIZE;
-  fileCacheQuantum = (bytesPerCluster >= PAGESIZE) ? 
-      bytesPerCluster : PAGESIZE;
-  status = CcRosInitializeFileCache (fileObject, 
-                                     &FCB->RFCB.Bcb,
-                                     fileCacheQuantum);
-  if (!NT_SUCCESS (status))
-  {
-    DbgPrint ("CcRosInitializeFileCache failed\n");
-    KeBugCheck (0);
-  }
-  ObDereferenceObject (fileObject);
+  vfatFCBInitializeCache (pVCB, FCB);
   vfatAddFCBToTable (pVCB, FCB);
+  vfatGrabFCB(pVCB, FCB);
 
   return  FCB;
 }
@@ -167,27 +307,191 @@ vfatOpenRootFCB (PDEVICE_EXTENSION  pVCB)
   PVFATFCB  FCB;
 
   FCB = vfatGrabFCBFromTable (pVCB, L"\\");
-  if (FCB != NULL)
+  if (FCB == NULL)
   {
-    return  FCB;
+    FCB = vfatMakeRootFCB (pVCB);
   }
-  FCB = vfatMakeRootFCB (pVCB);
   
   return  FCB;
 }
 
-BOOL
-vfatFCBIsDirectory (PDEVICE_EXTENSION pVCB, PVFATFCB FCB)
+NTSTATUS
+vfatMakeFCBFromDirEntry (PVCB  vcb,
+                         PVFATFCB  directoryFCB,
+                         PWSTR  longName,
+                         PFAT_DIR_ENTRY  dirEntry,
+                         PVFATFCB * fileFCB)
 {
-  return  FCB->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY;
+  PVFATFCB  rcFCB;
+  WCHAR  pathName [MAX_PATH];
+
+  if (longName [0] != 0 && wcslen (directoryFCB->PathName) + 
+        sizeof(WCHAR) + wcslen (longName) > MAX_PATH)
+  {
+    return  STATUS_OBJECT_NAME_INVALID;
+  }
+  wcscpy (pathName, directoryFCB->PathName);
+  if (!vfatFCBIsRoot (directoryFCB))
+  {
+    wcscat (pathName, L"\\");
+  }
+  if (longName [0] != 0)
+  {
+    wcscat (pathName, longName);
+  }
+  else
+  {
+    WCHAR  entryName [MAX_PATH];
+
+    vfatGetDirEntryName (dirEntry, entryName);
+    wcscat (pathName, entryName);
+  }
+  rcFCB = vfatNewFCB (pathName);
+  memcpy (&rcFCB->entry, dirEntry, sizeof (FAT_DIR_ENTRY));
+
+  vfatFCBInitializeCache (vcb, rcFCB);
+  vfatAddFCBToTable (vcb, rcFCB);
+  vfatGrabFCB (vcb, rcFCB);
+  *fileFCB = rcFCB;
+
+  return  STATUS_SUCCESS;
 }
 
-PVFATFCB  
-vfatDirFindFile (PDEVICE_EXTENSION  pVCB, 
-                 PVFATFCB  parentFCB, 
-                 const PWSTR  elementName)
+NTSTATUS
+vfatAttachFCBToFileObject (PDEVICE_EXTENSION  vcb, 
+                           PVFATFCB  fcb,
+                           PFILE_OBJECT  fileObject)
 {
-  UNIMPLEMENTED;
+  NTSTATUS  status;
+  PVFATCCB  newCCB;
+
+  newCCB = ExAllocatePoolWithTag (NonPagedPool, sizeof (VFATCCB), TAG_CCB);
+  if (newCCB == NULL)
+  {
+    return  STATUS_INSUFFICIENT_RESOURCES;
+  }
+  memset (newCCB, 0, sizeof (VFATCCB));
+
+  fileObject->Flags = fileObject->Flags | FO_FCB_IS_VALID |
+      FO_DIRECT_CACHE_PAGING_READ;
+  fileObject->SectionObjectPointers = &fcb->SectionObjectPointers;
+  fileObject->FsContext = (PVOID) &fcb->RFCB;
+  fileObject->FsContext2 = newCCB;
+  newCCB->pFcb = fcb;
+  newCCB->PtrFileObject = fileObject;
+  fcb->pDevExt = vcb;
+
+  if (!fcb->isCacheInitialized)
+  {
+    ULONG  bytesPerCluster;
+    ULONG  fileCacheQuantum;
+
+    bytesPerCluster = vcb->Boot->SectorsPerCluster * BLOCKSIZE;
+    fileCacheQuantum = (bytesPerCluster >= PAGESIZE) ? bytesPerCluster : 
+        PAGESIZE;
+    status = CcRosInitializeFileCache (fileObject, 
+                                       &fcb->RFCB.Bcb,
+                                       fileCacheQuantum);
+    if (!NT_SUCCESS (status))
+    {
+      DbgPrint ("CcRosInitializeFileCache failed\n");
+      KeBugCheck (0);
+    }
+    fcb->isCacheInitialized = TRUE;
+  }
+
+  DPRINT ("file open: fcb:%x file size: %d\n", fcb, fcb->entry.FileSize);
+
+  return  STATUS_SUCCESS;
+}
+
+NTSTATUS
+vfatDirFindFile (PDEVICE_EXTENSION  pDeviceExt, 
+                 PVFATFCB  pDirectoryFCB, 
+                 PWSTR  pFileToFind,
+                 PVFATFCB * pFoundFCB)
+{
+  BOOL  finishedScanningDirectory;
+  ULONG  directoryIndex;
+  NTSTATUS  status;
+  WCHAR  defaultFileName [2];
+  WCHAR  currentLongName [256];
+  FAT_DIR_ENTRY  currentDirEntry;
+  WCHAR  currentEntryName [256];
+
+  assert (pDeviceExt);
+  assert (pDirectoryFCB);
+  assert (pFileToFind);
+
+  DPRINT ("vfatDirFindFile(VCB:%08x, dirFCB:%08x, File:%S)\n",
+          pDeviceExt, 
+          pDirectoryFCB,
+          pFileToFind);
+  DPRINT ("Dir Path:%S\n", pDirectoryFCB->PathName);
+
+  //  default to '.' if no filename specified
+  if (wcslen (pFileToFind) == 0)
+  {
+    defaultFileName [0] = L'.';
+    defaultFileName [1] = 0;
+    pFileToFind = defaultFileName;
+  }
+
+  directoryIndex = 0; 
+  finishedScanningDirectory = FALSE;
+  while (!finishedScanningDirectory)
+  {
+    status = vfatGetNextDirEntry (pDeviceExt,
+                                  pDirectoryFCB,
+                                  &directoryIndex,
+                                  currentLongName,
+                                  &currentDirEntry);
+    if (status == STATUS_NO_MORE_ENTRIES)
+    {
+      finishedScanningDirectory = TRUE;
+      continue;
+    }
+    else if (!NT_SUCCESS(status))
+    {
+      return  status;
+    }
+
+    DPRINT ("  Index:%d  longName:%S\n", 
+            directoryIndex,
+            currentLongName);
+
+    if (!vfatIsDirEntryDeleted (&currentDirEntry))
+    {
+      if (currentLongName [0] != L'\0' && wstrcmpjoki (currentLongName, pFileToFind))
+      {
+        DPRINT ("Match found, %S\n", currentLongName);
+        status = vfatMakeFCBFromDirEntry (pDeviceExt,
+                                          pDirectoryFCB,
+                                          currentLongName,
+                                          &currentDirEntry,
+                                          pFoundFCB);
+        return  status;
+      }
+      else 
+      {
+        vfatGetDirEntryName (&currentDirEntry, currentEntryName);
+        DPRINT ("  entryName:%S\n", currentEntryName);
+
+        if (wstrcmpjoki (currentEntryName, pFileToFind))
+        {
+          DPRINT ("Match found, %S\n", currentEntryName);
+          status = vfatMakeFCBFromDirEntry (pDeviceExt,
+                                            pDirectoryFCB,
+                                            currentLongName,
+                                            &currentDirEntry,
+                                            pFoundFCB);
+          return  status;
+        }
+      }
+    }
+  }
+
+  return  STATUS_OBJECT_NAME_NOT_FOUND;
 }
 
 NTSTATUS
@@ -196,26 +500,29 @@ vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB,
                    PVFATFCB  *pFCB, 
                    const PWSTR  pFileName)
 {
+  NTSTATUS  status;
   WCHAR  pathName [MAX_PATH];
   WCHAR  elementName [MAX_PATH];
   PWCHAR  currentElement;
   PVFATFCB  FCB;
   PVFATFCB  parentFCB;
   
+  DPRINT ("vfatGetFCBForFile (%x,%x,%x,%S)\n",
+          pVCB, 
+          pParentFCB, 
+          pFCB, 
+          pFileName);
+
   //  Trivial case, open of the root directory on volume
   if (pFileName [0] == L'\0' || wcscmp (pFileName, L"\\") == 0)
   {
-    currentElement = pFileName;
-    //FIXME: grab/create root RCB and return it
-    FCB = vfatGrabFCBFromTable (pVCB, L"\\");
-    if (FCB == NULL)
-    {
-      FCB = vfatMakeRootFCB (pVCB);
-      *pFCB = FCB;
-      *pParentFCB = NULL;
+    DPRINT ("returning root FCB\n");
 
-      return  (FCB != NULL) ? STATUS_SUCCESS : STATUS_OBJECT_PATH_NOT_FOUND;
-    }
+    FCB = vfatOpenRootFCB (pVCB);
+    *pFCB = FCB;
+    *pParentFCB = NULL;
+
+    return  (FCB != NULL) ? STATUS_SUCCESS : STATUS_OBJECT_PATH_NOT_FOUND;
   }
   else
   {
@@ -235,7 +542,8 @@ vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB,
       continue;
     }
 
-    currentElement = vfatGetNextPathElement (currentElement);
+    DPRINT ("Parsing, currentElement:%S\n", currentElement);
+    DPRINT ("  parentFCB:%x FCB:%x\n", parentFCB, FCB);
 
     //  descend to next directory level
     if (parentFCB)
@@ -246,8 +554,13 @@ vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB,
     //  fail if element in FCB is not a directory
     if (!vfatFCBIsDirectory (pVCB, FCB))
     {
+      DPRINT ("Element in requested path is not a directory\n");
+
       vfatReleaseFCB (pVCB, FCB);
       FCB = 0;
+      *pParentFCB = NULL;
+      *pFCB = NULL;
+
       return  STATUS_OBJECT_PATH_NOT_FOUND;
     }
     parentFCB = FCB;
@@ -256,6 +569,7 @@ vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB,
     vfatWSubString (pathName, 
                     pFileName, 
                     vfatGetNextPathElement (currentElement) - pFileName);
+    DPRINT ("  pathName:%S\n", pathName);
 
     FCB = vfatGrabFCBFromTable (pVCB, pathName);
     if (FCB == NULL)
@@ -263,12 +577,14 @@ vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB,
       vfatWSubString (elementName, 
                       currentElement, 
                       vfatGetNextPathElement (currentElement) - currentElement);
-      FCB = vfatDirFindFile (pVCB, parentFCB, elementName);
-      if (FCB == NULL)
+      DPRINT ("  elementName:%S\n", elementName);
+
+      status = vfatDirFindFile (pVCB, parentFCB, elementName, &FCB);
+      if (status == STATUS_OBJECT_NAME_NOT_FOUND)
       {
         *pParentFCB = parentFCB;
         *pFCB = NULL;
-        if (vfatGetNextPathElement (currentElement) == 0)
+        if (vfatGetNextPathElement (vfatGetNextPathElement (currentElement) + 1) == 0)
         {
           return  STATUS_OBJECT_NAME_NOT_FOUND;
         }
@@ -277,9 +593,16 @@ vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB,
           return  STATUS_OBJECT_PATH_NOT_FOUND;
         }
       }
+      else if (!NT_SUCCESS (status))
+      {
+        vfatReleaseFCB (pVCB, parentFCB);
+        *pParentFCB = NULL;
+        *pFCB = NULL;
 
-      // FIXME: check security on directory element and fail if access denied
+        return  status;
+      }
     }
+    currentElement = vfatGetNextPathElement (currentElement);
   }
 
   *pParentFCB = parentFCB;

@@ -1,4 +1,4 @@
-/* $Id: iface.c,v 1.53 2001/06/11 19:52:22 ekohl Exp $
+/* $Id: iface.c,v 1.54 2001/07/05 01:51:52 rex Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -103,6 +103,7 @@ VfatMountDevice (PDEVICE_EXTENSION DeviceExt, PDEVICE_OBJECT DeviceToMount)
      DeviceExt->Boot->FATCount * DeviceExt->Boot->FATSectors;
    DeviceExt->dataStart =
      DeviceExt->rootStart + DeviceExt->rootDirectorySectors;
+   DeviceExt->BytesPerSector = DeviceExt->Boot->BytesPerSector;
    DeviceExt->FATEntriesPerSector = DeviceExt->Boot->BytesPerSector / 32;
    DeviceExt->BytesPerCluster = DeviceExt->Boot->SectorsPerCluster *
      DeviceExt->Boot->BytesPerSector;

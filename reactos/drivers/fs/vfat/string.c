@@ -1,4 +1,4 @@
-/* $Id: string.c,v 1.7 2001/05/10 04:02:21 rex Exp $
+/* $Id: string.c,v 1.8 2001/07/05 01:51:53 rex Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -151,7 +151,7 @@ BOOLEAN wstrcmpjoki(PWSTR s1, PWSTR s2)
 PWCHAR  
 vfatGetNextPathElement (PWCHAR  pFileName)
 {
-  if (*pFileName != L'\0')
+  if (*pFileName == L'\0')
   {
     return  0;
   }
