@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.7 2002/10/20 14:53:02 ekohl Exp $
+# $Id: Makefile,v 1.8 2002/10/26 09:53:15 dwelch Exp $
 
 PATH_TO_TOP = ../..
 
@@ -10,7 +10,7 @@ TARGET_BASE = 0x77e70000
 
 TARGET_SDKLIBS = ntdll.a kernel32.a gdi32.a
 
-TARGET_CFLAGS = -I./include -DUNICODE -DDBG -Wall -Werror
+TARGET_CFLAGS = -I./include -DUNICODE -Wall -Werror
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 

@@ -1,4 +1,4 @@
-/* $Id: seh.s,v 1.2 2002/10/26 07:32:08 chorns Exp $
+/* $Id: seh.s,v 1.3 2002/10/26 09:53:15 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS MSVCRT Runtime Library
