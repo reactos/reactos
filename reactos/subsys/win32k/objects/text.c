@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.79 2004/03/04 00:07:03 navaraf Exp $ */
+/* $Id: text.c,v 1.80 2004/03/17 20:57:06 weiden Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -209,8 +209,8 @@ IntGdiAddFontResource(PUNICODE_STRING Filename, DWORD fl)
   FontGDI->face = face;
 
   // FIXME: Complete text metrics
-  FontGDI->TextMetric.tmAscent = (face->size->metrics.ascender + 32) / 64; // units above baseline
-  FontGDI->TextMetric.tmDescent = (- face->size->metrics.descender + 32) / 64; // units below baseline
+  FontGDI->TextMetric.tmAscent = (face->size->metrics.ascender + 32) >> 6; // units above baseline
+  FontGDI->TextMetric.tmDescent = (32 - face->size->metrics.descender) >> 6; // units below baseline
   FontGDI->TextMetric.tmHeight = FontGDI->TextMetric.tmAscent + FontGDI->TextMetric.tmDescent;
 
   DPRINT("Font loaded: %s (%s)\n", face->family_name, face->style_name);
@@ -748,9 +748,9 @@ NtGdiExtTextOut(
    if (dc->w.textAlign & TA_BASELINE)
       yoff = 0;
    else if (dc->w.textAlign & TA_BOTTOM)
-      yoff = -face->size->metrics.descender / 64;
+      yoff = -face->size->metrics.descender >> 6;
    else /* TA_TOP */
-      yoff = face->size->metrics.ascender / 64;
+      yoff = face->size->metrics.ascender >> 6;
 
    use_kerning = FT_HAS_KERNING(face);
    previous = 0;
@@ -865,9 +865,9 @@ NtGdiExtTextOut(
       if (fuOptions & ETO_OPAQUE)
       {
          DestRect.left = BackgroundLeft;
-         DestRect.right = TextLeft + (glyph->advance.x + 32) / 64;
-         DestRect.top = TextTop + yoff - (face->size->metrics.ascender + 32) / 64;
-         DestRect.bottom = TextTop + yoff + (- face->size->metrics.descender + 32) / 64;
+         DestRect.right = TextLeft + ((glyph->advance.x + 32) >> 6);
+         DestRect.top = TextTop + yoff - ((face->size->metrics.ascender + 32) >> 6);
+         DestRect.bottom = TextTop + yoff + ((32 - face->size->metrics.descender) >> 6);
          IntEngBitBlt(
             SurfObj,
             NULL,
@@ -921,7 +921,7 @@ NtGdiExtTextOut(
 
       EngDeleteSurface(HSourceGlyph);
 
-      TextLeft += (glyph->advance.x + 32) / 64;
+      TextLeft += (glyph->advance.x + 32) >> 6;
       previous = glyph_index;
 
       String++;
@@ -1580,12 +1580,12 @@ NtGdiGetTextMetrics(HDC hDC,
             }
           else
             {
-              SafeTm.tmAveCharWidth = (pOS2->xAvgCharWidth + 32) / 64;
+              SafeTm.tmAveCharWidth = (pOS2->xAvgCharWidth + 32) >> 6;
             }
-  	  SafeTm.tmAscent = (Face->size->metrics.ascender + 32) / 64; // units above baseline
-	  SafeTm.tmDescent = (- Face->size->metrics.descender + 32) / 64; // units below baseline
+  	  SafeTm.tmAscent = (Face->size->metrics.ascender + 32) >> 6; // units above baseline
+	  SafeTm.tmDescent = (32 - Face->size->metrics.descender) >> 6; // units below baseline
 	  SafeTm.tmHeight = SafeTm.tmAscent + SafeTm.tmDescent;
-          SafeTm.tmMaxCharWidth = (Face->size->metrics.max_advance + 32) / 64;
+          SafeTm.tmMaxCharWidth = (Face->size->metrics.max_advance + 32) >> 6;
 	  Status = MmCopyToCaller(tm, &SafeTm, sizeof(TEXTMETRICW));
 	  }
       }
