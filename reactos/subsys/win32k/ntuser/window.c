@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.36 2003/03/22 03:05:26 rcampbell Exp $
+/* $Id: window.c,v 1.37 2003/03/22 04:53:01 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -561,7 +561,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->ClientRect = WindowObject->WindowRect;
 
   /* FIXME: Initialize the window menu. */
-
+  
   /* Initialize the window's scrollbars */
   if (dwStyle & WS_VSCROLL)
       SCROLL_CreateScrollBar(WindowObject, SB_VERT);
@@ -621,6 +621,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 		  WindowObject->ClientRect.left,
 		  WindowObject->ClientRect.bottom - 
 		  WindowObject->ClientRect.top);
+ 
       DPRINT("NtUserCreateWindow(): About to send WM_SIZE\n");
       W32kCallWindowProc(NULL, WindowObject->Self, WM_SIZE, SIZE_RESTORED, 
 			 lParam);
@@ -866,8 +867,8 @@ NtUserMoveWindow(
       Window->ClientRect.right -= NtUserGetSystemMetrics(SM_CXSIZEFRAME);
     }
     if (uStyle & WS_CAPTION)
-       Window->ClientRect.top += NtUserGetSystemMetrics(SM_CYCAPTION);
-    if (Window->Menu)
+       Window->ClientRect.top += NtUserGetSystemMetrics(SM_CYCAPTION) + 1;
+    if ( Window->Class->Class.lpszMenuName)
     {
         Window->ClientRect.top += NtUserGetSystemMetrics(SM_CYMENU);
     }
