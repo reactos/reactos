@@ -61,7 +61,7 @@ APPS = args hello test cat bench apc shm lpc thread event file gditest \
 #       objdir
 
 #NET_APPS = ping roshttpd
-NET_APPS = ping roshttpd
+NET_APPS = ping
 
 
 KERNEL_SERVICES = $(DEVICE_DRIVERS) $(INPUT_DRIVERS) $(FS_DRIVERS) $(NET_DRIVERS) $(NET_DEVICE_DRIVERS)

@@ -48,6 +48,7 @@ DIST_DIR = dist
 endif
 
 CC = $(PREFIX)gcc
+CXX = $(PREFIX)g++
 HOST_CC = gcc
 HOST_NM = nm
 CFLAGS := $(CFLAGS) -I$(PATH_TO_TOP)/include -pipe

@@ -1,4 +1,4 @@
-/* $Id: iface.c,v 1.48 2001/01/12 21:00:08 dwelch Exp $
+/* $Id: iface.c,v 1.49 2001/01/16 09:55:02 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -157,6 +157,14 @@ VfatMount (PDEVICE_OBJECT DeviceToMount)
   Status = CcInitializeFileCache(DeviceExt->StreamStorageDevice,
 				 &DeviceExt->StorageBcb,
 				 PAGESIZE);
+  if (DeviceExt->FatType == FAT12)
+    {
+      DeviceExt->Fat12StorageDevice = 
+	IoCreateStreamFileObject(NULL, DeviceExt->StorageDevice);
+      Status = CcInitializeFileCache(DeviceExt->Fat12StorageDevice,
+				     &DeviceExt->Fat12StorageBcb,
+				     PAGESIZE * 3);
+    }
   ExInitializeResourceLite (&DeviceExt->DirResource);
   ExInitializeResourceLite (&DeviceExt->FatResource);
 

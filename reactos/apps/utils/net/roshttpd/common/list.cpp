@@ -34,7 +34,7 @@ CListNode::CListNode(PVOID element, CListNode *next, CListNode *prev)
 	Prev = prev;
 }
 
-PVOID CListNode::operator new(/*size_t*/ UINT size)
+void* CListNode::operator new(/*size_t*/ UINT size)
 {
     PVOID p;
     if (hHeap == NULL) {
@@ -47,7 +47,7 @@ PVOID CListNode::operator new(/*size_t*/ UINT size)
     return p;
 }
 
-VOID CListNode::operator delete(PVOID p)
+VOID CListNode::operator delete(void* p)
 {
     if (HeapFree(hHeap, 0, p) != FALSE)
         nRef--;

@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.23 2001/01/14 15:05:53 dwelch Exp $ */
+/* $Id: vfat.h,v 1.24 2001/01/16 09:55:02 dwelch Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -83,6 +83,8 @@ typedef struct
   PDEVICE_OBJECT StorageDevice;
   PFILE_OBJECT StreamStorageDevice;
   PBCB StorageBcb;
+  PFILE_OBJECT Fat12StorageDevice;
+  PBCB Fat12StorageBcb;
   BootSector *Boot;
   int rootDirectorySectors, FATStart, rootStart, dataStart;
   int FATEntriesPerSector, FATUnit;
@@ -153,6 +155,12 @@ NTSTATUS STDCALL
 VfatQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 
+NTSTATUS
+NextCluster(PDEVICE_EXTENSION DeviceExt,
+	    ULONG FirstCluster,
+	    PULONG CurrentCluster,
+	    BOOLEAN Extend);
+
 /* internal functions in blockdev.c */
 NTSTATUS
 VfatReadSectors(IN PDEVICE_OBJECT pDeviceObject,
@@ -188,9 +196,11 @@ VfatReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
              PULONG LengthRead, ULONG NoCache);
 NTSTATUS 
 VfatWriteFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
-              PVOID Buffer, ULONG Length, ULONG WriteOffset);
+              PVOID Buffer, ULONG Length, ULONG WriteOffset, ULONG NoCache);
 NTSTATUS
-GetNextWriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster,
+GetNextWriteCluster(PDEVICE_EXTENSION DeviceExt, 
+		    ULONG FirstCluster,
+		    ULONG CurrentCluster,
 		    PULONG NextCluster);
 BOOLEAN 
 IsDeletedEntry(PVOID Block, ULONG Offset);
@@ -199,7 +209,8 @@ IsLastEntry(PVOID Block, ULONG Offset);
 wchar_t* 
 vfat_wcsncpy(wchar_t * dest, const wchar_t *src,size_t wcount);
 NTSTATUS 
-VfatWriteCluster(PDEVICE_EXTENSION DeviceExt, PVOID Buffer, ULONG Cluster);
+VfatRawWriteCluster(PDEVICE_EXTENSION DeviceExt, 
+		    ULONG FirstCluster, PVOID Buffer, ULONG Cluster);
 
 /* internal functions in dirwr.c */
 NTSTATUS 
@@ -236,7 +247,8 @@ ClusterToSector(PDEVICE_EXTENSION DeviceExt, ULONG Cluster);
 NTSTATUS
 GetNextCluster(PDEVICE_EXTENSION DeviceExt, 
 	       ULONG CurrentCluster,
-	       PULONG NextCluster);
+	       PULONG NextCluster,
+	       BOOLEAN Extend);
 NTSTATUS
 VfatRawReadCluster (PDEVICE_EXTENSION DeviceExt, 
 		    ULONG FirstCluster,
@@ -269,6 +281,9 @@ VfatSetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
  */
 NTSTATUS 
 ReadVolumeLabel(PDEVICE_EXTENSION DeviceExt, PVPB Vpb);
+NTSTATUS
+VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
+	      PWSTR FileName);
 
 /*
  * functions from shutdown.c

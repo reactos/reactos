@@ -10,7 +10,7 @@ cp services/dd/vga/miniport/vgamp.sys $1/reactos/system32/drivers
 cp services/dd/vga/display/vgaddi.dll $1/reactos/system32/drivers
 cp services/dd/vidport/vidport.sys $1/reactos/system32/drivers
 cp services/fs/minix/minixfs.sys $1/reactos/system32/drivers
-cp apps/shell/shell.exe $1/reactos/system32
+cp apps/system/shell/shell.exe $1/reactos/system32
 cp lib/ntdll/ntdll.dll $1/reactos/system32
 cp lib/kernel32/kernel32.dll $1/reactos/system32
 cp lib/crtdll/crtdll.dll $1/reactos/system32

@@ -1,4 +1,4 @@
-/* $Id: close.c,v 1.3 2000/12/29 23:17:12 dwelch Exp $
+/* $Id: close.c,v 1.4 2001/01/16 09:55:02 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -28,7 +28,7 @@ VfatCloseFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject)
   PVFATCCB pCcb;
   KIRQL oldIrql;
 
-  DPRINT ("FsdCloseFile(DeviceExt %x, FileObject %x)\n",
+  DPRINT ("VfatCloseFile(DeviceExt %x, FileObject %x)\n",
 	  DeviceExt, FileObject);
 
   //FIXME : update entry in directory ?
@@ -65,7 +65,7 @@ VfatClose (PDEVICE_OBJECT DeviceObject, PIRP Irp)
   PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
   NTSTATUS Status;
 
-  DPRINT ("FsdClose(DeviceObject %x, Irp %x)\n", DeviceObject, Irp);
+  DPRINT ("VfatClose(DeviceObject %x, Irp %x)\n", DeviceObject, Irp);
 
   Status = VfatCloseFile (DeviceExtension, FileObject);
 

@@ -13,7 +13,8 @@ COMMON_OBJECTS = common/list.o common/socket.o common/thread.o
 OBJECTS = $(MAIN_OBJECTS) $(COMMON_OBJECTS)
 PROGS = $(TARGETNAME).exe
 LIBS = ../../../lib/kernel32/kernel32.a \
-       ../../../lib/ws2_32/ws2_32.a
+       ../../../lib/ws2_32/ws2_32.a \
+	../../../lib/user32/user32.a
 
 ifeq ($(DOSCLI), yes)
 CLEAN_FILES = *.o $(TARGETNAME).exe $(TARGETNAME).sym common\*.o

@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.14 2000/10/11 20:50:31 dwelch Exp $
+/* $Id: rw.c,v 1.15 2001/01/16 09:55:02 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -100,8 +100,6 @@ WINBOOL STDCALL ReadFile(HANDLE hFile,
    IO_STATUS_BLOCK IIosb;
    PIO_STATUS_BLOCK IoStatusBlock;
    PLARGE_INTEGER ptrOffset;
-   
-   DbgPrint("ReadFile(hFile %x)\n", hFile);
    
    if (IsConsoleHandle(hFile))
      {

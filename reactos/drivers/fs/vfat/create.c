@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.13 2001/01/12 21:00:08 dwelch Exp $
+/* $Id: create.c,v 1.14 2001/01/16 09:55:02 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -150,7 +150,7 @@ ReadVolumeLabel (PDEVICE_EXTENSION DeviceExt, PVPB Vpb)
   ULONG NextCluster;
   NTSTATUS Status;
 
-  Size = DeviceExt->rootDirectorySectors;	//FIXME : in fat32, no limit
+  Size = DeviceExt->rootDirectorySectors;      /* FIXME : in fat32, no limit */
   StartingSector = DeviceExt->rootStart;
   NextCluster = 0;
 
@@ -183,7 +183,7 @@ ReadVolumeLabel (PDEVICE_EXTENSION DeviceExt, PVPB Vpb)
 	      return (STATUS_UNSUCCESSFUL);
 	    }
 	}
-      // not found in this sector, try next :
+      /* not found in this sector, try next : */
 
       /* directory can be fragmented although it is best to keep them
          unfragmented */
@@ -192,7 +192,8 @@ ReadVolumeLabel (PDEVICE_EXTENSION DeviceExt, PVPB Vpb)
 	{
 	  if (StartingSector == ClusterToSector (DeviceExt, NextCluster + 1))
 	    {
-	      Status = GetNextCluster (DeviceExt, NextCluster, &NextCluster);
+	      Status = GetNextCluster (DeviceExt, NextCluster, &NextCluster,
+				       FALSE);
 	      if (NextCluster == 0 || NextCluster == 0xffffffff)
 		{
 		  *(Vpb->VolumeLabel) = 0;
@@ -235,17 +236,11 @@ FindFile (PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
       CHECKPOINT;
       TempStr[0] = (WCHAR) '.';
       TempStr[1] = 0;
-      FileToFind = (PWSTR) & TempStr;
-    }
-  if (Parent != NULL)
-    {
-      DPRINT ("Parent->entry.FirstCluster %d\n", Parent->entry.FirstCluster);
+      FileToFind = (PWSTR)&TempStr;
     }
 
-  DPRINT ("FindFile '%S'\n", FileToFind);
   if (Parent == NULL || Parent->entry.FirstCluster == 1)
     {
-      CHECKPOINT;
       Size = DeviceExt->rootDirectorySectors;  /* FIXME : in fat32, no limit */
       StartingSector = DeviceExt->rootStart;
       NextCluster = 0;
@@ -253,7 +248,6 @@ FindFile (PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
 	  || (FileToFind[0] == '.' && FileToFind[1] == 0))
 	{
 	  /* it's root : complete essentials fields then return ok */
-	  CHECKPOINT;
 	  memset (Fcb, 0, sizeof (VFATFCB));
 	  memset (Fcb->entry.Filename, ' ', 11);
 	  Fcb->entry.FileSize = DeviceExt->rootDirectorySectors * BLOCKSIZE;
@@ -261,7 +255,7 @@ FindFile (PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
 	  if (DeviceExt->FatType == FAT32)
 	    Fcb->entry.FirstCluster = 2;
 	  else
-	    Fcb->entry.FirstCluster = 1;	/* FIXME : is 1 the good value for mark root? */
+	    Fcb->entry.FirstCluster = 1;    
 	  if (StartSector)
 	    *StartSector = StartingSector;
 	  if (Entry)
@@ -286,13 +280,10 @@ FindFile (PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
 	  StartingSector = DeviceExt->rootStart;
 	}
     }
-  CHECKPOINT;
   block = ExAllocatePool (NonPagedPool, BLOCKSIZE);
-  CHECKPOINT;
   if (StartSector && (*StartSector))
     StartingSector = *StartSector;
   i = (Entry) ? (*Entry) : 0;
-  DPRINT ("FindFile : start at sector %lx, entry %ld\n", StartingSector, i);
   for (j = 0; j < Size; j++)
     {
       /* FIXME: Check status */
@@ -316,8 +307,8 @@ FindFile (PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
 	    {
 	      if (wstrcmpjoki (name, FileToFind))
 		{
-		  /* In the case of a long filename, the firstcluster is stored in
-		     the next record -- where it's short name is */
+		  /* In the case of a long filename, the firstcluster is 
+		     stored in the next record -- where it's short name is */
 		  if (((FATDirEntry *) block)[i].Attrib == 0x0f)
 		    i++;
 		  if (i == (ENTRIES_PER_SECTOR))
@@ -354,7 +345,8 @@ FindFile (PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
 	{
 	  if (StartingSector == ClusterToSector (DeviceExt, NextCluster + 1))
 	    {
-	      Status = GetNextCluster (DeviceExt, NextCluster, &NextCluster);
+	      Status = GetNextCluster (DeviceExt, NextCluster, &NextCluster,
+				       FALSE);
 	      if (NextCluster == 0 || NextCluster == 0xffffffff)
 		{
 		  if (StartSector)
@@ -379,7 +371,7 @@ FindFile (PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
 
 
 NTSTATUS
-FsdOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
+VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	     PWSTR FileName)
 /*
  * FUNCTION: Opens a file
@@ -400,7 +392,7 @@ FsdOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   KIRQL oldIrql;
   ULONG BytesPerCluster;
 
-  DPRINT ("FsdOpenFile(%08lx, %08lx, %S)\n", DeviceExt, FileObject, FileName);
+  DPRINT ("VfatOpenFile(%08lx, %08lx, %S)\n", DeviceExt, FileObject, FileName);
 
   /* FIXME : treat relative name */
   if (FileObject->RelatedFileObject)
@@ -641,9 +633,12 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
   DeviceExt = DeviceObject->DeviceExtension;
   assert (DeviceExt);
   
-  Status = FsdOpenFile (DeviceExt, FileObject, FileObject->FileName.Buffer);
+  Status = VfatOpenFile (DeviceExt, FileObject, FileObject->FileName.Buffer);
 
-  CHECKPOINT;
+  /*
+   * If the directory containing the file to open doesn't exist then
+   * fail immediately
+   */
   Irp->IoStatus.Information = 0;
   if (Status == STATUS_OBJECT_PATH_NOT_FOUND)
     {
@@ -651,23 +646,21 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
       return Status;
     }
 
-  CHECKPOINT;
   if (!NT_SUCCESS (Status))
     {
-      if (RequestedDisposition == FILE_CREATE
-	  || RequestedDisposition == FILE_OPEN_IF
-	  || RequestedDisposition == FILE_OVERWRITE_IF
-	  || RequestedDisposition == FILE_SUPERSEDE)
+      /*
+       * If the file open failed then create the required file
+       */
+      if (RequestedDisposition == FILE_CREATE || 
+	  RequestedDisposition == FILE_OPEN_IF || 
+	  RequestedDisposition == FILE_OVERWRITE_IF || 
+	  RequestedDisposition == FILE_SUPERSEDE)
 	{
 	  CHECKPOINT;
-#if 0
-	  Status =
+	  Status = 
 	    addEntry (DeviceExt, FileObject, RequestedOptions,
 		      (Stack->Parameters.
 		       Create.FileAttributes & FILE_ATTRIBUTE_VALID_FLAGS));
-#else
-	  Status = STATUS_UNSUCCESSFUL;
-#endif
 	  if (NT_SUCCESS (Status))
 	    Irp->IoStatus.Information = FILE_CREATED;
 	  /* FIXME set size if AllocationSize requested */
@@ -680,13 +673,20 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
     }
   else
     {
+      /*
+       * Otherwise fail if the caller wanted to create a new file
+       */
       if (RequestedDisposition == FILE_CREATE)
 	{
 	  Irp->IoStatus.Information = FILE_EXISTS;
 	  Status = STATUS_OBJECT_NAME_COLLISION;
-	}
+	}      
       pCcb = FileObject->FsContext2;
       pFcb = pCcb->pFcb;
+      /*
+       * If requested then delete the file and create a new one with the
+       * same name
+       */
       if (RequestedDisposition == FILE_SUPERSEDE)
 	{
 	  ULONG Cluster, NextCluster;
@@ -699,14 +699,18 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	    Cluster = pFcb->entry.FirstCluster;
 	  pFcb->entry.FirstCluster = 0;
 	  pFcb->entry.FirstClusterHigh = 0;
-	  //	  updEntry (DeviceExt, FileObject);
+	  updEntry (DeviceExt, FileObject);
 	  while (Cluster != 0xffffffff && Cluster > 1)
 	    {
-	      Status = GetNextCluster (DeviceExt, Cluster, &NextCluster);
+	      Status = GetNextCluster (DeviceExt, Cluster, &NextCluster, TRUE);
 	      //	      WriteCluster (DeviceExt, Cluster, 0);
 	      Cluster = NextCluster;
 	    }
 	}
+
+      /*
+       * Check the file has the requested attributes
+       */
       if ((RequestedOptions & FILE_NON_DIRECTORY_FILE)
 	  && (pFcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY))
 	{

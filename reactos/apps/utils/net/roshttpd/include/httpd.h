@@ -42,8 +42,10 @@ private:
 	BOOL bStop;
 	LPSTR lpsBuffer;
 	LONG nBufferSize;
-    unsigned __int64 nTotalRead;
-	unsigned __int64 nFileSize;
+	//    unsigned __int64 nTotalRead;
+	unsigned long long nTotalRead;
+	//	unsigned __int64 nFileSize;
+	unsigned long long nFileSize;
     HANDLE hFile;
 };
 typedef CHttpClient* LPCHttpClient;

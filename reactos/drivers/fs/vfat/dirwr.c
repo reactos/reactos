@@ -1,4 +1,4 @@
-/* $Id: dirwr.c,v 1.15 2001/01/01 04:42:11 dwelch Exp $
+/* $Id: dirwr.c,v 1.16 2001/01/16 09:55:02 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -19,7 +19,6 @@
 
 #include "vfat.h"
 
-#if 0
 /*
  * Copies a file name into a directory slot (long file name entry)
  * and fills trailing slot space with 0xFFFF. This keeps scandisk
@@ -127,7 +126,7 @@ NTSTATUS updEntry (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT pFileObject)
   memset (&FileObject, 0, sizeof (FILE_OBJECT));
   DPRINT ("open directory \'%S\' for update of entry \'%S\'\n", DirName,
 	  FileName);
-  status = FsdOpenFile (DeviceExt, &FileObject, DirName);
+  status = VfatOpenFile (DeviceExt, &FileObject, DirName);
   if (!NT_SUCCESS (status))
     {
       DbgPrint ("Failed to open \'%S\'. Status %lx\n", DirName, status);
@@ -143,10 +142,10 @@ NTSTATUS updEntry (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT pFileObject)
     {
       Buffer = ExAllocatePool (NonPagedPool, BLOCKSIZE);
       DPRINT ("update entry: sector %d, entry %d\n", Sector, Entry);
-      VFATReadSectors (DeviceExt->StorageDevice, Sector, 1, Buffer);
+      VfatReadSectors (DeviceExt->StorageDevice, Sector, 1, Buffer);
       pEntries = (FATDirEntry *) Buffer;
       memcpy (&pEntries[Entry], &pFcb->entry, sizeof (FATDirEntry));
-      VFATWriteSectors (DeviceExt->StorageDevice, Sector, 1, Buffer);
+      VfatWriteSectors (DeviceExt->StorageDevice, Sector, 1, Buffer);
       ExFreePool (Buffer);
     }
   VfatCloseFile (DeviceExt, &FileObject);
@@ -177,6 +176,8 @@ addEntry (PDEVICE_EXTENSION DeviceExt,
   ULONG CurrentCluster;
   KIRQL oldIrql;
   LARGE_INTEGER SystemTime, LocalTime;
+  ULONG BytesPerCluster;
+  NTSTATUS Status;
 
   PathFileName = pFileObject->FileName.Buffer;
   DPRINT ("addEntry: Pathname=%S\n", PathFileName);
@@ -194,7 +195,7 @@ addEntry (PDEVICE_EXTENSION DeviceExt,
   DirName[posCar] = 0;
   // open parent directory
   memset (&FileObject, 0, sizeof (FILE_OBJECT));
-  status = FsdOpenFile (DeviceExt, &FileObject, DirName);
+  status = VfatOpenFile (DeviceExt, &FileObject, DirName);
   nbSlots = (NameLen + 12) / 13 + 1;	//nb of entry needed for long name+normal entry
   DPRINT ("NameLen= %d, nbSlots =%d\n", NameLen, nbSlots);
   Buffer =
@@ -356,7 +357,7 @@ addEntry (PDEVICE_EXTENSION DeviceExt,
     {
       status =
 	VfatReadFile (DeviceExt, &FileObject, &FatEntry, sizeof (FATDirEntry),
-		     i * sizeof (FATDirEntry), &LengthRead);
+		     i * sizeof (FATDirEntry), &LengthRead, FALSE);
       if (status == STATUS_END_OF_FILE)
 	break;
       if (!NT_SUCCESS (status))
@@ -381,11 +382,11 @@ addEntry (PDEVICE_EXTENSION DeviceExt,
 
   if (RequestedOptions & FILE_DIRECTORY_FILE)
     {
-      CurrentCluster = GetNextWriteCluster (DeviceExt, 0);
+      NextCluster (DeviceExt, 0, &CurrentCluster, TRUE);
       // zero the cluster
       Buffer2 = ExAllocatePool (NonPagedPool, DeviceExt->BytesPerCluster);
       memset (Buffer2, 0, DeviceExt->BytesPerCluster);
-      VFATWriteCluster (DeviceExt, Buffer2, CurrentCluster);
+      VfatRawWriteCluster (DeviceExt, 0, Buffer2, CurrentCluster);
       ExFreePool (Buffer2);
       if (DeviceExt->FatType == FAT32)
 	{
@@ -400,7 +401,7 @@ addEntry (PDEVICE_EXTENSION DeviceExt,
       Offset = (i - nbSlots + 1) * sizeof (FATDirEntry);
       status =
 	VfatWriteFile (DeviceExt, &FileObject, Buffer,
-		      sizeof (FATDirEntry) * nbSlots, Offset);
+		      sizeof (FATDirEntry) * nbSlots, Offset, FALSE);
       DPRINT ("VfatWriteFile() returned: %x\n", status);
     }
   else
@@ -408,7 +409,7 @@ addEntry (PDEVICE_EXTENSION DeviceExt,
       Offset = (i - nbFree) * sizeof (FATDirEntry);
       status =
 	VfatWriteFile (DeviceExt, &FileObject, Buffer,
-		      sizeof (FATDirEntry) * (nbSlots + 1), Offset);
+		      sizeof (FATDirEntry) * (nbSlots + 1), Offset, FALSE);
     }
   DPRINT ("write entry offset %d status=%x\n", Offset, status);
   newCCB = ExAllocatePool (NonPagedPool, sizeof (VFATCCB));
@@ -418,6 +419,18 @@ addEntry (PDEVICE_EXTENSION DeviceExt,
   newCCB->pFcb = newFCB;
   newCCB->PtrFileObject = pFileObject;
   newFCB->RefCount++;
+  
+  BytesPerCluster = DeviceExt->Boot->SectorsPerCluster * BLOCKSIZE;
+  if (BytesPerCluster >= PAGESIZE)
+    {
+      Status = CcInitializeFileCache(pFileObject, &newFCB->RFCB.Bcb,
+				     BytesPerCluster);
+    }
+  else
+    {
+      Status = CcInitializeFileCache(pFileObject, &newFCB->RFCB.Bcb, 
+				     PAGESIZE);
+    }
 
   /* 
    * FIXME : initialize all fields in FCB and CCB
@@ -441,7 +454,7 @@ addEntry (PDEVICE_EXTENSION DeviceExt,
       memcpy (pEntry->Filename, ".          ", 11);
       status =
 	VfatWriteFile (DeviceExt, pFileObject, pEntry, sizeof (FATDirEntry),
-		      0L);
+		      0L, FALSE);
       pEntry->FirstCluster =
 	((VFATCCB *) (FileObject.FsContext2))->pFcb->entry.FirstCluster;
       pEntry->FirstClusterHigh =
@@ -451,13 +464,12 @@ addEntry (PDEVICE_EXTENSION DeviceExt,
 	pEntry->FirstCluster = 0;
       status =
 	VfatWriteFile (DeviceExt, pFileObject, pEntry, sizeof (FATDirEntry),
-		      sizeof (FATDirEntry));
+		      sizeof (FATDirEntry), FALSE);
     }
   VfatCloseFile (DeviceExt, &FileObject);
   ExFreePool (Buffer);
   DPRINT ("addentry ok\n");
   return STATUS_SUCCESS;
 }
-#endif
 
 /* EOF */

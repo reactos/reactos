@@ -162,11 +162,12 @@ VOID CHttpClient::SendFile(LPSTR lpsFilename)
     CHAR str[255];
     CHAR str2[32];
     union BigNum {
-        unsigned __int64 Big;
+      //        unsigned __int64 Big;
+      unsigned long long Big;
         struct {
             DWORD Low;
             DWORD High; 
-        };
+        } u;
     } nTotalBytes;
 	DWORD nBytesToRead;
 	DWORD nBytesRead;
@@ -186,8 +187,8 @@ VOID CHttpClient::SendFile(LPSTR lpsFilename)
         return; 
     }
     // Get file size
-    nTotalBytes.Low = GetFileSize(hFile, &nTotalBytes.High);
-    if ((nTotalBytes.Low == 0xFFFFFFFF) && ((GetLastError()) != NO_ERROR)) {
+    nTotalBytes.u.Low = GetFileSize(hFile, &nTotalBytes.u.High);
+    if ((nTotalBytes.u.Low == 0xFFFFFFFF) && ((GetLastError()) != NO_ERROR)) {
         // Internal server error
 		Report("500 Internal Server Error", HttpMsg500);
 		// Close file
@@ -217,7 +218,7 @@ VOID CHttpClient::SendFile(LPSTR lpsFilename)
     SendText("Content-Type: text/plain");
     SendText("Accept-Ranges: bytes");
     strcpy(str, "Content-Length: ");
-    _itoa(nTotalBytes.Low, str2, 10);
+    _itoa(nTotalBytes.u.Low, str2, 10);
     strcat(str, str2);
     SendText(str);
     SendText("");

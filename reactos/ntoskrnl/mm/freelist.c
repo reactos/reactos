@@ -101,6 +101,7 @@ MmGetContinuousPages(ULONG NumberOfBytes,
 	MmPageArray[i].SavedSwapEntry = 0;
 	InsertTailList(&UsedPageListHead, &MmPageArray[i].ListEntry);
      }
+   KeReleaseSpinLock(&PageListLock, oldIrql);
    return((PVOID)(start * 4096));
 }
 

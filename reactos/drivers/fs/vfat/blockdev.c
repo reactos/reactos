@@ -3,7 +3,7 @@
  * PROJECT:          ReactOS kernel
  * FILE:             services/fs/vfat/blockdev.c
  * PURPOSE:          Temporary sector reading support
- * PROGRAMMER:       David Welch (welch@mcmail.com)
+ * PROGRAMMER:       David Welch (welch@cwcom.net)
  * UPDATE HISTORY: 
  */
 
@@ -134,7 +134,7 @@ VfatWriteSectors (IN PDEVICE_OBJECT pDeviceObject,
 
   if (!NT_SUCCESS (Status))
     {
-      DPRINT ("IO failed!!! VFATWriteSectors : Error code: %x\n", Status);
+      DPRINT1 ("IO failed!!! VFATWriteSectors : Error code: %x\n", Status);
       return (Status);
     }
 
