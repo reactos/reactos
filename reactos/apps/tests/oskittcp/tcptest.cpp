@@ -1,15 +1,22 @@
+#ifdef _MSC_VER
+#pragma warning ( disable : 4786 )
+#endif//_MSC_VER
+
 #include <list>
 #include <string>
 #include <sstream>
+#include <malloc.h>
 extern "C" {
     typedef unsigned short u_short;
 #include <stdio.h>
 #include <oskittcp.h>
 #include <windows.h>
+#ifndef _MSC_VER
 #include <winsock2.h>
+#endif//_MSC_VER
 };
 
-char hwaddr[6] = { 0x08, 0x00, 0x20, 0x0b, 0xb7, 0xbb };
+unsigned char hwaddr[6] = { 0x08, 0x00, 0x20, 0x0b, 0xb7, 0xbb };
 
 #undef malloc
 #undef free
@@ -25,12 +32,20 @@ typedef struct _CONNECTION_ENDPOINT {
     OSK_UINT State;
 } CONNECTION_ENDPOINT, *PCONNECTION_ENDPOINT;
 
+extern "C" int is_stack_ptr ( const void* p )
+{
+	MEMORY_BASIC_INFORMATION mbi1, mbi2;
+	VirtualQuery ( p, &mbi1, sizeof(mbi1) );
+	VirtualQuery ( _alloca(1), &mbi2, sizeof(mbi2) );
+	return mbi1.AllocationBase == mbi2.AllocationBase;
+}
+
 int TCPSocketState(void *ClientData,
 		   void *WhichSocket, 
 		   void *WhichConnection,
 		   OSK_UINT NewState ) {
     PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)WhichConnection;
-    PLIST_ENTRY Entry;
+    //PLIST_ENTRY Entry;
 
     TI_DbgPrint(MID_TRACE,("Called: NewState %x\n", NewState));
 
@@ -218,7 +233,7 @@ int main( int argc, char **argv ) {
 
 	    if( datagram[0] == 'C' && datagram[1] == 'M' &&
 		datagram[2] == 'D' && datagram[3] == ' ' ) {
-		int theport, bytes, recvret, off, bytin;
+		int theport, bytes, /*recvret,*/ off, bytin;
 		struct sockaddr_in nam;
 		std::string faddr, word;
 		std::istringstream 

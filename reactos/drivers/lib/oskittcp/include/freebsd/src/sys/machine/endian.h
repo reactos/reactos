@@ -56,6 +56,27 @@
 #include <sys/cdefs.h>
 #endif
 
+#ifdef _MSC_VER
+static inline unsigned long __byte_swap_long ( unsigned long i )
+{
+	char dst[4];
+	char* src = (char*)&i;
+	dst[0] = src[3];
+	dst[1] = src[2];
+	dst[2] = src[1];
+	dst[3] = src[0];
+	return *(unsigned long*)&dst[0];
+}
+
+static inline unsigned short __byte_swap_word ( unsigned short i )
+{
+	char dst[2];
+	char* src = (char*)&i;
+	dst[0] = src[1];
+	dst[1] = src[0];
+	return *(unsigned short*)&dst[0];
+}
+#else/*_MSC_VER*/
 #define __word_swap_long(x) \
 ({ register u_long __X = (x); \
    __asm ("rorl $16, %1" \
@@ -89,6 +110,7 @@ __extension__ ({ register u_short __X = (x); \
 	: "0" (__X)); \
    __X; })
 #endif /* __GNUC__ >= 2 */
+#endif /* _MSC_VER */
 
 /*
  * Macros for network/external number representation conversion.

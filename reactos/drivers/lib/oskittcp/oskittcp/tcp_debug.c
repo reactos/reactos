@@ -66,6 +66,10 @@
 #include <netinet/tcpip.h>
 #include <netinet/tcp_debug.h>
 
+#ifdef _MSC_VER
+unsigned long __stdcall GetTickCount();
+#endif//_MSC_VER
+
 #ifdef TCPDEBUG
 int	tcpconsdebug = 0;
 #endif
@@ -85,7 +89,11 @@ tcp_trace(act, ostate, tp, ti, req)
 
 	if (tcp_debx == TCP_NDEBUG)
 		tcp_debx = 0;
+#ifdef _MSC_VER
+	td->td_time = GetTickCount();
+#else
 	td->td_time = iptime();
+#endif
 	td->td_act = act;
 	td->td_ostate = ostate;
 	td->td_tcb = (caddr_t)tp;

@@ -1,7 +1,9 @@
 #ifndef OSKITTCP_H
 #define OSKITTCP_H
 
+#ifndef _MSC_VER
 #include <roscfg.h>
+#endif/*_MSC_VER*/
 #ifdef KERNEL
 #include <sys/param.h>
 #include <sys/systm.h>
@@ -142,8 +144,14 @@ void OskitTCPGetAddress( void *socket,
 
 #undef errno
 
-#define malloc(x,...) fbsd_malloc(x,__FILE__,__LINE__)
-#define free(x,...) fbsd_free(x,__FILE__,__LINE__)
+void *fbsd_malloc( unsigned int bytes, ... );
+void fbsd_free( void *data, ... );
+#if 0
+#define malloc(x) fbsd_malloc(x,__FILE__,__LINE__)
+#define free(x) fbsd_free(x,__FILE__,__LINE__)
+#endif
+#define kern_malloc(x,y,z) kern_malloc_needs_definition(x,y,z)
+#define kern_free(x,y,z) kern_free_needs_definition(x,w,z)
 
 /* Error codes */
 #include <oskiterrno.h>

@@ -26,3 +26,7 @@ documented parts of bsd.  A wierd thing about sbappend is that it seems to
 want to see an M_EOR flag at the end of the so->so_rcv->sb_mb chain.  When
 it gets there it should append the input chain.
 
+=== NOTES FROM WORKING WITH ROYCE3 ===
+
+tcp_output: between line 511 and 614 m is initialized.  Where i was printing
+it it didn't have data yet.

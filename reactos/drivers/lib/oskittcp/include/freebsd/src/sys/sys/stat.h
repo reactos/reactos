@@ -68,6 +68,7 @@ struct ostat {
 };
 #endif /* !_POSIX_SOURCE */
 
+//#ifndef _MSC_VER
 struct stat {
 	dev_t	st_dev;			/* inode's device */
 	ino_t	st_ino;			/* inode's number */
@@ -87,6 +88,7 @@ struct stat {
 	long	st_lspare;
 	quad_t	st_qspare[2];
 };
+//#endif//_MSC_VER
 #define st_atime st_atimespec.ts_sec
 #define st_mtime st_mtimespec.ts_sec
 #define st_ctime st_ctimespec.ts_sec

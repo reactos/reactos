@@ -497,18 +497,17 @@ send:
 		}
 		m->m_data += max_linkhdr;
 		m->m_len = hdrlen;
+		/* m is not initialized here ... see below up to line
+		 * in_cksum to see how it gets there */
 		if (len <= MHLEN - hdrlen - max_linkhdr) {
-		    OS_DbgPrint(OSK_MID_TRACE,("Preparing %d bytes to send\n",
-					       len));
-		    OskitDumpBuffer(mtod(m, caddr_t), len);
 		    m_copydata(so->so_snd.sb_mb, off, (int) len,
 			       mtod(m, caddr_t) + hdrlen);
 		    m->m_len += len;
 		} else {
 		    m->m_next = m_copy(so->so_snd.sb_mb, off, (int) len);
-		    OS_DbgPrint(OSK_MID_TRACE,("Preparing %d bytes to send\n",
-					       len));
-		    OskitDumpBuffer(mtod(m, caddr_t), len);
+		    // the buffer is allocated, but not filled with the tcp
+		    // header yet, so dumping it here yields garbage...
+		    //OskitDumpBuffer(mtod(m, caddr_t), len);
 		    if (m->m_next == 0) {
 			(void) m_free(m);
 			error = ENOBUFS;
@@ -543,6 +542,9 @@ send:
 		m->m_len = hdrlen;
 	}
 	m->m_pkthdr.rcvif = (struct ifnet *)0;
+
+	/* This pulls the data ptr from m and start initting it...
+	 * before this point, m is empty. */
 	ti = mtod(m, struct tcpiphdr *);
 	if (tp->t_template == 0)
 		panic("tcp_output");

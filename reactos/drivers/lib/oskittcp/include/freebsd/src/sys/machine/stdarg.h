@@ -36,6 +36,10 @@
 #ifndef _STDARG_H_
 #define	_STDARG_H_
 
+#ifdef _MSC_VER
+#include <stdarg.h>
+#else
+
 typedef char *va_list;
 
 #ifdef __GNUC__
@@ -59,5 +63,7 @@ typedef char *va_list;
 #endif
 
 #define	va_end(ap)
+
+#endif
 
 #endif /* !_STDARG_H_ */

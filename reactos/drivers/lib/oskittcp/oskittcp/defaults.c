@@ -47,7 +47,7 @@ struct proc *
 pfind(pid_t pid)
 {
 	printf("%s called, pid=%d, returning x%p\n", 
-	       __FUNCTION__, (int)pid, (void*)&proc0);
+	       "pfind", (int)pid, (void*)&proc0);
 	return &proc0;
 }
 
@@ -57,7 +57,7 @@ pfind(pid_t pid)
 void    
 psignal (struct proc *p, int sig)
 {
-    printf("%s called, proc=x%p sig=%d\n", __FUNCTION__, p, sig);
+    printf("%s called, proc=x%p sig=%d\n", "psignal", p, sig);
 }
 
 /*
@@ -66,7 +66,7 @@ psignal (struct proc *p, int sig)
 void    
 gsignal (int pgid, int sig)
 {
-	printf("%s called, pgid=%d sig=%d\n", __FUNCTION__, pgid, sig);
+	printf("%s called, pgid=%d sig=%d\n", "gsignal", pgid, sig);
 }
 
 /* ---------------------------------------------------------------------- */

@@ -39,6 +39,12 @@ static __inline int imax(int a, int b) { return (a > b ? a : b); }
 static __inline int imin(int a, int b) { return (a < b ? a : b); }
 static __inline long lmax(long a, long b) { return (a > b ? a : b); }
 static __inline long lmin(long a, long b) { return (a < b ? a : b); }
+#ifdef max
+#undef max
+#endif//max
+#ifdef min
+#undef min
+#endif//min
 static __inline u_int max(u_int a, u_int b) { return (a > b ? a : b); }
 static __inline u_int min(u_int a, u_int b) { return (a < b ? a : b); }
 static __inline quad_t qmax(quad_t a, quad_t b) { return (a > b ? a : b); }

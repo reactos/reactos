@@ -40,11 +40,12 @@
  * Structure returned by gettimeofday(2) system call,
  * and used in other calls.
  */
+#ifndef _WINSOCKAPI_
 struct timeval {
 	long	tv_sec;		/* seconds */
 	long	tv_usec;	/* and microseconds */
 };
-
+#endif//_WINSOCKAPI_
 /*
  * Structure defined by POSIX.4 to be like a timeval.
  */
@@ -77,10 +78,12 @@ struct timezone {
 /* Operations on timevals. */
 #define	timerclear(tvp)		(tvp)->tv_sec = (tvp)->tv_usec = 0
 #define	timerisset(tvp)		((tvp)->tv_sec || (tvp)->tv_usec)
+#ifndef _MSC_VER
 #define	timercmp(tvp, uvp, cmp)						\
 	(((tvp)->tv_sec == (uvp)->tv_sec) ?				\
 	    ((tvp)->tv_usec cmp (uvp)->tv_usec) :			\
 	    ((tvp)->tv_sec cmp (uvp)->tv_sec))
+#endif
 
 /*
  * Names of the interval timers, and structure

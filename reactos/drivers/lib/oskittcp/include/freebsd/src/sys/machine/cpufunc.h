@@ -303,6 +303,31 @@ write_eflags(u_long ef)
 	__asm __volatile("pushl %0; popfl" : : "r" (ef));
 }
 
+#else /* !__GNUC__ */
+
+int	bdb		__P((void));
+void	disable_intr	__P((void));
+void	enable_intr	__P((void));
+u_char	inb		__P((u_int port));
+u_long	inl		__P((u_int port));
+void	insb		__P((u_int port, void *addr, size_t cnt));
+void	insl		__P((u_int port, void *addr, size_t cnt));
+void	insw		__P((u_int port, void *addr, size_t cnt));
+u_short	inw		__P((u_int port));
+u_int	loadandclear	__P((u_int *addr));
+void	outb		__P((u_int port, u_char data));
+void	outl		__P((u_int port, u_long data));
+void	outsb		__P((u_int port, void *addr, size_t cnt));
+void	outsl		__P((u_int port, void *addr, size_t cnt));
+void	outsw		__P((u_int port, void *addr, size_t cnt));
+void	outw		__P((u_int port, u_short data));
+void	pmap_update	__P((void));
+u_long	read_eflags	__P((void));
+u_long	rcr2		__P((void));
+void	write_eflags	__P((u_long ef));
+
+#endif	/* __GNUC__ */
+
 /*
  * XXX queue stuff belongs elsewhere.
  */
@@ -332,34 +357,6 @@ remque(void *a)
 	element->qh_rlink->qh_link = element->qh_link;
 	element->qh_rlink = 0;
 }
-
-#else /* !__GNUC__ */
-
-int	bdb		__P((void));
-void	disable_intr	__P((void));
-void	enable_intr	__P((void));
-u_char	inb		__P((u_int port));
-u_long	inl		__P((u_int port));
-void	insb		__P((u_int port, void *addr, size_t cnt));
-void	insl		__P((u_int port, void *addr, size_t cnt));
-void	insw		__P((u_int port, void *addr, size_t cnt));
-u_short	inw		__P((u_int port));
-u_int	loadandclear	__P((u_int *addr));
-void	outb		__P((u_int port, u_char data));
-void	outl		__P((u_int port, u_long data));
-void	outsb		__P((u_int port, void *addr, size_t cnt));
-void	outsl		__P((u_int port, void *addr, size_t cnt));
-void	outsw		__P((u_int port, void *addr, size_t cnt));
-void	outw		__P((u_int port, u_short data));
-void	pmap_update	__P((void));
-u_long	read_eflags	__P((void));
-u_long	rcr2		__P((void));
-void	write_eflags	__P((u_long ef));
-
-void	insque		__P((void *a, void *b));
-void	remque		__P((void *a));
-
-#endif	/* __GNUC__ */
 
 /*
  * XXX the following declarations document garbage in support.s.

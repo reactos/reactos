@@ -124,7 +124,20 @@ void	printf __P((const char *, ...));
 #else
 #include <oskitfreebsd.h>
 #include <oskitdebug.h>
-#define log(x,...) OS_DbgPrint(x,(__VA_ARGS__))
+
+int __cdecl vprintf(const char *, va_list);
+
+static inline int log ( int blah, const char* fmt, ... )
+{
+	va_list arg;
+	int i;
+	va_start(arg, fmt);
+#ifndef __NTDRIVER__
+	i = vprintf ( fmt, arg );
+#endif
+	va_end(arg);
+	return i;
+}
 #endif
 void	uprintf __P((const char *, ...));
 int	sprintf __P((char *buf, const char *, ...));

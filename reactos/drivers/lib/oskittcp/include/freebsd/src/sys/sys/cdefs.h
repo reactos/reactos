@@ -98,6 +98,10 @@
 #endif	/* !NO_ANSI_KEYWORDS */
 #endif	/* !(__STDC__ || __cplusplus) */
 
+#ifdef _MSC_VER
+#  undef __CONCAT
+#  define  __CONCAT(x,y) x ## y
+#endif/*_MSC_VER*/
 /*
  * GCC1 and some versions of GCC2 declare dead (non-returning) and
  * pure (no side effects) functions using "volatile" and "const";

@@ -1,6 +1,6 @@
 
 
-# $Id: makefile,v 1.4 2004/08/29 20:04:42 arty Exp $
+# $Id: makefile,v 1.5 2004/09/23 03:02:29 royce Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -11,7 +11,7 @@ TARGET_TYPE = library
 TARGET_NAME = oskittcp
 
 #-DMEMTRACK
-TARGET_CFLAGS = -g -D__REACTOS__=1 -DKERNEL -Iinclude/freebsd -Iinclude/freebsd/sys/include -Iinclude/freebsd/src/sys -Iinclude/freebsd/dev/include -Iinclude/freebsd/net/include -Iinclude -I$(PATH_TO_TOP)/w32api/include -I$(PATH_TO_TOP)/include
+TARGET_CFLAGS = -g -D__REACTOS__=1 -D__NTDRIVER__ -DKERNEL -Iinclude/freebsd -Iinclude/freebsd/sys/include -Iinclude/freebsd/src/sys -Iinclude/freebsd/dev/include -Iinclude/freebsd/net/include -Iinclude -I$(PATH_TO_TOP)/w32api/include -I$(PATH_TO_TOP)/include
 
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -D_DISABLE_TIDENTS

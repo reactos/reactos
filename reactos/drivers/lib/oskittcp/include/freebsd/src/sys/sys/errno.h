@@ -55,8 +55,10 @@ extern int errno;			/* global error number */
 #define	ENOEXEC		8		/* Exec format error */
 #define	EBADF		9		/* Bad file descriptor */
 #define	ECHILD		10		/* No child processes */
+#ifndef EDEADLK
 #define	EDEADLK		11		/* Resource deadlock avoided */
 					/* 11 was EAGAIN */
+#endif//EDEADLK
 #define	ENOMEM		12		/* Cannot allocate memory */
 #define	EACCES		13		/* Permission denied */
 #define	EFAULT		14		/* Bad address */
@@ -88,7 +90,9 @@ extern int errno;			/* global error number */
 #define	ERANGE		34		/* Result too large */
 
 /* non-blocking and interrupt i/o */
+#ifndef EAGAIN
 #define	EAGAIN		35		/* Resource temporarily unavailable */
+#endif//EAGAIN
 #ifndef _POSIX_SOURCE
 #define	EWOULDBLOCK	EAGAIN		/* Operation would block */
 #define	EINPROGRESS	36		/* Operation now in progress */
@@ -124,14 +128,18 @@ extern int errno;			/* global error number */
 
 #define	ELOOP		62		/* Too many levels of symbolic links */
 #endif /* _POSIX_SOURCE */
+#ifndef ENAMETOOLONG
 #define	ENAMETOOLONG	63		/* File name too long */
+#endif//ENAMETOOLONG
 
 /* should be rearranged */
 #ifndef _POSIX_SOURCE
 #define	EHOSTDOWN	64		/* Host is down */
 #define	EHOSTUNREACH	65		/* No route to host */
 #endif /* _POSIX_SOURCE */
+#ifndef ENOTEMPTY
 #define	ENOTEMPTY	66		/* Directory not empty */
+#endif//ENOTEMPTY
 
 /* quotas & mush */
 #ifndef _POSIX_SOURCE
@@ -149,8 +157,12 @@ extern int errno;			/* global error number */
 #define	EPROCUNAVAIL	76		/* Bad procedure for program */
 #endif /* _POSIX_SOURCE */
 
+#ifndef ENOLCK
 #define	ENOLCK		77		/* No locks available */
+#endif//ENOLCK
+#ifndef ENOSYS
 #define	ENOSYS		78		/* Function not implemented */
+#endif//ENOSYS
 
 #ifndef _POSIX_SOURCE
 #define	EFTYPE		79		/* Inappropriate file type or format */

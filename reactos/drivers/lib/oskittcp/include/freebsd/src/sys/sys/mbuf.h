@@ -365,6 +365,7 @@ union mcluster {
 	  } \
 	  (n) = (m)->m_next; \
 	  FREE((m), mbtypes[(m)->m_type]); \
+	  m = NULL; \
 	}
 #else /* notyet */
 #ifdef OSKIT
@@ -376,6 +377,7 @@ union mcluster {
 	  } \
 	  (nn) = (m)->m_next; \
 	  FREE((m), mbtypes[(m)->m_type]); \
+	  m = NULL; \
 	}
 #else /* !OSKIT */
 #define	MFREE(m, nn) \
@@ -386,6 +388,7 @@ union mcluster {
 	  } \
 	  (nn) = (m)->m_next; \
 	  FREE((m), mbtypes[(m)->m_type]); \
+	  m = NULL; \
 	}
 #endif /* OSKIT */
 #endif

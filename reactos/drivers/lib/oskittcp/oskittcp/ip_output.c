@@ -880,7 +880,7 @@ ip_setmoptions(optname, imop, m)
 		 * allocate one and initialize to default values.
 		 */
 		imo = (struct ip_moptions*)malloc(sizeof(*imo), M_IPMOPTS,
-		    M_WAITOK);
+						  M_WAITOK);
 
 		if (imo == NULL)
 			return (ENOBUFS);

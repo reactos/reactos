@@ -41,13 +41,17 @@
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
+#ifndef _WINSOCKAPI_
 unsigned long	 inet_addr __P((const char *));
+#endif//_WINSOCKAPI_
 int		 inet_aton __P((const char *, struct in_addr *));
 unsigned long	 inet_lnaof __P((struct in_addr));
 struct in_addr	 inet_makeaddr __P((u_long , u_long));
 unsigned long	 inet_netof __P((struct in_addr));
 unsigned long	 inet_network __P((const char *));
+#ifndef _WINSOCKAPI_
 char		*inet_ntoa __P((struct in_addr));
+#endif//_WINSOCKAPI_
 __END_DECLS
 
 #endif /* !_INET_H_ */

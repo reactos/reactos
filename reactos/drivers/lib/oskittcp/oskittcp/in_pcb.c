@@ -93,10 +93,10 @@ in_pcbbind(inp, nam)
 	u_short lport = 0;
 	int wild = 0, reuseport = (so->so_options & SO_REUSEPORT);
 	int error;
-
+	
 	OS_DbgPrint(OSK_MID_TRACE,("Called\n"));
 
-	OskitDumpBuffer( nam->m_data, nam->m_len );
+	if( nam ) OskitDumpBuffer( nam->m_data, nam->m_len );
 
 #ifndef __REACTOS__
 	if (in_ifaddr == 0) {

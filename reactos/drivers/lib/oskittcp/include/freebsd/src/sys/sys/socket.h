@@ -78,10 +78,12 @@
 /*
  * Structure used for manipulating linger option.
  */
+#ifndef _WINSOCKAPI_
 struct	linger {
 	int	l_onoff;		/* option on/off */
 	int	l_linger;		/* linger time */
 };
+#endif//_WINSOCKAPI_
 
 /*
  * Level number for (get/set)sockopt() to apply to socket itself.
@@ -93,7 +95,9 @@ struct	linger {
  */
 #define	AF_UNSPEC	0		/* unspecified */
 #define	AF_LOCAL	1		/* local to host (pipes, portals) */
+#ifndef _WINSOCKAPI_
 #define	AF_UNIX		AF_LOCAL	/* backward compatibility */
+#endif//_WINSOCKAPI_
 #define	AF_INET		2		/* internetwork: UDP, TCP, etc. */
 #define	AF_IMPLINK	3		/* arpanet imp addresses */
 #define	AF_PUP		4		/* pup protocols: e.g. BSP */
@@ -116,20 +120,30 @@ struct	linger {
 #define	AF_COIP		20		/* connection-oriented IP, aka ST II */
 #define	AF_CNT		21		/* Computer Network Technology */
 #define pseudo_AF_RTIP	22		/* Help Identify RTIP packets */
+#ifndef _WINSOCKAPI_
 #define	AF_IPX		23		/* Novell Internet Protocol */
+#endif//_WINSOCKAPI_
 #define	AF_SIP		24		/* Simple Internet Protocol */
 #define	pseudo_AF_PIP	25		/* Help Identify PIP packets */
 #define	AF_ISDN		26		/* Integrated Services Digital Network*/
 #define	AF_E164		AF_ISDN		/* CCITT E.164 recommendation */
 #define	pseudo_AF_KEY	27		/* Internal key-management function */
+#ifndef _WINSOCKAPI_
 #define	AF_INET6	28		/* IPv6 */
 
 #define	AF_MAX		29
+#endif//_WINSOCKAPI_
+
 
 /*
  * Structure used by kernel to store most
  * addresses.
  */
+#ifdef _WINSOCKAPI_
+#define sockaddr bsd_sockaddr
+#define sockproto bsd_sockproto
+#endif//_WINSOCKAPI_
+
 struct sockaddr {
 	u_char	sa_len;			/* total length */
 	u_char	sa_family;		/* address family */
@@ -150,14 +164,18 @@ struct sockproto {
  */
 #define	PF_UNSPEC	AF_UNSPEC
 #define	PF_LOCAL	AF_LOCAL
+#ifndef _WINSOCKAPI_
 #define	PF_UNIX		PF_LOCAL	/* backward compatibility */
+#endif//_WINSOCKAPI_
 #define	PF_INET		AF_INET
 #define	PF_IMPLINK	AF_IMPLINK
 #define	PF_PUP		AF_PUP
 #define	PF_CHAOS	AF_CHAOS
 #define	PF_NS		AF_NS
 #define	PF_ISO		AF_ISO
+#ifndef _WINSOCKAPI_
 #define	PF_OSI		AF_ISO
+#endif//_WINSOCKAPI_
 #define	PF_ECMA		AF_ECMA
 #define	PF_DATAKIT	AF_DATAKIT
 #define	PF_CCITT	AF_CCITT
@@ -242,7 +260,9 @@ struct sockproto {
 /*
  * Maximum queue length specifiable by listen.
  */
+#ifndef _WINSOCKAPI_
 #define	SOMAXCONN	128
+#endif//_WINSOCKAPI_
 
 /*
  * Message header for recvmsg and sendmsg calls.

@@ -27,17 +27,15 @@ unsigned net_imask;
 unsigned volatile ipending;
 struct timeval boottime;
 
-void *fbsd_malloc( unsigned int bytes, const char *file, int line, ... ) {
+void *fbsd_malloc( unsigned int bytes, ... ) {
     if( !OtcpEvent.TCPMalloc ) panic("no malloc");
     return OtcpEvent.TCPMalloc
-	( OtcpEvent.ClientData,
-	  (OSK_UINT)bytes, (OSK_PCHAR)file, (OSK_UINT)line );
+	( OtcpEvent.ClientData, (OSK_UINT)bytes, "*", 0 );
 }
 
-void fbsd_free( void *data, const char *file, int line, ... ) {
+void fbsd_free( void *data, ... ) {
     if( !OtcpEvent.TCPFree ) panic("no free");
-    OtcpEvent.TCPFree( OtcpEvent.ClientData,
-		    data, (OSK_PCHAR)file, (OSK_UINT)line );
+    OtcpEvent.TCPFree( OtcpEvent.ClientData, data, "*", 0 );
 }
 
 void InitOskitTCP() {

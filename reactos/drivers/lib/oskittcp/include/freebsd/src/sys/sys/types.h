@@ -54,19 +54,33 @@ typedef	unsigned long	u_long;
 typedef	unsigned short	ushort;		/* Sys V compatibility */
 typedef	unsigned int	uint;		/* Sys V compatibility */
 
+#ifdef _MSC_VER
+typedef unsigned __int64 u_quad_t;      /* quads */
+typedef __int64 quad_t;
+#else
 typedef	unsigned long long u_quad_t;	/* quads */
 typedef	long long	quad_t;
+#endif/*_MSC_VER*/
 typedef	quad_t *	qaddr_t;
 
 typedef	char *		caddr_t;	/* core address */
 typedef	long		daddr_t;	/* disk address */
+#ifndef _DEV_T_DEFINED
+#define _DEV_T_DEFINED
 typedef	unsigned long	dev_t;		/* device number */
+#endif//_DEV_T_DEFINED
 typedef unsigned long	fixpt_t;	/* fixed point number */
 typedef	unsigned long	gid_t;		/* group id */
+#ifndef _INO_T_DEFINED
+#define _INO_T_DEFINED
 typedef	unsigned long	ino_t;		/* inode number */
+#endif//_INO_T_DEFINED
 typedef	unsigned short	mode_t;		/* permissions */
 typedef	unsigned short	nlink_t;	/* link count */
+#ifndef _OFF_T_DEFINED
+#define _OFF_T_DEFINED
 typedef	quad_t		off_t;		/* file offset */
+#endif//_OFF_T_DEFINED
 typedef	long		pid_t;		/* process id */
 typedef	long		segsz_t;	/* segment size */
 typedef	long		swblk_t;	/* swap offset */
@@ -99,11 +113,13 @@ __END_DECLS
 #include <machine/types.h>
 
 #ifdef	_BSD_CLOCK_T_
+#define _CLOCK_T_DEFINED
 typedef	_BSD_CLOCK_T_	clock_t;
 #undef	_BSD_CLOCK_T_
 #endif
 
 #ifdef	_BSD_SIZE_T_
+#define _SIZE_T_DEFINED
 typedef	_BSD_SIZE_T_	size_t;
 #undef	_BSD_SIZE_T_
 #endif
@@ -114,6 +130,7 @@ typedef	_BSD_SSIZE_T_	ssize_t;
 #endif
 
 #ifdef	_BSD_TIME_T_
+#define _TIME_T_DEFINED
 typedef	_BSD_TIME_T_	time_t;
 #undef	_BSD_TIME_T_
 #endif
@@ -138,6 +155,7 @@ typedef long	fd_mask;
 #define	howmany(x, y)	(((x)+((y)-1))/(y))
 #endif
 
+#ifndef _MSC_VER
 typedef	struct fd_set {
 	fd_mask	fds_bits[howmany(FD_SETSIZE, NFDBITS)];
 } fd_set;
@@ -147,6 +165,7 @@ typedef	struct fd_set {
 #define	FD_ISSET(n, p)	((p)->fds_bits[(n)/NFDBITS] & (1 << ((n) % NFDBITS)))
 #define	FD_COPY(f, t)	bcopy(f, t, sizeof(*(f)))
 #define	FD_ZERO(p)	bzero(p, sizeof(*(p)))
+#endif/*_MSC_VER*/
 
 #if defined(__STDC__) && defined(KERNEL)
 /*

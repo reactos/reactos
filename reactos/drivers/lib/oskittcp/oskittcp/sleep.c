@@ -78,7 +78,7 @@ void clock_init()
 {
 	timeout_init();
 	/* inittodr(0); // what does this do? */
-	boottime = time;
+	/* boottime = kern_time; */
 	/* Start a clock we can use for timeouts */
 }
 

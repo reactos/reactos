@@ -56,7 +56,11 @@ extern char kernelname[MAXPATHLEN];
 extern volatile struct timeval mono_time;
 extern struct timeval boottime;
 extern struct timeval runtime;
+#ifdef _MSC_VER /* TODO FIXME - need a library-specific macro for this one */
+extern volatile struct timeval kern_time;
+#else/*_MSC_VER*/
 extern volatile struct timeval time;
+#endif/*_MSC_VER*/
 extern struct timezone tz;			/* XXX */
 
 extern int tick;			/* usec per tick (1000000 / hz) */
@@ -76,8 +80,12 @@ extern long timedelta;
  * ld/ld.h.  Since their calculation requires arithmetic, we
  * can't name them symbolically (e.g., 23 is N_SETT | N_EXT).
  */
+#ifdef _MSC_VER
+#define MAKE_SET(set, sym, type)
+#else
 #define MAKE_SET(set, sym, type) \
 	asm(".stabs \"_" #set "\", " #type ", 0, 0, _" #sym)
+#endif
 #define TEXT_SET(set, sym) MAKE_SET(set, sym, 23)
 #define DATA_SET(set, sym) MAKE_SET(set, sym, 25)
 #define BSS_SET(set, sym)  MAKE_SET(set, sym, 27)

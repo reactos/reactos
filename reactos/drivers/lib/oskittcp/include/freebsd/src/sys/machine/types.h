@@ -59,7 +59,12 @@ typedef	short			  int16_t;
 typedef	unsigned short		u_int16_t;
 typedef	int			  int32_t;
 typedef	unsigned int		u_int32_t;
+#ifdef _MSC_VER
+typedef __int64           int64_t;
+typedef unsigned __int64    u_int64_t;
+#else
 typedef	long long		  int64_t;
 typedef	unsigned long long	u_int64_t;
+#endif
 
 #endif	/* _MACHTYPES_H_ */

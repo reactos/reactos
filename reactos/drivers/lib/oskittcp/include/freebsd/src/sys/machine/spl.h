@@ -172,7 +172,15 @@ extern	unsigned tty_imask;	/* group of interrupts masked with spltty() */
 
 #define	schedsofttty()	(*(unsigned *)&idelayed |= SWI_TTY_PENDING)
 
-#ifdef __GNUC__
+#ifdef _MSC_VER
+
+static int splhigh() { return 0; }
+static int splimp() { return 0; }
+static int splnet() { return 0; }
+static int splx() { return 0; }
+static int splclock() { return 0; }
+
+#elif defined(__GNUC__)
 
 void	splz	__P((void));
 

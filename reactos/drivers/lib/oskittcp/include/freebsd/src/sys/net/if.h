@@ -88,16 +88,6 @@ struct	ether_header;
  * (Would like to call this struct ``if'', but C isn't PL/1.)
  */
 
-struct ifnet {
-	char	*if_name;		/* name, e.g. ``en'' or ``lo'' */
-	struct	ifnet *if_next;		/* all struct ifnets are chained */
-	struct	ifaddr *if_addrlist;	/* linked list of addresses per if */
-        int	if_pcount;		/* number of promiscuous listeners */
-	caddr_t	if_bpf;			/* packet filter structure */
-	u_short	if_index;		/* numeric abbreviation for this if  */
-	short	if_unit;		/* sub-unit for lower level driver */
-	short	if_timer;		/* time 'til if_watchdog called */
-	short	if_flags;		/* up/down, broadcast, etc. */
 	struct	if_data {
 /* generic interface information */
 		u_char	ifi_type;	/* ethernet, tokenring, etc */
@@ -120,7 +110,20 @@ struct ifnet {
 		u_long	ifi_iqdrops;	/* dropped on input, this interface */
 		u_long	ifi_noproto;	/* destined for unsupported protocol */
 		struct	timeval ifi_lastchange;/* time of last administrative change */
-	}	if_data;
+	};
+
+
+struct ifnet {
+	char	*if_name;		/* name, e.g. ``en'' or ``lo'' */
+	struct	ifnet *if_next;		/* all struct ifnets are chained */
+	struct	ifaddr *if_addrlist;	/* linked list of addresses per if */
+        int	if_pcount;		/* number of promiscuous listeners */
+	caddr_t	if_bpf;			/* packet filter structure */
+	u_short	if_index;		/* numeric abbreviation for this if  */
+	short	if_unit;		/* sub-unit for lower level driver */
+	short	if_timer;		/* time 'til if_watchdog called */
+	short	if_flags;		/* up/down, broadcast, etc. */
+	struct if_data if_data;
 /* procedure handles */
 	void	(*if_init)		/* init routine */
 		__P((int));

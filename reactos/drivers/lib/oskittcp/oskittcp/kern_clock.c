@@ -136,7 +136,7 @@ long tk_rawcc;
 }
 
 int	ticks;
-volatile struct	timeval time;
+volatile struct	timeval kern_time;
 volatile struct	timeval mono_time;
 
 /*
@@ -280,8 +280,8 @@ hzto(tv)
 	 * 10ms ticks is 248 days.
 	 */
 	s = splclock();
-	sec = tv->tv_sec - time.tv_sec;
-	usec = tv->tv_usec - time.tv_usec;
+	sec = tv->tv_sec - kern_time.tv_sec;
+	usec = tv->tv_usec - kern_time.tv_usec;
 	splx(s);
 	if (usec < 0) {
 		sec--;

@@ -113,7 +113,9 @@ struct tcphdr {
 /*
  * User-settable options (used with setsockopt).
  */
+#ifndef _WINSOCKAPI_
 #define	TCP_NODELAY	0x01	/* don't delay send to coalesce packets */
+#endif/*_WINSOCKAPI_*/
 #define	TCP_MAXSEG	0x02	/* set maximum segment size */
 #define TCP_NOPUSH	0x04	/* don't push last block of write */
 #define TCP_NOOPT	0x08	/* don't use TCP options */

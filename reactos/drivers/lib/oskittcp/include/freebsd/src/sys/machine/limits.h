@@ -54,7 +54,9 @@
 #define	SCHAR_MAX	127		/* min value for a signed char */
 #define	SCHAR_MIN	(-128)		/* max value for a signed char */
 
+#ifndef _MSC_VER
 #define	UCHAR_MAX	255		/* max value for an unsigned char */
+#endif//_MSC_VER
 #ifndef __REACTOS__
 #define	CHAR_MAX	127		/* max value for a char */
 #define	CHAR_MIN	(-128)		/* min value for a char */
