@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.55 2003/12/14 11:36:43 gvg Exp $
+/* $Id: winpos.c,v 1.56 2003/12/15 21:51:10 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1203,7 +1203,12 @@ WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, POINT Point,
 	   (Current->Style & (WS_CHILD | WS_POPUP)) != WS_CHILD) &&
 	  WinPosPtInWindow(Current, Point))
 	{
+	  if(*Window)
+	    ObmDereferenceObject(*Window);
+	  ObmReferenceObjectByPointer(Current, otWindow);
+	  
 	  *Window = Current;
+	  
 	  if (Current->Style & WS_DISABLED)
 	    {
 		  ExReleaseFastMutexUnsafe(&ScopeWin->ChildrenListLock);
