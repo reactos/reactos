@@ -10,6 +10,7 @@
  *   20 Aug 2003 vizzini - DMA support
  *   3  Oct 2003 vizzini - SendPackets support
  */
+#include <roscfg.h>
 #include <miniport.h>
 #include <protocol.h>
 
@@ -105,8 +106,7 @@ MiniDisplayPacket2(
     PVOID  LookaheadBuffer,
     UINT   LookaheadBufferSize)
 {
-//#ifdef DBG
-#if 0
+#ifdef DBG
     if ((DebugTraceLevel | DEBUG_PACKET) > 0) {
         ULONG i, Length;
         PUCHAR p;
@@ -162,7 +162,6 @@ MiniIndicateData(
   /* KIRQL OldIrql; */
   PLIST_ENTRY CurrentEntry;
   PADAPTER_BINDING AdapterBinding;
-  static PVOID ReceiveHandler = 0;
   
   NDIS_DbgPrint(DEBUG_MINIPORT, ("Called. Adapter (0x%X)  HeaderBuffer (0x%X)  "
       "HeaderBufferSize (0x%X)  LookaheadBuffer (0x%X)  LookaheadBufferSize (0x%X).\n",
@@ -193,20 +192,22 @@ MiniIndicateData(
   //KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
     {
       CurrentEntry = Adapter->ProtocolListHead.Flink;
+      NDIS_DbgPrint(DEBUG_MINIPORT, ("CurrentEntry = %x\n", CurrentEntry));
 
       if (CurrentEntry == &Adapter->ProtocolListHead) 
         {
           NDIS_DbgPrint(DEBUG_MINIPORT, ("WARNING: No upper protocol layer.\n"));
         }
 
-      while (CurrentEntry->Flink != &Adapter->ProtocolListHead) 
+      while (CurrentEntry != &Adapter->ProtocolListHead) 
         {
           AdapterBinding = CONTAINING_RECORD(CurrentEntry, ADAPTER_BINDING, AdapterListEntry);
+	  NDIS_DbgPrint(DEBUG_MINIPORT, ("AdapterBinding = %x\n", AdapterBinding));
 
           /* see above */
           /* KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql); */
 
-#if DBG
+#ifdef DBG
           if(!AdapterBinding)
             {
               NDIS_DbgPrint(MIN_TRACE, ("AdapterBinding was null\n"));
@@ -225,13 +226,6 @@ MiniIndicateData(
               break;
             }
 #endif
-
-	  if( !ReceiveHandler ) 
-	      ReceiveHandler = 
-		  *AdapterBinding->ProtocolBinding->Chars.u4.ReceiveHandler;
-	  ASSERT( ReceiveHandler ==
-		  *AdapterBinding->ProtocolBinding->Chars.u4.ReceiveHandler );
-	      
 
 	  NDIS_DbgPrint
 	      (MID_TRACE, 
@@ -319,7 +313,7 @@ MiniIndicateReceivePacket(
 
       NDIS_DbgPrint(MID_TRACE, ("indicating a %d-byte packet\n", PacketLength));
 
-      MiniIndicateData(Miniport, 0, PacketBuffer, 14, PacketBuffer+14, PacketLength-14, PacketLength-14);
+      MiniIndicateData(Miniport, NULL, PacketBuffer, 14, PacketBuffer+14, PacketLength-14, PacketLength-14);
 
       NdisFreeMemory(PacketBuffer, 0, 0);
     }
@@ -490,7 +484,7 @@ MiniAdapterHasAddress(
 
   NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
-#if DBG
+#ifdef DBG
   if(!Adapter)
     {
       NDIS_DbgPrint(MID_TRACE, ("Adapter object was null\n"));

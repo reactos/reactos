@@ -9,6 +9,7 @@
  *   CSH 01/08-2000 Created
  *   09-13-2003 Vizzini Updates for SendPackets support
  */
+#include <roscfg.h>
 #include <ndissys.h>
 #include <miniport.h>
 #include <protocol.h>
