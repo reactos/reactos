@@ -1536,7 +1536,7 @@ LPSTR FindSourceLineForAddress(ULONG addr,PULONG pulLineNumber,LPSTR* ppSrcStart
 						// if we're in the function we're looking for
 						if(szCurrentFunction[0] && PICE_fncmp(szCurrentFunction,pFunctionName)==0)
                         {
-                            DPRINT((0,"code source line number #%u for addr. %x (function @ %x) ulMinValue = %x ulDelta = %x\n",pStab->n_desc,start+pStab->n_value,start,ulMinValue,(addr-(start+pStab->n_value))));
+                            DPRINT((0,"cslnum#%u for addr.%x (fn @ %x) ulMinVal=%x ulDelta=%x\n",pStab->n_desc,start+pStab->n_value,start,ulMinValue,(addr-(start+pStab->n_value))));
 
                             if(bFirstOccurence)
                             {
@@ -1544,9 +1544,10 @@ LPSTR FindSourceLineForAddress(ULONG addr,PULONG pulLineNumber,LPSTR* ppSrcStart
                                 DPRINT((0,"source file must be %s\n",szWantedPath));
                                 bFirstOccurence = FALSE;
                             }
-
+							DPRINT((0,"wanted %s, current: %s\n",szWantedPath, szCurrentPath));
                             // we might have a match if our address is greater than the one in the STAB
                             // and we're lower or equal than minimum value
+							//ei need to add the size of prolog 10(?)
                             if(addr>=start+pStab->n_value &&
                                (addr-(start+pStab->n_value))<=ulMinValue &&
                                PICE_strcmpi(szWantedPath,szCurrentPath)==0 )
@@ -1571,14 +1572,13 @@ LPSTR FindSourceLineForAddress(ULONG addr,PULONG pulLineNumber,LPSTR* ppSrcStart
                                 for(j=0;j<pSymbols->ulNumberOfSrcFiles;j++)
                                 {
                                     LPSTR pSlash;
+									ULONG currlen, fnamelen;
 
-                                    // make basename
-                                    pSlash = strrchr(pSrc->filename,'/');
-                                    if(!pSlash)
-                                        pSlash = pSrc->filename;
-                                    else
-                                        pSlash++;
+									currlen = PICE_strlen( szCurrentPath );
+									fnamelen = PICE_strlen( pSrc->filename );
+									pSlash = pSrc->filename + fnamelen - currlen;
 
+									//DPRINT((0,"pSlash: %s, szCurrentPath: %s\n", pSlash, szCurrentPath));
                                     // if base name matches current path we have found the correct source file
                                     if(PICE_strcmpi(pSlash,szCurrentPath)==0)
                                     {
