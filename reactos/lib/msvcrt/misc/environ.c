@@ -1,4 +1,4 @@
-/* $Id: environ.c,v 1.6 2003/12/24 23:20:08 sedwards Exp $
+/* $Id: environ.c,v 1.7 2004/02/21 08:02:49 tamlin Exp $
  *
  * dllmain.c
  *
@@ -43,7 +43,7 @@ int *__p__commode(void) // not exported by NTDLL
 int BlockEnvToEnviron(void)
 {
     char * ptr, * ptr2;
-    int i, len;
+    int i, count;
 
     DPRINT("BlockEnvToEnviron()\n");
 
@@ -57,18 +57,25 @@ int BlockEnvToEnviron(void)
         DPRINT("GetEnvironmentStringsA() returnd NULL\n");
         return -1;
     }
-    len = 0;
+    count = 0;
     while (*ptr2) {
-        len++;
+        /* skip current directory of the form "=C:=C:\directory\" */
+        if (*ptr2 != '=') {
+            count++;
+        }
         ptr2 += strlen(ptr2) + 1;
     }
-    _environ = malloc((len + 1) * sizeof(char*));
+    _environ = malloc((count + 1) * sizeof(char*));
     if (_environ == NULL) {
         FreeEnvironmentStringsA(ptr);
         return -1;
     }
-    for (i = 0; i < len && *ptr; i++) {
-        _environ[i] = ptr;
+    i = 0;
+    while (i < count && *ptr) {
+        if (*ptr != '=') {
+            _environ[i] = ptr;
+            ++i;
+        }
         ptr += strlen(ptr) + 1;
     }
     _environ[i] = NULL;
