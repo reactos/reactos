@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.51 2003/11/25 22:06:31 gvg Exp $
+ * $Id: gdiobj.c,v 1.52 2003/11/26 21:48:35 gvg Exp $
  *
  */
 
@@ -273,6 +273,7 @@ GDIOBJ_AllocObj(WORD Size, DWORD ObjectType, GDICLEANUPPROC CleanupProc)
     W32Process->GDIObjects++;
   }
 
+//if (0x4001b == (DWORD) GDI_HANDLE_CREATE(Index, ObjectType)) __asm__("int $3\n");
   return GDI_HANDLE_CREATE(Index, ObjectType);
 }
 
@@ -425,71 +426,6 @@ GDIOBJ_UnlockMultipleObj(PGDIMULTILOCK pList, INT nObj)
 }
 
 /*!
- * Marks the object as global. (Creator process ID is set to GDI_GLOBAL_PROCESS). Global objects may be
- * accessed by any process.
- * \param 	ObjectHandle - handle of the object to make global.
- *
- * \note	Only stock objects should be marked global.
-*/
-VOID FASTCALL
-GDIOBJ_MarkObjectGlobal(HGDIOBJ ObjectHandle)
-{
-  PEPROCESS Process;
-  PW32PROCESS W32Process;
-  NTSTATUS Status;
-  PGDIOBJHDR ObjHdr;
-
-  DPRINT("GDIOBJ_MarkObjectGlobal handle 0x%08x\n", ObjectHandle);
-  ObjHdr = GDIOBJ_iGetObjectForIndex(GDI_HANDLE_GET_INDEX(ObjectHandle));
-  if (NULL == ObjHdr)
-    {
-      return;
-    }
-  
-  Status = PsLookupProcessByProcessId((PVOID)ObjHdr->hProcessId, &Process);
-  if(NT_SUCCESS(Status))
-  {
-    W32Process = Process->Win32Process;
-    if(W32Process)
-    {
-      W32Process->GDIObjects--;
-    }
-  ObDereferenceObject(Process);
-  }
-  
-  ObjHdr->hProcessId = GDI_GLOBAL_PROCESS;
-}
-
-/*!
- * Removes the global mark from the object. Global objects may be
- * accessed by any process.
- * \param 	ObjectHandle - handle of the object to make local.
- *
- * \note	Only stock objects should be marked global.
-*/
-VOID FASTCALL
-GDIOBJ_UnmarkObjectGlobal(HGDIOBJ ObjectHandle)
-{
-  PW32PROCESS W32Process;
-  PGDIOBJHDR ObjHdr;
-
-  DPRINT("GDIOBJ_MarkObjectGlobal handle 0x%08x\n", ObjectHandle);
-  ObjHdr = GDIOBJ_iGetObjectForIndex(GDI_HANDLE_GET_INDEX(ObjectHandle));
-  if (NULL == ObjHdr /*|| GDI_GLOBAL_PROCESS != ObjHdr->hProcessId*/)
-    {
-      return;
-    }
-  
-  W32Process = PsGetCurrentProcess()->Win32Process;
-  if(W32Process)
-  {
-    W32Process->GDIObjects++;
-  }
-  
-  ObjHdr->hProcessId = PsGetCurrentProcessId();
-}
-
-/*!
  * Get the type of the object.
  * \param 	ObjectHandle - handle of the object.
  * \return 	One of the \ref GDI object types
@@ -564,7 +500,7 @@ CreateStockObjects(void)
     {
       if (NULL != StockObjects[Object])
 	{
-	  GDIOBJ_MarkObjectGlobal(StockObjects[Object]);
+	  GDIOBJ_SetOwnership(StockObjects[Object], NULL);
 /*	  GDI_HANDLE_SET_STOCKOBJ(StockObjects[Object]);*/
 	}
     }
@@ -810,16 +746,91 @@ GDIOBJ_OwnedByCurrentProcess(HGDIOBJ ObjectHandle)
 }
 
 void FASTCALL
-GDIOBJ_TakeOwnership(HGDIOBJ ObjectHandle)
+GDIOBJ_SetOwnership(HGDIOBJ ObjectHandle, PEPROCESS NewOwner)
 {
   PGDIOBJHDR ObjHdr = GDIOBJ_iGetObjectForIndex(GDI_HANDLE_GET_INDEX(ObjectHandle));
+  PEPROCESS OldProcess;
+  PW32PROCESS W32Process;
+  NTSTATUS Status;
 
   DPRINT("GDIOBJ_OwnedByCurrentProcess: ObjectHandle: 0x%08x\n", ObjectHandle);
   ASSERT(GDI_VALID_OBJECT(ObjectHandle, ObjHdr, GDI_OBJECT_TYPE_DONTCARE, GDIOBJFLAG_IGNOREPID));
 
-  if (GDI_GLOBAL_PROCESS != ObjHdr->hProcessId)
+  if ((NULL == NewOwner && GDI_GLOBAL_PROCESS != ObjHdr->hProcessId)
+      || (NULL != NewOwner && ObjHdr->hProcessId != (HANDLE) NewOwner->UniqueProcessId))
     {
-      ObjHdr->hProcessId = PsGetCurrentProcessId();
+      Status = PsLookupProcessByProcessId((PVOID)ObjHdr->hProcessId, &OldProcess);
+      if (NT_SUCCESS(Status))
+        {
+          W32Process = OldProcess->Win32Process;
+          if (W32Process)
+            {
+              W32Process->GDIObjects--;
+            }
+          ObDereferenceObject(OldProcess);
+        }
+    }
+
+  if (NULL == NewOwner)
+    {
+      ObjHdr->hProcessId = GDI_GLOBAL_PROCESS;
+    }
+  else if (ObjHdr->hProcessId != (HANDLE) NewOwner->UniqueProcessId)
+    {
+      ObjHdr->hProcessId = (HANDLE) NewOwner->UniqueProcessId;
+      W32Process = NewOwner->Win32Process;
+      if (W32Process)
+        {
+          W32Process->GDIObjects++;
+        }
+    }
+}
+
+void FASTCALL
+GDIOBJ_CopyOwnership(HGDIOBJ CopyFrom, HGDIOBJ CopyTo)
+{
+  PGDIOBJHDR ObjHdrFrom = GDIOBJ_iGetObjectForIndex(GDI_HANDLE_GET_INDEX(CopyFrom));
+  PGDIOBJHDR ObjHdrTo = GDIOBJ_iGetObjectForIndex(GDI_HANDLE_GET_INDEX(CopyTo));
+  NTSTATUS Status;
+  PEPROCESS ProcessFrom;
+  PEPROCESS CurrentProcess;
+
+  ASSERT(NULL != ObjHdrFrom && NULL != ObjHdrTo);
+  if (NULL != ObjHdrFrom && NULL != ObjHdrTo
+      && ObjHdrTo->hProcessId != ObjHdrFrom->hProcessId)
+    {
+      if (ObjHdrFrom->hProcessId == GDI_GLOBAL_PROCESS)
+        {
+          GDIOBJ_SetOwnership(CopyTo, NULL);
+        }
+      else
+        {
+          /* Warning: ugly hack ahead
+           *
+           * During process cleanup, we can't call PsLookupProcessByProcessId
+           * for the current process, 'cause that function will try to
+           * reference the process, and since the process is closing down
+           * that will result in a bugcheck.
+           * So, instead, we call PsGetCurrentProcess, which doesn't reference
+           * the process. If the current process is indeed the one we're
+           * looking for, we use it, otherwise we can (safely) call
+           * PsLookupProcessByProcessId
+           */
+          CurrentProcess = PsGetCurrentProcess();
+          if (ObjHdrFrom->hProcessId == (HANDLE) CurrentProcess->UniqueProcessId)
+            {
+              GDIOBJ_SetOwnership(CopyTo, CurrentProcess);
+            }
+          else
+            {
+              Status = PsLookupProcessByProcessId((PVOID) ObjHdrFrom->hProcessId, &ProcessFrom);
+              if (NT_SUCCESS(Status))
+                {
+                  GDIOBJ_SetOwnership(CopyTo, ProcessFrom);
+                  ObDereferenceObject(ProcessFrom);
+                }
+            }
+        }
     }
 }
 

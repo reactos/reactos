@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.101 2003/11/26 18:44:08 navaraf Exp $
+/* $Id: dc.c,v 1.102 2003/11/26 21:48:35 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -617,7 +617,7 @@ IntCreatePrimarySurface()
       DPRINT("Adjusting GDIInfo.ulLogPixelsY\n");
       PrimarySurface.GDIInfo.ulLogPixelsY = 96;
     }
-  GDIOBJ_MarkObjectGlobal(PrimarySurface.DevInfo.hpalDefault);
+  GDIOBJ_SetOwnership(PrimarySurface.DevInfo.hpalDefault, NULL);
 
   DPRINT("calling completePDev\n");
 
@@ -1987,4 +1987,30 @@ DC_InvertXform(const XFORM *xformSrc,
 
   return  TRUE;
 }
+
+VOID FASTCALL
+DC_SetOwnership(HDC hDC, PEPROCESS Owner)
+{
+  PDC DC;
+
+  GDIOBJ_SetOwnership(hDC, Owner);
+  DC = DC_LockDc(hDC);
+  if (NULL != DC)
+    {
+      if (NULL != DC->w.hClipRgn)
+        {
+          GDIOBJ_CopyOwnership(hDC, DC->w.hClipRgn);
+        }
+      if (NULL != DC->w.hVisRgn)
+        {
+          GDIOBJ_CopyOwnership(hDC, DC->w.hVisRgn);
+        }
+      if (NULL != DC->w.hGCClipRgn)
+        {
+          GDIOBJ_CopyOwnership(hDC, DC->w.hGCClipRgn);
+        }
+      DC_UnlockDc(hDC);
+    }
+}
+
 /* EOF */

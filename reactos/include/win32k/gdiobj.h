@@ -1,7 +1,6 @@
 /*
  *  GDI object common header definition
  *
- * (RJJ) taken from WINE
  */
 
 #ifndef __WIN32K_GDIOBJ_H
@@ -67,7 +66,9 @@ BOOL    FASTCALL GDIOBJ_UnlockObj (HGDIOBJ Obj, DWORD ObjectType);
 BOOL    FASTCALL GDIOBJ_UnlockMultipleObj(PGDIMULTILOCK pList, INT nObj);
 DWORD   FASTCALL GDIOBJ_GetObjectType(HGDIOBJ ObjectHandle);
 BOOL    FASTCALL GDIOBJ_OwnedByCurrentProcess(HGDIOBJ ObjectHandle);
-void    FASTCALL GDIOBJ_TakeOwnership(HGDIOBJ ObjectHandle);
+void    FASTCALL GDIOBJ_SetOwnership(HGDIOBJ ObjectHandle, PEPROCESS Owner);
+void    FASTCALL GDIOBJ_CopyOwnership(HGDIOBJ CopyFrom, HGDIOBJ CopyTo);
+BOOL    FASTCALL GDIOBJ_LockMultipleObj(PGDIMULTILOCK pList, INT nObj);
 
 /* a couple macros for debugging GDIOBJ locking */
 #define GDIOBJ_LockObj(obj,ty) GDIOBJ_LockObjDbg(__FILE__,__LINE__,obj,ty)

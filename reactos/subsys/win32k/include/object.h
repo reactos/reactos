@@ -119,10 +119,6 @@ VOID  FASTCALL CreateStockObjects (VOID);
 
 BOOL  FASTCALL CleanupForProcess (struct _EPROCESS *Process, INT Pid);
 
-VOID  FASTCALL GDIOBJ_MarkObjectGlobal (HGDIOBJ ObjectHandle);
-VOID  FASTCALL GDIOBJ_UnmarkObjectGlobal (HGDIOBJ ObjectHandle);
-BOOL  FASTCALL GDIOBJ_LockMultipleObj (PGDIMULTILOCK pList, INT nObj);
-
 PPOINT FASTCALL GDI_Bezier (const POINT *Points, INT count, PINT nPtsOut);
 
 /* objects/objconv.c */

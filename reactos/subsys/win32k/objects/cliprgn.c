@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cliprgn.c,v 1.25 2003/09/24 16:01:32 weiden Exp $ */
+/* $Id: cliprgn.c,v 1.26 2003/11/26 21:48:35 gvg Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -131,6 +131,7 @@ NtGdiSelectVisRgn(HDC hdc, HRGN hrgn)
   if (dc->w.hVisRgn == NULL)
     {
       dc->w.hVisRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
+      GDIOBJ_CopyOwnership(hdc, dc->w.hVisRgn);
     }
 
   retval = NtGdiCombineRgn(dc->w.hVisRgn, hrgn, 0, RGN_COPY);

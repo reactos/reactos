@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: color.c,v 1.27 2003/10/23 15:34:44 gvg Exp $ */
+/* $Id: color.c,v 1.28 2003/11/26 21:48:35 gvg Exp $ */
 
 // FIXME: Use PXLATEOBJ logicalToSystem instead of int *mapping
 
@@ -167,7 +167,7 @@ HBRUSH STDCALL NtGdiGetSysColorBrush(int nIndex)
       SysBrushes[nIndex] = (HBRUSH) ((DWORD)NtGdiCreateSolidBrush(SysColours[nIndex]));
       if (NULL != SysBrushes[nIndex])
         {
-          GDIOBJ_MarkObjectGlobal(SysBrushes[nIndex]);
+          GDIOBJ_SetOwnership(SysBrushes[nIndex], NULL);
         }
     }
 

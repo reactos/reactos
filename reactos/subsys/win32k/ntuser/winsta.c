@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: winsta.c,v 1.47 2003/11/25 22:06:31 gvg Exp $
+ *  $Id: winsta.c,v 1.48 2003/11/26 21:48:35 gvg Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -293,7 +293,7 @@ IntInitializeDesktopGraphics(VOID)
       IntDestroyPrimarySurface();
       return FALSE;
     }
-  GDIOBJ_MarkObjectGlobal(ScreenDeviceContext);
+  DC_SetOwnership(ScreenDeviceContext, NULL);
   EnableMouse(ScreenDeviceContext);
   /* not the best place to load the cursors but it's good for now */
   IntLoadDefaultCursors(FALSE);
@@ -309,7 +309,7 @@ IntEndDesktopGraphics(VOID)
   EnableMouse(FALSE);
   if (NULL != ScreenDeviceContext)
     {
-      GDIOBJ_UnmarkObjectGlobal(ScreenDeviceContext);
+      DC_SetOwnership(ScreenDeviceContext, PsGetCurrentProcess());
       NtGdiDeleteDC(ScreenDeviceContext);
       ScreenDeviceContext = NULL;
     }

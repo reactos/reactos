@@ -132,6 +132,7 @@ VOID FASTCALL DC_FreeDC(HDC  DCToFree);
 HDC  FASTCALL DC_GetNextDC (PDC pDC);
 VOID FASTCALL DC_SetNextDC (PDC pDC, HDC hNextDC);
 BOOL FASTCALL DC_InternalDeleteDC( PDC DCToDelete );
+VOID FASTCALL DC_SetOwnership(HDC DC, PEPROCESS Owner);
 
 VOID FASTCALL DC_UpdateXforms(PDC  dc);
 BOOL FASTCALL DC_InvertXform(const XFORM *xformSrc, XFORM *xformDest);
