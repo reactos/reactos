@@ -1,4 +1,4 @@
-/* $Id: win32.c,v 1.10 2004/10/31 01:23:05 weiden Exp $
+/* $Id: win32.c,v 1.11 2004/11/02 23:42:49 weiden Exp $
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -11,941 +11,871 @@
  *              10/06/2002: Created
  */
 
-#include <windows.h>
-#include <psapi.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ddk/ntddk.h>
-#include <epsapi.h>
+#include "precomp.h"
 
-/* EmptyWorkingSet */
-BOOL STDCALL EmptyWorkingSet(HANDLE hProcess)
-{
- NTSTATUS nErrCode;
- QUOTA_LIMITS qlProcessQuota;
+/* INTERNAL *******************************************************************/
 
- /* query the working set */
- nErrCode = NtQueryInformationProcess
- (
-  hProcess,
-  ProcessQuotaLimits,
-  &qlProcessQuota,
-  sizeof(qlProcessQuota),
-  NULL
- );
-
- /* failure */
- if(!NT_SUCCESS(nErrCode))
-  goto fail;
-
- /* empty the working set */
- qlProcessQuota.MinimumWorkingSetSize = -1;
- qlProcessQuota.MaximumWorkingSetSize = -1;
-
- /* set the working set */
- nErrCode = NtSetInformationProcess
- (
-  hProcess,
-  ProcessQuotaLimits,
-  &qlProcessQuota,
-  sizeof(qlProcessQuota)
- );
-
- /* success */
- if(NT_SUCCESS(nErrCode))
-  return (TRUE);
-
-fail:
- /* failure */
- SetLastError(RtlNtStatusToDosError(nErrCode));
- return (FALSE);
-}
-
-/* EnumDeviceDrivers */
-/* callback context */
 typedef struct _ENUM_DEVICE_DRIVERS_CONTEXT
 {
- LPVOID *lpImageBase;
- DWORD nCount;
+  LPVOID *lpImageBase;
+  DWORD nCount;
 } ENUM_DEVICE_DRIVERS_CONTEXT, *PENUM_DEVICE_DRIVERS_CONTEXT;
 
-/* callback routine */
-NTSTATUS STDCALL EnumDeviceDriversCallback
-(
- IN PSYSTEM_MODULE_INFORMATION_ENTRY CurrentModule,
- IN OUT PVOID CallbackContext
-)
+NTSTATUS STDCALL
+EnumDeviceDriversCallback(IN PSYSTEM_MODULE_INFORMATION_ENTRY CurrentModule,
+                          IN OUT PVOID CallbackContext)
 {
- register PENUM_DEVICE_DRIVERS_CONTEXT peddcContext =
-  (PENUM_DEVICE_DRIVERS_CONTEXT)CallbackContext;
+  PENUM_DEVICE_DRIVERS_CONTEXT Context = (PENUM_DEVICE_DRIVERS_CONTEXT)CallbackContext;
 
- /* no more buffer space */
- if(peddcContext->nCount == 0)
-  return STATUS_INFO_LENGTH_MISMATCH;
-
- /* return current module */
- *(peddcContext->lpImageBase) = CurrentModule->Base;
-
- /* go to next array slot */
- (peddcContext->lpImageBase) ++;
- (peddcContext->nCount) --;
-
- return STATUS_SUCCESS;
-}
-
-/* exported interface */
-BOOL STDCALL EnumDeviceDrivers
-(
- LPVOID *lpImageBase,
- DWORD cb,
- LPDWORD lpcbNeeded
-)
-{
- register NTSTATUS nErrCode;
- ENUM_DEVICE_DRIVERS_CONTEXT eddcContext = {lpImageBase, cb / sizeof(PVOID)};
-
- cb /= sizeof(PVOID);
-
- /* do nothing if the buffer is empty */
- if(cb == 0 || lpImageBase == NULL)
- {
-  *lpcbNeeded = 0;
-  return (TRUE);
- }
-
- /* enumerate the system modules */
- nErrCode = PsaEnumerateSystemModules(&EnumDeviceDriversCallback, &eddcContext);
-
- /* return the count of bytes returned */
- *lpcbNeeded = (cb - eddcContext.nCount) * sizeof(PVOID);
-
- /* success */
- if(NT_SUCCESS(nErrCode) || nErrCode == STATUS_INFO_LENGTH_MISMATCH)
-  return (TRUE);
- else
- {
-  /* failure */
-  SetLastError(RtlNtStatusToDosError(nErrCode));
-  return (FALSE);
- }
-}
-
-/* EnumProcesses */
-/* callback context */
-typedef struct _ENUM_PROCESSES_CONTEXT
-{
- DWORD *lpidProcess;
- DWORD nCount;
-} ENUM_PROCESSES_CONTEXT, *PENUM_PROCESSES_CONTEXT;
-
-/* callback routine */
-NTSTATUS STDCALL EnumProcessesCallback
-(
- IN PSYSTEM_PROCESSES CurrentProcess,
- IN OUT PVOID CallbackContext
-)
-{
- register PENUM_PROCESSES_CONTEXT pepcContext =
-  (PENUM_PROCESSES_CONTEXT)CallbackContext;
-
- /* no more buffer space */
- if(pepcContext->nCount == 0)
-  return STATUS_INFO_LENGTH_MISMATCH;
-
- /* return current process */
- *(pepcContext->lpidProcess) = CurrentProcess->ProcessId;
-
- /* go to next array slot */
- (pepcContext->lpidProcess) ++;
- (pepcContext->nCount) --;
-
- return STATUS_SUCCESS;
-}
-
-/* exported interface */
-/*!
- @brief Enumerate the process identifiers of the currently active processes
-
- @param lpidProcess Array that receives the list of process identifiers
- @param cb          Size of the @p lpidProcess array, in bytes
- @param lpcbNeeded  Number of bytes returned in the @p lpidProcess array
-
- @return [standard]
- */
-BOOL STDCALL EnumProcesses
-(
- DWORD *lpidProcess,
- DWORD cb,
- LPDWORD lpcbNeeded
-)
-{
- register NTSTATUS nErrCode;
- ENUM_PROCESSES_CONTEXT epcContext = {lpidProcess, cb / sizeof(DWORD)};
-
- cb /= sizeof(DWORD);
-
- /* do nothing if the buffer is empty */
- if(cb == 0 || lpidProcess == NULL)
- {
-  *lpcbNeeded = 0;
-  return (TRUE);
- }
-
- /* enumerate the process ids */
- nErrCode = PsaEnumerateProcesses
- (
-  &EnumProcessesCallback,
-  &epcContext
- );
-
- *lpcbNeeded = (cb - epcContext.nCount) * sizeof(DWORD);
-
- /* success */
- if(NT_SUCCESS(nErrCode) || nErrCode == STATUS_INFO_LENGTH_MISMATCH)
-  return (TRUE);
- else
- {
-  /* failure */
-  SetLastError(RtlNtStatusToDosError(nErrCode));
-  return (FALSE);
- }
-}
-
-/* EnumProcessModules */
-/* callback context */
-typedef struct _ENUM_PROCESS_MODULES_CONTEXT
-{
- HMODULE *lphModule;
- DWORD nCount;
-} ENUM_PROCESS_MODULES_CONTEXT, *PENUM_PROCESS_MODULES_CONTEXT;
-
-/* callback routine */
-NTSTATUS STDCALL EnumProcessModulesCallback
-(
- IN HANDLE ProcessHandle,
- IN PLDR_MODULE CurrentModule,
- IN OUT PVOID CallbackContext
-)
-{
- register PENUM_PROCESS_MODULES_CONTEXT pepmcContext =
-  (PENUM_PROCESS_MODULES_CONTEXT)CallbackContext;
-
- /* no more buffer space */
- if(pepmcContext->nCount == 0)
-  return STATUS_INFO_LENGTH_MISMATCH;
-
- /* return current process */
- *(pepmcContext->lphModule) = CurrentModule->BaseAddress;
-
- /* go to next array slot */
- (pepmcContext->lphModule) ++;
- (pepmcContext->nCount) --;
-
- return STATUS_SUCCESS;
-}
-
-/* exported interface */
-BOOL STDCALL EnumProcessModules(
-  HANDLE hProcess,
-  HMODULE *lphModule,
-  DWORD cb,
-  LPDWORD lpcbNeeded
-)
-{
- register NTSTATUS nErrCode;
- ENUM_PROCESS_MODULES_CONTEXT epmcContext = {lphModule, cb / sizeof(HMODULE)};
-
- cb /= sizeof(DWORD);
-
- /* do nothing if the buffer is empty */
- if(cb == 0 || lphModule == NULL)
- {
-  *lpcbNeeded = 0;
-  return (TRUE);
- }
-
- /* enumerate the process modules */
- nErrCode = PsaEnumerateProcessModules
- (
-  hProcess,
-  &EnumProcessModulesCallback,
-  &epmcContext
- );
-
- *lpcbNeeded = (cb - epmcContext.nCount) * sizeof(DWORD);
-
- /* success */
- if(NT_SUCCESS(nErrCode) || nErrCode == STATUS_INFO_LENGTH_MISMATCH)
-  return (TRUE);
- else
- {
-  /* failure */
-  SetLastError(RtlNtStatusToDosError(nErrCode));
-  return (FALSE);
- }
-}
-
-/* GetDeviceDriverBase/FileName */
-/* common callback context */
-typedef struct _GET_DEVICE_DRIVER_NAME_CONTEXT
-{
- LPVOID ImageBase;
- struct
- {
-  ULONG bFullName:sizeof(ULONG) * 8 / 2;
-  ULONG bUnicode:sizeof(ULONG) * 8 / 2;
- };
- DWORD nSize;
- union
- {
-  LPVOID lpName;
-  LPSTR lpAnsiName;
-  LPWSTR lpUnicodeName;
- };
-} GET_DEVICE_DRIVER_NAME_CONTEXT, *PGET_DEVICE_DRIVER_NAME_CONTEXT;
-
-/* common callback routine */
-NTSTATUS STDCALL GetDeviceDriverNameCallback
-(
- IN PSYSTEM_MODULE_INFORMATION_ENTRY CurrentModule,
- IN OUT PVOID CallbackContext
-)
-{
- register PGET_DEVICE_DRIVER_NAME_CONTEXT pgddncContext =
-  (PGET_DEVICE_DRIVER_NAME_CONTEXT) CallbackContext;
-
- /* module found */
- if(pgddncContext->ImageBase == CurrentModule->Base)
- {
-  register PCHAR pcModuleName;
-  register ULONG l;
-
-  /* get the full name or just the filename part */
-  if(pgddncContext->bFullName)
-   pcModuleName = &CurrentModule->ImageName[0];
-  else
-   pcModuleName = &CurrentModule->ImageName[CurrentModule->PathLength];
-
-  /* get the length of the name */
-  l = strlen(pcModuleName);
-
-  /* if user buffer smaller than the name */
-  if(pgddncContext->nSize <= l)
-   /* use the user buffer's length */
-   l = pgddncContext->nSize;
-  /* if user buffer larger than the name */
-  else
+  /* no more buffer space */
+  if(Context->nCount == 0)
   {
-   /* enough space for the null terminator */
-   l ++;
-   pgddncContext->nSize = l;
+    return STATUS_INFO_LENGTH_MISMATCH;
   }
 
-  /* copy the string */
-  if(pgddncContext->bUnicode)
-  {
-   /* Unicode: convert and copy */
-   ANSI_STRING strAnsi = {l, l, pcModuleName};
-   UNICODE_STRING wstrUnicode =
-   {
-     0,
-     l * sizeof(WCHAR),
-     pgddncContext->lpUnicodeName
-   };
-   /* driver names should always be in language-neutral ASCII, so we don't
-      bother calling AreFileApisANSI() */
-   RtlAnsiStringToUnicodeString(&wstrUnicode, &strAnsi, FALSE);
-  }
-  else
-   /* ANSI/OEM: direct copy */
-   memcpy(pgddncContext->lpAnsiName, pcModuleName, l);
+  /* return current module */
+  *Context->lpImageBase = CurrentModule->Base;
 
-  /* terminate the enumeration */
-  return STATUS_NO_MORE_FILES;
- }
- /* continue searching */
- else
+  /* go to next array slot */
+  Context->lpImageBase++;
+  Context->nCount--;
+
   return STATUS_SUCCESS;
 }
 
-/* common internal implementation */
-DWORD FASTCALL internalGetDeviceDriverName(
-  BOOLEAN bUnicode,
-  BOOLEAN bFullName,
-  LPVOID ImageBase,
-  LPVOID lpName,
-  DWORD nSize
-)
+
+typedef struct _ENUM_PROCESSES_CONTEXT
 {
- register NTSTATUS nErrCode;
- GET_DEVICE_DRIVER_NAME_CONTEXT gddncContext =
- {
-  ImageBase,
-  { bFullName, bUnicode },
-  nSize,
-  { lpName }
- };
+  DWORD *lpidProcess;
+  DWORD nCount;
+} ENUM_PROCESSES_CONTEXT, *PENUM_PROCESSES_CONTEXT;
 
- /* empty buffer */
- if(lpName == NULL || nSize == 0)
-  return 0;
-
- /* invalid image base */
- if(ImageBase == NULL)
- {
-  SetLastError(ERROR_INVALID_HANDLE);
-  return 0;
- }
-
- /* start the enumeration */
- nErrCode = PsaEnumerateSystemModules
- (
-  &GetDeviceDriverNameCallback,
-  &gddncContext
- );
-
- if(nErrCode == STATUS_NO_MORE_FILES)
-  /* module was found, return string size */
-  return gddncContext.nSize;
- else
- {
-  if(NT_SUCCESS(nErrCode))
-   /* module was not found */
-   SetLastError(ERROR_INVALID_HANDLE);
-  else
-   /* an error occurred */
-   SetLastError(RtlNtStatusToDosError(nErrCode));
-
-  /* failure */
-  return 0;
- }
-}
-
-/* exported interfaces */
-/*
- NOTES:
-  - nSize is not, as stated by Microsoft's documentation, the byte size, but the
-    count of characters in the buffer
-  - the return value is the count of characters copied into the buffer
-  - the functions don't attempt to null-terminate the string
- */
-DWORD STDCALL GetDeviceDriverBaseNameA(
-  LPVOID ImageBase,
-  LPSTR lpBaseName,
-  DWORD nSize
-)
+NTSTATUS STDCALL
+EnumProcessesCallback(IN PSYSTEM_PROCESSES CurrentProcess,
+                      IN OUT PVOID CallbackContext)
 {
- return internalGetDeviceDriverName(FALSE, FALSE, ImageBase, lpBaseName, nSize);
-}
+  PENUM_PROCESSES_CONTEXT Context = (PENUM_PROCESSES_CONTEXT)CallbackContext;
 
-DWORD STDCALL GetDeviceDriverFileNameA(
-  LPVOID ImageBase,
-  LPSTR lpFilename,
-  DWORD nSize
-)
-{
- return internalGetDeviceDriverName(FALSE, TRUE, ImageBase, lpFilename, nSize);
-}
-
-DWORD STDCALL GetDeviceDriverBaseNameW(
-  LPVOID ImageBase,
-  LPWSTR lpBaseName,
-  DWORD nSize
-)
-{
- return internalGetDeviceDriverName(TRUE, FALSE, ImageBase, lpBaseName, nSize);
-}
-
-DWORD STDCALL GetDeviceDriverFileNameW(
-  LPVOID ImageBase,
-  LPWSTR lpFilename,
-  DWORD nSize
-)
-{
- return internalGetDeviceDriverName(TRUE, TRUE, ImageBase, lpFilename, nSize);
-}
-
-/* GetMappedFileName */
-/* common internal implementation */
-DWORD FASTCALL internalGetMappedFileName(
-  BOOLEAN bUnicode,
-  HANDLE hProcess,    
-  LPVOID lpv,         
-  LPVOID lpName,   
-  DWORD nSize         
-)
-{
- register NTSTATUS nErrCode;
- register ULONG nBufSize;
- PMEMORY_SECTION_NAME pmsnName;
-
- /* empty buffer */
- if(nSize == 0 || (LPSTR)lpName == NULL)
-  return 0;
-
- if(nSize > (0xFFFF / sizeof(WCHAR)))
-  /* if the user buffer contains more characters than would fit in an
-     UNICODE_STRING, limit the buffer size. RATIONALE: we don't limit buffer
-     size elsewhere because here superfluous buffer size will mean a larger
-     temporary buffer */
-  nBufSize = 0xFFFF / sizeof(WCHAR);
- else
-  nBufSize = nSize * sizeof(WCHAR);
- 
- /* allocate the memory */
- pmsnName = PsaiMalloc(nBufSize + offsetof(MEMORY_SECTION_NAME, NameBuffer));
- 
- if(pmsnName == NULL)
- {
-  /* failure */
-  SetLastError(ERROR_OUTOFMEMORY);
-  return 0;
- }
-
- /* initialize the destination buffer */
- pmsnName->SectionFileName.Length = 0;
- pmsnName->SectionFileName.Length = nBufSize;
-
-#if 0
- __try
- {
-#endif
-  /* query the name */
-  nErrCode = NtQueryVirtualMemory
-  (
-   hProcess,
-   lpv,
-   MemorySectionName,
-   pmsnName,
-   nBufSize,
-   NULL
-  );
-  
-  if(!NT_SUCCESS(nErrCode))
+  /* no more buffer space */
+  if(Context->nCount == 0)
   {
-   /* failure */
-   SetLastError(RtlNtStatusToDosError(nErrCode));
-#if 0
-#else
-   /* free the buffer */
-   PsaiFree(pmsnName);
-#endif
-   return 0;
+    return STATUS_INFO_LENGTH_MISMATCH;
   }
-  
-  /* copy the name */
-  if(bUnicode)
+
+  /* return current process */
+  *Context->lpidProcess = CurrentProcess->ProcessId;
+
+  /* go to next array slot */
+  Context->lpidProcess++;
+  Context->nCount--;
+
+  return STATUS_SUCCESS;
+}
+
+
+typedef struct _ENUM_PROCESS_MODULES_CONTEXT
+{
+  HMODULE *lphModule;
+  DWORD nCount;
+} ENUM_PROCESS_MODULES_CONTEXT, *PENUM_PROCESS_MODULES_CONTEXT;
+
+NTSTATUS STDCALL
+EnumProcessModulesCallback(IN HANDLE ProcessHandle,
+                           IN PLDR_MODULE CurrentModule,
+                           IN OUT PVOID CallbackContext)
+{
+  PENUM_PROCESS_MODULES_CONTEXT Context = (PENUM_PROCESS_MODULES_CONTEXT)CallbackContext;
+
+  /* no more buffer space */
+  if(Context->nCount == 0)
   {
-   /* destination is an Unicode string: direct copy */
-   memcpy
-   (
-    (LPWSTR)lpName,
-    pmsnName->NameBuffer,
-    pmsnName->SectionFileName.Length
-   );
-   
+    return STATUS_INFO_LENGTH_MISMATCH;
+  }
+
+  /* return current process */
+  *Context->lphModule = CurrentModule->BaseAddress;
+
+  /* go to next array slot */
+  Context->lphModule++;
+  Context->nCount--;
+
+  return STATUS_SUCCESS;
+}
+
+
+typedef struct _GET_DEVICE_DRIVER_NAME_CONTEXT
+{
+  LPVOID ImageBase;
+  struct
+  {
+    ULONG bFullName : sizeof(ULONG) * 8 / 2;
+    ULONG bUnicode : sizeof(ULONG) * 8 / 2;
+  };
+  DWORD nSize;
+  union
+  {
+    LPVOID lpName;
+    LPSTR lpAnsiName;
+    LPWSTR lpUnicodeName;
+  };
+} GET_DEVICE_DRIVER_NAME_CONTEXT, *PGET_DEVICE_DRIVER_NAME_CONTEXT;
+
+NTSTATUS STDCALL
+GetDeviceDriverNameCallback(IN PSYSTEM_MODULE_INFORMATION_ENTRY CurrentModule,
+                            IN OUT PVOID CallbackContext)
+{
+  PGET_DEVICE_DRIVER_NAME_CONTEXT Context = (PGET_DEVICE_DRIVER_NAME_CONTEXT)CallbackContext;
+
+  /* module found */
+  if(Context->ImageBase == CurrentModule->Base)
+  {
+    PCHAR pcModuleName;
+    ULONG l;
+
+    /* get the full name or just the filename part */
+    if(Context->bFullName)
+      pcModuleName = &CurrentModule->ImageName[0];
+    else
+      pcModuleName = &CurrentModule->ImageName[CurrentModule->PathLength];
+
+    /* get the length of the name */
+    l = strlen(pcModuleName);
+
+    if(Context->nSize <= l)
+    {
+      /* use the user buffer's length */
+      l = Context->nSize;
+    }
+    else
+    {
+      /* enough space for the null terminator */
+      Context->nSize = ++l;
+    }
+
+    /* copy the string */
+    if(Context->bUnicode)
+    {
+      ANSI_STRING AnsiString;
+      UNICODE_STRING UnicodeString;
+
+      UnicodeString.Length = 0;
+      UnicodeString.MaximumLength = l * sizeof(WCHAR);
+      UnicodeString.Buffer = Context->lpUnicodeName;
+
+      RtlInitAnsiString(&AnsiString, pcModuleName);
+      /* driver names should always be in language-neutral ASCII, so we don't
+         bother calling AreFileApisANSI() */
+      RtlAnsiStringToUnicodeString(&UnicodeString, &AnsiString, FALSE);
+    }
+    else
+    {
+      memcpy(Context->lpAnsiName, pcModuleName, l);
+    }
+
+    /* terminate the enumeration */
+    return STATUS_NO_MORE_FILES;
+  }
+  else
+  {
+    /* continue searching */
+    return STATUS_SUCCESS;
+  }
+}
+
+
+static DWORD
+InternalGetDeviceDriverName(BOOLEAN bUnicode,
+                            BOOLEAN bFullName,
+                            LPVOID ImageBase,
+                            LPVOID lpName,
+                            DWORD nSize)
+{
+  GET_DEVICE_DRIVER_NAME_CONTEXT Context;
+  NTSTATUS Status;
+
+  if(lpName == NULL || nSize == 0)
+  {
+    return 0;
+  }
+
+  if(ImageBase == NULL)
+  {
+    SetLastError(ERROR_INVALID_HANDLE);
+    return 0;
+  }
+
+  Context.ImageBase = ImageBase;
+  Context.bFullName = bFullName;
+  Context.bUnicode = bUnicode;
+  Context.nSize = nSize;
+  Context.lpName = lpName;
+
+  /* start the enumeration */
+  Status = PsaEnumerateSystemModules(GetDeviceDriverNameCallback, &Context);
+
+  if(Status == STATUS_NO_MORE_FILES)
+  {
+    /* module was found, return string size */
+    return Context.nSize;
+  }
+  else if(NT_SUCCESS(Status))
+  {
+    /* module was not found */
+    SetLastError(ERROR_INVALID_HANDLE);
+  }
+  else
+  {
+    /* an error occurred */
+    SetLastErrorByStatus(Status);
+  }
+  return 0;
+}
+
+
+static DWORD
+InternalGetMappedFileName(BOOLEAN bUnicode,
+                          HANDLE hProcess,
+                          LPVOID lpv,
+                          LPVOID lpName,
+                          DWORD nSize)
+{
+  PMEMORY_SECTION_NAME pmsnName;
+  ULONG nBufSize;
+  NTSTATUS Status;
+
+  if(nSize == 0 || lpName == NULL)
+  {
+    return 0;
+  }
+
+  if(nSize > (0xFFFF / sizeof(WCHAR)))
+  {
+    /* if the user buffer contains more characters than would fit in an
+       UNICODE_STRING, limit the buffer size. RATIONALE: we don't limit buffer
+       size elsewhere because here superfluous buffer size will mean a larger
+       temporary buffer */
+    nBufSize = 0xFFFF / sizeof(WCHAR);
+  }
+  else
+  {
+    nBufSize = nSize * sizeof(WCHAR);
+  }
+
+  /* allocate the memory */
+  pmsnName = PsaiMalloc(nBufSize + offsetof(MEMORY_SECTION_NAME, NameBuffer));
+
+  if(pmsnName == NULL)
+  {
+    SetLastError(ERROR_OUTOFMEMORY);
+    return 0;
+  }
+
+   /* initialize the destination buffer */
+   pmsnName->SectionFileName.Length = 0;
+   pmsnName->SectionFileName.Length = nBufSize;
+
 #if 0
-#else
-   /* free the buffer */
-   PsaiFree(pmsnName);
-#endif
-   
-   if(pmsnName->SectionFileName.Length < nSize)
+   __try
    {
-    /* null-terminate the string */
-    ((LPWSTR)lpName)[pmsnName->SectionFileName.Length] = 0;
-    return pmsnName->SectionFileName.Length + 1;
+#endif
+   /* query the name */
+   Status = NtQueryVirtualMemory(hProcess,
+                                 lpv,
+                                 MemorySectionName,
+                                 pmsnName,
+                                 nBufSize,
+                                 NULL);
+   if(!NT_SUCCESS(Status))
+   {
+     PsaiFree(pmsnName);
+     SetLastErrorByStatus(Status);
+     return 0;
    }
-   
-   return pmsnName->SectionFileName.Length;
-  }
-  else
-  {
-   ANSI_STRING strAnsi = {0, nSize, (LPSTR)lpName};
 
-   if(AreFileApisANSI())
-    /* destination is an ANSI string: convert and copy */
-    RtlUnicodeStringToAnsiString(&strAnsi, &pmsnName->SectionFileName, FALSE);
+   if(bUnicode)
+   {
+     /* destination is an Unicode string: direct copy */
+     memcpy((LPWSTR)lpName, pmsnName->NameBuffer, pmsnName->SectionFileName.Length);
+
+     PsaiFree(pmsnName);
+
+     if(pmsnName->SectionFileName.Length < nSize)
+     {
+       /* null-terminate the string */
+       ((LPWSTR)lpName)[pmsnName->SectionFileName.Length] = 0;
+       return pmsnName->SectionFileName.Length + 1;
+     }
+
+     return pmsnName->SectionFileName.Length;
+   }
    else
-    /* destination is an OEM string: convert and copy */
-    RtlUnicodeStringToOemString(&strAnsi, &pmsnName->SectionFileName, FALSE);
-
-#if 0
-#else
-   /* free the buffer */
-   PsaiFree(pmsnName);
-#endif
-
-   if(strAnsi.Length < nSize)
    {
-    /* null-terminate the string */
-    ((LPSTR)lpName)[strAnsi.Length] = 0;
-    return strAnsi.Length + 1;
+     ANSI_STRING AnsiString;
+
+     AnsiString.Length = 0;
+     AnsiString.MaximumLength = nSize;
+     AnsiString.Buffer = (LPSTR)lpName;
+
+     if(AreFileApisANSI())
+       RtlUnicodeStringToAnsiString(&AnsiString, &pmsnName->SectionFileName, FALSE);
+     else
+       RtlUnicodeStringToOemString(&AnsiString, &pmsnName->SectionFileName, FALSE);
+
+     PsaiFree(pmsnName);
+
+     if(AnsiString.Length < nSize)
+     {
+       /* null-terminate the string */
+       ((LPSTR)lpName)[AnsiString.Length] = 0;
+       return AnsiString.Length + 1;
+     }
+
+     return AnsiString.Length;
    }
 
-   return strAnsi.Length;
-  }
-
 #if 0
- }
- __finally
- {
-  PsaiFree(pmsnName);
- }
+   }
+   __finally
+   {
+     PsaiFree(pmsnName);
+   }
 #endif
 }
 
-/* exported interfaces */
-DWORD STDCALL GetMappedFileNameA(
-  HANDLE hProcess,    
-  LPVOID lpv,         
-  LPSTR lpFilename,   
-  DWORD nSize         
-)
-{
- return internalGetMappedFileName(FALSE, hProcess, lpv, lpFilename, nSize);
-}
 
-DWORD STDCALL GetMappedFileNameW(
-  HANDLE hProcess,    
-  LPVOID lpv,         
-  LPWSTR lpFilename,  
-  DWORD nSize         
-)
-{
- return internalGetMappedFileName(TRUE, hProcess, lpv, lpFilename, nSize);
-}
-
-/* GetModuleInformation */
-/* common callback context */
 typedef struct _GET_MODULE_INFORMATION_FLAGS
 {
- ULONG bWantName:sizeof(ULONG) * 8 / 4;
- ULONG bUnicode:sizeof(ULONG) * 8 / 4;
- ULONG bFullName:sizeof(ULONG) * 8 / 4;
+  ULONG bWantName : sizeof(ULONG) * 8 / 4;
+  ULONG bUnicode : sizeof(ULONG) * 8 / 4;
+  ULONG bFullName : sizeof(ULONG) * 8 / 4;
 } GET_MODULE_INFORMATION_FLAGS, *PGET_MODULE_INFORMATION_FLAGS;
 
 typedef struct _GET_MODULE_INFORMATION_CONTEXT
 {
- HMODULE hModule;
- GET_MODULE_INFORMATION_FLAGS Flags;
- DWORD nBufSize;
- union
- {
-  LPWSTR lpUnicodeName;
-  LPSTR lpAnsiName;
-  LPMODULEINFO lpmodinfo;
-  LPVOID lpBuffer;
- };
+  HMODULE hModule;
+  GET_MODULE_INFORMATION_FLAGS Flags;
+  DWORD nBufSize;
+  union
+  {
+    LPWSTR lpUnicodeName;
+    LPSTR lpAnsiName;
+    LPMODULEINFO lpmodinfo;
+    LPVOID lpBuffer;
+  };
 } GET_MODULE_INFORMATION_CONTEXT, *PGET_MODULE_INFORMATION_CONTEXT;
 
-/* common callback */
-NTSTATUS STDCALL GetModuleInformationCallback
-(
- IN HANDLE ProcessHandle,
- IN PLDR_MODULE CurrentModule,
- IN OUT PVOID CallbackContext
-)
+NTSTATUS STDCALL
+GetModuleInformationCallback(IN HANDLE ProcessHandle,
+                             IN PLDR_MODULE CurrentModule,
+                             IN OUT PVOID CallbackContext)
 {
- register PGET_MODULE_INFORMATION_CONTEXT pgmicContext =
-  (PGET_MODULE_INFORMATION_CONTEXT)CallbackContext;
+  PGET_MODULE_INFORMATION_CONTEXT Context = (PGET_MODULE_INFORMATION_CONTEXT)CallbackContext;
 
- /* found the module we were looking for */
- if(CurrentModule->BaseAddress == pgmicContext->hModule)
- {
-  /* we want the module name */
-  if(pgmicContext->Flags.bWantName)
+  /* found the module we were looking for */
+  if(CurrentModule->BaseAddress == Context->hModule)
   {
-   register NTSTATUS nErrCode;
-   register PUNICODE_STRING pwstrSource;
-   register ULONG l;
-   
-   if(pgmicContext->Flags.bFullName)
-    /* full name */
-    pwstrSource = &(CurrentModule->FullDllName);
-   else
-    /* base name only */
-    pwstrSource = &(CurrentModule->BaseDllName);
-   
-   /* paranoia */
-   pwstrSource->Length -= pwstrSource->Length % sizeof(WCHAR);
-   
-   /* l is the byte size of the user buffer */
-   l = pgmicContext->nBufSize * sizeof(WCHAR);
-   
-   /* if the user buffer has room for the string and a null terminator */
-   if(l >= (pwstrSource->Length + sizeof(WCHAR)))
-   {
-    /* limit the buffer size */
-    l = pwstrSource->Length;
-    
-    /* null-terminate the string */
-    if(pgmicContext->Flags.bUnicode)
-     pgmicContext->lpUnicodeName[l / sizeof(WCHAR)] = 0;
-    else
-     pgmicContext->lpAnsiName[l / sizeof(WCHAR)] = 0;
-   }
-
-   if(pgmicContext->Flags.bUnicode)
-   {
-    /* Unicode: direct copy */
-    /* NOTE: I've chosen not to check for ProcessHandle == NtCurrentProcess(),
-       this function is complicated enough as it is */
-    nErrCode = NtReadVirtualMemory
-    (
-     ProcessHandle,
-     pwstrSource->Buffer,
-     pgmicContext->lpUnicodeName,
-     l,
-     NULL
-    );
-
-    if(NT_SUCCESS(nErrCode))
-     pgmicContext->nBufSize = l / sizeof(WCHAR);
-    else
+    /* we want the module name */
+    if(Context->Flags.bWantName)
     {
-     pgmicContext->nBufSize = 0;
-     return nErrCode;
-    }
-   }
-   else
-   {
-    /* ANSI/OEM: convert and copy */
-    register LPWSTR pwcUnicodeBuf;
-    ANSI_STRING strAnsi = {0, pgmicContext->nBufSize, pgmicContext->lpAnsiName};
-    UNICODE_STRING wstrUnicodeBuf;
-    
-    /* allocate the local buffer */
-    pwcUnicodeBuf = PsaiMalloc(pwstrSource->Length);
+      PUNICODE_STRING SourceString;
+      ULONG l;
+      NTSTATUS Status;
+
+      if(Context->Flags.bFullName)
+        SourceString = &(CurrentModule->FullDllName);
+      else
+        SourceString = &(CurrentModule->BaseDllName);
+
+      SourceString->Length -= SourceString->Length % sizeof(WCHAR);
+
+      /* l is the byte size of the user buffer */
+      l = Context->nBufSize * sizeof(WCHAR);
+
+      /* if the user buffer has room for the string and a null terminator */
+      if(l >= (SourceString->Length + sizeof(WCHAR)))
+      {
+        /* limit the buffer size */
+        l = SourceString->Length;
+
+        /* null-terminate the string */
+        if(Context->Flags.bUnicode)
+          Context->lpUnicodeName[l / sizeof(WCHAR)] = 0;
+        else
+          Context->lpAnsiName[l / sizeof(WCHAR)] = 0;
+      }
+
+      if(Context->Flags.bUnicode)
+      {
+        /* Unicode: direct copy */
+        /* NOTE: I've chosen not to check for ProcessHandle == NtCurrentProcess(),
+                 this function is complicated enough as it is */
+        Status = NtReadVirtualMemory(ProcessHandle,
+                                     SourceString->Buffer,
+                                     Context->lpUnicodeName,
+                                     l,
+                                     NULL);
+
+        if(!NT_SUCCESS(Status))
+        {
+          Context->nBufSize = 0;
+          return Status;
+        }
+
+        Context->nBufSize = l / sizeof(WCHAR);
+      }
+      else
+      {
+        /* ANSI/OEM: convert and copy */
+        LPWSTR pwcUnicodeBuf;
+        ANSI_STRING AnsiString;
+        UNICODE_STRING UnicodeString;
+
+        AnsiString.Length = 0;
+        AnsiString.MaximumLength = Context->nBufSize;
+        AnsiString.Buffer = Context->lpAnsiName;
+
+        /* allocate the local buffer */
+        pwcUnicodeBuf = PsaiMalloc(SourceString->Length);
 
 #if 0
-    __try
-    {
+        __try
+        {
 #endif
-     if(pwcUnicodeBuf == NULL)
-      /* failure */
+        if(pwcUnicodeBuf == NULL)
+        {
+          Status = STATUS_NO_MEMORY;
+          goto exitWithStatus;
+        }
+
+        /* copy the string in the local buffer */
+        Status = NtReadVirtualMemory(ProcessHandle,
+                                     SourceString->Buffer,
+                                     pwcUnicodeBuf,
+                                     l,
+                                     NULL);
+
+        if(!NT_SUCCESS(Status))
+        {
+          goto exitWithStatus;
+        }
+
+        /* initialize Unicode string buffer */
+        UnicodeString.Length = UnicodeString.MaximumLength = l;
+        UnicodeString.Buffer = pwcUnicodeBuf;
+
+        /* convert and copy */
+        if(AreFileApisANSI())
+          RtlUnicodeStringToAnsiString(&AnsiString, &UnicodeString, FALSE);
+        else
+          RtlUnicodeStringToOemString(&AnsiString, &UnicodeString, FALSE);
+
+        /* return the string size */
+        Context->nBufSize = AnsiString.Length;
 #if 0
-      return STATUS_NO_MEMORY;
+        }
+        __finally
+        {
+          /* free the buffer */
+          PsaiFree(pwcUnicodeBuf);
+        }
 #else
-     {
-      nErrCode = STATUS_NO_MEMORY;
-      goto exitWithStatus;
-     }
-#endif
- 
-     /* copy the string in the local buffer */
-     nErrCode = NtReadVirtualMemory
-     (
-      ProcessHandle,
-      pwstrSource->Buffer,
-      pwcUnicodeBuf,
-      l,
-      NULL
-     );
- 
-     if(!NT_SUCCESS(nErrCode))
-      /* failure */
-#if 0
-      return nErrCode;
-#else
-      goto exitWithStatus;
-#endif
-     
-     /* initialize Unicode string buffer */
-     wstrUnicodeBuf.Length = wstrUnicodeBuf.MaximumLength = l;
-     wstrUnicodeBuf.Buffer = pwcUnicodeBuf;
-     
-     /* convert and copy */
-     if(AreFileApisANSI())
-      RtlUnicodeStringToAnsiString(&strAnsi, &wstrUnicodeBuf, FALSE);
-     else
-      RtlUnicodeStringToOemString(&strAnsi, &wstrUnicodeBuf, FALSE);
-     
-     /* return the string size */
-     pgmicContext->nBufSize = strAnsi.Length;
-#if 0
-    }
-    __finally
-    {
-     /* free the buffer */
-     PsaiFree(pwcUnicodeBuf);
-    }
-#else
-     /* success */
-     nErrCode = STATUS_NO_MORE_FILES;
+        Status = STATUS_NO_MORE_FILES;
 
 exitWithStatus:
-     /* free the buffer */
-     PsaiFree(pwcUnicodeBuf);
-     return nErrCode;
+        /* free the buffer */
+        PsaiFree(pwcUnicodeBuf);
+        return Status;
 #endif
-   }
-   
+      }
+    }
+    else
+    {
+      /* we want other module information */
+      ULONG nSize = Context->nBufSize;
+
+      /* base address */
+      if(nSize >= sizeof(CurrentModule->BaseAddress))
+      {
+        Context->lpmodinfo->lpBaseOfDll = CurrentModule->BaseAddress;
+        nSize -= sizeof(CurrentModule->BaseAddress);
+      }
+
+      /* image size */
+      if(nSize >= sizeof(CurrentModule->SizeOfImage))
+      {
+        Context->lpmodinfo->SizeOfImage = CurrentModule->SizeOfImage;
+        nSize -= sizeof(CurrentModule->SizeOfImage);
+      }
+
+      /* entry point */
+      if(nSize >= sizeof(CurrentModule->EntryPoint))
+      {
+        /* ??? FIXME? is "EntryPoint" just the offset, or the real address? */
+        Context->lpmodinfo->EntryPoint = (PVOID)CurrentModule->EntryPoint;
+      }
+
+      Context->nBufSize = TRUE;
+    }
+
+    return STATUS_NO_MORE_FILES;
   }
-  /* we want other module information */
+
+  return STATUS_SUCCESS;
+}
+
+
+static DWORD
+InternalGetModuleInformation(HANDLE hProcess,
+                             HMODULE hModule,
+                             GET_MODULE_INFORMATION_FLAGS Flags,
+                             LPVOID lpBuffer,
+                             DWORD nBufSize)
+{
+  GET_MODULE_INFORMATION_CONTEXT Context;
+  NTSTATUS Status;
+
+  Context.hModule = hModule;
+  Context.Flags = Flags;
+  Context.nBufSize = nBufSize;
+  Context.lpBuffer = lpBuffer;
+
+  Status = PsaEnumerateProcessModules(hProcess, GetModuleInformationCallback, &Context);
+
+  if(Status == STATUS_NO_MORE_FILES)
+  {
+    /* module was found, return string size */
+    return Context.nBufSize;
+  }
+  else if(NT_SUCCESS(Status))
+  {
+    /* module was not found */
+    SetLastError(ERROR_INVALID_HANDLE);
+  }
   else
   {
-   register ULONG nSize = pgmicContext->nBufSize;
-   
-   /* base address */
-   if(nSize >= sizeof(CurrentModule->BaseAddress))
-   {
-    pgmicContext->lpmodinfo->lpBaseOfDll = CurrentModule->BaseAddress;
-    nSize -= sizeof(CurrentModule->BaseAddress);
-   }
-   
-   /* image size */
-   if(nSize >= sizeof(CurrentModule->SizeOfImage))
-   {
-    pgmicContext->lpmodinfo->SizeOfImage = CurrentModule->SizeOfImage;
-    nSize -= sizeof(CurrentModule->SizeOfImage);
-   }
-   
-   /* entry point */
-   if(nSize >= sizeof(CurrentModule->EntryPoint))
-    /* ??? FIXME? is "EntryPoint" just the offset, or the real address? */
-    pgmicContext->lpmodinfo->EntryPoint = (PVOID)CurrentModule->EntryPoint;
-   
-   pgmicContext->nBufSize = TRUE;
+    /* an error occurred */
+    SetLastErrorByStatus(Status);
+  }
+  return 0;
+}
+
+/* PUBLIC *********************************************************************/
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+EmptyWorkingSet(HANDLE hProcess)
+{
+  QUOTA_LIMITS QuotaLimits;
+  NTSTATUS Status;
+
+  /* query the working set */
+  Status = NtQueryInformationProcess(hProcess,
+                                     ProcessQuotaLimits,
+                                     &QuotaLimits,
+                                     sizeof(QuotaLimits),
+                                     NULL);
+
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastErrorByStatus(Status);
+    return FALSE;
+  }
+
+  /* empty the working set */
+  QuotaLimits.MinimumWorkingSetSize = -1;
+  QuotaLimits.MaximumWorkingSetSize = -1;
+
+  /* set the working set */
+  Status = NtSetInformationProcess(hProcess,
+                                   ProcessQuotaLimits,
+                                   &QuotaLimits,
+                                   sizeof(QuotaLimits));
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastErrorByStatus(Status);
+    return FALSE;
   }
   
-  return STATUS_NO_MORE_FILES;
- }
-
- return STATUS_SUCCESS;
+  return TRUE;
 }
 
-/* common internal implementation */
-DWORD FASTCALL internalGetModuleInformation(
-  HANDLE hProcess,
-  HMODULE hModule,
-  GET_MODULE_INFORMATION_FLAGS Flags,
-  LPVOID lpBuffer,
-  DWORD nBufSize
-)
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+EnumDeviceDrivers(LPVOID *lpImageBase,
+                  DWORD cb,
+                  LPDWORD lpcbNeeded)
 {
- register NTSTATUS nErrCode;
- GET_MODULE_INFORMATION_CONTEXT gmicContext =
- {
-  hModule,
-  Flags,
-  nBufSize,
-  {lpBuffer}
- };
+  ENUM_DEVICE_DRIVERS_CONTEXT Context;
+  NTSTATUS Status;
+ 
+  if(cb == 0 || lpImageBase == NULL)
+  {
+    *lpcbNeeded = 0;
+    return TRUE;
+  }
+ 
+  cb /= sizeof(PVOID);
 
+  Context.lpImageBase = lpImageBase;
+  Context.nCount = cb;
 
- nErrCode = PsaEnumerateProcessModules
- (
-  hProcess,
-  &GetModuleInformationCallback,
-  &gmicContext
- );
+  Status = PsaEnumerateSystemModules(EnumDeviceDriversCallback, &Context);
 
- if(nErrCode == STATUS_NO_MORE_FILES)
-  return gmicContext.nBufSize;
- else
- {
-  if(NT_SUCCESS(nErrCode))
-   SetLastError(ERROR_INVALID_HANDLE);
-  else
-   SetLastError(RtlNtStatusToDosError(nErrCode));
+  /* return the count of bytes returned */
+  *lpcbNeeded = (cb - Context.nCount) * sizeof(PVOID);
 
-  return 0;
- }
+  if(!NT_SUCCESS(Status) && (Status != STATUS_INFO_LENGTH_MISMATCH))
+  {
+    SetLastErrorByStatus(Status);
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
-/* exported interfaces */
-DWORD STDCALL GetModuleBaseNameA(
-  HANDLE hProcess,    // handle to process
-  HMODULE hModule,    // handle to module
-  LPSTR lpBaseName,   // base name buffer
-  DWORD nSize         // maximum characters to retrieve
-)
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+EnumProcesses(DWORD *lpidProcess,
+              DWORD cb,
+              LPDWORD lpcbNeeded)
 {
- register GET_MODULE_INFORMATION_FLAGS Flags = {TRUE, FALSE, FALSE};
- return internalGetModuleInformation
- (
-  hProcess,
-  hModule,
-  Flags,
-  lpBaseName,
-  nSize
- );
+  ENUM_PROCESSES_CONTEXT Context;
+  NTSTATUS Status;
+  
+  cb /= sizeof(DWORD);
+  
+  if(cb == 0 || lpidProcess == NULL)
+  {
+    *lpcbNeeded = 0;
+    return TRUE;
+  }
+  
+  Context.lpidProcess = lpidProcess;
+  Context.nCount = cb;
+
+  /* enumerate the process ids */
+  Status = PsaEnumerateProcesses(EnumProcessesCallback, &Context);
+
+  *lpcbNeeded = (cb - Context.nCount) * sizeof(DWORD);
+
+  if(!NT_SUCCESS(Status) && (Status != STATUS_INFO_LENGTH_MISMATCH))
+  {
+    SetLastErrorByStatus(Status);
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
-DWORD STDCALL GetModuleBaseNameW(
-  HANDLE hProcess,    // handle to process
-  HMODULE hModule,    // handle to module
-  LPWSTR lpBaseName,  // base name buffer
-  DWORD nSize         // maximum characters to retrieve
-)
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+EnumProcessModules(HANDLE hProcess,
+                   HMODULE *lphModule,
+                   DWORD cb,
+                   LPDWORD lpcbNeeded)
 {
- register GET_MODULE_INFORMATION_FLAGS Flags = {TRUE, TRUE, FALSE};
- return internalGetModuleInformation
- (
-  hProcess,
-  hModule,
-  Flags,
-  lpBaseName,
-  nSize
- );
+  ENUM_PROCESS_MODULES_CONTEXT Context;
+  NTSTATUS Status;
+  
+  cb /= sizeof(HMODULE);
+  
+  if(cb == 0 || lphModule == NULL)
+  {
+    *lpcbNeeded = 0;
+    return TRUE;
+  }
+
+  Context.lphModule = lphModule;
+  Context.nCount = cb;
+
+  /* enumerate the process modules */
+  Status = PsaEnumerateProcessModules(hProcess, EnumProcessModulesCallback, &Context);
+
+  *lpcbNeeded = (cb - Context.nCount) * sizeof(DWORD);
+
+  if(!NT_SUCCESS(Status) && (Status != STATUS_INFO_LENGTH_MISMATCH))
+  {
+    SetLastErrorByStatus(Status);
+    return FALSE;
+  }
+  
+  return TRUE;
 }
 
-DWORD STDCALL GetModuleFileNameExA(
-  HANDLE hProcess,    // handle to process
-  HMODULE hModule,    // handle to module
-  LPSTR lpFilename,   // path buffer
-  DWORD nSize         // maximum characters to retrieve
-)
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+GetDeviceDriverBaseNameA(LPVOID ImageBase,
+                         LPSTR lpBaseName,
+                         DWORD nSize)
 {
- register GET_MODULE_INFORMATION_FLAGS Flags = {TRUE, FALSE, TRUE};
- return internalGetModuleInformation
- (
-  hProcess,
-  hModule,
-  Flags,
-  lpFilename,
-  nSize
- );
+  return InternalGetDeviceDriverName(FALSE, FALSE, ImageBase, lpBaseName, nSize);
 }
 
-DWORD STDCALL GetModuleFileNameExW(
-  HANDLE hProcess,    // handle to process
-  HMODULE hModule,    // handle to module
-  LPWSTR lpFilename,  // path buffer
-  DWORD nSize         // maximum characters to retrieve
-)
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+GetDeviceDriverFileNameA(LPVOID ImageBase,
+                         LPSTR lpFilename,
+                         DWORD nSize)
 {
- register GET_MODULE_INFORMATION_FLAGS Flags = {TRUE, TRUE, TRUE};
- return internalGetModuleInformation
- (
-  hProcess,
-  hModule,
-  Flags,
-  lpFilename,
-  nSize
- );
+  return InternalGetDeviceDriverName(FALSE, TRUE, ImageBase, lpFilename, nSize);
 }
 
-BOOL STDCALL GetModuleInformation(
-  HANDLE hProcess,         // handle to process
-  HMODULE hModule,         // handle to module
-  LPMODULEINFO lpmodinfo,  // information buffer
-  DWORD cb                 // size of buffer
-)
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+GetDeviceDriverBaseNameW(LPVOID ImageBase,
+                         LPWSTR lpBaseName,
+                         DWORD nSize)
 {
- register GET_MODULE_INFORMATION_FLAGS Flags = {FALSE, FALSE, FALSE};
- return (BOOL)internalGetModuleInformation
- (
-  hProcess,
-  hModule,
-  Flags,
-  lpmodinfo,
-  cb
- );
+  return InternalGetDeviceDriverName(TRUE, FALSE, ImageBase, lpBaseName, nSize);
 }
 
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+GetDeviceDriverFileNameW(LPVOID ImageBase,
+                         LPWSTR lpFilename,
+                         DWORD nSize)
+{
+  return InternalGetDeviceDriverName(TRUE, TRUE, ImageBase, lpFilename, nSize);
+}
+
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+GetMappedFileNameA(HANDLE hProcess,
+                   LPVOID lpv,
+                   LPSTR lpFilename,
+                   DWORD nSize)
+{
+  return InternalGetMappedFileName(FALSE, hProcess, lpv, lpFilename, nSize);
+}
+
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+GetMappedFileNameW(HANDLE hProcess,
+                   LPVOID lpv,
+                   LPWSTR lpFilename,
+                   DWORD nSize)
+{
+  return InternalGetMappedFileName(TRUE, hProcess, lpv, lpFilename, nSize);
+}
+
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+GetModuleBaseNameA(HANDLE hProcess,
+                   HMODULE hModule,
+                   LPSTR lpBaseName,
+                   DWORD nSize)
+{
+  GET_MODULE_INFORMATION_FLAGS Flags = {TRUE, FALSE, FALSE};
+  return InternalGetModuleInformation(hProcess, hModule, Flags, lpBaseName, nSize);
+}
+
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+GetModuleBaseNameW(HANDLE hProcess,
+                   HMODULE hModule,
+                   LPWSTR lpBaseName,
+                   DWORD nSize)
+{
+  GET_MODULE_INFORMATION_FLAGS Flags = {TRUE, TRUE, FALSE};
+  return InternalGetModuleInformation(hProcess, hModule, Flags, lpBaseName, nSize);
+}
+
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+GetModuleFileNameExA(HANDLE hProcess,
+                     HMODULE hModule,
+                     LPSTR lpFilename,
+                     DWORD nSize)
+{
+  GET_MODULE_INFORMATION_FLAGS Flags = {TRUE, FALSE, TRUE};
+  return InternalGetModuleInformation(hProcess, hModule, Flags, lpFilename, nSize);
+}
+
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+GetModuleFileNameExW(HANDLE hProcess,
+                     HMODULE hModule,
+                     LPWSTR lpFilename,
+                     DWORD nSize)
+{
+  GET_MODULE_INFORMATION_FLAGS Flags = {TRUE, TRUE, TRUE};
+  return InternalGetModuleInformation(hProcess, hModule, Flags, lpFilename, nSize);
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+GetModuleInformation(HANDLE hProcess,
+                     HMODULE hModule,
+                     LPMODULEINFO lpmodinfo,
+                     DWORD cb)
+{
+  GET_MODULE_INFORMATION_FLAGS Flags = {FALSE, FALSE, FALSE};
+  return (BOOL)InternalGetModuleInformation(hProcess, hModule, Flags, lpmodinfo, cb);
+}
+
+
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 InitializeProcessForWsWatch(HANDLE hProcess)
@@ -965,6 +895,10 @@ InitializeProcessForWsWatch(HANDLE hProcess)
   return TRUE;
 }
 
+
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 GetWsChanges(HANDLE hProcess,

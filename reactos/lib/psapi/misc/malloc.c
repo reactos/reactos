@@ -1,4 +1,4 @@
-/* $Id: malloc.c,v 1.4 2003/04/02 22:09:57 hyperion Exp $
+/* $Id: malloc.c,v 1.5 2004/11/02 23:42:49 weiden Exp $
  */
 /*
  * COPYRIGHT:   None
@@ -13,39 +13,40 @@
  *                          for better reusability
  */
 
-#include <ddk/ntddk.h>
-#include <napi/teb.h>
-#include <ntos/heap.h>
+#include "precomp.h"
 
-PVOID STDCALL MemAlloc
-(
- IN HANDLE Heap,
- IN PVOID Ptr,
- IN ULONG Size
-)
+PVOID
+STDCALL
+MemAlloc(IN HANDLE Heap,
+         IN PVOID Ptr,
+         IN ULONG Size)
 {
- PVOID pBuf = NULL;
+  PVOID pBuf = NULL;
 
- if(Size == 0 && Ptr == NULL)
-  return (NULL);
+  if(Size == 0 && Ptr == NULL)
+  {
+    return NULL;
+  }
   
- if(Heap == NULL)
-  Heap = NtCurrentPeb()->ProcessHeap;
+  if(Heap == NULL)
+  {
+    Heap = NtCurrentPeb()->ProcessHeap;
+  }
  
- if(Size > 0)
- {
-  if(Ptr == NULL)
-   /* malloc */
-   pBuf = RtlAllocateHeap(Heap, 0, Size);
+  if(Size > 0)
+  {
+    if(Ptr == NULL)
+      /* malloc */
+      pBuf = RtlAllocateHeap(Heap, 0, Size);
+    else
+      /* realloc */
+      pBuf = RtlReAllocateHeap(Heap, 0, Ptr, Size);
+  }
   else
-   /* realloc */
-   pBuf = RtlReAllocateHeap(Heap, 0, Ptr, Size);
- }
- else
-  /* free */
-  RtlFreeHeap(Heap, 0, Ptr);
+    /* free */
+    RtlFreeHeap(Heap, 0, Ptr);
 
- return pBuf;
+  return pBuf;
 }
 
 void *PsaiMalloc(SIZE_T size)

@@ -6,3 +6,4 @@ temp.exp
 *.o
 *.d
 *.map
+*.gch

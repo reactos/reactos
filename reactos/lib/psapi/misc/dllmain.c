@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.4 2002/08/31 17:11:24 hyperion Exp $
+/* $Id: dllmain.c,v 1.5 2004/11/02 23:42:49 weiden Exp $
 */
 /*
  * COPYRIGHT:   None
@@ -11,8 +11,7 @@
  *              28/11/2001: Created (Emanuele Aliberti <eal@users.sf.net>)
  *              30/08/2002: Minimal tweak (KJK::Hyperion <noog@libero.it>)
  */
-#include <windows.h>
-#include <ntdll/ldr.h>
+#include "precomp.h"
 
 BOOLEAN STDCALL DllMain
 (
