@@ -502,10 +502,22 @@ VOID NICStartTransmit(
  */
 {
     UINT Length;
+	UCHAR FrameStart;
+    UCHAR Tmp;
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+	//FrameStart = Adapter->TXStart + Adapter->TXCurrent * DRIVER_BLOCK_SIZE;
+	//FrameStart = Adapter->TXStart;
+	FrameStart = (UCHAR)(Adapter->TXStart + (UCHAR)(Adapter->TXCurrent * BUFFERS_PER_TX_BUF));
 
     /* Set start of frame */
-    NdisRawWritePortUchar(Adapter->IOBase + PG0_TPSR,
-        Adapter->TXStart + Adapter->TXCurrent * DRIVER_BLOCK_SIZE);
+    NdisRawReadPortUchar(Adapter->IOBase + PG0_TPSR, &Tmp);
+//    NdisRawWritePortUchar(Adapter->IOBase + PG0_TPSR,
+//        Adapter->TXStart + Adapter->TXCurrent * DRIVER_BLOCK_SIZE);
+
+    NdisRawWritePortUchar(Adapter->IOBase + PG0_TPSR, FrameStart);
+    //NDIS_DbgPrint(MID_TRACE, ("Setting start of frame to (%d).\n", FrameStart));
 
     /* Set length of frame */
     Length = Adapter->TXSize[Adapter->TXCurrent];
@@ -515,8 +527,10 @@ VOID NICStartTransmit(
     /* Start transmitting */
     NdisRawWritePortUchar(Adapter->IOBase + PG0_CR, CR_STA | CR_TXP | CR_RD2);
 
-    NDIS_DbgPrint(MAX_TRACE, ("Transmitting. Buffer (%d)  Size (%d).\n",
+    NDIS_DbgPrint(MID_TRACE, ("Transmitting. FrameStart (%d)  TXCurrent (%d)  TXStart (%d)  Length (%d).\n\n", 
+		FrameStart,
         Adapter->TXCurrent,
+		Adapter->TXStart,
         Length));
 
 }
@@ -698,7 +712,6 @@ VOID NICWriteDataAlign(
 
 
     /* Now output some data */
-
     Count = Length;
 
     /* Initialize RSAR0 and RSAR1 - Remote Start Address Registers */
@@ -853,7 +866,7 @@ VOID NICIndicatePacket(
                 Adapter->PacketOffset + sizeof(PACKET_HEADER),
                 IndicateLength + DRIVER_HEADER_SIZE);
 
-    NDIS_DbgPrint(MAX_TRACE, ("Indicating (%d) bytes.\n", IndicateLength));
+    NDIS_DbgPrint(MID_TRACE, ("Indicating (%d) bytes.\n", IndicateLength));
 
 #if 0
     NDIS_DbgPrint(MAX_TRACE, ("FRAME:\n"));
@@ -965,7 +978,7 @@ VOID NICWritePacket(
                     &SrcBuffer,
                     &Adapter->TXSize[Adapter->TXNext]);
 
-    NDIS_DbgPrint(MAX_TRACE, ("Packet Size (%d) is now (%d).\n",
+    NDIS_DbgPrint(MID_TRACE, ("Packet (%d) is now size (%d).\n",
         Adapter->TXNext,
         Adapter->TXSize[Adapter->TXNext]));
 
@@ -1109,7 +1122,7 @@ VOID HandleReceive(
 
     if (Adapter->BufferOverflow) {
 
-        NDIS_DbgPrint(MAX_TRACE, ("Receive ring overflow.\n"));
+        NDIS_DbgPrint(MID_TRACE, ("Receive ring overflow.\n"));
 
         /* Select page 0 and stop the NIC */
         NdisRawWritePortUchar(Adapter->IOBase + PG0_CR, CR_STP | CR_RD2 | CR_PAGE0);
@@ -1149,7 +1162,7 @@ VOID HandleReceive(
     }
 
     if (Adapter->ReceiveError) {
-        NDIS_DbgPrint(MAX_TRACE, ("Receive error.\n"));
+        NDIS_DbgPrint(MID_TRACE, ("Receive error.\n"));
 
         /* Skip this packet */
         Adapter->NextPacket = Adapter->CurrentPage;
@@ -1161,15 +1174,15 @@ VOID HandleReceive(
     for (;;) {
         NICGetCurrentPage(Adapter);
 
-        NDIS_DbgPrint(MAX_TRACE, ("Current page (0x%X)  NextPacket (0x%X).\n",
+        NDIS_DbgPrint(MID_TRACE, ("Current page (0x%X)  NextPacket (0x%X).\n",
             Adapter->CurrentPage,
             Adapter->NextPacket));
 
         if (Adapter->CurrentPage == Adapter->NextPacket) {
-            NDIS_DbgPrint(MAX_TRACE, ("No more packets.\n"));
+            NDIS_DbgPrint(MID_TRACE, ("No more packets.\n"));
             break;
         } else {
-            NDIS_DbgPrint(MAX_TRACE, ("Got a packet in the receive ring.\n"));
+            NDIS_DbgPrint(MID_TRACE, ("Got a packet in the receive ring.\n"));
 
             /* Read packet from receive buffer ring */
             NICReadPacket(Adapter);
@@ -1185,7 +1198,7 @@ VOID HandleReceive(
     }
 
     if ((Adapter->TransmitPending) && (Adapter->TXCurrent != -1)) {
-        NDIS_DbgPrint(MAX_TRACE, ("Retransmitting current packet at (%d).\n", Adapter->TXCurrent));
+        NDIS_DbgPrint(MID_TRACE, ("Retransmitting current packet at (%d).\n", Adapter->TXCurrent));
         /* Retransmit packet */
         NICStartTransmit(Adapter);
         Adapter->TransmitPending = FALSE;
@@ -1207,6 +1220,10 @@ VOID HandleTransmit(
     UINT Length;
     UINT BufferCount;
 
+//    PIP_PACKET pIPPacket;
+//    pIPPacket = (PIP_PACKET)
+//    DisplayIPPacket(pIPPacket);
+
     if (Adapter->TransmitError) {
         /* FIXME: Retransmit now or let upper layer protocols handle retransmit? */
         Adapter->TransmitError = FALSE;
@@ -1216,7 +1233,7 @@ VOID HandleTransmit(
     Length      = Adapter->TXSize[Adapter->TXCurrent];
     BufferCount = (Length + DRIVER_BLOCK_SIZE - 1) / DRIVER_BLOCK_SIZE;
 
-    NDIS_DbgPrint(MAX_TRACE, ("Freeing (%d) buffers at (%d).\n",
+    NDIS_DbgPrint(MID_TRACE, ("Freeing (%d) buffers at (%d).\n",
         BufferCount,
         Adapter->TXCurrent));
 
@@ -1225,7 +1242,7 @@ VOID HandleTransmit(
     Adapter->TXCurrent = (Adapter->TXCurrent + BufferCount) % Adapter->TXCount;
 
     if (Adapter->TXSize[Adapter->TXCurrent] == 0) {
-        NDIS_DbgPrint(MAX_TRACE, ("No more packets in transmit buffer.\n"));
+        NDIS_DbgPrint(MID_TRACE, ("No more packets in transmit buffer.\n"));
 
         Adapter->TXCurrent = -1;
     }
@@ -1256,7 +1273,7 @@ VOID MiniportHandleInterrupt(
     ISRMask = Adapter->InterruptMask;
     NdisRawReadPortUchar(Adapter->IOBase + PG0_ISR, &ISRValue);
 
-    NDIS_DbgPrint(MAX_TRACE, ("ISRValue (0x%X).\n", ISRValue));
+    NDIS_DbgPrint(MID_TRACE, ("ISRValue (0x%X).\n", ISRValue));
 
     Adapter->InterruptStatus |= (ISRValue & ISRMask);
 
@@ -1267,7 +1284,7 @@ VOID MiniportHandleInterrupt(
     Mask = 0x01;
     while (Adapter->InterruptStatus != 0x00) {
 
-        NDIS_DbgPrint(MAX_TRACE, ("Adapter->InterruptStatus (0x%X)  Mask (0x%X).\n",
+        NDIS_DbgPrint(MID_TRACE, ("Adapter->InterruptStatus (0x%X)  Mask (0x%X).\n",
             Adapter->InterruptStatus, Mask));
 
         /* Find next interrupt type */
@@ -1276,7 +1293,7 @@ VOID MiniportHandleInterrupt(
 
         switch (Adapter->InterruptStatus & Mask) {
         case ISR_OVW:   
-            NDIS_DbgPrint(MAX_TRACE, ("Overflow interrupt.\n"));
+            NDIS_DbgPrint(MID_TRACE, ("Overflow interrupt.\n"));
             /* Overflow. Handled almost the same way as a receive interrupt */
             Adapter->BufferOverflow = TRUE;
 
@@ -1286,13 +1303,13 @@ VOID MiniportHandleInterrupt(
             break;
 
         case ISR_RXE:
-            NDIS_DbgPrint(MAX_TRACE, ("Receive error interrupt.\n"));
+            NDIS_DbgPrint(MID_TRACE, ("Receive error interrupt.\n"));
             NICUpdateCounters(Adapter);
 
             Adapter->ReceiveError = TRUE;
             
         case ISR_PRX:
-            NDIS_DbgPrint(MAX_TRACE, ("Receive interrupt.\n"));
+            NDIS_DbgPrint(MID_TRACE, ("Receive interrupt.\n"));
 
             HandleReceive(Adapter);
 
@@ -1300,13 +1317,13 @@ VOID MiniportHandleInterrupt(
             break;  
 
         case ISR_TXE:
-            NDIS_DbgPrint(MAX_TRACE, ("Transmit error interrupt.\n"));
+            NDIS_DbgPrint(MID_TRACE, ("Transmit error interrupt.\n"));
             NICUpdateCounters(Adapter);
 
             Adapter->TransmitError = TRUE;
 
         case ISR_PTX:
-            NDIS_DbgPrint(MAX_TRACE, ("Transmit interrupt.\n"));
+            NDIS_DbgPrint(MID_TRACE, ("Transmit interrupt.\n"));
 
             HandleTransmit(Adapter);
 
@@ -1314,7 +1331,7 @@ VOID MiniportHandleInterrupt(
             break;
 
         case ISR_CNT:
-            NDIS_DbgPrint(MAX_TRACE, ("Counter interrupt.\n"));
+            NDIS_DbgPrint(MID_TRACE, ("Counter interrupt.\n"));
             /* Counter overflow. Read counters from the NIC */
             NICUpdateCounters(Adapter);
 
@@ -1322,7 +1339,7 @@ VOID MiniportHandleInterrupt(
             break;
 
         default:
-            NDIS_DbgPrint(MAX_TRACE, ("Unknown interrupt. Adapter->InterruptStatus (0x%X).\n", Adapter->InterruptStatus));
+            NDIS_DbgPrint(MID_TRACE, ("Unknown interrupt. Adapter->InterruptStatus (0x%X).\n", Adapter->InterruptStatus));
             Adapter->InterruptStatus &= ~Mask;
             break;
         }
@@ -1333,7 +1350,7 @@ VOID MiniportHandleInterrupt(
 
         NdisRawReadPortUchar(Adapter->IOBase + PG0_ISR, &ISRValue);
 
-        NDIS_DbgPrint(MAX_TRACE, ("ISRValue (0x%X).\n", ISRValue));
+        NDIS_DbgPrint(MID_TRACE, ("ISRValue (0x%X).\n", ISRValue));
 
         Adapter->InterruptStatus |= (ISRValue & ISRMask);
 

@@ -7,10 +7,17 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
+#define DBG
 #include <miniport.h>
 #include <protocol.h>
 #ifdef DBG
 #include <buffer.h>
+#endif /* DBG */
+
+#ifdef DBG
+/* See debug.h for debug/trace constants */
+ULONG DebugTraceLevel = MIN_TRACE;
+//ULONG DebugTraceLevel = (MAX_TRACE + DEBUG_MINIPORT);
 #endif /* DBG */
 
 
@@ -111,18 +118,18 @@ MiniIndicateData(
         DbgPrint("HEADER:");
         p = HeaderBuffer;
         for (i = 0; i < HeaderBufferSize; i++) {
-            if (i % 12 == 0)
+            if (i % 16 == 0)
                 DbgPrint("\n%04X ", i);
             DbgPrint("%02X ", *p);
             (ULONG_PTR)p += 1;
         }
 
-        DbgPrint("\nFRAME:\n");
+        DbgPrint("\nFRAME:");
 
         p = LookaheadBuffer;
         Length = (LookaheadBufferSize < 64)? LookaheadBufferSize : 64;
         for (i = 0; i < Length; i++) {
-            if (i % 12 == 0)
+            if (i % 16 == 0)
                 DbgPrint("\n%04X ", i);
             DbgPrint("%02X ", *p);
             (ULONG_PTR)p += 1;
@@ -135,6 +142,11 @@ MiniIndicateData(
 
     KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
     CurrentEntry = Adapter->ProtocolListHead.Flink;
+
+    if (CurrentEntry == &Adapter->ProtocolListHead) {
+        NDIS_DbgPrint(DEBUG_MINIPORT, ("WARNING: No upper protocol layer.\n"));
+    }
+
     while (CurrentEntry != &Adapter->ProtocolListHead) {
 	    AdapterBinding = CONTAINING_RECORD(CurrentEntry,
                                            ADAPTER_BINDING,

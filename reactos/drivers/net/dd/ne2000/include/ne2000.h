@@ -54,6 +54,7 @@
 
 /* Default number of transmit buffers */
 #define DRIVER_DEFAULT_TX_BUFFER_COUNT 12
+#define BUFFERS_PER_TX_BUF 1
 
 /* Interrupt Mask Register value */
 #define DRIVER_INTERRUPT_MASK   IMR_ALLE - IMR_RDCE

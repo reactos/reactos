@@ -13,6 +13,7 @@
 #ifdef DBG
 
 /* See debug.h for debug/trace constants */
+//DWORD DebugTraceLevel = MID_TRACE;
 ULONG DebugTraceLevel = MIN_TRACE;
 
 #endif /* DBG */
@@ -130,7 +131,9 @@ VOID MiniportHalt(
             Adapter->IOBase);
 
     /* Remove adapter from global adapter list */
-    RemoveEntryList(&Adapter->ListEntry);
+    if ((&Adapter->ListEntry)->Blink != NULL) {
+        RemoveEntryList(&Adapter->ListEntry);
+	}
 
     /* Free adapter context area */
     NdisFreeMemory(Adapter, sizeof(NIC_ADAPTER), 0);
@@ -225,9 +228,9 @@ NDIS_STATUS MiniportInitialize(
         return Status;
     }
 
-    NDIS_DbgPrint(MAX_TRACE, ("BOARDDATA:\n"));
+    NDIS_DbgPrint(MID_TRACE, ("BOARDDATA:\n"));
     for (i = 0; i < 4; i++) {
-        NDIS_DbgPrint(MAX_TRACE, ("%02X %02X %02X %02X\n",
+        NDIS_DbgPrint(MID_TRACE, ("%02X %02X %02X %02X\n",
             Adapter->SAPROM[i*4+0],
             Adapter->SAPROM[i*4+1],
             Adapter->SAPROM[i*4+2],
@@ -249,12 +252,12 @@ NDIS_STATUS MiniportInitialize(
     /* Setup the NIC */
     NICSetup(Adapter);
 
-    NDIS_DbgPrint(MAX_TRACE, ("TXStart (0x%X)  TXCount (0x%X)  PageStart (0x%X)\n",
+    NDIS_DbgPrint(MID_TRACE, ("TXStart (0x%X)  TXCount (0x%X)  PageStart (0x%X)\n",
         Adapter->TXStart,
         Adapter->TXCount,
         Adapter->PageStart));
 
-    NDIS_DbgPrint(MAX_TRACE, ("PageStop (0x%X)  CurrentPage (0x%X)  NextPacket (0x%X).\n",
+    NDIS_DbgPrint(MID_TRACE, ("PageStop (0x%X)  CurrentPage (0x%X)  NextPacket (0x%X).\n",
         Adapter->PageStop,
         Adapter->CurrentPage,
         Adapter->NextPacket));
@@ -413,7 +416,7 @@ NDIS_STATUS MiniportQueryInformation(
         GenericULONG = DRIVER_FRAME_SIZE;
         break;
     case OID_GEN_PROTOCOL_OPTIONS:
-        NDIS_DbgPrint(MAX_TRACE, ("OID_GEN_PROTOCOL_OPTIONS.\n"));
+        NDIS_DbgPrint(MID_TRACE, ("OID_GEN_PROTOCOL_OPTIONS.\n"));
         Status = NDIS_STATUS_NOT_SUPPORTED;
         break;
     case OID_GEN_MAC_OPTIONS:
@@ -437,14 +440,14 @@ NDIS_STATUS MiniportQueryInformation(
         CopySize = DRIVER_LENGTH_OF_ADDRESS;
         break;
     case OID_802_3_MULTICAST_LIST:
-        NDIS_DbgPrint(MAX_TRACE, ("OID_802_3_MULTICAST_LIST.\n"));
+        NDIS_DbgPrint(MID_TRACE, ("OID_802_3_MULTICAST_LIST.\n"));
         Status = NDIS_STATUS_NOT_SUPPORTED;
         break;
     case OID_802_3_MAXIMUM_LIST_SIZE:
         GenericULONG = Adapter->MaxMulticastListSize;
         break;
     case OID_802_3_MAC_OPTIONS:
-        NDIS_DbgPrint(MAX_TRACE, ("OID_802_3_MAC_OPTIONS.\n"));
+        NDIS_DbgPrint(MID_TRACE, ("OID_802_3_MAC_OPTIONS.\n"));
         Status = NDIS_STATUS_NOT_SUPPORTED;
         break;
     default:
@@ -531,7 +534,7 @@ NDIS_STATUS MiniportSend(
 {
     PNIC_ADAPTER Adapter = (PNIC_ADAPTER)MiniportAdapterContext;
 
-    NDIS_DbgPrint(MAX_TRACE, ("Queueing packet.\n"));
+    NDIS_DbgPrint(MID_TRACE, ("Queueing packet.\n"));
 
 #ifdef NOCARD
     NdisMSendComplete(Adapter->MiniportAdapterHandle,
@@ -738,7 +741,7 @@ NDIS_STATUS MiniportTransferData(
             SrcData = RecvStart;
     }
 
-    NDIS_DbgPrint(MAX_TRACE, ("Transferred (%d) bytes.\n", BytesToTransfer));
+    NDIS_DbgPrint(MID_TRACE, ("Transferred (%d) bytes.\n", BytesToTransfer));
 
     *BytesTransferred = BytesCopied;
 
