@@ -16,11 +16,11 @@ int _putenv(const char* val)
    int size, result;
    wchar_t *woption;
       
-   size = MultiByteToWideChar(CP_ACP, 0, val, 0, NULL, 0);
-   woption = malloc(size);
+   size = MultiByteToWideChar(CP_ACP, 0, val, -1, NULL, 0);
+   woption = malloc(size* sizeof(wchar_t));
    if (woption == NULL)
       return -1;
-   MultiByteToWideChar(CP_ACP, 0, val, 0, woption, size);
+   MultiByteToWideChar(CP_ACP, 0, val, -1, woption, size);
    result = SetEnv(woption);
    free(woption);
    return result;

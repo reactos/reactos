@@ -1,4 +1,4 @@
-/* $Id: environ.c,v 1.10 2004/08/27 03:08:23 navaraf Exp $
+/* $Id: environ.c,v 1.11 2004/08/31 14:40:50 hbirr Exp $
  *
  * dllmain.c
  *
@@ -232,7 +232,7 @@ int SetEnv(const wchar_t *option)
    }
 
    /* Create a copy of the option name. */
-   name = malloc(epos - option + 1);
+   name = malloc((epos - option + 1) * sizeof(wchar_t));
    if (name == NULL)
       return -1;
    memcpy(name, option, (epos - option) * sizeof(wchar_t));
@@ -285,7 +285,7 @@ int SetEnv(const wchar_t *option)
       }
 
       /* Create a multibyte copy of the option. */
-      size = WideCharToMultiByte(CP_ACP, 0, option, 0, NULL, 0, NULL, NULL);
+      size = WideCharToMultiByte(CP_ACP, 0, option, -1, NULL, 0, NULL, NULL);
       mboption = malloc(size);
       if (mboption == NULL)
       {
@@ -293,7 +293,7 @@ int SetEnv(const wchar_t *option)
          free(woption);
          return -1;
       }
-      WideCharToMultiByte(CP_ACP, 0, option, 0, mboption, size, NULL, NULL);
+      WideCharToMultiByte(CP_ACP, 0, option, -1, mboption, size, NULL, NULL);
 
       if (found)
       {
