@@ -672,9 +672,9 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 		if (!url || !*url)
 #ifdef _DEBUG
-			url = _T("http://localhost");
+			url = TEXT("http://localhost");
 #else
-			url = _T("about:blank");
+			url = TEXT("about:blank");
 #endif
 
 		if (!_right_hwnd) {
@@ -764,7 +764,7 @@ void MainFrame::resize_children()
 	}
 
 	if (_right_hwnd)
-		hdwp = DeferWindowPos(hdwp, _right_hwnd, 0, _clnt_rect.left+cx+1, _clnt_rect.top, _clnt_rect.right-cx, _clnt_rect.bottom-_clnt_rect.top, SWP_NOZORDER|SWP_NOACTIVATE);
+		hdwp = DeferWindowPos(hdwp, _right_hwnd, 0, _clnt_rect.left+cx, _clnt_rect.top, _clnt_rect.right-cx, _clnt_rect.bottom-_clnt_rect.top, SWP_NOZORDER|SWP_NOACTIVATE);
 
 	EndDeferWindowPos(hdwp);
 }

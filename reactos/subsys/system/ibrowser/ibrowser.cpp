@@ -370,7 +370,7 @@ PopupMenu::PopupMenu(UINT nid)
 }
 
 
- /// "About Explorer" Dialog
+ /// "About" Dialog
 struct ExplorerAboutDlg : public
 			CtlColorParent<
 				OwnerDrawParent<Dialog>

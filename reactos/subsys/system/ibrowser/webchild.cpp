@@ -222,8 +222,8 @@ WebChildWindow::WebChildWindow(HWND hwnd, const WebChildWndInfo& info)
 
 		_connector = auto_ptr<EventConnector>(new EventConnector(_control, DIID_DWebBrowserEvents2, this));
 
+		 // We need to call Navigate() here to initialize the browser control (see _browser_initialized)
 		_control->Navigate(BStr(info._url), &vtMissing, &vtMissing, &vtMissing, &vtMissing);
-		//browser->Navigate2(&Variant(info._url), &vtMissing, &vtMissing, &vtMissing, &vtMissing);
 	}
 }
 
