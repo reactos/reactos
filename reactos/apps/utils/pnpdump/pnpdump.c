@@ -147,7 +147,7 @@ GetPnpKey(PHKEY PnpKey)
 
 
 static VOID
-PnpDecodeIrq(char *Ptr)
+PnpDecodeIrq(unsigned char *Ptr)
 {
   USHORT IrqMask;
   int i;
@@ -171,10 +171,10 @@ PnpDecodeIrq(char *Ptr)
 
 
 static VOID
-PnpDecodeDma(char *Ptr)
+PnpDecodeDma(unsigned char *Ptr)
 {
-  char DmaChannel;
-  char DmaStatus;
+  unsigned char DmaChannel;
+  unsigned char DmaStatus;
   int i;
 
   DmaChannel = *Ptr;
@@ -196,7 +196,7 @@ PnpDecodeDma(char *Ptr)
 
 
 static VOID
-PnpDecodeIoPort(char *Ptr)
+PnpDecodeIoPort(unsigned char *Ptr)
 {
   USHORT MinBase;
   USHORT MaxBase;
@@ -224,7 +224,7 @@ PnpDecodeIoPort(char *Ptr)
 
 
 static VOID
-PnpDecodeFixedIoPort(char *Ptr)
+PnpDecodeFixedIoPort(unsigned char *Ptr)
 {
   USHORT IoPort;
   UCHAR Length;
@@ -256,7 +256,7 @@ PnpDecodeFixedIoPort(char *Ptr)
 
 
 static VOID
-PnpDecodeMemory16(char *Ptr)
+PnpDecodeMemory16(unsigned char *Ptr)
 {
   USHORT DescLength;
   UCHAR Info;
@@ -294,7 +294,7 @@ PnpDecodeMemory16(char *Ptr)
 
 
 static VOID
-PnpDecodeMemory32(char *Ptr)
+PnpDecodeMemory32(unsigned char *Ptr)
 {
   USHORT DescLength;
   UCHAR Info;
@@ -348,7 +348,7 @@ PnpDecodeMemory32(char *Ptr)
 
 
 static VOID
-PnpDecodeFixedMemory(char *Ptr)
+PnpDecodeFixedMemory(unsigned char *Ptr)
 {
   USHORT DescLength;
   UCHAR Info;
@@ -383,12 +383,12 @@ PnpDecodeFixedMemory(char *Ptr)
 
 void PrintDeviceData (PCM_PNP_BIOS_DEVICE_NODE DeviceNode)
 {
-  char PnpId[8];
-  char *Ptr;
+  unsigned char PnpId[8];
+  unsigned char *Ptr;
   unsigned int TagSize;
   unsigned int TagType;
 
-  char Id[4];
+  unsigned char Id[4];
 
   printf ("Node: %x  Size %hu (0x%hx)\n",
 	  DeviceNode->Node,
@@ -414,7 +414,7 @@ void PrintDeviceData (PCM_PNP_BIOS_DEVICE_NODE DeviceNode)
 
   if (DeviceNode->Size > sizeof(CM_PNP_BIOS_DEVICE_NODE))
     {
-      Ptr = (char *)(DeviceNode + 1);
+      Ptr = (unsigned char *)(DeviceNode + 1);
       while (TRUE)
 	{
 	  if (*Ptr & 0x80)
