@@ -4421,7 +4421,7 @@ typedef struct _WINDOWPLACEMENT {
   RECT  rcNormalPosition;
 } WINDOWPLACEMENT;
 
-typedef struct _WNDCLASS {
+typedef struct _WNDCLASSA {
   UINT    style;
   WNDPROC lpfnWndProc;
   int     cbClsExtra;
@@ -4430,11 +4430,30 @@ typedef struct _WNDCLASS {
   HICON   hIcon;
   HCURSOR hCursor;
   HBRUSH  hbrBackground;
-  LPCTSTR lpszMenuName;
-  LPCTSTR lpszClassName;
-} WNDCLASS, *LPWNDCLASS;
+  LPCSTR  lpszMenuName;
+  LPCSTR  lpszClassName;
+} WNDCLASSA, *LPWNDCLASSA;
 
-typedef struct _WNDCLASSEX {
+typedef struct _WNDCLASSW {
+  UINT    style;
+  WNDPROC lpfnWndProc;
+  int     cbClsExtra;
+  int     cbWndExtra;
+  HANDLE  hInstance;
+  HICON   hIcon;
+  HCURSOR hCursor;
+  HBRUSH  hbrBackground;
+  LPCWSTR lpszMenuName;
+  LPCWSTR lpszClassName;
+} WNDCLASSW, *LPWNDCLASSW;
+
+#ifdef UNICODE
+typedef WNDCLASSW WNDCLASS;
+#else
+typedef WNDCLASSA WNDCLASS;
+#endif
+
+typedef struct _WNDCLASSEXA {
   UINT    cbSize;
   UINT    style;
   WNDPROC lpfnWndProc;
@@ -4444,10 +4463,31 @@ typedef struct _WNDCLASSEX {
   HICON   hIcon;
   HCURSOR hCursor;
   HBRUSH  hbrBackground;
-  LPCTSTR lpszMenuName;
-  LPCTSTR lpszClassName;
+  LPCSTR  lpszMenuName;
+  LPCSTR  lpszClassName;
   HICON   hIconSm;
-} WNDCLASSEX, *LPWNDCLASSEX;
+} WNDCLASSEXA, *LPWNDCLASSEXA;
+
+typedef struct _WNDCLASSEXW {
+  UINT    cbSize;
+  UINT    style;
+  WNDPROC lpfnWndProc;
+  int     cbClsExtra;
+  int     cbWndExtra;
+  HANDLE  hInstance;
+  HICON   hIcon;
+  HCURSOR hCursor;
+  HBRUSH  hbrBackground;
+  LPCWSTR lpszMenuName;
+  LPCWSTR lpszClassName;
+  HICON   hIconSm;
+} WNDCLASSEXW, *LPWNDCLASSEXW;
+
+#ifdef UNICODE
+typedef WNDCLASSEXW WNDCLASSEX;
+#else
+typedef WNDCLASSEXA WNDCLASSEX;
+#endif
 
 typedef struct _CONNECTDLGSTRUCT {
   DWORD cbStructure;

@@ -34,7 +34,7 @@ NTSTATUS FASTCALL
 ClassReferenceClassByNameOrAtom(PWNDCLASS_OBJECT *Class,
 				LPWSTR ClassNameOrAtom);
 PWNDCLASS_OBJECT FASTCALL
-W32kCreateClass(LPWNDCLASSEX lpwcx,
+W32kCreateClass(LPWNDCLASSEXW lpwcx,
 		BOOL bUnicodeClass);
 struct _WINDOW_OBJECT;
 ULONG FASTCALL

@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.18 2003/05/17 09:20:23 gvg Exp $
+/* $Id: class.c,v 1.19 2003/06/16 13:10:01 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -18,7 +18,7 @@ STDCALL
 GetClassInfoA(
   HINSTANCE hInstance,
   LPCSTR lpClassName,
-  LPWNDCLASS lpWndClass)
+  LPWNDCLASSA lpWndClass)
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -29,7 +29,7 @@ STDCALL
 GetClassInfoExA(
   HINSTANCE hinst,
   LPCSTR lpszClass,
-  LPWNDCLASSEX lpwcx)
+  LPWNDCLASSEXA lpwcx)
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -40,7 +40,7 @@ STDCALL
 GetClassInfoExW(
   HINSTANCE hinst,
   LPCWSTR lpszClass,
-  LPWNDCLASSEX lpwcx)
+  LPWNDCLASSEXW lpwcx)
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -51,7 +51,7 @@ STDCALL
 GetClassInfoW(
   HINSTANCE hInstance,
   LPCWSTR lpClassName,
-  LPWNDCLASS lpWndClass)
+  LPWNDCLASSW lpWndClass)
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -160,22 +160,22 @@ RealGetWindowClassW(
 }
 
 ATOM STDCALL
-RegisterClassA(CONST WNDCLASS *lpWndClass)
+RegisterClassA(CONST WNDCLASSA *lpWndClass)
 {
-  WNDCLASSEX Class;
+  WNDCLASSEXA Class;
 
   RtlMoveMemory(&Class.style, lpWndClass, sizeof(WNDCLASS));
-  Class.cbSize = sizeof(WNDCLASSEX);
+  Class.cbSize = sizeof(WNDCLASSEXA);
   Class.hIconSm = INVALID_HANDLE_VALUE;
   return RegisterClassExA(&Class);
 }
 
 ATOM STDCALL
-RegisterClassExA(CONST WNDCLASSEX *lpwcx)
+RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
 {
   UNICODE_STRING MenuName;
   UNICODE_STRING ClassName;
-  WNDCLASSEX Class;
+  WNDCLASSEXW Class;
   RTL_ATOM Atom;
 
   if (!RtlCreateUnicodeStringFromAsciiz(&MenuName, (PCSZ)lpwcx->lpszMenuName))
@@ -192,9 +192,9 @@ RegisterClassExA(CONST WNDCLASSEX *lpwcx)
       return (ATOM)0;
     }
 
-  RtlMoveMemory(&Class, lpwcx, sizeof(WNDCLASSEX));
-  Class.lpszMenuName = (LPCTSTR)MenuName.Buffer;
-  Class.lpszClassName = (LPCTSTR)ClassName.Buffer;
+  RtlMoveMemory(&Class, lpwcx, sizeof(WNDCLASSEXA));
+  Class.lpszMenuName = MenuName.Buffer;
+  Class.lpszClassName = ClassName.Buffer;
 
   Atom = NtUserRegisterClassExWOW(&Class,
 				  FALSE,
@@ -210,7 +210,7 @@ RegisterClassExA(CONST WNDCLASSEX *lpwcx)
 }
 
 ATOM STDCALL
-RegisterClassExW(CONST WNDCLASSEX *lpwcx)
+RegisterClassExW(CONST WNDCLASSEXW *lpwcx)
 {
   RTL_ATOM Atom;
 
@@ -225,12 +225,12 @@ RegisterClassExW(CONST WNDCLASSEX *lpwcx)
 }
 
 ATOM STDCALL
-RegisterClassW(CONST WNDCLASS *lpWndClass)
+RegisterClassW(CONST WNDCLASSW *lpWndClass)
 {
-  WNDCLASSEX Class;
+  WNDCLASSEXW Class;
 
-  RtlMoveMemory(&Class.style, lpWndClass, sizeof(WNDCLASS));
-  Class.cbSize = sizeof(WNDCLASSEX);
+  RtlMoveMemory(&Class.style, lpWndClass, sizeof(WNDCLASSW));
+  Class.cbSize = sizeof(WNDCLASSEXW);
   Class.hIconSm = INVALID_HANDLE_VALUE;
   return RegisterClassExW(&Class);
 }

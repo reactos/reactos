@@ -1201,7 +1201,7 @@ CallWindowProcA(
 ATOM
 STDCALL
 RegisterClassA(
-    CONST WNDCLASS *lpWndClass);
+    CONST WNDCLASSA *lpWndClass);
  
 WINBOOL
 STDCALL
@@ -1214,15 +1214,15 @@ STDCALL
 GetClassInfoA(
     HINSTANCE hInstance ,
     LPCSTR lpClassName,
-    LPWNDCLASS lpWndClass);
+    LPWNDCLASSA lpWndClass);
  
 ATOM
 STDCALL
-RegisterClassExA(CONST WNDCLASSEX *);
+RegisterClassExA(CONST WNDCLASSEXA *);
  
 WINBOOL
 STDCALL
-GetClassInfoExA(HINSTANCE, LPCSTR, LPWNDCLASSEX);
+GetClassInfoExA(HINSTANCE, LPCSTR, LPWNDCLASSEXA);
  
 HWND
 STDCALL

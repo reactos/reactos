@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winsta.c,v 1.14 2003/06/07 12:23:14 chorns Exp $
+/* $Id: winsta.c,v 1.15 2003/06/16 13:10:01 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -82,7 +82,7 @@ InitWindowStationImpl(VOID)
   HANDLE WindowStationsDirectory;
   UNICODE_STRING UnicodeString;
   NTSTATUS Status;
-  WNDCLASSEX wcx;
+  WNDCLASSEXW wcx;
 
   /*
    * Create the '\Windows\WindowStations' directory

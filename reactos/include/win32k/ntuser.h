@@ -1102,7 +1102,7 @@ NtUserRedrawWindow(HWND hWnd, CONST RECT *lprcUpdate, HRGN hrgnUpdate, UINT flag
 RTL_ATOM
 STDCALL
 NtUserRegisterClassExWOW(
-  LPWNDCLASSEX lpwcx,
+  LPWNDCLASSEXW lpwcx,
   BOOL bUnicodeClass,
   DWORD Unknown2,
   DWORD Unknown3,
