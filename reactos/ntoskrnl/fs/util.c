@@ -1,4 +1,4 @@
-/* $Id: util.c,v 1.14 2003/07/10 06:27:13 royce Exp $
+/* $Id: util.c,v 1.15 2003/08/03 15:53:45 ea Exp $
  *
  * reactos/ntoskrnl/fs/util.c
  *
@@ -330,7 +330,7 @@ FsRtlPostStackOverflow (
  * RETURN VALUE
  *	It always returns STATUS_SUCCESS.
  *
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 STDCALL
