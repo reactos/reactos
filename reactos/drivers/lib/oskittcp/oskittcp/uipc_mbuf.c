@@ -363,9 +363,7 @@ m_copym(m, off0, len, wait)
 #ifdef OSKIT
 			oskit_bufio_addref(m->m_ext.ext_bufio);
 #else
-#ifdef __REACTOS__
-			m->m_data = malloc(m->m_len);
-#else
+#ifndef __REACTOS__
 			mclrefcnt[mtocl(m->m_ext.ext_buf)]++;
 #endif
 #endif /* OSKIT */
@@ -416,6 +414,7 @@ m_copydata(m, off, len, cp)
 		if (m == 0)
 			panic("m_copydata");
 		count = min(m->m_len - off, len);
+                OS_DbgPrint(OSK_MID_TRACE,("count %d len %d\n", count, len));
 		bcopy(mtod(m, caddr_t) + off, cp, count);
 		len -= count;
 		cp += count;
