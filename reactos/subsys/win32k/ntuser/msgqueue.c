@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.111 2004/12/25 22:59:10 navaraf Exp $
+/* $Id: msgqueue.c,v 1.112 2004/12/29 19:55:01 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -53,6 +53,7 @@ static KMUTEX HardwareMessageQueueLock;
 static KEVENT HardwareMessageEvent;
 
 static PAGED_LOOKASIDE_LIST MessageLookasideList;
+static PAGED_LOOKASIDE_LIST TimerLookasideList;
 
 #define IntLockSystemMessageQueue(OldIrql) \
   KeAcquireSpinLock(&SystemMessageQueueLock, &OldIrql)
@@ -145,6 +146,13 @@ MsqInitializeImpl(VOID)
 				 sizeof(USER_MESSAGE),
 				 0,
 				 256);
+  ExInitializePagedLookasideList(&TimerLookasideList,
+				 NULL,
+				 NULL,
+				 0,
+				 sizeof(TIMER_ENTRY),
+				 0,
+				 64);
 
   return(STATUS_SUCCESS);
 }
@@ -1195,16 +1203,29 @@ MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 }
 
 NTSTATUS FASTCALL
-MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue)
+MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, HWND WndFilter,
+                      UINT MsgFilterMin, UINT MsgFilterMax)
 {
   PVOID WaitObjects[2] = {MessageQueue->NewMessages, &HardwareMessageEvent};
+  LARGE_INTEGER TimerExpiry;
+  PLARGE_INTEGER Timeout;
+
+  if (MsqGetFirstTimerExpiry(MessageQueue, WndFilter, MsgFilterMin, MsgFilterMax, &TimerExpiry))
+    {
+      Timeout = &TimerExpiry;
+    }
+  else
+    {
+      Timeout = NULL;
+    }
+
   return(KeWaitForMultipleObjects(2,
 				  WaitObjects,
 				  WaitAny,
 				  Executive,
 				  UserMode,
 				  FALSE,
-				  NULL,
+				  Timeout,
 				  NULL));
 }
 
@@ -1228,6 +1249,7 @@ MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQu
   InitializeListHead(&MessageQueue->PostedMessagesListHead);
   InitializeListHead(&MessageQueue->SentMessagesListHead);
   InitializeListHead(&MessageQueue->HardwareMessagesListHead);
+  InitializeListHead(&MessageQueue->TimerListHead);
   InitializeListHead(&MessageQueue->DispatchingMessagesHead);
   InitializeListHead(&MessageQueue->LocalDispatchingMessagesHead);
   KeInitializeMutex(&MessageQueue->HardwareLock, 0);
@@ -1267,6 +1289,7 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
 {
   PLIST_ENTRY CurrentEntry;
   PUSER_MESSAGE CurrentMessage;
+  PTIMER_ENTRY CurrentTimer;
   PUSER_SENT_MESSAGE CurrentSentMessage;
   
   IntLockMessageQueue(MessageQueue);
@@ -1309,6 +1332,14 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
       
       /* free the message */
       ExFreePool(CurrentSentMessage);
+    }
+  
+  /* cleanup timers */
+  while (! IsListEmpty(&MessageQueue->TimerListHead))
+    {
+      CurrentEntry = RemoveHeadList(&MessageQueue->TimerListHead);
+      CurrentTimer = CONTAINING_RECORD(CurrentEntry, TIMER_ENTRY, ListEntry);
+      ExFreeToPagedLookasideList(&TimerLookasideList, CurrentTimer);
     }
   
   /* notify senders of dispatching messages. This needs to be cleaned up if e.g.
@@ -1474,6 +1505,302 @@ MsqSetStateWindow(PUSER_MESSAGE_QUEUE MessageQueue, ULONG Type, HWND hWnd)
   }
   
   return NULL;
+}
+
+#ifndef NDEBUG
+static VOID FASTCALL
+DumpTimerList(PUSER_MESSAGE_QUEUE MessageQueue)
+{
+  PLIST_ENTRY Current;
+  PTIMER_ENTRY Timer;
+
+  Current = MessageQueue->TimerListHead.Flink;
+  if (Current == &MessageQueue->TimerListHead)
+    {
+      DPRINT("timer list is empty for queue %p\n", MessageQueue);
+    }
+  while (Current != &MessageQueue->TimerListHead)
+    {
+      Timer = CONTAINING_RECORD(Current, TIMER_ENTRY, ListEntry);
+      DPRINT("queue %p timer %p expiry %I64d wnd %x id %p period %u timerproc %p msg %u\n",
+             MessageQueue, Timer, Timer->ExpiryTime.QuadPart, Timer->Wnd, Timer->IDEvent,
+             Timer->Period, Timer->TimerFunc, Timer->Msg);
+      Current = Current->Flink;
+    }
+}
+#endif /* ! defined(NDEBUG) */
+
+/* Must have the message queue locked while calling this */
+static VOID FASTCALL
+InsertTimer(PUSER_MESSAGE_QUEUE MessageQueue, PTIMER_ENTRY NewTimer)
+{
+  PLIST_ENTRY Current;
+
+  Current = MessageQueue->TimerListHead.Flink;
+  while (Current != &MessageQueue->TimerListHead)
+    {
+      if (NewTimer->ExpiryTime.QuadPart <
+          CONTAINING_RECORD(Current, TIMER_ENTRY, ListEntry)->ExpiryTime.QuadPart)
+        {
+          break;
+        }
+      Current = Current->Flink;
+    }
+
+  InsertTailList(Current, &NewTimer->ListEntry);
+}
+
+/* Must have the message queue locked while calling this */
+static PTIMER_ENTRY FASTCALL
+RemoveTimer(PUSER_MESSAGE_QUEUE MessageQueue, HWND Wnd, UINT_PTR IDEvent, UINT Msg)
+{
+  PTIMER_ENTRY Timer;
+  PLIST_ENTRY EnumEntry;
+  
+  /* Remove timer if already in the queue */
+  EnumEntry = MessageQueue->TimerListHead.Flink;
+  while (EnumEntry != &MessageQueue->TimerListHead)
+    {
+      Timer = CONTAINING_RECORD(EnumEntry, TIMER_ENTRY, ListEntry);
+      EnumEntry = EnumEntry->Flink;
+      
+      if (Timer->Wnd == Wnd && 
+          Timer->IDEvent == IDEvent &&
+          Timer->Msg == Msg)
+        {
+          RemoveEntryList(&Timer->ListEntry);
+          return Timer;
+        }
+    }
+  
+  return NULL;
+}
+
+BOOLEAN FASTCALL
+MsqSetTimer(PUSER_MESSAGE_QUEUE MessageQueue, HWND Wnd,
+            UINT_PTR IDEvent, UINT Period, TIMERPROC TimerFunc,
+            UINT Msg)
+{
+  PTIMER_ENTRY Timer;
+  LARGE_INTEGER CurrentTime;
+
+  DPRINT("MsqSetTimer queue %p wnd %x id %p period %u timerproc %p msg %d\n",
+         MessageQueue, Wnd, IDEvent, Period, TimerFunc, Msg);
+
+  IntLockMessageQueue(MessageQueue);
+  Timer = RemoveTimer(MessageQueue, Wnd, IDEvent, Msg);
+  if (NULL == Timer)
+    {
+      Timer = ExAllocateFromPagedLookasideList(&TimerLookasideList);
+      if (NULL == Timer)
+        {
+          IntUnLockMessageQueue(MessageQueue);
+          DPRINT1("Failed to allocate timer entry\n");
+          return FALSE;
+        }
+      DPRINT("Allocated new timer entry %p\n", Timer);
+      Timer->Wnd = Wnd;
+      Timer->IDEvent = IDEvent;
+      Timer->Msg = Msg;
+    }
+  else
+    {
+      DPRINT("Updating existing timer entry %p\n", Timer);
+    }
+
+  KeQuerySystemTime(&CurrentTime);
+  Timer->ExpiryTime.QuadPart = CurrentTime.QuadPart +
+                               (ULONGLONG) Period * (ULONGLONG) 10000;
+  Timer->Period = Period;
+  Timer->TimerFunc = TimerFunc;
+  DPRINT("Insert timer now %I64d expiry %I64d\n", CurrentTime.QuadPart,
+         Timer->ExpiryTime.QuadPart);
+
+  InsertTimer(MessageQueue, Timer);  
+
+#ifndef NDEBUG
+  DumpTimerList(MessageQueue);
+#endif /* ! defined(NDEBUG) */
+
+  IntUnLockMessageQueue(MessageQueue);
+
+  return TRUE;
+}
+
+BOOLEAN FASTCALL
+MsqKillTimer(PUSER_MESSAGE_QUEUE MessageQueue, HWND Wnd,
+             UINT_PTR IDEvent, UINT Msg)
+{
+  PTIMER_ENTRY Timer;
+
+  DPRINT("MsqKillTimer queue %p wnd %x id %p msg %d\n",
+         MessageQueue, Wnd, IDEvent, Msg);
+
+  IntLockMessageQueue(MessageQueue);
+  Timer = RemoveTimer(MessageQueue, Wnd, IDEvent, Msg);
+
+  if (NULL == Timer)
+    {
+      DPRINT("Failed to remove timer from list, not found\n");
+    }
+  else
+    {
+      ExFreeToPagedLookasideList(&TimerLookasideList, Timer);
+    }
+
+#ifndef NDEBUG
+  DumpTimerList(MessageQueue);
+#endif /* ! defined(NDEBUG) */
+
+  IntUnLockMessageQueue(MessageQueue);
+
+  return NULL != Timer;
+}
+
+BOOLEAN FASTCALL
+MsqGetTimerMessage(PUSER_MESSAGE_QUEUE MessageQueue,
+                   HWND WndFilter, UINT MsgFilterMin, UINT MsgFilterMax,
+                   MSG *Msg, BOOLEAN Restart)
+{
+  PTIMER_ENTRY Timer;
+  LARGE_INTEGER CurrentTime;
+  PLIST_ENTRY EnumEntry;
+  BOOLEAN GotMessage;
+
+  DPRINT("MsqGetTimerMessage queue %p msg %p restart %s\n",
+         MessageQueue, Msg, Restart ? "TRUE" : "FALSE");
+
+  IntLockMessageQueue(MessageQueue);
+  KeQuerySystemTime(&CurrentTime);
+  DPRINT("Current time %I64d\n", CurrentTime.QuadPart);
+  EnumEntry = MessageQueue->TimerListHead.Flink;
+  GotMessage = FALSE;
+  while (EnumEntry != &MessageQueue->TimerListHead)
+    {
+      Timer = CONTAINING_RECORD(MessageQueue->TimerListHead.Flink,
+                                TIMER_ENTRY, ListEntry);
+      DPRINT("Checking timer %p wnd %x expiry %I64d\n", Timer, Timer->wnd,
+             Timer->ExpiryTime.QuadPart);
+      EnumEntry = EnumEntry->Flink;
+      if ((NULL == WndFilter || Timer->Wnd == WndFilter) &&
+	  ((MsgFilterMin == 0 && MsgFilterMax == 0) ||
+	   (MsgFilterMin <= Timer->Msg &&
+	    Timer->Msg <= MsgFilterMax)))
+        {
+          if (Timer->ExpiryTime.QuadPart <= CurrentTime.QuadPart)
+            {
+              DPRINT("Timer is expired\n");
+              GotMessage = TRUE;
+              break;
+            }
+          else
+            {
+              DPRINT("No need to check later timers\n");
+              break;
+            }
+        }
+      else
+        {
+          DPRINT("timer %p (wnd %x msg %d) failed filter wnd %x msgmin %d msgmax %d\n",
+                 Timer, Timer->Wnd, Timer->Msg, WndFilter, MsgFilterMin, MsgFilterMax);
+        }
+    }
+
+  if (! GotMessage)
+    {
+      DPRINT("No timer pending\n");
+      IntUnLockMessageQueue(MessageQueue);
+      return FALSE;
+    }
+
+  Msg->hwnd = Timer->Wnd;
+  Msg->message = Timer->Msg;
+  Msg->wParam = (WPARAM) Timer->IDEvent;
+  Msg->lParam = (LPARAM) Timer->TimerFunc;
+
+  if (Restart)
+    {
+      RemoveEntryList(&Timer->ListEntry);
+      Timer->ExpiryTime.QuadPart = CurrentTime.QuadPart +
+                                   (ULONGLONG) Timer->Period * (ULONGLONG) 10000;
+      DPRINT("Restarting timer %p expires %I64d\n", Timer, Timer->ExpiryTime.QuadPart);
+      InsertTimer(MessageQueue, Timer);
+
+#ifndef NDEBUG
+      DumpTimerList(MessageQueue);
+#endif /* ! defined(NDEBUG) */
+    }
+
+  IntUnLockMessageQueue(MessageQueue);
+
+  DPRINT("Created message wnd %x msg %d wParam %u lParam %u\n", Msg->hwnd, Msg->message,
+         Msg->wParam, Msg->lParam);
+
+  return TRUE;
+}
+
+VOID FASTCALL
+MsqRemoveTimersWindow(PUSER_MESSAGE_QUEUE MessageQueue, HWND Wnd)
+{
+  PTIMER_ENTRY Timer;
+  PLIST_ENTRY EnumEntry;
+
+  DPRINT("MsqRemoveTimersWindow queue %p wnd %x\n", MessageQueue, Wnd);
+
+  IntLockMessageQueue(MessageQueue);
+  EnumEntry = MessageQueue->TimerListHead.Flink;
+  while (EnumEntry != &MessageQueue->TimerListHead)
+    {
+      Timer = CONTAINING_RECORD(EnumEntry, TIMER_ENTRY, ListEntry);
+      EnumEntry = EnumEntry->Flink;
+      if (Timer->Wnd == Wnd)
+        {
+          DPRINT("Removing timer %p because its window is going away\n", Timer);
+          RemoveEntryList(&Timer->ListEntry);
+          ExFreeToPagedLookasideList(&TimerLookasideList, Timer);
+        }
+    }
+
+#ifndef NDEBUG
+  DumpTimerList(MessageQueue);
+#endif /* ! defined(NDEBUG) */
+
+  IntUnLockMessageQueue(MessageQueue);
+}
+
+BOOLEAN FASTCALL
+MsqGetFirstTimerExpiry(PUSER_MESSAGE_QUEUE MessageQueue,
+                       HWND WndFilter, UINT MsgFilterMin, UINT MsgFilterMax,
+                       PLARGE_INTEGER FirstTimerExpiry)
+{
+  PTIMER_ENTRY Timer;
+  PLIST_ENTRY EnumEntry;
+
+  DPRINT("MsqGetFirstTimerExpiry queue %p wndfilter %x msgfiltermin %d msgfiltermax %d expiry %p\n",
+         MessageQueue, WndFilter, MsgFilterMin, MsgFilterMax, FirstTimerExpiry);
+
+  IntLockMessageQueue(MessageQueue);
+  EnumEntry = MessageQueue->TimerListHead.Flink;
+  while (EnumEntry != &MessageQueue->TimerListHead)
+    {
+      Timer = CONTAINING_RECORD(MessageQueue->TimerListHead.Flink,
+                                TIMER_ENTRY, ListEntry);
+      EnumEntry = EnumEntry->Flink;
+      if ((NULL == WndFilter || Timer->Wnd == WndFilter) &&
+	  ((MsgFilterMin == 0 && MsgFilterMax == 0) ||
+	   (MsgFilterMin <= Timer->Msg &&
+	    Timer->Msg <= MsgFilterMax)))
+        {
+          *FirstTimerExpiry = Timer->ExpiryTime;
+          DPRINT("First timer expires %I64d\n", Timer->ExpiryTime);
+          IntUnLockMessageQueue(MessageQueue);
+          return TRUE;
+        }
+    }
+
+  IntUnLockMessageQueue(MessageQueue);
+
+  return FALSE;
 }
 
 /* EOF */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.258 2004/12/25 20:30:50 navaraf Exp $
+/* $Id: window.c,v 1.259 2004/12/29 19:55:01 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -268,7 +268,7 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
   
   ASSERT(Window);
 
-  RemoveTimersWindow(Window->Self);
+  MsqRemoveTimersWindow(ThreadData->MessageQueue, Window->Self);
   
   IntLockThreadWindows(Window->OwnerThread->Tcb.Win32Thread);
   if(Window->Status & WINDOWSTATUS_DESTROYING)

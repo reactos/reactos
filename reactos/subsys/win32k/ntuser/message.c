@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.78 2004/12/25 22:59:10 navaraf Exp $
+/* $Id: message.c,v 1.79 2004/12/29 19:55:01 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -690,7 +690,14 @@ IntPeekMessage(PUSER_MESSAGE Msg,
     return TRUE;
   }
   
-  /* FIXME - get WM_(SYS)TIMER messages */
+  /* Check for WM_(SYS)TIMER messages */
+  Present = MsqGetTimerMessage(ThreadQueue, Wnd, MsgFilterMin, MsgFilterMax,
+                               &Msg->Msg, RemoveMessages);
+  if (Present)
+  {
+    Msg->FreeLParam = FALSE;
+    goto MessageFound;
+  }
   
   if(Present)
   {
@@ -845,8 +852,8 @@ NtUserPeekMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
 
 static BOOL FASTCALL
 IntWaitMessage(HWND Wnd,
-                UINT MsgFilterMin,
-                UINT MsgFilterMax)
+               UINT MsgFilterMin,
+               UINT MsgFilterMax)
 {
   PUSER_MESSAGE_QUEUE ThreadQueue;
   NTSTATUS Status;
@@ -862,9 +869,9 @@ IntWaitMessage(HWND Wnd,
 	}
 
       /* Nothing found. Wait for new messages. */
-      Status = MsqWaitForNewMessages(ThreadQueue);
+      Status = MsqWaitForNewMessages(ThreadQueue, Wnd, MsgFilterMin, MsgFilterMax);
     }
-  while (STATUS_WAIT_0 <= Status && Status <= STATUS_WAIT_63);
+  while ((STATUS_WAIT_0 <= Status && Status <= STATUS_WAIT_63) || STATUS_TIMEOUT == Status);
 
   SetLastNtError(Status);
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.37 2004/12/25 22:59:10 navaraf Exp $
+/* $Id: timer.c,v 1.38 2004/12/29 19:55:01 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -32,446 +32,165 @@
 
 #include <w32k.h>
 
-#define NDEBUG
+#undef NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
 
-//windows 2000 has room for 32768 window-less timers
+/* Windows 2000 has room for 32768 window-less timers */
 #define NUM_WINDOW_LESS_TIMERS   1024
 
 static FAST_MUTEX     Mutex;
-static LIST_ENTRY     TimerListHead;
-static KTIMER         Timer;
 static RTL_BITMAP     WindowLessTimersBitMap;
 static PVOID          WindowLessTimersBitMapBuffer;
 static ULONG          HintIndex = 0;
-static HANDLE        MsgTimerThreadHandle;
-static CLIENT_ID     MsgTimerThreadId;
 
 
-#define IntLockTimerList() \
+#define IntLockWindowlessTimerBitmap() \
   ExAcquireFastMutex(&Mutex)
 
-#define IntUnLockTimerList() \
+#define IntUnlockWindowlessTimerBitmap() \
   ExReleaseFastMutex(&Mutex)
 
 /* FUNCTIONS *****************************************************************/
 
 
-//return true if the new timer became the first entry
-//must hold mutex while calling this
-BOOL FASTCALL
-IntInsertTimerAscendingOrder(PMSG_TIMER_ENTRY NewTimer)
-{
-  PLIST_ENTRY current;
-
-  current = TimerListHead.Flink;
-  while (current != &TimerListHead)
-  {
-    if (CONTAINING_RECORD(current, MSG_TIMER_ENTRY, ListEntry)->Timeout.QuadPart >=\
-        NewTimer->Timeout.QuadPart)
-    {
-      break;
-    }
-    current = current->Flink;
-  }
-
-  InsertTailList(current, &NewTimer->ListEntry);
-
-  return TimerListHead.Flink == &NewTimer->ListEntry;
-}
-
-
-//must hold mutex while calling this
-PMSG_TIMER_ENTRY FASTCALL
-IntRemoveTimer(HWND hWnd, UINT_PTR IDEvent, HANDLE ThreadID, BOOL SysTimer)
-{
-  PMSG_TIMER_ENTRY MsgTimer;
-  PLIST_ENTRY EnumEntry;
-  
-  //remove timer if already in the queue
-  EnumEntry = TimerListHead.Flink;
-  while (EnumEntry != &TimerListHead)
-  {
-    MsgTimer = CONTAINING_RECORD(EnumEntry, MSG_TIMER_ENTRY, ListEntry);
-    EnumEntry = EnumEntry->Flink;
-      
-    if (MsgTimer->Msg.hwnd == hWnd && 
-        MsgTimer->Msg.wParam == (WPARAM)IDEvent &&
-        MsgTimer->ThreadID == ThreadID &&
-        (MsgTimer->Msg.message == WM_SYSTIMER) == SysTimer)
-    {
-      RemoveEntryList(&MsgTimer->ListEntry);
-      return MsgTimer;
-    }
-  }
-  
-  return NULL;
-}
-
-
-/* 
- * NOTE: It doesn't kill the timer. It just removes them from the list.
- */
-VOID FASTCALL
-RemoveTimersThread(HANDLE ThreadID)
-{
-  PMSG_TIMER_ENTRY MsgTimer;
-  PLIST_ENTRY EnumEntry;
-  
-  IntLockTimerList();
-  
-  EnumEntry = TimerListHead.Flink;
-  while (EnumEntry != &TimerListHead)
-  {
-    MsgTimer = CONTAINING_RECORD(EnumEntry, MSG_TIMER_ENTRY, ListEntry);
-    EnumEntry = EnumEntry->Flink;
-    
-    if (MsgTimer->ThreadID == ThreadID)
-    {
-      if (MsgTimer->Msg.hwnd == NULL)
-      {
-        RtlClearBits(&WindowLessTimersBitMap, ((UINT_PTR)MsgTimer->Msg.wParam) - 1, 1);   
-      }
-      
-      RemoveEntryList(&MsgTimer->ListEntry);
-      ExFreePool(MsgTimer);
-    }
-  }
-  
-  IntUnLockTimerList();
-}
-
-
-/* 
- * NOTE: It doesn't kill the timer. It just removes them from the list.
- */
-VOID FASTCALL
-RemoveTimersWindow(HWND Wnd)
-{
-  PMSG_TIMER_ENTRY MsgTimer;
-  PLIST_ENTRY EnumEntry;
-
-  IntLockTimerList();
-  
-  EnumEntry = TimerListHead.Flink;
-  while (EnumEntry != &TimerListHead)
-  {
-    MsgTimer = CONTAINING_RECORD(EnumEntry, MSG_TIMER_ENTRY, ListEntry);
-    EnumEntry = EnumEntry->Flink;
-    
-    if (MsgTimer->Msg.hwnd == Wnd)
-    {
-      RemoveEntryList(&MsgTimer->ListEntry);
-      ExFreePool(MsgTimer);
-    }
-  }
-  
-  IntUnLockTimerList();
-}
-
-
 UINT_PTR FASTCALL
-IntSetTimer(HWND hWnd, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc, BOOL SystemTimer)
+IntSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL SystemTimer)
 {
-  PMSG_TIMER_ENTRY MsgTimer = NULL;
-  PMSG_TIMER_ENTRY NewTimer;
-  LARGE_INTEGER CurrentTime;
   PWINDOW_OBJECT WindowObject;
-  HANDLE ThreadID;
   UINT_PTR Ret = 0;
- 
-  ThreadID = PsGetCurrentThreadId();
-  KeQuerySystemTime(&CurrentTime);
-  IntLockTimerList();
+
+  DPRINT("IntSetTimer wnd %x id %p elapse %u timerproc %p systemtimer %s\n",
+         Wnd, IDEvent, Elapse, TimerFunc, SystemTimer ? "TRUE" : "FALSE");
   
-  if((hWnd == NULL) && !SystemTimer)
-  {
-    /* find a free, window-less timer id */
-    nIDEvent = RtlFindClearBitsAndSet(&WindowLessTimersBitMap, 1, HintIndex);
-    
-    if(nIDEvent == (UINT_PTR) -1)
+  if ((Wnd == NULL) && ! SystemTimer)
     {
-      IntUnLockTimerList();
-      return 0;
-    }
+      DPRINT("Window-less timer\n");
+      /* find a free, window-less timer id */
+      IntLockWindowlessTimerBitmap();
+      IDEvent = RtlFindClearBitsAndSet(&WindowLessTimersBitMap, 1, HintIndex);
     
-    HintIndex = ++nIDEvent;
-  }
+      if (IDEvent == (UINT_PTR) -1)
+        {
+          IntUnlockWindowlessTimerBitmap();
+          DPRINT1("Unable to find a free window-less timer id\n");
+          SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+          return 0;
+        }
+    
+      HintIndex = ++IDEvent;
+      IntUnlockWindowlessTimerBitmap();
+      Ret = IDEvent;
+    }
   else
-  {
-    WindowObject = IntGetWindowObject(hWnd);
-    if(!WindowObject)
     {
-      IntUnLockTimerList();
-      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-      return 0;
-    }
+      WindowObject = IntGetWindowObject(Wnd);
+      if (! WindowObject)
+        {
+          DPRINT1("Invalid window handle\n");
+          SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+          return 0;
+        }
     
-    if(WindowObject->OwnerThread != PsGetCurrentThread())
-    {
-      IntUnLockTimerList();
+      if (WindowObject->OwnerThread != PsGetCurrentThread())
+        {
+          IntReleaseWindowObject(WindowObject);
+          DPRINT1("Trying to set timer for window in another thread (shatter attack?)\n");
+          SetLastWin32Error(ERROR_ACCESS_DENIED);
+          return 0;
+        }
       IntReleaseWindowObject(WindowObject);
-      SetLastWin32Error(ERROR_ACCESS_DENIED);
-      return 0;
+      Ret = 1;
     }
-    IntReleaseWindowObject(WindowObject);
-    
-    /* remove timer if already in the queue */
-    MsgTimer = IntRemoveTimer(hWnd, nIDEvent, ThreadID, SystemTimer); 
-  }
   
   #if 1
   
   /* Win NT/2k/XP */
-  if(uElapse > 0x7fffffff)
-    uElapse = 1;
+  if (Elapse > 0x7fffffff)
+    {
+      DPRINT("Adjusting uElapse\n");
+      Elapse = 1;
+    }
   
   #else
   
   /* Win Server 2003 */
-  if(uElapse > 0x7fffffff)
-    uElapse = 0x7fffffff;
+  if (Elapse > 0x7fffffff)
+    {
+      DPRINT("Adjusting uElapse\n");
+      Elapse = 0x7fffffff;
+    }
   
   #endif
   
   /* Win 2k/XP */
-  if(uElapse < 10)
-    uElapse = 10;
-  
-  if(MsgTimer)
-  {
-    /* modify existing (removed) timer */
-    NewTimer = MsgTimer;
-    
-    NewTimer->Period = uElapse;
-    NewTimer->Timeout.QuadPart = CurrentTime.QuadPart + (uElapse * 10000);
-    NewTimer->Msg.lParam = (LPARAM)lpTimerFunc;
-  }
-  else
-  {
-    /* FIXME: use lookaside? */
-    NewTimer = ExAllocatePoolWithTag(PagedPool, sizeof(MSG_TIMER_ENTRY), TAG_TIMER);
-    if(!NewTimer)
+  if (Elapse < 10)
     {
-      IntUnLockTimerList();
-      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      DPRINT("Adjusting uElapse\n");
+      Elapse = 10;
+    }
+
+  if (! MsqSetTimer(PsGetWin32Thread()->MessageQueue, Wnd,
+                    IDEvent, Elapse, TimerFunc,
+                    SystemTimer ? WM_SYSTIMER : WM_TIMER))
+    {
+      DPRINT1("Failed to set timer in message queue\n");
+      SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
       return 0;
     }
-    
-    NewTimer->Msg.hwnd = hWnd;
-    NewTimer->Msg.message = (SystemTimer ? WM_SYSTIMER : WM_TIMER);
-    NewTimer->Msg.wParam = (WPARAM)nIDEvent;
-    NewTimer->Msg.lParam = (LPARAM)lpTimerFunc;
-    NewTimer->Period = uElapse;
-    NewTimer->Timeout.QuadPart = CurrentTime.QuadPart + (uElapse * 10000);
-    NewTimer->ThreadID = ThreadID;
-  }
-  
-  Ret = nIDEvent; // FIXME - return lpTimerProc if it's not a system timer
-  
-  if(IntInsertTimerAscendingOrder(NewTimer))
-  {
-     /* new timer is first in queue and expires first */
-     KeSetTimer(&Timer, NewTimer->Timeout, NULL);
-  }
 
-  IntUnLockTimerList();
 
   return Ret;
 }
 
 
 BOOL FASTCALL
-IntKillTimer(HWND hWnd, UINT_PTR uIDEvent, BOOL SystemTimer)
+IntKillTimer(HWND Wnd, UINT_PTR IDEvent, BOOL SystemTimer)
 {
-  PMSG_TIMER_ENTRY MsgTimer;
-  PWINDOW_OBJECT WindowObject;
-  
-  IntLockTimerList();
+  DPRINT("IntKillTimer wnd %x id %p systemtimer %s\n",
+         Wnd, IDEvent, SystemTimer ? "TRUE" : "FALSE");
+
+  if (! MsqKillTimer(PsGetWin32Thread()->MessageQueue, Wnd,
+                     IDEvent, SystemTimer ? WM_SYSTIMER : WM_TIMER))
+    {
+      DPRINT1("Unable to locate timer in message queue\n");
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return FALSE;
+    }
   
   /* window-less timer? */
-  if((hWnd == NULL) && !SystemTimer)
-  {
-    if(!RtlAreBitsSet(&WindowLessTimersBitMap, uIDEvent - 1, 1))
+  if ((Wnd == NULL) && ! SystemTimer)
     {
-      IntUnLockTimerList();
-      /* bit was not set */
-      /* FIXME: set the last error */
-      return FALSE;
+      /* Release the id */
+      IntLockWindowlessTimerBitmap();
+
+      ASSERT(RtlAreBitsSet(&WindowLessTimersBitMap, IDEvent - 1, 1));
+      RtlClearBits(&WindowLessTimersBitMap, IDEvent - 1, 1);
+
+      IntUnlockWindowlessTimerBitmap();
     }
-    RtlClearBits(&WindowLessTimersBitMap, uIDEvent - 1, 1);
-  }
-  else
-  {
-    WindowObject = IntGetWindowObject(hWnd);
-    if(!WindowObject)
-    {
-      IntUnLockTimerList(); 
-      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-      return FALSE;
-    }
-    if(WindowObject->OwnerThread != PsGetCurrentThread())
-    {
-      IntUnLockTimerList();
-      IntReleaseWindowObject(WindowObject);
-      SetLastWin32Error(ERROR_ACCESS_DENIED);
-      return FALSE;
-    }
-    IntReleaseWindowObject(WindowObject);
-  }
-  
-  MsgTimer = IntRemoveTimer(hWnd, uIDEvent, PsGetCurrentThreadId(), SystemTimer);
-  
-  IntUnLockTimerList();
-  
-  if(MsgTimer == NULL)
-  {
-    /* didn't find timer */
-    /* FIXME: set the last error */
-    return FALSE;
-  }
-  
-  /* FIXME: use lookaside? */
-  ExFreePool(MsgTimer);
   
   return TRUE;
-}
-
-static VOID STDCALL
-TimerThreadMain(PVOID StartContext)
-{
-  NTSTATUS Status;
-  LARGE_INTEGER CurrentTime;
-  PLIST_ENTRY EnumEntry;
-  PMSG_TIMER_ENTRY MsgTimer;
-  PETHREAD Thread;
-  PETHREAD *ThreadsToDereference;
-  ULONG ThreadsToDereferenceCount, ThreadsToDereferencePos, i;
-  
-  for(;;)
-  {
-    Status = KeWaitForSingleObject(&Timer,
-                                   Executive,
-                                   KernelMode,
-                                   FALSE,
-                                   NULL);
-    if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("Error waiting in TimerThreadMain\n");
-      KEBUGCHECK(0);
-    }
-    
-    ThreadsToDereferenceCount = ThreadsToDereferencePos = 0;
-    
-    IntLockTimerList();
-    
-    KeQuerySystemTime(&CurrentTime);
-
-    for (EnumEntry = TimerListHead.Flink;
-         EnumEntry != &TimerListHead;
-         EnumEntry = EnumEntry->Flink)
-    {
-       MsgTimer = CONTAINING_RECORD(EnumEntry, MSG_TIMER_ENTRY, ListEntry);
-       if (CurrentTime.QuadPart >= MsgTimer->Timeout.QuadPart)
-          ++ThreadsToDereferenceCount;
-       else
-          break;
-    }
-
-
-    ThreadsToDereference = (PETHREAD *)ExAllocatePoolWithTag(
-       NonPagedPool, ThreadsToDereferenceCount * sizeof(PETHREAD), TAG_TIMERTD);
-
-    EnumEntry = TimerListHead.Flink;
-    while (EnumEntry != &TimerListHead)
-    {
-      MsgTimer = CONTAINING_RECORD(EnumEntry, MSG_TIMER_ENTRY, ListEntry);
-      
-      if (CurrentTime.QuadPart >= MsgTimer->Timeout.QuadPart)
-      {
-        EnumEntry = EnumEntry->Flink;
-
-        RemoveEntryList(&MsgTimer->ListEntry);
-        
-        /* 
-         * FIXME: 1) Find a faster way of getting the thread message queue? (lookup by id is slow)
-         */
-        
-        if (!NT_SUCCESS(PsLookupThreadByThreadId(MsgTimer->ThreadID, &Thread)))
-        {
-          ExFreePool(MsgTimer);
-          continue;
-        }
-        
-        MsqPostMessage(Thread->Tcb.Win32Thread->MessageQueue, &MsgTimer->Msg,
-                       FALSE, QS_TIMER);
-        
-        ThreadsToDereference[ThreadsToDereferencePos] = Thread;
-        ++ThreadsToDereferencePos;
-        
-        //set up next periodic timeout
-        //FIXME: is this calculation really necesary (and correct)? -Gunnar
-        do
-          {
-            MsgTimer->Timeout.QuadPart += (MsgTimer->Period * 10000);
-          }
-        while (MsgTimer->Timeout.QuadPart <= CurrentTime.QuadPart);
-        IntInsertTimerAscendingOrder(MsgTimer);
-      }
-      else
-      {
-        break;
-      }
-
-    }
-    
-    
-    //set up next timeout from first entry (if any)
-    if (!IsListEmpty(&TimerListHead))
-    {
-      MsgTimer = CONTAINING_RECORD( TimerListHead.Flink, MSG_TIMER_ENTRY, ListEntry);
-      KeSetTimer(&Timer, MsgTimer->Timeout, NULL);
-    }
-    
-    IntUnLockTimerList();
-
-    for (i = 0; i < ThreadsToDereferencePos; i++)
-       ObDereferenceObject(ThreadsToDereference[i]);
-
-     ExFreePool(ThreadsToDereference);
-  }
 }
 
 NTSTATUS FASTCALL
 InitTimerImpl(VOID)
 {
-  NTSTATUS Status;
   ULONG BitmapBytes;
   
-  BitmapBytes = ROUND_UP(NUM_WINDOW_LESS_TIMERS, sizeof(ULONG) * 8) / 8;
-  
-  InitializeListHead(&TimerListHead);
-  KeInitializeTimerEx(&Timer, SynchronizationTimer);
   ExInitializeFastMutex(&Mutex);
   
+  BitmapBytes = ROUND_UP(NUM_WINDOW_LESS_TIMERS, sizeof(ULONG) * 8) / 8;
   WindowLessTimersBitMapBuffer = ExAllocatePoolWithTag(PagedPool, BitmapBytes, TAG_TIMERBMP);
   RtlInitializeBitMap(&WindowLessTimersBitMap,
                       WindowLessTimersBitMapBuffer,
                       BitmapBytes * 8);
   
-  //yes we need this, since ExAllocatePool isn't supposed to zero out allocated memory
+  /* yes we need this, since ExAllocatePool isn't supposed to zero out allocated memory */
   RtlClearAllBits(&WindowLessTimersBitMap); 
-  
-  Status = PsCreateSystemThread(&MsgTimerThreadHandle,
-                                THREAD_ALL_ACCESS,
-                                NULL,
-                                NULL,
-                                &MsgTimerThreadId,
-                                TimerThreadMain,
-                                NULL);
-  return Status;
+
+  return STATUS_SUCCESS;
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: caret.c,v 1.16 2004/12/25 22:59:10 navaraf Exp $
+/* $Id: caret.c,v 1.17 2004/12/29 19:55:01 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -240,7 +240,7 @@ NtUserCreateCaret(
     return FALSE;
   }
   
-  IntRemoveTimer(hWnd, IDCARETTIMER, PsGetCurrentThreadId(), TRUE);
+  IntKillTimer(hWnd, IDCARETTIMER, TRUE);
   
   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
   
@@ -325,7 +325,7 @@ NtUserHideCaret(
   
   if(ThreadQueue->CaretInfo->Visible)
   {
-    IntRemoveTimer(hWnd, IDCARETTIMER, PsGetCurrentThreadId(), TRUE);
+    IntKillTimer(hWnd, IDCARETTIMER, TRUE);
     
     IntHideCaret(ThreadQueue->CaretInfo);
     ThreadQueue->CaretInfo->Visible = 0;
