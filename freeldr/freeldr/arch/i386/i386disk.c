@@ -284,7 +284,7 @@ BOOL DiskResetController(U32 DriveNumber)
 	// AH = status
 	// CF clear if successful
 	// CF set on error
-	RegsIn.b.ah = 0x02;
+	RegsIn.b.ah = 0x00;
 	RegsIn.b.dl = DriveNumber;
 
 	// Reset the disk controller

@@ -139,7 +139,32 @@ typedef struct _CM_SERIAL_DEVICE_DATA
   U16 Version;
   U16 Revision;
   U32 BaudClock;
-} CM_SERIAL_DEVICE_DATA, *PCM_SERIAL_DEVICE_DATA;
+} __attribute__((packed)) CM_SERIAL_DEVICE_DATA, *PCM_SERIAL_DEVICE_DATA;
+
+
+typedef struct _CM_FLOPPY_DEVICE_DATA
+{
+  U16 Version;
+  U16 Revision;
+  CHAR Size[8];
+  U32 MaxDensity;
+  U32 MountDensity;
+
+  /* Version 2.0 data */
+  U8 StepRateHeadUnloadTime;
+  U8 HeadLoadTime;
+  U8 MotorOffTime;
+  U8 SectorLengthCode;
+  U8 SectorPerTrack;
+  U8 ReadWriteGapLength;
+  U8 DataTransferLength;
+  U8 FormatGapLength;
+  U8 FormatFillCharacter;
+  U8 HeadSettleTime;
+  U8 MotorSettleTime;
+  U8 MaximumTrackValue;
+  U8 DataTransferRate;
+} __attribute__((packed)) CM_FLOPPY_DEVICE_DATA, *PCM_FLOPPY_DEVICE_DATA;
 
 
 static char Hex[] = "0123456789ABCDEF";
@@ -700,6 +725,248 @@ DetectBiosDisks(HKEY SystemKey,
 }
 
 
+static U32
+GetFloppyCount(VOID)
+{
+  U8 Data;
+
+  WRITE_PORT_UCHAR((PUCHAR)0x70, 0x10);
+  Data = READ_PORT_UCHAR((PUCHAR)0x71);
+
+  return ((Data & 0xF0) ? 1 : 0) + ((Data & 0x0F) ? 1 : 0);
+}
+
+
+static U8
+GetFloppyType(U8 DriveNumber)
+{
+  U8 Data;
+
+  WRITE_PORT_UCHAR((PUCHAR)0x70, 0x10);
+  Data = READ_PORT_UCHAR((PUCHAR)0x71);
+
+  if (DriveNumber == 0)
+    return Data >> 4;
+  else if (DriveNumber == 1)
+    return Data & 0x0F;
+
+  return 0;
+}
+
+
+static PVOID
+GetInt1eTable(VOID)
+{
+  PU16 SegPtr = (PU16)0x7A;
+  PU16 OfsPtr = (PU16)0x78;
+
+  return (PVOID)(((U32)(*SegPtr)) << 4) + (U32)(*OfsPtr);
+}
+
+
+static VOID
+DetectBiosFloppyPeripheral(HKEY ControllerKey)
+{
+  PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
+  PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
+  PCM_FLOPPY_DEVICE_DATA FloppyData;
+  char KeyName[32];
+  char Identifier[20];
+  HKEY PeripheralKey;
+  U32 Size;
+  S32 Error;
+  U32 FloppyNumber;
+  U8 FloppyType;
+  U32 MaxDensity[6] = {0, 360, 1200, 720, 1440, 2880};
+  PU8 Ptr;
+
+  for (FloppyNumber = 0; FloppyNumber < 2; FloppyNumber++)
+  {
+    FloppyType = GetFloppyType(FloppyNumber);
+
+    if ((FloppyType > 5) || (FloppyType == 0))
+      continue;
+
+    DiskResetController(FloppyNumber);
+
+    Ptr = GetInt1eTable();
+
+    sprintf(KeyName, "FloppyDiskPeripheral\\%u", FloppyNumber);
+
+    Error = RegCreateKey(ControllerKey,
+			 "FloppyDiskPeripheral\\0",
+			 &PeripheralKey);
+    if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_HWDETECT, "Failed to create peripheral key\n"));
+      return;
+    }
+
+    DbgPrint((DPRINT_HWDETECT, "Created key: %s\n", KeyName));
+
+    /* Set 'ComponentInformation' value */
+    SetComponentInformation(PeripheralKey,
+			    0x0,
+			    FloppyNumber,
+			    0xFFFFFFFF);
+
+    Size = sizeof(CM_FULL_RESOURCE_DESCRIPTOR) +
+	   sizeof(CM_FLOPPY_DEVICE_DATA);
+    FullResourceDescriptor = MmAllocateMemory(Size);
+    if (FullResourceDescriptor == NULL)
+    {
+      DbgPrint((DPRINT_HWDETECT,
+		"Failed to allocate resource descriptor\n"));
+      return;
+    }
+
+    memset(FullResourceDescriptor, 0, Size);
+    FullResourceDescriptor->InterfaceType = Isa;
+    FullResourceDescriptor->BusNumber = 0;
+    FullResourceDescriptor->PartialResourceList.Count = 1;
+
+    PartialDescriptor = &FullResourceDescriptor->PartialResourceList.PartialDescriptors[0];
+    PartialDescriptor->Type = CmResourceTypeDeviceSpecific;
+    PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
+    PartialDescriptor->u.DeviceSpecificData.DataSize = sizeof(CM_FLOPPY_DEVICE_DATA);
+
+    FloppyData = ((PVOID)FullResourceDescriptor) + sizeof(CM_FULL_RESOURCE_DESCRIPTOR);
+    FloppyData->Version = 2;
+    FloppyData->Revision = 0;
+    FloppyData->MaxDensity = MaxDensity[FloppyType];
+    FloppyData->MountDensity = 0;
+    RtlCopyMemory(&FloppyData->StepRateHeadUnloadTime,
+                  Ptr,
+                  11);
+    FloppyData->MaximumTrackValue = (FloppyType == 1) ? 39 : 79;
+    FloppyData->DataTransferRate = 0;
+
+    /* Set 'Configuration Data' value */
+    Error = RegSetValue(PeripheralKey,
+			"Configuration Data",
+			REG_FULL_RESOURCE_DESCRIPTOR,
+			(PU8) FullResourceDescriptor,
+			Size);
+    MmFreeMemory(FullResourceDescriptor);
+    if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_HWDETECT,
+		"RegSetValue(Configuration Data) failed (Error %u)\n",
+		(int)Error));
+      return;
+    }
+
+    /* Set 'Identifier' value */
+    sprintf(Identifier, "FLOPPY%u", FloppyNumber + 1);
+    Error = RegSetValue(PeripheralKey,
+			"Identifier",
+			REG_SZ,
+			(PU8)Identifier,
+			strlen(Identifier) + 1);
+    if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_HWDETECT,
+		"RegSetValue() failed (Error %u)\n",
+		(int)Error));
+    }
+  }
+}
+
+
+static VOID
+DetectBiosFloppyController(HKEY SystemKey,
+			   HKEY BusKey)
+{
+  PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
+  PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
+  HKEY ControllerKey;
+  U32 Size;
+  S32 Error;
+  U32 FloppyCount;
+
+  FloppyCount = GetFloppyCount();
+  printf ("Floppy count: %u\n", FloppyCount);
+
+  if (FloppyCount == 0)
+    return;
+
+  Error = RegCreateKey(BusKey,
+		       "DiskController\\0",
+		       &ControllerKey);
+  if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_HWDETECT, "Failed to create controller key\n"));
+      return;
+    }
+
+  DbgPrint((DPRINT_HWDETECT, "Created key: DiskController\\0\n"));
+
+  /* Set 'ComponentInformation' value */
+  SetComponentInformation(ControllerKey,
+			  0x64,
+			  0,
+			  0xFFFFFFFF);
+
+  Size = sizeof(CM_FULL_RESOURCE_DESCRIPTOR) +
+	 2 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+  FullResourceDescriptor = MmAllocateMemory(Size);
+  if (FullResourceDescriptor == NULL)
+    {
+      DbgPrint((DPRINT_HWDETECT,
+		"Failed to allocate resource descriptor\n"));
+      return;
+    }
+  memset(FullResourceDescriptor, 0, Size);
+
+  /* Initialize resource descriptor */
+  FullResourceDescriptor->InterfaceType = Isa;
+  FullResourceDescriptor->BusNumber = 0;
+  FullResourceDescriptor->PartialResourceList.Count = 3;
+
+  /* Set IO Port */
+  PartialDescriptor = &FullResourceDescriptor->PartialResourceList.PartialDescriptors[0];
+  PartialDescriptor->Type = CmResourceTypePort;
+  PartialDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+  PartialDescriptor->Flags = CM_RESOURCE_PORT_IO;
+  PartialDescriptor->u.Port.Start = (U64)0x03F0;
+  PartialDescriptor->u.Port.Length = 8;
+
+  /* Set Interrupt */
+  PartialDescriptor = &FullResourceDescriptor->PartialResourceList.PartialDescriptors[1];
+  PartialDescriptor->Type = CmResourceTypeInterrupt;
+  PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
+  PartialDescriptor->Flags = CM_RESOURCE_INTERRUPT_LATCHED;
+  PartialDescriptor->u.Interrupt.Level = 6;
+  PartialDescriptor->u.Interrupt.Vector = 6;
+  PartialDescriptor->u.Interrupt.Affinity = 0xFFFFFFFF;
+
+  /* Set DMA channel */
+  PartialDescriptor = &FullResourceDescriptor->PartialResourceList.PartialDescriptors[2];
+  PartialDescriptor->Type = CmResourceTypeDma;
+  PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
+  PartialDescriptor->Flags = 0;
+  PartialDescriptor->u.Dma.Channel = 2;
+  PartialDescriptor->u.Dma.Port = 0;
+
+  /* Set 'Configuration Data' value */
+  Error = RegSetValue(ControllerKey,
+		      "Configuration Data",
+		      REG_FULL_RESOURCE_DESCRIPTOR,
+		      (PU8) FullResourceDescriptor,
+		      Size);
+  MmFreeMemory(FullResourceDescriptor);
+  if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_HWDETECT,
+		"RegSetValue(Configuration Data) failed (Error %u)\n",
+		(int)Error));
+      return;
+    }
+
+  DetectBiosFloppyPeripheral(ControllerKey);
+}
+
+
 static VOID
 InitializeSerialPort(U32 Port,
 		     U32 LineControl)
@@ -722,7 +989,7 @@ DetectSerialMouse(U32 Port)
   U32 TimeOut = 200;
   U8 LineControl;
 
-  /* Shutdown mouse or something like that */ 
+  /* Shutdown mouse or something like that */
   LineControl = READ_PORT_UCHAR((PUCHAR)Port + 4);
   WRITE_PORT_UCHAR((PUCHAR)Port + 4, (LineControl & ~0x02) | 0x01);
   KeStallExecutionProcessor(100000);
@@ -1485,9 +1752,7 @@ DetectIsaBios(HKEY SystemKey, U32 *BusNumber)
   /* Detect ISA/BIOS devices */
   DetectBiosDisks(SystemKey, BusKey);
 
-#if 0
-  DetectBiosFloppyDisks(SystemKey, BusKey);
-#endif
+  DetectBiosFloppyController(SystemKey, BusKey);
 
   DetectSerialPorts(BusKey);
 
