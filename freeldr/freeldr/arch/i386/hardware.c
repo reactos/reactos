@@ -715,7 +715,7 @@ InitializeSerialPort(U32 Port,
 
 
 static U32
-DetectMicrosoftMouse(U32 Port)
+DetectSerialMouse(U32 Port)
 {
   CHAR Buffer[4];
   U32 i;
@@ -802,7 +802,7 @@ DetectMicrosoftMouse(U32 Port)
 
 
 static U32
-GetMousePnpId(U32 Port, char *Buffer)
+GetSerialMousePnpId(U32 Port, char *Buffer)
 {
   U32 TimeOut;
   U32 i = 0;
@@ -881,11 +881,11 @@ DetectSerialPointerPeripheral(HKEY ControllerKey,
   Identifier[0] = 0;
 
   InitializeSerialPort(Base, 2);
-  MouseType = DetectMicrosoftMouse(Base);
+  MouseType = DetectSerialMouse(Base);
 
   if (MouseType != MOUSE_TYPE_NONE)
     {
-      Length = GetMousePnpId(Base, Buffer);
+      Length = GetSerialMousePnpId(Base, Buffer);
       DbgPrint((DPRINT_HWDETECT,
 		"PnP ID length: %u\n",
 		Length));
@@ -1164,7 +1164,7 @@ DetectSerialPorts(HKEY BusKey)
 	  sprintf(Buffer,
 		  "COM%u",
 		  i + 1);
-	  Error = RegSetValue(BusKey,
+	  Error = RegSetValue(ControllerKey,
 			      "Identifier",
 			      REG_SZ,
 			      (PU8)Buffer,
