@@ -90,6 +90,7 @@
 #define ID_VIEW_STATUSBAR               503
 #define ID_VIEW_TOOL_BAR                508
 #define IDC_ROS_EXPLORER                1000
+#define ID_DESKTOP_VERSION              1003
 #define IDC_WWW                         1012
 #define IDC_TOPIC                       1017
 #define IDC_MAILS_FOUND                 1018
@@ -107,9 +108,9 @@
 #define ID_STOP                         40009
 #define ID_MINIMIZE_ALL                 40010
 #define ID_EXPLORE                      40011
-#define ID_SWITCH_DESKTOP_1             50000
 #define ID_TASKMGR                      40012
-#define	ID_BROWSE_UP                    40013
+#define ID_BROWSE_UP                    40013
+#define ID_SWITCH_DESKTOP_1             50000
 #define ID_WINDOW_NEW                   0xE130
 #define ID_EDIT_PROPERTIES              57656
 #define ID_FILE_EXIT                    0xE141
@@ -123,7 +124,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        165
 #define _APS_NEXT_COMMAND_VALUE         40014
-#define _APS_NEXT_CONTROL_VALUE         1003
+#define _APS_NEXT_CONTROL_VALUE         1004
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
