@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.5 2004/02/25 18:12:52 hbirr Exp $
+/* $Id: conio.c,v 1.6 2004/02/25 23:33:42 hbirr Exp $
  *
  * reactos/subsys/csrss/win32csr/conio.c
  *
@@ -130,6 +130,7 @@ CsrInitConsoleScreenBuffer(PCSRSS_CONSOLE Console,
     {
       return STATUS_INSUFFICIENT_RESOURCES;
     }
+  RtlInitializeCriticalSection(&Buffer->Header.Lock);
   ConioInitScreenBuffer(Console, Buffer);
   /* initialize buffer to be empty with default attributes */
   for (Buffer->CurrentY = 0 ; Buffer->CurrentY < Buffer->MaxY; Buffer->CurrentY++)
@@ -874,6 +875,7 @@ VOID STDCALL
 ConioDeleteScreenBuffer(Object_t *Object)
 {
   PCSRSS_SCREEN_BUFFER Buffer = (PCSRSS_SCREEN_BUFFER) Object;
+  RtlDeleteCriticalSection(&Buffer->Header.Lock);
   HeapFree(Win32CsrApiHeap, 0, Buffer->Buffer);
   HeapFree(Win32CsrApiHeap, 0, Buffer);
 }
