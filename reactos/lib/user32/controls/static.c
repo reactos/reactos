@@ -1,4 +1,4 @@
-/* $Id: static.c,v 1.7 2003/09/11 22:10:16 gvg Exp $
+/* $Id: static.c,v 1.8 2003/10/31 16:25:08 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -93,8 +93,27 @@ static HICON STATIC_SetIcon( HWND hwnd, HICON hicon, DWORD style )
     }
     return prevIcon;
 #else
-    OutputDebugStringA("STATIC_SetIcon not implemented\n");
-    return NULL;
+    HICON prevIcon;
+
+    if ((style & SS_TYPEMASK) != SS_ICON) return 0;
+    prevIcon = (HICON)SetWindowLongA( hwnd, HICON_GWL_OFFSET, (LONG)hicon );
+    if (hicon)
+    {
+        ICONINFO info;
+        SIZE bitmapSize;
+
+        if (!GetIconInfo(hicon, &info))
+        {
+            return 0;
+        }
+        if (!GetBitmapDimensionEx(info.hbmColor, &bitmapSize))
+        {
+            return 0;
+        }
+        SetWindowPos( hwnd, 0, 0, 0, bitmapSize.cx, bitmapSize.cy,
+                        SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER );
+    }
+    return prevIcon;
 #endif
 }
 
@@ -237,6 +256,17 @@ static LRESULT CALLBACK StaticWndProcW( HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 	lParam = (LPARAM)(((LPCREATESTRUCTW)lParam)->lpszName);
 	/* fall through */
     case WM_SETTEXT:
+        if ((LPWSTR)lParam != NULL && ((LPWSTR)lParam)[0] == '#')
+        {
+            ULONG resource = 0, i;
+            LPWSTR name = (LPWSTR)lParam;
+            for (i = 1; name[i] != 0; ++i)
+            {
+                resource *= 10;
+                resource += name[i] - '0';
+            }
+            name = (LPWSTR)resource;
+        }
 	switch (style) {
 	case SS_ICON:
 	{

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dialog.c,v 1.19 2003/09/20 19:52:23 gvg Exp $
+/* $Id: dialog.c,v 1.20 2003/10/31 16:25:08 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/dialog.c
@@ -84,6 +84,7 @@ typedef struct
     UINT       id;
     LPCWSTR    className;
     LPCWSTR    windowName;
+    BOOL       windowNameFree;
     LPCVOID    data;
 } DLG_CONTROL_INFO;
 
@@ -267,12 +268,15 @@ static const WORD *DIALOG_GetControl32( const WORD *p, DLG_CONTROL_INFO *info,
     
     if (GET_WORD(p) == 0xffff)  /* Is it an integer id? */
     {
-        info->windowName = (LPCWSTR)(UINT)GET_WORD(p + 1);
+        info->windowName = HeapAlloc( GetProcessHeap(), 0, 10 );
+        swprintf((LPWSTR)info->windowName, L"#%d", GET_WORD(p + 1));
+        info->windowNameFree = TRUE;
         p += 2;
     }
     else
     {
         info->windowName = (LPCWSTR)p;
+        info->windowNameFree = FALSE;
         p += wcslen( info->windowName ) + 1;
     }
     
@@ -353,6 +357,12 @@ static BOOL DIALOG_CreateControls32( HWND hwnd, LPCSTR template, const DLG_TEMPL
             if (HIWORD(class)) HeapFree( GetProcessHeap(), 0, class );
             if (HIWORD(caption)) HeapFree( GetProcessHeap(), 0, caption );
         }
+        
+        if (info.windowNameFree)
+        {
+            HeapFree( GetProcessHeap(), 0, (LPVOID)info.windowName );
+        }
+
         if (!hwndCtrl)
         {
             if (dlgTemplate->style & DS_NOFAILCREATE) continue;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: messagebox.c,v 1.20 2003/10/12 10:05:22 weiden Exp $
+/* $Id: messagebox.c,v 1.21 2003/10/31 16:25:08 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/messagebox.c
@@ -737,13 +737,13 @@ MessageBoxIndirectA(
 
     ret = MessageBoxTimeoutIndirectW(&msgboxW, (UINT)-1);
 
-    if (HIWORD(textW.Buffer))
+    if (HIWORD((UINT)lpMsgBoxParams->lpszText))
         RtlFreeUnicodeString(&textW);
 
-    if (HIWORD(captionW.Buffer))
+    if (HIWORD((UINT)lpMsgBoxParams->lpszCaption))
         RtlFreeUnicodeString(&captionW);
 
-    if (HIWORD(iconW.Buffer))
+    if (HIWORD((UINT)lpMsgBoxParams->lpszIcon))
         RtlFreeUnicodeString(&iconW);
 
     return ret;
