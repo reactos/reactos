@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.44 2004/01/26 12:46:16 weiden Exp $
+/* $Id: menu.c,v 1.45 2004/01/26 23:22:48 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -274,29 +274,6 @@ MenuInit(VOID)
 }
 
 
-ULONG
-MenuGetMenuBarHeight(HWND hWnd, ULONG MenuBarWidth, LONG OrgX, LONG OrgY)
-{
-  /*ULONG MenuId;
-  PPOPUP_MENU Menu;
-  RECT Rect;
-  HDC hDC;
-
-  MenuId = GetWindowLong(hWnd, GWL_ID);
-  Menu = MenuGetMenu((HMENU)MenuId);
-  if (Menu == NULL)
-    {
-      return(0);
-    }
-  hDC = GetDCEx(hWnd, 0, DCX_CACHE | DCX_WINDOW);
-  SelectObject(hDC, hMenuFont);
-  SetRect(&Rect, OrgX, OrgY, OrgX + MenuBarWidth, 
-	  OrgY + GetSystemMetrics(SM_CYMENU));
-  MenuMenuBarCalcSize(hDC, &Rect, Menu, hWnd);
-  ReleaseDC(hWnd, hDC);*/
-  return(GetSystemMetrics(SM_CYMENU));
-}
-
 static BOOL
 MeasureMenuItem(HWND hWnd, HMENU mnu, HDC hDC, MENUITEMINFOW *mii, RECT *mir, LPWSTR str)
 {
@@ -372,7 +349,7 @@ DrawMenuItem(HWND hWnd, HMENU mnu, HDC hDC, MENUITEMINFOW *mii, RECT *mir, LPWST
 UINT
 MenuDrawMenuBar(HDC hDC, LPRECT Rect, HWND hWnd, BOOL Draw)
 {
-  UINT height;
+  UINT bottom, line;
   HMENU mnu;
   HANDLE hHeap;
   PVOID Buf, hBuf;
@@ -381,26 +358,23 @@ MenuDrawMenuBar(HDC hDC, LPRECT Rect, HWND hWnd, BOOL Draw)
   SETMENUITEMRECT smir;
   RECT *omir, *mir = NULL;
   LPWSTR str;
-  
-  FillRect(hDC, Rect, GetSysColorBrush(COLOR_MENU));
 
-  height = Rect->bottom - Rect->top;
   mnu = GetMenu(hWnd); /* Fixme - pass menu handle as parameter */
   /* get menu item list size */
   BufSize = NtUserBuildMenuItemList(mnu, (VOID*)1, 0, 0);
   if(BufSize)
   {
-    /* FIXME cache menu bar items using NtUserDrawMenuBarTemp() 
-             instead of allocating and deallocating memory everytime */
-
     hHeap = GetProcessHeap();
     hBuf = HeapAlloc(hHeap, 0, BufSize);
     if(!hBuf)
-      return(Rect->bottom - Rect->top);
+      return 0;
     Buf = hBuf;
     /* copy menu items into buffer */
     Items = Items2 = NtUserBuildMenuItemList(mnu, Buf, BufSize, 0);
     
+    if(!Draw)
+    {
+    bottom = line = Rect->top;
     smir.fByPosition = TRUE;
     smir.uItem = 0;
     /* calculate menu item rectangles */
@@ -431,51 +405,74 @@ MenuDrawMenuBar(HDC hDC, LPRECT Rect, HWND hWnd, BOOL Draw)
         mir->top = Rect->top;
       }
       MeasureMenuItem(hWnd, mnu, hDC, mii, mir, str);
+      
+      if(mir->right > Rect->right)
+      {
+        mir->right -= (mir->left - Rect->left);
+        mir->left = Rect->left;
+        mir->top += line;
+        mir->bottom += line;
+        line = mir->bottom - mir->top;
+      }
+      
       smir.rcRect = *mir;
       NtUserSetMenuItemRect(mnu, &smir);
       
-      height = max(height, mir->top + mir->bottom);
+      bottom = max(bottom, mir->bottom);
+      line = max(line, mir->bottom - mir->top);
       /* DbgPrint("Measure menu item %ws: (%d, %d, %d, %d)\n", str, mir->left, mir->top, mir->right, mir->bottom); */
       Items--;
       smir.uItem++;
     }
-    height = max(height, GetSystemMetrics(SM_CYMENU));
-    
-    Buf = hBuf;
-    /* draw menu items */
-    while (Items2 > 0)
+    bottom = max(bottom, Rect->top + GetSystemMetrics(SM_CYMENU));
+    if(bottom - Rect->top > 0)
     {
-      mii = (LPMENUITEMINFOW)Buf;
-      Buf += sizeof(MENUITEMINFOW);
-      mir = (LPRECT)Buf;
-      Buf += sizeof(RECT);
-      if(mii->cch)
+      if(NtUserSetMenuBarHeight(mnu, bottom - Rect->top) && Draw)
       {
-        str = (LPWSTR)Buf;
-        Buf += (mii->cch + 1) * sizeof(WCHAR);
+        /* FIXME - update frame */
       }
-      else
-        str = NULL;
-      /* DbgPrint("Draw menu item %ws at (%d, %d, %d, %d)\n", str, mir->left, mir->top, mir->right, mir->bottom); */
-      DrawMenuItem(hWnd, mnu, hDC, mii, mir, str);
-      Items2--;
+    }
+    }
+    else
+    {
+      bottom = Rect->bottom;
+      FillRect(hDC, Rect, GetSysColorBrush(COLOR_MENU));
+      Buf = hBuf;
+      /* draw menu items */
+      while (Items2 > 0)
+      {
+        mii = (LPMENUITEMINFOW)Buf;
+        Buf += sizeof(MENUITEMINFOW);
+        mir = (LPRECT)Buf;
+        Buf += sizeof(RECT);
+        if(mii->cch)
+        {
+          str = (LPWSTR)Buf;
+          Buf += (mii->cch + 1) * sizeof(WCHAR);
+        }
+        else
+          str = NULL;
+        /* DbgPrint("Draw menu item %ws at (%d, %d, %d, %d)\n", str, mir->left, mir->top, mir->right, mir->bottom); */
+        DrawMenuItem(hWnd, mnu, hDC, mii, mir, str);
+        Items2--;
+      }
     }
     
     HeapFree(hHeap, 0, hBuf);
   }
 
-  return height;
+  return max(bottom - Rect->top, GetSystemMetrics(SM_CYMENU));
 }
 
 
 VOID
 MenuTrackMouseMenuBar(HWND hWnd, ULONG Ht, POINT Pt)
-{DbgPrint("MenuTrackMouseMenuBar at %i, %i\n", Pt.x, Pt.y);
+{
   int Item = NtUserMenuItemFromPoint(hWnd, GetMenu(hWnd), Pt.x, Pt.y);
   
   if(Item > -1)
   {
-  
+    /* FIXME */
   }
 }
 

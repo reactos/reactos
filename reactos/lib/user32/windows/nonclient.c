@@ -420,12 +420,13 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn)
    
    if(!(Style & WS_MINIMIZE))
    {
+     HMENU menu = GetMenu(hWnd);
      /* Draw menu bar */
-     if (UserHasMenu(hWnd, Style))
+     if (menu && !(Style & WS_CHILD))
      {
         TempRect = CurrentRect;
-        TempRect.bottom = TempRect.top + GetSystemMetrics(SM_CYMENU);
-        CurrentRect.top += MenuDrawMenuBar(hDC, &TempRect, hWnd, FALSE);
+        TempRect.bottom = TempRect.top + (UINT)NtUserSetMenuBarHeight(menu, 0);
+        CurrentRect.top += MenuDrawMenuBar(hDC, &TempRect, hWnd, TRUE);
      }
      
      if (ExStyle & WS_EX_CLIENTEDGE)
@@ -477,6 +478,7 @@ DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect)
    DWORD Style = GetClassLongW(hWnd, GCL_STYLE);
    DWORD ExStyle;
    SIZE WindowBorders;
+   RECT OrigRect = *Rect;
 
    if (CalcSizeStruct)
    {
@@ -496,6 +498,9 @@ DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect)
     
    if (!(Style & WS_MINIMIZE))
    {
+      ULONG menuheight;
+      HMENU menu = GetMenu(hWnd);
+      
       UserGetWindowBorders(Style, ExStyle, &WindowBorders, FALSE);
       InflateRect(Rect, -WindowBorders.cx, -WindowBorders.cy);
       if ((Style & WS_CAPTION) == WS_CAPTION)
@@ -506,8 +511,21 @@ DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect)
             Rect->top += GetSystemMetrics(SM_CYCAPTION);
       }
 
-      if (UserHasMenu(hWnd, Style))
-         Rect->top += MenuGetMenuBarHeight(hWnd, Rect->right - Rect->left, Rect->left, Rect->top);
+      if (menu && !(Style & WS_CHILD))
+      {
+         HDC hDC = GetWindowDC(hWnd);
+         if(hDC)
+         {
+           RECT CliRect = *Rect;
+           CliRect.bottom -= OrigRect.top;
+           CliRect.right -= OrigRect.left;
+           CliRect.left -= OrigRect.left;
+           CliRect.top -= OrigRect.top;
+           menuheight = (ULONG)MenuDrawMenuBar(hDC, &CliRect, hWnd, FALSE);
+           ReleaseDC(hWnd, hDC);
+           Rect->top += max(menuheight, GetSystemMetrics(SM_CYMENU));
+         }
+      }
 
       if (ExStyle & WS_EX_CLIENTEDGE)
       {

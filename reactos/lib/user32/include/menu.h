@@ -12,8 +12,6 @@ UINT
 MenuDrawMenuBar(HDC hDC, LPRECT Rect, HWND hWnd, BOOL Draw);
 BOOL
 MenuInit(VOID);
-ULONG
-MenuGetMenuBarHeight(HWND hWnd, ULONG MenuBarWidth, LONG OrgX, LONG OrgY);
 VOID
 MenuTrackMouseMenuBar(HWND hWnd, ULONG Ht, POINT Pt);
 VOID

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.42 2004/01/26 12:46:16 weiden Exp $
+/* $Id: menu.c,v 1.43 2004/01/26 23:22:48 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1042,16 +1042,45 @@ IntGetMenuDefaultItem(PMENU_OBJECT MenuObject, UINT fByPos, UINT gmdiFlags,
   return res;
 }
 
+VOID FASTCALL
+IntInitTracking(PWINDOW_OBJECT WindowObject, PMENU_OBJECT MenuObject, BOOL Popup,
+                UINT Flags)
+{
+  /* FIXME - hide caret */
+  
+  if(!(Flags & TPM_NONOTIFY))
+    IntSendMessage(WindowObject->Self, WM_SETCURSOR, (WPARAM)WindowObject->Self, HTCAPTION);
+  
+  /* FIXME - send WM_SETCURSOR message */
+  
+  if(!(Flags & TPM_NONOTIFY))
+    IntSendMessage(WindowObject->Self, WM_INITMENU, (WPARAM)MenuObject->Self, 0);
+}
+
+VOID FASTCALL
+IntExitTracking(PWINDOW_OBJECT WindowObject, PMENU_OBJECT MenuObject, BOOL Popup,
+                UINT Flags)
+{
+  if(!(Flags & TPM_NONOTIFY))
+    IntSendMessage(WindowObject->Self, WM_EXITMENULOOP, 0 /* FIXME */, 0);
+  
+  /* FIXME - Show caret again */
+}
+
+INT FASTCALL
+IntTrackMenu(PMENU_OBJECT MenuObject, PWINDOW_OBJECT WindowObject, INT x, INT y,
+             RECT lprect)
+{
+  return 0;
+}
 
 BOOL FASTCALL
 IntTrackPopupMenu(PMENU_OBJECT MenuObject, PWINDOW_OBJECT WindowObject,
                   UINT Flags, POINT *Pos, UINT MenuPos, RECT *ExcludeRect)
 {
-
-/* FIXME */
-DbgPrint("IntTrackPopupMenu: unimplemented\n");
-SetLastWin32Error(ERROR_CALL_NOT_IMPLEMENTED);
+  IntInitTracking(WindowObject, MenuObject, TRUE, Flags);
   
+  IntExitTracking(WindowObject, MenuObject, TRUE, Flags);
   return FALSE;
 }
 
