@@ -10,29 +10,47 @@
 
 #include <ddk/ntddk.h>
 
-DWORD STDCALL EngDeviceIoControl(
-  HANDLE  hDevice,
-  DWORD   dwIoControlCode,
-  LPVOID  lpInBuffer,
-  DWORD   nInBufferSize,
-  LPVOID  lpOutBuffer,
-  DWORD   nOutBufferSize,
-  DWORD *lpBytesReturned)
+#define NDEBUG
+#include <debug.h>
+
+DWORD STDCALL
+EngDeviceIoControl(HANDLE  hDevice,
+		   DWORD   dwIoControlCode,
+		   LPVOID  lpInBuffer,
+		   DWORD   nInBufferSize,
+		   LPVOID  lpOutBuffer,
+		   DWORD   nOutBufferSize,
+		   DWORD *lpBytesReturned)
 {
   PIRP Irp;
   NTSTATUS Status;
   KEVENT Event;
   IO_STATUS_BLOCK Iosb;
-  PDRIVER_OBJECT DriverObject;
+  PFILE_OBJECT FileObject;
 
-  DriverObject = hDevice;
+  DPRINT("EngDeviceIoControl() called\n");
 
   KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
 
-  Irp = IoBuildDeviceIoControlRequest(dwIoControlCode, DriverObject->DeviceObject, lpInBuffer, nInBufferSize,
-                                      lpOutBuffer, nOutBufferSize, FALSE, &Event, &Iosb);
+  Status = ObReferenceObjectByHandle(hDevice,
+				     FILE_READ_DATA | FILE_WRITE_DATA,
+				     IoFileObjectType,
+				     KernelMode,
+				     (PVOID *)&FileObject,
+				     NULL);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
 
-  Status = IoCallDriver(DriverObject->DeviceObject, Irp);
+  Irp = IoBuildDeviceIoControlRequest(dwIoControlCode,
+				      FileObject->DeviceObject,
+				      lpInBuffer,
+				      nInBufferSize,
+				      lpOutBuffer,
+				      nOutBufferSize, FALSE, &Event, &Iosb);
+
+  Status = IoCallDriver(FileObject->DeviceObject, Irp);
 
   if (Status == STATUS_PENDING)
   {
