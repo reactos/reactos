@@ -18,6 +18,6 @@ int _ismbclower( unsigned int c )
 		if ( c >= 0x829A && c<= 0x829A )
 			return 1;
 	}
-	else
-		return isupper(c);
+
+	return islower(c);
 }

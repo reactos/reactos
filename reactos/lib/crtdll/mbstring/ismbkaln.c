@@ -8,6 +8,7 @@
  *              12/04/99: Created
  */
 #include <crtdll/mbctype.h>
+#include <crtdll/ctype.h>
 
 int _ismbbkalnum( unsigned int c )
 {

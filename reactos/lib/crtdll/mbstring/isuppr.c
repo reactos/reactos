@@ -18,6 +18,6 @@ int _ismbcupper( unsigned int c )
 		if ( c >= 0x8260 && c<= 0x8279 )
 			return 1;
 	}
-	else
-		return isupper(c);
+
+	return isupper(c);
 }

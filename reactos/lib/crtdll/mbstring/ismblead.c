@@ -13,6 +13,7 @@
 #include <crtdll/stdlib.h>
 #include <crtdll/mbctype.h>
 
+size_t _mbclen2(const unsigned int s);
 
 char _jctype[257] = {
 /*-1*/  ___,

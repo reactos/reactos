@@ -11,6 +11,8 @@
 #include <crtdll/mbstring.h>
 #include <crtdll/mbctype.h>
 
+size_t _mbclen2(const unsigned int s);
+
 //  iskanji2()   : (0x40 <= c <= 0x7E 0x80  <=  c <= 0xFC) 
 
 int _ismbbtrail(unsigned int c)

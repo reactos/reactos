@@ -10,5 +10,5 @@ unsigned char * _mbsspnp(const unsigned char *s1, const unsigned char *s2)
   for (spanp = s2; (sc = *spanp++) != 0;)
     if (sc == c)
       goto cont;
-  return p;
+  return (unsigned char *)p;
 }

@@ -1,5 +1,8 @@
 #include <crtdll/mbstring.h>
 
+int _ismbbalpha(unsigned char c);
+int _ismbbalnum(unsigned char c);
+
 int _ismbcalnum( unsigned int c )
 {
 	if ((c & 0xFF00) != 0) {
@@ -11,7 +14,7 @@ int _ismbcalnum( unsigned int c )
 
 	return 0;
 }
-  
+
 int _ismbcalpha( unsigned int c )
 {
 	if ((c & 0xFF00) != 0) {
