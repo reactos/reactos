@@ -81,6 +81,7 @@ subsys\system\autochk\autochk.exe       1
 subsys\system\cmd\cmd.exe               1
 subsys\system\explorer\explorer.exe     4
 subsys\system\format\format.exe         1
+subsys\system\regedit\regedit.exe       4
 subsys\system\services\services.exe     1
 subsys\system\setup\setup.exe           1
 subsys\system\userinit\userinit.exe     1
