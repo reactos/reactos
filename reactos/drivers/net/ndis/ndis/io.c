@@ -11,6 +11,7 @@
  *   3  Oct 2003 Vizzini - Formatting and minor bugfixes
  */
 
+#include <roscfg.h>
 #include "ndissys.h"
 
 
@@ -313,7 +314,6 @@ NdisMAllocateMapRegisters(
 {
   DEVICE_DESCRIPTION Description;
   PDMA_ADAPTER       AdapterObject = 0;
-  UINT               MapRegistersRequired = 0;
   UINT               MapRegistersPerBaseRegister = 0;
   ULONG              AvailableMapRegisters;
   NTSTATUS           NtStatus;
@@ -352,14 +352,7 @@ NdisMAllocateMapRegisters(
 
   /* unhandled corner case: {1,2}-byte max buffer size */
   ASSERT(MaximumBufferSize > 2);
-  MapRegistersPerBaseRegister = ((MaximumBufferSize-2) / PAGE_SIZE) + 2;
-  MapRegistersRequired = BaseMapRegistersNeeded * MapRegistersPerBaseRegister;
-
-  if(MapRegistersRequired > 64)
-    {
-      NDIS_DbgPrint(MID_TRACE, ("Request for too many map registers: %d\n", MapRegistersRequired));
-      return NDIS_STATUS_RESOURCES;
-    }
+  MapRegistersPerBaseRegister = ((MaximumBufferSize-2) / (2*PAGE_SIZE)) + 2;
 
   Description.Version = DEVICE_DESCRIPTION_VERSION;
   Description.Master = TRUE;                         /* implied by calling this function */
@@ -393,7 +386,6 @@ NdisMAllocateMapRegisters(
       ASSERT(0);
     }
 
-  AvailableMapRegisters = MapRegistersRequired;
   AdapterObject = IoGetDmaAdapter(
     Adapter->NdisMiniportBlock.PhysicalDeviceObject,
     &Description, &AvailableMapRegisters);
@@ -406,10 +398,10 @@ NdisMAllocateMapRegisters(
 
   Adapter->NdisMiniportBlock.SystemAdapterObject = AdapterObject;
 
-  if(AvailableMapRegisters < MapRegistersRequired)
+  if(AvailableMapRegisters < MapRegistersPerBaseRegister)
     {
       NDIS_DbgPrint(MIN_TRACE, ("Didn't get enough map registers from hal - requested 0x%x, got 0x%x\n", 
-          MapRegistersRequired, AvailableMapRegisters));
+          MapRegistersPerBaseRegister, AvailableMapRegisters));
 
       return NDIS_STATUS_RESOURCES;
     }
