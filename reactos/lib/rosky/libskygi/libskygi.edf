@@ -1,0 +1,28 @@
+LIBRARY acledit.dll
+
+EXPORTS
+DefaultWindowFunc=DefaultWindowFunc
+GC_ResetBlit=GC_ResetBlit
+GC_blit=GC_blit
+GC_create_connected=GC_create_connected
+GC_destroy=GC_destroy
+GC_draw_line=GC_draw_line
+GC_draw_rect_fill=GC_draw_rect_fill
+GC_set_bg_color=GC_set_bg_color
+GI_ShowApplicationWindow=GI_ShowApplicationWindow
+GI_add_menu_item=GI_add_menu_item
+GI_add_menu_sub=GI_add_menu_sub
+GI_create_DDB_from_DIB=GI_create_DDB_from_DIB
+GI_create_app=GI_create_app
+GI_create_menu=GI_create_menu
+GI_create_menu_item=GI_create_menu_item
+GI_destroy_window=GI_destroy_window
+GI_dispatch_message=GI_dispatch_message
+GI_kill_timer=GI_kill_timer
+GI_load_bitmap=GI_load_bitmap
+GI_messagebox=GI_messagebox
+GI_post_quit=GI_post_quit
+GI_set_high_timer=GI_set_high_timer
+GI_wait_message=GI_wait_message
+
+; EOF

@@ -1,0 +1,13 @@
+LIBRARY libsky.dll
+
+EXPORTS
+__libc_init_memory
+__to_kernel
+_alloca
+ctor_dtor_initialize=ctor_dtor_initialize
+get_usec_counter
+rand
+srand
+strcpy
+
+; EOF
