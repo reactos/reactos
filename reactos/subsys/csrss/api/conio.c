@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.17 2001/01/31 02:22:09 phreak Exp $
+/* $Id: conio.c,v 1.18 2001/06/18 03:07:37 phreak Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -704,7 +704,7 @@ VOID Console_Api( DWORD RefreshEvent )
 	    continue;
 	 }
       // process special keys if enabled
-      if( ActiveConsole->Mode & ENABLE_PROCESSED_INPUT )
+      if( ActiveConsole->Mode & (ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT) )
 	  switch( KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar )
 	    {
 	    case '\r':
@@ -746,7 +746,9 @@ VOID Console_Api( DWORD RefreshEvent )
 	     ActiveConsole->WaitingLines++;
 	}
       KeyEventRecord->Echoed = FALSE;
-      if( ActiveConsole->Mode & ENABLE_PROCESSED_INPUT && KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar == '\b' && KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown )
+      if( ActiveConsole->Mode & (ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT) &&
+	  KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar == '\b' &&
+	  KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown )
 	 {
 	    // walk the input queue looking for a char to backspace
 	    for( TempInput = (ConsoleInput *)ActiveConsole->InputEvents.Blink;
