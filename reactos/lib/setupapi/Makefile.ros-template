@@ -1,4 +1,4 @@
-# $Id: Makefile.ros-template,v 1.1 2004/01/24 15:39:18 sedwards Exp $
+# $Id: Makefile.ros-template,v 1.2 2004/01/28 19:34:45 navaraf Exp $
 
 TARGET_NAME = setupapi
 
@@ -8,7 +8,7 @@ TARGET_CFLAGS = @EXTRADEFS@ -D__REACTOS__
 
 TARGET_SDKLIBS = @IMPORTS@ libwine.a ntdll.a libwine_unicode.a
 
-TARGET_BASE = 0x76160000
+TARGET_BASE = 0x76660000
 
 TARGET_RC_SRCS = @RC_SRCS@
 TARGET_RC_BINSRC = @RC_BINSRC@

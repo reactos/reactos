@@ -7,7 +7,7 @@ TARGET_CFLAGS = -D__REACTOS__ @EXTRADEFS@
 
 TARGET_SDKLIBS = @IMPORTS@ libwine.a libwine_unicode.a wine_uuid.a ntdll.a winspool.a
 
-TARGET_BASE = 0x77a50000
+TARGET_BASE = 0x76200000
 
 TARGET_RC_SRCS = @RC_SRCS@
 TARGET_RC_BINSRC = @RC_BINSRC@

@@ -5,7 +5,7 @@ TARGET_TYPE = dynlink
 
 TARGET_NAME = imm32
 
-TARGET_BASE=0x76380000
+TARGET_BASE=0x75e60000
 
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -D_DISABLE_TIDENTS -D__USE_W32API
