@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.122 2004/03/07 19:59:36 hbirr Exp $
+/* $Id: registry.c,v 1.123 2004/03/13 12:14:44 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -525,7 +525,7 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 			CmiKeyType);
   if (!NT_SUCCESS(Status))
     {
-      return(Status);
+      return Status;
     }
 
   DPRINT ("RemainingPath %wZ\n", &RemainingPath);
@@ -537,12 +537,13 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
       return STATUS_OBJECT_NAME_COLLISION;
     }
 
-  /* If RemainingPath contains \ we must return error
-     because CmiConnectHive() can not create trees */
+  /* Ignore leading backslash */
   SubName = RemainingPath.Buffer;
   if (*SubName == L'\\')
     SubName++;
 
+  /* If RemainingPath contains \ we must return error
+     because CmiConnectHive() can not create trees */
   if (wcschr (SubName, L'\\') != NULL)
     {
       ObDereferenceObject (ParentKey);
@@ -575,38 +576,39 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
   NewKey->KeyCell = CmiGetCell (RegistryHive, NewKey->KeyCellOffset, NULL);
   NewKey->Flags = 0;
   NewKey->NumberOfSubKeys = 0;
-  NewKey->SubKeys = ExAllocatePool(PagedPool,
-                                   NewKey->KeyCell->NumberOfSubKeys * sizeof(ULONG));
-
-  if ((NewKey->SubKeys == NULL) && (NewKey->KeyCell->NumberOfSubKeys != 0))
+  if (NewKey->KeyCell->NumberOfSubKeys != 0)
     {
-      DPRINT("NumberOfSubKeys %d\n", NewKey->KeyCell->NumberOfSubKeys);
-      ObDereferenceObject (NewKey);
-      ObDereferenceObject (ParentKey);
-      RtlFreeUnicodeString(&RemainingPath);
-      return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-  if (SubName == RemainingPath.Buffer)
-    {
-      NewKey->Name = RemainingPath;
+      NewKey->SubKeys = ExAllocatePool(PagedPool,
+				       NewKey->KeyCell->NumberOfSubKeys * sizeof(ULONG));
+      if (NewKey->SubKeys == NULL)
+	{
+	  DPRINT("ExAllocatePool() failed\n");
+	  ObDereferenceObject (NewKey);
+	  ObDereferenceObject (ParentKey);
+	  RtlFreeUnicodeString(&RemainingPath);
+	  return STATUS_INSUFFICIENT_RESOURCES;
+	}
     }
   else
     {
-      Status = RtlCreateUnicodeString(&NewKey->Name,
-				      SubName);
-      RtlFreeUnicodeString(&RemainingPath);
-      if (!NT_SUCCESS(Status))
-        {
-          DPRINT1("RtlCreateUnicodeString() failed (Status %lx)\n", Status);
-          if (NewKey->SubKeys != NULL)
-	    {
-	      ExFreePool (NewKey->SubKeys);
-	    }
-          ObDereferenceObject (NewKey);
-          ObDereferenceObject (ParentKey);
-          return STATUS_INSUFFICIENT_RESOURCES;
+      NewKey->SubKeys = NULL;
+    }
+
+  DPRINT ("SubName %S\n", SubName);
+
+  Status = RtlCreateUnicodeString(&NewKey->Name,
+				  SubName);
+  RtlFreeUnicodeString(&RemainingPath);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("RtlCreateUnicodeString() failed (Status %lx)\n", Status);
+      if (NewKey->SubKeys != NULL)
+	{
+	  ExFreePool (NewKey->SubKeys);
 	}
+      ObDereferenceObject (NewKey);
+      ObDereferenceObject (ParentKey);
+      return STATUS_INSUFFICIENT_RESOURCES;
     }
 
   CmiAddKeyToList (ParentKey, NewKey);

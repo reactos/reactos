@@ -404,7 +404,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
       KeLeaveCriticalRegion();
       ObDereferenceObject(KeyObject);
       DPRINT("No more entries\n");
-      return(STATUS_NO_MORE_ENTRIES);
+      return STATUS_NO_MORE_ENTRIES;
     }
 
   Status = STATUS_SUCCESS;
@@ -412,10 +412,17 @@ NtEnumerateKey(IN HANDLE KeyHandle,
     {
       case KeyBasicInformation:
 	/* Check size of buffer */
-	NameSize = SubKeyCell->NameSize;
-	if (SubKeyCell->Flags & REG_KEY_NAME_PACKED)
+	if (SubKeyObject != NULL)
 	  {
-	    NameSize *= sizeof(WCHAR);
+	    NameSize = SubKeyObject->Name.Length;
+	  }
+	else
+	  {
+	    NameSize = SubKeyCell->NameSize;
+	    if (SubKeyCell->Flags & REG_KEY_NAME_PACKED)
+	      {
+		NameSize *= sizeof(WCHAR);
+	      }
 	  }
 	*ResultLength = sizeof(KEY_BASIC_INFORMATION) + NameSize;
 
@@ -460,13 +467,17 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 
       case KeyNodeInformation:
 	/* Check size of buffer */
-	if (SubKeyCell->Flags & REG_KEY_NAME_PACKED)
+	if (SubKeyObject != NULL)
 	  {
-	    NameSize = SubKeyCell->NameSize * sizeof(WCHAR);
+	    NameSize = SubKeyObject->Name.Length;
 	  }
 	else
 	  {
 	    NameSize = SubKeyCell->NameSize;
+	    if (SubKeyCell->Flags & REG_KEY_NAME_PACKED)
+	      {
+		NameSize *= sizeof(WCHAR);
+	      }
 	  }
 	*ResultLength = sizeof(KEY_NODE_INFORMATION) +
 	  NameSize + SubKeyCell->ClassSize;
