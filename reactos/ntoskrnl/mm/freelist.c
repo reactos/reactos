@@ -52,7 +52,7 @@ PHYSICAL_PAGE, *PPHYSICAL_PAGE;
 /* GLOBALS ****************************************************************/
 
 static PPHYSICAL_PAGE MmPageArray;
-static ULONG MmPageArraySize;
+ULONG MmPageArraySize;
 
 static KSPIN_LOCK PageListLock;
 static LIST_ENTRY UsedPageListHeads[MC_MAXIMUM];
