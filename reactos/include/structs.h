@@ -2898,14 +2898,65 @@ typedef struct _OFNOTIFY {
   LPTSTR         pszFile;
 } OFNOTIFY, *LPOFNOTIFY;
 
-typedef struct _OSVERSIONINFO {
+typedef struct _OSVERSIONINFOA {
   DWORD dwOSVersionInfoSize;
   DWORD dwMajorVersion;
   DWORD dwMinorVersion;
   DWORD dwBuildNumber;
   DWORD dwPlatformId;
-  TCHAR szCSDVersion[ 128 ];
-} OSVERSIONINFO, *POSVERSIONINFO, *LPOSVERSIONINFO;
+  CHAR szCSDVersion[ 128 ];
+} OSVERSIONINFOA, *POSVERSIONINFOA, *LPOSVERSIONINFOA;
+
+typedef struct _OSVERSIONINFOW {
+  DWORD dwOSVersionInfoSize;
+  DWORD dwMajorVersion;
+  DWORD dwMinorVersion;
+  DWORD dwBuildNumber;
+  DWORD dwPlatformId;
+  WCHAR szCSDVersion[ 128 ];
+} OSVERSIONINFOW, *POSVERSIONINFOW, *LPOSVERSIONINFOW;
+
+#ifdef UNICODE
+typedef OSVERSIONINFOA OSVERSIONINFO;
+#else
+typedef OSVERSIONINFOW OSVERSIONINFO;
+#endif
+
+typedef struct _OSVERSIONINFOEXA
+#ifdef __cplusplus
+: public OSVERSIONINFOA
+{
+#else
+{
+ OSVERSIONINFOA;
+#endif
+ WORD wServicePackMajor;
+ WORD wServicePackMinor;
+ WORD wSuiteMask;
+ BYTE wProductType;
+ BYTE wReserved;
+} OSVERSIONINFOEXA, *POSVERSIONINFOEXA, *LPOSVERSIONINFOEXA;
+
+typedef struct _OSVERSIONINFOEXW
+#ifdef __cplusplus
+: public OSVERSIONINFOW
+{
+#else
+{
+ OSVERSIONINFOW;
+#endif
+ WORD wServicePackMajor;
+ WORD wServicePackMinor;
+ WORD wSuiteMask;
+ BYTE wProductType;
+ BYTE wReserved;
+} OSVERSIONINFOEXW, *POSVERSIONINFOEXW, *LPOSVERSIONINFOEXW;
+
+#ifdef UNICODE
+typedef OSVERSIONINFOEXA OSVERSIONINFOEX;
+#else
+typedef OSVERSIONINFOEXW OSVERSIONINFOEX;
+#endif
 
 typedef struct tagTEXTMETRIC {
   LONG tmHeight;

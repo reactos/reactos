@@ -145,7 +145,9 @@ typedef struct _PEB
    PVOID LoaderLock;                                // A0h
    ULONG OSMajorVersion;                            // A4h
    ULONG OSMinorVersion;                            // A8h
-   ULONG OSBuildNumber;                             // ACh
+   USHORT OSBuildNumber;                            // ACh
+   UCHAR SPMajorVersion;                            // AEh
+   UCHAR SPMinorVersion;                            // AFh
    ULONG OSPlatformId;                              // B0h
    ULONG ImageSubSystem;                            // B4h
    ULONG ImageSubSystemMajorVersion;                // B8h

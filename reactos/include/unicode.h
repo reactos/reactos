@@ -2152,7 +2152,7 @@ FindNextFileW(
 WINBOOL
 STDCALL
 GetVersionExW(
-    LPOSVERSIONINFO lpVersionInformation
+    LPOSVERSIONINFOW lpVersionInformation
     );
 
 #define CreateWindowW(lpClassName, lpWindowName, dwStyle, x, y,\
