@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.24 2003/09/24 16:01:32 weiden Exp $
+/* $Id: windc.c,v 1.25 2003/09/26 20:58:05 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -48,6 +48,7 @@
 /* GLOBALS *******************************************************************/
 
 static PDCE FirstDce = NULL;
+static HDC defaultDCstate;
 
 #define DCX_CACHECOMPAREMASK (DCX_CLIPSIBLINGS | DCX_CLIPCHILDREN | \
                               DCX_CACHE | DCX_WINDOW | DCX_PARENTCLIP)
@@ -114,19 +115,14 @@ DceGetVisRgn(HWND hWnd, ULONG Flags, HWND hWndChild, ULONG CFlags)
   return VisRgn;
 }
 
-INT STDCALL
-NtUserReleaseDC(HWND hWnd, HDC hDc)
-{
-  return 1;  
-}
-
 HDC STDCALL
 NtUserGetDC(HWND hWnd)
 {
     return NtUserGetDCEx(hWnd, NULL, NULL == hWnd ? DCX_CACHE | DCX_WINDOW : DCX_USESTYLE);
 }
 
-PDCE FASTCALL DceAllocDCE(HWND hWnd, DCE_TYPE Type)
+PDCE FASTCALL
+DceAllocDCE(HWND hWnd, DCE_TYPE Type)
 {
   HDCE DceHandle;
   DCE* Dce;
@@ -137,6 +133,10 @@ PDCE FASTCALL DceAllocDCE(HWND hWnd, DCE_TYPE Type)
   
   Dce = DCEOBJ_LockDCE(DceHandle);
   Dce->hDC = NtGdiCreateDC(L"DISPLAY", NULL, NULL, NULL);
+  if (NULL == defaultDCstate)
+    {
+      defaultDCstate = NtGdiGetDCState(Dce->hDC);
+    }
   Dce->hwndCurrent = hWnd;
   Dce->hClipRgn = NULL;
   Dce->next = FirstDce;
@@ -217,6 +217,44 @@ DceDeleteClipRgn(DCE* Dce)
 
   /* make it dirty so that the vis rgn gets recomputed next time */
   Dce->DCXFlags |= DCX_DCEDIRTY;
+}
+
+STATIC INT FASTCALL
+DceReleaseDC(DCE* dce)
+{
+  if (DCX_DCEBUSY != (dce->DCXFlags & (DCX_DCEEMPTY | DCX_DCEBUSY)))
+    {
+      return 0;
+    }
+
+#if 0
+  /* restore previous visible region */
+
+  if ((dce->DCXFlags & (DCX_INTERSECTRGN | DCX_EXCLUDERGN)) &&
+      (dce->DCXFlags & (DCX_CACHE | DCX_WINDOWPAINT)) )
+    {
+      DceDeleteClipRgn( dce );
+    }
+
+  if (dce->DCXFlags & DCX_CACHE)
+    {
+      /* make the DC clean so that SetDCState doesn't try to update the vis rgn */
+      NtGdiSetHookFlags(dce->hDC, DCHF_VALIDATEVISRGN);
+      NtGdiSetDCState(dce->hDC, defaultDCstate);
+      dce->DCXFlags &= ~DCX_DCEBUSY;
+      if (dce->DCXFlags & DCX_DCEDIRTY)
+	{
+	  /* don't keep around invalidated entries
+	   * because SetDCState() disables hVisRgn updates
+	   * by removing dirty bit. */
+	  dce->hwndCurrent = 0;
+	  dce->DCXFlags &= DCX_CACHE;
+	  dce->DCXFlags |= DCX_DCEEMPTY;
+	}
+    }
+#endif
+
+  return 1;
 }
 
 HDC STDCALL
@@ -488,6 +526,32 @@ IntWindowFromDC(HDC hDc)
     }
   }
   return 0;
+}
+
+INT STDCALL
+NtUserReleaseDC(HWND hWnd, HDC hDc)
+{
+  DCE *dce;
+  INT nRet = 0;
+
+  /* FIXME USER_Lock(); */
+  dce = FirstDce;
+
+  DPRINT("%p %p\n", hWnd, hDc);
+
+  while (dce && (dce->hDC != hDc))
+    {
+      dce = dce->next;
+    }
+
+  if (dce && (dce->DCXFlags & DCX_DCEBUSY))
+    {
+      nRet = DceReleaseDC(dce);
+    }
+
+  /* FIXME USER_Unlock(); */
+
+  return nRet;
 }
   
 

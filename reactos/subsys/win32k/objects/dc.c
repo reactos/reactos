@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.82 2003/09/26 10:45:45 gvg Exp $
+/* $Id: dc.c,v 1.83 2003/09/26 20:58:06 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -42,6 +42,7 @@
 #include <win32k/text.h>
 #include "../eng/clip.h"
 #include "../eng/handle.h"
+#include <include/dce.h>
 #include <include/error.h>
 #include <include/inteng.h>
 #include <include/eng.h>
@@ -694,7 +695,7 @@ NtGdiSetBkColor(HDC hDC, COLORREF color)
   return oldColor;
 }
 
-static HDC STDCALL
+HDC STDCALL
 NtGdiGetDCState(HDC  hDC)
 {
   PDC  newdc, dc;
@@ -793,9 +794,9 @@ NtGdiGetDCState(HDC  hDC)
   return  hnewdc;
 }
 
-STATIC
+
 VOID
-FASTCALL
+STDCALL
 NtGdiSetDCState ( HDC hDC, HDC hDCSave )
 {
   PDC  dc, dcs;
@@ -883,6 +884,8 @@ NtGdiSetDCState ( HDC hDC, HDC hDCSave )
 	  dc->w.hClipRgn = 0;
 	}
 	CLIPPING_UpdateGCRegion( dc );
+#else
+	NtGdiSelectClipRgn(hDC, dcs->w.hClipRgn);
 #endif
 
 	NtGdiSelectObject( hDC, dcs->w.hBitmap );
@@ -1449,7 +1452,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
 	pen = PENOBJ_LockPen(dc->w.hPen);
 	if( pen )
 	{
-	  pen->logpen.lopnColor = XLATEOBJ_iXlate(XlateObj, pen->logpen.lopnColor);
+	  pen->iSolidColor = XLATEOBJ_iXlate(XlateObj, pen->logpen.lopnColor);
 	  PENOBJ_UnlockPen(dc->w.hPen);
 	}
 	EngDeleteXlate(XlateObj);
@@ -1555,6 +1558,38 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
   }
   DC_UnlockDc( hDC );
   return objOrg;
+}
+
+WORD STDCALL
+NtGdiSetHookFlags(HDC hDC, WORD Flags)
+{
+  WORD wRet;
+  DC *dc = DC_LockDc(hDC);
+
+  if (NULL == dc)
+    {
+      return 0;
+    }
+
+  wRet = dc->w.flags & DC_DIRTY;
+
+  /* "Undocumented Windows" info is slightly confusing.
+   */
+
+  DPRINT("DC %p, Flags %04x\n", hDC, Flags);
+
+  if (Flags & DCHF_INVALIDATEVISRGN)
+    {
+      dc->w.flags |= DC_DIRTY;
+    }
+  else if (Flags & DCHF_VALIDATEVISRGN || 0 == Flags)
+    {
+      dc->w.flags &= ~DC_DIRTY;
+    }
+
+  DC_UnlockDc(hDC);
+
+  return wRet;
 }
 
 DC_SET_MODE( NtGdiSetBkMode, w.backgroundMode, TRANSPARENT, OPAQUE )

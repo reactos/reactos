@@ -7,7 +7,8 @@
 /* GDI logical pen object */
 typedef struct
 {
-   LOGPEN    logpen;
+   LOGPEN logpen;
+   ULONG  iSolidColor;
 } PENOBJ, *PPENOBJ;
 
 /*  Internal interface  */

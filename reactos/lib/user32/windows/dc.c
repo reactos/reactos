@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.13 2003/08/17 09:17:04 weiden Exp $
+/* $Id: dc.c,v 1.14 2003/09/26 20:58:06 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -73,7 +73,7 @@ GetWindowDC(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 STDCALL
@@ -81,8 +81,7 @@ ReleaseDC(
   HWND hWnd,
   HDC hDC)
 {
-  UNIMPLEMENTED;
-  return 0;
+  return NtUserReleaseDC(hWnd, hDC);
 }
 
 

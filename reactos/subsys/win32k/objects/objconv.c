@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: objconv.c,v 1.12 2003/08/20 07:45:02 gvg Exp $ */
+/* $Id: objconv.c,v 1.13 2003/09/26 20:58:06 gvg Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -49,7 +49,7 @@ PenToBrushObj ( BRUSHOBJ *brush, PENOBJ *pen )
   if ( pen->logpen.lopnStyle == PS_NULL )
     brush->logbrush.lbStyle = BS_NULL;
   else
-    brush->iSolidColor = pen->logpen.lopnColor;
+    brush->iSolidColor = pen->iSolidColor;
   return brush;
 }
 

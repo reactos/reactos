@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.88 2003/09/21 06:44:51 gvg Exp $
+/* $Id: defwnd.c,v 1.89 2003/09/26 20:58:06 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -41,7 +41,7 @@ static HBITMAP hbScrRight;
 */
 
 
-static COLORREF SysColours[29] =
+static COLORREF SysColours[] =
   {
     RGB(224, 224, 224) /* COLOR_SCROLLBAR */,
     RGB(58, 110, 165) /* COLOR_BACKGROUND */,
@@ -146,7 +146,22 @@ GetSysColor(int nIndex)
 HPEN STDCALL
 GetSysColorPen(int nIndex)
 {
-    return CreatePen(PS_SOLID, 1, SysColours[nIndex]);
+  static HPEN SysPens[sizeof(SysColours) / sizeof(SysColours[0])];
+
+  if (nIndex < 0 || sizeof(SysColours) / sizeof(SysColours[0]) < nIndex)
+    {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return NULL;
+    }
+
+  /* FIXME should register this object with DeleteObject() so it
+     can't be deleted */
+  if (NULL == SysPens[nIndex])
+    {
+      SysPens[nIndex] = CreatePen(PS_SOLID, 1, SysColours[nIndex]);
+    }
+
+  return SysPens[nIndex];
 }
 
 /*
@@ -155,7 +170,22 @@ GetSysColorPen(int nIndex)
 HBRUSH STDCALL
 GetSysColorBrush(int nIndex)
 {
-    return CreateSolidBrush(SysColours[nIndex]);
+  static HBRUSH SysBrushes[sizeof(SysColours) / sizeof(SysColours[0])];
+
+  if (nIndex < 0 || sizeof(SysColours) / sizeof(SysColours[0]) < nIndex)
+    {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return NULL;
+    }
+
+  /* FIXME should register this object with DeleteObject() so it
+     can't be deleted */
+  if (NULL == SysBrushes[nIndex])
+    {
+      SysBrushes[nIndex] = (HBRUSH) ((DWORD) CreateSolidBrush(SysColours[nIndex]) | 0x00800000);
+    }
+
+  return SysBrushes[nIndex];
 }
 
 /*

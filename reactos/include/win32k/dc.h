@@ -171,6 +171,7 @@ HGDIOBJ STDCALL  NtGdiGetCurrentObject(HDC  hDC, UINT  ObjectType);
 VOID FASTCALL IntGetCurrentPositionEx (PDC  dc,  LPPOINT currentPosition);
 BOOL STDCALL  NtGdiGetCurrentPositionEx(HDC  hDC, LPPOINT currentPosition);
 BOOL STDCALL  NtGdiGetDCOrgEx(HDC  hDC, LPPOINT  Point);
+HDC STDCALL  NtGdiGetDCState(HDC  hDC);
 INT STDCALL  NtGdiGetDeviceCaps(HDC  hDC, INT  Index);
 INT STDCALL  NtGdiGetMapMode(HDC  hDC);
 INT STDCALL  NtGdiGetObject(HGDIOBJ  hGDIObj,
@@ -193,6 +194,8 @@ BOOL STDCALL  NtGdiRestoreDC(HDC  hDC, INT  SavedDC);
 INT STDCALL  NtGdiSaveDC(HDC  hDC);
 HGDIOBJ STDCALL  NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj);
 INT STDCALL  NtGdiSetBkMode(HDC  hDC, INT  backgroundMode);
+VOID STDCALL NtGdiSetDCState ( HDC hDC, HDC hDCSave );
+WORD STDCALL NtGdiSetHookFlags(HDC hDC, WORD Flags);
 INT STDCALL  NtGdiSetPolyFillMode(HDC  hDC, INT polyFillMode);
 INT STDCALL  NtGdiSetRelAbs(HDC  hDC, INT  relAbsMode);
 INT STDCALL  NtGdiSetROP2(HDC  hDC, INT  ROPmode);
