@@ -93,7 +93,7 @@ NtResumeThread(IN HANDLE ThreadHandle,
 
     /* Dereference and Return */
     ObDereferenceObject ((PVOID)Thread);
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 /*
@@ -169,7 +169,7 @@ NtSuspendThread(IN HANDLE ThreadHandle,
 
     /* Dereference and Return */
     ObDereferenceObject((PVOID)Thread);
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 /* EOF */
