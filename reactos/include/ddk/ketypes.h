@@ -54,10 +54,15 @@ typedef struct _LOADER_PARAMETER_BLOCK
 #ifdef __NTOSKRNL__
 extern CHAR EXPORTED KeNumberProcessors;
 extern LOADER_PARAMETER_BLOCK EXPORTED KeLoaderBlock;
+extern ULONG EXPORTED KeDcacheFlushCount;
+extern ULONG EXPORTED KeIcacheFlushCount;
 #else
 extern CHAR IMPORTED KeNumberProcessors;
 extern LOADER_PARAMETER_BLOCK IMPORTED KeLoaderBlock;
+extern ULONG EXPORTED KeDcacheFlushCount;
+extern ULONG EXPORTED KeIcacheFlushCount;
 #endif
+
 
 
 struct _KMUTANT;

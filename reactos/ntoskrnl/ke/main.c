@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.131 2002/07/20 21:49:35 dwelch Exp $
+/* $Id: main.c,v 1.132 2002/07/29 15:27:59 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -63,6 +63,8 @@ ULONG EXPORTED NtBuildNumber = KERNEL_VERSION_BUILD;
 ULONG EXPORTED NtGlobalFlag = 0;
 CHAR  EXPORTED KeNumberProcessors;
 LOADER_PARAMETER_BLOCK EXPORTED KeLoaderBlock;
+ULONG EXPORTED KeDcacheFlushCount = 0;
+ULONG EXPORTED KeIcacheFlushCount = 0;
 static LOADER_MODULE KeLoaderModules[64];
 static UCHAR KeLoaderModuleStrings[64][256];
 static UCHAR KeLoaderCommandLine[256];

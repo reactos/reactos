@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.139 2002/07/27 13:02:37 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.140 2002/07/29 15:29:58 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -345,7 +345,7 @@ KeBugCheckEx@20
 KeCancelTimer@4
 KeClearEvent@4
 KeConnectInterrupt@4
-;KeDcacheFlushCount DATA
+KeDcacheFlushCount DATA
 KeDelayExecutionThread@12
 KeDeregisterBugCheckCallback@4
 KeDetachProcess@0
@@ -367,7 +367,7 @@ KeGetPreviousMode@0
 ;KeI386ReleaseGdtSelectors
 ;KeI386ReleaseLid
 ;KeI386SetGdtSelector
-;KeIcacheFlushCount DATA
+KeIcacheFlushCount DATA
 KeInitializeApc@32
 KeInitializeDeviceQueue@4
 KeInitializeDpc@12

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.125 2002/07/27 13:02:37 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.126 2002/07/29 15:29:58 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -345,7 +345,7 @@ KeBugCheckEx=KeBugCheckEx@20
 KeCancelTimer=KeCancelTimer@4
 KeClearEvent=KeClearEvent@4
 KeConnectInterrupt=KeConnectInterrupt@4
-;KeDcacheFlushCount DATA
+KeDcacheFlushCount DATA
 KeDelayExecutionThread=KeDelayExecutionThread@12
 KeDeregisterBugCheckCallback=KeDeregisterBugCheckCallback@4
 KeDetachProcess=KeDetachProcess@0
@@ -367,7 +367,7 @@ KeGetPreviousMode=KeGetPreviousMode@0
 ;KeI386ReleaseGdtSelectors
 ;KeI386ReleaseLid
 ;KeI386SetGdtSelector
-;KeIcacheFlushCount DATA
+KeIcacheFlushCount DATA
 KeInitializeApc=KeInitializeApc@32
 KeInitializeDeviceQueue=KeInitializeDeviceQueue@4
 KeInitializeDpc=KeInitializeDpc@12
