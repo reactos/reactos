@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.46 2003/08/28 13:50:49 gvg Exp $ */
+/* $Id: text.c,v 1.47 2003/08/28 21:40:26 gvg Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -632,7 +632,7 @@ TextIntGetTextExtentPoint(PTEXTOBJ TextObj,
 
       if (TotalWidth <= MaxExtent && NULL != Fit)
 	{
-	  *Fit = i;
+	  *Fit = i + 1;
 	}
       if (NULL != Dx)
 	{
