@@ -96,6 +96,10 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 	string subpath(path);
 	if ( e.name == "module" )
 	{
+		if ( pIf )
+			throw InvalidBuildFileException (
+				e.location,
+				"<module> is not a valid sub-element of <if>" );
 		Module* module = new Module ( *this, e, path );
 		if ( LocateModule ( module->name ) )
 			throw InvalidBuildFileException (
@@ -114,7 +118,11 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 	}
 	else if ( e.name == "include" )
 	{
-		includes.push_back ( new Include ( *this, e ) );
+		Include* include = new Include ( *this, e );
+		if ( pIf )
+			pIf->includes.push_back ( include );
+		else
+			includes.push_back ( include );
 		subs_invalid = true;
 	}
 	else if ( e.name == "define" )

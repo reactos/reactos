@@ -8,11 +8,13 @@
 	</xi:include>
 
 	<define name="_M_IX86" />
-	<if property="dbg" value="true">
-		<define name="dbg_or_kdbg" value="true" />
+	<if property="DBG" value="1">
+		<define name="DBG" value="1" />
+		<property name="DBG_OR_KDBG" value="true" />
 	</if>
-	<if property="kdbg" value="true">
-		<define name="dbg_or_kdbg" value="true" />
+	<if property="KDBG" value="1">
+		<define name="KDBG" value="1" />
+		<property name="DBG_OR_KDBG" value="true" />
 	</if>
 
 	<include>include</include>

@@ -256,6 +256,7 @@ public:
 	const Module* module;
 	std::string property, value;
 	std::vector<File*> files;
+	std::vector<Include*> includes;
 	std::vector<Define*> defines;
 	std::vector<Property*> properties;
 	std::vector<If*> ifs;

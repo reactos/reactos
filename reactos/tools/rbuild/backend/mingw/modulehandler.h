@@ -46,12 +46,11 @@ private:
 	std::string GenerateGccDefineParametersFromVector ( const std::vector<Define*>& defines ) const;
 	std::string GenerateGccDefineParameters ( const Module& module ) const;
 	std::string GenerateGccIncludeParametersFromVector ( const std::vector<Include*>& includes ) const;
-	void GenerateMacros ( const Module& module,
-	                      const char* op,
+	void GenerateMacros ( const char* op,
 	                      const std::vector<File*>& files,
-	                      const std::vector<Include*>* includes,
+	                      const std::vector<Include*>& includes,
 	                      const std::vector<Define*>& defines,
-	                      const std::vector<If*>* ifs,
+	                      const std::vector<If*>& ifs,
 	                      const std::string& cflags_macro,
 	                      const std::string& nasmflags_macro,
 	                      const std::string& objs_macro) const;

@@ -122,11 +122,11 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	}
 	else if ( e.name == "include" )
 	{
+		Include* include = new Include ( project, this, e );
 		if ( pIf )
-			throw InvalidBuildFileException (
-				e.location,
-				"<include> is not a valid sub-element of <if>" );
-		includes.push_back ( new Include ( project, this, e ) );
+			pIf->includes.push_back ( include );
+		else
+			includes.push_back ( include );
 		subs_invalid = true;
 	}
 	else if ( e.name == "define" )
@@ -513,6 +513,8 @@ If::~If ()
 	size_t i;
 	for ( i = 0; i < files.size(); i++ )
 		delete files[i];
+	for ( i = 0; i < includes.size(); i++ )
+		delete includes[i];
 	for ( i = 0; i < defines.size(); i++ )
 		delete defines[i];
 	for ( i = 0; i < ifs.size(); i++ )
