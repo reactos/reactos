@@ -8,6 +8,7 @@
 class CRegistryKey  
 {
 public:
+	DWORD DeleteValue(LPCTSTR pszValueName);
 	DWORD SetValue(LPCTSTR pszValueName, DWORD dwType, BYTE *lpData, DWORD dwDataSize);
 	DWORD Delete(BOOL blnRecursive);
 	DWORD DeleteSubkey(LPCTSTR pszSubKey, BOOL blnRecursive = FALSE);

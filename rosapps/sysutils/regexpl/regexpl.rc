@@ -36,3 +36,4 @@ BEGIN
     END
 END
 
+GPL LICENSE "..\\..\\copying"

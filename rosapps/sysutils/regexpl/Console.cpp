@@ -1,11 +1,23 @@
-/* $Id: Console.cpp,v 1.1 2000/10/04 21:04:30 ea Exp $
+/* $Id: Console.cpp,v 1.2 2000/10/24 20:17:41 narnaoud Exp $
  *
  * regexpl - Console Registry Explorer
  *
- * Copyright (c) 1999-2000 Nedko Arnaoudov <nedkohome@atia.com>
+ * Copyright (C) 2000 Nedko Arnaoudov <nedkohome@atia.com>
  *
- * License: GNU GPL
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; see the file COPYING.  If not, write to
+ * the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
  */
 
 // Console.cpp: implementation of the CConsole class.
@@ -14,6 +26,10 @@
 
 #include "ph.h"
 #include "Console.h"
+
+#define MORE_STRING			_T("-- Press space to view more. Press q or Ctrl+break to cancel.--")
+#define MORE_EMPTY_STRING	_T("                                                               ")
+
 /*
 TCHAR * _tcsnchr(const TCHAR *string, TCHAR ch, int count)
 {
@@ -45,20 +61,30 @@ CConsole::CConsole()
 	m_pchBuffer2 = NULL;
 	m_pfReplaceCompletionCallback = NULL;
 	m_blnMoreMode = TRUE;
+	m_dwOldInputMode = 0;
+	m_dwOldOutputMode = 0;
+	m_blnOldInputModeSaved = FALSE;
+	m_blnOldOutputModeSaved = FALSE;
 }
 
 CConsole::~CConsole()
 {
-	if (m_hStdIn != INVALID_HANDLE_VALUE)
-		VERIFY(CloseHandle(m_hStdIn));
-	if (m_hStdOut != INVALID_HANDLE_VALUE)
-		VERIFY(CloseHandle(m_hStdOut));
 	if (m_pchBuffer)
 		delete m_pchBuffer;
 	if (m_pchBuffer1)
 		delete m_pchBuffer1;
 	if (m_pchBuffer2)
 		delete m_pchBuffer2;
+
+	if (m_blnOldInputModeSaved)
+		SetConsoleMode(m_hStdIn,m_dwOldInputMode);
+	if (m_blnOldOutputModeSaved)
+		SetConsoleMode(m_hStdOut,m_dwOldOutputMode);
+
+	if (m_hStdIn != INVALID_HANDLE_VALUE)
+		VERIFY(CloseHandle(m_hStdIn));
+	if (m_hStdOut != INVALID_HANDLE_VALUE)
+		VERIFY(CloseHandle(m_hStdOut));
 }
 
 BOOL CConsole::Write(const TCHAR *p, DWORD dwChars)
@@ -84,7 +110,9 @@ BOOL CConsole::Write(const TCHAR *p, DWORD dwChars)
 			m_CursorPosition.X = 0;
 			break;
 		case _T('\r'):
-			break;
+			dwCharsWrittenAdd++;
+			dwCharsToWrite--;
+			continue;
 		case _T('\t'):
 			do
 			{
@@ -136,12 +164,12 @@ BOOL CConsole::Write(const TCHAR *p, DWORD dwChars)
 			{
 				ASSERT(m_Lines == m_BufferSize.Y-1);
 				m_Lines = 0;
-				VERIFY(WriteString(_T("-- More --"),m_CursorPosition));
+				VERIFY(WriteString(MORE_STRING,m_CursorPosition));
 				VERIFY(FlushInputBuffer());
 
 				CONSOLE_CURSOR_INFO cci;
 				cci.bVisible = FALSE;
-				cci.dwSize = 10;
+				cci.dwSize = 100;
 				VERIFY(SetConsoleCursorInfo(m_hStdOut,&cci));
 
 				INPUT_RECORD InputRecord;
@@ -149,22 +177,30 @@ BOOL CConsole::Write(const TCHAR *p, DWORD dwChars)
 				while ((ret = ReadConsoleInput(m_hStdIn,&InputRecord,1,&dwRecordsReaded)) != FALSE)
 				{
 					ASSERT(dwRecordsReaded == 1);
-					if (dwRecordsReaded != 1) break;
-					if (InputRecord.EventType != KEY_EVENT) continue;
-					if (!InputRecord.Event.KeyEvent.bKeyDown) continue;
+					if (dwRecordsReaded != 1)
+						break;
+					if (InputRecord.EventType != KEY_EVENT)
+						continue;
+					if (!InputRecord.Event.KeyEvent.bKeyDown)
+						continue;
+
+					if ((InputRecord.Event.KeyEvent.wVirtualKeyCode == VK_CANCEL)||
+						(InputRecord.Event.KeyEvent.wVirtualKeyCode == _T('Q')))
+					{
+						VERIFY(GenerateConsoleCtrlEvent(CTRL_C_EVENT,0));
+						continue;
+					}
 #ifdef UNICODE
 					TCHAR ch = InputRecord.Event.KeyEvent.uChar.UnicodeChar;
 #else
 					TCHAR ch = InputRecord.Event.KeyEvent.uChar.AsciiChar;
 #endif
-					if (ch == VK_CANCEL)
-					{
-						VERIFY(GenerateConsoleCtrlEvent(CTRL_C_EVENT,0));
-						continue;
-					}
-					if (ch) break;
+					if (ch)
+						break;
 				}
-				VERIFY(WriteString(_T("          "),m_CursorPosition));
+
+				// delete "more" msg
+				VERIFY(WriteString(MORE_EMPTY_STRING,m_CursorPosition));
 				m_CursorPosition.X = 0;
 
 				cci.bVisible = TRUE;
@@ -828,6 +864,21 @@ TCHAR * CConsole::Init(DWORD dwBufferSize, DWORD dwMaxHistoryLines)
 	if (!GetConsoleScreenBufferInfo(m_hStdOut,&info)) goto Abort;
 	m_wAttributes = info.wAttributes;
 	
+	if (!m_blnOldInputModeSaved)
+	{
+		if (!GetConsoleMode(m_hStdIn,&m_dwOldInputMode))
+			goto Abort;
+
+		m_blnOldInputModeSaved = TRUE;
+	}
+
+	if (!m_blnOldOutputModeSaved)
+	{
+		if (!GetConsoleMode(m_hStdOut,&m_dwOldOutputMode))
+			goto Abort;
+		m_blnOldOutputModeSaved = TRUE;
+	}
+
 	if (!SetConsoleMode(m_hStdIn,0)) goto Abort;
 	if (!SetConsoleMode(m_hStdOut,0)) goto Abort;
 
@@ -985,37 +1036,3 @@ void CConsole::EnableWrite()
 {
 	m_blnDisableWrite = FALSE;
 }
-
-/*				DWORD ofs = dwCurrentCharOffset;
-				DWORD nLines = (FristCharCursorPosition.X + dwLastCharOffset-1)/m_BufferSize.X;
-				for (DWORD nLine = 0 ; nLine <= nLines ; nLine++)
-				{
-					ASSERT(m_BufferSize.X > pos.X);
-					DWORD nChars = m_BufferSize.X - pos.X - 1;
-					if (nChars > dwLastCharOffset - ofs) nChars = dwLastCharOffset - ofs;
-					if (nChars)
-					{	// We have some chars to move in this line
-						_tcsncpy(m_pchBuffer1,m_pchBuffer+ofs,nChars);
-						m_pchBuffer1[nChars] = 0;
-						if (!WriteString(m_pchBuffer1,pos)) return FALSE;
-					}
-					pos.X = SHORT(pos.X + nChars);
-					// if current line is not the last line
-					// Move the first char in next line to end of current line
-					if (nLine < nLines)
-					{
-						ofs += nChars;
-						m_pchBuffer1[0] = m_pchBuffer[ofs];
-						m_pchBuffer1[1] = 0;
-						if (!WriteString(m_pchBuffer1,pos)) return FALSE;
-						pos.Y++;
-						pos.X = 0;
-						ofs++;
-					}
-					else	// Adjust end of read line
-					{
-						m_pchBuffer1[0] = _T(' ');
-						m_pchBuffer1[1] = 0;
-						if (!WriteString(m_pchBuffer1,pos)) return FALSE;
-					}
-				}*/

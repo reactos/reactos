@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2000/10/08 10:48:10 narnaoud Exp $
+# $Id: Makefile,v 1.3 2000/10/24 20:17:41 narnaoud Exp $
 #
 #  ReactOS makefile for RegExpl
 #
@@ -6,6 +6,10 @@
 include ../../rules.mak
 
 TARGET_NAME=regexpl
+
+all: $(TARGET_NAME)$(EXE_POSTFIX)
+
+include depend.mak
 
 ROS_DIR=../../../reactos
 ROS_INC=$(ROS_DIR)/include
@@ -17,7 +21,9 @@ IMPORT_ADVAPI32=$(ROS_LIB)/advapi32/advapi32.a
 IMPORT_USER32=$(ROS_LIB)/user32/user32.a
 IMPORT_CRTDLL=$(ROS_LIB)/crtdll/crtdll.a
 
-all: $(TARGET_NAME)$(EXE_POSTFIX)
+depend.mak : *.h
+	$(CC) \
+		-MM *.cpp *.c > $@
 
 OBJECTS = \
 	ArgumentParser.o		\
@@ -51,19 +57,19 @@ CLEAN_FILES = \
 	*.o				\
 	$(TARGET_NAME)$(EXE_POSTFIX)	\
 	$(TARGET_NAME).sym		\
-	$(TARGET_NAME).coff
+	$(TARGET_NAME).coff\
+	depend.mak
 
 
 $(TARGET_NAME)$(EXE_POSTFIX): $(OBJECTS)
 	$(CC) \
 		-Wl,--subsystem,console	\
-		-o $(TARGET_NAME)	\
+		-o $@				\
 		$(IMPORT_KERNEL32)	\
 		$(IMPORT_CRTDLL)	\
 		$(IMPORT_USER32)	\
 		$(OBJECTS)
 	$(NM) --numeric-sort $(TARGET_NAME)$(EXE_POSTFIX) > $(TARGET_NAME).sym
-
 
 clean: $(CLEAN_FILES:%=%_clean)
 

@@ -51,6 +51,10 @@ private:
 	BOOL m_blnMoreMode;
 	CTextHistory m_History;
 	BOOL m_blnDisableWrite;
+	DWORD m_dwOldOutputMode;
+	DWORD m_dwOldInputMode;
+	BOOL m_blnOldInputModeSaved;
+	BOOL m_blnOldOutputModeSaved;
 };
 
 #endif // !defined(CONSOLE_H__FEF419EC_6EB6_11D3_907D_204C4F4F5020__INCLUDED_)
