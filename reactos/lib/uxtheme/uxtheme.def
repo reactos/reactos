@@ -84,7 +84,7 @@ DrawThemeParentBackground      @38
 ;GetThemeTextMetrics           @80
 ;GetWindowTheme                @81
 ;HitTestThemeBackground        @82
-;IsAppThemed                   @83
+IsAppThemed                    @83
 ;IsThemeActive                 @84
 IsThemeBackgroundPartiallyTransparent @85
 ;IsThemeDialogTextureEnabled   @86

@@ -31,10 +31,10 @@ static const UINT Button_PushButton_State[] =
  DFCS_BUTTONPUSH | DFCS_HOT,      /* PBS_HOT */
  DFCS_BUTTONPUSH | DFCS_PUSHED,   /* PBS_PRESSED */
  DFCS_BUTTONPUSH | DFCS_INACTIVE  /* PBS_DISABLED */
- /* TODO */                       /* PBS_DEFAULTED */
+                                  /* PBS_DEFAULTED */
 };
 
-/* BP_RADIOBUTTON */ /* FIXME: not sure about DrawFrameControl with radios */
+/* BP_RADIOBUTTON */
 static const UINT Button_RadioButton_State[] =
 {
  DFCS_BUTTONRADIO,                               /* RBS_UNCHECKEDNORMAL */
@@ -47,30 +47,66 @@ static const UINT Button_RadioButton_State[] =
  DFCS_BUTTONRADIO | DFCS_CHECKED | DFCS_INACTIVE /* RBS_CHECKEDDISABLED */
 };
 
-/* BP_CHECKBOX */ /* FIXME: not sure about DrawFrameControl with checkboxes */
+/* BP_CHECKBOX */
 static const UINT Button_CheckBox_State[] =
 {
- DFCS_BUTTONCHECK,                               /* CBS_UNCHECKEDNORMAL */
- DFCS_BUTTONCHECK | DFCS_HOT,                    /* CBS_UNCHECKEDHOT */
- DFCS_BUTTONCHECK | DFCS_PUSHED,                 /* CBS_UNCHECKEDPRESSED */
- DFCS_BUTTONCHECK | DFCS_INACTIVE,               /* CBS_UNCHECKEDDISABLED */
- DFCS_BUTTONCHECK | DFCS_CHECKED,                /* CBS_CHECKEDNORMAL */
- DFCS_BUTTONCHECK | DFCS_CHECKED | DFCS_HOT,     /* CBS_CHECKEDHOT */
- DFCS_BUTTONCHECK | DFCS_CHECKED | DFCS_PUSHED,  /* CBS_CHECKEDPRESSED */
- DFCS_BUTTONCHECK | DFCS_CHECKED | DFCS_INACTIVE /* CBS_CHECKEDDISABLED */
- /* TODO */                                      /* CBS_MIXEDNORMAL */
- /* TODO */                                      /* CBS_MIXEDHOT */
- /* TODO */                                      /* CBS_MIXEDPRESSED */
- /* TODO */                                      /* CBS_MIXEDDISABLED */
-};
+ DFCS_BUTTONCHECK,                                /* CBS_UNCHECKEDNORMAL */
+ DFCS_BUTTONCHECK | DFCS_HOT,                     /* CBS_UNCHECKEDHOT */
+ DFCS_BUTTONCHECK | DFCS_PUSHED,                  /* CBS_UNCHECKEDPRESSED */
+ DFCS_BUTTONCHECK | DFCS_INACTIVE,                /* CBS_UNCHECKEDDISABLED */
+ DFCS_BUTTONCHECK | DFCS_CHECKED,                 /* CBS_CHECKEDNORMAL */
+ DFCS_BUTTONCHECK | DFCS_CHECKED | DFCS_HOT,      /* CBS_CHECKEDHOT */
+ DFCS_BUTTONCHECK | DFCS_CHECKED | DFCS_PUSHED,   /* CBS_CHECKEDPRESSED */
+ DFCS_BUTTONCHECK | DFCS_CHECKED | DFCS_INACTIVE, /* CBS_CHECKEDDISABLED */
+ DFCS_BUTTON3STATE | DFCS_CHECKED,                /* CBS_MIXEDNORMAL */
+ DFCS_BUTTON3STATE | DFCS_CHECKED | DFCS_HOT,     /* CBS_MIXEDHOT */
+ DFCS_BUTTON3STATE | DFCS_CHECKED | DFCS_PUSHED,  /* CBS_MIXEDPRESSED */
+ DFCS_BUTTON3STATE | DFCS_CHECKED | DFCS_INACTIVE /* CBS_MIXEDDISABLED */
+};                               
 
 static UINT const * Button_Part_State[] =
 {
  Button_PushButton_State,
  Button_RadioButton_State,
  Button_CheckBox_State
- /* TODO: group box */
 };
+
+STDAPI Button_DrawBackgroundSpecial
+(
+ struct UXTHEME_DATA_ * pData,
+ HDC hdc,
+ int iPartId,
+ int iStateId,
+ const RECT * pRect
+)
+{
+ HRESULT hres = S_FALSE;
+
+ if(iPartId == BP_GROUPBOX)
+ {
+  if(!DrawEdge(hdc, (LPRECT)pRect, EDGE_ETCHED, BF_RECT))
+   hres = HRESULT_FROM_WIN32(GetLastError());
+
+  hres = S_OK;
+ }
+ else if(iPartId == BP_PUSHBUTTON && iStateId == PBS_DEFAULTED)
+ {
+  RECT rcSave = *pRect;
+
+  for(;;)
+  {
+   if(!FillRect(hdc, &rcSave, (HBRUSH)(COLOR_WINDOWFRAME + 1))) break;
+   if(!InflateRect(&rcSave, -1, -1)) break;
+   if(!DrawFrameControl(hdc, &rcSave, DFC_BUTTON, DFCS_BUTTONPUSH)) break;
+   hres = S_OK;
+   break;
+  }
+
+  if(hres != S_OK) hres = HRESULT_FROM_WIN32(GetLastError());
+ }
+
+ return hres;
+}
 
 STDAPI Button_DrawBackground
 (
@@ -84,19 +120,38 @@ STDAPI Button_DrawBackground
 {
  UINT uState = 0;
  HRGN hrgnSave;
- HRESULT hres;
+ HRESULT hres = S_OK;
 
- if(!Button_IsPartDefined(pData, iPartId, iStateId)) return E_FAIL;
+ /*UxTheme_Trace(("[ Button_DrawBackground"));*/
 
- uState = Button_Part_State[iPartId - 1][iStateId - 1];
+ for(;;)
+ {
+  if(!Button_IsPartDefined(pData, iPartId, iStateId))
+  {
+   hres = HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
+   break;
+  }
 
- if(pClipRect && FAILED(hres = UxTheme_ClipDc(hdc, pClipRect, &hrgnSave)))
-  return hres;
+  uState = Button_Part_State[iPartId - 1][iStateId - 1];
 
- if(!DrawFrameControl(hdc, (LPRECT)pRect, DFC_BUTTON, uState))
-  hres = HRESULT_FROM_WIN32(GetLastError());
+  if(pClipRect && FAILED(hres = UxTheme_ClipDc(hdc, pClipRect, &hrgnSave)))
+   break;
 
- if(pClipRect) UxTheme_UnclipDc(hdc, hrgnSave);
+  hres = Button_DrawBackgroundSpecial(pData, hdc, iPartId, iStateId, pRect);
+
+  if(hres != S_FALSE) break;
+
+  hres = S_OK;
+
+  if(!DrawFrameControl(hdc, (LPRECT)pRect, DFC_BUTTON, uState))
+   hres = HRESULT_FROM_WIN32(GetLastError());
+
+  if(pClipRect) UxTheme_UnclipDc(hdc, hrgnSave);
+
+  break;
+ }
+
+ /*UxTheme_Trace(("] Button_DrawBackground (status %X)", hres));*/
 
  return hres;
 }
@@ -169,18 +224,8 @@ STDAPI_(BOOL) Button_IsPartDefined
    break;
 
   case BP_GROUPBOX:
-   switch(iStateId)
-   {
-    case GBS_NORMAL:
-    case GBS_DISABLED:
-     break;
-
-    default:
-     return FALSE;
-   }
-
    break;
-
+   
   case BP_USERBUTTON:
   default:
    return FALSE;
@@ -188,6 +233,13 @@ STDAPI_(BOOL) Button_IsPartDefined
 
  return TRUE;
 }
+
+/* Initialization */
+#if 0
+STDAPI Button_Initialize(void)
+{
+}
+#endif
 
 /* EOF */
 

@@ -33,8 +33,8 @@
     <OTHERFILES value=""/>
   </MACROS>
   <OPTIONS>
-    <IDLCFLAGS value="-Inostyle -I.\include -I$(BCB)\include -I$(BCB)\include\vcl 
-      -I..\..\include -src_suffix cpp -D_DEBUG -boa"/>
+    <IDLCFLAGS value="-src_suffix cpp -D_DEBUG -Inostyle -I.\include -I$(BCB)\include 
+      -I$(BCB)\include\vcl -I..\..\include -boa"/>
     <CFLAG1 value="-WD -Od -H=$(BCB)\lib\vcl60.csm -Hc -Vx -Ve -X- -r- -a8 -b- -k -y -v -vi- 
       -tWD -tWM -c"/>
     <PFLAGS value="-$YD -$W -$O- -$A8 -v -JPHNE -M"/>
@@ -94,7 +94,7 @@ RunParams=
 Launcher=
 UseLauncher=0
 DebugCWD=
-HostApplication=.\CustomControlSample.exe
+HostApplication=D:\misc\cvsroot\reactos\reactos\lib\uxtheme\XPThemeExplorer6.exe
 RemoteHost=
 RemotePath=
 RemoteLauncher=

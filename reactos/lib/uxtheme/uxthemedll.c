@@ -161,6 +161,11 @@ THEMEAPI_(BOOL) IsThemeBackgroundPartiallyTransparent
  return FALSE;
 }
 
+THEMEAPI_(BOOL) IsAppThemed(void)
+{
+ return TRUE;
+}
+
 THEMEAPI_(HTHEME) OpenThemeData
 (
  HWND hwnd,
@@ -170,6 +175,7 @@ THEMEAPI_(HTHEME) OpenThemeData
  PUXTHEME_DATA pUxTheme;
  PCUXTHEME_VTABLE pvt;
 
+ /* FIXME: support class lists */
  if(_wcsicmp(pszClassList, L"Button") == 0) pvt = &Button_Vt;
  else return NULL;
 
