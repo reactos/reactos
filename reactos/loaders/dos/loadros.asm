@@ -1057,6 +1057,7 @@ load_module2:
 	;;
 	;; Close the file
 	;;
+	pop	ds
 	mov	bx, [_current_filehandle]
 	mov	ah, 0x3e
 	int	0x21
@@ -1069,7 +1070,6 @@ load_module2:
 	;;
 	;; Copy the tailing part to high memory
 	;;
-	pop	ds
 	mov	ecx, [_current_size]
 	mov	esi, 0x90000
 	call	_himem_copy
