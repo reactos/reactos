@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.171 2003/09/25 05:12:24 vizzini Exp $
+/* $Id: main.c,v 1.172 2003/09/29 20:43:07 navaraf Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -724,17 +724,15 @@ ExpInitializeExecutive(VOID)
 
   PiInitDefaultLocale();
 
-#if 0
   /*
    * Load boot start drivers
    */
   IopLoadBootStartDrivers();
-#else
+
   /*
    * Load Auto configured drivers
    */
   LdrLoadAutoConfigDrivers();
-#endif
 
   IoDestroyDriverList();
 

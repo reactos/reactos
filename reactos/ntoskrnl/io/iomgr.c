@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.37 2003/08/24 11:35:41 dwelch Exp $
+/* $Id: iomgr.c,v 1.38 2003/09/29 20:43:07 navaraf Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -375,7 +375,8 @@ VOID IoInit2(VOID)
     DeviceNode,
     TRUE,
     NULL,
-    0);
+    0,
+    FALSE);
   if (!NT_SUCCESS(Status))
     {
       IopFreeDeviceNode(DeviceNode);

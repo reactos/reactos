@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.60 2003/09/25 20:04:27 ekohl Exp $
+/* $Id: device.c,v 1.61 2003/09/29 20:43:06 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -365,7 +365,7 @@ IopAttachFilterDrivers(PDEVICE_NODE DeviceNode,
 
 NTSTATUS 
 IopInitializeDevice(PDEVICE_NODE DeviceNode,
-                    BOOLEAN BootDriversOnly)
+                    BOOLEAN BootDriver)
 {
   IO_STATUS_BLOCK IoStatusBlock;
   PDRIVER_OBJECT DriverObject;
@@ -424,12 +424,22 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
         {
           DPRINT("Bus extender found\n");
 
-          Status = IopInterrogateBusExtender(
-            DeviceNode, Fdo, BootDriversOnly);
-          if (!NT_SUCCESS(Status))
+          /*
+           * Don't initialize boot bus drivers here, because
+           * it will not be able to load the required drivers
+           * for the devices found.
+           *
+           * FiN
+           */
+          if (!BootDriver)
             {
-              ObDereferenceObject(Fdo);
-	            return(Status);
+              Status = IopInterrogateBusExtender(
+                DeviceNode, Fdo);
+              if (!NT_SUCCESS(Status))
+                {
+                  ObDereferenceObject(Fdo);
+    	            return(Status);
+                }
             }
         }
       else if (Fdo->DeviceType == FILE_DEVICE_ACPI)
@@ -473,7 +483,8 @@ IopInitializeService(
     }
 
     Status = IopInitializeDriver(ModuleObject->EntryPoint, DeviceNode, FALSE,
-				 ModuleObject->Base, ModuleObject->Length);
+				 ModuleObject->Base, ModuleObject->Length,
+				 FALSE);
     if (!NT_SUCCESS(Status))
     {
       LdrUnloadModule(ModuleObject);
@@ -482,9 +493,10 @@ IopInitializeService(
       CPRINT("A driver failed to initialize\n");
       return(Status);
     }
+  } else
+  {
+    Status = IopInitializeDevice(DeviceNode, FALSE);
   }
-
-  Status = IopInitializeDevice(DeviceNode, FALSE);
 
   return(Status);
 }
@@ -601,7 +613,8 @@ IopInitializeDriver(PDRIVER_INITIALIZE DriverEntry,
 		    PDEVICE_NODE DeviceNode,
 		    BOOLEAN FileSystemDriver,
 		    PVOID DriverImageStart,
-		    ULONG DriverImageSize)
+		    ULONG DriverImageSize,
+		    BOOLEAN BootDriver)
 /*
  * FUNCTION: Called to initalize a loaded driver
  * ARGUMENTS:
@@ -653,7 +666,7 @@ IopInitializeDriver(PDRIVER_INITIALIZE DriverEntry,
       return(Status);
     }
 
-  Status = IopInitializeDevice(DeviceNode, TRUE);
+  Status = IopInitializeDevice(DeviceNode, BootDriver);
 
   return(Status);
 }

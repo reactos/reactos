@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.16 2003/09/28 12:52:53 navaraf Exp $
+/* $Id: pnpmgr.c,v 1.17 2003/09/29 20:43:07 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -26,7 +26,7 @@ DEFINE_GUID(GUID_CLASS_COMPORT,          0x86e0d1e0L, 0x8089, 0x11d0, 0x9c, 0xe4
 DEFINE_GUID(GUID_SERENUM_BUS_ENUMERATOR, 0x4D36E978L, 0xE325, 0x11CE, 0xBF, 0xC1, 0x08, 0x00, 0x2B, 0xE1, 0x03, 0x18);
 #endif // DEFINE_GUID
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 
@@ -1064,18 +1064,17 @@ IopActionInitChildServices(
 NTSTATUS
 IopInterrogateBusExtender(
   PDEVICE_NODE DeviceNode,
-  PDEVICE_OBJECT Pdo,
-  BOOLEAN BootDriversOnly)
+  PDEVICE_OBJECT Pdo)
 {
   DEVICETREE_TRAVERSE_CONTEXT Context;
   PDEVICE_RELATIONS DeviceRelations;
-	IO_STATUS_BLOCK	IoStatusBlock;
+  IO_STATUS_BLOCK IoStatusBlock;
   PDEVICE_NODE ChildDeviceNode;
   IO_STACK_LOCATION Stack;
   NTSTATUS Status;
   ULONG i;
 
-  DPRINT("DeviceNode %x  Pdo %x  BootDriversOnly %d\n", DeviceNode, Pdo, BootDriversOnly);
+  DPRINT("DeviceNode %x  Pdo %x\n", DeviceNode, Pdo);
 
   DPRINT("Sending IRP_MN_QUERY_DEVICE_RELATIONS to device stack\n");
 
@@ -1179,10 +1178,7 @@ IopInterrogateBusExtender(
 
 VOID IopLoadBootStartDrivers(VOID)
 {
-  IopInterrogateBusExtender(
-    IopRootDeviceNode,
-    IopRootDeviceNode->Pdo,
-    TRUE);
+  IopInterrogateBusExtender(IopRootDeviceNode, IopRootDeviceNode->Pdo);
 }
 
 VOID PnpInit(VOID)
