@@ -18,8 +18,8 @@
 unsigned char read_mixer(unsigned short base,unsigned char reg)
 {
 
-	outb(base+0x04,reg);
-	return inb(base+0x05);
+//	outb(base+0x04,reg);
+//	return inb(base+0x05);
 }
 
 unsigned char get_irq(SB16* sb16)

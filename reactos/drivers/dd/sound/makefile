@@ -1,28 +1,15 @@
-#
-#
-#
+# $Id: makefile,v 1.7 2004/01/20 00:29:48 sedwards Exp $
+
 PATH_TO_TOP = ../../..
 
-TARGET = sound
+TARGET_TYPE = driver
 
-OBJECTS = dsp.o mixer.o sb_waveout.o sound.o wave.o
+TARGET_NAME = sb16
 
-LIBS = $(PATH_TO_TOP)/ntoskrnl/ntoskrnl.a
+TARGET_OBJECTS = sb16.o dsp.o mixer.o sb_waveout.o sound.o wave.o
 
-all: $(TARGET).sys $(TARGET).sys.unstripped
-
-.phony: all
-
-clean:
-	- $(RM) *.o *.sym *.coff junk.tmp base.tmp temp.exp $(TARGET).sys $(TARGET).sys.unstripped
-
-.phony: clean
-
-install: $(FLOPPY_DIR)/drivers/$(TARGET).sys
-
-$(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
-	$(CP) $(TARGET).sys $(FLOPPY_DIR)/drivers/$(TARGET).sys
-
-$(TARGET).sys $(TARGET).sys.unstripped: $(OBJECTS) $(LIBS)
+TARGET_CFLAGS = -Wall
 
 include $(PATH_TO_TOP)/rules.mak
+
+include $(TOOLS_PATH)/helper.mk
