@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.8 1999/09/25 06:25:51 ariadne Exp $
+# $Id: makefile,v 1.9 1999/10/25 06:58:09 rex Exp $
 #
 # Makefile for ReactOS advapi32.dll
 #
@@ -38,7 +38,7 @@ OBJECTS = $(MISC_OBJECTS) $(REGISTRY_OBJECTS) $(SECURITY_OBJECTS) \
 all: $(DLLTARGET)
 
 $(TARGET).coff: $(TARGET).rc ../../include/reactos/resource.h
-	windres $(TARGET).rc $(TARGET).coff
+	$(RC) $(TARGET).rc $(TARGET).coff
 
 $(TARGET).a: $(OBJECTS)
 	$(LD) -r $(OBJECTS) -o $(TARGET).a

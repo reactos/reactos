@@ -35,7 +35,7 @@ else
 endif
 
 bench-thread.exe: bench-thread.c
-	$(CC) bench-thread.c -lkernel32 -o bench-thread.exe
+	$(CC) $(CFLAGS) bench-thread.c -lkernel32 -o bench-thread.exe
 	$(NM) --numeric-sort bench-thread.exe > bench-thread.sym
 
 include ../../rules.mak

@@ -26,7 +26,7 @@ clean:
 .phony: clean
 
 ext2fs.sys: $(OBJECTS)
-	$(CC) -specs=$(KM_SPECS) -mdll -o junk.tmp -Wl,--defsym,_end=end \
+	$(CC) -specs=../../svc_specs -mdll -o junk.tmp -Wl,--defsym,_end=end \
 	      -Wl,--defsym,_edata=__data_end__ -Wl,--defsym,_etext=etext \
 	      -Wl,--base-file,base.tmp $(OBJECTS)
 	$(RM) junk.tmp
@@ -34,7 +34,7 @@ ext2fs.sys: $(OBJECTS)
 	           --output-exp temp.exp
 	$(RM) base.tmp
 	$(CC) --verbose -Wl,--image-base,0x10000 -Wl,-e,_DriverEntry \
-	      -specs=$(KM_SPECS) -mdll -o ext2fs.sys $(OBJECTS) -Wl,temp.exp
+	      -specs=../../svc_specs -mdll -o ext2fs.sys $(OBJECTS) -Wl,temp.exp
 	$(RM) temp.exp
 
 include ../../../rules.mak
