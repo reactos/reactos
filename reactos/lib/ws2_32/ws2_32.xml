@@ -11,6 +11,9 @@
 	<library>user32</library>
 	<library>advapi32</library>
 	<library>dnsapi</library>
+	<directory name="include">
+		<pch>ws2_32.h</pch>
+	</directory>
 	<directory name="misc">
 		<file>bsd.c</file>
 		<file>catalog.c</file>

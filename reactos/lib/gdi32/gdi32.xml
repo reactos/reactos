@@ -10,6 +10,9 @@
 	<library>rosrtl</library>
 	<library>kernel32</library>
 	<library>advapi32</library>
+	<directory name="include">
+		<pch>precomp.h</pch>
+	</directory>
 	<directory name="main">
 		<file>dllmain.c</file>
 	</directory>

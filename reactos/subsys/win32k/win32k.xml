@@ -14,6 +14,7 @@
 	<library>hal</library>
 	<library>pseh</library>
 	<library>freetype</library>
+	<pch>w32k.h</pch>
 	<directory name="dib">
 		<file>dib1bpp.c</file>
 		<file>dib4bpp.c</file>

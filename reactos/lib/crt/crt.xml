@@ -11,6 +11,7 @@
 	<define name="_MSVCRT_LIB_" />
 	<define name="_MSVCRT_" />
 	<define name="_MT" />
+	<pch>precomp.h</pch>
 	<directory name="conio">
 		<file>cgets.c</file>
 		<file>cprintf.c</file>

@@ -21,6 +21,7 @@
 	<library>shell32</library>
 	<library>expat</library>
 	<library>notifyhook</library>
+	<pch>precomp.h</pch>
 	<directory name="desktop">
 		<file>desktop.cpp</file>
 	</directory>

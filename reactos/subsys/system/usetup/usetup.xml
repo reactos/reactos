@@ -7,6 +7,7 @@
 	<library>zlib</library>
 	<library>vfatlib</library>
 	<library>ntdll</library>
+	<pch>precomp.h</pch>
 	<file>bootsup.c</file>
 	<file>cabinet.c</file>
 	<file>console.c</file>

@@ -8,6 +8,9 @@
 	<define name="__USE_W32API" />
 	<library>ntoskrnl</library>
 	<library>hal</library>
+	<directory name="include">
+		<pch>ndissys.h</pch>
+	</directory>
 	<directory name="ndis">
 		<file>40gone.c</file>
 		<file>50gone.c</file>

@@ -12,6 +12,9 @@
 	<library>pseh</library>
 	<library>ntoskrnl</library>
 	<library>hal</library>
+	<directory name="include">
+		<pch>precomp.h</pch>
+	</directory>
 	<directory name="datalink">
 		<file>lan.c</file>
 	</directory>

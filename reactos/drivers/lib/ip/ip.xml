@@ -4,6 +4,9 @@
 	<define name="__USE_W32API"/>
 	<include>drivers/net/tcpip/include</include>
 	<include>drivers/lib/oskittcp/include</include>
+	<directory name="include">
+		<pch>precomp.h</pch>
+	</directory>
 	<directory name="network">
 		<if property="ARCH" value="i386">
 			<directory name="i386">

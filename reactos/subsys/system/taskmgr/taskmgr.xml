@@ -8,6 +8,7 @@
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>comctl32</library>
+	<pch>precomp.h</pch>
 	<file>about.c</file>
 	<file>affinity.c</file>
 	<file>applpage.c</file>

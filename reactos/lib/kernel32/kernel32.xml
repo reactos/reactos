@@ -11,6 +11,7 @@
 	<linkerflag>-lgcc</linkerflag>
 	<linkerflag>-nostartfiles</linkerflag>
 	<linkerflag>-nostdlib</linkerflag>
+	<pch>k32.h</pch>
 	<directory name="debug">
 		<file>break.c</file>
 		<file>debugger.c</file>
