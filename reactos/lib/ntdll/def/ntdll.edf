@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.48 2000/08/11 12:34:13 ekohl Exp $
+; $Id: ntdll.edf,v 1.49 2000/08/11 17:30:20 ea Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -285,6 +285,8 @@ RtlAllocateHeap=RtlAllocateHeap@12
 RtlAnsiCharToUnicodeChar=RtlAnsiCharToUnicodeChar@4
 RtlAnsiStringToUnicodeSize=RtlAnsiStringToUnicodeSize@4
 RtlAnsiStringToUnicodeString=RtlAnsiStringToUnicodeString@12
+RtlAppendAsciizToString=RtlAppendAsciizToString@8
+RtlAppendStringToString=RtlAppendStringToString@8
 RtlAppendUnicodeStringToString=RtlAppendUnicodeStringToString@8
 RtlAppendUnicodeToString=RtlAppendUnicodeToString@8
 ;RtlApplyRXact
