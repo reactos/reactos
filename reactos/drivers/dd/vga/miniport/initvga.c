@@ -108,7 +108,11 @@ VOID  VGAResetDevice(OUT PSTATUS_BLOCK  StatusBlock)
   CHECKPOINT;
   Event = 0;
 
+  memset(&vxba, 0, sizeof(vxba));
   vxba.Eax = 0x0003;
+  vps = VideoPortInt10(NULL, &vxba);
+  memset(&vxba, 0, sizeof(vxba));
+  vxba.Eax = 0x1112;
   vps = VideoPortInt10(NULL, &vxba);
   RtlInitUnicodeString( &Name, L"\\TextConsoleRefreshEvent" );
   InitializeObjectAttributes( &Attr, &Name, 0, 0, 0 );
