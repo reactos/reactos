@@ -180,7 +180,7 @@ protected:
 	int		Command(int id, int code);
 	int		Notify(int id, NMHDR* pnmh);
 
-	bool	DoContextMenu(int x, int y, CtxMenuInterfaces& cm_ifs);
+	bool	DoContextMenu(int x, int y);
 	HRESULT DoDesktopContextMenu(int x, int y);
 	void	PositionIcons(int dir=1);
 
