@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.184 2004/01/13 03:23:11 arty Exp $
+/* $Id: main.c,v 1.185 2004/03/15 21:10:34 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -629,28 +629,7 @@ ExpInitializeExecutive(VOID)
    * Enter the kernel debugger before starting up the boot drivers
    */
 #ifdef KDBG
-  {
-    /* Load the symbols */
-    UNICODE_STRING KWideModuleName;
-
-    for (i=0; i < KeLoaderBlock.ModsCount; i++)
-      {
-	RtlCreateUnicodeStringFromAsciiz(&KWideModuleName,
-					 (PCHAR)KeLoaderModules[i].String);
-	LdrInitDebug(&KeLoaderModules[i],KWideModuleName.Buffer);
-	if( strstr((PCHAR)KeLoaderModules[i].String,".sym") ||
-	    strstr((PCHAR)KeLoaderModules[i].String,".SYM") ) {
-	  KdbProcessSymbolFile((PVOID)KeLoaderModules[i].ModStart,
-			       (PCHAR)KeLoaderModules[i].String,
-			       KeLoaderModules[i].ModEnd - 
-			       KeLoaderModules[i].ModEnd);
-	}
-		   
-	RtlFreeUnicodeString(&KWideModuleName);
-      }
-
-    KdbEnter();
-  }
+  KdbEnter();
 #endif /* KDBG */
 
   IoCreateDriverList();
@@ -816,8 +795,7 @@ ExpInitializeExecutive(VOID)
   NtClose(ProcessHandle);
 }
 
-
-VOID
+VOID __attribute((noinline))
 KiSystemStartup(BOOLEAN BootProcessor)
 {
   HalInitSystem (0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
@@ -839,14 +817,7 @@ KiSystemStartup(BOOLEAN BootProcessor)
   for(;;);
 }
 
-/* 
- * FIXME: 
- *   INIT_FUNCTION is temporary disabled, because if ntoskrnl is compiled with 
- *   higher optimisation levels, gcc puts directly some code from KiSystemStartup 
- *   into _main. This code frees the memory from the init section (_main) and
- *   that does crash reactos.
- */
-VOID /*INIT_FUNCTION*/
+VOID INIT_FUNCTION
 _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
 /*
  * FUNCTION: Called by the boot loader to start the kernel
