@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: registry.c,v 1.6 2003/10/18 20:41:14 ekohl Exp $
+/* $Id: registry.c,v 1.7 2003/10/19 09:35:07 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/registry.c
@@ -97,6 +97,11 @@ RegInitializeRegistry(VOID)
   /* Create SECURITY key */
   RegCreateKey(RootKey,
 	       "Registry\\Machine\\SECURITY",
+	       NULL);
+
+  /* Create SOFTWARE key */
+  RegCreateKey(RootKey,
+	       "Registry\\Machine\\SOFTWARE",
 	       NULL);
 
   /* Create DEFAULT key */
