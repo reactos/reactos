@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.30 1999/07/17 23:10:26 ea Exp $
+/* $Id: loader.c,v 1.31 1999/09/05 12:40:20 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -72,14 +72,6 @@ static PVOID  LdrPEGetExportAddress(PMODULE_OBJECT ModuleObject,
                                     unsigned short Hint);
 static unsigned int LdrGetKernelSymbolAddr(char *Name);
 
-/*  COFF Driver load support  */
-static PMODULE_OBJECT  LdrCOFFProcessModule(PVOID ModuleLoadBase);
-static BOOLEAN LdrCOFFDoRelocations(module *Module, unsigned int SectionIndex);
-static BOOLEAN LdrCOFFDoAddr32Reloc(module *Module, SCNHDR *Section, RELOC *Relocation);
-static BOOLEAN LdrCOFFDoReloc32Reloc(module *Module, SCNHDR *Section, RELOC *Relocation);
-static void LdrCOFFGetSymbolName(module *Module, unsigned int Idx, char *Name);
-static unsigned int LdrCOFFGetSymbolValue(module *Module, unsigned int Idx);
-static unsigned int LdrCOFFGetSymbolValueByName(module *Module, char *SymbolName, unsigned int Idx);
 
 /* FUNCTIONS *****************************************************************/
 
