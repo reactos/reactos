@@ -83,6 +83,7 @@ VOID IoMarkIrpPending(PIRP Irp)
    DPRINT("IoGetCurrentIrpStackLocation(Irp) %x\n",
 	  IoGetCurrentIrpStackLocation(Irp));
    IoGetCurrentIrpStackLocation(Irp)->Control |= SL_PENDING_RETURNED;
+   Irp->Tail.Overlay.Thread = KeGetCurrentThread();
    DPRINT("IoGetCurrentIrpStackLocation(Irp)->Control %x\n",
 	  IoGetCurrentIrpStackLocation(Irp)->Control);
    DPRINT("SL_PENDING_RETURNED %x\n",SL_PENDING_RETURNED);
@@ -231,8 +232,8 @@ VOID IopCompleteRequest(struct _KAPC* Apc,
 			PVOID* SystemArgument1,
 			PVOID* SystemArgument2)
 {
-   	IoSecondStageCompletion((PIRP)(*NormalContext),
-				IO_NO_INCREMENT);
+   IoSecondStageCompletion((PIRP)(*NormalContext),
+                           IO_NO_INCREMENT);
 }
 
 VOID IoCompleteRequest(PIRP Irp, CCHAR PriorityBoost)

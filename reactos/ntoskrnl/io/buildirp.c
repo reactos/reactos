@@ -229,7 +229,6 @@ PIRP IoBuildSynchronousFsdRequest(ULONG MajorFunction,
           {
              RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, Buffer, Length);
           }
-	Irp->UserBuffer = NULL;
      }
    if (DeviceObject->Flags&DO_DIRECT_IO)
      {

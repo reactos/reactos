@@ -433,13 +433,61 @@ static  char SectorBuffer[512 * 10];
     }
 }
 
+void 
+TstKeyboard(void)
+{
+  NTSTATUS Status;
+  HANDLE FileHandle;
+  ANSI_STRING AnsiDeviceName;
+  UNICODE_STRING UnicodeDeviceName;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  KEY_EVENT_RECORD KeyEvent[2];
+     
+  DbgPrint("Testing keyboard driver...\n");
+   
+  DbgPrint("Opening Keyboard device\n");
+  RtlInitAnsiString(&AnsiDeviceName, "\\Device\\Keyboard");
+  RtlAnsiStringToUnicodeString(&UnicodeDeviceName, &AnsiDeviceName, TRUE);
+  InitializeObjectAttributes(&ObjectAttributes,
+                             &UnicodeDeviceName, 
+                             0,
+                             NULL,
+                             NULL);
+  Status = ZwOpenFile(&FileHandle, FILE_GENERIC_READ, &ObjectAttributes, NULL, 0, 0);
+  if (!NT_SUCCESS(Status))
+    {
+      DbgPrint("Failed to open keyboard\n");
+      return;
+    }
+
+  DbgPrint(">");
+  for(;;)
+    {
+      Status = ZwReadFile(FileHandle,
+                          NULL,
+                          NULL,
+                          NULL,
+                          NULL,
+                          &KeyEvent,
+                          sizeof(KeyEvent),
+                          0,
+                          0);
+      if (!NT_SUCCESS(Status))
+        {
+          DbgPrint("Failed to read key event, status %08x\n", Status);
+          return;
+        }
+      DbgPrint("%c",KeyEvent[0].AsciiChar);
+    }
+}
+
 void TstBegin()
 {
    ExExecuteShell();
 //   TstFileRead();
 //   TstGeneralWrite();
 //   TstThreadSupport();
-//   TstKeyboardRead();
+//   TstKeyboard();
 //   TstIDERead();
 //   TstKeyboardRead();
 //   TstShell();
