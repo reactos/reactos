@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dialog.c,v 1.16 2003/08/15 15:55:02 weiden Exp $
+/* $Id: dialog.c,v 1.17 2003/08/30 18:38:08 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/dialog.c
@@ -47,9 +47,9 @@
 #define DF_END  0x0001
 #define DF_OWNERENABLED 0x0002
 #define CW_USEDEFAULT16 ((short)0x8000)
-
-#define GETDLGINFO(hwnd) ((DIALOGINFO*)GetPropA(hwnd, "ROS_DIALOG_INFO"))
-#define SETDLGINFO(hwnd, info) (SetPropA(hwnd, "ROS_DIALOG_INFO", info))
+#define DWL_INIT (12)
+#define GETDLGINFO(hwnd) (DIALOGINFO*)GetWindowLongW((hwnd), DWL_INIT)
+#define SETDLGINFO(hwnd, info) SetWindowLongW((hwnd), DWL_INIT, (LONG)(info))
 #define GET_WORD(ptr)  (*(WORD *)(ptr))
 #define GET_DWORD(ptr) (*(DWORD *)(ptr))
 #define MAKEINTATOMA(atom)  ((LPCSTR)((ULONG_PTR)((WORD)(atom))))
@@ -124,7 +124,7 @@ const struct builtin_class_descr DIALOG_builtin_class =
     DIALOG_CLASS_ATOMW, /* name */
     CS_GLOBALCLASS | CS_SAVEBITS | CS_DBLCLKS, /* style  */
     (WNDPROC) DefDlgProcW,        /* procW */
-    sizeof(DIALOGINFO *),  /* extra */
+    DWL_INIT + sizeof(LONG),  /* extra */
     (LPCWSTR) IDC_ARROW,           /* cursor */
     0                     /* brush */
 };
