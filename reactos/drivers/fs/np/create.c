@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.14 2002/09/08 10:22:11 chorns Exp $
+/* $Id: create.c,v 1.15 2003/01/19 01:13:04 gvg Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -37,7 +37,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
    KIRQL oldIrql;
    ULONG Disposition;
    
-   DPRINT1("NpfsCreate(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
+   DPRINT("NpfsCreate(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
    
    DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
    IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -199,7 +199,7 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
    PNPFS_PIPE current;
    PIO_PIPE_CREATE_BUFFER Buffer;
    
-   DPRINT1("NpfsCreateNamedPipe(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
+   DPRINT("NpfsCreateNamedPipe(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
    
    DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
    IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -343,7 +343,7 @@ NpfsClose(PDEVICE_OBJECT DeviceObject,
   PNPFS_PIPE_DATA Current;
 
 
-  DPRINT1("NpfsClose(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
+  DPRINT("NpfsClose(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
   IoStack = IoGetCurrentIrpStackLocation(Irp);
   DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;

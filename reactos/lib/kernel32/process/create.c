@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.59 2003/01/15 21:24:35 chorns Exp $
+/* $Id: create.c,v 1.60 2003/01/19 01:13:04 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -13,7 +13,7 @@
 
 #include <k32.h>
 
-#define DBG
+#define NDEBUG
 #include <kernel32/kernel32.h>
 
 /* FUNCTIONS ****************************************************************/
