@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <sys/utime.h>
 #ifdef WIN32
 #include <io.h>
 #include <dos.h>
@@ -85,6 +86,8 @@ copy_file(char* path1, char* path2)
    char* buf;
    int n_in;
    int n_out;
+   struct _stat st_buffer;
+   struct _utimbuf ut_buffer; 
 
    in = fopen(path1, "rb");
    if (in == NULL)
@@ -115,6 +118,21 @@ copy_file(char* path1, char* path2)
 	     exit(1);
 	  }
      }
+   free(buf);
+   fclose(in);
+   fclose(out);
+
+   if (_stat(path2, &st_buffer) >= 0)
+   {
+      ut_buffer.actime = st_buffer.st_atime;
+   
+      if (_stat(path1, &st_buffer) >= 0)
+      {
+         ut_buffer.modtime = st_buffer.st_mtime;
+	 _utime(path2, &ut_buffer);
+      }
+   }
+   
 }
 
 #ifdef WIN32
