@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.34 2001/03/07 16:48:42 dwelch Exp $
+/* $Id: irp.c,v 1.35 2001/04/06 04:29:16 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -228,11 +228,10 @@ IofCompleteRequest (PIRP Irp, CCHAR PriorityBoost)
 	     Irp->PendingReturned = TRUE;
 	  }
      }
-
-   if (Irp->PendingReturned)
+   Thread = &Irp->Tail.Overlay.Thread->Tcb;
+   if ( Irp->PendingReturned && Thread != KeGetCurrentThread() )
      {
 	DPRINT("Dispatching APC\n");
-	Thread = &Irp->Tail.Overlay.Thread->Tcb;
 	KeInitializeApc(&Irp->Tail.Apc,
 			Thread,
 			0,
