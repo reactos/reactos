@@ -1,4 +1,4 @@
-/* $Id: import.c,v 1.4 2001/11/25 18:28:00 ekohl Exp $
+/* $Id: import.c,v 1.5 2002/04/27 19:00:14 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -64,7 +64,7 @@ computeKeyNameSize (PCHAR  regChunk)
   return  copyCount;
 }
 
-static BOOL
+static BOOLEAN
 allocateKeyName (PUNICODE_STRING  newKeyName, int  newKeySize)
 {
   if (newKeyName->MaximumLength < (newKeySize + 1) * sizeof (WCHAR))
@@ -226,6 +226,14 @@ getKeyValueTypeFromChunk (PCHAR  regChunk, PCHAR  dataFormat, int *keyValueType)
     if (*regChunk == ':')
       regChunk++;
   }
+  else if (strncmp (regChunk, "multi", 5) == 0)
+  {
+    strcpy (dataFormat, "multi");
+    *keyValueType = REG_MULTI_SZ;
+    regChunk += 5;
+    if (*regChunk == ':')
+      regChunk++;
+  }
   else
   {
     UNIMPLEMENTED;
@@ -277,6 +285,36 @@ computeKeyValueDataSize (PCHAR  regChunk, PCHAR  dataFormat)
       regChunk++;
     }
   }
+  else if (strcmp (dataFormat, "multi") == 0)
+  {
+    while (*regChunk == '\"')
+    {
+      regChunk++;
+      while (*regChunk != 0 && *regChunk != '\"')
+      {
+        dataSize++;
+        dataSize++;
+        regChunk++;
+      }
+      regChunk++;
+      dataSize++;
+      dataSize++;
+      if (*regChunk == ',')
+      {
+        regChunk++;
+        regChunk = skipWhitespaceInChunk (regChunk);
+        if (*regChunk == '\\')
+        {
+          regChunk++;
+          regChunk = skipWhitespaceInChunk (regChunk);
+        }
+      }
+      else
+        break;
+    }
+    dataSize++;
+    dataSize++;
+  }
   else
   {
     UNIMPLEMENTED;
@@ -285,7 +323,7 @@ computeKeyValueDataSize (PCHAR  regChunk, PCHAR  dataFormat)
   return  dataSize;
 }
 
-static BOOL
+static BOOLEAN
 allocateDataBuffer (PVOID * data, int * dataBufferSize, int dataSize)
 {
   if (*dataBufferSize < dataSize)
@@ -352,6 +390,33 @@ getKeyValueDataFromChunk (PCHAR  regChunk, PCHAR  dataFormat, PCHAR data)
     }
     memcpy(data, &ulValue, sizeof(ULONG));
   }
+  else if (strcmp (dataFormat, "multi") == 0)
+  {
+    ptr = (PWCHAR)data;
+    while (*regChunk == '\"')
+    {
+      regChunk++;
+      while (*regChunk != 0 && *regChunk != '\"')
+      {
+        *ptr++ = (WCHAR)*regChunk++;
+      }
+      regChunk++;
+      *ptr++ = 0;
+      if (*regChunk == ',')
+      {
+        regChunk++;
+        regChunk = skipWhitespaceInChunk (regChunk);
+        if (*regChunk == '\\')
+        {
+          regChunk++;
+          regChunk = skipWhitespaceInChunk (regChunk);
+        }
+      }
+      else
+        break;
+    }
+    *ptr = 0;
+  }
   else
   {
     UNIMPLEMENTED;
@@ -360,11 +425,11 @@ getKeyValueDataFromChunk (PCHAR  regChunk, PCHAR  dataFormat, PCHAR data)
   return  *regChunk ? regChunk : 0;
 }
 
-static BOOL 
-setKeyValue (HANDLE  currentKey, 
-             PUNICODE_STRING  newValueName, 
-             ULONG  keyValueType, 
-             PVOID  data, 
+static BOOLEAN
+setKeyValue (HANDLE  currentKey,
+             PUNICODE_STRING  newValueName,
+             ULONG  keyValueType,
+             PVOID  data,
              ULONG  dataSize)
 {
   NTSTATUS  status;
@@ -373,11 +438,11 @@ setKeyValue (HANDLE  currentKey,
           newValueName,
           keyValueType,
           dataSize);
-  status = NtSetValueKey (currentKey, 
-                          newValueName, 
-                          0, 
-                          keyValueType, 
-                          data, 
+  status = NtSetValueKey (currentKey,
+                          newValueName,
+                          0,
+                          keyValueType,
+                          data,
                           dataSize);
   if (!NT_SUCCESS(status))
   {
