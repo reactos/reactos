@@ -1,4 +1,4 @@
-/* $Id: scm.c,v 1.13 2002/11/14 18:21:04 chorns Exp $
+/* $Id: scm.c,v 1.14 2002/12/26 17:23:27 robd Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -35,8 +35,7 @@ ChangeServiceConfigA(
 	LPCSTR		lpDependencies,
 	LPCSTR		lpServiceStartName,
 	LPCSTR		lpPassword,
-	LPCSTR		lpDisplayName 
-	)
+	LPCSTR		lpDisplayName)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -59,8 +58,7 @@ ChangeServiceConfigW(
 	LPCWSTR		lpDependencies,
 	LPCWSTR		lpServiceStartName,
 	LPCWSTR		lpPassword,
-	LPCWSTR		lpDisplayName 
-	)
+	LPCWSTR		lpDisplayName)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -72,7 +70,7 @@ ChangeServiceConfigW(
  */
 BOOL 
 STDCALL
-CloseServiceHandle( SC_HANDLE hSCObject )
+CloseServiceHandle(SC_HANDLE hSCObject)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -84,11 +82,9 @@ CloseServiceHandle( SC_HANDLE hSCObject )
  */
 BOOL
 STDCALL
-ControlService(
-	SC_HANDLE		hService,
-	DWORD			dwControl,
-	LPSERVICE_STATUS	lpServiceStatus
-	)
+ControlService(SC_HANDLE		hService,
+	           DWORD			dwControl,
+	           LPSERVICE_STATUS	lpServiceStatus)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -113,8 +109,7 @@ CreateServiceA(
 	LPDWORD		lpdwTagId,
 	LPCSTR		lpDependencies,
 	LPCSTR		lpServiceStartName,
-	LPCSTR		lpPassword
-	)
+	LPCSTR		lpPassword)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return NULL;
@@ -139,8 +134,7 @@ CreateServiceW(
 	LPDWORD		lpdwTagId,
 	LPCWSTR		lpDependencies,
 	LPCWSTR		lpServiceStartName,
-	LPCWSTR		lpPassword
-	)
+	LPCWSTR		lpPassword)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return NULL;
@@ -152,7 +146,7 @@ CreateServiceW(
  */
 BOOL
 STDCALL
-DeleteService( SC_HANDLE hService )
+DeleteService(SC_HANDLE hService)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -170,8 +164,7 @@ EnumDependentServicesA(
 	LPENUM_SERVICE_STATUSA	lpServices,
 	DWORD			cbBufSize,
 	LPDWORD			pcbBytesNeeded,
-	LPDWORD			lpServicesReturned
-	)
+	LPDWORD			lpServicesReturned)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -189,8 +182,7 @@ EnumDependentServicesW(
 	LPENUM_SERVICE_STATUSW	lpServices,
 	DWORD			cbBufSize,
 	LPDWORD			pcbBytesNeeded,
-	LPDWORD			lpServicesReturned
-	)
+	LPDWORD			lpServicesReturned)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -213,8 +205,7 @@ EnumServiceGroupW (
 	DWORD	Unknown5,
 	DWORD	Unknown6,
 	DWORD	Unknown7,
-	DWORD	Unknown8
-	)
+	DWORD	Unknown8)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -234,8 +225,7 @@ EnumServicesStatusA (
 	DWORD                   cbBufSize,
 	LPDWORD                 pcbBytesNeeded,
 	LPDWORD                 lpServicesReturned,
-	LPDWORD                 lpResumeHandle
-	)
+	LPDWORD                 lpResumeHandle)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -256,8 +246,7 @@ EnumServicesStatusExA(SC_HANDLE  hSCManager,
   LPDWORD  pcbBytesNeeded,
   LPDWORD  lpServicesReturned,
   LPDWORD  lpResumeHandle,
-  LPCSTR  pszGroupName
-  )
+  LPCSTR  pszGroupName)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -278,8 +267,7 @@ EnumServicesStatusExW(SC_HANDLE  hSCManager,
   LPDWORD  pcbBytesNeeded,
   LPDWORD  lpServicesReturned,
   LPDWORD  lpResumeHandle,
-  LPCWSTR  pszGroupName
-  )
+  LPCWSTR  pszGroupName)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -299,8 +287,7 @@ EnumServicesStatusW(
 	DWORD                   cbBufSize,
 	LPDWORD                 pcbBytesNeeded,
 	LPDWORD                 lpServicesReturned,
-	LPDWORD                 lpResumeHandle
-	)
+	LPDWORD                 lpResumeHandle)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -316,8 +303,7 @@ GetServiceDisplayNameA(
 	SC_HANDLE	hSCManager,
 	LPCSTR		lpServiceName,
 	LPSTR		lpDisplayName,
-	LPDWORD		lpcchBuffer
-	)
+	LPDWORD		lpcchBuffer)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -333,8 +319,7 @@ GetServiceDisplayNameW(
 	SC_HANDLE	hSCManager,
 	LPCWSTR		lpServiceName,
 	LPWSTR		lpDisplayName,
-	LPDWORD		lpcchBuffer
-	)
+	LPDWORD		lpcchBuffer)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -350,8 +335,7 @@ GetServiceKeyNameA(
 	SC_HANDLE	hSCManager,
 	LPCSTR		lpDisplayName,
 	LPSTR		lpServiceName,
-	LPDWORD		lpcchBuffer
-	)
+	LPDWORD		lpcchBuffer)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -367,8 +351,7 @@ GetServiceKeyNameW(
 	SC_HANDLE	hSCManager,
 	LPCWSTR		lpDisplayName,
 	LPWSTR		lpServiceName,
-	LPDWORD		lpcchBuffer
-	)
+	LPDWORD		lpcchBuffer)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -379,9 +362,7 @@ GetServiceKeyNameW(
  */
 SC_LOCK
 STDCALL
-LockServiceDatabase(
-	SC_HANDLE	hSCManager
-	)
+LockServiceDatabase(SC_HANDLE	hSCManager)
 {
 	SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
 	return NULL;
@@ -581,8 +562,7 @@ PrivilegedServiceAuditAlarmA(
 	LPCSTR		ServiceName,
 	HANDLE		ClientToken,
 	PPRIVILEGE_SET	Privileges,
-	BOOL		AccessGranted 
-	)
+	BOOL		AccessGranted)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -599,8 +579,7 @@ PrivilegedServiceAuditAlarmW(
 	LPCWSTR		ServiceName,
 	HANDLE		ClientToken,
 	PPRIVILEGE_SET	Privileges,
-	BOOL		AccessGranted 
-	)
+	BOOL		AccessGranted)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 1;
@@ -616,8 +595,7 @@ QueryServiceConfigA(
 	SC_HANDLE		hService,
 	LPQUERY_SERVICE_CONFIGA	lpServiceConfig,
 	DWORD			cbBufSize,
-	LPDWORD			pcbBytesNeeded
-	)
+	LPDWORD			pcbBytesNeeded)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -633,8 +611,7 @@ QueryServiceConfigW(
 	SC_HANDLE		hService,
 	LPQUERY_SERVICE_CONFIGW lpServiceConfig,
 	DWORD                   cbBufSize,
-	LPDWORD                 pcbBytesNeeded
-	)
+	LPDWORD                 pcbBytesNeeded)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -650,8 +627,7 @@ QueryServiceLockStatusA(
 	SC_HANDLE			hSCManager,
 	LPQUERY_SERVICE_LOCK_STATUSA	lpLockStatus,
 	DWORD				cbBufSize,
-	LPDWORD				pcbBytesNeeded
-	)
+	LPDWORD				pcbBytesNeeded)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -667,8 +643,7 @@ QueryServiceLockStatusW(
 	SC_HANDLE			hSCManager,
 	LPQUERY_SERVICE_LOCK_STATUSW	lpLockStatus,
 	DWORD				cbBufSize,
-	LPDWORD				pcbBytesNeeded
-	)
+	LPDWORD				pcbBytesNeeded)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -685,8 +660,7 @@ QueryServiceObjectSecurity(
 	SECURITY_INFORMATION	dwSecurityInformation,
 	PSECURITY_DESCRIPTOR	lpSecurityDescriptor,
 	DWORD			cbBufSize,
-	LPDWORD			pcbBytesNeeded
-	)
+	LPDWORD			pcbBytesNeeded)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -700,8 +674,7 @@ BOOL
 STDCALL
 QueryServiceStatus(
 	SC_HANDLE		hService,
-	LPSERVICE_STATUS	lpServiceStatus
-	)
+	LPSERVICE_STATUS	lpServiceStatus)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -717,8 +690,7 @@ QueryServiceStatusEx(SC_HANDLE  hService,
   SC_STATUS_TYPE  InfoLevel,
   LPBYTE  lpBuffer,
   DWORD  cbBufSize,
-  LPDWORD  pcbBytesNeeded
-  )
+  LPDWORD  pcbBytesNeeded)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -733,8 +705,7 @@ STDCALL
 StartServiceA(
 	SC_HANDLE	hService,
 	DWORD		dwNumServiceArgs,
-	LPCSTR		*lpServiceArgVectors
-	)
+	LPCSTR		*lpServiceArgVectors)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -751,8 +722,7 @@ STDCALL
 StartServiceW(
 	SC_HANDLE	hService,
 	DWORD		dwNumServiceArgs,
-	LPCWSTR		*lpServiceArgVectors
-	)
+	LPCWSTR		*lpServiceArgVectors)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -764,9 +734,7 @@ StartServiceW(
  */
 BOOL
 STDCALL
-UnlockServiceDatabase(
-	SC_LOCK	ScLock
-	)
+UnlockServiceDatabase(SC_LOCK	ScLock)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
