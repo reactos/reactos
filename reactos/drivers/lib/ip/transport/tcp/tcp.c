@@ -427,7 +427,7 @@ NTSTATUS TCPConnect
 
     TcpipRecursiveMutexLeave( &TCPLock );
     
-    if( Status == OSK_EINPROGRESS || Status == STATUS_SUCCESS ) 
+    if( Status == OSK_EINPROGRESS ) 
 	return STATUS_PENDING;
     else
 	return Status;
@@ -496,26 +496,41 @@ NTSTATUS TCPListen
   UINT Backlog, 
   PTCP_COMPLETION_ROUTINE Complete,
   PVOID Context) {
-   NTSTATUS Status;
+    NTSTATUS Status;
+    SOCKADDR_IN AddressToBind;
 
-   TI_DbgPrint(DEBUG_TCP,("TCPListen started\n"));
+    TI_DbgPrint(DEBUG_TCP,("TCPListen started\n"));
 
-   TI_DbgPrint(DEBUG_TCP,("Connection->SocketContext %x\n",
-     Connection->SocketContext));
+    TI_DbgPrint(DEBUG_TCP,("Connection->SocketContext %x\n",
+	Connection->SocketContext));
 
-   ASSERT(Connection);
-   ASSERT_KM_POINTER(Connection->SocketContext);
+    ASSERT(Connection);
+    ASSERT_KM_POINTER(Connection->SocketContext);
+    ASSERT_KM_POINTER(Connection->AddressFile);
 
-   TcpipRecursiveMutexEnter( &TCPLock, TRUE );
+    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
    
-   Status =  TCPTranslateError( OskitTCPListen( Connection->SocketContext,
+    AddressToBind.sin_family = AF_INET;
+    memcpy( &AddressToBind.sin_addr, 
+	    &Connection->AddressFile->Address.Address.IPv4Address,
+	    sizeof(AddressToBind.sin_addr) );
+    AddressToBind.sin_port = Connection->AddressFile->Port;
+
+    TI_DbgPrint(DEBUG_TCP,("AddressToBind - %x:%x\n", AddressToBind.sin_addr, AddressToBind.sin_port));
+
+    OskitTCPBind( Connection->SocketContext,
+		  Connection,
+		  &AddressToBind,
+		  sizeof(AddressToBind) );
+   
+    Status = TCPTranslateError( OskitTCPListen( Connection->SocketContext,
 						Backlog ) );
    
-   TcpipRecursiveMutexLeave( &TCPLock );
+    TcpipRecursiveMutexLeave( &TCPLock );
 
-   TI_DbgPrint(DEBUG_TCP,("TCPListen finished %x\n", Status));
+    TI_DbgPrint(DEBUG_TCP,("TCPListen finished %x\n", Status));
    
-   return Status;
+    return Status;
 }
 
 NTSTATUS TCPAccept

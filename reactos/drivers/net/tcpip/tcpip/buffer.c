@@ -370,6 +370,7 @@ NDIS_STATUS AllocatePacketWithBufferX( PNDIS_PACKET *NdisPacket,
 	ExFreePool( NewData );
 	UntrackFL( File, Line, Packet );
 	FreeNdisPacket( Packet );
+	return Status;
     }
     TrackWithTag(NDIS_BUFFER_TAG, Buffer, File, Line);
 
