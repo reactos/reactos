@@ -61,7 +61,7 @@ NTSTATUS MakeSocketIntoConnection( PAFD_FCB FCB ) {
 			     ReceiveComplete,
 			     FCB );
     }
-    
+
     return Status;
 }
 

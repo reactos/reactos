@@ -140,6 +140,7 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 VOID DestroySocket( PAFD_FCB FCB ) {
     UINT i;
+    BOOLEAN ReturnEarly = FALSE;
     PAFD_IN_FLIGHT_REQUEST InFlightRequest[IN_FLIGHT_REQUESTS];
 
     AFD_DbgPrint(MIN_TRACE,("Called (%x)\n", FCB));
@@ -161,8 +162,7 @@ VOID DestroySocket( PAFD_FCB FCB ) {
 				FCB->ListenIrp.InFlightRequest,
 				FCB->ReceiveIrp.InFlightRequest,
 				FCB->SendIrp.InFlightRequest));
-	SocketStateUnlock( FCB );
-	return;
+        ReturnEarly = TRUE;
     }
 
     /* After PoolReeval, this FCB should not be involved in any outstanding
@@ -181,6 +181,8 @@ VOID DestroySocket( PAFD_FCB FCB ) {
     }
 
     SocketStateUnlock( FCB );
+
+    if( ReturnEarly ) return;
     
     if( FCB->Recv.Window ) 
 	ExFreePool( FCB->Recv.Window );

@@ -208,6 +208,12 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         if( !(SendReq = LockRequest( Irp, IrpSp )) ) 
             return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp, 0,
                                            NULL, FALSE );
+
+        /* Must lock buffers before handing off user data */
+        SendReq->BufferArray = LockBuffers( SendReq->BufferArray,
+                                            SendReq->BufferCount,
+                                            NULL, NULL,
+                                            FALSE, FALSE );
     
         TdiBuildConnectionInfo( &TargetAddress, FCB->RemoteAddress );
 
@@ -260,7 +266,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 					SendReq->BufferCount,
 					NULL, NULL,
 					FALSE, FALSE );
-    
+
     AFD_DbgPrint(MID_TRACE,("FCB->Send.BytesUsed = %d\n", 
 			    FCB->Send.BytesUsed));
 

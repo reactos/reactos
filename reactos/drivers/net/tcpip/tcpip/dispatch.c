@@ -82,74 +82,6 @@ VOID DispCancelComplete(
 }
 
 
-VOID DDKAPI DispCancelRequest(
-    PDEVICE_OBJECT Device,
-    PIRP Irp)
-/*
- * FUNCTION: Cancels an IRP
- * ARGUMENTS:
- *     Device = Pointer to device object
- *     Irp    = Pointer to an I/O request packet
- */
-{
-    PIO_STACK_LOCATION IrpSp;
-    PTRANSPORT_CONTEXT TranContext;
-    PFILE_OBJECT FileObject;
-    UCHAR MinorFunction;
-    NTSTATUS Status = STATUS_SUCCESS;
-
-    TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
-
-    IrpSp         = IoGetCurrentIrpStackLocation(Irp);
-    FileObject    = IrpSp->FileObject;
-    TranContext   = (PTRANSPORT_CONTEXT)FileObject->FsContext;
-    MinorFunction = IrpSp->MinorFunction;
-
-    TI_DbgPrint(DEBUG_IRP, ("IRP at (0x%X)  MinorFunction (0x%X)  IrpSp (0x%X).\n", Irp, MinorFunction, IrpSp));
-
-#ifdef DBG
-    if (!Irp->Cancel)
-        TI_DbgPrint(MIN_TRACE, ("Irp->Cancel is FALSE, should be TRUE.\n"));
-#endif
-
-    IoReleaseCancelSpinLock(Irp->CancelIrql);
-
-    /* Try canceling the request */
-    switch(MinorFunction) {
-    case TDI_SEND:
-    case TDI_RECEIVE:
-        /* FIXME: Close connection */
-        break;
-
-    case TDI_SEND_DATAGRAM:
-        if (FileObject->FsContext2 != (PVOID)TDI_TRANSPORT_ADDRESS_FILE) {
-            TI_DbgPrint(MIN_TRACE, ("TDI_SEND_DATAGRAM, but no address file.\n"));
-            break;
-        }
-
-        /*DGCancelSendRequest(TranContext->Handle.AddressHandle, Irp);*/
-        break;
-
-    case TDI_RECEIVE_DATAGRAM:
-        if (FileObject->FsContext2 != (PVOID)TDI_TRANSPORT_ADDRESS_FILE) {
-            TI_DbgPrint(MIN_TRACE, ("TDI_RECEIVE_DATAGRAM, but no address file.\n"));
-            break;
-        }
-
-        /*DGCancelReceiveRequest(TranContext->Handle.AddressHandle, Irp);*/
-        break;
-
-    default:
-        TI_DbgPrint(MIN_TRACE, ("Unknown IRP. MinorFunction (0x%X).\n", MinorFunction));
-        break;
-    }
-
-    if (Status != STATUS_PENDING)
-        DispCancelComplete(FileObject);
-
-    TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
-}
-
 VOID DispDataRequestComplete(
     PVOID Context,
     NTSTATUS Status,
@@ -201,6 +133,90 @@ VOID DispDataRequestComplete(
     IRPFinish(Irp, Irp->IoStatus.Status);
 
     TI_DbgPrint(DEBUG_IRP, ("Done Completing IRP\n"));
+}
+
+
+VOID DDKAPI DispCancelRequest(
+    PDEVICE_OBJECT Device,
+    PIRP Irp)
+/*
+ * FUNCTION: Cancels an IRP
+ * ARGUMENTS:
+ *     Device = Pointer to device object
+ *     Irp    = Pointer to an I/O request packet
+ */
+{
+    PIO_STACK_LOCATION IrpSp;
+    PTRANSPORT_CONTEXT TranContext;
+    PFILE_OBJECT FileObject;
+    UCHAR MinorFunction;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
+
+    IrpSp         = IoGetCurrentIrpStackLocation(Irp);
+    FileObject    = IrpSp->FileObject;
+    TranContext   = (PTRANSPORT_CONTEXT)FileObject->FsContext;
+    MinorFunction = IrpSp->MinorFunction;
+
+    TI_DbgPrint(DEBUG_IRP, ("IRP at (0x%X)  MinorFunction (0x%X)  IrpSp (0x%X).\n", Irp, MinorFunction, IrpSp));
+
+#ifdef DBG
+    if (!Irp->Cancel)
+        TI_DbgPrint(MIN_TRACE, ("Irp->Cancel is FALSE, should be TRUE.\n"));
+#endif
+
+    /* Try canceling the request */
+    switch(MinorFunction) {
+    case TDI_SEND:
+        TCPDisconnect
+            ( TranContext->Handle.ConnectionContext,
+              TDI_DISCONNECT_RELEASE,
+              NULL,
+              NULL,
+              DispDataRequestComplete,
+              Irp );
+        break;
+
+    case TDI_RECEIVE:
+        TCPDisconnect
+            ( TranContext->Handle.ConnectionContext,
+              TDI_DISCONNECT_ABORT | TDI_DISCONNECT_RELEASE,
+              NULL,
+              NULL,
+              DispDataRequestComplete,
+              Irp );
+        break;
+
+    case TDI_SEND_DATAGRAM:
+        if (FileObject->FsContext2 != (PVOID)TDI_TRANSPORT_ADDRESS_FILE) {
+            TI_DbgPrint(MIN_TRACE, ("TDI_SEND_DATAGRAM, but no address file.\n"));
+            break;
+        }
+
+        /*DGCancelSendRequest(TranContext->Handle.AddressHandle, Irp);*/
+        break;
+
+    case TDI_RECEIVE_DATAGRAM:
+        if (FileObject->FsContext2 != (PVOID)TDI_TRANSPORT_ADDRESS_FILE) {
+            TI_DbgPrint(MIN_TRACE, ("TDI_RECEIVE_DATAGRAM, but no address file.\n"));
+            break;
+        }
+
+        /*DGCancelReceiveRequest(TranContext->Handle.AddressHandle, Irp);*/
+        break;
+
+    default:
+        TI_DbgPrint(MIN_TRACE, ("Unknown IRP. MinorFunction (0x%X).\n", MinorFunction));
+        break;
+    }
+
+    if (Status != STATUS_PENDING)
+        DispCancelComplete(FileObject);
+    else
+        IoReleaseCancelSpinLock(Irp->CancelIrql);
+
+    TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
 
 
