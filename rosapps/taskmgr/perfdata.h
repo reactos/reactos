@@ -23,6 +23,11 @@
 #ifndef __PERFDATA_H
 #define __PERFDATA_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 #if 0
 typedef struct _TIME {
 	DWORD LowPart;
@@ -408,5 +413,10 @@ ULONG	PerfDataGetPhysicalMemorySystemCacheK(void);
 ULONG	PerfDataGetSystemHandleCount(void);
 
 ULONG	PerfDataGetTotalThreadCount(void);
+
+
+#ifdef __cplusplus
+};
+#endif
 
 #endif // __PERFDATA_H

@@ -1,7 +1,7 @@
 /*
  *  ReactOS Task Manager
  *
- *  graph.h
+ *  performancepage.h
  *
  *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
  *
@@ -20,25 +20,26 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 	
-#ifndef __GRAPH_H
-#define __GRAPH_H
+#ifndef __PERFORMANCEPAGE_H
+#define __PERFORMANCEPAGE_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 
-#define BRIGHT_GREEN	RGB(0, 255, 0)
-#define DARK_GREEN		RGB(0, 130, 0)
-#define RED				RGB(255, 0, 0)
+extern	HWND		hPerformancePage;				// Performance Property Page
 
-extern	LONG				OldGraphWndProc;
+LRESULT CALLBACK	PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+void				RefreshPerformancePage(void);
 
-LRESULT CALLBACK	Graph_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+void				PerformancePage_OnViewShowKernelTimes(void);
+void				PerformancePage_OnViewCPUHistoryOneGraphAll(void);
+void				PerformancePage_OnViewCPUHistoryOneGraphPerCPU(void);
 
 
 #ifdef __cplusplus
 };
 #endif
 
-#endif // __GRAPH_H
+#endif // __PERFORMANCEPAGE_H

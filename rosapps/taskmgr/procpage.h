@@ -1,7 +1,7 @@
 /*
  *  ReactOS Task Manager
  *
- *  graph.h
+ *  processpage.h
  *
  *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
  *
@@ -20,25 +20,16 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 	
-#ifndef __GRAPH_H
-#define __GRAPH_H
+#ifndef __PROCESSPAGE_H
+#define __PROCESSPAGE_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+extern	HWND		hProcessPage;						// Process List Property Page
+extern	HWND		hProcessPageListCtrl;				// Process ListCtrl Window
+extern	HWND		hProcessPageHeaderCtrl;				// Process Header Control
+extern	HWND		hProcessPageEndProcessButton;		// Process End Process button
+extern	HWND		hProcessPageShowAllProcessesButton;	// Process Show All Processes checkbox
 
+LRESULT CALLBACK	ProcessPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+void				RefreshProcessPage(void);
 
-#define BRIGHT_GREEN	RGB(0, 255, 0)
-#define DARK_GREEN		RGB(0, 130, 0)
-#define RED				RGB(255, 0, 0)
-
-extern	LONG				OldGraphWndProc;
-
-LRESULT CALLBACK	Graph_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-
-
-#ifdef __cplusplus
-};
-#endif
-
-#endif // __GRAPH_H
+#endif // __PROCESSPAGE_H
