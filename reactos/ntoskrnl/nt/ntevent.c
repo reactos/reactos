@@ -209,6 +209,11 @@ NtOpenEvent(OUT PHANDLE UnsafeEventHandle,
 			       DesiredAccess,
 			       NULL,
 			       &EventHandle);
+             
+  if (!NT_SUCCESS(Status))
+  {
+    return(Status);
+  }
 
    Status = MmCopyToCaller(UnsafeEventHandle, &EventHandle, sizeof(HANDLE));
    if (!NT_SUCCESS(Status))
@@ -216,7 +221,7 @@ NtOpenEvent(OUT PHANDLE UnsafeEventHandle,
        ZwClose(EventHandle);
        return(Status);
      }
-   
+     
    return(Status);
 }
 
