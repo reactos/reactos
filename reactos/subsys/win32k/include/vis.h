@@ -1,4 +1,4 @@
-/* $Id: vis.h,v 1.5 2003/12/12 18:59:24 weiden Exp $
+/* $Id: vis.h,v 1.6 2004/01/17 15:18:25 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
@@ -15,13 +15,11 @@
 #include <include/window.h>
 
 HRGN FASTCALL
-VIS_ComputeVisibleRegion(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
-                         BOOLEAN ClientArea, BOOLEAN ClipChildren,
-                         BOOLEAN ClipSiblings);
+VIS_ComputeVisibleRegion(PWINDOW_OBJECT Window, BOOLEAN ClientArea,
+   BOOLEAN ClipChildren, BOOLEAN ClipSiblings);
 
 VOID FASTCALL
-VIS_WindowLayoutChanged(PDESKTOP_OBJECT Desktop, PWINDOW_OBJECT Window,
-                        HRGN UncoveredRgn);
+VIS_WindowLayoutChanged(PWINDOW_OBJECT Window, HRGN UncoveredRgn);
 
 #endif /* ! defined(_WIN32K_VIS_H) */
 

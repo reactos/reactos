@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.175 2004/01/15 21:02:09 gvg Exp $
+/* $Id: window.c,v 1.176 2004/01/17 15:18:25 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -452,6 +452,7 @@ DestroyThreadWindows(struct _ETHREAD *Thread)
       LastHead = Win32Thread->WindowListHead.Flink;
       Window = CONTAINING_RECORD(Win32Thread->WindowListHead.Flink, WINDOW_OBJECT, ThreadListEntry);
       ExReleaseFastMutexUnsafe(&Win32Thread->WindowListLock);
+      WinPosShowWindow(Window->Self, SW_HIDE);
       IntDestroyWindow(Window, Win32Process, Win32Thread, FALSE);
       ExAcquireFastMutexUnsafe(&Win32Thread->WindowListLock);
     }
@@ -608,7 +609,6 @@ VOID FASTCALL
 IntInitDesktopWindow(ULONG Width, ULONG Height)
 {
   PWINDOW_OBJECT DesktopWindow;
-  HRGN DesktopRgn;
 
   DesktopWindow = IntGetWindowObject(PsGetWin32Thread()->Desktop->DesktopWindow);
   if (NULL == DesktopWindow)
@@ -621,9 +621,7 @@ IntInitDesktopWindow(ULONG Width, ULONG Height)
   DesktopWindow->WindowRect.bottom = Height;
   DesktopWindow->ClientRect = DesktopWindow->WindowRect;
 
-  DesktopRgn = UnsafeIntCreateRectRgnIndirect(&(DesktopWindow->WindowRect));
-  VIS_WindowLayoutChanged(PsGetWin32Thread()->Desktop, DesktopWindow, DesktopRgn);
-  NtGdiDeleteObject(DesktopRgn);
+  IntRedrawWindow(DesktopWindow, NULL, 0, RDW_INVALIDATE | RDW_ERASE);
   IntReleaseWindowObject(DesktopWindow);
 }
 
@@ -1432,6 +1430,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 	SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED :
 	SWP_NOZORDER | SWP_FRAMECHANGED;
       DPRINT("NtUserCreateWindow(): About to minimize/maximize\n");
+      DPRINT("%d,%d %dx%d\n", NewPos.left, NewPos.top, NewPos.right, NewPos.bottom);
       WinPosSetWindowPos(WindowObject->Self, 0, NewPos.left, NewPos.top,
 			 NewPos.right, NewPos.bottom, SwFlag);
     }
@@ -1504,15 +1503,21 @@ NtUserDestroyWindow(HWND Wnd)
   /* Look whether the focus is within the tree of windows we will
    * be destroying.
    */
-  WinPosActivateOtherWindow(Window);
-  /* FIXME: Lock */
+  if (!WinPosShowWindow(Wnd, SW_HIDE))
+    {
+      if (NtUserGetActiveWindow() == Wnd)
+        {
+          WinPosActivateOtherWindow(Window);
+        }
+    }
+  ExAcquireFastMutex(&Window->MessageQueue->Lock);
   if (Window->MessageQueue->ActiveWindow == Window->Self)
     Window->MessageQueue->ActiveWindow = NULL;
   if (Window->MessageQueue->FocusWindow == Window->Self)
     Window->MessageQueue->FocusWindow = NULL;
   if (Window->MessageQueue->CaptureWindow == Window->Self)
     Window->MessageQueue->CaptureWindow = NULL;
-  /* FIXME: Unlock */
+  ExReleaseFastMutex(&Window->MessageQueue->Lock);
 
   /* Call hooks */
 #if 0 /* FIXME */
@@ -1543,19 +1548,6 @@ NtUserDestroyWindow(HWND Wnd)
     return TRUE;
     }
 #endif
-
-  /* Hide the window */
-  if (! WinPosShowWindow(Wnd, SW_HIDE ))
-    {
-      if (Wnd == NtUserGetActiveWindow())
-	{
-          PWINDOW_OBJECT ActiveWindow = IntGetWindowObject(Wnd);
-          if (NULL != ActiveWindow)
-            {
-              WinPosActivateOtherWindow(ActiveWindow);
-            }
-	}
-    }
 
   if (!IntIsWindow(Wnd))
     {

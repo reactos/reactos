@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.80 2004/01/15 21:02:39 gvg Exp $
+/* $Id: winpos.c,v 1.81 2004/01/17 15:18:25 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -793,10 +793,10 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
                         SWP_HIDEWINDOW | SWP_FRAMECHANGED)) != 
        (SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER))
    {
-      VisBefore = VIS_ComputeVisibleRegion(
-         PsGetWin32Thread()->Desktop, Window, FALSE, FALSE, TRUE);
+      VisBefore = VIS_ComputeVisibleRegion(Window, FALSE, FALSE, TRUE);
 
-      if (UnsafeIntGetRgnBox(VisBefore, &TempRect) == NULLREGION)
+      if (VisBefore != NULL &&
+          UnsafeIntGetRgnBox(VisBefore, &TempRect) == NULLREGION)
       {
          NtGdiDeleteObject(VisBefore);
          VisBefore = NULL;
@@ -878,10 +878,10 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
    }
 
    /* Determine the new visible region */
-   VisAfter = VIS_ComputeVisibleRegion(
-      PsGetWin32Thread()->Desktop, Window, FALSE, FALSE, TRUE);
+   VisAfter = VIS_ComputeVisibleRegion(Window, FALSE, FALSE, TRUE);
 
-   if (UnsafeIntGetRgnBox(VisAfter, &TempRect) == NULLREGION)
+   if (VisAfter != NULL &&
+       UnsafeIntGetRgnBox(VisAfter, &TempRect) == NULLREGION)
    {
       NtGdiDeleteObject(VisAfter);
       VisAfter = NULL;
@@ -974,25 +974,24 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
    /* We need to redraw what wasn't visible before */
    if (VisAfter != NULL)
    {
+      DirtyRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
       if (CopyRgn != NULL)
       {
-         DirtyRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
          RgnType = NtGdiCombineRgn(DirtyRgn, VisAfter, CopyRgn, RGN_DIFF);
-         if (RgnType != ERROR && RgnType != NULLREGION)
-         {
-            NtGdiOffsetRgn(DirtyRgn,
-               Window->WindowRect.left - Window->ClientRect.left,
-               Window->WindowRect.top - Window->ClientRect.top);
-            IntRedrawWindow(Window, NULL, DirtyRgn,
-               RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
-         }
-         NtGdiDeleteObject(DirtyRgn);
       }
       else
       {
-         IntRedrawWindow(Window, NULL, 0,
+         RgnType = NtGdiCombineRgn(DirtyRgn, VisAfter, 0, RGN_COPY);
+      }
+      if (RgnType != ERROR && RgnType != NULLREGION)
+      {
+         NtGdiOffsetRgn(DirtyRgn,
+            Window->WindowRect.left - Window->ClientRect.left,
+            Window->WindowRect.top - Window->ClientRect.top);
+         IntRedrawWindow(Window, NULL, DirtyRgn,
             RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
       }
+      NtGdiDeleteObject(DirtyRgn);
    }
 
    if (CopyRgn != NULL)
@@ -1014,8 +1013,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 
       if (RgnType != ERROR && RgnType != NULLREGION)
       {
-         VIS_WindowLayoutChanged(PsGetWin32Thread()->Desktop, Window,
-            ExposedRgn);
+         VIS_WindowLayoutChanged(Window, ExposedRgn);
       }
       NtGdiDeleteObject(ExposedRgn);
       NtGdiDeleteObject(VisBefore);

@@ -1,4 +1,4 @@
-/* $Id: desktopbg.c,v 1.5 2004/01/11 17:31:16 gvg Exp $
+/* $Id: desktopbg.c,v 1.6 2004/01/17 15:18:25 navaraf Exp $
  *
  * reactos/subsys/csrss/win32csr/desktopbg.c
  *
@@ -149,7 +149,7 @@ DtbgDesktopThread(PVOID Data)
     }
   BackgroundWnd = CreateWindowW((LPCWSTR) DESKTOP_WINDOW_ATOM,
                                 L"",
-                                WS_POPUP,
+                                WS_POPUP | WS_CLIPCHILDREN,
                                 0,
                                 0,
                                 0,

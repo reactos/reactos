@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: focus.c,v 1.12 2004/01/16 13:28:29 navaraf Exp $
+ * $Id: focus.c,v 1.13 2004/01/17 15:18:25 navaraf Exp $
  */
 
 #include <win32k/win32k.h>
@@ -25,7 +25,7 @@
 #include <include/focus.h>
 #include <include/error.h>
 #include <include/winpos.h>
-//#define NDEBUG
+/* #define NDEBUG */
 #include <win32k/debug1.h>
 #include <debug.h>
 

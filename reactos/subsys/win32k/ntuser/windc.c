@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.50 2004/01/13 17:13:48 navaraf Exp $
+/* $Id: windc.c,v 1.51 2004/01/17 15:18:25 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -70,7 +70,7 @@ DceGetVisRgn(HWND hWnd, ULONG Flags, HWND hWndChild, ULONG CFlags)
       return NULL;
     }
 
-  VisRgn = VIS_ComputeVisibleRegion(PsGetWin32Thread()->Desktop, Window,
+  VisRgn = VIS_ComputeVisibleRegion(Window,
                                     0 == (Flags & DCX_WINDOW),
                                     0 != (Flags & DCX_CLIPCHILDREN),
                                     0 != (Flags & DCX_CLIPSIBLINGS));
@@ -464,17 +464,7 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
 	}
       else
 	{
-	  if (hWnd == IntGetDesktopWindow())
-	    {
-	      hRgnVisible = 
-		NtGdiCreateRectRgn(0, 0, 
-				  NtUserGetSystemMetrics(SM_CXSCREEN),
-				  NtUserGetSystemMetrics(SM_CYSCREEN));
-	    }
-	  else
-	    {
-	      hRgnVisible = DceGetVisRgn(hWnd, Flags, 0, 0);
-	    }
+          hRgnVisible = DceGetVisRgn(hWnd, Flags, 0, 0);
 	}
 
       if (0 != (Flags & DCX_INTERSECTRGN))
