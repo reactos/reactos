@@ -218,15 +218,14 @@ NTSTATUS DoQuery(PDEVICE_OBJECT DeviceObject, PIRP Irp,PIO_STACK_LOCATION Stack)
  unsigned long OldEntry,OldSector;
   DeviceExt = DeviceObject->DeviceExtension;
   // Obtain the callers parameters
-  BufferLength = Stack->Parameters.QueryDirectory.BufferLength;
+  BufferLength = Stack->Parameters.QueryDirectory.Length;
   pSearchPattern = Stack->Parameters.QueryDirectory.FileName;
   FileInformationClass = Stack->Parameters.QueryDirectory.FileInformationClass;
   FileIndex = Stack->Parameters.QueryDirectory.FileIndex;
   pFileObject = Stack->FileObject;
   pCcb =(PVfatCCB)pFileObject->FsContext2;
   pFcb = pCcb->pFcb;
-  if(Stack->Parameters.QueryDirectory.RestartScan)
-//  if(Stack->Flags & SL_RESTART_SCAN) ??
+  if(Stack->Flags & SL_RESTART_SCAN)
   {//FIXME : what is really use of RestartScan ?
     pCcb->StartEntry=pCcb->StartSector=0;
   }
@@ -290,8 +289,7 @@ DPRINT("Found %w,RC=%x, sector %x entry %x\n",tmpFcb.ObjectName,RC
     }
     Buffer0=(PFILE_NAMES_INFORMATION)Buffer;
     Buffer0->FileIndex=FileIndex++;
-//    if(Stack->Flags & SL_RETURN_SINGLE_ENTRY) break;
-    if(Stack->Parameters.QueryDirectory.ReturnSingleEntry) break;
+    if(Stack->Flags & SL_RETURN_SINGLE_ENTRY) break;
     BufferLength -= Buffer0->NextEntryOffset;
     Buffer += Buffer0->NextEntryOffset;
   }
