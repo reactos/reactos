@@ -1,4 +1,4 @@
-/* $Id: ide.c,v 1.40 2001/04/30 05:28:17 rex Exp $
+/* $Id: ide.c,v 1.41 2001/06/02 15:53:26 ekohl Exp $
  *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
@@ -75,6 +75,9 @@
 #include "partitio.h"
 
 #define  VERSION  "V0.1.4"
+
+/* remove this to activate the old behaviour of partition chain code (EK) */
+#define PARTITION_FIX
 
 //  -------------------------------------------------------  File Static Data
 
@@ -492,6 +495,9 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
   BOOLEAN                ExtendedPart = FALSE;
   ULONG                  PartitionOffset = 0;
   ULONG                  offsetToNextPartition = 0;
+#ifdef PARTITION_FIX
+  ULONG                  ExtendedOffset;
+#endif
 
     //  Copy I/O port offsets for convenience
   CommandPort = ControllerExtension->CommandPortBase;
@@ -541,6 +547,7 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
       SectorCount =
          (ULONG)(DrvParms.LogicalCyls * DrvParms.LogicalHeads * DrvParms.SectorsPerTrack);
     }
+  DPRINT("SectorCount %lu\n", SectorCount);
 
   RC = IDECreateDevice(DriverObject,
                        &RawDeviceObject,
@@ -577,6 +584,9 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
 
   // read the partition table (chain)
   PartitionOffset = 0;
+#ifdef PARTITION_FIX
+  ExtendedOffset = 0;
+#endif
   PartitionNum = 1;
 
   do
@@ -594,8 +604,8 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
       else
         {
           //  build devices for all partitions in table
-          DPRINT("Read partition on %wZ at %ld\n", 
-                 &UnicodeDeviceDirName, 
+          DPRINT("Read partition on %wZ at %ld\n",
+                 &UnicodeDeviceDirName,
                  PartitionOffset);
           for (PartitionIdx = 0; PartitionIdx < 4; PartitionIdx++)
             {
@@ -605,7 +615,8 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
               //  if the partition entry is in use, create a device for it
               if (IsRecognizedPartition(p->PartitionType))
                 {
-                  DPRINT("%wZ ptbl entry:%d type:%02x Start:%lu Size:%lu\n",                         &UnicodeDeviceDirName,
+                  DPRINT("Partition: %wZ entry:%d type:%02x Start:%lu Size:%lu\n",
+                         &UnicodeDeviceDirName,
                          PartitionIdx,
                          p->PartitionType,
                          p->StartingBlock,
@@ -632,16 +643,32 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
               else if (IsExtendedPartition(p->PartitionType))
                 {
                   //  Create devices for logical partitions within an extended partition
-                  DPRINT("Extended found: entry:%d type:%02x Start:%lu Size:%lu\n",                         &UnicodeDeviceDirName,
+                  DPRINT("Extended: entry:%d type:%02x Start:%lu Size:%lu\n",
                          PartitionIdx,
                          p->PartitionType,
                          p->StartingBlock,
                          p->SectorCount);
                   ExtendedPart = TRUE;
+#ifdef PARTITION_FIX
+                  if (ExtendedOffset == 0)
+                    {
+                      ExtendedOffset = p->StartingBlock;
+                      offsetToNextPartition = 0;
+                    }
+                  else
+                    {
+                      offsetToNextPartition = p->StartingBlock;
+                    }
+#else
                   offsetToNextPartition = p->StartingBlock;
+#endif
                 }
             }
+#ifdef PARTITION_FIX
+          PartitionOffset = ExtendedOffset + offsetToNextPartition;
+#else
           PartitionOffset += offsetToNextPartition;
+#endif
         }
     }
   while (ExtendedPart == TRUE);
