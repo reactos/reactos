@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.6 1999/12/08 12:58:26 ekohl Exp $
+/* $Id: process.c,v 1.7 1999/12/10 17:48:34 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -477,7 +477,7 @@ RtlCreateProcessParameters (
 		DataSize += (Reserved->Length + sizeof(WCHAR));
 
 	/* Calculate the required block size */
-	RegionSize = DataSize;
+	RegionSize = ROUNDUP(DataSize, PAGESIZE);
 
 	Status = NtAllocateVirtualMemory (
 		NtCurrentProcess (),

@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.10 1999/11/25 23:43:44 ekohl Exp $
+/* $Id: unicode.c,v 1.11 1999/12/10 17:48:34 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -81,8 +81,6 @@ RtlAnsiStringToUnicodeString(
 	if (Length > 65535)
 		return STATUS_INVALID_PARAMETER_2;
 
-	DestinationString->Length = Length;
-
 	if (AllocateDestinationString == TRUE)
 	{
 		DestinationString->MaximumLength = Length + sizeof(WCHAR);
@@ -95,9 +93,10 @@ RtlAnsiStringToUnicodeString(
 	}
 	else
 	{
-		if (Length > DestinationString->Length)
-			return STATUS_BUFFER_OVERFLOW;
+		if (Length >= DestinationString->MaximumLength)
+			return STATUS_BUFFER_TOO_SMALL;
 	}
+	DestinationString->Length = Length;
 
 	RtlZeroMemory (DestinationString->Buffer,
 	               DestinationString->Length);
@@ -470,7 +469,6 @@ RtlDowncaseUnicodeString (
 
 	if (AllocateDestinationString == TRUE)
 	{
-		DestinationString->Length = SourceString->Length;
 		DestinationString->MaximumLength = SourceString->Length + sizeof(WCHAR);
 		DestinationString->Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
 		                                             0,
@@ -479,8 +477,9 @@ RtlDowncaseUnicodeString (
 	else
 	{
 		if (SourceString->Length >= DestinationString->MaximumLength)
-			return STATUS_BUFFER_OVERFLOW;
+			return STATUS_BUFFER_TOO_SMALL;
 	}
+	DestinationString->Length = SourceString->Length;
 
 	Src = SourceString->Buffer;
 	Dest = DestinationString->Buffer;
@@ -855,8 +854,6 @@ RtlOemStringToUnicodeString (
 	if (Length > 65535)
 		return STATUS_INVALID_PARAMETER_2;
 
-	DestinationString->Length = Length;
-
 	if (AllocateDestinationString == TRUE)
 	{
 		DestinationString->MaximumLength = Length + sizeof(WCHAR);
@@ -869,13 +866,13 @@ RtlOemStringToUnicodeString (
 	}
 	else
 	{
-		if (Length > DestinationString->Length)
-			return STATUS_BUFFER_OVERFLOW;
+		if (Length > DestinationString->MaximumLength)
+			return STATUS_BUFFER_TOO_SMALL;
 	}
+	DestinationString->Length = Length;
 
-	memset (DestinationString->Buffer,
-	        0,
-	        DestinationString->Length);
+	RtlZeroMemory (DestinationString->Buffer,
+	               DestinationString->Length);
 
 	Status = RtlOemToUnicodeN (DestinationString->Buffer,
 	                           DestinationString->Length,
@@ -931,12 +928,6 @@ RtlUnicodeStringToAnsiString (
 	else
 		Length = SourceString->Length / sizeof(WCHAR);
 
-	/* this doesn't make sense */
-//	if (Length > 65535)
-//		return STATUS_INVALID_PARAMETER_2;
-
-	DestinationString->Length = Length;
-
 	if (AllocateDestinationString == TRUE)
 	{
 		DestinationString->MaximumLength = Length + sizeof(CHAR);
@@ -949,9 +940,10 @@ RtlUnicodeStringToAnsiString (
 	}
 	else
 	{
-		if (Length >= DestinationString->Length)
-			return STATUS_BUFFER_OVERFLOW;
+		if (Length >= DestinationString->MaximumLength)
+			return STATUS_BUFFER_TOO_SMALL;
 	}
+	DestinationString->Length = Length;
 
 	RtlZeroMemory (DestinationString->Buffer,
 	               DestinationString->Length);
@@ -963,10 +955,12 @@ RtlUnicodeStringToAnsiString (
 	                                 SourceString->Length);
 	if (!NT_SUCCESS(Status))
 	{
-		if (AllocateDestinationString)
+		if (AllocateDestinationString == TRUE)
+		{
 			RtlFreeHeap (RtlGetProcessHeap (),
 			             0,
 			             DestinationString->Buffer);
+		}
 		return Status;
 	}
 
@@ -1079,11 +1073,6 @@ RtlUnicodeStringToOemString (
 	else
 		Length = SourceString->Length / sizeof(WCHAR);
 
-//	if (Length > 65535)
-//		return STATUS_INVALID_PARAMETER_2;
-
-	DestinationString->Length = Length;
-
 	if (AllocateDestinationString == TRUE)
 	{
 		DestinationString->MaximumLength = Length + sizeof(CHAR);
@@ -1096,9 +1085,10 @@ RtlUnicodeStringToOemString (
 	}
 	else
 	{
-		if (Length >= DestinationString->Length)
-			return STATUS_BUFFER_OVERFLOW;
+		if (Length >= DestinationString->MaximumLength)
+			return STATUS_BUFFER_TOO_SMALL;
 	}
+	DestinationString->Length = Length;
 
 	RtlZeroMemory (DestinationString->Buffer,
 	               DestinationString->Length);
@@ -1154,8 +1144,6 @@ RtlUpcaseUnicodeString (
 	ULONG i;
 	PWCHAR Src, Dest;
 
-	DestinationString->Length = SourceString->Length;
-
 	if (AllocateDestinationString == TRUE)
 	{
 		DestinationString->MaximumLength=SourceString->Length+sizeof(WCHAR);
@@ -1165,6 +1153,12 @@ RtlUpcaseUnicodeString (
 		if (DestinationString->Buffer == NULL)
 			return STATUS_NO_MEMORY;
 	}
+	else
+	{
+		if (SourceString->Length >= DestinationString->MaximumLength)
+			return STATUS_BUFFER_TOO_SMALL;
+	}
+	DestinationString->Length = SourceString->Length;
 
 	Src = SourceString->Buffer;
 	Dest = DestinationString->Buffer;
@@ -1196,11 +1190,6 @@ RtlUpcaseUnicodeStringToAnsiString (
 	else
 		Length = SourceString->Length / sizeof(WCHAR);
 
-//	if (Length > 65535)
-//		return STATUS_INVALID_PARAMETER_2;
-
-	DestinationString->Length = Length;
-
 	if (AllocateDestinationString == TRUE)
 	{
 		DestinationString->MaximumLength = Length + sizeof(CHAR);
@@ -1212,9 +1201,10 @@ RtlUpcaseUnicodeStringToAnsiString (
 	}
 	else
 	{
-		if (Length >= DestinationString->Length)
-			return STATUS_BUFFER_OVERFLOW;
+		if (Length >= DestinationString->MaximumLength)
+			return STATUS_BUFFER_TOO_SMALL;
 	}
+	DestinationString->Length = Length;
 
 	RtlZeroMemory (DestinationString->Buffer,
 	               DestinationString->Length);
@@ -1262,11 +1252,6 @@ RtlUpcaseUnicodeStringToOemString (
 	else
 		Length = SourceString->Length / sizeof(WCHAR);
 
-//	if (Length > 65535)
-//		return STATUS_INVALID_PARAMETER_2;
-
-	DestinationString->Length = Length;
-
 	if (AllocateDestinationString == TRUE)
 	{
 		DestinationString->MaximumLength = Length + sizeof(CHAR);
@@ -1278,9 +1263,10 @@ RtlUpcaseUnicodeStringToOemString (
 	}
 	else
 	{
-		if (Length >= DestinationString->Length)
-			return STATUS_BUFFER_OVERFLOW;
+		if (Length >= DestinationString->MaximumLength)
+			return STATUS_BUFFER_TOO_SMALL;
 	}
+	DestinationString->Length = Length;
 
 	RtlZeroMemory (DestinationString->Buffer,
 	               DestinationString->Length);

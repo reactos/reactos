@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.15 1999/12/08 12:58:44 ekohl Exp $
+/* $Id: create.c,v 1.16 1999/12/10 17:47:29 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -359,23 +359,7 @@ CreatePeb (
    ULONG PpbSize;
    ULONG BytesWritten;
 
-   PebBase = (PVOID)PEB_BASE;
-   PebSize = 0x1000;
-
-   NtReadVirtualMemory(ProcessHandle,
-		       (PVOID)PEB_BASE,
-		       &Peb,
-		       sizeof(Peb),
-		       &BytesWritten);
-
-   Peb.Ppb = (PPPB)PEB_STARTUPINFO;
-
-   NtWriteVirtualMemory(ProcessHandle,
-			(PVOID)PEB_BASE,
-			&Peb,
-			sizeof(Peb),
-			&BytesWritten);
-
+   /* create the PPB */
    PpbBase = (PVOID)PEB_STARTUPINFO;
    PpbSize = Ppb->TotalSize;
    Status = NtAllocateVirtualMemory(ProcessHandle,
@@ -389,11 +373,37 @@ CreatePeb (
 	return(Status);
      }
 
-   DPRINT("Ppb size %x\n", Ppb->TotalSize);
-   ZwWriteVirtualMemory(ProcessHandle,
-			(PVOID)PEB_STARTUPINFO,
-			&Ppb,
+   DPRINT("Ppb->TotalSize %x\n", Ppb->TotalSize);
+   NtWriteVirtualMemory(ProcessHandle,
+			PpbBase,
+			Ppb,
 			Ppb->TotalSize,
+			&BytesWritten);
+
+
+   /* create the PEB */
+   PebBase = (PVOID)PEB_BASE;
+   PebSize = 0x1000;
+
+   Status = NtAllocateVirtualMemory(ProcessHandle,
+				    &PebBase,
+				    0,
+				    &PebSize,
+				    MEM_COMMIT,
+				    PAGE_READWRITE);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
+
+   DPRINT("Peb created\n");
+
+   Peb.Ppb = (PPPB)PpbBase;
+
+   NtWriteVirtualMemory(ProcessHandle,
+			PebBase,
+			&Peb,
+			sizeof(Peb),
 			&BytesWritten);
 
    *PebPtr = (PPEB)PebBase;
@@ -458,6 +468,8 @@ CreateProcessW (
 	RtlInitUnicodeString (
 		&CommandLine_U,
 		TempCommandLine);
+
+	DPRINT("CommandLine_U %w\n", CommandLine_U.Buffer);
 
 	RtlCreateProcessParameters (
 		&Ppb,
