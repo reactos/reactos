@@ -209,6 +209,7 @@ do_reg_operation(HANDLE KeyHandle,
   WCHAR EmptyStr = (WCHAR)0;
   ULONG Type;
   ULONG Size;
+  NTSTATUS Status;
 
   if (Flags & (FLG_ADDREG_DELREG_BIT | FLG_ADDREG_DELVAL))  /* deletion */
     {
@@ -331,37 +332,50 @@ do_reg_operation(HANDLE KeyHandle,
 
       if (Type == REG_DWORD)
 	{
-	  ULONG dw = Str ? wcstol (Str, NULL, 16) : 0;
+	  ULONG dw = Str ? wcstol (Str, NULL, 0) : 0;
 
-	  DPRINT1("setting dword %wZ to %lx\n", &ValueName, dw);
+	  DPRINT1("setting dword %wZ to %lx\n", ValueName, dw);
 
-	  NtSetValueKey (KeyHandle,
-			 ValueName,
-			 0,
-			 Type,
-			 (PVOID)&dw,
-			 (ULONG)sizeof(dw));
+	  Status = NtSetValueKey (KeyHandle,
+				  ValueName,
+				  0,
+				  Type,
+				  (PVOID)&dw,
+				  sizeof(ULONG));
+	  if (!NT_SUCCESS(Status))
+	    {
+	      DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+	    }
 	}
       else
 	{
 	  DPRINT1("setting value %wZ to %S\n", ValueName, Str);
+
 	  if (Str)
 	    {
-	      NtSetValueKey (KeyHandle,
+	      Status = NtSetValueKey (KeyHandle,
 			     ValueName,
 			     0,
 			     Type,
 			     (PVOID)Str,
 			     Size * sizeof(WCHAR));
+	      if (!NT_SUCCESS(Status))
+		{
+		  DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+		}
 	    }
 	  else
 	    {
-	      NtSetValueKey (KeyHandle,
+	      Status = NtSetValueKey (KeyHandle,
 			     ValueName,
 			     0,
 			     Type,
 			     (PVOID)&EmptyStr,
 			     sizeof(WCHAR));
+	      if (!NT_SUCCESS(Status))
+		{
+		  DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+		}
 	    }
 	}
       RtlFreeHeap (ProcessHeap, 0, Str);
@@ -383,16 +397,18 @@ do_reg_operation(HANDLE KeyHandle,
 	  InfGetBinaryField (Context, 5, Data, Size, NULL);
 	}
 
-      NtSetValueKey (KeyHandle,
-		     ValueName,
-		     0,
-		     Type,
-		     (PVOID)Data,
-		     Size);
+      Status = NtSetValueKey (KeyHandle,
+			      ValueName,
+			      0,
+			      Type,
+			      (PVOID)Data,
+			      Size);
+      if (!NT_SUCCESS(Status))
+	{
+	  DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+	}
 
       RtlFreeHeap (ProcessHeap, 0, Data);
-
-      return TRUE;
     }
 
   return TRUE;
@@ -651,6 +667,7 @@ ImportRegistryData(PWSTR Filename)
 NTSTATUS
 SetupUpdateRegistry(VOID)
 {
+#if 0
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING KeyName;
   UNICODE_STRING ValueName;
@@ -679,7 +696,6 @@ SetupUpdateRegistry(VOID)
   NtClose(KeyHandle);
 
 
-#if 0
   /* Create '\Registry\Machine\System\Setup' key */
   RtlInitUnicodeStringFromLiteral(&KeyName,
 				  L"\\Registry\\Machine\\SYSTEM\\Setup");
@@ -708,6 +724,7 @@ SetupUpdateRegistry(VOID)
   NtClose(KeyHandle);
 #endif
 
+
   SetStatusText("   Importing hivesys.inf...");
 
   if (!ImportRegistryData (L"hivesys.inf"))
@@ -718,6 +735,51 @@ SetupUpdateRegistry(VOID)
   SetStatusText("   Done...");
 
   return STATUS_SUCCESS;
+}
+
+
+BOOLEAN
+SetInstallPathValue(PUNICODE_STRING InstallPath)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING KeyName;
+  UNICODE_STRING ValueName;
+  HANDLE KeyHandle;
+  NTSTATUS Status;
+
+  /* Create the 'secret' InstallPath key */
+  RtlInitUnicodeStringFromLiteral (&KeyName,
+				   L"\\Registry\\Machine\\HARDWARE");
+  InitializeObjectAttributes (&ObjectAttributes,
+			      &KeyName,
+			      OBJ_CASE_INSENSITIVE,
+			      NULL,
+			      NULL);
+  Status =  NtOpenKey (&KeyHandle,
+		       KEY_ALL_ACCESS,
+		       &ObjectAttributes);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
+      return FALSE;
+    }
+
+  RtlInitUnicodeStringFromLiteral (&ValueName,
+				   L"InstallPath");
+  Status = NtSetValueKey (KeyHandle,
+			  &ValueName,
+			  0,
+			  REG_SZ,
+			  (PVOID)InstallPath->Buffer,
+			  InstallPath->Length);
+  NtClose(KeyHandle);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+      return FALSE;
+    }
+
+  return TRUE;
 }
 
 /* EOF */

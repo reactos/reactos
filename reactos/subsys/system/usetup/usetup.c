@@ -1264,58 +1264,21 @@ FileCopyPage(PINPUT_RECORD Ir)
 static ULONG
 RegistryPage(PINPUT_RECORD Ir)
 {
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING KeyName;
-  UNICODE_STRING ValueName;
-  HANDLE KeyHandle;
+  INFCONTEXT InfContext;
   NTSTATUS Status;
 
-  SetTextXY(6, 8, "Setup updated the system configuration");
+  PWSTR Action;
+  PWSTR File;
+  PWSTR Section;
+
+
+  SetTextXY(6, 8, "Setup is updating the system configuration");
 
   SetStatusText("   Creating registry hives...");
 
-  /* Create the 'secret' InstallPath key */
-  RtlInitUnicodeStringFromLiteral(&KeyName,
-				  L"\\Registry\\Machine\\HARDWARE");
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &KeyName,
-			     OBJ_CASE_INSENSITIVE,
-			     NULL,
-			     NULL);
-  Status =  NtOpenKey(&KeyHandle,
-		      KEY_ALL_ACCESS,
-		      &ObjectAttributes);
-  if (!NT_SUCCESS(Status))
+  if (!SetInstallPathValue(&DestinationPath))
     {
-      DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
-      PopupError("Setup failed to open the HARDWARE registry key.",
-		 "ENTER = Reboot computer");
-
-      while(TRUE)
-	{
-	  ConInKey(Ir);
-
-	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return(QUIT_PAGE);
-	    }
-	}
-    }
-
-  RtlInitUnicodeStringFromLiteral(&ValueName,
-				  L"InstallPath");
-
-  Status = NtSetValueKey(KeyHandle,
-			 &ValueName,
-			 0,
-			 REG_SZ,
-			 (PVOID)DestinationPath.Buffer,
-			 DestinationPath.Length);
-  NtClose(KeyHandle);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
-      PopupError("Setup failed to set the \'InstallPath\' registry value.",
+      PopupError("Setup failed to set the initialize the registry.",
 		 "ENTER = Reboot computer");
 
       while(TRUE)
@@ -1334,7 +1297,7 @@ RegistryPage(PINPUT_RECORD Ir)
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("NtInitializeRegistry() failed (Status %lx)\n", Status);
-      PopupError("Setup failed to initialize the registry.",
+      PopupError("Setup failed to create the registry hives.",
 		 "ENTER = Reboot computer");
 
       while(TRUE)
@@ -1350,6 +1313,38 @@ RegistryPage(PINPUT_RECORD Ir)
 
   /* Update registry */
   SetStatusText("   Updating registry hives...");
+
+#if 0
+  if (!InfFindFirstLine(SetupInf, L"HiveInfs.Install", NULL, &InfContext))
+    {
+      DPRINT1("InfFindFirstLine() failed\n");
+      PopupError("Setup failed to find the registry hive inf-files.",
+		 "ENTER = Reboot computer");
+
+      while(TRUE)
+	{
+	  ConInKey(Ir);
+
+	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	    {
+	      return(QUIT_PAGE);
+	    }
+	}
+    }
+
+  do
+    {
+
+      InfGetDataField (&InfContext, 0, &Action);
+      InfGetDataField (&InfContext, 1, &File);
+      InfGetDataField (&InfContext, 2, &Section);
+
+      DPRINT1("Action: %S  File: %S  Section %S\n", Action, File, Section);
+
+    }
+  while (InfFindNextLine (&InfContext, &InfContext));
+#endif
+
 
   Status = SetupUpdateRegistry();
   if (!NT_SUCCESS(Status))

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: registry.h,v 1.2 2003/03/18 20:39:49 ekohl Exp $
+/* $Id: registry.h,v 1.3 2003/03/19 20:12:44 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/registry.h
@@ -27,11 +27,15 @@
 #ifndef __REGISTRY_H__
 #define __REGISTRY_H__
 
+
 NTSTATUS
 SetupUpdateRegistry(VOID);
 
 BOOLEAN
 ImportRegistryData(PWSTR Filename);
+
+BOOLEAN
+SetInstallPathValue(PUNICODE_STRING InstallPath);
 
 #endif /* __REGISTRY_H__ */
 
