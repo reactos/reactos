@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.41 2003/10/15 17:04:39 navaraf Exp $
+/* $Id: iomgr.c,v 1.42 2003/11/14 15:17:08 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -30,11 +30,11 @@
 
 POBJECT_TYPE EXPORTED IoDeviceObjectType = NULL;
 POBJECT_TYPE EXPORTED IoFileObjectType = NULL;
-ULONG        EXPORTED IoReadOperationCount = 0;	/* FIXME: unknown type */
-ULONG        EXPORTED IoReadTransferCount = 0;	/* FIXME: unknown type */
-ULONG        EXPORTED IoWriteOperationCount = 0; /* FIXME: unknown type */
-ULONG        EXPORTED IoWriteTransferCount = 0;	/* FIXME: unknown type */
-ULONG        EXPORTED IoStatisticsLock = 0;	/* FIXME: unknown type */
+ULONG        EXPORTED IoReadOperationCount = 0;
+ULONGLONG    EXPORTED IoReadTransferCount = 0;
+ULONG        EXPORTED IoWriteOperationCount = 0;
+ULONGLONG    EXPORTED IoWriteTransferCount = 0;
+KSPIN_LOCK   EXPORTED IoStatisticsLock = 0;
 
 static GENERIC_MAPPING IopFileMapping = {FILE_GENERIC_READ,
 					 FILE_GENERIC_WRITE,
@@ -359,11 +359,14 @@ IoInit (VOID)
   PnpInit();
 }
 
+
 VOID INIT_FUNCTION
 IoInit2(VOID)
 {
   PDEVICE_NODE DeviceNode;
   NTSTATUS Status;
+
+  KeInitializeSpinLock (&IoStatisticsLock);
 
   /* Initialize raw filesystem driver */
 
