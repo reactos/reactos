@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.76 2004/05/28 21:33:41 gvg Exp $
+/* $Id: misc.c,v 1.77 2004/06/11 20:15:07 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1138,7 +1138,8 @@ IntSafeCopyUnicodeString(PUNICODE_STRING Dest,
   
   if(Dest->Length > 0 && Src)
   {
-    Dest->Buffer = ExAllocatePoolWithTag(NonPagedPool, Dest->Length, TAG_STRING);
+    Dest->MaximumLength = Dest->Length;
+    Dest->Buffer = ExAllocatePoolWithTag(NonPagedPool, Dest->MaximumLength, TAG_STRING);
     if(!Dest->Buffer)
     {
       return STATUS_NO_MEMORY;
@@ -1183,7 +1184,8 @@ IntSafeCopyUnicodeStringTerminateNULL(PUNICODE_STRING Dest,
   
   if(Dest->Length > 0 && Src)
   {
-    Dest->Buffer = ExAllocatePoolWithTag(NonPagedPool, Dest->Length + sizeof(WCHAR), TAG_STRING);
+    Dest->MaximumLength = Dest->Length + sizeof(WCHAR);
+    Dest->Buffer = ExAllocatePoolWithTag(NonPagedPool, Dest->MaximumLength, TAG_STRING);
     if(!Dest->Buffer)
     {
       return STATUS_NO_MEMORY;
