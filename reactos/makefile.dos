@@ -38,6 +38,7 @@ LOADERS = dos
 KERNEL_SERVICES = blue parallel keyboard null mouse serial sound ide test sdisk \
                   minix vfat
 
+#  cmd
 APPS = hello shell
 
 all: $(COMPONENTS) $(LOADERS) $(KERNEL_SERVICES) $(APPS)
