@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.34 2003/06/28 08:39:18 gvg Exp $ */
+/* $Id: text.c,v 1.35 2003/07/21 17:43:46 jimtabor Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -364,7 +364,7 @@ int
 STDCALL
 W32kEnumFontFamiliesEx(HDC  hDC,
                             LPLOGFONTW  Logfont,
-                            FONTENUMPROCW  EnumFontFamExProc,
+                            FONTENUMEXPROC  EnumFontFamExProc,
                             LPARAM  lParam,
                             DWORD  Flags)
 {
