@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.4 2002/06/18 21:51:10 dwelch Exp $
+/* $Id: object.c,v 1.5 2002/06/26 18:38:24 hbirr Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -77,8 +77,8 @@ ObmpGetObjectByHandle(PUSER_HANDLE_TABLE HandleTable,
  *   NULL on failure
  */
 {
-  ULONG Count = ((ULONG)Handle / HANDLE_BLOCK_ENTRIES);
-  ULONG Index = (((ULONG)Handle) - 1) >> 2;
+  ULONG Index = (((ULONG)Handle) >> 2) - 1;
+  ULONG Count = Index / HANDLE_BLOCK_ENTRIES;
   PUSER_HANDLE_BLOCK Block = NULL;
   PLIST_ENTRY Current;
   ULONG i;
