@@ -124,6 +124,55 @@ protected:
 };
 
 
+struct WindowHandle
+{
+	WindowHandle(HWND hwnd=0)
+	 :	_hwnd(hwnd) {}
+
+	operator HWND() const {return _hwnd;}
+	HWND* operator&() {return &_hwnd;}
+
+protected:
+	HWND	_hwnd;
+};
+
+
+ /// critical section wrapper
+
+struct CritSect : public CRITICAL_SECTION
+{
+	CritSect()
+	{
+		InitializeCriticalSection(this);
+	}
+
+	~CritSect()
+	{
+		DeleteCriticalSection(this);
+	}
+};
+
+
+ /// Lock protects a code section utilizing a critical section
+
+struct Lock
+{
+	Lock(CritSect& crit_sect)
+	 :	_crit_sect(crit_sect)
+	{
+		EnterCriticalSection(&crit_sect);
+	}
+
+	~Lock()
+	{
+		LeaveCriticalSection(&_crit_sect);
+	}
+
+protected:
+	CritSect&	_crit_sect;
+};
+
+
  // window utilities
 
 struct ClientRect : public RECT

@@ -124,7 +124,7 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	  case WM_TIMER: {
 		TimerTick();
 
-		ClockWindow* clock_window = static_cast<ClockWindow*>(get_window(_hwndClock));
+		ClockWindow* clock_window = GET_WINDOW(ClockWindow, _hwndClock);
 
 		if (clock_window)
 			clock_window->TimerTick();

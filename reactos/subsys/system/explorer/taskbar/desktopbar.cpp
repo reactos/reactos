@@ -252,7 +252,7 @@ LRESULT DesktopBar::ProcessCopyData(COPYDATASTRUCT* pcd)
 
 		//TODO: process the differnt versions of the NOTIFYICONDATA structure (look at cbSize to decide which one)
 
-		NotifyArea* notify_area = static_cast<NotifyArea*>(get_window(_hwndNotify));
+		NotifyArea* notify_area = GET_WINDOW(NotifyArea, _hwndNotify);
 
 		if (notify_area)
 			return notify_area->ProcessTrayNotification(ptr->notify_code, &ptr->nicon_data);

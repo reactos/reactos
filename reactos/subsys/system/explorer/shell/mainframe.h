@@ -34,6 +34,9 @@ struct MainFrame : public PreTranslateWindow
 	~MainFrame();
 
 	static HWND Create();
+	static HWND Create(LPCTSTR path, BOOL mode_explore=TRUE);
+
+	ChildWindow* CreateChild(LPCTSTR path=NULL, BOOL mode_explore=TRUE);
 
 protected:
 	FullScreenParameters _fullscreen;

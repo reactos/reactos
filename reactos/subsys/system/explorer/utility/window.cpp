@@ -57,9 +57,30 @@ IconWindowClass::IconWindowClass(LPCTSTR classname, UINT nid, UINT style, WNDPRO
 }
 
 
-HHOOK Window::s_hcbtHook = 0;
-Window::CREATORFUNC Window::s_window_creator = NULL;
-const void* Window::s_new_info = NULL;
+HHOOK				Window::s_hcbtHook = 0;
+
+Window::CREATORFUNC	Window::s_window_creator = NULL;
+const void*			Window::s_new_info = NULL;
+CritSect			Window::s_create_crit_sect;
+
+Window::WindowMap	Window::s_wnd_map;
+CritSect			Window::s_map_crit_sect;
+
+
+Window::Window(HWND hwnd)
+ :	WindowHandle(hwnd)
+{
+	Lock lock(s_map_crit_sect);	// protect access to s_wnd_map
+
+	s_wnd_map[_hwnd] = this;
+}
+
+Window::~Window()
+{
+	Lock lock(s_map_crit_sect);	// protect access to s_wnd_map
+
+	s_wnd_map.erase(_hwnd);
+}
 
 
 HWND Window::Create(CREATORFUNC creator, DWORD dwExStyle,
@@ -67,6 +88,8 @@ HWND Window::Create(CREATORFUNC creator, DWORD dwExStyle,
 					DWORD dwStyle, int x, int y, int w, int h,
 					HWND hwndParent, HMENU hMenu, LPVOID lpParam)
 {
+	Lock lock(s_create_crit_sect);	// protect access to s_window_creator and s_new_info
+
 	s_window_creator = creator;
 	s_new_info = NULL;
 
@@ -80,6 +103,8 @@ HWND Window::Create(CREATORFUNC creator, const void* info, DWORD dwExStyle,
 					DWORD dwStyle, int x, int y, int w, int h,
 					HWND hwndParent, HMENU hMenu, LPVOID lpParam)
 {
+	Lock lock(s_create_crit_sect);	// protect access to s_window_creator and s_new_info
+
 	s_window_creator = creator;
 	s_new_info = info;
 
@@ -93,6 +118,8 @@ static Window* s_new_child_wnd = NULL;
 
 Window* Window::create_mdi_child(HWND hmdiclient, const MDICREATESTRUCT& mcs, CREATORFUNC creator, const void* info)
 {
+	Lock lock(s_create_crit_sect);	// protect access to s_window_creator and s_new_info
+
 	s_window_creator = creator;
 	s_new_info = info;
 	s_new_child_wnd = NULL;
@@ -132,12 +159,18 @@ LRESULT CALLBACK Window::CBTHookProc(int code, WPARAM wparam, LPARAM lparam)
 
 Window* Window::get_window(HWND hwnd)
 {
-	Window* wnd = (Window*) GetWindowLong(hwnd, GWL_USERDATA);
+	{
+		Lock lock(s_map_crit_sect);	// protect access to s_wnd_map
 
-	if (wnd)
-		return wnd;
+		WindowMap::const_iterator found = s_wnd_map.find(hwnd);
+
+		if (found!=s_wnd_map.end())
+			return found->second;
+	}
 
 	if (s_window_creator) {	// protect for recursion
+		Lock lock(s_create_crit_sect);	// protect access to s_window_creator and s_new_info
+
 		const void* info = s_new_info;
 		s_new_info = NULL;
 
@@ -145,12 +178,12 @@ Window* Window::get_window(HWND hwnd)
 		s_window_creator = NULL;
 
 		if (info)
-			wnd = window_creator(hwnd, info);
+			return window_creator(hwnd, info);
 		else
-			wnd = CREATORFUNC_NO_INFO(window_creator)(hwnd);
+			return CREATORFUNC_NO_INFO(window_creator)(hwnd);
 	}
 
-	return wnd;
+	return NULL;
 }
 
 
@@ -191,11 +224,12 @@ LRESULT Window::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	HWND hwnd = _hwnd;
 
+/*@@TODO: replace by StartMenu::TrackStartmenu()
 	 // close startup menu and other popup menus
 	 // This functionality is for tray notification icons missing in MS Windows.
 	if (nmsg == WM_SETFOCUS)
 		CancelModes((HWND)wparam);	//@@ erronesly cancels desktop bar resize when switching from another process
-
+*/
 	return DefWindowProc(hwnd, nmsg, wparam, lparam);
 }
 

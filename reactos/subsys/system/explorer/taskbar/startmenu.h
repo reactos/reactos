@@ -206,6 +206,7 @@ struct StartMenuRoot : public StartMenu
 	StartMenuRoot(HWND hwnd);
 
 	static HWND Create(HWND hwndDesktopBar);
+	void	TrackStartmenu();
 
 protected:
 	LRESULT	Init(LPCREATESTRUCT pcs);

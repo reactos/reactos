@@ -45,19 +45,6 @@ typedef set<HWND> WindowSet;
  */
 
 
-struct WindowHandle
-{
-	WindowHandle(HWND hwnd=0)
-	 :	_hwnd(hwnd) {}
-
-	operator HWND() const {return _hwnd;}
-	HWND* operator&() {return &_hwnd;}
-
-protected:
-	HWND	_hwnd;
-};
-
-
  /**
 	Class Window is the base class for several C++ window wrapper classes.
 	Window objects are allocated from the heap. They are automatically freed
@@ -65,19 +52,11 @@ protected:
  */
 struct Window : public WindowHandle
 {
-	Window(HWND hwnd)
-	 :	WindowHandle(hwnd)
-	{
-		 // store "this" pointer as user data
-		SetWindowLong(hwnd, GWL_USERDATA, (LONG)this);
-	}
+	Window(HWND hwnd);
+	virtual ~Window();
 
-	virtual ~Window()
-	{
-		 // empty user data field
-		SetWindowLong(_hwnd, GWL_USERDATA, 0);
-	}
 
+	typedef map<HWND,Window*> WindowMap;
 
 	typedef Window* (*CREATORFUNC)(HWND, const void*);
 	typedef Window* (*CREATORFUNC_NO_INFO)(HWND);
@@ -95,8 +74,12 @@ struct Window : public WindowHandle
 	static Window* create_mdi_child(HWND hmdiclient, const MDICREATESTRUCT& mcs, CREATORFUNC creator, const void* info=NULL);
 
 	static LRESULT CALLBACK WindowWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
-	static Window* get_window(HWND hwnd);
 
+	static Window* get_window(HWND hwnd);
+#ifndef _MSC_VER
+	template<typename WNDCLASS> static WNDCLASS* get_window(HWND hwnd) {return static_cast<WNDCLASS*>(get_window(hwnd));}
+#define	GET_WINDOW(WNDCLASS, hwnd) Window::get_window<WNDCLASS>(hwnd)
+#endif
 
 	static void register_pretranslate(HWND hwnd);
 	static void unregister_pretranslate(HWND hwnd);
@@ -122,8 +105,12 @@ protected:
 	virtual int		Notify(int id, NMHDR* pnmh);						// WM_NOTIFY processing
 
 
-	static const void* s_new_info;	//TODO: protect for multithreaded access
-	static CREATORFUNC s_window_creator;	//TODO: protect for multithreaded access
+	static WindowMap	s_wnd_map;
+	static CritSect		s_map_crit_sect;
+
+	static const void*	s_new_info;
+	static CREATORFUNC	s_window_creator;
+	static CritSect		s_create_crit_sect;
 
 	 // MDI child creation
 	static HHOOK s_hcbtHook;
@@ -132,6 +119,16 @@ protected:
 	static WindowSet s_pretranslate_windows;
 	static WindowSet s_dialogs;
 };
+
+
+#ifdef _MSC_VER
+template<typename WNDCLASS> struct GetWindowHelper {
+	static WNDCLASS* get_window(HWND hwnd) {
+		return static_cast<WNDCLASS*>(Window::get_window(hwnd));
+	}
+};
+#define	GET_WINDOW(WNDCLASS, hwnd) GetWindowHelper<WNDCLASS>::get_window(hwnd)
+#endif
 
 
  /**

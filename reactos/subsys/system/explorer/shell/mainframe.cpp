@@ -167,6 +167,28 @@ HWND MainFrame::Create()
 				0/*hwndDesktop*/, hMenuFrame);
 }
 
+HWND MainFrame::Create(LPCTSTR path, BOOL mode_explore)
+{
+	HWND hMainFrame = Create();
+	if (!hMainFrame)
+		return 0;
+
+	ShowWindow(hMainFrame, SW_SHOW);
+
+	MainFrame* pMainFrame = GET_WINDOW(MainFrame, hMainFrame);
+
+	if (pMainFrame)
+		pMainFrame->CreateChild(path, mode_explore);
+
+	return hMainFrame;
+}
+
+
+ChildWindow* MainFrame::CreateChild(LPCTSTR path, BOOL mode_explore)
+{
+	return reinterpret_cast<ChildWindow*>(SendMessage(_hwnd, PM_OPEN_WINDOW, mode_explore, (LPARAM)path));
+}
+
 
 LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
@@ -237,8 +259,7 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		create_info._mode_explore = wparam? true: false;
 
 	//	FileChildWindow::create(_hmdiclient, create_info);
-		ShellBrowserChild::create(_hmdiclient, create_info);
-		break;}
+		return (LRESULT)ShellBrowserChild::create(_hmdiclient, create_info);}
 
 	  case PM_GET_CONTROLWINDOW:
 		if (wparam == FCW_STATUS)

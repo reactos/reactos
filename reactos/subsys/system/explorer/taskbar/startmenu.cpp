@@ -562,6 +562,36 @@ HWND StartMenuRoot::Create(HWND hwndDesktopBar)
 }
 
 
+void StartMenuRoot::TrackStartmenu()
+{
+	//TODO
+
+	MSG msg;
+
+	while(GetMessage(&msg, 0, 0, 0)) {
+		try {
+			if (pretranslate_msg(&msg))
+				continue;
+
+			if (dispatch_dialog_msg(&msg))
+				continue;
+
+			TranslateMessage(&msg);
+
+			try {
+				DispatchMessage(&msg);
+			} catch(COMException& e) {
+				HandleException(e, g_Globals._hMainWnd);
+			}
+		} catch(COMException& e) {
+			HandleException(e, g_Globals._hMainWnd);
+		}
+	}
+
+	//@@return msg.wParam;
+}
+
+
 LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 {
 	 // add buttons for entries in _entries
@@ -656,12 +686,10 @@ int StartMenuRoot::Command(int id, int code)
 		CreateSubmenu(id, CSIDL_CONTROLS);
 		break;
 
-	  case IDC_SETTINGS_WND: {	//TODO: make more object oriented, e.g introduce a class CabinetWindow
+	  case IDC_SETTINGS_WND:
 		CloseStartMenu(id);
-		HWND hwndFrame = MainFrame::Create();
-		ShowWindow(hwndFrame, SW_SHOW);
-		SendMessage(hwndFrame, PM_OPEN_WINDOW, FALSE/*mode_explore*/, (LPARAM)_T("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}"));
-		break;}
+		MainFrame::Create(_T("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}"), FALSE);
+		break;
 
 	  case IDC_FAVORITES:
 		CreateSubmenu(id, CSIDL_FAVORITES);
