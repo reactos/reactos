@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.59 2003/12/31 05:33:04 jfilby Exp $
+/* $Id: mminit.c,v 1.60 2004/02/17 23:58:54 tamlin Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -41,11 +41,6 @@ extern unsigned int _init_end__;
 
 extern unsigned int _bss_end__;
 
-#if defined(_MSC_VER)
-
-#pragma message("This will never work until we somehow fix these!")
-
-#endif
 
 static BOOLEAN IsThisAnNtAsSystem = FALSE;
 static MM_SYSTEM_SIZE MmSystemSize = MmSmallSystem;
