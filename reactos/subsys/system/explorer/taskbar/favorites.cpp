@@ -253,6 +253,7 @@ void BookmarkList::write(XMLPos& pos) const
 }
 
 
+ /// fill treeview control with bookmark tree content
 void BookmarkList::fill_tree(HWND hwnd, HTREEITEM parent, HIMAGELIST himagelist) const
 {
 	HDC hdc = GetDC(hwnd);
@@ -302,6 +303,7 @@ void BookmarkList::fill_tree(HWND hwnd, HTREEITEM parent, HIMAGELIST himagelist)
 }
 
 
+ /// import Internet Explorer bookmarks from Favorites folder into bookmark list
 void BookmarkList::import_IE_favorites(ShellDirectory& dir, HWND hwnd)
 {
 	TCHAR path[MAX_PATH], ext[_MAX_EXT];
@@ -309,7 +311,7 @@ void BookmarkList::import_IE_favorites(ShellDirectory& dir, HWND hwnd)
 	dir.smart_scan(SCAN_FILESYSTEM);
 
 	for(Entry*entry=dir._down; entry; entry=entry->_next) {
-		if (entry->_shell_attribs & SFGAO_HIDDEN)	// hide files like "desktop.ini"
+		if (entry->_shell_attribs & SFGAO_HIDDEN)	// ignore files like "desktop.ini"
 			continue;
 
 		String name;
