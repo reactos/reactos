@@ -1,4 +1,4 @@
-/* $Id: name.c,v 1.11 2004/09/04 15:02:00 navaraf Exp $
+/* $Id: name.c,v 1.12 2004/09/11 14:48:13 ekohl Exp $
  *
  * reactos/ntoskrnl/fs/name.c
  *
@@ -6,9 +6,7 @@
 
 #include <ntoskrnl.h>
 
-/* DATA */
-
-PUCHAR	* FsRtlLegalAnsiCharacterArray = NULL;
+/* FUNCTIONS ***************************************************************/
 
 /**********************************************************************
  * NAME							EXPORTED

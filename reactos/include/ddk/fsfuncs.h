@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_FSFUNCS_H
 #define __INCLUDE_DDK_FSFUNCS_H
-/* $Id: fsfuncs.h,v 1.27 2004/08/12 06:04:21 ion Exp $ */
+/* $Id: fsfuncs.h,v 1.28 2004/09/11 14:48:56 ekohl Exp $ */
 #define FlagOn(x,f) ((x) & (f))
 
 #include <ntos/fstypes.h>
@@ -51,6 +51,15 @@ OSR doens't tell a lot, but we only have one parameter. It must be the FCB Heade
 this function as a stub, and confirms the theory.
 
 */
+
+#ifdef __NTOSKRNL__
+extern PUCHAR EXPORTED FsRtlLegalAnsiCharacterArray;
+#else
+extern PUCHAR IMPORTED FsRtlLegalAnsiCharacterArray;
+#endif
+
+#define FSRTL_WILD_CHARACTER  0x08
+
 
 VOID
 STDCALL
@@ -197,30 +206,22 @@ FsRtlDeleteTunnelCache(IN PTUNNEL Cache);
 VOID STDCALL
 FsRtlDeregisterUncProvider(IN HANDLE Handle);
 
-VOID
-STDCALL
-FsRtlDissectDbcs (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
-	);
+VOID STDCALL
+FsRtlDissectDbcs(IN ANSI_STRING Name,
+		 OUT PANSI_STRING FirstPart,
+		 OUT PANSI_STRING RemainingPart);
 
 VOID STDCALL
-FsRtlDissectName (IN UNICODE_STRING Name,
-		  OUT PUNICODE_STRING FirstPart,
-		  OUT PUNICODE_STRING RemainingPart);
+FsRtlDissectName(IN UNICODE_STRING Name,
+		 OUT PUNICODE_STRING FirstPart,
+		 OUT PUNICODE_STRING RemainingPart);
 
-BOOLEAN
-STDCALL
-FsRtlDoesDbcsContainWildCards (
-	IN	DWORD	Unknown0
-	);
-BOOLEAN
-STDCALL
-FsRtlDoesNameContainWildCards (
-	IN	PUNICODE_STRING	Name
-	);
+BOOLEAN STDCALL
+FsRtlDoesDbcsContainWildCards(IN PANSI_STRING Name);
+
+BOOLEAN STDCALL
+FsRtlDoesNameContainWildCards(IN PUNICODE_STRING Name);
+
 BOOLEAN
 STDCALL
 FsRtlFastCheckLockForRead (

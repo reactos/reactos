@@ -2344,10 +2344,26 @@ FsRtlDeregisterUncProvider (
 NTKERNELAPI
 VOID
 NTAPI
+FsRtlDissectDbcs (
+    IN ANSI_STRING Name,
+    OUT PANSI_STRING FirstPart,
+    OUT PANSI_STRING RemainingPart
+);
+
+NTKERNELAPI
+VOID
+NTAPI
 FsRtlDissectName (
     IN UNICODE_STRING Name,
     OUT PUNICODE_STRING FirstPart,
     OUT PUNICODE_STRING RemainingPart
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlDoesDbcsContainWildCards (
+    IN PANSI_STRING Name
 );
 
 NTKERNELAPI
