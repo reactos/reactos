@@ -19,12 +19,15 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.82 2004/12/19 16:53:57 weiden Exp $
+ * $Id: gdiobj.c,v 1.83 2004/12/21 04:05:18 royce Exp $
  */
 #include <w32k.h>
+#include <ddk/ntddk.h>
 
 #define NDEBUG
 #include <debug.h>
+
+#include <pseh.h>
 
 #ifdef __USE_W32API
 /* F*(&#$ header mess!!!! */
@@ -32,6 +35,9 @@ HANDLE
 STDCALL PsGetProcessId(
    	PEPROCESS	Process
 	);
+/* ditto */
+ULONG STDCALL
+KeRosGetStackFrames ( PULONG Frames, ULONG FrameCount );
 #endif /* __USE_W32API */
 
 
@@ -396,22 +402,8 @@ LockHandle:
           InterlockedExchange(&Entry->ProcessId, CurrentProcessId);
 
 #ifdef GDI_DEBUG
-          {
-            PULONG Frame;
-			int which;
-#if defined __GNUC__
-            __asm__("mov %%ebp, %%ebx" : "=b" (Frame) : );
-#elif defined(_MSC_VER)
-            __asm mov [Frame], ebp
-#endif
-			for ( which = 0; which < GDI_STACK_LEVELS && Frame[1] != 0 && Frame[1] != 0xDEADBEEF; which++ )
-			{
-				GDIHandleAllocator[Index][which] = Frame[1];
-				Frame = ((PULONG)Frame[0]);
-			}
-			for ( ; which < GDI_STACK_LEVELS; which++ )
-				GDIHandleAllocator[Index][which] = 0xDEADBEEF;
-          }
+          memset ( GDIHandleAllocator[Index], 0xcd, GDI_STACK_LEVELS * sizeof(ULONG) );
+          KeRosGetStackFrames ( GDIHandleAllocator[Index], GDI_STACK_LEVELS );
 #endif /* GDI_DEBUG */
 
           if(W32Process != NULL)

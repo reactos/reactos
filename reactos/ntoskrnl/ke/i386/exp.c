@@ -30,6 +30,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
+#include <pseh.h>
 #define NDEBUG
 #include <internal/debug.h>
 
@@ -630,16 +631,23 @@ VOID
 KeDumpStackFrames(PULONG Frame)
 {
 	DbgPrint("Frames: ");
-	while ( MmIsAddressValid(Frame) )
+	_SEH_TRY
 	{
-		ULONG Addr = Frame[1];
-		if (!KeRosPrintAddress((PVOID)Addr))
-			DbgPrint("<%X>", Addr);
-		if ( Addr == 0 || Addr == 0xDEADBEEF )
-			break;
-		Frame = (PULONG)Frame[0];
-		DbgPrint(" ");
+		while ( MmIsAddressValid(Frame) )
+		{
+			ULONG Addr = Frame[1];
+			if (!KeRosPrintAddress((PVOID)Addr))
+				DbgPrint("<%X>", Addr);
+			if ( Addr == 0 || Addr == 0xDEADBEEF )
+				break;
+			Frame = (PULONG)Frame[0];
+			DbgPrint(" ");
+		}
 	}
+	_SEH_HANDLE
+	{
+	}
+	_SEH_END;
 	DbgPrint("\n");
 }
 
@@ -649,29 +657,62 @@ KeRosDumpStackFrames ( PULONG Frame, ULONG FrameCount )
 	ULONG i=0;
 
 	DbgPrint("Frames: ");
-	if ( !Frame )
+	_SEH_TRY
+	{
+		if ( !Frame )
+		{
+#if defined __GNUC__
+			__asm__("mov %%ebp, %%ebx" : "=b" (Frame) : );
+#elif defined(_MSC_VER)
+			__asm mov [Frame], ebp
+#endif
+			//Frame = (PULONG)Frame[0]; // step out of KeRosDumpStackFrames
+		}
+		while ( MmIsAddressValid(Frame) && i++ < FrameCount )
+		{
+			ULONG Addr = Frame[1];
+			if (!KeRosPrintAddress((PVOID)Addr))
+				DbgPrint("<%X>", Addr);
+			if ( Addr == 0 || Addr == 0xDEADBEEF )
+				break;
+			Frame = (PULONG)Frame[0];
+			DbgPrint(" ");
+		}
+	}
+	_SEH_HANDLE
+	{
+	}
+	_SEH_END;
+	DbgPrint("\n");
+}
+
+ULONG STDCALL
+KeRosGetStackFrames ( PULONG Frames, ULONG FrameCount )
+{
+	ULONG Count = 0;
+	PULONG Frame;
+	_SEH_TRY
 	{
 #if defined __GNUC__
 		__asm__("mov %%ebp, %%ebx" : "=b" (Frame) : );
 #elif defined(_MSC_VER)
 		__asm mov [Frame], ebp
 #endif
-		//Frame = (PULONG)Frame[0]; // step out of KeRosDumpStackFrames
+		while ( Count < FrameCount )
+		{
+			Frames[Count++] = Frame[1];
+			Frame = (PULONG)Frame[0];
+		}
 	}
-	while ( MmIsAddressValid(Frame) && i++ < FrameCount )
+	_SEH_HANDLE
 	{
-		ULONG Addr = Frame[1];
-		if (!KeRosPrintAddress((PVOID)Addr))
-			DbgPrint("<%X>", Addr);
-		if ( Addr == 0 || Addr == 0xDEADBEEF )
-			break;
-		Frame = (PULONG)Frame[0];
-		DbgPrint(" ");
 	}
-	DbgPrint("\n");
+	_SEH_END;
+	return Count;
 }
 
-static void set_system_call_gate(unsigned int sel, unsigned int func)
+static void
+set_system_call_gate(unsigned int sel, unsigned int func)
 {
    DPRINT("sel %x %d\n",sel,sel);
    KiIdt[sel].a = (((int)func)&0xffff) +

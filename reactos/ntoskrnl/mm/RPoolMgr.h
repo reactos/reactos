@@ -1,4 +1,4 @@
-/* $Id: RPoolMgr.h,v 1.2 2004/12/18 21:30:17 royce Exp $
+/* $Id: RPoolMgr.h,v 1.3 2004/12/21 04:05:18 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -249,65 +249,26 @@ RPoolRemoveFree ( PR_POOL pool, PR_FREE Item )
 #endif//DBG || KDBG
 }
 
-// this function is used to walk up a stack trace... it returns
-// the pointer to the next return address above the pointer to the
-// return address pointed to by Frame...
-static rulong*
-RNextStackFrame ( rulong* Frame )
-{
-	if ( !Frame || !*Frame || *Frame == 0xDEADBEAF )
-		return NULL;
-	return (rulong*)(  Frame[-1] ) + 1;
-}
-
-// this function returns a pointer to the address the
-// caller will return to. Use RNextStackFrame() above to walk
-// further up the stack.
-static rulong*
-RStackFrame()
-{
-	rulong* Frame;
-#if defined __GNUC__
-	__asm__("mov %%ebp, %%ebx" : "=b" (Frame) : );
-#elif defined(_MSC_VER)
-	__asm mov [Frame], ebp
-#endif
-	return RNextStackFrame ( Frame + 1 );
-}
-
 static void
 RFreeFillStack ( PR_FREE free )
 {
-	rulong* Frame = RStackFrame();
 	int i;
-	memset ( free->LastOwnerStack, 0, sizeof(free->LastOwnerStack) );
-	Frame = RNextStackFrame ( Frame ); // step out of RFreeInit()
-	Frame = RNextStackFrame ( Frame ); // step out of RFreeSplit()/RPoolReclaim()
-	Frame = RNextStackFrame ( Frame ); // step out of RPoolFree()
+	ULONG stack[R_EXTRA_STACK_UP+3]; // need to skip 3 known levels of stack trace
+	memset ( stack, 0xCD, sizeof(stack) );
+	R_GET_STACK_FRAMES ( stack, R_EXTRA_STACK_UP+3 );
 	for ( i = 0; i < R_EXTRA_STACK_UP; i++ )
-		Frame = RNextStackFrame ( Frame );
-	for ( i = 0; i < R_STACK && Frame; i++ )
-	{
-		free->LastOwnerStack[i] = *Frame;
-		Frame = RNextStackFrame ( Frame );
-	}
+		free->LastOwnerStack[i] = stack[i+3];
 }
 
 static void
 RUsedFillStack ( PR_USED used )
 {
-	rulong* Frame = RStackFrame();
 	int i;
-	memset ( used->LastOwnerStack, 0, sizeof(used->LastOwnerStack) );
-	Frame = RNextStackFrame ( Frame ); // step out of RUsedInit()
-	Frame = RNextStackFrame ( Frame ); // step out of RPoolAlloc()
+	ULONG stack[R_EXTRA_STACK_UP+2]; // need to skip 2 known levels of stack trace
+	memset ( stack, 0xCD, sizeof(stack) );
+	R_GET_STACK_FRAMES ( stack, R_EXTRA_STACK_UP+2 );
 	for ( i = 0; i < R_EXTRA_STACK_UP; i++ )
-		Frame = RNextStackFrame ( Frame );
-	for ( i = 0; i < R_STACK && Frame; i++ )
-	{
-		used->LastOwnerStack[i] = *Frame;
-		Frame = RNextStackFrame ( Frame );
-	}
+		used->LastOwnerStack[i] = stack[i+2];
 }
 
 static PR_FREE

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.107 2004/12/12 01:40:37 weiden Exp $
+# $Id: makefile,v 1.108 2004/12/21 04:05:18 royce Exp $
 
 PATH_TO_TOP = ../..
 
@@ -13,6 +13,9 @@ TARGET_ENTRY = _DllMain@8
 TARGET_PCH = w32k.h
 
 TARGET_DDKLIBS = freetype.a
+
+TARGET_LIBS = \
+	$(SDK_PATH_LIB)/libpseh.a
 
 TARGET_REGTESTS = yes
 

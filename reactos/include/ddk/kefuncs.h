@@ -361,6 +361,9 @@ KeResetEvent(IN PKEVENT Event);
 VOID STDCALL
 KeRosDumpStackFrames ( PULONG Frame, ULONG FrameCount );
 
+ULONG STDCALL
+KeRosGetStackFrames ( PULONG Frames, ULONG FrameCount );
+
 BOOLEAN STDCALL
 KeRosPrintAddress(PVOID address);
 

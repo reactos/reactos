@@ -1,4 +1,4 @@
-/* $Id: ppool.c,v 1.38 2004/12/18 21:27:27 royce Exp $
+/* $Id: ppool.c,v 1.39 2004/12/21 04:05:18 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -32,6 +32,7 @@
 #define R_PANIC() KeBugCheck(0)
 #define R_DEBUG DbgPrint
 #define R_EXTRA_STACK_UP 2
+#define R_GET_STACK_FRAMES(ptr,cnt) KeRosGetStackFrames(ptr,cnt)
 
 #include "RPoolMgr.h"
 
