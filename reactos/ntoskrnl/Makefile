@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.37 2001/04/26 13:23:38 dwelch Exp $
+# $Id: Makefile,v 1.38 2001/04/28 22:59:16 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -56,8 +56,7 @@ all: $(EXE_PREFIX)depends$(EXE_POSTFIX) include/internal/config.h \
 	$(OBJECTS_PATH) \
 	$(TARGETNAME).nostrip.exe \
 	$(TARGETNAME).exe \
-	$(TARGETNAME).sym \
-	$(TARGETNAME).dbg
+	$(TARGETNAME).sym 
 
 $(EXE_PREFIX)depends$(EXE_POSTFIX): depends.c
 	$(HOST_CC) -o depends$(EXE_POSTFIX) depends.c
