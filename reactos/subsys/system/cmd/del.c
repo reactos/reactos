@@ -31,7 +31,7 @@
  *        Little fix to keep DEL quiet inside batch files.
  *
  *    28-Jan-2004 (Michael Fritscher <michael@fritscher.net>)
- *        Added prompt ("/P") and yes ("/Y") option.
+ *        Added prompt ("/P"), yes ("/Y") and wipe("/W") option.
  */
 
 #include "config.h"
@@ -43,6 +43,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <math.h>
 
 #include "cmd.h"
 #include "batch.h"
@@ -71,8 +72,31 @@ RemoveFile (LPTSTR lpFileName, DWORD dwFlags)
 	if (dwFlags & DEL_WIPE)
 	{
 
-		/* FIXME: Wipe the given file */
+		HANDLE file;
+		DWORD temp;
+		LONG BufferSize = 65536;
+		BYTE buffer[BufferSize];
+		LONG i;
+		HANDLE fh;
+		WIN32_FIND_DATA f;
+		LONGLONG FileSize;
 
+		fh = FindFirstFile(lpFileName, &f);
+		FileSize = ((LONGLONG)f.nFileSizeHigh * ((LONGLONG)MAXDWORD+1)) + (LONGLONG)f.nFileSizeLow;
+
+		for(i = 0; i < BufferSize; i++)
+		{
+			buffer[i]=rand() % 256;
+		}
+		file = CreateFile (lpFileName, GENERIC_WRITE, 0, NULL, OPEN_EXISTING,  FILE_FLAG_WRITE_THROUGH, NULL);
+		for(i = 0; i < (FileSize - BufferSize); i += BufferSize)
+		{
+			WriteFile (file, buffer, BufferSize, &temp, NULL);
+			ConOutPrintf (_T("%I64d%% wiped\r"),(i * (LONGLONG)100)/FileSize);
+		}
+		WriteFile (file, buffer, FileSize - i, &temp, NULL);
+		ConOutPrintf (_T("100%% wiped\n"));
+		CloseHandle (file);
 	}
 
 	return DeleteFile (lpFileName);
@@ -104,13 +128,12 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 		               "  file  Specifies the file(s) to delete.\n"
 		               "\n"
 		               "  /N    Nothing.\n"
-		               "  /P    Prompt for confirmation before deleting each file.\n"
-		               "  /T    Display total number of deleted files and freed disk space.\n"
+		               "  /P    Prompt. Ask before deleting each file.\n"
+		               "  /T    Total. Display total number of deleted files and freed disk space.\n"
 		               "  /Q    Quiet.\n"
-		               "  /W    Wipe. Overwrite the file with zeros before deleting it.\n"
-		               "        (Not implemented yet!)\n"
-		               "  /Y    Kill even *.* without asking.\n"
-		               "  /Z    Zap (delete hidden, read-only and system files).\n"));
+		               "  /W    Wipe. Overwrite the file with random numbers before deleting it.\n"
+		               "  /Y    Yes. Kill even *.* without asking.\n"
+		               "  /Z    Zap. Delete hidden, read-only and system files).\n"));
 
 		return 0;
 	}
