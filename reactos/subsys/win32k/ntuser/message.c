@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.75 2004/11/20 16:46:06 weiden Exp $
+/* $Id: message.c,v 1.76 2004/12/11 19:39:18 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -519,7 +519,10 @@ IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *Hit
           {
             /* post the message to the other window */
             Msg->hwnd = Wnd->Self;
-            MsqPostMessage(Wnd->MessageQueue, Msg, FALSE);
+            if(!(Wnd->Status & WINDOWSTATUS_DESTROYING))
+            {
+              MsqPostMessage(Wnd->MessageQueue, Msg, FALSE);
+            }
             
             /* eat the message */
             IntReleaseWindowObject(Wnd);
@@ -1114,6 +1117,13 @@ NtUserPostMessage(HWND Wnd,
           SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
           return FALSE;
         }
+      if(Window->Status & WINDOWSTATUS_DESTROYING)
+      {
+        IntReleaseWindowObject(Window);
+        DPRINT1("Attempted to post message to window 0x%x that is being destroyed!\n", Wnd);
+        /* FIXME - last error code? */
+        return FALSE;
+      }
 
       UserModeMsg.hwnd = Wnd;
       UserModeMsg.message = Msg;
@@ -1290,6 +1300,14 @@ IntSendMessageTimeoutSingle(HWND hWnd,
   {
     IntReleaseWindowObject(Window);
     /* FIXME - Set a LastError? */
+    return FALSE;
+  }
+  
+  if(Window->Status & WINDOWSTATUS_DESTROYING)
+  {
+    IntReleaseWindowObject(Window);
+    /* FIXME - last error? */
+    DPRINT1("Attempted to send message to window 0x%x that is being destroyed!\n", hWnd);
     return FALSE;
   }
   

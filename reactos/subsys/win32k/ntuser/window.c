@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.250 2004/11/20 19:08:37 weiden Exp $
+/* $Id: window.c,v 1.251 2004/12/11 19:39:18 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -278,6 +278,7 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
     return 0;
   }
   Window->Status |= WINDOWSTATUS_DESTROYING;
+  Window->Flags &= ~WS_VISIBLE;
   /* remove the window already at this point from the thread window list so we
      don't get into trouble when destroying the thread windows while we're still
      in IntDestroyWindow() */
@@ -290,7 +291,18 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
   {
     /* Send destroy messages */
     IntSendDestroyMsg(Window->Self);
+    if(BelongsToThreadData)
+      IntSendMessage(Window->Self, WM_NCDESTROY, 0, 0);
   }
+  
+  /* from now on no messages can be sent to this window anymore */
+  IntLockThreadWindows(Window->OwnerThread->Tcb.Win32Thread);
+  Window->Status |= WINDOWSTATUS_DESTROYED;
+  /* don't remove the WINDOWSTATUS_DESTROYING bit */
+  IntUnLockThreadWindows(Window->OwnerThread->Tcb.Win32Thread);
+  
+  /* flush the message queue */
+  MsqRemoveWindowMessagesFromQueue(Window);
 
   /* free child windows */
   Children = IntWinListChildren(Window);
@@ -311,23 +323,6 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
             }
         }
       ExFreePool(Children);
-    }
-
-  if (SendMessages)
-    {      
-      /*
-       * Clear the update region to make sure no WM_PAINT messages will be
-       * generated for this window while processing the WM_NCDESTROY.
-       */ 
-      IntRedrawWindow(Window, NULL, 0,
-                      RDW_VALIDATE | RDW_NOFRAME | RDW_NOERASE |
-                      RDW_NOINTERNALPAINT | RDW_NOCHILDREN);
-
-      /*
-       * Send the WM_NCDESTROY to the window being destroyed.
-       */
-      if(BelongsToThreadData)
-        IntSendMessage(Window->Self, WM_NCDESTROY, 0, 0);
     }
 
   /* reset shell window handles */
@@ -384,11 +379,6 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
   ObmCloseHandle(ThreadData->Desktop->WindowStation->HandleTable, Window->Self);
   
   IntDestroyScrollBars(Window);
-  
-  IntLockThreadWindows(Window->OwnerThread->Tcb.Win32Thread);
-  Window->Status |= WINDOWSTATUS_DESTROYED;
-  /* don't remove the WINDOWSTATUS_DESTROYING bit */
-  IntUnLockThreadWindows(Window->OwnerThread->Tcb.Win32Thread);
   
   /* remove the window from the class object */
   IntLockClassWindows(Window->Class);
@@ -1403,7 +1393,6 @@ IntCreateWindowEx(DWORD dwExStyle,
   HWND ParentWindowHandle;
   HWND OwnerWindowHandle;
   PMENU_OBJECT SystemMenu;
-  NTSTATUS Status;
   HANDLE Handle;
   POINT Pos;
   SIZE Size;
@@ -1417,7 +1406,6 @@ IntCreateWindowEx(DWORD dwExStyle,
   LRESULT Result;
   BOOL MenuChanged;
   BOOL ClassFound;
-  PWSTR ClassNameString;
 
   ParentWindowHandle = PsGetWin32Thread()->Desktop->DesktopWindow;
   OwnerWindowHandle = NULL;
@@ -1454,24 +1442,7 @@ IntCreateWindowEx(DWORD dwExStyle,
   /* FIXME: parent must belong to the current process */
 
   /* Check the class. */
-  if (IS_ATOM(ClassName->Buffer))
-    {
-      ClassFound = ClassReferenceClassByNameOrAtom(&ClassObject, ClassName->Buffer, hInstance);
-    }
-  else
-    {
-      Status = IntUnicodeStringToNULLTerminated(&ClassNameString, ClassName);
-      if (! NT_SUCCESS(Status))
-        {
-          if (NULL != ParentWindow)
-            {
-              IntReleaseWindowObject(ParentWindow);
-            }
-          return NULL;
-        }
-      ClassFound = ClassReferenceClassByNameOrAtom(&ClassObject, ClassNameString, hInstance);
-      IntFreeNULLTerminatedFromUnicodeString(ClassNameString, ClassName);
-    }
+  ClassFound = ClassReferenceClassByNameOrAtom(&ClassObject, ClassName->Buffer, hInstance);
   if (!ClassFound)
   {
      if (IS_ATOM(ClassName->Buffer))
@@ -1486,6 +1457,7 @@ IntCreateWindowEx(DWORD dwExStyle,
      {
         IntReleaseWindowObject(ParentWindow);
      }
+     SetLastWin32Error(ERROR_CANNOT_FIND_WND_CLASS);
      return((HWND)0);
   }
 
@@ -2045,7 +2017,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
     }
   if (! IS_ATOM(ClassName.Buffer))
     {
-      Status = IntSafeCopyUnicodeString(&ClassName, UnsafeClassName);
+      Status = IntSafeCopyUnicodeStringTerminateNULL(&ClassName, UnsafeClassName);
       if (! NT_SUCCESS(Status))
         {
           SetLastNtError(Status);
@@ -2111,6 +2083,8 @@ NtUserDestroyWindow(HWND Wnd)
 {
   PWINDOW_OBJECT Window;
   BOOLEAN isChild;
+  
+  DbgPrint("DestroyWindow:0x%x\n", Wnd);
 
   Window = IntGetWindowObject(Wnd);
   if (Window == NULL)
@@ -2453,7 +2427,7 @@ NtUserFindWindowEx(HWND hwndParent,
         DPRINT1("Window class not found (%lx)\n", (ULONG_PTR)ClassName.Buffer);
       else
         DPRINT1("Window class not found (%S)\n", ClassName.Buffer);
-      SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
+      SetLastWin32Error(ERROR_FILE_NOT_FOUND);
       goto Cleanup;
     }
   }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.124 2004/11/21 12:14:34 navaraf Exp $
+/* $Id: winpos.c,v 1.125 2004/12/11 19:39:18 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1321,7 +1321,8 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
 
   /* FIXME: Check for window destruction. */
 
-  if (Window->Flags & WINDOWOBJECT_NEED_SIZE)
+  if ((Window->Flags & WINDOWOBJECT_NEED_SIZE) &&
+      !(Window->Status & WINDOWSTATUS_DESTROYING))
     {
       WPARAM wParam = SIZE_RESTORED;
 
