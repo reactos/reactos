@@ -489,7 +489,7 @@ MiniLocateDevice(
 
               ASSERT(Adapter);
 
-              NDIS_DbgPrint(DEBUG_MINIPORT, ("AdapterName = %wZ\n", &AdapterName));
+              NDIS_DbgPrint(DEBUG_MINIPORT, ("AdapterName = %wZ\n", AdapterName));
               NDIS_DbgPrint(DEBUG_MINIPORT, ("DeviceName = %wZ\n", &Adapter->NdisMiniportBlock.MiniportName));
 
               if (RtlCompareUnicodeString(AdapterName, &Adapter->NdisMiniportBlock.MiniportName, TRUE) == 0) 
@@ -498,6 +498,7 @@ MiniLocateDevice(
                   break;
                 }
 
+              Adapter = NULL;
               CurrentEntry = CurrentEntry->Flink;
             }
         } while (0);
