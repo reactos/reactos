@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.115 2004/12/12 23:08:13 navaraf Exp $ */
+/* $Id: text.c,v 1.116 2004/12/13 01:45:18 royce Exp $ */
 #include <w32k.h>
 
 #include <ft2build.h>
@@ -2583,7 +2583,6 @@ NtGdiGetTextMetrics(HDC hDC,
   }
   else
   {
-    ASSERT(FALSE);
     Status = STATUS_INVALID_HANDLE;
   }
   DC_UnlockDc(hDC);
