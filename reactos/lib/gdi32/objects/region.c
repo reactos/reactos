@@ -45,33 +45,32 @@ GetClipRgn(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HRGN
 STDCALL
 CreatePolyPolygonRgn(
-	CONST POINT	*a0,
-	CONST INT	*a1,
-	int		a2,
-	int		a3
+	CONST POINT	*lppt,
+	CONST INT	*lpPolyCounts,
+	int		nCount,
+	int		fnPolyFillMode
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  return W32kCreatePolyPolygonRgn ( (CONST PPOINT)lppt,
+    (CONST PINT)lpPolyCounts, nCount, fnPolyFillMode );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HBRUSH
 STDCALL
 CreatePatternBrush(
-	HBITMAP		a0
+	HBITMAP		hbmp
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  return W32kCreatePatternBrush ( hbmp );
 }
 
 
@@ -105,21 +104,21 @@ CreateRectRgnIndirect(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HRGN
 STDCALL
 CreateRoundRectRgn(
-	int		a0,
-	int		a1,
-	int		a2,
-	int		a3,
-	int		a4,
-	int		a5
+	int	nLeftRect,
+	int	nTopRect,
+	int	nRightRect,
+	int	nBottomRect,
+	int	nWidthEllipse,
+	int	nHeightEllipse
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  return W32kCreateRoundRectRgn (
+    nLeftRect, nTopRect, nRightRect, nBottomRect, nWidthEllipse, nHeightEllipse );
 }
 
 
