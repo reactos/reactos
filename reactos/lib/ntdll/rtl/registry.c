@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.14 2002/06/12 23:21:45 ekohl Exp $
+/* $Id: registry.c,v 1.15 2002/06/17 15:42:30 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -178,7 +178,10 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 				 FALSE,
 				 &BaseKeyHandle);
   if (!NT_SUCCESS(Status))
-    return(Status);
+    {
+      DPRINT("RtlpGetRegistryHandle() failed (Status %lx)\n", Status);
+      return(Status);
+    }
 
   CurrentKeyHandle = BaseKeyHandle;
   QueryEntry = QueryTable;
@@ -291,13 +294,9 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 	    }
 	  else
 	    {
-	      if (ValueInfo->Type == REG_SZ ||
-		  ValueInfo->Type == REG_EXPAND_SZ ||
-		  ValueInfo->Type == REG_MULTI_SZ)
-#if 0
+	      if ((ValueInfo->Type == REG_SZ) ||
+		  (ValueInfo->Type == REG_MULTI_SZ) ||
 		  (ValueInfo->Type == REG_EXPAND_SZ && (QueryEntry->Flags & RTL_QUERY_REGISTRY_NOEXPAND)))
-		  (ValueInfo->Type == REG_MULTI_SZ && (QueryEntry->Flags & RTL_QUERY_REGISTRY_NOEXPAND)))
-#endif
 		{
 		  PUNICODE_STRING ValueString;
 
@@ -321,6 +320,63 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 			 ValueInfo->Data,
 			 ValueString->Length);
 		  ((PWSTR)ValueString->Buffer)[ValueString->Length / sizeof(WCHAR)] = 0;
+		}
+	      else if (ValueInfo->Type == REG_EXPAND_SZ)
+		{
+		  PUNICODE_STRING ValueString;
+
+		  DPRINT("Expand REG_EXPAND_SZ type\n");
+
+		  ValueString = (PUNICODE_STRING)QueryEntry->EntryContext;
+
+		  ExpandBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
+						 0,
+						 ValueInfo->DataLength * 2);
+		  if (ExpandBuffer == NULL)
+		    {
+		      Status = STATUS_NO_MEMORY;
+		      break;
+		    }
+
+		  RtlInitUnicodeString(&EnvValue,
+				       (PWSTR)ValueInfo->Data);
+		  EnvExpandedValue.Length = 0;
+		  EnvExpandedValue.MaximumLength = ValueInfo->DataLength * 2 * sizeof(WCHAR);
+		  EnvExpandedValue.Buffer = ExpandBuffer;
+		  *ExpandBuffer = 0;
+
+		  RtlExpandEnvironmentStrings_U(Environment,
+						&EnvValue,
+						&EnvExpandedValue,
+						&StringLen);
+
+		  if (ValueString->Buffer == NULL)
+		    {
+		      ValueString->MaximumLength = EnvExpandedValue.Length + sizeof(WCHAR);
+		      ValueString->Length = EnvExpandedValue.Length;
+		      ValueString->Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+							    0,
+							    ValueString->MaximumLength);
+		      if (ValueString->Buffer == NULL)
+			{
+			  Status = STATUS_INSUFFICIENT_RESOURCES;
+			  break;
+			}
+		    }
+		  else
+		    {
+		      ValueString->Length = min(EnvExpandedValue.Length,
+						ValueString->MaximumLength - sizeof(WCHAR));
+		    }
+
+		  memcpy(ValueString->Buffer,
+			 EnvExpandedValue.Buffer,
+			 ValueString->Length);
+		  ((PWSTR)ValueString->Buffer)[ValueString->Length / sizeof(WCHAR)] = 0;
+
+		  RtlFreeHeap(RtlGetProcessHeap(),
+			      0,
+			      ExpandBuffer);
 		}
 	      else
 		{
@@ -899,7 +955,7 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
 
   InitializeObjectAttributes(&ObjectAttributes,
 			     &KeyName,
-			     OBJ_CASE_INSENSITIVE,
+			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
 			     NULL,
 			     NULL);
 
