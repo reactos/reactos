@@ -95,7 +95,7 @@ NtCreateSemaphore(OUT PHANDLE SemaphoreHandle,
     }
     
     /* Make sure the counts make sense */
-    if (!MaximumCount || !InitialCount || InitialCount > MaximumCount) {
+    if (!MaximumCount || InitialCount < 0 || InitialCount > MaximumCount) {
     
         DPRINT("Invalid Count Data!\n");
         return STATUS_INVALID_PARAMETER;
