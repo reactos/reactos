@@ -1,4 +1,4 @@
-/* $Id: session.c,v 1.7 2004/10/02 21:14:08 weiden Exp $
+/* $Id: session.c,v 1.8 2004/10/08 21:37:16 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -83,16 +83,9 @@ BOOL STDCALL ProcessIdToSessionId (IN  DWORD dwProcessId,
       *pSessionId = SessionInformation.SessionId;
       return TRUE;
     }
-    else
-    {
-      SetLastErrorByStatus(Status);
-    }
   }
-  else
-  {
-    SetLastErrorByStatus(Status);
-  }
-  
+
+  SetLastErrorByStatus(Status);
   return FALSE;
 }
 
