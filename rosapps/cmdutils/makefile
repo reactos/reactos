@@ -9,16 +9,16 @@ all: $(TARGET)
 
 CLEAN_FILES = *.o *.exe *.sym *.coff
 
-more.exe: more.o
-	$(CC) more.o -lkernel32 -lcrtdll -o more.exe
+more.exe: more.o more.coff
+	$(CC) more.o -lkernel32 -lcrtdll -o more.exe more.coff
 	$(NM) --numeric-sort more.exe > more.sym
 
-tee.exe: tee.o
-	$(CC) tee.o -lkernel32 -lcrtdll -o tee.exe
+tee.exe: tee.o tee.coff
+	$(CC) tee.o -lkernel32 -lcrtdll -o tee.exe tee.coff
 	$(NM) --numeric-sort tee.exe > tee.sym
 
-y.exe: y.o
-	$(CC) y.o -lkernel32 -lcrtdll -o y.exe
+y.exe: y.o y.coff
+	$(CC) y.o -lkernel32 -lcrtdll -o y.exe y.coff
 	$(NM) --numeric-sort y.exe > y.sym
 
 clean: $(CLEAN_FILES:%=%_clean)
