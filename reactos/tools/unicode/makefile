@@ -81,7 +81,7 @@ UNICODE_OBJECTS = \
 UNICODE_HOST_CFLAGS = \
 	-D__USE_W32API -DWINVER=0x501 -DWINE_UNICODE_API= \
 	-Dwchar_t="unsigned short" -D_WCHAR_T_DEFINED \
-	-I$(UNICODE_BASE) -Iinclude/wine
+	-I$(UNICODE_BASE) -Iinclude/wine -Iw32api/include
 
 $(UNICODE_TARGET): $(UNICODE_OBJECTS)
 	${host_ar} -rc $(UNICODE_TARGET) $(UNICODE_OBJECTS)
