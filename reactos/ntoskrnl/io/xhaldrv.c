@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.11 2001/06/28 02:42:27 rex Exp $
+/* $Id: xhaldrv.c,v 1.12 2001/06/28 02:56:27 rex Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -617,7 +617,7 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 			  NotificationEvent,
 			  FALSE);
 
-	DPRINT1("PartitionOffset: %I64u\n", PartitionOffset.QuadPart / SectorSize);
+	DPRINT("PartitionOffset: %I64u\n", PartitionOffset.QuadPart / SectorSize);
 
 	Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
 					   DeviceObject,
@@ -659,7 +659,7 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 	     return STATUS_SUCCESS;
 	  }
 
-#if 1 /* ndef NDEBUG */
+#ifndef NDEBUG
 	for (i = 0; i < PARTITION_TBL_SIZE; i++)
 	  {
 	     DPRINT1("  %d: flags:%2x type:%x start:%d:%d:%d end:%d:%d:%d stblk:%d count:%d\n", 
