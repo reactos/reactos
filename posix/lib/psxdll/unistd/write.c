@@ -1,4 +1,4 @@
-/* $Id: write.c,v 1.3 2002/03/21 22:46:30 hyperion Exp $
+/* $Id: write.c,v 1.4 2002/05/17 01:54:39 hyperion Exp $
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -29,12 +29,17 @@ ssize_t write(int fildes, const void *buf, size_t nbyte)
   return (0);
 
  if(fcntl(fildes, F_GETALL, &fdDescriptor) == -1)
+ {
+  ERR("fcntl() failed, errno %d", errno);
   return (0);
+ }
 
  if((fdDescriptor.OpenFlags && O_APPEND) == O_APPEND)
  {
   TODO("move file pointer to the end");
  }
+
+ INFO("handle for descriptor %d is %d", fildes, fdDescriptor.FileHandle);
 
  nErrCode = NtWriteFile
  (
@@ -51,6 +56,7 @@ ssize_t write(int fildes, const void *buf, size_t nbyte)
 
  if(!NT_SUCCESS(nErrCode))
  {
+  ERR("NtWriteFile() failed with status 0x%08X", nErrCode);
   errno = __status_to_errno(nErrCode);
   return (0);
  }

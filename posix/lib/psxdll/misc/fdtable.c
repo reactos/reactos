@@ -1,4 +1,4 @@
-/* $Id: fdtable.c,v 1.3 2002/03/11 20:48:08 hyperion Exp $
+/* $Id: fdtable.c,v 1.4 2002/05/17 01:54:39 hyperion Exp $
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -155,11 +155,14 @@ int __fdtable_entry_add(__fdtable_t * fdtable, int fileno, __fildes_t * fildes, 
   );
 
   /* ... try to increase the size of the table */
-  pTemp = __realloc
-  (
-   fdtable->Descriptors,
-   (nFileNo + 1) * sizeof(*fdtable->Descriptors)
-  );
+  if(fdtable->AllocatedDescriptors * sizeof(*fdtable->Descriptors) == 0)
+   pTemp = __malloc((nFileNo + 1) * sizeof(*fdtable->Descriptors));
+  else
+   pTemp = __realloc
+   (
+    fdtable->Descriptors,
+    (nFileNo + 1) * sizeof(*fdtable->Descriptors)
+   );
 
   /* reallocation failed */
   if(pTemp == 0)
