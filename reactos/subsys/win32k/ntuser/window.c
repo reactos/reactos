@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.244.2.9 2004/09/24 18:35:40 weiden Exp $
+/* $Id: window.c,v 1.244.2.10 2004/09/26 18:33:30 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -804,7 +804,7 @@ IntCreateWindow(DWORD dwExStyle,
   WindowObject->Style = dwStyle & ~WS_VISIBLE;
   DPRINT("1: Style is now %lx\n", WindowObject->Style);
   
-  WindowObject->ContextHelpId = 0;
+  //WindowObject->ContextHelpId = 0; // ObmCreateObject() zeroes the memory
   WindowObject->WindowID = WindowID;
   WindowObject->Instance = hInstance;
   WindowObject->Handle = Handle;
@@ -823,12 +823,12 @@ IntCreateWindow(DWORD dwExStyle,
   
   WindowObject->Parent = ParentWindow;
   WindowObject->Owner = OwnerWindow;
-  WindowObject->FirstChild = NULL;
-  WindowObject->LastChild = NULL;
-  WindowObject->PrevSibling = NULL;
-  WindowObject->NextSibling = NULL;
+  //WindowObject->FirstChild = NULL; // ObmCreateObject() zeroes the memory
+  //WindowObject->LastChild = NULL; // ObmCreateObject() zeroes the memory
+  //WindowObject->PrevSibling = NULL; // ObmCreateObject() zeroes the memory
+  //WindowObject->NextSibling = NULL; // ObmCreateObject() zeroes the memory
   
-  WindowObject->UserData = 0;
+  //WindowObject->UserData = 0; // ObmCreateObject() zeroes the memory
   if ((((DWORD)ClassObject->lpfnWndProcA & 0xFFFF0000) != 0xFFFF0000)
       && (((DWORD)ClassObject->lpfnWndProcW & 0xFFFF0000) != 0xFFFF0000)) 
     {
@@ -850,8 +850,8 @@ IntCreateWindow(DWORD dwExStyle,
   }
   else
   {
-    WindowObject->ExtraData = NULL;
-    WindowObject->ExtraDataSize = 0;
+    //WindowObject->ExtraData = NULL; // ObmCreateObject() zeroes the memory
+    //WindowObject->ExtraDataSize = 0; // ObmCreateObject() zeroes the memory
   }
 
   if (NULL != WindowName->Buffer)
@@ -1095,6 +1095,20 @@ IntCreateWindow(DWORD dwExStyle,
   DPRINT1("[win32k.window] IntCreateWindow style %d, exstyle %d, parent %d\n", Cs.style, Cs.dwExStyle, Cs.hwndParent);
   DPRINT1("IntCreateWindow(): (%d,%d-%d,%d)\n", x, y, nWidth, nHeight);
   DPRINT1("IntCreateWindow(): About to send NCCREATE message.\n");
+#define X(fld) DPRINT1("\tCs." #fld " = %lx\n", Cs.fld );
+    X(lpCreateParams)
+    X(hInstance)
+    X(hMenu)
+    X(hwndParent)
+    X(cy)
+    X(cx)
+    X(y)
+    X(x)
+    X(style)
+    X(lpszName)
+    X(lpszClass)
+    X(dwExStyle)
+#undef X
   Result = IntSendMessage(WindowObject, WM_NCCREATE, 0, (LPARAM) &Cs);
   
   /* FIXME - make sure the window still exists! */
