@@ -1,4 +1,4 @@
-/* $Id: errormsg.c,v 1.7 2003/08/07 04:03:23 royce Exp $
+/* $Id: errormsg.c,v 1.8 2003/08/11 05:58:02 jimtabor Exp $
  *
  * reactos/lib/kernel32/misc/errormsg.c
  *
@@ -99,7 +99,7 @@ typedef struct tagMESSAGE_RESOURCE_DATA {
 //#define RT_RCDATAW         MAKEINTRESOURCEW(10)
 ////#define RT_RCDATA            WINELIB_NAME_AW(RT_RCDATA)
 //#define RT_MESSAGETABLEA   MAKEINTRESOURCEA(11)
-#define RT_MESSAGETABLEW   MAKEINTRESOURCEW(11)
+//#define RT_MESSAGETABLEW   MAKEINTRESOURCEW(11)
 ////#define RT_MESSAGETABLE       WINELIB_NAME_AW(RT_MESSAGETABLE)
 
 /* Messages...used by FormatMessage32* (KERNEL32.something)
@@ -497,7 +497,7 @@ DWORD WINAPI FormatMessageW(
     }
     from = NULL;
     if (dwFlags & FORMAT_MESSAGE_FROM_STRING) {
-        from = HEAP_strdupWtoA(GetProcessHeap(),0,(LPWSTR)lpSource);
+        from = (LPSTR)HEAP_strdupWtoA(GetProcessHeap(),0,(LPWSTR)lpSource);
     }
     else {
         bufsize = 0;
