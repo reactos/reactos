@@ -49,9 +49,9 @@ WinMain(HINSTANCE hInstance,
       return(1);
     }
 
-	/*tf = CreateFontA(14, 0, 0, TA_BASELINE, FW_NORMAL, FALSE, FALSE, FALSE,
+	tf = CreateFontA(14, 0, 0, TA_BASELINE, FW_NORMAL, FALSE, FALSE, FALSE,
 		ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-		DEFAULT_QUALITY, FIXED_PITCH|FF_DONTCARE, "Timmons");*/
+		DEFAULT_QUALITY, FIXED_PITCH|FF_DONTCARE, "Timmons");
 
   ShowWindow(hWnd, nCmdShow);
 
@@ -61,7 +61,7 @@ WinMain(HINSTANCE hInstance,
     DispatchMessage(&msg);
   }
 
-  /*DeleteObject(tf);*/
+  DeleteObject(tf);
 
   return msg.wParam;
 }
@@ -76,9 +76,6 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_PAINT:
 		hDC = BeginPaint(hWnd, &ps);
 		SelectObject(hDC, tf);
-		tf = CreateFontA(14, 0, 0, TA_BASELINE, FW_NORMAL, FALSE, FALSE, FALSE,
-		ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-		DEFAULT_QUALITY, FIXED_PITCH|FF_DONTCARE, "Timmons");
 		TextOut(hDC, 10, 10, "Hello World from ReactOS!", strlen("Hello World from ReactOS!"));
 		EndPaint(hWnd, &ps);
 		break;
