@@ -8,6 +8,3 @@
 #include <ddk/extypes.h>
 #include <ddk/pstypes.h>
    
-typedef struct _ADAPTER_OBJECT
-{
-} ADAPTER_OBJECT, *PADAPTER_OBJECT;

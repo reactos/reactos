@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.23 2001/02/10 22:51:07 dwelch Exp $
+/* $Id: iotypes.h,v 1.24 2001/03/31 16:01:03 phreak Exp $
  * 
  */
 
@@ -84,9 +84,7 @@ typedef VOID (*PIO_APC_ROUTINE) (PVOID ApcContext,
 
 /* STRUCTURE TYPES ***********************************************************/
 
-typedef struct _ADAPTER_OBJECT
-{
-} ADAPTER_OBJECT, *PADAPTER_OBJECT;
+typedef struct _ADAPTER_OBJECT ADAPTER_OBJECT, *PADAPTER_OBJECT;
 
 /*
  * PURPOSE: Special timer associated with each device

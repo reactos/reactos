@@ -1,4 +1,4 @@
-/* $Id: adapter.c,v 1.4 2000/07/19 14:18:18 dwelch Exp $
+/* $Id: adapter.c,v 1.5 2001/03/31 15:58:24 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -30,7 +30,11 @@ IoAllocateAdapterChannel (PADAPTER_OBJECT	AdapterObject,
 			  PDRIVER_CONTROL	ExecutionRoutine,
 			  PVOID		Context)
 {
-   UNIMPLEMENTED;
+  return HalAllocateAdapterChannel( AdapterObject,
+				    DeviceObject,
+				    NumberOfMapRegisters,
+				    ExecutionRoutine,
+				    Context );
 }
 
 

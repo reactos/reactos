@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.88 2001/03/25 02:34:27 dwelch Exp $
+; $Id: ntoskrnl.edf,v 1.89 2001/03/31 15:58:24 phreak Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -1012,7 +1012,7 @@ ExTryToAcquireFastMutex=ExTryToAcquireFastMutex@4
 HalAcquireDisplayOwnership=HalAcquireDisplayOwnership@4
 HalAdjustResourceList=HalAdjustResourceList@4
 HalAllProcessorsStarted=HalAllProcessorsStarted@0
-HalAllocateAdapterChannel=HalAllocateAdapterChannel@16
+HalAllocateAdapterChannel=HalAllocateAdapterChannel@20
 HalAllocateCommonBuffer=HalAllocateCommonBuffer@16
 ;HalAllocateCrashDumpRegisters=HalAllocateCrashDumpRegisters@8
 HalAssignSlotResource=HalAssignSlotResources@32

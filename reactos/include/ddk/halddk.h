@@ -1,4 +1,4 @@
-/* $Id: halddk.h,v 1.8 2001/01/14 15:35:56 ekohl Exp $
+/* $Id: halddk.h,v 1.9 2001/03/31 16:01:03 phreak Exp $
  *
  * COPYRIGHT:                See COPYING in the top level directory
  * PROJECT:                  ReactOS kernel
@@ -304,9 +304,10 @@ NTSTATUS
 STDCALL
 HalAllocateAdapterChannel (
 	IN	PADAPTER_OBJECT	AdapterObject,
-	ULONG	Unknown2,
+	IN PDEVICE_OBJECT DeviceObject,
 	IN	ULONG		NumberOfMapRegisters,
-	IN	PDRIVER_CONTROL	ExecutionRoutine
+	IN	PDRIVER_CONTROL	ExecutionRoutine,
+	IN PVOID Context
 	);
 
 PVOID

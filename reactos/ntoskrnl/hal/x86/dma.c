@@ -1,4 +1,4 @@
-/* $Id: dma.c,v 1.9 2000/12/30 01:41:29 ekohl Exp $
+/* $Id: dma.c,v 1.10 2001/03/31 15:58:24 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -14,6 +14,14 @@
 #include <ddk/ntddk.h>
 
 #include <internal/debug.h>
+#include <internal/i386/hal.h>
+
+ADAPTER_OBJECT AdapterObjects[] = {
+  { 0, (PVOID)0x87, (PVOID)0x1, (PVOID)0x0, { 0 }, NULL },
+  { 1, (PVOID)0x83, (PVOID)0x3, (PVOID)0x2, { 0 }, NULL },
+  { 2, (PVOID)0x81, (PVOID)0x5, (PVOID)0x4, { 0 }, NULL },
+  { 3, (PVOID)0x82, (PVOID)0x7, (PVOID)0x6, { 0 }, NULL } };
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -67,9 +75,9 @@ HalGetAdapter (PDEVICE_DESCRIPTION	DeviceDescription,
 	       PULONG			NumberOfMapRegisters)
 /*
  * FUNCTION: Returns a pointer to an adapter object for the DMA device 
- * defined the device description structure
+ * defined in the device description structure
  * ARGUMENTS:
- *        DeviceObject = Structure describing the attributes of the device
+ *        DeviceDescription = Structure describing the attributes of the device
  *        NumberOfMapRegisters (OUT) = Returns the maximum number of map
  *                                     registers the device driver can
  *                                     allocate for DMA transfer operations
@@ -77,9 +85,26 @@ HalGetAdapter (PDEVICE_DESCRIPTION	DeviceDescription,
  *          NULL on failure
  */
 {
-   UNIMPLEMENTED;
+  /* Validate parameters in device description, and return a pointer to
+     the adapter object for the requested dma channel */
+  if( DeviceDescription->Version != DEVICE_DESCRIPTION_VERSION )
+    return NULL;
+  if( DeviceDescription->Master )
+    return NULL;
+  if( DeviceDescription->ScatterGather )
+    return NULL;
+  if( DeviceDescription->AutoInitialize )
+    return NULL;
+  if( DeviceDescription->Dma32BitAddress )
+    return NULL;
+  if( DeviceDescription->InterfaceType != Isa )
+     return NULL;
+  /*  if( DeviceDescription->DmaWidth != Width8Bits )
+      return NULL;*/
+  *NumberOfMapRegisters = 0x10;
+  AdapterObjects[DeviceDescription->DmaChannel].Buffer = 0;
+  return &AdapterObjects[DeviceDescription->DmaChannel];
 }
-
 
 ULONG STDCALL
 HalReadDmaCounter (PADAPTER_OBJECT	AdapterObject)
