@@ -1,4 +1,4 @@
-/* $Id: namespc.c,v 1.25 2001/06/16 14:10:55 ekohl Exp $
+/* $Id: namespc.c,v 1.26 2001/08/26 17:29:57 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -220,7 +220,7 @@ ObpFindEntryDirectory(PDIRECTORY_OBJECT DirectoryObject,
    return(NULL);
 }
 
-NTSTATUS
+NTSTATUS STDCALL
 ObpParseDirectory(PVOID Object,
 		  PVOID * NextObject,
 		  PUNICODE_STRING FullPath,
@@ -278,7 +278,7 @@ ObpParseDirectory(PVOID Object,
    return STATUS_SUCCESS;
 }
 
-NTSTATUS
+NTSTATUS STDCALL
 ObpCreateDirectory(PVOID ObjectBody,
 		   PVOID Parent,
 		   PWSTR RemainingPath,

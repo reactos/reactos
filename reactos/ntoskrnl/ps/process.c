@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.66 2001/08/07 14:01:42 ekohl Exp $
+/* $Id: process.c,v 1.67 2001/08/26 17:30:21 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -256,7 +256,7 @@ PsInitProcessManagment(VOID)
 }
 
 
-VOID
+VOID STDCALL
 PiDeleteProcess(PVOID ObjectBody)
 {
    KIRQL oldIrql;

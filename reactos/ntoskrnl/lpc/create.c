@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.4 2001/06/16 14:08:57 ekohl Exp $
+/* $Id: create.c,v 1.5 2001/08/26 17:28:00 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -59,7 +59,7 @@ NTSTATUS STDCALL VerifyCreateParameters (
 }
 
 
-NTSTATUS
+NTSTATUS STDCALL
 NiCreatePort (
 	PVOID			ObjectBody,
 	PVOID			Parent,

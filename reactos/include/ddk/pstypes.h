@@ -18,7 +18,7 @@ struct _KPROCESS;
 struct _ETHREAD;
 struct _KTHREAD;
 
-typedef NTSTATUS (*PKSTART_ROUTINE)(PVOID StartContext);
+typedef NTSTATUS STDCALL (*PKSTART_ROUTINE)(PVOID StartContext);
 
 typedef struct _STACK_INFORMATION
 {

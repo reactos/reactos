@@ -1,4 +1,4 @@
-/* $Id: ntsem.c,v 1.12 2001/06/16 14:10:08 ekohl Exp $
+/* $Id: ntsem.c,v 1.13 2001/08/26 17:29:36 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -33,10 +33,11 @@ static GENERIC_MAPPING ExSemaphoreMapping = {
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS NtpCreateSemaphore(PVOID ObjectBody,
-			    PVOID Parent,
-			    PWSTR RemainingPath,
-			    POBJECT_ATTRIBUTES ObjectAttributes)
+NTSTATUS STDCALL
+NtpCreateSemaphore(PVOID ObjectBody,
+		   PVOID Parent,
+		   PWSTR RemainingPath,
+		   POBJECT_ATTRIBUTES ObjectAttributes)
 {
    
    DPRINT("NtpCreateSemaphore(ObjectBody %x, Parent %x, RemainingPath %S)\n",

@@ -52,12 +52,11 @@ static GENERIC_MAPPING ExpDesktopMapping = {
 /* FUNCTIONS ****************************************************************/
 
 
-NTSTATUS
-ExpWinStaObjectCreate(
-  PVOID ObjectBody,
-	PVOID Parent,
-	PWSTR RemainingPath,
-	struct _OBJECT_ATTRIBUTES* ObjectAttributes)
+NTSTATUS STDCALL
+ExpWinStaObjectCreate(PVOID ObjectBody,
+		      PVOID Parent,
+		      PWSTR RemainingPath,
+		      struct _OBJECT_ATTRIBUTES* ObjectAttributes)
 {
   PWINSTATION_OBJECT WinSta = (PWINSTATION_OBJECT)ObjectBody;
   UNICODE_STRING UnicodeString;
@@ -121,9 +120,8 @@ ExpWinStaObjectCreate(
   return STATUS_SUCCESS;
 }
 
-VOID
-ExpWinStaObjectDelete(
-  PVOID DeletedObject)
+VOID STDCALL
+ExpWinStaObjectDelete(PVOID DeletedObject)
 {
   PWINSTATION_OBJECT WinSta = (PWINSTATION_OBJECT)DeletedObject;
 
@@ -135,10 +133,9 @@ ExpWinStaObjectDelete(
 }
 
 PVOID
-ExpWinStaObjectFind(
-  PWINSTATION_OBJECT WinStaObject,
-	PWSTR Name,
-  ULONG Attributes)
+ExpWinStaObjectFind(PWINSTATION_OBJECT WinStaObject,
+		    PWSTR Name,
+		    ULONG Attributes)
 {
   PLIST_ENTRY Current;
   PDESKTOP_OBJECT CurrentObject;
@@ -179,14 +176,13 @@ ExpWinStaObjectFind(
   return NULL;
 }
 
-NTSTATUS
-ExpWinStaObjectParse(
-  PVOID Object,
-	PVOID *NextObject,
-	PUNICODE_STRING FullPath,
-	PWSTR *Path,
-	POBJECT_TYPE ObjectType,
-	ULONG Attributes)
+NTSTATUS STDCALL
+ExpWinStaObjectParse(PVOID Object,
+		     PVOID *NextObject,
+		     PUNICODE_STRING FullPath,
+		     PWSTR *Path,
+		     POBJECT_TYPE ObjectType,
+		     ULONG Attributes)
 {
   PVOID FoundObject;
   NTSTATUS Status;
@@ -226,12 +222,11 @@ ExpWinStaObjectParse(
   return Status;
 }
 
-NTSTATUS
-ExpDesktopObjectCreate(
-  PVOID ObjectBody,
-	PVOID Parent,
-	PWSTR RemainingPath,
-	struct _OBJECT_ATTRIBUTES* ObjectAttributes)
+NTSTATUS STDCALL
+ExpDesktopObjectCreate(PVOID ObjectBody,
+		       PVOID Parent,
+		       PWSTR RemainingPath,
+		       struct _OBJECT_ATTRIBUTES* ObjectAttributes)
 {
   PDESKTOP_OBJECT Desktop = (PDESKTOP_OBJECT)ObjectBody;
   UNICODE_STRING UnicodeString;
@@ -263,9 +258,8 @@ ExpDesktopObjectCreate(
   return RtlCreateUnicodeString(&Desktop->Name, UnicodeString.Buffer);
 }
 
-VOID
-ExpDesktopObjectDelete(
-  PVOID DeletedObject)
+VOID STDCALL
+ExpDesktopObjectDelete(PVOID DeletedObject)
 {
   PDESKTOP_OBJECT Desktop = (PDESKTOP_OBJECT)DeletedObject;
   KIRQL OldIrql;

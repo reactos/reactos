@@ -1,4 +1,4 @@
-/* $Id: nttimer.c,v 1.10 2001/06/16 14:10:08 ekohl Exp $
+/* $Id: nttimer.c,v 1.11 2001/08/26 17:29:36 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -45,7 +45,7 @@ static GENERIC_MAPPING ExpTimerMapping = {
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS
+NTSTATUS STDCALL
 NtpCreateTimer(PVOID ObjectBody,
 	       PVOID Parent,
 	       PWSTR RemainingPath,

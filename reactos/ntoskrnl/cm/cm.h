@@ -157,18 +157,22 @@ typedef struct _KEY_OBJECT
 } KEY_OBJECT, *PKEY_OBJECT;
 
 
-NTSTATUS CmiObjectParse(PVOID ParsedObject,
-		     PVOID *NextObject,
-		     PUNICODE_STRING FullPath,
-		     PWSTR *Path,
-		     POBJECT_TYPE ObjectType,
-		     ULONG Attribute);
-		     
-NTSTATUS CmiObjectCreate(PVOID ObjectBody,
-		      PVOID Parent,
-		      PWSTR RemainingPath,
-		      struct _OBJECT_ATTRIBUTES* ObjectAttributes);
-void  CmiObjectDelete(PVOID  DeletedObject);
+NTSTATUS STDCALL
+CmiObjectParse(PVOID ParsedObject,
+	       PVOID *NextObject,
+	       PUNICODE_STRING FullPath,
+	       PWSTR *Path,
+	       POBJECT_TYPE ObjectType,
+	       ULONG Attribute);
+
+NTSTATUS STDCALL
+CmiObjectCreate(PVOID ObjectBody,
+		PVOID Parent,
+		PWSTR RemainingPath,
+		struct _OBJECT_ATTRIBUTES* ObjectAttributes);
+
+VOID STDCALL
+CmiObjectDelete(PVOID  DeletedObject);
 
 VOID  CmiAddKeyToList(PKEY_OBJECT ParentKey,PKEY_OBJECT  NewKey);
 NTSTATUS  CmiRemoveKeyFromList(PKEY_OBJECT  NewKey);

@@ -1,4 +1,4 @@
-/* $Id: mpw.c,v 1.5 2001/03/16 18:11:23 dwelch Exp $
+/* $Id: mpw.c,v 1.6 2001/08/26 17:29:09 ekohl Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -88,7 +88,8 @@ VOID MmWritePagesInProcess(PEPROCESS Process)
    MmUnlockAddressSpace(&Process->AddressSpace);
 }
 
-NTSTATUS MmMpwThreadMain(PVOID Ignored)
+NTSTATUS STDCALL
+MmMpwThreadMain(PVOID Ignored)
 {
    NTSTATUS Status;
       

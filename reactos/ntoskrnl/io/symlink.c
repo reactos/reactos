@@ -1,4 +1,4 @@
-/* $Id: symlink.c,v 1.21 2001/06/16 14:07:30 ekohl Exp $
+/* $Id: symlink.c,v 1.22 2001/08/26 17:27:00 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -56,7 +56,7 @@ static GENERIC_MAPPING IopSymbolicLinkMapping = {
  *
  * REVISIONS
  */
-NTSTATUS
+NTSTATUS STDCALL
 IopCreateSymbolicLink(PVOID Object,
 		      PVOID Parent,
 		      PWSTR RemainingPath,
@@ -85,7 +85,7 @@ IopCreateSymbolicLink(PVOID Object,
  *
  * REVISIONS
  */
-NTSTATUS
+NTSTATUS STDCALL
 IopParseSymbolicLink(PVOID Object,
 		     PVOID * NextObject,
 		     PUNICODE_STRING FullPath,

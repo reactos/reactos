@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.59 2001/08/03 09:36:18 ei Exp $
+/* $Id: section.c,v 1.60 2001/08/26 17:29:09 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -817,7 +817,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
    return(0);
 }
 
-VOID 
+VOID STDCALL
 MmpDeleteSection(PVOID ObjectBody)
 {
   PSECTION_OBJECT Section = (PSECTION_OBJECT)ObjectBody;
@@ -843,7 +843,7 @@ MmpDeleteSection(PVOID ObjectBody)
     }
 }
 
-VOID 
+VOID STDCALL
 MmpCloseSection(PVOID ObjectBody,
 		ULONG HandleCount)
 {
@@ -852,10 +852,11 @@ MmpCloseSection(PVOID ObjectBody,
    
 }
 
-NTSTATUS MmpCreateSection(PVOID ObjectBody,
-			  PVOID Parent,
-			  PWSTR RemainingPath,
-			  POBJECT_ATTRIBUTES ObjectAttributes)
+NTSTATUS STDCALL
+MmpCreateSection(PVOID ObjectBody,
+		 PVOID Parent,
+		 PWSTR RemainingPath,
+		 POBJECT_ATTRIBUTES ObjectAttributes)
 {
    NTSTATUS Status;
    

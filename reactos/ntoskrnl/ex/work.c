@@ -1,4 +1,4 @@
-/* $Id: work.c,v 1.10 2001/06/04 11:26:11 chorns Exp $
+/* $Id: work.c,v 1.11 2001/08/26 17:26:23 ekohl Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -60,7 +60,8 @@ WORK_QUEUE EiHyperCriticalWorkQueue;
 
 /* FUNCTIONS ****************************************************************/
 
-static NTSTATUS ExWorkerThreadEntryPoint(PVOID context)
+static NTSTATUS STDCALL
+ExWorkerThreadEntryPoint(PVOID context)
 /*
  * FUNCTION: Entry point for a worker thread
  * ARGUMENTS:

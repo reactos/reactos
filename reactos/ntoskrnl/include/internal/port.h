@@ -60,12 +60,12 @@ typedef struct _QUEUEDMESSAGE
 
 /* Code in ntoskrnl/lpc/close.h */
 
-VOID
+VOID STDCALL
 NiClosePort (
 	PVOID	ObjectBody,
 	ULONG	HandleCount
 	);
-VOID
+VOID STDCALL
 NiDeletePort (
 	IN	PVOID	ObjectBody
 	);
@@ -98,7 +98,7 @@ EiDequeueMessagePort (
 
 /* Code in ntoskrnl/lpc/create.c */
 
-NTSTATUS
+NTSTATUS STDCALL
 NiCreatePort (
 	PVOID			ObjectBody,
 	PVOID			Parent,

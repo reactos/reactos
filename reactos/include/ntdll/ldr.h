@@ -1,7 +1,7 @@
 #include <ntos/kdbgsyms.h>
 #include "../ntoskrnl/include/internal/config.h"
 
-typedef NTSTATUS (*PEPFUNC)(PPEB);
+typedef NTSTATUS STDCALL (*PEPFUNC)(PPEB);
 
 typedef struct _LDR_MODULE
 {

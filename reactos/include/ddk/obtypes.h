@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_OBTYPES_H
 #define _INCLUDE_DDK_OBTYPES_H
-/* $Id: obtypes.h,v 1.12 2001/05/05 09:30:28 ekohl Exp $ */
+/* $Id: obtypes.h,v 1.13 2001/08/26 17:23:39 ekohl Exp $ */
 struct _DIRECTORY_OBJECT;
 struct _OBJECT_ATTRIBUTES;
 
@@ -62,23 +62,24 @@ typedef struct _OBJECT_TYPE
    * PURPOSE: Dumps the object
    * NOTE: To be defined
    */
-  VOID (*Dump)(VOID);
+  VOID STDCALL (*Dump)(VOID);
   
   /*
    * PURPOSE: Opens the object
    * NOTE: To be defined
    */
-  VOID (*Open)(VOID);
+  VOID STDCALL (*Open)(VOID);
   
    /*
     * PURPOSE: Called to close an object if OkayToClose returns true
     */
-  VOID (*Close)(PVOID ObjectBody, ULONG HandleCount);
+  VOID STDCALL (*Close)(PVOID ObjectBody,
+			ULONG HandleCount);
   
   /*
    * PURPOSE: Called to delete an object when the last reference is removed
    */
-  VOID (*Delete)(PVOID ObjectBody);
+  VOID STDCALL (*Delete)(PVOID ObjectBody);
   
   /*
    * PURPOSE: Called when an open attempts to open a file apparently
@@ -88,33 +89,33 @@ typedef struct _OBJECT_TYPE
    *     STATUS_UNSUCCESSFUL  NextObject not found
    *     STATUS_REPARSE       Path changed, restart parsing the path
    */
-   NTSTATUS (*Parse)(PVOID ParsedObject,
-		     PVOID *NextObject,
-		     PUNICODE_STRING FullPath,
-		     PWSTR *Path,
-		     struct _OBJECT_TYPE* ObjectType,
-		     ULONG Attributes);
+   NTSTATUS STDCALL (*Parse)(PVOID ParsedObject,
+			     PVOID *NextObject,
+			     PUNICODE_STRING FullPath,
+			     PWSTR *Path,
+			     struct _OBJECT_TYPE* ObjectType,
+			     ULONG Attributes);
   
    /*
     */
-  NTSTATUS (*Security)(PVOID Object,
-		       ULONG InfoClass,
-		       PVOID Info,
-		       PULONG InfoLength);
+  NTSTATUS STDCALL (*Security)(PVOID Object,
+			       ULONG InfoClass,
+			       PVOID Info,
+			       PULONG InfoLength);
   
   /*
    */
-  VOID (*QueryName)(VOID);
+  VOID STDCALL (*QueryName)(VOID);
    
   /*
    * PURPOSE: Called when a process asks to close the object
    */
-  VOID (*OkayToClose)(VOID);
+  VOID STDCALL (*OkayToClose)(VOID);
   
-  NTSTATUS (*Create)(PVOID ObjectBody,
-		     PVOID Parent,
-		     PWSTR RemainingPath,
-		     struct _OBJECT_ATTRIBUTES* ObjectAttributes);
+  NTSTATUS STDCALL (*Create)(PVOID ObjectBody,
+			     PVOID Parent,
+			     PWSTR RemainingPath,
+			     struct _OBJECT_ATTRIBUTES* ObjectAttributes);
 } OBJECT_TYPE, *POBJECT_TYPE;
 
 

@@ -1,4 +1,4 @@
-/* $Id: evtpair.c,v 1.8 2001/06/16 14:10:08 ekohl Exp $
+/* $Id: evtpair.c,v 1.9 2001/08/26 17:29:36 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -32,10 +32,11 @@ static GENERIC_MAPPING ExEventPairMapping = {
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS NtpCreateEventPair(PVOID ObjectBody,
-			    PVOID Parent,
-			    PWSTR RemainingPath,
-			    POBJECT_ATTRIBUTES ObjectAttributes)
+NTSTATUS STDCALL
+NtpCreateEventPair(PVOID ObjectBody,
+		   PVOID Parent,
+		   PWSTR RemainingPath,
+		   POBJECT_ATTRIBUTES ObjectAttributes)
 {
    DPRINT("NtpCreateEventPair(ObjectBody %x, Parent %x, RemainingPath %S)\n",
 	  ObjectBody, Parent, RemainingPath);

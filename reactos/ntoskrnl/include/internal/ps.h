@@ -499,8 +499,8 @@ ULONG PsUnfreezeThread(PETHREAD Thread, PNTSTATUS WaitStatus);
 ULONG PsFreezeThread(PETHREAD Thread, PNTSTATUS WaitStatus,
 		     UCHAR Alertable, ULONG WaitMode);
 VOID PiInitApcManagement(VOID);
-VOID PiDeleteThread(PVOID ObjectBody);
-VOID PiCloseThread(PVOID ObjectBody, ULONG HandleCount);
+VOID STDCALL PiDeleteThread(PVOID ObjectBody);
+VOID STDCALL PiCloseThread(PVOID ObjectBody, ULONG HandleCount);
 VOID PsReapThreads(VOID);
 NTSTATUS 
 PsInitializeThread(HANDLE ProcessHandle,
@@ -554,7 +554,7 @@ VOID HalTaskSwitch(PKTHREAD thread);
 NTSTATUS 
 Ke386InitThreadWithContext(PKTHREAD Thread, PCONTEXT Context);
 NTSTATUS HalReleaseTask(PETHREAD Thread);
-VOID PiDeleteProcess(PVOID ObjectBody);
+VOID STDCALL PiDeleteProcess(PVOID ObjectBody);
 VOID PsReapThreads(VOID);
 VOID PsUnfreezeOtherThread(PETHREAD Thread);
 VOID PsFreezeOtherThread(PETHREAD Thread);
@@ -572,7 +572,7 @@ VOID
 PsApplicationProcessorInit(VOID);
 VOID
 PsPrepareForApplicationProcessorInit(ULONG Id);
-NTSTATUS
+NTSTATUS STDCALL
 PsIdleThreadMain(PVOID Context);
 
 #endif /* ASSEMBLER */

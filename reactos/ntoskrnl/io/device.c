@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.30 2001/08/22 03:53:52 rex Exp $
+/* $Id: device.c,v 1.31 2001/08/26 17:27:00 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -496,7 +496,7 @@ IoAttachDevice(PDEVICE_OBJECT SourceDevice,
    UNIMPLEMENTED;
 }
 
-NTSTATUS 
+NTSTATUS STDCALL
 IopCreateDevice(PVOID ObjectBody,
 		PVOID Parent,
 		PWSTR RemainingPath,

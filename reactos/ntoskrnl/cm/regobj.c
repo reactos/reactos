@@ -11,12 +11,13 @@
 extern POBJECT_TYPE  CmiKeyType;
 extern KSPIN_LOCK  CmiKeyListLock;
 
-NTSTATUS CmiObjectParse(PVOID ParsedObject,
-		     PVOID *NextObject,
-		     PUNICODE_STRING FullPath,
-		     PWSTR *Path,
-		     POBJECT_TYPE ObjectType,
-		     ULONG Attributes)
+NTSTATUS STDCALL
+CmiObjectParse(PVOID ParsedObject,
+	       PVOID *NextObject,
+	       PUNICODE_STRING FullPath,
+	       PWSTR *Path,
+	       POBJECT_TYPE ObjectType,
+	       ULONG Attributes)
 {
  CHAR cPath[MAX_PATH];
  PWSTR end;
@@ -106,10 +107,11 @@ DPRINT("CmiObjectParse %s\n",FoundObject->Name);
    return STATUS_SUCCESS;
 }
 
-NTSTATUS CmiObjectCreate(PVOID ObjectBody,
-		      PVOID Parent,
-		      PWSTR RemainingPath,
-		      struct _OBJECT_ATTRIBUTES* ObjectAttributes)
+NTSTATUS STDCALL
+CmiObjectCreate(PVOID ObjectBody,
+		PVOID Parent,
+		PWSTR RemainingPath,
+		struct _OBJECT_ATTRIBUTES* ObjectAttributes)
 {
  PKEY_OBJECT pKey=ObjectBody;
    pKey->ParentKey = Parent;
@@ -132,8 +134,8 @@ NTSTATUS CmiObjectCreate(PVOID ObjectBody,
    return STATUS_SUCCESS;
 }
 
-void  
-CmiObjectDelete(PVOID  DeletedObject)
+VOID STDCALL
+CmiObjectDelete(PVOID DeletedObject)
 {
   PKEY_OBJECT  KeyObject;
 

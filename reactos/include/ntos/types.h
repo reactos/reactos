@@ -421,8 +421,7 @@ typedef struct _SMALL_RECT {
 } SMALL_RECT, *PSMALL_RECT;
 
 
-typedef
-VOID
+typedef VOID STDCALL
 (*PTIMERAPCROUTINE)(
 	LPVOID lpArgToCompletionRoutine,
 	DWORD dwTimerLowValue,

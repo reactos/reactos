@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.86 2001/08/22 03:53:52 rex Exp $
+/* $Id: loader.c,v 1.87 2001/08/26 17:27:44 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -71,10 +71,11 @@ NTSTATUS LdrProcessModule(PVOID ModuleLoadBase,
                           PMODULE_OBJECT *ModuleObject);
 PVOID  LdrGetExportAddress(PMODULE_OBJECT ModuleObject, char *Name, unsigned short Hint);
 static PMODULE_OBJECT LdrOpenModule(PUNICODE_STRING  Filename);
-static NTSTATUS LdrCreateModule(PVOID ObjectBody,
-                                PVOID Parent,
-                                PWSTR RemainingPath,
-                                POBJECT_ATTRIBUTES ObjectAttributes);
+static NTSTATUS STDCALL
+LdrCreateModule(PVOID ObjectBody,
+                PVOID Parent,
+                PWSTR RemainingPath,
+                POBJECT_ATTRIBUTES ObjectAttributes);
 static VOID LdrpBuildModuleBaseName(PUNICODE_STRING BaseName,
 				    PUNICODE_STRING FullName);
 
@@ -953,7 +954,7 @@ VOID LdrLoadAutoConfigDrivers (VOID)
 }
 
 
-static NTSTATUS 
+static NTSTATUS STDCALL
 LdrCreateModule(PVOID ObjectBody,
                 PVOID Parent,
                 PWSTR RemainingPath,

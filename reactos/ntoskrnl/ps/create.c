@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.38 2001/08/07 15:44:40 ekohl Exp $
+/* $Id: create.c,v 1.39 2001/08/26 17:30:21 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -292,7 +292,7 @@ PsBeginThread(PKSTART_ROUTINE StartRoutine, PVOID StartContext)
 }
 #endif
 
-VOID
+VOID STDCALL
 PiDeleteThread(PVOID ObjectBody)
 {
    KIRQL oldIrql;
@@ -311,7 +311,7 @@ PiDeleteThread(PVOID ObjectBody)
    DPRINT("PiDeleteThread() finished\n");
 }
 
-VOID
+VOID STDCALL
 PiCloseThread(PVOID ObjectBody,
 	      ULONG HandleCount)
 {

@@ -1,4 +1,4 @@
-/* $Id: close.c,v 1.5 2001/06/23 19:13:33 phreak Exp $
+/* $Id: close.c,v 1.6 2001/08/26 17:28:00 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -32,7 +32,7 @@
  * REVISIONS
  *
  */
-VOID
+VOID STDCALL
 NiClosePort (PVOID	ObjectBody, ULONG	HandleCount)
 {
   PEPORT Port = (PEPORT)ObjectBody;
@@ -86,7 +86,7 @@ NiClosePort (PVOID	ObjectBody, ULONG	HandleCount)
  * REVISIONS
  *
  */
-VOID
+VOID STDCALL
 NiDeletePort (PVOID	ObjectBody)
 {
    //   PEPORT Port = (PEPORT)ObjectBody;

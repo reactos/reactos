@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.11 2001/08/22 03:53:52 rex Exp $
+/* $Id: io.h,v 1.12 2001/08/26 17:25:29 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -133,14 +133,16 @@ PIRP IoBuildFilesystemControlRequest(ULONG MinorFunction,
 				     PDEVICE_OBJECT DeviceToMount);
 VOID IoSecondStageCompletion(PIRP Irp, CCHAR PriorityBoost);
 
-NTSTATUS IopCreateFile (PVOID ObjectBody,
-			PVOID Parent,
-			PWSTR RemainingPath,
-			POBJECT_ATTRIBUTES ObjectAttributes);
-NTSTATUS IopCreateDevice(PVOID ObjectBody,
-			 PVOID Parent,
-			 PWSTR RemainingPath,
-			 POBJECT_ATTRIBUTES ObjectAttributes);
+NTSTATUS STDCALL
+IopCreateFile(PVOID ObjectBody,
+	      PVOID Parent,
+	      PWSTR RemainingPath,
+	      POBJECT_ATTRIBUTES ObjectAttributes);
+NTSTATUS STDCALL
+IopCreateDevice(PVOID ObjectBody,
+		PVOID Parent,
+		PWSTR RemainingPath,
+		POBJECT_ATTRIBUTES ObjectAttributes);
 NTSTATUS IoAttachVpb(PDEVICE_OBJECT DeviceObject);
 
 PIRP IoBuildSynchronousFsdRequestWithMdl(ULONG MajorFunction,

@@ -51,7 +51,7 @@ static GENERIC_MAPPING ExpEventMapping = {
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS
+NTSTATUS STDCALL
 NtpCreateEvent(PVOID ObjectBody,
 	       PVOID Parent,
 	       PWSTR RemainingPath,

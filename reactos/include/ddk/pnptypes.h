@@ -148,15 +148,13 @@ typedef enum _IO_NOTIFICATION_EVENT_CATEGORY {
 } IO_NOTIFICATION_EVENT_CATEGORY;
 
 // CallbackRoutine for IoRegisterPlugPlayNotification
-typedef
-NTSTATUS
+typedef NTSTATUS STDCALL
 (*PDRIVER_NOTIFICATION_CALLBACK_ROUTINE)(
   IN PVOID NotificationStructure,
   IN PVOID Context);
 
 // Callback for IoReportTargetDeviceChangeAsynchronous
-typedef
-VOID
+typedef VOID STDCALL
 (*PDEVICE_CHANGE_COMPLETE_CALLBACK)(
   IN PVOID Context);
 

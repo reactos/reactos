@@ -300,7 +300,7 @@ VOID KiRemoveProfile(PKPROFILE Profile)
   KeReleaseSpinLock(&ProfileListLock, oldIrql);
 }
 
-VOID
+VOID STDCALL
 KiDeleteProfile(PVOID ObjectBody)
 {
   PKPROFILE Profile;

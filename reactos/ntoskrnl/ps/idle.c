@@ -25,7 +25,7 @@ PETHREAD PiIdleThread;
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS 
+NTSTATUS STDCALL
 PsIdleThreadMain(PVOID Context)
 {
    KIRQL oldlvl;

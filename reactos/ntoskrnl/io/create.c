@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.46 2001/07/04 20:40:21 chorns Exp $
+/* $Id: create.c,v 1.47 2001/08/26 17:27:00 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -61,11 +61,11 @@ NtDeleteFile(IN POBJECT_ATTRIBUTES ObjectAttributes)
  * REVISIONS
  * 
  */
-NTSTATUS
-IopCreateFile (PVOID			ObjectBody,
-	       PVOID			Parent,
-	       PWSTR			RemainingPath,
-	       POBJECT_ATTRIBUTES	ObjectAttributes)
+NTSTATUS STDCALL
+IopCreateFile(PVOID			ObjectBody,
+	      PVOID			Parent,
+	      PWSTR			RemainingPath,
+	      POBJECT_ATTRIBUTES	ObjectAttributes)
 {
    PDEVICE_OBJECT	DeviceObject = (PDEVICE_OBJECT) Parent;
    PFILE_OBJECT	FileObject = (PFILE_OBJECT) ObjectBody;
