@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.19 2003/05/18 22:07:02 gvg Exp $
+/* $Id: message.c,v 1.20 2003/05/21 22:58:42 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -40,6 +40,7 @@
 #include <include/winsta.h>
 #include <include/callback.h>
 #include <include/painting.h>
+#include <internal/safe.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -49,179 +50,339 @@
 NTSTATUS FASTCALL
 W32kInitMessageImpl(VOID)
 {
-  return(STATUS_SUCCESS);
+  return STATUS_SUCCESS;
 }
 
 NTSTATUS FASTCALL
 W32kCleanupMessageImpl(VOID)
 {
-  return(STATUS_SUCCESS);
+  return STATUS_SUCCESS;
 }
 
 
 LRESULT STDCALL
-NtUserDispatchMessage(CONST MSG* lpMsg)
+NtUserDispatchMessage(CONST MSG* UnsafeMsg)
 {
   LRESULT Result;
   PWINDOW_OBJECT WindowObject;
   NTSTATUS Status;
+  MSG Msg;
+
+  Status = MmCopyFromCaller(&Msg, (PVOID) UnsafeMsg, sizeof(MSG));
+  if (! NT_SUCCESS(Status))
+    {
+    SetLastNtError(Status);
+    return 0;
+    }
 
   /* Process timer messages. */
-  if (lpMsg->message == WM_TIMER)
+  if (Msg.message == WM_TIMER)
     {
-      if (lpMsg->lParam)
+      if (Msg.lParam)
 	{
 	  /* FIXME: Call hooks. */
 
 	  /* FIXME: Check for continuing validity of timer. */
 
-	  return(W32kCallWindowProc((WNDPROC)lpMsg->lParam,
-				      lpMsg->hwnd,
-				      lpMsg->message,
-				      lpMsg->wParam,
-				      0 /* GetTickCount() */));
+	  return W32kCallWindowProc((WNDPROC)Msg.lParam,
+				      Msg.hwnd,
+				      Msg.message,
+				      Msg.wParam,
+				      0 /* GetTickCount() */);
 	}
     }
 
   /* Get the window object. */
   Status = 
     ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->HandleTable,
-			       lpMsg->hwnd,
+			       Msg.hwnd,
 			       otWindow,
 			       (PVOID*)&WindowObject);
   if (!NT_SUCCESS(Status))
     {
-      return(0);
+      SetLastNtError(Status);
+      return 0;
     }
 
   /* FIXME: Call hook procedures. */
 
   /* Call the window procedure. */
   Result = W32kCallWindowProc(NULL /* WndProc */,
-			      lpMsg->hwnd,
-			      lpMsg->message,
-			      lpMsg->wParam,
-			      lpMsg->lParam);
+			      Msg.hwnd,
+			      Msg.message,
+			      Msg.wParam,
+			      Msg.lParam);
 
-  return(Result);
+  return Result;
 }
 
-BOOL STDCALL
-NtUserGetMessage(LPMSG lpMsg,
-		 HWND hWnd,
-		 UINT wMsgFilterMin,
-		 UINT wMsgFilterMax)
 /*
- * FUNCTION: Get a message from the calling thread's message queue.
- * ARGUMENTS:
- *      lpMsg - Pointer to the structure which receives the returned message.
- *      hWnd - Window whose messages are to be retrieved.
- *      wMsgFilterMin - Integer value of the lowest message value to be
- *                      retrieved.
- *      wMsgFilterMax - Integer value of the highest message value to be
- *                      retrieved.
+ * Internal version of PeekMessage() doing all the work
  */
+BOOL STDCALL
+W32kPeekMessage(LPMSG Msg,
+                HWND Wnd,
+                UINT MsgFilterMin,
+                UINT MsgFilterMax,
+                UINT RemoveMsg)
 {
   PUSER_MESSAGE_QUEUE ThreadQueue;
   BOOLEAN Present;
   PUSER_MESSAGE Message;
+  BOOLEAN RemoveMessages;
+
+  /* The queues and order in which they are checked are documented in the MSDN
+     article on GetMessage() */
+
+  ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
+
+  /* Inspect RemoveMsg flags */
+  /* FIXME: The only flag we process is PM_REMOVE - processing of others must still be implemented */
+  RemoveMessages = RemoveMsg & PM_REMOVE;
+
+  /* Dispatch sent messages here. */
+  while (MsqDispatchOneSentMessage(ThreadQueue))
+    ;
+      
+  /* Now look for a quit message. */
+  /* FIXME: WINE checks the message number filter here. */
+  if (ThreadQueue->QuitPosted)
+  {
+    Msg->hwnd = Wnd;
+    Msg->message = WM_QUIT;
+    Msg->wParam = ThreadQueue->QuitExitCode;
+    Msg->lParam = 0;
+    if (RemoveMessages)
+      {
+        ThreadQueue->QuitPosted = FALSE;
+      }
+    return TRUE;
+  }
+
+  /* Now check for normal messages. */
+  Present = MsqFindMessage(ThreadQueue,
+                           FALSE,
+                           RemoveMessages,
+                           Wnd,
+                           MsgFilterMin,
+                           MsgFilterMax,
+                           &Message);
+  if (Present)
+    {
+      RtlCopyMemory(Msg, &Message->Msg, sizeof(MSG));
+      if (RemoveMessages)
+	{
+	  ExFreePool(Message);
+	}
+      return TRUE;
+    }
+
+  /* Check for hardware events. */
+  Present = MsqFindMessage(ThreadQueue,
+                           TRUE,
+                           RemoveMessages,
+                           Wnd,
+                           MsgFilterMin,
+                           MsgFilterMax,
+                           &Message);
+  if (Present)
+    {
+      RtlCopyMemory(Msg, &Message->Msg, sizeof(MSG));
+      if (RemoveMessages)
+	{
+	  ExFreePool(Message);
+	}
+      return TRUE;
+    }
+
+  /* Check for sent messages again. */
+  while (MsqDispatchOneSentMessage(ThreadQueue))
+    ;
+
+  /* Check for paint messages. */
+  if (ThreadQueue->PaintPosted)
+    {
+      PWINDOW_OBJECT WindowObject;
+
+      Msg->hwnd = PaintingFindWinToRepaint(Wnd, PsGetWin32Thread());
+      Msg->message = WM_PAINT;
+      Msg->wParam = Msg->lParam = 0;
+
+      WindowObject = W32kGetWindowObject(Msg->hwnd);
+      if (WindowObject != NULL)
+	{
+	  if (WindowObject->Style & WS_MINIMIZE &&
+	      (HICON)NtUserGetClassLong(Msg->hwnd, GCL_HICON) != NULL)
+	    {
+	      Msg->message = WM_PAINTICON;
+	      Msg->wParam = 1;
+	    }
+
+	  if (Msg->hwnd == NULL || Msg->hwnd == Wnd ||
+	      W32kIsChildWindow(Wnd, Msg->hwnd))
+	    {
+	      if (WindowObject->Flags & WINDOWOBJECT_NEED_INTERNALPAINT &&
+		  WindowObject->UpdateRegion == NULL)
+		{
+		  WindowObject->Flags &= ~WINDOWOBJECT_NEED_INTERNALPAINT;
+		  if (RemoveMessages)
+		    {
+		      MsqDecPaintCountQueue(WindowObject->MessageQueue);
+		    }
+		}
+	    }
+	  W32kReleaseWindowObject(WindowObject);
+	}
+
+      return TRUE;
+    }
+
+  return FALSE;
+}
+
+BOOL STDCALL
+NtUserPeekMessage(LPMSG UnsafeMsg,
+                  HWND Wnd,
+                  UINT MsgFilterMin,
+                  UINT MsgFilterMax,
+                  UINT RemoveMsg)
+{
+  MSG SafeMsg;
   NTSTATUS Status;
+  BOOL Present;
+  PWINDOW_OBJECT Window;
 
   /* Initialize the thread's win32 state if necessary. */ 
   W32kGuiCheck();
+
+  /* Validate input */
+  if (NULL != Wnd)
+    {
+      Status = ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->HandleTable,
+                                          Wnd, otWindow, (PVOID*)&Window);
+      if (!NT_SUCCESS(Status))
+        {
+	  Wnd = NULL;
+        }
+      else
+	{
+	  ObmDereferenceObject(Window);
+	}
+    }
+  if (MsgFilterMax < MsgFilterMin)
+    {
+      MsgFilterMin = 0;
+      MsgFilterMax = 0;
+    }
+
+  Present = W32kPeekMessage(&SafeMsg, Wnd, MsgFilterMin, MsgFilterMax, RemoveMsg);
+  if (Present)
+    {
+      Status = MmCopyToCaller(UnsafeMsg, &SafeMsg, sizeof(MSG));
+      if (! NT_SUCCESS(Status))
+	{
+	  /* There is error return documented for PeekMessage().
+             Do the best we can */
+	  SetLastNtError(Status);
+	  return FALSE;
+	}
+    }
+
+  return Present;
+}
+
+static BOOL STDCALL
+W32kWaitMessage(HWND Wnd,
+                UINT MsgFilterMin,
+                UINT MsgFilterMax)
+{
+  PUSER_MESSAGE_QUEUE ThreadQueue;
+  NTSTATUS Status;
+  MSG Msg;
 
   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
 
   do
     {
-      /* Dispatch sent messages here. */
-      while (MsqDispatchOneSentMessage(ThreadQueue));
-      
-      /* Now look for a quit message. */
-      /* FIXME: WINE checks the message number filter here. */
-      if (ThreadQueue->QuitPosted)
+      if (W32kPeekMessage(&Msg, Wnd, MsgFilterMin, MsgFilterMax, PM_NOREMOVE))
 	{
-	  lpMsg->hwnd = hWnd;
-	  lpMsg->message = WM_QUIT;
-	  lpMsg->wParam = ThreadQueue->QuitExitCode;
-	  lpMsg->lParam = 0;
-	  ThreadQueue->QuitPosted = FALSE;
-	  return(FALSE);
+	  return TRUE;
 	}
 
-      /* Now check for normal messages. */
-      Present = MsqFindMessage(ThreadQueue,
-			       FALSE,
-			       TRUE,
-			       hWnd,
-			       wMsgFilterMin,
-			       wMsgFilterMax,
-			       &Message);
-      if (Present)
-	{
-	  RtlCopyMemory(lpMsg, &Message->Msg, sizeof(MSG));
-	  ExFreePool(Message);
-	  return(TRUE);
-	}
-
-      /* Check for hardware events. */
-      Present = MsqFindMessage(ThreadQueue,
-			       TRUE,
-			       TRUE,
-			       hWnd,
-			       wMsgFilterMin,
-			       wMsgFilterMax,
-			       &Message);
-      if (Present)
-	{
-	  RtlCopyMemory(lpMsg, &Message->Msg, sizeof(MSG));
-	  ExFreePool(Message);
-	  return(TRUE);
-	}
-
-      /* Check for sent messages again. */
-      while (MsqDispatchOneSentMessage(ThreadQueue));
-
-      /* Check for paint messages. */
-      if (ThreadQueue->PaintPosted)
-	{
-	  PWINDOW_OBJECT WindowObject;
-
-	  lpMsg->hwnd = PaintingFindWinToRepaint(hWnd, PsGetWin32Thread());
-	  lpMsg->message = WM_PAINT;
-	  lpMsg->wParam = lpMsg->lParam = 0;
-
-	  WindowObject = W32kGetWindowObject(lpMsg->hwnd);
-	  if (WindowObject != NULL)
-	    {
-	      if (WindowObject->Style & WS_MINIMIZE &&
-		  (HICON)NtUserGetClassLong(lpMsg->hwnd, GCL_HICON) != NULL)
-		{
-		  lpMsg->message = WM_PAINTICON;
-		  lpMsg->wParam = 1;
-		}
-
-	      if (lpMsg->hwnd == NULL || lpMsg->hwnd == hWnd ||
-		  W32kIsChildWindow(hWnd, lpMsg->hwnd))
-		{
-		  if (WindowObject->Flags & WINDOWOBJECT_NEED_INTERNALPAINT &&
-		      WindowObject->UpdateRegion == NULL)
-		    {
-		      WindowObject->Flags &= ~WINDOWOBJECT_NEED_INTERNALPAINT;
-		      MsqDecPaintCountQueue(WindowObject->MessageQueue);
-		    }
-		}
-	      W32kReleaseWindowObject(WindowObject);
-	    }
-
-	  return(TRUE); 
-	}
-
-      /* Nothing found so far. Wait for new messages. */
+      /* Nothing found. Wait for new messages. */
       Status = MsqWaitForNewMessages(ThreadQueue);
     }
-  while (Status >= STATUS_WAIT_0 && Status <= STATUS_WAIT_63);
-  return((BOOLEAN)(-1));
+  while (STATUS_WAIT_0 <= STATUS_WAIT_0 && Status <= STATUS_WAIT_63);
+
+  SetLastNtError(Status);
+
+  return FALSE;
+}
+
+BOOL STDCALL
+NtUserGetMessage(LPMSG UnsafeMsg,
+		 HWND Wnd,
+		 UINT MsgFilterMin,
+		 UINT MsgFilterMax)
+/*
+ * FUNCTION: Get a message from the calling thread's message queue.
+ * ARGUMENTS:
+ *      UnsafeMsg - Pointer to the structure which receives the returned message.
+ *      Wnd - Window whose messages are to be retrieved.
+ *      MsgFilterMin - Integer value of the lowest message value to be
+ *                     retrieved.
+ *      MsgFilterMax - Integer value of the highest message value to be
+ *                     retrieved.
+ */
+{
+  BOOL GotMessage;
+  MSG SafeMsg;
+  NTSTATUS Status;
+  PWINDOW_OBJECT Window;
+
+  /* Initialize the thread's win32 state if necessary. */ 
+  W32kGuiCheck();
+
+  /* Validate input */
+  if (NULL != Wnd)
+    {
+      Status = ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->HandleTable,
+                                          Wnd, otWindow, (PVOID*)&Window);
+      if (!NT_SUCCESS(Status))
+        {
+	  Wnd = NULL;
+        }
+      else
+	{
+	  ObmDereferenceObject(Window);
+	}
+    }
+  if (MsgFilterMax < MsgFilterMin)
+    {
+      MsgFilterMin = 0;
+      MsgFilterMax = 0;
+    }
+
+  do
+    {
+      GotMessage = W32kPeekMessage(&SafeMsg, Wnd, MsgFilterMin, MsgFilterMax, PM_REMOVE);
+      if (GotMessage)
+	{
+	  Status = MmCopyToCaller(UnsafeMsg, &SafeMsg, sizeof(MSG));
+	  if (! NT_SUCCESS(Status))
+	    {
+	      SetLastNtError(Status);
+	      return (BOOL) -1;
+	    }
+	}
+      else
+	{
+	  W32kWaitMessage(Wnd, MsgFilterMin, MsgFilterMax);
+	}
+    }
+  while (! GotMessage);
+
+  return WM_QUIT != SafeMsg.message;
 }
 
 DWORD
@@ -241,148 +402,40 @@ NtUserMessageCall(
 }
 
 BOOL STDCALL
-NtUserPeekMessage(LPMSG lpMsg,
-  HWND hWnd,
-  UINT wMsgFilterMin,
-  UINT wMsgFilterMax,
-  UINT wRemoveMsg)
-/*
- * FUNCTION: Get a message from the calling thread's message queue.
- * ARGUMENTS:
- *      lpMsg - Pointer to the structure which receives the returned message.
- *      hWnd - Window whose messages are to be retrieved.
- *      wMsgFilterMin - Integer value of the lowest message value to be
- *                      retrieved.
- *      wMsgFilterMax - Integer value of the highest message value to be
- *                      retrieved.
- *      wRemoveMsg - Specificies whether or not to remove messages from the queue after processing
- */
-{
-  PUSER_MESSAGE_QUEUE ThreadQueue;
-  BOOLEAN Present;
-  PUSER_MESSAGE Message;
-  BOOLEAN RemoveMessages;
-
-  /* Initialize the thread's win32 state if necessary. */ 
-  W32kGuiCheck();
-
-  ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
-
-  /* Inspect wRemoveMsg flags */
-  /* FIXME: The only flag we process is PM_REMOVE - processing of others must still be implemented */
-  RemoveMessages = wRemoveMsg & PM_REMOVE;
-
-  /* Dispatch sent messages here. */
-  while (MsqDispatchOneSentMessage(ThreadQueue));
-      
-  /* Now look for a quit message. */
-  /* FIXME: WINE checks the message number filter here. */
-  if (ThreadQueue->QuitPosted)
-  {
-	  lpMsg->hwnd = hWnd;
-	  lpMsg->message = WM_QUIT;
-	  lpMsg->wParam = ThreadQueue->QuitExitCode;
-	  lpMsg->lParam = 0;
-	  ThreadQueue->QuitPosted = FALSE;
-	  return(FALSE);
-  }
-
-  /* Now check for normal messages. */
-  Present = MsqFindMessage(ThreadQueue,
-       FALSE,
-       RemoveMessages,
-       hWnd,
-       wMsgFilterMin,
-       wMsgFilterMax,
-       &Message);
-  if (Present)
-  {
-	  RtlCopyMemory(lpMsg, &Message->Msg, sizeof(MSG));
-	  ExFreePool(Message);
-	  return(TRUE);
-  }
-
-  /* Check for hardware events. */
-  Present = MsqFindMessage(ThreadQueue,
-       TRUE,
-       RemoveMessages,
-       hWnd,
-       wMsgFilterMin,
-       wMsgFilterMax,
-       &Message);
-  if (Present)
-  {
-	  RtlCopyMemory(lpMsg, &Message->Msg, sizeof(MSG));
-	  ExFreePool(Message);
-	  return(TRUE);
-  }
-
-  /* Check for sent messages again. */
-  while (MsqDispatchOneSentMessage(ThreadQueue));
-
-  /* Check for paint messages. */
-
-  /* Check for paint messages. */
-  if (ThreadQueue->PaintPosted)
-    {
-      PWINDOW_OBJECT WindowObject;
-
-      lpMsg->hwnd = PaintingFindWinToRepaint(hWnd, PsGetWin32Thread());
-      lpMsg->message = WM_PAINT;
-      lpMsg->wParam = lpMsg->lParam = 0;
-
-      WindowObject = W32kGetWindowObject(lpMsg->hwnd);
-      if (WindowObject != NULL)
-	{
-	  if (WindowObject->Style & WS_MINIMIZE &&
-	      (HICON)NtUserGetClassLong(lpMsg->hwnd, GCL_HICON) != NULL)
-	    {
-	      lpMsg->message = WM_PAINTICON;
-	      lpMsg->wParam = 1;
-	    }
-
-	  if (lpMsg->hwnd == NULL || lpMsg->hwnd == hWnd ||
-	      W32kIsChildWindow(hWnd, lpMsg->hwnd))
-	    {
-	      if (WindowObject->Flags & WINDOWOBJECT_NEED_INTERNALPAINT &&
-		  WindowObject->UpdateRegion == NULL)
-		{
-		  WindowObject->Flags &= ~WINDOWOBJECT_NEED_INTERNALPAINT;
-		  MsqDecPaintCountQueue(WindowObject->MessageQueue);
-		}
-	    }
-	  W32kReleaseWindowObject(WindowObject);
-	}
-
-      return(TRUE); 
-    }
-
-  return FALSE;
-}
-
-BOOL STDCALL
 NtUserPostMessage(HWND hWnd,
 		  UINT Msg,
 		  WPARAM wParam,
 		  LPARAM lParam)
 {
-  PUSER_MESSAGE_QUEUE ThreadQueue;
+  PWINDOW_OBJECT Window;
+  MSG Mesg;
+  PUSER_MESSAGE Message;
+  NTSTATUS Status;
 
-  switch (Msg)
-  {
-    case WM_NULL:
-      break;
+  /* Initialize the thread's win32 state if necessary. */ 
+  W32kGuiCheck();
 
-    case WM_QUIT:
-      ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
-      ThreadQueue->QuitPosted = TRUE;
-      ThreadQueue->QuitExitCode = wParam;
-      break;
-
-    default:
-      DPRINT1("Unhandled message: %u\n", Msg);
-      return FALSE;
-  }
+  if (WM_QUIT == Msg)
+    {
+      MsqPostQuitMessage(PsGetWin32Thread()->MessageQueue, wParam);
+    }
+  else
+    {
+      Status = ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->HandleTable,
+                                          hWnd, otWindow, (PVOID*)&Window);
+      if (!NT_SUCCESS(Status))
+        {
+	  SetLastNtError(Status);
+          return FALSE;
+        }
+      Mesg.hwnd = hWnd;
+      Mesg.message = Msg;
+      Mesg.wParam = wParam;
+      Mesg.lParam = lParam;
+      Message = MsqCreateMessage(&Mesg);
+      MsqPostMessage(Window->MessageQueue, Message);
+      ObmDereferenceObject(Window);
+    }
 
   return TRUE;
 }
@@ -428,7 +481,7 @@ W32kSendMessage(HWND hWnd,
 			       (PVOID*)&Window);
   if (!NT_SUCCESS(Status))
     {
-      return(FALSE);
+      return 0;
     }
 
   /* FIXME: Check for an exiting window. */
@@ -440,12 +493,12 @@ W32kSendMessage(HWND hWnd,
 	{
 	  Result = W32kCallTrampolineWindowProc(NULL, hWnd, Msg, wParam,
 						lParam);
-	  return(Result);
+	  return Result;
 	}
       else
 	{
 	  Result = W32kCallWindowProc(NULL, hWnd, Msg, wParam, lParam);
-	  return(Result);
+	  return Result;
 	}
     }
   else
@@ -475,22 +528,22 @@ W32kSendMessage(HWND hWnd,
 				     NULL);
       if (Status == STATUS_WAIT_0)
 	{
-	  return(Result);
+	  return Result;
 	}
       else
 	{
-	  return(FALSE);
+	  return FALSE;
 	}
     }
 }
 
 LRESULT STDCALL
-NtUserSendMessage(HWND hWnd,
+NtUserSendMessage(HWND Wnd,
 		  UINT Msg,
 		  WPARAM wParam,
 		  LPARAM lParam)
 {
-  return(W32kSendMessage(hWnd, Msg, wParam, lParam, FALSE));
+  return W32kSendMessage(Wnd, Msg, wParam, lParam, FALSE);
 }
 
 BOOL STDCALL
@@ -503,7 +556,7 @@ NtUserSendMessageCallback(HWND hWnd,
 {
   UNIMPLEMENTED;
 
-  return(0);
+  return 0;
 }
 
 BOOL STDCALL
@@ -520,9 +573,10 @@ NtUserSendNotifyMessage(HWND hWnd,
 BOOL STDCALL
 NtUserWaitMessage(VOID)
 {
-  UNIMPLEMENTED;
+  /* Initialize the thread's win32 state if necessary. */ 
+  W32kGuiCheck();
 
-  return 0;
+  return W32kWaitMessage(NULL, 0, 0);
 }
 
 /* EOF */

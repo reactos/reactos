@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.8 2003/05/18 17:16:17 ea Exp $
+/* $Id: msgqueue.c,v 1.9 2003/05/21 22:58:42 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -64,6 +64,7 @@ MsqIncPaintCountQueue(PUSER_MESSAGE_QUEUE Queue)
   ExAcquireFastMutex(&Queue->Lock);
   Queue->PaintCount++;
   Queue->PaintPosted = TRUE;
+  KeSetEvent(&Queue->NewMessages, IO_NO_INCREMENT, FALSE);
   ExReleaseFastMutex(&Queue->Lock);
 }
 
@@ -205,9 +206,12 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
 	}
     }
 
-  Message->Msg.hwnd = Window->Self;
-  Message->Msg.message = Msg;
-  Message->Msg.lParam = MAKELONG(Point.x, Point.y);
+  if (Remove)
+    {
+      Message->Msg.hwnd = Window->Self;
+      Message->Msg.message = Msg;
+      Message->Msg.lParam = MAKELONG(Point.x, Point.y);
+    }
 
   return(TRUE);
 }
@@ -236,7 +240,6 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
       PUSER_MESSAGE Current = 
 	CONTAINING_RECORD(CurrentEntry, USER_MESSAGE, ListEntry);
       CurrentEntry = CurrentEntry->Flink;
-      RemoveEntryList(&Current->ListEntry);
       if (Current->Msg.message >= WM_MOUSEFIRST && 
 	  Current->Msg.message <= WM_MOUSELAST)
 	{
@@ -246,14 +249,16 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 					    &ScreenPoint, &MouseClick);
 	  if (Accept)
 	    {
-	      RemoveEntryList(&Current->ListEntry);
+	      if (Remove)
+		{
+		  RemoveEntryList(&Current->ListEntry);
+		}
 	      ExReleaseFastMutex(&MessageQueue->Lock);
 	      *Message = Current;
 	      W32kReleaseWindowObject(DesktopWindow);
 	      return(TRUE);
 	    }
 	}
-      CurrentEntry = CurrentEntry->Flink;
     }
   ExReleaseFastMutex(&MessageQueue->Lock);
 
@@ -319,7 +324,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 				 &Current->ListEntry);
 		}
 	      ExReleaseFastMutex(&HardwareMessageQueueLock);
-	      *Message = Current;	     
+	      *Message = Current;
 	      W32kReleaseWindowObject(DesktopWindow);
 	      return(TRUE);
 	    }
@@ -486,6 +491,7 @@ MsqSendNotifyMessage(PUSER_MESSAGE_QUEUE MessageQueue,
   ExAcquireFastMutex(&MessageQueue->Lock);
   InsertTailList(&MessageQueue->NotifyMessagesListHead, 
 		 &NotifyMessage->ListEntry);
+  KeSetEvent(&MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
   ExReleaseFastMutex(&MessageQueue->Lock);
 }
 
@@ -495,6 +501,7 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 {
   ExAcquireFastMutex(&MessageQueue->Lock);
   InsertTailList(&MessageQueue->SentMessagesListHead, &Message->ListEntry);
+  KeSetEvent(&MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
   ExReleaseFastMutex(&MessageQueue->Lock);
 }
 
@@ -504,6 +511,16 @@ MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, PUSER_MESSAGE Message)
   ExAcquireFastMutex(&MessageQueue->Lock);
   InsertTailList(&MessageQueue->PostedMessagesListHead,
 		 &Message->ListEntry);
+  KeSetEvent(&MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
+  ExReleaseFastMutex(&MessageQueue->Lock);
+}
+
+VOID FASTCALL
+MsqPostQuitMessage(PUSER_MESSAGE_QUEUE MessageQueue, ULONG ExitCode)
+{
+  ExAcquireFastMutex(&MessageQueue->Lock);
+  MessageQueue->QuitPosted = TRUE;
+  MessageQueue->QuitExitCode = ExitCode;
   KeSetEvent(&MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
   ExReleaseFastMutex(&MessageQueue->Lock);
 }
@@ -577,7 +594,7 @@ MsqInitializeMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
   ExInitializeFastMutex(&MessageQueue->Lock);
   MessageQueue->QuitPosted = FALSE;
   MessageQueue->QuitExitCode = 0;
-  KeInitializeEvent(&MessageQueue->NewMessages, NotificationEvent, FALSE);
+  KeInitializeEvent(&MessageQueue->NewMessages, SynchronizationEvent, FALSE);
   MessageQueue->QueueStatus = 0;
   MessageQueue->FocusWindow = NULL;
 }

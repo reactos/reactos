@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.15 2003/05/19 20:11:17 gvg Exp $
+/* $Id: message.c,v 1.16 2003/05/21 22:58:43 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -524,8 +524,7 @@ WINBOOL
 STDCALL
 WaitMessage(VOID)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return NtUserWaitMessage();
 }
 
 UINT STDCALL
