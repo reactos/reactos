@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.50 2004/03/23 12:30:15 ekohl Exp $
+/* $Id: scsiport.c,v 1.51 2004/03/24 16:21:59 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -506,7 +506,7 @@ ScsiPortGetSrb(IN PVOID DeviceExtension,
 	       IN UCHAR Lun,
 	       IN LONG QueueTag)
 {
-  DPRINT1("ScsiPortGetSrb()\n");
+  DPRINT1("ScsiPortGetSrb() unimplemented\n");
   UNIMPLEMENTED;
   return NULL;
 }
@@ -657,6 +657,7 @@ ScsiPortInitialize(IN PVOID Argument1,
   ULONG DeviceExtensionSize;
   ULONG PortConfigSize;
   BOOLEAN Again;
+  BOOLEAN DeviceFound = FALSE;
   ULONG i;
   ULONG Result;
   NTSTATUS Status;
@@ -950,6 +951,7 @@ ScsiPortInitialize(IN PVOID Argument1,
 
 	  SystemConfig->ScsiPortCount++;
 	  PortDeviceObject = NULL;
+	  DeviceFound = TRUE;
 	}
       else
 	{
@@ -999,7 +1001,7 @@ ByeBye:
 
   DPRINT("ScsiPortInitialize() done!\n");
 
-  return Status;
+  return (DeviceFound == FALSE) ? Status : STATUS_SUCCESS;
 }
 
 
@@ -1109,6 +1111,7 @@ ScsiPortNotification(IN SCSI_NOTIFICATION_TYPE NotificationType,
 		   PathId, TargetId, Lun);
 	  /* FIXME: Implement it! */
 
+	  DeviceExtension->IrpFlags |= IRP_FLAG_NEXT;
 //	  DeviceExtension->IrpFlags |= IRP_FLAG_NEXT_LU;
 
 	  /* Hack! */
@@ -1283,7 +1286,7 @@ SpiGetPciConfigData (IN struct _HW_INITIALIZATION_DATA *HwInitializationData,
 			      PortConfig->AccessRanges[i].RangeInMemory =
 				!(PciConfig.u.type0.BaseAddresses[i] & PCI_ADDRESS_IO_SPACE);
 
-			      DPRINT1("RangeStart 0x%lX  RangeLength 0x%lX  RangeInMemory %s\n",
+			      DPRINT("RangeStart 0x%lX  RangeLength 0x%lX  RangeInMemory %s\n",
 				     PciConfig.u.type0.BaseAddresses[i] & PCI_ADDRESS_IO_ADDRESS_MASK,
 				     -(RangeLength & PCI_ADDRESS_IO_ADDRESS_MASK),
 				     (PciConfig.u.type0.BaseAddresses[i] & PCI_ADDRESS_IO_SPACE)?"FALSE":"TRUE");
@@ -1653,12 +1656,6 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
   Irp->IoStatus.Status = STATUS_SUCCESS;
   Irp->IoStatus.Information = Srb->DataTransferLength;
 
-  /* Allocte SRB extension */
-  if (DeviceExtension->SrbExtensionSize != 0)
-    {
-      Srb->SrbExtension = DeviceExtension->VirtualAddress;
-    }
-
   DeviceExtension->CurrentIrp = Irp;
 
   if (!KeSynchronizeExecution(DeviceExtension->Interrupt,
@@ -1724,6 +1721,12 @@ ScsiPortStartPacket(IN OUT PVOID Context)
 
   IrpStack = IoGetCurrentIrpStackLocation(DeviceExtension->CurrentIrp);
   Srb = IrpStack->Parameters.Scsi.Srb;
+
+  /* Allocte SRB extension */
+  if (DeviceExtension->SrbExtensionSize != 0)
+    {
+      Srb->SrbExtension = DeviceExtension->VirtualAddress;
+    }
 
   return(DeviceExtension->HwStartIo(&DeviceExtension->MiniPortDeviceExtension,
 				    Srb));
