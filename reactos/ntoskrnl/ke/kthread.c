@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kthread.c,v 1.58 2004/11/10 02:50:59 ion Exp $
+/* $Id: kthread.c,v 1.59 2004/12/12 17:25:52 hbirr Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Microkernel thread support
@@ -312,12 +312,25 @@ KeRevertToUserAffinityThread(VOID)
 {
 	PKTHREAD CurrentThread;
 	CurrentThread = KeGetCurrentThread();
-	
+
+	ASSERT(CurrentThread->SystemAffinityActive != FALSE);
+
 	/* Return to User Affinity */
 	CurrentThread->Affinity = CurrentThread->UserAffinity;
 	
 	/* Disable System Affinity */
 	CurrentThread->SystemAffinityActive = FALSE;
+
+	if (CurrentThread->Affinity & (1 << KeGetCurrentProcessorNumber()))
+	{
+	   KeReleaseDispatcherDatabaseLock(oldIrql);
+	}
+	else
+	{
+	   CurrentThread->WaitIrql = oldIrql;
+           PsDispatchThreadNoLock(THREAD_STATE_READY);
+           KeLowerIrql(oldIrql);
+	}
 }
 
 /*
@@ -349,13 +362,31 @@ STDCALL
 KeSetSystemAffinityThread(IN KAFFINITY Affinity)
 {
 	PKTHREAD CurrentThread;
+	KIRQL oldIrql;
+
+        oldIrql = KeAcquireDispatcherDatabaseLock();
+
 	CurrentThread = KeGetCurrentThread();
+
+	ASSERT(CurrentThread->SystemAffinityActive == FALSE);
+	ASSERT(Affinity & ((1 << KeNumberProcessors) - 1));
 	
-	/* Set the System Affinity Specified */
+        /* Set the System Affinity Specified */
 	CurrentThread->Affinity = Affinity;
 	
 	/* Enable System Affinity */
 	CurrentThread->SystemAffinityActive = TRUE;
+
+	if (Affinity & (1 << KeGetCurrentProcessorNumber()))
+	{
+	   KeReleaseDispatcherDatabaseLock(oldIrql);
+	}
+	else
+	{
+	   CurrentThread->WaitIrql = oldIrql;
+           PsDispatchThreadNoLock(THREAD_STATE_READY);
+           KeLowerIrql(oldIrql);
+	}
 }
 
 /*

@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.140 2004/12/10 16:50:37 navaraf Exp $
+/* $Id: thread.c,v 1.141 2004/12/12 17:25:53 hbirr Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -32,7 +32,6 @@ extern LIST_ENTRY PsProcessListHead;
 
 POBJECT_TYPE EXPORTED PsThreadType = NULL;
 
-KSPIN_LOCK PiThreadLock;
 LONG PiNrThreadsAwaitingReaping = 0;
 
 /*
@@ -338,10 +337,10 @@ static PETHREAD PsScanThreadList(KPRIORITY Priority, ULONG Affinity)
 	       DPRINT1("%d/%d\n", current->Cid.UniqueThread, current->Tcb.State);
 	     }
            ASSERT(current->Tcb.State == THREAD_STATE_READY);
-           DPRINT("current->Tcb.UserAffinity %x Affinity %x PID %d %d\n",
-	          current->Tcb.UserAffinity, Affinity, current->Cid.UniqueThread,
+           DPRINT("current->Tcb.Affinity %x Affinity %x PID %d %d\n",
+	          current->Tcb.Affinity, Affinity, current->Cid.UniqueThread,
 	          Priority);
-           if (current->Tcb.UserAffinity & Affinity)
+           if (current->Tcb.Affinity & Affinity)
 	     {
 	       PsRemoveFromThreadList(current);
 	       return(current);
@@ -408,7 +407,7 @@ VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 	if (Candidate == CurrentThread)
 	  {
 	     Candidate->Tcb.State = THREAD_STATE_RUNNING;
-	     KeReleaseSpinLockFromDpcLevel(&PiThreadLock);
+	     KeReleaseDispatcherDatabaseLockFromDpcLevel();	
 	     return;
 	  }
 	if (Candidate != NULL)
@@ -441,8 +440,7 @@ PsDispatchThread(ULONG NewThreadStatus)
      {
 	return;
      }
-
-   KeAcquireSpinLock(&PiThreadLock, &oldIrql);
+   oldIrql = KeAcquireDispatcherDatabaseLock();
    /*
     * Save wait IRQL
     */
@@ -454,9 +452,6 @@ PsDispatchThread(ULONG NewThreadStatus)
 VOID
 PsUnblockThread(PETHREAD Thread, PNTSTATUS WaitStatus)
 {
-  KIRQL oldIrql;
-
-  KeAcquireSpinLock(&PiThreadLock, &oldIrql);
   if (THREAD_STATE_TERMINATED_1 == Thread->Tcb.State ||
       THREAD_STATE_TERMINATED_2 == Thread->Tcb.State)
     {
@@ -478,7 +473,6 @@ PsUnblockThread(PETHREAD Thread, PNTSTATUS WaitStatus)
       Thread->Tcb.State = THREAD_STATE_READY;
       PsInsertIntoThreadList(Thread->Tcb.Priority, Thread);
     }
-  KeReleaseSpinLock(&PiThreadLock, oldIrql);
 }
 
 VOID
@@ -493,11 +487,6 @@ PsBlockThread(PNTSTATUS Status, UCHAR Alertable, ULONG WaitMode,
   if (!DispatcherLock)
     {
       oldIrql = KeAcquireDispatcherDatabaseLock();
-      KiAcquireSpinLock(&PiThreadLock);
-    }
-  else
-    {
-      KeAcquireSpinLock(&PiThreadLock, &oldIrql);
     }
 
   KThread = KeGetCurrentThread();
@@ -511,7 +500,6 @@ PsBlockThread(PNTSTATUS Status, UCHAR Alertable, ULONG WaitMode,
 	WaitBlock = WaitBlock->NextWaitBlock;
       }
     Thread->Tcb.WaitBlockList = NULL;
-    KeReleaseDispatcherDatabaseLockFromDpcLevel();
     PsDispatchThreadNoLock (THREAD_STATE_READY);
     if (Status != NULL)
       {
@@ -520,7 +508,6 @@ PsBlockThread(PNTSTATUS Status, UCHAR Alertable, ULONG WaitMode,
   }
   else
     {
-      KeReleaseDispatcherDatabaseLockFromDpcLevel();
       Thread->Tcb.Alertable = Alertable;
       Thread->Tcb.WaitMode = (UCHAR)WaitMode;
       Thread->Tcb.WaitIrql = WaitIrql;
@@ -546,8 +533,7 @@ PsFreezeAllThreads(PEPROCESS Process)
   PLIST_ENTRY current_entry;
   PETHREAD current;
 
-  KeAcquireSpinLock(&PiThreadLock, &oldIrql);
-
+  oldIrql = KeAcquireDispatcherDatabaseLock();
   current_entry = Process->ThreadListHead.Flink;
   while (current_entry != &Process->ThreadListHead)
     {
@@ -562,7 +548,7 @@ PsFreezeAllThreads(PEPROCESS Process)
       current_entry = current_entry->Flink;
     }
 
-  KeReleaseSpinLock(&PiThreadLock, oldIrql);
+    KeReleaseDispatcherDatabaseLock(oldIrql);
 }
 
 ULONG
@@ -572,7 +558,7 @@ PsEnumThreadsByProcess(PEPROCESS Process)
   PLIST_ENTRY current_entry;
   ULONG Count = 0;
 
-  KeAcquireSpinLock(&PiThreadLock, &oldIrql);
+  oldIrql = KeAcquireDispatcherDatabaseLock();
 
   current_entry = Process->ThreadListHead.Flink;
   while (current_entry != &Process->ThreadListHead)
@@ -581,7 +567,7 @@ PsEnumThreadsByProcess(PEPROCESS Process)
       current_entry = current_entry->Flink;
     }
   
-  KeReleaseSpinLock(&PiThreadLock, oldIrql);
+  KeReleaseDispatcherDatabaseLock(oldIrql);
   return Count;
 }
 
@@ -657,6 +643,7 @@ PsPrepareForApplicationProcessorInit(ULONG Id)
 		     TRUE);
   IdleThread->Tcb.State = THREAD_STATE_RUNNING;
   IdleThread->Tcb.FreezeCount = 0;
+  IdleThread->Tcb.Affinity = 1 << Id;
   IdleThread->Tcb.UserAffinity = 1 << Id;
   IdleThread->Tcb.Priority = LOW_PRIORITY;
   Pcr->PrcbData.IdleThread = &IdleThread->Tcb;
@@ -678,7 +665,6 @@ PsInitThreadManagment(VOID)
    HANDLE FirstThreadHandle;
    NTSTATUS Status;
 
-   KeInitializeSpinLock(&PiThreadLock);
    for (i=0; i < MAXIMUM_PRIORITY; i++)
      {
 	InitializeListHead(&PriorityListHead[i]);
@@ -713,6 +699,8 @@ PsInitThreadManagment(VOID)
 		      THREAD_ALL_ACCESS,NULL, TRUE);
    FirstThread->Tcb.State = THREAD_STATE_RUNNING;
    FirstThread->Tcb.FreezeCount = 0;
+   FirstThread->Tcb.UserAffinity = (1 << 0);   /* Set the affinity of the first thread to the boot processor */
+   FirstThread->Tcb.Affinity = (1 << 0);
    KeGetCurrentKPCR()->PrcbData.CurrentThread = (PVOID)FirstThread;
    NtClose(FirstThreadHandle);
 
@@ -791,7 +779,7 @@ KeSetPriorityThread (PKTHREAD Thread, KPRIORITY Priority)
 	KEBUGCHECK(0);
      }
 
-   KeAcquireSpinLock(&PiThreadLock, &oldIrql);
+   oldIrql = KeAcquireDispatcherDatabaseLock();
 
    OldPriority = Thread->Priority;
    Thread->BasePriority = Thread->Priority = (CHAR)Priority;
@@ -825,7 +813,7 @@ KeSetPriorityThread (PKTHREAD Thread, KPRIORITY Priority)
 	     }
 	 }
      }
-   KeReleaseSpinLock(&PiThreadLock, oldIrql);
+   KeReleaseDispatcherDatabaseLock(oldIrql);
    return(OldPriority);
 }
 
@@ -861,6 +849,7 @@ NtAlertThread (IN HANDLE ThreadHandle)
    PETHREAD Thread;
    NTSTATUS Status;
    NTSTATUS ThreadStatus;
+   KIRQL oldIrql;
 
    Status = ObReferenceObjectByHandle(ThreadHandle,
 				      THREAD_SUSPEND_RESUME,
@@ -874,7 +863,9 @@ NtAlertThread (IN HANDLE ThreadHandle)
      }
 
    ThreadStatus = STATUS_ALERTED;
+   oldIrql = KeAcquireDispatcherDatabaseLock();
    (VOID)PsUnblockThread(Thread, &ThreadStatus);
+   KeReleaseDispatcherDatabaseLock(oldIrql);
 
    ObDereferenceObject(Thread);
    return(STATUS_SUCCESS);

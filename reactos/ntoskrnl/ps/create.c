@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.87 2004/12/10 16:50:37 navaraf Exp $
+/* $Id: create.c,v 1.88 2004/12/12 17:25:52 hbirr Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -26,8 +26,6 @@
 #include <internal/debug.h>
 
 /* GLOBAL *******************************************************************/
-
-extern KSPIN_LOCK PiThreadLock;
 
 #define MAX_THREAD_NOTIFY_ROUTINE_COUNT    8
 
@@ -460,10 +458,10 @@ PsInitializeThread(PEPROCESS Process,
    Thread->LpcExitThreadCalled = FALSE;
    Thread->LpcReceivedMsgIdValid = FALSE;
 
-   KeAcquireSpinLock(&PiThreadLock, &oldIrql);
+   oldIrql = KeAcquireDispatcherDatabaseLock();
    InsertTailList(&Process->ThreadListHead,
 		  &Thread->ThreadListEntry);
-   KeReleaseSpinLock(&PiThreadLock, oldIrql);
+   KeReleaseDispatcherDatabaseLock(oldIrql);
 
    *ThreadPtr = Thread;
 

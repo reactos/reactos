@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.89 2004/12/04 16:56:20 blight Exp $
+/* $Id: kill.c,v 1.90 2004/12/12 17:25:52 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,8 +16,6 @@
 #include <internal/debug.h>
 
 /* GLOBALS *******************************************************************/
-
-extern KSPIN_LOCK PiThreadLock;
 
 VOID PsTerminateCurrentThread(NTSTATUS ExitStatus);
 NTSTATUS STDCALL NtCallTerminatePorts(PETHREAD Thread);
@@ -41,19 +39,17 @@ PsReapThreads(VOID)
   PETHREAD Thread;
   PLIST_ENTRY ListEntry;
 
-  KeAcquireSpinLock(&PiThreadLock, &oldlvl);
+  oldlvl = KeAcquireDispatcherDatabaseLock();
   while((ListEntry = RemoveHeadList(&ThreadsToReapHead)) != &ThreadsToReapHead)
   {
     PiNrThreadsAwaitingReaping--;
-    KeReleaseSpinLock(&PiThreadLock, oldlvl);
-    
+    KeReleaseDispatcherDatabaseLock(oldlvl);
     Thread = CONTAINING_RECORD(ListEntry, ETHREAD, TerminationPortList);
 
     ObDereferenceObject(Thread);
-
-    KeAcquireSpinLock(&PiThreadLock, &oldlvl);
+    oldlvl = KeAcquireDispatcherDatabaseLock();
   }
-  KeReleaseSpinLock(&PiThreadLock, oldlvl);
+  KeReleaseDispatcherDatabaseLock(oldlvl);
 }
 
 VOID
@@ -73,9 +69,9 @@ PiTerminateProcessThreads(PEPROCESS Process,
    
    DPRINT("PiTerminateProcessThreads(Process %x, ExitStatus %x)\n",
 	  Process, ExitStatus);
+	  
+   oldlvl = KeAcquireDispatcherDatabaseLock();
    
-   KeAcquireSpinLock(&PiThreadLock, &oldlvl);
-
    current_entry = Process->ThreadListHead.Flink;
    while (current_entry != &Process->ThreadListHead)
      {
@@ -86,9 +82,9 @@ PiTerminateProcessThreads(PEPROCESS Process,
 	     DPRINT("Terminating %x, current thread: %x, "
 		    "thread's process: %x\n", current, PsGetCurrentThread(), 
 		    current->ThreadsProcess);
-	     KeReleaseSpinLock(&PiThreadLock, oldlvl);
+             KeReleaseDispatcherDatabaseLock(oldlvl);
 	     PsTerminateOtherThread(current, ExitStatus);
-	     KeAcquireSpinLock(&PiThreadLock, &oldlvl);
+             oldlvl = KeAcquireDispatcherDatabaseLock();
 	     current_entry = Process->ThreadListHead.Flink;
 	  }
 	else
@@ -96,7 +92,7 @@ PiTerminateProcessThreads(PEPROCESS Process,
 	     current_entry = current_entry->Flink;
 	  }
      }
-   KeReleaseSpinLock(&PiThreadLock, oldlvl);
+   KeReleaseDispatcherDatabaseLock(oldlvl);
    DPRINT("Finished PiTerminateProcessThreads()\n");
 }
 
@@ -131,7 +127,7 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
 
    KeCancelTimer(&CurrentThread->Tcb.Timer);
 
-   KeAcquireSpinLock(&PiThreadLock, &oldIrql);
+   oldIrql = KeAcquireDispatcherDatabaseLock();
 
    DPRINT("terminating %x\n",CurrentThread);
 
@@ -145,7 +141,7 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
    InterlockedCompareExchangePointer(&KeGetCurrentKPCR()->PrcbData.NpxThread,
                                      NULL, ETHREAD_TO_KTHREAD(CurrentThread));
 
-   KeReleaseSpinLock(&PiThreadLock, oldIrql);
+   KeReleaseDispatcherDatabaseLock(oldIrql);
  
    PsLockProcess(CurrentProcess, FALSE);
 
@@ -209,7 +205,7 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
     PiTerminateProcess(CurrentProcess, ExitStatus);
    }
 
-   KeAcquireSpinLock(&PiThreadLock, &oldIrql);
+   oldIrql = KeAcquireDispatcherDatabaseLock();
 
 #ifdef _ENABLE_THRDEVTPAIR
    ExpSwapThreadEventPair(CurrentThread, NULL); /* Release the associated eventpair object, if there was one */
@@ -260,14 +256,14 @@ PsTerminateOtherThread(PETHREAD Thread,
   DPRINT("PsTerminateOtherThread(Thread %x, ExitStatus %x)\n",
 	 Thread, ExitStatus);
 
-  KeAcquireSpinLock(&PiThreadLock, &OldIrql);
+  OldIrql = KeAcquireDispatcherDatabaseLock();
   if (Thread->HasTerminated)
   {
-     KeReleaseSpinLock(&PiThreadLock, OldIrql);
+     KeReleaseDispatcherDatabaseLock (OldIrql);
      return;
   }
   Thread->HasTerminated = TRUE;
-  KeReleaseSpinLock(&PiThreadLock, OldIrql);
+  KeReleaseDispatcherDatabaseLock (OldIrql);
   Thread->ExitStatus = ExitStatus;
   Apc = ExAllocatePoolWithTag(NonPagedPool, sizeof(KAPC), TAG_TERMINATE_APC);
   KeInitializeApc(Apc,
