@@ -22,7 +22,6 @@
 - implement more than one column for very crowded start menus
 - Execute selected programs with additional command line options ("Run" dialog with pre-filled edit field)
 
-- GDI-Leaks
 - autostart doesn't on NT4 ?
 
 - Startmenu: You can't close the start menu with pressing Win-key You can open the start menu
