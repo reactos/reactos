@@ -1114,6 +1114,9 @@ extern "C" {
 #define WM_WINDOWPOSCHANGED	(71)
 #define WM_WINDOWPOSCHANGING	(70)
 #define WM_WININICHANGE	(26)
+#define WM_XBUTTONDOWN  (523)
+#define WM_XBUTTONUP    (524)
+#define WM_XBUTTONDBLCLK    (525)
 
 /* Window message ranges */
 #define WM_KEYFIRST	(256)

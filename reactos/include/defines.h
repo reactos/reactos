@@ -602,6 +602,10 @@ extern "C" {
 #define TAPE_SETMARKS	(0L)
 #define TAPE_SHORT_FILEMARKS	(0x2L)
 
+/* Mouse Wheel */
+#define WHEEL_DELTA (120)
+#define GET_WHEEL_DELTA_WPARAM(wParam)  ((short)HIWORD(wParam))
+
 /* CreateWindow */
 #define CW_USEDEFAULT	(0x80000000L)
 #define WS_BORDER	(0x800000L)
@@ -4336,6 +4340,8 @@ extern "C" {
 #define MK_MBUTTON	(16)
 #define MK_RBUTTON	(2)
 #define MK_SHIFT	(4)
+#define MK_XBUTTON1 (0x0020)
+#define MK_XBUTTON2 (0x0040)
 
 /* WNDCLASS structure */
 #define CS_BYTEALIGNCLIENT	(4096)
