@@ -39,7 +39,7 @@ BUS = acpi isapnp pci
 
 # Filesystem libraries
 # vfatlib
-LIB_FSLIB = vfatlib
+LIB_FSLIB = vfatlib ext2lib
 
 # Static libraries
 LIB_STATIC = string rosrtl epsapi uuid libwine zlib rtl tgetopt pseh adns dxguid strmiids
@@ -84,7 +84,7 @@ INPUT_DRIVERS = keyboard mouclass psaux sermouse
 
 # Kernel mode file system drivers
 # cdfs ext2 fs_rec ms np vfat
-FS_DRIVERS = cdfs fs_rec ms np vfat mup ntfs
+FS_DRIVERS = cdfs fs_rec ms np vfat ext2 mup ntfs
 
 # Kernel mode networking drivers
 # afd ndis npf tcpip tdi wshtcpip

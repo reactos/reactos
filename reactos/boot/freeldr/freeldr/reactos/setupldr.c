@@ -556,6 +556,9 @@ for(;;);
   if (!LoadDriver(SourcePath, "vfatfs.sys"))
     return;
 
+  /* Load ext2.sys (could be loaded by the setup prog!) */
+  if (!LoadDriver(SourcePath, "ext2.sys"))
+    return;
 
   /* Load keyboard driver */
   if (!LoadDriver(SourcePath, "keyboard.sys"))
