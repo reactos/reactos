@@ -2,3 +2,5 @@
 *.obj
 *.tds
 *.exe
+*.i
+*.res

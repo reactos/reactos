@@ -1,8 +1,6 @@
-# $Id: Makefile,v 1.1 2003/10/27 03:03:22 hyperion Exp $
+# $Id: Makefile,v 1.2 2003/10/27 23:20:57 hyperion Exp $
 
 PATH_TO_TOP = ../../../..
-
-TARGET_NORC = yes
 
 TARGET_TYPE = program
 
