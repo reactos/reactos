@@ -41,7 +41,7 @@ typedef struct tagLINE_INFO
     LPTSTR name;
     void* val;
     size_t val_len;
-} LINE_INFO;
+} LINE_INFO, *PLINE_INFO;
 
 /*******************************************************************************
  * Global and Local Variables:
@@ -60,6 +60,8 @@ LPCTSTR GetValueName(HWND hwndLV)
 {
     int item, len, maxLen;
     LPTSTR newStr;
+    LVITEM LVItem;
+    PLINE_INFO lineinfo;
 
     if (!g_valueName) g_valueName = HeapAlloc(GetProcessHeap(), 0, 1024);
     if (!g_valueName) return NULL;
@@ -70,13 +72,21 @@ LPCTSTR GetValueName(HWND hwndLV)
     item = ListView_GetNextItem(hwndLV, -1, LVNI_FOCUSED);
     if (item == -1) return NULL;
     do {
-        ListView_GetItemText(hwndLV, item, 0, g_valueName, maxLen);
-	len = _tcslen(g_valueName);
-	if (len < maxLen - 1) break;
-	newStr = HeapReAlloc(GetProcessHeap(), 0, g_valueName, maxLen * 2);
-	if (!newStr) return NULL;
-	g_valueName = newStr;
-	maxLen *= 2;
+        LVItem.mask = LVIF_PARAM;
+        LVItem.iItem = item;
+        if(ListView_GetItem(hwndLV, &LVItem))
+        {
+          lineinfo = (PLINE_INFO)LVItem.lParam;
+          g_valueName = lineinfo->name;
+	  len = _tcslen(g_valueName);
+	  if (len < maxLen - 1) break;
+	  newStr = HeapReAlloc(GetProcessHeap(), 0, g_valueName, maxLen * 2);
+	  if (!newStr) return NULL;
+	  g_valueName = newStr;
+	  maxLen *= 2;
+       }
+       else
+         break;
     } while (TRUE);
 
     return g_valueName;
@@ -327,33 +337,9 @@ static LRESULT CALLBACK ListWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
                     
             ListView_SortItems(hWnd, CompareFunc, (WPARAM)hWnd);
             break;
-        case NM_DBLCLK: {
-                NMITEMACTIVATE* nmitem = (LPNMITEMACTIVATE)lParam;
-                LVHITTESTINFO info;
-
-                if (nmitem->hdr.hwndFrom != hWnd) break;
-                /*            if (nmitem->hdr.idFrom != IDW_LISTVIEW) break;  */
-                /*            if (nmitem->hdr.code != ???) break;  */
-#ifdef _MSC_VER
-                switch (nmitem->uKeyFlags) {
-                case LVKF_ALT:     /*  The ALT key is pressed.   */
-                    /* properties dialog box ? */
-                    break;
-                case LVKF_CONTROL: /*  The CTRL key is pressed. */
-                    /* run dialog box for providing parameters... */
-                    break;
-                case LVKF_SHIFT:   /*  The SHIFT key is pressed.    */
-                    break;
-                }
-#endif
-                info.pt.x = nmitem->ptAction.x;
-                info.pt.y = nmitem->ptAction.y;
-                if (ListView_HitTest(hWnd, &info) != -1) {
-                    LVITEM item;
-                    item.mask = LVIF_PARAM;
-                    item.iItem = info.iItem;
-                    if (ListView_GetItem(hWnd, &item)) {}
-                }
+        case NM_DBLCLK: 
+            {
+                SendMessage(hFrameWnd, WM_COMMAND, MAKEWPARAM(ID_EDIT_MODIFY, 0), 0);
             }
             break;
 

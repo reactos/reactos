@@ -67,7 +67,14 @@ INT_PTR CALLBACK modify_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
 
     switch(uMsg) {
     case WM_INITDIALOG:
-        SetDlgItemText(hwndDlg, IDC_VALUE_NAME, editValueName);
+        if(editValueName && strcmp(editValueName, _T("")))
+        {
+          SetDlgItemText(hwndDlg, IDC_VALUE_NAME, editValueName);
+        }
+        else
+        {
+          SetDlgItemText(hwndDlg, IDC_VALUE_NAME, _T("(Default)"));
+        }
         SetDlgItemText(hwndDlg, IDC_VALUE_DATA, stringValueData);
         return TRUE;
     case WM_COMMAND:
@@ -75,16 +82,33 @@ INT_PTR CALLBACK modify_string_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, L
         case IDOK:
             if ((hwndValue = GetDlgItem(hwndDlg, IDC_VALUE_DATA))) {
                 if ((len = GetWindowTextLength(hwndValue))) {
-                    if ((valueData = HeapReAlloc(GetProcessHeap(), 0, stringValueData, (len + 1) * sizeof(TCHAR)))) {
-                        stringValueData = valueData;
-                        if (!GetWindowText(hwndValue, stringValueData, len + 1))
-                            *stringValueData = 0;
+                    if(stringValueData)
+                    {
+                      if ((valueData = HeapReAlloc(GetProcessHeap(), 0, stringValueData, (len + 1) * sizeof(TCHAR)))) {
+                          stringValueData = valueData;
+                          if (!GetWindowText(hwndValue, stringValueData, len + 1))
+                              *stringValueData = 0;
+                      }
+                    }
+                    else
+                    {
+                      if ((valueData = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(TCHAR)))) {
+                          stringValueData = valueData;
+                          if (!GetWindowText(hwndValue, stringValueData, len + 1))
+                              *stringValueData = 0;
+                      }
                     }
                 }
+                else
+                {
+                  if(stringValueData)
+                    *stringValueData = 0;
+                }
             }
-            /* Fall through */
+            EndDialog(hwndDlg, IDOK);
+            break;
         case IDCANCEL:
-            EndDialog(hwndDlg, wParam);
+            EndDialog(hwndDlg, IDCANCEL);
             return TRUE;
         }
     }
@@ -103,23 +127,41 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName)
     editValueName = valueName;
 
     lRet = RegQueryValueEx(hKey, valueName, 0, &type, 0, &valueDataLen);
+    if(lRet != ERROR_SUCCESS && (!strcmp(valueName, _T("")) || valueName == NULL))
+    {
+      lRet = ERROR_SUCCESS; /* Allow editing of (Default) values which don't exist */
+      type = REG_SZ;
+      valueDataLen = 0;
+      stringValueData = NULL;
+    }
+    
     if (lRet != ERROR_SUCCESS) {
         error(hwnd, IDS_BAD_VALUE, valueName);
         goto done;
     }
 
     if ( (type == REG_SZ) || (type == REG_EXPAND_SZ) ) {
-        if (!(stringValueData = HeapAlloc(GetProcessHeap(), 0, valueDataLen))) {
-            error(hwnd, IDS_TOO_BIG_VALUE, valueDataLen);
-            goto done;
+        if(valueDataLen > 0)
+        {
+          if (!(stringValueData = HeapAlloc(GetProcessHeap(), 0, valueDataLen))) {
+              error(hwnd, IDS_TOO_BIG_VALUE, valueDataLen);
+              goto done;
+          }
+          lRet = RegQueryValueEx(hKey, valueName, 0, 0, stringValueData, &valueDataLen);
+          if (lRet != ERROR_SUCCESS) {
+              error(hwnd, IDS_BAD_VALUE, valueName);
+              goto done;
+          }
         }
-        lRet = RegQueryValueEx(hKey, valueName, 0, 0, stringValueData, &valueDataLen);
-        if (lRet != ERROR_SUCCESS) {
-            error(hwnd, IDS_BAD_VALUE, valueName);
-            goto done;
+        else
+        {
+          stringValueData = NULL;
         }
         if (DialogBox(0, MAKEINTRESOURCE(IDD_EDIT_STRING), hwnd, modify_string_dlgproc) == IDOK) {
-            lRet = RegSetValueEx(hKey, valueName, 0, type, stringValueData, lstrlen(stringValueData) + 1);
+            if(stringValueData)
+              lRet = RegSetValueEx(hKey, valueName, 0, type, stringValueData, lstrlen(stringValueData) + 1);
+            else
+              lRet = RegSetValueEx(hKey, valueName, 0, type, NULL, 0);
             if (lRet == ERROR_SUCCESS) result = TRUE;
         }
     } else if ( type == REG_DWORD ) {
@@ -129,7 +171,8 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName)
     }
 
 done:
-    HeapFree(GetProcessHeap(), 0, stringValueData);
+    if(stringValueData)
+      HeapFree(GetProcessHeap(), 0, stringValueData);
     stringValueData = NULL;
 
     return result;
