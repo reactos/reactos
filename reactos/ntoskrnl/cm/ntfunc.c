@@ -429,13 +429,13 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 
 	    if (SubKeyCell->Flags & REG_KEY_NAME_PACKED)
 	      {
-		CmiCopyPackedName(BasicInformation->Name,
+		CmiCopyPackedName(NodeInformation->Name,
 				  SubKeyCell->Name,
 				  SubKeyCell->NameSize);
 	      }
 	    else
 	      {
-		RtlCopyMemory(BasicInformation->Name,
+		RtlCopyMemory(NodeInformation->Name,
 			      SubKeyCell->Name,
 			      SubKeyCell->NameSize);
 	      }
@@ -493,8 +493,8 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 	  }
 	break;
 
-  default:
-    DPRINT1("Not handling 0x%x\n", KeyInformationClass);
+      default:
+	DPRINT1("Not handling 0x%x\n", KeyInformationClass);
 	break;
     }
 
@@ -897,9 +897,19 @@ NtQueryKey(IN HANDLE KeyHandle,
 	    BasicInformation->LastWriteTime.u.HighPart = KeyCell->LastWriteTime.u.HighPart;
 	    BasicInformation->TitleIndex = 0;
 	    BasicInformation->NameLength = KeyObject->Name.Length;
-	    RtlCopyMemory(BasicInformation->Name,
-			  KeyObject->Name.Buffer,
-			  KeyObject->Name.Length);
+
+	    if (KeyCell->Flags & REG_KEY_NAME_PACKED)
+	      {
+		CmiCopyPackedName(BasicInformation->Name,
+				  KeyCell->Name,
+				  KeyCell->NameSize);
+	      }
+	    else
+	      {
+		RtlCopyMemory(BasicInformation->Name,
+			      KeyCell->Name,
+			      KeyCell->NameSize);
+	      }
 	  }
 	break;
 
@@ -923,9 +933,19 @@ NtQueryKey(IN HANDLE KeyHandle,
 	      KeyObject->Name.Length;
 	    NodeInformation->ClassLength = KeyCell->ClassSize;
 	    NodeInformation->NameLength = KeyObject->Name.Length;
-	    RtlCopyMemory(NodeInformation->Name,
-			  KeyObject->Name.Buffer,
-			  KeyObject->Name.Length);
+
+	    if (KeyCell->Flags & REG_KEY_NAME_PACKED)
+	      {
+		CmiCopyPackedName(NodeInformation->Name,
+				  KeyCell->Name,
+				  KeyCell->NameSize);
+	      }
+	    else
+	      {
+		RtlCopyMemory(NodeInformation->Name,
+			      KeyCell->Name,
+			      KeyCell->NameSize);
+	      }
 
 	    if (KeyCell->ClassSize != 0)
 	      {
