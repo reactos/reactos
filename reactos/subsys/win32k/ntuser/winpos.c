@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.26 2003/08/20 07:45:01 gvg Exp $
+/* $Id: winpos.c,v 1.27 2003/08/21 20:14:45 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -898,7 +898,10 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 	    }
 	  /* FIXME: Redraw the window parent. */
 	}
-      NtGdiDeleteObject(VisRgn);
+      if ((HRGN) 1 != VisRgn)
+	{
+	  NtGdiDeleteObject(VisRgn);
+	}
     }
 
   if (!(flags & SWP_NOACTIVATE))
