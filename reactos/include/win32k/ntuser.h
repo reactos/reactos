@@ -212,10 +212,10 @@ NtUserChildWindowFromPointEx(HWND Parent,
 			     LONG y,
 			     UINT Flags);
 
-DWORD
+BOOL
 STDCALL
 NtUserClipCursor(
-  DWORD Unknown0);
+  RECT *lpRect);
 
 DWORD
 STDCALL
@@ -360,11 +360,11 @@ STDCALL
 NtUserDestroyAcceleratorTable(
   HACCEL Table);
 
-DWORD
+BOOL
 STDCALL
 NtUserDestroyCursor(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  HCURSOR hCursor,
+  DWORD Unknown);
 
 BOOL
 STDCALL
@@ -615,10 +615,10 @@ DWORD
 STDCALL
 NtUserGetClipboardViewer(VOID);
 
-DWORD
+BOOL
 STDCALL
 NtUserGetClipCursor(
-  DWORD Unknown0);
+  RECT *lpRect);
 
 DWORD
 STDCALL
@@ -656,10 +656,10 @@ NtUserGetCursorFrameInfo(
   DWORD Unknown2,
   DWORD Unknown3);
 
-DWORD
+BOOL
 STDCALL
 NtUserGetCursorInfo(
-  DWORD Unknown0);
+  PCURSORINFO pci);
 
 UINT STDCALL
 NtUserGetMenuDefaultItem(
@@ -702,13 +702,13 @@ NtUserGetIconInfo(
   HBITMAP *hbmMask,
   HBITMAP *hbmColor);
 
-DWORD
+BOOL
 STDCALL
 NtUserGetIconSize(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+  HICON hIcon,
+  BOOL *fIcon,
+  LONG *Width,
+  LONG *Height);
 
 DWORD
 STDCALL
@@ -1311,24 +1311,24 @@ NtUserSetConsoleReserveKeys(
   DWORD Unknown0,
   DWORD Unknown1);
 
-DWORD
+HCURSOR
 STDCALL
 NtUserSetCursor(
-  DWORD Unknown0);
+  HCURSOR hCursor);
 
-DWORD
+BOOL
 STDCALL
 NtUserSetCursorContents(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  HCURSOR hCursor,
+  DWORD Unknown);
 
-DWORD
+BOOL
 STDCALL
 NtUserSetCursorIconData(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+  HICON hIcon,
+  PBOOL fIcon,
+  PDWORD xHotspot,
+  PDWORD yHotspot);
 
 DWORD
 STDCALL
@@ -1461,11 +1461,11 @@ NtUserSetSysColors(
   DWORD Unknown2,
   DWORD Unknown3);
 
-DWORD
+BOOL
 STDCALL
 NtUserSetSystemCursor(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  HCURSOR hcur,
+  DWORD id);
 
 BOOL
 STDCALL

@@ -17,15 +17,21 @@ BOOL FASTCALL IconCursor_InternalDelete( PICONCURSOROBJ pIconCursor )
 	return TRUE;
 }
 
-HICON STDCALL NtGdiCreateIcon(BOOL fIcon,
-                             INT  Width,
-                             INT  Height,
-                             UINT  Planes,
-                             UINT  BitsPerPel,
-                             DWORD xHotspot,
-                             DWORD yHotspot,
-                             CONST VOID *ANDBits,
-                             CONST VOID *XORBits)
+
+/*
+ * @implemented
+ */
+HICON 
+STDCALL 
+NtGdiCreateIcon(BOOL fIcon,
+                INT  Width,
+                INT  Height,
+                UINT  Planes,
+                UINT  BitsPerPel,
+                DWORD xHotspot,
+                DWORD yHotspot,
+                CONST VOID *ANDBits,
+                CONST VOID *XORBits)
 {
 	PICONCURSOROBJ icon;
 	HICON hIcon;
@@ -48,7 +54,7 @@ HICON STDCALL NtGdiCreateIcon(BOOL fIcon,
 	hIcon = ICONCURSOROBJ_AllocIconCursor ();
 	if (!hIcon)
 	{
-		DPRINT("NtGdiCreateIcon: ICONCURSOROBJ_AllocIconCursor() returned 0\n");
+		DPRINT("NtGdiCreateIcon: ICONCURSOROBJ_AllocIconCursor(hIcon == 0x%x) returned 0\n", hIcon);
 		return 0;
 	}
 	
@@ -97,6 +103,10 @@ HICON STDCALL NtGdiCreateIcon(BOOL fIcon,
 	return hIcon;
 }
 
+
+/*
+ * @implemented
+ */
 DWORD
 STDCALL
 NtUserGetIconInfo(
@@ -113,7 +123,7 @@ NtUserGetIconInfo(
   
   if (!icon)
   {
-	DPRINT1("NtUserGetIconInfo: ICONCURSOROBJ_LockIconCursor() returned 0\n");
+	DPRINT1("NtUserGetIconInfo: ICONCURSOROBJ_LockIconCursor(hIcon == 0x%x) returned 0\n", hIcon);
 	return FALSE;
   }
 
@@ -141,19 +151,44 @@ NtUserGetIconInfo(
   return TRUE;
 }
 
-DWORD
+
+/*
+ * @implemented
+ */
+BOOL
 STDCALL
 NtUserGetIconSize(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
+  HICON hIcon,
+  BOOL *fIcon,
+  LONG *Width,
+  LONG *Height)
 {
-  UNIMPLEMENTED
+  PICONCURSOROBJ icon;
+  
+  if (!hIcon || !Width || !Width)
+    return FALSE;
 
-  return 0;
+  icon = ICONCURSOROBJ_LockIconCursor(hIcon);
+  
+  if (!icon)
+  {
+	DPRINT1("NtUserGetIconInfo: ICONCURSOROBJ_LockIconCursor() returned 0\n");
+	return FALSE;
+  }
+  
+  if(fIcon) *fIcon = icon->fIcon;
+  *Width = icon->ANDBitmap.bmWidth;
+  *Width = icon->ANDBitmap.bmHeight;
+  
+  ICONCURSOROBJ_UnlockIconCursor(hIcon);
+    
+  return TRUE;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 NtUserGetCursorFrameInfo(
@@ -167,37 +202,53 @@ NtUserGetCursorFrameInfo(
   return 0;
 }
 
-DWORD
+
+/*
+ * @unimplemented
+ */
+BOOL
 STDCALL
 NtUserGetCursorInfo(
-  DWORD Unknown0)
+  PCURSORINFO pci)
 {
   UNIMPLEMENTED
 
   return 0;
 }
 
-DWORD
+
+/*
+ * @unimplemented
+ */
+BOOL
 STDCALL
 NtUserClipCursor(
-  DWORD Unknown0)
+  RECT *lpRect)
 {
   UNIMPLEMENTED
 
   return 0;
 }
 
-DWORD
+
+/*
+ * @unimplemented
+ */
+BOOL
 STDCALL
 NtUserDestroyCursor(
-  DWORD Unknown0,
-  DWORD Unknown1)
+  HCURSOR hCursor,
+  DWORD Unknown)
 {
   UNIMPLEMENTED
 
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 NtUserFindExistingCursorIcon(
@@ -210,54 +261,75 @@ NtUserFindExistingCursorIcon(
   return 0;
 }
 
-DWORD
+
+/*
+ * @unimplemented
+ */
+BOOL
 STDCALL
 NtUserGetClipCursor(
-  DWORD Unknown0)
+  RECT *lpRect)
 {
   UNIMPLEMENTED
 
   return 0;
 }
 
-DWORD
+
+/*
+ * @unimplemented
+ */
+HCURSOR
 STDCALL
 NtUserSetCursor(
-  DWORD Unknown0)
+  HCURSOR hCursor)
 {
   UNIMPLEMENTED
 
   return 0;
 }
-DWORD
+
+
+/*
+ * @unimplemented
+ */
+BOOL
 STDCALL
 NtUserSetCursorContents(
-  DWORD Unknown0,
-  DWORD Unknown1)
+  HCURSOR hCursor,
+  DWORD Unknown)
 {
   UNIMPLEMENTED
 
   return 0;
 }
 
-DWORD
+
+/*
+ * @unimplemented
+ */
+BOOL
 STDCALL
 NtUserSetCursorIconData(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
+  HICON hIcon,
+  PBOOL fIcon,
+  PDWORD xHotspot,
+  PDWORD yHotspot)
 {
   UNIMPLEMENTED
 
   return 0;
 }
 
-DWORD
+
+/*
+ * @unimplemented
+ */
+BOOL
 STDCALL
 NtUserSetSystemCursor(
-  DWORD Unknown0,
-  DWORD Unknown1)
+  HCURSOR hcur,
+  DWORD id)
 {
   UNIMPLEMENTED
 
