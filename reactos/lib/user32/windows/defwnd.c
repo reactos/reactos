@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.40 2003/03/20 04:03:13 rcampbell Exp $
+/* $Id: defwnd.c,v 1.41 2003/03/24 23:45:47 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -989,7 +989,7 @@ User32DefWindowProc(HWND hWnd,
       }
     case WM_LBUTTONUP:
     {
-        DbgPrint("test\n\n\n\n\n\n");
+        break;
     }
     case WM_RBUTTONUP:
       {
