@@ -71,20 +71,18 @@ VOID DispCancelComplete(
 
     FileObject  = (PFILE_OBJECT)Context;
     TranContext = (PTRANSPORT_CONTEXT)FileObject->FsContext;
-    
-    IoAcquireCancelSpinLock(&OldIrql);
 
-    TI_DbgPrint(DEBUG_IRP, ("Setting TranContext->CleanupEvent to signaled.\n"));
     /* Set the cleanup event */
     KeSetEvent(&TranContext->CleanupEvent, 0, FALSE);
 
+    /* We are expected to release the cancel spin lock */
     IoReleaseCancelSpinLock(OldIrql);
 
     TI_DbgPrint(DEBUG_IRP, ("Leaving.\n"));
 }
 
 
-VOID DispCancelRequest(
+VOID DDKAPI DispCancelRequest(
     PDEVICE_OBJECT Device,
     PIRP Irp)
 /*
@@ -179,8 +177,6 @@ VOID DispDataRequestComplete(
     IoAcquireCancelSpinLock(&OldIrql);
 
     IoSetCancelRoutine(Irp, NULL);
-
-    KeSetEvent(&TranContext->CleanupEvent, 0, FALSE);
 
     if (Irp->Cancel || TranContext->CancelIrps) {
         /* The IRP has been cancelled */
@@ -647,7 +643,7 @@ NTSTATUS DispTdiReceive(
   Status = DispPrepareIrpForCancel
       (TranContext->Handle.ConnectionContext, 
        Irp, 
-       (PDRIVER_CANCEL)TCPCancelReceiveRequest);
+       (PDRIVER_CANCEL)DispCancelRequest);
 
   TI_DbgPrint(MID_TRACE,("TCPIP<<< Got an MDL: %x\n", Irp->MdlAddress));
   if (NT_SUCCESS(Status))
@@ -663,12 +659,8 @@ NTSTATUS DispTdiReceive(
       if (Status != STATUS_PENDING)
       {
           DispDataRequestComplete(Irp, Status, BytesReceived);
-      }
-    }
-
-  if (Status != STATUS_PENDING)
-    {
-      IrpSp->Control &= ~SL_PENDING_RETURNED;
+      } else
+	  IoMarkIrpPending(Irp);
     }
 
   TI_DbgPrint(DEBUG_IRP, ("Leaving. Status is (0x%X)\n", Status));
@@ -735,15 +727,10 @@ NTSTATUS DispTdiReceiveDatagram(
 	  &BytesReceived,
 	  (PDATAGRAM_COMPLETION_ROUTINE)DispDataRequestComplete,
 	  Irp);
-      if (Status != STATUS_PENDING)
-        {
+      if (Status != STATUS_PENDING) {
           DispDataRequestComplete(Irp, Status, BytesReceived);
-        }
-    }
-
-  if (Status != STATUS_PENDING)
-    {
-      IrpSp->Control &= ~SL_PENDING_RETURNED;
+      } else
+	  IoMarkIrpPending(Irp);
     }
 
   TI_DbgPrint(DEBUG_IRP, ("Leaving. Status is (0x%X)\n", Status));
@@ -809,12 +796,8 @@ NTSTATUS DispTdiSend(
 	if (Status != STATUS_PENDING)
 	{
 	    DispDataRequestComplete(Irp, Status, BytesReceived);
-	}
-    }
-
-  if (Status != STATUS_PENDING)
-    {
-      IrpSp->Control &= ~SL_PENDING_RETURNED;
+	} else 
+	    IoMarkIrpPending( Irp );
     }
 
   TI_DbgPrint(DEBUG_IRP, ("Leaving. Status is (0x%X)\n", Status));
@@ -883,7 +866,8 @@ NTSTATUS DispTdiSendDatagram(
             /* Return STATUS_PENDING because DispPrepareIrpForCancel
                marks Irp as pending */
             Status = STATUS_PENDING;
-        }
+        } else
+	    IoMarkIrpPending( Irp );
     }
 
     TI_DbgPrint(DEBUG_IRP, ("Leaving.\n"));

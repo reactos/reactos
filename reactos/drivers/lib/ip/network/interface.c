@@ -11,7 +11,6 @@
 
 #include "precomp.h"
 
-
 NTSTATUS GetInterfaceIPv4Address( PIP_INTERFACE Interface, 
 				  ULONG TargetType,
 				  PULONG Address ) {

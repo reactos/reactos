@@ -276,6 +276,8 @@ VOID STDCALL ProtocolTransferDataComplete(
     PLAN_WQ_ITEM WQItem;
     PLAN_ADAPTER Adapter = (PLAN_ADAPTER)BindingContext;
 
+    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+
     if( Status != NDIS_STATUS_SUCCESS ) return;
     WQItem = ExAllocatePool( NonPagedPool, sizeof(LAN_WQ_ITEM) );
     if( !WQItem ) return;

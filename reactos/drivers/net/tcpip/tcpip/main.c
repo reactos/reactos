@@ -12,7 +12,7 @@
 #define NDEBUG
 
 #ifndef NDEBUG
-DWORD DebugTraceLevel = 0x7fffffff;
+DWORD DebugTraceLevel = DEBUG_TCP;
 #else
 DWORD DebugTraceLevel = 0; /*DEBUG_IP | DEBUG_PBUFFER | DEBUG_DATALINK;*/
 #endif /* NDEBUG */

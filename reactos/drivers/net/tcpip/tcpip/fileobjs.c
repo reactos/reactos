@@ -378,7 +378,6 @@ NTSTATUS FileOpenConnection(
   if( !Connection ) return STATUS_NO_MEMORY;
 
   Status = TCPSocket( Connection, AF_INET, SOCK_STREAM, IPPROTO_TCP );
-  DbgPrint("STATUS from OSKITTCP was %08x\n", Status);
 
   /* Return connection endpoint file object */
   Request->Handle.ConnectionContext = Connection;
