@@ -605,6 +605,8 @@ struct String
 
 	String& operator=(LPCTSTR s) {if (s) super::assign(s); else erase(); return *this;}
 	String& operator=(const super& s) {super::assign(s); return *this;}
+	void assign(LPCTSTR s) {super::assign(s);}
+	void assign(LPCTSTR s, int l) {super::assign(s, l);}
 
 	operator LPCTSTR() const {return c_str();}
 

@@ -493,7 +493,6 @@ struct Static : public WindowHandle
 };
 
 
-/*
  // control color message routing for ColorStatic and HyperlinkCtrl
 
 #define	PM_DISPATCH_CTLCOLOR	(WM_APP+0x08)
@@ -522,7 +521,6 @@ template<typename BASE> struct CtlColorParent : public BASE
 		}
 	}
 };
-*/
 
 
 #define	PM_DISPATCH_DRAWITEM	(WM_APP+0x09)
@@ -596,6 +594,26 @@ protected:
 */
 
 
+struct FlatButton : public OwnerdrawnButton
+{
+	typedef OwnerdrawnButton super;
+
+	FlatButton(HWND hwnd)
+	 : super(hwnd), _active(false) {}
+
+	FlatButton(HWND owner, int id)
+	 : super(GetDlgItem(owner, IDOK)), _active(false) {}
+
+protected:
+	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+	virtual void DrawItem(LPDRAWITEMSTRUCT dis);
+
+	COLORREF _textColor;
+	COLORREF _activeColor;
+	bool	_active;
+};
+
+
  /**
 	Subclass button controls to paint pictures left to the labels.
 	The buttons should have set the style bit BS_OWNERDRAW.
@@ -616,6 +634,88 @@ protected:
 	HICON	_hIcon;
 	HBRUSH	_hBrush;
 	bool	_flat;
+};
+
+
+struct ColorStatic : public SubclassedWindow
+{
+	typedef SubclassedWindow super;
+
+	ColorStatic(HWND hwnd, COLORREF textColor=RGB(255,0,0), HBRUSH hbrush_bkgnd=0, HFONT hfont=0)
+	 :	super(hwnd),
+		_textColor(textColor),
+		_hbrush_bkgnd(hbrush_bkgnd),
+		_hfont(hfont)
+	{
+	}
+
+	ColorStatic(HWND owner, int id, COLORREF textColor=RGB(255,0,0), HBRUSH hbrush_bkgnd=0, HFONT hfont=0)
+	 :	super(GetDlgItem(owner, id)),
+		_textColor(textColor),
+		_hbrush_bkgnd(hbrush_bkgnd),
+		_hfont(hfont)
+	{
+	}
+
+protected:
+	LRESULT WndProc(UINT message, WPARAM wparam, LPARAM lparam)
+	{
+		if (message == PM_DISPATCH_CTLCOLOR) {
+			HDC hdc = (HDC) wparam;
+
+			SetTextColor(hdc, _textColor);
+
+			if (_hfont)
+				SelectFont(hdc, _hfont);
+
+			if (_hbrush_bkgnd)
+				return (LRESULT)_hbrush_bkgnd;
+			else {
+				SetBkMode(hdc, TRANSPARENT);
+				return (LRESULT)GetStockBrush(HOLLOW_BRUSH);
+			}
+		} else
+			return super::WndProc(message, wparam, lparam);
+	}
+
+	COLORREF	_textColor;
+	HBRUSH		_hbrush_bkgnd;
+	HFONT		_hfont;
+};
+
+
+  /// Hyperlink Controls
+
+struct HyperlinkCtrl : public SubclassedWindow
+{
+	typedef SubclassedWindow super;
+
+	HyperlinkCtrl(HWND hwnd, COLORREF colorLink=RGB(0,0,255), COLORREF colorVisited=RGB(128,0,128));
+	HyperlinkCtrl(HWND owner, int id, COLORREF colorLink=RGB(0,0,255), COLORREF colorVisited=RGB(128,0,128));
+
+	~HyperlinkCtrl();
+
+	String	_cmd;
+
+protected:
+	COLORREF _textColor;
+	COLORREF _colorVisited;
+	HFONT	 _hfont;
+	HCURSOR	_crsr_link;
+
+	LRESULT WndProc(UINT message, WPARAM wparam, LPARAM lparam);
+
+	void init();
+
+	bool LaunchLink()
+	{
+		if (!_cmd.empty()) {
+			HINSTANCE hinst = ShellExecute(GetParent(_hwnd), _T("open"), _cmd, 0, 0, SW_SHOWNORMAL);
+			return (int)hinst > HINSTANCE_ERROR;
+		}
+
+		return true;
+	}
 };
 
 

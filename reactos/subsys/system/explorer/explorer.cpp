@@ -136,12 +136,86 @@ void explorer_show_frame(HWND hwndDesktop, int cmdshow, LPTSTR lpCmdLine)
 		ShowWindow(hMainFrame, cmdshow);
 		UpdateWindow(hMainFrame);
 
+		bool valid_dir = false;
+
+		if (lpCmdLine) {
+			DWORD attribs = GetFileAttributes(lpCmdLine);
+
+			if (attribs!=INVALID_FILE_ATTRIBUTES && (attribs&FILE_ATTRIBUTE_DIRECTORY))
+				valid_dir = true;
+			else if (*lpCmdLine==':' || *lpCmdLine=='"')
+				valid_dir = true;
+		}
+
 		 // Open the first child window after initializing the application
-		if (lpCmdLine)
+		if (valid_dir)
 			PostMessage(hMainFrame, PM_OPEN_WINDOW, 0, (LPARAM)lpCmdLine);
 		else
 			PostMessage(hMainFrame, PM_OPEN_WINDOW, OWM_EXPLORE|OWM_DETAILS, 0);
 	}
+}
+
+
+ /// "About Explorer" Dialog
+struct ExplorerAboutDlg : public
+			CtlColorParent<
+				OwnerDrawParent<Dialog>
+			>
+{
+	typedef CtlColorParent<
+				OwnerDrawParent<Dialog>
+			> super;
+
+	ExplorerAboutDlg(HWND hwnd)
+	 :	super(hwnd)
+	{
+		SetWindowIcon(hwnd, IDI_REACTOS);
+
+		new FlatButton(hwnd, IDOK);
+
+		_hfont = CreateFont(20, 0, 0, 0, FW_BOLD, TRUE, 0, 0, 0, 0, 0, 0, 0, TEXT("Sans Serif"));
+		new ColorStatic(hwnd, IDC_ROS_EXPLORER, RGB(32,32,128), 0, _hfont);
+
+		new HyperlinkCtrl(hwnd, IDC_WWW);
+
+		CenterWindow(hwnd);
+	}
+
+	~ExplorerAboutDlg()
+	{
+		DeleteObject(_hfont);
+	}
+
+	LRESULT WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
+	{
+		switch(nmsg) {
+		  case WM_PAINT:
+			Paint();
+			break;
+
+		  default:
+			return super::WndProc(nmsg, wparam, lparam);
+		}
+
+		return 0;
+	}
+
+	void Paint()
+	{
+		PaintCanvas canvas(_hwnd);
+
+		HICON hicon = (HICON) LoadImage(g_Globals._hInstance, MAKEINTRESOURCE(IDI_REACTOS_BIG), IMAGE_ICON, 0, 0, LR_SHARED);
+
+		DrawIconEx(canvas, 20, 10, hicon, 0, 0, 0, 0, DI_NORMAL);
+	}
+
+protected:
+	HFONT	_hfont;
+};
+
+void explorer_about(HWND hwndParent)
+{
+	Dialog::DoModal(IDD_ABOUT_EXPLORER, WINDOW_CREATOR(ExplorerAboutDlg), hwndParent);
 }
 
 

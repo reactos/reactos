@@ -30,6 +30,7 @@
 
 #include "../explorer.h"
 #include "../globals.h"
+#include "../externals.h"
 
 #include "../explorer_intres.h"
 
@@ -526,8 +527,12 @@ int MainFrame::Command(int id, int code)
 
 	///@todo There are even more menu items!
 
-	  case ID_ABOUT:
+	  case ID_ABOUT_WINDOWS:
 		ShellAbout(_hwnd, ResString(IDS_TITLE), NULL, 0);
+		break;
+
+	  case ID_ABOUT_EXPLORER:
+		explorer_about(_hwnd);
 		break;
 
 	  case ID_EXPLORER_FAQ:

@@ -727,5 +727,9 @@ SOURCE=.\globals.h
 
 SOURCE=".\i386-stub-win32.c"
 # End Source File
+# Begin Source File
+
+SOURCE=".\res\ros-big.ico"
+# End Source File
 # End Target
 # End Project

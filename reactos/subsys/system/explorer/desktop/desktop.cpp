@@ -35,6 +35,7 @@
 #include "../taskbar/desktopbar.h"
 #include "../shell/mainframe.h"	// for MainFrame::Create()
 
+#include "../globals.h"
 #include "../externals.h"
 #include "../explorer_intres.h"
 
@@ -289,10 +290,10 @@ LRESULT	DesktopShellView::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	switch(nmsg) {
 	  case WM_CONTEXTMENU:
 		if (!DoContextMenu(GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam)))
-			goto def;	///@todo desktop context menu
+			DoDesktopContextMenu(GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 		break;
 
-	  default: def:
+	  default:
 		return super::WndProc(nmsg, wparam, lparam);
 	}
 
@@ -346,4 +347,48 @@ bool DesktopShellView::DoContextMenu(int x, int y)
 	CHECKERROR(hr);
 
 	return true;
+}
+
+HRESULT DesktopShellView::DoDesktopContextMenu(int x, int y)
+{
+	IContextMenu* pcm;
+
+	HRESULT hr = DesktopFolder()->GetUIObjectOf(_hwnd, 0, NULL, IID_IContextMenu, NULL, (LPVOID*)&pcm);
+
+	if (SUCCEEDED(hr)) {
+		HMENU hmenu = CreatePopupMenu();
+
+		if (hmenu) {
+			hr = pcm->QueryContextMenu(hmenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST-1, CMF_NORMAL|CMF_EXPLORE);
+
+			if (SUCCEEDED(hr)) {
+				AppendMenu(hmenu, MF_SEPARATOR, 0, NULL);
+				AppendMenu(hmenu, 0, FCIDM_SHVIEWLAST-1, ResString(IDS_ABOUT_EXPLORER));
+
+				UINT idCmd = TrackPopupMenu(hmenu, TPM_LEFTALIGN|TPM_RETURNCMD|TPM_RIGHTBUTTON, x, y, 0, _hwnd, NULL);
+
+				if (idCmd == FCIDM_SHVIEWLAST-1) {
+					explorer_about(_hwnd);
+				} else if (idCmd) {
+				  CMINVOKECOMMANDINFO cmi;
+
+				  cmi.cbSize = sizeof(CMINVOKECOMMANDINFO);
+				  cmi.fMask = 0;
+				  cmi.hwnd = _hwnd;
+				  cmi.lpVerb = (LPCSTR)(INT_PTR)(idCmd - FCIDM_SHVIEWFIRST);
+				  cmi.lpParameters = NULL;
+				  cmi.lpDirectory = NULL;
+				  cmi.nShow = SW_SHOWNORMAL;
+				  cmi.dwHotKey = 0;
+				  cmi.hIcon = 0;
+
+				  hr = pcm->InvokeCommand(&cmi);
+				}
+			}
+		}
+
+		pcm->Release();
+	}
+
+	return hr;
 }

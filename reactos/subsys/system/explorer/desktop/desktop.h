@@ -97,4 +97,5 @@ protected:
 	int		Notify(int id, NMHDR* pnmh);
 
 	bool	DoContextMenu(int x, int y);
+	HRESULT DoDesktopContextMenu(int x, int y);
 };

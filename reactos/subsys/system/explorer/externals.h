@@ -40,6 +40,9 @@ extern int explorer_main(HINSTANCE hinstance, HWND hwndDesktop, LPTSTR lpCmdLine
  // display explorer/file manager window
 extern void explorer_show_frame(HWND hwndDesktop, int cmdshow, LPTSTR lpCmdLine=NULL);
 
+ // display explorer "About" dialog
+extern void explorer_about(HWND hwndParent);
+
  // test for already running desktop instance
 extern BOOL IsAnyDesktopRunning();
 

@@ -434,25 +434,16 @@ HRESULT ShellFolderContextMenu(IShellFolder* shell_folder, HWND hwndParent, int 
 //	HRESULT hr = CDefFolderMenu_Create2(dir?dir->_pidl:DesktopFolder(), hwndParent, 1, &pidl, shell_folder, NULL, 0, NULL, &pcm);
 
 	if (SUCCEEDED(hr)) {
-		HMENU hPopup = CreatePopupMenu();
+		HMENU hmenu = CreatePopupMenu();
 
-		if (hPopup) {
-			hr = pcm->QueryContextMenu(hPopup, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, CMF_NORMAL|CMF_EXPLORE);
+		if (hmenu) {
+			hr = pcm->QueryContextMenu(hmenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, CMF_NORMAL|CMF_EXPLORE);
 
 			if (SUCCEEDED(hr)) {
-				IContextMenu2* pcm2;
-
-				pcm->QueryInterface(IID_IContextMenu2, (LPVOID*)&pcm2);
-
-				UINT idCmd = TrackPopupMenu(hPopup, TPM_LEFTALIGN|TPM_RETURNCMD|TPM_RIGHTBUTTON, x, y, 0, hwndParent, NULL);
-
-				if (pcm2) {
-				  pcm2->Release();
-				  pcm2 = NULL;
-				}
+				UINT idCmd = TrackPopupMenu(hmenu, TPM_LEFTALIGN|TPM_RETURNCMD|TPM_RIGHTBUTTON, x, y, 0, hwndParent, NULL);
 
 				if (idCmd) {
-				  CMINVOKECOMMANDINFO  cmi;
+				  CMINVOKECOMMANDINFO cmi;
 
 				  cmi.cbSize = sizeof(CMINVOKECOMMANDINFO);
 				  cmi.fMask = 0;
@@ -462,7 +453,7 @@ HRESULT ShellFolderContextMenu(IShellFolder* shell_folder, HWND hwndParent, int 
 				  cmi.lpDirectory = NULL;
 				  cmi.nShow = SW_SHOWNORMAL;
 				  cmi.dwHotKey = 0;
-				  cmi.hIcon = NULL;
+				  cmi.hIcon = 0;
 
 				  hr = pcm->InvokeCommand(&cmi);
 				}

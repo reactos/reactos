@@ -930,6 +930,221 @@ void PictureButton::DrawItem(LPDRAWITEMSTRUCT dis)
 }
 
 
+void FlatButton::DrawItem(LPDRAWITEMSTRUCT dis)
+{
+	UINT style = DFCS_BUTTONPUSH;
+
+	if (dis->itemState & ODS_DISABLED)
+		style |= DFCS_INACTIVE;
+
+	RECT textRect = {dis->rcItem.left+2, dis->rcItem.top+2, dis->rcItem.right-4, dis->rcItem.bottom-4};
+
+	if (dis->itemState & ODS_SELECTED) {
+		style |= DFCS_PUSHED;
+		++textRect.left;	++textRect.top;
+		++textRect.right;	++textRect.bottom;
+	}
+
+	FillRect(dis->hDC, &dis->rcItem, GetSysColorBrush(COLOR_BTNFACE));
+
+	 // highlight the button?
+	if (_active)
+		DrawEdge(dis->hDC, &dis->rcItem, EDGE_ETCHED, BF_RECT);
+	else if (GetWindowStyle(_hwnd) & BS_FLAT)	// Only with BS_FLAT there will be drawn a frame to show highlighting.
+		DrawEdge(dis->hDC, &dis->rcItem, EDGE_RAISED, BF_RECT|BF_FLAT);
+
+	TCHAR txt[BUFFER_LEN];
+	int txt_len = GetWindowText(_hwnd, txt, BUFFER_LEN);
+
+	if (dis->itemState & (ODS_DISABLED|ODS_GRAYED)) {
+		COLORREF gray = GetSysColor(COLOR_GRAYTEXT);
+
+		if (gray) {
+			{
+			TextColor lcColor(dis->hDC, GetSysColor(COLOR_BTNHIGHLIGHT));
+			RECT shadowRect = {textRect.left+1, textRect.top+1, textRect.right+1, textRect.bottom+1};
+			DrawText(dis->hDC, txt, txt_len, &shadowRect, DT_SINGLELINE|DT_VCENTER|DT_CENTER);
+			}
+
+			BkMode mode(dis->hDC, TRANSPARENT);
+			TextColor lcColor(dis->hDC, gray);
+			DrawText(dis->hDC, txt, txt_len, &textRect, DT_SINGLELINE|DT_VCENTER|DT_CENTER);
+		} else {
+			int old_r = textRect.right;
+			int old_b = textRect.bottom;
+			DrawText(dis->hDC, txt, txt_len, &textRect, DT_SINGLELINE|DT_VCENTER|DT_CENTER|DT_CALCRECT);
+			int x = textRect.left + (old_r-textRect.right)/2;
+			int y = textRect.top + (old_b-textRect.bottom)/2;
+			int w = textRect.right-textRect.left;
+			int h = textRect.bottom-textRect.top;
+			s_MyDrawText_Rect.right = w;
+			s_MyDrawText_Rect.bottom = h;
+			GrayString(dis->hDC, GetSysColorBrush(COLOR_GRAYTEXT), MyDrawText, (LPARAM)txt, txt_len, x, y, w, h);
+		}
+	} else {
+		TextColor lcColor(dis->hDC, _active? _activeColor: _textColor);
+		DrawText(dis->hDC, txt, txt_len, &textRect, DT_SINGLELINE|DT_VCENTER|DT_CENTER);
+	}
+
+	if (dis->itemState & ODS_FOCUS) {
+		RECT rect = {
+			dis->rcItem.left+3, dis->rcItem.top+3,
+			dis->rcItem.right-dis->rcItem.left-4, dis->rcItem.bottom-dis->rcItem.top-4
+		};
+		if (dis->itemState & ODS_SELECTED) {
+			++rect.left;	++rect.top;
+			++rect.right;	++rect.bottom;
+		}
+		DrawFocusRect(dis->hDC, &rect);
+	}
+}
+
+LRESULT	FlatButton::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
+{
+	switch(nmsg) {
+	  case WM_MOUSEMOVE: {
+		bool active = false;
+
+		if (IsWindowEnabled(_hwnd)) {
+			DWORD pid_foreground;
+			HWND hwnd_foreground = GetForegroundWindow();	//@@ vielleicht besser über WM_ACTIVATEAPP-Abfrage
+			GetWindowThreadProcessId(hwnd_foreground, &pid_foreground);
+
+			if (GetCurrentProcessId() == pid_foreground) {
+				POINT pt = {GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam)};
+				ClientRect clntRect(_hwnd);
+
+				 // highlight the button?
+				if (pt.x>=clntRect.left && pt.x<clntRect.right && pt.y>=clntRect.top && pt.y<clntRect.bottom)
+					active = true;
+			}
+		}
+
+		if (active != _active) {
+			_active = active;
+
+			if (active) {
+				TRACKMOUSEEVENT tme = {sizeof(tme), /*TME_HOVER|*/TME_LEAVE, _hwnd/*, HOVER_DEFAULT*/};
+				_TrackMouseEvent(&tme);
+			}
+
+			InvalidateRect(_hwnd, NULL, TRUE);
+		}
+
+		return 0;}
+
+	  case WM_LBUTTONUP: {
+		POINT pt = {GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam)};
+		ClientRect clntRect(_hwnd);
+
+		 // no more in the active rectangle?
+		if (pt.x<clntRect.left || pt.x>=clntRect.right || pt.y<clntRect.top || pt.y>=clntRect.bottom)
+			goto cancel_press;
+
+		goto def;}
+
+	  case WM_CANCELMODE:
+	  cancel_press: {
+		TRACKMOUSEEVENT tme = {sizeof(tme), /*TME_HOVER|*/TME_LEAVE|TME_CANCEL, _hwnd/*, HOVER_DEFAULT*/};
+		_TrackMouseEvent(&tme);
+		_active = false;
+		ReleaseCapture();}
+		// fall through
+
+	  case WM_MOUSELEAVE:
+		if (_active) {
+			_active = false;
+
+			InvalidateRect(_hwnd, NULL, TRUE);
+		}
+
+		return 0;
+
+	  default: def:
+		return super::WndProc(nmsg, wparam, lparam);
+	}
+}
+
+
+HyperlinkCtrl::HyperlinkCtrl(HWND hwnd, COLORREF colorLink, COLORREF colorVisited)
+ :	super(hwnd),
+	_textColor(colorLink),
+	_colorVisited(colorVisited),
+	_hfont(0),
+	_crsr_link(0),
+	_cmd(ResString(GetDlgCtrlID(hwnd)))
+{
+	init();
+}
+
+HyperlinkCtrl::HyperlinkCtrl(HWND owner, int id, COLORREF colorLink, COLORREF colorVisited)
+ :	super(GetDlgItem(owner, id)),
+	_textColor(colorLink),
+	_colorVisited(colorVisited),
+	_hfont(0),
+	_crsr_link(0),
+	_cmd(ResString(id))
+{
+	init();
+}
+
+void HyperlinkCtrl::init()
+{
+	if (_cmd.empty()) {
+		TCHAR txt[BUFFER_LEN];
+		_cmd.assign(txt, GetWindowText(_hwnd, txt, BUFFER_LEN));
+	}
+}
+
+HyperlinkCtrl::~HyperlinkCtrl()
+{
+	if (_hfont)
+		DeleteObject(_hfont);
+}
+
+LRESULT HyperlinkCtrl::WndProc(UINT message, WPARAM wparam, LPARAM lparam)
+{
+	switch(message) {
+	  case PM_DISPATCH_CTLCOLOR: {
+		if (!_hfont) {
+			HFONT hfont = (HFONT) SendMessage(_hwnd, WM_GETFONT, 0, 0);
+			LOGFONT lf; GetObject(hfont, sizeof(lf), &lf);
+			lf.lfUnderline = TRUE;
+			_hfont = CreateFontIndirect(&lf);
+		}
+
+		HDC hdc = (HDC) wparam;
+		SetTextColor(hdc, _textColor);	//@@
+		SelectFont(hdc, _hfont);
+		SetBkMode(hdc, TRANSPARENT);
+		return (LRESULT)GetStockObject(HOLLOW_BRUSH);
+	  }
+
+	  case WM_SETCURSOR:
+		if (!_crsr_link)
+			_crsr_link = LoadCursor(0, IDC_HAND);
+
+		if (_crsr_link)
+			SetCursor(_crsr_link);
+		return 0;
+
+	  case WM_NCHITTEST:
+		return HTCLIENT;	// Aktivierung von Maus-Botschaften
+
+	  case WM_LBUTTONDOWN:
+		if (LaunchLink()) {
+			_textColor = _colorVisited;
+			InvalidateRect(_hwnd, NULL, FALSE);
+		} else
+			MessageBeep(0);
+		return 0;
+
+	  default:
+		return super::WndProc(message, wparam, lparam);
+	}
+}
+
+
 ToolTip::ToolTip(HWND owner)
  :	super(CreateWindowEx(WS_EX_TOPMOST|WS_EX_NOPARENTNOTIFY, TOOLTIPS_CLASS, 0,
 				 WS_POPUP|TTS_NOPREFIX|TTS_ALWAYSTIP, CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,
