@@ -171,13 +171,11 @@ HRESULT WINAPI __CLSIDFromStringA(LPCSTR idstr, CLSID *id);
  * Per-thread values are stored in the TEB on offset 0xF80,
  * see http://www.microsoft.com/msj/1099/bugslayer/bugslayer1099.htm
  */
-static inline APARTMENT* COM_CurrentInfo(void) WINE_UNUSED;
 static inline APARTMENT* COM_CurrentInfo(void)
 {
   APARTMENT* apt = NtCurrentTeb()->ReservedForOle;
   return apt;
 }
-static inline APARTMENT* COM_CurrentApt(void) WINE_UNUSED;
 static inline APARTMENT* COM_CurrentApt(void)
 {
   APARTMENT* apt = COM_CurrentInfo();

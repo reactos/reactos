@@ -325,7 +325,6 @@ static HRESULT WINAPI DefaultHandler_SetContainedObject(
  */
 static IOleObjectVtbl DefaultHandler_IOleObject_VTable =
 {
-  ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   DefaultHandler_QueryInterface,
   DefaultHandler_AddRef,
   DefaultHandler_Release,
@@ -354,7 +353,6 @@ static IOleObjectVtbl DefaultHandler_IOleObject_VTable =
 
 static IUnknownVtbl DefaultHandler_NDIUnknown_VTable =
 {
-  ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   DefaultHandler_NDIUnknown_QueryInterface,
   DefaultHandler_NDIUnknown_AddRef,
   DefaultHandler_NDIUnknown_Release,
@@ -362,7 +360,6 @@ static IUnknownVtbl DefaultHandler_NDIUnknown_VTable =
 
 static IDataObjectVtbl DefaultHandler_IDataObject_VTable =
 {
-  ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   DefaultHandler_IDataObject_QueryInterface,
   DefaultHandler_IDataObject_AddRef,
   DefaultHandler_IDataObject_Release,
@@ -379,7 +376,6 @@ static IDataObjectVtbl DefaultHandler_IDataObject_VTable =
 
 static IRunnableObjectVtbl DefaultHandler_IRunnableObject_VTable =
 {
-  ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   DefaultHandler_IRunnableObject_QueryInterface,
   DefaultHandler_IRunnableObject_AddRef,
   DefaultHandler_IRunnableObject_Release,

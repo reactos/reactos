@@ -61,8 +61,18 @@ RC_BINARIES = \
 	drag_move.cur \
 	nodrop.cur 
 
+IDL_SRCS = \
+	dcom.idl
+
 SUBDIRS = tests
 
 @MAKE_DLL_RULES@
+
+.SUFFIXES: .idl .h
+
+.idl.h:
+	$(WIDL) $(IDLFLAGS) -b -h -H $@ $<
+
+idl: $(IDL_SRCS:.idl=.h)
 
 ### Dependencies:

@@ -171,7 +171,6 @@ HRESULT WINAPI HGLOBALStreamImpl_Clone(
  */
 static IStreamVtbl HGLOBALStreamImpl_Vtbl =
 {
-    ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
     HGLOBALStreamImpl_QueryInterface,
     HGLOBALStreamImpl_AddRef,
     HGLOBALStreamImpl_Release,

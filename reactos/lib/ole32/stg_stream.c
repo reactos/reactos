@@ -48,7 +48,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(storage);
  */
 static IStreamVtbl StgStreamImpl_Vtbl =
 {
-    ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
     StgStreamImpl_QueryInterface,
     StgStreamImpl_AddRef,
     StgStreamImpl_Release,

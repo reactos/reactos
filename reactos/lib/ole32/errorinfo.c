@@ -30,10 +30,10 @@
 
 #include "windef.h"
 #include "winbase.h"
+#include "objbase.h"
 #include "oleauto.h"
 #include "winerror.h"
 
-#include "objbase.h"
 #include "wine/unicode.h"
 #include "compobj_private.h"
 
@@ -304,7 +304,6 @@ static HRESULT WINAPI IErrorInfoImpl_GetHelpContext(
 
 static IErrorInfoVtbl IErrorInfoImpl_VTable =
 {
-  ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   IErrorInfoImpl_QueryInterface,
   IErrorInfoImpl_AddRef,
   IErrorInfoImpl_Release,
@@ -406,7 +405,6 @@ static HRESULT WINAPI ICreateErrorInfoImpl_SetHelpContext(
 
 static ICreateErrorInfoVtbl ICreateErrorInfoImpl_VTable =
 {
-  ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   ICreateErrorInfoImpl_QueryInterface,
   ICreateErrorInfoImpl_AddRef,
   ICreateErrorInfoImpl_Release,
@@ -457,7 +455,6 @@ static HRESULT WINAPI ISupportErrorInfoImpl_InterfaceSupportsErrorInfo(
 
 static ISupportErrorInfoVtbl ISupportErrorInfoImpl_VTable =
 {
-  ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   ISupportErrorInfoImpl_QueryInterface,
   ISupportErrorInfoImpl_AddRef,
   ISupportErrorInfoImpl_Release,

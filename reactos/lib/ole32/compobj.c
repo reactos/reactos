@@ -1290,7 +1290,7 @@ end:
  *
  *	Reads a registry value and expands it when necessary
  */
-HRESULT compobj_RegReadPath(char * keyname, char * valuename, char * dst, int dstlen)
+HRESULT compobj_RegReadPath(char * keyname, char * valuename, char * dst, DWORD dstlen)
 {
 	HRESULT hres;
 	HKEY key;
@@ -1303,7 +1303,7 @@ HRESULT compobj_RegReadPath(char * keyname, char * valuename, char * dst, int ds
             if (keytype == REG_EXPAND_SZ) {
               if (dstlen <= ExpandEnvironmentStringsA(src, dst, dstlen)) hres = ERROR_MORE_DATA;
             } else {
-              strncpy(dst, src, dstlen);
+              lstrcpynA(dst, src, dstlen);
             }
 	  }
           RegCloseKey (key);
@@ -1589,7 +1589,7 @@ HRESULT WINAPI CoCreateInstanceEx(
   IUnknown* pUnk = NULL;
   HRESULT   hr;
   ULONG     index;
-  int       successCount = 0;
+  ULONG     successCount = 0;
 
   /*
    * Sanity check

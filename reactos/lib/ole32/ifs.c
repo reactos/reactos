@@ -344,7 +344,6 @@ static VOID WINAPI IMalloc_fnHeapMinimize(LPMALLOC iface) {
 
 static IMallocVtbl VT_IMalloc32 =
 {
-	ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
 	IMalloc_fnQueryInterface,
 	IMalloc_fnAddRefRelease,
 	IMalloc_fnAddRefRelease,
@@ -392,7 +391,7 @@ static HRESULT WINAPI IMallocSpy_fnQueryInterface(LPMALLOCSPY iface,REFIID refii
 static ULONG WINAPI IMallocSpy_fnAddRef (LPMALLOCSPY iface)
 {
 
-    ICOM_THIS (_MallocSpy, iface);
+    _MallocSpy *This = (_MallocSpy *)iface;
 
     TRACE ("(%p)->(count=%lu)\n", This, This->ref);
 
@@ -408,7 +407,7 @@ static ULONG WINAPI IMallocSpy_fnAddRef (LPMALLOCSPY iface)
 static ULONG WINAPI IMallocSpy_fnRelease (LPMALLOCSPY iface)
 {
 
-    ICOM_THIS (_MallocSpy, iface);
+    _MallocSpy *This = (_MallocSpy *)iface;
 
     TRACE ("(%p)->(count=%lu)\n", This, This->ref);
 
@@ -420,32 +419,32 @@ static ULONG WINAPI IMallocSpy_fnRelease (LPMALLOCSPY iface)
 
 static ULONG WINAPI IMallocSpy_fnPreAlloc(LPMALLOCSPY iface, ULONG cbRequest)
 {
-    ICOM_THIS (_MallocSpy, iface);
+    _MallocSpy *This = (_MallocSpy *)iface;
     TRACE ("(%p)->(%lu)\n", This, cbRequest);
     return cbRequest;
 }
 static PVOID WINAPI IMallocSpy_fnPostAlloc(LPMALLOCSPY iface, void* pActual)
 {
-    ICOM_THIS (_MallocSpy, iface);
+    _MallocSpy *This = (_MallocSpy *)iface;
     TRACE ("(%p)->(%p)\n", This, pActual);
     return pActual;
 }
 
 static PVOID WINAPI IMallocSpy_fnPreFree(LPMALLOCSPY iface, void* pRequest, BOOL fSpyed)
 {
-    ICOM_THIS (_MallocSpy, iface);
+    _MallocSpy *This = (_MallocSpy *)iface;
     TRACE ("(%p)->(%p %u)\n", This, pRequest, fSpyed);
     return pRequest;
 }
 static void  WINAPI IMallocSpy_fnPostFree(LPMALLOCSPY iface, BOOL fSpyed)
 {
-    ICOM_THIS (_MallocSpy, iface);
+    _MallocSpy *This = (_MallocSpy *)iface;
     TRACE ("(%p)->(%u)\n", This, fSpyed);
 }
 
 static ULONG WINAPI IMallocSpy_fnPreRealloc(LPMALLOCSPY iface, void* pRequest, ULONG cbRequest, void** ppNewRequest, BOOL fSpyed)
 {
-    ICOM_THIS (_MallocSpy, iface);
+    _MallocSpy *This = (_MallocSpy *)iface;
     TRACE ("(%p)->(%p %lu %u)\n", This, pRequest, cbRequest, fSpyed);
     *ppNewRequest = pRequest;
     return cbRequest;
@@ -453,48 +452,48 @@ static ULONG WINAPI IMallocSpy_fnPreRealloc(LPMALLOCSPY iface, void* pRequest, U
 
 static PVOID WINAPI IMallocSpy_fnPostRealloc(LPMALLOCSPY iface, void* pActual, BOOL fSpyed)
 {
-    ICOM_THIS (_MallocSpy, iface);
+    _MallocSpy *This = (_MallocSpy *)iface;
     TRACE ("(%p)->(%p %u)\n", This, pActual, fSpyed);
     return pActual;
 }
 
 static PVOID WINAPI IMallocSpy_fnPreGetSize(LPMALLOCSPY iface, void* pRequest, BOOL fSpyed)
 {
-    ICOM_THIS (_MallocSpy, iface);
+    _MallocSpy *This = (_MallocSpy *)iface;
     TRACE ("(%p)->(%p %u)\n", This,  pRequest, fSpyed);
     return pRequest;
 }
 
 static ULONG WINAPI IMallocSpy_fnPostGetSize(LPMALLOCSPY iface, ULONG cbActual, BOOL fSpyed)
 {
-    ICOM_THIS (_MallocSpy, iface);
+    _MallocSpy *This = (_MallocSpy *)iface;
     TRACE ("(%p)->(%lu %u)\n", This, cbActual, fSpyed);
     return cbActual;
 }
 
 static PVOID WINAPI IMallocSpy_fnPreDidAlloc(LPMALLOCSPY iface, void* pRequest, BOOL fSpyed)
 {
-    ICOM_THIS (_MallocSpy, iface);
+    _MallocSpy *This = (_MallocSpy *)iface;
     TRACE ("(%p)->(%p %u)\n", This, pRequest, fSpyed);
     return pRequest;
 }
 
 static int WINAPI IMallocSpy_fnPostDidAlloc(LPMALLOCSPY iface, void* pRequest, BOOL fSpyed, int fActual)
 {
-    ICOM_THIS (_MallocSpy, iface);
+    _MallocSpy *This = (_MallocSpy *)iface;
     TRACE ("(%p)->(%p %u %u)\n", This, pRequest, fSpyed, fActual);
     return fActual;
 }
 
 static void WINAPI IMallocSpy_fnPreHeapMinimize(LPMALLOCSPY iface)
 {
-    ICOM_THIS (_MallocSpy, iface);
+    _MallocSpy *This = (_MallocSpy *)iface;
     TRACE ("(%p)->()\n", This);
 }
 
 static void WINAPI IMallocSpy_fnPostHeapMinimize(LPMALLOCSPY iface)
 {
-    ICOM_THIS (_MallocSpy, iface);
+    _MallocSpy *This = (_MallocSpy *)iface;
     TRACE ("(%p)->()\n", This);
 }
 
@@ -504,7 +503,6 @@ static void MallocSpyDumpLeaks() {
 
 static IMallocSpyVtbl VT_IMallocSpy =
 {
-	ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
 	IMallocSpy_fnQueryInterface,
 	IMallocSpy_fnAddRef,
 	IMallocSpy_fnRelease,

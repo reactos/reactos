@@ -94,7 +94,6 @@ static HRESULT WINAPI StdGlobalInterfaceTable_GetInterfaceFromGlobal(IGlobalInte
 /* Virtual function table */
 static IGlobalInterfaceTableVtbl StdGlobalInterfaceTableImpl_Vtbl =
 {
-  ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   StdGlobalInterfaceTable_QueryInterface,
   StdGlobalInterfaceTable_AddRef,
   StdGlobalInterfaceTable_Release,
@@ -350,7 +349,6 @@ static HRESULT WINAPI GITCF_LockServer(LPCLASSFACTORY iface, BOOL fLock) {
 }
 
 static IClassFactoryVtbl GITClassFactoryVtbl = {
-    ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
     GITCF_QueryInterface,
     GITCF_AddRef,
     GITCF_Release,

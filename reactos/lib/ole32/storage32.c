@@ -160,7 +160,6 @@ static DWORD GetCreationModeFromSTGM(DWORD stgm);
  */
 static IStorageVtbl Storage32Impl_Vtbl =
 {
-    ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
     StorageBaseImpl_QueryInterface,
     StorageBaseImpl_AddRef,
     StorageBaseImpl_Release,
@@ -186,7 +185,6 @@ static IStorageVtbl Storage32Impl_Vtbl =
  */
 static IStorageVtbl Storage32InternalImpl_Vtbl =
   {
-    ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
     StorageBaseImpl_QueryInterface,
     StorageBaseImpl_AddRef,
     StorageBaseImpl_Release,
@@ -212,7 +210,6 @@ static IStorageVtbl Storage32InternalImpl_Vtbl =
  */
 static IEnumSTATSTGVtbl IEnumSTATSTGImpl_Vtbl =
 {
-    ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
     IEnumSTATSTGImpl_QueryInterface,
     IEnumSTATSTGImpl_AddRef,
     IEnumSTATSTGImpl_Release,
@@ -243,7 +240,7 @@ HRESULT WINAPI StorageBaseImpl_QueryInterface(
   REFIID             riid,
   void**             ppvObject)
 {
-  ICOM_THIS(StorageBaseImpl,iface);
+  StorageBaseImpl *This = (StorageBaseImpl *)iface;
   /*
    * Perform a sanity check on the parameters.
    */
@@ -293,7 +290,7 @@ HRESULT WINAPI StorageBaseImpl_QueryInterface(
 ULONG WINAPI StorageBaseImpl_AddRef(
             IStorage* iface)
 {
-  ICOM_THIS(StorageBaseImpl,iface);
+  StorageBaseImpl *This = (StorageBaseImpl *)iface;
   This->ref++;
 
   return This->ref;
@@ -310,7 +307,7 @@ ULONG WINAPI StorageBaseImpl_AddRef(
 ULONG WINAPI StorageBaseImpl_Release(
       IStorage* iface)
 {
-  ICOM_THIS(StorageBaseImpl,iface);
+  StorageBaseImpl *This = (StorageBaseImpl *)iface;
   /*
    * Decrease the reference count on this object.
    */
@@ -349,7 +346,7 @@ HRESULT WINAPI StorageBaseImpl_OpenStream(
   DWORD            reserved2, /* [in]  */
   IStream**        ppstm)     /* [out] */
 {
-  ICOM_THIS(StorageBaseImpl,iface);
+  StorageBaseImpl *This = (StorageBaseImpl *)iface;
   IEnumSTATSTGImpl* propertyEnumeration;
   StgStreamImpl*    newStream;
   StgProperty       currentProperty;
@@ -465,7 +462,7 @@ HRESULT WINAPI StorageBaseImpl_OpenStorage(
   DWORD            reserved,      /* [in] */
   IStorage**       ppstg)         /* [out] */
 {
-  ICOM_THIS(StorageBaseImpl,iface);
+  StorageBaseImpl *This = (StorageBaseImpl *)iface;
   StorageInternalImpl* newStorage;
   IEnumSTATSTGImpl*      propertyEnumeration;
   StgProperty            currentProperty;
@@ -590,7 +587,7 @@ HRESULT WINAPI StorageBaseImpl_EnumElements(
   DWORD           reserved3, /* [in] */
   IEnumSTATSTG**  ppenum)    /* [out] */
 {
-  ICOM_THIS(StorageBaseImpl,iface);
+  StorageBaseImpl *This = (StorageBaseImpl *)iface;
   IEnumSTATSTGImpl* newEnum;
 
   TRACE("(%p, %ld, %p, %ld, %p)\n",
@@ -637,7 +634,7 @@ HRESULT WINAPI StorageBaseImpl_Stat(
   STATSTG*         pstatstg,     /* [out] */
   DWORD            grfStatFlag)  /* [in] */
 {
-  ICOM_THIS(StorageBaseImpl,iface);
+  StorageBaseImpl *This = (StorageBaseImpl *)iface;
   StgProperty    curProperty;
   BOOL           readSuccessful;
   HRESULT        res = STG_E_UNKNOWN;
@@ -700,7 +697,7 @@ HRESULT WINAPI StorageBaseImpl_RenameElement(
             const OLECHAR*   pwcsOldName,  /* [in] */
             const OLECHAR*   pwcsNewName)  /* [in] */
 {
-  ICOM_THIS(StorageBaseImpl,iface);
+  StorageBaseImpl *This = (StorageBaseImpl *)iface;
   IEnumSTATSTGImpl* propertyEnumeration;
   StgProperty       currentProperty;
   ULONG             foundPropertyIndex;
@@ -858,7 +855,7 @@ HRESULT WINAPI StorageBaseImpl_CreateStream(
             DWORD            reserved2, /* [in] */
             IStream**        ppstm)     /* [out] */
 {
-  ICOM_THIS(StorageBaseImpl,iface);
+  StorageBaseImpl *This = (StorageBaseImpl *)iface;
   IEnumSTATSTGImpl* propertyEnumeration;
   StgStreamImpl*    newStream;
   StgProperty       currentProperty, newStreamProperty;
@@ -1008,7 +1005,7 @@ HRESULT WINAPI StorageBaseImpl_SetClass(
   IStorage*        iface,
   REFCLSID         clsid) /* [in] */
 {
-  ICOM_THIS(StorageBaseImpl,iface);
+  StorageBaseImpl *This = (StorageBaseImpl *)iface;
   HRESULT hRes = E_FAIL;
   StgProperty curProperty;
   BOOL success;

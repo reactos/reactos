@@ -103,7 +103,7 @@ CFStub_QueryInterface(LPRPCSTUBBUFFER iface, REFIID riid, LPVOID *ppv) {
 
 static ULONG WINAPI
 CFStub_AddRef(LPRPCSTUBBUFFER iface) {
-    ICOM_THIS(CFStub,iface);
+    CFStub *This = (CFStub *)iface;
 
     This->ref++;
     return This->ref;
@@ -111,7 +111,7 @@ CFStub_AddRef(LPRPCSTUBBUFFER iface) {
 
 static ULONG WINAPI
 CFStub_Release(LPRPCSTUBBUFFER iface) {
-    ICOM_THIS(CFStub,iface);
+    CFStub *This = (CFStub *)iface;
 
     This->ref--;
     if (This->ref)
@@ -122,7 +122,7 @@ CFStub_Release(LPRPCSTUBBUFFER iface) {
 
 static HRESULT WINAPI
 CFStub_Connect(LPRPCSTUBBUFFER iface, IUnknown *pUnkServer) {
-    ICOM_THIS(CFStub,iface);
+    CFStub *This = (CFStub *)iface;
 
     This->pUnkServer = pUnkServer;
     IUnknown_AddRef(pUnkServer);
@@ -131,7 +131,7 @@ CFStub_Connect(LPRPCSTUBBUFFER iface, IUnknown *pUnkServer) {
 
 static void WINAPI
 CFStub_Disconnect(LPRPCSTUBBUFFER iface) {
-    ICOM_THIS(CFStub,iface);
+    CFStub *This = (CFStub *)iface;
 
     IUnknown_Release(This->pUnkServer);
     This->pUnkServer = NULL;
@@ -140,7 +140,7 @@ static HRESULT WINAPI
 CFStub_Invoke(
     LPRPCSTUBBUFFER iface,RPCOLEMESSAGE* msg,IRpcChannelBuffer* chanbuf
 ) {
-    ICOM_THIS(CFStub,iface);
+    CFStub *This = (CFStub *)iface;
     HRESULT hres;
 
     if (msg->iMethod == 3) { /* CreateInstance */
@@ -238,7 +238,6 @@ CFStub_DebugServerRelease(LPRPCSTUBBUFFER iface,void *pv) {
 }
 
 static IRpcStubBufferVtbl cfstubvt = {
-    ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
     CFStub_QueryInterface,
     CFStub_AddRef,
     CFStub_Release,
@@ -413,7 +412,6 @@ static HRESULT WINAPI CFProxy_LockServer(LPCLASSFACTORY iface,BOOL fLock) {
 }
 
 static IRpcProxyBufferVtbl pspbvtbl = {
-    ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
     IRpcProxyBufferImpl_QueryInterface,
     IRpcProxyBufferImpl_AddRef,
     IRpcProxyBufferImpl_Release,
@@ -421,7 +419,6 @@ static IRpcProxyBufferVtbl pspbvtbl = {
     IRpcProxyBufferImpl_Disconnect
 };
 static IClassFactoryVtbl cfproxyvt = {
-    ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
     CFProxy_QueryInterface,
     CFProxy_AddRef,
     CFProxy_Release,
@@ -497,7 +494,6 @@ PSFacBuf_CreateStub(
 }
 
 static IPSFactoryBufferVtbl psfacbufvtbl = {
-    ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
     PSFacBuf_QueryInterface,
     PSFacBuf_AddRef,
     PSFacBuf_Release,

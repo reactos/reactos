@@ -92,7 +92,6 @@ HRESULT WINAPI RunningObjectTableImpl_GetObjectIndex(RunningObjectTableImpl* Thi
 /* Virtual function table for the IRunningObjectTable class. */
 static IRunningObjectTableVtbl VT_RunningObjectTableImpl =
 {
-    ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
     RunningObjectTableImpl_QueryInterface,
     RunningObjectTableImpl_AddRef,
     RunningObjectTableImpl_Release,
@@ -110,7 +109,7 @@ static IRunningObjectTableVtbl VT_RunningObjectTableImpl =
  */
 HRESULT WINAPI RunningObjectTableImpl_QueryInterface(IRunningObjectTable* iface,REFIID riid,void** ppvObject)
 {
-    ICOM_THIS(RunningObjectTableImpl,iface);
+    RunningObjectTableImpl *This = (RunningObjectTableImpl *)iface;
 
     TRACE("(%p,%p,%p)\n",This,riid,ppvObject);
 
@@ -142,7 +141,7 @@ HRESULT WINAPI RunningObjectTableImpl_QueryInterface(IRunningObjectTable* iface,
  */
 ULONG   WINAPI RunningObjectTableImpl_AddRef(IRunningObjectTable* iface)
 {
-    ICOM_THIS(RunningObjectTableImpl,iface);
+    RunningObjectTableImpl *This = (RunningObjectTableImpl *)iface;
 
     TRACE("(%p)\n",This);
 
@@ -174,7 +173,7 @@ HRESULT WINAPI RunningObjectTableImpl_Destroy()
 ULONG   WINAPI RunningObjectTableImpl_Release(IRunningObjectTable* iface)
 {
     DWORD i;
-    ICOM_THIS(RunningObjectTableImpl,iface);
+    RunningObjectTableImpl *This = (RunningObjectTableImpl *)iface;
 
     TRACE("(%p)\n",This);
 
@@ -266,7 +265,7 @@ HRESULT WINAPI RunningObjectTableImpl_Register(IRunningObjectTable* iface,
                                                DWORD *pdwRegister)       /* Pointer to the value identifying the  registration */
 {
     HRESULT res=S_OK;
-    ICOM_THIS(RunningObjectTableImpl,iface);
+    RunningObjectTableImpl *This = (RunningObjectTableImpl *)iface;
 
     TRACE("(%p,%ld,%p,%p,%p)\n",This,grfFlags,punkObject,pmkObjectName,pdwRegister);
 
@@ -329,7 +328,7 @@ HRESULT WINAPI RunningObjectTableImpl_Revoke(  IRunningObjectTable* iface,
 {
 
     DWORD index,j;
-    ICOM_THIS(RunningObjectTableImpl,iface);
+    RunningObjectTableImpl *This = (RunningObjectTableImpl *)iface;
 
     TRACE("(%p,%ld)\n",This,dwRegister);
 
@@ -362,7 +361,7 @@ HRESULT WINAPI RunningObjectTableImpl_Revoke(  IRunningObjectTable* iface,
 HRESULT WINAPI RunningObjectTableImpl_IsRunning(  IRunningObjectTable* iface,
                                                   IMoniker *pmkObjectName)  /* Pointer to the moniker of the object whose status is desired */
 {
-    ICOM_THIS(RunningObjectTableImpl,iface);
+    RunningObjectTableImpl *This = (RunningObjectTableImpl *)iface;
 
     TRACE("(%p,%p)\n",This,pmkObjectName);
 
@@ -377,7 +376,7 @@ HRESULT WINAPI RunningObjectTableImpl_GetObject(  IRunningObjectTable* iface,
                                                   IUnknown **ppunkObject) /* Address of output variable that receives the IUnknown interface pointer */
 {
     DWORD index;
-    ICOM_THIS(RunningObjectTableImpl,iface);
+    RunningObjectTableImpl *This = (RunningObjectTableImpl *)iface;
 
     TRACE("(%p,%p,%p)\n",This,pmkObjectName,ppunkObject);
 
@@ -407,7 +406,7 @@ HRESULT WINAPI RunningObjectTableImpl_NoteChangeTime(IRunningObjectTable* iface,
                                                      FILETIME *pfiletime) /* Pointer to structure containing object's last change time */
 {
     DWORD index=-1;
-    ICOM_THIS(RunningObjectTableImpl,iface);
+    RunningObjectTableImpl *This = (RunningObjectTableImpl *)iface;
 
     TRACE("(%p,%ld,%p)\n",This,dwRegister,pfiletime);
 
@@ -429,7 +428,7 @@ HRESULT WINAPI RunningObjectTableImpl_GetTimeOfLastChange(IRunningObjectTable* i
                                                           FILETIME *pfiletime)       /* Pointer to structure that receives object's last change time */
 {
     DWORD index=-1;
-    ICOM_THIS(RunningObjectTableImpl,iface);
+    RunningObjectTableImpl *This = (RunningObjectTableImpl *)iface;
 
     TRACE("(%p,%p,%p)\n",This,pmkObjectName,pfiletime);
 
@@ -518,7 +517,7 @@ HRESULT WINAPI GetRunningObjectTable(DWORD reserved, LPRUNNINGOBJECTTABLE *pprot
 HRESULT WINAPI OleRun(LPUNKNOWN pUnknown)
 {
   IRunnableObject	*runable;
-  ICOM_THIS(IRunnableObject,pUnknown);
+  IRunnableObject *This = (IRunnableObject *)pUnknown;
   LRESULT		ret;
 
   ret = IRunnableObject_QueryInterface(This,&IID_IRunnableObject,(LPVOID*)&runable);
