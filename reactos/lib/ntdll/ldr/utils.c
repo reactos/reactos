@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.90 2004/06/20 10:36:17 gvg Exp $
+/* $Id: utils.c,v 1.91 2004/06/25 18:50:48 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -717,7 +717,10 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
   NTSTATUS              Status;
   PLDR_MODULE           Module;
 
-  TRACE_LDR("LdrLoadDll, loading %wZ%s%S\n", Name, SearchPath ? " from " : "", SearchPath ? SearchPath : L"");
+  TRACE_LDR("LdrLoadDll, loading %wZ%s%S\n",
+            Name,
+            SearchPath ? " from " : "",
+            SearchPath ? SearchPath : L"");
 
   if (Name == NULL)
     {
@@ -1217,18 +1220,19 @@ LdrGetExportByName(PVOID BaseAddress,
  * NOTE
  *
  */
-static NTSTATUS LdrPerformRelocations (PIMAGE_NT_HEADERS        NTHeaders,
-                                       PVOID                    ImageBase)
+static NTSTATUS
+LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders,
+                      PVOID ImageBase)
 {
-  USHORT                        NumberOfEntries;
-  PUSHORT                       pValue16;
-  ULONG                 RelocationRVA;
-  ULONG                 Delta32;
-  ULONG                 Offset;
-  PULONG                        pValue32;
+  USHORT NumberOfEntries;
+  PUSHORT pValue16;
+  ULONG RelocationRVA;
+  LONG Delta32;
+  ULONG Offset;
+  PULONG pValue32;
   PRELOCATION_DIRECTORY RelocationDir;
-  PRELOCATION_ENTRY     RelocationBlock;
-  int                   i;
+  PRELOCATION_ENTRY RelocationBlock;
+  int i;
   PIMAGE_DATA_DIRECTORY RelocationDDir;
   ULONG OldProtect;
   PVOID ProtectBase;
@@ -1239,6 +1243,8 @@ static NTSTATUS LdrPerformRelocations (PIMAGE_NT_HEADERS        NTHeaders,
   NTSTATUS Status;
   PIMAGE_SECTION_HEADER Sections;
   ULONG MaxExtend;
+  ULONG RelocationBlockOffset;
+  ULONG RelocationSectionSize;
 
   if (NTHeaders->FileHeader.Characteristics & IMAGE_FILE_RELOCS_STRIPPED)
     {
@@ -1248,6 +1254,7 @@ static NTSTATUS LdrPerformRelocations (PIMAGE_NT_HEADERS        NTHeaders,
   Sections =
     (PIMAGE_SECTION_HEADER)((PVOID)NTHeaders + sizeof(IMAGE_NT_HEADERS));
   MaxExtend = 0;
+  RelocationSectionSize = 0;
   for (i = 0; i < NTHeaders->FileHeader.NumberOfSections; i++)
     {
       if (!(Sections[i].Characteristics & IMAGE_SECTION_NOLOAD))
@@ -1257,6 +1264,12 @@ static NTSTATUS LdrPerformRelocations (PIMAGE_NT_HEADERS        NTHeaders,
             (ULONG)(Sections[i].VirtualAddress + Sections[i].Misc.VirtualSize);
           MaxExtend = max(MaxExtend, Extend);
         }
+
+      if (!memcmp(Sections[i].Name,".reloc", 6))
+	{
+	  RelocationSectionSize = Sections[i].Misc.VirtualSize;
+	  DPRINT("Relocation section size: %lx\n", RelocationSectionSize);
+	}
     }
 
   RelocationDDir =
@@ -1268,7 +1281,8 @@ static NTSTATUS LdrPerformRelocations (PIMAGE_NT_HEADERS        NTHeaders,
       RelocationDir =
         (PRELOCATION_DIRECTORY)((PCHAR)ImageBase + RelocationRVA);
 
-      while (RelocationDir->SizeOfBlock)
+      RelocationBlockOffset = 0;
+      while (RelocationBlockOffset < RelocationSectionSize)
         {
           if (RelocationDir->VirtualAddress > MaxExtend)
             {
@@ -1319,7 +1333,6 @@ static NTSTATUS LdrPerformRelocations (PIMAGE_NT_HEADERS        NTHeaders,
                       return(Status);
                     }
               }
-
           for (i = 0; i < NumberOfEntries; i++)
             {
               Offset = (RelocationBlock[i].TypeOffset & 0xfff);
@@ -1352,7 +1365,7 @@ static NTSTATUS LdrPerformRelocations (PIMAGE_NT_HEADERS        NTHeaders,
                 case TYPE_RELOC_HIGHADJ:
                   /* FIXME: do the highadjust fixup  */
                   DPRINT("TYPE_RELOC_HIGHADJ fixup not implemented, sorry\n");
-                  return(STATUS_UNSUCCESSFUL);
+                  return STATUS_UNSUCCESSFUL;
 
                 default:
                   DPRINT("unexpected fixup type\n");
@@ -1388,8 +1401,10 @@ static NTSTATUS LdrPerformRelocations (PIMAGE_NT_HEADERS        NTHeaders,
           RelocationRVA += RelocationDir->SizeOfBlock;
           RelocationDir =
             (PRELOCATION_DIRECTORY) (ImageBase + RelocationRVA);
+          RelocationBlockOffset += RelocationDir->SizeOfBlock;
         }
     }
+
   return STATUS_SUCCESS;
 }
 
@@ -1427,10 +1442,9 @@ LdrpGetOrLoadModule(PWCHAR SerachPath,
 }
 
 static NTSTATUS
-LdrpProcessImportDirectoryEntry(
-   PLDR_MODULE Module,
-   PLDR_MODULE ImportedModule,
-   PIMAGE_IMPORT_MODULE_DIRECTORY ImportModuleDirectory)
+LdrpProcessImportDirectoryEntry(PLDR_MODULE Module,
+                                PLDR_MODULE ImportedModule,
+                                PIMAGE_IMPORT_MODULE_DIRECTORY ImportModuleDirectory)
 {
    NTSTATUS Status;
    PVOID* ImportAddressList;
@@ -2571,8 +2585,8 @@ LdrpAttachProcess(VOID)
 NTSTATUS STDCALL
 LdrShutdownProcess (VOID)
 {
-   LdrpDetachProcess(TRUE);
-   return STATUS_SUCCESS;
+  LdrpDetachProcess(TRUE);
+  return STATUS_SUCCESS;
 }
 
 /*
@@ -2582,48 +2596,47 @@ LdrShutdownProcess (VOID)
 NTSTATUS
 LdrpAttachThread (VOID)
 {
-   PLIST_ENTRY ModuleListHead;
-   PLIST_ENTRY Entry;
-   PLDR_MODULE Module;
-   NTSTATUS Status;
+  PLIST_ENTRY ModuleListHead;
+  PLIST_ENTRY Entry;
+  PLDR_MODULE Module;
+  NTSTATUS Status;
 
-   DPRINT("LdrpAttachThread() called for %wZ\n",
-          &ExeModule->BaseDllName);
+  DPRINT("LdrpAttachThread() called for %wZ\n",
+         &ExeModule->BaseDllName);
 
-   RtlEnterCriticalSection (NtCurrentPeb()->LoaderLock);
+  RtlEnterCriticalSection (NtCurrentPeb()->LoaderLock);
 
-   Status = LdrpInitializeTlsForThread();
+  Status = LdrpInitializeTlsForThread();
 
-   if (NT_SUCCESS(Status))
-     {
+  if (NT_SUCCESS(Status))
+    {
+      ModuleListHead = &NtCurrentPeb()->Ldr->InInitializationOrderModuleList;
+      Entry = ModuleListHead->Flink;
 
-       ModuleListHead = &NtCurrentPeb()->Ldr->InInitializationOrderModuleList;
-       Entry = ModuleListHead->Flink;
+      while (Entry != ModuleListHead)
+        {
+          Module = CONTAINING_RECORD(Entry, LDR_MODULE, InInitializationOrderModuleList);
+          if (Module->Flags & PROCESS_ATTACH_CALLED &&
+              !(Module->Flags & DONT_CALL_FOR_THREAD) &&
+              !(Module->Flags & UNLOAD_IN_PROGRESS))
+            {
+              TRACE_LDR("%wZ - Calling entry point at %x for thread attaching\n",
+                        &Module->BaseDllName, Module->EntryPoint);
+              LdrpCallDllEntry(Module, DLL_THREAD_ATTACH, NULL);
+            }
+          Entry = Entry->Flink;
+        }
 
-       while (Entry != ModuleListHead)
-         {
-           Module = CONTAINING_RECORD(Entry, LDR_MODULE, InInitializationOrderModuleList);
-           if (Module->Flags & PROCESS_ATTACH_CALLED &&
-               !(Module->Flags & DONT_CALL_FOR_THREAD) &&
-               !(Module->Flags & UNLOAD_IN_PROGRESS))
-             {
-               TRACE_LDR("%wZ - Calling entry point at %x for thread attaching\n",
-                         &Module->BaseDllName, Module->EntryPoint);
-               LdrpCallDllEntry(Module, DLL_THREAD_ATTACH, NULL);
-             }
-           Entry = Entry->Flink;
-         }
+      Entry = NtCurrentPeb()->Ldr->InLoadOrderModuleList.Flink;
+      Module = CONTAINING_RECORD(Entry, LDR_MODULE, InLoadOrderModuleList);
+      LdrpTlsCallback(Module, DLL_THREAD_ATTACH);
+    }
 
-       Entry = NtCurrentPeb()->Ldr->InLoadOrderModuleList.Flink;
-       Module = CONTAINING_RECORD(Entry, LDR_MODULE, InLoadOrderModuleList);
-       LdrpTlsCallback(Module, DLL_THREAD_ATTACH);
-     }
+  RtlLeaveCriticalSection (NtCurrentPeb()->LoaderLock);
 
-   RtlLeaveCriticalSection (NtCurrentPeb()->LoaderLock);
+  DPRINT("LdrpAttachThread() done\n");
 
-   DPRINT("LdrpAttachThread() done\n");
-
-   return Status;
+  return Status;
 }
 
 
