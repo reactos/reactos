@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.56 2004/10/13 22:27:03 ion Exp $
+/* $Id: kdebug.c,v 1.57 2004/12/12 20:14:01 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -69,32 +69,38 @@ PrintString(char* fmt,...)
 
 
 VOID INIT_FUNCTION
-KdInitSystem(ULONG Reserved,
+KdInitSystem(ULONG BootPhase,
 	     PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
   KD_PORT_INFORMATION PortInfo;
   ULONG Value;
   PCHAR p1, p2;
 
+  if (BootPhase > 0)
+    {
 #ifdef KDBG
-  /* Initialize runtime debugging if available */
-  DbgRDebugInit();
+      /* Initialize runtime debugging if available */
+      DbgRDebugInit();
 #endif
 
 #ifdef KDBG
-  /* Initialize the local kernel debugger. */
-  KdDebuggerEnabled = TRUE;
-  KdDebugState |= KD_DEBUG_KDB;
+      /* Initialize the local kernel debugger. */
+      KdDebuggerEnabled = TRUE;
+      KdDebugState |= KD_DEBUG_KDB;
 #endif
+    }
 
-  /* Set debug port default values */
-  PortInfo.ComPort = DEFAULT_DEBUG_PORT;
-  PortInfo.BaudRate = DEFAULT_DEBUG_BAUD_RATE;
-  KdpPortIrq = DEFAULT_DEBUG_COM2_IRQ;
+  if (BootPhase == 0)
+    {
+      /* Set debug port default values */
+      PortInfo.ComPort = DEFAULT_DEBUG_PORT;
+      PortInfo.BaudRate = DEFAULT_DEBUG_BAUD_RATE;
+      KdpPortIrq = DEFAULT_DEBUG_COM2_IRQ;
 
-  /* Set serial log port default values */
-  LogPortInfo.ComPort = DEFAULT_DEBUG_PORT;
-  LogPortInfo.BaudRate = DEFAULT_DEBUG_BAUD_RATE;
+      /* Set serial log port default values */
+      LogPortInfo.ComPort = DEFAULT_DEBUG_PORT;
+      LogPortInfo.BaudRate = DEFAULT_DEBUG_BAUD_RATE;
+    }
 
   /* Parse kernel command line */
 
@@ -109,19 +115,19 @@ KdInitSystem(ULONG Reserved,
 	  if (*p2 == '=')
 	    {
 	      p2++;
-	      if (!_strnicmp(p2, "SCREEN", 6))
+	      if (!_strnicmp(p2, "SCREEN", 6) && BootPhase > 0)
 		{
 		  p2 += 6;
 		  KdDebuggerEnabled = TRUE;
 		  KdDebugState |= KD_DEBUG_SCREEN;
 		}
-	      else if (!_strnicmp(p2, "BOCHS", 5))
+	      else if (!_strnicmp(p2, "BOCHS", 5) && BootPhase == 0)
 		{
 		  p2 += 5;
 		  KdDebuggerEnabled = TRUE;
 		  KdDebugState |= KD_DEBUG_BOCHS;
 		}
-	      else if (!_strnicmp(p2, "GDB", 3))
+	      else if (!_strnicmp(p2, "GDB", 3) && BootPhase > 0)
 		{
 		  p2 += 3;
 		  KdDebuggerEnabled = TRUE;
@@ -132,13 +138,13 @@ KdInitSystem(ULONG Reserved,
 		  PortInfo.ComPort = DEFAULT_DEBUG_PORT;
 		  PortInfo.BaudRate = DEFAULT_DEBUG_BAUD_RATE;
 		}
-	      else if (!_strnicmp(p2, "PICE", 4))
+	      else if (!_strnicmp(p2, "PICE", 4) && BootPhase > 0)
 		{
 		  p2 += 4;
 		  KdDebuggerEnabled = TRUE;
 		  KdDebugState |= KD_DEBUG_PICE;
 		}
-	      else if (!_strnicmp(p2, "COM", 3))
+	      else if (!_strnicmp(p2, "COM", 3)  && BootPhase == 0)
 		{
 		  p2 += 3;
 		  Value = (ULONG)atol(p2);
@@ -149,13 +155,13 @@ KdInitSystem(ULONG Reserved,
 		      LogPortInfo.ComPort = Value;
 		    }
 		}
-	      else if (!_strnicmp(p2, "BOOTLOG", 4))
+	      else if (!_strnicmp(p2, "BOOTLOG", 4) && BootPhase > 0)
 		{
 		  p2 += 4;
 		  KdDebuggerEnabled = TRUE;
 		  KdDebugState |= KD_DEBUG_BOOTLOG;
 		}
-	      else if (!_strnicmp(p2, "MDA", 3))
+	      else if (!_strnicmp(p2, "MDA", 3) && BootPhase > 0)
 		{
 		  p2 += 3;
 		  KdDebuggerEnabled = TRUE;
@@ -163,42 +169,42 @@ KdInitSystem(ULONG Reserved,
 		}
 	    }
 	}
-      else if (!_strnicmp(p2, "KDSERIAL", 8))
+      else if (!_strnicmp(p2, "KDSERIAL", 8) && BootPhase > 0)
         {
 	  p2 += 8;
 	  KdDebuggerEnabled = TRUE;
 	  KdDebugState |= KD_DEBUG_SERIAL | KD_DEBUG_KDSERIAL;
         }
-      else if (!_strnicmp(p2, "KDNOECHO", 8))
+      else if (!_strnicmp(p2, "KDNOECHO", 8) && BootPhase > 0)
         {
 	  p2 += 8;
 	  KdDebuggerEnabled = TRUE;
 	  KdDebugState |= KD_DEBUG_KDNOECHO;
         }
-      else if (!_strnicmp(p2, "DEBUG", 5))
+      else if (!_strnicmp(p2, "DEBUG", 5) && BootPhase == 0)
 	{
 	  p2 += 5;
 	  KdDebuggerEnabled = TRUE;
 	  KdDebugState |= KD_DEBUG_SERIAL;
 	}
-      else if (!_strnicmp(p2, "NODEBUG", 7))
+      else if (!_strnicmp(p2, "NODEBUG", 7) && BootPhase == 0)
 	{
 	  p2 += 7;
 	  KdDebuggerEnabled = FALSE;
 	  KdDebugState = KD_DEBUG_DISABLED;
 	}
-      else if (!_strnicmp(p2, "CRASHDEBUG", 10))
+      else if (!_strnicmp(p2, "CRASHDEBUG", 10) && BootPhase == 0)
 	{
 	  p2 += 10;
 	  KdDebuggerEnabled = FALSE;
 	  KdDebugState = KD_DEBUG_DISABLED;
 	}
-      else if (!_strnicmp(p2, "BREAK", 5))
+      else if (!_strnicmp(p2, "BREAK", 5) && BootPhase > 0)
 	{
 	  p2 += 5;
 	  KdpBreakPending = TRUE;
 	}
-      else if (!_strnicmp(p2, "COM", 3))
+      else if (!_strnicmp(p2, "COM", 3) && BootPhase == 0)
 	{
 	  p2 += 3;
 	  if ('=' == *p2)
@@ -211,7 +217,7 @@ KdInitSystem(ULONG Reserved,
 		}
 	    }
 	}
-      else if (!_strnicmp(p2, "BAUDRATE", 8))
+      else if (!_strnicmp(p2, "BAUDRATE", 8) && BootPhase == 0)
 	{
 	  p2 += 8;
 	  if ('=' == *p2)
@@ -224,7 +230,7 @@ KdInitSystem(ULONG Reserved,
 		}
 	    }
 	}
-      else if (!_strnicmp(p2, "IRQ", 3))
+      else if (!_strnicmp(p2, "IRQ", 3) && BootPhase == 0)
 	{
 	  p2 += 3;
 	  if ('=' == *p2)
@@ -238,7 +244,7 @@ KdInitSystem(ULONG Reserved,
 	    }
 	}
 #ifdef KDBG
-    else if (!_strnicmp(p2, "PROFILE", 7))
+    else if (!_strnicmp(p2, "PROFILE", 7)  && BootPhase > 0)
       {
         KdbInitProfiling();
       }
@@ -249,16 +255,16 @@ KdInitSystem(ULONG Reserved,
   /* Perform any initialization nescessary */
   if (KdDebuggerEnabled == TRUE)
     {
-      if (KdDebugState & KD_DEBUG_GDB)
+      if (KdDebugState & KD_DEBUG_GDB && BootPhase > 0)
 	    KdPortInitializeEx(&GdbPortInfo, 0, 0);
 
-      if (KdDebugState & KD_DEBUG_SERIAL)
+      if (KdDebugState & KD_DEBUG_SERIAL  && BootPhase == 0)
 	    KdPortInitializeEx(&LogPortInfo, 0, 0);
 
-      if (KdDebugState & KD_DEBUG_BOOTLOG)
+      if (KdDebugState & KD_DEBUG_BOOTLOG && BootPhase > 0)
 	    DebugLogInit();
 
-      if (KdDebugState & KD_DEBUG_MDA)
+      if (KdDebugState & KD_DEBUG_MDA && BootPhase > 0)
 	    KdInitializeMda();
     }
 }

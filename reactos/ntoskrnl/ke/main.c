@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.210 2004/12/04 20:58:13 gvg Exp $
+/* $Id: main.c,v 1.211 2004/12/12 20:14:01 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -457,7 +457,7 @@ ExpInitializeExecutive(VOID)
   /*
    * Initialize the kernel debugger
    */
-  KdInitSystem (0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+  KdInitSystem (1, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
 
   KeInit2();
   
@@ -1044,6 +1044,7 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
       KeLoaderBlock.MmapAddr = (ULONG)KeMemoryMap;
     }
 
+  KdInitSystem (0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
   HalInitSystem (0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
 
   KiSystemStartup(1);
