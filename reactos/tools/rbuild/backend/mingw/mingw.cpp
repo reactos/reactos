@@ -206,7 +206,8 @@ MingwBackend::Process ()
 {
 	size_t i;
 
-	DetectPCHSupport();
+	DetectPipeSupport ();
+	DetectPCHSupport ();
 
 	CreateMakefile ();
 	GenerateHeader ();
@@ -515,30 +516,65 @@ FixupTargetFilename ( const string& targetFilename )
 }
 
 void
-MingwBackend::DetectPCHSupport()
+MingwBackend::DetectPipeSupport ()
 {
-#ifdef WIN32
-	string sNUL = "NUL";
-#else
-	string sNUL = "/dev/null";
-#endif
+	printf ( "Detecting compiler -pipe support..." );
+
+	string pipe_detection = "tools" SSEP "rbuild" SSEP "backend" SSEP "mingw" SSEP "pipe_detection.c";
+	string pipe_detectionObjectFilename = ReplaceExtension ( pipe_detection,
+	                                                         ".o" );
+	string command = ssprintf (
+		"gcc -pipe -c %s -o %s 2>%s",
+		pipe_detection.c_str (),
+		pipe_detectionObjectFilename.c_str (),
+		NUL );
+	int exitcode = system ( command.c_str () );
+	FILE* f = fopen ( pipe_detectionObjectFilename.c_str (), "rb" );
+	if ( f )
+	{
+		usePipe = (exitcode == 0);
+		fclose ( f );
+		unlink ( pipe_detectionObjectFilename.c_str () );
+	}
+	else
+		usePipe = false;
+
+	if ( usePipe )
+		printf ( "detected\n" );
+	else
+		printf ( "not detected\n" );
+
+	// TODO FIXME - eventually check for ROS_USE_PCH env var and
+	// allow that to override use_pch if true
+}
+
+void
+MingwBackend::DetectPCHSupport ()
+{
+	printf ( "Detecting compiler pre-compiled header support..." );
+
 	string path = "tools" SSEP "rbuild" SSEP "backend" SSEP "mingw" SSEP "pch_detection.h";
-	string cmd = ssprintf(
+	string cmd = ssprintf (
 		"gcc -c %s 2>%s",
 		path.c_str (),
-		sNUL.c_str () );
-	system ( cmd.c_str() );
+		NUL );
+	system ( cmd.c_str () );
 	path += ".gch";
 
-	FILE* f = fopen ( path.c_str(), "rb" );
+	FILE* f = fopen ( path.c_str (), "rb" );
 	if ( f )
 	{
 		use_pch = true;
-		fclose(f);
-		unlink ( path.c_str() );
+		fclose ( f );
+		unlink ( path.c_str () );
 	}
 	else
 		use_pch = false;
+
+	if ( use_pch )
+		printf ( "detected\n" );
+	else
+		printf ( "not detected\n" );
 
 	// TODO FIXME - eventually check for ROS_USE_PCH env var and
 	// allow that to override use_pch if true

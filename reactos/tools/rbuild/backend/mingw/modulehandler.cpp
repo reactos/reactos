@@ -1278,10 +1278,15 @@ MingwModuleHandler::GenerateOtherMacros ()
 		}
 	}
 
+	string globalCflags = "-g";
+	if ( backend->usePipe )
+		globalCflags += " -pipe";
+	
 	fprintf (
 		fMakefile,
-		"%s += $(PROJECT_CFLAGS) -g\n",
-		cflagsMacro.c_str () );
+		"%s += $(PROJECT_CFLAGS) %s\n",
+		cflagsMacro.c_str (),
+		globalCflags.c_str () );
 
 	fprintf (
 		fMakefile,

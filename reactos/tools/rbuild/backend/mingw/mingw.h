@@ -3,6 +3,12 @@
 
 #include "../backend.h"
 
+#ifdef WIN32
+	#define NUL "NUL"
+#else
+	#define NUL "/dev/null"
+#endif
+
 class Directory;
 class MingwModuleHandler;
 
@@ -13,6 +19,7 @@ public:
 	virtual ~MingwBackend ();
 	virtual void Process ();
 	std::string AddDirectoryTarget ( const std::string& directory, bool out );
+	bool usePipe;
 private:
 	void CreateMakefile ();
 	void CloseMakefile () const;
@@ -31,7 +38,8 @@ private:
 	void GenerateXmlBuildFilesMacro() const;
 	void CheckAutomaticDependencies ();
 	bool IncludeDirectoryTarget ( const std::string& directory ) const;
-	void DetectPCHSupport();
+	void DetectPipeSupport ();
+	void DetectPCHSupport ();
 	FILE* fMakefile;
 	bool use_pch;
 	Directory *int_directories, *out_directories;
