@@ -97,7 +97,6 @@ static void set_dll_file_name( const char *name, DLLSPEC *spec )
     {
         if (!strcmp( p, ".spec" ) || !strcmp( p, ".def" )) *p = 0;
     }
-    if (!strchr( spec->file_name, '.' )) strcat( spec->file_name, ".dll" );
 }
 
 /* set the dll subsystem */
@@ -143,6 +142,7 @@ static const char usage_str[] =
 "    -C --source-dir=DIR     Look for source files in DIR\n"
 "    -d --delay-lib=LIB      Import the specified library in delayed mode\n"
 "    -D SYM                  Ignored for C flags compatibility\n"
+"    -E --export=FILE        Export the symbols defined in the .spec or .def file\n"
 "    -e --entry=FUNC         Set the DLL entry point function (default: DllMain)\n"
 "    -f FLAGS                Compiler flags (only -fPIC is supported)\n"
 "    -F --filename=DLLFILE   Set the DLL filename (default: from input file name)\n"
@@ -164,9 +164,9 @@ static const char usage_str[] =
 "       --version            Print the version and exit\n"
 "    -w --warnings           Turn on warnings\n"
 "\nMode options:\n"
-"       --dll=FILE           Build a .c file from a .spec or .def file\n"
-"       --def=FILE.SPEC      Build a .def file from a spec file\n"
-"       --exe=NAME           Build a .c file for the named executable\n"
+"       --dll                Build a .c file from a .spec or .def file\n"
+"       --def                Build a .def file from a .spec file\n"
+"       --exe                Build a .c file for an executable\n"
 "       --debug [FILES]      Build a .c file with the debug channels declarations\n"
 "       --relay16            Build the 16-bit relay assembly routines\n"
 "       --relay32            Build the 32-bit relay assembly routines\n"
@@ -188,13 +188,13 @@ enum long_options_values
     LONG_OPT_PEDLL
 };
 
-static const char short_options[] = "C:D:F:H:I:K:L:M:N:d:e:f:hi:kl:m:o:r:w";
+static const char short_options[] = "C:D:E:F:H:I:K:L:M:N:d:e:f:hi:kl:m:o:r:w";
 
 static const struct option long_options[] =
 {
-    { "dll",      1, 0, LONG_OPT_DLL },
-    { "def",      1, 0, LONG_OPT_DEF },
-    { "exe",      1, 0, LONG_OPT_EXE },
+    { "dll",      0, 0, LONG_OPT_DLL },
+    { "def",      0, 0, LONG_OPT_DEF },
+    { "exe",      0, 0, LONG_OPT_EXE },
     { "debug",    0, 0, LONG_OPT_DEBUG },
     { "ld-cmd",   1, 0, LONG_OPT_LDCMD },
     { "nm-cmd",   1, 0, LONG_OPT_NMCMD },
@@ -206,6 +206,7 @@ static const struct option long_options[] =
     /* aliases for short options */
     { "source-dir",    1, 0, 'C' },
     { "delay-lib",     1, 0, 'd' },
+    { "export",        1, 0, 'E' },
     { "entry",         1, 0, 'e' },
     { "filename",      1, 0, 'F' },
     { "help",          0, 0, 'h' },
@@ -249,6 +250,10 @@ static char **parse_options( int argc, char **argv, DLLSPEC *spec )
             break;
         case 'D':
             /* ignored */
+            break;
+        case 'E':
+            spec_file_name = xstrdup( optarg );
+            set_dll_file_name( optarg, spec );
             break;
         case 'F':
             spec->file_name = xstrdup( optarg );
@@ -326,21 +331,12 @@ static char **parse_options( int argc, char **argv, DLLSPEC *spec )
             break;
         case LONG_OPT_DLL:
             set_exec_mode( MODE_DLL );
-            spec_file_name = xstrdup( optarg );
-            set_dll_file_name( optarg, spec );
             break;
         case LONG_OPT_DEF:
             set_exec_mode( MODE_DEF );
-            spec_file_name = xstrdup( optarg );
-            set_dll_file_name( optarg, spec );
             break;
         case LONG_OPT_EXE:
             set_exec_mode( MODE_EXE );
-            if ((p = strrchr( optarg, '/' ))) p++;
-            else p = optarg;
-            spec->file_name = xmalloc( strlen(p) + 5 );
-            strcpy( spec->file_name, p );
-            if (!strchr( spec->file_name, '.' )) strcat( spec->file_name, ".exe" );
             if (!spec->subsystem) spec->subsystem = IMAGE_SUBSYSTEM_WINDOWS_GUI;
             break;
         case LONG_OPT_DEBUG:
@@ -374,6 +370,10 @@ static char **parse_options( int argc, char **argv, DLLSPEC *spec )
             break;
         }
     }
+
+    if (spec->file_name && !strchr( spec->file_name, '.' ))
+        strcat( spec->file_name, exec_mode == MODE_EXE ? ".exe" : ".dll" );
+
     return &argv[optind];
 }
 
@@ -412,12 +412,14 @@ static int parse_input_file( DLLSPEC *spec )
 {
     FILE *input_file = open_input_file( NULL, spec_file_name );
     char *extension = strrchr( spec_file_name, '.' );
+    int result;
 
     if (extension && !strcmp( extension, ".def" ))
-        return parse_def_file( input_file, spec );
+        result = parse_def_file( input_file, spec );
     else
-        return parse_spec_file( input_file, spec );
+        result = parse_spec_file( input_file, spec );
     close_input_file( input_file );
+    return result;
 }
 
 
@@ -442,6 +444,7 @@ int main(int argc, char **argv)
     case MODE_DLL:
         spec->characteristics |= IMAGE_FILE_DLL;
         load_resources( argv, spec );
+        if (!spec_file_name) fatal_error( "missing .spec file\n" );
         if (!parse_input_file( spec )) break;
         switch (spec->type)
         {
@@ -457,13 +460,16 @@ int main(int argc, char **argv)
         break;
     case MODE_EXE:
         if (spec->type == SPEC_WIN16) fatal_error( "Cannot build 16-bit exe files\n" );
+	if (!spec->file_name) fatal_error( "executable must be named via the -F option\n" );
         load_resources( argv, spec );
+        if (spec_file_name && !parse_input_file( spec )) break;
         read_undef_symbols( argv );
         BuildSpec32File( output_file, spec );
         break;
     case MODE_DEF:
         if (argv[0]) fatal_error( "file argument '%s' not allowed in this mode\n", argv[0] );
         if (spec->type == SPEC_WIN16) fatal_error( "Cannot yet build .def file for 16-bit dlls\n" );
+        if (!spec_file_name) fatal_error( "missing .spec file\n" );
         if (!parse_input_file( spec )) break;
         BuildDef32File( output_file, spec );
         break;

@@ -1134,7 +1134,7 @@ else
 endif
 %.spec.def: %.spec
 	$(HALFVERBOSEECHO) [DEF]     $<
-	$(WINEBUILD) $(DEFS) -o $@ --def $<
+	$(WINEBUILD) $(DEFS) -o $@ --def -E $<
 %.drv.spec.def: %.spec
 	$(HALFVERBOSEECHO) [DEF]     $<
 	$(WINEBUILD) $(DEFS) -o $@ --def $<
