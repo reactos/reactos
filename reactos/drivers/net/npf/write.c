@@ -41,7 +41,7 @@
 
 //-------------------------------------------------------------------
 
-NTSTATUS
+NTSTATUS STDCALL
 NPF_Write(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp

@@ -248,7 +248,7 @@ NPF_StartDump(POPEN_INSTANCE Open)
         THREAD_ALL_ACCESS,
         NULL,
         KernelMode,
-        &Open->DumpThreadObject,
+        (PVOID*)&Open->DumpThreadObject,
         0);
     if ( !NT_SUCCESS( ntStatus ) )
     {

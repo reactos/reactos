@@ -67,7 +67,8 @@ NDIS_SPIN_LOCK Opened_Instances_Lock;
 
 //-------------------------------------------------------------------
 
-NTSTATUS NPF_Open(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+NTSTATUS STDCALL
+NPF_Open(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
 
     PDEVICE_EXTENSION DeviceExtension;
@@ -380,7 +381,7 @@ VOID NPF_OpenAdapterComplete(
 
 //-------------------------------------------------------------------
 
-NTSTATUS
+NTSTATUS STDCALL
 NPF_Close(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
 {
 

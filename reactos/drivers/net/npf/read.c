@@ -96,7 +96,7 @@ UINT n,i,NBlocks;
 
 //-------------------------------------------------------------------
 
-NTSTATUS
+NTSTATUS STDCALL
 NPF_Read(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
 {
     POPEN_INSTANCE      Open;

@@ -120,14 +120,14 @@
 
   This IOCTL is used to perform an OID set operation on the NIC driver. 
 */
-#define  BIOCSETOID 2147483648
+#define  BIOCSETOID 2147483648UL
 
 /*!
   \brief IOCTL code: get an OID value
 
   This IOCTL is used to perform an OID get operation on the NIC driver. 
 */
-#define  BIOCQUERYOID 2147483652
+#define  BIOCQUERYOID 2147483652UL
 
 /*!
   \brief IOCTL code: set the name of a the file used by kernel dump mode
@@ -455,7 +455,7 @@ BOOLEAN createDevice(
   and buffers needed by the new instance, fills the OPEN_INSTANCE structure associated with it and opens the 
   adapter with a call to NdisOpenAdapter.
 */
-NTSTATUS
+NTSTATUS STDCALL
 NPF_Open(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -487,7 +487,7 @@ NPF_OpenAdapterComplete(
   It stops the capture/monitoring/dump process, deallocates the memory and the objects associated with the 
   instance and closing the files. The network adapter is then closed with a call to NdisCloseAdapter. 
 */
-NTSTATUS
+NTSTATUS STDCALL
 NPF_Close(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -590,7 +590,7 @@ NPF_ReceiveComplete(IN NDIS_HANDLE  ProtocolBindingContext);
   - #BIOCSENDPACKETSSYNC
   - #BIOCSENDPACKETSNOSYNC
 */
-NTSTATUS
+NTSTATUS STDCALL
 NPF_IoControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -625,7 +625,7 @@ NPF_RequestComplete(
   associated with Irp indicates the number of copies of the packet that will be sent: more than one copy of the
   packet can be sent for performance reasons.
 */
-NTSTATUS
+NTSTATUS STDCALL
 NPF_Write(
             IN PDEVICE_OBJECT DeviceObject,
             IN PIRP Irp
@@ -712,7 +712,7 @@ NPF_StatusComplete(IN NDIS_HANDLE  ProtocolBindingContext);
   delete the devices and deregisters the protocol. The driver can be unloaded by the user stopping the NPF
   service (from control panel or with a console 'net stop npf').
 */
-VOID
+VOID STDCALL
 NPF_Unload(IN PDRIVER_OBJECT DriverObject);
 
 
@@ -734,7 +734,7 @@ NPF_Unload(IN PDRIVER_OBJECT DriverObject);
   - If the instance is in statistical mode or in dump mode, the application's request is blocked until the 
   timeout kept in OPEN_INSTANCE::TimeOut expires.
 */
-NTSTATUS
+NTSTATUS STDCALL
 NPF_Read(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -758,7 +758,7 @@ NPF_ReadRegistry(
 
   Normally not used in recent versions of NPF.
 */
-NTSTATUS
+NTSTATUS STDCALL
 NPF_QueryRegistryRoutine(
     IN PWSTR     ValueName,
     IN ULONG     ValueType,

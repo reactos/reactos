@@ -593,7 +593,7 @@ BOOLEAN createDevice(IN OUT PDRIVER_OBJECT adriverObjectP,
 
 //-------------------------------------------------------------------
 
-VOID
+VOID STDCALL
 NPF_Unload(IN PDRIVER_OBJECT DriverObject)
 {
     PDEVICE_OBJECT     DeviceObject;
@@ -648,7 +648,7 @@ NPF_Unload(IN PDRIVER_OBJECT DriverObject)
 
 //-------------------------------------------------------------------
 
-NTSTATUS
+NTSTATUS STDCALL
 NPF_IoControl(IN PDEVICE_OBJECT DeviceObject,IN PIRP Irp)
 {
     POPEN_INSTANCE      Open;
@@ -1344,7 +1344,7 @@ NPF_ReadRegistry(
 
 //-------------------------------------------------------------------
 
-NTSTATUS
+NTSTATUS STDCALL
 NPF_QueryRegistryRoutine(
     IN PWSTR     ValueName,
     IN ULONG     ValueType,
