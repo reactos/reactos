@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.44 2004/08/15 16:39:01 chorns Exp $
+/* $Id: sysinfo.c,v 1.45 2004/08/18 20:41:03 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -340,7 +340,7 @@ QSI_DEF(SystemBasicInformation)
 	Sbi->HighestPhysicalPage = MmStats.NrTotalPages; /* FIXME */
 	Sbi->AllocationGranularity = 65536; /* hard coded on Intel? */
 	Sbi->LowestUserAddress = 0x10000; /* Top of 64k */
-	Sbi->HighestUserAddress = 0x7ffeffff; /* From mm/mminit.c */
+	Sbi->HighestUserAddress = (ULONG_PTR)MmHighestUserAddress;
 	Sbi->ActiveProcessors = 0x00000001; /* FIXME */
 	Sbi->NumberProcessors = KeNumberProcessors;
 	return (STATUS_SUCCESS);
