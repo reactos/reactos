@@ -25,21 +25,25 @@ static KIRQL CurrentIrql = HIGH_LEVEL;
 
 /* FUNCTIONS ****************************************************************/
 
-static unsigned int pic_get_current_mask(void)
+static unsigned int HiGetCurrentPICMask(void)
 {
    unsigned int mask;
    
    mask = inb_p(0x21);
    mask = mask | (inb_p(0xa1)<<8);
+
+   return mask;
 }
 
-static unsigned int pic_set_current_mask(unsigned int mask)
+static unsigned int HiSetCurrentPICMask(unsigned int mask)
 {
    outb_p(0x21,mask & 0xff);
    outb_p(0xa1,(mask >> 8) & 0xff);
+
+   return mask;
 }
 
-static void switch_irql(void)
+static void HiSwitchIrql(void)
 /*
  * FUNCTION: Switches to the current irql
  * NOTE: Must be called with interrupt disabled
@@ -49,7 +53,7 @@ static void switch_irql(void)
    
    if (CurrentIrql == HIGH_LEVEL)
      {
-	pic_set_current_mask(0xffff);
+	HiSetCurrentPICMask(0xffff);
 	return;
      }
    if (CurrentIrql > DISPATCH_LEVEL)
@@ -61,14 +65,14 @@ static void switch_irql(void)
 	     set_bit(NR_DEVICE_SPECIFIC_LEVELS - i,&current_mask);
 	  }
 	
-	pic_set_current_mask(current_mask);
+	HiSetCurrentPICMask(current_mask);
 	__asm__("sti\n\t");
 	return;
      }
    
    if (CurrentIrql <= DISPATCH_LEVEL)
      {
-	pic_set_current_mask(0);
+	HiSetCurrentPICMask(0);
 	__asm__("sti\n\t");
 	return;
      }
@@ -104,7 +108,7 @@ VOID KeLowerIrql(KIRQL NewIrql)
    DPRINT("NewIrql %x CurrentIrql %x\n",NewIrql,CurrentIrql);
    assert(NewIrql <= CurrentIrql);
    CurrentIrql = NewIrql;
-   switch_irql();
+   HiSwitchIrql();
 }
 
 VOID KeRaiseIrql(KIRQL NewIrql, PKIRQL OldIrql)
@@ -133,7 +137,7 @@ VOID KeRaiseIrql(KIRQL NewIrql, PKIRQL OldIrql)
 //   *OldIrql = InterlockedExchange(&CurrentIrql,NewIrql);
    DPRINT("NewIrql %x OldIrql %x CurrentIrql %x\n",NewIrql,*OldIrql,
           CurrentIrql);
-   switch_irql();
+   HiSwitchIrql();
 }
 
 
