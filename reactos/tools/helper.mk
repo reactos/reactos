@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.17 2002/06/18 21:51:11 dwelch Exp $
+# $Id: helper.mk,v 1.18 2002/06/30 02:40:24 ei Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -400,7 +400,7 @@ MK_IMPLIB_FULLNAME := $(MK_BASENAME)$(MK_IMPLIB_EXT)
 MK_NOSTRIPNAME := $(MK_BASENAME).nostrip$(MK_EXT)
 
 # We don't want to link header files
-MK_OBJECTS := $(filter-out %.h,$(TARGET_OBJECTS)) 
+MK_OBJECTS := $(filter-out %.h,$(TARGET_OBJECTS))
 MK_STRIPPED_OBJECT := $(MK_BASENAME).stripped.o
 
 ifeq ($(MK_IMPLIBONLY),yes)
@@ -420,7 +420,7 @@ else # MK_IMPLIBONLY
 
 
 all: $(MK_FULLNAME) $(MK_NOSTRIPNAME)
-	
+
 
 ifeq ($(MK_IMPLIB),yes)
   MK_EXTRACMD := --def $(MK_EDFNAME)
@@ -464,7 +464,7 @@ $(MK_FULLNAME): $(MK_NOSTRIPNAME)
 
 endif # KM_MODE
 
-# Kernel mode targets 
+# Kernel mode targets
 ifeq ($(MK_MODE),kernel)
 
 ifeq ($(MK_IMPLIB),yes)
@@ -552,7 +552,7 @@ implib:
 endif
 
 # Be carefull not to clean non-object files
-MK_CLEANFILES := $(filter %.o,$(MK_OBJECTS)) 
+MK_CLEANFILES := $(filter %.o,$(MK_OBJECTS))
 
 clean:
 	- $(RM) *.o $(MK_BASENAME).sym $(MK_BASENAME).a $(TARGET_PATH)/$(MK_RES_BASE).coff \
@@ -605,9 +605,9 @@ endif # MK_IMPLIBONLY
 %.o: %.S
 	$(AS) $(TARGET_ASFLAGS) -c $< -o $@
 %.o: %.s
-	$(AS) $(TARGET_ASFLAGS) -c $< -o $@	
+	$(AS) $(TARGET_ASFLAGS) -c $< -o $@
 %.o: %.asm
-	$(NASM_CMD) $(TARGET_NFLAGS) $< -o $@
+	$(NASM_CMD) $(NFLAGS) $(TARGET_NFLAGS) $< -o $@
 %.coff: %.rc
 	$(RC) $(TARGET_RCFLAGS) $(RCINC) $< -o $@
 
