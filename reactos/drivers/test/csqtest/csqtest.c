@@ -182,16 +182,16 @@ NTSTATUS NTAPI DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING Registry
 	UNICODE_STRING NtName;
 	UNICODE_STRING DosName;
 
-	DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)DispatchCreateCloseCleanup;
-	DriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH)DispatchCreateCloseCleanup;
-	DriverObject->MajorFunction[IRP_MJ_CLEANUP] = (PDRIVER_DISPATCH)DispatchCreateCloseCleanup;
-	DriverObject->MajorFunction[IRP_MJ_READ] = (PDRIVER_DISPATCH)DispatchReadWrite;
-	DriverObject->MajorFunction[IRP_MJ_WRITE] = (PDRIVER_DISPATCH)DispatchReadWrite;
-	DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = (PDRIVER_DISPATCH)DispatchIoctl;
-	DriverObject->DriverUnload = (PDRIVER_UNLOAD)Unload;
+	DriverObject->MajorFunction[IRP_MJ_CREATE] = DispatchCreateCloseCleanup;
+	DriverObject->MajorFunction[IRP_MJ_CLOSE] = DispatchCreateCloseCleanup;
+	DriverObject->MajorFunction[IRP_MJ_CLEANUP] = DispatchCreateCloseCleanup;
+	DriverObject->MajorFunction[IRP_MJ_READ] = DispatchReadWrite;
+	DriverObject->MajorFunction[IRP_MJ_WRITE] = DispatchReadWrite;
+	DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = DispatchIoctl;
+	DriverObject->DriverUnload = Unload;
 
-	Status = IoCsqInitialize(&Csq, (PIO_CSQ_INSERT_IRP)CsqInsertIrp, CsqRemoveIrp, CsqPeekNextIrp, 
-													 CsqAcquireLock, (PIO_CSQ_RELEASE_LOCK)CsqReleaseLock, CsqCompleteCancelledIrp);
+	Status = IoCsqInitialize(&Csq, CsqInsertIrp, CsqRemoveIrp, CsqPeekNextIrp, 
+													 CsqAcquireLock, CsqReleaseLock, CsqCompleteCancelledIrp);
 
 	if(Status != STATUS_SUCCESS)
 		KdPrint(("csqtest: IoCsqInitalize failed: 0x%x\n", Status));
