@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.40 2002/05/14 21:19:16 dwelch Exp $
+/* $Id: view.c,v 1.41 2002/05/19 14:09:35 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -85,6 +85,14 @@ CcRosInternalFreeCacheSegment(PBCB Bcb, PCACHE_SEGMENT CacheSeg);
 
 NTSTATUS
 CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
+/*
+ * FUNCTION: Try to free some memory from the file cache.
+ * ARGUMENTS:
+ *       Target - The number of pages to be freed.
+ *       Priority - The priority of free (currently unused).
+ *       NrFreed - Points to a variable where the number of pages 
+ *                 actually freed is returned.
+ */
 {
   PLIST_ENTRY current_entry;
   PCACHE_SEGMENT current;

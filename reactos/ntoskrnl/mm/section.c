@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.83 2002/05/17 23:01:56 dwelch Exp $
+/* $Id: section.c,v 1.84 2002/05/19 14:09:35 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -2617,7 +2617,6 @@ MmUnmapViewOfSection(PEPROCESS Process,
    
    DPRINT("Opening memory area Process %x BaseAddress %x\n",
 	   Process, BaseAddress);
-   MmLockAddressSpace(AddressSpace);
    MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
 					  BaseAddress);
    if (MemoryArea == NULL)
@@ -2652,7 +2651,6 @@ MmUnmapViewOfSection(PEPROCESS Process,
    MmUnlockSection(Section);
    MmUnlockSectionSegment(Segment);
    ObDereferenceObject(Section);
-   MmUnlockAddressSpace(AddressSpace);
    return(STATUS_SUCCESS);
 }
 
@@ -2696,7 +2694,9 @@ NtUnmapViewOfSection (HANDLE	ProcessHandle,
 	return(Status);
      }
 
+   MmLockAddressSpace(&Process->AddressSpace);
    Status = MmUnmapViewOfSection(Process, BaseAddress);
+   MmUnlockAddressSpace(&Process->AddressSpace);
 
    ObDereferenceObject(Process);
 
