@@ -18,8 +18,8 @@ typedef long RPC_STATUS;
 
 typedef void* I_RPC_HANDLE;
 
-#ifndef GUID_DEFINED
-#define GUID_DEFINED
+#ifndef _GUID_DEFINED
+#define _GUID_DEFINED
 typedef struct _GUID
 {
     DWORD Data1;

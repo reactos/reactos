@@ -257,10 +257,13 @@ typedef struct {
   DWORD        bV4GammaBlue;
 } BITMAPV4HEADER,   *LPBITMAPV4HEADER, *PBITMAPV4HEADER;
 
+#ifndef _BLOB_DEFINED
+#define _BLOB_DEFINED
 typedef struct _BLOB {
   ULONG   cbSize;
   BYTE    *pBlobData;
 } BLOB;
+#endif
 
 typedef struct _SHITEMID {
   USHORT cb;
@@ -2794,8 +2797,8 @@ typedef struct _SERVICE_ADDRESSES {
   SERVICE_ADDRESS   Addresses[1];
 } SERVICE_ADDRESSES, *LPSERVICE_ADDRESSES;
 
-#ifndef GUID_DEFINED
-#define GUID_DEFINED
+#ifndef _GUID_DEFINED
+#define _GUID_DEFINED
 typedef struct _GUID
 {
     unsigned long  Data1;

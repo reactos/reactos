@@ -5,8 +5,8 @@ struct _DEVICE_OBJECT;
 struct _FILE_OBJECT;
 
 // windows.h may be included before
-#ifndef GUID_DEFINED
-#define GUID_DEFINED
+#ifndef _GUID_DEFINED
+#define _GUID_DEFINED
 
 typedef struct _GUID {
   ULONG Data1;

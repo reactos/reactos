@@ -197,8 +197,8 @@ typedef CONST CHAR *PCSTR;
 
 #if defined(NDIS_MINIPORT_DRIVER) || !defined(_MSC_VER)
 
-#ifndef GUID_DEFINED
-#define GUID_DEFINED
+#ifndef _GUID_DEFINED
+#define _GUID_DEFINED
 
 typedef struct _GUID {
     ULONG   Data1;
@@ -207,7 +207,7 @@ typedef struct _GUID {
     UCHAR   Data4[8];
 } GUID;
 
-#endif /* GUID_DEFINED */
+#endif /* _GUID_DEFINED */
 
 #endif /* NDIS_MINIPORT_DRIVER || _MSC_VER */
 

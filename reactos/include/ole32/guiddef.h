@@ -43,8 +43,8 @@ Cambridge, MA 02139, USA.
 
 
 //	guid definition
-#ifndef GUID_DEFINED
-	#define GUID_DEFINED
+#ifndef _GUID_DEFINED
+	#define _GUID_DEFINED
 	typedef struct _GUID {
 		unsigned long  Data1;
 		unsigned short Data2;
