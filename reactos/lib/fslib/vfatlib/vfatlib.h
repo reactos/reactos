@@ -87,29 +87,45 @@ typedef struct _FAT32_FSINFO
 } __attribute__((packed)) FAT32_FSINFO, *PFAT32_FSINFO;
 
 
-NTSTATUS
-Fat12Format (HANDLE  FileHandle,
-	     PPARTITION_INFORMATION  PartitionInfo,
-	     PDISK_GEOMETRY DiskGeometry,
-	     PUNICODE_STRING Label,
-	     BOOL  QuickFormat,
-	     DWORD  ClusterSize,
-	     PFMIFSCALLBACK  Callback);
+typedef struct _FORMAT_CONTEXT
+{
+  PFMIFSCALLBACK Callback;
+  ULONG TotalSectorCount;
+  ULONG CurrentSectorCount;
+  BOOLEAN Success;
+  ULONG Percent;
+} FORMAT_CONTEXT, *PFORMAT_CONTEXT;
+
 
 NTSTATUS
-Fat16Format (HANDLE  FileHandle,
-	     PPARTITION_INFORMATION  PartitionInfo,
+Fat12Format (HANDLE FileHandle,
+	     PPARTITION_INFORMATION PartitionInfo,
 	     PDISK_GEOMETRY DiskGeometry,
 	     PUNICODE_STRING Label,
-	     BOOL  QuickFormat,
-	     DWORD  ClusterSize,
-	     PFMIFSCALLBACK  Callback);
+	     BOOLEAN QuickFormat,
+	     ULONG ClusterSize,
+	     PFORMAT_CONTEXT Context);
 
 NTSTATUS
-Fat32Format (HANDLE  FileHandle,
-	     PPARTITION_INFORMATION  PartitionInfo,
+Fat16Format (HANDLE FileHandle,
+	     PPARTITION_INFORMATION PartitionInfo,
 	     PDISK_GEOMETRY DiskGeometry,
 	     PUNICODE_STRING Label,
-	     BOOL  QuickFormat,
-	     DWORD  ClusterSize,
-	     PFMIFSCALLBACK  Callback);
+	     BOOLEAN QuickFormat,
+	     ULONG ClusterSize,
+	     PFORMAT_CONTEXT Context);
+
+NTSTATUS
+Fat32Format (HANDLE FileHandle,
+	     PPARTITION_INFORMATION PartitionInfo,
+	     PDISK_GEOMETRY DiskGeometry,
+	     PUNICODE_STRING Label,
+	     BOOLEAN QuickFormat,
+	     ULONG ClusterSize,
+	     PFORMAT_CONTEXT Context);
+
+VOID
+UpdateProgress (PFORMAT_CONTEXT Context,
+		ULONG Increment);
+
+/* EOF */

@@ -52,8 +52,9 @@ CalcVolumeSerialNumber(VOID)
 
 
 static NTSTATUS
-Fat12WriteBootSector(IN HANDLE FileHandle,
-  IN PFAT16_BOOT_SECTOR BootSector)
+Fat12WriteBootSector (IN HANDLE FileHandle,
+		      IN PFAT16_BOOT_SECTOR BootSector,
+		      IN OUT PFORMAT_CONTEXT Context)
 {
   IO_STATUS_BLOCK IoStatusBlock;
   NTSTATUS Status;
@@ -61,9 +62,9 @@ Fat12WriteBootSector(IN HANDLE FileHandle,
   LARGE_INTEGER FileOffset;
 
   /* Allocate buffer for new bootsector */
-  NewBootSector = (PUCHAR)RtlAllocateHeap(RtlGetProcessHeap(),
-    0,
-    SECTORSIZE);
+  NewBootSector = (PUCHAR)RtlAllocateHeap (RtlGetProcessHeap (),
+					   0,
+					   SECTORSIZE);
   if (NewBootSector == NULL)
     return(STATUS_INSUFFICIENT_RESOURCES);
 
@@ -96,14 +97,17 @@ Fat12WriteBootSector(IN HANDLE FileHandle,
   /* Free the new boot sector */
   RtlFreeHeap(RtlGetProcessHeap(), 0, NewBootSector);
 
+  UpdateProgress (Context, 1);
+
   return(Status);
 }
 
 
 static NTSTATUS
-Fat12WriteFAT(IN HANDLE FileHandle,
-  ULONG SectorOffset,
-  IN PFAT16_BOOT_SECTOR BootSector)
+Fat12WriteFAT (IN HANDLE FileHandle,
+	       IN ULONG SectorOffset,
+	       IN PFAT16_BOOT_SECTOR BootSector,
+	       IN OUT PFORMAT_CONTEXT Context)
 {
   IO_STATUS_BLOCK IoStatusBlock;
   NTSTATUS Status;
@@ -146,6 +150,8 @@ Fat12WriteFAT(IN HANDLE FileHandle,
       return(Status);
     }
 
+  UpdateProgress (Context, 1);
+
   /* Zero the begin of the buffer */
   memset(Buffer, 0, 3);
 
@@ -155,12 +161,12 @@ Fat12WriteFAT(IN HANDLE FileHandle,
     {
       /* Zero some sectors of the FAT */
       FileOffset.QuadPart = (SectorOffset + BootSector->ReservedSectors + i) * BootSector->BytesPerSector;
-      Size = (ULONG)BootSector->FATSectors - i;
-      if (Size > Sectors)
+      if (((ULONG)BootSector->FATSectors - i) <= Sectors)
         {
-	  Size = Sectors;
+	  Sectors = (ULONG)BootSector->FATSectors - i;
         }
-      Size *= BootSector->BytesPerSector;
+
+      Size = Sectors * BootSector->BytesPerSector;
       Status = NtWriteFile(FileHandle,
         NULL,
         NULL,
@@ -176,6 +182,8 @@ Fat12WriteFAT(IN HANDLE FileHandle,
           RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
           return(Status);
         }
+
+      UpdateProgress (Context, Sectors);
     }
 
   /* Free the buffer */
@@ -186,8 +194,9 @@ Fat12WriteFAT(IN HANDLE FileHandle,
 
 
 static NTSTATUS
-Fat12WriteRootDirectory(IN HANDLE FileHandle,
-  IN PFAT16_BOOT_SECTOR BootSector)
+Fat12WriteRootDirectory (IN HANDLE FileHandle,
+			 IN PFAT16_BOOT_SECTOR BootSector,
+			 IN OUT PFORMAT_CONTEXT Context)
 {
   IO_STATUS_BLOCK IoStatusBlock;
   NTSTATUS Status;
@@ -227,12 +236,12 @@ Fat12WriteRootDirectory(IN HANDLE FileHandle,
     {
       /* Zero some sectors of the root directory */
       FileOffset.QuadPart = (FirstRootDirSector + i) * BootSector->BytesPerSector;
-      Size = RootDirSectors - i;
-      if (Size > Sectors)
+
+      if ((RootDirSectors - i) <= Sectors)
         {
-	  Size = Sectors;
+	  Sectors = RootDirSectors - i;
         }
-      Size *= BootSector->BytesPerSector;
+      Size = Sectors * BootSector->BytesPerSector;
 
       Status = NtWriteFile(FileHandle,
 	NULL,
@@ -249,6 +258,7 @@ Fat12WriteRootDirectory(IN HANDLE FileHandle,
 	  RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
 	  return(Status);
 	}
+      UpdateProgress (Context, Sectors);
     }
 
   /* Free the buffer */
@@ -259,13 +269,13 @@ Fat12WriteRootDirectory(IN HANDLE FileHandle,
 
 
 NTSTATUS
-Fat12Format (HANDLE  FileHandle,
-	     PPARTITION_INFORMATION  PartitionInfo,
+Fat12Format (HANDLE FileHandle,
+	     PPARTITION_INFORMATION PartitionInfo,
 	     PDISK_GEOMETRY DiskGeometry,
 	     PUNICODE_STRING Label,
-	     BOOL  QuickFormat,
-	     DWORD  ClusterSize,
-	     PFMIFSCALLBACK  Callback)
+	     BOOLEAN QuickFormat,
+	     ULONG ClusterSize,
+	     PFORMAT_CONTEXT Context)
 {
   FAT16_BOOT_SECTOR BootSector;
   OEM_STRING VolumeLabel;
@@ -331,8 +341,20 @@ Fat12Format (HANDLE  FileHandle,
 
   DPRINT("BootSector.FATSectors = %hx\n", BootSector.FATSectors);
 
-  Status = Fat12WriteBootSector(FileHandle,
-    &BootSector);
+  /* Init context data */
+  if (QuickFormat)
+    {
+      Context->TotalSectorCount =
+	1 + (BootSector.FATSectors * 2) + RootDirSectors;
+    }
+  else
+    {
+      Context->TotalSectorCount = SectorCount;
+    }
+
+  Status = Fat12WriteBootSector (FileHandle,
+				 &BootSector,
+				 Context);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("Fat12WriteBootSector() failed with status 0x%.08x\n", Status);
@@ -340,9 +362,10 @@ Fat12Format (HANDLE  FileHandle,
     }
 
   /* Write first FAT copy */
-  Status = Fat12WriteFAT(FileHandle,
-    0,
-    &BootSector);
+  Status = Fat12WriteFAT (FileHandle,
+			  0,
+			  &BootSector,
+			  Context);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("Fat12WriteFAT() failed with status 0x%.08x\n", Status);
@@ -350,20 +373,27 @@ Fat12Format (HANDLE  FileHandle,
     }
 
   /* Write second FAT copy */
-  Status = Fat12WriteFAT(FileHandle,
-    (ULONG)BootSector.FATSectors,
-    &BootSector);
+  Status = Fat12WriteFAT (FileHandle,
+			  (ULONG)BootSector.FATSectors,
+			  &BootSector,
+			  Context);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("Fat12WriteFAT() failed with status 0x%.08x.\n", Status);
       return Status;
     }
 
-  Status = Fat12WriteRootDirectory(FileHandle,
-    &BootSector);
+  Status = Fat12WriteRootDirectory (FileHandle,
+				    &BootSector,
+				    Context);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("Fat12WriteRootDirectory() failed with status 0x%.08x\n", Status);
+    }
+
+  if (!QuickFormat)
+    {
+      /* FIXME: Fill remaining sectors */
     }
 
   return Status;

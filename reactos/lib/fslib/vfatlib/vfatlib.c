@@ -7,13 +7,14 @@
  * REVISIONS:
  *   CSH 05/04-2003 Created
  */
-#define NDEBUG
-#include <debug.h>
 #define NTOS_MODE_USER
 #include <ntos.h>
 #include <ddk/ntddscsi.h>
 #include <fslib/vfatlib.h>
 #include "vfatlib.h"
+
+#define NDEBUG
+#include <debug.h>
 
 
 NTSTATUS
@@ -26,22 +27,28 @@ VfatInitialize(VOID)
 
 
 NTSTATUS
-VfatFormat(
-	PUNICODE_STRING  DriveRoot,
-	DWORD  MediaFlag,
-	PUNICODE_STRING  Label,
-	BOOL  QuickFormat,
-	DWORD  ClusterSize,
-	PFMIFSCALLBACK  Callback)
+VfatFormat (PUNICODE_STRING DriveRoot,
+	    ULONG MediaFlag,
+	    PUNICODE_STRING Label,
+	    BOOLEAN QuickFormat,
+	    ULONG ClusterSize,
+	    PFMIFSCALLBACK Callback)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   DISK_GEOMETRY DiskGeometry;
   IO_STATUS_BLOCK Iosb;
   HANDLE FileHandle;
   PARTITION_INFORMATION PartitionInfo;
+  FORMAT_CONTEXT Context;
   NTSTATUS Status;
 
   DPRINT("VfatFormat(DriveRoot '%wZ')\n", DriveRoot);
+
+  Context.TotalSectorCount = 0;
+  Context.CurrentSectorCount = 0;
+  Context.Callback = Callback;
+  Context.Success = FALSE;
+  Context.Percent = 0;
 
   InitializeObjectAttributes(&ObjectAttributes,
     DriveRoot,
@@ -138,6 +145,12 @@ VfatFormat(
   DPRINT("RewritePartition %d\n", PartitionInfo.RewritePartition);
   DPRINT("RecognizedPartition %d\n", PartitionInfo.RecognizedPartition);
 
+  if (Callback != NULL)
+    {
+      Context.Percent = 0;
+      Callback (PROGRESS, 0, (PVOID)&Context.Percent);
+    }
+
   if (PartitionInfo.PartitionLength.QuadPart < (4200ULL * 1024ULL))
     {
       /* FAT12 (volume is smaller than 4.1MB) */
@@ -147,7 +160,7 @@ VfatFormat(
 			    Label,
 			    QuickFormat,
 			    ClusterSize,
-			    Callback);
+			    &Context);
     }
   else if (PartitionInfo.PartitionLength.QuadPart < (512ULL * 1024ULL * 1024ULL))
     {
@@ -158,7 +171,7 @@ VfatFormat(
 			    Label,
 			    QuickFormat,
 			    ClusterSize,
-			    Callback);
+			    &Context);
     }
   else
     {
@@ -169,10 +182,16 @@ VfatFormat(
 			    Label,
 			    QuickFormat,
 			    ClusterSize,
-			    Callback);
+			    &Context);
     }
 
   NtClose(FileHandle);
+
+  if (Callback != NULL)
+    {
+      Context.Success = (BOOLEAN)(NT_SUCCESS(Status));
+      Callback (DONE, 0, (PVOID)&Context.Success);
+    }
 
   DPRINT("VfatFormat() done. Status 0x%.08x\n", Status);
 
@@ -187,3 +206,24 @@ VfatCleanup(VOID)
 
   return STATUS_SUCCESS;
 }
+
+
+VOID
+UpdateProgress (PFORMAT_CONTEXT Context,
+		ULONG Increment)
+{
+  ULONG NewPercent;
+
+  Context->CurrentSectorCount += (ULONGLONG)Increment;
+
+
+  NewPercent = (Context->CurrentSectorCount * 100ULL) / Context->TotalSectorCount;
+
+  if (NewPercent > Context->Percent)
+    {
+      Context->Percent = NewPercent;
+      Context->Callback (PROGRESS, 0, &Context->Percent);
+    }
+}
+
+/* EOF */
