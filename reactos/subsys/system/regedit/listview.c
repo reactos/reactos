@@ -387,7 +387,7 @@ HWND CreateListView(HWND hwndParent, int id)
     /* Get the dimensions of the parent window's client area, and create the list view control.  */
     GetClientRect(hwndParent, &rcClient);
     hwndLV = CreateWindowEx(WS_EX_CLIENTEDGE, WC_LISTVIEW, _T("List View"),
-                            WS_VISIBLE | WS_CHILD | LVS_REPORT | LVS_EDITLABELS,
+                            WS_VISIBLE | WS_CHILD | WS_TABSTOP | LVS_REPORT | LVS_EDITLABELS,
                             0, 0, rcClient.right, rcClient.bottom,
                             hwndParent, (HMENU)id, hInst, NULL);
     if (!hwndLV) return NULL;

@@ -185,7 +185,8 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
     /* Main message loop */
     while (GetMessage(&msg, (HWND)NULL, 0, 0)) {
-        if (!TranslateAccelerator(msg.hwnd, hAccel, &msg)) {
+        if (!TranslateAccelerator(msg.hwnd, hAccel, &msg) && 
+            !IsDialogMessage(hFrameWnd, &msg)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
