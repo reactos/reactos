@@ -148,7 +148,7 @@ VOID KeExpireTimers( PKDPC Apc,
 VOID KeInitializeDispatcherHeader(DISPATCHER_HEADER* Header, ULONG Type,
 				  ULONG Size, ULONG SignalState);
 
-VOID KeDumpStackFrames(PVOID Stack, ULONG NrFrames);
+VOID KeDumpStackFrames(PULONG Frame);
 ULONG KeAllocateGdtSelector(ULONG Desc[2]);
 VOID KeFreeGdtSelector(ULONG Entry);
 BOOLEAN KiTestAlert(VOID);
@@ -199,6 +199,12 @@ VOID
 Ki386ApplicationProcessorInitializeTSS(VOID);
 VOID
 Ki386BootInitializeTSS(VOID);
+VOID
+KiGdtPrepareForApplicationProcessorInit(ULONG Id);
+VOID
+KePrepareForApplicationProcessorInit(ULONG id);
+VOID
+Ki386InitializeLdt(VOID);
 
 #endif /* not __ASM__ */
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.91 2001/04/16 23:29:54 dwelch Exp $
+/* $Id: main.c,v 1.92 2001/04/17 04:11:00 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -455,6 +455,8 @@ ExpInitializeExecutive(VOID)
 
   while (!HalAllProcessorsStarted())
     {
+      KePrepareForApplicationProcessorInit(KeNumberProcessors);
+      PsPrepareForApplicationProcessorInit(KeNumberProcessors);
       HalInitializeProcessor(KeNumberProcessors);
       KeNumberProcessors++;
     }
@@ -577,6 +579,10 @@ KiSystemStartup(BOOLEAN BootProcessor)
     }
   /* Do application processor initialization */
   KeApplicationProcessorInit();
+  PsApplicationProcessorInit();
+  KeLowerIrql(PASSIVE_LEVEL);
+  PsIdleThreadMain(NULL);
+  KeBugCheck(0);
   for(;;);
 }
 

@@ -38,9 +38,9 @@
 /* GLOBALS *******************************************************************/
 
 /*
- * 
+ * Empty LDT shared by every process that doesn't have its own.
  */
-//STATIC UCHAR KiNullLdt[8] = {0,};
+STATIC UCHAR KiNullLdt[8];
 
 /* FUNCTIONS *****************************************************************/
 
@@ -52,3 +52,21 @@ NtSetLdtEntries (HANDLE	Thread,
   return(STATUS_NOT_IMPLEMENTED);
 }
 
+VOID
+Ki386InitializeLdt(VOID)
+{
+  PUSHORT Gdt = KeGetCurrentKPCR()->GDT;
+  unsigned int base, length;
+
+  /*
+   * Set up an a descriptor for the LDT
+   */
+  base = (unsigned int)&KiNullLdt;
+  length = sizeof(KiNullLdt) - 1;
+  
+  Gdt[(LDT_SELECTOR / 2) + 0] = (length & 0xFFFF);
+  Gdt[(LDT_SELECTOR / 2) + 1] = (base & 0xFFFF);
+  Gdt[(LDT_SELECTOR / 2) + 2] = ((base & 0xFF0000) >> 16) | 0x8200;
+  Gdt[(LDT_SELECTOR / 2) + 3] = ((length & 0xF0000) >> 16) |
+    ((base & 0xFF000000) >> 16);
+}

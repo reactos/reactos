@@ -210,7 +210,7 @@ _multiboot_entry:
 	movl	%eax, %es
 	movl	%eax, %gs
 	movl	%eax, %ss
-	movl	$PCR_SELECTOR, %eax
+	movl	$0, %eax
 	movl	%eax, %fs
 
 #ifdef MP
@@ -253,6 +253,12 @@ _multiboot_entry:
 
 #endif /* MP */
 
+	/*
+	 * Load the PCR selector
+	 */
+	movl	$PCR_SELECTOR, %eax
+	movl	%eax, %fs
+	
 	/*
 	 * Load the initial kernel stack
 	 */

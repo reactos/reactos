@@ -176,17 +176,17 @@ KfLowerIrql (
 
   CurrentIrql = KeGetCurrentKPCR()->Irql;
   
-	if (NewIrql > CurrentIrql)
-	{
-		DbgPrint ("(%s:%d) NewIrql %x CurrentIrql %x\n",
-		          __FILE__, __LINE__, NewIrql, CurrentIrql);
-		KeDumpStackFrames (0, 32);
-		for(;;);
-	}
-
-	OldIrql = CurrentIrql;
+  if (NewIrql > CurrentIrql)
+    {
+      DbgPrint ("(%s:%d) NewIrql %x CurrentIrql %x\n",
+		__FILE__, __LINE__, NewIrql, CurrentIrql);
+      KeBugCheck(0);
+      for(;;);
+    }
+  
+  OldIrql = CurrentIrql;
   KeGetCurrentKPCR()->Irql = NewIrql;
-	HiSwitchIrql(OldIrql, Flags);
+  HiSwitchIrql(OldIrql, Flags);
 }
 
 
@@ -240,7 +240,7 @@ KfRaiseIrql (
 	)
 {
   KIRQL CurrentIrql;
-	KIRQL OldIrql;
+  KIRQL OldIrql;
   ULONG Flags;
 
   //DPRINT("KfRaiseIrql(NewIrql %d)\n", NewIrql);

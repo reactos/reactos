@@ -71,8 +71,6 @@ extern VOID KiTrapUnknown(VOID);
 extern ULONG init_stack;
 extern ULONG init_stack_top;
 
-static char KiNullLdt[8] = {0,};
-
 static char *ExceptionTypeStrings[] = 
   {
     "Divide Error",
@@ -595,43 +593,22 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
 }
 
 VOID 
-KeDumpStackFrames(PVOID _Stack, ULONG NrFrames)
+KeDumpStackFrames(PULONG Frame)
 {
-   PULONG Stack = (PULONG)_Stack;
-   ULONG i;
-   ULONG StackLimit;
-   
-   Stack = (PVOID)(((ULONG)Stack) & (~0x3));
-   DbgPrint("Stack: %x\n", Stack);
-   if (PsGetCurrentThread() != NULL)
-     {
-	DbgPrint("kernel stack base %x\n",
-		 PsGetCurrentThread()->Tcb.StackLimit);
-     }
+  ULONG i;
 
-   if (PsGetCurrentThread() != NULL)
-     {
-       StackLimit = (ULONG)PsGetCurrentThread()->Tcb.StackBase;
-     }
-   else
-     {
-       StackLimit = (ULONG)&init_stack_top;
-     }
-   
-   DbgPrint("Frames:\n");
-   for (i=0; i<NrFrames && ((ULONG)&Stack[i] < StackLimit); i++)
-     {
-	if (Stack[i] > KERNEL_BASE)
-	  {
-	     print_address((PVOID)Stack[i]);
-	     DbgPrint(" ");
-	  }
-	if (Stack[i] == 0xceafbeef)
-	  {
-	     DbgPrint("IRQ ");
-	  }
-     }
-   DbgPrint("\n");
+  DbgPrint("Frames: ");
+  i = 1;
+  while (Frame != NULL)
+    {
+      print_address((PVOID)Frame[1]);
+      Frame = (PULONG)Frame[0];
+      i++;
+    }
+  if ((i % 8) != 0)
+    {
+      DbgPrint("\n");
+    }
 }
 
 static void set_system_call_gate(unsigned int sel, unsigned int func)
@@ -658,29 +635,15 @@ set_task_gate(unsigned int sel, unsigned task_sel)
   KiIdt[sel].b = 0x8500;
 }
 
-void KeInitExceptions(void)
+VOID 
+KeInitExceptions(VOID)
 /*
  * FUNCTION: Initalize CPU exception handling
  */
 {
    int i;
-   ULONG base, length;
-   extern USHORT KiBootGdt[];
 
-   DPRINT("KeInitExceptions()\n",0);
-
-   /*
-    * Set up an a descriptor for the LDT
-    */
-   memset(KiNullLdt, 0, sizeof(KiNullLdt));
-   base = (unsigned int)&KiNullLdt;
-   length = sizeof(KiNullLdt) - 1;
-   
-   KiBootGdt[(LDT_SELECTOR / 2) + 0] = (length & 0xFFFF);
-   KiBootGdt[(LDT_SELECTOR / 2) + 1] = (base & 0xFFFF);
-   KiBootGdt[(LDT_SELECTOR / 2) + 2] = ((base & 0xFF0000) >> 16) | 0x8200;
-   KiBootGdt[(LDT_SELECTOR / 2) + 3] = ((length & 0xF0000) >> 16) |
-     ((base & 0xFF000000) >> 16);
+   DPRINT("KeInitExceptions()\n");
 
    /*
     * Set up the other gates

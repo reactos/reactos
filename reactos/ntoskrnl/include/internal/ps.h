@@ -555,6 +555,12 @@ PsBlockThread(PNTSTATUS Status, UCHAR Alertable, ULONG WaitMode,
 	      BOOLEAN DispatcherLock, KIRQL WaitIrql);
 VOID
 PsUnblockThread(PETHREAD Thread, PNTSTATUS WaitStatus);
+VOID
+PsApplicationProcessorInit(VOID);
+VOID
+PsPrepareForApplicationProcessorInit(ULONG Id);
+NTSTATUS
+PsIdleThreadMain(PVOID Context);
 
 #endif /* ASSEMBLER */
 

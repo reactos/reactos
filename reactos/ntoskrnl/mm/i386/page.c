@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.28 2001/04/16 23:29:55 dwelch Exp $
+/* $Id: page.c,v 1.29 2001/04/17 04:11:01 dwelch Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -581,6 +581,75 @@ VOID MmSetCleanPage(PEPROCESS Process, PVOID Address)
 BOOLEAN MmIsPagePresent(PEPROCESS Process, PVOID Address)
 {
    return((MmGetPageEntryForProcess1(Process, Address)) & PA_PRESENT);
+}
+
+NTSTATUS 
+MmCreateVirtualMappingForKernel(PVOID Address, 
+				ULONG flProtect,
+				ULONG PhysicalAddress)
+{
+  PEPROCESS CurrentProcess;
+  ULONG Attributes;
+  PULONG Pte;
+  NTSTATUS Status;
+  PEPROCESS Process = NULL;
+
+  if (Process != NULL)
+    {
+      CurrentProcess = PsGetCurrentProcess();
+    }
+  else
+    {
+      CurrentProcess = NULL;
+    }
+   
+   if (Process == NULL && Address < (PVOID)KERNEL_BASE)
+     {
+       DPRINT1("No process\n");
+       KeBugCheck(0);
+     }
+   if (Process != NULL && Address >= (PVOID)KERNEL_BASE)
+     {
+       DPRINT1("Setting kernel address with process context\n");
+       KeBugCheck(0);
+     }
+   Attributes = ProtectToPTE(flProtect);
+   
+   if (Process != NULL && Process != CurrentProcess)
+     {
+	KeAttachProcess(Process);
+     }
+   
+   Status = MmGetPageEntry2(Address, &Pte);
+   if (!NT_SUCCESS(Status))
+     {
+	if (Process != NULL && Process != CurrentProcess)
+	  {
+	     KeDetachProcess();
+	  }
+	return(Status);
+     }
+   if (PAGE_MASK((*Pte)) != 0)
+     {
+     }
+   *Pte = PhysicalAddress | Attributes;
+   if (Process != NULL && 
+       Process->AddressSpace.PageTableRefCountTable != NULL &&
+       ADDR_TO_PAGE_TABLE(Address) < 768 &&
+       Attributes & PA_PRESENT)
+     {
+	PUSHORT Ptrc;
+	
+	Ptrc = Process->AddressSpace.PageTableRefCountTable;
+	
+	Ptrc[ADDR_TO_PAGE_TABLE(Address)]++;
+     }
+   FLUSH_TLB;
+   if (Process != NULL && Process != CurrentProcess)
+     {
+	KeDetachProcess();
+     }
+   return(STATUS_SUCCESS);
 }
 
 NTSTATUS 

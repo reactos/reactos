@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bug.c,v 1.17 2001/03/16 23:04:59 dwelch Exp $
+/* $Id: bug.c,v 1.18 2001/04/17 04:11:00 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/bug.c
@@ -105,7 +105,7 @@ KeBugCheckEx (ULONG BugCheckCode,
 		 PsGetCurrentThread()->Cid.UniqueThread);
      }
 //   PsDumpThreads();
-   KeDumpStackFrames(&((&BugCheckCode)[-1]),64);
+   KeDumpStackFrames((PULONG)__builtin_frame_address(0));
    
 #if 1
    for(;;)
@@ -148,7 +148,7 @@ KeBugCheck (ULONG BugCheckCode)
 		 PsGetCurrentThread()->Cid.UniqueThread);
      }
 //   PsDumpThreads();
-   KeDumpStackFrames(&((&BugCheckCode)[-1]), 80);
+   KeDumpStackFrames((PULONG)__builtin_frame_address(0));
 #if 1
    for(;;)
      {

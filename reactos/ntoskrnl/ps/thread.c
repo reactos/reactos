@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.75 2001/04/16 16:29:03 dwelch Exp $
+/* $Id: thread.c,v 1.76 2001/04/17 04:11:01 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -44,6 +44,7 @@ KSPIN_LOCK PiThreadListLock;
 LIST_ENTRY PiThreadListHead;
 static LIST_ENTRY PriorityListHead[MAXIMUM_PRIORITY];
 static BOOLEAN DoneInitYet = FALSE;
+static PETHREAD IdleThreads[MAXIMUM_PROCESSORS];
 ULONG PiNrThreads = 0;
 ULONG PiNrRunnableThreads = 0;
 
@@ -107,8 +108,8 @@ VOID PsDumpThreads(VOID)
 	DbgPrint("current %x current->Tcb.State %d eip %x/%x ",
 		current, current->Tcb.State,
 		0, current->Tcb.LastEip);
-	KeDumpStackFrames((PVOID)current->Tcb.KernelStack, 
-			  16);
+	//	KeDumpStackFrames((PVOID)current->Tcb.KernelStack, 
+	//	  16);
 	DbgPrint("PID %d ", current->ThreadsProcess->UniqueProcessId);
 	DbgPrint("\n");
 	
@@ -289,6 +290,34 @@ PsFreezeAllThreads(PEPROCESS Process)
   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 }
 
+VOID
+PsApplicationProcessorInit(VOID)
+{
+  KeGetCurrentKPCR()->CurrentThread = 
+    (PVOID)IdleThreads[KeGetCurrentProcessorNumber()];
+}
+
+VOID
+PsPrepareForApplicationProcessorInit(ULONG Id)
+{
+  PETHREAD IdleThread;
+  HANDLE IdleThreadHandle;
+
+  PsInitializeThread(NULL,
+		     &IdleThread,
+		     &IdleThreadHandle,
+		     THREAD_ALL_ACCESS,
+		     NULL, 
+		     TRUE);
+  IdleThread->Tcb.State = THREAD_STATE_RUNNING;
+  IdleThread->Tcb.FreezeCount = 0;
+  IdleThread->Tcb.UserAffinity = 1 << Id;
+  IdleThread->Tcb.Priority = LOW_PRIORITY;
+  IdleThreads[Id] = IdleThread;
+
+  NtClose(IdleThreadHandle);
+}
+
 VOID 
 PsInitThreadManagment(VOID)
 /*
@@ -304,6 +333,7 @@ PsInitThreadManagment(VOID)
      {
 	InitializeListHead(&PriorityListHead[i]);
      }
+
    InitializeListHead(&PiThreadListHead);
    
    PsThreadType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));

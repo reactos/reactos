@@ -462,4 +462,9 @@ MmGetSavedSwapEntryPage(PVOID PhysicalAddress);
 
 #define STATUS_MM_RESTART_OPERATION       (0xD0000001)
 
+NTSTATUS 
+MmCreateVirtualMappingForKernel(PVOID Address, 
+				ULONG flProtect,
+				ULONG PhysicalAddress);
+
 #endif

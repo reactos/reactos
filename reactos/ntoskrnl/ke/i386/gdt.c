@@ -65,6 +65,12 @@ static KSPIN_LOCK GdtLock;
 /* FUNCTIONS *****************************************************************/
 
 VOID
+KiGdtPrepareForApplicationProcessorInit(ULONG Id)
+{
+  KiGdtArray[Id] = ExAllocatePool(NonPagedPool, sizeof(USHORT) * 4 * 11);
+}
+
+VOID
 KiInitializeGdt(PKPCR Pcr)
 {
   PUSHORT Gdt;
@@ -85,9 +91,10 @@ KiInitializeGdt(PKPCR Pcr)
   /*
    * Allocate a GDT
    */
-  Gdt = ExAllocatePool(NonPagedPool, sizeof(USHORT) * 4 * 11);
+  Gdt = KiGdtArray[Pcr->ProcessorNumber];
   if (Gdt == NULL)
     {
+      DbgPrint("No GDT (%d)\n", Pcr->ProcessorNumber);
       KeBugCheck(0);
     }
 
@@ -98,7 +105,6 @@ KiInitializeGdt(PKPCR Pcr)
    * irrelevant.
    */
   memcpy(Gdt, KiBootGdt, sizeof(USHORT) * 4 * 11);
-  KiGdtArray[Pcr->ProcessorNumber] = Gdt;
   Pcr->GDT = Gdt;
 
   /*
@@ -143,6 +149,7 @@ KeSetBaseGdtSelector(ULONG Entry,
 		     PVOID Base)
 {
    KIRQL oldIrql;
+   PUSHORT Gdt = KeGetCurrentKPCR()->GDT;
    
    DPRINT("KeSetBaseGdtSelector(Entry %x, Base %x)\n",
 	   Entry, Base);
@@ -151,14 +158,14 @@ KeSetBaseGdtSelector(ULONG Entry,
    
    Entry = (Entry & (~0x3)) / 2;
    
-   KiBootGdt[Entry + 1] = ((ULONG)Base) & 0xffff;
+   Gdt[Entry + 1] = ((ULONG)Base) & 0xffff;
    
-   KiBootGdt[Entry + 2] = KiBootGdt[Entry + 2] & ~(0xff);
-   KiBootGdt[Entry + 2] = KiBootGdt[Entry + 2] |
+   Gdt[Entry + 2] = Gdt[Entry + 2] & ~(0xff);
+   Gdt[Entry + 2] = Gdt[Entry + 2] |
      ((((ULONG)Base) & 0xff0000) >> 16);
    
-   KiBootGdt[Entry + 3] = KiBootGdt[Entry + 3] & ~(0xff00);
-   KiBootGdt[Entry + 3] = KiBootGdt[Entry + 3] |
+   Gdt[Entry + 3] = Gdt[Entry + 3] & ~(0xff00);
+   Gdt[Entry + 3] = Gdt[Entry + 3] |
      ((((ULONG)Base) & 0xff000000) >> 16);
    
    DPRINT("%x %x %x %x\n", 

@@ -40,11 +40,19 @@
 
 ULONG KiPcrInitDone = 0;
 static ULONG PcrsAllocated = 0;
+static PVOID PcrPages[MAXIMUM_PROCESSORS];
 
 /* FUNCTIONS *****************************************************************/
 
 VOID
-KeApplicationProcessorInit()
+KePrepareForApplicationProcessorInit(ULONG Id)
+{
+  PcrPages[Id] = MmAllocPage(0);
+  KiGdtPrepareForApplicationProcessorInit(Id);
+}
+
+VOID
+KeApplicationProcessorInit(VOID)
 {
   PKPCR KPCR;
   ULONG Offset;
@@ -52,12 +60,11 @@ KeApplicationProcessorInit()
   /*
    * Create a PCR for this processor
    */
-  Offset = InterlockedIncrement(&PcrsAllocated);
+  Offset = InterlockedIncrement(&PcrsAllocated) - 1;
   KPCR = (PKPCR)(KPCR_BASE + (Offset * PAGESIZE));
-  MmCreateVirtualMapping(NULL,
-			 (PVOID)KPCR,
-			 PAGE_READWRITE,
-			 (ULONG)MmAllocPage(0));
+  MmCreateVirtualMappingForKernel((PVOID)KPCR,
+				  PAGE_READWRITE,
+				  (ULONG)PcrPages[Offset]);
   memset(KPCR, 0, PAGESIZE);
   KPCR->ProcessorNumber = Offset;
   KPCR->Self = KPCR;
@@ -67,11 +74,21 @@ KeApplicationProcessorInit()
    * Initialize the GDT
    */
   KiInitializeGdt(KPCR);
+  
+  /*
+   * It is now safe to process interrupts
+   */
+  KeLowerIrql(DISPATCH_LEVEL);
 
   /*
    * Initialize the TSS
    */
   Ki386ApplicationProcessorInitializeTSS();
+
+  /*
+   * Initialize a default LDT
+   */
+  Ki386InitializeLdt();
 }
 
 VOID 
@@ -103,6 +120,8 @@ KeInit1(VOID)
    KPCR->ProcessorNumber = 0;
    KiPcrInitDone = 1;
    PcrsAllocated++;
+
+   Ki386InitializeLdt();
 }
 
 VOID 

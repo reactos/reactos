@@ -1,4 +1,4 @@
-/* $Id: spinlock.c,v 1.6 2000/12/26 05:32:44 dwelch Exp $
+/* $Id: spinlock.c,v 1.7 2001/04/17 04:11:01 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -17,6 +17,7 @@
 /* INCLUDES ****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/config.h>
 
 #include <internal/debug.h>
 
@@ -81,8 +82,12 @@ KeAcquireSpinLockAtDpcLevel (PKSPIN_LOCK	SpinLock)
    
    while ((i = InterlockedExchange(&SpinLock->Lock, 1)) == 1)
      {
-	DbgPrint("Spinning on spinlock %x current value %x\n", SpinLock, i);
-	KeBugCheck(0);
+#ifndef MP
+       DbgPrint("Spinning on spinlock %x current value %x\n", SpinLock, i);
+       KeBugCheck(0);
+#else /* not MP */
+       /* Avoid reading the value again too fast */
+#endif /* MP */
      }
 }
 
