@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.203 2004/03/30 20:50:15 gvg Exp $
+/* $Id: window.c,v 1.204 2004/03/30 22:49:38 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -711,18 +711,18 @@ IntIsChildWindow(HWND Parent, HWND Child)
   Window = BaseWindow;
   while (Window)
   {
-    if(!(Window->Style & WS_CHILD))
-    {
-      if(Window != BaseWindow)
-        IntReleaseWindowObject(Window);
-      break;
-    }
     if (Window->Self == Parent)
     {
       if(Window != BaseWindow)
         IntReleaseWindowObject(Window);
       IntReleaseWindowObject(BaseWindow);
       return(TRUE);
+    }
+    if(!(Window->Style & WS_CHILD))
+    {
+      if(Window != BaseWindow)
+        IntReleaseWindowObject(Window);
+      break;
     }
     Old = Window;
     Window = IntGetParentObject(Window);
