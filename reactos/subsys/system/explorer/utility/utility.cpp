@@ -300,7 +300,7 @@ BOOL RecursiveCreateDirectory(LPCTSTR path_in)
 			path[i++] = *p++;
 
 		for(; i<l; i++) {
-			memcpy(path, hole_path, i);
+			memcpy(path, hole_path, i*sizeof(TCHAR));
 
 			for(; hole_path[i] && hole_path[i]!='/' && hole_path[i]!='\\'; i++)
 				path[i] = hole_path[i];
