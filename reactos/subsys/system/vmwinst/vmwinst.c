@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: vmwinst.c,v 1.5 2004/06/01 19:08:53 sedwards Exp $
+/* $Id: vmwinst.c,v 1.6 2004/08/10 15:00:22 weiden Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS VMware(r) driver installation utility
@@ -42,6 +42,13 @@ static WCHAR *vmx_mode = L"vmx_mode.dll";
 static WCHAR *vmx_svga = L"vmx_svga.sys";
 
 static WCHAR *SrcPath = PathToVideoDrivers45;
+
+static HANDLE hInstallationThread = NULL;
+static HWND hInstallationNotifyWnd = NULL;
+static LONG AbortInstall = 0;
+#define WM_INSTABORT        (WM_USER + 2)
+#define WM_INSTCOMPLETE     (WM_USER + 3)
+#define WM_INSTSTATUSUPDATE (WM_USER + 4)
 
 /* Helper functions */
 
@@ -424,42 +431,203 @@ PageInsertDiscProc(
           PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
           break;
         case PSN_WIZNEXT:
-          PropSheet_SetWizButtons(GetParent(hwndDlg), 0);
-          ProcessMessages();
-          if(!IsVMwareCDInDrive(&CDDrive))
-          {
-            WCHAR Msg[1024];
-            LoadString(hAppInstance, IDS_FAILEDTOLOCATEDRIVERS, Msg, sizeof(Msg) / sizeof(WCHAR));
-            MessageBox(GetParent(hwndDlg), Msg, NULL, MB_ICONWARNING);
-            PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
-            SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_INSERT_VMWARE_TOOLS);
-            return TRUE;
-          }
-          
-          if(!InstallFile(DestinationPath, vmx_fb) ||
-             !InstallFile(DestinationPath, vmx_mode) ||
-             !InstallFile(DestinationDriversPath, vmx_svga))
-          {
-            WCHAR Msg[1024];
-            LoadString(hAppInstance, IDS_FAILEDTOCOPYFILES, Msg, sizeof(Msg) / sizeof(WCHAR));
-            MessageBox(GetParent(hwndDlg), Msg, NULL, MB_ICONWARNING);
-            PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
-            SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_INSERT_VMWARE_TOOLS);
-            return TRUE;
-          }
-          
-          if(!EnableVmwareDriver(FALSE, FALSE, TRUE))
-          {
-            WCHAR Msg[1024];
-            LoadString(hAppInstance, IDS_FAILEDTOACTIVATEDRIVER, Msg, sizeof(Msg) / sizeof(WCHAR));
-            MessageBox(GetParent(hwndDlg), Msg, NULL, MB_ICONWARNING);
-            SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_INSTALLATION_FAILED);
-            return TRUE;
-          }
-          
-          PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
+          SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_INSTALLING_VMWARE_TOOLS);
           break;
       }
+      break;
+    }
+  }
+  return FALSE;
+}
+
+VOID
+InstTerminateInstaller(BOOL Wait)
+{
+  if(hInstallationThread != NULL)
+  {
+    if(Wait)
+    {
+      InterlockedExchange((LONG*)&AbortInstall, 2);
+      WaitForSingleObject(hInstallationThread, INFINITE);
+    }
+    else
+    {
+      InterlockedExchange((LONG*)&AbortInstall, 1);
+    }
+  }
+}
+
+DWORD STDCALL
+InstInstallationThread(LPVOID lpParameter)
+{
+  HANDLE hThread;
+  BOOL DriveAvailable;
+  int DrivesTested = 0;
+  
+  if(AbortInstall != 0) goto done;
+  PostMessage(hInstallationNotifyWnd, WM_INSTSTATUSUPDATE, IDS_SEARCHINGFORCDROM, 0);
+  
+  while(AbortInstall == 0)
+  {
+    Sleep(500);
+    DriveAvailable = IsVMwareCDInDrive(&CDDrive);
+    if(DriveAvailable)
+      break;
+    if(DrivesTested++ > 20)
+    {
+      PostMessage(hInstallationNotifyWnd, WM_INSTABORT, IDS_FAILEDTOLOCATEDRIVERS, 0);
+      goto cleanup;
+    }
+  }
+
+  if(AbortInstall != 0) goto done;
+  PostMessage(hInstallationNotifyWnd, WM_INSTSTATUSUPDATE, IDS_COPYINGFILES, 0);
+  
+  if(AbortInstall != 0) goto done;
+  if(!InstallFile(DestinationPath, vmx_fb))
+  {
+    PostMessage(hInstallationNotifyWnd, WM_INSTABORT, IDS_FAILEDTOCOPYFILES, 0);
+    goto cleanup;
+  }
+  
+  Sleep(250);
+  
+  if(AbortInstall != 0) goto done;
+  if(!InstallFile(DestinationPath, vmx_mode))
+  {
+    PostMessage(hInstallationNotifyWnd, WM_INSTABORT, IDS_FAILEDTOCOPYFILES, 0);
+    goto cleanup;
+  }
+  
+  Sleep(250);
+  
+  if(AbortInstall != 0) goto done;
+  if(!InstallFile(DestinationDriversPath, vmx_svga))
+  {
+    PostMessage(hInstallationNotifyWnd, WM_INSTABORT, IDS_FAILEDTOCOPYFILES, 0);
+    goto cleanup;
+  }
+  
+  Sleep(250);
+
+  if(AbortInstall != 0) goto done;
+  PostMessage(hInstallationNotifyWnd, WM_INSTSTATUSUPDATE, IDS_ENABLINGDRIVER, 0);
+  if(!EnableVmwareDriver(FALSE, FALSE, TRUE))
+  {
+    PostMessage(hInstallationNotifyWnd, WM_INSTABORT, IDS_FAILEDTOACTIVATEDRIVER, 0);
+    goto cleanup;
+  }
+
+  Sleep(500);
+
+done:
+  switch(AbortInstall)
+  {
+    case 0:
+      SendMessage(hInstallationNotifyWnd, WM_INSTCOMPLETE, 0, 0);
+      break;
+    case 1:
+      SendMessage(hInstallationNotifyWnd, WM_INSTABORT, 0, 0);
+      break;
+  }
+  
+cleanup:
+  hThread = (HANDLE)InterlockedExchange((LONG*)&hInstallationThread, 0);
+  if(hThread != NULL)
+  {
+    CloseHandle(hThread);
+  }
+  return 0;
+}
+
+BOOL
+InstStartInstallationThread(HWND hwndNotify)
+{
+  if(hInstallationThread == NULL)
+  {
+    DWORD ThreadId;
+    hInstallationNotifyWnd = hwndNotify;
+    AbortInstall = 0;
+    hInstallationThread = CreateThread(NULL,
+                                       0,
+                                       InstInstallationThread,
+                                       NULL,
+                                       CREATE_SUSPENDED,
+                                       &ThreadId);
+    if(hInstallationThread == NULL)
+    {
+      return FALSE;
+    }
+
+    ResumeThread(hInstallationThread);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+/* Property page dialog callback */
+int CALLBACK
+PageInstallingProc(
+  HWND hwndDlg,
+  UINT uMsg,
+  WPARAM wParam,
+  LPARAM lParam
+)
+{
+  switch(uMsg)
+  {
+    case WM_NOTIFY:
+    {
+      LPNMHDR pnmh = (LPNMHDR)lParam;
+      switch(pnmh->code)
+      {
+        case PSN_SETACTIVE:
+          SetDlgItemText(hwndDlg, IDC_INSTALLINGSTATUS, NULL);
+          SendDlgItemMessage(hwndDlg, IDC_INSTALLINGPROGRESS, PBM_SETMARQUEE, TRUE, 50);
+          PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK);
+          InstStartInstallationThread(hwndDlg);
+          break;
+        case PSN_RESET:
+          InstTerminateInstaller(TRUE);
+          break;
+        case PSN_WIZBACK:
+          if(hInstallationThread != NULL)
+          {
+            PropSheet_SetWizButtons(GetParent(hwndDlg), 0);
+            InstTerminateInstaller(FALSE);
+            SetWindowLong(hwndDlg, DWL_MSGRESULT, -1);
+            return -1;
+          }
+          else
+          {
+            SendDlgItemMessage(hwndDlg, IDC_INSTALLINGPROGRESS, PBM_SETMARQUEE, FALSE, 0);
+            SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_INSERT_VMWARE_TOOLS);
+          }
+          break;
+      }
+      break;
+    }
+    case WM_INSTABORT:
+      /* go back in case we aborted the installation thread */
+      SendDlgItemMessage(hwndDlg, IDC_INSTALLINGPROGRESS, PBM_SETMARQUEE, FALSE, 0);
+      PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_INSERT_VMWARE_TOOLS);
+      if(wParam != 0)
+      {
+        WCHAR Msg[1024];
+        LoadString(hAppInstance, wParam, Msg, sizeof(Msg) / sizeof(WCHAR));
+        MessageBox(GetParent(hwndDlg), Msg, NULL, MB_ICONWARNING);
+      }
+      break;
+    case WM_INSTCOMPLETE:
+      PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
+      PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_CONFIG);
+      break;
+    case WM_INSTSTATUSUPDATE:
+    {
+      WCHAR Msg[1024];
+      LoadString(hAppInstance, wParam, Msg, sizeof(Msg) / sizeof(WCHAR));
+      SetDlgItemText(hwndDlg, IDC_INSTALLINGSTATUS, Msg);
       break;
     }
   }
@@ -796,7 +964,7 @@ PageDoUninstallProc(
 static LONG
 CreateWizard(VOID)
 {
-  PROPSHEETPAGE psp[7];
+  PROPSHEETPAGE psp[8];
   PROPSHEETHEADER psh;
   WCHAR Caption[1024];
   
@@ -815,11 +983,12 @@ CreateWizard(VOID)
   
   InitPropSheetPage(&psp[0], IDD_WELCOMEPAGE, PageWelcomeProc);
   InitPropSheetPage(&psp[1], IDD_INSERT_VMWARE_TOOLS, PageInsertDiscProc);
-  InitPropSheetPage(&psp[2], IDD_CONFIG, PageConfigProc);
-  InitPropSheetPage(&psp[3], IDD_INSTALLATION_FAILED, PageInstallFailedProc);
-  InitPropSheetPage(&psp[4], IDD_CHOOSEACTION, PageChooseActionProc);
-  InitPropSheetPage(&psp[5], IDD_SELECTDRIVER, PageSelectDriverProc);
-  InitPropSheetPage(&psp[6], IDD_DOUNINSTALL, PageDoUninstallProc);
+  InitPropSheetPage(&psp[2], IDD_INSTALLING_VMWARE_TOOLS, PageInstallingProc);
+  InitPropSheetPage(&psp[3], IDD_CONFIG, PageConfigProc);
+  InitPropSheetPage(&psp[4], IDD_INSTALLATION_FAILED, PageInstallFailedProc);
+  InitPropSheetPage(&psp[5], IDD_CHOOSEACTION, PageChooseActionProc);
+  InitPropSheetPage(&psp[6], IDD_SELECTDRIVER, PageSelectDriverProc);
+  InitPropSheetPage(&psp[7], IDD_DOUNINSTALL, PageDoUninstallProc);
   
   return (LONG)(PropertySheet(&psh) != -1);
 }
@@ -835,7 +1004,7 @@ WinMain(HINSTANCE hInstance,
   WCHAR *lc;
   
   hAppInstance = hInstance;
-  
+
   /* Setup our exception "handler" ;-) */
   OldHandler = SetUnhandledExceptionFilter(ExceptionHandler);
   
@@ -844,7 +1013,7 @@ WinMain(HINSTANCE hInstance,
     ExitProcess(1);
     return 1;
   }
-  
+
   /* restore the exception handler */
   SetUnhandledExceptionFilter(OldHandler);
   

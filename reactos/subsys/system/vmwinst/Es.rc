@@ -1,7 +1,3 @@
-#include <defines.h>
-#include <reactos/resource.h>
-#include "vmwinst.h"
-
 LANGUAGE LANG_SPANISH, SUBLANG_SPANISH
 
 VS_VERSION_INFO VERSIONINFO
@@ -51,6 +47,15 @@ CAPTION "Instalación del Controlador de Video"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
   LTEXT "El Instalador de ReactOS no viene con el controlador SVGA VMware(r).\n\nPor lo tanto vaya a 'VM' en la barra de menú de VMware(r) workstation y seleccione 'Install VMware(r) tools...'\n\nhaga click en 'Siguiente' para continuar o en 'Cancelar' para saltar la instalación del controlador SVGA.",-1,25,25,225,85
+END
+
+IDD_INSTALLING_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Video Driver Installation"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+  LTEXT "{STATUS}",IDC_INSTALLINGSTATUS,25,68,225,8
+  CONTROL "", IDC_INSTALLINGPROGRESS, "msctls_progress32", PBS_MARQUEE | WS_CHILD | WS_VISIBLE | WS_BORDER, 25, 80, 225, 8
 END
 
 IDD_CONFIG DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
@@ -129,5 +134,12 @@ BEGIN
   10001 "Baja (8BPP)"
   10002 "Media (16BPP)"
   10003 "Alta (32BPP)"
+END
+
+STRINGTABLE
+BEGIN
+  IDS_SEARCHINGFORCDROM "Searching for VMware(r) Tools CD-ROM..."
+  IDS_COPYINGFILES      "Copying files..."
+  IDS_ENABLINGDRIVER    "Enabling VMware(r) SVGA driver..."
 END
 
