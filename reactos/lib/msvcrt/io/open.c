@@ -1,4 +1,4 @@
-/* $Id: open.c,v 1.13 2002/12/05 15:30:44 robd Exp $
+/* $Id: open.c,v 1.14 2002/12/26 17:26:41 robd Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -34,22 +34,61 @@
 #define STD_AUX_HANDLE 3
 #define STD_PRINTER_HANDLE 4
 
+
+/////////////////////////////////////////
+#if 0 // from perl sources
+
+#ifndef _INTPTR_T_DEFINED
+typedef int		intptr_t;
+#define _INTPTR_T_DEFINED
+#endif
+
+#ifndef _UINTPTR_T_DEFINED
+typedef unsigned int	uintptr_t;
+#define _UINTPTR_T_DEFINED
+#endif
+
+/*
+ * Control structure for lowio file handles
+ */
+typedef struct {
+    intptr_t osfhnd;/* underlying OS file HANDLE */
+    char osfile;    /* attributes of file (e.g., open in text mode?) */
+    char pipech;    /* one char buffer for handles opened on pipes */
+    int lockinitflag;
+    //CRITICAL_SECTION lock;
+} ioinfo;
+
+/*
+ * Array of arrays of control structures for lowio files.
+ */
+//ioinfo* __pioinfo[];
+//ioinfo* __pioinfo[] = { NULL };
+
+#endif
+/////////////////////////////////////////
+
 typedef struct _fileno_modes_type
 {
     HANDLE hFile;
     int mode;
+    char pipech;    /* one char buffer for handles opened on pipes */
+    int lockinitflag;
+    /*CRITICAL_SECTION*/int lock;
     int fd;
 } fileno_modes_type;
 
-static fileno_modes_type* fileno_modes = NULL;
+//static fileno_modes_type* fileno_modes = NULL;
+fileno_modes_type* __pioinfo = NULL;
 
+/////////////////////////////////////////
 int maxfno = 0;
 
 char __is_text_file(FILE* p)
 {
-   if ( p == NULL || fileno_modes == NULL )
+   if ( p == NULL || __pioinfo == NULL )
      return FALSE;
-   return (!((p)->_flag&_IOSTRG) && (fileno_modes[(p)->_file].mode&O_TEXT));
+   return (!((p)->_flag&_IOSTRG) && (__pioinfo[(p)->_file].mode&O_TEXT));
 }
 
 int _open(const char* _path, int _oflag,...)
@@ -170,10 +209,10 @@ int __fileno_alloc(HANDLE hFile, int mode)
     return -1;
 
   for (i = 5; i < maxfno; i++) {
-    if (fileno_modes[i].fd == -1 ) {
-        fileno_modes[i].fd = i;
-        fileno_modes[i].mode = mode;
-        fileno_modes[i].hFile = hFile;
+    if (__pioinfo[i].fd == -1 ) {
+        __pioinfo[i].fd = i;
+        __pioinfo[i].mode = mode;
+        __pioinfo[i].hFile = hFile;
         return i;
     }
   }
@@ -182,29 +221,29 @@ int __fileno_alloc(HANDLE hFile, int mode)
      so that when we hit the count'th request, we've already up'd it. */
   if (i == maxfno) {
     int oldcount = maxfno;
-    fileno_modes_type* old_fileno_modes = fileno_modes;
+    fileno_modes_type* old_fileno_modes = __pioinfo;
     maxfno += 255;
-    fileno_modes = (fileno_modes_type*)malloc(maxfno * sizeof(fileno_modes_type));
+    __pioinfo = (fileno_modes_type*)malloc(maxfno * sizeof(fileno_modes_type));
     if (old_fileno_modes != NULL) {
-        memcpy(fileno_modes, old_fileno_modes, oldcount * sizeof(fileno_modes_type));
+        memcpy(__pioinfo, old_fileno_modes, oldcount * sizeof(fileno_modes_type));
         free(old_fileno_modes);
     }
-    memset(fileno_modes + oldcount, -1, (maxfno-oldcount)*sizeof(fileno_modes_type));
+    memset(__pioinfo + oldcount, -1, (maxfno-oldcount)*sizeof(fileno_modes_type));
   }
 
   /* Fill in the value */
-  fileno_modes[i].fd = i;
-  fileno_modes[i].mode = mode;
-  fileno_modes[i].hFile = hFile;
+  __pioinfo[i].fd = i;
+  __pioinfo[i].mode = mode;
+  __pioinfo[i].hFile = hFile;
   return i;
 }
 
 void* filehnd(int fileno)
 {
-    if (fileno < 0 || fileno >= maxfno || fileno_modes[fileno].fd == -1) {
+    if (fileno < 0 || fileno >= maxfno || __pioinfo[fileno].fd == -1) {
         return (void*)-1;
     }
-    return fileno_modes[fileno].hFile;
+    return __pioinfo[fileno].hFile;
 }
 
 int __fileno_setmode(int _fd, int _newmode)
@@ -214,8 +253,8 @@ int __fileno_setmode(int _fd, int _newmode)
         __set_errno(EBADF);
         return -1;
     }
-    m = fileno_modes[_fd].mode;
-    fileno_modes[_fd].mode = _newmode;
+    m = __pioinfo[_fd].mode;
+    __pioinfo[_fd].mode = _newmode;
     return m;
 }
 
@@ -225,7 +264,7 @@ int __fileno_getmode(int _fd)
         __set_errno(EBADF);
         return -1;
     }
-    return fileno_modes[_fd].mode;
+    return __pioinfo[_fd].mode;
 
 }
 
@@ -235,8 +274,8 @@ int __fileno_close(int _fd)
         __set_errno(EBADF);
         return -1;
     }
-    fileno_modes[_fd].fd = -1;
-    fileno_modes[_fd].hFile = (HANDLE)-1;
+    __pioinfo[_fd].fd = -1;
+    __pioinfo[_fd].hFile = (HANDLE)-1;
     return 0;
 }
 
@@ -258,41 +297,41 @@ int __fileno_dup2(int handle1, int handle2)
       __set_errno(EBADF);
       return -1;
    }
-   if (fileno_modes[handle1].fd == -1) {
+   if (__pioinfo[handle1].fd == -1) {
       __set_errno(EBADF);
       return -1;
    }
    if (handle1 == handle2)
       return handle1;
-   if (fileno_modes[handle2].fd != -1) {
+   if (__pioinfo[handle2].fd != -1) {
       _close(handle2);
    }
    hProcess = GetCurrentProcess();
    result = DuplicateHandle(hProcess, 
-                fileno_modes[handle1].hFile, 
+                __pioinfo[handle1].hFile, 
                 hProcess, 
-                &fileno_modes[handle2].hFile, 
+                &__pioinfo[handle2].hFile, 
                 0, 
                 TRUE,  
                 DUPLICATE_SAME_ACCESS);
    if (result) {
-      fileno_modes[handle2].fd = handle2;
-      fileno_modes[handle2].mode = fileno_modes[handle1].mode;
+      __pioinfo[handle2].fd = handle2;
+      __pioinfo[handle2].mode = __pioinfo[handle1].mode;
       switch (handle2) {
       case 0:
-         SetStdHandle(STD_INPUT_HANDLE, fileno_modes[handle2].hFile);
+         SetStdHandle(STD_INPUT_HANDLE, __pioinfo[handle2].hFile);
          break;
       case 1:
-         SetStdHandle(STD_OUTPUT_HANDLE, fileno_modes[handle2].hFile);
+         SetStdHandle(STD_OUTPUT_HANDLE, __pioinfo[handle2].hFile);
          break;
       case 2:
-         SetStdHandle(STD_ERROR_HANDLE, fileno_modes[handle2].hFile);
+         SetStdHandle(STD_ERROR_HANDLE, __pioinfo[handle2].hFile);
          break;
       case 3:
-         SetStdHandle(STD_AUX_HANDLE, fileno_modes[handle2].hFile);
+         SetStdHandle(STD_AUX_HANDLE, __pioinfo[handle2].hFile);
          break;
       case 4:
-         SetStdHandle(STD_AUX_HANDLE, fileno_modes[handle2].hFile);
+         SetStdHandle(STD_AUX_HANDLE, __pioinfo[handle2].hFile);
          break;
       }
       return handle1;
@@ -333,49 +372,49 @@ BOOL __fileno_init(void)
        result = malloc(50);
 #endif
    }
-   //fileno_modes = (fileno_modes_type*)malloc(sizeof(fileno_modes_type) * maxfno);
-   fileno_modes = malloc(sizeof(fileno_modes_type) * maxfno);
-   if (fileno_modes == NULL) {
+   //__pioinfo = (fileno_modes_type*)malloc(sizeof(fileno_modes_type) * maxfno);
+   __pioinfo = malloc(sizeof(fileno_modes_type) * maxfno);
+   if (__pioinfo == NULL) {
        return FALSE;
    }
-   memset(fileno_modes, -1, sizeof(fileno_modes_type) * maxfno);
+   memset(__pioinfo, -1, sizeof(fileno_modes_type) * maxfno);
    if (count) {
       pFile = (HANDLE*)(StInfo.lpReserved2 + sizeof(ULONG) + count * sizeof(char));
       pmode = (char*)(StInfo.lpReserved2 + sizeof(ULONG));
       for (i = 0; i <  count; i++) {
           if (*pFile != INVALID_HANDLE_VALUE) {
-             fileno_modes[i].fd = i;
-             fileno_modes[i].mode = ((*pmode << 8) & (_O_TEXT|_O_BINARY)) | (*pmode & _O_ACCMODE);
-             fileno_modes[i].hFile = *pFile;
+             __pioinfo[i].fd = i;
+             __pioinfo[i].mode = ((*pmode << 8) & (_O_TEXT|_O_BINARY)) | (*pmode & _O_ACCMODE);
+             __pioinfo[i].hFile = *pFile;
           }
           pFile++;
           pmode++;
       }
    }
-   if (fileno_modes[0].fd == -1) {
-      fileno_modes[0].fd = 0;
-      fileno_modes[0].hFile = GetStdHandle(STD_INPUT_HANDLE);
-      fileno_modes[0].mode = _O_RDONLY|_O_TEXT;
+   if (__pioinfo[0].fd == -1) {
+      __pioinfo[0].fd = 0;
+      __pioinfo[0].hFile = GetStdHandle(STD_INPUT_HANDLE);
+      __pioinfo[0].mode = _O_RDONLY|_O_TEXT;
    }
-   if (fileno_modes[1].fd == -1) {
-      fileno_modes[1].fd = 1;
-      fileno_modes[1].hFile = GetStdHandle(STD_OUTPUT_HANDLE);
-      fileno_modes[1].mode = _O_WRONLY|_O_TEXT;
+   if (__pioinfo[1].fd == -1) {
+      __pioinfo[1].fd = 1;
+      __pioinfo[1].hFile = GetStdHandle(STD_OUTPUT_HANDLE);
+      __pioinfo[1].mode = _O_WRONLY|_O_TEXT;
    }
-   if (fileno_modes[2].fd == -1) {
-      fileno_modes[2].fd = 2;
-      fileno_modes[2].hFile = GetStdHandle(STD_ERROR_HANDLE);
-      fileno_modes[2].mode = _O_WRONLY|_O_TEXT;
+   if (__pioinfo[2].fd == -1) {
+      __pioinfo[2].fd = 2;
+      __pioinfo[2].hFile = GetStdHandle(STD_ERROR_HANDLE);
+      __pioinfo[2].mode = _O_WRONLY|_O_TEXT;
    }
-   if (fileno_modes[3].fd == -1) {
-      fileno_modes[3].fd = 3;
-      fileno_modes[3].hFile = GetStdHandle(STD_AUX_HANDLE);
-      fileno_modes[3].mode = _O_WRONLY|_O_TEXT;
+   if (__pioinfo[3].fd == -1) {
+      __pioinfo[3].fd = 3;
+      __pioinfo[3].hFile = GetStdHandle(STD_AUX_HANDLE);
+      __pioinfo[3].mode = _O_WRONLY|_O_TEXT;
    }
-   if (fileno_modes[4].fd == -1) {
-      fileno_modes[4].fd = 4;
-      fileno_modes[4].hFile = GetStdHandle(STD_PRINTER_HANDLE);
-      fileno_modes[4].mode = _O_WRONLY|_O_TEXT;
+   if (__pioinfo[4].fd == -1) {
+      __pioinfo[4].fd = 4;
+      __pioinfo[4].hFile = GetStdHandle(STD_PRINTER_HANDLE);
+      __pioinfo[4].mode = _O_WRONLY|_O_TEXT;
    }
    return TRUE;
 }

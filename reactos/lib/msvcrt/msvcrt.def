@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.16 2002/11/24 18:42:20 robd Exp $
+; $Id: msvcrt.def,v 1.17 2002/12/26 17:26:41 robd Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -137,7 +137,7 @@ __p__winmajor
 __p__winminor
 __p__winver
 ; __p__wpgmptr
-; __pioinfo
+__pioinfo
 ; __pxcptinfoptrs
 __set_app_type
 ; __setlc_active
