@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.35 2003/08/21 15:26:18 weiden Exp $
+/* $Id: stubs.c,v 1.36 2003/08/22 00:33:47 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -232,30 +232,6 @@ LockWorkStation(VOID)
 {
   UNIMPLEMENTED;
   return FALSE;
-}
-
-
-/*
- * @implemented
- */
-WINBOOL
-STDCALL
-MessageBeep(
-  UINT uType)
-{
-    CHAR EventName[64];
-    
-    switch(uType)
-    {
-        case 0xFFFFFFFF : return Beep(500, 100);    // Beep through speaker
-        case MB_ICONASTERISK : strcpy(EventName, "SystemAsterisk"); break;
-        case MB_ICONEXCLAMATION : strcpy(EventName, "SystemExclamation"); break;
-        case MB_ICONHAND : strcpy(EventName, "SystemHand"); break;
-        case MB_ICONQUESTION : strcpy(EventName, "SystemQuestion"); break;
-        case MB_OK : strcpy(EventName, "SystemDefault"); break;
-    }
-//    return PlaySoundA((LPCSTR) &EventName, NULL, SND_ALIAS | SND_NOWAIT | SND_NOSTOP | SND_ASYNC);
-    return FALSE;
 }
 
 

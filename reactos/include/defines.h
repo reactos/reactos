@@ -2100,6 +2100,7 @@ extern "C" {
 #define MB_TASKMODAL	(0x2000L)
 #define MB_YESNO	(0x4L)
 #define MB_YESNOCANCEL	(0x3L)
+#define MB_CANCELTRYCONTINUE	(0x6L)
 #define IDABORT	(3)
 #define IDCANCEL	(2)
 #define IDCLOSE	(8)
@@ -2109,6 +2110,8 @@ extern "C" {
 #define IDOK	(1)
 #define IDRETRY	(4)
 #define IDYES	(6)
+#define IDTRYAGAIN	(10)
+#define IDCONTINUE	(11)
 
 /* MessageProc */
 #define MSGF_DIALOGBOX	(0)

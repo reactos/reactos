@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: messagebox.c,v 1.11 2003/08/09 14:25:07 chorns Exp $
+/* $Id: messagebox.c,v 1.12 2003/08/22 00:33:47 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/messagebox.c
@@ -40,6 +40,8 @@
 #include <stdlib.h>
 #include <debug.h>
 
+typedef UINT *LPUINT;
+#include <mmsystem.h>
 
 /* DEFINES *******************************************************************/
 
@@ -67,16 +69,6 @@
 #ifndef MB_DEFMASK
 #define MB_DEFMASK              0x00000F00
 #endif
-#ifndef MB_CANCELTRYCONTINUE
-#define MB_CANCELTRYCONTINUE    (0x6L)
-#endif
-#ifndef IDTRYAGAIN
-#define IDTRYAGAIN      10
-#endif
-#ifndef IDCONTINUE
-#define IDCONTINUE      11
-#endif
-
 
 /* FUNCTIONS *****************************************************************/
 
@@ -688,10 +680,49 @@ MessageBoxW(
  */
 DWORD
 STDCALL
-SoftModalMessageBox (DWORD Unknown0)
+SoftModalMessageBox(DWORD Unknown0)
 {
   UNIMPLEMENTED;
   return 0;
+}
+
+
+/*
+ * @implemented
+ */
+WINBOOL
+STDCALL
+MessageBeep(UINT uType)
+{
+#if 0
+  LPWSTR EventName;
+
+  switch(uType)
+  {
+    case 0xFFFFFFFF:
+      /* FIXME check if soundcard installed, else fall through to MB_OK */
+      return Beep(500, 100);    // Beep through speaker
+    case MB_OK: 
+      EventName = L"SystemDefault";
+      break;
+    case MB_ICONASTERISK:
+      EventName = L"SystemAsterisk";
+      break;
+    case MB_ICONEXCLAMATION:
+      EventName = L"SystemExclamation";
+      break;
+    case MB_ICONHAND:
+      EventName = L"SystemHand";
+      break;
+    case MB_ICONQUESTION:
+      EventName = L"SystemQuestion";
+      break;
+  }
+  DbgPrint("Playing sound: %ws\n", (LPWSTR)EventName);
+  return PlaySoundW(EventName, NULL, SND_ALIAS | SND_NOWAIT | SND_NOSTOP | SND_ASYNC);
+#else
+  return Beep(500, 100);    // Beep through speaker
+#endif
 }
 
 /* EOF */
