@@ -166,6 +166,7 @@ ObDuplicateObject(PEPROCESS SourceProcess,
   POBJECT_HEADER ObjectHeader;
   LONG ExTargetHandle;
   LONG ExSourceHandle = HANDLE_TO_EX_HANDLE(SourceHandle);
+  ULONG NewHandleCount;
   
   PAGED_CODE();
   
@@ -200,8 +201,8 @@ ObDuplicateObject(PEPROCESS SourceProcess,
      1 here, we're in big trouble... it would've been safe to increment and
      check the handle count without using interlocked functions because the
      entry is locked, which means the handle count can't change. */
-  InterlockedIncrement(&ObjectHeader->HandleCount);
-  ASSERT(ObjectHeader->HandleCount >= 2);
+  NewHandleCount = InterlockedIncrement(&ObjectHeader->HandleCount);
+  ASSERT(NewHandleCount >= 2);
   
   ExUnlockHandleTableEntry(SourceProcess->ObjectTable,
                            SourceHandleEntry);
@@ -329,7 +330,8 @@ NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
      }
 
    /* Check for magic handle first */
-   if (SourceHandle == NtCurrentThread())
+   if (SourceHandle == NtCurrentThread() ||
+       SourceHandle == NtCurrentProcess())
      {
        PVOID ObjectBody;
        
@@ -746,6 +748,7 @@ ObReferenceObjectByHandle(HANDLE Handle,
                                  HandleEntry);
 
         KeLeaveCriticalRegion();
+        ObDereferenceObject(ObjectBody);
         
         return(STATUS_OBJECT_TYPE_MISMATCH);
      }
@@ -762,6 +765,7 @@ ObReferenceObjectByHandle(HANDLE Handle,
 	if (!(GrantedAccess & DesiredAccess) &&
 	    !((~GrantedAccess) & DesiredAccess))
 	  {
+             ObDereferenceObject(ObjectBody);
 	     CHECKPOINT;
 	     return(STATUS_ACCESS_DENIED);
 	  }
