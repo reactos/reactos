@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.60 2004/07/04 01:23:32 navaraf Exp $ */
+/* $Id: cursoricon.c,v 1.61 2004/07/04 11:18:56 navaraf Exp $ */
 #include <w32k.h>
 
 PCURICON_OBJECT FASTCALL
@@ -47,6 +47,7 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
    PCURICON_OBJECT OldCursor;
    HCURSOR Ret = (HCURSOR)0;
    HBITMAP hColor = (HBITMAP)0;
+   HBITMAP hMask = 0;
    SURFOBJ *soMask = NULL, *soColor = NULL;
    XLATEOBJ *XlateObj = NULL;
    RECTL PointerRect;
@@ -148,7 +149,23 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
           MaskBmpObj = BITMAPOBJ_LockBitmap(NewCursor->IconInfo.hbmMask);
           if(MaskBmpObj)
           {
-            soMask = &MaskBmpObj->SurfObj;
+            RECTL DestRect = {0, 0, MaskBmpObj->SurfObj.sizlBitmap.cx, MaskBmpObj->SurfObj.sizlBitmap.cy};
+            POINTL SourcePoint = {0, 0};
+
+            /*
+             * NOTE: For now we create the cursor in top-down bitmap,
+             * because VMware driver rejects it otherwise. This should
+             * be fixed later.
+             */
+            hMask = EngCreateBitmap(
+              MaskBmpObj->SurfObj.sizlBitmap, abs(MaskBmpObj->SurfObj.lDelta),
+              MaskBmpObj->SurfObj.iBitmapFormat, BMF_TOPDOWN,
+              NULL);
+            ASSERT(hMask);
+            soMask = EngLockSurface((HSURF)hMask);
+            EngCopyBits(soMask, &MaskBmpObj->SurfObj, NULL, NULL,
+              &DestRect, &SourcePoint);
+            BITMAPOBJ_UnlockBitmap(NewCursor->IconInfo.hbmMask);
           }
         }
       }
@@ -172,7 +189,7 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
                                                         CurInfo->y, 
                                                         &PointerRect,
                                                         SPS_CHANGE);
-      DbgPrint("SetCursor: DrvSetPointerShape() returned %x\n",
+      DPRINT("SetCursor: DrvSetPointerShape() returned %x\n",
          GDIDEV(SurfObj)->PointerStatus);
     }
     else
@@ -200,9 +217,10 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
     SetPointerRect(CurInfo, &PointerRect);
     
     BITMAPOBJ_UnlockBitmap(SurfObj->hsurf);
-    if(MaskBmpObj)
+    if(hMask)
     {
-      BITMAPOBJ_UnlockBitmap(soMask->hsurf);
+      EngUnlockSurface(soMask);
+      EngDeleteSurface((HSURF)hMask);
     }
     if(hColor)
     {
