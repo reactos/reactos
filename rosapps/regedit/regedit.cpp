@@ -23,7 +23,7 @@
 #ifdef _MSC_VER
 #include "stdafx.h"
 #else
-#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
+#define WIN32_LEAN_AND_MEAN     // Exclude rarely-used stuff from Windows headers
 #include <windows.h>
 #include <commctrl.h>
 #include <stdlib.h>
@@ -33,7 +33,7 @@
 #include <process.h>
 #include <stdio.h>
 #endif
-	
+    
 #include "regedit.h"
 #include "regtree.h"
 #include "reglist.h"
@@ -189,7 +189,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
     // Create the status bar
     hStatusWnd = CreateStatusWindow(WS_VISIBLE|WS_CHILD|WS_CLIPSIBLINGS|SBT_NOBORDERS, 
-		                            "", hMainWnd, STATUS_WINDOW);
+                                    "", hMainWnd, STATUS_WINDOW);
     if (!hStatusWnd)
         return FALSE;
 
@@ -202,18 +202,18 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 /*
     hSplitWnd = CreateWindow(szFrameClass, "splitter window", WS_VISIBLE|WS_CHILD,
                             CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, 
-							hMainWnd, (HMENU)SPLIT_WINDOW, hInstance, NULL);
+                            hMainWnd, (HMENU)SPLIT_WINDOW, hInstance, NULL);
     if (!hSplitWnd)
         return FALSE;
  */
-	hTreeWnd = CreateTreeView(hMainWnd, "c:\\foobar.txt");
+    hTreeWnd = CreateTreeView(hMainWnd, "c:\\foobar.txt");
     if (!hTreeWnd)
         return FALSE;
 
     hListWnd = CreateListView(hMainWnd, "");
     if (!hListWnd)
         return FALSE;
-		
+        
     ShowWindow(hMainWnd, nCmdShow);
     UpdateWindow(hMainWnd);
     return TRUE;
@@ -250,8 +250,8 @@ void OnSize(UINT nType, int cx, int cy)
 
     GetWindowRect(hStatusWnd, &rc);
 
-	MoveWindow(hTreeWnd,0,0,cx/2,cy-(rc.bottom - rc.top),TRUE);
-	MoveWindow(hListWnd,cx/2,0,cx,cy-(rc.bottom - rc.top),TRUE);
+    MoveWindow(hTreeWnd,0,0,cx/2,cy-(rc.bottom - rc.top),TRUE);
+    MoveWindow(hListWnd,cx/2,0,cx,cy-(rc.bottom - rc.top),TRUE);
 
 }
 
@@ -291,11 +291,11 @@ void OnMenuSelect(HWND hWnd, UINT nItemID, UINT nFlags, HMENU hSysMenu)
     TCHAR str[100];
 
     strcpy(str, TEXT(""));
-	if (nFlags & MF_POPUP) {
-		if (hSysMenu != GetMenu(hWnd)) {
-			if (nItemID == 2) nItemID = 5;
-		}
-	}
+    if (nFlags & MF_POPUP) {
+        if (hSysMenu != GetMenu(hWnd)) {
+            if (nItemID == 2) nItemID = 5;
+        }
+    }
     if (LoadString(hInst, nItemID, str, 100)) {
         // load appropriate string
         LPTSTR lpsz = str;
@@ -324,7 +324,7 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         switch (wmId) {
             case IDM_ABOUT:
 //                ShowAboutBox(hWnd);
-				{
+                {
                 HICON hIcon = LoadIcon(hInst, (LPCTSTR)IDI_REGEDIT);
                 ShellAbout(hWnd, szTitle, "FrameWndProc", hIcon);
                 //if (hIcon) DestroyIcon(hIcon); // NOT REQUIRED
@@ -386,16 +386,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             //PageSetupDlg(&psd);
             break;
         case ID_REGISTRY_OPENLOCAL:
-			{
+            {
             HWND hChildWnd;
 //            hChildWnd = CreateWindow(szFrameClass, szTitle, WS_OVERLAPPEDWINDOW | WS_CHILD,
 //                                   CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, hWnd, NULL, hInst, NULL);
             hChildWnd = CreateWindow(szFrameClass, szTitle, WS_OVERLAPPEDWINDOW | WS_CHILD,
                                      0, 0, 150, 170, hWnd, NULL, hInst, NULL);
-			if (hChildWnd) {
-				ShowWindow(hChildWnd, 1);
-				UpdateWindow(hChildWnd);
-			}
+            if (hChildWnd) {
+                ShowWindow(hChildWnd, 1);
+                UpdateWindow(hChildWnd);
+            }
             }
             break;
         case IDM_ABOUT:

@@ -1,6 +1,6 @@
 // stdafx.cpp : source file that includes just the standard includes
-//	regedit.pch will be the pre-compiled header
-//	stdafx.obj will contain the pre-compiled type information
+//  regedit.pch will be the pre-compiled header
+//  stdafx.obj will contain the pre-compiled type information
 
 #include "stdafx.h"
 

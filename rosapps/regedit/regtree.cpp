@@ -128,8 +128,8 @@ HTREEITEM AddItemToTree(HWND hwndTV, LPSTR lpszItem, int nLevel)
 
 BOOL InitTreeViewItems(HWND hwndTV, LPSTR lpszFileName) 
 { 
-	HTREEITEM hItem;
-	
+    HTREEITEM hItem;
+    
     hItem = AddItemToTree(hwndTV, "My Computer", 1); 
     AddItemToTree(hwndTV, "HKEY_CLASSES_ROOT", 2); 
     AddItemToTree(hwndTV, "HKEY_CURRENT_USER", 2); 
@@ -137,7 +137,7 @@ BOOL InitTreeViewItems(HWND hwndTV, LPSTR lpszFileName)
     AddItemToTree(hwndTV, "HKEY_USERS", 2); 
     AddItemToTree(hwndTV, "HKEY_CURRENT_CONFIG", 2); 
 
-	TreeView_Expand(hwndTV, hItem, TVE_EXPAND);
+    TreeView_Expand(hwndTV, hItem, TVE_EXPAND);
     return TRUE; 
 } 
  

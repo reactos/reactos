@@ -2,8 +2,13 @@
 // Microsoft Developer Studio generated include file.
 // Used by regedit.rc
 //
-#define IDC_MYICON                      2
-#define IDD_REGED_DIALOG                102
+#define ID_REGISTRY_MENU                0
+#define ID_EDIT_MENU                    1
+#define ID_FILE_MENU                    2
+#define ID_VIEW_MENU                    3
+#define ID_FAVOURITES_MENU              4
+#define ID_EDIT_NEW_MENU                5
+
 #define IDD_ABOUTBOX                    103
 #define IDS_APP_TITLE                   103
 #define IDM_ABOUT                       104
@@ -13,20 +18,11 @@
 #define IDI_SMALL                       108
 #define IDC_REGEDIT                     109
 #define IDC_REGEDIT_FRAME               110
-#define IDR_MAINFRAME                   128
 #define IDR_REGEDIT_MENU                130
 #define IDD_DIALOG1                     131
-
-#define ID_REGISTRY_MENU                0
-#define ID_EDIT_MENU                    1
-#define ID_FILE_MENU                    2
-#define ID_VIEW_MENU                    3
-#define ID_FAVOURITES_MENU              4
-#define ID_EDIT_NEW_MENU                5
-
-#define IDB_OPEN_FILE	                97
-#define IDB_CLOSED_FILE                 98
-#define IDB_ROOT                        99
+#define IDB_OPEN_FILE                   132
+#define IDB_CLOSED_FILE                 133
+#define IDB_ROOT                        134
 
 #define ID_HELP_HELPTOPICS              32771
 #define ID_FAVOURITES_ADDTOFAVOURITES   32772

@@ -130,7 +130,7 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "About"
 FONT 8, "System"
 BEGIN
-    ICON            IDI_REGEDIT,IDC_MYICON,14,9,16,16
+    ICON            IDI_REGEDIT,IDI_REGEDIT,14,9,16,16
     LTEXT           "ReactOS regedit Version 1.0",IDC_STATIC,49,10,119,8,
                     SS_NOPREFIX
     LTEXT           "Copyright (C) 2002 ReactOS Team",IDC_STATIC,49,20,119,8
