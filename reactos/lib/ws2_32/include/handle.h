@@ -7,7 +7,6 @@
 #ifndef __HANDLE_H
 #define __HANDLE_H
 
-#include <ws2_32.h>
 #include <catalog.h>
 
 typedef struct _PROVIDER_HANDLE {

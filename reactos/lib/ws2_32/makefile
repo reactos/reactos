@@ -1,10 +1,12 @@
-# $Id: makefile,v 1.15 2004/06/09 18:11:39 arty Exp $
+# $Id: makefile,v 1.16 2004/08/15 18:53:07 chorns Exp $
 
 PATH_TO_TOP = ../..
 
 TARGET_TYPE = dynlink
 
 TARGET_NAME = ws2_32
+
+TARGET_PCH = include/ws2_32.h
 
 TARGET_BASE = $(TARGET_BASE_LIB_W2_32)
 
