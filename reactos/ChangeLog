@@ -1,3 +1,9 @@
+2003-11-29  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* tools/cabman/dfp.cxx (CDFParser::Parse): Allow TokenString.
+	(CDFParser::PerformFileCopy): Use CurrentChar instead of length of
+	CurrentString to find the start of the next token.
+
 2003-11-08  Martin Fuchs  <martin-fuchs@gmx.net>
 
 	* controls/button.c partial fix for for Bug #42:

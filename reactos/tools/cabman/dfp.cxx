@@ -314,6 +314,7 @@ unsigned long CDFParser::Parse()
                 case TokenInteger:
                     sprintf(CurrentString, "%lu", CurrentInteger);
                 case TokenIdentifier:
+                case TokenString:
                     if (Command) {
                         /* Command */
                         Status = PerformCommand();
@@ -1003,7 +1004,7 @@ unsigned long CDFParser::PerformFileCopy()
     strcpy(SrcName, "");
     strcpy(DstName, "");
 
-    i = strlen(CurrentString);
+    i = CurrentChar;
     while ((i < LineLength) &&
         ((ch = Line[i]) != ' ') &&
          (ch != 0x09) &&
