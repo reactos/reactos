@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.44 2004/12/05 03:50:33 navaraf Exp $
+/* $Id: message.c,v 1.45 2004/12/13 15:39:52 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1934,7 +1934,7 @@ BOOL WINAPI RegisterMessagePumpHook(MESSAGEPUMPHOOKPROC Hook)
 		return FALSE;
 	}
 	if (!gcLoadMPH++) {
-		InterlockedExchange(&gfMessagePumpHook, 1);
+		InterlockedExchange((PLONG)&gfMessagePumpHook, 1);
 	}
 	LeaveCriticalSection(&gcsMPH);
 	return TRUE;
@@ -1947,7 +1947,7 @@ BOOL WINAPI UnregisterMessagePumpHook(VOID)
 		if(NtUserCallNoParam(NOPARAM_ROUTINE_UNINIT_MESSAGE_PUMP)) {
 			gcLoadMPH--;
 			if(!gcLoadMPH) {
-				InterlockedExchange(&gfMessagePumpHook, 0);
+				InterlockedExchange((PLONG)&gfMessagePumpHook, 0);
 				gpfnInitMPH(TRUE, NULL);
 				ResetMessagePumpHook(&gmph);
 				gpfnInitMPH = 0;

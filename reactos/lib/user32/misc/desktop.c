@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.35 2004/11/13 01:14:42 rcampbell Exp $
+/* $Id: desktop.c,v 1.36 2004/12/13 15:39:52 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -171,7 +171,7 @@ SystemParametersInfoA(UINT uiAction,
                            L"Control Panel\\Desktop",
                            0, KEY_SET_VALUE, &hKey) == ERROR_SUCCESS)
           {
-            Ret = RegSetValueExA(hKey, "Wallpaper", 0, REG_SZ, (lpWallpaper != NULL ? lpWallpaper : ""),
+            Ret = RegSetValueExA(hKey, "Wallpaper", 0, REG_SZ, (LPBYTE)(lpWallpaper != NULL ? lpWallpaper : ""),
                                  (lpWallpaper != NULL ? (lstrlenA(lpWallpaper) + 1) * sizeof(CHAR) : sizeof(CHAR)) == ERROR_SUCCESS);
             RegCloseKey(hKey);
           }

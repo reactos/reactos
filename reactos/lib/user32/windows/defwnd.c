@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.148 2004/12/12 01:40:36 weiden Exp $
+/* $Id: defwnd.c,v 1.149 2004/12/13 15:39:52 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -41,9 +41,9 @@ void FASTCALL MenuInitSysMenuPopup(HMENU Menu, DWORD Style, DWORD ClsStyle, LONG
 
 /* GLOBALS *******************************************************************/
 
-static COLORREF SysColors[NUM_SYSCOLORS] = {0};
-static HPEN SysPens[NUM_SYSCOLORS] = {0};
-static HBRUSH SysBrushes[NUM_SYSCOLORS] = {0};
+COLORREF SysColors[NUM_SYSCOLORS] = {0};
+HPEN SysPens[NUM_SYSCOLORS] = {0};
+HBRUSH SysBrushes[NUM_SYSCOLORS] = {0};
 
 /* Bits in the dwKeyData */
 #define KEYDATA_ALT   0x2000
@@ -219,7 +219,7 @@ DefWndHandleSetCursor(HWND hWnd, WPARAM wParam, LPARAM lParam, ULONG Style)
       return(0);
     }
 
-  switch(LOWORD(lParam))
+  switch((INT_PTR) LOWORD(lParam))
     {
     case HTERROR:
       {
