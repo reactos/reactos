@@ -6,7 +6,9 @@
 #include <ddk/ntddk.h>
 #include <ddk/ntddvid.h>
 
-#define UNIMPLEMENTED DbgPrint("%s:%d: Function not implemented", __FILE__, __LINE__)
+#include "vidport.h"
+
+#define UNIMPLEMENTED do {DbgPrint("%s:%d: Function not implemented", __FILE__, __LINE__); for(;;);} while (0)
 
 #define VERSION "0.0.0"
 
@@ -56,7 +58,7 @@ VideoPortCompareMemory(IN PVOID  Source1,
                        IN PVOID  Source2, 
                        IN ULONG  Length)
 {
-  UNIMPLEMENTED;
+  return RtlCompareMemory(Source1, Source2, Length);
 }
 
 VOID 
@@ -93,13 +95,18 @@ VideoPortGetBusData(IN PVOID  HwDeviceExtension,
                     IN ULONG  Offset,
                     IN ULONG  Length)
 {
-  UNIMPLEMENTED;
+  return HalGetBusDataByOffset(BusDataType, 
+                               0, 
+                               SlotNumber, 
+                               Buffer, 
+                               Offset, 
+                               Length);
 }
 
 UCHAR 
 VideoPortGetCurrentIrql(VOID)
 {
-  UNIMPLEMENTED;
+  return KeGetCurrentIrql;
 }
 
 PVOID 
@@ -157,6 +164,7 @@ VideoPortInitialize(IN PVOID  Context1,
   PDRIVER_OBJECT  MPDriverObject = (PDRIVER_OBJECT) Context1;
   PDEVICE_OBJECT  MPDeviceObject;
   VIDEO_PORT_CONFIG_INFO  ConfigInfo;
+  VIDEOPORT_DEVICE_EXTENSION_DATA  ExtensionData;
 
   /*  Build Dispatch table from passed data  */
   MPDriverObject->DriverStartIo = HwInitializationData->HwStartIO;
@@ -172,7 +180,8 @@ VideoPortInitialize(IN PVOID  Context1,
 
       /*  Create the device  */
       RC = IoCreateDevice(MPDriverObject, 
-                          HwInitializationData->HwDeviceExtensionSize, 
+                          HwInitializationData->HwDeviceExtensionSize +
+                            sizeof VIDEOPORT_EXTENSION_DATA,
                           &UnicodeName, 
                           FILE_DEVICE_VIDEO, 
                           0, 
@@ -183,31 +192,85 @@ VideoPortInitialize(IN PVOID  Context1,
           DbgPrint("IoCreateDevice call failed\n",0);
           return RC;
         }
-
+      ExtensionData = 
+        (PVIDEOPORT_EXTENSION_DATA) MPDeviceObject->DeviceExtension;
+      ExtensionData->DeviceObject = MPDeviceObject;
+      
       /*  Set the buffering strategy here...  */
       MPDeviceObject->Flags |= DO_BUFFERED_IO;
 
       /*  Call HwFindAdapter entry point  */
       /* FIXME: Need to figure out what string to pass as param 3  */
-      if (!HwInitializationData->HwFindAdapter(MPDeviceObject->DeviceExtension,
-                                               Context2,
-                                               "",
-                                               &ConfigInfo,
-                                               &Again))
+      Status = HwInitializationData->HwFindAdapter(VPExtensionToMPExtension(ExtensionData),
+                                                   Context2,
+                                                   "",
+                                                   &ConfigInfo,
+                                                   &Again);
+      if (!NT_SUCCESS(Status))
         {
           DbgPrint("HwFindAdapter call failed");
-          /* FIXME: should deallocate device here  */
+          IoDeleteDevice(MPDeviceObject);
 
-          return  STATUS_UNSUCCESSFUL;
+          return  Status;
         }
 
       /* FIXME: Allocate hardware resources for device  */
-      /* FIXME: Allocate interrupt for device  */
+
+      /*  Allocate interrupt for device  */
+      if (HwInitializationData->HwInterrupt != NULL)
+        {
+          ExtensionData->IRQL = ConfigInfo.BusInterruptLevel;
+          ExtensionData->Interrupt = 
+            HalGetinterruptVector(ConfigInfo.AdapterInterfaceType,
+                                  ConfigInfo.SystemIoBusNumber,
+                                  ConfigInfo.BusInterruptLevel,
+                                  ConfigInfo.BufInterruptVector,
+                                  &ExtensionData->IRQL,
+                                  &ExtensionData->Affinity);
+          KeInitializeSpinLock(&ExtensionData->InterruptSpinLock);
+          Status = IoConnectInterrupt(&ExtensionData->InterruptObject,
+                                      HwInitializationData->HwInterrupt,
+                                      VPExtensionToMPExtension(ExtensionData),
+                                      &ExtensionData->InterruptSpinLock,
+                                      ExtensionData->InterruptLevel,
+                                      ExtensionData->IRQL,
+                                      ExtensionData->IRQL,
+                                      ConfigData.InterruptMode,
+                                      FALSE,
+                                      ExtensionData->Affinity,
+                                      FALSE);
+          if (!NT_SUCCESS(Status))
+            {
+              DbgPrint("IoConnectInterrupt failed\n");
+              IoDeleteDevice(MPDeviceObject);
+              
+              return Status;
+            }
+          
+        }
     }
   while (&Again);
 
   /* FIXME: initialize timer routine for MP Driver  */
-
+  if (HwInitialization->HwTimer != NULL)
+    {
+      Status = IoInitializeTimer(MPDeviceObject,
+                                 HwInitialization->HwTimer,
+                                 VPExtensionTPMPExtension(ExtensionData));
+      if (!NT_SUCCESS(Status))
+        {
+          DbgPrint("IoInitializeTimer failed\n");
+          
+          if (HwInitializationData->HwInterrupt != NULL)
+            {
+              IoDisconnectInterrupt(&ExtensionData->InterruptObject);
+            }
+          IoDeleteDevice(MPDeviceObject);
+          
+          return Status;
+        }
+    }
+  
   return  STATUS_SUCCESS;
 }
 
@@ -262,19 +325,19 @@ VideoPortMoveMemory(OUT PVOID  Destination,
 UCHAR 
 VideoPortReadPortUchar(IN PUCHAR  Port)
 {
-  UNIMPLEMENTED;
+  return  READ_PORT_UCHAR(Port);
 }
 
 USHORT 
 VideoPortReadPortUshort(IN PUSHORT Port)
 {
-  UNIMPLEMENTED;
+  return  READ_PORT_USHORT(Port);
 }
 
 ULONG 
 VideoPortReadPortUlong(IN PULONG Port)
 {
-  UNIMPLEMENTED;
+  return  READ_PORT_ULONG(Port);
 }
 
 VOID 
@@ -282,7 +345,7 @@ VideoPortReadPortBufferUchar(IN PUCHAR  Port,
                              OUT PUCHAR  Buffer, 
                              IN ULONG  Count)
 {
-  UNIMPLEMENTED;
+  READ_PORT_BUFFER_UCHAR(Port, Buffer, Count);
 }
 
 VOID 
@@ -290,7 +353,7 @@ VideoPortReadPortBufferUshort(IN PUSHORT Port,
                               OUT PUSHORT Buffer, 
                               IN ULONG Count)
 {
-  UNIMPLEMENTED;
+  READ_PORT_BUFFER_USHORT(Port, Buffer, Count);
 }
 
 VOID 
@@ -298,25 +361,25 @@ VideoPortReadPortBufferUlong(IN PULONG Port,
                              OUT PULONG Buffer, 
                              IN ULONG Count)
 {
-  UNIMPLEMENTED;
+  READ_PORT_BUFFER_ULONG(Port, Buffer, Count);
 }
 
 UCHAR 
 VideoPortReadRegisterUchar(IN PUCHAR Register)
 {
-  UNIMPLEMENTED;
+  return  READ_REGISTER_UCHAR(Register);
 }
 
 USHORT 
 VideoPortReadRegisterUshort(IN PUSHORT Register)
 {
-  UNIMPLEMENTED;
+  return  READ_REGISTER_USHORT(Register);
 }
 
 ULONG 
 VideoPortReadRegisterUlong(IN PULONG Register)
 {
-  UNIMPLEMENTED;
+  return  READ_REGISTER_ULONG(Register);
 }
 
 VOID 
@@ -324,7 +387,7 @@ VideoPortReadRegisterBufferUchar(IN PUCHAR  Register,
                                  OUT PUCHAR  Buffer, 
                                  IN ULONG  Count)
 {
-  UNIMPLEMENTED;
+  READ_REGISTER_BUFFER_UCHAR(Register, Buffer, Count);
 }
 
 VOID 
@@ -332,7 +395,7 @@ VideoPortReadRegisterBufferUshort(IN PUSHORT  Register,
                                   OUT PUSHORT  Buffer, 
                                   IN ULONG  Count)
 {
-  UNIMPLEMENTED;
+  READ_REGISTER_BUFFER_USHORT(Register, Buffer, Count);
 }
 
 VOID 
@@ -340,7 +403,7 @@ VideoPortReadRegisterBufferUlong(IN PULONG  Register,
                                  OUT PULONG  Buffer, 
                                  IN ULONG  Count)
 {
-  UNIMPLEMENTED;
+  READ_REGISTER_BUFFER_ULONG(Register, Buffer, Count);
 }
 
 BOOLEAN 
@@ -383,19 +446,25 @@ VideoPortSetTrappedEmulatorPorts(IN PVOID  HwDeviceExtension,
 VOID 
 VideoPortStallExecution(IN ULONG  Microseconds)
 {
-  UNIMPLEMENTED;
+  KeStallExecutionProcessor(Microseconds);
 }
 
 VOID 
 VideoPortStartTimer(IN PVOID  HwDeviceExtension)
 {
-  UNIMPLEMENTED;
+  PVIDEOPORT_EXTENSION_DATA ExtensionData = 
+    MPExtensionToVPExtension(HwDeviceExtension);
+
+  IoStartTimer(ExtensionData->DeviceObject);
 }
 
 VOID 
 VideoPortStopTimer(IN PVOID  HwDeviceExtension)
 {
-  UNIMPLEMENTED;
+  PVIDEOPORT_EXTENSION_DATA ExtensionData = 
+    MPExtensionToVPExtension(HwDeviceExtension);
+
+  IoStopTimer(ExtensionData->DeviceObject);
 }
 
 BOOLEAN 
