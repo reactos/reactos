@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.34 2004/10/24 20:37:26 weiden Exp $
+/* $Id: zw.h,v 1.35 2004/11/12 12:06:17 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -5765,17 +5765,19 @@ ZwAddAtom(
 NTSTATUS
 STDCALL
 NtAllocateUuids(
-	PULARGE_INTEGER Time,
-	PULONG Range,
-	PULONG Sequence
+	OUT PULARGE_INTEGER Time,
+	OUT PULONG Range,
+	OUT PULONG Sequence,
+	OUT PUCHAR Seed
 	);
 
 NTSTATUS
 STDCALL
 ZwAllocateUuids(
-	PULARGE_INTEGER Time,
-	PULONG Range,
-	PULONG Sequence
+	OUT PULARGE_INTEGER Time,
+	OUT PULONG Range,
+	OUT PULONG Sequence,
+	OUT PUCHAR Seed
 	);
 
 NTSTATUS
@@ -6332,6 +6334,12 @@ ZwSetTimer(
 	IN LONG Period  OPTIONAL,
 	OUT PBOOLEAN PreviousState  OPTIONAL
 	);
+
+NTSTATUS STDCALL
+NtSetUuidSeed(IN PUCHAR Seed);
+
+NTSTATUS STDCALL
+ZwSetUuidSeed(IN PUCHAR Seed);
 
 /*
  * FUNCTION: Unloads a registry key.

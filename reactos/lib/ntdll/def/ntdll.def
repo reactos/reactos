@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.133 2004/11/07 13:08:24 hyperion Exp $
+; $Id: ntdll.def,v 1.134 2004/11/12 12:06:54 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -65,7 +65,7 @@ NtAdjustPrivilegesToken@24
 NtAlertResumeThread@8
 NtAlertThread@4
 NtAllocateLocallyUniqueId@4
-NtAllocateUuids@12
+NtAllocateUuids@16
 NtAllocateVirtualMemory@24
 NtAssignProcessToJobObject@8
 NtCallbackReturn@12
@@ -252,6 +252,7 @@ NtSetSystemPowerState@12
 NtSetSystemTime@8
 NtSetTimer@28
 NtSetTimerResolution@12
+NtSetUuidSeed@4
 NtSetValueKey@24
 NtSetVolumeInformationFile@20
 NtShutdownSystem@4
@@ -691,7 +692,7 @@ ZwAdjustPrivilegesToken@24
 ZwAlertResumeThread@8
 ZwAlertThread@4
 ZwAllocateLocallyUniqueId@4
-ZwAllocateUuids@12
+ZwAllocateUuids@16
 ZwAllocateVirtualMemory@24
 ZwCallbackReturn@12
 ZwCancelIoFile@8
@@ -870,6 +871,7 @@ ZwSetSystemPowerState@12
 ZwSetSystemTime@8
 ZwSetTimer@28
 ZwSetTimerResolution@12
+ZwSetUuidSeed@4
 ZwSetValueKey@24
 ZwSetVolumeInformationFile@20
 ZwShutdownSystem@4

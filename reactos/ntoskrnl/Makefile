@@ -260,6 +260,7 @@ OBJECTS_EX = \
 	ex/sysinfo.o \
 	ex/time.o \
 	ex/util.o \
+	ex/uuid.o \
 	ex/win32k.o \
 	ex/work.o \
 	ex/zone.o

@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.49 2004/10/24 15:26:14 weiden Exp $
+/* $Id: semgr.c,v 1.50 2004/11/12 12:05:05 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -187,20 +187,6 @@ VOID SepReferenceLogonSession(PLUID AuthenticationId)
 VOID SepDeReferenceLogonSession(PLUID AuthenticationId)
 {
    UNIMPLEMENTED;
-}
-
-
-
-/*
- * @unimplemented
- */
-NTSTATUS STDCALL
-NtAllocateUuids(PULARGE_INTEGER Time,
-		PULONG Range,
-		PULONG Sequence)
-{
-  UNIMPLEMENTED;
-  return(STATUS_NOT_IMPLEMENTED);
 }
 
 

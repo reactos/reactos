@@ -8,7 +8,7 @@ NtAdjustPrivilegesToken ZwAdjustPrivilegesToken 6
 NtAlertResumeThread ZwAlertResumeThread 2
 NtAlertThread ZwAlertThread 1
 NtAllocateLocallyUniqueId ZwAllocateLocallyUniqueId 1
-NtAllocateUuids ZwAllocateUuids 3
+NtAllocateUuids ZwAllocateUuids 4
 NtAllocateVirtualMemory ZwAllocateVirtualMemory 6
 NtAssignProcessToJobObject ZwAssignProcessToJobObject 2
 NtCallbackReturn ZwCallbackReturn 3
@@ -202,6 +202,7 @@ NtSetSystemPowerState ZwSetSystemPowerState 3
 NtSetSystemTime ZwSetSystemTime 2
 NtSetTimer ZwSetTimer 7
 NtSetTimerResolution ZwSetTimerResolution 3
+NtSetUuidSeed ZwSetUuidSeed 1
 NtSetValueKey ZwSetValueKey 6
 NtSetVolumeInformationFile ZwSetVolumeInformationFile 5
 NtShutdownSystem ZwShutdownSystem 1

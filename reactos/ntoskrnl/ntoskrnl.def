@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.199 2004/11/07 22:55:37 navaraf Exp $
+; $Id: ntoskrnl.def,v 1.200 2004/11/12 12:05:27 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -767,7 +767,7 @@ NtAddAtom@12
 NtAdjustPrivilegesToken@24
 NtAlertThread@4
 NtAllocateLocallyUniqueId@4
-NtAllocateUuids@12
+NtAllocateUuids@16
 NtAllocateVirtualMemory@24
 NtBuildNumber DATA
 NtClose@4
