@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.68 2002/09/17 23:41:43 dwelch Exp $
+/* $Id: rtl.h,v 1.69 2002/11/10 13:34:42 robd Exp $
  * 
  */
 
@@ -696,8 +696,8 @@ STDCALL
 RtlCreateHeap (
 	ULONG			Flags,
 	PVOID			BaseAddress,
-	ULONG			SizeToReserve,
-	ULONG			SizeToCommit,
+	ULONG			SizeToReserve,     // dwMaximumSize
+	ULONG			SizeToCommit,      // dwInitialSize
 	PVOID			Unknown,
 	PRTL_HEAP_DEFINITION	Definition
 	);
