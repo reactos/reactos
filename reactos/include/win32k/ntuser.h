@@ -978,15 +978,16 @@ NtUserModifyUserStartupInfoFlags(
   DWORD Unknown0,
   DWORD Unknown1);
 
-DWORD
+BOOL
 STDCALL
-NtUserMoveWindow(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5);
+NtUserMoveWindow(      
+    HWND hWnd,
+    int X,
+    int Y,
+    int nWidth,
+    int nHeight,
+    BOOL bRepaint
+);
 
 DWORD
 STDCALL
@@ -1445,16 +1446,16 @@ NtUserSetWindowPlacement(
   DWORD Unknown0,
   DWORD Unknown1);
 
-DWORD
-STDCALL
-NtUserSetWindowPos(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5,
-  DWORD Unknown6);
+BOOL 
+STDCALL NtUserSetWindowPos(      
+    HWND hWnd,
+    HWND hWndInsertAfter,
+    int X,
+    int Y,
+    int cx,
+    int cy,
+    UINT uFlags
+);
 
 DWORD
 STDCALL

@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.25 2003/03/06 23:57:03 gvg Exp $
+/* $Id: window.c,v 1.26 2003/03/07 05:38:02 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -788,17 +788,18 @@ NtUserLockWindowUpdate(DWORD Unknown0)
   return 0;
 }
 
-DWORD STDCALL
-NtUserMoveWindow(DWORD Unknown0,
-		 DWORD Unknown1,
-		 DWORD Unknown2,
-		 DWORD Unknown3,
-		 DWORD Unknown4,
-		 DWORD Unknown5)
+BOOL STDCALL
+NtUserMoveWindow(      
+    HWND hWnd,
+    int X,
+    int Y,
+    int nWidth,
+    int nHeight,
+    BOOL bRepaint)
 {
-  UNIMPLEMENTED
-
-  return 0;
+    int flags = SWP_NOZORDER | SWP_NOACTIVATE;
+    if (!bRepaint) flags |= SWP_NOREDRAW;
+    return NtUserSetWindowPos( hWnd, 0, X, Y, nWidth, nHeight, flags );
 }
 
 DWORD STDCALL
@@ -993,18 +994,17 @@ NtUserSetWindowPlacement(DWORD Unknown0,
   return 0;
 }
 
-DWORD STDCALL
-NtUserSetWindowPos(DWORD Unknown0,
-		   DWORD Unknown1,
-		   DWORD Unknown2,
-		   DWORD Unknown3,
-		   DWORD Unknown4,
-		   DWORD Unknown5,
-		   DWORD Unknown6)
+BOOL 
+STDCALL NtUserSetWindowPos(      
+    HWND hWnd,
+    HWND hWndInsertAfter,
+    int X,
+    int Y,
+    int cx,
+    int cy,
+    UINT uFlags)
 {
-  UNIMPLEMENTED
-
-  return 0;
+  return WinPosSetWindowPos(hWnd, hWndInsertAfter, X, Y, cx, cy, uFlags);
 }
 
 DWORD STDCALL
