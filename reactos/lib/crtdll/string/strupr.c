@@ -12,7 +12,7 @@
 #include <crtdll/string.h>
 #include <crtdll/ctype.h>
 
-char *strupr(char *x)
+char *_strupr(char *x)
 {
 	char  *y=x;
 
