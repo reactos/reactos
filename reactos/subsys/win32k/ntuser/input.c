@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.30 2004/04/30 22:18:00 weiden Exp $
+/* $Id: input.c,v 1.31 2004/05/01 08:47:14 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -602,20 +602,6 @@ IntMouseInput(MOUSEINPUT *mi)
       MousePos.y += mi->dy;
     }
     
-    if(CurInfo->CursorClipInfo.IsClipped)
-    {
-      /* The mouse cursor needs to be clipped */
-      
-      if(MousePos.x > CurInfo->CursorClipInfo.Right)
-        MousePos.x = CurInfo->CursorClipInfo.Right;
-      if(MousePos.x <= CurInfo->CursorClipInfo.Left)
-        MousePos.x = CurInfo->CursorClipInfo.Left;
-      if(MousePos.y > CurInfo->CursorClipInfo.Bottom)
-        MousePos.y = CurInfo->CursorClipInfo.Bottom;
-      if(MousePos.y <= CurInfo->CursorClipInfo.Top)
-        MousePos.y = CurInfo->CursorClipInfo.Top;
-    }
-    
     if(MousePos.x < 0)
       MousePos.x = 0;
     if(MousePos.y < 0)
@@ -624,6 +610,20 @@ IntMouseInput(MOUSEINPUT *mi)
       MousePos.x = SurfObj->sizlBitmap.cx - 1;
     if(MousePos.y >= SurfObj->sizlBitmap.cy)
       MousePos.y = SurfObj->sizlBitmap.cy - 1;
+    
+    if(CurInfo->CursorClipInfo.IsClipped)
+    {
+      /* The mouse cursor needs to be clipped */
+      
+      if(MousePos.x >= (LONG)CurInfo->CursorClipInfo.Right)
+        MousePos.x = (LONG)CurInfo->CursorClipInfo.Right;
+      if(MousePos.x < (LONG)CurInfo->CursorClipInfo.Left)
+        MousePos.x = (LONG)CurInfo->CursorClipInfo.Left;
+      if(MousePos.y >= (LONG)CurInfo->CursorClipInfo.Bottom)
+        MousePos.y = (LONG)CurInfo->CursorClipInfo.Bottom;
+      if(MousePos.y < (LONG)CurInfo->CursorClipInfo.Top)
+        MousePos.y = (LONG)CurInfo->CursorClipInfo.Top;
+    }
     
     if((DoMove = (MousePos.x != CurInfo->x || MousePos.y != CurInfo->y)))
     {
