@@ -8,7 +8,7 @@ PATH_TO_TOP = ../../reactos
 
 TARGET_TYPE = program
 
-TARGET_APPTYPE = console
+TARGET_APPTYPE = windows
 
 TARGET_NAME = winfile
 
