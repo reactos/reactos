@@ -56,10 +56,10 @@ GetDllLoadPath(LPCWSTR lpModule)
 		Length = (lpModuleEnd - lpModule) + 1;		
 	}
 
-	Length += GetCurrentDirectoryW(0, NULL) + 1;
-	Length += GetSystemDirectoryW(NULL, 0) + 1;
-	Length += GetWindowsDirectoryW(NULL, 0) + 1;
-	Length += GetEnvironmentVariableW(L"PATH", NULL, 0) + 1;
+	Length += GetCurrentDirectoryW(0, NULL);
+	Length += GetSystemDirectoryW(NULL, 0);
+	Length += GetWindowsDirectoryW(NULL, 0);
+	Length += GetEnvironmentVariableW(L"PATH", NULL, 0);
 
 	EnvironmentBufferW = RtlAllocateHeap(RtlGetProcessHeap(), 0,
                                              Length * sizeof(WCHAR));
@@ -181,8 +181,9 @@ LoadLibraryExW (
 	SearchPath = GetDllLoadPath(
 	  dwFlags & LOAD_WITH_ALTERED_SEARCH_PATH ? lpLibFileName : NULL);
 
-	RtlInitUnicodeString (&DllName, (LPWSTR)lpLibFileName);
+	RtlInitUnicodeString(&DllName, (LPWSTR)lpLibFileName);
 	Status = LdrLoadDll(SearchPath, dwFlags, &DllName, (PVOID*)&hInst);
+	RtlFreeHeap(RtlGetProcessHeap(), 0, SearchPath);
 	if ( !NT_SUCCESS(Status))
 	{
 		SetLastErrorByStatus (Status);
