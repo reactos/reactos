@@ -40,31 +40,30 @@
 #define DEBUG(x)
 #endif
 
-#define SZ_APPNAME "ROSMine"
+
 int WINAPI WinMain( HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdline, int cmdshow )
 {
     MSG msg;
     WNDCLASS wc;
     HWND hWnd;
     HACCEL haccel;
-    /*
     char appname[9];
-     LoadString doesn't appear to work properly under ROS
+
     LoadString( hInst, IDS_APPNAME, appname, sizeof(appname));
-    */
+
     wc.style = 0;
     wc.lpfnWndProc = MainProc;
     wc.cbClsExtra = 0;
     wc.cbWndExtra = 0;
     wc.hInstance = hInst;
-    wc.hIcon = LoadIcon( hInst, SZ_APPNAME );
+    wc.hIcon = LoadIcon( hInst, appname );
     wc.hCursor = LoadCursor( NULL_HANDLE, IDI_APPLICATION );
     wc.hbrBackground = (HBRUSH) GetStockObject( BLACK_BRUSH );
     wc.lpszMenuName = "MENU_WINEMINE";
-    wc.lpszClassName = SZ_APPNAME;
+    wc.lpszClassName = appname;
 
     if (!RegisterClass(&wc)) exit(1);
-    hWnd = CreateWindow( SZ_APPNAME, SZ_APPNAME,
+    hWnd = CreateWindow( appname, appname,
         WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
         CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
         NULL_HANDLE, NULL_HANDLE, hInst, NULL );
@@ -74,7 +73,7 @@ int WINAPI WinMain( HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdline, int cmd
     ShowWindow( hWnd, cmdshow );
     UpdateWindow( hWnd );
 
-    haccel = LoadAccelerators( hInst, SZ_APPNAME );
+    haccel = LoadAccelerators( hInst, appname );
     SetTimer( hWnd, ID_TIMER, 1000, NULL );
 
     while( GetMessage(&msg, NULL_HANDLE, 0, 0) ) {
@@ -85,6 +84,7 @@ int WINAPI WinMain( HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdline, int cmd
     }
     return msg.wParam;
 }
+
 
 LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
