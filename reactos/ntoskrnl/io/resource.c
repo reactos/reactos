@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: resource.c,v 1.7 2001/09/05 09:21:47 ekohl Exp $
+/* $Id: resource.c,v 1.8 2001/09/27 02:14:34 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/resource.c
@@ -103,7 +103,51 @@ IoQueryDeviceDescription(PINTERFACE_TYPE BusType,
 			 PIO_QUERY_DEVICE_ROUTINE CalloutRoutine,
 			 PVOID Context)
 {
-  UNIMPLEMENTED;
+#if 0
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  NTSTATUS Status;
+  PWCH BaseKeyName[] = 
+    L"\\Registry\\Machine\\Hardware\\MultifunctionAdapter\\0";
+  HANDLE BaseKeyHandle;
+  ULONG i;
+  struct
+  {
+    KEY_BASIC_INFORMATION BasicInfo;
+    WCH Name[255];
+  } BasicInfo;
+
+  BaseKeyName = L"\\Registry\\Machine\\Hardware\\MultifunctionAdapter";
+  InitializeObjectAttributes(&ObjectAttributes,
+			     BaseKeyName,
+			     0,
+			     NULL,
+			     NULL);
+  Status = ZwOpenKey(&BaseKeyHandle,
+		     KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEY,
+		     &ObjectAttributes);
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
+
+  i = 0;
+  for (;;)
+    {
+      Status = ZwEnumerateKey(BaseKeyHandle,
+			      i,
+			      KeyBasicInformation,
+			      &BasicInfo,
+			      sizeof(BasicInfo),
+			      &ResultLength);
+      if (!NT_SUCCESS(Status))
+	{
+	  break;
+	}
+
+      
+    }
+#endif			  
+  return(STATUS_NOT_IMPLEMENTED);
 }
 
 NTSTATUS STDCALL

@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.48 2001/08/07 14:07:33 ekohl Exp $
+/* $Id: virtual.c,v 1.49 2001/09/27 02:14:35 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -890,7 +890,8 @@ NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
    if (((AllocationType & (MEM_COMMIT | MEM_RESERVE)) == MEM_COMMIT) &&
        (*UBaseAddress == 0))
      {
-       return(STATUS_INVALID_PARAMETER);
+       /* Fix for badly behaved vc applications. */
+       AllocationType |= MEM_RESERVE;
      }
    
    PBaseAddress = *UBaseAddress;
