@@ -27,18 +27,18 @@
 #include "cmd.h"
 
 
-#define INVALID_SWITCH			_T("Invalid switch - /%c\n")
-#define TOO_MANY_PARAMETERS		_T("Too many parameters - %s\n")
-#define PATH_NOT_FOUND			_T("Path not found\n")
-#define FILE_NOT_FOUND			_T("File not found")
-#define REQ_PARAM_MISSING		_T("Required parameter missing\n")
-#define INVALID_DRIVE			_T("Invalid drive specification\n")
+#define INVALID_SWITCH		_T("Invalid switch - /%c\n")
+#define TOO_MANY_PARAMETERS	_T("Too many parameters - %s\n")
+#define PATH_NOT_FOUND		_T("Path not found\n")
+#define FILE_NOT_FOUND		_T("File not found\n")
+#define REQ_PARAM_MISSING	_T("Required parameter missing\n")
+#define INVALID_DRIVE		_T("Invalid drive specification\n")
 #define INVALID_PARAM_FORMAT	_T("Invalid parameter format - %s\n")
-#define BADCOMMAND				_T("Bad command or filename\n")
-#define OUT_OF_MEMORY			_T("Out of memory error.\n")
-#define CANNOTPIPE				_T("Error!  Cannot pipe!  Cannot open temporary file!\n")
+#define BADCOMMAND		_T("Bad command or filename\n")
+#define OUT_OF_MEMORY		_T("Out of memory error.\n")
+#define CANNOTPIPE		_T("Error!  Cannot pipe!  Cannot open temporary file!\n")
 
-#define D_PAUSEMSG				_T("Press any key to continue . . .")
+#define D_PAUSEMSG		_T("Press any key to continue . . .")
 
 
 
@@ -52,7 +52,7 @@ VOID ErrorMessage (DWORD dwErrorCode, LPTSTR szFormat, ...)
 		return;
 
 	va_start (arg_ptr, szFormat);
-    _vstprintf (szMessage, szFormat, arg_ptr);
+	_vstprintf (szMessage, szFormat, arg_ptr);
 	va_end (arg_ptr);
 
 #ifndef __REACTOS__
