@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.35 2003/03/09 21:39:17 hbirr Exp $
+/* $Id: dir.c,v 1.36 2003/05/06 06:49:57 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -321,6 +321,7 @@ GetFullPathNameA (
 	PWSTR FilePartU;
 	ULONG BufferLength;
 	ULONG Offset;
+	DWORD FullNameLen;
 
 	DPRINT("GetFullPathNameA(lpFileName %s, nBufferLength %d, lpBuffer %p, "
 	       "lpFilePart %p)\n",lpFileName,nBufferLength,lpBuffer,lpFilePart);
@@ -351,16 +352,21 @@ GetFullPathNameA (
 	FullName.Length = 0;
 	FullName.Buffer = lpBuffer;
 
-	RtlUnicodeStringToAnsiString (&FullName,
-	                              &FullNameU,
-	                              FALSE);
-
-	if (lpFilePart != NULL)
+        if (lpBuffer != NULL )
 	{
-		Offset = (ULONG)(FilePartU - FullNameU.Buffer);
-		*lpFilePart = FullName.Buffer + Offset;
+		RtlUnicodeStringToAnsiString (&FullName,
+					&FullNameU,
+					FALSE);
+
+		if (lpFilePart != NULL)
+		{
+			Offset = (ULONG)(FilePartU - FullNameU.Buffer);
+			*lpFilePart = FullName.Buffer + Offset;
+		}
 	}
 
+	FullNameLen = FullNameU.Length / sizeof(WCHAR);
+	
 	RtlFreeHeap (RtlGetProcessHeap (),
 	             0,
 	             FullNameU.Buffer);
@@ -368,7 +374,7 @@ GetFullPathNameA (
 	DPRINT("lpBuffer %s lpFilePart %s Length %ld\n",
 	       lpBuffer, lpFilePart, FullName.Length);
 
-	return FullName.Length;
+	return FullNameLen;
 }
 
 

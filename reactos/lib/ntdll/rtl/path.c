@@ -1,4 +1,4 @@
-/* $Id: path.c,v 1.17 2003/03/23 10:49:19 hbirr Exp $
+/* $Id: path.c,v 1.18 2003/05/06 06:49:57 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -464,7 +464,6 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING name)
    return STATUS_SUCCESS;
 }
 
-
 ULONG STDCALL
 RtlGetFullPathName_U(PWSTR DosName,
 		     ULONG size,
@@ -478,6 +477,7 @@ RtlGetFullPathName_U(PWSTR DosName,
 	UNICODE_STRING  usvar, pfx;
 	PCURDIR cd;
 	NTSTATUS Status;
+	WCHAR TempFullPathName[MAX_PATH+2] = L"";
 
 	DPRINT("RtlGetFullPathName_U %S %ld %p %p\n",
 	       DosName, size, buf, FilePart);
@@ -541,7 +541,7 @@ CHECKPOINT;
 			if (drive == towupper (cd->DosPath.Buffer[0]))
 			{
 CHECKPOINT;
-				wcscpy (buf, cd->DosPath.Buffer);
+				wcscpy (TempFullPathName, cd->DosPath.Buffer);
 			}
 			else
 			{
@@ -550,8 +550,8 @@ CHECKPOINT;
 				usvar.MaximumLength = 8;
 				usvar.Buffer = var;
 				pfx.Length = 0;
-				pfx.MaximumLength = size;
-				pfx.Buffer = buf;
+				pfx.MaximumLength = MAX_PATH;
+				pfx.Buffer = TempFullPathName;
 				Status = RtlQueryEnvironmentVariable_U (NULL,
 				                                        &usvar,
 				                                        &pfx);
@@ -561,21 +561,21 @@ CHECKPOINT;
 CHECKPOINT;
 					if (Status == STATUS_BUFFER_TOO_SMALL)
 						return pfx.Length + len * 2 + 2;
-					swprintf (buf, L"%c:\\", drive);
+					swprintf (TempFullPathName, L"%c:\\", drive);
 				}
 			}
 			break;
 
 		case 4:		/* \xxx    */
-			wcsncpy (buf, cd->DosPath.Buffer, 2);
+			wcsncpy (TempFullPathName, cd->DosPath.Buffer, 2);
 			break;
 
 		case 5:		/* xxx     */
-			wcscpy (buf, cd->DosPath.Buffer);
+			wcscpy (TempFullPathName, cd->DosPath.Buffer);
 			break;
 
 		case 7:		/* \\.     */
-			wcscpy (buf, L"\\\\.\\");
+			wcscpy (TempFullPathName, L"\\\\.\\");
 			len = 0;
 			break;
 
@@ -583,40 +583,45 @@ CHECKPOINT;
 			return 0;
 	}
 
-	DPRINT("buf \'%S\' DosName \'%S\' len %ld\n", buf, DosName, len);
+	DPRINT("TempFullPathName \'%S\' DosName \'%S\' len %ld\n", TempFullPathName, DosName, len);
 	/* add dosname to prefix */
-	wcsncat (buf, DosName, len);
+	wcsncat (TempFullPathName, DosName, len);
 
 	CHECKPOINT;
 	/* replace slashes */
-	for (wcs = buf; *wcs; wcs++)
+	for (wcs = TempFullPathName; *wcs; wcs++)
 		if (*wcs == L'/')
 			*wcs = L'\\';
 
-	len = wcslen (buf);
+	len = wcslen (TempFullPathName);
 	if (len < 3 && buf[len-1] == L':')
-		wcscat (buf, L"\\");
+		wcscat (TempFullPathName, L"\\");
 
-	DPRINT("buf \'%S\'\n", buf);
-	RtlpEatPath (buf);
-	DPRINT("buf \'%S\'\n", buf);
+	DPRINT("TempFullPathName \'%S\'\n", TempFullPathName);
+	RtlpEatPath (TempFullPathName);
+	DPRINT("TempFullPathName \'%S\'\n", TempFullPathName);
 
-	len = wcslen (buf);
-
-	/* find file part */
-	if (FilePart)
-	{
-		for (wcs = buf + len - 1; wcs >= buf; wcs--)
-		{
-			if (*wcs == L'\\')
-			{
-				*FilePart = wcs + 1;
-				break;
-			}
-		}
-	}
+	len = wcslen (TempFullPathName);
 
 	RtlReleasePebLock();
+
+	if (len < (size / sizeof(WCHAR)))
+	{
+        	wcsncpy(buf, TempFullPathName, size / sizeof(WCHAR));
+
+		/* find file part */
+		if (FilePart)
+		{
+			for (wcs = buf + len - 1; wcs >= buf; wcs--)
+			{
+				if (*wcs == L'\\')
+				{
+					*FilePart = wcs + 1;
+					break;
+				}
+			}
+		}
+        }
 
 	return len * sizeof(WCHAR);
 }
