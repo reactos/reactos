@@ -586,7 +586,7 @@ RtlSecondsSince1970ToTime@8
 RtlSecondsSince1980ToTime@8
 RtlSelfRelativeToAbsoluteSD@44
 RtlSetAllBits@4
-;RtlSetAttributesSecurityDescriptor
+RtlSetAttributesSecurityDescriptor@12
 RtlSetBits@12
 RtlSetControlSecurityDescriptor@12
 RtlSetCriticalSectionSpinCount@8

@@ -107,8 +107,8 @@ RtlpQuerySecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
 }
 
 /*
-* @implemented
-*/
+ * @implemented
+ */
 NTSTATUS STDCALL
 RtlCreateSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
                             ULONG Revision)
@@ -812,6 +812,30 @@ RtlSetSecurityDescriptorRMControl(PSECURITY_DESCRIPTOR SecurityDescriptor,
     SecurityDescriptor->Control |= SE_RM_CONTROL_VALID;
     SecurityDescriptor->Sbz1 = *RMControl;
   }
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+RtlSetAttributesSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+                                   IN SECURITY_DESCRIPTOR_CONTROL Control,
+                                   OUT PULONG Revision)
+{
+  *Revision = SecurityDescriptor->Revision;
+
+  if (SecurityDescriptor->Revision != SECURITY_DESCRIPTOR_REVISION1)
+    return STATUS_UNKNOWN_REVISION;
+
+  Control &=
+    ~(SE_OWNER_DEFAULTED | SE_GROUP_DEFAULTED | SE_DACL_PRESENT |
+      SE_DACL_DEFAULTED | SE_SACL_PRESENT | SE_SACL_DEFAULTED |
+      SE_RM_CONTROL_VALID | SE_SELF_RELATIVE);
+
+  return RtlSetControlSecurityDescriptor(SecurityDescriptor,
+                                         Control,
+                                         Control);
 }
 
 /* EOF */
