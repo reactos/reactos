@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: winsta.c,v 1.59 2004/05/10 17:07:18 weiden Exp $
+ *  $Id: winsta.c,v 1.60 2004/05/14 23:57:32 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -274,6 +274,7 @@ NtUserCreateWindowStation(
    DWORD Unknown4,
    DWORD Unknown5)
 {
+   PSYSTEM_CURSORINFO CurInfo;
    UNICODE_STRING WindowStationName;
    PWINSTATION_OBJECT WindowStationObject;
    HWINSTA WindowStation;
@@ -367,11 +368,22 @@ NtUserCreateWindowStation(
     * Initialize the new window station object
     */
 
+   if(!(CurInfo = ExAllocatePool(PagedPool, sizeof(SYSTEM_CURSORINFO))))
+   {
+     ExFreePool(WindowStationName.Buffer);
+     /* FIXME - Delete window station object */
+     ObDereferenceObject(WindowStationObject);
+     SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
+     return 0;
+   }
+
    WindowStationObject->HandleTable = ObmCreateHandleTable();
    if (!WindowStationObject->HandleTable)
    {
       DPRINT("Failed creating handle table\n");
+      ExFreePool(CurInfo);
       ExFreePool(WindowStationName.Buffer);
+      /* FIXME - Delete window station object */
       ObDereferenceObject(WindowStationObject);
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
       return 0;
@@ -379,23 +391,25 @@ NtUserCreateWindowStation(
   
    InitHotKeys(WindowStationObject);
   
-   ExInitializeFastMutex(&WindowStationObject->SystemCursor.CursorMutex);
-   WindowStationObject->SystemCursor.Enabled = FALSE;
-   WindowStationObject->SystemCursor.ButtonsDown = 0;
-   WindowStationObject->SystemCursor.x = (LONG)0;
-   WindowStationObject->SystemCursor.y = (LONG)0;
-   WindowStationObject->SystemCursor.CursorClipInfo.IsClipped = FALSE;
-   WindowStationObject->SystemCursor.LastBtnDown = 0;
-   WindowStationObject->SystemCursor.CurrentCursorObject = NULL;
-   WindowStationObject->SystemCursor.ShowingCursor = 0;
+   ExInitializeFastMutex(&CurInfo->CursorMutex);
+   CurInfo->Enabled = FALSE;
+   CurInfo->ButtonsDown = 0;
+   CurInfo->x = (LONG)0;
+   CurInfo->y = (LONG)0;
+   CurInfo->CursorClipInfo.IsClipped = FALSE;
+   CurInfo->LastBtnDown = 0;
+   CurInfo->CurrentCursorObject = NULL;
+   CurInfo->ShowingCursor = 0;
   
    /* FIXME: Obtain the following information from the registry */
-   WindowStationObject->SystemCursor.SwapButtons = FALSE;
-   WindowStationObject->SystemCursor.SafetySwitch = FALSE;
-   WindowStationObject->SystemCursor.SafetyRemoveCount = 0;
-   WindowStationObject->SystemCursor.DblClickSpeed = 500;
-   WindowStationObject->SystemCursor.DblClickWidth = 4;
-   WindowStationObject->SystemCursor.DblClickHeight = 4;
+   CurInfo->SwapButtons = FALSE;
+   CurInfo->SafetySwitch = FALSE;
+   CurInfo->SafetyRemoveCount = 0;
+   CurInfo->DblClickSpeed = 500;
+   CurInfo->DblClickWidth = 4;
+   CurInfo->DblClickHeight = 4;
+   
+   WindowStationObject->SystemCursor = CurInfo;
   
    if (!IntSetupCurIconHandles(WindowStationObject))
    {
@@ -528,6 +542,12 @@ NtUserCloseWindowStation(
       DPRINT("Validation of window station handle (0x%X) failed\n", hWinSta);
       return FALSE;
    }
+
+   #if 0
+   /* FIXME - free the cursor information when actually deleting the object!! */
+   ASSERT(Object->SystemCursor);
+   ExFreePool(Object->SystemCursor);
+   #endif
 
    ObDereferenceObject(Object);
 

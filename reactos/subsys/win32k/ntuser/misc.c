@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.72 2004/05/12 15:28:01 weiden Exp $
+/* $Id: misc.c,v 1.73 2004/05/14 23:57:32 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -238,6 +238,7 @@ NtUserCallOneParam(
     
     case ONEPARAM_ROUTINE_GETCURSORPOSITION:
     {
+      PSYSTEM_CURSORINFO CurInfo;
       PWINSTATION_OBJECT WinStaObject;
       NTSTATUS Status;
       POINT Pos;
@@ -251,9 +252,10 @@ NtUserCallOneParam(
       if (!NT_SUCCESS(Status))
         return (DWORD)FALSE;
       
+      CurInfo = IntGetSysCursorInfo(WinStaObject);
       /* FIXME - check if process has WINSTA_READATTRIBUTES */
-      Pos.x = WinStaObject->SystemCursor.x;
-      Pos.y = WinStaObject->SystemCursor.y;
+      Pos.x = CurInfo->x;
+      Pos.y = CurInfo->y;
       
       Status = MmCopyToCaller((PPOINT)Param, &Pos, sizeof(POINT));
       if(!NT_SUCCESS(Status))
@@ -636,6 +638,8 @@ IntSystemParametersInfo(
     case SPI_SETDOUBLECLKHEIGHT:
     case SPI_SETDOUBLECLICKTIME:
     {
+      PSYSTEM_CURSORINFO CurInfo;
+      
       Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
                                               KernelMode,
                                               0,
@@ -646,19 +650,20 @@ IntSystemParametersInfo(
         return (DWORD)FALSE;
       }
       
+      CurInfo = IntGetSysCursorInfo(WinStaObject);
       switch(uiAction)
       {
         case SPI_SETDOUBLECLKWIDTH:
           /* FIXME limit the maximum value? */
-          WinStaObject->SystemCursor.DblClickWidth = uiParam;
+          CurInfo->DblClickWidth = uiParam;
           break;
         case SPI_SETDOUBLECLKHEIGHT:
           /* FIXME limit the maximum value? */
-          WinStaObject->SystemCursor.DblClickHeight = uiParam;
+          CurInfo->DblClickHeight = uiParam;
           break;
         case SPI_SETDOUBLECLICKTIME:
           /* FIXME limit the maximum time to 1000 ms? */
-          WinStaObject->SystemCursor.DblClickSpeed = uiParam;
+          CurInfo->DblClickSpeed = uiParam;
           break;
       }
       
@@ -914,6 +919,7 @@ NtUserGetDoubleClickTime(VOID)
   UINT Result;
   NTSTATUS Status;
   PWINSTATION_OBJECT WinStaObject;
+  PSYSTEM_CURSORINFO CurInfo;
   
   Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
                                           KernelMode,
@@ -922,7 +928,8 @@ NtUserGetDoubleClickTime(VOID)
   if (!NT_SUCCESS(Status))
     return (DWORD)FALSE;
 
-  Result = WinStaObject->SystemCursor.DblClickSpeed;
+  CurInfo = IntGetSysCursorInfo(WinStaObject);
+  Result = CurInfo->DblClickSpeed;
       
   ObDereferenceObject(WinStaObject);
   return Result;

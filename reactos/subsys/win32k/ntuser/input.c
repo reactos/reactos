@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.32 2004/05/10 17:07:18 weiden Exp $
+/* $Id: input.c,v 1.33 2004/05/14 23:57:32 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -515,8 +515,12 @@ NtUserBlockInput(
 BOOL FASTCALL
 IntSwapMouseButton(PWINSTATION_OBJECT WinStaObject, BOOL Swap)
 {
-  BOOL res = WinStaObject->SystemCursor.SwapButtons;
-  WinStaObject->SystemCursor.SwapButtons = Swap;
+  PSYSTEM_CURSORINFO CurInfo;
+  BOOL res;
+  
+  CurInfo = IntGetSysCursorInfo(WinStaObject);
+  res = CurInfo->SwapButtons;
+  CurInfo->SwapButtons = Swap;
   return res;
 }
 
@@ -557,7 +561,7 @@ IntMouseInput(MOUSEINPUT *mi)
 #endif
   ASSERT(WinSta);
   
-  CurInfo = &WinSta->SystemCursor;
+  CurInfo = IntGetSysCursorInfo(WinSta);
   
   dc = DC_LockDc(hDC);
   SurfObj = (SURFOBJ*)AccessUserObject((ULONG) dc->Surface);
@@ -573,7 +577,7 @@ IntMouseInput(MOUSEINPUT *mi)
     mi->time = LargeTickCount.u.LowPart;
   }
   
-  SwapButtons = WinSta->SystemCursor.SwapButtons;
+  SwapButtons = CurInfo->SwapButtons;
   DoMove = FALSE;
   ExAcquireFastMutex(&CurInfo->CursorMutex);
   MousePos.x = CurInfo->x;

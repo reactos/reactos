@@ -8,41 +8,6 @@
 #define NTOS_MODE_KERNEL
 #include <ntos.h>
 
-typedef struct _CURSORCLIP_INFO
-{
-  BOOL IsClipped;
-  UINT Left;
-  UINT Top;
-  UINT Right;
-  UINT Bottom;
-} CURSORCLIP_INFO, *PCURSORCLIP_INFO;
-
-typedef struct _SYSTEM_CURSORINFO
-{
-  BOOL Enabled;
-  BOOL SwapButtons;
-  UINT ButtonsDown;
-  LONG x, y;
-  BOOL SafetySwitch;
-  UINT SafetyRemoveCount;
-  LONG PointerRectLeft;
-  LONG PointerRectTop;
-  LONG PointerRectRight;
-  LONG PointerRectBottom;
-  FAST_MUTEX CursorMutex;
-  CURSORCLIP_INFO CursorClipInfo;
-  PVOID CurIconHandleTable;
-  PVOID CurrentCursorObject;
-  BYTE ShowingCursor;
-  UINT DblClickSpeed;
-  UINT DblClickWidth;
-  UINT DblClickHeight;
-  DWORD LastBtnDown;
-  LONG LastBtnDownX;
-  LONG LastBtnDownY;
-  HANDLE LastClkWnd;
-} SYSTEM_CURSORINFO, *PSYSTEM_CURSORINFO;
-
 typedef struct _WINSTATION_OBJECT
 {
   CSHORT Type;
@@ -53,7 +18,7 @@ typedef struct _WINSTATION_OBJECT
   PRTL_ATOM_TABLE AtomTable;
   PVOID HandleTable;
   HANDLE SystemMenuTemplate;
-  SYSTEM_CURSORINFO SystemCursor;
+  PVOID SystemCursor;
   UINT CaretBlinkRate;
   HANDLE ShellWindow;
   HANDLE ShellListView;

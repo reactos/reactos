@@ -16,23 +16,22 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.55 2004/05/10 17:07:20 weiden Exp $ */
+/* $Id: cursoricon.c,v 1.56 2004/05/14 23:57:32 weiden Exp $ */
 #include <w32k.h>
 
 PCURICON_OBJECT FASTCALL
 IntGetCurIconObject(PWINSTATION_OBJECT WinStaObject, HANDLE Handle)
 {
-  PCURICON_OBJECT Object;
-  PUSER_HANDLE_TABLE HandleTable;
-  
-  HandleTable = (PUSER_HANDLE_TABLE)WinStaObject->SystemCursor.CurIconHandleTable;
-  if(!NT_SUCCESS(ObmReferenceObjectByHandle(HandleTable, Handle, otCursorIcon, 
-                 (PVOID*)&Object)))
-  {
-    return FALSE;
-  }
-  
-  return Object;
+   PCURICON_OBJECT Object;
+   NTSTATUS Status;
+
+   Status = ObmReferenceObjectByHandle(WinStaObject->HandleTable,
+      Handle, otCursorIcon, (PVOID*)&Object);
+   if (!NT_SUCCESS(Status))
+   {
+      return NULL;
+   }
+   return Object;
 }
 
 HBITMAP FASTCALL
@@ -74,7 +73,7 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
    RECTL PointerRect;
    HDC Screen;
   
-   CurInfo = &WinStaObject->SystemCursor;
+   CurInfo = IntGetSysCursorInfo(WinStaObject);
    OldCursor = CurInfo->CurrentCursorObject;
    if (OldCursor)
    {
@@ -241,11 +240,7 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
 BOOL FASTCALL
 IntSetupCurIconHandles(PWINSTATION_OBJECT WinStaObject)
 {
-  if((WinStaObject->SystemCursor.CurIconHandleTable = (PVOID)ObmCreateHandleTable()))
-  {
-    ObmInitializeHandleTable((PUSER_HANDLE_TABLE)WinStaObject->SystemCursor.CurIconHandleTable);
-  }
-  return (WinStaObject->SystemCursor.CurIconHandleTable != NULL);
+  return TRUE;
 }
 
 PCURICON_OBJECT FASTCALL
@@ -258,7 +253,7 @@ IntFindExistingCurIconObject(PWINSTATION_OBJECT WinStaObject, HMODULE hModule,
   PCURICON_OBJECT Object;
   ULONG i;
   
-  HandleTable = (PUSER_HANDLE_TABLE)WinStaObject->SystemCursor.CurIconHandleTable;
+  HandleTable = (PUSER_HANDLE_TABLE)WinStaObject->HandleTable;
   ObmpLockHandleTable(HandleTable);
   
   CurrentEntry = HandleTable->ListHead.Flink;
@@ -268,15 +263,19 @@ IntFindExistingCurIconObject(PWINSTATION_OBJECT WinStaObject, HMODULE hModule,
     for(i = 0; i < HANDLE_BLOCK_ENTRIES; i++)
     {
       Object = (PCURICON_OBJECT)Current->Handles[i].ObjectBody;
-      if(Object && (Object->hModule == hModule) && (Object->hRsrc == hRsrc))
+      if(Object && (ObmReferenceObjectByPointer(Object, otCursorIcon) == STATUS_SUCCESS))
       {
-        if(cx && ((cx != Object->Size.cx) || (cy != Object->Size.cy)))
+        if((Object->hModule == hModule) && (Object->hRsrc == hRsrc))
         {
-          continue;
+          if(cx && ((cx != Object->Size.cx) || (cy != Object->Size.cy)))
+          {
+	    ObmDereferenceObject(Object);
+	    continue;
+          }
+          ObmpUnlockHandleTable(HandleTable);
+          return Object;
         }
-        ObmReferenceObject(Object);
-        ObmpUnlockHandleTable(HandleTable);
-        return Object;
+        ObmDereferenceObject(Object);
       }
     }
     CurrentEntry = CurrentEntry->Flink;
@@ -289,14 +288,11 @@ IntFindExistingCurIconObject(PWINSTATION_OBJECT WinStaObject, HMODULE hModule,
 PCURICON_OBJECT FASTCALL
 IntCreateCurIconHandle(PWINSTATION_OBJECT WinStaObject)
 {
-  PUSER_HANDLE_TABLE HandleTable;
   PCURICON_OBJECT Object;
   HANDLE Handle;
   PW32PROCESS Win32Process;
   
-  HandleTable = (PUSER_HANDLE_TABLE)WinStaObject->SystemCursor.CurIconHandleTable;
-  
-  Object = ObmCreateObject(HandleTable, &Handle, otCursorIcon, sizeof(CURICON_OBJECT));
+  Object = ObmCreateObject(WinStaObject->HandleTable, &Handle, otCursorIcon, sizeof(CURICON_OBJECT));
   
   if(!Object)
   {
@@ -319,15 +315,13 @@ IntCreateCurIconHandle(PWINSTATION_OBJECT WinStaObject)
 BOOL FASTCALL
 IntDestroyCurIconObject(PWINSTATION_OBJECT WinStaObject, HANDLE Handle, BOOL RemoveFromProcess)
 {
-  PUSER_HANDLE_TABLE HandleTable;
+  PSYSTEM_CURSORINFO CurInfo;
   PCURICON_OBJECT Object;
   HBITMAP bmpMask, bmpColor;
   NTSTATUS Status;
   BOOL Ret;
   
-  HandleTable = (PUSER_HANDLE_TABLE)WinStaObject->SystemCursor.CurIconHandleTable;
-  
-  Status = ObmReferenceObjectByHandle(HandleTable, Handle, otCursorIcon, (PVOID*)&Object);
+  Status = ObmReferenceObjectByHandle(WinStaObject->HandleTable, Handle, otCursorIcon, (PVOID*)&Object);
   if(!NT_SUCCESS(Status))
   {
     return FALSE;
@@ -335,10 +329,13 @@ IntDestroyCurIconObject(PWINSTATION_OBJECT WinStaObject, HANDLE Handle, BOOL Rem
   
   if (Object->Process != PsGetWin32Process())
   {
+    ObmDereferenceObject(Object);
     return FALSE;
   }
 
-  if (WinStaObject->SystemCursor.CurrentCursorObject == Object)
+  CurInfo = IntGetSysCursorInfo(WinStaObject);
+
+  if (CurInfo->CurrentCursorObject == Object)
   {
     /* Hide the cursor if we're destroying the current cursor */
     IntSetCursor(WinStaObject, NULL, TRUE);
@@ -354,7 +351,7 @@ IntDestroyCurIconObject(PWINSTATION_OBJECT WinStaObject, HANDLE Handle, BOOL Rem
     IntUnLockProcessCursorIcons(Object->Process);
   }
   
-  Ret = NT_SUCCESS(ObmCloseHandle(HandleTable, Handle));
+  Ret = NT_SUCCESS(ObmCloseHandle(WinStaObject->HandleTable, Handle));
   
   /* delete bitmaps */
   if(bmpMask)
@@ -362,7 +359,7 @@ IntDestroyCurIconObject(PWINSTATION_OBJECT WinStaObject, HANDLE Handle, BOOL Rem
   if(bmpColor)
     NtGdiDeleteObject(bmpColor);
 
-/*  ObmDereferenceObject(Object);*/
+  ObmDereferenceObject(Object);
   
   return Ret;
 }
@@ -643,7 +640,7 @@ NtUserGetCursorInfo(
     return FALSE;
   }
   
-  CurInfo = &WinStaObject->SystemCursor;
+  CurInfo = IntGetSysCursorInfo(WinStaObject);
   CursorObject = (PCURICON_OBJECT)CurInfo->CurrentCursorObject;
   
   SafeCi.flags = ((CurInfo->ShowingCursor && CursorObject) ? CURSOR_SHOWING : 0);
@@ -698,7 +695,7 @@ NtUserClipCursor(
     return FALSE;
   }
   
-  CurInfo = &WinStaObject->SystemCursor;
+  CurInfo = IntGetSysCursorInfo(WinStaObject);
   if(WinStaObject->ActiveDesktop)
     DesktopWindow = IntGetWindowObject(WinStaObject->ActiveDesktop->DesktopWindow);
   
@@ -725,7 +722,7 @@ NtUserClipCursor(
     return TRUE;
   }
   
-  WinStaObject->SystemCursor.CursorClipInfo.IsClipped = FALSE;
+  CurInfo->CursorClipInfo.IsClipped = FALSE;
   ObDereferenceObject(WinStaObject);
   
   return TRUE;
@@ -819,7 +816,7 @@ NtUserGetClipCursor(
   RECT *lpRect)
 {
   /* FIXME - check if process has WINSTA_READATTRIBUTES */
-  
+  PSYSTEM_CURSORINFO CurInfo;
   PWINSTATION_OBJECT WinStaObject;
   RECT Rect;
   NTSTATUS Status;
@@ -839,12 +836,13 @@ NtUserGetClipCursor(
     return FALSE;
   }
   
-  if(WinStaObject->SystemCursor.CursorClipInfo.IsClipped)
+  CurInfo = IntGetSysCursorInfo(WinStaObject);
+  if(CurInfo->CursorClipInfo.IsClipped)
   {
-    Rect.left = WinStaObject->SystemCursor.CursorClipInfo.Left;
-    Rect.top = WinStaObject->SystemCursor.CursorClipInfo.Top;
-    Rect.right = WinStaObject->SystemCursor.CursorClipInfo.Right;
-    Rect.bottom = WinStaObject->SystemCursor.CursorClipInfo.Bottom;
+    Rect.left = CurInfo->CursorClipInfo.Left;
+    Rect.top = CurInfo->CursorClipInfo.Top;
+    Rect.right = CurInfo->CursorClipInfo.Right;
+    Rect.bottom = CurInfo->CursorClipInfo.Bottom;
   }
   else
   {

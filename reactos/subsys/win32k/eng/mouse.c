@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.69 2004/05/10 17:07:17 weiden Exp $
+/* $Id: mouse.c,v 1.70 2004/05/14 23:57:32 weiden Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -39,12 +39,13 @@ EnableMouse(HDC hDisplayDC)
   PDC dc;
   SURFOBJ *SurfObj;
   PSURFGDI SurfGDI;
+  PSYSTEM_CURSORINFO CurInfo = IntGetSysCursorInfo(InputWindowStation);
 
   if( hDisplayDC && InputWindowStation)
   {
     if(!IntGetWindowStationObject(InputWindowStation))
     {
-       InputWindowStation->SystemCursor.Enabled = FALSE;
+       CurInfo->Enabled = FALSE;
        return;
     }
     
@@ -55,14 +56,14 @@ EnableMouse(HDC hDisplayDC)
     
     /* Move the cursor to the screen center */
     DPRINT("Setting Cursor up at 0x%x, 0x%x\n", SurfObj->sizlBitmap.cx / 2, SurfObj->sizlBitmap.cy / 2);
-    ExAcquireFastMutex(&InputWindowStation->SystemCursor.CursorMutex);
-    InputWindowStation->SystemCursor.x = SurfObj->sizlBitmap.cx / 2;
-    InputWindowStation->SystemCursor.y = SurfObj->sizlBitmap.cy / 2;
-    ExReleaseFastMutex(&InputWindowStation->SystemCursor.CursorMutex);
+    ExAcquireFastMutex(&CurInfo->CursorMutex);
+    CurInfo->x = SurfObj->sizlBitmap.cx / 2;
+    CurInfo->y = SurfObj->sizlBitmap.cy / 2;
+    ExReleaseFastMutex(&CurInfo->CursorMutex);
     IntSetCursor(InputWindowStation, NULL, TRUE);
     
-    InputWindowStation->SystemCursor.Enabled = (SPS_ACCEPT_EXCLUDE == SurfGDI->PointerStatus ||
-                                                SPS_ACCEPT_NOEXCLUDE == SurfGDI->PointerStatus);
+    CurInfo->Enabled = (SPS_ACCEPT_EXCLUDE == SurfGDI->PointerStatus ||
+                        SPS_ACCEPT_NOEXCLUDE == SurfGDI->PointerStatus);
     
     ObDereferenceObject(InputWindowStation);
   }
@@ -71,9 +72,9 @@ EnableMouse(HDC hDisplayDC)
     if(IntGetWindowStationObject(InputWindowStation))
     {
        IntSetCursor(InputWindowStation, NULL, TRUE);
-       InputWindowStation->SystemCursor.Enabled = FALSE;
-       InputWindowStation->SystemCursor.CursorClipInfo.IsClipped = FALSE;
-	   ObDereferenceObject(InputWindowStation);
+       CurInfo->Enabled = FALSE;
+       CurInfo->CursorClipInfo.IsClipped = FALSE;
+       ObDereferenceObject(InputWindowStation);
        return;
     }
   }
@@ -97,7 +98,7 @@ MouseSafetyOnDrawStart(SURFOBJ *SurfObj, PSURFGDI SurfGDI, LONG HazardX1,
    
   if(IntGetWindowStationObject(InputWindowStation))
   {
-    CurInfo = &InputWindowStation->SystemCursor;
+    CurInfo = IntGetSysCursorInfo(InputWindowStation);
     
     MouseEnabled = CurInfo->Enabled && CurInfo->ShowingCursor;
   }
@@ -183,7 +184,7 @@ MouseSafetyOnDrawEnd(SURFOBJ *SurfObj, SURFGDI *SurfGDI)
     
   if(IntGetWindowStationObject(InputWindowStation))
   {
-    CurInfo = &InputWindowStation->SystemCursor;
+    CurInfo = IntGetSysCursorInfo(InputWindowStation);
   }
   else
     return FALSE;

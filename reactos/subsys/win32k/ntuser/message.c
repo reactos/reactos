@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.64 2004/05/14 16:48:04 navaraf Exp $
+/* $Id: message.c,v 1.65 2004/05/14 23:57:32 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -342,12 +342,14 @@ IntSendHitTestMessages(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg)
     case WM_XBUTTONDBLCLK:
     {
       WPARAM wParam;
+      PSYSTEM_CURSORINFO CurInfo;
       
       if(!IntGetWindowStationObject(InputWindowStation))
       {
         break;
       }
-      wParam = (WPARAM)InputWindowStation->SystemCursor.ButtonsDown;
+      CurInfo = IntGetSysCursorInfo(InputWindowStation);
+      wParam = (WPARAM)(CurInfo->ButtonsDown);
       ObDereferenceObject(InputWindowStation);
       
       IntSendMessage(Msg->hwnd, WM_MOUSEMOVE, wParam, Msg->lParam);
@@ -1025,6 +1027,7 @@ NtUserPostMessage(HWND Wnd,
     }
   else
     {
+      PSYSTEM_CURSORINFO CurInfo;
       Window = IntGetWindowObject(Wnd);
       if (NULL == Window)
         {
@@ -1043,8 +1046,9 @@ NtUserPostMessage(HWND Wnd,
           SetLastWin32Error(ERROR_INVALID_PARAMETER);
           return FALSE;
         }
-      KernelModeMsg.pt.x = PsGetWin32Process()->WindowStation->SystemCursor.x;
-      KernelModeMsg.pt.y = PsGetWin32Process()->WindowStation->SystemCursor.y;
+      CurInfo = IntGetSysCursorInfo(PsGetWin32Process()->WindowStation);
+      KernelModeMsg.pt.x = CurInfo->x;
+      KernelModeMsg.pt.y = CurInfo->y;
       KeQueryTickCount(&LargeTickCount);
       KernelModeMsg.time = LargeTickCount.u.LowPart;
       MsqPostMessage(Window->MessageQueue, &KernelModeMsg,
