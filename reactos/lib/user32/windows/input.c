@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.13 2003/08/17 22:45:40 silverblade Exp $
+/* $Id: input.c,v 1.14 2003/08/20 03:07:33 silverblade Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -36,7 +36,7 @@
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL
 STDCALL

@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.71 2003/08/20 01:41:01 silverblade Exp $
+/* $Id: defwnd.c,v 1.72 2003/08/20 03:07:33 silverblade Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -451,7 +451,10 @@ DrawCaption(
 #endif
 
     // If DC_GRADIENT is specified, a Win 98/2000 style caption gradient should
-    // be painted. For now, that flag is ignored.
+    // be painted. For now, that flag is ignored:
+    // Windows 98/Me, Windows 2000/XP: When this flag is set, the function uses
+    // COLOR_GRADIENTACTIVECAPTION (if the DC_ACTIVE flag was set) or
+    // COLOR_GRADIENTINACTIVECAPTION for the title-bar color. 
 
     // Draw the caption background
     if (uFlags & DC_INBUTTON)
@@ -489,7 +492,11 @@ DrawCaption(
 
   if ((uFlags & DC_TEXT) && (GetWindowTextW( hWnd, buffer, sizeof(buffer)/sizeof(buffer[0]) )))
   {
-    r.left += GetSystemMetrics(SM_CXSIZE) + Padding;
+    // Duplicate odd behaviour from Windows:
+    if ((! uFlags & DC_SMALLCAP) || (uFlags & DC_ICON) || (uFlags & DC_INBUTTON) ||
+        (! uFlags & DC_ACTIVE))
+        r.left += GetSystemMetrics(SM_CXSIZE) + Padding;
+
     r.right = (lprc->right - lprc->left);
 
     nclm.cbSize = sizeof(nclm);
@@ -501,8 +508,8 @@ DrawCaption(
         SetTextColor(MemDC, SysColours[ uFlags & DC_ACTIVE ? COLOR_CAPTIONTEXT : COLOR_INACTIVECAPTIONTEXT]);
 
     SetBkMode( MemDC, TRANSPARENT );
-//    if (GetWindowLongW(hWnd, GWL_STYLE) & WS_EX_TOOLWINDOW)
-    if (uFlags & DC_SMALLCAP)
+    if (GetWindowLongW(hWnd, GWL_STYLE) & WS_EX_TOOLWINDOW)
+//    if (uFlags & DC_SMALLCAP) // incorrect
         hFont = CreateFontIndirectW(&nclm.lfSmCaptionFont);
     else
         hFont = CreateFontIndirectW(&nclm.lfCaptionFont);

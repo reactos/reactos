@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.68 2003/08/19 01:31:15 weiden Exp $
+/* $Id: window.c,v 1.69 2003/08/20 03:07:33 silverblade Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -46,7 +46,7 @@ User32SendNCCALCSIZEMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
       DPRINT("Wrong length.\n");
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
-  Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
+  Proc = (WNDPROC)NtUserGetWindowLong(CallbackArgs->Wnd, GWL_WNDPROC, FALSE);
   DPRINT("Proc %X\n", Proc);
   /* Call the window procedure; notice kernel messages are always unicode. */
   if (CallbackArgs->Validate)
@@ -81,7 +81,7 @@ User32SendGETMINMAXINFOMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
       DPRINT("Wrong length.\n");
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
-  Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
+  Proc = (WNDPROC)NtUserGetWindowLong(CallbackArgs->Wnd, GWL_WNDPROC, FALSE);
   DPRINT("Proc %X\n", Proc);
   /* Call the window procedure; notice kernel messages are always unicode. */
   Result.Result = CallWindowProcW(Proc, CallbackArgs->Wnd, WM_GETMINMAXINFO, 
@@ -106,7 +106,7 @@ User32SendCREATEMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
       DPRINT("Wrong length.\n");
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
-  Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
+  Proc = (WNDPROC)NtUserGetWindowLong(CallbackArgs->Wnd, GWL_WNDPROC, FALSE);
   DPRINT("Proc %X\n", Proc);
   /* Call the window procedure; notice kernel messages are always unicode. */
   Result = CallWindowProcW(Proc, CallbackArgs->Wnd, WM_CREATE, 0, 
@@ -130,7 +130,7 @@ User32SendNCCREATEMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
       DPRINT("Wrong length.\n");
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
-  Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
+  Proc = (WNDPROC)NtUserGetWindowLong(CallbackArgs->Wnd, GWL_WNDPROC, FALSE);
   DPRINT("Proc %X\n", Proc);
   /* Call the window procedure; notice kernel messages are always unicode. */
   Result = CallWindowProcW(Proc, CallbackArgs->Wnd, WM_NCCREATE, 0, 
@@ -154,7 +154,7 @@ User32SendWINDOWPOSCHANGINGMessageForKernel(PVOID Arguments, ULONG ArgumentLengt
       DPRINT("Wrong length.\n");
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
-  Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
+  Proc = (WNDPROC)NtUserGetWindowLong(CallbackArgs->Wnd, GWL_WNDPROC, FALSE);
   DPRINT("Proc %X\n", Proc);
   /* Call the window procedure; notice kernel messages are always unicode. */
   Result = CallWindowProcW(Proc, CallbackArgs->Wnd, WM_WINDOWPOSCHANGING, 0, 
@@ -178,7 +178,7 @@ User32SendWINDOWPOSCHANGEDMessageForKernel(PVOID Arguments, ULONG ArgumentLength
       DPRINT("Wrong length.\n");
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
-  Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
+  Proc = (WNDPROC)NtUserGetWindowLong(CallbackArgs->Wnd, GWL_WNDPROC, FALSE);
   DPRINT("Proc %X\n", Proc);
   /* Call the window procedure; notice kernel messages are always unicode. */
   Result = CallWindowProcW(Proc, CallbackArgs->Wnd, WM_WINDOWPOSCHANGED, 0, 
@@ -202,7 +202,7 @@ User32SendSTYLECHANGINGMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
       DPRINT("Wrong length.\n");
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
-  Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
+  Proc = (WNDPROC)NtUserGetWindowLong(CallbackArgs->Wnd, GWL_WNDPROC, FALSE);
   DPRINT("Proc %X\n", Proc);
   /* Call the window procedure; notice kernel messages are always unicode. */
   Result = CallWindowProcW(Proc, CallbackArgs->Wnd, WM_STYLECHANGING, CallbackArgs->WhichStyle,
@@ -226,7 +226,7 @@ User32SendSTYLECHANGEDMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
       DPRINT("Wrong length.\n");
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
-  Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
+  Proc = (WNDPROC)NtUserGetWindowLong(CallbackArgs->Wnd, GWL_WNDPROC, FALSE);
   DPRINT("Proc %X\n", Proc);
   /* Call the window procedure; notice kernel messages are always unicode. */
   Result = CallWindowProcW(Proc, CallbackArgs->Wnd, WM_STYLECHANGED, CallbackArgs->WhichStyle,
@@ -266,7 +266,7 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
     }
   if (CallbackArgs->Proc == NULL)
     {
-      CallbackArgs->Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
+      CallbackArgs->Proc = (WNDPROC)NtUserGetWindowLong(CallbackArgs->Wnd, GWL_WNDPROC, FALSE);
     }
   Result = CallWindowProcW(CallbackArgs->Proc, CallbackArgs->Wnd, 
 			   CallbackArgs->Msg, CallbackArgs->wParam, 
@@ -334,18 +334,6 @@ NC_AdjustRectInner95 (LPRECT rect, DWORD style, DWORD exStyle)
  * @implemented
  */
 WINBOOL STDCALL
-AdjustWindowRect(LPRECT lpRect,
-		 DWORD dwStyle,
-		 WINBOOL bMenu)
-{
-  return(AdjustWindowRectEx(lpRect, dwStyle, bMenu, 0));
-}
-
-
-/*
- * @implemented
- */
-WINBOOL STDCALL
 AdjustWindowRectEx(LPRECT lpRect, 
 		   DWORD dwStyle, 
 		   WINBOOL bMenu, 
@@ -365,6 +353,18 @@ AdjustWindowRectEx(LPRECT lpRect,
 
 
 /*
+ * @implemented
+ */
+WINBOOL STDCALL
+AdjustWindowRect(LPRECT lpRect,
+		 DWORD dwStyle,
+		 WINBOOL bMenu)
+{
+  return(AdjustWindowRectEx(lpRect, dwStyle, bMenu, 0));
+}
+
+
+/*
  * @unimplemented
  */
 WINBOOL STDCALL
@@ -372,36 +372,6 @@ AllowSetForegroundWindow(DWORD dwProcessId)
 {
   UNIMPLEMENTED;
   return(FALSE);
-}
-
-
-/*
- * @implemented
- */
-WINBOOL STDCALL
-AnimateWindow(HWND hwnd,
-	      DWORD dwTime,
-	      DWORD dwFlags)
-{
-  /* FIXME Add animation code */
-
-  /* If trying to show/hide and it's already   *
-   * shown/hidden or invalid window, fail with *
-   * invalid parameter                         */
-   
-  BOOL visible;
-  visible = IsWindowVisible(hwnd);
-  if(!IsWindow(hwnd) ||
-    (visible && !(dwFlags & AW_HIDE)) ||
-    (!visible && (dwFlags & AW_HIDE)))
-  {
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return FALSE;
-  }
-
-  ShowWindow(hwnd, (dwFlags & AW_HIDE) ? SW_HIDE : ((dwFlags & AW_ACTIVATE) ? SW_SHOW : SW_SHOWNA));
-
-  return TRUE;
 }
 
 
@@ -788,6 +758,27 @@ EndDeferWindowPos(HDWP hWinPosInfo)
 }
 
 
+/*
+ * @implemented
+ */
+HWND STDCALL
+GetDesktopWindow(VOID)
+{
+	return NtUserGetDesktopWindow();
+}
+
+
+/*
+ * @unimplemented
+ */
+HWND STDCALL
+GetForegroundWindow(VOID)
+{
+  UNIMPLEMENTED;
+  return (HWND)0;
+}
+
+
 WINBOOL
 STATIC
 User32EnumWindows (
@@ -914,18 +905,6 @@ EnumDesktopWindows(
 
 
 /*
- * @implemented
- */
-HWND STDCALL
-FindWindowA(LPCSTR lpClassName, LPCSTR lpWindowName)
-{
-  //FIXME: FindWindow does not search children, but FindWindowEx does.
-  //       what should we do about this?
-  return FindWindowExA (NULL, NULL, lpClassName, lpWindowName);
-}
-
-
-/*
  * @unimplemented
  */
 HWND STDCALL
@@ -936,27 +915,6 @@ FindWindowExA(HWND hwndParent,
 {
   UNIMPLEMENTED;
   return (HWND)0;
-}
-
-
-/*
- * @implemented
- */
-HWND STDCALL
-FindWindowW(LPCWSTR lpClassName, LPCWSTR lpWindowName)
-{
-  /* 
-  
-  There was a FIXME here earlier, but I think it is just a documentation unclarity.
-
-  FindWindow only searches top level windows. What they mean is that child 
-  windows of other windows than the desktop can be searched. 
-  FindWindowExW never does a recursive search.
-  
-	/ Joakim
-  */
-
-  return FindWindowExW (NULL, NULL, lpClassName, lpWindowName);
 }
 
 
@@ -990,6 +948,41 @@ FindWindowExW(HWND hwndParent,
 
 	return NtUserFindWindowEx(hwndParent, hwndChildAfter, &ucClassName, &ucWindowName);
 }
+
+
+/*
+ * @implemented
+ */
+HWND STDCALL
+FindWindowA(LPCSTR lpClassName, LPCSTR lpWindowName)
+{
+  //FIXME: FindWindow does not search children, but FindWindowEx does.
+  //       what should we do about this?
+  return FindWindowExA (NULL, NULL, lpClassName, lpWindowName);
+}
+
+
+/*
+ * @implemented
+ */
+HWND STDCALL
+FindWindowW(LPCWSTR lpClassName, LPCWSTR lpWindowName)
+{
+  /* 
+  
+  There was a FIXME here earlier, but I think it is just a documentation unclarity.
+
+  FindWindow only searches top level windows. What they mean is that child 
+  windows of other windows than the desktop can be searched. 
+  FindWindowExW never does a recursive search.
+  
+	/ Joakim
+  */
+
+  return FindWindowExW (NULL, NULL, lpClassName, lpWindowName);
+}
+
+
 
 /*
  * @unimplemented
@@ -1038,27 +1031,6 @@ WINBOOL STDCALL
 GetClientRect(HWND hWnd, LPRECT lpRect)
 {
   return(NtUserGetClientRect(hWnd, lpRect));
-}
-
-
-/*
- * @implemented
- */
-HWND STDCALL
-GetDesktopWindow(VOID)
-{
-	return NtUserGetDesktopWindow();
-}
-
-
-/*
- * @unimplemented
- */
-HWND STDCALL
-GetForegroundWindow(VOID)
-{
-  UNIMPLEMENTED;
-  return (HWND)0;
 }
 
 
@@ -1121,10 +1093,10 @@ GetTitleBarInfo(HWND hwnd,
  * @implemented
  */
 HWND STDCALL
-GetTopWindow(HWND hWnd)
+GetWindow(HWND hWnd,
+	  UINT uCmd)
 {
-  if (!hWnd) hWnd = GetDesktopWindow();
-  return GetWindow( hWnd, GW_CHILD );
+  return NtUserGetWindow(hWnd, uCmd);
 }
 
 
@@ -1132,10 +1104,10 @@ GetTopWindow(HWND hWnd)
  * @implemented
  */
 HWND STDCALL
-GetWindow(HWND hWnd,
-	  UINT uCmd)
+GetTopWindow(HWND hWnd)
 {
-  return NtUserGetWindow(hWnd, uCmd);
+  if (!hWnd) hWnd = GetDesktopWindow();
+  return GetWindow( hWnd, GW_CHILD );
 }
 
 
@@ -1373,6 +1345,36 @@ MoveWindow(HWND hWnd,
 	   WINBOOL bRepaint)
 {
   return NtUserMoveWindow(hWnd, X, Y, nWidth, nHeight, bRepaint);
+}
+
+
+/*
+ * @implemented
+ */
+WINBOOL STDCALL
+AnimateWindow(HWND hwnd,
+	      DWORD dwTime,
+	      DWORD dwFlags)
+{
+  /* FIXME Add animation code */
+
+  /* If trying to show/hide and it's already   *
+   * shown/hidden or invalid window, fail with *
+   * invalid parameter                         */
+   
+  BOOL visible;
+  visible = IsWindowVisible(hwnd);
+//  if(!IsWindow(hwnd) ||
+//    (visible && !(dwFlags & AW_HIDE)) ||
+//    (!visible && (dwFlags & AW_HIDE)))
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+
+//  ShowWindow(hwnd, (dwFlags & AW_HIDE) ? SW_HIDE : ((dwFlags & AW_ACTIVATE) ? SW_SHOW : SW_SHOWNA));
+
+  return TRUE;
 }
 
 

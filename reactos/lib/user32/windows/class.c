@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.37 2003/08/20 01:05:10 silverblade Exp $
+/* $Id: class.c,v 1.38 2003/08/20 03:07:33 silverblade Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -372,7 +372,7 @@ GetClassNameW(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WORD
 STDCALL
@@ -383,8 +383,10 @@ GetClassWord(
  * NOTE: Obsoleted in 32-bit windows
  */
 {
-  UNIMPLEMENTED;
-  return 0;
+    if ((nIndex < 0) && (nIndex != GCW_ATOM))
+        return 0;
+
+    return (WORD) NtUserGetClassLong ( hWnd, nIndex, TRUE );
 }
 
 
@@ -695,7 +697,7 @@ SetClassLongW(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WORD
 STDCALL
@@ -707,8 +709,10 @@ SetClassWord(
  * NOTE: Obsoleted in 32-bit windows
  */
 {
-  UNIMPLEMENTED;
-  return 0;
+    if ((nIndex < 0) && (nIndex != GCW_ATOM))
+        return 0;
+
+    return (WORD) NtUserSetClassLong ( hWnd, nIndex, wNewWord, TRUE );
 }
 
 

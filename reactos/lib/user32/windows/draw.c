@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: draw.c,v 1.25 2003/08/20 00:41:04 silverblade Exp $
+/* $Id: draw.c,v 1.26 2003/08/20 03:07:33 silverblade Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -1684,7 +1684,7 @@ DrawAnimatedRects(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL
 STDCALL
@@ -2009,7 +2009,7 @@ WINBOOL INTERNAL_DrawState(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL
 STDCALL
@@ -2030,7 +2030,7 @@ DrawStateA(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL
 STDCALL

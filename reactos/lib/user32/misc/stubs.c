@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.33 2003/08/19 01:31:15 weiden Exp $
+/* $Id: stubs.c,v 1.34 2003/08/20 03:07:33 silverblade Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -11,6 +11,10 @@
  */
 #include <windows.h>
 #include <debug.h>
+#include <string.h>
+typedef UINT *LPUINT;
+#include <mmsystem.h>
+
 
 /*
  * @unimplemented
@@ -246,15 +250,26 @@ LockWorkStation(VOID)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL
 STDCALL
 MessageBeep(
   UINT uType)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+    CHAR EventName[64];
+    
+    switch(uType)
+    {
+        case 0xFFFFFFFF : return Beep(500, 100);    // Beep through speaker
+        case MB_ICONASTERISK : strcpy(EventName, "SystemAsterisk"); break;
+        case MB_ICONEXCLAMATION : strcpy(EventName, "SystemExclamation"); break;
+        case MB_ICONHAND : strcpy(EventName, "SystemHand"); break;
+        case MB_ICONQUESTION : strcpy(EventName, "SystemQuestion"); break;
+        case MB_OK : strcpy(EventName, "SystemDefault"); break;
+    }
+//    return PlaySoundA((LPCSTR) &EventName, NULL, SND_ALIAS | SND_NOWAIT | SND_NOSTOP | SND_ASYNC);
+    return FALSE;
 }
 
 
@@ -640,7 +655,7 @@ RegisterShellHookWindow(HWND hWnd)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL
 STDCALL
@@ -649,8 +664,17 @@ EndTask(
 	WINBOOL fShutDown,
 	WINBOOL fForce)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+    SendMessageW(hWnd, WM_CLOSE, 0, 0);
+    
+    if (IsWindow(hWnd))
+    {
+        if (fForce)
+            return DestroyWindow(hWnd);
+        else
+            return FALSE;
+    }
+    
+    return TRUE;
 }
 
 /*
