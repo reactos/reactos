@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.67 2001/08/26 17:30:21 ekohl Exp $
+/* $Id: process.c,v 1.68 2001/09/07 21:35:45 ea Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -757,12 +757,29 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
       case ProcessWorkingSetWatch:
       case ProcessUserModeIOPL:
       case ProcessEnableAlignmentFaultFixup:
+	Status = STATUS_NOT_IMPLEMENTED;
+	break;
+
+      case ProcessForegroundInformation:
+	((PPROCESS_PRIORITY_CLASS)ProcessInformation)->Foreground =
+		FALSE; /*FIXME: how to compute it? */
       case ProcessPriorityClass:
+	((PPROCESS_PRIORITY_CLASS)ProcessInformation)->PriorityClass =
+		Process->PriorityClass;
+	break;
+
       case ProcessWx86Information:
       case ProcessHandleCount:
       case ProcessAffinityMask:
-      default:
+      case ProcessPriorityBoost:
+      case ProcessDeviceMap:
+      case ProcessSessionInformation:
+      case ProcessWow64Information:
 	Status = STATUS_NOT_IMPLEMENTED;
+	break;
+	
+      default:
+	Status = STATUS_INVALID_INFO_CLASS;
      }
    ObDereferenceObject(Process);
    return(Status);

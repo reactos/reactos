@@ -1,4 +1,5 @@
-/*
+/* $Id: tinfo.c,v 1.16 2001/09/07 21:35:45 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ps/tinfo.c
