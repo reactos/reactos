@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.67 2004/02/19 21:12:09 weiden Exp $
+/* $Id: msgqueue.c,v 1.68 2004/02/22 12:25:02 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -243,7 +243,6 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
 {
   USHORT Msg = Message->Msg.message;
   PWINDOW_OBJECT CaptureWin, Window = NULL;
-  HWND Wnd;
   POINT Point;
   LPARAM SpareLParam;
   LRESULT Result;
@@ -265,7 +264,7 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
         
         if(Window && (Hit != (USHORT)HTTRANSPARENT))
         {
-          Result = IntSendMessage(Wnd, WM_MOUSEACTIVATE, (WPARAM)NtUserGetParent(Window->Self), (LPARAM)SpareLParam);
+          Result = IntSendMessage(Window->Self, WM_MOUSEACTIVATE, (WPARAM)NtUserGetParent(Window->Self), (LPARAM)SpareLParam);
           
           switch (Result)
           {
@@ -982,6 +981,7 @@ MsqCreateMessageQueue(struct _ETHREAD *Thread)
   MessageQueue = (PUSER_MESSAGE_QUEUE)ExAllocatePoolWithTag(PagedPool,
 				   sizeof(USER_MESSAGE_QUEUE) + sizeof(THRDCARETINFO),
 				   TAG_MSGQ);
+  RtlZeroMemory(MessageQueue, sizeof(USER_MESSAGE_QUEUE) + sizeof(THRDCARETINFO));
   if (!MessageQueue)
     {
       return NULL;
