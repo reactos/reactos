@@ -41,6 +41,8 @@ struct DesktopSettingsDlg : public OwnerDrawParent<PropSheetPageDlg>
 protected:
 	virtual int Command(int id, int code);
 	virtual int Notify(int id, NMHDR* pnmh);
+
+	int	_display_version_org;
 };
 
 

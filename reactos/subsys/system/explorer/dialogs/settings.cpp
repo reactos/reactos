@@ -69,6 +69,8 @@ void ExplorerPropertySheet(HWND hparent)
 DesktopSettingsDlg::DesktopSettingsDlg(HWND hwnd)
  :	super(hwnd)
 {
+	_display_version_org = SendMessage(g_Globals._hwndShellView, PM_DISPLAY_VERSION, 0, MAKELONG(0,0));
+	CheckDlgButton(hwnd, ID_DESKTOP_VERSION, _display_version_org? BST_CHECKED: BST_UNCHECKED);
 }
 
 #ifndef PSN_QUERYINITIALFOCUS	// currently (as of 18.01.2004) missing in MinGW headers
@@ -82,9 +84,11 @@ int DesktopSettingsDlg::Notify(int id, NMHDR* pnmh)
 		break;
 
 	  case PSN_APPLY:
+		_display_version_org = SendMessage(g_Globals._hwndShellView, PM_DISPLAY_VERSION, 0, MAKELONG(0,0));
 		break;
 
 	  case PSN_RESET:
+		SendMessage(g_Globals._hwndShellView, PM_DISPLAY_VERSION, _display_version_org, MAKELONG(1,0));
 		break;
 
 	  default:
@@ -96,7 +100,17 @@ int DesktopSettingsDlg::Notify(int id, NMHDR* pnmh)
 
 int	DesktopSettingsDlg::Command(int id, int code)
 {
-	return FALSE;
+	switch(id) {
+	  case ID_DESKTOP_VERSION:
+		SendMessage(g_Globals._hwndShellView, PM_DISPLAY_VERSION, 0, MAKELONG(0,1));	// toggle version display flag
+		PropSheet_Changed(GetParent(_hwnd), _hwnd);
+		break;
+
+	  default:
+		return 1;
+	}
+
+	return 0;
 }
 
 

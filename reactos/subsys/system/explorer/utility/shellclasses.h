@@ -46,7 +46,7 @@ using namespace _com_util;
 #endif
 
 
- // COM Exception Handling
+ // Exception Handling
 
 #ifndef _NO_COMUTIL
 
@@ -78,7 +78,7 @@ struct COMExceptionBase
 				LocalFree(pBuf);
 			 } else {
 				TCHAR buffer[128];
-				_stprintf(buffer, TEXT("unknown COM Exception: 0x%08X"), _hr);
+				_stprintf(buffer, TEXT("unknown Exception: 0x%08X"), _hr);
 				_msg = buffer;
 			 }
 		}
@@ -94,7 +94,7 @@ protected:
 #endif
 
 
- /// COM Exception with context information
+ /// Exception with context information
 
 struct COMException : public COMExceptionBase
 {

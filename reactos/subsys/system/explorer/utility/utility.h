@@ -149,6 +149,9 @@ BOOL RunDLL(HWND hwnd, LPCTSTR dllname, LPCSTR procname, LPCTSTR cmdline, UINT n
  // create a directory with all missing parent directories
 BOOL RecursiveCreateDirectory(LPCTSTR path_in);
 
+ // read DWORD value from registry
+DWORD RegGetDWORDValue(HKEY root, LPCTSTR path, LPCTSTR valueName, DWORD def);
+
 
 #ifdef __cplusplus
 } // extern "C"
@@ -620,7 +623,7 @@ protected:
 };
 
 
- /// string class for convenience
+ /// string class for TCHAR strings
 struct String
 #ifdef UNICODE
  : public wstring
