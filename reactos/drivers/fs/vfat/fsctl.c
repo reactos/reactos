@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.29 2004/03/31 03:30:36 jimtabor Exp $
+/* $Id: fsctl.c,v 1.30 2004/05/02 20:16:45 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -55,6 +55,9 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
    ULONG Sectors;
    LARGE_INTEGER Offset;
    struct _BootSector* Boot;
+   BOOL PartitionInfoIsValid = FALSE;
+
+   DPRINT("VfatHasFileSystem\n");
 
    *RecognizedFS = FALSE;
 
@@ -66,15 +69,12 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
 				     &DiskGeometry,
 				     &Size,
 				     FALSE);
-  DPRINT("VfatHasFileSystem start\n");
-  
-
    if (!NT_SUCCESS(Status))
    {
       DPRINT("VfatBlockDeviceIoControl faild (%x)\n", Status);
       return Status;
    }
-   if (DiskGeometry.MediaType == FixedMedia || RemovableMedia)
+   if (DiskGeometry.MediaType == FixedMedia || DiskGeometry.MediaType == RemovableMedia)
    {
       // We have found a hard disk
       Size = sizeof(PARTITION_INFORMATION);
@@ -90,7 +90,8 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
          DPRINT("VfatBlockDeviceIoControl faild (%x)\n", Status);
          return Status;
       }
-/*#ifndef NDEBUG*/
+      PartitionInfoIsValid = TRUE;
+#if defined(DBG) && !defined(NDEBUG)
       DbgPrint("Partition Information:\n");
       DbgPrint("StartingOffset      %u\n", PartitionInfo.StartingOffset.QuadPart  / 512);
       DbgPrint("PartitionLength     %u\n", PartitionInfo.PartitionLength.QuadPart / 512);
@@ -100,18 +101,29 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
       DbgPrint("BootIndicator       %u\n", PartitionInfo.BootIndicator);
       DbgPrint("RecognizedPartition %u\n", PartitionInfo.RecognizedPartition);
       DbgPrint("RewritePartition    %u\n", PartitionInfo.RewritePartition);
-/*#endif*/
-      if (PartitionInfo.PartitionType == PARTITION_FAT_12       ||
-          PartitionInfo.PartitionType == PARTITION_FAT_16       ||
-          PartitionInfo.PartitionType == PARTITION_HUGE         ||
-          PartitionInfo.PartitionType == PARTITION_FAT32        ||
-          PartitionInfo.PartitionType == PARTITION_FAT32_XINT13 ||
-          PartitionInfo.PartitionType == PARTITION_XINT13)
+#endif
+      if (PartitionInfo.PartitionType)
       {
+         if (PartitionInfo.PartitionType == PARTITION_FAT_12       ||
+             PartitionInfo.PartitionType == PARTITION_FAT_16       ||
+             PartitionInfo.PartitionType == PARTITION_HUGE         ||
+             PartitionInfo.PartitionType == PARTITION_FAT32        ||
+             PartitionInfo.PartitionType == PARTITION_FAT32_XINT13 ||
+             PartitionInfo.PartitionType == PARTITION_XINT13)
+         {
+            *RecognizedFS = TRUE;
+         }
+      }
+      else if (DiskGeometry.MediaType == RemovableMedia &&
+               PartitionInfo.PartitionNumber > 0 &&
+               PartitionInfo.StartingOffset.QuadPart == 0LL &&
+               PartitionInfo.PartitionLength.QuadPart > 0LL)
+      {
+         /* This is possible a removable media formated as super floppy */
          *RecognizedFS = TRUE;
       }
    }
-   else if (DiskGeometry.MediaType > Unknown && DiskGeometry.MediaType <= RemovableMedia )
+   if (DiskGeometry.MediaType > Unknown && DiskGeometry.MediaType < RemovableMedia )
    {
       *RecognizedFS = TRUE;
    }
@@ -123,8 +135,6 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
    Boot = ExAllocatePool(NonPagedPool, DiskGeometry.BytesPerSector);
    if (Boot == NULL)
    {
-  DPRINT("VfatHasFileSystem 1\n");
-
       *RecognizedFS=FALSE;
       return STATUS_INSUFFICIENT_RESOURCES;
    }
@@ -134,9 +144,66 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
    Status = VfatReadDisk(DeviceToMount, &Offset, DiskGeometry.BytesPerSector, (PUCHAR) Boot, FALSE);
    if (NT_SUCCESS(Status))
    {
-      DPRINT("VfatHasFileSystem 2\n");
+      if (Boot->Signatur1 != 0xaa55)
+      {
+         DPRINT1("Signature %04x\n", Boot->Signatur1);
+         *RecognizedFS=FALSE;
+      }
+      if (*RecognizedFS &&
+	  Boot->BytesPerSector != 512 &&
+	  Boot->BytesPerSector != 1024 &&
+          Boot->BytesPerSector != 2048 && 
+	  Boot->BytesPerSector == 4096)
+      {
+         DPRINT1("BytesPerSector %d\n", Boot->BytesPerSector);
+         *RecognizedFS=FALSE;
+      }
 
-      if (Boot->BytesPerSector != 0)
+      if (*RecognizedFS &&
+          Boot->FATCount != 1 && 
+	  Boot->FATCount != 2)
+      {
+         DPRINT1("FATCount %d\n", Boot->FATCount);
+         *RecognizedFS=FALSE;
+      }
+
+      if (*RecognizedFS &&
+          Boot->Media != 0xf0 && 
+	  Boot->Media != 0xf8 &&
+	  Boot->Media != 0xf9 &&
+	  Boot->Media != 0xfa && 
+	  Boot->Media != 0xfb &&
+	  Boot->Media != 0xfc &&
+	  Boot->Media != 0xfd &&
+	  Boot->Media != 0xfe && 
+	  Boot->Media != 0xff)
+      {
+         DPRINT1("Media             %02x\n", Boot->Media);
+         *RecognizedFS=FALSE;
+      }
+
+      if (*RecognizedFS &&
+	  Boot->SectorsPerCluster != 1 &&
+	  Boot->SectorsPerCluster != 2 &&
+          Boot->SectorsPerCluster != 4 && 
+	  Boot->SectorsPerCluster != 8 &&
+          Boot->SectorsPerCluster != 16 &&
+	  Boot->SectorsPerCluster != 32 && 
+          Boot->SectorsPerCluster != 64 &&
+	  Boot->SectorsPerCluster != 128)
+      {
+         DPRINT1("SectorsPerCluster %02x\n", Boot->SectorsPerCluster);
+         *RecognizedFS=FALSE;
+      }
+
+      if (*RecognizedFS &&
+          Boot->BytesPerSector * Boot->SectorsPerCluster > 32 * 1024)
+      {
+         DPRINT1("ClusterSize %dx\n", Boot->BytesPerSector * Boot->SectorsPerCluster);
+         *RecognizedFS=FALSE;
+      }
+
+      if (*RecognizedFS)
       {
          FatInfo.VolumeID = Boot->VolumeID;
          FatInfo.FATStart = Boot->ReservedSectors;
@@ -169,21 +236,22 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
             DPRINT("FAT16\n");
             FatInfo.FatType = FAT16;
          }
-         if (pFatInfo)
+	 if (PartitionInfoIsValid &&
+	     FatInfo.Sectors > PartitionInfo.PartitionLength.QuadPart / FatInfo.BytesPerSector)
+	 {
+	    CHECKPOINT1;
+	    *RecognizedFS = FALSE;
+	 }
+	    
+         if (pFatInfo && *RecognizedFS)
          {
             *pFatInfo = FatInfo;
          }
       }
-      else
-      {
-        DPRINT("VfatHasFileSystem 3\n");
-
-      	Status = STATUS_INSUFFICIENT_RESOURCES;
-      }
    }
-     DPRINT("VfatHasFileSystem end\n");
 
    ExFreePool(Boot);
+   DPRINT("VfatHasFileSystem done\n");
    return Status;
 }
 
@@ -205,19 +273,6 @@ VfatMountDevice(PDEVICE_EXTENSION DeviceExt,
       return(Status);
    }
    DPRINT("MountVfatdev %d, PAGE_SIZE = %d\n", DeviceExt->FatInfo.BytesPerCluster, PAGE_SIZE);
-
-   if (DeviceExt->FatInfo.BytesPerCluster >= PAGE_SIZE &&
-      (DeviceExt->FatInfo.BytesPerCluster % PAGE_SIZE) != 0)
-   {
-      DbgPrint("(%s:%d) Invalid cluster size\n", __FILE__, __LINE__);
-      KEBUGCHECK(0);
-   }
-   else if (DeviceExt->FatInfo.BytesPerCluster < PAGE_SIZE &&
-      (PAGE_SIZE % DeviceExt->FatInfo.BytesPerCluster) != 0)
-   {
-      DbgPrint("(%s:%d) Invalid cluster size2\n", __FILE__, __LINE__);
-      KEBUGCHECK(0);
-   }
 
    return(STATUS_SUCCESS);
 }

@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.61 2003/11/12 15:26:44 ekohl Exp $ */
+/* $Id: vfat.h,v 1.62 2004/05/02 20:16:46 hbirr Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -20,8 +20,8 @@ struct _BootSector
   unsigned char  Drive, Res1, Sig;
   unsigned long  VolumeID;
   unsigned char  VolumeLabel[11], SysType[8];
-  unsigned char  Res2[446];
-  unsigned long  Signatur1;
+  unsigned char  Res2[448];
+  unsigned short Signatur1;
 } __attribute__((packed));
 
 struct _BootSector32
@@ -48,8 +48,8 @@ struct _BootSector32
   unsigned char  ExtBootSignature;			// 66
   unsigned long  VolumeID;				// 67
   unsigned char  VolumeLabel[11], SysType[8];		// 71
-  unsigned char  Res2[418];				// 90
-  unsigned long  Signature1;				// 508
+  unsigned char  Res2[420];				// 90
+  unsigned short Signature1;				// 510
 } __attribute__((packed));
 
 struct _FsInfoSector
