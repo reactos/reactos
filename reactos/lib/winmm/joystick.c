@@ -139,7 +139,7 @@ UINT WINAPI joyGetNumDevs(void)
 /**************************************************************************
  * 				joyGetDevCapsA		[WINMM.@]
  */
-MMRESULT WINAPI joyGetDevCapsA(UINT wID, LPJOYCAPSA lpCaps, UINT wSize)
+MMRESULT WINAPI joyGetDevCapsA(UINT_PTR wID, LPJOYCAPSA lpCaps, UINT wSize)
 {
     if (wID >= MAXJOYSTICK)	return JOYERR_PARMS;
     if (!JOY_LoadDriver(wID))	return MMSYSERR_NODRIVER;
@@ -153,7 +153,7 @@ MMRESULT WINAPI joyGetDevCapsA(UINT wID, LPJOYCAPSA lpCaps, UINT wSize)
 /**************************************************************************
  * 				joyGetDevCapsW		[WINMM.@]
  */
-MMRESULT WINAPI joyGetDevCapsW(UINT wID, LPJOYCAPSW lpCaps, UINT wSize)
+MMRESULT WINAPI joyGetDevCapsW(UINT_PTR wID, LPJOYCAPSW lpCaps, UINT wSize)
 {
     JOYCAPSA	jca;
     MMRESULT	ret = joyGetDevCapsA(wID, &jca, sizeof(jca));

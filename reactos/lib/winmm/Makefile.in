@@ -1,0 +1,33 @@
+EXTRADEFS = -D_WINMM_
+TOPSRCDIR = @top_srcdir@
+TOPOBJDIR = ../..
+SRCDIR    = @srcdir@
+VPATH     = @srcdir@
+MODULE    = winmm.dll
+IMPORTS   = user32 advapi32 kernel32 ntdll
+ALTNAMES  = mmsystem.dll sound.dll
+
+SPEC_SRCS16 = $(ALTNAMES:.dll=.spec)
+
+C_SRCS = \
+	driver.c \
+	joystick.c \
+	lolvldrv.c \
+	mci.c \
+	mmio.c \
+	playsound.c \
+	time.c \
+	winmm.c
+
+C_SRCS16 = \
+	message16.c \
+	mmsystem.c \
+	sound16.c
+
+RC_SRCS = winmm_res.rc
+
+SUBDIRS = tests
+
+@MAKE_DLL_RULES@
+
+### Dependencies:

@@ -389,7 +389,7 @@ LRESULT WINAPI CloseDriver(HDRVR hDrvr, LPARAM lParam1, LPARAM lParam2)
                     DRIVER_SendMessage(lpDrv0, DRV_CLOSE, 0L, 0L);
                     lpDrv0->d.d32.dwDriverID = 0;
                     DRIVER_RemoveFromList(lpDrv0);
-                    FreeLibrary(lpDrv->d.d32.hModule);
+                    FreeLibrary(lpDrv0->d.d32.hModule);
                     HeapFree(GetProcessHeap(), 0, lpDrv0);
                 }
                 FreeLibrary(lpDrv->d.d32.hModule);

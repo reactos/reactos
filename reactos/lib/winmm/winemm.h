@@ -22,10 +22,6 @@
  *****************************************************************************
  */
 
-#include "config.h"
-#include "wine/port.h"
-#include "wine/debug.h"
-
 #include <stdarg.h>
 
 #include "windef.h"
@@ -74,7 +70,7 @@ typedef struct tagWINE_MM_DRIVER_PART {
     int				nIDMin;		/* lower bound of global indexes for this type */
     int				nIDMax;		/* hhigher bound of global indexes for this type */
     union {
-	WINEMM_msgFunc32	fnMessage32;	/* pointer to fonction */
+	WINEMM_msgFunc32	fnMessage32;	/* pointer to function */
 	WINEMM_msgFunc16	fnMessage16;
     } u;
 } WINE_MM_DRIVER_PART;
@@ -197,6 +193,7 @@ typedef struct tagWINE_PLAYSOUND {
     LPCWSTR		        pszSound;
     HMODULE		        hMod;
     DWORD		        fdwSound;
+    HANDLE                      hThread;
     struct tagWINE_PLAYSOUND*   lpNext;
 } WINE_PLAYSOUND, *LPWINE_PLAYSOUND;
 
@@ -205,12 +202,6 @@ typedef struct tagWINE_MM_IDATA {
     HANDLE			hWinMM32Instance;
     HANDLE			hWinMM16Instance;
     CRITICAL_SECTION		cs;
-    /* mm timer part */
-    HANDLE			hMMTimer;
-    DWORD			mmSysTimeMS;
-    LPWINE_TIMERENTRY 		lpTimerList;
-    int				nSizeLpTimers;
-    LPWINE_TIMERENTRY		lpTimers;
     /* mci part */
     LPWINE_MCIDRIVER 		lpMciDrvs;
     /* low level drivers (unused yet) */
@@ -246,7 +237,7 @@ DWORD		MMDRV_Open(LPWINE_MLD mld, UINT wMsg, DWORD dwParam1, DWORD dwParam2);
 DWORD		MMDRV_Close(LPWINE_MLD mld, UINT wMsg);
 LPWINE_MLD	MMDRV_Get(HANDLE hndl, UINT type, BOOL bCanBeID);
 LPWINE_MLD	MMDRV_GetRelated(HANDLE hndl, UINT srcType, BOOL bSrcCanBeID, UINT dstTyped);
-DWORD		MMDRV_Message(LPWINE_MLD mld, WORD wMsg, DWORD dwParam1, DWORD dwParam2, BOOL bFrom32);
+DWORD           MMDRV_Message(LPWINE_MLD mld, UINT wMsg, DWORD_PTR dwParam1, DWORD_PTR dwParam2, BOOL bFrom32);
 UINT		MMDRV_PhysicalFeatures(LPWINE_MLD mld, UINT uMsg, DWORD dwParam1, DWORD dwParam2);
 BOOL            MMDRV_Is32(unsigned int);
 void            MMDRV_InstallMap(unsigned int, MMDRV_MAPFUNC, MMDRV_UNMAPFUNC,
@@ -294,6 +285,7 @@ void		TIME_MMTimeStop(void);
 
 /* Global variables */
 extern LPWINE_MM_IDATA  WINMM_IData;
+extern DWORD		WINMM_SysTimeMS;
 
 /* pointers to 16 bit functions (if sibling MMSYSTEM.DLL is loaded
  * NULL otherwise

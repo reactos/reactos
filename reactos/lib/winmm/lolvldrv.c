@@ -171,8 +171,8 @@ UINT	MMDRV_GetNum(UINT type)
 /**************************************************************************
  * 				MMDRV_Message			[internal]
  */
-DWORD	MMDRV_Message(LPWINE_MLD mld, WORD wMsg, DWORD dwParam1,
-		      DWORD dwParam2, BOOL bFrom32)
+DWORD  MMDRV_Message(LPWINE_MLD mld, UINT wMsg, DWORD_PTR dwParam1,
+                     DWORD_PTR dwParam2, BOOL bFrom32)
 {
     LPWINE_MM_DRIVER 		lpDrv;
     DWORD			ret;
@@ -502,7 +502,8 @@ UINT	MMDRV_PhysicalFeatures(LPWINE_MLD mld, UINT uMsg, DWORD dwParam1,
     case DRV_QUERYDSOUNDDESC: /* Wine-specific: Retrieve DirectSound driver description*/
     case DRV_QUERYDSOUNDGUID: /* Wine-specific: Retrieve DirectSound driver GUID */
 	return MMDRV_Message(mld, uMsg, dwParam1, dwParam2, TRUE);
-#endif /* __REACTOS__ */
+#endif
+
     default:
 	WARN("Unknown call %04x\n", uMsg);
 	return MMSYSERR_INVALPARAM;
@@ -742,8 +743,9 @@ static BOOL	MMDRV_InitFromRegistry(void)
 static BOOL	MMDRV_InitHardcoded(void)
 {
     /* first load hardware drivers */
+#ifndef __REACTOS__
     MMDRV_Install("wineoss.drv",   	"wineoss.drv",	FALSE);
-
+#endif /* __REACTOS__ */
     /* finish with mappers */
     MMDRV_Install("wavemapper",	   	"msacm.drv",	TRUE);
     MMDRV_Install("midimapper",   	"midimap.drv",	TRUE);

@@ -190,6 +190,7 @@ static void     PlaySound_Free(WINE_PLAYSOUND* wps)
     if (WINMM_IData->lpPlaySound == NULL) SetEvent(WINMM_IData->psLastEvent);
     LeaveCriticalSection(&WINMM_IData->cs);
     if (wps->bAlloc) HeapFree(GetProcessHeap(), 0, (void*)wps->pszSound);
+    if (wps->hThread) CloseHandle(wps->hThread);
     HeapFree(GetProcessHeap(), 0, wps);
 }
 
@@ -456,9 +457,12 @@ BOOL MULTIMEDIA_PlaySound(const void* pszSound, HMODULE hmod, DWORD fdwSound, BO
     if (fdwSound & SND_ASYNC)
     {
         DWORD       id;
+        HANDLE      handle;
         wps->bLoop = (fdwSound & SND_LOOP) ? TRUE : FALSE;
-        if (CreateThread(NULL, 0, proc_PlaySound, wps, 0, &id) != 0)
+        if ((handle = CreateThread(NULL, 0, proc_PlaySound, wps, 0, &id)) != 0) {
+            wps->hThread = handle;
             return TRUE;
+        }
     }
     else return proc_PlaySound(wps);
 
