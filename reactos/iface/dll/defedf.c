@@ -1,4 +1,4 @@
-/* $Id: defedf.c,v 1.2 1999/07/12 21:02:06 ea Exp $
+/* $Id: defedf.c,v 1.3 1999/08/20 05:53:04 ea Exp $
  * 
  * reactos/iface/dll/defedf.c
  *
@@ -18,6 +18,8 @@
 #include <string.h>
 
 #define INPUT_BUFFER_SIZE 1024
+
+//#define DEBUG
 
 static const char * SUFFIX_DEF = ".def";
 static const char * SUFFIX_EDF = ".edf";
@@ -88,6 +90,10 @@ enum
 	LineExports,
 	LineImports,
 	LineSymbol,
+//	LineSymbolCdecl,
+//	LineSymbolStdcall,
+//	LineSymbolFastcall,
+//	LineSymbolData,
 	LineComment,
 	LineEmpty
 	
@@ -100,9 +106,7 @@ ParseInput (
 	char * CleanName
 	)
 {
-	char	Buffer [MAX_PATH];
 	char	* r;
-	char	* w;
 
 	r = strrchr( InputBuffer, '\n' );
 	if (r) *r = '\0';
@@ -116,11 +120,21 @@ printf("LineEmpty\n");
 #endif
 		return LineEmpty;
 	}
-	
-	for (	r = InputBuffer, w = Buffer;
-		*r && (*r != ' ') && (*r != '\t');
-		++r
+	/*
+	 * Skip blanks and tabs.
+	 */
+	for (	InputBuffer;
+		(
+		 	(*InputBuffer)
+			&& (*InputBuffer == ' ')
+			&& (*InputBuffer == '\t')
+			);
+		InputBuffer++
 		);
+#ifdef DEBUG
+printf("1st=\"%c\" (%d)\n", *InputBuffer, (int) *InputBuffer );
+#endif
+	r = InputBuffer;
 	if (*r == ';') 
 	{
 		strcpy( InputBuffer, r );
