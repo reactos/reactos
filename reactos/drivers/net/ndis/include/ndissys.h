@@ -28,24 +28,6 @@
 #ifndef _MSC_VER
 /* FIXME: The following should be moved to ntddk.h */
 
-/* i386 specific constants */
-
-/* Page size for the Intel 386 is 4096 */
-#define PAGE_SIZE (ULONG)0x1000
-
-/* 4096 is 2^12. Used to find the virtual page number from a virtual address */
-#define PAGE_SHIFT 12L
-
-/*
- * ULONG ADDRESS_AND_SIZE_TO_SPAN_PAGES(
- *     IN  PVOID   Va,
- *     IN  ULONG   Size);
- */
-#define ADDRESS_AND_SIZE_TO_SPAN_PAGES(Va, Size)            \
-    ((((ULONG)((ULONG)(Size) - 1) >> PAGE_SHIFT) +          \
-    (((((ULONG)(Size - 1) & (PAGE_SIZE - 1)) +              \
-    ((ULONG)Va & (PAGE_SIZE - 1)))) >> PAGE_SHIFT)) + 1)
-
 /*
  * ULONG MmGetMdlByteCount(
  *     IN  PMDL    Mdl)

@@ -10,8 +10,7 @@ RESOURCE_OBJECT = $(TARGETNAME).coff
 NDIS_OBJECTS    = ndis/main.o ndis/40gone.o ndis/50gone.o ndis/buffer.o ndis/cl.o \
                   ndis/cm.o ndis/co.o ndis/control.o ndis/hardware.o \
                   ndis/io.o ndis/memory.o ndis/miniport.o \
-		  ndis/protocol.o ndis/string.o ndis/stubs.o ndis/time.o \
-		  $(TARGETNAME).coff
+		  ndis/protocol.o ndis/string.o ndis/stubs.o ndis/time.o
 
 all: objects $(TARGETNAME).sys
 
@@ -38,8 +37,10 @@ $(TARGETNAME).sys: $(OBJECTS)
 		--kill-at \
 		--output-lib $(TARGETNAME).a
 	$(CC) \
+		-nostartfiles -nostdlib \
+		--subsystem=native \
 		-mdll \
-		-specs=../../svc_specs \
+		--dll \
 		-Wl,-e,_DriverEntry@8 \
 		-Wl,--base-file,base.tmp \
 		-Wl,--defsym,_end=end  \
@@ -55,8 +56,10 @@ $(TARGETNAME).sys: $(OBJECTS)
         --def $(TARGETNAME).edf
 	- $(RM) base.tmp
 	$(CC) \
+		-nostartfiles -nostdlib \
+		--subsystem=native \
 		-mdll \
-		-specs=../../svc_specs \
+		--dll \
 		-Wl,--image-base,0x10000 \
 		-Wl,-e,_DriverEntry@8 \
 		-Wl,temp.exp \

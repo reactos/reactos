@@ -631,6 +631,9 @@ VOID IPReceive(
         return;
     default:
         TI_DbgPrint(MIN_TRACE, ("Datagram has an unsupported IP version %d.\n", Version));
+
+        DISPLAY_IP_PACKET(IPPacket);
+
         return;
     }
 }

@@ -1,6 +1,6 @@
 # TCPIP.SYS - TCP/IP protocol driver
 #
-PATH_TO_TOP = ../../../
+PATH_TO_TOP = ../../..
 
 TARGETNAME=tcpip
 
@@ -76,8 +76,10 @@ $(TARGETNAME).sys: $(OBJECTS)
 		--kill-at \
 		--output-lib $(TARGETNAME).a
 	$(CC) \
-        -mdll \
-        -specs=../../svc_specs \
+		-nostartfiles -nostdlib \
+		--subsystem=native \
+		-mdll \
+		--dll \
         -Wl,-e,_DriverEntry@8 \
         -Wl,--base-file,base.tmp \
         -Wl,--defsym,_end=end \
@@ -93,8 +95,10 @@ $(TARGETNAME).sys: $(OBJECTS)
         --def $(TARGETNAME).edf
 	- $(RM) base.tmp
 	$(CC) \
-        -mdll \
-        -specs=../../svc_specs \
+		-nostartfiles -nostdlib \
+		--subsystem=native \
+		-mdll \
+		--dll \
         -Wl,--image-base,0x10000 \
         -Wl,-e,_DriverEntry@8 \
         -Wl,temp.exp \

@@ -285,10 +285,19 @@ PADDRESS_FILE AddrSearchNext(
     KeAcquireSpinLock(&AddressFileListLock, &OldIrql);
 
     while (CurrentEntry != &AddressFileListHead) {
-	    Current = CONTAINING_RECORD(CurrentEntry, ADDRESS_FILE, ListEntry);
+        Current = CONTAINING_RECORD(CurrentEntry, ADDRESS_FILE, ListEntry);
+
+        IPAddress = Current->ADE->Address;
+
+        TI_DbgPrint(DEBUG_ADDRFILE, ("Comparing: ((%d, %d, 0x%X), (%d, %d, 0x%X)).\n",
+            Current->Port,
+            Current->Protocol,
+            IPAddress->Address.IPv4Address,
+            SearchContext->Port,
+            SearchContext->Protocol,
+            SearchContext->Address->Address.IPv4Address));
 
         /* See if this address matches the search criteria */
-        IPAddress = Current->ADE->Address;
         if (((Current->Port    == SearchContext->Port) &&
             (Current->Protocol == SearchContext->Protocol) &&
             (AddrIsEqual(IPAddress, SearchContext->Address))) ||

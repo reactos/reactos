@@ -48,6 +48,14 @@ UINT ResizePacket(
     PNDIS_PACKET Packet,
     UINT Size);
 
+#ifdef DBG
+VOID DisplayIPPacket(
+    PIP_PACKET IPPacket);
+#define DISPLAY_IP_PACKET(x) DisplayIPPacket(x)
+#else
+#define DISPLAY_IP_PACKET(x)
+#endif /* DBG */
+
 #endif /* __ROUTINES_H */
 
 /* EOF */

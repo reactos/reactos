@@ -51,6 +51,8 @@ NTSTATUS AddUDPHeaderIPv4(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
+    TI_DbgPrint(MAX_TRACE, ("Allocated %d bytes for headers at 0x%X.\n", BufferSize, Header));
+
     /* Allocate NDIS buffer for maximum Link level, IP and UDP header */
     NdisAllocateBuffer(&NdisStatus,
                        &HeaderBuffer,
@@ -137,10 +139,10 @@ NTSTATUS BuildUDPPacket(
     }
 
     RtlZeroMemory(Packet, sizeof(IP_PACKET));
-    Packet->RefCount   = 1;
-    Packet->TotalSize  = sizeof(IPv4_HEADER) +
-                         sizeof(UDP_HEADER)  +
-                         SendRequest->BufferSize;
+    Packet->RefCount  = 1;
+    Packet->TotalSize = sizeof(IPv4_HEADER) +
+                        sizeof(UDP_HEADER)  +
+                        SendRequest->BufferSize;
 
     /* Allocate NDIS packet */
     NdisAllocatePacket(&NdisStatus, &Packet->NdisPacket, GlobalPacketPool);
@@ -171,6 +173,8 @@ NTSTATUS BuildUDPPacket(
     /* Chain data after header */
     NdisChainBufferAtBack(Packet->NdisPacket, SendRequest->Buffer);
 
+    DISPLAY_IP_PACKET(Packet);
+
     *IPPacket = Packet;
 
     return STATUS_SUCCESS;
@@ -197,6 +201,12 @@ VOID DeliverUDPData(
  */
 {
     KIRQL OldIrql;
+    PTDI_IND_RECEIVE_DATAGRAM ReceiveHandler;
+    PVOID HandlerContext;
+    LONG AddressLength;
+    PVOID SourceAddress;
+    ULONG BytesTaken;
+    NTSTATUS Status;
 
     TI_DbgPrint(MAX_TRACE, ("Called.\n"));
 
@@ -247,11 +257,33 @@ VOID DeliverUDPData(
                 PoolFreeBuffer(Current->RemoteAddress);
             PoolFreeBuffer(Current);
         }
-    } else {
+    } else if (AddrFile->RegisteredReceiveDatagramHandler) {
+        TI_DbgPrint(MAX_TRACE, ("Calling receive event handler.\n"));
+
+        ReceiveHandler = AddrFile->ReceiveDatagramHandler;
+        HandlerContext = AddrFile->ReceiveDatagramHandlerContext;
+
         KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
 
-        /* FIXME: Call event handler */
-        TI_DbgPrint(MAX_TRACE, ("Calling receive event handler.\n"));
+        if (Address->Type == IP_ADDRESS_V4) {
+            AddressLength = sizeof(IPv4_RAW_ADDRESS);
+            SourceAddress = &Address->Address.IPv4Address;
+        } else /* (Address->Type == IP_ADDRESS_V6) */ {
+            AddressLength = sizeof(IPv6_RAW_ADDRESS);
+            SourceAddress = Address->Address.IPv6Address;
+        }
+
+        Status = (*ReceiveHandler)(HandlerContext,
+                                   AddressLength,
+                                   SourceAddress,
+                                   0,
+                                   NULL,
+                                   TDI_RECEIVE_ENTIRE_MESSAGE,
+                                   DataSize,
+                                   DataSize,
+                                   &BytesTaken,
+                                   IPPacket->Data,
+                                   NULL);
     }
 
     TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));

@@ -153,10 +153,10 @@ NTSTATUS TiCreateFileObject(
         /* This is a request to open an address */
 
         /* Parameter checks */
-        Address = (PTA_ADDRESS_IP)(EaInfo->EaName + EaInfo->EaNameLength + 1);
+        Address = (PTA_ADDRESS_IP)(EaInfo->EaName + EaInfo->EaNameLength);
         if ((EaInfo->EaValueLength < sizeof(TA_ADDRESS_IP)) ||
             (Address->TAAddressCount != 1) ||
-            (Address->Address[0].AddressLength < sizeof(TDI_ADDRESS_IP)) ||
+            (Address->Address[0].AddressLength < TDI_ADDRESS_LENGTH_IP) ||
             (Address->Address[0].AddressType != TDI_ADDRESS_TYPE_IP)) {
             TI_DbgPrint(MIN_TRACE, ("Parameters are invalid.\n"));
             ExFreePool(Context);
@@ -375,9 +375,10 @@ NTSTATUS TiDispatchInternal(
 	NTSTATUS Status;
     PIO_STACK_LOCATION IrpSp;
 
-    TI_DbgPrint(DEBUG_IRP, ("Called. DeviceObject is at (0x%X), IRP is at (0x%X).\n", DeviceObject, Irp));
+    IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
-	IrpSp = IoGetCurrentIrpStackLocation(Irp);
+    TI_DbgPrint(DEBUG_IRP, ("Called. DeviceObject is at (0x%X), IRP is at (0x%X) MN (%d).\n",
+        DeviceObject, Irp, IrpSp->MinorFunction));
 
     Irp->IoStatus.Status      = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
@@ -701,7 +702,7 @@ DriverEntry(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-#if 1
+#if 0
     /* Open underlying adapter(s) we are bound to */
 
     /* FIXME: Get binding information from registry */

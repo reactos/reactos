@@ -33,7 +33,7 @@
 
 /* Define _NTTEST_ to make test version. Device names are prefixed with
    'NT' to allow the driver to run side by side with MS TCP/IP driver */
-#define _NTTEST_
+//#define _NTTEST_
 
 /* FIXME: The following should be moved to ntddk.h or tdi headers */
 #ifndef _MSC_VER

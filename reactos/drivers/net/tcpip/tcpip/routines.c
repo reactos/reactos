@@ -400,4 +400,43 @@ UINT ResizePacket(
     return OldSize;
 }
 
+#ifdef DBG
+VOID DisplayIPPacket(
+    PIP_PACKET IPPacket)
+{
+    UINT i;
+    PCHAR p;
+    UINT Length;
+    PNDIS_BUFFER Buffer;
+    PNDIS_BUFFER NextBuffer;
+
+    if ((DebugTraceLevel & MAX_TRACE) == 0)
+        return;
+
+    if (!IPPacket) {
+        TI_DbgPrint(MIN_TRACE, ("Cannot display null packet.\n"));
+        return;
+    }
+
+    TI_DbgPrint(MIN_TRACE, ("Header buffer is at (0x%X).\n", IPPacket->Header));
+    TI_DbgPrint(MIN_TRACE, ("Header size is (%d).\n", IPPacket->HeaderSize));
+    TI_DbgPrint(MIN_TRACE, ("TotalSize (%d).\n", IPPacket->TotalSize));
+    TI_DbgPrint(MIN_TRACE, ("ContigSize (%d).\n", IPPacket->ContigSize));
+    TI_DbgPrint(MIN_TRACE, ("NdisPacket (0x%X).\n", IPPacket->NdisPacket));
+
+    NdisQueryPacket(IPPacket->NdisPacket, NULL, NULL, &Buffer, NULL);
+    for (; Buffer != NULL; Buffer = NextBuffer) {
+        NdisGetNextBuffer(Buffer, &NextBuffer);
+        NdisQueryBuffer(Buffer, (PVOID)&p, &Length);
+
+        for (i = 0; i < Length; i++) {
+            if (i % 16 == 0)
+                DbgPrint("\n");
+            DbgPrint("%02X ", (p[i]) & 0xFF);
+        }
+        DbgPrint("\n");
+    }
+}
+#endif /* DBG */
+
 /* EOF */

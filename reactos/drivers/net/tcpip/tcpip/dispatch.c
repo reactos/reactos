@@ -81,9 +81,7 @@ VOID DispCancelComplete(
     
     IoAcquireCancelSpinLock(&OldIrql);
 
-    /* Remove the reference placed on the endpoint by the cancel routine.
-       The cancelled IRP will be completed by the completion routine for
-       the request */
+    /* Remove the reference taken by the cancel routine */
     TranContext->RefCount--;
 
     if (TranContext->RefCount == 0) {
@@ -482,7 +480,6 @@ NTSTATUS DispTdiSetEventHandler(
  *     Status of operation
  */
 {
-#ifdef _MSC_VER
     PTDI_REQUEST_KERNEL_SET_EVENT Parameters;
     PTRANSPORT_CONTEXT TranContext;
     PIO_STACK_LOCATION IrpSp;
@@ -518,8 +515,8 @@ NTSTATUS DispTdiSetEventHandler(
     switch (Parameters->EventType) {
     case TDI_EVENT_CONNECT:
         if (!Parameters->EventHandler) {
-            AddrFile->ConnectionHandler =
-                (PTDI_IND_CONNECT)TdiDefaultConnectHandler;
+//            AddrFile->ConnectionHandler =
+//                (PTDI_IND_CONNECT)TdiDefaultConnectHandler;
             AddrFile->ConnectionHandlerContext    = NULL;
             AddrFile->RegisteredConnectionHandler = FALSE;
         } else {
@@ -532,8 +529,8 @@ NTSTATUS DispTdiSetEventHandler(
 
     case TDI_EVENT_DISCONNECT:
         if (!Parameters->EventHandler) {
-            AddrFile->DisconnectHandler =
-                (PTDI_IND_DISCONNECT)TdiDefaultDisconnectHandler;
+//            AddrFile->DisconnectHandler =
+//                (PTDI_IND_DISCONNECT)TdiDefaultDisconnectHandler;
             AddrFile->DisconnectHandlerContext    = NULL;
             AddrFile->RegisteredDisconnectHandler = FALSE;
         } else {
@@ -546,8 +543,8 @@ NTSTATUS DispTdiSetEventHandler(
 
     case TDI_EVENT_RECEIVE:
         if (Parameters->EventHandler == NULL) {
-            AddrFile->ReceiveHandler =
-                (PTDI_IND_RECEIVE)TdiDefaultReceiveHandler;
+//            AddrFile->ReceiveHandler =
+//                (PTDI_IND_RECEIVE)TdiDefaultReceiveHandler;
             AddrFile->ReceiveHandlerContext    = NULL;
             AddrFile->RegisteredReceiveHandler = FALSE;
         } else {
@@ -560,8 +557,8 @@ NTSTATUS DispTdiSetEventHandler(
 
     case TDI_EVENT_RECEIVE_EXPEDITED:
         if (Parameters->EventHandler == NULL) {
-            AddrFile->ExpeditedReceiveHandler =
-                (PTDI_IND_RECEIVE_EXPEDITED)TdiDefaultRcvExpeditedHandler;
+//            AddrFile->ExpeditedReceiveHandler =
+//                (PTDI_IND_RECEIVE_EXPEDITED)TdiDefaultRcvExpeditedHandler;
             AddrFile->ExpeditedReceiveHandlerContext    = NULL;
             AddrFile->RegisteredExpeditedReceiveHandler = FALSE;
         } else {
@@ -574,8 +571,8 @@ NTSTATUS DispTdiSetEventHandler(
 
     case TDI_EVENT_RECEIVE_DATAGRAM:
         if (Parameters->EventHandler == NULL) {
-            AddrFile->ReceiveDatagramHandler =
-                (PTDI_IND_RECEIVE_DATAGRAM)TdiDefaultRcvDatagramHandler;
+//            AddrFile->ReceiveDatagramHandler =
+//                (PTDI_IND_RECEIVE_DATAGRAM)TdiDefaultRcvDatagramHandler;
             AddrFile->ReceiveDatagramHandlerContext    = NULL;
             AddrFile->RegisteredReceiveDatagramHandler = FALSE;
         } else {
@@ -588,8 +585,8 @@ NTSTATUS DispTdiSetEventHandler(
 
     case TDI_EVENT_ERROR:
         if (Parameters->EventHandler == NULL) {
-            AddrFile->ErrorHandler =
-                (PTDI_IND_ERROR)TdiDefaultErrorHandler;
+//            AddrFile->ErrorHandler =
+//                (PTDI_IND_ERROR)TdiDefaultErrorHandler;
             AddrFile->ErrorHandlerContext    = NULL;
             AddrFile->RegisteredErrorHandler = FALSE;
         } else {
@@ -607,9 +604,6 @@ NTSTATUS DispTdiSetEventHandler(
     KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
 
     return Status;
-#else
-    return STATUS_NOT_IMPLEMENTED;
-#endif
 }
 
 
