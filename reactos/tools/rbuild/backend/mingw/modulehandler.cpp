@@ -48,7 +48,7 @@ MingwModuleHandler::GetImportLibraryDependencies ( const Module& module ) const
 	{
 		if ( dependencies.size () > 0 )
 			dependencies += " ";
-		Module* importedModule = module.project->LocateModule ( module.libraries[i]->name );
+		const Module* importedModule = module.project.LocateModule ( module.libraries[i]->name );
 		assert ( importedModule != NULL );
 		dependencies += importedModule->GetPath ().c_str ();
 	}
@@ -117,7 +117,7 @@ MingwModuleHandler::GenerateGccDefineParametersFromVector ( const vector<Define*
 string
 MingwModuleHandler::GenerateGccDefineParameters ( const Module& module ) const
 {
-	string parameters = GenerateGccDefineParametersFromVector ( module.project->defines );
+	string parameters = GenerateGccDefineParametersFromVector ( module.project.defines );
 	string s = GenerateGccDefineParametersFromVector ( module.defines );
 	if (s.length () > 0)
 	{
@@ -160,7 +160,7 @@ string
 MingwModuleHandler::GenerateGccIncludeParameters ( const Module& module ) const
 {
 	string parameters = GenerateGccIncludeParametersFromVector ( ".",
-	                                                             module.project->includes );
+	                                                             module.project.includes );
 	string s = GenerateGccIncludeParametersFromVector ( module.path,
 	                                                    module.includes );
 	if (s.length () > 0)

@@ -58,14 +58,14 @@ AccessDeniedException::AccessDeniedException ( const string& filename)
 }
 
 
-InvalidBuildFileException::InvalidBuildFileException ( const char* message,
+InvalidBuildFileException::InvalidBuildFileException ( const string& location,
+                                                       const char* message,
                                                        ...)
 {
 	va_list args;
 	va_start ( args,
 	           message );
-	SetMessage ( message,
-	            args );
+	SetLocationMessage ( location, message, args );
 	va_end ( args );
 }
 
@@ -73,6 +73,13 @@ InvalidBuildFileException::InvalidBuildFileException ()
 {
 }
 
+void
+InvalidBuildFileException::SetLocationMessage ( const std::string& location,
+                                                const char* message,
+                                                va_list args )
+{
+	Message = location + ": " + ssvprintf ( message, args );
+}
 
 XMLSyntaxErrorException::XMLSyntaxErrorException ( const string& location,
 	                                               const char* message,
@@ -81,7 +88,7 @@ XMLSyntaxErrorException::XMLSyntaxErrorException ( const string& location,
 	va_list args;
 	va_start ( args,
 	          message );
-	Message = location + ": " + ssvprintf ( message, args );
+	SetLocationMessage ( location, message, args );
 	va_end ( args );
 }
 

@@ -306,8 +306,9 @@ XMLAttribute::XMLAttribute(const string& name_,
 {
 }
 
-XMLElement::XMLElement()
-	: parentElement(NULL)
+XMLElement::XMLElement ( const string& location_ )
+	: location(location_),
+	  parentElement(NULL)
 {
 }
 
@@ -476,7 +477,7 @@ XMLParse(XMLFile& f,
 			return NULL;
 	}
 
-	XMLElement* e = new XMLElement;
+	XMLElement* e = new XMLElement ( f.Location() );
 	bool bNeedEnd = e->Parse ( token, end_tag );
 
 	if ( e->name == "xi:include" )

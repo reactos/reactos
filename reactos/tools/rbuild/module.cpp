@@ -21,13 +21,16 @@ FixSeparator ( const string& s )
 	return s2;
 }
 
-Module::Module ( Project* project,
+Module::Module ( const Project& project,
                  const XMLElement& moduleNode,
                  const string& modulePath )
 	: project(project),
 	  node(moduleNode)
 {
-  	path = FixSeparator ( modulePath );
+	if ( node.name != "module" )
+		throw Exception ( "internal tool error: Module created with non-<module> node" );
+
+	path = FixSeparator ( modulePath );
 
 	const XMLAttribute* att = moduleNode.GetAttribute ( "name", true );
 	assert(att);
@@ -54,17 +57,30 @@ Module::~Module ()
 }
 
 void
-Module::ProcessXML ( const XMLElement& e,
-                     const string& path )
+Module::ProcessXML()
 {
+	size_t i;
+	for ( i = 0; i < node.subElements.size(); i++ )
+		ProcessXMLSubElement ( *node.subElements[i], path );
+	for ( i = 0; i < libraries.size(); i++ )
+		libraries[i]->ProcessXML();
+}
+
+void
+Module::ProcessXMLSubElement ( const XMLElement& e,
+                               const string& path )
+{
+	bool subs_invalid = false;
 	string subpath ( path );
 	if ( e.name == "file" && e.value.size () )
 	{
 		files.push_back ( new File ( FixSeparator ( path + CSEP + e.value ) ) );
+		subs_invalid = true;
 	}
 	else if ( e.name == "library" && e.value.size () )
 	{
-		libraries.push_back ( new Library ( e.value ) );
+		libraries.push_back ( new Library ( e, *this, e.value ) );
+		subs_invalid = true;
 	}
 	else if ( e.name == "directory" )
 	{
@@ -74,18 +90,21 @@ Module::ProcessXML ( const XMLElement& e,
 	}
 	else if ( e.name == "include" )
 	{
-		Include* include = new Include ( project, this, e );
-		includes.push_back ( include );
-		include->ProcessXML ( e );
+		includes.push_back ( new Include ( project, this, e ) );
+		subs_invalid = true;
 	}
 	else if ( e.name == "define" )
 	{
-		Define* define = new Define ( project, this, e );
-		defines.push_back ( define );
-		define->ProcessXML ( e );
+		defines.push_back ( new Define ( project, this, e ) );
+		subs_invalid = true;
 	}
+	if ( subs_invalid && e.subElements.size() )
+		throw InvalidBuildFileException (
+			e.location,
+			"<%s> cannot have sub-elements",
+			e.name.c_str() );
 	for ( size_t i = 0; i < e.subElements.size (); i++ )
-		ProcessXML ( *e.subElements[i], subpath );
+		ProcessXMLSubElement ( *e.subElements[i], subpath );
 }
 
 ModuleType
@@ -102,7 +121,7 @@ Module::GetModuleType ( const XMLAttribute& attribute )
 }
 
 string
-Module::GetDefaultModuleExtension ()
+Module::GetDefaultModuleExtension () const
 {
 	switch (type)
 	{
@@ -130,7 +149,27 @@ File::File ( const string& _name )
 }
 
 
-Library::Library ( const string& _name )
-	: name(_name)
+Library::Library ( const XMLElement& _node,
+                   const Module& _module,
+                   const string& _name )
+	: node(_node),
+	  module(_module),
+	  name(_name)
 {
+	if ( module.name == name )
+		throw InvalidBuildFileException (
+			node.location,
+			"module '%s' cannot link against itself",
+			name.c_str() );
+}
+
+void
+Library::ProcessXML()
+{
+	if ( !module.project.LocateModule ( name ) )
+		throw InvalidBuildFileException (
+			node.location,
+			"module '%s' trying to link against non-existant module '%s'",
+			module.name.c_str(),
+			name.c_str() );
 }

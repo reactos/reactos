@@ -58,13 +58,14 @@ public:
 class XMLElement
 {
 public:
+	std::string location;
 	std::string name;
 	std::vector<XMLAttribute*> attributes;
 	XMLElement* parentElement;
 	std::vector<XMLElement*> subElements;
 	std::string value;
 
-	XMLElement();
+	XMLElement ( const std::string& location_ );
 	~XMLElement();
 	bool Parse(const std::string& token,
 	           bool& end_tag);

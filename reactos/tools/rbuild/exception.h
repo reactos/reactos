@@ -40,12 +40,15 @@ public:
 	std::string Filename;
 };
 
-
 class InvalidBuildFileException : public Exception
 {
 public:
-	InvalidBuildFileException ( const char* message,
+	InvalidBuildFileException ( const std::string& location,
+	                            const char* message,
 	                            ...);
+	void SetLocationMessage ( const std::string& location,
+	                          const char* message,
+	                          va_list args );
 protected:
 	InvalidBuildFileException ();
 };

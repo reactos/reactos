@@ -40,13 +40,15 @@ public:
 	Project ();
 	Project ( const std::string& filename );
 	~Project ();
-	void ProcessXML ( const XMLElement& e,
-	                  const std::string& path );
-	Module* LocateModule ( std::string name );
+	void ProcessXML ( const std::string& path );
+	Module* LocateModule ( const std::string& name );
+	const Module* LocateModule ( const std::string& name ) const;
 private:
 	void ReadXml ();
 	XMLFile xmlfile;
-	XMLElement* head;
+	XMLElement* node;
+	void ProcessXMLSubElement ( const XMLElement& e,
+	                            const std::string& path );
 };
 
 
@@ -61,7 +63,7 @@ enum ModuleType
 class Module
 {
 public:
-	Project* project;
+	const Project& project;
 	const XMLElement& node;
 	std::string name;
 	std::string extension;
@@ -72,56 +74,58 @@ public:
 	std::vector<Include*> includes;
 	std::vector<Define*> defines;
 
-	Module ( Project* project,
+	Module ( const Project& project,
 	         const XMLElement& moduleNode,
 	         const std::string& modulePath );
 	~Module ();
 	ModuleType GetModuleType (const XMLAttribute& attribute );
 	std::string GetPath () const;
-	void ProcessXML ( const XMLElement& e, const std::string& path );
+	void ProcessXML();
 private:
-	std::string GetDefaultModuleExtension ();
+	std::string GetDefaultModuleExtension () const;
+	void ProcessXMLSubElement ( const XMLElement& e,
+	                            const std::string& path );
 };
 
 
 class Include
 {
 public:
-	Project* project;
-	Module* module;
+	const Project& project;
+	const Module* module;
 	const XMLElement& node;
 	std::string directory;
 
-	Include ( Project* project,
+	Include ( const Project& project,
 	          const XMLElement& includeNode );
-	Include ( Project* project,
-	          Module* module,
+	Include ( const Project& project,
+	          const Module* module,
 	          const XMLElement& includeNode );
 	~Include ();
-	void ProcessXML ( const XMLElement& e );
+	void ProcessXML();
 private:
-	void Initialize ( const XMLElement& includeNode );
+	void Initialize();
 };
 
 
 class Define
 {
 public:
-	Project* project;
-	Module* module;
+	const Project& project;
+	const Module* module;
 	const XMLElement& node;
 	std::string name;
 	std::string value;
 
-	Define ( Project* project,
+	Define ( const Project& project,
 	         const XMLElement& defineNode );
-	Define ( Project* project,
-	         Module* module,
+	Define ( const Project& project,
+	         const Module* module,
 	         const XMLElement& defineNode );
 	~Define();
-	void ProcessXML ( const XMLElement& e );
+	void ProcessXML();
 private:
-	void Initialize ( const XMLElement& defineNode );
+	void Initialize();
 };
 
 
@@ -137,9 +141,15 @@ public:
 class Library
 {
 public:
+	const XMLElement& node;
+	const Module& module;
 	std::string name;
 
-	Library ( const std::string& _name );
+	Library ( const XMLElement& _node,
+	          const Module& _module,
+	          const std::string& _name );
+
+	void ProcessXML();
 };
 
 extern std::string

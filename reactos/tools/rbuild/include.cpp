@@ -6,21 +6,23 @@
 using std::string;
 using std::vector;
 
-Include::Include ( Project* project,
+Include::Include ( const Project& project_,
                    const XMLElement& includeNode )
-	: project(project),
+	: project(project_),
+	  module(NULL),
 	  node(includeNode)
 {
-	Initialize ( includeNode );
+	Initialize();
 }
 
-Include::Include ( Project* project,
-	               Module* module,
+Include::Include ( const Project& project_,
+	               const Module* module_,
 	               const XMLElement& includeNode )
-	: project(project),
+	: project(project_),
+	  module(module_),
 	  node(includeNode)
 {
-	Initialize ( includeNode );
+	Initialize();
 }
 
 Include::~Include ()
@@ -28,12 +30,12 @@ Include::~Include ()
 }
 
 void
-Include::Initialize ( const XMLElement& includeNode )
+Include::Initialize()
 {
-	directory = FixSeparator ( includeNode.value );
+	directory = FixSeparator ( node.value );
 }
 
 void
-Include::ProcessXML ( const XMLElement& e )
+Include::ProcessXML()
 {
 }

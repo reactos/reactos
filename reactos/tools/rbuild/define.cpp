@@ -6,23 +6,23 @@
 using std::string;
 using std::vector;
 
-Define::Define ( Project* project,
+Define::Define ( const Project& project,
                  const XMLElement& defineNode )
 	: project(project),
 	  module(NULL),
 	  node(defineNode)
 {
-	Initialize (defineNode);
+	Initialize();
 }
 
-Define::Define ( Project* project,
-	             Module* module,
+Define::Define ( const Project& project,
+	             const Module* module,
                  const XMLElement& defineNode )
 	: project(project),
 	  module(module),
 	  node(defineNode)
 {
-	Initialize (defineNode);
+	Initialize();
 }
 
 Define::~Define ()
@@ -30,15 +30,15 @@ Define::~Define ()
 }
 
 void
-Define::Initialize ( const XMLElement& defineNode )
+Define::Initialize()
 {
-	const XMLAttribute* att = defineNode.GetAttribute ( "name", true );
+	const XMLAttribute* att = node.GetAttribute ( "name", true );
 	assert(att);
 	name = att->value;
-	value = defineNode.value;
+	value = node.value;
 }
 
 void
-Define::ProcessXML ( const XMLElement& e )
+Define::ProcessXML()
 {
 }
