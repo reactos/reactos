@@ -100,6 +100,7 @@ OBJECTS_RTL = \
 	rtl/ctype.o \
 	rtl/handle.o \
 	rtl/message.o \
+	rtl/misc.o \
 	rtl/purecall.o \
 	rtl/regio.o \
 	rtl/sprintf.o \

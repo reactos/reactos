@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: version.c,v 1.4 2004/11/07 18:45:52 hyperion Exp $
+/* $Id$
  *
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Runtime code
@@ -36,7 +36,6 @@
 
 /* GLOBALS ******************************************************************/
 
-extern ULONG NtGlobalFlag;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -69,16 +68,6 @@ RtlGetVersion(RTL_OSVERSIONINFOW *Info)
    }
 
    return STATUS_INVALID_PARAMETER;
-}
-
-/*
-* @implemented
-*/
-ULONG
-STDCALL
-RtlGetNtGlobalFlags(VOID)
-{
-	return(NtGlobalFlag);
 }
 
 /*

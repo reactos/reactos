@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.11 2004/12/13 23:11:13 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -95,4 +95,15 @@ RtlGetNtVersionNumbers(LPDWORD major, LPDWORD minor, LPDWORD build)
 		/* FIXME: Does anybody know the real formula? */
 		*build = (0xF0000000 | pPeb->OSBuildNumber);
 	}
+}
+
+/*
+* @implemented
+*/
+ULONG
+STDCALL
+RtlGetNtGlobalFlags(VOID)
+{   
+	PPEB pPeb = NtCurrentPeb();
+	return pPeb->NtGlobalFlag;
 }

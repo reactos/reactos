@@ -37,8 +37,6 @@ static CRITICAL_SECTION LoaderLock;
 static RTL_BITMAP TlsBitMap;
 PLDR_MODULE ExeModule;
 
-ULONG NtGlobalFlag = 0;
-
 NTSTATUS LdrpAttachThread (VOID);
 
 
@@ -102,7 +100,6 @@ LoadImageFileExecutionOptions(PPEB Peb)
 	 *   read more options 
          */
       }
-    NtGlobalFlag = Peb->NtGlobalFlag;
 }
 
 
@@ -242,6 +239,8 @@ __true_LdrInitializeThunk (ULONG Unknown1,
    PLDR_MODULE NtModule;  // ntdll
    NLSTABLEINFO NlsTable;
    WCHAR FullNtDllPath[MAX_PATH];
+   SYSTEM_BASIC_INFORMATION SystemInformation;
+   NTSTATUS Status;
 
    DPRINT("LdrInitializeThunk()\n");
    if (NtCurrentPeb()->Ldr == NULL || NtCurrentPeb()->Ldr->Initialized == FALSE)
@@ -280,6 +279,18 @@ __true_LdrInitializeThunk (ULONG Unknown1,
 
        NTHeaders = (PIMAGE_NT_HEADERS)(ImageBase + PEDosHeader->e_lfanew);
       
+
+       /* Get number of processors */
+       Status = ZwQuerySystemInformation(SystemBasicInformation,
+	                                 &SystemInformation,
+					 sizeof(SYSTEM_BASIC_INFORMATION),
+					 NULL);
+       if (!NT_SUCCESS(Status))
+         {
+	   ZwTerminateProcess(NtCurrentProcess(), Status);
+	 }
+
+       Peb->NumberOfProcessors = SystemInformation.NumberProcessors;
        /* create process heap */
        RtlInitializeHeapManager();
        Peb->ProcessHeap = RtlCreateHeap(HEAP_GROWABLE,

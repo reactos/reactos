@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.104 2004/12/25 11:18:51 navaraf Exp $
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -51,7 +51,6 @@ static ULONG LdrpTlsSize = 0;
 static HANDLE LdrpKnownDllsDirHandle = NULL;
 static UNICODE_STRING LdrpKnownDllPath = {0, 0, NULL};
 static PLDR_MODULE LdrpLastModule = NULL;
-extern ULONG NtGlobalFlag;
 extern PLDR_MODULE ExeModule;
 
 /* PROTOTYPES ****************************************************************/

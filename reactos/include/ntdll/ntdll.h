@@ -17,7 +17,7 @@
 
 #ifdef NDEBUG
 #if defined(__GNUC__)
-#define TRACE_LDR(args...) if (NtGlobalFlag & FLG_SHOW_LDR_SNAPS) { DbgPrint("(LDR:%s:%d) ",__FILE__,__LINE__); DbgPrint(args); }
+#define TRACE_LDR(args...) if (RtlGetNtGlobalFlags() & FLG_SHOW_LDR_SNAPS) { DbgPrint("(LDR:%s:%d) ",__FILE__,__LINE__); DbgPrint(args); }
 #define DPRINT(args...)
 #else
 #define DPRINT
