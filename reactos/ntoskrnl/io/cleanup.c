@@ -20,13 +20,26 @@
 #include <internal/debug.h>
 
 /* FUNCTIONS ***************************************************************/
+
 VOID IoDeviceControlCompletion(PDEVICE_OBJECT DeviceObject,
 			       PIRP Irp,
 			       PIO_STACK_LOCATION IoStack)
 {
    ULONG IoControlCode;
-   
-   IoControlCode = IoStack->Parameters.DeviceIoControl.IoControlCode;
+   ULONG OutputBufferLength;
+
+   if (IoStack->MajorFunction == IRP_MJ_FILE_SYSTEM_CONTROL)
+     {
+       IoControlCode = 
+	 ((PEXTENDED_IO_STACK_LOCATION)IoStack)->Parameters.FileSystemControl.FsControlCode;
+       OutputBufferLength = 
+	 ((PEXTENDED_IO_STACK_LOCATION)IoStack)->Parameters.FileSystemControl.OutputBufferLength;
+     }
+   else
+     {
+       IoControlCode = IoStack->Parameters.DeviceIoControl.IoControlCode;
+       OutputBufferLength = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
+     }
    
    switch (IO_METHOD_FROM_CTL_CODE(IoControlCode))
      {
@@ -36,11 +49,10 @@ VOID IoDeviceControlCompletion(PDEVICE_OBJECT DeviceObject,
 	/* copy output buffer back and free it */
 	if (Irp->AssociatedIrp.SystemBuffer)
 	  {
-	     if (IoStack->Parameters.DeviceIoControl.OutputBufferLength)
+	     if (OutputBufferLength)
 	       {
 		  RtlCopyMemory(Irp->UserBuffer,
 				Irp->AssociatedIrp.SystemBuffer,
-				IoStack->Parameters.DeviceIoControl.
 				OutputBufferLength);
 	       }
 	     ExFreePool (Irp->AssociatedIrp.SystemBuffer);
@@ -53,11 +65,10 @@ VOID IoDeviceControlCompletion(PDEVICE_OBJECT DeviceObject,
 	/* copy output buffer back and free it */
         if (Irp->AssociatedIrp.SystemBuffer)
 	  {
-	     if (IoStack->Parameters.DeviceIoControl.OutputBufferLength)
+	     if (OutputBufferLength)
 	       {
 		  RtlCopyMemory(Irp->UserBuffer,
 				Irp->AssociatedIrp.SystemBuffer,
-				IoStack->Parameters.DeviceIoControl.
 				OutputBufferLength);
 	       }
 	    ExFreePool (Irp->AssociatedIrp.SystemBuffer);
@@ -184,26 +195,27 @@ IoSecondStageCompletion(
      {
       case IRP_MJ_CREATE:
       case IRP_MJ_FLUSH_BUFFERS:
-     /* NOP */
-   break;
+	/* NOP */
+	break;
    
       case IRP_MJ_READ:
       case IRP_MJ_WRITE:
-   IoReadWriteCompletion(DeviceObject,Irp,IoStack);
-   break;
+	IoReadWriteCompletion(DeviceObject,Irp,IoStack);
+	break;
    
       case IRP_MJ_DEVICE_CONTROL:
       case IRP_MJ_INTERNAL_DEVICE_CONTROL:
-   IoDeviceControlCompletion(DeviceObject, Irp, IoStack);
-   break;
+      case IRP_MJ_FILE_SYSTEM_CONTROL:
+	IoDeviceControlCompletion(DeviceObject, Irp, IoStack);
+	break;
    
       case IRP_MJ_QUERY_VOLUME_INFORMATION:
       case IRP_MJ_SET_VOLUME_INFORMATION:
-   IoVolumeInformationCompletion(DeviceObject, Irp, IoStack);
-   break;
+	IoVolumeInformationCompletion(DeviceObject, Irp, IoStack);
+	break;
    
       default:
-   break;
+	break;
      }
    
    if (Irp->UserIosb!=NULL)
