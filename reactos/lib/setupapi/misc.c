@@ -91,3 +91,82 @@ LPVOID WINAPI MyRealloc(LPVOID lpSrc, DWORD dwSize)
 
     return HeapReAlloc(GetProcessHeap(), 0, lpSrc, dwSize);
 }
+
+
+/**************************************************************************
+ * DuplicateString [SETUPAPI.@]
+ *
+ * Duplicates a unicode string.
+ *
+ * PARAMS
+ *     lpSrc  [I] pointer to the unicode string that will be duplicated
+ *
+ * RETURNS
+ *     Success: pointer to the duplicated unicode string
+ *     Failure: NULL
+ *
+ * NOTES
+ *     Call MyFree() to release the duplicated string.
+ */
+
+LPWSTR WINAPI DuplicateString(LPCWSTR lpSrc)
+{
+    LPWSTR lpDst;
+
+    lpDst = MyMalloc((lstrlenW(lpSrc) + 1) * sizeof(WCHAR));
+    if (lpDst == NULL)
+        return NULL;
+
+    wcscpy(lpDst, lpSrc);
+
+    return lpDst;
+}
+
+
+/**************************************************************************
+ * QueryRegistryValue [SETUPAPI.@]
+ *
+ * Retrieves value data from the registry and allocates memory for the
+ * value data.
+ *
+ * PARAMS
+ *     hKey        [I] Handle of the key to query
+ *     lpValueName [I] Name of value under hkey to query
+ *     lpData      [O] Destination for the values contents,
+ *     lpType      [O] Destination for the value type
+ *     lpcbData    [O] Destination for the size of data
+ *
+ * RETURNS
+ *     Success: ERROR_SUCCESS
+ *     Failure: Otherwise
+ *
+ * NOTES
+ *     Use MyFree to release the lpData buffer.
+ */
+
+LONG WINAPI QueryRegistryValue(HKEY hKey,
+                               LPCWSTR lpValueName,
+                               LPBYTE  *lpData,
+                               LPDWORD lpType,
+                               LPDWORD lpcbData)
+{
+    LONG lError;
+
+    /* Get required buffer size */
+    *lpcbData = 0;
+    lError = RegQueryValueExW(hKey, lpValueName, 0, lpType, NULL, lpcbData);
+    if (lError != ERROR_SUCCESS)
+        return lError;
+
+    /* Allocate buffer */
+    *lpData = MyMalloc(*lpcbData);
+    if (*lpData == NULL)
+        return ERROR_NOT_ENOUGH_MEMORY;
+
+    /* Query registry value */
+    lError = RegQueryValueExW(hKey, lpValueName, 0, lpType, *lpData, lpcbData);
+    if (lError != ERROR_SUCCESS)
+        MyFree(*lpData);
+
+    return lError;
+}

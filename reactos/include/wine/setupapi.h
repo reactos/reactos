@@ -613,11 +613,12 @@ DECL_WINELIB_SETUPAPI_TYPE_AW(PFILEPATHS)
 #define SPDRP_MAXIMUM_PROPERTY            0x00000023
 
 
-VOID     WINAPI MyFree( LPVOID lpMem );
-LPVOID   WINAPI MyMalloc( DWORD dwSize );
-LPVOID   WINAPI MyRealloc( LPVOID lpSrc, DWORD dwSize );
+LPWSTR   WINAPI DuplicateString(LPCWSTR lpSrc);
+VOID     WINAPI MyFree(LPVOID lpMem);
+LPVOID   WINAPI MyMalloc(DWORD dwSize);
+LPVOID   WINAPI MyRealloc(LPVOID lpSrc, DWORD dwSize);
 
-LONG     WINAPI QueryRegistryValue( HKEY, LPCWSTR, LPBYTE *, LPDWORD, LPDWORD );
+LONG     WINAPI QueryRegistryValue(HKEY, LPCWSTR, LPBYTE *, LPDWORD, LPDWORD);
 
 void     WINAPI InstallHinfSectionA( HWND hwnd, HINSTANCE handle, LPCSTR cmdline, INT show );
 void     WINAPI InstallHinfSectionW( HWND hwnd, HINSTANCE handle, LPCWSTR cmdline, INT show );
