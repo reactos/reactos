@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: eventlog.c,v 1.6 2003/11/14 17:13:32 weiden Exp $
+/* $Id: eventlog.c,v 1.7 2003/11/20 11:09:49 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -48,28 +48,14 @@
 
 /* FUNCTIONS *****************************************************************/
 
-void
-PrintString(char* fmt,...)
-{
-  char buffer[512];
-  va_list ap;
-
-  va_start(ap, fmt);
-  vsprintf(buffer, fmt, ap);
-  va_end(ap);
-
-  OutputDebugStringA(buffer);
-}
-
 
 VOID CALLBACK
 ServiceMain(DWORD argc, LPTSTR *argv)
 {
-  PrintString("ServiceMain() called\n");
+  DPRINT1("ServiceMain() called\n");
 
 
-  PrintString("ServiceMain() done\n");
-
+  DPRINT1("ServiceMain() done\n");
 }
 
 
@@ -82,39 +68,30 @@ main(int argc, char *argv[])
   HANDLE hEvent;
 //  NTSTATUS Status;
 
-#if 0
-  PrintString("EventLog started\n");
-#endif
+  DPRINT("EventLog started\n");
 
 
 
 
 
   StartServiceCtrlDispatcher(ServiceTable);
-#if 0
-  PrintString("StartServiceCtrlDispatcher() done\n");
-#endif
 
-#if 0
+  DPRINT("StartServiceCtrlDispatcher() done\n");
+
   if (StartPortThread() == FALSE)
     {
-      PrintString("StartPortThread() failed\n");
+      DPRINT1("StartPortThread() failed\n");
     }
-#endif
 
+  DPRINT("EventLog waiting\n");
 
-
-#if 0
-  PrintString("EventLog waiting\n");
-#endif
   hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
   WaitForSingleObject(hEvent, INFINITE);
 
-#if 0
-  PrintString("EventLog done\n");
-#endif
+  DPRINT("EventLog done\n");
 
   ExitThread(0);
+
   return(0);
 }
 

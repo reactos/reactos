@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: logport.c,v 1.6 2003/11/17 02:12:51 hyperion Exp $
+/* $Id: logport.c,v 1.7 2003/11/20 11:09:49 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -51,11 +51,11 @@ HANDLE MessagePortHandle = NULL;
 /* FUNCTIONS ****************************************************************/
 
 static NTSTATUS
-InitLogPort(VOID)
+InitLogPort (VOID)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING PortName;
-  LPC_MESSAGE Message;
+  LPC_MAX_MESSAGE Request;
   NTSTATUS Status;
 
   ConnectPortHandle = NULL;
@@ -75,80 +75,105 @@ InitLogPort(VOID)
 			0x100,
 			0x2000);
   if (!NT_SUCCESS(Status))
-    goto ByeBye;
-
-  Message.DataSize = sizeof(LPC_MESSAGE);
-  Message.MessageSize = 0;
+    {
+      DPRINT1("NtCreatePort() failed (Status %lx)\n", Status);
+      goto ByeBye;
+    }
 
   Status = NtListenPort(ConnectPortHandle,
-			&Message);
+			&Request.Header);
   if (!NT_SUCCESS(Status))
-    goto ByeBye;
+    {
+      DPRINT1("NtListenPort() failed (Status %lx)\n", Status);
+      goto ByeBye;
+    }
 
   Status = NtAcceptConnectPort(&MessagePortHandle,
-			       0,
-			       &Message,
-			       1,
-			       0,
-			       0);
-  if (!NT_SUCCESS(Status))
-    goto ByeBye;
+			       ConnectPortHandle,
+			       NULL,
+			       TRUE,
+			       NULL,
+			       NULL);
+  if (!NT_SUCCESS (Status))
+    {
+      DPRINT1("NtAcceptConnectPort() failed (Status %lx)\n", Status);
+      goto ByeBye;
+    }
 
-  Status = NtCompleteConnectPort(MessagePortHandle);
-  if (!NT_SUCCESS(Status))
-    goto ByeBye;
+  Status = NtCompleteConnectPort (MessagePortHandle);
+  if (!NT_SUCCESS (Status))
+    {
+      DPRINT1("NtCompleteConnectPort() failed (Status %lx)\n", Status);
+      goto ByeBye;
+    }
 
 ByeBye:
-  if (ConnectPortHandle != NULL)
-    NtClose(ConnectPortHandle);
+  if (!NT_SUCCESS (Status))
+    {
+      if (ConnectPortHandle != NULL)
+	NtClose (ConnectPortHandle);
 
-  if (MessagePortHandle != NULL)
-    NtClose(MessagePortHandle);
+      if (MessagePortHandle != NULL)
+	NtClose (MessagePortHandle);
+    }
 
-  return(Status);
+  return Status;
 }
 
 
 static NTSTATUS
 ProcessPortMessage(VOID)
 {
-  PLPC_MAX_MESSAGE Request;
-  LPC_MESSAGE Reply;
-  BOOL ReplyReady = FALSE;
+  LPC_MAX_MESSAGE Request;
+  PIO_ERROR_LOG_MESSAGE Message;
   NTSTATUS Status;
 
-  Request = HeapAlloc(GetProcessHeap(),
-		      HEAP_ZERO_MEMORY,
-		      sizeof(LPC_MAX_MESSAGE));
-  if (Request == NULL)
-    return(STATUS_NO_MEMORY);
+
+  DPRINT1("ProcessPortMessage() called\n");
+
+  Status = STATUS_SUCCESS;
 
   while (TRUE)
     {
       Status = NtReplyWaitReceivePort(MessagePortHandle,
 				      0,
-				      (ReplyReady)? &Reply : NULL,
-				      (PLPC_MESSAGE)Request);
+				      NULL,
+				      &Request.Header);
       if (!NT_SUCCESS(Status))
 	{
-	  HeapFree(GetProcessHeap(),
-		   0,
-		   Request);
-	  return(Status);
+	  DPRINT1("NtReplyWaitReceivePort() failed (Status %lx)\n", Status);
+	  break;
 	}
 
-      ReplyReady = FALSE;
-      if (Request->Header.MessageType == LPC_REQUEST)
+      DPRINT1 ("Received message\n");
+
+      if (Request.Header.MessageType == LPC_PORT_CLOSED)
+	{
+	  DPRINT1 ("Port closed\n");
+
+	  return (STATUS_UNSUCCESSFUL);
+	}
+      if (Request.Header.MessageType == LPC_REQUEST)
 	{
 	  DPRINT1("Received request\n");
 
-	  ReplyReady = FALSE;
 	}
-      else if (Request->Header.MessageType == LPC_DATAGRAM)
+      else if (Request.Header.MessageType == LPC_DATAGRAM)
 	{
-	  DPRINT1("Received datagram\n");
+	  DPRINT1 ("Received datagram\n");
+
+
+	  Message = (PIO_ERROR_LOG_MESSAGE)&Request.Data;
+
+	  DPRINT1("Message->Type %hx\n", Message->Type);
+	  DPRINT1("Message->Size %hu\n", Message->Size);
+
+	  DPRINT1("Sequence number %lx\n", Message->EntryData.SequenceNumber);
+
 	}
     }
+
+  return Status;
 }
 
 
@@ -161,10 +186,16 @@ PortThreadRoutine(PVOID Param)
   if (!NT_SUCCESS(Status))
     return(Status);
 
-  while (!NT_SUCCESS(Status))
+  while (NT_SUCCESS(Status))
     {
       Status = ProcessPortMessage();
     }
+
+  if (ConnectPortHandle != NULL)
+    NtClose (ConnectPortHandle);
+
+  if (MessagePortHandle != NULL)
+    NtClose (MessagePortHandle);
 
   return(Status);
 }
