@@ -224,7 +224,7 @@ RtlCompareString(
       {
          if (CaseInsensitive)
          {
-            while (1)
+            for(;;)
             {
                c1 = len1-- ? RtlUpperChar (*s1++) : 0;
                c2 = len2-- ? RtlUpperChar (*s2++) : 0;
@@ -234,7 +234,7 @@ RtlCompareString(
          }
          else
          {
-            while (1)
+            for(;;)
             {
                c1 = len1-- ? *s1++ : 0;
                c2 = len2-- ? *s2++ : 0;
@@ -498,21 +498,6 @@ RtlInitUnicodeString(IN OUT PUNICODE_STRING DestinationString,
 }
 
 /*
-* @unimplemented
-*/
-NTSTATUS
-STDCALL
-RtlInt64ToUnicodeString (
-	IN ULONGLONG Value,
-	IN ULONG Base OPTIONAL,
-	IN OUT PUNICODE_STRING String
-	)
-{
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
  * @implemented
  *
  * NOTES
@@ -643,14 +628,51 @@ RtlIntegerToUnicodeString(
 
    Status = RtlIntegerToChar (Value,
                               Base,
-                              33,
+                              sizeof(Buffer),
                               Buffer);
    if (!NT_SUCCESS(Status))
       return Status;
 
    AnsiString.Buffer = Buffer;
    AnsiString.Length = strlen (Buffer);
-   AnsiString.MaximumLength = 33;
+   AnsiString.MaximumLength = sizeof(Buffer);
+
+   Status = RtlAnsiStringToUnicodeString (String,
+                                          &AnsiString,
+                                          FALSE);
+
+   return Status;
+}
+
+
+/*
+* @implemented
+*/
+NTSTATUS
+STDCALL
+RtlInt64ToUnicodeString (
+	IN ULONGLONG Value,
+	IN ULONG Base OPTIONAL,
+	IN OUT PUNICODE_STRING String
+	)
+{
+   LARGE_INTEGER LargeInt;
+   ANSI_STRING AnsiString;
+   CHAR Buffer[33];
+   NTSTATUS Status;
+   
+   LargeInt.QuadPart = Value;
+
+   Status = RtlLargeIntegerToChar (&LargeInt,
+                                   Base,
+                                   sizeof(Buffer),
+                                   Buffer);
+   if (!NT_SUCCESS(Status))
+      return Status;
+
+   AnsiString.Buffer = Buffer;
+   AnsiString.Length = strlen (Buffer);
+   AnsiString.MaximumLength = sizeof(Buffer);
 
    Status = RtlAnsiStringToUnicodeString (String,
                                           &AnsiString,
