@@ -4,9 +4,20 @@
  * FILE:            lib/kernel32/file/volume.c
  * PURPOSE:         File volume functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
+		    Erik Bos, Alexandre Julliard :
+		    	DRIVE_IsValid, GetLogicalDriveStringsA,
+		    	GetLogicalDriveStringsW, GetLogicalDrives
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
+//WINE copyright notice:
+/*
+ * DOS drives handling functions 
+ *
+ * Copyright 1993 Erik Bos
+ * Copyright 1996 Alexandre Julliard
+ */
+
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -14,12 +25,28 @@
 #include <string.h>
 #include <ddk/li.h>
 
-DWORD
-STDCALL
-GetLogicalDrives(VOID)
+#define MAX_DOS_DRIVES 26
+
+int DRIVE_IsValid( int drive )
 {
-	return (DWORD)-1;
+    char Drives[4];
+    Drives[0] = 'A';
+    Drives[1] = ':';
+    Drives[2] = '\\';
+    Drives[3] = 0;
+
+    Drives[0] = 'A' + drive -1;
+    if ((drive < 0) || (drive >= MAX_DOS_DRIVES)) return 0;
+    if ( CreateFileA(Drives,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_FLAG_BACKUP_SEMANTICS|FILE_ATTRIBUTE_DIRECTORY,NULL) == -1 ) {
+	return 0;
+    }
+    return drive;
+    
 }
+
+
+
+
 
 DWORD
 STDCALL
@@ -28,7 +55,26 @@ GetLogicalDriveStringsA(
 			LPSTR lpBuffer
 			)
 {
+    int drive, count;
+
+    for (drive = count = 0; drive < MAX_DOS_DRIVES; drive++)
+        if (DRIVE_IsValid(drive)) count++;
+    if (count * 4 * sizeof(char) <= nBufferLength)
+    {
+        LPSTR p = lpBuffer;
+        for (drive = 0; drive < MAX_DOS_DRIVES; drive++)
+            if (DRIVE_IsValid(drive))
+            {
+                *p++ = 'A' + drive;
+                *p++ = ':';
+                *p++ = '\\';
+                *p++ = '\0';
+            }
+        *p = '\0';
+    }
+    return count * 4 * sizeof(char);
 }
+
 
 DWORD
 STDCALL
@@ -37,7 +83,40 @@ GetLogicalDriveStringsW(
     LPWSTR lpBuffer
     )
 {
+    int drive, count;
+
+    for (drive = count = 0; drive < MAX_DOS_DRIVES; drive++)
+        if (DRIVE_IsValid(drive)) count++;
+    if (count * 4 * sizeof(WCHAR) <=  nBufferLength)
+    {
+        LPWSTR p = lpBuffer;
+        for (drive = 0; drive < MAX_DOS_DRIVES; drive++)
+            if (DRIVE_IsValid(drive))
+            {
+                *p++ = (WCHAR)('A' + drive);
+                *p++ = (WCHAR)':';
+                *p++ = (WCHAR)'\\';
+                *p++ = (WCHAR)'\0';
+            }
+        *p = (WCHAR)'\0';
+    }
+    return count * 4 * sizeof(WCHAR);
 }
+
+
+DWORD
+STDCALL
+GetLogicalDrives(VOID)
+{
+    DWORD ret = 0;
+    int drive;
+
+    for (drive = 0; drive < MAX_DOS_DRIVES; drive++)
+        if (DRIVE_IsValid(drive)) ret |= (1 << drive);
+    return ret;
+}
+
+
 
 WINBOOL
 STDCALL

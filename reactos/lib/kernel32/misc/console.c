@@ -57,22 +57,72 @@ ReadConsoleA(
     LPVOID lpReserved
     )
 {
-	return ReadFile(hConsoleInput,lpBuffer,nNumberOfCharsToRead,lpNumberOfCharsRead,lpReserved);	
+	KEY_EVENT_RECORD *k;
+	OVERLAPPED Overlapped;
+	OVERLAPPED * lpOverlapped;
+	int kSize;
+	int i,j;
+
+	if ( lpReserved == NULL ) {
+		Overlapped.Internal = 0;
+		Overlapped.InternalHigh = 0;
+		Overlapped.Offset = 0;
+		Overlapped.OffsetHigh = 0;
+	//	Overlapped.hEvent = CreateEvent(NULL,FALSE,TRUE,NULL);
+		lpOverlapped = &Overlapped;
+	}
+	else
+		lpOverlapped = lpReserved;
+
+
+	kSize = nNumberOfCharsToRead*sizeof(kSize);
+	k = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,kSize);
+	if ( k == NULL || kSize == 0 )
+		return FALSE;
+		
+	k[0].AsciiChar = 0;
+	while(k[0].AsciiChar == 0 )
+	{
+		ReadFile(hConsoleInput,k,kSize,lpNumberOfCharsRead,lpOverlapped);
+
+	}
+	j = 0;
+	i = 0;
+	//if ( k[i].bKeyDown ) 
+	{
+		((char *)lpBuffer)[j] = k[i].AsciiChar;
+		j++;
+	}
+	i++;
+	while(j < nNumberOfCharsToRead && i < *lpNumberOfCharsRead ) {
+		//if ( k[i].bKeyDown ) 
+		{
+			((char *)lpBuffer)[j] = k[i].AsciiChar;
+			j++;
+		}
+		i++;
+	}
+
+	HeapFree(GetProcessHeap(),0,k);
+	//if ( lpReserved == NULL ) {
+	//	CloseHandle(Overlapped.hEvent);
+	//}
+	
 }
 
 WINBOOL
 STDCALL
 AllocConsole( VOID )
 {
-	StdInput = CreateFile("\\Keyboard",
+	StdInput = CreateFile("\\Device\\Keyboard",
 			       FILE_GENERIC_READ,
 			       0,
 			       NULL,
 			       OPEN_EXISTING,
-			       0,
+			       FILE_FLAG_OVERLAPPED,
 			       NULL);
 
-	StdOutput = CreateFile("\\BlueScreen",
+	StdOutput = CreateFile("\\Device\\BlueScreen",
 			       FILE_GENERIC_WRITE|FILE_GENERIC_READ,
 			       0,
 			       NULL,
@@ -90,6 +140,8 @@ WINBOOL
 STDCALL
 FreeConsole( VOID )
 {
+	CloseHandle(StdInput);
+	CloseHandle(StdOutput);
 	return TRUE;
 }
 
@@ -123,9 +175,9 @@ SetConsoleCursorPosition(
 
 	if( !GetConsoleScreenBufferInfo(hConsoleOutput,&ConsoleScreenBufferInfo) )
 		return FALSE;
-//	ConsoleScreenBufferInfo.dwCursorPosition.X = dwCursorPosition.X;
-//	ConsoleScreenBufferInfo.dwCursorPosition.Y = dwCursorPosition.Y;
-	return  TRUE;
+	ConsoleScreenBufferInfo.dwCursorPosition.X = dwCursorPosition.X;
+	ConsoleScreenBufferInfo.dwCursorPosition.Y = dwCursorPosition.Y;
+	
 	if( !DeviceIoControl(
 		hConsoleOutput,
 			FSCTL_SET_CONSOLE_SCREEN_BUFFER_INFO,
@@ -164,5 +216,6 @@ FillConsoleOutputCharacterW(
     LPDWORD lpNumberOfCharsWritten
     )
 {
+		
 	return FALSE;
 }

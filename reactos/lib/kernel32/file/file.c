@@ -44,8 +44,7 @@ CopyFileExA(
     DWORD dwCopyFlags 
     ); 
 
-DWORD
-GetCurrentTime(VOID);
+
 
 BOOLEAN  bIsFileApiAnsi; // set the file api to ansi or oem
 
@@ -91,10 +90,10 @@ WINBOOL STDCALL WriteFile(HANDLE  hFile,
    LARGE_INTEGER Offset;
    HANDLE hEvent = NULL;
    NTSTATUS errCode;
+   PIO_STATUS_BLOCK IoStatusBlock;
+   IO_STATUS_BLOCK IIosb;
 
-   WCHAR Buffer[1000];
-
-  //printk("%.*s",nNumberOfBytesToWrite,lpBuffer);
+ 
 	
    if (lpOverLapped != NULL ) 
      {
@@ -102,9 +101,15 @@ WINBOOL STDCALL WriteFile(HANDLE  hFile,
 	SET_LARGE_INTEGER_HIGH_PART(Offset, lpOverLapped->OffsetHigh);
 	lpOverLapped->Internal = STATUS_PENDING;
 	hEvent= lpOverLapped->hEvent;
+   	IoStatusBlock = (PIO_STATUS_BLOCK)lpOverLapped;
+     }
+   else
+     {
+	IoStatusBlock = &IIosb;
+	Offset = NULL;
      }
    errCode = NtWriteFile(hFile,hEvent,NULL,NULL,
-			 (PIO_STATUS_BLOCK)lpOverLapped,
+			 IoStatusBlock,
 			 (PVOID)lpBuffer, 
 			 nNumberOfBytesToWrite,
 			 &Offset,
@@ -114,7 +119,8 @@ WINBOOL STDCALL WriteFile(HANDLE  hFile,
 	SetLastError(RtlNtStatusToDosError(errCode));
 	return FALSE;
      }
-   
+   if ( !lpNumberOfBytesWritten )
+   		*lpNumberOfBytesWritten = IoStatusBlock->Information;
    return(TRUE);
 }
 
@@ -163,6 +169,8 @@ WINBOOL STDCALL ReadFile(HANDLE hFile,
 	return FALSE;
      }
 
+   if ( !lpNumberOfBytesRead )
+   	*lpNumberOfBytesRead = IoStatusBlock->Information;
  
    return TRUE;  
 }
@@ -213,6 +221,8 @@ ReadFileEx(
 		SetLastError(RtlNtStatusToDosError(errCode));
 		return FALSE;
 	}
+
+
 	return TRUE;  
 }
 
@@ -1265,17 +1275,7 @@ SetFileAttributesW(
 
 
 
-DWORD
-GetCurrentTime(VOID)
-{
-	NTSTATUS errCode;
-	FILETIME CurrentTime;
-memset(&CurrentTime,sizeof(FILETIME),0);
-//	errCode = NtQuerySystemTime (
-//		(TIME *)&CurrentTime
-//	);
-	return CurrentTime.dwLowDateTime;
-}
+
 
 UINT
 STDCALL
