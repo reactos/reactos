@@ -1,5 +1,5 @@
 #define __ELF_WORD_SIZE 32
-#include "elf.c"
+#include "elf.inc.h"
 
 extern NTSTATUS NTAPI Elf64FmtCreateSection
 (
