@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.4 2003/11/24 19:04:23 weiden Exp $
+/* $Id: stubs.c,v 1.5 2003/12/01 18:21:04 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS msgina.dll
@@ -90,20 +90,6 @@ WlxIsLogoffOk(
  * @unimplemented
  */
 int WINAPI
-WlxLoggedOnSAS(
-	PVOID pWlxContext,
-	DWORD dwSasType,
-	PVOID pReserved)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int WINAPI
 WlxLoggedOutSAS(
 	PVOID                pWlxContext,
 	DWORD                dwSasType,
@@ -174,22 +160,6 @@ WlxScreenSaverNotify(
  * @unimplemented
  */
 BOOL WINAPI
-WlxDisplayStatusMessage(
-	PVOID pWlxContext,
-	HDESK hDesktop,
-	DWORD dwOptions,
-	PWSTR pTitle,
-	PWSTR pMessage)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL WINAPI
 WlxGetStatusMessage(
 	PVOID pWlxContext,
 	DWORD *pdwOptions,
@@ -208,18 +178,6 @@ BOOL WINAPI
 WlxNetworkProviderLoad(
 	PVOID                pWlxContext,
 	PWLX_MPR_NOTIFY_INFO pNprNotifyInfo)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL WINAPI
-WlxRemoveStatusMessage(
-	PVOID pWlxContext)
 {
   UNIMPLEMENTED;
   return FALSE;

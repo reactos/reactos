@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: setup.c,v 1.1 2003/03/25 19:26:33 ekohl Exp $
+/* $Id: setup.c,v 1.2 2003/12/01 18:21:04 weiden Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS winlogon
  * FILE:            subsys/system/winlogon/setup.h
@@ -28,7 +28,7 @@
 
 #include <windows.h>
 #include <stdio.h>
-#include <lsass/ntsecapi.h>
+#include <ntsecapi.h>
 #include <wchar.h>
 
 #include "setup.h"
@@ -49,7 +49,7 @@ GetSetupType(VOID)
   DWORD dwSetupType;
 
   dwError = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-			 "SYSTEM\\Setup", //TEXT("SYSTEM\\Setup"),
+			 L"SYSTEM\\Setup", //TEXT("SYSTEM\\Setup"),
 			 0,
 			 KEY_QUERY_VALUE,
 			 &hKey);
@@ -60,7 +60,7 @@ GetSetupType(VOID)
 
   dwSize = sizeof(DWORD);
   dwError = RegQueryValueEx (hKey,
-			     "SetupType", //TEXT("SetupType"),
+			     L"SetupType", //TEXT("SetupType"),
 			     NULL,
 			     &dwType,
 			     (LPBYTE)&dwSetupType,
@@ -82,7 +82,7 @@ SetSetupType (DWORD dwSetupType)
   HANDLE hKey;
 
   dwError = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-			 "SYSTEM\\Setup", //TEXT("SYSTEM\\Setup"),
+			 L"SYSTEM\\Setup", //TEXT("SYSTEM\\Setup"),
 			 0,
 			 KEY_QUERY_VALUE,
 			 &hKey);
@@ -92,7 +92,7 @@ SetSetupType (DWORD dwSetupType)
     }
 
   dwError = RegSetValueEx (hKey,
-			   "SetupType", //TEXT("SetupType"),
+			   L"SetupType", //TEXT("SetupType"),
 			   0,
 			   REG_DWORD,
 			   (LPBYTE)&dwSetupType,
@@ -112,7 +112,7 @@ RunSetup (VOID)
 {
   PROCESS_INFORMATION ProcessInformation;
   STARTUPINFO StartupInfo;
-  CHAR CommandLine[MAX_PATH];
+  WCHAR CommandLine[MAX_PATH];
   BOOLEAN Result;
   DWORD dwError;
   HANDLE hKey;
@@ -123,7 +123,7 @@ RunSetup (VOID)
   DPRINT ("RunSetup() called\n");
 
   dwError = RegOpenKeyEx (HKEY_LOCAL_MACHINE,
-			  "SYSTEM\\Setup",
+			  L"SYSTEM\\Setup",
 			  0,
 			  KEY_QUERY_VALUE,
 			  &hKey);
@@ -134,7 +134,7 @@ RunSetup (VOID)
 
   dwSize = MAX_PATH;
   dwError = RegQueryValueEx (hKey,
-			     "CmdLine",
+			     L"CmdLine",
 			     NULL,
 			     &dwType,
 			     (LPBYTE)CommandLine,

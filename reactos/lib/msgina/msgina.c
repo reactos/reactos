@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgina.c,v 1.4 2003/11/24 19:04:23 weiden Exp $
+/* $Id: msgina.c,v 1.5 2003/12/01 18:21:04 weiden Exp $
  *
  * PROJECT:         ReactOS msgina.dll
  * FILE:            lib/msgina/msgina.c
@@ -28,8 +28,56 @@
 #include <windows.h>
 #include <WinWlx.h>
 #include "msgina.h"
+#include "resource.h"
 
 extern HINSTANCE hDllInstance;
+
+typedef struct _DISPLAYSTATUSMSG
+{
+  PGINA_CONTEXT Context;
+  HDESK hDesktop;
+  DWORD dwOptions;
+  PWSTR pTitle;
+  PWSTR pMessage;
+  HANDLE StartupEvent;
+} DISPLAYSTATUSMSG, *PDISPLAYSTATUSMSG;
+
+BOOL CALLBACK 
+LoggedOnDlgProc(
+  HWND hwndDlg,
+  UINT uMsg,
+  WPARAM wParam,
+  LPARAM lParam
+)
+{
+  switch(uMsg)
+  {
+    case WM_COMMAND:
+    {
+      switch(LOWORD(wParam))
+      {
+        case IDYES:
+        case IDNO:
+        {
+          EndDialog(hwndDlg, LOWORD(wParam));
+          break;
+        }
+      }
+      return FALSE;
+    }
+    case WM_INITDIALOG:
+    {
+      SetFocus(GetDlgItem(hwndDlg, IDNO));
+      break;
+    }
+    case WM_CLOSE:
+    {
+      EndDialog(hwndDlg, IDNO);
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
 
 
 /*
@@ -80,6 +128,9 @@ WlxInitialize(
   /* save window station */
   pgContext->station = lpWinsta;
   
+  /* clear status window handle */
+  pgContext->hStatusWindow = 0;
+  
   /* notify winlogon that we will use the default SAS */
   pgContext->pWlxFuncs->WlxUseCtrlAltDel(hWlx);
   
@@ -128,6 +179,7 @@ WlxStartApplication(
   return Ret;
 }
 
+
 /*
  * @implemented
  */
@@ -138,7 +190,7 @@ WlxActivateUserShell(
 	PWSTR pszMprLogonScript,
 	PVOID pEnvironment)
 {
-  PGINA_CONTEXT pgContext = (PGINA_CONTEXT) pWlxContext;
+  PGINA_CONTEXT pgContext = (PGINA_CONTEXT)pWlxContext;
   STARTUPINFO si;
   PROCESS_INFORMATION pi;
   HKEY hKey;
@@ -151,6 +203,7 @@ WlxActivateUserShell(
                   L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon", 
                   0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
   {
+    VirtualFree(pEnvironment, 0, MEM_RELEASE);
     return FALSE;
   }
   BufSize = MAX_PATH * sizeof(WCHAR);
@@ -158,15 +211,18 @@ WlxActivateUserShell(
                      &BufSize) != ERROR_SUCCESS) || (ValueType != REG_SZ))
   {
     RegCloseKey(hKey);
+    VirtualFree(pEnvironment, 0, MEM_RELEASE);
     return FALSE;
   }
   RegCloseKey(hKey);
   
-  /* execute userinit */
+  /* FIXME - execute logon script */
+  
+  /* start userinit */
   si.cb = sizeof(STARTUPINFO);
   si.lpReserved = NULL;
   si.lpTitle = L"userinit";
-  si.dwX = si.dwY = si.dwXSize = si.dwYSize = 0L;
+  si.dwX = si.dwY = si.dwXSize = si.dwYSize = 0;
   si.dwFlags = 0;
   si.wShowWindow = SW_SHOW;  
   si.lpReserved2 = NULL;
@@ -187,6 +243,204 @@ WlxActivateUserShell(
   
   VirtualFree(pEnvironment, 0, MEM_RELEASE);
   return Ret;
+}
+
+
+/*
+ * @implemented
+ */
+int WINAPI
+WlxLoggedOnSAS(
+	PVOID pWlxContext,
+	DWORD dwSasType,
+	PVOID pReserved)
+{
+  PGINA_CONTEXT pgContext = (PGINA_CONTEXT)pWlxContext;
+  int SasAction = WLX_SAS_ACTION_NONE;
+  
+  switch(dwSasType)
+  {
+    case WLX_SAS_TYPE_CTRL_ALT_DEL:
+    {
+      int Result;
+      /* display "Are you sure you want to log off?" dialog */
+      Result = pgContext->pWlxFuncs->WlxDialogBoxParam(pgContext->hWlx,
+                                                       pgContext->hDllInstance,
+                                                       (LPTSTR)IDD_LOGOFF_DLG,
+                                                       NULL,
+                                                       LoggedOnDlgProc,
+                                                       (LPARAM)pgContext);
+      if(Result == IDOK)
+      {
+        SasAction = WLX_SAS_ACTION_LOCK_WKSTA;
+      }
+      break;
+    }
+    case WLX_SAS_TYPE_SC_INSERT:
+    {
+      DbgPrint("WlxLoggedOnSAS: SasType WLX_SAS_TYPE_SC_INSERT not supported!\n");
+      break;
+    }
+    case WLX_SAS_TYPE_SC_REMOVE:
+    {
+      DbgPrint("WlxLoggedOnSAS: SasType WLX_SAS_TYPE_SC_REMOVE not supported!\n");
+      break;
+    }
+    case WLX_SAS_TYPE_TIMEOUT:
+    {
+      DbgPrint("WlxLoggedOnSAS: SasType WLX_SAS_TYPE_TIMEOUT not supported!\n");
+      break;
+    }
+    default:
+    {
+      DbgPrint("WlxLoggedOnSAS: Unknown SasType: 0x%x\n", dwSasType);
+      break;
+    }
+  }
+  
+  return SasAction;
+}
+
+
+BOOL 
+CALLBACK 
+StatusMessageWindowProc(
+  HWND hwndDlg,
+  UINT uMsg,
+  WPARAM wParam,
+  LPARAM lParam
+)
+{
+  switch(uMsg)
+  {
+    case WM_INITDIALOG:
+    {
+      PDISPLAYSTATUSMSG msg = (PDISPLAYSTATUSMSG)lParam;
+      if(!msg)
+        return FALSE;
+      
+      msg->Context->hStatusWindow = hwndDlg;
+      
+      if(msg->pTitle)
+        SetWindowText(hwndDlg, msg->pTitle);
+      SetDlgItemText(hwndDlg, IDC_STATUSLABEL, msg->pMessage);
+      if(!msg->Context->SignaledStatusWindowCreated)
+      {
+        msg->Context->SignaledStatusWindowCreated = TRUE;
+        SetEvent(msg->StartupEvent);
+      }
+      break;
+    }
+  }
+  return FALSE;
+}
+
+
+DWORD WINAPI
+StartupWindowThread(LPVOID lpParam)
+{
+  HDESK OldDesk;
+  PDISPLAYSTATUSMSG msg = (PDISPLAYSTATUSMSG)lpParam;
+  
+  OldDesk = GetThreadDesktop(GetCurrentThreadId());
+  
+  if(!SetThreadDesktop(msg->hDesktop))
+  {
+    HeapFree(GetProcessHeap(), 0, lpParam);
+    return FALSE;
+  }
+  DialogBoxParam(hDllInstance, 
+                 MAKEINTRESOURCE(IDD_STATUSWINDOW),
+                 0,
+                 StatusMessageWindowProc,
+                 (LPARAM)lpParam);
+  SetThreadDesktop(OldDesk);
+  
+  msg->Context->hStatusWindow = 0;
+  msg->Context->SignaledStatusWindowCreated = FALSE;
+  
+  HeapFree(GetProcessHeap(), 0, lpParam);
+  return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL WINAPI
+WlxDisplayStatusMessage(
+	PVOID pWlxContext,
+	HDESK hDesktop,
+	DWORD dwOptions,
+	PWSTR pTitle,
+	PWSTR pMessage)
+{
+  PDISPLAYSTATUSMSG msg;
+  HANDLE Thread;
+  DWORD ThreadId;
+  PGINA_CONTEXT pgContext = (PGINA_CONTEXT)pWlxContext;
+  
+  if(!pgContext->hStatusWindow)
+  {
+    msg = (PDISPLAYSTATUSMSG)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DISPLAYSTATUSMSG));
+    if(!msg)
+      return FALSE;
+    
+    msg->Context = pgContext;
+    msg->dwOptions = dwOptions;
+    msg->pTitle = pTitle;
+    msg->pMessage = pMessage;
+    msg->hDesktop = hDesktop;
+    
+    msg->StartupEvent = CreateEvent(NULL,
+                                    TRUE,
+                                    FALSE,
+                                    NULL);
+    
+    if(!msg->StartupEvent)
+      return FALSE;
+    
+    Thread = CreateThread(NULL,
+                          0,
+                          StartupWindowThread,
+                          (PVOID)msg,
+                          0,
+                          &ThreadId);
+    if(Thread)
+    {
+      CloseHandle(Thread);
+      WaitForSingleObject(msg->StartupEvent, INFINITE);
+      CloseHandle(msg->StartupEvent);
+      return TRUE;
+    }
+    
+    return FALSE;
+  }
+  
+  if(pTitle)
+    SetWindowText(pgContext->hStatusWindow, pTitle);
+  
+  SetDlgItemText(pgContext->hStatusWindow, IDC_STATUSLABEL, pMessage);
+  
+  return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL WINAPI
+WlxRemoveStatusMessage(
+	PVOID pWlxContext)
+{
+  PGINA_CONTEXT pgContext = (PGINA_CONTEXT)pWlxContext;
+  if(pgContext->hStatusWindow)
+  {
+    EndDialog(pgContext->hStatusWindow, 0);
+    pgContext->hStatusWindow = 0;
+  }
+  
+  return TRUE;
 }
 
 
