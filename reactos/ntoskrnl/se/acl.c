@@ -1,4 +1,4 @@
-/* $Id: acl.c,v 1.21 2004/11/06 21:32:16 navaraf Exp $
+/* $Id: acl.c,v 1.22 2004/12/10 16:50:37 navaraf Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -217,6 +217,49 @@ SepInitDACLs(VOID)
 			 SeRestrictedCodeSid);
 
   return(TRUE);
+}
+
+NTSTATUS STDCALL 
+SepCreateImpersonationTokenDacl(PACCESS_TOKEN Token, 
+                                PACCESS_TOKEN PrimaryToken,
+                                PACL *Dacl)
+{
+  ULONG AclLength;
+  PVOID TokenDacl;
+
+  AclLength = sizeof(ACL) +
+	      (sizeof(ACE) + RtlLengthSid(SeAliasAdminsSid)) +
+	      (sizeof(ACE) + RtlLengthSid(SeRestrictedCodeSid)) +
+	      (sizeof(ACE) + RtlLengthSid(SeLocalSystemSid)) +
+	      (sizeof(ACE) + RtlLengthSid(Token->UserAndGroups->Sid)) +
+	      (sizeof(ACE) + RtlLengthSid(PrimaryToken->UserAndGroups->Sid));
+
+  TokenDacl = ExAllocatePoolWithTag(PagedPool, AclLength, TAG_ACL);
+  if (TokenDacl == NULL)
+    {
+      return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+  RtlCreateAcl(TokenDacl, AclLength, ACL_REVISION);
+  RtlAddAccessAllowedAce(TokenDacl, ACL_REVISION, GENERIC_ALL,
+                         Token->UserAndGroups->Sid);
+  RtlAddAccessAllowedAce(TokenDacl, ACL_REVISION, GENERIC_ALL,
+                         PrimaryToken->UserAndGroups->Sid);
+  RtlAddAccessAllowedAce(TokenDacl, ACL_REVISION, GENERIC_ALL,
+                         SeAliasAdminsSid);
+  RtlAddAccessAllowedAce(TokenDacl, ACL_REVISION, GENERIC_ALL,
+                         SeLocalSystemSid);
+
+  /* FIXME */
+#if 0
+  if (Token->RestrictedSids != NULL || PrimaryToken->RestrictedSids != NULL)
+    {
+      RtlAddAccessAllowedAce(TokenDacl, ACL_REVISION, GENERIC_ALL,
+                             SeRestrictedCodeSid);
+    }
+#endif
+
+  return STATUS_SUCCESS;
 }
 
 /* EOF */

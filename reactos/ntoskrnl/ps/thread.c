@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.139 2004/11/27 16:52:35 hbirr Exp $
+/* $Id: thread.c,v 1.140 2004/12/10 16:50:37 navaraf Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -1004,23 +1004,6 @@ PsLookupThreadByThreadId(IN PVOID ThreadId,
   }
 
   return STATUS_INVALID_PARAMETER;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-NtOpenThreadTokenEx(
-    IN HANDLE ThreadHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN BOOLEAN OpenAsSelf,
-    IN ULONG HandleAttributes,
-    OUT PHANDLE TokenHandle
-    )
-{
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
 }
 
 /* EOF */

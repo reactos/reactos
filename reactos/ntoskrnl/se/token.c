@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.42 2004/10/22 20:48:00 ekohl Exp $
+/* $Id: token.c,v 1.43 2004/12/10 16:50:38 navaraf Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -133,9 +133,9 @@ SepFindPrimaryGroupAndDefaultOwner(PACCESS_TOKEN Token,
 NTSTATUS
 SepDuplicateToken(PACCESS_TOKEN Token,
 		  POBJECT_ATTRIBUTES ObjectAttributes,
+		  BOOLEAN EffectiveOnly,
 		  TOKEN_TYPE TokenType,
 		  SECURITY_IMPERSONATION_LEVEL Level,
-		  SECURITY_IMPERSONATION_LEVEL ExistingLevel,
 		  KPROCESSOR_MODE PreviousMode,
 		  PACCESS_TOKEN* NewAccessToken)
 {
@@ -281,8 +281,8 @@ SepInitializeNewProcess(struct _EPROCESS* NewProcess,
 
   Status = SepDuplicateToken(pParentToken,
 			     &ObjectAttributes,
+			     FALSE,
 			     TokenPrimary,
-			     pParentToken->ImpersonationLevel,
 			     pParentToken->ImpersonationLevel,
 			     KernelMode,
 			     &pNewToken);
@@ -307,10 +307,12 @@ SeAppendPrivileges(
 	return STATUS_NOT_IMPLEMENTED;
 }
 
-NTSTATUS SeCopyClientToken(PACCESS_TOKEN Token,
-			   SECURITY_IMPERSONATION_LEVEL Level,
-			   KPROCESSOR_MODE PreviousMode,
-			   PACCESS_TOKEN* NewToken)
+NTSTATUS
+STDCALL
+SeCopyClientToken(PACCESS_TOKEN Token,
+                  SECURITY_IMPERSONATION_LEVEL Level,
+	          KPROCESSOR_MODE PreviousMode,
+		  PACCESS_TOKEN* NewToken)
 {
    NTSTATUS Status;
    OBJECT_ATTRIBUTES ObjectAttributes;
@@ -322,8 +324,8 @@ NTSTATUS SeCopyClientToken(PACCESS_TOKEN Token,
 			      NULL);
    Status = SepDuplicateToken(Token,
 				&ObjectAttributes,
-				0,
-				SecurityIdentification,
+				FALSE,
+				TokenImpersonation,
 				Level,
 				PreviousMode,
 				NewToken);
@@ -968,7 +970,7 @@ NTSTATUS STDCALL
 NtDuplicateToken(IN HANDLE ExistingTokenHandle,
 		 IN ACCESS_MASK DesiredAccess,
 		 IN POBJECT_ATTRIBUTES ObjectAttributes,
-		 IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,
+		 IN BOOLEAN EffectiveOnly,
 		 IN TOKEN_TYPE TokenType,
 		 OUT PHANDLE NewTokenHandle)
 {
@@ -976,7 +978,6 @@ NtDuplicateToken(IN HANDLE ExistingTokenHandle,
   PACCESS_TOKEN Token;
   PACCESS_TOKEN NewToken;
   NTSTATUS Status;
-  ULONG ExistingImpersonationLevel;
 
   PreviousMode = KeGetPreviousMode();
   Status = ObReferenceObjectByHandle(ExistingTokenHandle,
@@ -991,12 +992,11 @@ NtDuplicateToken(IN HANDLE ExistingTokenHandle,
       return Status;
     }
 
-  ExistingImpersonationLevel = Token->ImpersonationLevel;
   Status = SepDuplicateToken(Token,
 			     ObjectAttributes,
+			     EffectiveOnly,
 			     TokenType,
-			     ImpersonationLevel,
-			     ExistingImpersonationLevel,
+			     ObjectAttributes->SecurityQualityOfService->ImpersonationLevel,
 			     PreviousMode,
 			     &NewToken);
 
@@ -1747,5 +1747,150 @@ SeTokenIsWriteRestricted(
 	return FALSE;
 }
 
+
+/*
+ * @implemented
+ */
+NTSTATUS
+STDCALL
+NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
+                    IN ACCESS_MASK DesiredAccess,
+                    IN BOOLEAN OpenAsSelf,
+                    IN ULONG HandleAttributes,
+                    OUT PHANDLE TokenHandle)
+{
+  PETHREAD Thread;
+  PACCESS_TOKEN Token, NewToken, PrimaryToken;
+  BOOLEAN CopyOnOpen, EffectiveOnly;
+  SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
+  SE_IMPERSONATION_STATE ImpersonationState;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  SECURITY_DESCRIPTOR SecurityDescriptor;
+  PACL Dacl = NULL;
+  NTSTATUS Status;
+
+  /*
+   * At first open the thread token for information access and verify
+   * that the token associated with thread is valid.
+   */
+
+  Status = ObReferenceObjectByHandle(ThreadHandle, THREAD_QUERY_INFORMATION,
+                                     PsThreadType, UserMode, (PVOID*)&Thread,
+                                     NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+
+  Token = PsReferenceImpersonationToken(Thread, &CopyOnOpen, &EffectiveOnly,
+                                        &ImpersonationLevel);
+  if (Token == NULL)
+    {
+      ObfDereferenceObject(Thread);
+      return STATUS_NO_TOKEN;
+    }
+
+  ObDereferenceObject(Thread);
+
+  if (ImpersonationLevel == SecurityAnonymous)
+    {
+      ObfDereferenceObject(Token);
+      return STATUS_CANT_OPEN_ANONYMOUS;
+    }
+
+  /*
+   * Revert to self if OpenAsSelf is specified.
+   */
+
+  if (OpenAsSelf)
+    {
+      PsDisableImpersonation(PsGetCurrentThread(), &ImpersonationState);
+    }
+
+  if (CopyOnOpen)
+    {
+      Status = ObReferenceObjectByHandle(ThreadHandle, THREAD_ALL_ACCESS,
+                                         PsThreadType, UserMode,
+                                         (PVOID*)&Thread, NULL);
+      if (!NT_SUCCESS(Status))
+        {
+          ObfDereferenceObject(Token);
+          if (OpenAsSelf)
+            {
+              PsRestoreImpersonation(PsGetCurrentThread(), &ImpersonationState);
+            }
+          return Status;
+        }
+   
+      PrimaryToken = PsReferencePrimaryToken(Thread->ThreadsProcess);
+      Status = SepCreateImpersonationTokenDacl(Token, PrimaryToken, &Dacl);
+      ObfDereferenceObject(PrimaryToken);
+      ObfDereferenceObject(Thread);
+      if (!NT_SUCCESS(Status))
+        {
+          ObfDereferenceObject(Token);
+          if (OpenAsSelf)
+            {
+              PsRestoreImpersonation(PsGetCurrentThread(), &ImpersonationState);
+            }
+          return Status;
+        }
+      
+      RtlCreateSecurityDescriptor(&SecurityDescriptor,
+                                  SECURITY_DESCRIPTOR_REVISION);
+      RtlSetDaclSecurityDescriptor(&SecurityDescriptor, TRUE, Dacl,
+                                   FALSE);
+
+      InitializeObjectAttributes(&ObjectAttributes, NULL, HandleAttributes,
+                                 NULL, &SecurityDescriptor);
+
+      Status = SepDuplicateToken(Token, &ObjectAttributes, EffectiveOnly,
+                                 TokenImpersonation, ImpersonationLevel,
+                                 KernelMode, &NewToken);
+      ExFreePool(Dacl);
+      if (!NT_SUCCESS(Status))
+        {
+          ObfDereferenceObject(Token);
+          if (OpenAsSelf)
+            {
+              PsRestoreImpersonation(PsGetCurrentThread(), &ImpersonationState);
+            }
+          return Status;
+        }
+
+      Status = ObInsertObject(NewToken, NULL, DesiredAccess, 0, NULL,
+                              TokenHandle);
+
+      ObfDereferenceObject(NewToken);
+    }
+  else
+    {
+      Status = ObOpenObjectByPointer(Token, HandleAttributes,
+                                     NULL, DesiredAccess, SepTokenObjectType,
+                                     ExGetPreviousMode(), TokenHandle);
+    }
+
+  ObfDereferenceObject(Token);
+
+  if (OpenAsSelf)
+    {
+      PsRestoreImpersonation(PsGetCurrentThread(), &ImpersonationState);
+    }
+
+  return Status;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+NtOpenThreadToken(IN HANDLE ThreadHandle,
+                  IN ACCESS_MASK DesiredAccess,
+                  IN BOOLEAN OpenAsSelf,
+                  OUT PHANDLE TokenHandle)
+{
+  return NtOpenThreadTokenEx(ThreadHandle, DesiredAccess, OpenAsSelf, 0,
+                             TokenHandle);
+}
 
 /* EOF */

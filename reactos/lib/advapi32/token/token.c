@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.14 2004/09/27 20:04:53 gvg Exp $
+/* $Id: token.c,v 1.15 2004/12/10 16:50:37 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -259,8 +259,14 @@ DuplicateTokenEx (HANDLE ExistingTokenHandle,
                   PHANDLE DuplicateTokenHandle)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
+  SECURITY_QUALITY_OF_SERVICE Qos;
   HANDLE NewToken;
   NTSTATUS Status;
+
+  Qos.Length = sizeof(SECURITY_QUALITY_OF_SERVICE);
+  Qos.ImpersonationLevel = ImpersonationLevel;
+  Qos.ContextTrackingMode = SECURITY_DYNAMIC_TRACKING;
+  Qos.EffectiveOnly = FALSE;
 
   ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
   ObjectAttributes.RootDirectory = NULL;
@@ -271,12 +277,12 @@ DuplicateTokenEx (HANDLE ExistingTokenHandle,
       ObjectAttributes.Attributes |= OBJ_INHERIT;
     }
   ObjectAttributes.SecurityDescriptor = lpTokenAttributes->lpSecurityDescriptor;
-  ObjectAttributes.SecurityQualityOfService = NULL;
+  ObjectAttributes.SecurityQualityOfService = &Qos;
 
   Status = NtDuplicateToken (ExistingTokenHandle,
 			     dwDesiredAccess,
 			     &ObjectAttributes,
-			     ImpersonationLevel,
+			     FALSE,
 			     TokenType,
 			     &NewToken);
   if (!NT_SUCCESS(Status))

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.86 2004/11/20 16:46:05 weiden Exp $
+/* $Id: create.c,v 1.87 2004/12/10 16:50:37 navaraf Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -235,63 +235,6 @@ NtImpersonateThread(IN HANDLE ThreadHandle,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
-NtOpenThreadToken (IN HANDLE ThreadHandle,
-		   IN ACCESS_MASK DesiredAccess,
-		   IN BOOLEAN OpenAsSelf,
-		   OUT PHANDLE TokenHandle)
-{
-  PACCESS_TOKEN Token;
-  PETHREAD Thread;
-  NTSTATUS Status;
-
-  Status = ObReferenceObjectByHandle (ThreadHandle,
-				      0,
-				      PsThreadType,
-				      UserMode,
-				      (PVOID*)&Thread,
-				      NULL);
-   if (!NT_SUCCESS(Status))
-     {
-	return(Status);
-     }
-
-  if (OpenAsSelf)
-    {
-      Token = Thread->ThreadsProcess->Token;
-    }
-  else
-    {
-      if (Thread->ActiveImpersonationInfo == FALSE)
-	{
-	  ObDereferenceObject (Thread);
-	  return STATUS_NO_TOKEN;
-	}
-
-      Token = Thread->ImpersonationInfo->Token;
-    }
-
-  if (Token == NULL)
-    {
-      ObDereferenceObject (Thread);
-      return STATUS_NO_TOKEN;
-    }
-
-  Status = ObCreateHandle (PsGetCurrentProcess(),
-			   Token,
-			   DesiredAccess,
-			   FALSE,
-			   TokenHandle);
-
-  ObDereferenceObject (Thread);
-
-  return Status;
-}
-
-
-/*
- * @implemented
- */
 PACCESS_TOKEN STDCALL
 PsReferenceImpersonationToken(IN PETHREAD Thread,
 			      OUT PBOOLEAN CopyOnOpen,
@@ -339,7 +282,7 @@ PsDereferencePrimaryToken(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 STDCALL
@@ -348,12 +291,32 @@ PsDisableImpersonation(
     IN PSE_IMPERSONATION_STATE ImpersonationState
     )
 {
-	UNIMPLEMENTED;
-	return FALSE;	
+   if (Thread->ActiveImpersonationInfo == FALSE)
+   {
+      ImpersonationState->Token = NULL;
+      ImpersonationState->CopyOnOpen = FALSE;
+      ImpersonationState->EffectiveOnly = FALSE;
+      ImpersonationState->Level = 0;
+      return TRUE;
+   }
+
+/* FIXME */
+/*   ExfAcquirePushLockExclusive(&Thread->ThreadLock); */
+
+   Thread->ActiveImpersonationInfo = FALSE;
+   ImpersonationState->Token = Thread->ImpersonationInfo->Token;
+   ImpersonationState->CopyOnOpen = Thread->ImpersonationInfo->CopyOnOpen;
+   ImpersonationState->EffectiveOnly = Thread->ImpersonationInfo->EffectiveOnly;
+   ImpersonationState->Level = Thread->ImpersonationInfo->Level;
+
+/* FIXME */
+/*   ExfReleasePushLock(&Thread->ThreadLock); */
+
+   return TRUE;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */                       
 VOID
 STDCALL
@@ -362,7 +325,11 @@ PsRestoreImpersonation(
 	IN PSE_IMPERSONATION_STATE  	ImpersonationState
      	)
 {
-	UNIMPLEMENTED;
+   PsImpersonateClient(Thread, ImpersonationState->Token,
+                       ImpersonationState->CopyOnOpen,
+                       ImpersonationState->EffectiveOnly,
+                       ImpersonationState->Level);
+   ObfDereferenceObject(ImpersonationState->Token);
 }
 
 VOID
