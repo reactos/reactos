@@ -764,16 +764,15 @@ IopCreateDeviceKeyPath(PWSTR Path,
     }
 
   wcsncpy (KeyBuffer, Path, MAX_PATH-1);
-  RtlInitUnicodeString (&KeyName, KeyBuffer);
 
   /* Skip \\Registry\\ */
-  Current = KeyName.Buffer;
-  Current = wcschr (Current, '\\') + 1;
-  Current = wcschr (Current, '\\') + 1;
+  Current = KeyBuffer;
+  Current = wcschr (Current, L'\\') + 1;
+  Current = wcschr (Current, L'\\') + 1;
 
   while (TRUE)
     {
-      Next = wcschr (Current, '\\');
+      Next = wcschr (Current, L'\\');
       if (Next == NULL)
 	{
 	  /* The end */
@@ -783,6 +782,7 @@ IopCreateDeviceKeyPath(PWSTR Path,
 	  *Next = 0;
 	}
 
+      RtlInitUnicodeString (&KeyName, KeyBuffer);
       InitializeObjectAttributes (&ObjectAttributes,
 				  &KeyName,
 				  OBJ_CASE_INSENSITIVE,
