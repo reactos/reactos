@@ -525,10 +525,9 @@ UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOperation,
     static const WCHAR wExtensions[] = {'e','x','e',' ','p','i','f',' ','b','a','t',' ','c','m','d',' ','c','o','m',0};
 
     WCHAR *extension = NULL; /* pointer to file extension */
-    WCHAR wtmpext[5];        /* local copy to mung as we please */
     WCHAR filetype[256];     /* registry name for this filetype */
     LONG  filetypelen = sizeof(filetype); /* length of above */
-    WCHAR command[256];      /* command from registry */
+    WCHAR command[1024];     /* command from registry */
     WCHAR wBuffer[256];      /* Used to GetProfileString */
     UINT  retval = 31;       /* default - 'No association was found' */
     WCHAR *tok;              /* token pointer */
@@ -575,15 +574,11 @@ UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOperation,
 					   /* .\FILE.EXE :( */
 	TRACE("xlpFile=%s,extension=%s\n", debugstr_w(xlpFile), debugstr_w(extension));
 
-	if ((extension == NULL) || (extension == &xlpFile[strlenW(xlpFile)]))
+	if (extension == NULL || extension[1]==0)
 	{
 	    WARN("Returning 31 - No association\n");
 	    return 31; /* no association */
 	}
-	/* Make local copy & lowercase it for reg & 'programs=' lookup */
-	lstrcpynW(wtmpext, extension, 5);
-	CharLowerW(wtmpext);
-	TRACE("%s file\n", debugstr_w(wtmpext));
 
 	/* Three places to check: */
 	/* 1. win.ini, [windows], programs (NB no leading '.') */
@@ -610,7 +605,7 @@ UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOperation,
 		    while (*p == ' ' || *p == '\t') p++;
 		}
 
-		if (strcmpW(tok, &wtmpext[1]) == 0) /* have to skip the leading "." */
+		if (strcmpiW(tok, &extension[1]) == 0) /* have to skip the leading "." */
 		{
 		    strcpyW(lpResult, xlpFile);
 		    /* Need to perhaps check that the file has a path
@@ -628,7 +623,7 @@ UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOperation,
 	}
 
 	/* Check registry */
-	if (RegQueryValueW(HKEY_CLASSES_ROOT, wtmpext, filetype, 
+	if (RegQueryValueW(HKEY_CLASSES_ROOT, extension, filetype, 
 			    &filetypelen) == ERROR_SUCCESS)
 	{
 	    filetypelen /= sizeof(WCHAR);
