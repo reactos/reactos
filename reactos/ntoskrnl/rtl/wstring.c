@@ -63,18 +63,6 @@ wcschr(const wchar_t *str, wchar_t ch)
   return NULL;
 }
 
-wchar_t towupper(wchar_t w)
-{
-   if (w < L'A')
-     {
-	return(w + 'A');
-     }
-   else     
-     {
-	return(w);
-     }
-}
-
 int wcsicmp(const wchar_t* cs, const wchar_t* ct)
 {
    while (*cs != '\0' && *ct != '\0' && towupper(*cs) == towupper(*ct))

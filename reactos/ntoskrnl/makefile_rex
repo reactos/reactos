@@ -12,7 +12,8 @@ NT_OBJECTS = nt/port.o nt/channel.o nt/ntevent.o nt/nttimer.o nt/atom.o \
 RTL_OBJECTS = rtl/vsprintf.o rtl/lookas.o rtl/unicode.o rtl/strtok.o \
               rtl/time.o rtl/unalign.o rtl/mem.o rtl/largeint.o rtl/ctype.o \
 	      rtl/list.o rtl/slist.o rtl/interlck.o rtl/return.o \
-	      rtl/wstring.o rtl/memcpy.o
+              rtl/wstring.o rtl/memcpy.o rtl/memmove.o rtl/memset.o \
+              rtl/memchr.o
 
 KE_OBJECTS = ke/main.o ke/timer.o ke/error.o ke/catch.o ke/exports.o \
              ke/dpc.o ke/wait.o ke/kqueue.o ke/dispatch.o \

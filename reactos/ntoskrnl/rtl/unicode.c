@@ -29,19 +29,6 @@ VOID RtlUpperString(PSTRING DestinationString, PSTRING SourceString)
    UNIMPLEMENTED;
 }
 
-WCHAR wtoupper(WCHAR c)
-{
-        if((c>='a') && (c<='z')) return c+Aa_Difference;
-        return c;
-}
-
-WCHAR wtolower(WCHAR c)
-{
-//   DPRINT("c %c (c-Aa_Difference) %c\n",(char)c,(char)(c-Aa_Difference));
-        if((c>='A') && (c<='Z')) return c-Aa_Difference;
-        return c;
-}
-
 ULONG RtlAnsiStringToUnicodeSize(IN PANSI_STRING AnsiString)
 {
         return AnsiString->Length*2;
@@ -165,8 +152,8 @@ LONG RtlCompareUnicodeString(PUNICODE_STRING String1, PUNICODE_STRING String2,
 
         for(i=0; i<String1->Length; i++) {
                 if(CaseInsensitive==TRUE) {
-                        wc1=wtoupper(*String1->Buffer);
-                        wc2=wtoupper(*String2->Buffer);
+                        wc1=towupper(*String1->Buffer);
+                        wc2=towupper(*String2->Buffer);
                 } else {
                         wc1=*String1->Buffer;
                         wc2=*String2->Buffer;
@@ -283,8 +270,8 @@ BOOLEAN RtlEqualUnicodeString(PUNICODE_STRING String1, PUNICODE_STRING String2,
 
         for(i=0; i<s1l; i++) {
                 if(CaseInsensitive==TRUE) {
-                        wc1=wtoupper(*String1->Buffer);
-                        wc2=wtoupper(*String2->Buffer);
+                        wc1=towupper(*String1->Buffer);
+                        wc2=towupper(*String2->Buffer);
                 } else {
                         wc1=*String1->Buffer;
                         wc2=*String2->Buffer;
@@ -500,7 +487,7 @@ NTSTATUS RtlUpcaseUnicodeString(IN OUT PUNICODE_STRING DestinationString,
         };
 
         for(i=0; i<SourceString->Length; i++) {
-                *DestinationString->Buffer=wtoupper(*SourceString->Buffer);
+                *DestinationString->Buffer=towupper(*SourceString->Buffer);
                 DestinationString->Buffer++;
                 SourceString->Buffer++;
         };

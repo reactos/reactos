@@ -35,36 +35,54 @@ _L,_L,_L,_L,_L,_L,_L,_L,_L,_L,_L,_L,_L,_L,_L,_L,       /* 224-239 */
 _L,_L,_L,_L,_L,_L,_L,_P,_L,_L,_L,_L,_L,_L,_L,_L};      /* 240-255 */
 #endif
 
-int toupper(int c)
-{
-   if ('a' <= c && 'z' >= c)
-     {
-	return(c + 'A' - 'a');
-     }
-   return(c);
-}
 
-int tolower(int c)
+int isdigit(int c)
 {
-   if ('A' <= c && 'Z' >= c)
-     {
-	return(c + 'a' - 'A');
-     }
-   return(c);
+   return((c >= '0' && c <= '9'));
 }
 
 int islower(int c)
 {
-   return(('a' <= c && 'z' >= c));
+   return((c >= 'a' && c <= 'z'));
 }
 
-int isdigit(int c)
+int isprint(int c)
 {
-   return(('0' <= c && '9' >= c));
+   return((c >= ' ' && c <= '~'));
+}
+
+int isspace(int c)
+{
+   return((c == ' ' || c == '\t'));
+}
+
+int isupper(int c)
+{
+   return((c >= 'A') && (c <= 'Z'));
 }
 
 int isxdigit(int c)
 {
    return(('0' <= c && '9' >= c) || ('a' <= 'c' && 'f' >= 'c') ||
 	  ('A' <= c && 'Z' >= c));
+}
+
+int tolower(int c)
+{
+   return (c >= 'A' && c <= 'Z')   ? c - ( 'A' - 'a' ) : c;
+}
+
+int toupper(int c)
+{
+   return (c >= 'a' && c <= 'z')   ? c + 'A' - 'a' : c;
+}
+
+wchar_t towlower(wchar_t c)
+{
+   return (c >= 'A' && c <= 'Z')   ? c - ( 'A' - 'a' ) : c;
+}
+
+wchar_t towupper(wchar_t c)
+{
+   return (c >= 'a' && c <= 'z')   ? c + 'A' - 'a' : c;
 }
