@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kdb.c,v 1.21 2004/03/15 17:32:47 hbirr Exp $
+/* $Id: kdb.c,v 1.22 2004/05/04 21:16:51 navaraf Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/kdb.c
@@ -674,7 +674,7 @@ DbgStepOver(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
       Eip++;
     }
   if (Eip[0] == 0xE8 || Eip[0] == 0x9A || Eip[0] == 0xF2 || Eip[0] == 0xF3 ||
-      (Eip[0] == 0xFF && (Eip[1] & 0x3C) == 0x10))
+      (Eip[0] == 0xFF && (Eip[1] & 0x38) == 0x10))
     {
       ULONG NextInst = Tf->Eip + KdbGetInstLength(Tf->Eip);
       KdbLastSingleStepFrom = Tf->Eip;
