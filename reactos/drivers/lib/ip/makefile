@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.6 2004/11/07 20:37:20 arty Exp $
+# $Id: makefile,v 1.7 2004/11/14 21:28:21 arty Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -32,6 +32,7 @@ TARGET_OBJECTS = \
 	network/loopback.o \
 	network/memtrack.o \
 	network/neighbor.o \
+	network/ports.o \
 	network/prefix.o \
 	network/receive.o \
 	network/route.o \

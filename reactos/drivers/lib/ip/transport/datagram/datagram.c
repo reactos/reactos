@@ -67,19 +67,18 @@ VOID DGDeliverData(
       while ((CurrentEntry != &AddrFile->ReceiveQueue) && (!Found))
         {
           Current = CONTAINING_RECORD(CurrentEntry, DATAGRAM_RECEIVE_REQUEST, ListEntry);
-	  if (AddrIsEqual(Address, &Current->RemoteAddress))
+
+	  if (!Current->RemotePort ||
+	      AddrIsEqual(Address, &Current->RemoteAddress)) {
             Found = TRUE;
-    
-          if (Found)
-            {
-              /* FIXME: Maybe we should check if the buffer of this
-                 receive request is large enough and if not, search
-                 for another */
-    
-              /* Remove the request from the queue */
-              RemoveEntryList(&Current->ListEntry);
-              break;
-            }
+	    /* FIXME: Maybe we should check if the buffer of this
+	       receive request is large enough and if not, search
+	       for another */
+	    
+	    /* Remove the request from the queue */
+	    RemoveEntryList(&Current->ListEntry);
+	    break;
+	  }
           CurrentEntry = CurrentEntry->Flink;
         }
 
@@ -95,9 +94,8 @@ VOID DGDeliverData(
 			 DataSize );
   
           /* Complete the receive request */
-          (*Current->Complete)(Current->Context, STATUS_SUCCESS, DataSize);
-    
-          exFreePool(Current);
+          Current->Complete(Current->Context, STATUS_SUCCESS, DataSize);
+	  exFreePool( Current );
         }
     }
   else if (AddrFile->RegisteredReceiveDatagramHandler)
