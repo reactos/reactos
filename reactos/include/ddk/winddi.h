@@ -16,7 +16,7 @@
 #else
 #include <windows.h>
 #endif
-#include <ddk\ddrawi.h>
+#include <ddk/ddrawi.h>
 
 #ifndef IN
 #define IN

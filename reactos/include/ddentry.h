@@ -16,9 +16,9 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-#include <ddk\ddrawi.h>
-#include <ddk\winddi.h>
-#include <ddk\d3dhal.h>
+#include <ddk/ddrawi.h>
+#include <ddk/winddi.h>
+#include <ddk/d3dhal.h>
 BOOL STDCALL DdCreateDirectDrawObject( 
 LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
 HDC hdc
