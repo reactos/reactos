@@ -48,6 +48,13 @@ static NTSTATUS RtlpCreateFirstThread
  );
 }
 
+PPEB
+STDCALL
+RtlpCurrentPeb(VOID)
+{
+    return NtCurrentPeb();
+}
+
 static NTSTATUS
 RtlpMapFile(PUNICODE_STRING ImageFileName,
             PRTL_USER_PROCESS_PARAMETERS Ppb,

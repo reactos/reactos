@@ -20,29 +20,8 @@
 #define NDEBUG
 #include <ntdll/ntdll.h>
 
+PPEB STDCALL RtlpCurrentPeb(VOID);
 /* FUNCTIONS *****************************************************************/
-
-/* FIXME: Added here temporarly until I fix this properly tomorrow */
-/*
- * @implemented
- */
-VOID STDCALL
-RtlAcquirePebLock(VOID)
-{
-   PPEB Peb = NtCurrentPeb ();
-   Peb->FastPebLockRoutine (Peb->FastPebLock);
-}
-
-/* FIXME: Added here temporarly until I fix this properly tomorrow */
-/*
- * @implemented
- */
-VOID STDCALL
-RtlReleasePebLock(VOID)
-{
-   PPEB Peb = NtCurrentPeb ();
-   Peb->FastPebUnlockRoutine (Peb->FastPebLock);
-}
 
 /*
  * @implemented
@@ -533,12 +512,11 @@ RtlQueryEnvironmentVariable_U(PWSTR Environment,
 
    if (Environment == NULL)
    {
-      if (NtCurrentPeb() == NULL)
-      {
-         return(STATUS_VARIABLE_NOT_FOUND);
+      PPEB Peb = RtlpCurrentPeb();
+      if (Peb) {
+          Environment = Peb->ProcessParameters->Environment;
+          SysEnvUsed = TRUE;
       }
-      Environment = NtCurrentPeb()->ProcessParameters->Environment;
-      SysEnvUsed = TRUE;
    }
 
    if (Environment == NULL)

@@ -11,6 +11,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+#include <internal/ps.h>
 #define NDEBUG
 #include <internal/debug.h>
 
@@ -18,6 +19,31 @@
 #define PRTL_CRITICAL_SECTION PVOID
 
 /* FUNCTIONS *****************************************************************/
+
+/*
+ * @implemented
+ */
+VOID STDCALL
+RtlAcquirePebLock(VOID)
+{
+
+}
+
+/*
+ * @implemented
+ */
+VOID STDCALL
+RtlReleasePebLock(VOID)
+{
+
+}
+
+PPEB
+STDCALL
+RtlpCurrentPeb(VOID)
+{
+    return ((PEPROCESS)(KeGetCurrentThread()->ApcState.Process))->Peb;
+}
 
 NTSTATUS 
 STDCALL
