@@ -1,11 +1,12 @@
-/* $Id: ide.c,v 1.46 2001/11/01 00:28:57 ekohl Exp $
+/* $Id: ide.c,v 1.47 2001/11/01 14:51:57 ekohl Exp $
  *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
  *     with help from various documentation sources and a few peeks at
  *       linux and freebsd sources.
  * 
- *    This driver supports up to 4 controllers with up to 2 drives each.
+ *    This driver supports PCI controllers and up to 4 ISA controllers
+ *    with up to 2 drives each.
  *    The device names are assigned as follows:
  *      \Devices\HarddiskX\Partition0
  *    for the raw device, and 
@@ -74,15 +75,12 @@
 #include "ide.h"
 #include "partitio.h"
 
-#define  VERSION  "V0.1.4"
-
-/* remove this to activate the old behaviour of partition chain code (EK) */
-#define PARTITION_FIX
+#define  VERSION  "V0.1.5"
 
 //  -------------------------------------------------------  File Static Data
 
 
-typedef struct _IDE_CONTROLLER_PARAMETERS 
+typedef struct _IDE_CONTROLLER_PARAMETERS
 {
   int              CommandPortBase;
   int              CommandPortSpan;
@@ -167,14 +165,14 @@ static NTSTATUS IDECreatePartitionDevice(IN PDRIVER_OBJECT DriverObject,
                                          IN ULONG DiskNumber,
                                          IN PIDE_DRIVE_IDENTIFY DrvParms,
                                          IN PPARTITION_INFORMATION PartitionInfo);
-static int IDEPolledRead(IN WORD Address, 
-                         IN BYTE PreComp, 
-                         IN BYTE SectorCnt, 
-                         IN BYTE SectorNum , 
-                         IN BYTE CylinderLow, 
-                         IN BYTE CylinderHigh, 
-                         IN BYTE DrvHead, 
-                         IN BYTE Command, 
+static int IDEPolledRead(IN WORD Address,
+                         IN BYTE PreComp,
+                         IN BYTE SectorCnt,
+                         IN BYTE SectorNum,
+                         IN BYTE CylinderLow,
+                         IN BYTE CylinderHigh,
+                         IN BYTE DrvHead,
+                         IN BYTE Command,
                          OUT BYTE *Buffer);
 static NTSTATUS STDCALL IDEDispatchOpenClose(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
 static NTSTATUS STDCALL IDEDispatchReadWrite(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
@@ -189,9 +187,9 @@ static BOOLEAN STDCALL
 IDEStartController(IN OUT PVOID Context);
 VOID IDEBeginControllerReset(PIDE_CONTROLLER_EXTENSION ControllerExtension);
 static BOOLEAN STDCALL IDEIsr(IN PKINTERRUPT Interrupt, IN PVOID ServiceContext);
-static VOID IDEDpcForIsr(IN PKDPC Dpc, 
+static VOID IDEDpcForIsr(IN PKDPC Dpc,
                          IN PDEVICE_OBJECT DpcDeviceObject,
-                         IN PIRP DpcIrp, 
+                         IN PIRP DpcIrp,
                          IN PVOID DpcContext);
 static VOID IDEFinishOperation(PIDE_CONTROLLER_EXTENSION ControllerExtension);
 static VOID STDCALL IDEIoTimer(PDEVICE_OBJECT DeviceObject, PVOID Context);
@@ -199,13 +197,13 @@ static VOID STDCALL IDEIoTimer(PDEVICE_OBJECT DeviceObject, PVOID Context);
 //  ----------------------------------------------------------------  Inlines
 
 void
-IDESwapBytePairs(char *Buf, 
-                 int Cnt) 
+IDESwapBytePairs(char *Buf,
+                 int Cnt)
 {
   char  t;
   int   i;
 
-  for (i = 0; i < Cnt; i += 2) 
+  for (i = 0; i < Cnt; i += 2)
     {
       t = Buf[i];
       Buf[i] = Buf[i+1];
@@ -242,7 +240,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 
   DbgPrint("IDE Driver %s\n", VERSION);
 
-    //  Export other driver entry points...
+  /* Export other driver entry points... */
   DriverObject->DriverStartIo = IDEStartIo;
   DriverObject->MajorFunction[IRP_MJ_CREATE] = IDEDispatchOpenClose;
   DriverObject->MajorFunction[IRP_MJ_CLOSE] = IDEDispatchOpenClose;
@@ -257,7 +255,8 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     {
       IDEInitialized = TRUE;
     }
-  return Status;
+
+  return(Status);
 }
 
 //  ----------------------------------------------------  Discardable statics
@@ -353,18 +352,26 @@ IdeFindControllers(IN PDRIVER_OBJECT DriverObject)
 		  else
 		    {
 		      DPRINT("Secondary channel: Compatibility mode\n");
-#if 0
-		      Status = IdeCreateController(DriverObject,
-						   &Controllers[1],
-						   ControllerIdx);
-		      if (NT_SUCCESS(Status))
+		      if (ConfigInfo->AtDiskSecondaryAddressClaimed == FALSE)
 			{
-			  ControllerIdx++;
-			  ConfigInfo->AtDiskSecondaryAddressClaimed = TRUE;
-			  ConfigInfo->ScsiPortCount++;
-			  ReturnedStatus = Status;
+			  Status = IdeCreateController(DriverObject,
+						       &Controllers[1],
+						       ControllerIdx);
+			  if (NT_SUCCESS(Status))
+			    {
+			      ControllerIdx++;
+			      ConfigInfo->AtDiskSecondaryAddressClaimed = TRUE;
+			      ConfigInfo->ScsiPortCount++;
+			      ReturnedStatus = Status;
+			    }
 			}
-#endif
+		      else
+			{
+			  /*
+			   * FIXME: Switch controller to native pci mode
+			   *        if it is programmable.
+			   */
+			}
 		    }
 		  if (PciConfig.ProgIf & 0x08)
 		    {
@@ -415,7 +422,7 @@ IdeFindControllers(IN PDRIVER_OBJECT DriverObject)
 	}
     }
 
-#if 0
+  /* Search for ISA IDE controller if no secondary controller was found */
   if (ConfigInfo->AtDiskSecondaryAddressClaimed == FALSE)
     {
       DPRINT("Searching for secondary ISA IDE controller!\n");
@@ -436,7 +443,6 @@ IdeFindControllers(IN PDRIVER_OBJECT DriverObject)
 	    }
 	}
     }
-#endif
 
   DPRINT("IdeFindControllers() done!\n");
 
@@ -592,12 +598,12 @@ IDEResetController(IN WORD CommandPort,
         }
       KeStallExecutionProcessor(10);
     }
-   CHECKPOINT;
+  CHECKPOINT;
   if (Retries >= IDE_RESET_BUSY_TIMEOUT * 1000)
     {
       return FALSE;
     }
-   CHECKPOINT;
+  CHECKPOINT;
     //  return TRUE if controller came back to life. and
     //  the registers are initialized correctly
   return  IDEReadError(CommandPort) == 1;
@@ -650,7 +656,7 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
   PPARTITION_INFORMATION PartitionEntry;
   ULONG i;
 
-    //  Copy I/O port offsets for convenience
+   /* Copy I/O port offsets for convenience */
   CommandPort = ControllerExtension->CommandPortBase;
 //  ControlPort = ControllerExtension->ControlPortBase;
   DPRINT("probing IDE controller %d Addr %04lx Drive %d\n",
@@ -661,11 +667,10 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
   /* Get the Drive Identification Data */
   if (!IDEGetDriveIdentification(CommandPort, DriveIdx, &DrvParms))
     {
-      CHECKPOINT1;
-      DbgPrint("Giving up on drive %d on controller %d...\n", 
+      DbgPrint("No ATA drive %d found on controller %d...\n", 
              DriveIdx,
              ControllerExtension->Number);
-      return  FALSE;
+      return(FALSE);
     }
 
   /* Create the harddisk device directory */
@@ -683,7 +688,7 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
   if (!NT_SUCCESS(Status))
     {
       DbgPrint("Could not create device dir object\n");
-      return FALSE;
+      return(FALSE);
     }
 
   /* Create the disk device */
@@ -752,14 +757,14 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
              PartitionEntry->PartitionNumber,
              PartitionEntry->BootIndicator,
              PartitionEntry->PartitionType,
-             PartitionEntry->StartingOffset.QuadPart / 512 /*DrvParms.BytesPerSector*/,
-             PartitionEntry->PartitionLength.QuadPart / 512 /* DrvParms.BytesPerSector*/);
+             PartitionEntry->StartingOffset.QuadPart / DrvParms.BytesPerSector,
+             PartitionEntry->PartitionLength.QuadPart / DrvParms.BytesPerSector);
 
       /* Create device for partition */
       Status = IDECreatePartitionDevice(DriverObject,
                                         &PartitionDeviceObject,
                                         ControllerObject,
-                                        DiskDeviceObject->DeviceExtension, //DiskDeviceExtension,
+                                        DiskDeviceObject->DeviceExtension,
                                         DriveIdx,
                                         HarddiskIdx,
                                         &DrvParms,
@@ -794,21 +799,20 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
 //    TRUE  The drive identification block was retrieved successfully
 //
 
-BOOLEAN  
+static BOOLEAN
 IDEGetDriveIdentification(IN int CommandPort,
                           IN int DriveNum,
                           OUT PIDE_DRIVE_IDENTIFY DrvParms)
 {
 
-    //  Get the Drive Identify block from drive or die
+  /* Get the Drive Identify block from drive or die */
   if (IDEPolledRead(CommandPort, 0, 0, 0, 0, 0, (DriveNum ? IDE_DH_DRV1 : 0),
                     IDE_CMD_IDENT_DRV, (BYTE *)DrvParms) != 0) 
     {
-      CHECKPOINT1;
       return FALSE;
     }
 
-    //  Report on drive parameters if debug mode
+  /* Report on drive parameters if debug mode */
   IDESwapBytePairs(DrvParms->SerialNumber, 20);
   IDESwapBytePairs(DrvParms->FirmwareRev, 8);
   IDESwapBytePairs(DrvParms->ModelNumber, 40);
@@ -845,9 +849,15 @@ IDEGetDriveIdentification(IN int CommandPort,
          DrvParms->TMSectorCountLo,
          (ULONG)((DrvParms->TMSectorCountHi << 16) + DrvParms->TMSectorCountLo));
 
+  /*
+   * Fix default ATA sector size.
+   * Attention: Default ATAPI sector size is 2048 bytes!!
+   */
+  if (DrvParms->BytesPerSector == 0)
+    DrvParms->BytesPerSector = 512;
   DPRINT("BytesPerSector %d\n", DrvParms->BytesPerSector);
-  DrvParms->BytesPerSector = 512; /* FIXME !!!*/
-  return TRUE;
+
+  return(TRUE);
 }
 
 
@@ -890,14 +900,14 @@ IDECreateDiskDevice(IN PDRIVER_OBJECT DriverObject,
   NTSTATUS               RC;
   PIDE_DEVICE_EXTENSION  DeviceExtension;
 
-    // Create a unicode device name
+  /* Create a unicode device name */
   swprintf(NameBuffer,
            L"\\Device\\Harddisk%d\\Partition0",
            DiskNumber);
   RtlInitUnicodeString(&DeviceName,
                        NameBuffer);
 
-    // Create the device
+  /* Create the device */
   RC = IoCreateDevice(DriverObject,
                       sizeof(IDE_DEVICE_EXTENSION),
                       &DeviceName,
@@ -907,15 +917,15 @@ IDECreateDiskDevice(IN PDRIVER_OBJECT DriverObject,
                       DeviceObject);
   if (!NT_SUCCESS(RC))
     {
-      DbgPrint ("IoCreateDevice call failed\n");
-      return  RC;
+      DbgPrint("IoCreateDevice call failed\n");
+      return(RC);
     }
 
-    //  Set the buffering strategy here...
+  /* Set the buffering strategy here... */
   (*DeviceObject)->Flags |= DO_DIRECT_IO;
   (*DeviceObject)->AlignmentRequirement = FILE_WORD_ALIGNMENT;
 
-    //  Fill out Device extension data
+  /* Fill out Device extension data */
   DeviceExtension = (PIDE_DEVICE_EXTENSION) (*DeviceObject)->DeviceExtension;
   DeviceExtension->DeviceObject = (*DeviceObject);
   DeviceExtension->ControllerObject = ControllerObject;
@@ -925,10 +935,9 @@ IDECreateDiskDevice(IN PDRIVER_OBJECT DriverObject,
     (DrvParms->Capabilities & IDE_DRID_LBA_SUPPORTED) ? 1 : 0;
   DeviceExtension->DMASupported = 
     (DrvParms->Capabilities & IDE_DRID_DMA_SUPPORTED) ? 1 : 0;
-    // FIXME: deal with bizarre sector sizes
-  DeviceExtension->BytesPerSector = 512 /* DrvParms->BytesPerSector */;
-  DeviceExtension->SectorsPerLogCyl = DrvParms->LogicalHeads *
-      DrvParms->SectorsPerTrack;
+  DeviceExtension->BytesPerSector = DrvParms->BytesPerSector;
+  DeviceExtension->SectorsPerLogCyl =
+    DrvParms->LogicalHeads * DrvParms->SectorsPerTrack;
   DeviceExtension->SectorsPerLogTrk = DrvParms->SectorsPerTrack;
   DeviceExtension->LogicalHeads = DrvParms->LogicalHeads;
   DeviceExtension->LogicalCylinders = 
@@ -1118,7 +1127,6 @@ IDEPolledRead(IN WORD Address,
     {
       Status = IDEReadStatus(Address);
       if (!(Status & IDE_SR_BUSY) && !(Status & IDE_SR_DRQ))
-//      if (!(Status & IDE_SR_BUSY))
         {
           break;
         }
@@ -1144,7 +1152,6 @@ IDEPolledRead(IN WORD Address,
     }
   if (RetryCount == IDE_MAX_BUSY_RETRIES)
     {
-      CHECKPOINT1;
       return IDE_ER_ABRT;
     }
 
@@ -1245,9 +1252,9 @@ IDEPolledRead(IN WORD Address,
 //    NTSTATUS
 //
 
-static  NTSTATUS  
-STDCALL IDEDispatchOpenClose(IN PDEVICE_OBJECT pDO, 
-                     IN PIRP Irp) 
+static NTSTATUS STDCALL
+IDEDispatchOpenClose(IN PDEVICE_OBJECT pDO,
+                     IN PIRP Irp)
 {
   Irp->IoStatus.Status = STATUS_SUCCESS;
   Irp->IoStatus.Information = FILE_OPENED;
