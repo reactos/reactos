@@ -5,7 +5,7 @@ W32kSetRect(PRECT Rect, INT left, INT top, INT right, INT bottom);
 BOOL STDCALL
 W32kSetEmptyRect(PRECT Rect);
 BOOL STDCALL
-W32kIsEmptyRect(PRECT Rect);
+W32kIsEmptyRect(const RECT* Rect);
 BOOL STDCALL
 W32kIntersectRect(PRECT Dest, const RECT* Src1, const RECT* Src2);
 BOOL STDCALL

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rect.c,v 1.4 2003/05/18 17:16:18 ea Exp $ */
+/* $Id: rect.c,v 1.5 2003/07/27 18:34:47 dwelch Exp $ */
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <win32k/region.h>
@@ -79,7 +79,7 @@ W32kSetEmptyRect(PRECT Rect)
 }
 
 BOOL STDCALL
-W32kIsEmptyRect(PRECT Rect)
+W32kIsEmptyRect(const RECT* Rect)
 {
   return(Rect->left >= Rect->right || Rect->top >= Rect->bottom);
 }
