@@ -1,4 +1,4 @@
-/* $Id: curdir.c,v 1.41 2004/01/23 21:16:03 ekohl Exp $
+/* $Id: curdir.c,v 1.42 2004/06/06 08:50:26 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -241,18 +241,26 @@ GetTempPathW (
 
 		if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_TOO_SMALL)
 		{
+		        /*
+			 * FIXME: Should we use the current directory or the windows directory ?
+			 */
 			Value.Length = RtlGetCurrentDirectory_U (Value.MaximumLength,
 			                                         Value.Buffer);
 		}
 	}
-
-	if (NT_SUCCESS(Status))
+	
+	Value.Length /= sizeof(WCHAR);
+	if (NT_SUCCESS(Status) && Value.Length > 0 && Value.Length + 1 < nBufferLength) 
 	{
-		lpBuffer[Value.Length / sizeof(WCHAR)] = L'\\';
-		lpBuffer[Value.Length / sizeof(WCHAR) + 1] = 0;
+		lpBuffer[Value.Length] = L'\\';
+		lpBuffer[Value.Length + 1] = 0;
+		if (!RtlDoesFileExists_U(lpBuffer))
+		{
+			Value.Length = 0;
+		}
 	}
 
-	return Value.Length / sizeof(WCHAR) + 1;
+	return Value.Length ? Value.Length + 1 : 0;
 }
 
 
