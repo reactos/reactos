@@ -23,14 +23,14 @@ CreateSemaphoreA(
 {
 	WCHAR NameW[MAX_PATH];
 	ULONG i = 0;
-  
-   	while ((*lpName)!=0 && i < MAX_PATH)
-     	{
+
+	while ((*lpName)!=0 && i < MAX_PATH)
+		{
 		NameW[i] = *lpName;
 		lpName++;
 		i++;
-     	}
-   	NameW[i] = 0;
+		}
+	NameW[i] = 0;
 	return CreateSemaphoreW(
 		 lpSemaphoreAttributes,
 		 lInitialCount,
@@ -55,14 +55,14 @@ CreateSemaphoreW(
 
 	NameString.Length = lstrlenW(lpName)*sizeof(WCHAR);
 	NameString.Buffer = (WCHAR *)lpName;
-   	NameString.MaximumLength = NameString.Length;
-   
-   	ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-   	ObjectAttributes.RootDirectory = NULL;
-   	ObjectAttributes.ObjectName = &NameString;
-   	ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE;
-   	ObjectAttributes.SecurityDescriptor = NULL;
-   	ObjectAttributes.SecurityQualityOfService = NULL;
+	NameString.MaximumLength = NameString.Length;
+
+	ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
+	ObjectAttributes.RootDirectory = NULL;
+	ObjectAttributes.ObjectName = &NameString;
+	ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE;
+	ObjectAttributes.SecurityDescriptor = NULL;
+	ObjectAttributes.SecurityQualityOfService = NULL;
 
 	if ( lpSemaphoreAttributes != NULL ) {
 		ObjectAttributes.SecurityDescriptor = lpSemaphoreAttributes->lpSecurityDescriptor;
@@ -79,15 +79,12 @@ CreateSemaphoreW(
 	lMaximumCount
 	);
 	if (!NT_SUCCESS(errCode))
-     	{
+		{
 		SetLastError(RtlNtStatusToDosError(errCode));
 		return NULL;
-     	}
+		}
 
 	return SemaphoreHandle;
-
-		
-   
 }
 
 HANDLE
@@ -100,15 +97,15 @@ CreateMutexA(
 {
 	WCHAR NameW[MAX_PATH];
 	ULONG i = 0;
-  
-   	while ((*lpName)!=0 && i < MAX_PATH)
+
+	while ((*lpName)!=0 && i < MAX_PATH)
      	{
 		NameW[i] = *lpName;
 		lpName++;
 		i++;
      	}
-   	NameW[i] = 0;
-	
+	NameW[i] = 0;
+
 	return CreateMutexW(
 	     lpMutexAttributes,
 	     bInitialOwner,
@@ -131,14 +128,14 @@ CreateMutexW(
 
 	NameString.Length = lstrlenW(lpName)*sizeof(WCHAR);
 	NameString.Buffer = (WCHAR *)lpName;
-   	NameString.MaximumLength = NameString.Length;
-   
-   	ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-   	ObjectAttributes.RootDirectory = NULL;
-   	ObjectAttributes.ObjectName = &NameString;
-   	ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE;
-   	ObjectAttributes.SecurityDescriptor = NULL;
-   	ObjectAttributes.SecurityQualityOfService = NULL;
+	NameString.MaximumLength = NameString.Length;
+
+	ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
+	ObjectAttributes.RootDirectory = NULL;
+	ObjectAttributes.ObjectName = &NameString;
+	ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE;
+	ObjectAttributes.SecurityDescriptor = NULL;
+	ObjectAttributes.SecurityQualityOfService = NULL;
 
 	if ( lpMutexAttributes != NULL ) {
 		ObjectAttributes.SecurityDescriptor = lpMutexAttributes->lpSecurityDescriptor;
@@ -149,15 +146,13 @@ CreateMutexW(
 
 	errCode = NtCreateMutant(&MutantHandle,GENERIC_ALL, &ObjectAttributes,(BOOLEAN)bInitialOwner);
 	if (!NT_SUCCESS(errCode))
-     	{
+	{
 		SetLastError(RtlNtStatusToDosError(errCode));
 		return NULL;
-     	}
+	}
 
 	return MutantHandle;
 
-		
-   
 }
 
 
@@ -187,7 +182,8 @@ DWORD STDCALL WaitForSingleObjectEx(HANDLE  hHandle,
      }
    else
      {
-        Time.LowPart = dwMilliseconds;
+	Time.LowPart = dwMilliseconds;
+	Time.HighPart = 0;
 	TimePtr = &Time;
      }
 
@@ -226,8 +222,8 @@ WaitForMultipleObjectsEx(
 	LARGE_INTEGER Time;
 	DWORD retCode;
 
-        Time.LowPart = dwMilliseconds;
-
+	Time.LowPart = dwMilliseconds;
+	Time.HighPart = 0;
 	
 	errCode = NtWaitForMultipleObjects (
 	nCount,
