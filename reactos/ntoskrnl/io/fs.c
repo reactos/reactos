@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -35,7 +35,7 @@ typedef struct _FS_CHANGE_NOTIFY_ENTRY
 static ERESOURCE FileSystemListLock;
 static LIST_ENTRY FileSystemListHead;
 
-static KSPIN_LOCK FsChangeNotifyListLock;
+static FAST_MUTEX FsChangeNotifyListLock;
 static LIST_ENTRY FsChangeNotifyListHead;
 
 #define TAG_FILE_SYSTEM       TAG('F', 'S', 'Y', 'S')
@@ -178,7 +178,7 @@ IoInitFileSystemImplementation(VOID)
   ExInitializeResourceLite(&FileSystemListLock);
 
   InitializeListHead(&FsChangeNotifyListHead);
-  KeInitializeSpinLock(&FsChangeNotifyListLock);
+  ExInitializeFastMutex(&FsChangeNotifyListLock);
 }
 
 
@@ -709,9 +709,8 @@ IopNotifyFileSystemChange(PDEVICE_OBJECT DeviceObject,
 {
   PFS_CHANGE_NOTIFY_ENTRY ChangeEntry;
   PLIST_ENTRY Entry;
-  KIRQL oldlvl;
 
-  KeAcquireSpinLock(&FsChangeNotifyListLock,&oldlvl);
+  ExAcquireFastMutex(&FsChangeNotifyListLock);
   Entry = FsChangeNotifyListHead.Flink;
   while (Entry != &FsChangeNotifyListHead)
     {
@@ -721,7 +720,7 @@ IopNotifyFileSystemChange(PDEVICE_OBJECT DeviceObject,
 
       Entry = Entry->Flink;
     }
-  KeReleaseSpinLock(&FsChangeNotifyListLock,oldlvl);
+  ExReleaseFastMutex(&FsChangeNotifyListLock);
 }
 
 
@@ -743,9 +742,10 @@ IoRegisterFsRegistrationChange(IN PDRIVER_OBJECT DriverObject,
   Entry->DriverObject = DriverObject;
   Entry->FSDNotificationProc = FSDNotificationProc;
 
-  ExInterlockedInsertHeadList(&FsChangeNotifyListHead,
-			      &Entry->FsChangeNotifyList,
-			      &FsChangeNotifyListLock);
+  ExAcquireFastMutex(&FsChangeNotifyListLock);
+  InsertHeadList(&FsChangeNotifyListHead,
+			      &Entry->FsChangeNotifyList);
+  ExReleaseFastMutex(&FsChangeNotifyListLock);
 
   return(STATUS_SUCCESS);
 }
@@ -760,7 +760,6 @@ IoUnregisterFsRegistrationChange(IN PDRIVER_OBJECT DriverObject,
 {
   PFS_CHANGE_NOTIFY_ENTRY ChangeEntry;
   PLIST_ENTRY Entry;
-  KIRQL oldlvl;
 
   Entry = FsChangeNotifyListHead.Flink;
   while (Entry != &FsChangeNotifyListHead)
@@ -769,9 +768,9 @@ IoUnregisterFsRegistrationChange(IN PDRIVER_OBJECT DriverObject,
       if (ChangeEntry->DriverObject == DriverObject &&
 	  ChangeEntry->FSDNotificationProc == FSDNotificationProc)
 	{
-	  KeAcquireSpinLock(&FsChangeNotifyListLock,&oldlvl);
+	  ExAcquireFastMutex(&FsChangeNotifyListLock);
 	  RemoveEntryList(Entry);
-	  KeReleaseSpinLock(&FsChangeNotifyListLock,oldlvl);
+	  ExReleaseFastMutex(&FsChangeNotifyListLock);
 
 	  ExFreePool(Entry);
 	  return;
