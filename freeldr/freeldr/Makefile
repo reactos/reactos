@@ -21,10 +21,12 @@
 # CHANGE THESE FOR YOUR OUTPUT
 #
 TARGET		=	i386
+ifeq ($(DEBUG),)
 # Debugging information on (bigger binary)
 #DEBUG		=	yes
 # Debugging information off (smaller binary)
 DEBUG		=	no
+endif
 
 OBJDIR		=	obj
 OUTPUT_DIR	=	$(OBJDIR)/$(TARGET)
@@ -41,6 +43,8 @@ CP		= $(subst /,$(SEP),$(TOOLSDIR))$(SEP)rcopy
 MKDIR		= $(subst /,$(SEP),$(TOOLSDIR))$(SEP)rmkdir
 RMDIR		= $(subst /,$(SEP),$(TOOLSDIR))$(SEP)rrmdir
 OBJCOPY		= objcopy
+NM   		= nm
+OBJDUMP		= objdump
 DEPTOOL		= $(subst /,$(SEP),$(TOOLSDIR))$(SEP)deptool
 HOSTTOOL	= $(subst /,$(SEP),$(TOOLSDIR))$(SEP)hosttype
 TOOLS		= $(DEPTOOL) $(HOSTTOOL)
@@ -347,10 +351,12 @@ all : freeldr.sys setupldr.sys
 
 freeldr.sys : $(ALL_OBJS)
 	@echo ===================================================== LINKING $@
-#	@$(LD) -N -Ttext=0x8000 --oformat=binary -s -o freeldr.sys $(F_OBJS)
-	@$(LD) $(LFLAGS) -Map freeldr.map -o freeldr.exe $(F_OBJS)
-#	@$(CC) -Wl,-Ttext=0x8000,-N,-Map,freeldr.map -o freeldr.exe $(F_OBJS)
-	@$(NM) --numeric-sort freeldr.exe > freeldr.sym
+	@$(LD) $(LFLAGS) -o freeldr.exe $(F_OBJS)
+ifeq ($(FULL_MAP),yes)
+	@$(OBJDUMP) -d -S freeldr.exe > freeldr.map
+else
+	@$(NM) --numeric-sort freeldr.exe > freeldr.map
+endif
 	@$(OBJCOPY) -O binary freeldr.exe freeldr.sys
 
 #############################################
@@ -358,7 +364,11 @@ freeldr.sys : $(ALL_OBJS)
 setupldr.sys : $(ALL_OBJS)
 	@echo ===================================================== LINKING $@
 	@$(LD) $(LFLAGS) -Map setupldr.map -o setupldr.exe $(S_OBJS)
-	@$(NM) --numeric-sort setupldr.exe > setupldr.sym
+ifeq ($(FULL_MAP),yes)
+	@$(OBJDUMP) -d -S setupldr.exe > setupldr.map
+else
+	@$(NM) --numeric-sort setupldr.exe > setupldr.map
+endif
 	@$(OBJCOPY) -O binary setupldr.exe setupldr.sys
 
 #############################################

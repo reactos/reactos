@@ -1,3 +1,8 @@
+Changes in v1.8.25 (10/30/2004) (chorns)
+
+- Support FULL_MAP command line option.
+- Allow DEBUG to be set on command line.
+
 Changes in v1.8.24 (09/20/2004) (hbirr)
 
 - Implemented the driver loading by the sequence of tag entries 
