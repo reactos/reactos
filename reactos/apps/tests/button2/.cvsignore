@@ -4,3 +4,4 @@ statst.sym
 statst.coff
 *.d
 *.o*.map
+*.map
