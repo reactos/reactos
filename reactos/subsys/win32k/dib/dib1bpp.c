@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib1bpp.c,v 1.9 2003/08/13 20:24:04 chorns Exp $ */
+/* $Id: dib1bpp.c,v 1.10 2003/08/22 08:03:51 gvg Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -124,7 +124,7 @@ DIB_1BPP_BitBltSrcCopy(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       else
 	{
 	  sy = SourcePoint->y + DestRect->bottom - DestRect->top - 1;
-	  for (j = DestRect->bottom - 1; DestRect->top <= j; j++)
+	  for (j = DestRect->bottom - 1; DestRect->top <= j; j--)
 	    {
 	      if (DestRect->left < SourcePoint->x)
 		{
@@ -158,7 +158,7 @@ DIB_1BPP_BitBltSrcCopy(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 		      sx--;
 		    }
 		}
-	      sy++;
+	      sy--;
 	    }
 	}
       break;
