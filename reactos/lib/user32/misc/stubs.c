@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.28 2003/08/02 16:56:13 gdalsnes Exp $
+/* $Id: stubs.c,v 1.29 2003/08/04 16:56:49 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -135,18 +135,6 @@ CopyImage(
 }
 
 
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-DragDetect(
-  HWND hwnd,
-  POINT pt)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
 
 
 /*

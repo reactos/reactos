@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.49 2003/07/28 08:09:51 ekohl Exp $
+/* $Id: window.c,v 1.50 2003/08/04 16:56:40 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -722,8 +722,7 @@ DeferWindowPos(HDWP hWinPosInfo,
 	       int cy,
 	       UINT uFlags)
 {
-  UNIMPLEMENTED;
-  return (HDWP)0;
+  return NtUserDeferWindowPos(hWinPosInfo, hWnd, hWndInsertAfter, x, y, cx, cy, uFlags);
 }
 
 
@@ -1056,8 +1055,7 @@ GetGUIThreadInfo(DWORD idThread,
 HWND STDCALL
 GetLastActivePopup(HWND hWnd)
 {
-  UNIMPLEMENTED;
-  return (HWND)0;
+  return NtUserGetLastActivePopup(hWnd);
 }
 
 
@@ -1067,7 +1065,7 @@ GetLastActivePopup(HWND hWnd)
 HWND STDCALL
 GetParent(HWND hWnd)
 {
-  return NtUserGetAncestor(hWnd, GA_PARENT);
+  return NtUserGetParent(hWnd);
 }
 
 
@@ -1095,25 +1093,24 @@ GetTitleBarInfo(HWND hwnd,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HWND STDCALL
 GetTopWindow(HWND hWnd)
 {
-  UNIMPLEMENTED;
-  return (HWND)0;
+  if (!hWnd) hWnd = GetDesktopWindow();
+  return GetWindow( hWnd, GW_CHILD );
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HWND STDCALL
 GetWindow(HWND hWnd,
 	  UINT uCmd)
 {
-  UNIMPLEMENTED;
-  return (HWND)0;
+  return NtUserGetWindow(hWnd, uCmd);
 }
 
 

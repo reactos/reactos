@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.10 2003/08/02 16:55:59 gdalsnes Exp $
+/* $Id: input.c,v 1.11 2003/08/04 16:56:40 gdalsnes Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -33,6 +33,20 @@
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
+
+
+/*
+ * @unimplemented
+ */
+WINBOOL
+STDCALL
+DragDetect(
+  HWND hWnd,
+  POINT pt)
+{
+  return NtUserDragDetect(hWnd, pt.x, pt.y);
+}
+
 
 /*
  * @unimplemented
