@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.1 2001/07/16 01:45:44 rex Exp $
+/* $Id: stubs.c,v 1.2 2001/10/01 16:31:12 rex Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -2152,4 +2152,9 @@ VarXor (DWORD Unknown1, DWORD Unknown2, DWORD Unknown3)
   FIXME;
 }
 
+VOID STDCALL
+UnknownOrdStub (VOID)
+{
+  FIXME;
+}
 
