@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: wizard.c,v 1.16 2004/11/27 13:33:40 ekohl Exp $
+/* $Id: wizard.c,v 1.17 2004/12/02 14:09:25 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -883,7 +883,7 @@ DestroyTimeZoneList(PSETUPDATA SetupData)
   SetupData->TimeZoneListTail = NULL;
 }
 
-
+#if 0
 static BOOL
 GetTimeZoneListIndex(LPDWORD lpIndex)
 {
@@ -984,6 +984,7 @@ GetTimeZoneListIndex(LPDWORD lpIndex)
 
   return FALSE;
 }
+#endif
 
 
 static VOID
@@ -994,7 +995,10 @@ ShowTimeZoneList(HWND hwnd, PSETUPDATA SetupData)
   DWORD dwEntryIndex = 0;
   DWORD dwCount;
 
+#if 0
   GetTimeZoneListIndex(&dwEntryIndex);
+#endif
+  dwEntryIndex = 85; /* GMT time zone */
 
   Entry = SetupData->TimeZoneListHead;
   while (Entry != NULL)
