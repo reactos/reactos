@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -45,9 +45,9 @@ ShutdownThreadMain(PVOID Context)
    /* Run the thread on the boot processor */
    KeSetSystemAffinityThread(1);
 
-   IoShutdownRegisteredDevices();
    CmShutdownRegistry();
    IoShutdownRegisteredFileSystems();
+   IoShutdownRegisteredDevices();
 
    PiShutdownProcessManager();
    MiShutdownMemoryManager();
