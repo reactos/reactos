@@ -1,4 +1,4 @@
-/* $Id: services.c,v 1.12 2003/08/28 13:38:24 gvg Exp $
+/* $Id: services.c,v 1.13 2003/11/15 15:08:32 gvg Exp $
  *
  * service control manager
  * 
@@ -31,6 +31,7 @@
 
 #define NTOS_MODE_USER
 #include <ntos.h>
+#include <stdio.h>
 #include <windows.h>
 
 #include "services.h"
