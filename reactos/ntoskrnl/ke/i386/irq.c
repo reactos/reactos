@@ -1,6 +1,23 @@
-/* $Id: irq.c,v 1.19 2002/05/02 23:45:33 dwelch Exp $
+/*
+ *  ReactOS kernel
+ *  Copyright (C) 1998, 1999, 2000, 2001, 2002 ReactOS Team
  *
- * COPYRIGHT:       See COPYING in the top level directory
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: irq.c,v 1.20 2002/05/06 22:25:50 dwelch Exp $
+ *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/irq.c
  * PURPOSE:         IRQ handling
@@ -373,6 +390,13 @@ KiInterruptDispatch (ULONG Vector, PKIRQ_TRAPFRAME Trapframe)
 
 VOID STDCALL
 KiInterruptDispatch2 (ULONG Irq, KIRQL old_level)
+/*
+ * FUNCTION: Calls all the interrupt handlers for a given irq.
+ * ARGUMENTS:
+ *        Irq - The number of the irq to call handlers for.
+ *        old_level - The irql of the processor when the irq took place.
+ * NOTES: Must be called at DIRQL.
+ */
 {
   PKINTERRUPT isr;
   PLIST_ENTRY current;
@@ -406,19 +430,6 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
  */
 {
    KIRQL old_level;
-   static ULONG Irq0Count = 0;
-
-#if 0
-   KTRAP_FRAME KernelTrapFrame;
-
-   KeIRQTrapFrameToTrapFrame(Trapframe, &KernelTrapFrame);
-   KeGetCurrentThread()->TrapFrame = &KernelTrapFrame;
-#endif /* DBG */
-
-   if (InterlockedIncrement(&Irq0Count) > 32)
-     {
-       __asm__("int $3\n\t");
-     }
 
    /*
     * At this point we have interrupts disabled, nothing has been done to
@@ -433,7 +444,6 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
 				 PROFILE_LEVEL - irq,
 				 &old_level))
      {
-       InterlockedDecrement(&Irq0Count);
        return;
      }
 
@@ -453,8 +463,9 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
     */
    HalEndSystemInterrupt (old_level, 0);
 
-   InterlockedDecrement(&Irq0Count);
-
+   /*
+    * Maybe do a reschedule as well.
+    */
    if (old_level < DISPATCH_LEVEL && irq == 0)
      {
        PsDispatchThread(THREAD_STATE_RUNNABLE);
