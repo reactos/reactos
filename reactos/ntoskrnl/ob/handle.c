@@ -169,6 +169,7 @@ ObDuplicateObject(PEPROCESS SourceProcess,
                                            ExSourceHandle);
   if (SourceHandleEntry == NULL)
     {
+      KeLeaveCriticalRegion();
       return STATUS_INVALID_HANDLE;
     }
 
@@ -506,7 +507,7 @@ ObDeleteHandle(PEPROCESS Process,
      
      return STATUS_SUCCESS;
    }
-
+   KeLeaveCriticalRegion();
    return STATUS_INVALID_HANDLE;
 }
 
