@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.62 2002/10/01 19:27:23 chorns Exp $
+/* $Id: npool.c,v 1.63 2002/11/05 20:47:05 hbirr Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -203,7 +203,7 @@ MiAddToTagHashTable(BLOCK_HDR* block)
 	  return;
 	}
       previous = current;
-      if ((PVOID)current->tag_next >= (PVOID)0xc1123160)
+      if (current->tag_next &&((PVOID)current->tag_next >= (PVOID)kernel_pool_base + NONPAGED_POOL_SIZE || (PVOID)current->tag_next < (PVOID)kernel_pool_base))
 	{
 	  DbgPrint("previous %x\n", previous);
 	}
@@ -596,7 +596,9 @@ merge_free_block(BLOCK_HDR* blk)
 	  (unsigned int)next)
 	{
 	  RemoveEntryList(&next->ListEntry);
-	  blk->Size = blk->Size + sizeof(BLOCK_HDR) + next->Size;
+	  blk->Size = blk->Size + next->Size;
+	  memset(next, 0xcc, sizeof(BLOCK_HDR));
+          EiFreeNonPagedPool += sizeof(BLOCK_HDR);
 	  EiNrFreeBlocks--;
 	}
     }
@@ -610,6 +612,8 @@ merge_free_block(BLOCK_HDR* blk)
 	{
 	  RemoveEntryList(&blk->ListEntry);
 	  previous->Size = previous->Size + sizeof(BLOCK_HDR) + blk->Size;
+	  memset(blk, 0xcc, sizeof(BLOCK_HDR));
+          EiFreeNonPagedPool += sizeof(BLOCK_HDR);
 	  EiNrFreeBlocks--;
 	}
     }
@@ -635,6 +639,7 @@ add_to_free_list(BLOCK_HDR* blk)
 	  blk->ListEntry.Blink = current_entry->Blink;
 	  current_entry->Blink->Flink = &blk->ListEntry;
 	  current_entry->Blink = &blk->ListEntry;
+          EiFreeNonPagedPool += blk->Size;
 	  EiNrFreeBlocks++;
 	  return;
 	}
@@ -642,6 +647,7 @@ add_to_free_list(BLOCK_HDR* blk)
       current_entry = current_entry->Flink;
     }
   InsertTailList(&FreeBlockListHead, &blk->ListEntry);
+  EiFreeNonPagedPool += blk->Size;
   EiNrFreeBlocks++;
 }
 
@@ -651,6 +657,7 @@ static void add_to_used_list(BLOCK_HDR* blk)
  */
 {
   InsertHeadList(&UsedBlockListHead, &blk->ListEntry);
+  EiUsedNonPagedPool += blk->Size;
   EiNrUsedBlocks++;
 }
 
@@ -658,6 +665,7 @@ static void add_to_used_list(BLOCK_HDR* blk)
 static void remove_from_free_list(BLOCK_HDR* current)
 {
   RemoveEntryList(&current->ListEntry);
+  EiFreeNonPagedPool -= current->Size;
   EiNrFreeBlocks--;
 }
 
@@ -665,6 +673,7 @@ static void remove_from_free_list(BLOCK_HDR* current)
 static void remove_from_used_list(BLOCK_HDR* current)
 {
   RemoveEntryList(&current->ListEntry);
+  EiUsedNonPagedPool -= current->Size;
   EiNrUsedBlocks--;
 }
 
@@ -684,20 +693,162 @@ inline static BLOCK_HDR* address_to_block(void* addr)
                ( ((int)addr) - sizeof(BLOCK_HDR) );
 }
 
-static BLOCK_HDR* grow_kernel_pool(unsigned int size, ULONG Tag, PVOID Caller)
+static BLOCK_HDR* lookup_block(unsigned int size)
+{
+   PLIST_ENTRY current_entry;
+   BLOCK_HDR* current;
+   BLOCK_HDR* best = NULL;
+   ULONG new_size;
+   PVOID block, block_boundary;
+    
+   current_entry = FreeBlockListHead.Flink;
+   if (size < PAGE_SIZE)
+   {
+      while (current_entry != &FreeBlockListHead)
+      {
+         DPRINT("current %x size %x tag_next %x\n",
+	        current, current->Size, current->tag_next);
+	 current = CONTAINING_RECORD(current_entry, BLOCK_HDR, ListEntry);
+         if (current->Size >= size && 
+	     (best == NULL || current->Size < best->Size)) 
+	 {
+	    best = current;
+	 }
+         current_entry = current_entry->Flink;
+      }
+   }
+   else
+   {
+      while (current_entry != &FreeBlockListHead)
+      {
+         DPRINT("current %x size %x tag_next %x\n",
+	        current, current->Size, current->tag_next);
+	 current = CONTAINING_RECORD(current_entry, BLOCK_HDR, ListEntry);
+
+	 block = block_to_address(current);
+	 block_boundary = (PVOID)PAGE_ROUND_UP((ULONG)block);
+	 new_size = (ULONG)block_boundary - (ULONG)block + size;
+	 if (new_size != size && (ULONG)block_boundary - (ULONG)block < sizeof(BLOCK_HDR))
+	 {
+	     new_size += PAGE_SIZE;
+	 }
+	 if (current->Size >= new_size && 
+	     (best == NULL || current->Size < best->Size))
+	 {
+	    best = current;
+	 }
+         current_entry = current_entry->Flink;
+      }
+   }
+   return best;
+}
+
+static void* take_block(BLOCK_HDR* current, unsigned int size,
+			ULONG Tag, PVOID Caller)
+/*
+ * FUNCTION: Allocate a used block of least 'size' from the specified
+ * free block
+ * RETURNS: The address of the created memory block
+ */
+{
+
+    BLOCK_HDR* blk;
+    if (size >= PAGE_SIZE)
+    {
+       blk = address_to_block((PVOID)PAGE_ROUND_UP(block_to_address (current)));
+       if (blk != current)
+       {
+          if ((ULONG)blk - (ULONG)current < sizeof(BLOCK_HDR))
+	  {
+             (ULONG)blk += PAGE_SIZE;
+	  }
+	  assert((ULONG)blk - (ULONG)current + size <= current->Size && (ULONG)blk - (ULONG)current >= sizeof(BLOCK_HDR));
+
+	  memset(blk, 0, sizeof(BLOCK_HDR));
+	  blk->Magic = BLOCK_HDR_FREE_MAGIC;
+	  blk->Size = current->Size - ((ULONG)blk - (ULONG)current);
+	  current->Size -= (blk->Size + sizeof(BLOCK_HDR));
+	  InsertHeadList(&current->ListEntry, &blk->ListEntry);
+          EiFreeNonPagedPool -= sizeof(BLOCK_HDR);
+          EiNrFreeBlocks++;
+	  current = blk;
+       }
+   }
+   /*
+    * If the block is much bigger than required then split it and
+    * return a pointer to the allocated section. If the difference
+    * between the sizes is marginal it makes no sense to have the
+    * extra overhead 
+    */
+   if (current->Size > size + sizeof(BLOCK_HDR))
+     {
+	BLOCK_HDR* free_blk;
+	
+	EiFreeNonPagedPool -= current->Size;
+	
+	/*
+	 * Replace the bigger block with a smaller block in the
+	 * same position in the list
+	 */
+        free_blk = (BLOCK_HDR *)(((int)current)
+				 + sizeof(BLOCK_HDR) + size);		
+	free_blk->Magic = BLOCK_HDR_FREE_MAGIC;
+	InsertHeadList(&current->ListEntry, &free_blk->ListEntry);
+	free_blk->Size = current->Size - (sizeof(BLOCK_HDR) + size);
+	
+	current->Size=size;
+	RemoveEntryList(&current->ListEntry);
+	add_to_used_list(current);
+	current->Magic = BLOCK_HDR_USED_MAGIC;
+	current->Tag = Tag;
+	current->Caller = Caller;
+	current->Dumped = FALSE;
+#ifdef TAG_STATISTICS_TRACKING
+	MiAddToTagHashTable(current);
+#endif /* TAG_STATISTICS_TRACKING */
+	
+	EiFreeNonPagedPool += free_blk->Size;
+	
+	VALIDATE_POOL;
+	return(block_to_address(current));
+     }
+   
+   /*
+    * Otherwise allocate the whole block
+    */
+   remove_from_free_list(current);
+   add_to_used_list(current);
+   
+   current->Magic = BLOCK_HDR_USED_MAGIC;   
+   current->Tag = Tag;
+   current->Caller = Caller;
+   current->Dumped = FALSE;
+#ifdef TAG_STATISTICS_TRACKING
+   MiAddToTagHashTable(current);
+#endif /* TAG_STATISTICS_TRACKING */
+
+   VALIDATE_POOL;
+   return(block_to_address(current));
+}
+
+static void* grow_kernel_pool(unsigned int size, ULONG Tag, PVOID Caller)
 /*
  * FUNCTION: Grow the executive heap to accomodate a block of at least 'size'
  * bytes
  */
 {
-   unsigned int total_size = size + sizeof(BLOCK_HDR);
-   unsigned int nr_pages = PAGE_ROUND_UP(total_size) / PAGE_SIZE;
-   unsigned int start;
-   BLOCK_HDR* used_blk=NULL;
-   BLOCK_HDR* free_blk=NULL;
+   ULONG nr_pages = PAGE_ROUND_UP(size + sizeof(BLOCK_HDR)) / PAGE_SIZE;
+   ULONG start;
+   BLOCK_HDR* blk=NULL;
    int i;
-   NTSTATUS Status;
    KIRQL oldIrql;
+   NTSTATUS Status;
+   PVOID block = NULL;
+
+   if (size >= PAGE_SIZE)
+   {
+      nr_pages++;
+   }
 
    start = (ULONG)MiAllocNonPagedPoolRegion(nr_pages);
  
@@ -716,7 +867,7 @@ static BLOCK_HDR* grow_kernel_pool(unsigned int size, ULONG Tag, PVOID Caller)
 	 }
        Status = MmCreateVirtualMapping(NULL,
 				       (PVOID)(start + (i*PAGE_SIZE)),
-				       PAGE_READWRITE,
+				       PAGE_READWRITE|PAGE_SYSTEM,
 				       Page,
 				       FALSE);
 	if (!NT_SUCCESS(Status))
@@ -726,114 +877,28 @@ static BLOCK_HDR* grow_kernel_pool(unsigned int size, ULONG Tag, PVOID Caller)
 	  }
      }
 
+   blk = (struct _BLOCK_HDR *)start;
+   memset(blk, 0, sizeof(BLOCK_HDR));
+   blk->Size = (nr_pages * PAGE_SIZE) - sizeof(BLOCK_HDR);
+   blk->Magic = BLOCK_HDR_FREE_MAGIC;
+   memset(block_to_address(blk), 0xcc, blk->Size);
+
    KeAcquireSpinLock(&MmNpoolLock, &oldIrql);
-   if ((PAGE_SIZE-(total_size%PAGE_SIZE))>(2*sizeof(BLOCK_HDR)))
-     {
-	used_blk = (struct _BLOCK_HDR *)start;
-	DPRINT("Creating block at %x\n",start);
-	used_blk->Magic = BLOCK_HDR_USED_MAGIC;
-        used_blk->Size = size;
-	add_to_used_list(used_blk);
-	
-	free_blk = (BLOCK_HDR *)(start + sizeof(BLOCK_HDR) + size);
-	DPRINT("Creating block at %x\n",free_blk);
-	free_blk->Magic = BLOCK_HDR_FREE_MAGIC;
-	free_blk->Size = (nr_pages * PAGE_SIZE) -((sizeof(BLOCK_HDR)*2) + size);
-	add_to_free_list(free_blk);
-	
-	EiFreeNonPagedPool = EiFreeNonPagedPool + free_blk->Size;
-	EiUsedNonPagedPool = EiUsedNonPagedPool + used_blk->Size;
-     }
-   else
-     {
-	used_blk = (struct _BLOCK_HDR *)start;
-	used_blk->Magic = BLOCK_HDR_USED_MAGIC;
-	used_blk->Size = (nr_pages * PAGE_SIZE) - sizeof(BLOCK_HDR);
-	add_to_used_list(used_blk);
-	
-	EiUsedNonPagedPool = EiUsedNonPagedPool + used_blk->Size;
-     }
+   add_to_free_list(blk);
+   merge_free_block(blk);
 
-   used_blk->Tag = Tag;
-   used_blk->Caller = Caller;
-   used_blk->Dumped = FALSE;
-#ifdef TAG_STATISTICS_TRACKING
-   MiAddToTagHashTable(used_blk);
-#endif /* TAG_STATISTICS_TRACKING */
-   
-   VALIDATE_POOL;
+   blk = lookup_block(size);
+   if (blk)
+   {
+      block = take_block(blk, size, Tag, Caller);
+      VALIDATE_POOL;
+   }
    KeReleaseSpinLock(&MmNpoolLock, oldIrql);
-   return(used_blk);
-}
-
-static void* take_block(BLOCK_HDR* current, unsigned int size,
-			ULONG Tag, PVOID Caller)
-/*
- * FUNCTION: Allocate a used block of least 'size' from the specified
- * free block
- * RETURNS: The address of the created memory block
- */
-{
-   /*
-    * If the block is much bigger than required then split it and
-    * return a pointer to the allocated section. If the difference
-    * between the sizes is marginal it makes no sense to have the
-    * extra overhead 
-    */
-   if (current->Size > (1 + size + sizeof(BLOCK_HDR)))
-     {
-	BLOCK_HDR* free_blk;
-	
-	EiFreeNonPagedPool = EiFreeNonPagedPool - current->Size;
-	
-	/*
-	 * Replace the bigger block with a smaller block in the
-	 * same position in the list
-	 */
-        free_blk = (BLOCK_HDR *)(((int)current)
-				 + sizeof(BLOCK_HDR) + size);		
-	free_blk->Magic = BLOCK_HDR_FREE_MAGIC;
-	InsertHeadList(&current->ListEntry, &free_blk->ListEntry);
-	free_blk->Size = current->Size - (sizeof(BLOCK_HDR) + size);
-	
-	current->Size=size;
-	RemoveEntryList(&current->ListEntry);
-	InsertHeadList(&UsedBlockListHead, &current->ListEntry);
-	EiNrUsedBlocks++;
-	current->Magic = BLOCK_HDR_USED_MAGIC;
-	current->Tag = Tag;
-	current->Caller = Caller;
-	current->Dumped = FALSE;
-#ifdef TAG_STATISTICS_TRACKING
-	MiAddToTagHashTable(current);
-#endif /* TAG_STATISTICS_TRACKING */
-	
-	EiUsedNonPagedPool = EiUsedNonPagedPool + current->Size;
-	EiFreeNonPagedPool = EiFreeNonPagedPool + free_blk->Size;
-	
-	VALIDATE_POOL;
-	return(block_to_address(current));
-     }
-   
-   /*
-    * Otherwise allocate the whole block
-    */
-   remove_from_free_list(current);
-   add_to_used_list(current);
-   
-   EiFreeNonPagedPool = EiFreeNonPagedPool - current->Size;
-   EiUsedNonPagedPool = EiUsedNonPagedPool + current->Size;
-
-   current->Magic = BLOCK_HDR_USED_MAGIC;   
-   current->Tag = Tag;
-   current->Caller = Caller;
-   current->Dumped = FALSE;
-#ifdef TAG_STATISTICS_TRACKING
-   MiAddToTagHashTable(current);
-#endif /* TAG_STATISTICS_TRACKING */
-
-   VALIDATE_POOL;
-   return(block_to_address(current));
+   if (block == NULL)
+   {
+       CHECKPOINT1;
+   }
+   return block;
 }
 
 #endif /* not WHOLE_PAGE_ALLOCATIONS */
@@ -904,11 +969,12 @@ VOID STDCALL ExFreeNonPagedPool (PVOID block)
 #endif /* TAG_STATISTICS_TRACKING */
    remove_from_used_list(blk);
    blk->Magic = BLOCK_HDR_FREE_MAGIC;
+   blk->Tag = 0;
+   blk->Caller = NULL;
+   blk->tag_next = NULL;
    add_to_free_list(blk);
    merge_free_block(blk);
 
-   EiUsedNonPagedPool = EiUsedNonPagedPool - blk->Size;
-   EiFreeNonPagedPool = EiFreeNonPagedPool + blk->Size;   
    VALIDATE_POOL;
    KeReleaseSpinLock(&MmNpoolLock, oldIrql);
 
@@ -942,8 +1008,6 @@ ExAllocateNonPagedPoolWithTag(ULONG Type, ULONG Size, ULONG Tag, PVOID Caller)
    return(block);
 
 #else /* not WHOLE_PAGE_ALLOCATIONS */
-   BLOCK_HDR* current = NULL;
-   PLIST_ENTRY current_entry;
    PVOID block;
    BLOCK_HDR* best = NULL;
    KIRQL oldIrql;
@@ -952,9 +1016,21 @@ ExAllocateNonPagedPoolWithTag(ULONG Type, ULONG Size, ULONG Tag, PVOID Caller)
 	      Size,Caller);
    
    KeAcquireSpinLock(&MmNpoolLock, &oldIrql);
-   
+
    VALIDATE_POOL;
-   
+
+#if 0
+   /* after some allocations print the npaged pool stats */
+#ifdef TAG_STATISTICS_TRACKING
+   {
+       static ULONG counter = 0;
+       if (counter++ % 100000 == 0)
+       {
+          MiDebugDumpNonPagedPoolStats(FALSE);   
+       }
+   }
+#endif
+#endif
    /*
     * accomodate this useful idiom
     */
@@ -964,39 +1040,26 @@ ExAllocateNonPagedPoolWithTag(ULONG Type, ULONG Size, ULONG Tag, PVOID Caller)
 	KeReleaseSpinLock(&MmNpoolLock, oldIrql);
 	return(NULL);
      }
-   
+   /* Make the size dword alligned, this makes the block dword alligned */  
+   Size = ROUND_UP(Size, 4);
    /*
     * Look for an already created block of sufficent size
     */
-   current_entry = FreeBlockListHead.Flink;   
-   while (current_entry != &FreeBlockListHead)
-     {
-       DPRINT("current %x size %x tag_next %x\n",current,current->Size,
-	       current->tag_next);
-	current = CONTAINING_RECORD(current_entry, BLOCK_HDR, ListEntry);
-	if (current->Size >= Size && 
-	    (best == NULL || current->Size < best->Size)) 
-	  {
-	    best = current;
-	  }
-	current_entry = current_entry->Flink;
-     }
-   if (best != NULL)
-     {
-	block=take_block(best, Size, Tag, Caller);
-	VALIDATE_POOL;
-	memset(block,0,Size);
-	KeReleaseSpinLock(&MmNpoolLock, oldIrql);
-	return(block);
-     }
-	  
-   
-   /*
-    * Otherwise create a new block
-    */
-   KeReleaseSpinLock(&MmNpoolLock, oldIrql);
-   block=block_to_address(grow_kernel_pool(Size, Tag, Caller));
-   memset(block, 0, Size);
+   best = lookup_block(Size);
+   if (best == NULL)
+   {
+       KeReleaseSpinLock(&MmNpoolLock, oldIrql);
+       block = grow_kernel_pool(Size, Tag, Caller);
+       assert(block != NULL);
+       memset(block,0,Size);
+   }
+   else
+   {
+       block=take_block(best, Size, Tag, Caller);
+       VALIDATE_POOL;
+       KeReleaseSpinLock(&MmNpoolLock, oldIrql);
+       memset(block,0,Size);
+   }
    return(block);
 #endif /* WHOLE_PAGE_ALLOCATIONS */
 }
