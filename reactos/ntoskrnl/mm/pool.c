@@ -1,4 +1,4 @@
-/* $Id: pool.c,v 1.28 2004/04/10 22:35:25 gdalsnes Exp $
+/* $Id: pool.c,v 1.29 2004/06/23 21:50:59 ion Exp $
  * 
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -146,7 +146,20 @@ ExAllocatePoolWithQuota (POOL_TYPE PoolType, ULONG NumberOfBytes)
    return(ExAllocatePoolWithQuotaTag(PoolType, NumberOfBytes, TAG_NONE));
 }
 
-
+/*
+ * @unimplemented
+ */
+PVOID
+STDCALL
+ExAllocatePoolWithTagPriority(
+    IN POOL_TYPE PoolType,
+    IN SIZE_T NumberOfBytes,
+    IN ULONG Tag,
+    IN EX_POOL_PRIORITY Priority
+    )
+{
+	UNIMPLEMENTED;
+}
 /*
  * @unimplemented
  */
@@ -193,6 +206,20 @@ ExFreePoolWithTag(IN PVOID Block, IN ULONG Tag)
 {
    /* FIXME: Validate the tag */
    ExFreePool(Block);
+}
+
+/*
+ * @unimplemented
+ */
+SIZE_T
+STDCALL
+ExQueryPoolBlockSize (                          
+    IN PVOID PoolBlock,                         
+    OUT PBOOLEAN QuotaCharged                   
+    )
+{
+	UNIMPLEMENTED;
+	return FALSE;
 }
 
 /* EOF */
