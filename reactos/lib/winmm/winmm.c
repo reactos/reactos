@@ -2661,6 +2661,7 @@ UINT WINAPI waveOutPrepareHeader(HWAVEOUT hWaveOut,
 				 WAVEHDR* lpWaveOutHdr, UINT uSize)
 {
     LPWINE_MLD		wmld;
+    UINT		result;
 
     TRACE("(%p, %p, %u);\n", hWaveOut, lpWaveOutHdr, uSize);
 
@@ -2670,7 +2671,17 @@ UINT WINAPI waveOutPrepareHeader(HWAVEOUT hWaveOut,
     if ((wmld = MMDRV_Get(hWaveOut, MMDRV_WAVEOUT, FALSE)) == NULL)
 	return MMSYSERR_INVALHANDLE;
 
-    return MMDRV_Message(wmld, WODM_PREPARE, (DWORD_PTR)lpWaveOutHdr, uSize, TRUE);
+    if ((result = MMDRV_Message(wmld, WODM_PREPARE, (DWORD_PTR)lpWaveOutHdr,
+                                uSize, TRUE)) != MMSYSERR_NOTSUPPORTED)
+        return result;
+
+    if (lpWaveOutHdr->dwFlags & WHDR_INQUEUE)
+	return WAVERR_STILLPLAYING;
+
+    lpWaveOutHdr->dwFlags |= WHDR_PREPARED;
+    lpWaveOutHdr->dwFlags &= ~WHDR_DONE;
+
+    return MMSYSERR_NOERROR;
 }
 
 /**************************************************************************
@@ -2680,6 +2691,7 @@ UINT WINAPI waveOutUnprepareHeader(HWAVEOUT hWaveOut,
 				   LPWAVEHDR lpWaveOutHdr, UINT uSize)
 {
     LPWINE_MLD		wmld;
+    UINT		result;
 
     TRACE("(%p, %p, %u);\n", hWaveOut, lpWaveOutHdr, uSize);
 
@@ -2693,7 +2705,17 @@ UINT WINAPI waveOutUnprepareHeader(HWAVEOUT hWaveOut,
     if ((wmld = MMDRV_Get(hWaveOut, MMDRV_WAVEOUT, FALSE)) == NULL)
 	return MMSYSERR_INVALHANDLE;
 
-    return MMDRV_Message(wmld, WODM_UNPREPARE, (DWORD_PTR)lpWaveOutHdr, uSize, TRUE);
+    if ((result = MMDRV_Message(wmld, WODM_UNPREPARE, (DWORD_PTR)lpWaveOutHdr,
+                                uSize, TRUE)) != MMSYSERR_NOTSUPPORTED)
+        return result;
+
+    if (lpWaveOutHdr->dwFlags & WHDR_INQUEUE)
+	return WAVERR_STILLPLAYING;
+
+    lpWaveOutHdr->dwFlags &= ~WHDR_PREPARED;
+    lpWaveOutHdr->dwFlags |= WHDR_DONE;
+
+    return MMSYSERR_NOERROR;
 }
 
 /**************************************************************************
