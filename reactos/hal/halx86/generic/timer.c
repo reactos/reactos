@@ -165,7 +165,7 @@ static ULONG Read8254Timer(VOID)
 }
 
 
-static VOID WaitFor8254Wraparound(VOID)
+VOID WaitFor8254Wraparound(VOID)
 {
   ULONG CurCount, PrevCount = ~0;
   LONG Delta;
