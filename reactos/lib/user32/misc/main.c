@@ -18,7 +18,7 @@ int main(int argc, char **argv)
 	MSG msg;
 	WNDCLASSEX wc1;
 	HINSTANCE hInst = 0;
-	int nWinMode = 0;
+	int nWinMode = SW_SHOWMAXIMIZED;
 
 	wc1.hInstance = hInst;
 	wc1.lpszClassName = szName;
@@ -38,18 +38,22 @@ int main(int argc, char **argv)
 
 	if ( !RegisterClassEx(&wc1)) return 0;
 
-	hwnd = CreateWindowEx(0, szName, "test", WS_OVERLAPPEDWINDOW,
+	hwnd = CreateWindowEx(0, szName, "test", WS_OVERLAPPEDWINDOW| WS_VISIBLE,
 		CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,
 		NULL,NULL,hInst, NULL);
+
+      
 
 	ShowWindow(hwnd,nWinMode);
 	UpdateWindow(hwnd);
 
-	while(GetMessage(&msg,NULL, 0, 0))
-	{
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
-	}
+	SendMessageW( hwnd, WM_MOVE, 0,MAKELONG(0,0));
+	//while(GetMessage(&msg,NULL, 0, 0))
+	//{
+	//	TranslateMessage(&msg);
+	//	DispatchMessage(&msg);
+	//}
+	Sleep(10000);
 	return msg.wParam;
 }
 

@@ -640,7 +640,8 @@ WINBOOL MSG_PeekMessage( LPMSG msg, HWND hwnd, WORD first, WORD last,
     while(1)
     {    
 	hQueue   = GetFastQueue();
-        msgQueue = (MESSAGEQUEUE *)GlobalLock( hQueue );
+ //       msgQueue = (MESSAGEQUEUE *)GlobalLock( hQueue );
+	msgQueue = (MESSAGEQUEUE *) hQueue;
         if (!msgQueue) return FALSE;
         msgQueue->changeBits = 0;
 
@@ -1045,10 +1046,16 @@ HTASK GetCurrentTask(void)
 }
 
 //FIXME
-HQUEUE hThreadQ;
+int init = 0;
+MESSAGEQUEUE Queue;
+HQUEUE hThreadQ = &Queue;;
 
 HQUEUE  GetThreadQueue( DWORD thread )
 {
+	if ( init == 0 ) {
+		init = 1;
+		memset(&Queue,0,sizeof(MESSAGEQUEUE));
+	}
 	return hThreadQ;
 }
 

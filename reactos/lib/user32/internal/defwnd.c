@@ -6,17 +6,25 @@
  */
 
 #include <stdlib.h>
+#include <windows.h>
 #include <user32/win.h>
-#include "user.h"
-#include "heap.h"
-#include "nonclient.h"
-#include "winpos.h"
-#include "dce.h"
-#include "sysmetrics.h"
-#include "debug.h"
-#include "spy.h"
-#include "tweak.h"
-#include "wine/winuser.h"
+#include <user32/nc.h>
+#include <user32/heapdup.h>
+#include <user32/winpos.h>
+#include <user32/dce.h>
+#include <user32/sysmetr.h>
+#include <user32/paint.h>
+#include <user32/debug.h>
+
+
+void  FillWindow( HWND hwndParent, HWND hwnd, HDC hdc, HBRUSH hbrush );
+
+#define WM_CTLCOLOR             0x0019
+#define WM_ISACTIVEICON         0x0035
+#define WM_DROPOBJECT	    	0x022A
+#define WM_QUERYDROPOBJECT  	0x022B
+
+#define DRAG_FILE		0x454C4946
 
   /* Last COLOR id */
 #define COLOR_MAX   COLOR_BTNHIGHLIGHT
@@ -33,7 +41,7 @@ static short iMenuSysKey = 0;
  *
  * Handle the WM_WINDOWPOSCHANGED message.
  */
-static void DEFWND_HandleWindowPosChanged( WND *wndPtr, UINT flags )
+void DEFWND_HandleWindowPosChanged( WND *wndPtr, UINT flags )
 {
     WPARAM wp = SIZE_RESTORED;
 
@@ -61,16 +69,15 @@ void DEFWND_SetTextA( WND *wndPtr, LPCSTR text )
 {
     if (!text) text = "";
     if (wndPtr->text) HeapFree( GetProcessHeap(), 0, wndPtr->text );
-    wndPtr->text = HEAP_strdupA( GetProcessHeap(), 0, text );    
-    wndPtr->pDriver->pSetText(wndPtr, wndPtr->text);
+    wndPtr->text = (void *)HEAP_strdupA( GetProcessHeap(), 0, text );    
 }
 
 
-void DEFWND_SetTextW( WND *wndPtr, LPCSTR text )
+void DEFWND_SetTextW( WND *wndPtr, LPCWSTR text )
 {
-    if (!text) text = "";
+    if (!text) text = L"";
     if (wndPtr->text) HeapFree( GetProcessHeap(), 0, wndPtr->text );
-    wndPtr->text = HEAP_strdupW( GetProcessHeap(), 0, text );    
+    wndPtr->text = (void *)HEAP_strdupW( GetProcessHeap(), 0, text );    
 
 }
 /***********************************************************************
@@ -108,11 +115,11 @@ HBRUSH DEFWND_ControlColor( HDC hDC, UINT ctlType )
 /***********************************************************************
  *           DEFWND_SetRedraw
  */
-static void DEFWND_SetRedraw( WND* wndPtr, WPARAM wParam )
+void DEFWND_SetRedraw( WND* wndPtr, WPARAM wParam )
 {
     WINBOOL bVisible = wndPtr->dwStyle & WS_VISIBLE;
 
-    TRACE(win,"%04x %i\n", wndPtr->hwndSelf, (wParam!=0) );
+    DPRINT("%04x %i\n", (UINT)wndPtr->hwndSelf, (wParam!=0) );
 
     if( wParam )
     {
@@ -138,16 +145,19 @@ static void DEFWND_SetRedraw( WND* wndPtr, WPARAM wParam )
  *
  * Default window procedure for messages that are the same in Win and Win.
  */
-static LRESULT DEFWND_DefWinProc( WND *wndPtr, UINT msg, WPARAM wParam,
+LRESULT DEFWND_DefWinProc( WND *wndPtr, UINT msg, WPARAM wParam,
                                   LPARAM lParam )
 {
+    POINT pt;
     switch(msg)
     {
     case WM_NCPAINT:
 	return NC_HandleNCPaint( wndPtr->hwndSelf, (HRGN)wParam );
 
     case WM_NCHITTEST:
-        return NC_HandleNCHitTest( wndPtr->hwndSelf, MAKEPOINT(lParam) );
+	pt.x = LOWORD(lParam);  
+        pt.y = HIWORD(lParam);  
+        return NC_HandleNCHitTest( wndPtr->hwndSelf, pt);
 
     case WM_NCLBUTTONDOWN:
 	return NC_HandleNCLButtonDown( wndPtr, wParam, lParam );
@@ -175,7 +185,7 @@ static LRESULT DEFWND_DefWinProc( WND *wndPtr, UINT msg, WPARAM wParam,
 	    TrackPopupMenu(wndPtr->hSysMenu,TPM_LEFTALIGN | TPM_RETURNCMD,LOWORD(lParam),HIWORD(lParam),0,wndPtr->hwndSelf,NULL);
 	    DestroyMenu(wndPtr->hSysMenu);
 	    */
-	    FIXME(win,"Display default popup menu\n");
+	    DPRINT("Fixme Display default popup menu\n");
 	  /* Track system popup if click was in the caption area. */
 	  }
 	break;
@@ -204,7 +214,7 @@ static LRESULT DEFWND_DefWinProc( WND *wndPtr, UINT msg, WPARAM wParam,
 			SYSMETRICS_CXICON)/2;
 	        int y = (wndPtr->rectWindow.bottom - wndPtr->rectWindow.top -
 			SYSMETRICS_CYICON)/2;
-		TRACE(win,"Painting class icon: vis rect=(%i,%i - %i,%i)\n",
+		DPRINT("Painting class icon: vis rect=(%i,%i - %i,%i)\n",
 		ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right, ps.rcPaint.bottom );
 	        DrawIcon( hdc, x, y, wndPtr->class->hIcon );
 	      }
@@ -272,7 +282,10 @@ static LRESULT DEFWND_DefWinProc( WND *wndPtr, UINT msg, WPARAM wParam,
 	return (LRESULT)DEFWND_ControlColor( (HDC)wParam, HIWORD(lParam) );
 	
     case WM_GETTEXTLENGTH:
-        if (wndPtr->text) return (LRESULT)strlen(wndPtr->text);
+        if (wndPtr->text && wndPtr->class->bUnicode == TRUE) 
+		return (LRESULT)lstrlenW(wndPtr->text);
+	else if (wndPtr->text && wndPtr->class->bUnicode == FALSE) 
+		return (LRESULT)lstrlenA(wndPtr->text);
         return 0;
 
     case WM_SETCURSOR:
@@ -283,8 +296,9 @@ static LRESULT DEFWND_DefWinProc( WND *wndPtr, UINT msg, WPARAM wParam,
 	return NC_HandleSetCursor( wndPtr->hwndSelf, wParam, lParam );
 
     case WM_SYSCOMMAND:
-        return NC_HandleSysCommand( wndPtr->hwndSelf, wParam,
-                                    MAKEPOINT(lParam) );
+	pt.x = LOWORD(lParam);  
+        pt.y = HIWORD(lParam);  
+        return NC_HandleSysCommand( wndPtr->hwndSelf, wParam,pt);
 
     case WM_KEYDOWN:
 	if(wParam == VK_F10) iF10Key = VK_F10;
@@ -357,7 +371,8 @@ static LRESULT DEFWND_DefWinProc( WND *wndPtr, UINT msg, WPARAM wParam,
 	break; 
 
     case WM_CANCELMODE:
-	if (wndPtr->parent == WIN_GetDesktop()) EndMenu();
+	//if (wndPtr->parent == WIN_GetDesktop()) 
+		//EndMenu();
 	if (GetCapture() == wndPtr->hwndSelf) ReleaseCapture();
 	break;
 
@@ -374,6 +389,7 @@ static LRESULT DEFWND_DefWinProc( WND *wndPtr, UINT msg, WPARAM wParam,
 
     case WM_QUERYDRAGICON:
         {
+#if 0
             HICON hIcon=0;
             UINT len;
 
@@ -382,7 +398,10 @@ static LRESULT DEFWND_DefWinProc( WND *wndPtr, UINT msg, WPARAM wParam,
                 if((hIcon=LoadIcon(wndPtr->hInstance,MAKEINTRESOURCE(len))))
                     return (LRESULT)hIcon;
             return (LRESULT)LoadIcon(0,IDI_APPLICATION);
-        }
+        
+#endif
+	}
+	return 0;
         break;
 
     case WM_ISACTIVEICON:
@@ -393,6 +412,18 @@ static LRESULT DEFWND_DefWinProc( WND *wndPtr, UINT msg, WPARAM wParam,
 	return 1;
     }
     return 0;
+}
+
+
+/***********************************************************************
+ *           FillWindow    (USER.324)
+ */
+void  FillWindow( HWND hwndParent, HWND hwnd, HDC hdc, HBRUSH hbrush )
+{
+    RECT rect;
+    GetClientRect( hwnd, &rect );
+   // DPtoLP16( hdc, (LPPOINT16)&rect, 2 );
+   // PaintRect( hwndParent, hwnd, hdc, hbrush, &rect );
 }
 
 

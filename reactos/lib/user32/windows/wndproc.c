@@ -1,6 +1,9 @@
 #include <windows.h>
 #include <user32/win.h>
 #include <user32/winproc.h>
+#include <user32/nc.h>
+//#include <user32/defwnd.h>
+
 //#include <user32/heapdup.h>
 
 #define MDICREATESTRUCTA MDICREATESTRUCT
@@ -104,25 +107,132 @@ LRESULT WINAPI CallWindowProcW(
 */
 
 
-//FIXME DefWindowProcW should be fundamental
-
-LRESULT WINAPI DefWindowProcA(
-	 HWND hwnd,
-	 UINT msg,
-	 WPARAM wParam,
-         LPARAM lParam )
+/***********************************************************************
+ *  DefWindowProcA [USER32.126] 
+ *
+ */
+LRESULT WINAPI DefWindowProcA( HWND hwnd, UINT msg, WPARAM wParam,
+                                 LPARAM lParam )
 {
-	return 0;
+    WND * wndPtr = WIN_FindWndPtr( hwnd );
+    LRESULT result = 0;
+
+    if (!wndPtr) return 0;
+//    SPY_EnterMessage( SPY_DEFWNDPROC, hwnd, msg, wParam, lParam );
+
+    switch(msg)
+    {
+    case WM_NCCREATE:
+	{
+	    CREATESTRUCTA *cs = (CREATESTRUCTA *)lParam;
+	    if (cs->lpszName) DEFWND_SetTextA( wndPtr, cs->lpszName );
+	    result = 1;
+	}
+        break;
+
+    case WM_NCCALCSIZE:
+        result = NC_HandleNCCalcSize( wndPtr, (RECT *)lParam );
+        break;
+
+    case WM_WINDOWPOSCHANGING:
+	result = WINPOS_HandleWindowPosChanging( wndPtr,
+                                                   (WINDOWPOS *)lParam );
+        break;
+
+    case WM_WINDOWPOSCHANGED:
+	{
+	    WINDOWPOS * winPos = (WINDOWPOS *)lParam;
+            DEFWND_HandleWindowPosChanged( wndPtr, winPos->flags );
+	}
+        break;
+
+    case WM_GETTEXT:
+        if (wParam && wndPtr->text)
+        {
+            lstrcpynA( (LPSTR)lParam, wndPtr->text, wParam );
+            result = (LRESULT)lstrlenA( (LPSTR)lParam );
+        }
+        break;
+
+    case WM_SETTEXT:
+	DEFWND_SetTextA( wndPtr, (LPSTR)lParam );
+	NC_HandleNCPaint( hwnd , (HRGN)1 );  /* Repaint caption */
+        break;
+
+    default:
+        result = DEFWND_DefWinProc( wndPtr, msg, wParam, lParam );
+        break;
+    }
+
+//    SPY_ExitMessage( SPY_RESULT_DEFWND, hwnd, msg, result );
+    return result;
 }
 
 
-LRESULT WINAPI DefWindowProcW( 
-    HWND hwnd,      
-    UINT msg,       
-    WPARAM wParam,  
-    LPARAM lParam ) 
+/***********************************************************************
+ * DefWindowProcW [USER32.127] Calls default window message handler
+ * 
+ * Calls default window procedure for messages not processed 
+ *  by application.
+ *
+ *  RETURNS
+ *     Return value is dependent upon the message.
+*/
+LRESULT WINAPI DefWindowProcW( HWND hwnd, UINT msg, WPARAM wParam,
+                                 LPARAM lParam )
 {
- 	return 0;
+    WND * wndPtr = WIN_FindWndPtr( hwnd );
+    LRESULT result = 0;
+
+    if (!wndPtr) return 0;
+  //  SPY_EnterMessage( SPY_DEFWNDPROC, hwnd, msg, wParam, lParam );
+
+    switch(msg)
+    {
+    case WM_NCCREATE:
+	{
+	    CREATESTRUCTW *cs = (CREATESTRUCTW *)lParam;
+	    if (cs->lpszName) DEFWND_SetTextW( wndPtr, cs->lpszName );
+	    result = 1;
+	}
+        break;
+
+    case WM_NCCALCSIZE:
+        result = NC_HandleNCCalcSize( wndPtr, (RECT *)lParam );
+        break;
+
+    case WM_WINDOWPOSCHANGING:
+	result = WINPOS_HandleWindowPosChanging( wndPtr,
+                                                   (WINDOWPOS *)lParam );
+        break;
+
+    case WM_WINDOWPOSCHANGED:
+	{
+	    WINDOWPOS * winPos = (WINDOWPOS *)lParam;
+            DEFWND_HandleWindowPosChanged( wndPtr, winPos->flags );
+	}
+        break;
+
+    case WM_GETTEXT:
+        if (wParam && wndPtr->text)
+        {
+            lstrcpynW( (LPWSTR)lParam, wndPtr->text, wParam );
+            result = (LRESULT)lstrlenW( (LPWSTR)lParam );
+        }
+        break;
+
+    case WM_SETTEXT:
+	DEFWND_SetTextW( wndPtr, (LPSTR)lParam );
+	NC_HandleNCPaint( hwnd , (HRGN)1 );  /* Repaint caption */
+        break;
+
+    default:
+        result = DEFWND_DefWinProc( wndPtr, msg, wParam, lParam );
+        break;
+    }
+
+  //  SPY_ExitMessage( SPY_RESULT_DEFWND, hwnd, msg, result );
+    return result;
 }
 
 /**********************************************************************

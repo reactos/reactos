@@ -2,6 +2,7 @@
 #include <windows.h>
 #include <user32/class.h>
 #include <user32/win.h>
+#include <user32/dce.h>
 #include <user32/heapdup.h>
 
 CLASS *rootClass;
@@ -100,8 +101,10 @@ ATOM STDCALL RegisterClassExA(const WNDCLASSEX* wc)
     classPtr->hbrBackground = (HBRUSH)wc->hbrBackground;
     classPtr->bUnicode = FALSE;
 
-    classPtr->dce         = (wc->style & CS_CLASSDC) ?
-                                 CreateDC( "DISPLAY", NULL,NULL,NULL ) : NULL;
+    if (wc->style & CS_CLASSDC)
+       classPtr->dce         = DCE_AllocDCE( 0, DCE_CLASS_DC ) ;
+    else classPtr->style |= CS_OWNDC;
+
     
 
     if ( wc->lpszMenuName != NULL ) {

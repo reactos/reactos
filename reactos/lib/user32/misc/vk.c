@@ -1,5 +1,10 @@
 #include <windows.h>
 
+SHORT GetKeyState(    int  nVirtKey 	)
+{
+	return 0;
+}
+
 int
 STDCALL
 ToAscii(

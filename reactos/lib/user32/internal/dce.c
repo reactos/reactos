@@ -1,9 +1,11 @@
 #include <windows.h>
 #include <user32/dce.h>
 #include <user32/win.h>
+#include <user32/debug.h>
 
 DCE *firstDCE = 0;
 HDC defaultDCstate = 0;
+
 
 /***********************************************************************
  *           DCE_AllocDCE
@@ -82,7 +84,7 @@ void DCE_DeleteClipRgn( DCE* dce )
 
     dce->hClipRgn = 0;
 
-    //TRACE(dc,"\trestoring VisRgn\n");
+    //DPRINT("\trestoring VisRgn\n");
 
     RestoreVisRgn(dce->hDC);
    
@@ -317,4 +319,92 @@ INT DCE_ExcludeRgn( HDC hDC, WND* wnd, HRGN hRgn )
   OffsetRgn(hRgn, pt.x, pt.y);
 
   return ExtSelectClipRgn( hDC, hRgn, RGN_DIFF );
+}
+
+/***********************************************************************
+ *   DCE_InvalidateDCE
+ *
+ * It is called from SetWindowPos() - we have to mark as dirty all busy
+ * DCE's for windows that have pWnd->parent as an ansector and whose client 
+ * rect intersects with specified update rectangle. 
+ */
+WINBOOL DCE_InvalidateDCE(WND* pWnd, const RECT* pRectUpdate)
+{
+    WND* wndScope = pWnd->parent;
+    WINBOOL bRet = FALSE;
+
+    if( wndScope )
+    {
+	DCE *dce;
+
+	DPRINT("scope hwnd = %04x, (%i,%i - %i,%i)\n",
+		     wndScope->hwndSelf, pRectUpdate->left,pRectUpdate->top,
+		     pRectUpdate->right,pRectUpdate->bottom);
+//	if(TRACE_ON(dc)) 
+//	  DCE_DumpCache();
+
+ 	/* walk all DCEs and fixup non-empty entries */
+
+	for (dce = firstDCE; (dce); dce = dce->next)
+	{
+	    if( !(dce->DCXflags & DCX_DCEEMPTY) )
+	    {
+		WND* wndCurrent = WIN_FindWndPtr(dce->hwndCurrent);
+
+		if( wndCurrent && wndCurrent != WIN_GetDesktop() )
+		{
+		    WND* wnd = wndCurrent;
+		    INT xoffset = 0, yoffset = 0;
+
+		    if( (wndCurrent == wndScope) && !(dce->DCXflags & DCX_CLIPCHILDREN) ) continue;
+
+		    /* check if DCE window is within the z-order scope */
+
+		    for( wnd = wndCurrent; wnd; wnd = wnd->parent )
+		    {
+			if( wnd == wndScope )
+		 	{
+			    RECT wndRect;
+
+			    wndRect = wndCurrent->rectWindow;
+
+			    OffsetRect( &wndRect, xoffset - wndCurrent->rectClient.left, 
+						    yoffset - wndCurrent->rectClient.top);
+
+			    if (pWnd == wndCurrent ||
+				IntersectRect( &wndRect, &wndRect, pRectUpdate ))
+			    { 
+				if( !(dce->DCXflags & DCX_DCEBUSY) )
+				{
+				    /* Don't bother with visible regions of unused DCEs */
+
+				    DPRINT("\tpurged %08x dce [%04x]\n", 
+						(unsigned)dce, wndCurrent->hwndSelf);
+
+				    dce->hwndCurrent = 0;
+				    dce->DCXflags &= DCX_CACHE;
+				    dce->DCXflags |= DCX_DCEEMPTY;
+				}
+				else
+				{
+				    /* Set dirty bits in the hDC and DCE structs */
+
+				    DPRINT("\tfixed up %08x dce [%04x]\n", 
+						(unsigned)dce, wndCurrent->hwndSelf);
+
+				    dce->DCXflags |= DCX_DCEDIRTY;
+				    //SetHookFlags(dce->hDC, DCHF_INVALIDATEVISRGN);
+				    bRet = TRUE;
+				}
+			    }
+			    break;
+			}
+			xoffset += wnd->rectClient.left;
+			yoffset += wnd->rectClient.top;
+		    }
+		}
+	    }
+	} /* dce list */
+    }
+    return bRet;
 }

@@ -5,7 +5,7 @@ LPVOID HEAP_strdupAtoW(HANDLE  hHeap,DWORD  dwFlags,	LPCSTR lpszAsciiString )
 {	
 	int i;
 	INT len = lstrlenA(lpszAsciiString);
-	LPWSTR lpszUnicodeString = HeapAlloc( GetProcessHeap(), 0, (len + 1)*2 );
+	LPWSTR lpszUnicodeString = HeapAlloc(hHeap, dwFlags, (len + 1)*2 );
 	for(i=0;i<len;i++)
 	 	lpszUnicodeString[i] = lpszAsciiString[i];
 	lpszUnicodeString[i] = 0;
@@ -19,7 +19,7 @@ LPVOID HEAP_strdupWtoA(HANDLE  hHeap,DWORD  dwFlags,	LPCWSTR lpszUnicodeString )
 {
 	int i;
 	INT len = lstrlenW(lpszUnicodeString);
-	LPSTR lpszAsciiString = HeapAlloc( GetProcessHeap(), 0, (len + 1) );
+	LPSTR lpszAsciiString =  HeapAlloc(hHeap, dwFlags,  (len + 1) );
 	for(i=0;i<len;i++)
 		lpszAsciiString[i] = lpszUnicodeString[i];
 	lpszAsciiString[i] = 0;
@@ -28,16 +28,7 @@ LPVOID HEAP_strdupWtoA(HANDLE  hHeap,DWORD  dwFlags,	LPCWSTR lpszUnicodeString )
 
 //FIXME should use multi byte strings instead
 
-LPVOID HEAP_wcsdup(HANDLE  hHeap, DWORD  dwFlags, LPCWSTR lpszUnicodeString )
-{
-	int i;
-	INT len = lstrlenW(lpszUnicodeString);
-	LPWSTR lpszString = HeapAlloc( GetProcessHeap(), 0, (len + 1)*2 );
-	for(i=0;i<len;i++)
-		lpszString[i] = lpszUnicodeString[i];
-	lpszString[i] = 0;
-	return lpszString;
-}
+
 
 int lstrcpynWtoA( LPSTR ptr1, LPWSTR ptr2, int n )
 {
@@ -92,19 +83,19 @@ int lpstrncpyW( LPWSTR ptr1,LPWSTR ptr2, int n)
 	}
 }
 
-LPSTR HEAP_strdupA(LPSTR ptr)
+LPSTR HEAP_strdupA(HANDLE  hHeap,DWORD  dwFlags,LPCSTR ptr)
 {
 	 INT len = lstrlenA(ptr);
-	 LPSTR lpszString = HeapAlloc( GetProcessHeap(), 0, (len + 1) );
+	 LPSTR lpszString = HeapAlloc(hHeap, dwFlags, (len + 1) );
 	 if ( lpszString != NULL )
 	 	lstrcpyA(lpszString,ptr);
 	 
 	 return lpszString;
 }
-LPWSTR HEAP_strdupW(LPWSTR ptr)
+LPWSTR HEAP_strdupW(HANDLE  hHeap,DWORD  dwFlags,LPCWSTR ptr)
 {
 	 INT len = lstrlenW(ptr);
-	 LPWSTR lpszString = HeapAlloc( GetProcessHeap(), 0, (len + 1)*2 );
+	 LPWSTR lpszString = HeapAlloc(hHeap, dwFlags, (len + 1)*2 );
 	 if ( lpszString != NULL )
 	 	lstrcpyW(lpszString,ptr);
 	 

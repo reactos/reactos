@@ -293,7 +293,7 @@ void QUEUE_WaitBits( WORD bits )
 
     for (;;)
     {
-        if (!(queue = (MESSAGEQUEUE *)GlobalLock( GetFastQueue() ))) return;
+        if (!(queue = (MESSAGEQUEUE *)( GetFastQueue() ))) return;
 
         if (queue->changeBits & bits)
         {

@@ -80,7 +80,8 @@ HANDLE WIN_CreateWindowEx( CREATESTRUCTW *cs, ATOM classAtom)
     wndPtr->hmemTaskQ      = GetFastQueue();
     wndPtr->hrgnUpdate     = 0;
     wndPtr->hwndLastActive = wndPtr->hwndSelf;
-    wndPtr->dwStyle        = cs->style & ~WS_VISIBLE;
+//    wndPtr->dwStyle        = cs->style & ~WS_VISIBLE;
+      wndPtr->dwStyle        = cs->style | WS_VISIBLE;
     wndPtr->dwExStyle      = cs->dwExStyle;
     wndPtr->wIDmenu        = 0;
     wndPtr->helpContext    = 0;
@@ -828,6 +829,7 @@ void WIN_UpdateNCArea(WND* wnd, BOOL bUpdate)
  */
 WINBOOL WIN_IsWindowDrawable( WND* wnd, WINBOOL icon )
 {
+
   if( (wnd->dwStyle & WS_MINIMIZE &&
        icon && wnd->class->hIcon) ||
      !(wnd->dwStyle & WS_VISIBLE) ) return FALSE;

@@ -1342,7 +1342,7 @@ WINBOOL MENU_PatchResidentPopup( HQUEUE checkQueue, WND* checkWnd )
                 str++;
             }
 	    
-            if ( ! (text = HEAP_wcsdup(GetProcessHeap,0, str ) )) 
+            if ( ! (text = HEAP_strdupW(GetProcessHeap,0, str ) )) 
 		return FALSE;
             item->text = text;
         }

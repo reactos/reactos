@@ -4,6 +4,11 @@ WINBOOL STDCALL DrawEdge( HDC hdc, LPRECT rc, UINT edge, UINT flags )
 {
 
 }
+WINBOOL DrawIcon(HDC  hDC,	int  xLeft,	int  yTop,	HICON  hIcon 	
+   )
+{
+	return FALSE;
+}
 
 WINBOOL
 STDCALL
