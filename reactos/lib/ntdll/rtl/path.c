@@ -1,4 +1,4 @@
-/* $Id: path.c,v 1.25 2003/11/17 20:35:46 sedwards Exp $
+/* $Id: path.c,v 1.26 2003/11/30 20:48:07 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -555,6 +555,9 @@ RtlGetFullPathName_U(PWSTR DosName,
 	DPRINT("RtlGetFullPathName_U %S %ld %p %p\n",
 	       DosName, size, buf, FilePart);
 
+  /* FIXME: this code is a mess! We should use Wine's implementation
+  of this function, since it's cleaner and IMO better. -Gunnar */
+  
 	if (!DosName || !*DosName)
 		return 0;
 
@@ -601,9 +604,15 @@ DPRINT("type %ld\n", type);
 		case 6:		/* \\.\xxx */
 			break;
 
-		case 2:		/* x:\xxx  */
-			*DosName = RtlUpcaseUnicodeChar (*DosName);
-			break;
+		case 2:
+      break;
+#if 0    
+  /* this makes a direct CreateFileW call crash! */
+
+    case 2:   /* x:\xxx  */
+       *DosName = RtlUpcaseUnicodeChar (*DosName);
+       break;
+#endif      
 
 		case 3:		/* x:xxx   */
 			drive = RtlUpcaseUnicodeChar (*DosName);
@@ -674,11 +683,17 @@ CHECKPOINT;
 			return 0;
 	}
 
+
 	RtlReleasePebLock();
 
 	DPRINT("TempFullPathName \'%S\' DosName \'%S\' len %ld\n", TempFullPathName, DosName, len);
 	/* add dosname to prefix */
 	memcpy (TempFullPathName + templen, DosName, len * sizeof(WCHAR));
+  
+  /* dirty/temporary fix for the CreateFileW problem */
+  if (type == 2){
+    TempFullPathName[0] = RtlUpcaseUnicodeChar(TempFullPathName[0]);
+  }
 	len += templen;
 	TempFullPathName[len] = 0;
 
@@ -753,6 +768,7 @@ RtlDosPathNameToNtPathName_U(PWSTR dosname,
 	ULONG Offset;
 	WCHAR fullname[MAX_PATH + 1];
 	PWSTR Buffer = NULL;
+
 
 	RtlAcquirePebLock ();
 
@@ -848,7 +864,6 @@ RtlDosPathNameToNtPathName_U(PWSTR dosname,
 	}
 
 	RtlReleasePebLock();
-
 	return TRUE;
 }
 
