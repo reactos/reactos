@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.1 2003/03/19 16:03:02 mtempel Exp $
+# $Id: makefile,v 1.2 2003/08/15 18:51:31 royce Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -6,9 +6,11 @@ TARGET_NORC = yes
 
 TARGET_TYPE = program
 
-TARGET_APPTYPE = console
+TARGET_APPTYPE = windows
 
 TARGET_NAME = shaptest
+
+TARGET_CFLAGS = -Wall -Werror
 
 TARGET_SDKLIBS = kernel32.a gdi32.a
 

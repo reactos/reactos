@@ -15,90 +15,95 @@
 HFONT tf;
 LRESULT WINAPI MainWndProc(HWND, UINT, WPARAM, LPARAM);
 
-void __stdcall PolygonTest(HDC Desktop)
+void PolygonTest ( HDC hdc )
 {
-	HPEN BluePen;  
-	HPEN OldPen;
-	HBRUSH RedBrush;
-	HBRUSH OldBrush;
-	POINT lpPointsAlternate[5];
-	POINT lpPointsWinding[5];
-	DWORD Mode;
+  HPEN BluePen, OldPen;
+  HBRUSH RedBrush, OldBrush;
+  DWORD Mode;
+  POINT PointsAlternate[] =
+  {
+    { 20, 80 },
+    { 60, 20 },
+    { 90, 80 },
+    { 20, 40 },
+    { 100, 40 }
+  };
+  POINT PointsWinding[] =
+  {
+    { 130, 80 },
+    { 170, 20 },
+    { 200, 80 },
+    { 130, 40 },
+    { 210, 40 }
+  };
+  POINT Tri1[] =
+  {
+    { 3, 3 },
+    { 5, 3 },
+    { 3, 5 }
+  };
+  POINT Tri2[] =
+  {
+    { 7, 3 },
+    { 7, 7 },
+    { 3, 7 },
+  };
 
-	//create a pen to draw the shape
-	BluePen = CreatePen(PS_SOLID, 3, RGB(0, 0, 0xff));
-	RedBrush = CreateSolidBrush(RGB(0xff, 0, 0));
+  //create a pen to draw the shape
+  BluePen = CreatePen(PS_SOLID, 1, RGB(0, 0, 0xff));
+  RedBrush = CreateSolidBrush(RGB(0xff, 0, 0));
 
-	//initialize a set of points for alternate.
-	lpPointsAlternate[0].x = 20;
-	lpPointsAlternate[0].y = 80; //{20,80};
-	lpPointsAlternate[1].x = 60;
-	lpPointsAlternate[1].y = 20; //{60,20};
-	lpPointsAlternate[2].x = 90;
-	lpPointsAlternate[2].y = 80; //{90,80};
-	lpPointsAlternate[3].x = 20;
-	lpPointsAlternate[3].y = 40; //{20,40};
-	lpPointsAlternate[4].x = 100;
-	lpPointsAlternate[4].y = 40; //{100,40};
+  //initialize a set of points for alternate.
+  /*lpPointsAlternate[0].x = 20;
+  lpPointsAlternate[0].y = 80; //{20,80};
+  lpPointsAlternate[1].x = 60;
+  lpPointsAlternate[1].y = 20; //{60,20};
+  lpPointsAlternate[2].x = 90;
+  lpPointsAlternate[2].y = 80; //{90,80};
+  lpPointsAlternate[3].x = 20;
+  lpPointsAlternate[3].y = 40; //{20,40};
+  lpPointsAlternate[4].x = 100;
+  lpPointsAlternate[4].y = 40; //{100,40};
 
-	//initialize a set of points for winding.
-	lpPointsWinding[0].x = 130;
-	lpPointsWinding[0].y = 80; //{130,80};
-	lpPointsWinding[1].x = 170;
-	lpPointsWinding[1].y = 20; //{170,20};
-	lpPointsWinding[2].x = 200;
-	lpPointsWinding[2].y = 80; //{200,80};
-	lpPointsWinding[3].x = 130;
-	lpPointsWinding[3].y = 40; //{130,40};
-	lpPointsWinding[4].x = 210;
-	lpPointsWinding[4].y = 40; //{210,40};
+  //initialize a set of points for winding.
+  lpPointsWinding[0].x = 130;
+  lpPointsWinding[0].y = 80; //{130,80};
+  lpPointsWinding[1].x = 170;
+  lpPointsWinding[1].y = 20; //{170,20};
+  lpPointsWinding[2].x = 200;
+  lpPointsWinding[2].y = 80; //{200,80};
+  lpPointsWinding[3].x = 130;
+  lpPointsWinding[3].y = 40; //{130,40};
+  lpPointsWinding[4].x = 210;
+  lpPointsWinding[4].y = 40; //{210,40};
+*/
+  OldPen = (HPEN)SelectObject(hdc, BluePen);
+  OldBrush = (HBRUSH)SelectObject(hdc, RedBrush);
 
-	OldPen = (HPEN)SelectObject(Desktop, BluePen);
-	OldBrush = (HBRUSH)SelectObject(Desktop, RedBrush);
+  Mode = GetPolyFillMode(hdc);
 
-	Mode = GetPolyFillMode(Desktop);
+  SetPolyFillMode(hdc, ALTERNATE);
+  Polygon(hdc,PointsAlternate,sizeof(PointsAlternate)/sizeof(PointsAlternate[0]));
 
-	SetPolyFillMode(Desktop, ALTERNATE);
-	Polygon(Desktop,lpPointsAlternate,5);
+  SetPolyFillMode(hdc, WINDING);
+  Polygon(hdc,PointsWinding,sizeof(PointsWinding)/sizeof(PointsWinding[0]));
 
-	SetPolyFillMode(Desktop, WINDING);
-	Polygon(Desktop,lpPointsWinding,5);
-	
-	//cleanup
-	SetPolyFillMode(Desktop, Mode);
-	SelectObject(Desktop, OldPen);
-	SelectObject(Desktop, OldBrush);
-	DeleteObject(BluePen);
-	DeleteObject(RedBrush);
+  Polygon(hdc,Tri1,sizeof(Tri1)/sizeof(Tri1[0]));
+  Polygon(hdc,Tri2,sizeof(Tri2)/sizeof(Tri2[0]));
 
+  Rectangle ( hdc, 3, 15, 7, 20 );
+
+  //cleanup
+  SetPolyFillMode(hdc, Mode);
+  DeleteObject ( SelectObject(hdc, OldPen) );
+  DeleteObject ( SelectObject(hdc, OldBrush) );
 }
 
 
-void shaptest( HDC DevCtx ){
-  HDC  Desktop, MyDC, DC24;
-  HPEN  RedPen, GreenPen, BluePen, WhitePen;
-  HBITMAP  MyBitmap, DIB24;
-  HFONT  hf, tf;
-  BITMAPINFOHEADER BitInf;
-  BITMAPINFO BitPalInf;
-  HRGN hRgn1, hRgn2, hRgn3;
-  HBRUSH BlueBrush, DefBrush;
-  int sec,Xmod,Ymod;
-  char tbuf[5];
-
-
-  BlueBrush = CreateSolidBrush( RGB(0, 0, 0xff) );
-  DefBrush = SelectObject( DevCtx, BlueBrush );
-
-  SelectObject( DevCtx, DefBrush );
-  DeleteObject( BlueBrush );
-
-  // Create a blue pen and select it into the DC
-  BluePen = CreatePen(PS_SOLID, 8, RGB(0, 0, 0xff));
-  SelectObject(DevCtx, BluePen);
-
+void shaptest( HDC hdc )
+{
   //Test the Polygon routine.
-  PolygonTest(DevCtx);
+  PolygonTest(hdc);
 }
 
 
@@ -116,8 +121,8 @@ WinMain(HINSTANCE hInstance,
   wc.lpfnWndProc = MainWndProc;
   wc.style = CS_VREDRAW | CS_HREDRAW;
   wc.hInstance = hInstance;
-  wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-  wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+  wc.hIcon = (HICON)LoadIcon(NULL, (LPCTSTR)IDI_APPLICATION);
+  wc.hCursor = (HCURSOR)LoadCursor(NULL, (LPCTSTR)IDC_ARROW);
   wc.hbrBackground = (HBRUSH)GetStockObject(GRAY_BRUSH);
   wc.lpszMenuName = NULL;
   wc.cbClsExtra = 0;
@@ -125,7 +130,7 @@ WinMain(HINSTANCE hInstance,
   if (RegisterClass(&wc) == 0)
     {
       fprintf(stderr, "RegisterClass failed (last error 0x%X)\n",
-	      GetLastError());
+	      (unsigned int)GetLastError());
       return(1);
     }
 
@@ -143,7 +148,7 @@ WinMain(HINSTANCE hInstance,
   if (hWnd == NULL)
     {
       fprintf(stderr, "CreateWindow failed (last error 0x%X)\n",
-	      GetLastError());
+	      (unsigned int)GetLastError());
       return(1);
     }
 
@@ -166,27 +171,25 @@ WinMain(HINSTANCE hInstance,
 
 LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	PAINTSTRUCT ps;
-	HDC hDC;
-	RECT clr, wir;
-        char spr[100], sir[100];
+  PAINTSTRUCT ps;
+  HDC hDC;
 
-	switch(msg)
-	{
-	
-	case WM_PAINT:
-	  hDC = BeginPaint(hWnd, &ps);
-	  shaptest( hDC );
-	  EndPaint(hWnd, &ps);
-	  break;
+  switch(msg)
+  {
+  
+  case WM_PAINT:
+    hDC = BeginPaint(hWnd, &ps);
+    shaptest( hDC );
+    EndPaint(hWnd, &ps);
+    break;
 
-	case WM_DESTROY:
-	  PostQuitMessage(0);
-	  break;
+  case WM_DESTROY:
+    PostQuitMessage(0);
+    break;
 
-	default:
-	  return DefWindowProc(hWnd, msg, wParam, lParam);
-	}
-	return 0;
+  default:
+    return DefWindowProc(hWnd, msg, wParam, lParam);
+  }
+  return 0;
 }
 

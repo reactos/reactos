@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fillshap.c,v 1.21 2003/07/14 09:43:11 gvg Exp $ */
+/* $Id: fillshap.c,v 1.22 2003/08/15 18:51:32 royce Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -83,23 +83,24 @@ W32kPie(HDC  hDC,
 //even-numbered polygon sides on each scan line. That is, GDI fills the area between the 
 //first and second side, between the third and fourth side, and so on. 
 extern BOOL FillPolygon_ALTERNATE(PDC dc,
-                                  SURFOBJ *SurfObj,
-                                  PBRUSHOBJ BrushObj,
-                                  MIX RopMode,
-                                  CONST PPOINT Points,
-                                  int Count,
-                                  RECTL BoundRect);
+				  SURFOBJ *SurfObj,
+				  PBRUSHOBJ BrushObj,
+				  MIX RopMode,
+				  CONST PPOINT Points,
+				  int Count,
+				  RECTL BoundRect);
 
 
 //WINDING Selects winding mode (fills any region with a nonzero winding value). 
 //When the fill mode is WINDING, GDI fills any region that has a nonzero winding value. 
 //This value is defined as the number of times a pen used to draw the polygon would go around the region. 
 //The direction of each edge of the polygon is important. 
-extern BOOL FillPolygon_WINDING(SURFOBJ *SurfObj,
-                                PBRUSHOBJ BrushObj,MIX RopMode,
-                                CONST PPOINT Points,
-                                int Count,
-                                RECTL BoundRect);
+extern BOOL FillPolygon_WINDING(PDC dc,
+				SURFOBJ *SurfObj,
+				PBRUSHOBJ BrushObj,MIX RopMode,
+				CONST PPOINT Points,
+				int Count,
+				RECTL BoundRect);
 #endif
 
 //This implementation is blatantly ripped off from W32kRectangle
@@ -122,7 +123,7 @@ W32kPolygon(HDC  hDC,
 
   DPRINT("In W32kPolygon()\n");
   
-  if (NULL == dc || NULL == Points || Count < 2)
+  if (NULL == dc || NULL == UnsafePoints || Count < 2)
     {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return FALSE;
@@ -154,22 +155,22 @@ W32kPolygon(HDC  hDC,
   //ei not yet implemented ASSERT(RectBounds);
 
   if (PATH_IsPathOpen(dc->w.path)) 
-    {	  
+    {
       ret = PATH_Polygon(hDC, Points, Count);
-    } 
-  else 
+    }
+  else
     {
       /* Get the current pen. */
       pen = (PENOBJ*) GDIOBJ_LockObj(dc->w.hPen, GO_PEN_MAGIC);
       ASSERT(pen);
       OutBrushObj = (PBRUSHOBJ) PenToBrushObj(dc, pen);
       GDIOBJ_UnlockObj(dc->w.hPen, GO_PEN_MAGIC);
-	
+
       DestRect.left   = Points[0].x;
       DestRect.right  = Points[0].x;
       DestRect.top    = Points[0].y;
       DestRect.bottom = Points[0].y;
-	  
+
       for (CurrentPoint = 1; CurrentPoint < Count; ++CurrentPoint)
 	{
 	  DestRect.left     = MIN(DestRect.left, Points[CurrentPoint].x);
@@ -181,19 +182,20 @@ W32kPolygon(HDC  hDC,
       /* Now fill the polygon with the current brush. */
       FillBrushObj = (BRUSHOBJ*) GDIOBJ_LockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
       /* determine the fill mode to fill the polygon. */
+#if 1
       if (WINDING == dc->w.polyFillMode)
 	{
-	  ret = FillPolygon_WINDING(SurfObj,  FillBrushObj, dc->w.ROPmode, Points, Count, DestRect);
+	  ret = FillPolygon_WINDING(dc, SurfObj,  FillBrushObj, dc->w.ROPmode, Points, Count, DestRect);
 	}
       else /* default */
 	{
 	  ret = FillPolygon_ALTERNATE(dc, SurfObj,  FillBrushObj, dc->w.ROPmode, Points, Count, DestRect);
 	}
-
+#endif
       // Draw the Polygon Edges with the current pen
       for (CurrentPoint = 0; CurrentPoint < Count; ++CurrentPoint)
-	{ 
-          POINT To, From, Next;
+	{
+	  POINT To, From; //, Next;
 
 	  /* Let CurrentPoint be i
 	   * if i+1 > Count, Draw a line from Points[i] to Points[0]
@@ -209,39 +211,6 @@ W32kPolygon(HDC  hDC,
 	      To = Points[CurrentPoint + 1];
 	    }
 
-	  /* Special handling of lower right corner of a rectangle. If we
-	   * don't treat it specially, it will end up looking like this:
-	   *
-	   *                *
-	   *                *
-	   *                *
-	   *       *********
-	   */
-	  if (3 < Count)
-	    {
-	      if (Count <= CurrentPoint + 2)
-		{
-		  Next = Points[CurrentPoint + 2 - Count];
-		}
-	      else
-		{
-		  Next = Points[CurrentPoint + 2];
-		}
-	      if (From.x == To.x &&
-	          From.y <= To.y &&
-	          To.y == Next.y &&
-	          Next.x <= To.x)
-		{
-		  To.y++;
-		}
-	      else if (From.y == To.y &&
-	               From.x <= To.x &&
-	               To.x == Next.x &&
-	               Next.y <= To.y)
-		{
-		  To.x++;
-		}
-	    }
 	  DPRINT("Polygon Making line from (%d,%d) to (%d,%d)\n", From.x, From.y, To.x, To.y );
 	  ret = IntEngLineTo(SurfObj,
 	                     dc->CombinedClip,
@@ -254,6 +223,17 @@ W32kPolygon(HDC  hDC,
 	                     dc->w.ROPmode); /* MIX */
 		  
 	}
+#if 0
+      /* determine the fill mode to fill the polygon. */
+      if (WINDING == dc->w.polyFillMode)
+      {
+	ret = FillPolygon_WINDING(dc, SurfObj,  FillBrushObj, dc->w.ROPmode, Points, Count, DestRect);
+      }
+      else /* default */
+      {
+	ret = FillPolygon_ALTERNATE(dc, SurfObj,  FillBrushObj, dc->w.ROPmode, Points, Count, DestRect);
+      }
+#endif
       GDIOBJ_UnlockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
     }
   
@@ -297,9 +277,12 @@ W32kRectangle(HDC  hDC,
   RectBounds = GDIOBJ_LockObj(dc->w.hGCClipRgn, GO_REGION_MAGIC);
   //ei not yet implemented ASSERT(RectBounds);
 
-  if(PATH_IsPathOpen(dc->w.path)) {
+  if(PATH_IsPathOpen(dc->w.path))
+  {
     ret = PATH_Rectangle(hDC, LeftRect, TopRect, RightRect, BottomRect);
-  } else {
+  }
+  else
+  {
     // Draw the rectangle with the current pen
     pen = (PENOBJ*) GDIOBJ_LockObj(dc->w.hPen, GO_PEN_MAGIC);
     ASSERT(pen);
