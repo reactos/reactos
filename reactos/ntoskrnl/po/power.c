@@ -12,6 +12,7 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#define MB_INFO_FLAG_ACPI_TABLE         0x00001000
 PDEVICE_NODE PopSystemPowerDeviceNode = NULL;
 BOOLEAN PopAcpiPresent = FALSE;
 
@@ -191,9 +192,16 @@ PopSetSystemPowerState(
   return Status;
 }
 
-VOID INIT_FUNCTION
-PoInit(VOID)
+VOID 
+INIT_FUNCTION
+PoInit(PLOADER_PARAMETER_BLOCK LoaderBlock, 
+       BOOLEAN ForceAcpiDisable)
 {
+    /* Set the ACPI State to False if it's been forced that way */
+    if (ForceAcpiDisable) PopAcpiPresent = FALSE;
+    
+    /* Otherwise check the LoaderBlock's Flag */
+    PopAcpiPresent = LoaderBlock->Flags & MB_INFO_FLAG_ACPI_TABLE;
 }
 
 /*

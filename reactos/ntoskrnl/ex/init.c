@@ -305,7 +305,10 @@ ParseAndCacheLoadedModules(PBOOLEAN SetupBoot)
 inline
 VOID
 STDCALL
-ParseCommandLine(PULONG MaxMem, PBOOLEAN NoGuiBoot, PBOOLEAN BootLog)
+ParseCommandLine(PULONG MaxMem, 
+                 PBOOLEAN NoGuiBoot, 
+                 PBOOLEAN BootLog, 
+                 PBOOLEAN ForceAcpiDisable)
 {
     PCHAR p1, p2; 
     
@@ -356,6 +359,10 @@ ParseCommandLine(PULONG MaxMem, PBOOLEAN NoGuiBoot, PBOOLEAN BootLog)
             
             p2 += 7;
             *BootLog = TRUE;
+        } else if (!_strnicmp(p2, "NOACPI", 6)) {
+            
+            p2 += 6;
+            *ForceAcpiDisable = TRUE;
         }
         
         p1 = p2;
@@ -375,6 +382,7 @@ ExpInitializeExecutive(VOID)
     BOOLEAN BootLog = FALSE;
     ULONG MaxMem = 0;
     BOOLEAN SetupBoot = TRUE;
+    BOOLEAN ForceAcpiDisable = FALSE;
     LARGE_INTEGER Timeout;
     HANDLE ProcessHandle;
     HANDLE ThreadHandle;
@@ -396,7 +404,7 @@ ExpInitializeExecutive(VOID)
     NtEarlyInitVdm();
 
     /* Parse Command Line Settings */
-    ParseCommandLine(&MaxMem, &NoGuiBoot, &BootLog);
+    ParseCommandLine(&MaxMem, &NoGuiBoot, &BootLog, &ForceAcpiDisable);
     
     /* Initialize Kernel Memory Address Space */
     MmInit1(FirstKrnlPhysAddr,
@@ -507,7 +515,7 @@ ExpInitializeExecutive(VOID)
     IoInit();
     
     /* TBD */
-    PoInit();
+    PoInit((PLOADER_PARAMETER_BLOCK)&KeLoaderBlock, ForceAcpiDisable);
   
     /* Initialize the Registry (Hives are NOT yet loaded!) */
     CmInitializeRegistry();

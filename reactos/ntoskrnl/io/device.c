@@ -244,17 +244,41 @@ IoGetDeviceAttachmentBaseRef(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 STDCALL
-IoGetDiskDeviceObject(
-    IN  PDEVICE_OBJECT  FileSystemDeviceObject,
-    OUT PDEVICE_OBJECT  *DiskDeviceObject
-    )
+IoGetDiskDeviceObject(IN  PDEVICE_OBJECT  FileSystemDeviceObject,
+                      OUT PDEVICE_OBJECT  *DiskDeviceObject)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+#if 0
+    PDEVOBJ_EXTENSION DeviceExtension;
+    PVPB Vpb;
+    KIRQL OldIrql;
+    
+    /* Make sure there's a VPB */
+    if (!FileSystemDeviceObject->Vpb) return STATUS_INVALID_PARAMETER;
+    
+    /* Acquire it */
+    IoAcquireVpbSpinLock(&OldIrql);
+    
+    /* Get the Device Extension */
+    DeviceExtension = FileSystemDeviceObject->DeviceObjectExtension;
+    
+    /* Make sure this one has a VPB too */
+    Vpb = DeviceExtension->Vpb;
+    if (!Vpb) return STATUS_INVALID_PARAMETER;
+    
+    /* Make sure someone it's mounted */
+    if ((!Vpb->ReferenceCount) || (Vpb->Flags & VPB_MOUNTED)) return STATUS_VOLUME_DISMOUNTED;
+    
+    /* Return the Disk Device Object */
+    *DiskDeviceObject = Vpb->RealDevice;
+    
+    /* Release the lock */
+    IoReleaseVpbSpinLock(OldIrql);
+#endif
+    return STATUS_SUCCESS;
 }
 
 /*
