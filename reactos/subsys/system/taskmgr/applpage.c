@@ -74,7 +74,7 @@ LRESULT CALLBACK ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, 
     LV_COLUMN   column;
     TCHAR       szTemp[256];
     int         cx, cy;
-
+    
     switch (message) {
     case WM_INITDIALOG:
 
@@ -159,21 +159,21 @@ LRESULT CALLBACK ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, 
         InvalidateRect(hApplicationPageListCtrl, NULL, TRUE);
         
         GetClientRect(hApplicationPageEndTaskButton, &rc);
-        MapWindowPoints(hApplicationPageEndTaskButton, hDlg, (LPPOINT)(&rc), (sizeof(RECT)/sizeof(POINT)) );
+        MapWindowPoints(hApplicationPageEndTaskButton, hDlg, (LPPOINT)(PRECT)(&rc), (sizeof(RECT)/sizeof(POINT)) );
         cx = rc.left + nXDifference;
         cy = rc.top + nYDifference;
         SetWindowPos(hApplicationPageEndTaskButton, NULL, cx, cy, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
         InvalidateRect(hApplicationPageEndTaskButton, NULL, TRUE);
         
         GetClientRect(hApplicationPageSwitchToButton, &rc);
-        MapWindowPoints(hApplicationPageSwitchToButton, hDlg, (LPPOINT)(&rc), (sizeof(RECT)/sizeof(POINT)) );
+        MapWindowPoints(hApplicationPageSwitchToButton, hDlg, (LPPOINT)(PRECT)(&rc), (sizeof(RECT)/sizeof(POINT)) );
         cx = rc.left + nXDifference;
         cy = rc.top + nYDifference;
         SetWindowPos(hApplicationPageSwitchToButton, NULL, cx, cy, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
         InvalidateRect(hApplicationPageSwitchToButton, NULL, TRUE);
         
         GetClientRect(hApplicationPageNewTaskButton, &rc);
-        MapWindowPoints(hApplicationPageNewTaskButton, hDlg, (LPPOINT)(&rc), (sizeof(RECT)/sizeof(POINT)) );
+        MapWindowPoints(hApplicationPageNewTaskButton, hDlg, (LPPOINT)(PRECT)(&rc), (sizeof(RECT)/sizeof(POINT)) );
         cx = rc.left + nXDifference;
         cy = rc.top + nYDifference;
         SetWindowPos(hApplicationPageNewTaskButton, NULL, cx, cy, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
@@ -260,6 +260,8 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
     TCHAR szText[260];
     BOOL  bLargeIcon;
     BOOL  bHung = FALSE;
+    HICON* xhIcon = (HICON*)&hIcon;
+
     typedef int (FAR __stdcall *IsHungAppWindowProc)(HWND);
     IsHungAppWindowProc IsHungAppWindow;
 
@@ -284,14 +286,14 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
 
     /* Get the icon for this window */
     hIcon = NULL;
-    SendMessageTimeout(hWnd, WM_GETICON, bLargeIcon ? ICON_BIG /*1*/ : ICON_SMALL /*0*/, 0, 0, 1000, (unsigned long*)&hIcon);
+    SendMessageTimeout(hWnd, WM_GETICON,bLargeIcon ? ICON_BIG /*1*/ : ICON_SMALL /*0*/, 0, 0, 1000, (PDWORD_PTR)xhIcon);
 
     if (!hIcon)
     {
         hIcon = (HICON)GetClassLong(hWnd, bLargeIcon ? GCL_HICON : GCL_HICONSM);
         if (!hIcon) hIcon = (HICON)GetClassLong(hWnd, bLargeIcon ? GCL_HICONSM : GCL_HICON);
-        if (!hIcon) SendMessageTimeout(hWnd, WM_QUERYDRAGICON, 0, 0, 0, 1000, (unsigned long*)&hIcon);
-        if (!hIcon) SendMessageTimeout(hWnd, WM_GETICON, bLargeIcon ? ICON_SMALL /*0*/ : ICON_BIG /*1*/, 0, 0, 1000, (unsigned long*)&hIcon);
+        if (!hIcon) SendMessageTimeout(hWnd, WM_QUERYDRAGICON, 0, 0, 0, 1000, (PDWORD_PTR)xhIcon);
+        if (!hIcon) SendMessageTimeout(hWnd, WM_GETICON, bLargeIcon ? ICON_SMALL /*0*/ : ICON_BIG /*1*/, 0, 0, 1000, (PDWORD_PTR)xhIcon);
     }
 
     if (!hIcon)

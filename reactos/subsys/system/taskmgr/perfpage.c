@@ -78,7 +78,7 @@ void AdjustFrameSize(HWND hCntrl, HWND hDlg, int nXDifference, int nYDifference,
     int		cx, cy, sx, sy;
 
     GetClientRect(hCntrl, &rc);
-    MapWindowPoints(hCntrl, hDlg, (LPPOINT)(&rc), (sizeof(RECT)/sizeof(POINT)));
+    MapWindowPoints(hCntrl, hDlg, (LPPOINT)(PRECT)(&rc), (sizeof(RECT)/sizeof(POINT)));
     if (pos) {
         cx = rc.left;
         cy = rc.top;
