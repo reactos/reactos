@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.6 2000/08/24 19:09:12 ekohl Exp $
+/* $Id: xhaldrv.c,v 1.7 2000/08/25 15:55:02 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -7,14 +7,6 @@
  * PROGRAMMER:      Eric Kohl (ekohl@rz-online.de)
  * UPDATE HISTORY:
  *                  Created 19/06/2000
- */
-
-/*
- * TODO:
- *  - Read disk signature in xHalIoReadPartitionTable().
- *  - Build correct system path from nt device name or arc name.
- *    For example: \Device\Harddisk0\Partition1\reactos ==> C:\reactos
- *    Or: multi(0)disk(0)rdisk(0)partition(1)\reactos ==> C:\reactos
  */
 
 /* INCLUDES *****************************************************************/
@@ -32,6 +24,7 @@
 #define  PARTITION_MAGIC    0xaa55
 #define  PART_MAGIC_OFFSET  0x01fe
 #define  PARTITION_OFFSET   0x01be
+#define  SIGNATURE_OFFSET   0x01b8
 #define  PARTITION_TBL_SIZE 4
 
 #define IsUsablePartition(P)  \
@@ -676,10 +669,9 @@ xHalIoReadPartitionTable (
 	}
 #endif
 
-	/* FIXME: Set the correct value */
 	if (ExtendedFound == FALSE);
 	  {
-	     LayoutBuffer->Signature = 0xdeadbeef;
+	     LayoutBuffer->Signature = *((PULONG)(SectorBuffer + SIGNATURE_OFFSET));
 	  }
 
 	ExtendedFound = FALSE;

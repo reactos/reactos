@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.17 2000/06/29 23:35:24 dwelch Exp $
+/* $Id: volume.c,v 1.18 2000/08/25 15:52:56 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -6,7 +6,7 @@
  * PURPOSE:         File volume functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
  *                  Erik Bos, Alexandre Julliard :
- *                      DRIVE_IsValid, GetLogicalDriveStringsA,
+ *                      GetLogicalDriveStringsA,
  *                      GetLogicalDriveStringsW, GetLogicalDrives
  * UPDATE HISTORY:
  *                  Created 01/11/98
@@ -20,6 +20,7 @@
  */
 
 #include <ddk/ntddk.h>
+#include <napi/shared_data.h>
 #include <windows.h>
 #include <ntos/minmax.h>
 
@@ -31,68 +32,62 @@
 #define MAX_DOS_DRIVES 26
 
 
-int DRIVE_IsValid( int drive )
-{
-    char Drives[4];
-    Drives[0] = 'A';
-    Drives[1] = ':';
-    Drives[2] = '\\';
-    Drives[3] = 0;
-
-    Drives[0] = 'A' + drive -1;
-    if ((drive < 0) || (drive >= MAX_DOS_DRIVES)) return 0;
-    if ( CreateFileA(Drives,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_FLAG_BACKUP_SEMANTICS|FILE_ATTRIBUTE_DIRECTORY,NULL) == INVALID_HANDLE_VALUE ) {
-	return 0;
-    }
-    return drive;
-    
-}
-
-
 DWORD
 STDCALL
-GetLogicalDriveStringsA(
-			DWORD nBufferLength,
-			LPSTR lpBuffer
-			)
+GetLogicalDriveStringsA(DWORD nBufferLength,
+			LPSTR lpBuffer)
 {
-    int drive, count;
+   DWORD drive, count;
+   DWORD dwDriveMap;
 
-    for (drive = count = 0; drive < MAX_DOS_DRIVES; drive++)
-        if (DRIVE_IsValid(drive)) count++;
-    if (count * 4 * sizeof(char) <= nBufferLength)
-    {
-        LPSTR p = lpBuffer;
-        for (drive = 0; drive < MAX_DOS_DRIVES; drive++)
-	  if (DRIVE_IsValid(drive))
+   dwDriveMap = ((PKUSER_SHARED_DATA)USER_SHARED_DATA_BASE)->DosDeviceMap;
+
+   for (drive = count = 0; drive < MAX_DOS_DRIVES; drive++)
+     {
+	if (dwDriveMap & (1<<drive))
+	   count++;
+     }
+
+
+   if (count * 4 * sizeof(char) <= nBufferLength)
+     {
+	LPSTR p = lpBuffer;
+
+	for (drive = 0; drive < MAX_DOS_DRIVES; drive++)
+	  if (dwDriveMap & (1<<drive))
 	  {
 	     *p++ = 'A' + drive;
 	     *p++ = ':';
 	     *p++ = '\\';
 	     *p++ = '\0';
 	  }
-        *p = '\0';
+	*p = '\0';
      }
-    return count * 4 * sizeof(char);
+    return (count * 4 * sizeof(char));
 }
 
 
 DWORD
 STDCALL
-GetLogicalDriveStringsW(
-    DWORD nBufferLength,
-    LPWSTR lpBuffer
-    )
+GetLogicalDriveStringsW(DWORD nBufferLength,
+			LPWSTR lpBuffer)
 {
-    int drive, count;
+   DWORD drive, count;
+   DWORD dwDriveMap;
 
-    for (drive = count = 0; drive < MAX_DOS_DRIVES; drive++)
-        if (DRIVE_IsValid(drive)) count++;
+   dwDriveMap = ((PKUSER_SHARED_DATA)USER_SHARED_DATA_BASE)->DosDeviceMap;
+
+   for (drive = count = 0; drive < MAX_DOS_DRIVES; drive++)
+     {
+	if (dwDriveMap & (1<<drive))
+	   count++;
+     }
+
     if (count * 4 * sizeof(WCHAR) <=  nBufferLength)
     {
         LPWSTR p = lpBuffer;
         for (drive = 0; drive < MAX_DOS_DRIVES; drive++)
-            if (DRIVE_IsValid(drive))
+            if (dwDriveMap & (1<<drive))
             {
                 *p++ = (WCHAR)('A' + drive);
                 *p++ = (WCHAR)':';
@@ -101,7 +96,7 @@ GetLogicalDriveStringsW(
             }
         *p = (WCHAR)'\0';
     }
-    return count * 4 * sizeof(WCHAR);
+    return (count * 4 * sizeof(WCHAR));
 }
 
 
@@ -109,12 +104,7 @@ DWORD
 STDCALL
 GetLogicalDrives(VOID)
 {
-    DWORD ret = 0;
-    int drive;
-
-    for (drive = 0; drive < MAX_DOS_DRIVES; drive++)
-        if (DRIVE_IsValid(drive)) ret |= (1 << drive);
-    return ret;
+   return (((PKUSER_SHARED_DATA)USER_SHARED_DATA_BASE)->DosDeviceMap);
 }
 
 

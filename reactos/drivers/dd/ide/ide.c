@@ -1,4 +1,4 @@
-/* $Id: ide.c,v 1.33 2000/08/24 19:15:20 ekohl Exp $
+/* $Id: ide.c,v 1.34 2000/08/25 15:56:24 ekohl Exp $
  *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
@@ -925,13 +925,13 @@ IDECreateDevice(IN PDRIVER_OBJECT DriverObject,
     }
   RtlInitUnicodeString (&ArcName,
                         ArcNameBuffer);
-  DPRINT1("%wZ ==> %wZ\n", &ArcName, &DeviceName);
+  DPRINT("%wZ ==> %wZ\n", &ArcName, &DeviceName);
   RC = IoAssignArcName (&ArcName,
                         &DeviceName);
   if (!NT_SUCCESS(RC))
     {
-      DPRINT1("IoAssignArcName (%wZ) failed (Status %x)\n",
-              &ArcName, RC);
+      DPRINT("IoAssignArcName (%wZ) failed (Status %x)\n",
+             &ArcName, RC);
     }
 
 

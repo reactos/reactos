@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.58 2000/08/24 19:10:27 ekohl Exp $
+/* $Id: main.c,v 1.59 2000/08/25 15:54:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -29,7 +29,7 @@
 #include <internal/i386/segment.h>
 #include <napi/shared_data.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 /* DATA *********************************************************************/
@@ -161,17 +161,188 @@ CreateSystemRootLink (PCSZ ParameterLine)
 	 */
 }
 
+
 static VOID
-InitSystemSharedUserPage (VOID)
+InitSystemSharedUserPage (PCSZ ParameterLine)
 {
    PKUSER_SHARED_DATA SharedPage;
 
+   UNICODE_STRING ArcDeviceName;
+   UNICODE_STRING ArcName;
+   UNICODE_STRING BootPath;
+   UNICODE_STRING DriveDeviceName;
+   UNICODE_STRING DriveName;
+   WCHAR DriveNameBuffer[20];
+   PCHAR ParamBuffer;
+   PWCHAR ArcNameBuffer;
+   PCHAR p;
+   NTSTATUS Status;
+   ULONG Length;
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   HANDLE Handle;
+   ULONG i;
+   BOOLEAN BootDriveFound;
+
    SharedPage = (PKUSER_SHARED_DATA)KERNEL_SHARED_DATA_BASE;
-
-   /* set system root in shared user page */
-   wcscpy (SharedPage->NtSystemRoot, L"C:\\reactos");
-
+   SharedPage->DosDeviceMap = 0;
    SharedPage->NtProductType = NtProductWinNt;
+   for (i = 0; i < 32; i++)
+     {
+	SharedPage->DosDeviceDriveType[i] = 0;
+     }
+
+   BootDriveFound = FALSE;
+
+   /*
+    * Retrieve the current dos system path
+    * (e.g.: C:\reactos) from the given arc path
+    * (e.g.: multi(0)disk(0)rdisk(0)partititon(1)\reactos)
+    * Format: "<arc_name>\<path> [options...]"
+    */
+
+   /* create local parameter line copy */
+   ParamBuffer = ExAllocatePool (PagedPool, 256);
+   strcpy (ParamBuffer, (char *)ParameterLine);
+   DPRINT("%s\n", ParamBuffer);
+
+   /* cut options off */
+   p = strchr (ParamBuffer, ' ');
+   if (p)
+     {
+	*p = 0;
+     }
+   DPRINT("%s\n", ParamBuffer);
+
+   /* extract path */
+   p = strchr (ParamBuffer, '\\');
+   if (p)
+     {
+	DPRINT("Boot path: %s\n", p);
+	RtlCreateUnicodeStringFromAsciiz (&BootPath, p);
+	*p = 0;
+     }
+   else
+     {
+	DPRINT("Boot path: %s\n", "\\");
+	RtlCreateUnicodeStringFromAsciiz (&BootPath, "\\");
+     }
+   DPRINT("Arc name: %s\n", ParamBuffer);
+
+   /* Only arc name left - build full arc name */
+   ArcNameBuffer = ExAllocatePool (PagedPool, 256 * sizeof(WCHAR));
+   swprintf (ArcNameBuffer, L"\\ArcName\\%S", ParamBuffer);
+   RtlInitUnicodeString (&ArcName, ArcNameBuffer);
+   DPRINT("Arc name: %wZ\n", &ArcName);
+
+   /* free ParamBuffer */
+   ExFreePool (ParamBuffer);
+
+   /* allocate arc device name string */
+   ArcDeviceName.Length = 0;
+   ArcDeviceName.MaximumLength = 256 * sizeof(WCHAR);
+   ArcDeviceName.Buffer = ExAllocatePool (PagedPool, 256 * sizeof(WCHAR));
+
+   InitializeObjectAttributes (&ObjectAttributes,
+			       &ArcName,
+			       0,
+			       NULL,
+			       NULL);
+
+   Status = NtOpenSymbolicLinkObject (&Handle,
+				      SYMBOLIC_LINK_ALL_ACCESS,
+				      &ObjectAttributes);
+   RtlFreeUnicodeString (&ArcName);
+   if (!NT_SUCCESS(Status))
+     {
+	RtlFreeUnicodeString (&BootPath);
+	RtlFreeUnicodeString (&ArcDeviceName);
+	DbgPrint("NtOpenSymbolicLinkObject() failed (Status %x)\n",
+	         Status);
+
+	KeBugCheck (0x0);
+     }
+
+   Status = NtQuerySymbolicLinkObject (Handle,
+				       &ArcDeviceName,
+				       &Length);
+   NtClose (Handle);
+   if (!NT_SUCCESS(Status))
+     {
+	RtlFreeUnicodeString (&BootPath);
+	RtlFreeUnicodeString (&ArcDeviceName);
+	DbgPrint("NtQuerySymbolicObject() failed (Status %x)\n",
+		 Status);
+
+	KeBugCheck (0x0);
+     }
+   DPRINT("Length: %lu ArcDeviceName: %wZ\n", Length, &ArcDeviceName);
+
+
+   /* allocate device name string */
+   DriveDeviceName.Length = 0;
+   DriveDeviceName.MaximumLength = 256 * sizeof(WCHAR);
+   DriveDeviceName.Buffer = ExAllocatePool (PagedPool, 256 * sizeof(WCHAR));
+
+   for (i = 0; i < 26; i++)
+     {
+	swprintf (DriveNameBuffer, L"\\??\\%C:", 'A' + i);
+	RtlInitUnicodeString (&DriveName,
+			      DriveNameBuffer);
+
+	InitializeObjectAttributes (&ObjectAttributes,
+				    &DriveName,
+				    0,
+				    NULL,
+				    NULL);
+
+	Status = NtOpenSymbolicLinkObject (&Handle,
+					   SYMBOLIC_LINK_ALL_ACCESS,
+					   &ObjectAttributes);
+	if (!NT_SUCCESS(Status))
+	  {
+	     DPRINT("Failed to open link %wZ\n",
+		    &DriveName);
+	     continue;
+	  }
+
+	Status = NtQuerySymbolicLinkObject (Handle,
+					    &DriveDeviceName,
+					    &Length);
+	if (!NT_SUCCESS(Status))
+	  {
+	     DPRINT("Failed query open link %wZ\n",
+		    &DriveName);
+	     continue;
+	  }
+	DPRINT("Opened link: %wZ ==> %wZ\n",
+	       &DriveName, &DriveDeviceName);
+
+	if (!RtlCompareUnicodeString (&ArcDeviceName, &DriveDeviceName, FALSE))
+	  {
+	     DPRINT("DOS Boot path: %c:%wZ\n", 'A' + i, &BootPath);
+	     swprintf (SharedPage->NtSystemRoot,
+		       L"%C:%wZ", 'A' + i, &BootPath);
+
+		BootDriveFound = TRUE;
+	  }
+
+	NtClose (Handle);
+
+	/* set bit in dos drives bitmap (drive available) */
+	SharedPage->DosDeviceMap |= (1<<i);
+     }
+
+   RtlFreeUnicodeString (&BootPath);
+   RtlFreeUnicodeString (&DriveDeviceName);
+   RtlFreeUnicodeString (&ArcDeviceName);
+
+   DPRINT("DosDeviceMap: 0x%x\n", SharedPage->DosDeviceMap);
+
+   if (BootDriveFound == FALSE)
+     {
+	DbgPrint("No system drive found!\n");
+	KeBugCheck (0x0);
+     }
 }
 
 
@@ -307,8 +478,11 @@ void _main (PLOADER_PARAMETER_BLOCK LoaderBlock)
                          NULL,
                          NULL);
 
-   /* initialize shared user page */
-   InitSystemSharedUserPage ();
+   /*
+    * Initialize shared user page:
+    *  - set dos system path, dos device map, etc.
+    */
+   InitSystemSharedUserPage (KeLoaderBlock.kernel_parameters);
 
   /*
    *  Launch initial process
