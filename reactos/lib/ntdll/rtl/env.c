@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.14 2002/07/05 17:23:05 ekohl Exp $
+/* $Id: env.c,v 1.15 2002/07/06 17:38:06 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -112,82 +112,83 @@ RtlExpandEnvironmentStrings_U(PWSTR Environment,
 			      PUNICODE_STRING Destination,
 			      PULONG Length)
 {
-	UNICODE_STRING var;
-	UNICODE_STRING val;
-	NTSTATUS Status = STATUS_SUCCESS;
-	BOOLEAN flag = FALSE;
-	PWSTR s;
-	PWSTR d;
-	PWSTR w;
-	int src_len;
-	int dst_max;
-	int tail;
+  UNICODE_STRING var;
+  UNICODE_STRING val;
+  NTSTATUS Status = STATUS_SUCCESS;
+  BOOLEAN flag = FALSE;
+  PWSTR s;
+  PWSTR d;
+  PWSTR w;
+  int src_len;
+  int dst_max;
+  int tail;
 
-	DPRINT ("RtlExpandEnvironmentStrings_U %p %wZ %p %p\n",
-	        Environment, Source, Destination, Length);
+  DPRINT("RtlExpandEnvironmentStrings_U %p %wZ %p %p\n",
+	 Environment, Source, Destination, Length);
 
-	src_len = Source->Length / sizeof(WCHAR);
-	s = Source->Buffer;
-	dst_max = Destination->MaximumLength / sizeof(WCHAR);
-	d = Destination->Buffer;
+  src_len = Source->Length / sizeof(WCHAR);
+  s = Source->Buffer;
+  dst_max = Destination->MaximumLength / sizeof(WCHAR);
+  d = Destination->Buffer;
 
-	while (src_len)
+  while (src_len)
+    {
+      if (*s == L'%')
 	{
-		if (*s == L'%')
-		{
-			if (flag)
-			{
-				flag = FALSE;
-				goto copy;
-			}
-			w = s + 1;
-			tail = src_len - 1;
-			while (*w != L'%' && tail)
-			{
-				w++;
-				tail--;
-			}
-			if (!tail)
-				goto copy;
+	  if (flag)
+	    {
+	      flag = FALSE;
+	      goto copy;
+	    }
+	  w = s + 1;
+	  tail = src_len - 1;
+	  while (*w != L'%' && tail)
+	    {
+	      w++;
+	      tail--;
+	    }
+	  if (!tail)
+	    goto copy;
 
-			var.Length = (w - ( s + 1)) * sizeof(WCHAR);
-			var.MaximumLength = var.Length;
-			var.Buffer = s + 1;
+	  var.Length = (w - ( s + 1)) * sizeof(WCHAR);
+	  var.MaximumLength = var.Length;
+	  var.Buffer = s + 1;
 
-			val.Length = 0;
-			val.MaximumLength = dst_max * sizeof(WCHAR);
-			val.Buffer = d;
-			Status = RtlQueryEnvironmentVariable_U (Environment, &var, &val);
-			if (NT_SUCCESS(Status))
-			{
-				d += val.Length / sizeof(WCHAR);
-				dst_max -= val.Length / sizeof(WCHAR);
-				s = w + 1;
-				src_len = tail - 1;
-				continue;
-			}
-			/* variable not found or buffer too small, just copy %var% */
-			flag = TRUE;
-		}
-copy:
-		if (!dst_max)
-		{
-			Status = STATUS_BUFFER_TOO_SMALL;
-			break;
-		}
-
-		*d++ = *s++;
-		dst_max--;
-		src_len--;
+	  val.Length = 0;
+	  val.MaximumLength = dst_max * sizeof(WCHAR);
+	  val.Buffer = d;
+	  Status = RtlQueryEnvironmentVariable_U (Environment, &var, &val);
+	  if (NT_SUCCESS(Status))
+	    {
+	      d += val.Length / sizeof(WCHAR);
+	      dst_max -= val.Length / sizeof(WCHAR);
+	      s = w + 1;
+	      src_len = tail - 1;
+	      continue;
+	    }
+	  /* variable not found or buffer too small, just copy %var% */
+	  flag = TRUE;
 	}
-	Destination->Length = (d - Destination->Buffer) * sizeof(WCHAR);
-	if (Length != NULL)
-		*Length = Destination->Length;
-	if (dst_max)
-		Destination->Buffer[Destination->Length / sizeof(WCHAR)] = 0;
+copy:
+      if (!dst_max)
+	{
+	  Status = STATUS_BUFFER_TOO_SMALL;
+	  break;
+	}
 
-	DPRINT ("Destination %wZ\n", Destination);
-	return Status;
+      *d++ = *s++;
+      dst_max--;
+      src_len--;
+    }
+
+  Destination->Length = (d - Destination->Buffer) * sizeof(WCHAR);
+  if (Length != NULL)
+    *Length = Destination->Length;
+  if (dst_max)
+    Destination->Buffer[Destination->Length / sizeof(WCHAR)] = 0;
+
+  DPRINT("Destination %wZ\n", Destination);
+  return(Status);
 }
 
 
@@ -218,7 +219,7 @@ RtlSetEnvironmentVariable(PWSTR *Environment,
 			  PUNICODE_STRING Value)
 {
   MEMORY_BASIC_INFORMATION mbi;
-  UNICODE_STRING var, ExpandedValue;
+  UNICODE_STRING var;
   int hole_len, new_len, env_len = 0;
   WCHAR *new_env = 0, *env_end = 0, *wcs, *env, *val = 0, *tail = 0, *hole = 0;
   PWSTR head = NULL;
@@ -283,45 +284,11 @@ RtlSetEnvironmentVariable(PWSTR *Environment,
     }
 
 found:
-  /* Perform inline replacement if Value references existing vars */
-  /* ex: SET PATH=C:\MinGW\Bin;%PATH% */
-
-  ExpandedValue.MaximumLength = (env_len + Value->Length) * 2 * sizeof(WCHAR);
-  ExpandedValue.Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
-					 0,
-					 ExpandedValue.MaximumLength + 1);
-  if (ExpandedValue.Buffer == NULL)
-    {
-      if (Environment == NULL)
-	{
-	  RtlReleasePebLock();
-	}
-      return(STATUS_INSUFFICIENT_RESOURCES);
-    }
-  ExpandedValue.Length = 0;
-  ExpandedValue.Buffer[0] = (WCHAR)'\0';
-
-  Status = RtlExpandEnvironmentStrings_U(env,
-					 Value,
-					 &ExpandedValue,
-					 NULL);
-  if (!NT_SUCCESS(Status))
-    {
-      RtlFreeHeap(RtlGetProcessHeap(),
-		  0,
-		  ExpandedValue.Buffer);
-      if (Environment == NULL)
-	{
-	  RtlReleasePebLock();
-	}
-      return(Status);
-    }
-
-  if (ExpandedValue.Length > 0)
+  if (Value->Length > 0)
     {
       hole_len = tail - hole;
       /* calculate new environment size */
-      new_size = ExpandedValue.Length + sizeof(WCHAR);
+      new_size = Value->Length + sizeof(WCHAR);
       /* adding new variable */
       if (f)
 	new_size += Name->Length + sizeof(WCHAR);
@@ -345,9 +312,6 @@ found:
 					    NULL);
 	      if (!NT_SUCCESS(Status))
 		{
-		  RtlFreeHeap(RtlGetProcessHeap(),
-			      0,
-			      ExpandedValue.Buffer);
 		  if (Environment == NULL)
 		    {
 		      RtlReleasePebLock();
@@ -367,9 +331,6 @@ found:
 					       PAGE_READWRITE);
 	      if (!NT_SUCCESS(Status))
 		{
-		  RtlFreeHeap(RtlGetProcessHeap(),
-			      0,
-			      ExpandedValue.Buffer);
 		  if (Environment == NULL)
 		    {
 		      RtlReleasePebLock();
@@ -428,9 +389,9 @@ found:
 
       /* copy value */
       memmove(hole,
-	      ExpandedValue.Buffer,
-	      ExpandedValue.Length);
-      hole += ExpandedValue.Length / sizeof(WCHAR);
+	      Value->Buffer,
+	      Value->Length);
+      hole += Value->Length / sizeof(WCHAR);
       *hole = 0;
     }
   else
@@ -448,9 +409,6 @@ found:
 	}
     }
 
-  RtlFreeHeap(RtlGetProcessHeap(),
-	      0,
-	      ExpandedValue.Buffer);
   if (Environment == NULL)
     {
       RtlReleasePebLock();
@@ -465,74 +423,74 @@ RtlQueryEnvironmentVariable_U(PWSTR Environment,
 			      PUNICODE_STRING Name,
 			      PUNICODE_STRING Value)
 {
-	NTSTATUS Status;
-	PWSTR wcs;
-	PWSTR var;
-	PWSTR val;
-	int varlen;
-	int len;
-	BOOLEAN SysEnvUsed = FALSE;
+  NTSTATUS Status;
+  PWSTR wcs;
+  PWSTR var;
+  PWSTR val;
+  int varlen;
+  int len;
+  BOOLEAN SysEnvUsed = FALSE;
 
-	DPRINT("RtlQueryEnvironmentVariable_U Environment %p Variable %wZ Value %p\n",
-	       Environment, Name, Value);
+  DPRINT("RtlQueryEnvironmentVariable_U Environment %p Variable %wZ Value %p\n",
+	 Environment, Name, Value);
 
-	if (Environment == NULL)
+  if (Environment == NULL)
+    {
+      Environment = NtCurrentPeb()->ProcessParameters->Environment;
+      SysEnvUsed = TRUE;
+    }
+
+  if (Environment == NULL)
+    return(STATUS_VARIABLE_NOT_FOUND);
+
+  Value->Length = 0;
+  if (SysEnvUsed == TRUE)
+    RtlAcquirePebLock();
+
+  wcs = Environment;
+  len = Name->Length / sizeof(WCHAR);
+  while (*wcs)
+    {
+      for (var = wcs++; *wcs && *wcs != L'='; wcs++)
+	;
+
+      if (*wcs)
 	{
-		Environment = NtCurrentPeb()->ProcessParameters->Environment;
-		SysEnvUsed = TRUE;
-	}
+	  varlen = wcs - var;
+	  for (val = ++wcs; *wcs; wcs++)
+	     ;
 
-	if (Environment == NULL)
-		return STATUS_VARIABLE_NOT_FOUND;
-
-	Value->Length = 0;
-	if (SysEnvUsed == TRUE)
-		RtlAcquirePebLock();
-
-	wcs = Environment;
-	len = Name->Length / sizeof(WCHAR);
-	while (*wcs)
-	{
-		for (var = wcs++; *wcs && *wcs != L'='; wcs++)
-			;
-
-		if (*wcs)
+	  if (varlen == len &&
+	      !_wcsnicmp(var, Name->Buffer, len))
+	    {
+	      Value->Length = (wcs - val) * sizeof(WCHAR);
+	      if (Value->Length < Value->MaximumLength)
 		{
-			varlen = wcs - var;
-			for (val = ++wcs; *wcs; wcs++)
-				;
-
-			if (varlen == len &&
-			    !_wcsnicmp (var, Name->Buffer, len))
-			{
-				Value->Length = (wcs - val) * sizeof(WCHAR);
-				if (Value->Length < Value->MaximumLength)
-				{
-					wcscpy (Value->Buffer, val);
-					DPRINT("Value %S\n", val);
-					DPRINT("Return STATUS_SUCCESS\n");
-					Status = STATUS_SUCCESS;
-				}
-				else
-				{
-					DPRINT("Return STATUS_BUFFER_TOO_SMALL\n");
-					Status = STATUS_BUFFER_TOO_SMALL;
-				}
-
-				if (SysEnvUsed == TRUE)
-					RtlReleasePebLock ();
-
-				return Status;
-			}
+		  wcscpy(Value->Buffer, val);
+		  DPRINT("Value %S\n", val);
+		  DPRINT("Return STATUS_SUCCESS\n");
+		  Status = STATUS_SUCCESS;
 		}
-		wcs++;
+	      else
+		{
+		  DPRINT("Return STATUS_BUFFER_TOO_SMALL\n");
+		  Status = STATUS_BUFFER_TOO_SMALL;
+		}
+
+	      if (SysEnvUsed == TRUE)
+		RtlReleasePebLock();
+
+	      return(Status);
+	    }
 	}
+      wcs++;
+    }
 
-	if (SysEnvUsed == TRUE)
-		RtlReleasePebLock ();
+  if (SysEnvUsed == TRUE)
+    RtlReleasePebLock();
 
-	DPRINT("Return STATUS_VARIABLE_NOT_FOUND\n");
-	return STATUS_VARIABLE_NOT_FOUND;
+  DPRINT("Return STATUS_VARIABLE_NOT_FOUND\n");
+  return(STATUS_VARIABLE_NOT_FOUND);
 }
 
 /* EOF */
