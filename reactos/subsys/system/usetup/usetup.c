@@ -25,7 +25,8 @@
  *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
-#include <ddk/ntddk.h>
+
+#include "precomp.h"
 #include <ntdll/rtl.h>
 
 #include <ntos/minmax.h>

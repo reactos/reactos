@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: filequeue.c,v 1.3 2003/12/01 18:28:54 navaraf Exp $
+/* $Id: filequeue.c,v 1.4 2004/08/15 22:29:50 chorns Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/filequeue.c
@@ -27,7 +27,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#include "precomp.h"
 #include <ntdll/rtl.h>
 
 #include "usetup.h"

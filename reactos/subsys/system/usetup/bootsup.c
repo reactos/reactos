@@ -24,7 +24,7 @@
  * PROGRAMMER:      Eric Kohl
  */
 
-#include <ddk/ntddk.h>
+#include "precomp.h"
 #include <ntdll/rtl.h>
 
 #include "usetup.h"

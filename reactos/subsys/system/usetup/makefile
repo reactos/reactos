@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.17 2004/05/30 14:54:02 ekohl Exp $
+# $Id: makefile,v 1.18 2004/08/15 22:29:50 chorns Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -11,6 +11,8 @@ TARGET_TYPE = program
 TARGET_APPTYPE = native
 
 TARGET_NAME = usetup
+
+TARGET_PCH = precomp.h
 
 TARGET_SDKLIBS = zlib.a vfatlib.a ntdll.a
 

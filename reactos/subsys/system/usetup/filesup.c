@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: filesup.c,v 1.10 2004/01/18 22:34:40 hbirr Exp $
+/* $Id: filesup.c,v 1.11 2004/08/15 22:29:50 chorns Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/filesup.c
@@ -27,7 +27,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#include "precomp.h"
 #include <ntdll/rtl.h>
 
 #include "usetup.h"

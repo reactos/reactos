@@ -4,3 +4,4 @@
 *.o
 *.sym
 *.map
+*.gch

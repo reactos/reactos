@@ -26,7 +26,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
+#include "precomp.h"
 #include <ddk/ntddblue.h>
 
 #include "usetup.h"

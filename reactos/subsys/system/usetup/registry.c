@@ -26,7 +26,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#include "precomp.h"
 #include <ntdll/rtl.h>
 #include <rosrtl/string.h>
 
