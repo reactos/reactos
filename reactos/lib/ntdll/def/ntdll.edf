@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.96 2003/08/22 13:46:55 ea Exp $
+; $Id: ntdll.edf,v 1.97 2003/09/02 11:21:59 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -555,8 +555,8 @@ RtlSizeHeap=RtlSizeHeap@12
 ;RtlStartRXact
 RtlSubAuthorityCountSid=RtlSubAuthorityCountSid@4
 RtlSubAuthoritySid=RtlSubAuthoritySid@8
-;RtlSubtreePredecessor
-;RtlSubtreeSuccessor
+RtlSubtreePredecessor=RtlSubtreePredecessor@4
+RtlSubtreeSuccessor=RtlSubtreeSuccessor@4
 RtlSystemTimeToLocalTime=RtlSystemTimeToLocalTime@8
 RtlTimeFieldsToTime=RtlTimeFieldsToTime@8
 RtlTimeToElapsedTimeFields=RtlTimeToElapsedTimeFields@8

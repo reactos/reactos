@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.107 2003/08/22 13:46:55 ea Exp $
+; $Id: ntdll.def,v 1.108 2003/09/02 11:21:59 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -556,8 +556,8 @@ RtlSizeHeap@12
 ;RtlStartRXact
 RtlSubAuthorityCountSid@4
 RtlSubAuthoritySid@8
-;RtlSubtreePredecessor
-;RtlSubtreeSuccessor
+RtlSubtreePredecessor@4
+RtlSubtreeSuccessor@4
 RtlSystemTimeToLocalTime@8
 RtlTimeFieldsToTime@8
 RtlTimeToElapsedTimeFields@8
