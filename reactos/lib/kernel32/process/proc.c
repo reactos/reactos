@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.61 2004/03/14 18:16:40 weiden Exp $
+/* $Id: proc.c,v 1.62 2004/05/29 15:10:28 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -383,6 +383,7 @@ WinExec(LPCSTR lpCmdLine,
    HINSTANCE hInst;
    DWORD dosErr;
 
+   RtlZeroMemory(&StartupInfo, sizeof(StartupInfo));
    StartupInfo.cb = sizeof(STARTUPINFOA);
    StartupInfo.wShowWindow = uCmdShow;
    StartupInfo.dwFlags = 0;
