@@ -1,0 +1,50 @@
+TOPSRCDIR = @top_srcdir@
+TOPOBJDIR = ../..
+SRCDIR    = @srcdir@
+VPATH     = @srcdir@
+MODULE    = msi.dll
+IMPORTS   = shell32 cabinet oleaut32 ole32 version user32 advapi32 kernel32
+EXTRALIBS = -luuid $(LIBUNICODE)
+
+C_SRCS = \
+	action.c \
+	create.c \
+	distinct.c \
+	handle.c \
+	insert.c \
+	msi.c \
+	msiquery.c \
+	order.c \
+	package.c \
+	record.c \
+	regsvr.c \
+	select.c \
+	string.c \
+	suminfo.c \
+	table.c \
+	tokenize.c \
+	update.c \
+	where.c
+
+RC_SRCS = version.rc
+
+EXTRA_SRCS = sql.y cond.y
+EXTRA_OBJS = sql.tab.o cond.tab.o
+
+@MAKE_DLL_RULES@
+
+sql.tab.c sql.tab.h: sql.y
+	$(BISON) -p SQL_ -d $(SRCDIR)/sql.y -o sql.tab.c
+
+cond.tab.c cond.tab.h: cond.y
+	$(BISON) -p COND_ -d $(SRCDIR)/cond.y -o cond.tab.c
+
+# hack to allow parallel make
+sql.tab.h: sql.tab.c
+sql.tab.o: sql.tab.h
+cond.tab.h: cond.tab.c
+cond.tab.o: cond.tab.h
+
+tokenize.o: sql.tab.h
+
+### Dependencies:

@@ -1,0 +1,67 @@
+Only in /root/wine/wine/dlls/msi: .cvsignore
+Only in /root/wine/wine/dlls/msi: CVS
+Only in ./: Makefile
+Only in ./: Makefile.ros-template
+diff -u /root/wine/wine/dlls/msi/action.c ./action.c
+--- /root/wine/wine/dlls/msi/action.c	2004-10-27 20:43:05.000000000 -0500
++++ ./action.c	2004-10-30 12:14:17.000000000 -0500
+@@ -28,6 +28,7 @@
+ 
+ #include <stdarg.h>
+ #include <stdio.h>
++#include <fcntl.h>
+ 
+ #define COBJMACROS
+ 
+@@ -39,7 +40,7 @@
+ #include "fdi.h"
+ #include "msi.h"
+ #include "msiquery.h"
+-#include "msvcrt/fcntl.h"
++//#include "msvcrt/fcntl.h"
+ #include "objbase.h"
+ #include "objidl.h"
+ #include "msipriv.h"
+@@ -3477,7 +3478,7 @@
+             continue;
+         }
+ 
+-        res = LoadTypeLib(package->files[index].TargetPath,&ptLib);
++//        res = LoadTypeLib(package->files[index].TargetPath,&ptLib);
+         if (SUCCEEDED(res))
+         {
+             WCHAR help[MAX_PATH];
+@@ -3488,7 +3489,7 @@
+ 
+             resolve_folder(package,helpid,help,FALSE,FALSE,NULL);
+ 
+-            res = RegisterTypeLib(ptLib,package->files[index].TargetPath,help);
++//            res = RegisterTypeLib(ptLib,package->files[index].TargetPath,help);
+             if (!SUCCEEDED(res))
+                 ERR("Failed to register type library %s\n",
+                      debugstr_w(package->files[index].TargetPath));
+@@ -3503,8 +3504,9 @@
+                        debugstr_w(package->files[index].TargetPath));
+             }
+ 
+-            if (ptLib)
+-                ITypeLib_Release(ptLib);
++            if (ptLib){
++                //ITypeLib_Release(ptLib);
++                }
+         }
+         else
+             ERR("Failed to load type library %s\n",
+Only in ./: patch.diff
+diff -u /root/wine/wine/dlls/msi/suminfo.c ./suminfo.c
+--- /root/wine/wine/dlls/msi/suminfo.c	2004-10-18 13:20:12.000000000 -0500
++++ ./suminfo.c	2004-10-30 00:09:12.000000000 -0500
+@@ -23,6 +23,8 @@
+ #define COBJMACROS
+ #define NONAMELESSUNION
+ 
++#define PRSPEC_PROPID (1)
++
+ #include "windef.h"
+ #include "winbase.h"
+ #include "winreg.h"
