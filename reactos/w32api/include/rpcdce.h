@@ -345,6 +345,7 @@ RPC_STATUS RPC_ENTRY RpcServerInqIf(RPC_IF_HANDLE,UUID*,RPC_MGR_EPV**);
 RPC_STATUS RPC_ENTRY RpcServerListen(unsigned int,unsigned int,unsigned int);
 RPC_STATUS RPC_ENTRY RpcServerRegisterIf(RPC_IF_HANDLE,UUID*,RPC_MGR_EPV*);
 RPC_STATUS RPC_ENTRY RpcServerRegisterIfEx(RPC_IF_HANDLE,UUID*,RPC_MGR_EPV*,unsigned int,unsigned int,RPC_IF_CALLBACK_FN*);
+RPC_STATUS RPC_ENTRY RpcServerRegisterIf2(RPC_IF_HANDLE,UUID*,RPC_MGR_EPV*,unsigned int,unsigned int,unsigned int,RPC_IF_CALLBACK_FN*);
 RPC_STATUS RPC_ENTRY RpcServerUnregisterIf(RPC_IF_HANDLE,UUID*,unsigned int);
 RPC_STATUS RPC_ENTRY RpcServerUseAllProtseqs(unsigned int,void*);
 RPC_STATUS RPC_ENTRY RpcServerUseAllProtseqsEx(unsigned int,void*,PRPC_POLICY);

@@ -152,6 +152,10 @@ typedef struct tagCStdStubBuffer {
     const struct IRpcStubBufferVtbl * lpVtbl;
     long RefCount;
     struct IUnknown *pvServerObject;
+    const struct ICallFactoryVtbl * pCallFactoryVtbl;
+    const IID * pAsyncIID;
+    struct IPSFactoryBuffer * pPSFactory;
+    const struct IReleaseMarshalBuffersVtbl * pRMBVtbl;
 } CStdStubBuffer;
 typedef struct tagCStdPSFactoryBuffer {
     const IPSFactoryBufferVtbl *lpVtbl;

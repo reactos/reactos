@@ -17,6 +17,12 @@ extern "C" {
 #define RPC_UNICODE_SUPPORTED
 #endif
 
+#ifdef _RPCRT4_
+#define RPCRTAPI DECLSPEC_EXPORT
+#else
+#define RPCRTAPI DECLSPEC_IMPORT
+#endif
+
 #ifndef __MIDL_USER_DEFINED
 #define midl_user_allocate MIDL_user_allocate
 #define midl_user_free     MIDL_user_free
