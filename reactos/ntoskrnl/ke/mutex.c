@@ -162,10 +162,28 @@ KeReleaseMutant(IN PKMUTANT Mutant,
     /* Check if the signal state is only single */
     if (Mutant->Header.SignalState == 1) {
         
+        /* Check if it's below 0 now */
         if (PreviousState <= 0) {
         
+            /* Remove the mutant from the list */
             DPRINT("Removing Mutant\n");
             RemoveEntryList(&Mutant->MutantListEntry);
+            
+            /* Reenable APCs */
+            DPRINT("Re-enabling APCs\n");
+            CurrentThread->KernelApcDisable += Mutant->ApcDisable;
+            
+            /* Force an Interrupt if Apcs are pending */
+            if (!IsListEmpty(&CurrentThread->ApcState.ApcListHead[KernelMode])) {
+            
+                /* Make sure they aren't disabled though */
+                if (!CurrentThread->KernelApcDisable) {
+                
+                    /* Request the Interrupt */
+                    DPRINT("Requesting APC Interupt\n");
+                    HalRequestSoftwareInterrupt(APC_LEVEL);
+                }
+            }
         }
         
         /* Remove the Owning Thread and wake it */
