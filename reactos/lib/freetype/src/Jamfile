@@ -1,0 +1,17 @@
+# FreeType 2 src Jamfile (c) 2001, 2002 David Turner
+#
+
+SubDir  FT2_TOP $(FT2_SRC_DIR) ;
+
+# The file <freetype/internal/internal.h> is used to define macros that are
+# later used in #include statements.  It needs to be parsed in order to
+# record these definitions.
+#
+HDRMACRO  [ FT2_SubDir $(FT2_INCLUDE_DIR) internal internal.h ] ;
+
+for xx in $(FT2_COMPONENTS)
+{
+  SubInclude FT2_TOP $(FT2_SRC_DIR) $(xx) ;
+}
+
+# end of src Jamfile

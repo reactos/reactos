@@ -1,0 +1,208 @@
+/*
+ * Regedit resources
+ *
+ * Copyright 2002 Robert Dickenson
+ * Copyright 2003 Vincent Béron
+ * Copyright 2004 Sylvain Pétréolle
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+/*
+ * Menu
+ */
+
+IDC_REGEDIT MENU DISCARDABLE
+BEGIN
+    POPUP "&Fichier"
+    BEGIN
+        MENUITEM "&Quitter",                       ID_REGISTRY_EXIT
+    END
+    POPUP "&Aide"
+    BEGIN
+        MENUITEM "&A propos...",                  ID_HELP_ABOUT
+    END
+END
+
+IDR_REGEDIT_MENU MENU DISCARDABLE
+BEGIN
+    POPUP "&Registres"
+    BEGIN
+        MENUITEM "&Importer un fichier de registres...",    ID_REGISTRY_IMPORTREGISTRYFILE
+        MENUITEM "&Exporter un fichier de registres...",    ID_REGISTRY_EXPORTREGISTRYFILE
+        MENUITEM SEPARATOR
+        MENUITEM "&Connecter à des registres via le réseau...", ID_REGISTRY_CONNECTNETWORKREGISTRY, GRAYED
+        MENUITEM "&Déconnecter de registres réseau...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Im&primer\tCtrl+P",              ID_REGISTRY_PRINT, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Quitter",                       ID_REGISTRY_EXIT
+    END
+    POPUP "&Edition"
+    BEGIN
+        MENUITEM "&Modifier",                     ID_EDIT_MODIFY
+        MENUITEM SEPARATOR
+        POPUP "&Nouvelle"
+        BEGIN
+            MENUITEM "&Clé",                        ID_EDIT_NEW_KEY
+            MENUITEM SEPARATOR
+            MENUITEM "Valeur c&haîne",               ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "Valeur &binaire",               ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "Valeur &mot double",                ID_EDIT_NEW_DWORDVALUE
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Supprimer\tDel",                ID_EDIT_DELETE
+        MENUITEM "Ren&ommer",                     ID_EDIT_RENAME
+        MENUITEM SEPARATOR
+        MENUITEM "&Copier le nom de la clé",              ID_EDIT_COPYKEYNAME
+        MENUITEM SEPARATOR
+        MENUITEM "&Rechercher\tCtrl+F",               ID_EDIT_FIND, GRAYED
+        MENUITEM "Sui&vant\tF3",              ID_EDIT_FINDNEXT, GRAYED
+    END
+    POPUP "&Affichage"
+    BEGIN
+        MENUITEM "&Barre d'état",                 ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "&Séparateur",                      ID_VIEW_SPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Rafraîchir\tF5",                ID_VIEW_REFRESH
+    END
+    POPUP "&Favoris"
+    BEGIN
+        MENUITEM "&Ajouter aux Favoris",          ID_FAVOURITES_ADDTOFAVOURITES
+        , GRAYED
+        MENUITEM "&Retirer des Favoris",           ID_FAVOURITES_REMOVEFAVOURITE
+        , GRAYED
+    END
+    POPUP "&Aide"
+    BEGIN
+        MENUITEM "&Sujets de l'aide",                ID_HELP_HELPTOPICS
+        MENUITEM SEPARATOR
+        MENUITEM "&A propos de l'éditeur de registres",      ID_HELP_ABOUT
+    END
+END
+
+/*
+ * String Table
+ */
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_LIST_COLUMN_NAME    "Nom"
+    IDS_LIST_COLUMN_TYPE    "Type"
+    IDS_LIST_COLUMN_DATA    "Valeur"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_APP_TITLE           "Éditeur de registres"
+    IDC_REGEDIT             "REGEDIT"
+    IDC_REGEDIT_FRAME       "REGEDIT_FRAME"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_REGISTRY_MENU        "Contient des commandes pour travailler sur les registres de manière globale"
+    ID_EDIT_MENU            "Contient des commandes pour éditer des valeurs ou des clés"
+    ID_VIEW_MENU            "Contient des commandes pour personnaliser la fenêtre des registres"
+    ID_FAVOURITES_MENU      "Contient des commandes pour accéder aux clés fréquemment utilisées"
+    ID_HELP_MENU            "Contient des commandes pour afficher de l'aide et de l'information à propos de l'éditeur de registres"
+    ID_EDIT_NEW_MENU        "Contient des commandes pour créer de nouvelles clés ou valeurs"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_EDIT_MODIFY          "Modifie les données d'une valeur"
+    ID_EDIT_NEW_KEY         "Ajoute une nouvelle clé"
+    ID_EDIT_NEW_STRINGVALUE "Ajoute une nouvelle valeur chaîne"
+    ID_EDIT_NEW_BINARYVALUE "Ajoute une nouvelle valeur binaire"
+    ID_EDIT_NEW_DWORDVALUE  "Ajoute une nouvelle valeur mot double"
+    ID_REGISTRY_IMPORTREGISTRYFILE "Importe un fichier texte dans les registres"
+    ID_REGISTRY_EXPORTREGISTRYFILE
+                            "Exporte tout ou une partie des registres dans un fichier texte"
+    ID_REGISTRY_CONNECTNETWORKREGISTRY
+                            "Connecte aux registres d'un ordinateur distant"
+    ID_REGISTRY_DISCONNECTNETWORKREGISTRY
+                            "Déconnecte des registres d'un ordinateur distant"
+    ID_REGISTRY_PRINT       "Imprime tout ou une partie des registres"
+/*    ID_HELP_HELPTOPICS      "Ouvre l'aide de l'éditeur de registres" */
+    ID_HELP_ABOUT           "Affiche de l'information sur le programme, le numéro de version et le copyright"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_REGISTRY_EXIT        "Quitte l'éditeur de registres"
+    ID_FAVOURITES_ADDTOFAVOURITES "Ajoute des clés à la liste des Favoris"
+    ID_FAVOURITES_REMOVEFAVOURITE "Retire des clés de la liste des Favoris"
+    ID_VIEW_STATUSBAR       "Montre ou cache la barre d'état"
+    ID_VIEW_SPLIT           "Change la position de la séparation entre les deux panneaux"
+    ID_VIEW_REFRESH         "Rafraîchit la fenêtre"
+    ID_EDIT_DELETE          "Supprime la sélection"
+    ID_EDIT_RENAME          "Renomme la sélection"
+    ID_EDIT_COPYKEYNAME     "Copie le nom de la clé sélectionnée vers le presse-papier"
+    ID_EDIT_FIND            "Recherche du texte dans une clé, une valeur ou des données"
+    ID_EDIT_FINDNEXT        "Recherche l'occurence suivante du texte de la dernière recherche"
+END
+
+/*****************************************************************/
+
+
+/*
+ * Dialog
+ */
+
+IDD_DIALOG1 DIALOG DISCARDABLE  50, 50, 268, 98
+STYLE DS_3DLOOK | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
+    WS_BORDER
+FONT 8, "MS Sans Serif"
+BEGIN
+END
+
+IDD_DIALOG2 DIALOG DISCARDABLE  0, 0, 187, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Boîte de dialogue"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,130,7,50,14
+    PUSHBUTTON      "Annuler",IDCANCEL,130,24,50,14
+END
+
+
+/*
+ * TEXTINCLUDE
+ */
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "resource.h\0"
+END
+
+
+
+/*
+ * String Table
+ */
+
+/*
+ *STRINGTABLE DISCARDABLE
+ *BEGIN
+ *    ID_HELP_HELPTOPICS      "Ouvre l'aide de l'éditeur de registres."
+ *    ID_HELP_ABOUT           "Affiche de l'information sur le programme, le numéro de version et le copyright."
+ *END
+ */
+
+/*****************************************************************/

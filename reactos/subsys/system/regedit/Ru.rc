@@ -1,0 +1,206 @@
+/*
+ * Regedit (Russian resources)
+ *
+ * Copyright 2003 Igor Stepin
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+/*
+ * Menu
+ */
+
+IDC_REGEDIT MENU DISCARDABLE
+BEGIN
+    POPUP "&Файл"
+    BEGIN
+        MENUITEM "В&ыход",                       ID_REGISTRY_EXIT
+    END
+    POPUP "&Справка"
+    BEGIN
+        MENUITEM "&О программе",                  ID_HELP_ABOUT
+    END
+END
+
+IDR_REGEDIT_MENU MENU DISCARDABLE
+BEGIN
+    POPUP "&Реестр"
+    BEGIN
+        MENUITEM "&Импортировать файл реестра...",    ID_REGISTRY_IMPORTREGISTRYFILE
+        MENUITEM "&Экспортировать файл реестра...",    ID_REGISTRY_EXPORTREGISTRYFILE
+        MENUITEM SEPARATOR
+        MENUITEM "&Подключить сетевой реестр...", ID_REGISTRY_CONNECTNETWORKREGISTRY, GRAYED
+        MENUITEM "&Отключить сетевой реестр...",  ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Печатаь\tCtrl+P",              ID_REGISTRY_PRINT, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "В&ыход",                       ID_REGISTRY_EXIT
+    END
+    POPUP "&Правка"
+    BEGIN
+        MENUITEM "&Изменить",                     ID_EDIT_MODIFY
+        MENUITEM SEPARATOR
+        POPUP "Созд&ать"
+        BEGIN
+            MENUITEM "Кл&юч",                        ID_EDIT_NEW_KEY
+            MENUITEM SEPARATOR
+            MENUITEM "&Строковое значение",               ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Бинарное значение",               ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&DWORD значение",                ID_EDIT_NEW_DWORDVALUE
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Удалить\tDel",                ID_EDIT_DELETE
+        MENUITEM "&Переименовать",                     ID_EDIT_RENAME
+        MENUITEM SEPARATOR
+        MENUITEM "С&копировать имя ключа",              ID_EDIT_COPYKEYNAME
+        MENUITEM SEPARATOR
+        MENUITEM "&Найти\tCtrl+F",               ID_EDIT_FIND, GRAYED
+        MENUITEM "Найти &далее\tF3",              ID_EDIT_FINDNEXT, GRAYED
+    END
+    POPUP "&Вид"
+    BEGIN
+        MENUITEM "Строка &состояния",                 ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "&Разделить",                      ID_VIEW_SPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Обновить\tF5",                ID_VIEW_REFRESH
+    END
+    POPUP "&Избранное"
+    BEGIN
+        MENUITEM "&Добавить в избранное",          ID_FAVOURITES_ADDTOFAVOURITES
+        , GRAYED
+        MENUITEM "&Удалить из избранного",           ID_FAVOURITES_REMOVEFAVOURITE
+        , GRAYED
+    END
+    POPUP "&Справка"
+    BEGIN
+        MENUITEM "&Содержание",                ID_HELP_HELPTOPICS
+        MENUITEM SEPARATOR
+        MENUITEM "&О редакторе реестра",      ID_HELP_ABOUT
+    END
+END
+
+/*
+ * String Table
+ */
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_LIST_COLUMN_NAME    "Имя"
+    IDS_LIST_COLUMN_TYPE    "Тип"
+    IDS_LIST_COLUMN_DATA    "Данные"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_APP_TITLE           "Редактор реестра"
+    IDC_REGEDIT             "REGEDIT"
+    IDC_REGEDIT_FRAME       "REGEDIT_FRAME"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_REGISTRY_MENU        "Содержит команды для работы с регистром в целом"
+    ID_EDIT_MENU            "Содержит команды для редактирования значений или ключей"
+    ID_VIEW_MENU            "Содержит команды для настройки окна реестра"
+    ID_FAVOURITES_MENU      "Содержит команды для доступа к часто используемым ключам"
+    ID_HELP_MENU            "Содержит команды для отображения справки и информации о редакторе реестра"
+    ID_EDIT_NEW_MENU        "Содержит команды для создания новых ключей или значений"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_EDIT_MODIFY          "Modifies the value's data"
+    ID_EDIT_NEW_KEY         "Добавляет новый ключ"
+    ID_EDIT_NEW_STRINGVALUE "Добавляет новое строковое значение"
+    ID_EDIT_NEW_BINARYVALUE "Добавляет новое бинарное значение"
+    ID_EDIT_NEW_DWORDVALUE  "Добавляет новое DWORD-значение"
+    ID_REGISTRY_IMPORTREGISTRYFILE "Импортирует текстовой файл в реестр"
+    ID_REGISTRY_EXPORTREGISTRYFILE
+                            "Экспортирует весь реестр или его часть в текстовой файл"
+    ID_REGISTRY_CONNECTNETWORKREGISTRY
+                            "Подключается к реестру удалённого компьютера"
+    ID_REGISTRY_DISCONNECTNETWORKREGISTRY
+                            "Отключается от реестра удалённого компьютера"
+    ID_REGISTRY_PRINT       "Печатает весь реестр или ого часть"
+/*    ID_HELP_HELPTOPICS      "Opens registry editor help" */
+    ID_HELP_ABOUT           "Отображает информацию о программе, номер версии и авторство"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_REGISTRY_EXIT        "Выход из редактора реестра"
+    ID_FAVOURITES_ADDTOFAVOURITES "Добавить ключ в избранное"
+    ID_FAVOURITES_REMOVEFAVOURITE "Удалить ключ из избранного"
+    ID_VIEW_STATUSBAR       "Показать или скрыть строку состояния"
+    ID_VIEW_SPLIT           "Изменить позицию разделителя между двумя панелями"
+    ID_VIEW_REFRESH         "Обновляет окно"
+    ID_EDIT_DELETE          "Удаляет выделение"
+    ID_EDIT_RENAME          "Переименовывает выделение"
+    ID_EDIT_COPYKEYNAME     "Копирует имя выделенного ключа в буфер обмена"
+    ID_EDIT_FIND            "Ищет текстовую строку в ключе, значении или данных"
+    ID_EDIT_FINDNEXT        "Ищет следующее совпадение текста, заданного в предыдущем поиске"
+END
+
+/*****************************************************************/
+
+
+/*
+ * Dialog
+ */
+
+IDD_DIALOG1 DIALOG DISCARDABLE  50, 50, 268, 98
+STYLE DS_3DLOOK | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
+    WS_BORDER
+FONT 8, "MS Sans Serif"
+BEGIN
+END
+
+IDD_DIALOG2 DIALOG DISCARDABLE  0, 0, 187, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Диалог"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,130,7,50,14
+    PUSHBUTTON      "Отмена",IDCANCEL,130,24,50,14
+END
+
+
+/*
+ * TEXTINCLUDE
+ */
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "resource.h\0"
+END
+
+
+
+/*
+ * String Table
+ */
+
+/*
+ *STRINGTABLE DISCARDABLE
+ *BEGIN
+ *    ID_HELP_HELPTOPICS      "Opens Registry Editor Help."
+ *    ID_HELP_ABOUT           "Displays program information, version number, and copyright."
+ *END
+ */
+
+/*****************************************************************/

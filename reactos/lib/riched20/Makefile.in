@@ -1,0 +1,27 @@
+TOPSRCDIR = @top_srcdir@
+TOPOBJDIR = ../..
+SRCDIR    = @srcdir@
+VPATH     = @srcdir@
+MODULE    = riched20.dll
+IMPORTS   = user32 gdi32 kernel32
+EXTRALIBS = -luuid
+
+C_SRCS = \
+	caret.c \
+	context.c \
+	editor.c \
+	list.c \
+	paint.c \
+	para.c \
+	reader.c \
+	richole.c \
+	row.c \
+	run.c \
+	string.c \
+	style.c \
+	undo.c \
+	wrap.c
+
+@MAKE_DLL_RULES@
+
+### Dependencies:

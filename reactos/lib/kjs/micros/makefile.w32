@@ -1,0 +1,50 @@
+
+LIBOBJS = b_array.obj b_bool.obj b_core.obj b_date.obj b_file.obj \
+b_math.obj b_number.obj b_regexp.obj b_string.obj b_system.obj \
+b_vm.obj bc.obj compiler.obj debug.obj getopt.obj getopt1.obj \
+heap.obj js.obj object.obj utils.obj mrgsort.obj vm.obj \
+vmjumps.obj vmswitch.obj alloc.obj xjs.obj w32.obj \
+b_dir.obj b_func.obj b_object.obj crc32.obj dl_dummy.obj \
+iostream.obj regex.obj r_std.obj
+
+MOREOBJS = md5c.obj xmd5.obj
+
+#
+# The mystic flags in the CFLAGS and LDFLAGS?:
+#
+#  -Ml		large memory model (yes, that's true)
+#  -F 3000	???
+#  -W3		warning level 3
+#  -Zi		generate debugging information
+#  /st:0x3000	set the stack size to 0x3000
+#
+
+CC	= cl
+CFLAGS	= -F 3000 -W3 -Zi -I.. -I. -DWIN32 -nologo
+DEFS	= -DHAVE_CONFIG_H
+LDFLAGS1= -F 3000 -Zi -nologo
+LDFLAGS2= -link
+
+prefix	= ..\..\ngs
+
+all: js.exe
+
+js.exe: libjs.lib main.obj $(MOREOBJS)
+	$(CC) $(LDFLAGS1) -o $@ main.obj setargv.obj $(MOREOBJS) libjs.lib $(LDFLAGS2)
+
+libjs.lib: $(LIBOBJS)
+	rm libjs.lib
+	lib -NOLOGO -OUT:"$@" $(LIBOBJS) ;
+
+install: js.exe
+	copy js.exe $(prefix)\bin
+	copy libjs.lib $(prefix)\lib
+	copy js.h $(prefix)\include
+	copy jsint.h $(prefix)\include
+	copy jsconfig.h $(prefix)\include
+
+%.obj: %.c
+	@$(CC) $(CFLAGS) $(DEFS) -c $<
+
+clean::
+	rm -rf $(LIBOBJS) $(MOREOBJS)

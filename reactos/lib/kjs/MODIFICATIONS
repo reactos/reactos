@@ -1,0 +1,6 @@
+This interpreter has been modified for use in the ReactOS kernel as a
+debugging aid.  The original files are available in the src directory,
+and modified files are in the ksrc directory.
+
+The file jsconfig.h which is normally automatically generated has been
+hand generated here.

@@ -1,0 +1,275 @@
+dnl Process this file with autoconf to produce a configure script.
+
+AC_PREREQ(2.12)
+
+AC_INIT(src/jsint.h)
+AM_INIT_AUTOMAKE(js, 0.2.5)
+AM_CONFIG_HEADER(jsconfig.h)
+
+AC_REVISION($Revision: 1.1 $)
+
+dnl Check if we have `libtool'.
+
+AC_CHECK_PROG(ACLOCAL_FLAGS_FOR_LIBTOOL, libtool, found, -I $(srcdir)/am.opt)
+
+if test "X$ACLOCAL_FLAGS_FOR_LIBTOOL" = "Xfound"; then
+   ACLOCAL_FLAGS_FOR_LIBTOOL=""
+fi
+
+
+AM_PROG_INSTALL
+AC_PROG_RANLIB
+
+AC_CANONICAL_HOST
+AC_DEFINE_UNQUOTED(CANONICAL_HOST, "$host")
+AC_DEFINE_UNQUOTED(CANONICAL_HOST_CPU, "$host_cpu")
+AC_DEFINE_UNQUOTED(CANONICAL_HOST_VENDOR, "$host_vendor")
+AC_DEFINE_UNQUOTED(CANONICAL_HOST_OS, "$host_os")
+
+dnl System / C-compiler properties.
+
+please_posix_threads=0
+AC_ARG_WITH(pthreads,
+[  --with-pthreads         use Posix threads for the re-entrant functions],
+  if test "X$withval" = "Xyes"; then
+    please_posix_threads=1
+
+    echo "fetching re-entrant functions from the Posix threads library"
+    RE_ENTRANT_SOURCE="r_pthrs.lo"
+  fi
+)
+
+if test "X$please_posix_threads" = "X1"; then
+   dnl Check if we know anything about the Posix threads.
+   AM_POSIX_THREADS
+fi
+
+dnl ... other re-entrancy back-ends
+
+if test "X$RE_ENTRANT_SOURCE" = "X"; then
+  echo "fetching re-entrant functions from the C-library"
+  AC_MSG_WARN(the interpreter is not re-entrant)
+  RE_ENTRANT_SOURCE="r_std.lo"
+fi
+
+INTERPRETER_FEATURES="$INTERPRETER_FEATURES $RE_ENTRANT_SOURCE"
+
+dnl Now we definitely need the cc.
+AC_PROG_CC
+
+
+AM_ENABLE_SHARED(no)
+AM_ENABLE_STATIC(yes)
+AM_PROG_LIBTOOL
+
+AC_AIX
+
+AM_PROG_CC_STDC
+
+AC_C_CONST
+AM_C_PROTOTYPES
+AC_FUNC_ALLOCA
+
+AC_STDC_HEADERS
+AC_HAVE_HEADERS(string.h stdlib.h unistd.h errno.h float.h limits.h)
+
+AC_CHECK_SIZEOF(int)
+AC_CHECK_SIZEOF(long)
+
+AC_CHECK_FUNCS(srand48 drand48 sleep usleep lstat)
+
+dnl Can we use inline?
+AC_MSG_CHECKING([if inline works])
+AC_TRY_COMPILE([
+static inline int foo ()
+{
+  return 0;
+}
+], [
+  foo ();
+], [
+  AC_MSG_RESULT(yes)
+], [
+  AC_MSG_RESULT(no)
+  AC_DEFINE(inline,)
+])
+
+dnl Does the struct stat have st_blksize?
+AC_MSG_CHECKING([if struct stat has st_blksize])
+AC_TRY_COMPILE([
+#include <sys/stat.h>
+#include <sys/types.h>
+], [
+  struct stat stat_st;
+  stat_st.st_blksize = 0;
+], [
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(HAVE_STAT_ST_ST_BLKSIZE, 1)
+], [
+  AC_MSG_RESULT(no)
+])
+
+dnl Does the struct stat have st_blocks?
+AC_MSG_CHECKING([if struct stat has st_blocks])
+AC_TRY_COMPILE([
+#include <sys/stat.h>
+#include <sys/types.h>
+], [
+  struct stat stat_st;
+  stat_st.st_blocks = 0;
+], [
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(HAVE_STAT_ST_ST_BLOCKS, 1)
+], [
+  AC_MSG_RESULT(no)
+])
+
+dnl
+dnl Interpreter features.
+dnl
+
+AC_ARG_ENABLE(all-dispatchers,
+[  --enable-all-dispatchers  build all byte-code instruction dispatchers],
+  if test "X$enableval" = "Xyes"; then
+    echo "building all byte-code instruction dispatchers"
+    AC_DEFINE(ALL_DISPATCHERS)
+    INTERPRETER_FEATURES="$INTERPRETER_FEATURES vmswt0.lo"
+  fi
+)
+
+AC_ARG_ENABLE(profiling,
+[  --enable-profiling      enable byte-code operand profiling],
+  if test "X$enableval" = "Xyes"; then
+    echo "enabling byte-code operand profiling"
+    AC_DEFINE(PROFILING)
+  fi
+)
+
+AC_ARG_ENABLE(operand-hooks,
+[  --enable-operand-hooks  turn on byte-code operand hooks],
+  if test "X$enableval" = "Xyes"; then
+    echo "enabling byte-code operand hooks"
+    AC_DEFINE(BC_OPERAND_HOOKS)
+  fi
+)
+
+AC_ARG_ENABLE(jumps,
+[  --disable-jumps         disable the jumps instruction dispatch method],
+  if test "X$enableval" = "Xno"; then
+    echo "disabling the jumps byte-code instruction dispatch method"
+    AC_DEFINE(DISABLE_JUMPS)
+  fi
+)
+
+
+dnl
+dnl Extensions.
+dnl
+
+EXTENSIONS=""
+EXTENSIONS_LIBS=""
+
+with_curses_val=0
+AC_ARG_WITH(curses,
+[  --with-curses           build curses entension],
+  if test "X$withval" = "Xyes"; then
+    echo "building curses extension"
+    with_curses_val=1
+
+    dnl Check which curses package to use.
+    AC_CHECK_HEADER(ncurses.h, [
+      AC_DEFINE(HAVE_NCURSES_H)
+      curses_lib='-lncurses'
+    ], [
+      AC_CHECK_HEADER(curses.h, [
+        AC_DEFINE(HAVE_CURSES_H)
+	curses_lib='-lcurses'
+      ], [
+        AC_MSG_ERROR([couldn't determine which curses library I should use])
+      ])
+    ])
+  fi
+)
+if test "X$with_curses_val" = "X1"; then
+  AC_DEFINE(WITH_CURSES)
+  EXTENSIONS="$EXTENSIONS xcurses.lo"
+  EXTENSIONS_LIBS="$EXTENSIONS_LIBS $curses_lib -ltermcap"
+fi
+
+with_dload_val=1
+AC_ARG_WITH(dload,
+[  --without-dload         disable dynamic loading],
+  if test "X$withval" = "Xno"; then
+    echo "disabling the dynamic loading"
+    with_dload_val=0
+  fi
+)
+if test "X$with_dload_val" = "X1"; then
+  # Check what dload method we should use, and from which library.
+
+  # The dl{open,close,cym}() interface.
+  AC_HAVE_HEADERS(dlfcn.h)
+  AC_CHECK_LIB(dl, dlopen, [
+    EXTENSIONS="$EXTENSIONS dl_open.lo"
+    EXTENSIONS_LIBS="$EXTENSIONS_LIBS -ldl"
+  ], [
+    # Ok, can't do dynamic loading.
+    with_dload_val=0
+  ])
+fi
+if test "X$with_dload_val" = "X1"; then
+  # Everything ok so far.  Let's set the final link flags the
+  # environment might require.
+  case "$host" in
+    *linux* )
+      LDFLAGS="$LDFLAGS -rdynamic"
+    ;;
+  esac
+else
+  # Sorry, no luck.  Dynamic loading do not work on your system.
+  EXTENSIONS="dl_dummy.lo"
+fi
+
+with_js_val=1
+AC_ARG_WITH(js,
+[  --without-js            do not built the JS extension],
+  if text "X$withval" = "Xno"; then
+    echo "disabling the JS extension"
+    with_js_val=0
+  fi
+)
+if test "X$with_js_val" = "X1"; then
+  AC_DEFINE(WITH_JS)
+  EXTENSIONS="$EXTENSIONS xjs.lo"
+fi
+
+with_md5_val=1
+AC_ARG_WITH(md5,
+[  --without-md5           do not built the MD5 extension],
+  if text "X$withval" = "Xno"; then
+    echo "disabling the MD5 extension"
+    with_md5_val=0
+  fi
+)
+if test "X$with_md5_val" = "X1"; then
+   AC_DEFINE(WITH_MD5)
+  EXTENSIONS="$EXTENSIONS xmd5.lo md5c.lo"
+fi
+
+AC_SUBST(EXTENSIONS)
+AC_SUBST(EXTENSIONS_LIBS)
+
+AC_SUBST(INTERPRETER_FEATURES)
+
+AC_OUTPUT([Makefile \
+	src/Makefile \
+	src/tests/Makefile \
+	examples/Makefile \
+	jsc/Makefile \
+	jsc/tests/Makefile \
+	jsas/Makefile \
+	jsdas/Makefile \
+	jswrap/Makefile \
+	docs/Makefile \
+	projects/Makefile \
+	micros/Makefile])
