@@ -1,5 +1,5 @@
 /*
- * Copyright 2003, 2004 Martin Fuchs
+ * Copyright 2003, 2004, 2005 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -33,6 +33,9 @@
 #include "explorer_intres.h"
 
 #include <locale.h>	// for setlocale()
+
+
+DynamicLoadLibFct<void(__stdcall*)(BOOL)> g_SHDOCVW_ShellDDEInit(TEXT("SHDOCVW"), 118);
 
 
 ExplorerGlobals g_Globals;
@@ -696,6 +699,10 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 		 // another undocumented event: "Global\\msgina: ReturnToWelcome"
 		if (!SetShellReadyEvent(TEXT("msgina: ShellReadyEvent")))
 			SetShellReadyEvent(TEXT("Global\\msgina: ShellReadyEvent"));
+
+		 // launch the shell DDE server
+		if (g_SHDOCVW_ShellDDEInit)
+			(*g_SHDOCVW_ShellDDEInit)(TRUE);
 	}
 
 
@@ -726,6 +733,10 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 		g_Globals._desktop_mode = true;
 
 	int ret = explorer_main(hInstance, lpCmdLine, nShowCmd);
+
+	 // shutdown the shell DDE server
+	if (g_SHDOCVW_ShellDDEInit)
+		(*g_SHDOCVW_ShellDDEInit)(FALSE);
 
 	return ret;
 }
