@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: focus.c,v 1.1 2003/11/30 20:29:09 navaraf Exp $
+ * $Id: focus.c,v 1.2 2003/11/30 22:48:11 navaraf Exp $
  */
 
 #include <win32k/win32k.h>
@@ -171,10 +171,10 @@ IntSetActiveWindow(PWINDOW_OBJECT Window)
 
    if (Window != 0)
    {
-      if (Window->MessageQueue != ThreadQueue)
+      if (!(Window->Style & WS_VISIBLE) ||
+          (Window->Style & (WS_POPUP | WS_CHILD)) == WS_CHILD)
       {
-         IntReleaseWindowObject(Window);
-         return 0;
+         return ThreadQueue ? 0 : ThreadQueue->ActiveWindow;
       }
       hWnd = Window->Self;
    }
@@ -263,13 +263,6 @@ NtUserSetActiveWindow(HWND hWnd)
       DPRINT("(%wZ)\n", &Window->WindowName);
 
       ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
-
-      if (!(Window->Style & WS_VISIBLE) ||
-          (Window->Style & (WS_POPUP | WS_CHILD)) == WS_CHILD)
-      {
-         IntReleaseWindowObject(Window);
-         return ThreadQueue ? 0 : ThreadQueue->ActiveWindow;
-      }
 
       if (Window->MessageQueue != ThreadQueue)
       {

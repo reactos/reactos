@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.48 2003/11/30 20:03:47 navaraf Exp $
+/* $Id: winpos.c,v 1.49 2003/11/30 22:48:11 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -166,9 +166,9 @@ done:
       IntReleaseWindowObject(Window);
     }
 
-  if (! NtUserSetActiveWindow(hwndTo))
+  if (!IntSetActiveWindow(hwndTo))
     {
-      NtUserSetActiveWindow(NULL);
+      IntSetActiveWindow(NULL);
     }
 }
 
