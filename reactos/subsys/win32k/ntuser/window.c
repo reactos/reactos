@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.54 2003/06/14 10:00:57 gvg Exp $
+/* $Id: window.c,v 1.55 2003/06/15 04:25:34 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1139,10 +1139,9 @@ NtUserFillWindow(DWORD Unknown0,
 HWND STDCALL
 NtUserFindWindowEx(HWND hwndParent,
 		   HWND hwndChildAfter,
-		   LPCWSTR ucClassName,
-		   LPCWSTR ucWindowName)
+		   PUNICODE_STRING ucClassName,
+		   PUNICODE_STRING ucWindowName)
 {
-#if 0
   NTSTATUS status;
   HWND windowHandle;
   PWINDOW_OBJECT windowObject;
@@ -1157,9 +1156,9 @@ NtUserFindWindowEx(HWND hwndParent,
       return (HWND)0;
     }
 
-  ExAcquireFastMutexUnsafe (&PsGetWin32Process()->WindowListLock);
-  currentEntry = PsGetWin32Process()->WindowListHead.Flink;
-  while (currentEntry != &PsGetWin32Process()->WindowListHead)
+  //ExAcquireFastMutexUnsafe (&PsGetWin32Process()->WindowListLock);
+  currentEntry = W32kGetActiveDesktop()->WindowListHead.Flink;
+  while (currentEntry != &W32kGetActiveDesktop()->WindowListHead)
     {
       windowObject = CONTAINING_RECORD (currentEntry, WINDOW_OBJECT, 
 					ListEntry);
@@ -1168,20 +1167,19 @@ NtUserFindWindowEx(HWND hwndParent,
 	  RtlCompareUnicodeString (ucWindowName, &windowObject->WindowName, 
 				   TRUE) == 0)
 	{
-	  ObmCreateHandle(PsGetWin32Process()->HandleTable,
+	  ObmCreateHandle(W32kGetActiveDesktop()->WindowStation->HandleTable,
 			  windowObject,
 			  &windowHandle);
-	  ExReleaseFastMutexUnsafe (&PsGetWin32Process()->WindowListLock);
+	  //ExReleaseFastMutexUnsafe (&PsGetWin32Process()->WindowListLock);
 	  ObmDereferenceObject (classObject);
       
 	  return  windowHandle;
 	}
       currentEntry = currentEntry->Flink;
   }
-  ExReleaseFastMutexUnsafe (&PsGetWin32Process()->WindowListLock);
+  //ExReleaseFastMutexUnsafe (&PsGetWin32Process()->WindowListLock);
   
   ObmDereferenceObject (classObject);
-#endif
 
   return  (HWND)0;
 }

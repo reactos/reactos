@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.37 2003/06/14 10:00:58 gvg Exp $
+/* $Id: window.c,v 1.38 2003/06/15 04:25:34 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -714,7 +714,29 @@ FindWindowExW(HWND hwndParent,
 	      LPCWSTR lpszClass,
 	      LPCWSTR lpszWindow)
 {
-  return NtUserFindWindowEx(hwndParent, hwndChildAfter, lpszClass, lpszWindow);
+	PUNICODE_STRING ucClassName;
+	PUNICODE_STRING ucWindowName;
+
+	if (IS_ATOM(lpszClass)) 
+	{
+		RtlInitUnicodeString(ucClassName, NULL);
+		ucClassName->Buffer = (LPWSTR)lpszClass;
+    } 
+	else 
+    {
+		RtlInitUnicodeString(ucClassName, lpszClass);
+    }
+	if (IS_ATOM(lpszWindow)) 
+	{
+		RtlInitUnicodeString(ucWindowName, NULL);
+		ucClassName->Buffer = (LPWSTR)lpszWindow;
+    } 
+	else 
+    {
+		RtlInitUnicodeString(ucWindowName, lpszWindow);
+    }
+
+	return NtUserFindWindowEx(hwndParent, hwndChildAfter, ucClassName, ucWindowName);
 }
 
 WINBOOL STDCALL

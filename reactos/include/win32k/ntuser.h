@@ -504,8 +504,8 @@ STDCALL
 NtUserFindWindowEx(
   HWND  hwndParent,
   HWND  hwndChildAfter,
-  LPCWSTR  ucClassName,
-  LPCWSTR  ucWindowName
+  PUNICODE_STRING  ucClassName,
+  PUNICODE_STRING  ucWindowName
   );
 
 DWORD
