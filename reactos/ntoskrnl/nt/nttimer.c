@@ -1,4 +1,4 @@
-/* $Id: nttimer.c,v 1.20 2003/09/25 20:06:32 ekohl Exp $
+/* $Id: nttimer.c,v 1.21 2003/10/07 14:00:45 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -15,6 +15,7 @@
 #include <ntos.h>
 #include <ntos/synch.h>
 #include <internal/ke.h>
+#include <internal/ob.h>
 #include <limits.h>
 #include <internal/pool.h>
 #include <internal/safe.h>
@@ -141,6 +142,8 @@ VOID NtInitializeTimerImplementation(VOID)
    ExTimerType->OkayToClose = NULL;
    ExTimerType->Create = NtpCreateTimer;
    ExTimerType->DuplicationNotify = NULL;
+
+   ObpCreateTypeObject(ExTimerType);
 }
 
 

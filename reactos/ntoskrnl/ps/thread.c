@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.118 2003/09/30 22:36:29 gvg Exp $
+/* $Id: thread.c,v 1.119 2003/10/07 14:01:57 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -462,8 +462,6 @@ PsInitThreadManagment(VOID)
    
    PsThreadType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
    
-   RtlInitUnicodeStringFromLiteral(&PsThreadType->TypeName, L"Thread");
-   
    PsThreadType->Tag = TAG('T', 'H', 'R', 'T');
    PsThreadType->TotalObjects = 0;
    PsThreadType->TotalHandles = 0;
@@ -483,6 +481,10 @@ PsInitThreadManagment(VOID)
    PsThreadType->Create = NULL;
    PsThreadType->DuplicationNotify = NULL;
    
+   RtlInitUnicodeStringFromLiteral(&PsThreadType->TypeName, L"Thread");
+   
+   ObpCreateTypeObject(PsThreadType);
+
    PsInitializeThread(NULL,&FirstThread,&FirstThreadHandle,
 		      THREAD_ALL_ACCESS,NULL, TRUE);
    FirstThread->Tcb.State = THREAD_STATE_RUNNING;

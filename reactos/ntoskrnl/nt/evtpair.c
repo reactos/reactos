@@ -1,4 +1,4 @@
-/* $Id: evtpair.c,v 1.17 2003/09/25 20:06:32 ekohl Exp $
+/* $Id: evtpair.c,v 1.18 2003/10/07 14:00:45 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,6 +18,7 @@
 #define NTOS_MODE_KERNEL
 #include <ntos.h>
 #include <ntos/synch.h>
+#include <internal/ob.h>
 #include <internal/ps.h>
 #include <limits.h>
 
@@ -89,6 +90,7 @@ VOID NtInitializeEventPairImplementation(VOID)
    ExEventPairObjectType->DuplicationNotify = NULL;
 
    KeInitializeSpinLock(&ExThreadEventPairSpinLock);
+   ObpCreateTypeObject(ExEventPairObjectType);
 }
 
 

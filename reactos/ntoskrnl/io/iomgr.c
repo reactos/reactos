@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.38 2003/09/29 20:43:07 navaraf Exp $
+/* $Id: iomgr.c,v 1.39 2003/10/07 13:58:53 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -234,6 +234,8 @@ VOID IoInit (VOID)
   
   RtlInitUnicodeStringFromLiteral(&IoDeviceObjectType->TypeName, L"Device");
 
+  ObpCreateTypeObject(IoDeviceObjectType);
+
   /*
    * Register iomgr types: FileObjectType
    * (alias DriverObjectType)
@@ -260,6 +262,8 @@ VOID IoInit (VOID)
   IoFileObjectType->DuplicationNotify = NULL;
   
   RtlInitUnicodeStringFromLiteral(&IoFileObjectType->TypeName, L"File");
+
+  ObpCreateTypeObject(IoFileObjectType);
 
   /*
    * Create the '\Driver' object directory

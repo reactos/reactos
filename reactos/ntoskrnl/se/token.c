@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.27 2003/09/25 20:09:11 ekohl Exp $
+/* $Id: token.c,v 1.28 2003/10/07 14:04:52 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -14,6 +14,7 @@
 #include <limits.h>
 #define NTOS_MODE_KERNEL
 #include <ntos.h>
+#include <internal/ob.h>
 #include <internal/ps.h>
 #include <internal/se.h>
 #include <internal/safe.h>
@@ -480,6 +481,7 @@ SepInitializeTokenImplementation(VOID)
 
   RtlCreateUnicodeString(&SepTokenObjectType->TypeName,
 			 L"Token");
+  ObpCreateTypeObject (SepTokenObjectType);
 }
 
 

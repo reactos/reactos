@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.108 2003/09/25 20:03:11 ekohl Exp $
+/* $Id: registry.c,v 1.109 2003/10/07 14:08:43 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -278,6 +278,8 @@ CmInitializeRegistry(VOID)
   CmiKeyType->Create = CmiObjectCreate;
   CmiKeyType->DuplicationNotify = NULL;
   RtlInitUnicodeString(&CmiKeyType->TypeName, L"Key");
+
+  ObpCreateTypeObject (CmiKeyType);
 
   /* Initialize the hive list */
   InitializeListHead(&CmiHiveListHead);

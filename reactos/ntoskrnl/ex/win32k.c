@@ -27,6 +27,7 @@
 #include <limits.h>
 #include <ddk/ntddk.h>
 #include <internal/ex.h>
+#include <internal/ob.h>
 #include <wchar.h>
 
 #define NDEBUG
@@ -288,6 +289,8 @@ ExpWin32kInit(VOID)
   ExWindowStationObjectType->DuplicationNotify = NULL;
   RtlInitUnicodeStringFromLiteral(&ExWindowStationObjectType->TypeName, L"WindowStation");
 
+  ObpCreateTypeObject(ExWindowStationObjectType);
+
   /* Create desktop object type */
   ExDesktopObjectType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
   if (ExDesktopObjectType == NULL)
@@ -315,6 +318,8 @@ ExpWin32kInit(VOID)
   ExDesktopObjectType->Create = ExpDesktopObjectCreate;
   ExDesktopObjectType->DuplicationNotify = NULL;
   RtlInitUnicodeStringFromLiteral(&ExDesktopObjectType->TypeName, L"Desktop");
+
+  ObpCreateTypeObject(ExDesktopObjectType);
 }
 
 /* EOF */

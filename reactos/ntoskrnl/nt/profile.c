@@ -30,6 +30,7 @@
 #define NTOS_MODE_KERNEL
 #include <ntos.h>
 #include <internal/mm.h>
+#include <internal/ob.h>
 #include <internal/ps.h>
 #include <internal/pool.h>
 #include <limits.h>
@@ -394,6 +395,8 @@ NtInitializeProfileImplementation(VOID)
   ExProfileObjectType->QueryName = NULL;
   ExProfileObjectType->OkayToClose = NULL;
   ExProfileObjectType->Create = NULL;
+
+  ObpCreateTypeObject(ExProfileObjectType);
 }
 
 NTSTATUS STDCALL 

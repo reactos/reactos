@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.117 2003/10/04 18:19:17 navaraf Exp $
+/* $Id: process.c,v 1.118 2003/10/07 14:01:57 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -263,6 +263,8 @@ PsInitProcessManagment(VOID)
    
    RtlInitUnicodeStringFromLiteral(&PsProcessType->TypeName, L"Process");
    
+   ObpCreateTypeObject(PsProcessType);
+
    InitializeListHead(&PsProcessListHead);
    KeInitializeSpinLock(&PsProcessListLock);
    

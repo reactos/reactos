@@ -32,6 +32,7 @@
 #define NTOS_MODE_KERNEL
 #include <ntos.h>
 #include <ntos/synch.h>
+#include <internal/ob.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -102,6 +103,8 @@ NtInitializeMutantImplementation(VOID)
   ExMutantObjectType->OkayToClose = NULL;
   ExMutantObjectType->Create = NtpCreateMutant;
   ExMutantObjectType->DuplicationNotify = NULL;
+
+  ObpCreateTypeObject(ExMutantObjectType);
 }
 
 

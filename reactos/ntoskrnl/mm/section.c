@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.128 2003/09/25 20:05:44 ekohl Exp $
+/* $Id: section.c,v 1.129 2003/10/07 14:00:10 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -2164,6 +2164,12 @@ MmInitSectionImplementation(VOID)
    MmSectionObjectType->Create = MmpCreateSection;
    MmSectionObjectType->DuplicationNotify = NULL;
    
+   /*
+    * NOTE: Do not register the section object type here because
+    * the object manager it not initialized yet!
+    * The section object type will be created in ObInit().
+    */
+
    return(STATUS_SUCCESS);
 }
 

@@ -31,6 +31,7 @@
 #define NTOS_MODE_KERNEL
 #include <ntos.h>
 #include <internal/id.h>
+#include <internal/ob.h>
 #include <ntos/synch.h>
 #include <internal/pool.h>
 #include <internal/safe.h>
@@ -94,6 +95,8 @@ NtInitializeEventImplementation(VOID)
    ExEventObjectType->OkayToClose = NULL;
    ExEventObjectType->Create = NtpCreateEvent;
    ExEventObjectType->DuplicationNotify = NULL;
+
+   ObpCreateTypeObject(ExEventObjectType);
 }
 
 

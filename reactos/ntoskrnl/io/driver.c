@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.21 2003/10/06 18:49:50 navaraf Exp $
+/* $Id: driver.c,v 1.22 2003/10/07 13:58:53 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -109,6 +109,8 @@ IopInitDriverImplementation(VOID)
   IoDriverObjectType->Create = IopCreateDriver;
   IoDriverObjectType->DuplicationNotify = NULL;
   RtlInitUnicodeStringFromLiteral(&IoDriverObjectType->TypeName, L"Driver");
+
+  ObpCreateTypeObject(IoDriverObjectType);
 }
 
 /**********************************************************************

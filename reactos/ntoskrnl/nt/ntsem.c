@@ -1,4 +1,4 @@
-/* $Id: ntsem.c,v 1.19 2003/09/25 20:06:32 ekohl Exp $
+/* $Id: ntsem.c,v 1.20 2003/10/07 14:00:45 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -15,6 +15,7 @@
 #define NTOS_MODE_KERNEL
 #include <ntos.h>
 #include <ntos/synch.h>
+#include <internal/ob.h>
 #include <internal/pool.h>
 #include <internal/ps.h>
 
@@ -74,6 +75,8 @@ VOID NtInitializeSemaphoreImplementation(VOID)
    ExSemaphoreType->OkayToClose = NULL;
    ExSemaphoreType->Create = NtpCreateSemaphore;
    ExSemaphoreType->DuplicationNotify = NULL;
+
+   ObpCreateTypeObject(ExSemaphoreType);
 }
 
 NTSTATUS STDCALL
