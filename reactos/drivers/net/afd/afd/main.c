@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.17 2004/12/25 21:30:17 arty Exp $
+/* $Id: main.c,v 1.18 2004/12/29 21:44:44 gvg Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/main.c
@@ -244,12 +244,19 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
 				       Irp, 0, NULL, FALSE );
 
-    Status = TdiBuildNullConnectionInfo
-	( &ConnInfo, FCB->RemoteAddress->Address[0].AddressType );
+    if (NULL == FCB->RemoteAddress)
+      {
+        ConnInfo = NULL;
+      }
+    else
+      {
+	Status = TdiBuildNullConnectionInfo
+	    ( &ConnInfo, FCB->RemoteAddress->Address[0].AddressType );
 
-    if( !NT_SUCCESS(Status) || !ConnInfo ) 
-	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
-				       Irp, 0, NULL, TRUE );
+	if( !NT_SUCCESS(Status) || !ConnInfo ) 
+	    return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
+					   Irp, 0, NULL, TRUE );
+      }
 
     if( DisReq->DisconnectType & AFD_DISCONNECT_SEND )
 	Flags |= TDI_DISCONNECT_RELEASE;
