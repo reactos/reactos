@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mpw.c,v 1.11 2002/09/08 10:23:35 chorns Exp $
+/* $Id: mpw.c,v 1.12 2003/01/11 15:47:14 hbirr Exp $
  *
  * PROJECT:      ReactOS kernel
  * FILE:         ntoskrnl/mm/mpw.c
@@ -56,6 +56,10 @@ MmWriteDirtyPages(ULONG Target, PULONG Actual)
   Page = MmGetLRUFirstUserPage();
   while (Page.QuadPart != 0LL && Target > 0)
     {
+      /*
+       * FIXME: While the current page is write back it is possible
+       *        that the next page is freed and not longer a user page.
+       */
       NextPage = MmGetLRUNextUserPage(Page);
       if (MmIsDirtyPageRmap(Page))
 	{
@@ -100,7 +104,12 @@ MmMpwThreadMain(PVOID Ignored)
 	}
       
       PagesWritten = 0;
+#if 0
+      /* 
+       *  FIXME: MmWriteDirtyPages doesn't work correctly.
+       */
       MmWriteDirtyPages(128, &PagesWritten);
+#endif
       CcRosFlushDirtyPages(128, &PagesWritten);
     }
 }
