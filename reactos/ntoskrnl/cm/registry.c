@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.66 2001/12/05 01:40:23 dwelch Exp $
+/* $Id: registry.c,v 1.67 2002/01/03 11:09:35 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -200,7 +200,7 @@ DPRINT("Creating HKU\n");
                         CmiHardwareKey,
                         NewKey,
                         L"DESCRIPTION",
-                        16,
+                        22,
                         0,
                         NULL,
                         0);
