@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: syscall.S,v 1.13 2004/03/29 22:29:34 gvg Exp $
+/* $Id: syscall.S,v 1.14 2004/04/07 15:35:14 ekohl Exp $
  *
  * FILE:            ntoskrnl/hal/x86/syscall.s
  * PURPOSE:         2E trap handler
@@ -153,7 +153,8 @@ new_serviceInRange:
 
            /*  Allocate room for argument list from kernel stack  */
            movl  %es:_KeServiceDescriptorTable + 12, %ecx
-           movl  %es:(%ecx, %eax, 4), %ecx
+           movb  %es:(%ecx, %eax), %cl
+           movzx %cl, %ecx
            subl  %ecx, %esp
 
            /*  Copy the arguments from the user stack to the kernel stack  */
@@ -211,7 +212,8 @@ new_shadowServiceInRange:
 
            /*  Allocate room for argument list from kernel stack  */
            movl  %es:_KeServiceDescriptorTableShadow + 28, %ecx
-           movl  %es:(%ecx, %eax, 4), %ecx
+           movb  %es:(%ecx, %eax), %cl
+           movzx %cl, %ecx
            subl  %ecx, %esp
 
            /*  Copy the arguments from the user stack to the kernel stack  */
