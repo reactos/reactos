@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.47 2003/05/14 21:27:53 ekohl Exp $
+/* $Id: init.c,v 1.48 2003/06/09 13:45:22 ekohl Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -31,6 +31,7 @@
 
 #include <ntos.h>
 #include <ntdll/rtl.h>
+#include <ntdll/ldr.h>
 #include <napi/lpc.h>
 
 #include "smss.h"
@@ -407,9 +408,31 @@ SmKnownDllsQueryRoutine(PWSTR ValueName,
   PrintString("Opened file %wZ successfully\n", &ImageName);
 #endif
 
+  /* Check for valid image checksum */
+  Status = LdrVerifyImageMatchesChecksum (FileHandle,
+					  0,
+					  0,
+					  0);
+  if (Status == STATUS_IMAGE_CHECKSUM_MISMATCH)
+    {
+      /* Raise a hard error (crash the system/BSOD) */
+      NtRaiseHardError (Status,
+			0,
+			0,
+			0,
+			0,
+			0);
+    }
+  else if (!NT_SUCCESS(Status))
+    {
+#ifndef NDEBUG
+      PrintString("Failed to check the image checksum\n");
+#endif
+      NtClose(SectionHandle);
+      NtClose(FileHandle);
 
-  /* FIXME: Check dll image file */
-
+      return STATUS_SUCCESS;
+    }
 
   InitializeObjectAttributes(&ObjectAttributes,
 			     &ImageName,
