@@ -99,13 +99,13 @@ FloppyReadSTAT(ULONG PortBase)
 }
 
 /* waits until the fdc becomes ready */
-static int 
-FloppyWaitUntilReady(WORD PortBase)
+static int
+FloppyWaitUntilReady(ULONG PortBase)
 {
   int Retries;
   int Status;
 
-  for (Retries = 0; Retries < FLOPPY_MAX_STAT_RETRIES; Retries++) 
+  for (Retries = 0; Retries < FLOPPY_MAX_STAT_RETRIES; Retries++)
     {
       Status = FloppyReadSTAT(PortBase);
       if (Status & STATUS_READY)
@@ -114,10 +114,10 @@ FloppyWaitUntilReady(WORD PortBase)
         }
     }
 
-  if (FloppyInitialized) 
+  if (FloppyInitialized)
     {
       DPRINT("Getstatus times out (%x) on fdc %d\n",
-             Status, 
+             Status,
              PortBase);
     }
 
@@ -125,14 +125,14 @@ FloppyWaitUntilReady(WORD PortBase)
 }
 
 static VOID
-FloppyWriteData(WORD PortBase, BYTE Byte)
+FloppyWriteData(ULONG PortBase, BYTE Byte)
 {
    WRITE_PORT_UCHAR((PUCHAR)(PortBase + FLOPPY_DATA), Byte);
 }
 
 /* sends a command byte to the fdc */
-static BOOLEAN 
-FloppyWriteCommandByte(WORD PortBase, BYTE Byte)
+static BOOLEAN
+FloppyWriteCommandByte(ULONG PortBase, BYTE Byte)
 {
   int Status;
 
@@ -144,14 +144,14 @@ FloppyWriteCommandByte(WORD PortBase, BYTE Byte)
   if ((Status & (STATUS_READY|STATUS_DIR|STATUS_DMA)) == STATUS_READY)
     {
       FloppyWriteData(PortBase, Byte);
-      return 0;
+      return TRUE;
     }
 
-  if (FloppyInitialized) 
+  if (FloppyInitialized)
     {
       DPRINT("Unable to send byte %x to FDC. Fdc=%x Status=%x\n",
-             Byte, 
-             PortBase, 
+             Byte,
+             PortBase,
              Status);
     }
 
@@ -159,13 +159,13 @@ FloppyWriteCommandByte(WORD PortBase, BYTE Byte)
 }
 
 /* gets the response from the fdc */
-static int 
-FloppyReadResultCode(WORD PortBase, PUCHAR Result)
+static int
+FloppyReadResultCode(ULONG PortBase, PUCHAR Result)
 {
   int Replies;
   int Status;
 
-  for (Replies = 0; Replies < FLOPPY_MAX_REPLIES; Replies++) 
+  for (Replies = 0; Replies < FLOPPY_MAX_REPLIES; Replies++)
     {
       if ((Status = FloppyWaitUntilReady(PortBase)) < 0)
         {
@@ -178,19 +178,20 @@ FloppyReadResultCode(WORD PortBase, PUCHAR Result)
         }
       if (Status == (STATUS_DIR | STATUS_READY | STATUS_BUSY))
         {
-          Result[Replies] = READ_PORT_UCHAR((PUCHAR)FLOPPY_DATA);
+          Result[Replies] = READ_PORT_UCHAR((PUCHAR)(PortBase + FLOPPY_DATA));
         }
       else
         {
+          DPRINT("FloppyReadResultCode: break\n");
           break;
         }
     }
 
-  if (FloppyInitialized) 
+  if (FloppyInitialized)
     {
       DPRINT("get result error. Fdc=%d Last status=%x Read bytes=%d\n",
-             PortBase, 
-             Status, 
+             PortBase,
+             Status,
              Replies);
     }
 
@@ -199,8 +200,8 @@ FloppyReadResultCode(WORD PortBase, PUCHAR Result)
 
 #define MORE_OUTPUT -2
 /* does the fdc need more output? */
-static int 
-FloppyNeedsMoreOutput(WORD PortBase, PUCHAR Result)
+static int
+FloppyNeedsMoreOutput(ULONG PortBase, PUCHAR Result)
 {
   int Status;
 
@@ -215,7 +216,7 @@ FloppyNeedsMoreOutput(WORD PortBase, PUCHAR Result)
 }
 
 static BOOLEAN
-FloppyConfigure(WORD PortBase, BOOLEAN DisableFIFO, BYTE FIFODepth)
+FloppyConfigure(ULONG PortBase, BOOLEAN DisableFIFO, BYTE FIFODepth)
 {
   BYTE Result[FLOPPY_MAX_REPLIES];
 
@@ -226,12 +227,12 @@ FloppyConfigure(WORD PortBase, BOOLEAN DisableFIFO, BYTE FIFODepth)
       return FALSE;
     }
   FloppyWriteCommandByte(PortBase, 0);
-  FloppyWriteCommandByte(PortBase, 
+  FloppyWriteCommandByte(PortBase,
                          0x10 | 
                            (DisableFIFO ? 0x20 : 0x00) | 
                            (FIFODepth & 0x0f));
   /* pre-compensation from track 0 upwards */
-  FloppyWriteCommandByte(PortBase, 0); 
+  FloppyWriteCommandByte(PortBase, 0);
 
   return TRUE;
 }
@@ -257,8 +258,8 @@ static BOOLEAN
 FloppyGetControllerVersion(IN PFLOPPY_CONTROLLER_PARAMETERS ControllerParameters,
                            OUT PFLOPPY_CONTROLLER_TYPE ControllerType)
 {
-   ULONG ResultLength;
   UCHAR Result[FLOPPY_MAX_REPLIES];
+  int ResultLength;
 
   /* 82072 and better know DUMPREGS */
   if (!FloppyWriteCommandByte(ControllerParameters->PortBase, 
@@ -278,10 +279,10 @@ FloppyGetControllerVersion(IN PFLOPPY_CONTROLLER_PARAMETERS ControllerParameters
   if ((ResultLength == 1) && (Result[0] == 0x80))
     {
       DPRINT("FDC %d is an 8272A\n", ControllerParameters->PortBase);
-      *ControllerType = FDC_8272A;       
+      *ControllerType = FDC_8272A;
       return TRUE;
     }
-  if (ResultLength != 10) 
+  if (ResultLength != 10)
     {
       DPRINT("FDC %d init: DUMP_FDC: unexpected return of %d bytes.\n",
              ControllerParameters->PortBase,
@@ -289,7 +290,7 @@ FloppyGetControllerVersion(IN PFLOPPY_CONTROLLER_PARAMETERS ControllerParameters
       return FALSE;
     }
 
-  if (!FloppyConfigure(ControllerParameters->PortBase, FALSE, 0x0a)) 
+  if (!FloppyConfigure(ControllerParameters->PortBase, FALSE, 0x0a))
     {
       DPRINT("FDC %d is an 82072\n", ControllerParameters->PortBase);
       *ControllerType = FDC_82072;
@@ -297,11 +298,11 @@ FloppyGetControllerVersion(IN PFLOPPY_CONTROLLER_PARAMETERS ControllerParameters
     }
   FloppyWriteCommandByte(ControllerParameters->PortBase, FLOPPY_CMD_PPND_RW);
   if (FloppyNeedsMoreOutput(ControllerParameters->PortBase, Result) == 
-      FLOPPY_NEEDS_OUTPUT) 
+      FLOPPY_NEEDS_OUTPUT)
     {
       FloppyWriteCommandByte(ControllerParameters->PortBase, 0);
-    } 
-  else 
+    }
+  else
     {
       DPRINT("FDC %d is an 82072A\n", ControllerParameters->PortBase);
       *ControllerType = FDC_82072A;
@@ -310,18 +311,18 @@ FloppyGetControllerVersion(IN PFLOPPY_CONTROLLER_PARAMETERS ControllerParameters
 
   /* Pre-1991 82077, doesn't know LOCK/UNLOCK */
   FloppyWriteCommandByte(ControllerParameters->PortBase, FLOPPY_CMD_UNLK_FIFO);
-  ResultLength = FloppyReadResultCode(ControllerParameters->PortBase, 
+  ResultLength = FloppyReadResultCode(ControllerParameters->PortBase,
 				      Result);
   if ((ResultLength == 1) && (Result[0] == 0x80))
     {
       DPRINT("FDC %d is a pre-1991 82077\n", ControllerParameters->PortBase);
-      *ControllerType = FDC_82077_ORIG;  
+      *ControllerType = FDC_82077_ORIG;
       return TRUE;
     }
-  if ((ResultLength != 1) || (Result[0] != 0x00)) 
+  if ((ResultLength != 1) || (Result[0] != 0x00))
     {
       DPRINT("FDC %d init: UNLOCK: unexpected return of %d bytes.\n",
-             ControllerParameters->PortBase, 
+             ControllerParameters->PortBase,
              ResultLength);
       return FALSE;
     }
@@ -330,20 +331,20 @@ FloppyGetControllerVersion(IN PFLOPPY_CONTROLLER_PARAMETERS ControllerParameters
   FloppyWriteCommandByte(ControllerParameters->PortBase, FLOPPY_CMD_PARTID);
   ResultLength = FloppyReadResultCode(ControllerParameters->PortBase, 
 				      Result);
-  if (ResultLength != 1) 
+  if (ResultLength != 1)
     {
       DPRINT("FDC %d init: PARTID: unexpected return of %d bytes.\n",
-             ControllerParameters->PortBase, 
+             ControllerParameters->PortBase,
              ResultLength);
       return FALSE;
     }
-  if (Result[0] == 0x80) 
+  if (Result[0] == 0x80)
     {
       DPRINT("FDC %d is a post-1991 82077\n", ControllerParameters->PortBase);
       *ControllerType = FDC_82077;
       return TRUE;
     }
-  switch (Result[0] >> 5) 
+  switch (Result[0] >> 5)
     {
     case 0x0:
       /* Either a 82078-1 or a 82078SL running at 5Volt */
@@ -362,21 +363,21 @@ FloppyGetControllerVersion(IN PFLOPPY_CONTROLLER_PARAMETERS ControllerParameters
       return TRUE;
 
     case 0x3:
-      DPRINT("FDC %d is a National Semiconductor PC87306\n", 
+      DPRINT("FDC %d is a National Semiconductor PC87306\n",
 	     ControllerParameters->PortBase);
       *ControllerType = FDC_87306;
       return TRUE;
 
     default:
       DPRINT("FDC %d init: 82078 variant with unknown PARTID=%d.\n",
-             ControllerParameters->PortBase, 
+             ControllerParameters->PortBase,
              Result[0] >> 5);
       *ControllerType = FDC_82078_UNKN;
       return TRUE;
     }
 }
 
-static BOOLEAN 
+static BOOLEAN
 FloppyIsr(PKINTERRUPT Interrupt, PVOID ServiceContext)
 {
    return(TRUE);
@@ -390,7 +391,7 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
    FLOPPY_CONTROLLER_TYPE ControllerType;
    PCONTROLLER_OBJECT ControllerObject;
    PFLOPPY_CONTROLLER_EXTENSION ControllerExtension;
-   UNICODE_STRING DeviceName;   
+   UNICODE_STRING DeviceName;
    UNICODE_STRING SymlinkName;
    NTSTATUS Status;
    PDEVICE_OBJECT DeviceObject;
@@ -407,7 +408,7 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
 
    /*  Create controller object for FDC  */
    ControllerObject = IoCreateController(sizeof(FLOPPY_CONTROLLER_EXTENSION));
-   if (ControllerObject == NULL) 
+   if (ControllerObject == NULL)
      {
 	DPRINT("Could not create controller object for controller %d\n",
 	       Index);
@@ -480,29 +481,33 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
    ConfigInfo = IoGetConfigurationInformation ();
    ConfigInfo->FloppyCount++;
 
-   return  STATUS_SUCCESS;
+   return TRUE;
 }
 
-VOID FloppyStartIo(PDEVICE_OBJECT DeviceObject,
-		   PIRP Irp)
+VOID STDCALL FloppyStartIo(PDEVICE_OBJECT DeviceObject,
+			   PIRP Irp)
 {
+   DPRINT("FloppyStartIo\n");
 }
 
-NTSTATUS FloppyDispatchOpenClose(PDEVICE_OBJECT DeviceObject,
-				 PIRP Irp)
+NTSTATUS STDCALL FloppyDispatchOpenClose(PDEVICE_OBJECT DeviceObject,
+					 PIRP Irp)
 {
+   DPRINT("FloppyDispatchOpenClose\n");
    return(STATUS_UNSUCCESSFUL);
 }
 
-NTSTATUS FloppyDispatchReadWrite(PDEVICE_OBJECT DeviceObject,
-				 PIRP Irp)
+NTSTATUS STDCALL FloppyDispatchReadWrite(PDEVICE_OBJECT DeviceObject,
+					 PIRP Irp)
 {
+   DPRINT("FloppyDispatchReadWrite\n");
    return(STATUS_UNSUCCESSFUL);
 }
 
-NTSTATUS FloppyDispatchDeviceControl(PDEVICE_OBJECT DeviceObject,
-				     PIRP Irp)
+NTSTATUS STDCALL FloppyDispatchDeviceControl(PDEVICE_OBJECT DeviceObject,
+					     PIRP Irp)
 {
+   DPRINT("FloppyDispatchDeviceControl\n");
    return(STATUS_UNSUCCESSFUL);
 }
 
@@ -525,8 +530,8 @@ NTSTATUS FloppyDispatchDeviceControl(PDEVICE_OBJECT DeviceObject,
  *  RETURNS:
  *    NTSTATUS  
  */
-NTSTATUS STDCALL DriverEntry(IN PDRIVER_OBJECT DriverObject, 
-			     IN PUNICODE_STRING RegistryPath) 
+NTSTATUS STDCALL DriverEntry(IN PDRIVER_OBJECT DriverObject,
+			     IN PUNICODE_STRING RegistryPath)
 {
    DbgPrint("Floppy driver\n");
    
@@ -536,11 +541,11 @@ NTSTATUS STDCALL DriverEntry(IN PDRIVER_OBJECT DriverObject,
    DriverObject->MajorFunction[IRP_MJ_CLOSE] = FloppyDispatchOpenClose;
    DriverObject->MajorFunction[IRP_MJ_READ] = FloppyDispatchReadWrite;
    DriverObject->MajorFunction[IRP_MJ_WRITE] = FloppyDispatchReadWrite;
-   DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = 
+   DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] =
      FloppyDispatchDeviceControl;
    
    /*  Try to detect controller and abort if it fails */
-   if (!FloppyCreateController(DriverObject, 
+   if (!FloppyCreateController(DriverObject,
 			       &ControllerParameters[0],
 			       0))
      {
@@ -550,3 +555,5 @@ NTSTATUS STDCALL DriverEntry(IN PDRIVER_OBJECT DriverObject,
    
    return STATUS_SUCCESS;
 }
+
+/* EOF */
