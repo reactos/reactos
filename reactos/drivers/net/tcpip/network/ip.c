@@ -370,6 +370,7 @@ PNET_TABLE_ENTRY IPCreateNTE(
     }
 
     INIT_TAG(NTE, TAG('N','T','E',' '));
+    INIT_TAG(Address, TAG('A','D','R','S'));
 
     NTE->Free = FreeNTE;
 
@@ -442,7 +443,13 @@ VOID DestroyNTE(
     /* Remove NTE from the interface list */
     RemoveEntryList(&NTE->IFListEntry);
     /* Remove NTE from the net table list */
+
+/* TODO: DEBUG: removed by RobD to prevent failure when testing under bochs 6 sept 2002.
+
     RemoveEntryList(&NTE->NTListEntry);
+
+ */
+
     /* Dereference the objects that are referenced */
     DereferenceObject(NTE->Address);
     DereferenceObject(NTE->Interface);
@@ -517,6 +524,11 @@ PNET_TABLE_ENTRY IPLocateNTEOnInterface(
 
     /* Search the list and return the NTE if found */
     CurrentEntry = IF->ADEListHead.Flink;
+
+    if (CurrentEntry == &IF->ADEListHead) {
+        TI_DbgPrint(DEBUG_IP, ("NTE list is empty!!!\n"));
+    }
+
     while (CurrentEntry != &IF->ADEListHead) {
 	      Current = CONTAINING_RECORD(CurrentEntry, ADDRESS_ENTRY, ListEntry);
         if (AddrIsEqual(Address, Current->Address)) {
@@ -524,6 +536,9 @@ PNET_TABLE_ENTRY IPLocateNTEOnInterface(
             *AddressType = Current->Type;
             KeReleaseSpinLock(&IF->Lock, OldIrql);
             return Current->NTE;
+        }
+        else {
+            TI_DbgPrint(DEBUG_IP, ("CurrentEntry = 0x%X != &IF->ADEListHead = 0x%X.\n", CurrentEntry, &IF->ADEListHead));
         }
         CurrentEntry = CurrentEntry->Flink;
     }
