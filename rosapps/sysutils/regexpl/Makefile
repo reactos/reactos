@@ -1,17 +1,15 @@
-# $Id: Makefile,v 1.11 2003/10/19 22:59:36 narnaoud Exp $
+# $Id: Makefile,v 1.12 2004/10/11 01:20:13 sedwards Exp $
 #
 #  ReactOS makefile for RegExpl
 #
 
-PATH_TO_TOP = ../..
+PATH_TO_TOP := ../../../reactos
 
 include $(PATH_TO_TOP)/rules.mak
 
 TARGET_NAME=regexpl
 
 all: $(TARGET_NAME)$(EXE_POSTFIX)
-
-include depend.mak
 
 ROS_DIR=../../../reactos
 ROS_INC=$(ROS_DIR)/include
@@ -21,10 +19,6 @@ IMPORT_FMIFS=$(ROS_LIB)/fmifs.a
 IMPORT_KERNEL32=$(ROS_LIB)/kernel32.a
 IMPORT_ADVAPI32=$(ROS_LIB)/advapi32.a
 IMPORT_USER32=$(ROS_LIB)/user32.a
-
-depend.mak : *.h
-	$(CC) \
-		-MM *.cpp *.c > $@
 
 OBJECTS = \
 	ArgumentParser.o		\
@@ -54,30 +48,16 @@ OBJECTS = \
 	Completion.o			\
 	Pattern.o			\
 	Settings.o			\
-	Prompt.o			\
-	$(TARGET_NAME).coff
+	Prompt.o			
 
 CLEAN_FILES = \
 	*.o				\
 	$(TARGET_NAME)$(EXE_POSTFIX)	\
-	$(TARGET_NAME).sym		\
-	$(TARGET_NAME).coff\
-	depend.mak
+	$(TARGET_NAME).sym		
 
-
-$(TARGET_NAME)$(EXE_POSTFIX): $(OBJECTS) $(TARGET_NAME).coff
-	$(CXX) -Wl,--subsystem,console -o $(TARGET_NAME)$(EXE_POSTFIX) $(OBJECTS) $(TARGET_NAME).coff $(IMPORT_KERNEL32) $(IMPORT_USER32)
+$(TARGET_NAME)$(EXE_POSTFIX): $(OBJECTS)
+	$(CXX) -Wl,--subsystem,console -o $(TARGET_NAME)$(EXE_POSTFIX) $(OBJECTS)$(IMPORT_KERNEL32) $(IMPORT_USER32)
 	$(NM) --numeric-sort $(TARGET_NAME)$(EXE_POSTFIX) > $(TARGET_NAME).sym
-
-
-#$(TARGET_NAME)$(EXE_POSTFIX): $(OBJECTS)
-#	$(CPP) \
-#		-Wl,--subsystem,console	\
-#		-o $@				\
-#		$(IMPORT_KERNEL32)	\
-#		$(IMPORT_USER32)	\
-#		$(OBJECTS)
-#	$(NM) --numeric-sort $(TARGET_NAME)$(EXE_POSTFIX) > $(TARGET_NAME).sym
 
 clean: $(CLEAN_FILES:%=%_clean)
 
