@@ -11,9 +11,8 @@ SeverityNames=(Success=0x0:STATUS_SEVERITY_SUCCESS
               )
 
 FacilityNames=(System=0x0:FACILITY_SYSTEM
-               Runtime=0x2:FACILITY_RUNTIME
-               Stubs=0x3:FACILITY_STUBS
-               Io=0x4:FACILITY_IO_ERROR_CODE
+			   ITF=0x4:FACILITY_ITF
+			   WIN32=0x7:FACILITY_GENERAL
               )
 
 LanguageNames=(English=0x409:MSG00409)
@@ -28,6 +27,7 @@ Facility=System
 SymbolicName=ERROR_SUCCESS
 Language=English
 ERROR_SUCCESS - The operation completed successfully.
+
 .
 
 MessageId=0x01
@@ -36,6 +36,7 @@ Facility=System
 SymbolicName=ERROR_INVALID_FUNCTION
 Language=English
 ERROR_INVALID_FUNCTION - Incorrect function.
+
 .
 
 MessageId=0x02
@@ -44,6 +45,7 @@ Facility=System
 SymbolicName=ERROR_FILE_NOT_FOUND
 Language=English
 ERROR_FILE_NOT_FOUND - The system cannot find the file specified.
+
 .
 
 MessageId=0x03
@@ -52,6 +54,7 @@ Facility=System
 SymbolicName=ERROR_PATH_NOT_FOUND
 Language=English
 ERROR_PATH_NOT_FOUND - The system cannot find the path specified.
+
 .
 
 MessageId=0x04
@@ -60,6 +63,7 @@ Facility=System
 SymbolicName=ERROR_TOO_MANY_OPEN_FILES
 Language=English
 ERROR_TOO_MANY_OPEN_FILES - The system cannot open the file.
+
 .
 
 MessageId=0x05
@@ -68,6 +72,7 @@ Facility=System
 SymbolicName=ERROR_ACCESS_DENIED
 Language=English
 ERROR_ACCESS_DENIED - Access is denied.
+
 .
 
 MessageId=0x06
@@ -76,6 +81,7 @@ Facility=System
 SymbolicName=ERROR_INVALID_HANDLE
 Language=English
 ERROR_INVALID_HANDLE - The handle is invalid.
+
 .
 
 MessageId=0x07
@@ -84,6 +90,7 @@ Facility=System
 SymbolicName=ERROR_ARENA_TRASHED
 Language=English
 ERROR_ARENA_TRASHED - The storage control blocks were destroyed.
+
 .
 
 MessageId=0x08
@@ -92,6 +99,7 @@ Facility=System
 SymbolicName=ERROR_NOT_ENOUGH_MEMORY
 Language=English
 ERROR_NOT_ENOUGH_MEMORY - Not enough storage is available to process this command.
+
 .
 
 MessageId=0x09
@@ -100,6 +108,7 @@ Facility=System
 SymbolicName=ERROR_INVALID_BLOCK
 Language=English
 ERROR_INVALID_BLOCK - The storage control block address is invalid.
+
 .
 
 MessageId=0x0A
@@ -108,6 +117,7 @@ Facility=System
 SymbolicName=ERROR_BAD_ENVIRONMENT
 Language=English
 ERROR_BAD_ENVIRONMENT - The environment is incorrect.
+
 .
 
 MessageId=0x0B
@@ -116,6 +126,7 @@ Facility=System
 SymbolicName=ERROR_BAD_FORMAT
 Language=English
 ERROR_BAD_FORMAT - An attempt was made to load a program with an incorrect format.
+
 .
 
 MessageId=0x0C
@@ -124,6 +135,7 @@ Facility=System
 SymbolicName=ERROR_INVALID_ACCESS
 Language=English
 ERROR_INVALID_ACCESS - The access code is invalid.
+
 .
 
 MessageId=0x0D
@@ -132,6 +144,7 @@ Facility=System
 SymbolicName=ERROR_INVALID_DATA
 Language=English
 ERROR_INVALID_DATA - The data is invalid.
+
 .
 
 MessageId=0x0E
@@ -140,6 +153,7 @@ Facility=System
 SymbolicName=ERROR_OUTOFMEMORY
 Language=English
 ERROR_OUTOFMEMORY - Not enough storage is available to complete this operation.
+
 .
 
 MessageId=0x0F
@@ -148,6 +162,7 @@ Facility=System
 SymbolicName=ERROR_INVALID_DRIVE
 Language=English
 ERROR_INVALID_DRIVE - The system cannot find the drive specified.
+
 .
 
 MessageId=0x10
@@ -156,6 +171,7 @@ Facility=System
 SymbolicName=ERROR_CURRENT_DIRECTORY
 Language=English
 ERROR_CURRENT_DIRECTORY - The directory cannot be removed.
+
 .
 
 MessageId=0x11
@@ -164,6 +180,7 @@ Facility=System
 SymbolicName=ERROR_NOT_SAME_DEVICE
 Language=English
 ERROR_NOT_SAME_DEVICE - The system cannot move the file to a different disk drive.
+
 .
 
 MessageId=0x12
@@ -172,6 +189,7 @@ Facility=System
 SymbolicName=ERROR_NO_MORE_FILES
 Language=English
 ERROR_NO_MORE_FILES - There are no more files.
+
 .
 
 MessageId=0x13
@@ -180,6 +198,7 @@ Facility=System
 SymbolicName=ERROR_WRITE_PROTECT
 Language=English
 ERROR_WRITE_PROTECT - The media is write protected.
+
 .
 
 MessageId=0x14
@@ -188,6 +207,7 @@ Facility=System
 SymbolicName=ERROR_BAD_UNIT
 Language=English
 ERROR_BAD_UNIT - The system cannot find the device specified.
+
 .
 
 MessageId=0x15
@@ -196,6 +216,7 @@ Facility=System
 SymbolicName=ERROR_NOT_READY
 Language=English
 ERROR_NOT_READY - The device is not ready.
+
 .
 
 MessageId=0x16
@@ -204,6 +225,7 @@ Facility=System
 SymbolicName=ERROR_BAD_COMMAND
 Language=English
 ERROR_BAD_COMMAND - The device does not recognize the command.
+
 .
 
 MessageId=0x17
@@ -212,6 +234,7 @@ Facility=System
 SymbolicName=ERROR_CRC
 Language=English
 ERROR_CRC - Data error (cyclic redundancy check).
+
 .
 
 MessageId=0x18
@@ -220,6 +243,7 @@ Facility=System
 SymbolicName=ERROR_BAD_LENGTH
 Language=English
 ERROR_BAD_LENGTH - The program issued a command but the command length is incorrect.
+
 .
 
 MessageId=0x19
@@ -228,6 +252,7 @@ Facility=System
 SymbolicName=ERROR_SEEK
 Language=English
 ERROR_SEEK - The drive cannot locate a specific area or track on the disk.
+
 .
 
 MessageId=0x1A
@@ -236,6 +261,7 @@ Facility=System
 SymbolicName=ERROR_NOT_DOS_DISK
 Language=English
 ERROR_NOT_DOS_DISK - The specified disk or diskette cannot be accessed.
+
 .
 
 MessageId=0x1B
@@ -244,6 +270,7 @@ Facility=System
 SymbolicName=ERROR_SECTOR_NOT_FOUND
 Language=English
 ERROR_SECTOR_NOT_FOUND - The drive cannot find the sector requested.
+
 .
 
 MessageId=0x1C
@@ -252,6 +279,7 @@ Facility=System
 SymbolicName=ERROR_OUT_OF_PAPER
 Language=English
 ERROR_OUT_OF_PAPER - The printer is out of paper.
+
 .
 
 MessageId=0x1D
@@ -260,6 +288,7 @@ Facility=System
 SymbolicName=ERROR_WRITE_FAULT
 Language=English
 ERROR_WRITE_FAULT - The system cannot write to the specified device.
+
 .
 
 MessageId=0x1E
@@ -268,6 +297,7 @@ Facility=System
 SymbolicName=ERROR_READ_FAULT
 Language=English
 ERROR_READ_FAULT - The system cannot read from the specified device.
+
 .
 
 MessageId=0x1F
@@ -276,6 +306,7 @@ Facility=System
 SymbolicName=ERROR_GEN_FAILURE
 Language=English
 ERROR_GEN_FAILURE - A device attached to the system is not functioning.
+
 .
 
 MessageId=0x20
@@ -284,6 +315,7 @@ Facility=System
 SymbolicName=ERROR_SHARING_VIOLATION
 Language=English
 ERROR_SHARING_VIOLATION - The process cannot access the file because it is being used by another process.
+
 .
 
 MessageId=0x21
@@ -292,6 +324,7 @@ Facility=System
 SymbolicName=ERROR_LOCK_VIOLATION
 Language=English
 ERROR_LOCK_VIOLATION - The process cannot access the file because another process has locked a portion of the file.
+
 .
 
 MessageId=0x22
@@ -316,6 +349,7 @@ Facility=System
 SymbolicName=ERROR_HANDLE_EOF
 Language=English
 ERROR_HANDLE_EOF - Too many files opened for sharing.
+
 .
 
 MessageId=0x27
@@ -332,6 +366,7 @@ Facility=System
 SymbolicName=ERROR_NOT_SUPPORTED
 Language=English
 ERROR_NOT_SUPPORTED - Reached the end of the file.
+
 .
 
 MessageId=0x33
@@ -340,6 +375,7 @@ Facility=System
 SymbolicName=ERROR_REM_NOT_LIST
 Language=English
 ERROR_REM_NOT_LIST - The disk is full.
+
 .
 
 MessageId=0x34
@@ -428,6 +464,7 @@ Facility=System
 SymbolicName=ERROR_NO_SPOOL_SPACE
 Language=English
 ERROR_NO_SPOOL_SPACE - The network request is not supported.
+
 .
 
 MessageId=0x3F
@@ -436,6 +473,7 @@ Facility=System
 SymbolicName=ERROR_PRINT_CANCELLED
 Language=English
 ERROR_PRINT_CANCELLED - The remote computer is not available.
+
 .
 
 MessageId=0x40
@@ -444,6 +482,7 @@ Facility=System
 SymbolicName=ERROR_NETNAME_DELETED
 Language=English
 ERROR_NETNAME_DELETED - A duplicate name exists on the network.
+
 .
 
 MessageId=0x41
@@ -452,6 +491,7 @@ Facility=System
 SymbolicName=ERROR_NETWORK_ACCESS_DENIED
 Language=English
 ERROR_NETWORK_ACCESS_DENIED - The network path was not found.
+
 .
 
 MessageId=0x42
@@ -460,6 +500,7 @@ Facility=System
 SymbolicName=ERROR_BAD_DEV_TYPE
 Language=English
 ERROR_BAD_DEV_TYPE - The network is busy.
+
 .
 
 MessageId=0x43
@@ -468,6 +509,7 @@ Facility=System
 SymbolicName=ERROR_BAD_NET_NAME
 Language=English
 ERROR_BAD_NET_NAME - The specified network resource or device is no longer available.
+
 .
 
 MessageId=0x44
@@ -476,6 +518,7 @@ Facility=System
 SymbolicName=ERROR_TOO_MANY_NAMES
 Language=English
 ERROR_TOO_MANY_NAMES - The network BIOS command limit has been reached.
+
 .
 
 MessageId=0x45
@@ -484,6 +527,7 @@ Facility=System
 SymbolicName=ERROR_TOO_MANY_SESS
 Language=English
 ERROR_TOO_MANY_SESS - A network adapter hardware error occurred.
+
 .
 
 MessageId=0x46
@@ -492,6 +536,7 @@ Facility=System
 SymbolicName=ERROR_SHARING_PAUSED
 Language=English
 ERROR_SHARING_PAUSED - The specified server cannot perform the requested operation.
+
 .
 
 MessageId=0x47
@@ -500,6 +545,7 @@ Facility=System
 SymbolicName=ERROR_REQ_NOT_ACCEP
 Language=English
 ERROR_REQ_NOT_ACCEP - An unexpected network error occurred.
+
 .
 
 MessageId=0x48
@@ -508,6 +554,7 @@ Facility=System
 SymbolicName=ERROR_REDIR_PAUSED
 Language=English
 ERROR_REDIR_PAUSED - The remote adapter is not compatible.
+
 .
 
 MessageId=0x50
@@ -516,6 +563,7 @@ Facility=System
 SymbolicName=ERROR_FILE_EXISTS
 Language=English
 ERROR_FILE_EXISTS - The printer queue is full.
+
 .
 
 MessageId=0x52
@@ -524,6 +572,7 @@ Facility=System
 SymbolicName=ERROR_CANNOT_MAKE
 Language=English
 ERROR_CANNOT_MAKE - Space to store the file waiting to be printed is not available on the server.
+
 .
 
 MessageId=0x53
@@ -532,6 +581,7 @@ Facility=System
 SymbolicName=ERROR_FAIL_I24
 Language=English
 ERROR_FAIL_I24 - Your file waiting to be printed was deleted.
+
 .
 
 MessageId=0x54
@@ -540,6 +590,7 @@ Facility=System
 SymbolicName=ERROR_OUT_OF_STRUCTURES
 Language=English
 ERROR_OUT_OF_STRUCTURES - The specified network name is no longer available.
+
 .
 
 MessageId=0x55
@@ -548,6 +599,7 @@ Facility=System
 SymbolicName=ERROR_ALREADY_ASSIGNED
 Language=English
 ERROR_ALREADY_ASSIGNED - Network access is denied.
+
 .
 
 MessageId=0x56
@@ -556,6 +608,7 @@ Facility=System
 SymbolicName=ERROR_INVALID_PASSWORD
 Language=English
 ERROR_INVALID_PASSWORD - The network resource type is not correct.
+
 .
 
 MessageId=0x57
@@ -564,6 +617,7 @@ Facility=System
 SymbolicName=ERROR_INVALID_PARAMETER
 Language=English
 ERROR_INVALID_PARAMETER - The network name cannot be found.
+
 .
 
 MessageId=0x58
@@ -572,6 +626,7 @@ Facility=System
 SymbolicName=ERROR_NET_WRITE_FAULT
 Language=English
 ERROR_NET_WRITE_FAULT - The name limit for the local computer network adapter card was exceeded.
+
 .
 
 MessageId=0x59
@@ -580,6 +635,7 @@ Facility=System
 SymbolicName=ERROR_NO_PROC_SLOTS
 Language=English
 ERROR_NO_PROC_SLOTS - The network BIOS session limit was exceeded.
+
 .
 
 MessageId=0x64
@@ -588,6 +644,7 @@ Facility=System
 SymbolicName=ERROR_TOO_MANY_SEMAPHORES
 Language=English
 ERROR_TOO_MANY_SEMAPHORES - The remote server has been paused or is in the process of being started.
+
 .
 
 MessageId=0x65
@@ -596,6 +653,7 @@ Facility=System
 SymbolicName=ERROR_EXCL_SEM_ALREADY_OWNED
 Language=English
 ERROR_EXCL_SEM_ALREADY_OWNED - No more connections can be made to this remote computer at this time because there are already as many connections as the computer can accept.
+
 .
 
 MessageId=0x66
@@ -604,6 +662,7 @@ Facility=System
 SymbolicName=ERROR_SEM_IS_SET
 Language=English
 ERROR_SEM_IS_SET - The specified printer or disk device has been paused.
+
 .
 
 MessageId=0x67
@@ -668,6 +727,7 @@ Facility=System
 SymbolicName=ERROR_OPEN_FAILED
 Language=English
 ERROR_OPEN_FAILED - The file exists.
+
 .
 
 MessageId=0x6F
@@ -684,6 +744,7 @@ Facility=System
 SymbolicName=ERROR_DISK_FULL
 Language=English
 ERROR_DISK_FULL - The directory or file cannot be created.
+
 .
 
 MessageId=0x71
@@ -692,6 +753,7 @@ Facility=System
 SymbolicName=ERROR_NO_MORE_SEARCH_HANDLES
 Language=English
 ERROR_NO_MORE_SEARCH_HANDLES - Fail on INT 24.
+
 .
 
 MessageId=0x72
@@ -700,6 +762,7 @@ Facility=System
 SymbolicName=ERROR_INVALID_TARGET_HANDLE
 Language=English
 ERROR_INVALID_TARGET_HANDLE - Storage to process this request is not available.
+
 .
 
 MessageId=0x75
@@ -708,6 +771,7 @@ Facility=System
 SymbolicName=ERROR_INVALID_CATEGORY
 Language=English
 ERROR_INVALID_CATEGORY - The local device name is already in use.
+
 .
 
 MessageId=0x76
@@ -716,6 +780,7 @@ Facility=System
 SymbolicName=ERROR_INVALID_VERIFY_SWITCH
 Language=English
 ERROR_INVALID_VERIFY_SWITCH - The specified network password is not correct.
+
 .
 
 MessageId=0x77
@@ -724,6 +789,7 @@ Facility=System
 SymbolicName=ERROR_BAD_DRIVER_LEVEL
 Language=English
 ERROR_BAD_DRIVER_LEVEL - The parameter is incorrect.
+
 .
 
 MessageId=0x78
@@ -732,6 +798,7 @@ Facility=System
 SymbolicName=ERROR_CALL_NOT_IMPLEMENTED
 Language=English
 ERROR_CALL_NOT_IMPLEMENTED - A write fault occurred on the network.
+
 .
 
 MessageId=0x79
@@ -740,6 +807,7 @@ Facility=System
 SymbolicName=ERROR_SEM_TIMEOUT
 Language=English
 ERROR_SEM_TIMEOUT - The system cannot start another process at this time.
+
 .
 
 MessageId=0x7A
@@ -828,6 +896,7 @@ Facility=System
 SymbolicName=ERROR_SEEK_ON_DEVICE
 Language=English
 ERROR_SEEK_ON_DEVICE - Cannot create another system semaphore.
+
 .
 
 MessageId=0x85
@@ -836,6 +905,7 @@ Facility=System
 SymbolicName=ERROR_IS_JOIN_TARGET
 Language=English
 ERROR_IS_JOIN_TARGET - The exclusive semaphore is owned by another process.
+
 .
 
 MessageId=0x86
@@ -844,6 +914,7 @@ Facility=System
 SymbolicName=ERROR_IS_JOINED
 Language=English
 ERROR_IS_JOINED - The semaphore is set and cannot be closed.
+
 .
 
 MessageId=0x87
@@ -852,6 +923,7 @@ Facility=System
 SymbolicName=ERROR_IS_SUBSTED
 Language=English
 ERROR_IS_SUBSTED - The semaphore cannot be set again.
+
 .
 
 MessageId=0x88
@@ -860,6 +932,7 @@ Facility=System
 SymbolicName=ERROR_NOT_JOINED
 Language=English
 ERROR_NOT_JOINED - Cannot request exclusive semaphores at interrupt time.
+
 .
 
 MessageId=0x89
@@ -868,6 +941,7 @@ Facility=System
 SymbolicName=ERROR_NOT_SUBSTED
 Language=English
 ERROR_NOT_SUBSTED - The previous ownership of this semaphore has ended.
+
 .
 
 MessageId=0x8A
@@ -884,6 +958,7 @@ Facility=System
 SymbolicName=ERROR_SUBST_TO_SUBST
 Language=English
 ERROR_SUBST_TO_SUBST - The program stopped because an alternate diskette was not inserted.
+
 .
 
 MessageId=0x8C
@@ -892,7 +967,9 @@ Facility=System
 SymbolicName=ERROR_JOIN_TO_SUBST
 Language=English
 ERROR_JOIN_TO_SUBST - The disk is in use or locked by
+
 another process.
+
 .
 
 MessageId=0x8D
@@ -901,6 +978,7 @@ Facility=System
 SymbolicName=ERROR_SUBST_TO_JOIN
 Language=English
 ERROR_SUBST_TO_JOIN - The pipe has been ended.
+
 .
 
 MessageId=0x8E
@@ -909,7 +987,9 @@ Facility=System
 SymbolicName=ERROR_BUSY_DRIVE
 Language=English
 ERROR_BUSY_DRIVE - The system cannot open the
+
 device or file specified.
+
 .
 
 MessageId=0x8F
@@ -918,6 +998,7 @@ Facility=System
 SymbolicName=ERROR_SAME_DRIVE
 Language=English
 ERROR_SAME_DRIVE - The file name is too long.
+
 .
 
 MessageId=0x90
@@ -926,6 +1007,7 @@ Facility=System
 SymbolicName=ERROR_DIR_NOT_ROOT
 Language=English
 ERROR_DIR_NOT_ROOT - There is not enough space on the disk.
+
 .
 
 MessageId=0x91
@@ -934,6 +1016,7 @@ Facility=System
 SymbolicName=ERROR_DIR_NOT_EMPTY
 Language=English
 ERROR_DIR_NOT_EMPTY - No more internal file identifiers available.
+
 .
 
 MessageId=0x92
@@ -942,6 +1025,7 @@ Facility=System
 SymbolicName=ERROR_IS_SUBST_PATH
 Language=English
 ERROR_IS_SUBST_PATH - The target internal file identifier is incorrect.
+
 .
 
 MessageId=0x93
@@ -966,6 +1050,7 @@ Facility=System
 SymbolicName=ERROR_IS_SUBST_TARGET
 Language=English
 ERROR_IS_SUBST_TARGET - The IOCTL call made by the application program is not correct.
+
 .
 
 MessageId=0x96
@@ -974,6 +1059,7 @@ Facility=System
 SymbolicName=ERROR_SYSTEM_TRACE
 Language=English
 ERROR_SYSTEM_TRACE - The verify-on-write switch parameter value is not correct.
+
 .
 
 MessageId=0x97
@@ -982,6 +1068,7 @@ Facility=System
 SymbolicName=ERROR_INVALID_EVENT_COUNT
 Language=English
 ERROR_INVALID_EVENT_COUNT - The system does not support the command requested.
+
 .
 
 MessageId=0x98
@@ -990,6 +1077,7 @@ Facility=System
 SymbolicName=ERROR_TOO_MANY_MUXWAITERS
 Language=English
 ERROR_TOO_MANY_MUXWAITERS - This function is not supported on this system.
+
 .
 
 MessageId=0x99
@@ -998,6 +1086,7 @@ Facility=System
 SymbolicName=ERROR_INVALID_LIST_FORMAT
 Language=English
 ERROR_INVALID_LIST_FORMAT - The semaphore timeout period has expired.
+
 .
 
 MessageId=0x9A
@@ -1006,6 +1095,7 @@ Facility=System
 SymbolicName=ERROR_LABEL_TOO_LONG
 Language=English
 ERROR_LABEL_TOO_LONG - The data area passed to a system call is too small.
+
 .
 
 MessageId=0x9B
@@ -1014,6 +1104,7 @@ Facility=System
 SymbolicName=ERROR_TOO_MANY_TCBS
 Language=English
 ERROR_TOO_MANY_TCBS - The filename, directory name, or volume label syntax is incorrect.
+
 .
 
 MessageId=0x9C
@@ -1022,6 +1113,7 @@ Facility=System
 SymbolicName=ERROR_SIGNAL_REFUSED
 Language=English
 ERROR_SIGNAL_REFUSED - The system call level is not correct.
+
 .
 
 MessageId=0x9D
@@ -1030,6 +1122,7 @@ Facility=System
 SymbolicName=ERROR_DISCARDED
 Language=English
 ERROR_DISCARDED - The disk has no volume label.
+
 .
 
 MessageId=0x9E
@@ -1038,6 +1131,7 @@ Facility=System
 SymbolicName=ERROR_NOT_LOCKED
 Language=English
 ERROR_NOT_LOCKED - The specified module could not be found.
+
 .
 
 MessageId=0x9F
@@ -1046,6 +1140,7 @@ Facility=System
 SymbolicName=ERROR_BAD_THREADID_ADDR
 Language=English
 ERROR_BAD_THREADID_ADDR - The specified procedure could not be found.
+
 .
 
 MessageId=0xA0
@@ -1054,6 +1149,7 @@ Facility=System
 SymbolicName=ERROR_BAD_ARGUMENTS
 Language=English
 ERROR_BAD_ARGUMENTS - There are no child processes to wait for.
+
 .
 
 MessageId=0xA1
@@ -1070,6 +1166,7 @@ Facility=System
 SymbolicName=ERROR_SIGNAL_PENDING
 Language=English
 ERROR_SIGNAL_PENDING - Attempt to use a file handle to an open disk partition for an operation other than raw disk I/O.
+
 .
 
 MessageId=0xA4
@@ -1078,6 +1175,7 @@ Facility=System
 SymbolicName=ERROR_MAX_THRDS_REACHED
 Language=English
 ERROR_MAX_THRDS_REACHED - An attempt was made to move the file pointer before the beginning of the file.
+
 .
 
 MessageId=0xA7
@@ -1086,6 +1184,7 @@ Facility=System
 SymbolicName=ERROR_LOCK_FAILED
 Language=English
 ERROR_LOCK_FAILED - The file pointer cannot be set on the specified device or file.
+
 .
 
 MessageId=0xAA
@@ -1094,6 +1193,7 @@ Facility=System
 SymbolicName=ERROR_BUSY
 Language=English
 ERROR_BUSY - A JOIN or SUBST command cannot be used for a drive that contains previously joined drives.
+
 .
 
 MessageId=0xAD
@@ -1102,6 +1202,7 @@ Facility=System
 SymbolicName=ERROR_CANCEL_VIOLATION
 Language=English
 ERROR_CANCEL_VIOLATION - An attempt was made to use a JOIN or SUBST command on a drive that has already been joined.
+
 .
 
 MessageId=0xAE
@@ -1110,6 +1211,7 @@ Facility=System
 SymbolicName=ERROR_ATOMIC_LOCKS_NOT_SUPPORTED
 Language=English
 ERROR_ATOMIC_LOCKS_NOT_SUPPORTED - An attempt was made to use a JOIN or SUBST command on a drive that has already been substituted.
+
 .
 
 MessageId=0xB4
@@ -1118,6 +1220,7 @@ Facility=System
 SymbolicName=ERROR_INVALID_SEGMENT_NUMBER
 Language=English
 ERROR_INVALID_SEGMENT_NUMBER - The system tried to delete the JOIN of a drive that is not joined.
+
 .
 
 MessageId=0xB6
@@ -1126,6 +1229,7 @@ Facility=System
 SymbolicName=ERROR_INVALID_ORDINAL
 Language=English
 ERROR_INVALID_ORDINAL - The system tried to delete the substitution of a drive that is not substituted.
+
 .
 
 MessageId=0xB7
@@ -1134,6 +1238,7 @@ Facility=System
 SymbolicName=ERROR_ALREADY_EXISTS
 Language=English
 ERROR_ALREADY_EXISTS - The system tried to join a drive to a directory on a joined drive.
+
 .
 
 MessageId=0xBA
@@ -1142,6 +1247,7 @@ Facility=System
 SymbolicName=ERROR_INVALID_FLAG_NUMBER
 Language=English
 ERROR_INVALID_FLAG_NUMBER - The system tried to substitute a drive to a directory on a substituted drive.
+
 .
 
 MessageId=0xBB
@@ -1150,6 +1256,7 @@ Facility=System
 SymbolicName=ERROR_SEM_NOT_FOUND
 Language=English
 ERROR_SEM_NOT_FOUND - The system tried to join a drive to a directory on a substituted drive.
+
 .
 
 MessageId=0xBC
@@ -1158,6 +1265,7 @@ Facility=System
 SymbolicName=ERROR_INVALID_STARTING_CODESEG
 Language=English
 ERROR_INVALID_STARTING_CODESEG - The system tried to SUBST a drive to a directory on a joined drive.
+
 .
 
 MessageId=0xBD
@@ -1166,6 +1274,7 @@ Facility=System
 SymbolicName=ERROR_INVALID_STACKSEG
 Language=English
 ERROR_INVALID_STACKSEG - The system cannot perform a JOIN or SUBST at this time.
+
 .
 
 MessageId=0xBE
@@ -1174,6 +1283,7 @@ Facility=System
 SymbolicName=ERROR_INVALID_MODULETYPE
 Language=English
 ERROR_INVALID_MODULETYPE - The system cannot join or substitute a drive to or for a directory on the same drive.
+
 .
 
 MessageId=0xBF
@@ -1182,6 +1292,7 @@ Facility=System
 SymbolicName=ERROR_INVALID_EXE_SIGNATURE
 Language=English
 ERROR_INVALID_EXE_SIGNATURE - The directory is not a subdirectory of the root directory.
+
 .
 
 MessageId=0xC0
@@ -1190,6 +1301,7 @@ Facility=System
 SymbolicName=ERROR_EXE_MARKED_INVALID
 Language=English
 ERROR_EXE_MARKED_INVALID - The directory is not empty.
+
 .
 
 MessageId=0xC1
@@ -1198,6 +1310,7 @@ Facility=System
 SymbolicName=ERROR_BAD_EXE_FORMAT
 Language=English
 ERROR_BAD_EXE_FORMAT - The path specified is being used in a substitute.
+
 .
 
 MessageId=0xC2
@@ -1206,6 +1319,7 @@ Facility=System
 SymbolicName=ERROR_ITERATED_DATA_EXCEEDS_64k
 Language=English
 ERROR_ITERATED_DATA_EXCEEDS_64k - Not enough resources are available to process this command.
+
 .
 
 MessageId=0xC3
@@ -1214,6 +1328,7 @@ Facility=System
 SymbolicName=ERROR_INVALID_MINALLOCSIZE
 Language=English
 ERROR_INVALID_MINALLOCSIZE - The path specified cannot be used at this time.
+
 .
 
 MessageId=0xC4
@@ -1222,6 +1337,7 @@ Facility=System
 SymbolicName=ERROR_DYNLINK_FROM_INVALID_RING
 Language=English
 ERROR_DYNLINK_FROM_INVALID_RING - An attempt was made to join or substitute a drive for which a directory on the drive is the target of a previous substitute.
+
 .
 
 MessageId=0xC5
@@ -1230,6 +1346,7 @@ Facility=System
 SymbolicName=ERROR_IOPL_NOT_ENABLED
 Language=English
 ERROR_IOPL_NOT_ENABLED - System trace information was not specified in your CONFIG.SYS file, or tracing is disallowed.
+
 .
 
 MessageId=0xC6
@@ -1238,6 +1355,7 @@ Facility=System
 SymbolicName=ERROR_INVALID_SEGDPL
 Language=English
 ERROR_INVALID_SEGDPL - The number of specified semaphore events for DosMuxSemWait is not correct.
+
 .
 
 MessageId=0xC7
@@ -1246,6 +1364,7 @@ Facility=System
 SymbolicName=ERROR_AUTODATASEG_EXCEEDS_64k
 Language=English
 ERROR_AUTODATASEG_EXCEEDS_64k - DosMuxSemWait did not execute; too many semaphores are already set.
+
 .
 
 MessageId=0xC8
@@ -1254,6 +1373,7 @@ Facility=System
 SymbolicName=ERROR_RING2SEG_MUST_BE_MOVABLE
 Language=English
 ERROR_RING2SEG_MUST_BE_MOVABLE - The DosMuxSemWait list is not correct.
+
 .
 
 MessageId=0xC9
@@ -1262,7 +1382,9 @@ Facility=System
 SymbolicName=ERROR_RELOC_CHAIN_XEEDS_SEGLIM
 Language=English
 ERROR_RELOC_CHAIN_XEEDS_SEGLIM - The volume label you entered exceeds the label character
+
 limit of the target file system.
+
 .
 
 MessageId=0xCA
@@ -1271,6 +1393,7 @@ Facility=System
 SymbolicName=ERROR_INFLOOP_IN_RELOC_CHAIN
 Language=English
 ERROR_INFLOOP_IN_RELOC_CHAIN - Cannot create another thread.
+
 .
 
 MessageId=0xCB
@@ -1279,6 +1402,7 @@ Facility=System
 SymbolicName=ERROR_ENVVAR_NOT_FOUND
 Language=English
 ERROR_ENVVAR_NOT_FOUND - The recipient process has refused the signal.
+
 .
 
 MessageId=0xCD
@@ -1287,6 +1411,7 @@ Facility=System
 SymbolicName=ERROR_NO_SIGNAL_SENT
 Language=English
 ERROR_NO_SIGNAL_SENT - The segment is already discarded and cannot be locked.
+
 .
 
 MessageId=0xCE
@@ -1295,6 +1420,7 @@ Facility=System
 SymbolicName=ERROR_FILENAME_EXCED_RANGE
 Language=English
 ERROR_FILENAME_EXCED_RANGE - The segment is already unlocked.
+
 .
 
 MessageId=0xCF
@@ -1303,6 +1429,7 @@ Facility=System
 SymbolicName=ERROR_RING2_STACK_IN_USE
 Language=English
 ERROR_RING2_STACK_IN_USE - The address for the thread ID is not correct.
+
 .
 
 MessageId=0xD0
@@ -1311,6 +1438,7 @@ Facility=System
 SymbolicName=ERROR_META_EXPANSION_TOO_LONG
 Language=English
 ERROR_META_EXPANSION_TOO_LONG - The argument string passed to DosExecPgm is not correct.
+
 .
 
 MessageId=0xD1
@@ -1319,6 +1447,7 @@ Facility=System
 SymbolicName=ERROR_INVALID_SIGNAL_NUMBER
 Language=English
 ERROR_INVALID_SIGNAL_NUMBER - The specified path is invalid.
+
 .
 
 MessageId=0xD2
@@ -1327,6 +1456,7 @@ Facility=System
 SymbolicName=ERROR_THREAD_1_INACTIVE
 Language=English
 ERROR_THREAD_1_INACTIVE - A signal is already pending.
+
 .
 
 MessageId=0xD4
@@ -1343,6 +1473,7 @@ Facility=System
 SymbolicName=ERROR_TOO_MANY_MODULES
 Language=English
 ERROR_TOO_MANY_MODULES - No more threads can be created in the system.
+
 .
 
 MessageId=0xD7
@@ -1367,6 +1498,7 @@ Facility=System
 SymbolicName=ERROR_PIPE_BUSY
 Language=English
 ERROR_PIPE_BUSY - Unable to lock a region of a file.
+
 .
 
 MessageId=0xE8
@@ -1391,6 +1523,7 @@ Facility=System
 SymbolicName=ERROR_MORE_DATA
 Language=English
 ERROR_MORE_DATA - The requested resource is in use.
+
 .
 
 MessageId=0xF0
@@ -1415,6 +1548,7 @@ Facility=System
 SymbolicName=ERROR_EA_LIST_INCONSISTENT
 Language=English
 ERROR_EA_LIST_INCONSISTENT - A lock request was not outstanding for the supplied cancel region.
+
 .
 
 MessageId=0x103
@@ -1423,6 +1557,7 @@ Facility=System
 SymbolicName=ERROR_NO_MORE_ITEMS
 Language=English
 ERROR_NO_MORE_ITEMS - The file system does not support atomic changes to the lock type.
+
 .
 
 MessageId=0x10A
@@ -1471,6 +1606,7 @@ Facility=System
 SymbolicName=ERROR_INVALID_EA_HANDLE
 Language=English
 ERROR_INVALID_EA_HANDLE - The system detected a segment number that was not correct.
+
 .
 
 MessageId=0x11A
@@ -1495,6 +1631,7 @@ Facility=System
 SymbolicName=ERROR_TOO_MANY_POSTS
 Language=English
 ERROR_TOO_MANY_POSTS - Cannot create a file when that file already exists.
+
 .
 
 MessageId=0x12B
@@ -1519,6 +1656,7 @@ Facility=System
 SymbolicName=ERROR_INVALID_ADDRESS
 Language=English
 ERROR_INVALID_ADDRESS - The flag passed is not correct.
+
 .
 
 MessageId=0x216
@@ -1527,6 +1665,7 @@ Facility=System
 SymbolicName=ERROR_ARITHMETIC_OVERFLOW
 Language=English
 ERROR_ARITHMETIC_OVERFLOW - The specified system semaphore name was not found.
+
 .
 
 MessageId=0x217
@@ -1599,6 +1738,7 @@ Facility=System
 SymbolicName=ERROR_STACK_OVERFLOW
 Language=English
 ERROR_STACK_OVERFLOW - The operating system cannot run this application program.
+
 .
 
 MessageId=0x3EA
@@ -1607,6 +1747,7 @@ Facility=System
 SymbolicName=ERROR_INVALID_MESSAGE
 Language=English
 ERROR_INVALID_MESSAGE - The operating system is not presently configured to run this application.
+
 .
 
 MessageId=0x3EB
@@ -1623,6 +1764,7 @@ Facility=System
 SymbolicName=ERROR_INVALID_FLAGS
 Language=English
 ERROR_INVALID_FLAGS - The operating system cannot run this application program.
+
 .
 
 MessageId=0x3ED
@@ -1631,6 +1773,7 @@ Facility=System
 SymbolicName=ERROR_UNRECOGNIZED_VOLUME
 Language=English
 ERROR_UNRECOGNIZED_VOLUME - The code segment cannot be greater than or equal to 64K.
+
 .
 
 MessageId=0x3EE
@@ -1655,7 +1798,9 @@ Facility=System
 SymbolicName=ERROR_NO_TOKEN
 Language=English
 ERROR_NO_TOKEN - The system could not find the environment
+
 option that was entered.
+
 .
 
 MessageId=0x3F1
@@ -1672,7 +1817,9 @@ Facility=System
 SymbolicName=ERROR_BADKEY
 Language=English
 ERROR_BADKEY - No process in the command subtree has a
+
 signal handler.
+
 .
 
 MessageId=0x3F3
@@ -1681,6 +1828,7 @@ Facility=System
 SymbolicName=ERROR_CANTOPEN
 Language=English
 ERROR_CANTOPEN - The filename or extension is too long.
+
 .
 
 MessageId=0x3F4
@@ -1689,6 +1837,7 @@ Facility=System
 SymbolicName=ERROR_CANTREAD
 Language=English
 ERROR_CANTREAD - The ring 2 stack is in use.
+
 .
 
 MessageId=0x3F5
@@ -1697,6 +1846,7 @@ Facility=System
 SymbolicName=ERROR_CANTWRITE
 Language=English
 ERROR_CANTWRITE - The global filename characters, * or ?, are entered incorrectly or too many global filename characters are specified.
+
 .
 
 MessageId=0x3F6
@@ -1705,6 +1855,7 @@ Facility=System
 SymbolicName=ERROR_REGISTRY_RECOVERED
 Language=English
 ERROR_REGISTRY_RECOVERED - The signal being posted is not correct.
+
 .
 
 MessageId=0x3F7
@@ -1713,6 +1864,7 @@ Facility=System
 SymbolicName=ERROR_REGISTRY_CORRUPT
 Language=English
 ERROR_REGISTRY_CORRUPT - The signal handler cannot be set.
+
 .
 
 MessageId=0x3F8
@@ -1729,6 +1881,7 @@ Facility=System
 SymbolicName=ERROR_NOT_REGISTRY_FILE
 Language=English
 ERROR_NOT_REGISTRY_FILE - The segment is locked and cannot be reallocated.
+
 .
 
 MessageId=0x3FA
@@ -1745,6 +1898,7 @@ Facility=System
 SymbolicName=ERROR_NO_LOG_SPACE
 Language=English
 ERROR_NO_LOG_SPACE - Too many dynamic-link modules are attached to this program or dynamic-link module.
+
 .
 
 MessageId=0x3FC
@@ -1753,6 +1907,7 @@ Facility=System
 SymbolicName=ERROR_KEY_HAS_CHILDREN
 Language=English
 ERROR_KEY_HAS_CHILDREN - Cannot nest calls to LoadModule.
+
 .
 
 MessageId=0x3FD
@@ -1873,6 +2028,7 @@ Facility=System
 SymbolicName=ERROR_FAILED_SERVICE_CONTROLLER_CONNECT
 Language=English
 ERROR_FAILED_SERVICE_CONTROLLER_CONNECT - The pipe state is invalid.
+
 .
 
 MessageId=0x428
@@ -1881,6 +2037,7 @@ Facility=System
 SymbolicName=ERROR_EXCEPTION_IN_SERVICE
 Language=English
 ERROR_EXCEPTION_IN_SERVICE - All pipe instances are busy.
+
 .
 
 MessageId=0x429
@@ -1889,6 +2046,7 @@ Facility=System
 SymbolicName=ERROR_DATABASE_DOES_NOT_EXIST
 Language=English
 ERROR_DATABASE_DOES_NOT_EXIST - The pipe is being closed.
+
 .
 
 MessageId=0x42A
@@ -1897,6 +2055,7 @@ Facility=System
 SymbolicName=ERROR_SERVICE_SPECIFIC_ERROR
 Language=English
 ERROR_SERVICE_SPECIFIC_ERROR - No process is on the other end of the pipe.
+
 .
 
 MessageId=0x42B
@@ -1905,6 +2064,7 @@ Facility=System
 SymbolicName=ERROR_PROCESS_ABORTED
 Language=English
 ERROR_PROCESS_ABORTED - More data is available.
+
 .
 
 MessageId=0x42C
@@ -1953,6 +2113,7 @@ Facility=System
 SymbolicName=ERROR_SERVICE_EXISTS
 Language=English
 ERROR_SERVICE_EXISTS - The session was canceled.
+
 .
 
 MessageId=0x432
@@ -2065,6 +2226,7 @@ Facility=System
 SymbolicName=ERROR_UNABLE_TO_LOCK_MEDIA
 Language=English
 ERROR_UNABLE_TO_LOCK_MEDIA - The specified extended attribute name was invalid.
+
 .
 
 MessageId=0x455
@@ -2073,6 +2235,7 @@ Facility=System
 SymbolicName=ERROR_UNABLE_TO_UNLOAD_MEDIA
 Language=English
 ERROR_UNABLE_TO_UNLOAD_MEDIA - The extended attributes are inconsistent.
+
 .
 
 MessageId=0x456
@@ -2097,6 +2260,7 @@ Facility=System
 SymbolicName=ERROR_NO_MEDIA_IN_DRIVE
 Language=English
 ERROR_NO_MEDIA_IN_DRIVE - The wait operation timed out.
+
 .
 
 MessageId=0x459
@@ -2105,6 +2269,7 @@ Facility=System
 SymbolicName=ERROR_NO_UNICODE_TRANSLATION
 Language=English
 ERROR_NO_UNICODE_TRANSLATION - No more data is available.
+
 .
 
 MessageId=0x45A
@@ -2161,6 +2326,7 @@ Facility=System
 SymbolicName=ERROR_MORE_WRITES
 Language=English
 ERROR_MORE_WRITES - The copy functions cannot be used.
+
 .
 
 MessageId=0x461
@@ -2169,6 +2335,7 @@ Facility=System
 SymbolicName=ERROR_COUNTER_TIMEOUT
 Language=English
 ERROR_COUNTER_TIMEOUT - The directory name is invalid.
+
 .
 
 MessageId=0x462
@@ -2233,6 +2400,7 @@ Facility=System
 SymbolicName=ERROR_EOM_OVERFLOW
 Language=English
 ERROR_EOM_OVERFLOW - The extended attributes did not fit in the buffer.
+
 .
 
 MessageId=0x46A
@@ -2241,6 +2409,7 @@ Facility=System
 SymbolicName=ERROR_NOT_ENOUGH_SERVER_MEMORY
 Language=English
 ERROR_NOT_ENOUGH_SERVER_MEMORY - The extended attribute file on the mounted file system is corrupt.
+
 .
 
 MessageId=0x46B
@@ -2249,6 +2418,7 @@ Facility=System
 SymbolicName=ERROR_POSSIBLE_DEADLOCK
 Language=English
 ERROR_POSSIBLE_DEADLOCK - The extended attribute table file is full.
+
 .
 
 MessageId=0x46C
@@ -2257,6 +2427,7 @@ Facility=System
 SymbolicName=ERROR_MAPPED_ALIGNMENT
 Language=English
 ERROR_MAPPED_ALIGNMENT - The specified extended attribute handle is invalid.
+
 .
 
 MessageId=0x474
@@ -2289,6 +2460,7 @@ Facility=System
 SymbolicName=ERROR_OLD_WIN_VERSION
 Language=English
 ERROR_OLD_WIN_VERSION - The mounted file system does not support extended attributes.
+
 .
 
 MessageId=0x47F
@@ -2337,6 +2509,7 @@ Facility=System
 SymbolicName=ERROR_DDE_FAIL
 Language=English
 ERROR_DDE_FAIL - Attempt to release mutex not owned by caller.
+
 .
 
 MessageId=0x485
@@ -2417,6 +2590,7 @@ Facility=System
 SymbolicName=ERROR_EXTENDED_ERROR
 Language=English
 ERROR_EXTENDED_ERROR - Too many posts were made to a semaphore.
+
 .
 
 MessageId=0x4B9
@@ -2425,6 +2599,7 @@ Facility=System
 SymbolicName=ERROR_INVALID_GROUPNAME
 Language=English
 ERROR_INVALID_GROUPNAME - Only part of a ReadProcessMemory or WriteProcessMemory request was completed.
+
 .
 
 MessageId=0x4BA
@@ -2433,6 +2608,7 @@ Facility=System
 SymbolicName=ERROR_INVALID_COMPUTERNAME
 Language=English
 ERROR_INVALID_COMPUTERNAME - The oplock request is denied.
+
 .
 
 MessageId=0x4BB
@@ -2441,6 +2617,7 @@ Facility=System
 SymbolicName=ERROR_INVALID_EVENTNAME
 Language=English
 ERROR_INVALID_EVENTNAME - An invalid oplock acknowledgment was received by the system.
+
 .
 
 MessageId=0x4BC
@@ -3929,6 +4106,7 @@ Facility=System
 SymbolicName=ERROR_WORKING_SET_QUOTA
 Language=English
 ERROR_WORKING_SET_QUOTA - Attempt to access invalid address.
+
 .
 
 MessageId=0x5AE
@@ -4305,6 +4483,7 @@ Facility=System
 SymbolicName=RPC_S_MAX_CALLS_TOO_SMALL
 Language=English
 RPC_S_MAX_CALLS_TOO_SMALL - Arithmetic result exceeded 32 bits.
+
 .
 
 MessageId=0x6CF
@@ -4313,6 +4492,7 @@ Facility=System
 SymbolicName=RPC_S_STRING_TOO_LONG
 Language=English
 RPC_S_STRING_TOO_LONG - There is a process on other end of the pipe.
+
 .
 
 MessageId=0x6D0
@@ -4321,6 +4501,7 @@ Facility=System
 SymbolicName=RPC_S_PROTSEQ_NOT_FOUND
 Language=English
 RPC_S_PROTSEQ_NOT_FOUND - Waiting for a process to open the other end of the pipe.
+
 .
 
 MessageId=0x6D1
@@ -5353,6 +5534,391 @@ Facility=System
 SymbolicName=ERROR_NO_BROWSER_SERVERS_FOUND
 Language=English
 ERROR_NO_BROWSER_SERVERS_FOUND
+.
+
+MessageId=0xFFFF
+Severity=Warning
+Facility=System
+SymbolicName=E_UNEXPECTED
+Language=English
+E_UNEXPECTED - Catastrophic failure
+.
+
+
+; Facility=WIN32
+
+MessageId=0x000E
+Severity=Warning
+Facility=WIN32
+SymbolicName=E_OUTOFMEMORY
+Language=English
+E_OUTOFMEMORY - Out of memory
+.
+
+MessageId=0x0057
+Severity=Warning
+Facility=WIN32
+SymbolicName=E_INVALIDARG
+Language=English
+E_INVALIDARG - One or more arguments are invalid
+.
+
+MessageId=0x0006
+Severity=Warning
+Facility=WIN32
+SymbolicName=E_HANDLE
+Language=English
+E_POINTER - Invalid handle
+.
+
+MessageId=0x0005
+Severity=Warning
+Facility=WIN32
+SymbolicName=E_ACCESSDENIED
+Language=English
+E_ACCESSDENIED - WIN32 access denied error
+.
+
+
+; Facility=System
+
+MessageId=0x4001
+Severity=Warning
+Facility=System
+SymbolicName=E_NOTIMPL
+Language=English
+E_NOTIMPL - Not implemented
+.
+
+MessageId=0x4002
+Severity=Warning
+Facility=System
+SymbolicName=E_NOINTERFACE
+Language=English
+E_NOINTERFACE - No such interface supported
+.
+
+MessageId=0x4003
+Severity=Warning
+Facility=System
+SymbolicName=E_POINTER
+Language=English
+E_POINTER - Invalid pointer
+.
+
+MessageId=0x4004
+Severity=Warning
+Facility=System
+SymbolicName=E_ABORT
+Language=English
+E_ABORT - Operation aborted
+.
+
+MessageId=0x4005
+Severity=Warning
+Facility=System
+SymbolicName=E_FAIL
+Language=English
+E_FAIL - Unspecified error
+.
+
+MessageId=0x000A
+Severity=Warning
+Facility=System
+SymbolicName=E_PENDING
+Language=English
+E_PENDING - The data necessary to complete this operation is not yet available.
+.
+
+MessageId=0x4006
+Severity=Warning
+Facility=System
+SymbolicName=CO_E_INIT_TLS
+Language=English
+CO_E_INIT_TLS - Thread local storage failure
+.
+
+MessageId=0x4007
+Severity=Warning
+Facility=System
+SymbolicName=CO_E_INIT_SHARED_ALLOCATOR
+Language=English
+CO_E_INIT_SHARED_ALLOCATOR - Get shared memory allocator failure
+.
+
+MessageId=0x4008
+Severity=Warning
+Facility=System
+SymbolicName=CO_E_INIT_MEMORY_ALLOCATOR
+Language=English
+CO_E_INIT_MEMORY_ALLOCATOR - Get memory allocator failure
+.
+
+MessageId=0x4009
+Severity=Warning
+Facility=System
+SymbolicName=CO_E_INIT_CLASS_CACHE
+Language=English
+CO_E_INIT_CLASS_CACHE - Unable to initialize class cache
+.
+
+MessageId=0x400A
+Severity=Warning
+Facility=System
+SymbolicName=CO_E_INIT_RPC_CHANNEL
+Language=English
+CO_E_INIT_RPC_CHANNEL - Unable to initialize RPC services
+.
+
+MessageId=0x400B
+Severity=Warning
+Facility=System
+SymbolicName=CO_E_INIT_TLS_SET_CHANNEL_CONTROL
+Language=English
+CO_E_INIT_TLS_SET_CHANNEL_CONTROL - Cannot set thread local storage channel control
+.
+
+MessageId=0x400C
+Severity=Warning
+Facility=System
+SymbolicName=CO_E_INIT_TLS_CHANNEL_CONTROL
+Language=English
+CO_E_INIT_TLS_CHANNEL_CONTROL - Could not allocate thread local storage channel control
+.
+
+MessageId=0x400D
+Severity=Warning
+Facility=System
+SymbolicName=CO_E_INIT_UNACCEPTED_USER_ALLOCATOR
+Language=English
+CO_E_INIT_UNACCEPTED_USER_ALLOCATOR - The user supplied memory allocator is unacceptable
+.
+
+MessageId=0x400E
+Severity=Warning
+Facility=System
+SymbolicName=CO_E_INIT_SCM_MUTEX_EXISTS
+Language=English
+CO_E_INIT_SCM_MUTEX_EXISTS - The OLE service mutex already exists
+.
+
+MessageId=0x400F
+Severity=Warning
+Facility=System
+SymbolicName=CO_E_INIT_SCM_FILE_MAPPING_EXISTS
+Language=English
+CO_E_INIT_SCM_FILE_MAPPING_EXISTS - The OLE service file mapping already exists
+.
+
+MessageId=0x4010
+Severity=Warning
+Facility=System
+SymbolicName=CO_E_INIT_SCM_MAP_VIEW_OF_FILE
+Language=English
+CO_E_INIT_SCM_MAP_VIEW_OF_FILE - Unable to map view of file for OLE service
+.
+
+MessageId=0x4011
+Severity=Warning
+Facility=System
+SymbolicName=CO_E_INIT_SCM_EXEC_FAILURE
+Language=English
+CO_E_INIT_SCM_EXEC_FAILURE - Failure attempting to launch OLE service
+.
+
+MessageId=0x4012
+Severity=Warning
+Facility=System
+SymbolicName=CO_E_INIT_ONLY_SINGLE_THREADED
+Language=English
+CO_E_INIT_ONLY_SINGLE_THREADED - There was an attempt to call CoInitialize a second time while single threaded
+.
+
+MessageId=0x4013
+Severity=Warning
+Facility=System
+SymbolicName=CO_E_CANT_REMOTE
+Language=English
+CO_E_CANT_REMOTE - A Remote activation was necessary but was not allowed
+.
+
+MessageId=0x4014
+Severity=Warning
+Facility=System
+SymbolicName=CO_E_BAD_SERVER_NAME
+Language=English
+CO_E_BAD_SERVER_NAME - A Remote activation was necessary but the server name provided was invalid
+.
+
+MessageId=0x4015
+Severity=Warning
+Facility=System
+SymbolicName=CO_E_WRONG_SERVER_IDENTITY
+Language=English
+CO_E_WRONG_SERVER_IDENTITY - The class is configured to run as a security id different from the caller
+.
+
+MessageId=0x4016
+Severity=Warning
+Facility=System
+SymbolicName=CO_E_OLE1DDE_DISABLED
+Language=English
+CO_E_OLE1DDE_DISABLED - Use of Ole1 services requiring DDE windows is disabled
+.
+
+MessageId=0x4017
+Severity=Warning
+Facility=System
+SymbolicName=CO_E_RUNAS_SYNTAX
+Language=English
+CO_E_RUNAS_SYNTAX - A RunAs specification must be <domain name>\<user name> or simply <user name>
+.
+
+MessageId=0x4018
+Severity=Warning
+Facility=System
+SymbolicName=CO_E_CREATEPROCESS_FAILURE
+Language=English
+CO_E_CREATEPROCESS_FAILURE - The server process could not be started. The pathname may be incorrect.
+.
+
+MessageId=0x4019
+Severity=Warning
+Facility=System
+SymbolicName=CO_E_RUNAS_CREATEPROCESS_FAILURE
+Language=English
+CO_E_RUNAS_CREATEPROCESS_FAILURE - The server process could not be started as the configured identity. The pathname may be incorrect or unavailable.
+.
+
+MessageId=0x401A
+Severity=Warning
+Facility=System
+SymbolicName=CO_E_RUNAS_LOGON_FAILURE
+Language=English
+CO_E_RUNAS_LOGON_FAILURE - The server process could not be started because the configured identity is incorrect. Check the username and password.
+.
+
+MessageId=0x401B
+Severity=Warning
+Facility=System
+SymbolicName=CO_E_LAUNCH_PERMSSION_DENIED
+Language=English
+CO_E_LAUNCH_PERMSSION_DENIED - The client is not allowed to launch this server.
+.
+
+MessageId=0x401C
+Severity=Warning
+Facility=System
+SymbolicName=CO_E_START_SERVICE_FAILURE
+Language=English
+CO_E_START_SERVICE_FAILURE - The service providing this server could not be started.
+.
+
+MessageId=0x401D
+Severity=Warning
+Facility=System
+SymbolicName=CO_E_REMOTE_COMMUNICATION_FAILURE
+Language=English
+CO_E_REMOTE_COMMUNICATION_FAILURE - This computer was unable to communicate with the computer providing the server.
+.
+
+MessageId=0x401E
+Severity=Warning
+Facility=System
+SymbolicName=CO_E_SERVER_START_TIMEOUT
+Language=English
+CO_E_SERVER_START_TIMEOUT - The server did not respond after being launched.
+.
+
+MessageId=0x401F
+Severity=Warning
+Facility=System
+SymbolicName=CO_E_CLSREG_INCONSISTENT
+Language=English
+CO_E_CLSREG_INCONSISTENT - The registration information for this server is inconsistent or incomplete.
+.
+
+MessageId=0x4020
+Severity=Warning
+Facility=System
+SymbolicName=CO_E_IIDREG_INCONSISTENT
+Language=English
+CO_E_IIDREG_INCONSISTENT - The registration information for this interface is inconsistent or incomplete.
+.
+
+MessageId=0x4021
+Severity=Warning
+Facility=System
+SymbolicName=CO_E_NOT_SUPPORTED
+Language=English
+CO_E_NOT_SUPPORTED - The operation attempted is not supported.
+.
+
+MessageId=0x4022
+Severity=Warning
+Facility=System
+SymbolicName=CO_E_RELOAD_DLL
+Language=English
+CO_E_RELOAD_DLL - A dll must be loaded.
+.
+
+MessageId=0x4023
+Severity=Warning
+Facility=System
+SymbolicName=CO_E_MSI_ERROR
+Language=English
+CO_E_MSI_ERROR - A Microsoft Software Installer error was encountered.
+.
+
+
+; Facility=ITF
+
+MessageId=0x0000
+Severity=Warning
+Facility=ITF
+SymbolicName=OLE_E_OLEVERB
+Language=English
+OLE_E_OLEVERB - Invalid OLEVERB structure
+.
+
+MessageId=0x0001
+Severity=Warning
+Facility=ITF
+SymbolicName=OLE_E_ADVF
+Language=English
+OLE_E_ADVF - Invalid advise flags
+.
+
+MessageId=0x0002
+Severity=Warning
+Facility=ITF
+SymbolicName=OLE_E_ENUM_NOMORE
+Language=English
+OLE_E_ENUM_NOMORE - Can't enumerate any more, because the associated data is missing
+.
+
+MessageId=0x0003
+Severity=Warning
+Facility=ITF
+SymbolicName=OLE_E_ADVISENOTSUPPORTED
+Language=English
+OLE_E_ADVISENOTSUPPORTED - This implementation doesn't take advises
+.
+
+MessageId=0x0004
+Severity=Warning
+Facility=ITF
+SymbolicName=OLE_E_NOCONNECTION
+Language=English
+OLE_E_NOCONNECTION - There is no connection for this connection ID
+.
+
+MessageId=0x0005
+Severity=Warning
+Facility=ITF
+SymbolicName=OLE_E_NOTRUNNING
+Language=English
+OLE_E_NOTRUNNING - Need to run the object to perform this operation
 .
 
 ; EOF

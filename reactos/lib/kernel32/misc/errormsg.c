@@ -1,4 +1,4 @@
-/* $Id: errormsg.c,v 1.12 2003/11/16 11:35:25 mf Exp $
+/* $Id: errormsg.c,v 1.13 2003/11/16 12:56:44 mf Exp $
  *
  * reactos/lib/kernel32/misc/errormsg.c
  *
@@ -288,7 +288,7 @@ DWORD WINAPI FormatMessageA(
         }
 
         if (!bufsize) {
-            TRACE("FormatMessageA: dwFlags=%x hmodule=%x dwMessageId=%x - could not load message\n", dwFlags, hmodule, dwMessageId);
+            TRACE("FormatMessageA: dwFlags=%#x hmodule=%#x dwMessageId=%#x - could not load message\n", dwFlags, hmodule, dwMessageId);
             SetLastError (ERROR_RESOURCE_LANG_NOT_FOUND);
             return 0;
         }
@@ -539,7 +539,7 @@ DWORD WINAPI FormatMessageW(
         }
 
         if (!bufsize) {
-            TRACE("FormatMessageW: dwFlags=%x hmodule=%x dwMessageId=%x - could not load message\n", dwFlags, hmodule, dwMessageId);
+            TRACE("FormatMessageW: dwFlags=%#x hmodule=%#x dwMessageId=%#x - could not load message\n", dwFlags, hmodule, dwMessageId);
             SetLastError (ERROR_RESOURCE_LANG_NOT_FOUND);
             return 0;
         }
