@@ -45,6 +45,7 @@ copy drivers\dd\vidport\vidport.sys %ROS_INSTALL%\system32\drivers
 copy drivers\net\afd\afd.sys %ROS_INSTALL%\system32\drivers
 copy drivers\net\dd\ne2000\ne2000.sys %ROS_INSTALL%\system32\drivers
 copy drivers\net\ndis\ndis.sys %ROS_INSTALL%\system32\drivers
+copy drivers\net\packet\packet.sys %ROS_INSTALL%\system32\drivers
 copy drivers\net\tcpip\tcpip.sys %ROS_INSTALL%\system32\drivers
 copy drivers\net\wshtcpip\wshtcpip.dll %ROS_INSTALL%\system32
 copy drivers\storage\atapi\atapi.sys %ROS_INSTALL%\system32\drivers

@@ -28,10 +28,10 @@ HALS = halx86
 BUS = acpi isapnp pci
 
 # User mode libraries
-# advapi32 crtdll fmifs gdi32 kernel32 msafd msvcrt ntdll ole32
-# oleaut32 psapi rpcrt4 secur32 shell32 user32 version ws2_32
+# advapi32 crtdll fmifs gdi32 kernel32 libpcap packet msafd msvcrt ntdll ole32
+# oleaut32 psapi rpcrt4 secur32 shell32 user32 version ws2help ws2_32 wsock32 wshirda
 DLLS = advapi32 crtdll fmifs gdi32 kernel32 msafd msvcrt ntdll \
-       secur32 user32 version ws2_32
+       secur32 user32 version ws2help ws2_32 wshirda
 SUBSYS = smss win32k csrss
 
 #
@@ -61,8 +61,8 @@ INPUT_DRIVERS = keyboard mouclass psaux
 FS_DRIVERS = cdfs fs_rec ms np vfat
 
 # Kernel mode networking drivers
-# afd ndis tcpip tdi wshtcpip
-NET_DRIVERS = afd ndis tcpip tdi wshtcpip
+# afd ndis packet tcpip tdi wshtcpip
+NET_DRIVERS = afd ndis packet tcpip tdi wshtcpip
 
 # Kernel mode networking device drivers
 # ne2000
