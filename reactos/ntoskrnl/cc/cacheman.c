@@ -49,9 +49,10 @@ CcGetFlushedValidData (
     IN BOOLEAN BcbListHeld
     )
 {
+	LARGE_INTEGER i; 
+
 	UNIMPLEMENTED;
 
-	LARGE_INTEGER i; 
 	i.QuadPart = 0;
 	return i;
 }
