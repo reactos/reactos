@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.h,v 1.12 2004/12/18 22:14:39 blight Exp $
+ * $Id: videoprt.h,v 1.13 2004/12/19 15:51:51 navaraf Exp $
  */
 
 #ifndef VIDEOPRT_H
@@ -70,6 +70,7 @@ typedef struct _VIDEO_PORT_DEVICE_EXTENSTION
 {
    PDEVICE_OBJECT PhysicalDeviceObject;
    PDEVICE_OBJECT FunctionalDeviceObject;
+   PDEVICE_OBJECT NextDeviceObject;
    UNICODE_STRING RegistryPath;
    PKINTERRUPT InterruptObject;
    KSPIN_LOCK InterruptSpinLock;

@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.c,v 1.28 2004/11/24 11:12:19 ekohl Exp $
+ * $Id: videoprt.c,v 1.29 2004/12/19 15:51:51 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -445,7 +445,8 @@ IntVideoPortFindAdapter(
    }
 
    if (PhysicalDeviceObject != NULL)
-      IoAttachDeviceToDeviceStack(DeviceObject, PhysicalDeviceObject);
+      DeviceExtension->NextDeviceObject = IoAttachDeviceToDeviceStack(
+         DeviceObject, PhysicalDeviceObject);
 
    DPRINT("STATUS_SUCCESS\n");
    return STATUS_SUCCESS;
