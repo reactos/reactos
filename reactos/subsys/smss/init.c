@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.4 1999/12/01 15:18:54 ekohl Exp $
+/* $Id: init.c,v 1.5 1999/12/04 21:11:00 ea Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -96,7 +96,7 @@ InitSessionManager (
 	}
 
 #ifndef NDEBUG
-	DisplayString (L"SmApiPort created...\n");
+	DisplayString (L"SM: \\SmApiPort created...\n");
 #endif
 
 	/* Create two threads for "\SmApiPort" */
@@ -128,7 +128,7 @@ InitSessionManager (
 	if (!NT_SUCCESS(Status))
 		return FALSE;
 #ifndef NDEBUG
-	DisplayString (L"System Environment created\n");
+	DisplayString (L"SM: System Environment created\n");
 #endif
 
 	/* FIXME: Define symbolic links to kernel devices (MS-DOS names) */
@@ -160,7 +160,7 @@ InitSessionManager (
 
 	/* Start the Win32 subsystem (csrss.exe) */
 #if 0
-	DisplayString (L"Executing csrss.exe\n");
+	DisplayString (L"SM: Executing csrss.exe\n");
 	RtlInitUnicodeString (&UnicodeString,
 	                      L"\\??\\C:\\reactos\\system32\\csrss.exe");
 
@@ -175,13 +175,13 @@ InitSessionManager (
 
 	if (!NT_SUCCESS(Status))
 	{
-		DisplayString (L"Loading csrss.exe failed!\n");
+		DisplayString (L"SM: Loading csrss.exe failed!\n");
 		return FALSE;
 	}
 #endif
 
 	/* Start the simple shell (shell.exe) */
-	DisplayString (L"Executing shell\n");
+	DisplayString (L"SM: Executing shell\n");
 	RtlInitUnicodeString (&UnicodeString,
 	                      L"\\??\\C:\\reactos\\system32\\shell.exe");
 
@@ -201,7 +201,7 @@ InitSessionManager (
 
 	if (!NT_SUCCESS(Status))
 	{
-		DisplayString (L"Loading shell.exe failed!\n");
+		DisplayString (L"SM: Loading shell.exe failed!\n");
 #if 0
 		NtTerminateProcess (Children[CHILD_CSRSS],
 		                    0);
@@ -229,7 +229,7 @@ InitSessionManager (
 		return FALSE;
 	}
 #ifndef NDEBUG
-	DisplayString (L"DbgSsApiPort created...\n");
+	DisplayString (L"SM: DbgSsApiPort created...\n");
 #endif
 
 	/* Create the \DbgUiApiPort object (LPC) */
@@ -252,7 +252,7 @@ InitSessionManager (
 		return FALSE;
 	}
 #ifndef NDEBUG
-	DisplayString (L"DbgUiApiPort created...\n");
+	DisplayString (L"SM: DbgUiApiPort created...\n");
 #endif
 
 	return TRUE;
