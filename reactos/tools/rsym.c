@@ -125,7 +125,7 @@ typedef struct _STAB_ENTRY {
 #define N_SLINE 0x44
 #define N_SO 0x64
 
-typedef struct 
+typedef struct
 {
    unsigned long OldOffset;
    unsigned long NewOffset;
@@ -137,9 +137,9 @@ char* convert_path(char* origpath)
 {
    char* newpath;
    int i;
-   
+
    newpath = strdup(origpath);
-   
+
    i = 0;
    while (newpath[i] != 0)
      {
@@ -154,8 +154,8 @@ char* convert_path(char* origpath)
 	  {
 	     newpath[i] = '\\';
 	  }
-#endif	
-#endif	
+#endif
+#endif
 	i++;
      }
    return(newpath);
@@ -168,7 +168,9 @@ int main(int argc, char* argv[])
   SYMBOLFILE_HEADER SymbolFileHeader;
   IMAGE_DOS_HEADER PEDosHeader;
   IMAGE_FILE_HEADER PEFileHeader;
+  PIMAGE_OPTIONAL_HEADER PEOptHeader;
   PIMAGE_SECTION_HEADER PESectionHeaders;
+  ULONG ImageBase;
   PVOID SymbolsBase;
   ULONG SymbolsLength;
   PVOID SymbolStringsBase;
@@ -187,16 +189,16 @@ int main(int argc, char* argv[])
   PSTR_ENTRY StrEntry;
   ULONG StrCount;
   ULONG j;
-   
+
    if (argc != 3)
      {
 	fprintf(stderr, "Too many arguments\n");
 	exit(1);
      }
-   
+
    path1 = convert_path(argv[1]);
    path2 = convert_path(argv[2]);
-   
+
    in = fopen(path1, "rb");
    if (in == NULL)
      {
@@ -224,6 +226,11 @@ int main(int argc, char* argv[])
   fseek(in, PEDosHeader.e_lfanew + sizeof(ULONG), SEEK_SET);
   n_in = fread(&PEFileHeader, 1, sizeof(PEFileHeader), in);
 
+  /* Read optional header */
+  PEOptHeader = malloc(PEFileHeader.SizeOfOptionalHeader);
+  fread ( PEOptHeader, 1, PEFileHeader.SizeOfOptionalHeader, in );
+  ImageBase = PEOptHeader->ImageBase;
+
   /* Read PE section headers  */
   PESectionHeaders = malloc(PEFileHeader.NumberOfSections * sizeof(IMAGE_SECTION_HEADER));
   fseek(in, PEDosHeader.e_lfanew + sizeof(ULONG) + sizeof(IMAGE_FILE_HEADER)
@@ -242,7 +249,7 @@ int main(int argc, char* argv[])
       if ((strncmp(PESectionHeaders[Idx].Name, ".stab", 5) == 0)
         && (PESectionHeaders[Idx].Name[5] == 0))
         {
-	   //printf(".stab section found. Size %d\n", 
+	   //printf(".stab section found. Size %d\n",
            //  PESectionHeaders[Idx].SizeOfRawData);
 
            SymbolsLength = PESectionHeaders[Idx].SizeOfRawData;
@@ -254,7 +261,7 @@ int main(int argc, char* argv[])
 
       if (strncmp(PESectionHeaders[Idx].Name, ".stabstr", 8) == 0)
         {
-	   //printf(".stabstr section found. Size %d\n", 
+	   //printf(".stabstr section found. Size %d\n",
            //  PESectionHeaders[Idx].SizeOfRawData);
 
            SymbolStringsLength = PESectionHeaders[Idx].SizeOfRawData;
@@ -276,6 +283,8 @@ int main(int argc, char* argv[])
 	  StabEntry[i].n_type == N_SO)
         {
 	  memmove(&StabEntry[Count], &StabEntry[i], sizeof(STAB_ENTRY));
+	  if ( StabEntry[Count].n_value >= ImageBase )
+		StabEntry[Count].n_value -= ImageBase;
 	  Count++;
 	}
     }

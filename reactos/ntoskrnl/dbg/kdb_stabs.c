@@ -88,12 +88,10 @@ KdbpStabFindEntry(IN PIMAGE_SYMBOL_INFO SymbolInfo,
 
       if (RelativeAddress != NULL)
         {
-          if (StabEntry->n_value < (ULONG_PTR)SymbolInfo->ImageBase)
-            continue;
-          if (StabEntry->n_value >= ((ULONG_PTR)SymbolInfo->ImageBase + SymbolInfo->ImageSize))
+          if (StabEntry->n_value >= SymbolInfo->ImageSize)
             continue;
 
-          SymbolRelativeAddress = StabEntry->n_value - (ULONG_PTR)SymbolInfo->ImageBase;
+          SymbolRelativeAddress = StabEntry->n_value;
           if ((SymbolRelativeAddress <= (ULONG_PTR)RelativeAddress) &&
               (SymbolRelativeAddress > AddrFound))
             {
@@ -109,9 +107,13 @@ KdbpStabFindEntry(IN PIMAGE_SYMBOL_INFO SymbolInfo,
     }
 
   if (BestStabEntry == NULL)
+  {
     DPRINT("StabEntry not found!\n");
+  }
   else
+  {
     DPRINT("StabEntry found!\n");
+  }
 
   return BestStabEntry;
 }
