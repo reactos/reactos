@@ -87,6 +87,7 @@
 #include <internal/kd.h>
 #include <internal/ke.h>
 #include <internal/ps.h>
+#include <internal/ldr.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -1205,7 +1206,7 @@ GspBreakIn(PKINTERRUPT Interrupt,
   DPRINT ("Break In\n");
 
   DoBreakIn = FALSE;
-  while (KdPortGetByte (&Value))
+  while (KdPortGetByteEx (&GdbPortInfo, &Value))
     {
       if (Value == 0x03)
         DoBreakIn = TRUE;
@@ -1243,6 +1244,8 @@ KdGdbStubInit(ULONG Phase)
 
   if (Phase == 0)
     {
+		  DbgPrint("Module 'hal.dll' loaded at 0x%.08x.\n", LdrHalBase);
+
 		  GspInitialized = TRUE;
 		  GspRunThread = PsGetCurrentThread();
 		  GspDbgThread = PsGetCurrentThread();

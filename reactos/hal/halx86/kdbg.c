@@ -1,4 +1,4 @@
-/* $Id: kdbg.c,v 1.3 2002/01/23 23:39:24 chorns Exp $
+/* $Id: kdbg.c,v 1.4 2002/05/08 17:05:31 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -263,6 +263,95 @@ KdPortInitialize (
 }
 
 
+/* HAL.KdPortInitializeEx */
+BOOLEAN
+STDCALL
+KdPortInitializeEx (
+	PKD_PORT_INFORMATION	PortInformation,
+	DWORD	Unknown1,
+	DWORD	Unknown2
+	)
+{
+        ULONG BaseArray[5] = {0, 0x3F8, 0x2F8, 0x3E8, 0x2E8};
+		PUCHAR ComPortBase;
+        char buffer[80];
+        ULONG divisor;
+        BYTE lcr;
+
+		if (PortInformation->BaudRate == 0)
+		{
+				PortInformation->BaudRate = DEFAULT_BAUD_RATE;
+		}
+
+		if (PortInformation->ComPort == 0)
+		{
+				return FALSE;
+		}
+		else
+		{
+				if (KdpDoesComPortExist ((PUCHAR)BaseArray[PortInformation->ComPort]))
+				{
+						ComPortBase = (PUCHAR)BaseArray[PortInformation->ComPort];
+						PortInformation->BaseAddress = (ULONG)ComPortBase;
+#ifndef NDEBUG
+						sprintf (buffer,
+								 "\nSerial port COM%ld found at 0x%lx\n",
+								 PortInformation->ComPort,
+								 (ULONG)ComPortBase];
+						HalDisplayString (buffer);
+#endif /* NDEBUG */
+				}
+				else
+				{
+						sprintf (buffer,
+								 "\nKernel Debugger: Serial port not found!!!\n\n");
+						HalDisplayString (buffer);
+						return FALSE;
+				}
+		}
+
+        /*
+         * set baud rate and data format (8N1)
+         */
+
+        /*  turn on DTR and RTS  */
+        WRITE_PORT_UCHAR (SER_MCR(ComPortBase), SR_MCR_DTR | SR_MCR_RTS);
+
+        /* set DLAB */
+        lcr = READ_PORT_UCHAR (SER_LCR(ComPortBase)) | SR_LCR_DLAB;
+        WRITE_PORT_UCHAR (SER_LCR(ComPortBase), lcr);
+
+        /* set baud rate */
+        divisor = 115200 / PortInformation->BaudRate;
+        WRITE_PORT_UCHAR (SER_DLL(ComPortBase), divisor & 0xff);
+        WRITE_PORT_UCHAR (SER_DLM(ComPortBase), (divisor >> 8) & 0xff);
+
+        /* reset DLAB and set 8N1 format */
+        WRITE_PORT_UCHAR (SER_LCR(ComPortBase),
+                          SR_LCR_CS8 | SR_LCR_ST1 | SR_LCR_PNO);
+
+        /* read junk out of the RBR */
+        lcr = READ_PORT_UCHAR (SER_RBR(ComPortBase));
+
+#ifndef NDEBUG
+
+        /*
+         * print message to blue screen
+         */
+        sprintf (buffer,
+                 "\nKernel Debugger: COM%ld (Port 0x%lx) BaudRate %ld\n\n",
+                 PortInformation->ComPort,
+                 (ULONG)ComPortBase,
+                 PortInformation->BaudRate);
+
+        HalDisplayString (buffer);
+
+#endif /* NDEBUG */
+
+        return TRUE;
+}
+
+
 /* HAL.KdPortGetByte */
 BOOLEAN
 STDCALL
@@ -276,6 +365,26 @@ KdPortGetByte (
 	if ((READ_PORT_UCHAR (SER_LSR(PortBase)) & SR_LSR_DR))
 	{
 		*ByteRecieved = READ_PORT_UCHAR (SER_RBR(PortBase));
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
+
+/* HAL.KdPortGetByteEx */
+BOOLEAN
+STDCALL
+KdPortGetByteEx (
+	PKD_PORT_INFORMATION	PortInformation,
+	PUCHAR	ByteRecieved
+	)
+{
+	PUCHAR ComPortBase = (PUCHAR)PortInformation->BaseAddress;
+
+	if ((READ_PORT_UCHAR (SER_LSR(ComPortBase)) & SR_LSR_DR))
+	{
+		*ByteRecieved = READ_PORT_UCHAR (SER_RBR(ComPortBase));
 		return TRUE;
 	}
 
@@ -302,6 +411,27 @@ KdPortPollByte (
 }
 
 
+/* HAL.KdPortPollByteEx */
+BOOLEAN
+STDCALL
+KdPortPollByteEx (
+	PKD_PORT_INFORMATION	PortInformation,
+	PUCHAR	ByteRecieved
+	)
+{
+	PUCHAR ComPortBase = (PUCHAR)PortInformation->BaseAddress;
+
+	while ((READ_PORT_UCHAR (SER_LSR(ComPortBase)) & SR_LSR_DR) == 0)
+		;
+
+	*ByteRecieved = READ_PORT_UCHAR (SER_RBR(ComPortBase));
+
+	return TRUE;
+}
+
+
+
+
 /* HAL.KdPortPutByte */
 VOID
 STDCALL
@@ -316,6 +446,22 @@ KdPortPutByte (
 		;
 
 	WRITE_PORT_UCHAR (SER_THR(PortBase), ByteToSend);
+}
+
+/* HAL.KdPortPutByteEx */
+VOID
+STDCALL
+KdPortPutByteEx (
+	PKD_PORT_INFORMATION	PortInformation,
+	UCHAR ByteToSend
+	)
+{
+	PUCHAR ComPortBase = (PUCHAR)PortInformation->BaseAddress;
+
+	while ((READ_PORT_UCHAR (SER_LSR(ComPortBase)) & SR_LSR_TBE) == 0)
+		;
+
+	WRITE_PORT_UCHAR (SER_THR(ComPortBase), ByteToSend);
 }
 
 

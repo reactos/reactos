@@ -60,9 +60,13 @@ IoFreeMapRegisters@12
 IoMapTransfer@24
 KdComPortInUse DATA
 KdPortGetByte@4
+KdPortGetByteEx@8
 KdPortInitialize@12
+KdPortInitializeEx@12
 KdPortPollByte@4
+KdPortPollByteEx@8
 KdPortPutByte@4
+KdPortPutByteEx@8
 KdPortRestore@0
 KdPortSave@0
 KdPortDisableInterrupts@0

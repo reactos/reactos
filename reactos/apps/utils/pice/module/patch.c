@@ -101,12 +101,12 @@ BOOLEAN PiceKbdIsr (
             bEnterNow=TRUE;
 			bControl=FALSE;
         // simulate an initial break
-        __asm__("
-            pushfl
-            pushl %cs
-            pushl $returnpoint
-            pushl $" STR(REASON_CTRLF) "
-            jmp NewInt31Handler
+        __asm__("\n\t \
+            pushfl\n\t \
+            pushl %cs\n\t \
+            pushl $returnpoint\n\t \
+            pushl $" STR(REASON_CTRLF) "\n\t \
+            jmp NewInt31Handler\n\t \
 			returnpoint:");
 			*pByte =  0x1d | 0x80 | 0x7f;
 			bForward=TRUE;

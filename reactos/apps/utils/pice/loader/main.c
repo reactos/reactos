@@ -226,9 +226,11 @@ void process_stabs(
     SymbolFileHeader.ulOffsetToSrcFiles = sizeof(PICE_SYMBOLFILE_HEADER)+sectionHeadersSize+nGlobalLen+nGlobalStrLen+nStabLen+nStrLen;
     SymbolFileHeader.ulNumberOfSrcFiles = ulCurrentSrcFile;
 
-	printf("sectionHeaderSize: %ld, nGlobalLen: %ld, nGlobalStrLen: %ld, nStabLen: %ld,
-			nStrLen: %ld, ulCurrentSrcFile: %ld, ulOffsetToStabs: %ld \n", sectionHeadersSize, nGlobalLen, nGlobalStrLen,
+	printf("sectionHeaderSize: %ld, nGlobalLen: %ld, nGlobalStrLen: %ld, nStabLen: %ld, "
+			"nStrLen: %ld, ulCurrentSrcFile: %ld, ulOffsetToStabs: %ld\n",
+			sectionHeadersSize, nGlobalLen, nGlobalStrLen,
 			nStabLen, nStrLen, ulCurrentSrcFile, SymbolFileHeader.ulOffsetToStabs);
+
 	WriteFile(fileout,&SymbolFileHeader,sizeof(PICE_SYMBOLFILE_HEADER),&wrote, NULL);
 	WriteFile(fileout,section,sectionHeadersSize,&wrote, NULL);
 	WriteFile(fileout,pGlobals,nGlobalLen,&wrote, NULL);

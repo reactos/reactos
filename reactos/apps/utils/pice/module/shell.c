@@ -439,17 +439,17 @@ void DebuggerShell(void)
                         ulLastLineDisplayedOffset = 0;
                         PrintRingBuffer(wWindow[OUTPUT_WINDOW].cy-1);
                         // setup a safe stack for parsing
-                        __asm__ __volatile__("
-                            movl %2,%%eax
-                            movl %%esp,%%ebx
-                            mov  %%ebx,%0
-                            leal _aulNewStack,%%ebx
-                            addl $0x1FFF0,%%ebx
-                            movl %%ebx,%%esp
-                            pushl $0
-                            pushl %%eax
-                            call _Parse
-                            movl %0,%%ebx
+                        __asm__ __volatile__("\n\t \
+                            movl %2,%%eax\n\t \
+                            movl %%esp,%%ebx\n\t \
+                            mov  %%ebx,%0\n\t \
+                            leal _aulNewStack,%%ebx\n\t \
+                            addl $0x1FFF0,%%ebx\n\t \
+                            movl %%ebx,%%esp\n\t \
+                            pushl $0\n\t \
+                            pushl %%eax\n\t \
+                            call _Parse\n\t \
+                            movl %0,%%ebx\n\t \
                             movl %%ebx,%%esp"
                             :"=m" (ulOldStack)
                             :"m" (ulOldStack),"m" (ucCommandBuffer)
@@ -528,17 +528,17 @@ void DebuggerShell(void)
                             PrintRingBuffer(wWindow[OUTPUT_WINDOW].cy-1);
 
                             // setup a safe stack for parsing
-                            __asm__ __volatile__("
-                                movl %2,%%eax
-                                movl %%esp,%%ebx
-                                mov  %%ebx,%0
-                                leal _aulNewStack,%%ebx
-                                addl $0x1FFF0,%%ebx
-                                movl %%ebx,%%esp
-                                pushl $1
-                                pushl %%eax
-                                call _Parse
-                                movl %0,%%ebx
+                            __asm__ __volatile__("\n\t \
+                                movl %2,%%eax\n\t \
+                                movl %%esp,%%ebx\n\t \
+                                mov  %%ebx,%0\n\t \
+                                leal _aulNewStack,%%ebx\n\t \
+                                addl $0x1FFF0,%%ebx\n\t \
+                                movl %%ebx,%%esp\n\t \
+                                pushl $1\n\t \
+                                pushl %%eax\n\t \
+                                call _Parse\n\t \
+                                movl %0,%%ebx\n\t \
                                 movl %%ebx,%%esp"
                                 :"=m" (ulOldStack)
                                 :"m" (ulOldStack),"m" (ucCommandBuffer)
@@ -1138,11 +1138,11 @@ void RealIsr(ULONG dwReasonForBreak)
         DPRINT((0,"REASON_HARDWARE_BP\n"));
 
         // disable HW breakpoints
-		__asm__("
-            movl %%dr6,%%eax
-            movl %%eax,%0
-			xorl %%eax,%%eax
-			movl %%eax,%%dr6
+		__asm__("\n\t \
+            movl %%dr6,%%eax\n\t \
+            movl %%eax,%0\n\t \
+			xorl %%eax,%%eax\n\t \
+			movl %%eax,%%dr6\n\t \
 			movl %%eax,%%dr7"
 			:"=m" (ulReason)
             :
@@ -1399,32 +1399,32 @@ void RealIsr(ULONG dwReasonForBreak)
         DPRINT((0,"RealIsr(): saving registers\n"));
 	    // save the extended regs
 	    __asm__ __volatile__
-	    ("
-            pushl %eax
-		    movw %es,%ax
-		    movw %ax,_CurrentES
-		    //movw %fs,%ax
-		    //movw %ax,_CurrentFS
-		    movw %gs,%ax
-		    movw %ax,_CurrentGS
-		    movl %dr0,%eax
-		    movl %eax,_CurrentDR0
-		    movl %dr1,%eax
-		    movl %eax,_CurrentDR1
-		    movl %dr2,%eax
-		    movl %eax,_CurrentDR2
-		    movl %dr3,%eax
-		    movl %eax,_CurrentDR3
-		    movl %dr6,%eax
-		    movl %eax,_CurrentDR6
-		    movl %dr7,%eax
-		    movl %eax,_CurrentDR7
-		    movl %cr0,%eax
-		    movl %eax,_CurrentCR0
-		    movl %cr2,%eax
-		    movl %eax,_CurrentCR2
-		    movl %cr3,%eax
-		    movl %eax,_CurrentCR3
+	    ("\n\t \
+            pushl %eax\n\t \
+		    movw %es,%ax\n\t \
+		    movw %ax,_CurrentES\n\t \
+		    //movw %fs,%ax\n\t \
+		    //movw %ax,_CurrentFS\n\t \
+		    movw %gs,%ax\n\t \
+		    movw %ax,_CurrentGS\n\t \
+		    movl %dr0,%eax\n\t \
+		    movl %eax,_CurrentDR0\n\t \
+		    movl %dr1,%eax\n\t \
+		    movl %eax,_CurrentDR1\n\t \
+		    movl %dr2,%eax\n\t \
+		    movl %eax,_CurrentDR2\n\t \
+		    movl %dr3,%eax\n\t \
+		    movl %eax,_CurrentDR3\n\t \
+		    movl %dr6,%eax\n\t \
+		    movl %eax,_CurrentDR6\n\t \
+		    movl %dr7,%eax\n\t \
+		    movl %eax,_CurrentDR7\n\t \
+		    movl %cr0,%eax\n\t \
+		    movl %eax,_CurrentCR0\n\t \
+		    movl %cr2,%eax\n\t \
+		    movl %eax,_CurrentCR2\n\t \
+		    movl %cr3,%eax\n\t \
+		    movl %eax,_CurrentCR3\n\t \
             popl %eax"
 	    );
 
@@ -1464,174 +1464,174 @@ common_return_point:
 }
 
 
-__asm__(".global NewInt31Handler
-NewInt31Handler:
-	cli
-    cld
-
-	pushl %eax
-	pushl %ds
-
-	movw %ss,%ax
-	mov %ax,%ds
-
-	mov 0x4(%esp),%eax
-	movl %eax,_CurrentEAX
-	movl %ebx,_CurrentEBX
-	movl %ecx,_CurrentECX
-	movl %edx,_CurrentEDX
-	movl %esi,_CurrentESI
-	movl %edi,_CurrentEDI
-	movl %ebp,_CurrentEBP
-	movl (%esp),%eax
-	movw %ax,_CurrentDS
-
-    // test for V86 mode
-	testl $0x20000,5*4(%esp)
-	jz notV86
-
-	int $0x03
-
-notV86:
-    // test if stack switched (ring3->ring0 transition)
-    // stack is switched if orig. SS is not global kernel code segment
-    movl 4*4(%esp),%eax
-    cmpw $" STR(GLOBAL_CODE_SEGMENT) ",%ax
-	je notswitched
-
-	// switched stack
-	movl 6*4(%esp),%eax
-	mov %eax,_CurrentESP
-	mov 7*4(%esp),%eax
-	movzwl %ax,%eax
-	mov %ax,_CurrentSS
-	jmp afterswitch
-
-notswitched:
-    // didn't switch stack
-	movl %esp,_CurrentESP
-	addl $24,_CurrentESP
-	movw %ss,%ax
-	movzwl %ax,%eax
-	mov %ax,_CurrentSS
-
-afterswitch:
-    // save EIP
-	mov 3*4(%esp),%eax
-	mov %eax,_CurrentEIP
-    //save CS
-	mov 4*4(%esp),%eax
-	movzwl %ax,%eax
-	movw %ax,_CurrentCS
-    // save flags
-	movl 5*4(%esp),%eax
-	andl $0xFFFFFEFF,%eax
-	movl %eax,_CurrentEFL
-
-	pushal
-
-    // get reason code
-    mov 0x28(%esp),%ebx
-
-	/*
-	 * Load the PCR selector.
-	 */
-
-	movl 	%fs, %eax
-	movl	%eax, _OLD_PCR
-	movl	_PCR_SEL, %eax
-	movl	%eax, %fs
-
-    // setup a large work stack
-	movl %esp,%eax
-	movl %eax,_ulRealStackPtr
-
-    pushl %ebx
-	call _RealIsr
-    addl $4,%esp
-
-	pushl 	%eax
-	movl	_OLD_PCR, %eax
-	movl	%eax, %fs
-	popl	%eax
-
-	// restore all regs
-	popal
-
-	// do an EOI to IRQ controller (because we definitely pressed some key)
-	// TODO: SMP APIC support
-	movb $0x20,%al
-	outb %al,$0x20
-
-	popl %ds
-	popl %eax
-
-    // remove reason code
-    addl $4,%esp
-
-    // make EAX available
-	pushl %eax
-
-	// modify or restore EFLAGS
-	.byte 0x2e
-	mov _CurrentEFL,%eax
-	mov %eax,3*4(%esp)
-	.byte 0x2e
-	movzwl _CurrentCS,%eax
-	mov %eax,2*4(%esp)
-	.byte 0x2e
-	mov _CurrentEIP,%eax
-	mov %eax,1*4(%esp)
-
-    // restore EAX
-	popl %eax
-
-	// do we need to call old INT1 handler
-    .byte 0x2e
-     cmp $0,_dwCallOldInt1Handler
-     je do_iret2
-
-    // call INT3 handler
-    .byte 0x2e
-     jmp *_OldInt1Handler
-
-do_iret2:
-    // do we need to call old INT3 handler
-    .byte 0x2e
-    cmp $0,_dwCallOldInt3Handler
-    je do_iret1
-
-    // call INT3 handler
-    .byte 0x2e
-    jmp *_OldInt3Handler
-
-do_iret1:
-    // do we need to call old pagefault handler
-    .byte 0x2e
-    cmp $0,_dwCallOldIntEHandler
-    je do_iret3
-
-    // call old pagefault handler
-	.byte 0x2e
-    pushl _error_code
-	.byte 0x2e
-    jmp *_OldIntEHandler
-
-do_iret3:
-    // do we need to call old general protection fault handler
-    .byte 0x2e
-    cmp $0,_dwCallOldGPFaultHandler
-    je do_iret
-
-    // call old pagefault handler
-	.byte 0x2e
-    pushl _error_code
-	.byte 0x2e
-    jmp *_OldGPFaultHandler
-
-do_iret:
-	//ei
-	//int3
+__asm__(".global NewInt31Handler\n\t \
+NewInt31Handler:\n\t \
+	cli\n\t \
+    cld\n\t \
+\n\t \
+	pushl %eax\n\t \
+	pushl %ds\n\t \
+\n\t \
+	movw %ss,%ax\n\t \
+	mov %ax,%ds\n\t \
+\n\t \
+	mov 0x4(%esp),%eax\n\t \
+	movl %eax,_CurrentEAX\n\t \
+	movl %ebx,_CurrentEBX\n\t \
+	movl %ecx,_CurrentECX\n\t \
+	movl %edx,_CurrentEDX\n\t \
+	movl %esi,_CurrentESI\n\t \
+	movl %edi,_CurrentEDI\n\t \
+	movl %ebp,_CurrentEBP\n\t \
+	movl (%esp),%eax\n\t \
+	movw %ax,_CurrentDS\n\t \
+\n\t \
+    // test for V86 mode\n\t \
+	testl $0x20000,5*4(%esp)\n\t \
+	jz notV86\n\t \
+\n\t \
+	int $0x03\n\t \
+\n\t \
+notV86:\n\t \
+    // test if stack switched (ring3->ring0 transition)\n\t \
+    // stack is switched if orig. SS is not global kernel code segment\n\t \
+    movl 4*4(%esp),%eax\n\t \
+    cmpw $" STR(GLOBAL_CODE_SEGMENT) ",%ax\n\t \
+	je notswitched\n\t \
+\n\t \
+	// switched stack\n\t \
+	movl 6*4(%esp),%eax\n\t \
+	mov %eax,_CurrentESP\n\t \
+	mov 7*4(%esp),%eax\n\t \
+	movzwl %ax,%eax\n\t \
+	mov %ax,_CurrentSS\n\t \
+	jmp afterswitch\n\t \
+\n\t \
+notswitched:\n\t \
+    // didn't switch stack\n\t \
+	movl %esp,_CurrentESP\n\t \
+	addl $24,_CurrentESP\n\t \
+	movw %ss,%ax\n\t \
+	movzwl %ax,%eax\n\t \
+	mov %ax,_CurrentSS\n\t \
+\n\t \
+afterswitch:\n\t \
+    // save EIP\n\t \
+	mov 3*4(%esp),%eax\n\t \
+	mov %eax,_CurrentEIP\n\t \
+    //save CS\n\t \
+	mov 4*4(%esp),%eax\n\t \
+	movzwl %ax,%eax\n\t \
+	movw %ax,_CurrentCS\n\t \
+    // save flags\n\t \
+	movl 5*4(%esp),%eax\n\t \
+	andl $0xFFFFFEFF,%eax\n\t \
+	movl %eax,_CurrentEFL\n\t \
+\n\t \
+	pushal\n\t \
+\n\t \
+    // get reason code\n\t \
+    mov 0x28(%esp),%ebx\n\t \
+\n\t \
+	/*\n\t \
+	 * Load the PCR selector.\n\t \
+	 */\n\t \
+\n\t \
+	movl 	%fs, %eax\n\t \
+	movl	%eax, _OLD_PCR\n\t \
+	movl	_PCR_SEL, %eax\n\t \
+	movl	%eax, %fs\n\t \
+\n\t \
+    // setup a large work stack\n\t \
+	movl %esp,%eax\n\t \
+	movl %eax,_ulRealStackPtr\n\t \
+\n\t \
+    pushl %ebx\n\t \
+	call _RealIsr\n\t \
+    addl $4,%esp\n\t \
+\n\t \
+	pushl 	%eax\n\t \
+	movl	_OLD_PCR, %eax\n\t \
+	movl	%eax, %fs\n\t \
+	popl	%eax\n\t \
+\n\t \
+	// restore all regs\n\t \
+	popal\n\t \
+\n\t \
+	// do an EOI to IRQ controller (because we definitely pressed some key)\n\t \
+	// TODO: SMP APIC support\n\t \
+	movb $0x20,%al\n\t \
+	outb %al,$0x20\n\t \
+\n\t \
+	popl %ds\n\t \
+	popl %eax\n\t \
+\n\t \
+    // remove reason code\n\t \
+    addl $4,%esp\n\t \
+\n\t \
+    // make EAX available\n\t \
+	pushl %eax\n\t \
+\n\t \
+	// modify or restore EFLAGS\n\t \
+	.byte 0x2e\n\t \
+	mov _CurrentEFL,%eax\n\t \
+	mov %eax,3*4(%esp)\n\t \
+	.byte 0x2e\n\t \
+	movzwl _CurrentCS,%eax\n\t \
+	mov %eax,2*4(%esp)\n\t \
+	.byte 0x2e\n\t \
+	mov _CurrentEIP,%eax\n\t \
+	mov %eax,1*4(%esp)\n\t \
+\n\t \
+    // restore EAX\n\t \
+	popl %eax\n\t \
+\n\t \
+	// do we need to call old INT1 handler\n\t \
+    .byte 0x2e\n\t \
+     cmp $0,_dwCallOldInt1Handler\n\t \
+     je do_iret2\n\t \
+\n\t \
+    // call INT3 handler\n\t \
+    .byte 0x2e\n\t \
+     jmp *_OldInt1Handler\n\t \
+\n\t \
+do_iret2:\n\t \
+    // do we need to call old INT3 handler\n\t \
+    .byte 0x2e\n\t \
+    cmp $0,_dwCallOldInt3Handler\n\t \
+    je do_iret1\n\t \
+\n\t \
+    // call INT3 handler\n\t \
+    .byte 0x2e\n\t \
+    jmp *_OldInt3Handler\n\t \
+\n\t \
+do_iret1:\n\t \
+    // do we need to call old pagefault handler\n\t \
+    .byte 0x2e\n\t \
+    cmp $0,_dwCallOldIntEHandler\n\t \
+    je do_iret3\n\t \
+\n\t \
+    // call old pagefault handler\n\t \
+	.byte 0x2e\n\t \
+    pushl _error_code\n\t \
+	.byte 0x2e\n\t \
+    jmp *_OldIntEHandler\n\t \
+\n\t \
+do_iret3:\n\t \
+    // do we need to call old general protection fault handler\n\t \
+    .byte 0x2e\n\t \
+    cmp $0,_dwCallOldGPFaultHandler\n\t \
+    je do_iret\n\t \
+\n\t \
+    // call old pagefault handler\n\t \
+	.byte 0x2e\n\t \
+    pushl _error_code\n\t \
+	.byte 0x2e\n\t \
+    jmp *_OldGPFaultHandler\n\t \
+\n\t \
+do_iret:\n\t \
+	//ei\n\t \
+	//int3\n\t \
 	iretl ");
 
 //
@@ -1639,18 +1639,18 @@ do_iret:
 //
 // IDTs keyboard IRQ points here
 //
-__asm__ ("
-NewGlobalInt31Handler:
-		.byte 0x2e
-		cmpb $0,_bEnterNow
-		jne dotheenter
-
-        // chain to old handler
-		.byte 0x2e
-		jmp *_OldGlobalInt31Handler
-
-dotheenter:
-        pushl $" STR(REASON_CTRLF) "
+__asm__ ("\n\t \
+NewGlobalInt31Handler:\n\t \
+		.byte 0x2e\n\t \
+		cmpb $0,_bEnterNow\n\t \
+		jne dotheenter\n\t \
+\n\t \
+        // chain to old handler\n\t \
+		.byte 0x2e\n\t \
+		jmp *_OldGlobalInt31Handler\n\t \
+\n\t \
+dotheenter:\n\t \
+        pushl $" STR(REASON_CTRLF) "\n\t \
         jmp NewInt31Handler "
 );
 

@@ -60,21 +60,21 @@ BOOLEAN InstallTraceHook(void)
 
 //this asm function must be at least second in the file. otherwise gcc does not
 //generate correct code.
-__asm__("
-NewInt1Handler:
-       pushl %eax
-	 	movl %dr6,%eax
-	 	testl $(1<<14),%eax
-	 	jz exceptionnotsinglestep
-
-        popl %eax
-        pushl $" STR(REASON_SINGLESTEP) "
-        jmp NewInt31Handler
-
-exceptionnotsinglestep:
-        popl %eax
-        pushl $" STR(REASON_HARDWARE_BP) "
-        jmp NewInt31Handler
+__asm__("\n\t \
+NewInt1Handler:\n\t \
+       pushl %eax\n\t \
+	 	movl %dr6,%eax\n\t \
+	 	testl $(1<<14),%eax\n\t \
+	 	jz exceptionnotsinglestep\n\t \
+\n\t \
+        popl %eax\n\t \
+        pushl $" STR(REASON_SINGLESTEP) "\n\t \
+        jmp NewInt31Handler\n\t \
+\n\t \
+exceptionnotsinglestep:\n\t \
+        popl %eax\n\t \
+        pushl $" STR(REASON_HARDWARE_BP) "\n\t \
+        jmp NewInt31Handler\n\t \
 ");
 
 void DeInstallTraceHook(void)

@@ -249,9 +249,9 @@ BOOLEAN InitPICE(void)
     CurrentEIP = (ULONG)RealIsr;
 
     CurrentDS = CurrentSS = GLOBAL_DATA_SEGMENT;
-    __asm__("
-            mov %%esp,%%eax
-            mov %%eax,_CurrentESP
+    __asm__("\n\t \
+            mov %%esp,%%eax\n\t \
+            mov %%eax,_CurrentESP\n\t \
             ":::"eax");
 
 
@@ -259,13 +259,13 @@ BOOLEAN InitPICE(void)
     Ver(NULL);
 
     // disable HW breakpoints
-	__asm__("
-		xorl %%eax,%%eax
-		mov %%eax,%%dr6
-		mov %%eax,%%dr7
-        mov %%dr0,%%eax
-        mov %%dr1,%%eax
-        mov %%dr2,%%eax
+	__asm__("\n\t \
+		xorl %%eax,%%eax\n\t \
+		mov %%eax,%%dr6\n\t \
+		mov %%eax,%%dr7\n\t \
+        mov %%dr0,%%eax\n\t \
+        mov %%dr1,%%eax\n\t \
+        mov %%dr2,%%eax\n\t \
         mov %%dr3,%%eax"
 		:::"eax"
 		);
@@ -290,12 +290,12 @@ BOOLEAN InitPICE(void)
         DPRINT((0,"about to do initial break...\n"));
 
         // simulate an initial break
-        __asm__("
-            pushfl
-            pushl %cs
-            pushl $initialreturnpoint
-            pushl $" STR(REASON_CTRLF) "
-            jmp NewInt31Handler
+        __asm__("\n\t \
+            pushfl\n\t \
+            pushl %cs\n\t \
+            pushl $initialreturnpoint\n\t \
+            pushl $" STR(REASON_CTRLF) "\n\t \
+            jmp NewInt31Handler\n\t \
 initialreturnpoint:");
     }
     else

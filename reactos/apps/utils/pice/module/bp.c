@@ -694,11 +694,11 @@ void RevirtualizeBreakpointsForModule(PDEBUG_MODULE pMod)
 // NewInt3Handler()
 //
 //*************************************************************************
-__asm__ ("
-NewInt3Handler:
-        pushl $" STR(REASON_INT3) "
-		// call debugger loop
-		jmp NewInt31Handler
+__asm__ ("\n\t \
+NewInt3Handler:\n\t \
+        pushl $" STR(REASON_INT3) "\n\t \
+		// call debugger loop\n\t \
+		jmp NewInt31Handler\n\t \
 ");
 
 

@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.102 2002/05/02 23:45:33 dwelch Exp $
+/* $Id: loader.c,v 1.103 2002/05/08 17:05:32 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -43,13 +43,6 @@
 
 #define NDEBUG
 #include <internal/debug.h>
-
-/* MACROS ********************************************************************/
-
-#define  KERNEL_MODULE_NAME  L"ntoskrnl.exe"
-#define  HAL_MODULE_NAME  L"hal.dll"
-#define  MODULE_ROOT_NAME  L"\\Modules\\"
-#define  FILESYSTEM_ROOT_NAME  L"\\FileSystem\\"
 
 /* GLOBALS *******************************************************************/
 
@@ -896,7 +889,6 @@ VOID LdrLoadAutoConfigDrivers (VOID)
 {
 
 #ifdef KDBG
-
   NTSTATUS Status;
   UNICODE_STRING ModuleName;
   PMODULE_OBJECT ModuleObject;
@@ -930,7 +922,7 @@ VOID LdrLoadAutoConfigDrivers (VOID)
     */
    LdrLoadAutoConfigDriver( L"keyboard.sys" );
 
-   if (KdDebugType == PiceDebug)
+   if ((KdDebuggerEnabled) && (KdDebugState & KD_DEBUG_PICE))
      {
 			 /*
 			  * Private ICE debugger
@@ -1167,7 +1159,7 @@ LdrLoadModule(PUNICODE_STRING Filename)
       return NULL;
     }
   CHECKPOINT;
-   
+	
   /*  Load driver into memory chunk  */
   Status = NtReadFile(FileHandle,
                       0, 0, 0,
@@ -1860,6 +1852,14 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
   CreatedModuleObject->TextSection = ModuleTextSection;
 
   *ModuleObject = CreatedModuleObject;
+
+	  DPRINT("Loading Module %wZ...\n", FileName);
+
+  if ((KdDebuggerEnabled == TRUE) && (KdDebugState & KD_DEBUG_GDB))
+	  {
+			DbgPrint("Module %wZ loaded at 0x%.08x.\n",
+			  FileName, CreatedModuleObject->Base);
+	  }
 
   return STATUS_SUCCESS;
 }

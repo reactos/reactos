@@ -812,8 +812,8 @@ ULONG GetLinearAddress(USHORT Segment,ULONG Offset)
 	{
 		DPRINT((0,"GetLinearAddress(): Segment is in LDT\n"));
 		// get LDT selector
-		__asm__("
-			sldt %%ax
+		__asm__("\n\t \
+			sldt %%ax\n\t \
 			mov %%ax,%0"
 			:"=m" (Segment));
 		if(Segment)
@@ -900,12 +900,12 @@ void SetHardwareBreakPoint(ULONG ulAddress,ULONG ulReg)
     DPRINT((0,"mask = %x\n",mask));
 
 	__asm__ __volatile__
-	("
-		xorl %%eax,%%eax
-		mov %%eax,%%dr6
-        mov %%dr7,%%eax
-        orl %0,%%eax
-		mov %%eax,%%dr7
+	("\n\t \
+		xorl %%eax,%%eax\n\t \
+		mov %%eax,%%dr6\n\t \
+        mov %%dr7,%%eax\n\t \
+        orl %0,%%eax\n\t \
+		mov %%eax,%%dr7\n\t \
 	"
 	:
 	:"m" (mask)
@@ -915,9 +915,9 @@ void SetHardwareBreakPoint(ULONG ulAddress,ULONG ulReg)
     {
         case 0:
             __asm__ __volatile__
-            ("
-        		mov %0,%%eax
-		        mov %%eax,%%dr0
+            ("\n\t \
+        		mov %0,%%eax\n\t \
+		        mov %%eax,%%dr0\n\t \
              "
              :
              :"m" (ulAddress)
@@ -925,9 +925,9 @@ void SetHardwareBreakPoint(ULONG ulAddress,ULONG ulReg)
              break;
         case 1:
             __asm__ __volatile__
-            ("
-        		mov %0,%%eax
-		        mov %%eax,%%dr1
+            ("\n\t \
+        		mov %0,%%eax\n\t \
+		        mov %%eax,%%dr1\n\t \
              "
              :
              :"m" (ulAddress)
@@ -935,9 +935,9 @@ void SetHardwareBreakPoint(ULONG ulAddress,ULONG ulReg)
              break;
         case 2:
             __asm__ __volatile__
-            ("
-        		mov %0,%%eax
-		        mov %%eax,%%dr2
+            ("\n\t \
+        		mov %0,%%eax\n\t \
+		        mov %%eax,%%dr2\n\t \
              "
              :
              :"m" (ulAddress)
@@ -945,9 +945,9 @@ void SetHardwareBreakPoint(ULONG ulAddress,ULONG ulReg)
              break;
         case 3:
             __asm__ __volatile__
-            ("
-        		mov %0,%%eax
-		        mov %%eax,%%dr3
+            ("\n\t \
+        		mov %0,%%eax\n\t \
+		        mov %%eax,%%dr3\n\t \
              "
              :
              :"m" (ulAddress)
@@ -971,11 +971,11 @@ PULONG LinAddr[4]={&LinAddr0,&LinAddr1,&LinAddr2,&LinAddr3};
     ENTER_FUNC();
 
 	// cancel all debug activity
-	__asm__("
-		pushl %eax
-		xorl %eax,%eax
-		mov %eax,%dr6
-		mov %eax,%dr7
+	__asm__("\n\t \
+		pushl %eax\n\t \
+		xorl %eax,%eax\n\t \
+		mov %eax,%dr6\n\t \
+		mov %eax,%dr7\n\t \
 		popl %eax");
 	// build DR7 mask
 	for(mask=0,i=0;i<4;i++)
@@ -990,20 +990,20 @@ PULONG LinAddr[4]={&LinAddr0,&LinAddr1,&LinAddr2,&LinAddr3};
 	}
 	if(mask)
 	{
-		__asm__("
-			pushl %%eax
-			movl %0,%%eax
-			andl $0x000000FF,%%eax
-			orl $0x300,%%eax
-			mov %%eax,%%dr7
-			mov %1,%%eax
-			mov %%eax,%%dr0
-			mov %2,%%eax
-			mov %%eax,%%dr1
-			mov %3,%%eax
-			mov %%eax,%%dr2
-			mov %4,%%eax
-			mov %%eax,%%dr3
+		__asm__("\n\t \
+			pushl %%eax\n\t \
+			movl %0,%%eax\n\t \
+			andl $0x000000FF,%%eax\n\t \
+			orl $0x300,%%eax\n\t \
+			mov %%eax,%%dr7\n\t \
+			mov %1,%%eax\n\t \
+			mov %%eax,%%dr0\n\t \
+			mov %2,%%eax\n\t \
+			mov %%eax,%%dr1\n\t \
+			mov %3,%%eax\n\t \
+			mov %%eax,%%dr2\n\t \
+			mov %4,%%eax\n\t \
+			mov %%eax,%%dr3\n\t \
 			popl %%eax"
 			:
 			:"m" (mask),"m" (LinAddr0),"m" (LinAddr1),"m" (LinAddr2),"m" (LinAddr3));
@@ -1630,8 +1630,8 @@ void InvalidateLB(void)
 	ENTER_FUNC();
     __asm__ __volatile__
 	(
-		"wbinvd
-		mov %%cr3,%%ecx
+		"wbinvd\n\t \
+		mov %%cr3,%%ecx\n\t \
         mov %%ecx,%%cr3"
         :::"ecx"
     );

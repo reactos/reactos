@@ -1,4 +1,4 @@
-/* $Id: kd.h,v 1.6 2002/02/09 18:41:23 chorns Exp $
+/* $Id: kd.h,v 1.7 2002/05/08 17:05:32 chorns Exp $
  *
  * kernel debugger prototypes
  */
@@ -8,18 +8,18 @@
 
 #include <internal/ke.h>
 
-typedef enum
-{
-  NoDebug = 0,
-  GdbDebug,
-  PiceDebug,
-  ScreenDebug,
-  SerialDebug,
-  BochsDebug,
-  FileLogDebug
-} DEBUG_TYPE;
+#define KD_DEBUG_DISABLED	0x00
+#define KD_DEBUG_GDB		0x01
+#define KD_DEBUG_PICE		0x02
+#define KD_DEBUG_SCREEN		0x04
+#define KD_DEBUG_SERIAL		0x08
+#define KD_DEBUG_BOCHS		0x10
+#define KD_DEBUG_FILELOG	0x20
 
-extern DEBUG_TYPE KdDebugType;
+extern ULONG KdDebugState;
+
+KD_PORT_INFORMATION GdbPortInfo;
+KD_PORT_INFORMATION LogPortInfo;
 
 typedef enum _KD_CONTINUE_TYPE
 {

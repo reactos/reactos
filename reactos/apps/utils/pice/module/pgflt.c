@@ -290,71 +290,71 @@ ULONG HandlePageFault(FRAME* ptr)
 // NewIntEHandler()
 //
 //*************************************************************************
-__asm__ ("
-NewIntEHandler:
-		pushfl
-        cli
-        cld
-        pushal
-	    pushl %ds
-
-	    // setup default data selectors
-	    movw %ss,%ax
-	    movw %ax,%ds
-
-		/*
-		 * Load the PCR selector.
-		 */
-		movl 	%fs, %eax
-		movl	%eax, _OLD_PCR
-	 	movl	_PCR_SEL, %eax
-		movl	%eax, %fs
-
-        // get frame ptr
-        lea 40(%esp),%eax
-        pushl %eax
-        call _HandlePageFault
-        addl $4,%esp
-
-		pushl 	%eax
-	 	movl	_OLD_PCR, %eax
-		movl	%eax, %fs
-		popl	%eax
-
-        cmpl $0,%eax
-        je call_old_inte_handler
-
-        cmpl $2,%eax
-        je call_handler_unknown_reason
-
-	    popl %ds
-        popal
-		popfl
-        // remove error code. will be restored later when we call
-        // original handler again.
-        addl $4,%esp
-		// call debugger loop
-        pushl $" STR(REASON_PAGEFAULT) "
-		jmp NewInt31Handler
-
-call_old_inte_handler:
-	    popl %ds
-        popal
-		popfl
-		// chain to old handler
-		.byte 0x2e
-		jmp *_OldIntEHandler
-
-call_handler_unknown_reason:
-	    popl %ds
-        popal
-		popfl
-        // remove error code. will be restored later when we call
-        // original handler again.
-        addl $4,%esp
-		// call debugger loop
-        pushl $" STR(REASON_INTERNAL_ERROR) "
-		jmp NewInt31Handler
+__asm__ ("\n\t \
+NewIntEHandler:\n\t \
+		pushfl\n\t \
+        cli\n\t \
+        cld\n\t \
+        pushal\n\t \
+	    pushl %ds\n\t \
+\n\t \
+	    // setup default data selectors\n\t \
+	    movw %ss,%ax\n\t \
+	    movw %ax,%ds\n\t \
+\n\t \
+		/*\n\t \
+		 * Load the PCR selector.\n\t \
+		 */\n\t \
+		movl 	%fs, %eax\n\t \
+		movl	%eax, _OLD_PCR\n\t \
+	 	movl	_PCR_SEL, %eax\n\t \
+		movl	%eax, %fs\n\t \
+\n\t \
+        // get frame ptr\n\t \
+        lea 40(%esp),%eax\n\t \
+        pushl %eax\n\t \
+        call _HandlePageFault\n\t \
+        addl $4,%esp\n\t \
+\n\t \
+		pushl 	%eax\n\t \
+	 	movl	_OLD_PCR, %eax\n\t \
+		movl	%eax, %fs\n\t \
+		popl	%eax\n\t \
+\n\t \
+        cmpl $0,%eax\n\t \
+        je call_old_inte_handler\n\t \
+\n\t \
+        cmpl $2,%eax\n\t \
+        je call_handler_unknown_reason\n\t \
+\n\t \
+	    popl %ds\n\t \
+        popal\n\t \
+		popfl\n\t \
+        // remove error code. will be restored later when we call\n\t \
+        // original handler again.\n\t \
+        addl $4,%esp\n\t \
+		// call debugger loop\n\t \
+        pushl $" STR(REASON_PAGEFAULT) "\n\t \
+		jmp NewInt31Handler\n\t \
+\n\t \
+call_old_inte_handler:\n\t \
+	    popl %ds\n\t \
+        popal\n\t \
+		popfl\n\t \
+		// chain to old handler\n\t \
+		.byte 0x2e\n\t \
+		jmp *_OldIntEHandler\n\t \
+\n\t \
+call_handler_unknown_reason:\n\t \
+	    popl %ds\n\t \
+        popal\n\t \
+		popfl\n\t \
+        // remove error code. will be restored later when we call\n\t \
+        // original handler again.\n\t \
+        addl $4,%esp\n\t \
+		// call debugger loop\n\t \
+        pushl $" STR(REASON_INTERNAL_ERROR) "\n\t \
+		jmp NewInt31Handler\n\t \
         ");
 
 

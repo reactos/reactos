@@ -2029,8 +2029,8 @@ COMMAND_PROTOTYPE(Ver)
 COMMAND_PROTOTYPE(Hboot)
 {
 	// nudge the reset line through keyboard controller
-	__asm__("
-		movb $0xFE,%al
+	__asm__("\n\t \
+		movb $0xFE,%al\n\t \
 		outb %al,$0x64");
 	// never gets here
 	return TRUE;

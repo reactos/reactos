@@ -156,39 +156,39 @@ void CSyscallHandler(FRAME_SYSCALL* ptr,ULONG ulSysCall,ULONG ebx)
  */
 }
 
-__asm__ ("
-NewSyscallHandler:
-		// save used regs
-		pushfl
-		cli
-        cld
-        pushal
-	    pushl %ds
-
-        // push the syscall number
-        pushl %ebx
-        pushl %eax
-
-        // frame ptr
-        lea 48(%esp),%eax
-        pushl %eax
-
-	    // setup default data selectors
-	    movw %ss,%ax
-	    movw %ax,%ds
-
-    	call _CSyscallHandler
-
-		// remove pushed params
-        add $12,%esp
-
-		// restore used regs
-	    popl %ds
-        popal
-		popfl
-
-		// chain to old handler
-		.byte 0x2e
+__asm__ ("\n\t \
+NewSyscallHandler:\n\t \
+		// save used regs\n\t \
+		pushfl\n\t \
+		cli\n\t \
+        cld\n\t \
+        pushal\n\t \
+	    pushl %ds\n\t \
+\n\t \
+        // push the syscall number\n\t \
+        pushl %ebx\n\t \
+        pushl %eax\n\t \
+\n\t \
+        // frame ptr\n\t \
+        lea 48(%esp),%eax\n\t \
+        pushl %eax\n\t \
+\n\t \
+	    // setup default data selectors\n\t \
+	    movw %ss,%ax\n\t \
+	    movw %ax,%ds\n\t \
+\n\t \
+    	call _CSyscallHandler\n\t \
+\n\t \
+		// remove pushed params\n\t \
+        add $12,%esp\n\t \
+\n\t \
+		// restore used regs\n\t \
+	    popl %ds\n\t \
+        popal\n\t \
+		popfl\n\t \
+\n\t \
+		// chain to old handler\n\t \
+		.byte 0x2e\n\t \
 		jmp *_OldSyscallHandler");
 
 void InstallSyscallHook(void)

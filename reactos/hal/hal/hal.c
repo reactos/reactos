@@ -1,4 +1,4 @@
-/* $Id: hal.c,v 1.2 2002/01/23 23:39:24 chorns Exp $
+/* $Id: hal.c,v 1.3 2002/05/08 17:05:31 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -598,6 +598,18 @@ KdPortGetByte(
 
 BOOLEAN
 STDCALL
+KdPortGetByteEx(
+  PKD_PORT_INFORMATION PortInformation,
+  PUCHAR  ByteRecieved)
+{
+  UNIMPLEMENTED;
+
+  return TRUE;
+}
+
+
+BOOLEAN
+STDCALL
 KdPortInitialize(
   PKD_PORT_INFORMATION PortInformation,
   DWORD Unknown1,
@@ -620,9 +632,31 @@ KdPortPollByte(
 }
 
 
+BOOLEAN
+STDCALL
+KdPortPollByteEx(
+  PKD_PORT_INFORMATION PortInformation,
+  PUCHAR  ByteRecieved)
+{
+  UNIMPLEMENTED;
+
+  return TRUE;
+}
+
+
 VOID
 STDCALL
 KdPortPutByte(
+  UCHAR ByteToSend)
+{
+  UNIMPLEMENTED;
+}
+
+
+VOID
+STDCALL
+KdPortPutByteEx(
+  PKD_PORT_INFORMATION PortInformation,
   UCHAR ByteToSend)
 {
   UNIMPLEMENTED;
