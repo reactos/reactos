@@ -58,11 +58,11 @@ div_t div(int num, int denom)
   return r;
 }
 
-int mod(int num, int denom)
+/*int mod(int num, int denom)
 {
   div_t dvt = div(num, denom);
   return dvt.rem;
-}
+}*/
 
 BYTE bytesPerPixel(ULONG Format)
 {
@@ -109,17 +109,15 @@ VOID vgaPreCalc()
   startmasks[5] = 31;
   startmasks[6] = 63;
   startmasks[7] = 127;
-  startmasks[8] = 255;
 
-  endmasks[0] = 128;
-  endmasks[1] = 192;
-  endmasks[2] = 224;
-  endmasks[3] = 240;
-  endmasks[4] = 248;
-  endmasks[5] = 252;
-  endmasks[6] = 254;
-  endmasks[7] = 255;
-  endmasks[8] = 255;
+  endmasks[0] = 0;
+  endmasks[1] = 128;
+  endmasks[2] = 192;
+  endmasks[3] = 224;
+  endmasks[4] = 240;
+  endmasks[5] = 248;
+  endmasks[6] = 252;
+  endmasks[7] = 254;
 
   for(j=0; j<80; j++)
   {
@@ -283,25 +281,19 @@ BOOL vgaHLine(INT x, INT y, INT len, UCHAR c)
     for (i=x; i<x+len; i++)
       vgaPutPixel(i, y, c);
 
-   return TRUE;
+    return TRUE;
   }
 
   // Calculate the left mask pixels, middle bytes and right mask pixel
-  ileftpix = 8-mod(x, 8);
-  irightpix = mod(x+len, 8);
+  ileftpix = 7 - mod8(x-1);
+  irightpix = mod8(x+len);
   imidpix = (len-ileftpix-irightpix) / 8;
 
-  if(ileftpix == 8)
-  {
-    ileftpix = 0;
-    imidpix++;
-  }
-
-  pre1=xconv[x-(8-ileftpix)]+y80[y];
+  pre1 = xconv[(x-1)&~7] + y80[y];
   orgpre1=pre1;
 
   // Left
-  if(ileftpix>0)
+  if ( ileftpix > 0 )
   {
     // Write left pixels
     WRITE_PORT_UCHAR((PUCHAR)GRA_I,0x08);     // set the mask
@@ -311,12 +303,12 @@ BOOL vgaHLine(INT x, INT y, INT len, UCHAR c)
     WRITE_REGISTER_UCHAR(vidmem + pre1, c);
 
     // Prepare new x for the middle
-    x=orgx+8;
+    x = orgx + 8;
   }
 
-  if(imidpix>0)
+  if ( imidpix > 0 )
   {
-    midpre1=xconv[x]+y80[y];
+    midpre1 = xconv[x] + y80[y];
 
     // Set mask to all pixels in byte
     WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x08);
@@ -326,21 +318,14 @@ BOOL vgaHLine(INT x, INT y, INT len, UCHAR c)
 
   if ( irightpix > 0 )
   {
-    x=orgx+len-irightpix;
-#if 0
-    for(i=x; i<x+irightpix; i++)
-    {
-      vgaPutPixel(i, y, c);
-    }
-#else
-    pre1=xconv[x]+y80[y];
+    x = orgx + len - irightpix;
+    pre1 = xconv[x] + y80[y];
 
     // Write right pixels
     WRITE_PORT_UCHAR((PUCHAR)GRA_I,0x08);     // set the mask bits
     WRITE_PORT_UCHAR((PUCHAR)GRA_D, endmasks[irightpix]);
     a = READ_REGISTER_UCHAR(vidmem + pre1);
     WRITE_REGISTER_UCHAR(vidmem + pre1, c);
-#endif
   }
 
   return TRUE;
@@ -499,7 +484,7 @@ void DIB_BltFromVGA(int x, int y, int w, int h, void *b, int Dest_lDelta)
   BYTE  b1, b2;
 
   // Check if the width is odd
-  if(mod(w, 2)>0)
+  if(mod2(w)>0)
   {
     edgePixel = TRUE;
     x2 -= 1;
@@ -587,7 +572,7 @@ void DIB_TransparentBltToVGA(int x, int y, int w, int h, void *b, int Source_lDe
   BYTE  b1, b2;
 
   // Check if the width is odd
-  if(mod(w, 2)>0)
+  if(mod2(w)>0)
   {
     edgePixel = TRUE;
     x2 -= 1;
@@ -949,7 +934,7 @@ void DFB_BltToDIB(int x, int y, int w, int h, void *b, int bw, void *bdib, int d
   for (i=w; i>0; i--) {
 
     // determine the bit shift for the DIB pixel
-    dib_shift = mod(w-i, 2);
+    dib_shift = mod2(w-i);
     if(dib_shift > 0) dib_shift = 4;
     dibTmp = dib;
 
@@ -978,7 +963,7 @@ void DIB_BltToDFB(int x, int y, int w, int h, void *b, int bw, void *bdib, int d
   for (i=w; i>0; i--) {
 
     // determine the bit shift for the DIB pixel
-    dib_shift = mod(w-i, 2);
+    dib_shift = mod2(w-i);
     if(dib_shift > 0) {
       dib_shift = 0;
       dib_and = 0x0f;

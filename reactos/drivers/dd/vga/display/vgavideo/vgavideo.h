@@ -66,3 +66,6 @@ BOOL VGADDIIntersectRect(PRECTL prcDst, PRECTL prcSrc1, PRECTL prcSrc2);
 #define ASSIGNMK4(x, y, mask) mask = 0x80 >> ((x) & 7);
 
 void get_masks(int x, int w);
+
+#define mod8(n) ((n)&7)
+#define mod2(n) ((n)&1)
