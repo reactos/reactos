@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.43 2003/11/01 16:33:39 ekohl Exp $
+/* $Id: class2.c,v 1.44 2003/11/07 11:48:59 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -571,7 +571,7 @@ ScsiClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
   switch (ModifiedControlCode)
     {
       case IOCTL_DISK_CHECK_VERIFY:
-	DPRINT("IOCTL_DISK_CHECK_VERIFY\n");
+	DPRINT("ScsiClassDeviceControl: IOCTL_DISK_CHECK_VERIFY\n");
 
 	/* Initialize SRB operation */
 	Srb->CdbLength = 6;
@@ -967,6 +967,7 @@ ScsiClassInterpretSenseInfo(IN PDEVICE_OBJECT DeviceObject,
 			    OUT NTSTATUS *Status)
 {
   PDEVICE_EXTENSION DeviceExtension;
+  PDEVICE_EXTENSION PhysicalExtension;
 #if 0
   PIO_ERROR_LOG_PACKET LogPacket;
 #endif
@@ -985,7 +986,8 @@ ScsiClassInterpretSenseInfo(IN PDEVICE_OBJECT DeviceObject,
       return(FALSE);
     }
 
-  DeviceExtension = DeviceObject->DeviceExtension;
+  DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+  PhysicalExtension = (PDEVICE_EXTENSION)DeviceExtension->PhysicalDevice->DeviceExtension;
   SenseData = Srb->SenseInfoBuffer;
   LogError = FALSE;
   Retry = TRUE;
@@ -1097,6 +1099,21 @@ ScsiClassInterpretSenseInfo(IN PDEVICE_OBJECT DeviceObject,
 
 	  case SCSI_SENSE_UNIT_ATTENTION:
 	    DPRINT("SCSI_SENSE_UNIT_ATTENTION\n");
+	    switch (SenseData->AdditionalSenseCode)
+	      {
+		case SCSI_ADSENSE_MEDIUM_CHANGED:
+		  DPRINT("SCSI_ADSENSE_MEDIUM_CHANGED\n");
+		  break;
+
+		case SCSI_ADSENSE_BUS_RESET:
+		  DPRINT("SCSI_ADSENSE_BUS_RESET\n");
+		  break;
+
+		default:
+		  DPRINT("Unit attention\n");
+		  break;
+	      }
+
 	    if ((DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA) &&
 		(DeviceObject->Vpb->Flags & VPB_MOUNTED))
 	      {
@@ -1108,6 +1125,9 @@ ScsiClassInterpretSenseInfo(IN PDEVICE_OBJECT DeviceObject,
 	      {
 		*Status = STATUS_IO_DEVICE_ERROR;
 	      }
+
+	    /* Increment the media change count */
+	    PhysicalExtension->MediaChangeCount++;
 	    break;
 
 	  case SCSI_SENSE_DATA_PROTECT:
