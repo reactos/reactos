@@ -18,6 +18,36 @@ void dprintf(char* fmt, ...)
    va_end(args);
 }
 
+void do_enumeratekey(PWSTR Name)
+{
+ ULONG Index,Length,i;
+ KEY_BASIC_INFORMATION KeyInformation[5];
+ NTSTATUS Status;
+ OBJECT_ATTRIBUTES ObjectAttributes;
+ HANDLE hKey1;
+ UNICODE_STRING KeyName;
+
+  RtlInitUnicodeString(&KeyName, Name);
+  InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE
+				, NULL, NULL);
+  Status=NtOpenKey( &hKey1, MAXIMUM_ALLOWED, &ObjectAttributes);
+    dprintf("NtEnumerateKey : \n");
+    Index=0;
+    while(Status == STATUS_SUCCESS)
+    {
+      Status=NtEnumerateKey(hKey1,Index++,KeyBasicInformation
+		,&KeyInformation[0], sizeof(KeyInformation)
+		,&Length);
+      if(Status== STATUS_SUCCESS)
+	{
+        dprintf("\tSubKey Name = ");
+	  for (i=0;i<KeyInformation[0].NameLength/2;i++)
+		dprintf("%C",KeyInformation[0].Name[i]);
+        dprintf("\n");
+	}
+    }
+}
+
 void test1(void)
 {
  HKEY hKey = NULL,hKey1;
@@ -219,7 +249,7 @@ void test2(void)
     }
   }
   NtClose(hKey);
-  dprintf("delete \\Registry\\Machine\\software\\test3reactos ?");
+  dprintf("delete \\Registry\\Machine\\software\\test2reactos ?");
   ReadConsoleA(InputHandle, Buffer, 3, &Result, NULL) ;
   if (Buffer[0] != 'y' && Buffer[0] != 'Y') return;
   RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\Software\\test2reactos\\test2\\TestVolatile");
@@ -282,6 +312,11 @@ void test3(void)
 		,0,NULL,REG_OPTION_NON_VOLATILE,NULL);
   dprintf("\t\tStatus=%x\n",Status);
   NtClose(hKey);
+  do_enumeratekey(L"\\Registry\\Machine\\Software");
+  dprintf("NtOpenKey: ");
+  Status=NtOpenKey( &hKey, MAXIMUM_ALLOWED, &ObjectAttributes);
+  dprintf("\t\tStatus=%x\n",Status);
+  NtClose(hKey);
   dprintf("  ...\\test3 :");
   RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\Software\\test3reactos\\test3");
   InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE
@@ -289,6 +324,9 @@ void test3(void)
   Status = NtCreateKey ( &hKey1, KEY_ALL_ACCESS , &ObjectAttributes
 		,0,NULL,REG_OPTION_NON_VOLATILE,NULL);
   dprintf("\t\t\t\t\tStatus=%x\n",Status);
+  dprintf("NtOpenKey: ");
+  Status=NtOpenKey( &hKey1, MAXIMUM_ALLOWED, &ObjectAttributes);
+  dprintf("\t\tStatus=%x\n",Status);
   dprintf("  ...\\testNonVolatile :");
   RtlInitUnicodeString(&KeyName, L"TestNonVolatile");
   InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE
@@ -545,6 +583,51 @@ void test4(void)
    dprintf ("\nTests done...\n");
 }
 
+void test5(void)
+{
+ OBJECT_ATTRIBUTES ObjectAttributes;
+ UNICODE_STRING KeyName;
+ NTSTATUS Status;
+ LONG dwError;
+ TOKEN_PRIVILEGES NewPrivileges; 
+ HANDLE Token; 
+ LUID Luid; 
+ BOOLEAN bRes;
+  Status=NtOpenProcessToken(GetCurrentProcess()
+	,TOKEN_ADJUST_PRIVILEGES|TOKEN_QUERY,&Token);
+  dprintf("\t\t\t\tStatus =%x\n",Status);
+  bRes=LookupPrivilegeValueA(NULL,SE_RESTORE_NAME,&Luid);
+  dprintf("\t\t\t\tbRes =%x\n",bRes);
+  NewPrivileges.PrivilegeCount = 1; 
+  NewPrivileges.Privileges[0].Luid = Luid; 
+  NewPrivileges.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED; 
+ 
+//  Status = NtAdjustPrivilegesToken( 
+  Status = AdjustTokenPrivileges( 
+            Token, 
+            FALSE, 
+            &NewPrivileges, 
+            0, 
+            NULL, 
+            NULL 
+            ); 
+  dprintf("\t\t\t\tStatus =%x\n",Status);
+ 
+  Status=NtClose(Token); 
+  dprintf("\t\t\t\tStatus =%x\n",Status);
+
+
+  RtlInitUnicodeString(&KeyName,L"test5");
+  InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE
+				, NULL, NULL);
+  Status = NtLoadKey(HKEY_LOCAL_MACHINE,&ObjectAttributes);
+  dprintf("\t\t\t\tStatus =%x\n",Status);
+  dwError=RegLoadKey(HKEY_LOCAL_MACHINE,"def"
+		,"test5");
+  dprintf("\t\t\t\tdwError =%x\n",dwError);
+
+}
+
 int main(int argc, char* argv[])
 {
  char Buffer[10];
@@ -573,6 +656,9 @@ int main(int argc, char* argv[])
     break;
    case '4':
     test4();
+    break;
+   case '5':
+    test5();
     break;
   }
   return 0;

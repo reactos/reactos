@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.37 2000/10/08 12:42:24 ekohl Exp $
+/* $Id: zw.h,v 1.38 2000/10/11 13:20:33 jean Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1739,13 +1739,13 @@ NTSTATUS
 STDCALL 
 NtLoadKey(
 	PHANDLE KeyHandle,
-	OBJECT_ATTRIBUTES ObjectAttributes
+	POBJECT_ATTRIBUTES ObjectAttributes
 	);
 NTSTATUS
 STDCALL 
 ZwLoadKey(
 	PHANDLE KeyHandle,
-	OBJECT_ATTRIBUTES ObjectAttributes
+	POBJECT_ATTRIBUTES ObjectAttributes
 	);
 
 /*
@@ -1762,14 +1762,14 @@ NTSTATUS
 STDCALL
 NtLoadKey2 (
 	PHANDLE			KeyHandle,
-	OBJECT_ATTRIBUTES	ObjectAttributes,
+	POBJECT_ATTRIBUTES	ObjectAttributes,
 	ULONG			Unknown3
 	);
 NTSTATUS
 STDCALL
 ZwLoadKey2 (
 	PHANDLE			KeyHandle,
-	OBJECT_ATTRIBUTES	ObjectAttributes,
+	POBJECT_ATTRIBUTES	ObjectAttributes,
 	ULONG			Unknown3
 	);
 
