@@ -1,4 +1,4 @@
-/* $Id: fs.c,v 1.33 2003/05/22 00:47:04 gdalsnes Exp $
+/* $Id: fs.c,v 1.34 2003/06/27 19:00:33 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -436,6 +436,7 @@ IoVerifyVolume(IN PDEVICE_OBJECT DeviceObject,
   KEVENT Event;
   PIRP Irp;
   NTSTATUS Status;
+  PDEVICE_OBJECT DevObject;
 
   DPRINT("IoVerifyVolume(DeviceObject %x  AllowRawMount %x)\n",
 	 DeviceObject, AllowRawMount);
@@ -453,12 +454,13 @@ IoVerifyVolume(IN PDEVICE_OBJECT DeviceObject,
   if (DeviceObject->Vpb->Flags & VPB_MOUNTED)
     {
       /* Issue verify request to the FSD */
+      DevObject = DeviceObject->Vpb->DeviceObject;
 
       KeInitializeEvent(&Event,
 			NotificationEvent,
 			FALSE);
 
-      Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
+      Irp = IoAllocateIrp(DevObject->StackSize, TRUE);
       if (Irp==NULL)
 	{
 	  return(STATUS_INSUFFICIENT_RESOURCES);
@@ -473,14 +475,14 @@ IoVerifyVolume(IN PDEVICE_OBJECT DeviceObject,
       StackPtr->MinorFunction = IRP_MN_VERIFY_VOLUME;
       StackPtr->Flags = 0;
       StackPtr->Control = 0;
-      StackPtr->DeviceObject = DeviceObject;
+      StackPtr->DeviceObject = DevObject;
       StackPtr->FileObject = NULL;
       StackPtr->CompletionRoutine = NULL;
 
       StackPtr->Parameters.VerifyVolume.Vpb = DeviceObject->Vpb;
       StackPtr->Parameters.VerifyVolume.DeviceObject = DeviceObject;
 
-      Status = IoCallDriver(DeviceObject,
+      Status = IoCallDriver(DevObject,
 			    Irp);
       if (Status==STATUS_PENDING)
 	{
