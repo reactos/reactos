@@ -1,4 +1,4 @@
-/* $Id: Console.cpp,v 1.2 2000/10/24 20:17:41 narnaoud Exp $
+/* $Id: Console.cpp,v 1.3 2001/01/10 01:25:29 narnaoud Exp $
  *
  * regexpl - Console Registry Explorer
  *
@@ -27,6 +27,7 @@
 #include "ph.h"
 #include "Console.h"
 
+#define TAB_WIDTH         8
 #define MORE_STRING			_T("-- Press space to view more. Press q or Ctrl+break to cancel.--")
 #define MORE_EMPTY_STRING	_T("                                                               ")
 
@@ -118,7 +119,7 @@ BOOL CConsole::Write(const TCHAR *p, DWORD dwChars)
 			{
 				if (!Write(_T(" "))) return FALSE;
 			}
-			while ((m_CursorPosition.X % 8) && (!m_blnDisableWrite));
+			while ((m_CursorPosition.X % TAB_WIDTH) && (!m_blnDisableWrite));
 			dwCharsWrittenAdd++;
 			dwCharsToWrite--;
 			continue;
@@ -212,6 +213,11 @@ BOOL CConsole::Write(const TCHAR *p, DWORD dwChars)
 		dwCharsToWrite--;
 	}
 	return ret;
+}
+
+unsigned int CConsole::GetTabWidth()
+{
+  return TAB_WIDTH;
 }
 
 BOOL CConsole::SetTitle(TCHAR *p)
@@ -674,85 +680,99 @@ Paste:
 			}
 		}
 		else if (ch == _T('\t'))
-		{
-			if (!blnCompletionMode)
+		{ // Tab
+      
+			if (!blnCompletionMode) // If tab was pressed after non-tab. We enter in completion mode.
 			{
-				if (InputRecord.Event.KeyEvent.dwControlKeyState & SHIFT_PRESSED)
-//					nCompletionIndex = 0xFFFFFFFFFFFFFFFF;
-					nCompletionIndex = (unsigned long long) -1;
+        // Initialize completion index
+				if (InputRecord.Event.KeyEvent.dwControlKeyState & SHIFT_PRESSED)  // If shift was pressed
+					nCompletionIndex = (unsigned long long) -1; // Last completion
 				else
-					nCompletionIndex = 0;
+					nCompletionIndex = 0; // First completion
+
+        // Find completion offset. It points at char after first non-quoted whitespace.
 				dwCompletionOffset = dwCurrentCharOffset;
-				BOOL b = FALSE;
+				BOOL blnQuotedParameter = FALSE;
 				while(dwCompletionOffset)
 				{
 					dwCompletionOffset--;
 					if (m_pchBuffer[dwCompletionOffset] == _T('\"'))
 					{
-						b = !b;
+						blnQuotedParameter = !blnQuotedParameter; 
 					}
-					else if (!b && _istspace(m_pchBuffer[dwCompletionOffset]))
-					{
-						dwCompletionOffset++;
+					else if (!blnQuotedParameter && _istspace(m_pchBuffer[dwCompletionOffset]))
+					{ // Found ! We are not inside quored parameter and we are on whitespace.
+						dwCompletionOffset++; // dwCompletionOffset must point at char AFTER first non-quoted whitespace.
 						break;
 					}
 				}
+        
 				ASSERT(dwCompletionOffset <= dwCurrentCharOffset);
+
+        // Save not changing part (context) of completion in m_pchBuffer1
 				_tcsncpy(m_pchBuffer1,m_pchBuffer,dwCompletionOffset);
 				m_pchBuffer1[dwCompletionOffset] = 0;
+
+        // Size of changing part
 				dwCompletionStringSize = dwCurrentCharOffset-dwCompletionOffset;
+
+        // Save intial changing part of completion in m_pchBuffer2
 				if (dwCompletionStringSize)
 					_tcsncpy(m_pchBuffer2,m_pchBuffer+dwCompletionOffset,dwCompletionStringSize);
 				m_pchBuffer2[dwCompletionStringSize] = 0;
+
+        // Calculate cursor position of point between changing and not changing ports
 				CompletionPosition.X = X_CURSOR_POSITION_FROM_OFFSET(dwCompletionOffset);
 				CompletionPosition.Y = Y_CURSOR_POSITION_FROM_OFFSET(dwCompletionOffset);
-//				Beep(1000,500);
-			}
-			else
-			{
-//				Beep(1000,50);
-//				Beep(2000,50);
-//				Beep(3000,50);
-//				Beep(4000,50);
-//				Beep(3000,50);
-//				Beep(2000,50);
-//				Beep(1000,50);
-			}
+			} // if first time tab
+
 			const TCHAR *pchCompletion = NULL;
+
+      // Direction
 			BOOL blnForward = !(InputRecord.Event.KeyEvent.dwControlKeyState & SHIFT_PRESSED);
-			if (m_pfReplaceCompletionCallback)
+
+			if (m_pfReplaceCompletionCallback)  // If we are using replace completion callback
 				pchCompletion = m_pfReplaceCompletionCallback(nCompletionIndex,
-				blnCompletionMode?&blnForward:NULL,
-				m_pchBuffer1,m_pchBuffer2);
-			if (pchCompletion)
+                                                      blnCompletionMode?&blnForward:NULL, // If this is first time we call the completion callback, do not change completion index
+                                                      m_pchBuffer1,m_pchBuffer2);
+      
+			if (pchCompletion) // If completion found
 			{
-				// Set cursor position
+				// Set cursor position to compeltion position
 				m_CursorPosition = CompletionPosition;
-				if (!SetConsoleCursorPosition(m_hStdOut,m_CursorPosition)) return FALSE;
+				if (!SetConsoleCursorPosition(m_hStdOut,m_CursorPosition))
+          return FALSE;
 
 				// Calculate buffer free space
 				ASSERT(m_dwBufferSize > dwCompletionOffset);
 				DWORD dwFree = m_dwBufferSize - dwCompletionOffset - 1;
 
+        // Save old completion string size
 				DWORD dwOldCompletionStringSize = dwCompletionStringSize;
 
 				// Write completion string to buffer
 				dwCompletionStringSize = _tcslen(pchCompletion);
 
+        // If there is not enough space in buffer, so we truncate the completion
 				if (dwCompletionStringSize > dwFree)
 					dwCompletionStringSize = dwFree;
+
 				if (dwCompletionStringSize)
 				{
+          // Copy competion into main buffer
 					_tcsncpy(m_pchBuffer+dwCompletionOffset,pchCompletion,dwCompletionStringSize);
-//					m_pchBuffer[dwCompletionOffset+dwCompletionStringSize] = 0;
 					
 					// Write completion string to console
-					if (!Write(m_pchBuffer+dwCompletionOffset,dwCompletionStringSize)) return FALSE;
+					if (!Write(m_pchBuffer+dwCompletionOffset,dwCompletionStringSize))
+            return FALSE;
+
+          // Set new offsets
 					dwCurrentCharOffset = dwLastCharOffset = dwCompletionOffset + dwCompletionStringSize;
+          
 					ASSERT(dwLastCharOffset < m_dwBufferSize);
 				}
 
-				// Erase rest from previous completion string
+				// Erase rest from previous completion string, if the new completion is shorter than old
 				if (dwOldCompletionStringSize > dwCompletionStringSize)
 				{
 					_tcsnset(m_pchBuffer+dwCompletionOffset+dwCompletionStringSize,_T(' '),
@@ -767,22 +787,12 @@ Paste:
 
 					// Set cursor position
 					m_CursorPosition = pos;
-					if (!SetConsoleCursorPosition(m_hStdOut,m_CursorPosition)) return FALSE;
+					if (!SetConsoleCursorPosition(m_hStdOut,m_CursorPosition))
+            return FALSE;
 				}
+			} // If completion found
 
-			}
-			else
-			{
-/*				if (InputRecord.Event.KeyEvent.dwControlKeyState & SHIFT_PRESSED)
-				{
-					 nCompletionIndex++;
-				}
-				else
-				{
-					if (nCompletionIndex)
-						nCompletionIndex--;
-				}*/
-			}
+      // Ok, we are in completion mode
 			blnCompletionMode = TRUE;
 		}
 		else if (_istprint(ch))
@@ -854,14 +864,19 @@ TCHAR * CConsole::Init(DWORD dwBufferSize, DWORD dwMaxHistoryLines)
 	if (m_hStdIn != INVALID_HANDLE_VALUE) VERIFY(CloseHandle(m_hStdIn));
 	if (m_hStdOut != INVALID_HANDLE_VALUE) VERIFY(CloseHandle(m_hStdOut));
 
-	m_hStdIn = GetStdHandle(STD_INPUT_HANDLE);
-	if (m_hStdIn == INVALID_HANDLE_VALUE) goto Abort;
+  m_hStdIn = CreateFile("CONIN$",GENERIC_READ | GENERIC_WRITE,FILE_SHARE_READ | FILE_SHARE_WRITE,NULL,OPEN_EXISTING,0,NULL);
+  //m_hStdIn = GetStdHandle(STD_INPUT_HANDLE);
+	if (m_hStdIn == INVALID_HANDLE_VALUE)
+    goto Abort;
 
-	m_hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-	if (m_hStdOut == INVALID_HANDLE_VALUE) goto Abort;
+  m_hStdOut = CreateFile("CONOUT$",GENERIC_READ | GENERIC_WRITE,FILE_SHARE_READ | FILE_SHARE_WRITE,NULL,OPEN_EXISTING,0,NULL);
+	//m_hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	if (m_hStdOut == INVALID_HANDLE_VALUE)
+    goto Abort;
 
 	CONSOLE_SCREEN_BUFFER_INFO info;
-	if (!GetConsoleScreenBufferInfo(m_hStdOut,&info)) goto Abort;
+	if (!GetConsoleScreenBufferInfo(m_hStdOut,&info))
+    goto Abort;
 	m_wAttributes = info.wAttributes;
 	
 	if (!m_blnOldInputModeSaved)

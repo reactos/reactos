@@ -1,4 +1,4 @@
-/* $Id: ShellCommandHelp.cpp,v 1.2 2000/10/24 20:17:41 narnaoud Exp $
+/* $Id: ShellCommandHelp.cpp,v 1.3 2001/01/10 01:25:29 narnaoud Exp $
  *
  * regexpl - Console Registry Explorer
  *
@@ -123,7 +123,7 @@ int CShellCommandHelp::Execute(CConsole &rConsole, CArgumentParser& rArguments)
 const TCHAR * CShellCommandHelp::GetHelpString()
 {
 	return HELP_CMD_SHORT_DESC
-			_T("Syntax: ") HELP_CMD _T("[<COMMAND>] [/?]\n")
+			_T("Syntax: ") HELP_CMD _T(" [<COMMAND>] [/?]\n")
 			_T("    COMMAND    - Command for which help will be displayed.\n")
 			_T("    /?    - This help.\n\n")
 			_T("Without parameters, command lists available commands.\n");

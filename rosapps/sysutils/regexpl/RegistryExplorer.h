@@ -2,7 +2,7 @@
 #ifndef _REGISTRY_EXPLORER_H__INCLUDED
 #define _REGISTRY_EXPLORER_H__INCLUDED
 
-#define CURRENT_VERSION		_T("0.10+")
+#define CURRENT_VERSION		_T("0.20")
 #define EMAIL				_T("registryexplorer@yahoo.com")
 
 //#define __L(x)      L ## x
@@ -41,11 +41,11 @@
 
 #define GOODBYE_MSG			_T("\nThank you for using Registry Explorer !!!\n")
 
-#define COMMAND_NA_ON_ROOT	_T(" command is not applicable to root key.\n")
-
 //#define COMMAND_LENGTH(cmd)	(sizeof(DIR_CMD)-sizeof(TCHAR))/sizeof(TCHAR)
 #define COMMAND_LENGTH(cmd)	_tcslen(cmd)
 
 #define PROMPT_BUFFER_SIZE	1024
+
+#define COMMAND_NA_ON_ROOT	_T(" is not applicable to root key.\n")
 
 #endif //#ifndef _REGISTRY_EXPLORER_H__INCLUDED

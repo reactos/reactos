@@ -1,4 +1,4 @@
-/* $Id: SecurityDescriptor.cpp,v 1.2 2000/10/24 20:17:41 narnaoud Exp $
+/* $Id: SecurityDescriptor.cpp,v 1.3 2001/01/10 01:25:29 narnaoud Exp $
  *
  * regexpl - Console Registry Explorer
  *
@@ -322,4 +322,8 @@ void CSecurityDescriptor::GetCurrentACE_AccessMask(DWORD& dwMask)
 	}
 }
 
-
+void CSecurityDescriptor::GetCurrentACE_Flags(BYTE& bFlags)
+{
+	ASSERT(m_pCurrentACEHeader != NULL);
+  bFlags = m_pCurrentACEHeader->AceFlags;
+}

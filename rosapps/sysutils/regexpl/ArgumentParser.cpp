@@ -1,4 +1,4 @@
-/* $Id: ArgumentParser.cpp,v 1.2 2000/10/24 20:17:41 narnaoud Exp $
+/* $Id: ArgumentParser.cpp,v 1.3 2001/01/10 01:25:29 narnaoud Exp $
  *
  * regexpl - Console Registry Explorer
  *
@@ -44,29 +44,29 @@ CArgumentParser::~CArgumentParser()
 
 void CArgumentParser::SetArgumentList(TCHAR *pchArguments)
 {
-	TCHAR *pch = m_pchArgumentList = pchArguments;
-	m_pchArgumentListEnd = pchArguments + _tcslen(pchArguments);
-
-	BOOL blnLongArg = FALSE;
-	while (*pch)
-	{
-		switch(*pch)
-		{
-		case L'\"':
-			if (blnLongArg) blnLongArg = FALSE;
-			else blnLongArg = TRUE;
-			break;
-		case L' ':
-		case L'\t':
-		case L'\r':
-		case L'\n':
-			if (!blnLongArg) *pch = 0;
-			break;
-		}
-		pch++;
-	}
-
-	ResetArgumentIteration();
+TCHAR *pch = m_pchArgumentList = pchArguments;
+m_pchArgumentListEnd = pchArguments + _tcslen(pchArguments);
+ 
+ BOOL blnLongArg = FALSE;
+ while (*pch)
+ {
+   switch(*pch)
+   {
+   case _T('\"'):
+    blnLongArg = !blnLongArg;
+		break;
+   case _T(' '):
+   case _T('\t'):
+   case _T('\r'):
+   case _T('\n'):
+     if (!blnLongArg)
+       *pch = 0;
+     break;
+   }
+   pch++;
+ }
+ 
+ ResetArgumentIteration();
 }
 
 TCHAR * CArgumentParser::GetNextArgument()
@@ -76,7 +76,8 @@ TCHAR * CArgumentParser::GetNextArgument()
 	ASSERT(m_pchArgumentListEnd >= m_pchArgumentList);
 
 	// if this is begin of iteration
-	if (!m_pchArgument) m_pchArgument = m_pchArgumentList;
+	if (!m_pchArgument)
+    m_pchArgument = m_pchArgumentList;
 
 	while(m_pchArgument)
 	{

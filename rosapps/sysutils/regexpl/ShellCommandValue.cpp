@@ -1,4 +1,4 @@
-/* $Id: ShellCommandValue.cpp,v 1.2 2000/10/24 20:17:42 narnaoud Exp $
+/* $Id: ShellCommandValue.cpp,v 1.3 2001/01/10 01:25:29 narnaoud Exp $
  *
  * regexpl - Console Registry Explorer
  *
@@ -69,7 +69,7 @@ int CShellCommandValue::Execute(CConsole &rConsole, CArgumentParser& rArguments)
 	BOOL blnUnicodeDump = FALSE;
 	BOOL blnBadParameter = FALSE;
 	BOOL blnHelp = FALSE;
-	DWORD dwError;
+	LONG nError;
 	DWORD dwValueSize;
 	DWORD dwType = REG_NONE;
 	BYTE *pDataBuffer = NULL;
@@ -120,10 +120,9 @@ CheckValueArgument:
 		}
 	}
 	
-	CRegistryTree *pTree = NULL;
-	CRegistryKey *pKey = NULL;
+	CRegistryKey Key;
 	TCHAR *pchValueName;
-	TCHAR *pchPath;
+	const TCHAR *pszPath;
 	
 	if (blnHelp)
 	{
@@ -142,7 +141,7 @@ CheckValueArgument:
 
 		TCHAR *pchSep = _tcsrchr(pchValueFull,_T('\\'));
 		pchValueName = pchSep?(pchSep+1):(pchValueFull);
-		pchPath = pchSep?pchValueFull:NULL;
+		pszPath = pchSep?pchValueFull:_T(".");
 				
 		//if (_tcsrchr(pchValueName,_T('.')))
 		//{
@@ -156,271 +155,266 @@ CheckValueArgument:
 	else
 	{
 		pchValueName = _T("");
-		pchPath = NULL;
+		pszPath = _T(".");
 	}
-		
-	if (pchPath)
-	{
-		pTree = new CRegistryTree(m_rTree);
-		if ((_tcscmp(pTree->GetCurrentPath(),m_rTree.GetCurrentPath()) != 0)
-			||(!pTree->ChangeCurrentKey(pchPath)))
-		{
-			rConsole.Write(_T("Cannot open key "));
-			rConsole.Write(pchPath);
-			rConsole.Write(_T("\n"));
-			goto SkipValueCommand;
-		}
-		else
-		{
-			pKey = pTree->GetCurrentKey();
-		}
-	}
-	else
-	{
-		pKey = m_rTree.GetCurrentKey();
-	}
-	
-	if (pKey)
-	{	// not root key ???
-		rConsole.Write(_T("Value name : \""));
-		rConsole.Write(_T("\\"));
-		rConsole.Write(pTree?pTree->GetCurrentPath():m_rTree.GetCurrentPath());
-		rConsole.Write(*pchValueName?pchValueName:_T("\"(Default)\""));
-		rConsole.Write(_T("\"\n"));
-		size_t l = _tcslen(pchValueName);
-		if (l&&
-			(*pchValueName == _T('\"'))&&
-			(pchValueName[l-1] == _T('\"')))
-		{
-			pchValueName[l-1] = 0;
-			pchValueName++;
-		}
-		dwError = pKey->GetValue(pchValueName,NULL,NULL,&dwValueSize);
-		if (dwError == ERROR_SUCCESS)
-		{
-			pDataBuffer = new BYTE [dwValueSize];
-			pKey->GetValue(pchValueName,&dwType,pDataBuffer,&dwValueSize);
-			rConsole.Write(_T("Value type : "));
-			rConsole.Write(CRegistryKey::GetValueTypeName(dwType));
-			rConsole.Write(_T("\nValue data : "));
-			switch(dwType)
-			{
-			case REG_DWORD_LITTLE_ENDIAN:
-				{
-					TCHAR Buffer[11];
-					unsigned int n = *pDataBuffer;
-					_stprintf(Buffer,_T("0x%08X\n"),n);
-					rConsole.Write(Buffer);
-				}
-				break;
-			case REG_DWORD_BIG_ENDIAN:
-				{
-					TCHAR Buffer[3];
-					rConsole.Write(_T("0x"));
-					for (unsigned int i = 0 ; i < dwValueSize ; i++)
-					{
-						_stprintf(Buffer,_T("%02X"),*(pDataBuffer+i));
-						rConsole.Write(Buffer);
-					}
-				}
-				rConsole.Write(_T("\n"));
-				break;
-			case REG_LINK:
-				break;
-			case REG_MULTI_SZ:
-				{
-					TCHAR *pchCurrentString = (TCHAR *)pDataBuffer;
-					rConsole.Write(_T("\n"));
-					while(*pchCurrentString)
-					{
-						rConsole.Write(_T("\""));
-						rConsole.Write(pchCurrentString);
-						rConsole.Write(_T("\"\n"));
-						pchCurrentString += _tcslen(pchCurrentString)+1;
-					}
-				}
-				break;
-			case REG_RESOURCE_LIST:
-				break;
-			case REG_SZ:
-			case REG_EXPAND_SZ:
-				rConsole.Write(_T("\""));
-				rConsole.Write((TCHAR *)pDataBuffer);
-				rConsole.Write(_T("\"\n"));
-				break;
-			case REG_BINARY:
-			default:
-				{
-					TCHAR Buffer[256];
-					DWORD i;
-					for (i = 0 ; i < dwValueSize ; i++)
-					{
-						if (i%16 == 0)
-						{	// ok this is begining of line
-							rConsole.Write(_T("\n"));
-							// print offset
-							_stprintf(Buffer,_T("0x%08X  "),i);
-							rConsole.Write(Buffer);
-						}
-						else if (i%8 == 0)
-						{	// this is the additional space between 7th and 8th byte in current line
-							rConsole.Write(_T(" "));
-						}
 
-						// print current byte
-						unsigned int n = *(pDataBuffer+i);
-						_stprintf(Buffer,_T("%02X "),n);
-						rConsole.Write(Buffer);
+  if (!m_rTree.GetKey(pszPath,KEY_READ,Key))
+  {
+    rConsole.Write(m_rTree.GetLastErrorDescription());
+    goto SkipValueCommand;
+  }
 
-						if (i && (i%16 == 15))
-						{	// if this is the last byte in line
-							// Dump text representation
-							for (DWORD j = i-15; j <= i; j += blnUnicodeDump?2:1)\
-							{
-								if ((j%8 == 0)&&(j%16 != 0))
-								{	// this is the additional space between 7th and 8th byte in current line
-									rConsole.Write(_T(" "));
-								}
-								ASSERT(i-j < 16);
-								// write current char representation
-								if (blnUnicodeDump)
-								{
-									ASSERT(j%2 == 0);
-									wchar_t ch = *(TCHAR *)(pDataBuffer+j);
-									_stprintf(Buffer,
+	if (Key.IsRoot())
+    goto ValueCommandNAonRoot;
+  
+  {
+    rConsole.Write(_T("Value name : \""));
+    rConsole.Write(_T("\\"));
+    rConsole.Write(Key.GetKeyName());
+    size_t l = _tcslen(pchValueName);
+    if (l&&
+        (*pchValueName == _T('\"'))&&
+        (pchValueName[l-1] == _T('\"')))
+    {
+      pchValueName[l-1] = 0;
+      pchValueName++;
+    }
+    rConsole.Write(pchValueName);
+    rConsole.Write(_T("\"\n"));
+  
+    nError = Key.GetValue(pchValueName,NULL,NULL,&dwValueSize);
+    if (nError == ERROR_SUCCESS)
+    {
+      pDataBuffer = new BYTE [dwValueSize];
+      Key.GetValue(pchValueName,&dwType,pDataBuffer,&dwValueSize);
+      rConsole.Write(_T("Value type : "));
+      rConsole.Write(CRegistryKey::GetValueTypeName(dwType));
+      rConsole.Write(_T("\nValue data : "));
+      switch(dwType)
+      {
+      case REG_DWORD_LITTLE_ENDIAN:
+        {
+          TCHAR Buffer[11];
+          unsigned int n = *pDataBuffer;
+          _stprintf(Buffer,_T("0x%08X\n"),n);
+          rConsole.Write(Buffer);
+        }
+        break;
+      case REG_DWORD_BIG_ENDIAN:
+        {
+          TCHAR Buffer[3];
+          rConsole.Write(_T("0x"));
+          for (unsigned int i = 0 ; i < dwValueSize ; i++)
+          {
+            _stprintf(Buffer,_T("%02X"),*(pDataBuffer+i));
+            rConsole.Write(Buffer);
+          }
+        }
+        rConsole.Write(_T("\n"));
+        break;
+      case REG_LINK:
+        break;
+      case REG_MULTI_SZ:
+        {
+          TCHAR *pchCurrentString = (TCHAR *)pDataBuffer;
+          rConsole.Write(_T("\n"));
+          while(*pchCurrentString)
+          {
+            rConsole.Write(_T("\""));
+            rConsole.Write(pchCurrentString);
+            rConsole.Write(_T("\"\n"));
+            pchCurrentString += _tcslen(pchCurrentString)+1;
+          }
+        }
+        break;
+      case REG_RESOURCE_LIST:
+        break;
+      case REG_SZ:
+      case REG_EXPAND_SZ:
+        rConsole.Write(_T("\""));
+        rConsole.Write((TCHAR *)pDataBuffer);
+        rConsole.Write(_T("\"\n"));
+        break;
+      case REG_BINARY:
+      default:
+        {
+          TCHAR Buffer[256];
+          DWORD i;
+          for (i = 0 ; i < dwValueSize ; i++)
+          {
+            if (i%16 == 0)
+            {	// ok this is begining of line
+              rConsole.Write(_T("\n"));
+              // print offset
+              _stprintf(Buffer,_T("0x%08X  "),(unsigned int)i);
+              rConsole.Write(Buffer);
+            }
+            else if (i%8 == 0)
+            {	// this is the additional space between 7th and 8th byte in current line
+              rConsole.Write(_T(" "));
+            }
+
+            // print current byte
+            unsigned int n = *(pDataBuffer+i);
+            _stprintf(Buffer,_T("%02X "),n);
+            rConsole.Write(Buffer);
+
+            if (i && (i%16 == 15))
+            {	// if this is the last byte in line
+              // Dump text representation
+              for (DWORD j = i-15; j <= i; j += blnUnicodeDump?2:1)\
+                  {
+                    if ((j%8 == 0)&&(j%16 != 0))
+                    {	// this is the additional space between 7th and 8th byte in current line
+                      rConsole.Write(_T(" "));
+                    }
+                    ASSERT(i-j < 16);
+                    // write current char representation
+                    if (blnUnicodeDump)
+                    {
+                      ASSERT(j%2 == 0);
+                      wchar_t ch = *(TCHAR *)(pDataBuffer+j);
+
+                      _stprintf(Buffer,
 #ifdef _UNICODE
-										_T("%c"),
+                                _T("%c"),
 #else
-										_T("%C"),
+                                // g++ may print warnings here (warning: __wchar_t format, different type arg (arg 3))
+                                // %C in format string is a Microsoft extension.
+                                _T("%C"),
 #endif
-										iswprint(ch)?ch:L'.');
-								}
-								else
-								{
-									unsigned char ch = *(pDataBuffer+j);
-									_stprintf(Buffer,
+                                iswprint(ch)?ch:L'.');
+                    }
+                    else
+                    {
+                      unsigned char ch = *(pDataBuffer+j);
+
+                      _stprintf(Buffer,
 #ifdef _UNICODE
-										_T("%C"),
+                                // g++ may print warnings here (warning: __wchar_t format, different type arg (arg 3))
+                                // %C in format string is a Microsoft extension.
+                                _T("%C"),
 #else
-										_T("%c"),
+                                _T("%c"),
 #endif
-										isprint(ch)?ch:'.');
-								}
-								rConsole.Write(Buffer);
-							}	// for
-						}	// if
-					}	// for
+                                isprint(ch)?ch:'.');
+                    }
+                    rConsole.Write(Buffer);
+                  }	// for
+            }	// if
+          }	// for
 
-					// print text representation of last line if it is not full (it have less than 16 bytes)
-					// k is pseudo offset
-					for (DWORD k = i; k%16 != 0; k++)
-					{
-						if (k%8 == 0)
-						{	// this is the additional space between 7th and 8th byte in current line
-							rConsole.Write(_T(" "));
-						}
-						_tcscpy(Buffer,_T("   "));	// the replacement of two digit of current byte + spacing
-						rConsole.Write(Buffer);
-						if (k && (k%16 == 15))
-						{	// if this is the last byte in line
-							ASSERT((k-15)%16 == 0);	// k-15 must point at begin of last line
-							for (DWORD j = k-15; j < i; j += j += blnUnicodeDump?2:1)
-							{
-								if (blnUnicodeDump&&(j+1 >= i))
-								{	// ok, buffer size is odd number, so we don't display last byte.
-									ASSERT(j+1 == i);
-									break;
-								}
-								if ((j%8 == 0)&&(j%16 != 0))
-								{	// this is the additional space between 7th and 8th byte in current line
-									rConsole.Write(_T(" "));
-								}
+          // print text representation of last line if it is not full (it have less than 16 bytes)
+          // k is pseudo offset
+          for (DWORD k = i; k%16 != 0; k++)
+          {
+            if (k%8 == 0)
+            {	// this is the additional space between 7th and 8th byte in current line
+              rConsole.Write(_T(" "));
+            }
+            _tcscpy(Buffer,_T("   "));	// the replacement of two digit of current byte + spacing
+            rConsole.Write(Buffer);
+            if (k && (k%16 == 15))
+            {	// if this is the last byte in line
+              ASSERT((k-15)%16 == 0);	// k-15 must point at begin of last line
+              for (DWORD j = k-15; j < i; j += j += blnUnicodeDump?2:1)
+              {
+                if (blnUnicodeDump&&(j+1 >= i))
+                {	// ok, buffer size is odd number, so we don't display last byte.
+                  ASSERT(j+1 == i);
+                  break;
+                }
+                if ((j%8 == 0)&&(j%16 != 0))
+                {	// this is the additional space between 7th and 8th byte in current line
+                  rConsole.Write(_T(" "));
+                }
 
-								// write current char representation
-								if (blnUnicodeDump)
-								{
-									ASSERT(j%2 == 0);
-									wchar_t ch = *(TCHAR *)(pDataBuffer+j);
-									_stprintf(Buffer,
+                // write current char representation
+                if (blnUnicodeDump)
+                {
+                  ASSERT(j%2 == 0);
+                  wchar_t ch = *(TCHAR *)(pDataBuffer+j);
+
+                  _stprintf(Buffer,
 #ifdef _UNICODE
-										_T("%c"),
+                            _T("%c"),
 #else
-										_T("%C"),
+                            // g++ may print warnings here (warning: __wchar_t format, different type arg (arg 3))
+                            // %C in format string is a Microsoft extension.
+                            _T("%C"),
 #endif
-										iswprint(ch)?ch:L'.');
-								}
-								else
-								{
-									unsigned char ch = *(pDataBuffer+j);
-									_stprintf(Buffer,
+                            iswprint(ch)?ch:L'.');
+                }
+                else
+                {
+                  unsigned char ch = *(pDataBuffer+j);
+
+                  _stprintf(Buffer,
 #ifdef _UNICODE
-										_T("%C"),
+                            // g++ may print warnings here (warning: __wchar_t format, different type arg (arg 3))
+                            // %C in format string is a Microsoft extension.
+                            _T("%C"),
 #else
-										_T("%c"),
+                            _T("%c"),
 #endif
-										isprint(ch)?ch:'.');
-								}
-								rConsole.Write(Buffer);
-							} // for
-						} // if
-					} // for
-				} // default:
-				rConsole.Write(_T("\n"));
-			} // switch
-			rConsole.Write(_T("\n"));
+                            isprint(ch)?ch:'.');
+                }
+                rConsole.Write(Buffer);
+              } // for
+            } // if
+          } // for
+        } // default:
+        rConsole.Write(_T("\n"));
+      } // switch
+      rConsole.Write(_T("\n"));
 
-			if (pchFilename)
-			{
-				rConsole.Write(_T("Exporting value data to "));
-				rConsole.Write(pchFilename);
-				rConsole.Write(_T(" ...\n"));
+      if (pchFilename)
+      {
+        rConsole.Write(_T("Exporting value data to "));
+        rConsole.Write(pchFilename);
+        rConsole.Write(_T(" ...\n"));
 
-				HANDLE hFile = CreateFile(pchFilename,GENERIC_WRITE,0,NULL,CREATE_NEW,FILE_ATTRIBUTE_NORMAL,NULL);
-				if (hFile == INVALID_HANDLE_VALUE)
-				{
-					rConsole.Write(_T("Cannot create new file "));
-					rConsole.Write(pchFilename);
-					rConsole.Write(_T("\n"));
-					goto SkipValueCommand;
-				}
+        HANDLE hFile = CreateFile(pchFilename,GENERIC_WRITE,0,NULL,CREATE_NEW,FILE_ATTRIBUTE_NORMAL,NULL);
+        if (hFile == INVALID_HANDLE_VALUE)
+        {
+          rConsole.Write(_T("Cannot create new file "));
+          rConsole.Write(pchFilename);
+          rConsole.Write(_T("\n"));
+          goto SkipValueCommand;
+        }
 
-				DWORD dwBytesWritten;
-				if (!WriteFile(hFile,pDataBuffer,dwValueSize,&dwBytesWritten,NULL))
-				{
-					rConsole.Write(_T("Error writting file.\n"));
-					VERIFY(CloseHandle(hFile));
-					goto SkipValueCommand;
-				}
+        DWORD dwBytesWritten;
+        if (!WriteFile(hFile,pDataBuffer,dwValueSize,&dwBytesWritten,NULL))
+        {
+          rConsole.Write(_T("Error writting file.\n"));
+          VERIFY(CloseHandle(hFile));
+          goto SkipValueCommand;
+        }
 
-				ASSERT(dwBytesWritten == dwValueSize);
-				VERIFY(CloseHandle(hFile));
-			}
-		}
-		else
-		{
-			rConsole.Write(_T("Error "));
-			TCHAR Buffer[256];
-			rConsole.Write(_itot(dwError,Buffer,10));
-			rConsole.Write(_T("\n"));
-			if (dwError == 2)
-			{
-				rConsole.Write(_T("(System Cannot find the value specified)\n"));
-			}
-		}
-	} // if (pKey)
-	else
-	{
-ValueCommandNAonRoot:
-		rConsole.Write(VALUE_CMD COMMAND_NA_ON_ROOT);
-	}
+        ASSERT(dwBytesWritten == dwValueSize);
+        VERIFY(CloseHandle(hFile));
+      }
+    }
+    else
+    {
+      rConsole.Write(_T("Error "));
+      TCHAR Buffer[256];
+      rConsole.Write(_itot(nError,Buffer,10));
+      rConsole.Write(_T("\n"));
+      if (nError == ERROR_FILE_NOT_FOUND)
+      {
+        rConsole.Write(_T("(System cannot find the value specified)\n"));
+      }
+    }
+  }
 
 SkipValueCommand:
-	if (pTree)
-		delete pTree;
-
 	if (pDataBuffer)
 		delete pDataBuffer;
 	return 0;
+ValueCommandNAonRoot:
+	rConsole.Write(VALUE_CMD COMMAND_NA_ON_ROOT);
+  return 0;
 }
 
 const TCHAR * CShellCommandValue::GetHelpString()

@@ -16,6 +16,7 @@ const TCHAR * GetSidTypeName(SID_NAME_USE Use);
 class CSecurityDescriptor  
 {
 public:
+	void GetCurrentACE_Flags(BYTE& bFlags);
 	void GetCurrentACE_AccessMask(DWORD& dwMask);
 	PSID GetCurrentACE_SID();
 	enum ACEntryType

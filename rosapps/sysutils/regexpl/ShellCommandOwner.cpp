@@ -1,4 +1,4 @@
-/* $Id: ShellCommandOwner.cpp,v 1.2 2000/10/24 20:17:41 narnaoud Exp $
+/* $Id: ShellCommandOwner.cpp,v 1.3 2001/01/10 01:25:29 narnaoud Exp $
  *
  * regexpl - Console Registry Explorer
  *
@@ -108,30 +108,14 @@ CheckOwnerArgument:
 		}
 	}
 
-	CRegistryTree *pTree = NULL;
-	CRegistryKey *pKey = NULL;
+	CRegistryKey Key;
+  
+  if (!m_rTree.GetKey(pchKey?pchKey:_T("."),KEY_QUERY_VALUE|READ_CONTROL,Key))
+  {
+    rConsole.Write(m_rTree.GetLastErrorDescription());
+    blnDo = FALSE;
+  }
 
-	if (pchKey)
-	{
-		pTree = new CRegistryTree(m_rTree);
-		if ((_tcscmp(pTree->GetCurrentPath(),m_rTree.GetCurrentPath()) != 0)||(!pTree->ChangeCurrentKey(pchKey)))
-		{
-			rConsole.Write(_T("Cannot open key "));
-			rConsole.Write(pchKey);
-			rConsole.Write(_T("\n"));
-			//blnHelp = TRUE;
-			blnDo = FALSE;
-		}
-		else
-		{
-			pKey = pTree->GetCurrentKey();
-		}
-	}
-	else
-	{
-		pKey = m_rTree.GetCurrentKey();
-	}
-	
 	if (blnHelp)
 	{
 		rConsole.Write(GetHelpString());
@@ -139,116 +123,112 @@ CheckOwnerArgument:
 
 	if (blnDo&&blnHelp) rConsole.Write(_T("\n"));
 
-	if (blnDo)
-	{
-		if (pKey == NULL)
-		{	// root key
-			rConsole.Write(OWNER_CMD COMMAND_NA_ON_ROOT);
-		}
-		else
-		{
-			PSECURITY_DESCRIPTOR pSecurityDescriptor = NULL;
-			TCHAR *pchName = NULL, *pchDomainName = NULL;
-			try
-			{
-				DWORD dwSecurityDescriptorLength;
-				rConsole.Write(_T("Key : "));
-				rConsole.Write(_T("\\"));
-				rConsole.Write(pTree?pTree->GetCurrentPath():m_rTree.GetCurrentPath());
-				rConsole.Write(_T("\n"));
-				dwError = pKey->GetSecurityDescriptorLength(&dwSecurityDescriptorLength);
-				if (dwError != ERROR_SUCCESS) throw dwError;
+	if (!blnDo)
+    return 0;
+  
+  if (Key.IsRoot())
+  {	// root key
+    rConsole.Write(OWNER_CMD COMMAND_NA_ON_ROOT);
+    return 0;
+  }
+  
+  PSECURITY_DESCRIPTOR pSecurityDescriptor = NULL;
+  TCHAR *pchName = NULL, *pchDomainName = NULL;
+  try
+  {
+    DWORD dwSecurityDescriptorLength;
+    rConsole.Write(_T("Key : "));
+    rConsole.Write(_T("\\"));
+    rConsole.Write(Key.GetKeyName());
+    rConsole.Write(_T("\n"));
+    dwError = Key.GetSecurityDescriptorLength(&dwSecurityDescriptorLength);
+    if (dwError != ERROR_SUCCESS) throw dwError;
 				
-				pSecurityDescriptor = (PSECURITY_DESCRIPTOR) new unsigned char [dwSecurityDescriptorLength];
-				DWORD dwSecurityDescriptorLength1 = dwSecurityDescriptorLength;
-				dwError = pKey->GetSecurityDescriptor((SECURITY_INFORMATION)OWNER_SECURITY_INFORMATION,pSecurityDescriptor,&dwSecurityDescriptorLength1);
-				if (dwError != ERROR_SUCCESS) throw dwError;
-				PSID psidOwner;
-				BOOL blnOwnerDefaulted;
-				if (!GetSecurityDescriptorOwner(pSecurityDescriptor,&psidOwner,&blnOwnerDefaulted))
-					throw GetLastError();
-				if (psidOwner == NULL)
-				{
-					rConsole.Write(_T("Key has no owner."));
-				}
-				else
-				{
-					if (!IsValidSid(psidOwner))
-					{
-						rConsole.Write(_T("Key has invalid owner SID."));
-					}
-					else
-					{
-						rConsole.Write(_T("Key Owner: \n"));
-						DWORD dwSIDStringSize = 0;
-						BOOL blnRet = GetTextualSid(psidOwner,NULL,&dwSIDStringSize);
-						ASSERT(!blnRet);
-						ASSERT(GetLastError() == ERROR_INSUFFICIENT_BUFFER);
-						TCHAR *pchSID = new TCHAR[dwSIDStringSize];
-						if(!GetTextualSid(psidOwner,pchSID,&dwSIDStringSize))
-						{
-							dwError = GetLastError();
-							ASSERT(dwError != ERROR_INSUFFICIENT_BUFFER);
-							rConsole.Write(_T("Error "));
-							TCHAR Buffer[256];
-							rConsole.Write(_itot(dwError,Buffer,10));
-							rConsole.Write(_T("\nGetting string representation of SID\n"));
-						}
-						else
-						{
-							rConsole.Write(_T("\tSID: "));
-							rConsole.Write(pchSID);
-							rConsole.Write(_T("\n"));
-						}
-						delete [] pchSID;
-						DWORD dwNameBufferLength, dwDomainNameBufferLength;
-						dwNameBufferLength = 1024;
-						dwDomainNameBufferLength = 1024;
-						pchName = new TCHAR [dwNameBufferLength];
-						pchDomainName = new TCHAR [dwDomainNameBufferLength];
-						DWORD dwNameLength = dwNameBufferLength, dwDomainNameLength = dwDomainNameBufferLength;
-						SID_NAME_USE Use;
-						if (!LookupAccountSid(NULL,psidOwner,pchName,&dwNameLength,pchDomainName,&dwDomainNameLength,&Use))
-							throw GetLastError();
-						else
-						{
-							rConsole.Write(_T("\tOwner Domain: "));
-							rConsole.Write(pchDomainName);
-							rConsole.Write(_T("\n"));
-							rConsole.Write(_T("\tOwner Name: "));
-							rConsole.Write(pchName);
-							rConsole.Write(_T("\n\tSID type: "));
-							rConsole.Write(GetSidTypeName(Use));
-							rConsole.Write(_T("\n"));
-							rConsole.Write(_T("\tOwner defaulted: "));
-							rConsole.Write(blnOwnerDefaulted?_T("Yes"):_T("No"));
-							rConsole.Write(_T("\n"));
-						}
-						delete [] pchName;
-						pchName = NULL;
-						delete [] pchDomainName;
-						pchDomainName = NULL;
+    pSecurityDescriptor = (PSECURITY_DESCRIPTOR) new unsigned char [dwSecurityDescriptorLength];
+    DWORD dwSecurityDescriptorLength1 = dwSecurityDescriptorLength;
+    dwError = Key.GetSecurityDescriptor((SECURITY_INFORMATION)OWNER_SECURITY_INFORMATION,pSecurityDescriptor,&dwSecurityDescriptorLength1);
+    if (dwError != ERROR_SUCCESS) throw dwError;
+    PSID psidOwner;
+    BOOL blnOwnerDefaulted;
+    if (!GetSecurityDescriptorOwner(pSecurityDescriptor,&psidOwner,&blnOwnerDefaulted))
+      throw GetLastError();
+    if (psidOwner == NULL)
+    {
+      rConsole.Write(_T("Key has no owner."));
+    }
+    else
+    {
+      if (!IsValidSid(psidOwner))
+      {
+        rConsole.Write(_T("Key has invalid owner SID."));
+      }
+      else
+      {
+        rConsole.Write(_T("Key Owner: \n"));
+        DWORD dwSIDStringSize = 0;
+        BOOL blnRet = GetTextualSid(psidOwner,NULL,&dwSIDStringSize);
+        ASSERT(!blnRet);
+        ASSERT(GetLastError() == ERROR_INSUFFICIENT_BUFFER);
+        TCHAR *pchSID = new TCHAR[dwSIDStringSize];
+        if(!GetTextualSid(psidOwner,pchSID,&dwSIDStringSize))
+        {
+          dwError = GetLastError();
+          ASSERT(dwError != ERROR_INSUFFICIENT_BUFFER);
+          rConsole.Write(_T("Error "));
+          TCHAR Buffer[256];
+          rConsole.Write(_itot(dwError,Buffer,10));
+          rConsole.Write(_T("\nGetting string representation of SID\n"));
+        }
+        else
+        {
+          rConsole.Write(_T("\tSID: "));
+          rConsole.Write(pchSID);
+          rConsole.Write(_T("\n"));
+        }
+        delete [] pchSID;
+        DWORD dwNameBufferLength, dwDomainNameBufferLength;
+        dwNameBufferLength = 1024;
+        dwDomainNameBufferLength = 1024;
+        pchName = new TCHAR [dwNameBufferLength];
+        pchDomainName = new TCHAR [dwDomainNameBufferLength];
+        DWORD dwNameLength = dwNameBufferLength, dwDomainNameLength = dwDomainNameBufferLength;
+        SID_NAME_USE Use;
+        if (!LookupAccountSid(NULL,psidOwner,pchName,&dwNameLength,pchDomainName,&dwDomainNameLength,&Use))
+          throw GetLastError();
+        else
+        {
+          rConsole.Write(_T("\tOwner Domain: "));
+          rConsole.Write(pchDomainName);
+          rConsole.Write(_T("\n"));
+          rConsole.Write(_T("\tOwner Name: "));
+          rConsole.Write(pchName);
+          rConsole.Write(_T("\n\tSID type: "));
+          rConsole.Write(GetSidTypeName(Use));
+          rConsole.Write(_T("\n"));
+          rConsole.Write(_T("\tOwner defaulted: "));
+          rConsole.Write(blnOwnerDefaulted?_T("Yes"):_T("No"));
+          rConsole.Write(_T("\n"));
+        }
+        delete [] pchName;
+        pchName = NULL;
+        delete [] pchDomainName;
+        pchDomainName = NULL;
 						
-					}
-				}
-				delete [] pSecurityDescriptor;
-			}
-			catch (DWORD dwError)
-			{
-				rConsole.Write(_T("Error "));
-				TCHAR Buffer[256];
-				rConsole.Write(_itot(dwError,Buffer,10));
-				rConsole.Write(_T("\n"));
-				if (pchName) delete [] pchName;
-				if (pchDomainName) delete [] pchDomainName;
-				if (pSecurityDescriptor) delete [] pSecurityDescriptor;
-			}
-		} // else (pKey == NULL)
-	} // if (blnDo)
-
-	if (pTree)
-		delete pTree;
-
+      }
+    }
+    delete [] pSecurityDescriptor;
+  }
+  catch (DWORD dwError)
+  {
+    rConsole.Write(_T("Error "));
+    TCHAR Buffer[256];
+    rConsole.Write(_itot(dwError,Buffer,10));
+    rConsole.Write(_T("\n"));
+    if (pchName) delete [] pchName;
+    if (pchDomainName) delete [] pchDomainName;
+    if (pSecurityDescriptor) delete [] pSecurityDescriptor;
+  }
+  
 	return 0;
 }
 

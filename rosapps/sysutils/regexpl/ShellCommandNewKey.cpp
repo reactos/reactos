@@ -1,4 +1,4 @@
-/* $Id: ShellCommandNewKey.cpp,v 1.2 2000/10/24 20:17:41 narnaoud Exp $
+/* $Id: ShellCommandNewKey.cpp,v 1.3 2001/01/10 01:25:29 narnaoud Exp $
  *
  * regexpl - Console Registry Explorer
  *
@@ -50,41 +50,41 @@ BOOL CShellCommandNewKey::Match(const TCHAR *pchCommand)
 
 int CShellCommandNewKey::Execute(CConsole &rConsole, CArgumentParser& rArguments)
 {
-	const TCHAR *pchNewKey = NULL, *pchArg;
+	TCHAR *pszNewKey = NULL, *pszArg;
 
 	BOOL blnHelp = FALSE;
 	BOOL blnExitAfterHelp = FALSE;
 	BOOL blnVolatile = FALSE;
 	
-	while((pchArg = rArguments.GetNextArgument()) != NULL)
+	while((pszArg = rArguments.GetNextArgument()) != NULL)
 	{
-		if ((_tcsicmp(pchArg,_T("/?")) == 0)
-			||(_tcsicmp(pchArg,_T("-?")) == 0))
+		if ((_tcsicmp(pszArg,_T("/?")) == 0)
+			||(_tcsicmp(pszArg,_T("-?")) == 0))
 		{
 			blnHelp = TRUE;
 		}
-		else if ((_tcsicmp(pchArg,_T("/v")) == 0)
-			||(_tcsicmp(pchArg,_T("-v")) == 0))
+		else if ((_tcsicmp(pszArg,_T("/v")) == 0)
+			||(_tcsicmp(pszArg,_T("-v")) == 0))
 		{
 			blnVolatile = TRUE;
 		}
 		else
 		{
-			if (pchNewKey)
+			if (pszNewKey)
 			{
 				rConsole.Write(_T("Wrong parameter : \""));
-				rConsole.Write(pchArg);
+				rConsole.Write(pszArg);
 				rConsole.Write(_T("\"\n\n"));
 				blnHelp = TRUE;
 			}
 			else
 			{
-				pchNewKey = pchArg;
+				pszNewKey = pszArg;
 			}
 		}
 	}
 
-	if ((!blnHelp) && (!pchNewKey))
+	if (!pszNewKey)
 	{
 		rConsole.Write(_T("Key name not specified !\n\n"));
 		blnExitAfterHelp = TRUE;
@@ -96,28 +96,74 @@ int CShellCommandNewKey::Execute(CConsole &rConsole, CArgumentParser& rArguments
 		if (blnExitAfterHelp)
 			return 0;
 		else
-		rConsole.Write(_T("\n"));
+      rConsole.Write(_T("\n"));
 	}
 
-	if (m_rTree.IsCurrentRoot())
-	{	// root key
-		rConsole.Write(NK_CMD COMMAND_NA_ON_ROOT);
-		return 0;
-	}
+  // search for last key name token
+  TCHAR *pch = pszNewKey;
+  while(*pch) // search end of string
+    pch++;
 
-	if (!m_rTree.NewKey(pchNewKey,blnVolatile))
+  if (pch > pszNewKey) // last non-null char
+    pch--;
+
+  while(*pch == _T('\\')) // ignore ending backslashes
+    *pch = 0;
+
+  while((pch > pszNewKey)&&(*pch != _T('\\')))
+    pch--;
+
+  ASSERT(pch >= pszNewKey);
+
+  const TCHAR *pszPath;
+  TCHAR *pszSubkeyName = pch+1;
+  if (pch == pszNewKey)
+  {
+    pszPath = _T(".");
+  }
+  else
+  {
+    if (pch-1 == pszNewKey)
+    {
+      rConsole.Write(NK_CMD COMMAND_NA_ON_ROOT);
+      return 0;
+    }
+    else
+    {
+      *pch = 0;
+      pszPath = pszNewKey;
+    }
+  }
+  
+  {
+    size_t s = _tcslen(pszSubkeyName);
+    if (s && (pszSubkeyName[0] == _T('\"')) && (pszSubkeyName[s-1] == _T('\"')))
+    {
+      pszSubkeyName[s-1] = 0;
+      pszSubkeyName++;
+    }
+  }
+
+	if (!m_rTree.NewKey(pszSubkeyName,pszPath,blnVolatile))
 	{
 		rConsole.Write(_T("Cannot create key.\n"));
 		rConsole.Write(m_rTree.GetLastErrorDescription());
 	}
+  else
+  {
+    InvalidateCompletion();
+  }
+  
 	return 0;
 }
 
 const TCHAR * CShellCommandNewKey::GetHelpString()
 {
 	return NK_CMD_SHORT_DESC
-			_T("Syntax: ") NK_CMD _T(" [/v] [/?] Key_Name\n\n")
-			_T("    /? - This help.\n\n")
+			_T("Syntax: ") NK_CMD _T(" [/v] [/?] [PATH]KEY_NAME\n\n")
+      _T("    PATH     - optional path to key which subkey will be created. Default is current key.\n")
+      _T("    KEY_NAME - name of subkey to be created.\n")
+			_T("    /? - This help.\n")
 			_T("    /v - Create volatile key. The information is stored in memory and is not\n")
 			_T("         preserved when the corresponding registry hive is unloaded.\n");
 }

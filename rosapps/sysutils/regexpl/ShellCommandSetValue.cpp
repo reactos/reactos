@@ -1,4 +1,4 @@
-/* $Id: ShellCommandSetValue.cpp,v 1.2 2000/10/24 20:17:42 narnaoud Exp $
+/* $Id: ShellCommandSetValue.cpp,v 1.3 2001/01/10 01:25:29 narnaoud Exp $
  *
  * regexpl - Console Registry Explorer
  *
@@ -104,77 +104,78 @@ CShellCommandSetValue::~CShellCommandSetValue()
 {
 }
 
-BOOL CShellCommandSetValue::Match(const TCHAR *pchCommand)
+BOOL CShellCommandSetValue::Match(const TCHAR *pszCommand)
 {
-	if (_tcsicmp(pchCommand,SET_VALUE_CMD) == 0)
+	if (_tcsicmp(pszCommand,SET_VALUE_CMD) == 0)
 		return TRUE;
-	if (_tcsnicmp(pchCommand,SET_VALUE_CMD _T(".."),SET_VALUE_CMD_LENGTH+2*sizeof(TCHAR)) == 0)
+	if (_tcsnicmp(pszCommand,SET_VALUE_CMD _T(".."),SET_VALUE_CMD_LENGTH+2*sizeof(TCHAR)) == 0)
 		return TRUE;
-	if (_tcsnicmp(pchCommand,SET_VALUE_CMD _T("/"),SET_VALUE_CMD_LENGTH+1*sizeof(TCHAR)) == 0)
+	if (_tcsnicmp(pszCommand,SET_VALUE_CMD _T("/"),SET_VALUE_CMD_LENGTH+1*sizeof(TCHAR)) == 0)
 		return TRUE;
-	if (_tcsnicmp(pchCommand,SET_VALUE_CMD _T("\\"),SET_VALUE_CMD_LENGTH+1*sizeof(TCHAR)) == 0)
+	if (_tcsnicmp(pszCommand,SET_VALUE_CMD _T("\\"),SET_VALUE_CMD_LENGTH+1*sizeof(TCHAR)) == 0)
 		return TRUE;
 	return FALSE;
 }
 
 int CShellCommandSetValue::Execute(CConsole &rConsole, CArgumentParser& rArguments)
 {
+  LONG nError;
+  
 	rArguments.ResetArgumentIteration();
-	TCHAR *pchCommandItself = rArguments.GetNextArgument();
+	TCHAR *pszCommandItself = rArguments.GetNextArgument();
 
-	TCHAR *pchParameter;
-	TCHAR *pchValueFull = NULL;
-	TCHAR *pchValueData = NULL;
+	TCHAR *pszParameter;
+	TCHAR *pszValueFull = NULL;
+	TCHAR *pszValueData = NULL;
 	BOOL blnBadParameter = FALSE;
 	BOOL blnHelp = FALSE;
-//	DWORD dwError;
 	DWORD dwValueSize = 0;
 	DWORD dwType = REG_NONE;
 	BYTE *pDataBuffer = NULL;
 
-	if ((_tcsnicmp(pchCommandItself,SET_VALUE_CMD _T(".."),SET_VALUE_CMD_LENGTH+2*sizeof(TCHAR)) == 0)||
-		(_tcsnicmp(pchCommandItself,SET_VALUE_CMD _T("\\"),SET_VALUE_CMD_LENGTH+1*sizeof(TCHAR)) == 0))
+	if ((_tcsnicmp(pszCommandItself,SET_VALUE_CMD _T(".."),SET_VALUE_CMD_LENGTH+2*sizeof(TCHAR)) == 0)||
+		(_tcsnicmp(pszCommandItself,SET_VALUE_CMD _T("\\"),SET_VALUE_CMD_LENGTH+1*sizeof(TCHAR)) == 0))
 	{
-		pchValueFull = pchCommandItself + SET_VALUE_CMD_LENGTH;
+		pszValueFull = pszCommandItself + SET_VALUE_CMD_LENGTH;
 	}
-	else if (_tcsnicmp(pchCommandItself,SET_VALUE_CMD _T("/"),SET_VALUE_CMD_LENGTH+1*sizeof(TCHAR)) == 0)
+	else if (_tcsnicmp(pszCommandItself,SET_VALUE_CMD _T("/"),SET_VALUE_CMD_LENGTH+1*sizeof(TCHAR)) == 0)
 	{
-		pchParameter = pchCommandItself + SET_VALUE_CMD_LENGTH;
+		pszParameter = pszCommandItself + SET_VALUE_CMD_LENGTH;
 		goto CheckValueArgument;
 	}
 
-	while((pchParameter = rArguments.GetNextArgument()) != NULL)
+	while((pszParameter = rArguments.GetNextArgument()) != NULL)
 	{
 CheckValueArgument:
 		blnBadParameter = FALSE;
-		if (((*pchParameter == _T('/'))||(*pchParameter == _T('-')))
-			&&(*(pchParameter+1) == _T('?')))
+		if (((*pszParameter == _T('/'))||(*pszParameter == _T('-')))
+			&&(*(pszParameter+1) == _T('?')))
 		{
 			blnHelp = TRUE;
 		}
 		else if (dwType == REG_NONE)
 		{
-			if (_tcsicmp(pchParameter,_T("b")) == 0)
+			if (_tcsicmp(pszParameter,_T("b")) == 0)
 			{
 				dwType = REG_BINARY;
 			}
-			else if (_tcsicmp(pchParameter,_T("dw")) == 0)
+			else if (_tcsicmp(pszParameter,_T("dw")) == 0)
 			{
 				dwType = REG_DWORD;
 			}
-			else if (_tcsicmp(pchParameter,_T("dwle")) == 0)
+			else if (_tcsicmp(pszParameter,_T("dwle")) == 0)
 			{
 				dwType = REG_DWORD_LITTLE_ENDIAN;
 			}
-			else if (_tcsicmp(pchParameter,_T("dwbe")) == 0)
+			else if (_tcsicmp(pszParameter,_T("dwbe")) == 0)
 			{
 				dwType = REG_DWORD_BIG_ENDIAN;
 			}
-			else if (_tcsicmp(pchParameter,_T("sz")) == 0)
+			else if (_tcsicmp(pszParameter,_T("sz")) == 0)
 			{
 				dwType = REG_SZ;
 			}
-			else if (_tcsicmp(pchParameter,_T("esz")) == 0)
+			else if (_tcsicmp(pszParameter,_T("esz")) == 0)
 			{
 				dwType = REG_EXPAND_SZ;
 			}
@@ -183,13 +184,13 @@ CheckValueArgument:
 				blnBadParameter = TRUE;
 			}
 		}
-		else if (pchValueData == NULL)
+		else if (pszValueData == NULL)
 		{
-			pchValueData = pchParameter;
+			pszValueData = pszParameter;
 		}
-		else if (!pchValueFull)
+		else if (!pszValueFull)
 		{
-			pchValueFull = pchParameter;
+			pszValueFull = pszParameter;
 		}
 		else
 		{
@@ -198,18 +199,17 @@ CheckValueArgument:
 		if (blnBadParameter)
 		{
 			rConsole.Write(_T("Bad parameter: "));
-			rConsole.Write(pchParameter);
+			rConsole.Write(pszParameter);
 			rConsole.Write(_T("\n"));
 		}
 	}
 
-	if (!pchValueData)
+	if (!pszValueData)
 		blnHelp = TRUE;
 	
-	CRegistryTree *pTree = NULL;
-	CRegistryKey *pKey = NULL;
-	TCHAR *pchValueName;
-	TCHAR *pchPath;
+	CRegistryKey Key;
+	TCHAR *pszValueName;
+	const TCHAR *pszPath;
 	
 	if (blnHelp)
 	{
@@ -221,19 +221,19 @@ CheckValueArgument:
 		return 0;
 	}
 
-	if (pchValueFull)
+	if (pszValueFull)
 	{
-		if (_tcscmp(pchValueFull,_T("\\")) == 0)
+		if (_tcscmp(pszValueFull,_T("\\")) == 0)
 			goto CommandNAonRoot;
 
-		TCHAR *pchSep = _tcsrchr(pchValueFull,_T('\\'));
-		pchValueName = pchSep?(pchSep+1):(pchValueFull);
-		pchPath = pchSep?pchValueFull:NULL;
+		TCHAR *pchSep = _tcsrchr(pszValueFull,_T('\\'));
+		pszValueName = pchSep?(pchSep+1):(pszValueFull);
+		pszPath = pchSep?pszValueFull:_T(".");
 				
-		//if (_tcsrchr(pchValueName,_T('.')))
+		//if (_tcsrchr(pszValueName,_T('.')))
 		//{
-		//	pchValueName = _T("");
-		//	pchPath = pchValueFull;
+		//	pszValueName = _T("");
+		//	pszPath = pszValueFull;
 		//}
 		//else
 		if (pchSep)
@@ -241,131 +241,130 @@ CheckValueArgument:
 	}
 	else
 	{
-		pchValueName = _T("");
-		pchPath = NULL;
+		pszValueName = _T("");
+		pszPath = _T(".");
 	}
 		
-	if (pchPath)
-	{
-		pTree = new CRegistryTree(m_rTree);
-		if ((_tcscmp(pTree->GetCurrentPath(),m_rTree.GetCurrentPath()) != 0)
-			||(!pTree->ChangeCurrentKey(pchPath)))
-		{
-			rConsole.Write(_T("Cannot open key "));
-			rConsole.Write(pchPath);
-			rConsole.Write(_T("\n"));
-			goto SkipCommand;
-		}
-		else
-		{
-			pKey = pTree->GetCurrentKey();
-		}
-	}
-	else
-	{
-		pKey = m_rTree.GetCurrentKey();
-	}
+  if (!m_rTree.GetKey(pszPath,KEY_SET_VALUE,Key))
+  {
+    rConsole.Write(m_rTree.GetLastErrorDescription());
+    goto SkipCommand;
+  }
 	
-	if (pKey)
-	{	// not root key ???
-		switch (dwType)
-		{
-		case REG_BINARY:
-			{
-				HANDLE hFile;
-				DWORD dwBytesReaded;
-				hFile = CreateFile(pchValueData,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,0,NULL);
-				if (hFile == INVALID_HANDLE_VALUE)
-				{
-					rConsole.Write(_T("Cannot open file "));
-					rConsole.Write(pchValueData);
-					rConsole.Write(_T("\n"));
-					goto SkipCommand;
-				}
-				dwValueSize = GetFileSize(hFile,NULL);
-				if (dwValueSize == -1)	// ok, that's right, we compare signed with unsigned here.
-										// GetFileSize is documented and declared to return DWORD.
-										// Error is indicated by checking if return is -1. Design->documentation bug ???
-				{
-					rConsole.Write(_T("Cannot get size of file "));
-					rConsole.Write(pchValueData);
-					rConsole.Write(_T("\n"));
-					VERIFY(CloseHandle(hFile));
-					goto SkipCommand;
-				}
-				pDataBuffer = new BYTE [dwValueSize];
-				if (!pDataBuffer)
-				{
-					rConsole.Write(_T("Cannot load file into memory. Out of memory.\n"));
-					VERIFY(CloseHandle(hFile));
-					goto SkipCommand;
-				}
-				if (!ReadFile(hFile,pDataBuffer,dwValueSize,&dwBytesReaded,NULL))
-				{
-					rConsole.Write(_T("Cannot load file into memory. Error reading file.\n"));
-					VERIFY(CloseHandle(hFile));
-					goto SkipCommand;
-				}
+	if (Key.IsRoot())
+    goto CommandNAonRoot;
+  
+  switch (dwType)
+  {
+  case REG_BINARY:
+    {
+      HANDLE hFile;
+      DWORD dwBytesReaded;
+      hFile = CreateFile(pszValueData,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,0,NULL);
+      if (hFile == INVALID_HANDLE_VALUE)
+      {
+        rConsole.Write(_T("Cannot open file "));
+        rConsole.Write(pszValueData);
+        rConsole.Write(_T("\n"));
+        goto SkipCommand;
+      }
+      dwValueSize = GetFileSize(hFile,NULL);
+      if (dwValueSize == (DWORD)-1)	// ok, that's right, we compare signed with unsigned here.
+        // GetFileSize is documented and declared to return DWORD.
+        // Error is indicated by checking if return is -1. Design->documentation bug ???
+      {
+        rConsole.Write(_T("Cannot get size of file "));
+        rConsole.Write(pszValueData);
+        rConsole.Write(_T("\n"));
+        VERIFY(CloseHandle(hFile));
+        goto SkipCommand;
+      }
+      pDataBuffer = new BYTE [dwValueSize];
+      if (!pDataBuffer)
+      {
+        rConsole.Write(_T("Cannot load file into memory. Out of memory.\n"));
+        VERIFY(CloseHandle(hFile));
+        goto SkipCommand;
+      }
+      if (!ReadFile(hFile,pDataBuffer,dwValueSize,&dwBytesReaded,NULL))
+      {
+        rConsole.Write(_T("Cannot load file into memory. Error reading file.\n"));
+        VERIFY(CloseHandle(hFile));
+        goto SkipCommand;
+      }
 
-				VERIFY(CloseHandle(hFile));
-				ASSERT(dwBytesReaded == dwValueSize);
-			}
-			break;
-		case REG_DWORD_LITTLE_ENDIAN:
-		case REG_DWORD_BIG_ENDIAN:
-			dwValueSize = 4;
-			pDataBuffer = (BYTE *) new BYTE [dwValueSize];
-			if (!StringToDWORD(*(DWORD *)pDataBuffer,pchValueData))
-			{
-				rConsole.Write(_T("Cannot convert "));
-				rConsole.Write(pchValueData);
-				rConsole.Write(_T(" to DWORD \n"));
-				goto SkipCommand;
-			}
-			if (dwType == REG_DWORD_BIG_ENDIAN)
-			{
-				unsigned char nByte;
-				nByte = *pDataBuffer;
-				*pDataBuffer = *(pDataBuffer+3);
-				*(pDataBuffer+3) = nByte;
-				nByte = *(pDataBuffer+1);
-				*(pDataBuffer+1) = *(pDataBuffer+2);
-				*(pDataBuffer+2) = nByte;
-			}
-			break;
-		case REG_SZ:
-		case REG_EXPAND_SZ:
-			dwValueSize = _tcslen(pchValueData)+1;
-			if (*pchValueData == _T('\"'))
-			{
-				dwValueSize -= 2;
-				*(pchValueData+dwValueSize) = 0;
-				pchValueData++;
-			}
-			dwValueSize *= sizeof(TCHAR);
-			pDataBuffer = (BYTE *) new BYTE [dwValueSize];
-			_tcscpy((TCHAR *)pDataBuffer,pchValueData);
-			break;
-		default:
-			ASSERT(FALSE);
-		}
+      VERIFY(CloseHandle(hFile));
+      ASSERT(dwBytesReaded == dwValueSize);
+    }
+    break;
+  case REG_DWORD_LITTLE_ENDIAN:
+  case REG_DWORD_BIG_ENDIAN:
+    dwValueSize = 4;
+    pDataBuffer = (BYTE *) new BYTE [dwValueSize];
+    if (!StringToDWORD(*(DWORD *)pDataBuffer,pszValueData))
+    {
+      rConsole.Write(_T("Cannot convert "));
+      rConsole.Write(pszValueData);
+      rConsole.Write(_T(" to DWORD \n"));
+      goto SkipCommand;
+    }
+    if (dwType == REG_DWORD_BIG_ENDIAN)
+    {
+      unsigned char nByte;
+      nByte = *pDataBuffer;
+      *pDataBuffer = *(pDataBuffer+3);
+      *(pDataBuffer+3) = nByte;
+      nByte = *(pDataBuffer+1);
+      *(pDataBuffer+1) = *(pDataBuffer+2);
+      *(pDataBuffer+2) = nByte;
+    }
+    break;
+  case REG_SZ:
+  case REG_EXPAND_SZ:
+    dwValueSize = _tcslen(pszValueData)+1;
+    if (*pszValueData == _T('\"'))
+    {
+      dwValueSize -= 2;
+      *(pszValueData+dwValueSize) = 0;
+      pszValueData++;
+    }
+    dwValueSize *= sizeof(TCHAR);
+    pDataBuffer = (BYTE *) new BYTE [dwValueSize];
+    _tcscpy((TCHAR *)pDataBuffer,pszValueData);
+    break;
+  default:
+    ASSERT(FALSE);
+  }
 
-		if (pKey->SetValue(pchValueName,dwType,pDataBuffer,dwValueSize) != ERROR_SUCCESS)
-			rConsole.Write(_T("Cannot set value\n"));
-	} // if (pKey)
-	else
-	{
-CommandNAonRoot:
-		rConsole.Write(SET_VALUE_CMD COMMAND_NA_ON_ROOT);
-	}
+  {
+    size_t s = _tcslen(pszValueName);
+    if (s && (pszValueName[0] == _T('\"'))&&(pszValueName[s-1] == _T('\"')))
+    {
+      pszValueName[s-1] = 0;
+      pszValueName++;
+    }
+  }
+
+  nError = Key.SetValue(pszValueName,dwType,pDataBuffer,dwValueSize);
+  if (nError != ERROR_SUCCESS)
+  {
+    char Buffer[254];
+    _stprintf(Buffer,_T("Cannot set value. Error is %u\n"),(unsigned int)nError);
+    rConsole.Write(Buffer);
+  }
+  else
+  {
+    InvalidateCompletion();
+  }
 
 SkipCommand:
-	if (pTree)
-		delete pTree;
-
 	if (pDataBuffer)
 		delete pDataBuffer;
 	return 0;
+
+CommandNAonRoot:
+  rConsole.Write(SET_VALUE_CMD COMMAND_NA_ON_ROOT);
+  return 0;
 }
 
 const TCHAR * CShellCommandSetValue::GetHelpString()

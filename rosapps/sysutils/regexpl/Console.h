@@ -6,9 +6,7 @@
 #define CONSOLE_H__FEF419EC_6EB6_11D3_907D_204C4F4F5020__INCLUDED_
 
 #include "TextHistory.h"
-
-typedef const TCHAR * (*ReplaceCompletionCallback)(unsigned __int64& rnIndex, const BOOL *pblnForward,
-												   const TCHAR *pchContext, const TCHAR *pchBegin);
+#include "Completion.h"
 
 class CConsole  
 {
@@ -29,6 +27,7 @@ public:
 	BOOL Write(const TCHAR *p, DWORD dwChars = 0);
 	CConsole();
 	virtual ~CConsole();
+  unsigned int GetTabWidth();
 private:
 	HANDLE m_hStdOut;
 	HANDLE m_hStdIn;

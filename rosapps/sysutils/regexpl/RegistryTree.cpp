@@ -1,4 +1,4 @@
-/* $Id: RegistryTree.cpp,v 1.2 2000/10/24 20:17:41 narnaoud Exp $
+/* $Id: RegistryTree.cpp,v 1.3 2001/01/10 01:25:29 narnaoud Exp $
  *
  * regexpl - Console Registry Explorer
  *
@@ -21,37 +21,44 @@
  */
 
 // RegistryTree.cpp: implementation of the CRegistryTree class.
-//
-//////////////////////////////////////////////////////////////////////
 
 #include "ph.h"
 #include "RegistryTree.h"
+#include "Pattern.h"
+#include "RegistryExplorer.h"
 
-//////////////////////////////////////////////////////////////////////
-// Construction/Destruction
-//////////////////////////////////////////////////////////////////////
-
-CRegistryTree::CRegistryTree(unsigned int nMaxPathSize)
+CRegistryTree::CRegistryTree()
 {
 	m_pszMachineName = NULL;
-	m_samDesiredOpenKeyAccess = 0;
-	m_pCurrentKey = m_pRoot = NULL;
+  VERIFY(SUCCEEDED(m_Root.m_Key.InitRoot()));
+  m_Root.m_pUp = NULL;
+	m_pCurrentKey = &m_Root;
+  ASSERT(m_pCurrentKey->m_Key.IsRoot());
 	m_ErrorMsg[ERROR_MSG_BUFFER_SIZE] = 0;
-	m_ChangeKeyBuffer = new TCHAR[nMaxPathSize];
-//#ifdef _DEBUG
-	m_nMaxPathSize = nMaxPathSize;
-//#endif
 }
 
 CRegistryTree::CRegistryTree(const CRegistryTree& Tree)
 {
 	m_pszMachineName = NULL;
-	m_samDesiredOpenKeyAccess = Tree.GetDesiredOpenKeyAccess();
-	m_pCurrentKey = m_pRoot = NULL;
-	m_ErrorMsg[ERROR_MSG_BUFFER_SIZE] = 0;
-	m_ChangeKeyBuffer = new TCHAR[m_nMaxPathSize = Tree.m_nMaxPathSize];
-	_tcscpy(m_ChangeKeyBuffer,Tree.GetCurrentPath());
-	ChangeCurrentKey(m_ChangeKeyBuffer);
+  VERIFY(SUCCEEDED(m_Root.m_Key.InitRoot()));
+  m_Root.m_pUp = NULL;
+	m_pCurrentKey = &m_Root;
+  ASSERT(m_pCurrentKey->m_Key.IsRoot());
+
+  const TCHAR *pszPath = Tree.GetCurrentPath();
+  if ((pszPath[0] == _T('\\')) && (pszPath[1] == _T('\\')))
+  { // path has machine name
+    pszPath += 2;
+    while (*pszPath && (*pszPath != _T('\\')))
+      pszPath++;
+    
+    ASSERT(*pszPath == _T('\\')); // if path begins with \\ it must be followed by machine name
+  }
+
+  if (Tree.m_pszMachineName)
+    SetMachineName(Tree.m_pszMachineName);
+  
+  VERIFY(ChangeCurrentKey(pszPath));
 }
 
 CRegistryTree::~CRegistryTree()
@@ -59,388 +66,574 @@ CRegistryTree::~CRegistryTree()
 	if (m_pszMachineName)
 		delete m_pszMachineName;
 
-	CRegistryKey *pNode;
-	while(m_pRoot)
+	CNode *pNode;
+	while(m_pCurrentKey->m_pUp)
 	{
-		pNode = m_pRoot;
-		m_pRoot = m_pRoot->GetChild();
+		pNode = m_pCurrentKey;
+		m_pCurrentKey = m_pCurrentKey->m_pUp;
 		delete pNode;
 	}
 
-	delete [] m_ChangeKeyBuffer;
+  // We are on root
+  ASSERT(m_pCurrentKey->m_Key.IsRoot());
+  ASSERT(m_pCurrentKey == &m_Root);
 }
 
 const TCHAR * CRegistryTree::GetCurrentPath() const
 {
-	ASSERT(m_nMaxPathSize > 0);
-	unsigned int nBufferSize = m_nMaxPathSize;
-	CRegistryKey *pNode = m_pRoot;
-
-	nBufferSize--;
-	m_ChangeKeyBuffer[nBufferSize] = 0;
-
-	TCHAR *pchCurrentOffset = m_ChangeKeyBuffer;
-
-	if (m_pszMachineName)
-	{
-		size_t m = _tcslen(m_pszMachineName+2);
-		if (m > nBufferSize)
-		{	// No enough space in buffer to store machine name
-			ASSERT(FALSE);
-		}
-		else
-		{
-			_tcscpy(pchCurrentOffset,m_pszMachineName+2);
-			pchCurrentOffset += m;
-			nBufferSize -= m;
-		}
-	}
-
-	if (2 > nBufferSize)
-	{	// No enough space in buffer to store '\\'
-		ASSERT(FALSE);
-	}
-	else
-	{
-		*pchCurrentOffset = _T('\\');
-		pchCurrentOffset++;
-		nBufferSize--;
-	}
-
-	while(pNode)
-	{
-		TCHAR *pchKeyName = pNode->GetKeyName();
-		unsigned int nKeyNameLength = _tcslen(pchKeyName);
-		if ((nKeyNameLength+1) > nBufferSize)
-		{	// No enough space in buffer to store key name + '\\'
-			ASSERT(FALSE);
-			break;
-		}
-		_tcscpy(pchCurrentOffset,pchKeyName);
-		pchCurrentOffset[nKeyNameLength] = '\\';
-		pchCurrentOffset += nKeyNameLength+1;
-		nBufferSize -= nKeyNameLength+1;
-		pNode = pNode->GetChild();
-	}
-	*pchCurrentOffset = 0;
-	return m_ChangeKeyBuffer;
+  return m_pCurrentKey->m_Key.GetKeyName();
 }
 
 BOOL CRegistryTree::IsCurrentRoot()
 {
-	return m_pRoot == NULL;
+	return m_pCurrentKey->m_Key.IsRoot();
 }
 
-// returns TRUE on success and FALSE on fail
-// on fail, extended information can be received  by calling GetLastErrorDescription();
-BOOL CRegistryTree::ChangeCurrentKey(const TCHAR *pchRelativePath)
+BOOL CRegistryTree::ChangeCurrentKey(const TCHAR *pszRelativePath)
 {
-	if (*pchRelativePath == _T('\\'))
+  if (*pszRelativePath == _T('\\'))
+    GotoRoot();  // This is full absolute path.
+
+  // split path to key names.
+	TCHAR *pszSeps = _T("\\");
+
+  // Make buffer and copy relative path into it.
+  TCHAR *pszBuffer = new TCHAR[_tcslen(pszRelativePath)+1];
+  if (!pszBuffer)
+  {
+    SetError(ERROR_OUTOFMEMORY);
+    return FALSE;
+  }
+
+	_tcscpy(pszBuffer,pszRelativePath);
+
+  // We accept names in form "\"blablabla\\blab  labla\"\\"
+  size_t size = _tcslen(pszBuffer);
+  if (size)
+  {
+    if (pszBuffer[size-1] == _T('\\'))
+      pszBuffer[--size] = 0;
+      
+    if ((*pszBuffer == _T('\"'))&&(pszBuffer[size-1] == _T('\"')))
+    {
+      size--;
+      pszBuffer[size] = 0;	LONG ConnectRegistry(HKEY hKey);
+
+      pszBuffer++;
+    }
+  }
+
+	TCHAR *pszNewKey = _tcstok(pszBuffer,pszSeps);
+
+	if ((!pszNewKey)&&((*pszRelativePath != _T('\\'))||(*(pszRelativePath+1) != 0)))
 	{
-		CRegistryKey *pNode;
-		while(m_pRoot)
-		{
-			pNode = m_pRoot;
-			m_pRoot = m_pRoot->GetChild();
-			delete pNode;
-		}
-		m_pCurrentKey = NULL;
-	}
-	TCHAR *pchSeps = _T("\\");
-
-	ASSERT(_tcslen(pchRelativePath) <= m_nMaxPathSize);
-	_tcscpy(m_ChangeKeyBuffer,pchRelativePath);
-
-	TCHAR *pchNewKey = _tcstok(m_ChangeKeyBuffer,pchSeps);
-
-	if ((!pchNewKey)&&((*pchRelativePath != _T('\\'))||(*(pchRelativePath+1) != 0)))
-	{
-		_tcscpy(m_ErrorMsg,_T("Invalid key name"));
-		return FALSE;
+		SetError(_T("Invalid key name"));
+		goto Abort;
 	};
-	while (pchNewKey)
+
+  // change keys
+	while (pszNewKey)
 	{
-		HKEY hNewKey;
-		if (m_pRoot == NULL)
-		{	// if this is the root key there are limations
-			if ((_tcsicmp(pchNewKey,_T("HKCR")) == 0)||
-				(_tcsicmp(pchNewKey,_T("HKEY_CLASSES_ROOT")) == 0))
-			{
-				hNewKey = HKEY_CLASSES_ROOT;
-			}
-			else if ((_tcsicmp(pchNewKey,_T("HKCU")) == 0)||
-				(_tcsicmp(pchNewKey,_T("HKEY_CURRENT_USER")) == 0))
-			{
-				hNewKey = HKEY_CURRENT_USER;
-			}
-			else if ((_tcsicmp(pchNewKey,_T("HKLM")) == 0)||
-				(_tcsicmp(pchNewKey,_T("HKEY_LOCAL_MACHINE")) == 0))
-			{
-				hNewKey = HKEY_LOCAL_MACHINE;
-			}
-			else if ((_tcsicmp(pchNewKey,_T("HKU")) == 0)||
-				(_tcsicmp(pchNewKey,_T("HKEY_USERS")) == 0))
-			{
-				hNewKey = HKEY_USERS;
-			}
-			else if ((_tcsicmp(pchNewKey,_T("HKPD")) == 0)||
-				(_tcsicmp(pchNewKey,_T("HKEY_PERFORMANCE_DATA")) == 0))
-			{
-				hNewKey = HKEY_PERFORMANCE_DATA;
-			}
-			else if ((_tcsicmp(pchNewKey,_T("HKDD")) == 0)||
-				(_tcsicmp(pchNewKey,_T("HKEY_DYN_DATA")) == 0))
-			{
-				hNewKey = HKEY_DYN_DATA;
-			}
-			else if ((_tcsicmp(pchNewKey,_T("HKCC")) == 0)||
-				(_tcsicmp(pchNewKey,_T("HKEY_CURRENT_CONFIG")) == 0))
-			{
-				hNewKey = HKEY_CURRENT_CONFIG;
-			}
-			else
-			{
-				_tcscpy(m_ErrorMsg,_T("Invalid key name."));
-				return FALSE;
-			}
-			// Ok. Key to open is in hNewKey
+    if (!InternalChangeCurrentKey(pszNewKey,KEY_READ))
+      goto Abort;  // InternalChangeCurrentKey sets last error description
 
-			int nErr = ConnectRegistry(hNewKey);
-			if (nErr)
-			{
-				_stprintf(m_ErrorMsg,_T("Cannot connect registry. Error is %d"),nErr);
-				return FALSE;
-			}
-		}	// if (m_pRoot == NULL)
-		else
-		{	// current key is not root key
-			if (_tcsicmp(pchNewKey,_T("..")) == 0)
-			{
-				m_pCurrentKey = m_pCurrentKey->UpOneLevel();
-				if (m_pCurrentKey == NULL)
-				{
-					m_pRoot = NULL;
-				}
-			}
-			else
-			{	// Normal key name
-				CRegistryKey *pNewKey = new CRegistryKey(pchNewKey,m_pCurrentKey);
-				//RegOpenKeyExW(*m_pCurrentKey,pchNewKey,0,KEY_EXECUTE,&hNewKey)
-				DWORD dwError = pNewKey->Open(m_samDesiredOpenKeyAccess);
-				if (dwError != ERROR_SUCCESS)
-				{
-					TCHAR *pchPreErrorMsg = _T("Cannot open key : "), *pchCurrentOffset = m_ErrorMsg;
-					_tcscpy(pchCurrentOffset,pchPreErrorMsg);
-					pchCurrentOffset += _tcslen(pchPreErrorMsg);
-
-					_tcscpy(pchCurrentOffset,pchNewKey);
-					pchCurrentOffset += _tcslen(pchNewKey);
-
-					TCHAR *pchMsg = _T("\nError ");
-					_tcscpy(pchCurrentOffset,pchMsg);
-					pchCurrentOffset += _tcslen(pchMsg);
-
-					TCHAR Buffer[256];
-					_tcscpy(pchCurrentOffset,_itot(dwError,Buffer,10));
-					pchCurrentOffset += _tcslen(Buffer);
-
-					pchMsg = _T("\n");
-					_tcscpy(pchCurrentOffset,pchMsg);
-					pchCurrentOffset += _tcslen(pchMsg);
-					switch(dwError)
-					{
-					case 5:
-						pchMsg = _T("(Access denied)");
-						break;
-					case 2:
-						pchMsg = _T("(The system cannot find the key specified)");
-						break;
-					}
-
-					_tcscpy(pchCurrentOffset,pchMsg);
-					pchCurrentOffset += _tcslen(pchMsg);
-
-					delete pNewKey;
-
-					return FALSE;
-				}
-				pNewKey->LinkParent();
-				m_pCurrentKey = pNewKey;
-			}
-		}
 		// Get next key name
-		pchNewKey = _tcstok(NULL,pchSeps);
+		pszNewKey = _tcstok(NULL,pszSeps);
 	}
+  
 	return TRUE;
+
+Abort:
+  delete pszBuffer;
+  return FALSE;
 }
 
-TCHAR * CRegistryTree::GetLastErrorDescription()
+const TCHAR * CRegistryTree::GetLastErrorDescription()
 {
 	return m_ErrorMsg;
 }
 
-CRegistryKey * CRegistryTree::GetCurrentKey()
+void CRegistryTree::GotoRoot()
 {
-	return m_pCurrentKey;
+  // Delete current tree
+  CNode *pNode;
+  while(m_pCurrentKey->m_pUp)
+  {
+    pNode = m_pCurrentKey;
+    m_pCurrentKey = m_pCurrentKey->m_pUp;
+    delete pNode;
+  }
+
+  // We are on root
+  ASSERT(m_pCurrentKey->m_Key.IsRoot());
+  ASSERT(m_pCurrentKey == &m_Root);
 }
 
-void CRegistryTree::SetDesiredOpenKeyAccess(REGSAM samDesired)
+BOOL CRegistryTree::SetMachineName(LPCTSTR pszMachineName)
 {
-	m_samDesiredOpenKeyAccess = samDesired;
+  GotoRoot();
+  
+  // If we are going to local machine...
+  if (pszMachineName == NULL)
+  {
+    // Delete previous machine name buffer if allocated.
+    if (m_pszMachineName)
+      delete m_pszMachineName;
+    
+    m_pszMachineName = NULL;
+    m_Root.m_Key.InitRoot();
+    return TRUE;
+  }
+
+  // Skip leading backslashes if any.
+  while ((*pszMachineName)&&(*pszMachineName == _T('\\')))
+    pszMachineName++;
+
+  ASSERT(*pszMachineName);      // No machine name.
+
+  TCHAR *pszNewMachineName = new TCHAR[_tcslen(pszMachineName)+3]; // two leading backslashes + terminating null
+
+  if (!pszMachineName)
+  {
+    SetError(ERROR_OUTOFMEMORY);
+    return FALSE;
+  }
+    
+  // Delete previous machine name buffer if allocated.
+  if (m_pszMachineName)
+    delete m_pszMachineName;
+  
+  m_pszMachineName = pszNewMachineName;
+  
+  _tcscpy(m_pszMachineName,_T("\\\\")); // leading backslashes
+  _tcscpy(m_pszMachineName+2,pszMachineName); // machine name itself
+  _tcsupr(m_pszMachineName+2);  // upercase it
+  
+  VERIFY(SUCCEEDED(m_Root.m_Key.InitRoot(m_pszMachineName)));
+  return TRUE;
 }
 
-REGSAM CRegistryTree::GetDesiredOpenKeyAccess() const
+BOOL CRegistryTree::NewKey(const TCHAR *pszKeyName, const TCHAR *pszPath, BOOL blnVolatile)
 {
-	return m_samDesiredOpenKeyAccess;
-}
+  if (!m_pCurrentKey)
+  {
+    SetErrorCommandNAOnRoot(_T("Creating new key "));
+    return FALSE;
+  }
 
-int CRegistryTree::ConnectRegistry(HKEY hKey)
-{
-	CRegistryKey *pKey = new CRegistryKey(hKey,m_pszMachineName);
-	int ret = pKey->Open(m_samDesiredOpenKeyAccess);
-
-	if (ret == 0)
+  CRegistryTree Tree(*this);
+	if (!Tree.ChangeCurrentKey(pszPath))
+  {
+    SetError(Tree.GetLastErrorDescription());
+    return FALSE;
+  }
+  
+	BOOL blnOpened;
+  HKEY hKey;
+  
+	LONG nError = Tree.m_pCurrentKey->m_Key.CreateSubkey(KEY_READ,
+                                                       pszKeyName,
+                                                       hKey,
+                                                       &blnOpened,
+                                                       blnVolatile);
+  if (nError == ERROR_SUCCESS)
+  {
+    LONG nError = RegCloseKey(hKey);
+    ASSERT(nError == ERROR_SUCCESS);
+  }
+  
+	if ((nError == ERROR_SUCCESS) && blnOpened)
 	{
-		CRegistryKey *pNode;
-		while(m_pRoot)
-		{
-			pNode = m_pRoot;
-			m_pRoot = m_pRoot->GetChild();
-			delete pNode;
-		}
-		m_pCurrentKey = NULL;
-		m_pRoot = m_pCurrentKey = pKey;
+		SetError(_T("A key \"%s\" already exists."),pszKeyName);
+    return FALSE;
 	}
-	else
+  
+	if (nError != ERROR_SUCCESS)
 	{
-		delete pKey;
+		SetError(_T("Cannot create key : %s%s\nError %d (%s)\n"),
+             GetCurrentPath(),pszKeyName,nError,GetErrorDescription(nError));
+    
+    return FALSE;
 	}
-
-	return ret;
-}
-
-void CRegistryTree::SetMachineName(LPCTSTR pszMachineName)
-{
-	if (m_pszMachineName)
-		delete m_pszMachineName;
-
-	if (pszMachineName == NULL)
-	{
-		m_pszMachineName = NULL;
-		return;
-	}
-
-	while ((*pszMachineName)&&(*pszMachineName == _T('\\')))
-		pszMachineName++;
-
-	if (*pszMachineName == 0)
-	{
-		ASSERT(FALSE);
-	}
-
-	m_pszMachineName = new TCHAR[_tcslen(pszMachineName)+3];
-	_tcscpy(m_pszMachineName,_T("\\\\"));
-	_tcscpy(m_pszMachineName+2,pszMachineName);
-	_tcsupr(m_pszMachineName+2);
-}
-
-BOOL CRegistryTree::NewKey(const TCHAR *pchKeyName, BOOL blnVolatile)
-{
-	CRegistryKey *pNewKey = new CRegistryKey(pchKeyName,m_pCurrentKey);
-	DWORD dwDisposition;
-	DWORD dwError = pNewKey->Create(0,&dwDisposition,blnVolatile);
-	switch (dwDisposition)
-	{
-	case REG_OPENED_EXISTING_KEY:
-		_sntprintf(m_ErrorMsg,ERROR_MSG_BUFFER_SIZE,_T("A key \"%s\" already exists."),pchKeyName);
-		delete pNewKey;
-		return FALSE;
-	case REG_CREATED_NEW_KEY:
-		break;
-	default:
-		ASSERT(FALSE);
-	}
-	if (dwError != ERROR_SUCCESS)
-	{
-		TCHAR *pchCurrentOffset = m_ErrorMsg;
-		TCHAR *pchPreErrorMsg = _T("Cannot create key : ");
-		_tcscpy(pchCurrentOffset,pchPreErrorMsg);
-		pchCurrentOffset += _tcslen(pchPreErrorMsg);
-
-		_tcscpy(pchCurrentOffset,pchKeyName);
-		pchCurrentOffset += _tcslen(pchKeyName);
-
-		TCHAR *pchMsg = _T("\nError ");
-		_tcscpy(pchCurrentOffset,pchMsg);
-		pchCurrentOffset += _tcslen(pchMsg);
-
-		TCHAR Buffer[256];
-		_tcscpy(pchCurrentOffset,_itot(dwError,Buffer,10));
-		pchCurrentOffset += _tcslen(Buffer);
-
-		pchMsg = _T("\n");
-		_tcscpy(pchCurrentOffset,pchMsg);
-		pchCurrentOffset += _tcslen(pchMsg);
-		switch(dwError)
-		{
-		case 5:
-			pchMsg = _T("(Access denied)");
-			break;
-		case 2:
-			pchMsg = _T("(The system cannot find the key specified)");
-			break;
-		}
-
-		_tcscpy(pchCurrentOffset,pchMsg);
-		pchCurrentOffset += _tcslen(pchMsg);
-
-		delete pNewKey;
-
-		return FALSE;
-	}
-
-	delete pNewKey;
 
 	return TRUE;
 }
 
-BOOL CRegistryTree::DeleteKey(const TCHAR *pchKeyName, BOOL blnRecursive)
+BOOL CRegistryTree::DeleteSubkeys(const TCHAR *pszKeyPattern, const TCHAR *pszPath, BOOL blnRecursive)
 {
-	DWORD dwError = m_pCurrentKey->DeleteSubkey(pchKeyName,blnRecursive);
-	if (dwError != ERROR_SUCCESS)
-	{
-		TCHAR *pchPreErrorMsg = _T("Cannot open key : "), *pchCurrentOffset = m_ErrorMsg;
-		_tcscpy(pchCurrentOffset,pchPreErrorMsg);
-		pchCurrentOffset += _tcslen(pchPreErrorMsg);
-
-		_tcscpy(pchCurrentOffset,pchKeyName);
-		pchCurrentOffset += _tcslen(pchKeyName);
-
-		TCHAR *pchMsg = _T("\nError ");
-		_tcscpy(pchCurrentOffset,pchMsg);
-		pchCurrentOffset += _tcslen(pchMsg);
-
-		TCHAR Buffer[256];
-		_tcscpy(pchCurrentOffset,_itot(dwError,Buffer,10));
-		pchCurrentOffset += _tcslen(Buffer);
-
-		pchMsg = _T("\n");
-		_tcscpy(pchCurrentOffset,pchMsg);
-		pchCurrentOffset += _tcslen(pchMsg);
-		switch(dwError)
-		{
-		case 5:
-			pchMsg = _T("(Access denied)");
-			break;
-		case 2:
-			pchMsg = _T("(The system cannot find the key specified)");
-			break;
-		}
-
-		_tcscpy(pchCurrentOffset,pchMsg);
-		pchCurrentOffset += _tcslen(pchMsg);
-
-		return FALSE;
-	}
-	return TRUE;
+  CRegistryKey Key;
+  if (!GetKey(pszPath,KEY_QUERY_VALUE|KEY_ENUMERATE_SUB_KEYS|DELETE,Key))
+    return FALSE;
+  
+  return DeleteSubkeys(Key, pszKeyPattern, blnRecursive);
 }
+
+BOOL CRegistryTree::DeleteSubkeys(CRegistryKey& rKey, const TCHAR *pszKeyPattern, BOOL blnRecursive)
+{
+  LONG nError;
+
+  // enumerate subkeys
+  DWORD dwMaxSubkeyNameLength;
+  nError = rKey.GetSubkeyNameMaxLength(dwMaxSubkeyNameLength);
+  if (nError != ERROR_SUCCESS)
+  {
+    SetError(_T("Cannot delete subkeys(s) of key %s.\nRequesting info about key failed.\nError %d (%s)\n"),
+             rKey.GetKeyName(),nError,GetErrorDescription(nError));
+    return FALSE;
+  }
+
+  TCHAR *pszSubkeyName = new TCHAR [dwMaxSubkeyNameLength];
+  rKey.InitSubkeyEnumeration(pszSubkeyName, dwMaxSubkeyNameLength);
+  BOOL blnKeyDeleted = FALSE;
+  while ((nError = rKey.GetNextSubkeyName()) == ERROR_SUCCESS)
+  {
+    if (blnRecursive)
+    { // deltion is recursive, delete subkey subkeys
+      CRegistryKey Subkey;
+      // open subkey
+      nError = rKey.OpenSubkey(DELETE,pszSubkeyName,Subkey);
+      // delete subkey subkeys
+      if (DeleteSubkeys(Subkey, PATTERN_MATCH_ALL, TRUE))
+      {
+        AddErrorDescription(_T("Cannot delete subkey(s) of key %s. Subkey deletion failed.\n"),Subkey.GetKeyName());
+        return FALSE;
+      }
+    }
+
+    if (PatternMatch(pszKeyPattern,pszSubkeyName))
+    {
+      nError = rKey.DeleteSubkey(pszSubkeyName);
+      if (nError != ERROR_SUCCESS)
+      {
+        SetError(_T("Cannot delete the %s subkey of key %s.\nError %d (%s)\n"),
+                 pszSubkeyName,rKey.GetKeyName(),nError,GetErrorDescription(nError));
+    
+        return FALSE;
+      }
+      blnKeyDeleted = TRUE;
+    }
+  }
+
+  ASSERT(nError != ERROR_SUCCESS);
+  if (nError != ERROR_NO_MORE_ITEMS)
+  {
+    SetError(_T("Cannot delete subkeys(s) of key %s.\nSubkey enumeration failed.\nError %d (%s)\n"),
+             rKey.GetKeyName(),nError,GetErrorDescription(nError));
+    return FALSE;
+  }
+
+  if (!blnKeyDeleted)
+    SetError(_T("The key %s has no subkeys that match %s pattern.\n"),rKey.GetKeyName(),pszKeyPattern);
+
+  return blnKeyDeleted;
+}
+
+const TCHAR * CRegistryTree::GetErrorDescription(LONG nError)
+{
+  switch(nError)
+  {
+  case ERROR_ACCESS_DENIED:
+    return _T("Access denied");
+  case ERROR_FILE_NOT_FOUND:
+    return _T("The system cannot find the key specified");
+  case ERROR_INTERNAL_ERROR:
+    return _T("Internal error");
+  case ERROR_OUTOFMEMORY:
+    return _T("Out of memory");
+  default:
+    return _T("Unknown error");
+  }
+}
+
+void CRegistryTree::SetError(LONG nError)
+{
+  SetError(_T("Error %u (%s)"),nError,GetErrorDescription(nError));
+}
+
+void CRegistryTree::SetError(const TCHAR *pszFormat, ...)
+{
+  va_list args;
+  va_start(args,pszFormat);
+  if (_vsntprintf(m_ErrorMsg,ERROR_MSG_BUFFER_SIZE,pszFormat,args) < 0)
+    m_ErrorMsg[ERROR_MSG_BUFFER_SIZE] = 0;
+  va_end(args);
+}
+
+void CRegistryTree::SetInternalError()
+{
+  SetError(_T("Internal Error"));
+}
+
+void CRegistryTree::AddErrorDescription(const TCHAR *pszFormat, ...)
+{
+  size_t size = _tcslen(m_ErrorMsg);
+  if (size < ERROR_MSG_BUFFER_SIZE)
+  {
+    TCHAR *pszAdd = m_ErrorMsg+size;
+    va_list args;
+    va_start(args,pszFormat);
+    size = ERROR_MSG_BUFFER_SIZE-size;
+    if (_vsntprintf(pszAdd,size,pszFormat,args) < 0)
+      m_ErrorMsg[size] = 0;
+    va_end(args);
+  }
+}
+
+void CRegistryTree::SetErrorCommandNAOnRoot(const TCHAR *pszCommand)
+{
+  ASSERT(pszCommand);
+  if (pszCommand)
+    SetError(_T("%s") COMMAND_NA_ON_ROOT,pszCommand);
+  else
+    SetInternalError();
+}
+
+BOOL CRegistryTree::InternalChangeCurrentKey(const TCHAR *pszSubkeyName, REGSAM DesiredAccess)
+{
+  size_t size = _tcslen(pszSubkeyName);
+  TCHAR *pszSubkeyNameBuffer = new TCHAR[size+3];
+  if (!pszSubkeyNameBuffer)
+  {
+    SetError(_T("Cannot open key : %s%s\nError %d (%s)\n"),
+             GetCurrentPath(),pszSubkeyName,ERROR_OUTOFMEMORY,GetErrorDescription(ERROR_OUTOFMEMORY));
+  }
+
+  _tcscpy(pszSubkeyNameBuffer,pszSubkeyName);
+  if (size && (pszSubkeyName[0] == _T('\"')) && (pszSubkeyName[size-1] == _T('\"')))
+  {
+    pszSubkeyNameBuffer[size-1] = 0;
+    pszSubkeyName = pszSubkeyNameBuffer+1;
+  }
+  
+  if (_tcscmp(pszSubkeyName,_T(".")) == 0)
+  {
+    delete pszSubkeyNameBuffer;
+    return TRUE;
+  }
+
+  if (_tcscmp(pszSubkeyName,_T("..")) == 0)
+  {
+    // Up level abstraction
+    if (m_pCurrentKey->m_Key.IsRoot())
+    {
+      // We are on root
+      ASSERT(m_pCurrentKey->m_pUp == NULL);
+      SetError(_T("Cannot open key. The root is not child.\n"));
+      delete pszSubkeyNameBuffer;
+      return FALSE;
+    }
+      
+    ASSERT(m_pCurrentKey->m_pUp);
+    if (!m_pCurrentKey->m_pUp)
+    {
+      SetInternalError();
+      delete pszSubkeyNameBuffer;
+      return FALSE;
+    }
+    CNode *pNode = m_pCurrentKey;
+    m_pCurrentKey = m_pCurrentKey->m_pUp;
+    delete pNode;
+    delete pszSubkeyNameBuffer;
+    return TRUE;
+  }
+
+  CNode *pNewKey = new CNode;
+  if (!pNewKey)
+  {
+    SetError(_T("Cannot open key : %s%s\nError %d (%s)\n"),
+             GetCurrentPath(),pszSubkeyName,ERROR_OUTOFMEMORY,GetErrorDescription(ERROR_OUTOFMEMORY));
+    delete pszSubkeyNameBuffer;
+    return FALSE;
+  }
+
+  if (!InternalGetSubkey(pszSubkeyName,DesiredAccess,pNewKey->m_Key))
+  {
+    delete pNewKey;
+    delete pszSubkeyNameBuffer;
+    return FALSE;
+  }
+  pNewKey->m_pUp = m_pCurrentKey;
+  m_pCurrentKey = pNewKey;
+  
+  delete pszSubkeyNameBuffer;
+  return TRUE;
+}
+
+BOOL CRegistryTree::InternalGetSubkey(const TCHAR *pszSubkeyName, REGSAM DesiredAccess, CRegistryKey& rKey)
+{
+  LONG nError;
+  HKEY hNewKey = NULL;
+  TCHAR *pszSubkeyNameCaseUpdated = NULL;
+
+  nError = m_pCurrentKey->m_Key.OpenSubkey(DesiredAccess,pszSubkeyName,hNewKey);
+
+  if (nError != ERROR_SUCCESS)
+  {
+		SetError(_T("Cannot open key : %s%s\nError %u (%s)\n"),
+             GetCurrentPath(),pszSubkeyName,nError,GetErrorDescription(nError));
+
+    return FALSE;
+  }
+
+  // enum subkeys to find the subkey and get its name in stored case.
+  DWORD dwMaxSubkeyNameLength;
+	nError = m_pCurrentKey->m_Key.GetSubkeyNameMaxLength(dwMaxSubkeyNameLength);
+  if (nError != ERROR_SUCCESS)
+    goto SkipCaseUpdate;
+  
+  pszSubkeyNameCaseUpdated = new TCHAR [dwMaxSubkeyNameLength];
+  m_pCurrentKey->m_Key.InitSubkeyEnumeration(pszSubkeyNameCaseUpdated, dwMaxSubkeyNameLength);
+  while ((nError = m_pCurrentKey->m_Key.GetNextSubkeyName()) == ERROR_SUCCESS)
+    if (_tcsicmp(pszSubkeyNameCaseUpdated, pszSubkeyName) == 0)
+      break;
+
+  if (nError != ERROR_SUCCESS)
+  {
+    delete pszSubkeyNameCaseUpdated;
+    pszSubkeyNameCaseUpdated = NULL;
+  }
+
+SkipCaseUpdate:
+
+  HRESULT hr;
+  ASSERT(hNewKey);
+  if (pszSubkeyNameCaseUpdated)
+  {
+    hr = rKey.Init(hNewKey,GetCurrentPath(),pszSubkeyNameCaseUpdated,DesiredAccess);
+    if (FAILED(hr))
+    {
+      if (hr == (HRESULT)E_OUTOFMEMORY)
+        SetError(_T("Cannot open key : %s%s\nError %d (%s)\n"),
+                 GetCurrentPath(),pszSubkeyName,ERROR_OUTOFMEMORY,GetErrorDescription(ERROR_OUTOFMEMORY));
+      else
+        SetError(_T("Cannot open key : %s%s\nUnknown error\n"), GetCurrentPath(), pszSubkeyName);
+
+      goto Abort;
+    }
+    
+    delete pszSubkeyNameCaseUpdated;
+  }
+  else
+  {
+    hr = rKey.Init(hNewKey,GetCurrentPath(),pszSubkeyName,DesiredAccess);
+    if (FAILED(hr))
+    {
+      if (hr == (HRESULT)E_OUTOFMEMORY)
+        SetError(_T("Cannot open key : %s%s\nError %d (%s)\n"),
+                 GetCurrentPath(),pszSubkeyName,ERROR_OUTOFMEMORY,GetErrorDescription(ERROR_OUTOFMEMORY));
+      else
+        SetError(_T("Cannot open key : %s%s\nUnknown error \n"),
+                 GetCurrentPath(),
+                 pszSubkeyName);
+      
+      goto Abort;
+    }
+  }
+  
+  return TRUE;
+Abort:
+  if (pszSubkeyNameCaseUpdated)
+    delete pszSubkeyNameCaseUpdated;
+
+  if (hNewKey)
+  {
+    LONG nError = RegCloseKey(hNewKey);
+    ASSERT(nError == ERROR_SUCCESS);
+  }
+  
+  return FALSE;
+}
+
+BOOL CRegistryTree::GetKey(const TCHAR *pszRelativePath, REGSAM DesiredAccess, CRegistryKey& rKey)
+{
+  CRegistryTree Tree(*this);
+
+  if (!Tree.ChangeCurrentKey(pszRelativePath))
+  {
+    SetError(Tree.GetLastErrorDescription());
+    return FALSE;
+  }
+
+  if (Tree.m_pCurrentKey->m_Key.IsRoot())
+  {
+    HRESULT hr = rKey.InitRoot(m_pszMachineName);
+    if (FAILED(hr))
+    {
+      if (hr == (HRESULT)E_OUTOFMEMORY)
+        SetError(_T("\nError %d (%s)\n"),
+                 ERROR_OUTOFMEMORY,GetErrorDescription(ERROR_OUTOFMEMORY));
+      else
+        SetInternalError();
+      return FALSE;
+    }
+    
+    return TRUE;
+  }
+
+  // open key with desired access
+  
+  // may be call to DuplicateHandle() is better.
+  // registry key handles returned by the RegConnectRegistry function cannot be used in a call to DuplicateHandle.
+
+  // Get short key name now...
+  const TCHAR *pszKeyName = Tree.m_pCurrentKey->m_Key.GetKeyName();
+  if (pszKeyName == NULL)
+  {
+    SetInternalError();
+    return FALSE;
+  }
+  
+  size_t size = _tcslen(pszKeyName);
+  ASSERT(size);
+  if (!size)
+  {
+    SetInternalError();
+    return FALSE;
+  }
+  
+  const TCHAR *pszShortKeyName_ = pszKeyName + size-1;
+  pszShortKeyName_--; // skip ending backslash
+  size = 0;
+  while (pszShortKeyName_ >= pszKeyName)
+  {
+    if (*pszShortKeyName_ == _T('\\'))
+      break;
+    pszShortKeyName_--;
+    size++;
+  }
+  
+  if (!size || (*pszShortKeyName_ != _T('\\')))
+  {
+    ASSERT(FALSE);
+    SetInternalError();
+    return FALSE;
+  }
+
+  TCHAR *pszShortKeyName = new TCHAR [size+1];
+  if (!pszShortKeyName)
+  {
+    SetError(ERROR_OUTOFMEMORY);
+    return FALSE;
+  }
+
+  memcpy(pszShortKeyName,pszShortKeyName_+1,size*sizeof(TCHAR));
+  pszShortKeyName[size] = 0;
+
+  // change to parent key
+	if (!Tree.InternalChangeCurrentKey(_T(".."),READ_CONTROL))
+  {
+    ASSERT(FALSE);
+    SetInternalError();
+    return FALSE;
+  }
+  
+  // change back to target key
+	if (!Tree.InternalGetSubkey(pszShortKeyName,DesiredAccess,rKey))
+  {
+    SetError(Tree.GetLastErrorDescription());
+    return FALSE;
+  }
+
+  return TRUE;
+}
+

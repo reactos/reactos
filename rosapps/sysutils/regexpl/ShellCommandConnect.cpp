@@ -1,4 +1,4 @@
-/* $Id: ShellCommandConnect.cpp,v 1.2 2000/10/24 20:17:41 narnaoud Exp $
+/* $Id: ShellCommandConnect.cpp,v 1.3 2001/01/10 01:25:29 narnaoud Exp $
  *
  * regexpl - Console Registry Explorer
  *
@@ -75,7 +75,12 @@ int CShellCommandConnect::Execute(CConsole &rConsole, CArgumentParser& rArgument
 	if (blnHelp)
 		rConsole.Write(GetHelpString());
 
-	m_rTree.SetMachineName(pchMachine);
+	if (!m_rTree.SetMachineName(pchMachine))
+  {
+    rConsole.Write(m_rTree.GetLastErrorDescription());
+    rConsole.Write(_T("\n"));
+  }
+  
 	return 0;
 }
 

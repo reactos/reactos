@@ -1,4 +1,4 @@
-/* $Id: ShellCommandDeleteValue.cpp,v 1.2 2000/10/24 20:17:41 narnaoud Exp $
+/* $Id: ShellCommandDeleteValue.cpp,v 1.3 2001/01/10 01:25:29 narnaoud Exp $
  *
  * regexpl - Console Registry Explorer
  *
@@ -44,57 +44,56 @@ CShellCommandDeleteValue::~CShellCommandDeleteValue()
 {
 }
 
-BOOL CShellCommandDeleteValue::Match(const TCHAR *pchCommand)
+BOOL CShellCommandDeleteValue::Match(const TCHAR *pszCommand)
 {
-	return _tcsicmp(pchCommand,DV_CMD) == 0;
+	return _tcsicmp(pszCommand,DV_CMD) == 0;
 }
 
 int CShellCommandDeleteValue::Execute(CConsole &rConsole, CArgumentParser& rArguments)
 {
 	rArguments.ResetArgumentIteration();
-	TCHAR *pchCommandItself = rArguments.GetNextArgument();
+	TCHAR *pszCommandItself = rArguments.GetNextArgument();
 
-	TCHAR *pchParameter;
-	TCHAR *pchValueFull = NULL;
+	TCHAR *pszParameter;
+	TCHAR *pszValueFull = NULL;
 	BOOL blnHelp = FALSE;
 //	DWORD dwError;
 
-	if ((_tcsnicmp(pchCommandItself,DV_CMD _T(".."),DV_CMD_LENGTH+2*sizeof(TCHAR)) == 0)||
-		(_tcsnicmp(pchCommandItself,DV_CMD _T("\\"),DV_CMD_LENGTH+1*sizeof(TCHAR)) == 0))
+	if ((_tcsnicmp(pszCommandItself,DV_CMD _T(".."),DV_CMD_LENGTH+2*sizeof(TCHAR)) == 0)||
+		(_tcsnicmp(pszCommandItself,DV_CMD _T("\\"),DV_CMD_LENGTH+1*sizeof(TCHAR)) == 0))
 	{
-		pchValueFull = pchCommandItself + DV_CMD_LENGTH;
+		pszValueFull = pszCommandItself + DV_CMD_LENGTH;
 	}
-	else if (_tcsnicmp(pchCommandItself,DV_CMD _T("/"),DV_CMD_LENGTH+1*sizeof(TCHAR)) == 0)
+	else if (_tcsnicmp(pszCommandItself,DV_CMD _T("/"),DV_CMD_LENGTH+1*sizeof(TCHAR)) == 0)
 	{
-		pchParameter = pchCommandItself + DV_CMD_LENGTH;
+		pszParameter = pszCommandItself + DV_CMD_LENGTH;
 		goto CheckValueArgument;
 	}
 
-	while((pchParameter = rArguments.GetNextArgument()) != NULL)
+	while((pszParameter = rArguments.GetNextArgument()) != NULL)
 	{
 CheckValueArgument:
-		if ((_tcsicmp(pchParameter,_T("/?")) == 0)
-			||(_tcsicmp(pchParameter,_T("-?")) == 0))
+		if ((_tcsicmp(pszParameter,_T("/?")) == 0)
+			||(_tcsicmp(pszParameter,_T("-?")) == 0))
 		{
 			blnHelp = TRUE;
 			break;
 		}
-		else if (!pchValueFull)
+		else if (!pszValueFull)
 		{
-			pchValueFull = pchParameter;
+			pszValueFull = pszParameter;
 		}
 		else
 		{
 			rConsole.Write(_T("Bad parameter: "));
-			rConsole.Write(pchParameter);
+			rConsole.Write(pszParameter);
 			rConsole.Write(_T("\n"));
 		}
 	}
 	
-	CRegistryTree *pTree = NULL;
-	CRegistryKey *pKey = NULL;
-	TCHAR *pchValueName;
-	TCHAR *pchPath;
+	CRegistryKey Key;
+	TCHAR *pszValueName;
+	const TCHAR *pszPath;
 	
 	if (blnHelp)
 	{
@@ -102,19 +101,19 @@ CheckValueArgument:
 		return 0;
 	}
 
-	if (pchValueFull)
+	if (pszValueFull)
 	{
-		if (_tcscmp(pchValueFull,_T("\\")) == 0)
+		if (_tcscmp(pszValueFull,_T("\\")) == 0)
 			goto CommandNAonRoot;
 
-		TCHAR *pchSep = _tcsrchr(pchValueFull,_T('\\'));
-		pchValueName = pchSep?(pchSep+1):(pchValueFull);
-		pchPath = pchSep?pchValueFull:NULL;
+		TCHAR *pchSep = _tcsrchr(pszValueFull,_T('\\'));
+		pszValueName = pchSep?(pchSep+1):(pszValueFull);
+		pszPath = pchSep?pszValueFull:_T(".");
 				
-		//if (_tcsrchr(pchValueName,_T('.')))
+		//if (_tcsrchr(pszValueName,_T('.')))
 		//{
-		//	pchValueName = _T("");
-		//	pchPath = pchValueFull;
+		//	pszValueName = _T("");
+		//	pszPath = pszValueFull;
 		//}
 		//else
 		if (pchSep)
@@ -122,35 +121,38 @@ CheckValueArgument:
 	}
 	else
 	{
-		pchValueName = _T("");
-		pchPath = NULL;
+		pszValueName = _T("");
+		pszPath = _T(".");
 	}
-		
-	if (pchPath)
-	{
-		pTree = new CRegistryTree(m_rTree);
-		if ((_tcscmp(pTree->GetCurrentPath(),m_rTree.GetCurrentPath()) != 0)
-			||(!pTree->ChangeCurrentKey(pchPath)))
-		{
-			rConsole.Write(_T("Cannot open key "));
-			rConsole.Write(pchPath);
-			rConsole.Write(_T("\n"));
-			goto SkipCommand;
-		}
-		else
-		{
-			pKey = pTree->GetCurrentKey();
-		}
-	}
-	else
-	{
-		pKey = m_rTree.GetCurrentKey();
-	}
-	
-	if (pKey)
+  
+  {
+    size_t s = _tcslen(pszValueName);
+    if (s && (pszValueName[0] == _T('\"'))&&(pszValueName[s-1] == _T('\"')))
+    {
+      pszValueName[s-1] = 0;
+      pszValueName++;
+    }
+  }
+
+  if (!m_rTree.GetKey(pszPath,KEY_SET_VALUE,Key))
+  {
+    rConsole.Write(m_rTree.GetLastErrorDescription());
+    goto SkipCommand;
+  }
+
+	if (!Key.IsRoot())
 	{	// not root key ???
-		if (pKey->DeleteValue(pchValueName) != ERROR_SUCCESS)
-			rConsole.Write(_T("Cannot set value\n"));
+		LONG nError = Key.DeleteValue(pszValueName);
+		if (nError != ERROR_SUCCESS)
+		{
+			char Buffer[254];
+			_stprintf(Buffer,_T("Cannot delete value. Error is %u\n"),(unsigned int)nError);
+			rConsole.Write(Buffer);
+		}
+    else
+    {
+      InvalidateCompletion();
+    }
 	} // if (pKey)
 	else
 	{
@@ -159,8 +161,8 @@ CommandNAonRoot:
 	}
 
 SkipCommand:
-	if (pTree)
-		delete pTree;
+  //	if (pTree)
+  //		delete pTree;
 	return 0;
 }
 

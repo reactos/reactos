@@ -12,6 +12,10 @@
 //#define UNICODE
 //#define _UNICODE
 
+#ifdef DBG
+#define _DEBUG
+#endif
+
 #include <TCHAR.H>
 
 #include <stdio.h>
@@ -28,5 +32,10 @@
 #include <wincon.h>
 #include <conio.h>
 #include <limits.h>
+
+// INHERITED_ACE is from windows 2000
+#ifndef INHERITED_ACE
+#define INHERITED_ACE                     (0x10)
+#endif
 
 #endif // !defined(PH_H__FEF419E3_6EB6_11D3_907D_204C4F4F5020__INCLUDED_)

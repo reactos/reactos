@@ -1,4 +1,4 @@
-/* $Id: ShellCommandChangeKey.cpp,v 1.2 2000/10/24 20:17:41 narnaoud Exp $
+/* $Id: ShellCommandChangeKey.cpp,v 1.3 2001/01/10 01:25:29 narnaoud Exp $
  *
  * regexpl - Console Registry Explorer
  *
@@ -73,7 +73,9 @@ int CShellCommandChangeKey::Execute(CConsole &rConsole, CArgumentParser& rArgume
 
 	if ((!blnHelp)&&(pchPath != NULL)&&(!rArguments.GetNextArgument()))
 	{
-		ASSERT(_tcslen(pchPath) <= PROMPT_BUFFER_SIZE);
+    size_t size = _tcslen(pchPath);
+		ASSERT(size <= PROMPT_BUFFER_SIZE);
+    
 		if (!m_rTree.ChangeCurrentKey(pchPath))
 		{
 			rConsole.Write(m_rTree.GetLastErrorDescription());

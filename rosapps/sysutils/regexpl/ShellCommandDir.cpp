@@ -1,4 +1,4 @@
-/* $Id: ShellCommandDir.cpp,v 1.2 2000/10/24 20:17:41 narnaoud Exp $
+/* $Id: ShellCommandDir.cpp,v 1.3 2001/01/10 01:25:29 narnaoud Exp $
  *
  * regexpl - Console Registry Explorer
  *
@@ -73,35 +73,35 @@ int CShellCommandDir::Execute(CConsole &rConsole, CArgumentParser& rArguments)
 {
 	rArguments.ResetArgumentIteration();
 
-	const TCHAR *pchKey = NULL;
 	BOOL blnDo = TRUE,blnBadParameter, blnHelp = FALSE;
-	const TCHAR *pchParameter;
-	const TCHAR *pchCommandItself = rArguments.GetNextArgument();
+	const TCHAR *pszParameter;
+	const TCHAR *pszCommandItself = rArguments.GetNextArgument();
+  const TCHAR *pszKey = NULL;
 
-	if ((_tcsnicmp(pchCommandItself,DIR_CMD _T(".."),DIR_CMD_LENGTH+2*sizeof(TCHAR)) == 0)||
-		(_tcsnicmp(pchCommandItself,DIR_CMD _T("\\"),DIR_CMD_LENGTH+1*sizeof(TCHAR)) == 0))
+	if ((_tcsnicmp(pszCommandItself,DIR_CMD _T(".."),DIR_CMD_LENGTH+2*sizeof(TCHAR)) == 0)||
+		(_tcsnicmp(pszCommandItself,DIR_CMD _T("\\"),DIR_CMD_LENGTH+1*sizeof(TCHAR)) == 0))
 	{
-		pchKey = pchCommandItself + DIR_CMD_LENGTH;
+		pszKey = pszCommandItself + DIR_CMD_LENGTH;
 	}
-	else if (_tcsnicmp(pchCommandItself,DIR_CMD _T("/"),DIR_CMD_LENGTH+1*sizeof(TCHAR)) == 0)
+	else if (_tcsnicmp(pszCommandItself,DIR_CMD _T("/"),DIR_CMD_LENGTH+1*sizeof(TCHAR)) == 0)
 	{
-		pchParameter = pchCommandItself + DIR_CMD_LENGTH;
+		pszParameter = pszCommandItself + DIR_CMD_LENGTH;
 		goto CheckDirArgument;
 	}
 
-	while((pchParameter = rArguments.GetNextArgument()) != NULL)
+	while((pszParameter = rArguments.GetNextArgument()) != NULL)
 	{
 CheckDirArgument:
 		blnBadParameter = FALSE;
-		if ((_tcsicmp(pchParameter,_T("/?")) == 0)
-			||(_tcsicmp(pchParameter,_T("-?")) == 0))
+		if ((_tcsicmp(pszParameter,_T("/?")) == 0)
+			||(_tcsicmp(pszParameter,_T("-?")) == 0))
 		{
 			blnHelp = TRUE;
-			blnDo = pchKey != NULL;
+			blnDo = pszKey != NULL;
 		}
-		else if (!pchKey)
+		else if (!pszKey)
 		{
-			pchKey = pchParameter;
+			pszKey = pszParameter;
 			blnDo = TRUE;
 		}
 		else
@@ -111,133 +111,124 @@ CheckDirArgument:
 		if (blnBadParameter)
 		{
 			rConsole.Write(_T("Bad parameter: "));
-			rConsole.Write(pchParameter);
+			rConsole.Write(pszParameter);
 			rConsole.Write(_T("\n"));
 		}
 	}
 	
-	CRegistryTree *pTree = NULL;
-	CRegistryKey *pKey = NULL;
-	if (pchKey)
-	{
-		pTree = new CRegistryTree(m_rTree);
-		if ((_tcscmp(pTree->GetCurrentPath(),m_rTree.GetCurrentPath()) != 0)||
-			(!pTree->ChangeCurrentKey(pchKey)))
-		{
-			rConsole.Write(_T("Cannot open key "));
-			rConsole.Write(pchKey);
-			rConsole.Write(_T("\n"));
-			//blnHelp = TRUE;
-			blnDo = FALSE;
-		}
-		else
-		{
-			pKey = pTree->GetCurrentKey();
-		}
-	}
-	else
-	{
-		pKey = m_rTree.GetCurrentKey();
-	}
-	
+	CRegistryKey Key;
+
+  if (!m_rTree.GetKey(pszKey?pszKey:_T("."),KEY_ENUMERATE_SUB_KEYS|KEY_QUERY_VALUE,Key))
+  {
+    const TCHAR *pszErrorMsg = m_rTree.GetLastErrorDescription();
+    rConsole.Write(pszErrorMsg);
+    blnDo = FALSE;
+  }
+
 	if (blnHelp)
 	{
 		rConsole.Write(GetHelpString());
 	}
 
-	DWORD dwError;
+	LONG nError;
 	
-	if (blnDo)
-	{
-		rConsole.Write(_T("\n Key is "));
-//		rConsole.Write(_T("\\"));
-		rConsole.Write(pTree?pTree->GetCurrentPath():m_rTree.GetCurrentPath());
-		if (pKey)
-		{
-			rConsole.Write(_T("\n Last modify time is "));
-			rConsole.Write(pKey->GetLastWriteTime());
-		}
-		rConsole.Write(_T("\n\n"));
-		unsigned __int64 nTotalItems = 0;
-		if (!pKey)
-		{
-			rConsole.Write(_T("\t(KEY)\t\t\t\tHKEY_CLASSES_ROOT\\\n"));
-			rConsole.Write(_T("\t(KEY)\t\t\t\tHKEY_CURRENT_USER\\\n"));
-			rConsole.Write(_T("\t(KEY)\t\t\t\tHKEY_LOCAL_MACHINE\\\n"));
-			rConsole.Write(_T("\t(KEY)\t\t\t\tHKEY_USERS\\\n"));
-			rConsole.Write(_T("\t(KEY)\t\t\t\tHKEY_PERFORMANCE_DATA\\\n"));
-			rConsole.Write(_T("\t(KEY)\t\t\t\tHKEY_CURRENT_CONFIG\\\n"));
-			rConsole.Write(_T("\t(KEY)\t\t\t\tHKEY_DYN_DATA\\\n"));
-			nTotalItems = 7;
-		}
-		else
-		{
-			dwError = ERROR_SUCCESS;
-			try
-			{
-				if (!pKey->IsPredefined())
-				{
-					dwError = pKey->Open(KEY_QUERY_VALUE|KEY_READ);
-					if (dwError != ERROR_SUCCESS) throw dwError;
-				}
+	if (!blnDo)
+    return 0;
+  
+  rConsole.Write(_T("\n Key is "));
+  rConsole.Write(Key.GetKeyName());
+
+  if (!Key.IsRoot())
+  {
+    rConsole.Write(_T("\n Last modify time is "));
+    rConsole.Write(Key.GetLastWriteTime());
+  }
+  
+  rConsole.Write(_T("\n\n"));
+  unsigned __int64 nTotalItems = 0;
+  
+  try
+  {
+    ASSERT(nTotalItems == 0);
+    rConsole.Write(_T("\t(KEY)\t\t\t\t..\\\n"));	// parent key abstraction
+    nTotalItems = 1;
 				
-				ASSERT(nTotalItems == 0);
-				rConsole.Write(_T("\t(KEY)\t\t\t\t..\\\n"));	// parent key abstraction
-				nTotalItems = 1;
-				
-				pKey->InitSubKeyEnumeration();
-				TCHAR *pchSubKeyName;
-				while ((pchSubKeyName = pKey->GetSubKeyName(dwError)) != NULL)
-				{
-					rConsole.Write(_T("\t(KEY)\t\t\t\t"));
-					rConsole.Write(pchSubKeyName);
-					rConsole.Write(_T("\\\n"));
-					nTotalItems++;
-				}
-				if ((dwError != ERROR_SUCCESS)&&(dwError != ERROR_NO_MORE_ITEMS)) throw dwError;
-				
-				pKey->InitValueEnumeration();
-				TCHAR *pchValueName;
-				DWORD dwValueNameLength, dwMaxValueNameLength;
-				dwError = pKey->GetMaxValueNameLength(dwMaxValueNameLength);
-				if (dwError != ERROR_SUCCESS) throw dwError;
-				dwMaxValueNameLength++;
-				pchValueName = new TCHAR [dwMaxValueNameLength];
-				DWORD Type;
-				for(;;)
-				{
-					dwValueNameLength = dwMaxValueNameLength;
-					//dwValueSize = dwMaxValueSize;
-					dwError = pKey->GetNextValue(pchValueName,dwValueNameLength,&Type,
-						NULL,//pDataBuffer
-						NULL//&dwValueSize
-						);
-					if (dwError == ERROR_NO_MORE_ITEMS) break;
-					if (dwError != ERROR_SUCCESS) throw dwError;
-					rConsole.Write(_T("\t"));
-					rConsole.Write(CRegistryKey::GetValueTypeName(Type));
-					rConsole.Write(_T("\t"));
-					rConsole.Write((dwValueNameLength == 0)?_T("(Default)"):pchValueName);
-					rConsole.Write(_T("\n"));
-					nTotalItems++;
-				}	// for
-				delete [] pchValueName;
-			}	// try
-			catch (DWORD dwError)
-			{
-				rConsole.Write(_T("Error "));
-				TCHAR Buffer[256];
-				rConsole.Write(_itot(dwError,Buffer,10));
-				rConsole.Write(_T("\n"));
-			}
-		}	// else (Tree.IsCurrentRoot())
+    DWORD dwMaxSubkeyNameLength;
+    nError = Key.GetSubkeyNameMaxLength(dwMaxSubkeyNameLength);
+    if (nError != ERROR_SUCCESS)
+      throw nError;
+
+    TCHAR *pszSubkeyNameBuffer = new TCHAR[dwMaxSubkeyNameLength];
+    if (!pszSubkeyNameBuffer)
+      throw ERROR_OUTOFMEMORY;
+    
+    Key.InitSubkeyEnumeration(pszSubkeyNameBuffer,dwMaxSubkeyNameLength);
+    while ((nError = Key.GetNextSubkeyName()) == ERROR_SUCCESS)
+    {
+      rConsole.Write(_T("\t(KEY)\t\t\t\t"));
+      rConsole.Write(pszSubkeyNameBuffer);
+      rConsole.Write(_T("\\\n"));
+      nTotalItems++;
+    }
+
+    delete pszSubkeyNameBuffer;
+    
+    if (nError != ERROR_NO_MORE_ITEMS)
+      throw nError;
+
+    DWORD dwMaxValueNameBufferSize;
+    nError = Key.GetMaxValueNameLength(dwMaxValueNameBufferSize);
+    if (nError != ERROR_SUCCESS)
+      throw nError;
+    
+    TCHAR *pchValueNameBuffer = new TCHAR[dwMaxValueNameBufferSize];
+    if (!pchValueNameBuffer)
+      throw ERROR_OUTOFMEMORY;
+    
+
+    DWORD Type;
+    Key.InitValueEnumeration(pchValueNameBuffer,
+                             dwMaxValueNameBufferSize,
+                             NULL,
+                             0,
+                             &Type);
+
+    DWORD dwValueNameActualLength;
+    const TCHAR *pszValueTypeName;
+    unsigned int nTabSize = rConsole.GetTabWidth();
+    unsigned int nTabs;
+    while((nError = Key.GetNextValue(&dwValueNameActualLength)) == ERROR_SUCCESS)
+    {
+      rConsole.Write(_T("\t"));
+      pszValueTypeName = CRegistryKey::GetValueTypeName(Type);
+      nTabs = _tcslen(pszValueTypeName)/nTabSize;
+      nTabs = (nTabs < 4)?(4-nTabs):1;
+      rConsole.Write(pszValueTypeName);
+      while(nTabs--)
+        rConsole.Write(_T("\t"));
+      rConsole.Write((dwValueNameActualLength == 0)?_T("(Default)"):pchValueNameBuffer);
+      rConsole.Write(_T("\n"));
+      nTotalItems++;
+    }
+    
+    delete pchValueNameBuffer;
+    
+    if (nError != ERROR_NO_MORE_ITEMS)
+      throw nError;
+    
+  }	// try
+  catch (LONG nError)
+  {
+    rConsole.Write(_T("Error "));
+    TCHAR Buffer[256];
+    rConsole.Write(_itot(nError,Buffer,10));
+    rConsole.Write(_T("\n"));
+  }
 		
-		rConsole.Write(_T("\n Total: "));
-		TCHAR Buffer[256];
-		rConsole.Write(_ui64tot(nTotalItems,Buffer,10));
-		rConsole.Write(_T(" item(s) listed.\n"));
-		if (pTree) delete pTree;
-	}	// if (blnDo)
+  rConsole.Write(_T("\n Total: "));
+  TCHAR Buffer[256];
+  rConsole.Write(_ui64tot(nTotalItems,Buffer,10));
+  rConsole.Write(_T(" item(s) listed.\n"));
 
 	return 0;
 }

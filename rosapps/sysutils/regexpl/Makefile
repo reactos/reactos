@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2000/10/24 20:17:41 narnaoud Exp $
+# $Id: Makefile,v 1.4 2001/01/10 01:25:29 narnaoud Exp $
 #
 #  ReactOS makefile for RegExpl
 #
@@ -36,7 +36,6 @@ OBJECTS = \
 	ShellCommandChangeKey.o		\
 	ShellCommandConnect.o		\
 	ShellCommandDACL.o		\
-	ShellCommandDOKA.o		\
 	ShellCommandDeleteKey.o		\
 	ShellCommandDeleteValue.o	\
 	ShellCommandDir.o		\
@@ -51,6 +50,8 @@ OBJECTS = \
 	ShellCommandsLinkedList.o	\
 	CrtSupplement.c			\
 	TextHistory.o			\
+	Completion.o			\
+	Pattern.o			\
 	$(TARGET_NAME).coff
 
 CLEAN_FILES = \
