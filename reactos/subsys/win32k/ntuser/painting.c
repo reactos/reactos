@@ -309,19 +309,20 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
          -Window->WindowRect.top);
 
       hRgnNonClient = NtGdiCreateRectRgn(0, 0, 0, 0);
-      GDIOBJ_SetOwnership(hRgnNonClient, NULL);
       if (NtGdiCombineRgn(hRgnNonClient, Window->UpdateRegion,
           hRgnWindow, RGN_DIFF) == NULLREGION)
       {
-         GDIOBJ_SetOwnership(hRgnNonClient, PsGetCurrentProcess());
          NtGdiDeleteObject(hRgnNonClient);
          hRgnNonClient = NULL;
+      }
+      else
+      {
+         GDIOBJ_SetOwnership(hRgnNonClient, NULL);
       }
 
       /*
        * Remove the nonclient region from the standard update region.
        */
-
       if (NtGdiCombineRgn(Window->UpdateRegion, Window->UpdateRegion,
           hRgnWindow, RGN_AND) == NULLREGION)
       {
@@ -336,12 +337,12 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
       }
       else
       {
-         NtGdiCombineRgn(Window->NCUpdateRegion, Window->NCUpdateRegion,
-            hRgnNonClient, RGN_OR);
-         if (NULL != hRgnNonClient)
+         if(NULL != hRgnNonClient)
          {
-            GDIOBJ_SetOwnership(hRgnNonClient, PsGetCurrentProcess());
-            NtGdiDeleteObject(hRgnNonClient);
+           NtGdiCombineRgn(Window->NCUpdateRegion, Window->NCUpdateRegion,
+               hRgnNonClient, RGN_OR);
+           GDIOBJ_SetOwnership(hRgnNonClient, PsGetCurrentProcess());
+           NtGdiDeleteObject(hRgnNonClient);
          }
       }
 
