@@ -52,9 +52,9 @@ Debugging kernel-mode code is tricky, these are some snippets
     easier to see where output is coming from. DbgPrint can be used at any
     point including in interrupt handlers.
     
-    There are options in ntoskrnl/hal/x86/printk.c for copying DbgPrint
-    output to a serial device (parallel support should also be added). This
-    can be useful if a lot of output is being generated.
+    There are options in ntoskrnl/dbg/print.c for copying DbgPrint output
+    to a serial device or bochs logging port (parallel support should also
+    be added). This can be useful if a lot of output is being generated.
     
     It should be possible to include support for debugging the kernel with
     gdb over a serial line. Bochs (a shareware CPU emulator) is also useful
@@ -105,7 +105,7 @@ Debugging kernel-mode code is tricky, these are some snippets
 
     There is a mailing list for kernel development,
     
-            ros-kernel@sid-dis.com
+            ros-kernel@reactos.com
 	    
     The main developers use a cvs account to coordinate changes, ask 
     rex (rex@lvcablemodem.com) for an account if you are going to be adding
