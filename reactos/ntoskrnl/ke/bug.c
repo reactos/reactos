@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bug.c,v 1.43 2004/03/09 21:49:53 dwelch Exp $
+/* $Id: bug.c,v 1.44 2004/03/11 21:50:24 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/bug.c
@@ -104,6 +104,7 @@ KeBugCheckWithTf(ULONG BugCheckCode,
     }
 
   Ke386DisableInterrupts();
+  DebugLogDumpMessages();
 
   if (KeGetCurrentIrql() < DISPATCH_LEVEL)
     {
@@ -138,8 +139,23 @@ KeBugCheckWithTf(ULONG BugCheckCode,
       DbgPrint("Recursive bug check halting now\n");
       Ke386HaltProcessor();
     }
-  InBugCheck = 1;
-  KiDumpTrapFrame(Tf, BugCheckParameter1, BugCheckParameter2);
+  InBugCheck = 1;  
+  if (Tf != NULL)
+    {
+      KiDumpTrapFrame(Tf, BugCheckParameter1, BugCheckParameter2);
+    }
+  else
+    {
+#if defined(__GNUC__)
+      KeDumpStackFrames((PULONG)__builtin_frame_address(0));
+#elif defined(_MSC_VER)
+      __asm push ebp
+      __asm call KeDumpStackFrames
+      __asm add esp, 4
+#else
+#error Unknown compiler for inline assembler
+#endif
+    }
   MmDumpToPagingFile(BugCheckCode, BugCheckParameter1, 
 		     BugCheckParameter2, BugCheckParameter3,
 		     BugCheckParameter4, Tf);
@@ -175,88 +191,8 @@ KeBugCheckEx(ULONG BugCheckCode,
  * RETURNS: Doesn't
  */
 {
-  PRTL_MESSAGE_RESOURCE_ENTRY Message;
-  NTSTATUS Status;
-  KIRQL OldIrql;
-
-  /* Make sure we're switching back to the blue screen and print messages on it */
-  HalReleaseDisplayOwnership();
-  if (0 == (KdDebugState & KD_DEBUG_GDB))
-    {
-      KdDebugState |= KD_DEBUG_SCREEN;
-    }
-
-  Ke386DisableInterrupts();
-
-  if (KeGetCurrentIrql() < DISPATCH_LEVEL)
-    {
-      KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
-    }
-  DbgPrint("Bug detected (code %x param %x %x %x %x)\n",
-	   BugCheckCode,
-	   BugCheckParameter1,
-	   BugCheckParameter2,
-	   BugCheckParameter3,
-	   BugCheckParameter4);
-
-  Status = RtlFindMessage((PVOID)KERNEL_BASE, //0xC0000000,
-			  11, //RT_MESSAGETABLE,
-			  0x09, //0x409,
-			  BugCheckCode,
-			  &Message);
-  if (NT_SUCCESS(Status))
-    {
-      if (Message->Flags == 0)
-	DbgPrint("  %s\n", Message->Text);
-      else
-	DbgPrint("  %S\n", (PWSTR)Message->Text);
-    }
-  else
-    {
-      DbgPrint("  No message text found!\n\n");
-    }
-
-  if (InBugCheck == 1)
-    {
-      DbgPrint("Recursive bug check halting now\n");
-      Ke386HaltProcessor();
-    }
-  InBugCheck = 1;
-  if (PsGetCurrentProcess() != NULL)
-    {
-      DbgPrint("Pid: %x <", PsGetCurrentProcess()->UniqueProcessId);
-      DbgPrint("%.8s> ", PsGetCurrentProcess()->ImageFileName);
-    }
-  if (PsGetCurrentThread() != NULL)
-    {
-      DbgPrint("Thrd: %x Tid: %x\n",
-	       PsGetCurrentThread(),
-	       PsGetCurrentThread()->Cid.UniqueThread);
-    }
-#if defined(__GNUC__)
-  KeDumpStackFrames((PULONG)__builtin_frame_address(0));
-#elif defined(_MSC_VER)
-  __asm push ebp
-  __asm call KeDumpStackFrames
-  __asm add esp, 4
-#else
-#error Unknown compiler for inline assembler
-#endif
-  MmDumpToPagingFile(BugCheckCode, BugCheckParameter1, 
-		     BugCheckParameter2, BugCheckParameter3,
-		     BugCheckParameter4, NULL);
-
-  if (KdDebuggerEnabled)
-    {
-      Ke386EnableInterrupts();
-      DbgBreakPointNoBugCheck();
-      Ke386DisableInterrupts();
-    }
-
-  for (;;)
-    {
-      Ke386HaltProcessor();
-    }
+  KeBugCheckWithTf(BugCheckCode, BugCheckParameter1, BugCheckParameter2,
+		   BugCheckParameter3, BugCheckParameter4, NULL);
 }
 
 /*

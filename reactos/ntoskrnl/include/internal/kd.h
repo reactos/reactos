@@ -1,4 +1,4 @@
-/* $Id: kd.h,v 1.23 2004/02/24 21:25:41 weiden Exp $
+/* $Id: kd.h,v 1.24 2004/03/11 21:50:23 dwelch Exp $
  *
  * kernel debugger prototypes
  */
@@ -120,5 +120,7 @@ KD_CONTINUE_TYPE
 KdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
 			  PCONTEXT Context,
 			  PKTRAP_FRAME TrapFrame);
+VOID
+DebugLogDumpMessages(VOID);
 
 #endif /* __INCLUDE_INTERNAL_KERNEL_DEBUGGER_H */

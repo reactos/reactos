@@ -1,4 +1,4 @@
-/* $Id: dlog.c,v 1.12 2004/03/07 04:38:41 dwelch Exp $
+/* $Id: dlog.c,v 1.13 2004/03/11 21:50:23 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -34,6 +34,38 @@ static HANDLE DebugLogFile;
 static KEVENT DebugLogEvent;
 
 /* FUNCTIONS *****************************************************************/
+
+VOID
+DebugLogDumpMessages(VOID)
+{
+  static CHAR Buffer[256];
+  ULONG Offset;
+  ULONG Length;
+
+  if (!(KdDebugState & KD_DEBUG_FILELOG))
+    {
+      return;
+    }
+  KdDebugState &= ~KD_DEBUG_FILELOG;
+ 
+  Offset = (DebugLogEnd + 1) % DEBUGLOG_SIZE;
+  do
+    {
+      if (Offset <= DebugLogEnd)
+	{
+	  Length = min(255, DebugLogEnd - Offset);
+	}
+      else
+	{
+	  Length = min(255, DEBUGLOG_SIZE - Offset);
+	}
+      memcpy(Buffer, DebugLog + Offset, Length);
+      Buffer[Length] = 0;
+      DbgPrint(Buffer);
+      Offset = (Offset + Length) % DEBUGLOG_SIZE;
+    }
+  while (Length > 0);
+}
 
 VOID INIT_FUNCTION
 DebugLogInit(VOID)
