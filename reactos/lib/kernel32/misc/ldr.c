@@ -1,3 +1,11 @@
+/* $Id: ldr.c,v 1.3 1999/10/31 22:41:15 ea Exp $
+ *
+ * COPYRIGHT: See COPYING in the top level directory
+ * PROJECT  : ReactOS user mode libraries
+ * MODULE   : kernel32.dll
+ * FILE     : reactos/lib/kernel32/misc/ldr.c
+ * AUTHOR   : Boudewijn Dekker
+ */
 #define WIN32_NO_STATUS
 #define WIN32_NO_PEHDR
 #include <windows.h>
@@ -6,7 +14,9 @@
 #include <ntdll/ldr.h>
 
 
-HINSTANCE LoadLibraryA( LPCSTR lpLibFileName )
+HINSTANCE
+STDCALL
+LoadLibraryA( LPCSTR lpLibFileName )
 {
 	HINSTANCE hInst;
 	int i;
@@ -41,7 +51,9 @@ HINSTANCE LoadLibraryA( LPCSTR lpLibFileName )
 }
 
 
-FARPROC GetProcAddress( HMODULE hModule, LPCSTR lpProcName )
+FARPROC
+STDCALL
+GetProcAddress( HMODULE hModule, LPCSTR lpProcName )
 {
 	
 	FARPROC fnExp;
@@ -54,7 +66,10 @@ FARPROC GetProcAddress( HMODULE hModule, LPCSTR lpProcName )
 	return fnExp;
 }
 
-WINBOOL FreeLibrary( HMODULE hLibModule )
+
+WINBOOL
+STDCALL
+FreeLibrary( HMODULE hLibModule )
 {
 	LdrUnloadDll(hLibModule);
 	return TRUE;
@@ -73,7 +88,13 @@ FreeLibraryAndExitThread(
 	return;
 }
 
-HMODULE GetModuleHandleA ( LPCSTR lpModuleName )
+
+HMODULE
+STDCALL
+GetModuleHandleA ( LPCSTR lpModuleName )
 {
 	return LoadLibraryA(lpModuleName);
 }
+
+
+/* EOF */

@@ -1,4 +1,5 @@
-/*
+/* $Id: rw.c,v 1.7 1999/10/31 22:41:15 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/file/rw.c
@@ -140,13 +141,15 @@ VOID ApcRoutine(PVOID ApcContext, struct _IO_STATUS_BLOCK* IoStatusBlock, ULONG 
 }
 
 
-WINBOOL WriteFileEx(
-	HANDLE  hFile, 	
-	LPCVOID  lpBuffer, 
-	DWORD  nNumberOfBytesToWrite, 	
-	LPOVERLAPPED  lpOverLapped, 	
-	LPOVERLAPPED_COMPLETION_ROUTINE  lpCompletionRoutine 
-   )
+WINBOOL
+STDCALL
+WriteFileEx (
+	HANDLE				hFile,
+	LPCVOID				lpBuffer,
+	DWORD				nNumberOfBytesToWrite,
+	LPOVERLAPPED			lpOverLapped,
+	LPOVERLAPPED_COMPLETION_ROUTINE	lpCompletionRoutine
+	)
 {
 
    LARGE_INTEGER Offset;
