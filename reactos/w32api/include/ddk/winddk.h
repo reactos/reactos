@@ -119,7 +119,7 @@ static __inline struct _KPCR * KeGetCurrentKPCR(
 {
   ULONG Value;
 
-  __asm__ __volatile__ ("movl %%fs:0x18, %0\n\t"
+  __asm__ __volatile__ ("movl %%fs:0x1C, %0\n\t"
 	  : "=r" (Value)
     : /* no inputs */
   );
