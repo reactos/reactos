@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.88 2002/12/09 15:18:11 robd Exp $
+# $Id: Makefile,v 1.89 2003/01/07 17:48:11 robd Exp $
 #
 # ReactOS Operating System
 #
@@ -89,6 +89,7 @@ OBJECTS_RTL = \
 	rtl/error.o \
 	rtl/handle.o \
 	rtl/largeint.o \
+	rtl/math.o \
 	rtl/mem.o \
 	rtl/memchr.o \
 	rtl/memcpy.o \
@@ -336,7 +337,8 @@ OBJECTS_KD = \
 	kd/kdebug.o \
 	kd/service.o \
 	kd/dlog.o \
-  kd/gdbstub.o kd/mda.o
+    kd/gdbstub.o \
+    kd/mda.o
 
 DEP_OBJECTS := $(OBJECTS_NT) $(OBJECTS_MM) $(OBJECTS_ARCH) \
 	$(OBJECTS_IO) $(OBJECTS_KE) $(OBJECTS_OB) \
@@ -652,7 +654,7 @@ implib: $(DDK_PATH_LIB)/$(TARGETNAME).a
 clean:
 	- $(RM) $(OBJECTS_PATH)/*.o cc/*.o cm/*.o dbg/*.o dbg/i386/*.o ex/*.o \
               ex/i386/*.o io/*.o ke/*.o ldr/*.o mm/*.o nt/*.o ob/*.o ps/*.o \
-              rtl/*.o se/*.o ke/i386/*.o mm/i386/*.o fs/*.o po/*.o nls/*.o \
+              rtl/*.o rtl/i386/*.o se/*.o ke/i386/*.o mm/i386/*.o fs/*.o po/*.o nls/*.o \
               lpc/*.o kd/*.o $(TARGETNAME).o junk.tmp base.tmp temp.exp \
               $(TARGETNAME).exe $(TARGETNAME).nostrip.exe $(TARGETNAME).sym ntoskrnl.map \
 	          $(TARGETNAME).coff bugcodes.rc msg?????.bin $(DEP_FILES) \

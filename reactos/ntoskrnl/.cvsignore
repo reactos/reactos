@@ -1,11 +1,12 @@
+objects
 base.tmp
 junk.tmp
-ntoskrnl.coff
-objects
 temp.exp
+ntoskrnl.coff
+ntoskrnl.map
 ntoskrnl.dbg
 bugcodes.rc
 msg*.bin
-ntoskrnl.map
 *.o
 *.sym
+*.exe
