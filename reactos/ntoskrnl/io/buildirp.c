@@ -1,4 +1,4 @@
-/* $Id: buildirp.c,v 1.44 2004/08/15 16:39:03 chorns Exp $
+/* $Id: buildirp.c,v 1.45 2004/08/21 20:42:10 tamlin Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -258,7 +258,7 @@ IoBuildDeviceIoControlRequest(ULONG IoControlCode,
 	     RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
 			   InputBuffer,
 			   InputBufferLength);
-	     RtlZeroMemory(Irp->AssociatedIrp.SystemBuffer + InputBufferLength,
+	     RtlZeroMemory((char*)Irp->AssociatedIrp.SystemBuffer + InputBufferLength,
 			   BufferLength - InputBufferLength);
 	  }
 	else
