@@ -1,4 +1,4 @@
-/* $Id: profile.c,v 1.1 2004/01/13 12:34:09 ekohl Exp $
+/* $Id: profile.c,v 1.2 2004/01/15 14:59:06 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -7,6 +7,7 @@
  * PROGRAMMER:      Eric Kohl
  */
 
+#include <ntos.h>
 #include <windows.h>
 #include <string.h>
 
@@ -21,6 +22,179 @@ BOOL WINAPI
 CreateUserProfileW (PSID Sid,
 		    LPCWSTR lpUserName)
 {
+  WCHAR szRawProfilesPath[MAX_PATH];
+  WCHAR szProfilesPath[MAX_PATH];
+  WCHAR szUserProfilePath[MAX_PATH];
+  WCHAR szDefaultUserPath[MAX_PATH];
+  WCHAR szBuffer[MAX_PATH];
+  UNICODE_STRING SidString;
+  DWORD dwLength;
+  DWORD dwDisposition;
+  HKEY hKey;
+  NTSTATUS Status;
+
+
+  if (RegOpenKeyExW (HKEY_LOCAL_MACHINE,
+		     L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
+		     0,
+		     KEY_ALL_ACCESS,
+		     &hKey))
+    {
+      DPRINT1("Error: %lu\n", GetLastError());
+      return FALSE;
+    }
+
+  /* Get profiles path */
+  dwLength = MAX_PATH * sizeof(WCHAR);
+  if (RegQueryValueExW (hKey,
+			L"ProfilesDirectory",
+			NULL,
+			NULL,
+			(LPBYTE)szRawProfilesPath,
+			&dwLength))
+    {
+      DPRINT1("Error: %lu\n", GetLastError());
+      RegCloseKey (hKey);
+      return FALSE;
+    }
+
+  /* Expand it */
+  if (!ExpandEnvironmentStringsW (szRawProfilesPath,
+				  szProfilesPath,
+				  MAX_PATH))
+    {
+      DPRINT1("Error: %lu\n", GetLastError());
+      RegCloseKey (hKey);
+      return FALSE;
+    }
+
+  /* Get default user path */
+  dwLength = MAX_PATH * sizeof(WCHAR);
+  if (RegQueryValueExW (hKey,
+			L"DefaultUserProfile",
+			NULL,
+			NULL,
+			(LPBYTE)szBuffer,
+			&dwLength))
+    {
+      DPRINT1("Error: %lu\n", GetLastError());
+      RegCloseKey (hKey);
+      return FALSE;
+    }
+
+  RegCloseKey (hKey);
+
+  wcscpy (szUserProfilePath, szProfilesPath);
+  wcscat (szUserProfilePath, L"\\");
+  wcscat (szUserProfilePath, lpUserName);
+
+  wcscpy (szDefaultUserPath, szProfilesPath);
+  wcscat (szDefaultUserPath, L"\\");
+  wcscat (szDefaultUserPath, szBuffer);
+
+  /* Create user profile directory */
+  if (!CreateDirectoryW (szUserProfilePath, NULL))
+    {
+      if (GetLastError () != ERROR_ALREADY_EXISTS)
+	{
+	  DPRINT1("Error: %lu\n", GetLastError());
+	  return FALSE;
+	}
+    }
+
+  /* Copy default user directory */
+  if (!CopyDirectory (szUserProfilePath, szDefaultUserPath))
+    {
+      DPRINT1("Error: %lu\n", GetLastError());
+      return FALSE;
+    }
+
+  /* Add profile to profile list */
+  Status = RtlConvertSidToUnicodeString (&SidString, Sid, TRUE);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("Status: %lx\n", Status);
+      return FALSE;
+    }
+
+  wcscpy (szBuffer,
+	  L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList\\");
+  wcscat (szBuffer, SidString.Buffer);
+
+//  DebugPrint ("User SID: %wZ\n", &SidString);
+//  RtlFreeUnicodeString (&SidString);
+
+  /* Create user profile key */
+  if (RegCreateKeyExW (HKEY_LOCAL_MACHINE,
+		       szBuffer,
+		       0,
+		       NULL,
+		       REG_OPTION_NON_VOLATILE,
+		       KEY_ALL_ACCESS,
+		       NULL,
+		       &hKey,
+		       &dwDisposition))
+    {
+      DPRINT1("Error: %lu\n", GetLastError());
+      RtlFreeUnicodeString (&SidString);
+      return FALSE;
+    }
+
+  /* Create non-expanded user profile path */
+  wcscpy (szBuffer, szRawProfilesPath);
+  wcscat (szBuffer, L"\\");
+  wcscat (szBuffer, lpUserName);
+
+  /* Set 'ProfileImagePath' value (non-expanded) */
+  if (RegSetValueExW (hKey,
+		      L"ProfileImagePath",
+		      0,
+		      REG_EXPAND_SZ,
+		      (LPBYTE)szBuffer,
+		      (wcslen (szBuffer) + 1) * sizeof(WCHAR)))
+    {
+      DPRINT1("Error: %lu\n", GetLastError());
+      RtlFreeUnicodeString (&SidString);
+      RegCloseKey (hKey);
+      return FALSE;
+    }
+
+  /* Set 'Sid' value */
+  if (RegSetValueExW (hKey,
+		      L"Sid",
+		      0,
+		      REG_BINARY,
+		      Sid,
+		      RtlLengthSid (Sid)))
+    {
+      DPRINT1("Error: %lu\n", GetLastError());
+      RtlFreeUnicodeString (&SidString);
+      RegCloseKey (hKey);
+      return FALSE;
+    }
+
+  RegCloseKey (hKey);
+
+  /* Create user hive name */
+  wcscat (szUserProfilePath, L"\\ntuser.dat");
+
+  /* Create new user hive */
+  if (RegLoadKeyW (HKEY_USERS,
+		   SidString.Buffer,
+		   szUserProfilePath))
+    {
+      DPRINT1("Error: %lu\n", GetLastError());
+      RtlFreeUnicodeString (&SidString);
+      return FALSE;
+    }
+
+  /* FIXME: Copy default user hive */
+
+  RegUnLoadKeyW (HKEY_USERS,
+		 SidString.Buffer);
+
+  RtlFreeUnicodeString (&SidString);
+
   return TRUE;
 }
 
@@ -206,6 +380,7 @@ GetProfilesDirectoryW (LPWSTR lpProfilesDir,
       return FALSE;
     }
 
+  /* Get profiles path */
   dwLength = MAX_PATH * sizeof(WCHAR);
   if (RegQueryValueExW (hKey,
 			L"ProfilesDirectory",
@@ -221,6 +396,7 @@ GetProfilesDirectoryW (LPWSTR lpProfilesDir,
 
   RegCloseKey (hKey);
 
+  /* Expand it */
   if (!ExpandEnvironmentStringsW (szBuffer,
 				  szProfilesPath,
 				  MAX_PATH))
