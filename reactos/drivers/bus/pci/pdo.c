@@ -1,4 +1,4 @@
-/* $Id: pdo.c,v 1.8 2004/08/18 22:11:15 ekohl Exp $
+/* $Id: pdo.c,v 1.9 2004/08/20 13:33:51 ekohl Exp $
  *
  * PROJECT:         ReactOS PCI bus driver
  * FILE:            pdo.c
@@ -39,7 +39,7 @@ PdoQueryDeviceText(
   {
     case DeviceTextDescription:
       DPRINT("DeviceTextDescription\n");
-      Irp->IoStatus.Information = (ULONG_PTR)DeviceExtension->DeviceLocation.Buffer;
+      Irp->IoStatus.Information = (ULONG_PTR)DeviceExtension->DeviceDescription.Buffer;
       break;
 
     case DeviceTextLocationInformation:
@@ -169,10 +169,10 @@ PdoQueryCapabilities(
   DeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
   DeviceCapabilities = IrpSp->Parameters.DeviceCapabilities.Capabilities;
 
-  DeviceCapabilities->UniqueID = TRUE;
+  DeviceCapabilities->UniqueID = FALSE;
 
-  DeviceCapabilities->Address =
-  DeviceCapabilities->UINumber = DeviceExtension->SlotNumber.u.AsULONG;
+  DeviceCapabilities->Address = DeviceExtension->SlotNumber.u.AsULONG;
+  DeviceCapabilities->UINumber = (ULONG)-1; /* FIXME */
 
   return STATUS_SUCCESS;
 }
@@ -338,7 +338,7 @@ PdoQueryResourceRequirements(
 
   /* Count required resource descriptors */
   ResCount = 0;
-  if ((PciConfig.HeaderType & 0x7F) == 0)
+  if (PCI_CONFIGURATION_TYPE(&PciConfig) == PCI_DEVICE_TYPE)
   {
     for (i = 0; i < PCI_TYPE0_ADDRESSES; i++)
     {
@@ -347,7 +347,7 @@ PdoQueryResourceRequirements(
 			     &Base,
 			     &Length,
 			     &Flags))
-        break;
+	break;
 
       ResCount += 2;
     }
@@ -357,7 +357,7 @@ PdoQueryResourceRequirements(
     if (PciConfig.u.type0.InterruptPin != 0)
       ResCount++;
   }
-  else if ((PciConfig.HeaderType & 0x7F) == 1)
+  else if (PCI_CONFIGURATION_TYPE(&PciConfig) == PCI_BRIDGE_TYPE)
   {
     for (i = 0; i < PCI_TYPE1_ADDRESSES; i++)
     {
@@ -366,14 +366,17 @@ PdoQueryResourceRequirements(
 			     &Base,
 			     &Length,
 			     &Flags))
-        break;
+	break;
 
       ResCount += 2;
     }
   }
+  else if (PCI_CONFIGURATION_TYPE(&PciConfig) == PCI_CARDBUS_BRIDGE_TYPE)
+  {
+  }
   else
   {
-    DPRINT1("Unsupported header type %u\n", PciConfig.HeaderType);
+    DPRINT1("Unsupported header type %u\n", PCI_CONFIGURATION_TYPE(&PciConfig));
   }
 
   if (ResCount == 0)
@@ -389,7 +392,7 @@ PdoQueryResourceRequirements(
     ListSize += ((ResCount - 1) * sizeof(IO_RESOURCE_DESCRIPTOR));
   }
 
-  DPRINT1("ListSize %lu (0x%lx)\n", ListSize, ListSize);
+  DPRINT("ListSize %lu (0x%lx)\n", ListSize, ListSize);
 
   /* Allocate the resource requirements list */
   ResourceList = ExAllocatePool(PagedPool,
@@ -409,7 +412,7 @@ PdoQueryResourceRequirements(
   ResourceList->List[0].Count = ResCount;
 
   Descriptor = &ResourceList->List[0].Descriptors[0];
-  if ((PciConfig.HeaderType & 0x7F) == 0)
+  if (PCI_CONFIGURATION_TYPE(&PciConfig) == 0)
   {
     for (i = 0; i < PCI_TYPE0_ADDRESSES; i++)
     {
@@ -498,7 +501,7 @@ PdoQueryResourceRequirements(
       Descriptor->u.Interrupt.MaximumVector = 0xFF;
     }
   }
-  else if ((PciConfig.HeaderType & 0x7F) == 1)
+  else if (PCI_CONFIGURATION_TYPE(&PciConfig) == 1)
   {
     for (i = 0; i < PCI_TYPE1_ADDRESSES; i++)
     {
@@ -575,6 +578,10 @@ PdoQueryResourceRequirements(
       Descriptor++;
     }
   }
+  else if (PCI_CONFIGURATION_TYPE(&PciConfig) == 2)
+  {
+    /* FIXME: Add Cardbus bridge resources */
+  }
 
   Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
 
@@ -622,7 +629,7 @@ PdoQueryResources(
 
   /* Count required resource descriptors */
   ResCount = 0;
-  if ((PciConfig.HeaderType & 0x7F) == 0)
+  if (PCI_CONFIGURATION_TYPE(&PciConfig) == 0)
   {
     for (i = 0; i < PCI_TYPE0_ADDRESSES; i++)
     {
@@ -640,7 +647,7 @@ PdoQueryResources(
         (PciConfig.u.type0.InterruptLine != 0xFF))
       ResCount++;
   }
-  else if ((PciConfig.HeaderType & 0x7F) == 1)
+  else if (PCI_CONFIGURATION_TYPE(&PciConfig) == 1)
   {
     for (i = 0; i < PCI_TYPE1_ADDRESSES; i++)
     {
@@ -654,9 +661,13 @@ PdoQueryResources(
       ResCount++;
     }
   }
+  else if (PCI_CONFIGURATION_TYPE(&PciConfig) == 2)
+  {
+
+  }
   else
   {
-    DPRINT1("Unsupported header type %u\n", PciConfig.HeaderType);
+    DPRINT1("Unsupported header type %u\n", PCI_CONFIGURATION_TYPE(&PciConfig));
   }
 
   if (ResCount == 0)
@@ -688,7 +699,7 @@ PdoQueryResources(
   PartialList->Count = ResCount;
 
   Descriptor = &PartialList->PartialDescriptors[0];
-  if ((PciConfig.HeaderType & 0x7F) == 0)
+  if (PCI_CONFIGURATION_TYPE(&PciConfig) == 0)
   {
     for (i = 0; i < PCI_TYPE0_ADDRESSES; i++)
     {
@@ -742,7 +753,7 @@ PdoQueryResources(
       Descriptor->u.Interrupt.Affinity = 0xFFFFFFFF;
     }
   }
-  else if ((PciConfig.HeaderType & 0x7F) == 1)
+  else if (PCI_CONFIGURATION_TYPE(&PciConfig) == 1)
   {
     for (i = 0; i < PCI_TYPE1_ADDRESSES; i++)
     {
@@ -783,6 +794,10 @@ PdoQueryResources(
 
       Descriptor++;
     }
+  }
+  else if (PCI_CONFIGURATION_TYPE(&PciConfig) == 2)
+  {
+    /* FIXME: Cardbus */
   }
 
   Irp->IoStatus.Information = (ULONG_PTR)ResourceList;

@@ -1,4 +1,4 @@
-/* $Id: pci.c,v 1.8 2004/08/16 09:13:00 ekohl Exp $
+/* $Id: pci.c,v 1.9 2004/08/20 13:33:51 ekohl Exp $
  *
  * PROJECT:         ReactOS PCI Bus driver
  * FILE:            pci.c
@@ -436,8 +436,22 @@ PciCreateDeviceDescriptionString(PUNICODE_STRING DeviceDescription,
 
   switch (Device->PciConfig.BaseClass)
   {
+    case PCI_CLASS_PRE_20:
+      switch (Device->PciConfig.SubClass)
+      {
+        case PCI_SUBCLASS_PRE_20_VGA:
+          Description = L"VGA device";
+          break;
+
+        default:
+        case PCI_SUBCLASS_PRE_20_NON_VGA:
+          Description = L"PCI device";
+          break;
+      }
+      break;
+
     case PCI_CLASS_MASS_STORAGE_CTLR:
-      switch (Device->PciConfig.BaseClass)
+      switch (Device->PciConfig.SubClass)
       {
         case PCI_SUBCLASS_MSC_SCSI_BUS_CTLR:
           Description = L"SCSI controller";
@@ -461,20 +475,217 @@ PciCreateDeviceDescriptionString(PUNICODE_STRING DeviceDescription,
 
         default:
           Description = L"Mass storage controller";
+          break;
       }
       break;
 
     case PCI_CLASS_NETWORK_CTLR:
-      switch (Device->PciConfig.BaseClass)
+      switch (Device->PciConfig.SubClass)
       {
+        case PCI_SUBCLASS_NET_ETHERNET_CTLR:
+          Description = L"Ethernet controller";
+          break;
+
+        case PCI_SUBCLASS_NET_TOKEN_RING_CTLR:
+          Description = L"Token-Ring controller";
+          break;
+
+        case PCI_SUBCLASS_NET_FDDI_CTLR:
+          Description = L"FDDI controller";
+          break;
+
+        case PCI_SUBCLASS_NET_ATM_CTLR:
+          Description = L"ATM controller";
+          break;
 
         default:
           Description = L"Network controller";
+          break;
+      }
+      break;
+
+    case PCI_CLASS_DISPLAY_CTLR:
+      switch (Device->PciConfig.SubClass)
+      {
+        case PCI_SUBCLASS_VID_VGA_CTLR:
+          Description = L"VGA display controller";
+          break;
+
+        case PCI_SUBCLASS_VID_XGA_CTLR:
+          Description = L"XGA display controller";
+          break;
+
+        case PCI_SUBLCASS_VID_3D_CTLR:
+          Description = L"Multimedia display controller";
+          break;
+
+        default:
+          Description = L"Other display controller";
+          break;
+      }
+      break;
+
+    case PCI_CLASS_MULTIMEDIA_DEV:
+      switch (Device->PciConfig.SubClass)
+      {
+        case PCI_SUBCLASS_MM_VIDEO_DEV:
+          Description = L"Multimedia video device";
+          break;
+
+        case PCI_SUBCLASS_MM_AUDIO_DEV:
+          Description = L"Multimedia audio device";
+          break;
+
+        case PCI_SUBCLASS_MM_TELEPHONY_DEV:
+          Description = L"Multimedia telephony device";
+          break;
+
+        default:
+          Description = L"Other multimedia device";
+          break;
+      }
+      break;
+
+    case PCI_CLASS_MEMORY_CTLR:
+      switch (Device->PciConfig.SubClass)
+      {
+        case PCI_SUBCLASS_MEM_RAM:
+          Description = L"PCI Memory";
+          break;
+
+        case PCI_SUBCLASS_MEM_FLASH:
+          Description = L"PCI Flash Memory";
+          break;
+
+        default:
+          Description = L"Other memory controller";
+          break;
+      }
+      break;
+
+    case PCI_CLASS_BRIDGE_DEV:
+      switch (Device->PciConfig.SubClass)
+      {
+        case PCI_SUBCLASS_BR_HOST:
+          Description = L"PCI-Host bridge";
+          break;
+
+        case PCI_SUBCLASS_BR_ISA:
+          Description = L"PCI-ISA bridge";
+          break;
+
+        case PCI_SUBCLASS_BR_EISA:
+          Description = L"PCI-EISA bridge";
+          break;
+
+        case PCI_SUBCLASS_BR_MCA:
+          Description = L"PCI-Micro Channel bridge";
+          break;
+
+        case PCI_SUBCLASS_BR_PCI_TO_PCI:
+          Description = L"PCI-PCI bridge";
+          break;
+
+        case PCI_SUBCLASS_BR_PCMCIA:
+          Description = L"PCI-PCMCIA bridge";
+          break;
+
+        case PCI_SUBCLASS_BR_NUBUS:
+          Description = L"PCI-NUBUS bridge";
+          break;
+
+        case PCI_SUBCLASS_BR_CARDBUS:
+          Description = L"PCI-CARDBUS bridge";
+          break;
+
+        default:
+          Description = L"Other bridge device";
+          break;
+      }
+      break;
+
+    case PCI_CLASS_SIMPLE_COMMS_CTLR:
+      switch (Device->PciConfig.SubClass)
+      {
+
+        default:
+          Description = L"Communication device";
+          break;
+      }
+      break;
+
+    case PCI_CLASS_BASE_SYSTEM_DEV:
+      switch (Device->PciConfig.SubClass)
+      {
+
+        default:
+          Description = L"System device";
+          break;
+      }
+      break;
+
+    case PCI_CLASS_INPUT_DEV:
+      switch (Device->PciConfig.SubClass)
+      {
+
+        default:
+          Description = L"Input device";
+          break;
+      }
+      break;
+
+    case PCI_CLASS_DOCKING_STATION:
+      switch (Device->PciConfig.SubClass)
+      {
+
+        default:
+          Description = L"Docking station";
+          break;
+      }
+      break;
+
+    case PCI_CLASS_PROCESSOR:
+      switch (Device->PciConfig.SubClass)
+      {
+
+        default:
+          Description = L"Processor";
+          break;
+      }
+      break;
+
+    case PCI_CLASS_SERIAL_BUS_CTLR:
+      switch (Device->PciConfig.SubClass)
+      {
+        case PCI_SUBCLASS_SB_IEEE1394:
+          Description = L"FireWire controller";
+          break;
+
+        case PCI_SUBCLASS_SB_ACCESS:
+          Description = L"ACCESS bus controller";
+          break;
+
+        case PCI_SUBCLASS_SB_SSA:
+          Description = L"SSA controller";
+          break;
+
+        case PCI_SUBCLASS_SB_USB:
+          Description = L"USB controller";
+          break;
+
+        case PCI_SUBCLASS_SB_FIBRE_CHANNEL:
+          Description = L"Fibre Channel controller";
+          break;
+
+        default:
+          Description = L"Other serial bus controller";
+          break;
       }
       break;
 
     default:
-      Description = L"PCI-Device";
+      Description = L"Other PCI Device";
+      break;
   }
 
   Length = (wcslen(Description) + 1) * sizeof(WCHAR);
