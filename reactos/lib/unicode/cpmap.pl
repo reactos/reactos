@@ -82,6 +82,7 @@ $DEF_CHAR = ord '?';
     [ 10081, "VENDORS/MICSFT/MAC/TURKISH.TXT",    "Mac Turkish" ],
     [ 20866, "VENDORS/MISC/KOI8-R.TXT",           "Russian KOI8" ],
     [ 20932, "OBSOLETE/EASTASIA/JIS/JIS0208.TXT", "EUC-JP" ],
+    [ 21866, "VENDORS/MISC/KOI8-U.TXT",           "Ukrainian KOI8" ],
     [ 28591, "ISO8859/8859-1.TXT",                "ISO 8859-1 Latin 1" ],
     [ 28592, "ISO8859/8859-2.TXT",                "ISO 8859-2 Latin 2 (East European)" ],
     [ 28593, "ISO8859/8859-3.TXT",                "ISO 8859-3 Latin 3 (South European)" ],
