@@ -38,7 +38,9 @@ HACCEL hAccel;
 
 BOOL bDigitGrouping = FALSE;
 
-
+/*TODO: Figure out why we are copying MFC map style programming.
+**      This pattern is difficult to maintain.
+*/
 #define BEGIN_CMD_MAP(a) switch(##a) {
 #define CMD_MAP_ENTRY(a, b) case a: b(); break;
 #define END_CMD_MAP(a) }
@@ -133,7 +135,9 @@ void OnHelpTopics(void)
 void OnHelpAbout(void)
 {
 }
-
+void OnButtonClick(int ButtonID)
+{
+}
 // Message handler for dialog box.
 LRESULT CALLBACK CalcWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -154,14 +158,17 @@ LRESULT CALLBACK CalcWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
         }
 
         if (HIWORD(wParam) == BN_CLICKED) { 
-            switch (LOWORD(wParam)) { 
-//            case IDC_OWNERDRAW: 
+            switch (LOWORD(wParam)) {
+              OnButtonClick(LOWORD(wParam));
+              //case IDC_OWNERDRAW: 
 //                 // application-defined processing 
 //                 break; 
             } 
         } 
             
-        BEGIN_CMD_MAP(LOWORD(wParam))
+        //BEGIN_CMD_MAP( LOWORD(wParam) )
+		switch (LOWORD(wParam))
+		{
             CMD_MAP_ENTRY(ID_EDIT_COPY,           OnEditCopy)
             CMD_MAP_ENTRY(ID_EDIT_PASTE,          OnEditPaste)
             CMD_MAP_ENTRY(ID_VIEW_STANDARD,       OnViewStandard)
@@ -176,7 +183,8 @@ LRESULT CALLBACK CalcWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
             CMD_MAP_ENTRY(ID_VIEW_GRADS,          OnViewGrads)
             CMD_MAP_ENTRY(ID_HELP_TOPICS,         OnHelpTopics)
             CMD_MAP_ENTRY(ID_HELP_ABOUT,          OnHelpAbout)
-        END_CMD_MAP(0)
+		}
+        //END_CMD_MAP(0)
         break;
 /*
     case WM_KEYUP:
