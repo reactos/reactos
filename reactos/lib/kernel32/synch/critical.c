@@ -1,4 +1,4 @@
-/* $Id: critical.c,v 1.6 1999/09/27 20:58:46 ariadne Exp $
+/* $Id: critical.c,v 1.7 2000/04/17 03:09:04 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -72,7 +72,7 @@ LeaveCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
 			ReleaseSemaphore( lpCriticalSection->LockSemaphore,1,NULL);
 	}
 
-	lpCriticalSection->LockCount--;
+	InterlockedDecrement( &lpCriticalSection->LockCount );
 }
 
 
