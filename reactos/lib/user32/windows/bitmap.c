@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmap.c,v 1.18 2003/10/15 19:39:08 navaraf Exp $
+/* $Id: bitmap.c,v 1.19 2003/11/10 17:44:49 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -35,6 +35,7 @@
 #include <stdlib.h>
 
 /*forward declerations... actualy in user32\windows\icon.c but usful here****/
+HICON ICON_CreateCursorFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cxDesired, int cyDesired, int xHotspot, int yHotspot);
 HICON ICON_CreateIconFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cxDesired, int cyDesired, int xHotspot, int yHotspot);
 CURSORICONDIRENTRY *CURSORICON_FindBestIcon( CURSORICONDIR *dir, int width, int height, int colors);
 CURSORICONDIRENTRY *CURSORICON_FindBestCursor( CURSORICONDIR *dir, int width, int height, int colors);
@@ -234,7 +235,7 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
       return(NULL);
   }
 
-  hIcon = ICON_CreateIconFromData(hScreenDc, Data, SafeIconImage, 32, 32, dirEntry->Info.cursor.wXHotspot, dirEntry->Info.cursor.wYHotspot);
+  hIcon = ICON_CreateCursorFromData(hScreenDc, Data, SafeIconImage, 32, 32, dirEntry->Info.cursor.wXHotspot, dirEntry->Info.cursor.wYHotspot);
   RtlFreeHeap(RtlGetProcessHeap(), 0, SafeIconImage);
   return hIcon;
 }

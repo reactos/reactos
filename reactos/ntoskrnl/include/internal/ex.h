@@ -8,9 +8,6 @@
 #define NTOS_MODE_KERNEL
 #include <ntos.h>
 
-/* one systemcursor for custom cursors */
-#define SYSCURSORCOUNT (14 + 1)
-
 typedef struct _CURSORCLIP_INFO
 {
   BOOL IsClipped;
@@ -20,26 +17,26 @@ typedef struct _CURSORCLIP_INFO
   UINT Bottom;
 } CURSORCLIP_INFO, *PCURSORCLIP_INFO;
 
-typedef struct _SYSCURSOR
+typedef struct _CURICONS
 {
-  HANDLE hCursor;
-  LONG cx, cy;
-  LONG hx, hy;
-  PVOID AndImage;
-  PVOID XorImage;
-} SYSCURSOR, *PSYSCURSOR;
+  FAST_MUTEX LockHandles;
+  PVOID Handles;
+  PVOID Objects;
+  UINT Count;
+} CURICONS, *PCURICONS;
 
 typedef struct _SYSTEM_CURSORINFO
 {
   BOOL Enabled;
   BOOL SwapButtons;
-  UINT CurrentCursor;
   UINT ButtonsDown;
   LONG x, y;
   BOOL SafetySwitch, SafetySwitch2;
   FAST_MUTEX CursorMutex;
   CURSORCLIP_INFO CursorClipInfo;
-  SYSCURSOR SystemCursors[SYSCURSORCOUNT];
+  CURICONS CurIcons;
+  PVOID CurrentCursorObject;
+  BYTE ShowingCursor;
   UINT DblClickSpeed;
   UINT DblClickWidth;
   UINT DblClickHeight;
@@ -76,6 +73,8 @@ typedef struct _DESKTOP_OBJECT
   struct _WINSTATION_OBJECT *WindowStation;
   /* Pointer to the active queue. */
   PVOID ActiveMessageQueue;
+  /* Rectangle of the work area */
+  struct RECT* WorkArea;
   /* Handle of the desktop window. */
   HANDLE DesktopWindow;
   HANDLE PrevActiveWindow;

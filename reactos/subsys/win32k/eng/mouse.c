@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.43 2003/09/28 00:26:13 weiden Exp $
+/* $Id: mouse.c,v 1.44 2003/11/10 17:44:49 weiden Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -36,6 +36,8 @@
 #include "include/msgqueue.h"
 #include "include/object.h"
 #include "include/winsta.h"
+#include "include/cursoricon.h"
+#include "include/callback.h"
 #include <include/mouse.h>
 
 #define NDEBUG
@@ -43,77 +45,6 @@
 
 
 #define GETSYSCURSOR(x) ((x) - OCR_NORMAL)
-
-/* GLOBALS *******************************************************************/
-
-static ULONG PointerStatus;
-
-static UCHAR DefaultCursor[256] = {
-  0x3F, 0xFF, 0xFF, 0xFF,
-  0x1F, 0xFF, 0xFF, 0xFF,
-  0x0F, 0xFF, 0xFF, 0xFF,
-  0x07, 0xFF, 0xFF, 0xFF,
-  0x03, 0xFF, 0xFF, 0xFF,
-  0x01, 0xFF, 0xFF, 0xFF,
-  0x00, 0xFF, 0xFF, 0xFF,
-  0x00, 0x7F, 0xFF, 0xFF,
-  0x00, 0x3F, 0xFF, 0xFF,
-  0x00, 0x1F, 0xFF, 0xFF,
-  0x00, 0x0F, 0xFF, 0xFF,
-  0x00, 0xFF, 0xFF, 0xFF,
-  0x00, 0xFF, 0xFF, 0xFF,
-  0x18, 0x7F, 0xFF, 0xFF,
-  0x38, 0x7F, 0xFF, 0xFF,
-  0x7C, 0x3F, 0xFF, 0xFF,
-  0xFC, 0x3F, 0xFF, 0xFF,
-  0xFE, 0x1F, 0xFF, 0xFF,
-  0xFE, 0x1F, 0xFF, 0xFF,
-  0xFF, 0x3F, 0xFF, 0xFF,
-  0xFF, 0xFF, 0xFF, 0xFF,
-  0xFF, 0xFF, 0xFF, 0xFF,
-  0xFF, 0xFF, 0xFF, 0xFF,
-  0xFF, 0xFF, 0xFF, 0xFF,
-  0xFF, 0xFF, 0xFF, 0xFF,
-  0xFF, 0xFF, 0xFF, 0xFF,
-  0xFF, 0xFF, 0xFF, 0xFF,
-  0xFF, 0xFF, 0xFF, 0xFF,
-  0xFF, 0xFF, 0xFF, 0xFF,
-  0xFF, 0xFF, 0xFF, 0xFF,
-  0xFF, 0xFF, 0xFF, 0xFF,
-  0xFF, 0xFF, 0xFF, 0xFF,
-
-  0x00, 0x00, 0x00, 0x00,
-  0x40, 0x00, 0x00, 0x00,
-  0x60, 0x00, 0x00, 0x00,
-  0x70, 0x00, 0x00, 0x00,
-  0x78, 0x00, 0x00, 0x00,
-  0x7C, 0x00, 0x00, 0x00,
-  0x7E, 0x00, 0x00, 0x00,
-  0x7F, 0x00, 0x00, 0x00,
-  0x7F, 0x80, 0x00, 0x00,
-  0x7F, 0xC0, 0x00, 0x00,
-  0x7E, 0x00, 0x00, 0x00,
-  0x76, 0x00, 0x00, 0x00,
-  0x76, 0x00, 0x00, 0x00,
-  0x43, 0x00, 0x00, 0x00,
-  0x03, 0x00, 0x00, 0x00,
-  0x01, 0x80, 0x00, 0x00,
-  0x01, 0x80, 0x00, 0x00,
-  0x00, 0xC0, 0x00, 0x00,
-  0x00, 0xC0, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00};
 
 /* FUNCTIONS *****************************************************************/
 
@@ -192,8 +123,8 @@ MouseSafetyOnDrawStart(PSURFOBJ SurfObj, PSURFGDI SurfGDI, LONG HazardX1,
   RECTL MouseRect;
   LONG tmp;
   PSYSTEM_CURSORINFO CurInfo;
-  PSYSCURSOR SysCursor;
   BOOL MouseEnabled = FALSE;
+  PCURICON_OBJECT Cursor;
 
 
   /* Mouse is not allowed to move if GDI is busy drawing */
@@ -202,8 +133,7 @@ MouseSafetyOnDrawStart(PSURFOBJ SurfObj, PSURFGDI SurfGDI, LONG HazardX1,
   {
     CurInfo = &InputWindowStation->SystemCursor;
     
-    SysCursor = &CurInfo->SystemCursors[CurInfo->CurrentCursor];
-    MouseEnabled = CurInfo->Enabled && SysCursor->hCursor;
+    MouseEnabled = CurInfo->Enabled && CurInfo->ShowingCursor;
   }
   else
     return FALSE;
@@ -225,12 +155,18 @@ MouseSafetyOnDrawStart(PSURFOBJ SurfObj, PSURFGDI SurfGDI, LONG HazardX1,
       return(FALSE);
     }
 
-  if (SPS_ACCEPT_NOEXCLUDE == PointerStatus)
+  if (SPS_ACCEPT_NOEXCLUDE == SurfGDI->PointerStatus)
     {
       /* Hardware cursor, no need to remove it */
       ObDereferenceObject(InputWindowStation);
       return(FALSE);
     }
+  
+  if(!(Cursor = CurInfo->CurrentCursorObject))
+  {
+    ObDereferenceObject(InputWindowStation);
+    return(FALSE);
+  }
 
   if (HazardX1 > HazardX2)
     {
@@ -241,8 +177,8 @@ MouseSafetyOnDrawStart(PSURFOBJ SurfObj, PSURFGDI SurfGDI, LONG HazardX1,
       tmp = HazardY2; HazardY2 = HazardY1; HazardY1 = tmp;
     }
 
-  if (((CurInfo->x + SysCursor->cx) >= HazardX1)  && (CurInfo->x <= HazardX2) &&
-      ((CurInfo->y + SysCursor->cy) >= HazardY1) && (CurInfo->y <= HazardY2))
+  if (((CurInfo->x + Cursor->Size.cx) >= HazardX1)  && (CurInfo->x <= HazardX2) &&
+      ((CurInfo->y + Cursor->Size.cy) >= HazardY1) && (CurInfo->y <= HazardY2))
     {
       /* Mouse is not allowed to move if GDI is busy drawing */
       ExAcquireFastMutexUnsafe(&CurInfo->CursorMutex);
@@ -263,7 +199,6 @@ MouseSafetyOnDrawEnd(PSURFOBJ SurfObj, PSURFGDI SurfGDI)
 {
   RECTL MouseRect;
   PSYSTEM_CURSORINFO CurInfo;
-  PSYSCURSOR SysCursor;
   BOOL MouseEnabled = FALSE;
     
   if(IntGetWindowStationObject(InputWindowStation))
@@ -282,8 +217,7 @@ MouseSafetyOnDrawEnd(PSURFOBJ SurfObj, PSURFGDI SurfGDI)
     return FALSE;
   }
   
-  SysCursor = &CurInfo->SystemCursors[CurInfo->CurrentCursor];
-  MouseEnabled = CurInfo->Enabled && SysCursor->hCursor;
+  MouseEnabled = CurInfo->Enabled && CurInfo->ShowingCursor;
 
   if (SurfObj->iType != STYPE_DEVICE || MouseEnabled == FALSE)
     {
@@ -294,7 +228,7 @@ MouseSafetyOnDrawEnd(PSURFOBJ SurfObj, PSURFGDI SurfGDI)
       return(FALSE);
     }
 
-  if (SPS_ACCEPT_NOEXCLUDE == PointerStatus)
+  if (SPS_ACCEPT_NOEXCLUDE == SurfGDI->PointerStatus)
     {
       /* Hardware cursor, it wasn't removed so need to restore it */
       ExAcquireFastMutexUnsafe(&CurInfo->CursorMutex);
@@ -395,7 +329,6 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
 {
   ULONG i;
   PSYSTEM_CURSORINFO CurInfo;
-  PSYSCURSOR SysCursor;
   BOOL MouseEnabled = FALSE;
   BOOL MouseMoveAdded = FALSE;
   BOOL Moved = FALSE;
@@ -420,7 +353,6 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
   if(IntGetWindowStationObject(InputWindowStation))
   {
     CurInfo = &InputWindowStation->SystemCursor;
-    SysCursor = &CurInfo->SystemCursors[CurInfo->CurrentCursor];
     MouseEnabled = CurInfo->Enabled;
     if(!MouseEnabled)
     {
@@ -657,12 +589,6 @@ EnableMouse(HDC hDisplayDC)
   PDC dc;
   PSURFOBJ SurfObj;
   PSURFGDI SurfGDI;
-  HBITMAP hMouseSurf;
-  PSURFOBJ MouseSurf;
-  SIZEL MouseSize;
-  RECTL MouseRect;
-  PSYSTEM_CURSORINFO CurInfo;
-  PSYSCURSOR SysCursor;
 
   if( hDisplayDC && InputWindowStation)
   {
@@ -671,49 +597,27 @@ EnableMouse(HDC hDisplayDC)
        InputWindowStation->SystemCursor.Enabled = FALSE;
        return;
     }
-    
-    CurInfo = &InputWindowStation->SystemCursor;
-    SysCursor = &CurInfo->SystemCursors[CurInfo->CurrentCursor];
+    IntSetCursor(InputWindowStation, NULL, TRUE);
     
     dc = DC_LockDc(hDisplayDC);
     SurfObj = (PSURFOBJ)AccessUserObject((ULONG) dc->Surface);
     SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
     DC_UnlockDc( hDisplayDC );
     
-    /* Tell the display driver to set the pointer shape. */
-    CurInfo->x = SurfObj->sizlBitmap.cx / 2;
-    CurInfo->y = SurfObj->sizlBitmap.cy / 2;
-
-    /* Create the default mouse cursor. */
-    MouseSize.cx = SysCursor->cx;
-    MouseSize.cy = SysCursor->cy * 2;
-    hMouseSurf = EngCreateBitmap(MouseSize, 4, BMF_1BPP, BMF_TOPDOWN, DefaultCursor);
-    MouseSurf = (PSURFOBJ)AccessUserObject((ULONG) hMouseSurf);
-
-    DPRINT("Setting Cursor up at 0x%x, 0x%x\n", CurInfo->x, CurInfo->y);
-    IntCheckClipCursor(&CurInfo->x, 
-                       &CurInfo->y,
-                       CurInfo);
-
-    PointerStatus = SurfGDI->SetPointerShape(SurfObj, MouseSurf, NULL, NULL,
-                                             SysCursor->hx,
-                                             SysCursor->hy, 
-                                             CurInfo->x, 
-                                             CurInfo->y, 
-                                             &MouseRect,
-                                             SPS_CHANGE);
-
-    InputWindowStation->SystemCursor.Enabled = (SPS_ACCEPT_EXCLUDE == PointerStatus ||
-                                                SPS_ACCEPT_NOEXCLUDE == PointerStatus);
-
-    EngDeleteSurface(hMouseSurf);
-    ObDereferenceObject(InputWindowStation);
+    InputWindowStation->SystemCursor.Enabled = (SPS_ACCEPT_EXCLUDE == SurfGDI->PointerStatus ||
+                                                SPS_ACCEPT_NOEXCLUDE == SurfGDI->PointerStatus);
     
+    /* Move the cursor to the screen center */
+    DPRINT("Setting Cursor up at 0x%x, 0x%x\n", SurfObj->sizlBitmap.cx / 2, SurfObj->sizlBitmap.cy / 2);
+    MouseMoveCursor(SurfObj->sizlBitmap.cx / 2, SurfObj->sizlBitmap.cy / 2);
+
+    ObDereferenceObject(InputWindowStation);
   }
   else
   {
     if(IntGetWindowStationObject(InputWindowStation))
     {
+       IntSetCursor(InputWindowStation, NULL, TRUE);
        InputWindowStation->SystemCursor.Enabled = FALSE;
        InputWindowStation->SystemCursor.CursorClipInfo.IsClipped = FALSE;
 	   ObDereferenceObject(InputWindowStation);

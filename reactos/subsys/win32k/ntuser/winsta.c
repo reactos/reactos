@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winsta.c,v 1.39 2003/10/19 19:51:48 navaraf Exp $
+/* $Id: winsta.c,v 1.40 2003/11/10 17:44:49 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -48,6 +48,7 @@
 #include <include/mouse.h>
 #include <include/callback.h>
 #include <include/color.h>
+#include <include/cursoricon.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -66,7 +67,7 @@ STATIC HDESK InputDesktopHandle = NULL;
 STATIC PDESKTOP_OBJECT InputDesktop = NULL;
 //STATIC PWINSTATION_OBJECT InputWindowStation = NULL;
 
-static HDC ScreenDeviceContext = NULL;
+HDC ScreenDeviceContext = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -375,11 +376,12 @@ NtUserCreateWindowStation(PUNICODE_STRING lpszWindowStationName,
   ExInitializeFastMutex(&WinStaObject->SystemCursor.CursorMutex);
   WinStaObject->SystemCursor.Enabled = FALSE;
   WinStaObject->SystemCursor.ButtonsDown = 0;
-  WinStaObject->SystemCursor.CurrentCursor = 0;
   WinStaObject->SystemCursor.x = (LONG)0;
   WinStaObject->SystemCursor.y = (LONG)0;
   WinStaObject->SystemCursor.CursorClipInfo.IsClipped = FALSE;
   WinStaObject->SystemCursor.LastBtnDown = 0;
+  WinStaObject->SystemCursor.CurrentCursorObject = NULL;
+  WinStaObject->SystemCursor.ShowingCursor = 0;
   
   /* FIXME Obtain the following information from the registry */
   WinStaObject->SystemCursor.SwapButtons = FALSE;
@@ -389,13 +391,10 @@ NtUserCreateWindowStation(PUNICODE_STRING lpszWindowStationName,
   WinStaObject->SystemCursor.DblClickWidth = 4;
   WinStaObject->SystemCursor.DblClickHeight = 4;
   
-  /* FIXME tell user32 to load the cursors from it's rosource file or
-           to load the user's cursor scheme */
-  WinStaObject->SystemCursor.SystemCursors[0].hCursor = (HANDLE)1;
-  WinStaObject->SystemCursor.SystemCursors[0].cx = 32;
-  WinStaObject->SystemCursor.SystemCursors[0].cy = 32;
-  
-  /* FIXME setup system cursors */
+  if(!IntSetupCurIconHandles(WinStaObject))
+  {
+    DbgPrint("Setting up the Cursor/Icon Handle table failed!\n");
+  }
   
   DPRINT("Window station successfully created (%wZ)\n", &WindowStationName);
   
@@ -662,6 +661,7 @@ NtUserCreateDesktop(PUNICODE_STRING lpszDesktopName,
   WCHAR NameBuffer[MAX_PATH];
   NTSTATUS Status;
   HDESK Desktop;
+  PRECT WorkArea;
 
   Status = ValidateWindowStationHandle(hWindowStation,
 				       KernelMode,
@@ -711,7 +711,7 @@ NtUserCreateDesktop(PUNICODE_STRING lpszDesktopName,
 			  &ObjectAttributes,
 			  ExGetPreviousMode(),
 			  NULL,
-			  sizeof(DESKTOP_OBJECT),
+			  sizeof(DESKTOP_OBJECT) + sizeof(RECT),
 			  0,
 			  0,
 			  (PVOID*)&DesktopObject);
@@ -721,6 +721,13 @@ NtUserCreateDesktop(PUNICODE_STRING lpszDesktopName,
       SetLastNtError(STATUS_UNSUCCESSFUL);
       return((HDESK)0);
     }
+  
+  WorkArea = (PRECT)((PDESKTOP_OBJECT)(DesktopObject + 1));
+  DesktopObject->WorkArea = (struct RECT *)WorkArea;
+  WorkArea->left = 0;
+  WorkArea->top = 0;
+  WorkArea->right = 640;
+  WorkArea->bottom = 480;
 
   /* Initialize some local (to win32k) desktop state. */
   DesktopObject->ActiveMessageQueue = NULL;  
@@ -1014,9 +1021,9 @@ IntInitializeDesktopGraphics(VOID)
 {
   ScreenDeviceContext = NtGdiCreateDC(L"DISPLAY", NULL, NULL, NULL);
   GDIOBJ_MarkObjectGlobal(ScreenDeviceContext);
+  EnableMouse(ScreenDeviceContext);
   /* not the best place to load the cursors but it's good for now */
   IntLoadDefaultCursors();
-  EnableMouse(ScreenDeviceContext);
   NtUserAcquireOrReleaseInputOwnership(FALSE);
 }
 

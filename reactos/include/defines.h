@@ -1382,6 +1382,9 @@ extern "C" {
 /* GetComputerName */
 #define MAX_COMPUTERNAME_LENGTH	(15)
 
+/* GetCursorInfo */
+#define CURSOR_SHOWING     0x00000001
+
 
 /* GetCPInfo */
 #define CP_ACP	(0)

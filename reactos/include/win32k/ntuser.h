@@ -270,6 +270,12 @@ NtUserCreateCaret(
   int nWidth,
   int nHeight);
 
+HICON
+STDCALL
+NtUserCreateCursorIconHandle(
+  PICONINFO IconInfo,
+  BOOL Indirect);
+
 HDESK
 STDCALL
 NtUserCreateDesktop(
@@ -427,20 +433,20 @@ NtUserDrawCaptionTemp(
   DWORD Unknown5,
   DWORD Unknown6);
 
-DWORD
+BOOL
 STDCALL
 NtUserDrawIconEx(
+  HDC hdc,
+  int xLeft,
+  int yTop,
+  HICON hIcon,
+  int cxWidth,
+  int cyWidth,
+  UINT istepIfAniCur,
+  HBRUSH hbrFlickerFreeDraw,
+  UINT diFlags,
   DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5,
-  DWORD Unknown6,
-  DWORD Unknown7,
-  DWORD Unknown8,
-  DWORD Unknown9,
-  DWORD Unknown10);
+  DWORD Unknown1);
 
 DWORD
 STDCALL
@@ -534,12 +540,11 @@ NtUserFillWindow(
   DWORD Unknown2,
   DWORD Unknown3);
 
-DWORD
+HICON
 STDCALL
 NtUserFindExistingCursorIcon(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+  HMODULE hModule,
+  HRSRC hRsrc);
 
 HWND
 STDCALL
@@ -698,23 +703,18 @@ NtUserGetGUIThreadInfo(
   DWORD Unknown0,
   DWORD Unknown1);
 
-DWORD
+BOOL
 STDCALL
 NtUserGetIconInfo(
   HICON hIcon,
-  PBOOL fIcon,
-  PDWORD xHotspot,
-  PDWORD yHotspot,
-  HBITMAP *hbmMask,
-  HBITMAP *hbmColor);
+  PICONINFO IconInfo);
 
 BOOL
 STDCALL
 NtUserGetIconSize(
   HICON hIcon,
   BOOL *fIcon,
-  LONG *Width,
-  LONG *Height);
+  SIZE *Size);
 
 DWORD
 STDCALL
@@ -1336,17 +1336,19 @@ NtUserSetCursor(
 
 BOOL
 STDCALL
-NtUserSetCursorContents(
+NtUserSetCursorIconContents(
   HCURSOR hCursor,
-  DWORD Unknown);
+  PICONINFO IconInfo);
 
 BOOL
 STDCALL
 NtUserSetCursorIconData(
   HICON hIcon,
   PBOOL fIcon,
-  PDWORD xHotspot,
-  PDWORD yHotspot);
+  POINT *Hotspot,
+  HMODULE hModule,
+  HRSRC hRsrc,
+  HRSRC hGroupRsrc);
 
 DWORD
 STDCALL

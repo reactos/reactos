@@ -292,6 +292,24 @@ enum _GLYPH_MODE
 #define GCAPS_NO64BITMEMACCESS  0x00400000
 #define GCAPS_FORCEDITHER       0x00800000
 #define GCAPS_GRAY16            0x01000000
+#define GCAPS_ICM               0x02000000
+#define GCAPS_CMYKCOLOR         0x04000000
+#define GCAPS_LAYERED           0x08000000
+#define GCAPS_ARBRUSHTEXT       0x10000000
+#define GCAPS_SCREENPRECISION   0x20000000
+#define GCAPS_FONT_RASTERIZER   0x40000000
+#define GCAPS_NUP               0x80000000
+
+#define GCAPS2_JPEGSRC          0x00000001
+#define GCAPS2_xxxx             0x00000002
+#define GCAPS2_PNGSRC           0x00000008
+#define GCAPS2_CHANGEGAMMARAMP  0x00000010
+#define GCAPS2_ALPHACURSOR      0x00000020
+#define GCAPS2_SYNCFLUSH        0x00000040
+#define GCAPS2_SYNCTIMER        0x00000080
+#define GCAPS2_ICD_MULTIMON     0x00000100
+#define GCAPS2_MOUSETRAILS      0x00000200
+#define GCAPS2_RESERVED1        0x00000400
 
 /*  EngAssocateSurface hook flags  */
 #define  HOOK_BITBLT             0x00000001
@@ -527,6 +545,7 @@ typedef struct _DEVINFO
   USHORT  cxDither;
   USHORT  cyDither;
   HPALETTE  hpalDefault;
+  ULONG  flGraphicsCaps2;
 } DEVINFO, *PDEVINFO;
 
 typedef struct _GDIINFO

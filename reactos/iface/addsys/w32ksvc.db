@@ -314,6 +314,7 @@ NtUserCopyAcceleratorTable              3
 NtUserCountClipboardFormats             0
 NtUserCreateAcceleratorTable            2
 NtUserCreateCaret                       4
+NtUserCreateCursorIconHandle            2
 NtUserCreateDesktop                     5
 NtUserCreateLocalMemHandle              4
 NtUserCreateMenu			0
@@ -349,7 +350,7 @@ NtUserEnumDisplaySettings               4
 NtUserEvent                             1
 NtUserExcludeUpdateRgn                  2
 NtUserFillWindow                        4
-NtUserFindExistingCursorIcon            3
+NtUserFindExistingCursorIcon            2
 NtUserFindWindowEx                      4
 NtUserFlashWindowEx                     1
 NtUserGetActiveWindow			0
@@ -383,8 +384,8 @@ NtUserGetDoubleClickTime                0
 NtUserGetForegroundWindow               0
 NtUserGetGuiResources                   2
 NtUserGetGUIThreadInfo                  2
-NtUserGetIconInfo                       6
-NtUserGetIconSize                       4
+NtUserGetIconInfo                       2
+NtUserGetIconSize                       3
 NtUserGetImeHotKey                      4
 NtUserGetInternalWindowPos              3
 NtUserGetKeyboardLayoutList             2
@@ -481,8 +482,8 @@ NtUserSetClipboardData                  3
 NtUserSetClipboardViewer                1
 NtUserSetConsoleReserveKeys             2
 NtUserSetCursor                         1
-NtUserSetCursorContents                 2
-NtUserSetCursorIconData                 4
+NtUserSetCursorIconContents             2
+NtUserSetCursorIconData                 6
 NtUserSetDbgTag                         2
 NtUserSetFocus                          1
 NtUserSetImeHotKey                      5

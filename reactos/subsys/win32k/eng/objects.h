@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: objects.h,v 1.19 2003/10/29 08:38:55 gvg Exp $
+/* $Id: objects.h,v 1.20 2003/11/10 17:44:49 weiden Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -186,6 +186,9 @@ typedef struct _SURFGDI {
   PFN_DIB_HLine    DIB_HLine;
   PFN_DIB_VLine    DIB_VLine;
   PFN_DIB_BitBlt   DIB_BitBlt;
+
+  /* misc */
+  ULONG PointerStatus;
 } SURFGDI;
 
 typedef struct _XFORMGDI {

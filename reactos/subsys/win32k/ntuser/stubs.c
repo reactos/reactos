@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.33 2003/11/09 18:38:09 navaraf Exp $
+/* $Id: stubs.c,v 1.34 2003/11/10 17:44:49 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -327,26 +327,6 @@ NtUserDrawCaptionTemp(
   DWORD Unknown4,
   DWORD Unknown5,
   DWORD Unknown6)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserDrawIconEx(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5,
-  DWORD Unknown6,
-  DWORD Unknown7,
-  DWORD Unknown8,
-  DWORD Unknown9,
-  DWORD Unknown10)
 {
   UNIMPLEMENTED
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursor.c,v 1.13 2003/09/24 21:09:22 weiden Exp $
+/* $Id: cursor.c,v 1.14 2003/11/10 17:44:49 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/cursor.c
@@ -33,6 +33,9 @@
 #include <string.h>
 #include <debug.h>
 
+HBITMAP
+CopyBitmap(HBITMAP bmp);
+
 /* INTERNAL ******************************************************************/
 
 /* This callback routine is called directly after switching to gui mode */
@@ -41,6 +44,8 @@ User32SetupDefaultCursors(PVOID Arguments, ULONG ArgumentLength)
 {
   LRESULT Result = TRUE;
   /* FIXME load system cursor scheme */
+  SetCursor(0);
+  SetCursor(LoadCursorW(0, (LPCWSTR)IDC_ARROW));
   
   return(ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS));
 }
@@ -49,18 +54,23 @@ User32SetupDefaultCursors(PVOID Arguments, ULONG ArgumentLength)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HCURSOR STDCALL
 CopyCursor(HCURSOR pcur)
 {
-  UNIMPLEMENTED;
+  ICONINFO IconInfo;
+  
+  if(NtUserGetIconInfo((HICON)pcur, &IconInfo))
+  {
+    return (HCURSOR)NtUserCreateCursorIconHandle(&IconInfo, FALSE);
+  }
   return (HCURSOR)0;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HCURSOR STDCALL
 CreateCursor(HINSTANCE hInst,
@@ -71,20 +81,34 @@ CreateCursor(HINSTANCE hInst,
 	     CONST VOID *pvANDPlane,
 	     CONST VOID *pvXORPlane)
 {
+  ICONINFO IconInfo;
 
-  UNIMPLEMENTED;
-  return (HCURSOR)0;
+  IconInfo.fIcon = FALSE;
+  IconInfo.xHotspot = xHotSpot;
+  IconInfo.yHotspot = yHotSpot;
+  IconInfo.hbmMask = CreateBitmap(nWidth, nHeight, 1, 1, pvANDPlane);
+  if(!IconInfo.hbmMask)
+  {
+    return (HICON)0;
+  }
+  IconInfo.hbmColor = CreateBitmap(nWidth, nHeight, 1, 1, pvXORPlane);
+  if(!IconInfo.hbmColor)
+  {
+    DeleteObject(IconInfo.hbmMask);
+    return (HICON)0;
+  }
+  
+  return (HCURSOR)NtUserCreateCursorIconHandle(&IconInfo, FALSE);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL STDCALL
 DestroyCursor(HCURSOR hCursor)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return (WINBOOL)NtUserDestroyCursor((HICON)hCursor, 0);
 }
 
 
@@ -99,24 +123,27 @@ GetClipCursor(LPRECT lpRect)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HCURSOR STDCALL
 GetCursor(VOID)
 {
-  UNIMPLEMENTED;
-  return (HCURSOR)0;
+  CURSORINFO ci;
+  ci.cbSize = sizeof(CURSORINFO);
+  if(NtUserGetCursorInfo(&ci))
+    return ci.hCursor;
+  else
+    return (HCURSOR)0;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL STDCALL
 GetCursorInfo(PCURSORINFO pci)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return (WINBOOL)NtUserGetCursorInfo(pci);
 }
 
 
@@ -200,25 +227,17 @@ STDCALL
 ClipCursor(
   CONST RECT *lpRect)
 {
-  RECT rc;
-  if(lpRect)
-  {
-    RtlCopyMemory(&rc, lpRect, sizeof(RECT));
-    return NtUserClipCursor(&rc);
-  }
-  else
-    return NtUserClipCursor(NULL);
+  return NtUserClipCursor((RECT *)lpRect);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HCURSOR STDCALL
 SetCursor(HCURSOR hCursor)
 {
-  UNIMPLEMENTED;
-  return (HCURSOR)0;
+  return NtUserSetCursor(hCursor);
 }
 
 

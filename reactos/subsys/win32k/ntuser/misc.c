@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.21 2003/10/17 20:31:56 weiden Exp $
+/* $Id: misc.c,v 1.22 2003/11/10 17:44:49 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -20,6 +20,7 @@
 #include <include/mouse.h>
 #include <include/winsta.h>
 #include <include/caret.h>
+#include <include/object.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -286,50 +287,71 @@ NtUserSystemParametersInfo(
     0, 0, DEFAULT_QUALITY, FF_MODERN, L"Bitstream Vera Sans Bold" };*/
   NTSTATUS Status;
   PWINSTATION_OBJECT WinStaObject;
-  RECT Rect;
   
   switch(uiAction)
   {
     case SPI_SETDOUBLECLKWIDTH:
     case SPI_SETDOUBLECLKHEIGHT:
     case SPI_SETDOUBLECLICKTIME:
-      Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-                                           KernelMode,
-                                           0,
-                                           &WinStaObject);
-      if (!NT_SUCCESS(Status))
-        return (DWORD)FALSE;
-      
-      switch(uiAction)
       {
-        case SPI_SETDOUBLECLKWIDTH:
-          /* FIXME limit the maximum value? */
-          WinStaObject->SystemCursor.DblClickWidth = uiParam;
-          break;
-        case SPI_SETDOUBLECLKHEIGHT:
-          /* FIXME limit the maximum value? */
-          WinStaObject->SystemCursor.DblClickHeight = uiParam;
-          break;
-        case SPI_SETDOUBLECLICKTIME:
-          /* FIXME limit the maximum time to 1000 ms? */
-          WinStaObject->SystemCursor.DblClickSpeed = uiParam;
-          break;
+        Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+                                             KernelMode,
+                                             0,
+                                             &WinStaObject);
+        if (!NT_SUCCESS(Status))
+          return (DWORD)FALSE;
+        
+        switch(uiAction)
+        {
+          case SPI_SETDOUBLECLKWIDTH:
+            /* FIXME limit the maximum value? */
+            WinStaObject->SystemCursor.DblClickWidth = uiParam;
+            break;
+          case SPI_SETDOUBLECLKHEIGHT:
+            /* FIXME limit the maximum value? */
+            WinStaObject->SystemCursor.DblClickHeight = uiParam;
+            break;
+          case SPI_SETDOUBLECLICKTIME:
+            /* FIXME limit the maximum time to 1000 ms? */
+            WinStaObject->SystemCursor.DblClickSpeed = uiParam;
+            break;
+        }
+        
+        /* FIXME save the value to the registry */
+        
+        ObDereferenceObject(WinStaObject);
+        return TRUE;
       }
-      
-      /* FIXME save the value to the registry */
-      
-      ObDereferenceObject(WinStaObject);
-      return TRUE;
-
+    case SPI_SETWORKAREA:
+      {
+        PDESKTOP_OBJECT Desktop = PsGetWin32Thread()->Desktop;
+        
+        if(!Desktop)
+        {
+          /* FIXME - Set last error */
+          return FALSE;
+        }
+        
+        Status = MmCopyFromCaller(Desktop->WorkArea, (PRECT)pvParam, sizeof(RECT));
+        if(!NT_SUCCESS(Status))
+        {
+          SetLastNtError(Status);
+          return FALSE;
+        }
+        
+        return TRUE;
+      }
     case SPI_GETWORKAREA:
       {
-        /* FIXME */
-        Rect.left = 0;
-        Rect.top = 0;
-        Rect.right = 640;
-        Rect.bottom = 480;
+        PDESKTOP_OBJECT Desktop = PsGetWin32Thread()->Desktop;
         
-        Status = MmCopyToCaller((PRECT)pvParam, &Rect, sizeof(RECT));
+        if(!Desktop)
+        {
+          /* FIXME - Set last error */
+          return FALSE;
+        }
+        
+        Status = MmCopyToCaller((PRECT)pvParam, Desktop->WorkArea, sizeof(RECT));
         if(!NT_SUCCESS(Status))
         {
           SetLastNtError(Status);

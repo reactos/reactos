@@ -17,6 +17,8 @@
 WINSTATION_OBJECT *InputWindowStation;
 //FAST_MUTEX InputWindowStationLock;
 
+extern HDC ScreenDeviceContext;
+
 
 NTSTATUS FASTCALL
 InitWindowStationImpl(VOID);
