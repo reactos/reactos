@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.59 2004/02/24 01:30:57 weiden Exp $
+/* $Id: windc.c,v 1.60 2004/03/23 16:32:20 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -485,6 +485,8 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
       if (Dce->hClipRgn && Window->UpdateRegion)
         {
           NtGdiCombineRgn(Dce->hClipRgn, Window->UpdateRegion, NULL, RGN_COPY);
+          if(Window->WindowRegion)
+            NtGdiCombineRgn(Dce->hClipRgn, Dce->hClipRgn, Window->WindowRegion, RGN_AND);
           if (!(Flags & DCX_WINDOW))
             {
               NtGdiOffsetRgn(Dce->hClipRgn,
@@ -500,14 +502,25 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
       if (!(Flags & DCX_WINDOW))
         {
           Dce->hClipRgn = UnsafeIntCreateRectRgnIndirect(&Window->ClientRect);
-          NtGdiOffsetRgn(Dce->hClipRgn, -Window->ClientRect.left,
-             -Window->ClientRect.top);
+          if(Window->WindowRegion)
+          {
+            NtGdiOffsetRgn(Dce->hClipRgn, -Window->WindowRect.left, -Window->WindowRect.top);
+            NtGdiCombineRgn(Dce->hClipRgn, Dce->hClipRgn, Window->WindowRegion, RGN_AND);
+            NtGdiOffsetRgn(Dce->hClipRgn, -(Window->ClientRect.left - Window->WindowRect.left), 
+                                          -(Window->ClientRect.top - Window->WindowRect.top));
+          }
+          else
+          {
+            NtGdiOffsetRgn(Dce->hClipRgn, -Window->ClientRect.left, -Window->ClientRect.top);
+          }
         }
       else
         {
           Dce->hClipRgn = UnsafeIntCreateRectRgnIndirect(&Window->WindowRect);
           NtGdiOffsetRgn(Dce->hClipRgn, -Window->WindowRect.left,
              -Window->WindowRect.top);
+          if(Window->WindowRegion)
+            NtGdiCombineRgn(Dce->hClipRgn, Dce->hClipRgn, Window->WindowRegion, RGN_AND);
         }
     }
   else if (NULL != ClipRegion)
@@ -515,7 +528,10 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
       Dce->hClipRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
       if (Dce->hClipRgn)
         {
-          NtGdiCombineRgn(Dce->hClipRgn, ClipRegion, NULL, RGN_COPY);
+          if(Window->WindowRegion)
+            NtGdiCombineRgn(Dce->hClipRgn, ClipRegion, Window->WindowRegion, RGN_AND);
+          else
+            NtGdiCombineRgn(Dce->hClipRgn, ClipRegion, NULL, RGN_COPY);
         }
       NtGdiDeleteObject(ClipRegion);
     }

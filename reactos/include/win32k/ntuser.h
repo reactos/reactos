@@ -1425,12 +1425,12 @@ STDCALL NtUserSetWindowPos(
     UINT uFlags
 );
 
-DWORD
+INT
 STDCALL
 NtUserSetWindowRgn(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+  HWND hWnd,
+  HRGN hRgn,
+  BOOL bRedraw);
 
 DWORD
 STDCALL

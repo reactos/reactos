@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.199 2004/03/13 23:12:19 gvg Exp $
+/* $Id: window.c,v 1.200 2004/03/23 16:32:20 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -416,6 +416,11 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
   
   ObmDereferenceObject(Window->Class);
   Window->Class = NULL;
+  
+  if(Window->WindowRegion)
+  {
+    NtGdiDeleteObject(Window->WindowRegion);
+  }
   
   IntReleaseWindowObject(Window);
 
@@ -3390,16 +3395,42 @@ NtUserSetWindowPos(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
-DWORD STDCALL
-NtUserSetWindowRgn(DWORD Unknown0,
-		   DWORD Unknown1,
-		   DWORD Unknown2)
+INT STDCALL
+NtUserSetWindowRgn(
+  HWND hWnd,
+  HRGN hRgn,
+  BOOL bRedraw)
 {
-  UNIMPLEMENTED
-
-  return 0;
+  PWINDOW_OBJECT WindowObject;
+  
+  WindowObject = IntGetWindowObject(hWnd);
+  if (WindowObject == NULL)
+  {
+    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+    return 0;
+  }
+  
+  /* FIXME - Verify if hRgn is a valid handle!!!!
+             Propably make this operation thread-safe, but maybe it's not necessary */
+  
+  if(WindowObject->WindowRegion)
+  {
+    /* Delete no longer needed region handle */
+    NtGdiDeleteObject(WindowObject->WindowRegion);
+  }
+  WindowObject->WindowRegion = hRgn;
+  
+  /* FIXME - send WM_WINDOWPOSCHANGING and WM_WINDOWPOSCHANGED messages to the window */
+  
+  if(bRedraw)
+  {
+    IntRedrawWindow(WindowObject, NULL, NULL, RDW_INVALIDATE);
+  }
+  
+  IntReleaseWindowObject(WindowObject);
+  return (INT)hRgn;
 }
 
 

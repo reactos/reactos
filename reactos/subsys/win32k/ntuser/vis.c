@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: vis.c,v 1.23 2004/03/14 20:31:55 gvg Exp $
+ * $Id: vis.c,v 1.24 2004/03/23 16:32:20 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -52,16 +52,27 @@ VIS_ComputeVisibleRegion(
 
    if (ClientArea)
    {
-      VisRgn = UnsafeIntCreateRectRgnIndirect(&Window->ClientRect);
-      LeftOffset = Window->ClientRect.left;
-      TopOffset = Window->ClientRect.top;
+      if(!(ClipRgn = VIS_ComputeVisibleRegion(Window, FALSE, ClipChildren, ClipSiblings)))
+      {
+        return NULL;
+      }
+      if(!(VisRgn = UnsafeIntCreateRectRgnIndirect(&Window->ClientRect)))
+      {
+        NtGdiDeleteObject(VisRgn);
+        return NULL;
+      }
+      LeftOffset = Window->ClientRect.left - Window->WindowRect.left;
+      TopOffset = Window->ClientRect.top - Window->WindowRect.top;
+      NtGdiOffsetRgn(VisRgn, -Window->WindowRect.left, -Window->WindowRect.top);
+      NtGdiCombineRgn(VisRgn, VisRgn, ClipRgn, RGN_AND);
+      NtGdiDeleteObject(ClipRgn);
+      NtGdiOffsetRgn(VisRgn, -LeftOffset, -TopOffset);
+      return VisRgn;
    }
-   else
-   {
-      VisRgn = UnsafeIntCreateRectRgnIndirect(&Window->WindowRect);
-      LeftOffset = Window->WindowRect.left;
-      TopOffset = Window->WindowRect.top;
-   }
+
+   VisRgn = UnsafeIntCreateRectRgnIndirect(&Window->WindowRect);
+   LeftOffset = Window->WindowRect.left;
+   TopOffset = Window->WindowRect.top;
 
    /*
     * Walk through all perent windows and for each clip the visble region 
@@ -92,6 +103,13 @@ VIS_ComputeVisibleRegion(
             if (CurrentSibling->Style & WS_VISIBLE)
             {
                ClipRgn = UnsafeIntCreateRectRgnIndirect(&CurrentSibling->WindowRect);
+               /* Combine it with the window region if available */
+               if(CurrentSibling->WindowRegion)
+               {
+                 NtGdiOffsetRgn(ClipRgn, -CurrentSibling->WindowRect.left, -CurrentSibling->WindowRect.top);
+                 NtGdiCombineRgn(ClipRgn, ClipRgn, CurrentSibling->WindowRegion, RGN_AND);
+                 NtGdiOffsetRgn(ClipRgn, CurrentSibling->WindowRect.left, CurrentSibling->WindowRect.top);
+               }
                NtGdiCombineRgn(VisRgn, VisRgn, ClipRgn, RGN_DIFF);
                NtGdiDeleteObject(ClipRgn);
             }
@@ -114,6 +132,13 @@ VIS_ComputeVisibleRegion(
          if (CurrentWindow->Style & WS_VISIBLE)
          {
             ClipRgn = UnsafeIntCreateRectRgnIndirect(&CurrentWindow->WindowRect);
+            /* Combine it with the window region if available */
+            if(CurrentWindow->WindowRegion)
+            {
+              NtGdiOffsetRgn(ClipRgn, -CurrentWindow->WindowRect.left, -CurrentWindow->WindowRect.top);
+              NtGdiCombineRgn(ClipRgn, ClipRgn, CurrentWindow->WindowRegion, RGN_AND);
+              NtGdiOffsetRgn(ClipRgn, CurrentWindow->WindowRect.left, CurrentWindow->WindowRect.top);
+            }
             NtGdiCombineRgn(VisRgn, VisRgn, ClipRgn, RGN_DIFF);
             NtGdiDeleteObject(ClipRgn);
          }
@@ -121,9 +146,16 @@ VIS_ComputeVisibleRegion(
       }
       IntUnLockRelatives(Window);
    }
-
+   
+   if(Window->WindowRegion)
+   {
+     NtGdiOffsetRgn(VisRgn, -LeftOffset, -TopOffset);
+     NtGdiCombineRgn(VisRgn, VisRgn, Window->WindowRegion, RGN_AND);
+     return VisRgn;
+   }
+   
    NtGdiOffsetRgn(VisRgn, -LeftOffset, -TopOffset);
-
+   
    return VisRgn;
 }
 

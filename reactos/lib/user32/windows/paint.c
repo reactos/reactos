@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: paint.c,v 1.23 2004/03/23 11:20:58 gvg Exp $
+/* $Id: paint.c,v 1.24 2004/03/23 16:32:20 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/paint.c
@@ -191,7 +191,7 @@ RedrawWindow(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 ScrollDC(HDC hDC, int dx, int dy, CONST RECT *lprcScroll, CONST RECT *lprcClip,
@@ -203,7 +203,7 @@ ScrollDC(HDC hDC, int dx, int dy, CONST RECT *lprcScroll, CONST RECT *lprcClip,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 STDCALL
@@ -212,8 +212,7 @@ SetWindowRgn(
   HRGN hRgn,
   BOOL bRedraw)
 {
-  UNIMPLEMENTED;
-  return 0;
+  return (int)NtUserSetWindowRgn(hWnd, hRgn, bRedraw);
 }
 
 
