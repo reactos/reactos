@@ -70,7 +70,7 @@ PMM_PAGEOP
 MmCheckForPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
                  PMM_SECTION_SEGMENT Segment, ULONG Offset)
 {
-   ULONG Hash;
+   ULONG_PTR Hash;
    KIRQL oldIrql;
    PMM_PAGEOP PageOp;
 
@@ -79,11 +79,11 @@ MmCheckForPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
     */
    if (MArea->Type == MEMORY_AREA_SECTION_VIEW)
    {
-      Hash = (((ULONG)Segment) | (((ULONG)Offset) / PAGE_SIZE));
+      Hash = (((ULONG_PTR)Segment) | (((ULONG_PTR)Offset) / PAGE_SIZE));
    }
    else
    {
-      Hash = (((ULONG)Pid) | (((ULONG)Address) / PAGE_SIZE));
+      Hash = (((ULONG_PTR)Pid) | (((ULONG_PTR)Address) / PAGE_SIZE));
    }
    Hash = Hash % PAGEOP_HASH_TABLE_SIZE;
 
@@ -137,7 +137,7 @@ MmGetPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
  * pid, address pair.      
  */
 {
-   ULONG Hash;
+   ULONG_PTR Hash;
    KIRQL oldIrql;
    PMM_PAGEOP PageOp;
 
@@ -146,11 +146,11 @@ MmGetPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
     */
    if (MArea->Type == MEMORY_AREA_SECTION_VIEW)
    {
-      Hash = (((ULONG)Segment) | (((ULONG)Offset) / PAGE_SIZE));
+      Hash = (((ULONG_PTR)Segment) | (((ULONG_PTR)Offset) / PAGE_SIZE));
    }
    else
    {
-      Hash = (((ULONG)Pid) | (((ULONG)Address) / PAGE_SIZE));
+      Hash = (((ULONG_PTR)Pid) | (((ULONG_PTR)Address) / PAGE_SIZE));
    }
    Hash = Hash % PAGEOP_HASH_TABLE_SIZE;
 

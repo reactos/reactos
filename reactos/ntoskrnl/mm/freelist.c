@@ -284,10 +284,10 @@ MiIsPfnRam(PADDRESS_RANGE BIOSMemoryMap,
          
 
 PVOID INIT_FUNCTION
-MmInitializePageList(PVOID FirstPhysKernelAddress,
-                     PVOID LastPhysKernelAddress,
+MmInitializePageList(ULONG_PTR FirstPhysKernelAddress,
+                     ULONG_PTR LastPhysKernelAddress,
                      ULONG MemorySizeInPages,
-                     ULONG LastKernelAddress,
+                     ULONG_PTR LastKernelAddress,
                      PADDRESS_RANGE BIOSMemoryMap,
                      ULONG AddressRangeCount)
 /*
@@ -331,9 +331,9 @@ MmInitializePageList(PVOID FirstPhysKernelAddress,
    DPRINT("Reserved %d\n", Reserved);
 
    LastKernelAddress = PAGE_ROUND_UP(LastKernelAddress);
-   LastKernelAddress = ((ULONG)LastKernelAddress + (Reserved * PAGE_SIZE));
-   LastPhysKernelAddress = (PVOID)PAGE_ROUND_UP(LastPhysKernelAddress);
-   LastPhysKernelAddress = (char*)LastPhysKernelAddress + (Reserved * PAGE_SIZE);
+   LastKernelAddress = ((ULONG_PTR)LastKernelAddress + (Reserved * PAGE_SIZE));
+   LastPhysKernelAddress = (ULONG_PTR)PAGE_ROUND_UP(LastPhysKernelAddress);
+   LastPhysKernelAddress = (ULONG_PTR)LastPhysKernelAddress + (Reserved * PAGE_SIZE);
 
    MmStats.NrTotalPages = 0;
    MmStats.NrSystemPages = 0;
@@ -349,7 +349,7 @@ MmInitializePageList(PVOID FirstPhysKernelAddress,
    LastPage = MmPageArraySize;
    for (i = 0; i < Reserved; i++)
    {
-      PVOID Address = (char*)(ULONG)MmPageArray + (i * PAGE_SIZE);
+      PVOID Address = (char*)MmPageArray + (i * PAGE_SIZE);
       ULONG j, start, end;
       if (!MmIsPagePresent(NULL, Address))
       {

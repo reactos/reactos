@@ -532,7 +532,7 @@ MmDumpToPagingFile(ULONG BugCode,
    Headers->BugCheckParameters[3] = BugCodeParameter4;
    Headers->FaultingStackBase = (PVOID)Thread->Tcb.StackLimit;
    Headers->FaultingStackSize =
-   StackSize = (ULONG_PTR)(Thread->Tcb.StackBase - Thread->Tcb.StackLimit);
+   StackSize = (ULONG_PTR)Thread->Tcb.StackBase - (ULONG_PTR)Thread->Tcb.StackLimit;
    Headers->PhysicalMemorySize = MmStats.NrTotalPages * PAGE_SIZE;
 
    /* Initialize the dump device. */

@@ -32,7 +32,7 @@ VOID
 ExUnmapPage(PVOID Addr)
 {
    KIRQL oldIrql;
-   ULONG Base = ((char*)Addr - (char*)MM_KERNEL_MAP_BASE) / PAGE_SIZE;
+   ULONG_PTR Base = ((ULONG_PTR)Addr - (ULONG_PTR)MM_KERNEL_MAP_BASE) / PAGE_SIZE;
 
    DPRINT("ExUnmapPage(Addr %x)\n",Addr);
 
@@ -93,12 +93,12 @@ ExAllocatePageWithPhysPage(PFN_TYPE Page)
 {
    KIRQL oldlvl;
    PVOID Addr;
-   ULONG Base;
+   ULONG_PTR Base;
    NTSTATUS Status;
 
    KeAcquireSpinLock(&AllocMapLock, &oldlvl);
    Base = RtlFindClearBitsAndSet(&AllocMap, 1, AllocMapHint);
-   if (Base != 0xFFFFFFFF)
+   if (Base != (ULONG_PTR)-1)
    {
       AllocMapHint = Base + 1;
       KeReleaseSpinLock(&AllocMapLock, oldlvl);
@@ -131,7 +131,7 @@ VOID
 MiFreeNonPagedPoolRegion(PVOID Addr, ULONG Count, BOOLEAN Free)
 {
    ULONG i;
-   ULONG Base = ((char*)Addr - (char*)MM_KERNEL_MAP_BASE) / PAGE_SIZE;
+   ULONG_PTR Base = ((char*)Addr - (char*)MM_KERNEL_MAP_BASE) / PAGE_SIZE;
    KIRQL oldlvl;
 
    for (i = 0; i < Count; i++)
@@ -154,12 +154,12 @@ MiAllocNonPagedPoolRegion(ULONG nr_pages)
  * FUNCTION: Allocates a region of pages within the nonpaged pool area
  */
 {
-   ULONG Base;
+   ULONG_PTR Base;
    KIRQL oldlvl;
 
    KeAcquireSpinLock(&AllocMapLock, &oldlvl);
    Base = RtlFindClearBitsAndSet(&AllocMap, nr_pages, AllocMapHint);
-   if (Base == 0xFFFFFFFF)
+   if (Base == (ULONG_PTR)-1)
    {
       DbgPrint("CRITICAL: Out of non-paged pool space\n");
       KEBUGCHECK(0);

@@ -55,7 +55,7 @@ MmCopyToCaller(PVOID Dest, const VOID *Src, ULONG NumberOfBytes)
 
   if (ExGetPreviousMode() == UserMode)
     {
-      if ((ULONG)Dest >= KERNEL_BASE)
+      if ((ULONG_PTR)Dest >= KERNEL_BASE)
    {
      return(STATUS_ACCESS_VIOLATION);
    }
@@ -76,7 +76,7 @@ MmCopyFromCaller(PVOID Dest, const VOID *Src, ULONG NumberOfBytes)
 
   if (ExGetPreviousMode() == UserMode)
     {
-      if ((ULONG)Src >= KERNEL_BASE)
+      if ((ULONG_PTR)Src >= KERNEL_BASE)
    {
      return(STATUS_ACCESS_VIOLATION);
    }
@@ -177,7 +177,7 @@ BOOLEAN STDCALL MmIsAddressValid(PVOID VirtualAddress)
    MEMORY_AREA* MemoryArea;
    PMADDRESS_SPACE AddressSpace;
 
-   if ((ULONG)VirtualAddress >= KERNEL_BASE)
+   if ((ULONG_PTR)VirtualAddress >= KERNEL_BASE)
    {
       AddressSpace = MmGetKernelAddressSpace();
    }
@@ -200,7 +200,7 @@ BOOLEAN STDCALL MmIsAddressValid(PVOID VirtualAddress)
 }
 
 NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
-                       ULONG Address, /* FiN TODO: Should be ULONG_PTR! */
+                       ULONG_PTR Address,
                        BOOLEAN FromMdl)
 {
    PMADDRESS_SPACE AddressSpace;
@@ -322,7 +322,7 @@ NTSTATUS MmCommitPagedPoolAddress(PVOID Address, BOOLEAN Locked)
 }
 
 NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
-                           ULONG Address, /* FiN TODO: Should be ULONG_PTR! */
+                           ULONG_PTR Address,
                            BOOLEAN FromMdl)
 {
    PMADDRESS_SPACE AddressSpace;

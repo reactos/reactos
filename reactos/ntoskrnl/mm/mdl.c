@@ -98,11 +98,11 @@ MmInitializeMdlImplementation(VOID)
 PVOID
 MmGetMdlPageAddress(PMDL Mdl, PVOID Offset)
 {
-   PULONG MdlPages;
+   PPFN_NUMBER MdlPages;
 
-   MdlPages = (PULONG)(Mdl + 1);
+   MdlPages = (PPFN_NUMBER)(Mdl + 1);
 
-   return((PVOID)MdlPages[((ULONG)Offset) / PAGE_SIZE]);
+   return((PVOID)MdlPages[((ULONG_PTR)Offset) / PAGE_SIZE]);
 }
 
 
@@ -123,8 +123,8 @@ MmUnlockPages(PMDL Mdl)
  */
 {
    ULONG i;
-   PULONG MdlPages;
-   PFN_TYPE Page;
+   PPFN_NUMBER MdlPages;
+   PFN_NUMBER Page;
 
    /* 
     * MmProbeAndLockPages MUST have been called to lock this mdl!
@@ -161,7 +161,7 @@ MmUnlockPages(PMDL Mdl)
    }
 
 
-   MdlPages = (PULONG)(Mdl + 1);
+   MdlPages = (PPFN_NUMBER)(Mdl + 1);
    for (i=0; i<(PAGE_ROUND_UP(Mdl->ByteCount+Mdl->ByteOffset)/PAGE_SIZE); i++)
    {
       Page = MdlPages[i];
@@ -422,7 +422,7 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
        
       if (!MmIsPagePresent(NULL, Address))
       {
-         Status = MmNotPresentFault(Mode, (ULONG)Address, TRUE);
+         Status = MmNotPresentFault(Mode, (ULONG_PTR)Address, TRUE);
          if (!NT_SUCCESS(Status))
          {
             for (j = 0; j < i; j++)
@@ -442,7 +442,7 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
       if ((Operation == IoWriteAccess || Operation == IoModifyAccess) &&
           (!(MmGetPageProtect(NULL, (PVOID)Address) & PAGE_READWRITE)))
       {
-         Status = MmAccessFault(Mode, (ULONG)Address, TRUE);
+         Status = MmAccessFault(Mode, (ULONG_PTR)Address, TRUE);
          if (!NT_SUCCESS(Status))
          {
             for (j = 0; j < i; j++)
@@ -541,7 +541,7 @@ MmBuildMdlForNonPagedPool (PMDL Mdl)
     * mdl buffer must (at least) be in kernel space, thou this doesn't 
     * necesarely mean that the buffer in within _nonpaged_ kernel space...
     */
-   ASSERT((ULONG)Mdl->StartVa >= KERNEL_BASE);
+   ASSERT((ULONG_PTR)Mdl->StartVa >= KERNEL_BASE);
    
    PageCount = PAGE_ROUND_UP(Mdl->ByteOffset + Mdl->ByteCount) / PAGE_SIZE;
    MdlPages = (PPFN_TYPE)(Mdl + 1);

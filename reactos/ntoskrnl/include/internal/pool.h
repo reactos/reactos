@@ -45,7 +45,7 @@ extern ULONG MmPagedPoolSize;
  */
 #define MM_CACHE_LINE_SIZE  32
 
-#define MM_ROUND_UP(x,s)    ((PVOID)(((ULONG)(x)+(s)-1) & ~((s)-1)))
-#define MM_ROUND_DOWN(x,s)  ((PVOID)(((ULONG)(x)) & ~((s)-1)))
+#define MM_ROUND_UP(x,s)    ((PVOID)(((ULONG_PTR)(x)+(s)-1) & ~((ULONG_PTR)(s)-1)))
+#define MM_ROUND_DOWN(x,s)  ((PVOID)(((ULONG_PTR)(x)) & ~((ULONG_PTR)(s)-1)))
 
 #endif /* __INTERNAL_POOL_H */

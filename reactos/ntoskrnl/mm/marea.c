@@ -188,7 +188,7 @@ MmDumpMemoryAreas(PMADDRESS_SPACE AddressSpace)
         Node != NULL;
         Node = MmIterateNextNode(Node))
    {
-      DbgPrint("Start %x End %x Attributes %x\n",
+      DbgPrint("Start %p End %p Attributes %x\n",
                Node->StartingAddress, Node->EndingAddress,
                Node->Attributes);
    }
@@ -203,7 +203,7 @@ MmLocateMemoryAreaByAddress(
 {
    PMEMORY_AREA Node = AddressSpace->MemoryAreaRoot;
 
-   DPRINT("MmLocateMemoryAreaByAddress(AddressSpace %x, Address %x)\n",
+   DPRINT("MmLocateMemoryAreaByAddress(AddressSpace %p, Address %p)\n",
            AddressSpace, Address);
 
    if (!(KdDebugState & KD_DEBUG_SCREEN))
@@ -217,13 +217,13 @@ MmLocateMemoryAreaByAddress(
          Node = Node->RightChild;
       else
       {
-         DPRINT("MmLocateMemoryAreaByAddress(%x): %x [%x - %x]\n",
+         DPRINT("MmLocateMemoryAreaByAddress(%p): %p [%p - %p]\n",
                 Address, Node, Node->StartingAddress, Node->EndingAddress);
          return Node;
       }
    }
 
-   DPRINT("MmLocateMemoryAreaByAddress(%x): 0\n", Address);
+   DPRINT("MmLocateMemoryAreaByAddress(%p): 0\n", Address);
    return NULL;
 }
 
@@ -250,24 +250,24 @@ MmLocateMemoryAreaByRegion(
       if (Node->StartingAddress >= Address &&
           Node->StartingAddress < Extent)
       {
-         DPRINT("MmLocateMemoryAreaByRegion(%x - %x): %x - %x\n",
-                Address, Address + Length, Node->StartingAddress,
+         DPRINT("MmLocateMemoryAreaByRegion(%p - %p): %p - %p\n",
+                Address, (ULONG_PTR)Address + Length, Node->StartingAddress,
                 Node->EndingAddress);
          return Node;
       }
       if (Node->EndingAddress > Address &&
           Node->EndingAddress < Extent)
       {
-         DPRINT("MmLocateMemoryAreaByRegion(%x - %x): %x - %x\n",
-                Address, Address + Length, Node->StartingAddress,
+         DPRINT("MmLocateMemoryAreaByRegion(%p - %p): %p - %p\n",
+                Address, (ULONG_PTR)Address + Length, Node->StartingAddress,
                 Node->EndingAddress);
          return Node;
       }
       if (Node->StartingAddress <= Address &&
           Node->EndingAddress >= Extent)
       {
-         DPRINT("MmLocateMemoryAreaByRegion(%x - %x): %x - %x\n",
-                Address, Address + Length, Node->StartingAddress,
+         DPRINT("MmLocateMemoryAreaByRegion(%p - %p): %p - %p\n",
+                Address, (ULONG_PTR)Address + Length, Node->StartingAddress,
                 Node->EndingAddress);
          return Node;
       }
@@ -417,9 +417,9 @@ MmInsertMemoryArea(
    Node = AddressSpace->MemoryAreaRoot;
    do
    {
-      DPRINT("marea->EndingAddress: %x Node->StartingAddress: %x\n",
+      DPRINT("marea->EndingAddress: %p Node->StartingAddress: %p\n",
              marea->EndingAddress, Node->StartingAddress);
-      DPRINT("marea->StartingAddress: %x Node->EndingAddress: %x\n",
+      DPRINT("marea->StartingAddress: %p Node->EndingAddress: %p\n",
              marea->StartingAddress, Node->EndingAddress);
       ASSERT(marea->EndingAddress <= Node->StartingAddress ||
              marea->StartingAddress >= Node->EndingAddress);
@@ -467,7 +467,7 @@ MmFindGapBottomUp(
 
    MmVerifyMemoryAreas(AddressSpace);
 
-   DPRINT("LowestAddress: %x HighestAddress: %x\n",
+   DPRINT("LowestAddress: %p HighestAddress: %p\n",
           AddressSpace->LowestAddress, HighestAddress);
 
    AlignedAddress = MM_ROUND_UP(AddressSpace->LowestAddress, Granularity);
@@ -475,9 +475,9 @@ MmFindGapBottomUp(
    /* Special case for empty tree. */
    if (AddressSpace->MemoryAreaRoot == NULL)
    {
-      if (HighestAddress - AlignedAddress >= Length)
+      if ((ULONG_PTR)HighestAddress - (ULONG_PTR)AlignedAddress >= Length)
       {
-         DPRINT("MmFindGapBottomUp: %x\n", AlignedAddress);
+         DPRINT("MmFindGapBottomUp: %p\n", AlignedAddress);
          return AlignedAddress;
       }
       DPRINT("MmFindGapBottomUp: 0\n");
@@ -497,9 +497,9 @@ MmFindGapBottomUp(
 
       AlignedAddress = MM_ROUND_UP(PreviousNode->EndingAddress, Granularity);
       if (Node->StartingAddress > AlignedAddress &&
-          Node->StartingAddress - AlignedAddress >= Length)
+          (ULONG_PTR)Node->StartingAddress - (ULONG_PTR)AlignedAddress >= Length)
       {
-         DPRINT("MmFindGapBottomUp: %x\n", AlignedAddress);
+         DPRINT("MmFindGapBottomUp: %p\n", AlignedAddress);
          return AlignedAddress;
       }
 
@@ -508,18 +508,18 @@ MmFindGapBottomUp(
 
    /* Check if there is enough space after the last memory area. */
    AlignedAddress = MM_ROUND_UP(PreviousNode->EndingAddress, Granularity);
-   if (HighestAddress - AlignedAddress >= Length)
+   if ((ULONG_PTR)HighestAddress - (ULONG_PTR)AlignedAddress >= Length)
    {
-      DPRINT("MmFindGapBottomUp: %x\n", AlignedAddress);
+      DPRINT("MmFindGapBottomUp: %p\n", AlignedAddress);
       return AlignedAddress;
    }
 
    /* Check if there is enough space before the first memory area. */
    AlignedAddress = MM_ROUND_UP(AddressSpace->LowestAddress, Granularity);
    if (FirstNode->StartingAddress > AlignedAddress &&
-       FirstNode->StartingAddress - AlignedAddress >= Length)
+       (ULONG_PTR)FirstNode->StartingAddress - (ULONG_PTR)AlignedAddress >= Length)
    {
-      DPRINT("MmFindGapBottomUp: %x\n", AlignedAddress);
+      DPRINT("MmFindGapBottomUp: %p\n", AlignedAddress);
       return AlignedAddress;
    }
 
@@ -542,10 +542,10 @@ MmFindGapTopDown(
 
    MmVerifyMemoryAreas(AddressSpace);
 
-   DPRINT("LowestAddress: %x HighestAddress: %x\n",
+   DPRINT("LowestAddress: %p HighestAddress: %p\n",
           AddressSpace->LowestAddress, HighestAddress);
 
-   AlignedAddress = MM_ROUND_DOWN(HighestAddress - Length + 1, Granularity);
+   AlignedAddress = MM_ROUND_DOWN((ULONG_PTR)HighestAddress - Length + 1, Granularity);
 
    /* Check for overflow. */
    if (AlignedAddress > HighestAddress)
@@ -556,7 +556,7 @@ MmFindGapTopDown(
    {
       if (AlignedAddress >= (PVOID)AddressSpace->LowestAddress)
       {
-         DPRINT("MmFindGapTopDown: %x\n", AlignedAddress);
+         DPRINT("MmFindGapTopDown: %p\n", AlignedAddress);
          return AlignedAddress;
       }
       DPRINT("MmFindGapTopDown: 0\n");
@@ -569,7 +569,7 @@ MmFindGapTopDown(
    /* Check if there is enough space after the last memory area. */
    if (Node->EndingAddress <= AlignedAddress)
    {
-      DPRINT("MmFindGapTopDown: %x\n", AlignedAddress);
+      DPRINT("MmFindGapTopDown: %p\n", AlignedAddress);
       return AlignedAddress;
    }
 
@@ -581,7 +581,7 @@ MmFindGapTopDown(
       if (Node == NULL)
          break;
 
-      AlignedAddress = MM_ROUND_DOWN(PreviousNode->StartingAddress - Length + 1, Granularity);
+      AlignedAddress = MM_ROUND_DOWN((ULONG_PTR)PreviousNode->StartingAddress - Length + 1, Granularity);
 
       /* Check for overflow. */
       if (AlignedAddress > PreviousNode->StartingAddress)
@@ -589,14 +589,14 @@ MmFindGapTopDown(
       
       if (Node->EndingAddress <= AlignedAddress)
       {
-         DPRINT("MmFindGapTopDown: %x\n", AlignedAddress);
+         DPRINT("MmFindGapTopDown: %p\n", AlignedAddress);
          return AlignedAddress;
       }
 
       PreviousNode = Node;
    }
 
-   AlignedAddress = MM_ROUND_DOWN(PreviousNode->StartingAddress - Length + 1, Granularity);
+   AlignedAddress = MM_ROUND_DOWN((ULONG_PTR)PreviousNode->StartingAddress - Length + 1, Granularity);
 
    /* Check for overflow. */
    if (AlignedAddress > PreviousNode->StartingAddress)
@@ -604,7 +604,7 @@ MmFindGapTopDown(
 
    if (AlignedAddress >= (PVOID)AddressSpace->LowestAddress)
    {
-      DPRINT("MmFindGapTopDown: %x\n", AlignedAddress);
+      DPRINT("MmFindGapTopDown: %p\n", AlignedAddress);
       return AlignedAddress;
    }
 
@@ -675,13 +675,15 @@ MmFindGapAtAddress(
 
    if (RightNeighbour)
    {
-      DPRINT("MmFindGapAtAddress: %x [%x]\n", Address, RightNeighbour->StartingAddress - Address);
-      return RightNeighbour->StartingAddress - Address;
+      DPRINT("MmFindGapAtAddress: %p [%p]\n", Address,
+             (ULONG_PTR)RightNeighbour->StartingAddress - (ULONG_PTR)Address);
+      return (ULONG_PTR)RightNeighbour->StartingAddress - (ULONG_PTR)Address;
    }
    else
    {
-      DPRINT("MmFindGapAtAddress: %x [%x]\n", Address, HighestAddress - Address);
-      return HighestAddress - Address;
+      DPRINT("MmFindGapAtAddress: %p [%p]\n", Address,
+             (ULONG_PTR)HighestAddress - (ULONG_PTR)Address);
+      return (ULONG_PTR)HighestAddress - (ULONG_PTR)Address;
    }
 }
 
@@ -726,7 +728,7 @@ MmFreeMemoryArea(
    PVOID FreePageContext)
 {
    PMEMORY_AREA *ParentReplace;
-   PVOID Address;
+   ULONG_PTR Address;
    PVOID EndAddress;
    PEPROCESS CurrentProcess = PsGetCurrentProcess();
 
@@ -737,7 +739,9 @@ MmFreeMemoryArea(
    }
 
    EndAddress = MM_ROUND_UP(MemoryArea->EndingAddress, PAGE_SIZE); 
-   for (Address = MemoryArea->StartingAddress; Address < EndAddress; Address += PAGE_SIZE)
+   for (Address = (ULONG_PTR)MemoryArea->StartingAddress;
+        Address < (ULONG_PTR)EndAddress;
+        Address += PAGE_SIZE)
    {
       if (MemoryArea->Type == MEMORY_AREA_IO_MAPPING)
       {
@@ -866,8 +870,8 @@ MmFreeMemoryAreaByPtr(
 {
    PMEMORY_AREA MemoryArea;
 
-   DPRINT("MmFreeMemoryArea(AddressSpace %x, BaseAddress %x, "
-          "FreePageContext %d)\n", AddressSpace, BaseAddress,
+   DPRINT("MmFreeMemoryArea(AddressSpace %p, BaseAddress %p, "
+          "FreePageContext %p)\n", AddressSpace, BaseAddress,
           FreePageContext);
 
    MmVerifyMemoryAreas(AddressSpace);
@@ -926,9 +930,9 @@ MmCreateMemoryArea(PEPROCESS Process,
    ULONG tmpLength;
    PMEMORY_AREA MemoryArea;
 
-   DPRINT("MmCreateMemoryArea(Type %d, BaseAddress %x, "
-          "*BaseAddress %x, Length %x, Attributes %x, TopDown: %x, "
-          "FixedAddress %x, Result %x)\n",
+   DPRINT("MmCreateMemoryArea(Type %d, BaseAddress %p, "
+          "*BaseAddress %p, Length %p, Attributes %x, TopDown: %x, "
+          "FixedAddress %x, Result %p)\n",
           Type, BaseAddress, *BaseAddress, Length, Attributes, TopDown,
           FixedAddress, Result);
 
@@ -988,7 +992,7 @@ MmCreateMemoryArea(PEPROCESS Process,
    RtlZeroMemory(MemoryArea, sizeof(MEMORY_AREA));
    MemoryArea->Type = Type;
    MemoryArea->StartingAddress = *BaseAddress;
-   MemoryArea->EndingAddress = *BaseAddress + tmpLength;
+   MemoryArea->EndingAddress = (PVOID)((ULONG_PTR)*BaseAddress + tmpLength);
    MemoryArea->Attributes = Attributes;
    MemoryArea->LockCount = 0;
    MemoryArea->Process = Process;
@@ -999,7 +1003,7 @@ MmCreateMemoryArea(PEPROCESS Process,
 
    *Result = MemoryArea;
 
-   DPRINT("MmCreateMemoryArea() succeeded (%x)\n", *BaseAddress);
+   DPRINT("MmCreateMemoryArea() succeeded (%p)\n", *BaseAddress);
    return STATUS_SUCCESS;
 }
 

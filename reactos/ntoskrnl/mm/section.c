@@ -3265,8 +3265,8 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
          return(Status);
       }
 
-      if (0 != InterlockedCompareExchangeUL(&FileObject->SectionObjectPointer->ImageSectionObject,
-                                            ImageSectionObject, 0))
+      if (NULL != InterlockedCompareExchangePointer(&FileObject->SectionObjectPointer->ImageSectionObject,
+                                                    ImageSectionObject, NULL))
       {
          /*
           * An other thread has initialized the some image in the background
@@ -4089,7 +4089,7 @@ MmAllocateSection (IN ULONG Length, PVOID BaseAddress)
          KEBUGCHECK(0);
       }
       Status = MmCreateVirtualMapping (NULL,
-                                       (PVOID)(Result + (i * PAGE_SIZE)),
+                                       (PVOID)((ULONG_PTR)Result + (i * PAGE_SIZE)),
                                        PAGE_READWRITE,
                                        &Page,
                                        1);
@@ -4201,9 +4201,9 @@ MmMapViewOfSection(IN PVOID SectionObject,
       {
          if (!(SectionSegments[i].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
          {
-            ULONG MaxExtent;
-            MaxExtent = (ULONG)((char*)SectionSegments[i].VirtualAddress +
-                                SectionSegments[i].Length);
+            ULONG_PTR MaxExtent;
+            MaxExtent = (ULONG_PTR)SectionSegments[i].VirtualAddress +
+                        SectionSegments[i].Length;
             ImageSize = max(ImageSize, MaxExtent);
          }
       }

@@ -58,7 +58,7 @@ KiIpiSendRequest(ULONG TargetSet,
 		 ULONG IpiRequest);
 
 VOID  
-KeIpiGenericCall(VOID STDCALL (*WorkerRoutine)(PVOID), 
+KeIpiGenericCall(VOID (STDCALL *WorkerRoutine)(PVOID), 
 		 PVOID Argument);
 
 /* next file ***************************************************************/

@@ -72,7 +72,7 @@ VOID MiShutdownMemoryManager(VOID)
 {}
 
 VOID INIT_FUNCTION
-MmInitVirtualMemory(ULONG LastKernelAddress,
+MmInitVirtualMemory(ULONG_PTR LastKernelAddress,
                     ULONG KernelLength)
 /*
  * FUNCTION: Intialize the memory areas list
@@ -133,7 +133,7 @@ MmInitVirtualMemory(ULONG LastKernelAddress,
                       BoundaryAddressMultiple);
 
    BaseAddress = (PVOID)KERNEL_BASE;
-   Length = PAGE_ROUND_UP(((ULONG)&_text_end__)) - KERNEL_BASE;
+   Length = PAGE_ROUND_UP(((ULONG_PTR)&_text_end__)) - KERNEL_BASE;
    ParamLength = ParamLength - Length;
 
    /*
@@ -151,10 +151,10 @@ MmInitVirtualMemory(ULONG LastKernelAddress,
                       FALSE,
                       BoundaryAddressMultiple);
 
-   BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG)&_text_end__));
+   BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG_PTR)&_text_end__));
    ASSERT(BaseAddress == (PVOID)&_init_start__);
-   Length = PAGE_ROUND_UP(((ULONG)&_init_end__)) -
-            PAGE_ROUND_UP(((ULONG)&_text_end__));
+   Length = PAGE_ROUND_UP(((ULONG_PTR)&_init_end__)) -
+            PAGE_ROUND_UP(((ULONG_PTR)&_text_end__));
    ParamLength = ParamLength - Length;
 
    MmCreateMemoryArea(NULL,
@@ -168,11 +168,11 @@ MmInitVirtualMemory(ULONG LastKernelAddress,
                       FALSE,
                       BoundaryAddressMultiple);
 
-   Length = PAGE_ROUND_UP(((ULONG)&_bss_end__)) -
-            PAGE_ROUND_UP(((ULONG)&_init_end__));
+   Length = PAGE_ROUND_UP(((ULONG_PTR)&_bss_end__)) -
+            PAGE_ROUND_UP(((ULONG_PTR)&_init_end__));
    ParamLength = ParamLength - Length;
    DPRINT("Length %x\n",Length);
-   BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG)&_init_end__));
+   BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG_PTR)&_init_end__));
    DPRINT("BaseAddress %x\n",BaseAddress);
 
    /*
@@ -190,8 +190,8 @@ MmInitVirtualMemory(ULONG LastKernelAddress,
                       FALSE,
                       BoundaryAddressMultiple);
 
-   BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG)&_bss_end__));
-   Length = LastKernelAddress - (ULONG)BaseAddress;
+   BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG_PTR)&_bss_end__));
+   Length = LastKernelAddress - (ULONG_PTR)BaseAddress;
    MmCreateMemoryArea(NULL,
                       MmGetKernelAddressSpace(),
                       MEMORY_AREA_SYSTEM,
@@ -277,9 +277,9 @@ MmInitVirtualMemory(ULONG LastKernelAddress,
 }
 
 VOID INIT_FUNCTION
-MmInit1(ULONG FirstKrnlPhysAddr,
-        ULONG LastKrnlPhysAddr,
-        ULONG LastKernelAddress,
+MmInit1(ULONG_PTR FirstKrnlPhysAddr,
+        ULONG_PTR LastKrnlPhysAddr,
+        ULONG_PTR LastKernelAddress,
         PADDRESS_RANGE BIOSMemoryMap,
         ULONG AddressRangeCount,
         ULONG MaxMem)
@@ -289,12 +289,13 @@ MmInit1(ULONG FirstKrnlPhysAddr,
 {
    ULONG i;
    ULONG kernel_len;
+   ULONG_PTR MappingAddress;
 #ifndef CONFIG_SMP
-
    extern unsigned int unmap_me, unmap_me2, unmap_me3;
 #endif
+   extern unsigned int pagetable_start, pagetable_end;
 
-   DPRINT("MmInit1(FirstKrnlPhysAddr, %x, LastKrnlPhysAddr %x, LastKernelAddress %x)\n",
+   DPRINT("MmInit1(FirstKrnlPhysAddr, %p, LastKrnlPhysAddr %p, LastKernelAddress %p)\n",
           FirstKrnlPhysAddr,
           LastKrnlPhysAddr,
           LastKernelAddress);
@@ -383,8 +384,9 @@ MmInit1(ULONG FirstKrnlPhysAddr,
 
    DbgPrint("Used memory %dKb\n", (MmStats.NrTotalPages * PAGE_SIZE) / 1024);
 
-   LastKernelAddress = (ULONG)MmInitializePageList((PVOID)FirstKrnlPhysAddr,
-                       (PVOID)LastKrnlPhysAddr,
+   LastKernelAddress = (ULONG_PTR)MmInitializePageList(
+                       FirstKrnlPhysAddr,
+                       LastKrnlPhysAddr,
                        MmStats.NrTotalPages,
                        PAGE_ROUND_UP(LastKernelAddress),
                        BIOSMemoryMap,
@@ -405,15 +407,18 @@ MmInit1(ULONG FirstKrnlPhysAddr,
 
    DPRINT("Invalidating between %x and %x\n",
           LastKernelAddress, KERNEL_BASE + 0x00600000);
-   for (i=(LastKernelAddress); i<KERNEL_BASE + 0x00600000; i+=PAGE_SIZE)
+   for (MappingAddress = LastKernelAddress;
+        MappingAddress < KERNEL_BASE + 0x00600000;
+        MappingAddress += PAGE_SIZE)
    {
-      MmRawDeleteVirtualMapping((PVOID)(i));
+      MmRawDeleteVirtualMapping((PVOID)MappingAddress);
    }
 
-   extern unsigned int pagetable_start, pagetable_end;
-   for (i = (ULONG_PTR)&pagetable_start; i < (ULONG_PTR)&pagetable_end; i += PAGE_SIZE)
+   for (MappingAddress = (ULONG_PTR)&pagetable_start;
+        MappingAddress < (ULONG_PTR)&pagetable_end;
+        MappingAddress += PAGE_SIZE)
    {
-      MmDeleteVirtualMapping(NULL, (PVOID)i, FALSE, NULL, NULL);
+      MmDeleteVirtualMapping(NULL, (PVOID)MappingAddress, FALSE, NULL, NULL);
    }
 
    DPRINT("Almost done MmInit()\n");

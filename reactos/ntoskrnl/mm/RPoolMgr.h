@@ -13,16 +13,16 @@
 
 typedef unsigned long rulong;
 
-#define R_IS_POOL_PTR(pool,ptr) (void*)(ptr) >= pool->UserBase && (char*)(ptr) < ((char*)pool->UserBase+pool->UserSize)
+#define R_IS_POOL_PTR(pool,ptr) (void*)(ptr) >= pool->UserBase && (ULONG_PTR)(ptr) < ((ULONG_PTR)pool->UserBase + pool->UserSize)
 #define R_ASSERT_PTR(pool,ptr) ASSERT( R_IS_POOL_PTR(pool,ptr) )
 #define R_ASSERT_SIZE(pool,sz) ASSERT( sz > (sizeof(R_USED)+2*R_RZ) && sz >= sizeof(R_FREE) && sz < pool->UserSize )
 
 #ifndef R_ROUND_UP
-#define R_ROUND_UP(x,s)    ((PVOID)(((rulong)(x)+(s)-1) & ~((s)-1)))
+#define R_ROUND_UP(x,s)    ((PVOID)(((ULONG_PTR)(x)+(s)-1) & ~((ULONG_PTR)(s)-1)))
 #endif//R_ROUND_UP
 
 #ifndef R_ROUND_DOWN
-#define R_ROUND_DOWN(x,s)  ((PVOID)(((rulong)(x)) & ~((s)-1)))
+#define R_ROUND_DOWN(x,s)  ((PVOID)(((ULONG_PTR)(x)) & ~((ULONG_PTR)(s)-1)))
 #endif//R_ROUND_DOWN
 
 #ifndef R_QUEMIN
@@ -79,7 +79,7 @@ typedef struct _R_FREE
 	rulong Status : 2;
 	rulong Size;
 #if R_STACK
-	rulong LastOwnerStack[R_STACK];
+	ULONG_PTR LastOwnerStack[R_STACK];
 #endif//R_STACK
 	struct _R_FREE* NextFree;
 	struct _R_FREE* PrevFree;
@@ -95,7 +95,7 @@ typedef struct _R_USED
 	rulong Status : 2;
 	rulong Size;
 #if R_STACK
-	rulong LastOwnerStack[R_STACK];
+	ULONG_PTR LastOwnerStack[R_STACK];
 #endif//R_STACK
 	struct _R_USED* NextUsed;
 #if R_RZ
@@ -245,7 +245,7 @@ RPoolRemoveFree ( PR_POOL pool, PR_FREE Item )
 		pool->FirstFree = Item->NextFree;
 	}
 #if defined(DBG) || defined(KDBG)
-	Item->NextFree = Item->PrevFree = (PR_FREE)0xDEADBEEF;
+	Item->NextFree = Item->PrevFree = (PR_FREE)(ULONG_PTR)0xDEADBEEF;
 #endif//DBG || KDBG
 }
 
@@ -281,7 +281,7 @@ RFreeInit ( void* memory )
 	block->Status = 0;
 	RFreeFillStack ( block );
 #if defined(DBG) || defined(KDBG)
-	block->PrevFree = block->NextFree = (PR_FREE)0xDEADBEEF;
+	block->PrevFree = block->NextFree = (PR_FREE)(ULONG_PTR)0xDEADBEEF;
 #endif//DBG || KDBG
 	return block;
 }
@@ -644,7 +644,7 @@ RiUsedInit ( PR_USED Block, rulong Tag )
 
 	// now add the block to the used block list
 #if defined(DBG) || defined(KDBG)
-	Block->NextUsed = (PR_USED)0xDEADBEEF;
+	Block->NextUsed = (PR_USED)(ULONG_PTR)0xDEADBEEF;
 #endif//R_USED_LIST
 
 	Block->Tag = Tag;

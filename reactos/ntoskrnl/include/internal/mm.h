@@ -453,9 +453,9 @@ VOID MmBuildMdlFromPages(PMDL Mdl, PULONG Pages);
 
 VOID MiShutdownMemoryManager(VOID);
 
-VOID MmInit1(ULONG FirstKernelPhysAddress, 
-	     ULONG LastKernelPhysAddress,
-	     ULONG LastKernelAddress,
+VOID MmInit1(ULONG_PTR FirstKernelPhysAddress, 
+	     ULONG_PTR LastKernelPhysAddress,
+	     ULONG_PTR LastKernelAddress,
 	     PADDRESS_RANGE BIOSMemoryMap,
 	     ULONG AddressRangeCount,
 	     ULONG MaxMemInMeg);
@@ -507,11 +507,11 @@ NTSTATUS MmPageFault(ULONG Cs,
 /* mm.c **********************************************************************/
 
 NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
-		       ULONG Address,
+		       ULONG_PTR Address,
 		       BOOLEAN FromMdl);
 
 NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
-			   ULONG Address,
+			   ULONG_PTR Address,
 			   BOOLEAN FromMdl);
 
 /* anonmem.c *****************************************************************/
@@ -633,10 +633,10 @@ VOID MmUnlockPage(PFN_TYPE Page);
 
 ULONG MmGetLockCountPage(PFN_TYPE Page);
 
-PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
-		           PVOID LastPhysKernelAddress,
+PVOID MmInitializePageList(ULONG_PTR FirstPhysKernelAddress,
+		           ULONG_PTR LastPhysKernelAddress,
 			   ULONG MemorySizeInPages,
-			   ULONG LastKernelBase,
+			   ULONG_PTR LastKernelBase,
 			   PADDRESS_RANGE BIOSMemoryMap,
 			   ULONG AddressRangeCount);
 

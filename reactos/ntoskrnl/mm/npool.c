@@ -1235,11 +1235,11 @@ grow_block(BLOCK_HDR* blk, PVOID end)
 {
    NTSTATUS Status;
    PFN_TYPE Page[32];
-   ULONG StartIndex, EndIndex;
+   ULONG_PTR StartIndex, EndIndex;
    ULONG i, j, k;
    
-   StartIndex =  (ULONG)((char*)(PVOID)PAGE_ROUND_UP((ULONG)((char*)blk + BLOCK_HDR_SIZE)) - (char*)MiNonPagedPoolStart) / PAGE_SIZE;
-   EndIndex = (ULONG)((char*)PAGE_ROUND_UP(end) - (char*)MiNonPagedPoolStart) / PAGE_SIZE;
+   StartIndex = (ULONG_PTR)(PAGE_ROUND_UP((ULONG_PTR)blk + BLOCK_HDR_SIZE - (ULONG_PTR)MiNonPagedPoolStart)) / PAGE_SIZE;
+   EndIndex = ((ULONG_PTR)PAGE_ROUND_UP(end) - (ULONG_PTR)MiNonPagedPoolStart) / PAGE_SIZE;
 
 
    for (i = StartIndex; i < EndIndex; i++)
@@ -1266,7 +1266,7 @@ grow_block(BLOCK_HDR* blk, PVOID end)
 	    }
 	 }
          Status = MmCreateVirtualMapping(NULL,
-	                                 MiNonPagedPoolStart + i * PAGE_SIZE,
+	                                 (PVOID)((ULONG_PTR)MiNonPagedPoolStart + i * PAGE_SIZE),
                                          PAGE_READWRITE|PAGE_SYSTEM,
                                          Page,
                                          k);
@@ -1333,12 +1333,12 @@ static BLOCK_HDR* get_block(unsigned int size, unsigned long alignment)
              * from alignment. If not, calculate forward to the next alignment
              * and see if we allocate there...
              */
-            new_size = (ULONG)aligned_addr - (ULONG)addr + size;
-            if ((ULONG)aligned_addr - (ULONG)addr < BLOCK_HDR_SIZE)
+            new_size = (ULONG_PTR)aligned_addr - (ULONG_PTR)addr + size;
+            if ((ULONG_PTR)aligned_addr - (ULONG_PTR)addr < BLOCK_HDR_SIZE)
             {
                /* not enough room for a free block header, add some more bytes */
                aligned_addr = MM_ROUND_UP(block_to_address((BLOCK_HDR*)((char*)current + BLOCK_HDR_SIZE)), alignment);
-               new_size = (ULONG)aligned_addr - (ULONG)addr + size;
+               new_size = (ULONG_PTR)aligned_addr - (ULONG_PTR)addr + size;
             }
             if (current->Size >= new_size &&
                   (best == NULL || current->Size < best->Size))
@@ -1382,9 +1382,9 @@ static BLOCK_HDR* get_block(unsigned int size, unsigned long alignment)
           * if size-aligned, break off the preceding bytes into their own block...
           */
          previous = current;
-         previous_size = (ULONG)blk - (ULONG)previous - BLOCK_HDR_SIZE;
+         previous_size = (ULONG_PTR)blk - (ULONG_PTR)previous - BLOCK_HDR_SIZE;
          current = blk;
-         current_size -= ((ULONG)current - (ULONG)previous);
+         current_size -= ((ULONG_PTR)current - (ULONG_PTR)previous);
       }
    }
 
@@ -1393,7 +1393,7 @@ static BLOCK_HDR* get_block(unsigned int size, unsigned long alignment)
    if (current_size >= size + BLOCK_HDR_SIZE + MM_POOL_ALIGNMENT)
    {
       /* create a new free block after our block, if the memory size is >= 4 byte for this block */
-      next = (BLOCK_HDR*)((ULONG)current + size + BLOCK_HDR_SIZE);
+      next = (BLOCK_HDR*)((ULONG_PTR)current + size + BLOCK_HDR_SIZE);
       next_size = current_size - size - BLOCK_HDR_SIZE;
       current_size = size;
       end = (char*)next + BLOCK_HDR_SIZE;
@@ -1828,9 +1828,9 @@ MiInitializeNonPagedPool(VOID)
    /* the second block is the first free block */
    blk = (BLOCK_HDR*)((char*)blk + BLOCK_HDR_SIZE + blk->Size);
    memset(blk, 0, BLOCK_HDR_SIZE);
-   memset((char*)blk + BLOCK_HDR_SIZE, 0x0cc, MiNonPagedPoolNrOfPages * PAGE_SIZE - ((ULONG)blk + BLOCK_HDR_SIZE - (ULONG)MiNonPagedPoolStart));
+   memset((char*)blk + BLOCK_HDR_SIZE, 0x0cc, MiNonPagedPoolNrOfPages * PAGE_SIZE - ((ULONG_PTR)blk + BLOCK_HDR_SIZE - (ULONG_PTR)MiNonPagedPoolStart));
    blk->Magic = BLOCK_HDR_FREE_MAGIC;
-   blk->Size = MiNonPagedPoolLength - ((ULONG)blk + BLOCK_HDR_SIZE - (ULONG)MiNonPagedPoolStart);
+   blk->Size = MiNonPagedPoolLength - ((ULONG_PTR)blk + BLOCK_HDR_SIZE - (ULONG_PTR)MiNonPagedPoolStart);
    blk->previous = (BLOCK_HDR*)MiNonPagedPoolStart;
    add_to_free_list(blk);
 #endif
