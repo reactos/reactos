@@ -124,14 +124,18 @@ HWND DesktopWindow::Create()
 	int width = GetSystemMetrics(SM_CXSCREEN);
 	int height = GetSystemMetrics(SM_CYSCREEN);
 
-	HWND hwndDesktop = Window::Create(WINDOW_CREATOR(DesktopWindow),
-					WS_EX_TOOLWINDOW, wcDesktop, _T("Program Manager"), WS_POPUP|WS_CLIPCHILDREN|WS_VISIBLE,
+	HWND hwnd = Window::Create(WINDOW_CREATOR(DesktopWindow),
+					WS_EX_TOOLWINDOW, wcDesktop, _T("Program Manager"), WS_POPUP|WS_VISIBLE|WS_CLIPCHILDREN,
 					0, 0, width, height, 0);
 
 	 // work around to display desktop bar in Wine
 	ShowWindow(GET_WINDOW(DesktopWindow, hwndDesktop)->_desktopBar, SW_SHOW);
 
-	return hwndDesktop;
+	 // work around for Windows NT, Win 98, ...
+	 // Without this the desktop has mysteriously only a size of 800x600 pixels.
+	MoveWindow(hwnd, 0, 0, width, height, TRUE);
+
+	return hwnd;
 }
 
 
@@ -197,6 +201,10 @@ LRESULT	DesktopWindow::Init(LPCREATESTRUCT pcs)
 		*/
 
 			HWND hwndFolderView = ::GetNextWindow(hWndView, GW_CHILD);
+
+			 // work around for Windows NT, Win 98, ...
+			 // Without this the desktop has mysteriously only a size of 800x600 pixels.
+			MoveWindow(hwndFolderView, 0, 0, rect.right, rect.bottom, TRUE);
 
 			new BackgroundWindow(hwndFolderView);
 		}
