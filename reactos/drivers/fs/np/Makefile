@@ -1,13 +1,14 @@
-# $Id: Makefile,v 1.3 2000/04/01 14:20:21 ea Exp $
+# $Id: Makefile,v 1.4 2001/05/01 11:09:01 ekohl Exp $
 #
 # Named Pipes File System
 #
+PATH_TO_TOP = ../../..
 
 TARGETNAME=npfs
 
-BASE_CFLAGS = -I../../../include
+#BASE_CFLAGS = -I../../../include
 
-OBJECTS = create.o mount.o npfs.coff \
+OBJECTS = create.o fsctrl.o mount.o rw.o npfs.coff \
           ../../../ntoskrnl/ntoskrnl.a
 
 all: $(TARGETNAME).sys

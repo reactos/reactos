@@ -501,6 +501,7 @@ extern "C" {
 #define PIPE_READMODE_MESSAGE	(2)
 #define PIPE_WAIT	(0)
 #define PIPE_NOWAIT	(1)
+#define PIPE_UNLIMITED_INSTANCES (255)
 
 /* CreatePen, ExtCreatePen */
 #define PS_GEOMETRIC	(65536)

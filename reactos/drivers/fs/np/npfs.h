@@ -14,7 +14,7 @@ typedef struct
    LIST_ENTRY FcbListHead;
    ULONG ReferenceCount;
    ULONG MaxInstances;
-   LARGE_INTEGER TimeOut;   
+   LARGE_INTEGER TimeOut;
 } NPFS_PIPE, *PNPFS_PIPE;
 
 typedef struct _NPFS_FCB
@@ -39,5 +39,14 @@ VOID NpfsPipeList(VOID);
                                              NULL);
 
 #define KeUnlockMutex(x) KeReleaseMutex(x, FALSE);
+
+NTSTATUS STDCALL NpfsCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL NpfsClose(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+
+NTSTATUS STDCALL NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL NpfsWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+
+NTSTATUS STDCALL NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 #endif /* __SERVICES_FS_NP_NPFS_H */

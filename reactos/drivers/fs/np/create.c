@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.4 2000/05/13 13:51:08 dwelch Exp $
+/* $Id: create.c,v 1.5 2001/05/01 11:09:01 ekohl Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -11,10 +11,11 @@
 
 #include <ddk/ntddk.h>
 
-//#define NDEBUG
-#include <internal/debug.h>
-
 #include "npfs.h"
+
+//#define NDEBUG
+#include <debug.h>
+
 
 /* GLOBALS *******************************************************************/
 
@@ -29,8 +30,9 @@ VOID NpfsInitPipeList(VOID)
    KeInitializeMutex(&PipeListLock, 0);
 }
 
-NTSTATUS NpfsCreate(PDEVICE_OBJECT DeviceObject,
-		    PIRP Irp)		    
+NTSTATUS STDCALL
+NpfsCreate(PDEVICE_OBJECT DeviceObject,
+	   PIRP Irp)
 {
    PIO_STACK_LOCATION IoStack;
    PFILE_OBJECT FileObject;
@@ -40,6 +42,10 @@ NTSTATUS NpfsCreate(PDEVICE_OBJECT DeviceObject,
    PWSTR PipeName;
    PNPFS_PIPE current;
    PLIST_ENTRY current_entry;
+   PNPFS_DEVICE_EXTENSION DeviceExt;
+   KIRQL oldIrql;
+   
+   DPRINT1("NpfsCreate(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
    
    DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
    IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -63,8 +69,8 @@ NTSTATUS NpfsCreate(PDEVICE_OBJECT DeviceObject,
    while (current_entry != &PipeListHead)
      {
 	current = CONTAINING_RECORD(current_entry,
-				    PipeListEntry,
-				    NPFS_PIPE);
+				    NPFS_PIPE,
+				    PipeListEntry);
 	
 	if (wcscmp(Pipe->Name, current->Name) == 0)
 	  {
@@ -74,7 +80,7 @@ NTSTATUS NpfsCreate(PDEVICE_OBJECT DeviceObject,
 	current_entry = current_entry->Flink;
      }
    
-   if (current_entry == PipeListHead)
+   if (current_entry == &PipeListHead)
      {
 	ExFreePool(Fcb);
 	KeUnlockMutex(&PipeListLock);
@@ -89,9 +95,9 @@ NTSTATUS NpfsCreate(PDEVICE_OBJECT DeviceObject,
    
    Pipe = current;
    
-   KeAcquireSpinLock(&Pipe->FcbListHead, &oldIrql);
+   KeAcquireSpinLock(&Pipe->FcbListLock, &oldIrql);
    InsertTailList(&Pipe->FcbListHead, &Fcb->FcbListEntry);
-   KeReleaseSpinLock(&Pipe->FcbListHead, oldIrql);   
+   KeReleaseSpinLock(&Pipe->FcbListLock, oldIrql);
    Fcb->WriteModeMessage = FALSE;
    Fcb->ReadModeMessage = FALSE;
    Fcb->NonBlocking = FALSE;
@@ -115,25 +121,31 @@ NTSTATUS NpfsCreate(PDEVICE_OBJECT DeviceObject,
    return(Status);
 }
 
-NTSTATUS NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL
+NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
+		    PIRP Irp)
 {
    PIO_STACK_LOCATION IoStack;
    PFILE_OBJECT FileObject;
-   NTSTATUS Status;
+   NTSTATUS Status = STATUS_SUCCESS;
    PNPFS_DEVICE_EXTENSION DeviceExt;
    PWSTR PipeName;
    PNPFS_PIPE Pipe;
    PNPFS_FCB Fcb;
-   NTSTATUS Status;
    KIRQL oldIrql;
    PLIST_ENTRY current_entry;
    PNPFS_PIPE current;
+   PIO_PIPE_CREATE_BUFFER Buffer;
+   
+   DPRINT1("NpfsCreateNamedPipe(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
    
    DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
    IoStack = IoGetCurrentIrpStackLocation(Irp);
    FileObject = IoStack->FileObject;
    
    PipeName = FileObject->FileName.Buffer;
+   
+   Buffer = (PIO_PIPE_CREATE_BUFFER)Irp->Tail.Overlay.AuxiliaryBuffer;
    
    Pipe = ExAllocatePool(NonPagedPool, sizeof(NPFS_PIPE));
    if (Pipe == NULL)
@@ -164,28 +176,31 @@ NTSTATUS NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    if (Pipe->Name == NULL)
      {
 	ExFreePool(Pipe);
-	ExFreePool(Fcb);	
+	ExFreePool(Fcb);
 	
 	Irp->IoStatus.Status = STATUS_NO_MEMORY;
 	Irp->IoStatus.Information = 0;
 	
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
-     }   
+
+	return(STATUS_NO_MEMORY);
+     }
    
    wcscpy(Pipe->Name, PipeName);
    Pipe->ReferenceCount = 0;
    InitializeListHead(&Pipe->FcbListHead);
    KeInitializeSpinLock(&Pipe->FcbListLock);
-   Pipe->MaxInstances = IoStack->Parameters.CreateNamedPipe.MaxInstances;
-   Pipe->TimeOut = IoStack->Parameters.CreateNamedPipe.TimeOut;
+   
+   Pipe->MaxInstances = Buffer->MaxInstances;
+   Pipe->TimeOut = Buffer->TimeOut;
    
    KeLockMutex(&PipeListLock);
    current_entry = PipeListHead.Flink;
    while (current_entry != &PipeListHead)
      {
 	current = CONTAINING_RECORD(current_entry,
-				    PipeListEntry,
-				    NPFS_PIPE);
+				    NPFS_PIPE,
+				    PipeListEntry);
 	
 	if (wcscmp(Pipe->Name, current->Name) == 0)
 	  {
@@ -208,20 +223,21 @@ NTSTATUS NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject, PIRP Irp)
      }
    Pipe->ReferenceCount++;
    
-   KeAcquireSpinLock(&Pipe->FcbListHead, &oldIrql);
+   KeAcquireSpinLock(&Pipe->FcbListLock, &oldIrql);
    InsertTailList(&Pipe->FcbListHead, &Fcb->FcbListEntry);
-   KeReleaseSpinLock(&Pipe->FcbListHead, oldIrql);   
-   Fcb->WriteModeMessage = 
-     IoStack->Parameters.CreateNamedPipe.WriteModeMessage;
-   Fcb->ReadModeMessage = IoStack->Parameters.CreateNamedPipe.ReadModeMessage;
-   Fcb->NonBlocking = IoStack->Parameters.CreateNamedPipe.NonBlocking;
-   Fcb->InBufferSize = IoStack->Parameters.CreateNamedPipe.InBufferSize;
-   Fcb->OutBufferSize = IoStack->Parameters.CreateNamedPipe.OutBufferSize;
+   KeReleaseSpinLock(&Pipe->FcbListLock, oldIrql);
+   
+   Fcb->WriteModeMessage = Buffer->WriteModeMessage;
+   Fcb->ReadModeMessage = Buffer->ReadModeMessage;
+   Fcb->NonBlocking = Buffer->NonBlocking;
+   Fcb->InBufferSize = Buffer->InBufferSize;
+   Fcb->OutBufferSize = Buffer->OutBufferSize;
+   
    Fcb->Pipe = Pipe;
    Fcb->IsServer = TRUE;
    Fcb->OtherSide = NULL;
    
-   KeUnlockMutex(PipeListLock);
+   KeUnlockMutex(&PipeListLock);
    
    FileObject->FsContext = Fcb;
    
@@ -233,5 +249,32 @@ NTSTATUS NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    return(Status);
 }
 
+
+NTSTATUS STDCALL
+NpfsClose(PDEVICE_OBJECT DeviceObject,
+	  PIRP Irp)
+{
+   PIO_STACK_LOCATION IoStack;
+   PFILE_OBJECT FileObject;
+   PNPFS_FCB Fcb;
+   NTSTATUS Status;
+
+   DPRINT1("NpfsClose(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
+
+   IoStack = IoGetCurrentIrpStackLocation(Irp);
+   FileObject = IoStack->FileObject;
+   Fcb =  FileObject->FsContext;
+
+   DPRINT1("Closing pipe %S\n", Fcb->Pipe->Name);
+
+   Status = STATUS_SUCCESS;
+
+   Irp->IoStatus.Status = Status;
+   Irp->IoStatus.Information = 0;
+   
+   IoCompleteRequest(Irp, IO_NO_INCREMENT);
+   
+   return(Status);
+}
 
 /* EOF */

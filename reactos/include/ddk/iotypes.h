@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.26 2001/04/26 01:31:35 phreak Exp $
+/* $Id: iotypes.h,v 1.27 2001/05/01 11:04:52 ekohl Exp $
  * 
  */
 
@@ -110,8 +110,8 @@ typedef struct _IO_SECURITY_CONTEXT
 typedef struct _IO_STACK_LOCATION
 {
    UCHAR MajorFunction;
-   UCHAR MinorFunction;   
-   UCHAR Flags;   
+   UCHAR MinorFunction;
+   UCHAR Flags;
    UCHAR Control;
    
    union
@@ -155,31 +155,37 @@ typedef struct _IO_STACK_LOCATION
 	     struct _VPB* Vpb;
 	     struct _DEVICE_OBJECT* DeviceObject;
 	  } Mount;
-        struct {
-            ULONG Length;
-            FILE_INFORMATION_CLASS FileInformationClass;
-        } QueryFile;
-        struct {
-            ULONG Length;
-            FS_INFORMATION_CLASS FileInformationClass;
-        } QueryVolume;
-        struct {
-            ULONG Length;
-            FS_INFORMATION_CLASS FileInformationClass;
-        } SetVolume;
-        struct {
-            ULONG Length;
-            FILE_INFORMATION_CLASS FileInformationClass;
-            struct _FILE_OBJECT* FileObject;
-            union {
-                struct {
-                    BOOLEAN ReplaceIfExists;
-                    BOOLEAN AdvanceOnly;
-                } d;
-                ULONG ClusterCount;
-                HANDLE DeleteHandle;
-            } u;
-        } SetFile;
+	struct
+	  {
+	     ULONG Length;
+	     FILE_INFORMATION_CLASS FileInformationClass;
+	  } QueryFile;
+	struct
+	  {
+	     ULONG Length;
+	     FS_INFORMATION_CLASS FileInformationClass;
+	  } QueryVolume;
+	struct
+	  {
+	     ULONG Length;
+	     FS_INFORMATION_CLASS FileInformationClass;
+	  } SetVolume;
+	struct
+	  {
+	     ULONG Length;
+	     FILE_INFORMATION_CLASS FileInformationClass;
+	     struct _FILE_OBJECT* FileObject;
+	     union
+	       {
+		  struct
+		    {
+		       BOOLEAN ReplaceIfExists;
+		       BOOLEAN AdvanceOnly;
+		    } d;
+		  ULONG ClusterCount;
+		  HANDLE DeleteHandle;
+	       } u;
+	  } SetFile;
 	struct
 	  {
 	     ULONG Length;
@@ -187,26 +193,11 @@ typedef struct _IO_STACK_LOCATION
 	     FILE_INFORMATION_CLASS FileInformationClass;
 	     ULONG FileIndex;
 	  } QueryDirectory;
-/*
-	struct
-	  {
-	     ULONG CreateDisposition;
-	     ULONG CreateOptions;
-	     ULONG ShareAccess;
-	     BOOLEAN WriteModeMessage;
-	     BOOLEAN ReadModeMessage;
-	     BOOLEAN NonBlocking;
-	     ULONG MaxInstances;
-	     ULONG InBufferSize;
-	     ULONG OutBufferSize;
-	     LARGE_INTEGER TimeOut;
-	  } CreateNamedPipe;
-*/
      } Parameters;
    
    struct _DEVICE_OBJECT* DeviceObject;
    struct _FILE_OBJECT* FileObject;
-
+   
    PIO_COMPLETION_ROUTINE CompletionRoutine;
    PVOID CompletionContext;
    
@@ -217,6 +208,27 @@ typedef struct _IO_STATUS_BLOCK
    NTSTATUS Status;
    ULONG Information;
 } IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
+
+
+typedef struct _IO_PIPE_CREATE_BUFFER
+{
+   BOOLEAN WriteModeMessage;
+   BOOLEAN ReadModeMessage;
+   BOOLEAN NonBlocking;
+   ULONG MaxInstances;
+   ULONG InBufferSize;
+   ULONG OutBufferSize;
+   LARGE_INTEGER TimeOut;
+} IO_PIPE_CREATE_BUFFER, *PIO_PIPE_CREATE_BUFFER;
+
+
+typedef struct _IO_MAILSLOT_CREATE_BUFFER
+{
+   ULONG Param; /* ?? */
+   ULONG MaxMessageSize;
+   LARGE_INTEGER TimeOut;
+} IO_MAILSLOT_CREATE_BUFFER, *PIO_MAILSLOT_CREATE_BUFFER;
+
 
 /*
  * Driver entry point declaration

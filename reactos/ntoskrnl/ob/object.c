@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.34 2001/03/07 16:48:45 dwelch Exp $
+/* $Id: object.c,v 1.35 2001/05/01 11:06:24 ekohl Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -220,10 +220,11 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
  *
  * RETURN VALUE
  */
-PVOID STDCALL ObCreateObject(PHANDLE Handle,
-			     ACCESS_MASK DesiredAccess,
-			     POBJECT_ATTRIBUTES ObjectAttributes,
-			     POBJECT_TYPE Type)
+PVOID STDCALL
+ObCreateObject(PHANDLE Handle,
+	       ACCESS_MASK DesiredAccess,
+	       POBJECT_ATTRIBUTES ObjectAttributes,
+	       POBJECT_TYPE Type)
 {
    PVOID Parent = NULL;
    UNICODE_STRING RemainingPath;
@@ -243,10 +244,15 @@ PVOID STDCALL ObCreateObject(PHANDLE Handle,
    if (ObjectAttributes != NULL &&
        ObjectAttributes->ObjectName != NULL)
      {
-	ObFindObject(ObjectAttributes,
-		     &Parent,
-		     &RemainingPath,
-		     NULL);
+	Status = ObFindObject(ObjectAttributes,
+			      &Parent,
+			      &RemainingPath,
+			      NULL);
+	if (!NT_SUCCESS(Status))
+	  {
+	     DPRINT("ObFindObject() failed! (Status 0x%x)\n", Status);
+	     return (NULL);
+	  }
      }
    else
      {
@@ -264,8 +270,8 @@ PVOID STDCALL ObCreateObject(PHANDLE Handle,
 		      DesiredAccess,
 		      Type,
 		      ObjectAttributes);
-   if (Header->ObjectType != NULL &&
-       Header->ObjectType->Create != NULL)
+   if ((Header->ObjectType != NULL) &&
+       (Header->ObjectType->Create != NULL))
      {
 	DPRINT("Calling %x\n", Header->ObjectType);
 	DPRINT("Calling %x\n", Header->ObjectType->Create);
@@ -286,10 +292,11 @@ PVOID STDCALL ObCreateObject(PHANDLE Handle,
    return(HEADER_TO_BODY(Header));
 }
 
-NTSTATUS STDCALL ObReferenceObjectByPointer(PVOID ObjectBody,
-				    ACCESS_MASK DesiredAccess,
-				    POBJECT_TYPE ObjectType,
-				    KPROCESSOR_MODE AccessMode)
+NTSTATUS STDCALL
+ObReferenceObjectByPointer(PVOID ObjectBody,
+			   ACCESS_MASK DesiredAccess,
+			   POBJECT_TYPE ObjectType,
+			   KPROCESSOR_MODE AccessMode)
 /*
  * FUNCTION: Increments the pointer reference count for a given object
  * ARGUMENTS:

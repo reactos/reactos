@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.1 2000/03/26 22:00:09 dwelch Exp $
+/* $Id: rw.c,v 1.2 2001/05/01 11:09:01 ekohl Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -10,31 +10,36 @@
 /* INCLUDES ******************************************************************/
 
 #include <ddk/ntddk.h>
+#include "npfs.h"
 
 //#define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
-#include "npfs.h"
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL
+NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    PIO_STACK_LOCATION IoStack;
    PFILE_OBJECT FileObject;
    NTSTATUS Status;
    PNPFS_DEVICE_EXTENSION DeviceExt;
    PWSTR PipeName;
-   PNPFS_FSCONTEXT PipeDescr;
-   NTSTATUS Status;
+//   PNPFS_FSCONTEXT PipeDescr;
    KIRQL oldIrql;
    PLIST_ENTRY current_entry;
-   PNPFS_CONTEXT current;
+//   PNPFS_CONTEXT current;
    ULONG Information;
    
    DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
    IoStack = IoGetCurrentIrpStackLocation(Irp);
    FileObject = IoStack->FileObject;
+   
+   Status = STATUS_SUCCESS;
+   Information = 0;
+   
+#if 0
    PipeDescr = FileObject->FsContext;
    
    if (PipeType & NPFS_READMODE_BYTE)
@@ -68,6 +73,7 @@ NTSTATUS NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    else
      {
      }
+#endif
    
    Irp->IoStatus.Status = Status;
    Irp->IoStatus.Information = Information;
@@ -77,5 +83,23 @@ NTSTATUS NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    return(Status);
 }
 
+
+NTSTATUS STDCALL
+NpfsWrite(PDEVICE_OBJECT DeviceObject,
+	  PIRP Irp)
+{
+   NTSTATUS Status;
+
+   DPRINT1("NpfsWrite()\n");
+
+   Status = STATUS_SUCCESS;
+
+   Irp->IoStatus.Status = Status;
+   Irp->IoStatus.Information = 0;
+   
+   IoCompleteRequest(Irp, IO_NO_INCREMENT);
+   
+   return(Status);
+}
 
 /* EOF */

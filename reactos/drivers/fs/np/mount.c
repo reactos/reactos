@@ -1,4 +1,4 @@
-/* $Id: mount.c,v 1.4 2000/05/13 13:51:08 dwelch Exp $
+/* $Id: mount.c,v 1.5 2001/05/01 11:09:01 ekohl Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -10,19 +10,19 @@
 /* INCLUDES ******************************************************************/
 
 #include <ddk/ntddk.h>
+#include "npfs.h"
 
 //#define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
-#include "npfs.h"
 
 /* GLOBALS *******************************************************************/
 
-static PDRIVER_OBJECT DriverObject;
+//static PDRIVER_OBJECT DriverObject;
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS DriverEntry(PDRIVER_OBJECT _DriverObject,
+NTSTATUS DriverEntry(PDRIVER_OBJECT DriverObject,
 		     PUNICODE_STRING RegistryPath)
 {
    PDEVICE_OBJECT DeviceObject;
@@ -32,13 +32,14 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT _DriverObject,
    
    DbgPrint("Named Pipe Filesystem\n");
    
-   DriverObject = _DriverObject;
+//   DriverObject = _DriverObject;
    
+#if 0
    RtlInitUnicodeString(&DeviceName, L"\\Device\\Npfs");
    Status = IoCreateDevice(DriverObject,
 			   0,
 			   &DeviceName,
-			   FILE_DEVICE_FILE_SYSTEM,
+			   FILE_DEVICE_NAMED_PIPE,
 			   0,
 			   FALSE,
 			   &DeviceObject);
@@ -47,34 +48,60 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT _DriverObject,
 	return(Status);
      }
    
-   RtlInitUnicodeString(&LinkName, L"\\??\\pipe");
+   RtlInitUnicodeString(&LinkName, L"\\??\\Pipe");
    Status = IoCreateSymbolicLink(&LinkName,
 				 &DeviceName);
+#endif
    
    DeviceObject->Flags = 0;
-   DeviceObject->MajorFunction[IRP_MJ_CLOSE] = NpfsClose;
-   DeviceObject->MajorFunction[IRP_MJ_CREATE_NAMED_PIPE] =
+   DriverObject->MajorFunction[IRP_MJ_CREATE] = NpfsCreate;
+   DriverObject->MajorFunction[IRP_MJ_CREATE_NAMED_PIPE] =
      NpfsCreateNamedPipe;
-   DeviceObject->MajorFunction[IRP_MJ_CREATE] = NpfsCreate;
-   DeviceObject->MajorFunction[IRP_MJ_READ] = NpfsRead;
-   DeviceObject->MajorFunction[IRP_MJ_WRITE] = NpfsWrite;
-   DeviceObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] =
-     NpfsDirectoryControl;
-   DeviceObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] =
-     NpfsQueryInformation;
-   DeviceObject->MajorFunction[IRP_MJ_SET_INFORMATION] =
-     NpfsSetInformation;
-   DeviceObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = NpfsFlushBuffers;
-   DeviceObject->MajorFunction[IRP_MJ_SHUTDOWN] = NpfsShutdown;
-   DeviceObject->MajorFunction[IRP_MJ_CLEANUP] = NpfsCleanup;
-   DeviceObject->MajorFunction[IRP_MJ_QUERY_SECURITY] = 
-     NpfsQuerySecurity;
-   DeviceObject->MajorFunction[IRP_MJ_SET_SECURITY] =
-     NpfsSetSecurity;
-   DeviceObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] =
+   DriverObject->MajorFunction[IRP_MJ_CLOSE] = NpfsClose;
+   DriverObject->MajorFunction[IRP_MJ_READ] = NpfsRead;
+   DriverObject->MajorFunction[IRP_MJ_WRITE] = NpfsWrite;
+//   DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] =
+//     NpfsDirectoryControl;
+//   DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] =
+//     NpfsQueryInformation;
+//   DriverObject->MajorFunction[IRP_MJ_SET_INFORMATION] =
+//     NpfsSetInformation;
+//   DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = NpfsFlushBuffers;
+//   DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = NpfsShutdown;
+//   DriverObject->MajorFunction[IRP_MJ_CLEANUP] = NpfsCleanup;
+//   DriverObject->MajorFunction[IRP_MJ_QUERY_SECURITY] = 
+//     NpfsQuerySecurity;
+//   DriverObject->MajorFunction[IRP_MJ_SET_SECURITY] =
+//     NpfsSetSecurity;
+   DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] =
      NpfsFileSystemControl;
    
    DriverObject->DriverUnload = NULL;
+   
+   RtlInitUnicodeString(&DeviceName, L"\\Device\\Npfs");
+   Status = IoCreateDevice(DriverObject,
+			   0,
+			   &DeviceName,
+			   FILE_DEVICE_NAMED_PIPE,
+			   0,
+			   FALSE,
+			   &DeviceObject);
+   if (!NT_SUCCESS(Status))
+     {
+	DPRINT1("Failed to create named pipe device! (Status %x)\n", Status);
+	return(Status);
+     }
+   
+   RtlInitUnicodeString(&LinkName, L"\\??\\Pipe");
+   Status = IoCreateSymbolicLink(&LinkName,
+				 &DeviceName);
+   if (!NT_SUCCESS(Status))
+     {
+	DPRINT1("Failed to create named pipe symbolic link! (Status %x)\n", Status);
+
+//	IoDeleteDevice();
+	return(Status);
+     }
    
    NpfsInitPipeList();
    

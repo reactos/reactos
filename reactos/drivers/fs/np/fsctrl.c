@@ -1,4 +1,4 @@
-/* $Id: fsctrl.c,v 1.1 2000/05/13 13:51:08 dwelch Exp $
+/* $Id: fsctrl.c,v 1.2 2001/05/01 11:09:01 ekohl Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -10,15 +10,17 @@
 /* INCLUDES ******************************************************************/
 
 #include <ddk/ntddk.h>
+#include "npfs.h"
 
 //#define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
-#include "npfs.h"
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL
+NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
+		      PIRP Irp)
 {
    PIO_STACK_LOCATION IoStack;
    PFILE_OBJECT FileObject;
@@ -33,7 +35,7 @@ NTSTATUS NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    Fcb = FileObject->FsContext;
    Pipe = Fcb->Pipe;
    
-   switch (stk->Parameters.FileSystemControl.IoControlCode)
+   switch (IoStack->Parameters.FileSystemControl.IoControlCode)
      {
       case FSCTL_WAIT_PIPE:
 	break;
