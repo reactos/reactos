@@ -1925,7 +1925,7 @@ extern "C" {
 #define GMEM_MODIFY     (128)
 #define GMEM_DISCARDED  (16384)
 #define GMEM_LOCKCOUNT  (255)
-
+#define GlobalDiscard(h) GlobalReAlloc(h, 0, GMEM_MOVEABLE)
 
 /* ImageList_Create */
 #define ILC_COLOR	(0)

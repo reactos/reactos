@@ -4991,11 +4991,6 @@ GlobalAlloc(
 	    DWORD dwBytes
 	    );
 
-HGLOBAL
-STDCALL
-GlobalDiscard(
-	      HGLOBAL hglbMem
-	      );
 
 HGLOBAL
 STDCALL
