@@ -14,7 +14,7 @@ typedef enum _KEY_INFORMATION_CLASS
   KeyFullInformation
 } KEY_INFORMATION_CLASS;
 
-typedef struct _KEY_BASIC_INFORMATION 
+typedef struct _KEY_BASIC_INFORMATION
 {
   LARGE_INTEGER  LastWriteTime;
   ULONG  TitleIndex;
@@ -22,7 +22,7 @@ typedef struct _KEY_BASIC_INFORMATION
   WCHAR  Name[1];
 } KEY_BASIC_INFORMATION, *PKEY_BASIC_INFORMATION;
 
-typedef struct _KEY_FULL_INFORMATION 
+typedef struct _KEY_FULL_INFORMATION
 {
   LARGE_INTEGER  LastWriteTime;
   ULONG  TitleIndex;
@@ -37,7 +37,7 @@ typedef struct _KEY_FULL_INFORMATION
   WCHAR  Class[1];
 } KEY_FULL_INFORMATION, *PKEY_FULL_INFORMATION;
 
-typedef struct _KEY_NODE_INFORMATION 
+typedef struct _KEY_NODE_INFORMATION
 {
   LARGE_INTEGER  LastWriteTime;
   ULONG  TitleIndex;
@@ -61,7 +61,7 @@ typedef enum _KEY_VALUE_INFORMATION_CLASS
   KeyValuePartialInformation
 } KEY_VALUE_INFORMATION_CLASS;
 
-typedef struct _KEY_VALUE_BASIC_INFORMATION 
+typedef struct _KEY_VALUE_BASIC_INFORMATION
 {
   ULONG  TitleIndex;
   ULONG  Type;
@@ -69,7 +69,7 @@ typedef struct _KEY_VALUE_BASIC_INFORMATION
   WCHAR  Name[1];
 } KEY_VALUE_BASIC_INFORMATION, *PKEY_VALUE_BASIC_INFORMATION;
 
-typedef struct _KEY_VALUE_FULL_INFORMATION 
+typedef struct _KEY_VALUE_FULL_INFORMATION
 {
   ULONG  TitleIndex;
   ULONG  Type;
@@ -79,7 +79,7 @@ typedef struct _KEY_VALUE_FULL_INFORMATION
   WCHAR  Name[1];
 } KEY_VALUE_FULL_INFORMATION, *PKEY_VALUE_FULL_INFORMATION;
 
-typedef struct _KEY_VALUE_PARTIAL_INFORMATION 
+typedef struct _KEY_VALUE_PARTIAL_INFORMATION
 {
   ULONG  TitleIndex;
   ULONG  Type;
@@ -91,4 +91,13 @@ typedef struct _KEY_VALUE_PARTIAL_INFORMATION
 #define  REG_OPTION_BACKUP_RESTORE  0x00000004
 
 
+/* used by [Nt/Zw]QueryMultipleValueKey */
+
+typedef struct _KEY_VALUE_ENTRY
+{
+  PUNICODE_STRING  ValueName;
+  ULONG  DataLength;
+  ULONG  DataOffset;
+  ULONG  Type;
+} KEY_VALUE_ENTRY, *PKEY_VALUE_ENTRY;
 

@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.48 2001/11/20 02:29:43 dwelch Exp $
+/* $Id: zw.h,v 1.49 2002/02/06 01:22:32 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -3075,7 +3075,7 @@ NtQueryKey(
 	IN KEY_INFORMATION_CLASS KeyInformationClass,
 	OUT PVOID KeyInformation,
 	IN ULONG Length,
-	OUT PULONG ResultLength 
+	OUT PULONG ResultLength
 	);
 
 NTSTATUS
@@ -3085,7 +3085,7 @@ ZwQueryKey(
 	IN KEY_INFORMATION_CLASS KeyInformationClass,
 	OUT PVOID KeyInformation,
 	IN ULONG Length,
-	OUT PULONG ResultLength 
+	OUT PULONG ResultLength
 	);
 
 
@@ -3094,24 +3094,24 @@ ZwQueryKey(
 NTSTATUS
 STDCALL
 NtQueryMultipleValueKey(
-   HANDLE KeyHandle,
-   PWVALENT ListOfValuesToQuery,
-   ULONG NumberOfItems,
-   PVOID MultipleValueInformation,
-   ULONG Length,
-   PULONG  ReturnLength
-);	
+	IN HANDLE KeyHandle,
+	IN OUT PKEY_VALUE_ENTRY ValueList,
+	IN ULONG NumberOfValues,
+	OUT PVOID Buffer,
+	IN OUT PULONG Length,
+	OUT PULONG ReturnLength
+	);
 
 NTSTATUS
 STDCALL
 ZwQueryMultipleValueKey(
-   HANDLE KeyHandle,
-   PWVALENT ListOfValuesToQuery,
-   ULONG NumberOfItems,
-   PVOID MultipleValueInformation,
-   ULONG Length,
-   PULONG  ReturnLength
-);
+	IN HANDLE KeyHandle,
+	IN OUT PKEY_VALUE_ENTRY ValueList,
+	IN ULONG NumberOfValues,
+	OUT PVOID Buffer,
+	IN OUT PULONG Length,
+	OUT PULONG ReturnLength
+	);
 
 /*
  * FUNCTION: Queries the information of a mutant object.

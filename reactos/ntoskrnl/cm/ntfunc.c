@@ -704,15 +704,12 @@ DPRINT("NTOpenKey2 : after ObFindObject\n");
 }
 
 
-NTSTATUS 
-STDCALL
-NtQueryKey (
-	IN	HANDLE			KeyHandle, 
-	IN	KEY_INFORMATION_CLASS	KeyInformationClass,
-	OUT	PVOID			KeyInformation,
-	IN	ULONG			Length,
-	OUT	PULONG			ResultLength
-	)
+NTSTATUS STDCALL
+NtQueryKey(IN	HANDLE			KeyHandle,
+	   IN	KEY_INFORMATION_CLASS	KeyInformationClass,
+	   OUT	PVOID			KeyInformation,
+	   IN	ULONG			Length,
+	   OUT	PULONG			ResultLength)
 {
   NTSTATUS  Status;
   PKEY_OBJECT  KeyObject;
@@ -1136,19 +1133,17 @@ NtSetValueKey (
   return  Status;
 }
 
-NTSTATUS
-STDCALL
-NtDeleteValueKey (
-	IN	HANDLE		KeyHandle,
-	IN	PUNICODE_STRING	ValueName
-	)
+
+NTSTATUS STDCALL
+NtDeleteValueKey(IN HANDLE KeyHandle,
+		 IN PUNICODE_STRING ValueName)
 {
- NTSTATUS  Status;
- PKEY_OBJECT  KeyObject;
- PREGISTRY_FILE  RegistryFile;
- PKEY_BLOCK  KeyBlock;
- char ValueName2[MAX_PATH];
-// KIRQL  OldIrql;
+  NTSTATUS  Status;
+  PKEY_OBJECT  KeyObject;
+  PREGISTRY_FILE  RegistryFile;
+  PKEY_BLOCK  KeyBlock;
+  char ValueName2[MAX_PATH];
+//  KIRQL  OldIrql;
 
   wcstombs(ValueName2,ValueName->Buffer,ValueName->Length>>1);
   ValueName2[ValueName->Length>>1]=0;
@@ -1178,26 +1173,21 @@ NtDeleteValueKey (
   return  Status;
 }
 
-NTSTATUS
-STDCALL 
-NtLoadKey (
-	PHANDLE			KeyHandle,
-	POBJECT_ATTRIBUTES	ObjectAttributes
-	)
+
+NTSTATUS STDCALL
+NtLoadKey(PHANDLE KeyHandle,
+	  POBJECT_ATTRIBUTES ObjectAttributes)
 {
-  return  NtLoadKey2(KeyHandle,
-                     ObjectAttributes,
-                     0);
+  return(NtLoadKey2(KeyHandle,
+		    ObjectAttributes,
+		    0));
 }
 
 
-NTSTATUS
-STDCALL
-NtLoadKey2 (
-	PHANDLE			KeyHandle,
-	POBJECT_ATTRIBUTES	ObjectAttributes,
-	ULONG			Unknown3
-	)
+NTSTATUS STDCALL
+NtLoadKey2(IN PHANDLE KeyHandle,
+	   IN POBJECT_ATTRIBUTES ObjectAttributes,
+	   IN ULONG Flags)
 {
 	UNIMPLEMENTED;
 }
@@ -1222,18 +1212,118 @@ NtNotifyChangeKey (
 }
 
 
-NTSTATUS
-STDCALL
-NtQueryMultipleValueKey (
-	IN	HANDLE		KeyHandle,
-	IN	PWVALENT	ListOfValuesToQuery,
-	IN	ULONG		NumberOfItems,
-	OUT	PVOID		MultipleValueInformation,
-	IN	ULONG		Length,
-	OUT	PULONG		ReturnLength
-	)
+NTSTATUS STDCALL
+NtQueryMultipleValueKey(IN HANDLE KeyHandle,
+			IN OUT PKEY_VALUE_ENTRY ValueList,
+			IN ULONG NumberOfValues,
+			OUT PVOID Buffer,
+			IN OUT PULONG Length,
+			OUT PULONG ReturnLength)
 {
-	UNIMPLEMENTED;
+  PKEY_OBJECT KeyObject;
+  PREGISTRY_FILE RegistryFile;
+  PKEY_BLOCK KeyBlock;
+  PVALUE_BLOCK ValueBlock;
+  PDATA_BLOCK DataBlock;
+  UCHAR ValueName[MAX_PATH];
+  PUCHAR DataPtr;
+  ULONG BufferLength;
+  ULONG i;
+  NTSTATUS Status;
+
+  /* Verify that the handle is valid and is a registry key */
+  Status = ObReferenceObjectByHandle(KeyHandle,
+				     KEY_QUERY_VALUE,
+				     CmiKeyType,
+				     UserMode,
+				     (PVOID *)&KeyObject,
+				     NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("ObReferenceObjectByHandle() failed with status %x\n", Status);
+      return(Status);
+    }
+
+  /*  Get pointer to KeyBlock  */
+  KeyBlock = KeyObject->KeyBlock;
+  RegistryFile = KeyObject->RegistryFile;
+
+  DataPtr = (PUCHAR)Buffer;
+
+  for (i = 0; i < NumberOfValues; i++)
+    {
+      wcstombs(ValueName,
+	       ValueList[i].ValueName->Buffer,
+	       ValueList[i].ValueName->Length >> 1);
+      ValueName[ValueList[i].ValueName->Length >> 1] = 0;
+
+      DPRINT("ValueName: '%s'\n", ValueName);
+
+      /*  Get Value block of interest  */
+      Status = CmiScanKeyForValue(RegistryFile,
+				  KeyBlock,
+				  ValueName,
+				  &ValueBlock,
+				  NULL);
+      if (!NT_SUCCESS(Status))
+	{
+	  DPRINT("CmiScanKeyForValue() failed with status %x\n", Status);
+	  break;
+	}
+      else if (ValueBlock == NULL)
+	{
+	  Status = STATUS_OBJECT_NAME_NOT_FOUND;
+	  break;
+	}
+
+      BufferLength = (BufferLength + 3) & 0xfffffffc;
+
+      if (BufferLength + (ValueBlock->DataSize & LONG_MAX) <= *Length)
+	{
+	  DataPtr = (PUCHAR)(((ULONG)DataPtr + 3) & 0xfffffffc);
+
+	  ValueList[i].Type = ValueBlock->DataType;
+	  ValueList[i].DataLength = ValueBlock->DataSize & LONG_MAX;
+	  ValueList[i].DataOffset = (ULONG)DataPtr - (ULONG)Buffer;
+
+	  if (ValueBlock->DataSize >0)
+	    {
+	      DataBlock = CmiGetBlock(RegistryFile,
+				      ValueBlock->DataOffset,
+				      NULL);
+	      RtlCopyMemory(DataPtr,
+			    DataBlock->Data,
+			    ValueBlock->DataSize & LONG_MAX);
+	      CmiReleaseBlock(RegistryFile,
+			      DataBlock);
+	    }
+	  else
+	    {
+	      RtlCopyMemory(DataPtr,
+			    &ValueBlock->DataOffset,
+			    ValueBlock->DataSize & LONG_MAX);
+	    }
+
+	  DataPtr += ValueBlock->DataSize & LONG_MAX;
+	}
+      else
+	{
+	  Status = STATUS_BUFFER_TOO_SMALL;
+	}
+
+      BufferLength +=  ValueBlock->DataSize & LONG_MAX;
+    }
+
+  if (NT_SUCCESS(Status))
+    *Length = BufferLength;
+
+  *ReturnLength = BufferLength;
+
+  ObDereferenceObject(KeyObject);
+
+  DPRINT("Return Status 0x%X\n", Status);
+
+  return(Status);
 }
 
 
@@ -1285,22 +1375,15 @@ NtSetInformationKey (
 }
 
 
-NTSTATUS
-STDCALL 
-NtUnloadKey (
-	HANDLE	KeyHandle
-	)
+NTSTATUS STDCALL
+NtUnloadKey(IN HANDLE KeyHandle)
 {
 	UNIMPLEMENTED;
 }
 
 
-NTSTATUS
-STDCALL 
-NtInitializeRegistry (
-	BOOLEAN	SetUpBoot
-	)
+NTSTATUS STDCALL
+NtInitializeRegistry(IN BOOLEAN SetUpBoot)
 {
-//	UNIMPLEMENTED;
-   return STATUS_SUCCESS;
+  return(STATUS_SUCCESS);
 }
