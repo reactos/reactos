@@ -1,4 +1,5 @@
-/*
+/* $Id: pool.c,v 1.10 2000/03/01 22:52:28 ea Exp $
+ * 
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
  * FILE:         ntoskrnl/mm/pool.c
@@ -21,7 +22,9 @@
 
 /* FUNCTIONS ***************************************************************/
 
-PVOID ExAllocatePool(POOL_TYPE PoolType, ULONG NumberOfBytes)
+PVOID
+STDCALL
+ExAllocatePool (POOL_TYPE PoolType, ULONG NumberOfBytes)
 /*
  * FUNCTION: Allocates pool memory of a specified type and returns a pointer
  * to the allocated block. This routine is used for general purpose allocation
@@ -52,7 +55,10 @@ PVOID ExAllocatePool(POOL_TYPE PoolType, ULONG NumberOfBytes)
    return(Block);
 }
 
-PVOID ExAllocatePoolWithTag(ULONG PoolType, ULONG NumberOfBytes, ULONG Tag)
+
+PVOID
+STDCALL
+ExAllocatePoolWithTag (ULONG PoolType, ULONG NumberOfBytes, ULONG Tag)
 {
    PVOID Block;
    
@@ -90,9 +96,35 @@ PVOID ExAllocatePoolWithTag(ULONG PoolType, ULONG NumberOfBytes, ULONG Tag)
      }
    return(Block);
 }
-   
-PVOID ExAllocatePoolWithQuota(POOL_TYPE PoolType, ULONG NumberOfBytes)
+
+
+PVOID
+STDCALL
+ExAllocatePoolWithQuota (POOL_TYPE PoolType, ULONG NumberOfBytes)
 {
 //   return(ExAllocatePoolWithQuotaTag(PoolType,NumberOfBytes,TAG_NONE));
-   UNIMPLEMENTED;
+	UNIMPLEMENTED;
 }
+
+
+PVOID
+STDCALL
+ExAllocatePoolWithQuotaTag (
+	IN	POOL_TYPE	PoolType,
+	IN	ULONG		NumberOfBytes,
+	IN	ULONG		Tag
+	)
+{
+	PVOID	Address = NULL;
+	
+	UNIMPLEMENTED;	/* FIXME */
+
+	if (NULL == Address)
+	{
+		ExRaiseStatus (STATUS_INSUFFICIENT_RESOURCES);
+	}
+	return Address;
+}
+
+
+/* EOF */

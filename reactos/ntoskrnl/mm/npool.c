@@ -1,4 +1,5 @@
-/*
+/* $Id: npool.c,v 1.26 2000/03/01 22:52:28 ea Exp $
+ *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
  * FILE:         ntoskrnl/mm/pool.c
@@ -23,6 +24,7 @@
 #include <internal/mmhal.h>
 #include <internal/bitops.h>
 #include <internal/ntoskrnl.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -625,7 +627,7 @@ asmlinkage VOID ExFreePool(PVOID block)
    KeReleaseSpinLock(&MmNpoolLock, oldIrql);
 }
 
-PVOID ExAllocateNonPagedPoolWithTag(ULONG type, 
+PVOID STDCALL ExAllocateNonPagedPoolWithTag(ULONG type, 
 				    ULONG size, 
 				    ULONG Tag,
 				    PVOID Caller)
@@ -697,3 +699,5 @@ PVOID ExAllocateNonPagedPoolWithTag(ULONG type,
    return(block);
 }
 
+
+/* EOF */

@@ -1,4 +1,5 @@
-/*
+/* $Id: ntddk.h,v 1.13 2000/03/01 22:52:25 ea Exp $
+ *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
  * FILE:           include/ddk/ntddk.h

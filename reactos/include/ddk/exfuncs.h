@@ -3,12 +3,30 @@
 
 /* EXECUTIVE ROUTINES ******************************************************/
 
-VOID ExReleaseResourceLite(PERESOURCE Resource);
-VOID ExAcquireFastMutex (PFAST_MUTEX	FastMutex);
-VOID ExAcquireFastMutexUnsafe (PFAST_MUTEX	FastMutex);
-BOOLEAN ExAcquireResourceExclusive (PERESOURCE Resource, BOOLEAN Wait);
-BOOLEAN ExAcquireResourceExclusiveLite (PERESOURCE Resource, BOOLEAN	Wait);
-BOOLEAN ExAcquireResourceSharedLite (
+VOID
+ExReleaseResourceLite (
+	PERESOURCE	Resource
+	);
+VOID
+ExAcquireFastMutex (
+	PFAST_MUTEX	FastMutex
+	);
+VOID
+ExAcquireFastMutexUnsafe (
+	PFAST_MUTEX	FastMutex
+	);
+BOOLEAN
+ExAcquireResourceExclusive (
+	PERESOURCE	Resource,
+	BOOLEAN		Wait
+	);
+BOOLEAN
+ExAcquireResourceExclusiveLite (
+	PERESOURCE	Resource,
+	BOOLEAN		Wait
+	);
+BOOLEAN
+ExAcquireResourceSharedLite (
 	PERESOURCE	Resource,
 	BOOLEAN		Wait
 	);
@@ -34,37 +52,40 @@ PVOID
 ExAllocateFromZone (
 	PZONE_HEADER	Zone
 	);
-
 /*
  * FUNCTION: Allocates memory from the nonpaged pool
  * ARGUMENTS:
- *      size = minimum size of the block to be allocated
+ *      NumberOfBytes = minimum size of the block to be allocated
  *      PoolType = the type of memory to use for the block (ignored)
  * RETURNS:
  *      the address of the block if it succeeds
  */
 PVOID
+STDCALL
 ExAllocatePool (
-	POOL_TYPE	PoolType,
-	ULONG		size
+	IN	POOL_TYPE	PoolType,
+	IN	ULONG		NumberOfBytes
 	);
 
 PVOID
+STDCALL
 ExAllocatePoolWithQuota (
-	POOL_TYPE	PoolType,
-	ULONG		NumberOfBytes
+	IN	POOL_TYPE	PoolType,
+	IN	ULONG		NumberOfBytes
 	);
 PVOID
+STDCALL
 ExAllocatePoolWithQuotaTag (
-	POOL_TYPE	PoolType,
-	ULONG		NumberOfBytes,
-	ULONG		Tag
+	IN	POOL_TYPE	PoolType,
+	IN	ULONG		NumberOfBytes,
+	IN	ULONG		Tag
 	);
 PVOID
+STDCALL
 ExAllocatePoolWithTag (
-	POOL_TYPE	PoolType,
-	ULONG		NumberOfBytes,
-	ULONG		Tag
+	IN	POOL_TYPE	PoolType,
+	IN	ULONG		NumberOfBytes,
+	IN	ULONG		Tag
 	);
 VOID
 ExConvertExclusiveToSharedLite (

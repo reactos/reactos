@@ -1,4 +1,5 @@
-/*
+/* $Id: ppool.c,v 1.2 2000/03/01 22:52:28 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/ppool.c
@@ -17,7 +18,35 @@
 
 /* FUNCTIONS *****************************************************************/
 
-PVOID ExAllocatePagedPoolWithTag(ULONG type, ULONG size, ULONG Tag)
+
+/**********************************************************************
+ * NAME							INTERNAL
+ *	ExAllocatePagedPoolWithTag@12
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ */
+PVOID 
+STDCALL
+ExAllocatePagedPoolWithTag (
+	IN	POOL_TYPE	PoolType,
+	IN	ULONG		NumberOfBytes,
+	IN	ULONG		Tag
+	)
 {
-   UNIMPLEMENTED;
+	PVOID	Address = NULL;
+	
+	UNIMPLEMENTED; /* FIXME: */
+
+	if (NULL == Address)
+	{
+		ExRaiseStatus (STATUS_INSUFFICIENT_RESOURCES);
+	}
+	return Address;
 }
+
+
+/* EOF */

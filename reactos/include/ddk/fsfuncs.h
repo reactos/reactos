@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_FSFUNCS_H
 #define __INCLUDE_DDK_FSFUNCS_H
-/* $Id: fsfuncs.h,v 1.6 2000/02/26 16:21:34 ea Exp $ */
+/* $Id: fsfuncs.h,v 1.7 2000/03/01 22:52:25 ea Exp $ */
 VOID
 STDCALL
 FsRtlAddLargeMcbEntry (
@@ -19,6 +19,32 @@ FsRtlAddMcbEntry (
 	DWORD	Unknown1,
 	DWORD	Unknown2,
 	DWORD	Unknown3
+	);
+PVOID
+STDCALL
+FsRtlAllocatePool (
+	IN	POOL_TYPE	PoolType,
+	IN	ULONG		NumberOfBytes
+	);
+PVOID
+STDCALL
+FsRtlAllocatePoolWithQuota (
+	IN	POOL_TYPE	PoolType,
+	IN	ULONG		NumberOfBytes
+	);
+PVOID
+STDCALL
+FsRtlAllocatePoolWithQuotaTag (
+	IN	POOL_TYPE	PoolType,
+	IN	ULONG		NumberOfBytes,
+	IN	ULONG		Tag
+	);
+PVOID
+STDCALL
+FsRtlAllocatePoolWithTag (
+	IN	POOL_TYPE	PoolType,
+	IN	ULONG		NumberOfBytes,
+	IN	ULONG		Tag
 	);
 DWORD
 STDCALL
