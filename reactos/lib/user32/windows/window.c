@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.76 2003/10/28 22:46:30 navaraf Exp $
+/* $Id: window.c,v 1.77 2003/10/30 21:58:42 mtempel Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -339,6 +339,7 @@ HWND STDCALL
 ChildWindowFromPoint(HWND hWndParent,
 		     POINT Point)
 {
+  DbgPrint("FIXME: ChildWindowFromPoint is not implemented\n");
   UNIMPLEMENTED;
   return (HWND)0;
 }
@@ -352,6 +353,7 @@ ChildWindowFromPointEx(HWND hwndParent,
 		       POINT pt,
 		       UINT uFlags)
 {
+  DbgPrint("FIXME: ChildWindowFromPointEx is not implemented\n");
   UNIMPLEMENTED;
   return (HWND)0;
 }
@@ -1507,13 +1509,14 @@ UpdateLayeredWindow(HWND hwnd,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HWND STDCALL
 WindowFromPoint(POINT Point)
 {
-  UNIMPLEMENTED;
-  return (HWND)0;
+  //TODO: Determine what the actual parameters to 
+  // NtUserWindowFromPoint are.
+  return NtUserWindowFromPoint(Point.x, Point.y);
 }
 
 
