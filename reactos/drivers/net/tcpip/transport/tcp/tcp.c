@@ -317,6 +317,7 @@ NTSTATUS TCPReceiveData
 	Status = STATUS_PENDING;
     } else {
 	TI_DbgPrint(MID_TRACE,("Got status %x, bytes %d\n", Status, Received));
+	*BytesReceived = Received;
     }
 
     KeReleaseSpinLock(&Connection->Lock, OldIrql);

@@ -91,12 +91,15 @@ int TCPSocketState(void *ClientData,
 			    ("Completing Receive Request: %x\n", 
 			     Bucket->Request));
 		
-		Complete( Bucket->Request.RequestContext, 
-			  STATUS_SUCCESS, 
-			  Received );
-	    } else {
+		Complete( Bucket->Request.RequestContext,
+			  STATUS_SUCCESS, Received );
+	    } else if( Status == STATUS_SUCCESS ) {
 		InsertHeadList( &Connection->ReceiveRequest,
 				&Bucket->Entry );
+		break;
+	    } else {
+		Complete( Bucket->Request.RequestContext, Status, 0 );
+		break;
 	    }
 	}
     } 
