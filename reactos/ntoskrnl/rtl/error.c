@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.12 2004/05/15 16:17:59 gvg Exp $
+/* $Id: error.c,v 1.13 2004/05/15 16:29:55 gvg Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -840,7 +840,7 @@ RtlAssert(PVOID FailedAssertion,
 	  ULONG LineNumber,
 	  PCHAR Message)
 {
-   if (NULL == Message)
+   if (NULL != Message)
       {
          DbgPrint("Assertion \'%s\' failed at %s line %d: %s\n",
                   (PCHAR)FailedAssertion,
