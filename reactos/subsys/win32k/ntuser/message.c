@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.34 2003/11/21 17:01:16 navaraf Exp $
+/* $Id: message.c,v 1.35 2003/11/23 12:41:42 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -95,14 +95,10 @@ NtUserDispatchMessage(CONST MSG* UnsafeMsg)
   if( Msg.hwnd == 0 ) return 0;
 
   /* Get the window object. */
-  Status = 
-    ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->HandleTable,
-			       Msg.hwnd,
-			       otWindow,
-			       (PVOID*)&WindowObject);
-  if (!NT_SUCCESS(Status))
+  WindowObject = IntGetWindowObject(Msg.hwnd);
+  if(!WindowObject)
     {
-      SetLastNtError(Status);
+      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       return 0;
     }
 
@@ -114,7 +110,9 @@ NtUserDispatchMessage(CONST MSG* UnsafeMsg)
 					Msg.message,
 					Msg.wParam,
 					Msg.lParam);
-
+  
+  IntReleaseWindowObject(WindowObject);
+  
   return Result;
 }
 
@@ -226,16 +224,11 @@ NtUserPeekMessage(LPMSG UnsafeMsg,
   /* Validate input */
   if (NULL != Wnd)
     {
-      Status = ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->HandleTable,
-                                          Wnd, otWindow, (PVOID*)&Window);
-      if (!NT_SUCCESS(Status))
-        {
-	  Wnd = NULL;
-        }
+      Window = IntGetWindowObject(Wnd);
+      if(!Window)
+        Wnd = NULL;
       else
-	{
-	  ObmDereferenceObject(Window);
-	}
+        IntReleaseWindowObject(Window);
     }
   if (MsgFilterMax < MsgFilterMin)
     {
@@ -311,16 +304,11 @@ NtUserGetMessage(LPMSG UnsafeMsg,
   /* Validate input */
   if (NULL != Wnd)
     {
-      Status = ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->HandleTable,
-                                          Wnd, otWindow, (PVOID*)&Window);
-      if (!NT_SUCCESS(Status))
-        {
-	  Wnd = NULL;
-        }
+      Window = IntGetWindowObject(Wnd);
+      if(!Window)
+        Wnd = NULL;
       else
-	{
-	  ObmDereferenceObject(Window);
-	}
+        IntReleaseWindowObject(Window);
     }
   if (MsgFilterMax < MsgFilterMin)
     {
@@ -375,7 +363,6 @@ NtUserPostMessage(HWND hWnd,
   PWINDOW_OBJECT Window;
   MSG Mesg;
   PUSER_MESSAGE Message;
-  NTSTATUS Status;
   LARGE_INTEGER LargeTickCount;
 
   if (WM_QUIT == Msg)
@@ -384,11 +371,10 @@ NtUserPostMessage(HWND hWnd,
     }
   else
     {
-      Status = ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->HandleTable,
-                                          hWnd, otWindow, (PVOID*)&Window);
-      if (!NT_SUCCESS(Status))
+      Window = IntGetWindowObject(hWnd);
+      if (!Window)
         {
-	  SetLastNtError(Status);
+	      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
           return FALSE;
         }
       Mesg.hwnd = hWnd;
@@ -401,7 +387,7 @@ NtUserPostMessage(HWND hWnd,
       Mesg.time = LargeTickCount.u.LowPart;
       Message = MsqCreateMessage(&Mesg);
       MsqPostMessage(Window->MessageQueue, Message);
-      ObmDereferenceObject(Window);
+      IntReleaseWindowObject(Window);
     }
 
   return TRUE;
@@ -465,14 +451,10 @@ IntSendMessage(HWND hWnd,
   /* FIXME: Check for a broadcast or topmost destination. */
 
   /* FIXME: Call hooks. */
-
-  Status = 
-    ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->HandleTable,
-			       hWnd,
-			       otWindow,
-			       (PVOID*)&Window);
-  if (!NT_SUCCESS(Status))
+  Window = IntGetWindowObject(hWnd);
+  if (!Window)
     {
+      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       return 0;
     }
 
@@ -485,12 +467,14 @@ IntSendMessage(HWND hWnd,
 	{
 	  Result = IntCallTrampolineWindowProc(NULL, hWnd, Msg, wParam,
 						lParam);
-	  return Result;
+	  IntReleaseWindowObject(Window);
+      return Result;
 	}
       else
 	{
 	  Result = IntCallWindowProc(Window->WndProcW, hWnd, Msg, wParam, lParam);
-	return Result;
+	  IntReleaseWindowObject(Window);
+      return Result;
 	}
     }
   else
@@ -512,7 +496,7 @@ IntSendMessage(HWND hWnd,
       Message->CompletionCallback = NULL;
       MsqSendMessage(Window->MessageQueue, Message);
 
-      ObmDereferenceObject(Window);
+      IntReleaseWindowObject(Window);
       Status = KeWaitForSingleObject(CompletionEvent,
 				     UserRequest,
 				     UserMode,
