@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.76 2004/03/13 17:33:53 gvg Exp $
+ *  $Id: painting.c,v 1.77 2004/03/22 20:14:29 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -212,12 +212,12 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
     * Clip the given region with window rectangle (or region)
     */
 
-#ifdef TODO
+   IntLockWindowUpdate(Window);
    if (!Window->WindowRegion)
-#endif
    {
       HRGN hRgnWindow;
 
+      IntUnLockWindowUpdate(Window);
       hRgnWindow = UnsafeIntCreateRectRgnIndirect(&Window->WindowRect);
       NtGdiOffsetRgn(hRgnWindow,
          -Window->WindowRect.left,
@@ -225,12 +225,11 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
       RgnType = NtGdiCombineRgn(hRgn, hRgn, hRgnWindow, RGN_AND);
       NtGdiDeleteObject(hRgnWindow);
    }
-#ifdef TODO
    else
    {
-      RgnType = NtGdiCombineRgn(hRgn, hRgn, Window->WindowRegion, RGN_AND);        
+      RgnType = NtGdiCombineRgn(hRgn, hRgn, Window->WindowRegion, RGN_AND);
+      IntUnLockWindowUpdate(Window);
    }
-#endif
 
    /*
     * Save current state of pending updates

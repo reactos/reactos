@@ -151,9 +151,9 @@ NtGdiGetRegionData(HRGN hrgn,
 
 HRGN STDCALL REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lpPt);
 
-HRGN STDCALL UnsafeIntCreateRectRgnIndirect(CONST PRECT rc);
-INT STDCALL UnsafeIntGetRgnBox(HRGN  hRgn, LPRECT pRect);
-HRGN FASTCALL UnsafeIntUnionRectWithRgn(HRGN hDest, CONST PRECT Rect);
-BOOL FASTCALL UnsafeIntRectInRegion(HRGN hRgn, CONST LPRECT rc);
+HRGN FASTCALL UnsafeIntCreateRectRgnIndirect(CONST PRECT rc);
+INT FASTCALL UnsafeIntGetRgnBox(PROSRGNDATA Rgn, LPRECT pRect);
+VOID FASTCALL UnsafeIntUnionRectWithRgn(PROSRGNDATA RgnDest, CONST PRECT Rect);
+BOOL FASTCALL UnsafeIntRectInRegion(PROSRGNDATA Rgn, CONST LPRECT rc);
 #endif
 

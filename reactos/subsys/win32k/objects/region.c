@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.42 2004/02/19 21:12:10 weiden Exp $ */
+/* $Id: region.c,v 1.43 2004/03/22 20:14:29 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -1674,7 +1674,7 @@ NtGdiCreateRectRgnIndirect(CONST PRECT rc)
   return(UnsafeIntCreateRectRgnIndirect(&SafeRc));
 }
 
-HRGN STDCALL
+HRGN FASTCALL
 UnsafeIntCreateRectRgnIndirect(CONST PRECT  rc)
 {
   return(NtGdiCreateRectRgn(rc->left, rc->top, rc->right, rc->bottom));
@@ -1735,10 +1735,10 @@ NtGdiCreateRoundRectRgn(INT left, INT top, INT right, INT bottom,
 	      /* move toward center */
 	    rect.top = top++;
 	    rect.bottom = rect.top + 1;
-	    UnsafeIntUnionRectWithRgn( hrgn, &rect );
+	    UnsafeIntUnionRectWithRgn( obj, &rect );
 	    rect.top = --bottom;
 	    rect.bottom = rect.top + 1;
-	    UnsafeIntUnionRectWithRgn( hrgn, &rect );
+	    UnsafeIntUnionRectWithRgn( obj, &rect );
 	    yd -= 2*asq;
 	    d  -= yd;
 	}
@@ -1747,7 +1747,6 @@ NtGdiCreateRoundRectRgn(INT left, INT top, INT right, INT bottom,
 	xd += 2*bsq;
 	d  += bsq + xd;
     }
-
       /* Loop to draw second half of quadrant */
 
     d += (3 * (asq-bsq) / 2 - (xd+yd)) / 2;
@@ -1756,10 +1755,10 @@ NtGdiCreateRoundRectRgn(INT left, INT top, INT right, INT bottom,
 	  /* next vertical point */
 	rect.top = top++;
 	rect.bottom = rect.top + 1;
-	UnsafeIntUnionRectWithRgn( hrgn, &rect );
+	UnsafeIntUnionRectWithRgn( obj, &rect );
 	rect.top = --bottom;
 	rect.bottom = rect.top + 1;
-	UnsafeIntUnionRectWithRgn( hrgn, &rect );
+	UnsafeIntUnionRectWithRgn( obj, &rect );
 	if (d < 0)   /* if nearest pixel is outside ellipse */
 	{
 	    rect.left--;     /* move away from center */
@@ -1770,14 +1769,13 @@ NtGdiCreateRoundRectRgn(INT left, INT top, INT right, INT bottom,
 	yd -= 2*asq;
 	d  += asq - yd;
     }
-
       /* Add the inside rectangle */
 
     if (top <= bottom)
     {
 	rect.top = top;
 	rect.bottom = bottom;
-	UnsafeIntUnionRectWithRgn( hrgn, &rect );
+	UnsafeIntUnionRectWithRgn( obj, &rect );
     }
     RGNDATA_UnlockRgn( hrgn );
     return hrgn;
@@ -1888,18 +1886,16 @@ NtGdiFrameRgn(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-INT STDCALL
-UnsafeIntGetRgnBox(HRGN  hRgn,
+INT FASTCALL
+UnsafeIntGetRgnBox(PROSRGNDATA  Rgn,
 		    LPRECT  pRect)
 {
-  PROSRGNDATA rgn = RGNDATA_LockRgn(hRgn);
   DWORD ret;
 
-  if (rgn)
+  if (Rgn)
     {
-      *pRect = rgn->rdh.rcBound;
-      ret = rgn->rdh.iType;
-      RGNDATA_UnlockRgn( hRgn );
+      *pRect = Rgn->rdh.rcBound;
+      ret = Rgn->rdh.iType;
 
       return ret;
     }
@@ -1911,10 +1907,17 @@ INT STDCALL
 NtGdiGetRgnBox(HRGN  hRgn,
 	      LPRECT  pRect)
 {
+  PROSRGNDATA  Rgn;
   RECT SafeRect;
   DWORD ret;
 
-  ret = UnsafeIntGetRgnBox(hRgn, &SafeRect);
+  if (!(Rgn = RGNDATA_LockRgn(hRgn)))
+    {
+      return ERROR;
+    }
+
+  ret = UnsafeIntGetRgnBox(Rgn, &SafeRect);
+  RGNDATA_UnlockRgn(hRgn);
   if (ERROR == ret)
     {
       return ret;
@@ -2066,31 +2069,25 @@ NtGdiPtInRegion(HRGN  hRgn,
 
 BOOL
 FASTCALL
-UnsafeIntRectInRegion(HRGN  hRgn,
+UnsafeIntRectInRegion(PROSRGNDATA Rgn,
                       CONST LPRECT rc)
 {
-  PROSRGNDATA rgn;
   PRECT pCurRect, pRectEnd;
-  BOOL bRet = FALSE;
-
-  if( !( rgn  = RGNDATA_LockRgn(hRgn) ) )
-	return ERROR;
 
   // this is (just) a useful optimization
-  if((rgn->rdh.nCount > 0) && EXTENTCHECK(&rgn->rdh.rcBound, rc))
+  if((Rgn->rdh.nCount > 0) && EXTENTCHECK(&Rgn->rdh.rcBound, rc))
   {
-    for (pCurRect = (PRECT)rgn->Buffer, pRectEnd = pCurRect + rgn->rdh.nCount; pCurRect < pRectEnd; pCurRect++)
+    for (pCurRect = (PRECT)Rgn->Buffer, pRectEnd = pCurRect + Rgn->rdh.nCount; pCurRect < pRectEnd; pCurRect++)
     {
       if (pCurRect->bottom <= rc->top) continue; // not far enough down yet
       if (pCurRect->top >= rc->bottom) break;    // too far down
       if (pCurRect->right <= rc->left) continue; // not far enough over yet
       if (pCurRect->left >= rc->right) continue;
-      bRet = TRUE;
-      break;
+      
+      return TRUE;
     }
   }
-  RGNDATA_UnlockRgn(hRgn);
-  return bRet;
+  return FALSE;
 }
 
 BOOL
@@ -2098,15 +2095,25 @@ STDCALL
 NtGdiRectInRegion(HRGN  hRgn,
                        CONST LPRECT  unsaferc)
 {
+  PROSRGNDATA Rgn;
   RECT rc;
+  BOOL Ret;
+  
+  if(!(Rgn = RGNDATA_LockRgn(hRgn)))
+  {
+    return ERROR;
+  }
 
   if (!NT_SUCCESS(MmCopyFromCaller(&rc, unsaferc, sizeof(RECT))))
     {
+      RGNDATA_UnlockRgn(hRgn);
       DPRINT1("NtGdiRectInRegion: bogus rc\n");
       return ERROR;
     }
-
-  return UnsafeIntRectInRegion(hRgn, &rc);
+  
+  Ret = UnsafeIntRectInRegion(Rgn, &rc);
+  RGNDATA_UnlockRgn(hRgn);
+  return Ret;
 }
 
 BOOL
@@ -2145,36 +2152,34 @@ NtGdiSetRectRgn(HRGN  hRgn,
   return TRUE;
 }
 
-HRGN FASTCALL
-UnsafeIntUnionRectWithRgn(HRGN hDest, CONST PRECT Rect)
+VOID FASTCALL
+UnsafeIntUnionRectWithRgn(PROSRGNDATA RgnDest, CONST PRECT Rect)
 {
-  PROSRGNDATA pRgn;
-
-  pRgn = RGNDATA_LockRgn(hDest);
-  if (NULL == pRgn)
-    {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return NULL;
-    }
-
-  REGION_UnionRectWithRegion(Rect, pRgn);
-  RGNDATA_UnlockRgn(hDest);
-
-  return hDest;
+  REGION_UnionRectWithRegion(Rect, RgnDest);
 }
 
 HRGN STDCALL
 NtGdiUnionRectWithRgn(HRGN hDest, CONST PRECT UnsafeRect)
 {
   RECT SafeRect;
+  PROSRGNDATA Rgn;
+  
+  if(!(Rgn = (PROSRGNDATA)RGNDATA_UnlockRgn(hDest)))
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return NULL;
+  }
 
   if (! NT_SUCCESS(MmCopyFromCaller(&SafeRect, UnsafeRect, sizeof(RECT))))
     {
+      RGNDATA_UnlockRgn(hDest);
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return NULL;
     }
-
-  return UnsafeIntUnionRectWithRgn(hDest, &SafeRect);
+  
+  UnsafeIntUnionRectWithRgn(Rgn, &SafeRect);
+  RGNDATA_UnlockRgn(hDest);
+  return hDest;
 }
 
 /*!

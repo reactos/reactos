@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cliprgn.c,v 1.29 2003/12/21 18:38:37 navaraf Exp $ */
+/* $Id: cliprgn.c,v 1.30 2004/03/22 20:14:29 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -162,12 +162,19 @@ int FASTCALL
 IntGdiGetClipBox(HDC    hDC,
 			     LPRECT rc)
 {
+  PROSRGNDATA Rgn;
   int retval;
   PDC dc;
 
   if (!(dc = DC_LockDc(hDC)))
   	return ERROR;
-  retval = UnsafeIntGetRgnBox(dc->w.hGCClipRgn, rc);
+  if(!(Rgn = RGNDATA_LockRgn(dc->w.hGCClipRgn)))
+  {
+    DC_UnlockDc( hDC );
+    return ERROR;
+  }
+  retval = UnsafeIntGetRgnBox(Rgn, rc);
+  RGNDATA_UnlockRgn(dc->w.hGCClipRgn);
   IntDPtoLP(dc, (LPPOINT)rc, 2);
   DC_UnlockDc( hDC );
   return(retval);
@@ -260,6 +267,8 @@ BOOL STDCALL NtGdiPtVisible(HDC  hDC,
 BOOL STDCALL NtGdiRectVisible(HDC  hDC,
                       CONST PRECT  UnsafeRect)
 {
+   NTSTATUS Status;
+   PROSRGNDATA Rgn;
    PDC dc = DC_LockDc(hDC);
    BOOL Result = FALSE;
    RECT Rect;
@@ -269,12 +278,21 @@ BOOL STDCALL NtGdiRectVisible(HDC  hDC,
       return FALSE;
    }
 
-   MmCopyFromCaller(&Rect, UnsafeRect, sizeof(RECT));
+   Status = MmCopyFromCaller(&Rect, UnsafeRect, sizeof(RECT));
+   if(!NT_SUCCESS(Status))
+   {
+      DC_UnlockDc(hDC);
+      return FALSE;
+   }
 
    if (dc->w.hGCClipRgn)
    {
-      IntLPtoDP(dc, (LPPOINT)&Rect, 2);
-      Result = UnsafeIntRectInRegion(dc->w.hGCClipRgn, &Rect);
+      if((Rgn = (PROSRGNDATA)RGNDATA_LockRgn(dc->w.hGCClipRgn)))
+      {
+         IntLPtoDP(dc, (LPPOINT)&Rect, 2);
+         Result = UnsafeIntRectInRegion(Rgn, &Rect);
+         RGNDATA_UnlockRgn(dc->w.hGCClipRgn);
+      }
    }
    DC_UnlockDc(hDC);
 

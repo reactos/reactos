@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.101 2004/02/26 22:23:55 weiden Exp $
+/* $Id: winpos.c,v 1.102 2004/03/22 20:14:29 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -774,6 +774,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
    WINDOWPOS WinPos;
    RECT NewWindowRect;
    RECT NewClientRect;
+   PROSRGNDATA VisRgn;
    HRGN VisBefore = NULL;
    HRGN VisAfter = NULL;
    HRGN DirtyRgn = NULL;
@@ -845,12 +846,18 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
        (SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER))
    {
       VisBefore = VIS_ComputeVisibleRegion(Window, FALSE, FALSE, TRUE);
+      VisRgn = NULL;
 
-      if (VisBefore != NULL &&
-          UnsafeIntGetRgnBox(VisBefore, &TempRect) == NULLREGION)
+      if (VisBefore != NULL && (VisRgn = (PROSRGNDATA)RGNDATA_LockRgn(VisBefore)) &&
+          UnsafeIntGetRgnBox(VisRgn, &TempRect) == NULLREGION)
       {
+         RGNDATA_UnlockRgn(VisBefore);
          NtGdiDeleteObject(VisBefore);
          VisBefore = NULL;
+      }
+      else if(VisRgn)
+      {
+         RGNDATA_UnlockRgn(VisBefore);
       }
    }
 
@@ -940,12 +947,18 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 
    /* Determine the new visible region */
    VisAfter = VIS_ComputeVisibleRegion(Window, FALSE, FALSE, TRUE);
+   VisRgn = NULL;
 
-   if (VisAfter != NULL &&
-       UnsafeIntGetRgnBox(VisAfter, &TempRect) == NULLREGION)
+   if (VisAfter != NULL && (VisRgn = (PROSRGNDATA)RGNDATA_LockRgn(VisAfter)) &&
+       UnsafeIntGetRgnBox(VisRgn, &TempRect) == NULLREGION)
    {
+      RGNDATA_UnlockRgn(VisAfter);
       NtGdiDeleteObject(VisAfter);
       VisAfter = NULL;
+   }
+   else if(VisRgn)
+   {
+      RGNDATA_UnlockRgn(VisAfter);
    }
 
    /*
@@ -995,15 +1008,22 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
        * there's nothing to copy. Also, it's no use copying bits onto
        * themselves.
        */
-      if (UnsafeIntGetRgnBox(CopyRgn, &CopyRect) == NULLREGION)
+      VisRgn = NULL;
+      if ((VisRgn = (PROSRGNDATA)RGNDATA_LockRgn(CopyRgn)) && 
+          UnsafeIntGetRgnBox(VisRgn, &CopyRect) == NULLREGION)
       {
          /* Nothing to copy, clean up */
+         RGNDATA_UnlockRgn(CopyRgn);
          NtGdiDeleteObject(CopyRgn);
          CopyRgn = NULL;
       }
       else if (OldWindowRect.left != NewWindowRect.left ||
                OldWindowRect.top != NewWindowRect.top)
       {
+         if(VisRgn)
+         {
+            RGNDATA_UnlockRgn(CopyRgn);
+         }
          /*
           * Small trick here: there is no function to bitblt a region. So
           * we set the region as the clipping region, take the bounding box
@@ -1025,6 +1045,10 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
             CopyRect.top + (OldWindowRect.top - NewWindowRect.top), SRCCOPY);
          NtUserReleaseDC(Wnd, Dc);
          IntValidateParent(Window, CopyRgn);
+      }
+      else if(VisRgn)
+      {
+         RGNDATA_UnlockRgn(CopyRgn);
       }
    }
    else
