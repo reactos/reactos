@@ -1,4 +1,4 @@
-/* $Id: symlink.c,v 1.5 2003/10/12 17:05:49 hbirr Exp $
+/* $Id: symlink.c,v 1.6 2003/10/14 14:45:23 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -19,15 +19,8 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-/* GLOBALS ******************************************************************/
 
-typedef struct
-{
-	CSHORT			Type;
-	CSHORT			Size;
-	UNICODE_STRING		TargetName;
-	OBJECT_ATTRIBUTES	Target;
-} SYMLNK_OBJECT, *PSYMLNK_OBJECT;
+/* GLOBALS ******************************************************************/
 
 POBJECT_TYPE ObSymbolicLinkType = NULL;
 
@@ -40,8 +33,8 @@ static GENERIC_MAPPING ObpSymbolicLinkMapping = {
 #define TAG_SYMLINK_TTARGET     TAG('S', 'Y', 'T', 'T')
 #define TAG_SYMLINK_TARGET      TAG('S', 'Y', 'M', 'T')
 
-/* FUNCTIONS ****************************************************************/
 
+/* FUNCTIONS ****************************************************************/
 
 /**********************************************************************
  * NAME							INTERNAL
@@ -82,7 +75,7 @@ ObpCreateSymbolicLink(PVOID Object,
 VOID STDCALL
 ObpDeleteSymbolicLink(PVOID ObjectBody)
 {
-  PSYMLNK_OBJECT SymlinkObject = (PSYMLNK_OBJECT)ObjectBody;
+  PSYMLINK_OBJECT SymlinkObject = (PSYMLINK_OBJECT)ObjectBody;
 
   RtlFreeUnicodeString(&SymlinkObject->TargetName);
 }
@@ -107,7 +100,7 @@ ObpParseSymbolicLink(PVOID Object,
 		     PWSTR * RemainingPath,
 		     ULONG Attributes)
 {
-  PSYMLNK_OBJECT SymlinkObject = (PSYMLNK_OBJECT) Object;
+  PSYMLINK_OBJECT SymlinkObject = (PSYMLINK_OBJECT) Object;
   UNICODE_STRING TargetPath;
 
   DPRINT("ObpParseSymbolicLink (RemainingPath %S)\n", *RemainingPath);
@@ -179,7 +172,7 @@ ObInitSymbolicLinkImplementation (VOID)
   ObSymbolicLinkType->MaxObjects = ULONG_MAX;
   ObSymbolicLinkType->MaxHandles = ULONG_MAX;
   ObSymbolicLinkType->PagedPoolCharge = 0;
-  ObSymbolicLinkType->NonpagedPoolCharge = sizeof(SYMLNK_OBJECT);
+  ObSymbolicLinkType->NonpagedPoolCharge = sizeof(SYMLINK_OBJECT);
   ObSymbolicLinkType->Mapping = &ObpSymbolicLinkMapping;
   ObSymbolicLinkType->Dump = NULL;
   ObSymbolicLinkType->Open = NULL;
@@ -218,7 +211,7 @@ NtCreateSymbolicLinkObject(OUT PHANDLE SymbolicLinkHandle,
 			   IN POBJECT_ATTRIBUTES ObjectAttributes,
 			   IN PUNICODE_STRING DeviceName)
 {
-  PSYMLNK_OBJECT SymbolicLink;
+  PSYMLINK_OBJECT SymbolicLink;
   NTSTATUS Status;
 
   assert_irql(PASSIVE_LEVEL);
@@ -234,7 +227,7 @@ NtCreateSymbolicLinkObject(OUT PHANDLE SymbolicLinkHandle,
 			  ObjectAttributes,
 			  ExGetPreviousMode(),
 			  NULL,
-			  sizeof(SYMLNK_OBJECT),
+			  sizeof(SYMLINK_OBJECT),
 			  0,
 			  0,
 			  (PVOID*)&SymbolicLink);
@@ -267,11 +260,7 @@ NtCreateSymbolicLinkObject(OUT PHANDLE SymbolicLinkHandle,
 
   DPRINT("DeviceName %S\n", SymbolicLink->TargetName.Buffer);
 
-  InitializeObjectAttributes(&SymbolicLink->Target,
-			     &SymbolicLink->TargetName,
-			     0,
-			     NULL,
-			     NULL);
+  NtQuerySystemTime (&SymbolicLink->CreateTime);
 
   DPRINT("%s() = STATUS_SUCCESS\n",__FUNCTION__);
   ObDereferenceObject(SymbolicLink);
@@ -329,7 +318,7 @@ NtQuerySymbolicLinkObject(IN HANDLE LinkHandle,
 			  IN OUT PUNICODE_STRING LinkTarget,
 			  OUT PULONG ReturnedLength OPTIONAL)
 {
-  PSYMLNK_OBJECT SymlinkObject;
+  PSYMLINK_OBJECT SymlinkObject;
   NTSTATUS Status;
 
   Status = ObReferenceObjectByHandle(LinkHandle,

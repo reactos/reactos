@@ -35,6 +35,15 @@ typedef struct _DIRECTORY_OBJECT
 } DIRECTORY_OBJECT, *PDIRECTORY_OBJECT;
 
 
+typedef struct _SYMLINK_OBJECT
+{
+  CSHORT Type;
+  CSHORT Size;
+  UNICODE_STRING TargetName;
+  LARGE_INTEGER CreateTime;
+} SYMLINK_OBJECT, *PSYMLINK_OBJECT;
+
+
 typedef struct _TYPE_OBJECT
 {
   CSHORT Type;
