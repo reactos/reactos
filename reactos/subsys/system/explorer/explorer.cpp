@@ -130,6 +130,8 @@ void explorer_show_frame(HWND hwndDesktop, int cmdshow)
 
 static void InitInstance(HINSTANCE hInstance)
 {
+	CONTEXT("InitInstance");
+
 	setlocale(LC_COLLATE, "");	// set collating rules to local settings for compareName
 
 	 // register frame window class
@@ -147,6 +149,8 @@ static void InitInstance(HINSTANCE hInstance)
 
 int explorer_main(HINSTANCE hInstance, HWND hwndDesktop, int cmdshow)
 {
+	CONTEXT("explorer_main");
+
 	 // initialize COM and OLE
 	OleInit usingCOM;
 
@@ -185,6 +189,8 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int);
 
 int main(int argc, char* argv[])
 {
+	CONTEXT("main");
+
 	STARTUPINFO startupinfo;
 	int nShowCmd = SW_SHOWNORMAL;
 
@@ -201,6 +207,8 @@ int main(int argc, char* argv[])
 
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nShowCmd)
 {
+	CONTEXT("WinMain()");
+
 	 // create desktop window and task bar only, if there is no other shell and we are
 	 // the first explorer instance
 	BOOL startup_desktop = !IsAnyDesktopRunning();

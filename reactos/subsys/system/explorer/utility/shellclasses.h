@@ -50,14 +50,14 @@ using namespace _com_util;
 
 #ifndef _NO_COMUTIL
 
-#define	COMException _com_error
+#define	COMExceptionBase _com_error
 
 #else
 
- /// COM Exception class as replacement for _com_error
-struct COMException
+ /// COM ExceptionBase class as replacement for _com_error
+struct COMExceptionBase
 {
-	COMException(HRESULT hr)
+	COMExceptionBase(HRESULT hr)
 	 :	_hr(hr)
 	{
 	}
@@ -90,6 +90,59 @@ protected:
 	HRESULT	_hr;
 	mutable String _msg;
 };
+
+#endif
+
+
+struct Context
+{
+	Context(LPCTSTR ctx)
+	 :	_ctx(ctx)
+	{
+		_last = s_current;
+		s_current = this;
+	}
+
+	~Context()
+	{
+		s_current = _last;
+	}
+
+	LPCTSTR	_ctx;
+	Context* _last;
+
+	static Context*	s_current;
+	static Context	s_main;
+};
+
+#define	CONTEXT(x) Context __ctx__(TEXT(x))
+
+
+ /// COM Exception with context information
+
+struct COMException : public COMExceptionBase
+{
+	typedef COMExceptionBase super;
+
+	COMException(HRESULT hr)
+	 :	super(hr)
+	{
+		_ctx = Context::s_current->_ctx;
+	}
+
+	COMException(HRESULT hr, const String& obj)
+	 :	super(hr),
+		_obj(obj)
+	{
+		_ctx = Context::s_current->_ctx;
+	}
+
+	LPCTSTR _ctx;
+	String	_obj;
+};
+
+
+#ifdef _NO_COMUTIL
 
 inline void CheckError(HRESULT hr)
 {
@@ -485,6 +538,8 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 
 	ShellPath(IShellFolder* folder, LPCWSTR path)
 	{
+		CONTEXT("ShellPath::ShellPath(IShellFolder*, LPCWSTR)");
+
 		if (path) {
 			ULONG l;
 			CheckError(folder->ParseDisplayName(0, 0, (LPOLESTR)path, &l, &_p, 0));
@@ -494,6 +549,8 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 
 	ShellPath(LPCWSTR path)
 	{
+		CONTEXT("ShellPath::ShellPath(LPCWSTR)");
+
 		if (path) {
 			ULONG l;
 			CheckError(Desktop()->ParseDisplayName(0, 0, (LPOLESTR)path, &l, &_p, 0));
@@ -503,6 +560,8 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 
 	ShellPath(IShellFolder* folder, LPCSTR path)
 	{
+		CONTEXT("ShellPath::ShellPath(IShellFolder*, LPCSTR)");
+
 		ULONG l;
 		WCHAR b[MAX_PATH];
 
@@ -515,6 +574,8 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 
 	ShellPath(LPCSTR path)
 	{
+		CONTEXT("ShellPath::ShellPath(LPCSTR)");
+
 		ULONG l;
 		WCHAR b[MAX_PATH];
 
@@ -528,6 +589,8 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 	ShellPath(const ShellPath& o)
 	 :	super(NULL)
 	{
+		//CONTEXT("ShellPath::ShellPath(const ShellPath&)");
+
 		if (o._p) {
 			int l = ILGetSize(o._p);
 			_p = (ITEMIDLIST*) _malloc->Alloc(l);
@@ -542,6 +605,8 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 
 	ShellPath(LPCITEMIDLIST p)
 	{
+		//CONTEXT("ShellPath::ShellPath(LPCITEMIDLIST)");
+
 		if (p) {
 			int l = ILGetSize(p);
 			_p = (ITEMIDLIST*) _malloc->Alloc(l);
@@ -551,6 +616,8 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 
 	void operator=(const ShellPath& o)
 	{
+		//CONTEXT("ShellPath::operator=(const ShellPath&)");
+
 		ITEMIDLIST* h = _p;
 
 		if (o._p) {
@@ -567,6 +634,8 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 
 	void operator=(ITEMIDLIST* p)
 	{
+		//CONTEXT("ShellPath::operator=(ITEMIDLIST*)");
+
 		ITEMIDLIST* h = _p;
 
 		if (p) {
@@ -608,6 +677,8 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 
 	void assign(LPCITEMIDLIST pidl, size_t size)
 	{
+		//CONTEXT("ShellPath::assign(LPCITEMIDLIST, size_t)");
+
 		ITEMIDLIST* h = _p;
 
 		_p = (ITEMIDLIST*) _malloc->Alloc(size+sizeof(USHORT/*SHITEMID::cb*/));
@@ -622,6 +693,8 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 
 	void assign(LPCITEMIDLIST pidl)
 	{
+		//CONTEXT("ShellPath::assign(LPCITEMIDLIST)");
+
 		ITEMIDLIST* h = _p;
 
 		if (pidl) {
@@ -837,6 +910,8 @@ struct SpecialFolderFSPath : public FileSysShellPath
 {
 	SpecialFolderFSPath(int folder, HWND hwnd)
 	{
+		CONTEXT("SpecialFolderFSPath::SpecialFolderFSPath()");
+
 		HRESULT hr = SHGetSpecialFolderLocation(hwnd, folder, &_p);
 		CheckError(hr);
 	}
@@ -851,6 +926,8 @@ struct ShellItemEnumerator : public SIfacePtr<IEnumIDList>
 {
 	ShellItemEnumerator(IShellFolder* folder, DWORD flags=SHCONTF_FOLDERS|SHCONTF_NONFOLDERS|SHCONTF_INCLUDEHIDDEN)
 	{
+		CONTEXT("ShellItemEnumerator::ShellItemEnumerator()");
+
 		CheckError(folder->EnumObjects(0, flags, &_p));
 	}
 };

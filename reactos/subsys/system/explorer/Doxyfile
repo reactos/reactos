@@ -136,8 +136,8 @@ LATEX_HIDE_INDICES     = NO
 #---------------------------------------------------------------------------
 GENERATE_RTF           = NO
 RTF_OUTPUT             = rtf
-COMPACT_RTF            = NO
-RTF_HYPERLINKS         = NO
+COMPACT_RTF            = YES
+RTF_HYPERLINKS         = YES
 RTF_STYLESHEET_FILE    = 
 RTF_EXTENSIONS_FILE    = 
 #---------------------------------------------------------------------------

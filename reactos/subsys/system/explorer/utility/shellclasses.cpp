@@ -62,16 +62,35 @@ LPWSTR wcscpyn(LPWSTR dest, LPCWSTR source, size_t count)
 }
 
 
+Context Context::s_main(TEXT("-NO-CONTEXT-"));
+Context* Context::s_current = &Context::s_main;
+
+
  // Exception Handler for COM exceptions
 
 void HandleException(COMException& e, HWND hwnd)
 {
 	SetLastError(0);
 
-	MessageBox(hwnd, e.ErrorMessage(), TEXT("ShellClasses COM Exception"), MB_ICONHAND|MB_OK);
+	String msg = e.ErrorMessage();
 
+	if (e._ctx) {
+		TCHAR buffer[BUFFER_LEN];
+		_stprintf(buffer, TEXT("%s\nContext: %s"), (LPCTSTR)msg, e._ctx);
+		msg = buffer;
+	}
+
+	if (!e._obj.empty()) {
+		TCHAR buffer[BUFFER_LEN];
+		_stprintf(buffer, TEXT("%s\nObject: %s"), (LPCTSTR)msg, (LPCTSTR)e._obj);
+		msg = buffer;
+	}
+
+	MessageBox(hwnd, msg, TEXT("ShellClasses COM Exception"), MB_ICONHAND|MB_OK);
+
+	 // If displaying the error message box _with_ parent was not successfull, display it now without a parent window.
 	if (GetLastError() == ERROR_INVALID_WINDOW_HANDLE)
-		MessageBox(0, e.ErrorMessage(), TEXT("ShellClasses COM Exception"), MB_ICONHAND|MB_OK);
+		MessageBox(0, msg, TEXT("ShellClasses COM Exception"), MB_ICONHAND|MB_OK);
 }
 
 
@@ -95,6 +114,8 @@ ShellFolder& Desktop()
 
 void CommonDesktop::init()
 {
+	CONTEXT("CommonDesktop::init()");
+
 	if (!_desktop)
 		_desktop = new ShellFolder;
 }
@@ -122,6 +143,8 @@ HRESULT path_from_pidlA(IShellFolder* folder, LPCITEMIDLIST pidl, LPSTR buffer, 
 
 HRESULT path_from_pidlW(IShellFolder* folder, LPCITEMIDLIST pidl, LPWSTR buffer, int len)
 {
+	CONTEXT("path_from_pidlW()");
+
 	StrRetW str;
 
 	HRESULT hr = folder->GetDisplayNameOf(pidl, SHGDN_FORPARSING, &str);
@@ -136,6 +159,8 @@ HRESULT path_from_pidlW(IShellFolder* folder, LPCITEMIDLIST pidl, LPWSTR buffer,
 
 HRESULT name_from_pidl(IShellFolder* folder, LPCITEMIDLIST pidl, LPTSTR buffer, int len, SHGDNF flags)
 {
+	CONTEXT("name_from_pidl()");
+
 	StrRet str;
 
 	HRESULT hr = folder->GetDisplayNameOf(pidl, flags, &str);
@@ -153,6 +178,8 @@ HRESULT name_from_pidl(IShellFolder* folder, LPCITEMIDLIST pidl, LPTSTR buffer, 
 
 ShellFolder::ShellFolder()
 {
+	CONTEXT("ShellFolder::ShellFolder()");
+
 	IShellFolder* desktop;
 
 	CheckError(SHGetDesktopFolder(&desktop));
@@ -164,11 +191,15 @@ ShellFolder::ShellFolder()
 ShellFolder::ShellFolder(IShellFolder* p)
  :	super(p)
 {
+	CONTEXT("ShellFolder::ShellFolder(IShellFolder*)");
+
 	p->AddRef();
 }
 
 ShellFolder::ShellFolder(IShellFolder* parent, LPCITEMIDLIST pidl)
 {
+	CONTEXT("ShellFolder::ShellFolder(IShellFolder*, LPCITEMIDLIST)");
+
 	IShellFolder* ptr;
 
 	if (!pidl)
@@ -185,6 +216,8 @@ ShellFolder::ShellFolder(IShellFolder* parent, LPCITEMIDLIST pidl)
 
 ShellFolder::ShellFolder(LPCITEMIDLIST pidl)
 {
+	CONTEXT("ShellFolder::ShellFolder(LPCITEMIDLIST)");
+
 	IShellFolder* ptr;
 	IShellFolder* parent = Desktop();
 
@@ -199,6 +232,8 @@ ShellFolder::ShellFolder(LPCITEMIDLIST pidl)
 
 void ShellFolder::attach(IShellFolder* parent, LPCITEMIDLIST pidl)
 {
+	CONTEXT("ShellFolder::attach(IShellFolder*, LPCITEMIDLIST)");
+
 	IShellFolder* ptr;
 
 	if (pidl && pidl->mkid.cb)
@@ -214,6 +249,8 @@ void ShellFolder::attach(IShellFolder* parent, LPCITEMIDLIST pidl)
 
 ShellFolder::ShellFolder()
 {
+	CONTEXT("ShellFolder::ShellFolder()");
+
 	CheckError(SHGetDesktopFolder(&_p));
 
 	_p->AddRef();
@@ -222,11 +259,15 @@ ShellFolder::ShellFolder()
 ShellFolder::ShellFolder(IShellFolder* p)
  :	super(p)
 {
+	CONTEXT("ShellFolder::ShellFolder(IShellFolder*)");
+
 	_p->AddRef();
 }
 
 ShellFolder::ShellFolder(IShellFolder* parent, LPCITEMIDLIST pidl)
 {
+	CONTEXT("ShellFolder::ShellFolder(IShellFolder*, LPCITEMIDLIST)");
+
 	if (pidl && pidl->mkid.cb)
 		CheckError(parent->BindToObject(pidl, 0, IID_IShellFolder, (LPVOID*)&_p));
 	else
@@ -237,6 +278,8 @@ ShellFolder::ShellFolder(IShellFolder* parent, LPCITEMIDLIST pidl)
 
 ShellFolder::ShellFolder(LPCITEMIDLIST pidl)
 {
+	CONTEXT("ShellFolder::ShellFolder(LPCITEMIDLIST)");
+
 	if (pidl && pidl->mkid.cb)
 		CheckError(Desktop()->BindToObject(pidl, 0, IID_IShellFolder, (LPVOID*)&_p));
 	else
@@ -247,6 +290,8 @@ ShellFolder::ShellFolder(LPCITEMIDLIST pidl)
 
 void ShellFolder::attach(IShellFolder* parent, LPCITEMIDLIST pidl)
 {
+	CONTEXT("ShellFolder::ShellFolder(IShellFolder*, LPCITEMIDLIST)");
+
 	IShellFolder* h = _p;
 
 	CheckError(parent->BindToObject(pidl, 0, IID_IShellFolder, (LPVOID*)&_p));
@@ -259,6 +304,8 @@ void ShellFolder::attach(IShellFolder* parent, LPCITEMIDLIST pidl)
 
 String ShellFolder::get_name(LPCITEMIDLIST pidl, SHGDNF flags) const
 {
+	CONTEXT("ShellFolder::get_name()");
+
 	TCHAR buffer[MAX_PATH];
 	StrRet strret;
 
@@ -299,6 +346,8 @@ void ShellPath::split(ShellPath& parent, ShellPath& obj) const
 
 void ShellPath::GetUIObjectOf(REFIID riid, LPVOID* ppvOut, HWND hWnd, ShellFolder& sf)
 {
+	CONTEXT("ShellPath::GetUIObjectOf()");
+
 	ShellPath parent, obj;
 
 	split(parent, obj);
@@ -317,6 +366,8 @@ void ShellPath::GetUIObjectOf(REFIID riid, LPVOID* ppvOut, HWND hWnd, ShellFolde
  // convert an item id list from relative to absolute (=relative to the desktop) format
 ShellPath ShellPath::create_absolute_pidl(LPCITEMIDLIST parent_pidl) const
 {
+	CONTEXT("ShellPath::create_absolute_pidl()");
+
 	return ILCombine(parent_pidl, _p);
 
 /* seems to work only for NT upwards
@@ -337,6 +388,8 @@ ShellPath ShellPath::create_absolute_pidl(LPCITEMIDLIST parent_pidl) const
 
 ShellPath ShellPath::create_absolute_pidl(LPCITEMIDLIST parent_pidl) const
 {
+	CONTEXT("ShellPath::create_absolute_pidl()");
+
 	static DynamicFct<LPITEMIDLIST(WINAPI*)(LPCITEMIDLIST, LPCITEMIDLIST)> ILCombine(TEXT("SHELL32"), 25);
 
 	if (ILCombine)
