@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.60 2004/04/02 19:00:56 weiden Exp $
+/* $Id: menu.c,v 1.61 2004/04/02 19:14:44 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -1989,7 +1989,9 @@ MenuInitSysMenuPopup(HMENU Menu, DWORD Style, DWORD ClsStyle, LONG HitTest )
 {
   BOOL Gray;
   UINT DefItem;
+  #if 0
   MENUITEMINFOW mii;
+  #endif
 
   Gray = 0 == (Style & WS_THICKFRAME) || 0 != (Style & (WS_MAXIMIZE | WS_MINIMIZE));
   EnableMenuItem(Menu, SC_SIZE, (Gray ? MF_GRAYED : MF_ENABLED));
@@ -2025,13 +2027,15 @@ MenuInitSysMenuPopup(HMENU Menu, DWORD Style, DWORD ClsStyle, LONG HitTest )
       DefItem = SC_CLOSE;
     }
   }
+  #if 0
   mii.cbSize = sizeof(MENUITEMINFOW);
   mii.fMask = MIIM_STATE;
-  if(GetMenuItemInfoW(Menu, DefItem, FALSE, &mii) && 
+  if((DefItem != SC_CLOSE) && GetMenuItemInfoW(Menu, DefItem, FALSE, &mii) && 
      (mii.fState & (MFS_GRAYED | MFS_DISABLED)))
   {
     DefItem = SC_CLOSE;
   }
+  #endif
   SetMenuDefaultItem(Menu, DefItem, MF_BYCOMMAND);
 }
 
@@ -2121,7 +2125,7 @@ MenuShowSubPopup(HWND WndOwner, PROSMENUINFO MenuInfo, BOOL SelectFirst, UINT Fl
   if (IS_SYSTEM_MENU(MenuInfo))
     {
       MenuInitSysMenuPopup(ItemInfo.hSubMenu, GetWindowLongW(MenuInfo->Wnd, GWL_STYLE),
-                           GetClassLongW(MenuInfo->Wnd, GCL_STYLE), FALSE);
+                           GetClassLongW(MenuInfo->Wnd, GCL_STYLE), HTSYSMENU);
 
       NcGetSysPopupPos(MenuInfo->Wnd, &Rect);
       Rect.top = Rect.bottom;
