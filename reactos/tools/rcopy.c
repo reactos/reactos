@@ -170,8 +170,32 @@ copy_directory (char *path1, char *path2)
 }
 
 #else
-
 /* Linux version */
+
+static int
+is_reg (char *path, char *fn)
+{
+  char buf[MAX_PATH];
+  char buf2[MAX_PATH];
+  struct stat sbuf;
+
+  strcpy(buf, path);
+  if (buf[strlen(buf)-1] != '/')
+    strcat(buf, "/");
+  strcat(buf, fn);
+
+  make_absolute(buf2, buf);
+
+  if (stat(buf2, &sbuf) == -1)
+    return 0;
+  else {
+    if (S_ISREG(sbuf.st_mode))
+      return 1;
+    else
+      return 0;
+  }
+}
+
 static void
 copy_directory (char *path1, char *path2)
 {
@@ -191,7 +215,7 @@ copy_directory (char *path1, char *path2)
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
           continue; // skip self and parent
 
-        if (entry->d_type == DT_REG) // normal file
+        if (entry->d_type == DT_REG || is_reg(path1, entry->d_name)) // normal file
 		    {
               // Convert to absolute path
               make_absolute(buf, path1);
