@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.183 2004/05/28 21:16:27 royce Exp $
+; $Id: ntoskrnl.def,v 1.184 2004/06/13 10:35:53 navaraf Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -559,7 +559,7 @@ NlsLeadByteInfo DATA
 NlsMbCodePageTag DATA
 NlsMbOemCodePageTag DATA
 NlsOemLeadByteInfo DATA
-NtAddAtom@8
+NtAddAtom@12
 NtAdjustPrivilegesToken@24
 NtAlertThread@4
 NtAllocateLocallyUniqueId@4
@@ -578,7 +578,7 @@ NtDeleteFile@4
 NtDeviceIoControlFile@40
 NtDuplicateObject@28
 NtDuplicateToken@24
-NtFindAtom@8
+NtFindAtom@12
 NtFreeVirtualMemory@16
 NtFsControlFile@40
 NtGlobalFlag DATA

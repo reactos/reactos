@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.12 2004/01/23 17:13:36 ekohl Exp $
+/* $Id: virtual.c,v 1.13 2004/06/13 10:35:52 navaraf Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -126,8 +126,8 @@ VirtualProtectEx(HANDLE hProcess,
   NTSTATUS Status;
 
   Status = NtProtectVirtualMemory(hProcess,
-				  (PVOID)lpAddress,
-				  dwSize,
+				  &lpAddress,
+				  &dwSize,
 				  flNewProtect,
 				  (PULONG)lpflOldProtect);
   if (!NT_SUCCESS(Status))

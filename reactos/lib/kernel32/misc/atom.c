@@ -1,4 +1,4 @@
-/* $Id: atom.c,v 1.19 2004/01/23 21:16:03 ekohl Exp $
+/* $Id: atom.c,v 1.20 2004/06/13 10:35:52 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -49,6 +49,7 @@ GlobalAddAtomA(LPCSTR lpString)
 				    (LPSTR)lpString);
 
    Status = NtAddAtom(AtomName.Buffer,
+                      AtomName.Length,
 		      &Atom);
    RtlFreeUnicodeString(&AtomName);
    if (!NT_SUCCESS(Status))
@@ -81,6 +82,7 @@ GlobalAddAtomW(LPCWSTR lpString)
      }
 
    Status = NtAddAtom((LPWSTR)lpString,
+                      wcslen(lpString),
 		      &Atom);
    if (!NT_SUCCESS(Status))
      {
@@ -139,6 +141,7 @@ GlobalFindAtomA(LPCSTR lpString)
    RtlCreateUnicodeStringFromAsciiz(&AtomName,
 				    (LPSTR)lpString);
    Status = NtFindAtom(AtomName.Buffer,
+                       AtomName.Length,
 		       &Atom);
    RtlFreeUnicodeString(&AtomName);
    if (!NT_SUCCESS(Status))
@@ -171,6 +174,7 @@ GlobalFindAtomW(LPCWSTR lpString)
      }
 
    Status = NtFindAtom((LPWSTR)lpString,
+                       wcslen(lpString),
 		       &Atom);
    if (!NT_SUCCESS(Status))
      {

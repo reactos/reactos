@@ -1,7 +1,7 @@
 NtAcceptConnectPort ZwAcceptConnectPort 6
 NtAccessCheck ZwAccessCheck 8
 NtAccessCheckAndAuditAlarm ZwAccessCheckAndAuditAlarm 11
-NtAddAtom ZwAddAtom 2
+NtAddAtom ZwAddAtom 3
 NtAdjustGroupsToken ZwAdjustGroupsToken 6
 NtAdjustPrivilegesToken ZwAdjustPrivilegesToken 6
 NtAlertResumeThread ZwAlertResumeThread 2
@@ -51,7 +51,7 @@ NtDuplicateToken ZwDuplicateToken 6
 NtEnumerateKey ZwEnumerateKey 6
 NtEnumerateValueKey ZwEnumerateValueKey 6
 NtExtendSection ZwExtendSection 2
-NtFindAtom ZwFindAtom 2
+NtFindAtom ZwFindAtom 3
 NtFlushBuffersFile ZwFlushBuffersFile 2
 NtFlushInstructionCache ZwFlushInstructionCache 3
 NtFlushKey ZwFlushKey 1

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: virtual.c,v 1.74 2004/05/29 11:53:43 navaraf Exp $
+/* $Id: virtual.c,v 1.75 2004/06/13 10:35:52 navaraf Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/virtual.c
@@ -206,8 +206,8 @@ NtQueryVirtualMemory (IN HANDLE ProcessHandle,
 
 NTSTATUS STDCALL
 NtProtectVirtualMemory(IN HANDLE ProcessHandle,
-                       IN PVOID BaseAddress,
-                       IN ULONG NumberOfBytesToProtect,
+                       IN PVOID *UnsafeBaseAddress,
+                       IN ULONG *UnsafeNumberOfBytesToProtect,
                        IN ULONG NewAccessProtection,
                        OUT PULONG UnsafeOldAccessProtection)
 {
@@ -216,6 +216,15 @@ NtProtectVirtualMemory(IN HANDLE ProcessHandle,
    NTSTATUS Status;
    PMADDRESS_SPACE AddressSpace;
    ULONG OldAccessProtection;
+   PVOID BaseAddress;
+   ULONG NumberOfBytesToProtect;
+
+   Status = MmCopyFromCaller(&BaseAddress, UnsafeBaseAddress, sizeof(PVOID));
+   if (!NT_SUCCESS(Status))
+      return Status;
+   Status = MmCopyFromCaller(&NumberOfBytesToProtect, UnsafeNumberOfBytesToProtect, sizeof(ULONG));
+   if (!NT_SUCCESS(Status))
+      return Status;
 
    NumberOfBytesToProtect =
       PAGE_ROUND_UP(BaseAddress + NumberOfBytesToProtect) -
@@ -228,7 +237,7 @@ NtProtectVirtualMemory(IN HANDLE ProcessHandle,
                                       UserMode,
                                       (PVOID*)(&Process),
                                       NULL);
-   if (Status != STATUS_SUCCESS)
+   if (!NT_SUCCESS(Status))
    {
       DPRINT("NtProtectVirtualMemory() = %x\n",Status);
       return(Status);
@@ -263,8 +272,9 @@ NtProtectVirtualMemory(IN HANDLE ProcessHandle,
    MmUnlockAddressSpace(AddressSpace);
    ObDereferenceObject(Process);
 
-   MmCopyToCaller(UnsafeOldAccessProtection, &OldAccessProtection,
-                  sizeof(ULONG));
+   MmCopyToCaller(UnsafeOldAccessProtection, &OldAccessProtection, sizeof(ULONG));
+   MmCopyToCaller(UnsafeBaseAddress, &BaseAddress, sizeof(PVOID));
+   MmCopyToCaller(UnsafeNumberOfBytesToProtect, &NumberOfBytesToProtect, sizeof(ULONG));
 
    return(Status);
 }

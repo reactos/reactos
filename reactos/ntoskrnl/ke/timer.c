@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.72 2004/04/20 20:38:41 jimtabor Exp $
+/* $Id: timer.c,v 1.73 2004/06/13 10:35:52 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -224,16 +224,19 @@ KeQuerySystemTime(PLARGE_INTEGER CurrentTime)
   while (CurrentTime->u.HighPart != SharedUserData->SystemTime.High2Part);
 }
 
-VOID STDCALL
-KeQueryInterruptTime(PLARGE_INTEGER CurrentTime)
+ULONGLONG STDCALL
+KeQueryInterruptTime(VOID)
 {
+  LARGE_INTEGER CurrentTime;
+
   do
     {
-      CurrentTime->u.HighPart = SharedUserData->InterruptTime.High1Part;
-      CurrentTime->u.LowPart = SharedUserData->InterruptTime.LowPart;
+      CurrentTime.u.HighPart = SharedUserData->InterruptTime.High1Part;
+      CurrentTime.u.LowPart = SharedUserData->InterruptTime.LowPart;
     }
-  while (CurrentTime->u.HighPart != SharedUserData->InterruptTime.High2Part);
+  while (CurrentTime.u.HighPart != SharedUserData->InterruptTime.High2Part);
 
+  return CurrentTime.QuadPart;
 }
 
 /*
@@ -305,9 +308,8 @@ KeSetTimerEx (PKTIMER		Timer,
    Timer->Dpc = Dpc;
    if (DueTime.QuadPart < 0)
      {
-        KeQueryInterruptTime(&Time);
         Timer->Header.Absolute = 0;
-	Timer->DueTime.QuadPart = Time.QuadPart - DueTime.QuadPart;
+	Timer->DueTime.QuadPart = KeQueryInterruptTime() - DueTime.QuadPart;
      }
    else
      {
@@ -542,7 +544,7 @@ KeExpireTimers(PKDPC Dpc,
 
    KeAcquireSpinLockAtDpcLevel(&TimerListLock);
 
-   KeQueryInterruptTime(&InterruptTime);
+   InterruptTime.QuadPart = KeQueryInterruptTime();
    KeQuerySystemTime(&SystemTime);
 
    current_entry = RelativeTimerListHead.Flink;

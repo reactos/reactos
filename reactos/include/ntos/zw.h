@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.24 2004/05/01 19:22:49 ekohl Exp $
+/* $Id: zw.h,v 1.25 2004/06/13 10:35:51 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -4878,8 +4878,8 @@ NTSTATUS
 STDCALL
 NtProtectVirtualMemory(
 	IN HANDLE ProcessHandle,
-	IN PVOID BaseAddress,
-	IN ULONG NumberOfBytesToProtect,
+	IN PVOID *BaseAddress,
+	IN ULONG *NumberOfBytesToProtect,
 	IN ULONG NewAccessProtection,
 	OUT PULONG OldAccessProtection
 	);
@@ -5235,8 +5235,9 @@ ZwAccessCheckAndAuditAlarm(
 /*
  * FUNCTION: Adds an atom to the global atom table
  * ARGUMENTS:
- *        AtomString = The string to add to the atom table.
- *        Atom (OUT) = Caller supplies storage for the resulting atom.
+ *       AtomName = The string to add to the atom table.
+ *       AtomNameLength = Length of the atom name
+ *       Atom (OUT) = Caller supplies storage for the resulting atom.
  * REMARKS: The arguments map to the win32 add GlobalAddAtom.
  * RETURNS: Status
  */
@@ -5244,6 +5245,7 @@ NTSTATUS
 STDCALL
 NtAddAtom(
 	IN	PWSTR		AtomName,
+	IN	ULONG		AtomNameLength,
 	IN OUT	PRTL_ATOM	Atom
 	);
 
@@ -5252,6 +5254,7 @@ NTSTATUS
 STDCALL
 ZwAddAtom(
 	IN	PWSTR		AtomName,
+	IN	ULONG		AtomNameLength,
 	IN OUT	PRTL_ATOM	Atom
 	);
 
@@ -5350,6 +5353,7 @@ ZwDuplicateToken(
  * FUNCTION: Finds a atom
  * ARGUMENTS:
  *       AtomName = Name to search for.
+ *       AtomNameLength = Length of the atom name
  *       Atom = Caller supplies storage for the resulting atom
  * RETURNS: Status 
  * REMARKS:
@@ -5359,6 +5363,7 @@ NTSTATUS
 STDCALL
 NtFindAtom(
 	IN	PWSTR		AtomName,
+	IN	ULONG		AtomNameLength,
 	OUT	PRTL_ATOM	Atom OPTIONAL
 	);
 
@@ -5366,6 +5371,7 @@ NTSTATUS
 STDCALL
 ZwFindAtom(
 	IN	PWSTR		AtomName,
+	IN	ULONG		AtomNameLength,
 	OUT	PRTL_ATOM	Atom OPTIONAL
 	);
 
@@ -5491,8 +5497,8 @@ NTSTATUS
 STDCALL
 ZwProtectVirtualMemory(
 	IN HANDLE ProcessHandle,
-	IN PVOID BaseAddress,
-	IN ULONG NumberOfBytesToProtect,
+	IN PVOID *BaseAddress,
+	IN ULONG *NumberOfBytesToProtect,
 	IN ULONG NewAccessProtection,
 	OUT PULONG OldAccessProtection
 	);

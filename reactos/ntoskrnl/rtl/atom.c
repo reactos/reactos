@@ -1,4 +1,4 @@
-/* $Id: atom.c,v 1.9 2004/02/27 23:11:32 gvg Exp $
+/* $Id: atom.c,v 1.10 2004/06/13 10:35:53 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -67,18 +67,18 @@ static PRTL_ATOM_TABLE GlobalAtomTable = NULL;
  * @implemented
  */
 NTSTATUS STDCALL
-NtAddAtom(IN PWSTR AtomName,
-	  OUT PRTL_ATOM Atom)
+NtAddAtom(
+   IN PWSTR AtomName,
+   IN ULONG AtomNameLength,
+   OUT PRTL_ATOM Atom)
 {
    PRTL_ATOM_TABLE AtomTable;
 
    AtomTable = RtlpGetGlobalAtomTable();
    if (AtomTable == NULL)
-     return STATUS_ACCESS_DENIED;
+      return STATUS_ACCESS_DENIED;
 
-   return (RtlAddAtomToAtomTable(AtomTable,
-				 AtomName,
-				 Atom));
+   return RtlAddAtomToAtomTable(AtomTable, AtomName, Atom);
 }
 
 
@@ -104,6 +104,7 @@ NtDeleteAtom(IN RTL_ATOM Atom)
  */
 NTSTATUS STDCALL
 NtFindAtom(IN PWSTR AtomName,
+           IN ULONG AtomNameLength,
 	   OUT PRTL_ATOM Atom)
 {
    PRTL_ATOM_TABLE AtomTable;

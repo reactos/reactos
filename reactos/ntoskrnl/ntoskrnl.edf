@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.169 2004/05/28 21:16:27 royce Exp $
+; $Id: ntoskrnl.edf,v 1.170 2004/06/13 10:35:53 navaraf Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -560,7 +560,7 @@ NlsLeadByteInfo DATA
 NlsMbCodePageTag DATA
 NlsMbOemCodePageTag DATA
 NlsOemLeadByteInfo DATA
-NtAddAtom=NtAddAtom@8
+NtAddAtom=NtAddAtom@12
 NtAdjustPrivilegesToken=NtAdjustPrivilegesToken@24
 NtAlertThread=NtAlertThread@4
 NtAllocateLocallyUniqueId=NtAllocateLocallyUniqueId@4
@@ -579,7 +579,7 @@ NtDeleteFile=NtDeleteFile@4
 NtDeviceIoControlFile=NtDeviceIoControlFile@40
 NtDuplicateObject=NtDuplicateObject@28
 NtDuplicateToken=NtDuplicateToken@24
-NtFindAtom=NtFindAtom@8
+NtFindAtom=NtFindAtom@12
 NtFreeVirtualMemory=NtFreeVirtualMemory@16
 NtFsControlFile=NtFsControlFile@40
 NtGlobalFlag DATA

@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.120 2004/05/13 21:01:14 navaraf Exp $
+; $Id: ntdll.def,v 1.121 2004/06/13 10:35:52 navaraf Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -64,7 +64,7 @@ NlsMbOemCodePageTag DATA
 NtAcceptConnectPort@24
 NtAccessCheck@32
 NtAccessCheckAndAuditAlarm@44
-NtAddAtom@8
+NtAddAtom@12
 NtAdjustGroupsToken@24
 NtAdjustPrivilegesToken@24
 NtAlertResumeThread@8
@@ -116,7 +116,7 @@ NtDuplicateToken@24
 NtEnumerateKey@24
 NtEnumerateValueKey@24
 NtExtendSection@8
-NtFindAtom@8
+NtFindAtom@12
 NtFlushBuffersFile@8
 NtFlushInstructionCache@12
 NtFlushKey@4
@@ -654,7 +654,7 @@ RtlxUnicodeStringToOemSize@4
 ZwAcceptConnectPort@24
 ZwAccessCheck@32
 ZwAccessCheckAndAuditAlarm@44
-ZwAddAtom@8
+ZwAddAtom@12
 ZwAdjustGroupsToken@24
 ZwAdjustPrivilegesToken@24
 ZwAlertResumeThread@8
@@ -704,7 +704,7 @@ ZwDuplicateToken@24
 ZwEnumerateKey@24
 ZwEnumerateValueKey@24
 ZwExtendSection@8
-ZwFindAtom@8
+ZwFindAtom@12
 ZwFlushBuffersFile@8
 ZwFlushInstructionCache@12
 ZwFlushKey@4

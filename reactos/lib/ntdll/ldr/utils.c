@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.87 2004/06/02 18:26:58 gvg Exp $
+/* $Id: utils.c,v 1.88 2004/06/13 10:35:52 navaraf Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1235,7 +1235,11 @@ static NTSTATUS LdrPerformRelocations (PIMAGE_NT_HEADERS        NTHeaders,
   int                   i;
   PIMAGE_DATA_DIRECTORY RelocationDDir;
   ULONG OldProtect;
+  PVOID ProtectBase;
+  ULONG ProtectSize;
   ULONG OldProtect2;
+  PVOID ProtectBase2;
+  ULONG ProtectSize2;
   NTSTATUS Status;
   PIMAGE_SECTION_HEADER Sections;
   ULONG MaxExtend;
@@ -1286,10 +1290,11 @@ static NTSTATUS LdrPerformRelocations (PIMAGE_NT_HEADERS        NTHeaders,
             RelocationDir->SizeOfBlock - sizeof (RELOCATION_DIRECTORY);
           NumberOfEntries = NumberOfEntries / sizeof (RELOCATION_ENTRY);
 
+          ProtectBase = ImageBase + RelocationDir->VirtualAddress;
+          ProtectSize = PAGE_SIZE;
           Status = NtProtectVirtualMemory(NtCurrentProcess(),
-                                          ImageBase +
-                                          RelocationDir->VirtualAddress,
-                                          PAGE_SIZE,
+                                          &ProtectBase,
+                                          &ProtectSize,
                                           PAGE_READWRITE,
                                           &OldProtect);
           if (!NT_SUCCESS(Status))
@@ -1300,21 +1305,21 @@ static NTSTATUS LdrPerformRelocations (PIMAGE_NT_HEADERS        NTHeaders,
 
           if (RelocationDir->VirtualAddress + PAGE_SIZE < MaxExtend)
             {
+                  ProtectBase2 = ImageBase + RelocationDir->VirtualAddress + PAGE_SIZE;
+                  ProtectSize2 = PAGE_SIZE;
                   Status = NtProtectVirtualMemory(NtCurrentProcess(),
-                                                  ImageBase +
-                                                  RelocationDir->VirtualAddress + PAGE_SIZE,
-                                                  PAGE_SIZE,
+                                                  &ProtectBase2,
+                                                  &ProtectSize2,
                                                   PAGE_READWRITE,
                                                   &OldProtect2);
                   if (!NT_SUCCESS(Status))
                     {
                       DPRINT1("Failed to unprotect relocation target (2).\n");
-                  NtProtectVirtualMemory(NtCurrentProcess(),
-                                        ImageBase +
-                                        RelocationDir->VirtualAddress,
-                                        PAGE_SIZE,
-                                        OldProtect,
-                                        &OldProtect);
+                      NtProtectVirtualMemory(NtCurrentProcess(),
+                                             &ProtectBase,
+                                             &ProtectSize,
+                                             OldProtect,
+                                             &OldProtect);
                       return(Status);
                     }
               }
@@ -1360,9 +1365,8 @@ static NTSTATUS LdrPerformRelocations (PIMAGE_NT_HEADERS        NTHeaders,
             }
 
           Status = NtProtectVirtualMemory(NtCurrentProcess(),
-                                          ImageBase +
-                                          RelocationDir->VirtualAddress,
-                                          PAGE_SIZE,
+                                          &ProtectBase,
+                                          &ProtectSize,
                                           OldProtect,
                                           &OldProtect);
           if (!NT_SUCCESS(Status))
@@ -1374,9 +1378,8 @@ static NTSTATUS LdrPerformRelocations (PIMAGE_NT_HEADERS        NTHeaders,
           if (RelocationDir->VirtualAddress + PAGE_SIZE < MaxExtend)
             {
                   Status = NtProtectVirtualMemory(NtCurrentProcess(),
-                                                  ImageBase +
-                                                  RelocationDir->VirtualAddress + PAGE_SIZE,
-                                                  PAGE_SIZE,
+                                                  &ProtectBase2,
+                                                  &ProtectSize2,
                                                   OldProtect2,
                                                   &OldProtect2);
                   if (!NT_SUCCESS(Status))
@@ -1468,11 +1471,12 @@ LdrpProcessImportDirectoryEntry(
 
    /* Unprotect the region we are about to write into. */
    IATBase = (PVOID)ImportAddressList;
+   IATSize *= sizeof(PVOID*);
    Status = NtProtectVirtualMemory(NtCurrentProcess(),
-                                  IATBase,
-                                  IATSize * sizeof(PVOID*),
-                                  PAGE_READWRITE,
-                                  &OldProtect);
+                                   &IATBase,
+                                   &IATSize,
+                                   PAGE_READWRITE,
+                                   &OldProtect);
    if (!NT_SUCCESS(Status))
      {
        DPRINT1("Failed to unprotect IAT.\n");
@@ -1509,8 +1513,8 @@ LdrpProcessImportDirectoryEntry(
 
    /* Protect the region we are about to write into. */
    Status = NtProtectVirtualMemory(NtCurrentProcess(),
-                                   IATBase,
-                                   IATSize * sizeof(PVOID*),
+                                   &IATBase,
+                                   &IATSize,
                                    OldProtect,
                                    &OldProtect);
    if (!NT_SUCCESS(Status))
@@ -1626,9 +1630,10 @@ LdrpAdjustImportDirectory(PLDR_MODULE Module,
 
            /* Unprotect the region we are about to write into. */
            IATBase = (PVOID)ImportAddressList;
+           IATSize *= sizeof(PVOID*);
            Status = NtProtectVirtualMemory(NtCurrentProcess(),
-                                           IATBase,
-                                           IATSize * sizeof(PVOID*),
+                                           &IATBase,
+                                           &IATSize,
                                            PAGE_READWRITE,
                                            &OldProtect);
            if (!NT_SUCCESS(Status))
@@ -1655,8 +1660,8 @@ LdrpAdjustImportDirectory(PLDR_MODULE Module,
 
            /* Protect the region we are about to write into. */
            Status = NtProtectVirtualMemory(NtCurrentProcess(),
-                                           IATBase,
-                                           IATSize * sizeof(PVOID*),
+                                           &IATBase,
+                                           &IATSize,
                                            OldProtect,
                                            &OldProtect);
            if (!NT_SUCCESS(Status))

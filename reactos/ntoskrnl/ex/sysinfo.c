@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.35 2004/05/26 19:56:35 navaraf Exp $
+/* $Id: sysinfo.c,v 1.36 2004/06/13 10:35:52 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -28,7 +28,7 @@
 #include <internal/debug.h>
 
 extern ULONG NtGlobalFlag; /* FIXME: it should go in a ddk/?.h */
-VOID STDCALL KeQueryInterruptTime(PLARGE_INTEGER CurrentTime);
+ULONGLONG STDCALL KeQueryInterruptTime(VOID);
 
 VOID MmPrintMemoryStatistic(VOID);
 
@@ -647,7 +647,7 @@ QSI_DEF(SystemProcessorPerformanceInformation)
 
         PsLookupProcessByProcessId((PVOID) 1, &TheIdleProcess);
 
-	KeQueryInterruptTime((PLARGE_INTEGER) &CurrentTime);
+	CurrentTime.QuadPart = KeQueryInterruptTime();
 
         Spi->TotalProcessorRunTime.QuadPart = 
 		TheIdleProcess->Pcb.KernelTime * 100000; // IdleTime
