@@ -24,38 +24,41 @@ NTSTATUS STDCALL NtSetSystemPowerState(VOID)
 }
 
 
-static void kb_wait(void)
-{
-   int i;
-   
-   for (i=0; i<10000; i++)
-     {
-	if ((inb_p(0x64) & 0x02) == 0)
-	  {
-	     return;
-	  }
-     }
-}
-
 NTSTATUS
 STDCALL
 NtShutdownSystem (
-	IN	SHUTDOWN_ACTION	Action
+        IN   SHUTDOWN_ACTION Action
 	)
-/*
- * FIXME: Does a reboot only
- */
 {
-   int i, j;
-   
-   for (;;)
-     {
-	for (i=0; i<100; i++)
-	  {
-	     kb_wait();
-	     for (j=0; j<500; j++);
-	     outb(0xfe, 0x64);
-	     for (j=0; j<500; j++);
-	  }
-     }
+    if (Action > ShutdownPowerOff)
+        return STATUS_INVALID_PARAMETER;
+
+    /* FIXME: notify all registered drivers (MJ_SHUTDOWN) */
+
+    /* FIXME: notify configuration manager (Registry) */
+
+    /* FIXME: notify memory manager */
+
+    /* FIXME: notify all file system drivers (MJ_SHUTDOWN) */
+
+    if (Action == ShutdownNoReboot)
+    {
+#if 0
+        /* Switch off */
+        HalReturnToFirmware (FIRMWARE_OFF);      
+#endif
+    }
+    else if (Action == ShutdownReboot)
+    {
+        HalReturnToFirmware (FIRMWARE_REBOOT);
+    }
+    else
+    {
+        HalReturnToFirmware (FIRMWARE_HALT);
+    }
+
+    return STATUS_SUCCESS;
 }
+
+/* EOF */
+

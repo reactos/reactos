@@ -68,4 +68,10 @@ VOID Hal_bios32_probe(VOID);
 BOOLEAN Hal_bios32_is_service_present(ULONG service);
 
 
+/*
+ * FUNCTION: Initializes the text mode display (blue screen)
+ */
+VOID HalInitializeDisplay (VOID);
+
+
 #endif /* __INTERNAL_HAL_HAL_H */

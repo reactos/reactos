@@ -12,6 +12,11 @@
 #ifndef __INCLUDE_INTERNAL_HAL_DDK_H
 #define __INCLUDE_INTERNAL_HAL_DDK_H
 
+/* HalReturnToFirmware */
+#define FIRMWARE_HALT   1
+#define FIRMWARE_REBOOT 3
+
+
 enum
 {
    DEVICE_DESCRIPTION_VERSION,
@@ -54,6 +59,9 @@ typedef struct _DEVICE_DESCRIPTION
    ULONG DmaPort;
 } DEVICE_DESCRIPTION, *PDEVICE_DESCRIPTION;
 
+typedef BOOLEAN STDCALL (*RESET_DISPLAY_ROUTINE)(ULONG SizeX, ULONG SizeY);
+
+VOID HalAcquireDisplayOwnership(RESET_DISPLAY_ROUTINE ResetRoutine);
 PVOID HalAllocateCommonBuffer(PADAPTER_OBJECT AdapterObject,
 			      ULONG Length,
 			      PPHYSICAL_ADDRESS LogicalAddress,
@@ -95,8 +103,15 @@ ULONG HalGetInterruptVector(INTERFACE_TYPE InterfaceType,
 			    ULONG BusInterruptVector,
 			    PKIRQL Irql,
 			    PKAFFINITY Affinity);
+BOOLEAN HalMakeBeep(ULONG Frequency);
+VOID HalQueryDisplayParameters(PULONG DispSizeX,
+			       PULONG DispSizeY,
+			       PULONG CursorPosX,
+			       PULONG CursorPosY);
+VOID HalQueryRealTimeClock(PTIME_FIELDS pTime);
 VOID HalQuerySystemInformation(VOID);
 ULONG HalReadDmaCounter(PADAPTER_OBJECT AdapterObject);
+VOID HalReturnToFirmware(ULONG Action);
 ULONG HalSetBusData(BUS_DATA_TYPE BusDataType,
 		    ULONG BusNumber,
 		    ULONG SlotNumber,
@@ -108,12 +123,12 @@ ULONG HalSetBusDataByOffset(BUS_DATA_TYPE BusDataType,
 			    PVOID Buffer,
 			    ULONG Offset,
 			    ULONG Length);
+VOID HalSetDisplayParameters(ULONG CursorPosX,
+			     ULONG CursorPosY);
 BOOLEAN HalTranslateBusAddress(INTERFACE_TYPE InterfaceType,
 			       ULONG BusNumber,
 			       PHYSICAL_ADDRESS BusAddress,
 			       PULONG AddressSpace,
 			       PPHYSICAL_ADDRESS TranslatedAddress);
-BOOLEAN HalMakeBeep(ULONG Frequency);
-VOID HalQueryRealTimeClock(PTIME_FIELDS pTime);
 
 #endif /* __INCLUDE_INTERNAL_HAL_DDK_H */
