@@ -248,6 +248,7 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	    }
 	  if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
 	    {
+	      DPRINT("outb %d, %x\n", (ULONG)ip[i + 1], Tf->Eax & 0xFF);
 	      WRITE_PORT_UCHAR((PUCHAR)(ULONG)ip[i + 1], 
 			       Tf->Eax & 0xFF);
 	      Tf->Eip = Tf->Eip + 2;
@@ -267,10 +268,12 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	    {
 	      if (!BigDataPrefix)
 		{
+		  DPRINT("outw %d, %x\n", (ULONG)ip[i + 1], Tf->Eax & 0xFFFF);
 		  WRITE_PORT_USHORT((PUSHORT)(ULONG)ip[1], Tf->Eax & 0xFFFF);
 		}
 	      else
 		{
+		  DPRINT("outl %d, %x\n", (ULONG)ip[i + 1], Tf->Eax);
 		  WRITE_PORT_ULONG((PULONG)(ULONG)ip[1], Tf->Eax);
 		}
 	      Tf->Eip = Tf->Eip + 2;
@@ -288,6 +291,7 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	    }
 	  if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
 	    {
+	      DPRINT("outb %d, %x\n", Tf->Edx & 0xFFFF, Tf->Eax & 0xFF);
 	      WRITE_PORT_UCHAR((PUCHAR)(Tf->Edx & 0xFFFF), Tf->Eax & 0xFF);
 	      Tf->Eip = Tf->Eip + 1;
 	      return(0);
@@ -306,11 +310,13 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	    {
 	      if (!BigDataPrefix)
 		{
+		  DPRINT("outw %d, %x\n", Tf->Edx & 0xFFFF, Tf->Eax & 0xFFFF);
 		  WRITE_PORT_USHORT((PUSHORT)(Tf->Edx & 0xFFFF), 
 				    Tf->Eax & 0xFFFF);
 		}
 	      else
 		{
+		  DPRINT("outl %d, %x\n", Tf->Edx & 0xFFFF, Tf->Eax);
 		  WRITE_PORT_ULONG((PULONG)(Tf->Edx & 0xFFFF), 
 				   Tf->Eax);
 		}
@@ -332,6 +338,7 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	      UCHAR v;
 	      
 	      v = READ_PORT_UCHAR((PUCHAR)(ULONG)ip[1]);
+	      DPRINT("inb %d\t%X\n", (ULONG)ip[1], v);
 	      Tf->Eax = Tf->Eax & (~0xFF);
 	      Tf->Eax = Tf->Eax | v;
 	      Tf->Eip = Tf->Eip + 2;
@@ -348,12 +355,22 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	      return(1);
 	    }
 	  if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
-	    {
-	      USHORT v;
-	      
-	      v = READ_PORT_USHORT((PUSHORT)(ULONG)ip[1]);
-	      Tf->Eax = Tf->Eax & (~0xFFFF);
-	      Tf->Eax = Tf->Eax | v;
+	    {	     
+	      if (!BigDataPrefix)
+		{
+		  USHORT v;
+		  v = READ_PORT_USHORT((PUSHORT)(ULONG)ip[1]);
+		  DPRINT("inw %d\t%X\n", (ULONG)ip[1], v);
+		  Tf->Eax = Tf->Eax & (~0xFFFF);
+		  Tf->Eax = Tf->Eax | v;
+		}
+	      else
+		{
+		  ULONG v;
+		  v = READ_PORT_USHORT((PUSHORT)(ULONG)ip[1]);
+		  DPRINT("inl %d\t%X\n", (ULONG)ip[1], v);
+		  Tf->Eax = v;
+		}
 	      Tf->Eip = Tf->Eip + 2;
 	      return(0);
 	    }
@@ -370,8 +387,9 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	  if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
 	    {
 	      UCHAR v;
-
+	      
 	      v = READ_PORT_UCHAR((PUCHAR)(Tf->Edx & 0xFFFF));
+	      DPRINT("inb %d\t%X\n", Tf->Edx & 0xFFFF, v);
 	      Tf->Eax = Tf->Eax & (~0xFF);
 	      Tf->Eax = Tf->Eax | v;
 	      Tf->Eip = Tf->Eip + 1;
@@ -389,11 +407,23 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 	    }
 	  if (VTf->regs->Flags & KV86M_ALLOW_IO_PORT_ACCESS)
 	    {
-	      USHORT v;
+	      if (!BigDataPrefix)
+		{
+		  USHORT v;
 
-	      v = READ_PORT_USHORT((PUSHORT)(Tf->Edx & 0xFFFF));
-	      Tf->Eax = Tf->Eax & (~0xFFFF);
-	      Tf->Eax = Tf->Eax | v;
+		  v = READ_PORT_USHORT((PUSHORT)(Tf->Edx & 0xFFFF));
+		  DPRINT("inw %d\t%X\n", Tf->Edx & 0xFFFF, v);
+		  Tf->Eax = Tf->Eax & (~0xFFFF);
+		  Tf->Eax = Tf->Eax | v;
+		}
+	      else
+		{
+		  ULONG v;
+
+		  v = READ_PORT_USHORT((PUSHORT)(Tf->Edx & 0xFFFF));
+		  DPRINT("inl %d\t%X\n", Tf->Edx & 0xFFFF, v);
+		  Tf->Eax = v;
+		}
 	      Tf->Eip = Tf->Eip + 1;
 	      return(0);
 	    }
