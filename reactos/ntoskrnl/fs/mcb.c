@@ -1,4 +1,4 @@
-/* $Id: mcb.c,v 1.11 2003/12/30 18:52:03 fireball Exp $
+/* $Id: mcb.c,v 1.12 2004/06/23 00:42:21 ion Exp $
  *
  * reactos/ntoskrnl/fs/mcb.c
  *
@@ -128,6 +128,51 @@ FsRtlLookupLargeMcbEntry(IN PLARGE_MCB Mcb,
   return(FALSE);
 }
 
+/*
+ * @unimplemented
+ */
+STDCALL
+BOOLEAN
+FsRtlLookupLastLargeMcbEntryAndIndex (
+    IN PLARGE_MCB OpaqueMcb,
+    OUT PLONGLONG LargeVbn,
+    OUT PLONGLONG LargeLbn,
+    OUT PULONG Index
+    )
+{
+  UNIMPLEMENTED;
+  return(FALSE);
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+PFSRTL_PER_STREAM_CONTEXT
+FsRtlLookupPerStreamContextInternal (
+    IN PFSRTL_ADVANCED_FCB_HEADER StreamContext,
+    IN PVOID OwnerId OPTIONAL,
+    IN PVOID InstanceId OPTIONAL
+    )
+{
+  UNIMPLEMENTED;
+  return(FALSE);
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+PVOID /* PFSRTL_PER_FILE_OBJECT_CONTEXT*/
+FsRtlLookupPerFileObjectContext (
+    IN PFSRTL_ADVANCED_FCB_HEADER StreamContext,
+    IN PVOID OwnerId OPTIONAL,
+    IN PVOID InstanceId OPTIONAL
+    )
+{
+  UNIMPLEMENTED;
+  return(FALSE);
+}
 
 /*
  * @unimplemented
@@ -219,6 +264,19 @@ FsRtlRemoveMcbEntry (IN PMCB     Mcb,
   UNIMPLEMENTED;
 }
 
+
+/*
+ * @unimplemented
+ */
+STDCALL
+VOID
+FsRtlResetLargeMcb (
+    IN PLARGE_MCB Mcb,
+    IN BOOLEAN SelfSynchronized
+    )
+{
+  UNIMPLEMENTED;
+}
 
 /*
  * @unimplemented
