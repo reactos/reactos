@@ -1,4 +1,4 @@
-/* $Id: queue.c,v 1.4 2001/11/25 15:21:10 dwelch Exp $
+/* $Id: queue.c,v 1.5 2001/12/02 23:34:42 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -19,6 +19,7 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+/* FUNCTIONS *****************************************************************/
 
 VOID STDCALL
 EiEnqueueMessagePort (IN OUT	PEPORT		Port,

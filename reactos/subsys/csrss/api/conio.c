@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.26 2001/11/20 02:29:45 dwelch Exp $
+/* $Id: conio.c,v 1.27 2001/12/02 23:34:43 dwelch Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -1689,6 +1689,7 @@ CSR_API(CsrWriteConsoleOutput)
    COORD BufferSize;
    NTSTATUS Status;
    DWORD Offset;
+   DWORD PSize;
 
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE_HEADER);
@@ -1702,8 +1703,17 @@ CSR_API(CsrWriteConsoleOutput)
       }
 
    BufferSize = Request->Data.WriteConsoleOutputRequest.BufferSize;
+   PSize = BufferSize.X * BufferSize.Y * sizeof(CHAR_INFO);
    BufferCoord = Request->Data.WriteConsoleOutputRequest.BufferCoord;
-   CharInfo = (CHAR_INFO*)&Request->Data.WriteConsoleOutputRequest.CharInfo;
+   CharInfo = Request->Data.WriteConsoleOutputRequest.CharInfo;
+   if (((PVOID)CharInfo < ProcessData->CsrSectionViewBase) ||
+       (((PVOID)CharInfo + PSize) > 
+	(ProcessData->CsrSectionViewBase + ProcessData->CsrSectionViewSize)))
+     {
+       UNLOCK;
+       Reply->Status = STATUS_ACCESS_VIOLATION;
+       return(Reply->Status);
+     }
    WriteRegion = Request->Data.WriteConsoleOutputRequest.WriteRegion;
 
    SizeY = RtlMin(BufferSize.Y - BufferCoord.Y, CsrpRectHeight(WriteRegion));

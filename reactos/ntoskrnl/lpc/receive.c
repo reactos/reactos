@@ -1,4 +1,4 @@
-/* $Id: receive.c,v 1.2 2000/10/22 16:36:51 ekohl Exp $
+/* $Id: receive.c,v 1.3 2001/12/02 23:34:42 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -19,6 +19,7 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+/* FUNCTIONS *****************************************************************/
 
 /**********************************************************************
  * NAME							SYSTEM
@@ -30,16 +31,13 @@
  * RETURN VALUE
  *
  */
-NTSTATUS
-STDCALL
-NtReadRequestData (
-	HANDLE		PortHandle,
-	PLPC_MESSAGE	Message,
-	ULONG		Index,
-	PVOID		Buffer,
-	ULONG		BufferLength,
-	PULONG		Returnlength
-	)
+NTSTATUS STDCALL
+NtReadRequestData (HANDLE		PortHandle,
+		   PLPC_MESSAGE	Message,
+		   ULONG		Index,
+		   PVOID		Buffer,
+		   ULONG		BufferLength,
+		   PULONG		Returnlength)
 {
 	UNIMPLEMENTED;
 }

@@ -1,4 +1,4 @@
-/* $Id: wapi.c,v 1.15 2001/09/01 15:36:45 chorns Exp $
+/* $Id: wapi.c,v 1.16 2001/12/02 23:34:43 dwelch Exp $
  * 
  * reactos/subsys/csrss/api/wapi.c
  *
@@ -113,11 +113,14 @@ void Thread_Api(PVOID PortHandle)
    LPC_MAX_MESSAGE Request;
    HANDLE ServerPort;
    HANDLE ServerThread;
+   PCSRSS_PROCESS_DATA ProcessData;
    
    CsrInitProcessData();
    
    for (;;)
      {
+       LPC_SECTION_READ LpcRead;
+
 	Status = NtListenPort(PortHandle, &Request.Header);
 	if (!NT_SUCCESS(Status))
 	  {
@@ -130,12 +133,16 @@ void Thread_Api(PVOID PortHandle)
 				     NULL,
 				     1,
 				     0,
-				     NULL);
+				     &LpcRead);
 	if (!NT_SUCCESS(Status))
 	  {
 	     DisplayString(L"CSR: NtAcceptConnectPort() failed\n");
 	     NtTerminateThread(NtCurrentThread(), Status);
 	  }
+
+	ProcessData = CsrGetProcessData(Request.Header.Cid.UniqueProcess);
+	ProcessData->CsrSectionViewBase = LpcRead.ViewBase;
+	ProcessData->CsrSectionViewSize = LpcRead.ViewSize;
 	
 	Status = NtCompleteConnectPort(ServerPort);
 	if (!NT_SUCCESS(Status))

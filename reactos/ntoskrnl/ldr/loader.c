@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.90 2001/09/16 13:19:32 chorns Exp $
+/* $Id: loader.c,v 1.91 2001/12/02 23:34:41 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -932,7 +932,7 @@ VOID LdrLoadAutoConfigDrivers (VOID)
    /*
     * Networking
     */
-#if 1
+#if 0
    /*
     * NDIS library
     */

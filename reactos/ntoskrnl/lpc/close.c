@@ -1,4 +1,4 @@
-/* $Id: close.c,v 1.6 2001/08/26 17:28:00 ekohl Exp $
+/* $Id: close.c,v 1.7 2001/12/02 23:34:42 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -19,6 +19,7 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+/* FUNCTIONS *****************************************************************/
 
 /**********************************************************************
  * NAME

@@ -1,4 +1,4 @@
-/* $Id: lpc.c,v 1.3 2001/11/25 15:21:09 dwelch Exp $
+/* $Id: lpc.c,v 1.4 2001/12/02 23:34:40 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -25,6 +25,11 @@
 /* GLOBALS *******************************************************************/
 
 HANDLE WindowsApiPort = INVALID_HANDLE_VALUE;
+static PVOID CsrSectionMapBase = NULL;
+static PVOID CsrSectionMapServerBase = NULL;
+static HANDLE CsrCommHeap = NULL;
+
+#define CSR_CONTROL_HEAP_SIZE (65536)
 
 /* FUNCTIONS *****************************************************************/
 
@@ -51,6 +56,33 @@ Request is the family of PCSRSS_XXX_REQUEST objects.
 XXX_REQUEST depend on the CsrApiNumber.Index.
 
 */
+
+NTSTATUS STDCALL
+CsrCaptureParameterBuffer(PVOID ParameterBuffer,
+			  ULONG ParameterBufferSize,
+			  PVOID* ClientAddress,
+			  PVOID* ServerAddress)
+{
+  PVOID Block;
+
+  Block = RtlAllocateHeap(CsrCommHeap, 0, ParameterBufferSize);
+  if (Block == NULL)
+    {
+      return(STATUS_NO_MEMORY);
+    }
+  memcpy(Block, ParameterBuffer, ParameterBufferSize);
+  *ClientAddress = Block;
+  *ServerAddress = Block - CsrSectionMapBase + CsrSectionMapServerBase;
+  return(STATUS_SUCCESS);
+}
+
+NTSTATUS STDCALL
+CsrReleaseParameterBuffer(PVOID ClientAddress)
+{
+  RtlFreeHeap(CsrCommHeap, 0, ClientAddress);
+  return(STATUS_SUCCESS);
+}
+
 NTSTATUS STDCALL
 CsrClientCallServer(PCSRSS_API_REQUEST Request,
 		    PCSRSS_API_REPLY Reply OPTIONAL,
@@ -83,13 +115,32 @@ CsrClientConnectToServer(VOID)
    ULONG ConnectInfoLength;
    CSRSS_API_REQUEST Request;
    CSRSS_API_REPLY Reply;
-   
+   LPC_SECTION_WRITE LpcWrite;
+   HANDLE CsrSectionHandle;
+   ULONG CsrSectionViewSize;
+
+   CsrSectionViewSize = CSR_CSRSS_SECTION_SIZE;
+   Status = NtCreateSection(&CsrSectionHandle,
+			    SECTION_ALL_ACCESS,
+			    NULL,
+			    &CsrSectionViewSize,
+			    PAGE_READWRITE,
+			    SEC_COMMIT,
+			    NULL);
+   if (!NT_SUCCESS(Status))
+     {
+       return(Status);
+     }
    RtlInitUnicodeString(&PortName, L"\\Windows\\ApiPort");
    ConnectInfoLength = 0;
+   LpcWrite.Length = sizeof(LPC_SECTION_WRITE);
+   LpcWrite.SectionHandle = CsrSectionHandle;
+   LpcWrite.SectionOffset = 0;
+   LpcWrite.ViewSize = CsrSectionViewSize;
    Status = NtConnectPort(&WindowsApiPort,
 			  &PortName,
 			  NULL,
-			  NULL,
+			  &LpcWrite,
 			  NULL,
 			  NULL,
 			  NULL,
@@ -97,6 +148,22 @@ CsrClientConnectToServer(VOID)
    if (!NT_SUCCESS(Status))
      {
 	return(Status);
+     }
+
+   NtClose(CsrSectionHandle);
+   CsrSectionMapBase = LpcWrite.ViewBase;
+   CsrSectionMapServerBase = LpcWrite.TargetViewBase;
+
+   /* Create the heap for communication for csrss. */
+   CsrCommHeap = RtlCreateHeap(HEAP_NO_VALLOC,
+			       CsrSectionMapBase,
+			       CsrSectionViewSize,
+			       CsrSectionViewSize,
+			       0,
+			       NULL);
+   if (CsrCommHeap == NULL)
+     {
+       return(STATUS_NO_MEMORY);
      }
    
    Request.Type = CSRSS_CONNECT_PROCESS;

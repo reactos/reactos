@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.37 2001/11/25 15:21:09 dwelch Exp $
+/* $Id: console.c,v 1.38 2001/12/02 23:34:40 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -1153,52 +1153,23 @@ WriteConsoleOutputA(HANDLE		 hConsoleOutput,
   ULONG Size;
   BOOLEAN Result;
   ULONG i, j;
+  PVOID BufferBase;
+  PVOID BufferTargetBase;
 
   Size = dwBufferSize.Y * dwBufferSize.X * sizeof(CHAR_INFO);
 
-  if ((sizeof(CSRSS_API_REQUEST) + Size) > 
-      (sizeof(LPC_MESSAGE) + MAX_MESSAGE_DATA))
+  Status = CsrCaptureParameterBuffer((PVOID)lpBuffer,
+				     Size,
+				     &BufferBase,
+				     &BufferTargetBase);
+  if (!NT_SUCCESS(Status))
     {
-      COORD FragDim, FragCoord;
-      SMALL_RECT FragRegion;
-      DWORD SizeX, SizeY;
-      CONST CHAR_INFO* lpFragBuffer;
-
-      SizeX = min(dwBufferSize.X - dwBufferCoord.X, 
-		  lpWriteRegion->Right - lpWriteRegion->Left);
-      SizeY = min(dwBufferSize.Y - dwBufferCoord.Y, 
-		  lpWriteRegion->Bottom - lpWriteRegion->Top);
-
-      for (i = dwBufferCoord.Y; i < (dwBufferCoord.Y + SizeY); i++)
-	{
-	  for (j = dwBufferCoord.X; j < (dwBufferCoord.X + SizeX); j++)
-	    {
-	      FragDim.X = 1;
-	      FragDim.Y = 1;
-	      FragCoord.X = 0;
-	      FragCoord.Y = 0;
-	      FragRegion.Left = lpWriteRegion->Left + j;
-	      FragRegion.Right = lpWriteRegion->Left + j + 1;
-	      FragRegion.Top = lpWriteRegion->Top + i;
-	      FragRegion.Bottom = lpWriteRegion->Bottom + i + 1;
-
-	      lpFragBuffer = lpBuffer + (i * dwBufferSize.X) + j;
-	      Result = WriteConsoleOutputA(hConsoleOutput,
-					   lpFragBuffer,
-					   FragDim,
-					   FragCoord,
-					   &FragRegion);
-	      if (!Result)
-		{
-		  return(FALSE);
-		}	      
-	    }
-	}
-      return(TRUE);
+      SetLastErrorByStatus(Status);
+      return(FALSE);
     }
   
   Request = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, 
-			    sizeof(CSRSS_API_REQUEST) + Size);
+			    sizeof(CSRSS_API_REQUEST));
   if (Request == NULL)
     {
       SetLastError(ERROR_OUTOFMEMORY);
@@ -1209,11 +1180,11 @@ WriteConsoleOutputA(HANDLE		 hConsoleOutput,
   Request->Data.WriteConsoleOutputRequest.BufferSize = dwBufferSize;
   Request->Data.WriteConsoleOutputRequest.BufferCoord = dwBufferCoord;
   Request->Data.WriteConsoleOutputRequest.WriteRegion = *lpWriteRegion;
-  RtlCopyMemory(&Request->Data.WriteConsoleOutputRequest.CharInfo, lpBuffer, 
-		Size);
+  Request->Data.WriteConsoleOutputRequest.CharInfo = 
+    (CHAR_INFO*)BufferTargetBase;
   
   Status = CsrClientCallServer(Request, &Reply, 
-			       sizeof(CSRSS_API_REQUEST) + Size, 
+			       sizeof(CSRSS_API_REQUEST), 
 			       sizeof(CSRSS_API_REPLY));
   if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
     {
@@ -1224,6 +1195,7 @@ WriteConsoleOutputA(HANDLE		 hConsoleOutput,
       
   *lpWriteRegion = Reply.Data.WriteConsoleOutputReply.WriteRegion;
   RtlFreeHeap(GetProcessHeap(), 0, Request);
+  CsrReleaseParameterBuffer(BufferBase);
   return(TRUE);
 }
 

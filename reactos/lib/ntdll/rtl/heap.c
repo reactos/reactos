@@ -282,7 +282,8 @@ HEAP_FindSubHeap(HEAP *heap,  /* [in] Heap pointer */
  */
 static inline BOOL
 HEAP_Commit(SUBHEAP *subheap,
-	    void *ptr)
+	    void *ptr,
+	    DWORD flags)
 {
     DWORD size = (DWORD)((char *)ptr - (char *)subheap);
     NTSTATUS Status;
@@ -296,20 +297,23 @@ HEAP_Commit(SUBHEAP *subheap,
     address = (PVOID)((char *)subheap + subheap->commitSize);
     commitsize = size - subheap->commitSize;
 
-    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
-				     &address,
-				     0,
-				     &commitsize,
-				     MEM_COMMIT,
-				     PAGE_EXECUTE_READWRITE);
-    if (!NT_SUCCESS(Status))
-    {
-        WARN("Could not commit %08lx bytes at %08lx for heap %08lx\n",
+    if (!(flags & HEAP_NO_VALLOC))
+      {
+	Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+					 &address,
+					 0,
+					 &commitsize,
+					 MEM_COMMIT,
+					 PAGE_EXECUTE_READWRITE);
+	if (!NT_SUCCESS(Status))
+	  {
+	    WARN("Could not commit %08lx bytes at %08lx for heap %08lx\n",
                  size - subheap->commitSize,
                  (DWORD)((char *)subheap + subheap->commitSize),
                  (DWORD)subheap->heap );
-        return FALSE;
-    }
+	    return FALSE;
+	  }
+      }
     subheap->commitSize = size;
     return TRUE;
 }
@@ -320,7 +324,7 @@ HEAP_Commit(SUBHEAP *subheap,
  *
  * If possible, decommit the heap storage from (including) 'ptr'.
  */
-static inline BOOL HEAP_Decommit( SUBHEAP *subheap, void *ptr )
+static inline BOOL HEAP_Decommit( SUBHEAP *subheap, void *ptr, DWORD flags )
 {
     DWORD size = (DWORD)((char *)ptr - (char *)subheap);
     PVOID address;
@@ -333,18 +337,21 @@ static inline BOOL HEAP_Decommit( SUBHEAP *subheap, void *ptr )
     address = (PVOID)((char *)subheap + size);
     decommitsize = subheap->commitSize - size;
 
-    Status = ZwFreeVirtualMemory(NtCurrentProcess(),
-				 &address,
-				 &decommitsize,
-				 MEM_DECOMMIT);
-    if (!NT_SUCCESS(Status));
-    {
-        WARN("Could not decommit %08lx bytes at %08lx for heap %08lx\n",
-                 subheap->commitSize - size,
-                 (DWORD)((char *)subheap + size),
-                 (DWORD)subheap->heap );
-        return FALSE;
-    }
+    if (!(flags & HEAP_NO_VALLOC))
+      {
+	Status = ZwFreeVirtualMemory(NtCurrentProcess(),
+				     &address,
+				     &decommitsize,
+				     MEM_DECOMMIT);
+	if (!NT_SUCCESS(Status));
+	{
+	  WARN("Could not decommit %08lx bytes at %08lx for heap %08lx\n",
+	       subheap->commitSize - size,
+	       (DWORD)((char *)subheap + size),
+	       (DWORD)subheap->heap );
+	  return FALSE;
+	}
+      }
     subheap->commitSize = size;
     return TRUE;
 }
@@ -413,7 +420,8 @@ static void HEAP_CreateFreeBlock( SUBHEAP *subheap, void *ptr, DWORD size )
  * Turn an in-use block into a free block. Can also decommit the end of
  * the heap, and possibly even free the sub-heap altogether.
  */
-static void HEAP_MakeInUseBlockFree( SUBHEAP *subheap, ARENA_INUSE *pArena )
+static void HEAP_MakeInUseBlockFree( SUBHEAP *subheap, ARENA_INUSE *pArena,
+				     DWORD flags)
 {
     ARENA_FREE *pFree;
     DWORD size = (pArena->size & ARENA_SIZE_MASK) + sizeof(*pArena);
@@ -451,10 +459,13 @@ static void HEAP_MakeInUseBlockFree( SUBHEAP *subheap, ARENA_INUSE *pArena )
         if (pPrev) pPrev->next = subheap->next;
         /* Free the memory */
         subheap->magic = 0;
-        ZwFreeVirtualMemory(NtCurrentProcess(),
-			    (PVOID*)&subheap,
-			    0,
-			    MEM_RELEASE);
+	if (!(flags & HEAP_NO_VALLOC))
+	  {
+	    ZwFreeVirtualMemory(NtCurrentProcess(),
+				(PVOID*)&subheap,
+				0,
+				MEM_RELEASE);
+	  }
         return;
     }
     
@@ -497,19 +508,21 @@ static BOOL HEAP_InitSubHeap( HEAP *heap, LPVOID address, DWORD flags,
     NTSTATUS Status;
    
     /* Commit memory */
-
-    Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
-				     &address,
-				     0,
-				     (PULONG)&commitSize,
-				     MEM_COMMIT,
-				     PAGE_EXECUTE_READWRITE);
-   if (!NT_SUCCESS(Status))
-    {
-        WARN("Could not commit %08lx bytes for sub-heap %08lx\n",
-                   commitSize, (DWORD)address );
-        return FALSE;
-    }
+    if (!(flags & HEAP_NO_VALLOC))
+      {
+	Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
+					 &address,
+					 0,
+					 (PULONG)&commitSize,
+					 MEM_COMMIT,
+					 PAGE_EXECUTE_READWRITE);
+	if (!NT_SUCCESS(Status))
+	  {
+	    WARN("Could not commit %08lx bytes for sub-heap %08lx\n",
+		 commitSize, (DWORD)address );
+	    return FALSE;
+	  }
+      }
 
     /* Fill the sub-heap structure */
 
@@ -584,32 +597,37 @@ static SUBHEAP *HEAP_CreateSubHeap(PVOID BaseAddress,
     if (!commitSize) commitSize = 0x10000;
     if (totalSize < commitSize) totalSize = commitSize;
 
-    /* Allocate the memory block */
-
+    /* Allocate the memory block */    
     address = BaseAddress;
-    Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
-				     &address,
-				     0,
-				     (PULONG)&totalSize,
-				     MEM_RESERVE | MEM_COMMIT,
-				     PAGE_EXECUTE_READWRITE);
-    if (!NT_SUCCESS(Status))
-    {
-        WARN("Could not VirtualAlloc %08lx bytes\n",
+    if (!(flags & HEAP_NO_VALLOC))
+      {
+	Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
+					 &address,
+					 0,
+					 (PULONG)&totalSize,
+					 MEM_RESERVE | MEM_COMMIT,
+					 PAGE_EXECUTE_READWRITE);
+	if (!NT_SUCCESS(Status))
+	  {
+	    WARN("Could not VirtualAlloc %08lx bytes\n",
                  totalSize );
-        return NULL;
-    }
+	    return NULL;
+	  }
+      }
 
     /* Initialize subheap */
 
     if (!HEAP_InitSubHeap( heap? heap : (HEAP *)address, 
                            address, flags, commitSize, totalSize ))
     {
-        ZwFreeVirtualMemory(NtCurrentProcess(),
-			    address,
-			    0,
-			    MEM_RELEASE);
-        return NULL;
+      if (!(flags & HEAP_NO_VALLOC))
+	{
+	  ZwFreeVirtualMemory(NtCurrentProcess(),
+			      address,
+			      0,
+			      MEM_RELEASE);
+	  return NULL;
+	}
     }
 
     return (SUBHEAP *)address;
@@ -639,7 +657,8 @@ static ARENA_FREE *HEAP_FindFreeBlock( HEAP *heap, DWORD size,
         {
             subheap = HEAP_FindSubHeap( heap, pArena );
             if (!HEAP_Commit( subheap, (char *)pArena + sizeof(ARENA_INUSE)
-                                               + size + HEAP_MIN_BLOCK_SIZE))
+                                               + size + HEAP_MIN_BLOCK_SIZE,
+			      heap->flags))
                 return NULL;
             *ppSubHeap = subheap;
             return pArena;
@@ -1043,11 +1062,13 @@ RtlDestroyHeap(HANDLE heap) /* [in] Handle of heap */
     {
         SUBHEAP *next = subheap->next;
 
-        ZwFreeVirtualMemory(NtCurrentProcess(),
-			    (PVOID*)&subheap,
-			    0,
-			    MEM_RELEASE);
-
+	if (!(heapPtr->flags & HEAP_NO_VALLOC))
+	  {
+	    ZwFreeVirtualMemory(NtCurrentProcess(),
+				(PVOID*)&subheap,
+				0,
+				MEM_RELEASE);
+	  }
         subheap = next;
     }
     return TRUE;
@@ -1160,7 +1181,7 @@ BOOLEAN STDCALL RtlFreeHeap(
 
     pInUse  = (ARENA_INUSE *)ptr - 1;
     subheap = HEAP_FindSubHeap( heapPtr, pInUse );
-    HEAP_MakeInUseBlockFree( subheap, pInUse );
+    HEAP_MakeInUseBlockFree( subheap, pInUse, heapPtr->flags );
 
     if (!(flags & HEAP_NO_SERIALIZE)) RtlLeaveCriticalSection( &heapPtr->critSection );
 
@@ -1227,7 +1248,8 @@ LPVOID STDCALL RtlReAllocateHeap(
             pFree->prev->next = pFree->next;
             pArena->size += (pFree->size & ARENA_SIZE_MASK) + sizeof(*pFree);
             if (!HEAP_Commit( subheap, (char *)pArena + sizeof(ARENA_INUSE)
-                                               + size + HEAP_MIN_BLOCK_SIZE))
+                                               + size + HEAP_MIN_BLOCK_SIZE,
+			      heapPtr->flags))
             {
                 if (!(flags & HEAP_NO_SERIALIZE)) RtlLeaveCriticalSection( &heapPtr->critSection );
                 return NULL;
@@ -1261,7 +1283,7 @@ LPVOID STDCALL RtlReAllocateHeap(
 
             /* Free the previous block */
 
-            HEAP_MakeInUseBlockFree( subheap, pArena );
+            HEAP_MakeInUseBlockFree( subheap, pArena, flags );
             subheap = newsubheap;
             pArena  = pInUse;
         }

@@ -1,4 +1,4 @@
-/* $Id: complete.c,v 1.4 2001/06/23 19:13:33 phreak Exp $
+/* $Id: complete.c,v 1.5 2001/12/02 23:34:42 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -9,7 +9,7 @@
  *                  Created 22/05/98
  */
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES ******************************************************************/
 
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
@@ -19,6 +19,7 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+/* FUNCTIONS *****************************************************************/
 
 /***********************************************************************
  * NAME							EXPORTED
@@ -47,7 +48,8 @@ NtCompleteConnectPort (HANDLE PortHandle)
   
   OurPort->State = EPORT_CONNECTED_SERVER;
   
-  KeReleaseSemaphore( &OurPort->OtherPort->Semaphore, IO_NO_INCREMENT, 1, FALSE );
+  KeReleaseSemaphore(&OurPort->OtherPort->Semaphore, IO_NO_INCREMENT, 1, 
+		     FALSE);
    
   ObDereferenceObject (OurPort);
   

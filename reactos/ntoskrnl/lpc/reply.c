@@ -1,4 +1,4 @@
-/* $Id: reply.c,v 1.8 2001/11/25 15:21:10 dwelch Exp $
+/* $Id: reply.c,v 1.9 2001/12/02 23:34:42 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -112,7 +112,7 @@ NtReplyPort (IN	HANDLE		PortHandle,
 				 LpcReply, 
 				 LPC_REPLY,
 				 Port);
-   KeReleaseSemaphore( &Port->OtherPort->Semaphore, IO_NO_INCREMENT, 1, FALSE );
+   KeReleaseSemaphore(&Port->OtherPort->Semaphore, IO_NO_INCREMENT, 1, FALSE);
    
    ObDereferenceObject(Port);
    
@@ -170,9 +170,10 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
      }
    if( Port->State == EPORT_DISCONNECTED )
      {
-       // if the port is disconnected, force the timeout to be 0
-       // so we don't wait for new messages, because there won't be
-       // any, only try to remove any existing messages
+       /* If the port is disconnected, force the timeout to be 0
+        * so we don't wait for new messages, because there won't be
+        * any, only try to remove any existing messages
+	*/
        Disconnected = TRUE;
        to.QuadPart = 0;
        Timeout = &to;
@@ -188,7 +189,8 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
 				      LpcReply,
 				      LPC_REPLY,
 				      Port);
-	KeReleaseSemaphore( &Port->OtherPort->Semaphore, IO_NO_INCREMENT, 1, FALSE);
+	KeReleaseSemaphore(&Port->OtherPort->Semaphore, IO_NO_INCREMENT, 1, 
+			   FALSE);
 	
 	if (!NT_SUCCESS(Status))
 	  {
@@ -208,16 +210,18 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
 				  Timeout);
    if( Status == STATUS_TIMEOUT )
      {
-       // if the port is disconnected, and there are no remaining messages,
-       // return STATUS_PORT_DISCONNECTED
-       ObDereferenceObject( Port );
-       return Disconnected ? STATUS_PORT_DISCONNECTED : STATUS_TIMEOUT;
+       /*
+	* if the port is disconnected, and there are no remaining messages,
+        * return STATUS_PORT_DISCONNECTED
+	*/
+       ObDereferenceObject(Port);
+       return(Disconnected ? STATUS_PORT_DISCONNECTED : STATUS_TIMEOUT);
      }
    
    if (!NT_SUCCESS(Status))
      {
        DPRINT1("NtReplyWaitReceivePortEx() = %x\n", Status);
-       ObDereferenceObject( Port );
+       ObDereferenceObject(Port);
        return(Status);
      }
 
@@ -227,14 +231,34 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
    KeAcquireSpinLock(&Port->Lock, &oldIrql);
    Request = EiDequeueMessagePort(Port);
    
-   assert( Request );
-   Status = MmCopyToCaller(LpcMessage, &Request->Message,
-			   Request->Message.MessageSize);
+   if (Request->Message.MessageType == LPC_CONNECTION_REQUEST)
+     {
+       LPC_MESSAGE_HEADER Header;
+       PEPORT_CONNECT_REQUEST_MESSAGE CRequest;
+
+       CRequest = (PEPORT_CONNECT_REQUEST_MESSAGE)&Request->Message;
+       memcpy(&Header, &Request->Message, sizeof(LPC_MESSAGE_HEADER));
+       Header.DataSize = CRequest->ConnectDataLength;
+       Header.MessageSize = Header.DataSize + sizeof(LPC_MESSAGE_HEADER);
+       Status = MmCopyToCaller(LpcMessage, &Header, sizeof(LPC_MESSAGE));
+       if (!NT_SUCCESS(Status))
+	 {
+	   Status = MmCopyToCaller((PVOID)(LpcMessage + 1),
+				   CRequest->ConnectData,
+				   CRequest->ConnectDataLength);
+	 }
+     }
+   else
+     {
+       Status = MmCopyToCaller(LpcMessage, &Request->Message,
+			       Request->Message.MessageSize);
+     }
    if (!NT_SUCCESS(Status))
      {
        /*
 	* Copying the message to the caller's buffer failed so 
 	* undo what we did and return.
+	* FIXME: Also increment semaphore.
 	*/
        EiEnqueueMessageAtHeadPort(Port, Request);
        KeReleaseSpinLock(&Port->Lock, oldIrql);
@@ -284,13 +308,11 @@ NtReplyWaitReceivePort (IN  HANDLE		PortHandle,
 			IN  PLPC_MESSAGE	LpcReply,     
 			OUT PLPC_MESSAGE	LpcMessage)
 {
-	return NtReplyWaitReceivePortEx (
-			PortHandle,
-			PortId,
-			LpcReply,
-			LpcMessage,
-			NULL
-			);
+  return(NtReplyWaitReceivePortEx (PortHandle,
+				   PortId,
+				   LpcReply,
+				   LpcMessage,
+				   NULL));
 }
 
 /**********************************************************************

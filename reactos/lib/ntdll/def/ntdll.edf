@@ -1,10 +1,12 @@
-; $Id: ntdll.edf,v 1.70 2001/11/21 22:31:18 ekohl Exp $
+; $Id: ntdll.edf,v 1.71 2001/12/02 23:34:41 dwelch Exp $
 ;
 ; ReactOS Operating System
 ;
 LIBRARY ntdll.dll
 
 EXPORTS
+CsrCaptureParameterBuffer=CsrCaptureParameterBuffer@16
+CsrReleaseParameterBuffer=CsrReleaseParameterBuffer@4
 CsrAllocateCaptureBuffer=CsrAllocateCaptureBuffer@12
 CsrAllocateCapturePointer=CsrAllocateCapturePointer@12
 CsrAllocateMessagePointer=CsrAllocateMessagePointer@12

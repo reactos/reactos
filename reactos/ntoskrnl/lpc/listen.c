@@ -1,4 +1,4 @@
-/* $Id: listen.c,v 1.2 2000/10/22 16:36:51 ekohl Exp $
+/* $Id: listen.c,v 1.3 2001/12/02 23:34:42 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -9,7 +9,7 @@
  *                  Created 22/05/98
  */
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES ******************************************************************/
 
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
@@ -19,6 +19,7 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+/* FUNCTIONS *****************************************************************/
 
 /**********************************************************************
  * NAME							EXPORTED
@@ -43,42 +44,35 @@
  * NOTE
  * 	
  */
-EXPORTED
-NTSTATUS
-STDCALL
-NtListenPort (
-	IN	HANDLE		PortHandle,
-	IN	PLPC_MESSAGE	ConnectMsg
-	)
+EXPORTED NTSTATUS STDCALL
+NtListenPort (IN	HANDLE		PortHandle,
+	      IN	PLPC_MESSAGE	ConnectMsg)
 {
-	NTSTATUS	Status;
-
-	/*
-	 * Wait forever for a connection request.
-	 */
-	for (;;)
+  NTSTATUS	Status;
+  
+  /*
+   * Wait forever for a connection request.
+   */
+  for (;;)
+    {
+      Status = NtReplyWaitReceivePort(PortHandle,
+				      NULL,
+				      NULL,
+				      ConnectMsg);
+      /*
+       * Accept only LPC_CONNECTION_REQUEST requests.
+       * Drop any other message.
+       */
+      if (!NT_SUCCESS(Status) || 
+	  LPC_CONNECTION_REQUEST == ConnectMsg->MessageType)
 	{
-		Status = NtReplyWaitReceivePort (
-				PortHandle,
-				NULL,
-				NULL,
-				ConnectMsg
-				);
-		/*
-		 * Accept only LPC_CONNECTION_REQUEST requests.
-		 * Drop any other message.
-		 */
-		if (	!NT_SUCCESS(Status)
-			|| (LPC_CONNECTION_REQUEST == ConnectMsg->MessageType)
-			)
-		{
-			DPRINT("Got message (type %x)\n", LPC_CONNECTION_REQUEST);
-			break;
-		}
-		DPRINT("Got message (type %x)\n", ConnectMsg->MessageType);
+	  DPRINT("Got message (type %x)\n", LPC_CONNECTION_REQUEST);
+	  break;
 	}
-
-	return (Status);
+      DPRINT("Got message (type %x)\n", ConnectMsg->MessageType);
+    }
+  
+  return (Status);
 }
 
 

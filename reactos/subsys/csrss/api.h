@@ -74,11 +74,13 @@ typedef struct CSRSS_CONSOLE_t
 
 typedef struct
 {
-   PCSRSS_CONSOLE Console;
-   ULONG HandleTableSize;
-   Object_t ** HandleTable;
-   ULONG ProcessId;
-   HANDLE ConsoleEvent;
+  PCSRSS_CONSOLE Console;
+  ULONG HandleTableSize;
+  Object_t ** HandleTable;
+  ULONG ProcessId;
+  HANDLE ConsoleEvent;
+  PVOID CsrSectionViewBase;
+  ULONG CsrSectionViewSize;
 } CSRSS_PROCESS_DATA, *PCSRSS_PROCESS_DATA;
 
 #define CSR_API(n) NTSTATUS n (\

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.66 2001/11/13 22:46:49 ekohl Exp $
+/* $Id: section.c,v 1.67 2001/12/02 23:34:42 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -376,7 +376,6 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    ULONG Entry1;
    ULONG Attributes;
    PMM_PAGEOP PageOp;
-   PVOID NewAddress;
    
    /*
     * There is a window between taking the page fault and locking the
@@ -525,7 +524,8 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    /*
     * Map anonymous memory for BSS sections
     */
-   if (Segment->Characteristics & IMAGE_SECTION_CHAR_BSS)
+   if (Segment->Characteristics & IMAGE_SECTION_CHAR_BSS ||
+       Segment->Flags & MM_PAGEFILE_SECTION)
      {
        Page = MmAllocPage(0);
        while (Page == NULL)
@@ -539,11 +539,6 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	    MmLockSectionSegment(Segment);
 	    Page = MmAllocPage(0);
 	 }
-
-       // clear the page	
-       NewAddress = ExAllocatePageWithPhysPage((ULONG)Page);
-       memset(NewAddress, 0, PAGESIZE);
-       ExUnmapPage(NewAddress);
 
        Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
 				       Address,
@@ -1713,6 +1708,7 @@ MmMapViewOfSegment(PEPROCESS Process,
   PMEMORY_AREA MArea;
   NTSTATUS Status;
   KIRQL oldIrql;
+
   MmLockAddressSpace(&Process->AddressSpace);
   Status = MmCreateMemoryArea(Process,
 			      &Process->AddressSpace,

@@ -1,4 +1,4 @@
-/* $Id: port.c,v 1.6 2001/06/23 19:13:33 phreak Exp $
+/* $Id: port.c,v 1.7 2001/12/02 23:34:42 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -85,23 +85,20 @@ NTSTATUS NiInitPort (VOID)
  *	STATUS_SUCCESS if initialization succedeed. An error code
  *	otherwise.
  */
-NTSTATUS
-STDCALL
-NiInitializePort (
-	IN OUT	PEPORT	Port
-	)
+NTSTATUS STDCALL
+NiInitializePort (IN OUT	PEPORT	Port)
 {
-	memset (Port, 0, sizeof(EPORT));
-	KeInitializeSpinLock (& Port->Lock);
-	KeInitializeSemaphore( &Port->Semaphore, 0, LONG_MAX );
-	Port->OtherPort = NULL;
-	Port->QueueLength = 0;
-	Port->ConnectQueueLength = 0;
-	Port->State = EPORT_INACTIVE;
-	InitializeListHead (& Port->QueueListHead);
-	InitializeListHead (& Port->ConnectQueueListHead);
+  memset (Port, 0, sizeof(EPORT));
+  KeInitializeSpinLock (& Port->Lock);
+  KeInitializeSemaphore( &Port->Semaphore, 0, LONG_MAX );
+  Port->OtherPort = NULL;
+  Port->QueueLength = 0;
+  Port->ConnectQueueLength = 0;
+  Port->State = EPORT_INACTIVE;
+  InitializeListHead (& Port->QueueListHead);
+  InitializeListHead (& Port->ConnectQueueListHead);
    
-	return (STATUS_SUCCESS);
+  return (STATUS_SUCCESS);
 }
 
 
@@ -121,14 +118,11 @@ NiInitializePort (
  * RETURN VALUE
  * 
  */
-NTSTATUS
-STDCALL
-NtImpersonateClientOfPort (
-	HANDLE		PortHandle,
-	PLPC_MESSAGE	ClientMessage
-	)
+NTSTATUS STDCALL
+NtImpersonateClientOfPort (HANDLE		PortHandle,
+			   PLPC_MESSAGE	ClientMessage)
 {
-	UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
 

@@ -11,6 +11,7 @@
 #define CSR_PRIORITY_CLASS_HIGH		(0x40)
 #define CSR_PRIORITY_CLASS_REALTIME	(0x80)
 
+#define CSR_CSRSS_SECTION_SIZE          (65536)
 
 typedef struct
 {
@@ -222,7 +223,7 @@ typedef struct
   COORD BufferSize;
   COORD BufferCoord;
   SMALL_RECT WriteRegion;
-  CHAR_INFO CharInfo[0];
+  CHAR_INFO* CharInfo;
 } CSRSS_WRITE_CONSOLE_OUTPUT_REQUEST, *PCSRSS_WRITE_CONSOLE_OUTPUT_REQUEST;
 
 typedef struct

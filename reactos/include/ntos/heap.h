@@ -19,6 +19,6 @@
 #define HEAP_ZERO_MEMORY	(8)
 #define HEAP_REALLOC_IN_PLACE_ONLY	(16)
 #define HEAP_GROWABLE (32)
-
+#define HEAP_NO_VALLOC (64)
 
 #endif /* __INCLUDE_HEAP_H */

@@ -1,4 +1,4 @@
-/* $Id: query.c,v 1.2 2000/10/22 16:36:51 ekohl Exp $
+/* $Id: query.c,v 1.3 2001/12/02 23:34:42 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -19,6 +19,7 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+/* FUNCTIONS *****************************************************************/
 
 /**********************************************************************
  * NAME							EXPORTED
@@ -41,38 +42,32 @@
  * 	P. Dabak reports that this system service seems to return
  * 	no information.
  */
-EXPORTED
-NTSTATUS
-STDCALL
-NtQueryInformationPort (
-	IN	HANDLE	PortHandle,
-	IN	CINT	PortInformationClass,	
-	OUT	PVOID	PortInformation,    
-	IN	ULONG	PortInformationLength,
-	OUT	PULONG	ReturnLength
-	)
+EXPORTED NTSTATUS STDCALL
+NtQueryInformationPort (IN	HANDLE	PortHandle,
+			IN	CINT	PortInformationClass,	
+			OUT	PVOID	PortInformation,    
+			IN	ULONG	PortInformationLength,
+			OUT	PULONG	ReturnLength)
 {
-	NTSTATUS	Status;
-	PEPORT		Port;
-	
-	Status = ObReferenceObjectByHandle (
-			PortHandle,
-			PORT_ALL_ACCESS,   /* AccessRequired */
-			ExPortType,
-			UserMode,
-			(PVOID *) & Port,
-			NULL
-			);
-	if (!NT_SUCCESS(Status))
-	{
-		DPRINT("NtQueryInformationPort() = %x\n", Status);
-		return (Status);
-	}
-	/*
-	 * FIXME: NT does nothing here!
-	 */
-	ObDereferenceObject (Port);
-	return STATUS_SUCCESS;
+  NTSTATUS	Status;
+  PEPORT		Port;
+  
+  Status = ObReferenceObjectByHandle (PortHandle,
+				      PORT_ALL_ACCESS,   /* AccessRequired */
+				      ExPortType,
+				      UserMode,
+				      (PVOID *) & Port,
+				      NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("NtQueryInformationPort() = %x\n", Status);
+      return (Status);
+    }
+  /*
+   * FIXME: NT does nothing here!
+   */
+  ObDereferenceObject (Port);
+  return STATUS_SUCCESS;
 }
 
 
