@@ -359,6 +359,7 @@ static NTSTATUS getInterfaceInfoSet( HANDLE tcpFile,
                     ( tcpFile,
                       &entIDSet[i],
                       &infoSetInt[curInterf].if_info );
+		DPRINT("tdiGetMibForIfEntity: %08x\n", status);
                 if( NT_SUCCESS(status) ) {
                     DWORD numAddrs;
                     IPAddrEntry *addrs;
@@ -366,25 +367,22 @@ static NTSTATUS getInterfaceInfoSet( HANDLE tcpFile,
                     int j,k;
 
                     interfaceInfoComplete = FALSE;
-                    for( j = 0; NT_SUCCESS(status); j++ ) {
-                        status = getNthIpEntity( tcpFile, j, &ip_ent );
-                        if( NT_SUCCESS(status) )
-                            status = tdiGetIpAddrsForIpEntity
-                                ( tcpFile, &ip_ent, &addrs, &numAddrs );
-                        for( k = 0; k < numAddrs && NT_SUCCESS(status); k++ ) {
-                            if( addrs[k].iae_index == 
-                                infoSetInt[curInterf].if_info.ent.if_index ) {
-                                memcpy( &infoSetInt[curInterf].ip_addr,
-                                        &addrs[k],
-                                        sizeof( addrs[k] ) );
-                                interfaceInfoComplete = TRUE;
-                                break;
-                            }
-                        }
-                        if( interfaceInfoComplete ) break;
-                    }                       
+		    status = getNthIpEntity( tcpFile, 0, &ip_ent );
+		    if( NT_SUCCESS(status) )
+			status = tdiGetIpAddrsForIpEntity
+			    ( tcpFile, &ip_ent, &addrs, &numAddrs );
+		    for( k = 0; k < numAddrs && NT_SUCCESS(status); k++ ) {
+			DPRINT("ADDR %d: index %d (target %d)\n", k, addrs[k].iae_index, infoSetInt[curInterf].if_info.ent.if_index);
+			if( addrs[k].iae_index == 
+			    infoSetInt[curInterf].if_info.ent.if_index ) {
+			    memcpy( &infoSetInt[curInterf].ip_addr,
+				    &addrs[k],
+				    sizeof( addrs[k] ) );
+			    curInterf++;
+			    break;
+			}
+		    }
                 }
-                if( NT_SUCCESS(status) ) curInterf++;
             }
         }
     }
@@ -572,6 +570,11 @@ InterfaceIndexTable *getInterfaceIndexTableInt( BOOL nonLoopbackOnly ) {
   if( NT_SUCCESS(status) ) {
       status = getInterfaceInfoSet( tcpFile, &ifInfo, &numInterfaces );
 
+      DPRINT("InterfaceInfoSet: %08x, %04x:%08x\n", 
+	     status, 
+	     ifInfo->entity_id.tei_entity,
+	     ifInfo->entity_id.tei_instance);
+
       if( NT_SUCCESS(status) ) {
           ret = (InterfaceIndexTable *)
               calloc(1,
@@ -580,14 +583,17 @@ InterfaceIndexTable *getInterfaceIndexTableInt( BOOL nonLoopbackOnly ) {
           
           if (ret) {
               ret->numAllocated = numInterfaces;
+	      DPRINT("NumInterfaces = %d\n", numInterfaces);
           
               for( i = 0; i < numInterfaces; i++ ) {
+		  DPRINT("Examining interface %d\n", i);
                   if( !nonLoopbackOnly || 
                       !isLoopback( tcpFile, &ifInfo[i].entity_id ) ) {
+		      DPRINT("Interface %d matches (%d)\n", i, curInterface);
                       ret->indexes[curInterface++] = 
                           ifInfo[i].if_info.ent.if_index;
                   }
-              }
+              } 
 
               ret->numIndexes = curInterface;
           }
@@ -788,49 +794,4 @@ char *toIPAddressString(unsigned int addr, char string[16])
     string[16] = '\0';
   }
   return string;
-}
-
-DWORD createIpForwardEntryOS( PMIB_IPFORWARDROW pRoute ) {
-    HANDLE tcpFile = INVALID_HANDLE_VALUE;
-    NTSTATUS status = openTcpFile( &tcpFile );
-    TCP_REQUEST_SET_INFORMATION_EX_SAFELY_SIZED req = 
-        TCP_REQUEST_SET_INFORMATION_INIT;
-    IPRouteEntry *rte;
-    TDIEntityID   id;
-    DWORD         returnSize = 0;
-    
-    DPRINT("Called.\n");
-
-    if( NT_SUCCESS(status) )
-        status = getNthIpEntity( tcpFile, 0, &id );
-
-    if( NT_SUCCESS(status) ) {
-        req.Req.ID.toi_class                = INFO_CLASS_PROTOCOL;
-        req.Req.ID.toi_type                 = INFO_TYPE_PROVIDER;
-        req.Req.ID.toi_id                   = IP_MIB_ROUTETABLE_ENTRY_ID;
-        req.Req.ID.toi_entity               = id;
-        req.Req.BufferSize                  = sizeof(*rte);
-        rte                                 = 
-            (IPRouteEntry *)&req.Req.Buffer[0];
-
-        rte->ire_dest   = pRoute->dwForwardDest;
-        rte->ire_index  = pRoute->dwForwardIfIndex;
-        rte->ire_metric = pRoute->dwForwardMetric1;
-        rte->ire_gw     = pRoute->dwForwardNextHopAS;
-        rte->ire_mask   = pRoute->dwForwardMask;
-
-        status = DeviceIoControl( tcpFile,
-                                  IOCTL_TCP_SET_INFORMATION_EX,
-                                  &req,
-                                  sizeof(req),
-                                  NULL,
-                                  0,
-                                  &returnSize,
-                                  NULL );
-    }
-
-    if( tcpFile != INVALID_HANDLE_VALUE )
-        closeTcpFile( tcpFile );
-
-    return status;
 }

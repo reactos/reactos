@@ -15,7 +15,7 @@ C_SRCS = \
 	media.c \
 	registry.c \
 	resinfo_reactos.c \
-	route.c
+	route_reactos.c
 
 RC_SRCS = iphlpapi.rc
 RC_BINSRC = iphlpapi.rc

@@ -13,7 +13,7 @@
 
 /* ID to use for requesting the route table */
 #define IP_MIB_ROUTETABLE_ENTRY_ID  0x101
-#define IP_MIB_ADDRTABLE_ENTRY_ID 102
+#define IP_MIB_ADDRTABLE_ENTRY_ID   0x102
 
 typedef struct IFEntry {
 	ULONG			if_index;
@@ -41,20 +41,22 @@ typedef struct IFEntry {
 	UCHAR			if_descr[1];
 } IFEntry;
 
+// As in the mib from RFC 1213
+
 typedef struct _IPRouteEntry {
     ULONG ire_dest;
     ULONG ire_index;            //matches if_index in IFEntry and iae_index in IPAddrEntry
-    ULONG ire_metric;
-    ULONG ire_unk1;             //??
-    ULONG ire_unk2;             //??
-    ULONG ire_unk3;             //??
+    ULONG ire_metric1;
+    ULONG ire_metric2;
+    ULONG ire_metric3;
+    ULONG ire_metric4;
     ULONG ire_gw;
-    ULONG ire_unk4;             //??
-    ULONG ire_unk5;             //??
-    ULONG ire_unk6;             //??
+    ULONG ire_type; 
+    ULONG ire_proto;
+    ULONG ire_age; 
     ULONG ire_mask;
-    ULONG ire_unk7;             //??
-    ULONG ire_unk8;             //??
+    ULONG ire_metric5;
+    ULONG ire_info;
 } IPRouteEntry;
 
 typedef struct _IPAddrEntry {

@@ -116,4 +116,9 @@ BOOL WINAPI
 GetComputerNameExA(COMPUTER_NAME_FORMAT,LPSTR,LPDWORD);
 #endif
 
+#ifdef FORCE_DEBUG
+#undef DPRINT
+#define DPRINT(fmt,x...) DbgPrint("%s:%d:%s: " fmt, __FILE__, __LINE__, __FUNCTION__, ## x)
+#endif
+
 #endif/*IPPRIVATE_H*/

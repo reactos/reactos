@@ -446,6 +446,8 @@ RouteTable *getRouteTable(void)
     if( !NT_SUCCESS(status) )
         return 0;
 
+    DPRINT("GETTING ROUTE TABLE\n");
+
     out_route_table = HeapAlloc( GetProcessHeap(), 0, 
                                  sizeof(RouteTable) + 
                                  (sizeof(RouteEntry) * (numRoutes - 1)) );
@@ -487,13 +489,15 @@ RouteTable *getRouteTable(void)
             out_route_table->routes[routeNum].ifIndex =
                 route_set[j].ire_index;
             out_route_table->routes[routeNum].metric =
-                route_set[j].ire_metric;
+                route_set[j].ire_metric1;
         }
 
         if( route_set ) tdiFreeThingSet( route_set );
 
         routesAdded += snmpInfo.ipsi_numroutes;
     }
+
+    DPRINT("Return: %08x, %08x\n", status, out_route_table);
 
     return out_route_table;
 }
