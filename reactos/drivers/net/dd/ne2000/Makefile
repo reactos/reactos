@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.6 2000/11/20 19:59:12 ekohl Exp $
+# $Id: Makefile,v 1.7 2001/01/17 17:14:34 jean Exp $
 #
 #
 PATH_TO_TOP = ../../../..
@@ -65,9 +65,15 @@ $(TARGETNAME).sys: $(OBJECTS) $(TARGETNAME).def
 	$(NM) --numeric-sort $(TARGETNAME).sys > $(TARGETNAME).sym
 
 clean:
+	- $(RM) *.o
+	- $(RM) *.a
+	- $(RM) ne2000\*.o
+	- $(RM) objects\*.o
 	- $(RM) junk.tmp
 	- $(RM) base.tmp
 	- $(RM) temp.exp
+	- $(RM) $(TARGETNAME).coff
+	- $(RM) $(TARGETNAME).sym
 	- $(RM) $(TARGETNAME).sys
 
 .phony: clean
