@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.134 2004/07/23 20:03:25 chorns Exp $
+# $Id: Makefile,v 1.135 2004/08/02 15:04:24 navaraf Exp $
 #
 # ReactOS Operating System
 #
@@ -695,11 +695,12 @@ test:
 
 clean:
 	- $(RM) $(OBJECTS_PATH)/*.o cc/*.o cm/*.o dbg/*.o dbg/i386/*.o ex/*.o \
-              ex/i386/*.o inbv/*.o io/*.o ke/*.o ldr/*.o mm/*.o nt/*.o ob/*.o ps/*.o \
-              rtl/*.o rtl/i386/*.o se/*.o ke/i386/*.o mm/i386/*.o fs/*.o po/*.o \
-              lpc/*.o kd/*.o $(TARGETNAME).o junk.tmp base.tmp temp.exp \
-              $(TARGETNAME).exe $(TARGETNAME).nostrip.exe $(TARGETNAME).sym ntoskrnl.map \
-	          $(TARGETNAME).coff bugcodes.rc msg?????.bin $(DEP_FILES) \
+              ex/i386/*.o inbv/*.o io/*.o ke/*.o ldr/*.o mm/*.o nt/*.o ob/*.o \
+              ps/*.o ps/i386/*.o rtl/*.o rtl/i386/*.o se/*.o ke/i386/*.o \
+              mm/i386/*.o fs/*.o po/*.o lpc/*.o kd/*.o $(TARGETNAME).o \
+              junk.tmp base.tmp temp.exp $(TARGETNAME).exe \
+              $(TARGETNAME).nostrip.exe $(TARGETNAME).sym ntoskrnl.map \
+              $(TARGETNAME).coff bugcodes.rc msg?????.bin $(DEP_FILES) \
 	      $(TAG_OBJECTS) $(PATH_TO_TOP)/include/reactos/bugcodes.h
 
 

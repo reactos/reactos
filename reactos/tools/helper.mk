@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.72 2004/08/01 23:27:56 navaraf Exp $
+# $Id: helper.mk,v 1.73 2004/08/02 15:04:24 navaraf Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -51,8 +51,6 @@
 #   $TARGET_BOOTSTRAP_NAME = Name on the installation medium (optional)
 #   $TARGET_REGTESTS   = This module has regression tests (no,yes) (optional)
 #   $TARGET_BUILDENV_TEST = Build this test to be run in the build environment (no,yes) (optional)
-#   $WINE_MODE         = Compile using WINE headers (no,yes) (optional)
-#   $WINE_RC           = Name of .rc file for WINE modules (optional)
 #   $SUBDIRS           = Subdirs in which to run make (optional)
 
 include $(PATH_TO_TOP)/config
@@ -122,14 +120,8 @@ ifeq ($(TARGET_TYPE),program)
   MK_DEFENTRY := _DEFINE_TARGET_APPTYPE
   MK_DDKLIBS :=
   MK_SDKLIBS :=
-ifneq ($(WINE_MODE),yes)
   MK_CFLAGS := -I.
   MK_CPPFLAGS := -I.
-else
-  MK_CFLAGS := -I$(PATH_TO_TOP)/include/wine
-  MK_CPPFLAGS := -I$(PATH_TO_TOP)/include/wine
-  MK_RCFLAGS := --include-dir $(PATH_TO_TOP)/include/wine --include-dir $(WINE_INCLUDE)
-endif
   MK_IMPLIB := no
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH :=
@@ -137,11 +129,7 @@ endif
   MK_INSTALLDIR := bin
   MK_BOOTCDDIR := system32
   MK_DISTDIR := apps
-ifeq ($(WINE_RC),)
   MK_RES_BASE := $(TARGET_NAME)
-else
-  MK_RES_BASE := $(WINE_RC)
-endif
 endif
 
 ifeq ($(TARGET_TYPE),proglib)
@@ -170,14 +158,8 @@ ifeq ($(TARGET_TYPE),dynlink)
   MK_DEFENTRY := _DllMain@12
   MK_DDKLIBS :=
   MK_SDKLIBS :=
-ifneq ($(WINE_MODE),yes)
   MK_CFLAGS := -I.
   MK_CPPFLAGS := -I.
-else
-  MK_CFLAGS := -I$(PATH_TO_TOP)/include/wine -I. -I$(WINE_INCLUDE)
-  MK_CPPFLAGS := -I$(PATH_TO_TOP)/include/wine -I. -I$(WINE_INCLUDE)
-  MK_RCFLAGS := --include-dir $(PATH_TO_TOP)/include/wine --include-dir $(WINE_INCLUDE)
-endif
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH := $(SDK_PATH_LIB)
@@ -185,11 +167,7 @@ endif
   MK_INSTALLDIR := system32
   MK_BOOTCDDIR := system32
   MK_DISTDIR := dlls
-ifeq ($(WINE_RC),)
   MK_RES_BASE := $(TARGET_NAME)
-else
-  MK_RES_BASE := $(WINE_RC)
-endif
 endif
 
 ifeq ($(TARGET_TYPE),library)
@@ -223,6 +201,7 @@ ifeq ($(TARGET_TYPE),kmlibrary)
   MK_IMPLIBDEFPATH := $(DDK_PATH_LIB)
   #MK_IMPLIB_EXT :=
 endif
+
 ifeq ($(TARGET_TYPE),driver_library)
   MK_MODE := kernel
   MK_EXETYPE := dll
