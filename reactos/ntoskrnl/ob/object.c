@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.43 2002/02/22 13:35:50 ekohl Exp $
+/* $Id: object.c,v 1.44 2002/02/23 23:08:58 ekohl Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -238,6 +238,7 @@ ObCreateObject(PHANDLE Handle,
   POBJECT_HEADER Header;
   POBJECT_HEADER ParentHeader = NULL;
   NTSTATUS Status;
+  BOOLEAN ObjectAttached = FALSE;
 
   assert_irql(APC_LEVEL);
 
@@ -292,6 +293,7 @@ ObCreateObject(PHANDLE Handle,
       ObpAddEntryDirectory(Parent,
 			   Header,
 			   RemainingPath.Buffer+1);
+      ObjectAttached = TRUE;
     }
 
   if ((Header->ObjectType != NULL) &&
@@ -304,6 +306,10 @@ ObCreateObject(PHANDLE Handle,
 					  ObjectAttributes);
       if (!NT_SUCCESS(Status))
 	{
+	  if (ObjectAttached == TRUE)
+	    {
+	      ObpRemoveEntryDirectory(Header);
+	    }
 	  if (Parent)
 	    {
 	      ObDereferenceObject(Parent);
