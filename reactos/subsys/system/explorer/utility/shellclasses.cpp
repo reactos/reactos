@@ -84,6 +84,9 @@ void HandleException(COMException& e, HWND hwnd)
 
 	SetLastError(0);
 
+	if (hwnd && !IsWindowVisible(hwnd))
+		hwnd = 0;
+
 	MessageBox(hwnd, msg, TEXT("ShellClasses COM Exception"), MB_ICONHAND|MB_OK);
 
 	 // If displaying the error message box _with_ parent was not successfull, display it now without a parent window.
