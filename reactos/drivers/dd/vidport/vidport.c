@@ -1,4 +1,4 @@
-/* $Id: vidport.c,v 1.21 2002/02/08 02:57:09 chorns Exp $
+/* $Id: vidport.c,v 1.22 2002/02/12 12:00:28 jfilby Exp $
  *
  * VideoPort driver
  *   Written by Rex Jolliff
@@ -292,7 +292,7 @@ VideoPortInitialize(IN PVOID  Context1,
       DeviceNumber++;
     }
   while (Again);
-#if 0
+
   /* Find a process handle for csrss */
   Cid.UniqueProcess = (HANDLE)3;
   Cid.UniqueThread = 0;
@@ -319,9 +319,7 @@ VideoPortInitialize(IN PVOID  Context1,
 	  Csrss = NULL;
 	}
     }  
-#else
-  Csrss = NULL;
-#endif
+
   /* FIXME: initialize timer routine for MP Driver  */
   if (HwInitializationData->HwTimer != NULL)
     {
