@@ -136,8 +136,9 @@ InterlockedExchange(LPLONG target, LONG value )
                   "lock\n\txchgl %0,(%1)"
                   :"=r" (ret):"r" (target), "0" (value):"memory" );
 #elif defined(_M_PPC)
-        ret = *(volatile LONG *)target;
-        while( InterlockedCompareExchange( target, value, ret ) != ret );
+        do {
+            ret = *(volatile LONG *)target;
+        } while( InterlockedCompareExchange( target, value, ret ) != ret );
 #endif
 	return ret;
 }
