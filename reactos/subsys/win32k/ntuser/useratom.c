@@ -33,7 +33,7 @@ RTL_ATOM FASTCALL
 IntAddAtom(LPWSTR AtomName)
 {
    PWINSTATION_OBJECT WinStaObject;
-   NTSTATUS Status;
+   NTSTATUS Status = STATUS_SUCCESS;
    RTL_ATOM Atom;
    
    if (PsGetWin32Thread()->Desktop == NULL)
@@ -43,7 +43,7 @@ IntAddAtom(LPWSTR AtomName)
    }
    WinStaObject = PsGetWin32Thread()->Desktop->WindowStation;
    Status = RtlAddAtomToAtomTable(WinStaObject->AtomTable,
-      AtomName, &Atom);
+				  AtomName, &Atom);
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);      
@@ -56,7 +56,7 @@ ULONG FASTCALL
 IntGetAtomName(RTL_ATOM nAtom, LPWSTR lpBuffer, ULONG nSize)
 {
    PWINSTATION_OBJECT WinStaObject;
-   NTSTATUS Status;
+   NTSTATUS Status = STATUS_SUCCESS;
    ULONG Size = nSize;
 
    if (PsGetWin32Thread()->Desktop == NULL)
