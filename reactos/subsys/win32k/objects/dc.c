@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.40 2002/09/18 23:56:48 dwelch Exp $
+/* $Id: dc.c,v 1.41 2002/09/19 22:41:57 jfilby Exp $
  *
  * DC.C - Device context functions
  *
@@ -343,7 +343,7 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
 
   NewDC->w.hVisRgn = W32kCreateRectRgn(0, 0, 640, 480);
   W32kSetTextColor(hNewDC, RGB(0, 0, 0));
-  W32kSetTextAlign(hNewDC, TA_BASELINE);
+  W32kSetTextAlign(hNewDC, TA_TOP);
   DC_ReleasePtr( hNewDC );
 
   return hNewDC;
