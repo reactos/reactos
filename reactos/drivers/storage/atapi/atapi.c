@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.46 2004/02/29 12:27:52 hbirr Exp $
+/* $Id: atapi.c,v 1.47 2004/02/29 22:01:21 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -2439,10 +2439,15 @@ AtapiCompleteRequest(PATAPI_MINIPORT_EXTENSION DevExt,
   DPRINT("AtapiCompleteRequest(DevExt %x, SrbStatus %x)\n", DevExt, SrbStatus);
 
   Srb->SrbStatus = SrbStatus;
-  if (SrbStatus != SRB_STATUS_SUCCESS)
+  if (SrbStatus == SRB_STATUS_ERROR)
     {
       Srb->SrbStatus = AtapiErrorToScsi((PVOID)DevExt, Srb);
     }
+  else if (SrbStatus == SRB_STATUS_DATA_OVERRUN)
+    {
+      Srb->DataTransferLength -= DevExt->DataTransferLength;
+    }
+      
   DevExt->Handler = NULL;
   ScsiPortNotification(RequestComplete, (PVOID)DevExt, Srb);
   ScsiPortNotification(NextRequest, (PVOID)DevExt, NULL);
@@ -2494,7 +2499,7 @@ AtapiPacketInterrupt(PATAPI_MINIPORT_EXTENSION DevExt)
         {
 	  DPRINT1("AtapiPacketInterrupt: data underrun (%d bytes), command was %02x\n", 
 	          DevExt->DataTransferLength, Srb->Cdb[0]);
-	  SrbStatus = SRB_STATUS_ERROR;
+	  SrbStatus = SRB_STATUS_DATA_OVERRUN;
 	}
       else
         {
@@ -2558,7 +2563,6 @@ AtapiPacketInterrupt(PATAPI_MINIPORT_EXTENSION DevExt)
   else if (Srb->SrbFlags & SRB_FLAGS_DATA_OUT)
     {
       DPRINT("write data\n");
-      TransferSize = DevExt->TransferSize[Srb->TargetId];
       if (DevExt->DataTransferLength < TransferSize)
         {
 	  TransferSize = DevExt->DataTransferLength;
@@ -2566,7 +2570,7 @@ AtapiPacketInterrupt(PATAPI_MINIPORT_EXTENSION DevExt)
 
       TargetAddress = DevExt->DataBuffer;
 
-      DPRINT1("TargetAddress %x, TransferSize %x\n", TargetAddress, TransferSize);
+      DPRINT("TargetAddress %x, TransferSize %x\n", TargetAddress, TransferSize);
 
       DevExt->DataBuffer += TransferSize;
       DevExt->DataTransferLength -= TransferSize;
@@ -2595,13 +2599,13 @@ AtapiNoDataInterrupt(PATAPI_MINIPORT_EXTENSION DevExt)
 {
   BYTE Status;
 
-  DPRINT1("AtapiNoDataInterrupt()\n");
+  DPRINT("AtapiNoDataInterrupt()\n");
 
   Status = IDEReadStatus(DevExt->CommandPortBase);
   AtapiCompleteRequest(DevExt,
                        (Status & (IDE_SR_DRDY|IDE_SR_BUSY|IDE_SR_ERR|IDE_SR_DRQ)) == IDE_SR_DRDY ? SRB_STATUS_SUCCESS : SRB_STATUS_ERROR);
 
-  DPRINT1("AtapiNoDatanterrupt() done!\n");
+  DPRINT("AtapiNoDatanterrupt() done!\n");
   return TRUE;
 }
 
