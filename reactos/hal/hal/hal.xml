@@ -1,3 +1,5 @@
 <module name="hal" type="kernelmodedll">
 	<importlibrary basename="hal" definition="hal.def" />
+	<file>hal.c</file>
+	<file>hal.rc</file>
 </module>
