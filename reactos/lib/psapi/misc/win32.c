@@ -1,4 +1,4 @@
-/* $Id: win32.c,v 1.9 2003/06/01 14:59:02 chorns Exp $
+/* $Id: win32.c,v 1.10 2004/10/31 01:23:05 weiden Exp $
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -945,5 +945,47 @@ BOOL STDCALL GetModuleInformation(
   cb
  );
 }
+
+BOOL
+STDCALL
+InitializeProcessForWsWatch(HANDLE hProcess)
+{
+  NTSTATUS Status;
+
+  Status = NtSetInformationProcess(hProcess,
+                                   ProcessWorkingSetWatch,
+                                   NULL,
+                                   0);
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastError(RtlNtStatusToDosError(Status));
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+BOOL
+STDCALL
+GetWsChanges(HANDLE hProcess,
+             PPSAPI_WS_WATCH_INFORMATION lpWatchInfo,
+             DWORD cb)
+{
+  NTSTATUS Status;
+
+  Status = NtQueryInformationProcess(hProcess,
+                                     ProcessWorkingSetWatch,
+                                     (PVOID)lpWatchInfo,
+                                     cb,
+                                     NULL);
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastError(RtlNtStatusToDosError(Status));
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 /* EOF */
 
