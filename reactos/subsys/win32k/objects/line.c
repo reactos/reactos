@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: line.c,v 1.22 2003/08/26 12:28:53 weiden Exp $ */
+/* $Id: line.c,v 1.23 2003/08/28 19:41:37 gvg Exp $ */
 
 // Some code from the WINE project source (www.winehq.com)
 
@@ -466,9 +466,10 @@ NtGdiPolyPolyline(HDC            hDC,
 		ret = IntPolyline ( dc, pts, *pc );
 		if (ret == FALSE)
 		{
+		    DC_UnlockDc( hDC );
 			return ret;
 		}
-		(DWORD)pts+=(DWORD)pc++;
+		pts+=*pc++;
 	}
     DC_UnlockDc( hDC );
   }

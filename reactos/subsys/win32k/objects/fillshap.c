@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fillshap.c,v 1.29 2003/08/26 12:28:53 weiden Exp $ */
+/* $Id: fillshap.c,v 1.30 2003/08/28 19:41:37 gvg Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -271,9 +271,10 @@ NtGdiPolyPolygon(HDC            hDC,
 	    ret = IntPolygon ( dc, pt, *pc );
 		if (ret == FALSE)
 		{
+		    DC_UnlockDc ( hDC );
 			return ret;
 		}
-		(DWORD)pt+=(DWORD)pc++;
+		pt+=*pc++;
 	}
     DC_UnlockDc ( hDC );
   }
