@@ -407,6 +407,7 @@ LdrPEProcessDriver(PVOID ModuleLoadBase)
             ImportModuleDirectory->dwRVAModuleName;
           DPRINT("Import module: %s\n", pName);
           if (strcmp(pName, "ntoskrnl.exe") && 
+              strcmp(pName, "roskrnl.exe") && 
               strcmp(pName, "HAL.dll"))
             {
               DPRINT("Kernel mode DLLs are currently unsupported\n");
