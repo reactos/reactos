@@ -1,8 +1,31 @@
-/* $Id: cdrom.c,v 1.1 2002/01/31 15:00:00 ekohl Exp $
+/*
+ *  ReactOS kernel
+ *  Copyright (C) 2001, 2002 ReactOS Team
  *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: cdrom.c,v 1.2 2002/03/08 11:59:08 ekohl Exp $
+ *
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            services/storage/cdrom/cdrom.c
+ * PURPOSE:         cdrom class driver
+ * PROGRAMMER:      Eric Kohl (ekohl@rz-online.de)
  */
 
-//  -------------------------------------------------------------------------
+/* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
 
@@ -13,28 +36,51 @@
 //#define NDEBUG
 #include <debug.h>
 
-#define VERSION "V0.0.1"
+#define VERSION "0.0.1"
+
+
+typedef struct _CDROM_DATA
+{
+  ULONG Dummy;
+} CDROM_DATA, *PCDROM_DATA;
 
 
 
 BOOLEAN STDCALL
-CdromFindDevices(PDRIVER_OBJECT DriverObject,
-		 PUNICODE_STRING RegistryPath,
-		 PCLASS_INIT_DATA InitializationData,
-		 PDEVICE_OBJECT PortDeviceObject,
-		 ULONG PortNumber);
+CdromClassFindDevices(IN PDRIVER_OBJECT DriverObject,
+		      IN PUNICODE_STRING RegistryPath,
+		      IN PCLASS_INIT_DATA InitializationData,
+		      IN PDEVICE_OBJECT PortDeviceObject,
+		      IN ULONG PortNumber);
+
+BOOLEAN STDCALL
+CdromClassCheckDevice(IN PINQUIRYDATA InquiryData);
+
+NTSTATUS STDCALL
+CdromClassCheckReadWrite(IN PDEVICE_OBJECT DeviceObject,
+			 IN PIRP Irp);
+
+static NTSTATUS
+CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
+			     IN PUNICODE_STRING RegistryPath, /* what's this used for? */
+			     IN PDEVICE_OBJECT PortDeviceObject,
+			     IN ULONG PortNumber,
+			     IN ULONG DeviceNumber,
+			     IN PIO_SCSI_CAPABILITIES Capabilities,
+			     IN PSCSI_INQUIRY_DATA InquiryData,
+			     IN PCLASS_INIT_DATA InitializationData);
 
 
 NTSTATUS STDCALL
-CdromDeviceControl(IN PDEVICE_OBJECT DeviceObject,
-		   IN PIRP Irp);
+CdromClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
+			IN PIRP Irp);
 
 NTSTATUS STDCALL
-CdromShutdownFlush(IN PDEVICE_OBJECT DeviceObject,
-		   IN PIRP Irp);
+CdromClassShutdownFlush(IN PDEVICE_OBJECT DeviceObject,
+			IN PIRP Irp);
 
 
-
+/* FUNCTIONS ****************************************************************/
 
 //    DriverEntry
 //
@@ -67,16 +113,16 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 	 RegistryPath);
 
   InitData.InitializationDataSize = sizeof(CLASS_INIT_DATA);
-  InitData.DeviceExtensionSize = sizeof(DEVICE_EXTENSION);	// + sizeof(DISK_DATA)
+  InitData.DeviceExtensionSize = sizeof(DEVICE_EXTENSION) + sizeof(CDROM_DATA);
   InitData.DeviceType = FILE_DEVICE_CD_ROM;
   InitData.DeviceCharacteristics = 0;
 
-  InitData.ClassError = NULL;				// CdromProcessError;
-  InitData.ClassReadWriteVerification = NULL;		// CdromReadWriteVerification;
-  InitData.ClassFindDeviceCallBack = NULL;		// CdromDeviceVerification;
-  InitData.ClassFindDevices = CdromFindDevices;
-  InitData.ClassDeviceControl = CdromDeviceControl;
-  InitData.ClassShutdownFlush = CdromShutdownFlush;
+  InitData.ClassError = NULL;				// CdromClassProcessError;
+  InitData.ClassReadWriteVerification = CdromClassCheckReadWrite;
+  InitData.ClassFindDeviceCallBack = CdromClassCheckDevice;
+  InitData.ClassFindDevices = CdromClassFindDevices;
+  InitData.ClassDeviceControl = CdromClassDeviceControl;
+  InitData.ClassShutdownFlush = CdromClassShutdownFlush;
   InitData.ClassCreateClose = NULL;
   InitData.ClassStartIo = NULL;
 
@@ -86,7 +132,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 }
 
 
-//    CdromFindDevices
+//    CdromClassFindDevices
 //
 //  DESCRIPTION:
 //    This function searches for device that are attached to the given scsi port.
@@ -107,30 +153,31 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 //
 
 BOOLEAN STDCALL
-CdromFindDevices(PDRIVER_OBJECT DriverObject,
-		 PUNICODE_STRING RegistryPath,
-		 PCLASS_INIT_DATA InitializationData,
-		 PDEVICE_OBJECT PortDeviceObject,
-		 ULONG PortNumber)
+CdromClassFindDevices(IN PDRIVER_OBJECT DriverObject,
+		      IN PUNICODE_STRING RegistryPath,
+		      IN PCLASS_INIT_DATA InitializationData,
+		      IN PDEVICE_OBJECT PortDeviceObject,
+		      IN ULONG PortNumber)
 {
+  PCONFIGURATION_INFORMATION ConfigInfo;
   PIO_SCSI_CAPABILITIES PortCapabilities;
   PSCSI_ADAPTER_BUS_INFO AdapterBusInfo;
+  PSCSI_INQUIRY_DATA UnitInfo;
+  PINQUIRYDATA InquiryData;
   PCHAR Buffer;
-#if 0
+  ULONG Bus;
   ULONG DeviceCount;
-#endif
-  ULONG ScsiBus;
+  BOOLEAN FoundDevice;
   NTSTATUS Status;
-//  PCONFIGURATION_INFORMATION ConfigInfo;
 
-  DPRINT1("CdromFindDevices() called.\n");
+  DPRINT1("CdromClassFindDevices() called.\n");
 
   /* Get port capabilities */
   Status = ScsiClassGetCapabilities(PortDeviceObject,
 				    &PortCapabilities);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("ScsiClassGetCapabilities() failed! (Status 0x%lX)\n", Status);
+      DPRINT1("ScsiClassGetCapabilities() failed! (Status 0x%lX)\n", Status);
       return(FALSE);
     }
 
@@ -141,38 +188,64 @@ CdromFindDevices(PDRIVER_OBJECT DriverObject,
 				   (PSCSI_ADAPTER_BUS_INFO *)&Buffer);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("ScsiClassGetInquiryData() failed! (Status 0x%lX)\n", Status);
+      DPRINT1("ScsiClassGetInquiryData() failed! (Status 0x%lX)\n", Status);
       return(FALSE);
     }
 
   /* Check whether there are unclaimed devices */
   AdapterBusInfo = (PSCSI_ADAPTER_BUS_INFO)Buffer;
-#if 0
   DeviceCount = ScsiClassFindUnclaimedDevices(InitializationData,
 					      AdapterBusInfo);
   if (DeviceCount == 0)
     {
-      DPRINT("ScsiClassFindUnclaimedDevices() returned 0!");
+      DPRINT1("No unclaimed devices!\n");
       return(FALSE);
     }
-#endif
 
-//  ConfigInfo = IoGetConfigurationInformation();
-//  DPRINT1("Number of SCSI ports: %lu\n", ConfigInfo->ScsiPortCount);
+  DPRINT1("Found %lu unclaimed devices!\n", DeviceCount);
+
+  ConfigInfo = IoGetConfigurationInformation();
+  DPRINT1("Number of SCSI ports: %lu\n", ConfigInfo->ScsiPortCount);
 
   /* Search each bus of this adapter */
-  for (ScsiBus = 0; ScsiBus < (ULONG)AdapterBusInfo->NumberOfBuses; ScsiBus++)
+  for (Bus = 0; Bus < (ULONG)AdapterBusInfo->NumberOfBuses; Bus++)
     {
-      DPRINT("Searching bus %lu\n", ScsiBus);
-#if 0
-      lunInfo = (PVOID)(Buffer + adapterInfo->BusData[scsiBus].InquiryDataOffset);
+      DPRINT("Searching bus %lu\n", Bus);
 
+      UnitInfo = (PSCSI_INQUIRY_DATA)(Buffer + AdapterBusInfo->BusData[Bus].InquiryDataOffset);
 
-      while (AdapterBusInfo->BusData[ScsiBus].InquiryDataOffset)
+      while (AdapterBusInfo->BusData[Bus].InquiryDataOffset)
 	{
+	  InquiryData = (PINQUIRYDATA)UnitInfo->InquiryData;
 
+	  if ((InquiryData->DeviceType == READ_ONLY_DIRECT_ACCESS_DEVICE) &&
+	      (InquiryData->DeviceTypeQualifier == 0) &&
+	      (UnitInfo->DeviceClaimed == FALSE))
+	    {
+	      DPRINT("Vendor: '%.24s'\n",
+		     InquiryData->VendorId);
+
+	      /* Create device objects for disk */
+	      Status = CdromClassCreateDeviceObject(DriverObject,
+						    RegistryPath,
+						    PortDeviceObject,
+						    PortNumber,
+						    ConfigInfo->CDRomCount,
+						    PortCapabilities,
+						    UnitInfo,
+						    InitializationData);
+	      if (NT_SUCCESS(Status))
+		{
+		  ConfigInfo->CDRomCount++;
+		  FoundDevice = TRUE;
+		}
+	    }
+
+	  if (UnitInfo->NextInquiryDataOffset == 0)
+	    break;
+
+	  UnitInfo = (PSCSI_INQUIRY_DATA)(Buffer + UnitInfo->NextInquiryDataOffset);
 	}
-#endif
     }
 
   ExFreePool(Buffer);
@@ -182,7 +255,219 @@ CdromFindDevices(PDRIVER_OBJECT DriverObject,
 }
 
 
-//    CdromDeviceControl
+/**********************************************************************
+ * NAME							EXPORTED
+ *	CdromClassCheckDevice
+ *
+ * DESCRIPTION
+ *	This function checks the InquiryData for the correct device
+ *	type and qualifier.
+ *
+ * RUN LEVEL
+ *	PASSIVE_LEVEL
+ *
+ * ARGUMENTS
+ *	InquiryData
+ *		Pointer to the inquiry data for the device in question.
+ *
+ * RETURN VALUE
+ *	TRUE: A disk device was found.
+ *	FALSE: Otherwise.
+ */
+
+BOOLEAN STDCALL
+CdromClassCheckDevice(IN PINQUIRYDATA InquiryData)
+{
+  return((InquiryData->DeviceType == READ_ONLY_DIRECT_ACCESS_DEVICE) &&
+	 (InquiryData->DeviceTypeQualifier == 0));
+}
+
+
+/**********************************************************************
+ * NAME							EXPORTED
+ *	CdromClassCheckReadWrite
+ *
+ * DESCRIPTION
+ *	This function checks the given IRP for correct data.
+ *
+ * RUN LEVEL
+ *	PASSIVE_LEVEL
+ *
+ * ARGUMENTS
+ *	DeviceObject
+ *		Pointer to the device.
+ *
+ *	Irp
+ *		Irp to check.
+ *
+ * RETURN VALUE
+ *	STATUS_SUCCESS: The IRP matches the requirements of the given device.
+ *	Others: Failure.
+ */
+
+NTSTATUS STDCALL
+CdromClassCheckReadWrite(IN PDEVICE_OBJECT DeviceObject,
+			 IN PIRP Irp)
+{
+  DPRINT1("CdromClassCheckReadWrite() called\n");
+
+  return(STATUS_SUCCESS);
+}
+
+
+//    CdromClassCreateDeviceObject
+//
+//  DESCRIPTION:
+//    Create the raw device and any partition devices on this drive
+//
+//  RUN LEVEL:
+//    PASSIVE_LEVEL
+//
+//  ARGUMENTS:
+//    IN  PDRIVER_OBJECT  DriverObject  The system created driver object
+//    IN  PCONTROLLER_OBJECT         ControllerObject
+//    IN  PIDE_CONTROLLER_EXTENSION  ControllerExtension
+//                                      The IDE controller extension for
+//                                      this device
+//    IN  int             DriveIdx      The index of the drive on this
+//                                      controller
+//    IN  int             HarddiskIdx   The NT device number for this
+//                                      drive
+//
+//  RETURNS:
+//    TRUE   Drive exists and devices were created
+//    FALSE  no devices were created for this device
+//
+
+static NTSTATUS
+CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
+			     IN PUNICODE_STRING RegistryPath, /* what's this used for? */
+			     IN PDEVICE_OBJECT PortDeviceObject,
+			     IN ULONG PortNumber,
+			     IN ULONG DeviceNumber,
+			     IN PIO_SCSI_CAPABILITIES Capabilities,
+			     IN PSCSI_INQUIRY_DATA InquiryData,
+			     IN PCLASS_INIT_DATA InitializationData)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING UnicodeDeviceDirName;
+  CHAR NameBuffer[80];
+  PDEVICE_OBJECT DiskDeviceObject;
+  PDEVICE_EXTENSION DiskDeviceExtension; /* defined in class2.h */
+  HANDLE Handle;
+  PCDROM_DATA CdromData;
+  NTSTATUS Status;
+
+  DPRINT1("CdromClassCreateDeviceObject() called\n");
+
+  /* Claim the cdrom device */
+  Status = ScsiClassClaimDevice(PortDeviceObject,
+				InquiryData,
+				FALSE,
+				&PortDeviceObject);
+  if (!NT_SUCCESS(Status))
+    {
+      DbgPrint("Could not claim cdrom device\n");
+      return(Status);
+    }
+
+  /* Create cdrom device */
+  sprintf(NameBuffer,
+	  "\\Device\\CdRom%lu",
+	  DeviceNumber);
+
+  Status = ScsiClassCreateDeviceObject(DriverObject,
+				       NameBuffer,
+				       NULL,
+				       &DiskDeviceObject,
+				       InitializationData);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("ScsiClassCreateDeviceObject() failed (Status %x)\n", Status);
+
+      /* Release (unclaim) the disk */
+      ScsiClassClaimDevice(PortDeviceObject,
+			   InquiryData,
+			   TRUE,
+			   NULL);
+
+      return(Status);
+    }
+
+  DiskDeviceObject->Flags |= DO_DIRECT_IO;
+  DiskDeviceObject->Characteristics |= FILE_REMOVABLE_MEDIA;
+  DiskDeviceObject->StackSize = (CCHAR)PortDeviceObject->StackSize + 1;
+
+  if (PortDeviceObject->AlignmentRequirement > DiskDeviceObject->AlignmentRequirement)
+    {
+      DiskDeviceObject->AlignmentRequirement = PortDeviceObject->AlignmentRequirement;
+    }
+
+  DiskDeviceExtension = DiskDeviceObject->DeviceExtension;
+  DiskDeviceExtension->LockCount = 0;
+  DiskDeviceExtension->DeviceNumber = DeviceNumber;
+  DiskDeviceExtension->PortDeviceObject = PortDeviceObject;
+
+  /* FIXME: Not yet! Will cause pointer corruption! */
+//  DiskDeviceExtension->PortCapabilities = PortCapabilities;
+
+  DiskDeviceExtension->StartingOffset.QuadPart = 0;
+  DiskDeviceExtension->PortNumber = (UCHAR)PortNumber;
+  DiskDeviceExtension->PathId = InquiryData->PathId;
+  DiskDeviceExtension->TargetId = InquiryData->TargetId;
+  DiskDeviceExtension->Lun = InquiryData->Lun;
+
+  /* zero-out disk data */
+  CdromData = (PCDROM_DATA)(DiskDeviceExtension + 1);
+  RtlZeroMemory(CdromData,
+		sizeof(CDROM_DATA));
+
+#if 0
+  /* Get disk geometry */
+  DiskDeviceExtension->DiskGeometry = ExAllocatePool(NonPagedPool,
+						     sizeof(DISK_GEOMETRY));
+  if (DiskDeviceExtension->DiskGeometry == NULL)
+    {
+      DPRINT1("Failed to allocate geometry buffer!\n");
+
+      IoDeleteDevice(DiskDeviceObject);
+
+      /* Release (unclaim) the disk */
+      ScsiClassClaimDevice(PortDeviceObject,
+			   InquiryData,
+			   TRUE,
+			   NULL);
+
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
+
+  /* Read the drive's capacity */
+  Status = ScsiClassReadDriveCapacity(DiskDeviceObject);
+  if (!NT_SUCCESS(Status) &&
+      (DiskDeviceObject->Characteristics & FILE_REMOVABLE_MEDIA) == 0)
+    {
+      DPRINT1("Failed to retrieve drive capacity!\n");
+      return(STATUS_SUCCESS);
+    }
+  else
+    {
+      /* Clear the verify flag for non-removable media drives. */
+      DiskDeviceObject->Flags &= ~DO_VERIFY_VOLUME;
+    }
+
+  DPRINT1("SectorSize: %lu\n", DiskDeviceExtension->DiskGeometry->BytesPerSector);
+#endif
+
+
+
+  DPRINT1("CdromClassCreateDeviceObjects() done\n");
+
+  return(STATUS_SUCCESS);
+}
+
+
+
+//    CdromClassDeviceControl
 //
 //  DESCRIPTION:
 //    Answer requests for device control calls
@@ -198,10 +483,10 @@ CdromFindDevices(PDRIVER_OBJECT DriverObject,
 //
 
 NTSTATUS STDCALL
-CdromDeviceControl(IN PDEVICE_OBJECT DeviceObject,
-		   IN PIRP Irp)
+CdromClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
+			IN PIRP Irp)
 {
-  DPRINT("CdromDeviceControl() called!\n");
+  DPRINT("CdromClassDeviceControl() called!\n");
 
   Irp->IoStatus.Status = STATUS_SUCCESS;
   Irp->IoStatus.Information = 0;
@@ -211,7 +496,7 @@ CdromDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 }
 
 
-//    CdromShutdownFlush
+//    CdromClassShutdownFlush
 //
 //  DESCRIPTION:
 //    Answer requests for shutdown and flush calls
@@ -227,10 +512,10 @@ CdromDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 //
 
 NTSTATUS STDCALL
-CdromShutdownFlush(IN PDEVICE_OBJECT DeviceObject,
-		   IN PIRP Irp)
+CdromClassShutdownFlush(IN PDEVICE_OBJECT DeviceObject,
+			IN PIRP Irp)
 {
-  DPRINT("CdromShutdownFlush() called!\n");
+  DPRINT("CdromClassShutdownFlush() called!\n");
 
   Irp->IoStatus.Status = STATUS_SUCCESS;
   Irp->IoStatus.Information = 0;
