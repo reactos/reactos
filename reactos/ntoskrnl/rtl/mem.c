@@ -1,4 +1,4 @@
-/* $Id: mem.c,v 1.6 1999/11/09 18:03:39 ekohl Exp $
+/* $Id: mem.c,v 1.7 1999/12/01 15:22:49 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -22,7 +22,11 @@
 
 ULONG
 STDCALL
-RtlCompareMemory(PVOID Source1, PVOID Source2, ULONG Length)
+RtlCompareMemory (
+	PVOID	Source1,
+	PVOID	Source2,
+	ULONG	Length
+	)
 /*
  * FUNCTION: Compares blocks of memory and returns the number of equal bytes
  * ARGUMENTS:
@@ -33,7 +37,7 @@ RtlCompareMemory(PVOID Source1, PVOID Source2, ULONG Length)
  */
 {
    int i,total;
-   
+
    for (i=0,total=0;i<Length;i++)
      {
 	if ( ((PUCHAR)Source1)[i] == ((PUCHAR)Source2)[i] )
@@ -44,12 +48,46 @@ RtlCompareMemory(PVOID Source1, PVOID Source2, ULONG Length)
    return(total);
 }
 
+
+ULONG
+STDCALL
+RtlCompareMemoryUlong (
+	PVOID	Source,
+	ULONG	Length,
+	ULONG	Value
+	)
+/*
+ * FUNCTION: Compares a block of ULONGs with an ULONG and returns the number of equal bytes
+ * ARGUMENTS:
+ *      Source = Block to compare
+ *      Length = Number of bytes to compare
+ *      Value = Value to compare
+ * RETURNS: Number of equal bytes
+ */
+{
+	PULONG ptr = (PULONG)Source;
+	ULONG  len = Length / sizeof(ULONG);
+	int i;
+
+	for (i = 0; i < len; i++)
+	{
+		if (*ptr != Value)
+			break;
+		ptr++;
+	}
+
+	return (ULONG)((PCHAR)ptr - (PCHAR)Source);
+}
+
+
+#if 0
 VOID RtlCopyBytes(PVOID Destination,
 		  CONST VOID* Source,
 		  ULONG Length)
 {
    RtlCopyMemory(Destination,Source,Length);
 }
+#endif
 
 VOID RtlCopyMemory(VOID* Destination, CONST VOID* Source, ULONG Length)
 {
@@ -75,35 +113,20 @@ RtlFillMemory (
 VOID
 STDCALL
 RtlFillMemoryUlong (
-        PVOID   Destination,
-	ULONG	Length,
-        ULONG   Fill
-	)
-{
-   PULONG Dest  = Destination;
-   ULONG  Count = Length / 4;
-
-   while (Count > 0)
-   {
-       *Dest = Fill;
-       Dest++;
-       Count--;
-   }
-}
-
-
-VOID
-STDCALL
-RtlZeroMemory (
 	PVOID	Destination,
-	ULONG	Length
+	ULONG	Length,
+	ULONG	Fill
 	)
 {
-	RtlFillMemory (
-		Destination,
-		Length,
-		0
-		);
+	PULONG Dest  = Destination;
+	ULONG  Count = Length / sizeof(ULONG);
+
+	while (Count > 0)
+	{
+		*Dest = Fill;
+		Dest++;
+		Count--;
+	}
 }
 
 
@@ -122,5 +145,19 @@ RtlMoveMemory (
 		);
 }
 
+
+VOID
+STDCALL
+RtlZeroMemory (
+	PVOID	Destination,
+	ULONG	Length
+	)
+{
+	RtlFillMemory (
+		Destination,
+		Length,
+		0
+		);
+}
 
 /* EOF */
