@@ -219,12 +219,6 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
    }
 
    oldIrql = KeAcquireDispatcherDatabaseLock();
-
-#ifdef _ENABLE_THRDEVTPAIR
-   ExpSwapThreadEventPair(CurrentThread, NULL); /* Release the associated eventpair object, if there was one */
-#endif /* _ENABLE_THRDEVTPAIR */
-
-   ASSERT(CurrentThread->Tcb.WaitBlockList == NULL);
    
    PsDispatchThreadNoLock(THREAD_STATE_TERMINATED_1);
    DPRINT1("Unexpected return, CurrentThread %x PsGetCurrentThread() %x\n", CurrentThread, PsGetCurrentThread());
