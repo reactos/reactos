@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.30 2002/02/15 20:14:43 hbirr Exp $
+/* $Id: dc.c,v 1.31 2002/02/16 00:51:02 jfilby Exp $
  *
  * DC.C - Device context functions
  * 
@@ -19,7 +19,7 @@
 #include <win32k/text.h>
 #include "../eng/objects.h"
 
-// #define NDEBUG
+#define NDEBUG
 #include <win32k/debug1.h>
 
 /* FIXME: DCs should probably be thread safe  */
