@@ -29,6 +29,8 @@
 #define	PM_OPEN_WINDOW			(WM_APP+0x07)
 enum OPEN_WINDOW_MODE {OWM_EXPLORE=1, OWM_DETAILS=2, OWM_PIDL=4};
 
+#define	PM_JUMP_TO				(WM_APP+0x25)
+
 
  /// Explorer frame window
 struct MainFrame : public PreTranslateWindow
@@ -86,6 +88,7 @@ protected:
 	void	fullscreen_move();
 
 	void	FillBookmarks();
+	void	jump_to(LPCTSTR url);
 
 	HACCEL	_hAccel;
 	TCHAR	_drives[BUFFER_LEN];

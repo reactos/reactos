@@ -569,7 +569,7 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 		CONTEXT("ShellPath::ShellPath(IShellFolder*, LPCWSTR)");
 
 		if (path)
-			CHECKERROR(folder->ParseDisplayName(0, 0, (LPOLESTR)path, NULL, &_p, 0));
+			CHECKERROR(folder->ParseDisplayName(0, NULL, (LPOLESTR)path, NULL, &_p, NULL));
 		else
 			_p = NULL;
 	}
@@ -579,7 +579,7 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 		OBJ_CONTEXT("ShellPath::ShellPath(LPCWSTR)", path);
 
 		if (path)
-			CHECKERROR(GetDesktopFolder()->ParseDisplayName(0, 0, (LPOLESTR)path, NULL, &_p, 0));
+			CHECKERROR(GetDesktopFolder()->ParseDisplayName(0, NULL, (LPOLESTR)path, NULL, &_p, NULL));
 		else
 			_p = NULL;
 	}
@@ -592,7 +592,7 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 
 		if (path) {
 			MultiByteToWideChar(CP_ACP, 0, path, -1, b, MAX_PATH);
-			CHECKERROR(folder->ParseDisplayName(0, 0, b, NULL, &_p, 0));
+			CHECKERROR(folder->ParseDisplayName(0, NULL, b, NULL, &_p, NULL));
 		} else
 			_p = NULL;
 	}
@@ -605,7 +605,7 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 
 		if (path) {
 			MultiByteToWideChar(CP_ACP, 0, path, -1, b, MAX_PATH);
-			CHECKERROR(GetDesktopFolder()->ParseDisplayName(0, 0, b, NULL, &_p, 0));
+			CHECKERROR(GetDesktopFolder()->ParseDisplayName(0, NULL, b, NULL, &_p, NULL));
 		} else
 			_p = NULL;
 	}

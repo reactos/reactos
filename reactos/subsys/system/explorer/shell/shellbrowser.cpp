@@ -419,6 +419,13 @@ LRESULT ShellBrowserChild::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		}
 		return TRUE;}
 	
+	  case PM_JUMP_TO: {
+		LPCTSTR url = (LPCTSTR)lparam;
+
+		if (0)	///@todo
+			return TRUE;
+		break;}
+
 	  default:
 		return super::WndProc(nmsg, wparam, lparam);
 	}

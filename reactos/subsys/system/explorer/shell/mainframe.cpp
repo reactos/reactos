@@ -483,7 +483,11 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			path = buffer;
 		}
 
-		{
+		if (_tcsstr(path, TEXT("://"))) {	// "http://...", "ftp://", ...
+			OBJ_CONTEXT("create WebChild window", path);
+
+			return (LRESULT)GET_WINDOW(ChildWindow, create_webchildwindow(WebChildWndInfo(_hmdiclient, path)));
+		} else {
 			OBJ_CONTEXT("create ShellChildWndInfo", path);
 
 			 // Shell Namespace as default view
@@ -530,8 +534,9 @@ int MainFrame::Command(int id, int code)
 #ifndef _NO_MDI
 	HWND hwndClient = (HWND) SendMessage(_hmdiclient, WM_MDIGETACTIVE, 0, 0);
 
-	if (SendMessage(hwndClient, PM_DISPATCH_COMMAND, MAKELONG(id,code), 0))
-		return 0;
+	if (hwndClient)
+		if (SendMessage(hwndClient, PM_DISPATCH_COMMAND, MAKELONG(id,code), 0))
+			return 0;
 #endif
 
 	if (id>=ID_DRIVE_FIRST && id<=ID_DRIVE_FIRST+0xFF) {
@@ -790,6 +795,18 @@ int MainFrame::Notify(int id, NMHDR* pnmh)
 
 				lstrcpyn(pnmgit->pszText, txt.c_str(), pnmgit->cchTextMax);
 			}
+		}
+		break;}
+
+	  case NM_DBLCLK: {
+		HTREEITEM hitem = TreeView_GetSelection(_hsidebar);
+		LPARAM lparam = TreeView_GetItemData(_hsidebar, hitem);
+
+		if (lparam) {
+			const BookmarkNode& node = *(BookmarkNode*)lparam;
+
+			if (node._type == BookmarkNode::BMNT_BOOKMARK)
+				jump_to(node._pbookmark->_url);
 		}
 		break;}
 	}
@@ -1073,3 +1090,17 @@ void MainFrame::FillBookmarks()
 }
 
 #endif
+
+
+void MainFrame::jump_to(LPCTSTR url)
+{
+#ifndef _NO_MDI
+	HWND hwndClient = (HWND) SendMessage(_hmdiclient, WM_MDIGETACTIVE, 0, 0);
+
+	if (hwndClient)
+		if (SendMessage(hwndClient, PM_JUMP_TO, 0, (LPARAM)url))
+			return;
+#endif
+
+	CreateChild(url);	
+}
