@@ -1,4 +1,4 @@
-/* $Id: mcb.c,v 1.7 2003/04/20 09:07:12 ea Exp $
+/* $Id: mcb.c,v 1.8 2003/04/20 17:59:18 ea Exp $
  *
  * reactos/ntoskrnl/fs/mcb.c
  *
@@ -29,15 +29,17 @@ FsRtlAddLargeMcbEntry(IN PLARGE_MCB Mcb,
   return(FALSE);
 }
 
-
+/* FsRtlAddMcbEntry: Obsolete */
 BOOLEAN STDCALL
 FsRtlAddMcbEntry (IN PMCB     Mcb,
 		  IN VBN      Vbn,
 		  IN LBN      Lbn,
 		  IN ULONG    SectorCount)
 {
-  UNIMPLEMENTED
-  return(FALSE);
+  return FsRtlAddLargeMcbEntry(& Mcb->LargeMcb,
+			       (LONGLONG) Vbn,
+			       (LONGLONG) Lbn,
+			       (LONGLONG) SectorCount);
 }
 
 
@@ -60,8 +62,19 @@ FsRtlGetNextMcbEntry (IN PMCB     Mcb,
 		      OUT PLBN    Lbn,
 		      OUT PULONG  SectorCount)
 {
-  UNIMPLEMENTED
-  return(FALSE);
+  BOOLEAN  rc=FALSE;
+  LONGLONG llVbn;
+  LONGLONG llLbn;
+  LONGLONG llSectorCount;
+
+  // FIXME: how should conversion be done
+  // FIXME: between 32 and 64 bits?
+  rc=FsRtlGetNextLargeMcbEntry (& Mcb->LargeMcb,
+				RunIndex,
+				& llVbn,
+				& llLbn,
+				& llSectorCount);
+  return(rc);
 }
 
 
@@ -73,7 +86,7 @@ FsRtlInitializeLargeMcb(IN PLARGE_MCB Mcb,
   Mcb->PoolType = PoolType;
 }
 
-
+/* FsRtlInitializeMcb: Obsolete */
 VOID STDCALL
 FsRtlInitializeMcb (IN PMCB         Mcb,
 		    IN POOL_TYPE    PoolType)
@@ -136,11 +149,11 @@ FsRtlNumberOfRunsInLargeMcb(IN PLARGE_MCB Mcb)
 }
 
 
+/* FsRtlNumberOfRunsInMcb: Obsolete */
 ULONG STDCALL
 FsRtlNumberOfRunsInMcb (IN PMCB Mcb)
 {
-  UNIMPLEMENTED
-  return(0);
+  return FsRtlNumberOfRunsInLargeMcb(& Mcb->LargeMcb);
 }
 
 
@@ -180,11 +193,12 @@ FsRtlTruncateLargeMcb(IN PLARGE_MCB Mcb,
 }
 
 
+/* FsRtlTruncateMcb: Obsolete */
 VOID STDCALL
 FsRtlTruncateMcb (IN PMCB Mcb,
 		  IN VBN  Vbn)
 {
-  UNIMPLEMENTED
+  FsRtlTruncateLargeMcb (& Mcb->LargeMcb, (LONGLONG) Vbn);
 }
 
 
@@ -194,7 +208,7 @@ FsRtlUninitializeLargeMcb(IN PLARGE_MCB Mcb)
   UNIMPLEMENTED;
 }
 
-
+/* FsRtlUninitializeMcb: Obsolete */
 VOID STDCALL
 FsRtlUninitializeMcb (IN PMCB Mcb)
 {
