@@ -1,4 +1,4 @@
-/* $Id: cmd.h,v 1.18 1999/12/28 23:06:35 ekohl Exp $
+/* $Id: cmd.h,v 1.19 2000/02/01 18:29:11 paolopan Exp $
  *
  *  CMD.H - header file for the modules in CMD.EXE
  *
@@ -252,6 +252,7 @@ VOID History_move_to_bottom(VOID);/*F3*/
 VOID InitHistory(VOID);
 VOID CleanHistory(VOID);
 VOID History_del_current_entry(LPTSTR str);/*CTRL-D*/
+INT CommandHistory (LPTSTR cmd, LPTSTR param);
 #endif
 
 

@@ -115,6 +115,10 @@ COMMAND cmds[] =
 
 	{_T("goto"), CMD_BATCHONLY, cmd_goto},
 
+#ifdef FEATURE_HISTORY	
+	{_T("history"), 0, CommandHistory},
+#endif
+
 	{_T("if"), 0, cmd_if},
 
 #ifdef INCLUDE_CMD_LABEL

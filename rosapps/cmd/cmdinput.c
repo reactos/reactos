@@ -139,6 +139,7 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 	INPUT_RECORD ir;
 	WORD   wLastKey = 0;
 	TCHAR  ch;
+	BOOL bContinue=FALSE;/*is TRUE the second case will not be executed*/
 
 	/* get screen size */
 	GetScreenSize (&maxx, &maxy);
@@ -156,6 +157,57 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 	do
 	{
 		ConInKey (&ir);
+
+		if (ir.Event.KeyEvent.dwControlKeyState &
+			(RIGHT_ALT_PRESSED|RIGHT_ALT_PRESSED|
+			RIGHT_CTRL_PRESSED|LEFT_CTRL_PRESSED) )
+		{
+
+			switch (ir.Event.KeyEvent.wVirtualKeyCode)
+			{
+
+#ifdef FEATURE_HISTORY
+	
+				case 'K':
+					/*add the current command line to the history*/
+					if (ir.Event.KeyEvent.dwControlKeyState &
+						(LEFT_CTRL_PRESSED|RIGHT_CTRL_PRESSED))
+					{
+				
+						if (str[0])
+							History(0,str);
+
+						ClearCommandLine (str, maxlen, orgx, orgy);
+						current = charcount = 0;
+						bContinue=TRUE;
+						break;
+					}
+
+				case 'D':
+					/*delete current history entry*/
+					if (ir.Event.KeyEvent.dwControlKeyState &
+						(LEFT_CTRL_PRESSED|RIGHT_CTRL_PRESSED))
+					{
+						ClearCommandLine (str, maxlen, orgx, orgy);
+						History_del_current_entry(str);					
+						current = charcount = _tcslen (str);
+						ConOutPrintf (_T("%s"), str);
+						bContinue=TRUE;
+						break;
+					}
+
+#endif/*FEATURE_HISTORY*/
+			}
+
+
+			
+
+		}
+
+		//if (bContinue)
+		//	continue;
+
+
 
 		switch (ir.Event.KeyEvent.wVirtualKeyCode)
 		{
@@ -303,8 +355,8 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 				current = charcount = 0;
 				break;
 
-			case VK_F3:
 #ifdef FEATURE_HISTORY
+			case VK_F3:
 				History_move_to_bottom();
 #endif
 			case VK_UP:
@@ -359,8 +411,11 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 				}
 				break;
 
+#if 0
+
 #ifdef FEATURE_HISTORY
 			
+
 			/*!!!WARNING!!!*/
 				/*this will only work as long as the two if statement 
 				evaluates the same expression and a break is included
@@ -368,7 +423,6 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 				This can be used for any combination using CTRL.
 				For other combinations is needed another system*/
 	
-			//case VK_K:
 			case 'K':
 				/*add the current command line to the history*/
 				if (ir.Event.KeyEvent.dwControlKeyState &
@@ -394,7 +448,9 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 					break;
 				}
 
-#endif
+#endif/*FEATURE_HISTORY*/
+#endif/*0*/
+
 			default:
 #ifdef _UNICODE
 				ch = ir.Event.KeyEvent.uChar.UnicodeChar;
