@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.61 2003/10/11 17:51:56 hbirr Exp $
+/* $Id: rw.c,v 1.62 2003/10/12 01:13:23 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -456,7 +456,7 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
 {
    NTSTATUS Status;
    PVFATFCB Fcb;
-   ULONG Length;
+   ULONG Length = 0;
    ULONG ReturnedLength = 0;
    PERESOURCE Resource = NULL;
    LARGE_INTEGER ByteOffset;
@@ -697,7 +697,7 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
    LARGE_INTEGER ByteOffset;
    LARGE_INTEGER OldFileSize;
    NTSTATUS Status = STATUS_SUCCESS;
-   ULONG Length;
+   ULONG Length = 0;
    ULONG OldAllocationSize;
    PVOID Buffer;
    ULONG BytesPerSector;
