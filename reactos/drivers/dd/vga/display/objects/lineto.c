@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: lineto.c,v 1.14 2003/08/11 04:02:07 royce Exp $
+ * $Id: lineto.c,v 1.15 2003/08/11 04:23:37 royce Exp $
  */
 
 #include "../vgaddi.h"
@@ -41,7 +41,7 @@ vgaNWtoSE(PCLIPOBJ Clip, PBRUSHOBJ Brush, LONG x, LONG y, LONG deltax, LONG delt
   ClipRect = RectEnum.arcl;
   delta = max(deltax, deltay);
   i = 0;
-  error = 0;
+  error = delta/2;
   while (i < delta && (ClipRect < RectEnum.arcl + RectEnum.c || EnumMore))
     {
       while ((ClipRect < RectEnum.arcl + RectEnum.c /* there's still a current clip rect */
@@ -60,30 +60,30 @@ vgaNWtoSE(PCLIPOBJ Clip, PBRUSHOBJ Brush, LONG x, LONG y, LONG deltax, LONG delt
 	      ClipRect++;
 	    }
 	}
-      if (ClipRect < RectEnum.arcl + RectEnum.c) /* If there's no current clip rect we're done */
+      if ( ClipRect < RectEnum.arcl + RectEnum.c ) /* If there's no current clip rect we're done */
 	{
 	  if (ClipRect->left <= x && ClipRect->top <= y)
 	    {
-	      vgaPutPixel(x, y, Pixel);
+	      vgaPutPixel ( x, y, Pixel );
 	    }
-	  if (deltax < deltay)
+	  if ( deltax < deltay )
 	    {
 	      y++;
-	      error = error + deltax;
-	      if (deltay <= error)
+	      error += deltax;
+	      if ( error >= deltay )
 		{
 		  x++;
-		  error = error - deltay;
+		  error -= deltay;
 		}
 	    }
 	  else
 	    {
 	      x++;
-	      error = error + deltay;
-	      if (deltax <= error)
+	      error += deltay;
+	      if ( error >= deltax )
 		{
-	  	  y++;
-		  error = error - deltax;
+		  y++;
+		  error -= deltax;
 		}
 	    }
 	  i++;
@@ -107,7 +107,7 @@ vgaSWtoNE(PCLIPOBJ Clip, PBRUSHOBJ Brush, LONG x, LONG y, LONG deltax, LONG delt
   ClipRect = RectEnum.arcl;
   delta = max(deltax, deltay);
   i = 0;
-  error = 0;
+  error = delta/2;
   while (i < delta && (ClipRect < RectEnum.arcl + RectEnum.c || EnumMore))
     {
       while ((ClipRect < RectEnum.arcl + RectEnum.c
@@ -172,7 +172,7 @@ vgaNEtoSW(PCLIPOBJ Clip, PBRUSHOBJ Brush, LONG x, LONG y, LONG deltax, LONG delt
   ClipRect = RectEnum.arcl;
   delta = max(deltax, deltay);
   i = 0;
-  error = 0;
+  error = delta/2;
   while (i < delta && (ClipRect < RectEnum.arcl + RectEnum.c || EnumMore))
     {
       while ((ClipRect < RectEnum.arcl + RectEnum.c
@@ -237,7 +237,7 @@ vgaSEtoNW(PCLIPOBJ Clip, PBRUSHOBJ Brush, LONG x, LONG y, LONG deltax, LONG delt
   ClipRect = RectEnum.arcl;
   delta = max(deltax, deltay);
   i = 0;
-  error = 0;
+  error = delta/2;
   while (i < delta && (ClipRect < RectEnum.arcl + RectEnum.c || EnumMore))
     {
       while ((ClipRect < RectEnum.arcl + RectEnum.c
