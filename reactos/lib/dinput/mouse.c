@@ -869,7 +869,7 @@ static DWORD time=0;
     TRACE("(%p)->(dods=%ld,entries=%ld,fl=0x%08lx)\n",This,dodsize,*entries,flags);
     
 #ifdef __REACTOS__
-getmousesvalue(iface);
+if (flags == DIGDD_PEEK ) getmousesvalue(iface);
 #endif
 
 	// windows does not get any data if 
@@ -884,39 +884,101 @@ getmousesvalue(iface);
 	WARN(" application tries to get data from an unacquired device !\n");
 	return DIERR_NOTACQUIRED;
     }
-    
+
+   
+
 #ifdef __REACTOS__	
+     
+	if (dodsize == sizeof(DIDEVICEOBJECTDATA_DX3)) {
+	    
+
   FIXME("This is broken in Tribes, need right implant of the buffer!!!!!!!!\n"); 
 
-  *entries = 5;
-  if (GetTickCount()-time <50) return DI_OK;
+  
+  if (GetTickCount()-time <50) {
+	  return DI_OK;
+      }
   time = GetTickCount();
-   
+  if (*entries == 0) return DIERR_INVALIDPARAM;
+  
+
+  if (*entries == 1) {
   dod[0].dwOfs =   DIMOFS_X;
   dod[0].dwData =   This->m_state.lX;
-  dod[0].dwTimeStamp =  0;
-  dod[0].dwSequence = last_event++;
-   
+  dod[0].dwTimeStamp =  time +1; 
+  dod[0].dwSequence = last_event++;  
+  }
+  
+  if (*entries == 2) {
   dod[1].dwOfs =   DIMOFS_Y;
   dod[1].dwData =   This->m_state.lY;
-  dod[1].dwTimeStamp =  0;
+  dod[1].dwTimeStamp =  time +1;
   dod[1].dwSequence = last_event++;
-  
-  dod[2].dwOfs =   DIMOFS_BUTTON0;
-  dod[2].dwData =   This->m_state.rgbButtons[0];
-  dod[2].dwTimeStamp =  0;
-  dod[2].dwSequence = last_event++;
-  
-  dod[3].dwOfs =   DIMOFS_BUTTON1;
-  dod[3].dwData =   This->m_state.rgbButtons[1];
-  dod[3].dwTimeStamp =  0;
-  dod[3].dwSequence = last_event++;
-  
-  dod[4].dwOfs =   DIMOFS_BUTTON2;
-  dod[4].dwData =   This->m_state.rgbButtons[2];
-  dod[4].dwTimeStamp =  50;
-  dod[4].dwSequence = last_event++;
+  }
 
+  if (*entries == 3) {
+  dod[2].dwOfs =   DIMOFS_2;
+  dod[2].dwData =   This->m_state.lZ;
+  dod[2].dwTimeStamp =  time +1;
+  dod[2].dwSequence = last_event++;
+  }
+
+  if (*entries == 4) {
+  dod[3].dwOfs =   DIMOFS_BUTTON0;
+  dod[3].dwData =   This->m_state.rgbButtons[0];
+  dod[3].dwTimeStamp =  time +1;
+  dod[3].dwSequence = last_event++;
+  }
+
+  if (*entries == 5) {
+  dod[4].dwOfs =   DIMOFS_BUTTON1;
+  dod[4].dwData =   This->m_state.rgbButtons[1];
+  dod[4].dwTimeStamp =  time +1;
+  dod[4].dwSequence = last_event++;
+  }
+
+  if (*entries == 6) {
+  dod[5].dwOfs =   DIMOFS_BUTTON2;
+  dod[5].dwData =   This->m_state.rgbButtons[2];
+  dod[5].dwTimeStamp =  time +1;
+  dod[5].dwSequence = last_event++;
+  }
+
+  if (*entries == 7) {
+  dod[6].dwOfs =   DIMOFS_BUTTON3;
+  dod[6].dwData =   This->m_state.rgbButtons[3];
+  dod[6].dwTimeStamp =  time +1;
+  dod[6].dwSequence = last_event++;
+  }
+
+  if (*entries == 8) {
+  dod[7].dwOfs =   DIMOFS_BUTTON4;
+  dod[7].dwData =   This->m_state.rgbButtons[4];
+  dod[7].dwTimeStamp =  time +1;
+  dod[7].dwSequence = last_event++;
+  }
+
+  if (*entries == 9) {
+  dod[8].dwOfs =   DIMOFS_BUTTON5;
+  dod[8].dwData =   This->m_state.rgbButtons[5];
+  dod[8].dwTimeStamp =  time +1;
+  dod[8].dwSequence = last_event++;
+  }
+
+  if (*entries == 10) {
+  dod[9].dwOfs =   DIMOFS_BUTTON6;
+  dod[9].dwData =   This->m_state.rgbButtons[6];
+  dod[9].dwTimeStamp =  time +1;
+  dod[9].dwSequence = last_event++;
+  }
+
+  }
+
+	else {
+		ERR("Wrong structure size !\n");	   
+	    return DIERR_INVALIDPARAM;
+	}
+  //LeaveCriticalSection(&(This->crit));
 #endif
 
 #ifndef __REACTOS__
