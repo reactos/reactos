@@ -135,9 +135,11 @@ typedef struct _LPCMESSAGE
 #define SystemPerformanceInformation		2
 #define SystemInformation3			3
 #define SystemProcessInformation		5
+#define	SystemGlobalFlagInformation		9
 #define SystemDriverInformation			11
 #define SystemPageFileInformation		18
 #define SystemCacheInformation			21
+#define	SystemPoolTagStatsInformation		22
 #define SystemTimeAdjustmentInformation		28
 #define SystemTimeZoneInformation		44
 
@@ -312,26 +314,62 @@ typedef struct _OBJECT_TYPE_INFORMATION
 #pragma pack(2)
 typedef struct _SYSTEM_THREAD_INFORMATION
 {
-	PVOID	StartAddress;
-	DWORD	ParentPid;
-	DWORD	Tid;
+	FILETIME	ftCreationTime;
+	DWORD		dwUnknown1;
+	PVOID		dwStartAddress;
+	DWORD		dwOwningPID;
+	DWORD		dwThreadID;
+	DWORD		dwCurrentPriority;
+	DWORD		dwBasePriority;
+	DWORD		dwContextSwitches;
+	DWORD		dwThreadState;
+	DWORD		dwWaitReason;
+	DWORD		dwUnknown2 [ 5 ];
+	
 	
 } SYSTEM_THREAD_INFORMATION, * PSYSTEM_THREAD_INFORMATION;
 
 
 typedef struct _SYSTEM_PROCESS_INFORMATION
 {
-	WORD	Unknown0;
-	DWORD	Unknown1;
-	DWORD	Unknown2;
-	ULONG	ThreadCount;
-	DWORD	Unknown3 [10];
-	DWORD	Pid;
-	DWORD	Unknown4 [32];
-	WCHAR	ImageName [16]; /* always ImageName[15] == L'\0' */
+	DWORD				dwOffset;
+	DWORD				dwThreadCount;
+	DWORD 				dwUnknown1 [6];
+	FILETIME			ftCreationTime;
+	DWORD				dwUnknown2 [5];
+	WCHAR				* pszProcessName;
+	DWORD				dwBasePriority;
+	DWORD				dwProcessID;
+	DWORD				dwParentProcessID;
+	DWORD				dwHandleCount;
+	DWORD				dwUnknown3;
+	DWORD				dwUnknown4;
+	DWORD				dwVirtualBytesPeak;
+	DWORD				dwVirtualBytes;
+	DWORD				dwPageFaults;
+	DWORD				dwWorkingSetPeak;
+	DWORD				dwWorkingSet;
+	DWORD				dwUnknown5;
+	DWORD				dwPagedPool;
+	DWORD				dwUnknown6;
+	DWORD				dwNonPagedPool;
+	DWORD				dwPageFileBytesPeak;
+	DWORD				dwPrivateBytes;
+	DWORD				dwPageFileBytes;
+	DWORD				dwUnknown7 [4];
+	SYSTEM_THREAD_INFORMATION	Threads [1];
 
 } SYSTEM_PROCESS_INFORMATION, * PSYSTEM_PROCESS_INFORMATION;
 #endif
+
+
+typedef
+struct _SYSTEM_GLOBAL_FLAGS_INFO
+{
+	DWORD	GlobalFlags;
+
+} SYSTEM_GLOBAL_FLAGS_INFO, * PSYSTEM_GLOBAL_FLAGS_INFO;
+
 
 #if 0
 #pragma pack(4)
@@ -345,6 +383,7 @@ typedef struct _SYSTEM_DRIVER_INFO
 	CHAR  DriverName [256];
 
 } SYSTEM_DRIVER_INFO, * PSYSTEM_DRIVER_INFO;
+
 
 typedef struct _SYSTEM_DRIVERS_INFO
 {
@@ -397,6 +436,32 @@ typedef struct _SYSTEM_CACHE_INFORMATION
 	ULONG	MaximumWorkingSet;
 	ULONG	Unused[4];
 } SYSTEM_CACHE_INFORMATION;
+
+
+/* SYSTEM_POOL_ENTRY_INFO, SYSTEM_POOL_INFORMATION
+ * found by Klaus P. Gerlicher */
+typedef
+struct _SYSTEM_POOL_ENTRY_INFO
+{
+	ULONG	Tag;
+	ULONG	NP_Allocs;
+	ULONG	NP_Frees;
+	ULONG	NP_Used;
+	ULONG	P_Allocs;
+	ULONG	P_Frees;
+	ULONG	P_Used;
+
+} SYSTEM_POOL_ENTRY_INFO, * PSYSTEM_POOL_ENTRY_INFO;
+
+
+typedef
+struct _SYSTEM_POOL_INFORMATION
+{
+	ULONG			Count;
+	SYSTEM_POOL_ENTRY_INFO	PoolEntry [1];
+    
+} SYSTEM_POOL_INFORMATION, *PSYSTEM_POOL_INFORMATION;
+
 #endif
 
 // file information
