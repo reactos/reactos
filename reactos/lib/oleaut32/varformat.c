@@ -1310,12 +1310,10 @@ static HRESULT VARIANT_FormatNumber(LPVARIANT pVarIn, LPOLESTR lpszFormat,
     case FMT_NUM_YES_NO:
       boolFlag = VAR_BOOLYESNO;
       goto VARIANT_FormatNumber_Bool;
-      break;
 
     case FMT_NUM_ON_OFF:
       boolFlag = VAR_BOOLONOFF;
       goto VARIANT_FormatNumber_Bool;
-      break;
 
     case FMT_NUM_TRUE_FALSE:
       boolFlag = VAR_LOCALBOOL;
@@ -1452,7 +1450,6 @@ VARIANT_FormatNumber_Bool:
       ERR("Unknown token 0x%02x!\n", *pToken);
       hRes = E_INVALIDARG;
       goto VARIANT_FormatNumber_Exit;
-      break;
     }
     if (localeValue)
     {
@@ -1762,7 +1759,6 @@ static HRESULT VARIANT_FormatDate(LPVARIANT pVarIn, LPOLESTR lpszFormat,
       ERR("Unknown token 0x%02x!\n", *pToken);
       hRes = E_INVALIDARG;
       goto VARIANT_FormatDate_Exit;
-      break;
     }
     if (localeValue)
     {
@@ -1916,7 +1912,6 @@ static HRESULT VARIANT_FormatString(LPVARIANT pVarIn, LPOLESTR lpszFormat,
       ERR("Unknown token 0x%02x!\n", *pToken);
       hRes = E_INVALIDARG;
       goto VARIANT_FormatString_Exit;
-      break;
     }
     pToken++;
   }

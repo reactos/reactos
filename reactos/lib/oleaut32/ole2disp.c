@@ -33,7 +33,6 @@
 #include "winerror.h"
 
 #include "ole2disp.h"
-#include "olectl.h"
 
 #include "wine/debug.h"
 

@@ -154,7 +154,7 @@ static inline DWORD SAFEARRAY_GetHiddenDWORD(SAFEARRAY* psa)
 /* Get the number of cells in a SafeArray */
 static ULONG SAFEARRAY_GetCellCount(const SAFEARRAY *psa)
 {
-  SAFEARRAYBOUND* psab = psa->rgsabound;
+  const SAFEARRAYBOUND* psab = psa->rgsabound;
   USHORT cCount = psa->cDims;
   ULONG ulNumCells = 1;
 
