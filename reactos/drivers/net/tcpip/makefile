@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.15 2004/03/02 18:18:14 navaraf Exp $
+# $Id: makefile,v 1.16 2004/03/04 20:45:38 chorns Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -34,6 +34,7 @@ TCP_OBJECTS      = transport/tcp/tcp.o transport/tcp/tcpcore.o \
                    transport/tcp/tcp_input.o transport/tcp/tcp_ipv4.o \
                    transport/tcp/tcp_output.o transport/tcp/tcp_timer.o
 UDP_OBJECTS      = transport/udp/udp.o
+ARCH_OBJECTS     = tcpip/i386/checksum.o
 
 TARGET_OBJECTS = \
   $(TCPIP_OBJECTS) \
@@ -42,7 +43,8 @@ TARGET_OBJECTS = \
   $(DATAGRAM_OBJECTS) \
   $(RAWIP_OBJECTS) \
   $(TCP_OBJECTS) \
-  $(UDP_OBJECTS)
+  $(UDP_OBJECTS) \
+  $(ARCH_OBJECTS)
 
 include $(PATH_TO_TOP)/rules.mak
 

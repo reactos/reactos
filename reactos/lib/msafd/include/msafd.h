@@ -18,6 +18,13 @@
 #include <afd/shared.h>
 #include <debug.h>
 
+/*typedef _MSAFD_LISTEN_REQUEST
+{
+  LIST_ENTRY ListEntry;
+  HANDLE Socket;
+} MSAFD_LISTEN_REQUEST, *PMSAFD_LISTEN_REQUEST;*/
+
+
 extern HANDLE GlobalHeap;
 extern WSPUPCALLTABLE Upcalls;
 extern LPWPUCOMPLETEOVERLAPPEDREQUEST lpWPUCompleteOverlappedRequest;

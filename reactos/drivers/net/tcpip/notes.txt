@@ -1,0 +1,27 @@
+
+RFC 791 - Internet Protocol
+http://www.faqs.org/rfcs/rfc791.html
+
+RFC 792 - Internet Control Message Protocol
+http://www.faqs.org/rfcs/rfc792.html
+
+RFC 793 - Transmission Control Protocol
+http://www.faqs.org/rfcs/rfc793.html
+
+RFC 826 - Ethernet Address Resolution Protocol
+http://www.faqs.org/rfcs/rfc826.html
+
+RFC 1122 - Requirements for Internet Hosts - Communication Layers
+http://www.faqs.org/rfcs/rfc1122.html
+
+RFC 1123 - Requirements for Internet Hosts - Application and Support
+http://www.faqs.org/rfcs/rfc1123.html
+
+RFC 2398 - Some Testing Tools for TCP Implementors
+http://www.faqs.org/rfcs/rfc2398.html
+
+RFC 2525 - Known TCP Implementation Problems
+http://www.faqs.org/rfcs/rfc2525.html
+
+RFC 2581 - TCP Congestion Control
+http://www.faqs.org/rfcs/rfc2581.html

@@ -23,6 +23,9 @@ DWORD DebugTraceLevel = MIN_TRACE;
 /* To make the linker happy */
 VOID STDCALL KeBugCheck (ULONG	BugCheckCode) {}
 
+/* FIXME: Protect me */
+static LIST_ENTRY MsAfdListenRequests; /* Queue of listen reqests */
+
 
 HANDLE GlobalHeap;
 WSPUPCALLTABLE Upcalls;
@@ -358,6 +361,7 @@ WSPListen(
  *     0, or SOCKET_ERROR if the socket could not be bound
  */
 {
+  //PAFD_LISTEN_REQUEST MsafdRequest;
   FILE_REQUEST_LISTEN Request;
   FILE_REPLY_LISTEN Reply;
   IO_STATUS_BLOCK Iosb;
@@ -365,28 +369,38 @@ WSPListen(
 
   AFD_DbgPrint(MAX_TRACE, ("s (0x%X)  backlog (%d).\n", s, backlog));
 
+/*  MsafdRequest = (PMSAFD_LISTEN_REQUEST)HeapAlloc(
+    GlobalHeap, 0, sizeof(MSAFD_LISTEN_REQUEST));
+  if (MsafdRequest == NULL)
+  {
+      AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+      *lpErrno = WSAENOBUFS;
+      return SOCKET_ERROR;
+    }*/
+
   Request.Backlog = backlog;
 
   Status = NtDeviceIoControlFile(
     (HANDLE)s,
     NULL,
-		NULL,
-		NULL,
-		&Iosb,
-		IOCTL_AFD_LISTEN,
-		&Request,
-		sizeof(FILE_REQUEST_LISTEN),
-		&Reply,
-		sizeof(FILE_REPLY_LISTEN));
-  if (Status == STATUS_PENDING) {
-    AFD_DbgPrint(MAX_TRACE, ("Waiting on transport.\n"));
-    /* FIXME: Wait only for blocking sockets */
-		Status = NtWaitForSingleObject((HANDLE)s, FALSE, NULL);
-  }
-
-  if (!NT_SUCCESS(Status)) {
+	NULL,
+	NULL,
+	&Iosb,
+	IOCTL_AFD_LISTEN,
+	&Request,
+	sizeof(FILE_REQUEST_LISTEN),
+	&Reply,
+	sizeof(FILE_REPLY_LISTEN));
+  if (Status == STATUS_PENDING)
+    {
+      //AFD_DbgPrint(MAX_TRACE, ("Waiting on transport.\n"));
+      //InsertTailList(&MsAfdListenRequests, &MsafdRequest->ListEntry);
+    }
+  else if (!NT_SUCCESS(Status))
+    {
+      //HeapFree(GlobalHeap, 0, MsafdRequest);
 	  *lpErrno = Reply.Status;
-    return SOCKET_ERROR;
+      return SOCKET_ERROR;
 	}
 
   return 0;
@@ -841,9 +855,12 @@ WSPStartup(
  */
 {
   HMODULE hWS2_32;
-  INT Status;
+  NTSTATUS Status;
+  INT Error;
 
   AFD_DbgPrint(MAX_TRACE, ("wVersionRequested (0x%X) \n", wVersionRequested));
+
+  Status = NO_ERROR;
 
   EnterCriticalSection(&InitCriticalSection);
 
@@ -859,17 +876,22 @@ WSPStartup(
         lpWPUCompleteOverlappedRequest = (LPWPUCOMPLETEOVERLAPPEDREQUEST)
           GetProcAddress(hWS2_32, "WPUCompleteOverlappedRequest");
         if (lpWPUCompleteOverlappedRequest != NULL) {
-          Status = NO_ERROR;
           StartupCount++;
+        } else {
+          AFD_DbgPrint(MIN_TRACE, ("GetProcAddress() failed for WPUCompleteOverlappedRequest\n"));
+          CloseCommandChannel();
+          Error = WSASYSNOTREADY;
         }
       } else {
         AFD_DbgPrint(MIN_TRACE, ("GetModuleHandle() failed for ws2_32.dll\n"));
+        CloseCommandChannel();
+        Error = WSASYSNOTREADY;
       }
     } else {
       AFD_DbgPrint(MIN_TRACE, ("Cannot open afd.sys\n"));
+      Error = WSASYSNOTREADY;
     }
   } else {
-    Status = NO_ERROR;
     StartupCount++;
   }
 
@@ -968,6 +990,8 @@ DllMain(HANDLE hInstDll,
         DisableThreadLibraryCalls(hInstDll);
 
         InitializeCriticalSection(&InitCriticalSection);
+
+        InitializeListHead(&MsAfdListenRequests);
 
         GlobalHeap = GetProcessHeap();
 

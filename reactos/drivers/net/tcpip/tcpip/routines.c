@@ -480,6 +480,33 @@ UINT ResizePacket(
 
 #ifdef DBG
 
+static VOID DisplayIPHeader(
+    PUCHAR Header,
+    UINT Length)
+{
+    /* FIXME: IPv4 only */
+    PIPv4_HEADER IPHeader = (PIPv4_HEADER)Header;
+
+    DbgPrint("IPv4 header:\n");
+    DbgPrint("VerIHL: 0x%x (version 0x%x, length %d 32-bit words)\n",
+      IPHeader->VerIHL, (IPHeader->VerIHL & 0xF0) >> 4, IPHeader->VerIHL & 0x0F);
+    DbgPrint("  Tos: %d\n", IPHeader->Tos);
+    DbgPrint("  TotalLength: %d\n", WN2H(IPHeader->TotalLength));
+    DbgPrint("  Id: %d\n", WN2H(IPHeader->Id));
+    DbgPrint("  FlagsFragOfs: 0x%x (offset 0x%x)\n", WN2H(IPHeader->FlagsFragOfs), WN2H(IPHeader->FlagsFragOfs) & IPv4_FRAGOFS_MASK);
+    if ((WN2H(IPHeader->FlagsFragOfs) & IPv4_DF_MASK) > 0) DbgPrint("    IPv4_DF - Don't fragment\n");
+    if ((WN2H(IPHeader->FlagsFragOfs) & IPv4_MF_MASK) > 0) DbgPrint("    IPv4_MF - More fragments\n");
+    DbgPrint("  Ttl: %d\n", IPHeader->Ttl);
+    DbgPrint("  Protocol: %d\n", IPHeader->Protocol);
+    DbgPrint("  Checksum: 0x%x\n", WN2H(IPHeader->Checksum));
+    DbgPrint("  SrcAddr: %d.%d.%d.%d\n",
+      ((IPHeader->SrcAddr >> 0) & 0xFF), ((IPHeader->SrcAddr >> 8) & 0xFF),
+      ((IPHeader->SrcAddr >> 16) & 0xFF), ((IPHeader->SrcAddr >> 24) & 0xFF));
+    DbgPrint("  DstAddr: %d.%d.%d.%d\n",
+      ((IPHeader->DstAddr >> 0) & 0xFF), ((IPHeader->DstAddr >> 8) & 0xFF),
+      ((IPHeader->DstAddr >> 16) & 0xFF), ((IPHeader->DstAddr >> 24) & 0xFF));
+}
+
 VOID DisplayIPPacket(
     PIP_PACKET IPPacket)
 {
@@ -488,6 +515,7 @@ VOID DisplayIPPacket(
     UINT Length;
     PNDIS_BUFFER Buffer;
     PNDIS_BUFFER NextBuffer;
+    PUCHAR CharBuffer;
 
     if ((DebugTraceLevel & (DEBUG_BUFFER | DEBUG_IP)) != (DEBUG_BUFFER | DEBUG_IP)) {
         return;
@@ -528,6 +556,19 @@ VOID DisplayIPPacket(
         }
         DbgPrint("\n");
     }
+
+    if (IPPacket->NdisPacket) {
+        NdisQueryPacket(IPPacket->NdisPacket, NULL, NULL, NULL, &Length);
+        Length -= MaxLLHeaderSize;
+        CharBuffer = ExAllocatePool(NonPagedPool, Length);
+        Length = CopyPacketToBuffer(CharBuffer, IPPacket->NdisPacket, MaxLLHeaderSize, Length);
+        DisplayIPHeader(CharBuffer, Length);
+        ExFreePool(CharBuffer);
+    } else {
+        CharBuffer = IPPacket->Header;
+        Length = IPPacket->ContigSize;
+        DisplayIPHeader(CharBuffer, Length);
+    }
 }
 
 
@@ -537,32 +578,31 @@ static VOID DisplayTCPHeader(
 {
     /* FIXME: IPv4 only */
     PIPv4_HEADER IPHeader = (PIPv4_HEADER)Header;
-    PTCP_HEADER TCPHeader;
+    PTCPv4_HEADER TCPHeader;
 
     if (IPHeader->Protocol != IPPROTO_TCP) {
         DbgPrint("This is not a TCP datagram. Protocol is %d\n", IPHeader->Protocol);
         return;
     }
 
-    DbgPrint("VerIHL: 0x%x\n", IPHeader->VerIHL);
-    TCPHeader = (PTCP_HEADER)((PUCHAR)IPHeader + (IPHeader->VerIHL & 0x0F) * 4);
+    TCPHeader = (PTCPv4_HEADER)((PUCHAR)IPHeader + (IPHeader->VerIHL & 0x0F) * 4);
 
     DbgPrint("TCP header:\n");
     DbgPrint("  SourcePort: %d\n", WN2H(TCPHeader->SourcePort));
-    DbgPrint("  DestPort: %d\n", WN2H(TCPHeader->DestPort));
-    DbgPrint("  SeqNum: %d\n", WN2H(TCPHeader->SeqNum));
-    DbgPrint("  AckNum: %d\n", WN2H(TCPHeader->AckNum));
-    DbgPrint("  DataOfs: %d (%d)\n", TCPHeader->DataOfs, TCPHeader->DataOfs & 0x0F);
+    DbgPrint("  DestinationPort: %d\n", WN2H(TCPHeader->DestinationPort));
+    DbgPrint("  SequenceNumber: 0x%x\n", DN2H(TCPHeader->SequenceNumber));
+    DbgPrint("  AckNumber: 0x%x\n", DN2H(TCPHeader->AckNumber));
+    DbgPrint("  DataOffset: 0x%x (0x%x) 32-bit words\n", TCPHeader->DataOffset, TCPHeader->DataOffset >> 4);
     DbgPrint("  Flags: 0x%x (0x%x)\n", TCPHeader->Flags, TCPHeader->Flags & 0x3F);
     if ((TCPHeader->Flags & TCP_URG) > 0) DbgPrint("    TCP_URG - Urgent Pointer field significant\n");
-    if ((TCPHeader->Flags & TCP_ACK) > 0) DbgPrint("    TCP_ACK - Acknowledgment field significant\n");
+    if ((TCPHeader->Flags & TCP_ACK) > 0) DbgPrint("    TCP_ACK - Acknowledgement field significant\n");
     if ((TCPHeader->Flags & TCP_PSH) > 0) DbgPrint("    TCP_PSH - Push Function\n");
     if ((TCPHeader->Flags & TCP_RST) > 0) DbgPrint("    TCP_RST - Reset the connection\n");
     if ((TCPHeader->Flags & TCP_SYN) > 0) DbgPrint("    TCP_SYN - Synchronize sequence numbers\n");
     if ((TCPHeader->Flags & TCP_FIN) > 0) DbgPrint("    TCP_FIN - No more data from sender\n");
-    DbgPrint("  Window: %d\n", WN2H(TCPHeader->Window));
-    DbgPrint("  Checksum: %d\n", WN2H(TCPHeader->Checksum));
-    DbgPrint("  Urgent: %d\n", WN2H(TCPHeader->Urgent));
+    DbgPrint("  Window: 0x%x\n", WN2H(TCPHeader->Window));
+    DbgPrint("  Checksum: 0x%x\n", WN2H(TCPHeader->Checksum));
+    DbgPrint("  Urgent: 0x%x\n", WN2H(TCPHeader->Urgent));
 }
 
 
@@ -592,8 +632,9 @@ VOID DisplayTCPPacket(
 
     if (IPPacket->NdisPacket) {
         NdisQueryPacket(IPPacket->NdisPacket, NULL, NULL, NULL, &Length);
+        Length -= MaxLLHeaderSize;
         Buffer = ExAllocatePool(NonPagedPool, Length);
-        Length = CopyPacketToBuffer(Buffer, IPPacket->NdisPacket, 0, Length);
+        Length = CopyPacketToBuffer(Buffer, IPPacket->NdisPacket, MaxLLHeaderSize, Length);
         DisplayTCPHeader(Buffer, Length);
         ExFreePool(Buffer);
     } else {

@@ -182,7 +182,7 @@ VOID ICMPReceive(
     TI_DbgPrint(DEBUG_ICMP, ("Checksum (0x%X).\n", ICMPHeader->Checksum));
 
     /* Checksum ICMP header and data */
-    if (!CorrectChecksum(IPPacket->Data, IPPacket->TotalSize - IPPacket->HeaderSize)) {
+    if (!IPv4CorrectChecksum(IPPacket->Data, IPPacket->TotalSize - IPPacket->HeaderSize)) {
         TI_DbgPrint(DEBUG_ICMP, ("Bad ICMP checksum.\n"));
         /* Discard packet */
         return;

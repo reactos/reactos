@@ -529,8 +529,9 @@ NTSTATUS DispTdiListen(
   PTDI_REQUEST_KERNEL Parameters;
   PTRANSPORT_CONTEXT TranContext;
   PIO_STACK_LOCATION IrpSp;
-  TDI_REQUEST Request;
+  PTDI_REQUEST Request;
   NTSTATUS Status;
+  KIRQL OldIrql;
 
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
@@ -539,28 +540,51 @@ NTSTATUS DispTdiListen(
   /* Get associated connection endpoint file object. Quit if none exists */
 
   TranContext = IrpSp->FileObject->FsContext;
-  if (!TranContext) {
-    TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
-    return STATUS_INVALID_CONNECTION;
-  }
+  if (TranContext == NULL)
+    {
+      TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
+      return STATUS_INVALID_CONNECTION;
+    }
 
   Connection = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
-  if (!Connection) {
-    TI_DbgPrint(MID_TRACE, ("No connection endpoint file object.\n"));
-    return STATUS_INVALID_CONNECTION;
-  }
+  if (Connection == NULL)
+    {
+      TI_DbgPrint(MID_TRACE, ("No connection endpoint file object.\n"));
+      return STATUS_INVALID_CONNECTION;
+    }
 
   Parameters = (PTDI_REQUEST_KERNEL)&IrpSp->Parameters;
 
-  /* Initialize a connect request */
-  Request.Handle.ConnectionContext = TranContext->Handle.ConnectionContext;
-  Request.RequestNotifyObject      = DispDataRequestComplete;
-  Request.RequestContext           = Irp;
+  /* Initialize a listen request */
+  Request = (PTDI_REQUEST) ExAllocatePool(NonPagedPool, sizeof(TDI_REQUEST));
+  if (Request == NULL)
+    {
+      return STATUS_NO_MEMORY;
+    }
 
-  Status = TCPListen(
-    &Request,
-    Parameters->RequestConnectionInformation,
-    Parameters->ReturnConnectionInformation);
+  Status = DispPrepareIrpForCancel(TranContext, Irp, NULL);
+  if (NT_SUCCESS(Status))
+    {
+      Request->Handle.ConnectionContext = TranContext->Handle.ConnectionContext;
+      Request->RequestNotifyObject      = DispDataRequestComplete;
+      Request->RequestContext           = Irp;
+
+      Status = TCPListen(
+        Request,
+        Parameters->RequestConnectionInformation,
+        Parameters->ReturnConnectionInformation);
+      if (Status != STATUS_PENDING)
+        {
+          IoAcquireCancelSpinLock(&OldIrql);
+          IoSetCancelRoutine(Irp, NULL);
+          IoReleaseCancelSpinLock(OldIrql);
+        }
+    }
+
+  if (Status != STATUS_PENDING)
+    {
+      ExFreePool(Request);
+    }
 
   return Status;
 }

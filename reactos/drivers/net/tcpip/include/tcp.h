@@ -7,27 +7,26 @@
 #ifndef __TCP_H
 #define __TCP_H
 
-
 /* TCPv4 header structure */
-typedef struct TCP_HEADER {
-  USHORT SourcePort; /* Source port */
-  USHORT DestPort;   /* Destination port */
-  USHORT SeqNum;     /* Sequence number */
-  USHORT AckNum;     /* Acknowledgment number */
-  UCHAR  DataOfs;    /* Data offset (leftmost 4 bits) */
-  UCHAR  Flags;      /* Control bits (rightmost 6 bits) */
-  USHORT Window;     /* Maximum acceptable receive window */
-  USHORT Checksum;   /* Checksum of segment */
-  USHORT Urgent;     /* Pointer to urgent data */
-} __attribute__((packed)) TCP_HEADER, *PTCP_HEADER;
+typedef struct TCPv4_HEADER {
+  USHORT SourcePort;        /* Source port */
+  USHORT DestinationPort;   /* Destination port */
+  ULONG  SequenceNumber;    /* Sequence number */
+  ULONG  AckNumber;         /* Acknowledgement number */
+  UCHAR  DataOffset;        /* Data offset; 32-bit words (leftmost 4 bits) */
+  UCHAR  Flags;             /* Control bits (rightmost 6 bits) */
+  USHORT Window;            /* Maximum acceptable receive window */
+  USHORT Checksum;          /* Checksum of segment */
+  USHORT Urgent;            /* Pointer to urgent data */
+} __attribute__((packed)) TCPv4_HEADER, *PTCPv4_HEADER;
 
 /* TCPv4 header flags */
-#define TCP_URG   0x04
-#define TCP_ACK   0x08
-#define TCP_PSH   0x10
-#define TCP_RST   0x20
-#define TCP_SYN   0x40
-#define TCP_FIN   0x80
+#define TCP_URG   0x20
+#define TCP_ACK   0x10
+#define TCP_PSH   0x08
+#define TCP_RST   0x04
+#define TCP_SYN   0x02
+#define TCP_FIN   0x01
 
 
 #define TCPOPT_END_OF_LIST  0x0
@@ -38,13 +37,13 @@ typedef struct TCP_HEADER {
 
 
 /* TCPv4 pseudo header */
-typedef struct TCP_PSEUDO_HEADER {
-  ULONG SourceAddress; /* Source address */
-  ULONG DestAddress;   /* Destination address */
-  UCHAR Zero;          /* Reserved */
-  UCHAR Protocol;      /* Protocol */
-  USHORT TCPLength;    /* Size of TCP segment */
-} __attribute__((packed)) TCP_PSEUDO_HEADER, *PTCP_PSEUDO_HEADER;
+typedef struct TCPv4_PSEUDO_HEADER {
+  ULONG SourceAddress;      /* Source address */
+  ULONG DestinationAddress; /* Destination address */
+  UCHAR Zero;               /* Reserved */
+  UCHAR Protocol;           /* Protocol */
+  USHORT TCPLength;         /* Size of TCP segment */
+} __attribute__((packed)) TCPv4_PSEUDO_HEADER, *PTCPv4_PSEUDO_HEADER;
 
 
 /* Retransmission timeout constants */
@@ -71,6 +70,18 @@ typedef struct TCP_PSEUDO_HEADER {
 #define SRF_SYN   TCP_SYN
 #define SRF_FIN   TCP_FIN
 
+
+PTCP_SEGMENT TCPCreateSegment(
+  PIP_PACKET IPPacket,
+  ULONG SequenceNumber,
+  ULONG SegmentLength);
+
+VOID TCPFreeSegment(
+  PTCP_SEGMENT Segment);
+
+VOID TCPAddSegment(
+  PCONNECTION_ENDPOINT Connection,
+  PTCP_SEGMENT Segment);
 
 inline NTSTATUS TCPBuildSendRequest(
     PTCP_SEND_REQUEST *SendRequest,
@@ -113,5 +124,3 @@ NTSTATUS TCPShutdown(
   VOID);
 
 #endif /* __TCP_H */
-
-/* EOF */

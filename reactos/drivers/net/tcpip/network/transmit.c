@@ -104,13 +104,13 @@ NTSTATUS SendFragments(
         IPPacket, NCE, PathMTU));
 
     IFC = ExAllocatePool(NonPagedPool, sizeof(IPFRAGMENT_CONTEXT));
-    if (!IFC)
+    if (IFC == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
     /* We allocate a buffer for a PathMTU sized packet and reuse
        it for all fragments */
     Data = ExAllocatePool(NonPagedPool, MaxLLHeaderSize + PathMTU);
-    if (!IFC->Header) {
+    if (Data == NULL) {
         ExFreePool(IFC);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
@@ -118,7 +118,7 @@ NTSTATUS SendFragments(
     /* Allocate NDIS packet */
     NdisAllocatePacket(&NdisStatus, &IFC->NdisPacket, GlobalPacketPool);
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        //ExFreePool(Data); // RobD - why are we trying to free this here?, not allocated yet!
+        ExFreePool(Data);
         ExFreePool(IFC);
         return STATUS_INSUFFICIENT_RESOURCES;
     }

@@ -552,7 +552,7 @@ VOID IPv4Receive(
   }
 
   /* Checksum IPv4 header */
-  if (!CorrectChecksum(IPPacket->Header, IPPacket->HeaderSize)) {
+  if (!IPv4CorrectChecksum(IPPacket->Header, IPPacket->HeaderSize)) {
     TI_DbgPrint(MIN_TRACE, ("Datagram received with bad checksum. Checksum field (0x%X)\n",
       WN2H(((PIPv4_HEADER)IPPacket->Header)->Checksum)));
     /* Discard packet */

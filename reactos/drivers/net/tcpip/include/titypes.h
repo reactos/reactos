@@ -266,6 +266,8 @@ typedef struct _TCP_SEND_REQUEST {
   PVOID Context;                        /* Pointer to context information */
   PVOID ProtocolContext;                /* Protocol specific context */
   ULONG Flags;                          /* Protocol specific flags */
+  ULONG SequenceNumber;                 /* Sequence number (network byte order) */
+  ULONG AckNumber;                      /* Acknowledgement number (network byte order) */
 } TCP_SEND_REQUEST, *PTCP_SEND_REQUEST;
 
 #define InitializeTCPSendRequest( \
@@ -296,6 +298,15 @@ typedef enum {
 } CONNECTION_STATE, *PCONNECTION_STATE;
 
 
+/* Structure for an TCP segment */
+typedef struct _TCP_SEGMENT {
+  LIST_ENTRY ListEntry;
+  PIP_PACKET IPPacket;        /* Pointer to IP packet */
+  ULONG SequenceNumber;       /* Sequence number of first byte in segment */
+  ULONG Length;               /* Number of bytes in segment */
+} TCP_SEGMENT, *PTCP_SEGMENT;
+
+
 /* Transport connection context structure A.K.A. Transmission Control Block
    (TCB) in TCP terminology. The FileObject->FsContext2 field holds a pointer
    to this structure */
@@ -324,14 +335,21 @@ typedef struct _CONNECTION_ENDPOINT {
   ULONG SendISS;              /* Initial send sequence number */
 
   /* Receive sequence variables */
-  ULONG RecvNext;             /* Sequence number of last data block received */
-  ULONG RecvWindow;           /* Maximum allowed number of octets in a segment */
-  ULONG RecvUrgentPointer;    /* Sequence number of start of urgent data */
-  ULONG RecvIRS;              /* Initial receive sequence number */
+  ULONG ReceiveNext;          /* Sequence number of last data block received */
+  ULONG ReceiveWindow;        /* Maximum allowed number of octets in a segment */
+  ULONG ReceiveUrgentPointer; /* Sequence number of start of urgent data */
+  ULONG ReceiveIRS;           /* Initial receive sequence number */
 
   /* Statistics for computing the retransmission timeout */
   ULONG TimestampSend;        /* Timestamp when sending a segment */
   ULONG TimestampAck;         /* Timestamp when receiving acknowledgment */
+
+  /* Requests */
+  PTDI_REQUEST ListenRequest; /* Queued listen request */
+
+  /* Queues */
+  LIST_ENTRY ReceivedSegments;
+
 } CONNECTION_ENDPOINT, *PCONNECTION_ENDPOINT;
 
 

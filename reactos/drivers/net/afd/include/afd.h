@@ -75,7 +75,7 @@ typedef struct _AFDFCB {
     LIST_ENTRY          ListenRequestQueue;
     /* For WSAEventSelect() */
     WSANETWORKEVENTS    NetworkEvents;
-    WSAEVENT            EventObjects[FD_MAX_EVENTS];
+    PKEVENT             EventObject;
 } AFDFCB, *PAFDFCB;
 
 /* Socket states */
@@ -99,6 +99,8 @@ typedef struct _AFD_READ_REQUEST {
 typedef struct _AFD_LISTEN_REQUEST {
   LIST_ENTRY ListEntry;
   PAFDFCB Fcb;
+  PTDI_CONNECTION_INFORMATION RequestConnectionInfo;
+  IO_STATUS_BLOCK Iosb;
 } AFD_LISTEN_REQUEST, *PAFD_LISTEN_REQUEST;
 
 typedef struct IPSNMP_INFO {
@@ -363,7 +365,7 @@ NTSTATUS TdiAssociateAddressFile(
   PFILE_OBJECT ConnectionObject);
 
 NTSTATUS TdiListen(
-  PFILE_OBJECT ConnectionObject,
+  PAFD_LISTEN_REQUEST Request,
   PIO_COMPLETION_ROUTINE  CompletionRoutine,
   PVOID CompletionContext);
 

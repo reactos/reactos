@@ -61,6 +61,9 @@ BOOLEAN AddrIsEqualIPv4(
 PIP_ADDRESS AddrBuildIPv4(
     IPv4_RAW_ADDRESS Address);
 
+PIP_ADDRESS AddrCloneAddress(
+    PIP_ADDRESS Address);
+
 PADDRESS_ENTRY AddrLocateADEv4(
     IPv4_RAW_ADDRESS Address);
 

@@ -199,6 +199,7 @@ NTSTATUS TdiOpenAddressFileIPv4(
   EaInfo->EaValueLength = sizeof(TA_IP_ADDRESS);
   Address = (PTA_IP_ADDRESS)(EaInfo->EaName + TDI_TRANSPORT_ADDRESS_LENGTH + 1); /* 0-terminated */
   TdiBuildAddressIPv4(Address, Name);
+
   Status = TdiOpenDevice(DeviceName,
                          EaLength,
                          EaInfo,
@@ -414,13 +415,13 @@ NTSTATUS TdiAssociateAddressFile(
 
 
 NTSTATUS TdiListen(
-  PFILE_OBJECT ConnectionObject,
+  PAFD_LISTEN_REQUEST ListenRequest,
   PIO_COMPLETION_ROUTINE  CompletionRoutine,
   PVOID CompletionContext)
 /*
  * FUNCTION: Listen on a connection endpoint for a connection request from a remote peer
  * ARGUMENTS:
- *     ConnectionObject  = Pointer to connection endpoint file object
+ *     ListenRequest     = Pointer to listen request object
  *     CompletionRoutine = Routine to be called when IRP is completed
  *     CompletionContext = Context for CompletionRoutine
  * RETURNS:
@@ -428,35 +429,34 @@ NTSTATUS TdiListen(
  *     May return STATUS_PENDING
  */
 {
-  PTDI_CONNECTION_INFORMATION RequestConnectionInfo;
-  //PTDI_CONNECTION_INFORMATION ReturnConnectionInfo;
+  PFILE_OBJECT ConnectionObject;
   PDEVICE_OBJECT DeviceObject;
-  IO_STATUS_BLOCK Iosb;
   NTSTATUS Status;
-  KEVENT Event;
   PIRP Irp;
 
   AFD_DbgPrint(MAX_TRACE, ("Called\n"));
 
+  ConnectionObject = ListenRequest->Fcb->TdiConnectionObject;
   assert(ConnectionObject);
 
   DeviceObject = IoGetRelatedDeviceObject(ConnectionObject);
 
-  Status = TdiBuildNullConnectionInfo(&RequestConnectionInfo, TDI_ADDRESS_TYPE_IP);
+  Status = TdiBuildNullConnectionInfo(&ListenRequest->RequestConnectionInfo,
+    TDI_ADDRESS_TYPE_IP);
   if (!NT_SUCCESS(Status))
-     return Status;
-
-  KeInitializeEvent(&Event, NotificationEvent, FALSE);
+    return Status;
 
   Irp = TdiBuildInternalDeviceControlIrp(TDI_LISTEN,              /* Sub function */
                                          DeviceObject,            /* Device object */
                                          ConnectionObject,        /* File object */
-                                         &Event,                  /* Event */
-                                         &Iosb);                  /* Status */
-  if (!Irp) {
-    ExFreePool(RequestConnectionInfo);
-    return STATUS_INSUFFICIENT_RESOURCES;
-  }
+                                         NULL,                    /* Event */
+                                         &ListenRequest->Iosb);   /* Status */
+  if (Irp == NULL)
+    {
+      ExFreePool(ListenRequest->RequestConnectionInfo);
+	  ListenRequest->RequestConnectionInfo = NULL;
+      return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
   TdiBuildListen(Irp,                    /* IRP */
                  DeviceObject,           /* Device object */
@@ -464,13 +464,10 @@ NTSTATUS TdiListen(
                  CompletionRoutine,      /* Completion routine */
                  CompletionContext,      /* Completion routine context */
                  0,                      /* Flags */
-                 RequestConnectionInfo,  /* Request connection information */
+                 ListenRequest->RequestConnectionInfo,  /* Request connection information */
                  NULL /* ReturnConnectionInfo */);  /* Return connection information */
 
-  Status = TdiCall(Irp, DeviceObject, NULL /* Don't wait for completion */, &Iosb);
-
-  ExFreePool(RequestConnectionInfo);
-  //ExFreePool(ReturnConnectionInfo);
+  Status = TdiCall(Irp, DeviceObject, NULL /* Don't wait for completion */, &ListenRequest->Iosb);
 
   return Status;
 }

@@ -12,10 +12,22 @@
 #include <checksum.h>
 
 
+ULONG ChecksumFold(
+  ULONG Sum)
+{
+  /* Fold 32-bit sum to 16 bits */
+  while (Sum >> 16)
+    {
+      Sum = (Sum & 0xFFFF) + (Sum >> 16);
+    }
+
+  return Sum;
+}
+
 ULONG ChecksumCompute(
-    PVOID Data,
-    UINT Count,
-    ULONG Seed)
+  PVOID Data,
+  UINT Count,
+  ULONG Seed)
 /*
  * FUNCTION: Calculate checksum of a buffer
  * ARGUMENTS:
@@ -26,25 +38,20 @@ ULONG ChecksumCompute(
  *     Checksum of buffer
  */
 {
-    /* FIXME: This should be done in assembler */
+  register ULONG Sum = Seed;
 
-    register ULONG Sum = Seed;
-
-    while (Count > 1) {
-        Sum             += *(PUSHORT)Data;
-        Count           -= 2;
-        (ULONG_PTR)Data += 2;
+  while (Count > 1)
+    {
+      Sum += *(PUSHORT)Data;
+      Count -= 2;
+      (ULONG_PTR)Data += 2;
     }
 
-    /* Add left-over byte, if any */
-    if (Count > 0)
-        Sum += *(PUCHAR)Data;
+  /* Add left-over byte, if any */
+  if (Count > 0)
+    {
+      Sum += *(PUCHAR)Data;
+    }
 
-    /* Fold 32-bit sum to 16 bits */
-    while (Sum >> 16)
-        Sum = (Sum & 0xFFFF) + (Sum >> 16);
-
-    return ~Sum;
+  return Sum;
 }
-
-/* EOF */

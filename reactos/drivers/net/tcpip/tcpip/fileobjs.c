@@ -296,13 +296,13 @@ NTSTATUS FileOpenAddress(
   switch (Protocol) {
   case IPPROTO_TCP:
     /* FIXME: If specified port is 0, a port is chosen dynamically */
-    AddrFile->Port = ((PTDI_ADDRESS_IP)Address->Address)->sin_port;
+    AddrFile->Port = Address->Address[0].Address[0].sin_port;
     AddrFile->Send = TCPSendDatagram;
     break;
 
   case IPPROTO_UDP:
     /* FIXME: If specified port is 0, a port is chosen dynamically */
-    AddrFile->Port = ((PTDI_ADDRESS_IP)Address->Address)->sin_port;
+    AddrFile->Port = Address->Address[0].Address[0].sin_port;
     AddrFile->Send = UDPSendDatagram;
     break;
 
@@ -448,6 +448,9 @@ NTSTATUS FileOpenConnection(
 
   /* Save client context pointer */
   Connection->ClientContext = ClientContext;
+
+  /* Initialize receive queue */
+  InitializeListHead(&Connection->ReceivedSegments);
 
   /* Return connection endpoint file object */
   Request->Handle.ConnectionContext = Connection;

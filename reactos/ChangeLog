@@ -1,3 +1,53 @@
+2004-03-04  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* drivers/net/tcpip/tcpip/i386: New directory.
+	* drivers/net/tcpip/tcpip/i386/checksum.S: New file.
+	* drivers/net/tcpip/notes.txt: New file.
+	* drivers/net/afd/afd/dispatch.c (AfdDispCompleteListen): Signal ACCEPT
+	network event.
+	(AfdDispEventSelect): Reference event handle.
+	* drivers/net/afd/afd/tdi.c (TdiListen): Remove unused event.
+	Move Iosb and RequestConnectionInfo to AFD_LISTEN_REQUEST structure.
+	* drivers/net/afd/include/afd.h (AFDFCB): Replace EventObjects with
+	EventObject of type PKEVENT.
+	* drivers/net/tcpip/makefile (ARCH_OBJECTS): New variable.
+	(TARGET_OBJECTS): Add ARCH_OBJECTS.
+	* drivers/net/tcpip/include/address.h (AddrCloneAddress): New prototype.
+	* drivers/net/tcpip/include/checksum.h (ChecksumFold, csum_partial): New
+	prototype.
+	(TCPv4Checksum): New macro.
+	(CorrectChecksum): Rename to IPv4CorrectChecksum.
+	(TCPv4CorrectChecksum): New macro.
+	* drivers/net/tcpip/include/ip.h (IPv4_DF_MASK): New constant.
+	* drivers/net/tcpip/include/tcp.h (TCP_XXX): Correct constants.
+	(TCPCreateSegment, TCPFreeSegment, TCPAddSegment): Prototype.
+	* drivers/net/tcpip/include/titypes.h (TCP_SEND_REQUEST): Add SequenceNumber
+	and AckNumber.
+	(TCP_SEGMENT): New structure.
+	(CONNECTION_ENDPOINT): Add ListenRequest and ReceivedSegments.
+	* drivers/net/tcpip/network/transmit.c (SendFragments): Release memory
+	for Data on failure.
+	* drivers/net/tcpip/tcpip/address.c (AddrCloneAddress): New function.
+	* drivers/net/tcpip/tcpip/checksum.c (ChecksumFold): Factor out folding
+	from ChecksumCompute.
+	* drivers/net/tcpip/tcpip/dispatch.c (DispTdiListen): Support asynchronous
+	operation.
+	* drivers/net/tcpip/tcpip/fileobjs.c (FileOpenAddress): Don't cast to
+	PTDI_ADDRESS_IP.
+	Initialize ReceivedSegments.
+	* drivers/net/tcpip/tcpip/routines.c (DisplayIPHeader): New function.
+	(DisplayIPPacket): Call DisplayIPHeader().
+	(DisplayTCPHeader): Change format strings.
+	* drivers/net/tcpip/transport/tcp/tcp.c (IPIdentification,
+	TCPSegmentList): Add.
+	(TCPCreateSegment, TCPFreeSegment, TCPAddSegment,
+	TCPBuildAndTransmitSendRequest2, TCPiSelectISS, TCPiReceiveListen,
+	TCPiReceiveSynSent, TCPiReceiveSynReceived, TCPiReceiveData): New
+	function.
+	(TCPiBuildPacket): Build segment.
+	(TCPStartup): Initialize TCPSegmentList.
+	(TCPShutdown): Cleanup TCPSegmentList.
+
 2004-02-25  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* drivers/net/tcpip/datalink/loopback.c: Reformat.

@@ -49,8 +49,9 @@ typedef struct IPv4_HEADER {
     IPv4_RAW_ADDRESS DstAddr;    /* Destination Address */
 } IPv4_HEADER, *PIPv4_HEADER;
 
-#define IPv4_FRAGOFS_MASK       0x1FFF
-#define IPv4_MF_MASK            0x2000
+#define IPv4_FRAGOFS_MASK       0x1FFF /* Fragment offset mask (host byte order) */
+#define IPv4_MF_MASK            0x2000 /* More fragments (host byte order) */
+#define IPv4_DF_MASK            0x4000 /* Don't fragment (host byte order) */
 #define IPv4_MAX_HEADER_SIZE    60
 
 /* Packet completion handler prototype */
@@ -60,7 +61,7 @@ typedef VOID (*PACKET_COMPLETION_ROUTINE)(
     NDIS_STATUS NdisStatus);
 
 /* Structure for an IP packet */
-typedef struct IP_PACKET {
+typedef struct _IP_PACKET {
     DEFINE_TAG
     ULONG RefCount;                     /* Reference count for this object */
     OBJECT_FREE_ROUTINE Free;           /* Routine used to free resources for the object */
@@ -81,7 +82,7 @@ typedef struct IP_PACKET {
 
 
 /* Packet context */
-typedef struct PACKET_CONTEXT {
+typedef struct _PACKET_CONTEXT {
     PACKET_COMPLETION_ROUTINE Complete;   /* Transport level completion handler */
     PVOID Context;                        /* Context information for handler */
     PACKET_COMPLETION_ROUTINE DLComplete; /* Data link level completion handler. Also

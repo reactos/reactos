@@ -289,7 +289,7 @@ BOOLEAN AddrIsEqualIPv4(
 /*
  * FUNCTION: Build an IPv4 style address
  * ARGUMENTS:
- *     Address = Raw IPv4 address
+ *     Address = Raw IPv4 address (network byte order)
  * RETURNS:
  *     Pointer to IP address structure, NULL if there was not enough free
  *     non-paged memory
@@ -300,7 +300,7 @@ PIP_ADDRESS AddrBuildIPv4(
     PIP_ADDRESS IPAddress;
 
     IPAddress = ExAllocatePool(NonPagedPool, sizeof(IP_ADDRESS));
-    if (IPAddress) {
+    if (IPAddress != NULL) {
         IPAddress->RefCount            = 1;
         IPAddress->Type                = IP_ADDRESS_V4;
         IPAddress->Address.IPv4Address = Address;
@@ -308,6 +308,29 @@ PIP_ADDRESS AddrBuildIPv4(
     }
 
     return IPAddress;
+}
+
+
+/*
+ * FUNCTION: Clone an IP address
+ * ARGUMENTS:
+ *     IPAddress = Pointer to IP address
+ * RETURNS:
+ *     Pointer to new IP address structure, NULL if there was not enough free
+ *     non-paged memory
+ */
+PIP_ADDRESS AddrCloneAddress(
+  PIP_ADDRESS Address)
+{
+  if (Address->Type == IP_ADDRESS_V4)
+    {
+      return AddrBuildIPv4(Address->Address.IPv4Address);
+    }
+  else
+    {
+      TI_DbgPrint(MIN_TRACE, ("Cannot clone IPv6 address.\n"));
+      return NULL;
+    }
 }
 
 

@@ -139,9 +139,25 @@ AfdDispCompleteListen(
 {
   PAFD_LISTEN_REQUEST ListenRequest = (PAFD_LISTEN_REQUEST) Context;
 
-  AFD_DbgPrint(MAX_TRACE, ("Called. ListenRequest (0x%X).\n", ListenRequest));
+  /* FIXME: Protect ListenRequest->Fcb->ListenRequestQueue */
+  RemoveEntryList(&ListenRequest->ListEntry);
 
-  AFD_DbgPrint(MAX_TRACE, ("Fcb (0x%X).\n", ListenRequest->Fcb));
+  AFD_DbgPrint(MAX_TRACE, ("Completed ListenRequest at (0x%X).\n", ListenRequest));
+
+  if (NT_SUCCESS(ListenRequest->Iosb.Status))
+    {
+	  if (ListenRequest->Fcb->EventObject != NULL)
+	    {
+          /* FIXME: Protect ListenRequest->Fcb */
+          ListenRequest->Fcb->NetworkEvents.lNetworkEvents |= FD_ACCEPT;
+          ListenRequest->Fcb->NetworkEvents.iErrorCode[FD_ACCEPT_BIT] = NO_ERROR;
+	      KeSetEvent(ListenRequest->Fcb->EventObject, EVENT_INCREMENT, FALSE);
+	    }
+    }
+
+  ExFreePool(ListenRequest->RequestConnectionInfo);
+  ListenRequest->RequestConnectionInfo = NULL;
+  ExFreePool(ListenRequest);
 
   return STATUS_SUCCESS;
 }
@@ -197,14 +213,14 @@ NTSTATUS AfdDispListen(
 
             if (NT_SUCCESS(Status))
               {
-		            ListenRequest = ExAllocateFromNPagedLookasideList(&ListenRequestLookasideList);
+                ListenRequest = ExAllocateFromNPagedLookasideList(&ListenRequestLookasideList);
                 if (ListenRequest != NULL)
                   {
                     ListenRequest->Fcb = FCB;
                     /* FIXME: Protect ListenRequestQueue */
                     InsertTailList(&FCB->ListenRequestQueue, &ListenRequest->ListEntry);
 
-                    Status = TdiListen(FCB->TdiConnectionObject, AfdDispCompleteListen, ListenRequest);
+                    Status = TdiListen(ListenRequest, AfdDispCompleteListen, ListenRequest);
                     if ((Status == STATUS_PENDING) || NT_SUCCESS(Status))
                       {
                         if (Status != STATUS_PENDING)
@@ -630,8 +646,8 @@ NTSTATUS AfdDispEventSelect(
   UINT OutputBufferLength;
   PFILE_REQUEST_EVENTSELECT Request;
   PFILE_REPLY_EVENTSELECT Reply;
+  PKEVENT Event;
   PAFDFCB FCB;
-  ULONG i;
 
   InputBufferLength  = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
   OutputBufferLength = IrpSp->Parameters.DeviceIoControl.OutputBufferLength;
@@ -644,20 +660,32 @@ NTSTATUS AfdDispEventSelect(
     Request = (PFILE_REQUEST_EVENTSELECT)Irp->AssociatedIrp.SystemBuffer;
     Reply   = (PFILE_REPLY_EVENTSELECT)Irp->AssociatedIrp.SystemBuffer;
 
-    FCB->NetworkEvents.lNetworkEvents = Request->lNetworkEvents;
-    for (i = 0; i < FD_MAX_EVENTS; i++) {
-      if ((Request->lNetworkEvents & (1 << i)) > 0) {
-        FCB->EventObjects[i] = Request->hEventObject;
-      } else {
-        /* The effect of any previous call to this function is cancelled */
-        FCB->EventObjects[i] = (WSAEVENT)0;
-      }
-    }
+	/* FIXME: Need to ObDereferenceObject(FCB->EventObject) this somewhere */
+	Status = ObReferenceObjectByHandle(
+      Request->hEventObject,
+      0,
+      ExEventObjectType,
+      UserMode,
+      (PVOID*)&Event,
+      NULL);
+    if (NT_SUCCESS(Status)) {
+      FCB->NetworkEvents.lNetworkEvents = Request->lNetworkEvents;
+	  FCB->EventObject = Event;
+      Reply->Status = NO_ERROR;
+      Status = STATUS_SUCCESS;
+	}
+	else
+	{
+	  AFD_DbgPrint(MID_TRACE, ("Bad event handle (0x%X).\n", Status));
 
-    Reply->Status = NO_ERROR;
-    Status = STATUS_SUCCESS;
-  } else
+	  Reply->Status = WSAEINVAL;
+      Status = STATUS_SUCCESS;
+    }
+  }
+  else
+  {
     Status = STATUS_INVALID_PARAMETER;
+  }
 
   AFD_DbgPrint(MAX_TRACE, ("Status (0x%X).\n", Status));
 
