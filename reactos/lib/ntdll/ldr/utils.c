@@ -44,7 +44,7 @@ static NTSTATUS LdrLoadDll(PDLL* Dll, PCHAR Name)
    HANDLE FileHandle, SectionHandle;
    PDLLMAIN_FUNC Entrypoint;
    
-   DPRINT("LdrLoadDll(Base %x, Name %s)\n",Dll,Name);
+   dprintf("LdrLoadDll(Base %x, Name %s)\n",Dll,Name);
    
    strcat(fqname, Name);
    
@@ -140,8 +140,9 @@ static NTSTATUS LdrLoadDll(PDLL* Dll, PCHAR Name)
    Entrypoint = (PDLLMAIN_FUNC)LdrPEStartup(ImageBase, SectionHandle);
    if (Entrypoint != NULL)
      {
-	DPRINT("Calling entry point at %x\n",Entrypoint);
+	dprintf("Calling entry point at %x\n",Entrypoint);
 	Entrypoint(ImageBase, DLL_PROCESS_ATTACH, NULL);
+	dprintf("Successful called entrypoint\n");
      }
    
    return(STATUS_SUCCESS);
@@ -231,6 +232,8 @@ static PVOID LdrGetExportByOrdinal(PDLL Module, ULONG Ordinal)
 			     ExportDir->AddressOfNameOrdinals);
    ExFunctions = (PDWORD*)RVA(Module->BaseAddress, 
 			      ExportDir->AddressOfFunctions);
+   dprintf("LdrGetExportByOrdinal(Ordinal %d) = %x\n",
+	   Ordinal,ExFunctions[ExOrdinals[Ordinal - ExportDir->Base]]);
    return(ExFunctions[ExOrdinals[Ordinal - ExportDir->Base]]);
 }
 
@@ -260,12 +263,14 @@ static PVOID LdrGetExportByName(PDLL Module, PUCHAR SymbolName)
    for (i=0; i<ExportDir->NumberOfFunctions; i++)
      {
 	ExName = RVA(Module->BaseAddress, ExNames[i]);
+	DPRINT("Comparing '%s' '%s'\n",ExName,SymbolName);
 	if (strcmp(ExName,SymbolName) == 0)
 	  {
 	     Ordinal = ExOrdinals[i];
 	     return(RVA(Module->BaseAddress, ExFunctions[Ordinal]));
 	  }
      }
+   dprintf("LdrGetExportByName() = failed to find %s\n",SymbolName);
    return(NULL);
 }
 
@@ -430,6 +435,7 @@ PEPFUNC LdrPEStartup(PVOID ImageBase, HANDLE SectionHandle)
 	Status = LdrPerformRelocations(NTHeaders, ImageBase);
 	if (!NT_SUCCESS(Status))
 	  {
+	     dprintf("LdrPerformRelocations() failed\n");
 	     return(NULL);
 	  }
      }
@@ -440,13 +446,14 @@ PEPFUNC LdrPEStartup(PVOID ImageBase, HANDLE SectionHandle)
 	Status = LdrFixupImports(NTHeaders, ImageBase);
 	if (!NT_SUCCESS(Status))
 	  {
+	     dprintf("LdrFixupImports() failed\n");
 	     return(NULL);
 	  }
      }
    
    EntryPoint = (PEPFUNC)(ImageBase + 
 			  NTHeaders->OptionalHeader.AddressOfEntryPoint);
-   
+   dprintf("LdrPEStartup() = %x\n",EntryPoint);
    return(EntryPoint);
 }
 

@@ -21,14 +21,14 @@ FILE *_fdopen(int handle, char *mode)
     	return stdprn;  
  
   file = __alloc_file();
-  if (f == NULL)       
+  if (file == NULL)       
 	return NULL;       
   file->_file = handle;        
  
   rw = (mode[1] == '+') || (mode[1] && (mode[2] == '+'));     
 
   if (*mode == 'a')
-    lseek(fd, 0, SEEK_END);
+    _lseek(handle, 0, SEEK_END);
 
   file->_cnt = 0;
   file->_file = handle;
@@ -40,7 +40,7 @@ FILE *_fdopen(int handle, char *mode)
   else
     file->_flag = _IOWRT;
 
-  file->_base = f->_ptr = NULL;   
+  file->_base = file->_ptr = NULL;   
   return file;
 }        
                        

@@ -12,8 +12,8 @@
 
 #undef putc
 #undef putchar
-int
-putchar(int c)
+
+int putchar(int c)
 {
   int r = putc(c, stdout);
   if (stdout->_flag & _IOLBF)

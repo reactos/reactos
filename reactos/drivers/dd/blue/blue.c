@@ -6,7 +6,7 @@
 #include <defines.h>
 #include <ddk/ntddblue.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 
@@ -144,9 +144,11 @@ NTSTATUS ScrWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
     DeviceExtension = DeviceObject->DeviceExtension;
     vidmem  = DeviceExtension->VideoMemory;
-    cursorx = DeviceExtension->CursorX;
-    cursory = DeviceExtension->CursorY;
-
+//    cursorx = DeviceExtension->CursorX;
+//    cursory = DeviceExtension->CursorY;
+   cursorx = __wherex();
+   cursory = __wherey();
+   
     for (i = 0; i < stk->Parameters.Write.Length; i++, pch++)
     {
         switch (*pch)
@@ -228,8 +230,9 @@ NTSTATUS ScrWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
     offset >>= 8;
     outb_p (CRTC_DATA, offset);
 
-    DeviceExtension->CursorX = cursorx;
-    DeviceExtension->CursorY = cursory;
+//    DeviceExtension->CursorX = cursorx;
+//    DeviceExtension->CursorY = cursory;
+   __goxy(cursorx, cursory);
 
 
     Status = STATUS_SUCCESS;
@@ -464,6 +467,8 @@ NTSTATUS ScrIoControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
                 vidmem = DeviceExtension->VideoMemory;
                 offset = (Buf->dwCoord.Y * NR_COLUMNS * 2) +
                          (Buf->dwCoord.X * 2);
+
+                CHECKPOINT
 
                 for (dwCount = 0; dwCount < Buf->nLength; dwCount++)
                 {

@@ -38,7 +38,7 @@ STRING_OBJECTS = string/memchr.o string/memcmp.o string/strcat.o \
 		 string/strxfrm.o string/memmove.o string/memset.o \
 		 string/strdup.o string/strlwr.o string/strupr.o \
 		 string/str_old.o string/strerror.o string/stricmp.o\
-		 string/strnlen.o
+		 string/strnlen.o string/strnicmp.o
 
 WCHAR_OBJECTS = wchar/wcscat.o wchar/wcschr.o wchar/wcscmp.o \
 		 wchar/wcscoll.o wchar/wcscpy.o wchar/wcscspn.o \
@@ -58,8 +58,9 @@ STDIO_OBJECTS = stdio/getenv.o stdio/doprnt.o stdio/doscan.o stdio/filbuf.o  \
 		stdio/scanf.o stdio/setbuf.o stdio/setbuffe.o stdlib/obsol.o\
 		stdio/setlineb.o stdio/setvbuf.o stdio/sprintf.o stdio/sscanf.o \
 		stdio/stdiohk.o stdio/stdhnd.o stdio/tempnam.o stdio/tmpfile.o stdio/tmpnam.o \
-		stdio/ungetc.o stdio/vfprintf.o stdio/vprintf.o stdio/vsprintf.o
-
+		stdio/ungetc.o stdio/vfprintf.o stdio/vprintf.o \
+		stdio/fdopen.o stdio/vsprintf.o stdio/frlist.o \
+ 
 
 IO_OBJECTS = io/access.o io/close.o io/create.o io/dup.o io/dup2.o io/find.o io/isatty.o io/lseek.o \
 		io/open.o io/read.o io/setmode.o io/unlink.o io/write.o io/fmode.o io/mktemp.o\
@@ -80,7 +81,7 @@ SIGNAL_OBJECTS = signal/signal.o
 PROCESS_OBJECTS = process/_cwait.o process/dll.o process/spawnl.o process/spawnlp.o process/spawnlpe.o  process/spawnvpe.o process/spawnvp.o \
 		process/spawnv.o process/spawnve.o process/spawnle.o process/execl.o process/execlp.o process/execlpe.o  \
 		process/execvpe.o process/execvp.o process/execv.o process/execle.o process/_system.o\
-		process/threadid.o process/thread.o
+		process/threadid.o
 
 TCHAR_OBJECTS = tchar/strdec.o tchar/strinc.o tchar/strninc.o  tchar/strncnt.o tchar/strnextc.o tchar/strspnp.o
 
@@ -89,7 +90,8 @@ TIME_OBJECTS = time/ctime.o time/difftime.o time/strftime.o time/time.o time/clo
 FLOAT_OBJECTS = float/fpreset.o float/clearfp.o float/cntrlfp.o float/statfp.o float/logb.o\
 		float/chgsign.o
 
-SYS_STAT_OBJECTS = sys_stat/fstat.o sys_stat/stat.o sys_stat/futime.o
+#SYS_STAT_OBJECTS = sys_stat/fstat.o sys_stat/stat.o sys_stat/futime.o
+SYS_STAT_OBJECTS = sys_stat/fstat.o sys_stat/stat.o
 
 
 MATH_OBJECTS = math/acos.o math/acosh.o math/asin.o math/asinh.o math/atan.o math/atan2.o\
@@ -107,10 +109,20 @@ MATH_OBJECTS = math/acos.o math/acosh.o math/asin.o math/asinh.o math/atan.o mat
 #	  $(SEARCH_OBJECTS)
 
 
-OBJECTS = $(MISC_OBJECTS) string/strdup.o stdlib/malloc.o stdlib/abort.o \
+OLD_OBJECTS = $(MISC_OBJECTS) stdlib/malloc.o stdlib/abort.o \
           stdlib/_exit.o stdlib/atexit.o stdio/fileno.o io/fmode.o \
 	  float/fpreset.o stdio/stdhnd.o io/setmode.o io/open.o \
-	  stdio/vsprintf.o
+	  stdio/vsprintf.o $(CTYPE_OBJECTS) stdlib/atoi.o stdlib/strtol.o \
+	  stdio/flsbuf.o stdio/putc.o stdio/doprnt.o $(STRING_OBJECTS)\
+	  io/write.o io/isatty.o sys_stat/fstat.o misc/dllmain.o \
+	  stdlib/errno.o 
+
+OBJECTS = $(MISC_OBJECTS) $(STDLIB_OBJECTS) $(IO_OBJECTS) \
+          $(FLOAT_OBJECTS) $(ASSERT_OBJECTS) $(PROCESS_OBJECTS) \
+	  $(STDIO_OBJECTS) $(CTYPE_OBJECTS) $(MATH_OBJECTS) \
+	  $(STRING_OBJECTS) $(TIME_OBJECTS) $(WCHAR_OBJECTS) \
+	  $(SYS_STAT_OBJECTS) misc/dllmain.o $(MALLOC_OBJECTS) \
+	  $(SEARCH_OBJECTS) $(CONIO_OBJECTS) $(DIRECT_OBJECTS)
 
 
  crtdll.a: $(OBJECTS)

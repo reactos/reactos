@@ -13,6 +13,8 @@
 #include <wchar.h>
 #include <string.h>
 
+#include <kernel32/kernel32.h>
+
 #define MAX_ENVIRONMENT_VARS 255
 #define MAX_VALUE 1024
 
@@ -26,13 +28,9 @@ typedef struct _ENV_ELEMENT
 ENV_ELEMENT Environment[MAX_ENVIRONMENT_VARS+1];
 UINT nEnvVar = 0;
 
-DWORD
-STDCALL
-GetEnvironmentVariableA(
-    LPCSTR lpName,
-    LPSTR lpBuffer,
-    DWORD nSize
-    )
+DWORD STDCALL GetEnvironmentVariableA(LPCSTR lpName,
+				      LPSTR lpBuffer,
+				      DWORD nSize)
 {
 	WCHAR BufferW[MAX_VALUE];
 	WCHAR NameW[MAX_PATH];
@@ -237,72 +235,85 @@ GetVersionExA(
 
 
 
-LPSTR
-STDCALL
-GetEnvironmentStringsA(
-		       VOID
-		       )
+LPSTR STDCALL GetEnvironmentStringsA(VOID)
 {
-	WCHAR *EnvironmentStringsW;
-	char *EnvironmentStringsA;
-	int size = 0;
-	int i;
-	EnvironmentStringsW = GetEnvironmentStringsW();
-	EnvironmentStringsA = (char *)EnvironmentStringsW;
+   WCHAR *EnvironmentStringsW;
+   char *EnvironmentStringsA;
+   int size = 0;
+   int i;
+ 
+   return(NULL);
+   
+   /* FIXME: This doesn't work */
+#if 0
+   EnvironmentStringsW = GetEnvironmentStringsW();
+   EnvironmentStringsA = (char *)EnvironmentStringsW;
 
-	for(i=0;i<nEnvVar;i++) {
-		if ( Environment[i].Valid ) {
-			size += Environment[i].Name.Length;
-			size += sizeof(WCHAR); // =
-			size += Environment[i].Value.Length;
-			size += sizeof(WCHAR); // zero
-		}
-	}
-	size += sizeof(WCHAR);
-	size /= sizeof(WCHAR);
-	for(i=0;i<size;i++)
-		EnvironmentStringsA[i] = (char)EnvironmentStringsW[i];	
-	return EnvironmentStringsA;
+   for(i=0;i<nEnvVar;i++) 
+     {
+	if ( Environment[i].Valid ) 
+	  {
+	     size += Environment[i].Name.Length;
+	     size += sizeof(WCHAR); // =
+	     size += Environment[i].Value.Length;
+	     size += sizeof(WCHAR); // zero
+	  }
+     }
+   size += sizeof(WCHAR);
+   size /= sizeof(WCHAR);
+   for(i=0;i<size;i++)
+     EnvironmentStringsA[i] = (char)EnvironmentStringsW[i];	
+   return EnvironmentStringsA;
+#endif
 }
 
 
-LPWSTR
-STDCALL
-GetEnvironmentStringsW(
-    VOID
-    )
+LPWSTR STDCALL GetEnvironmentStringsW(VOID)
 {
-	int size = 0;
-	int i;
-	WCHAR *EnvironmentString;
-	WCHAR *EnvironmentStringSave;
-	for(i=0;i<nEnvVar;i++) {
-		if ( Environment[i].Valid ) {
-			size += Environment[i].Name.Length;
-			size += sizeof(WCHAR); // =
-			size += Environment[i].Value.Length;
-			size += sizeof(WCHAR); // zero
-		}
-	}
-	size += sizeof(WCHAR); // extra zero
-	EnvironmentString =  (WCHAR *)HeapAlloc(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,size);
-	EnvironmentStringSave = EnvironmentString;
-	for(i=0;i<nEnvVar;i++) {
-		if ( Environment[i].Valid ) {
-			wcscpy(EnvironmentString,Environment[i].Name.Buffer);
-			wcscat(EnvironmentString,L"=");
-			wcscat(EnvironmentString,Environment[i].Value.Buffer);
+   int size = 0;
+   int i;
+   WCHAR *EnvironmentString;
+   WCHAR *EnvironmentStringSave;
 
-			size = Environment[i].Name.Length;
-			size += sizeof(WCHAR); // =
-			size += Environment[i].Value.Length;
-			size += sizeof(WCHAR); // zero
-			EnvironmentString += (size/sizeof(WCHAR));
-		}
-	}
-	EnvironmentString++;
-	*EnvironmentString = 0;
-	return EnvironmentStringSave;
+   return(NULL);
+   
+   /* FIXME: This doesn't work, why not? */
+#if 0
+   for(i=0;i<nEnvVar;i++) 
+     {
+	if ( Environment[i].Valid ) 
+	  {
+	     size += Environment[i].Name.Length;
+	     size += sizeof(WCHAR); // =
+	     size += Environment[i].Value.Length;
+	     size += sizeof(WCHAR); // zero
+	  }
+     }
+   size += sizeof(WCHAR); // extra zero
+   DPRINT("size %d\n",size);
+   EnvironmentString =  (WCHAR *)HeapAlloc(GetProcessHeap(),
+					   HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,
+					   size);
+   DPRINT("EnvironmentString %x\n",EnvironmentString);
+   EnvironmentStringSave = EnvironmentString;
+   for(i=0;i<nEnvVar;i++) 
+     {
+	if ( Environment[i].Valid ) 
+	  {
+	     wcscpy(EnvironmentString,Environment[i].Name.Buffer);
+	     wcscat(EnvironmentString,L"=");
+	     wcscat(EnvironmentString,Environment[i].Value.Buffer);
+	     
+	     size = Environment[i].Name.Length;
+	     size += sizeof(WCHAR); // =
+	     size += Environment[i].Value.Length;
+	     size += sizeof(WCHAR); // zero
+	     EnvironmentString += (size/sizeof(WCHAR));
+	  }
+     }
+   *EnvironmentString = 0;
+   return EnvironmentStringSave;
+#endif
 }
 
 

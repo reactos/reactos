@@ -20,9 +20,9 @@ _fstat(int fd, struct stat *statbuf)
 
   if ( !GetFileInformationByHandle(_get_osfhandle(fd),&FileInformation) )
 	return -1;
-  statbuf->st_ctime = FileTimeToUnixTime( &FileInformation.ftCreationTime,NULL);
-  statbuf->st_atime = FileTimeToUnixTime( &FileInformation.ftLastAccessTime,NULL);
-  statbuf->st_mtime = FileTimeToUnixTime( &FileInformation.ftLastWriteTime,NULL);
+//  statbuf->st_ctime = FileTimeToUnixTime( &FileInformation.ftCreationTime,NULL);
+//  statbuf->st_atime = FileTimeToUnixTime( &FileInformation.ftLastAccessTime,NULL);
+//  statbuf->st_mtime = FileTimeToUnixTime( &FileInformation.ftLastWriteTime,NULL);
 
   statbuf->st_dev = fd;
   statbuf->st_size = FileInformation.nFileSizeLow; 

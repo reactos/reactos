@@ -17,9 +17,12 @@
 #include <crtdll/string.h>
 #include <crtdll/io.h>
 
+char* mktemp (char *_template)
+{
+   return(_mktemp(_template));
+}
 
-char *
-mktemp (char *_template)
+char* _mktemp (char *_template)
 {
   static int count = 0;
   char *cp, *dp;

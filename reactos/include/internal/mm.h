@@ -94,4 +94,8 @@ VOID MmFreePage(PVOID PhysicalAddress, ULONG Nr);
 VOID MmDeletePageTable(PEPROCESS Process, PVOID Address);
 NTSTATUS MmCopyMmInfo(PEPROCESS Src, PEPROCESS Dest);
 NTSTATUS MmReleaseMmInfo(PEPROCESS Process);
+NTSTATUS Mmi386ReleaseMmInfo(PEPROCESS Process);
+VOID MmDeletePageEntry(PEPROCESS Process, PVOID Address, BOOL FreePage);
+
+
 #endif

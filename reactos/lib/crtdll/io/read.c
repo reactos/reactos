@@ -12,10 +12,15 @@
 
 size_t	_read(int _fd, void *_buf, size_t _nbyte)
 {
-	size_t _rbyte;
-	if ( !ReadFile(_get_osfhandle(_fd),_buf,_nbyte,&_rbyte,NULL) ) {
-		return -1;
-	}
-
-	return _rbyte;
+   size_t _rbyte;
+   
+   printf("_read(fd %d, buf %x, _nbyte %d)\n",_fd,_buf,_nbyte);
+   
+   if (!ReadFile(_get_osfhandle(_fd),_buf,_nbyte,&_rbyte,NULL)) 
+     {
+	printf("_read() = %d\n",-1);
+	return -1;
+     }
+   printf("_read() = %d\n",_rbyte);
+   return _rbyte;
 }

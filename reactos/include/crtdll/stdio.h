@@ -22,9 +22,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.5 $
+ * $Revision: 1.6 $
  * $Author: dwelch $
- * $Date: 1999/04/10 12:08:06 $
+ * $Date: 1999/04/14 00:46:22 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
@@ -95,12 +95,11 @@ typedef struct {
  * NOTE: These will go to the bit-bucket silently in GUI applications!
  */
 extern FILE (*_iob)[];	/* A pointer to an array of FILE */
-//#define _iob (*__imp__iob)	/* An array of FILE */
-#define stdin	(&_iob[0])
-#define stdout	(&_iob[1])
-#define stderr	(&_iob[2])
-#define stdaux	(&_iob[3])
-#define stdprn	(&_iob[4])
+#define stdin	(&(*_iob)[0])
+#define stdout	(&(*_iob)[1])
+#define stderr	(&(*_iob)[2])
+#define stdaux	(&(*_iob)[3])
+#define stdprn	(&(*_iob)[4])
 
 /* Returned by various functions on end of file condition or error. */
 #define	EOF	(-1)

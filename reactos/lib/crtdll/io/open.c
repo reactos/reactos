@@ -28,10 +28,11 @@ fileno_modes_type *fileno_modes = NULL;
 int maxfno = 5;
 int minfno = 5;
 
-char __is_text_file(FILE *p) {
-	if ( p == NULL || fileno_modes == NULL )
-		return FALSE;
-	return (!((p)->_flag&_IOSTRG) && (fileno_modes[(p)->_file].mode&O_TEXT));
+char __is_text_file(FILE *p) 
+{
+   if ( p == NULL || fileno_modes == NULL )
+     return FALSE;
+   return (!((p)->_flag&_IOSTRG) && (fileno_modes[(p)->_file].mode&O_TEXT));
 }
 
 
@@ -42,79 +43,78 @@ int __fileno_alloc(HANDLE hFile, int mode);
 
 int _open(const char *_path, int _oflag,...)
 {
-
-	HANDLE hFile;
-	DWORD dwDesiredAccess = 0;
-	DWORD dwShareMode = 0;
-	DWORD dwCreationDistribution = 0;
-	DWORD dwFlagsAndAttributes = 0;
+   HANDLE hFile;
+   DWORD dwDesiredAccess = 0;
+   DWORD dwShareMode = 0;
+   DWORD dwCreationDistribution = 0;
+   DWORD dwFlagsAndAttributes = 0;
 	
-	if (( _oflag & S_IREAD ) == S_IREAD)
-		dwShareMode = FILE_SHARE_READ;
-	else if ( ( _oflag & S_IWRITE) == S_IWRITE ) {
-		dwShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
-	}
+   if (( _oflag & S_IREAD ) == S_IREAD)
+     dwShareMode = FILE_SHARE_READ;
+   else if ( ( _oflag & S_IWRITE) == S_IWRITE ) {
+      dwShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
+   }
 
-/*
+   /*
+    *
+    * _O_BINARY   Opens file in binary (untranslated) mode. (See fopen for a description of binary mode.)
+    * _O_TEXT   Opens file in text (translated) mode. (For more information, see Text and Binary Mode File I/O and fopen.)
+    * 
+    */
+   if (( _oflag & _O_RDWR ) == _O_RDWR ) 
+     dwDesiredAccess |= GENERIC_WRITE|GENERIC_READ | FILE_READ_DATA |
+                        FILE_WRITE_DATA | FILE_READ_ATTRIBUTES |
+                        FILE_WRITE_ATTRIBUTES;
+   else if (( _oflag & O_RDONLY ) == O_RDONLY ) 
+     dwDesiredAccess |= GENERIC_READ | FILE_READ_DATA | FILE_READ_ATTRIBUTES
+                     | FILE_WRITE_ATTRIBUTES;
+   else if (( _oflag & _O_WRONLY ) == _O_WRONLY )
+     dwDesiredAccess |= GENERIC_WRITE | FILE_WRITE_DATA | 
+                        FILE_READ_ATTRIBUTES | FILE_WRITE_ATTRIBUTES;
 
-_O_BINARY   Opens file in binary (untranslated) mode. (See fopen for a description of binary mode.)
-_O_TEXT   Opens file in text (translated) mode. (For more information, see Text and Binary Mode File I/O and fopen.)
+   if (( _oflag & S_IREAD ) == S_IREAD )
+     dwShareMode |= FILE_SHARE_READ;
+   
+   if (( _oflag & S_IWRITE ) == S_IWRITE )
+     dwShareMode |= FILE_SHARE_WRITE;	
 
-*/
-	if (( _oflag & _O_RDWR ) == _O_RDWR ) 
-		dwDesiredAccess |= GENERIC_WRITE|GENERIC_READ;
-	else if (( _oflag & O_RDONLY ) == O_RDONLY ) 
-		dwDesiredAccess |= GENERIC_READ;
-	else if (( _oflag & _O_WRONLY ) == _O_WRONLY )
-		dwDesiredAccess |= GENERIC_WRITE;
-	
-	if (( _oflag & S_IREAD ) == S_IREAD )
-		dwShareMode |= FILE_SHARE_READ;
-	
-	if (( _oflag & S_IWRITE ) == S_IWRITE )
-		dwShareMode |= FILE_SHARE_WRITE;	
+   if (( _oflag & (_O_CREAT | _O_EXCL ) ) == (_O_CREAT | _O_EXCL) )
+     dwCreationDistribution |= CREATE_NEW;
 
-	if (( _oflag & (_O_CREAT | _O_EXCL ) ) == (_O_CREAT | _O_EXCL) )
-		dwCreationDistribution |= CREATE_NEW;
-
-	else if (( _oflag &  O_TRUNC ) == O_TRUNC  ) {
-		if (( _oflag &  O_CREAT ) ==  O_CREAT ) 
-			dwCreationDistribution |= CREATE_ALWAYS;
-		else if (( _oflag & O_RDONLY ) != O_RDONLY ) 
-			dwCreationDistribution |= TRUNCATE_EXISTING;
-	}
-	else if (( _oflag & _O_APPEND ) == _O_APPEND )
-		dwCreationDistribution |= OPEN_EXISTING;
-	else if (( _oflag &  _O_CREAT ) == _O_CREAT )
-		dwCreationDistribution |= OPEN_ALWAYS;
-	else
-		dwCreationDistribution |= OPEN_EXISTING;
-
-	
-
-	if (( _oflag &  _O_RANDOM ) == _O_RANDOM )
-		dwFlagsAndAttributes |= FILE_FLAG_RANDOM_ACCESS;	
-	if (( _oflag &  _O_SEQUENTIAL ) == _O_SEQUENTIAL )
-		dwFlagsAndAttributes |= FILE_FLAG_SEQUENTIAL_SCAN;
-
-	if (( _oflag &  _O_TEMPORARY ) == _O_TEMPORARY )
-		dwFlagsAndAttributes |= FILE_FLAG_DELETE_ON_CLOSE;
-
-	if (( _oflag &  _O_SHORT_LIVED ) == _O_SHORT_LIVED )
-		dwFlagsAndAttributes |= FILE_FLAG_DELETE_ON_CLOSE;
-
-	hFile = CreateFileA(
-		_path,
-    		dwDesiredAccess,
-    		dwShareMode,	
-    		NULL, 
-    		dwCreationDistribution,	
-		dwFlagsAndAttributes,
-		NULL
-	);
-	if ( hFile == (HANDLE)-1 )
-		return -1;
-	return  __fileno_alloc(hFile,_oflag);
+   else if (( _oflag &  O_TRUNC ) == O_TRUNC  ) {
+      if (( _oflag &  O_CREAT ) ==  O_CREAT ) 
+	dwCreationDistribution |= CREATE_ALWAYS;
+      else if (( _oflag & O_RDONLY ) != O_RDONLY ) 
+	dwCreationDistribution |= TRUNCATE_EXISTING;
+   }
+   else if (( _oflag & _O_APPEND ) == _O_APPEND )
+     dwCreationDistribution |= OPEN_EXISTING;
+   else if (( _oflag &  _O_CREAT ) == _O_CREAT )
+     dwCreationDistribution |= OPEN_ALWAYS;
+   else
+     dwCreationDistribution |= OPEN_EXISTING;
+   
+   if (( _oflag &  _O_RANDOM ) == _O_RANDOM )
+     dwFlagsAndAttributes |= FILE_FLAG_RANDOM_ACCESS;	
+   if (( _oflag &  _O_SEQUENTIAL ) == _O_SEQUENTIAL )
+     dwFlagsAndAttributes |= FILE_FLAG_SEQUENTIAL_SCAN;
+   
+   if (( _oflag &  _O_TEMPORARY ) == _O_TEMPORARY )
+     dwFlagsAndAttributes |= FILE_FLAG_DELETE_ON_CLOSE;
+   
+   if (( _oflag &  _O_SHORT_LIVED ) == _O_SHORT_LIVED )
+     dwFlagsAndAttributes |= FILE_FLAG_DELETE_ON_CLOSE;
+   
+   hFile = CreateFileA(_path,
+		       dwDesiredAccess,
+		       dwShareMode,	
+		       NULL, 
+		       dwCreationDistribution,	
+		       dwFlagsAndAttributes,
+		       NULL);
+   if (hFile == (HANDLE)-1)
+     return -1;
+   return  __fileno_alloc(hFile,_oflag);
 
 //	_O_APPEND   Moves file pointer to end of file before every write operation.
 

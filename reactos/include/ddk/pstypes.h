@@ -1,7 +1,6 @@
 #ifndef __INCLUDE_DDK_PSTYPES_H
 #define __INCLUDE_DDK_PSTYPES_H
 
-#include <kernel32/heap.h>
 #include <kernel32/atom.h>
 #include <internal/hal.h>
 
@@ -94,7 +93,7 @@ typedef struct _NT_PEB
 	WORD			NtGlobalFlag;
 
 	PPROCESSINFOW		StartupInfo;
-	PHEAP			ProcessHeap; 
+	HANDLE			ProcessHeap; 
 	ATOMTABLE		LocalAtomTable;
 	LPCRITICAL_SECTION	CriticalSection;
 	DWORD			CriticalSectionTimeout; 

@@ -11,8 +11,7 @@
 #include <crtdll/io.h>
 
 
-int
-fflush(FILE *f)
+int fflush(FILE *f)
 {
   char *base;
   int n, rn;

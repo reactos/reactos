@@ -17,13 +17,28 @@
  *  DISCLAMED. This includes but is not limited to warrenties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.1 $
- * $Author: rex $
- * $Date: 1999/01/16 02:11:43 $
+ * $Revision: 1.2 $
+ * $Author: dwelch $
+ * $Date: 1999/04/14 00:51:19 $
  *
  */
 
 #include <windows.h>
+#include <stdarg.h>
+
+void debug_printf(char* fmt, ...)
+{
+   va_list args;
+   char buffer[255];
+   HANDLE OutputHandle;
+   
+   AllocConsole();
+   OutputHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+   va_start(args,fmt);
+   vsprintf(buffer,fmt,args);
+   WriteConsoleA(OutputHandle, buffer, strlen(buffer), NULL, NULL);
+   va_end(args);
+}
 
 BOOL WINAPI DllMain (HANDLE hDll, DWORD dwReason, LPVOID lpReserved)
 {

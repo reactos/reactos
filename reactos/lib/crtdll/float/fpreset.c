@@ -2,6 +2,7 @@
 
 void    _fpreset (void)
 {
-	__asm__ __volatile__("fninit\n\t");
+   /* FIXME: This causes an exception */
+//	__asm__ __volatile__("fninit\n\t");
 	return;
 }

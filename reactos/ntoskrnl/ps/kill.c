@@ -29,7 +29,7 @@ VOID PiDeleteProcess(PVOID ObjectBody)
 {
    DPRINT("PiDeleteProcess(ObjectBody %x)\n",ObjectBody);
    /* FIXME: This doesn't work, why? */
-//   (VOID)MmReleaseMmInfo((PEPROCESS)ObjectBody);
+   (VOID)MmReleaseMmInfo((PEPROCESS)ObjectBody);
 }
 
 VOID PsTerminateCurrentThread(NTSTATUS ExitStatus)

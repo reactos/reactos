@@ -4,11 +4,11 @@
 #include <crtdll/internal/file.h>
 
 
-int
-printf(const char *fmt, ...)
+int printf(const char *fmt, ...)
 {
   int len;
-  va_list a = 0;
+  va_list a;
+   
   va_start( a, fmt ); 
   len = _doprnt(fmt, a, stdout);
 

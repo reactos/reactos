@@ -2829,21 +2829,17 @@ NtQueryInformationAtom(
           GetFullPathName, GetFileType, GetFileSize, GetFileTime  functions. 
  * RETURNS: Status
  */
-NTSTATUS
-STDCALL
-NtQueryInformationFile(
-	IN HANDLE FileHandle,
-	OUT PIO_STATUS_BLOCK IoStatusBlock,
-	OUT PVOID FileInformation,
-	IN ULONG Length,
-	IN FILE_INFORMATION_CLASS FileInformationClass
-    );
+NTSTATUS STDCALL NtQueryInformationFile(IN HANDLE FileHandle,
+					OUT PIO_STATUS_BLOCK IoStatusBlock,
+					OUT PVOID FileInformation,
+					IN ULONG Length,
+					IN FILE_INFORMATION_CLASS FileInformationClass);
 
-NTSTATUS ZwQueryInformationFile(HANDLE FileHandle,
-				PIO_STATUS_BLOCK IoStatusBlock,
-				PVOID FileInformation,
-				ULONG Length,
-				FILE_INFORMATION_CLASS FileInformationClass);
+NTSTATUS STDCALL ZwQueryInformationFile(HANDLE FileHandle,
+					PIO_STATUS_BLOCK IoStatusBlock,
+					PVOID FileInformation,
+					ULONG Length,
+					FILE_INFORMATION_CLASS FileInformationClass);
   
 /*
  * FUNCTION: Queries the information of a process object.

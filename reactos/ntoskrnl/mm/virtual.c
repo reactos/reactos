@@ -12,7 +12,6 @@
  
 /* INCLUDE *****************************************************************/
 
-#include <internal/i386/segment.h>
 #include <internal/mm.h>
 #include <internal/mmhal.h>
 #include <internal/ob.h>
@@ -24,206 +23,47 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-/* TYPES *******************************************************************/
-
-extern unsigned int etext;
-extern unsigned int end;
-
-static MEMORY_AREA* kernel_text_desc = NULL;
-static MEMORY_AREA* kernel_data_desc = NULL;
-static MEMORY_AREA* kernel_param_desc = NULL;
-static MEMORY_AREA* kernel_pool_desc = NULL;
-
 /* FUNCTIONS ****************************************************************/
 
-void VirtualInit(boot_param* bp)
-/*
- * FUNCTION: Intialize the memory areas list
- * ARGUMENTS:
- *           bp = Pointer to the boot parameters
- *           kernel_len = Length of the kernel
- */
+NTSTATUS MmReleaseMemoryArea(PEPROCESS Process, PMEMORY_AREA Marea)
 {
-   unsigned int kernel_len = bp->end_mem - bp->start_mem;
-   PVOID BaseAddress;
-   ULONG Length;
-   ULONG ParamLength = kernel_len;
+   ULONG i;
+   PHYSICAL_ADDRESS addr;
    
-   DPRINT("VirtualInit() %x\n",bp);
+   DPRINT("MmReleaseMemoryArea(Process %x, Marea %x)\n",Process,Marea);
    
-   MmInitMemoryAreas();
-   ExInitNonPagedPool(KERNEL_BASE+ PAGE_ROUND_UP(kernel_len) + PAGESIZE);
-   
-   
-   /*
-    * Setup the system area descriptor list
-    */
-   BaseAddress = (PVOID)KERNEL_BASE;
-   Length = PAGE_ROUND_UP(((ULONG)&etext)) - KERNEL_BASE;
-   ParamLength = ParamLength - Length;
-   MmCreateMemoryArea(KernelMode,NULL,MEMORY_AREA_SYSTEM,&BaseAddress,
-		      Length,0,&kernel_text_desc);
-   
-   Length = PAGE_ROUND_UP(((ULONG)&end)) - PAGE_ROUND_UP(((ULONG)&etext));
-   ParamLength = ParamLength - Length;
-   DPRINT("Length %x\n",Length);
-   BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG)&etext));
-   MmCreateMemoryArea(KernelMode,
-		      NULL,
-		      MEMORY_AREA_SYSTEM,
-		      &BaseAddress,
-		      Length,
-		      0,
-		      &kernel_data_desc);
-   
-   
-   BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG)&end));
-   Length = ParamLength;
-   MmCreateMemoryArea(KernelMode,NULL,MEMORY_AREA_SYSTEM,&BaseAddress,
-		      Length,0,&kernel_param_desc);
-   
-   BaseAddress = (PVOID)(KERNEL_BASE + PAGE_ROUND_UP(kernel_len) + PAGESIZE);
-   Length = NONPAGED_POOL_SIZE;
-   MmCreateMemoryArea(KernelMode,NULL,MEMORY_AREA_SYSTEM,&BaseAddress,
-		      Length,0,&kernel_pool_desc);
-   
-//   MmDumpMemoryAreas();
-   CHECKPOINT;
-   
-   MmInitSectionImplementation();
-}
-
-ULONG MmCommitedSectionHandleFault(MEMORY_AREA* MemoryArea, PVOID Address)
-{
-   MmSetPage(PsGetCurrentProcess(),
-	     Address,
-	     MemoryArea->Attributes,
-	     (ULONG)MmAllocPage());
-   return(TRUE);
-}
-
-NTSTATUS MmSectionHandleFault(MEMORY_AREA* MemoryArea, PVOID Address)
-{
-   LARGE_INTEGER Offset;
-   IO_STATUS_BLOCK IoStatus;
-   
-   DPRINT("MmSectionHandleFault(MemoryArea %x, Address %x)\n",
-	  MemoryArea,Address);
-   
-   MmSetPage(NULL,
-	     Address,
-	     MemoryArea->Attributes,
-	     (ULONG)MmAllocPage());
-   
-   LARGE_INTEGER_QUAD_PART(Offset) = (Address - MemoryArea->BaseAddress) + 
-     MemoryArea->Data.SectionData.ViewOffset;
-   
-   DPRINT("MemoryArea->Data.SectionData.Section->FileObject %x\n",
-	    MemoryArea->Data.SectionData.Section->FileObject);
-   
-   if (MemoryArea->Data.SectionData.Section->FileObject == NULL)
+   DPRINT("Releasing %x between %x %x\n",
+	  Marea, Marea->BaseAddress, Marea->BaseAddress + Marea->Length);
+   for (i=Marea->BaseAddress; i<(Marea->BaseAddress + Marea->Length);
+	i=i+PAGESIZE)
      {
-	return(STATUS_UNSUCCESSFUL);
+	MmDeletePageEntry(Process, (PVOID)i, TRUE);
      }
-   
-   IoPageRead(MemoryArea->Data.SectionData.Section->FileObject,
-	      (PVOID)Address,
-	      &Offset,
-	      &IoStatus);
-   
-   DPRINT("Returning from MmSectionHandleFault()\n");
+   ExFreePool(Marea);
    
    return(STATUS_SUCCESS);
 }
 
-asmlinkage int page_fault_handler(unsigned int cs,
-                                  unsigned int eip)
-/*
- * FUNCTION: Handle a page fault
- */
+NTSTATUS MmReleaseMmInfo(PEPROCESS Process)
 {
-   KPROCESSOR_MODE FaultMode;
-   MEMORY_AREA* MemoryArea;
-   KIRQL oldlvl;
-   ULONG stat;
+   ULONG i,j,addr;
+   PLIST_ENTRY CurrentEntry;
+   PMEMORY_AREA Current;
    
-   /*
-    * Get the address for the page fault
-    */
-   unsigned int cr2;
-   __asm__("movl %%cr2,%0\n\t" : "=d" (cr2));                
-   DPRINT("Page fault at address %x with eip %x in process %x\n",cr2,eip,
-	  PsGetCurrentProcess());
-
-   cr2 = PAGE_ROUND_DOWN(cr2);
+   DPRINT("MmReleaseMmInfo(Process %x)\n",Process);
    
-   if (KeGetCurrentIrql() != PASSIVE_LEVEL)
+   while (!IsListEmpty(&Process->Pcb.MemoryAreaList))
      {
-	DbgPrint("Page fault at high IRQL\n");
-	return(0);
-//	KeBugCheck(0);
-     }
-   
-   KeRaiseIrql(DISPATCH_LEVEL, &oldlvl);
-   
-   /*
-    * Find the memory area for the faulting address
-    */
-   if (cr2>=KERNEL_BASE)
-     {
-	/*
-	 * Check permissions
-	 */
-	if (cs != KERNEL_CS)
-	  {
-	     printk("%s:%d\n",__FILE__,__LINE__);
-	     return(0);
-	  }
-	FaultMode = UserMode;
-     }
-   else
-     {
-	FaultMode = KernelMode;
-     }
-   
-   MemoryArea = MmOpenMemoryAreaByAddress(PsGetCurrentProcess(),(PVOID)cr2);
-   if (MemoryArea == NULL)
-     {
-	printk("%s:%d\n",__FILE__,__LINE__);
-	return(0);
-     }
-   
-   switch (MemoryArea->Type)
-     {
-      case MEMORY_AREA_SYSTEM:
-	stat = 0;
-	break;
+	CurrentEntry = RemoveHeadList(&Process->Pcb.MemoryAreaList);
+	Current = CONTAINING_RECORD(CurrentEntry, MEMORY_AREA, Entry);
 	
-      case MEMORY_AREA_SECTION_VIEW_COMMIT:
-        if (MmSectionHandleFault(MemoryArea, (PVOID)cr2)==STATUS_SUCCESS)
-	  {
-	     stat = 1;
-	  }
-	else
-	  {
-	     stat = 0;
-	  }
-	break;
-	
-      case MEMORY_AREA_COMMIT:
-	stat = MmCommitedSectionHandleFault(MemoryArea,(PVOID)cr2);
-	break;
-	
-      default:
-	stat = 0;
-	break;
+	MmReleaseMemoryArea(Process, Current);
      }
-   DPRINT("Completed page fault handling\n");
-   if (stat)
-     {
-	KeLowerIrql(oldlvl);
-     }
-   return(stat);
+   
+   Mmi386ReleaseMmInfo(Process);
+   
+   DPRINT("Finished MmReleaseMmInfo()\n");
+   return(STATUS_SUCCESS);
 }
 
 BOOLEAN MmIsNonPagedSystemAddressValid(PVOID VirtualAddress)
@@ -319,9 +159,9 @@ ZwAllocateVirtualMemory(
    NTSTATUS Status;
    
    DPRINT("ZwAllocateVirtualMemory(ProcessHandle %x, *BaseAddress %x, "
-	    "ZeroBits %d, *RegionSize %x, AllocationType %x, Protect %x)\n",
-	    ProcessHandle,*BaseAddress,ZeroBits,*RegionSize,AllocationType,
-	    Protect);
+	  "ZeroBits %d, *RegionSize %x, AllocationType %x, Protect %x)\n",
+	  ProcessHandle,*BaseAddress,ZeroBits,*RegionSize,AllocationType,
+	  Protect);
    
    Status = ObReferenceObjectByHandle(ProcessHandle,
 				      PROCESS_VM_OPERATION,
@@ -458,6 +298,11 @@ NTSTATUS STDCALL ZwFreeVirtualMemory(IN HANDLE ProcessHandle,
    NTSTATUS Status;
    PEPROCESS Process;
    
+   DPRINT("ZwFreeVirtualMemory(ProcessHandle %x, *BaseAddress %x, "
+	  "*RegionSize %x, FreeType %x)\n",ProcessHandle,*BaseAddress,
+	  *RegionSize,FreeType);
+				 
+   
    Status = ObReferenceObjectByHandle(ProcessHandle,
 				      PROCESS_VM_OPERATION,
 				      PsProcessType,
@@ -570,14 +415,14 @@ NTSTATUS STDCALL ZwProtectVirtualMemory(IN HANDLE ProcessHandle,
 				      NULL);
    if (Status != STATUS_SUCCESS)
      {
-	DbgPrint("ZwProtectVirtualMemory() = %x\n",Status);
+	DPRINT("ZwProtectVirtualMemory() = %x\n",Status);
 	return(Status);
      }
 
    MemoryArea = MmOpenMemoryAreaByAddress(Process,BaseAddress);
    if (MemoryArea == NULL)
      {
-	DbgPrint("ZwProtectVirtualMemory() = %x\n",STATUS_UNSUCCESSFUL);
+	DPRINT("ZwProtectVirtualMemory() = %x\n",STATUS_UNSUCCESSFUL);
 	return(STATUS_UNSUCCESSFUL);
      }
 

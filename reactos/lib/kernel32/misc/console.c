@@ -15,7 +15,7 @@
 #include <assert.h>
 #include <wchar.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <kernel32/kernel32.h>
 
 
@@ -37,25 +37,23 @@ HANDLE StdPrint  = INVALID_HANDLE_VALUE;
 /*--------------------------------------------------------------
  *	GetStdHandle
  */
-HANDLE
-STDCALL
-GetStdHandle(
-	     DWORD nStdHandle
-	     )
+HANDLE STDCALL GetStdHandle(DWORD nStdHandle)
 {
-	SetLastError(ERROR_SUCCESS); /* OK */
-	switch (nStdHandle)
-	{
-		case STD_INPUT_HANDLE:	return StdInput;
-		case STD_OUTPUT_HANDLE:	return StdOutput;
-		case STD_ERROR_HANDLE:	return StdError;
+   DPRINT("GetStdHandle(nStdHandle %d)\n",nStdHandle);
+   
+   SetLastError(ERROR_SUCCESS); /* OK */
+   switch (nStdHandle)
+     {
+      case STD_INPUT_HANDLE:	return StdInput;
+      case STD_OUTPUT_HANDLE:	return StdOutput;
+      case STD_ERROR_HANDLE:	return StdError;
 #ifdef EXTENDED_CONSOLE
-		case STD_AUX_HANDLE:	return StdError;
-		case STD_PRINT_HANDLE:	return StdError;
+      case STD_AUX_HANDLE:	return StdError;
+      case STD_PRINT_HANDLE:	return StdError;
 #endif
-	}
-	SetLastError(0); /* FIXME: What error code? */
-	return INVALID_HANDLE_VALUE;
+     }
+   SetLastError(0); /* FIXME: What error code? */
+   return INVALID_HANDLE_VALUE;
 }
 
 

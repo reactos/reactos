@@ -60,3 +60,14 @@ time_t FileTimeToUnixTime( const FILETIME *filetime, DWORD *remainder );
 #endif
 
 #endif /* __dj_include_libc_file_h__ */
+
+#define __FILE_REC_MAX 20
+typedef struct __file_rec 
+{
+   struct __file_rec *next;
+   int count;
+   FILE *files[__FILE_REC_MAX];
+} __file_rec;
+
+extern __file_rec *__file_rec_list;
+

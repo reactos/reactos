@@ -177,11 +177,12 @@ PVOID MmAllocPage(VOID)
    ListEntry = ExInterlockedRemoveHeadList(&FreePageListHead, 
 					   &FreePageListLock);
    DPRINT("ListEntry %x\n",ListEntry);
-   PageDescriptor = CONTAINING_RECORD(ListEntry, PHYSICAL_PAGE, ListEntry);
-   if (PageDescriptor == NULL)
+   if (ListEntry == NULL)
      {
-	return(NULL);
+	DbgPrint("MmAllocPage(): Out of memory\n");
+	KeBugCheck(0);
      }
+   PageDescriptor = CONTAINING_RECORD(ListEntry, PHYSICAL_PAGE, ListEntry);
    DPRINT("PageDescriptor %x\n",PageDescriptor);
    PageDescriptor->Flags = PHYSICAL_PAGE_INUSE;
    ExInterlockedInsertTailList(&UsedPageListHead, ListEntry, 

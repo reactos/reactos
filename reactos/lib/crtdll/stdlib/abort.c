@@ -6,6 +6,6 @@ static char msg[] = "Abort!\r\n";
 
 void abort()
 {
-//  _write(stderr->_file, msg, sizeof(msg)-1);
-//  _exit(1);
+   _write(stderr->_file, msg, sizeof(msg)-1);
+   _exit(1);
 }

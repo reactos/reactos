@@ -23,9 +23,9 @@ int _findfirst(const char *_name, struct _finddata_t *result)
 	result->attrib = FindFileData.dwFileAttributes; 
 
 
-	result->time_create = FileTimeToUnixTime( &FindFileData.ftCreationTime,NULL);
-	result->time_access = FileTimeToUnixTime( &FindFileData.ftLastAccessTime,NULL);
-	result->time_write = FileTimeToUnixTime( &FindFileData.ftLastWriteTime,NULL);
+//	result->time_create = FileTimeToUnixTime( &FindFileData.ftCreationTime,NULL);
+//	result->time_access = FileTimeToUnixTime( &FindFileData.ftLastAccessTime,NULL);
+//	result->time_write = FileTimeToUnixTime( &FindFileData.ftLastWriteTime,NULL);
 	result->size = FindFileData.nFileSizeLow;
 	strncpy(result->name,FindFileData.cFileName,260);
 	return hFindFile;
@@ -41,9 +41,9 @@ int  _findnext(int handle, struct _finddata_t  *result)
 		return -1;
 	
 	result->attrib = FindFileData.dwFileAttributes; 
-	result->time_create = FileTimeToUnixTime( &FindFileData.ftCreationTime,NULL);
-	result->time_access = FileTimeToUnixTime( &FindFileData.ftLastAccessTime,NULL);
-	result->time_write = FileTimeToUnixTime( &FindFileData.ftLastWriteTime,NULL);
+//	result->time_create = FileTimeToUnixTime( &FindFileData.ftCreationTime,NULL);
+//	result->time_access = FileTimeToUnixTime( &FindFileData.ftLastAccessTime,NULL);
+//	result->time_write = FileTimeToUnixTime( &FindFileData.ftLastWriteTime,NULL);
 	result->size = FindFileData.nFileSizeLow;
 	strncpy(result->name,FindFileData.cFileName,260);
 	return 0;

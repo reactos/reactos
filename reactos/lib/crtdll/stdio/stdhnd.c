@@ -5,7 +5,7 @@
 
 
 
-FILE _crtdll_iob[] = 
+FILE _crtdll_iob[5] =
 {
 	// stdin
 {

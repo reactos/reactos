@@ -422,7 +422,7 @@ ZwSetContextChannel@4
 ZwYieldExecution@0
 RtlAllocateHeap@12
 RtlCreateHeap@24
-RtlCompactHeap
+RtlCompactHeap@8
 RtlDestroyHeap@4
 RtlFreeHeap@12
 RtlGetProcessHeap@0

@@ -233,6 +233,7 @@ asmlinkage void exception_handler(unsigned int edi,
 	DbgPrint("ESP %.8x\n",esp);
      }
    
+   for(;;);
    
   if ((cs & 0xffff) == KERNEL_CS)
     {

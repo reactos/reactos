@@ -14,6 +14,7 @@
 #include <kernel32/proc.h>
 #include <internal/teb.h>
 
+#define NDEBUG
 #include <kernel32/kernel32.h>
 
 WINBOOL STDCALL DllMain (HANDLE hInst, 
@@ -33,12 +34,16 @@ WINBOOL STDCALL DllMain(HANDLE hInst,
 			ULONG ul_reason_for_call,
 			LPVOID lpReserved)
 {
-   DPRINT("DllMain");
+   DPRINT("DllMain(hInst %x, ul_reason_for_call %d)\n",
+	  hInst, ul_reason_for_call);
    switch (ul_reason_for_call) 
      {
       case DLL_PROCESS_ATTACH:
 	  {     
 	     DPRINT("DLL_PROCESS_ATTACH\n");
+	     AllocConsole();
+	     SetCurrentDirectoryA("C:\\");
+	     break;
 	  }
     	case DLL_THREAD_ATTACH:
 	  {

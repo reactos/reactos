@@ -32,6 +32,21 @@ VOID RegisterWaitForInputIdle(WaitForInputIdleType  lpfnRegisterWaitForInputIdle
 
 WINBOOL STDCALL GetProcessId(HANDLE hProcess, LPDWORD lpProcessId);
 
+FARPROC GetProcAddress(HMODULE hModule, LPCSTR lpProcName)
+{
+   dprintf("GetProcAddress is unimplemented\n");
+}
+
+WINBOOL STDCALL GetProcessTimes(HANDLE hProcess,
+				LPFILETIME lpCreationTime,
+				LPFILETIME lpExitTime,
+				LPFILETIME lpKernelTime,
+				LPFILETIME lpUserTime)
+{
+   dprintf("GetProcessTimes is unimplemented\n");
+   return(FALSE);
+}
+
 HANDLE STDCALL GetCurrentProcess(VOID)
 {
 	return (HANDLE)NtCurrentProcess();

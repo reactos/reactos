@@ -35,12 +35,14 @@ EXPORTS
 ;AddConsoleAliasA@12
 ;AddConsoleAliasW@12
 AllocConsole@0
+AllocConsole = AllocConsole@0
 ;AreFileApisANSI@0
 ;BackupRead@28
 ;BackupSeek@24
 ;BackupWrite@28
 ;BaseAttachCompleteThunk@0
-;Beep@8
+Beep@8
+Beep = Beep@8
 ;BeginUpdateResourceA@8
 ;BeginUpdateResourceW@8
 ;BuildCommDCBA@8
@@ -53,6 +55,7 @@ AllocConsole@0
 ;ClearCommError@12
 ;CloseConsoleHandle@4
 CloseHandle@4
+CloseHandle = CloseHandle@4
 ;CloseProfileUserMapping@0
 ;CmdBatNotification@4
 ;CommConfigDialogA@12
@@ -65,18 +68,28 @@ CloseHandle@4
 ;ContinueDebugEvent@12
 ;ConvertDefaultLocale@4
 ;CopyFileA@12
-;CopyFileW@12
+CopyFileA = CopyFileA@12
+CopyFileW@12
+CopyFileW = CopyFileW@12
 ;CreateConsoleScreenBuffer@20
 CreateDirectoryA@8
+CreateDirectoryA = CreateDirectoryA@8
 CreateDirectoryExA@12
+CreateDirectoryExA = CreateDirectoryExA@12
 CreateDirectoryExW@12
+CreateDirectoryExW = CreateDirectoryExW@12
 CreateDirectoryW@8
+CreateDirectoryW = CreateDirectoryW@8
 CreateEventA@16
+CreateEventA = CreateEventA@16
 CreateEventW@16
+CreateEventW = CreateEventW@16
 CreateFileA@28
+CreateFileA = CreateFileA@28
 ;CreateFileMappingA@24
 ;CreateFileMappingW@24
 CreateFileW@28
+CreateFileW = CreateFileW@28
 ;CreateIoCompletionPort@16
 ;CreateMailslotA@16
 ;CreateMailslotW@16
@@ -84,14 +97,19 @@ CreateFileW@28
 ;CreateMutexW@12
 ;CreateNamedPipeA@32
 ;CreateNamedPipeW@32
-;CreatePipe@16
+CreatePipe@16
+CreatePipe = CreatePipe@16
 CreateProcessA@40
+CreateProcessA = CreateProcessA@40
 CreateProcessW@40
+CreateProcessW = CreateProcessW@40
 CreateRemoteThread@28
+CreateRemoteThread = CreateRemoteThread@28
 ;CreateSemaphoreA@16
 ;CreateSemaphoreW@16
 ;CreateTapePartition@16
 CreateThread@24
+CreateThread = CreateThread@24
 ;CreateVirtualBuffer@12
 ;DebugActiveProcess@4
 ;DebugBreak@0
@@ -99,8 +117,11 @@ CreateThread@24
 ;DefineDosDeviceW@12
 ;DeleteAtom@4
 DeleteCriticalSection@4
-;DeleteFileA@4
-;DeleteFileW@4
+DeleteCriticalSection = DeleteCriticalSection@4
+DeleteFileA@4
+DeleteFileA = DeleteFileA@4
+DeleteFileW@4
+DeleteFileW = DeleteFileW@4
 ;DeviceIoControl@32
 ;DisableThreadLibraryCalls@4
 ;DisconnectNamedPipe@4
@@ -129,6 +150,7 @@ DeleteCriticalSection@4
 ;EraseTape@12
 ;EscapeCommFunction@8
 ExitProcess@4
+ExitProcess = ExitProcess@4
 ;ExitThread@4
 ;ExitVDM@8
 ;ExpandEnvironmentStringsA@12
@@ -148,20 +170,26 @@ ExitProcess@4
 ;FindAtomA@4
 ;FindAtomW@4
 FindClose@4
+FindClose = FindClose@4
 ;FindCloseChangeNotification@4
 ;FindFirstChangeNotificationA@12
 ;FindFirstChangeNotificationW@12
 FindFirstFileA@8
+FindFirstFileA = FindFirstFileA@8
 FindFirstFileW@8
+FindFirstFileW = FindFirstFileW@8
 ;FindNextChangeNotification@4
 FindNextFileA@8
+FindNextFileA = FindNextFileA@8
 FindNextFileW@8
+FindNextFileW = FindNextFileW@8
 ;FindResourceA@12
 ;FindResourceExA@16
 ;FindResourceExW@16
 ;FindResourceW@12
 ;FlushConsoleInputBuffer@4
-;FlushFileBuffers@4
+FlushFileBuffers@4
+FlushFileBuffers = FlushFileBuffers@4
 ;FlushInstructionCache@12
 ;FlushViewOfFile@8
 ;FoldStringA@20
@@ -171,7 +199,8 @@ FindNextFileW@8
 ;FreeConsole@0
 ;FreeEnvironmentStringsA@4
 ;FreeEnvironmentStringsW@4
-;FreeLibrary@4
+FreeLibrary@4
+FreeLibrary = FreeLibrary@4
 ;FreeLibraryAndExitThread@8
 ;FreeResource@4
 ;FreeVirtualBuffer@4
@@ -190,9 +219,13 @@ FindNextFileW@8
 ;GetCommState@8
 ;GetCommTimeouts@8
 GetCommandLineA@0
+GetCommandLineA = GetCommandLineA@0
 GetCommandLineW@0
-;GetCompressedFileSizeA@8
-;GetCompressedFileSizeW@8
+GetCommandLineW = GetCommandLineW@0
+GetCompressedFileSizeA@8
+GetCompressedFileSizeA = GetCompressedFileSizeA@8
+GetCompressedFileSizeW@8
+GetCompressedFileSizeW = GetCompressedFileSizeW@8
 ;GetComputerNameA@8
 ;GetComputerNameW@8
 ;GetConsoleAliasA@16
@@ -225,37 +258,58 @@ GetCommandLineW@0
 ;GetCurrencyFormatW@24
 ;GetCurrentConsoleFont@12
 GetCurrentDirectoryA@8
+GetCurrentDirectoryA = GetCurrentDirectoryA@8
 GetCurrentDirectoryW@8
-;GetCurrentProcess@0
+GetCurrentDirectoryW = GetCurrentDirectoryW@8
+GetCurrentProcess@0
+GetCurrentProcess = GetCurrentProcess@0
 ;GetCurrentProcessId@0
-;GetCurrentThread@0
-;GetCurrentThreadId@0
+GetCurrentThread@0
+GetCurrentThread = GetCurrentThread@0
+GetCurrentThreadId@0
+GetCurrentThreadId = GetCurrentThreadId@0
 ;GetDateFormatA@24
 ;GetDateFormatW@24
 ;GetDefaultCommConfigA@12
 ;GetDefaultCommConfigW@12
-;GetDiskFreeSpaceA@20
-;GetDiskFreeSpaceW@20
+GetDiskFreeSpaceA@20
+GetDiskFreeSpaceA = GetDiskFreeSpaceA@20
+GetDiskFreeSpaceW@20
+GetDiskFreeSpaceW = GetDiskFreeSpaceW@20
 ;GetDriveTypeA@4
 ;GetDriveTypeW@4
 ;GetEnvironmentStrings@0
 GetEnvironmentStringsA@0
+GetEnvironmentStringsA = GetEnvironmentStringsA@0
 GetEnvironmentStringsW@0
-;GetEnvironmentVariableA@12
-;GetEnvironmentVariableW@12
-;GetExitCodeProcess@8
+GetEnvironmentStringsW = GetEnvironmentStringsW@0
+GetEnvironmentVariableA@12
+GetEnvironmentVariableA = GetEnvironmentVariableA@12
+GetEnvironmentVariableW@12
+GetEnvironmentVariableW = GetEnvironmentVariableW@12
+GetExitCodeProcess@8
+GetExitCodeProcess = GetExitCodeProcess@8
 ;GetExitCodeThread@8
-;GetFileAttributesA@4
-;GetFileAttributesW@4
-;GetFileInformationByHandle@8
-;GetFileSize@8
-;GetFileTime@16
-;GetFileType@4
-;GetFullPathNameA@16
-;GetFullPathNameW@16
+GetFileAttributesA@4
+GetFileAttributesA = GetFileAttributesA@4
+GetFileAttributesW@4
+GetFileAttributesW = GetFileAttributesW@4
+GetFileInformationByHandle@8
+GetFileInformationByHandle = GetFileInformationByHandle@8
+GetFileSize@8
+GetFileSize = GetFileSize@8
+GetFileTime@16
+GetFileTime = GetFileTime@16
+GetFileType@4
+GetFileType = GetFileType@4
+GetFullPathNameA@16
+GetFullPathNameA = GetFullPathNameA@16
+GetFullPathNameW@16
+GetFullPathNameW = GetFullPathNameW@16
 ;GetHandleInformation@8
 ;GetLargestConsoleWindowSize@4
-;GetLastError@0
+GetLastError@0
+GetLastError = GetLastError@0
 ;GetLocalTime@4
 ;GetLocaleInfoA@16
 ;GetLocaleInfoW@16
@@ -289,12 +343,15 @@ GetEnvironmentStringsW@0
 ;GetPrivateProfileStringW@24
 ;GetPrivateProfileStructA@20
 ;GetPrivateProfileStructW@20
-;GetProcAddress@8
+GetProcAddress@8
+GetProcAddress = GetProcAddress@8
 ;GetProcessAffinityMask@12
 GetProcessHeap@0
+GetProcessHeap = GetProcessHeap@0
 ;GetProcessHeaps@8
 ;GetProcessShutdownParameters@8
-;GetProcessTimes@20
+GetProcessTimes@20
+GetProcessTimes = GetProcessTimes@20
 ;GetProcessVersion@4
 ;GetProcessWorkingSetSize@12
 ;GetProfileIntA@12
@@ -309,6 +366,7 @@ GetProcessHeap@0
 ;GetStartupInfoA@4
 ;GetStartupInfoW@4
 GetStdHandle@4
+GetStdHandle = GetStdHandle@4
 ;GetStringTypeA@20
 ;GetStringTypeExA@20
 ;GetStringTypeExW@20
@@ -321,14 +379,19 @@ GetStdHandle@4
 ;GetSystemPowerStatus@4
 ;GetSystemTime@4
 ;GetSystemTimeAdjustment@12
-;GetSystemTimeAsFileTime@4
+GetSystemTimeAsFileTime@4
+GetSystemTimeAsFileTime = GetSystemTimeAsFileTime@4
 ;GetTapeParameters@16
 ;GetTapePosition@20
 ;GetTapeStatus@4
-;GetTempFileNameA@16
-;GetTempFileNameW@16
-;GetTempPathA@8
-;GetTempPathW@8
+GetTempFileNameA@16
+GetTempFileNameA = GetTempFileNameA@16
+GetTempFileNameW@16
+GetTempFileNameW = GetTempFileNameW@16
+GetTempPathA@8
+GetTempPathA = GetTempPathA@8
+GetTempPathW@8
+GetTempPathW = GetTempPathW@8
 ;GetThreadContext@8
 ;GetThreadLocale@0
 ;GetThreadPriority@4
@@ -342,6 +405,7 @@ GetStdHandle@4
 ;GetUserDefaultLangID@0
 ;GetVDMCurrentDirectories@8
 GetVersion@0
+GetVersion = GetVersion@0
 ;GetVersionExA@4
 ;GetVersionExW@4
 ;GetVolumeInformationA@32
@@ -370,20 +434,29 @@ GetVersion@0
 ;GlobalUnlock@4
 ;GlobalWire@4
 HeapAlloc@12
+HeapAlloc = HeapAlloc@12
 HeapCompact@8
+HeapCompact = HeapCompact@8
 HeapCreate@12
+HeapCreate = HeapCreate@12
 ;HeapCreateTagsW@16
 HeapDestroy@4
+HeapDestroy = HeapDestroy@4
 ;HeapExtend@16
 HeapFree@12
+HeapFree = HeapFree@12
 ;HeapLock@4
 ;HeapQueryTagW@20
 HeapReAlloc@16
+HeapReAlloc = HeapReAlloc@16
 HeapSize@12
+HeapSize = HeapSize@12
 ;HeapSummary@12
 HeapUnlock@4
+HeapUnlock = HeapUnlock@4
 ;HeapUsage@20
 HeapValidate@12
+HeapValidate = HeapValidate@12
 ;HeapWalk@8
 ;InitAtomTable@4
 ;InitializeCriticalSection@4
@@ -406,7 +479,8 @@ HeapValidate@12
 ;LCMapStringA@24
 ;LCMapStringW@24
 ;LeaveCriticalSection@4
-;LoadLibraryA@4
+LoadLibraryA@4
+LoadLibraryA = LoadLibraryA@4
 ;LoadLibraryExA@12
 ;LoadLibraryExW@12
 ;LoadLibraryW@4
@@ -423,21 +497,27 @@ HeapValidate@12
 ;LocalShrink@8
 ;LocalSize@4
 ;LocalUnlock@4
-;LockFile@20
+LockFile@20
+LockFile = LockFile@20
 ;LockFileEx@24
 ;LockResource@4
 ;MapViewOfFile@20
 ;MapViewOfFileEx@24
-;MoveFileA@8
+MoveFileA@8
+MoveFileA = MoveFileA@8
 ;MoveFileExA@12
 ;MoveFileExW@12
-;MoveFileW@8
+MoveFileW@8
+MoveFileW = MoveFileW@8
 ;MulDiv@12
 ;MultiByteToWideChar@24
 ;OpenConsoleW@16
-;OpenEventA@12
-;OpenEventW@12
-;OpenFile@12
+OpenEventA@12
+OpenEventA = OpenEventA@12
+OpenEventW@12
+OpenEventW = OpenEventW@12
+OpenFile@12
+OpenFile = OpenFile@12
 ;OpenFileMappingA@12
 ;OpenFileMappingW@12
 ;OpenMutexA@12
@@ -453,7 +533,8 @@ HeapValidate@12
 ;PeekNamedPipe@24
 ;PostQueuedCompletionStatus@16
 ;PrepareTape@12
-;PulseEvent@4
+PulseEvent@4
+PulseEvent = PulseEvent@4
 ;PurgeComm@8
 ;QueryDosDeviceA@12
 ;QueryDosDeviceW@12
@@ -462,6 +543,7 @@ HeapValidate@12
 ;QueryWin31IniFilesMappedToRegistry@16
 ;RaiseException@16
 ReadConsoleA@20
+ReadConsoleA = ReadConsoleA@20
 ;ReadConsoleInputA@16
 ;ReadConsoleInputW@16
 ;ReadConsoleOutputA@20
@@ -471,7 +553,9 @@ ReadConsoleA@20
 ;ReadConsoleOutputW@20
 ;ReadConsoleW@20
 ReadFile@20
+ReadFile = ReadFile@20
 ReadFileEx@20
+ReadFileEx = ReadFileEx@20
 ;ReadProcessMemory@20
 ;RegisterConsoleVDM@44
 ;RegisterWaitForInputIdle@4
@@ -479,9 +563,12 @@ ReadFileEx@20
 ;RegisterWowExec@4
 ;ReleaseMutex@4
 ;ReleaseSemaphore@12
-;RemoveDirectoryA@4
-;RemoveDirectoryW@4
-;ResetEvent@4
+RemoveDirectoryA@4
+RemoveDirectoryA = RemoveDirectoryA@4
+RemoveDirectoryW@4
+RemoveDirectoryW = RemoveDirectoryW@4
+ResetEvent@4
+ResetEvent = ResetEvent@4
 ;ResumeThread@4
 ;RtlFillMemory@12
 ;RtlMoveMemory@12
@@ -489,8 +576,10 @@ ReadFileEx@20
 ;RtlZeroMemory@8
 ;ScrollConsoleScreenBufferA@20
 ;ScrollConsoleScreenBufferW@20
-;SearchPathA@24
-;SearchPathW@24
+SearchPathA@24
+SearchPathA = SearchPathA@24
+SearchPathW@24
+SearchPathW = SearchPathW@24
 ;SetCommBreak@4
 ;SetCommConfig@12
 ;SetCommMask@8
@@ -522,20 +611,32 @@ ReadFileEx@20
 ;SetConsoleTitleW@4
 ;SetConsoleWindowInfo@12
 SetCurrentDirectoryA@4
+SetCurrentDirectoryA = SetCurrentDirectoryA@4
 SetCurrentDirectoryW@4
+SetCurrentDirectoryW = SetCurrentDirectoryW@4
 ;SetDefaultCommConfigA@12
 ;SetDefaultCommConfigW@12
-;SetEndOfFile@4
-;SetEnvironmentVariableA@8
-;SetEnvironmentVariableW@8
-;SetErrorMode@4
-;SetEvent@4
-;SetFileApisToANSI@0
-;SetFileApisToOEM@0
-;SetFileAttributesA@8
-;SetFileAttributesW@8
+SetEndOfFile@4
+SetEndOfFile = SetEndOfFile@4
+SetEnvironmentVariableA@8
+SetEnvironmentVariableA = SetEnvironmentVariableA@8
+SetEnvironmentVariableW@8
+SetEnvironmentVariableW = SetEnvironmentVariableW@8
+SetErrorMode@4
+SetErrorMode = SetErrorMode@4
+SetEvent@4
+SetEvent = SetEvent@4
+SetFileApisToANSI@0
+SetFileApisToANSI = SetFileApisToANSI@0
+SetFileApisToOEM@0
+SetFileApisToOEM = SetFileApisToOEM@0
+SetFileAttributesA@8
+SetFileAttributesA = SetFileAttributesA@8
+SetFileAttributesW@8
+SetFileAttributesW = SetFileAttributesW@8
 ;SetFilePointer@16
-;SetFileTime@16
+SetFileTime@16
+SetFileTime = SetFileTime@16
 ;SetHandleCount@4
 ;SetHandleInformation@12
 ;SetLastConsoleEventActive@0
@@ -560,14 +661,16 @@ SetCurrentDirectoryW@4
 ;SetThreadLocale@4
 ;SetThreadPriority@8
 ;SetTimeZoneInformation@4
-;SetUnhandledExceptionFilter@4
+SetUnhandledExceptionFilter@4
+SetUnhandledExceptionFilter = SetUnhandledExceptionFilter@4
 ;SetVDMCurrentDirectories@8
 ;SetVolumeLabelA@8
 ;SetVolumeLabelW@8
 ;SetupComm@12
 ;ShowConsoleCursor@8
 ;SizeofResource@8
-;Sleep@4
+Sleep@4
+Sleep = Sleep@4
 ;SleepEx@8
 ;SuspendThread@4
 ;SystemTimeToFileTime@8
@@ -610,8 +713,10 @@ WaitForSingleObject@8
 ;WaitNamedPipeA@8
 ;WaitNamedPipeW@8
 ;WideCharToMultiByte@32
-;WinExec@8
+WinExec@8
+WinExec = WinExec@8
 WriteConsoleA@20
+WriteConsoleA = WriteConsoleA@20
 ;WriteConsoleInputA@16
 ;WriteConsoleInputVDMA@16
 ;WriteConsoleInputVDMW@16
@@ -622,7 +727,8 @@ WriteConsoleA@20
 ;WriteConsoleOutputCharacterW@20
 ;WriteConsoleOutputW@20
 ;WriteConsoleW@20
-;WriteFile@20
+WriteFile@20
+WriteFile = WriteFile@20
 ;WriteFileEx@20
 ;WritePrivateProfileSectionA@12
 ;WritePrivateProfileSectionW@12
@@ -640,7 +746,8 @@ WriteConsoleA@20
 ;_hwrite@12
 ;_lclose@4
 ;_lcreat@8
-;_llseek@12
+_llseek@12
+_llseek = _llseek@12
 ;_lopen@8
 ;_lread@12
 ;_lwrite@12

@@ -27,6 +27,7 @@
  */
 
 #include <ddk/ntddk.h>
+#include <ntdll/rtl.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>

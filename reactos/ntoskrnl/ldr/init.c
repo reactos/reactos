@@ -28,7 +28,6 @@
 #include <internal/string.h>
 #include <internal/symbol.h>
 #include <internal/teb.h>
-
 #include <ddk/ntddk.h>
 
 //#define NDEBUG

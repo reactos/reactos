@@ -15,6 +15,7 @@
 #include <internal/ob.h>
 #include <string.h>
 #include <internal/string.h>
+#include <internal/ps.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -326,13 +327,15 @@ NTSTATUS ObReferenceObjectByHandle(HANDLE Handle,
 	  "ObjectType %x, AccessMode %d, Object %x)\n",Handle,DesiredAccess,
 	  ObjectType,AccessMode,Object);
    
-   if (Handle == NtCurrentProcess())
+   if (Handle == NtCurrentProcess() && 
+       (ObjectType == PsProcessType || ObjectType == NULL))
      {
 	BODY_TO_HEADER(PsGetCurrentProcess())->RefCount++;
 	*Object = PsGetCurrentProcess();
 	return(STATUS_SUCCESS);
      }
-   if (Handle == NtCurrentThread())
+   if (Handle == NtCurrentThread() && 
+       (ObjectType == PsThreadType || ObjectType == NULL))
      {
 	BODY_TO_HEADER(PsGetCurrentThread())->RefCount++;
 	*Object = PsGetCurrentThread();
@@ -350,7 +353,7 @@ NTSTATUS ObReferenceObjectByHandle(HANDLE Handle,
    
    if (ObjectType != NULL && ObjectType != ObjectHeader->ObjectType)
      {
-	return(STATUS_UNSUCCESSFUL);
+	return(STATUS_OBJECT_TYPE_MISMATCH);
      }   
    
    if (!(HandleRep->GrantedAccess & DesiredAccess))

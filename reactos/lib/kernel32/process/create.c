@@ -21,7 +21,7 @@
 #include <ntdll/ldr.h>
 #include <internal/teb.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <kernel32/kernel32.h>
 
 /* FUNCTIONS ****************************************************************/
@@ -106,21 +106,7 @@ HANDLE STDCALL CreateFirstThread(HANDLE ProcessHandle,
    BOOLEAN CreateSuspended = FALSE;
    PVOID BaseAddress;
    ULONG BytesWritten;
-   ULONG CommandLineLen;
    HANDLE DupNTDllSectionHandle, DupSectionHandle;
-   
-   if (lpCommandLine == NULL)
-     {
-	lpCommandLine = L"";
-	CommandLineLen = 1;
-     }
-   else
-     {
-	CommandLineLen = wcslen(lpCommandLine) + 1;     
-     }
-   CommandLineLen = CommandLineLen * sizeof(WCHAR);
-   CommandLineLen = (CommandLineLen & (~0x3)) + 4;
-   DPRINT("CommandLineLen %d\n",CommandLineLen);
    
    
    ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
@@ -438,7 +424,12 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
    DPRINT("CreateProcessW(lpApplicationName '%w', lpCommandLine '%w')\n",
 	   lpApplicationName,lpCommandLine);
    
-   wcscpy(TempCommandLine, lpCommandLine);
+   wcscpy(TempCommandLine, lpApplicationName);
+   if (lpCommandLine != NULL)
+     {
+	wcscat(TempCommandLine, L" ");
+	wcscat(TempCommandLine, lpCommandLine);
+     }
    
    
    hSection = KERNEL32_MapFile(lpApplicationName, 

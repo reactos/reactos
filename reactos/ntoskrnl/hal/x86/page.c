@@ -58,32 +58,16 @@ static ULONG ProtectToPTE(ULONG flProtect)
                                 (((ULONG)v / (1024 * 1024))&(~0x3)))
 #define ADDR_TO_PTE(v) (PULONG)(PAGETABLE_MAP + ((ULONG)v / 1024))
 
-NTSTATUS MmReleaseMmInfo(PEPROCESS Process)
+NTSTATUS Mmi386ReleaseMmInfo(PEPROCESS Process)
 {
    ULONG i,j,addr;
    
-   DbgPrint("MmReleaseMmInfo(Process %x)\n",Process);
+   DPRINT("Mmi386ReleaseMmInfo(Process %x)\n",Process);
    
-   KeAttachProcess(Process);
-   for (i=0; i<1024; i++)
-     {
-	if (ADDR_TO_PDE(i*4*1024*1024) != 0)
-	  {
-	     for (j=0; j<1024; j++)
-	       {
-		  addr = i*4*1024*1024 + j*4*1024;
-		  if (ADDR_TO_PTE(addr) != 0)
-		    {
-		       MmFreePage((PVOID)PAGE_MASK(*ADDR_TO_PTE(addr)), 1);
-		    }
-	       }
-	  }
-     }
-   KeDetachProcess();
    MmFreePage(Process->Pcb.PageTableDirectory, 1);
    Process->Pcb.PageTableDirectory = NULL;
    
-   DbgPrint("Finished MmReleaseMmInfo()\n");
+   DPRINT("Finished Mmi386ReleaseMmInfo()\n");
    return(STATUS_SUCCESS);
 }
 
@@ -123,13 +107,15 @@ NTSTATUS MmCopyMmInfo(PEPROCESS Src, PEPROCESS Dest)
 
 VOID MmDeletePageTable(PEPROCESS Process, PVOID Address)
 {
-   if (Process != NULL && Process != PsGetCurrentProcess())
+   PEPROCESS CurrentProcess = PsGetCurrentProcess();
+   
+   if (Process != NULL && Process != CurrentProcess)
      {
 	KeAttachProcess(Process);
      }
    *(ADDR_TO_PDE(Address)) = 0;
    FLUSH_TLB;
-   if (Process != NULL && Process != PsGetCurrentProcess())
+   if (Process != NULL && Process != CurrentProcess)
      {
 	KeDetachProcess();
      }
@@ -138,40 +124,46 @@ VOID MmDeletePageTable(PEPROCESS Process, PVOID Address)
 ULONG MmGetPageEntryForProcess(PEPROCESS Process, PVOID Address)
 {
    ULONG Entry;
+   PEPROCESS CurrentProcess = PsGetCurrentProcess();
    
-   if (Process != NULL && Process != PsGetCurrentProcess())
+   if (Process != NULL && Process != CurrentProcess)
      {
 	KeAttachProcess(Process);
      }
    Entry = *MmGetPageEntry(Address);
-   if (Process != NULL && Process != PsGetCurrentProcess())
+   if (Process != NULL && Process != CurrentProcess)
      {
 	KeDetachProcess();
      }
    return(Entry);
 }
 
-VOID MmDeletePageEntry(PEPROCESS Process, PVOID Address)
+VOID MmDeletePageEntry(PEPROCESS Process, PVOID Address, BOOL FreePage)
 {
    PULONG page_tlb;
    PULONG page_dir;
+   PEPROCESS CurrentProcess = PsGetCurrentProcess();
    
-   if (Process != NULL && Process != PsGetCurrentProcess())
+   if (Process != NULL && Process != CurrentProcess)
      {
 	KeAttachProcess(Process);
      }
    page_dir = ADDR_TO_PDE(Address);
    if ((*page_dir) == 0)
      {
-	if (Process != NULL && Process != PsGetCurrentProcess())
+	if (Process != NULL && Process != CurrentProcess)
 	  {
 	     KeDetachProcess();
 	  }	
 	return;
      }
    page_tlb = ADDR_TO_PTE(Address);
+   if (FreePage)
+     {
+	MmFreePage(PAGE_MASK(*page_tlb),1);
+     }
    *page_tlb = 0;
-   if (Process != NULL && Process != PsGetCurrentProcess())
+   if (Process != NULL && Process != CurrentProcess)
      {
 	KeDetachProcess();
      }
@@ -212,7 +204,7 @@ VOID MmSetPage(PEPROCESS Process,
 	       ULONG flProtect,
 	       ULONG PhysicalAddress)
 {
-   
+   PEPROCESS CurrentProcess = PsGetCurrentProcess();
    ULONG Attributes = 0;
    
    DPRINT("MmSetPage(Process %x, Address %x, flProtect %x, "
@@ -221,13 +213,13 @@ VOID MmSetPage(PEPROCESS Process,
    
    Attributes = ProtectToPTE(flProtect);
    
-   if (Process != NULL && Process != PsGetCurrentProcess())
+   if (Process != NULL && Process != CurrentProcess)
      {
 	KeAttachProcess(Process);
      }
    (*MmGetPageEntry(Address)) = PhysicalAddress | Attributes;
    FLUSH_TLB;
-   if (Process != NULL && Process != PsGetCurrentProcess())
+   if (Process != NULL && Process != CurrentProcess)
      {
 	KeDetachProcess();
      }
@@ -239,17 +231,18 @@ VOID MmSetPageProtect(PEPROCESS Process,
 {
    ULONG Attributes = 0;
    PULONG PageEntry;
+   PEPROCESS CurrentProcess = PsGetCurrentProcess();
    
    Attributes = ProtectToPTE(flProtect);
 
-   if (Process != PsGetCurrentProcess())
+   if (Process != CurrentProcess)
      {
 	KeAttachProcess(Process);
      }
    PageEntry = MmGetPageEntry(Address);
    (*PageEntry) = PAGE_MASK(*PageEntry) | Attributes;
    FLUSH_TLB;
-   if (Process != PsGetCurrentProcess())
+   if (Process != CurrentProcess)
      {
 	KeDetachProcess();
      }

@@ -18,13 +18,15 @@
 #include <ntdll/ldr.h>
 #include <ntdll/rtl.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <ntdll/ntdll.h>
 
 /* GLOBALS *******************************************************************/
 
 DLL LdrDllListHead;
 extern unsigned int _image_base__;
+extern HANDLE __ProcessHeap;
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -105,18 +107,21 @@ VOID LdrStartup(HANDLE SectionHandle,
      }
 
    NTHeaders = (PIMAGE_NT_HEADERS)(ImageBase + PEDosHeader->e_lfanew);
-   __RtlInitHeap((PVOID)HEAP_BASE,
-		 NTHeaders->OptionalHeader.SizeOfHeapCommit, 
-		 NTHeaders->OptionalHeader.SizeOfHeapReserve);
+   __ProcessHeap = RtlCreateHeap(0,
+				 (PVOID)HEAP_BASE,
+				 NTHeaders->OptionalHeader.SizeOfHeapCommit, 
+				 NTHeaders->OptionalHeader.SizeOfHeapReserve,
+				 NULL,
+				 NULL);
    EntryPoint = LdrPEStartup((PVOID)ImageBase, SectionHandle);
 
    if (EntryPoint == NULL)
      {
-	DPRINT("Failed to initialize image\n");
-	ZwTerminateProcess(NULL,STATUS_UNSUCCESSFUL);
+	dprintf("Failed to initialize image\n");
+	ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
      }
    
-   DPRINT("Transferring control to image at %x\n",EntryPoint);
+   dprintf("Transferring control to image at %x\n",EntryPoint);
    Status = EntryPoint();
    ZwTerminateProcess(NtCurrentProcess(),Status);
 }

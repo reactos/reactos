@@ -17,7 +17,7 @@
 #include <wchar.h>
 #include <string.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <kernel32/kernel32.h>
 
 /* EXTERNS ******************************************************************/
@@ -175,7 +175,7 @@ HANDLE STDCALL CreateFileW(LPCWSTR lpFileName,
    if (!NT_SUCCESS(Status))
    {
 	SetLastError(RtlNtStatusToDosError(Status));
-	return NULL;
+	return INVALID_HANDLE_VALUE;
    }
    return(FileHandle);			 
 }

@@ -2010,7 +2010,8 @@ extern "C" {
 #define HEAP_NO_SERIALIZE	(1)
 #define HEAP_ZERO_MEMORY	(8)
 #define HEAP_REALLOC_IN_PLACE_ONLY	(16)
-
+#define HEAP_GROWABLE (32)
+   
 /* ImageList_Create */
 #define ILC_COLOR	(0)
 #define ILC_COLOR4	(4)

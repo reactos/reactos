@@ -10,13 +10,12 @@
 FILE *	__alloc_file(void);
 
 
-FILE *
-fopen(const char *file, const char *mode)
+FILE* fopen(const char *file, const char *mode)
 {
   FILE *f;
   int fd, rw, oflags = 0;
   char tbchar;
-
+   
   if (file == 0)
     return 0;
   if (mode == 0)

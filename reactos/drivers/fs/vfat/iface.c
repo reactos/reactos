@@ -1580,6 +1580,37 @@ NTSTATUS FsdGetStandardInformation(PVfatFCB FCB, PDEVICE_OBJECT DeviceObject,
   return STATUS_SUCCESS;
 }
 
+NTSTATUS FsdSetPositionInformation(PFILE_OBJECT FileObject,
+				   PVfatFCB FCB,
+				   PDEVICE_OBJECT DeviceObject,
+                                   PFILE_POSITION_INFORMATION PositionInfo)
+ {
+    DbgPrint("FsdSetPositionInformation()\n");
+    
+    DbgPrint("PositionInfo %x\n", PositionInfo);
+    DbgPrint("Setting position %d\n",GET_LARGE_INTEGER_LOW_PART(
+				   PositionInfo->CurrentByteOffset));
+    memcpy(&FileObject->CurrentByteOffset,&PositionInfo->CurrentByteOffset,
+	   sizeof(LARGE_INTEGER));
+    
+    return(STATUS_SUCCESS);
+ }
+ 
+NTSTATUS FsdGetPositionInformation(PFILE_OBJECT FileObject,
+				   PVfatFCB FCB,
+				   PDEVICE_OBJECT DeviceObject,
+                                   PFILE_POSITION_INFORMATION PositionInfo)
+ {
+    DbgPrint("FsdGetPositionInformation()\n");
+    
+    memcpy(&PositionInfo->CurrentByteOffset, &FileObject->CurrentByteOffset,
+	   sizeof(LARGE_INTEGER));
+    DbgPrint("Getting position %x\n",GET_LARGE_INTEGER_LOW_PART(
+				   PositionInfo->CurrentByteOffset));
+    return(STATUS_SUCCESS);
+ }
+ 
+
 NTSTATUS FsdQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
  * FUNCTION: Retrieve the specified file information
@@ -1618,6 +1649,12 @@ NTSTATUS FsdQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
       case FileStandardInformation:
          RC = FsdGetStandardInformation(FCB, DeviceObject, SystemBuffer);
       break;
+      case FilePositionInformation:
+         RC = FsdGetPositionInformation(FileObject,
+					FCB, 
+					DeviceObject, 
+					SystemBuffer);
+      break;
       default:
        RC=STATUS_NOT_IMPLEMENTED;
    }
@@ -1625,6 +1662,60 @@ NTSTATUS FsdQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    return RC;
 }
 
+NTSTATUS FsdSetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+/*
+ * FUNCTION: Retrieve the specified file information
+ */
+{
+   PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
+   FILE_INFORMATION_CLASS FileInformationClass;
+   PFILE_OBJECT FileObject = NULL;
+   PVfatFCB FCB = NULL;
+//   PVfatCCB CCB = NULL;   
+   NTSTATUS RC = STATUS_SUCCESS;
+   PVOID SystemBuffer;
+
+   /* PRECONDITION */
+   assert(DeviceObject != NULL);
+   assert(Irp != NULL);
+   
+   DbgPrint("FsdSetInformation(DeviceObject %x, Irp %x)\n",
+	    DeviceObject,Irp);
+   
+   /* INITIALIZATION */
+   Stack = IoGetCurrentIrpStackLocation(Irp);
+   FileInformationClass = Stack->Parameters.SetFile.FileInformationClass;
+   FileObject = Stack->FileObject;
+   FCB = ((PVfatCCB)(FileObject->FsContext2))->pFcb;
+
+   // FIXME : determine Buffer for result :
+  if (Irp->MdlAddress) 
+     SystemBuffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
+   else
+     SystemBuffer = Irp->UserBuffer;
+   //   SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
+   
+   DbgPrint("FileInformationClass %d\n",FileInformationClass);
+   DbgPrint("SystemBuffer %x\n",SystemBuffer);
+
+   switch(FileInformationClass) 
+     {
+      case FilePositionInformation:
+	RC = FsdSetPositionInformation(FileObject,
+				       FCB, 
+				       DeviceObject, 
+				       SystemBuffer);
+	break;
+      default:
+	RC = STATUS_NOT_IMPLEMENTED;
+     }
+   
+   IoCompleteRequest(Irp, IO_NO_INCREMENT);
+   
+   return RC;
+}
+ 
+ 
 STDCALL NTSTATUS DriverEntry(PDRIVER_OBJECT _DriverObject,
 			     PUNICODE_STRING RegistryPath)
 /*
@@ -1662,6 +1753,8 @@ STDCALL NTSTATUS DriverEntry(PDRIVER_OBJECT _DriverObject,
                       FsdFileSystemControl;
    VFATDriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] =
                       FsdQueryInformation;
+   VFATDriverObject->MajorFunction[IRP_MJ_SET_INFORMATION] =
+                      FsdSetInformation;
    VFATDriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] =
                       FsdDirectoryControl;
 
