@@ -1,4 +1,4 @@
-/* $Id: ide.c,v 1.36 2000/10/07 13:41:55 dwelch Exp $
+/* $Id: ide.c,v 1.37 2001/01/06 23:25:35 rex Exp $
  *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
@@ -246,8 +246,12 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
   WeGotSomeDisks = FALSE;
   for (ControllerIdx = 0; ControllerIdx < IDE_MAX_CONTROLLERS; ControllerIdx++) 
     {
-      WeGotSomeDisks |= IDECreateController(DriverObject, 
-          &Controllers[ControllerIdx], ControllerIdx);
+      if (IDECreateController(DriverObject, 
+                              &Controllers[ControllerIdx], 
+                              ControllerIdx))
+      {
+        WeGotSomeDisks = TRUE;
+      }
     }
 
   if (WeGotSomeDisks)
@@ -293,7 +297,7 @@ IDECreateController(IN PDRIVER_OBJECT DriverObject,
 
     //  Try to reset the controller and return FALSE if it fails
   if (!IDEResetController(ControllerParams->CommandPortBase,
-      ControllerParams->ControlPortBase)) 
+                          ControllerParams->ControlPortBase)) 
     {
       DPRINT("Could not find controller %d at %04lx\n",
           ControllerIdx, ControllerParams->CommandPortBase);
@@ -364,6 +368,8 @@ IDECreateController(IN PDRIVER_OBJECT DriverObject,
     }
   else
     {
+      IDEResetController(ControllerParams->CommandPortBase,
+                         ControllerParams->ControlPortBase);
       IoStartTimer(ControllerExtension->TimerDevice);
     }
 
@@ -515,7 +521,7 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
   RC = ZwCreateDirectoryObject(&Handle, 0, &DeviceDirAttributes);
   if (!NT_SUCCESS(RC))
     {
-      DPRINT("Could not create device dir object\n", 0);
+      DbgPrint("Could not create device dir object\n");
       return FALSE;
     }
 
@@ -572,18 +578,18 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
     {
       ExtendedPart = FALSE;
 
-      //  Get Main partition table for device
+      //  Get Next partition table for device
       if (!IDEGetPartitionTable(CommandPort, DriveIdx, PartitionOffset, &DrvParms, PartitionTable))
         {
-          DPRINT("drive %d controller %d offset %lu: Could not get primary partition table\n",
-                 DriveIdx,
-                 ControllerExtension->Number,
-                 PartitionOffset);
+          DbgPrint("drive %d controller %d offset %lu: Could not get partition table\n",
+                   DriveIdx,
+                   ControllerExtension->Number,
+                   PartitionOffset);
         }
       else
         {
           //  build devices for all partitions in table
-          DPRINT("partitions on %s:\n", DeviceDirName);
+          DPRINT("Read partition on %wZ at %ld\n", &UnicodeDeviceDirName, PartitionOffset);
           for (PartitionIdx = 0; PartitionIdx < 4; PartitionIdx++)
             {
               //  copy partition pointer for convenience
@@ -592,8 +598,8 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
               //  if the partition entry is in use, create a device for it
               if (IsRecognizedPartition(p->PartitionType))
                 {
-                  DPRINT("%s ptbl entry:%d type:%02x Start:%lu Size:%lu\n",
-                         DeviceDirName,
+                  DPRINT("%wZ ptbl entry:%d type:%02x Start:%lu Size:%lu\n",
+                         &UnicodeDeviceDirName,
                          PartitionIdx,
                          p->PartitionType,
                          p->StartingBlock,
@@ -615,19 +621,21 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
                       DPRINT("IDECreateDevice call failed\n",0);
                       break;
                     }
-                  PartitionOffset += (p->StartingBlock + p->SectorCount);
                   PartitionNum++;
                 }
               else if (IsExtendedPartition(p->PartitionType))
                 {
                   //  Create devices for logical partitions within an extended partition
-                  DPRINT("%s ptbl entry:%d type:%02x Start:%lu Size:%lu\n",
-                         DeviceDirName,
+                  DPRINT("%wZ ptbl entry:%d type:%02x Start:%lu Size:%lu\n",
+                         &UnicodeDeviceDirName,
                          PartitionIdx,
                          p->PartitionType,
                          p->StartingBlock,
                          p->SectorCount);
                   ExtendedPart = TRUE;
+                  //TODO: If it is possible for partitions to appear after chain, this code is wrong.
+                  PartitionOffset += p->StartingBlock;
+                  break;
                 }
             }
         }
@@ -1146,14 +1154,14 @@ DPRINT("Offset:%ld * BytesPerSector:%ld  = AdjOffset:%ld:%ld\n",
        DeviceExtension->BytesPerSector,
        (unsigned long) AdjustedOffset.u.HighPart,
        (unsigned long) AdjustedOffset.u.LowPart);
-DPRINT("AdjOffset:%ld:%ld + ByteOffset:%ld:%ld = ",
+DPRINT("AdjOffset:%ld:%ld + ByteOffset:%ld:%ld\n",
        (unsigned long) AdjustedOffset.u.HighPart,
        (unsigned long) AdjustedOffset.u.LowPart,
        (unsigned long) IrpStack->Parameters.Read.ByteOffset.u.HighPart,
        (unsigned long) IrpStack->Parameters.Read.ByteOffset.u.LowPart);
   AdjustedOffset = RtlLargeIntegerAdd(AdjustedOffset, 
                                       IrpStack->Parameters.Read.ByteOffset);
-DPRINT("AdjOffset:%ld:%ld\n",
+DPRINT(" = AdjOffset:%ld:%ld\n",
        (unsigned long) AdjustedOffset.u.HighPart,
        (unsigned long) AdjustedOffset.u.LowPart);
   AdjustedExtent = RtlLargeIntegerAdd(AdjustedOffset, 
@@ -1164,7 +1172,7 @@ DPRINT("AdjOffset:%ld:%ld + Length:%ld = AdjExtent:%ld:%ld\n",
        IrpStack->Parameters.Read.Length,
        (unsigned long) AdjustedExtent.u.HighPart,
        (unsigned long) AdjustedExtent.u.LowPart);
-    /* FIXME: this assumption will fail on drives bigger than 1TB */
+    /*FIXME: this assumption will fail on drives bigger than 1TB */
   PartitionExtent.QuadPart = DeviceExtension->Offset + DeviceExtension->Size;
   PartitionExtent = RtlExtendedIntegerMultiply(PartitionExtent, 
                                                DeviceExtension->BytesPerSector);
@@ -1192,7 +1200,7 @@ DPRINT("AdjOffset:%ld:%ld + Length:%ld = AdjExtent:%ld:%ld\n",
   IrpInsertKey = InsertKeyLI.u.LowPart;
   IoStartPacket(DeviceExtension->DeviceObject, Irp, &IrpInsertKey, NULL);
    
-   DPRINT("Returning STATUS_PENDING\n");
+  DPRINT("Returning STATUS_PENDING\n");
   return  STATUS_PENDING;
 }
 
@@ -1379,13 +1387,14 @@ IDEAllocateController(IN PDEVICE_OBJECT DeviceObject,
 BOOLEAN 
 IDEStartController(IN OUT PVOID Context) 
 {
-  BYTE SectorCnt, SectorNum, CylinderLow, CylinderHigh;
-  BYTE DrvHead, Command;
-  int Retries;
-  ULONG StartingSector;
-  PIDE_DEVICE_EXTENSION DeviceExtension;
-  PIDE_CONTROLLER_EXTENSION ControllerExtension;
-  PIRP Irp;
+  BYTE  SectorCnt, SectorNum, CylinderLow, CylinderHigh;
+  BYTE  DrvHead, Command;
+  BYTE  Status;
+  int  Retries;
+  ULONG  StartingSector;
+  PIDE_DEVICE_EXTENSION  DeviceExtension;
+  PIDE_CONTROLLER_EXTENSION  ControllerExtension;
+  PIRP  Irp;
 
   DeviceExtension = (PIDE_DEVICE_EXTENSION) Context;
   ControllerExtension = (PIDE_CONTROLLER_EXTENSION)
@@ -1417,12 +1426,12 @@ IDEStartController(IN OUT PVOID Context)
       CylinderHigh = StartingSector >> 8;
     }
   Command = DeviceExtension->Operation == IRP_MJ_READ ? 
-//      IDE_CMD_READ_RETRY : IDE_CMD_WRITE_RETRY;
      IDE_CMD_READ : IDE_CMD_WRITE;
   if (DrvHead & IDE_DH_LBA) 
     {
-      DPRINT("%s:DRV=%d:LBA=1:BLK=%08d:SC=%02x:CM=%02x\n",
+      DPRINT("%s:BUS=%04x:DRV=%d:LBA=1:BLK=%08d:SC=%02x:CM=%02x\n",
              DeviceExtension->Operation == IRP_MJ_READ ? "READ" : "WRITE",
+             ControllerExtension->CommandPortBase,
              DrvHead & IDE_DH_DRV1 ? 1 : 0, 
              ((DrvHead & 0x0f) << 24) +
              (CylinderHigh << 16) + (CylinderLow << 8) + SectorNum,
@@ -1431,8 +1440,9 @@ IDEStartController(IN OUT PVOID Context)
     } 
   else 
     {
-      DPRINT("%s:DRV=%d:LBA=0:CH=%02x:CL=%02x:HD=%01x:SN=%02x:SC=%02x:CM=%02x\n",
+      DPRINT("%s:BUS=%04x:DRV=%d:LBA=0:CH=%02x:CL=%02x:HD=%01x:SN=%02x:SC=%02x:CM=%02x\n",
              DeviceExtension->Operation == IRP_MJ_READ ? "READ" : "WRITE",
+             ControllerExtension->CommandPortBase,
              DrvHead & IDE_DH_DRV1 ? 1 : 0, 
              CylinderHigh, 
              CylinderLow, 
@@ -1445,17 +1455,21 @@ IDEStartController(IN OUT PVOID Context)
   /*  wait for BUSY to clear  */
   for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++)
     {
-      BYTE  Status = IDEReadStatus(ControllerExtension->CommandPortBase);
+      Status = IDEReadStatus(ControllerExtension->CommandPortBase);
       if (!(Status & IDE_SR_BUSY)) 
         {
           break;
         }
       KeStallExecutionProcessor(10);
     }
+  DPRINT ("status=%02x\n", Status);
+  DPRINT ("waited %ld usecs for busy to clear\n", Retries * 10);
   if (Retries >= IDE_MAX_BUSY_RETRIES)
     {
+      DPRINT ("Drive is BUSY for too long\n");
       if (++ControllerExtension->Retries > IDE_MAX_CMD_RETRIES)
         {
+          DPRINT ("Max Retries on Drive reset reached, returning failure\n");
           Irp = ControllerExtension->CurrentIrp;
           Irp->IoStatus.Status = STATUS_DISK_OPERATION_FAILED;
           Irp->IoStatus.Information = 0;
@@ -1464,6 +1478,7 @@ IDEStartController(IN OUT PVOID Context)
         }
       else
         {
+          DPRINT ("Beginning drive reset sequence\n");
           IDEBeginControllerReset(ControllerExtension);
 
           return TRUE;
@@ -1483,10 +1498,13 @@ IDEStartController(IN OUT PVOID Context)
         }
       KeStallExecutionProcessor(10);
     }
+  DPRINT ("waited %ld usecs for busy to clear after drive select\n", Retries * 10);
   if (Retries >= IDE_MAX_BUSY_RETRIES)
     {
+      DPRINT ("Drive is BUSY for too long after drive select\n");
       if (ControllerExtension->Retries++ > IDE_MAX_CMD_RETRIES)
         {
+          DPRINT ("Max Retries on Drive reset reached, returning failure\n");
           Irp = ControllerExtension->CurrentIrp;
           Irp->IoStatus.Status = STATUS_DISK_OPERATION_FAILED;
           Irp->IoStatus.Information = 0;
@@ -1495,6 +1513,7 @@ IDEStartController(IN OUT PVOID Context)
         }
       else
         {
+          DPRINT ("Beginning drive reset sequence\n");
           IDEBeginControllerReset(ControllerExtension);
 
           return TRUE;
@@ -1553,6 +1572,7 @@ IDEStartController(IN OUT PVOID Context)
       DeviceExtension->BytesToTransfer -= DeviceExtension->BytesPerSector;
       DeviceExtension->SectorsTransferred++;
     }
+  DPRINT ("Command issued to drive, IDEStartController done\n");
 
   return  TRUE;
 }
@@ -1631,6 +1651,7 @@ IDEIsr(IN PKINTERRUPT Interrupt,
     {
       return FALSE;
     }
+  DPRINT ("IDEIsr called\n");
 
   ControllerExtension = (PIDE_CONTROLLER_EXTENSION) ServiceContext;
 
