@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.72 2004/05/10 17:07:20 weiden Exp $ */
+/* $Id: bitmaps.c,v 1.73 2004/05/14 16:50:44 navaraf Exp $ */
 #include <w32k.h>
 
 #define IN_RECT(r,x,y) \
@@ -518,7 +518,7 @@ NtGdiCreateCompatibleBitmap(
 
 	Dc = DC_LockDc(hDC);
 
-	DPRINT("NtGdiCreateCompatibleBitmap(%04x,%d,%d, bpp:%d) = \n", hDC, Width, Height, dc->w.bitsPerPixel);
+	DPRINT("NtGdiCreateCompatibleBitmap(%04x,%d,%d, bpp:%d) = \n", hDC, Width, Height, Dc->w.bitsPerPixel);
 
 	if (NULL == Dc)
 	{
