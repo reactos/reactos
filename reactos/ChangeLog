@@ -1,3 +1,10 @@
+2003-12-06	Martin Fuchs  <martin-fuchs@gmx.net>
+	* Doxyfile, Makefile: initial doxygen configuration
+	* drivers/Doxyfile, drivers/Makefile: Ditto.
+	* ntoskrnl/Doxyfile, ntoskrnl/Makefile: Ditto.
+	* subsys/win32k/Doxyfile, subsys/win32k/Makefile: Ditto.
+	* apps/Doxyfile, apps/Makefile: Ditto.
+
 2003-11-29  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* tools/cabman/dfp.cxx (CDFParser::Parse): Allow TokenString.
@@ -2843,12 +2850,3 @@
 	       
 	* Disabled broken code in kernel32.
 
-
-
-
-
-
-
-
-
-	
