@@ -1,4 +1,4 @@
-# $Id: Makefile.ros-template,v 1.1 2004/12/20 22:09:31 greatlrd Exp $
+# $Id: Makefile.ros-template,v 1.2 2004/12/20 22:16:18 greatlrd Exp $
 
 TARGET_NAME = devenum
 
@@ -9,7 +9,7 @@ TARGET_CFLAGS = @EXTRADEFS@ -DNONAMLESSUNION -D__REACTOS__
 TARGET_SDKLIBS = wine.a @IMPORTS@ ole32.a wine_uuid.a ntdll.a  dxguid.a strmiids.a
 
 
-TARGET_BASE = $(TARGET_BASE_LIB_DEVNUM)
+TARGET_BASE = $(TARGET_BASE_LIB_DEVENUM)
 
 TARGET_RC_SRCS = @RC_SRCS@
 TARGET_RC_BINSRC = @RC_BINSRC@
