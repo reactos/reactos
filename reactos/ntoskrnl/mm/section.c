@@ -332,9 +332,9 @@ NTSTATUS STDCALL ZwMapViewOfSection(HANDLE SectionHandle,
      }
    
    DPRINT("ViewSize %x\n",ViewSize);
-   if ((*ViewSize) > Section->MaximumSize.LowPart)
+   if ((*ViewSize) > Section->MaximumSize.u.LowPart)
      {
-        (*ViewSize) = Section->MaximumSize.LowPart;
+        (*ViewSize) = Section->MaximumSize.u.LowPart;
      }
    
    Status = MmCreateMemoryArea(UserMode,
@@ -361,7 +361,7 @@ NTSTATUS STDCALL ZwMapViewOfSection(HANDLE SectionHandle,
      }
    else
      {
-        Result->Data.SectionData.ViewOffset = SectionOffset->LowPart;
+        Result->Data.SectionData.ViewOffset = SectionOffset->u.LowPart;
      }
    
    DPRINT("*BaseAddress %x\n",*BaseAddress);

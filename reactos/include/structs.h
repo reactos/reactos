@@ -36,24 +36,21 @@ typedef union _LARGE_INTEGER
 {
   struct
   {
-    DWORD ULowPart;
-    LONG  UHighPart;
+    DWORD LowPart;
+    LONG  HighPart;
   } u;
   LONGLONG QuadPart;
 } LARGE_INTEGER, *PLARGE_INTEGER;
 
-typedef union
+typedef union _ULARGE_INTEGER
 {
   struct
   {
-    DWORD ULowPart;
-    DWORD UHighPart;
+    DWORD LowPart;
+    DWORD HighPart;
   } u;
   ULONGLONG QuadPart;
 } ULARGE_INTEGER, *PULARGE_INTEGER;
-
-#define LowPart  u.ULowPart
-#define HighPart u.UHighPart
 
 
 typedef struct _LIST_ENTRY { 
@@ -339,16 +336,11 @@ typedef struct _KEY_EVENT_RECORD {
   WORD wRepeatCount;         
   WORD wVirtualKeyCode;      
   WORD wVirtualScanCode; 
-
-//  char AsciiChar;
-//  char pad;
-//#if 0
   union { 
     WCHAR UnicodeChar; 
     CHAR  AsciiChar; 
   } uChar;  
-//#endif
-  DWORD dwControlKeyState;   
+  DWORD dwControlKeyState;
 } KEY_EVENT_RECORD PACKED;
 
 typedef struct _COORD {
@@ -3926,8 +3918,8 @@ typedef struct _STARTUPINFO {
   HANDLE  hStdInput; 
   HANDLE  hStdOutput; 
   HANDLE  hStdError; 
-} STARTUPINFO, *LPSTARTUPINFO; 
- 
+} STARTUPINFO, *LPSTARTUPINFO;
+
 typedef struct tagSTICKYKEYS {  
   DWORD cbSize; 
   DWORD dwFlags; 

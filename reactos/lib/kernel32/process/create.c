@@ -303,8 +303,8 @@ HANDLE KERNEL32_MapFile(LPCWSTR lpApplicationName,
 	return(NULL);	
      }
    
-   FileOffset.HighPart = 0;
-   FileOffset.LowPart = DosHeader->e_lfanew;
+   FileOffset.u.LowPart = DosHeader->e_lfanew;
+   FileOffset.u.HighPart = 0;
 
    Status = NtReadFile(hFile,
 		       NULL,

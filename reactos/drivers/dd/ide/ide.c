@@ -1230,7 +1230,7 @@ DPRINT("AdjOffset:%ld:%ld + Length:%ld = AdjExtent:%ld:%ld\n",
     //  Start the packet and insert the request in order of sector offset
   assert(DeviceExtension->BytesPerSector == 512);
   InsertKeyLI = RtlLargeIntegerShiftRight(IrpStack->Parameters.Read.ByteOffset, 9); 
-  IrpInsertKey = InsertKeyLI.LowPart;
+  IrpInsertKey = InsertKeyLI.u.LowPart;
   IoStartPacket(DeviceExtension->DeviceObject, Irp, &IrpInsertKey, NULL);
 
   return  STATUS_PENDING;
@@ -1360,7 +1360,7 @@ IDEStartIo(IN PDEVICE_OBJECT DeviceObject,
       DeviceExtension->BytesRequested = IrpStack->Parameters.Read.Length;
       assert(DeviceExtension->BytesPerSector == 512);
       SectorLI = RtlLargeIntegerShiftRight(IrpStack->Parameters.Read.ByteOffset, 9);
-      DeviceExtension->StartingSector = SectorLI.LowPart;
+      DeviceExtension->StartingSector = SectorLI.u.LowPart;
       if (DeviceExtension->BytesRequested > DeviceExtension->BytesPerSector * 
           IDE_MAX_SECTORS_PER_XFER) 
         {

@@ -29,7 +29,7 @@ NTSTATUS Ext2ReadFile(PDEVICE_EXTENSION DeviceExt,
 {
    PEXT2_FCB Fcb;
    PVOID TempBuffer;
-   ULONG Offset = OffsetL.LowPart;
+   ULONG Offset = OffsetL.u.LowPart;
    ULONG block;
    ULONG Delta;
    ULONG i;

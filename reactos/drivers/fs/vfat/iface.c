@@ -1508,7 +1508,7 @@ NTSTATUS FsdWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
    Length = Stack->Parameters.Write.Length;
    Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
-   Offset = Stack->Parameters.Write.ByteOffset.LowPart;
+   Offset = Stack->Parameters.Write.ByteOffset.u.LowPart;
 
    Status = FsdWriteFile(DeviceExt,FileObject,Buffer,Length,Offset);
 
@@ -1546,7 +1546,7 @@ NTSTATUS FsdRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
    Length = Stack->Parameters.Read.Length;
    Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
-   Offset = Stack->Parameters.Read.ByteOffset.LowPart;
+   Offset = Stack->Parameters.Read.ByteOffset.u.LowPart;
    
    Status = FsdReadFile(DeviceExt,FileObject,Buffer,Length,Offset,
 			&LengthRead);

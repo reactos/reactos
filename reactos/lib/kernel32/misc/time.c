@@ -295,10 +295,10 @@ FileTimeToSystemTime(
    dwMinute = RtlLargeIntegerDivide(dwRemHour,LIMINUTE,&dwRemMinute);
    dwSecond = RtlLargeIntegerDivide(dwRemMinute,LISECOND,&dwRemSecond);
    
-   lpSystemTime->wHour=   (WORD)(dwHour.LowPart);  
-   lpSystemTime->wMinute= (WORD)(dwMinute.LowPart); 
-   lpSystemTime->wSecond= (WORD)(dwSecond.LowPart); 
-   lpSystemTime->wMilliseconds = (WORD)(dwRemSecond.LowPart/10000);
+   lpSystemTime->wHour=   (WORD)(dwHour.u.LowPart);
+   lpSystemTime->wMinute= (WORD)(dwMinute.u.LowPart); 
+   lpSystemTime->wSecond= (WORD)(dwSecond.u.LowPart); 
+   lpSystemTime->wMilliseconds = (WORD)(dwRemSecond.u.LowPart/10000);
   
 
    if ( lpSystemTime->wSecond > 60 ) {
@@ -313,13 +313,13 @@ FileTimeToSystemTime(
 
    if (lpSystemTime->wHour > 24 ) {
 	lpSystemTime->wHour-= 24;
-        dwDay.LowPart = dwDay.LowPart + 1; 
+        dwDay.u.LowPart = dwDay.u.LowPart + 1; 
    }
  
   //FIXME since 1972 some years have a leap second [ aprox 15 out of 20 ]
 
   // if leap year  
-  lpSystemTime->wYear = 1601 + 1000* (LONG)dwMillenium.LowPart + 100 * (LONG)dwCentury.LowPart + 4 * (LONG)dwFourYear.LowPart + (LONG)dwYear.LowPart; 
+  lpSystemTime->wYear = 1601 + 1000* (LONG)dwMillenium.u.LowPart + 100 * (LONG)dwCentury.u.LowPart + 4 * (LONG)dwFourYear.u.LowPart + (LONG)dwYear.u.LowPart; 
 
   if ( (lpSystemTime->wYear % 4 == 0 && lpSystemTime->wYear % 100 != 0) || lpSystemTime->wYear % 400 == 0)
 	LeapDay = 1;
@@ -328,58 +328,58 @@ FileTimeToSystemTime(
 
   
 
-  if ( dwDay.LowPart >= 0 && dwDay.LowPart < 31 ) {
+  if ( dwDay.u.LowPart >= 0 && dwDay.u.LowPart < 31 ) {
 	lpSystemTime->wMonth = 1;
-        lpSystemTime->wDay = dwDay.LowPart + 1;
+        lpSystemTime->wDay = dwDay.u.LowPart + 1;
   }
-  else if ( dwDay.LowPart >= 31 && dwDay.LowPart < ( 59 + LeapDay )) {
+  else if ( dwDay.u.LowPart >= 31 && dwDay.u.LowPart < ( 59 + LeapDay )) {
 	lpSystemTime->wMonth = 2;
-        lpSystemTime->wDay = dwDay.LowPart + 1 - 31;
+        lpSystemTime->wDay = dwDay.u.LowPart + 1 - 31;
   }  
-  else if ( dwDay.LowPart >= ( 59 + LeapDay ) && dwDay.LowPart < ( 90 + LeapDay ) ) {
+  else if ( dwDay.u.LowPart >= ( 59 + LeapDay ) && dwDay.u.LowPart < ( 90 + LeapDay ) ) {
 	lpSystemTime->wMonth = 3;
-        lpSystemTime->wDay = dwDay.LowPart + 1 - ( 59 + LeapDay);
+        lpSystemTime->wDay = dwDay.u.LowPart + 1 - ( 59 + LeapDay);
   }  
-  else if ( dwDay.LowPart >= 90+ LeapDay && dwDay.LowPart < 120 + LeapDay) {
+  else if ( dwDay.u.LowPart >= 90+ LeapDay && dwDay.u.LowPart < 120 + LeapDay) {
 	lpSystemTime->wMonth = 4;
-        lpSystemTime->wDay = dwDay.LowPart + 1 - (31 + LeapDay );
+        lpSystemTime->wDay = dwDay.u.LowPart + 1 - (31 + LeapDay );
   }  
-  else if ( dwDay.LowPart >= 120 + LeapDay && dwDay.LowPart < 151 + LeapDay ) {
+  else if ( dwDay.u.LowPart >= 120 + LeapDay && dwDay.u.LowPart < 151 + LeapDay ) {
 	lpSystemTime->wMonth = 5;
-        lpSystemTime->wDay = dwDay.LowPart + 1 - (120 + LeapDay);
+        lpSystemTime->wDay = dwDay.u.LowPart + 1 - (120 + LeapDay);
   }  
-  else if ( dwDay.LowPart >= ( 151 + LeapDay) && dwDay.LowPart < ( 181 + LeapDay ) ) {
+  else if ( dwDay.u.LowPart >= ( 151 + LeapDay) && dwDay.u.LowPart < ( 181 + LeapDay ) ) {
 	lpSystemTime->wMonth = 6;
-        lpSystemTime->wDay = dwDay.LowPart + 1 - ( 151 + LeapDay );
+        lpSystemTime->wDay = dwDay.u.LowPart + 1 - ( 151 + LeapDay );
   }  
-  else if ( dwDay.LowPart >= ( 181 + LeapDay ) && dwDay.LowPart <  ( 212 + LeapDay ) ) {
+  else if ( dwDay.u.LowPart >= ( 181 + LeapDay ) && dwDay.u.LowPart <  ( 212 + LeapDay ) ) {
 	lpSystemTime->wMonth = 7;
-        lpSystemTime->wDay = dwDay.LowPart + 1 - ( 181 + LeapDay );
+        lpSystemTime->wDay = dwDay.u.LowPart + 1 - ( 181 + LeapDay );
   }  
-   else if ( dwDay.LowPart >= ( 212 + LeapDay ) && dwDay.LowPart < ( 243 + LeapDay ) ) {
+   else if ( dwDay.u.LowPart >= ( 212 + LeapDay ) && dwDay.u.LowPart < ( 243 + LeapDay ) ) {
 	lpSystemTime->wMonth = 8;
-        lpSystemTime->wDay = dwDay.LowPart + 1 -  (212 + LeapDay );
+        lpSystemTime->wDay = dwDay.u.LowPart + 1 -  (212 + LeapDay );
   }  
-  else if ( dwDay.LowPart >= ( 243+ LeapDay ) && dwDay.LowPart < ( 273 + LeapDay ) ) {
+  else if ( dwDay.u.LowPart >= ( 243+ LeapDay ) && dwDay.u.LowPart < ( 273 + LeapDay ) ) {
 	lpSystemTime->wMonth = 9;
-        lpSystemTime->wDay = dwDay.LowPart + 1 - ( 243 + LeapDay );
+        lpSystemTime->wDay = dwDay.u.LowPart + 1 - ( 243 + LeapDay );
   }  
-  else if ( dwDay.LowPart >= ( 273 + LeapDay ) && dwDay.LowPart < ( 304 + LeapDay ) ) {
+  else if ( dwDay.u.LowPart >= ( 273 + LeapDay ) && dwDay.u.LowPart < ( 304 + LeapDay ) ) {
 	lpSystemTime->wMonth = 10;
-        lpSystemTime->wDay = dwDay.LowPart + 1 - ( 273 + LeapDay);
+        lpSystemTime->wDay = dwDay.u.LowPart + 1 - ( 273 + LeapDay);
   }  
-  else if ( dwDay.LowPart >= ( 304 + LeapDay ) && dwDay.LowPart < ( 334 + LeapDay ) ) {
+  else if ( dwDay.u.LowPart >= ( 304 + LeapDay ) && dwDay.u.LowPart < ( 334 + LeapDay ) ) {
 	lpSystemTime->wMonth = 11;
-        lpSystemTime->wDay = dwDay.LowPart + 1 - ( 304 + LeapDay );
+        lpSystemTime->wDay = dwDay.u.LowPart + 1 - ( 304 + LeapDay );
   }  
-  else if ( dwDay.LowPart >= ( 334 + LeapDay ) && dwDay.LowPart < ( 365 + LeapDay )) {
+  else if ( dwDay.u.LowPart >= ( 334 + LeapDay ) && dwDay.u.LowPart < ( 365 + LeapDay )) {
 	lpSystemTime->wMonth = 12;
-        lpSystemTime->wDay = dwDay.LowPart + 1 - ( 334 + LeapDay );
+        lpSystemTime->wDay = dwDay.u.LowPart + 1 - ( 334 + LeapDay );
   }  
  
 
    dwDayOfWeek = RtlLargeIntegerDivide(FileTime,LIDAY,&dwRemDay);
-   lpSystemTime->wDayOfWeek = 1 + dwDayOfWeek.LowPart % 7;
+   lpSystemTime->wDayOfWeek = 1 + dwDayOfWeek.u.LowPart % 7;
 
   
 

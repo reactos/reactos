@@ -112,8 +112,8 @@ VOID IoReadWriteCompletion(PDEVICE_OBJECT DeviceObject,
      }
    if (FileObject != NULL)
      {
-        FileObject->CurrentByteOffset.LowPart =
-          FileObject->CurrentByteOffset.LowPart +
+        FileObject->CurrentByteOffset.u.LowPart =
+          FileObject->CurrentByteOffset.u.LowPart +
           Irp->IoStatus.Information;
      }
 }

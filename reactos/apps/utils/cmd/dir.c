@@ -810,8 +810,8 @@ DirList (LPTSTR szPath, LPTSTR szFilespec, LPINT pLine, DWORD dwFlags)
 				count = 0;
 			}
 
-                        uliSize.LowPart = file.nFileSizeLow;
-                        uliSize.HighPart = file.nFileSizeHigh;
+                        uliSize.u.LowPart = file.nFileSizeLow;
+                        uliSize.u.HighPart = file.nFileSizeHigh;
 			bytecount.QuadPart += uliSize.QuadPart;
 		}
 		else if (dwFlags & DIR_BARE)
@@ -841,8 +841,8 @@ DirList (LPTSTR szPath, LPTSTR szFilespec, LPINT pLine, DWORD dwFlags)
 			if (IncLine (pLine, dwFlags))
 				return 1;
 
-                        uliSize.LowPart = file.nFileSizeLow;
-                        uliSize.HighPart = file.nFileSizeHigh;
+                        uliSize.u.LowPart = file.nFileSizeLow;
+                        uliSize.u.HighPart = file.nFileSizeHigh;
 			bytecount.QuadPart += uliSize.QuadPart;
 		}
 		else
@@ -866,8 +866,8 @@ DirList (LPTSTR szPath, LPTSTR szFilespec, LPINT pLine, DWORD dwFlags)
 				{
 					ULARGE_INTEGER uliSize;
 
-                                        uliSize.LowPart = file.nFileSizeLow;
-                                        uliSize.HighPart = file.nFileSizeHigh;
+                                        uliSize.u.LowPart = file.nFileSizeLow;
+                                        uliSize.u.HighPart = file.nFileSizeHigh;
 
 					ConvertULargeInteger (uliSize, buffer, sizeof(buffer));
 					ConOutPrintf (_T("   %20s"), buffer);
@@ -918,8 +918,8 @@ DirList (LPTSTR szPath, LPTSTR szFilespec, LPINT pLine, DWORD dwFlags)
 				{
 					ULARGE_INTEGER uliSize;
 
-                                        uliSize.LowPart = file.nFileSizeLow;
-                                        uliSize.HighPart = file.nFileSizeHigh;
+                                        uliSize.u.LowPart = file.nFileSizeLow;
+                                        uliSize.u.HighPart = file.nFileSizeHigh;
                                         ConvertULargeInteger (uliSize, buffer, sizeof(buffer));
 					ConOutPrintf (_T("   %10s "), buffer);
 					bytecount.QuadPart += uliSize.QuadPart;

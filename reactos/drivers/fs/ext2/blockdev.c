@@ -36,8 +36,8 @@ BOOLEAN Ext2ReadSectors(IN PDEVICE_OBJECT pDeviceObject,
     DPRINT("VFATReadSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
            pDeviceObject,DiskSector,Buffer);
 
-    sectorNumber.HighPart = 0;
-    sectorNumber.LowPart = DiskSector * BLOCKSIZE;
+    sectorNumber.u.HighPart = 0;
+    sectorNumber.u.LowPart = DiskSector * BLOCKSIZE;
 
     DPRINT("DiskSector:%ld BLKSZ:%ld sectorNumber:%ld:%ld\n", 
            (unsigned long) DiskSector,
@@ -104,8 +104,8 @@ BOOLEAN VFATWriteSectors(IN PDEVICE_OBJECT pDeviceObject,
     DPRINT("VFATWriteSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
            pDeviceObject,DiskSector,Buffer);
 
-    sectorNumber.HighPart = 0;
-    sectorNumber.LowPart = DiskSector * BLOCKSIZE;
+    sectorNumber.u.HighPart = 0;
+    sectorNumber.u.LowPart = DiskSector * BLOCKSIZE;
 
     KeInitializeEvent(&event, NotificationEvent, FALSE);
 

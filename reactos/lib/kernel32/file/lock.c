@@ -69,8 +69,8 @@ LockFileEx(
    
    lpOverlapped->Internal = STATUS_PENDING;  
    
-   Offset.LowPart = lpOverlapped->Offset;
-   Offset.HighPart = lpOverlapped->OffsetHigh;
+   Offset.u.LowPart = lpOverlapped->Offset;
+   Offset.u.HighPart = lpOverlapped->OffsetHigh;
    
    if ( (dwFlags & LOCKFILE_FAIL_IMMEDIATELY) == LOCKFILE_FAIL_IMMEDIATELY )
      LockImmediate = TRUE;
@@ -82,8 +82,8 @@ LockFileEx(
    else
      LockExclusive = FALSE;
    
-   BytesToLock.LowPart = nNumberOfBytesToLockLow;
-   BytesToLock.HighPart = nNumberOfBytesToLockHigh;
+   BytesToLock.u.LowPart = nNumberOfBytesToLockLow;
+   BytesToLock.u.HighPart = nNumberOfBytesToLockHigh;
    
    errCode = NtLockFile(hFile,
 			NULL,
@@ -151,11 +151,11 @@ UnlockFileEx(
 	return FALSE;
      }
    
-   BytesToUnLock.LowPart = nNumberOfBytesToUnLockLow;
-   BytesToUnLock.HighPart = nNumberOfBytesToUnLockHigh;
+   BytesToUnLock.u.LowPart = nNumberOfBytesToUnLockLow;
+   BytesToUnLock.u.HighPart = nNumberOfBytesToUnLockHigh;
    
-   StartAddress.LowPart = lpOverlapped->Offset;
-   StartAddress.HighPart = lpOverlapped->OffsetHigh;
+   StartAddress.u.LowPart = lpOverlapped->Offset;
+   StartAddress.u.HighPart = lpOverlapped->OffsetHigh;
    
    errCode = NtUnlockFile(hFile,
 			  (PIO_STATUS_BLOCK)lpOverlapped,

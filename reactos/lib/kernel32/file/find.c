@@ -61,8 +61,8 @@ static void FileDataToWin32Data(LPWIN32_FIND_DATA lpFindFileData, PKERNEL32_FIND
 //   memcpy(&lpFindFileData->ftCreationTime,&IData->FileInfo.CreationTime,sizeof(FILETIME));
 //   memcpy(&lpFindFileData->ftLastAccessTime,&IData->FileInfo.LastAccessTime,sizeof(FILETIME));
 //   memcpy(&lpFindFileData->ftLastWriteTime,&IData->FileInfo.LastWriteTime,sizeof(FILETIME));
-   lpFindFileData->nFileSizeHigh = IData->FileInfo.EndOfFile.HighPart;
-   lpFindFileData->nFileSizeLow = IData->FileInfo.EndOfFile.LowPart;
+   lpFindFileData->nFileSizeHigh = IData->FileInfo.EndOfFile.u.HighPart;
+   lpFindFileData->nFileSizeLow = IData->FileInfo.EndOfFile.u.LowPart;
 }
 
 WINBOOL STDCALL InternalFindNextFile(HANDLE hFindFile,

@@ -30,8 +30,8 @@ BOOLEAN VFATReadSectors(IN PDEVICE_OBJECT pDeviceObject,
     NTSTATUS        status;
     ULONG           sectorSize;
    
-    sectorNumber.LowPart = DiskSector << 9;
-    sectorNumber.HighPart = DiskSector >> 23;
+    sectorNumber.u.LowPart = DiskSector << 9;
+    sectorNumber.u.HighPart = DiskSector >> 23;
 
     KeInitializeEvent(&event, NotificationEvent, FALSE);
     sectorSize = BLOCKSIZE * SectorCount;
@@ -82,8 +82,8 @@ BOOLEAN VFATReadSectors(IN PDEVICE_OBJECT pDeviceObject,
                  pDeviceObject,
                  DiskSector,
                  Buffer,
-                 sectorNumber.HighPart,
-                 sectorNumber.LowPart);
+                 sectorNumber.u.HighPart,
+                 sectorNumber.u.LowPart);
         return FALSE;
     }
     DPRINT("Block request succeeded\n");
@@ -105,8 +105,8 @@ BOOLEAN VFATWriteSectors(IN PDEVICE_OBJECT pDeviceObject,
     DPRINT("VFATWriteSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
            pDeviceObject,DiskSector,Buffer);
 
-    sectorNumber.LowPart = DiskSector << 9;
-    sectorNumber.HighPart = DiskSector >> 23;
+    sectorNumber.u.LowPart = DiskSector << 9;
+    sectorNumber.u.HighPart = DiskSector >> 23;
 
     KeInitializeEvent(&event, NotificationEvent, FALSE);
 

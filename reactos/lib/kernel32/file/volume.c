@@ -197,8 +197,8 @@ GetDiskFreeSpaceW(
 
     *lpBytesPerSector = FileFsSize.BytesPerSector;
     *lpSectorsPerCluster = FileFsSize.SectorsPerAllocationUnit;
-    *lpNumberOfFreeClusters = FileFsSize.AvailableAllocationUnits.LowPart;
-    *lpTotalNumberOfClusters = FileFsSize.TotalAllocationUnits.LowPart;
+    *lpNumberOfFreeClusters = FileFsSize.AvailableAllocationUnits.u.LowPart;
+    *lpTotalNumberOfClusters = FileFsSize.TotalAllocationUnits.u.LowPart;
     CloseHandle(hFile);
     return TRUE;
 }
@@ -287,7 +287,7 @@ GetDiskFreeSpaceExW(
         BytesPerCluster.QuadPart * FileFsSize.AvailableAllocationUnits.QuadPart;
 
     lpTotalNumberOfBytes->QuadPart =
-        BytesPerCluster.QuadPart * FileFsSize.TotalAllocationUnits.LowPart;
+        BytesPerCluster.QuadPart * FileFsSize.TotalAllocationUnits.QuadPart;
     lpTotalNumberOfFreeBytes->QuadPart =
         BytesPerCluster.QuadPart * FileFsSize.AvailableAllocationUnits.QuadPart;
 

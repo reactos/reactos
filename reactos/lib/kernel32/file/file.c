@@ -151,41 +151,41 @@ DWORD STDCALL SetFilePointer(HANDLE hFile,
 			       &FilePosition, 
 			       sizeof(FILE_POSITION_INFORMATION),
 			       FilePositionInformation);
-        FilePosition.CurrentByteOffset.LowPart += lDistanceToMove;
+        FilePosition.CurrentByteOffset.u.LowPart += lDistanceToMove;
 	if (lpDistanceToMoveHigh != NULL)
 	  {
-             FilePosition.CurrentByteOffset.HighPart =
-                     FilePosition.CurrentByteOffset.HighPart +
+             FilePosition.CurrentByteOffset.u.HighPart =
+                     FilePosition.CurrentByteOffset.u.HighPart +
                      *lpDistanceToMoveHigh;
 	  }
      }
    else if (dwMoveMethod == FILE_END) 
      {
 	NtQueryInformationFile(hFile,&IoStatusBlock,&FileEndOfFile, sizeof(FILE_END_OF_FILE_INFORMATION),FileEndOfFileInformation);
-        FilePosition.CurrentByteOffset.LowPart =
-                FileEndOfFile.EndOfFile.LowPart - lDistanceToMove;
+        FilePosition.CurrentByteOffset.u.LowPart =
+                FileEndOfFile.EndOfFile.u.LowPart - lDistanceToMove;
 	if ( lpDistanceToMoveHigh != NULL ) 
 	  {
-             FilePosition.CurrentByteOffset.HighPart =
-                     FileEndOfFile.EndOfFile.HighPart - *lpDistanceToMoveHigh;
+             FilePosition.CurrentByteOffset.u.HighPart =
+                     FileEndOfFile.EndOfFile.u.HighPart - *lpDistanceToMoveHigh;
 	  } 
 	else 
 	  {
-             FilePosition.CurrentByteOffset.HighPart =
-                     FileEndOfFile.EndOfFile.HighPart;
+             FilePosition.CurrentByteOffset.u.HighPart =
+                     FileEndOfFile.EndOfFile.u.HighPart;
 	  }
      }
    else if ( dwMoveMethod == FILE_BEGIN ) 
      {
-        FilePosition.CurrentByteOffset.LowPart = lDistanceToMove;
+        FilePosition.CurrentByteOffset.u.LowPart = lDistanceToMove;
 	if ( lpDistanceToMoveHigh != NULL ) 
 	  {
-             FilePosition.CurrentByteOffset.HighPart =
+             FilePosition.CurrentByteOffset.u.HighPart =
                      *lpDistanceToMoveHigh;
 	  } 
 	else 
 	  {
-             FilePosition.CurrentByteOffset.HighPart = 0;
+             FilePosition.CurrentByteOffset.u.HighPart = 0;
 	  }
      }
    
@@ -202,9 +202,9 @@ DWORD STDCALL SetFilePointer(HANDLE hFile,
    
    if (lpDistanceToMoveHigh != NULL) 
      {
-        *lpDistanceToMoveHigh = FilePosition.CurrentByteOffset.HighPart;
+        *lpDistanceToMoveHigh = FilePosition.CurrentByteOffset.u.HighPart;
      }
-   return FilePosition.CurrentByteOffset.LowPart;
+   return FilePosition.CurrentByteOffset.u.LowPart;
 }
 
 DWORD STDCALL GetFileType(HANDLE hFile)
@@ -240,10 +240,10 @@ DWORD STDCALL GetFileSize(HANDLE hFile,
 	  }
      }
    if ( lpFileSizeHigh != NULL )
-     *lpFileSizeHigh = FileStandard.AllocationSize.HighPart;
+     *lpFileSizeHigh = FileStandard.AllocationSize.u.HighPart;
 
    CloseHandle(hFile);
-   return FileStandard.AllocationSize.LowPart;
+   return FileStandard.AllocationSize.u.LowPart;
 }
 
 DWORD STDCALL GetCompressedFileSizeA(LPCSTR lpFileName,
@@ -321,8 +321,8 @@ WINBOOL STDCALL GetFileInformationByHandle(HANDLE hFile,
    memcpy(&lpFileInformation->ftCreationTime,&FileDirectory.CreationTime,sizeof(LARGE_INTEGER));
    memcpy(&lpFileInformation->ftLastAccessTime,&FileDirectory.LastAccessTime,sizeof(LARGE_INTEGER));
    memcpy(&lpFileInformation->ftLastWriteTime, &FileDirectory.LastWriteTime,sizeof(LARGE_INTEGER)); 
-   lpFileInformation->nFileSizeHigh = FileDirectory.AllocationSize.HighPart;
-   lpFileInformation->nFileSizeLow = FileDirectory.AllocationSize.LowPart;
+   lpFileInformation->nFileSizeHigh = FileDirectory.AllocationSize.u.HighPart;
+   lpFileInformation->nFileSizeLow = FileDirectory.AllocationSize.u.LowPart;
    
    errCode = NtQueryInformationFile(hFile,
 				    &IoStatusBlock,
@@ -334,8 +334,8 @@ WINBOOL STDCALL GetFileInformationByHandle(HANDLE hFile,
 	SetLastError(RtlNtStatusToDosError(errCode));
 	return FALSE;
      }
-   lpFileInformation->nFileIndexHigh = FileInternal.IndexNumber.HighPart;
-   lpFileInformation->nFileIndexLow = FileInternal.IndexNumber.LowPart;
+   lpFileInformation->nFileIndexHigh = FileInternal.IndexNumber.u.HighPart;
+   lpFileInformation->nFileIndexLow = FileInternal.IndexNumber.u.LowPart;
    
    errCode = NtQueryVolumeInformationFile(hFile,
 					  &IoStatusBlock,

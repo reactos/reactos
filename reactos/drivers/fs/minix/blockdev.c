@@ -35,8 +35,8 @@ BOOLEAN MinixReadSector(IN PDEVICE_OBJECT pDeviceObject,
     DPRINT("MinixReadSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
            pDeviceObject,DiskSector,Buffer);
    
-    sectorNumber.HighPart = 0;
-    sectorNumber.LowPart = DiskSector * BLOCKSIZE;
+    sectorNumber.u.HighPart = 0;
+    sectorNumber.u.LowPart = DiskSector * BLOCKSIZE;
 
     KeInitializeEvent(&event, NotificationEvent, FALSE);
 
@@ -99,8 +99,8 @@ BOOLEAN MinixWriteSector(IN PDEVICE_OBJECT pDeviceObject,
     DPRINT("MinixWriteSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
            pDeviceObject,DiskSector,Buffer);
    
-    sectorNumber.HighPart = 0;
-    sectorNumber.LowPart = DiskSector * BLOCKSIZE;
+    sectorNumber.u.HighPart = 0;
+    sectorNumber.u.LowPart = DiskSector * BLOCKSIZE;
 
     KeInitializeEvent(&event, NotificationEvent, FALSE);
 

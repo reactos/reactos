@@ -84,7 +84,7 @@ NTSTATUS MmCopyMmInfo(PEPROCESS Src, PEPROCESS Dest)
      {
 	return(STATUS_UNSUCCESSFUL);
      }
-   PhysPageDirectory = (PULONG)(MmGetPhysicalAddress(PageDirectory)).LowPart;
+   PhysPageDirectory = (PULONG)(MmGetPhysicalAddress(PageDirectory)).u.LowPart;
    KProcess->PageTableDirectory = PhysPageDirectory;   
    CurrentPageDirectory = (PULONG)PAGEDIRECTORY_MAP;
    
@@ -256,8 +256,8 @@ PHYSICAL_ADDRESS MmGetPhysicalAddress(PVOID vaddr)
 
   DPRINT("MmGetPhysicalAddress(vaddr %x)\n", vaddr);
    
-  p.LowPart = PAGE_MASK(*MmGetPageEntry(vaddr));
-  p.HighPart = 0;
+  p.u.LowPart = PAGE_MASK(*MmGetPageEntry(vaddr));
+  p.u.HighPart = 0;
    
   return p;
 }

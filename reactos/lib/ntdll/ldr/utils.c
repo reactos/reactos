@@ -198,8 +198,8 @@ NTSTATUS LdrMapSections(HANDLE ProcessHandle,
 	
 	Sections = (PIMAGE_SECTION_HEADER)SECHDROFFSET(ImageBase);
 	Base = (ULONG)(Sections[i].VirtualAddress + ImageBase);
-        Offset.HighPart = 0;
-        Offset.LowPart = Sections[i].PointerToRawData;
+        Offset.u.LowPart = Sections[i].PointerToRawData;
+        Offset.u.HighPart = 0;
 	Status = ZwMapViewOfSection(SectionHandle,
 				    ProcessHandle,
 				    (PVOID *)&Base,
