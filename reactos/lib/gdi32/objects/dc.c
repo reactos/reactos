@@ -897,6 +897,22 @@ GetDCOrgEx(
 
 /*
  * @implemented
+*/
+LONG
+STDCALL
+GetDCOrg(
+    HDC a0
+    )
+{
+    // Officially obsolete by Microsoft
+    POINT Pt;
+    if (!NtGdiGetDCOrgEx(a0,&Pt))
+        return 0;
+    return(MAKELONG(Pt.x, Pt.y));
+}
+
+/*
+ * @implemented
  */
 BOOL
 STDCALL
