@@ -49,6 +49,9 @@ CmiHiveSyncDpcRoutine(PKDPC Dpc,
 		      PVOID SystemArgument1,
 		      PVOID SystemArgument2);
 
+extern LIST_ENTRY CmiCallbackHead;
+extern FAST_MUTEX CmiCallbackLock;
+
 /* FUNCTIONS ****************************************************************/
 
 VOID
@@ -286,6 +289,9 @@ CmInitializeRegistry(VOID)
   /*  Build volatile registry store  */
   Status = CmiCreateVolatileHive (&CmiVolatileHive);
   ASSERT(NT_SUCCESS(Status));
+  
+  InitializeListHead(&CmiCallbackHead);
+  ExInitializeFastMutex(&CmiCallbackLock);
 
   /* Create '\Registry' key. */
   RtlInitUnicodeString(&KeyName, REG_ROOT_KEY_NAME);

@@ -24,30 +24,136 @@ extern PREGISTRY_HIVE  CmiVolatileHive;
 
 static BOOLEAN CmiRegistryInitialized = FALSE;
 
+LIST_ENTRY CmiCallbackHead;
+FAST_MUTEX CmiCallbackLock;
 
 /* FUNCTIONS ****************************************************************/
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS STDCALL
 CmRegisterCallback(IN PEX_CALLBACK_FUNCTION Function,
                    IN PVOID Context,
                    IN OUT PLARGE_INTEGER Cookie)
 {
-  UNIMPLEMENTED;
-  return STATUS_NOT_IMPLEMENTED;
+  PREGISTRY_CALLBACK Callback;
+  
+  ASSERT(Function && Cookie);
+  
+  Callback = ExAllocatePoolWithTag(PagedPool,
+                                   sizeof(REGISTRY_CALLBACK),
+                                   TAG('C', 'M', 'c', 'b'));
+  if(Callback != NULL)
+  {
+    /* initialize the callback */
+    ExInitializeRundownProtection(&Callback->RundownRef);
+    Callback->Function = Function;
+    Callback->Context = Context;
+    
+    /* add it to the callback list and receive a cookie for the callback */
+    ExAcquireFastMutex(&CmiCallbackLock);
+    /* FIXME - to receive a unique cookie we'll just return the pointer to the
+       callback object */
+    Callback->Cookie.QuadPart = (ULONG_PTR)Callback;
+    InsertTailList(&CmiCallbackHead, &Callback->ListEntry);
+
+    ExReleaseFastMutex(&CmiCallbackLock);
+    
+    *Cookie = Callback->Cookie;
+    return STATUS_SUCCESS;
+  }
+
+  return STATUS_INSUFFICIENT_RESOURCES;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS STDCALL
 CmUnRegisterCallback(IN LARGE_INTEGER Cookie)
 {
-  UNIMPLEMENTED;
-  return STATUS_NOT_IMPLEMENTED;
+  PLIST_ENTRY CurrentEntry;
+
+  ExAcquireFastMutex(&CmiCallbackLock);
+
+  for(CurrentEntry = CmiCallbackHead.Flink;
+      CurrentEntry != &CmiCallbackHead;
+      CurrentEntry = CurrentEntry->Flink)
+  {
+    PREGISTRY_CALLBACK CurrentCallback;
+
+    CurrentCallback = CONTAINING_RECORD(CurrentEntry, REGISTRY_CALLBACK, ListEntry);
+    if(CurrentCallback->Cookie.QuadPart == Cookie.QuadPart)
+    {
+      /* found the callback, don't unlink it from the list yet so we don't screw
+         the calling loop */
+      ExReleaseFastMutex(&CmiCallbackLock);
+
+      /* if the callback is currently executing, wait until it finished */
+      ExWaitForRundownProtectionRelease(&CurrentCallback->RundownRef);
+
+      /* time to unlink it. It's now safe because every attempt to acquire a
+         runtime protection on this callback will fail */
+      ExAcquireFastMutex(&CmiCallbackLock);
+      RemoveEntryList(&CurrentCallback->ListEntry);
+      ExReleaseFastMutex(&CmiCallbackLock);
+
+      /* free the callback */
+      ExFreePool(CurrentCallback);
+      return STATUS_SUCCESS;
+    }
+  }
+  
+  ExReleaseFastMutex(&CmiCallbackLock);
+
+  return STATUS_UNSUCCESSFUL;
+}
+
+
+NTSTATUS
+CmiCallRegisteredCallbacks(IN REG_NOTIFY_CLASS Argument1,
+                           IN PVOID Argument2)
+{
+  PLIST_ENTRY CurrentEntry;
+  
+  ExAcquireFastMutex(&CmiCallbackLock);
+
+  for(CurrentEntry = CmiCallbackHead.Flink;
+      CurrentEntry != &CmiCallbackHead;
+      CurrentEntry = CurrentEntry->Flink)
+  {
+    PREGISTRY_CALLBACK CurrentCallback;
+
+    CurrentCallback = CONTAINING_RECORD(CurrentEntry, REGISTRY_CALLBACK, ListEntry);
+    if(ExAcquireRundownProtectionEx(&CurrentCallback->RundownRef, 1))
+    {
+      NTSTATUS Status;
+      
+      /* don't hold locks during the callbacks! */
+      ExReleaseFastMutex(&CmiCallbackLock);
+      
+      Status = CurrentCallback->Function(CurrentCallback->Context,
+                                         Argument1,
+                                         Argument2);
+      if(!NT_SUCCESS(Status))
+      {
+        /* one callback returned failure, don't call any more callbacks */
+        return Status;
+      }
+
+      ExAcquireFastMutex(&CmiCallbackLock);
+      /* don't release the rundown protection before holding the callback lock
+         so the pointer to the next callback isn't cleared in case this callback
+         get's deleted */
+      ExReleaseRundownProtectionEx(&CurrentCallback->RundownRef, 1);
+    }
+  }
+  
+  ExReleaseFastMutex(&CmiCallbackLock);
+  
+  return STATUS_SUCCESS;
 }
 
 

@@ -372,12 +372,70 @@ extern LIST_ENTRY CmiHiveListHead;
 
 extern ERESOURCE CmiRegistryLock;
 
+typedef enum _REG_NOTIFY_CLASS
+{
+  RegNtDeleteKey,
+  RegNtPreDeleteKey = RegNtDeleteKey,
+  RegNtSetValueKey,
+  RegNtPreSetValueKey = RegNtSetValueKey,
+  RegNtDeleteValueKey,
+  RegNtPreDeleteValueKey = RegNtDeleteValueKey,
+  RegNtSetInformationKey,
+  RegNtPreSetInformationKey = RegNtSetInformationKey,
+  RegNtRenameKey,
+  RegNtPreRenameKey = RegNtRenameKey,
+  RegNtEnumerateKey,
+  RegNtPreEnumerateKey = RegNtEnumerateKey,
+  RegNtEnumerateValueKey,
+  RegNtPreEnumerateValueKey = RegNtEnumerateValueKey,
+  RegNtQueryKey,
+  RegNtPreQueryKey = RegNtQueryKey,
+  RegNtQueryValueKey,
+  RegNtPreQueryValueKey = RegNtQueryValueKey,
+  RegNtQueryMultipleValueKey,
+  RegNtPreQueryMultipleValueKey = RegNtQueryMultipleValueKey,
+  RegNtPreCreateKey,
+  RegNtPostCreateKey,
+  RegNtPreOpenKey,
+  RegNtPostOpenKey,
+  RegNtKeyHandleClose,
+  RegNtPreKeyHandleClose = RegNtKeyHandleClose,
+  RegNtPostDeleteKey,
+  RegNtPostSetValueKey,
+  RegNtPostDeleteValueKey,
+  RegNtPostSetInformationKey,
+  RegNtPostRenameKey,
+  RegNtPostEnumerateKey,
+  RegNtPostEnumerateValueKey,
+  RegNtPostQueryKey,
+  RegNtPostQueryValueKey,
+  RegNtPostQueryMultipleValueKey,
+  RegNtPostKeyHandleClose,
+  RegNtPreCreateKeyEx,
+  RegNtPostCreateKeyEx,
+  RegNtPreOpenKeyEx,
+  RegNtPostOpenKeyEx
+} REG_NOTIFY_CLASS, *PREG_NOTIFY_CLASS;
+
 /* Registry Callback Function */
 typedef NTSTATUS (*PEX_CALLBACK_FUNCTION ) (
     IN PVOID CallbackContext,
-    IN PVOID Argument1,
+    IN REG_NOTIFY_CLASS Argument1,
     IN PVOID Argument2
     );
+
+typedef struct _REGISTRY_CALLBACK
+{
+    LIST_ENTRY ListEntry;
+    EX_RUNDOWN_REF RundownRef;
+    PEX_CALLBACK_FUNCTION Function;
+    PVOID Context;
+    LARGE_INTEGER Cookie;
+} REGISTRY_CALLBACK, *PREGISTRY_CALLBACK;
+
+NTSTATUS
+CmiCallRegisteredCallbacks(IN REG_NOTIFY_CLASS Argument1,
+                           IN PVOID Argument2);
 
 VOID
 CmiVerifyBinHeader(PHBIN BinHeader);
