@@ -1,4 +1,4 @@
-/* $Id: genw32k.c,v 1.4 2003/07/09 20:41:35 hyperion Exp $
+/* $Id: genw32k.c,v 1.5 2003/08/01 09:06:54 weiden Exp $
  *
  * COPYRIGHT:             See COPYING in the top level directory
  * PROJECT:               ReactOS version of ntdll
@@ -305,7 +305,8 @@ process(
 
 void usage(char * argv0)
 {
-	printf("Usage: %s w32k.lst ssdt.h win32k.c win32k.c\n"
+	printf("Usage: %s w32ksvc.db w32k.lst ssdt.h win32k.c win32k.c\n"
+	       "  w32ksvc.db    input file(system calls database)\n"
 	       "  w32k.lst      system functions database\n"
 	       "  ssdt.h        WIN32K service table\n"
 	       "  win32k.c      GDI32 stubs\n"
