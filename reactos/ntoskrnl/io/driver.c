@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.14 2003/07/11 01:23:14 royce Exp $
+/* $Id: driver.c,v 1.15 2003/08/24 11:35:41 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -222,7 +222,9 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
 
   Status = IopInitializeDriver(ModuleObject->EntryPoint,
 			       DeviceNode,
-			       (Type == 2 || Type == 8));
+			       (Type == 2 || Type == 8),
+			       ModuleObject->Base,
+			       ModuleObject->Length);
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("IopInitializeDriver() failed (Status %lx)\n", Status);

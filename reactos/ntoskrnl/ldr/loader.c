@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.133 2003/07/21 21:53:52 royce Exp $
+/* $Id: loader.c,v 1.134 2003/08/24 11:35:41 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -538,7 +538,9 @@ LdrInitializeBootStartDriver(PVOID ModuleLoadBase,
   RtlCreateUnicodeString(&DeviceNode->ServiceName, Buffer);
 
   Status = IopInitializeDriver(ModuleObject->EntryPoint,
-			       DeviceNode, FALSE);
+			       DeviceNode, FALSE,
+			       ModuleObject->Base,
+			       ModuleObject->Length);
   if (!NT_SUCCESS(Status))
     {
       IopFreeDeviceNode(DeviceNode);

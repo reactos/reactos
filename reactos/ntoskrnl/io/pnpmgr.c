@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.13 2003/07/21 21:53:51 royce Exp $
+/* $Id: pnpmgr.c,v 1.14 2003/08/24 11:35:41 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -1233,7 +1233,7 @@ VOID PnpInit(VOID)
 
   KeInitializeSpinLock(&IopDeviceTreeLock);
 
-  Status = IopCreateDriverObject(&IopRootDriverObject, NULL, FALSE);
+  Status = IopCreateDriverObject(&IopRootDriverObject, NULL, FALSE, NULL, 0);
   if (!NT_SUCCESS(Status))
   {
     CPRINT("IoCreateDriverObject() failed\n");

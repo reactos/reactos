@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.36 2003/07/11 01:23:14 royce Exp $
+/* $Id: iomgr.c,v 1.37 2003/08/24 11:35:41 dwelch Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -373,7 +373,9 @@ VOID IoInit2(VOID)
 
   Status = IopInitializeDriver(RawFsDriverEntry,
     DeviceNode,
-    TRUE);
+    TRUE,
+    NULL,
+    0);
   if (!NT_SUCCESS(Status))
     {
       IopFreeDeviceNode(DeviceNode);

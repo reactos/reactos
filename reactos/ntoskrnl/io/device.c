@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.57 2003/07/21 21:53:51 royce Exp $
+/* $Id: device.c,v 1.58 2003/08/24 11:35:41 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -276,7 +276,9 @@ IopDefaultDispatchFunction(PDEVICE_OBJECT DeviceObject,
 NTSTATUS
 IopCreateDriverObject(PDRIVER_OBJECT *DriverObject,
 		      PUNICODE_STRING ServiceName,
-		      BOOLEAN FileSystem)
+		      BOOLEAN FileSystem,
+		      PVOID DriverImageStart,
+		      ULONG DriverImageSize)
 {
   PDRIVER_OBJECT Object;
   HANDLE DriverHandle = 0;
@@ -286,7 +288,8 @@ IopCreateDriverObject(PDRIVER_OBJECT *DriverObject,
   OBJECT_ATTRIBUTES ObjectAttributes;
   NTSTATUS Status;
 
-  DPRINT("IopCreateDriverObject(%p '%wZ' %x)\n", DriverObject, ServiceName, FileSystem);
+  DPRINT("IopCreateDriverObject(%p '%wZ' %x %p %x)\n", DriverObject, ServiceName, FileSystem,
+	 DriverImageStart, DriverImageSize);
 
   *DriverObject = NULL;
 
@@ -338,6 +341,9 @@ IopCreateDriverObject(PDRIVER_OBJECT *DriverObject,
   RtlZeroMemory(Object->DriverExtension, sizeof(DRIVER_EXTENSION));
 
   Object->Type = InternalDriverType;
+
+  Object->DriverStart = DriverImageStart;
+  Object->DriverSize = DriverImageSize;
 
   for (i=0; i<=IRP_MJ_MAXIMUM_FUNCTION; i++)
     {
@@ -465,7 +471,8 @@ IopInitializeService(
       return(Status);
     }
 
-    Status = IopInitializeDriver(ModuleObject->EntryPoint, DeviceNode, FALSE);
+    Status = IopInitializeDriver(ModuleObject->EntryPoint, DeviceNode, FALSE,
+				 ModuleObject->Base, ModuleObject->Length);
     if (!NT_SUCCESS(Status))
     {
       LdrUnloadModule(ModuleObject);
@@ -532,7 +539,9 @@ IopInitializeDeviceNodeService(PDEVICE_NODE DeviceNode)
 NTSTATUS
 IopInitializeDriver(PDRIVER_INITIALIZE DriverEntry,
 		    PDEVICE_NODE DeviceNode,
-		    BOOLEAN FileSystemDriver)
+		    BOOLEAN FileSystemDriver,
+		    PVOID DriverImageStart,
+		    ULONG DriverImageSize)
 /*
  * FUNCTION: Called to initalize a loaded driver
  * ARGUMENTS:
@@ -550,7 +559,9 @@ IopInitializeDriver(PDRIVER_INITIALIZE DriverEntry,
 
   Status = IopCreateDriverObject(&DriverObject,
 				 &DeviceNode->ServiceName,
-				 FileSystemDriver);
+				 FileSystemDriver,
+				 DriverImageStart,
+				 DriverImageSize);
   if (!NT_SUCCESS(Status))
     {
       return(Status);
