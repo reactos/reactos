@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.164 2004/10/01 20:06:43 gvg Exp $
+/* $Id: section.c,v 1.165 2004/10/09 12:17:54 gvg Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -3636,7 +3636,7 @@ NtExtendSection(IN HANDLE SectionHandle,
  * REVISIONS
  */
 PVOID STDCALL
-MmAllocateSection (IN ULONG Length)
+MmAllocateSection (IN ULONG Length, PVOID BaseAddress)
 {
    PVOID Result;
    MEMORY_AREA* marea;
@@ -3650,7 +3650,7 @@ MmAllocateSection (IN ULONG Length)
    BoundaryAddressMultiple.QuadPart = 0;
 
    AddressSpace = MmGetKernelAddressSpace();
-   Result = NULL;
+   Result = BaseAddress;
    MmLockAddressSpace(AddressSpace);
    Status = MmCreateMemoryArea (NULL,
                                 AddressSpace,

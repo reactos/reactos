@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.147 2004/10/04 17:27:13 hbirr Exp $
+/* $Id: loader.c,v 1.148 2004/10/09 12:17:53 gvg Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -776,7 +776,8 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
   DPRINT("DriverSize %x, SizeOfImage %x\n",DriverSize, PENtHeaders->OptionalHeader.SizeOfImage);
 
   /*  Allocate a virtual section for the module  */
-  DriverBase = MmAllocateSection(DriverSize);
+  DriverBase = NULL;
+  DriverBase = MmAllocateSection(DriverSize, DriverBase);
   if (DriverBase == 0)
     {
       CPRINT("Failed to allocate a virtual section for driver\n");

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.50 2004/08/15 16:39:08 chorns Exp $
+/* $Id: pagefile.c,v 1.51 2004/10/09 12:17:53 gvg Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -314,7 +314,7 @@ MmInitPagingFile(VOID)
     */
    if (MmCoreDumpType != MM_CORE_DUMP_TYPE_NONE)
    {
-      MmCoreDumpPageFrame = MmAllocateSection(PAGE_SIZE);
+      MmCoreDumpPageFrame = MmAllocateSection(PAGE_SIZE, NULL);
       if (MmCoreDumpType == MM_CORE_DUMP_TYPE_FULL)
       {
          MmCoreDumpSize = MmStats.NrTotalPages * 4096 + 1024 * 1024;

@@ -717,7 +717,7 @@ PMM_REGION MmFindRegion(PVOID BaseAddress, PLIST_ENTRY RegionListHead, PVOID Add
 /* section.c *****************************************************************/
 
 PVOID STDCALL 
-MmAllocateSection (IN ULONG Length);
+MmAllocateSection (IN ULONG Length, PVOID BaseAddress);
 
 NTSTATUS STDCALL
 MmQuerySectionView(PMEMORY_AREA MemoryArea,
