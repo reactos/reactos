@@ -230,6 +230,7 @@ protected:
 	void	InsertItem(HTREEITEM hparent, HTREEITEM after, const NotifyInfo&, HDC);
 	void	InsertItem(HTREEITEM hparent, HTREEITEM after, const NotifyIconDlgInfo&, HDC, HICON, NOTIFYICONMODE);
 	void	SetIconMode(NOTIFYICONMODE mode);
+	void	RefreshProperties(const NotifyIconDlgInfo& entry);
 };
 
 

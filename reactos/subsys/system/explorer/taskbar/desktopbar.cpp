@@ -47,7 +47,7 @@ DesktopBar::DesktopBar(HWND hwnd)
 	WM_TASKBARCREATED(RegisterWindowMessage(WINMSG_TASKBARCREATED))
 #endif
 {
-	SetWindowIcon(hwnd, IDI_REACTOS/*IDI_SEARCH*/);	// icon in for TrayNotifyDlg
+	SetWindowIcon(hwnd, IDI_REACTOS);
 
 	SystemParametersInfo(SPI_GETWORKAREA, 0, &_work_area_org, 0);
 }

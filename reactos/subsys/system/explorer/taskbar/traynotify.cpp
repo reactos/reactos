@@ -905,7 +905,7 @@ TrayNotifyDlg::TrayNotifyDlg(HWND hwnd)
 		_show_hidden_org = _pNotifyArea->_show_hidden;
 	}
 
-	SetWindowIcon(hwnd, IDI_REACTOS/*IDI_SEARCH*/);
+	SetWindowIcon(hwnd, IDI_REACTOS);
 
 	_haccel = LoadAccelerators(g_Globals._hInstance, MAKEINTRESOURCE(IDA_TRAYNOTIFY));
 
@@ -1053,7 +1053,7 @@ void TrayNotifyDlg::InsertItem(HTREEITEM hparent, HTREEITEM after, const NotifyI
 void TrayNotifyDlg::InsertItem(HTREEITEM hparent, HTREEITEM after, const NotifyIconDlgInfo& entry,
 								HDC hdc, HICON hicon, NOTIFYICONMODE mode)
 {
-	int idx = _info.size();
+	int idx = _info.size() + 1;
 	_info[idx] = entry;
 
 	String mode_str = string_from_mode(mode);
@@ -1163,42 +1163,10 @@ int TrayNotifyDlg::Notify(int id, NMHDR* pnmh)
 	switch(pnmh->code) {
 	  case TVN_SELCHANGED: {
 		NMTREEVIEW* pnmtv = (NMTREEVIEW*)pnmh;
-		LPARAM lparam = pnmtv->itemNew.lParam;
+		int idx = pnmtv->itemNew.lParam;
 
-		if (lparam) {
-			const NotifyIconDlgInfo& entry = _info[lparam];
-
-			SetDlgItemText(_hwnd, IDC_NOTIFY_TOOLTIP, entry._tipText);
-			SetDlgItemText(_hwnd, IDC_NOTIFY_TITLE, entry._windowTitle);
-			SetDlgItemText(_hwnd, IDC_NOTIFY_MODULE, entry._modulePath);
-
-			CheckRadioButton(_hwnd, IDC_NOTIFY_SHOW, IDC_NOTIFY_AUTOHIDE, IDC_NOTIFY_SHOW+entry._mode);
-
-			String change_str;
-			if (entry._lastChange)
-				change_str.printf(TEXT("before %d s"), (GetTickCount()-entry._lastChange+500)/1000);
-			SetDlgItemText(_hwnd, IDC_LAST_CHANGE, change_str);
-
-			HICON hicon = 0; //get_window_icon_big(entry._hWnd, false);
-
-			 // If we could not find an icon associated with the owner window, try to load one from the owning module.
-			if (!hicon && !entry._modulePath.empty()) {
-				hicon = ExtractIcon(g_Globals._hInstance, entry._modulePath, 0);
-
-				if (!hicon) {
-					SHFILEINFO sfi;
-
-					if (SHGetFileInfo(entry._modulePath, 0, &sfi, sizeof(sfi), SHGFI_ICON|SHGFI_LARGEICON))
-						hicon = sfi.hIcon;
-				}
-			}
-
-			if (hicon) {
-				SendMessage(GetDlgItem(_hwnd, IDC_PICTURE), STM_SETICON, (LPARAM)hicon, 0);
-				DestroyIcon(hicon);
-			} else
-				SendMessage(GetDlgItem(_hwnd, IDC_PICTURE), STM_SETICON, 0, 0);
-
+		if (idx) {
+			RefreshProperties(_info[idx]);
 			_selectedItem = pnmtv->itemNew.hItem;
 		} else {
 			/*
@@ -1214,14 +1182,48 @@ int TrayNotifyDlg::Notify(int id, NMHDR* pnmh)
 	return 0;
 }
 
+void TrayNotifyDlg::RefreshProperties(const NotifyIconDlgInfo& entry)
+{
+	SetDlgItemText(_hwnd, IDC_NOTIFY_TOOLTIP, entry._tipText);
+	SetDlgItemText(_hwnd, IDC_NOTIFY_TITLE, entry._windowTitle);
+	SetDlgItemText(_hwnd, IDC_NOTIFY_MODULE, entry._modulePath);
+
+	CheckRadioButton(_hwnd, IDC_NOTIFY_SHOW, IDC_NOTIFY_AUTOHIDE, IDC_NOTIFY_SHOW+entry._mode);
+
+	String change_str;
+	if (entry._lastChange)
+		change_str.printf(TEXT("before %d s"), (GetTickCount()-entry._lastChange+500)/1000);
+	SetDlgItemText(_hwnd, IDC_LAST_CHANGE, change_str);
+
+	HICON hicon = 0; //get_window_icon_big(entry._hWnd, false);
+
+	 // If we could not find an icon associated with the owner window, try to load one from the owning module.
+	if (!hicon && !entry._modulePath.empty()) {
+		hicon = ExtractIcon(g_Globals._hInstance, entry._modulePath, 0);
+
+		if (!hicon) {
+			SHFILEINFO sfi;
+
+			if (SHGetFileInfo(entry._modulePath, 0, &sfi, sizeof(sfi), SHGFI_ICON|SHGFI_LARGEICON))
+				hicon = sfi.hIcon;
+		}
+	}
+
+	if (hicon) {
+		SendMessage(GetDlgItem(_hwnd, IDC_PICTURE), STM_SETICON, (LPARAM)hicon, 0);
+		DestroyIcon(hicon);
+	} else
+		SendMessage(GetDlgItem(_hwnd, IDC_PICTURE), STM_SETICON, 0, 0);
+}
+
 void TrayNotifyDlg::SetIconMode(NOTIFYICONMODE mode)
 {
-	LPARAM lparam = TreeView_GetItemData(_tree_ctrl, _selectedItem);
+	int idx = TreeView_GetItemData(_tree_ctrl, _selectedItem);
 
-	if (!lparam)
+	if (!idx)
 		return;
 
-	NotifyIconConfig& entry = _info[lparam];
+	NotifyIconConfig& entry = _info[idx];
 
 	if (entry._mode != mode) {
 		entry._mode = mode;
