@@ -105,7 +105,7 @@ ReportDetectedDevice(
 	IN PUNICODE_STRING CompatibleIds)
 {
 	PDEVICE_OBJECT Pdo = NULL;
-	PPDO_DEVICE_EXTENSION PdoDeviceExtension;
+	PPDO_DEVICE_EXTENSION PdoDeviceExtension = NULL;
 	PFDO_DEVICE_EXTENSION FdoDeviceExtension;
 	NTSTATUS Status;
 	

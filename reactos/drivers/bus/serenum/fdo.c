@@ -100,7 +100,7 @@ SerenumFdoQueryBusRelations(
 	PDEVICE_RELATIONS DeviceRelations;
 	ULONG NumPDO;
 	ULONG i;
-	NTSTATUS Status;
+	NTSTATUS Status = STATUS_SUCCESS;
 	
 	DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	ASSERT(DeviceExtension->Common.IsFDO);
