@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.79 2001/05/05 19:13:09 chorns Exp $
+/* $Id: loader.c,v 1.80 2001/05/26 10:05:40 jfilby Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -678,6 +678,12 @@ VOID LdrLoadAutoConfigDrivers (VOID)
     * Named pipe filesystem driver
     */
    LdrLoadAutoConfigDriver(L"npfs.sys");
+
+   /*
+    * Mouse drivers
+    */
+   LdrLoadAutoConfigDriver(L"psaux.sys");
+   LdrLoadAutoConfigDriver(L"mouclass.sys");
 
    /*
     * Networking
