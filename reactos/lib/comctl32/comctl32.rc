@@ -1,0 +1,41 @@
+/* 
+ * FIXME:
+ * Can't use Wine's resource script because it doesn't work with windres.
+ */
+
+/*#include "rsrc.rc"*/
+
+#include <windows.h>
+#include "comctl32.h"
+#include "wine/wine_common_ver.rc"
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+IDB_STD_SMALL BITMAP "res/idb_std_small.bmp"
+IDB_STD_LARGE BITMAP "res/idb_std_large.bmp"
+IDB_VIEW_SMALL BITMAP "res/idb_view_small.bmp"
+IDB_VIEW_LARGE BITMAP "res/idb_view_large.bmp"
+IDB_HIST_SMALL BITMAP "res/idb_hist_small.bmp"
+IDB_HIST_LARGE BITMAP "res/idb_hist_large.bmp"
+IDC_DIVIDER CURSOR "res/idc_divider.cur"
+IDC_DIVIDEROPEN CURSOR "res/idc_divideropen.cur"
+IDI_DRAGARROW ICON "res/idi_dragarrow.ico"
+
+/*
+ * Everything specific to any language goes
+ * in one of the specific files.
+ * Note that you can and may override resources
+ * which also have a neutral version. This is to
+ * get localized bitmaps for example.
+ */
+
+#include "res/comctl_En.rc"
+#include "res/comctl_Cn.rc"
+#include "res/comctl_De.rc"
+#include "res/comctl_Fr.rc"
+#include "res/comctl_Es.rc"
+#include "res/comctl_Ko.rc"
+#include "res/comctl_Pl.rc"
+#include "res/comctl_Pt.rc"
+#include "res/comctl_Ru.rc"
+#include "res/comctl_Si.rc"

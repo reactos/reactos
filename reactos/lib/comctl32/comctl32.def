@@ -1,0 +1,160 @@
+LIBRARY comctl32.dll
+EXPORTS
+MenuHelp@28 @2
+ShowHideMenuCtl@12 @3
+GetEffectiveClientRect@12 @4
+DrawStatusTextA@16 @5
+CreateStatusWindowA@16 @6
+CreateToolbar@32 @7
+CreateMappedBitmap@20 @8
+DPA_LoadStream@16 @9 NONAME
+DPA_SaveStream@16 @10 NONAME
+DPA_Merge@24 @11 NONAME
+MakeDragList@4 @13
+LBItemFromPt@16 @14
+DrawInsert@12 @15
+CreateUpDownControl@48 @16
+InitCommonControls@0 @17
+Alloc@4 @71 NONAME
+ReAlloc@8 @72 NONAME
+Free@4 @73 NONAME
+GetSize@4 @74 NONAME
+CreateMRUListA@4 @151 NONAME
+FreeMRUList@4 @152 NONAME
+AddMRUStringA@8 @153 NONAME
+EnumMRUListA@16 @154 NONAME
+FindMRUStringA@12 @155 NONAME
+DelMRUString@8 @156 NONAME
+CreateMRUListLazyA@16 @157 NONAME
+AddMRUData@12 @167 NONAME
+FindMRUData@16 @169 NONAME
+Str_GetPtrA@12 @233 NONAME
+Str_SetPtrA@8 @234 NONAME
+Str_GetPtrW@12 @235 NONAME
+Str_SetPtrW@8 @236 NONAME
+DSA_Create@8 @320 NONAME
+DSA_Destroy@4 @321 NONAME
+DSA_GetItem@12 @322 NONAME
+DSA_GetItemPtr@8 @323 NONAME
+DSA_InsertItem@12 @324 NONAME
+DSA_SetItem@12 @325 NONAME
+DSA_DeleteItem@8 @326 NONAME
+DSA_DeleteAllItems@4 @327 NONAME
+DPA_Create@4 @328 NONAME
+DPA_Destroy@4 @329 NONAME
+DPA_Grow@8 @330 NONAME
+DPA_Clone@8 @331 NONAME
+DPA_GetPtr@8 @332 NONAME
+DPA_GetPtrIndex@8 @333 NONAME
+DPA_InsertPtr@12 @334 NONAME
+DPA_SetPtr@12 @335 NONAME
+DPA_DeletePtr@8 @336 NONAME
+DPA_DeleteAllPtrs@4 @337 NONAME
+DPA_Sort@12 @338 NONAME
+DPA_Search@24 @339 NONAME
+DPA_CreateEx@8 @340 NONAME
+SendNotify@16 @341 NONAME
+SendNotifyEx@20 @342 NONAME
+StrChrA@8 @350 NONAME
+StrRChrA@12 @351 NONAME
+StrCmpNA@12 @352 NONAME
+StrCmpNIA@12 @353 NONAME
+StrStrA@8 @354 NONAME
+StrStrIA@8 @355 NONAME
+StrCSpnA@8 @356 NONAME
+StrToIntA@4 @357 NONAME
+StrChrW@8 @358 NONAME
+StrRChrW@12 @359 NONAME
+StrCmpNW@12 @360 NONAME
+StrCmpNIW@12 @361 NONAME
+StrStrW@8 @362 NONAME
+StrStrIW@8 @363 NONAME
+StrSpnW@8 @364 NONAME
+StrToIntW@4 @365 NONAME
+SmoothScrollWindow@4 @382 NONAME
+DPA_EnumCallback@12 @385 NONAME
+DPA_DestroyCallback@12 @386 NONAME
+DSA_EnumCallback@12 @387 NONAME
+DSA_DestroyCallback@12 @388 NONAME
+CreateMRUListW@4 @400 NONAME
+AddMRUStringW@8 @401 NONAME
+FindMRUStringW@12 @402 NONAME
+EnumMRUListW@16 @403 NONAME
+CreateMRUListLazyW@16 @404 NONAME
+SetWindowSubclass@16 @410
+GetWindowSubclass@16 @411
+RemoveWindowSubclass@12 @412
+DefSubclassProc@16 @413
+DrawTextWrap@20 @415 NONAME
+ExtTextOutWrap@32 @417 NONAME
+GetTextExtentPointWrap@16 @419 NONAME
+CreatePropertySheetPage@4=CreatePropertySheetPageA@4 @12
+CreatePropertySheetPageA@4 @18
+CreatePropertySheetPageW@4 @19
+CreateStatusWindow@16=CreateStatusWindowA@16 @20
+CreateStatusWindowW@16 @21
+CreateToolbarEx@52 @22
+DestroyPropertySheetPage@4 @23
+DllGetVersion@4=COMCTL32_DllGetVersion@4 @24
+DllInstall@8=COMCTL32_DllInstall@8 @25
+DrawStatusText@16=DrawStatusTextA@16 @26
+DrawStatusTextW@16 @27
+FlatSB_EnableScrollBar@12 @28
+FlatSB_GetScrollInfo@12 @29
+FlatSB_GetScrollPos@8 @30
+FlatSB_GetScrollProp@12 @31
+FlatSB_GetScrollRange@16 @32
+FlatSB_SetScrollInfo@16 @33
+FlatSB_SetScrollPos@16 @34
+FlatSB_SetScrollProp@16 @35
+FlatSB_SetScrollRange@20 @36
+FlatSB_ShowScrollBar@12 @37
+GetMUILanguage@0 @38
+ImageList_Add@12 @39
+ImageList_AddIcon@8 @40
+ImageList_AddMasked@12 @41
+ImageList_BeginDrag@16 @42
+ImageList_Copy@20 @43
+ImageList_Create@20 @44
+ImageList_Destroy@4 @45
+ImageList_DragEnter@12 @46
+ImageList_DragLeave@4 @47
+ImageList_DragMove@8 @48
+ImageList_DragShowNolock@4 @49
+ImageList_Draw@24 @50
+ImageList_DrawEx@40 @51
+ImageList_DrawIndirect@4 @52
+ImageList_Duplicate@4 @53
+ImageList_EndDrag@0 @54
+ImageList_GetBkColor@4 @55
+ImageList_GetDragImage@8 @56
+ImageList_GetFlags@4 @57
+ImageList_GetIcon@12 @58
+ImageList_GetIconSize@12 @59
+ImageList_GetImageCount@4 @60
+ImageList_GetImageInfo@12 @61
+ImageList_GetImageRect@12 @62
+ImageList_LoadImage@28=ImageList_LoadImageA@28 @63
+ImageList_LoadImageA@28 @64
+ImageList_LoadImageW@28 @65
+ImageList_Merge@24 @66
+ImageList_Read@4 @67
+ImageList_Remove@8 @68
+ImageList_Replace@16 @69
+ImageList_ReplaceIcon@12 @70
+ImageList_SetBkColor@8 @75
+ImageList_SetDragCursorImage@16 @76
+ImageList_SetFilter@12 @77
+ImageList_SetFlags@8 @78
+ImageList_SetIconSize@12 @79
+ImageList_SetImageCount@8 @80
+ImageList_SetOverlayImage@12 @81
+ImageList_Write@8 @82
+InitCommonControlsEx@4 @83
+InitMUILanguage@4 @84
+InitializeFlatSB@4 @85
+PropertySheet@4=PropertySheetA@4 @86
+PropertySheetA@4 @87
+PropertySheetW@4 @88
+UninitializeFlatSB@4 @89
+_TrackMouseEvent@4 @90
