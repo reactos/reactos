@@ -56,6 +56,14 @@ CFLAGS += -D_DISABLE_TIDENTS
 # no native setjmp/longjmp in the kernel
 CFLAGS += -D_SEH_NO_NATIVE_NLG
 
+# 3GB User Mode Memory Space support
+ifeq ($(3GB), 1)
+CFLAGS += -D__3GB__
+TARGET_BASE = 0xC0000000
+else
+TARGET_BASE = 0x80000000
+endif
+
 # enable thread event pair features (NT4 only!)
 # CFLAGS += -D_ENABLE_THRDEVTPAIR
 
@@ -539,7 +547,7 @@ TARGET_LIBS = \
 TARGET_LFLAGS = \
 	-Wl,-T,ntoskrnl.lnk \
 	-Wl,--subsystem,native \
-	-Wl,--image-base,0xc0000000 \
+	-Wl,--image-base,$(TARGET_BASE) \
 	-Wl,--file-alignment,0x1000 \
 	-Wl,--section-alignment,0x1000 \
 	-Wl,--entry,_NtProcessStartup

@@ -2,14 +2,17 @@
 #include <internal/ntoskrnl.h>
 #include <internal/i386/segment.h>
 #include <internal/ps.h>
+#include <internal/i386/mm.h>
 
-#define KERNEL_BASE (0xc0000000)
+/* FIXME: These should be calculated from Command Line */
+#define KERNEL_PD_START (KERNEL_BASE / 0x100000) /* Page Directory Start. Only the High 3 bits. */
+#define KERNEL_PD_END ((KERNEL_BASE + 0x00400000) / 0x100000) /* Page Directory End. Only the High 3 bits. */
 
 #define MULTIBOOT_HEADER_MAGIC (0x1BADB002)
 
 #define MULTIBOOT_HEADER_FLAGS (0x00010003)
 
-#define V2P(x) (x - 0xc0000000 + 0x200000)
+#define V2P(x) (x - KERNEL_BASE + 0x200000)
 
 #ifdef MP
 
@@ -99,7 +102,7 @@ _multiboot_entry:
 	subl	$__bss_start__, %ecx
 	shr	$2, %ecx
 	movl	$__bss_start__, %edi
-	subl	$0xc0000000, %edi
+	subl	$KERNEL_BASE, %edi
 	addl	$0x200000, %edi
 	rep
 	stosl

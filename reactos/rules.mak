@@ -138,7 +138,12 @@ export MS2PS = $(Q)$(TOOLS_PATH)/ms2ps/ms2ps
 
 export STD_CFLAGS = -I$(PATH_TO_TOP)/include -I$(W32API_PATH)/include -pipe -march=$(OARCH) -D_M_IX86
 export STD_CPPFLAGS = $(STD_CFLAGS)
+# Check for 3GB 
+ifeq ($(3GB), 1)
+export STD_ASFLAGS = -I$(PATH_TO_TOP)/include -I$(W32API_PATH)/include -D__ASM__ -D_M_IX86 -D__3GB__
+else
 export STD_ASFLAGS = -I$(PATH_TO_TOP)/include -I$(W32API_PATH)/include -D__ASM__ -D_M_IX86
+endif
 export STD_RCFLAGS = --include-dir $(PATH_TO_TOP)/include --include-dir $(W32API_PATH)/include
 export STD_NFLAGS = -f win32
 

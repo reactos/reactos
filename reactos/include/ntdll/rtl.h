@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.48 2004/08/11 21:03:11 jimtabor Exp $
+/* $Id: rtl.h,v 1.49 2004/10/04 21:38:48 ion Exp $
  *
  */
 
@@ -173,7 +173,7 @@ typedef struct _RTL_HANDLE_TABLE
 } RTL_HANDLE_TABLE, *PRTL_HANDLE_TABLE;
 
 
-#define HEAP_BASE (0xa0000000)
+#define HEAP_BASE (0xA0000000)
 
 /* RtlQueryProcessDebugInformation */
 #define PDI_MODULES     0x01	/* The loaded modules of the process */

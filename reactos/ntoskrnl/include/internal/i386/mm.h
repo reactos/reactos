@@ -5,8 +5,6 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_I386_MM_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_I386_MM_H
 
-struct _EPROCESS;
-
 #if 0
 /*
  * Page access attributes (or these together)
@@ -25,8 +23,13 @@ struct _EPROCESS;
 #endif
 
 
+#ifdef __3GB__
+#define KERNEL_BASE        (0xC0000000)
+#else
+#define KERNEL_BASE        (0x80000000)
+#endif
 
-#define KERNEL_BASE        (0xc0000000)
+#ifndef __ASM__
 
 #if defined(__GNUC__)
 
@@ -53,7 +56,7 @@ struct _EPROCESS;
 #error Unknown compiler for inline assembler
 #endif
 
-
+struct _EPROCESS;
 PULONG MmGetPageDirectory(VOID);
 VOID MiEnablePAE(PVOID* LastKernelAddress);
 
@@ -61,5 +64,7 @@ VOID MiEnablePAE(PVOID* LastKernelAddress);
 
 #define PAGE_MASK(x)		((x)&(~0xfff))
 #define PAE_PAGE_MASK(x)	((x)&(~0xfffLL))
+
+#endif /* ASSEMBLER */
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_I386_MM_H */
