@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.31 2001/08/27 01:18:57 ekohl Exp $
+/* $Id: iotypes.h,v 1.32 2002/01/21 22:28:45 hbirr Exp $
  * 
  */
 
@@ -256,7 +256,7 @@ typedef struct
 /*
  * PURPOSE: IRP stack location
  */
-typedef struct _IO_STACK_LOCATION
+typedef struct __attribute__((packed)) _IO_STACK_LOCATION
 {
    UCHAR MajorFunction;
    UCHAR MinorFunction;
@@ -404,7 +404,7 @@ typedef struct _IO_STACK_LOCATION
       PCM_RESOURCE_LIST AllocatedResourcesTranslated;
     } StartDevice;
 
-  } Parameters;
+  }  Parameters;
    
    struct _DEVICE_OBJECT* DeviceObject;
    struct _FILE_OBJECT* FileObject;
@@ -412,7 +412,7 @@ typedef struct _IO_STACK_LOCATION
    PIO_COMPLETION_ROUTINE CompletionRoutine;
    PVOID CompletionContext;
    
-} IO_STACK_LOCATION, *PIO_STACK_LOCATION;
+} __attribute__((packed)) IO_STACK_LOCATION, *PIO_STACK_LOCATION;
 
 typedef struct _IO_STATUS_BLOCK
 {
