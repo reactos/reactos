@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.90 2002/08/17 01:42:02 dwelch Exp $
+/* $Id: section.c,v 1.91 2002/08/17 15:12:49 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -1798,6 +1798,7 @@ MmpDeleteSection(PVOID ObjectBody)
     }
   if (Section->FileObject != NULL)
     {
+      CcRosDereferenceCache(Section->FileObject);
       ObDereferenceObject(Section->FileObject);
       Section->FileObject = NULL;
     }
@@ -2224,6 +2225,7 @@ MmCreateDataFileSection(PHANDLE SectionHandle,
 	}
     }
   KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
+  CcRosReferenceCache(FileObject);
   Section->FileObject = FileObject; 
   Section->MaximumSize = MaximumSize;
   KeReleaseMutex(&Segment->Lock, FALSE);
@@ -2610,6 +2612,7 @@ MmCreateImageSection(PHANDLE SectionHandle,
     }
   ExFreePool(ImageSections);
   KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
+  CcRosReferenceCache(FileObject);
   Section->FileObject = FileObject;
 
   ObDereferenceObject(Section);
