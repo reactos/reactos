@@ -26,8 +26,6 @@
  //
 
 
-#include <list>
-
 //#include "shellhook.h"
 
 
@@ -49,8 +47,21 @@
 #define	CLASSNAME_TASKBAR		_T("MSTaskSwWClass")
 #define	TITLE_TASKBAR			_T("Running Applications")
 
-#define	CLASSNAME_STARTMENU		_T("ReactosStartmenuClass")
-#define	TITLE_STARTMENU			_T("Start Menu")
+
+#define	IDC_START		0x1000
+#define	IDC_LOGOFF		0x1001
+#define	IDC_SHUTDOWN	0x1002
+#define	IDC_LAUNCH		0x1003
+#define	IDC_START_HELP	0x1004
+#define	IDC_SEARCH		0x1005
+#define	IDC_SETTINGS	0x1006
+#define	IDC_DOCUMENTS	0x1007
+#define	IDC_FAVORITES	0x1008
+#define	IDC_PROGRAMS	0x1009
+#define	IDC_EXPLORE		0x100A
+
+#define	IDC_FIRST_APP	0x2000
+#define	IDC_FIRST_MENU	0x3000
 
 
 struct DesktopBar : public OwnerDrawParent<Window>
@@ -65,10 +76,7 @@ protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 	int		Command(int id, int code);
 
-	void	create_startmenu();
-
 	HWND	_hwndTaskBar;
-	HWND	_hwndStartMenu;
 };
 
 
@@ -119,62 +127,4 @@ protected:
 	static BOOL CALLBACK EnumWndProc(HWND hwnd, LPARAM lparam);
 
 	void	Refresh();
-};
-
-
- // Startmenu button
-struct StartMenuButton : public Button
-{
-	StartMenuButton(HWND parent, int y, LPCTSTR text,
-					UINT id, HICON hIcon, DWORD style=WS_VISIBLE|WS_CHILD|BS_PUSHBUTTON|BS_OWNERDRAW, DWORD exStyle=0)
-	 :	Button(parent, text, 2, y, STARTMENU_WIDTH-4, STARTMENU_LINE_HEIGHT, id, style, exStyle)
-	{
-		*new StartmenuEntry(_hwnd, hIcon);
-
-		SetWindowFont(_hwnd, GetStockFont(DEFAULT_GUI_FONT), FALSE);
-	}
-};
-
-
-typedef list<ShellPath> StartMenuFolders;
-typedef list<ShellDirectory> StartMenuShellDirs;
-
- // Startmenu window
-struct StartMenu : public OwnerDrawParent<Dialog>
-{
-	typedef OwnerDrawParent<Dialog> super;
-
-	StartMenu(HWND hwnd);
-	StartMenu(HWND hwnd, const StartMenuFolders& info);
-
-	static HWND Create(int x, int y, HWND hwndParent=0);
-	static HWND Create(int x, int y, const StartMenuFolders&, HWND hwndParent=0);
-
-protected:
-	int		_next_id;
-	StartMenuShellDirs _dirs;
-
-	static BtnWindowClass s_wcStartMenu;
-
-	LRESULT	Init(LPCREATESTRUCT pcs);
-	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
-	int		Command(int id, int code);
-
-	void	AddButton(LPCTSTR text, HICON hIcon=0, UINT id=(UINT)-1);
-	void	AddShellEntries(const ShellDirectory& dir, bool subfolders=true);
-};
-
-
- // Startmenu root window
-struct StartMenuRoot : public StartMenu
-{
-	typedef StartMenu super;
-
-	StartMenuRoot(HWND hwnd);
-
-	static HWND Create(int x, int y, HWND hwndParent=0);
-
-protected:
-	LRESULT	Init(LPCREATESTRUCT pcs);
-	int		Command(int id, int code);
 };

@@ -64,7 +64,8 @@ TARGET_OBJECTS = \
 	pane.o \
 	shellbrowser.o \
 	desktop.o \
-	taskbar.o
+	taskbar.o \
+	startmenu.o
 
 include $(PATH_TO_TOP)/rules.mak
 

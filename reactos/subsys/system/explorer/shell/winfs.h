@@ -39,15 +39,15 @@ protected:
 struct WinDirectory : public WinEntry, public Directory
 {
 	WinDirectory(LPCTSTR root_path)
-	 :	WinEntry(),
-		Directory(_tcsdup(root_path))
+	 :	WinEntry()
 	{
+		_path = _tcsdup(root_path);
 	}
 
 	WinDirectory(WinDirectory* parent, LPCTSTR path)
-	 :	WinEntry(parent),
-		Directory(_tcsdup(path))
+	 :	WinEntry(parent)
 	{
+		_path = _tcsdup(path);
 	}
 
 	~WinDirectory()

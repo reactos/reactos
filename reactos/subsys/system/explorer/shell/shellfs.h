@@ -58,11 +58,11 @@ struct ShellDirectory : public ShellEntry, public Directory
 
 	ShellDirectory(ShellDirectory* parent, IShellFolder* shell_root, LPITEMIDLIST shell_path, HWND hwnd)
 	 :	ShellEntry(parent, shell_path),
-		Directory(shell_root),
 		_folder(shell_root),
 		_hwnd(hwnd)
 	{
 		shell_root->AddRef();
+		_path = shell_root;
 	}
 
 	~ShellDirectory()

@@ -26,6 +26,8 @@
  //
 
 
+#include "utility/shellclasses.h"
+
 #include "shell/entries.h"
 
 #include "shell/winfs.h"

@@ -46,17 +46,21 @@ typedef set<HWND> WindowSet;
 
  /**
 	Class Window is the base class for several C++ window wrapper classes.
+	Window objects are allocated from the heap. They are automatically freed
+	when the window gets destroyed.
  */
 struct Window
 {
 	Window(HWND hwnd)
 	 :	_hwnd(hwnd)
 	{
+		 // store "this" pointer as user data
 		SetWindowLong(hwnd, GWL_USERDATA, (LONG)this);
 	}
 
 	virtual ~Window()
 	{
+		 // empty user data field
 		SetWindowLong(_hwnd, GWL_USERDATA, 0);
 	}
 
@@ -97,10 +101,10 @@ protected:
 	HWND	_hwnd;
 
 
-	virtual LRESULT	Init(LPCREATESTRUCT pcs);
+	virtual LRESULT	Init(LPCREATESTRUCT pcs);							// WM_CREATE processing
 	virtual LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
-	virtual int		Command(int id, int code);
-	virtual int		Notify(int id, NMHDR* pnmh);
+	virtual int		Command(int id, int code);							// WM_COMMAND processing
+	virtual int		Notify(int id, NMHDR* pnmh);						// WM_NOTIFY processing
 
 
 	static const void* s_new_info;	//TODO: protect for multithreaded access
@@ -115,6 +119,12 @@ protected:
 };
 
 
+ /**
+	SubclassedWindow is used to wrap already existing window handles
+	into C++ Window objects. To construct a object, use the "new" operator
+	to put it in the heap. It is automatically freed, when the window
+	gets destroyed.
+ */
 struct SubclassedWindow : public Window
 {
 	typedef Window super;
@@ -152,6 +162,13 @@ template<typename WND_CLASS, typename INFO_CLASS> struct WindowCreatorInfo
 	(Window::WINDOWCREATORFUNC) WindowCreatorInfo<WND_CLASS, INFO_CLASS>::window_creator
 
 
+ /**
+	WindowClass is a neat wrapper for RegisterClassEx().
+	Just construct a WindowClass object, override the attributes you want
+	to change, then call Register() or simply request the ATOM value to
+	register the window class. You don't have to worry calling Register()
+	more than once. It checks if, the class has already been registered.
+ */
 struct WindowClass : public WNDCLASSEX
 {
 	WindowClass(LPCTSTR classname, UINT style=0, WNDPROC wndproc=Window::WindowWndProc);
@@ -199,6 +216,7 @@ struct IconWindowClass : public WindowClass
 #define	COLOR_SPLITBAR		LTGRAY_BRUSH
 
 
+ /// menu info structure for MDI child windows
 struct MenuInfo
 {
 	HMENU	_hMenuView;
@@ -240,6 +258,11 @@ protected:
 };
 
 
+ /**
+	PreTranslateWindow is used to register windows to be called by Window::pretranslate_msg().
+	This way you get WM_TRANSLATE_MSG messages before the message loop dispatches messages.
+	You can then for example use TranslateAccelerator() to implement key shortcuts.
+ */
 struct PreTranslateWindow : public Window
 {
 	typedef Window super;

@@ -27,7 +27,6 @@
 
 
 #include "../utility/utility.h"
-#include "../utility/shellclasses.h"
 
 #include "../explorer.h"
 #include "../globals.h"

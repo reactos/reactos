@@ -85,7 +85,6 @@ public:
 struct Directory {
 protected:
 	Directory() : _path(NULL) {}
-	Directory(void* path) : _path(path) {}
 	virtual ~Directory() {}
 
 	void*	_path;

@@ -28,7 +28,7 @@
 
 #include "../utility/utility.h"
 #include "../utility/shellclasses.h"
-#include "../globals.h"
+#include "../globals.h"	// for _prescan_nodes
 
 #include "entries.h"
 

@@ -41,15 +41,21 @@ protected:
 struct UnixDirectory : public UnixEntry, public Directory
 {
 	UnixDirectory(LPCTSTR root_path)
-	 :	UnixEntry(),
-		Directory(_tcsdup(root_path))
+	 :	UnixEntry()
 	{
+		_path = _tcsdup(root_path);
 	}
 
 	UnixDirectory(UnixDirectory* parent, LPCTSTR path)
 	 :	UnixEntry(parent),
-		Directory(_tcsdup(path))
 	{
+		_path = _tcsdup(path);
+	}
+
+	~UnixDirectory()
+	{
+		free(_path);
+		_path = NULL;
 	}
 
 	virtual void read_directory();
