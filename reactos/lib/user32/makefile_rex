@@ -1,0 +1,63 @@
+include ../../rules.mak
+
+ifneq ($(HOST),mingw32-windows)
+  ifneq ($(HOST),mingw32-linux)
+    DLLTARGET=user32.a
+  else
+    DLLTARGET=user32.dll
+  endif
+else
+  DLLTARGET=user32.dll
+endif
+
+all: $(DLLTARGET)
+
+
+MISC_OBJECTS = misc/sprintf.o misc/dllmain.o
+
+RESOURCE_OBJECT = user32.coff
+
+
+OBJECTS = $(MISC_OBJECTS) $(RESOURCE_OBJECT)
+
+ifeq ($(DOSCLI),yes)
+CLEAN_FILES = misc\*.o \
+              user32.o user32.a junk.tmp base.tmp temp.exp user32.dll user32.sym
+else
+CLEAN_FILES = misc/*.o  \
+              user32.o user32.a junk.tmp base.tmp temp.exp user32.dll user32.sym
+endif
+
+user32.coff: user32.rc ../../include/reactos/resource.h
+	windres user32.rc user32.coff
+
+user32.a: $(OBJECTS)
+	$(AR) csr user32.a $(OBJECTS)
+
+user32.dll: $(DLLMAIN) $(OBJECTS) user32.def
+	$(LD) -r $(OBJECTS) -o user32.o
+	$(DLLTOOL) --dllname user32.dll --def user32.def \
+	           --output-lib user32.a --add-stdcall-alias \
+		   --kill-at
+	$(CC) -specs=user32_specs -mdll -o junk.tmp \
+	      -Wl,--base-file,base.tmp user32.o  ../ntdll/ntdll.a
+	- $(RM) junk.tmp
+	$(DLLTOOL) --dllname user32.dll --base-file base.tmp \
+	           --output-exp temp.exp --def user32.def \
+		   --add-stdcall-alias --kill-at
+	- $(RM) base.tmp
+	$(CC) -specs=user32_specs -mdll -o user32.dll user32.o  ../ntdll/ntdll.a\
+	      -Wl,--image-base,0x70000000 \
+	      -Wl,--file-alignment,0x1000 \
+	      -Wl,--section-alignment,0x1000 \
+	      -Wl,temp.exp
+	- $(RM) temp.exp
+	$(NM) --numeric-sort user32.dll > user32.sym
+
+clean: $(CLEAN_FILES:%=%_clean)
+
+$(CLEAN_FILES:%=%_clean): %_clean:
+	- $(RM) $*
+
+.PHONY: clean $(CLEAN_FILES:%=%_clean)
+
