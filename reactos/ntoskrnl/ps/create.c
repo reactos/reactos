@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.35 2001/07/12 17:21:05 ekohl Exp $
+/* $Id: create.c,v 1.36 2001/08/03 17:15:00 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -292,7 +292,8 @@ PsBeginThread(PKSTART_ROUTINE StartRoutine, PVOID StartContext)
 }
 #endif
 
-VOID PiDeleteThread(PVOID ObjectBody)
+VOID
+PiDeleteThread(PVOID ObjectBody)
 {
    KIRQL oldIrql;
    
@@ -310,7 +311,9 @@ VOID PiDeleteThread(PVOID ObjectBody)
    DPRINT("PiDeleteThread() finished\n");
 }
 
-VOID PiCloseThread(PVOID ObjectBody, ULONG HandleCount)
+VOID
+PiCloseThread(PVOID ObjectBody,
+	      ULONG HandleCount)
 {
    DPRINT("PiCloseThread(ObjectBody %x)\n", ObjectBody);
    DPRINT("ObGetReferenceCount(ObjectBody) %d "
@@ -408,7 +411,7 @@ PsInitializeThread(HANDLE ProcessHandle,
 
 static NTSTATUS
 PsCreateTeb(HANDLE ProcessHandle,
-	    PNT_TEB *TebPtr,
+	    PTEB *TebPtr,
 	    PETHREAD Thread,
 	    PINITIAL_TEB InitialTeb)
 {
@@ -418,7 +421,7 @@ PsCreateTeb(HANDLE ProcessHandle,
    ULONG RegionSize;
    ULONG TebSize;
    PVOID TebBase;
-   NT_TEB Teb;
+   TEB Teb;
    ULONG ResultLength;
 
    TebBase = (PVOID)0x7FFDE000;
@@ -471,29 +474,21 @@ PsCreateTeb(HANDLE ProcessHandle,
      {
         Teb.Tib.StackBase = InitialTeb->StackBase;
         Teb.Tib.StackLimit = InitialTeb->StackLimit;
-
-        /*
-         * I don't know if this is really stored in a WNT-TEB,
-         * but it's needed to free the thread stack. (Eric Kohl)
-         */
-        Teb.StackCommit = InitialTeb->StackCommit;
-        Teb.StackCommitMax = InitialTeb->StackCommitMax;
-        Teb.StackReserve = InitialTeb->StackReserve;
+        Teb.DeallocationStack = InitialTeb->StackAllocate;
      }
-
 
    /* more initialization */
    Teb.Cid.UniqueThread = Thread->Cid.UniqueThread;
    Teb.Cid.UniqueProcess = Thread->Cid.UniqueProcess;
    Teb.CurrentLocale = PsDefaultThreadLocaleId;
    
-   DPRINT("sizeof(NT_TEB) %x\n", sizeof(NT_TEB));
+   DPRINT("sizeof(TEB) %x\n", sizeof(TEB));
    
    /* write TEB data into teb page */
    Status = NtWriteVirtualMemory(ProcessHandle,
                                  TebBase,
                                  &Teb,
-                                 sizeof(NT_TEB),
+                                 sizeof(TEB),
                                  &ByteCount);
 
    if (!NT_SUCCESS(Status))
@@ -512,7 +507,7 @@ PsCreateTeb(HANDLE ProcessHandle,
 
    if (TebPtr != NULL)
      {
-        *TebPtr = (PNT_TEB)TebBase;
+        *TebPtr = (PTEB)TebBase;
      }
 
    DPRINT("TEB allocated at %p\n", TebBase);
@@ -532,7 +527,7 @@ NtCreateThread (PHANDLE		ThreadHandle,
 		BOOLEAN CreateSuspended)
 {
    PETHREAD Thread;
-   PNT_TEB  TebBase;
+   PTEB  TebBase;
    NTSTATUS Status;
    
    DPRINT("NtCreateThread(ThreadHandle %x, PCONTEXT %x)\n",
@@ -557,7 +552,7 @@ NtCreateThread (PHANDLE		ThreadHandle,
 	KeBugCheck(0);
      }
    ThreadContext->Eip = LdrpGetSystemDllEntryPoint;
-#endif   
+#endif
    
    Status = Ke386InitThreadWithContext(&Thread->Tcb, ThreadContext);
    if (!NT_SUCCESS(Status))
@@ -582,7 +577,7 @@ NtCreateThread (PHANDLE		ThreadHandle,
    if (Client != NULL)
      {
 	*Client=Thread->Cid;
-     }  
+     }
    
    /*
     * Maybe send a message to the process's debugger
@@ -653,7 +648,7 @@ PsCreateSystemThread(PHANDLE ThreadHandle,
    if (ClientId!=NULL)
      {
 	*ClientId=Thread->Cid;
-     }  
+     }
 
    PsUnblockThread(Thread, NULL);
    

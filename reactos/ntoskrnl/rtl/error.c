@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.2 2001/06/20 13:00:53 ekohl Exp $
+/* $Id: error.c,v 1.3 2001/08/03 17:16:30 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -918,7 +918,7 @@ RtlNtStatusToDosErrorNoTeb(IN NTSTATUS Status)
 DWORD STDCALL
 RtlNtStatusToDosError(IN NTSTATUS Status)
 {
-   PNT_TEB Teb = NtCurrentTeb ();
+   PTEB Teb = NtCurrentTeb ();
 
    if (NULL != Teb)
      {

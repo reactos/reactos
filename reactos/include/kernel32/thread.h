@@ -9,7 +9,7 @@
  */
 #include <windows.h>
 #include <ddk/ntddk.h>
-NT_TEB *GetTeb(VOID);
+PTEB GetTeb(VOID);
 
 
 

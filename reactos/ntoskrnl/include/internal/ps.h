@@ -119,7 +119,7 @@ typedef struct _KTHREAD
    ULONG             StackLimit;          /* 1C */
    
    /* Pointer to the thread's environment block in user memory */
-   NT_TEB*           Teb;                 /* 20 */
+   PTEB              Teb;                 /* 20 */
    
    /* Pointer to the thread's TLS array */
    PVOID             TlsArray;            /* 24 */

@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.7 2000/07/04 01:26:35 ekohl Exp $
+/* $Id: error.c,v 1.8 2001/08/03 17:18:50 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -858,9 +858,8 @@ RtlAssert (
  * REMARK
  *	RtlNtStatusToDosErrorNoTeb() does the real work.
  */
-DWORD
-STDCALL
-RtlNtStatusToDosErrorNoTeb (NTSTATUS Status)
+DWORD STDCALL
+RtlNtStatusToDosErrorNoTeb(NTSTATUS Status)
 {
 	PERROR_TABLE Table = (PERROR_TABLE)ErrorTable;
 
@@ -917,19 +916,16 @@ RtlNtStatusToDosErrorNoTeb (NTSTATUS Status)
  * REMARK
  *	RtlNtStatusToDosErrorNoTeb() does the real work.
  */
-DWORD
-STDCALL
-RtlNtStatusToDosError (
-	NTSTATUS	Status
-	)
+DWORD STDCALL
+RtlNtStatusToDosError(NTSTATUS Status)
 {
-	PNT_TEB Teb = NtCurrentTeb ();
+  PTEB Teb = NtCurrentTeb();
 
-	if (NULL != Teb)
-	{
-		Teb->LastStatusValue = Status;
-	}
-	return RtlNtStatusToDosErrorNoTeb (Status);
+  if (NULL != Teb)
+    {
+      Teb->LastStatusValue = Status;
+    }
+  return RtlNtStatusToDosErrorNoTeb(Status);
 }
 
 
@@ -954,18 +950,15 @@ RtlNtStatusToDosError (
  * REVISIONS
  * 	1999-11-30 ea
  */
-INT
-STDCALL
-RtlNtStatusToPsxErrno (
-	IN	NTSTATUS	Status
-	)
+INT STDCALL
+RtlNtStatusToPsxErrno(IN NTSTATUS Status)
 {
 #if 0
-	switch (Status)
-	{
-	}
+  switch (Status)
+    {
+    }
 #endif
-	return -1; /* generic POSIX error */
+  return -1; /* generic POSIX error */
 }
 
 /* EOF */

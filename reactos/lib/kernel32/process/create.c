@@ -1,8 +1,8 @@
-/* $Id: create.c,v 1.39 2001/06/18 03:02:43 phreak Exp $
+/* $Id: create.c,v 1.40 2001/08/03 17:20:06 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/proc/proc.c
+ * FILE:            lib/kernel32/process/create.c
  * PURPOSE:         Process functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
  * UPDATE HISTORY:
@@ -124,78 +124,149 @@ CreateProcessA (LPCSTR			lpApplicationName,
 HANDLE STDCALL 
 KlCreateFirstThread(HANDLE ProcessHandle,
 		    LPSECURITY_ATTRIBUTES lpThreadAttributes,
-		    DWORD dwStackSize,
+		    ULONG StackReserve,
+		    ULONG StackCommit,
 		    LPTHREAD_START_ROUTINE lpStartAddress,
 		    DWORD dwCreationFlags,
 		    LPDWORD lpThreadId)
 {
-   NTSTATUS Status;
-   HANDLE ThreadHandle;
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   CLIENT_ID ClientId;
-   CONTEXT ThreadContext;
-   INITIAL_TEB InitialTeb;
-   BOOLEAN CreateSuspended = FALSE;
-   PVOID BaseAddress;
+  NTSTATUS Status;
+  HANDLE ThreadHandle;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  CLIENT_ID ClientId;
+  CONTEXT ThreadContext;
+  INITIAL_TEB InitialTeb;
+  BOOLEAN CreateSuspended = FALSE;
+  ULONG OldPageProtection;
 
-   ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-   ObjectAttributes.RootDirectory = NULL;
-   ObjectAttributes.ObjectName = NULL;
-   ObjectAttributes.Attributes = 0;
-   if (lpThreadAttributes != NULL) 
-     {
-	if (lpThreadAttributes->bInheritHandle) 
-	  ObjectAttributes.Attributes = OBJ_INHERIT;
-	ObjectAttributes.SecurityDescriptor = 
-	  lpThreadAttributes->lpSecurityDescriptor;
-     }
-   ObjectAttributes.SecurityQualityOfService = NULL;
+  ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
+  ObjectAttributes.RootDirectory = NULL;
+  ObjectAttributes.ObjectName = NULL;
+  ObjectAttributes.Attributes = 0;
+  if (lpThreadAttributes != NULL) 
+    {
+      if (lpThreadAttributes->bInheritHandle) 
+	ObjectAttributes.Attributes = OBJ_INHERIT;
+      ObjectAttributes.SecurityDescriptor = 
+	lpThreadAttributes->lpSecurityDescriptor;
+    }
+  ObjectAttributes.SecurityQualityOfService = NULL;
 
-   if ((dwCreationFlags & CREATE_SUSPENDED) == CREATE_SUSPENDED)
-     CreateSuspended = TRUE;
-   else
-     CreateSuspended = FALSE;
+  if ((dwCreationFlags & CREATE_SUSPENDED) == CREATE_SUSPENDED)
+    CreateSuspended = TRUE;
+  else
+    CreateSuspended = FALSE;
 
-   /* Allocate thread stack */
-   BaseAddress = NULL;
-   Status = NtAllocateVirtualMemory(ProcessHandle,
-				    &BaseAddress,
-				    0,
-				    (PULONG)&dwStackSize,
-				    MEM_COMMIT,
-				    PAGE_READWRITE);
-   if (!NT_SUCCESS(Status))
-     {
-	return(NULL);
-     }
+  InitialTeb.StackCommit = (StackCommit < PAGESIZE) ? PAGESIZE : StackCommit;
+  InitialTeb.StackReserve = (StackReserve < 0x100000) ? 0x100000 : StackReserve;
 
-   memset(&ThreadContext,0,sizeof(CONTEXT));
-   ThreadContext.Eip = (ULONG)lpStartAddress;
-   ThreadContext.SegGs = USER_DS;
-   ThreadContext.SegFs = USER_DS;
-   ThreadContext.SegEs = USER_DS;
-   ThreadContext.SegDs = USER_DS;
-   ThreadContext.SegCs = USER_CS;
-   ThreadContext.SegSs = USER_DS;
-   ThreadContext.Esp = (ULONG)(BaseAddress + dwStackSize - 20);
-   ThreadContext.EFlags = (1<<1) + (1<<9);
+  /* size of guard page */
+  InitialTeb.StackCommit += PAGESIZE;
 
-   DPRINT("ThreadContext.Eip %x\n",ThreadContext.Eip);
+  /* Reserve stack */
+  InitialTeb.StackAllocate = NULL;
+  Status = NtAllocateVirtualMemory(ProcessHandle,
+				   &InitialTeb.StackAllocate,
+				   0,
+				   &InitialTeb.StackReserve,
+				   MEM_COMMIT, // MEM_RESERVE,
+				   PAGE_READWRITE);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("Error reserving stack space!\n");
+      SetLastErrorByStatus(Status);
+      return(NULL);
+    }
 
-   Status = NtCreateThread(&ThreadHandle,
-			   THREAD_ALL_ACCESS,
-			   &ObjectAttributes,
-			   ProcessHandle,
-			   &ClientId,
-			   &ThreadContext,
-			   &InitialTeb,
-			   CreateSuspended);
-   if (lpThreadId != NULL)
-     {
-	memcpy(lpThreadId, &ClientId.UniqueThread,sizeof(ULONG));
-     }
+  DPRINT("StackDeallocation: %p ReserveSize: 0x%lX\n",
+	 InitialTeb.StackDeallocation, InitialTeb.StackReserve);
 
-   return(ThreadHandle);
+  InitialTeb.StackBase = (PVOID)((ULONG)InitialTeb.StackAllocate + InitialTeb.StackReserve);
+  InitialTeb.StackLimit = (PVOID)((ULONG)InitialTeb.StackBase - InitialTeb.StackCommit);
+
+  DPRINT("StackBase: %p\nStackCommit: %p\n",
+	 InitialTeb.StackBase, InitialTeb.StackCommit);
+#if 0
+  /* Commit stack page(s) */
+  Status = NtAllocateVirtualMemory(ProcessHandle,
+				   &InitialTeb.StackLimit,
+				   0,
+				   &InitialTeb.StackCommit,
+				   MEM_COMMIT,
+				   PAGE_READWRITE);
+  if (!NT_SUCCESS(Status))
+    {
+      /* release the stack space */
+      NtFreeVirtualMemory(ProcessHandle,
+			  InitialTeb.StackAllocate,
+			  &InitialTeb.StackReserve,
+			  MEM_RELEASE);
+
+      DPRINT("Error comitting stack page(s)!\n");
+      SetLastErrorByStatus(Status);
+      return(NULL);
+    }
+
+  DPRINT("StackLimit: %p\n",
+	 InitialTeb.StackLimit);
+
+  /* Protect guard page */
+  Status = NtProtectVirtualMemory(ProcessHandle,
+				  InitialTeb.StackLimit,
+				  PAGESIZE,
+				  PAGE_GUARD | PAGE_READWRITE,
+				  &OldPageProtection);
+  if (!NT_SUCCESS(Status))
+    {
+      /* release the stack space */
+      NtFreeVirtualMemory(ProcessHandle,
+			  InitialTeb.StackAllocate,
+			  &InitialTeb.StackReserve,
+			  MEM_RELEASE);
+
+      DPRINT("Error comitting guard page!\n");
+      SetLastErrorByStatus(Status);
+      return(NULL);
+    }
+#endif
+
+  memset(&ThreadContext,0,sizeof(CONTEXT));
+  ThreadContext.Eip = (ULONG)lpStartAddress;
+  ThreadContext.SegGs = USER_DS;
+  ThreadContext.SegFs = USER_DS;
+  ThreadContext.SegEs = USER_DS;
+  ThreadContext.SegDs = USER_DS;
+  ThreadContext.SegCs = USER_CS;
+  ThreadContext.SegSs = USER_DS;
+  ThreadContext.Esp = (ULONG)InitialTeb.StackBase - 20;
+  ThreadContext.EFlags = (1<<1) + (1<<9);
+
+  DPRINT("ThreadContext.Eip %x\n",ThreadContext.Eip);
+
+  Status = NtCreateThread(&ThreadHandle,
+			  THREAD_ALL_ACCESS,
+			  &ObjectAttributes,
+			  ProcessHandle,
+			  &ClientId,
+			  &ThreadContext,
+			  &InitialTeb,
+			  CreateSuspended);
+  if (!NT_SUCCESS(Status))
+    {
+      NtFreeVirtualMemory(ProcessHandle,
+			  InitialTeb.StackAllocate,
+			  &InitialTeb.StackReserve,
+			  MEM_RELEASE);
+      SetLastErrorByStatus(Status);
+      return(NULL);
+    }
+
+  if (lpThreadId != NULL)
+    {
+      memcpy(lpThreadId, &ClientId.UniqueThread,sizeof(ULONG));
+    }
+
+  return(ThreadHandle);
 }
 
 HANDLE 
@@ -328,7 +399,7 @@ KlInitPeb (HANDLE ProcessHandle,
      }
 
    /* create the PPB */
-   PpbBase = (PVOID)PEB_STARTUPINFO;
+   PpbBase = NULL;
    PpbSize = Ppb->MaximumLength;
    Status = NtAllocateVirtualMemory(ProcessHandle,
 				    &PpbBase,
@@ -574,10 +645,11 @@ CreateProcessW(LPCWSTR lpApplicationName,
 				  lpThreadAttributes,
 				  //Sii.StackReserve,
 				  0x200000,
+				  //Sii.StackCommit,
+				  0x1000,
 				  lpStartAddress,
 				  dwCreationFlags,
 				  &lpProcessInformation->dwThreadId);
-   
    if (hThread == NULL)
      {
 	return FALSE;

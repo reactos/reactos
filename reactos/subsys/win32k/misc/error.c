@@ -12,22 +12,20 @@
 
 
 VOID
-SetLastNtError(
-  NTSTATUS Status)
+SetLastNtError(NTSTATUS Status)
 {
   SetLastWin32Error(RtlNtStatusToDosError(Status));
 }
 
 VOID
-SetLastWin32Error(
-  DWORD Status)
+SetLastWin32Error(DWORD Status)
 {
-  PNT_TEB Teb = NtCurrentTeb();
+  PTEB Teb = NtCurrentTeb();
 
-	if (NULL != Teb)
-	{
-		Teb->LastErrorValue = Status;
-	}
+  if (NULL != Teb)
+    {
+      Teb->LastErrorValue = Status;
+    }
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: debug.c,v 1.2 2000/05/25 15:50:44 ekohl Exp $
+/* $Id: debug.c,v 1.3 2001/08/03 17:17:16 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -34,11 +34,8 @@ typedef struct _LPC_DBGSS_MESSAGE
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
-STDCALL
-DbgSsServerThread (
-	PVOID	Unused
-	)
+VOID STDCALL
+DbgSsServerThread(PVOID Unused)
 {
 	LPC_DBGSS_MESSAGE Message;
 	NTSTATUS Status;
@@ -65,26 +62,19 @@ DbgSsServerThread (
 }
 
 
-NTSTATUS
-STDCALL
-DbgSsHandleKmApiMsg (
-	ULONG	Unknown1,
-	HANDLE	EventHandle
-	)
+NTSTATUS STDCALL
+DbgSsHandleKmApiMsg(ULONG Unknown1,
+		    HANDLE EventHandle)
 {
-
-	return STATUS_NOT_IMPLEMENTED;
+  return STATUS_NOT_IMPLEMENTED;
 }
 
 
-NTSTATUS
-STDCALL
-DbgSsInitialize (
-	HANDLE	ReplyPort,
-	ULONG	Unknown1,
-	ULONG	Unknown2,
-	ULONG	Unknown3
-	)
+NTSTATUS STDCALL
+DbgSsInitialize(HANDLE ReplyPort,
+		ULONG Unknown1,
+		ULONG Unknown2,
+		ULONG Unknown3)
 {
 	SECURITY_QUALITY_OF_SERVICE Qos;
 	UNICODE_STRING PortName;
@@ -129,16 +119,13 @@ DbgSsInitialize (
 }
 
 
-NTSTATUS
-STDCALL
-DbgUiConnectToDbg (
-	VOID
-	)
+NTSTATUS STDCALL
+DbgUiConnectToDbg(VOID)
 {
 	SECURITY_QUALITY_OF_SERVICE Qos;
 	UNICODE_STRING PortName;
 	NTSTATUS Status;
-	PNT_TEB Teb;
+	PTEB Teb;
 	ULONG InfoSize;
 
 	Teb = NtCurrentTeb ();
@@ -173,24 +160,19 @@ DbgUiConnectToDbg (
 }
 
 
-NTSTATUS
-STDCALL
-DbgUiContinue (
-	PCLIENT_ID	ClientId,
-	ULONG		ContinueStatus
-	)
+NTSTATUS STDCALL
+DbgUiContinue(PCLIENT_ID ClientId,
+	      ULONG ContinueStatus)
 {
-	return STATUS_NOT_IMPLEMENTED;
+  return STATUS_NOT_IMPLEMENTED;
 }
 
-NTSTATUS
-STDCALL
-DbgUiWaitStateChange (
-	ULONG	Unknown1,
-	ULONG	Unknown2
-	)
+
+NTSTATUS STDCALL
+DbgUiWaitStateChange(ULONG Unknown1,
+		     ULONG Unknown2)
 {
-	return STATUS_NOT_IMPLEMENTED;
+  return STATUS_NOT_IMPLEMENTED;
 }
 
 /* EOF */

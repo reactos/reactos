@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.23 2001/05/07 22:03:26 chorns Exp $
+/* $Id: thread.c,v 1.24 2001/08/03 17:20:46 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -112,7 +112,7 @@ HANDLE STDCALL CreateRemoteThread(HANDLE hProcess,
 				  LPVOID lpParameter,
 				  DWORD dwCreationFlags,
 				  LPDWORD lpThreadId)
-{	
+{
    HANDLE ThreadHandle;
    OBJECT_ATTRIBUTES ObjectAttributes;
    CLIENT_ID ClientId;
@@ -120,7 +120,7 @@ HANDLE STDCALL CreateRemoteThread(HANDLE hProcess,
    INITIAL_TEB InitialTeb;
    BOOLEAN CreateSuspended = FALSE;
    PVOID BaseAddress;
-   DWORD StackSize;
+   ULONG OldPageProtection;
    NTSTATUS Status;
    
    ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
@@ -141,83 +141,147 @@ HANDLE STDCALL CreateRemoteThread(HANDLE hProcess,
    else
      CreateSuspended = FALSE;
 
-   StackSize = (dwStackSize == 0) ? 4096 : dwStackSize;
+  InitialTeb.StackCommit = (dwStackSize == 0) ? PAGESIZE : dwStackSize;
+  InitialTeb.StackReserve = 0x100000; /* 1MByte */
 
-   BaseAddress = 0;
+  /* size of guard page */
+  InitialTeb.StackCommit += PAGESIZE;
 
-   Status = NtAllocateVirtualMemory(hProcess,
-                                    &BaseAddress,
-                                    0,
-                                    (PULONG)&StackSize,
-                                    MEM_COMMIT,
-                                    PAGE_READWRITE);
-   if (!NT_SUCCESS(Status))
-     {
-        DPRINT("Could not allocate stack space!\n");
-        return NULL;
-     }
+  /* Reserve stack */
+  InitialTeb.StackAllocate = NULL;
+  Status = NtAllocateVirtualMemory(hProcess,
+				   &InitialTeb.StackAllocate,
+				   0,
+				   &InitialTeb.StackReserve,
+				   MEM_COMMIT, //MEM_RESERVE,
+				   PAGE_READWRITE);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("Error reserving stack space!\n");
+      SetLastErrorByStatus(Status);
+      return(NULL);
+    }
 
+  DPRINT("StackDeallocation: %p ReserveSize: 0x%lX\n",
+	 InitialTeb.StackDeallocation, InitialTeb.StackReserve);
 
-   DPRINT("Stack base address: %p\n", BaseAddress);
-   
-   memset(&ThreadContext,0,sizeof(CONTEXT));
-   ThreadContext.Eip = (LONG)ThreadStartup;
-   ThreadContext.SegGs = USER_DS;
-   ThreadContext.SegFs = TEB_SELECTOR;
-   ThreadContext.SegEs = USER_DS;
-   ThreadContext.SegDs = USER_DS;
-   ThreadContext.SegCs = USER_CS;
-   ThreadContext.SegSs = USER_DS;
-   ThreadContext.Esp = (ULONG)(BaseAddress + StackSize - 12);
-   ThreadContext.EFlags = (1<<1) + (1<<9);
+  InitialTeb.StackBase = (PVOID)((ULONG)InitialTeb.StackAllocate + InitialTeb.StackReserve);
+  InitialTeb.StackLimit = (PVOID)((ULONG)InitialTeb.StackBase - InitialTeb.StackCommit);
 
-   /* initialize call stack */
-   *((PULONG)(BaseAddress + StackSize - 4)) = (ULONG)lpParameter;
-   *((PULONG)(BaseAddress + StackSize - 8)) = (ULONG)lpStartAddress;
-   *((PULONG)(BaseAddress + StackSize - 12)) = 0xdeadbeef;
+  DPRINT("StackBase: %p\nStackCommit: 0x%lX\n",
+	 InitialTeb.StackBase,
+	 InitialTeb.StackCommit);
+#if 0
+  /* Commit stack pages */
+  Status = NtAllocateVirtualMemory(hProcess,
+				   &InitialTeb.StackLimit,
+				   0,
+				   &InitialTeb.StackCommit,
+				   MEM_COMMIT,
+				   PAGE_READWRITE);
+  if (!NT_SUCCESS(Status))
+    {
+      /* release the stack space */
+      NtFreeVirtualMemory(hProcess,
+			  InitialTeb.StackAllocate,
+			  &InitialTeb.StackReserve,
+			  MEM_RELEASE);
 
-   DPRINT("Esp: %p\n", ThreadContext.Esp);
-   DPRINT("Eip: %p\n", ThreadContext.Eip);
+      DPRINT("Error comitting stack page(s)!\n");
+      SetLastErrorByStatus(Status);
+      return(NULL);
+    }
 
-   Status = NtCreateThread(&ThreadHandle,
-                           THREAD_ALL_ACCESS,
-                           &ObjectAttributes,
-                           hProcess,
-                           &ClientId,
-                           &ThreadContext,
-                           &InitialTeb,
-                           CreateSuspended);
+  DPRINT("StackLimit: %p\n",
+	 InitialTeb.StackLimit);
 
-   if (!NT_SUCCESS(Status))
-     {
-        DPRINT("NtCreateThread() failed!\n");
-        return NULL;
-     }
+  /* Protect guard page */
+  Status = NtProtectVirtualMemory(hProcess,
+				  InitialTeb.StackLimit,
+				  PAGESIZE,
+				  PAGE_GUARD | PAGE_READWRITE,
+				  &OldPageProtection);
+  if (!NT_SUCCESS(Status))
+    {
+      /* release the stack space */
+      NtFreeVirtualMemory(hProcess,
+			  InitialTeb.StackAllocate,
+			  &InitialTeb.StackReserve,
+			  MEM_RELEASE);
 
-   if ( lpThreadId != NULL )
-     memcpy(lpThreadId, &ClientId.UniqueThread,sizeof(ULONG));
-   
-   return ThreadHandle;
+      DPRINT("Error comitting guard page!\n");
+      SetLastErrorByStatus(Status);
+      return(NULL);
+    }
+#endif
+
+  memset(&ThreadContext,0,sizeof(CONTEXT));
+  ThreadContext.Eip = (LONG)ThreadStartup;
+  ThreadContext.SegGs = USER_DS;
+  ThreadContext.SegFs = TEB_SELECTOR;
+  ThreadContext.SegEs = USER_DS;
+  ThreadContext.SegDs = USER_DS;
+  ThreadContext.SegCs = USER_CS;
+  ThreadContext.SegSs = USER_DS;
+  ThreadContext.Esp = (ULONG)InitialTeb.StackBase - 12;
+  ThreadContext.EFlags = (1<<1) + (1<<9);
+
+  /* initialize call stack */
+  *((PULONG)((ULONG)InitialTeb.StackBase - 4)) = (ULONG)lpParameter;
+  *((PULONG)((ULONG)InitialTeb.StackBase - 8)) = (ULONG)lpStartAddress;
+  *((PULONG)((ULONG)InitialTeb.StackBase - 12)) = 0xdeadbeef;
+
+  DPRINT("Esp: %p\n", ThreadContext.Esp);
+  DPRINT("Eip: %p\n", ThreadContext.Eip);
+
+  Status = NtCreateThread(&ThreadHandle,
+			  THREAD_ALL_ACCESS,
+			  &ObjectAttributes,
+			  hProcess,
+			  &ClientId,
+			  &ThreadContext,
+			  &InitialTeb,
+			  CreateSuspended);
+  if (!NT_SUCCESS(Status))
+    {
+      NtFreeVirtualMemory(hProcess,
+			  InitialTeb.StackAllocate,
+			  &InitialTeb.StackReserve,
+			  MEM_RELEASE);
+
+      DPRINT("NtCreateThread() failed!\n");
+      SetLastErrorByStatus(Status);
+      return(NULL);
+    }
+
+  if (lpThreadId != NULL)
+    memcpy(lpThreadId, &ClientId.UniqueThread,sizeof(ULONG));
+
+  return(ThreadHandle);
 }
 
-NT_TEB *GetTeb(VOID)
+PTEB
+GetTeb(VOID)
 {
-	return NtCurrentTeb();
+  return(NtCurrentTeb());
 }
 
-WINBOOL STDCALL SwitchToThread(VOID)
+WINBOOL STDCALL
+SwitchToThread(VOID)
 {
    NTSTATUS errCode;
    errCode = NtYieldExecution();
    return TRUE;
 }
 
-DWORD STDCALL GetCurrentThreadId()
+DWORD STDCALL
+GetCurrentThreadId()
 {
    return((DWORD)(NtCurrentTeb()->Cid).UniqueThread);
 }
 
-VOID STDCALL ExitThread(DWORD uExitCode)
+VOID STDCALL
+ExitThread(DWORD uExitCode)
 {
    NTSTATUS errCode;
    BOOLEAN LastThread;

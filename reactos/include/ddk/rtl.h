@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.55 2001/07/04 20:40:18 chorns Exp $
+/* $Id: rtl.h,v 1.56 2001/08/03 17:07:56 ekohl Exp $
  * 
  */
 
@@ -16,11 +16,11 @@
 
 typedef struct _INITIAL_TEB
 {
-	PVOID StackBase;
-	PVOID StackLimit;
-	PVOID StackCommit;
-	PVOID StackCommitMax;
-	PVOID StackReserve;
+   ULONG StackCommit;
+   ULONG StackReserve;
+   PVOID StackBase;
+   PVOID StackLimit;
+   PVOID StackAllocate;
 } INITIAL_TEB, *PINITIAL_TEB;
 
 typedef struct _CONTROLLER_OBJECT
@@ -161,12 +161,13 @@ typedef struct _RTL_MESSAGE_RESOURCE_DATA
 #define RTL_QUERY_REGISTRY_DELETE	(0x00000040)
 
 
-typedef NTSTATUS (*PRTL_QUERY_REGISTRY_ROUTINE)(PWSTR ValueName,
-						ULONG ValueType,
-						PVOID ValueData,
-						ULONG ValueLength,
-						PVOID Context,
-						PVOID EntryContext);
+typedef NTSTATUS STDCALL
+(*PRTL_QUERY_REGISTRY_ROUTINE)(PWSTR ValueName,
+			       ULONG ValueType,
+			       PVOID ValueData,
+			       ULONG ValueLength,
+			       PVOID Context,
+			       PVOID EntryContext);
 
 typedef struct _RTL_QUERY_REGISTRY_TABLE
 {

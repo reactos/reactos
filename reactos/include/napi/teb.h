@@ -6,8 +6,8 @@
 
 typedef struct _CLIENT_ID
 {
-    HANDLE UniqueProcess;
-    HANDLE UniqueThread;
+   HANDLE UniqueProcess;
+   HANDLE UniqueThread;
 } CLIENT_ID, *PCLIENT_ID;
 
 typedef struct _CURDIR
@@ -154,7 +154,7 @@ typedef struct _GDI_TEB_BATCH
    ULONG Buffer[0x136];
 } GDI_TEB_BATCH, *PGDI_TEB_BATCH;
 
-typedef struct _NT_TEB
+typedef struct _TEB
 {
    NT_TIB Tib;                         // 00h
    PVOID EnvironmentPointer;           // 1Ch
@@ -211,17 +211,12 @@ typedef struct _NT_TEB
    ULONG Spare4;                       // F7Ch
    PVOID ReservedForOle;               // F80h
    ULONG WaitingOnLoaderLock;          // F84h
+} TEB, *PTEB;
 
-   PVOID StackCommit;                  // F88h
-   PVOID StackCommitMax;               // F8Ch
-   PVOID StackReserve;                 // F90h
-} NT_TEB, *PNT_TEB;
-
-#define PEB_STARTUPINFO (0xb0003000)
 
 #define NtCurrentPeb() (NtCurrentTeb()->Peb)
 
-static inline PNT_TEB NtCurrentTeb(VOID)
+static inline PTEB NtCurrentTeb(VOID)
 {
    int x;
    
@@ -230,7 +225,7 @@ static inline PNT_TEB NtCurrentTeb(VOID)
 			: /* no inputs */
 			);
    
-   return((PNT_TEB)x);
+   return((PTEB)x);
 }
 
 
