@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.25 2003/05/18 19:30:55 ea Exp $
+/* $Id: mouse.c,v 1.26 2003/08/09 11:59:27 gvg Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -300,8 +300,8 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
 
     mouse_x = max(mouse_x, 0);
     mouse_y = max(mouse_y, 0);
-    mouse_x = min(mouse_x, 620);
-    mouse_y = min(mouse_y, 460);
+    mouse_x = min(mouse_x, SurfObj->sizlBitmap.cx - 20);
+    mouse_y = min(mouse_y, SurfObj->sizlBitmap.cy - 20);
 
 
     if (SafetySwitch == FALSE && SafetySwitch2 == FALSE)
