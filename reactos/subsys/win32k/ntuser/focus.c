@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: focus.c,v 1.13 2004/01/17 15:18:25 navaraf Exp $
+ * $Id: focus.c,v 1.14 2004/01/27 08:49:58 weiden Exp $
  */
 
 #include <win32k/win32k.h>
@@ -175,12 +175,18 @@ IntSetForegroundWindow(PWINDOW_OBJECT Window)
    return IntSetForegroundAndFocusWindow(Window, Window, FALSE);
 }
 
-VOID FASTCALL
+BOOL FASTCALL
 IntMouseActivateWindow(PWINDOW_OBJECT Window)
 {
   HWND Top;
   PWINDOW_OBJECT TopWindow;
-
+  
+  if(Window->Style & WS_DISABLED)
+  {
+    /* FIXME - Activate a modal dialog window if available */
+    return FALSE;
+  }
+  
   Top = NtUserGetAncestor(Window->Self, GA_ROOT);
   if (Top != Window->Self)
     {
@@ -197,6 +203,7 @@ IntMouseActivateWindow(PWINDOW_OBJECT Window)
     {
       IntReleaseWindowObject(TopWindow);
     }
+  return TRUE;
 }
 
 HWND FASTCALL

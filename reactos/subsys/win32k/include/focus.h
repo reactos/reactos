@@ -15,7 +15,7 @@ IntGetFocusWindow();
 HWND FASTCALL
 IntGetThreadFocusWindow();
 
-VOID FASTCALL
+BOOL FASTCALL
 IntMouseActivateWindow(PWINDOW_OBJECT Window);
 BOOL FASTCALL
 IntSetForegroundWindow(PWINDOW_OBJECT Window);
