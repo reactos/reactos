@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.70 2004/01/05 14:28:21 weiden Exp $
+/* $Id: kill.c,v 1.71 2004/04/28 23:46:26 tamlin Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -252,7 +252,7 @@ PsTerminateOtherThread(PETHREAD Thread,
     {
       DPRINT("Unblocking thread\n");
       Status = STATUS_THREAD_IS_TERMINATING;
-      PsUnblockThread(Thread, &Status);
+      KeRemoveAllWaitsThread(Thread, Status, TRUE);
     }
 }
 
