@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: display.c,v 1.15 2004/07/20 21:25:36 hbirr Exp $
+/* $Id: display.c,v 1.16 2004/10/30 13:30:03 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -671,6 +671,7 @@ HalDisplayString(IN PCH String)
   int offset;
 #endif
   static KSPIN_LOCK Lock;
+  KIRQL OldIrql;
   ULONG Flags;
 
   /* See comment at top of file */
@@ -681,7 +682,7 @@ HalDisplayString(IN PCH String)
 
   pch = String;
 
-  KiAcquireSpinLock(&Lock);
+  OldIrql = KfAcquireSpinLock(&Lock);
 
   Ki386SaveFlags(Flags);
   Ki386DisableInterrupts();
@@ -748,7 +749,7 @@ HalDisplayString(IN PCH String)
   WRITE_PORT_UCHAR((PUCHAR)VGA_CRTC_DATA, (UCHAR)((offset >> 8) & 0xff));
 #endif
   Ki386RestoreFlags(Flags);
-  KiReleaseSpinLock(&Lock);
+  KfReleaseSpinLock(&Lock, OldIrql);
 }
 
 VOID STDCALL
