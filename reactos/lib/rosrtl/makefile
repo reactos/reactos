@@ -30,7 +30,8 @@ MISC_OBJECTS = \
  misc/qsort.o
 
 FILE_OBJECTS = \
- file/sparse.o
+ file/sparse.o \
+ file/path.o
 
 RECMUTEX_OBJECTS = recmutex/recmutex.o
 
