@@ -1,4 +1,4 @@
-/* $Id: regcontrol.c,v 1.12 2003/08/28 13:38:23 gvg Exp $
+/* $Id: regcontrol.c,v 1.13 2003/08/28 19:24:28 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -15,6 +15,7 @@
 static void RegisterBuiltinClass(const struct builtin_class_descr *Descr)
 {
   WNDCLASSW wc;
+  ATOM Class;
   
   wc.lpszClassName = Descr->name;
   wc.lpfnWndProc = Descr->procW;
@@ -32,7 +33,10 @@ static void RegisterBuiltinClass(const struct builtin_class_descr *Descr)
     DbgPrint("Registering built-in class atom=0x%x\n", wc.lpszClassName);
   else
     DbgPrint("Registering built-in class %wS\n", wc.lpszClassName);
-  DbgPrint("RegisterClassW = %d\n", RegisterClassW(&wc));
+#endif
+  Class = RegisterClassW(&wc);
+#if 0
+  DbgPrint("RegisterClassW = %d\n", Class);
 #endif
 }
 
