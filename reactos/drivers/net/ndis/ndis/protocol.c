@@ -411,6 +411,7 @@ ProTransferData(
     /* XXX sd - why is that true? */
 
     if (Packet == Adapter->LoopPacket) {
+	NDIS_DbgPrint(MAX_TRACE, ("LoopPacket\n"));
         /* NDIS is responsible for looping this packet */
         NdisCopyFromPacketToPacket(Packet,
                                    ByteOffset,

@@ -17,7 +17,6 @@ typedef struct _FIB_ENTRY {
     OBJECT_FREE_ROUTINE Free;     /* Routine used to free resources for the object */
     PIP_ADDRESS NetworkAddress;   /* Address of network */
     PIP_ADDRESS Netmask;          /* Netmask of network */
-    PNET_TABLE_ENTRY NTE;         /* Pointer to NTE to use */
     PNEIGHBOR_CACHE_ENTRY Router; /* Pointer to NCE of router to use */
     UINT Metric;                  /* Cost of this route */
 } FIB_ENTRY, *PFIB_ENTRY;
@@ -34,7 +33,6 @@ PIP_INTERFACE RouterFindOnLinkInterface(
 PFIB_ENTRY RouterAddRoute(
     PIP_ADDRESS NetworkAddress,
     PIP_ADDRESS Netmask,
-    PNET_TABLE_ENTRY NTE,
     PNEIGHBOR_CACHE_ENTRY Router,
     UINT Metric);
 
@@ -57,6 +55,10 @@ NTSTATUS RouterStartup(
 
 NTSTATUS RouterShutdown(
     VOID);
+
+UINT CountFIBs();
+
+UINT CopyFIBs( PFIB_ENTRY Target );
 
 #endif /* __ROUTER_H */
 

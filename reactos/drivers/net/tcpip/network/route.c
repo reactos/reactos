@@ -6,9 +6,15 @@
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  * NOTES:       The route cache is implemented as a binary search
  *              tree to obtain fast searches
+ *
+ *   This data is not authoritative.  It is a searchable cache that allows
+ *   quick access to route information to selected hosts.  This information
+ *   should always defer to the FIB.
+ *
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
+#include <roscfg.h>
 #include <tcpip.h>
 #include <route.h>
 #include <router.h>
@@ -23,7 +29,7 @@ KSPIN_LOCK RouteCacheLock;
 NPAGED_LOOKASIDE_LIST IPRCNList;
 
 
-#if DBG
+#ifdef DBG
 VOID PrintTree(
     PROUTE_CACHE_NODE Node)
 /*
@@ -50,6 +56,17 @@ VOID PrintTree(
 }
 #endif
 
+UINT CountRouteNodes( PROUTE_CACHE_NODE Node ) {
+    if( !Node ) Node = RouteCache;
+    if( IsInternalRCN(Node) )
+        return 
+	    /* Traverse left subtree */
+	    CountRouteNodes(Node->Left) + 
+	    /* Traverse right subtree */
+	    CountRouteNodes(Node->Right) + 1;
+    else
+	return 0;
+}
 
 VOID FreeRCN(
     PVOID Object)
@@ -168,6 +185,8 @@ PROUTE_CACHE_NODE ExpandExternalRCN(VOID)
 {
     PROUTE_CACHE_NODE RCN;
 
+    MTMARK();
+
     TI_DbgPrint(DEBUG_RCACHE, ("Called.\n"));
 
     RCN = ExAllocateFromNPagedLookasideList(&IPRCNList);
@@ -175,6 +194,8 @@ PROUTE_CACHE_NODE ExpandExternalRCN(VOID)
         TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         return NULL;
     }
+
+    MTMARK();
 
     RCN->Free = FreeRCN;
 
@@ -185,6 +206,8 @@ PROUTE_CACHE_NODE ExpandExternalRCN(VOID)
     RCN->Parent = ExternalRCN->Parent;
     RCN->Left   = ExternalRCN;
     RCN->Right  = ExternalRCN;
+
+    MTMARK();
 
     return RCN;
 }
@@ -364,7 +387,7 @@ VOID RemoveSubtree(
         DereferenceObject(Node->NTE);
         DereferenceObject(Node->NCE);
 
-#if DBG
+#ifdef DBG
         if (Node->RefCount != 1)
             TI_DbgPrint(MIN_TRACE, ("RCN at (0x%X) has (%d) references (should be 1).\n", Node, Node->RefCount));
 #endif

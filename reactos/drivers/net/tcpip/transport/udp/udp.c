@@ -7,6 +7,7 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
+#include <roscfg.h>
 #include <tcpip.h>
 #include <udp.h>
 #include <routines.h>
@@ -91,7 +92,7 @@ NTSTATUS AddUDPHeaderIPv4(
   /* Source address */
   IPHeader->SrcAddr = LocalAddress->Address.IPv4Address;
   /* Destination address. FIXME: IPv4 only */
-  IPHeader->DstAddr = SendRequest->RemoteAddress->Address.IPv4Address;
+  IPHeader->DstAddr = SendRequest->RemoteAddress.Address.IPv4Address;
 
   /* Build UDP header */
   UDPHeader = (PUDP_HEADER)((ULONG_PTR)IPHeader + sizeof(IPv4_HEADER));
@@ -110,8 +111,7 @@ NTSTATUS AddUDPHeaderIPv4(
 NTSTATUS BuildUDPPacket(
   PVOID Context,
   PIP_ADDRESS LocalAddress,
-  USHORT LocalPort,
-  PIP_PACKET *IPPacket)
+  USHORT LocalPort)
 /*
  * FUNCTION: Builds an UDP packet
  * ARGUMENTS:
@@ -124,16 +124,16 @@ NTSTATUS BuildUDPPacket(
  */
 {
   NTSTATUS Status;
-  PIP_PACKET Packet;
   NDIS_STATUS NdisStatus;
   PDATAGRAM_SEND_REQUEST SendRequest = (PDATAGRAM_SEND_REQUEST)Context;
+  PIP_PACKET Packet = &SendRequest->Packet;
 
   TI_DbgPrint(MAX_TRACE, ("Called.\n"));
 
   /* Prepare packet */
 
   /* FIXME: Assumes IPv4 */
-  Packet = IPCreatePacket(IP_ADDRESS_V4);
+  IPInitializePacket(IP_ADDRESS_V4, &SendRequest->Packet);
   if (!Packet)
     return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -141,15 +141,7 @@ NTSTATUS BuildUDPPacket(
                       sizeof(UDP_HEADER)  +
                       SendRequest->BufferSize;
 
-  /* Allocate NDIS packet */
-  NdisAllocatePacket(&NdisStatus, &Packet->NdisPacket, GlobalPacketPool);
-  if (NdisStatus != NDIS_STATUS_SUCCESS) {
-    TI_DbgPrint(MIN_TRACE, ("Cannot allocate NDIS packet. NdisStatus = (0x%X)\n", NdisStatus));
-    (*Packet->Free)(Packet);
-    return STATUS_INSUFFICIENT_RESOURCES;
-  }
-
-  switch (SendRequest->RemoteAddress->Type) {
+  switch (SendRequest->RemoteAddress.Type) {
   case IP_ADDRESS_V4:
     Status = AddUDPHeaderIPv4(SendRequest, LocalAddress, LocalPort, Packet);
     break;
@@ -162,17 +154,11 @@ NTSTATUS BuildUDPPacket(
   }
   if (!NT_SUCCESS(Status)) {
     TI_DbgPrint(MIN_TRACE, ("Cannot add UDP header. Status = (0x%X)\n", Status));
-    NdisFreePacket(Packet->NdisPacket);
-    (*Packet->Free)(Packet);
+    FreeNdisPacket(Packet->NdisPacket);
     return Status;
   }
 
-  /* Chain data after header */
-  NdisChainBufferAtBack(Packet->NdisPacket, SendRequest->Buffer);
-
   DISPLAY_IP_PACKET(Packet);
-
-  *IPPacket = Packet;
 
   return STATUS_SUCCESS;
 }
@@ -194,11 +180,18 @@ NTSTATUS UDPSendDatagram(
  *     Status of operation
  */
 {
-  return DGSendDatagram(Request,
-                        ConnInfo,
-                        Buffer,
-                        DataSize,
-                        BuildUDPPacket);
+    PDATAGRAM_SEND_REQUEST SendRequest;
+    PADDRESS_FILE AddrFile = 
+	(PADDRESS_FILE)Request->Handle.AddressHandle;
+    
+    BuildUDPPacket( SendRequest,
+		    (PIP_ADDRESS)&AddrFile->ADE->Address->Address.
+		    IPv4Address,
+		    AddrFile->Port );
+
+    return DGSendDatagram(Request,
+			  ConnInfo,
+			  &SendRequest->Packet);
 }
 
 

@@ -65,7 +65,7 @@
 #else /* DBG */
 
 #define DEFINE_TAG
-#define INIT_TAG (Object, Tag)
+#define INIT_TAG(Object, Tag)
 
 /*
  * VOID ReferenceObject(
@@ -127,17 +127,18 @@ typedef NTSTATUS (*DATAGRAM_BUILD_ROUTINE)(
     PIP_PACKET *IPPacket);
 
 typedef struct _DATAGRAM_SEND_REQUEST {
-    LIST_ENTRY ListEntry;                 /* Entry on list */
-    PIP_ADDRESS RemoteAddress;            /* Pointer to remote IP address */
-    USHORT RemotePort;                    /* Remote port number */
-    PNDIS_BUFFER Buffer;                  /* Pointer to NDIS buffer to send */
-    DWORD BufferSize;                     /* Size of Buffer */
+    LIST_ENTRY ListEntry;
+    PNDIS_PACKET PacketToSend;
     DATAGRAM_COMPLETION_ROUTINE Complete; /* Completion routine */
     PVOID Context;                        /* Pointer to context information */
-    DATAGRAM_BUILD_ROUTINE Build;         /* Datagram build routine */
+    IP_PACKET Packet;
+    UINT BufferSize;
+    IP_ADDRESS RemoteAddress;
+    USHORT RemotePort;
     ULONG Flags;                          /* Protocol specific flags */
 } DATAGRAM_SEND_REQUEST, *PDATAGRAM_SEND_REQUEST;
 
+#if 0
 #define InitializeDatagramSendRequest( \
   _SendRequest, \
   _RemoteAddress, \
@@ -157,6 +158,7 @@ typedef struct _DATAGRAM_SEND_REQUEST {
     (_SendRequest)->Build = (_Build); \
     (_SendRequest)->Flags = (_Flags); \
   }
+#endif /* These things bug me...  They hide the member names. */
 
 /* Transport address file context structure. The FileObject->FsContext2
    field holds a pointer to this structure */
@@ -254,32 +256,17 @@ typedef struct _AF_SEARCH {
     USHORT Protocol;        /* Protocol number */
 } AF_SEARCH, *PAF_SEARCH;
 
-
-
 /*******************************************************
 * Connection-oriented communication support structures *
 *******************************************************/
 
-typedef struct _TCP_SEND_REQUEST {
+typedef struct _TCP_RECEIVE_REQUEST {
   LIST_ENTRY ListEntry;                 /* Entry on list */
+  PNDIS_BUFFER Buffer;                  /* Pointer to receive buffer */
+  ULONG BufferSize;                     /* Size of Buffer */
   DATAGRAM_COMPLETION_ROUTINE Complete; /* Completion routine */
   PVOID Context;                        /* Pointer to context information */
-  PVOID ProtocolContext;                /* Protocol specific context */
-  ULONG Flags;                          /* Protocol specific flags */
-  ULONG SequenceNumber;                 /* Sequence number (network byte order) */
-  ULONG AckNumber;                      /* Acknowledgement number (network byte order) */
-} TCP_SEND_REQUEST, *PTCP_SEND_REQUEST;
-
-#define InitializeTCPSendRequest( \
-  _SendRequest, \
-  _Complete, \
-  _Context, \
-  _ProtocolContext) { \
-    (_SendRequest)->Complete = (_Complete); \
-    (_SendRequest)->Context = (_Context); \
-    (_SendRequest)->ProtocolContext = (_ProtocolContext); \
-  }
-
+} TCP_RECEIVE_REQUEST, *PTCP_RECEIVE_REQUEST;
 
 /* Connection states */
 typedef enum {
@@ -302,8 +289,10 @@ typedef enum {
 typedef struct _TCP_SEGMENT {
   LIST_ENTRY ListEntry;
   PIP_PACKET IPPacket;        /* Pointer to IP packet */
+  PVOID SegmentData;          /* Pointer to segment data */
   ULONG SequenceNumber;       /* Sequence number of first byte in segment */
   ULONG Length;               /* Number of bytes in segment */
+  ULONG BytesDelivered;       /* Number of bytes already delivered to the client */
 } TCP_SEGMENT, *PTCP_SEGMENT;
 
 
@@ -316,15 +305,16 @@ typedef struct _CONNECTION_ENDPOINT {
   ULONG RefCount;             /* Number of references to this object */
   PVOID ClientContext;        /* Pointer to client context information */
   PADDRESS_FILE AddressFile;  /* Associated address file object (NULL if none) */
+  PVOID SocketContext;        /* Context for lower layer */
 
-  CONNECTION_STATE State;     /* Connection state */
-
+#if 0
   PIP_ADDRESS LocalAddress;   /* Pointer to local IP address */
   USHORT LocalPort;           /* Local port number (network byte order) */
 
   PIP_ADDRESS RemoteAddress;  /* Pointer to remote IP address */
   USHORT RemotePort;          /* Remote port number (network byte order) */
 
+  CONNECTION_STATE State;     /* Connection state */
   /* Send sequence variables */
   ULONG SendUnacknowledged;   /* Highest sequence number that is acknowledged */
   ULONG SendNext;             /* Sequence number of last data block sent */
@@ -335,20 +325,23 @@ typedef struct _CONNECTION_ENDPOINT {
   ULONG SendISS;              /* Initial send sequence number */
 
   /* Receive sequence variables */
-  ULONG ReceiveNext;          /* Sequence number of last data block received */
+  ULONG ReceiveNext;          /* Next sequence number expected and start of receive window */
   ULONG ReceiveWindow;        /* Maximum allowed number of octets in a segment */
   ULONG ReceiveUrgentPointer; /* Sequence number of start of urgent data */
   ULONG ReceiveIRS;           /* Initial receive sequence number */
+  ULONG ReceiveDelivered;     /* Next sequence number to be delivered to the client */
 
   /* Statistics for computing the retransmission timeout */
   ULONG TimestampSend;        /* Timestamp when sending a segment */
   ULONG TimestampAck;         /* Timestamp when receiving acknowledgment */
+#endif
 
   /* Requests */
   PTDI_REQUEST ListenRequest; /* Queued listen request */
+  LIST_ENTRY ReceiveRequests; /* Queued receive requests */
 
   /* Queues */
-  LIST_ENTRY ReceivedSegments;
+  LIST_ENTRY ReceivedSegments;/* Segments that are received */
 
 } CONNECTION_ENDPOINT, *PCONNECTION_ENDPOINT;
 

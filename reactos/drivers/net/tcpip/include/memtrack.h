@@ -8,6 +8,9 @@
 #define FBSD_MALLOC FOURCC('d','s','b','f')
 #define EXALLOC_TAG FOURCC('E','x','A','l')
 
+#define AllocatePacketWithBuffer(x,y,z) AllocatePacketWithBufferX(x,y,z,__FILE__,__LINE__)
+#define FreeNdisPacket(x) FreeNdisPacketX(x,__FILE__,__LINE__)
+
 #ifdef MEMTRACK
 #define MTMARK() TrackDumpFL(__FILE__, __LINE__)
 #define NdisAllocateBuffer(x,y,z,a,b) { \
@@ -22,7 +25,6 @@
         Track(NDIS_PACKET_TAG, *y); \
     } \
 }
-#define FreeNdisPacket(x) { TI_DbgPrint(MID_TRACE,("Deleting Packet %x\n", x)); FreeNdisPacketX(x); }
 #define NdisFreePacket(x) { Untrack(x); NdisFreePacket(x); }
 #define NdisFreeBuffer(x) { Untrack(x); NdisFreeBuffer(x); }
 #define exAllocatePool(x,y) ExAllocatePoolX(x,y,__FILE__,__LINE__) 
@@ -67,12 +69,6 @@ static inline VOID ExFreePoolX( PVOID Data, PCHAR File, ULONG Line ) {
 #define TrackDump()
 #define Untrack(x)
 #define TrackTag(x)
-#define FreeNdisPacket FreeNdisPacketX
-#define exFreePool(x) ExFreePool(x)
-#define exAllocatePool(x,y) ExAllocatePool(x,y)
-#define exAllocatePoolWithTag(x,y,z) ExAllocatePoolWithTag(x,y,z)
-#define TrackWithTag(a,b,c,d)
-#define UntrackFL(a,b,c)
 #endif
 
 #endif/*MEMMTRAC_H*/

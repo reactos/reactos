@@ -132,45 +132,9 @@ ip_output(so, m0, opt, ro, flags, imo)
 	      m->m_data + IPHDR_SIZE, m->m_len - IPHDR_SIZE );
     }
 
+    OS_DbgPrint(OSK_MID_TRACE,("Error from upper layer: %d\n", error));
+
     return (error);
-}
-
-/*
- * Copy options from ip to jp,
- * omitting those not copied during fragmentation.
- */
-int
-ip_optcopy(ip, jp)
-	struct ip *ip, *jp;
-{
-	register u_char *cp, *dp;
-	int opt, optlen, cnt;
-
-	cp = (u_char *)(ip + 1);
-	dp = (u_char *)(jp + 1);
-	cnt = (ip->ip_hl << 2) - sizeof (struct ip);
-	for (; cnt > 0; cnt -= optlen, cp += optlen) {
-		opt = cp[0];
-		if (opt == IPOPT_EOL)
-			break;
-		if (opt == IPOPT_NOP) {
-			/* Preserve for IP mcast tunnel's LSRR alignment. */
-			*dp++ = IPOPT_NOP;
-			optlen = 1;
-			continue;
-		} else
-			optlen = cp[IPOPT_OLEN];
-		/* bogus lengths should have been caught by ip_dooptions */
-		if (optlen > cnt)
-			optlen = cnt;
-		if (IPOPT_COPIED(opt)) {
-			(void)memcpy(dp, cp, (unsigned)optlen);
-			dp += optlen;
-		}
-	}
-	for (optlen = dp - (u_char *)(jp+1); optlen & 0x3; optlen++)
-		*dp++ = IPOPT_EOL;
-	return (optlen);
 }
 
 /*

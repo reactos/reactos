@@ -1,4 +1,12 @@
 
+Ideas for optimizations:
+
+* transmit.c (SendFragments, IPSendComplete):
+  Keep IPFRAGMENT_CONTEXT objects and PathMTU buffers in a pool
+
+
+References:
+
 RFC 791 - Internet Protocol
 http://www.faqs.org/rfcs/rfc791.html
 

@@ -35,9 +35,7 @@ NTSTATUS DGTransmit(
 NTSTATUS DGSendDatagram(
   PTDI_REQUEST Request,
   PTDI_CONNECTION_INFORMATION ConnInfo,
-  PNDIS_BUFFER Buffer,
-  ULONG DataSize,
-  DATAGRAM_BUILD_ROUTINE Build);
+  PIP_PACKET Packet);
 
 NTSTATUS DGReceiveDatagram(
   PTDI_REQUEST Request,

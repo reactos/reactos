@@ -17,7 +17,6 @@
 
 /* See debug.h for debug/trace constants */
 DWORD DebugTraceLevel = MIN_TRACE;
-//DWORD DebugTraceLevel = DEBUG_ULTRA;
 
 #endif /* DBG */
 
@@ -37,7 +36,8 @@ INT
 EXPORT
 WSAGetLastError(VOID)
 {
-  PWINSOCK_THREAD_BLOCK p = NtCurrentTeb()->WinSockData;
+  
+PWINSOCK_THREAD_BLOCK p = NtCurrentTeb()->WinSockData;
 
   if (p) {
     return p->LastErrorValue;
@@ -667,6 +667,7 @@ DllMain(HANDLE hInstDll,
     }
 
     p->LastErrorValue = NO_ERROR;
+    p->Getservbyname  = NULL;
 
     NtCurrentTeb()->WinSockData = p;
     break;

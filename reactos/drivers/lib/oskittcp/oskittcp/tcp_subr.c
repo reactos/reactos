@@ -427,7 +427,7 @@ tcp_notify(inp, error)
 		so->so_error = error;
 	else
 		tp->t_softerror = error;
-	wakeup((caddr_t) &so->so_timeo);
+	wakeup(so, NULL, (caddr_t) &so->so_timeo);
 	sorwakeup(so);
 	sowwakeup(so);
 }

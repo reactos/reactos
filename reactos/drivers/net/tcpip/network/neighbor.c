@@ -7,10 +7,10 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
+#include <roscfg.h>
 #include <tcpip.h>
 #include <neighbor.h>
 #include <routines.h>
-#include <neighbor.h>
 #include <transmit.h>
 #include <address.h>
 #include <route.h>
@@ -186,7 +186,7 @@ VOID NBShutdown(
               NdisPacket = NextNdisPacket;
             }
 
-#if DBG
+#ifdef DBG
           if (CurNCE->RefCount != 1)
             {
               TI_DbgPrint(DEBUG_REFCOUNT, ("NCE at (0x%X) has (%d) references (should be 1).\n", CurNCE, CurNCE->RefCount));
@@ -293,7 +293,7 @@ PNEIGHBOR_CACHE_ENTRY NBAddNeighbor(
   NCE->Interface = Interface;
   NCE->Address = Address;
   NCE->LinkAddressLength = LinkAddressLength;
-  NCE->LinkAddress = (PVOID)((ULONG_PTR)NCE + sizeof(NEIGHBOR_CACHE_ENTRY));
+  NCE->LinkAddress = (PVOID)&NCE[1];
   if (LinkAddress != NULL)
     {
       RtlCopyMemory(NCE->LinkAddress, LinkAddress, LinkAddressLength);
@@ -524,7 +524,7 @@ VOID NBRemoveNeighbor(
           /* Remove reference to the address */
           DereferenceObject(CurNCE->Address);
 
-#if DBG
+#ifdef DBG
           CurNCE->RefCount--;
 
           if (CurNCE->RefCount != 0)

@@ -39,46 +39,34 @@ struct connect_args {
 #include <oskittypes.h>
 
 #define IPHDR_SIZE 20
+#define SEL_CONNECT 1
+#define SEL_FIN     2
+#define SEL_RST     4
+#define SEL_ABRT    8
+#define SEL_READ    16
+#define SEL_WRITE   32
+#define SEL_ACCEPT  64
+#define SEL_OOB     128
+#define SEL_ERROR   256
+#define SEL_FINOUT  512
 
-typedef void (*OSKITTCP_SOCKET_DATA_AVAILABLE)
+typedef void (*OSKITTCP_SOCKET_STATE)
     ( void *ClientData,
       void *WhichSocket,
       void *WhichConnection,
-      OSK_PCHAR Data,
-      OSK_UINT Len );
-typedef void (*OSKITTCP_SOCKET_CONNECT_INDICATION)
-    ( void *ClientData, 
-      void *WhichSocket, 
-      void *WhichConnection );
-typedef void (*OSKITTCP_SOCKET_CLOSE_INDICATION)
-    ( void *WhichSocket );
-typedef void (*OSKITTCP_SOCKET_PENDING_CONNECT_INDICATION)
-    ( void *WhichSocket );
-typedef void (*OSKITTCP_SOCKET_RESET_INDICATION)
-    ( void *WhichSocket );
+      OSK_UINT SelFlags,
+      OSK_UINT SocketState );
 typedef int (*OSKITTCP_SEND_PACKET)
     ( void *ClientData,
       void *WhichSocket,
       void *WhichConnection,
       OSK_PCHAR Data,
       OSK_UINT Len );
-typedef int (*OSKITTCP_NEED_BIND)
-    ( void *ClientData,
-      void *WhichSocket, 
-      void *WhichConnection,
-      struct sockaddr *address, 
-      OSK_UINT addrlen, 
-      OSK_UINT reuseport );
 
 typedef struct _OSKITTCP_EVENT_HANDLERS {
     void *ClientData;
-    OSKITTCP_SOCKET_DATA_AVAILABLE SocketDataAvailable;
-    OSKITTCP_SOCKET_CONNECT_INDICATION SocketConnectIndication;
-    OSKITTCP_SOCKET_CLOSE_INDICATION SocketCloseIndication;
-    OSKITTCP_SOCKET_PENDING_CONNECT_INDICATION SocketPendingConnectIndication;
-    OSKITTCP_SOCKET_RESET_INDICATION SocketResetIndication;
+    OSKITTCP_SOCKET_STATE SocketState;
     OSKITTCP_SEND_PACKET PacketSend;
-    OSKITTCP_NEED_BIND Bind;
 } OSKITTCP_EVENT_HANDLERS, *POSKITTCP_EVENT_HANDLERS;
 
 extern OSKITTCP_EVENT_HANDLERS OtcpEvent;
@@ -92,7 +80,12 @@ extern void RegisterOskitTCPEventHandlers
 ( POSKITTCP_EVENT_HANDLERS EventHandlers );
 extern void OskitTCPReceiveDatagram( OSK_PCHAR Data, OSK_UINT Len,
 				     OSK_UINT IpHeaderLen );
-
+extern int OskitTCPReceive( void *socket, 
+			    void *Addr,
+			    OSK_PCHAR Data,
+			    OSK_UINT Len,
+			    OSK_UINT *OutLen,
+			    OSK_UINT Flags );
 #undef errno
 
 #define malloc(x,...) fbsd_malloc(x,__FILE__,__LINE__)
@@ -102,5 +95,9 @@ extern void OskitTCPReceiveDatagram( OSK_PCHAR Data, OSK_UINT Len,
 #include <oskiterrno.h>
 
 #define SOCK_MAXADDRLEN 255
+
+#define OSK_MSG_OOB      0x01
+#define OSK_MSG_PEEK     0x02
+#define OSK_MSG_DONTWAIT 0x80
 
 #endif/*OSKITTCP_H*/

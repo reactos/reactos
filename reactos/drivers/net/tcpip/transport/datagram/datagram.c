@@ -7,6 +7,7 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
+#include <roscfg.h>
 #include <tcpip.h>
 #include <datagram.h>
 #include <routines.h>
@@ -124,13 +125,6 @@ VOID SendDatagramComplete(
   CompleteContext = SendRequest->Context;
   BytesSent       = SendRequest->BufferSize;
 
-  /* Remove data buffer before releasing memory for packet buffers */
-  NdisQueryPacket(Packet, NULL, NULL, &NdisBuffer, NULL);
-  NdisUnchainBufferAtBack(Packet, &NdisBuffer);
-  FreeNdisPacket(Packet);
-  DereferenceObject(SendRequest->RemoteAddress);
-  ExFreePool(SendRequest);
-
   /* If there are pending send requests, shedule worker function */
   KeAcquireSpinLock(&DGPendingListLock, &OldIrql);
   QueueWorkItem = (!IsListEmpty(&DGPendingListHead));
@@ -141,7 +135,7 @@ VOID SendDatagramComplete(
   TI_DbgPrint(MAX_TRACE, ("Calling 0x%X.\n", Complete));
 
   /* Call completion routine for send request */
-  (*Complete)(CompleteContext, NdisStatus, BytesSent);
+  (*Complete)(Context, NdisStatus, BytesSent);
 
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
@@ -168,8 +162,6 @@ VOID DGSend(
 
   TI_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-  ASSERT(SendRequest->Build);
-
   /* Get the information we need from the address file
      now so we minimize the time we hold the spin lock */
   KeAcquireSpinLock(&AddrFile->Lock, &OldIrql);
@@ -182,71 +174,73 @@ VOID DGSend(
   /* Loop until there are no more send requests in the
      transmit queue or until we run out of resources */
   for (;;)
-    {
-      Status = (*SendRequest->Build)(SendRequest, ADE->Address, LocalPort, &IPPacket);
+  {
+      TI_DbgPrint(MIN_TRACE, ("Looping on DGSend !!!! WHEE!\n"));
       if (!NT_SUCCESS(Status))
-        {
+      {
           KeAcquireSpinLock(&AddrFile->Lock, &OldIrql);
           /* An error occurred, enqueue the send request again and return */
           InsertHeadList(&AddrFile->TransmitQueue, &SendRequest->ListEntry);
           DereferenceObject(ADE);
           KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
-    
+	  
           TI_DbgPrint(MIN_TRACE, ("Leaving (insufficient resources).\n"));
           return;
-        }
-
+      }
+      
       /* Get a route to the destination address */
-      if (RouteGetRouteToDestination(SendRequest->RemoteAddress, ADE->NTE, &RCN) == IP_SUCCESS)
-        {
+      if (RouteGetRouteToDestination(&SendRequest->RemoteAddress, ADE->NTE, &RCN) == IP_SUCCESS)
+      {
           /* Set completion routine and send the packet */
+	  IPPacket = &SendRequest->Packet;
           PC(IPPacket->NdisPacket)->Complete = SendDatagramComplete;
           PC(IPPacket->NdisPacket)->Context  = SendRequest;
           if (IPSendDatagram(IPPacket, RCN) != STATUS_SUCCESS)
-            {
-              SendDatagramComplete(SendRequest,
-                IPPacket->NdisPacket,
-                NDIS_STATUS_REQUEST_ABORTED);
-            }
+	  {
+	      TI_DbgPrint(MIN_TRACE, ("!! Datagram sent !! (completing)\n"));
+	      SendDatagramComplete(SendRequest,
+				   IPPacket->NdisPacket,
+				   NDIS_STATUS_REQUEST_ABORTED);
+	  }
           /* We're done with the RCN */
           DereferenceObject(RCN);
-        }
+      }
       else
-        {
-          /* No route to destination */
-          /* FIXME: Which error code should we use here? */
-          TI_DbgPrint(MIN_TRACE, ("No route to destination address (0x%X).\n",
-              SendRequest->RemoteAddress->Address.IPv4Address));
-          SendDatagramComplete(SendRequest,
-            IPPacket->NdisPacket,
-            NDIS_STATUS_REQUEST_ABORTED);
-        }
+      {
+	  /* No route to destination */
+	  /* FIXME: Which error code should we use here? */
+	  TI_DbgPrint(MIN_TRACE, 
+		      ("No route to destination address (0x%X).\n",
+		       SendRequest->RemoteAddress.Address.IPv4Address));
+	  SendDatagramComplete(SendRequest,
+			       IPPacket->NdisPacket,
+			       NDIS_STATUS_REQUEST_ABORTED);
+      }
 
-      (*IPPacket->Free)(IPPacket);
-  
       /* Check transmit queue for more to send */
-  
+      
       KeAcquireSpinLock(&AddrFile->Lock, &OldIrql);
-  
+      
       if (!IsListEmpty(&AddrFile->TransmitQueue))
-        {
+      {
           /* Transmit queue is not empty, process one more request */
           CurrentEntry = RemoveHeadList(&AddrFile->TransmitQueue);
           SendRequest  = CONTAINING_RECORD(CurrentEntry, DATAGRAM_SEND_REQUEST, ListEntry);
-    
+	  
           KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
-        }
+	  TI_DbgPrint(MIN_TRACE, ("List is not empty\n"));
+      }
       else
-        {
+      {
           /* Transmit queue is empty */
           AF_CLR_PENDING(AddrFile, AFF_SEND);
           DereferenceObject(ADE);
           KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
-  
+	  
           TI_DbgPrint(MAX_TRACE, ("Leaving (empty queue).\n"));
           return;
-        }
-    }
+      }
+  }
 }
 
 
@@ -346,7 +340,7 @@ VOID DGDeliverData(
             {
               DereferenceObject(Current->RemoteAddress);
             }
-          ExFreePool(Current);
+          exFreePool(Current);
         }
     }
   else if (AddrFile->RegisteredReceiveDatagramHandler)
@@ -431,8 +425,7 @@ VOID DGCancelSendRequest(
     {
       /* Complete the request and free its resources */
       (*Current->Complete)(Current->Context, STATUS_CANCELLED, 0);
-      DereferenceObject(Current->RemoteAddress);
-      ExFreePool(Current);
+      exFreePool(Current);
     }
   else
     {
@@ -489,7 +482,7 @@ VOID DGCancelReceiveRequest(
         {
           DereferenceObject(Current->RemoteAddress);
         }
-      ExFreePool(Current);
+      exFreePool(Current);
     }
   else
     {
@@ -528,83 +521,80 @@ NTSTATUS DGTransmit(
       KeReleaseSpinLock(&AddressFile->Lock, OldIrql);
       /* Send the datagram */
       DGSend(AddressFile, SendRequest);
-      TI_DbgPrint(MAX_TRACE, ("Leaving (pending).\n"));
+      TI_DbgPrint(MAX_TRACE, ("Leaving (pending).\n")); 
     }
   return STATUS_PENDING;
 }
 
-NTSTATUS DGSendDatagram(
-  PTDI_REQUEST Request,
-  PTDI_CONNECTION_INFORMATION ConnInfo,
-  PNDIS_BUFFER Buffer,
-  ULONG DataSize,
-  DATAGRAM_BUILD_ROUTINE Build)
+NTSTATUS DGSendDatagram( PTDI_REQUEST Request,
+			 PTDI_CONNECTION_INFORMATION ConnInfo,
+			 PIP_PACKET Packet ) {
 /*
  * FUNCTION: Sends a datagram to a remote address
  * ARGUMENTS:
  *     Request   = Pointer to TDI request
  *     ConnInfo  = Pointer to connection information
- *     Buffer    = Pointer to NDIS buffer with data
- *     DataSize  = Size in bytes of data to be sent
- *     Build     = Pointer to datagram build routine
+ *     Packet    = Pointer to NDIS buffer with data
  * RETURNS:
  *     Status of operation
  */
-{
-  PADDRESS_FILE AddrFile;
-  KIRQL OldIrql;
-  NTSTATUS Status;
-  PDATAGRAM_SEND_REQUEST SendRequest;
-
-  TI_DbgPrint(MAX_TRACE, ("Called.\n"));
-
-  AddrFile = Request->Handle.AddressHandle;
-
-  KeAcquireSpinLock(&AddrFile->Lock, &OldIrql);
-
-  if (AF_IS_VALID(AddrFile))
-    {
-      /* Initialize a send request */
-      Status = BuildDatagramSendRequest(&SendRequest,
-        NULL,
-        0,
-        Buffer,
-        DataSize,
-        Request->RequestNotifyObject,
-        Request->RequestContext,
-        Build,
-        0);
-      if (NT_SUCCESS(Status))
-        {
-          Status = AddrGetAddress(ConnInfo->RemoteAddress,
-            &SendRequest->RemoteAddress,
-            &SendRequest->RemotePort,
-            &AddrFile->AddrCache);
-          if (NT_SUCCESS(Status))
-            {
-              KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
-              return DGTransmit(AddrFile, SendRequest);
-            }
-          else
-            {
-              ExFreePool(SendRequest);
-            }
-        }
-      else
-        {
-          Status = STATUS_INSUFFICIENT_RESOURCES;
-        }
+    PADDRESS_FILE AddrFile;
+    KIRQL OldIrql;
+    NTSTATUS Status;
+    PDATAGRAM_SEND_REQUEST SendRequest;
+    
+    TI_DbgPrint(MAX_TRACE, ("Called.\n"));
+    
+    AddrFile = Request->Handle.AddressHandle;
+    
+    KeAcquireSpinLock(&AddrFile->Lock, &OldIrql);
+    
+    if (AF_IS_VALID(AddrFile)) {
+	/* Initialize a send request */
+	SendRequest = exAllocatePool( NonPagedPool,
+				      sizeof( DATAGRAM_SEND_REQUEST ) );
+	
+	if( SendRequest ) {
+	    KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+	    return STATUS_INSUFFICIENT_RESOURCES;
+	}
+	
+	SendRequest->Complete = Request->RequestNotifyObject;
+	SendRequest->Context = Request->RequestContext;
+	NdisQueryPacketLength( Packet->NdisPacket,
+			       &SendRequest->BufferSize );
+	SendRequest->Packet = *Packet;
+	
+	if (NT_SUCCESS(Status)) {
+	    Status = AddrGetAddress(ConnInfo->RemoteAddress,
+				    &SendRequest->RemoteAddress,
+				    &SendRequest->RemotePort,
+				    &AddrFile->AddrCache);
+	    if (NT_SUCCESS(Status))
+	    {
+		KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+		return DGTransmit(AddrFile, SendRequest);
+	    }
+	    else
+	    {
+		exFreePool(SendRequest);
+	    }
+	}
+	else
+	{
+	    Status = STATUS_INSUFFICIENT_RESOURCES;
+	}
     }
-  else
+    else
     {
-      Status = STATUS_ADDRESS_CLOSED;
+	Status = STATUS_ADDRESS_CLOSED;
     }
-
-  KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
-
-  TI_DbgPrint(MAX_TRACE, ("Leaving. Status (0x%X)\n", Status));
-
-  return Status;
+    
+    KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+    
+    TI_DbgPrint(MAX_TRACE, ("Leaving. Status (0x%X)\n", Status));
+    
+    return Status;
 }
 
 
@@ -645,7 +635,7 @@ NTSTATUS DGReceiveDatagram(
 
   if (AF_IS_VALID(AddrFile))
     {
-      ReceiveRequest = ExAllocatePool(NonPagedPool, sizeof(DATAGRAM_RECEIVE_REQUEST));
+      ReceiveRequest = exAllocatePool(NonPagedPool, sizeof(DATAGRAM_RECEIVE_REQUEST));
       if (ReceiveRequest)
         {
           /* Initialize a receive request */
@@ -660,7 +650,7 @@ NTSTATUS DGReceiveDatagram(
               if (!NT_SUCCESS(Status))
                 {
                   KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
-                  ExFreePool(ReceiveRequest);
+                  exFreePool(ReceiveRequest);
                   return Status;
                 }
             }

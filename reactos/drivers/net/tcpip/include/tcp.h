@@ -35,6 +35,9 @@ typedef struct TCPv4_HEADER {
 
 #define TCPOPTLEN_MAX_SEG_SIZE  0x4
 
+/* Data offset; 32-bit words (leftmost 4 bits); convert to bytes */
+#define TCP_DATA_OFFSET(DataOffset)(((DataOffset) & 0xF0) >> (4-2))
+
 
 /* TCPv4 pseudo header */
 typedef struct TCPv4_PSEUDO_HEADER {
@@ -70,10 +73,9 @@ typedef struct TCPv4_PSEUDO_HEADER {
 #define SRF_SYN   TCP_SYN
 #define SRF_FIN   TCP_FIN
 
-
 PTCP_SEGMENT TCPCreateSegment(
   PIP_PACKET IPPacket,
-  ULONG SequenceNumber,
+  PTCPv4_HEADER TCPHeader,
   ULONG SegmentLength);
 
 VOID TCPFreeSegment(
@@ -81,25 +83,8 @@ VOID TCPFreeSegment(
 
 VOID TCPAddSegment(
   PCONNECTION_ENDPOINT Connection,
-  PTCP_SEGMENT Segment);
-
-inline NTSTATUS TCPBuildSendRequest(
-    PTCP_SEND_REQUEST *SendRequest,
-    PDATAGRAM_SEND_REQUEST *DGSendRequest,
-    PCONNECTION_ENDPOINT Connection,
-    DATAGRAM_COMPLETION_ROUTINE Complete,
-    PVOID Context,
-    PNDIS_BUFFER Buffer,
-    DWORD BufferSize,
-    ULONG Flags);
-
-inline NTSTATUS TCPBuildAndTransmitSendRequest(
-    PCONNECTION_ENDPOINT Connection,
-    DATAGRAM_COMPLETION_ROUTINE Complete,
-    PVOID Context,
-    PNDIS_BUFFER Buffer,
-    DWORD BufferSize,
-    ULONG Flags);
+  PTCP_SEGMENT Segment,
+  PULONG Acknowledged);
 
 NTSTATUS TCPConnect(
   PTDI_REQUEST Request,
@@ -108,10 +93,16 @@ NTSTATUS TCPConnect(
 
 NTSTATUS TCPListen(
   PTDI_REQUEST Request,
-  PTDI_CONNECTION_INFORMATION ConnInfo,
-  PTDI_CONNECTION_INFORMATION ReturnInfo);
+  UINT Backlog );
 
-NTSTATUS TCPSendDatagram(
+NTSTATUS TCPReceiveData(
+  PTDI_REQUEST Request,
+  PNDIS_BUFFER Buffer,
+  ULONG ReceiveLength,
+  ULONG ReceiveFlags,
+  PULONG BytesReceived);
+
+NTSTATUS TCPSendData(
   PTDI_REQUEST Request,
   PTDI_CONNECTION_INFORMATION ConnInfo,
   PNDIS_BUFFER Buffer,

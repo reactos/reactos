@@ -140,59 +140,6 @@ volatile struct	timeval time;
 volatile struct	timeval mono_time;
 
 /*
- * The real-time timer, interrupting hz times per second.
- */
-void bsd_hardclock(void)
-{
-	register struct callout *p1;
-	register int needsoft;
-	unsigned cpl;
-	int s;
-
-	save_cpl(&cpl);
-	splhigh();
-
-	/*
-	 * Update real-time timeout queue.
-	 * At front of queue are some number of events which are ``due''.
-	 * The time to these is <= 0 and if negative represents the
-	 * number of ticks which have passed since it was supposed to happen.
-	 * The rest of the q elements (times > 0) are events yet to happen,
-	 * where the time for each is given as a delta from the previous.
-	 * Decrementing just the first of these serves to decrement the time
-	 * to all events.
-	 */
-	needsoft = 0;
-	for (p1 = calltodo.c_next; p1 != NULL; p1 = p1->c_next) {
-		if (--p1->c_time > 0)
-			break;
-		needsoft = 1;
-		if (p1->c_time == 0)
-			break;
-	}
-
-	/*
-	 * Increment the time-of-day.
-	 */
-	ticks++;
-	BUMPTIME(&mono_time, tick);
-	BUMPTIME(&time, tick);
-
-	/*
-	 * At this point, we might need a soft interrupt. We say, what the
-	 * heck, let's do the work now. Reduce priority level to softclock
-	 * first, though. The alternative (postponing it) would be called
-	 * 'setsoftclock'
-	 */
-	if (needsoft) {
-		(void)splsoftclock();
-		softclock();
-	}
-
-	restore_cpl(cpl);
-}
-
-/*
  * Software (low priority) clock interrupt.
  * Run periodic events from timeout queue.
  */

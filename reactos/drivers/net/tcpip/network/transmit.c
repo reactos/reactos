@@ -7,6 +7,7 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
+#include <roscfg.h>
 #include <tcpip.h>
 #include <transmit.h>
 #include <routines.h>
@@ -66,6 +67,7 @@ BOOLEAN PrepareNextFragment(
         /* Calculate checksum of IP header */
         Header->Checksum = 0;
         Header->Checksum = (USHORT)IPv4Checksum(Header, IFC->HeaderSize, 0);
+	TI_DbgPrint(MID_TRACE,("IP Check: %x\n", Header->Checksum));
 
         /* Update pointers */
         IFC->DatagramData = (PVOID)((ULONG_PTR)IFC->DatagramData + DataSize);
@@ -103,23 +105,23 @@ NTSTATUS SendFragments(
     TI_DbgPrint(MAX_TRACE, ("Called. IPPacket (0x%X)  NCE (0x%X)  PathMTU (%d).\n",
         IPPacket, NCE, PathMTU));
 
-    IFC = ExAllocatePool(NonPagedPool, sizeof(IPFRAGMENT_CONTEXT));
+    IFC = exAllocatePool(NonPagedPool, sizeof(IPFRAGMENT_CONTEXT));
     if (IFC == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
     /* We allocate a buffer for a PathMTU sized packet and reuse
        it for all fragments */
-    Data = ExAllocatePool(NonPagedPool, MaxLLHeaderSize + PathMTU);
+    Data = exAllocatePool(NonPagedPool, MaxLLHeaderSize + PathMTU);
     if (Data == NULL) {
-        ExFreePool(IFC);
+        exFreePool(IFC);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     /* Allocate NDIS packet */
     NdisAllocatePacket(&NdisStatus, &IFC->NdisPacket, GlobalPacketPool);
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        ExFreePool(Data);
-        ExFreePool(IFC);
+        exFreePool(Data);
+        exFreePool(IFC);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -127,9 +129,9 @@ NTSTATUS SendFragments(
     NdisAllocateBuffer(&NdisStatus, &IFC->NdisBuffer,
         GlobalBufferPool, Data, MaxLLHeaderSize + PathMTU);
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        NdisFreePacket(IFC->NdisPacket);
-        ExFreePool(Data);
-        ExFreePool(IFC);
+        FreeNdisPacket(IFC->NdisPacket);
+        exFreePool(Data);
+        exFreePool(IFC);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -206,8 +208,11 @@ VOID IPSendComplete(
             /* There are no more fragments to transmit, so call completion handler */
             NdisPacket = IFC->Datagram;
             FreeNdisPacket(IFC->NdisPacket);
-            ExFreePool(IFC);
-            (*PC(NdisPacket)->Complete)(PC(NdisPacket)->Context, NdisPacket, NdisStatus);
+            exFreePool(IFC);
+            (*PC(NdisPacket)->Complete)
+		(PC(NdisPacket)->Context, 
+		 NdisPacket, 
+		 NdisStatus);
         }
     }
 }
@@ -304,10 +309,11 @@ NTSTATUS IPSendDatagram(
     TI_DbgPrint(MAX_TRACE, ("Called. IPPacket (0x%X)  RCN (0x%X)\n", IPPacket, RCN));
 
     DISPLAY_IP_PACKET(IPPacket);
+    OskitDumpBuffer( IPPacket->Header, IPPacket->TotalSize );
 
     NCE = RCN->NCE;
 
-#if DBG
+#ifdef DBG
     if (!NCE) {
         TI_DbgPrint(MIN_TRACE, ("No NCE to use.\n"));
         FreeNdisPacket(IPPacket->NdisPacket);
@@ -317,16 +323,20 @@ NTSTATUS IPSendDatagram(
 
     /* Fetch path MTU now, because it may change */
     PathMTU = RCN->PathMTU;
+    TI_DbgPrint(MID_TRACE,("PathMTU: %d\n", PathMTU));
 
     if (IPPacket->TotalSize > PathMTU) {
+	TI_DbgPrint(MID_TRACE,("Doing SendFragments\n"));
         return SendFragments(IPPacket, NCE, PathMTU);
     } else {
         if ((IPPacket->Flags & IP_PACKET_FLAG_RAW) == 0) {
             /* Calculate checksum of IP header */
+	    TI_DbgPrint(MID_TRACE,("-> not IP_PACKET_FLAG_RAW\n"));
             ((PIPv4_HEADER)IPPacket->Header)->Checksum = 0;
 
             ((PIPv4_HEADER)IPPacket->Header)->Checksum = (USHORT)
                 IPv4Checksum(IPPacket->Header, IPPacket->HeaderSize, 0);
+	    TI_DbgPrint(MID_TRACE,("IP Check: %x\n", ((PIPv4_HEADER)IPPacket->Header)->Checksum));
 
             TI_DbgPrint(MAX_TRACE, ("Sending packet (length is %d).\n",
                 WN2H(((PIPv4_HEADER)IPPacket->Header)->TotalLength)));

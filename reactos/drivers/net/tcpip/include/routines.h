@@ -8,25 +8,7 @@
 #define __ROUTINES_H
 
 
-inline NTSTATUS BuildDatagramSendRequest(
-    PDATAGRAM_SEND_REQUEST *SendRequest,
-    PIP_ADDRESS RemoteAddress,
-    USHORT RemotePort,
-    PNDIS_BUFFER Buffer,
-    DWORD BufferSize,
-    DATAGRAM_COMPLETION_ROUTINE Complete,
-    PVOID Context,
-    DATAGRAM_BUILD_ROUTINE Build,
-    ULONG Flags);
-
-inline NTSTATUS BuildTCPSendRequest(
-    PTCP_SEND_REQUEST *SendRequest,
-    DATAGRAM_COMPLETION_ROUTINE Complete,
-    PVOID Context,
-    PVOID ProtocolContext);
-
-UINT Random(
-    VOID);
+UINT Random(VOID);
 
 UINT CopyBufferToBufferChain(
     PNDIS_BUFFER DstBuffer,
@@ -53,8 +35,10 @@ UINT CopyPacketToBufferChain(
     UINT SrcOffset,
     UINT Length);
 
-VOID FreeNdisPacket(
-    PNDIS_PACKET Packet);
+VOID FreeNdisPacketX(
+    PNDIS_PACKET Packet,
+    PCHAR File,
+    UINT Line);
 
 PVOID AdjustPacket(
     PNDIS_PACKET Packet,

@@ -7,6 +7,7 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
+#include <roscfg.h>
 #include <tcpip.h>
 #include <datagram.h>
 #include <address.h>
@@ -16,6 +17,7 @@
 #include <udp.h>
 #include <ip.h>
 #include <fileobjs.h>
+#include <oskittcp.h>
 
 /* List of all address file objects managed by this driver */
 LIST_ENTRY AddressFileListHead;
@@ -98,7 +100,8 @@ VOID DeleteAddress(
   CurrentEntry = AddrFile->TransmitQueue.Flink;
   while (CurrentEntry != &AddrFile->TransmitQueue) {
     NextEntry = CurrentEntry->Flink;
-    SendRequest = CONTAINING_RECORD(CurrentEntry, DATAGRAM_SEND_REQUEST, ListEntry);
+    SendRequest = CONTAINING_RECORD(CurrentEntry, 
+				    DATAGRAM_SEND_REQUEST, ListEntry);
     /* Abort the request and free its resources */
     KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
     (*SendRequest->Complete)(SendRequest->Context, STATUS_ADDRESS_CLOSED, 0);
@@ -309,7 +312,7 @@ NTSTATUS FileOpenAddress(
   case IPPROTO_TCP:
     /* FIXME: If specified port is 0, a port is chosen dynamically */
     AddrFile->Port = Address->Address[0].Address[0].sin_port;
-    AddrFile->Send = TCPSendDatagram;
+    AddrFile->Send = TCPSendData;
     break;
 
   case IPPROTO_UDP:
@@ -437,7 +440,9 @@ NTSTATUS FileOpenConnection(
   PTDI_REQUEST Request,
   PVOID ClientContext)
 {
+  NTSTATUS Status;
   PCONNECTION_ENDPOINT Connection;
+  PADDRESS_FILE AddrFile;
 
   TI_DbgPrint(MID_TRACE, ("Called.\n"));
 
@@ -455,14 +460,25 @@ NTSTATUS FileOpenConnection(
   /* Reference the object */
   Connection->RefCount = 1;
 
-  /* Put connection in the closed state */
-  Connection->State = ctClosed;
-
   /* Save client context pointer */
   Connection->ClientContext = ClientContext;
+  Status = OskitTCPSocket( Connection,
+			   &Connection->SocketContext,
+			   AF_INET,
+			   SOCK_STREAM,
+			   IPPROTO_TCP );
+  DbgPrint("STATUS from OSKITTCP was %08x\n", Status);
+  
+  /* Initialize receive requests queue */
+  InitializeListHead(&Connection->ReceiveRequests);
 
-  /* Initialize receive queue */
+  /* Initialize received segments queue */
   InitializeListHead(&Connection->ReceivedSegments);
+
+TI_DbgPrint(MIN_TRACE, ("X1 cur 0x%x\n", &Connection->ReceivedSegments));
+TI_DbgPrint(MIN_TRACE, ("X1 Flink 0x%x\n", Connection->ReceivedSegments.Flink));
+TI_DbgPrint(MIN_TRACE, ("X1 Blink 0x%x\n", Connection->ReceivedSegments.Blink));
+
 
   /* Return connection endpoint file object */
   Request->Handle.ConnectionContext = Connection;
@@ -497,43 +513,9 @@ NTSTATUS FileCloseConnection(
 
   Connection = Request->Handle.ConnectionContext;
 
-#if 0
-  KeAcquireSpinLock(&Connection->Lock, &OldIrql);
-  if ((!AF_IS_BUSY(Connection)) && (Connection->RefCount == 1)) {
-    /* Set connection endpoint file object exclusive to us */
-    AF_SET_BUSY(Connection);
-    AF_CLR_VALID(Connection);
+  TCPClose(Request);
+  DeleteConnectionEndpoint(Connection);
 
-    KeReleaseSpinLock(&Connection->Lock, OldIrql);
-#endif
-    DeleteConnectionEndpoint(Connection);
-#if 0
-  } else {
-    if (!AF_IS_PENDING(Connection, AFF_DELETE)) {
-      Connection->Complete = Request->RequestNotifyObject;
-      Connection->Context  = Request->RequestContext;
-
-      /* Shedule connection endpoint for deletion */
-      AF_SET_PENDING(Connection, AFF_DELETE);
-      AF_CLR_VALID(Connection);
-
-      if (!AF_IS_BUSY(Connection)) {
-        /* Worker function is not running, so shedule it to run */
-        AF_SET_BUSY(Connection);
-        KeReleaseSpinLock(&Connection->Lock, OldIrql);
-        ExQueueWorkItem(&Connection->WorkItem, CriticalWorkQueue);
-      } else
-        KeReleaseSpinLock(&Connection->Lock, OldIrql);
-
-      TI_DbgPrint(MAX_TRACE, ("Leaving (pending).\n"));
-
-      return STATUS_PENDING;
-    } else
-      Status = STATUS_ADDRESS_CLOSED;
-
-    KeReleaseSpinLock(&Connection->Lock, OldIrql);
-  }
-#endif
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 
   return Status;

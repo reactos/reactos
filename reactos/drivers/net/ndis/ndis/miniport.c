@@ -322,6 +322,8 @@ MiniEthReceiveComplete(
 
   NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
+  if( !Filter ) return;
+
   Adapter = (PLOGICAL_ADAPTER)Filter->Miniport;
 
   NDIS_DbgPrint(MAX_TRACE, ("acquiring miniport block lock\n"));
@@ -372,13 +374,15 @@ MiniEthReceiveIndication(
  *     PacketSize          = Total size of received packet
  */
 {
-    MiniIndicateData((PLOGICAL_ADAPTER)Filter->Miniport,
-                     MacReceiveContext,
-                     HeaderBuffer,
-                     HeaderBufferSize,
-                     LookaheadBuffer,
-                     LookaheadBufferSize,
-                     PacketSize);
+    if( Filter ) {
+	MiniIndicateData((PLOGICAL_ADAPTER)Filter->Miniport,
+			 MacReceiveContext,
+			 HeaderBuffer,
+			 HeaderBufferSize,
+			 LookaheadBuffer,
+			 LookaheadBufferSize,
+			 PacketSize);
+    }
 }
 
 
@@ -1555,6 +1559,7 @@ NdisIStartAdapter(
           NDIS_DbgPrint(MIN_TRACE, ("error: unsupported media\n"));
           ExFreePool(Adapter);
           ASSERT(FALSE);
+	  KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
           return;
         }
 

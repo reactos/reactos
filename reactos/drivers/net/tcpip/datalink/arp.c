@@ -7,6 +7,7 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
+#include <roscfg.h>
 #include <tcpip.h>
 #include <arp.h>
 #include <routines.h>
@@ -43,42 +44,25 @@ PNDIS_PACKET PrepareARPPacket(
  */
 {
     PNDIS_PACKET NdisPacket;
-    PNDIS_BUFFER NdisBuffer;
     NDIS_STATUS NdisStatus;
     PARP_HEADER Header;
     PVOID DataBuffer;
-    ULONG Size;
+    ULONG Size, Contig;
 
     TI_DbgPrint(DEBUG_ARP, ("Called.\n"));
 
     /* Prepare ARP packet */
-    Size = MaxLLHeaderSize + sizeof(ARP_HEADER) + 
+    Size = MaxLLHeaderSize +
+	sizeof(ARP_HEADER) + 
         2 * LinkAddressLength + /* Hardware address length */
         2 * ProtoAddressLength; /* Protocol address length */
     Size = MAX(Size, MinLLFrameSize);
 
-    DataBuffer = ExAllocatePool(NonPagedPool, Size);
-    if (!DataBuffer)
-        return NULL;
+    NdisStatus = AllocatePacketWithBuffer( &NdisPacket, NULL, Size );
+    if( !NT_SUCCESS(NdisStatus) ) return NULL;
 
-    /* Allocate NDIS packet */
-    NdisAllocatePacket(&NdisStatus, &NdisPacket, GlobalPacketPool);
-    if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        ExFreePool(DataBuffer);
-        return NULL;
-    }
+    GetDataPtr( NdisPacket, 0, &DataBuffer, &Contig );
 
-    /* Allocate NDIS buffer for maximum link level header and ARP packet */
-    NdisAllocateBuffer(&NdisStatus, &NdisBuffer, GlobalBufferPool,
-        DataBuffer, Size);
-    if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        NdisFreePacket(NdisPacket);
-        ExFreePool(DataBuffer);
-        return NULL;
-    }
-
-    /* Link NDIS buffer into packet */
-    NdisChainBufferAtFront(NdisPacket, NdisBuffer);
     RtlZeroMemory(DataBuffer, Size);
     Header = (PARP_HEADER)((ULONG_PTR)DataBuffer + MaxLLHeaderSize);
     Header->HWType       = HardwareType;
@@ -126,7 +110,6 @@ VOID ARPTransmitComplete(
  */
 {
     TI_DbgPrint(DEBUG_ARP, ("Called.\n"));
-
     FreeNdisPacket(NdisPacket);
 }
 

@@ -85,8 +85,7 @@ tcp_output(tp)
 	struct rmxp_tao *taop;
 	struct rmxp_tao tao_noncached;
 
-	OS_DbgPrint(OSK_MID_TRACE,
-		    ("Before IP_OUTPUT : tp->rcv_nxt %x\n", tp->rcv_nxt));
+	OS_DbgPrint(OSK_MID_TRACE,("Start\n"));
 
 	/*
 	 * Determine length of data that should be transmitted,
@@ -102,7 +101,9 @@ tcp_output(tp)
 		 * slow start to get ack "clock" running again.
 		 */
 		tp->snd_cwnd = tp->t_maxseg;
+
 again:
+	OS_DbgPrint(OSK_MID_TRACE,("Again...\n"));
 	sendalot = 0;
 	off = tp->snd_nxt - tp->snd_una;
 	win = min(tp->snd_wnd, tp->snd_cwnd);
@@ -237,9 +238,6 @@ again:
 			goto send;
 	}
 
-	OS_DbgPrint(OSK_MID_TRACE,
-		    ("Before IP_OUTPUT : tp->rcv_nxt %x\n", tp->rcv_nxt));
-
 	/*
 	 * Compare available window to amount of window
 	 * known to peer (as advertised window less
@@ -262,9 +260,6 @@ again:
 			goto send;
 	}
 
-	OS_DbgPrint(OSK_MID_TRACE,
-		    ("Before IP_OUTPUT : tp->rcv_nxt %x\n", tp->rcv_nxt));
-
 	/*
 	 * Send if we owe peer an ACK.
 	 */
@@ -283,9 +278,6 @@ again:
 	if (flags & TH_FIN &&
 	    ((tp->t_flags & TF_SENTFIN) == 0 || tp->snd_nxt == tp->snd_una))
 		goto send;
-
-	OS_DbgPrint(OSK_MID_TRACE,
-		    ("Before IP_OUTPUT : tp->rcv_nxt %x\n", tp->rcv_nxt));
 
 	/*
 	 * TCP window updates are not reliable, rather a polling protocol
@@ -321,9 +313,6 @@ again:
 	/*return (0);*/
 
 send:
-	OS_DbgPrint(OSK_MID_TRACE,
-		    ("Before IP_OUTPUT : tp->rcv_nxt %x\n", tp->rcv_nxt));
-
 	/*
 	 * Before ESTABLISHED, force sending of initial options
 	 * unless TCP set not to do any options.
@@ -358,9 +347,6 @@ send:
 		}
  	}
 
-	OS_DbgPrint(OSK_MID_TRACE,
-		    ("Before IP_OUTPUT : tp->rcv_nxt %x\n", tp->rcv_nxt));
-
  	/*
 	 * Send a timestamp and echo-reply if this is a SYN and our side
 	 * wants to use timestamps (TF_REQ_TSTMP is set) or both our side
@@ -378,9 +364,6 @@ send:
  		*lp   = htonl(tp->ts_recent);
  		optlen += TCPOLEN_TSTAMP_APPA;
  	}
-
-	OS_DbgPrint(OSK_MID_TRACE,
-		    ("Before IP_OUTPUT : tp->rcv_nxt %x\n", tp->rcv_nxt));
 
  	/*
 	 * Send `CC-family' options if our side wants to use them (TF_REQ_CC),
@@ -457,9 +440,6 @@ send:
 
  	hdrlen += optlen;
 
-	OS_DbgPrint(OSK_MID_TRACE,
-		    ("Before IP_OUTPUT : tp->rcv_nxt %x\n", tp->rcv_nxt));
-
 	/*
 	 * Adjust data length if insertion of options will
 	 * bump the packet length beyond the t_maxopd length.
@@ -480,8 +460,6 @@ send:
 		panic("tcphdr too big");
 /*#endif*/
 
-	OS_DbgPrint(OSK_MID_TRACE,
-		    ("Before IP_OUTPUT : tp->rcv_nxt %x\n", tp->rcv_nxt));
 
 	/*
 	 * Grab a header mbuf, attaching a copy of data to
@@ -607,20 +585,11 @@ send:
 	if (win < (long)(so->so_rcv.sb_hiwat / 4) && win < (long)tp->t_maxseg)
 		win = 0;
 
-	OS_DbgPrint(OSK_MID_TRACE,
-		    ("Before IP_OUTPUT : AckNumber %x\n", ti->ti_ack));
-
 	if (win > (long)TCP_MAXWIN << tp->rcv_scale)
 		win = (long)TCP_MAXWIN << tp->rcv_scale;
 
-	OS_DbgPrint(OSK_MID_TRACE,
-		    ("Before IP_OUTPUT : AckNumber %x\n", ti->ti_ack));
-
 	if (win < (long)(tp->rcv_adv - tp->rcv_nxt))
 		win = (long)(tp->rcv_adv - tp->rcv_nxt);
-
-	OS_DbgPrint(OSK_MID_TRACE,
-		    ("Before IP_OUTPUT : AckNumber %x\n", ti->ti_ack));
 
 	ti->ti_win = htons((u_short) (win>>tp->rcv_scale));
 	if (SEQ_GT(tp->snd_up, tp->snd_nxt)) {
@@ -640,9 +609,6 @@ send:
 	 * checksum extended header and data.
 	 */
 
-	OS_DbgPrint(OSK_MID_TRACE,
-		    ("Before IP_OUTPUT : AckNumber %x\n", ti->ti_ack));
-
 	if (len + optlen) {
 	    ti->ti_src.s_addr = tp->t_inpcb->inp_laddr.s_addr;
 	    ti->ti_dst.s_addr = tp->t_inpcb->inp_faddr.s_addr;
@@ -651,13 +617,7 @@ send:
 					 optlen + len));
 	}
 
-	OS_DbgPrint(OSK_MID_TRACE,
-		    ("Before IP_OUTPUT : AckNumber %x\n", ti->ti_ack));
-
 	ti->ti_sum = in_cksum(m, (int)(hdrlen + len));
-
-	OS_DbgPrint(OSK_MID_TRACE,
-		    ("Before IP_OUTPUT : AckNumber %x\n", ti->ti_ack));
 
 	/*
 	 * In transmit state, time the transmission and arrange for
@@ -711,9 +671,6 @@ send:
 		if (SEQ_GT(tp->snd_nxt + len, tp->snd_max))
 			tp->snd_max = tp->snd_nxt + len;
 
-	OS_DbgPrint(OSK_MID_TRACE,
-		    ("Before IP_OUTPUT : AckNumber %x\n", ti->ti_ack));
-
 #ifdef TCPDEBUG
 	/*
 	 * Trace.
@@ -756,9 +713,7 @@ send:
 	}
 #endif
 
-	OS_DbgPrint(OSK_MID_TRACE,
-		    ("Before IP_OUTPUT : AckNumber %x\n", ti->ti_ack));
-
+	OS_DbgPrint(OSK_MID_TRACE,("Calling ip_output\n"));
 	error = ip_output(so, m, tp->t_inpcb->inp_options, &tp->t_inpcb->inp_route,
 			  so->so_options & SO_DONTROUTE, 0);
     }
@@ -799,6 +754,8 @@ out:
 		tp->rcv_adv = tp->rcv_nxt + win;
 	tp->last_ack_sent = tp->rcv_nxt;
 	tp->t_flags &= ~(TF_ACKNOW|TF_DELACK);
+	OS_DbgPrint(OSK_MID_TRACE,("sendalot: %d (flags %x)\n", 
+				   sendalot, tp->t_flags));
 	if (sendalot)
 		goto again;
 	return (0);

@@ -12,18 +12,18 @@ typedef struct _SLEEPING_THREAD {
 } SLEEPING_THREAD, *PSLEEPING_THREAD;
 
 LIST_ENTRY SleepingThreadsList;
-KSPIN_LOCK SleepingThreadsLock;
+FAST_MUTEX SleepingThreadsLock;
 
 /* clock_init */
 int ncallout = 256;
 struct callout *callout;
 
 void init_freebsd_sched() {
-    KeInitializeSpinLock( &SleepingThreadsLock );
+    ExInitializeFastMutex( &SleepingThreadsLock );
     InitializeListHead( &SleepingThreadsList );    
 }
 
-void tsleep( void *token, int priority, char *wmesg, int tmio ) {
+int tsleep( void *token, int priority, char *wmesg, int tmio ) {
     KIRQL OldIrql;
     KEVENT Event;
     PLIST_ENTRY Entry;
@@ -37,43 +37,65 @@ void tsleep( void *token, int priority, char *wmesg, int tmio ) {
     if( SleepingThread ) {
 	KeInitializeEvent( &SleepingThread->Event, NotificationEvent, FALSE );
 	SleepingThread->SleepToken = token;
-	ExInterlockedInsertTailList( &SleepingThreadsList,
-				     &SleepingThread->Entry,
-				     &SleepingThreadsLock );
-    }
 
-    OS_DbgPrint(OSK_MID_TRACE,("Waiting on %x\n", token));
-    KeWaitForSingleObject( &SleepingThread->Event,
-			   WrSuspended,
-			   KernelMode,
-			   TRUE,
-			   NULL );
+	ExAcquireFastMutex( &SleepingThreadsLock );
+	InsertTailList( &SleepingThreadsList, &SleepingThread->Entry );
+	ExReleaseFastMutex( &SleepingThreadsLock );
+
+	OS_DbgPrint(OSK_MID_TRACE,("Waiting on %x\n", token));
+	KeWaitForSingleObject( &SleepingThread->Event,
+			       WrSuspended,
+			       KernelMode,
+			       TRUE,
+			       NULL );
+
+	ExAcquireFastMutex( &SleepingThreadsLock );
+	RemoveEntryList( &SleepingThread->Entry );
+	ExReleaseFastMutex( &SleepingThreadsLock );
+
+	ExFreePool( SleepingThread );
+    }
     OS_DbgPrint(OSK_MID_TRACE,("Waiting finished: %x\n", token));
+    return 0;
 }
 
-void wakeup( void *token ) {
+void wakeup( struct socket *so, struct selinfo *si, void *token ) {
     KIRQL OldIrql;
     KEVENT Event;
     PLIST_ENTRY Entry;
     PSLEEPING_THREAD SleepingThread;
-    
-    OS_DbgPrint(OSK_MID_TRACE,("Wakeup %x!\n",token));
 
-    KeAcquireSpinLock( &SleepingThreadsLock, &OldIrql );
+    OS_DbgPrint
+	(OSK_MID_TRACE,("XXX Bytes to receive: %d\n", so->so_rcv.sb_cc));
+
+    if( so->so_rcv.sb_cc && si )
+	si->si_flags |= SEL_READ;
+
+    OS_DbgPrint(OSK_MID_TRACE,("Wakeup %x (socket %x, si_flags %x, state %x)!\n",
+			       token, so, si ? si->si_flags : 0,
+			       so->so_state));
+
+    if( OtcpEvent.SocketState ) {
+	OS_DbgPrint(OSK_MID_TRACE,("Calling client's socket state fn\n"));
+	OtcpEvent.SocketState( OtcpEvent.ClientData,
+			       so,
+			       so->so_connection,
+			       si ? si->si_flags : 0,
+			       so->so_state );
+    }
+
+    ExAcquireFastMutex( &SleepingThreadsLock );
     Entry = SleepingThreadsList.Flink;
     while( Entry != &SleepingThreadsList ) {
 	SleepingThread = CONTAINING_RECORD(Entry, SLEEPING_THREAD, Entry);
+	OS_DbgPrint(OSK_MID_TRACE,("Sleeper @ %x\n", SleepingThread));
 	if( SleepingThread->SleepToken == token ) {
-	    RemoveEntryList(Entry);
-	    KeReleaseSpinLock( &SleepingThreadsLock, OldIrql );
 	    OS_DbgPrint(OSK_MID_TRACE,("Setting event to wake %x\n", token));
-	    KeSetEvent( &SleepingThread->Event, IO_NO_INCREMENT, FALSE );
-	    ExFreePool( SleepingThread );
-	    return;
+	    KeSetEvent( &SleepingThread->Event, IO_NETWORK_INCREMENT, FALSE );
 	}
 	Entry = Entry->Flink;
     }
-    KeReleaseSpinLock( &SleepingThreadsLock, OldIrql );
+    ExReleaseFastMutex( &SleepingThreadsLock );
     OS_DbgPrint(OSK_MID_TRACE,("Wakeup done %x\n", token));
 }
 
@@ -142,32 +164,6 @@ static __inline int name(void)			\
 	return (x);				\
 }
 
-#if 0
-GENSPL(splbio, cpl |= bio_imask)
-GENSPL(splclock, cpl = HWI_MASK | SWI_MASK)
-GENSPL(splhigh, cpl = HWI_MASK | SWI_MASK)
-GENSPL(splimp, cpl |= net_imask)
-GENSPL(splnet, cpl |= SWI_NET_MASK)
-GENSPL(splsoftclock, cpl = SWI_CLOCK_MASK)
-GENSPL(splsofttty, cpl |= SWI_TTY_MASK)
-GENSPL(splstatclock, cpl |= stat_imask)
-GENSPL(spltty, cpl |= tty_imask)
-#endif
-
-#if 0
-void spl0(void) {
-    cpl = SWI_AST_MASK;
-    if (ipending & ~SWI_AST_MASK)
-	splz();
-}
-
-void splx(int ipl) {
-    cpl = ipl;
-    if (ipending & ~ipl)
-	splz();
-}
-#endif
-
 void splz(void) {
     OS_DbgPrint(OSK_MID_TRACE,("Called SPLZ\n"));
 }
@@ -183,27 +179,4 @@ void save_cpl(unsigned *x)
 void restore_cpl(unsigned x) 
 {
     cpl = x;
-}
-
-void selrecord( struct proc *selector, struct selinfo *sip) {
-    OS_DbgPrint(OSK_MID_TRACE,("Called selrecord\n"));
-}
-
-void wakeupsocket( struct socket *so, struct selinfo *sel ) {
-    void *connection = so->so_connection;
-    char *data = 0;
-    int datalen = 0;
-    int flags = 0;
-    
-    OS_DbgPrint(OSK_MID_TRACE,("Wakeup: %x\n", so));
-#if 0
-    if( soreceive(so, &paddr, 0, &mp0, &controlp, flags) == 0 ) {
-	/* We have data available */
-	OS_DbgPrint(OSK_MID_TRACE,("Data available on %x\n", so));
-    }
-#endif
-}
-
-void selwakeup( struct selinfo *sel ) {
-    OS_DbgPrint(OSK_MID_TRACE,("Called selwakeup\n"));
 }

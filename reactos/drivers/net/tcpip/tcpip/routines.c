@@ -7,6 +7,7 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
+#include <roscfg.h>
 #include <tcpip.h>
 #include <routines.h>
 #include <pool.h>
@@ -14,89 +15,6 @@
 
 
 static UINT RandomNumber = 0x12345678;
-
-
-inline NTSTATUS BuildDatagramSendRequest(
-    PDATAGRAM_SEND_REQUEST *SendRequest,
-    PIP_ADDRESS RemoteAddress,
-    USHORT RemotePort,
-    PNDIS_BUFFER Buffer,
-    DWORD BufferSize,
-    DATAGRAM_COMPLETION_ROUTINE Complete,
-    PVOID Context,
-    DATAGRAM_BUILD_ROUTINE Build,
-    ULONG Flags)
-/*
- * FUNCTION: Allocates and intializes a datagram send request
- * ARGUMENTS:
- *     SendRequest     = Pointer to datagram send request
- *     RemoteAddress   = Pointer to remote IP address
- *     RemotePort      = Remote port number
- *     Buffer          = Pointer to NDIS buffer to send
- *     BufferSize      = Size of Buffer
- *     Complete        = Completion routine
- *     Context         = Pointer to context information
- *     Build           = Datagram build routine
- *     Flags           = Protocol specific flags
- * RETURNS:
- *     Status of operation
- */
-{
-  PDATAGRAM_SEND_REQUEST Request;
-
-  Request = ExAllocatePool(NonPagedPool, sizeof(DATAGRAM_SEND_REQUEST));
-  if (!Request)
-    return STATUS_INSUFFICIENT_RESOURCES;
-
-  InitializeDatagramSendRequest(
-    Request,
-    RemoteAddress,
-    RemotePort,
-    Buffer,
-    BufferSize,
-    Complete,
-    Context,
-    Build,
-    Flags);
-
-  *SendRequest = Request;
-
-  return STATUS_SUCCESS;
-}
-
-
-inline NTSTATUS BuildTCPSendRequest(
-    PTCP_SEND_REQUEST *SendRequest,
-    DATAGRAM_COMPLETION_ROUTINE Complete,
-    PVOID Context,
-    PVOID ProtocolContext)
-/*
- * FUNCTION: Allocates and intializes a TCP send request
- * ARGUMENTS:
- *     SendRequest     = Pointer to TCP send request
- *     Complete        = Completion routine
- *     Context         = Pointer to context information
- *     ProtocolContext = Protocol specific context
- * RETURNS:
- *     Status of operation
- */
-{
-  PTCP_SEND_REQUEST Request;
-
-  Request = ExAllocatePool(NonPagedPool, sizeof(TCP_SEND_REQUEST));
-  if (!Request)
-    return STATUS_INSUFFICIENT_RESOURCES;
-
-  InitializeTCPSendRequest(
-    Request,
-    Complete,
-    Context,
-    ProtocolContext);
-
-  *SendRequest = Request;
-
-  return STATUS_SUCCESS;
-}
 
 
 UINT Random(
@@ -389,35 +307,6 @@ UINT CopyPacketToBufferChain(
 }
 
 
-VOID FreeNdisPacket(
-    PNDIS_PACKET Packet)
-/*
- * FUNCTION: Frees an NDIS packet
- * ARGUMENTS:
- *     Packet = Pointer to NDIS packet to be freed
- */
-{
-    PNDIS_BUFFER Buffer, NextBuffer;
-
-    TI_DbgPrint(DEBUG_BUFFER, ("Packet (0x%X)\n", Packet));
-
-    /* Free all the buffers in the packet first */
-    NdisQueryPacket(Packet, NULL, NULL, &Buffer, NULL);
-    for (; Buffer != NULL; Buffer = NextBuffer) {
-        PVOID Data;
-        UINT Length;
-
-        NdisGetNextBuffer(Buffer, &NextBuffer);
-        NdisQueryBuffer(Buffer, &Data, &Length);
-        NdisFreeBuffer(Buffer);
-        ExFreePool(Data);
-    }
-
-    /* Finally free the NDIS packet discriptor */
-    NdisFreePacket(Packet);
-}
-
-
 PVOID AdjustPacket(
     PNDIS_PACKET Packet,
     UINT Available,
@@ -538,32 +427,21 @@ VOID DisplayIPPacket(
         for (; Buffer != NULL; Buffer = NextBuffer) {
             NdisGetNextBuffer(Buffer, &NextBuffer);
             NdisQueryBuffer(Buffer, (PVOID)&p, &Length);
-
-            for (i = 0; i < Length; i++) {
-                if (i % 16 == 0)
-                    DbgPrint("\n");
-                DbgPrint("%02X ", (p[i]) & 0xFF);
-            }
-            DbgPrint("\n");
+	    OskitDumpBuffer( p, Length );
         }
     } else {
         p      = IPPacket->Header;
         Length = IPPacket->ContigSize;
-        for (i = 0; i < Length; i++) {
-            if (i % 16 == 0)
-                DbgPrint("\n");
-            DbgPrint("%02X ", (p[i]) & 0xFF);
-        }
-        DbgPrint("\n");
+	OskitDumpBuffer( p, Length );
     }
 
     if (IPPacket->NdisPacket) {
         NdisQueryPacket(IPPacket->NdisPacket, NULL, NULL, NULL, &Length);
         Length -= MaxLLHeaderSize;
-        CharBuffer = ExAllocatePool(NonPagedPool, Length);
+        CharBuffer = exAllocatePool(NonPagedPool, Length);
         Length = CopyPacketToBuffer(CharBuffer, IPPacket->NdisPacket, MaxLLHeaderSize, Length);
         DisplayIPHeader(CharBuffer, Length);
-        ExFreePool(CharBuffer);
+        exFreePool(CharBuffer);
     } else {
         CharBuffer = IPPacket->Header;
         Length = IPPacket->ContigSize;
@@ -633,10 +511,10 @@ VOID DisplayTCPPacket(
     if (IPPacket->NdisPacket) {
         NdisQueryPacket(IPPacket->NdisPacket, NULL, NULL, NULL, &Length);
         Length -= MaxLLHeaderSize;
-        Buffer = ExAllocatePool(NonPagedPool, Length);
+        Buffer = exAllocatePool(NonPagedPool, Length);
         Length = CopyPacketToBuffer(Buffer, IPPacket->NdisPacket, MaxLLHeaderSize, Length);
         DisplayTCPHeader(Buffer, Length);
-        ExFreePool(Buffer);
+        exFreePool(Buffer);
     } else {
         Buffer = IPPacket->Header;
         Length = IPPacket->ContigSize;
@@ -644,4 +522,90 @@ VOID DisplayTCPPacket(
     }
 }
 
-#endif /* DBG */
+#endif DBG /* DBG */
+
+void GetDataPtr( PNDIS_PACKET Packet,
+		 UINT Offset, 
+		 PUCHAR *DataOut,
+		 PUINT Size ) {
+    PNDIS_BUFFER Buffer;
+
+    NdisQueryPacket(Packet, NULL, NULL, &Buffer, NULL);
+    if( !Buffer ) return NULL;
+    SkipToOffset( Buffer, Offset, DataOut, Size );
+}
+
+
+#undef NdisAllocatePacket
+#undef NdisAllocateBuffer
+#undef NdisFreeBuffer
+#undef NdisFreePacket
+
+NDIS_STATUS AllocatePacketWithBufferX( PNDIS_PACKET *NdisPacket,
+				       PCHAR Data, UINT Len,
+				       PCHAR File, UINT Line ) {
+    PNDIS_PACKET Packet;
+    PNDIS_BUFFER Buffer;
+    NDIS_STATUS Status;
+    PCHAR NewData;
+
+    NewData = ExAllocatePool( NonPagedPool, Len );
+    if( !NewData ) return NDIS_STATUS_NOT_ACCEPTED; // XXX 
+    TrackWithTag(EXALLOC_TAG, NewData, File, Line);
+
+    if( Data ) 
+	RtlCopyMemory(NewData, Data, Len);
+
+    NdisAllocatePacket( &Status, &Packet, GlobalPacketPool );
+    if( Status != NDIS_STATUS_SUCCESS ) {
+	ExFreePool( NewData );
+	return Status;
+    }
+    TrackWithTag(NDIS_PACKET_TAG, Packet, File, Line);
+
+    NdisAllocateBuffer( &Status, &Buffer, GlobalBufferPool, NewData, Len );
+    if( Status != NDIS_STATUS_SUCCESS ) {
+	ExFreePool( NewData );
+	FreeNdisPacket( Packet );
+    }
+    TrackWithTag(NDIS_BUFFER_TAG, Buffer, File, Line);
+
+    NdisChainBufferAtFront( Packet, Buffer );
+    *NdisPacket = Packet;
+
+    return NDIS_STATUS_SUCCESS;
+}
+
+
+VOID FreeNdisPacketX
+( PNDIS_PACKET Packet,
+  PCHAR File,
+  UINT Line )
+/*
+ * FUNCTION: Frees an NDIS packet
+ * ARGUMENTS:
+ *     Packet = Pointer to NDIS packet to be freed
+ */
+{
+    PNDIS_BUFFER Buffer, NextBuffer;
+
+    TI_DbgPrint(DEBUG_BUFFER, ("Packet (0x%X)\n", Packet));
+
+    /* Free all the buffers in the packet first */
+    NdisQueryPacket(Packet, NULL, NULL, &Buffer, NULL);
+    for (; Buffer != NULL; Buffer = NextBuffer) {
+        PVOID Data;
+        UINT Length;
+
+        NdisGetNextBuffer(Buffer, &NextBuffer);
+        NdisQueryBuffer(Buffer, &Data, &Length);
+        NdisFreeBuffer(Buffer);
+	UntrackFL(File,Line,Buffer);
+        ExFreePool(Data);
+	UntrackFL(File,Line,Data);
+    }
+
+    /* Finally free the NDIS packet discriptor */
+    NdisFreePacket(Packet);
+    UntrackFL(File,Line,Packet);
+}

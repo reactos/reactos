@@ -4,12 +4,18 @@
  * FILE:        network/router.c
  * PURPOSE:     IP routing subsystem
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
+ * NOTES:
+ *   This file holds authoritative routing information.
+ *   Information queries on the route table should be handled here.
+ *   This information should always override the route cache info.
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
+#include <roscfg.h>
 #include <tcpip.h>
 #include <address.h>
 #include <router.h>
+#include <prefix.h>
 #include <pool.h>
 
 
@@ -48,7 +54,6 @@ VOID DestroyFIBE(
     DereferenceObject(FIBE->NetworkAddress);
     DereferenceObject(FIBE->Netmask);
     DereferenceObject(FIBE->Router);
-    DereferenceObject(FIBE->NTE);
 
 #ifdef DBG
     FIBE->RefCount--;
@@ -79,11 +84,48 @@ VOID DestroyFIBEs(
     CurrentEntry = FIBListHead.Flink;
     while (CurrentEntry != &FIBListHead) {
         NextEntry = CurrentEntry->Flink;
-	    Current = CONTAINING_RECORD(CurrentEntry, FIB_ENTRY, ListEntry);
+	Current = CONTAINING_RECORD(CurrentEntry, FIB_ENTRY, ListEntry);
         /* Destroy the FIB entry */
         DestroyFIBE(Current);
         CurrentEntry = NextEntry;
     }
+}
+
+
+UINT CountFIBs() {
+    UINT FibCount = 0;
+    PLIST_ENTRY CurrentEntry;
+    PLIST_ENTRY NextEntry;
+
+    /* Search the list and remove every FIB entry we find */
+    CurrentEntry = FIBListHead.Flink;
+    while (CurrentEntry != &FIBListHead) {
+        NextEntry = CurrentEntry->Flink;
+        CurrentEntry = NextEntry;
+	FibCount++;
+    }
+
+    return FibCount;
+}
+
+
+UINT CopyFIBs( PFIB_ENTRY Target ) {
+    UINT FibCount = 0;
+    PLIST_ENTRY CurrentEntry;
+    PLIST_ENTRY NextEntry;
+    PFIB_ENTRY Current;
+
+    /* Search the list and remove every FIB entry we find */
+    CurrentEntry = FIBListHead.Flink;
+    while (CurrentEntry != &FIBListHead) {
+        NextEntry = CurrentEntry->Flink;
+	Current = CONTAINING_RECORD(CurrentEntry, FIB_ENTRY, ListEntry);
+	Target[FibCount] = *Current;
+        CurrentEntry = NextEntry;
+	FibCount++;
+    }
+
+    return FibCount;    
 }
 
 
@@ -108,33 +150,25 @@ UINT CommonPrefixLength(
 
     TI_DbgPrint(DEBUG_ROUTER, ("Called. Address1 (0x%X)  Address2 (0x%X).\n", Address1, Address2));
 
-    TI_DbgPrint(DEBUG_ROUTER, ("Address1 (%s)  Address2 (%s).\n",
-        A2S(Address1), A2S(Address2)));
+    /*TI_DbgPrint(DEBUG_ROUTER, ("Target  (%s) \n", A2S(Address1)));*/
+    /*TI_DbgPrint(DEBUG_ROUTER, ("Adapter (%s).\n", A2S(Address2)));*/
 
     if (Address1->Type == IP_ADDRESS_V4)
         Size = sizeof(IPv4_RAW_ADDRESS);
     else
         Size = sizeof(IPv6_RAW_ADDRESS);
 
-    Addr1 = (PUCHAR)&Address1->Address;
-    Addr2 = (PUCHAR)&Address2->Address;
+    Addr1 = (PUCHAR)&Address1->Address.IPv4Address;
+    Addr2 = (PUCHAR)&Address2->Address.IPv4Address;
 
     /* Find first non-matching byte */
-    for (i = 0; ; i++) {
-        if (i == Size)
-            return 8 * i; /* The two addresses are equal */
-
-        if (Addr1[i] != Addr2[i])
-            break;
-    }
+    for (i = 0; i < Size && Addr1[i] == Addr2[i]; i++);
+    if( i == Size ) return 8 * i;
 
     /* Find first non-matching bit */
     Bitmask = 0x80;
-    for (j = 0; ; j++) {
-        if ((Addr1[i] & Bitmask) != (Addr2[i] & Bitmask))
-            break;
+    for (j = 0; (Addr1[i] & Bitmask) != (Addr2[i] & Bitmask); j++)
         Bitmask >>= 1;
-    }
 
     return 8 * i + j;
 }
@@ -161,8 +195,10 @@ BOOLEAN HasPrefix(
 
     TI_DbgPrint(DEBUG_ROUTER, ("Called. Address (0x%X)  Prefix (0x%X)  Length (%d).\n", Address, Prefix, Length));
 
+#if 0
     TI_DbgPrint(DEBUG_ROUTER, ("Address (%s)  Prefix (%s).\n",
         A2S(Address), A2S(Prefix)));
+#endif
 
     /* Check that initial integral bytes match */
     while (Length > 8) {
@@ -207,7 +243,8 @@ PNET_TABLE_ENTRY RouterFindBestNTE(
 
     CurrentEntry = Interface->NTEListHead.Flink;
     while (CurrentEntry != &Interface->NTEListHead) {
-	    Current = CONTAINING_RECORD(CurrentEntry, NET_TABLE_ENTRY, IFListEntry);
+	Current = CONTAINING_RECORD(CurrentEntry, NET_TABLE_ENTRY, IFListEntry);
+	TI_DbgPrint(DEBUG_ROUTER, ("Looking at NTE %s\n", A2S(Current->Address)));
 
         Length = CommonPrefixLength(Destination, Current->Address);
         if (BestNTE) {
@@ -271,7 +308,6 @@ PIP_INTERFACE RouterFindOnLinkInterface(
 PFIB_ENTRY RouterAddRoute(
     PIP_ADDRESS NetworkAddress,
     PIP_ADDRESS Netmask,
-    PNET_TABLE_ENTRY NTE,
     PNEIGHBOR_CACHE_ENTRY Router,
     UINT Metric)
 /*
@@ -279,24 +315,23 @@ PFIB_ENTRY RouterAddRoute(
  * ARGUMENTS:
  *     NetworkAddress = Pointer to address of network
  *     Netmask        = Pointer to netmask of network
- *     NTE            = Pointer to NTE to use
  *     Router         = Pointer to NCE of router to use
  *     Metric         = Cost of this route
  * RETURNS:
  *     Pointer to FIB entry if the route was added, NULL if not
  * NOTES:
- *     The FIB entry references the NetworkAddress, Netmask, NTE and
+ *     The FIB entry references the NetworkAddress, Netmask and
  *     the NCE of the router. The caller is responsible for providing
  *     these references
  */
 {
     PFIB_ENTRY FIBE;
 
-    TI_DbgPrint(DEBUG_ROUTER, ("Called. NetworkAddress (0x%X)  Netmask (0x%X)  NTE (0x%X)  "
-        "Router (0x%X)  Metric (%d).\n", NetworkAddress, Netmask, NTE, Router, Metric));
+    TI_DbgPrint(DEBUG_ROUTER, ("Called. NetworkAddress (0x%X)  Netmask (0x%X) "
+        "Router (0x%X)  Metric (%d).\n", NetworkAddress, Netmask, Router, Metric));
 
-    TI_DbgPrint(DEBUG_ROUTER, ("NetworkAddress (%s)  Netmask (%s)  NTE (%s)  Router (%s).\n",
-        A2S(NetworkAddress), A2S(Netmask), A2S(NTE->Address), A2S(Router->Address)));
+    TI_DbgPrint(DEBUG_ROUTER, ("NetworkAddress (%s)  Netmask (%s)  Router (%s).\n",
+			       A2S(NetworkAddress), A2S(Netmask), A2S(Router->Address)));
 
     FIBE = ExAllocatePool(NonPagedPool, sizeof(FIB_ENTRY));
     if (!FIBE) {
@@ -304,13 +339,11 @@ PFIB_ENTRY RouterAddRoute(
         return NULL;
     }
 
-   INIT_TAG(NTE, TAG('N','T','E',' '));
    INIT_TAG(Router, TAG('R','O','U','T'));
 
     FIBE->Free           = FreeFIB;
     FIBE->NetworkAddress = NetworkAddress;
     FIBE->Netmask        = Netmask;
-    FIBE->NTE            = NTE;
     FIBE->Router         = Router;
     FIBE->Metric         = Metric;
 
@@ -346,8 +379,9 @@ PNEIGHBOR_CACHE_ENTRY RouterGetRoute(
 
     TI_DbgPrint(DEBUG_ROUTER, ("Called. Destination (0x%X)  NTE (0x%X).\n", Destination, NTE));
 
-    TI_DbgPrint(DEBUG_ROUTER, ("Destination (%s)  NTE (%s).\n",
-        A2S(Destination), A2S(NTE->Address)));
+    TI_DbgPrint(DEBUG_ROUTER, ("Destination (%s)\n", A2S(Destination)));
+    if( NTE )
+	TI_DbgPrint(DEBUG_ROUTER, ("NTE (%s).\n", A2S(NTE->Address)));
 
     KeAcquireSpinLock(&FIBLock, &OldIrql);
 
@@ -476,7 +510,7 @@ PFIB_ENTRY RouterCreateRouteIPv4(
 
     ReferenceObject(pNetworkAddress);
     ReferenceObject(pNetmask);
-    FIBE = RouterAddRoute(pNetworkAddress, pNetmask, NTE, NCE, 1);
+    FIBE = RouterAddRoute(pNetworkAddress, pNetmask, NCE, 1);
     if (!FIBE) {
         /* Not enough free resources */
         NBRemoveNeighbor(NCE);

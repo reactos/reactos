@@ -9,6 +9,7 @@
 
 typedef VOID (*OBJECT_FREE_ROUTINE)(PVOID Object);
 
+#define FOURCC(a,b,c,d) (((a)<<24)|((b)<<16)|((c)<<8)|(d))
 
 /* Raw IPv4 style address */
 typedef ULONG IPv4_RAW_ADDRESS;
@@ -93,7 +94,6 @@ typedef struct _PACKET_CONTEXT {
 /* The ProtocolReserved field is structured as a PACKET_CONTEXT */
 #define PC(Packet) ((PPACKET_CONTEXT)(&Packet->ProtocolReserved))
 
-
 /* Address information a.k.a ADE */
 typedef struct _ADDRESS_ENTRY {
     DEFINE_TAG
@@ -105,10 +105,12 @@ typedef struct _ADDRESS_ENTRY {
     PIP_ADDRESS             Address;    /* Pointer to address identifying this entry */
 } ADDRESS_ENTRY, *PADDRESS_ENTRY;
 
-/* Values for address type */
-#define ADE_UNICAST   0x01
-#define ADE_MULTICAST 0x02
-#define ADE_ADDRMASK  0x03
+/* Values for address type -- also the interface flags */
+/* These values are mean to overlap meaningfully with the BSD ones */
+#define ADE_UNICAST     0x01
+#define ADE_MULTICAST   0x02
+#define ADE_ADDRMASK    0x04
+#define ADE_POINTOPOINT 0x10
 
 /* There is one NTE for each source (unicast) address assigned to an interface */
 typedef struct _NET_TABLE_ENTRY {
@@ -162,17 +164,6 @@ typedef struct _IP_INTERFACE {
 } IP_INTERFACE, *PIP_INTERFACE;
 
 
-/* Prefix List Entry */
-typedef struct _PREFIX_LIST_ENTRY {
-    DEFINE_TAG
-    LIST_ENTRY ListEntry;    /* Entry on list */
-    ULONG RefCount;          /* Reference count */
-    PIP_INTERFACE Interface; /* Pointer to interface */
-    PIP_ADDRESS Prefix;      /* Pointer to prefix */
-    UINT PrefixLength;       /* Length of prefix */
-} PREFIX_LIST_ENTRY, *PPREFIX_LIST_ENTRY;
-
-
 #define IP_PROTOCOL_TABLE_SIZE 0x100
 
 typedef VOID (*IP_PROTOCOL_HANDLER)(
@@ -202,8 +193,6 @@ extern LIST_ENTRY InterfaceListHead;
 extern KSPIN_LOCK InterfaceListLock;
 extern LIST_ENTRY NetTableListHead;
 extern KSPIN_LOCK NetTableListLock;
-extern LIST_ENTRY PrefixListHead;
-extern KSPIN_LOCK PrefixListLock;
 extern UINT MaxLLHeaderSize;
 extern UINT MinLLFrameSize;
 

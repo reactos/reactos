@@ -28,10 +28,20 @@ extern HANDLE GlobalHeap;
 extern BOOL Initialized;	/* TRUE if WSAStartup() has been successfully called */
 extern WSPUPCALLTABLE UpcallTable;
 
+#define WS2_INTERNAL_MAX_ALIAS 16
+
+typedef struct _WINSOCK_GETSERVBYNAME_CACHE {
+    UINT Size;
+    SERVENT ServerEntry;
+    PCHAR Aliases[WS2_INTERNAL_MAX_ALIAS];
+    CHAR Data[1];
+} WINSOCK_GETSERVBYNAME_CACHE, *PWINSOCK_GETSERVBYNAME_CACHE;
 
 typedef struct _WINSOCK_THREAD_BLOCK {
     INT LastErrorValue;     /* Error value from last function that failed */
     CHAR Intoa[16];         /* Buffer for inet_ntoa() */
+    PWINSOCK_GETSERVBYNAME_CACHE 
+    Getservbyname;          /* Buffer used by getservbyname */
 } WINSOCK_THREAD_BLOCK, *PWINSOCK_THREAD_BLOCK;
 
 

@@ -9,6 +9,7 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
+#include <roscfg.h>
 #include <tcpip.h>
 #include <receive.h>
 #include <routines.h>
@@ -100,7 +101,7 @@ VOID FreeIPDR(
     TI_DbgPrint(DEBUG_IP, ("Freeing fragment data at (0x%X).\n", CurrentF->Data));
 
     /* Free the fragment data buffer */
-    ExFreePool(CurrentF->Data);
+    exFreePool(CurrentF->Data);
 
     TI_DbgPrint(DEBUG_IP, ("Freeing fragment at (0x%X).\n", CurrentF));
 
@@ -112,7 +113,7 @@ VOID FreeIPDR(
   /* Free resources for the header, if it exists */
   if (IPDR->IPv4Header) {
     TI_DbgPrint(DEBUG_IP, ("Freeing IPv4 header data at (0x%X).\n", IPDR->IPv4Header));
-    ExFreePool(IPDR->IPv4Header);
+    exFreePool(IPDR->IPv4Header);
   }
 
   TI_DbgPrint(DEBUG_IP, ("Freeing IPDR data at (0x%X).\n", IPDR));
@@ -201,6 +202,11 @@ PIP_PACKET ReassembleDatagram(
   PVOID Data;
 
   TI_DbgPrint(DEBUG_IP, ("Reassembling datagram from IPDR at (0x%X).\n", IPDR));
+  TI_DbgPrint(DEBUG_IP, ("IPDR->HeaderSize = %d\n", IPDR->HeaderSize));
+  TI_DbgPrint(DEBUG_IP, ("IPDR->DataSize = %d\n", IPDR->DataSize));
+
+  TI_DbgPrint(DEBUG_IP, ("Fragment header:\n"));
+  OskitDumpBuffer(IPDR->IPv4Header, IPDR->HeaderSize);
 
   /* FIXME: Assume IPv4 */
   IPPacket = IPCreatePacket(IP_ADDRESS_V4);
@@ -216,7 +222,7 @@ PIP_PACKET ReassembleDatagram(
   RtlCopyMemory(&IPPacket->DstAddr, &IPDR->DstAddr, sizeof(IP_ADDRESS));
 
   /* Allocate space for full IP datagram */
-  IPPacket->Header = ExAllocatePool(NonPagedPool, IPPacket->TotalSize);
+  IPPacket->Header = exAllocatePool(NonPagedPool, IPPacket->TotalSize);
   if (!IPPacket->Header) {
     TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
     (*IPPacket->Free)(IPPacket);
@@ -226,7 +232,7 @@ PIP_PACKET ReassembleDatagram(
   /* Copy the header into the buffer */
   RtlCopyMemory(IPPacket->Header, IPDR->IPv4Header, IPDR->HeaderSize);  
   
-  Data = (PVOID)((ULONG_PTR)IPPacket->Header + IPDR->HeaderSize);
+  Data = IPPacket->Header + IPDR->HeaderSize;
   IPPacket->Data = Data;
 
   /* Copy data from all fragments into buffer */
@@ -237,11 +243,10 @@ PIP_PACKET ReassembleDatagram(
     TI_DbgPrint(DEBUG_IP, ("Copying (%d) bytes of fragment data from (0x%X) to offset (%d).\n",
       Current->Size, Data, Current->Offset));
     /* Copy fragment data to the destination buffer at the correct offset */
-    RtlCopyMemory(
-		  (PVOID)((ULONG_PTR)Data + Current->Offset),
-      Current->Data,
-      Current->Size);
-
+    RtlCopyMemory((PVOID)((ULONG_PTR)Data + Current->Offset),
+		  Current->Data,
+		  Current->Size);
+    OskitDumpBuffer( Data, Current->Offset + Current->Size );
     CurrentEntry = CurrentEntry->Flink;
   }
 
@@ -269,7 +274,7 @@ __inline VOID Cleanup(
   RemoveIPDR(IPDR);
   FreeIPDR(IPDR);
   if (Buffer)
-    ExFreePool(Buffer);
+    exFreePool(Buffer);
 }
 
 
@@ -399,7 +404,7 @@ VOID ProcessFragment(
 
     /* If this is the first fragment, save the IP header */
     if (FragFirst == 0) {
-      IPDR->IPv4Header = ExAllocatePool(NonPagedPool, IPPacket->HeaderSize);
+	IPDR->IPv4Header = exAllocatePool(NonPagedPool, IPPacket->HeaderSize);
       if (!IPDR->IPv4Header) {
         /* We don't have the resources to process this packet, discard it */
         Cleanup(&IPDR->Lock, OldIrql, IPDR, NULL);
@@ -426,7 +431,7 @@ VOID ProcessFragment(
     TI_DbgPrint(DEBUG_IP, ("Fragment descriptor allocated at (0x%X).\n", Fragment));
 
     Fragment->Size = IPPacket->TotalSize - IPPacket->HeaderSize;
-    Fragment->Data = ExAllocatePool(NonPagedPool, Fragment->Size);
+    Fragment->Data = exAllocatePool(NonPagedPool, Fragment->Size);
     if (!Fragment->Data) {
       /* We don't have the resources to process this packet, discard it */
       Cleanup(&IPDR->Lock, OldIrql, IPDR, Fragment);
@@ -437,13 +442,12 @@ VOID ProcessFragment(
       Fragment->Data, Fragment->Size));
 
     /* Copy datagram data into fragment buffer */
-    CopyPacketToBuffer(
-		  Fragment->Data,
-      IPPacket->NdisPacket,
-      IPPacket->Position,
-      Fragment->Size);
-      Fragment->Offset = FragFirst;
-
+    CopyPacketToBuffer(Fragment->Data,
+		       IPPacket->NdisPacket,
+		       IPPacket->Position + MaxLLHeaderSize,
+		       Fragment->Size);
+    Fragment->Offset = FragFirst;
+    
     /* If this is the last fragment, compute and save the datagram data size */
     if (!MoreFragments)
       IPDR->DataSize = FragFirst + Fragment->Size;
@@ -463,7 +467,7 @@ VOID ProcessFragment(
 
     Datagram = ReassembleDatagram(IPDR);
 
-	  KeReleaseSpinLock(&IPDR->Lock, OldIrql);
+    KeReleaseSpinLock(&IPDR->Lock, OldIrql);
 
     RemoveIPDR(IPDR);
     FreeIPDR(IPDR);
@@ -478,7 +482,7 @@ VOID ProcessFragment(
     IPDispatchProtocol(NTE, Datagram);
 
     /* We're done with this datagram */
-    ExFreePool(Datagram->Header);
+    exFreePool(Datagram->Header);
     TI_DbgPrint(MAX_TRACE, ("Freeing datagram at (0x%X).\n", Datagram));
     (*Datagram->Free)(Datagram);
   } else
@@ -525,7 +529,6 @@ VOID IPDatagramReassemblyTimeout(
 {
 }
 
-
 VOID IPv4Receive(
   PVOID Context,
   PIP_PACKET IPPacket)
@@ -536,81 +539,77 @@ VOID IPv4Receive(
  *     IPPacket = Pointer to IP packet
  */
 {
-  PNEIGHBOR_CACHE_ENTRY NCE;
-  PNET_TABLE_ENTRY NTE;
-  UINT AddressType;
+    PNEIGHBOR_CACHE_ENTRY NCE;
+    PNET_TABLE_ENTRY NTE;
+    UINT AddressType;
+    
+    TI_DbgPrint(DEBUG_IP, ("Received IPv4 datagram.\n"));
+    
+    IPPacket->HeaderSize = (((PIPv4_HEADER)IPPacket->Header)->VerIHL & 0x0F) << 2;
+    TI_DbgPrint(DEBUG_IP, ("IPPacket->HeaderSize = %d\n", IPPacket->HeaderSize));
 
-  TI_DbgPrint(DEBUG_IP, ("Received IPv4 datagram.\n"));
-
-  IPPacket->HeaderSize = (((PIPv4_HEADER)IPPacket->Header)->VerIHL & 0x0F) << 2;
-
-  if (IPPacket->HeaderSize > IPv4_MAX_HEADER_SIZE) {
-    TI_DbgPrint(MIN_TRACE, ("Datagram received with incorrect header size (%d).\n",
-      IPPacket->HeaderSize));
-    /* Discard packet */
-    return;
-  }
-
-  /* Checksum IPv4 header */
-  if (!IPv4CorrectChecksum(IPPacket->Header, IPPacket->HeaderSize)) {
-    TI_DbgPrint(MIN_TRACE, ("Datagram received with bad checksum. Checksum field (0x%X)\n",
-      WN2H(((PIPv4_HEADER)IPPacket->Header)->Checksum)));
-    /* Discard packet */
-    return;
-  }
-
-//    TI_DbgPrint(DEBUG_IP, ("TotalSize (datalink) is (%d).\n", IPPacket->TotalSize));
-
-  IPPacket->TotalSize = WN2H(((PIPv4_HEADER)IPPacket->Header)->TotalLength);
-
-//    TI_DbgPrint(DEBUG_IP, ("TotalSize (IPv4) is (%d).\n", IPPacket->TotalSize));
-
-	AddrInitIPv4(&IPPacket->SrcAddr, ((PIPv4_HEADER)IPPacket->Header)->SrcAddr);
-	AddrInitIPv4(&IPPacket->DstAddr, ((PIPv4_HEADER)IPPacket->Header)->DstAddr);
-
-  IPPacket->Position = IPPacket->HeaderSize;
-  IPPacket->Data     = (PVOID)((ULONG_PTR)IPPacket->Header + IPPacket->HeaderSize);
-
-  /* FIXME: Possibly forward packets with multicast addresses */
-
-  /* FIXME: Should we allow packets to be received on the wrong interface? */
-#if 0
-  NTE = IPLocateNTE(&IPPacket->DstAddr, &AddressType);
-#else
-  NTE = IPLocateNTEOnInterface((PIP_INTERFACE)Context, &IPPacket->DstAddr, &AddressType);
-#endif
-  if (NTE) {
-    /* This packet is destined for us */
-    ProcessFragment((PIP_INTERFACE)Context, IPPacket, NTE);
-
-    /* Done with this NTE */
-    DereferenceObject(NTE);
-  } else {
-    /* This packet is not destined for us. If we are a router,
-       try to find a route and forward the packet */
-
-    /* FIXME: Check if acting as a router */
-#if 1
-    //NCE = RouteFindRouter(&IPPacket->DstAddr, NULL);
-    NCE = NULL;
-    if (NCE) {
-      /* FIXME: Possibly fragment datagram */
-      /* Forward the packet */
-      IPSendFragment(IPPacket, NCE);
-    } else {
-      TI_DbgPrint(MIN_TRACE, ("No route to destination (0x%X).\n",
-        IPPacket->DstAddr.Address.IPv4Address));
-
-      /* FIXME: Send ICMP error code */
+    if (IPPacket->HeaderSize > IPv4_MAX_HEADER_SIZE) {
+	TI_DbgPrint
+	    (MIN_TRACE, 
+	     ("Datagram received with incorrect header size (%d).\n",
+	      IPPacket->HeaderSize));
+	/* Discard packet */
+	return;
     }
-#endif
-  }
+    
+    /* Checksum IPv4 header */
+    if (!IPv4CorrectChecksum(IPPacket->Header, IPPacket->HeaderSize)) {
+	TI_DbgPrint
+	    (MIN_TRACE, 
+	     ("Datagram received with bad checksum. Checksum field (0x%X)\n",
+	      WN2H(((PIPv4_HEADER)IPPacket->Header)->Checksum)));
+	/* Discard packet */
+	return;
+    }
+    
+    IPPacket->TotalSize = WN2H(((PIPv4_HEADER)IPPacket->Header)->TotalLength);
+    
+    AddrInitIPv4(&IPPacket->SrcAddr, ((PIPv4_HEADER)IPPacket->Header)->SrcAddr);
+    AddrInitIPv4(&IPPacket->DstAddr, ((PIPv4_HEADER)IPPacket->Header)->DstAddr);
+    
+    IPPacket->Position = IPPacket->HeaderSize;
+    IPPacket->Data     = (PVOID)((ULONG_PTR)IPPacket->Header + IPPacket->HeaderSize) + 14; /* XXX 14 */
+    
+    OskitDumpBuffer(IPPacket->Data - IPPacket->HeaderSize, IPPacket->TotalSize);
+
+    /* FIXME: Possibly forward packets with multicast addresses */
+    
+    /* FIXME: Should we allow packets to be received on the wrong interface? */
+    NTE = IPLocateNTEOnInterface((PIP_INTERFACE)Context, &IPPacket->DstAddr, &AddressType);
+    
+    if (NTE) {
+	/* This packet is destined for us */
+	ProcessFragment((PIP_INTERFACE)Context, IPPacket, NTE);
+	
+	/* Done with this NTE */
+	DereferenceObject(NTE);
+    } else {
+	/* This packet is not destined for us. If we are a router,
+	   try to find a route and forward the packet */
+	
+	/* FIXME: Check if acting as a router */
+	NCE = NULL;
+	if (NCE) {
+	    /* FIXME: Possibly fragment datagram */
+	    /* Forward the packet */
+	    IPSendFragment(IPPacket, NCE);
+	} else {
+	    TI_DbgPrint(MIN_TRACE, ("No route to destination (0x%X).\n",
+				    IPPacket->DstAddr.Address.IPv4Address));
+	    
+	    /* FIXME: Send ICMP error code */
+	}
+    }
 }
 
 
-VOID IPReceive(
-  PVOID Context,
-  PIP_PACKET IPPacket)
+VOID IPReceive( PVOID Context,
+	        PIP_PACKET IPPacket )
 /*
  * FUNCTION: Receives an IP datagram (or fragment)
  * ARGUMENTS:

@@ -7,6 +7,7 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
+#include <roscfg.h>
 #include <tcpip.h>
 #include <icmp.h>
 #include <rawip.h>
@@ -38,8 +39,6 @@ VOID SendICMPComplete(
     FreeNdisPacket(Packet);
 
     TI_DbgPrint(DEBUG_ICMP, ("Freeing IP packet at %X.\n", IPPacket));
-
-    (*IPPacket->Free)(IPPacket);
 }
 
 
@@ -79,9 +78,8 @@ PIP_PACKET PrepareICMPPacket(
 
     Size = MaxLLHeaderSize + sizeof(IPv4_HEADER) +
         sizeof(ICMP_HEADER) + DataSize;
-    DataBuffer = ExAllocatePool(NonPagedPool, Size);
+    DataBuffer = exAllocatePool(NonPagedPool, Size);
     if (!DataBuffer) {
-        (*IPPacket->Free)(IPPacket);
         return NULL;
     }
 
@@ -90,10 +88,10 @@ PIP_PACKET PrepareICMPPacket(
     /* Allocate NDIS packet */
     NdisAllocatePacket(&NdisStatus, &NdisPacket, GlobalPacketPool);
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        (*IPPacket->Free)(IPPacket);
-        ExFreePool(DataBuffer);
+        exFreePool(DataBuffer);
         return NULL;
     }
+    Track(NDIS_PACKET_TAG,NdisPacket);
 
     TI_DbgPrint(MAX_TRACE, ("NdisPacket at (0x%X).\n", NdisPacket));
 
@@ -101,12 +99,12 @@ PIP_PACKET PrepareICMPPacket(
     NdisAllocateBuffer(&NdisStatus, &NdisBuffer, GlobalBufferPool,
         DataBuffer, Size);
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        (*IPPacket->Free)(IPPacket);
-        NdisFreePacket(NdisPacket);
-        ExFreePool(DataBuffer);
+        FreeNdisPacket(NdisPacket);
+        exFreePool(DataBuffer);
         return NULL;
     }
-
+    Track(NDIS_BUFFER_TAG,NdisBuffer);
+    
     TI_DbgPrint(MAX_TRACE, ("NdisBuffer at (0x%X).\n", NdisBuffer));
 
     /* Link NDIS buffer into packet */
@@ -202,9 +200,10 @@ VOID ICMPReceive(
         ((PICMP_HEADER)NewPacket->Data)->Code     = 0;
         ((PICMP_HEADER)NewPacket->Data)->Checksum = 0;
 
+#ifdef DBG
         DisplayIPPacket(IPPacket);
-
         DisplayIPPacket(NewPacket);
+#endif
 
         ICMPTransmit(NTE, NewPacket);
 
@@ -245,11 +244,11 @@ VOID ICMPTransmit(
         IPv4Checksum(IPPacket->Data, IPPacket->TotalSize - IPPacket->HeaderSize, 0);
 
     /* Get a route to the destination address */
+    PNEIGHBOR_CACHE_ENTRY *NCE = RouterGetRoute( &IPPacket->DstAddr, NULL );
     if (RouteGetRouteToDestination(&IPPacket->DstAddr, NTE, &RCN) == IP_SUCCESS) {
         /* Send the packet */
         if (IPSendDatagram(IPPacket, RCN) != STATUS_SUCCESS) {
             FreeNdisPacket(IPPacket->NdisPacket);
-            (*IPPacket->Free)(IPPacket);
         }
         /* We're done with the RCN */
         DereferenceObject(RCN);
@@ -261,7 +260,6 @@ VOID ICMPTransmit(
             IPPacket->DstAddr.Address.IPv4Address));
         /* Discard packet */
         FreeNdisPacket(IPPacket->NdisPacket);
-        (*IPPacket->Free)(IPPacket);
     }
 }
 

@@ -17,6 +17,8 @@
 #include <udp.h>
 #include <tcp.h>
 #include <rosrtl/string.h>
+#include <info.h>
+#include <memtrack.h>
 
 #define NDEBUG
 
@@ -33,7 +35,7 @@ PDEVICE_OBJECT RawIPDeviceObject = NULL;
 NDIS_HANDLE GlobalPacketPool     = NULL;
 NDIS_HANDLE GlobalBufferPool     = NULL;
 KSPIN_LOCK EntityListLock;
-TDIEntityID *EntityList          = NULL;
+TDIEntityInfo *EntityList        = NULL;
 ULONG EntityCount                = 0;
 ULONG EntityMax                  = 0;
 UDP_STATISTICS UDPStats;
@@ -456,18 +458,9 @@ TiDispatchOpenClose(
     Status = STATUS_INVALID_DEVICE_REQUEST;
   }
 
-  if (Status != STATUS_PENDING) {
-    IrpSp->Control &= ~SL_PENDING_RETURNED;
-    Irp->IoStatus.Status = Status;
-
-    TI_DbgPrint(DEBUG_IRP, ("Completing IRP at (0x%X).\n", Irp));
-
-    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
-  }
-
   TI_DbgPrint(DEBUG_IRP, ("Leaving. Status is (0x%X)\n", Status));
 
-  return Status;
+  return IRPFinish( Irp, Status );
 }
 
 
@@ -487,7 +480,7 @@ TiDispatchInternal(
  *     Status of the operation
  */
 {
-	NTSTATUS Status;
+  NTSTATUS Status;
   PIO_STACK_LOCATION IrpSp;
 
   IrpSp = IoGetCurrentIrpStackLocation(Irp);
@@ -560,17 +553,9 @@ TiDispatchInternal(
     Status = STATUS_INVALID_DEVICE_REQUEST;
   }
 
-  if (Status != STATUS_PENDING) {
-    Irp->IoStatus.Status = Status;
-
-    TI_DbgPrint(DEBUG_IRP, ("Completing IRP at (0x%X).\n", Irp));
-
-    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
-  }
-
   TI_DbgPrint(DEBUG_IRP, ("Leaving. Status = (0x%X).\n", Status));
 
-	return Status;
+  return IRPFinish( Irp, Status );
 }
 
 
@@ -627,17 +612,9 @@ TiDispatch(
     }
   }
 
-  if (Status != STATUS_PENDING) {
-    Irp->IoStatus.Status = Status;
-
-    TI_DbgPrint(DEBUG_IRP, ("Completing IRP at (0x%X).\n", Irp));
-
-    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
-  }
-
   TI_DbgPrint(DEBUG_IRP, ("Leaving. Status = (0x%X).\n", Status));
 
-  return Status;
+  return IRPFinish( Irp, Status );
 }
 
 
@@ -726,6 +703,14 @@ DriverEntry(
   NDIS_STRING DeviceName;
 
   TI_DbgPrint(MAX_TRACE, ("Called.\n"));
+  
+  TrackingInit();
+  TrackTag(NDIS_BUFFER_TAG);
+  TrackTag(NDIS_PACKET_TAG);
+  TrackTag(FBSD_MALLOC);
+  TrackTag(EXALLOC_TAG);
+
+  InitOskitTCP();
 
   /* TdiInitialize() ? */
 
@@ -769,6 +754,28 @@ DriverEntry(
     TiUnload(DriverObject);
     return Status;
   }
+
+  /* Setup network layer and transport layer entities */
+  KeInitializeSpinLock(&EntityListLock);
+  EntityList = ExAllocatePool(NonPagedPool, sizeof(TDIEntityID) * MAX_TDI_ENTITIES );
+  if (!NT_SUCCESS(Status)) {
+	  TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+    TiUnload(DriverObject);
+    return STATUS_INSUFFICIENT_RESOURCES;
+  }
+
+  EntityList[0].tei_entity   = CL_NL_ENTITY;
+  EntityList[0].tei_instance = 0;
+  EntityList[0].context      = 0;
+  EntityList[0].info_req     = InfoNetworkLayerTdiQueryEx;
+  EntityList[0].info_set     = InfoNetworkLayerTdiSetEx;
+  EntityList[1].tei_entity   = CL_TL_ENTITY;
+  EntityList[1].tei_instance = 0;
+  EntityList[1].context      = 0;
+  EntityList[1].info_req     = InfoTransportLayerTdiQueryEx;
+  EntityList[1].info_set     = InfoTransportLayerTdiSetEx;
+  EntityCount = 2;
+  EntityMax   = MAX_TDI_ENTITIES;
 
   /* Allocate NDIS packet descriptors */
   NdisAllocatePacketPool(&NdisStatus, &GlobalPacketPool, 100, sizeof(PACKET_CONTEXT));
@@ -829,22 +836,6 @@ DriverEntry(
     TiUnload(DriverObject);
     return STATUS_INSUFFICIENT_RESOURCES;
   }
-
-  /* Setup network layer and transport layer entities */
-  KeInitializeSpinLock(&EntityListLock);
-  EntityList = ExAllocatePool(NonPagedPool, sizeof(TDIEntityID) * MAX_TDI_ENTITIES );
-  if (!NT_SUCCESS(Status)) {
-	  TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-    TiUnload(DriverObject);
-    return STATUS_INSUFFICIENT_RESOURCES;
-  }
-
-  EntityList[0].tei_entity   = CL_NL_ENTITY;
-  EntityList[0].tei_instance = 0;
-  EntityList[1].tei_entity   = CL_TL_ENTITY;
-  EntityList[1].tei_instance = 0;
-  EntityCount = 2;
-  EntityMax   = MAX_TDI_ENTITIES;
 
   /* Use direct I/O */
   IPDeviceObject->Flags    |= DO_DIRECT_IO;

@@ -51,7 +51,7 @@ extern int errno;			/* global error number */
 #define	OSK_ENOENT		2		/* No such file or directory */
 #define	OSK_ESRCH		3		/* No such process */
 #define	OSK_EINTR		4		/* Interrupted system call */
-#define	OSK_EIO		5		/* Input/output error */
+#define	OSK_EIO		        5		/* Input/output error */
 #define	OSK_ENXIO		6		/* Device not configured */
 #define	OSK_E2BIG		7		/* Argument list too long */
 #define	OSK_ENOEXEC		8		/* Exec format error */
