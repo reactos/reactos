@@ -49,11 +49,10 @@ NtShutdownSystem(IN SHUTDOWN_ACTION Action)
 #else
         PopSetSystemPowerState(PowerSystemShutdown);
 
-	Ke386DisableInterrupts();
-
 	while (TRUE)
 	  {
-	    ;
+	    Ke386DisableInterrupts();
+	    Ke386HaltProcessor();
 	  }
 #endif
      }
