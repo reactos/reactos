@@ -981,34 +981,6 @@ KeSetAffinityThread(PKTHREAD	Thread,
 }
 
 
-NTSTATUS STDCALL
-NtAlertThread (IN HANDLE ThreadHandle)
-{
-   PETHREAD Thread;
-   NTSTATUS Status;
-   NTSTATUS ThreadStatus;
-   KIRQL oldIrql;
-
-   Status = ObReferenceObjectByHandle(ThreadHandle,
-				      THREAD_SUSPEND_RESUME,
-				      PsThreadType,
-				      UserMode,
-				      (PVOID*)&Thread,
-				      NULL);
-   if (Status != STATUS_SUCCESS)
-     {
-	return(Status);
-     }
-
-   ThreadStatus = STATUS_ALERTED;
-   oldIrql = KeAcquireDispatcherDatabaseLock();
-   (VOID)PsUnblockThread(Thread, &ThreadStatus, 0);
-   KeReleaseDispatcherDatabaseLock(oldIrql);
-
-   ObDereferenceObject(Thread);
-   return(STATUS_SUCCESS);
-}
-
 /**********************************************************************
  *	NtOpenThread/4
  *
