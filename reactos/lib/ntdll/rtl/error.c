@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.4 2000/04/14 01:43:38 ekohl Exp $
+/* $Id: error.c,v 1.5 2000/05/30 22:25:10 ea Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -37,7 +37,7 @@ RtlAssert (
 }
 
 
-DWORD STDCALL RtlNtStatusToDosError (NTSTATUS Status)
+DWORD STDCALL RtlNtStatusToDosErrorNoTeb (NTSTATUS Status)
 {
    switch (Status)
    {
@@ -628,11 +628,21 @@ STATUS_CONNECTION_IN_USE             ERROR_DEVICE_IN_USE
 STATUS_VERIFY_REQUIRED               ERROR_MEDIA_CHANGED
 #endif
 
-      default:
-          DPRINT("Unknown status code: %u\n", Status);
-          return ERROR_GEN_FAILURE;
-   }
-   return(0);
+	}
+	DbgPrint("RTL: RtlNtStatusToDosErrorNoTeb(0x%lx): no valid W32 error mapping\n", Status);
+	return ERROR_MR_MID_NOT_FOUND;
+}
+
+
+DWORD STDCALL RtlNtStatusToDosError (NTSTATUS Status)
+{
+	PNT_TEB Teb = NtCurrentTeb ();
+
+	if (NULL != Teb)
+	{
+		/* FIXME: save Status in the TEB */
+	}
+	return RtlNtStatusToDosErrorNoTeb (Status);
 }
 
 
