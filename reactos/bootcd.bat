@@ -49,7 +49,6 @@ copy /Y bootdata\hivesft.inf %BOOTCD_DIR%\disk\install
 copy /Y bootdata\hivesys.inf %BOOTCD_DIR%\disk\install
 
 copy /Y bootdata\txtsetup.sif %BOOTCD_DIR%\disk\install
-copy /Y system.hiv %BOOTCD_DIR%\disk\install
 
 rem copy install files
 copy /Y ntoskrnl\ntoskrnl.exe %BOOTCD_DIR%\disk\install
