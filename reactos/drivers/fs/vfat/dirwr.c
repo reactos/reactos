@@ -14,7 +14,7 @@
 #include <wstring.h>
 #include <ddk/cctypes.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 #include "vfat.h"
@@ -31,6 +31,7 @@ NTSTATUS updEntry(PDEVICE_EXTENSION DeviceExt,PFILE_OBJECT pFileObject)
  FATDirEntry * pEntries;
  NTSTATUS status;
  FILE_OBJECT FileObject;
+ PVfatCCB pDirCcb;
  PVfatFCB pDirFcb,pFcb;
  short i,posCar,NameLen;
    PathFileName=pFileObject->FileName.Buffer;
@@ -44,27 +45,35 @@ NTSTATUS updEntry(PDEVICE_EXTENSION DeviceExt,PFILE_OBJECT pFileObject)
    FileName=&PathFileName[posCar+1];
    for(NameLen=0;FileName[NameLen];NameLen++);
    // extract directory name from pathname
-   memcpy(DirName,FileName,posCar*sizeof(WCHAR));
+   memcpy(DirName,PathFileName,posCar*sizeof(WCHAR));
    DirName[posCar]=0;
    if(FileName[0]==0 && DirName[0]==0)
      return STATUS_SUCCESS;//root : nothing to do ?
+   memset(&FileObject,0,sizeof(FILE_OBJECT));
+DPRINT("open directory %w for update of entry %w\n",DirName,FileName);
    status=FsdOpenFile(DeviceExt,&FileObject,DirName);
-   pDirFcb=((PVfatCCB)FileObject.FsContext2)->pFcb;
+   pDirCcb=(PVfatCCB)FileObject.FsContext2;
+   assert(pDirCcb);
+   pDirFcb=pDirCcb->pFcb;
+   assert(pDirFcb);
    FileFcb.ObjectName=&FileFcb.PathName[0];
    status=FindFile(DeviceExt,&FileFcb,pDirFcb,FileName,&Sector,&Entry);
-   Buffer=ExAllocatePool(NonPagedPool,BLOCKSIZE);
-DPRINT("update entry: sector %d, entry %d\n",Sector,Entry);
-   VFATReadSectors(DeviceExt->StorageDevice,Sector,1,Buffer);
-   pEntries=(FATDirEntry *)Buffer;
-   memcpy(&pEntries[Entry],&pFcb->entry,sizeof(FATDirEntry));
-   VFATWriteSectors(DeviceExt->StorageDevice,Sector,1,Buffer);
-   ExFreePool(Buffer);
+   if(NT_SUCCESS(status))
+   {
+     Buffer=ExAllocatePool(NonPagedPool,BLOCKSIZE);
+     DPRINT("update entry: sector %d, entry %d\n",Sector,Entry);
+     VFATReadSectors(DeviceExt->StorageDevice,Sector,1,Buffer);
+     pEntries=(FATDirEntry *)Buffer;
+     memcpy(&pEntries[Entry],&pFcb->entry,sizeof(FATDirEntry));
+     VFATWriteSectors(DeviceExt->StorageDevice,Sector,1,Buffer);
+     ExFreePool(Buffer);
+   }
    FsdCloseFile(DeviceExt,&FileObject);
-   return STATUS_SUCCESS;
+   return status;
 }
 
 NTSTATUS addEntry(PDEVICE_EXTENSION DeviceExt
-                  ,PFILE_OBJECT pFileObject,ULONG RequestedOptions)
+                  ,PFILE_OBJECT pFileObject,ULONG RequestedOptions,UCHAR ReqAttr)
 /*
   create a new FAT entry
 */
@@ -79,7 +88,7 @@ NTSTATUS addEntry(PDEVICE_EXTENSION DeviceExt
  ULONG LengthRead,Offset;
  short nbSlots=0,nbFree=0,i,j,posCar,NameLen;
  PUCHAR Buffer,Buffer2;
- BOOLEAN needTilde;
+ BOOLEAN needTilde=FALSE,needLong=FALSE;
  PVfatFCB newFCB;
  PVfatCCB newCCB;
  ULONG CurrentCluster;
@@ -96,10 +105,10 @@ NTSTATUS addEntry(PDEVICE_EXTENSION DeviceExt
    // extract directory name from pathname
    memcpy(DirName,PathFileName,posCar*sizeof(WCHAR));
    DirName[posCar]=0;
-   DPRINT("open directory %w\n",DirName);
+   // open parent directory
+   memset(&FileObject,0,sizeof(FILE_OBJECT));
    status=FsdOpenFile(DeviceExt,&FileObject,DirName);
-   DPRINT("after open, status=%x\n",status);
-   nbSlots=(NameLen+12)/13+1;
+   nbSlots=(NameLen+12)/13+1;//nb of entry needed for long name+normal entry
    DPRINT("NameLen= %d, nbSlots =%d\n",NameLen,nbSlots);
    Buffer=ExAllocatePool(NonPagedPool,(nbSlots+1)*sizeof(FATDirEntry));
    memset(Buffer,0,(nbSlots+1)*sizeof(FATDirEntry));
@@ -133,13 +142,16 @@ NTSTATUS addEntry(PDEVICE_EXTENSION DeviceExt
    }
    //copy extension
    if(FileName[posCar])
-     for(j=0,i=posCar+1;i<posCar+4;i++)
+     for(j=0,i=posCar+1;FileName[i] && i<posCar+4;i++)
      {
        pEntry->Ext[j++]=toupper((char)( FileName[i] &0x7F));
      }
+   if(FileName[i])
+     needTilde=TRUE;
    //find good value for tilde
    if(needTilde)
    {
+      needLong=TRUE;
       DPRINT("searching a good value for tilde\n");
       for(i=0;i<6;i++)
         DirName[i]=pEntry->Filename[i];
@@ -178,13 +190,54 @@ NTSTATUS addEntry(PDEVICE_EXTENSION DeviceExt
          return STATUS_UNSUCCESSFUL;
       }
    }
+   else
+   {
+DPRINT("check if long name entry needed, needlong=%d\n",needLong);
+     for(i=0;i<posCar;i++)
+       if((USHORT)pEntry->Filename[i]!=FileName[i])
+       {
+DPRINT("i=%d,%d,%d\n",i,pEntry->Filename[i],FileName[i]);
+         needLong=TRUE;
+       }
+     if(FileName[i])
+     {
+     i++;//jump on point char
+     for(j=0,i=posCar+1;FileName[i] && i<posCar+4;i++)
+       if((USHORT)pEntry->Ext[j++]!= FileName[i])
+       {
+DPRINT("i=%d,j=%d,%d,%d\n",i,j,pEntry->Filename[i],FileName[i]);
+         needLong=TRUE;
+       }
+     }
+   }
+   if(needLong==FALSE)
+   {
+     nbSlots=1;
+     memcpy(Buffer,pEntry,sizeof(FATDirEntry));
+     memset(pEntry,0,sizeof(FATDirEntry));
+     pEntry=(FATDirEntry *)Buffer;
+   }
+   else
+   {
+      memset(DirName,0xff,sizeof(DirName));
+      memcpy(DirName,FileName,NameLen*sizeof(WCHAR));
+      DirName[NameLen]=0;
+   }
    DPRINT("dos name=%11.11s\n",pEntry->Filename);
    //FIXME : set attributes, dates, times
+   pEntry->Attrib=ReqAttr;
+
    if(RequestedOptions&FILE_DIRECTORY_FILE)
      pEntry->Attrib |= FILE_ATTRIBUTE_DIRECTORY;
    pEntry->CreationDate=0x21;
    pEntry->UpdateDate=0x21;
-   //calculate checksum for 8.3 name
+   // calculate checksum for 8.3 name
+   for(pSlots[0].alias_checksum=i=0;i<11;i++)
+   {
+      pSlots[0].alias_checksum=(((pSlots[0].alias_checksum&1)<<7
+                    |((pSlots[0].alias_checksum&0xfe)>>1))
+                    +pEntry->Filename[i]);
+   }
    //construct slots and entry
    for(i=nbSlots-2;i>=0;i--)
    {
@@ -194,8 +247,8 @@ NTSTATUS addEntry(PDEVICE_EXTENSION DeviceExt
         pSlots[i].id=nbSlots-i-1;
       else
         pSlots[i].id=nbSlots-i-1+0x40;
-//      pSlots[i].alias_checksum=;
-//      pSlots[i].start=;
+      pSlots[i].alias_checksum=pSlots[0].alias_checksum;
+//FIXME      pSlots[i].start=;
       memcpy(pSlots[i].name0_4  ,FileName+(nbSlots-i-2)*13
          ,5*sizeof(WCHAR));
       memcpy(pSlots[i].name5_10 ,FileName+(nbSlots-i-2)*13+5
@@ -215,19 +268,22 @@ NTSTATUS addEntry(PDEVICE_EXTENSION DeviceExt
       if (nbFree==nbSlots) break;
    }
    DPRINT("NbFree %d, entry number %d\n",nbFree,i);
-   CurrentCluster=GetNextWriteCluster(DeviceExt,0);
-   // zero the cluster
-   Buffer2=ExAllocatePool(NonPagedPool,DeviceExt->BytesPerCluster);
-   memset(Buffer2,0,DeviceExt->BytesPerCluster);
-   VFATWriteCluster(DeviceExt,Buffer2,CurrentCluster);
-   ExFreePool(Buffer2);
-   if (DeviceExt->FatType == FAT32)
+   if(RequestedOptions&FILE_DIRECTORY_FILE)
    {
-     pEntry->FirstClusterHigh=CurrentCluster>>16;
-     pEntry->FirstCluster=CurrentCluster;
+     CurrentCluster=GetNextWriteCluster(DeviceExt,0);
+     // zero the cluster
+     Buffer2=ExAllocatePool(NonPagedPool,DeviceExt->BytesPerCluster);
+     memset(Buffer2,0,DeviceExt->BytesPerCluster);
+     VFATWriteCluster(DeviceExt,Buffer2,CurrentCluster);
+     ExFreePool(Buffer2);
+     if (DeviceExt->FatType == FAT32)
+     {
+       pEntry->FirstClusterHigh=CurrentCluster>>16;
+       pEntry->FirstCluster=CurrentCluster;
+     }
+     else
+       pEntry->FirstCluster=CurrentCluster;
    }
-   else
-     pEntry->FirstCluster=CurrentCluster;
    if(nbFree==nbSlots)
    {//use old slots
      Offset=(i-nbSlots+1)*sizeof(FATDirEntry);
