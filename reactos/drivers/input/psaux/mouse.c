@@ -69,6 +69,9 @@ ps2_mouse_handler(PKINTERRUPT Interrupt, PVOID ServiceContext)
     DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
     Queue = DeviceExtension->ActiveQueue % 2;
 
+    /* Reset the buffer state. */
+    mouse_buffer_position = 0;
+
     /* Prevent buffer overflow */
     if (DeviceExtension->InputDataCount[Queue] == MOUSE_BUFFER_SIZE)
     {
@@ -76,9 +79,7 @@ ps2_mouse_handler(PKINTERRUPT Interrupt, PVOID ServiceContext)
     }
 
     Input = &DeviceExtension->MouseInputData[Queue]
-            [DeviceExtension->InputDataCount[Queue]];
-
-    mouse_buffer_position = 0;
+            [DeviceExtension->InputDataCount[Queue]];    
 
     /* Determine the current state of the buttons */
     Input->RawButtons = (mouse_buffer[0] & 1) /* * GPM_B_LEFT */ +
