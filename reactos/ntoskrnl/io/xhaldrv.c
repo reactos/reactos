@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.8 2001/05/06 22:32:34 ekohl Exp $
+/* $Id: xhaldrv.c,v 1.9 2001/06/07 21:16:41 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -142,14 +142,11 @@ xHalpQueryDriveLayout (
 }
 
 
-VOID
-FASTCALL
-xHalExamineMBR (
-	IN	PDEVICE_OBJECT	DeviceObject,
-	IN	ULONG		SectorSize,
-	IN	ULONG		MBRTypeIdentifier,
-	OUT	PVOID		* Buffer
-	)
+VOID FASTCALL
+xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
+	       IN ULONG SectorSize,
+	       IN ULONG MBRTypeIdentifier,
+	       OUT PVOID *Buffer)
 {
 	KEVENT Event;
 	IO_STATUS_BLOCK StatusBlock;
@@ -568,18 +565,15 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 }
 
 
-NTSTATUS
-FASTCALL
-xHalIoReadPartitionTable (
-	PDEVICE_OBJECT			DeviceObject,
-	ULONG				SectorSize,
-	BOOLEAN				ReturnRecognizedPartitions,
-	PDRIVE_LAYOUT_INFORMATION	* PartitionBuffer
-	)
+NTSTATUS FASTCALL
+xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
+			 ULONG SectorSize,
+			 BOOLEAN ReturnRecognizedPartitions,
+			 PDRIVE_LAYOUT_INFORMATION *PartitionBuffer)
 {
    KEVENT Event;
    IO_STATUS_BLOCK StatusBlock;
-   ULARGE_INTEGER Offset;
+   ULARGE_INTEGER PartitionOffset;
    PUCHAR SectorBuffer;
    PIRP Irp;
    NTSTATUS Status;
@@ -598,57 +592,59 @@ xHalIoReadPartitionTable (
 
    *PartitionBuffer = NULL;
 
-   SectorBuffer = (PUCHAR)ExAllocatePool (PagedPool,
-                                          SectorSize);
+   SectorBuffer = (PUCHAR)ExAllocatePool(PagedPool,
+					 SectorSize);
    if (SectorBuffer == NULL)
      {
 	return STATUS_INSUFFICIENT_RESOURCES;
      }
 
-   LayoutBuffer = (PDRIVE_LAYOUT_INFORMATION)ExAllocatePool (NonPagedPool,
-                                                             0x1000);
+   LayoutBuffer = (PDRIVE_LAYOUT_INFORMATION)ExAllocatePool(NonPagedPool,
+							    0x1000);
    if (LayoutBuffer == NULL)
      {
 	ExFreePool (SectorBuffer);
 	return STATUS_INSUFFICIENT_RESOURCES;
      }
 
-   RtlZeroMemory (LayoutBuffer, 0x1000);
+   RtlZeroMemory(LayoutBuffer,
+		 0x1000);
 
-   Offset.QuadPart = 0;
+   PartitionOffset.QuadPart = 0;
 
    do
      {
-	KeInitializeEvent (&Event,
-			   NotificationEvent,
-			   FALSE);
+	KeInitializeEvent(&Event,
+			  NotificationEvent,
+			  FALSE);
 
-	Irp = IoBuildSynchronousFsdRequest (IRP_MJ_READ,
-	                                    DeviceObject,
-	                                    SectorBuffer,
-	                                    SectorSize,
-	                                    (PLARGE_INTEGER)&Offset,
-	                                    &Event,
-	                                    &StatusBlock);
+	DPRINT("PartitionOffset: %I64u\n", PartitionOffset.QuadPart / SectorSize);
 
-	Status = IoCallDriver (DeviceObject,
-	                       Irp);
+	Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
+					   DeviceObject,
+					   SectorBuffer,
+					   SectorSize,
+					   (PLARGE_INTEGER)&PartitionOffset,
+					   &Event,
+					   &StatusBlock);
+	Status = IoCallDriver(DeviceObject,
+			      Irp);
 	if (Status == STATUS_PENDING)
-	{
-		KeWaitForSingleObject (&Event,
-		                       Executive,
-		                       KernelMode,
-		                       FALSE,
-		                       NULL);
-		Status = StatusBlock.Status;
-	}
+	  {
+	     KeWaitForSingleObject(&Event,
+				   Executive,
+				   KernelMode,
+				   FALSE,
+				   NULL);
+	     Status = StatusBlock.Status;
+	  }
 
 	if (!NT_SUCCESS(Status))
 	  {
-	     DPRINT1("xHalIoReadPartitonTable failed (Status = 0x%08lx)\n",
-		     Status);
-	     ExFreePool (SectorBuffer);
-	     ExFreePool (LayoutBuffer);
+	     DPRINT("xHalIoReadPartitonTable failed (Status = 0x%08lx)\n",
+		    Status);
+	     ExFreePool(SectorBuffer);
+	     ExFreePool(LayoutBuffer);
 	     return Status;
 	  }
 
@@ -658,31 +654,28 @@ xHalIoReadPartitionTable (
 	DPRINT("Magic %x\n", PartitionTable->Magic);
 	if (PartitionTable->Magic != PARTITION_MAGIC)
 	  {
-	     DPRINT1("Invalid partition table magic\n");
-	     ExFreePool (SectorBuffer);
-//	     ExFreePool (LayoutBuffer);
-//	     return STATUS_UNSUCCESSFUL;
-
+	     DPRINT("Invalid partition table magic\n");
+	     ExFreePool(SectorBuffer);
 	     *PartitionBuffer = LayoutBuffer;
 	     return STATUS_SUCCESS;
 	  }
 
 #ifndef NDEBUG
 	for (i = 0; i < PARTITION_TBL_SIZE; i++)
-	{
-		DPRINT("  %d: flags:%2x type:%x start:%d:%d:%d end:%d:%d:%d stblk:%d count:%d\n", 
-		       i,
-		       PartitionTable->Partition[i].BootFlags,
-		       PartitionTable->Partition[i].PartitionType,
-		       PartitionTable->Partition[i].StartingHead,
-		       PartitionTable->Partition[i].StartingSector,
-		       PartitionTable->Partition[i].StartingCylinder,
-		       PartitionTable->Partition[i].EndingHead,
-		       PartitionTable->Partition[i].EndingSector,
-		       PartitionTable->Partition[i].EndingCylinder,
-		       PartitionTable->Partition[i].StartingBlock,
-		       PartitionTable->Partition[i].SectorCount);
-	}
+	  {
+	     DPRINT("  %d: flags:%2x type:%x start:%d:%d:%d end:%d:%d:%d stblk:%d count:%d\n", 
+		    i,
+		    PartitionTable->Partition[i].BootFlags,
+		    PartitionTable->Partition[i].PartitionType,
+		    PartitionTable->Partition[i].StartingHead,
+		    PartitionTable->Partition[i].StartingSector,
+		    PartitionTable->Partition[i].StartingCylinder,
+		    PartitionTable->Partition[i].EndingHead,
+		    PartitionTable->Partition[i].EndingSector,
+		    PartitionTable->Partition[i].EndingCylinder,
+		    PartitionTable->Partition[i].StartingBlock,
+		    PartitionTable->Partition[i].SectorCount);
+	  }
 #endif
 
 	if (ExtendedFound == FALSE);
@@ -691,73 +684,82 @@ xHalIoReadPartitionTable (
 	  }
 
 	ExtendedFound = FALSE;
+
 	for (i = 0; i < PARTITION_TBL_SIZE; i++)
 	  {
-	     /* handle normal partition */
-	     DPRINT("Partition %u: Normal Partition\n", i);
-	     Count = LayoutBuffer->PartitionCount;
-	     DPRINT("Logical Partition %u\n", Count);
-
-	     if (PartitionTable->Partition[i].StartingBlock)
+	     if ((ReturnRecognizedPartitions == FALSE) ||
+		 ((ReturnRecognizedPartitions == TRUE) &&
+		  IsRecognizedPartition(PartitionTable->Partition[i].PartitionType)))
 	       {
-		  LayoutBuffer->PartitionEntry[Count].StartingOffset.QuadPart =
-			(ULONGLONG)Offset.QuadPart +
+		  /* handle normal partition */
+		  DPRINT("Partition %u: Normal Partition\n", i);
+		  Count = LayoutBuffer->PartitionCount;
+		  DPRINT("Logical Partition %u\n", Count);
+		  if (PartitionTable->Partition[i].StartingBlock == 0)
+		    {
+		       LayoutBuffer->PartitionEntry[Count].StartingOffset.QuadPart = 0;
+		    }
+		  else if (IsExtendedPartition(PartitionTable->Partition[i].PartitionType))
+		    {
+		       LayoutBuffer->PartitionEntry[Count].StartingOffset.QuadPart =
+			(ULONGLONG)PartitionOffset.QuadPart;
+		    }
+		  else
+		    {
+		       LayoutBuffer->PartitionEntry[Count].StartingOffset.QuadPart =
+			(ULONGLONG)PartitionOffset.QuadPart +
 			((ULONGLONG)PartitionTable->Partition[i].StartingBlock * (ULONGLONG)SectorSize);
+		    }
+		  LayoutBuffer->PartitionEntry[Count].PartitionLength.QuadPart =
+			(ULONGLONG)PartitionTable->Partition[i].SectorCount * (ULONGLONG)SectorSize;
+		  LayoutBuffer->PartitionEntry[Count].HiddenSectors = 0;
+
+		  if (IsRecognizedPartition(PartitionTable->Partition[i].PartitionType))
+		    {
+		       LayoutBuffer->PartitionEntry[Count].PartitionNumber = Number;
+		       Number++;
+		    }
+		  else
+		    {
+		       LayoutBuffer->PartitionEntry[Count].PartitionNumber = 0;
+		    }
+
+		  LayoutBuffer->PartitionEntry[Count].PartitionType =
+			PartitionTable->Partition[i].PartitionType;
+		  LayoutBuffer->PartitionEntry[Count].BootIndicator =
+			(PartitionTable->Partition[i].BootFlags & 0x80)?TRUE:FALSE;
+		  LayoutBuffer->PartitionEntry[Count].RecognizedPartition =
+			IsRecognizedPartition (PartitionTable->Partition[i].PartitionType);
+		  LayoutBuffer->PartitionEntry[Count].RewritePartition = FALSE;
+
+		  DPRINT1(" %ld: nr: %d boot: %1x type: %x start: 0x%I64x count: 0x%I64x\n",
+			 Count,
+			 LayoutBuffer->PartitionEntry[Count].PartitionNumber,
+			 LayoutBuffer->PartitionEntry[Count].BootIndicator,
+			 LayoutBuffer->PartitionEntry[Count].PartitionType,
+			 LayoutBuffer->PartitionEntry[Count].StartingOffset.QuadPart,
+			 LayoutBuffer->PartitionEntry[Count].PartitionLength.QuadPart);
+
+		  LayoutBuffer->PartitionCount++;
 	       }
-	     else
-	       {
-		  LayoutBuffer->PartitionEntry[Count].StartingOffset.QuadPart = 0;
-	       }
-	     LayoutBuffer->PartitionEntry[Count].PartitionLength.QuadPart =
-		(ULONGLONG)PartitionTable->Partition[i].SectorCount * (ULONGLONG)SectorSize;
-	     LayoutBuffer->PartitionEntry[Count].HiddenSectors = 0;
 
 	     if (IsUsablePartition(PartitionTable->Partition[i].PartitionType))
 	       {
-		  LayoutBuffer->PartitionEntry[Count].PartitionNumber = Number;
-		  Number++;
-	       }
-	     else
-	       {
-		  LayoutBuffer->PartitionEntry[Count].PartitionNumber = 0;
-	       }
-
-	     LayoutBuffer->PartitionEntry[Count].PartitionType =
-		PartitionTable->Partition[i].PartitionType;
-	     LayoutBuffer->PartitionEntry[Count].BootIndicator =
-		(PartitionTable->Partition[i].BootFlags & 0x80)?TRUE:FALSE;
-	     LayoutBuffer->PartitionEntry[Count].RecognizedPartition =
-		IsRecognizedPartition (PartitionTable->Partition[i].PartitionType);
-	     LayoutBuffer->PartitionEntry[Count].RewritePartition = FALSE;
-
-	     DPRINT(" Offset: 0x%I64x", Offset.QuadPart);
-
-	     if (IsUsablePartition(PartitionTable->Partition[i].PartitionType))
-	       {
-		  Offset.QuadPart = (ULONGLONG)Offset.QuadPart +
-		     (((ULONGLONG)PartitionTable->Partition[i].StartingBlock + (ULONGLONG)PartitionTable->Partition[i].SectorCount)* (ULONGLONG)SectorSize);
+		  PartitionOffset.QuadPart = (ULONGLONG)PartitionOffset.QuadPart +
+		     (((ULONGLONG)PartitionTable->Partition[i].StartingBlock +
+		       (ULONGLONG)PartitionTable->Partition[i].SectorCount)* (ULONGLONG)SectorSize);
 	       }
 
 	     if (IsExtendedPartition(PartitionTable->Partition[i].PartitionType))
 	       {
 		  ExtendedFound = TRUE;
 	       }
-
-	     DPRINT(" %ld: nr: %d boot: %1x type: %x start: 0x%I64x count: 0x%I64x\n",
-		    Count,
-		    LayoutBuffer->PartitionEntry[Count].PartitionNumber,
-		    LayoutBuffer->PartitionEntry[Count].BootIndicator,
-		    LayoutBuffer->PartitionEntry[Count].PartitionType,
-		    LayoutBuffer->PartitionEntry[Count].StartingOffset.QuadPart,
-		    LayoutBuffer->PartitionEntry[Count].PartitionLength.QuadPart);
-
-	     LayoutBuffer->PartitionCount++;
 	  }
      }
    while (ExtendedFound == TRUE);
 
    *PartitionBuffer = LayoutBuffer;
-   ExFreePool (SectorBuffer);
+   ExFreePool(SectorBuffer);
 
    return STATUS_SUCCESS;
 }

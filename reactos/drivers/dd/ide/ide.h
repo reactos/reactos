@@ -24,7 +24,7 @@ extern "C" {
 #define  IDE_MAX_CMD_RETRIES       0
 #define  IDE_CMD_TIMEOUT           5
 #define  IDE_RESET_PULSE_LENGTH    500  /* maybe a little too long */
-#define  IDE_RESET_BUSY_TIMEOUT    31
+#define  IDE_RESET_BUSY_TIMEOUT    120
 #define  IDE_RESET_DRDY_TIMEOUT    120
 
 // Control Block offsets and masks
@@ -126,7 +126,8 @@ extern "C" {
 //    Available at any IRQL
 //
 
-typedef struct _IDE_DEVICE_EXTENSION {
+typedef struct _IDE_DEVICE_EXTENSION
+{
   PDEVICE_OBJECT         DeviceObject;
   PCONTROLLER_OBJECT     ControllerObject;
   struct _IDE_DEVICE_EXTESION  *DiskExtension;
@@ -135,6 +136,7 @@ typedef struct _IDE_DEVICE_EXTENSION {
   BOOLEAN                DMASupported;
   int                    BytesPerSector;
   int                    LogicalHeads;
+  int                    LogicalCylinders;
   int                    SectorsPerLogCyl;
   int                    SectorsPerLogTrk;
   int                    Offset;

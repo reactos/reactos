@@ -1,4 +1,4 @@
-/* $Id: ide.c,v 1.41 2001/06/02 15:53:26 ekohl Exp $
+/* $Id: ide.c,v 1.42 2001/06/07 21:18:01 ekohl Exp $
  *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
@@ -108,7 +108,6 @@ IDE_CONTROLLER_PARAMETERS Controllers[IDE_MAX_CONTROLLERS] =
 };
 
 static BOOLEAN IDEInitialized = FALSE;
-static int TotalPartitions = 0;
 
 //  -----------------------------------------------  Discardable Declarations
 
@@ -135,33 +134,27 @@ static int TotalPartitions = 0;
 
 //  ---------------------------------------------------- Forward Declarations
 
-static BOOLEAN IDECreateController(IN PDRIVER_OBJECT DriverObject, 
-                                   IN PIDE_CONTROLLER_PARAMETERS ControllerParams, 
+static BOOLEAN IDECreateController(IN PDRIVER_OBJECT DriverObject,
+                                   IN PIDE_CONTROLLER_PARAMETERS ControllerParams,
                                    IN int ControllerIdx);
 static BOOLEAN IDEResetController(IN WORD CommandPort, IN WORD ControlPort);
-static BOOLEAN IDECreateDevices(IN PDRIVER_OBJECT DriverObject, 
-                                IN PCONTROLLER_OBJECT ControllerObject, 
-                                IN PIDE_CONTROLLER_EXTENSION ControllerExtension, 
+static BOOLEAN IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
+                                IN PCONTROLLER_OBJECT ControllerObject,
+                                IN PIDE_CONTROLLER_EXTENSION ControllerExtension,
                                 IN int DriveIdx,
                                 IN int HarddiskIdx);
-static BOOLEAN IDEGetDriveIdentification(IN int CommandPort, 
-                                         IN int DriveNum, 
+static BOOLEAN IDEGetDriveIdentification(IN int CommandPort,
+                                         IN int DriveNum,
                                          OUT PIDE_DRIVE_IDENTIFY DrvParms);
-static BOOLEAN IDEGetPartitionTable(IN int CommandPort, 
-                                    IN int DriveNum, 
-                                    IN int Offset, 
-                                    IN PIDE_DRIVE_IDENTIFY DrvParms,
-                                    PARTITION *PartitionTable);
-static NTSTATUS IDECreateDevice(IN PDRIVER_OBJECT DriverObject, 
-//                                IN PCHAR DeviceName, 
-                                OUT PDEVICE_OBJECT *DeviceObject, 
-                                IN PCONTROLLER_OBJECT ControllerObject, 
+static NTSTATUS IDECreateDevice(IN PDRIVER_OBJECT DriverObject,
+                                OUT PDEVICE_OBJECT *DeviceObject,
+                                IN PCONTROLLER_OBJECT ControllerObject,
                                 IN int UnitNumber,
                                 IN ULONG DiskNumber,
-                                IN ULONG PartitionNumber,
-                                IN PIDE_DRIVE_IDENTIFY DrvParms, 
-                                IN DWORD Offset, 
-                                IN DWORD Size);
+                                IN PIDE_DRIVE_IDENTIFY DrvParms,
+                                IN ULONG PartitionIdx,
+                                IN ULONGLONG Offset,
+                                IN ULONGLONG Size);
 static int IDEPolledRead(IN WORD Address, 
                          IN BYTE PreComp, 
                          IN BYTE SectorCnt, 
@@ -351,6 +344,9 @@ IDECreateController(IN PDRIVER_OBJECT DriverObject,
       return  FALSE;
     }
 
+/* TEST */
+   IDEInitialized = TRUE;
+
     //  Create device objects for each raw device (and for partitions) 
   CreatedDevices = FALSE;
   for (DriveIdx = 0; DriveIdx < IDE_MAX_DRIVES; DriveIdx++) 
@@ -413,23 +409,8 @@ IDEResetController(IN WORD CommandPort,
     //  Negate drive reset line
   IDEWriteDriveControl(ControlPort, 0);
 
-    //  Wait for BUSY assertion
-  /*for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++) 
-    {
-      if (IDEReadStatus(CommandPort) & IDE_SR_BUSY)
-        {
-          break;
-        }
-      KeStallExecutionProcessor(10);
-    }
-   CHECKPOINT;
-  if (Retries >= IDE_MAX_BUSY_RETRIES)
-    {
-      return FALSE;
-    }*/
-
     //  Wait for BUSY negation
-  for (Retries = 0; Retries < IDE_RESET_BUSY_TIMEOUT * 1000; Retries++) 
+  for (Retries = 0; Retries < IDE_RESET_BUSY_TIMEOUT * 1000; Retries++)
     {
       if (!(IDEReadStatus(CommandPort) & IDE_SR_BUSY))
         {
@@ -479,25 +460,20 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
                  IN int DriveIdx,
                  IN int HarddiskIdx)
 {
-  BOOLEAN                CreatedDevices;
   WCHAR                  NameBuffer[IDE_MAX_NAME_LENGTH];
-  int                    CommandPort, PartitionIdx, PartitionNum;
-  NTSTATUS               RC;
+  int                    CommandPort;
+  NTSTATUS               Status;
   IDE_DRIVE_IDENTIFY     DrvParms;
   PDEVICE_OBJECT         RawDeviceObject;
-  PDEVICE_OBJECT         PrimaryDeviceObject;
+  PDEVICE_OBJECT         PartitionDeviceObject;
   PIDE_DEVICE_EXTENSION  RawDeviceExtension;
-  PARTITION              PartitionTable[4], *p;
   UNICODE_STRING         UnicodeDeviceDirName;
   OBJECT_ATTRIBUTES      DeviceDirAttributes;
   HANDLE                 Handle;
   ULONG                  SectorCount = 0;
-  BOOLEAN                ExtendedPart = FALSE;
-  ULONG                  PartitionOffset = 0;
-  ULONG                  offsetToNextPartition = 0;
-#ifdef PARTITION_FIX
-  ULONG                  ExtendedOffset;
-#endif
+  PDRIVE_LAYOUT_INFORMATION PartitionList = NULL;
+  PPARTITION_INFORMATION PartitionEntry;
+  ULONG i;
 
     //  Copy I/O port offsets for convenience
   CommandPort = ControllerExtension->CommandPortBase;
@@ -507,7 +483,7 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
          CommandPort,
          DriveIdx);
 
-    //  Get the Drive Identification Data
+  /* Get the Drive Identification Data */
   if (!IDEGetDriveIdentification(CommandPort, DriveIdx, &DrvParms))
     {
       DPRINT("Giving up on drive %d on controller %d...\n", 
@@ -516,9 +492,7 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
       return  FALSE;
     }
 
-  CreatedDevices = FALSE;
-
-    //  Create the harddisk device directory
+  /* Create the harddisk device directory */
   swprintf (NameBuffer,
             L"\\Device\\Harddisk%d",
             HarddiskIdx);
@@ -529,14 +503,14 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
                              0,
                              NULL,
                              NULL);
-  RC = ZwCreateDirectoryObject(&Handle, 0, &DeviceDirAttributes);
-  if (!NT_SUCCESS(RC))
+  Status = ZwCreateDirectoryObject(&Handle, 0, &DeviceDirAttributes);
+  if (!NT_SUCCESS(Status))
     {
       DbgPrint("Could not create device dir object\n");
       return FALSE;
     }
 
-    //  Create the raw device
+  /* Create the disk device */
   if (DrvParms.Capabilities & IDE_DRID_LBA_SUPPORTED)
     {
       SectorCount =
@@ -549,129 +523,87 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
     }
   DPRINT("SectorCount %lu\n", SectorCount);
 
-  RC = IDECreateDevice(DriverObject,
-                       &RawDeviceObject,
-                       ControllerObject,
-                       DriveIdx,
-                       HarddiskIdx,
-                       0,
-                       &DrvParms,
-                       0,
-                       SectorCount);
-  if (!NT_SUCCESS(RC))
+  Status = IDECreateDevice(DriverObject,
+                           &RawDeviceObject,
+                           ControllerObject,
+                           DriveIdx,
+                           HarddiskIdx,
+                           &DrvParms,
+                           0,
+                           0,
+                           SectorCount);
+  if (!NT_SUCCESS(Status))
     {
-      DbgPrint ("IDECreateDevice call failed for raw device\n", 0);
-    }
-  else
-    {
-      // Increase number of available raw disk drives
-      IoGetConfigurationInformation()->DiskCount++;
-
-      CreatedDevices = TRUE;
-      RawDeviceExtension = (PIDE_DEVICE_EXTENSION)
-          RawDeviceObject->DeviceExtension;
-
-        //  Initialze the controller timer here (since it has to be
-        //    tied to a device)...
-      if (DriveIdx == 0)
-        {
-          ControllerExtension->TimerState = IDETimerIdle;
-          ControllerExtension->TimerCount = 0;
-          ControllerExtension->TimerDevice = RawDeviceObject;
-          IoInitializeTimer(RawDeviceObject, IDEIoTimer, ControllerExtension);
-        }
+      DbgPrint("IDECreateDevice call failed for raw device\n");
+      return FALSE;
     }
 
-  // read the partition table (chain)
-  PartitionOffset = 0;
-#ifdef PARTITION_FIX
-  ExtendedOffset = 0;
-#endif
-  PartitionNum = 1;
+  /* Increase number of available physical disk drives */
+  IoGetConfigurationInformation()->DiskCount++;
 
-  do
+  RawDeviceExtension = (PIDE_DEVICE_EXTENSION)RawDeviceObject->DeviceExtension;
+
+  /*
+   * Initialize the controller timer here
+   * (since it has to be tied to a device)
+   */
+  if (DriveIdx == 0)
     {
-      ExtendedPart = FALSE;
-
-      //  Get Next partition table for device
-      if (!IDEGetPartitionTable(CommandPort, DriveIdx, PartitionOffset, &DrvParms, PartitionTable))
-        {
-          DbgPrint("drive %d controller %d offset %lu: Could not get partition table\n",
-                   DriveIdx,
-                   ControllerExtension->Number,
-                   PartitionOffset);
-        }
-      else
-        {
-          //  build devices for all partitions in table
-          DPRINT("Read partition on %wZ at %ld\n",
-                 &UnicodeDeviceDirName,
-                 PartitionOffset);
-          for (PartitionIdx = 0; PartitionIdx < 4; PartitionIdx++)
-            {
-              //  copy partition pointer for convenience
-              p = &PartitionTable[PartitionIdx];
-
-              //  if the partition entry is in use, create a device for it
-              if (IsRecognizedPartition(p->PartitionType))
-                {
-                  DPRINT("Partition: %wZ entry:%d type:%02x Start:%lu Size:%lu\n",
-                         &UnicodeDeviceDirName,
-                         PartitionIdx,
-                         p->PartitionType,
-                         p->StartingBlock,
-                         p->SectorCount);
-
-                  //  Create Device for partition
-                  TotalPartitions++;
-                  RC = IDECreateDevice(DriverObject,
-                                       &PrimaryDeviceObject,
-                                       ControllerObject,
-                                       DriveIdx,
-                                       HarddiskIdx,
-                                       PartitionNum,
-                                       &DrvParms,
-                                       p->StartingBlock + PartitionOffset,
-                                       p->SectorCount);
-                  if (!NT_SUCCESS(RC))
-                    {
-                      DbgPrint ("IDECreateDevice call failed\n", 0);
-                      break;
-                    }
-                  PartitionNum++;
-                }
-              else if (IsExtendedPartition(p->PartitionType))
-                {
-                  //  Create devices for logical partitions within an extended partition
-                  DPRINT("Extended: entry:%d type:%02x Start:%lu Size:%lu\n",
-                         PartitionIdx,
-                         p->PartitionType,
-                         p->StartingBlock,
-                         p->SectorCount);
-                  ExtendedPart = TRUE;
-#ifdef PARTITION_FIX
-                  if (ExtendedOffset == 0)
-                    {
-                      ExtendedOffset = p->StartingBlock;
-                      offsetToNextPartition = 0;
-                    }
-                  else
-                    {
-                      offsetToNextPartition = p->StartingBlock;
-                    }
-#else
-                  offsetToNextPartition = p->StartingBlock;
-#endif
-                }
-            }
-#ifdef PARTITION_FIX
-          PartitionOffset = ExtendedOffset + offsetToNextPartition;
-#else
-          PartitionOffset += offsetToNextPartition;
-#endif
-        }
+      ControllerExtension->TimerState = IDETimerIdle;
+      ControllerExtension->TimerCount = 0;
+      ControllerExtension->TimerDevice = RawDeviceObject;
+      IoInitializeTimer(RawDeviceObject,
+                        IDEIoTimer,
+                        ControllerExtension);
     }
-  while (ExtendedPart == TRUE);
+
+   DPRINT("DrvParms.BytesPerSector %ld\n",DrvParms.BytesPerSector);
+
+  /* Read partition table */
+  Status = IoReadPartitionTable(RawDeviceObject,
+                                DrvParms.BytesPerSector,
+                                TRUE,
+                                &PartitionList);
+  if (!NT_SUCCESS(Status))
+    {
+      DbgPrint("IoReadPartitionTable() failed\n");
+      return FALSE;
+    }
+
+  DPRINT("  Number of partitions: %u\n", PartitionList->PartitionCount);
+  for (i=0;i < PartitionList->PartitionCount; i++)
+    {
+      PartitionEntry = &PartitionList->PartitionEntry[i];
+
+      DPRINT("Partition %02ld: nr: %d boot: %1x type: %x offset: %I64d size: %I64d\n",
+             i,
+             PartitionEntry->PartitionNumber,
+             PartitionEntry->BootIndicator,
+             PartitionEntry->PartitionType,
+             PartitionEntry->StartingOffset.QuadPart / 512 /*DrvParms.BytesPerSector*/,
+             PartitionEntry->PartitionLength.QuadPart / 512 /* DrvParms.BytesPerSector*/);
+
+      /* Create device for partition */
+      Status = IDECreateDevice(DriverObject,
+                               &PartitionDeviceObject,
+                               ControllerObject,
+                               DriveIdx,
+                               HarddiskIdx,
+                               &DrvParms,
+                               PartitionEntry->PartitionNumber,
+                               PartitionEntry->StartingOffset.QuadPart / 512 /* DrvParms.BytesPerSector*/,
+                               PartitionEntry->PartitionLength.QuadPart / 512 /*DrvParms.BytesPerSector*/);
+      if (!NT_SUCCESS(Status))
+        {
+          DbgPrint("IDECreateDevice() failed\n");
+          break;
+        }
+   }
+
+   if (PartitionList != NULL)
+     ExFreePool(PartitionList);
+
+//for (;;);
 
   return  TRUE;
 }
@@ -743,118 +675,11 @@ IDEGetDriveIdentification(IN int CommandPort,
          DrvParms->TMSectorCountLo,
          (ULONG)((DrvParms->TMSectorCountHi << 16) + DrvParms->TMSectorCountLo));
 
+  DPRINT("BytesPerSector %d\n", DrvParms->BytesPerSector);
+  DrvParms->BytesPerSector = 512; /* FIXME !!!*/
   return TRUE;
 }
 
-//    IDEGetPartitionTable
-//
-//  DESCRIPTION:
-//    Gets the partition table from the device at the given offset if one exists
-//
-//  RUN LEVEL:
-//    PASSIVE_LEVEL
-//
-//  ARGUMENTS:
-//    IN   int        CommandPort     Address of command port for controller
-//    IN   int        DriveNum        index of drive (0,1)
-//    IN   int        Offset          Block offset (LBA addressing)
-//    OUT  PARTITION *PartitionTable  address to write partition table
-//
-//  RETURNS:
-//    TRUE  partition table was retrieved successfully
-//
-
-BOOLEAN  
-IDEGetPartitionTable(IN int CommandPort, 
-                     IN int DriveNum, 
-                     IN int Offset, 
-                     IN PIDE_DRIVE_IDENTIFY DrvParms,
-                     OUT PARTITION *PartitionTable) 
-{
-  BYTE  SectorBuf[512], SectorNum, DrvHead, CylinderLow, CylinderHigh;
-  int   RC, SaveOffset;
-
-#ifndef NDEBUG
-  int   i;
-#endif
-
-    //  Get sector at offset
-  SaveOffset = Offset;
-  if (DrvParms->Capabilities & IDE_DRID_LBA_SUPPORTED) 
-    {
-      SectorNum = Offset & 0xff;
-      CylinderLow = (Offset >> 8) & 0xff;
-      CylinderHigh = (Offset >> 16) & 0xff;
-      DrvHead = ((Offset >> 24) & 0x0f) | 
-          (DriveNum ? IDE_DH_DRV1 : 0) |
-          IDE_DH_LBA;
-    } 
-  else 
-    {
-      SectorNum = (Offset % DrvParms->SectorsPerTrack) + 1;
-      Offset /= DrvParms->SectorsPerTrack;
-      DrvHead = (Offset % DrvParms->LogicalHeads) | 
-          (DriveNum ? IDE_DH_DRV1 : 0);
-      Offset /= DrvParms->LogicalHeads;
-      CylinderLow = Offset & 0xff;
-      CylinderHigh = Offset >> 8;
-    }
-  Offset = SaveOffset;
-
-  RC = IDEPolledRead(CommandPort, 
-                     0, 
-                     1, 
-                     SectorNum,
-                     CylinderLow,
-                     CylinderHigh,
-                     DrvHead, 
-//                     IDE_CMD_READ_RETRY,
-		     IDE_CMD_READ,
-                     SectorBuf);
-  if (RC != 0) 
-    {
-      DbgPrint ("read failed: port %04x drive %d sector %d rc %d\n", 
-                CommandPort, 
-                DriveNum, 
-                Offset, 
-                RC);
-      return  FALSE;
-    } 
-  else if (*((WORD *)(SectorBuf + PART_MAGIC_OFFSET)) != PARTITION_MAGIC) 
-    {
-      DbgPrint ("Bad partition magic: port %04x drive %d offset %d magic %d\n", 
-                CommandPort, 
-                DriveNum, 
-                Offset, 
-                *((short *)(SectorBuf + PART_MAGIC_OFFSET)));
-      return  FALSE;
-    }
-  RtlCopyMemory(PartitionTable, SectorBuf + PARTITION_OFFSET, sizeof(PARTITION) * 4);
-
-#ifndef NDEBUG
-  DPRINT("Partition Table for device %d at offset %d on port %x\n", 
-         DriveNum, 
-         Offset,
-         CommandPort);
-  for (i = 0; i < PARTITION_TBL_SIZE; i++)
-    {
-      DPRINT("  %d: flags:%2x type:%x start:%d:%d:%d end:%d:%d:%d stblk:%d count:%d\n", 
-             i, 
-             PartitionTable[i].BootFlags,
-             PartitionTable[i].PartitionType,
-             PartitionTable[i].StartingHead,
-             PartitionTable[i].StartingSector,
-             PartitionTable[i].StartingCylinder,
-             PartitionTable[i].EndingHead,
-             PartitionTable[i].EndingSector,
-             PartitionTable[i].EndingCylinder,
-             PartitionTable[i].StartingBlock,
-             PartitionTable[i].SectorCount);
-    }
-#endif
-
-  return  TRUE;
-}
 
 //    IDECreateDevice
 //
@@ -885,10 +710,10 @@ IDECreateDevice(IN PDRIVER_OBJECT DriverObject,
                 IN PCONTROLLER_OBJECT ControllerObject,
                 IN int UnitNumber,
                 IN ULONG DiskNumber,
-                IN ULONG PartitionNumber,
                 IN PIDE_DRIVE_IDENTIFY DrvParms,
-                IN DWORD Offset,
-                IN DWORD Size)
+                IN ULONG PartitionNumber,
+                IN ULONGLONG Offset,
+                IN ULONGLONG Size)
 {
   WCHAR                  NameBuffer[IDE_MAX_NAME_LENGTH];
   WCHAR                  ArcNameBuffer[IDE_MAX_NAME_LENGTH + 15];
@@ -933,9 +758,11 @@ IDECreateDevice(IN PDRIVER_OBJECT DriverObject,
       DrvParms->SectorsPerTrack;
   DeviceExtension->SectorsPerLogTrk = DrvParms->SectorsPerTrack;
   DeviceExtension->LogicalHeads = DrvParms->LogicalHeads;
+  DeviceExtension->LogicalCylinders = 
+    (DrvParms->Capabilities & IDE_DRID_LBA_SUPPORTED) ? DrvParms->TMCylinders : DrvParms->LogicalCyls;
   DeviceExtension->Offset = Offset;
   DeviceExtension->Size = Size;
-  DPRINT("%wZ: offset %d size %d \n",
+  DPRINT("%wZ: offset %lu size %lu \n",
          &DeviceName,
          DeviceExtension->Offset,
          DeviceExtension->Size);
@@ -945,7 +772,7 @@ IDECreateDevice(IN PDRIVER_OBJECT DriverObject,
 
   if (PartitionNumber != 0)
     {
-      DbgPrint("%wZ %dMB\n", &DeviceName, Size / 2048);
+      DbgPrint("%wZ %luMB\n", &DeviceName, Size / 2048);
     }
 
   /* assign arc name */
@@ -1208,13 +1035,13 @@ DPRINT("AdjOffset:%ld:%ld + Length:%ld = AdjExtent:%ld:%ld\n",
   if ((AdjustedExtent.QuadPart > PartitionExtent.QuadPart) ||
       (IrpStack->Parameters.Read.Length & (DeviceExtension->BytesPerSector - 1))) 
     {
-      DbgPrint ("Request failed on bad parameters\n");
-      DbgPrint ("AdjustedExtent=%d:%d PartitionExtent=%d:%d ReadLength=%d\n", 
-                (unsigned int) AdjustedExtent.u.HighPart,
-                (unsigned int) AdjustedExtent.u.LowPart,
-                (unsigned int) PartitionExtent.u.HighPart,
-                (unsigned int) PartitionExtent.u.LowPart,
-                IrpStack->Parameters.Read.Length);
+      DPRINT("Request failed on bad parameters\n",0);
+      DPRINT("AdjustedExtent=%d:%d PartitionExtent=%d:%d ReadLength=%d\n", 
+             (unsigned int) AdjustedExtent.u.HighPart,
+             (unsigned int) AdjustedExtent.u.LowPart,
+             (unsigned int) PartitionExtent.u.HighPart,
+             (unsigned int) PartitionExtent.u.LowPart,
+             IrpStack->Parameters.Read.Length);
       Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
       IoCompleteRequest(Irp, IO_NO_INCREMENT);
       return  STATUS_INVALID_PARAMETER;
@@ -1248,9 +1075,9 @@ DPRINT("AdjOffset:%ld:%ld + Length:%ld = AdjExtent:%ld:%ld\n",
 //    NTSTATUS
 //
 
-static  NTSTATUS  
-STDCALL IDEDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject, 
-                         IN PIRP Irp) 
+static  NTSTATUS STDCALL
+IDEDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
+                         IN PIRP Irp)
 {
   NTSTATUS  RC;
   ULONG     ControlCode, InputLength, OutputLength;
@@ -1265,22 +1092,21 @@ STDCALL IDEDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
   DeviceExtension = (PIDE_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
 
     //  A huge switch statement in a Windows program?! who would have thought?
-  switch (ControlCode) 
+  switch (ControlCode)
     {
     case IOCTL_DISK_GET_DRIVE_GEOMETRY:
-      if (IrpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(DISK_GEOMETRY)) 
+      if (IrpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(DISK_GEOMETRY))
         {
           Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
-        } 
-      else 
+        }
+      else
         {
           PDISK_GEOMETRY Geometry;
 
           Geometry = (PDISK_GEOMETRY) Irp->AssociatedIrp.SystemBuffer;
           Geometry->MediaType = FixedMedia;
               // FIXME: should report for RawDevice even on partition
-          Geometry->Cylinders.QuadPart = DeviceExtension->Size / 
-              DeviceExtension->SectorsPerLogCyl;
+          Geometry->Cylinders.QuadPart = DeviceExtension->LogicalCylinders;
           Geometry->TracksPerCylinder = DeviceExtension->SectorsPerLogTrk /
               DeviceExtension->SectorsPerLogCyl;
           Geometry->SectorsPerTrack = DeviceExtension->SectorsPerLogTrk;
@@ -1344,6 +1170,8 @@ STDCALL IDEStartIo(IN PDEVICE_OBJECT DeviceObject,
   PIDE_DEVICE_EXTENSION      DeviceExtension;
   KIRQL                      OldIrql;
   
+  DPRINT("IDEStartIo() called!\n");
+  
   IrpStack = IoGetCurrentIrpStackLocation(Irp);
   DeviceExtension = (PIDE_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
 
@@ -1387,6 +1215,7 @@ STDCALL IDEStartIo(IN PDEVICE_OBJECT DeviceObject,
       IoStartNextPacket(DeviceObject, FALSE);
       break;
     }
+  DPRINT("IDEStartIo() finished!\n");
 }
 
 //    IDEAllocateController
@@ -1911,19 +1740,19 @@ IDEIsr(IN PKINTERRUPT Interrupt,
 //    IN PIRP           DpcIrp
 //    IN PVOID          DpcContext
 //
-static  VOID  
-IDEDpcForIsr(IN PKDPC Dpc, 
+static VOID
+IDEDpcForIsr(IN PKDPC Dpc,
              IN PDEVICE_OBJECT DpcDeviceObject,
-             IN PIRP DpcIrp, 
+             IN PIRP DpcIrp,
              IN PVOID DpcContext)
 {
-   DPRINT("IDEDpcForIsr()\n");
+  DPRINT("IDEDpcForIsr()\n");
   IDEFinishOperation((PIDE_CONTROLLER_EXTENSION) DpcContext);
 }
 
 //    IDEFinishOperation
 
-static VOID 
+static VOID
 IDEFinishOperation(PIDE_CONTROLLER_EXTENSION ControllerExtension)
 {
   PIDE_DEVICE_EXTENSION DeviceExtension;
