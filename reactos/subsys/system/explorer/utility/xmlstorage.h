@@ -234,8 +234,8 @@ inline void assign_utf8(XS_String& s, const char* str)
 inline std::string get_utf8(LPCTSTR s, int l)
 {
 #ifdef UNICODE
-	LPSTR buffer = (LPSTR)alloca(l);
-	l = WideCharToMultiByte(CP_UTF8, 0, s, l, buffer, l, 0, 0);
+	int bl=2*l; LPSTR buffer = (LPSTR)alloca(bl);
+	l = WideCharToMultiByte(CP_UTF8, 0, s, l, buffer, bl, 0, 0);
 #else
 	LPWSTR wbuffer = (LPWSTR)alloca(sizeof(WCHAR)*l);
 	l = MultiByteToWideChar(CP_ACP, 0, s, l, wbuffer, l);
@@ -1629,7 +1629,11 @@ struct XMLDoc : public XMLNode
 		tifstream in(path);
 		XMLReader reader(this, in);
 
+//#if defined(_STRING_DEFINED) && !defined(XS_STRING_UTF8)
+//		return read(reader, std::string(ANS(path)));
+//#else
 		return read(reader, XS_String(path));
+//#endif
 	}
 
 	bool read(XMLReaderBase& reader)
