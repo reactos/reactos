@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.120 2003/11/17 02:12:51 hyperion Exp $
+/* $Id: process.c,v 1.120.8.1 2003/12/22 20:16:54 hyperion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -347,28 +347,9 @@ PiDeleteProcessWorker(PVOID pContext)
       KeAttachProcess(Process);
     }
 
-  /* Terminate Win32 Process */
-  PsTerminateWin32Process (Process);
-
   KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
-  NotifyRoutineCount = 0;
-  for (i = 0; i < MAX_PROCESS_NOTIFY_ROUTINE_COUNT; i++)
-    {
-      if (PiProcessNotifyRoutine[i])
-	{
-	  NotifyRoutine[NotifyRoutineCount++] = PiProcessNotifyRoutine[i];
-	}
-    }
   RemoveEntryList(&Process->ProcessListEntry);
   KeReleaseSpinLock(&PsProcessListLock, oldIrql);
-
-  for (i = 0;i < NotifyRoutineCount; i++)
-    {
-      /* must be called below DISPATCH_LVL */
-      NotifyRoutine[i](Process->InheritedFromUniqueProcessId,
-		       (HANDLE)Process->UniqueProcessId,
-		       FALSE);
-    }
 
   /* KDB hook */
   KDB_DELETEPROCESS_HOOK(Process);
@@ -696,25 +677,9 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
      }
 
    KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
-   NotifyRoutineCount = 0;
-   for (i = 0; i < MAX_PROCESS_NOTIFY_ROUTINE_COUNT; i++)
-   {
-      if (PiProcessNotifyRoutine[i])
-      {
-         NotifyRoutine[NotifyRoutineCount++] = PiProcessNotifyRoutine[i];   
-      }
-   }
    InsertHeadList(&PsProcessListHead, &Process->ProcessListEntry);
    InitializeListHead(&Process->ThreadListHead);
    KeReleaseSpinLock(&PsProcessListLock, oldIrql);
-
-   for (i = 0;i < NotifyRoutineCount; i++)
-   {
-      //must be called below DISPATCH_LVL
-      NotifyRoutine[i](Process->InheritedFromUniqueProcessId,
-                       (HANDLE)Process->UniqueProcessId,
-                       TRUE);
-   }
 
    Process->Pcb.State = PROCESS_STATE_ACTIVE;
    
@@ -1592,8 +1557,6 @@ PsSetCreateProcessNotifyRoutine(IN PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine,
   KIRQL oldIrql;
   ULONG i;
 
-  KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
-
   if (Remove)
   {
      for(i=0;i<MAX_PROCESS_NOTIFY_ROUTINE_COUNT;i++)
@@ -1605,7 +1568,6 @@ PsSetCreateProcessNotifyRoutine(IN PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine,
         }
      }
 
-     KeReleaseSpinLock(&PsProcessListLock, oldIrql);
      return(STATUS_SUCCESS);
   }
 
@@ -1618,8 +1580,6 @@ PsSetCreateProcessNotifyRoutine(IN PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine,
         break;
      }
   }
-
-  KeReleaseSpinLock(&PsProcessListLock, oldIrql);
 
   if (i == MAX_PROCESS_NOTIFY_ROUTINE_COUNT)
   {
