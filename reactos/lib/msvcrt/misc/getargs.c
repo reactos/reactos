@@ -92,45 +92,44 @@ int expand(char* name, int flag)
  */
 int __getmainargs(int* argc, char*** argv, char*** env, int flag)
 {
-    int i, afterlastspace, ignorespace, len;
+    int i, afterlastspace, ignorespace, len, doexpand;
 
     /* missing threading init */
 
     i = 0;
     afterlastspace = 0;
     ignorespace = 0;
+    doexpand = flag;
+
     len = strlen(_acmdln);
 
     while (_acmdln[i]) {
 	if (_acmdln[i] == '"') {
-	    if (_acmdln[i + 1] == '"') {
-		memmove(_acmdln + i, _acmdln + i + 1, len - i);
-		len--;
+	    if(ignorespace) {
+		ignorespace = 0;
 	    } else {
-		if(ignorespace) {
-		    ignorespace = 0;
-		} else {
-		    ignorespace = 1;
-		}
-		memmove(_acmdln + i, _acmdln + i + 1, len - i);
-		len--;
-		continue;
+		ignorespace = 1;
+		doexpand = 0;
 	    }
+	    memmove(_acmdln + i, _acmdln + i + 1, len - i);
+	    len--;
+	    continue;
 	}
 
         if (_acmdln[i] == ' ' && !ignorespace) {
-            expand(strndup(_acmdln + afterlastspace, i - afterlastspace), flag);
+            expand(strndup(_acmdln + afterlastspace, i - afterlastspace), doexpand);
             i++;
             while (_acmdln[i]==' ')
                 i++;
             afterlastspace=i;
+	    doexpand = flag;
         } else {
             i++;
         }
     }
 
     if (_acmdln[afterlastspace] != 0) {
-        expand(strndup(_acmdln+afterlastspace, i - afterlastspace), flag);
+        expand(strndup(_acmdln+afterlastspace, i - afterlastspace), doexpand);
     }
     HeapValidate(hHeap, 0, NULL);
     *argc = __argc;
