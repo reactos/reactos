@@ -9,6 +9,9 @@
 #include <win32k/coord.h>
 #include <win32k/line.h>
 
+#include <math.h>
+#include <float.h>
+
 // #define NDEBUG
 #include <internal/debug.h>
 
