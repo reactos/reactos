@@ -60,7 +60,7 @@ $(TARGET).exe:	$(OBJS) $(TARGET).coff
 	$(NM) --numeric-sort $(TARGET).exe > $(TARGET).sym
 
 
-main.h:		resource.h makefile 
+main.h:		resource.h Makefile 
 
 about.o:	about.c about.h main.h
 
@@ -78,7 +78,7 @@ run.o:		run.c run.h main.h
 
 setttings.o:	setttings.c setttings.h  main.h
 
-$(TARGET).o:	$(TARGET).c $(TARGET).h main.h makefile
+$(TARGET).o:	$(TARGET).c $(TARGET).h main.h Makefile
 
 
 clean:
