@@ -82,7 +82,7 @@ BOOL FsOpenVolume(U32 DriveNumber, U32 PartitionNumber)
 	}
 
 	// Check for ISO9660 file system type
-	if (DriveNumber > 0x80 && FsRecIsIso9660(DriveNumber))
+	if (DriveNumber >= 0x80 && FsRecIsIso9660(DriveNumber))
 	{
 		DbgPrint((DPRINT_FILESYSTEM, "Drive is a cdrom drive. Assuming ISO-9660 file system.\n"));
 
