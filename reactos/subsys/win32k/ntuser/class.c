@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.56 2004/05/23 14:04:58 weiden Exp $
+/* $Id: class.c,v 1.57 2004/05/27 11:47:42 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -366,6 +366,9 @@ IntCreateClass(
 		ClassObject->ExtraData = NULL;
 	}
 
+	InitializeListHead(&ClassObject->ClassWindowsListHead);
+	ExInitializeFastMutex(&ClassObject->ClassWindowsListLock);
+
 	return(ClassObject);
 }
 
@@ -690,34 +693,42 @@ NtUserUnregisterClass(
 
    if (!ClassReferenceClassByNameOrAtom(&Class, ClassNameOrAtom, hInstance))
    {
+      ObDereferenceObject(WinStaObject);
       SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
       return FALSE;
    }
   
    if (Class->hInstance && Class->hInstance != hInstance)
    {
-      ObmDereferenceObject(Class);
+      ClassDereferenceObject(Class);
+      ObDereferenceObject(WinStaObject);
       SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
       return FALSE;
    }
   
-   if (ObmGetReferenceCount(Class) > 2)
+  IntLockClassWindows(Class);
+   if (!IsListEmpty(&Class->ClassWindowsListHead))
    {
+      IntUnLockClassWindows(Class);
+      /* Dereference the ClassReferenceClassByNameOrAtom() call */
       ObmDereferenceObject(Class);
+      ObDereferenceObject(WinStaObject);
       SetLastWin32Error(ERROR_CLASS_HAS_WINDOWS);
       return FALSE;
    }
+   IntUnLockClassWindows(Class);
   
    /* Dereference the ClassReferenceClassByNameOrAtom() call */
-   ObmDereferenceObject(Class);
+   ClassDereferenceObject(Class);
   
    RemoveEntryList(&Class->ListEntry);
 
    RtlDeleteAtomFromAtomTable(WinStaObject->AtomTable, Class->Atom);
-   ObDereferenceObject(WinStaObject);
   
    /* Free the object */
-   ObmDereferenceObject(Class);
+   ClassDereferenceObject(Class);
+   
+   ObDereferenceObject(WinStaObject);
   
    return TRUE;
 }

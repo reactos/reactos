@@ -30,6 +30,8 @@ typedef struct _WINDOW_OBJECT
 {
   /* Pointer to the window class. */
   PWNDCLASS_OBJECT Class;
+  /* entry in the window list of the class object */
+  LIST_ENTRY ClassListEntry;
   /* Extended style. */
   DWORD ExStyle;
   /* Window name. */

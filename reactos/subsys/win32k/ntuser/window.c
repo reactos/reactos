@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.235 2004/05/19 19:16:47 weiden Exp $
+/* $Id: window.c,v 1.236 2004/05/27 11:47:42 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -387,7 +387,13 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
   /* don't remove the WINDOWSTATUS_DESTROYING bit */
   IntUnLockThreadWindows(Window->OwnerThread->Win32Thread);
   
-  ObmDereferenceObject(Window->Class);
+  /* remove the window from the class object */
+  IntLockClassWindows(Window->Class);
+  RemoveEntryList(&Window->ClassListEntry);
+  IntUnLockClassWindows(Window->Class);
+  
+  /* dereference the class */
+  ClassDereferenceObject(Window->Class);
   Window->Class = NULL;
   
   if(Window->WindowRegion)
@@ -1509,7 +1515,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 					  &WinStaObject);
   if (!NT_SUCCESS(Status))
     {
-      ObmDereferenceObject(ClassObject);
+      ClassDereferenceObject(ClassObject);
       RtlFreeUnicodeString(&WindowName);
       if (NULL != ParentWindow)
         {
@@ -1530,7 +1536,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   if (!WindowObject)
     {
       ObDereferenceObject(WinStaObject);
-      ObmDereferenceObject(ClassObject);
+      ClassDereferenceObject(ClassObject);
       RtlFreeUnicodeString(&WindowName);
       if (NULL != ParentWindow)
         {
@@ -1551,6 +1557,10 @@ NtUserCreateWindowEx(DWORD dwExStyle,
    * Fill out the structure describing it.
    */
   WindowObject->Class = ClassObject;
+  IntLockClassWindows(ClassObject);
+  InsertTailList(&ClassObject->ClassWindowsListHead, &WindowObject->ClassListEntry);
+  IntUnLockClassWindows(ClassObject);
+  
   WindowObject->ExStyle = dwExStyle;
   WindowObject->Style = dwStyle & ~WS_VISIBLE;
   DPRINT("1: Style is now %lx\n", WindowObject->Style);
@@ -1690,6 +1700,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
       /* FIXME - Delete window object and remove it from the thread windows list */
       /* FIXME - delete allocated DCE */
       
+      ClassDereferenceObject(ClassObject);
       DPRINT1("CBT-hook returned !0\n");
       return (HWND) NULL;
     }
@@ -1907,6 +1918,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
         {
           IntReleaseWindowObject(ParentWindow);
         }
+      ClassDereferenceObject(ClassObject);
       DPRINT("NtUserCreateWindowEx(): send CREATE message failed.\n");
       return((HWND)0);
     } 
@@ -2462,6 +2474,8 @@ NtUserFindWindowEx(HWND hwndParent,
     }
   }
 #endif
+  
+  ClassDereferenceObject(ClassObject);
   
   Cleanup:
   if(ClassName.Length > 0 && ClassName.Buffer)
