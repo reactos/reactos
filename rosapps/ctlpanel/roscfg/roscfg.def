@@ -1,0 +1,9 @@
+;
+; roscfg.def
+;
+; ReactOS Operating System
+;
+;
+LIBRARY roscfg.cpl
+EXPORTS
+CPlApplet

@@ -1,0 +1,9 @@
+;
+; rospower.edf
+;
+; ReactOS Operating System
+;
+;
+LIBRARY rospower.cpl
+EXPORTS
+CPlApplet=CPlApplet@16

@@ -1,0 +1,893 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resrc1.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "defines.h"
+#include "reactos\resource.h"
+#include "resource.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_CPL_SYSTEM_ICON     ICON    DISCARDABLE     "res/system.ico"
+IDI_CPL_IRDA_ICON       ICON    DISCARDABLE     "res/irda.ico"
+IDI_CPL_MOUSE_ICON      ICON    DISCARDABLE     "res/mouse.ico"
+IDI_CPL_KEYBOARD_ICON   ICON    DISCARDABLE     "res/keyboard.ico"
+IDI_CPL_REGIONS_ICON    ICON    DISCARDABLE     "res/regions.ico"
+IDI_CPL_USERS_ICON      ICON    DISCARDABLE     "res/users.ico"
+IDI_CPL_DATETIME_ICON   ICON    DISCARDABLE     "res/datetime.ico"
+IDI_CPL_FOLDERS_ICON    ICON    DISCARDABLE     "res/folders.ico"
+IDI_CPL_DISPLAY_ICON    ICON    DISCARDABLE     "res/display.ico"
+IDI_CPL_ACCESSIBLE_ICON ICON    DISCARDABLE     "res/accessib.ico"
+IDI_CPL_PHONE_MODEM_ICON ICON    DISCARDABLE     "res/phonemod.ico"
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+(1) VERSIONINFO
+ FILEVERSION 0,0,19,154
+ PRODUCTVERSION 0,0,19,0
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName", "ReactOS Development Team\0"
+            VALUE "FileDescription", "ReactOS System Control Panel Applet\0"
+            VALUE "FileVersion", "0.0.19.154\0"
+            VALUE "InternalName", "roscfg\0"
+            VALUE "LegalCopyright", "Copyright (c) 1998-2002 ReactOS Team\0"
+            VALUE "OriginalFilename", "roscfg.cpl\0"
+            VALUE "ProductName", "ReactOS Operating System\0"
+            VALUE "ProductVersion", "0.0.19\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+#endif    // !_MAC
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_CPL_TABBED_DIALOG DIALOG DISCARDABLE  0, 0, 152, 78
+STYLE DS_MODALFRAME | WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Tabbed Applet"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Tab1",IDC_CPL_DIALOG_TAB,"SysTabControl32",WS_TABSTOP,7,
+                    7,142,47
+    PUSHBUTTON      "&Cancel",IDCANCEL,103,59,45,14
+    PUSHBUTTON      "OK",IDOK,55,59,45,14
+    PUSHBUTTON      "&Apply",ID_APPLY,7,59,45,14
+END
+
+IDD_CPL_SYSTEM_GENERAL_PAGE DIALOG DISCARDABLE  10, 10, 247, 180
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+END
+
+IDD_CPL_SYSTEM_NETWORK_PAGE DIALOG DISCARDABLE  10, 10, 247, 180
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+END
+
+IDD_CPL_SYSTEM_HARDWARE_PAGE DIALOG DISCARDABLE  10, 10, 247, 180
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+END
+
+IDD_CPL_SYSTEM_USERS_PAGE DIALOG DISCARDABLE  10, 10, 247, 180
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+END
+
+IDD_CPL_SYSTEM_ADVANCED_PAGE DIALOG DISCARDABLE  10, 10, 247, 180
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+END
+
+IDD_CPL_KEYBOARD_SPEED_PAGE DIALOG DISCARDABLE  10, 10, 220, 161
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+    GROUPBOX        "Character repeat",IDC_STATIC,3,4,209,100
+    GROUPBOX        "Cursor blink rate",IDC_STATIC,3,104,209,50
+    CONTROL         "Slider1",IDC_SLIDER1,"msctls_trackbar32",TBS_AUTOTICKS | 
+                    WS_TABSTOP,35,123,145,12
+    LTEXT           "Slow",IDC_STATIC,5,132,26,8
+    LTEXT           "Fast",IDC_STATIC,188,131,21,9
+    CONTROL         "Slider1",IDC_SLIDER2,"msctls_trackbar32",TBS_AUTOTICKS | 
+                    WS_TABSTOP,44,53,145,12
+    LTEXT           "Fast",IDC_STATIC,191,48,21,9
+    LTEXT           "Slow",IDC_STATIC,10,48,26,8
+    EDITTEXT        IDC_EDIT2,13,84,193,12,ES_AUTOHSCROLL
+    LTEXT           "Click here and hold down a key to test repeat rate:",
+                    IDC_STATIC,13,74,169,10
+    LTEXT           "Repeat rate:",IDC_STATIC,36,40,63,8
+    LTEXT           "Repeat rate:",IDC_STATIC,31,10,63,8
+    CONTROL         "Slider1",IDC_SLIDER3,"msctls_trackbar32",TBS_AUTOTICKS | 
+                    WS_TABSTOP,42,21,145,12
+    LTEXT           "Short",IDC_STATIC,189,15,21,9
+    LTEXT           "Long",IDC_STATIC,8,20,26,8
+END
+
+IDD_CPL_KEYBOARD_LOCALES_PAGE DIALOG DISCARDABLE  10, 10, 247, 190
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+    GROUPBOX        "Installed input locales",IDC_STATIC,7,3,232,76
+    GROUPBOX        "To turn off Caps Lock",IDC_STATIC,6,85,233,22
+    GROUPBOX        "Hot keys for input locales",IDC_STATIC,7,112,233,62
+    LTEXT           "Item",IDC_STATIC,11,123,31,8
+    LTEXT           "Key sequence",IDC_STATIC,166,124,67,8
+    CONTROL         "Enable indicator on taskbar",IDC_CHECK1,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,6,177,163,8
+    LTEXT           "Keyboard layout",IDC_STATIC,148,16,82,8
+    LTEXT           "Input language",IDC_STATIC,13,15,98,8
+    CONTROL         "Press CAPS LOCK key",IDC_RADIO1,"Button",
+                    BS_AUTORADIOBUTTON,15,94,85,9
+    CONTROL         "Press SHIFT key",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,
+                    129,94,99,10
+    LISTBOX         IDC_LIST1,11,25,224,33,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "A&dd",IDC_BUTTON1,11,62,55,12
+    PUSHBUTTON      "&Remove",IDC_BUTTON3,69,62,55,12
+    PUSHBUTTON      "&Properties",IDC_BUTTON6,126,62,55,12
+    PUSHBUTTON      "&Set as Default",IDC_BUTTON7,183,62,55,12
+    LISTBOX         IDC_LIST2,11,132,221,23,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Change Key Sequence...",IDC_BUTTON5,119,157,109,12
+END
+
+IDD_CPL_KEYBOARD_HARDWARE_PAGE DIALOG DISCARDABLE  10, 10, 192, 130
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+    GROUPBOX        "Static",IDC_STATIC,15,9,147,107
+END
+
+IDD_CPL_MOUSE_BUTTONS_PAGE DIALOG DISCARDABLE  10, 10, 247, 180
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+    GROUPBOX        "Button configuration",IDC_STATIC,3,0,239,70
+    GROUPBOX        "Files and Folders",IDC_STATIC,2,76,239,40
+    GROUPBOX        "Double-click s&peed",IDC_STATIC,1,124,239,56
+    CONTROL         "Slider1",IDC_SLIDER1,"msctls_trackbar32",WS_TABSTOP,37,
+                    152,113,16
+    LTEXT           "Test area:",IDC_STATIC,146,133,43,10
+    LTEXT           "Slow",IDC_STATIC,5,152,32,9
+    LTEXT           "Fast",IDC_STATIC,151,148,32,9
+    CONTROL         "&Single-click to open an item (point to select)",
+                    IDC_RADIO1,"Button",BS_AUTORADIOBUTTON,38,88,173,9
+    CONTROL         "&Double-click to open an item (single-click to select)",
+                    IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,37,100,200,9
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME,9,91,19,17
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME,81,27,78,38
+    CONTROL         "&Right-handed",IDC_RADIO3,"Button",BS_AUTORADIOBUTTON,
+                    11,13,61,9
+    CONTROL         "&Left-handed",IDC_RADIO4,"Button",BS_AUTORADIOBUTTON,76,
+                    13,61,9
+    LTEXT           "Left Button:",IDC_STATIC,11,26,48,8
+    LTEXT           "Right Button:",IDC_STATIC,179,25,48,8
+    LTEXT           "- Context Menu",IDC_STATIC,175,37,59,8
+    LTEXT           "- Special Drag",IDC_STATIC,176,48,56,8
+    LTEXT           "- Normal Select",IDC_STATIC,9,37,59,8
+    LTEXT           "- Normal Drag",IDC_STATIC,8,48,56,8
+    CONTROL         "Animate1",IDC_ANIMATE1,"SysAnimate32",WS_BORDER | 
+                    WS_TABSTOP,186,135,46,35
+END
+
+IDD_CPL_MOUSE_POINTERS_PAGE DIALOG DISCARDABLE  10, 10, 247, 204
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+    GROUPBOX        "Scheme",IDC_STATIC,6,16,179,52
+    LTEXT           "Customise:",IDC_STATIC,6,74,78,9
+    CONTROL         "Enable pointer shadow",IDC_CHECK1,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,9,189,116,9
+    COMBOBOX        IDC_COMBO1,14,28,162,12,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Save As...",IDC_BUTTON1,73,48,49,12
+    PUSHBUTTON      "Delete",IDC_BUTTON3,126,48,49,12
+    PUSHBUTTON      "Use Default",IDC_BUTTON4,134,185,49,12
+    PUSHBUTTON      "Browse",IDC_BUTTON5,189,185,49,12
+    LISTBOX         IDC_LIST1,7,88,230,92,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_CPL_MOUSE_MOTION_PAGE DIALOG DISCARDABLE  10, 10, 247, 180
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+    GROUPBOX        "&Speed",IDC_STATIC,3,6,238,50
+    GROUPBOX        "Acceleration",IDC_STATIC,2,61,238,50
+    GROUPBOX        "Snap to &default",IDC_STATIC,2,116,238,50
+    CONTROL         "Move pointer to the default button in dialog boxes",
+                    IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,51,141,
+                    175,9
+    LTEXT           "Adjust how fast your pointer moves",IDC_STATIC,46,18,
+                    144,9
+    LTEXT           "Adjust how much your pointer accelerates as you move it faster",
+                    IDC_STATIC,58,72,174,18
+    CONTROL         "&None",IDC_RADIO1,"Button",BS_AUTORADIOBUTTON,7,99,50,8
+    CONTROL         "&Low",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,59,99,50,8
+    CONTROL         "&Medium",IDC_RADIO3,"Button",BS_AUTORADIOBUTTON,117,100,
+                    50,8
+    CONTROL         "&High",IDC_RADIO4,"Button",BS_AUTORADIOBUTTON,183,99,50,
+                    8
+    CONTROL         "Slider1",IDC_SLIDER1,"msctls_trackbar32",TBS_AUTOTICKS | 
+                    WS_TABSTOP,51,28,132,16
+    LTEXT           "Slow",IDC_STATIC,34,44,37,7
+    LTEXT           "Fast",IDC_STATIC,165,44,35,7
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME,13,72,22,19
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME,12,134,22,19
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME,10,19,22,19
+END
+
+IDD_CPL_MOUSE_HARDWARE_PAGE DIALOG DISCARDABLE  10, 10, 247, 180
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+END
+
+IDD_CPL_USERS_USERS_PAGE DIALOG DISCARDABLE  10, 10, 247, 180
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+END
+
+IDD_CPL_USERS_ADVANCED_PAGE DIALOG DISCARDABLE  10, 10, 247, 180
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+END
+
+IDD_CPL_DISPLAY_BACKGROUND_PAGE DIALOG DISCARDABLE  10, 10, 266, 216
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME,59,18,133,80
+    LISTBOX         IDC_LIST1,10,141,164,68,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Browse...",IDC_BUTTON1,183,139,67,14
+    LTEXT           "Select a background picture as Wallpaper:",IDC_STATIC,
+                    12,131,165,10
+    LTEXT           "Picture &Dispaly:",IDC_STATIC,183,160,71,9
+    COMBOBOX        IDC_COMBO1,183,176,65,12,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Pattern",IDC_BUTTON3,182,193,67,14,WS_DISABLED
+END
+
+IDD_CPL_DISPLAY_SCREEN_SAVER_PAGE DIALOG DISCARDABLE  10, 10, 263, 204
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME,58,16,126,74
+    GROUPBOX        "&Screen Saver",IDC_STATIC,5,103,254,43
+    GROUPBOX        "Ener&gy saving features of monitor",IDC_STATIC,1,149,
+                    254,54
+    PUSHBUTTON      "&Settings...",IDC_BUTTON1,132,114,53,14
+    LTEXT           "Click Power to adjust the power settings for your monitor",
+                    IDC_STATIC,65,164,126,15
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME,10,166,47,23
+    CONTROL         "&Password protected",IDC_CHECK1,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,15,131,99,8
+    COMBOBOX        IDC_COMBO1,11,114,114,12,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "P&ower...",IDC_BUTTON3,191,188,67,15
+    PUSHBUTTON      "Pre&view",IDC_BUTTON4,190,113,53,14
+    LTEXT           "&Wait:",IDC_STATIC,159,133,22,8
+    EDITTEXT        IDC_EDIT1,181,132,30,10,ES_AUTOHSCROLL
+    CONTROL         "Spin2",IDC_SPIN2,"msctls_updown32",UDS_ARROWKEYS,210,
+                    132,11,11
+    LTEXT           "minutes",IDC_STATIC,221,133,36,8
+END
+
+IDD_CPL_DISPLAY_APPEARANCE_PAGE DIALOG DISCARDABLE  10, 10, 247, 180
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME,3,6,241,84
+    LTEXT           "&Scheme:",IDC_STATIC,3,97,65,9
+    COMBOBOX        IDC_COMBO1,2,109,142,12,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Item:",IDC_STATIC,3,127,65,9
+    COMBOBOX        IDC_COMBO2,2,137,142,12,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Font:",IDC_STATIC,2,152,65,9,WS_DISABLED
+    COMBOBOX        IDC_COMBO3,2,163,142,12,CBS_DROPDOWN | CBS_SORT | 
+                    WS_DISABLED | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Sa&ve As...",IDC_BUTTON1,151,111,46,13
+    PUSHBUTTON      "&Delete",IDC_BUTTON3,199,111,43,13
+    LTEXT           "Si&ze:",IDC_STATIC,148,129,39,10
+    LTEXT           "Siz&e:",IDC_STATIC,149,154,39,8
+    EDITTEXT        IDC_EDIT1,151,139,44,10,ES_AUTOHSCROLL | WS_DISABLED
+    COMBOBOX        IDC_COMBO4,150,162,43,12,CBS_DROPDOWN | CBS_SORT | 
+                    WS_DISABLED | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_CPL_DISPLAY_WEB_PAGE DIALOG DISCARDABLE  10, 10, 247, 180
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+END
+
+IDD_CPL_DISPLAY_EFFECTS_PAGE DIALOG DISCARDABLE  10, 10, 263, 210
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+    GROUPBOX        "&Desktop icons",IDC_STATIC,3,6,256,91
+    GROUPBOX        "Visual effects",IDC_STATIC,1,105,256,96
+    PUSHBUTTON      "D&efault Icon",IDC_BUTTON1,186,79,69,14
+    PUSHBUTTON      "&Change Icon...",IDC_BUTTON3,112,79,69,14
+    COMBOBOX        IDC_COMBO1,175,119,72,12,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Use &transition effects for menus and tooltips",
+                    IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,123,
+                    163,9
+    CONTROL         "&Smooth edges of screen fonts",IDC_CHECK2,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,135,163,9
+    CONTROL         "Use &large icons",IDC_CHECK3,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,147,163,9
+    CONTROL         "Show &icons using all possilbe colours",IDC_CHECK4,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,159,163,9
+    CONTROL         "Show &window contents while dragging",IDC_CHECK5,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,171,163,9
+    CONTROL         "&Hide keyboard navigation indicators until use of the Alt key",
+                    IDC_CHECK6,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,183,
+                    219,9
+    CONTROL         "List1",IDC_LIST1,"SysListView32",WS_BORDER | WS_TABSTOP,
+                    10,20,244,53
+END
+
+IDD_CPL_DISPLAY_SETTINGS_PAGE DIALOG DISCARDABLE  10, 10, 247, 180
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+    GROUPBOX        "&Colours",IDC_STATIC,3,107,115,40
+    GROUPBOX        "&Screen area",IDC_STATIC,126,108,116,40
+    COMBOBOX        IDC_COMBO1,6,117,107,13,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Slider1",IDC_SLIDER1,"msctls_trackbar32",TBS_AUTOTICKS | 
+                    WS_TABSTOP,151,122,66,15
+    LTEXT           "Less",IDC_STATIC,130,118,22,9
+    LTEXT           "More",IDC_STATIC,218,119,22,9
+    PUSHBUTTON      "&Troubleshoot...",IDC_BUTTON1,111,158,67,13
+    PUSHBUTTON      "Ad&vanced...",IDC_BUTTON3,180,158,67,13
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME,7,133,106,9
+    LTEXT           "Display:",IDC_STATIC,7,84,63,10
+    EDITTEXT        IDC_EDIT1,6,97,233,9,ES_AUTOHSCROLL | ES_READONLY | NOT 
+                    WS_BORDER
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME,62,12,120,68
+END
+
+IDD_CPL_FOLDERS_GENERAL_PAGE DIALOG DISCARDABLE  10, 10, 247, 180
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+END
+
+IDD_CPL_FOLDERS_VIEW_PAGE DIALOG DISCARDABLE  10, 10, 247, 180
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+END
+
+IDD_CPL_FOLDERS_FILE_TYPES_PAGE DIALOG DISCARDABLE  10, 10, 247, 180
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+END
+
+IDD_CPL_FOLDERS_OFFLINE_FILES_PAGE DIALOG DISCARDABLE  10, 10, 247, 180
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+END
+
+IDD_CPL_REGIONAL_GENERAL_PAGE DIALOG DISCARDABLE  10, 10, 247, 180
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+END
+
+IDD_CPL_REGIONAL_NUMBERS_PAGE DIALOG DISCARDABLE  10, 10, 247, 180
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+END
+
+IDD_CPL_REGIONAL_CURRENCY_PAGE DIALOG DISCARDABLE  10, 10, 247, 180
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+END
+
+IDD_CPL_REGIONAL_TIME_PAGE DIALOG DISCARDABLE  10, 10, 247, 180
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+END
+
+IDD_CPL_REGIONAL_DATE_PAGE DIALOG DISCARDABLE  10, 10, 247, 180
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+END
+
+IDD_CPL_REGIONAL_INPUT_LOCALES_PAGE DIALOG DISCARDABLE  10, 10, 247, 180
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+END
+
+IDD_CPL_DATETIME_DATETIME_PAGE DIALOG DISCARDABLE  10, 10, 247, 132
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+    GROUPBOX        "Date",IDC_STATIC,5,5,127,107
+    GROUPBOX        "Time",IDC_STATIC,136,5,105,107
+    COMBOBOX        IDC_CPL_DATETIME_MONTH_COMBO,13,21,55,100,CBS_DROPDOWN | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_CPL_DATETIME_YEAR_EDIT,69,21,46,13,ES_NUMBER
+    CONTROL         "Spin1",IDC_CPL_DATETIME_YEAR_SPIN,"msctls_updown32",
+                    UDS_ARROWKEYS,115,21,11,13
+    EDITTEXT        IDC_CPL_DATETIME_TIME_EDIT,142,96,82,13,ES_AUTOHSCROLL
+    CONTROL         "Spin1",IDC_CPL_DATETIME_TIME_SPIN,"msctls_updown32",
+                    UDS_ARROWKEYS,224,96,11,13
+    LTEXT           "Current time zone:",IDC_STATIC,8,115,81,10
+    EDITTEXT        IDC_CPL_DATETIME_CURRENT_TIMEZONE_EDIT,94,115,145,12,
+                    ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT 
+                    WS_TABSTOP
+    CONTROL         "",IDC_CPL_DATETIME_CLOCKFACE,"Static",SS_ETCHEDFRAME,
+                    142,15,92,77
+END
+
+IDD_CPL_DATETIME_TIMEZONE_PAGE DIALOG DISCARDABLE  10, 10, 245, 140
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+    CONTROL         "Automatically adjust clock for &daylight saving changes",
+                    IDC_CPL_DATETIME_DAYLIGHT_SAVINGS_CHECK,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,125,217,9
+    COMBOBOX        IDC_CPL_DATETIME_TIMEZONE_COMBO,4,6,235,120,
+                    CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "",IDC_CPL_DATETIME_EARTHMAP_IMAGE,"Static",
+                    SS_BLACKFRAME,10,23,223,98
+END
+
+IDD_CPL_IRDA_FILE_TRANSFER_PAGE DIALOG DISCARDABLE  0, 0, 244, 183
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+    GROUPBOX        "File Transfer Options",IDC_STATIC,11,56,224,116
+    CONTROL         "Display an &icon on the taskbar indicating infrared activity",
+                    IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,23,
+                    219,8
+    CONTROL         "A&llow others to send files to your computer using infrared communications",
+                    IDC_CHECK2,"Button",BS_AUTOCHECKBOX | BS_MULTILINE | 
+                    WS_TABSTOP,23,72,206,18
+    CONTROL         "&Display status while receiving files",IDC_CHECK3,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,100,204,17
+    LTEXT           "Default location for received files:",IDC_STATIC,23,126,
+                    171,9
+    EDITTEXT        IDC_EDIT1,23,137,202,12,ES_AUTOHSCROLL | WS_DISABLED
+END
+
+IDD_CPL_IRDA_IMAGE_TRANSFER_PAGE DIALOG DISCARDABLE  0, 0, 243, 176
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+    CONTROL         "&Use IrDa to transfer images from a digitial camera to your computer",
+                    IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,22,
+                    206,21
+    GROUPBOX        "Received Images",IDC_STATIC,7,60,229,109
+    LTEXT           "Transfer images to a subfolder of:",IDC_STATIC,15,76,
+                    213,11
+    EDITTEXT        IDC_EDIT1,11,93,218,15,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Browse...",IDC_BUTTON1,169,116,59,15
+    CONTROL         "&Explore location after receiving pictures",IDC_CHECK2,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,137,207,9
+END
+
+IDD_CPL_IRDA_HARDWARE_PAGE DIALOG DISCARDABLE  0, 0, 244, 192
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+    LTEXT           "&Devices:",IDC_STATIC,9,21,154,10
+    CONTROL         "List1",IDC_CPL_IRDA_HARDWARE_DEVICE_LIST,"SysListView32",
+                    LVS_REPORT | WS_BORDER | WS_TABSTOP,9,31,223,45
+    GROUPBOX        "Device Properties",IDC_STATIC,7,87,228,98
+    PUSHBUTTON      "P&roperties",IDC_BUTTON1,167,165,58,13
+    PUSHBUTTON      "&Troubleshoot...",IDC_BUTTON2,103,165,58,13
+    LTEXT           "Manufacturer:",IDC_STATIC,12,102,96,10
+    LTEXT           "Hardware Revision:",IDC_STATIC,12,112,96,10
+    LTEXT           "Location:",IDC_STATIC,12,122,96,10
+    LTEXT           "Device Status:",IDC_STATIC,12,132,96,10
+    EDITTEXT        IDC_EDIT1,107,103,118,12,ES_AUTOHSCROLL | WS_DISABLED | 
+                    NOT WS_BORDER
+    EDITTEXT        IDC_EDIT2,107,114,118,12,ES_AUTOHSCROLL | WS_DISABLED | 
+                    NOT WS_BORDER
+    EDITTEXT        IDC_EDIT3,107,125,118,12,ES_AUTOHSCROLL | WS_DISABLED | 
+                    NOT WS_BORDER
+    EDITTEXT        IDC_EDIT4,107,136,118,12,ES_AUTOHSCROLL | WS_DISABLED | 
+                    NOT WS_BORDER
+END
+
+IDD_CPL_ACCESSIBLE_KEYBOARD_PAGE DIALOG DISCARDABLE  10, 10, 247, 180
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+END
+
+IDD_CPL_ACCESSIBLE_GENERAL_PAGE DIALOG DISCARDABLE  10, 10, 247, 180
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+END
+
+IDD_CPL_ACCESSIBLE_SOUNDL_PAGE DIALOG DISCARDABLE  10, 10, 247, 180
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+END
+
+IDD_CPL_ACCESSIBLE_DISPLAY_PAGE DIALOG DISCARDABLE  10, 10, 247, 180
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+END
+
+IDD_CPL_ACCESSIBLE_MOUSE_PAGE DIALOG DISCARDABLE  10, 10, 247, 180
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+END
+
+IDD_CPL_PHONE_MODEM_DIALING_PAGE DIALOG DISCARDABLE  10, 10, 247, 180
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+END
+
+IDD_CPL_PHONE_MODEM_MODEMS_PAGE DIALOG DISCARDABLE  10, 10, 247, 180
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+END
+
+IDD_CPL_PHONE_MODEM_ADVANCED_PAGE DIALOG DISCARDABLE  10, 10, 247, 180
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "Tahoma"
+BEGIN
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_CPL_TABBED_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 149
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 73
+    END
+
+    IDD_CPL_KEYBOARD_SPEED_PAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 3
+        RIGHTMARGIN, 215
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 157
+    END
+
+    IDD_CPL_KEYBOARD_HARDWARE_PAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 186
+        TOPMARGIN, 3
+        BOTTOMMARGIN, 125
+    END
+
+    IDD_CPL_DATETIME_DATETIME_PAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 241
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 127
+    END
+
+    IDD_CPL_DATETIME_TIMEZONE_PAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 239
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 136
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog Info
+//
+#ifndef __GNUC__
+
+IDD_CPL_DATETIME_DATETIME_PAGE DLGINIT
+BEGIN
+    IDC_CPL_DATETIME_MONTH_COMBO, 0x403, 8, 0
+0x614a, 0x756e, 0x7261, 0x0079, 
+    IDC_CPL_DATETIME_MONTH_COMBO, 0x403, 9, 0
+0x6546, 0x7262, 0x6175, 0x7972, "\000" 
+    IDC_CPL_DATETIME_MONTH_COMBO, 0x403, 6, 0
+0x614d, 0x6372, 0x0068, 
+    IDC_CPL_DATETIME_MONTH_COMBO, 0x403, 6, 0
+0x7041, 0x6972, 0x006c, 
+    IDC_CPL_DATETIME_MONTH_COMBO, 0x403, 4, 0
+0x614d, 0x0079, 
+    IDC_CPL_DATETIME_MONTH_COMBO, 0x403, 5, 0
+0x754a, 0x656e, "\000" 
+    IDC_CPL_DATETIME_MONTH_COMBO, 0x403, 5, 0
+0x754a, 0x796c, "\000" 
+    IDC_CPL_DATETIME_MONTH_COMBO, 0x403, 7, 0
+0x7541, 0x7567, 0x7473, "\000" 
+    IDC_CPL_DATETIME_MONTH_COMBO, 0x403, 10, 0
+0x6553, 0x7470, 0x6d65, 0x6562, 0x0072, 
+    IDC_CPL_DATETIME_MONTH_COMBO, 0x403, 8, 0
+0x634f, 0x6f74, 0x6562, 0x0072, 
+    IDC_CPL_DATETIME_MONTH_COMBO, 0x403, 9, 0
+0x6f4e, 0x6576, 0x626d, 0x7265, "\000" 
+    IDC_CPL_DATETIME_MONTH_COMBO, 0x403, 9, 0
+0x6544, 0x6563, 0x626d, 0x7265, "\000" 
+    0
+END
+
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CPL_SYSTEM_NAME     "System"
+    IDS_CPL_SYSTEM_INFO     "Displays system information and Configures Environment settings"
+    IDS_CPL_IRDA_NAME       "Wireless Link"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CPL_IRDA_INFO       "Wireless link configuration settings"
+    IDS_CPL_MOUSE_NAME      "Mouse"
+    IDS_CPL_MOUSE_INFO      "Customises your mouse settings"
+    IDS_CPL_KEYBOARD_NAME   "Keyboard"
+    IDS_CPL_KEYBOARD_INFO   "Customises your keyboard settings"
+    IDS_CPL_REGIONS_NAME    "Regional Settings"
+    IDS_CPL_REGIONS_INFO    "Customises settings for display of languages, numbers, times and dates"
+    IDS_CPL_USERS_NAME      "Users and Passwords"
+    IDS_CPL_USERS_INFO      "Manages users and security for this computer"
+    IDS_CPL_DATETIME_NAME   "Date/Time"
+    IDS_CPL_DATETIME_INFO   "Sets the date, time and timezone information for this computer"
+    IDS_CPL_FOLDERS_NAME    "Folder Options"
+    IDS_CPL_FOLDERS_INFO    "Customises the display of files and folders, changes file associations, and makes network files available offline"
+    IDS_CPL_DISPLAY_NAME    "Display"
+    IDS_CPL_DISPLAY_INFO    "Customises your desktop display and screen saver"
+    IDS_CPL_ACCESSIBLE_NAME "Accessibility Options"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CPL_ACCESSIBLE_INFO "Customises accessibility features for your computer"
+    IDS_CPL_PHONE_MODEM_NAME "Phone and Modem Options"
+    IDS_CPL_PHONE_MODEM_INFO 
+                            "Configures your telephone dialing rules and modem properties"
+    IDS_CPL_DATETIME_MONTH_1 "January"
+    IDS_CPL_DATETIME_MONTH_2 "February"
+    IDS_CPL_DATETIME_MONTH_3 "March"
+    IDS_CPL_DATETIME_MONTH_4 "April"
+    IDS_CPL_DATETIME_MONTH_5 "May"
+    IDS_CPL_DATETIME_MONTH_6 "June"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDC_CPL_SYSTEM_DLG      "System Configuration"
+    IDC_CPL_IRDA_DLG        "Infrared Port Configuration"
+    IDC_CPL_MOUSE_DLG       "Mouse Properties"
+    IDC_CPL_KEYBOARD_DLG    "Keyboard Properties"
+    IDC_CPL_REGIONAL_DLG    "Regional Settings"
+    IDC_CPL_USERS_DLG       "User Properties"
+    IDC_CPL_DATETIME_DLG    "Date and Time Settings"
+    IDC_CPL_FOLDERS_DLG     "Folder Options"
+    IDC_CPL_DISPLAY_DLG     "Display Settings"
+    IDC_CPL_ACCESSIBLE_DLG  "Accessibility Options"
+    IDC_CPL_PHONE_MODEM_DLG "Phone and Modem Options"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDD_CPL_SYSTEM_GENERAL_PAGE "General"
+    IDD_CPL_SYSTEM_NETWORK_PAGE "Network Identification"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDD_CPL_SYSTEM_HARDWARE_PAGE "Hardware"
+    IDD_CPL_SYSTEM_USERS_PAGE "User Profiles"
+    IDD_CPL_SYSTEM_ADVANCED_PAGE "Advanced"
+    IDD_CPL_KEYBOARD_SPEED_PAGE "Speed"
+    IDD_CPL_KEYBOARD_LOCALES_PAGE "Input Locales"
+    IDD_CPL_KEYBOARD_HARDWARE_PAGE "Hardware"
+    IDD_CPL_MOUSE_BUTTONS_PAGE "Buttons"
+    IDD_CPL_MOUSE_POINTERS_PAGE "Pointers"
+    IDD_CPL_MOUSE_MOTION_PAGE "Motion"
+    IDD_CPL_MOUSE_HARDWARE_PAGE "Hardware"
+    IDD_CPL_USERS_USERS_PAGE "Users"
+    IDD_CPL_USERS_ADVANCED_PAGE "Advanced"
+    IDD_CPL_DISPLAY_BACKGROUND_PAGE "Background"
+    IDD_CPL_DISPLAY_SCREEN_SAVER_PAGE "Screen Saver"
+    IDD_CPL_DISPLAY_APPEARANCE_PAGE "Appearance"
+    IDD_CPL_DISPLAY_WEB_PAGE "Web"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDD_CPL_DISPLAY_EFFECTS_PAGE "Effects"
+    IDD_CPL_DISPLAY_SETTINGS_PAGE "Settings"
+    IDD_CPL_FOLDERS_GENERAL_PAGE "General"
+    IDD_CPL_FOLDERS_VIEW_PAGE "View"
+    IDD_CPL_FOLDERS_FILE_TYPES_PAGE "File Types"
+    IDD_CPL_FOLDERS_OFFLINE_FILES_PAGE "Offline Files"
+    IDD_CPL_REGIONAL_GENERAL_PAGE "General"
+    IDD_CPL_REGIONAL_NUMBERS_PAGE "Numbers"
+    IDD_CPL_REGIONAL_CURRENCY_PAGE "Currency"
+    IDD_CPL_REGIONAL_TIME_PAGE "Time"
+    IDD_CPL_REGIONAL_DATE_PAGE "Date"
+    IDD_CPL_REGIONAL_INPUT_LOCALES_PAGE "Input Locales"
+    IDD_CPL_DATETIME_DATETIME_PAGE "Date and Time"
+    IDD_CPL_DATETIME_TIMEZONE_PAGE "Time Zone"
+    IDD_CPL_IRDA_FILE_TRANSFER_PAGE "File Transfer"
+    IDD_CPL_IRDA_IMAGE_TRANSFER_PAGE "Image Transfer"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDD_CPL_IRDA_HARDWARE_PAGE "Hardware"
+    IDD_CPL_ACCESSIBLE_KEYBOARD_PAGE "Keyboard"
+    IDD_CPL_ACCESSIBLE_GENERAL_PAGE "General"
+    IDD_CPL_ACCESSIBLE_SOUNDL_PAGE "Sound"
+    IDD_CPL_ACCESSIBLE_DISPLAY_PAGE "Display"
+    IDD_CPL_ACCESSIBLE_MOUSE_PAGE "Mouse"
+    IDD_CPL_PHONE_MODEM_DIALING_PAGE "Dialing Rules"
+    IDD_CPL_PHONE_MODEM_MODEMS_PAGE "Modems"
+    IDD_CPL_PHONE_MODEM_ADVANCED_PAGE "Advanced"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CPL_DATETIME_MONTH_7 "July"
+    IDS_CPL_DATETIME_MONTH_8 "August"
+    IDS_CPL_DATETIME_MONTH_9 "September"
+    IDS_CPL_DATETIME_MONTH_10 "October"
+    IDS_CPL_DATETIME_MONTH_11 "November"
+    IDS_CPL_DATETIME_MONTH_12 "December"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (Australia) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENA)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_AUS
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resrc1.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""defines.h""\r\n"
+    "#include ""reactos\\resource.h""\r\n"
+    "#include ""resource.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_EARTH16             BITMAP  DISCARDABLE     "res\\earth16.bmp"
+IDB_EARTH256            BITMAP  DISCARDABLE     "res\\earth256.bmp"
+#endif    // English (Australia) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
