@@ -1,4 +1,4 @@
-/* $Id: ldr.c,v 1.16 2003/07/10 18:50:51 chorns Exp $
+/* $Id: ldr.c,v 1.17 2003/10/30 15:52:29 arty Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -129,6 +129,11 @@ LoadLibraryExW (
 
 	if ( lpLibFileName == NULL )
 		return NULL;
+
+	dwFlags &= 
+	  DONT_RESOLVE_DLL_REFERENCES |
+	  LOAD_LIBRARY_AS_DATAFILE |
+	  LOAD_WITH_ALTERED_SEARCH_PATH;
 
 	RtlInitUnicodeString (&DllName, (LPWSTR)lpLibFileName);
 	Status = LdrLoadDll(NULL, dwFlags, &DllName, (PVOID*)&hInst);

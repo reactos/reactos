@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.71 2003/09/12 17:51:47 vizzini Exp $
+/* $Id: utils.c,v 1.72 2003/10/30 15:52:29 arty Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -25,6 +25,7 @@
 #include <ntdll/ldr.h>
 #include <ntos/minmax.h>
 
+#define LDRP_PROCESS_CREATION_TIME 0x8000000
 
 #ifdef DBG_NTDLL_LDR_UTILS
 #define NDEBUG
@@ -613,7 +614,9 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
           DPRINT("Calling entry point at 0x%08x\n", Entrypoint);
           if (FALSE == Entrypoint(Module->BaseAddress,
                                   DLL_PROCESS_ATTACH,
-                                  NULL))
+                                  (void *)
+				  ((LoadFlags & LDRP_PROCESS_CREATION_TIME) ? 
+				   1 : 0)))
             {
 	      /* Do this as a DPRINT1 for now, until clean up and fail implemented */
               DPRINT1("NTDLL.LDR: DLL \"%wZ\" failed to initialize\n",
@@ -820,7 +823,7 @@ LdrFixupForward(PCHAR ForwardName)
         if (!NT_SUCCESS(Status))
           {
              Status = LdrLoadDll(NULL,
-                                 0,
+                                 LDRP_PROCESS_CREATION_TIME,
                                  &DllName,
                                  &BaseAddress);
              if (!NT_SUCCESS(Status))
@@ -1293,7 +1296,7 @@ static NTSTATUS LdrFixupImports(PIMAGE_NT_HEADERS       NTHeaders,
         if (!NT_SUCCESS(Status))
           {
              Status = LdrLoadDll(NULL,
-                                 0,
+                                 LDRP_PROCESS_CREATION_TIME,
                                  &DllName,
                                  &BaseAddress);
              RtlFreeUnicodeString (&DllName);
@@ -1775,7 +1778,7 @@ LdrShutdownProcess (VOID)
              DPRINT("Calling entry point at 0x%08x\n", Entrypoint);
              Entrypoint (Module->BaseAddress,
                          DLL_PROCESS_DETACH,
-                         NULL);
+                         (void *)TRUE);
           }
 
         Entry = Entry->Blink;
