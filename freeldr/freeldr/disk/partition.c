@@ -239,7 +239,7 @@ BOOL DiskReadBootRecord(U32 DriveNumber, U64 LogicalSectorNumber, PMASTER_BOOT_R
 	{
 		sprintf(ErrMsg, "Invalid partition table magic 0x%x found on drive 0x%x",
 		        BootRecord->MasterBootRecordMagic, DriveNumber);
-		DiskError("Invalid partition table magic (0xaa55)", 0);
+		DiskError(ErrMsg, 0);
 		return FALSE;
 	}
 
