@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.31 2001/10/03 18:23:02 hbirr Exp $
+ * $Id: fat.c,v 1.32 2001/10/07 08:58:29 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -380,9 +380,9 @@ FAT32FindAvailableCluster (PDEVICE_EXTENSION DeviceExt, PULONG Cluster)
 		}
 	    }
 	}
-      if (*((PULONG)(BaseAddress + ((FatStart + i) % ChunkSize))) & 0x0fffffff == 0)
+      if ((*((PULONG)(BaseAddress + ((FatStart + i) % ChunkSize))) & 0x0fffffff) == 0)
 	{
-	  DPRINT("Found available cluster 0x%x\n", i);
+	  DPRINT("Found available cluster 0x%x\n", i / 4);
 	  *Cluster = i / 4;
 	  CcRosReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);
 	  return(STATUS_SUCCESS);
@@ -945,7 +945,7 @@ GetNextCluster(PDEVICE_EXTENSION DeviceExt,
 //  DPRINT ("GetNextCluster(DeviceExt %x, CurrentCluster %x)\n",
 //	  DeviceExt, CurrentCluster);
 
-  if (Extend)
+  if (!Extend)
     {
       ExAcquireResourceSharedLite(&DeviceExt->FatResource, TRUE);
     }
@@ -967,6 +967,7 @@ GetNextCluster(PDEVICE_EXTENSION DeviceExt,
 	  Status = FAT16FindAvailableCluster(DeviceExt, &NewCluster);
 	  if (!NT_SUCCESS(Status))
 	    {
+          ExReleaseResourceLite(&DeviceExt->FatResource);
 	      return(Status);
 	    }
 	}
@@ -975,6 +976,7 @@ GetNextCluster(PDEVICE_EXTENSION DeviceExt,
 	  Status = FAT32FindAvailableCluster(DeviceExt, &NewCluster);
 	  if (!NT_SUCCESS(Status))
 	    {
+          ExReleaseResourceLite(&DeviceExt->FatResource);
 	      return(Status);
 	    }
 	}
@@ -983,6 +985,7 @@ GetNextCluster(PDEVICE_EXTENSION DeviceExt,
 	  Status = FAT12FindAvailableCluster(DeviceExt, &NewCluster);
 	  if (!NT_SUCCESS(Status))
 	    {
+          ExReleaseResourceLite(&DeviceExt->FatResource);
 	      return(Status);
 	    }
 	}
@@ -1021,6 +1024,7 @@ GetNextCluster(PDEVICE_EXTENSION DeviceExt,
 	  Status = FAT16FindAvailableCluster(DeviceExt, &NewCluster);
 	  if (!NT_SUCCESS(Status))
 	    {
+          ExReleaseResourceLite(&DeviceExt->FatResource);
 	      return(Status);
 	    }
 	}
@@ -1029,6 +1033,7 @@ GetNextCluster(PDEVICE_EXTENSION DeviceExt,
 	  Status = FAT32FindAvailableCluster(DeviceExt, &NewCluster);
 	  if (!NT_SUCCESS(Status))
 	    {
+          ExReleaseResourceLite(&DeviceExt->FatResource);
 	      return(Status);
 	    }
 	}
@@ -1037,6 +1042,7 @@ GetNextCluster(PDEVICE_EXTENSION DeviceExt,
 	  Status = FAT12FindAvailableCluster(DeviceExt, &NewCluster);
 	  if (!NT_SUCCESS(Status))
 	    {
+          ExReleaseResourceLite(&DeviceExt->FatResource);
 	      return(Status);
 	    }
 	}
