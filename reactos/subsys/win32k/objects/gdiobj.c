@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.70 2004/07/04 01:23:32 navaraf Exp $
+ * $Id: gdiobj.c,v 1.71 2004/07/04 12:00:40 navaraf Exp $
  *
  */
 #include <w32k.h>
@@ -345,8 +345,9 @@ GDIOBJ_AllocObj(WORD Size, DWORD ObjectType, GDICLEANUPPROC CleanupProc)
   newObject->Magic = GDI_TYPE_TO_MAGIC(ObjectType);
   newObject->lockfile = NULL;
   newObject->lockline = 0;
-#if 0
+#ifdef GDIOBJ_USE_FASTMUTEX
   ExInitializeFastMutex(&newObject->Lock);
+  newObject->RecursiveLockCount = 0;
 #else
   newObject->LockTid = 0;
   newObject->LockCount = 0;
@@ -684,6 +685,9 @@ PGDIOBJ FASTCALL
 GDIOBJ_LockObjDbg (const char* file, int line, HGDIOBJ hObj, DWORD ObjectType)
 {
   PGDIOBJHDR ObjHdr = GDIOBJ_iGetObjectForIndex(GDI_HANDLE_GET_INDEX(hObj));
+#ifndef GDIOBJ_USE_FASTMUTEX
+  DWORD CurrentTid = (DWORD)PsGetCurrentThreadId();
+#endif
 
   DPRINT("(%s:%i) GDIOBJ_LockObjDbg(0x%08x,0x%08x)\n", file, line, hObj, ObjectType);
   if (! GDI_VALID_OBJECT(hObj, ObjHdr, ObjectType, GDIOBJFLAG_DEFAULT))
@@ -712,24 +716,32 @@ GDIOBJ_LockObjDbg (const char* file, int line, HGDIOBJ hObj, DWORD ObjectType)
       return NULL;
     }
 
-#if 0
-#ifdef NDEBUG
-  ExAcquireFastMutex(&ObjHdr->Lock);
-#else /* NDEBUG */
-  if (! ExTryToAcquireFastMutex(&ObjHdr->Lock))
+#ifdef GDIOBJ_USE_FASTMUTEX
+  if (ObjHdr->Lock.Owner == KeGetCurrentThread())
     {
-      DPRINT1("Caution! GDIOBJ_LockObj trying to lock object 0x%x second time\n", hObj);
-      DPRINT1("  called from: %s:%i (thread %x)\n", file, line, KeGetCurrentThread());
-      if (NULL != ObjHdr->lockfile)
-        {
-          DPRINT1("  previously locked from: %s:%i (thread %x)\n", ObjHdr->lockfile, ObjHdr->lockline, ObjHdr->Lock.Owner);
-        }
-      ExAcquireFastMutex(&ObjHdr->Lock);
-      DPRINT1("  Disregard previous message about object 0x%x, it's ok\n", hObj);
+      ObjHdr->RecursiveLockCount++;
     }
+  else
+    {
+#ifdef NDEBUG    
+      ExAcquireFastMutex(&ObjHdr->Lock);
+#else /* NDEBUG */
+      if (! ExTryToAcquireFastMutex(&ObjHdr->Lock))
+        {
+          DPRINT1("Caution! GDIOBJ_LockObj trying to lock object 0x%x second time\n", hObj);
+          DPRINT1("  called from: %s:%i (thread %x)\n", file, line, KeGetCurrentThread());
+          if (NULL != ObjHdr->lockfile)
+            {
+              DPRINT1("  previously locked from: %s:%i (thread %x)\n", ObjHdr->lockfile, ObjHdr->lockline, ObjHdr->Lock.Owner);
+            }
+          ExAcquireFastMutex(&ObjHdr->Lock);
+          DPRINT1("  Disregard previous message about object 0x%x, it's ok\n", hObj);
+        }
 #endif /* NDEBUG */
+      ObjHdr->RecursiveLockCount++;
+    }
 #else
-  if (ObjHdr->LockTid == (DWORD)PsGetCurrentThreadId())
+  if (ObjHdr->LockTid == CurrentTid)
     {
       InterlockedIncrement(&ObjHdr->LockCount);
     }
@@ -737,7 +749,7 @@ GDIOBJ_LockObjDbg (const char* file, int line, HGDIOBJ hObj, DWORD ObjectType)
     {
       for (;;)
         {
-          if (InterlockedCompareExchange(&ObjHdr->LockTid, (DWORD)PsGetCurrentThreadId(), 0))
+          if (InterlockedCompareExchange(&ObjHdr->LockTid, CurrentTid, 0) == CurrentTid)
             {
               InterlockedIncrement(&ObjHdr->LockCount);
               break;
@@ -798,6 +810,9 @@ PGDIOBJ FASTCALL
 GDIOBJ_LockObj(HGDIOBJ hObj, DWORD ObjectType)
 {
   PGDIOBJHDR ObjHdr = GDIOBJ_iGetObjectForIndex(GDI_HANDLE_GET_INDEX(hObj));
+#ifndef GDIOBJ_USE_FASTMUTEX
+  DWORD CurrentTid = (DWORD)PsGetCurrentThreadId();
+#endif
 
   DPRINT("GDIOBJ_LockObj: hObj: 0x%08x, type: 0x%08x, objhdr: %x\n", hObj, ObjectType, ObjHdr);
   if (! GDI_VALID_OBJECT(hObj, ObjHdr, ObjectType, GDIOBJFLAG_DEFAULT))
@@ -807,10 +822,18 @@ GDIOBJ_LockObj(HGDIOBJ hObj, DWORD ObjectType)
       return NULL;
     }
 
-#if 0
-  ExAcquireFastMutex(&ObjHdr->Lock);
+#ifdef GDIOBJ_USE_FASTMUTEX
+  if (ObjHdr->Lock.Owner == KeGetCurrentThread())
+    {
+      ObjHdr->RecursiveLockCount++;
+    }
+  else
+    {
+      ExAcquireFastMutex(&ObjHdr->Lock);
+      ObjHdr->RecursiveLockCount++;
+    }
 #else
-  if (ObjHdr->LockTid == (DWORD)PsGetCurrentThreadId())
+  if (ObjHdr->LockTid == CurrentTid)
     {
       InterlockedIncrement(&ObjHdr->LockCount);
     }
@@ -818,7 +841,7 @@ GDIOBJ_LockObj(HGDIOBJ hObj, DWORD ObjectType)
     {
       for (;;)
         {
-          if (InterlockedCompareExchange(&ObjHdr->LockTid, (DWORD)PsGetCurrentThreadId(), 0))
+          if (InterlockedCompareExchange(&ObjHdr->LockTid, CurrentTid, 0) == CurrentTid)
             {
               InterlockedIncrement(&ObjHdr->LockCount);
               break;
@@ -859,8 +882,9 @@ GDIOBJ_UnlockObj(HGDIOBJ hObj, DWORD ObjectType)
     return FALSE;
   }
 
-#if 0
-  ExReleaseFastMutex(&ObjHdr->Lock);
+#ifdef GDIOBJ_USE_FASTMUTEX
+  if (--ObjHdr->RecursiveLockCount == 0)
+    ExReleaseFastMutex(&ObjHdr->Lock);
 #else
   if (InterlockedDecrement(&ObjHdr->LockCount) == 0)
     {

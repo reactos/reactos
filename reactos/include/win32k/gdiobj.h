@@ -37,6 +37,8 @@ typedef PVOID PGDIOBJ;
 
 typedef BOOL (FASTCALL *GDICLEANUPPROC)(PGDIOBJ Obj);
 
+#define GDIOBJ_USE_FASTMUTEX
+
 /*!
  * GDI object header. This is a part of any GDI object
 */
@@ -49,9 +51,13 @@ typedef struct _GDIOBJHDR
   WORD Magic;
   const char* lockfile;
   int lockline;
-/*  FAST_MUTEX Lock;*/
+#ifdef GDIOBJ_USE_FASTMUTEX
+  FAST_MUTEX Lock;
+  DWORD RecursiveLockCount;
+#else
   DWORD LockTid;
   DWORD LockCount;
+#endif
 } GDIOBJHDR, *PGDIOBJHDR;
 
 typedef struct _GDIMULTILOCK
