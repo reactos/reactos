@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.63 2003/08/18 11:23:32 hbirr Exp $
+/* $Id: kill.c,v 1.64 2003/09/14 10:50:29 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,6 +12,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/ex.h>
 #include <internal/ps.h>
 #include <internal/ke.h>
 #include <internal/mm.h>
@@ -189,6 +190,7 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
    KeDispatcherObjectWake(&CurrentThread->Tcb.DispatcherHeader);
    KeReleaseDispatcherDatabaseLockAtDpcLevel(FALSE);
 
+   ExpSwapThreadEventPair(CurrentThread, NULL); /* Release the associated eventpair object, if there was one */
    KeRemoveAllWaitsThread (CurrentThread, STATUS_UNSUCCESSFUL, FALSE);
 
    PsDispatchThreadNoLock(THREAD_STATE_TERMINATED_1);

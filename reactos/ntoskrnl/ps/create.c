@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.65 2003/09/10 06:12:22 vizzini Exp $
+/* $Id: create.c,v 1.66 2003/09/14 10:50:29 hbirr Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -26,7 +26,6 @@
 #include <internal/ke.h>
 #include <internal/ob.h>
 #include <internal/ps.h>
-#include <internal/ex.h>
 #include <internal/se.h>
 #include <internal/id.h>
 #include <internal/dbg.h>
@@ -312,7 +311,6 @@ PiDeleteThread(PVOID ObjectBody)
   PiNrThreads--;
   RemoveEntryList(&Thread->Tcb.ThreadListEntry);
   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
-  ExpSwapThreadEventPair(Thread, NULL); /* Release the associated eventpair object, if there was one */
 
   for (i = 0; i < NotifyRoutineCount; i++)
   {
