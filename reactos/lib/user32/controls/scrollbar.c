@@ -82,8 +82,7 @@ static LRESULT WINAPI ScrollBarWndProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 const struct builtin_class_descr SCROLL_builtin_class =
 {
     L"ScrollBar",           /* name */
-    CS_VREDRAW | CS_HREDRAW | CS_PARENTDC, /* style, Wine included CS_DBLCLK but then didn't
-                                              handle any WM_xBUTTONDBLCLK messages */
+    CS_DBLCLKS | CS_VREDRAW | CS_HREDRAW | CS_PARENTDC, /* style */
     ScrollBarWndProc,       /* procW */
     NULL,                   /* procA (winproc is Unicode only) */
     sizeof(SCROLLBARINFO) + sizeof(SCROLLINFO),  /* extra */
@@ -1274,6 +1273,7 @@ ScrollBarWndProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 	return 0;
 #endif
 
+      case WM_LBUTTONDBLCLK:
       case WM_LBUTTONDOWN:
         {
           POINT Pt;
