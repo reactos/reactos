@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.150 2003/04/10 23:14:46 hyperion Exp $
+; $Id: ntoskrnl.def,v 1.151 2003/04/25 18:36:10 fireball Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -434,7 +434,7 @@ KeResetEvent@4
 KeRundownQueue@4
 ;KeSaveFloatingPointState
 KeServiceDescriptorTable DATA
-;KeSetAffinityThread
+KeSetAffinityThread@8
 KeSetBasePriorityThread@8
 ;KeSetDmaIoCoherency
 KeSetEvent@12
