@@ -167,7 +167,7 @@ CharPrevExA(WORD codepage, LPCSTR start, LPCSTR ptr, DWORD flags)
     while (*start && (start < ptr))
     {
         LPCSTR next = CharNextExA(codepage, start, flags);
-        if (next > ptr) break;
+        if (next >= ptr) break;
         start = next;
     }
     return (LPSTR)start;
