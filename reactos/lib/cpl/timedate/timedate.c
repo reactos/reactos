@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timedate.c,v 1.3 2004/11/08 10:33:08 ekohl Exp $
+/* $Id: timedate.c,v 1.4 2004/11/11 12:24:56 ekohl Exp $
  *
  * PROJECT:         ReactOS Timedate Control Panel
  * FILE:            lib/cpl/timedate/timedate.c
@@ -102,6 +102,17 @@ DateTimePageProc(HWND hwndDlg,
                 /* Enable the 'Apply' button */
                 PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                 break;
+
+              case PSN_SETACTIVE:
+                /* FIXME: Update the time zone name */
+                return 0;
+
+              case PSN_APPLY:
+
+                /* FIXME: Set date and time */
+
+                SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
+                return TRUE;
 
               default:
                 break;
@@ -348,6 +359,113 @@ ShowTimeZoneList(HWND hwnd)
 }
 
 
+static VOID
+SetLocalTimeZone(HWND hwnd)
+{
+  TIME_ZONE_INFORMATION TimeZoneInformation;
+  PTIMEZONE_ENTRY Entry;
+  DWORD dwIndex;
+  DWORD i;
+
+  dwIndex = SendMessage(hwnd,
+			CB_GETCURSEL,
+			0,
+			0);
+
+  i = 0;
+  Entry = TimeZoneListHead;
+  while (i < dwIndex)
+    {
+      if (Entry == NULL)
+	return;
+
+      i++;
+      Entry = Entry->Next;
+    }
+
+  wcscpy(TimeZoneInformation.StandardName,
+	 Entry->StandardName);
+  wcscpy(TimeZoneInformation.DaylightName,
+	 Entry->DaylightName);
+
+  TimeZoneInformation.Bias = Entry->TimezoneInfo.Bias;
+  TimeZoneInformation.StandardBias = Entry->TimezoneInfo.StandardBias;
+  TimeZoneInformation.DaylightBias = Entry->TimezoneInfo.DaylightBias;
+
+  memcpy(&TimeZoneInformation.StandardDate,
+	 &Entry->TimezoneInfo.StandardDate,
+	 sizeof(SYSTEMTIME));
+  memcpy(&TimeZoneInformation.DaylightDate,
+	 &Entry->TimezoneInfo.DaylightDate,
+	 sizeof(SYSTEMTIME));
+
+  /* Set time zone information */
+  SetTimeZoneInformation(&TimeZoneInformation);
+}
+
+
+static VOID
+GetAutoDaylightInfo(HWND hwnd)
+{
+  HKEY hKey;
+
+  if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+		    L"SYSTEM\\CurrentControlSet\\Control\\TimeZoneInformation",
+		    0,
+		    KEY_SET_VALUE,
+		    &hKey))
+    return;
+
+  if (RegQueryValueExW(hKey,
+		       L"DisableAutoDaylightTimeSet",
+		       NULL,
+		       NULL,
+		       NULL,
+		       NULL))
+    {
+      SendMessage(hwnd, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
+    }
+  else
+    {
+      SendMessage(hwnd, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
+    }
+
+  RegCloseKey(hKey);
+}
+
+
+static VOID
+SetAutoDaylightInfo(HWND hwnd)
+{
+  HKEY hKey;
+  DWORD dwValue = 1;
+
+  if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+		    L"SYSTEM\\CurrentControlSet\\Control\\TimeZoneInformation",
+		    0,
+		    KEY_SET_VALUE,
+		    &hKey))
+    return;
+
+  if (SendMessage(hwnd, BM_GETCHECK, 0, 0) == BST_UNCHECKED)
+    {
+      RegSetValueExW(hKey,
+		     L"DisableAutoDaylightTimeSet",
+		     0,
+		     REG_DWORD,
+		     (LPBYTE)&dwValue,
+		     sizeof(DWORD));
+    }
+  else
+    {
+      RegDeleteKeyW(hKey,
+		    L"DisableAutoDaylightTimeSet");
+    }
+
+  RegCloseKey(hKey);
+}
+
+
 /* Property page dialog callback */
 INT_PTR CALLBACK
 TimeZonePageProc(HWND hwndDlg,
@@ -360,11 +478,12 @@ TimeZonePageProc(HWND hwndDlg,
     case WM_INITDIALOG:
       CreateTimeZoneList();
       ShowTimeZoneList(GetDlgItem(hwndDlg, IDC_TIMEZONELIST));
+      GetAutoDaylightInfo(GetDlgItem(hwndDlg, IDC_AUTODAYLIGHT));
       break;
 
     case WM_COMMAND:
       if ((LOWORD(wParam) == IDC_TIMEZONELIST && HIWORD(wParam) == CBN_SELCHANGE) ||
-          (LOWORD(wParam) == IDC_AUTOADJUST && HIWORD(wParam) == BN_CLICKED))
+          (LOWORD(wParam) == IDC_AUTODAYLIGHT && HIWORD(wParam) == BN_CLICKED))
         {
           /* Enable the 'Apply' button */
           PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
@@ -373,6 +492,25 @@ TimeZonePageProc(HWND hwndDlg,
 
     case WM_DESTROY:
       DestroyTimeZoneList();
+      break;
+
+    case WM_NOTIFY:
+      {
+          LPNMHDR lpnm = (LPNMHDR)lParam;
+
+          switch (lpnm->code)
+            {
+              case PSN_APPLY:
+                SetAutoDaylightInfo(GetDlgItem(hwndDlg, IDC_AUTODAYLIGHT));
+                SetLocalTimeZone(GetDlgItem(hwndDlg, IDC_TIMEZONELIST));
+                SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
+                return TRUE;
+
+              default:
+                break;
+            }
+
+      }
       break;
   }
 

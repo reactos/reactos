@@ -105,7 +105,7 @@ BEGIN
     COMBOBOX IDC_TIMEZONELIST, 53, 96, 201, 42,
              CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP
     AUTOCHECKBOX "Automatically adjust clock for &daylight saving changes",
-                 IDC_DAYLIGHTSAVINGS, 53, 124, 201, 10
+                 IDC_AUTODAYLIGHT, 53, 124, 201, 10
 END
 
 

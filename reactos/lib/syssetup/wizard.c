@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: wizard.c,v 1.11 2004/11/05 11:48:45 ekohl Exp $
+/* $Id: wizard.c,v 1.12 2004/11/11 12:23:43 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -537,7 +537,6 @@ static VOID
 CreateTimeZoneList(PSETUPDATA SetupData)
 {
   WCHAR szKeyName[256];
-//  WCHAR szValue[256];
   DWORD dwIndex;
   DWORD dwNameSize;
   DWORD dwValueSize;
@@ -693,13 +692,26 @@ CreateTimeZoneList(PSETUPDATA SetupData)
 }
 
 
-#if 0
 static VOID
 DestroyTimeZoneList(PSETUPDATA SetupData)
 {
+  PTIMEZONE_ENTRY Entry;
 
+  while (SetupData->TimeZoneListHead != NULL)
+    {
+      Entry = SetupData->TimeZoneListHead;
+
+      SetupData->TimeZoneListHead = Entry->Next;
+      if (SetupData->TimeZoneListHead != NULL)
+	{
+	  SetupData->TimeZoneListHead->Prev = NULL;
+	}
+
+      HeapFree(GetProcessHeap(), 0, Entry);
+    }
+
+  SetupData->TimeZoneListTail = NULL;
 }
-#endif
 
 
 static VOID
@@ -800,6 +812,32 @@ GetLocalSystemTime(HWND hwnd, PSETUPDATA SetupData)
 }
 
 
+static VOID
+SetAutoDaylightInfo(HWND hwnd)
+{
+  HKEY hKey;
+  DWORD dwValue = 1;
+
+  if (SendMessage(hwnd, BM_GETCHECK, 0, 0) == BST_UNCHECKED)
+    {
+      if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+			L"SYSTEM\\CurrentControlSet\\Control\\TimeZoneInformation",
+			0,
+			KEY_SET_VALUE,
+			&hKey))
+	  return;
+
+      RegSetValueExW(hKey,
+		     L"DisableAutoDaylightTimeSet",
+		     0,
+		     REG_DWORD,
+		     (LPBYTE)&dwValue,
+		     sizeof(DWORD));
+      RegCloseKey(hKey);
+    }
+}
+
+
 INT_PTR CALLBACK
 DateTimePageDlgProc(HWND hwndDlg,
                     UINT uMsg,
@@ -822,7 +860,9 @@ DateTimePageDlgProc(HWND hwndDlg,
           CreateTimeZoneList(SetupData);
 
           ShowTimeZoneList(GetDlgItem(hwndDlg, IDC_TIMEZONELIST),
-			   SetupData);
+                           SetupData);
+
+          SendDlgItemMessage(hwndDlg, IDC_AUTODAYLIGHT, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
         }
         break;
 
@@ -842,7 +882,8 @@ DateTimePageDlgProc(HWND hwndDlg,
                 {
                   GetLocalSystemTime(hwndDlg, SetupData);
                   SetLocalTimeZone(GetDlgItem(hwndDlg, IDC_TIMEZONELIST),
-				   SetupData);
+                                   SetupData);
+                  SetAutoDaylightInfo(GetDlgItem(hwndDlg, IDC_AUTODAYLIGHT));
                   SetLocalTime(&SetupData->SystemTime);
                 }
                 break;
@@ -851,6 +892,10 @@ DateTimePageDlgProc(HWND hwndDlg,
                 break;
             }
         }
+        break;
+
+      case WM_DESTROY:
+        DestroyTimeZoneList(SetupData);
         break;
 
       default:

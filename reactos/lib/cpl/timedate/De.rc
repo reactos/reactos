@@ -29,7 +29,7 @@ BEGIN
     COMBOBOX IDC_TIMEZONELIST, 5, 4, 241, 136,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     AUTOCHECKBOX "&Uhr automatisch auf Sommer-/Winterzeit umstellen",
-                 IDC_AUTOADJUST, 5, 136, 241, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
+                 IDC_AUTODAYLIGHT, 5, 136, 241, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
 END
 
 
