@@ -33,6 +33,44 @@ static GENERIC_MAPPING PiProcessMapping = {STANDARD_RIGHTS_READ | PROCESS_QUERY_
 					   STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE,
 					   PROCESS_ALL_ACCESS};
 
+static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
+{
+  ICI_SQ_SAME( sizeof(PROCESS_BASIC_INFORMATION),     sizeof(ULONG), ICIF_QUERY ),                     /* ProcessBasicInformation */
+  ICI_SQ_SAME( sizeof(QUOTA_LIMITS),                  sizeof(ULONG), ICIF_QUERY | ICIF_SET ),          /* ProcessQuotaLimits */
+  ICI_SQ_SAME( sizeof(IO_COUNTERS),                   sizeof(ULONG), ICIF_QUERY ),                     /* ProcessIoCounters */
+  ICI_SQ_SAME( sizeof(VM_COUNTERS),                   sizeof(ULONG), ICIF_QUERY ),                     /* ProcessVmCounters */
+  ICI_SQ_SAME( sizeof(KERNEL_USER_TIMES),             sizeof(ULONG), ICIF_QUERY ),                     /* ProcessTimes */
+  ICI_SQ_SAME( sizeof(KPRIORITY),                     sizeof(ULONG), ICIF_SET ),                       /* ProcessBasePriority */
+  ICI_SQ_SAME( sizeof(ULONG),                         sizeof(ULONG), ICIF_SET ),                       /* ProcessRaisePriority */
+  ICI_SQ_SAME( sizeof(HANDLE),                        sizeof(ULONG), ICIF_QUERY | ICIF_SET ),          /* ProcessDebugPort */
+  ICI_SQ_SAME( sizeof(HANDLE),                        sizeof(ULONG), ICIF_SET ),                       /* ProcessExceptionPort */
+  ICI_SQ_SAME( sizeof(PROCESS_ACCESS_TOKEN),          sizeof(ULONG), ICIF_SET ),                       /* ProcessAccessToken */
+  ICI_SQ_SAME( 0 /* FIXME */,                         sizeof(ULONG), ICIF_QUERY | ICIF_SET ),          /* ProcessLdtInformation */
+  ICI_SQ_SAME( 0 /* FIXME */,                         sizeof(ULONG), ICIF_SET ),                       /* ProcessLdtSize */
+  ICI_SQ_SAME( sizeof(ULONG),                         sizeof(ULONG), ICIF_QUERY | ICIF_SET ),          /* ProcessDefaultHardErrorMode */
+  ICI_SQ_SAME( 0 /* FIXME */,                         sizeof(ULONG), ICIF_SET ),                       /* ProcessIoPortHandlers */
+  ICI_SQ_SAME( sizeof(POOLED_USAGE_AND_LIMITS),       sizeof(ULONG), ICIF_QUERY ),                     /* ProcessPooledUsageAndLimits */
+  ICI_SQ_SAME( sizeof(PROCESS_WS_WATCH_INFORMATION),  sizeof(ULONG), ICIF_QUERY | ICIF_SET ),          /* ProcessWorkingSetWatch */
+  ICI_SQ_SAME( 0 /* FIXME */,                         sizeof(ULONG), ICIF_SET ),                       /* ProcessUserModeIOPL */
+  ICI_SQ_SAME( sizeof(BOOLEAN),                       sizeof(ULONG), ICIF_SET ),                       /* ProcessEnableAlignmentFaultFixup */
+  ICI_SQ_SAME( sizeof(PROCESS_PRIORITY_CLASS),        sizeof(ULONG), ICIF_SET ),                       /* ProcessPriorityClass */
+  ICI_SQ_SAME( sizeof(ULONG),                         sizeof(ULONG), ICIF_QUERY ),                     /* ProcessWx86Information */
+  ICI_SQ_SAME( sizeof(ULONG),                         sizeof(ULONG), ICIF_QUERY ),                     /* ProcessHandleCount */
+  ICI_SQ_SAME( sizeof(KAFFINITY),                     sizeof(ULONG), ICIF_SET ),                       /* ProcessAffinityMask */
+  ICI_SQ_SAME( sizeof(ULONG),                         sizeof(ULONG), ICIF_QUERY | ICIF_SET ),          /* ProcessPriorityBoost */
+
+  ICI_SQ(/*Q*/ sizeof(((PPROCESS_DEVICEMAP_INFORMATION)0x0)->Query),                                   /* ProcessDeviceMap */
+         /*S*/ sizeof(((PPROCESS_DEVICEMAP_INFORMATION)0x0)->Set),
+                                                /*Q*/ sizeof(ULONG),
+                                                /*S*/ sizeof(ULONG),
+                                                                     ICIF_QUERY | ICIF_SET ),
+
+  ICI_SQ_SAME( sizeof(PROCESS_SESSION_INFORMATION),   sizeof(ULONG), ICIF_QUERY | ICIF_SET ),          /* ProcessSessionInformation */
+  ICI_SQ_SAME( sizeof(BOOLEAN),                       sizeof(ULONG), ICIF_SET ),                       /* ProcessForegroundInformation */
+  ICI_SQ_SAME( sizeof(ULONG),                         sizeof(ULONG), ICIF_QUERY ),                     /* ProcessWow64Information */
+  ICI_SQ_SAME( sizeof(UNICODE_STRING),                sizeof(ULONG), ICIF_QUERY | ICIF_SIZE_VARIABLE), /* ProcessImageFileName */
+};
+
 #define MAX_PROCESS_NOTIFY_ROUTINE_COUNT    8
 #define MAX_LOAD_IMAGE_NOTIFY_ROUTINE_COUNT  8
 
@@ -1133,39 +1171,22 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 			  OUT PULONG ReturnLength  OPTIONAL)
 {
    PEPROCESS Process;
-   NTSTATUS Status;
    KPROCESSOR_MODE PreviousMode;
-
+   NTSTATUS Status = STATUS_SUCCESS;
+   
    PreviousMode = ExGetPreviousMode();
    
-   /* check for valid buffers */
-   if(PreviousMode == UserMode)
+   DefaultQueryInfoBufferCheck(ProcessInformationClass,
+                               PsProcessInfoClass,
+                               ProcessInformation,
+                               ProcessInformationLength,
+                               ReturnLength,
+                               PreviousMode,
+                               &Status);
+   if(!NT_SUCCESS(Status))
    {
-     _SEH_TRY
-     {
-       /* probe with 32bit alignment */
-       ProbeForWrite(ProcessInformation,
-                     ProcessInformationLength,
-                     sizeof(ULONG));
-       if(ReturnLength)
-       {
-         ProbeForWrite(ReturnLength,
-                       sizeof(ULONG),
-                       1);
-       }
-
-       Status = STATUS_SUCCESS;
-     }
-     _SEH_HANDLE
-     {
-       Status = _SEH_GetExceptionCode();
-     }
-     _SEH_END;
-     
-     if(!NT_SUCCESS(Status))
-     {
-       return Status;
-     }
+     DPRINT1("NtQueryInformationProcess() failed, Status: 0x%x\n", Status);
+     return Status;
    }
 
    /*
@@ -1669,45 +1690,36 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
 			IN ULONG ProcessInformationLength)
 {
    PEPROCESS Process;
-   NTSTATUS Status;
    KPROCESSOR_MODE PreviousMode;
    ACCESS_MASK Access;
+   NTSTATUS Status = STATUS_SUCCESS;
    
    PreviousMode = ExGetPreviousMode();
    
-   /* check for valid buffers */
-   if(PreviousMode == UserMode)
+   DefaultSetInfoBufferCheck(ProcessInformationClass,
+                             PsProcessInfoClass,
+                             ProcessInformation,
+                             ProcessInformationLength,
+                             PreviousMode,
+                             &Status);
+   if(!NT_SUCCESS(Status))
    {
-     _SEH_TRY
-     {
-       /* probe with 32bit alignment */
-       ProbeForRead(ProcessInformation,
-                    ProcessInformationLength,
-                    sizeof(ULONG));
-       Status = STATUS_SUCCESS;
-     }
-     _SEH_HANDLE
-     {
-       Status = _SEH_GetExceptionCode();
-     }
-     _SEH_END;
-
-     if(!NT_SUCCESS(Status))
-     {
-       return Status;
-     }
+     DPRINT1("NtSetInformationProcess() failed, Status: 0x%x\n", Status);
+     return Status;
    }
-   
-   Access = PROCESS_SET_INFORMATION;
    
    switch(ProcessInformationClass)
    {
      case ProcessSessionInformation:
-       Access |= PROCESS_SET_SESSIONID;
+       Access = PROCESS_SET_INFORMATION | PROCESS_SET_SESSIONID;
        break;
      case ProcessExceptionPort:
      case ProcessDebugPort:
-       Access |= PROCESS_SET_PORT;
+       Access = PROCESS_SET_INFORMATION | PROCESS_SET_PORT;
+       break;
+
+     default:
+       Access = PROCESS_SET_INFORMATION;
        break;
    }
    

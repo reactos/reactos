@@ -339,5 +339,169 @@ ObpReleaseObjectAttributes(IN PCAPTURED_OBJECT_ATTRIBUTES CapturedObjectAttribut
                            IN KPROCESSOR_MODE AccessMode,
                            IN BOOLEAN CaptureIfKernel);
 
+/* object information classes */
+
+#define ICIF_QUERY               0x1
+#define ICIF_SET                 0x2
+#define ICIF_QUERY_SIZE_VARIABLE 0x4
+#define ICIF_SET_SIZE_VARIABLE   0x8
+#define ICIF_SIZE_VARIABLE (ICIF_QUERY_SIZE_VARIABLE | ICIF_SET_SIZE_VARIABLE)
+
+typedef struct _INFORMATION_CLASS_INFO
+{
+  ULONG RequiredSizeQUERY;
+  ULONG RequiredSizeSET;
+  ULONG AlignmentSET;
+  ULONG AlignmentQUERY;
+  ULONG Flags;
+} INFORMATION_CLASS_INFO, *PINFORMATION_CLASS_INFO;
+
+#define ICI_SQ_SAME(Size, Alignment, Flags)                                    \
+  { Size, Size, Alignment, Alignment, Flags }
+
+#define ICI_SQ(SizeQuery, SizeSet, AlignmentQuery, AlignmentSet, Flags)        \
+  { SizeQuery, SizeSet, AlignmentQuery, AlignmentSet, Flags }
+
+#define CheckInfoClass(Class, BufferLen, ClassList, StatusVar, Mode)           \
+  do {                                                                         \
+  if((Class) >= 0 && (Class) < sizeof(ClassList) / sizeof(ClassList[0]))       \
+  {                                                                            \
+    if(!(ClassList[Class].Flags & ICIF_##Mode))                                \
+    {                                                                          \
+      *(StatusVar) = STATUS_INVALID_INFO_CLASS;                                \
+    }                                                                          \
+    else if(ClassList[Class].RequiredSize##Mode > 0 &&                         \
+            (BufferLen) != ClassList[Class].RequiredSize##Mode)                \
+    {                                                                          \
+      if(!(ClassList[Class].Flags & ICIF_##Mode##_SIZE_VARIABLE) ||            \
+         ((ClassList[Class].Flags & ICIF_##Mode##_SIZE_VARIABLE) &&            \
+          (BufferLen) < ClassList[Class].RequiredSize##Mode))                  \
+      {                                                                        \
+        *(StatusVar) = STATUS_INFO_LENGTH_MISMATCH;                            \
+      }                                                                        \
+    }                                                                          \
+  }                                                                            \
+  else                                                                         \
+  {                                                                            \
+    *(StatusVar) = STATUS_INVALID_INFO_CLASS;                                  \
+  }                                                                            \
+  } while(0)
+
+#define GetInfoClassAlignment(Class, ClassList, AlignmentVar, Mode)            \
+  do {                                                                         \
+  if((Class) >= 0 && (Class) < sizeof(ClassList) / sizeof(ClassList[0]))       \
+  {                                                                            \
+    *(AlignmentVar) = ClassList[Class].Alignment##Mode;                        \
+  }                                                                            \
+  else                                                                         \
+  {                                                                            \
+    *(AlignmentVar) = sizeof(ULONG);                                           \
+  }                                                                            \
+  } while(0)
+
+#define ProbeQueryInfoBuffer(Buffer, BufferLen, Alignment, RetLen, PrevMode, StatusVar) \
+  do {                                                                         \
+  if(PrevMode == UserMode)                                                     \
+  {                                                                            \
+    _SEH_TRY                                                                   \
+    {                                                                          \
+      ProbeForWrite(Buffer,                                                    \
+                    BufferLen,                                                 \
+                    Alignment);                                                \
+      if(RetLen != NULL)                                                       \
+      {                                                                        \
+        ProbeForWrite(RetLen,                                                  \
+                      sizeof(ULONG),                                           \
+                      1);                                                      \
+      }                                                                        \
+    }                                                                          \
+    _SEH_HANDLE                                                                \
+    {                                                                          \
+      *(StatusVar) = _SEH_GetExceptionCode();                                  \
+    }                                                                          \
+    _SEH_END;                                                                  \
+                                                                               \
+    if(!NT_SUCCESS(*(StatusVar)))                                              \
+    {                                                                          \
+      DPRINT1("ProbeQueryInfoBuffer failed: 0x%x\n", *(StatusVar));            \
+      return *(StatusVar);                                                     \
+    }                                                                          \
+  }                                                                            \
+  } while(0)
+
+#define ProbeSetInfoBuffer(Buffer, BufferLen, Alignment, PrevMode, StatusVar) \
+  do {                                                                         \
+  if(PrevMode == UserMode)                                                     \
+  {                                                                            \
+    _SEH_TRY                                                                   \
+    {                                                                          \
+      ProbeForRead(Buffer,                                                     \
+                   BufferLen,                                                  \
+                   Alignment);                                                 \
+    }                                                                          \
+    _SEH_HANDLE                                                                \
+    {                                                                          \
+      *(StatusVar) = _SEH_GetExceptionCode();                                  \
+    }                                                                          \
+    _SEH_END;                                                                  \
+                                                                               \
+    if(!NT_SUCCESS(*(StatusVar)))                                              \
+    {                                                                          \
+      DPRINT1("ProbeAllInfoBuffer failed: 0x%x\n", *(StatusVar));              \
+      return *(StatusVar);                                                     \
+    }                                                                          \
+  }                                                                            \
+  } while(0)
+
+#define DefaultSetInfoBufferCheck(Class, ClassList, Buffer, BufferLen, PrevMode, StatusVar) \
+  do {                                                                         \
+  ULONG _Alignment;                                                            \
+  /* get the preferred alignment for the information class or return */        \
+  /* default alignment in case the class doesn't exist */                      \
+  GetInfoClassAlignment(Class,                                                 \
+                        ClassList,                                             \
+                        &_Alignment,                                           \
+                        SET);                                                  \
+                                                                               \
+  /* probe the ENTIRE buffers and return on failure */                         \
+  ProbeSetInfoBuffer(Buffer,                                                   \
+                     BufferLen,                                                \
+                     _Alignment,                                               \
+                     PrevMode,                                                 \
+                     StatusVar);                                               \
+                                                                               \
+  /* validate information class index and check buffer size */                 \
+  CheckInfoClass(Class,                                                        \
+                 BufferLen,                                                    \
+                 ClassList,                                                    \
+                 StatusVar,                                                    \
+                 SET);                                                         \
+  } while(0)
+
+#define DefaultQueryInfoBufferCheck(Class, ClassList, Buffer, BufferLen, RetLen, PrevMode, StatusVar) \
+  do {                                                                         \
+    ULONG _Alignment;                                                          \
+   /* get the preferred alignment for the information class or return */       \
+   /* alignment in case the class doesn't exist */                             \
+   GetInfoClassAlignment(Class,                                                \
+                         ClassList,                                            \
+                         &_Alignment,                                          \
+                         QUERY);                                               \
+                                                                               \
+   /* probe the ENTIRE buffers and return on failure */                        \
+   ProbeQueryInfoBuffer(Buffer,                                                \
+                        BufferLen,                                             \
+                        _Alignment,                                            \
+                        RetLen,                                                \
+                        PrevMode,                                              \
+                        StatusVar);                                            \
+                                                                               \
+   /* validate information class index and check buffer size */                \
+   CheckInfoClass(Class,                                                       \
+                  BufferLen,                                                   \
+                  ClassList,                                                   \
+                  StatusVar,                                                   \
+                  QUERY);                                                      \
+  } while(0)
 
 #endif /* __INCLUDE_INTERNAL_OBJMGR_H */
