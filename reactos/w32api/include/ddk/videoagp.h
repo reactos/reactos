@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
 #include "video.h"
 
@@ -123,8 +121,6 @@ DDKAPI
 VideoPortGetAgpServices(
 	IN  PVOID  HwDeviceExtension,
 	IN  PVIDEO_PORT_AGP_SERVICES  AgpServices);
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

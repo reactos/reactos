@@ -31,11 +31,8 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
 #include "ntddstor.h"
-
 
 #define DD_TAPE_DEVICE_NAME               "\\Device\\Tape"
 #define DD_TAPE_DEVICE_NAME_U             L"\\Device\\Tape"
@@ -74,8 +71,6 @@ typedef enum _TAPE_DRIVE_PROBLEM_TYPE {
   TapeDriveMediaLifeExpired, 
   TapeDriveSnappedTape
 } TAPE_DRIVE_PROBLEM_TYPE;
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

@@ -31,10 +31,7 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
-
 
 /* GUIDs */
 
@@ -444,8 +441,6 @@ typedef struct _SERIALCONFIG {
   ULONG  ProviderSize;
   WCHAR  ProviderData[1];
 } SERIALCONFIG,*PSERIALCONFIG;
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

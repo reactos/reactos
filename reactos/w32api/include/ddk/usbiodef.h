@@ -31,10 +31,7 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
-
 
 DEFINE_GUID(GUID_DEVINTERFACE_USB_HUB, \
   0xf18a0e88, 0xc30c, 0x11d0, 0x88, 0x15, 0x00, 0xa0, 0xc9, 0x06, 0xbe, 0xd8);
@@ -101,8 +98,6 @@ DEFINE_GUID(GUID_USB_WMI_STD_NOTIFICATION,
                                     (id), \
                                     METHOD_NEITHER, \
                                     FILE_ANY_ACCESS)
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

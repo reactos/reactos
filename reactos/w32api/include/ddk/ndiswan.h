@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ndis.h"
 
 #define NDIS_USE_WAN_WRAPPER         			0x00000001
@@ -245,8 +243,6 @@ typedef struct _NDIS_WAN_CO_GET_STATS_INFO {
   OUT ULONG  BytesTransmittedCompressed;
   OUT ULONG  BytesReceivedCompressed;
 } NDIS_WAN_CO_GET_STATS_INFO, *PNDIS_WAN_CO_GET_STATS_INFO;
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

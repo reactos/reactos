@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ndis.h"
 
 #ifndef NDIS_TAPI_CURRENT_VERSION
@@ -1302,8 +1300,6 @@ typedef struct _CO_AF_TAPI_MAKE_CALL_PARAMETERS {
   IN  NDIS_VAR_DATA_DESC  DestAddress;
   IN  NDIS_VAR_DATA_DESC  LineCallParams;
 } CO_AF_TAPI_MAKE_CALL_PARAMETERS, *PCO_AF_TAPI_MAKE_CALL_PARAMETERS;
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

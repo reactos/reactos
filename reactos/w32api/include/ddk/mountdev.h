@@ -31,11 +31,8 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
 #include "mountmgr.h"
-
 
 #define IOCTL_MOUNTDEV_QUERY_DEVICE_NAME \
   CTL_CODE(MOUNTDEVCONTROLTYPE, 2, METHOD_BUFFERED, FILE_ANY_ACCESS)
@@ -74,8 +71,6 @@ typedef struct _MOUNTDEV_UNIQUE_ID_CHANGE_NOTIFY_OUTPUT {
   USHORT  NewUniqueIdOffset;
   USHORT  NewUniqueIdLength;
 } MOUNTDEV_UNIQUE_ID_CHANGE_NOTIFY_OUTPUT;
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
 #include "tdi.h"
 
@@ -1156,8 +1154,6 @@ VOID
 DDKAPI
 TdiUnmapBuffer(
   IN PMDL  MdlChain);
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

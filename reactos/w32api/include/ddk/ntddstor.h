@@ -31,10 +31,7 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
-
 
 #define IOCTL_STORAGE_BASE                FILE_DEVICE_MASS_STORAGE
 
@@ -328,8 +325,6 @@ typedef struct _STORAGE_PROPERTY_QUERY {
   STORAGE_QUERY_TYPE  QueryType;
   UCHAR  AdditionalParameters[1];
 } STORAGE_PROPERTY_QUERY, *PSTORAGE_PROPERTY_QUERY;
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

@@ -31,11 +31,8 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
 #include "ntddstor.h"
-
 
 #define IOCTL_CDROM_BASE                  FILE_DEVICE_CD_ROM
 
@@ -342,8 +339,6 @@ typedef struct __RAW_READ_INFO {
 	ULONG  SectorCount;
 	TRACK_MODE_TYPE  TrackMode;
 } RAW_READ_INFO, *PRAW_READ_INFO;
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

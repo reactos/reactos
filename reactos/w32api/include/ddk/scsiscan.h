@@ -31,10 +31,7 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
-
 
 #define IOCTL_SCSISCAN_CMD \
   CTL_CODE(FILE_DEVICE_SCANNER, SCSISCAN_CMD_CODE, METHOD_OUT_DIRECT, FILE_ANY_ACCESS)
@@ -125,8 +122,6 @@ typedef struct _SCSISCAN_INFO {
   UCHAR  AdapterName[MAX_STRING];
   ULONG  Reserved;
 } SCSISCAN_INFO, *PSCSISCAN_INFO;
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

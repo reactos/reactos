@@ -169,7 +169,6 @@ typedef struct _VIDEO_PORT_CONFIG_INFO {
   ULONG  NumEmulatorAccessEntries;
   PEMULATOR_ACCESS_ENTRY  EmulatorAccessEntries;
   ULONG_PTR  EmulatorAccessEntriesContext;
-  PVOID Reserved0;
   PHYSICAL_ADDRESS  VdmPhysicalVideoMemoryAddress;
   ULONG  VdmPhysicalVideoMemoryLength;
   ULONG  HardwareStateSize;

@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 typedef ULONG	ATM_ADDRESSTYPE;
 
 #define SAP_TYPE_NSAP			                1
@@ -431,6 +429,7 @@ typedef struct _ATM_TRAFFIC_DESCRIPTOR {
 typedef struct _ATM_TRAFFIC_DESCRIPTOR_IE {
   ATM_TRAFFIC_DESCRIPTOR  ForwardTD;
   ATM_TRAFFIC_DESCRIPTOR  BackwardTD;
+  BOOLEAN  BestEffort;
 } ATM_TRAFFIC_DESCRIPTOR_IE, *PATM_TRAFFIC_DESCRIPTOR_IE;
 
 /* ATM_TRANSIT_NETWORK_SELECTION_IE.TypeOfNetworkId constants */
@@ -500,8 +499,6 @@ typedef struct _ATM_SERVICE_ADDRESS_LIST {
   ULONG  NumberOfAddressesReturned;
   ATM_ADDRESS  Address[1];
 } ATM_SERVICE_ADDRESS_LIST, *PATM_SERVICE_ADDRESS_LIST;
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

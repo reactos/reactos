@@ -31,10 +31,7 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
-
 
 #define DD_BEEP_DEVICE_NAME               "\\Device\\Beep"
 #define DD_BEEP_DEVICE_NAME_U             L"\\Device\\Beep"
@@ -49,8 +46,6 @@ typedef struct _BEEP_SET_PARAMETERS {
 
 #define BEEP_FREQUENCY_MINIMUM            0x25
 #define BEEP_FREQUENCY_MAXIMUM            0x7FFF
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

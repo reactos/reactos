@@ -828,7 +828,7 @@ typedef struct _GDIINFO {
 typedef struct _PATHDATA {
   FLONG  flags;
   ULONG  count;
-  POINTFIX  pptfx;
+  POINTFIX  *glypptfx;
 } PATHDATA, *PPATHDATA;
 
 /* PATHOBJ.fl constants */
@@ -856,7 +856,7 @@ typedef union _GLYPHDEF {
 typedef struct _GLYPHPOS {
   HGLYPH  hg;
   GLYPHDEF  *pgdf;
-  POINTL  *ptl;
+  POINTL  ptl;
 } GLYPHPOS, *PGLYPHPOS;
 
 typedef struct _GLYPHDATA {
@@ -4146,8 +4146,6 @@ DrvGetDirectDrawInfo(
   OUT VIDEOMEMORY  *pvmList,
   OUT DWORD  *pdwNumFourCCCodes,
   OUT DWORD  *pdwFourCC);
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

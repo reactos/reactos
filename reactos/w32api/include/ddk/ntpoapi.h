@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
 #include "batclass.h"
 
@@ -223,9 +221,6 @@ typedef struct _PROCESSOR_POWER_INFORMATION {
   ULONG  MaxIdleState;
   ULONG  CurrentIdleState;
 } PROCESSOR_POWER_INFORMATION, *PPROCESSOR_POWER_INFORMATION;
-
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

@@ -31,10 +31,7 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
-
 
 #define MAXIMUM_USB_STRING_LENGTH         255
 
@@ -101,15 +98,18 @@ typedef struct _USB_COMMON_DESCRIPTOR {
 #define USB_CONFIG_SELF_POWERED           0x40
 #define USB_CONFIG_REMOTE_WAKEUP          0x20
 
+#include <pshpack1.h>
 typedef struct _USB_CONFIGURATION_DESCRIPTOR { 
   UCHAR  bLength;
   UCHAR  bDescriptorType;
   USHORT  wTotalLength;
   UCHAR  bNumInterfaces;
+  UCHAR  bConfigurationValue;
   UCHAR  iConfiguration;
   UCHAR  bmAttributes;
   UCHAR  MaxPower;
 } USB_CONFIGURATION_DESCRIPTOR, *PUSB_CONFIGURATION_DESCRIPTOR;
+#include <poppack.h>
 
 typedef struct _USB_DEVICE_DESCRIPTOR { 
   UCHAR  bLength;
@@ -140,6 +140,7 @@ typedef struct _USB_DEVICE_DESCRIPTOR {
 #define USB_ENDPOINT_TYPE_BULK            0x02
 #define USB_ENDPOINT_TYPE_INTERRUPT       0x03
 
+#include <pshpack1.h>
 typedef struct _USB_ENDPOINT_DESCRIPTOR { 
   UCHAR  bLength;
   UCHAR  bDescriptorType;
@@ -148,6 +149,7 @@ typedef struct _USB_ENDPOINT_DESCRIPTOR {
   USHORT  wMaxPacketSize;
   UCHAR  bInterval;
 } USB_ENDPOINT_DESCRIPTOR, *PUSB_ENDPOINT_DESCRIPTOR;
+#include <poppack.h>
 
 #define USB_FEATURE_ENDPOINT_STALL        0x0000
 #define USB_FEATURE_REMOTE_WAKEUP         0x0001
@@ -170,6 +172,7 @@ typedef struct _USB_STRING_DESCRIPTOR {
   WCHAR  bString[1];
 } USB_STRING_DESCRIPTOR, *PUSB_STRING_DESCRIPTOR;
 
+#include <pshpack1.h>
 typedef struct _USB_HUB_DESCRIPTOR {
 	UCHAR  bDescriptorLength;
 	UCHAR  bDescriptorType;
@@ -179,6 +182,7 @@ typedef struct _USB_HUB_DESCRIPTOR {
 	UCHAR  bHubControlCurrent;
 	UCHAR  bRemoveAndPowerMask[64];
 } USB_HUB_DESCRIPTOR, *PUSB_HUB_DESCRIPTOR;
+#include <poppack.h>
 
 #define USB_SUPPORT_D0_COMMAND            0x01
 #define USB_SUPPORT_D1_COMMAND            0x02
@@ -209,6 +213,7 @@ typedef struct _USB_CONFIGURATION_POWER_DESCRIPTOR {
 #define USB_FEATURE_INTERFACE_POWER_D2    0x0004
 #define USB_FEATURE_INTERFACE_POWER_D3    0x0005
 
+#include <pshpack1.h>
 typedef struct _USB_INTERFACE_POWER_DESCRIPTOR {
 	UCHAR  bLength;
 	UCHAR  bDescriptorType;
@@ -223,8 +228,7 @@ typedef struct _USB_INTERFACE_POWER_DESCRIPTOR {
 	USHORT  TransitionTimeFromD2;
 	USHORT  TransitionTimeFromD3;
 } USB_INTERFACE_POWER_DESCRIPTOR, *PUSB_INTERFACE_POWER_DESCRIPTOR;
-
-#pragma pack(pop)
+#include <poppack.h>
 
 #ifdef __cplusplus
 }

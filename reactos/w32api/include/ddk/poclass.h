@@ -31,11 +31,8 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
 #include "batclass.h"
-
 
 DEFINE_GUID(GUID_CLASS_INPUT,
   0x4D1E55B2L, 0xF16F, 0x11CF, 0x88, 0xCB, 0x00, 0x11, 0x11, 0x00, 0x00, 0x30);
@@ -113,8 +110,6 @@ typedef struct _PROCESSOR_OBJECT_INFO {
 	ULONG  PBlkAddress;
 	UCHAR  PBlkLength;
 } PROCESSOR_OBJECT_INFO, *PPROCESSOR_OBJECT_INFO;
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
 
 typedef union _CDB {
@@ -1688,8 +1686,6 @@ typedef union _TWO_BYTE {
   ASSERT(_val != 32); \
   (Bit) = _val; \
 }
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

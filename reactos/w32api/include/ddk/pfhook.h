@@ -31,10 +31,7 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
-
 
 #define DD_IPFLTRDRVR_DEVICE_NAME         L"\\Device\\IPFILTERDRIVER"
 
@@ -71,8 +68,6 @@ typedef struct _PF_SET_EXTENSION_HOOK_INFO {
 
 #define IOCTL_PF_SET_EXTENSION_POINTER \
   _IPFLTRDRVR_CTL_CODE(22, METHOD_BUFFERED, FILE_WRITE_ACCESS)
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

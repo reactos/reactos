@@ -34,12 +34,12 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include <stdarg.h>
 #include <winbase.h>
 #include "ntddk.h"
 #include "ntpoapi.h"
+
+#pragma pack(push,4)
 
 typedef struct _PEB *PPEB;
 

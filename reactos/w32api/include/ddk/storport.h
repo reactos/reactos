@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
 #include "srb.h"
 
@@ -416,8 +414,6 @@ StorPortSynchronizeAccess(
 #else
 #define DebugPrint(x)
 #endif
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

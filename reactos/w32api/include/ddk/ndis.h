@@ -37,8 +37,6 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
 #include "ntddndis.h"
 #include "netpnp.h"
@@ -537,6 +535,7 @@ typedef struct _NDIS_DMA_BLOCK {
   PVOID  MapRegisterBase;
   KEVENT  AllocationEvent;
   PADAPTER_OBJECT  SystemAdapterObject;
+  PVOID  Miniport;
   BOOLEAN  InProgress;
 } NDIS_DMA_BLOCK, *PNDIS_DMA_BLOCK;
 
@@ -703,10 +702,9 @@ typedef struct _CO_FLOW_PARAMETERS {
   ULONG  PeakBandwidth;
   ULONG  Latency;
   ULONG  DelayVariation;
-  GUARANTEE  LevelOfGuarantee;
-  ULONG  CostOfCall;
-  ULONG  NetworkAvailability;
+  SERVICETYPE  ServiceType;
   ULONG  MaxSduSize;
+  ULONG  MinimumPolicedSize;
 } CO_FLOW_PARAMETERS, *PCO_FLOW_PARAMETERS;
 
 typedef struct _CO_SPECIFIC_PARAMETERS {
@@ -5219,8 +5217,6 @@ typedef struct _NDIS_MAC_CHARACTERISTICS {
 
 typedef	NDIS_MAC_CHARACTERISTICS        NDIS_WAN_MAC_CHARACTERISTICS;
 typedef	NDIS_WAN_MAC_CHARACTERISTICS    *PNDIS_WAN_MAC_CHARACTERISTICS;
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

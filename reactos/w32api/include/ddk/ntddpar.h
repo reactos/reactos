@@ -31,10 +31,7 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
-
 
 /* Parallel port device GUIDs */
 
@@ -114,8 +111,6 @@ typedef struct _PARCLASS_NEGOTIATION_MASK {
 #define ECP_HW_IRQ                        0x0200
 #define ECP_SW                            0x0400
 #define ECP_ANY                           0x0780
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

@@ -31,11 +31,8 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
 #include "ntddstor.h"
-
 
 #define DD_DISK_DEVICE_NAME               "\\Device\\UNKNOWN"
 #define DD_DISK_DEVICE_NAME_U             L"\\Device\\UNKNOWN"
@@ -454,6 +451,7 @@ typedef struct _IDEREGS {
 	UCHAR  bReserved;
 } IDEREGS, *PIDEREGS, *LPIDEREGS;
 
+#include <pshpack1.h>
 typedef struct _SENDCMDINPARAMS {
 	ULONG  cBufferSize;
 	IDEREGS  irDriveRegs;
@@ -462,6 +460,7 @@ typedef struct _SENDCMDINPARAMS {
 	ULONG  dwReserved[4];
 	UCHAR  bBuffer[1];
 } SENDCMDINPARAMS, *PSENDCMDINPARAMS, *LPSENDCMDINPARAMS;
+#include <poppack.h>
 
 /* DRIVERSTATUS.bDriverError constants */
 #define SMART_NO_ERROR                    0
@@ -495,11 +494,13 @@ typedef struct _DRIVERSTATUS {
 #define READ_THRESHOLD_BUFFER_SIZE        512
 #define SMART_LOG_SECTOR_SIZE             512
 
+#include <pshpack1.h>
 typedef struct _SENDCMDOUTPARAMS {
 	ULONG  cBufferSize;
 	DRIVERSTATUS  DriverStatus;
 	UCHAR  bBuffer[1];
 } SENDCMDOUTPARAMS, *PSENDCMDOUTPARAMS, *LPSENDCMDOUTPARAMS;
+#include <poppack.h>
 
 #define READ_ATTRIBUTES                   0xD0
 #define READ_THRESHOLDS                   0xD1
@@ -512,8 +513,6 @@ typedef struct _SENDCMDOUTPARAMS {
 #define DISABLE_SMART                     0xD9
 #define RETURN_SMART_STATUS               0xDA
 #define ENABLE_DISABLE_AUTO_OFFLINE       0xDB
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

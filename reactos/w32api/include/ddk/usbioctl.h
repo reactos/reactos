@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
 #include "usb100.h"
 #include "usbiodef.h"
@@ -150,6 +148,8 @@ typedef enum _USB_CONNECTION_STATUS {
 	DeviceHubNestedTooDeeply,
 	DeviceInLegacyHub
 } USB_CONNECTION_STATUS, *PUSB_CONNECTION_STATUS;
+
+#include <pshpack1.h>
 
 typedef struct _USB_DESCRIPTOR_REQUEST {
 	ULONG  ConnectionIndex;
@@ -344,7 +344,7 @@ typedef struct _USB_ROOT_HUB_NAME {
 	WCHAR  RootHubName[1];
 } USB_ROOT_HUB_NAME, *PUSB_ROOT_HUB_NAME;
 
-#pragma pack(pop)
+#include <poppack.h>
 
 #ifdef __cplusplus
 }

@@ -35,11 +35,8 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
 #include "usbioctl.h"
-
 
 #define USBDI_VERSION                     0x300
 
@@ -400,8 +397,6 @@ typedef struct _URB {
 		struct _URB_CONTROL_GET_CONFIGURATION_REQUEST  UrbControlGetConfigurationRequest;
 	};
 } URB, *PURB;
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

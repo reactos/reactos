@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
 #include "hidusage.h"
 
@@ -598,8 +596,6 @@ HidP_UsageListDifference(
   OUT PUSAGE  BreakUsageList,
   OUT PUSAGE  MakeUsageList,
   IN ULONG  UsageListLength);
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }
