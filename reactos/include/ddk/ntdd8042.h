@@ -15,16 +15,13 @@ NTSTATUS
 (*PI8042_SYNCH_READ_PORT) (
     IN PVOID    Context,
     PUCHAR      Value,
-    BOOLEAN     WaitForACK
-    );
+    BOOLEAN     WaitForACK);
 
-typedef
-NTSTATUS
+typedef NTSTATUS
 (*PI8042_SYNCH_WRITE_PORT) (
     IN PVOID    Context,
     UCHAR       Value,
-    BOOLEAN     WaitForACK
-    );
+    BOOLEAN     WaitForACK);
 
 typedef enum _TRANSMIT_STATE {
     Idle = 0,
@@ -38,18 +35,15 @@ typedef struct _OUTPUT_PACKET {
     TRANSMIT_STATE State;
 } OUTPUT_PACKET, *POUTPUT_PACKET;
 
-typedef
-NTSTATUS
+typedef NTSTATUS
 (*PI8042_KEYBOARD_INITIALIZATION_ROUTINE) (
     IN PVOID                           InitializationContext,
     IN PVOID                           SynchFuncContext,
     IN PI8042_SYNCH_READ_PORT          ReadPort,
     IN PI8042_SYNCH_WRITE_PORT         WritePort,
-    OUT PBOOLEAN                       TurnTranslationOn
-    );
+    OUT PBOOLEAN                       TurnTranslationOn);
 
-typedef
-BOOLEAN
+typedef BOOLEAN
 (*PI8042_KEYBOARD_ISR) (
     PVOID                   IsrContext,
     PKEYBOARD_INPUT_DATA    CurrentInput,
@@ -57,8 +51,7 @@ BOOLEAN
     UCHAR                   StatusByte,
     PUCHAR                  Byte,
     PBOOLEAN                ContinueProcessing,
-    PKEYBOARD_SCAN_STATE    ScanState
-    );
+    PKEYBOARD_SCAN_STATE    ScanState);
 
 typedef struct _INTERNAL_I8042_HOOK_KEYBOARD {
 

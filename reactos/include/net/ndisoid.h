@@ -37,96 +37,6 @@ typedef struct _NET_PNP_TRANSLATE_LIST
 } NET_PNP_TRANSLATE_LIST, *PNET_PNP_TRANSLATE_LIST;
 
 
-
-/* Generel objects */
-
-/* General operational characteristics */
-
-/* Mandatory */
-#define OID_GEN_SUPPORTED_LIST                  0x00010101
-#define OID_GEN_HARDWARE_STATUS                 0x00010102
-#define OID_GEN_MEDIA_SUPPORTED                 0x00010103
-#define OID_GEN_MEDIA_IN_USE                    0x00010104
-#define OID_GEN_MAXIMUM_LOOKAHEAD               0x00010105
-#define OID_GEN_MAXIMUM_FRAME_SIZE              0x00010106
-#define OID_GEN_LINK_SPEED                      0x00010107
-#define OID_GEN_TRANSMIT_BUFFER_SPACE           0x00010108
-#define OID_GEN_RECEIVE_BUFFER_SPACE            0x00010109
-#define OID_GEN_TRANSMIT_BLOCK_SIZE             0x0001010A
-#define OID_GEN_RECEIVE_BLOCK_SIZE              0x0001010B
-#define OID_GEN_VENDOR_ID                       0x0001010C
-#define OID_GEN_VENDOR_DESCRIPTION              0x0001010D
-#define OID_GEN_CURRENT_PACKET_FILTER           0x0001010E
-#define OID_GEN_CURRENT_LOOKAHEAD               0x0001010F
-#define OID_GEN_DRIVER_VERSION                  0x00010110
-#define OID_GEN_MAXIMUM_TOTAL_SIZE              0x00010111
-#define OID_GEN_PROTOCOL_OPTIONS                0x00010112
-#define OID_GEN_MAC_OPTIONS                     0x00010113
-#define OID_GEN_MEDIA_CONNECT_STATUS            0x00010114
-#define OID_GEN_MAXIMUM_SEND_PACKETS            0x00010115
-#define OID_GEN_VENDOR_DRIVER_VERSION           0x00010116
-
-/* Optional */
-#define	OID_GEN_SUPPORTED_GUIDS                 0x00010117
-#define	OID_GEN_NETWORK_LAYER_ADDRESSES         0x00010118
-#define OID_GEN_TRANSPORT_HEADER_OFFSET         0x00010119
-
-/* General statistics */
-
-/* Mandatory */
-#define OID_GEN_XMIT_OK                         0x00020101
-#define OID_GEN_RCV_OK                          0x00020102
-#define OID_GEN_XMIT_ERROR                      0x00020103
-#define OID_GEN_RCV_ERROR                       0x00020104
-#define OID_GEN_RCV_NO_BUFFER                   0x00020105
-
-/* Optional */
-#define OID_GEN_DIRECTED_BYTES_XMIT             0x00020201
-#define OID_GEN_DIRECTED_FRAMES_XMIT            0x00020202
-#define OID_GEN_MULTICAST_BYTES_XMIT            0x00020203
-#define OID_GEN_MULTICAST_FRAMES_XMIT           0x00020204
-#define OID_GEN_BROADCAST_BYTES_XMIT            0x00020205
-#define OID_GEN_BROADCAST_FRAMES_XMIT           0x00020206
-#define OID_GEN_DIRECTED_BYTES_RCV              0x00020207
-#define OID_GEN_DIRECTED_FRAMES_RCV             0x00020208
-#define OID_GEN_MULTICAST_BYTES_RCV             0x00020209
-#define OID_GEN_MULTICAST_FRAMES_RCV            0x0002020A
-#define OID_GEN_BROADCAST_BYTES_RCV             0x0002020B
-#define OID_GEN_BROADCAST_FRAMES_RCV            0x0002020C
-#define OID_GEN_RCV_CRC_ERROR                   0x0002020D
-#define OID_GEN_TRANSMIT_QUEUE_LENGTH           0x0002020E
-
-
-/* Ethernet objects */
-
-/* Ethernet operational characteristics */
-
-/* Mandatory */
-#define OID_802_3_PERMANENT_ADDRESS             0x01010101
-#define OID_802_3_CURRENT_ADDRESS               0x01010102
-#define OID_802_3_MULTICAST_LIST                0x01010103
-#define OID_802_3_MAXIMUM_LIST_SIZE             0x01010104
-
-/* Optional */
-#define OID_802_3_MAC_OPTIONS                   0x01010105
-
-/* Ethernet statistics */
-
-/* Mandatory */
-#define OID_802_3_RCV_ERROR_ALIGNMENT           0x01020101
-#define OID_802_3_XMIT_ONE_COLLISION            0x01020102
-#define OID_802_3_XMIT_MORE_COLLISIONS          0x01020103
-
-/* Optional */
-#define OID_802_3_XMIT_DEFERRED                 0x01020201
-#define OID_802_3_XMIT_MAX_COLLISIONS           0x01020202
-#define OID_802_3_RCV_OVERRUN                   0x01020203
-#define OID_802_3_XMIT_UNDERRUN                 0x01020204
-#define OID_802_3_XMIT_HEARTBEAT_FAILURE        0x01020205
-#define OID_802_3_XMIT_TIMES_CRS_LOST           0x01020206
-#define OID_802_3_XMIT_LATE_COLLISIONS          0x01020207
-
-
 /* Token Ring objects */
 
 /* Token Ring operational characteristics */
@@ -418,5 +328,3 @@ typedef struct _NET_PNP_TRANSLATE_LIST
 
 
 /* EOF */
-
-
