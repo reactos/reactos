@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.27 2001/05/27 11:10:25 ekohl Exp $
+/* $Id: rtl.h,v 1.28 2001/06/17 22:52:37 ekohl Exp $
  *
  */
 
@@ -458,6 +458,32 @@ RtlIsValidIndexHandle (
 	IN	PRTL_HANDLE_TABLE	HandleTable,
 	IN OUT	PRTL_HANDLE		*Handle,
 	IN	ULONG			Index
+	);
+
+NTSTATUS
+STDCALL
+RtlpNtCreateKey (
+	OUT	HANDLE			KeyHandle,
+	IN	ACCESS_MASK		DesiredAccess,
+	IN	POBJECT_ATTRIBUTES	ObjectAttributes,
+	IN	ULONG			Unused1,
+	OUT	PULONG			Disposition,
+	IN	ULONG			Unused2
+	);
+
+NTSTATUS
+STDCALL
+RtlpNtMakeTemporaryKey (
+	IN	HANDLE	KeyHandle
+	);
+
+NTSTATUS
+STDCALL
+RtlpNtOpenKey (
+	OUT	HANDLE			KeyHandle,
+	IN	ACCESS_MASK		DesiredAccess,
+	IN	POBJECT_ATTRIBUTES	ObjectAttributes,
+	IN	ULONG			Unused
 	);
 
 #endif /* __INCLUDE_NTDLL_RTL_H */

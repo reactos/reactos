@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.64 2001/06/17 20:05:10 ea Exp $
+; $Id: ntdll.edf,v 1.65 2001/06/17 22:53:14 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -592,10 +592,10 @@ RtlValidateProcessHeaps=RtlValidateProcessHeaps@0
 RtlWriteRegistryValue=RtlWriteRegistryValue@24
 ;RtlZeroHeap
 RtlZeroMemory=RtlZeroMemory@8
-;RtlpNtCreateKey
+RtlpNtCreateKey=RtlpNtCreateKey@24
 ;RtlpNtEnumerateSubKey
 RtlpNtMakeTemporaryKey=RtlpNtMakeTemporaryKey@4
-;RtlpNtOpenKey
+RtlpNtOpenKey=RtlpNtOpenKey@16
 ;RtlpNtQueryValueKey
 ;RtlpNtSetValueKey
 ;RtlpUnWaitCriticalSection

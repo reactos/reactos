@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.3 2001/05/30 20:00:34 ekohl Exp $
+/* $Id: registry.c,v 1.4 2001/06/17 22:53:57 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -100,7 +100,9 @@ RtlDeleteRegistryValue(IN ULONG RelativeTo,
 NTSTATUS STDCALL
 RtlFormatCurrentUserKeyPath(PUNICODE_STRING KeyPath)
 {
-   return STATUS_UNSUCCESSFUL;
+   RtlCreateUnicodeString(KeyPath,
+			  L"\\Registry\\User\\.Default");
+   return STATUS_SUCCESS;
 }
 
 /*
@@ -292,9 +294,47 @@ RtlWriteRegistryValue(IN ULONG RelativeTo,
 
 
 NTSTATUS STDCALL
-RtlpNtMakeTemporaryKey(HANDLE KeyHandle)
+RtlpNtCreateKey(OUT HANDLE KeyHandle,
+		IN ACCESS_MASK DesiredAccess,
+		IN POBJECT_ATTRIBUTES ObjectAttributes,
+		IN ULONG Unused1,
+		OUT PULONG Disposition,
+		IN ULONG Unused2)
 {
-   return NtDeleteKey(KeyHandle);
+   if (ObjectAttributes != NULL)
+     ObjectAttributes->Attributes &=
+	~(OBJ_PERMANENT | OBJ_EXCLUSIVE);
+
+   return(NtCreateKey(KeyHandle,
+		      DesiredAccess,
+		      ObjectAttributes,
+		      0,
+		      NULL,
+		      0,
+		      Disposition));
+}
+
+
+NTSTATUS STDCALL
+RtlpNtMakeTemporaryKey(IN HANDLE KeyHandle)
+{
+   return(NtDeleteKey(KeyHandle));
+}
+
+
+NTSTATUS STDCALL
+RtlpNtOpenKey(OUT HANDLE KeyHandle,
+	      IN ACCESS_MASK DesiredAccess,
+	      IN POBJECT_ATTRIBUTES ObjectAttributes,
+	      IN ULONG Unused)
+{
+   if (ObjectAttributes != NULL)
+     ObjectAttributes->Attributes &=
+	~(OBJ_PERMANENT | OBJ_EXCLUSIVE);
+
+   return(NtOpenKey(KeyHandle,
+		    DesiredAccess,
+		    ObjectAttributes));
 }
 
 
