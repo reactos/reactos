@@ -48,7 +48,6 @@
  * TODO: Handle split reads and writes across multiple map registers
  * TODO: Break up ReadWritePassive and handle errors better
  * TODO: Figure out data rate issues
- * TODO: I think RWComputeCHS is bugified
  * TODO: Media type detection
  * TODO: Figure out perf issue - waiting after call to read/write for about a second each time
  * TODO: Figure out specify timings
@@ -346,7 +345,7 @@ static NTSTATUS NTAPI RWComputeCHS(PDRIVE_INFO IN  DriveInfo,
  * NOTES:
  *     - Lots of ugly typecasts here
  *     - Sectors are 1-based!
- *     - FIXME: I think this routine is still bugified a bit
+ *     - This is really crummy code.  Please FIXME.
  */
 {
   ULONG AbsoluteSector;
@@ -356,13 +355,15 @@ static NTSTATUS NTAPI RWComputeCHS(PDRIVE_INFO IN  DriveInfo,
 
   /* First calculate the 1-based "absolute sector" based on the byte offset */
   ASSERT(!(DiskByteOffset % DriveInfo->DiskGeometry.BytesPerSector));         /* FIXME: Only handle full sector transfers atm */
+
+  /* AbsoluteSector is zero-based to make the math a little easier */
   AbsoluteSector = DiskByteOffset / DriveInfo->DiskGeometry.BytesPerSector;  /* Num full sectors */
 
   /* Cylinder number is floor(AbsoluteSector / SectorsPerCylinder) */
   *Cylinder =  (CHAR)(AbsoluteSector / SectorsPerCylinder); 
 
-  /* Head number is 1 if the sector within the cylinder > SectorsPerTrack; 0 otherwise */
-  *Head =  AbsoluteSector % SectorsPerCylinder > DriveInfo->DiskGeometry.SectorsPerTrack ? 1 : 0;
+  /* Head number is 0 if the sector within the cylinder < SectorsPerTrack; 1 otherwise */
+  *Head =  AbsoluteSector % SectorsPerCylinder < DriveInfo->DiskGeometry.SectorsPerTrack ? 0 : 1;
 
   /* 
    * Sector number is the sector within the cylinder if on head 0; that minus SectorsPerTrack if it's on head 1 
@@ -371,6 +372,11 @@ static NTSTATUS NTAPI RWComputeCHS(PDRIVE_INFO IN  DriveInfo,
   *Sector =  ((UCHAR)(AbsoluteSector % SectorsPerCylinder) + 1) - ((*Head) * (UCHAR)DriveInfo->DiskGeometry.SectorsPerTrack);
 
   KdPrint(("floppy: RWComputeCHS: offset 0x%x is c:0x%x h:0x%x s:0x%x\n", DiskByteOffset, *Cylinder, *Head, *Sector));
+
+  /* Sanity checking */
+  ASSERT(*Cylinder <= DriveInfo->DiskGeometry.Cylinders.QuadPart);
+  ASSERT(*Head <= DriveInfo->DiskGeometry.TracksPerCylinder);
+  ASSERT(*Sector <= DriveInfo->DiskGeometry.SectorsPerTrack);
 
   return STATUS_SUCCESS;
 }
