@@ -78,7 +78,7 @@ typedef struct _KTRAP_FRAME
    USHORT Reserved9;
 } KTRAP_FRAME, *PKTRAP_FRAME;
 
-VOID KiUpdateSystemTime (VOID);
+VOID KiUpdateSystemTime (KIRQL oldIrql);
 
 VOID KeAcquireDispatcherDatabaseLock(BOOLEAN Wait);
 VOID KeReleaseDispatcherDatabaseLock(BOOLEAN Wait);

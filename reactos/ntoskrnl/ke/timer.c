@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.40 2001/03/14 00:21:22 dwelch Exp $
+/* $Id: timer.c,v 1.41 2001/03/14 23:19:14 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -427,7 +427,7 @@ KeExpireTimers(PKDPC Dpc,
 
 
 VOID 
-KiUpdateSystemTime (VOID)
+KiUpdateSystemTime (KIRQL oldIrql)
 /*
  * FUNCTION: Handles a timer interrupt
  */
@@ -450,25 +450,15 @@ KiUpdateSystemTime (VOID)
     * Display the tick count in the top left of the screen as a debugging
     * aid
     */
-   switch (KiTimerTicks % 4)
+   vidmem[0] = ' ';
+   if (oldIrql < DISPATCH_LEVEL)
      {
-     case 0:
-       vidmem[0] = '|';
-       break;
-       
-     case 1:
-       vidmem[0] = '/';
-       break;
-
-     case 2:
-       vidmem[0] = '-';
-       break;
-
-     case 3:
-       vidmem[0] = '\\';
-       break;
+       vidmem[1] = 0x17;
      }
-   vidmem[1] = 0x7;
+   else
+     {
+       vidmem[1] = 0x27;
+     }
 
    /*
     * Queue a DPC that will expire timers

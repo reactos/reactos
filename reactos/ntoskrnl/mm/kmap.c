@@ -1,4 +1,4 @@
-/* $Id: kmap.c,v 1.6 2001/02/10 22:51:10 dwelch Exp $
+/* $Id: kmap.c,v 1.7 2001/03/14 23:19:14 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -27,10 +27,10 @@
  * One bit for each page in the kmalloc region
  *      If set then the page is used by a kmalloc block
  */
-static unsigned int alloc_map[ALLOC_MAP_SIZE/32]={0,};
+static unsigned int AllocMap[ALLOC_MAP_SIZE/32]={0,};
 static KSPIN_LOCK AllocMapLock;
 
-static PVOID kernel_pool_base;
+static PVOID NonPagedPoolBase;
 
 /* FUNCTIONS ***************************************************************/
 
@@ -38,14 +38,14 @@ VOID
 ExUnmapPage(PVOID Addr)
 {
    KIRQL oldIrql;
-   ULONG i = (Addr - kernel_pool_base) / PAGESIZE;
+   ULONG i = (Addr - NonPagedPoolBase) / PAGESIZE;
    
    DPRINT("ExUnmapPage(Addr %x)\n",Addr);
    DPRINT("i %x\n",i);
    
    KeAcquireSpinLock(&AllocMapLock, &oldIrql);
    MmDeleteVirtualMapping(NULL, (PVOID)Addr, FALSE);
-   clear_bit(i%32, &alloc_map[i/32]);
+   clear_bit(i%32, &AllocMap[i/32]);
    KeReleaseSpinLock(&AllocMapLock, oldIrql);
 }
 
@@ -55,7 +55,6 @@ ExAllocatePage(VOID)
   ULONG PhysPage;
 
   PhysPage = (ULONG)MmAllocPage(0);
-  DPRINT("Allocated page %x\n",PhysPage);
   if (PhysPage == 0)
     {
       return(NULL);
@@ -75,11 +74,11 @@ ExAllocatePageWithPhysPage(ULONG PhysPage)
    KeAcquireSpinLock(&AllocMapLock, &oldlvl);
    for (i=1; i<ALLOC_MAP_SIZE;i++)
      {
-	if (!test_bit(i%32,&alloc_map[i/32]))
+	if (!test_bit(i%32,&AllocMap[i/32]))
 	  {
 	     DPRINT("i %x\n",i);
-	     set_bit(i%32,&alloc_map[i/32]);
-	     addr = (ULONG)(kernel_pool_base + (i*PAGESIZE));
+	     set_bit(i%32,&AllocMap[i/32]);
+	     addr = (ULONG)(NonPagedPoolBase + (i*PAGESIZE));
 	     Status = MmCreateVirtualMapping(NULL, 
 					     (PVOID)addr, 
 					     PAGE_READWRITE | PAGE_SYSTEM, 
@@ -100,12 +99,12 @@ ExAllocatePageWithPhysPage(ULONG PhysPage)
 VOID 
 MmInitKernelMap(PVOID BaseAddress)
 {
-   kernel_pool_base = BaseAddress;
+   NonPagedPoolBase = BaseAddress;
    KeInitializeSpinLock(&AllocMapLock);
 }
 
-unsigned int 
-alloc_pool_region(unsigned int nr_pages)
+PVOID
+MiAllocNonPagedPoolRegion(ULONG nr_pages)
 /*
  * FUNCTION: Allocates a region of pages within the nonpaged pool area
  */
@@ -113,12 +112,10 @@ alloc_pool_region(unsigned int nr_pages)
    unsigned int start = 0;
    unsigned int length = 0;
    unsigned int i,j;
-   
-   OLD_DPRINT("alloc_pool_region(nr_pages = %d)\n",nr_pages);
 
    for (i=1; i<ALLOC_MAP_SIZE;i++)
      {
-	if (!test_bit(i%32,&alloc_map[i/32]))
+	if (!test_bit(i%32,&AllocMap[i/32]))
 	  {
 	     if (length == 0)
 	       {
@@ -131,15 +128,13 @@ alloc_pool_region(unsigned int nr_pages)
 	       }
 	     if (length==nr_pages)
 	       {
-                  OLD_DPRINT("found region at %d for %d\n",start,
-			 length);
 		  for (j=start;j<(start+length);j++)
 		    {
-		       set_bit(j%32,&alloc_map[j/32]);
+		       set_bit(j%32,&AllocMap[j/32]);
 		    }
                   OLD_DPRINT("returning %x\n",(start*PAGESIZE)
 			 +kernel_pool_base);
-		  return((ULONG)((start*PAGESIZE)+kernel_pool_base));
+		  return(((start*PAGESIZE)+NonPagedPoolBase));
 	       }
 	  }
 	else

@@ -1,4 +1,4 @@
-/* $Id: irq.c,v 1.6 2001/03/07 16:48:43 dwelch Exp $
+/* $Id: irq.c,v 1.7 2001/03/14 23:19:14 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -153,12 +153,12 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
    __asm__("sti\n\t");
 
    if (irq==0)
-   {
-        KiUpdateSystemTime();
-   }
+     {
+       KiUpdateSystemTime(old_level);
+     }
    else
-   {
-      DPRINT("KiInterruptDispatch(irq %d)\n",irq);
+     {
+       DPRINT("KiInterruptDispatch(irq %d)\n",irq);
       /*
        * Iterate the list until one of the isr tells us its device interrupted
        */
