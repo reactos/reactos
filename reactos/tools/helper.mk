@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.35 2003/04/27 14:45:52 chorns Exp $
+# $Id: helper.mk,v 1.36 2003/05/05 19:59:21 chorns Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -821,7 +821,8 @@ endif # ROS_USE_PCH
 	$(NASM_CMD) $(NFLAGS) $(TARGET_NFLAGS) $< -o $@
 %.coff: %.rc
 	$(RC) $(TARGET_RCFLAGS) $(RCINC) $< -o $@
-
+# Kill implicit rule
+.o:;
 
 # Compatibility
 CFLAGS := $(TARGET_CFLAGS)
