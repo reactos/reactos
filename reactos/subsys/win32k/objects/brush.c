@@ -1,4 +1,4 @@
-/* $Id: brush.c,v 1.17 2002/09/08 10:23:52 chorns Exp $
+/* $Id: brush.c,v 1.18 2003/01/18 20:46:31 ei Exp $
  */
 
 
@@ -200,7 +200,7 @@ BOOL STDCALL W32kPatBlt(HDC  hDC,
   BrushObj = (BRUSHOBJ*) GDIOBJ_LockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
   assert(BrushObj);
   if (BrushObj->logbrush.lbStyle != BS_NULL)
-    {	
+    {
       if (Width > 0)
 	{
 	  DestRect.left = XLeft + dc->w.DCOrgX;
@@ -213,15 +213,15 @@ BOOL STDCALL W32kPatBlt(HDC  hDC,
 	}
       if (Height > 0)
 	{
-	  DestRect.top = YLeft + dc->w.DCOrgY;      
+	  DestRect.top = YLeft + dc->w.DCOrgY;
 	  DestRect.bottom = YLeft + Height + dc->w.DCOrgY;
 	}
       else
 	{
-	  DestRect.top = YLeft + Height + dc->w.DCOrgY;      
+	  DestRect.top = YLeft + Height + dc->w.DCOrgY;
 	  DestRect.bottom = YLeft + dc->w.DCOrgY;
 	}
-      ret = EngBitBlt(SurfObj, 
+      ret = EngBitBlt(SurfObj,
 		      NULL,
 		      NULL,
 		      NULL,
@@ -233,7 +233,8 @@ BOOL STDCALL W32kPatBlt(HDC  hDC,
 		      NULL,
 		      PATCOPY);
     }
-  GDIOBJ_UnlockObj( dc->w.hBrush, GO_PEN_MAGIC );	
+  GDIOBJ_UnlockObj( dc->w.hBrush, GO_BRUSH_MAGIC );
+  DC_ReleasePtr( hDC );
   return(ret);
 }
 

@@ -54,19 +54,22 @@ HRGN WINAPI SaveVisRgn(HDC hdc)
   return copy;
 }
 
-INT WINAPI 
+INT WINAPI
 W32kSelectVisRgn(HDC hdc, HRGN hrgn)
 {
   int retval;
   DC *dc;
 
-  if (!hrgn) return ERROR;
-  if (!(dc = DC_HandleToPtr(hdc))) return ERROR;
+  if (!hrgn)
+  	return ERROR;
+  if (!(dc = DC_HandleToPtr(hdc)))
+  	return ERROR;
 
   dc->w.flags &= ~DC_DIRTY;
 
   retval = W32kCombineRgn(dc->w.hVisRgn, hrgn, 0, RGN_COPY);
   CLIPPING_UpdateGCRegion(dc);
+  DC_ReleasePtr( hdc );
 
   return retval;
 }
@@ -93,12 +96,15 @@ int STDCALL W32kGetClipBox(HDC  hDC,
   int retval;
   DC *dc;
 
-  if (!(dc = DC_HandleToPtr(hDC))) return ERROR;
+  if (!(dc = DC_HandleToPtr(hDC)))
+  	return ERROR;
   retval = UnsafeW32kGetRgnBox(dc->w.hGCClipRgn, rc);
   rc->left -= dc->w.DCOrgX;
   rc->right -= dc->w.DCOrgX;
   rc->top -= dc->w.DCOrgY;
   rc->bottom -= dc->w.DCOrgY;
+
+  DC_ReleasePtr( hDC );
   W32kDPtoLP(hDC, (LPPOINT)rc, 2);
   return(retval);
 }

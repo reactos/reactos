@@ -140,12 +140,12 @@ W32kRectangle(HDC  hDC,
     if (BrushObj)
     {
       if (BrushObj->logbrush.lbStyle != BS_NULL)
-        {	
+        {
           DestRect.left = LeftRect + 1;
           DestRect.right = RightRect - 1;
           DestRect.top = TopRect + 1;
           DestRect.bottom = BottomRect - 1;
-          ret = EngBitBlt(SurfObj, 
+          ret = EngBitBlt(SurfObj,
                           NULL,
                           NULL,
                           NULL,
@@ -158,7 +158,7 @@ W32kRectangle(HDC  hDC,
                           PATCOPY);
         }
     }
-    GDIOBJ_UnlockObj( dc->w.hBrush, GO_PEN_MAGIC );	
+    GDIOBJ_UnlockObj( dc->w.hBrush, GO_BRUSH_MAGIC );
   }
 
 // FIXME: Move current position in DC?
