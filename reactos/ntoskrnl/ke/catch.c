@@ -118,68 +118,67 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
                 if (Action == kdContinue) return;
 #endif
 
-            /* FIXME: Forward exception to user mode debugger */
+                /* FIXME: Forward exception to user mode debugger */
 
-            /* FIXME: Check user mode stack for enough space */
-    
-            /* Let usermode try and handle the exception. Setup Stack */
-            Stack = (PULONG)temp_space;
-            CDest = 3 + (ROUND_UP(sizeof(EXCEPTION_RECORD), 4) / 4);
-            /* Return Address */
-            Stack[0] = 0;
-            /* Pointer to EXCEPTION_RECORD structure */
-            Stack[1] = (ULONG)&pNewUserStack[3];
-            /* Pointer to CONTEXT structure */
-            Stack[2] = (ULONG)&pNewUserStack[CDest];
-            memcpy(&Stack[3], ExceptionRecord, sizeof(EXCEPTION_RECORD));
-            memcpy(&Stack[CDest], Context, sizeof(CONTEXT));
-            
-            /* Copy Stack */
-            StatusOfCopy = MmCopyToCaller(pNewUserStack,
-                                          temp_space,
-                                          (12 + sizeof(EXCEPTION_RECORD) + sizeof(CONTEXT)));
-            
-            /* Check for success */
-            if (NT_SUCCESS(StatusOfCopy)) {
+                /* FIXME: Check user mode stack for enough space */
+        
+                /* Let usermode try and handle the exception. Setup Stack */
+                Stack = (PULONG)temp_space;
+                CDest = 3 + (ROUND_UP(sizeof(EXCEPTION_RECORD), 4) / 4);
+                /* Return Address */
+                Stack[0] = 0;
+                /* Pointer to EXCEPTION_RECORD structure */
+                Stack[1] = (ULONG)&pNewUserStack[3];
+                /* Pointer to CONTEXT structure */
+                Stack[2] = (ULONG)&pNewUserStack[CDest];
+                memcpy(&Stack[3], ExceptionRecord, sizeof(EXCEPTION_RECORD));
+                memcpy(&Stack[CDest], Context, sizeof(CONTEXT));
                 
-                /* Set new Stack Pointer */
-                Tf->Esp = (ULONG)pNewUserStack;
+                /* Copy Stack */
+                StatusOfCopy = MmCopyToCaller(pNewUserStack,
+                                              temp_space,
+                                              (12 + sizeof(EXCEPTION_RECORD) + sizeof(CONTEXT)));
                 
-            } else {
+                /* Check for success */
+                if (NT_SUCCESS(StatusOfCopy)) {
+                    
+                    /* Set new Stack Pointer */
+                    Tf->Esp = (ULONG)pNewUserStack;
+                    
+                } else {
+                    
+                    /*
+                     * Now it really hit the ventilation device. Sorry,
+                     * can do nothing but kill the sucker.
+                     */
+                    ZwTerminateThread(NtCurrentThread(), ExceptionRecord->ExceptionCode);
+                    DPRINT1("User-mode stack was invalid. Terminating target thread\n");
+                }
                 
-                /*
-                 * Now it really hit the ventilation device. Sorry,
-                 * can do nothing but kill the sucker.
-                 */
-                ZwTerminateThread(NtCurrentThread(), ExceptionRecord->ExceptionCode);
-                DPRINT1("User-mode stack was invalid. Terminating target thread\n");
+                /* Set EIP to the User-mode Dispathcer */
+                Tf->Eip = (ULONG)LdrpGetSystemDllExceptionDispatcher();
+                return;
             }
-            
-            /* Set EIP to the User-mode Dispathcer */
-            Tf->Eip = (ULONG)LdrpGetSystemDllExceptionDispatcher();
-            return;
-        }
 
-        /* FIXME: Forward the exception to the debugger */
+            /* FIXME: Forward the exception to the debugger */
 
-        /* FIXME: Forward the exception to the process exception port */
+            /* FIXME: Forward the exception to the process exception port */
 
-                  
 #ifdef KDBG
-        /* Enter KDB if available */
-        Action = KdbEnterDebuggerException(ExceptionRecord, 
-                                            PreviousMode,
-                                            Context, 
-                                            Tf, 
-                                            FALSE);
+            /* Enter KDB if available */
+            Action = KdbEnterDebuggerException(ExceptionRecord, 
+                                                PreviousMode,
+                                                Context, 
+                                                Tf, 
+                                                FALSE);
 
-        /* Exit if we're continuing */
-        if (Action == kdContinue) return;
+            /* Exit if we're continuing */
+            if (Action == kdContinue) return;
 #endif
 
-        /* Terminate the offending thread */
-        DPRINT1("Unhandled UserMode exception, terminating thread\n");
-        ZwTerminateThread(NtCurrentThread(), ExceptionRecord->ExceptionCode);
+            /* Terminate the offending thread */
+            DPRINT1("Unhandled UserMode exception, terminating thread\n");
+            ZwTerminateThread(NtCurrentThread(), ExceptionRecord->ExceptionCode);
         
         } else {
 
