@@ -1,4 +1,4 @@
-/* $Id: kmap.c,v 1.5 2001/01/08 02:14:06 dwelch Exp $
+/* $Id: kmap.c,v 1.6 2001/02/10 22:51:10 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -52,18 +52,25 @@ ExUnmapPage(PVOID Addr)
 PVOID 
 ExAllocatePage(VOID)
 {
+  ULONG PhysPage;
+
+  PhysPage = (ULONG)MmAllocPage(0);
+  DPRINT("Allocated page %x\n",PhysPage);
+  if (PhysPage == 0)
+    {
+      return(NULL);
+    }
+
+  return(ExAllocatePageWithPhysPage(PhysPage));
+}
+
+PVOID 
+ExAllocatePageWithPhysPage(ULONG PhysPage)
+{
    KIRQL oldlvl;
    ULONG addr;
    ULONG i;
-   ULONG PhysPage;
    NTSTATUS Status;
-
-   PhysPage = (ULONG)MmAllocPage(0);
-   DPRINT("Allocated page %x\n",PhysPage);
-   if (PhysPage == 0)
-     {
-	return(NULL);
-     }
 
    KeAcquireSpinLock(&AllocMapLock, &oldlvl);
    for (i=1; i<ALLOC_MAP_SIZE;i++)

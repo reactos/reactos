@@ -1,4 +1,4 @@
-/* $Id: cont.c,v 1.6 2001/01/08 02:14:05 dwelch Exp $
+/* $Id: cont.c,v 1.7 2001/02/10 22:51:10 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,6 +18,17 @@
 
 /* FUNCTIONS *****************************************************************/
 
+VOID static
+MmFreeContinuousPage(PVOID Context, PVOID Address)
+{
+  ULONG PhysAddr;
+
+  PhysAddr = MmGetPhysicalAddressForProcess(NULL, Address);
+  if (PhysAddr != 0)
+    {
+      MmDereferencePage((PVOID)PhysAddr);
+    }
+}
 
 /**********************************************************************
  * NAME							EXPORTED
@@ -74,7 +85,8 @@ MmAllocateContiguousMemory (IN ULONG NumberOfBytes,
        MmFreeMemoryArea(MmGetKernelAddressSpace(),
 			BaseAddress,
 			0,
-			TRUE);
+			NULL,
+			NULL);
        return(NULL);
      }
    for (i = 0; i < (PAGE_ROUND_UP(NumberOfBytes) / 4096); i++)
@@ -116,7 +128,8 @@ MmFreeContiguousMemory(IN PVOID BaseAddress)
    MmFreeMemoryArea(MmGetKernelAddressSpace(),
 		    BaseAddress,
 		    0,
-		    TRUE);
+		    MmFreeContinuousPage,
+		    NULL);
 }
 
 

@@ -269,14 +269,15 @@ NTSTATUS MmInitMemoryAreas(VOID)
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
-			  PVOID BaseAddress,
-			  ULONG Length,
-			  BOOLEAN FreePages)
+NTSTATUS 
+MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
+		 PVOID BaseAddress,
+		 ULONG Length,
+		 VOID (*FreePage)(PVOID Context, PVOID Address),
+		 PVOID FreePageContext)
 {
    MEMORY_AREA* MemoryArea;
    ULONG i;
-   LARGE_INTEGER PhysicalAddr;
    
    DPRINT("MmFreeMemoryArea(AddressSpace %x, BaseAddress %x, Length %x,"
 	   "FreePages %d)\n",AddressSpace,BaseAddress,Length,FreePages);
@@ -288,16 +289,12 @@ NTSTATUS MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
 	KeBugCheck(0);
 	return(STATUS_UNSUCCESSFUL);
      }
-   if (FreePages)
+   if (FreePage != NULL)
      {
 	for (i=0;i<=(MemoryArea->Length/PAGESIZE);i++)
 	  {
-	     PhysicalAddr = MmGetPhysicalAddress(MemoryArea->BaseAddress + 
-						 (i*PAGESIZE));
-	     if (PhysicalAddr.u.LowPart != 0)
-	       {
-		  MmDereferencePage((PVOID)(ULONG)(PhysicalAddr.u.LowPart));
-	       }
+	    FreePage(FreePageContext, 
+		     MemoryArea->BaseAddress + (i * PAGESIZE));
 	  }
      }
    for (i=0; i<=(MemoryArea->Length/PAGESIZE); i++)

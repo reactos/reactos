@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.34 2001/02/10 22:30:21 ekohl Exp $
+/* $Id: create.c,v 1.35 2001/02/10 22:51:08 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -383,6 +383,8 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
    NTSTATUS Status;
    LPTHREAD_START_ROUTINE  lpStartAddress = NULL;
    WCHAR TempCommandLine[256];
+   WCHAR ImagePathName[256];
+   UNICODE_STRING ImagePathName_U;
    PROCESS_BASIC_INFORMATION ProcessBasicInfo;
    ULONG retlen;
    PRTL_USER_PROCESS_PARAMETERS Ppb;
@@ -433,6 +435,8 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
                          256 * sizeof(WCHAR),
                          TempCommandLine,
                          NULL);
+   wcscpy(ImagePathName, TempCommandLine);
+   RtlInitUnicodeString(&ImagePathName_U, ImagePathName);
 
    if (lpCommandLine != NULL)
      {
@@ -453,7 +457,7 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
    DPRINT("CommandLine_U %S\n", CommandLine_U.Buffer);
 
    RtlCreateProcessParameters(&Ppb,
-			      &CommandLine_U,
+			      &ImagePathName_U,
 			      NULL,
 			      (lpCurrentDirectory == NULL) ? NULL : &CurrentDirectoryW,
 			      &CommandLine_U,

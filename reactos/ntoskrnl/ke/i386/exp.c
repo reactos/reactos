@@ -130,7 +130,8 @@ exception_handler(struct trap_frame* tf)
    if (PsGetCurrentThread() != NULL &&
        tf->esp < (ULONG)PsGetCurrentThread()->Tcb.StackLimit)
      {
-	DbgPrint("Stack underflow\n");
+	DbgPrint("Stack underflow (tf->esp %x Limit %x)\n",
+		 tf->esp, (ULONG)PsGetCurrentThread()->Tcb.StackLimit);
 	tf->type = 12;
      }
    

@@ -40,188 +40,29 @@ NTSTATUS LdrpMapImage(HANDLE ProcessHandle,
  * RETURNS: Status
  */
 {   
-   PVOID			ImageBase;
-   NTSTATUS		Status;
-   PIMAGE_NT_HEADERS	NTHeaders;
-   ULONG			InitialViewSize;
-   ULONG			i;
-   PEPROCESS Process;
-   PVOID FinalBase;
-   ULONG NumberOfSections;
-   
-   DPRINT("Referencing process\n");
-   Status = ObReferenceObjectByHandle(ProcessHandle,
-				      PROCESS_ALL_ACCESS,
-				      PsProcessType,
-				      KernelMode,
-				      (PVOID*)&Process,
-				      NULL);
-   if (!NT_SUCCESS(Status))
-     {
-	DbgPrint("ObReferenceObjectByProcess() failed (Status %x)\n", Status);
-	return(Status);
-     }
-   
-   /*
-    * map the dos header into the process
-    */
-   DPRINT("Mapping view of section\n");
-   InitialViewSize = sizeof(IMAGE_DOS_HEADER);
-   ImageBase = NULL;
-   
-   Status = ZwMapViewOfSection(SectionHandle,
-			       ProcessHandle,
-			       (PVOID*)&ImageBase,
-			       0,
-			       InitialViewSize,
-			       NULL,
-			       &InitialViewSize,
-			       0,
-			       MEM_COMMIT,
-			       PAGE_READWRITE);
-   if (!NT_SUCCESS(Status))
-     {
-	DbgPrint("Image map view of section failed (Status %x)", Status);
-	return(Status);
-     }
-   
-   /*
-    * Map the pe headers into the process
-    */
-   DPRINT("Attaching to process\n");
-   KeAttachProcess(Process);
-   InitialViewSize = ((PIMAGE_DOS_HEADER)ImageBase)->e_lfanew +
-     sizeof(IMAGE_NT_HEADERS);
-   DPRINT("InitialViewSize %d\n", InitialViewSize);
-   KeDetachProcess();
-   
-   DPRINT("Unmapping view of section\n");
-   Status = ZwUnmapViewOfSection(ProcessHandle,
-				 ImageBase);
-   if (!NT_SUCCESS(Status))
-     {
-	DbgPrint("ZwUnmapViewOfSection failed (Status %x)\n", Status);
-	return(Status);
-     }
-   
-   DPRINT("Mapping view of section\n");
-   ImageBase = NULL;
-   Status = ZwMapViewOfSection(SectionHandle,
-			       ProcessHandle,
-			       (PVOID*)&ImageBase,
-			       0,
-			       InitialViewSize,
-			       NULL,
-			       &InitialViewSize,
-			       0,
-			       MEM_COMMIT,
-			       PAGE_READWRITE);
-   if (!NT_SUCCESS(Status))
-     {
-	DbgPrint("Image map view of section failed (Status %x)", Status);
-	return(Status);
-     }
-   
-   DPRINT("ImageBase %x\n", ImageBase);
-   
-   /*
-    * TBD
-    */
-   DPRINT("Attaching to process\n");
-   KeAttachProcess(Process);
-   NTHeaders = RtlImageNtHeader(ImageBase);
-   DPRINT("NTHeaders %x\n", NTHeaders);
-   InitialViewSize = ((PIMAGE_DOS_HEADER)ImageBase)->e_lfanew +
-     sizeof(IMAGE_NT_HEADERS) +
-     (sizeof (IMAGE_SECTION_HEADER) * NTHeaders->FileHeader.NumberOfSections);
-   DPRINT("InitialViewSize %x\n", InitialViewSize);
-   FinalBase = (PVOID)NTHeaders->OptionalHeader.ImageBase;
-   DPRINT("FinalBase %x\n", FinalBase);
-   NumberOfSections = NTHeaders->FileHeader.NumberOfSections;
-   DPRINT("NrSections %d\n", NumberOfSections);
-   KeDetachProcess();
-   
-   DPRINT("Unmapping view of section\n");
-   Status = ZwUnmapViewOfSection(ProcessHandle,
-				 ImageBase);
-   if (!NT_SUCCESS(Status))
-     {
-	DbgPrint("ZwUnmapViewOfSection failed (Status %x)\n", Status);
-	return(Status);
-     }
-   
-   ImageBase = FinalBase;
-   
-   DPRINT("Mapping view of section\n");
-   Status = ZwMapViewOfSection(SectionHandle,
-			       ProcessHandle,
-			       (PVOID*)&ImageBase,
-			       0,
-			       InitialViewSize,
-			       NULL,
-			       &InitialViewSize,
-			       0,
-			       MEM_COMMIT,
-			       PAGE_READWRITE);
-   if (!NT_SUCCESS(Status))
-     {
-	DbgPrint("Image map view of section failed (Status %x)", Status);
-	return(Status);
-     }
-   
-   
-   DPRINT("Mapping view of all sections\n");
-   for (i = 0; i < NumberOfSections; i++)
-     {
-	PIMAGE_SECTION_HEADER	Sections;
-	LARGE_INTEGER		Offset;
-	ULONG			Base;
-	ULONG Size;
-	
-	KeAttachProcess(Process);
-	Sections = (PIMAGE_SECTION_HEADER) SECHDROFFSET(ImageBase);      
-	DPRINT("Sections %x\n", Sections);
-	Base = (ULONG)(Sections[i].VirtualAddress + ImageBase);
-	Offset.u.LowPart = Sections[i].PointerToRawData;
-	Offset.u.HighPart = 0;
-	Size = Sections[i].Misc.VirtualSize;
-	KeDetachProcess();
-	
-	if( Offset.u.LowPart )
-	  { // map the section if it is initialized
-	    Status = ZwMapViewOfSection(SectionHandle,
-					ProcessHandle,
-					(PVOID *)&Base,
-					0,
-					Size,
-					&Offset,
-					(PULONG)&Size,
-					0,
-					MEM_COMMIT,
-					PAGE_READWRITE);
-	    if (!NT_SUCCESS(Status))
-	      {
-		DbgPrint("Image map view of secion failed (Status %x)\n", Status);
-		return(Status);
-	      }
-	  }
-	else {
-	  // allocate the section if it is uninitialized
-	  Status = NtAllocateVirtualMemory( ProcessHandle,
-					    (PVOID *)&Base,
-					    0,
-					    &Size,
-					    MEM_COMMIT,
-					    PAGE_READWRITE );
-	  if( !NT_SUCCESS( Status ) )
-	    {
-	      DPRINT1( "Failed to allocate memory for uninitialized section\n" );
-	      return Status;
-	    }
-	}
-     }
-   
-   DPRINT("Returning\n");
+  ULONG ViewSize;
+  PVOID ImageBase;
+  NTSTATUS Status;
+
+  ViewSize = 0;
+  ImageBase = 0;
+  
+  Status = ZwMapViewOfSection(SectionHandle,
+			      ProcessHandle,
+			      (PVOID*)&ImageBase,
+			      0,
+			      ViewSize,
+			      NULL,
+			      &ViewSize,
+			      0,
+			      MEM_COMMIT,
+			      PAGE_READWRITE);
+  if (!NT_SUCCESS(Status))
+    {
+      DbgPrint("Image map view of section failed (Status %x)", Status);
+      return(Status);
+    }
+  
    *ReturnedImageBase = ImageBase;
    
    return(STATUS_SUCCESS);

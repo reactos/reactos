@@ -206,6 +206,7 @@ VOID IoSecondStageCompletion(PIRP Irp, CCHAR PriorityBoost)
 	break;
 	
       default:
+	break;
      }
    
    if (Irp->Overlay.AsynchronousParameters.UserApcRoutine != NULL)

@@ -1257,4 +1257,34 @@ struct _LPC_PORT_BASIC_INFORMATION
 
 } LPC_PORT_BASIC_INFORMATION, * PLPC_PORT_BASIC_INFORMATION;
 
+typedef struct _SECTION_BASIC_INFORMATION
+{
+  PVOID BaseAddress;
+  ULONG Attributes;
+  LARGE_INTEGER Size;
+} SECTION_BASIC_INFORMATION, *PSECTION_BASIC_INFORMATION;
+
+typedef struct _SECTION_IMAGE_INFORMATION
+{
+  PVOID EntryPoint;
+  ULONG Unknown1;
+  ULONG StackReserve;
+  ULONG StackCommit;
+  ULONG Subsystem;
+  USHORT MinorSubsystemVersion;
+  USHORT MajorSubsystemVersion;
+  ULONG Unknown2;
+  ULONG Characteristics;
+  USHORT ImageNumber;
+  BOOLEAN Executable;
+  UCHAR Unknown3;
+  ULONG Unknown4[3];
+} SECTION_IMAGE_INFORMATION, *PSECTION_IMAGE_INFORMATION;
+
+typedef enum _SECTION_INFORMATION_CLASS 
+{
+  SectionBasicInformation,
+  SectionImageInformation,
+} SECTION_INFORMATION_CLASS;
+
 #endif

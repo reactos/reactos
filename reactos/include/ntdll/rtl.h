@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.21 2000/12/29 13:47:43 ekohl Exp $
+/* $Id: rtl.h,v 1.22 2001/02/10 22:51:07 dwelch Exp $
  *
  */
 
@@ -6,6 +6,7 @@
 #define __INCLUDE_NTDLL_RTL_H
 
 #include <napi/teb.h>
+#include <ddk/ntddk.h>
 
 typedef struct _CRITICAL_SECTION_DEBUG {
     WORD   Type;
@@ -26,27 +27,6 @@ typedef struct _CRITICAL_SECTION {
     HANDLE LockSemaphore;
     DWORD Reserved;
 } CRITICAL_SECTION, *PCRITICAL_SECTION, *LPCRITICAL_SECTION;
-
-
-typedef struct _SECTION_IMAGE_INFORMATION
-{
-   PVOID ProcessEntryPoint;
-   ULONG StackZero;
-   ULONG StackReserve;
-   ULONG StackCommit;
-   ULONG SubsystemType;
-   USHORT MinorImageVersion;
-   USHORT MajorImageVersion;
-   ULONG u4;
-   ULONG Characteristics;
-   USHORT Machine;
-   BOOLEAN Executable;
-   USHORT u6;
-   ULONG u7;
-   ULONG u8;
-   ULONG u9;
-}SECTION_IMAGE_INFORMATION, *PSECTION_IMAGE_INFORMATION;
-
 
 typedef struct _RTL_PROCESS_INFO
 {

@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.13 2001/01/01 04:42:11 dwelch Exp $
+/* $Id: view.c,v 1.14 2001/02/10 22:51:08 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -186,6 +186,18 @@ CcRequestCacheSegment(PBCB Bcb,
    return(STATUS_SUCCESS);
 }
 
+static
+VOID CcFreeCachePage(PVOID Context, PVOID Address)
+{
+  ULONG PhysAddr;
+
+  PhysAddr = MmGetPhysicalAddressForProcess(NULL, Address);
+  if (PhysAddr != 0)
+    {
+      MmDereferencePage((PVOID)PhysAddr);
+    }
+}
+
 NTSTATUS STDCALL 
 CcFreeCacheSegment(PBCB Bcb,
 		   PCACHE_SEGMENT CacheSeg)
@@ -196,7 +208,8 @@ CcFreeCacheSegment(PBCB Bcb,
    MmFreeMemoryArea(NULL,
 		    CacheSeg->BaseAddress,
 		    Bcb->CacheSegmentSize,
-		    TRUE);
+		    CcFreeCachePage,
+		    NULL);
    ExFreePool(CacheSeg);
    return(STATUS_SUCCESS);
 }

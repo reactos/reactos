@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.37 2001/01/21 14:54:29 dwelch Exp $
+/* $Id: virtual.c,v 1.38 2001/02/10 22:51:10 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -1013,7 +1013,8 @@ NtFreeVirtualMemory(IN	HANDLE	ProcessHandle,
 	MmFreeMemoryArea(&Process->AddressSpace,
 			 BaseAddress,
 			 0,
-			 FALSE);
+			 NULL,
+			 NULL);
 	MmUnlockAddressSpace(AddressSpace);
 	ObDereferenceObject(Process);
 	return(STATUS_SUCCESS);

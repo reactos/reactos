@@ -71,14 +71,25 @@ typedef struct
    PSECTION_PAGE_TABLE PageTables[NR_SECTION_PAGE_TABLES];
 } SECTION_PAGE_DIRECTORY, *PSECTION_PAGE_DIRECTORY;
 
-typedef struct
+#define MM_PAGEFILE_SECTION    (0x1)
+#define MM_IMAGE_SECTION       (0x2)
+
+#define MM_SECTION_SEGMENT_BSS (0x1)
+
+typedef struct _MM_SECTION_SEGMENT
 {
   ULONG FileOffset;
   ULONG Protection;
   ULONG Attributes;
-  SECTION_PAGE_DIRECTORY PageDirectory;
+  ULONG Length;
+  ULONG RawLength;
   KMUTEX Lock;
-} MM_SECTION_SEGMENT;
+  ULONG ReferenceCount;
+  SECTION_PAGE_DIRECTORY PageDirectory;
+  ULONG Flags;
+  PVOID VirtualAddress;
+  ULONG Characteristics;
+} MM_SECTION_SEGMENT, *PMM_SECTION_SEGMENT;
 
 typedef struct
 {
@@ -91,8 +102,19 @@ typedef struct
   LIST_ENTRY ViewListHead;
   KSPIN_LOCK ViewListLock;
   KMUTEX Lock;
-  SECTION_PAGE_DIRECTORY PageDirectory;
   ULONG Flags;
+  ULONG NrSegments;
+  PMM_SECTION_SEGMENT Segments;
+  PVOID ImageBase;
+  PVOID EntryPoint;
+  ULONG StackReserve;
+  ULONG StackCommit;
+  ULONG Subsystem;
+  ULONG MinorSubsystemVersion;
+  ULONG MajorSubsystemVersion;
+  ULONG ImageCharacteristics;
+  USHORT Machine;
+  BOOLEAN Executable;
 } SECTION_OBJECT, *PSECTION_OBJECT;
 
 typedef struct
@@ -111,6 +133,7 @@ typedef struct
 	     SECTION_OBJECT* Section;
 	     ULONG ViewOffset;
 	     LIST_ENTRY ViewListEntry;
+ 	     PMM_SECTION_SEGMENT Segment;
 	  } SectionData;
 	struct
 	  {
@@ -134,7 +157,6 @@ typedef struct _MADDRESS_SPACE
   PUSHORT PageTableRefCountTable;
   ULONG PageTableRefCountTableSize;
 } MADDRESS_SPACE, *PMADDRESS_SPACE;
-
 
 /* FUNCTIONS */
 
@@ -161,7 +183,8 @@ VOID ExInitNonPagedPool(ULONG BaseAddress);
 NTSTATUS MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
 			  PVOID BaseAddress,
 			  ULONG Length,
-			  BOOLEAN FreePages);
+			  VOID (*FreePage)(PVOID Context, PVOID Address),
+			  PVOID FreePageContext);
 VOID MmDumpMemoryAreas(PLIST_ENTRY ListHead);
 NTSTATUS MmLockMemoryArea(MEMORY_AREA* MemoryArea);
 NTSTATUS MmUnlockMemoryArea(MEMORY_AREA* MemoryArea);
@@ -199,8 +222,8 @@ PVOID MmGetMdlPageAddress(PMDL Mdl, PVOID Offset);
 VOID MiShutdownMemoryManager(VOID);
 ULONG MmGetPhysicalAddressForProcess(struct _EPROCESS* Process,
 				     PVOID Address);
-NTSTATUS STDCALL MmUnmapViewOfSection(struct _EPROCESS* Process,
-				      PMEMORY_AREA MemoryArea);
+NTSTATUS STDCALL
+MmUnmapViewOfSection(struct _EPROCESS* Process, PVOID BaseAddress);
 NTSTATUS MmSafeCopyFromUser(PVOID Dest, PVOID Src, ULONG NumberOfBytes);
 NTSTATUS MmSafeCopyToUser(PVOID Dest, PVOID Src, ULONG NumberOfBytes);
 VOID MmInitPagingFile(VOID);
@@ -263,12 +286,11 @@ ULONG MmTrimWorkingSet(struct _EPROCESS* Process,
 		       ULONG ReduceHint);
 VOID MmRemovePageFromWorkingSet(struct _EPROCESS* Process,
 				PVOID Address);
-VOID
-MmAddPageToWorkingSet(struct _EPROCESS* Process, PVOID Address);
+VOID MmAddPageToWorkingSet(struct _EPROCESS* Process,
+			      PVOID Address);
 
 VOID MmInitPagingFile(VOID);
-BOOLEAN
-MmReserveSwapPages(ULONG Nr);
+BOOLEAN MmReserveSwapPages(ULONG Nr);
 VOID MmDereserveSwapPages(ULONG Nr);
 SWAPENTRY MmAllocSwapPage(VOID);
 VOID MmFreeSwapPage(SWAPENTRY Entry);
@@ -330,5 +352,18 @@ MmGetContinuousPages(ULONG NumberOfBytes,
 		     PHYSICAL_ADDRESS HighestAcceptableAddress);
 
 #define MM_PHYSICAL_PAGE_MPW_PENDING     (0x8)
+
+NTSTATUS 
+MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
+			     MEMORY_AREA* MemoryArea, 
+			     PVOID Address);
+ULONG
+MmGetPageProtect(struct _EPROCESS* Process, PVOID Address);
+PVOID 
+ExAllocatePageWithPhysPage(ULONG PhysPage);
+ULONG
+MmGetReferenceCountPage(PVOID PhysicalAddress);
+BOOLEAN
+MmIsUsablePage(PVOID PhysicalAddress);
 
 #endif

@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.68 2001/01/28 17:38:40 ekohl Exp $
+/* $Id: thread.c,v 1.69 2001/02/10 22:51:11 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -114,8 +114,8 @@ VOID PsDumpThreads(VOID)
 	DbgPrint("current %x current->Tcb.State %d eip %x/%x ",
 		current, current->Tcb.State,
 		0, current->Tcb.LastEip);
-//	KeDumpStackFrames((PVOID)current->Tcb.Context.esp0, 
-//			  16);
+	KeDumpStackFrames((PVOID)current->Tcb.KernelStack, 
+			  16);
 	DbgPrint("PID %d ", current->ThreadsProcess->UniqueProcessId);
 	DbgPrint("\n");
 	

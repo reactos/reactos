@@ -1,4 +1,4 @@
-/* $Id: xhaldisp.c,v 1.2 2000/08/21 00:14:04 ekohl Exp $
+/* $Id: xhaldisp.c,v 1.3 2001/02/10 22:51:09 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -46,3 +46,4 @@ HAL_PRIVATE_DISPATCH EXPORTED HalPrivateDispatchTable =
 };
 
 /* EOF */
+

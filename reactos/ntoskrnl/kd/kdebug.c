@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.17 2001/01/06 21:40:13 rex Exp $
+/* $Id: kdebug.c,v 1.18 2001/02/10 22:51:09 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -27,6 +27,7 @@
 #define ScreenDebug  (0x1)
 #define SerialDebug  (0x2)
 #define BochsDebug   (0x4)
+#define FileLogDebug (0x8)
 
 /* VARIABLES ***************************************************************/
 
@@ -42,7 +43,6 @@ KdDebuggerNotPresent = TRUE;		/* EXPORTED */
 static BOOLEAN KdpBreakPending = FALSE;
 static BOOLEAN KdpBreakRecieved = FALSE;
 static ULONG KdpDebugType = ScreenDebug | BochsDebug;
-
 
 /* PRIVATE FUNCTIONS ********************************************************/
 
@@ -116,7 +116,12 @@ KdInitSystem (
 		}
 		p1 = p2;
 	}
-
+	
+#ifdef DBGPRINT_FILE_LOG
+	KdpDebugType |= FileLogDebug;
+	DebugLogInit();
+#endif /* DBGPRINT_FILE_LOG */
+	
 	/* check for 'BAUDRATE' */
 	p1 = (PCHAR)LoaderBlock->CommandLine;
 	while (p1 && (p2 = strchr (p1, '/')))
@@ -215,6 +220,10 @@ KdInitSystem (
 			PrintString ("\n   Serial debugging enabled: COM%ld %ld Baud\n\n",
 			             PortInfo.ComPort, PortInfo.BaudRate);
 		}
+		if (KdpDebugType & FileLogDebug)
+		  {
+		    PrintString("\n   File log debugging enabled\n\n");
+		  }
 	}
 	else
 		PrintString ("\n   Debugging disabled\n\n");
@@ -262,7 +271,12 @@ ULONG KdpPrintString (PANSI_STRING String)
 	     pch++;
 	  }
      }
-   
+#ifdef DEBUGPRINT_LOG_WRITE
+   if (KdpDebugType & FileLogDebug)
+     {
+       DebugLogWrite(String->Buffer);
+     }
+#endif /* DEBUGPRINT_LOG_WRITE */
    return (ULONG)String->Length;
 }
 

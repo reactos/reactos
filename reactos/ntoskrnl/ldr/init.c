@@ -91,7 +91,7 @@ NTSTATUS LdrLoadInitialProcess (VOID)
 			    NULL,
 			    NULL,
 			    PAGE_READWRITE,
-			    MEM_COMMIT,
+			    SEC_COMMIT | SEC_IMAGE,
 			    FileHandle);
    if (!NT_SUCCESS(Status))
      {

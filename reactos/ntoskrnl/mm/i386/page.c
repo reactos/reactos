@@ -1,4 +1,4 @@
-/* $Id: page.c,v 1.18 2001/02/06 00:11:19 dwelch Exp $
+/* $Id: page.c,v 1.19 2001/02/10 22:51:11 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -30,10 +30,14 @@
 #define PA_BIT_ACCESSED  (5)
 #define PA_BIT_DIRTY     (6)
 
-#define PA_PRESENT  (1 << PA_BIT_PRESENT)
-#define PA_DIRTY    (1 << PA_BIT_DIRTY)
-#define PA_WT       (1 << PA_BIT_WT)
-#define PA_CD       (1 << PA_BIT_CD)
+#define PA_PRESENT   (1 << PA_BIT_PRESENT)
+#define PA_READWRITE (1 << PA_BIT_READWRITE)
+#define PA_USER      (1 << PA_BIT_USER)
+#define PA_DIRTY     (1 << PA_BIT_DIRTY)
+#define PA_WT        (1 << PA_BIT_WT)
+#define PA_CD        (1 << PA_BIT_CD)
+#define PA_ACCESSED  (1 << PA_BIT_ACCESSED)
+#define PA_DIRTY     (1 << PA_BIT_DIRTY)
 
 #define PAGETABLE_MAP     (0xf0000000)
 #define PAGEDIRECTORY_MAP (0xf0000000 + (PAGETABLE_MAP / (1024)))
@@ -60,22 +64,22 @@ ProtectToPTE(ULONG flProtect)
     }
    if (flProtect & PAGE_READWRITE || flProtect & PAGE_EXECUTE_READWRITE)
      {
-       Attributes = PA_WRITE;
+       Attributes = PA_PRESENT | PA_READWRITE;
      }
    if (flProtect & PAGE_READONLY || flProtect & PAGE_EXECUTE ||
        flProtect & PAGE_EXECUTE_READ)
      {
-       Attributes = PA_READ; 
+       Attributes = PA_PRESENT; 
      }
    if (!(flProtect & PAGE_SYSTEM))
      {
        Attributes = Attributes | PA_USER;
      }
-   if (!(flProtect & PAGE_NOCACHE))
+   if (flProtect & PAGE_NOCACHE)
      {
        Attributes = Attributes | PA_CD;
      }
-   if (!(flProtect & PAGE_WRITETHROUGH))
+   if (flProtect & PAGE_WRITETHROUGH)
      {
        Attributes = Attributes | PA_WT;
      }
@@ -289,7 +293,8 @@ VOID MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage)
    PULONG Pte;
    PULONG Pde;
    PEPROCESS CurrentProcess = PsGetCurrentProcess();
-   
+   BOOLEAN WasValid;
+
    if (Process != NULL && Process != CurrentProcess)
      {
 	KeAttachProcess(Process);
@@ -304,12 +309,13 @@ VOID MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage)
 	return;
      }
    Pte = ADDR_TO_PTE(Address);
-   if (FreePage && PAGE_MASK(*Pte) != 0)
+   WasValid = (PAGE_MASK(*Pte) != 0);
+   if (FreePage && WasValid)
      {
         MmDereferencePage((PVOID)PAGE_MASK(*Pte));
      }
    *Pte = 0;
-   if (Process != NULL && 
+   if (Process != NULL && WasValid &&
        Process->AddressSpace.PageTableRefCountTable != NULL &&
        ADDR_TO_PAGE_TABLE(Address) < 768)
      {
@@ -318,10 +324,12 @@ VOID MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage)
 	Ptrc = Process->AddressSpace.PageTableRefCountTable;
 	
 	Ptrc[ADDR_TO_PAGE_TABLE(Address)]--;
+#if 0
 	if (Ptrc[ADDR_TO_PAGE_TABLE(Address)] == 0)
 	  {
 	     MmFreePageTable(Process, Address);
 	  }
+#endif
      }
    if (Process != NULL && Process != CurrentProcess)
      {
@@ -431,6 +439,11 @@ NTSTATUS MmCreateVirtualMapping(PEPROCESS Process,
    PULONG Pte;
    NTSTATUS Status;
    
+   if (!MmIsUsablePage((PVOID)PhysicalAddress))
+     {
+       KeBugCheck(0);
+     }
+
    Attributes = ProtectToPTE(flProtect);
    
    if (Process != NULL && Process != CurrentProcess)
@@ -465,6 +478,29 @@ NTSTATUS MmCreateVirtualMapping(PEPROCESS Process,
 	KeDetachProcess();
      }
    return(STATUS_SUCCESS);
+}
+
+ULONG
+MmGetPageProtect(PEPROCESS Process, PVOID Address)
+{
+  ULONG Entry;
+  ULONG Protect;
+
+  Entry = MmGetPageEntryForProcess1(Process, Address);
+
+  if (!(Entry & PA_PRESENT))
+    {
+      Protect = PAGE_NOACCESS;
+    }
+  else if (Entry & PA_READWRITE)
+    {
+      Protect = PAGE_READWRITE;
+    }
+  else
+    {
+      Protect = PAGE_EXECUTE_READ;
+    }
+  return(Protect);
 }
 
 VOID 

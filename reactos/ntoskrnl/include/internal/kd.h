@@ -1,4 +1,4 @@
-/* $Id: kd.h,v 1.2 2000/12/28 03:38:07 dwelch Exp $
+/* $Id: kd.h,v 1.3 2001/02/10 22:51:08 dwelch Exp $
  *
  * kernel debugger prototypes
  */
@@ -8,5 +8,12 @@
 
 ULONG 
 KdpPrintString (PANSI_STRING String);
+
+VOID 
+DebugLogWrite(PCH String);
+VOID
+DebugLogInit(VOID);
+VOID
+DebugLogInit2(VOID);
 
 #endif /* __INCLUDE_INTERNAL_KERNEL_DEBUGGER_H */

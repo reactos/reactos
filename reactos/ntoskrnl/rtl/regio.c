@@ -1,4 +1,4 @@
-/* $Id: regio.c,v 1.2 2000/05/09 21:30:27 ekohl Exp $
+/* $Id: regio.c,v 1.3 2001/02/10 22:51:11 dwelch Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel

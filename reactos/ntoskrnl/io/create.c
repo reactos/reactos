@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.35 2001/01/08 02:14:05 dwelch Exp $
+/* $Id: create.c,v 1.36 2001/02/10 22:51:09 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -108,9 +108,8 @@ IopCreateFile (PVOID			ObjectBody,
      }
    else
      {
-	if (	(DeviceObject->DeviceType != FILE_DEVICE_FILE_SYSTEM)
-	    && (DeviceObject->DeviceType != FILE_DEVICE_DISK)
-	    )
+	if ((DeviceObject->DeviceType != FILE_DEVICE_FILE_SYSTEM)
+	    && (DeviceObject->DeviceType != FILE_DEVICE_DISK))
 	  {
 	     DPRINT ("Device was wrong type\n");
 	     return (STATUS_UNSUCCESSFUL);
@@ -322,8 +321,9 @@ IoCreateFile (
 		//FileObject->Flags |= FileObject->Flags | FO_SYNCHRONOUS_IO;
 		FileObject->Flags |= FO_SYNCHRONOUS_IO;
 	}
+	KeInitializeEvent (&FileObject->Lock, NotificationEvent, TRUE);
 	KeInitializeEvent (&Event, NotificationEvent, FALSE);
-   
+	
 	DPRINT("FileObject %x\n", FileObject);
 	DPRINT("FileObject->DeviceObject %x\n", FileObject->DeviceObject);
 	/*

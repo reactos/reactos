@@ -76,10 +76,9 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
    UNICODE_STRING		DllPathname;
    PIMAGE_DOS_HEADER	DosHeader;
    PIMAGE_NT_HEADERS	NTHeaders;
-   ULONG			InitialViewSize;
-   ULONG			i;
    PEPROCESS Process;
    ANSI_STRING ProcedureName;
+   ULONG ViewSize;
 
    /*
     * Locate and open NTDLL to determine ImageBase
@@ -146,7 +145,7 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
 			    NULL,
 			    NULL,
 			    PAGE_READWRITE,
-			    MEM_COMMIT,
+			    SEC_IMAGE | SEC_COMMIT,
 			    FileHandle);
    if (!NT_SUCCESS(Status))
      {
@@ -159,17 +158,15 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
    /*
     * Map the NTDLL into the process
     */
-   InitialViewSize = DosHeader->e_lfanew + 
-     sizeof (IMAGE_NT_HEADERS) + 
-     (sizeof (IMAGE_SECTION_HEADER) * NTHeaders->FileHeader.NumberOfSections);
-   DPRINT("Mapping view of section\n");
+   ViewSize = 0;
+   ImageBase = 0;
    Status = ZwMapViewOfSection(NTDllSectionHandle,
 			       ProcessHandle,
 			       (PVOID*)&ImageBase,
 			       0,
-			       InitialViewSize,
+			       ViewSize,
 			       NULL,
-			       &InitialViewSize,
+			       &ViewSize,
 			       0,
 			       MEM_COMMIT,
 			       PAGE_READWRITE);
@@ -179,40 +176,6 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
 	ZwClose(NTDllSectionHandle);
 	return(Status);
      }
-
-   for (i = 0; i < NTHeaders->FileHeader.NumberOfSections; i++)
-     {
-	PIMAGE_SECTION_HEADER	Sections;
-	LARGE_INTEGER		Offset;
-	ULONG			Base;
-	
-	DPRINT("Mapping view of section %d\n", i);
-	Sections = (PIMAGE_SECTION_HEADER) SECHDROFFSET(BlockBuffer);
-	DPRINT("Sections %x\n", Sections);
-	Base = Sections[i].VirtualAddress + ImageBase;
-	DPRINT("Base %x\n", Base);
-	Offset.u.LowPart = Sections[i].PointerToRawData;
-	Offset.u.HighPart = 0;
-	DPRINT("Mapping view of section\n");
-	Status = ZwMapViewOfSection(NTDllSectionHandle,
-				    ProcessHandle,
-				    (PVOID*)&Base,
-				    0,
-				    Sections[i].Misc.VirtualSize,
-				    &Offset,
-				    (PULONG)&Sections[i].Misc.VirtualSize,
-				    0,
-				    MEM_COMMIT,
-				    PAGE_READWRITE);
-	if (!NT_SUCCESS(Status))
-	  {
-	     DbgPrint("NTDLL map view of secion failed (Status %x)\n", Status);
-	     ZwClose(NTDllSectionHandle);
-	     return(Status);
-	  }
-     }
-   DPRINT("Finished mapping\n");
-
 
    DPRINT("Referencing process\n");
    Status = ObReferenceObjectByHandle(ProcessHandle,
@@ -233,74 +196,86 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
    /*
     * retrieve ntdll's startup address
     */   
-   RtlInitAnsiString (&ProcedureName,
-		      "LdrInitializeThunk");
-   Status = LdrGetProcedureAddress ((PVOID)ImageBase,
-				    &ProcedureName,
-				    0,
-				    &SystemDllEntryPoint);
-   if (!NT_SUCCESS(Status))
+   if (SystemDllEntryPoint == NULL)
      {
-	DbgPrint ("LdrGetProcedureAddress failed (Status %x)\n", Status);
-	KeDetachProcess();
-	ObDereferenceObject(Process);
-	ZwClose(NTDllSectionHandle);
-	return (Status);
+       RtlInitAnsiString (&ProcedureName,
+			  "LdrInitializeThunk");
+       Status = LdrGetProcedureAddress ((PVOID)ImageBase,
+					&ProcedureName,
+					0,
+					&SystemDllEntryPoint);
+       if (!NT_SUCCESS(Status))
+	 {
+	   DbgPrint ("LdrGetProcedureAddress failed (Status %x)\n", Status);
+	   KeDetachProcess();
+	   ObDereferenceObject(Process);
+	   ZwClose(NTDllSectionHandle);
+	   return (Status);
+	 }
+       *LdrStartupAddr = SystemDllEntryPoint;
      }
-   *LdrStartupAddr = SystemDllEntryPoint;
 
    /*
     * Retrieve the offset of the APC dispatcher from NTDLL
     */
-   RtlInitAnsiString (&ProcedureName,
-		      "KiUserApcDispatcher");
-   Status = LdrGetProcedureAddress ((PVOID)ImageBase,
-				    &ProcedureName,
-				    0,
-				    &SystemDllApcDispatcher);
-   if (!NT_SUCCESS(Status))
+   if (SystemDllApcDispatcher == NULL)
      {
-	DbgPrint ("LdrGetProcedureAddress failed (Status %x)\n", Status);
-	KeDetachProcess();
-	ObDereferenceObject(Process);
-	ZwClose(NTDllSectionHandle);
-	return (Status);
+       RtlInitAnsiString (&ProcedureName,
+			  "KiUserApcDispatcher");
+       Status = LdrGetProcedureAddress ((PVOID)ImageBase,
+					&ProcedureName,
+					0,
+					&SystemDllApcDispatcher);
+       if (!NT_SUCCESS(Status))
+	 {
+	   DbgPrint ("LdrGetProcedureAddress failed (Status %x)\n", Status);
+	   KeDetachProcess();
+	   ObDereferenceObject(Process);
+	   ZwClose(NTDllSectionHandle);
+	   return (Status);
+	 }
      }
 
    /*
     * Retrieve the offset of the exception dispatcher from NTDLL
     */
-   RtlInitAnsiString (&ProcedureName,
-		      "KiUserExceptionDispatcher");
-   Status = LdrGetProcedureAddress ((PVOID)ImageBase,
-				    &ProcedureName,
-				    0,
-				    &SystemDllExceptionDispatcher);
-   if (!NT_SUCCESS(Status))
+   if (SystemDllExceptionDispatcher == NULL)
      {
-	DbgPrint ("LdrGetProcedureAddress failed (Status %x)\n", Status);
-	KeDetachProcess();
-	ObDereferenceObject(Process);
-	ZwClose(NTDllSectionHandle);
-	return (Status);
+       RtlInitAnsiString (&ProcedureName,
+			  "KiUserExceptionDispatcher");
+       Status = LdrGetProcedureAddress ((PVOID)ImageBase,
+					&ProcedureName,
+					0,
+					&SystemDllExceptionDispatcher);
+       if (!NT_SUCCESS(Status))
+	 {
+	   DbgPrint ("LdrGetProcedureAddress failed (Status %x)\n", Status);
+	   KeDetachProcess();
+	   ObDereferenceObject(Process);
+	   ZwClose(NTDllSectionHandle);
+	   return (Status);
+	 }
      }
-   
+
    /*
     * Retrieve the offset of the callback dispatcher from NTDLL
     */
-   RtlInitAnsiString (&ProcedureName,
-		      "KiUserCallbackDispatcher");
-   Status = LdrGetProcedureAddress ((PVOID)ImageBase,
-				    &ProcedureName,
-				    0,
-				    &SystemDllCallbackDispatcher);
-   if (!NT_SUCCESS(Status))
+   if (SystemDllCallbackDispatcher == NULL)
      {
-	DbgPrint ("LdrGetProcedureAddress failed (Status %x)\n", Status);
-	KeDetachProcess();
-	ObDereferenceObject(Process);
-	ZwClose(NTDllSectionHandle);
-	return (Status);
+       RtlInitAnsiString (&ProcedureName,
+			  "KiUserCallbackDispatcher");
+       Status = LdrGetProcedureAddress ((PVOID)ImageBase,
+					&ProcedureName,
+					0,
+					&SystemDllCallbackDispatcher);
+       if (!NT_SUCCESS(Status))
+	 {
+	   DbgPrint ("LdrGetProcedureAddress failed (Status %x)\n", Status);
+	   KeDetachProcess();
+	   ObDereferenceObject(Process);
+	   ZwClose(NTDllSectionHandle);
+	   return (Status);
+	 }
      }
    
    KeDetachProcess();

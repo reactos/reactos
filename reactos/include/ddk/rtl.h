@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.46 2000/12/29 13:47:30 ekohl Exp $
+/* $Id: rtl.h,v 1.47 2001/02/10 22:51:07 dwelch Exp $
  * 
  */
 
@@ -875,13 +875,8 @@ RtlExtendedMagicDivide (
 	CCHAR		ShiftCount
 	);
 
-VOID
-STDCALL
-RtlFillMemory (
-	PVOID	Destination,
-	ULONG	Length,
-	UCHAR	Fill
-	);
+VOID STDCALL
+RtlFillMemory (PVOID	Destination, ULONG	Length, UCHAR	Fill);
 
 VOID
 STDCALL
@@ -1299,13 +1294,8 @@ RtlLookupAtomInAtomTable (
 	OUT	PRTL_ATOM	Atom
 	);
 
-VOID
-STDCALL
-RtlMoveMemory (
-	PVOID		Destination,
-	CONST VOID	* Source,
-	ULONG		Length
-	);
+VOID STDCALL
+RtlMoveMemory (PVOID Destination, CONST VOID* Source, ULONG Length);
 
 NTSTATUS
 STDCALL
@@ -1787,12 +1777,8 @@ RtlWriteRegistryValue (
 	ULONG	ValueLength
 	);
 
-VOID
-STDCALL
-RtlZeroMemory (
-	PVOID	Destination,
-	ULONG	Length
-	);
+VOID STDCALL
+RtlZeroMemory (PVOID Destination, ULONG Length);
 
 ULONG
 STDCALL

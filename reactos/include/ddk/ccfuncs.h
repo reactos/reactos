@@ -1,7 +1,7 @@
 
 #ifndef _NTOS_CCFUNCS_H
 #define _NTOS_CCFUNCS_H
-/* $Id: ccfuncs.h,v 1.5 2000/06/12 14:51:26 ekohl Exp $ */
+/* $Id: ccfuncs.h,v 1.6 2001/02/10 22:51:07 dwelch Exp $ */
 
 /* exported variables */
 /*

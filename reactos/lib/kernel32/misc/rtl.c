@@ -1,4 +1,4 @@
-/* $Id: rtl.c,v 1.3 2000/07/01 17:07:00 ea Exp $
+/* $Id: rtl.c,v 1.4 2001/02/10 22:51:07 dwelch Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -11,90 +11,80 @@
 
 #include <windows.h>
 
-typedef DWORD ( *RtlFillMemoryType) (DWORD Unknown0, DWORD Unknown1, DWORD Unknown2 );
+typedef DWORD 
+(*RtlFillMemoryType) (PVOID Destination, ULONG Length, UCHAR Fill);
+
 #undef FillMemory
-DWORD
-STDCALL
-RtlFillMemory (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
+VOID STDCALL
+RtlFillMemory (PVOID Destination, ULONG	Length, UCHAR Fill)
 {
-	HINSTANCE hModule;
-	RtlFillMemoryType FillMemory; 
-	hModule = LoadLibraryA("ntdll.dll");
-	if ( hModule == NULL )
-		return -1;
-	FillMemory = (RtlFillMemoryType)GetProcAddress(hModule, "RtlFillMemory");
-	if ( FillMemory == NULL )
-		return -1;
-	return FillMemory(Unknown0, Unknown1, Unknown2);
-   
+  HINSTANCE hModule;
+  RtlFillMemoryType FillMemory; 
 
+  hModule = LoadLibraryA("ntdll.dll");
+  if (hModule == NULL)
+    return;
+  FillMemory = (RtlFillMemoryType)GetProcAddress(hModule, "RtlFillMemory");
+  if ( FillMemory == NULL )
+    return;
+  FillMemory(Destination, Length, Fill);
 }
 
-typedef DWORD ( *RtlMoveMemoryType) (DWORD Unknown0, DWORD Unknown1, DWORD Unknown2 );
+typedef DWORD 
+(*RtlMoveMemoryType) (PVOID Destination, CONST VOID* Source, ULONG Length);
 #undef MoveMemory
-DWORD
-STDCALL
-RtlMoveMemory (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
+VOID STDCALL
+RtlMoveMemory (PVOID Destination, CONST VOID* Source, ULONG Length)
 {
-	HINSTANCE hModule;
-	RtlMoveMemoryType MoveMemory; 
-	hModule = LoadLibraryA("ntdll.dll");
-	if ( hModule == NULL )
-		return -1;
-	MoveMemory = (RtlMoveMemoryType)GetProcAddress(hModule, "RtlMoveMemory");
-	if ( MoveMemory == NULL )
-		return -1;
-	return MoveMemory(Unknown0, Unknown1, Unknown2);
+  HINSTANCE hModule;
+  RtlMoveMemoryType MoveMemory; 
+
+  hModule = LoadLibraryA("ntdll.dll");
+  if (hModule == NULL)
+    return;
+  MoveMemory = (RtlMoveMemoryType)GetProcAddress(hModule, "RtlMoveMemory");
+  if (MoveMemory == NULL)
+    return;
+  MoveMemory(Destination, Source, Length);
 }
 
-typedef DWORD ( *RtlZeroMemoryType) (DWORD Unknown0, DWORD Unknown1 );
+typedef DWORD ( *RtlZeroMemoryType) (PVOID Destination, ULONG Length);
 #undef ZeroMemory
-DWORD
-STDCALL
-RtlZeroMemory (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	)
+VOID STDCALL
+RtlZeroMemory (PVOID Destination, ULONG Length)
 {
-	HINSTANCE hModule;
-	RtlZeroMemoryType ZeroMemory; 
-	hModule = LoadLibraryA("ntdll.dll");
-	if ( hModule == NULL )
-		return -1;
-	ZeroMemory = (RtlZeroMemoryType)GetProcAddress(hModule, "RtlZeroMemory");
-	if ( ZeroMemory == NULL )
-		return -1;
-	return ZeroMemory(Unknown0, Unknown1);
+  HINSTANCE hModule;
+  RtlZeroMemoryType ZeroMemory; 
+
+  hModule = LoadLibraryA("ntdll.dll");
+  if (hModule == NULL)
+    return;
+  ZeroMemory = (RtlZeroMemoryType)GetProcAddress(hModule, "RtlZeroMemory");
+  if (ZeroMemory == NULL)
+    return;
+  ZeroMemory(Destination, Length);
 }
 
 typedef DWORD ( *RtlUnwindType) (DWORD	Unknown0, DWORD	Unknown1, DWORD	Unknown2, DWORD Unknown3 );
 #undef Unwind
-DWORD
+VOID
 STDCALL
 RtlUnwind (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
+	ULONG	Unknown0,
+	ULONG	Unknown1,
+	ULONG	Unknown2,
+        ULONG	Unknown3
 	)
 {
 	HINSTANCE hModule;
 	RtlUnwindType Unwind; 
 	hModule = LoadLibraryA("ntdll.dll");
 	if ( hModule == NULL )
-		return -1;
+		return;
 	Unwind = (RtlUnwindType)GetProcAddress(hModule, "RtlUnwind");
 	if ( Unwind == NULL )
-		return -1;
-	return Unwind(Unknown0, Unknown1, Unknown2, Unknown3);
+		return;
+	Unwind(Unknown0, Unknown1, Unknown2, Unknown3);
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: rtl.c,v 1.11 2000/10/22 16:36:51 ekohl Exp $
+/* $Id: rtl.c,v 1.12 2001/02/10 22:51:09 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -23,19 +23,14 @@
 /* FUNCTIONS ****************************************************************/
 
 
-PIMAGE_NT_HEADERS STDCALL RtlImageNtHeader (IN PVOID BaseAddress)
+PIMAGE_NT_HEADERS STDCALL 
+RtlImageNtHeader (IN PVOID BaseAddress)
 {
    PIMAGE_DOS_HEADER DosHeader;
    PIMAGE_NT_HEADERS NTHeaders;
    
-   DPRINT("BaseAddress %x\n", BaseAddress);
    DosHeader = (PIMAGE_DOS_HEADER)BaseAddress;
-   DPRINT("DosHeader %x\n", DosHeader);
    NTHeaders = (PIMAGE_NT_HEADERS)(BaseAddress + DosHeader->e_lfanew);
-   DPRINT("NTHeaders %x\n", NTHeaders);
-   DPRINT("DosHeader->e_magic %x DosHeader->e_lfanew %x\n",
-	  DosHeader->e_magic, DosHeader->e_lfanew);
-   DPRINT("*NTHeaders %x\n", *(PULONG)NTHeaders);
    if ((DosHeader->e_magic != IMAGE_DOS_MAGIC)
        || (DosHeader->e_lfanew == 0L)
        || (*(PULONG) NTHeaders != IMAGE_PE_MAGIC))
@@ -47,12 +42,10 @@ PIMAGE_NT_HEADERS STDCALL RtlImageNtHeader (IN PVOID BaseAddress)
 
 
 PVOID STDCALL
-RtlImageDirectoryEntryToData (
-	IN PVOID	BaseAddress,
-	IN BOOLEAN	ImageLoaded,
-	IN ULONG	Directory,
-	OUT PULONG	Size
-	)
+RtlImageDirectoryEntryToData (IN PVOID	BaseAddress,
+			      IN BOOLEAN	ImageLoaded,
+			      IN ULONG	Directory,
+			      OUT PULONG	Size)
 {
 	PIMAGE_NT_HEADERS NtHeader;
 	PIMAGE_SECTION_HEADER SectionHeader;
@@ -149,6 +142,7 @@ RtlImageRvaToVa (
 	               Section->VirtualAddress);
 }
 
+#define RVA(m, b) ((ULONG)b + m)
 
 NTSTATUS STDCALL
 LdrGetProcedureAddress (IN PVOID BaseAddress,
@@ -164,24 +158,57 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
 
    /* get the pointer to the export directory */
    ExportDir = (PIMAGE_EXPORT_DIRECTORY)
-	RtlImageDirectoryEntryToData (BaseAddress, TRUE, IMAGE_DIRECTORY_ENTRY_EXPORT, &i);
+	RtlImageDirectoryEntryToData (BaseAddress, TRUE, 
+				      IMAGE_DIRECTORY_ENTRY_EXPORT, &i);
 
    if (!ExportDir || !i || !ProcedureAddress)
      {
-	return STATUS_INVALID_PARAMETER;
+	return(STATUS_INVALID_PARAMETER);
      }
-
-   AddressPtr = (PULONG)((ULONG)BaseAddress + (ULONG)ExportDir->AddressOfFunctions);
+   
+   AddressPtr = (PULONG)RVA(BaseAddress, ExportDir->AddressOfFunctions);
    if (Name && Name->Length)
      {
+       ULONG minn, maxn;
+
 	/* by name */
-	OrdinalPtr = (PUSHORT)((ULONG)BaseAddress + (ULONG)ExportDir->AddressOfNameOrdinals);
-	NamePtr = (PULONG)((ULONG)BaseAddress + (ULONG)ExportDir->AddressOfNames);
+       OrdinalPtr = 
+	 (PUSHORT)RVA(BaseAddress, ExportDir->AddressOfNameOrdinals);
+       NamePtr = (PULONG)RVA(BaseAddress, ExportDir->AddressOfNames);
+
+	minn = 0; maxn = ExportDir->NumberOfNames;
+	while (minn <= maxn)
+	  {
+	    ULONG mid;
+	    LONG res;
+
+	    mid = (minn + maxn) / 2;
+	    res = _strnicmp(Name->Buffer, (PCH)RVA(BaseAddress, NamePtr[mid]),
+			    Name->Length);
+	    if (res == 0)
+	      {
+		*ProcedureAddress = 
+		  (PVOID)RVA(BaseAddress, AddressPtr[OrdinalPtr[mid]]);
+		return(STATUS_SUCCESS);
+	      }
+	    else if (res > 0)
+	      {
+		maxn = mid - 1;
+	      }
+	    else
+	      {
+		minn = mid + 1;
+	      }
+	  }
+
 	for (i = 0; i < ExportDir->NumberOfNames; i++, NamePtr++, OrdinalPtr++)
 	  {
-	     if (!_strnicmp(Name->Buffer, (char*)(BaseAddress + *NamePtr), Name->Length))
+	     if (!_strnicmp(Name->Buffer, 
+			    (char*)(BaseAddress + *NamePtr), Name->Length))
 	       {
-		  *ProcedureAddress = (PVOID)((ULONG)BaseAddress + (ULONG)AddressPtr[*OrdinalPtr]);
+		  *ProcedureAddress = 
+		    (PVOID)((ULONG)BaseAddress + 
+			    (ULONG)AddressPtr[*OrdinalPtr]);
 		  return STATUS_SUCCESS;
 	       }
 	  }
@@ -193,10 +220,13 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
 	Ordinal &= 0x0000FFFF;
 	if (Ordinal - ExportDir->Base < ExportDir->NumberOfFunctions)
 	  {
-	     *ProcedureAddress = (PVOID)((ULONG)BaseAddress + (ULONG)AddressPtr[Ordinal - ExportDir->Base]);
+	     *ProcedureAddress = 
+	       (PVOID)((ULONG)BaseAddress + 
+		       (ULONG)AddressPtr[Ordinal - ExportDir->Base]);
 	     return STATUS_SUCCESS;
 	  }
-	DbgPrint("LdrGetProcedureAddress: Can't resolve symbol @%d\n", Ordinal);
+	DbgPrint("LdrGetProcedureAddress: Can't resolve symbol @%d\n",
+		 Ordinal);
   }
 
    return STATUS_PROCEDURE_NOT_FOUND;

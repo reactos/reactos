@@ -1,4 +1,4 @@
-/* $Id: mm.c,v 1.40 2001/01/08 02:14:06 dwelch Exp $
+/* $Id: mm.c,v 1.41 2001/02/10 22:51:10 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -41,19 +41,29 @@ NTSTATUS MmReleaseMemoryArea(PEPROCESS Process, PMEMORY_AREA Marea)
    DPRINT("Releasing %x between %x %x\n",
 	  Marea, Marea->BaseAddress, Marea->BaseAddress + Marea->Length);
    
-   if (Marea->Type == MEMORY_AREA_SECTION_VIEW_COMMIT ||
-       Marea->Type == MEMORY_AREA_SECTION_VIEW_RESERVE)
+   switch (Marea->Type)
      {
-	MmUnmapViewOfSection(Process, Marea);
+     case MEMORY_AREA_SECTION_VIEW_COMMIT:
+     case MEMORY_AREA_SECTION_VIEW_RESERVE:
+	MmUnmapViewOfSection(Process, Marea->BaseAddress);
+	return(STATUS_SUCCESS);
+
+      case MEMORY_AREA_VIRTUAL_MEMORY:
+	for (i = Marea->BaseAddress; 
+	     i < (Marea->BaseAddress + Marea->Length);
+	     i = i + PAGESIZE)
+	  {
+	    MmDeleteVirtualMapping(Process, i, TRUE);
+	  }
+	ExFreePool(Marea);
+	break;	
+
+     case MEMORY_AREA_SHARED_DATA:
+       break;
+
+     default:
+       KeBugCheck(0);
      }
-   
-   for (i = Marea->BaseAddress; 
-	i < (Marea->BaseAddress + Marea->Length);
-	i = i+PAGESIZE)
-     {
-	MmDeleteVirtualMapping(Process, i, TRUE);
-     }
-   ExFreePool(Marea);
    
    return(STATUS_SUCCESS);
 }
@@ -69,8 +79,7 @@ NTSTATUS MmReleaseMmInfo(PEPROCESS Process)
    
    while (!IsListEmpty(&Process->AddressSpace.MAreaListHead))
      {
-	CurrentEntry = RemoveHeadList(
-				     &Process->AddressSpace.MAreaListHead);
+	CurrentEntry = RemoveHeadList(&Process->AddressSpace.MAreaListHead);
 	Current = CONTAINING_RECORD(CurrentEntry, MEMORY_AREA, Entry);
 	
 	MmReleaseMemoryArea(Process, Current);
@@ -122,7 +131,79 @@ BOOLEAN STDCALL MmIsAddressValid(PVOID VirtualAddress)
 NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
 		       ULONG Address)
 {
-   return(STATUS_UNSUCCESSFUL);
+   PMADDRESS_SPACE AddressSpace;
+   MEMORY_AREA* MemoryArea;
+   NTSTATUS Status;
+   
+   DPRINT("MmNotPresentFault(Mode %d, Address %x)\n", Mode, Address);
+   
+   if (KeGetCurrentIrql() >= DISPATCH_LEVEL)
+     {
+	DbgPrint("Page fault at high IRQL was %d\n", KeGetCurrentIrql());
+	return(STATUS_UNSUCCESSFUL);
+     }
+   if (PsGetCurrentProcess() == NULL)
+     {
+	DbgPrint("No current process\n");
+	return(STATUS_UNSUCCESSFUL);
+     }
+   
+   /*
+    * Find the memory area for the faulting address
+    */
+   if (Address >= KERNEL_BASE)
+     {
+	/*
+	 * Check permissions
+	 */
+	if (Mode != KernelMode)
+	  {
+	     DbgPrint("%s:%d\n",__FILE__,__LINE__);
+	     return(STATUS_UNSUCCESSFUL);
+	  }
+	AddressSpace = MmGetKernelAddressSpace();
+     }
+   else
+     {
+	AddressSpace = &PsGetCurrentProcess()->AddressSpace;
+     }
+   
+   MmLockAddressSpace(AddressSpace);
+   MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace, (PVOID)Address);
+   if (MemoryArea == NULL)
+     {
+	DbgPrint("%s:%d\n",__FILE__,__LINE__);
+	MmUnlockAddressSpace(AddressSpace);
+	return(STATUS_UNSUCCESSFUL);
+     }
+   
+   switch (MemoryArea->Type)
+     {
+      case MEMORY_AREA_SYSTEM:
+	Status = STATUS_UNSUCCESSFUL;
+	break;
+	
+      case MEMORY_AREA_SECTION_VIEW_COMMIT:
+	Status = MmAccessFaultSectionView(AddressSpace,
+					  MemoryArea, 
+					  (PVOID)Address);
+	break;
+	
+      case MEMORY_AREA_VIRTUAL_MEMORY:
+	Status = STATUS_UNSUCCESSFUL;
+	break;
+	
+      case MEMORY_AREA_SHARED_DATA:
+	Status = STATUS_UNSUCCESSFUL;
+	break;
+	
+      default:
+	Status = STATUS_UNSUCCESSFUL;
+	break;
+     }
+   DPRINT("Completed page fault handling\n");
+   MmUnlockAddressSpace(AddressSpace);
+   return(Status);
 }
 
 NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,

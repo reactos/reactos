@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.24 2001/01/16 09:55:02 dwelch Exp $ */
+/* $Id: vfat.h,v 1.25 2001/02/10 22:51:11 dwelch Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -95,6 +95,7 @@ typedef struct
 typedef struct _VFATFCB
 {
   REACTOS_COMMON_FCB_HEADER RFCB;
+  SECTION_OBJECT_POINTERS SectionObjectPointers;
   FATDirEntry entry;
   /* point on filename (250 chars max) in PathName */
   WCHAR *ObjectName; 

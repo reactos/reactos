@@ -358,6 +358,56 @@ VOID MmReferencePage(PVOID PhysicalAddress)
    KeReleaseSpinLock(&PageListLock, oldIrql);
 }
 
+ULONG
+MmGetReferenceCountPage(PVOID PhysicalAddress)
+{
+   ULONG Start = (ULONG)PhysicalAddress / PAGESIZE;
+   KIRQL oldIrql;
+   ULONG RCount;
+
+   DPRINT("MmGetReferenceCountPage(PhysicalAddress %x)\n", PhysicalAddress);
+
+   if (((ULONG)PhysicalAddress) == 0)
+     {
+	KeBugCheck(0);
+     }
+   
+   KeAcquireSpinLock(&PageListLock, &oldIrql);
+   
+   if (MM_PTYPE(MmPageArray[Start].Flags) != MM_PHYSICAL_PAGE_USED)
+     {
+	DbgPrint("Getting reference count for free page\n");
+	KeBugCheck(0);
+     }
+   
+   RCount = MmPageArray[Start].ReferenceCount;
+
+   KeReleaseSpinLock(&PageListLock, oldIrql);
+   return(RCount);
+}
+
+BOOLEAN
+MmIsUsablePage(PVOID PhysicalAddress)
+{
+   ULONG Start = (ULONG)PhysicalAddress / PAGESIZE;
+
+   DPRINT("MmGetReferenceCountPage(PhysicalAddress %x)\n", PhysicalAddress);
+
+   if (((ULONG)PhysicalAddress) == 0)
+     {
+	KeBugCheck(0);
+     }
+   
+   if (MM_PTYPE(MmPageArray[Start].Flags) != MM_PHYSICAL_PAGE_USED &&
+       MM_PTYPE(MmPageArray[Start].Flags) != MM_PHYSICAL_PAGE_BIOS)
+     {
+       return(FALSE);
+     }
+   
+   return(TRUE);
+}
+
+
 VOID MmDereferencePage(PVOID PhysicalAddress)
 {
    ULONG Start = (ULONG)PhysicalAddress / PAGESIZE;
@@ -377,27 +427,27 @@ VOID MmDereferencePage(PVOID PhysicalAddress)
 	DbgPrint("Dereferencing free page\n");
 	KeBugCheck(0);
      }
-   
-   MmStats.NrFreePages++;
-   MmStats.NrSystemPages--;
+  
    
    MmPageArray[Start].ReferenceCount--;
    if (MmPageArray[Start].ReferenceCount == 0)
      {
-	RemoveEntryList(&MmPageArray[Start].ListEntry);
-	if (MmPageArray[Start].LockCount > 0)
-	  {
-	     DbgPrint("Freeing locked page\n");
-	     KeBugCheck(0);
-	  }
-	if (MmPageArray[Start].Flags != MM_PHYSICAL_PAGE_USED)
-	  {
-	     DbgPrint("Freeing page with flags %x\n",
-		      MmPageArray[Start].Flags);
-	     KeBugCheck(0);
-	  }
-	MmPageArray[Start].Flags = MM_PHYSICAL_PAGE_FREE;
-	InsertTailList(&FreePageListHead, &MmPageArray[Start].ListEntry);
+       MmStats.NrFreePages++;
+       MmStats.NrSystemPages--;
+       RemoveEntryList(&MmPageArray[Start].ListEntry);
+       if (MmPageArray[Start].LockCount > 0)
+	 {
+	   DbgPrint("Freeing locked page\n");
+	   KeBugCheck(0);
+	 }
+       if (MmPageArray[Start].Flags != MM_PHYSICAL_PAGE_USED)
+	 {
+	   DbgPrint("Freeing page with flags %x\n",
+		    MmPageArray[Start].Flags);
+	   KeBugCheck(0);
+	 }
+       MmPageArray[Start].Flags = MM_PHYSICAL_PAGE_FREE;
+       InsertTailList(&FreePageListHead, &MmPageArray[Start].ListEntry);
      }
    KeReleaseSpinLock(&PageListLock, oldIrql);
 }

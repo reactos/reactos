@@ -1,4 +1,4 @@
-/* $Id: iospace.c,v 1.7 2001/01/08 02:14:05 dwelch Exp $
+/* $Id: iospace.c,v 1.8 2001/02/10 22:51:10 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -121,7 +121,8 @@ VOID STDCALL MmUnmapIoSpace (IN PVOID BaseAddress,
    (VOID)MmFreeMemoryArea(&PsGetCurrentProcess()->AddressSpace,
 			  BaseAddress,
 			  NumberOfBytes,
-			  FALSE);
+			  NULL,
+			  NULL);
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.22 2001/01/08 02:14:05 dwelch Exp $
+/* $Id: iotypes.h,v 1.23 2001/02/10 22:51:07 dwelch Exp $
  * 
  */
 
@@ -714,4 +714,4 @@ VOID
 	);
 #endif // (_WIN32_WINNT >= 0x0400)
 
-#endif __INCLUDE_DDK_IOTYPES_H
+#endif /* __INCLUDE_DDK_IOTYPES_H */

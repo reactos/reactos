@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.27 2001/01/08 02:14:06 dwelch Exp $
+/* $Id: mdl.c,v 1.28 2001/02/10 22:51:10 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -60,15 +60,12 @@ VOID STDCALL MmUnlockPages(PMDL Mdl)
 	return;
      }
    
-   MmLockAddressSpace(&Mdl->Process->AddressSpace);
-   
    MdlPages = (PULONG)(Mdl + 1);
    for (i=0; i<(PAGE_ROUND_UP(Mdl->ByteCount+Mdl->ByteOffset)/PAGESIZE); i++)
      {
 	MmUnlockPage((PVOID)MdlPages[i]);
 	MmDereferencePage((PVOID)MdlPages[i]);
      }   
-   MmUnlockAddressSpace(&Mdl->Process->AddressSpace);
    Mdl->MdlFlags = Mdl->MdlFlags & (~MDL_PAGES_LOCKED);
 }
 
@@ -141,7 +138,8 @@ VOID STDCALL MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
    (VOID)MmFreeMemoryArea(MmGetKernelAddressSpace(),
 			  BaseAddress - Mdl->ByteOffset,
 			  Mdl->ByteCount,
-			  FALSE);
+			  NULL,
+			  NULL);
    Mdl->MdlFlags = Mdl->MdlFlags & ~MDL_MAPPED_TO_SYSTEM_VA;
    Mdl->MappedSystemVa = NULL;
    MmUnlockAddressSpace(MmGetKernelAddressSpace());

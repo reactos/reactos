@@ -18,6 +18,7 @@ endif
 ifeq ($(HOST),mingw32-linux)
 NASM_FORMAT = win32
 PREFIX = i586-mingw32-
+#PREFIX = /usr/mingw32-cvs-000207/bin/mingw32-cvs-000207-
 EXE_POSTFIX = 
 EXE_PREFIX = ./
 #CP = cp

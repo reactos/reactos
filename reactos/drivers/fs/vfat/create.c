@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.14 2001/01/16 09:55:02 dwelch Exp $
+/* $Id: create.c,v 1.15 2001/02/10 22:51:11 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -446,6 +446,10 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	  FileObject->FsContext = (PVOID)&Fcb->RFCB;
 	  newCCB = ExAllocatePool (NonPagedPool, sizeof (VFATCCB));
 	  memset (newCCB, 0, sizeof (VFATCCB));
+	  FileObject->Flags = FileObject->Flags | 
+	    FO_FCB_IS_VALID | FO_DIRECT_CACHE_PAGING_READ;
+	  FileObject->SectionObjectPointers = 
+	    &Fcb->SectionObjectPointers;
 	  FileObject->FsContext2 = newCCB;
 	  newCCB->pFcb = Fcb;
 	  newCCB->PtrFileObject = FileObject;
@@ -563,6 +567,9 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 
   FileObject->Flags = FileObject->Flags | 
     FO_FCB_IS_VALID | FO_DIRECT_CACHE_PAGING_READ;
+  FileObject->SectionObjectPointers = &ParentFcb->SectionObjectPointers;
+  memset(FileObject->SectionObjectPointers, 0, 
+	 sizeof(SECTION_OBJECT_POINTERS));
   FileObject->FsContext = (PVOID)&ParentFcb->RFCB;
   newCCB = ExAllocatePool (NonPagedPool, sizeof (VFATCCB));
   memset (newCCB, 0, sizeof (VFATCCB));

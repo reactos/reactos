@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.77 2001/02/06 00:11:18 dwelch Exp $
+/* $Id: main.c,v 1.78 2001/02/10 22:51:09 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -26,6 +26,7 @@
 #include <internal/i386/segment.h>
 #include <napi/shared_data.h>
 #include <internal/v86m.h>
+#include <internal/kd.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -574,6 +575,12 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
 	 }
      }
    
+#ifdef DEBUGPRINT_FILE_LOG
+   /* On the assumption that we can now access disks start up the debug 
+      logger thread */
+   DebugLogInit2();
+#endif /* DEBUGPRINT_FILE_LOG */
+
    /* Create the SystemRoot symbolic link */
    DbgPrint("CommandLine: %s\n", (PUCHAR)KeLoaderBlock.CommandLine);
    CreateSystemRootLink ((PUCHAR)KeLoaderBlock.CommandLine);
