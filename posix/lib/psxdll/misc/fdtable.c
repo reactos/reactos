@@ -1,4 +1,4 @@
-/* $Id: fdtable.c,v 1.2 2002/02/20 09:17:57 hyperion Exp $
+/* $Id: fdtable.c,v 1.3 2002/03/11 20:48:08 hyperion Exp $
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -227,6 +227,7 @@ __fildes_t *__fdtable_entry_get(__fdtable_t * fdtable, int fileno)
  if(fileno >= fdtable->AllocatedDescriptors)
   return (0);
 
+ /* TODO: check the fileno against the bitmap */
  return (&fdtable->Descriptors[fileno]);
 }
 
