@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: logport.c,v 1.7 2003/11/20 11:09:49 ekohl Exp $
+/* $Id: logport.c,v 1.8 2003/11/24 16:41:41 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -33,7 +33,7 @@
 #include <ntos.h>
 #include <napi/lpc.h>
 #include <windows.h>
-#include <rosrtl/string.h>
+#include <string.h>
 
 #include "eventlog.h"
 
@@ -61,7 +61,7 @@ InitLogPort (VOID)
   ConnectPortHandle = NULL;
   MessagePortHandle = NULL;
 
-  RtlRosInitUnicodeStringFromLiteral(&PortName,
+  RtlInitUnicodeString(&PortName,
 		       L"\\ErrorLogPort");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &PortName,
@@ -126,6 +126,10 @@ ProcessPortMessage(VOID)
 {
   LPC_MAX_MESSAGE Request;
   PIO_ERROR_LOG_MESSAGE Message;
+//#ifndef NDEBUG
+  ULONG i;
+  PWSTR p;
+//#endif
   NTSTATUS Status;
 
 
@@ -145,31 +149,54 @@ ProcessPortMessage(VOID)
 	  break;
 	}
 
-      DPRINT1 ("Received message\n");
+      DPRINT ("Received message\n");
 
       if (Request.Header.MessageType == LPC_PORT_CLOSED)
 	{
-	  DPRINT1 ("Port closed\n");
+	  DPRINT ("Port closed\n");
 
 	  return (STATUS_UNSUCCESSFUL);
 	}
       if (Request.Header.MessageType == LPC_REQUEST)
 	{
-	  DPRINT1("Received request\n");
+	  DPRINT ("Received request\n");
 
 	}
       else if (Request.Header.MessageType == LPC_DATAGRAM)
 	{
-	  DPRINT1 ("Received datagram\n");
+	  DPRINT ("Received datagram\n");
 
 
 	  Message = (PIO_ERROR_LOG_MESSAGE)&Request.Data;
 
-	  DPRINT1("Message->Type %hx\n", Message->Type);
-	  DPRINT1("Message->Size %hu\n", Message->Size);
+	  DPRINT ("Message->Type %hx\n", Message->Type);
+	  DPRINT ("Message->Size %hu\n", Message->Size);
 
-	  DPRINT1("Sequence number %lx\n", Message->EntryData.SequenceNumber);
+//#ifndef NDEBUG
+	  DbgPrint ("\n Error mesage:\n");
+	  DbgPrint ("Error code: %lx\n", Message->EntryData.ErrorCode);
+	  DbgPrint ("Retry count: %u\n", Message->EntryData.RetryCount);
+	  DbgPrint ("Sequence number: %lu\n", Message->EntryData.SequenceNumber);
 
+	  if (Message->DriverNameLength != 0)
+	    {
+	      DbgPrint ("Driver name: %.*S\n",
+		        Message->DriverNameLength / sizeof(WCHAR),
+		        (PWCHAR)((ULONG_PTR)Message + Message->DriverNameOffset));
+	    }
+
+	  if (Message->EntryData.NumberOfStrings != 0)
+	    {
+	      p = (PWSTR)((ULONG_PTR)&Message->EntryData + Message->EntryData.StringOffset);
+	      for (i = 0; i < Message->EntryData.NumberOfStrings; i++)
+		{
+		  DbgPrint ("String %lu: %S\n", i, p);
+		  p += wcslen(p) + 1;
+		}
+	      DbgPrint("\n");
+	    }
+
+//#endif
 	}
     }
 
