@@ -46,8 +46,7 @@ MainFrame::MainFrame(HWND hwnd)
 	_hMenuFrame = GetMenu(hwnd);
 	_hMenuWindow = GetSubMenu(_hMenuFrame, GetMenuItemCount(_hMenuFrame)-2);
 
-	_menu_info._hMenuView = GetSubMenu(_hMenuFrame, 3);
-	_menu_info._hMenuOptions = GetSubMenu(_hMenuFrame, 4);
+	_menu_info._hMenuView = GetSubMenu(_hMenuFrame, 1);
 
 	_hAccel = LoadAccelerators(g_Globals._hInstance, MAKEINTRESOURCE(IDA_EXPLORER));
 
@@ -87,7 +86,7 @@ MainFrame::MainFrame(HWND hwnd)
 		IDW_TOOLBAR, 2, g_Globals._hInstance, IDB_TOOLBAR, toolbarBtns,
 		sizeof(toolbarBtns)/sizeof(TBBUTTON), 16, 15, 16, 15, sizeof(TBBUTTON));
 
-	CheckMenuItem(_menu_info._hMenuOptions, ID_VIEW_TOOL_BAR, MF_BYCOMMAND|MF_CHECKED);
+	CheckMenuItem(_menu_info._hMenuView, ID_VIEW_TOOL_BAR, MF_BYCOMMAND|MF_CHECKED);
 
 
 	TBBUTTON drivebarBtn = {0, 0, TBSTATE_ENABLED, BTNS_SEP, {0, 0}, 0, 0};
@@ -97,7 +96,7 @@ MainFrame::MainFrame(HWND hwnd)
 	_hdrivebar = CreateToolbarEx(hwnd, WS_CHILD|WS_VISIBLE|CCS_NOMOVEY|TBSTYLE_LIST,
 				IDW_DRIVEBAR, 2, g_Globals._hInstance, IDB_DRIVEBAR, &drivebarBtn,
 				1, 16, 13, 16, 13, sizeof(TBBUTTON));
-	CheckMenuItem(_menu_info._hMenuOptions, ID_VIEW_DRIVE_BAR, MF_BYCOMMAND|MF_CHECKED);
+	CheckMenuItem(_menu_info._hMenuView, ID_VIEW_DRIVE_BAR, MF_BYCOMMAND|MF_CHECKED);
 
 
 	GetLogicalDriveStrings(BUFFER_LEN, _drives);
@@ -208,7 +207,7 @@ MainFrame::MainFrame(HWND hwnd)
 						hwnd, (HMENU)IDW_STATUSBAR, g_Globals._hInstance, 0);*/
 
 	_hstatusbar = CreateStatusWindow(WS_CHILD|WS_VISIBLE, 0, hwnd, IDW_STATUSBAR);
-	CheckMenuItem(_menu_info._hMenuOptions, ID_VIEW_STATUSBAR, MF_BYCOMMAND|MF_CHECKED);
+	CheckMenuItem(_menu_info._hMenuView, ID_VIEW_STATUSBAR, MF_BYCOMMAND|MF_CHECKED);
 }
 
 
@@ -545,7 +544,7 @@ int MainFrame::Command(int id, int code)
 		break;
 
 	  case ID_VIEW_FULLSCREEN:
-		CheckMenuItem(_menu_info._hMenuOptions, id, toggle_fullscreen()?MF_CHECKED:0);
+		CheckMenuItem(_menu_info._hMenuView, id, toggle_fullscreen()?MF_CHECKED:0);
 		break;
 
 #ifdef __WINE__
@@ -813,7 +812,7 @@ void MainFrame::toggle_child(HWND hwnd, UINT cmd, HWND hchild)
 {
 	BOOL vis = IsWindowVisible(hchild);
 
-	CheckMenuItem(_menu_info._hMenuOptions, cmd, vis?MF_BYCOMMAND:MF_BYCOMMAND|MF_CHECKED);
+	CheckMenuItem(_menu_info._hMenuView, cmd, vis?MF_BYCOMMAND:MF_BYCOMMAND|MF_CHECKED);
 
 	ShowWindow(hchild, vis?SW_HIDE:SW_SHOW);
 

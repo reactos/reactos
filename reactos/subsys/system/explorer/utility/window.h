@@ -269,7 +269,6 @@ struct IconWindowClass : public WindowClass
 struct MenuInfo
 {
 	HMENU	_hMenuView;
-	HMENU	_hMenuOptions;
 };
 
 #define	PM_FRM_GET_MENUINFO		(WM_APP+0x02)
