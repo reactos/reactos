@@ -720,13 +720,13 @@ struct _SYSTEM_DRIVER_LOAD
 typedef
 struct _SYSTEM_TIME_ZONE_INFORMATION
 {
-	LONG		Bias;
-	WCHAR		StandardName [32];
-	SYSTEMTIME	StandardDate;
-	LONG		StandardBias;
-	WCHAR		DaylightName [32];
-	SYSTEMTIME	DaylightDate;
-	LONG		DaylightBias;
+	LONG	Bias;
+	WCHAR	StandardName [32];
+	TIME	StandardDate;
+	LONG	StandardBias;
+	WCHAR	DaylightName [32];
+	TIME	DaylightDate;
+	LONG	DaylightBias;
 
 } SYSTEM_TIME_ZONE_INFORMATION, * PSYSTEM_TIME_ZONE_INFORMATION;
 
