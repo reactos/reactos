@@ -11,10 +11,15 @@
 #ifdef __CYGWIN__
 #include <winsock.h>
 #else
-#include <Windows32/sockets.h>
+// #include <Windows32/sockets.h> Removed for ReactOS
 #endif
 #else
 #include <winsock.h>
+#endif
+
+// ReactOS uses winsock2.h (Steven Edwards 12-31-01)
+#ifdef __REACTOS__
+#include <winsock2.h>
 #endif
 
 enum NetworkType {TN_NETSOCKET, TN_NETPIPE};

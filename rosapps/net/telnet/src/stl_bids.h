@@ -132,8 +132,10 @@ public:
 		destroy(begin( ), end( ));
 #ifdef __CYGWIN__
 		_M_finish = _M_start;
-#else
-		finish = start;
+#endif
+//		finish = start;		/* Removed for ReactOS */
+#ifdef __REACTOS__
+		_M_finish = _M_start;
 #endif
 #endif
 	}
