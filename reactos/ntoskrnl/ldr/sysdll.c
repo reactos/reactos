@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -93,14 +93,14 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
 			      NULL);
    DPRINT("Opening NTDLL\n");
    Status = ZwOpenFile(&FileHandle,
-		       FILE_ALL_ACCESS,
+		       FILE_READ_ACCESS,
 		       &FileObjectAttributes,
 		       &Iosb,
 		       FILE_SHARE_READ,
 		       FILE_SYNCHRONOUS_IO_NONALERT);
    if (!NT_SUCCESS(Status))
      {
-	DbgPrint("NTDLL open failed (Status %x)\n", Status);
+	DPRINT1("NTDLL open failed (Status %x)\n", Status);
 	return Status;
      }
    Status = ZwReadFile(FileHandle,
@@ -114,7 +114,7 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
 		       0);
    if (!NT_SUCCESS(Status) || Iosb.Information != sizeof(BlockBuffer))
      {
-	DbgPrint("NTDLL header read failed (Status %x)\n", Status);
+	DPRINT1("NTDLL header read failed (Status %x)\n", Status);
 	ZwClose(FileHandle);
 	return Status;
      }
@@ -129,7 +129,7 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
        || (DosHeader->e_lfanew == 0L)
        || (*(PULONG) NTHeaders != IMAGE_NT_SIGNATURE))
      {
-	DbgPrint("NTDLL format invalid\n");
+	DPRINT1("NTDLL format invalid\n");
 	ZwClose(FileHandle);	
 	return(STATUS_UNSUCCESSFUL);
      }
@@ -149,7 +149,7 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
 			    FileHandle);
    if (!NT_SUCCESS(Status))
      {
-	DbgPrint("NTDLL create section failed (Status %x)\n", Status);
+	DPRINT1("NTDLL create section failed (Status %x)\n", Status);
 	ZwClose(FileHandle);	
 	return(Status);
      }
@@ -172,7 +172,7 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
 			       PAGE_READWRITE);
    if (!NT_SUCCESS(Status))
      {
-	DbgPrint("NTDLL map view of secion failed (Status %x)", Status);
+	DPRINT1("NTDLL map view of secion failed (Status %x)", Status);
 	ZwClose(NTDllSectionHandle);
 	return(Status);
      }
@@ -186,7 +186,7 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
 				      NULL);
    if (!NT_SUCCESS(Status))
      {
-	DbgPrint("ObReferenceObjectByProcess() failed (Status %x)\n", Status);
+	DPRINT1("ObReferenceObjectByProcess() failed (Status %x)\n", Status);
 	return(Status);
      }
 
@@ -210,7 +210,7 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
 					&SystemDllEntryPoint);
        if (!NT_SUCCESS(Status))
 	 {
-	   DbgPrint ("LdrGetProcedureAddress failed (Status %x)\n", Status);
+	   DPRINT1 ("LdrGetProcedureAddress failed (Status %x)\n", Status);
 	   if (Process != CurrentProcess)
 	     {
 	       KeDetachProcess();
@@ -235,7 +235,7 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
 					&SystemDllApcDispatcher);
        if (!NT_SUCCESS(Status))
 	 {
-	   DbgPrint ("LdrGetProcedureAddress failed (Status %x)\n", Status);
+	   DPRINT1 ("LdrGetProcedureAddress failed (Status %x)\n", Status);
 	   if (Process != CurrentProcess)
 	     {
 	       KeDetachProcess();
@@ -259,7 +259,7 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
 					&SystemDllExceptionDispatcher);
        if (!NT_SUCCESS(Status))
 	 {
-	   DbgPrint ("LdrGetProcedureAddress failed (Status %x)\n", Status);
+	   DPRINT1 ("LdrGetProcedureAddress failed (Status %x)\n", Status);
 	   if (Process != CurrentProcess)
 	     {
 	       KeDetachProcess();
@@ -283,7 +283,7 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
 					&SystemDllCallbackDispatcher);
        if (!NT_SUCCESS(Status))
 	 {
-	   DbgPrint ("LdrGetProcedureAddress failed (Status %x)\n", Status);
+	   DPRINT1 ("LdrGetProcedureAddress failed (Status %x)\n", Status);
 	   if (Process != CurrentProcess)
 	     {
 	       KeDetachProcess();
@@ -307,7 +307,7 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
 					&SystemDllRaiseExceptionDispatcher);
        if (!NT_SUCCESS(Status))
 	 {
-	   DbgPrint ("LdrGetProcedureAddress failed (Status %x)\n", Status);
+	   DPRINT1 ("LdrGetProcedureAddress failed (Status %x)\n", Status);
 	   if (Process != CurrentProcess)
 	     {
 	       KeDetachProcess();
