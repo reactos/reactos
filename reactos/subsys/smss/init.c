@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.31 2002/03/18 16:16:47 ekohl Exp $
+/* $Id: init.c,v 1.32 2002/03/18 22:44:42 hbirr Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -209,6 +209,8 @@ SmSetEnvironmentVariables (VOID)
 	/* Set "SystemDrive = C:" */
 	RtlInitUnicodeString (&EnvVariable,
 	                      L"SystemDrive");
+	RtlInitUnicodeString (&EnvValue,
+	                      ValueBuffer);
 	RtlSetEnvironmentVariable (&SmSystemEnvironment,
 	                           &EnvVariable,
 	                           &EnvValue);
