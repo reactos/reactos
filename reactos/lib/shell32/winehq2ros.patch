@@ -36,3 +36,18 @@ diff -u -r1.87 shellpath.c
          case CSIDL_BITBUCKET:
              *ppidl = _ILCreateBitBucket();
              break;
+Index: shell32_main.c
+===================================================================
+RCS file: /home/wine/wine/dlls/shell32/shell32_main.c,v
+retrieving revision 1.136
+diff -u -r1.136 shell32_main.c
+--- shell32_main.c	14 Sep 2004 17:44:40 -0000	1.136
++++ shell32_main.c	21 Sep 2004 19:14:29 -0000
+@@ -953,7 +953,6 @@
+ 	    InitCommonControlsEx(NULL);
+ 
+ 	    SIC_Initialize();
+-	    SYSTRAY_Init();
+ 	    InitChangeNotifications();
+ 	    break;
+ 
