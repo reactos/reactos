@@ -1,4 +1,4 @@
-/* $Id: database.c,v 1.3 2002/06/17 15:47:32 ekohl Exp $
+/* $Id: database.c,v 1.4 2002/07/20 13:34:10 ekohl Exp $
  *
  * service control manager
  * 
@@ -64,13 +64,16 @@ typedef struct _SERVICE
   BOOLEAN ServiceRunning;
   BOOLEAN ServiceVisited;
 
+  HANDLE ControlPipeHandle;
+  ULONG ProcessId;
+  ULONG ThreadId;
 } SERVICE, *PSERVICE;
 
 
 /* GLOBALS *******************************************************************/
 
-LIST_ENTRY GroupListHead = {NULL, NULL};
-LIST_ENTRY ServiceListHead  = {NULL, NULL};
+LIST_ENTRY GroupListHead;
+LIST_ENTRY ServiceListHead;
 
 
 /* FUNCTIONS *****************************************************************/
@@ -309,15 +312,20 @@ ScmCreateServiceDataBase(VOID)
 
 
 static NTSTATUS
-ScmCheckDriver(PSERVICE_GROUP Group,
-	       PSERVICE Service)
+ScmCheckDriver(PSERVICE Service)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING DirName;
   HANDLE DirHandle;
   NTSTATUS Status;
+  POBJDIR_INFORMATION DirInfo;
+  ULONG BufferLength;
+  ULONG DataLength;
+  ULONG Index;
+  PLIST_ENTRY GroupEntry;
+  PSERVICE_GROUP CurrentGroup;
 
-  DPRINT("ScmCheckDriver() called\n");
+  DPRINT("ScmCheckDriver(%wZ) called\n", &Service->ServiceName);
 
   if (Service->Type == SERVICE_KERNEL_DRIVER)
     {
@@ -344,37 +352,65 @@ ScmCheckDriver(PSERVICE_GROUP Group,
       return(Status);
     }
 
-#if 0
+  BufferLength = sizeof(OBJDIR_INFORMATION) +
+		 2 * MAX_PATH * sizeof(WCHAR);
+  DirInfo = HeapAlloc(GetProcessHeap(),
+		      HEAP_ZERO_MEMORY,
+		      BufferLength);
+
   Index = 0;
   while (TRUE)
     {
-
-
       Status = NtQueryDirectoryObject(DirHandle,
-				      &DirInfo,
+				      DirInfo,
 				      BufferLength,
 				      TRUE,
 				      FALSE,
 				      &Index,
 				      &DataLength);
-      if (!NT_SUCCESS(Status))
+      if (Status == STATUS_NO_MORE_ENTRIES)
 	{
-	  NtClose(DirHandle);
-	  return(Status);
+	  /* FIXME: Add current service to 'failed service' list */
+	  DPRINT("Service '%wZ' failed\n", &Service->ServiceName);
+	  break;
 	}
 
-#if 0
-	      if (NT_SUCCESS(Status))
+      if (!NT_SUCCESS(Status))
+	break;
+
+      DPRINT("Comparing: '%wZ'  '%wZ'\n", &Service->ServiceName, &DirInfo->ObjectName);
+
+      if (RtlEqualUnicodeString(&Service->ServiceName, &DirInfo->ObjectName, TRUE))
+	{
+	  DPRINT("Found: '%wZ'  '%wZ'\n", &Service->ServiceName, &DirInfo->ObjectName);
+
+	  /* Mark service as 'running' */
+	  Service->ServiceRunning = TRUE;
+
+	  /* Find the driver's group and mark it as 'running' */
+	  if (Service->ServiceGroup.Buffer != NULL)
+	    {
+	      GroupEntry = GroupListHead.Flink;
+	      while (GroupEntry != &GroupListHead)
 		{
-		  CurrentGroup->ServicesRunning = TRUE;
-		  CurrentService->ServiceRunning = TRUE;
+		  CurrentGroup = CONTAINING_RECORD(GroupEntry, SERVICE_GROUP, GroupListEntry);
+
+		  DPRINT("Checking group '%wZ'\n", &CurrentGroup->GroupName);
+		  if (RtlEqualUnicodeString(&Service->ServiceGroup, &CurrentGroup->GroupName, TRUE))
+		    {
+		      CurrentGroup->ServicesRunning = TRUE;
+		    }
+
+		  GroupEntry = GroupEntry->Flink;
 		}
-#endif
-
-
+	    }
+	  break;
+	}
     }
-#endif
 
+  HeapFree(GetProcessHeap(),
+	   0,
+	   DirInfo);
   NtClose(DirHandle);
 
   return(STATUS_SUCCESS);
@@ -384,38 +420,26 @@ ScmCheckDriver(PSERVICE_GROUP Group,
 VOID
 ScmGetBootAndSystemDriverState(VOID)
 {
-  PLIST_ENTRY GroupEntry;
   PLIST_ENTRY ServiceEntry;
-  PSERVICE_GROUP CurrentGroup;
   PSERVICE CurrentService;
   NTSTATUS Status;
 
   DPRINT("ScmGetBootAndSystemDriverState() called\n");
 
-  GroupEntry = GroupListHead.Flink;
-  while (GroupEntry != &GroupListHead)
+  ServiceEntry = ServiceListHead.Flink;
+  while (ServiceEntry != &ServiceListHead)
     {
-      CurrentGroup = CONTAINING_RECORD(GroupEntry, SERVICE_GROUP, GroupListEntry);
+      CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
 
-      DPRINT("Checking group '%wZ'\n", &CurrentGroup->GroupName);
-
-      ServiceEntry = ServiceListHead.Flink;
-      while (ServiceEntry != &ServiceListHead)
+      if (CurrentService->Start == SERVICE_BOOT_START ||
+	  CurrentService->Start == SERVICE_SYSTEM_START)
 	{
-	  CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
+	  /* Check driver */
+	  DPRINT("  Checking service: %wZ\n", &CurrentService->ServiceName);
 
-	  if (CurrentService->Start == SERVICE_BOOT_START ||
-	      CurrentService->Start == SERVICE_SYSTEM_START)
-	    {
-	      /* Check driver */
-	      DPRINT("  Checking service: %wZ\n", &CurrentService->ServiceName);
-
-	      ScmCheckDriver(CurrentGroup,
-			     CurrentService);
-	    }
-	  ServiceEntry = ServiceEntry->Flink;
+	  ScmCheckDriver(CurrentService);
 	}
-      GroupEntry = GroupEntry->Flink;
+      ServiceEntry = ServiceEntry->Flink;
     }
 
   DPRINT("ScmGetBootAndSystemDriverState() done\n");
@@ -435,6 +459,8 @@ ScmStartService(PSERVICE Service,
   BOOL Result;
 
   DPRINT("ScmStartService() called\n");
+
+  Service->ControlPipeHandle = INVALID_HANDLE_VALUE;
 
   if (Service->Type == SERVICE_KERNEL_DRIVER ||
       Service->Type == SERVICE_FILE_SYSTEM_DRIVER ||
@@ -471,6 +497,21 @@ ScmStartService(PSERVICE Service,
 	  DPRINT("Type: %lx\n", Type);
 
 	  /* FIXME: create '\\.\pipe\net\NtControlPipe' instance */
+	  Service->ControlPipeHandle = CreateNamedPipeW(L"\\\\.\\pipe\\net\\NtControlPipe",
+							PIPE_ACCESS_DUPLEX,
+							PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
+							100,
+							8000,
+							4,
+							30000,
+							NULL);
+	  DPRINT1("CreateNamedPipeW() done\n");
+	  if (Service->ControlPipeHandle == INVALID_HANDLE_VALUE)
+	    {
+	      DPRINT1("Failed to create control pipe!\n");
+	      Status = STATUS_UNSUCCESSFUL;
+	      goto Done;
+	    }
 
 	  StartupInfo.cb = sizeof(StartupInfo);
 	  StartupInfo.lpReserved = NULL;
@@ -485,29 +526,64 @@ ScmStartService(PSERVICE Service,
 				  NULL,
 				  NULL,
 				  FALSE,
-				  DETACHED_PROCESS,
+				  DETACHED_PROCESS | CREATE_SUSPENDED,
 				  NULL,
 				  NULL,
 				  &StartupInfo,
 				  &ProcessInformation);
-
 	  RtlFreeUnicodeString(&ImagePath);
 
 	  if (!Result)
 	    {
-	      /* FIXME: close control pipe */
+	      /* Close control pipe */
+	      CloseHandle(Service->ControlPipeHandle);
+	      Service->ControlPipeHandle = INVALID_HANDLE_VALUE;
 
-	      DPRINT("Failed to start '%S'\n", Service->ServiceName.Buffer);
+	      DPRINT("Starting '%S' failed!\n", Service->ServiceName.Buffer);
 	      Status = STATUS_UNSUCCESSFUL;
 	    }
 	  else
 	    {
-	      /* FIXME: connect control pipe */
+	      DPRINT1("Process Id: %lu  Handle %lx\n",
+		      ProcessInformation.dwProcessId,
+		      ProcessInformation.hProcess);
+	      DPRINT1("Tread Id: %lu  Handle %lx\n",
+		      ProcessInformation.dwThreadId,
+		      ProcessInformation.hThread);
 
+	      /* Get process and thread ids */
+	      Service->ProcessId = ProcessInformation.dwProcessId;
+	      Service->ThreadId = ProcessInformation.dwThreadId;
+
+	      /* Resume Thread */
+	      ResumeThread(ProcessInformation.hThread);
+
+	      /* FIXME: connect control pipe */
+	      if (ConnectNamedPipe(Service->ControlPipeHandle, NULL))
+		{
+		  DPRINT1("Control pipe connected!\n");
+		  Status = STATUS_SUCCESS;
+		}
+	      else
+		{
+		  DPRINT1("Connecting control pipe failed!\n");
+
+		  /* Close control pipe */
+		  CloseHandle(Service->ControlPipeHandle);
+		  Service->ControlPipeHandle = INVALID_HANDLE_VALUE;
+		  Service->ProcessId = 0;
+		  Service->ThreadId = 0;
+		  Status = STATUS_UNSUCCESSFUL;
+		}
+
+	      /* Close process and thread handle */
+	      CloseHandle(ProcessInformation.hThread);
+	      CloseHandle(ProcessInformation.hProcess);
 	    }
 	}
     }
 
+Done:
   if (NT_SUCCESS(Status))
     {
       if (Group != NULL)
