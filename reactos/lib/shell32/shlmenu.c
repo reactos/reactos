@@ -427,7 +427,7 @@ int WINAPI FileMenu_InsertUsingPidl (
 /*************************************************************************
  * FileMenu_ReplaceUsingPidl			[SHELL32.113]
  *
- * FIXME: the static items are deleted but wont be refreshed
+ * FIXME: the static items are deleted but won't be refreshed
  */
 int WINAPI FileMenu_ReplaceUsingPidl(
 	HMENU	hmenu,

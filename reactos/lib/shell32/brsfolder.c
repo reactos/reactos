@@ -202,7 +202,7 @@ static HTREEITEM InsertTreeViewItem(IShellFolder * lpsf, LPCITEMIDLIST pidl, LPC
 	lptvid->pEnumIL = pEnumIL;
 	GetNormalAndSelectedIcons(lptvid->lpifq, &tvi);
 
-	tvins.DUMMYUNIONNAME.item         = tvi;
+	tvins.u.item       = tvi;
 	tvins.hInsertAfter = NULL;
 	tvins.hParent      = hParent;
 

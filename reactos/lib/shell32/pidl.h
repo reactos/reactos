@@ -57,11 +57,11 @@
 *	network		0x1F		mycomp
 *	bitbucket	0x1F		mycomp
 *	drive		0x23/25		drive		(usual)
-*	drive		0x25/25		drive		(lnk/persistant)
+*	drive		0x25/25		drive		(lnk/persistent)
 *	drive		0x29/25		drive
 *	shell extension	0x2E		mycomp
-*	drive		0x2F		drive		(lnk/persistant)
-*	folder/file	0x30		folder/file (1)	(lnk/persistant)
+*	drive		0x2F		drive		(lnk/persistent)
+*	folder/file	0x30		folder/file (1)	(lnk/persistent)
 *	folder		0x31		folder		(usual)
 *	valueA		0x32		file		(ANSI file name) 
 *	valueW		0x34		file		(Unicode file name)
@@ -73,7 +73,7 @@
 *	history/favorites 0xb1		file
 *	share		0xc3		network (6)
 *
-* guess: the persistant elements are non tracking
+* guess: the persistent elements are non tracking
 *
 * (1) dummy byte is used, attributes are empty
 * (2) IID_MyComputer = 20D04FE0L-3AEA-1069-A2D8-08002B30309D
