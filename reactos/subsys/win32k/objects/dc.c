@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.86 2003/10/04 20:26:43 gvg Exp $
+/* $Id: dc.c,v 1.87 2003/10/06 16:25:53 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -132,6 +132,7 @@ NtGdiCreateCompatableDC(HDC  hDC)
   HDC hNewDC;
   HRGN hVisRgn;
   BITMAPOBJ *pb;
+  PSURFGDI SurfGDI;
 
   if (hDC == NULL)
   {
@@ -166,6 +167,8 @@ NtGdiCreateCompatableDC(HDC  hDC)
            sizeof(NewDC->FillPatternSurfaces));
     NewDC->GDIInfo = &PrimarySurface.GDIInfo;
     NewDC->DevInfo = &PrimarySurface.DevInfo;
+    SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) PrimarySurface.Handle);
+    NewDC->w.bitsPerPixel = SurfGDI->BitsPerPixel;
   }
   else
   {
@@ -176,6 +179,7 @@ NtGdiCreateCompatableDC(HDC  hDC)
            sizeof OrigDC->FillPatternSurfaces);
     NewDC->GDIInfo = OrigDC->GDIInfo;
     NewDC->DevInfo = OrigDC->DevInfo;
+    NewDC->w.bitsPerPixel = OrigDC->w.bitsPerPixel;
   }
 
   /* DriverName is copied in the AllocDC routine  */
@@ -197,7 +201,7 @@ NtGdiCreateCompatableDC(HDC  hDC)
   }
 
   /* Create default bitmap */
-  if (!(hBitmap = NtGdiCreateBitmap( 1, 1, 1, 1, NULL )))
+  if (!(hBitmap = NtGdiCreateBitmap( 1, 1, 1, NewDC->w.bitsPerPixel, NULL )))
   {
     DC_UnlockDc( hDC );
     DC_UnlockDc( hNewDC );
@@ -205,7 +209,6 @@ NtGdiCreateCompatableDC(HDC  hDC)
     return NULL;
   }
   NewDC->w.flags        = DC_MEMORY;
-  NewDC->w.bitsPerPixel = 1;
   NewDC->w.hBitmap      = hBitmap;
   NewDC->w.hFirstBitmap = hBitmap;
   pb = BITMAPOBJ_LockBitmap(hBitmap);

@@ -40,7 +40,6 @@ NtGdiCreateFontIndirect			1
 NtGdiCreateHalftonePalette		1
 NtGdiCreateHatchBrush			2
 NtGdiCreateIC				4
-NtGdiCreateIcon					9
 NtGdiCreateMetaFile			1
 NtGdiCreatePalette			1
 NtGdiCreatePatternBrush			1

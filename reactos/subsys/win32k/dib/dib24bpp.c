@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib24bpp.c,v 1.13 2003/08/12 21:55:47 gvg Exp $ */
+/* $Id: dib24bpp.c,v 1.14 2003/10/06 16:25:53 gvg Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -253,7 +253,7 @@ DIB_24BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 		 PBRUSHOBJ Brush, PPOINTL BrushOrigin,
 		 XLATEOBJ *ColorTranslation, ULONG Rop4)
 {
-  LONG     i, j, k, sx, sy;
+  LONG     i, j, sx, sy;
   ULONG    Dest, Source, Pattern;
   PULONG   DestBits;
   BOOL     UsesSource = ((Rop4 & 0xCC0000) >> 2) != (Rop4 & 0x330000);
@@ -276,7 +276,7 @@ DIB_24BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 	    Dest = *DestBits & 0x00ffffff;
 	    if (UsesSource)
 	      {
-		Source = DIB_GetSource(SourceSurf, SourceGDI, sx + i + k, sy, ColorTranslation) & 0x00ffffff;
+		Source = DIB_GetSource(SourceSurf, SourceGDI, sx + (i - DestRect->left), sy, ColorTranslation) & 0x00ffffff;
 	      }
 	    if (UsesPattern)
 	      {
@@ -287,6 +287,7 @@ DIB_24BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 	    *(PBYTE)DestBits = Dest & 0xff;
             *(PWORD)(DestBits + 1) = Dest >> 8;
 	  }
+        sy++;
       }
     }
   return TRUE;

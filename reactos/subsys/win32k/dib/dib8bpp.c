@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib8bpp.c,v 1.6 2003/08/31 07:56:24 gvg Exp $ */
+/* $Id: dib8bpp.c,v 1.7 2003/10/06 16:25:53 gvg Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -301,7 +301,7 @@ DIB_8BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 		Source = 0;
 		for (k = 0; k < 4; k++)
 		  {
-		    Source |= (DIB_GetSource(SourceSurf, SourceGDI, sx + i + k, sy, ColorTranslation) << (k * 8));
+		    Source |= (DIB_GetSource(SourceSurf, SourceGDI, sx + (i - DestRect->left) + k, sy, ColorTranslation) << (k * 8));
 		  }
 	      }
 	    if (UsesPattern)
@@ -321,7 +321,7 @@ DIB_8BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 	      {
 		if (UsesSource)
 		  {
-		    Source = DIB_GetSource(SourceSurf, SourceGDI, sx + i, sy, ColorTranslation);
+		    Source = DIB_GetSource(SourceSurf, SourceGDI, sx + (i - DestRect->left), sy, ColorTranslation);
 		  }
 		if (UsesPattern)
 		  {
@@ -335,6 +335,7 @@ DIB_8BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 		Dest >>= 8;
 	      }	 
 	  }
+        sy++;
       }
     }
   return TRUE;

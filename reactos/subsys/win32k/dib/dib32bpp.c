@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib32bpp.c,v 1.5 2003/08/13 20:24:04 chorns Exp $ */
+/* $Id: dib32bpp.c,v 1.6 2003/10/06 16:25:53 gvg Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -247,7 +247,7 @@ DIB_32BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 		 PBRUSHOBJ Brush, PPOINTL BrushOrigin,
 		 XLATEOBJ *ColorTranslation, ULONG Rop4)
 {
-  LONG     i, j, k, sx, sy;
+  LONG     i, j, sx, sy;
   ULONG    Dest, Source, Pattern;
   PULONG   DestBits;
   BOOL     UsesSource = ((Rop4 & 0xCC0000) >> 2) != (Rop4 & 0x330000);
@@ -270,7 +270,7 @@ DIB_32BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 	    Dest = *DestBits;
 	    if (UsesSource)
 	      {
-		Source = DIB_GetSource(SourceSurf, SourceGDI, sx + i + k, sy, ColorTranslation);
+		Source = DIB_GetSource(SourceSurf, SourceGDI, sx + (i - DestRect->left), sy, ColorTranslation);
 	      }
 	    if (UsesPattern)
 	      {
@@ -279,6 +279,7 @@ DIB_32BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 	      }
 	    *DestBits = DIB_DoRop(Rop4, Dest, Source, Pattern);	    
 	  }
+        sy++;
       }
     }
   return TRUE;
