@@ -2962,47 +2962,47 @@ typedef struct _PCI_COMMON_CONFIG {
       UCHAR  MinimumGrant;
       UCHAR  MaximumLatency;
     } type0;
-      struct _PCI_HEADER_TYPE_1 {
-        ULONG  BaseAddresses[PCI_TYPE1_ADDRESSES];
-        UCHAR  PrimaryBus;
-        UCHAR  SecondaryBus;
-        UCHAR  SubordinateBus;
-        UCHAR  SecondaryLatency;
-        UCHAR  IOBase;
-        UCHAR  IOLimit;
-        USHORT  SecondaryStatus;
-        USHORT  MemoryBase;
-        USHORT  MemoryLimit;
-        USHORT  PrefetchBase;
-        USHORT  PrefetchLimit;
-        ULONG  PrefetchBaseUpper32;
-        ULONG  PrefetchLimitUpper32;
-        USHORT  IOBaseUpper16;
-        USHORT  IOLimitUpper16;
-        UCHAR  CapabilitiesPtr;
-        UCHAR  Reserved1[3];
-        ULONG  ROMBaseAddress;
-        UCHAR  InterruptLine;
-        UCHAR  InterruptPin;
-        USHORT  BridgeControl;
-      } type1;
-      struct _PCI_HEADER_TYPE_2 {
-        ULONG  SocketRegistersBaseAddress;
-        UCHAR  CapabilitiesPtr;
-        UCHAR  Reserved;
-        USHORT  SecondaryStatus;
-        UCHAR  PrimaryBus;
-        UCHAR  SecondaryBus;
-        UCHAR  SubordinateBus;
-        UCHAR  SecondaryLatency;
-        struct {
-          ULONG  Base;
-          ULONG  Limit;
-        } Range[PCI_TYPE2_ADDRESSES - 1];
-        UCHAR  InterruptLine;
-        UCHAR  InterruptPin;
-        USHORT  BridgeControl;
-      } type2;
+    struct _PCI_HEADER_TYPE_1 {
+      ULONG  BaseAddresses[PCI_TYPE1_ADDRESSES];
+      UCHAR  PrimaryBus;
+      UCHAR  SecondaryBus;
+      UCHAR  SubordinateBus;
+      UCHAR  SecondaryLatency;
+      UCHAR  IOBase;
+      UCHAR  IOLimit;
+      USHORT  SecondaryStatus;
+      USHORT  MemoryBase;
+      USHORT  MemoryLimit;
+      USHORT  PrefetchBase;
+      USHORT  PrefetchLimit;
+      ULONG  PrefetchBaseUpper32;
+      ULONG  PrefetchLimitUpper32;
+      USHORT  IOBaseUpper16;
+      USHORT  IOLimitUpper16;
+      UCHAR  CapabilitiesPtr;
+      UCHAR  Reserved1[3];
+      ULONG  ROMBaseAddress;
+      UCHAR  InterruptLine;
+      UCHAR  InterruptPin;
+      USHORT  BridgeControl;
+    } type1;
+    struct _PCI_HEADER_TYPE_2 {
+      ULONG  SocketRegistersBaseAddress;
+      UCHAR  CapabilitiesPtr;
+      UCHAR  Reserved;
+      USHORT  SecondaryStatus;
+      UCHAR  PrimaryBus;
+      UCHAR  SecondaryBus;
+      UCHAR  SubordinateBus;
+      UCHAR  SecondaryLatency;
+      struct {
+        ULONG  Base;
+        ULONG  Limit;
+      } Range[PCI_TYPE2_ADDRESSES - 1];
+      UCHAR  InterruptLine;
+      UCHAR  InterruptPin;
+      USHORT  BridgeControl;
+    } type2;
   } u;
   UCHAR  DeviceSpecific[192];
 } PCI_COMMON_CONFIG, *PPCI_COMMON_CONFIG;
@@ -6811,13 +6811,23 @@ IoReleaseRemoveLockEx(
 
 /*
  * VOID
+ * IoReleaseRemoveLock(
+ *   IN PIO_REMOVE_LOCK  RemoveLock,
+ *   IN PVOID  Tag)
+ */
+#define IoReleaseRemoveLock(_RemoveLock, \
+                            _Tag) \
+  IoReleaseRemoveLockEx(_RemoveLock, _Tag, sizeof(IO_REMOVE_LOCK))
+
+/*
+ * VOID
  * IoReleaseRemoveLockAndWait(
  *   IN PIO_REMOVE_LOCK  RemoveLock,
  *   IN PVOID  Tag)
  */
 #define IoReleaseRemoveLockAndWait(_RemoveLock, \
                                    _Tag) \
-  IoReleaseRemoveLockEx(_RemoveLock, _Tag, sizeof(IO_REMOVE_LOCK))
+  IoReleaseRemoveLockAndWaitEx(_RemoveLock, _Tag, sizeof(IO_REMOVE_LOCK))
 
 NTOSAPI
 VOID
