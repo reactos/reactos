@@ -1,4 +1,4 @@
-/* $Id: bitmap.c,v 1.6 2004/02/01 20:48:06 ekohl Exp $
+/* $Id: bitmap.c,v 1.7 2004/02/02 13:34:01 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -741,6 +741,48 @@ RtlSetBits (
 		NumberToSet -= Count;
 		StartingIndex += Count;
 	}
+}
+
+
+/*
+ * @implemented
+ */
+CCHAR STDCALL
+RtlFindLeastSignificantBit (IN ULONGLONG Set)
+{
+  int i;
+
+  if (Set == 0ULL)
+    return -1;
+
+  for (i = 0; i < 64; i++)
+    {
+      if (Set & (1 << i))
+        return (CCHAR)i;
+    }
+
+  return -1;
+}
+
+
+/*
+ * @implemented
+ */
+CCHAR STDCALL
+RtlFindMostSignificantBit (IN ULONGLONG Set)
+{
+  int i;
+
+  if (Set == 0ULL)
+    return -1;
+
+  for (i = 63; i >= 0; i--)
+    {
+      if (Set & (1 << i))
+        return (CCHAR)i;
+    }
+
+  return -1;
 }
 
 /* EOF */
