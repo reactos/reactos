@@ -221,4 +221,17 @@ typedef LONG FLOATL;
 
 typedef LONG FIX; /* fixed-point number */
 
+/* copied from W32API */
+typedef struct _KFLOATING_SAVE
+{
+  ULONG  ControlWord;
+  ULONG  StatusWord;
+  ULONG  ErrorOffset;
+  ULONG  ErrorSelector;
+  ULONG  DataOffset;
+  ULONG  DataSelector;
+  ULONG  Cr0NpxState;
+  ULONG  Spare1;
+} KFLOATING_SAVE, *PKFLOATING_SAVE;
+
 #endif /* __INCLUDE_DDK_KETYPES_H */
