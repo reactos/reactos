@@ -709,6 +709,7 @@ XMLLoadFile ( const string& filename, const Path& path )
 			return NULL;
 		}
 		// replace inclusion tree with the imported tree
+		e2->parentElement = e->parentElement;
 		e2->name = e->name;
 		e2->attributes = e->attributes;
 		*parent_container = e2;
