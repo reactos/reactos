@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: arcname.c,v 1.12 2003/07/17 16:57:38 silverblade Exp $
+/* $Id: arcname.c,v 1.13 2003/09/26 19:45:04 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -177,22 +177,25 @@ IoCreateArcNames(VOID)
 static NTSTATUS
 IopCheckCdromDevices(PULONG DeviceNumber)
 {
-  PFILE_FS_VOLUME_INFORMATION FileFsVolume;
   PCONFIGURATION_INFORMATION ConfigInfo;
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING DeviceName;
-  WCHAR DeviceNameBuffer[32];
+  WCHAR DeviceNameBuffer[MAX_PATH];
   HANDLE Handle;
   ULONG i;
   NTSTATUS Status;
+#if 0
+  PFILE_FS_VOLUME_INFORMATION FileFsVolume;
   IO_STATUS_BLOCK IoStatusBlock;
   USHORT Buffer[FS_VOLUME_BUFFER_SIZE];
 
   FileFsVolume = (PFILE_FS_VOLUME_INFORMATION)Buffer;
+#endif
 
   ConfigInfo = IoGetConfigurationInformation();
   for (i = 0; i < ConfigInfo->CdRomCount; i++)
     {
+#if 0
       swprintf(DeviceNameBuffer,
 	       L"\\Device\\CdRom%lu\\",
 	       i);
@@ -232,8 +235,38 @@ IopCheckCdromDevices(PULONG DeviceNumber)
 	    }
 	  NtClose(Handle);
 	}
+#endif
+
+      swprintf(DeviceNameBuffer,
+	       L"\\Device\\CdRom%lu\\reactos\\ntoskrnl.exe",
+	       i);
+      RtlInitUnicodeString(&DeviceName,
+			   DeviceNameBuffer);
+
+      InitializeObjectAttributes(&ObjectAttributes,
+				 &DeviceName,
+				 0,
+				 NULL,
+				 NULL);
+
+      Status = NtOpenFile(&Handle,
+			  FILE_ALL_ACCESS,
+			  &ObjectAttributes,
+			  NULL,
+			  0,
+			  0);
+      DPRINT("NtOpenFile()  DeviceNumber %lu  Status %lx\n", i, Status);
+      if (NT_SUCCESS(Status))
+	{
+	  DPRINT("Found ntoskrnl.exe on Cdrom%lu\n", i);
+	  NtClose(Handle);
+	  *DeviceNumber = i;
+	  return(STATUS_SUCCESS);
+	}
+
     }
 
+  DPRINT("Could not find ntoskrnl.exe\n");
   *DeviceNumber = (ULONG)-1;
 
   return(STATUS_UNSUCCESSFUL);
