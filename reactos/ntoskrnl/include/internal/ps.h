@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.64 2004/08/10 06:26:42 ion Exp $
+/* $Id: ps.h,v 1.65 2004/08/21 12:34:58 tamlin Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -504,15 +504,15 @@ VOID
 KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First);
 NTSTATUS KeReleaseThread(PETHREAD Thread);
 
-STDCALL
 VOID
+STDCALL
 KeStackAttachProcess (
     IN PKPROCESS Process,
     OUT PKAPC_STATE ApcState
     );
 
-STDCALL
 VOID
+STDCALL
 KeUnstackDetachProcess (
     IN PKAPC_STATE ApcState
     );
