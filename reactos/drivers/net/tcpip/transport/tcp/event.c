@@ -101,7 +101,26 @@ void TCPRecvNotify( PCONNECTION_ENDPOINT Connection, UINT Flags ) {
 }
 
 void TCPCloseNotify( PCONNECTION_ENDPOINT Connection ) {
-    TCPRecvNotify( Connection, 0 );
+    NTSTATUS Status;
+    PTDI_IND_DISCONNECT DisconnectHandler;
+    PVOID HandlerContext;
+
+    DisconnectHandler = Connection->AddressFile->DisconnectHandler;
+    HandlerContext = Connection->AddressFile->DisconnectHandlerContext;
+    
+    /* XXX Distinguish TDI_DISCONNECT_RELEASE from TDI_DISCONNECT_ABORT */
+    if( Connection->AddressFile->RegisteredDisconnectHandler )
+	Status = DisconnectHandler( HandlerContext,
+				    NULL,
+				    0,
+				    NULL,
+				    0,
+				    NULL,
+				    TDI_DISCONNECT_ABORT );
+    else
+	Status = STATUS_UNSUCCESSFUL;    
+
+    return Status;
 }
 
 char *FlagNames[] = { "SEL_CONNECT",
