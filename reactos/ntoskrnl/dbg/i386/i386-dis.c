@@ -1,6 +1,7 @@
 #include <stdarg.h>
 
 /* ReactOS compatibility stuff. */
+
 #define PARAMS(X) X
 #define PTR void*
 typedef enum bfd_flavour
@@ -34,8 +35,10 @@ void* memcpy(void *dest, const void *src, unsigned int length);
 extern void DbgPrint(const char *format, ...);
 #define sprintf_vma(BUF, VMA) sprintf(BUF, "0x%X", VMA)
 #define _setjmp setjmp
-unsigned int
-KdbPrintAddress(void* address);
+unsigned int KdbPrintAddress(void* address);
+
+typedef long NTSTATUS;
+NTSTATUS MmSafeCopyFromUser(void *Dest, const void *Src, unsigned long Count);
 
 struct disassemble_info;
 
@@ -66,14 +69,14 @@ int static
 KdbReadMemory(unsigned int Addr, unsigned char* Data, unsigned int Length, 
 	      struct disassemble_info * Ignored)
 {
-  memcpy(Data, (unsigned char*)Addr, Length);
-  return(0);
+  return MmSafeCopyFromUser(Data, (void *)Addr, Length); /* 0 means no error */
 }
 
 void static
 KdbMemoryError(int Status, unsigned int Addr, 
 	       struct disassemble_info * Ignored)
 {
+  DbgPrint("\nCouldn't read memory at address 0x%x (Status 0x%x)!\n", Addr, Status);
 }
 
 void static

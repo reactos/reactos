@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2004/03/08 14:24:47 weiden Exp $
+# $Id: Makefile,v 1.1.4.1 2004/06/03 22:29:18 arty Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -10,7 +10,7 @@ TARGET_NAME = sysdm
 
 TARGET_INSTALLDIR = system32
 
-TARGET_BASE = 0x58760000
+TARGET_BASE = $(TARGET_BASE_LIB_CPL_SYSDM)
 
 TARGET_CFLAGS = \
  -I./include \

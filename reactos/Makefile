@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.222 2004/05/29 00:16:39 sedwards Exp $
+# $Id: Makefile,v 1.222.2.1 2004/06/03 22:29:16 arty Exp $
 #
 # Global makefile
 #
@@ -32,10 +32,10 @@ BUS = acpi isapnp pci
 LIB_FSLIB = vfatlib
 
 # Static libraries
-LIB_STATIC = string rosrtl epsapi uuid libwine zlib
+LIB_STATIC = string rosrtl epsapi uuid libwine zlib rtl tgetopt
 
 # Keyboard layout libraries
-DLLS_KBD = kbdus kbdgr kbdfr kbduk
+DLLS_KBD = kbddv kbdfr kbdgr kbdse kbduk kbdus
 
 # Control Panels
 DLLS_CPL = cpl

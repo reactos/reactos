@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.6 2004/01/11 20:46:06 navaraf Exp $
+# $Id: makefile,v 1.6.8.1 2004/06/03 22:29:27 arty Exp $
 
 PATH_TO_TOP = ../..
 
@@ -6,7 +6,7 @@ TARGET_TYPE = dynlink
 
 TARGET_NAME = packet
 
-TARGET_BASE = 0x77780000
+TARGET_BASE = $(TARGET_BASE_LIB_PACKET)
 
 TARGET_CFLAGS = -I./include -DUNICODE -D_UNICODE -DLE -DDBG -D_DEBUG -D__USE_W32API -Wall -Werror
 

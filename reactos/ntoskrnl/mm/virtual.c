@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: virtual.c,v 1.73 2004/05/05 02:00:01 tamlin Exp $
+/* $Id: virtual.c,v 1.73.2.1 2004/06/03 22:29:33 arty Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/virtual.c
@@ -274,7 +274,7 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
                     IN PVOID BaseAddress,
                     OUT PVOID Buffer,
                     IN ULONG NumberOfBytesToRead,
-                    OUT PULONG NumberOfBytesRead)
+                    OUT PULONG NumberOfBytesRead OPTIONAL)
 {
    NTSTATUS Status;
    PMDL Mdl;
@@ -319,7 +319,9 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
 
    ObDereferenceObject(Process);
 
-   *NumberOfBytesRead = NumberOfBytesToRead;
+   if (NumberOfBytesRead)
+      *NumberOfBytesRead = NumberOfBytesToRead;
+
    return(STATUS_SUCCESS);
 }
 

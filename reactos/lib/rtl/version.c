@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: version.c,v 1.1 2004/05/31 19:29:02 gdalsnes Exp $
+/* $Id: version.c,v 1.1.2.1 2004/06/03 22:29:28 arty Exp $
  *
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Runtime code

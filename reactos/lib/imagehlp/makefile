@@ -36,7 +36,7 @@ TARGET_LFLAGS = -nostartfiles -nostdlib
 
 TARGET_SDKLIBS = libwine.a ntdll.a kernel32.a
 
-TARGET_BASE = 0x76C90000
+TARGET_BASE = $(TARGET_BASE_LIB_IMAGEHLP)
 
 TARGET_OBJECTS = \
 debug.o \

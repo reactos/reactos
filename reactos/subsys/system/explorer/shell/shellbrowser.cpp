@@ -31,21 +31,22 @@
 #include "../explorer_intres.h"
 
 
-ShellBrowserChild::ShellBrowserChild(HWND hwnd, const ShellChildWndInfo& info)
- :	super(hwnd, info),
-	_create_info(info)
+ShellBrowser::ShellBrowser(HWND hwnd, HWND left_hwnd, WindowHandle& right_hwnd, ShellPathInfo& create_info, HIMAGELIST himl, BrowserCallback* cb)
+ :	_hwnd(hwnd),
+	_left_hwnd(left_hwnd),
+	_right_hwnd(right_hwnd),
+	_create_info(create_info),
+	_himl(himl),
+	_callback(cb)
 {
 	_pShellView = NULL;
 	_pDropTarget = NULL;
-	_himlSmall = 0;
 	_last_sel = 0;
 
-	 // store path into history
-	if (info._path && *info._path)
-		_url_history.push(info._path);
+	_cur_dir = NULL;
 }
 
-ShellBrowserChild::~ShellBrowserChild()
+ShellBrowser::~ShellBrowser()
 {
 	if (_pShellView)
 		_pShellView->Release();
@@ -54,72 +55,86 @@ ShellBrowserChild::~ShellBrowserChild()
 		_pDropTarget->Release();
 		_pDropTarget = NULL;
 	}
+
+	if (_right_hwnd) {
+		DestroyWindow(_right_hwnd);
+		_right_hwnd = 0;
+	}
 }
 
 
-LRESULT ShellBrowserChild::Init(LPCREATESTRUCT pcs)
+LRESULT ShellBrowser::Init(HWND hWndFrame)
 {
-	CONTEXT("ShellBrowserChild::Init()");
+	CONTEXT("ShellBrowser::Init()");
 
-	if (super::Init(pcs))
-		return 1;
-
-	_hWndFrame = GetParent(pcs->hwndParent);
-
-	ClientRect rect(_hwnd);
-
-	SHFILEINFO sfi;
-
-	_himlSmall = (HIMAGELIST)SHGetFileInfo(TEXT("C:\\"), 0, &sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX|SHGFI_SMALLICON);
-//	_himlLarge = (HIMAGELIST)SHGetFileInfo(TEXT("C:\\"), 0, &sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX|SHGFI_LARGEICON);
-
+	_hWndFrame = hWndFrame;
 
 	const String& root_name = GetDesktopFolder().get_name(_create_info._root_shell_path, SHGDN_FORPARSING);
 
 	_root._drive_type = DRIVE_UNKNOWN;
-	_root._sort_order = SORT_NAME;
-
 	lstrcpy(_root._volname, root_name);	// most of the time "Desktop"
 	_root._fs_flags = 0;
 	lstrcpy(_root._fs, TEXT("Desktop"));
 
-//@@	_root._entry->read_tree(shell_info._root_shell_path.get_folder(), info._shell_path, _root._sort_order/*_sortOrder*/);
-
-/*@todo
-	we should call read_tree() here to iterate through the hierarchy and open all folders from shell_info._root_shell_path to shell_info._shell_path
-	-> see FileChildWindow::FileChildWindow()
-*/
 	_root._entry = new ShellDirectory(GetDesktopFolder(), _create_info._root_shell_path, _hwnd);
-	_root._entry->read_directory_base(_root._sort_order);
+
+	jump_to(_create_info._shell_path);
+
+	 // -> set_curdir()
+	_root._entry->read_directory();
 
 	/* already filled by ShellDirectory constructor
 	lstrcpy(_root._entry->_data.cFileName, TEXT("Desktop")); */
 
-
-	 // create explorer treeview
-	if (_create_info._open_mode & OWM_EXPLORE)
-		_left_hwnd = CreateWindowEx(0, WC_TREEVIEW, NULL,
-						WS_CHILD|WS_TABSTOP|WS_VISIBLE|WS_CHILD|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_SHOWSELALWAYS,//|TVS_NOTOOLTIPS
-						0, rect.top, _split_pos-SPLIT_WIDTH/2, rect.bottom-rect.top,
-						_hwnd, (HMENU)IDC_FILETREE, g_Globals._hInstance, 0);
-
-	if (_left_hwnd) {
-		TreeView_SetImageList(_left_hwnd, _himlSmall, TVSIL_NORMAL);
-		TreeView_SetScrollTime(_left_hwnd, 100);
-
-		InitializeTree();
-
-		InitDragDrop();
-	} else
-		UpdateFolderView(_create_info._shell_path.get_folder());
-
 	return 0;
 }
 
+void ShellBrowser::jump_to(LPCITEMIDLIST pidl)
+{
+	Entry* entry = NULL;
 
-void ShellBrowserChild::InitializeTree()
+	 //@@
+	if (!_cur_dir)
+		_cur_dir = static_cast<ShellDirectory*>(_root._entry);
+
+/*@todo
+	we should call read_tree() here to iterate through the hierarchy and open all folders from shell_info._root_shell_path to shell_info._shell_path
+	_root._entry->read_tree(shell_info._root_shell_path.get_folder(), info._shell_path, SORT_NAME);
+	-> see FileChildWindow::FileChildWindow()
+*/
+
+	if (_cur_dir) {
+		static DynamicFct<LPITEMIDLIST(WINAPI*)(LPCITEMIDLIST, LPCITEMIDLIST)> ILFindChild(TEXT("SHELL32"), 24);
+
+		LPCITEMIDLIST child_pidl;
+
+		if (ILFindChild)
+			child_pidl = (*ILFindChild)(_cur_dir->create_absolute_pidl(), pidl);
+		else
+			child_pidl = pidl;	// This is not correct in the common case, but works on the desktop level.
+
+		if (child_pidl) {
+			_cur_dir->smart_scan();
+
+			entry = _cur_dir->find_entry(child_pidl);
+
+			if (entry)
+				_callback->entry_selected(entry);
+		}
+	}
+
+		//@@ work around as long as we don't iterate correctly through the ShellEntry tree
+	if (!entry)
+		UpdateFolderView(ShellFolder(pidl));
+}
+
+
+void ShellBrowser::InitializeTree(HIMAGELIST himl)
 {
 	CONTEXT("ShellBrowserChild::InitializeTree()");
+
+	TreeView_SetImageList(_left_hwnd, himl, TVSIL_NORMAL);
+	TreeView_SetScrollTime(_left_hwnd, 100);
 
 	TV_INSERTSTRUCT tvInsert;
 
@@ -138,10 +153,9 @@ void ShellBrowserChild::InitializeTree()
 	TreeView_Expand(_left_hwnd, hItem, TVE_EXPAND);
 }
 
-
-bool ShellBrowserChild::InitDragDrop()
+bool ShellBrowser::InitDragDrop()
 {
-	CONTEXT("ShellBrowserChild::InitDragDrop()");
+	CONTEXT("ShellBrowser::InitDragDrop()");
 
 	_pDropTarget = new TreeDropTarget(_left_hwnd);
 
@@ -171,9 +185,9 @@ bool ShellBrowserChild::InitDragDrop()
 }
 
 
-void ShellBrowserChild::OnTreeItemRClick(int idCtrl, LPNMHDR pnmh)
+void ShellBrowser::OnTreeItemRClick(int idCtrl, LPNMHDR pnmh)
 {
-	CONTEXT("ShellBrowserChild::OnTreeItemRClick()");
+	CONTEXT("ShellBrowser::OnTreeItemRClick()");
 
 	TVHITTESTINFO tvhti;
 
@@ -185,13 +199,13 @@ void ShellBrowserChild::OnTreeItemRClick(int idCtrl, LPNMHDR pnmh)
 
 	if (TVHT_ONITEM & tvhti.flags) {
 		ClientToScreen(_left_hwnd, &tvhti.pt);
-		Tree_DoItemMenu(_left_hwnd, tvhti.hItem , &tvhti.pt);
+		Tree_DoItemMenu(_left_hwnd, tvhti.hItem, &tvhti.pt);
 	}
 }
 
-void ShellBrowserChild::Tree_DoItemMenu(HWND hwndTreeView, HTREEITEM hItem, LPPOINT pptScreen)
+void ShellBrowser::Tree_DoItemMenu(HWND hwndTreeView, HTREEITEM hItem, LPPOINT pptScreen)
 {
-	CONTEXT("ShellBrowserChild::Tree_DoItemMenu()");
+	CONTEXT("ShellBrowser::Tree_DoItemMenu()");
 
 	LPARAM itemData = TreeView_GetItemData(hwndTreeView, hItem);
 
@@ -214,45 +228,47 @@ void ShellBrowserChild::Tree_DoItemMenu(HWND hwndTreeView, HTREEITEM hItem, LPPO
 	}
 }
 
-void ShellBrowserChild::OnTreeGetDispInfo(int idCtrl, LPNMHDR pnmh)
+void ShellBrowser::OnTreeGetDispInfo(int idCtrl, LPNMHDR pnmh)
 {
-	CONTEXT("ShellBrowserChild::OnTreeGetDispInfo()");
+	CONTEXT("ShellBrowser::OnTreeGetDispInfo()");
 
 	LPNMTVDISPINFO lpdi = (LPNMTVDISPINFO)pnmh;
 	ShellEntry* entry = (ShellEntry*)lpdi->item.lParam;
 
-	if (lpdi->item.mask & TVIF_TEXT)
-		lpdi->item.pszText = entry->_display_name;
-
-	if (lpdi->item.mask & (/*TVIF_TEXT|*/TVIF_IMAGE|TVIF_SELECTEDIMAGE)) {
-		ShellPath pidl_abs = entry->create_absolute_pidl();	// Caching of absolute PIDLs could enhance performance.
-		LPCITEMIDLIST pidl = pidl_abs;
-
-		SHFILEINFO sfi;
-/*
+	if (entry) {
 		if (lpdi->item.mask & TVIF_TEXT)
-			if (SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_DISPLAYNAME))
-				lstrcpy(lpdi->item.pszText, sfi.szDisplayName);	///@todo look at cchTextMax if there is enough space available
-			else
-				lpdi->item.pszText = entry->_data.cFileName;
-*/
-		if (lpdi->item.mask & TVIF_IMAGE)
-			if ((HIMAGELIST)SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_SYSICONINDEX|SHGFI_SMALLICON|SHGFI_LINKOVERLAY) == _himlSmall)
-				lpdi->item.iImage = sfi.iIcon;
-			else
-				lpdi->item.iImage = -1;
+			lpdi->item.pszText = entry->_display_name;
 
-		if (lpdi->item.mask & TVIF_SELECTEDIMAGE)
-			if ((HIMAGELIST)SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_SYSICONINDEX|SHGFI_SMALLICON|SHGFI_OPENICON) == _himlSmall)
-				lpdi->item.iSelectedImage = sfi.iIcon;
-			else
-				lpdi->item.iSelectedImage = -1;
+		if (lpdi->item.mask & (/*TVIF_TEXT|*/TVIF_IMAGE|TVIF_SELECTEDIMAGE)) {
+			ShellPath pidl_abs = entry->create_absolute_pidl();	// Caching of absolute PIDLs could enhance performance.
+			LPCITEMIDLIST pidl = pidl_abs;
+
+			SHFILEINFO sfi;
+/*
+			if (lpdi->item.mask & TVIF_TEXT)
+				if (SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_DISPLAYNAME))
+					lstrcpy(lpdi->item.pszText, sfi.szDisplayName);	///@todo look at cchTextMax if there is enough space available
+				else
+					lpdi->item.pszText = entry->_data.cFileName;
+*/
+			if (lpdi->item.mask & TVIF_IMAGE)
+				if ((HIMAGELIST)SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_SYSICONINDEX|SHGFI_SMALLICON|SHGFI_LINKOVERLAY) == _himl)
+					lpdi->item.iImage = sfi.iIcon;
+				else
+					lpdi->item.iImage = -1;
+
+			if (lpdi->item.mask & TVIF_SELECTEDIMAGE)
+				if ((HIMAGELIST)SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_SYSICONINDEX|SHGFI_SMALLICON|SHGFI_OPENICON) == _himl)
+					lpdi->item.iSelectedImage = sfi.iIcon;
+				else
+					lpdi->item.iSelectedImage = -1;
+		}
 	}
 }
 
-void ShellBrowserChild::OnTreeItemExpanding(int idCtrl, LPNMTREEVIEW pnmtv)
+void ShellBrowser::OnTreeItemExpanding(int idCtrl, LPNMTREEVIEW pnmtv)
 {
-	CONTEXT("ShellBrowserChild::OnTreeItemExpanding()");
+	CONTEXT("ShellBrowser::OnTreeItemExpanding()");
 
 	if (pnmtv->action == TVE_COLLAPSE)
         TreeView_Expand(_left_hwnd, pnmtv->itemNew.hItem, TVE_COLLAPSE|TVE_COLLAPSERESET);
@@ -275,9 +291,9 @@ void ShellBrowserChild::OnTreeItemExpanding(int idCtrl, LPNMTREEVIEW pnmtv)
 	}
 }
 
-int ShellBrowserChild::InsertSubitems(HTREEITEM hParentItem, Entry* entry, IShellFolder* pParentFolder)
+int ShellBrowser::InsertSubitems(HTREEITEM hParentItem, Entry* entry, IShellFolder* pParentFolder)
 {
-	CONTEXT("ShellBrowserChild::InsertSubitems()");
+	CONTEXT("ShellBrowser::InsertSubitems()");
 
 	WaitCursor wait;
 
@@ -328,47 +344,21 @@ int ShellBrowserChild::InsertSubitems(HTREEITEM hParentItem, Entry* entry, IShel
 	return cnt;
 }
 
-void ShellBrowserChild::OnTreeItemSelected(int idCtrl, LPNMTREEVIEW pnmtv)
+void ShellBrowser::OnTreeItemSelected(int idCtrl, LPNMTREEVIEW pnmtv)
 {
-	CONTEXT("ShellBrowserChild::OnTreeItemSelected()");
+	CONTEXT("ShellBrowser::OnTreeItemSelected()");
 
 	ShellEntry* entry = (ShellEntry*)pnmtv->itemNew.lParam;
 
 	_last_sel = pnmtv->itemNew.hItem;
 
-	if (entry->_etype == ET_SHELL) {
-		IShellFolder* folder;
-
-		if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-			folder = static_cast<ShellDirectory*>(entry)->_folder;
-		else
-			folder = entry->get_parent_folder();
-
-		if (!folder) {
-			assert(folder);
-			return;
-		}
-
-		TCHAR path[MAX_PATH];
-
-		if (entry->get_path(path)) {
-			String url;
-
-			if (path[0] == ':')
-				url.printf(TEXT("shell://%s"), path);
-			else
-				url.printf(TEXT("file://%s"), path);
-
-			set_url(url);
-		}
-
-		UpdateFolderView(folder);
-	}
+	if (entry)
+		_callback->entry_selected(entry);
 }
 
-void ShellBrowserChild::UpdateFolderView(IShellFolder* folder)
+void ShellBrowser::UpdateFolderView(IShellFolder* folder)
 {
-	CONTEXT("ShellBrowserChild::UpdateFolderView()");
+	CONTEXT("ShellBrowser::UpdateFolderView()");
 
 	FOLDERSETTINGS fs;
 	IShellView* pLastShellView = _pShellView;
@@ -397,63 +387,15 @@ void ShellBrowserChild::UpdateFolderView(IShellFolder* folder)
 		pLastShellView->UIActivate(SVUIA_DEACTIVATE);
 		pLastShellView->DestroyViewWindow();
 		pLastShellView->Release();
-
-		ClientRect clnt(_hwnd);
-		resize_children(clnt.right, clnt.bottom);
 	}
 
 	_pShellView->UIActivate(SVUIA_ACTIVATE_NOFOCUS);
 }
 
 
-LRESULT ShellBrowserChild::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
+HRESULT ShellBrowser::OnDefaultCommand(LPIDA pida)
 {
-	switch(nmsg) {
-	  case WM_GETISHELLBROWSER:	// for Registry Explorer Plugin
-		return (LRESULT)static_cast<IShellBrowser*>(this);
-
-	  case PM_GET_SHELLBROWSER_PTR:
-		return (LRESULT)this;
-
-	  case PM_DISPATCH_COMMAND: {
-		switch(LOWORD(wparam)) {
-		  case ID_WINDOW_NEW: {CONTEXT("ShellBrowserChild PM_DISPATCH_COMMAND ID_WINDOW_NEW");
-			ShellBrowserChild::create(_create_info);
-			break;}
-
-		  case ID_REFRESH:
-			//@todo refresh shell child
-			break;
-
-		  default:
-			return super::WndProc(nmsg, wparam, lparam);
-		}
-		return TRUE;}
-	
-	  default:
-		return super::WndProc(nmsg, wparam, lparam);
-	}
-
-	return 0;
-}
-
-int ShellBrowserChild::Notify(int id, NMHDR* pnmh)
-{
-	switch(pnmh->code) {
-	  case TVN_GETDISPINFO:		OnTreeGetDispInfo(id, pnmh);					break;
-	  case TVN_SELCHANGED:		OnTreeItemSelected(id, (LPNMTREEVIEW)pnmh);		break;
-	  case TVN_ITEMEXPANDING:	OnTreeItemExpanding(id, (LPNMTREEVIEW)pnmh);	break;
-	  case NM_RCLICK:			OnTreeItemRClick(id, pnmh);						break;
-	  default:					return super::Notify(id, pnmh);
-	}
-
-	return 0;
-}
-
-
-HRESULT ShellBrowserChild::OnDefaultCommand(LPIDA pida)
-{
-	CONTEXT("ShellBrowserChild::OnDefaultCommand()");
+	CONTEXT("ShellBrowser::OnDefaultCommand()");
 
 	if (pida->cidl >= 1) {
 		if (_left_hwnd) {	// explorer mode
@@ -479,7 +421,7 @@ HRESULT ShellBrowserChild::OnDefaultCommand(LPIDA pida)
 				}
 			}
 		} else { // no tree control
-			if (MainFrame::OpenShellFolders(pida, _hWndFrame))
+			if (MDIMainFrame::OpenShellFolders(pida, _hWndFrame))
 				return S_OK;
 
 /* create new Frame Window
@@ -493,9 +435,9 @@ HRESULT ShellBrowserChild::OnDefaultCommand(LPIDA pida)
 }
 
 
-HTREEITEM ShellBrowserChild::select_entry(HTREEITEM hitem, Entry* entry, bool expand)
+HTREEITEM ShellBrowser::select_entry(HTREEITEM hitem, Entry* entry, bool expand)
 {
-	CONTEXT("ShellBrowserChild::select_entry()");
+	CONTEXT("ShellBrowser::select_entry()");
 
 	if (expand && !TreeView_Expand(_left_hwnd, hitem, TVE_EXPAND))
 		return 0;
@@ -517,28 +459,7 @@ HTREEITEM ShellBrowserChild::select_entry(HTREEITEM hitem, Entry* entry, bool ex
 }
 
 
-String ShellBrowserChild::jump_to_int(LPCTSTR url)
-{
-	String dir, fname;
-
-	if (!_tcsnicmp(url, TEXT("shell://"), 8)) {
-		if (jump_to_pidl(ShellPath(url+8)))
-			return url;
-	}
-
-	if (SplitFileSysURL(url, dir, fname)) {
-
-		///@todo use fname
-
-		if (jump_to_pidl(ShellPath(dir)))
-			return FmtString(TEXT("file://%s"), (LPCTSTR)dir);
-	}
-	
-	return String();
-}
-
-
-bool ShellBrowserChild::jump_to_pidl(LPCITEMIDLIST pidl)
+bool ShellBrowser::jump_to_pidl(LPCITEMIDLIST pidl)
 {
 	if (!_root._entry)
 		return false;
@@ -569,3 +490,171 @@ bool ShellBrowserChild::jump_to_pidl(LPCITEMIDLIST pidl)
 
 	return false;
 }
+
+
+#ifndef _NO_MDI
+
+MDIShellBrowserChild::MDIShellBrowserChild(HWND hwnd, const ShellChildWndInfo& info)
+ :	super(hwnd, info),
+	_create_info(info),
+	_shellpath_info(info)	//@@ copies info -> no referenz to _create_info !
+{
+/**todo Conversion of shell path into path string -> store into URL history
+	 // store path into history
+	if (info._path && *info._path)
+		_url_history.push(info._path);
+*/
+}
+
+
+MDIShellBrowserChild* MDIShellBrowserChild::create(const ShellChildWndInfo& info)
+{
+	ChildWindow* child = ChildWindow::create(info, info._pos.rcNormalPosition,
+		WINDOW_CREATOR_INFO(MDIShellBrowserChild,ShellChildWndInfo), CLASSNAME_CHILDWND, NULL, info._pos.showCmd==SW_SHOWMAXIMIZED? WS_MAXIMIZE: 0);
+
+	return static_cast<MDIShellBrowserChild*>(child);
+}
+
+
+LRESULT MDIShellBrowserChild::Init(LPCREATESTRUCT pcs)
+{
+	CONTEXT("MDIShellBrowserChild::Init()");
+
+	if (super::Init(pcs))
+		return 1;
+
+	init_himl();
+
+	update_shell_browser();
+
+	if (&*_shellBrowser)
+		if (_left_hwnd)
+			_shellBrowser->Init(_himlSmall);
+		else
+			_shellBrowser->UpdateFolderView(_create_info._shell_path.get_folder());
+
+	return 0;
+}
+
+
+LRESULT MDIShellBrowserChild::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
+{
+	switch(nmsg) {
+	  case PM_DISPATCH_COMMAND: {
+		switch(LOWORD(wparam)) {
+		  case ID_WINDOW_NEW: {CONTEXT("MDIShellBrowserChild PM_DISPATCH_COMMAND ID_WINDOW_NEW");
+			MDIShellBrowserChild::create(_create_info);
+			break;}
+
+		  case ID_REFRESH:
+			//@todo refresh shell child
+			break;
+
+		  case ID_VIEW_SDI:
+			MainFrameBase::Create(_url, false);
+			break;
+
+		  default:
+			return super::WndProc(nmsg, wparam, lparam);
+		}
+		return TRUE;}
+	
+	  default:
+		return super::WndProc(nmsg, wparam, lparam);
+	}
+
+	return 0;
+}
+
+void MDIShellBrowserChild::update_shell_browser()
+{
+	int split_pos = DEFAULT_SPLIT_POS;
+
+	if (_shellBrowser.get()) {
+		split_pos = _split_pos;
+		delete _shellBrowser.release();
+	}
+
+	 // create explorer treeview
+	if (_create_info._open_mode & OWM_EXPLORE) {
+		if (!_left_hwnd) {
+			ClientRect rect(_hwnd);
+
+			_left_hwnd = CreateWindowEx(0, WC_TREEVIEW, NULL,
+							WS_CHILD|WS_TABSTOP|WS_VISIBLE|WS_CHILD|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_SHOWSELALWAYS,//|TVS_NOTOOLTIPS
+							0, rect.top, split_pos-SPLIT_WIDTH/2, rect.bottom-rect.top,
+							_hwnd, (HMENU)IDC_FILETREE, g_Globals._hInstance, 0);
+		}
+	} else {
+		if (_left_hwnd) {
+			DestroyWindow(_left_hwnd);
+			_left_hwnd = 0;
+		}
+	}
+
+	_shellBrowser = auto_ptr<ShellBrowser>(new ShellBrowser(_hwnd, _left_hwnd, _right_hwnd,
+												_shellpath_info, _himlSmall, this));
+
+	_shellBrowser->Init(_hwnd);
+}
+
+
+String MDIShellBrowserChild::jump_to_int(LPCTSTR url)
+{
+	String dir, fname;
+
+	if (!_tcsnicmp(url, TEXT("shell://"), 8)) {
+		if (_shellBrowser->jump_to_pidl(ShellPath(url+8)))
+			return url;
+	}
+
+	if (SplitFileSysURL(url, dir, fname)) {
+
+		///@todo use fname
+
+		if (_shellBrowser->jump_to_pidl(ShellPath(dir)))
+			return FmtString(TEXT("file://%s"), (LPCTSTR)dir);
+	}
+	
+	return String();
+}
+
+
+void MDIShellBrowserChild::entry_selected(Entry* entry)
+{
+	if (entry->_etype == ET_SHELL) {
+		ShellEntry* shell_entry = static_cast<ShellEntry*>(entry);
+		IShellFolder* folder;
+
+		if (shell_entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+			folder = static_cast<ShellDirectory*>(shell_entry)->_folder;
+		else
+			folder = shell_entry->get_parent_folder();
+
+		if (!folder) {
+			assert(folder);
+			return;
+		}
+
+		TCHAR path[MAX_PATH];
+
+		if (shell_entry->get_path(path)) {
+			String url;
+
+			if (path[0] == ':')
+				url.printf(TEXT("shell://%s"), path);
+			else
+				url.printf(TEXT("file://%s"), path);
+
+			set_url(url);
+		}
+
+		_shellBrowser->UpdateFolderView(folder);
+
+		 // set size of new created shell view windows
+		ClientRect rt(_hwnd);
+		resize_children(rt.right, rt.bottom);
+	}
+}
+
+#endif

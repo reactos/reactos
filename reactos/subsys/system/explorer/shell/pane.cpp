@@ -980,9 +980,9 @@ BOOL Pane::command(UINT cmd)
 	return TRUE;
 }
 
-MainFrame* Pane::get_frame()
+MainFrameBase* Pane::get_frame()
 {
 	HWND owner = GetParent(_hwnd);
 
-	return (MainFrame*)owner;
+	return (MainFrameBase*)owner;
 }

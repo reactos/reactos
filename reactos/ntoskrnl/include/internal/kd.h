@@ -1,4 +1,4 @@
-/* $Id: kd.h,v 1.24 2004/03/11 21:50:23 dwelch Exp $
+/* $Id: kd.h,v 1.24.4.1 2004/06/03 22:29:32 arty Exp $
  *
  * kernel debugger prototypes
  */
@@ -90,6 +90,8 @@ VOID KdPrintMda(PCH pch);
 #define KDB_LOADERINIT_HOOK(NTOS, HAL)
 #define KDB_SYMBOLFILE_HOOK(LOADBASE, FILENAME, LENGTH)
 #define KDB_CREATE_THREAD_HOOK(CONTEXT)
+#define KDB_INIT2()
+#define KDB_ENTER()
 #else
 #define KDB_DELETEPROCESS_HOOK(PROCESS) KdbFreeSymbolsProcess(PROCESS)
 #define KDB_LOADDRIVER_HOOK(FILENAME, MODULE) KdbLoadDriver(FILENAME, MODULE)
@@ -99,6 +101,8 @@ VOID KdPrintMda(PCH pch);
         KdbProcessSymbolFile(LOADBASE, FILENAME, LENGTH)
 #define KDB_CREATE_THREAD_HOOK(CONTEXT) \
 	KdbCreateThreadHook(CONTEXT)
+#define KDB_INIT2() KdbInit2()
+#define KDB_ENTER() KdbEnter()
 #endif /* KDBG */
 
 VOID

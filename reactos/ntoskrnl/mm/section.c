@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.149 2004/05/01 17:11:34 tamlin Exp $
+/* $Id: section.c,v 1.149.2.1 2004/06/03 22:29:32 arty Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -1978,7 +1978,7 @@ MmAlterViewAttributes(PMADDRESS_SPACE AddressSpace,
 
          if (MmIsPagePresent(AddressSpace->Process, Address))
          {
-            MmSetPageProtect(AddressSpace->Process, BaseAddress,
+            MmSetPageProtect(AddressSpace->Process, Address,
                              Protect);
          }
       }

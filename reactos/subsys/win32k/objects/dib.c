@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.49 2004/05/15 15:04:43 navaraf Exp $
+ * $Id: dib.c,v 1.49.2.1 2004/06/03 22:29:37 arty Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -152,7 +152,7 @@ IntSetDIBits(
   DestBitmap = BitmapToSurf(bitmap, DC->GDIDevice);
 
   DestSurf   = (SURFOBJ*) AccessUserObject( (ULONG)DestBitmap );
-  DestGDI    = (PSURFGDI) AccessInternalObject( (ULONG)DestBitmap );
+  DestGDI    = (PSURFGDI) AccessInternalObjectFromUserObject( DestSurf );
 
   // Create source surface
   SourceSize.cx = bmi->bmiHeader.biWidth;

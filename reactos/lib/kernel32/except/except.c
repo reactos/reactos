@@ -1,4 +1,4 @@
-/* $Id: except.c,v 1.12 2003/08/24 14:49:55 dwelch Exp $
+/* $Id: except.c,v 1.12.18.1 2004/06/03 22:29:19 arty Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -141,10 +141,9 @@ RaiseException (
 	}
 	/*
 	 * If the exception has no argument,
-	 * or it is a non-continuable exception,
 	 * ignore nNumberOfArguments and lpArguments.
 	 */
-	if ((NULL == lpArguments) || ExceptionRecord.ExceptionFlags)
+	if (NULL == lpArguments)
 	{
 		ExceptionRecord.NumberParameters = 0;
 	}

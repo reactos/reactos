@@ -4,7 +4,7 @@ TARGET_TYPE = dynlink
 
 TARGET_NAME = d3d8thk
 
-#TARGET_BASE = 0x76340000
+TARGET_BASE = $(TARGET_BASE_LIB_D3D8THK)
 
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -D_DISABLE_TIDENTS -Werror -Wall

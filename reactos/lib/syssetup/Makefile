@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.8 2004/04/19 10:54:23 ekohl Exp $
+# $Id: Makefile,v 1.8.2.1 2004/06/03 22:29:29 arty Exp $
 
 PATH_TO_TOP = ../..
 
@@ -6,7 +6,7 @@ TARGET_TYPE = dynlink
 
 TARGET_NAME = syssetup
 
-TARGET_BASE = 0x74A30000
+TARGET_BASE = $(TARGET_BASE_LIB_SYSSETUP)
 
 TARGET_SDKLIBS = ntdll.a kernel32.a advapi32.a gdi32.a user32.a samlib.a userenv.a comctl32.a
 

@@ -1,4 +1,4 @@
-/* $Id: libsupp.c,v 1.1 2004/05/31 19:33:59 gdalsnes Exp $
+/* $Id: libsupp.c,v 1.1.2.1 2004/06/03 22:29:23 arty Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

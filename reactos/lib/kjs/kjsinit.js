@@ -1,4 +1,4 @@
-function write(x) { System.print(x); }'
+function write(x) { System.print(x); }
 function regs(n) { return System.regs(n); }
 function debugebp() { return regs(0); }
 function debugeip() { return regs(1); }
@@ -43,4 +43,42 @@ function peek(a) { return System.mread(1,a); }
 function poke(a,b) { return System.mwrite(1,a,b); }
 function regread(x,y) { return System.regread(x,y); }
 function findmodule(str) { return System.findmodule(str); }
+
+MOD_NAME = 0;
+MOD_BASE = 1;
+MOD_LEN  = 2;
+MOD_SYM  = 3;
+MOD_SYM_STABS_BASE   = 0;
+MOD_SYM_STABS_LEN    = 1;
+MOD_SYM_STABSTR_BASE = 2;
+MOD_SYM_STABSTR_LEN  = 3;
+
+function getlocals_ofmodule(mod,addr) {
+    /* Ok, we have the module...  let's scan symbols if they exist */
+    if( mod[MOD_SYM].length > 0 ) {
+	stabs_base   = mod[MOD_SYM][MOD_SYM_STABS_BASE];
+	stabs_len    = mod[MOD_SYM][MOD_SYM_STABS_LEN];
+	stabstr_base = mod[MOD_SYM][MOD_SYM_STABSTR_BASE];
+	stabstr_len  = mod[MOD_SYM][MOD_SYM_STABSTR_LEN];
+
+	for( i = stabs_base; i < stabs_base + stabs_len; i++ ) {
+	    if( )
+	}
+    }
+}
+
+function getlocals(addr) {
+    /* Find the address range of addr */
+    i = 0;
+    do {
+	mod = System.getmodule(i);
+	if( mod && 
+	    mod[MOD_BASE] <= addr && 
+	    mod[MOD_BASE] + mod[MOD_LEN] > addr )
+	    return getlocals_ofmodule(mod,addr);
+	}
+    } while( mod );
+
+    return Array(0);
+}
 write('JS Registry Init Complete.  Welcome to ReactOS kernel scripting');

@@ -1675,7 +1675,7 @@ int StartMenuHandler::Command(int id, int code)
 
 	  case IDC_CONTROL_PANEL:
 		CloseStartMenu(id);
-		MainFrame::Create(TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}"), 0);
+		//@@SDIMainFrame::Create(TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}"), 0);
 		break;
 
 	  case IDC_ADMIN:

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.39 2004/03/25 11:30:07 ekohl Exp $
+# $Id: makefile,v 1.39.4.1 2004/06/03 22:29:17 arty Exp $
 
 PATH_TO_TOP = ../..
 
@@ -13,7 +13,7 @@ TARGET_LFLAGS = -nostartfiles -nostdlib
 
 TARGET_SDKLIBS = ntdll.a kernel32.a libwine.a msvcrt.a
 
-TARGET_BASE = 0x77DB0000
+TARGET_BASE = $(TARGET_BASE_LIB_ADVAPI32)
 
 MISC_OBJECTS = \
 	misc/dllmain.o \

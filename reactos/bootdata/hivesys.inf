@@ -12,8 +12,12 @@ HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000407","Layout File",0
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000407","Layout Text",0x00000000,"GR"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000409","Layout File",0x00000000,"kbdus.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000409","Layout Text",0x00000000,"US"
+HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00010409","Layout File",0x00000000,"kbddv.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00010409","Layout Text",0x00000000,"US-Dvorak"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\0000040c","Layout File",0x00000000,"kbdfr.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\0000040c","Layout Text",0x00000000,"FR"
+HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\0000041d","Layout File",0x00000000,"kbdse.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\0000041d","Layout Text",0x00000000,"SE"
 
 ; NLS Files
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","10000",0x00000000,"c_10000.nls"
@@ -41,6 +45,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","040d",0x00000000,"l_intl.n
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","040e",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","040f",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0410",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","041d",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","Default",0x00000000,"0409"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","InstallLanguage",0x00000000,"0409"
 
@@ -103,7 +108,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","kernel32",0x0
 
 ; Pagefile settings
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management","PagingFiles",0x00010000, \
- "C:\reactos\pagefile.sys"
+ "C:\reactos\pagefile.sys 32"
 
 ; 3Com 3c905 Driver
 HKLM,"SYSTEM\CurrentControlSet\Services\3c90x","ErrorControl",0x00010001,0x00000000
@@ -130,8 +135,8 @@ HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1\Linkage","Export",0x00010000,"\De
 HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1\Linkage","Route",0x00010000,"3c90x1"
 HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1\Parameters","SlotNumber",0x00000000,"10"
 HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1\Parameters","BusNumber",0x00000000,"0"
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1\Parameters\Tcpip","DefaultGateway",0x00010000,"10.0.0.1"
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1\Parameters\Tcpip","IPAddress",0x00010000,"10.0.0.100"
+HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1\Parameters\Tcpip","DefaultGateway",0x00010000,"10.10.1.254"
+HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1\Parameters\Tcpip","IPAddress",0x00010000,"10.10.1.115"
 HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1\Parameters\Tcpip","SubnetMask",0x00010000,"255.255.255.0"
 
 ; Afd driver
@@ -166,7 +171,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Blue","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\BootVideo","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\BootVideo","Group",0x00000000,"Base"
 HKLM,"SYSTEM\CurrentControlSet\Services\BootVideo","ImagePath",0x00020000,"system32\drivers\bootvid.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\BootVideo","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\BootVideo","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\BootVideo","Type",0x00010001,0x00000002
 
 ; Cdfs (ISO96660) filesystem driver
@@ -317,7 +322,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Group",0x00000000,"NDIS"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","ImagePath",0x00020000,"system32\drivers\ne2000.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Start",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Route",0x00000000,"Ne20001"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000\Linkage","Bind",0x00010000,"\Device\Ne20001"
@@ -340,7 +345,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000\Enum","NextInstance",0x00010001,0
 ; TODO: create this with NDI
 ; NE2000 Adapter 1
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001","Type",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Linkage","Bind",0x00010000,"\Device\Ne20001"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Linkage","Export",0x00010000,"\Device\Ne20001"
@@ -350,8 +355,8 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters","Irq",0x00000000,"9"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters","DwordTest",0x00000000,"baadf00d"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters","StringTest",0x00000000,"StringTest"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters","NetworkAddress",0x00000000,"001122334455"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters\Tcpip","DefaultGateway",0x00010000,"10.0.0.1"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters\Tcpip","IPAddress",0x00010000,"10.0.0.100"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters\Tcpip","DefaultGateway",0x00010000,"10.10.2.101"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters\Tcpip","IPAddress",0x00010000,"10.10.2.115"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters\Tcpip","SubnetMask",0x00010000,"255.255.255.0"
 
 ; PCI driver
@@ -369,7 +374,7 @@ HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","ClassGUID",0x00000000,"{4D36
 HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","Group",0x00000000,"NDIS"
 HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","ImagePath",0x00020000,"system32\drivers\pcntn5m.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\PCNet\Linkage","Bind",0x00010000,"\Device\PCNet1"
 HKLM,"SYSTEM\CurrentControlSet\Services\PCNet\Linkage","Export",0x00010000,"\Device\PCNet1"
@@ -401,8 +406,8 @@ HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters","MPMODE",0x00000000,"
 HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters","TP",0x00000000,"1"
 HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters","SlotNumber",0x00000000,"10"
 HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters","BusNumber",0x00000000,"0"
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters\Tcpip","DefaultGateway",0x00010000,"10.0.0.1"
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters\Tcpip","IPAddress",0x00010000,"10.0.0.100"
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters\Tcpip","DefaultGateway",0x00010000,"10.10.2.101"
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters\Tcpip","IPAddress",0x00010000,"10.10.2.115"
 HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters\Tcpip","SubnetMask",0x00010000,"255.255.255.0"
 
 ; ReactOS PCNet Driver
@@ -533,7 +538,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Route",0x00010000,"PCNet
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","DataBasePath",0x00000000,"DataBasePath"
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","Domain",0x00000000,""
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","Hostname",0x00000000,"ROSHost"
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","NameServer",0x00000000,"10.0.0.1"
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","NameServer",0x00000000,"64.81.159.2"
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","ForwardBroadcasts",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","IPEnableRouter",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","SearchList",0x00010000,""
@@ -559,7 +564,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\VBE\Device0","InstalledDisplayDrivers",0
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Group",0x00000000,"Video Save"
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","ImagePath",0x00020000,"system32\drivers\vgamp.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga\Device0","InstalledDisplayDrivers",0x00010000,"vgaddi"
 

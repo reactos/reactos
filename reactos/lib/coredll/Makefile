@@ -5,7 +5,7 @@ TARGET_TYPE = dynlink
 
 TARGET_NAME = coredll
 
-TARGET_BASE=0x73D80000
+TARGET_BASE=$(TARGET_BASE_LIB_COREDLL)
 
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -D_DISABLE_TIDENTS -Wall -Werror

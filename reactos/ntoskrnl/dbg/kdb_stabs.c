@@ -45,6 +45,8 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#include "kdb.h"
+
 /* GLOBALS ******************************************************************/
 
 typedef struct _SYMBOLFILE_HEADER {
@@ -106,108 +108,135 @@ KdbLdrUnloadModuleSymbols(PIMAGE_SYMBOL_INFO SymbolInfo);
 
 /* FUNCTIONS ****************************************************************/
 
-BOOLEAN 
-KdbPrintUserAddress(PVOID address)
+STATIC BOOLEAN
+KdbFindUserModule(PVOID address, LPCWSTR name, INT i, PKDB_MODULE_INFO info)
 {
-   PLIST_ENTRY current_entry;
-   PLDR_MODULE current;
-   PEPROCESS CurrentProcess;
-   PPEB Peb = NULL;
-   ULONG_PTR RelativeAddress;
-   NTSTATUS Status;
-   ULONG LineNumber;
-   CHAR FileName[256];
-   CHAR FunctionName[256];
+  PLIST_ENTRY current_entry;
+  PLDR_MODULE current;
+  PEPROCESS CurrentProcess;
+  PPEB Peb = NULL;
+  INT count = 0;
 
-   CurrentProcess = PsGetCurrentProcess();
-   if (NULL != CurrentProcess)
+  CurrentProcess = PsGetCurrentProcess();
+  if (CurrentProcess != NULL)
     {
       Peb = CurrentProcess->Peb;
     }
 
-   if (NULL == Peb)
-	   {
-       DbgPrint("<%x>", address);
-       return(TRUE);
-     }
+  if (Peb == NULL)
+    {
+      return FALSE;
+    }
 
-   current_entry = Peb->Ldr->InLoadOrderModuleList.Flink;
+  current_entry = Peb->Ldr->InLoadOrderModuleList.Flink;
+
+  while (current_entry != &Peb->Ldr->InLoadOrderModuleList &&
+         current_entry != NULL)
+    {
+      current = CONTAINING_RECORD(current_entry, LDR_MODULE, InLoadOrderModuleList);
+
+      if ((address != NULL && (address >= (PVOID)current->BaseAddress &&
+                               address < (PVOID)((char *)current->BaseAddress + current->SizeOfImage))) ||
+          (name != NULL && _wcsicmp(current->BaseDllName.Buffer, name) == 0) ||
+          (i >= 0 && count++ == i))
+        {
+	  INT len = current->BaseDllName.Length;
+	  if (len > 255)
+	    len = 255;
+	  wcsncpy(info->Name, current->BaseDllName.Buffer, len);
+	  info->Name[len] = L'\0';
+          info->Base = (ULONG_PTR)current->BaseAddress;
+          info->Size = current->SizeOfImage;
+          info->SymbolInfo = &current->SymbolInfo;
+          return TRUE;
+        }
+      current_entry = current_entry->Flink;
+    }
+    
+  return FALSE;
+}
+
+STATIC BOOLEAN
+KdbFindModule(PVOID address, LPCWSTR name, INT i, PKDB_MODULE_INFO info)
+{
+  PLIST_ENTRY current_entry;
+  MODULE_TEXT_SECTION* current;
+  extern LIST_ENTRY ModuleTextListHead;
+  INT count = 0;
+
+  current_entry = ModuleTextListHead.Flink;
    
-   while (current_entry != &Peb->Ldr->InLoadOrderModuleList &&
-	  current_entry != NULL)
-     {
-	current = 
-	  CONTAINING_RECORD(current_entry, LDR_MODULE, InLoadOrderModuleList);
-	
-	if (address >= (PVOID)current->BaseAddress &&
-	    address < (PVOID)((char*)current->BaseAddress + current->SizeOfImage))
-	  {
-            RelativeAddress = (ULONG_PTR) address - (ULONG_PTR)current->BaseAddress;
-            Status = LdrGetAddressInformation(&current->SymbolInfo,
-              RelativeAddress,
-              &LineNumber,
-              FileName,
-              FunctionName);
-            if (NT_SUCCESS(Status))
-              {
-                DbgPrint("<%wZ: %x (%s:%d (%s))>",
-                  &current->BaseDllName, RelativeAddress, FileName, LineNumber, FunctionName);
-              }
-            else
-             {
-               DbgPrint("<%wZ: %x>", &current->BaseDllName, RelativeAddress);
-             }
-	     return(TRUE);
-	  }
+  while (current_entry != &ModuleTextListHead &&
+         current_entry != NULL)
+    {
+      current = CONTAINING_RECORD(current_entry, MODULE_TEXT_SECTION, ListEntry);
 
-	current_entry = current_entry->Flink;
-     }
-   return(FALSE);
+      if ((address != NULL && (address >= (PVOID)current->Base &&
+                               address < (PVOID)(current->Base + current->Length))) ||
+          (name != NULL && _wcsicmp(current->Name, name) == 0) ||
+          (i >= 0 && count++ == i))
+        {
+	  wcsncpy(info->Name, current->Name, 255);
+	  info->Name[255] = L'\0';
+          info->Base = (ULONG_PTR)current->Base;
+          info->Size = current->Length;
+          info->SymbolInfo = &current->SymbolInfo;
+          return TRUE;
+        }
+      current_entry = current_entry->Flink;
+    }
+    
+  return KdbFindUserModule(address, name, i-count, info);
+}
+
+BOOLEAN
+KdbFindModuleByAddress(PVOID address, PKDB_MODULE_INFO info)
+{
+  return KdbFindModule(address, NULL, -1, info);
+}
+
+BOOLEAN
+KdbFindModuleByName(LPCWSTR name, PKDB_MODULE_INFO info)
+{
+  return KdbFindModule(NULL, name, -1, info);
+}
+
+BOOLEAN
+KdbFindModuleByIndex(INT i, PKDB_MODULE_INFO info)
+{
+  return KdbFindModule(NULL, NULL, i, info);
 }
 
 BOOLEAN 
 KdbPrintAddress(PVOID address)
 {
-   PLIST_ENTRY current_entry;
-   MODULE_TEXT_SECTION* current;
-   extern LIST_ENTRY ModuleTextListHead;
-   ULONG_PTR RelativeAddress;
-   NTSTATUS Status;
-   ULONG LineNumber;
-   CHAR FileName[256];
-   CHAR FunctionName[256];
+  KDB_MODULE_INFO info;
+  ULONG_PTR RelativeAddress;
+  NTSTATUS Status;
+  ULONG LineNumber;
+  CHAR FileName[256];
+  CHAR FunctionName[256];
 
-   current_entry = ModuleTextListHead.Flink;
-   
-   while (current_entry != &ModuleTextListHead &&
-	  current_entry != NULL)
-     {
-	current = 
-	  CONTAINING_RECORD(current_entry, MODULE_TEXT_SECTION, ListEntry);
+  if (!KdbFindModuleByAddress(address, &info))
+    return FALSE;
 
-	if (address >= (PVOID)current->Base &&
-	    address < (PVOID)(current->Base + current->Length))
-	  {
-            RelativeAddress = (ULONG_PTR) address - current->Base;
-            Status = LdrGetAddressInformation(&current->SymbolInfo,
-              RelativeAddress,
-              &LineNumber,
-              FileName,
-              FunctionName);
-            if (NT_SUCCESS(Status))
-              {
-                DbgPrint("<%ws: %x (%s:%d (%s))>",
-                  current->Name, RelativeAddress, FileName, LineNumber, FunctionName);
-              }
-            else
-             {
-               DbgPrint("<%ws: %x>", current->Name, RelativeAddress);
-             }
-	     return(TRUE);
-	  }
-	current_entry = current_entry->Flink;
-     }
-   return KdbPrintUserAddress(address);
+  RelativeAddress = (ULONG_PTR) address - info.Base;
+  Status = LdrGetAddressInformation(info.SymbolInfo,
+                                    RelativeAddress,
+                                    &LineNumber,
+                                    FileName,
+                                    FunctionName);
+  if (NT_SUCCESS(Status))
+    {
+      DbgPrint("<%ws: %x (%s:%d (%s))>",
+               info.Name, RelativeAddress, FileName, LineNumber, FunctionName);
+    }
+  else
+    {
+      DbgPrint("<%ws: %x>", info.Name, RelativeAddress);
+    }
+
+  return TRUE;
 }
 
 VOID

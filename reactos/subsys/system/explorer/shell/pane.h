@@ -101,7 +101,7 @@ protected:
 
 	void	calc_width(LPDRAWITEMSTRUCT dis, int col, LPCTSTR str);
 	void	calc_tabbed_width(LPDRAWITEMSTRUCT dis, int col, LPCTSTR str);
-	MainFrame* get_frame();
+	struct MainFrameBase* get_frame();
 
 protected:
 	HIMAGELIST	_himl;

@@ -481,9 +481,9 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 HRESULT DesktopWindow::OnDefaultCommand(LPIDA pida)
 {
-	if (MainFrame::OpenShellFolders(pida, 0))
+/*@@	if (SDIMainFrame::OpenShellFolders(pida, 0))
 		return S_OK;
-
+*/
 	return E_NOTIMPL;
 }
 

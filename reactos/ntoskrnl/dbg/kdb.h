@@ -13,6 +13,8 @@ KdbTryGetCharKeyboard(PULONG ScanCode);
 ULONG
 KdbTryGetCharSerial(VOID);
 VOID
+KdbInit2(VOID);
+VOID
 KdbEnter(VOID);
 VOID
 DbgRDebugInit(VOID);
@@ -39,3 +41,18 @@ struct KDB_BPINFO {
     DWORD Size;
     DWORD Enabled;
 };
+
+typedef struct _KDB_MODULE_INFO
+{
+    WCHAR              Name[256];
+    ULONG_PTR          Base;
+    ULONG              Size;
+    PIMAGE_SYMBOL_INFO SymbolInfo;
+} KDB_MODULE_INFO, *PKDB_MODULE_INFO;
+
+BOOLEAN
+KdbFindModuleByAddress(PVOID address, PKDB_MODULE_INFO info);
+BOOLEAN
+KdbFindModuleByName(LPCWSTR name, PKDB_MODULE_INFO info);
+BOOLEAN
+KdbFindModuleByIndex(INT i, PKDB_MODULE_INFO info);

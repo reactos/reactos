@@ -157,6 +157,8 @@ BOOL AfdpTryToSatisfyRecvRequest( PAFDFCB FCB,
     AFD_DbgPrint(MAX_TRACE, ("Locking pages\n"));
     /* Lock the regions */
     for( i = 0; i < Request->BufferCount; i++ ) {
+	AFD_DbgPrint(MAX_TRACE, ("Locking buffer %d (%x,%d)\n", 
+				 i, Buffers[i].buf, Buffers[i].len));
 	MmProbeAndLockPages( (PMDL)Buffers[i].buf, KernelMode, IoWriteAccess );
     }
     AFD_DbgPrint(MAX_TRACE, ("Unlocking pages\n"));

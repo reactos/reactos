@@ -40,7 +40,7 @@ struct FileChildWndInfo : public ChildWndInfo
 	int			_open_mode;	//OPEN_WINDOW_MODE
 };
 
- /// information structure for creation of ShellBrowserChild
+ /// information structure for creation of MDIShellBrowserChild
 struct ShellChildWndInfo : public FileChildWndInfo
 {
 	typedef FileChildWndInfo super;

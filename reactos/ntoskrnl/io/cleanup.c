@@ -17,7 +17,7 @@
 #include <internal/ps.h>
 #include <rosrtl/minmax.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 /* FUNCTIONS ***************************************************************/
@@ -63,6 +63,10 @@ VOID IoDeviceControlCompletion(PDEVICE_OBJECT DeviceObject,
 	  {
 	     if (OutputBufferLength)
 	       {
+		   DPRINT("Copying %x to %x for %d bytes\n",
+			  Irp->AssociatedIrp.SystemBuffer,
+			  Irp->UserBuffer,
+			  OutputBufferLength);
 		  RtlCopyMemory(Irp->UserBuffer,
 				Irp->AssociatedIrp.SystemBuffer,
 				OutputBufferLength);

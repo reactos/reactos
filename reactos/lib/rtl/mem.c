@@ -1,5 +1,5 @@
 
-/* $Id: mem.c,v 1.1 2004/05/31 19:29:02 gdalsnes Exp $
+/* $Id: mem.c,v 1.1.2.1 2004/06/03 22:29:28 arty Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

@@ -65,7 +65,7 @@
 #define	CLASSNAME_WINEFILETREE	TEXT("WFS_Tree")
 
 
-#include "shell/mainframe.h"
 #include "shell/pane.h"
 #include "shell/filechild.h"
 #include "shell/shellbrowser.h"
+#include "shell/mainframe.h"

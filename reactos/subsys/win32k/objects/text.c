@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.91 2004/05/10 17:07:20 weiden Exp $ */
+/* $Id: text.c,v 1.91.2.1 2004/06/03 22:29:37 arty Exp $ */
 #include <w32k.h>
 
 #include <ft2build.h>
@@ -178,9 +178,12 @@ IntGdiAddFontResource(PUNICODE_STRING Filename, DWORD fl)
   IO_STATUS_BLOCK Iosb;
   PFONT_ENTRY entry;
 
-  NewFont = (HFONT)CreateGDIHandle(sizeof( FONTGDI ), sizeof( FONTOBJ ));
-  FontObj = (FONTOBJ*) AccessUserObject( (ULONG) NewFont );
-  FontGDI = (PFONTGDI) AccessInternalObject( (ULONG) NewFont );
+  NewFont = (HFONT)CreateGDIHandle(sizeof( FONTGDI ), sizeof( FONTOBJ ), (PVOID*)&FontGDI, (PVOID*)&FontObj);
+  if(NewFont == 0)
+  {
+    DPRINT1("Could not allocate a new GDI font object\n");
+    return 0;
+  }
 
   //  Open the Module
   InitializeObjectAttributes(&ObjectAttributes, Filename, 0, NULL, NULL);
@@ -399,18 +402,20 @@ BOOL FASTCALL InitFontSupport(VOID)
 static NTSTATUS STDCALL
 GetFontObjectsFromTextObj(PTEXTOBJ TextObj, HFONT *FontHandle, FONTOBJ **FontObj, PFONTGDI *FontGDI)
 {
+  FONTOBJ *FntObj;
   NTSTATUS Status = STATUS_SUCCESS;
 
   ASSERT(NULL != TextObj && NULL != TextObj->GDIFontHandle);
   if (NULL != TextObj && NULL != TextObj->GDIFontHandle)
   {
-    if (NT_SUCCESS(Status) && NULL != FontHandle)
+    if (NULL != FontHandle)
     {
       *FontHandle = TextObj->GDIFontHandle;
     }
-    if (NT_SUCCESS(Status) && NULL != FontObj)
+    FntObj = (FONTOBJ*)AccessUserObject((ULONG) TextObj->GDIFontHandle);
+    if (NULL != FontObj)
     {
-      *FontObj = AccessUserObject((ULONG) TextObj->GDIFontHandle);
+      *FontObj = FntObj;
       if (NULL == *FontObj)
       {
 	ASSERT(FALSE);
@@ -419,20 +424,13 @@ GetFontObjectsFromTextObj(PTEXTOBJ TextObj, HFONT *FontHandle, FONTOBJ **FontObj
     }
     if (NT_SUCCESS(Status) && NULL != FontGDI)
     {
-      *FontGDI = AccessInternalObject((ULONG) TextObj->GDIFontHandle);
-      if (NULL == *FontGDI)
-      {
-	ASSERT(FALSE);
-	Status = STATUS_INVALID_HANDLE;
-      }
+      *FontGDI = AccessInternalObjectFromUserObject(FntObj);
     }
+    
+    return Status;
   }
-  else
-  {
-    Status = STATUS_INVALID_HANDLE;
-  }
-
-  return Status;
+  
+  return STATUS_INVALID_HANDLE;
 }
 
 int
@@ -451,6 +449,10 @@ NtGdiAddFontResource(PUNICODE_STRING Filename, DWORD fl)
     SetLastNtError(Status);
     return 0;
   }
+
+  /* Reserve for prepending '\??\' */
+  SafeFileName.Length += 4 * sizeof(WCHAR);
+  SafeFileName.MaximumLength += 4 * sizeof(WCHAR);
   
   src = SafeFileName.Buffer;
   SafeFileName.Buffer = (PWSTR)ExAllocatePoolWithTag(PagedPool, SafeFileName.MaximumLength, TAG_STRING);
@@ -460,7 +462,10 @@ NtGdiAddFontResource(PUNICODE_STRING Filename, DWORD fl)
     return 0;
   }
   
-  Status = MmCopyFromCaller(&SafeFileName.Buffer, src, SafeFileName.MaximumLength);
+  /* Prepend '\??\' */
+  RtlCopyMemory(SafeFileName.Buffer, L"\\??\\", 4 * sizeof(WCHAR));
+
+  Status = MmCopyFromCaller(SafeFileName.Buffer + 4, src, SafeFileName.MaximumLength - (4 * sizeof(WCHAR)));
   if(!NT_SUCCESS(Status))
   {
     ExFreePool(SafeFileName.Buffer);
@@ -1497,7 +1502,7 @@ NtGdiExtTextOut(
       return FALSE;
    }
    
-   if (NULL != UnsafeDx)
+   if (NULL != UnsafeDx && Count > 0)
    {
       Dx = ExAllocatePoolWithTag(PagedPool, Count * sizeof(INT), TAG_GDITEXT);
       if (NULL == Dx)

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.63 2004/02/26 12:23:29 ekohl Exp $
+# $Id: makefile,v 1.63.4.1 2004/06/03 22:29:18 arty Exp $
 
 PATH_TO_TOP = ../..
 
@@ -10,7 +10,7 @@ TARGET_TYPE = dynlink
 
 TARGET_NAME = crtdll
 
-TARGET_BASE = 0x77630000
+TARGET_BASE = $(TARGET_BASE_LIB_CRTDLL)
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
 

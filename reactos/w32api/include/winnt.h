@@ -2617,9 +2617,9 @@ typedef struct _IMAGE_EXPORT_DIRECTORY {
 	DWORD Base;
 	DWORD NumberOfFunctions;
 	DWORD NumberOfNames;
-	PDWORD *AddressOfFunctions;
-	PDWORD *AddressOfNames;
-	PWORD *AddressOfNameOrdinals;
+	DWORD AddressOfFunctions;
+	DWORD AddressOfNames;
+	DWORD AddressOfNameOrdinals;
 } IMAGE_EXPORT_DIRECTORY,*PIMAGE_EXPORT_DIRECTORY;
 typedef struct _IMAGE_IMPORT_BY_NAME {
 	WORD Hint;
