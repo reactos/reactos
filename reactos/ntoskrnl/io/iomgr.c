@@ -410,7 +410,7 @@ IoInit (VOID)
   IoDeviceObjectType->Create = IopCreateDevice;
   IoDeviceObjectType->DuplicationNotify = NULL;
   
-  RtlRosInitUnicodeStringFromLiteral(&IoDeviceObjectType->TypeName, L"Device");
+  RtlInitUnicodeString(&IoDeviceObjectType->TypeName, L"Device");
 
   ObpCreateTypeObject(IoDeviceObjectType);
 
@@ -439,7 +439,7 @@ IoInit (VOID)
   IoFileObjectType->Create = IopCreateFile;
   IoFileObjectType->DuplicationNotify = NULL;
   
-  RtlRosInitUnicodeStringFromLiteral(&IoFileObjectType->TypeName, L"File");
+  RtlInitUnicodeString(&IoFileObjectType->TypeName, L"File");
 
   ObpCreateTypeObject(IoFileObjectType);
   
@@ -453,7 +453,7 @@ IoInit (VOID)
   IoAdapterObjectType->PeakObjects = 0;
   IoAdapterObjectType->PeakHandles = 0;
   IoDeviceObjectType->Mapping = &IopFileMapping;
-  RtlRosInitUnicodeStringFromLiteral(&IoAdapterObjectType->TypeName, L"Adapter");
+  RtlInitUnicodeString(&IoAdapterObjectType->TypeName, L"Adapter");
   ObpCreateTypeObject(IoAdapterObjectType);
 
   /*

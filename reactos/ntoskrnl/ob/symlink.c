@@ -180,8 +180,8 @@ ObInitSymbolicLinkImplementation (VOID)
   ObSymbolicLinkType->Create = ObpCreateSymbolicLink;
   ObSymbolicLinkType->DuplicationNotify = NULL;
 
-  RtlRosInitUnicodeStringFromLiteral(&ObSymbolicLinkType->TypeName,
-				  L"SymbolicLink");
+  RtlInitUnicodeString(&ObSymbolicLinkType->TypeName,
+		       L"SymbolicLink");
 
   ObpCreateTypeObject(ObSymbolicLinkType);
 }

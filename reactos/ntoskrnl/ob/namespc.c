@@ -391,7 +391,7 @@ ObInit(VOID)
   ObDirectoryType->Create = ObpCreateDirectory;
   ObDirectoryType->DuplicationNotify = NULL;
 
-  RtlRosInitUnicodeStringFromLiteral(&ObDirectoryType->TypeName,
+  RtlInitUnicodeString(&ObDirectoryType->TypeName,
 		       L"Directory");
 
   /* create 'type' object type*/
@@ -416,7 +416,7 @@ ObInit(VOID)
   ObTypeObjectType->Create = NULL;
   ObTypeObjectType->DuplicationNotify = NULL;
 
-  RtlRosInitUnicodeStringFromLiteral(&ObTypeObjectType->TypeName,
+  RtlInitUnicodeString(&ObTypeObjectType->TypeName,
 		       L"ObjectType");
 
   /* Create security descriptor */

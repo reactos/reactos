@@ -2127,7 +2127,7 @@ MmInitSectionImplementation(VOID)
 {
    MmSectionObjectType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
 
-   RtlRosInitUnicodeStringFromLiteral(&MmSectionObjectType->TypeName, L"Section");
+   RtlInitUnicodeString(&MmSectionObjectType->TypeName, L"Section");
 
    MmSectionObjectType->Tag = TAG('S', 'E', 'C', 'T');
    MmSectionObjectType->TotalObjects = 0;

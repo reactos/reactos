@@ -1179,7 +1179,7 @@ NtUserGetGUIThreadInfo(
   
   if(idThread)
   {
-    Status = PsLookupThreadByThreadId((PVOID)idThread, &Thread);
+    Status = PsLookupThreadByThreadId((HANDLE)idThread, &Thread);
     if(!NT_SUCCESS(Status))
     {
       SetLastWin32Error(ERROR_ACCESS_DENIED);

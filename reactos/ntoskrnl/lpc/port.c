@@ -33,11 +33,11 @@ static GENERIC_MAPPING ExpPortMapping = {
 NTSTATUS INIT_FUNCTION
 LpcpInitSystem (VOID)
 {
-    /* Allocate Memory for the LPC Object */
-    LpcPortObjectType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
-    RtlZeroMemory (LpcPortObjectType, sizeof (OBJECT_TYPE));
+   /* Allocate Memory for the LPC Object */
+   LpcPortObjectType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
+   RtlZeroMemory (LpcPortObjectType, sizeof (OBJECT_TYPE));
    
-    RtlRosInitUnicodeStringFromLiteral(&LpcPortObjectType->TypeName,L"Port");
+   RtlInitUnicodeString(&LpcPortObjectType->TypeName,L"Port");
    
    LpcPortObjectType->Tag = TAG('L', 'P', 'R', 'T');
    LpcPortObjectType->PeakObjects = 0;

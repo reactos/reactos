@@ -49,7 +49,7 @@ ExpInitializeCallbacks(VOID)
    ExCallbackObjectType = ExAllocatePoolWithTag(NonPagedPool, sizeof(OBJECT_TYPE), CALLBACK_TAG);
 
    /* Initialize name */
-   RtlRosInitUnicodeStringFromLiteral(&ExCallbackObjectType->TypeName,L"Callback");
+   RtlInitUnicodeString(&ExCallbackObjectType->TypeName, L"Callback");
 
    /* Create the Object Type */
    ExCallbackObjectType->Tag = CALLBACK_TAG;

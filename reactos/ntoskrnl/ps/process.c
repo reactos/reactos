@@ -20,8 +20,8 @@ PEPROCESS EXPORTED PsInitialSystemProcess = NULL;
 
 POBJECT_TYPE EXPORTED PsProcessType = NULL;
 
-LIST_ENTRY PsProcessListHead;
-static KSPIN_LOCK PsProcessListLock;
+LIST_ENTRY PsActiveProcessHead;
+FAST_MUTEX PspActiveProcessMutex;
 static LARGE_INTEGER ShortPsLockDelay, PsLockTimeout;
 
 static GENERIC_MAPPING PiProcessMapping = {STANDARD_RIGHTS_READ | PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
@@ -101,7 +101,6 @@ PsExitSpecialApc(PKAPC Apc,
 PEPROCESS
 PsGetNextProcess(PEPROCESS OldProcess)
 {
-   KIRQL oldIrql;
    PEPROCESS NextProcess;
    NTSTATUS Status;
    
@@ -119,13 +118,13 @@ PsGetNextProcess(PEPROCESS OldProcess)
        return PsInitialSystemProcess;
      }
    
-   KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
+   ExAcquireFastMutex(&PspActiveProcessMutex);
    NextProcess = OldProcess;
    while (1)
      {
-       if (NextProcess->ProcessListEntry.Blink == &PsProcessListHead)
+       if (NextProcess->ProcessListEntry.Blink == &PsActiveProcessHead)
          {
-	   NextProcess = CONTAINING_RECORD(PsProcessListHead.Blink,
+	   NextProcess = CONTAINING_RECORD(PsActiveProcessHead.Blink,
 					   EPROCESS,
 					   ProcessListEntry);
          }
@@ -154,7 +153,7 @@ PsGetNextProcess(PEPROCESS OldProcess)
 	 }
      }
 
-   KeReleaseSpinLock(&PsProcessListLock, oldIrql);
+   ExReleaseFastMutex(&PspActiveProcessMutex);
    ObDereferenceObject(OldProcess);
    
    return(NextProcess);
@@ -281,14 +280,13 @@ PsOpenTokenOfProcess(HANDLE ProcessHandle,
 VOID 
 PiKillMostProcesses(VOID)
 {
-   KIRQL oldIrql;
    PLIST_ENTRY current_entry;
    PEPROCESS current;
    
-   KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
+   ExAcquireFastMutex(&PspActiveProcessMutex);
    
-   current_entry = PsProcessListHead.Flink;
-   while (current_entry != &PsProcessListHead)
+   current_entry = PsActiveProcessHead.Flink;
+   while (current_entry != &PsActiveProcessHead)
      {
 	current = CONTAINING_RECORD(current_entry, EPROCESS, 
 				    ProcessListEntry);
@@ -301,7 +299,7 @@ PiKillMostProcesses(VOID)
 	  }
      }
    
-   KeReleaseSpinLock(&PsProcessListLock, oldIrql);
+   ExReleaseFastMutex(&PspActiveProcessMutex);
 }
 
 
@@ -309,7 +307,6 @@ VOID INIT_FUNCTION
 PsInitProcessManagment(VOID)
 {
    PKPROCESS KProcess;
-   KIRQL oldIrql;
    NTSTATUS Status;
    
    ShortPsLockDelay.QuadPart = -100LL;
@@ -339,12 +336,12 @@ PsInitProcessManagment(VOID)
    PsProcessType->Create = NULL;
    PsProcessType->DuplicationNotify = NULL;
    
-   RtlRosInitUnicodeStringFromLiteral(&PsProcessType->TypeName, L"Process");
+   RtlInitUnicodeString(&PsProcessType->TypeName, L"Process");
    
    ObpCreateTypeObject(PsProcessType);
 
-   InitializeListHead(&PsProcessListHead);
-   KeInitializeSpinLock(&PsProcessListLock);
+   InitializeListHead(&PsActiveProcessHead);
+   ExInitializeFastMutex(&PspActiveProcessMutex);
 
    RtlZeroMemory(PiProcessNotifyRoutine, sizeof(PiProcessNotifyRoutine));
    RtlZeroMemory(PiLoadImageNotifyRoutine, sizeof(PiLoadImageNotifyRoutine));
@@ -412,11 +409,9 @@ PsInitProcessManagment(VOID)
    
    PsInitialSystemProcess->Win32WindowStation = (HANDLE)0;
    
-   KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
-   InsertHeadList(&PsProcessListHead, 
+   InsertHeadList(&PsActiveProcessHead,
 		  &PsInitialSystemProcess->ProcessListEntry);
    InitializeListHead(&PsInitialSystemProcess->ThreadListHead);
-   KeReleaseSpinLock(&PsProcessListLock, oldIrql);
 
    SepCreateSystemProcessToken(PsInitialSystemProcess);
 }
@@ -424,7 +419,6 @@ PsInitProcessManagment(VOID)
 VOID STDCALL
 PiDeleteProcessWorker(PVOID pContext)
 {
-  KIRQL oldIrql;
   PDEL_CONTEXT Context;
   PEPROCESS CurrentProcess;
   PEPROCESS Process;
@@ -440,9 +434,9 @@ PiDeleteProcessWorker(PVOID pContext)
       KeAttachProcess(&Process->Pcb);
     }
 
-  KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
+  ExAcquireFastMutex(&PspActiveProcessMutex);
   RemoveEntryList(&Process->ProcessListEntry);
-  KeReleaseSpinLock(&PsProcessListLock, oldIrql);
+  ExReleaseFastMutex(&PspActiveProcessMutex);
 
   /* KDB hook */
   KDB_DELETEPROCESS_HOOK(Process);
@@ -657,7 +651,6 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
    PEPROCESS Process;
    PEPROCESS pParentProcess;
    PKPROCESS KProcess;
-   KIRQL oldIrql;
    PVOID LdrStartupAddr;
    PVOID BaseAddress;
    PMEMORY_AREA MemoryArea;
@@ -863,10 +856,10 @@ exitdereferenceobjects:
    
    Process->Win32WindowStation = (HANDLE)0;
 
-   KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
-   InsertHeadList(&PsProcessListHead, &Process->ProcessListEntry);
+   ExAcquireFastMutex(&PspActiveProcessMutex);
+   InsertHeadList(&PsActiveProcessHead, &Process->ProcessListEntry);
    InitializeListHead(&Process->ThreadListHead);
-   KeReleaseSpinLock(&PsProcessListLock, oldIrql);
+   ExReleaseFastMutex(&PspActiveProcessMutex);
 
    ExInitializeFastMutex(&Process->TebLock);
    Process->Pcb.State = PROCESS_STATE_ACTIVE;
@@ -1261,14 +1254,13 @@ NtOpenProcess(OUT PHANDLE	    ProcessHandle,
      }
    else
      {
-	KIRQL oldIrql;
 	PLIST_ENTRY current_entry;
 	PEPROCESS current;
 	NTSTATUS Status;
 	
-	KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
-	current_entry = PsProcessListHead.Flink;
-	while (current_entry != &PsProcessListHead)
+	ExAcquireFastMutex(&PspActiveProcessMutex);
+	current_entry = PsActiveProcessHead.Flink;
+	while (current_entry != &PsActiveProcessHead)
 	  {
 	     current = CONTAINING_RECORD(current_entry, EPROCESS, 
 					 ProcessListEntry);
@@ -1285,7 +1277,7 @@ NtOpenProcess(OUT PHANDLE	    ProcessHandle,
 					                  PsProcessType,
 					                  UserMode);
 		    }
-		  KeReleaseSpinLock(&PsProcessListLock, oldIrql);
+		  ExReleaseFastMutex(&PspActiveProcessMutex);
 		  if (NT_SUCCESS(Status))
 		    {
 		      Status = ObCreateHandle(PsGetCurrentProcess(),
@@ -1301,7 +1293,7 @@ NtOpenProcess(OUT PHANDLE	    ProcessHandle,
 	       }
 	     current_entry = current_entry->Flink;
 	  }
-	KeReleaseSpinLock(&PsProcessListLock, oldIrql);
+	ExReleaseFastMutex(&PspActiveProcessMutex);
 	DPRINT("NtOpenProcess() = STATUS_UNSUCCESSFUL\n");
 	return(STATUS_UNSUCCESSFUL);
      }
@@ -2093,6 +2085,27 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
         }
         break;
       }
+      
+      case ProcessPriorityClass:
+      {
+        PROCESS_PRIORITY_CLASS ppc;
+
+        _SEH_TRY
+        {
+          ppc = *(PPROCESS_PRIORITY_CLASS)ProcessInformation;
+        }
+        _SEH_HANDLE
+        {
+          Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+        
+        if(NT_SUCCESS(Status))
+        {
+        }
+        
+        break;
+      }
 	
       case ProcessLdtInformation:
       case ProcessLdtSize:
@@ -2100,7 +2113,6 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
       case ProcessWorkingSetWatch:
       case ProcessUserModeIOPL:
       case ProcessEnableAlignmentFaultFixup:
-      case ProcessPriorityClass:
       case ProcessAffinityMask:
 	Status = STATUS_NOT_IMPLEMENTED;
 	break;
@@ -2143,7 +2155,6 @@ PiQuerySystemProcessInformation(PVOID Buffer,
    return STATUS_NOT_IMPLEMENTED;
 
 #if 0
-	KIRQL		OldIrql;
 	PLIST_ENTRY	CurrentEntryP;
 	PEPROCESS	CurrentP;
 	PLIST_ENTRY	CurrentEntryT;
@@ -2160,16 +2171,15 @@ PiQuerySystemProcessInformation(PVOID Buffer,
 	
 
    /* Lock the process list. */
-   KeAcquireSpinLock(&PsProcessListLock,
-		     &OldIrql);
+   ExAcquireFastMutex(&PspActiveProcessMutex);
 
 	/*
 	 * Scan the process list. Since the
 	 * list is circular, the guard is false
 	 * after the last process.
 	 */
-	for (	CurrentEntryP = PsProcessListHead.Flink;
-		(CurrentEntryP != & PsProcessListHead);
+	for (	CurrentEntryP = PsActiveProcessHead.Flink;
+		(CurrentEntryP != & PsActiveProcessHead);
 		CurrentEntryP = CurrentEntryP->Flink
 		)
 	{
@@ -2305,9 +2315,8 @@ PiQuerySystemProcessInformation(PVOID Buffer,
 	/*
 	 * Unlock the process list.
 	 */
-	KeReleaseSpinLock (
-		& PsProcessListLock,
-		OldIrql
+	ExReleaseFastMutex (
+		& PspActiveProcessMutex
 		);
 	/*
 	 * Return the proper error status code,
@@ -2541,14 +2550,13 @@ NTSTATUS STDCALL
 PsLookupProcessByProcessId(IN HANDLE ProcessId,
 			   OUT PEPROCESS *Process)
 {
-  KIRQL oldIrql;
   PLIST_ENTRY current_entry;
   PEPROCESS current;
 
-  KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
+  ExAcquireFastMutex(&PspActiveProcessMutex);
 
-  current_entry = PsProcessListHead.Flink;
-  while (current_entry != &PsProcessListHead)
+  current_entry = PsActiveProcessHead.Flink;
+  while (current_entry != &PsActiveProcessHead)
     {
       current = CONTAINING_RECORD(current_entry,
 				  EPROCESS,
@@ -2557,13 +2565,13 @@ PsLookupProcessByProcessId(IN HANDLE ProcessId,
 	{
 	  *Process = current;
           ObReferenceObject(current);
-	  KeReleaseSpinLock(&PsProcessListLock, oldIrql);
+	  ExReleaseFastMutex(&PspActiveProcessMutex);
 	  return(STATUS_SUCCESS);
 	}
       current_entry = current_entry->Flink;
     }
 
-  KeReleaseSpinLock(&PsProcessListLock, oldIrql);
+  ExReleaseFastMutex(&PspActiveProcessMutex);
 
   return(STATUS_INVALID_PARAMETER);
 }

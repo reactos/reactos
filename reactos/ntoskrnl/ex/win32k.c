@@ -295,7 +295,7 @@ ExpWin32kInit(VOID)
   ExWindowStationObjectType->OkayToClose = NULL;
   ExWindowStationObjectType->Create = ExpWinStaObjectCreate;
   ExWindowStationObjectType->DuplicationNotify = NULL;
-  RtlRosInitUnicodeStringFromLiteral(&ExWindowStationObjectType->TypeName, L"WindowStation");
+  RtlInitUnicodeString(&ExWindowStationObjectType->TypeName, L"WindowStation");
 
   ObpCreateTypeObject(ExWindowStationObjectType);
 
@@ -325,7 +325,7 @@ ExpWin32kInit(VOID)
   ExDesktopObjectType->OkayToClose = NULL;
   ExDesktopObjectType->Create = ExpDesktopObjectCreate;
   ExDesktopObjectType->DuplicationNotify = NULL;
-  RtlRosInitUnicodeStringFromLiteral(&ExDesktopObjectType->TypeName, L"Desktop");
+  RtlInitUnicodeString(&ExDesktopObjectType->TypeName, L"Desktop");
 
   ObpCreateTypeObject(ExDesktopObjectType);
 }

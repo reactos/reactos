@@ -27,7 +27,7 @@
 
 /* GLOBALS ******************************************************************/
 
-extern LIST_ENTRY PsProcessListHead;
+extern LIST_ENTRY PsActiveProcessHead;
 
 POBJECT_TYPE EXPORTED PsThreadType = NULL;
 
@@ -287,8 +287,8 @@ VOID PsDumpThreads(BOOLEAN IncludeSystem)
    PETHREAD Thread;
    ULONG nThreads = 0;
    
-   AProcess = PsProcessListHead.Flink;
-   while(AProcess != &PsProcessListHead)
+   AProcess = PsActiveProcessHead.Flink;
+   while(AProcess != &PsActiveProcessHead)
    {
      Process = CONTAINING_RECORD(AProcess, EPROCESS, ProcessListEntry);
      /* FIXME - skip suspended, ... processes? */
@@ -767,7 +767,7 @@ PsInitThreadManagment(VOID)
    PsThreadType->Create = NULL;
    PsThreadType->DuplicationNotify = NULL;
 
-   RtlRosInitUnicodeStringFromLiteral(&PsThreadType->TypeName, L"Thread");
+   RtlInitUnicodeString(&PsThreadType->TypeName, L"Thread");
 
    ObpCreateTypeObject(PsThreadType);
 
@@ -1088,12 +1088,12 @@ PsLookupProcessThreadByCid(IN PCLIENT_ID Cid,
  * @implemented
  */
 NTSTATUS STDCALL
-PsLookupThreadByThreadId(IN PVOID ThreadId,
+PsLookupThreadByThreadId(IN HANDLE ThreadId,
 			 OUT PETHREAD *Thread)
 {
   PCID_OBJECT CidObject;
   
-  CidObject = PsLockCidHandle((HANDLE)ThreadId, PsThreadType);
+  CidObject = PsLockCidHandle(ThreadId, PsThreadType);
   if(CidObject != NULL)
   {
     *Thread = CidObject->Obj.Thread;

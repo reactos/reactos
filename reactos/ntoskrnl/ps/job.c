@@ -1,11 +1,12 @@
-/* $Id:$
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ps/job.c
  * PURPOSE:         Job Native Functions
  * 
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net) (stubs)
+ *                  Thomas Weidenmueller <w3seek@reactos.com>
  */
 
 /* Note: Jobs are only supported on Win2K+ */
@@ -74,7 +75,7 @@ PsInitJobManagment(VOID)
   PsJobType->Create = NULL;
   PsJobType->DuplicationNotify = NULL;
   
-  RtlRosInitUnicodeStringFromLiteral(&PsJobType->TypeName, L"Job");
+  RtlInitUnicodeString(&PsJobType->TypeName, L"Job");
   
   ObpCreateTypeObject(PsJobType);
   

@@ -862,20 +862,20 @@ DbgThreadListCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
 ULONG
 DbgProcessListCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
 {
-  extern LIST_ENTRY PsProcessListHead;
+  extern LIST_ENTRY PsActiveProcessHead;
   PLIST_ENTRY current_entry;
   PEPROCESS current;
   ULONG i = 1;
 
-  if (PsProcessListHead.Flink == NULL)
+  if (PsActiveProcessHead.Flink == NULL)
     {
       DbgPrint("No processes.\n");
       return(1);
     }
 
   DbgPrint("Process list: ");
-  current_entry = PsProcessListHead.Flink;
-  while (current_entry != &PsProcessListHead)
+  current_entry = PsActiveProcessHead.Flink;
+  while (current_entry != &PsActiveProcessHead)
     {
       current = CONTAINING_RECORD(current_entry, EPROCESS, ProcessListEntry);
       DbgPrint("%d %.8s", current->UniqueProcessId, 
