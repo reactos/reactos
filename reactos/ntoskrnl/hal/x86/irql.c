@@ -214,7 +214,7 @@ KfLowerIrql (KIRQL	NewIrql)
     {
       DbgPrint ("(%s:%d) NewIrql %x CurrentIrql %x\n",
 		__FILE__, __LINE__, NewIrql, CurrentIrql);
-      KeDumpStackFrames (0, 32);
+      KeBugCheck(0);
       for(;;);
     }
   
