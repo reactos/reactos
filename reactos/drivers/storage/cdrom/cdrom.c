@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdrom.c,v 1.6 2002/03/22 23:05:44 ekohl Exp $
+/* $Id: cdrom.c,v 1.7 2002/03/25 21:56:19 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -424,6 +424,23 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   CdromData = (PCDROM_DATA)(DiskDeviceExtension + 1);
   RtlZeroMemory(CdromData,
 		sizeof(CDROM_DATA));
+
+  DiskDeviceExtension->SenseData = ExAllocatePool(NonPagedPool,
+						  sizeof(SENSE_DATA));
+  if (DiskDeviceExtension->SenseData == NULL)
+    {
+      DPRINT1("Failed to allocate sense data buffer!\n");
+
+      IoDeleteDevice(DiskDeviceObject);
+
+      /* Release (unclaim) the disk */
+      ScsiClassClaimDevice(PortDeviceObject,
+			   InquiryData,
+			   TRUE,
+			   NULL);
+
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
 
   /* Get disk geometry */
   DiskDeviceExtension->DiskGeometry = ExAllocatePool(NonPagedPool,

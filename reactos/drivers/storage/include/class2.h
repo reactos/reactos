@@ -1,4 +1,4 @@
-/* $Id: class2.h,v 1.3 2002/01/31 14:58:34 ekohl Exp $
+/* $Id: class2.h,v 1.4 2002/03/25 21:54:06 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,6 +12,8 @@
 
 #include "ntddscsi.h"
 #include "srb.h"
+
+#define MAXIMUM_RETRIES    4
 
 struct _CLASS_INIT_DATA;
 

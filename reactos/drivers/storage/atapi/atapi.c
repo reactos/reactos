@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.17 2002/03/24 15:29:57 ekohl Exp $
+/* $Id: atapi.c,v 1.18 2002/03/25 21:54:41 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -202,6 +202,11 @@ AtapiReadCapacity(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
 static ULONG
 AtapiReadWrite(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
 	       IN PSCSI_REQUEST_BLOCK Srb);
+
+
+static UCHAR
+AtapiErrorToScsi(PVOID DeviceExtension,
+		 PSCSI_REQUEST_BLOCK Srb);
 
 //  ----------------------------------------------------------------  Inlines
 
@@ -685,29 +690,10 @@ AtapiInterrupt(IN PVOID DeviceExtension)
 
   DeviceStatus = IDEReadStatus(CommandPortBase);
 
-  /*  Handle error condition if it exists */
-  if (DeviceStatus & IDE_SR_ERR)
+  if ((DeviceStatus & IDE_SR_ERR) &&
+      (Srb->Cdb[0] != SCSIOP_REQUEST_SENSE))
     {
-      BYTE ErrorReg, SectorCount, SectorNum, CylinderLow, CylinderHigh;
-      BYTE DriveHead;
-
-      /* Log the error */
-      ErrorReg = IDEReadError(CommandPortBase);
-      CylinderLow = IDEReadCylinderLow(CommandPortBase);
-      CylinderHigh = IDEReadCylinderHigh(CommandPortBase);
-      DriveHead = IDEReadDriveHead(CommandPortBase);
-      SectorCount = IDEReadSectorCount(CommandPortBase);
-      SectorNum = IDEReadSectorNum(CommandPortBase);
-
-      DPRINT1("ATAPI Error: STAT:%02x ERR:%02x CYLLO:%02x CYLHI:%02x SCNT:%02x SNUM:%02x\n",
-	      DeviceStatus,
-	      ErrorReg,
-	      CylinderLow,
-	      CylinderHigh,
-	      SectorCount,
-	      SectorNum);
-
-      /* FIXME: set a useful status code */
+      /* Report error condition */
       Srb->SrbStatus = SRB_STATUS_ERROR;
       IsLastBlock = TRUE;
     }
@@ -823,10 +809,18 @@ AtapiInterrupt(IN PVOID DeviceExtension)
       else
 	{
 	  DPRINT1("Unspecified transfer direction!\n");
-	  Srb->SrbStatus = SRB_STATUS_ERROR;
+	  Srb->SrbStatus = SRB_STATUS_SUCCESS; // SRB_STATUS_ERROR;
 	  IsLastBlock = TRUE;
 	}
     }
+
+
+  if (Srb->SrbStatus == SRB_STATUS_ERROR)
+    {
+      Srb->SrbStatus = AtapiErrorToScsi(DeviceExtension,
+					Srb);
+    }
+
 
   /* complete this packet */
   if (IsLastBlock)
@@ -1664,8 +1658,7 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 	       PSCSI_REQUEST_BLOCK Srb)
 {
   PIDE_DRIVE_IDENTIFY DeviceParams;
-
-  ULONG StartingSector,i;
+  ULONG StartingSector;
   ULONG SectorCount;
   UCHAR CylinderHigh;
   UCHAR CylinderLow;
@@ -1674,7 +1667,6 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   UCHAR Command;
   ULONG Retries;
   UCHAR Status;
-
 
   DPRINT("AtapiReadWrite() called!\n");
 
@@ -1912,6 +1904,132 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 
   /* Wait for interrupt. */
   return(SRB_STATUS_PENDING);
+}
+
+
+static UCHAR
+AtapiErrorToScsi(PVOID DeviceExtension,
+		 PSCSI_REQUEST_BLOCK Srb)
+{
+  PATAPI_MINIPORT_EXTENSION DevExt;
+  ULONG CommandPortBase;
+  ULONG ControlPortBase;
+  UCHAR ErrorReg;
+  UCHAR ScsiStatus;
+  UCHAR SrbStatus;
+
+  DPRINT1("AtapiErrorToScsi() called\n");
+
+  DevExt = (PATAPI_MINIPORT_EXTENSION)DeviceExtension;
+
+  CommandPortBase = DevExt->CommandPortBase;
+  ControlPortBase = DevExt->ControlPortBase;
+
+  ErrorReg = IDEReadError(CommandPortBase);
+
+  if (DevExt->DeviceAtapi[Srb->TargetId])
+    {
+      switch (ErrorReg >> 4)
+	{
+	  case SCSI_SENSE_NO_SENSE:
+	    DPRINT1("ATAPI error: SCSI_SENSE_NO_SENSE\n");
+	    ScsiStatus = SCSISTAT_CHECK_CONDITION;
+	    SrbStatus = SRB_STATUS_ERROR;
+	    break;
+
+	  case SCSI_SENSE_RECOVERED_ERROR:
+	    DPRINT1("ATAPI error: SCSI_SENSE_RECOVERED_SENSE\n");
+	    ScsiStatus = 0;
+	    SrbStatus = SRB_STATUS_SUCCESS;
+	    break;
+
+	  case SCSI_SENSE_NOT_READY:
+	    DPRINT1("ATAPI error: SCSI_SENSE_NOT_READY\n");
+	    ScsiStatus = SCSISTAT_CHECK_CONDITION;
+	    SrbStatus = SRB_STATUS_ERROR;
+	    break;
+
+	  case SCSI_SENSE_MEDIUM_ERROR:
+	    DPRINT1("ATAPI error: SCSI_SENSE_MEDIUM_ERROR\n");
+	    ScsiStatus = SCSISTAT_CHECK_CONDITION;
+	    SrbStatus = SRB_STATUS_ERROR;
+	    break;
+
+	  case SCSI_SENSE_HARDWARE_ERROR:
+	    DPRINT1("ATAPI error: SCSI_SENSE_HARDWARE_ERROR\n");
+	    ScsiStatus = SCSISTAT_CHECK_CONDITION;
+	    SrbStatus = SRB_STATUS_ERROR;
+	    break;
+
+	  case SCSI_SENSE_ILLEGAL_REQUEST:
+	    DPRINT1("ATAPI error: SCSI_SENSE_ILLEGAL_REQUEST\n");
+	    ScsiStatus = SCSISTAT_CHECK_CONDITION;
+	    SrbStatus = SRB_STATUS_ERROR;
+	    break;
+
+	  case SCSI_SENSE_UNIT_ATTENTION:
+	    DPRINT1("ATAPI error: SCSI_SENSE_UNIT_ATTENTION\n");
+	    ScsiStatus = SCSISTAT_CHECK_CONDITION;
+	    SrbStatus = SRB_STATUS_ERROR;
+	    break;
+
+	  case SCSI_SENSE_DATA_PROTECT:
+	    DPRINT1("ATAPI error: SCSI_SENSE_DATA_PROTECT\n");
+	    ScsiStatus = SCSISTAT_CHECK_CONDITION;
+	    SrbStatus = SRB_STATUS_ERROR;
+	    break;
+
+	  case SCSI_SENSE_BLANK_CHECK:
+	    DPRINT1("ATAPI error: SCSI_SENSE_BLANK_CHECK\n");
+	    ScsiStatus = SCSISTAT_CHECK_CONDITION;
+	    SrbStatus = SRB_STATUS_ERROR;
+	    break;
+
+	  case SCSI_SENSE_ABORTED_COMMAND:
+	    DPRINT1("ATAPI error: SCSI_SENSE_ABORTED_COMMAND\n");
+	    ScsiStatus = SCSISTAT_CHECK_CONDITION;
+	    SrbStatus = SRB_STATUS_ERROR;
+	    break;
+
+	  default:
+	    DPRINT1("ATAPI error: Invalid sense key\n");
+	    ScsiStatus = 0;
+	    SrbStatus = SRB_STATUS_ERROR;
+	    break;
+	}
+    }
+  else
+    {
+      DPRINT1("IDE error: %02x\n", ErrorReg);
+
+      ScsiStatus = 0;
+
+#if 0
+      UCHAR SectorCount, SectorNum, CylinderLow, CylinderHigh;
+      UCHAR DriveHead;
+
+      CylinderLow = IDEReadCylinderLow(CommandPortBase);
+      CylinderHigh = IDEReadCylinderHigh(CommandPortBase);
+      DriveHead = IDEReadDriveHead(CommandPortBase);
+      SectorCount = IDEReadSectorCount(CommandPortBase);
+      SectorNum = IDEReadSectorNum(CommandPortBase);
+
+      DPRINT1("IDE Error: ERR:%02x CYLLO:%02x CYLHI:%02x SCNT:%02x SNUM:%02x\n",
+	      ErrorReg,
+	      CylinderLow,
+	      CylinderHigh,
+	      SectorCount,
+	      SectorNum);
+#endif
+    }
+
+
+
+  Srb->ScsiStatus = ScsiStatus;
+
+  DPRINT1("AtapiErrorToScsi() done\n");
+
+  return(SrbStatus);
 }
 
 /* EOF */

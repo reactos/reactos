@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.13 2002/03/22 23:06:58 ekohl Exp $
+/* $Id: class2.c,v 1.14 2002/03/25 21:55:51 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -145,13 +145,13 @@ ScsiClassBuildRequest(PDEVICE_OBJECT DeviceObject,
   NextIrpStack = IoGetNextIrpStackLocation(Irp);
   StartingOffset = CurrentIrpStack->Parameters.Read.ByteOffset;
 
-  /* calculate logical block address */
+  /* Calculate logical block address */
   StartingBlock.QuadPart = StartingOffset.QuadPart >> DeviceExtension->SectorShift;
   LogicalBlockAddress = (ULONG)StartingBlock.u.LowPart;
 
   DPRINT("Logical block address: %lu\n", LogicalBlockAddress);
 
-  /* allocate and initialize an SRB */
+  /* Allocate and initialize an SRB */
   /* FIXME: use lookaside list instead */
   Srb = ExAllocatePool(NonPagedPool,
 		       sizeof(SCSI_REQUEST_BLOCK));
@@ -230,7 +230,7 @@ ScsiClassBuildRequest(PDEVICE_OBJECT DeviceObject,
     }
 #endif
 
-  /* or in the default flags from the device object. */
+  /* Update srb flags */
   Srb->SrbFlags |= DeviceExtension->SrbFlags;
 
 
@@ -238,10 +238,8 @@ ScsiClassBuildRequest(PDEVICE_OBJECT DeviceObject,
   NextIrpStack->Parameters.Scsi.Srb = Srb;
   NextIrpStack->DeviceObject = DeviceObject;
 
-#if 0
-  /* save retry count in current IRP stack */
+  /* Save retry count in current IRP stack */
   CurrentIrpStack->Parameters.Others.Argument4 = (PVOID)MAXIMUM_RETRIES;
-#endif
 
   DPRINT("IoSetCompletionRoutine (Irp %p  Srb %p)\n", Irp, Srb);
   IoSetCompletionRoutine(Irp,
@@ -724,7 +722,23 @@ ScsiClassInterpretSenseInfo(PDEVICE_OBJECT DeviceObject,
 			    ULONG RetryCount,
 			    NTSTATUS *Status)
 {
-  UNIMPLEMENTED;
+
+  DPRINT1("ScsiClassInterpretSenseInfo() called\n");
+
+  DPRINT1("Srb->SrbStatus %lx\n", Srb->SrbStatus);
+
+  if (SRB_STATUS(Srb->SrbStatus) == SRB_STATUS_PENDING)
+    {
+      *Status = STATUS_SUCCESS;
+    }
+  else
+    {
+      *Status = STATUS_UNSUCCESSFUL;
+    }
+
+  DPRINT1("ScsiClassInterpretSenseInfo() done\n");
+
+  return(FALSE);
 }
 
 
@@ -736,6 +750,7 @@ ScsiClassIoComplete(PDEVICE_OBJECT DeviceObject,
   PDEVICE_EXTENSION DeviceExtension;
   PIO_STACK_LOCATION IrpStack;
   PSCSI_REQUEST_BLOCK Srb;
+  BOOLEAN Retry;
   NTSTATUS Status;
 
   DPRINT("ScsiClassIoComplete(DeviceObject %p  Irp %p  Context %p) called\n",
@@ -747,30 +762,36 @@ ScsiClassIoComplete(PDEVICE_OBJECT DeviceObject,
 
   IrpStack = IoGetCurrentIrpStackLocation(Irp);
 
-#if 0
   if (SRB_STATUS(Srb->SrbStatus) == SRB_STATUS_SUCCESS)
     {
       Status = STATUS_SUCCESS;
     }
   else
     {
-      /* FIXME: improve error handling */
-      DPRINT1("Srb->SrbStatus %lx\n", Srb->SrbStatus);
+      Retry = ScsiClassInterpretSenseInfo(DeviceObject,
+					  Srb,
+					  IrpStack->MajorFunction,
+					  0,
+					  MAXIMUM_RETRIES - ((ULONG)IrpStack->Parameters.Others.Argument4),
+					  &Status);
+#if 0
+  irpStack->MajorFunction == IRP_MJ_DEVICE_CONTROL ? irpStack->Parameters.DeviceIoControl.IoControlCode : 0,
 
-      if (SRB_STATUS(Srb->SrbStatus) == SRB_STATUS_PENDING)
-	{
-	  Status = STATUS_SUCCESS;
-	}
-      else
-      Status = STATUS_UNSUCCESSFUL;
-    }
 #endif
+
+      if (Retry == TRUE)
+	{
+	  /* FIXME!! */
+	  DPRINT1("Should try again!\n");
+
+	}
+    }
 
   /* FIXME: use lookaside list instead */
   DPRINT("Freed SRB %p\n", IrpStack->Parameters.Scsi.Srb);
   ExFreePool(IrpStack->Parameters.Scsi.Srb);
 
-//  Irp->IoStatus.Status = Status;
+  Irp->IoStatus.Status = Status;
 #if 0
   if (!NT_SUCCESS(Status) &&
       IoIsErrorUserInduced(Status))
@@ -797,8 +818,7 @@ ScsiClassIoComplete(PDEVICE_OBJECT DeviceObject,
 
   DPRINT("ScsiClassIoComplete() done (Status %lx)\n", Status);
 
-//  return(Status);
-  return(STATUS_SUCCESS);
+  return(Status);
 }
 
 
@@ -958,6 +978,8 @@ ScsiClassSendSrbSynchronous(PDEVICE_OBJECT DeviceObject,
   IO_STATUS_BLOCK IoStatusBlock;
   PIO_STACK_LOCATION IoStack;
   ULONG RequestType;
+  BOOLEAN Retry;
+  ULONG RetryCount;
   KEVENT Event;
   PIRP Irp;
   NTSTATUS Status;
@@ -965,8 +987,10 @@ ScsiClassSendSrbSynchronous(PDEVICE_OBJECT DeviceObject,
 
   DPRINT("ScsiClassSendSrbSynchronous() called\n");
 
+  RetryCount = MAXIMUM_RETRIES;
   DeviceExtension = DeviceObject->DeviceExtension;
 
+  Srb->Length = SCSI_REQUEST_BLOCK_SIZE;
   Srb->PathId = DeviceExtension->PathId;
   Srb->TargetId = DeviceExtension->TargetId;
   Srb->Lun = DeviceExtension->Lun;
@@ -974,6 +998,11 @@ ScsiClassSendSrbSynchronous(PDEVICE_OBJECT DeviceObject,
 
   /* FIXME: more srb initialization required? */
 
+  Srb->SenseInfoBufferLength = SENSE_BUFFER_SIZE;
+  Srb->SenseInfoBuffer = ExAllocatePool(NonPagedPool,
+					SENSE_BUFFER_SIZE);
+  if (Srb->SenseInfoBuffer == NULL)
+    return(STATUS_INSUFFICIENT_RESOURCES);
 
   if (BufferAddress == NULL)
     {
@@ -1015,6 +1044,7 @@ ScsiClassSendSrbSynchronous(PDEVICE_OBJECT DeviceObject,
   if (Irp == NULL)
     {
       DPRINT1("IoBuildDeviceIoControlRequest() failed\n");
+      ExFreePool(Srb->SenseInfoBuffer);
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
@@ -1041,14 +1071,25 @@ ScsiClassSendSrbSynchronous(PDEVICE_OBJECT DeviceObject,
 
   if (SRB_STATUS(Srb->SrbStatus) != SRB_STATUS_SUCCESS)
     {
-      /* FIXME!! */
-      DPRINT1("Fix return value!\n");
-      Status = STATUS_UNSUCCESSFUL;
+      Retry = ScsiClassInterpretSenseInfo(DeviceObject,
+					  Srb,
+					  IRP_MJ_SCSI,
+					  0,
+					  MAXIMUM_RETRIES - RetryCount,
+					  &Status);
+      if (Retry == TRUE)
+	{
+	  /* FIXME!! */
+	  DPRINT1("Should try again!\n");
+
+	}
     }
   else
     {
       Status = STATUS_SUCCESS;
     }
+
+  ExFreePool(Srb->SenseInfoBuffer);
 
   DPRINT("ScsiClassSendSrbSynchronous() done\n");
 

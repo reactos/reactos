@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.34 2002/03/17 17:53:34 hbirr Exp $
+/* $Id: iotypes.h,v 1.35 2002/03/25 21:53:27 ekohl Exp $
  * 
  */
 
@@ -307,6 +307,11 @@ typedef struct __attribute__((packed)) _IO_STACK_LOCATION
 	} Mount;
       struct
 	{
+	  struct _VPB* Vpb;
+	  struct _DEVICE_OBJECT* DeviceObject;
+	} VerifyVolume;
+      struct
+	{
 	  ULONG Length;
 	  FILE_INFORMATION_CLASS FileInformationClass;
 	} QueryFile;
@@ -415,12 +420,20 @@ typedef struct __attribute__((packed)) _IO_STACK_LOCATION
 	  PCM_RESOURCE_LIST AllocatedResourcesTranslated;
 	} StartDevice;
 
-      // Parameters for IRP_MN_SCSI_CLASS
+      /* Parameters for IRP_MN_SCSI_CLASS */
       struct
 	{
 	  struct _SCSI_REQUEST_BLOCK *Srb;
 	} Scsi;
 
+      /* Paramters for other calls */
+      struct
+	{
+	  PVOID Argument1;
+	  PVOID Argument2;
+	  PVOID Argument3;
+	  PVOID Argument4;
+	} Others;
     } Parameters;
   
   struct _DEVICE_OBJECT* DeviceObject;
