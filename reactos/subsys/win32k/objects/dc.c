@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.65 2003/08/01 19:42:54 royce Exp $
+/* $Id: dc.c,v 1.66 2003/08/01 20:22:58 dwelch Exp $
  *
  * DC.C - Device context functions
  *
@@ -1516,6 +1516,7 @@ DC_AllocDC(LPCWSTR  Driver)
 	NewDC->w.vport2WorldValid = TRUE;
 
 	NewDC->w.hFont = W32kGetStockObject(SYSTEM_FONT);
+	TextIntRealizeFont(NewDC->w.hFont);
 
 	GDIOBJ_UnlockObj( hDC, GO_DC_MAGIC );
   	return  hDC;
