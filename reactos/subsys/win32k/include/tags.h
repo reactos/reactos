@@ -8,7 +8,7 @@
 #define TAG_ACCEL	TAG('A', 'C', 'C', 'L') /* accelerator */
 #define TAG_HOOK	TAG('W', 'N', 'H', 'K') /* hook */
 #define TAG_HOTKEY	TAG('H', 'O', 'T', 'K') /* hotkey */
-#define TAG_MENUITEM	TAG('M', 'E', 'N', 'I') /* menu itme */
+#define TAG_MENUITEM	TAG('M', 'E', 'N', 'I') /* menu item */
 #define TAG_MSG		TAG('M', 'E', 'S', 'G') /* message */
 #define TAG_MSGQ	TAG('M', 'S', 'G', 'Q') /* message queue */
 #define TAG_USRMSG	TAG('U', 'M', 'S', 'G') /* user message */
@@ -39,7 +39,7 @@
 #define TAG_PALETTEMAP	TAG('P', 'A', 'L', 'M') /* palette mapping */
 #define TAG_PATH	TAG('P', 'A', 'T', 'H') /* path */
 #define TAG_PRINT	TAG('P', 'R', 'N', 'T') /* print */
-#define TAG_REGION	TAG('P', 'R', 'N', 'T') /* region */
+#define TAG_REGION	TAG('R', 'G', 'N', 'O') /* region */
 #define TAG_GDITEXT	TAG('T', 'X', 'T', 'O') /* text */
 #define TAG_FONT	TAG('F', 'N', 'T', 'O') /* font entry */
 
