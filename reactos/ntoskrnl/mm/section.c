@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.39 2000/10/22 16:36:52 ekohl Exp $
+/* $Id: section.c,v 1.40 2000/12/28 03:38:07 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -43,14 +43,16 @@ VOID MmLockSection(PSECTION_OBJECT Section)
 			 NULL);
 }
 
-VOID MmUnlockSection(PSECTION_OBJECT Section)
+VOID 
+MmUnlockSection(PSECTION_OBJECT Section)
 {
    KeReleaseMutex(&Section->Lock, FALSE);
 }
 
-VOID MmSetPageEntrySection(PSECTION_OBJECT Section,
-			   ULONG Offset,
-			   ULONG Entry)
+VOID 
+MmSetPageEntrySection(PSECTION_OBJECT Section,
+		      ULONG Offset,
+		      ULONG Entry)
 {
    PSECTION_PAGE_TABLE Table;
    ULONG DirectoryOffset;
@@ -70,8 +72,9 @@ VOID MmSetPageEntrySection(PSECTION_OBJECT Section,
    Table->Pages[TableOffset] = Entry;
 }
 
-ULONG MmGetPageEntrySection(PSECTION_OBJECT Section,
-			    ULONG Offset)
+ULONG 
+MmGetPageEntrySection(PSECTION_OBJECT Section,
+		      ULONG Offset)
 {
    PSECTION_PAGE_TABLE Table;
    ULONG Entry;
@@ -92,9 +95,10 @@ ULONG MmGetPageEntrySection(PSECTION_OBJECT Section,
    return(Entry);
 }
 
-NTSTATUS MmUnalignedLoadPageForSection(PMADDRESS_SPACE AddressSpace,
-				       MEMORY_AREA* MemoryArea,
-				       PVOID Address)
+NTSTATUS 
+MmUnalignedLoadPageForSection(PMADDRESS_SPACE AddressSpace,
+			      MEMORY_AREA* MemoryArea,
+			      PVOID Address)
 {
    LARGE_INTEGER Offset;
    IO_STATUS_BLOCK IoStatus;
@@ -128,6 +132,15 @@ NTSTATUS MmUnalignedLoadPageForSection(PMADDRESS_SPACE AddressSpace,
    
    MmLockSection(Section);
    
+   /*
+    * Don't do an unaligned mapping of physical memory
+    */
+   if (Section->Flags & SO_PHYSICAL_MEMORY)
+     {
+       MmUnlockSection(Section);
+       return(STATUS_UNSUCCESSFUL);
+     }
+
    Page = MmAllocPageMaybeSwap(0);
    Mdl = MmCreateMdl(NULL, NULL, PAGESIZE);
    MmBuildMdlFromPages(Mdl, (PULONG)&Page);
@@ -162,12 +175,13 @@ NTSTATUS MmUnalignedLoadPageForSection(PMADDRESS_SPACE AddressSpace,
 
 }
 
-NTSTATUS MmWaitForPendingOperationSection(PMADDRESS_SPACE AddressSpace,
-					  PMEMORY_AREA MemoryArea,
-					  PVOID Address,
-					  PSECTION_OBJECT Section,
-					  LARGE_INTEGER Offset,
-					  ULONG Entry)
+NTSTATUS 
+MmWaitForPendingOperationSection(PMADDRESS_SPACE AddressSpace,
+				 PMEMORY_AREA MemoryArea,
+				 PVOID Address,
+				 PSECTION_OBJECT Section,
+				 LARGE_INTEGER Offset,
+				 ULONG Entry)
 {
    PVOID Page;
    NTSTATUS Status;
@@ -264,9 +278,10 @@ NTSTATUS MmWaitForPendingOperationSection(PMADDRESS_SPACE AddressSpace,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
-				      MEMORY_AREA* MemoryArea, 
-				      PVOID Address)
+NTSTATUS 
+MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
+			     MEMORY_AREA* MemoryArea, 
+			     PVOID Address)
 {
    LARGE_INTEGER Offset;
    IO_STATUS_BLOCK IoStatus;
@@ -308,16 +323,24 @@ NTSTATUS MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 					     Address));
      }
    
-   DPRINT("MemoryArea->BaseAddress %x\n", MemoryArea->BaseAddress);
-   DPRINT("MemoryArea->Data.SectionData.ViewOffset %x\n",
-	   MemoryArea->Data.SectionData.ViewOffset);
-   DPRINT("Got offset %x\n", Offset.QuadPart);
-   
    /*
     * Lock the section
     */
    Section = MemoryArea->Data.SectionData.Section;
    MmLockSection(Section);
+   
+   if (Section->Flags & SO_PHYSICAL_MEMORY)
+     {
+       /*
+	* Just map the desired physical page 
+	*/
+       Status = MmCreateVirtualMapping(NULL,
+				       Address,
+				       MemoryArea->Attributes,
+				       Offset.QuadPart);
+       MmUnlockSection(Section);
+       return(STATUS_SUCCESS);
+     }
    
    /*
     * Get the entry corresponding to the offset within the section
@@ -496,22 +519,25 @@ NTSTATUS MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
      }
 }
 
-ULONG MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
-			   MEMORY_AREA* MemoryArea, 
-			   PVOID Address,
-			   PBOOLEAN Ul)
+ULONG 
+MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
+		     MEMORY_AREA* MemoryArea, 
+		     PVOID Address,
+		     PBOOLEAN Ul)
 {
    (*Ul) = FALSE;
    return(0);
 }
 
-VOID MmpDeleteSection(PVOID ObjectBody)
+VOID 
+MmpDeleteSection(PVOID ObjectBody)
 {
    DPRINT("MmpDeleteSection(ObjectBody %x)\n", ObjectBody);
 }
 
-VOID MmpCloseSection(PVOID ObjectBody,
-		     ULONG HandleCount)
+VOID 
+MmpCloseSection(PVOID ObjectBody,
+		ULONG HandleCount)
 {
    DPRINT("MmpCloseSection(OB %x, HC %d) RC %d\n",
 	   ObjectBody, HandleCount, ObGetReferenceCount(ObjectBody));
@@ -552,40 +578,91 @@ NTSTATUS MmpCreateSection(PVOID ObjectBody,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS MmInitSectionImplementation(VOID)
+NTSTATUS 
+MmCreatePhysicalMemorySection(VOID)
 {
-   MmSectionObjectType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
+  HANDLE PhysSectionH;
+  PSECTION_OBJECT PhysSection;
+  NTSTATUS Status;
+  OBJECT_ATTRIBUTES Obj;
+  UNICODE_STRING Name;
+  LARGE_INTEGER SectionSize;
    
-   RtlInitUnicodeString(&MmSectionObjectType->TypeName, L"Section");
+  /*
+   * Create the section mapping physical memory 
+   */
+  SectionSize.QuadPart = 0xFFFFFFFF;
+  RtlInitUnicodeString(&Name, L"\\Device\\PhysicalMemory");
+  InitializeObjectAttributes(&Obj,			
+			     &Name,
+			     0,
+			     NULL,
+			     NULL);
+  Status = NtCreateSection(&PhysSectionH,
+			   SECTION_ALL_ACCESS,
+			   &Obj,			   
+			   &SectionSize,
+			   PAGE_EXECUTE_READWRITE,
+			   0,
+			   NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      DbgPrint("Failed to create PhysicalMemory section\n");
+      KeBugCheck(0);
+    }
+  Status = ObReferenceObjectByHandle(PhysSectionH,
+				     SECTION_ALL_ACCESS,
+				     NULL,
+				     KernelMode,
+				     (PVOID*)&PhysSection,
+				     NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      DbgPrint("Failed to reference PhysicalMemory section\n");
+      KeBugCheck(0);
+    }
+  PhysSection->Flags = PhysSection->Flags | SO_PHYSICAL_MEMORY;
+  ObDereferenceObject((PVOID)PhysSection);
+   
+  return(STATUS_SUCCESS);
+}
 
-   MmSectionObjectType->TotalObjects = 0;
-   MmSectionObjectType->TotalHandles = 0;
-   MmSectionObjectType->MaxObjects = ULONG_MAX;
-   MmSectionObjectType->MaxHandles = ULONG_MAX;
-   MmSectionObjectType->PagedPoolCharge = 0;
-   MmSectionObjectType->NonpagedPoolCharge = sizeof(SECTION_OBJECT);
-   MmSectionObjectType->Dump = NULL;
-   MmSectionObjectType->Open = NULL;
-   MmSectionObjectType->Close = MmpCloseSection;
-   MmSectionObjectType->Delete = MmpDeleteSection;
-   MmSectionObjectType->Parse = NULL;
-   MmSectionObjectType->Security = NULL;
-   MmSectionObjectType->QueryName = NULL;
-   MmSectionObjectType->OkayToClose = NULL;
-   MmSectionObjectType->Create = MmpCreateSection;
+NTSTATUS 
+MmInitSectionImplementation(VOID)
+{
+  MmSectionObjectType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
+  
+  RtlInitUnicodeString(&MmSectionObjectType->TypeName, L"Section");
+  
+  MmSectionObjectType->TotalObjects = 0;
+  MmSectionObjectType->TotalHandles = 0;
+  MmSectionObjectType->MaxObjects = ULONG_MAX;
+  MmSectionObjectType->MaxHandles = ULONG_MAX;
+  MmSectionObjectType->PagedPoolCharge = 0;
+  MmSectionObjectType->NonpagedPoolCharge = sizeof(SECTION_OBJECT);
+  MmSectionObjectType->Dump = NULL;
+  MmSectionObjectType->Open = NULL;
+  MmSectionObjectType->Close = MmpCloseSection;
+  MmSectionObjectType->Delete = MmpDeleteSection;
+  MmSectionObjectType->Parse = NULL;
+  MmSectionObjectType->Security = NULL;
+  MmSectionObjectType->QueryName = NULL;
+  MmSectionObjectType->OkayToClose = NULL;
+  MmSectionObjectType->Create = MmpCreateSection;
    
-   return(STATUS_SUCCESS);
+  return(STATUS_SUCCESS);
 }
 
 
 /* FIXME: NtCS should call MmCS */
-NTSTATUS STDCALL NtCreateSection (OUT PHANDLE SectionHandle, 
-				  IN ACCESS_MASK DesiredAccess,
-				  IN POBJECT_ATTRIBUTES	ObjectAttributes OPTIONAL,
-				  IN PLARGE_INTEGER MaximumSize	OPTIONAL,  
-				  IN ULONG SectionPageProtection OPTIONAL,
-				  IN ULONG AllocationAttributes,
-				  IN HANDLE FileHandle OPTIONAL)
+NTSTATUS STDCALL 
+NtCreateSection (OUT PHANDLE SectionHandle, 
+		 IN ACCESS_MASK DesiredAccess,
+		 IN POBJECT_ATTRIBUTES	ObjectAttributes OPTIONAL,
+		 IN PLARGE_INTEGER MaximumSize	OPTIONAL,  
+		 IN ULONG SectionPageProtection OPTIONAL,
+		 IN ULONG AllocationAttributes,
+		 IN HANDLE FileHandle OPTIONAL)
 /*
  * FUNCTION: Creates a section object.
  * ARGUMENTS:
@@ -640,8 +717,9 @@ NTSTATUS STDCALL NtCreateSection (OUT PHANDLE SectionHandle,
    KeInitializeSpinLock(&Section->ViewListLock);
    KeInitializeMutex(&Section->Lock, 0);
    memset(&Section->PageDirectory, 0, sizeof(Section->PageDirectory));
-   
-   if (FileHandle != (HANDLE)0xffffffff)
+   Section->Flags = 0;
+
+   if (FileHandle != (HANDLE)0)
      {
 	Status = ObReferenceObjectByHandle(FileHandle,
 					   FILE_READ_DATA,
@@ -686,9 +764,10 @@ NTSTATUS STDCALL NtCreateSection (OUT PHANDLE SectionHandle,
  * REVISIONS
  *
  */
-NTSTATUS STDCALL NtOpenSection(PHANDLE			SectionHandle,
-			       ACCESS_MASK		DesiredAccess,
-			       POBJECT_ATTRIBUTES	ObjectAttributes)
+NTSTATUS STDCALL 
+NtOpenSection(PHANDLE			SectionHandle,
+	      ACCESS_MASK		DesiredAccess,
+	      POBJECT_ATTRIBUTES	ObjectAttributes)
 {
    PVOID Object;
    NTSTATUS Status;
@@ -765,16 +844,17 @@ NTSTATUS STDCALL NtOpenSection(PHANDLE			SectionHandle,
  * RETURN VALUE
  * 	Status.
  */
-NTSTATUS STDCALL NtMapViewOfSection(HANDLE SectionHandle,
-				    HANDLE ProcessHandle,
-				    PVOID* BaseAddress,
-				    ULONG ZeroBits,
-				    ULONG CommitSize,
-				    PLARGE_INTEGER SectionOffset,
-				    PULONG ViewSize,
-				    SECTION_INHERIT InheritDisposition,
-				    ULONG AllocationType,
-				    ULONG Protect)
+NTSTATUS STDCALL 
+NtMapViewOfSection(HANDLE SectionHandle,
+		   HANDLE ProcessHandle,
+		   PVOID* BaseAddress,
+		   ULONG ZeroBits,
+		   ULONG CommitSize,
+		   PLARGE_INTEGER SectionOffset,
+		   PULONG ViewSize,
+		   SECTION_INHERIT InheritDisposition,
+		   ULONG AllocationType,
+		   ULONG Protect)
 {
    PSECTION_OBJECT Section;
    PEPROCESS Process;
@@ -803,7 +883,7 @@ NTSTATUS STDCALL NtMapViewOfSection(HANDLE SectionHandle,
    if (!(NT_SUCCESS(Status)))
      {
 	DPRINT("ObReference failed rc=%x\n",Status);	   
-	return Status;
+	return(Status);
      }
    
    DPRINT("Section %x\n",Section);
@@ -821,7 +901,7 @@ NTSTATUS STDCALL NtMapViewOfSection(HANDLE SectionHandle,
 	       Status);
 	MmUnlockSection(Section);
 	ObDereferenceObject(Section);		
-	return Status;
+	return(Status);
      }
    
    AddressSpace = &Process->AddressSpace;
@@ -839,9 +919,9 @@ NTSTATUS STDCALL NtMapViewOfSection(HANDLE SectionHandle,
      }
    
    if (((*ViewSize)+ViewOffset) > Section->MaximumSize.u.LowPart)
-	{
+     {
 	   (*ViewSize) = Section->MaximumSize.u.LowPart - ViewOffset;
-	}
+     }
    
    DPRINT("Creating memory area\n");
    MmLockAddressSpace(AddressSpace);
@@ -861,7 +941,7 @@ NTSTATUS STDCALL NtMapViewOfSection(HANDLE SectionHandle,
 	MmUnlockSection(Section);
 	ObDereferenceObject(Section);
 	
-	return Status;
+	return(Status);
      }
    
    KeAcquireSpinLock(&Section->ViewListLock, &oldIrql);
@@ -884,8 +964,9 @@ NTSTATUS STDCALL NtMapViewOfSection(HANDLE SectionHandle,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL MmUnmapViewOfSection(PEPROCESS Process,
-				      PMEMORY_AREA MemoryArea)
+NTSTATUS STDCALL 
+MmUnmapViewOfSection(PEPROCESS Process,
+		     PMEMORY_AREA MemoryArea)
 {
    PSECTION_OBJECT Section;
    KIRQL oldIrql;
@@ -922,8 +1003,9 @@ NTSTATUS STDCALL MmUnmapViewOfSection(PEPROCESS Process,
  * REVISIONS
  *
  */
-NTSTATUS STDCALL NtUnmapViewOfSection (HANDLE	ProcessHandle,
-				       PVOID	BaseAddress)
+NTSTATUS STDCALL 
+NtUnmapViewOfSection (HANDLE	ProcessHandle,
+		      PVOID	BaseAddress)
 {
    PEPROCESS	Process;
    NTSTATUS	Status;
@@ -964,10 +1046,20 @@ NTSTATUS STDCALL NtUnmapViewOfSection (HANDLE	ProcessHandle,
 				 MemoryArea);
    
    DPRINT("MmFreeMemoryArea()\n");
-   Status = MmFreeMemoryArea(&Process->AddressSpace,
-			     BaseAddress,
-			     0,
-			     TRUE);
+   if (MemoryArea->Data.SectionData.Section->Flags & SO_PHYSICAL_MEMORY)
+     {
+       Status = MmFreeMemoryArea(&Process->AddressSpace,
+				 BaseAddress,
+				 0,
+				 FALSE);
+     }
+   else
+     {
+       Status = MmFreeMemoryArea(&Process->AddressSpace,
+				 BaseAddress,
+				 0,
+				 TRUE);
+     }
    MmUnlockAddressSpace(AddressSpace);
    ObDereferenceObject(Process);
 
@@ -975,11 +1067,12 @@ NTSTATUS STDCALL NtUnmapViewOfSection (HANDLE	ProcessHandle,
 }
 
 
-NTSTATUS STDCALL NtQuerySection (IN	HANDLE	SectionHandle,
-				 IN	CINT	SectionInformationClass,
-				 OUT	PVOID	SectionInformation,
-				 IN	ULONG	Length, 
-				 OUT	PULONG	ResultLength)
+NTSTATUS STDCALL 
+NtQuerySection (IN	HANDLE	SectionHandle,
+		IN	CINT	SectionInformationClass,
+		OUT	PVOID	SectionInformation,
+		IN	ULONG	Length, 
+		OUT	PULONG	ResultLength)
 /*
  * FUNCTION: Queries the information of a section object.
  * ARGUMENTS: 
@@ -997,8 +1090,9 @@ NTSTATUS STDCALL NtQuerySection (IN	HANDLE	SectionHandle,
 }
 
 
-NTSTATUS STDCALL NtExtendSection(IN	HANDLE	SectionHandle,
-				 IN	ULONG	NewMaximumSize)
+NTSTATUS STDCALL 
+NtExtendSection(IN	HANDLE	SectionHandle,
+		IN	ULONG	NewMaximumSize)
 {
    UNIMPLEMENTED;
 }
@@ -1021,7 +1115,8 @@ NTSTATUS STDCALL NtExtendSection(IN	HANDLE	SectionHandle,
  * REVISIONS
  *
  */
-PVOID STDCALL MmAllocateSection (IN ULONG Length)
+PVOID STDCALL 
+MmAllocateSection (IN ULONG Length)
 {
    PVOID Result;
    MEMORY_AREA* marea;
@@ -1077,107 +1172,83 @@ PVOID STDCALL MmAllocateSection (IN ULONG Length)
  * 	Status.
  *
  */
-PVOID
-STDCALL
-MmMapViewOfSection (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5,
-	DWORD	Unknown6,
-	DWORD	Unknown7,
-	DWORD	Unknown8,
-	DWORD	Unknown9
-	)
+PVOID STDCALL
+MmMapViewOfSection (DWORD	Unknown0,
+		    DWORD	Unknown1,
+		    DWORD	Unknown2,
+		    DWORD	Unknown3,
+		    DWORD	Unknown4,
+		    DWORD	Unknown5,
+		    DWORD	Unknown6,
+		    DWORD	Unknown7,
+		    DWORD	Unknown8,
+		    DWORD	Unknown9)
 {
 	UNIMPLEMENTED;
 	return (NULL);
 }
 
 
-BOOLEAN
-STDCALL
-MmCanFileBeTruncated (
-	IN	PSECTION_OBJECT_POINTERS	SectionObjectPointer,
-	IN	PLARGE_INTEGER			NewFileSize
-	)
+BOOLEAN STDCALL
+MmCanFileBeTruncated (IN PSECTION_OBJECT_POINTERS	SectionObjectPointer,
+		      IN PLARGE_INTEGER			NewFileSize)
 {
-	UNIMPLEMENTED;
-	return (FALSE);
+  UNIMPLEMENTED;
+  return (FALSE);
 }
 
 
-BOOLEAN
-STDCALL
-MmDisableModifiedWriteOfSection (
-	DWORD	Unknown0
-	)
+BOOLEAN STDCALL
+MmDisableModifiedWriteOfSection (DWORD	Unknown0)
 {
-	UNIMPLEMENTED;
-	return (FALSE);
+  UNIMPLEMENTED;
+  return (FALSE);
 }
 
-BOOLEAN
-STDCALL
-MmFlushImageSection (
-	IN	PSECTION_OBJECT_POINTERS	SectionObjectPointer,
-	IN	MMFLUSH_TYPE			FlushType
-	)
+BOOLEAN STDCALL
+MmFlushImageSection (IN	PSECTION_OBJECT_POINTERS	SectionObjectPointer,
+		     IN	MMFLUSH_TYPE			FlushType)
 {
-	UNIMPLEMENTED;
-	return (FALSE);
+  UNIMPLEMENTED;
+  return (FALSE);
 }
 
-BOOLEAN
-STDCALL
-MmForceSectionClosed (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	)
+BOOLEAN STDCALL
+MmForceSectionClosed (DWORD	Unknown0,
+		      DWORD	Unknown1)
 {
-	UNIMPLEMENTED;
-	return (FALSE);
+  UNIMPLEMENTED;
+  return (FALSE);
 }
 
 
-NTSTATUS
-STDCALL
-MmMapViewInSystemSpace (
-	IN	PVOID	Section,
-	OUT	PVOID	* MappedBase,
-	IN	PULONG	ViewSize
-	)
+NTSTATUS STDCALL
+MmMapViewInSystemSpace (IN	PVOID	Section,
+			OUT	PVOID	* MappedBase,
+			IN	PULONG	ViewSize)
 {
-	UNIMPLEMENTED;
-	return (STATUS_NOT_IMPLEMENTED);
+  UNIMPLEMENTED;
+  return (STATUS_NOT_IMPLEMENTED);
 }
 
-NTSTATUS
-STDCALL
-MmUnmapViewInSystemSpace (
-	DWORD	Unknown0
-	)
+NTSTATUS STDCALL
+MmUnmapViewInSystemSpace (DWORD	Unknown0)
 {
-	UNIMPLEMENTED;
-	return (STATUS_NOT_IMPLEMENTED);
+  UNIMPLEMENTED;
+  return (STATUS_NOT_IMPLEMENTED);
 }
 
 
-NTSTATUS
-STDCALL
-MmSetBankedSection (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5
-	)
+NTSTATUS STDCALL
+MmSetBankedSection (DWORD	Unknown0,
+		    DWORD	Unknown1,
+		    DWORD	Unknown2,
+		    DWORD	Unknown3,
+		    DWORD	Unknown4,
+		    DWORD	Unknown5)
 {
-	UNIMPLEMENTED;
-	return (STATUS_NOT_IMPLEMENTED);
+  UNIMPLEMENTED;
+  return (STATUS_NOT_IMPLEMENTED);
 }
 
 
@@ -1234,20 +1305,23 @@ MmSetBankedSection (
  * RETURN VALUE
  * 	Status.
  */
-NTSTATUS
-STDCALL
-MmCreateSection (
-	OUT	PSECTION_OBJECT		* SectionObject,
-	IN	ACCESS_MASK		DesiredAccess,
-	IN	POBJECT_ATTRIBUTES	ObjectAttributes	OPTIONAL,
-	IN	PLARGE_INTEGER		MaximumSize,
-	IN	ULONG			SectionPageProtection,
-	IN	ULONG			AllocationAttributes,
-	IN	HANDLE			FileHandle		OPTIONAL,
-	IN	PFILE_OBJECT		File			OPTIONAL
-	)
+NTSTATUS STDCALL
+MmCreateSection (OUT	PSECTION_OBJECT		* SectionObject,
+		 IN	ACCESS_MASK		DesiredAccess,
+		 IN	POBJECT_ATTRIBUTES	ObjectAttributes     OPTIONAL,
+		 IN	PLARGE_INTEGER		MaximumSize,
+		 IN	ULONG			SectionPageProtection,
+		 IN	ULONG			AllocationAttributes,
+		 IN	HANDLE			FileHandle	  OPTIONAL,
+		 IN	PFILE_OBJECT		File		    OPTIONAL)
 {
-	return (STATUS_NOT_IMPLEMENTED);
+  return (STATUS_NOT_IMPLEMENTED);
 }
 
 /* EOF */
+
+
+
+
+
+

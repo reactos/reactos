@@ -24,7 +24,7 @@ cp apps/cat/cat.exe $1/reactos/bin
 cp subsys/smss/smss.exe $1/reactos/system32
 cp subsys/csrss/csrss.exe $1/reactos/system32
 cp subsys/win32k/win32k.sys $1/reactos/system32/drivers
-#cp apps/system/winlogon/winlogon.exe $1/reactos/system32/
+cp apps/system/winlogon/winlogon.exe $1/reactos/system32/
 cp apps/apc/apc.exe $1/reactos/bin
 cp apps/shm/shmsrv.exe $1/reactos/bin
 cp apps/shm/shmclt.exe $1/reactos/bin
@@ -40,3 +40,4 @@ cp apps/dump_shared_data/dump_shared_data.exe $1/reactos/bin
 cp apps/vmtest/vmtest.exe $1/reactos/bin
 cp apps/uitest/uitest.exe $1/reactos/bin/
 cp apps/gditest/gditest.exe $1/reactos/bin/
+cp apps/ptest/ptest.exe $1/reactos/bin

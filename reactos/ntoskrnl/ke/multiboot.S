@@ -3,8 +3,6 @@
 
 #define KERNEL_BASE (0xc0000000)
 
-#define NR_TASKS (128)
-
 #define MULTIBOOT_HEADER_MAGIC (0x1BADB002)
 
 #define MULTIBOOT_HEADER_FLAGS (0x00010003)
@@ -708,7 +706,7 @@ lowmem_pagetable:
 	.long 0x3f8007,0x3f9007,0x3fa007,0x3fb007,0x3fc007,0x3fd007,0x3fe007,0x3ff007
 
 _gdt_descr:
-	.word ((8+NR_TASKS)*8)-1
+	.word (10*8)-1
 	.long _KiGdt
 	
 _idt_descr:

@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.11 2000/12/20 18:44:20 jean Exp $
+/* $Id: mminit.c,v 1.12 2000/12/28 03:38:07 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -273,6 +273,8 @@ VOID MmInit2(VOID)
 VOID MmInit3(VOID)
 {
    MmInitPagerThread();
+   MmCreatePhysicalMemorySection();
+
    /* FIXME: Read parameters from memory */
 }
 

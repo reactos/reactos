@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.7 2000/12/07 16:58:42 jean Exp $
+ * $Id: fat.c,v 1.8 2000/12/28 03:38:08 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -22,7 +22,8 @@
 
 /* FUNCTIONS ****************************************************************/
 
-ULONG Fat32GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
+ULONG 
+Fat32GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
 /*
  * FUNCTION: Retrieve the next FAT32 cluster from the FAT table via a physical
  *           disk read
@@ -44,7 +45,8 @@ ULONG Fat32GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
    return(CurrentCluster);
 }
 
-ULONG Fat16GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
+ULONG 
+Fat16GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
 /*
  * FUNCTION: Retrieve the next FAT16 cluster from the FAT table from the
  *           in-memory FAT
@@ -59,7 +61,8 @@ ULONG Fat16GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
    return(CurrentCluster);
 }
 
-ULONG Fat12GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
+ULONG 
+Fat12GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
 /*
  * FUNCTION: Retrieve the next FAT12 cluster from the FAT table from the
  *           in-memory FAT
@@ -68,26 +71,27 @@ ULONG Fat12GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
  unsigned char* CBlock;
  ULONG FATOffset;
  ULONG Entry;
-   CBlock = DeviceExt->FAT;
-   FATOffset = (CurrentCluster * 12)/ 8;//first byte containing value
-   if ((CurrentCluster % 2) == 0)
+ CBlock = DeviceExt->FAT;
+ FATOffset = (CurrentCluster * 12)/ 8;//first byte containing value
+ if ((CurrentCluster % 2) == 0)
    {
-    Entry = CBlock[FATOffset];
-    Entry |= ((CBlock[FATOffset+1] & 0xf)<<8);
+     Entry = CBlock[FATOffset];
+     Entry |= ((CBlock[FATOffset+1] & 0xf)<<8);
    }
-   else
+ else
    {
-    Entry = (CBlock[FATOffset] >> 4);
-    Entry |= (CBlock[FATOffset+1] << 4);
+     Entry = (CBlock[FATOffset] >> 4);
+     Entry |= (CBlock[FATOffset+1] << 4);
    }
-   DPRINT("Entry %x\n",Entry);
-   if (Entry >= 0xff8 && Entry <= 0xfff)
+ DPRINT("Entry %x\n",Entry);
+ if (Entry >= 0xff8 && Entry <= 0xfff)
     Entry = 0xffffffff;
-   DPRINT("Returning %x\n",Entry);
-   return(Entry);
+ DPRINT("Returning %x\n",Entry);
+ return(Entry);
 }
 
-ULONG GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
+ULONG 
+GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
 /*
  * FUNCTION: Retrieve the next cluster depending on the FAT type
  */
@@ -95,21 +99,21 @@ ULONG GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
    ULONG NextCluster;
    
    DPRINT("GetNextCluster(DeviceExt %x, CurrentCluster %x)\n",
-	    DeviceExt,CurrentCluster);
+	  DeviceExt,CurrentCluster);
    
    ExAcquireResourceSharedLite(&DeviceExt->FatResource, TRUE);
    
    if (DeviceExt->FatType == FAT16)
      {
-	NextCluster = Fat16GetNextCluster(DeviceExt, CurrentCluster);
+       NextCluster = Fat16GetNextCluster(DeviceExt, CurrentCluster);
      }
    else if (DeviceExt->FatType == FAT32)
      {
-	NextCluster = Fat32GetNextCluster(DeviceExt, CurrentCluster);
+       NextCluster = Fat32GetNextCluster(DeviceExt, CurrentCluster);
      }
    else
      {
-	NextCluster = Fat12GetNextCluster(DeviceExt, CurrentCluster);
+       NextCluster = Fat12GetNextCluster(DeviceExt, CurrentCluster);
      }
    
    ExReleaseResourceLite(&DeviceExt->FatResource);
@@ -117,7 +121,8 @@ ULONG GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
    return(NextCluster);
 }
 
-ULONG FAT16FindAvailableCluster(PDEVICE_EXTENSION DeviceExt)
+ULONG 
+FAT16FindAvailableCluster(PDEVICE_EXTENSION DeviceExt)
 /*
  * FUNCTION: Finds the first available cluster in a FAT16 table
  */
@@ -132,7 +137,8 @@ ULONG FAT16FindAvailableCluster(PDEVICE_EXTENSION DeviceExt)
    return 0;
 }
 
-ULONG FAT12FindAvailableCluster(PDEVICE_EXTENSION DeviceExt)
+ULONG 
+FAT12FindAvailableCluster(PDEVICE_EXTENSION DeviceExt)
 /*
  * FUNCTION: Finds the first available cluster in a FAT12 table
  */
@@ -162,7 +168,8 @@ ULONG FAT12FindAvailableCluster(PDEVICE_EXTENSION DeviceExt)
    return 0;
 }
 
-ULONG FAT32FindAvailableCluster(PDEVICE_EXTENSION DeviceExt)
+ULONG 
+FAT32FindAvailableCluster(PDEVICE_EXTENSION DeviceExt)
 /*
  * FUNCTION: Finds the first available cluster in a FAT32 table
  */
@@ -192,7 +199,8 @@ ULONG FAT32FindAvailableCluster(PDEVICE_EXTENSION DeviceExt)
    return 0;
 }
 
-ULONG FAT12CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
+ULONG 
+FAT12CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
 /*
  * FUNCTION: Counts free cluster in a FAT12 table
  */
@@ -227,7 +235,8 @@ ULONG FAT12CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
    return ulCount;
 }
 
-ULONG FAT16CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
+ULONG 
+FAT16CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
 /*
  * FUNCTION: Counts free clusters in a FAT16 table
  */
@@ -250,7 +259,8 @@ ULONG FAT16CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
    return ulCount;
 }
 
-ULONG FAT32CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
+ULONG 
+FAT32CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
 /*
  * FUNCTION: Counts free clusters in a FAT32 table
  */
@@ -282,8 +292,9 @@ ULONG FAT32CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
    return ulCount;
 }
 
-void  FAT12WriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
-                        ULONG NewValue)
+VOID  
+FAT12WriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
+		  ULONG NewValue)
 /*
  * FUNCTION: Writes a cluster to the FAT12 physical and in-memory tables
  */
@@ -330,8 +341,9 @@ void  FAT12WriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
    }
 }
 
-void  FAT16WriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
-                        ULONG NewValue)
+VOID  
+FAT16WriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
+		  ULONG NewValue)
 /*
  * FUNCTION: Writes a cluster to the FAT16 physical and in-memory tables
  */
@@ -361,8 +373,9 @@ void  FAT16WriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
      }
 }
 
-void  FAT32WriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
-                        ULONG NewValue)
+VOID  
+FAT32WriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
+		  ULONG NewValue)
 /*
  * FUNCTION: Writes a cluster to the FAT32 physical tables
  */
@@ -397,8 +410,9 @@ DbgPrint("FAT32WriteCluster %u : %u\n",ClusterToWrite,NewValue);
    ExFreePool(Block);
 }
 
-void  WriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
-                   ULONG NewValue)
+VOID  
+WriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
+	     ULONG NewValue)
 /*
  * FUNCTION: Write a changed FAT entry
  */
@@ -417,7 +431,8 @@ void  WriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
      }
 }
 
-ULONG GetNextWriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
+ULONG 
+GetNextWriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
 /*
  * FUNCTION: Determines the next cluster to be written
  */
@@ -474,8 +489,9 @@ ULONG GetNextWriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
    }
 }
 
-ULONG ClusterToSector(PDEVICE_EXTENSION DeviceExt,
-			      unsigned long Cluster)
+ULONG 
+ClusterToSector(PDEVICE_EXTENSION DeviceExt,
+		unsigned long Cluster)
 /*
  * FUNCTION: Converts the cluster number to a sector number for this physical
  *           device
@@ -484,7 +500,8 @@ ULONG ClusterToSector(PDEVICE_EXTENSION DeviceExt,
   return DeviceExt->dataStart+((Cluster-2)*DeviceExt->Boot->SectorsPerCluster);
 }
 
-void VFATLoadCluster(PDEVICE_EXTENSION DeviceExt, PVOID Buffer, ULONG Cluster)
+VOID
+VFATLoadCluster(PDEVICE_EXTENSION DeviceExt, PVOID Buffer, ULONG Cluster)
 /*
  * FUNCTION: Load a cluster from the physical device
  */
@@ -503,7 +520,8 @@ void VFATLoadCluster(PDEVICE_EXTENSION DeviceExt, PVOID Buffer, ULONG Cluster)
    DPRINT("Finished VFATReadSectors\n");
 }
 
-void VFATWriteCluster(PDEVICE_EXTENSION DeviceExt, PVOID Buffer, ULONG Cluster)
+VOID 
+VFATWriteCluster(PDEVICE_EXTENSION DeviceExt, PVOID Buffer, ULONG Cluster)
 /*
  * FUNCTION: Write a cluster to the physical device
  */

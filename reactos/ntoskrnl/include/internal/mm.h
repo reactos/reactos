@@ -42,6 +42,8 @@ enum
 #define SPE_DIRTY                               (0x8)
 #define SPE_IN_PAGEFILE                         (0x10)
 
+#define SO_PHYSICAL_MEMORY                      (0x1)
+
 typedef struct
 {
    ULONG Pages[NR_SECTION_PAGE_ENTRIES];
@@ -54,16 +56,17 @@ typedef struct
 
 typedef struct
 {
-   CSHORT Type;
-   CSHORT Size;
-   LARGE_INTEGER MaximumSize;
-   ULONG SectionPageProtection;
-   ULONG AllocateAttributes;
-   PFILE_OBJECT FileObject;
-   LIST_ENTRY ViewListHead;
-   KSPIN_LOCK ViewListLock;
-   KMUTEX Lock;
-   SECTION_PAGE_DIRECTORY PageDirectory;
+  CSHORT Type;
+  CSHORT Size;
+  LARGE_INTEGER MaximumSize;
+  ULONG SectionPageProtection;
+  ULONG AllocateAttributes;
+  PFILE_OBJECT FileObject;
+  LIST_ENTRY ViewListHead;
+  KSPIN_LOCK ViewListLock;
+  KMUTEX Lock;
+  SECTION_PAGE_DIRECTORY PageDirectory;
+  ULONG Flags;
 } SECTION_OBJECT, *PSECTION_OBJECT;
 
 typedef struct
@@ -299,6 +302,8 @@ VOID MmUnlockPage(PVOID PhysicalPage);
 
 NTSTATUS MmSafeCopyFromUser(PVOID Dest, PVOID Src, ULONG Count);
 NTSTATUS MmSafeCopyToUser(PVOID Dest, PVOID Src, ULONG Count);
+NTSTATUS 
+MmCreatePhysicalMemorySection(VOID);
 
 #define MM_PHYSICAL_PAGE_MPW_PENDING     (0x8)
 

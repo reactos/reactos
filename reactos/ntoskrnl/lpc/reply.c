@@ -1,4 +1,4 @@
-/* $Id: reply.c,v 1.2 2000/10/22 16:36:51 ekohl Exp $
+/* $Id: reply.c,v 1.3 2000/12/28 03:38:07 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -9,7 +9,7 @@
  *                  Created 22/05/98
  */
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES ******************************************************************/
 
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
@@ -19,7 +19,7 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-
+/* FUNCTIONS *****************************************************************/
 
 /**********************************************************************
  * NAME
@@ -33,14 +33,11 @@
  * REVISIONS
  *
  */
-NTSTATUS
-STDCALL
-EiReplyOrRequestPort (
-	IN	PEPORT		Port, 
-	IN	PLPC_MESSAGE	LpcReply, 
-	IN	ULONG		MessageType,
-	IN	PEPORT		Sender
-	)
+NTSTATUS STDCALL
+EiReplyOrRequestPort (IN	PEPORT		Port, 
+		      IN	PLPC_MESSAGE	LpcReply, 
+		      IN	ULONG		MessageType,
+		      IN	PEPORT		Sender)
 {
    KIRQL oldIrql;
    PQUEUEDMESSAGE MessageReply;
@@ -78,12 +75,9 @@ EiReplyOrRequestPort (
  * REVISIONS
  *
  */
-NTSTATUS
-STDCALL
-NtReplyPort (
-	IN	HANDLE		PortHandle,
-	IN	PLPC_MESSAGE	LpcReply
-	)
+NTSTATUS STDCALL
+NtReplyPort (IN	HANDLE		PortHandle,
+	     IN	PLPC_MESSAGE	LpcReply)
 {
    NTSTATUS Status;
    PEPORT Port;
@@ -126,14 +120,11 @@ NtReplyPort (
  * REVISIONS
  *
  */
-NTSTATUS
-STDCALL
-NtReplyWaitReceivePort (
-	HANDLE		PortHandle,
-	PULONG		PortId,
-	PLPC_MESSAGE	LpcReply,     
-	PLPC_MESSAGE	LpcMessage
-	)
+NTSTATUS STDCALL
+NtReplyWaitReceivePort (HANDLE		PortHandle,
+			PULONG		PortId,
+			PLPC_MESSAGE	LpcReply,     
+			PLPC_MESSAGE	LpcMessage)
 {
    NTSTATUS Status;
    PEPORT Port;
@@ -176,33 +167,49 @@ NtReplyWaitReceivePort (
    /*
     * Want for a message to be received
     */
-   DPRINT("Entering wait for message\n");
-   KeWaitForSingleObject(&Port->Event,
-			 UserRequest,
-			 UserMode,
-			 FALSE,
-			 NULL);
-   DPRINT("Woke from wait for message\n");
+   do
+     {
+       Status = KeWaitForSingleObject(&Port->Event,
+				      UserRequest,
+				      UserMode,
+				      FALSE,
+				      NULL);
+       if (!NT_SUCCESS(Status))
+	 {
+	   return(Status);
+	 }
+
+       /*
+	* Dequeue the message
+	*/
+       KeAcquireSpinLock(&Port->Lock, &oldIrql);
+       Request = EiDequeueMessagePort(Port);
+       
+       /*
+	* There is a race between the event being set and the port being
+	* taken in which another thread may dequeue the same request so
+	* we may need to loop.
+	*/
+       if (Request == NULL)
+	 {
+	   KeReleaseSpinLock(&Port->Lock, oldIrql);
+	 }
+     } while(Request == NULL);
    
-   /*
-    * Dequeue the message
-    */
-   KeAcquireSpinLock(&Port->Lock, &oldIrql);
-   Request = EiDequeueMessagePort(Port);
    memcpy(LpcMessage, &Request->Message, Request->Message.MessageSize);
    if (Request->Message.MessageType == LPC_CONNECTION_REQUEST)
      {
-	EiEnqueueConnectMessagePort(Port, Request);
-	KeReleaseSpinLock(&Port->Lock, oldIrql);
+       EiEnqueueConnectMessagePort(Port, Request);
+       KeReleaseSpinLock(&Port->Lock, oldIrql);
      }
    else
      {
-	KeReleaseSpinLock(&Port->Lock, oldIrql);
-	ExFreePool(Request);
+       KeReleaseSpinLock(&Port->Lock, oldIrql);
+       ExFreePool(Request);
      }
    
    /*
-    * 
+    * Dereference the port
     */
    ObDereferenceObject(Port);
    return(STATUS_SUCCESS);
@@ -221,14 +228,11 @@ NtReplyWaitReceivePort (
  * REVISIONS
  *
  */
-NTSTATUS
-STDCALL
-NtReplyWaitReplyPort (
-	HANDLE		PortHandle,
-	PLPC_MESSAGE	ReplyMessage
-	)
+NTSTATUS STDCALL
+NtReplyWaitReplyPort (HANDLE		PortHandle,
+		      PLPC_MESSAGE	ReplyMessage)
 {
-	UNIMPLEMENTED;
+   UNIMPLEMENTED;
 }
 
 

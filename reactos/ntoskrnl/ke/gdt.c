@@ -34,9 +34,7 @@
 
 /* GLOBALS *******************************************************************/
 
-#define NR_TASKS 128
-
-USHORT KiGdt[(8 + NR_TASKS) * 4] = 
+USHORT KiGdt[10 * 4] = 
 {
  0x0, 0x0, 0x0, 0x0,              /* Null */
  0xffff, 0x0, 0x9a00, 0xcf,       /* Kernel CS */
@@ -53,8 +51,9 @@ static KSPIN_LOCK GdtLock;
 
 /* FUNCTIONS *****************************************************************/
 
-VOID KeSetBaseGdtSelector(ULONG Entry,
-			  PVOID Base)
+VOID 
+KeSetBaseGdtSelector(ULONG Entry,
+		     PVOID Base)
 {
    KIRQL oldIrql;
    
@@ -84,7 +83,8 @@ VOID KeSetBaseGdtSelector(ULONG Entry,
    KeReleaseSpinLock(&GdtLock, oldIrql);
 }
 
-VOID KeDumpGdtSelector(ULONG Entry)
+VOID 
+KeDumpGdtSelector(ULONG Entry)
 {
    USHORT a, b, c, d;
    ULONG RawLimit;
@@ -143,7 +143,8 @@ VOID KeFreeGdtSelector(ULONG Entry)
 #endif
 
 #if 0
-ULONG KeAllocateGdtSelector(ULONG Desc[2])
+ULONG 
+KeAllocateGdtSelector(ULONG Desc[2])
 /*
  * FUNCTION: Allocate a gdt selector
  * ARGUMENTS:

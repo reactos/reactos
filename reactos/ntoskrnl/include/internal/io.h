@@ -1,4 +1,22 @@
-/* $Id: io.h,v 1.6 2000/10/05 19:12:55 ekohl Exp $
+/*
+ *  ReactOS kernel
+ *  Copyright (C) 2000 David Welch <welch@cwcom.net>
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: io.h,v 1.7 2000/12/28 03:38:07 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -9,8 +27,8 @@
  *               28/05/97: Created
  */
 
-#ifndef __INCLUDE_INTERNAL_IO_H
-#define __INCLUDE_INTERNAL_IO_H
+#ifndef __NTOSKRNL_INCLUDE_INTERNAL_IO_H
+#define __NTOSKRNL_INCLUDE_INTERNAL_IO_H
 
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
@@ -23,14 +41,17 @@ extern POBJECT_TYPE		IoSymbolicLinkType;
  *          entry = pointer to the driver initialization routine
  * RETURNS: Success or failure
  */
-NTSTATUS IoInitializeDriver(PDRIVER_INITIALIZE DriverEntry);
+NTSTATUS 
+IoInitializeDriver(PDRIVER_INITIALIZE DriverEntry);
 
-
-
-VOID IoInitCancelHandling(VOID);
-VOID IoInitSymbolicLinkImplementation(VOID);
-VOID IoInitFileSystemImplementation(VOID);
-VOID IoInitVpbImplementation (VOID);
+VOID 
+IoInitCancelHandling(VOID);
+VOID 
+IoInitSymbolicLinkImplementation(VOID);
+VOID 
+IoInitFileSystemImplementation(VOID);
+VOID 
+IoInitVpbImplementation (VOID);
 
 NTSTATUS IoTryToMountStorageDevice(PDEVICE_OBJECT DeviceObject);
 POBJECT IoOpenSymlink(POBJECT SymbolicLink);

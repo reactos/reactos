@@ -20,27 +20,26 @@
  * FILE:            ntoskrnl/include/internal/i386/segment.h
  * PURPOSE:         Segment selector definitions
  * PROGRAMMER:      David Welch (welch@cwcom.net)
- * UPDATE HISTORY:
- *                  Created ??/??/??
  */
 
 /* INCLUDES *****************************************************************/
 
-#ifndef __INCLUDE_INTERNAL_I386_SEGMENT_H
-#define __INCLUDE_INTERNAL_i386_SEGMENT_H
+#ifndef __NTOSKRNL_INCLUDE_INTERNAL_I386_SEGMENT_H
+#define __NTOSKRNL_INCLUDE_INTERNAL_i386_SEGMENT_H
 
 #define NULL_SELECTOR        (0x0)
 #define KERNEL_CS            (0x8)
 #define KERNEL_DS            (0x10)
 #define USER_CS              (0x18 + 0x3)
 #define USER_DS              (0x20 + 0x3)
-/*
- * FIXME: We actually have one TSS per thread
- */
+/* Task State Segment */
 #define TSS_SELECTOR         (0x28)
+/* Processor Control Region */
 #define PCR_SELECTOR         (0x30)
+/* Thread Environment Block */
 #define TEB_SELECTOR         (0x38 + 0x3)
-#define RESERVED1_SELECTOR   (0x40)
+#define RESERVED_SELECTOR   (0x40)
+/* Local Descriptor Table */
 #define LDT_SELECTOR         (0x48)
 
-#endif /* __INCLUDE_INTERNAL_I386_SEGMENT_H */
+#endif /* __NTOSKRNL_INCLUDE_INTERNAL_I386_SEGMENT_H */
