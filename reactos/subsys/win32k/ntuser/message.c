@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.13 2003/05/04 15:42:21 gvg Exp $
+/* $Id: message.c,v 1.14 2003/05/10 21:47:04 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -268,7 +268,8 @@ NtUserPeekMessage(LPMSG lpMsg,
   /* FIXME: The only flag we process is PM_REMOVE - processing of others must still be implemented */
   RemoveMessages = wRemoveMsg & PM_REMOVE;
 
-  /* FIXME: Dispatch sent messages here. */
+  /* Dispatch sent messages here. */
+  while (MsqDispatchOneSentMessage(ThreadQueue));
       
   /* Now look for a quit message. */
   /* FIXME: WINE checks the message number filter here. */
@@ -312,11 +313,12 @@ NtUserPeekMessage(LPMSG lpMsg,
 	  return(TRUE);
   }
 
-  /* FIXME: Check for sent messages again. */
+  /* Check for sent messages again. */
+  while (MsqDispatchOneSentMessage(ThreadQueue));
 
   /* FIXME: Check for paint messages. */
 
-  return((BOOLEAN)(-1));
+  return FALSE;
 }
 
 BOOL STDCALL
@@ -409,7 +411,7 @@ W32kSendMessage(HWND hWnd,
     {
       PUSER_SENT_MESSAGE Message;
       PKEVENT CompletionEvent;
-      
+
       CompletionEvent = ExAllocatePool(NonPagedPool, sizeof(KEVENT));
       KeInitializeEvent(CompletionEvent, NotificationEvent, FALSE);
 
