@@ -1,4 +1,4 @@
-# $Id: Makefile.ros-template,v 1.2 2004/08/02 14:58:59 navaraf Exp $
+# $Id: Makefile.ros-template,v 1.3 2004/12/03 23:37:43 blight Exp $
 
 TARGET_NAME = msacm
 
@@ -6,7 +6,7 @@ TARGET_OBJECTS = @C_SRCS@
 
 TARGET_CFLAGS = @EXTRADEFS@ -D__REACTOS__
 
-TARGET_SDKLIBS = @IMPORTS@ winmm.a libwine.a wine_uuid.a ntdll.a
+TARGET_SDKLIBS = @IMPORTS@ winmm.a wine.a wine_uuid.a ntdll.a
 
 TARGET_BASE = 0x76160000
 

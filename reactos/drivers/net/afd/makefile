@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.14 2004/11/12 07:34:55 arty Exp $
+# $Id: makefile,v 1.15 2004/12/03 23:37:39 blight Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -8,8 +8,8 @@ TARGET_NAME = afd
 
 TARGET_PCH = include/afd.h
 
-TARGET_DDKLIBS = \
-	$(PATH_TO_TOP)/dk/w32/lib/pseh.a
+TARGET_LIBS = \
+	$(PATH_TO_TOP)/dk/w32/lib/libpseh.a
 
 TARGET_CFLAGS = -I./include -I$(PATH_TO_TOP)/w32api/include/ddk -I$(PATH_TO_TOP)/include/afd -D__USE_W32API -Werror -Wall
 

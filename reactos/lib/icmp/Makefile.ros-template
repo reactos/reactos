@@ -1,4 +1,4 @@
-# $Id: Makefile.ros-template,v 1.1 2004/09/28 19:07:56 sedwards Exp $
+# $Id: Makefile.ros-template,v 1.2 2004/12/03 23:37:40 blight Exp $
 
 TARGET_NAME = icmp
 
@@ -6,7 +6,7 @@ TARGET_OBJECTS = @C_SRCS@
 
 TARGET_CFLAGS = @EXTRADEFS@ -D__REACTOS__
 
-TARGET_SDKLIBS = @IMPORTS@ ws2_32.a libwine.a wine_uuid.a ntdll.a
+TARGET_SDKLIBS = @IMPORTS@ ws2_32.a wine.a wine_uuid.a ntdll.a
 
 TARGET_BASE = $(TARGET_BASE_LIB_COMCTL32)
 

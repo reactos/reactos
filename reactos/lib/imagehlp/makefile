@@ -35,7 +35,7 @@ TARGET_RCFLAGS += -D__REACTOS__	-D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
 
-TARGET_SDKLIBS = libwine.a ntdll.a kernel32.a
+TARGET_SDKLIBS = wine.a ntdll.a kernel32.a
 
 TARGET_BASE = $(TARGET_BASE_LIB_IMAGEHLP)
 

@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.96 2004/12/03 20:10:45 gvg Exp $
+# $Id: helper.mk,v 1.97 2004/12/03 23:37:44 blight Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -593,16 +593,16 @@ ifeq ($(MK_MODE),user)
     MK_DEFBASE := 0x400000
   endif
   ifneq ($(TARGET_SDKLIBS),)
-    MK_LIBS := $(addprefix $(SDK_PATH_LIB)/, $(TARGET_SDKLIBS))
+    MK_LIBS := $(addprefix $(SDK_PATH_LIB)/lib, $(TARGET_SDKLIBS))
   else
-    MK_LIBS := $(addprefix $(SDK_PATH_LIB)/, $(MK_SDKLIBS))
+    MK_LIBS := $(addprefix $(SDK_PATH_LIB)/lib, $(MK_SDKLIBS))
   endif
 endif
 
 
 ifeq ($(MK_MODE),kernel)
   MK_DEFBASE := 0x10000
-  MK_LIBS := $(addprefix $(DDK_PATH_LIB)/, $(TARGET_DDKLIBS) $(MK_DDKLIBS))
+  MK_LIBS := $(addprefix $(DDK_PATH_LIB)/lib, $(TARGET_DDKLIBS) $(MK_DDKLIBS))
   MK_CFLAGS += -D_SEH_NO_NATIVE_NLG
   MK_CPPFLAGS += -D_SEH_NO_NATIVE_NLG
   MK_LFLAGS += -nostartfiles
@@ -653,18 +653,19 @@ TARGET_LFLAGS += $(MK_LFLAGS) $(STD_LFLAGS)
 MK_GCCLIBS := $(addprefix -l, $(TARGET_GCCLIBS))
 
 ifeq ($(MK_MODE),static)
-  MK_FULLNAME := $(MK_LIBPATH)/$(MK_BASENAME)$(MK_EXT)
+  MK_FULLNAME := $(MK_LIBPATH)/lib$(MK_BASENAME)$(MK_EXT)
 else
   MK_FULLNAME := $(MK_BASENAME)$(MK_EXT)
 endif
 
 ifeq ($(TARGET_TYPE), kmlibrary)
-  MK_FULLNAME := $(DDK_PATH_LIB)/$(MK_BASENAME)$(MK_EXT)
+  MK_FULLNAME := $(DDK_PATH_LIB)/lib$(MK_BASENAME)$(MK_EXT)
 endif
 
-MK_IMPLIB_FULLNAME := $(MK_BASENAME)$(MK_IMPLIB_EXT)
+MK_IMPLIB_FULLNAME := lib$(MK_BASENAME)$(MK_IMPLIB_EXT)
 
 MK_NOSTRIPNAME := $(MK_BASENAME).nostrip$(MK_EXT)
+MK_DEBUGNAME := $(MK_BASENAME).dbg
 
 MK_EXTRADEP := $(filter %.h,$(TARGET_OBJECTS))
 
@@ -714,7 +715,7 @@ $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME): $(MK_OBJECTS) $(MK_DEFNAME)
 	$(DLLTOOL) \
 		--dllname $(MK_FULLNAME) \
 		--def $(MK_DEFNAME) \
-		--output-lib $(MK_IMPLIBPATH)/$(MK_BASENAME).a \
+		--output-lib $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME) \
 		$(MK_KILLAT)
 
 else # MK_IMPLIBONLY
@@ -926,13 +927,13 @@ depends:
 endif
 
 ifeq ($(MK_IMPLIB),yes)
-$(MK_IMPLIBPATH)/$(MK_BASENAME).a: $(MK_DEFNAME)
+$(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME): $(MK_DEFNAME)
 	$(DLLTOOL) --dllname $(MK_FULLNAME) \
 		--def $(MK_DEFNAME) \
-		--output-lib $(MK_IMPLIBPATH)/$(MK_BASENAME).a \
+		--output-lib $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME) \
 		$(MK_KILLAT)
 
-implib: $(MK_IMPLIBPATH)/$(MK_BASENAME).a
+implib: $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME)
 else
 implib: $(SUBDIRS:%=%_implib)
 endif
@@ -1105,7 +1106,7 @@ endif
 ifeq ($(TARGET_TYPE),test)
 run: all
 	@$(CC) -nostdlib -o _runtest.exe regtests.a $(TARGET_LIBS) _stubs.o \
-	$(SDK_PATH_LIB)/rtshared.a $(SDK_PATH_LIB)/regtests.a $(SDK_PATH_LIB)/pseh.a \
+	$(SDK_PATH_LIB)/librtshared.a $(SDK_PATH_LIB)/libregtests.a $(SDK_PATH_LIB)/libpseh.a \
 	_hooks.o -lgcc -lmsvcrt -lntdll
 	@$(CP) $(REGTESTS_PATH)/regtests/regtests.dll regtests.dll
 	@_runtest.exe

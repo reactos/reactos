@@ -14,7 +14,7 @@ RM_AT_FROM_SYMBOLS = no
 
 TARGET_LFLAGS = -nostartfiles --enable-stdcall-fixup
 
-TARGET_SDKLIBS = libwine.a string.a kernel32.a ntdll.a
+TARGET_SDKLIBS = wine.a string.a kernel32.a ntdll.a
 
 TARGET_GCCLIBS = gcc
 

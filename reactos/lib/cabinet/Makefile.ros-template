@@ -1,4 +1,4 @@
-# $Id: Makefile.ros-template,v 1.3 2004/05/29 21:24:42 hbirr Exp $
+# $Id: Makefile.ros-template,v 1.4 2004/12/03 23:37:40 blight Exp $
 
 TARGET_NAME = cabinet
 
@@ -6,7 +6,7 @@ TARGET_OBJECTS = @C_SRCS@
 
 TARGET_CFLAGS = @EXTRADEFS@ -D__REACTOS__
 
-TARGET_SDKLIBS = @IMPORTS@ libwine.a wine_uuid.a ntdll.a
+TARGET_SDKLIBS = @IMPORTS@ wine.a wine_uuid.a ntdll.a
 
 TARGET_BASE = $(TARGET_BASE_LIB_CABINET)
 

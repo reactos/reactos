@@ -28,11 +28,11 @@ endif
 ifeq ($(KDBG), 1)
 OBJECTS_KDBG := dbg/kdb.o dbg/kdb_serial.o dbg/kdb_keyboard.o dbg/rdebug.o \
                 dbg/i386/kdb_help.o dbg/kdb_stabs.o dbg/kdb_symbols.o dbg/profile.o \
-		../dk/w32/lib/kjs.a dbg/i386/i386-dis.o
+		../dk/w32/lib/libkjs.a dbg/i386/i386-dis.o
 CFLAGS_KDBG := -I../lib/kjs/include
 preall: all
 
-../dk/w32/lib/kjs.a:
+../dk/w32/lib/libkjs.a:
 	$(MAKE) -C ../lib/kjs
 else
 OBJECTS_KDBG :=
@@ -520,11 +520,11 @@ EXTRA_OBJECTS = $(PATH_TO_TOP)/include/reactos/bugcodes.h
 TARGET_OBJECTS = $(EXTRA_OBJECTS) $(OBJECTS)
 
 TARGET_LIBS = \
-	$(DDK_PATH_LIB)/hal.a \
-	$(SDK_PATH_LIB)/rtl.a \
-	$(SDK_PATH_LIB)/string.a \
-	$(SDK_PATH_LIB)/rosrtl.a \
-	$(SDK_PATH_LIB)/pseh.a
+	$(DDK_PATH_LIB)/libhal.a \
+	$(SDK_PATH_LIB)/librtl.a \
+	$(SDK_PATH_LIB)/libstring.a \
+	$(SDK_PATH_LIB)/librosrtl.a \
+	$(SDK_PATH_LIB)/libpseh.a
 
 TARGET_LFLAGS = \
 	-Wl,-T,ntoskrnl.lnk \

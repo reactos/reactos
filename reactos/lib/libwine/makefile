@@ -1,10 +1,10 @@
-# $Id: makefile,v 1.3 2004/09/16 10:25:15 gvg Exp $
+# $Id: makefile,v 1.4 2004/12/03 23:37:41 blight Exp $
 
 PATH_TO_TOP = ../..
 
 TARGET_TYPE = library
 
-TARGET_NAME = libwine
+TARGET_NAME = wine
 
 TARGET_CFLAGS = -D__REACTOS__
 

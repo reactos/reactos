@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.19 2004/07/01 02:40:22 hyperion Exp $
+# $Id: makefile,v 1.20 2004/12/03 23:37:39 blight Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -12,6 +12,6 @@ TARGET_OBJECTS = null.o
 
 TARGET_CFLAGS = -Wall -Werror -D__USE_W32API
 
-TARGET_LIBS = $(SDK_PATH_LIB)/pseh.a
+TARGET_LIBS = $(SDK_PATH_LIB)/libpseh.a
 
 include $(TOOLS_PATH)/helper.mk

@@ -1,4 +1,4 @@
-# $Id: Makefile.ros,v 1.1 2004/11/29 00:14:14 greatlrd Exp $
+# $Id: Makefile.ros,v 1.2 2004/12/03 23:37:40 blight Exp $
 
 TARGET_NAME = dinput8
 
@@ -6,7 +6,7 @@ TARGET_OBJECTS = dinput8_main.o
 
 TARGET_CFLAGS =  -D__REACTOS__
 
-TARGET_SDKLIBS = libwine.a dinput.a ole32.a wine_uuid.a ntdll.a  winmm.a dxguid.a
+TARGET_SDKLIBS = wine.a dinput.a ole32.a wine_uuid.a ntdll.a  winmm.a dxguid.a
 
 
 
