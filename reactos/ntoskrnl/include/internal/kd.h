@@ -1,4 +1,4 @@
-/* $Id: kd.h,v 1.4 2002/01/23 23:39:25 chorns Exp $
+/* $Id: kd.h,v 1.5 2002/02/02 20:12:45 ekohl Exp $
  *
  * kernel debugger prototypes
  */
@@ -26,19 +26,22 @@ VOID
 DebugLogInit2(VOID);
 
 VOID
-KdInit1();
+KdInit1(VOID);
 
 VOID
-KdInit2();
+KdInit2(VOID);
 
 VOID
 KdPutChar(UCHAR Value);
 
 UCHAR
-KdGetChar();
+KdGetChar(VOID);
 
 VOID
 KdGdbStubInit();
+
+VOID
+KdGdbDebugPrint (LPSTR Message);
 
 VOID
 KdDebugPrint (LPSTR Message);

@@ -1287,24 +1287,8 @@ KdGdbStubInit(ULONG Phase)
    the debugger. */
 
 VOID
-KdDebugPrint (LPSTR Message)
+KdGdbDebugPrint (LPSTR Message)
 {
-#ifdef SERDUMP
-
-  PCHAR pch = (PCHAR) Message;
-
-  while (*pch != 0)
-    {
-      if (*pch == '\n')
-        {
-          KdPortPutByte ('\r');
-        }
-        KdPortPutByte (*pch);
-        pch++;
-    }
-
-#else /* !SERDUMP */
-
 /* This can be quite annoying! */
 #if 0
   if (GspInitialized)
@@ -1317,9 +1301,7 @@ KdDebugPrint (LPSTR Message)
     Length = strlen (Message);
     GspOutBuffer[2 + Length] = '\n';
     GspOutBuffer[3 + Length] = '\0';
-    GspPutPacketNoWait (&GspOutBuffer[0]);    
+    GspPutPacketNoWait (&GspOutBuffer[0]);
   }
 #endif
-
-#endif /* SERDUMP */
 }

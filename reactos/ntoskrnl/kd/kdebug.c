@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.31 2002/01/23 23:39:25 chorns Exp $
+/* $Id: kdebug.c,v 1.32 2002/02/02 20:13:08 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -28,10 +28,14 @@
 
 /* TYPEDEFS ****************************************************************/
 
-#define ScreenDebug  (0x1)
-#define SerialDebug  (0x2)
-#define BochsDebug   (0x4)
-#define FileLogDebug (0x8)
+typedef enum
+{
+  NoDebug,
+  ScreenDebug,
+  SerialDebug,
+  BochsDebug,
+  FileLogDebug
+} DEBUG_TYPE;
 
 /* VARIABLES ***************************************************************/
 
@@ -45,271 +49,301 @@ KdDebuggerNotPresent = TRUE;		/* EXPORTED */
 
 
 static BOOLEAN KdpBreakPending = FALSE;
-static ULONG KdpDebugType = ScreenDebug | BochsDebug;
+static BOOLEAN KdpLogOnly = TRUE;
+static DEBUG_TYPE KdpDebugType = NoDebug;
 ULONG KdpPortIrq = 0;
 
 /* PRIVATE FUNCTIONS ********************************************************/
 
-static void
-PrintString (char* fmt,...)
+static VOID
+PrintString(char* fmt,...)
 {
-	char buffer[512];
-	va_list ap;
+  char buffer[512];
+  va_list ap;
 
-	va_start(ap, fmt);
-	vsprintf(buffer, fmt, ap);
-	va_end(ap);
+  va_start(ap, fmt);
+  vsprintf(buffer, fmt, ap);
+  va_end(ap);
 
-	HalDisplayString (buffer);
+  HalDisplayString(buffer);
 }
 
 
 VOID
-KdInitSystem (
-	ULONG			Reserved,
-	PLOADER_PARAMETER_BLOCK	LoaderBlock
-	)
+KdInitSystem(ULONG Reserved,
+	     PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-	KD_PORT_INFORMATION PortInfo;
-	ULONG Value;
-	PCHAR p1, p2;
+  KD_PORT_INFORMATION PortInfo;
+  ULONG Value;
+  PCHAR p1, p2;
 
 #ifdef KDBG
   /* Initialize runtime debugging if available */
   DbgRDebugInit();
 #endif
 
-	/* set debug port default values */
-	PortInfo.ComPort  = DEFAULT_DEBUG_PORT;
-	PortInfo.BaudRate = DEFAULT_DEBUG_BAUD_RATE;
-  KdpPortIrq        = DEFAULT_DEBUG_COM2_IRQ;
+  /* set debug port default values */
+  PortInfo.ComPort = DEFAULT_DEBUG_PORT;
+  PortInfo.BaudRate = DEFAULT_DEBUG_BAUD_RATE;
+  KdpPortIrq = DEFAULT_DEBUG_COM2_IRQ;
 
-	/*
-	 * parse kernel command line
-	 */
+  /* parse kernel command line */
 
-	/* check for 'DEBUGPORT' */
-	p1 = (PCHAR)LoaderBlock->CommandLine;
-	while (p1 && (p2 = strchr (p1, '/')))
+  /* check for 'DEBUGPORT' */
+  p1 = (PCHAR)LoaderBlock->CommandLine;
+  while (p1 && (p2 = strchr(p1, '/')))
+    {
+      p2++;
+      if (!_strnicmp(p2, "DEBUGPORT", 9))
 	{
-		p2++;
-		if (!_strnicmp (p2, "DEBUGPORT", 9))
+	  p2 += 9;
+	  if (*p2 == '=')
+	    {
+	      p2++;
+	      if (!_strnicmp(p2, "SCREEN", 6))
 		{
-			p2 += 9;
-			if (*p2 == '=')
-                        {
-				p2++;
-				if (!_strnicmp (p2, "SCREEN", 6))
-				{
-					p2 += 6;
-					KdDebuggerEnabled = TRUE;
-					KdpDebugType |= ScreenDebug;
-				}
-				else if (!_strnicmp (p2, "BOCHS", 5))
-				{
-					p2 += 5;
-					KdDebuggerEnabled = TRUE;
-					KdpDebugType |= BochsDebug;
-				}
-				else if (!_strnicmp (p2, "COM", 3))
-				{
-					p2 += 3;
-					Value = (ULONG)atol (p2);
-					if (Value > 0 && Value < 5)
-					{
-						KdDebuggerEnabled = TRUE;
-						KdpDebugType |= SerialDebug;
-						PortInfo.ComPort = Value;
-					}
-				}
-			}
+		  p2 += 6;
+		  KdDebuggerEnabled = TRUE;
+		  KdpDebugType = ScreenDebug;
 		}
-		else if (!_strnicmp (p2, "DEBUG", 5))
+	      else if (!_strnicmp(p2, "BOCHS", 5))
 		{
-			p2 += 5;
-			KdDebuggerEnabled = TRUE;
-			KdpDebugType = KdpDebugType | SerialDebug;
+		  p2 += 5;
+		  KdDebuggerEnabled = TRUE;
+		  KdpDebugType = BochsDebug;
 		}
-		else if (!_strnicmp (p2, "NODEBUG", 7))
+	      else if (!_strnicmp(p2, "COM", 3))
 		{
-			p2 += 7;
-			KdDebuggerEnabled = FALSE;
+		  p2 += 3;
+		  Value = (ULONG)atol(p2);
+		  if (Value > 0 && Value < 5)
+		    {
+		      KdDebuggerEnabled = TRUE;
+		      KdpDebugType = SerialDebug;
+		      PortInfo.ComPort = Value;
+		    }
 		}
-		else if (!_strnicmp (p2, "CRASHDEBUG", 10))
+	      else if (!_strnicmp(p2, "FILE", 4))
 		{
-			p2 += 10;
-			KdDebuggerEnabled = FALSE;
+		  p2 += 4;
+		  KdDebuggerEnabled = TRUE;
+		  KdpDebugType = FileLogDebug;
 		}
-		else if (!_strnicmp (p2, "BREAK", 5))
-		{
-			p2 += 7;
-			KdpBreakPending = TRUE;
-		}
-		else if (!_strnicmp (p2, "BAUDRATE", 8))
-		{
-			p2 += 8;
-			if (*p2 != '=')
-			{
-				p2++;
-				Value = (ULONG)atol (p2);
-				if (Value > 0)
-				{
-					KdDebuggerEnabled = TRUE;
-					KdpDebugType = KdpDebugType | SerialDebug;
-					PortInfo.BaudRate = Value;
-				}
-			}
-		else if (!_strnicmp (p2, "IRQ", 3))
-			{
-				p2 += 3;
-				if (*p2 != '=')
-				{
-					p2++;
-					Value = (ULONG)atol (p2);
-					if (Value > 0)
-					{
-						KdDebuggerEnabled = TRUE;
-						KdpDebugType = KdpDebugType | SerialDebug;
-						KdpPortIrq = Value;
-					}
-        }
-			}
-		}
-		p1 = p2;
+	    }
 	}
-	
-#ifdef DBGPRINT_FILE_LOG
-	KdpDebugType |= FileLogDebug;
-	DebugLogInit();
-#endif /* DBGPRINT_FILE_LOG */
-
-	/* print some information */
-	if (KdDebuggerEnabled == TRUE)
+      else if (!_strnicmp(p2, "DEBUG", 5))
 	{
-		if (KdpDebugType & ScreenDebug)
+	  p2 += 5;
+	  KdDebuggerEnabled = TRUE;
+	  KdpDebugType = SerialDebug;
+	}
+      else if (!_strnicmp(p2, "NODEBUG", 7))
+	{
+	  p2 += 7;
+	  KdDebuggerEnabled = FALSE;
+	  KdpDebugType = NoDebug;
+	}
+      else if (!_strnicmp(p2, "CRASHDEBUG", 10))
+	{
+	  p2 += 10;
+	  KdDebuggerEnabled = FALSE;
+	  KdpDebugType = NoDebug;
+	}
+      else if (!_strnicmp(p2, "BREAK", 5))
+	{
+	  p2 += 7;
+	  KdpBreakPending = TRUE;
+	}
+      else if (!_strnicmp(p2, "BAUDRATE", 8))
+	{
+	  p2 += 8;
+	  if (*p2 != '=')
+	    {
+	      p2++;
+	      Value = (ULONG)atol(p2);
+	      if (Value > 0)
 		{
-			PrintString ("\n   Screen debugging enabled\n\n");
+		  KdDebuggerEnabled = TRUE;
+		  KdpDebugType = SerialDebug;
+		  PortInfo.BaudRate = Value;
 		}
-		if (KdpDebugType & BochsDebug)
+	    }
+	  else if (!_strnicmp(p2, "IRQ", 3))
+	    {
+	      p2 += 3;
+	      if (*p2 != '=')
 		{
-			PrintString ("\n   Bochs debugging enabled\n\n");
+		  p2++;
+		  Value = (ULONG)atol(p2);
+		  if (Value > 0)
+		    {
+		      KdDebuggerEnabled = TRUE;
+		      KdpDebugType = SerialDebug;
+		      KdpPortIrq = Value;
+		    }
 		}
-		if (KdpDebugType & SerialDebug)
-		{
-			PrintString ("\n   Serial debugging enabled: COM%ld %ld Baud\n\n",
+	    }
+	}
+      else if (!_strnicmp(p2, "GDB", 3))
+	{
+	  p2 += 3;
+	  KdpLogOnly = FALSE;
+	}
+      p1 = p2;
+    }
+
+  /* print some information */
+  if (KdDebuggerEnabled == TRUE)
+    {
+      switch (KdpDebugType)
+	{
+	  case NoDebug:
+	    break;
+
+	  case ScreenDebug:
+	    PrintString("\n   Screen debugging enabled\n\n");
+	    break;
+
+	  case BochsDebug:
+	    PrintString("\n   Bochs debugging enabled\n\n");
+	    break;
+
+	  case SerialDebug:
+	    PrintString("\n   Serial debugging enabled: COM%ld %ld Baud\n\n",
 			             PortInfo.ComPort, PortInfo.BaudRate);
-		}
-		if (KdpDebugType & FileLogDebug)
-		  {
-		    PrintString("\n   File log debugging enabled\n\n");
-		  }
+	    break;
+
+	  case FileLogDebug:
+	    PrintString("\n   File log debugging enabled\n\n");
+	    break;
 	}
+    }
+
+  /* initialize debug port */
+  if (KdDebuggerEnabled == TRUE)
+    {
+      switch (KdpDebugType)
+	{
+	  case SerialDebug:
+	    KdPortInitialize(&PortInfo,
+			     0,
+			     0);
+	    break;
+
+	  case FileLogDebug:
+	    DebugLogInit();
+	    break;
+
+	  default:
+	    break;
+	}
+    }
+}
+
+
+VOID
+KdInit1(VOID)
+{
+  /* Initialize kernel debugger */
+  if (KdDebuggerEnabled == TRUE &&
+      KdpDebugType == SerialDebug &&
+      KdpLogOnly == FALSE)
+    {
+      KdGdbStubInit(0);
+    }
+}
+
+
+VOID KdInit2(VOID)
+{
+  if (KdDebuggerEnabled == TRUE &&
+      KdpDebugType == SerialDebug &&
+      KdpLogOnly == FALSE)
+    {
+      KdGdbStubInit(1);
+    }
+}
+
+VOID
+KdDebugPrint (LPSTR Message)
+{
+  PCHAR pch = (PCHAR) Message;
+
+  while (*pch != 0)
+    {
+      if (*pch == '\n')
+        {
+          KdPortPutByte ('\r');
+        }
+        KdPortPutByte (*pch);
+        pch++;
+    }
+}
+
+ULONG
+KdpPrintString(PANSI_STRING String)
+{
+  PCH pch = String->Buffer;
+
+  switch (KdpDebugType)
+    {
+      case NoDebug:
+	break;
+
+      case ScreenDebug:
+	HalDisplayString(pch);
+	break;
+
+      case SerialDebug:
+	if (KdpLogOnly == TRUE)
+	  KdDebugPrint(pch);
 	else
-		PrintString ("\n   Debugging disabled\n\n");
+	  KdGdbDebugPrint(pch);
+	break;
 
-
-	/* initialize debug port */
-	if (KdDebuggerEnabled && (KdpDebugType & SerialDebug))
-	{
-		KdPortInitialize (&PortInfo,
-		                  0,
-		                  0);
-	}
-}
-
-VOID KdInit1()
-{
-#ifndef SERDUMP
-
-	/* Initialize kernel debugger */
-	if (KdDebuggerEnabled && (KdpDebugType & SerialDebug))
-	{
-    KdGdbStubInit(0);
-	}
-
-#endif /* !SERDUMP */
-}
-
-VOID KdInit2()
-{
-#ifndef SERDUMP
-
-	/* Initialize kernel debugger */
-	if (KdDebuggerEnabled && (KdpDebugType & SerialDebug))
-	{
-    KdGdbStubInit(1);
-	}
-
-#endif /* !SERDUMP */
-}
-
-ULONG KdpPrintString (PANSI_STRING String)
-{
-   PCH pch = String->Buffer;
-
-   if (KdpDebugType & ScreenDebug)
-     {
-	HalDisplayString (String->Buffer);
-     }
-   if (KdpDebugType & SerialDebug)
-     KdDebugPrint (pch);
-   if (KdpDebugType & BochsDebug)
-     {
-	pch = String->Buffer;
+      case BochsDebug:
 	while (*pch != 0)
 	  {
-	     if (*pch == '\n')
-	       {
-		  WRITE_PORT_UCHAR((PUCHAR)BOCHS_LOGGER_PORT, '\r');
-	       }
-	     WRITE_PORT_UCHAR((PUCHAR)BOCHS_LOGGER_PORT, *pch);
-	     pch++;
+	    if (*pch == '\n')
+	      {
+		WRITE_PORT_UCHAR((PUCHAR)BOCHS_LOGGER_PORT, '\r');
+	      }
+	    WRITE_PORT_UCHAR((PUCHAR)BOCHS_LOGGER_PORT, *pch);
+	    pch++;
 	  }
-     }
-#ifdef DBGPRINT_FILE_LOG
-   if (KdpDebugType & FileLogDebug)
-     {
-       DebugLogWrite(String->Buffer);
-     }
-#endif /* DBGPRINT_FILE_LOG */
-   return (ULONG)String->Length;
+	break;
+
+      case FileLogDebug:
+	DebugLogWrite(pch);
+	break;
+    }
+
+  return((ULONG)String->Length);
 }
 
 /* PUBLIC FUNCTIONS *********************************************************/
 
 /* NTOSKRNL.KdPollBreakIn */
 
-BOOLEAN
-STDCALL
-KdPollBreakIn (
-	VOID
-	)
+BOOLEAN STDCALL
+KdPollBreakIn(VOID)
 {
-#ifndef SERDUMP
-
-	if (!KdDebuggerEnabled || !(KdpDebugType & SerialDebug))
-		return FALSE;
-
-  return TRUE;
-
-#else /* SERDUMP */
-
   return FALSE;
 
-#endif /* !SERDUMP */
+#if 0
+  if (!KdDebuggerEnabled || KdpDebugType != SerialDebug)
+    return FALSE;
+  return TRUE;
+#endif
 }
 
 VOID STDCALL
-KeEnterKernelDebugger (VOID)
+KeEnterKernelDebugger(VOID)
 {
-	HalDisplayString ("\n\n *** Entered kernel debugger ***\n");
+  HalDisplayString("\n\n *** Entered kernel debugger ***\n");
 
-#if 1
-	for (;;)
-		__asm__("hlt\n\t");
-#else
-   for(;;);
-#endif
+  for (;;)
+    __asm__("hlt\n\t");
 }
 
 VOID STDCALL
@@ -392,7 +426,7 @@ KdPutChar(UCHAR Value)
 
 
 UCHAR
-KdGetChar()
+KdGetChar(VOID)
 {
   UCHAR Value;
 
