@@ -1,4 +1,4 @@
-/* $Id: irq.c,v 1.13 2001/04/26 03:58:32 phreak Exp $
+/* $Id: irq.c,v 1.14 2001/04/26 14:26:22 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -19,6 +19,7 @@
 /* INCLUDES ****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/config.h>
 #include <internal/ke.h>
 #include <internal/ps.h>
 #include <internal/i386/segment.h>

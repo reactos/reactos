@@ -1,3 +1,4 @@
+#include <internal/config.h>
 #include <internal/ntoskrnl.h>
 #include <internal/i386/segment.h>
 
