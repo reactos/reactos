@@ -46,6 +46,11 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E975-E325-11CE-BFC1-08002BE103
 HKLM,"SYSTEM\CurrentControlSet\Control\ComputerName",,0x00000012
 HKLM,"SYSTEM\CurrentControlSet\Control\ComputerName\ComputerName","ComputerName",0x00000002,"COMPUTERNAME"
 
+; Hardware profile settings
+HKLM,"SYSTEM\CurrentControlSet\Control\IDConfigDB",,0x00000012
+HKLM,"SYSTEM\CurrentControlSet\Control\IDConfigDB","CurrentConfig",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Control\IDConfigDB\Hardware Profiles\0000","FriendlyName",0x00000000,"New Hardware Profile"
+
 ; Keyboard Layouts
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000407","Layout File",0x00000000,"kbdgr.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000407","Layout Text",0x00000000,"GR"
