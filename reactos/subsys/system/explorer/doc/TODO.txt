@@ -21,4 +21,3 @@
 - adjust already open windows of all running applications when resizing explorer bar
 - implement blink effect in task bar for SetForegoundWindow() requests
 - implement more than one column for very crowded start menus
-

@@ -668,23 +668,62 @@ LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 
 	AddSeparator();
 
+
+	HKEY hkey;
+	DWORD value, len;
+
+	if (RegOpenKey(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer"), &hkey))
+		hkey = 0;
+
+#define	IS_VALUE_ZERO(name) \
+	(!hkey || (len=sizeof(value),RegQueryValueEx(hkey, name, NULL, NULL, (LPBYTE)&value, &len) || !value))
+
+#define	IS_VALUE_NOT_ZERO(name) \
+	(!hkey || (len=sizeof(value),RegQueryValueEx(hkey, name, NULL, NULL, (LPBYTE)&value, &len) || value>0))
+
 	 // insert hard coded start entries
 	AddButton(ResString(IDS_PROGRAMS),		0, true, IDC_PROGRAMS);
+
 	AddButton(ResString(IDS_SEARCH_PRG),	0, false, IDC_SEARCH_PROGRAM);
+
 	AddButton(ResString(IDS_DOCUMENTS),		0, true, IDC_DOCUMENTS);
-	AddButton(ResString(IDS_RECENT),		0, true, IDC_RECENT);
+
+	if (IS_VALUE_ZERO(_T("NoRecentDocsMenu")))
+		AddButton(ResString(IDS_RECENT),	0, true, IDC_RECENT);
+
 	AddButton(ResString(IDS_FAVORITES),		0, true, IDC_FAVORITES);
+
 	AddButton(ResString(IDS_SETTINGS),		0, true, IDC_SETTINGS);
+
 	AddButton(ResString(IDS_BROWSE),		0, true, IDC_BROWSE);
-	AddButton(ResString(IDS_SEARCH),		0, false, IDC_SEARCH);
-	AddButton(ResString(IDS_SEARCH_COMPUTER),0,false, IDC_SEARCH_COMPUTER);
+
+	if (IS_VALUE_ZERO(_T("NoFind"))) {
+		AddButton(ResString(IDS_SEARCH),	0, false, IDC_SEARCH);
+		AddButton(ResString(IDS_SEARCH_COMPUTER),0,false, IDC_SEARCH_COMPUTER);
+	}
+
 	AddButton(ResString(IDS_START_HELP),	0, false, IDC_START_HELP);
-	AddButton(ResString(IDS_LAUNCH),		0, false, IDC_LAUNCH);
+
+	if (IS_VALUE_ZERO(_T("NoRun")))
+		AddButton(ResString(IDS_LAUNCH),	0, false, IDC_LAUNCH);
+
 
 	AddSeparator();
 
-	AddButton(ResString(IDS_LOGOFF),	SmallIcon(IDI_LOGOFF), false, IDC_LOGOFF);
-	AddButton(ResString(IDS_SHUTDOWN),	SmallIcon(IDI_LOGOFF), false, IDC_SHUTDOWN);
+
+	if (IS_VALUE_ZERO(_T("NoClose")))
+		AddButton(ResString(IDS_LOGOFF),	SmallIcon(IDI_LOGOFF), false, IDC_LOGOFF);
+
+	RegCloseKey(hkey);
+
+
+	if (RegOpenKey(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced"), &hkey))
+		hkey = 0;
+
+	if (IS_VALUE_NOT_ZERO(_T("StartMenuLogoff")))
+		AddButton(ResString(IDS_SHUTDOWN),	SmallIcon(IDI_LOGOFF), false, IDC_SHUTDOWN);
+
+	RegCloseKey(hkey);
 
 	return 0;
 }
