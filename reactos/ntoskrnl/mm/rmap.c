@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rmap.c,v 1.19 2003/06/27 21:28:30 hbirr Exp $
+/* $Id: rmap.c,v 1.20 2003/07/15 19:31:27 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -120,7 +120,7 @@ MmWritePagePhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
    */
   MmLockAddressSpace(AddressSpace);
   MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace, Address);
-  if (MemoryArea == NULL)
+  if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
     {
       MmUnlockAddressSpace(AddressSpace);
       if (Address < (PVOID)KERNEL_BASE)
@@ -259,6 +259,15 @@ MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
 
   MmLockAddressSpace(AddressSpace);
   MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace, Address);
+  if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
+    {
+      MmUnlockAddressSpace(AddressSpace);
+      if (Address < (PVOID)KERNEL_BASE)
+        {
+          ObDereferenceObject(Process);
+	}
+      return(STATUS_UNSUCCESSFUL);
+    }
   Type = MemoryArea->Type;
   if (Type == MEMORY_AREA_SECTION_VIEW)
     {
@@ -298,7 +307,8 @@ MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
       Status = MmPageOutSectionView(AddressSpace, MemoryArea, 
 				    Address, PageOp);
     }
-  else if (Type == MEMORY_AREA_VIRTUAL_MEMORY)
+  else if (Type == MEMORY_AREA_VIRTUAL_MEMORY || 
+           Type == MEMORY_AREA_CACHE_SEGMENT)
     {
       PageOp = MmGetPageOp(MemoryArea, Address < (PVOID)KERNEL_BASE ? Process->UniqueProcessId : 0,
 			   Address, NULL, 0, MM_PAGEOP_PAGEOUT);
