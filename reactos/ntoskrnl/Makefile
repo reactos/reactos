@@ -33,7 +33,7 @@ else
 OBJECTS_KDBG :=
 endif
 ifeq ($(DBG_OR_KDBG), 1)
-OBJECTS_KDBG := $(OBJECTS_KDBG) dbg/kdb_symbols.o dbg/profile.o
+OBJECTS_KDBG := $(OBJECTS_KDBG) dbg/kdb_symbols.o
 endif
 
 TARGET_ASFLAGS = -I./include
@@ -233,14 +233,12 @@ OBJECTS_PS = \
 
 # Executive Subsystem (Ex)
 OBJECTS_EX = \
-	ex/btree.o \
 	ex/callback.o \
 	ex/error.o \
 	ex/event.o \
 	ex/evtpair.o \
 	ex/fmutex.o \
 	ex/handle.o \
-	ex/hashtab.o \
 	ex/init.o \
 	ex/interlck.o \
 	ex/list.o \
@@ -250,7 +248,6 @@ OBJECTS_EX = \
 	ex/profile.o \
 	ex/resource.o \
 	ex/rundown.o \
-	ex/stree.o \
 	ex/sem.o \
 	ex/synch.o \
 	ex/sysinfo.o \

@@ -255,19 +255,6 @@ BOOLEAN
 KdbpAttachToProcess(
    PVOID ProcessId);
 
-/* from profile.c */
-
-VOID
-KdbInitProfiling();
-VOID
-KdbInitProfiling2();
-VOID
-KdbDisableProfiling();
-VOID
-KdbEnableProfiling();
-VOID
-KdbProfileInterrupt(ULONG_PTR Eip);
-
 /* other functions */
 
 #define KdbpSafeReadMemory(dst, src, size)   MmSafeCopyFromUser(dst, src, size)
