@@ -473,32 +473,48 @@ static HRESULT WINAPI ISF_Desktop_fnGetUIObjectOf (IShellFolder2 * iface,
     if (ppvOut) {
 	*ppvOut = NULL;
 
-	if (IsEqualIID (riid, &IID_IContextMenu)) {
-	    pObj = (LPUNKNOWN) ISvItemCm_Constructor ((IShellFolder *) iface, This->pidlRoot, apidl, cidl);
-	    hr = S_OK;
-	} else if (IsEqualIID (riid, &IID_IDataObject) && (cidl >= 1)) {
-	    pObj = (LPUNKNOWN) IDataObject_Constructor (hwndOwner, This->pidlRoot, apidl, cidl);
-	    hr = S_OK;
-	} else if (IsEqualIID (riid, &IID_IExtractIconA) && (cidl == 1)) {
-	    pidl = ILCombine (This->pidlRoot, apidl[0]);
-	    pObj = (LPUNKNOWN) IExtractIconA_Constructor (pidl);
-	    SHFree (pidl);
-	    hr = S_OK;
-	} else if (IsEqualIID (riid, &IID_IExtractIconW) && (cidl == 1)) {
-	    pidl = ILCombine (This->pidlRoot, apidl[0]);
-	    pObj = (LPUNKNOWN) IExtractIconW_Constructor (pidl);
-	    SHFree (pidl);
-	    hr = S_OK;
-	} else if (IsEqualIID (riid, &IID_IDropTarget) && (cidl >= 1)) {
-	    hr = IShellFolder_QueryInterface (iface, &IID_IDropTarget, (LPVOID *) & pObj);
-	} else if ((IsEqualIID(riid,&IID_IShellLinkW) || IsEqualIID(riid,&IID_IShellLinkA))
-				&& (cidl == 1)) {
-	    pidl = ILCombine (This->pidlRoot, apidl[0]);
-	    hr = IShellLink_ConstructFromFile(NULL, riid, pidl, (LPVOID*)&pObj);
-	    SHFree (pidl);
-	} else {
-	    hr = E_NOINTERFACE;
-	}
+    if (IsEqualIID (riid, &IID_IDataObject) && (cidl >= 1))
+    {
+        pObj = (LPUNKNOWN) IDataObject_Constructor( hwndOwner,
+                                                  This->pidlRoot, apidl, cidl);
+        hr = S_OK;
+    }
+    else if ((IsEqualIID(riid,&IID_IShellLinkW) ||
+              IsEqualIID(riid,&IID_IShellLinkA)) && (cidl == 1))
+    {
+        pidl = ILCombine (This->pidlRoot, apidl[0]);
+        hr = IShellLink_ConstructFromFile(NULL, riid, pidl, (LPVOID*)&pObj);
+        SHFree (pidl);
+    }
+    else if (IsEqualIID (riid, &IID_IContextMenu))
+    {
+        if (cidl > 0)
+            pObj = (LPUNKNOWN) ISvItemCm_Constructor( (IShellFolder *) iface, This->pidlRoot, apidl, cidl);
+        else
+            pObj = (LPUNKNOWN) ISvBgCm_Constructor( (IShellFolder *) iface, TRUE);
+        hr = S_OK;
+    }
+    else if (IsEqualIID (riid, &IID_IExtractIconA) && (cidl == 1))
+    {
+        pidl = ILCombine (This->pidlRoot, apidl[0]);
+        pObj = (LPUNKNOWN) IExtractIconA_Constructor (pidl);
+        SHFree (pidl);
+        hr = S_OK;
+    }
+    else if (IsEqualIID (riid, &IID_IExtractIconW) && (cidl == 1))
+    {
+        pidl = ILCombine (This->pidlRoot, apidl[0]);
+        pObj = (LPUNKNOWN) IExtractIconW_Constructor (pidl);
+        SHFree (pidl);
+        hr = S_OK;
+    }
+    else if (IsEqualIID (riid, &IID_IDropTarget) && (cidl >= 1))
+    {
+        hr = IShellFolder_QueryInterface (iface,
+                                          &IID_IDropTarget, (LPVOID *) & pObj);
+    }
+    else
+        hr = E_NOINTERFACE;
 
 	if (SUCCEEDED(hr) && !pObj)
 	    hr = E_OUTOFMEMORY;
