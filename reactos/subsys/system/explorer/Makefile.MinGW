@@ -75,6 +75,7 @@ explorer$(RES_SUFFIX): $(PROGRAM)_intres.rc res/*.bmp res/*.ico
 	windres $(RCFLAGS) -o $@ $(PROGRAM)_intres.rc
 
 clean:
-	rm -f $(TARGET) $(OBJECTS) $(PROGRAM)$(RES_SUFFIX)
+	rm -f $(TARGET) $(OBJECTS) $(PROGRAM)$(RES_SUFFIX) \
+	desktop/*.o dialogs/*.o shell/*.o taskbar/*.o utility/*.o
 
 ever:

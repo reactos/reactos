@@ -139,5 +139,9 @@ SOURCE=.\Makefile
 
 SOURCE=.\Makefile.MinGW
 # End Source File
+# Begin Source File
+
+SOURCE=.\Makefile.PCH
+# End Source File
 # End Target
 # End Project
