@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.77 2002/11/13 05:18:03 robd Exp $
+/* $Id: registry.c,v 1.78 2002/11/26 15:31:41 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -33,6 +33,9 @@ POBJECT_TYPE  CmiKeyType = NULL;
 PREGISTRY_HIVE  CmiVolatileHive = NULL;
 KSPIN_LOCK  CmiKeyListLock;
 
+LIST_ENTRY CmiHiveListHead;
+KSPIN_LOCK CmiHiveListLock;
+
 static PKEY_OBJECT  CmiRootKey = NULL;
 static PKEY_OBJECT  CmiMachineKey = NULL;
 static PKEY_OBJECT  CmiUserKey = NULL;
@@ -40,6 +43,7 @@ static PKEY_OBJECT  CmiHardwareKey = NULL;
 
 static GENERIC_MAPPING CmiKeyMapping =
 	{KEY_READ, KEY_WRITE, KEY_EXECUTE, KEY_ALL_ACCESS};
+
 
 
 VOID
@@ -271,11 +275,15 @@ CmInitializeRegistry(VOID)
   CmiKeyType->DuplicationNotify = NULL;
   RtlInitUnicodeString(&CmiKeyType->TypeName, L"Key");
 
+  /* Initialize the hive list */
+  InitializeListHead(&CmiHiveListHead);
+  KeInitializeSpinLock(&CmiHiveListLock);
+
   /*  Build volatile registry store  */
   Status = CmiCreateRegistryHive(NULL, &CmiVolatileHive, FALSE);
   assert(NT_SUCCESS(Status));
 
-  /* Build the Root Key Object */
+  /* Create '\Registry' key. */
   RtlInitUnicodeString(&RootKeyName, REG_ROOT_KEY_NAME);
   InitializeObjectAttributes(&ObjectAttributes, &RootKeyName, 0, NULL, NULL);
   Status = ObCreateObject(&RootKeyHandle,
@@ -307,7 +315,7 @@ CmInitializeRegistry(VOID)
 
   /* Create initial predefined symbolic links */
 
-  /* HKEY_LOCAL_MACHINE */
+  /* Create '\Registry\Machine' key. */
   Status = ObCreateObject(&KeyHandle,
     STANDARD_RIGHTS_REQUIRED,
     NULL,
@@ -334,7 +342,7 @@ CmInitializeRegistry(VOID)
   CmiAddKeyToList(CmiRootKey, NewKey);
   CmiMachineKey = NewKey;
 
-  /* HKEY_USERS */
+  /* Create '\Registry\User' key. */
   Status = ObCreateObject(&KeyHandle,
 		STANDARD_RIGHTS_REQUIRED,
 		NULL,
@@ -361,7 +369,7 @@ CmInitializeRegistry(VOID)
 	CmiAddKeyToList(CmiRootKey, NewKey);
 	CmiUserKey = NewKey;
 
-  /* Create '\\Registry\\Machine\\HARDWARE' key. */
+  /* Create '\Registry\Machine\HARDWARE' key. */
   Status = ObCreateObject(&KeyHandle,
 		STANDARD_RIGHTS_REQUIRED,
 		NULL,
@@ -388,7 +396,7 @@ CmInitializeRegistry(VOID)
   CmiAddKeyToList(CmiMachineKey, NewKey);
   CmiHardwareKey = NewKey;
 
-  /* Create '\\Registry\\Machine\\HARDWARE\\DESCRIPTION' key. */
+  /* Create '\Registry\Machine\HARDWARE\DESCRIPTION' key. */
   Status = ObCreateObject(&KeyHandle,
 		STANDARD_RIGHTS_REQUIRED,
 		NULL,
@@ -414,7 +422,7 @@ CmInitializeRegistry(VOID)
   memcpy(NewKey->Name, "DESCRIPTION", strlen("DESCRIPTION"));
   CmiAddKeyToList(CmiHardwareKey, NewKey);
 
-  /* Create '\\Registry\\Machine\\HARDWARE\\DEVICEMAP' key. */
+  /* Create '\Registry\Machine\HARDWARE\DEVICEMAP' key. */
   Status = ObCreateObject(&KeyHandle,
 		STANDARD_RIGHTS_REQUIRED,
 		NULL,
@@ -440,7 +448,7 @@ CmInitializeRegistry(VOID)
   memcpy(NewKey->Name, "DEVICEMAP", strlen("DEVICEMAP"));
   CmiAddKeyToList(CmiHardwareKey,NewKey);
 
-  /* Create '\\Registry\\Machine\\HARDWARE\\RESOURCEMAP' key. */
+  /* Create '\Registry\Machine\HARDWARE\RESOURCEMAP' key. */
   Status = ObCreateObject(&KeyHandle,
 		STANDARD_RIGHTS_REQUIRED,
 		NULL,
@@ -477,7 +485,9 @@ CmInit2(PCHAR CommandLine)
   PCHAR p1, p2;
   ULONG PiceStart;
 
-  /* FIXME: Store current command line */
+  /* FIXME: Store system start options */
+
+
 
   /* Create the 'CurrentControlSet' link. */
   CmiCreateCurrentControlSetLink();
@@ -655,9 +665,9 @@ CmiConnectHive(PWSTR FileName,
 
   if ((NewKey->SubKeys == NULL) && (NewKey->KeyCell->NumberOfSubKeys != 0))
     {
-      /* FIXME: Cleanup from CmiCreateRegistryHive() */
       DPRINT("NumberOfSubKeys %d\n", NewKey->KeyCell->NumberOfSubKeys);
       ZwClose(NewKey);
+      CmiRemoveRegistryHive(RegistryHive);
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
@@ -666,11 +676,11 @@ CmiConnectHive(PWSTR FileName,
 
   if ((NewKey->Name == NULL) && (strlen(KeyName) != 0))
     {
-      /* FIXME: Cleanup from CmiCreateRegistryHive() */
       DPRINT("strlen(KeyName) %d\n", strlen(KeyName));
       if (NewKey->SubKeys != NULL)
 	ExFreePool(NewKey->SubKeys);
       ZwClose(NewKey);
+      CmiRemoveRegistryHive(RegistryHive);
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
@@ -729,38 +739,162 @@ CmiInitializeHive(PWSTR FileName,
 NTSTATUS
 CmiInitHives(BOOLEAN SetUpBoot)
 {
+  PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING KeyName;
+  UNICODE_STRING ValueName;
+  HANDLE KeyHandle;
+
   NTSTATUS Status;
+
+  WCHAR ConfigPath[MAX_PATH];
+
+  ULONG BufferSize;
+  ULONG ResultSize;
+  PWSTR EndPtr;
+
 
   DPRINT("CmiInitHives() called\n");
 
+  if (SetUpBoot == TRUE)
+  {
+    RtlInitUnicodeStringFromLiteral(&KeyName,
+				    L"\\Registry\\Machine\\HARDWARE");
+    InitializeObjectAttributes(&ObjectAttributes,
+			       &KeyName,
+			       OBJ_CASE_INSENSITIVE,
+			       NULL,
+			       NULL);
+    Status =  NtOpenKey(&KeyHandle,
+			KEY_ALL_ACCESS,
+			&ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
+      return(Status);
+    }
+
+    RtlInitUnicodeStringFromLiteral(&ValueName,
+				    L"InstallPath");
+
+    BufferSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 4096;
+    ValueInfo = ExAllocatePool(PagedPool,
+			       BufferSize);
+    if (ValueInfo == NULL)
+    {
+      NtClose(KeyHandle);
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
+
+    Status = NtQueryValueKey(KeyHandle,
+			     &ValueName,
+			     KeyValuePartialInformation,
+			     ValueInfo,
+			     BufferSize,
+			     &ResultSize);
+    NtClose(KeyHandle);
+    if (ValueInfo == NULL)
+    {
+      ExFreePool(ValueInfo);
+      return(Status);
+    }
+
+    RtlCopyMemory(ConfigPath,
+		  ValueInfo->Data,
+		  ValueInfo->DataLength);
+    ConfigPath[ValueInfo->DataLength / sizeof(WCHAR)] = (WCHAR)0;
+    ExFreePool(ValueInfo);
+  }
+  else
+  {
+    wcscpy(ConfigPath, L"\\SystemRoot\\system32\\config");
+  }
+  DPRINT1("ConfigPath: %S\n", ConfigPath);
+
+  EndPtr = ConfigPath + wcslen(ConfigPath);
+
   CmiDoVerify = TRUE;
 
-  /* FIXME: Delete temporary \Registry\Machine\System */
+  /* FIXME: Save boot log */
+
+  /* FIXME: Rename \Registry\Machine\System */
 
   /* Connect the SYSTEM hive */
-  /* FIXME: Don't overwrite the existing 'System' hive yet */
-//  Status = CmiInitializeHive(SYSTEM_REG_FILE, REG_SYSTEM_KEY_NAME, "System", CmiMachineKey);
+//  Status = CmiInitializeHive(SYSTEM_REG_FILE, REG_SYSTEM_KEY_NAME, "System", CmiMachineKey, SetUpBoot);
 //  assert(NT_SUCCESS(Status));
 
+  /* FIXME: Synchronize old and new system hive (??) */
+
+  /* FIXME: Delete old system hive */
+
   /* Connect the SOFTWARE hive */
-  Status = CmiInitializeHive(SOFTWARE_REG_FILE, REG_SOFTWARE_KEY_NAME, "Software", CmiMachineKey, SetUpBoot);
+  wcscpy(EndPtr, REG_SOFTWARE_FILE_NAME);
+  DPRINT1("ConfigPath: %S\n", ConfigPath);
+
+//  Status = CmiInitializeHive(SOFTWARE_REG_FILE, REG_SOFTWARE_KEY_NAME, "Software", CmiMachineKey, SetUpBoot);
+  Status = CmiInitializeHive(ConfigPath,
+			     REG_SOFTWARE_KEY_NAME,
+			     "Software",
+			     CmiMachineKey,
+			     SetUpBoot);
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
+  }
   //assert(NT_SUCCESS(Status));
 
   /* Connect the SAM hive */
-  Status = CmiInitializeHive(SAM_REG_FILE,REG_SAM_KEY_NAME, "Sam", CmiMachineKey, SetUpBoot);
+  wcscpy(EndPtr, REG_SAM_FILE_NAME);
+  DPRINT1("ConfigPath: %S\n", ConfigPath);
+
+//  Status = CmiInitializeHive(SAM_REG_FILE, REG_SAM_KEY_NAME, "Sam", CmiMachineKey, SetUpBoot);
+  Status = CmiInitializeHive(ConfigPath,
+			     REG_SAM_KEY_NAME,
+			     "Sam",
+			     CmiMachineKey,
+			     SetUpBoot);
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
+  }
   //assert(NT_SUCCESS(Status));
 
   /* Connect the SECURITY hive */
-  Status = CmiInitializeHive(SEC_REG_FILE, REG_SEC_KEY_NAME, "Security", CmiMachineKey, SetUpBoot);
+  wcscpy(EndPtr, REG_SEC_FILE_NAME);
+  DPRINT1("ConfigPath: %S\n", ConfigPath);
+//  Status = CmiInitializeHive(SEC_REG_FILE, REG_SEC_KEY_NAME, "Security", CmiMachineKey, SetUpBoot);
+  Status = CmiInitializeHive(ConfigPath,
+			     REG_SEC_KEY_NAME,
+			     "Security",
+			     CmiMachineKey,
+			     SetUpBoot);
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
+  }
   //assert(NT_SUCCESS(Status));
 
   /* Connect the DEFAULT hive */
-  Status = CmiInitializeHive(USER_REG_FILE, REG_USER_KEY_NAME, ".Default", CmiUserKey, SetUpBoot);
+  wcscpy(EndPtr, REG_USER_FILE_NAME);
+  DPRINT1("ConfigPath: %S\n", ConfigPath);
+
+//  Status = CmiInitializeHive(USER_REG_FILE, REG_USER_KEY_NAME, ".Default", CmiUserKey, SetUpBoot);
+  Status = CmiInitializeHive(ConfigPath,
+			     REG_USER_KEY_NAME,
+			     ".Default",
+			     CmiUserKey,
+			     SetUpBoot);
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
+  }
   //assert(NT_SUCCESS(Status));
 
   /* FIXME : initialize standards symbolic links */
 
 //  CmiCheckRegistry(TRUE);
+
+  /* FIXME: Start automatic hive syncronization */
 
   DPRINT("CmiInitHives() done\n");
 
@@ -771,7 +905,41 @@ CmiInitHives(BOOLEAN SetUpBoot)
 VOID
 CmShutdownRegistry(VOID)
 {
-  DPRINT("CmShutdownRegistry() called\n");
+  PREGISTRY_HIVE Hive;
+  PLIST_ENTRY Entry;
+  KIRQL oldlvl;
+
+  DPRINT1("CmShutdownRegistry() called\n");
+
+  /* FIXME: Stop automatic hive syncronization */
+
+  KeAcquireSpinLock(&CmiHiveListLock,&oldlvl);
+  Entry = CmiHiveListHead.Flink;
+  while (Entry != &CmiHiveListHead)
+  {
+    Hive = CONTAINING_RECORD(Entry, REGISTRY_HIVE, HiveList);
+
+    if (Hive->Flags & HIVE_VOLATILE)
+    {
+      DPRINT1("Volatile hive\n");
+    }
+    else
+    {
+      DPRINT1("Flush non-volatile hive '%wZ'\n", &Hive->Filename);
+
+      /* Flush non-volatile hive */
+
+      /* Dereference file */
+      ObDereferenceObject(Hive->FileObject);
+      Hive->FileObject = NULL;
+    }
+
+    Entry = Entry->Flink;
+  }
+  KeReleaseSpinLock(&CmiHiveListLock,oldlvl);
+
+DPRINT1("  *** System stopped ***\n");
+for (;;);
 
   /* Note:
    *	Don't call UNIMPLEMENTED() here since this function is

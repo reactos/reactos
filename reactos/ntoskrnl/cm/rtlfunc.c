@@ -190,7 +190,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
     ParamTable[1].DefaultType = REG_MULTI_SZ;
 
     Status = RtlQueryRegistryValues(
-	           IN ULONG RelativeTo = RTL_REGISTRY_ABSOLUTE,
+               IN ULONG RelativeTo = RTL_REGISTRY_ABSOLUTE,
                IN PWSTR Path = Path,
                IN PRTL_QUERY_REGISTRY_TABLE QueryTable = ParamTable,
                IN PVOID Context = NULL,

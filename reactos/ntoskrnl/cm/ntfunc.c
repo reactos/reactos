@@ -38,12 +38,12 @@ static BOOLEAN CmiRegistryInitialized = FALSE;
 
 NTSTATUS STDCALL
 NtCreateKey(OUT PHANDLE KeyHandle,
-	IN ACCESS_MASK DesiredAccess,
-	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	IN ULONG TitleIndex,
-	IN PUNICODE_STRING Class,
-	IN ULONG CreateOptions,
-	OUT PULONG Disposition)
+	    IN ACCESS_MASK DesiredAccess,
+	    IN POBJECT_ATTRIBUTES ObjectAttributes,
+	    IN ULONG TitleIndex,
+	    IN PUNICODE_STRING Class,
+	    IN ULONG CreateOptions,
+	    OUT PULONG Disposition)
 {
   UNICODE_STRING RemainingPath;
   PKEY_OBJECT KeyObject;
@@ -52,17 +52,19 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   PWSTR End;
 
   DPRINT("NtCreateKey (Name %wZ  KeyHandle %x  Root %x)\n",
-         ObjectAttributes->ObjectName,
-         KeyHandle,
-         ObjectAttributes->RootDirectory);
+	 ObjectAttributes->ObjectName,
+	 KeyHandle,
+	 ObjectAttributes->RootDirectory);
 
   /* FIXME: check for standard handle prefix and adjust objectAttributes accordingly */
 
-  Status = ObFindObject(ObjectAttributes, &Object, &RemainingPath, CmiKeyType);
-
+  Status = ObFindObject(ObjectAttributes,
+			&Object,
+			&RemainingPath,
+			CmiKeyType);
   if (!NT_SUCCESS(Status))
     {
-      return Status;
+      return(Status);
     }
 
   DPRINT("RemainingPath %wZ\n", &RemainingPath);
@@ -73,7 +75,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
       if (((PKEY_OBJECT) Object)->Flags & KO_MARKED_FOR_DELETE)
 	{
 	  ObDereferenceObject(Object);
-	  return STATUS_UNSUCCESSFUL;
+	  return(STATUS_UNSUCCESSFUL);
 	}
 
       if (Disposition)
@@ -112,7 +114,9 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 			  (PVOID*)&KeyObject);
 
   if (!NT_SUCCESS(Status))
-    return(Status);
+    {
+      return(Status);
+    }
 
   KeyObject->ParentKey = Object;
 
@@ -125,7 +129,10 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   KeyObject->NumberOfSubKeys = 0;
   KeyObject->SizeOfSubKeys = 0;
   KeyObject->SubKeys = NULL;
-//  KeAcquireSpinLock(&Key->RegistryHive->RegLock, &OldIrql);
+
+  /* Acquire hive lock */
+  ExAcquireResourceExclusiveLite(&KeyObject->RegistryHive->HiveResource, TRUE);
+
   /* add key to subkeys of parent if needed */
   Status = CmiAddSubKey(KeyObject->RegistryHive,
 			KeyObject->ParentKey,
@@ -138,6 +145,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 
   if (!NT_SUCCESS(Status))
     {
+      ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
       ObDereferenceObject(KeyObject);
       ObDereferenceObject(Object);
       return STATUS_UNSUCCESSFUL;
@@ -164,7 +172,9 @@ NtCreateKey(OUT PHANDLE KeyHandle,
     }
 
   CmiAddKeyToList(KeyObject->ParentKey, KeyObject);
-//  KeReleaseSpinLock(&KeyObject->RegistryHive->RegLock, OldIrql);
+
+  /* Release hive lock */
+  ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
 
   ObDereferenceObject(KeyObject);
   ObDereferenceObject(Object);
@@ -199,6 +209,9 @@ NtDeleteKey(IN HANDLE KeyHandle)
       return Status;
     }
 
+  /* Acquire hive lock */
+  ExAcquireResourceExclusiveLite(&KeyObject->RegistryHive->HiveResource, TRUE);
+
   VERIFY_KEY_OBJECT(KeyObject);
 
   /*  Set the marked for delete bit in the key object  */
@@ -212,6 +225,9 @@ NtDeleteKey(IN HANDLE KeyHandle)
   ObDeleteHandle(PsGetCurrentProcess(), KeyHandle);
   /* FIXME: I think that ObDeleteHandle should dereference the object  */
   ObDereferenceObject(KeyObject);
+
+  /* Release hive lock */
+  ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
 
   return STATUS_SUCCESS;
 }
@@ -238,13 +254,13 @@ NtEnumerateKey(
   PDATA_CELL pClassData;
 
   DPRINT("KH %x  I %d  KIC %x KI %x  L %d  RL %x\n",
-  	KeyHandle,
-  	Index,
-	  KeyInformationClass,
-  	KeyInformation,
-  	Length,
-  	ResultLength);
-    
+	 KeyHandle,
+	 Index,
+	 KeyInformationClass,
+	 KeyInformation,
+	 Length,
+	 ResultLength);
+
   /* Verify that the handle is valid and is a registry key */
   Status = ObReferenceObjectByHandle(KeyHandle,
 		KEY_ENUMERATE_SUB_KEYS,
@@ -255,62 +271,68 @@ NtEnumerateKey(
   if (!NT_SUCCESS(Status))
     {
       DPRINT("ObReferenceObjectByHandle() failed with status %x\n", Status);
-      return Status;
+      return(Status);
     }
+
+  /* Acquire hive lock */
+  ExAcquireResourceSharedLite(&KeyObject->RegistryHive->HiveResource, TRUE);
 
   VERIFY_KEY_OBJECT(KeyObject);
 
   /* Get pointer to KeyCell */
   KeyCell = KeyObject->KeyCell;
   RegistryHive = KeyObject->RegistryHive;
-    
+
   /* Get pointer to SubKey */
   if (Index >= KeyCell->NumberOfSubKeys)
-	  {
-	    if (RegistryHive == CmiVolatileHive)
-		    {
-		      ObDereferenceObject (KeyObject);
-		      DPRINT("No more volatile entries\n");
-		      return STATUS_NO_MORE_ENTRIES;
-		    }
-	    else
-		    {
-		     ULONG i;
-		     PKEY_OBJECT CurKey = NULL;
+    {
+      if (RegistryHive == CmiVolatileHive)
+	{
+	  ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+	  ObDereferenceObject(KeyObject);
+	  DPRINT("No more volatile entries\n");
+	  return(STATUS_NO_MORE_ENTRIES);
+	}
+      else
+	{
+	  ULONG i;
+	  PKEY_OBJECT CurKey = NULL;
 
-		      /* Search volatile keys */
-		      for (i = 0; i < KeyObject->NumberOfSubKeys; i++)
-			      {
-			        CurKey = KeyObject->SubKeys[i];
-			        if (CurKey->RegistryHive == CmiVolatileHive)
-								{
-								  if (Index-- == KeyObject->NumberOfSubKeys)
-                    break;
-								}
-			      }
-		      if(Index >= KeyCell->NumberOfSubKeys)
-			      {
-			        ObDereferenceObject (KeyObject);
-			        DPRINT("No more non-volatile entries\n");
-			        return STATUS_NO_MORE_ENTRIES;
-			      }
-		      SubKeyCell = CurKey->KeyCell;
-		    }
-	  }
+	  /* Search volatile keys */
+	  for (i = 0; i < KeyObject->NumberOfSubKeys; i++)
+	    {
+	      CurKey = KeyObject->SubKeys[i];
+	      if (CurKey->RegistryHive == CmiVolatileHive)
+		{
+		  if (Index-- == KeyObject->NumberOfSubKeys)
+		    break;
+		}
+	    }
+	  if (Index >= KeyCell->NumberOfSubKeys)
+	    {
+	      ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+	      ObDereferenceObject(KeyObject);
+	      DPRINT("No more non-volatile entries\n");
+	      return(STATUS_NO_MORE_ENTRIES);
+	    }
+	  SubKeyCell = CurKey->KeyCell;
+	}
+    }
   else
-	  {
-	    HashTableBlock = CmiGetBlock(RegistryHive, KeyCell->HashTableOffset, NULL);
-	    SubKeyCell = CmiGetKeyFromHashByIndex(RegistryHive, 
-				HashTableBlock, 
-				Index);
-	  }
+    {
+      HashTableBlock = CmiGetBlock(RegistryHive, KeyCell->HashTableOffset, NULL);
+      SubKeyCell = CmiGetKeyFromHashByIndex(RegistryHive,
+					    HashTableBlock,
+					    Index);
+    }
 
   if (SubKeyCell == NULL)
-	  {
-	    ObDereferenceObject (KeyObject);
-	    DPRINT("No more entries\n");
-	    return STATUS_NO_MORE_ENTRIES;
-	  }
+    {
+      ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+      ObDereferenceObject(KeyObject);
+      DPRINT("No more entries\n");
+      return(STATUS_NO_MORE_ENTRIES);
+    }
 
   Status = STATUS_SUCCESS;
   switch (KeyInformationClass)
@@ -417,11 +439,13 @@ NtEnumerateKey(
       break;
     }
   CmiReleaseBlock(RegistryHive, SubKeyCell);
-  ObDereferenceObject (KeyObject);
+
+  ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+  ObDereferenceObject(KeyObject);
 
   DPRINT("Returning status %x\n", Status);
 
-  return  Status;
+  return(Status);
 }
 
 
@@ -444,12 +468,12 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
   PKEY_VALUE_FULL_INFORMATION  ValueFullInformation;
 
   DPRINT("KH %x  I %d  KVIC %x  KVI %x  L %d  RL %x\n",
-  	KeyHandle,
-  	Index,
-	  KeyValueInformationClass,
-  	KeyValueInformation,
-  	Length,
-  	ResultLength);
+	 KeyHandle,
+	 Index,
+	 KeyValueInformationClass,
+	 KeyValueInformation,
+	 Length,
+	 ResultLength);
 
   /*  Verify that the handle is valid and is a registry key  */
   Status = ObReferenceObjectByHandle(KeyHandle,
@@ -464,12 +488,15 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
       return Status;
     }
 
+  /* Acquire hive lock */
+  ExAcquireResourceSharedLite(&KeyObject->RegistryHive->HiveResource, TRUE);
+
   VERIFY_KEY_OBJECT(KeyObject);
 
   /* Get pointer to KeyCell */
   KeyCell = KeyObject->KeyCell;
   RegistryHive = KeyObject->RegistryHive;
-    
+
   /* Get Value block of interest */
   Status = CmiGetValueFromKeyByIndex(RegistryHive,
 		KeyCell,
@@ -478,10 +505,12 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
 
   if (!NT_SUCCESS(Status))
     {
+      ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
       ObDereferenceObject(KeyObject);
       return Status;
     }
-  else if (ValueCell != NULL)
+
+  if (ValueCell != NULL)
     {
       switch (KeyValueInformationClass)
         {
@@ -588,6 +617,8 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
     {
       Status = STATUS_UNSUCCESSFUL;
     }
+
+  ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
   ObDereferenceObject(KeyObject);
 
   return Status;
@@ -597,23 +628,22 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
 NTSTATUS STDCALL
 NtFlushKey(IN HANDLE KeyHandle)
 {
-	NTSTATUS Status;
-	PKEY_OBJECT  KeyObject;
-	PREGISTRY_HIVE  RegistryHive;
-	WCHAR LogName[MAX_PATH];
-	UNICODE_STRING TmpFileName;
-	HANDLE FileHandle;
-	// HANDLE FileHandleLog;
-	OBJECT_ATTRIBUTES ObjectAttributes;
-	// KIRQL  OldIrql;
-	LARGE_INTEGER fileOffset;
-	DWORD * pEntDword;
-	ULONG i;
+  NTSTATUS Status;
+  PKEY_OBJECT  KeyObject;
+  PREGISTRY_HIVE  RegistryHive;
+  WCHAR LogName[MAX_PATH];
+  UNICODE_STRING TmpFileName;
+  HANDLE FileHandle;
+//  HANDLE FileHandleLog;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  LARGE_INTEGER fileOffset;
+  DWORD * pEntDword;
+  ULONG i;
 
   DPRINT("KeyHandle %x\n", KeyHandle);
 
-	/* Verify that the handle is valid and is a registry key */
-	Status = ObReferenceObjectByHandle(KeyHandle,
+  /* Verify that the handle is valid and is a registry key */
+  Status = ObReferenceObjectByHandle(KeyHandle,
 		KEY_QUERY_VALUE,
 		CmiKeyType,
 		UserMode,
@@ -625,19 +655,22 @@ NtFlushKey(IN HANDLE KeyHandle)
       return Status;
     }
 
+  /* Acquire hive lock */
+  ExAcquireResourceExclusiveLite(&KeyObject->RegistryHive->HiveResource, TRUE);
+
   VERIFY_KEY_OBJECT(KeyObject);
 
   RegistryHive = KeyObject->RegistryHive;
-//  KeAcquireSpinLock(&RegistryHive->RegLock, &OldIrql);
+
   /* Then write changed blocks in .log */
   wcscpy(LogName,RegistryHive->Filename.Buffer);
   wcscat(LogName,L".log");
   RtlInitUnicodeString (&TmpFileName, LogName);
   InitializeObjectAttributes(&ObjectAttributes,
-		&TmpFileName,
-		0,
-		NULL,
-		NULL);
+			     &TmpFileName,
+			     0,
+			     NULL,
+			     NULL);
 
 /* BEGIN FIXME : actually (26 November 200) vfatfs.sys can't create new files
    so we can't create log file
@@ -721,28 +754,28 @@ END FIXME*/
 		      NULL,
 		      0,
 		      FILE_SYNCHRONOUS_IO_NONALERT);
-
   if (!NT_SUCCESS(Status))
     {
+      ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
       ObDereferenceObject(KeyObject);
       return Status;
     }
 
   RegistryHive->HiveHeader->Version++;
 
-  Status = ZwWriteFile(FileHandle, 
-		0,
-    0,
-    0,
-    0, 
-		RegistryHive->HiveHeader, 
-		sizeof(HIVE_HEADER), 
-		0,
-    0);
-
+  Status = ZwWriteFile(FileHandle,
+		       0,
+		       0,
+		       0,
+		       0,
+		       RegistryHive->HiveHeader,
+		       sizeof(HIVE_HEADER),
+		       0,
+		       0);
   if (!NT_SUCCESS(Status))
     {
       ZwClose(FileHandle);
+      ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
       ObDereferenceObject(KeyObject);
       return Status;
     }
@@ -750,35 +783,33 @@ END FIXME*/
   /* Update changed blocks in file */
   fileOffset.u.HighPart = 0;
   for (i = 0; i < RegistryHive->BlockListSize ; i++)
-  {
-    if (RegistryHive->BlockList[i]->DateModified.dwHighDateTime
+    {
+      if (RegistryHive->BlockList[i]->DateModified.dwHighDateTime
 	    > RegistryHive->HiveHeader->DateModified.dwHighDateTime
-      || (RegistryHive->BlockList[i]->DateModified.dwHighDateTime
+	  || (RegistryHive->BlockList[i]->DateModified.dwHighDateTime
 	        == RegistryHive->HiveHeader->DateModified.dwHighDateTime
-          && RegistryHive->BlockList[i]->DateModified.dwLowDateTime
-	        > RegistryHive->HiveHeader->DateModified.dwLowDateTime
-         )
-       )
+	      && RegistryHive->BlockList[i]->DateModified.dwLowDateTime
+	         > RegistryHive->HiveHeader->DateModified.dwLowDateTime))
+	{
+	  fileOffset.u.LowPart = RegistryHive->BlockList[i]->BlockOffset+4096;
+	  Status = NtWriteFile(FileHandle,
+			       0,
+			       0,
+			       0,
+			       0,
+			       RegistryHive->BlockList[i],
+			       RegistryHive->BlockList[i]->BlockSize,
+			       &fileOffset,
+			       0);
+	  if (!NT_SUCCESS(Status))
 	    {
-	      fileOffset.u.LowPart = RegistryHive->BlockList[i]->BlockOffset+4096;
-	      Status = NtWriteFile(FileHandle, 
-					0,
-	        0,
-	        0,
-	        0, 
-					RegistryHive->BlockList[i],
-					RegistryHive->BlockList[i]->BlockSize ,
-					&fileOffset,
-	        0);
-
-			  if (!NT_SUCCESS(Status))
-			    {
-			      ZwClose(FileHandle);
-			      ObDereferenceObject(KeyObject);
-			      return Status;
-			    }
+	      ZwClose(FileHandle);
+	      ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+	      ObDereferenceObject(KeyObject);
+	      return(Status);
 	    }
-  }
+	}
+    }
 
   /* Change version in header */
   RegistryHive->HiveHeader->VersionOld = RegistryHive->HiveHeader->Version;
@@ -794,25 +825,26 @@ END FIXME*/
 
   /* Write new header */
   fileOffset.u.LowPart = 0;
-  Status = ZwWriteFile(FileHandle, 
-		0,
-    0,
-    0,
-    0, 
-		RegistryHive->HiveHeader, 
-		sizeof(HIVE_HEADER), 
-		&fileOffset,
-    0);
+  Status = ZwWriteFile(FileHandle,
+		       0,
+		       0,
+		       0,
+		       0,
+		       RegistryHive->HiveHeader,
+		       sizeof(HIVE_HEADER),
+		       &fileOffset,
+		       0);
 
   if (!NT_SUCCESS(Status))
     {
       ZwClose(FileHandle);
+      ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
       ObDereferenceObject(KeyObject);
       return Status;
     }
 
   ZwClose(FileHandle);
-//  KeReleaseSpinLock(&RegistryHive->RegLock, OldIrql);
+  ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
   ObDereferenceObject(KeyObject);
   return STATUS_SUCCESS;
 }
@@ -893,12 +925,12 @@ NtQueryKey(IN	HANDLE KeyHandle,
   NTSTATUS Status;
 
   DPRINT("KH %x  KIC %x  KI %x  L %d  RL %x\n",
-  	KeyHandle,
-    KeyInformationClass,
-  	KeyInformation,
-    Length,
-    ResultLength);
-    
+	 KeyHandle,
+	 KeyInformationClass,
+	 KeyInformation,
+	 Length,
+	 ResultLength);
+
   /* Verify that the handle is valid and is a registry key */
   Status = ObReferenceObjectByHandle(KeyHandle,
 		KEY_READ,
@@ -906,11 +938,13 @@ NtQueryKey(IN	HANDLE KeyHandle,
 		UserMode,
 		(PVOID *) &KeyObject,
 		NULL);
-
   if (!NT_SUCCESS(Status))
     {
       return Status;
     }
+
+  /* Acquire hive lock */
+  ExAcquireResourceSharedLite(&KeyObject->RegistryHive->HiveResource, TRUE);
 
   VERIFY_KEY_OBJECT(KeyObject);
 
@@ -1023,10 +1057,12 @@ NtQueryKey(IN	HANDLE KeyHandle,
       break;
     }
 
+  ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
   ObDereferenceObject(KeyObject);
 
   return Status;
 }
+
 
 NTSTATUS STDCALL
 NtQueryValueKey(IN HANDLE KeyHandle,
@@ -1067,22 +1103,27 @@ NtQueryValueKey(IN HANDLE KeyHandle,
       return Status;
     }
 
+  /* Acquire hive lock */
+  ExAcquireResourceSharedLite(&KeyObject->RegistryHive->HiveResource, TRUE);
+
   VERIFY_KEY_OBJECT(KeyObject);
 
   /* Get pointer to KeyCell */
   KeyCell = KeyObject->KeyCell;
   RegistryHive = KeyObject->RegistryHive;
-  /* Get Value block of interest */
-  Status = CmiScanKeyForValue(RegistryHive, 
-		KeyCell,
-		ValueName2,
-		&ValueCell,NULL);
 
+  /* Get Value block of interest */
+  Status = CmiScanKeyForValue(RegistryHive,
+			      KeyCell,
+			      ValueName2,
+			      &ValueCell,
+			      NULL);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("CmiScanKeyForValue() failed with status %x\n", Status);
+      ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
       ObDereferenceObject(KeyObject);
-      return Status;
+      return(Status);
     }
   else if (ValueCell != NULL)
     {
@@ -1165,21 +1206,21 @@ NtQueryValueKey(IN HANDLE KeyHandle,
               mbstowcs(ValueFullInformation->Name, ValueCell->Name,ValueCell->NameSize*2);
               ValueFullInformation->Name[ValueCell->NameSize] = 0;
               if (ValueCell->DataSize > 0)
-	              {
-	                DataCell = CmiGetBlock(RegistryHive, ValueCell->DataOffset, NULL);
-	                RtlCopyMemory((PCHAR) ValueFullInformation
-			              + ValueFullInformation->DataOffset,
-	                  DataCell->Data, 
-	                  ValueCell->DataSize & LONG_MAX);
-	                CmiReleaseBlock(RegistryHive, DataCell);
-	              }
+                {
+                  DataCell = CmiGetBlock(RegistryHive, ValueCell->DataOffset, NULL);
+                  RtlCopyMemory((PCHAR) ValueFullInformation
+                                + ValueFullInformation->DataOffset,
+                                DataCell->Data,
+                                ValueCell->DataSize & LONG_MAX);
+                  CmiReleaseBlock(RegistryHive, DataCell);
+                }
               else
-	              {
-	                RtlCopyMemory((PCHAR) ValueFullInformation
-			              + ValueFullInformation->DataOffset,
-                    &ValueCell->DataOffset, 
-                    ValueCell->DataSize & LONG_MAX);
-	              }
+                {
+                  RtlCopyMemory((PCHAR) ValueFullInformation
+                                + ValueFullInformation->DataOffset,
+                                &ValueCell->DataOffset,
+                  ValueCell->DataSize & LONG_MAX);
+                }
             }
           break;
         }
@@ -1189,8 +1230,9 @@ NtQueryValueKey(IN HANDLE KeyHandle,
       Status = STATUS_OBJECT_NAME_NOT_FOUND;
     }
 
+  ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
   ObDereferenceObject(KeyObject);
-  
+
   return Status;
 }
 
@@ -1214,7 +1256,6 @@ NtSetValueKey(IN HANDLE KeyHandle,
   PDATA_CELL NewDataCell;
   PHBIN pBin;
   ULONG DesiredAccess;
-// KIRQL  OldIrql;
 
   DPRINT("KeyHandle %x  ValueName %S  Type %d\n",
     KeyHandle, ValueName? ValueName->Buffer : NULL, Type);
@@ -1236,6 +1277,9 @@ NtSetValueKey(IN HANDLE KeyHandle,
   if (!NT_SUCCESS(Status))
     return(Status);
 
+  /* Acquire hive lock */
+  ExAcquireResourceExclusiveLite(&KeyObject->RegistryHive->HiveResource, TRUE);
+
   VERIFY_KEY_OBJECT(KeyObject);
 
   /* Get pointer to key cell */
@@ -1250,11 +1294,10 @@ NtSetValueKey(IN HANDLE KeyHandle,
     {
       DPRINT1("Value not found. Status 0x%X\n", Status);
 
+      ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
       ObDereferenceObject(KeyObject);
       return(Status);
     }
-
-//  KeAcquireSpinLock(&RegistryHive->RegLock, &OldIrql);
 
   if (ValueCell == NULL)
     {
@@ -1269,6 +1312,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
     {
       DPRINT1("Cannot add value. Status 0x%X\n", Status);
 
+      ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
       ObDereferenceObject(KeyObject);
       return(Status);
     }
@@ -1338,8 +1382,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
 	}
     }
 
-//  KeReleaseSpinLock(&RegistryHive->RegLock, OldIrql);
-
+  ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
   ObDereferenceObject(KeyObject);
 
   DPRINT("Return Status 0x%X\n", Status);
@@ -1350,14 +1393,11 @@ NtSetValueKey(IN HANDLE KeyHandle,
 
 NTSTATUS STDCALL
 NtDeleteValueKey(IN HANDLE KeyHandle,
-  IN PUNICODE_STRING ValueName)
+		 IN PUNICODE_STRING ValueName)
 {
-  PREGISTRY_HIVE RegistryHive;
   CHAR ValueName2[MAX_PATH];
   PKEY_OBJECT KeyObject;
-  PKEY_CELL KeyCell;
   NTSTATUS Status;
-//  KIRQL  OldIrql;
 
   wcstombs(ValueName2, ValueName->Buffer, ValueName->Length >> 1);
   ValueName2[ValueName->Length>>1] = 0;
@@ -1369,20 +1409,23 @@ NtDeleteValueKey(IN HANDLE KeyHandle,
 		UserMode,
 		(PVOID *)&KeyObject,
 		NULL);
-
   if (!NT_SUCCESS(Status))
     {
       return Status;
     }
 
+  /* Acquire hive lock */
+  ExAcquireResourceExclusiveLite(&KeyObject->RegistryHive->HiveResource, TRUE);
+
   VERIFY_KEY_OBJECT(KeyObject);
 
-  /* Get pointer to KeyCell */
-  KeyCell = KeyObject->KeyCell;
-  RegistryHive = KeyObject->RegistryHive;
-//  KeAcquireSpinLock(&RegistryHive->RegLock, &OldIrql);
-  Status = CmiDeleteValueFromKey(RegistryHive, KeyCell, ValueName2);
-//  KeReleaseSpinLock(&RegistryHive->RegLock, OldIrql);
+  Status = CmiDeleteValueFromKey(KeyObject->RegistryHive,
+				 KeyObject->KeyCell,
+				 ValueName2);
+
+  /* Release hive lock */
+  ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+
   ObDereferenceObject(KeyObject);
 
   return Status;
@@ -1425,11 +1468,11 @@ NtNotifyChangeKey(
 
 NTSTATUS STDCALL
 NtQueryMultipleValueKey(IN HANDLE KeyHandle,
-	IN OUT PKEY_VALUE_ENTRY ValueList,
-	IN ULONG NumberOfValues,
-	OUT PVOID Buffer,
-	IN OUT PULONG Length,
-	OUT PULONG ReturnLength)
+			IN OUT PKEY_VALUE_ENTRY ValueList,
+			IN ULONG NumberOfValues,
+			OUT PVOID Buffer,
+			IN OUT PULONG Length,
+			OUT PULONG ReturnLength)
 {
   PREGISTRY_HIVE RegistryHive;
   UCHAR ValueName[MAX_PATH];
@@ -1454,6 +1497,9 @@ NtQueryMultipleValueKey(IN HANDLE KeyHandle,
       DPRINT("ObReferenceObjectByHandle() failed with status %x\n", Status);
       return(Status);
     }
+
+  /* Acquire hive lock */
+  ExAcquireResourceSharedLite(&KeyObject->RegistryHive->HiveResource, TRUE);
 
   VERIFY_KEY_OBJECT(KeyObject);
 
@@ -1528,11 +1574,14 @@ NtQueryMultipleValueKey(IN HANDLE KeyHandle,
 
   *ReturnLength = BufferLength;
 
+  /* Release hive lock */
+  ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+
   ObDereferenceObject(KeyObject);
 
   DPRINT("Return Status 0x%X\n", Status);
 
-  return Status;
+  return(Status);
 }
 
 

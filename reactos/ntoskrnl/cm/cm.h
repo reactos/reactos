@@ -26,6 +26,12 @@
 #define  SAM_REG_FILE			L"\\SystemRoot\\System32\\Config\\SAM"
 #define  SEC_REG_FILE			L"\\SystemRoot\\System32\\Config\\SECURITY"
 
+#define  REG_SYSTEM_FILE_NAME		L"\\SYSTEM"
+#define  REG_SOFTWARE_FILE_NAME		L"\\SOFTWARE"
+#define  REG_USER_FILE_NAME		L"\\DEFAULT"
+#define  REG_SAM_FILE_NAME		L"\\SAM"
+#define  REG_SEC_FILE_NAME		L"\\SECURITY"
+
 #define  REG_BLOCK_SIZE                4096
 #define  REG_HBIN_DATA_OFFSET          32
 #define  REG_BIN_ID                    0x6e696268
@@ -228,6 +234,7 @@ typedef struct _DATA_CELL
 
 typedef struct _REGISTRY_HIVE
 {
+  LIST_ENTRY HiveList;
   ULONG  Flags;
   UNICODE_STRING  Filename;
   ULONG  FileSize;
@@ -240,8 +247,8 @@ typedef struct _REGISTRY_HIVE
   ULONG  FreeListMax;
   PCELL_HEADER *FreeList;
   BLOCK_OFFSET *FreeListOffset;
-//  KSPIN_LOCK  RegLock;
-  KSEMAPHORE RegSem;
+  ERESOURCE HiveResource;
+
 //  NTSTATUS  (*Extend)(ULONG NewSize);
 //  PVOID  (*Flush)(VOID);
 } REGISTRY_HIVE, *PREGISTRY_HIVE;
@@ -314,6 +321,9 @@ extern PREGISTRY_HIVE CmiVolatileHive;
 extern POBJECT_TYPE CmiKeyType;
 extern KSPIN_LOCK CmiKeyListLock;
 
+extern LIST_ENTRY CmiHiveListHead;
+extern KSPIN_LOCK CmiHiveListLock;
+
 
 VOID
 CmiVerifyBinCell(PHBIN BinCell);
@@ -375,6 +385,9 @@ NTSTATUS
 CmiCreateRegistryHive(PWSTR Filename,
   PREGISTRY_HIVE *RegistryHive,
   BOOLEAN CreateNew);
+
+NTSTATUS
+CmiRemoveRegistryHive(PREGISTRY_HIVE RegistryHive);
 
 ULONG
 CmiGetMaxNameLength(IN PREGISTRY_HIVE  RegistryHive,
