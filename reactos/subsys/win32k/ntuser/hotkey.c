@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: hotkey.c,v 1.3 2003/11/11 22:17:18 weiden Exp $
+/* $Id: hotkey.c,v 1.4 2003/11/20 22:28:49 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -74,6 +74,11 @@ GetHotKey (PWINSTATION_OBJECT WinStaObject,
 {
   PLIST_ENTRY Entry;
   PHOT_KEY_ITEM HotKeyItem;
+  
+  if(!WinStaObject)
+  {
+    return FALSE;
+  }
 
   ExAcquireFastMutex (&WinStaObject->HotKeyListLock);
 
