@@ -219,7 +219,6 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 {
    ULONG i;
    ULONG Reserved;
-   ULONG ReservedGap;
    NTSTATUS Status;
    
    DPRINT("MmInitializePageList(FirstPhysKernelAddress %x, "
@@ -243,7 +242,7 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
    DPRINT("Reserved %d\n", Reserved);
 
    LastKernelAddress = PAGE_ROUND_UP(LastKernelAddress);
-   LastKernelAddress = ((ULONG)LastKernelAddress + (ReservedGap * PAGESIZE));
+   LastKernelAddress = ((ULONG)LastKernelAddress + (Reserved * PAGESIZE));
    LastPhysKernelAddress = (PVOID)PAGE_ROUND_UP(LastPhysKernelAddress);
    LastPhysKernelAddress = LastPhysKernelAddress + (Reserved * PAGESIZE);
      
