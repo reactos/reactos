@@ -38,7 +38,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 typedef
-DWORD (CALLBACK *PPROGRESS_ROUTINE)(
+DWORD CALLBACK (*PPROGRESS_ROUTINE)(
 	LARGE_INTEGER TotalFileSize,
 	LARGE_INTEGER TotalBytesTransferred,
 	LARGE_INTEGER StreamSize,
@@ -1710,7 +1710,7 @@ RtlSetCriticalSectionSpinCount(
 
 typedef
 VOID
-(CALLBACK *POVERLAPPED_COMPLETION_ROUTINE)(
+CALLBACK (*POVERLAPPED_COMPLETION_ROUTINE)(
     DWORD dwErrorCode,
     DWORD dwNumberOfBytesTransfered,
     LPOVERLAPPED lpOverlapped
@@ -6778,7 +6778,7 @@ TlsFree(
 	DWORD dwTlsIndex
 	);
 
-typedef VOID STDCALL (*PFLS_CALLBACK_FUNCTION)(PVOID lpFlsData);
+typedef VOID STDCALL_FUNC (*PFLS_CALLBACK_FUNCTION)(PVOID lpFlsData);
 
 DWORD STDCALL FlsAlloc(PFLS_CALLBACK_FUNCTION lpCallback);
 

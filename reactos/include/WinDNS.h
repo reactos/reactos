@@ -325,11 +325,11 @@ DNS_STATUS WINAPI DnsAcquireContextHandle_A
   PVOID Credentials, 
   HANDLE *ContextHandle );
 
-DNS_STATUS DnsValidateName_W
+DNS_STATUS WINAPI DnsValidateName_W
 ( LPCWSTR Name, DNS_NAME_FORMAT Format );
-DNS_STATUS DnsValidateName_UTF8
+DNS_STATUS WINAPI DnsValidateName_UTF8
 ( LPCSTR Name, DNS_NAME_FORMAT Format );
-DNS_STATUS DnsValidateName_A
+DNS_STATUS WINAPI DnsValidateName_A
 ( LPCSTR Name, DNS_NAME_FORMAT Format );
 
 DNS_STATUS WINAPI DnsQuery_W
