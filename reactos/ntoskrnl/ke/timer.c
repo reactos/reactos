@@ -200,9 +200,8 @@ KeSetTimerEx (PKTIMER Timer,
     
     /* Insert it */
     if (!KiInsertTimer(Timer, DueTime)) {
-    
-        /* FIXME: I will think about how to handle this and fix it ASAP -- Alex */
-        DPRINT1("CRITICAL UNHANDLED CASE: TIMER ALREADY EXPIRED!!!\n");
+
+       KiHandleExpiredTimer(Timer);
     };
 
     /* Release Dispatcher Lock */
@@ -221,43 +220,44 @@ KiExpireTimers(PKDPC Dpc,
                PVOID SystemArgument2)
 {
     ULONG Eip = (ULONG)SystemArgument1;
-    PKTIMER Timer = NULL;
+    PKTIMER Timer;
     ULONGLONG InterruptTime;
     LIST_ENTRY ExpiredTimerList;
     PLIST_ENTRY CurrentEntry = NULL;
     KIRQL OldIrql;
 
     DPRINT("KiExpireTimers(Dpc: %x)\n", Dpc);
+    
+    /* Initialize the Expired Timer List */
+    InitializeListHead(&ExpiredTimerList);
 
     /* Lock the Database and Raise IRQL */
     OldIrql = KeAcquireDispatcherDatabaseLock();
-
-    /* Initialize the Expired Timer List */    
-    InitializeListHead(&ExpiredTimerList);
     
     /* Query Interrupt Times */ 
     InterruptTime = KeQueryInterruptTime();
 
     /* Loop through the Timer List and remove Expired Timers. Insert them into the Expired Listhead */
-    for (CurrentEntry = KiTimerListHead.Flink; CurrentEntry != &KiTimerListHead; CurrentEntry = CurrentEntry->Flink) {
+    CurrentEntry = KiTimerListHead.Flink;
+    while (CurrentEntry != &KiTimerListHead) {
     
         /* Get the Current Timer */
         Timer = CONTAINING_RECORD(CurrentEntry, KTIMER, TimerListEntry);
         DPRINT("Looping for Timer: %x. Duetime: %I64d. InterruptTime %I64d \n", Timer, Timer->DueTime.QuadPart, InterruptTime);
         
+        CurrentEntry = CurrentEntry->Flink;
+        
         /* Check if we have to Expire it */
-        if (InterruptTime < Timer->DueTime.QuadPart) break;
+        if (InterruptTime >= Timer->DueTime.QuadPart) {
        
-        /* Remove it from the Timer List, add it to the Expired List */
-        RemoveEntryList(&Timer->TimerListEntry);
-        InsertTailList(&ExpiredTimerList, &Timer->TimerListEntry);
+           /* Remove it from the Timer List, add it to the Expired List */
+           RemoveEntryList(&Timer->TimerListEntry);
+           InsertTailList(&ExpiredTimerList, &Timer->TimerListEntry);
+        }
     }
     
     /* Expire the Timers */
-    while (!IsListEmpty(&ExpiredTimerList)) {
-        
-        /* Get the Next Entry */
-        CurrentEntry = RemoveHeadList(&ExpiredTimerList);
+    while ((CurrentEntry = RemoveHeadList(&ExpiredTimerList)) != &ExpiredTimerList) {
         
         /* Get the Timer */
         Timer = CONTAINING_RECORD(CurrentEntry, KTIMER, TimerListEntry);
@@ -287,9 +287,12 @@ KiHandleExpiredTimer(PKTIMER Timer)
     LARGE_INTEGER DueTime;
     DPRINT("HandleExpiredTime(Timer %x)\n", Timer);
     
-    /* First of all, remove the Timer */
-    Timer->Header.Inserted = FALSE;
-    RemoveEntryList(&Timer->TimerListEntry);
+    if(Timer->Header.Inserted) {
+
+       /* First of all, remove the Timer */
+       Timer->Header.Inserted = FALSE;
+       RemoveEntryList(&Timer->TimerListEntry);
+    }
     
     /* Set it as Signaled */
     DPRINT("Setting Timer as Signaled\n");
@@ -302,9 +305,9 @@ KiHandleExpiredTimer(PKTIMER Timer)
         /* Reinsert the Timer */
         DueTime.QuadPart = Timer->Period * -SYSTEM_TIME_UNITS_PER_MSEC;
         if (!KiInsertTimer(Timer, DueTime)) {
-        
-            /* FIXME: I will think about how to handle this and fix it ASAP -- Alex */
-            DPRINT1("CRITICAL UNHANDLED CASE: TIMER ALREADY EXPIRED!!!\n");
+
+           /* FIXME: I will think about how to handle this and fix it ASAP -- Alex */
+           DPRINT1("CRITICAL UNHANDLED CASE: TIMER ALREADY EXPIRED!!!\n");
         };
     }
     
