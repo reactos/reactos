@@ -166,6 +166,11 @@ KiDeliverUserApc(PKTRAP_FRAME TrapFrame)
        current_entry = RemoveHeadList(&Thread->ApcState.ApcListHead[1]);
        Apc = CONTAINING_RECORD(current_entry, KAPC, ApcListEntry);
        Apc->Inserted = FALSE;
+
+       /*
+	* We've dealt with one pending user-mode APC
+	*/
+       Thread->ApcState.UserApcPending--;
        KeReleaseSpinLock(&PiApcLock, oldlvl);       
        
        /*
@@ -210,10 +215,6 @@ KiDeliverUserApc(PKTRAP_FRAME TrapFrame)
        TrapFrame->Eip = (ULONG)LdrpGetSystemDllApcDispatcher();
        TrapFrame->Esp = (ULONG)Esp;     
        
-       /*
-	* We've dealt with one pending user-mode APC
-	*/
-       Thread->ApcState.UserApcPending--;
        
        /*
 	* Now call for the kernel routine for the APC, which will free
