@@ -293,7 +293,6 @@ const struct builtin_class_descr EDIT_builtin_class =
 {
 #ifdef __REACTOS__
     L"Edit",               /* name */
-    /* FIXME: Add CS_PARENTDC when the handling of WM_ERASEBKGND will be fixed! */
     CS_GLOBALCLASS | CS_DBLCLKS | CS_PARENTDC, /* style */
     (WNDPROC)EditWndProcW, /* procW */
     (WNDPROC)EditWndProcA, /* procA */
@@ -858,7 +857,8 @@ static LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg,
 
                 strng[0] = wParam >> 8;
                 strng[1] = wParam & 0xff;
-                MultiByteToWideChar(CP_ACP, 0, strng, 2, &charW, 1);
+                if (strng[0]) MultiByteToWideChar(CP_ACP, 0, strng, 2, &charW, 1);
+                else MultiByteToWideChar(CP_ACP, 0, &strng[1], 1, &charW, 1);
 		EDIT_WM_Char(es, charW);
 		break;
             }
