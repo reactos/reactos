@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.44.26.3 2004/07/27 14:48:27 navaraf Exp $
+ * $Id: fat.c,v 1.44.26.4 2004/07/27 22:36:00 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -380,8 +380,8 @@ FAT16CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
     {
       return STATUS_UNSUCCESSFUL;
     }
-    Block = (PUSHORT)((ULONG_PTR)BaseAddress + i % ChunkSize);
-    BlockEnd = (PUSHORT)((ULONG_PTR)BaseAddress + i % ChunkSize);
+    Block = (PUSHORT)((ULONG_PTR)BaseAddress + (i * 2) % ChunkSize);
+    BlockEnd = (PUSHORT)((ULONG_PTR)BaseAddress + ChunkSize);
 
     /* Now process the whole block */
     while (Block < BlockEnd && i < FatLength)
