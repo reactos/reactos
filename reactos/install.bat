@@ -131,6 +131,9 @@ copy apps\tests\nptest\npclient.exe %ROS_INSTALL_TESTS%
 copy apps\tests\atomtest\atomtest.exe %ROS_INSTALL_TESTS%
 copy apps\tests\mutex\mutex.exe %ROS_INSTALL%\bin
 copy apps\tests\winhello\winhello.exe %ROS_INSTALL%\bin
+copy apps\tests\wm_paint\wm_paint.exe %ROS_INSTALL_TESTS%
+copy apps\tests\bitblt\lena.bmp %ROS_INSTALL_TESTS%
+copy apps\tests\bitblt\bitblt.exe %ROS_INSTALL_TESTS%
 copy apps\tests\sectest\sectest.exe %ROS_INSTALL_TESTS%
 copy apps\tests\isotest\isotest.exe %ROS_INSTALL_TESTS%
 copy apps\tests\regtest\regtest.exe %ROS_INSTALL_TESTS%
