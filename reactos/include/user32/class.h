@@ -18,6 +18,7 @@
 
 
 
+
 typedef struct tagCLASS
 {
     struct tagCLASS *next;        /* Next class */

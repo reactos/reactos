@@ -20,37 +20,7 @@ typedef HANDLE HQUEUE;
 
 #define WND_MAGIC     0x444e4957  /* 'WIND' */
 
-  /* Built-in class names (see _Undocumented_Windows_ p.418) */
-#define POPUPMENU_CLASS_NAME "#32768"  /* PopupMenu */
-#define DESKTOP_CLASS_NAME   "#32769"  /* Desktop */
-#define DIALOG_CLASS_NAME    "#32770"  /* Dialog */
-#define WINSWITCH_CLASS_NAME "#32771"  /* WinSwitch */
-#define ICONTITLE_CLASS_NAME "#32772"  /* IconTitle */
-
-#define POPUPMENU_CLASS_ATOM MAKEINTATOM(32768)  /* PopupMenu */
-#define DESKTOP_CLASS_ATOM   ((ATOM)32769)       /* Desktop */
-#define DIALOG_CLASS_ATOM    MAKEINTATOM(32770)  /* Dialog */
-#define WINSWITCH_CLASS_ATOM MAKEINTATOM(32771)  /* WinSwitch */
-#define ICONTITLE_CLASS_ATOM MAKEINTATOM(32772)  /* IconTitle */
-
-/* Built-in 32-bit classes */
-typedef enum
-{
-    BIC32_BUTTON,
-    BIC32_EDIT,
-    BIC32_LISTBOX,
-    BIC32_COMBO,
-    BIC32_COMBOLB,
-    BIC32_POPUPMENU,
-    BIC32_STATIC,
-    BIC32_SCROLL,
-    BIC32_MDICLIENT,
-    BIC32_DESKTOP,
-    BIC32_DIALOG,
-    BIC32_ICONTITLE,
-    BIC32_NB_CLASSES
-} BUILTIN_CLASS;
-
+ 
   /* PAINT_RedrawWindow() control flags */
 #define RDW_C_USEHRGN		0x0001
 #define RDW_C_DELETEHRGN	0x0002

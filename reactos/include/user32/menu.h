@@ -172,11 +172,5 @@ void MENU_FreeItemData( MENUITEM* item );
 
 HMENU MENU_CopySysPopup(void);
 
-// addition to win32
-
-
-HPEN STDCALL GetSysColorPen(INT);
-
-
 
 #endif /* __WINE_MENU_H */

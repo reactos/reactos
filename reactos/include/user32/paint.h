@@ -20,3 +20,8 @@
 
 WINBOOL PAINT_RedrawWindow( HWND hwnd, const RECT *rectUpdate,
                            HRGN hrgnUpdate, UINT flags, UINT control );
+
+HBRUSH PAINT_GetControlBrush( HWND hParent, HWND hWnd, HDC hDC, UINT ctlType );
+
+HBRUSH GetControlBrush( HWND hwnd, HDC hdc, UINT ctlType );
+

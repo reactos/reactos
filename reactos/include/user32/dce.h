@@ -27,6 +27,8 @@ struct tagWND;
 #define DCX_KEEPCLIPRGN		0x00040000
 #define DCX_NOCLIPCHILDREN      0x00080000
 
+#define DCX_USESTYLE            0x00010000
+
 typedef enum
 {
     DCE_CACHE_DC,   /* This is a cached DC (allocated by USER) */

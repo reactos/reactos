@@ -12,7 +12,7 @@
 #include <user32/win.h>
 #include <user32/queue.h>
 #include <user32/sysmetr.h>
-//#include <user32/debug.h>
+#include <user32/debug.h>
 
 typedef struct
 {
@@ -52,9 +52,15 @@ WINBOOL MSG_PeekMessage( LPMSG msg, HWND hwnd, WORD first, WORD last,
 
 void  MSG_CallWndProcHook( LPMSG pmsg, WINBOOL bUnicode );
 
-LRESULT MSG_SendMessage( HQUEUE hDestQueue, HWND hwnd, UINT msg,
-                                WPARAM wParam, LPARAM lParam, WORD flags );
+LRESULT MSG_SendMessage(WND *Wnd, UINT msg,
+                                WPARAM wParam, LPARAM lParam);
 
+
+LRESULT MSG_SendMessageInterTask(  HWND hwnd, UINT msg,
+                                WPARAM wParam, LPARAM lParam, WINBOOL bUnicode);
+
+WINBOOL MSG_DoTranslateMessage( UINT message, HWND hwnd,
+                                      WPARAM wParam, LPARAM lParam );
 
 void joySendMessages(void);
 

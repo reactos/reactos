@@ -51,6 +51,9 @@ WINBOOL HOOK_RemoveHook( HANDLE hook );
 
 WINBOOL HOOK_IsHooked( INT id );
 
+LRESULT HOOK_CallHooks( INT id, INT code, WPARAM wParam,
+                           LPARAM lParam ,WINBOOL bUnicode);
+
 LRESULT HOOK_CallHooksA( INT id, INT code, WPARAM wParam,
 				  LPARAM lParam );
 LRESULT HOOK_CallHooksW( INT id, INT code, WPARAM wParam,
