@@ -1378,6 +1378,13 @@ IopActionConfigureChildServices(
 
    if (!IopDeviceNodeHasFlag(DeviceNode, DNF_DISABLED))
    {
+      WCHAR RegKeyBuffer[MAX_PATH];
+      UNICODE_STRING RegKey;
+      
+      RegKey.Length = 0;
+      RegKey.MaximumLength = sizeof(RegKeyBuffer);
+      RegKey.Buffer = RegKeyBuffer;
+      
       /*
        * Retrieve configuration from Enum key
        */
@@ -1391,8 +1398,11 @@ IopActionConfigureChildServices(
       QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
       QueryTable[0].EntryContext = Service;
 
-      Status = RtlQueryRegistryValues(RTL_REGISTRY_ENUM,
-         DeviceNode->InstancePath.Buffer, QueryTable, NULL, NULL);
+      RtlAppendUnicodeToString(&RegKey, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
+      RtlAppendUnicodeStringToString(&RegKey, &DeviceNode->InstancePath);
+
+      Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
+         RegKey.Buffer, QueryTable, NULL, NULL);
 
       if (!NT_SUCCESS(Status))
       {

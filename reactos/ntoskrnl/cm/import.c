@@ -242,7 +242,8 @@ CmImportHardwareHive(PCHAR ChunkBase,
 			    &Disposition);
       if (!NT_SUCCESS(Status))
 	{
-	  return FALSE;
+          DPRINT1("NtCreateKey() failed, status: 0x%x\n", Status);
+          return FALSE;
 	}
       NtClose (HardwareKey);
 
@@ -263,7 +264,8 @@ CmImportHardwareHive(PCHAR ChunkBase,
 			    &Disposition);
       if (!NT_SUCCESS(Status))
 	{
-	  return FALSE;
+          DPRINT1("NtCreateKey() failed, status: 0x%x\n", Status);
+          return FALSE;
 	}
       NtClose (HardwareKey);
 
@@ -284,7 +286,8 @@ CmImportHardwareHive(PCHAR ChunkBase,
 			    &Disposition);
       if (!NT_SUCCESS(Status))
 	{
-	  return FALSE;
+          DPRINT1("NtCreateKey() failed, status: 0x%x\n", Status);
+          return FALSE;
 	}
       NtClose (HardwareKey);
 
@@ -305,7 +308,8 @@ CmImportHardwareHive(PCHAR ChunkBase,
 			    &Disposition);
       if (!NT_SUCCESS(Status))
 	{
-	  return FALSE;
+          DPRINT1("NtCreateKey() failed, status: 0x%x\n", Status);
+          return FALSE;
 	}
       NtClose (HardwareKey);
 

@@ -77,6 +77,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 			CmiKeyType);
   if (!NT_SUCCESS(Status))
     {
+      DPRINT("ObFindObject failed, Status: 0x%x\n", Status);
       return(Status);
     }
 
@@ -89,6 +90,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 	{
 	  ObDereferenceObject(Object);
 	  RtlFreeUnicodeString(&RemainingPath);
+	  DPRINT("Object marked for delete!\n");
 	  return(STATUS_UNSUCCESSFUL);
 	}
 
@@ -101,7 +103,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 			      TRUE,
 			      KeyHandle);
 
-      DPRINT("Status %x\n", Status);
+      DPRINT("ObCreateHandle failed Status 0x%x\n", Status);
       ObDereferenceObject(Object);
       RtlFreeUnicodeString(&RemainingPath);
       return Status;
@@ -118,6 +120,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
     {
       ObDereferenceObject(Object);
       RtlFreeUnicodeString(&RemainingPath);
+      DPRINT1("NtCreateKey() can't create trees! (found \'\\\' in remaining path: \"%wZ\"!)\n", &RemainingPath);
       return STATUS_OBJECT_NAME_NOT_FOUND;
     }
 
@@ -134,6 +137,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 			  (PVOID*)&KeyObject);
   if (!NT_SUCCESS(Status))
     {
+      DPRINT1("ObCreateObject() failed!\n");
       return(Status);
     }
 
@@ -147,6 +151,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
     {
       ObDereferenceObject(KeyObject);
       RtlFreeUnicodeString(&RemainingPath);
+      DPRINT1("ObInsertObject() failed!\n");
       return(Status);
     }
 
@@ -965,7 +970,7 @@ NtOpenKey(OUT PHANDLE KeyHandle,
 	 ObjectAttributes ? ObjectAttributes->ObjectName : NULL);
 
   PreviousMode = ExGetPreviousMode();
-  
+
   if(PreviousMode != KernelMode)
   {
     _SEH_TRY

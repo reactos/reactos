@@ -458,8 +458,7 @@ RtlZeroMemory (PVOID Destination, ULONG Length);
 #define RTL_REGISTRY_WINDOWS_NT 3
 #define RTL_REGISTRY_DEVICEMAP  4
 #define RTL_REGISTRY_USER       5
-#define RTL_REGISTRY_ENUM       6   /* ReactOS specific: Used internally in kernel only */
-#define RTL_REGISTRY_MAXIMUM    7
+#define RTL_REGISTRY_MAXIMUM    6
 
 #define RTL_REGISTRY_HANDLE     0x40000000
 #define RTL_REGISTRY_OPTIONAL   0x80000000

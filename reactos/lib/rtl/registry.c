@@ -51,6 +51,13 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
 				 0,
 				 FALSE,
 				 DUPLICATE_SAME_ACCESS);
+#ifndef NDEBUG
+      if(!NT_SUCCESS(Status))
+      {
+        DPRINT("ZwDuplicateObject() failed! Status: 0x%x\n", Status);
+      }
+#endif
+      
       return(Status);
     }
 
@@ -58,18 +65,20 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
     RelativeTo &= ~RTL_REGISTRY_OPTIONAL;
 
   if (RelativeTo >= RTL_REGISTRY_MAXIMUM)
+  {
+    DPRINT("Invalid relative flag, parameter invalid!\n");
     return(STATUS_INVALID_PARAMETER);
+  }
 
   KeyName.Length = 0;
-  KeyName.MaximumLength = MAX_PATH;
+  KeyName.MaximumLength = sizeof(KeyBuffer);
   KeyName.Buffer = KeyBuffer;
   KeyBuffer[0] = 0;
 
   switch (RelativeTo)
     {
       case RTL_REGISTRY_ABSOLUTE:
-	RtlAppendUnicodeToString(&KeyName,
-				 L"\\");
+        /* nothing to prefix! */
 	break;
 
       case RTL_REGISTRY_SERVICES:
@@ -102,15 +111,7 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
 	RtlAppendUnicodeToString (&KeyName,
 				  L"\\");
 	break;
-
-      /* ReactOS specific */
-      case RTL_REGISTRY_ENUM:
-	RtlAppendUnicodeToString(&KeyName,
-				 L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
-	break;
     }
-
-  DPRINT("KeyName %wZ\n", &KeyName);
 
   if (Path[0] == L'\\' && RelativeTo != RTL_REGISTRY_ABSOLUTE)
     {
@@ -127,7 +128,7 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
 			     NULL,
 			     NULL);
 
-  if (Create == TRUE)
+  if (Create)
     {
       Status = ZwCreateKey(KeyHandle,
 			   KEY_ALL_ACCESS,
@@ -143,6 +144,13 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
 			 KEY_ALL_ACCESS,
 			 &ObjectAttributes);
     }
+
+#ifndef NDEBUG
+  if(!NT_SUCCESS(Status))
+  {
+    DPRINT("%s failed! Status: 0x%x\n", (Create ? "ZwCreateKey" : "ZwOpenKey"), Status);
+  }
+#endif
 
   return(Status);
 }
@@ -876,7 +884,10 @@ RtlWriteRegistryValue(IN ULONG RelativeTo,
 				 TRUE,
 				 &KeyHandle);
   if (!NT_SUCCESS(Status))
+  {
+    DPRINT("RtlpGetRegistryHandle() failed! Status: 0x%x\n", Status);
     return(Status);
+  }
 
   RtlInitUnicodeString(&Name,
 		       ValueName);
@@ -887,8 +898,12 @@ RtlWriteRegistryValue(IN ULONG RelativeTo,
 			 ValueType,
 			 ValueData,
 			 ValueLength);
-  if (NT_SUCCESS(Status))
-    ZwClose(KeyHandle);
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT1("ZwSetValueKey() failed! Status: 0x%x\n", Status);
+  }
+
+  ZwClose(KeyHandle);
 
   return(Status);
 }

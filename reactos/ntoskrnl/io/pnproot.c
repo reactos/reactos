@@ -409,7 +409,8 @@ PnpRootFdoReadDeviceInfo(
 
   DeviceDesc = &Device->DeviceDescription;
 
-  wcscpy(KeyName, ENUM_NAME_ROOT);
+  wcscpy(KeyName, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
+  wcscat(KeyName, ENUM_NAME_ROOT);
   wcscat(KeyName, L"\\");
   wcscat(KeyName, Device->ServiceName.Buffer);
   wcscat(KeyName, L"\\");
@@ -426,7 +427,7 @@ PnpRootFdoReadDeviceInfo(
   QueryTable[0].EntryContext = DeviceDesc;
 
   Status = RtlQueryRegistryValues(
-    RTL_REGISTRY_ENUM,
+    RTL_REGISTRY_ABSOLUTE,
     KeyName,
     QueryTable,
     NULL,
