@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.55 2004/09/28 10:51:05 ekohl Exp $
+/* $Id: rw.c,v 1.56 2004/10/10 18:23:09 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -70,7 +70,9 @@ NtReadFile (IN HANDLE FileHandle,
     return Status;
   }
 
-  if (ByteOffset == NULL)
+  if (ByteOffset == NULL ||
+      (ByteOffset->u.LowPart == FILE_USE_FILE_POINTER_POSITION &&
+       ByteOffset->u.HighPart == 0xffffffff))
   {
     /* a valid ByteOffset is required if asynch. op. */
     if (!(FileObject->Flags & FO_SYNCHRONOUS_IO))
