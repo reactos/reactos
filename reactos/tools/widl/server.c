@@ -366,8 +366,7 @@ static void write_function_stubs(type_t *iface)
             }
         }
 
-        write_type(server, def->type, def, def->tname);
-        fprintf(server, " __RPC_STUB\n");
+        fprintf(server, "void __RPC_STUB\n");
         fprintf(server, "%s_", iface->name);
         write_name(server, def);
         fprintf(server, "(\n");
@@ -602,7 +601,7 @@ static void write_stubdescriptor(type_t *iface)
     print_server("(void __RPC_FAR *)& %s___RpcServerInterface,\n", iface->name);
     print_server("MIDL_user_allocate,\n");
     print_server("MIDL_user_free,\n");
-    print_server("0,\n");
+    print_server("{NULL},\n");
     print_server("0,\n");
     print_server("0,\n");
     print_server("0,\n");

@@ -1,5 +1,12 @@
 ChangeLog
 
+2005-02-26 ekohl
+  tools/widl/server.c
+
+Server stubs are void functions.
+Fix a warning in the server stub descriptor.
+
+
 2005-02-25 ekohl
   tools/widl/client.c
   tools/widl/header.c
