@@ -1,4 +1,4 @@
-/* $Id: rtltypes.h,v 1.11 2004/01/05 14:28:19 weiden Exp $
+/* $Id: rtltypes.h,v 1.12 2004/02/01 20:45:18 ekohl Exp $
  * 
  */
 
@@ -63,10 +63,15 @@ typedef struct _TIME_FIELDS
 
 typedef struct _RTL_BITMAP
 {
-  ULONG  SizeOfBitMap;
+  ULONG SizeOfBitMap;
   PULONG Buffer;
 } RTL_BITMAP, *PRTL_BITMAP;
 
+typedef struct _RTL_BITMAP_RUN
+{
+  ULONG StarttingIndex;
+  ULONG NumberOfBits;
+} RTL_BITMAP_RUN, *PRTL_BITMAP_RUN;
 
 #ifdef __GNUC__
 #define STDCALL_FUNC STDCALL
@@ -123,13 +128,48 @@ typedef struct _RTL_SPLAY_LINKS
   struct _RTL_SPLAY_LINKS *RightChild;
 } RTL_SPLAY_LINKS, *PRTL_SPLAY_LINKS;
 
+
+typedef struct _RTL_RANGE_LIST
+{
+  LIST_ENTRY ListHead;
+  ULONG Flags;
+  ULONG Count;
+  ULONG Stamp;
+} RTL_RANGE_LIST, *PRTL_RANGE_LIST;
+
+
+typedef struct _RTL_RANGE
+{
+  ULONGLONG Start;
+  ULONGLONG End;
+  PVOID UserData;
+  PVOID Owner;
+  UCHAR Attributes;
+  UCHAR Flags;
+} RTL_RANGE, *PRTL_RANGE;
+
+
+typedef BOOLEAN
+(STDCALL *PRTL_CONFLICT_RANGE_CALLBACK) (PVOID Context,
+					 PRTL_RANGE Range);
+
+
+typedef struct _RANGE_LIST_ITERATOR
+{
+  PLIST_ENTRY RangeListHead;
+  PLIST_ENTRY MergedHead;
+  PVOID Current;
+  ULONG Stamp;
+} RTL_RANGE_LIST_ITERATOR, *PRTL_RANGE_LIST_ITERATOR;
+
+
 typedef struct _USER_STACK
 {
- PVOID FixedStackBase;
- PVOID FixedStackLimit;
- PVOID ExpandableStackBase;
- PVOID ExpandableStackLimit;
- PVOID ExpandableStackBottom;
+  PVOID FixedStackBase;
+  PVOID FixedStackLimit;
+  PVOID ExpandableStackBase;
+  PVOID ExpandableStackLimit;
+  PVOID ExpandableStackBottom;
 } USER_STACK, *PUSER_STACK;
 
 #else /* __USE_W32API */

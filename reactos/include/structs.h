@@ -496,36 +496,6 @@ typedef struct _cpinfoexW {
 typedef_tident(CPINFOEX)
 typedef_tident(LPCPINFOEX)
 
-typedef struct _RTL_RANGE_LIST {
-    LIST_ENTRY ListHead;
-    ULONG Flags;
-    ULONG Count;
-    ULONG Stamp;
-} RTL_RANGE_LIST, *PRTL_RANGE_LIST;
-
-typedef struct _RTL_RANGE {
-    ULONGLONG Start;
-    ULONGLONG End;
-    PVOID UserData;
-    PVOID Owner;
-    UCHAR Attributes;
-    UCHAR Flags;
-} RTL_RANGE, *PRTL_RANGE;
-
-typedef
-BOOLEAN
-(CALLBACK *PRTL_CONFLICT_RANGE_CALLBACK) (
-PVOID Context,
-PRTL_RANGE Range
-    );
-
-typedef struct _RANGE_LIST_ITERATOR {
-    PLIST_ENTRY RangeListHead;
-    PLIST_ENTRY MergedHead;
-    PVOID Current;
-    ULONG Stamp;
-} RTL_RANGE_LIST_ITERATOR, *PRTL_RANGE_LIST_ITERATOR;
-
 typedef struct tagCBT_CREATEWNDA {
   LPCREATESTRUCTA lpcs;
   HWND            hwndInsertAfter;
@@ -999,13 +969,6 @@ typedef struct tagACTCTX_SECTION_KEYED_DATA {
     ACTCTX_SECTION_KEYED_DATA_ASSEMBLY_METADATA AssemblyMetadata;
 } ACTCTX_SECTION_KEYED_DATA, *PACTCTX_SECTION_KEYED_DATA;
 typedef const ACTCTX_SECTION_KEYED_DATA * PCACTCTX_SECTION_KEYED_DATA;
-
-typedef struct tagRTL_BITMAP_RUN {
-    ULONG StartOfRun;
-    ULONG SizeOfRun;
-} RTL_BITMAP_RUN, *PRTL_BITMAP_RUN;
-
-typedef const RTL_BITMAP *PCRTL_BITMAP;
 
 typedef struct _cpinfo {
   UINT MaxCharSize;

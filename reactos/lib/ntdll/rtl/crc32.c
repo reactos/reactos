@@ -8,29 +8,22 @@
  *                    11/15/2000: Created
  */
 
-/* This work is based off of rtl.c in Wine. 
+/* This work is based off of rtl.c in Wine.
  * Please give credit where credit is due:
  *
- * Copyright 1996-1998 Marcus Meissner
- * Copyright 1999      Alex Korobka
  * Copyright 2003      Thomas Mertes
  * Crc32 code Copyright 1986 Gary S. Brown (Public domain)
  */
 
 /* INCLUDES *****************************************************************/
 
-#include <windows.h>
 #include <ddk/ntddk.h>
 #include <ntdll/rtl.h>
-
-/* GLOBALS ******************************************************************/
-
-extern ULONG NtGlobalFlag;
 
 /* FUNCTIONS ****************************************************************/
 
 /* CRC polynomial 0xedb88320 */
-static const DWORD CRC_table[256] =
+static const ULONG CrcTable[256] =
 {
     0x00000000, 0x77073096, 0xee0e612c, 0x990951ba, 0x076dc419, 0x706af48f,
     0xe963a535, 0x9e6495a3, 0x0edb8832, 0x79dcb8a4, 0xe0d5e91e, 0x97d2d988,
@@ -83,30 +76,34 @@ static const DWORD CRC_table[256] =
  * Calculate the CRC32 checksum of a block of bytes
  *
  * PARAMS
- *  dwInitial [I] Initial CRC value
- *  pData     [I] Data block
- *  iLen      [I] Length of the byte block
+ *  Initial [I] Initial CRC value
+ *  Data    [I] Data block
+ *  Length  [I] Length of the byte block
  *
  * RETURNS
- *  The cumulative CRC32 of dwInitial and iLen bytes of the pData block.
+ *  The cumulative CRC32 of Initial and Length bytes of the Data block.
  *
  * @implemented
  */
-DWORD STDCALL RtlComputeCrc32(DWORD dwInitial, PBYTE pData, INT iLen)
+ULONG STDCALL
+RtlComputeCrc32 (IN ULONG Initial,
+		 IN PUCHAR Data,
+		 IN ULONG Length)
 {
-  DWORD crc = ~dwInitial;
+  ULONG CrcValue;
 
 #ifdef DBG
-  DbgPrint("(%ld,%p,%d)\n", dwInitial, pData, iLen);
+  DbgPrint("(%lu,%p,%lu)\n", Initial, Data, Length);
 #endif
 
-  while (iLen > 0)
+  CrcValue = ~Initial;
+  while (Length > 0)
   {
-    crc = CRC_table[(crc ^ *pData) & 0xff] ^ (crc >> 8);
-    pData++;
-    iLen--;
+    CrcValue = CrcTable[(CrcValue ^ *Data) & 0xff] ^ (CrcValue >> 8);
+    Data++;
+    Length--;
   }
-  return ~crc;
+  return ~CrcValue;
 }
 
 /* EOF */

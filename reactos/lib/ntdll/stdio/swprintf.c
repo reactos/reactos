@@ -1,4 +1,4 @@
-/* $Id: swprintf.c,v 1.16 2004/01/10 14:22:14 hbirr Exp $
+/* $Id: swprintf.c,v 1.17 2004/02/01 20:48:06 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -243,7 +243,9 @@ stringw(wchar_t* buf, wchar_t* end, const wchar_t* sw, int len, int field_width,
 	return buf;
 }
 
-
+/*
+ * @implemented
+ */
 int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 {
 	int len;

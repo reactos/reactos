@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.24 2004/01/23 18:00:53 navaraf Exp $
+/* $Id: rtl.h,v 1.25 2004/02/01 20:45:18 ekohl Exp $
  * 
  */
 #ifndef __DDK_RTL_H
@@ -615,6 +615,15 @@ RtlAddAtomToAtomTable (
 	OUT	PRTL_ATOM	Atom
 	);
 
+NTSTATUS STDCALL
+RtlAddRange (IN OUT PRTL_RANGE_LIST RangeList,
+	     IN ULONGLONG Start,
+	     IN ULONGLONG End,
+	     IN UCHAR Attributes,
+	     IN ULONG Flags,
+	     IN PVOID UserData OPTIONAL,
+	     IN PVOID Owner OPTIONAL);
+
 PVOID STDCALL
 RtlAllocateHeap (
 	HANDLE	Heap,
@@ -798,6 +807,10 @@ RtlCopyLuidAndAttributesArray(ULONG Count,
 			      PLUID_AND_ATTRIBUTES Dest);
 
 NTSTATUS STDCALL
+RtlCopyRangeList (OUT PRTL_RANGE_LIST CopyRangeList,
+		  IN PRTL_RANGE_LIST RangeList);
+
+NTSTATUS STDCALL
 RtlCopySid(ULONG BufferLength,
 	   PSID Dest,
 	   PSID Src);
@@ -902,6 +915,16 @@ RtlDeleteAtomFromAtomTable(IN PRTL_ATOM_TABLE AtomTable,
 			   IN RTL_ATOM Atom);
 
 NTSTATUS STDCALL
+RtlDeleteOwnersRanges (IN OUT PRTL_RANGE_LIST RangeList,
+		       IN PVOID Owner);
+
+NTSTATUS STDCALL
+RtlDeleteRange (IN OUT PRTL_RANGE_LIST RangeList,
+		IN ULONGLONG Start,
+		IN ULONGLONG End,
+		IN PVOID Owner);
+
+NTSTATUS STDCALL
 RtlDescribeChunk(IN USHORT CompressionFormat,
 		 IN OUT PUCHAR *CompressedBuffer,
 		 IN PUCHAR EndOfCompressedBufferPlus1,
@@ -990,13 +1013,6 @@ RtlFillMemoryUlong (
 	ULONG	Fill
 	);
 
-NTSTATUS
-STDCALL
-RtlStringFromGUID (
-    IN REFGUID Guid,
-    OUT PUNICODE_STRING GuidString
-    );
-	
 ULONG
 STDCALL
 RtlFindClearBits (
@@ -1051,6 +1067,18 @@ RtlFindMessage (
 	OUT	PRTL_MESSAGE_RESOURCE_ENTRY	*MessageResourceEntry
 	);
 
+NTSTATUS STDCALL
+RtlFindRange (IN PRTL_RANGE_LIST RangeList,
+	      IN ULONGLONG Minimum,
+	      IN ULONGLONG Maximum,
+	      IN ULONG Length,
+	      IN ULONG Alignment,
+	      IN ULONG Flags,
+	      IN UCHAR AttributeAvailableMask,
+	      IN PVOID Context OPTIONAL,
+	      IN PRTL_CONFLICT_RANGE_CALLBACK Callback OPTIONAL,
+	      OUT PULONGLONG Start);
+
 ULONG
 STDCALL
 RtlFindSetBits (
@@ -1093,6 +1121,9 @@ RtlFreeOemString (
 	POEM_STRING	OemString
 	);
 
+VOID STDCALL
+RtlFreeRangeList (IN PRTL_RANGE_LIST RangeList);
+
 VOID
 STDCALL
 RtlFreeUnicodeString (
@@ -1116,6 +1147,16 @@ RtlGetDefaultCodePage (
 	PUSHORT AnsiCodePage,
 	PUSHORT OemCodePage
 	);
+
+NTSTATUS STDCALL
+RtlGetFirstRange (IN PRTL_RANGE_LIST RangeList,
+		  OUT PRTL_RANGE_LIST_ITERATOR Iterator,
+		  OUT PRTL_RANGE *Range);
+
+NTSTATUS STDCALL
+RtlGetNextRange (IN OUT PRTL_RANGE_LIST_ITERATOR Iterator,
+		 OUT PRTL_RANGE *Range,
+		 IN BOOLEAN MoveForwards);
 
 PVOID
 STDCALL
@@ -1214,6 +1255,9 @@ RtlInitializeGenericTable (
 	IN	ULONG			UserParameter
 	);
 
+VOID STDCALL
+RtlInitializeRangeList (IN OUT PRTL_RANGE_LIST RangeList);
+
 PVOID
 STDCALL
 RtlInsertElementGenericTable (
@@ -1240,19 +1284,27 @@ RtlIntegerToUnicodeString (
 	IN OUT	PUNICODE_STRING	String
 	);
 
-BOOLEAN
-STDCALL
-RtlIsGenericTableEmpty (
-	IN	PRTL_GENERIC_TABLE	Table
-	);
+NTSTATUS STDCALL
+RtlInvertRangeList (OUT PRTL_RANGE_LIST InvertedRangeList,
+		    IN PRTL_RANGE_LIST RangeList);
 
-BOOLEAN
-STDCALL
-RtlIsNameLegalDOS8Dot3 (
-	IN	PUNICODE_STRING	UnicodeName,
-	IN	PANSI_STRING	AnsiName,
-	OUT	PBOOLEAN	SpacesFound
-	);
+BOOLEAN STDCALL
+RtlIsGenericTableEmpty (IN PRTL_GENERIC_TABLE Table);
+
+BOOLEAN STDCALL
+RtlIsNameLegalDOS8Dot3 (IN PUNICODE_STRING UnicodeName,
+			IN PANSI_STRING AnsiName,
+			OUT PBOOLEAN SpacesFound);
+
+NTSTATUS STDCALL
+RtlIsRangeAvailable (IN PRTL_RANGE_LIST RangeList,
+		     IN ULONGLONG Start,
+		     IN ULONGLONG End,
+		     IN ULONG Flags,
+		     IN UCHAR AttributeAvailableMask,
+		     IN PVOID Context OPTIONAL,
+		     IN PRTL_CONFLICT_RANGE_CALLBACK Callback OPTIONAL,
+		     OUT PBOOLEAN Available);
 
 ULONG
 STDCALL
@@ -1463,6 +1515,12 @@ RtlLookupAtomInAtomTable (
 	IN	PWSTR		AtomName,
 	OUT	PRTL_ATOM	Atom
 	);
+
+NTSTATUS STDCALL
+RtlMergeRangeLists (OUT PRTL_RANGE_LIST MergedRangeList,
+		    IN PRTL_RANGE_LIST RangeList1,
+		    IN PRTL_RANGE_LIST RangeList2,
+		    IN ULONG Flags);
 
 NTSTATUS
 STDCALL
@@ -1738,7 +1796,11 @@ RtlSizeHeap (
 	{ \
 		*((PUSHORT)(Address))=(USHORT)(Value); \
 	}
-	
+
+NTSTATUS STDCALL
+RtlStringFromGUID (IN REFGUID Guid,
+		   OUT PUNICODE_STRING GuidString);
+
 BOOLEAN
 STDCALL
 RtlTimeFieldsToTime (

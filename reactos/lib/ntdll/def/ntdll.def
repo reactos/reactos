@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.113 2003/12/02 11:38:46 gvg Exp $
+; $Id: ntdll.def,v 1.114 2004/02/01 20:48:05 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -288,6 +288,7 @@ RtlAddAtomToAtomTable@12
 ;RtlAddAttributeActionToRXact
 RtlAddAuditAccessAce@24
 ;RtlAddCompoundAce
+RtlAddRange@36
 RtlAdjustPrivilege@16
 RtlAllocateAndInitializeSid@44
 RtlAllocateHandle@8
@@ -319,6 +320,7 @@ RtlCompareMemoryUlong@12
 RtlCompareString@12
 RtlCompareUnicodeString@12
 RtlCompressBuffer@32
+RtlComputeCrc32@12
 ;RtlConsoleMultiByteToUnicodeN
 RtlConvertExclusiveToShared@4
 RtlConvertLongToLargeInteger@4
@@ -328,6 +330,7 @@ RtlConvertSidToUnicodeString@12
 RtlConvertUlongToLargeInteger@4
 RtlCopyLuid@8
 RtlCopyLuidAndAttributesArray@12
+RtlCopyRangeList@8
 ;RtlCopySecurityDescriptor
 RtlCopySid@12
 RtlCopySidAndAttributesArray@28
@@ -360,6 +363,8 @@ RtlDeleteAtomFromAtomTable@8
 RtlDeleteCriticalSection@4
 RtlDeleteElementGenericTable@8
 RtlDeleteNoSplay@8
+RtlDeleteOwnersRanges@8
+RtlDeleteRange@24
 RtlDeleteRegistryValue@12
 RtlDeleteResource@4
 RtlDeleteSecurityObject@4
@@ -373,6 +378,7 @@ RtlDetermineDosPathNameType_U@4
 RtlDoesFileExists_U@4
 RtlDosPathNameToNtPathName_U@16
 RtlDosSearchPath_U@24
+RtlDowncaseUnicodeChar@4
 RtlDowncaseUnicodeString@12
 RtlDumpResource@4
 RtlEmptyAtomTable@8
@@ -402,9 +408,13 @@ RtlFillMemory@12
 RtlFillMemoryUlong@12
 RtlFindClearBits@12
 RtlFindClearBitsAndSet@12
+RtlFindClearRuns@16
+RtlFindLastBackwardRunClear@12
 RtlFindLongestRunClear@8
 RtlFindLongestRunSet@8
 RtlFindMessage@20
+RtlFindNextForwardRunClear@12
+RtlFindRange@48
 RtlFindSetBits@12
 RtlFindSetBitsAndClear@12
 RtlFirstFreeAce@8
@@ -415,6 +425,7 @@ RtlFreeAnsiString@4
 RtlFreeHandle@8
 RtlFreeHeap@12
 RtlFreeOemString@4
+RtlFreeRangeList@4
 RtlFreeSid@4
 RtlFreeUnicodeString@4
 RtlFreeUserThreadStack@8
@@ -426,9 +437,11 @@ RtlGetControlSecurityDescriptor@12
 RtlGetCurrentDirectory_U@8
 RtlGetDaclSecurityDescriptor@16
 RtlGetElementGenericTable@8
+RtlGetFirstRange@12
 RtlGetFullPathName_U@16
 RtlGetGroupSecurityDescriptor@12
 RtlGetLongestNtPathLength@0
+RtlGetNextRange@12
 RtlGetNtGlobalFlags@0
 RtlGetNtProductType@4
 RtlGetNtVersionNumbers@12
@@ -452,17 +465,21 @@ RtlInitUnicodeString@8
 RtlInitializeBitMap@12
 RtlInitializeContext@20
 RtlInitializeCriticalSection@4
+RtlInitializeCriticalSectionAndSpinCount@8
 RtlInitializeGenericTable@20
 RtlInitializeHandleTable@12
-;RtlInitializeRXact
+RtlInitializeRangeList@4
 RtlInitializeResource@4
+;RtlInitializeRXact
 RtlInitializeSid@12
 RtlInsertElementGenericTable@16
 RtlIntegerToChar@16
 RtlIntegerToUnicodeString@12
+RtlInvertRangeList@8
 RtlIsDosDeviceName_U@4
 RtlIsGenericTableEmpty@4
 RtlIsNameLegalDOS8Dot3@12
+RtlIsRangeAvailable@40
 RtlIsTextUnicode@12
 RtlIsValidHandle@8
 RtlIsValidIndexHandle@12
@@ -484,6 +501,7 @@ RtlLookupAtomInAtomTable@12
 RtlLookupElementGenericTable@8
 RtlMakeSelfRelativeSD@12
 RtlMapGenericMask@8
+RtlMergeRangeLists@16
 RtlMoveMemory@12
 RtlMultiByteToUnicodeN@20
 RtlMultiByteToUnicodeSize@12
@@ -846,6 +864,7 @@ _i64toa
 _i64tow
 _itoa
 _itow
+_lfind
 _ltoa
 _ltow
 _memccpy
@@ -860,9 +879,12 @@ _strnicmp
 _strupr
 _tolower
 _toupper
+_ui64toa
+_ui64tow
 _ultoa
 _ultow
 _vsnprintf
+_vsnwprintf
 _wcsicmp
 _wcslwr
 _wcsnicmp
@@ -874,6 +896,7 @@ abs
 atan
 atoi
 atol
+bsearch
 ceil
 cos
 fabs
@@ -890,7 +913,10 @@ isspace
 isupper
 iswalpha
 iswctype
+iswdigit
+iswlower
 iswspace
+iswxdigit
 isxdigit
 labs
 log
@@ -1072,7 +1098,6 @@ RtlAddAccessDeniedAceEx@20
 ;RtlAddAccessDeniedObjectAce
 ;RtlAddAuditAccessAceEx
 ;RtlAddAuditAccessObjectAce
-RtlAddRange@36
 RtlAddRefActivationContext@4
 ;RtlAddRefMemoryStream
 ;RtlAddVectoredExceptionHandler
@@ -1088,7 +1113,6 @@ RtlCaptureContext@4
 ;RtlCloneMemoryStream
 ;RtlCommitMemoryStream
 ;RtlCompareVariants
-RtlComputeCrc32@12
 ;RtlComputeImportTableHash
 ;RtlComputePrivatizedDllName_U
 ;RtlConvertPropertyToVariant
@@ -1096,7 +1120,6 @@ RtlComputeCrc32@12
 ;RtlConvertVariantToProperty
 ;RtlCopyMemoryStreamTo
 ;RtlCopyOutOfProcessMemoryStreamTo
-RtlCopyRangeList@8
 ;RtlCreateActivationContext
 ;RtlCreateBootStatusDataFile
 ;RtlCreateSystemVolumeInformationFolder
@@ -1107,8 +1130,6 @@ RtlDeactivateActivationContext@8
 ;RtlDebugPrintTimes
 ;RtlDefaultNpAcl
 ;RtlDeleteElementGenericTableAvl
-RtlDeleteOwnersRanges@8
-RtlDeleteRange@24
 RtlDeleteTimer@12
 RtlDeleteTimerQueue@4
 RtlDeleteTimerQueueEx@8
@@ -1118,7 +1139,6 @@ RtlDllShutdownInProgress@0
 ;RtlDnsHostNameToComputerName
 ;RtlDosApplyFileIsolationRedirection_Ustr
 ;RtlDosSearchPath_Ustr
-RtlDowncaseUnicodeChar@4
 RtlDuplicateUnicodeString@12
 ;RtlEnableEarlyCriticalSectionEventCreation
 ;RtlEnumerateGenericTableAvl
@@ -1128,29 +1148,21 @@ RtlDuplicateUnicodeString@12
 ;RtlFindActivationContextSectionGuid
 ;RtlFindActivationContextSectionString
 RtlFindCharInUnicodeString@16
-RtlFindClearRuns@16
-RtlFindLastBackwardRunClear@12
 RtlFindLeastSignificantBit@8
 RtlFindMostSignificantBit@8
-RtlFindNextForwardRunClear@12
-RtlFindRange@48
 ;RtlFirstEntrySList
 ;RtlFlushSecureMemoryCache
-RtlFreeOemString@4
-RtlFreeRangeList@4
 ;RtlFreeThreadActivationContextStack
 RtlGUIDFromString@8
 RtlGetActiveActivationContext@4
 RtlGetCurrentPeb@0
 ;RtlGetElementGenericTableAvl
-RtlGetFirstRange@12
 ;RtlGetFrame
 RtlGetLastNtStatus@0
 RtlGetLastWin32Error@0
 ;RtlGetLengthWithoutLastFullDosOrNtPathElement
 ;RtlGetLengthWithoutTrailingPathSeperators
 RtlGetNativeSystemInformation@16
-RtlGetNextRange@12
 ;RtlGetSecurityDescriptorRMControl
 ;RtlGetSetBootStatusData
 RtlGetVersion@4
@@ -1158,9 +1170,7 @@ RtlHashUnicodeString@16
 ;RtlInitMemoryStream
 ;RtlInitOutOfProcessMemoryStream
 RtlInitUnicodeStringEx@8
-RtlInitializeCriticalSectionAndSpinCount@8
 ;RtlInitializeGenericTableAvl
-RtlInitializeRangeList@4
 RtlInitializeSListHead@4
 ;RtlInsertElementGenericTableAvl
 RtlInt64ToUnicodeString@16
@@ -1168,7 +1178,6 @@ RtlInterlockedFlushSList@4
 RtlInterlockedPopEntrySList@4
 RtlInterlockedPushEntrySList@8
 ;RtlInterlockedPushListSList
-RtlInvertRangeList@8
 ;RtlIpv4AddressToStringA
 ;RtlIpv4AddressToStringW
 ;RtlIpv4StringToAddressA
@@ -1178,14 +1187,12 @@ RtlInvertRangeList@8
 ;RtlIpv6StringToAddressW
 ;RtlIsActivationContextActive
 ;RtlIsGenericTableEmptyAvl
-RtlIsRangeAvailable@40
 ;RtlIsThreadWithinLoaderCallout
 ;RtlLockBootStatusData
 ;RtlLockMemoryStreamRegion
 RtlLogStackBackTrace@0
 ;RtlLookupElementGenericTableAvl
 ;RtlMapSecurityErrorToNtStatus
-RtlMergeRangeLists@16
 ;RtlMultiAppendUnicodeStringBuffer
 ;RtlNewSecurityObjectEx
 ;RtlNewSecurityObjectWithMultipleInheritance
@@ -1458,14 +1465,6 @@ _CIpow
 ;__eGetStatusWord
 ;_alldvrm
 ;_aulldvrm
-_lfind
-_ui64toa
-_ui64tow
-_vsnwprintf
-bsearch
-iswdigit
-iswlower
-iswxdigit
 vDbgPrintEx
 vDbgPrintExWithPrefix
 CsrIsCsrss@0

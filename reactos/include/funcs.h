@@ -2184,8 +2184,6 @@ NTSTATUS  STDCALL RtlAddAccessDeniedAceEx(
 	IN DWORD AceFlags,
 	IN DWORD AccessMask,
 	IN PSID pSid);
-DWORD     STDCALL RtlComputeCrc32(DWORD dwInitial, PBYTE pData, INT iLen);
-WCHAR     STDCALL RtlDowncaseUnicodeChar(WCHAR wch);
 NTSTATUS  STDCALL RtlDuplicateUnicodeString(
     int add_nul,
     const UNICODE_STRING *source,
@@ -2195,17 +2193,11 @@ NTSTATUS  STDCALL RtlFindCharInUnicodeString(
     const UNICODE_STRING *main_str,
     const UNICODE_STRING *search_chars,
     USHORT *pos);
-ULONG     STDCALL RtlFindClearRuns(PCRTL_BITMAP lpBits, PRTL_BITMAP_RUN lpSeries,
-                              ULONG ulCount, BOOLEAN bLongest);
-ULONG     STDCALL RtlFindLastBackwardRunClear(PCRTL_BITMAP lpBits, ULONG ulStart, PULONG lpPos);
 CCHAR     STDCALL RtlFindLeastSignificantBit(ULONGLONG ulLong);
 CCHAR     STDCALL RtlFindMostSignificantBit(ULONGLONG ulLong);
-ULONG     STDCALL RtlFindNextForwardRunClear(PCRTL_BITMAP lpBits, ULONG ulStart, PULONG lpPos);
 VOID      STDCALL RtlFreeOemString(POEM_STRING str);
 NTSTATUS  STDCALL RtlInitUnicodeStringEx(PUNICODE_STRING target,PCWSTR source);
-NTSTATUS  STDCALL RtlInitializeCriticalSectionAndSpinCount(RTL_CRITICAL_SECTION *crit, DWORD spincount);
 NTSTATUS  STDCALL RtlInt64ToUnicodeString(ULONGLONG value,ULONG base,UNICODE_STRING *str);
-void  *_lfind(const void* match, const void* start,unsigned int* array_size, unsigned int elem_size,int (*cf)(const void*,const void*));
 
 ULONG
 __cdecl
@@ -2346,73 +2338,9 @@ NtUnloadKeyEx(
     );
 NTSTATUS
 STDCALL
-RtlAddRange(
-    IN OUT PRTL_RANGE_LIST RangeList,
-    IN ULONGLONG Start,
-    IN ULONGLONG End,
-    IN UCHAR Attributes,
-    IN ULONG Flags,
-    IN PVOID UserData,  OPTIONAL
-    IN PVOID Owner      OPTIONAL
-    );
-NTSTATUS
-STDCALL
-RtlCopyRangeList(
-    OUT PRTL_RANGE_LIST CopyRangeList,
-    IN PRTL_RANGE_LIST RangeList
-    );
-NTSTATUS
-STDCALL
-RtlDeleteOwnersRanges(
-    IN OUT PRTL_RANGE_LIST RangeList,
-    IN PVOID Owner
-    );
-NTSTATUS
-STDCALL
-RtlDeleteRange(
-    IN OUT PRTL_RANGE_LIST RangeList,
-    IN ULONGLONG Start,
-    IN ULONGLONG End,
-    IN PVOID Owner
-    );
-NTSTATUS
-STDCALL
-RtlFindRange(
-    IN PRTL_RANGE_LIST RangeList,
-    IN ULONGLONG Minimum,
-    IN ULONGLONG Maximum,
-    IN ULONG Length,
-    IN ULONG Alignment,
-    IN ULONG Flags,
-    IN UCHAR AttributeAvailableMask,
-    IN PVOID Context OPTIONAL,
-    IN PRTL_CONFLICT_RANGE_CALLBACK Callback OPTIONAL,
-    OUT PULONGLONG Start
-    );
-VOID
-STDCALL
-RtlFreeRangeList(
-    IN PRTL_RANGE_LIST RangeList
-    );
-NTSTATUS
-STDCALL
 RtlGUIDFromString(
     IN PUNICODE_STRING GuidString,
     OUT GUID* Guid
-    );
-NTSTATUS
-STDCALL
-RtlGetFirstRange(
-    IN PRTL_RANGE_LIST RangeList,
-    OUT PRTL_RANGE_LIST_ITERATOR Iterator,
-    OUT PRTL_RANGE *Range
-    );
-NTSTATUS
-STDCALL
-RtlGetNextRange(
-    IN OUT PRTL_RANGE_LIST_ITERATOR Iterator,
-    OUT PRTL_RANGE *Range,
-    IN BOOL MoveForwards
     );
 NTSTATUS
 STDCALL
@@ -2426,43 +2354,6 @@ RtlHashUnicodeString(
     IN BOOL CaseInSensitive,
     IN ULONG HashAlgorithm,
     OUT PULONG HashValue
-    );
-VOID
-STDCALL
-RtlInitializeRangeList(
-    IN OUT PRTL_RANGE_LIST RangeList
-    );
-NTSTATUS
-STDCALL
-RtlInvertRangeList(
-    OUT PRTL_RANGE_LIST InvertedRangeList,
-    IN PRTL_RANGE_LIST RangeList
-    );
-NTSTATUS
-STDCALL
-RtlIsRangeAvailable(
-    IN PRTL_RANGE_LIST RangeList,
-    IN ULONGLONG Start,
-    IN ULONGLONG End,
-    IN ULONG Flags,
-    IN UCHAR AttributeAvailableMask,
-    IN PVOID Context OPTIONAL,
-    IN PRTL_CONFLICT_RANGE_CALLBACK Callback OPTIONAL,
-    OUT PBOOL Available
-    );
-NTSTATUS
-STDCALL
-RtlMergeRangeLists(
-    OUT PRTL_RANGE_LIST MergedRangeList,
-    IN PRTL_RANGE_LIST RangeList1,
-    IN PRTL_RANGE_LIST RangeList2,
-    IN ULONG Flags
-    );
-NTSTATUS
-STDCALL
-RtlStringFromGUID(
-    IN REFGUID Guid,
-    OUT PUNICODE_STRING GuidString
     );
 USHORT
 FASTCALL

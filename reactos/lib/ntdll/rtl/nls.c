@@ -1,4 +1,4 @@
-/* $Id: nls.c,v 1.15 2003/09/12 17:51:48 vizzini Exp $
+/* $Id: nls.c,v 1.16 2004/02/01 20:48:06 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -85,7 +85,7 @@ RtlCustomCPToUnicodeN(IN PCPTABLEINFO CustomCP,
 }
 
 
-WCHAR
+WCHAR STDCALL
 RtlDowncaseUnicodeChar (IN WCHAR Source)
 {
   USHORT Offset;

@@ -1,4 +1,4 @@
-/* $Id: critical.c,v 1.18 2004/02/01 14:05:30 gvg Exp $
+/* $Id: critical.c,v 1.19 2004/02/01 20:48:06 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -61,26 +61,17 @@ RtlEnterCriticalSection(PCRITICAL_SECTION CriticalSection)
    CriticalSection->RecursionCount = 1;
 }
 
+
 /*
  * @implemented
  */
 NTSTATUS STDCALL
 RtlInitializeCriticalSection(PCRITICAL_SECTION CriticalSection)
 {
-   NTSTATUS Status;
-   
-   CriticalSection->LockCount = -1;
-   CriticalSection->RecursionCount = 0;
-   CriticalSection->OwningThread = (HANDLE)0;
-   CriticalSection->SpinCount = 0;
-   
-   Status = NtCreateSemaphore(&CriticalSection->LockSemaphore,
-			      SEMAPHORE_ALL_ACCESS,
-			      NULL,
-			      0,
-			      1);
-   return Status;
+  return RtlInitializeCriticalSectionAndSpinCount (CriticalSection,
+						   0);
 }
+
 
 /*
  * @implemented
@@ -121,7 +112,7 @@ RtlLeaveCriticalSection(PCRITICAL_SECTION CriticalSection)
 BOOLEAN STDCALL
 RtlTryEnterCriticalSection(PCRITICAL_SECTION CriticalSection)
 {
-   if (InterlockedCompareExchange((PVOID*)&CriticalSection->LockCount, 
+   if (InterlockedCompareExchange((PVOID*)&CriticalSection->LockCount,
 				  (PVOID)0, (PVOID)-1 ) == (PVOID)-1)
      {
 	CriticalSection->OwningThread = 
@@ -139,14 +130,24 @@ RtlTryEnterCriticalSection(PCRITICAL_SECTION CriticalSection)
    return FALSE;
 }
 
+
 /*
  * @implemented
  */
 NTSTATUS STDCALL
-RtlInitializeCriticalSectionAndSpinCount(RTL_CRITICAL_SECTION *crit, DWORD spincount)
+RtlInitializeCriticalSectionAndSpinCount (PCRITICAL_SECTION CriticalSection,
+					  ULONG SpinCount)
 {
-   crit->SpinCount = spincount;
-   return RtlInitializeCriticalSection(crit);
+  CriticalSection->LockCount = -1;
+  CriticalSection->RecursionCount = 0;
+  CriticalSection->OwningThread = (HANDLE)0;
+  CriticalSection->SpinCount = SpinCount;
+
+  return NtCreateSemaphore (&CriticalSection->LockSemaphore,
+			    SEMAPHORE_ALL_ACCESS,
+			    NULL,
+			    0,
+			    1);
 }
 
 /* EOF */

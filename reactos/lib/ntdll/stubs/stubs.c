@@ -1,6 +1,7 @@
 #include <msvcrt/stdlib.h>
 #include <windows.h>
 #include <ddk/ntddk.h>
+#include <ntdll/rtl.h>
 
 /*
  * @unimplemented
@@ -132,10 +133,7 @@ NTSTATUS  STDCALL RtlpWaitForCriticalSection(RTL_CRITICAL_SECTION *crit)
 {
   return(FALSE);
 }
-int sscanf(const char* szReadFrom, const char* szFormat, ...)
-{
-  return(FALSE);
-}
+
 
 /*
  * @unimplemented
@@ -201,14 +199,6 @@ RtlCaptureContext (
 /*
  * @unimplemented
  */
-WCHAR     STDCALL RtlDowncaseUnicodeChar(WCHAR wch)
-{
-  return(FALSE);
-}
-
-/*
- * @unimplemented
- */
 NTSTATUS  STDCALL RtlDuplicateUnicodeString(
     int add_nul,
     const UNICODE_STRING *source,
@@ -229,11 +219,13 @@ NTSTATUS  STDCALL RtlFindCharInUnicodeString(
   return(FALSE);
 }
 
+
+
 /*
  * @unimplemented
  */
-ULONG     STDCALL RtlFindClearRuns(PCRTL_BITMAP lpBits, PRTL_BITMAP_RUN lpSeries,
-                              ULONG ulCount, BOOLEAN bLongest)
+CCHAR STDCALL
+RtlFindLeastSignificantBit (ULONGLONG ulLong)
 {
   return(FALSE);
 }
@@ -241,39 +233,18 @@ ULONG     STDCALL RtlFindClearRuns(PCRTL_BITMAP lpBits, PRTL_BITMAP_RUN lpSeries
 /*
  * @unimplemented
  */
-ULONG     STDCALL RtlFindLastBackwardRunClear(PCRTL_BITMAP lpBits, ULONG ulStart, PULONG lpPos)
+CCHAR STDCALL
+RtlFindMostSignificantBit (ULONGLONG ulLong)
 {
   return(FALSE);
 }
 
-/*
- * @unimplemented
- */
-CCHAR     STDCALL RtlFindLeastSignificantBit(ULONGLONG ulLong)
-{
-  return(FALSE);
-}
 
 /*
  * @unimplemented
  */
-CCHAR     STDCALL RtlFindMostSignificantBit(ULONGLONG ulLong)
-{
-  return(FALSE);
-}
-
-/*
- * @unimplemented
- */
-ULONG     STDCALL RtlFindNextForwardRunClear(PCRTL_BITMAP lpBits, ULONG ulStart, PULONG lpPos)
-{
-  return(FALSE);
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS  STDCALL RtlInitUnicodeStringEx(PUNICODE_STRING target,PCWSTR source)
+NTSTATUS STDCALL
+RtlInitUnicodeStringEx(PUNICODE_STRING target,PCWSTR source)
 {
   return(FALSE);
 }
@@ -312,44 +283,6 @@ NTSTATUS STDCALL ZwPowerInformation(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x5
  * @unimplemented
  */
 double __cdecl _CIpow(double x,double y)
-{
-  return(FALSE);
-}
-
-/*
- * @unimplemented
- */
-void  *_lfind(const void* match, const void* start,unsigned int* array_size, unsigned int elem_size,int (*cf)(const void*,const void*))
-{
-  return(FALSE);
-}
-
-/*
- * @unimplemented
- */
-LPSTR __cdecl _ui64toa(
-    ULONGLONG value,
-    LPSTR str,
-    INT radix)
-{
-  return(FALSE);
-}
-
-/*
- * @unimplemented
- */
-LPWSTR __cdecl _ui64tow(
-    ULONGLONG value,
-    LPWSTR str,
-    INT radix)
-{
-  return(FALSE);
-}
-
-/*
- * @unimplemented
- */
-void* bsearch(const void* pKey, const void* pBase, size_t cntObjects, size_t sizeObject, _pfunccmp_t pfuncCmp)
 {
   return(FALSE);
 }
@@ -533,7 +466,7 @@ NtLockRegistryKey(
 NTSTATUS
 STDCALL
 NtNotifyChangeMultipleKeys(
-    IN HANDLE MasterKeyHandle,  		
+    IN HANDLE MasterKeyHandle,
     IN ULONG Count,
     IN OBJECT_ATTRIBUTES SlaveObjects[],
     IN HANDLE Event OPTIONAL,
@@ -654,96 +587,6 @@ NtUnloadKeyEx(
   return(FALSE);
 }
 
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-RtlAddRange(
-    IN OUT PRTL_RANGE_LIST RangeList,
-    IN ULONGLONG Start,
-    IN ULONGLONG End,
-    IN UCHAR Attributes,
-    IN ULONG Flags,
-    IN PVOID UserData,  OPTIONAL
-    IN PVOID Owner      OPTIONAL
-    )
-{
-  return(FALSE);
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-RtlCopyRangeList(
-    OUT PRTL_RANGE_LIST CopyRangeList,
-    IN PRTL_RANGE_LIST RangeList
-    )
-{
-  return(FALSE);
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-RtlDeleteOwnersRanges(
-    IN OUT PRTL_RANGE_LIST RangeList,
-    IN PVOID Owner
-    )
-{
-  return(FALSE);
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-RtlDeleteRange(
-    IN OUT PRTL_RANGE_LIST RangeList,
-    IN ULONGLONG Start,
-    IN ULONGLONG End,
-    IN PVOID Owner
-    )
-{
-  return(FALSE);
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-RtlFindRange(
-    IN PRTL_RANGE_LIST RangeList,
-    IN ULONGLONG Minimum,
-    IN ULONGLONG Maximum,
-    IN ULONG Length,
-    IN ULONG Alignment,
-    IN ULONG Flags,
-    IN UCHAR AttributeAvailableMask,
-    IN PVOID Context OPTIONAL,
-    IN PRTL_CONFLICT_RANGE_CALLBACK Callback OPTIONAL,
-    OUT PULONGLONG Start
-    )
-{
-  return(FALSE);
-}
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-RtlFreeRangeList(
-    IN PRTL_RANGE_LIST RangeList
-    )
-{
-}
 
 /*
  * @unimplemented
@@ -758,33 +601,6 @@ RtlGUIDFromString(
   return(FALSE);
 }
 
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-RtlGetFirstRange(
-    IN PRTL_RANGE_LIST RangeList,
-    OUT PRTL_RANGE_LIST_ITERATOR Iterator,
-    OUT PRTL_RANGE *Range
-    )
-{
-  return(FALSE);
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-RtlGetNextRange(
-    IN OUT PRTL_RANGE_LIST_ITERATOR Iterator,
-    OUT PRTL_RANGE *Range,
-    IN BOOL MoveForwards
-    )
-{
-  return(FALSE);
-}
 
 /*
  * @unimplemented
@@ -813,63 +629,6 @@ RtlHashUnicodeString(
   return(FALSE);
 }
 
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-RtlInitializeRangeList(
-    IN OUT PRTL_RANGE_LIST RangeList
-    )
-{
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-RtlInvertRangeList(
-    OUT PRTL_RANGE_LIST InvertedRangeList,
-    IN PRTL_RANGE_LIST RangeList
-    )
-{
-  return(FALSE);
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-RtlIsRangeAvailable(
-    IN PRTL_RANGE_LIST RangeList,
-    IN ULONGLONG Start,
-    IN ULONGLONG End,
-    IN ULONG Flags,
-    IN UCHAR AttributeAvailableMask,
-    IN PVOID Context OPTIONAL,
-    IN PRTL_CONFLICT_RANGE_CALLBACK Callback OPTIONAL,
-    OUT PBOOL Available
-    )
-{
-  return(FALSE);
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-RtlMergeRangeLists(
-    OUT PRTL_RANGE_LIST MergedRangeList,
-    IN PRTL_RANGE_LIST RangeList1,
-    IN PRTL_RANGE_LIST RangeList2,
-    IN ULONG Flags
-    )
-{
-  return(FALSE);
-}
 
 /*
  * @unimplemented

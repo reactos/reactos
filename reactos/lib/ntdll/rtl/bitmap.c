@@ -1,4 +1,4 @@
-/* $Id: bitmap.c,v 1.5 2003/07/11 13:50:23 royce Exp $
+/* $Id: bitmap.c,v 1.6 2004/02/01 20:48:06 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -265,6 +265,19 @@ RtlFindClearBitsAndSet (
 }
 
 
+/*
+ * @unimplemented
+ */
+ULONG STDCALL
+RtlFindClearRuns (PRTL_BITMAP BitMapHeader,
+		  PRTL_BITMAP_RUN RunArray,
+		  ULONG SizeOfRunArray,
+		  BOOLEAN LocateLongestRuns)
+{
+  return (ULONG)-1;
+}
+
+
 ULONG
 STDCALL
 RtlFindFirstRunClear (
@@ -380,6 +393,18 @@ RtlFindFirstRunSet (
 	}
 
 	return Count;
+}
+
+
+/*
+ * @unimplemented
+ */
+ULONG STDCALL
+RtlFindLastBackwardRunClear (IN PRTL_BITMAP BitMapHeader,
+			     IN ULONG FromIndex,
+			     IN PULONG StartingRunIndex)
+{
+  return (ULONG)-1;
 }
 
 
@@ -500,6 +525,18 @@ RtlFindLongestRunSet (
 		*StartingIndex = Maxstart;
 
 	return Max;
+}
+
+
+/*
+ * @unimplemented
+ */
+ULONG STDCALL
+RtlFindNextForwardRunClear (IN PRTL_BITMAP BitMapHeader,
+			    IN ULONG FromIndex,
+			    IN PULONG StartingRunIndex)
+{
+  return (ULONG)-1;
 }
 
 

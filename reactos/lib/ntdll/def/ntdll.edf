@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.103 2003/12/02 11:38:46 gvg Exp $
+; $Id: ntdll.edf,v 1.104 2004/02/01 20:48:05 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -288,6 +288,7 @@ RtlAddAtomToAtomTable=RtlAddAtomToAtomTable@12
 ;RtlAddAttributeActionToRXact
 RtlAddAuditAccessAce=RtlAddAuditAccessAce@24
 ;RtlAddCompoundAce
+RtlAddRange=RtlAddRange@36
 RtlAdjustPrivilege=RtlAdjustPrivilege@16
 RtlAllocateAndInitializeSid=RtlAllocateAndInitializeSid@44
 RtlAllocateHandle=RtlAllocateHandle@8
@@ -319,6 +320,7 @@ RtlCompareMemoryUlong=RtlCompareMemoryUlong@12
 RtlCompareString=RtlCompareString@12
 RtlCompareUnicodeString=RtlCompareUnicodeString@12
 RtlCompressBuffer=RtlCompressBuffer@32
+RtlComputeCrc32=RtlComputeCrc32@12
 ;RtlConsoleMultiByteToUnicodeN
 RtlConvertExclusiveToShared=RtlConvertExclusiveToShared@4
 RtlConvertLongToLargeInteger=RtlConvertLongToLargeInteger@4
@@ -328,6 +330,7 @@ RtlConvertSidToUnicodeString=RtlConvertSidToUnicodeString@12
 RtlConvertUlongToLargeInteger=RtlConvertUlongToLargeInteger@4
 RtlCopyLuid=RtlCopyLuid@8
 RtlCopyLuidAndAttributesArray=RtlCopyLuidAndAttributesArray@12
+RtlCopyRangeList=RtlCopyRangeList@8
 ;RtlCopySecurityDescriptor
 RtlCopySid=RtlCopySid@12
 RtlCopySidAndAttributesArray=RtlCopySidAndAttributesArray@28
@@ -360,6 +363,8 @@ RtlDeleteAtomFromAtomTable=RtlDeleteAtomFromAtomTable@8
 RtlDeleteCriticalSection=RtlDeleteCriticalSection@4
 RtlDeleteElementGenericTable=RtlDeleteElementGenericTable@8
 RtlDeleteNoSplay=RtlDeleteNoSplay@8
+RtlDeleteOwnersRanges=RtlDeleteOwnersRanges@8
+RtlDeleteRange=RtlDeleteRange@24
 RtlDeleteRegistryValue=RtlDeleteRegistryValue@12
 RtlDeleteResource=RtlDeleteResource@4
 RtlDeleteSecurityObject=RtlDeleteSecurityObject@4
@@ -373,6 +378,7 @@ RtlDetermineDosPathNameType_U=RtlDetermineDosPathNameType_U@4
 RtlDoesFileExists_U=RtlDoesFileExists_U@4
 RtlDosPathNameToNtPathName_U=RtlDosPathNameToNtPathName_U@16
 RtlDosSearchPath_U=RtlDosSearchPath_U@24
+RtlDowncaseUnicodeChar=RtlDowncaseUnicodeChar@4
 RtlDowncaseUnicodeString=RtlDowncaseUnicodeString@12
 RtlDumpResource=RtlDumpResource@4
 RtlEmptyAtomTable=RtlEmptyAtomTable@8
@@ -402,12 +408,16 @@ RtlFillMemory=RtlFillMemory@12
 RtlFillMemoryUlong=RtlFillMemoryUlong@12
 RtlFindClearBits=RtlFindClearBits@12
 RtlFindClearBitsAndSet=RtlFindClearBitsAndSet@12
-RtlFirstFreeAce=RtlFirstFreeAce@8
+RtlFindClearRuns=RtlFindClearRuns@16
+RtlFindLastBackwardRunClear=RtlFindLastBackwardRunClear@12
 RtlFindLongestRunClear=RtlFindLongestRunClear@8
 RtlFindLongestRunSet=RtlFindLongestRunSet@8
 RtlFindMessage=RtlFindMessage@20
+RtlFindNextForwardRunClear=RtlFindNextForwardRunClear@12
+RtlFindRange=RtlFindRange@48
 RtlFindSetBits=RtlFindSetBits@12
 RtlFindSetBitsAndClear=RtlFindSetBitsAndClear@12
+RtlFirstFreeAce=RtlFirstFreeAce@8
 ;RtlFlushPropertySet
 RtlFormatCurrentUserKeyPath=RtlFormatCurrentUserKeyPath@4
 ;RtlFormatMessage
@@ -415,6 +425,7 @@ RtlFreeAnsiString=RtlFreeAnsiString@4
 RtlFreeHandle=RtlFreeHandle@8
 RtlFreeHeap=RtlFreeHeap@12
 RtlFreeOemString=RtlFreeOemString@4
+RtlFreeRangeList=RtlFreeRangeList@4
 RtlFreeSid=RtlFreeSid@4
 RtlFreeUnicodeString=RtlFreeUnicodeString@4
 RtlFreeUserThreadStack=RtlFreeUserThreadStack@8
@@ -426,9 +437,11 @@ RtlGetControlSecurityDescriptor=RtlGetControlSecurityDescriptor@12
 RtlGetCurrentDirectory_U=RtlGetCurrentDirectory_U@8
 RtlGetDaclSecurityDescriptor=RtlGetDaclSecurityDescriptor@16
 RtlGetElementGenericTable=RtlGetElementGenericTable@8
+RtlGetFirstRange=RtlGetFirstRange@12
 RtlGetFullPathName_U=RtlGetFullPathName_U@16
 RtlGetGroupSecurityDescriptor=RtlGetGroupSecurityDescriptor@12
 RtlGetLongestNtPathLength=RtlGetLongestNtPathLength@0
+RtlGetNextRange=RtlGetNextRange@12
 RtlGetNtGlobalFlags=RtlGetNtGlobalFlags@0
 RtlGetNtProductType=RtlGetNtProductType@4
 RtlGetNtVersionNumbers=RtlGetNtVersionNumbers@12
@@ -452,17 +465,21 @@ RtlInitUnicodeString=RtlInitUnicodeString@8
 RtlInitializeBitMap=RtlInitializeBitMap@12
 RtlInitializeContext=RtlInitializeContext@20
 RtlInitializeCriticalSection=RtlInitializeCriticalSection@4
+RtlInitializeCriticalSectionAndSpinCount=RtlInitializeCriticalSectionAndSpinCount@8
 RtlInitializeGenericTable=RtlInitializeGenericTable@20
 RtlInitializeHandleTable=RtlInitializeHandleTable@12
-;RtlInitializeRXact
+RtlInitializeRangeList=RtlInitializeRangeList@4
 RtlInitializeResource=RtlInitializeResource@4
+;RtlInitializeRXact
 RtlInitializeSid=RtlInitializeSid@12
 RtlInsertElementGenericTable=RtlInsertElementGenericTable@16
 RtlIntegerToChar=RtlIntegerToChar@16
 RtlIntegerToUnicodeString=RtlIntegerToUnicodeString@12
+RtlInvertRangeList=RtlInvertRangeList@8
 RtlIsDosDeviceName_U=RtlIsDosDeviceName_U@4
 RtlIsGenericTableEmpty=RtlIsGenericTableEmpty@4
 RtlIsNameLegalDOS8Dot3=RtlIsNameLegalDOS8Dot3@12
+RtlIsRangeAvailable=RtlIsRangeAvailable@40
 RtlIsTextUnicode=RtlIsTextUnicode@12
 RtlIsValidHandle=RtlIsValidHandle@8
 RtlIsValidIndexHandle=RtlIsValidIndexHandle@12
@@ -484,6 +501,7 @@ RtlLookupAtomInAtomTable=RtlLookupAtomInAtomTable@12
 RtlLookupElementGenericTable=RtlLookupElementGenericTable@8
 RtlMakeSelfRelativeSD=RtlMakeSelfRelativeSD@12
 RtlMapGenericMask=RtlMapGenericMask@8
+RtlMergeRangeLists=RtlMergeRangeLists@16
 RtlMoveMemory=RtlMoveMemory@12
 RtlMultiByteToUnicodeN=RtlMultiByteToUnicodeN@20
 RtlMultiByteToUnicodeSize=RtlMultiByteToUnicodeSize@12
@@ -850,6 +868,7 @@ _i64toa
 _i64tow
 _itoa
 _itow
+_lfind
 _ltoa
 _ltow
 _memccpy
@@ -864,9 +883,12 @@ _strnicmp
 _strupr
 _tolower
 _toupper
+_ui64toa
+_ui64tow
 _ultoa
 _ultow
 _vsnprintf
+_vsnwprintf
 _wcsicmp
 _wcslwr
 _wcsnicmp
@@ -878,6 +900,7 @@ abs
 atan
 atoi
 atol
+bsearch
 ceil
 cos
 fabs
@@ -894,7 +917,10 @@ isspace
 isupper
 iswalpha
 iswctype
+iswdigit
+iswlower
 iswspace
+iswxdigit
 isxdigit
 labs
 log
@@ -1072,7 +1098,6 @@ RtlAddAccessDeniedAceEx=RtlAddAccessDeniedAceEx@20
 ;RtlAddAccessDeniedObjectAce
 ;RtlAddAuditAccessAceEx
 ;RtlAddAuditAccessObjectAce
-RtlAddRange=RtlAddRange@36
 RtlAddRefActivationContext=RtlAddRefActivationContext@4
 ;RtlAddRefMemoryStream
 ;RtlAddVectoredExceptionHandler
@@ -1088,7 +1113,6 @@ RtlCaptureContext=RtlCaptureContext@4
 ;RtlCloneMemoryStream
 ;RtlCommitMemoryStream
 ;RtlCompareVariants
-RtlComputeCrc32=RtlComputeCrc32@12
 ;RtlComputeImportTableHash
 ;RtlComputePrivatizedDllName_U
 ;RtlConvertPropertyToVariant
@@ -1096,7 +1120,6 @@ RtlComputeCrc32=RtlComputeCrc32@12
 ;RtlConvertVariantToProperty
 ;RtlCopyMemoryStreamTo
 ;RtlCopyOutOfProcessMemoryStreamTo
-RtlCopyRangeList=RtlCopyRangeList@8
 ;RtlCreateActivationContext
 ;RtlCreateBootStatusDataFile
 ;RtlCreateSystemVolumeInformationFolder
@@ -1107,8 +1130,6 @@ RtlDeactivateActivationContext=RtlDeactivateActivationContext@8
 ;RtlDebugPrintTimes
 ;RtlDefaultNpAcl
 ;RtlDeleteElementGenericTableAvl
-RtlDeleteOwnersRanges=RtlDeleteOwnersRanges@8
-RtlDeleteRange=RtlDeleteRange@24
 RtlDeleteTimer=RtlDeleteTimer@12
 RtlDeleteTimerQueue=RtlDeleteTimerQueue@4
 RtlDeleteTimerQueueEx=RtlDeleteTimerQueueEx@8
@@ -1118,7 +1139,6 @@ RtlDllShutdownInProgress=RtlDllShutdownInProgress@0
 ;RtlDnsHostNameToComputerName
 ;RtlDosApplyFileIsolationRedirection_Ustr
 ;RtlDosSearchPath_Ustr
-RtlDowncaseUnicodeChar=RtlDowncaseUnicodeChar@4
 RtlDuplicateUnicodeString=RtlDuplicateUnicodeString@12
 ;RtlEnableEarlyCriticalSectionEventCreation
 ;RtlEnumerateGenericTableAvl
@@ -1128,29 +1148,21 @@ RtlDuplicateUnicodeString=RtlDuplicateUnicodeString@12
 ;RtlFindActivationContextSectionGuid
 ;RtlFindActivationContextSectionString
 RtlFindCharInUnicodeString=RtlFindCharInUnicodeString@16
-RtlFindClearRuns=RtlFindClearRuns@16
-RtlFindLastBackwardRunClear=RtlFindLastBackwardRunClear@12
 RtlFindLeastSignificantBit=RtlFindLeastSignificantBit@8
 RtlFindMostSignificantBit=RtlFindMostSignificantBit@8 
-RtlFindNextForwardRunClear=RtlFindNextForwardRunClear@12
-RtlFindRange=RtlFindRange@48
 ;RtlFirstEntrySList
 ;RtlFlushSecureMemoryCache
-RtlFreeOemString=RtlFreeOemString
-RtlFreeRangeList=RtlFreeRangeList@4
 ;RtlFreeThreadActivationContextStack
 RtlGUIDFromString=RtlGUIDFromString@8
 RtlGetActiveActivationContext=RtlGetActiveActivationContext@4
 RtlGetCurrentPeb=RtlGetCurrentPeb@0
 ;RtlGetElementGenericTableAvl
-RtlGetFirstRange=RtlGetFirstRange@12
 ;RtlGetFrame
 RtlGetLastNtStatus=RtlGetLastNtStatus@0
 RtlGetLastWin32Error=RtlGetLastWin32Error@0
 ;RtlGetLengthWithoutLastFullDosOrNtPathElement
 ;RtlGetLengthWithoutTrailingPathSeperators
 RtlGetNativeSystemInformation=RtlGetNativeSystemInformation@16
-RtlGetNextRange=RtlGetNextRange@12
 ;RtlGetSecurityDescriptorRMControl
 ;RtlGetSetBootStatusData
 RtlGetVersion=RtlGetVersion@4
@@ -1158,9 +1170,7 @@ RtlHashUnicodeString=RtlHashUnicodeString@16
 ;RtlInitMemoryStream
 ;RtlInitOutOfProcessMemoryStream
 RtlInitUnicodeStringEx=RtlInitUnicodeStringEx@8
-RtlInitializeCriticalSectionAndSpinCount=RtlInitializeCriticalSectionAndSpinCount@8
 ;RtlInitializeGenericTableAvl
-RtlInitializeRangeList=RtlInitializeRangeList@4
 RtlInitializeSListHead=RtlInitializeSListHead@4
 ;RtlInsertElementGenericTableAvl
 RtlInt64ToUnicodeString=RtlInt64ToUnicodeString@16
@@ -1168,7 +1178,6 @@ RtlInterlockedFlushSList=RtlInterlockedFlushSList@4
 RtlInterlockedPopEntrySList=RtlInterlockedPopEntrySList@4
 RtlInterlockedPushEntrySList=RtlInterlockedPushEntrySList@8
 ;RtlInterlockedPushListSList
-RtlInvertRangeList=RtlInvertRangeList@8
 ;RtlIpv4AddressToStringA
 ;RtlIpv4AddressToStringW
 ;RtlIpv4StringToAddressA
@@ -1178,14 +1187,12 @@ RtlInvertRangeList=RtlInvertRangeList@8
 ;RtlIpv6StringToAddressW
 ;RtlIsActivationContextActive
 ;RtlIsGenericTableEmptyAvl
-RtlIsRangeAvailable=RtlIsRangeAvailable@40
 ;RtlIsThreadWithinLoaderCallout
 ;RtlLockBootStatusData
 ;RtlLockMemoryStreamRegion
 RtlLogStackBackTrace=RtlLogStackBackTrace@0
 ;RtlLookupElementGenericTableAvl
 ;RtlMapSecurityErrorToNtStatus
-RtlMergeRangeLists=RtlMergeRangeLists@16
 ;RtlMultiAppendUnicodeStringBuffer
 ;RtlNewSecurityObjectEx
 ;RtlNewSecurityObjectWithMultipleInheritance
@@ -1458,14 +1465,6 @@ _CIpow
 ;__eGetStatusWord
 ;_alldvrm
 ;_aulldvrm
-_lfind
-_ui64toa
-_ui64tow
-_vsnwprintf
-bsearch
-iswdigit
-iswlower
-iswxdigit
 vDbgPrintEx
 vDbgPrintExWithPrefix
 CsrIsCsrss=CsrIsCsrss@0

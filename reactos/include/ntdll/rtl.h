@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.41 2004/01/29 23:41:36 navaraf Exp $
+/* $Id: rtl.h,v 1.42 2004/02/01 20:44:59 ekohl Exp $
  *
  */
 
@@ -37,24 +37,28 @@ typedef struct _DEBUG_BUFFER
   PVOID Reserved[8];
 } DEBUG_BUFFER, *PDEBUG_BUFFER;
 
-typedef struct _CRITICAL_SECTION_DEBUG {
-    WORD   Type;
-    WORD   CreatorBackTraceIndex;
-    struct _CRITICAL_SECTION *CriticalSection;
-    LIST_ENTRY ProcessLocksList;
-    DWORD EntryCount;
-    DWORD ContentionCount;
-    DWORD Depth;
-    PVOID OwnerBackTrace[ 5 ];
+
+typedef struct _CRITICAL_SECTION_DEBUG
+{
+  USHORT Type;
+  USHORT CreatorBackTraceIndex;
+  struct _CRITICAL_SECTION *CriticalSection;
+  LIST_ENTRY ProcessLocksList;
+  ULONG EntryCount;
+  ULONG ContentionCount;
+  ULONG Depth;
+  PVOID OwnerBackTrace[ 5 ];
 } CRITICAL_SECTION_DEBUG, *PCRITICAL_SECTION_DEBUG;
 
-typedef struct _CRITICAL_SECTION {
-    PCRITICAL_SECTION_DEBUG DebugInfo;
-    LONG LockCount;
-    LONG RecursionCount;
-    HANDLE OwningThread;
-    HANDLE LockSemaphore;
-    ULONG_PTR SpinCount;
+
+typedef struct _CRITICAL_SECTION
+{
+  PCRITICAL_SECTION_DEBUG DebugInfo;
+  LONG LockCount;
+  LONG RecursionCount;
+  HANDLE OwningThread;
+  HANDLE LockSemaphore;
+  ULONG_PTR SpinCount;
 } CRITICAL_SECTION, *PCRITICAL_SECTION, *LPCRITICAL_SECTION;
 
 typedef CRITICAL_SECTION RTL_CRITICAL_SECTION;
@@ -112,42 +116,45 @@ typedef struct _RTL_HANDLE_TABLE
 #define PDI_HEAP_BLOCKS 0x10	/* The heap blocks */
 #define PDI_LOCKS       0x20	/* The locks created by the process */
 
-VOID
-STDCALL
+VOID STDCALL
 RtlDeleteCriticalSection (
 	PCRITICAL_SECTION	CriticalSection
 	);
 
-VOID
-STDCALL
+VOID STDCALL
 RtlEnterCriticalSection (
 	PCRITICAL_SECTION	CriticalSection
 	);
 
-NTSTATUS
-STDCALL
+NTSTATUS STDCALL
 RtlInitializeCriticalSection (
 	PCRITICAL_SECTION	CriticalSection
 	);
 
-VOID
-STDCALL
+NTSTATUS STDCALL
+RtlInitializeCriticalSectionAndSpinCount (PCRITICAL_SECTION CriticalSection,
+					  ULONG SpinCount);
+
+VOID STDCALL
 RtlLeaveCriticalSection (
 	PCRITICAL_SECTION	CriticalSection
 	);
 
-BOOLEAN
-STDCALL
+BOOLEAN STDCALL
 RtlTryEnterCriticalSection (
 	PCRITICAL_SECTION	CriticalSection
 	);
 
-DWORD
-STDCALL
+DWORD STDCALL
 RtlCompactHeap (
 	HANDLE	heap,
 	DWORD	flags
 	);
+
+ULONG STDCALL
+RtlComputeCrc32 (IN ULONG Initial,
+		 IN PUCHAR Data,
+		 IN ULONG Length);
 
 PDEBUG_BUFFER STDCALL
 RtlCreateQueryDebugBuffer(IN ULONG Size,
@@ -156,28 +163,24 @@ RtlCreateQueryDebugBuffer(IN ULONG Size,
 NTSTATUS STDCALL
 RtlDestroyQueryDebugBuffer(IN PDEBUG_BUFFER DebugBuffer);
 
-BOOLEAN
-STDCALL
+BOOLEAN STDCALL
 RtlEqualComputerName (
 	IN	PUNICODE_STRING	ComputerName1,
 	IN	PUNICODE_STRING	ComputerName2
 	);
 
-BOOLEAN
-STDCALL
+BOOLEAN STDCALL
 RtlEqualDomainName (
 	IN	PUNICODE_STRING	DomainName1,
 	IN	PUNICODE_STRING	DomainName2
 	);
 
-VOID
-STDCALL
+VOID STDCALL
 RtlEraseUnicodeString (
 	IN	PUNICODE_STRING	String
 	);
 
-NTSTATUS
-STDCALL
+NTSTATUS STDCALL
 RtlLargeIntegerToChar (
 	IN	PLARGE_INTEGER	Value,
 	IN	ULONG		Base,
@@ -242,9 +245,11 @@ RtlGetLongestNtPathLength (
 	VOID
 	);
 
-ULONG STDCALL RtlGetNtGlobalFlags(VOID);
+ULONG STDCALL
+RtlGetNtGlobalFlags (VOID);
 
-BOOLEAN STDCALL RtlGetNtProductType(PNT_PRODUCT_TYPE ProductType);
+BOOLEAN STDCALL
+RtlGetNtProductType (PNT_PRODUCT_TYPE ProductType);
 
 ULONG
 STDCALL
@@ -343,7 +348,8 @@ RtlCreateUserThread (
 	IN OUT	PCLIENT_ID		ClientId
 	);
 
-NTSTATUS STDCALL RtlExitUserThread(NTSTATUS Status);
+NTSTATUS STDCALL
+RtlExitUserThread (NTSTATUS Status);
 
 NTSTATUS
 STDCALL
@@ -589,17 +595,13 @@ RtlpNtSetValueKey (
 	);
 
 
-VOID NTAPI RtlRunDecodeUnicodeString
-(
- IN UCHAR hash,
- IN OUT PUNICODE_STRING uString
-);
+VOID STDCALL
+RtlRunDecodeUnicodeString (IN UCHAR Hash,
+			   IN OUT PUNICODE_STRING String);
 
-VOID NTAPI RtlRunEncodeUnicodeString
-(
- IN OUT PUCHAR hash,
- IN OUT PUNICODE_STRING uString
-);
+VOID STDCALL
+RtlRunEncodeUnicodeString (IN OUT PUCHAR Hash,
+			   IN OUT PUNICODE_STRING String);
 
 #ifndef __NTDRIVER__
 

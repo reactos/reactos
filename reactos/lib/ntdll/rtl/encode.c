@@ -1,4 +1,4 @@
-/* $Id: encode.c,v 1.2 2003/07/30 18:35:03 royce Exp $
+/* $Id: encode.c,v 1.3 2004/02/01 20:48:06 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -18,60 +18,63 @@
 
 /* FUNCTIONS ***************************************************************/
 
-VOID
-NTAPI
-RtlRunDecodeUnicodeString(
-	IN UCHAR hash,
-	IN OUT PUNICODE_STRING uString
-	)
+VOID STDCALL
+RtlRunDecodeUnicodeString (IN UCHAR Hash,
+			   IN OUT PUNICODE_STRING String)
 {
-   UCHAR *ptr;
-   WORD   i;
-   
-   ptr = (UCHAR *) uString->Buffer;
-   if (uString->Length > 1) {
-      for (i=uString->Length; i>1; i--) {
-         ptr[i-1] ^= ptr[i-2] ^ hash;
-      }
-   }
-   
-   if (uString->Length >= 1) {
-      ptr[0] ^= hash | (UCHAR) 0x43;
-   }
+  PUCHAR ptr;
+  USHORT i;
+
+  ptr = (PUCHAR)String->Buffer;
+  if (String->Length > 1)
+    {
+      for (i = String->Length; i > 1; i--)
+        {
+          ptr[i - 1] ^= ptr[i - 2] ^ Hash;
+        }
+    }
+
+  if (String->Length >= 1)
+    {
+      ptr[0] ^= Hash | (UCHAR)0x43;
+    }
 }
 
-VOID
-NTAPI
-RtlRunEncodeUnicodeString(
-	IN OUT PUCHAR hash,
-	IN OUT PUNICODE_STRING uString
-	)
-{
-   NTSTATUS ntS;
-   UCHAR *ptr;
-   TIME  CurrentTime;
-   WORD   i;
 
-   ptr = (UCHAR *) uString->Buffer;   
-   if (*hash == 0) {
-      ntS = NtQuerySystemTime((PLARGE_INTEGER)&CurrentTime);
-      if (NT_SUCCESS(ntS)) {
-         for (i=1; i<sizeof(TIME) && (*hash == 0); i++)
-            *hash |= *(PUCHAR) (((PUCHAR) &CurrentTime)+i);
-      }
-      
-      if (*hash == 0)
-         *hash = 1;
-   }
- 
-   if (uString->Length >= 1) {
-      ptr[0] ^= (*hash) | (UCHAR) 0x43;
-      if (uString->Length > 1) {
-         for (i=1; i<uString->Length; i++) {
-            ptr[i] ^= ptr[i-1] ^ (*hash);
-         }
-      }
-   }
+VOID STDCALL
+RtlRunEncodeUnicodeString (IN OUT PUCHAR Hash,
+			   IN OUT PUNICODE_STRING String)
+{
+  LARGE_INTEGER CurrentTime;
+  PUCHAR ptr;
+  USHORT i;
+  NTSTATUS Status;
+
+  ptr = (PUCHAR) String->Buffer;
+  if (*Hash == 0)
+    {
+      Status = NtQuerySystemTime (&CurrentTime);
+      if (NT_SUCCESS(Status))
+	{
+	  for (i = 1; i < sizeof(LARGE_INTEGER) && (*Hash == 0); i++)
+	    *Hash |= *(PUCHAR)(((PUCHAR)&CurrentTime) + i);
+	}
+
+      if (*Hash == 0)
+	*Hash = 1;
+    }
+
+  if (String->Length >= 1)
+    {
+      ptr[0] ^= (*Hash) | (UCHAR)0x43;
+      if (String->Length > 1)
+	{
+	  for (i = 1; i < String->Length; i++)
+	    {
+	      ptr[i] ^= ptr[i - 1] ^ (*Hash);
+	    }
+	}
+    }
 }
 
 /* EOF */

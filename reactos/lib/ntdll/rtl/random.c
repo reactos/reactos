@@ -16,14 +16,13 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: random.c,v 1.1 2003/06/07 11:32:03 ekohl Exp $
+/* $Id: random.c,v 1.2 2004/02/01 20:48:06 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
  * PURPOSE:           Random number generator functions
  * FILE:              lib/ntdll/rtl/random.c
  */
-
 
 #define NTOS_MODE_USER
 #include <ntos.h>
