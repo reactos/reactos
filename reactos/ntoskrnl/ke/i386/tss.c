@@ -79,7 +79,6 @@ Ki386ApplicationProcessorInitializeTSS(VOID)
   /* Initialize the boot TSS. */
   Tss->Esp0 = (ULONG)Ki386InitialStackArray[Id];
   Tss->Ss0 = KERNEL_DS;
-  //   Tss.IoMapBase = FIELD_OFFSET(KTSS, IoBitmap);
   Tss->IoMapBase = 0xFFFF; /* No i/o bitmap */
   Tss->IoBitmap[0] = 0xFF;   
   Tss->Ldt = LDT_SELECTOR;

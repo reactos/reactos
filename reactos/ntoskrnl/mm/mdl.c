@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.40 2002/05/17 23:01:56 dwelch Exp $
+/* $Id: mdl.c,v 1.41 2002/06/04 15:26:56 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -107,8 +107,8 @@ MmUnlockPages(PMDL Mdl)
    MdlPages = (PULONG)(Mdl + 1);
    for (i=0; i<(PAGE_ROUND_UP(Mdl->ByteCount+Mdl->ByteOffset)/PAGESIZE); i++)
      {
-	MmUnlockPage((PVOID)MdlPages[i]);
-	MmDereferencePage((PVOID)MdlPages[i]);
+	MmUnlockPage((LARGE_INTEGER)(LONGLONG)MdlPages[i]);
+	MmDereferencePage((LARGE_INTEGER)(LONGLONG)MdlPages[i]);
      }   
    Mdl->MdlFlags = Mdl->MdlFlags & (~MDL_PAGES_LOCKED);
 }
@@ -166,7 +166,7 @@ MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
        Status = MmCreateVirtualMapping(NULL,
 				       (PVOID)((ULONG)Base+(i*PAGESIZE)),
 				       PAGE_READWRITE,
-				       MdlPages[i],
+				       (LARGE_INTEGER)(LONGLONG)MdlPages[i],
 				       FALSE);
        if (!NT_SUCCESS(Status))
 	 {
@@ -322,15 +322,15 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
 	      {
 		for (j = 0; j < i; j++)
 		  {
-		    MmUnlockPage((PVOID)MdlPages[j]);
-		    MmDereferencePage((PVOID)MdlPages[j]);
+		    MmUnlockPage((LARGE_INTEGER)(LONGLONG)MdlPages[j]);
+		    MmDereferencePage((LARGE_INTEGER)(LONGLONG)MdlPages[j]);
 		  }
 		ExRaiseStatus(Status);
 	      }
 	  }
 	else
 	  {
-	    MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
+	    MmLockPage(MmGetPhysicalAddressForProcess(NULL, Address));
 	  }
 	if ((Operation == IoWriteAccess || Operation == IoModifyAccess) &&
 	    (!(MmGetPageProtect(NULL, (PVOID)Address) & PAGE_READWRITE)))
@@ -340,14 +340,15 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
 	      {
 		for (j = 0; j < i; j++)
 		  {
-			MmUnlockPage((PVOID)MdlPages[j]);
-			MmDereferencePage((PVOID)MdlPages[j]);
+			MmUnlockPage((LARGE_INTEGER)(LONGLONG)MdlPages[j]);
+			MmDereferencePage(
+					 (LARGE_INTEGER)(LONGLONG)MdlPages[j]);
 		  }
 		ExRaiseStatus(Status);
 	      }
 	  }
-	MdlPages[i] = MmGetPhysicalAddressForProcess(NULL, Address);
-	MmReferencePage((PVOID)MdlPages[i]);
+	MdlPages[i] = MmGetPhysicalAddressForProcess(NULL, Address).u.LowPart;
+	MmReferencePage((LARGE_INTEGER)(LONGLONG)MdlPages[i]);
      }
    MmUnlockAddressSpace(&Mdl->Process->AddressSpace);
    if (Mdl->Process != CurrentProcess)

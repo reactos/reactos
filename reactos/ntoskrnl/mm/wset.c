@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: wset.c,v 1.13 2002/05/14 21:19:19 dwelch Exp $
+/* $Id: wset.c,v 1.14 2002/06/04 15:26:57 dwelch Exp $
  * 
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/wset.c
@@ -41,14 +41,14 @@
 NTSTATUS
 MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages)
 {
-  PVOID CurrentPhysicalAddress;
-  PVOID NextPhysicalAddress;
+  PHYSICAL_ADDRESS CurrentPhysicalAddress;
+  PHYSICAL_ADDRESS NextPhysicalAddress;
   NTSTATUS Status;
 
   (*NrFreedPages) = 0;
 
   CurrentPhysicalAddress = MmGetLRUFirstUserPage();
-  while (CurrentPhysicalAddress != NULL && Target > 0)
+  while (CurrentPhysicalAddress.QuadPart != 0 && Target > 0)
     {
       NextPhysicalAddress = MmGetLRUNextUserPage(CurrentPhysicalAddress);
 

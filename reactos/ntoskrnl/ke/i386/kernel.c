@@ -40,7 +40,7 @@
 
 ULONG KiPcrInitDone = 0;
 static ULONG PcrsAllocated = 0;
-static PVOID PcrPages[MAXIMUM_PROCESSORS];
+static PHYSICAL_ADDRESS PcrPages[MAXIMUM_PROCESSORS];
 
 /* FUNCTIONS *****************************************************************/
 
@@ -64,7 +64,7 @@ KeApplicationProcessorInit(VOID)
   KPCR = (PKPCR)(KPCR_BASE + (Offset * PAGESIZE));
   MmCreateVirtualMappingForKernel((PVOID)KPCR,
 				  PAGE_READWRITE,
-				  (ULONG)PcrPages[Offset]);
+				  PcrPages[Offset]);
   memset(KPCR, 0, PAGESIZE);
   KPCR->ProcessorNumber = Offset;
   KPCR->Self = KPCR;

@@ -1,4 +1,4 @@
-/* $Id: kmap.c,v 1.16 2002/05/14 21:19:19 dwelch Exp $
+/* $Id: kmap.c,v 1.17 2002/06/04 15:26:56 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -50,10 +50,10 @@ ExUnmapPage(PVOID Addr)
 PVOID 
 ExAllocatePage(VOID)
 {
-  ULONG PhysPage;
+  PHYSICAL_ADDRESS PhysPage;
   NTSTATUS Status;
 
-  Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, (PVOID*)&PhysPage);
+  Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &PhysPage);
   if (!NT_SUCCESS(Status))
     {
       return(NULL);
@@ -63,7 +63,7 @@ ExAllocatePage(VOID)
 }
 
 NTSTATUS
-MiZeroPage(ULONG PhysPage)
+MiZeroPage(PHYSICAL_ADDRESS PhysPage)
 {
   PVOID TempAddress;
 
@@ -78,7 +78,7 @@ MiZeroPage(ULONG PhysPage)
 }
 
 NTSTATUS
-MiCopyFromUserPage(ULONG DestPhysPage, PVOID SourceAddress)
+MiCopyFromUserPage(PHYSICAL_ADDRESS DestPhysPage, PVOID SourceAddress)
 {
   PVOID TempAddress;
 
@@ -93,7 +93,7 @@ MiCopyFromUserPage(ULONG DestPhysPage, PVOID SourceAddress)
 }
 
 PVOID
-ExAllocatePageWithPhysPage(ULONG PhysPage)
+ExAllocatePageWithPhysPage(PHYSICAL_ADDRESS PhysPage)
 {
    KIRQL oldlvl;
    ULONG addr;

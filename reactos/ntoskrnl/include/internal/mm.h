@@ -180,7 +180,7 @@ NTSTATUS MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
 			  PVOID BaseAddress,
 			  ULONG Length,
 			  VOID (*FreePage)(PVOID Context, MEMORY_AREA* MemoryArea, 
-					   PVOID Address, ULONG PhysAddr, SWAPENTRY SwapEntry,
+					   PVOID Address, PHYSICAL_ADDRESS PhysAddr, SWAPENTRY SwapEntry,
 					   BOOLEAN Dirty),
 			  PVOID FreePageContext);
 VOID MmDumpMemoryAreas(PLIST_ENTRY ListHead);
@@ -197,17 +197,17 @@ PMEMORY_AREA MmSplitMemoryArea(struct _EPROCESS* Process,
 			       ULONG Length,
 			       ULONG NewType,
 			       ULONG NewAttributes);
-PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
-			   PVOID LastPhysKernelAddress,
-			   ULONG MemorySizeInPages,
-			   ULONG LastKernelBase,
-         PADDRESS_RANGE BIOSMemoryMap,
-         ULONG AddressRangeCount);
-
 PVOID 
+MmInitializePageList(PVOID FirstPhysKernelAddress,
+		     PVOID LastPhysKernelAddress,
+		     ULONG MemorySizeInPages,
+		     ULONG LastKernelBase,
+		     PADDRESS_RANGE BIOSMemoryMap,
+		     ULONG AddressRangeCount);
+PHYSICAL_ADDRESS
 MmAllocPage(ULONG Consumer, SWAPENTRY SavedSwapEntry);
-VOID MmDereferencePage(PVOID PhysicalAddress);
-VOID MmReferencePage(PVOID PhysicalAddress);
+VOID MmDereferencePage(PHYSICAL_ADDRESS PhysicalAddress);
+VOID MmReferencePage(PHYSICAL_ADDRESS PhysicalAddress);
 VOID MmDeletePageTable(struct _EPROCESS* Process, 
 		       PVOID Address);
 NTSTATUS MmCopyMmInfo(struct _EPROCESS* Src, 
@@ -219,7 +219,7 @@ MmDeleteVirtualMapping(struct _EPROCESS* Process,
 		       PVOID Address, 
 		       BOOL FreePage,
 		       BOOL* WasDirty,
-		       ULONG* PhysicalPage);
+		       PHYSICAL_ADDRESS* PhysicalPage);
 
 #define MM_PAGE_CLEAN     (0)
 #define MM_PAGE_DIRTY     (1)
@@ -227,8 +227,9 @@ MmDeleteVirtualMapping(struct _EPROCESS* Process,
 VOID MmBuildMdlFromPages(PMDL Mdl, PULONG Pages);
 PVOID MmGetMdlPageAddress(PMDL Mdl, PVOID Offset);
 VOID MiShutdownMemoryManager(VOID);
-ULONG MmGetPhysicalAddressForProcess(struct _EPROCESS* Process,
-				     PVOID Address);
+PHYSICAL_ADDRESS
+MmGetPhysicalAddressForProcess(struct _EPROCESS* Process,
+			       PVOID Address);
 NTSTATUS STDCALL
 MmUnmapViewOfSection(struct _EPROCESS* Process, PVOID BaseAddress);
 VOID MmInitPagingFile(VOID);
@@ -342,21 +343,21 @@ MmWriteToSwapPage(SWAPENTRY SwapEntry, PMDL Mdl);
 NTSTATUS 
 MmReadFromSwapPage(SWAPENTRY SwapEntry, PMDL Mdl);
 VOID 
-MmSetFlagsPage(PVOID PhysicalAddress, ULONG Flags);
+MmSetFlagsPage(PHYSICAL_ADDRESS PhysicalAddress, ULONG Flags);
 ULONG 
-MmGetFlagsPage(PVOID PhysicalAddress);
-VOID MmSetSavedSwapEntryPage(PVOID PhysicalAddress,
+MmGetFlagsPage(PHYSICAL_ADDRESS PhysicalAddress);
+VOID MmSetSavedSwapEntryPage(PHYSICAL_ADDRESS PhysicalAddress,
 			     SWAPENTRY SavedSwapEntry);
-SWAPENTRY MmGetSavedSwapEntryPage(PVOID PhysicalAddress);
+SWAPENTRY MmGetSavedSwapEntryPage(PHYSICAL_ADDRESS PhysicalAddress);
 VOID MmSetCleanPage(struct _EPROCESS* Process, PVOID Address);
-VOID MmLockPage(PVOID PhysicalPage);
-VOID MmUnlockPage(PVOID PhysicalPage);
+VOID MmLockPage(PHYSICAL_ADDRESS PhysicalPage);
+VOID MmUnlockPage(PHYSICAL_ADDRESS PhysicalPage);
 
 NTSTATUS MmSafeCopyFromUser(PVOID Dest, PVOID Src, ULONG Count);
 NTSTATUS MmSafeCopyToUser(PVOID Dest, PVOID Src, ULONG Count);
 NTSTATUS 
 MmCreatePhysicalMemorySection(VOID);
-PVOID
+PHYSICAL_ADDRESS
 MmGetContinuousPages(ULONG NumberOfBytes,
 		     PHYSICAL_ADDRESS HighestAcceptableAddress,
 		     ULONG Alignment);
@@ -371,11 +372,11 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
 ULONG
 MmGetPageProtect(struct _EPROCESS* Process, PVOID Address);
 PVOID 
-ExAllocatePageWithPhysPage(ULONG PhysPage);
+ExAllocatePageWithPhysPage(PHYSICAL_ADDRESS PhysPage);
 ULONG
-MmGetReferenceCountPage(PVOID PhysicalAddress);
+MmGetReferenceCountPage(PHYSICAL_ADDRESS PhysicalAddress);
 BOOLEAN
-MmIsUsablePage(PVOID PhysicalAddress);
+MmIsUsablePage(PHYSICAL_ADDRESS PhysicalAddress);
 
 #define MM_PAGEOP_PAGEIN        (1)
 #define MM_PAGEOP_PAGEOUT       (2)
@@ -425,9 +426,9 @@ MiDebugDumpNonPagedPool(BOOLEAN NewOnly);
 VOID
 MiDebugDumpNonPagedPoolStats(BOOLEAN NewOnly);
 VOID 
-MmMarkPageMapped(PVOID PhysicalAddress);
+MmMarkPageMapped(PHYSICAL_ADDRESS PhysicalAddress);
 VOID 
-MmMarkPageUnmapped(PVOID PhysicalAddress);
+MmMarkPageUnmapped(PHYSICAL_ADDRESS PhysicalAddress);
 VOID
 MmFreeSectionSegments(PFILE_OBJECT FileObject);
 
@@ -440,21 +441,36 @@ typedef struct _MM_IMAGE_SECTION_OBJECT
 VOID 
 MmFreeVirtualMemory(struct _EPROCESS* Process, PMEMORY_AREA MemoryArea);
 NTSTATUS
-MiCopyFromUserPage(ULONG DestPhysPage, PVOID SourceAddress);
+MiCopyFromUserPage(PHYSICAL_ADDRESS DestPhysPage, PVOID SourceAddress);
 NTSTATUS
-MiZeroPage(ULONG PhysPage);
+MiZeroPage(PHYSICAL_ADDRESS PhysPage);
 BOOLEAN 
 MmIsAccessedAndResetAccessPage(struct _EPROCESS* Process, PVOID Address);
-SWAPENTRY 
-MmGetSavedSwapEntryPage(PVOID PhysicalAddress);
 
 #define STATUS_MM_RESTART_OPERATION       (0xD0000001)
 
 NTSTATUS 
 MmCreateVirtualMappingForKernel(PVOID Address, 
 				ULONG flProtect,
-				ULONG PhysicalAddress);
+				PHYSICAL_ADDRESS PhysicalAddress);
 NTSTATUS MmCommitPagedPoolAddress(PVOID Address);
+NTSTATUS MmCreateVirtualMapping(struct _EPROCESS* Process,
+				PVOID Address, 
+				ULONG flProtect,
+				PHYSICAL_ADDRESS PhysicalAddress,
+				BOOLEAN MayWait);
+NTSTATUS 
+MmCreateVirtualMappingUnsafe(struct _EPROCESS* Process,
+			     PVOID Address, 
+			     ULONG flProtect,
+			     PHYSICAL_ADDRESS PhysicalAddress,
+			     BOOLEAN MayWait);
+
+VOID MmSetPageProtect(struct _EPROCESS* Process,
+		      PVOID Address,
+		      ULONG flProtect);
+BOOLEAN MmIsPagePresent(struct _EPROCESS* Process, 
+			PVOID Address);
 
 /* Memory balancing. */
 VOID
@@ -464,9 +480,10 @@ MmInitializeMemoryConsumer(ULONG Consumer,
 VOID
 MmInitializeBalancer(ULONG NrAvailablePages);
 NTSTATUS
-MmReleasePageMemoryConsumer(ULONG Consumer, PVOID Page);
+MmReleasePageMemoryConsumer(ULONG Consumer, PHYSICAL_ADDRESS Page);
 NTSTATUS
-MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait, PVOID* AllocatedPage);
+MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait, 
+			    PHYSICAL_ADDRESS* AllocatedPage);
 
 #define MC_CACHE          (0)
 #define MC_USER           (1)
@@ -475,24 +492,27 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait, PVOID* AllocatedPag
 #define MC_MAXIMUM        (4)
 
 VOID 
-MmSetRmapListHeadPage(PVOID PhysicalAddress, struct _MM_RMAP_ENTRY* ListHead);
+MmSetRmapListHeadPage(PHYSICAL_ADDRESS PhysicalAddress, 
+		      struct _MM_RMAP_ENTRY* ListHead);
 struct _MM_RMAP_ENTRY*
-MmGetRmapListHeadPage(PVOID PhysicalAddress);
+MmGetRmapListHeadPage(PHYSICAL_ADDRESS PhysicalAddress);
 VOID
-MmInsertRmap(PVOID PhysicalAddress, PEPROCESS Process, PVOID Address);
+MmInsertRmap(PHYSICAL_ADDRESS PhysicalAddress, PEPROCESS Process, 
+	     PVOID Address);
 VOID
-MmDeleteAllRmaps(PVOID PhysicalAddress, PVOID Context, 
+MmDeleteAllRmaps(PHYSICAL_ADDRESS PhysicalAddress, PVOID Context, 
 		 VOID (*DeleteMapping)(PVOID Context, PEPROCESS Process, PVOID Address));
 VOID
-MmDeleteRmap(PVOID PhysicalAddress, PEPROCESS Process, PVOID Address);
+MmDeleteRmap(PHYSICAL_ADDRESS PhysicalAddress, PEPROCESS Process, 
+	     PVOID Address);
 VOID
 MmInitializeRmapList(VOID);
-PVOID
-MmGetLRUNextUserPage(PVOID PreviousPhysicalAddress);
-PVOID
+PHYSICAL_ADDRESS
+MmGetLRUNextUserPage(PHYSICAL_ADDRESS PreviousPhysicalAddress);
+PHYSICAL_ADDRESS
 MmGetLRUFirstUserPage(VOID);
 NTSTATUS
-MmPageOutPhysicalAddress(PVOID PhysicalAddress);
+MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress);
 NTSTATUS
 MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages);
 
@@ -507,9 +527,10 @@ MmCreatePageFileMapping(PEPROCESS Process,
 			SWAPENTRY SwapEntry);
 BOOLEAN MmIsPageSwapEntry(PEPROCESS Process, PVOID Address);
 VOID
-MmTransferOwnershipPage(PVOID PhysicalAddress, ULONG NewConsumer);
+MmTransferOwnershipPage(PHYSICAL_ADDRESS PhysicalAddress, ULONG NewConsumer);
 VOID MmSetDirtyPage(PEPROCESS Process, PVOID Address);
 VOID
 MmInitializeMdlImplementation(VOID);
+extern PHYSICAL_ADDRESS MmSharedDataPagePhysicalAddress;
 
 #endif

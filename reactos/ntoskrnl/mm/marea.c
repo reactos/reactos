@@ -295,7 +295,7 @@ MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
 		 PVOID BaseAddress,
 		 ULONG Length,
 		 VOID (*FreePage)(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, 
-				  ULONG PhysAddr, SWAPENTRY SwapEntry, BOOLEAN Dirty),
+				  PHYSICAL_ADDRESS PhysAddr, SWAPENTRY SwapEntry, BOOLEAN Dirty),
 		 PVOID FreePageContext)
 {
    MEMORY_AREA* MemoryArea;
@@ -313,7 +313,7 @@ MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
      }
    for (i=0; i<(PAGE_ROUND_UP(MemoryArea->Length)/PAGESIZE); i++)
      {
-       ULONG PhysAddr = 0;
+       PHYSICAL_ADDRESS PhysAddr = (PHYSICAL_ADDRESS)0LL;
        BOOL Dirty;
        SWAPENTRY SwapEntry = 0;
 
@@ -333,7 +333,8 @@ MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
        if (FreePage != NULL)
 	 {
 	   FreePage(FreePageContext, MemoryArea,
-		    MemoryArea->BaseAddress + (i * PAGESIZE), PhysAddr, SwapEntry, Dirty);
+		    MemoryArea->BaseAddress + (i * PAGESIZE), PhysAddr, 
+		    SwapEntry, Dirty);
 	 }
      }
    

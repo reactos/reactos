@@ -117,10 +117,9 @@ static NTSTATUS ExceptionToNtStatus[] =
     STATUS_ACCESS_VIOLATION
   };
 
+extern unsigned int _text_start__, _text_end__;
 
 /* FUNCTIONS ****************************************************************/
-
-extern unsigned int _text_start__, _text_end__;
 
 STATIC BOOLEAN 
 print_address(PVOID address)
@@ -230,6 +229,7 @@ KiDoubleFaultHandler(VOID)
   ULONG ExceptionNr = 8;
   KTSS* OldTss;
   PULONG Frame;
+  ULONG OldCr3;
 #if 0
   ULONG i, j;
   static PVOID StackTrace[MM_STACK_SIZE / sizeof(PVOID)];
@@ -239,12 +239,22 @@ KiDoubleFaultHandler(VOID)
   BOOLEAN FoundRepeat;
 #endif
   
-  /* Use the address of the trap frame as approximation to the ring0 esp */
   OldTss = KeGetCurrentKPCR()->TSS;
   Esp0 = OldTss->Esp;
-  
+
   /* Get CR2 */
   __asm__("movl %%cr2,%0\n\t" : "=d" (cr2));
+
+  if (PsGetCurrentThread() != NULL &&
+      PsGetCurrentThread()->ThreadsProcess != NULL)
+    {
+      OldCr3 = 
+	PsGetCurrentThread()->ThreadsProcess->Pcb.DirectoryTableBase.QuadPart;
+    }
+  else
+    {
+      OldCr3 = 0xBEADF0AL;
+    }
    
    /*
     * Check for stack underflow
@@ -272,7 +282,7 @@ KiDoubleFaultHandler(VOID)
    DbgPrint("CS:EIP %x:%x ", OldTss->Cs, OldTss->Eip);
    print_address((PVOID)OldTss->Eip);
    DbgPrint("\n");
-   DbgPrint("cr2 %x cr3 %x ", cr2, OldTss->Cr3);
+   DbgPrint("cr2 %x cr3 %x ", cr2, OldCr3);
    DbgPrint("Proc: %x ",PsGetCurrentProcess());
    if (PsGetCurrentProcess() != NULL)
      {

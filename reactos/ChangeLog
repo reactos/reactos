@@ -1,4 +1,104 @@
-2001-03-18  David Welch  <welch@cwcom>
+2002-06-04  David Welch  <welch@whitehall1-5.seh.ox.ac.uk>
+
+	* ntoskrnl/ke/i386/exp.c (KiDoubleFaultHandler): Print CR3
+	correctly.
+
+2002-06-04  David Welch  <welch@whitehall1-5.seh.ox.ac.uk>
+
+	* ntoskrnl/include/internal/ps.h: Added KTHREAD_STACK_LIMIT definition.
+	* ntoskrnl/ke/i386/tskswitch.S (Ki386ContextSwitch): Force all the
+	pages of the kernel stack to be accessible from this process.
+	
+2002-06-04  David Welch  <welch@cwcom.net>
+
+	* ntoskrnl/cc/view.c (ReadCacheSegmentChain): Changes to use 
+	PHYSICAL_ADDRESS type for physical addresses.
+	* ntoskrnl/cc/copy.c (CcRosCreateCacheSegment): Changes to use 
+	PHYSICAL_ADDRESS type for physical addresses.
+	* ntoskrnl/cc/copy.c (CcFreeCachePage): Changes to use 
+	PHYSICAL_ADDRESS type for physical addresses.
+	* ntoskrnl/include/internal/mm.h: Changed prototypes to use 
+	PHYSICAL_ADDRESS type for physical addresses.
+	* ntoskrnl/include/internal/ps.h (KPROCESS): Changed type of
+	page directory base to PHYSICAL_ADDRESS.
+	* ntoskrnl/include/internal/i386/mm.h: Changed prototypes to use
+	PHYSICAL_ADDRESS type for physical addresses.
+	* ntoskrnl/ke/kthread.c (KeFreeStackPage): Changes to use 
+	PHYSICAL_ADDRESS type for physical addresses.
+	* ntoskrnl/ke/kthread.c (KeInitializeThread): Changes to use 
+	PHYSICAL_ADDRESS type for physical addresses.
+	* ntoskrnl/ke/process.c (KeAttachProcess, KeDetachProcess): Changes 
+	to use PHYSICAL_ADDRESS type for physical addresses.
+	* ntoskrnl/ke/kernel.c (PcrPages, KeApplicationProcessorInit): Changes
+	to use PHYSICAL_ADDRESS type for physical addresses.
+	* ntoskrnl/mm/balance.c (MM_ALLOCATION_REQUEST): Changes to use 
+	PHYSICAL_ADDRESS type for physical addresses.
+	* ntoskrnl/mm/balance.c (MmReleasePageMemoryConsumer): Changes to use 
+	PHYSICAL_ADDRESS type for physical addresses.
+	* ntoskrnl/mm/balance.c (MmRequestPageMemoryConsumer): Changes to use 
+	PHYSICAL_ADDRESS type for physical addresses.
+	* ntoskrnl/mm/cont.c (MmFreeContinuousPage): Changes to use 
+	PHYSICAL_ADDRESS type for physical addresses.
+	* ntoskrnl/mm/cont.c (MmAllocateContinuousAlignedMemory): Changes to 
+	use PHYSICAL_ADDRESS type for physical addresses.
+	* ntoskrnl/mm/freelist.c (MmTransferOwnershipPage, 
+	MmGetLRUFirstUserPage, MmGetLRUNextUserPage, MmGetContinuousPages,
+	MmInitializePageList, MmSetFlagsPage, MmSetRmapListHeadPage,
+	MmGetRmapListHeadPage, MmMarkPageMapped, MmMarkPageUnmapped,
+	MmGetFlagsPage, MmSetSavedSwapEntryPage, MmGetSavedSwapEntryPage,
+	MmReferencePage, MmGetReferenceCountPage, MmIsUsablePage,
+	MmDereferencePage, MmGetLockCountPage, MmLockPage, MmUnlockPage,
+	MmAllocPage): Changes to use PHYSICAL_ADDRESS type for physical 
+	addresses.
+	* ntoskrnl/mm/iospace.c (MmMapIoSpace): Changes to use 
+	PHYSICAL_ADDRESS type for physical addresses.
+	* ntoskrnl/mm/kmap.c (ExAllocatePage, MiZeroPage, MiCopyFromUserPage,
+	ExAllocatePageWithPhysPage): Changes to use PHYSICAL_ADDRESS type for 
+	physical addresses.
+	* ntoskrnl/mm/marea.c (MmFreeMemoryArea): Changes to use 
+	PHYSICAL_ADDRESS type for physical addresses.
+	* ntoskrnl/mm/mdl.c (MmUnlockPages, MmMapLockedPages, 
+	MmProbeAndLockPages): Changes to use PHYSICAL_ADDRESS type for 
+	physical addresses.
+	* ntoskrnl/mm/mm.c (MmSharedDataPagePhysicalAddress, 
+	MmCommitPagedPoolAddress, MmNotPresentFault): Changes to use 
+	PHYSICAL_ADDRESS type for physical addresses.
+	* ntoskrnl/mm/mminit.c (MmInitVirtualMemory): Changes to use 
+	PHYSICAL_ADDRESS type for physical addresses.
+	* ntoskrnl/mm/ncache.c (MmAllocateNonCachedMemory, 
+	MmFreeNonCachedPage): Changes to use PHYSICAL_ADDRESS type for 
+	physical addresses.
+	* ntoskrnl/mm/npool.c (grow_kernel_pool): Changes to use 
+	PHYSICAL_ADDRESS type for physical addresses.
+	* ntoskrnl/mm/rmap.c (MmPageOutPhysicalAddress, MmInsertRmap,
+	MmDeleteAllRmaps, MmDeleteRmap): Changes to use 
+	PHYSICAL_ADDRESS type for physical addresses.
+	* ntoskrnl/mm/section.c (MiReadPage, MmNotPresentFaultSectionView,
+	MmAccessFaultSectionView, MmPageOutDeleteMapping, 
+	MmPageOutSectionView, MmFreeSectionPage): Changes to use 
+	PHYSICAL_ADDRESS type for physical addresses.
+	* ntoskrnl/mm/slab.c (ExGrowSlabCache): Changes to use 
+	PHYSICAL_ADDRESS type for physical address.
+	* ntoskrnl/mm/virtual.c (MmPageOutVirtualMemory, 
+	MmNotPresentFaultVirtualMemory, MmFreeVirtualMemoryPage): Changes to 
+	use PHYSICAL_ADDRESS type for physical address.
+	* ntoskrnl/mm/wset.c (MmTrimUserMemory): Changes to use 
+	PHYSICAL_ADDRESS type for physical address.
+	* ntoskrnl/mm/page.c (Mmi386ReleaseMmInfo, MmCopyMmInfo,
+	MmGetPhysicalAddressForProcess, MmCreateVirtualMapping,
+	MmCreateVirtualMappingUnsafe, MmCreateVirtualMappingForProcess,
+	MmDeleteVirtualMapping): Changes to use PHYSICAL_ADDRESS type for 
+	physical address.
+	* ntoskrnl/ps/process (PsInitProcessManagment): Changes to use 
+	PHYSICAL_ADDRESS type for physical address.
+	* ntoskrnl/ps/thread.c (PsAllocateCallbackStack): Changes to use 
+	PHYSICAL_ADDRESS type for physical address.
+
+2002-06-04  David Welch  <welch@cwcom.net>
+
+	* Lots of change since the ChangeLog was last updated.
+
+2001-03-18  David Welch  <welch@cwcom.net>
 
 	* ntoskrnl/ke/apc.c (KiDeliverApc): Bug fix.
 	* ntoskrnl/ke/apc.c (KeInsertQueueApc): More comments.

@@ -1,4 +1,4 @@
-/* $Id: cont.c,v 1.19 2002/05/14 21:19:19 dwelch Exp $
+/* $Id: cont.c,v 1.20 2002/06/04 15:26:56 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -20,13 +20,14 @@
 /* FUNCTIONS *****************************************************************/
 
 VOID STATIC
-MmFreeContinuousPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, ULONG PhysAddr,
-		     SWAPENTRY SwapEntry, BOOLEAN Dirty)
+MmFreeContinuousPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, 
+		     PHYSICAL_ADDRESS PhysAddr, SWAPENTRY SwapEntry, 
+		     BOOLEAN Dirty)
 {
   assert(SwapEntry == 0);
-  if (PhysAddr != 0)
+  if (PhysAddr.QuadPart != 0)
     {
-      MmDereferencePage((PVOID)PhysAddr);
+      MmDereferencePage(PhysAddr);
     }
 }
 
@@ -38,7 +39,7 @@ MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
    PMEMORY_AREA MArea;
    NTSTATUS Status;
    PVOID BaseAddress = 0;
-   PVOID PBase;
+   PHYSICAL_ADDRESS PBase;
    ULONG i;
    
    MmLockAddressSpace(MmGetKernelAddressSpace());
@@ -60,7 +61,7 @@ MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
    PBase = MmGetContinuousPages(NumberOfBytes,
 				HighestAcceptableAddress,
 				Alignment);
-   if (PBase == NULL)
+   if (PBase.QuadPart == 0LL)
      {
        MmFreeMemoryArea(MmGetKernelAddressSpace(),
 			BaseAddress,
@@ -74,7 +75,7 @@ MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
 	MmCreateVirtualMapping(NULL,
 			       BaseAddress + (i * 4096),
 			       PAGE_EXECUTE_READWRITE | PAGE_SYSTEM,
-			       (ULONG)(PBase + (i * 4096)),
+			       (LARGE_INTEGER)(PBase.QuadPart + (i * 4096)),
 			       TRUE);
      }
    return(BaseAddress);

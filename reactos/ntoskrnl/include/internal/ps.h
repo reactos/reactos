@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.33 2002/05/14 21:19:17 dwelch Exp $
+/* $Id: ps.h,v 1.34 2002/06/04 15:26:55 dwelch Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -32,6 +32,7 @@
  * Defines for accessing KPCR and KTHREAD structure members
  */
 #define KTHREAD_INITIAL_STACK     0x18
+#define KTHREAD_STACK_LIMIT       0x1C
 #define KTHREAD_TEB               0x20
 #define KTHREAD_KERNEL_STACK      0x28
 #define KTHREAD_PREVIOUS_MODE     0x137
@@ -303,7 +304,7 @@ typedef struct _KPROCESS
    * We use the first member of this array to hold the physical address of
    * the page directory for this process.
    */
-  PVOID                 DirectoryTableBase[2];        /* 018 */
+  PHYSICAL_ADDRESS      DirectoryTableBase;           /* 018 */
   /*
    * Presumably a descriptor for the process's LDT, currently unused.
    */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: iospace.c,v 1.12 2001/08/03 09:36:18 ei Exp $
+/* $Id: iospace.c,v 1.13 2002/06/04 15:26:56 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/iospace.c
@@ -99,10 +99,11 @@ MmMapIoSpace (IN PHYSICAL_ADDRESS PhysicalAddress,
    for (i = 0; (i < ((NumberOfBytes + PAGESIZE - 1) / PAGESIZE)); i++)
      {
 	Status = 
-	  MmCreateVirtualMappingForKernel (
-          (Result + (i * PAGESIZE)),
-				  Attributes,
-				  PhysicalAddress.u.LowPart + (i * PAGESIZE));
+	  MmCreateVirtualMappingForKernel(Result + (i * PAGESIZE),
+					  Attributes,
+					  (PHYSICAL_ADDRESS)
+					  (PhysicalAddress.QuadPart + 
+					   (i * PAGESIZE)));
 	if (!NT_SUCCESS(Status))
 	  {
 	     DbgPrint("Unable to create virtual mapping\n");

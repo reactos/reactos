@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mm.c,v 1.56 2002/05/14 21:19:19 dwelch Exp $
+/* $Id: mm.c,v 1.57 2002/06/04 15:26:56 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -44,7 +44,6 @@
 PVOID EXPORTED MmUserProbeAddress = NULL; 
 PVOID EXPORTED MmHighestUserAddress = NULL;
 MM_STATS MmStats; 
-extern PVOID MmSharedDataPagePhysicalAddress;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -245,7 +244,7 @@ NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
 NTSTATUS MmCommitPagedPoolAddress(PVOID Address)
 {
   NTSTATUS Status;
-  PVOID AllocatedPage;
+  PHYSICAL_ADDRESS AllocatedPage;
   Status = MmRequestPageMemoryConsumer(MC_PPOOL, FALSE, &AllocatedPage);
   if (!NT_SUCCESS(Status))
     {
@@ -257,7 +256,7 @@ NTSTATUS MmCommitPagedPoolAddress(PVOID Address)
     MmCreateVirtualMapping(NULL,
 			   (PVOID)PAGE_ROUND_DOWN(Address),
 			   PAGE_READWRITE,
-			   (ULONG)AllocatedPage,
+			   AllocatedPage,
 			   FALSE);
   if (!NT_SUCCESS(Status))
     {
@@ -266,7 +265,7 @@ NTSTATUS MmCommitPagedPoolAddress(PVOID Address)
 	MmCreateVirtualMapping(NULL,
 			       (PVOID)PAGE_ROUND_DOWN(Address),
 			       PAGE_READWRITE,
-			       (ULONG)AllocatedPage,
+			       AllocatedPage,
 			       FALSE);
       MmLockAddressSpace(MmGetKernelAddressSpace());
     }
@@ -366,7 +365,7 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
 	     MmCreateVirtualMapping(PsGetCurrentProcess(),
 				    (PVOID)PAGE_ROUND_DOWN(Address),
 				    PAGE_READONLY,
-				    (ULONG)MmSharedDataPagePhysicalAddress,
+				    MmSharedDataPagePhysicalAddress,
 				    FALSE);
 	   if (!NT_SUCCESS(Status))
 	     {
@@ -375,7 +374,7 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
 		 MmCreateVirtualMapping(PsGetCurrentProcess(),
 					(PVOID)PAGE_ROUND_DOWN(Address),
 					PAGE_READONLY,
-					(ULONG)MmSharedDataPagePhysicalAddress,
+					MmSharedDataPagePhysicalAddress,
 					TRUE);
 	       MmLockAddressSpace(&PsGetCurrentProcess()->AddressSpace);
 	     }

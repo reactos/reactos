@@ -54,22 +54,4 @@ extern inline PULONG get_page_directory(void)
 #define VADDR_TO_PT_OFFSET(x)  (((x/1024)%4096))
 #define VADDR_TO_PD_OFFSET(x)  ((x)/(4*1024*1024))
 
-NTSTATUS MmCreateVirtualMapping(struct _EPROCESS* Process,
-				PVOID Address, 
-				ULONG flProtect,
-				ULONG PhysicalAddress,
-				BOOLEAN MayWait);
-NTSTATUS 
-MmCreateVirtualMappingUnsafe(struct _EPROCESS* Process,
-			     PVOID Address, 
-			     ULONG flProtect,
-			     ULONG PhysicalAddress,
-			     BOOLEAN MayWait);
-
-VOID MmSetPageProtect(struct _EPROCESS* Process,
-		      PVOID Address,
-		      ULONG flProtect);
-BOOLEAN MmIsPagePresent(struct _EPROCESS* Process, 
-			PVOID Address);
-
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_I386_MM_H */

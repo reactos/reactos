@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.41 2002/05/19 14:09:35 dwelch Exp $
+/* $Id: view.c,v 1.42 2002/06/04 15:26:55 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -292,7 +292,7 @@ CcRosCreateCacheSegment(PBCB Bcb,
   ExReleaseFastMutex(&ViewLock);
   for (i = 0; i < (Bcb->CacheSegmentSize / PAGESIZE); i++)
     {
-      PVOID Page;
+      PHYSICAL_ADDRESS Page;
       
       Status = MmRequestPageMemoryConsumer(MC_CACHE, TRUE, &Page);
       if (!NT_SUCCESS(Status))
@@ -303,7 +303,7 @@ CcRosCreateCacheSegment(PBCB Bcb,
       Status = MmCreateVirtualMapping(NULL,
 				      current->BaseAddress + (i * PAGESIZE),
 				      PAGE_READWRITE,
-				      (ULONG)Page,
+				      Page,
 				      TRUE);
       if (!NT_SUCCESS(Status))
 	{
@@ -462,12 +462,12 @@ CcRosRequestCacheSegment(PBCB Bcb,
 
 STATIC VOID 
 CcFreeCachePage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, 
-		ULONG PhysAddr, SWAPENTRY SwapEntry, BOOLEAN Dirty)
+		PHYSICAL_ADDRESS PhysAddr, SWAPENTRY SwapEntry, BOOLEAN Dirty)
 {
   assert(SwapEntry == 0);
-  if (PhysAddr != 0)
+  if (PhysAddr.QuadPart != 0)
     {
-      MmReleasePageMemoryConsumer(MC_CACHE, (PVOID)PhysAddr);
+      MmReleasePageMemoryConsumer(MC_CACHE, PhysAddr);
     }
 }
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kthread.c,v 1.25 2002/05/14 21:19:18 dwelch Exp $
+/* $Id: kthread.c,v 1.26 2002/06/04 15:26:56 dwelch Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Microkernel thread support
@@ -44,13 +44,13 @@
 /* FUNCTIONS *****************************************************************/
 
 VOID
-KeFreeStackPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, ULONG PhysAddr,
-		SWAPENTRY SwapEntry, BOOLEAN Dirty)
+KeFreeStackPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address, 
+		PHYSICAL_ADDRESS PhysAddr, SWAPENTRY SwapEntry, BOOLEAN Dirty)
 {
   assert(SwapEntry == 0);
-  if (PhysAddr != 0)
+  if (PhysAddr.QuadPart  != 0)
     {
-      MmDereferencePage((PVOID)PhysAddr);
+      MmDereferencePage(PhysAddr);
     }
 }
 
@@ -121,7 +121,7 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
 	}
       for (i = 0; i < (MM_STACK_SIZE / PAGESIZE); i++)
 	{
-	  PVOID Page;
+	  PHYSICAL_ADDRESS Page;
 	  Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &Page);
 	  if (!NT_SUCCESS(Status))
 	    {
@@ -130,7 +130,7 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
 	  Status = MmCreateVirtualMapping(NULL,
 					  KernelStack + (i * PAGESIZE),
 					  PAGE_EXECUTE_READWRITE,
-					  (ULONG)Page,
+					  Page,
 					  TRUE);
 	}
       Thread->InitialStack = KernelStack + MM_STACK_SIZE;

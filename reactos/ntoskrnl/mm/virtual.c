@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.58 2002/05/14 21:19:19 dwelch Exp $
+/* $Id: virtual.c,v 1.59 2002/06/04 15:26:57 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -101,7 +101,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
 		       PVOID Address,
 		       PMM_PAGEOP PageOp)
 {
-   PVOID PhysicalAddress;
+   PHYSICAL_ADDRESS PhysicalAddress;
    BOOL WasDirty;
    SWAPENTRY SwapEntry;
    NTSTATUS Status;
@@ -117,7 +117,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
        (MemoryArea->Attributes & PAGE_EXECUTE_READ))
      {       
        MmDeleteVirtualMapping(MemoryArea->Process, Address, FALSE,
-			      NULL, (PULONG)&PhysicalAddress);
+			      NULL, &PhysicalAddress);
        MmDeleteAllRmaps(PhysicalAddress, NULL, NULL);
        if (MmGetSavedSwapEntryPage(PhysicalAddress) != 0)
 	 {
@@ -137,7 +137,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
     */
    MmDisableVirtualMapping(MemoryArea->Process, Address,
 			   &WasDirty, (PULONG)&PhysicalAddress);
-   if (PhysicalAddress == 0)
+   if (PhysicalAddress.QuadPart == 0)
      {
        KeBugCheck(0);
      }
@@ -160,7 +160,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
    /*
     * If necessary, allocate an entry in the paging file for this page
     */
-   SwapEntry = MmGetSavedSwapEntryPage((PVOID)PhysicalAddress);
+   SwapEntry = MmGetSavedSwapEntryPage(PhysicalAddress);
    if (SwapEntry == 0)
      {
        SwapEntry = MmAllocSwapPage();
@@ -221,7 +221,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
  * NOTES: This function is called with the address space lock held.
  */
 {
-   PVOID Page;
+   PHYSICAL_ADDRESS Page;
    NTSTATUS Status;
    PMM_SEGMENT Segment;
    PVOID CurrentAddress;
@@ -236,7 +236,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
      {
 	if (Locked)
 	  {
-	    MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
+	    MmLockPage(MmGetPhysicalAddressForProcess(NULL, Address));
 	  }  
 	return(STATUS_SUCCESS);
      }
@@ -312,7 +312,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
        MmLockAddressSpace(AddressSpace);
        if (Locked)
 	 {
-	   MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
+	   MmLockPage(MmGetPhysicalAddressForProcess(NULL, Address));
 	 }
        MmReleasePageOp(PageOp);
        return(STATUS_SUCCESS);
@@ -355,7 +355,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
    Status = MmCreateVirtualMapping(PsGetCurrentProcess(),		      
 				   Address,
 				   MemoryArea->Attributes,
-				   (ULONG)Page,
+				   Page,
 				   FALSE);
    while (Status == STATUS_NO_MEMORY)
      {
@@ -363,7 +363,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
 	Status = MmCreateVirtualMapping(PsGetCurrentProcess(),		      
 					Address,
 					MemoryArea->Attributes,
-					(ULONG)Page,
+					Page,
 					TRUE);
 	MmLockAddressSpace(AddressSpace);
      }  
@@ -384,7 +384,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
     */
    if (Locked)
      {
-       MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
+       MmLockPage(MmGetPhysicalAddressForProcess(NULL, Address));
      }  
    PageOp->Status = STATUS_SUCCESS;
    KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
@@ -432,11 +432,11 @@ MmModifyAttributes(PMADDRESS_SPACE AddressSpace,
 	      MmDeleteVirtualMapping(AddressSpace->Process,
 				     BaseAddress + (i*PAGESIZE),
 				     FALSE, NULL, NULL);
-	      if (PhysicalAddr.u.LowPart != 0)
+	      if (PhysicalAddr.QuadPart != 0)
 		{
-		  MmDeleteRmap((PVOID)PhysicalAddr.u.LowPart, AddressSpace->Process,
+		  MmDeleteRmap(PhysicalAddr, AddressSpace->Process,
 			       BaseAddress + (i * PAGESIZE));
-		  MmDereferencePage((PVOID)(ULONG)(PhysicalAddr.u.LowPart));
+		  MmDereferencePage(PhysicalAddr);
 		}
 	    }
 	}
@@ -1053,16 +1053,16 @@ VOID STATIC
 MmFreeVirtualMemoryPage(PVOID Context,
 			MEMORY_AREA* MemoryArea,
 			PVOID Address,
-			ULONG PhysicalAddr,
+			PHYSICAL_ADDRESS PhysicalAddr,
 			SWAPENTRY SwapEntry,
 			BOOLEAN Dirty)
 {
   PEPROCESS Process = (PEPROCESS)Context;
   
-  if (PhysicalAddr != 0)
+  if (PhysicalAddr.QuadPart != 0)
     {
-      MmDeleteRmap((PVOID)PhysicalAddr, Process, Address);
-      MmDereferencePage((PVOID)PhysicalAddr);
+      MmDeleteRmap(PhysicalAddr, Process, Address);
+      MmDereferencePage(PhysicalAddr);
     }
   else if (SwapEntry != 0)
     {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rmap.c,v 1.5 2002/05/14 21:19:19 dwelch Exp $
+/* $Id: rmap.c,v 1.6 2002/06/04 15:26:57 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -58,7 +58,7 @@ MmInitializeRmapList(VOID)
 }
 
 NTSTATUS
-MmPageOutPhysicalAddress(PVOID PhysicalAddress)
+MmPageOutPhysicalAddress(PHYSICAL_ADDRESS PhysicalAddress)
 {
   PMM_RMAP_ENTRY entry;
   PMEMORY_AREA MemoryArea;
@@ -155,7 +155,8 @@ MmPageOutPhysicalAddress(PVOID PhysicalAddress)
 }
 
 VOID
-MmInsertRmap(PVOID PhysicalAddress, PEPROCESS Process, PVOID Address)
+MmInsertRmap(PHYSICAL_ADDRESS PhysicalAddress, PEPROCESS Process, 
+	     PVOID Address)
 {
   PMM_RMAP_ENTRY current_entry;
   PMM_RMAP_ENTRY new_entry;
@@ -170,8 +171,8 @@ MmInsertRmap(PVOID PhysicalAddress, PEPROCESS Process, PVOID Address)
   new_entry->Address = Address;
   new_entry->Process = Process;
 
-  if (MmGetPhysicalAddressForProcess(Process, Address) != 
-      (ULONG)PhysicalAddress)
+  if (MmGetPhysicalAddressForProcess(Process, Address).QuadPart != 
+      PhysicalAddress.QuadPart)
     {
       DPRINT1("Insert rmap (%d, 0x%.8X) 0x%.8X which doesn't match physical "
 	      "address 0x%.8X\n", Process->UniqueProcessId, Address, 
@@ -188,7 +189,7 @@ MmInsertRmap(PVOID PhysicalAddress, PEPROCESS Process, PVOID Address)
 }
 
 VOID
-MmDeleteAllRmaps(PVOID PhysicalAddress, PVOID Context, 
+MmDeleteAllRmaps(PHYSICAL_ADDRESS PhysicalAddress, PVOID Context, 
 		 VOID (*DeleteMapping)(PVOID Context, PEPROCESS Process, 
 				       PVOID Address))
 {
@@ -218,7 +219,8 @@ MmDeleteAllRmaps(PVOID PhysicalAddress, PVOID Context,
 }
 
 VOID
-MmDeleteRmap(PVOID PhysicalAddress, PEPROCESS Process, PVOID Address)
+MmDeleteRmap(PHYSICAL_ADDRESS PhysicalAddress, PEPROCESS Process, 
+	     PVOID Address)
 {
   PMM_RMAP_ENTRY current_entry, previous_entry;
 

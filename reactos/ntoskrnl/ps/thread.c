@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.93 2002/05/17 23:01:56 dwelch Exp $
+/* $Id: thread.c,v 1.94 2002/06/04 15:26:58 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -594,7 +594,7 @@ PsAllocateCallbackStack(ULONG StackSize)
     }
   for (i = 0; i < (StackSize / PAGESIZE); i++)
     {
-      PVOID Page;
+      PHYSICAL_ADDRESS Page;
       Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &Page);
       if (!NT_SUCCESS(Status))
 	{
@@ -603,7 +603,7 @@ PsAllocateCallbackStack(ULONG StackSize)
       Status = MmCreateVirtualMapping(NULL,
 				      KernelStack + (i * PAGESIZE),
 				      PAGE_EXECUTE_READWRITE,
-				      (ULONG)Page,
+				      Page,
 				      TRUE);
     }
   return(KernelStack);

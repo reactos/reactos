@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.4 2002/01/26 21:21:02 dwelch Exp $
+/* $Id: copy.c,v 1.5 2002/06/04 15:26:55 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -97,10 +97,10 @@ ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
 	      for (i = 0; i < (Bcb->CacheSegmentSize / PAGESIZE); i++)
 		{
 		  PVOID address;
-		  ULONG page;
+		  PHYSICAL_ADDRESS page;
 		  address = current2->BaseAddress + (i * PAGESIZE);
 		  page = MmGetPhysicalAddressForProcess(NULL, address);
-		  ((PULONG)(Mdl + 1))[offset] = page;
+		  ((PULONG)(Mdl + 1))[offset] = page.u.LowPart;
 		  offset++;
 		}
 	      current2 = current2->NextInChain;
