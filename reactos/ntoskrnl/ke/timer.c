@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.32 2000/07/07 00:45:37 phreak Exp $
+/* $Id: timer.c,v 1.33 2000/07/19 14:23:37 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -69,7 +69,7 @@ volatile ULONGLONG KiTimerTicks;
  * 
  * RJJ was 54945055
  */
-#define CLOCK_INCREMENT (549450)
+#define CLOCK_INCREMENT (549255)
 
 /*
  * PURPOSE: List of timers
@@ -147,13 +147,10 @@ NTSTATUS STDCALL NtDelayExecution(IN ULONG Alertable,
 }
 
 
-NTSTATUS
-STDCALL
-KeDelayExecutionThread (
-	KPROCESSOR_MODE	WaitMode,
-	BOOLEAN		Alertable,
-	PLARGE_INTEGER	Interval
-	)
+NTSTATUS STDCALL
+KeDelayExecutionThread (KPROCESSOR_MODE	WaitMode,
+			BOOLEAN		Alertable,
+			PLARGE_INTEGER	Interval)
 /*
  * FUNCTION: Puts the current thread into an alertable or nonalertable 
  * wait state for a given internal
@@ -173,11 +170,8 @@ KeDelayExecutionThread (
 				 NULL));
 }
 
-ULONG
-STDCALL
-KeQueryTimeIncrement (
-	VOID
-	)
+ULONG STDCALL
+KeQueryTimeIncrement (VOID)
 /*
  * FUNCTION: Gets the increment (in 100-nanosecond units) that is added to 
  * the system clock every time the clock interrupts
@@ -187,11 +181,8 @@ KeQueryTimeIncrement (
    return(CLOCK_INCREMENT);
 }
 
-VOID
-STDCALL
-KeQuerySystemTime (
-	PLARGE_INTEGER	CurrentTime
-	)
+VOID STDCALL
+KeQuerySystemTime (PLARGE_INTEGER	CurrentTime)
 /*
  * FUNCTION: Gets the current system time
  * ARGUMENTS:
@@ -204,11 +195,8 @@ KeQuerySystemTime (
 }
 
 
-NTSTATUS
-STDCALL
-NtGetTickCount (
-	PULONG	UpTime
-	)
+NTSTATUS STDCALL
+NtGetTickCount (PULONG	UpTime)
 {
 	LARGE_INTEGER TickCount;
 	if ( UpTime == NULL )
@@ -219,13 +207,10 @@ NtGetTickCount (
 }
 
 
-BOOLEAN
-STDCALL
-KeSetTimer (
-	PKTIMER		Timer,
-	LARGE_INTEGER	DueTime,
-	PKDPC		Dpc
-	)
+BOOLEAN STDCALL
+KeSetTimer (PKTIMER		Timer,
+	    LARGE_INTEGER	DueTime,
+	    PKDPC		Dpc)
 /*
  * FUNCTION: Sets the absolute or relative interval at which a timer object
  * is to be set to the signaled state and optionally supplies a 
@@ -242,14 +227,11 @@ KeSetTimer (
    return(KeSetTimerEx(Timer, DueTime, 0, Dpc));
 }
 
-BOOLEAN
-STDCALL
-KeSetTimerEx (
-	PKTIMER		Timer,
-	LARGE_INTEGER	DueTime,
-	LONG		Period,
-	PKDPC		Dpc
-	)
+BOOLEAN STDCALL
+KeSetTimerEx (PKTIMER		Timer,
+	      LARGE_INTEGER	DueTime,
+	      LONG		Period,
+	      PKDPC		Dpc)
 /*
  * FUNCTION: Sets the absolute or relative interval at which a timer object
  * is to be set to the signaled state and optionally supplies a 
@@ -291,11 +273,8 @@ KeSetTimerEx (
    return FALSE;
 }
 
-BOOLEAN
-STDCALL
-KeCancelTimer (
-	PKTIMER	Timer
-	)
+BOOLEAN STDCALL
+KeCancelTimer (PKTIMER	Timer)
 /*
  * FUNCTION: Removes a timer from the system timer list
  * ARGUMENTS:
@@ -323,20 +302,14 @@ KeCancelTimer (
    return(TRUE);
 }
 
-BOOLEAN
-STDCALL
-KeReadStateTimer (
-	PKTIMER	Timer
-	)
+BOOLEAN STDCALL
+KeReadStateTimer (PKTIMER	Timer)
 {
    return(Timer->Header.SignalState);
 }
 
-VOID
-STDCALL
-KeInitializeTimer (
-	PKTIMER	Timer
-	)
+VOID STDCALL
+KeInitializeTimer (PKTIMER	Timer)
 /*
  * FUNCTION: Initalizes a kernel timer object
  * ARGUMENTS:
@@ -347,12 +320,9 @@ KeInitializeTimer (
    KeInitializeTimerEx(Timer,NotificationTimer);
 }
 
-VOID
-STDCALL
-KeInitializeTimerEx (
-	PKTIMER		Timer,
-	TIMER_TYPE	Type
-	)
+VOID STDCALL
+KeInitializeTimerEx (PKTIMER		Timer,
+		     TIMER_TYPE	Type)
 /*
  * FUNCTION: Initializes a kernel timer object
  * ARGUMENTS:
@@ -387,11 +357,8 @@ KeInitializeTimerEx (
    Timer->TimerListEntry.Flink = Timer->TimerListEntry.Blink = NULL;
 }
 
-VOID
-STDCALL
-KeQueryTickCount (
-	PLARGE_INTEGER	TickCount
-	)
+VOID STDCALL
+KeQueryTickCount (PLARGE_INTEGER	TickCount)
 /*
  * FUNCTION: Returns the number of ticks since the system was booted
  * ARGUMENTS:
