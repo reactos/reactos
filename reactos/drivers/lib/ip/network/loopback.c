@@ -47,7 +47,6 @@ VOID LoopTransmit(
 	      ("Doing receive (complete: %x, context %x, packet %x)\n",
 	       PC(NdisPacket)->DLComplete, Context, NdisPacket));
   IPReceive(Context, &IPPacket);
-  DisplayIPPacket(&IPPacket);
   TI_DbgPrint(MAX_TRACE, 
 	      ("Finished receive (complete: %x, context %x, packet %x)\n",
 	       PC(NdisPacket)->DLComplete, Context, NdisPacket));
