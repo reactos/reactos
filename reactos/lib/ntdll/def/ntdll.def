@@ -672,6 +672,7 @@ RtlValidSid@4
 RtlValidateHeap@12
 RtlValidateProcessHeaps@0
 RtlValidateUnicodeString@8
+RtlVerifyVersionInfo@16
 ;RtlWalkHeap
 RtlWriteRegistryValue@24
 ;RtlZeroHeap

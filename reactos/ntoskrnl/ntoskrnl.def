@@ -1212,7 +1212,7 @@ RtlUpperString@8
 RtlValidRelativeSecurityDescriptor@12
 RtlValidSecurityDescriptor@4
 RtlValidSid@4
-;RtlVerifyVersionInfo@16
+RtlVerifyVersionInfo@16
 RtlVolumeDeviceToDosName@8
 RtlWalkFrameChain@12
 RtlWriteRegistryValue@24
