@@ -1,4 +1,4 @@
-; $Id: videoprt.edf,v 1.1 2003/02/15 19:16:32 gvg Exp $
+; $Id: videoprt.edf,v 1.2 2003/06/19 16:04:05 gvg Exp $
 ;
 ; vidport.def - export definition file for ReactOS
 ;
@@ -37,8 +37,8 @@ VideoPortScanRom=VideoPortScanRom@16
 VideoPortSetBusData=VideoPortSetBusData@24
 VideoPortSetRegistryParameters=VideoPortSetRegistryParameters@16
 VideoPortSetTrappedEmulatorPorts=VideoPortSetTrappedEmulatorPorts@12
-;VideoPortStallExecution=HAL.KeStallExecutionProcessor
-VideoPortStallExecution=NTOSKRNL.KeStallExecutionProcessor
+VideoPortStallExecution=HAL.KeStallExecutionProcessor
+;VideoPortStallExecution=NTOSKRNL.KeStallExecutionProcessor
 VideoPortStartTimer=VideoPortStartTimer@4
 VideoPortStopTimer=VideoPortStopTimer@4
 VideoPortSynchronizeExecution=VideoPortSynchronizeExecution@16
