@@ -71,7 +71,7 @@ APPS = args hello test cat bench apc shm lpc thread event file gditest \
        objdir atomtest winhello partinfo mutex readfile
 
 #NET_APPS = ncftp ping roshttpd telnet
-NET_APPS = ncftp ping roshttpd 
+NET_APPS =  
 
 #lzexpand mapi32 (missing imports)
 #dsound (missing winmm.dll)
