@@ -399,7 +399,7 @@ static void clear_color( GLcontext* ctx, const GLfloat color[4] )
  * Otherwise, we let swrast do it. 
  */ 
 
-static clear(GLcontext* ctx, GLbitfield mask, 
+static void clear(GLcontext* ctx, GLbitfield mask, 
       GLboolean all, GLint x, GLint y, GLint width, GLint height) 
 { 
   const   GLuint *colorMask = (GLuint *) &ctx->Color.ColorMask; 
@@ -665,6 +665,7 @@ static void fast_flat_rgb_line( GLcontext* ctx, GLuint v0,
 
 static line_func choose_line_function( GLcontext* ctx )
 {
+  return NULL;
 }
 
 
