@@ -34,7 +34,7 @@ typedef struct _WINSTATION_OBJECT
   HANDLE hbmWallpaper;
   ULONG cxWallpaper, cyWallpaper;
   WALLPAPER_MODE WallpaperMode;
-  
+
   ULONG Flags;
   struct _DESKTOP_OBJECT* ActiveDesktop;
   /* FIXME: Clipboard */
@@ -99,6 +99,8 @@ VOID
 ExpInitLookasideLists(VOID);
 VOID
 ExpInitializeCallbacks(VOID);
+VOID
+ExpInitUuids(VOID);
 
 /* OTHER FUNCTIONS **********************************************************/
 
