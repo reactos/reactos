@@ -91,8 +91,7 @@ VOID NCETimeout(
 }
 
 
-VOID NBTimeout(
-    VOID)
+VOID NBTimeout(VOID)
 /*
  * FUNCTION: Neighbor address cache timeout handler
  * NOTES:
@@ -123,8 +122,7 @@ VOID NBTimeout(
     }
 }
 
-VOID NBStartup(
-  VOID)
+VOID NBStartup(VOID)
 /*
  * FUNCTION: Starts the neighbor cache
  */
@@ -140,8 +138,7 @@ VOID NBStartup(
     }
 }
 
-VOID NBShutdown(
-  VOID)
+VOID NBShutdown(VOID)
 /*
  * FUNCTION: Shuts down the neighbor cache
  */
@@ -198,8 +195,7 @@ VOID NBShutdown(
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
 
-VOID NBSendSolicit(
-  PNEIGHBOR_CACHE_ENTRY NCE)
+VOID NBSendSolicit(PNEIGHBOR_CACHE_ENTRY NCE)
 /*
  * FUNCTION: Sends a neighbor solicitation message
  * ARGUMENTS:
@@ -272,13 +268,16 @@ PNEIGHBOR_CACHE_ENTRY NBAddNeighbor(
   ULONG HashValue;
   KIRQL OldIrql;
 
-  TI_DbgPrint(DEBUG_NCACHE, ("Called. Interface (0x%X)  Address (0x%X)  "
-    "LinkAddress (0x%X)  LinkAddressLength (%d)  State (0x%X)\n",
-    Interface, Address, LinkAddress, LinkAddressLength, State));
+  TI_DbgPrint
+      (DEBUG_NCACHE, 
+       ("Called. Interface (0x%X)  Address (0x%X)  "
+	"LinkAddress (0x%X)  LinkAddressLength (%d)  State (0x%X)\n",
+	Interface, Address, LinkAddress, LinkAddressLength, State));
 
   ASSERT(Address->Type == IP_ADDRESS_V4);
 
-  NCE = ExAllocatePool(NonPagedPool, sizeof(NEIGHBOR_CACHE_ENTRY) + LinkAddressLength);
+  NCE = ExAllocatePool
+      (NonPagedPool, sizeof(NEIGHBOR_CACHE_ENTRY) + LinkAddressLength);
   if (NCE == NULL)
     {
       TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));

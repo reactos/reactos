@@ -238,11 +238,7 @@ PADDRESS_ENTRY IPLocateADE(
 PADDRESS_ENTRY IPGetDefaultADE(
     UINT AddressType);
 
-VOID STDCALL IPTimeout(
-    PKDPC Dpc,
-    PVOID DeferredContext,
-    PVOID SystemArgument1,
-    PVOID SystemArgument2);
+VOID STDCALL IPTimeout( PVOID Context );
 
 VOID IPDispatchProtocol(
     PNET_TABLE_ENTRY NTE,

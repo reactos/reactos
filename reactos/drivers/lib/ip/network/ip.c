@@ -11,8 +11,6 @@
 #include "precomp.h"
 
 
-KTIMER IPTimer;
-KDPC IPTimeoutDpc;
 LIST_ENTRY InterfaceListHead;
 KSPIN_LOCK InterfaceListLock;
 LIST_ENTRY NetTableListHead;
@@ -21,6 +19,7 @@ UINT MaxLLHeaderSize; /* Largest maximum header size */
 UINT MinLLFrameSize;  /* Largest minimum frame size */
 BOOLEAN IPInitialized = FALSE;
 NPAGED_LOOKASIDE_LIST IPPacketList;
+/* Work around calling timer at Dpc level */
 
 IP_PROTOCOL_HANDLER ProtocolTable[IP_PROTOCOL_TABLE_SIZE];
 
@@ -607,29 +606,13 @@ PADDRESS_ENTRY IPGetDefaultADE(
     return NULL;
 }
 
-
-VOID STDCALL IPTimeout(
-    PKDPC Dpc,
-    PVOID DeferredContext,
-    PVOID SystemArgument1,
-    PVOID SystemArgument2)
-/*
- * FUNCTION: Timeout DPC
- * ARGUMENTS:
- *     Dpc             = Pointer to our DPC object
- *     DeferredContext = Pointer to context information (unused)
- *     SystemArgument1 = Unused
- *     SystemArgument2 = Unused
- * NOTES:
- *     This routine is dispatched once in a while to do maintainance jobs
- */
-{
+void STDCALL IPTimeout( PVOID Context ) {
     /* Check if datagram fragments have taken too long to assemble */
     IPDatagramReassemblyTimeout();
-
+    
     /* Clean possible outdated cached neighbor addresses */
     NBTimeout();
-
+    
     /* Call upper layer timeout routines */
     TCPTimeout();
 }
@@ -936,11 +919,10 @@ NTSTATUS IPStartup(PUNICODE_STRING RegistryPath)
  */
 {
     UINT i;
-    LARGE_INTEGER DueTime;
 
     TI_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-  	MaxLLHeaderSize = 0;
+    MaxLLHeaderSize = 0;
     MinLLFrameSize  = 0;
 
     /* Initialize lookaside lists */
@@ -1007,16 +989,6 @@ NTSTATUS IPStartup(PUNICODE_STRING RegistryPath)
 
     InitPLE();
 
-    /* Initialize our periodic timer and its associated DPC object. When the
-       timer expires, the IPTimeout deferred procedure call (DPC) is queued */
-    KeInitializeDpc(&IPTimeoutDpc, IPTimeout, NULL);
-    KeInitializeTimer(&IPTimer);
-
-    /* Start the periodic timer with an initial and periodic
-       relative expiration time of IP_TIMEOUT milliseconds */
-    DueTime.QuadPart = -(LONGLONG)IP_TIMEOUT * 10000;
-    KeSetTimerEx(&IPTimer, DueTime, IP_TIMEOUT, &IPTimeoutDpc);
-
     IPInitialized = TRUE;
 
     return STATUS_SUCCESS;
@@ -1035,9 +1007,6 @@ NTSTATUS IPShutdown(
 
     if (!IPInitialized)
         return STATUS_SUCCESS;
-
-    /* Cancel timer */
-    KeCancelTimer(&IPTimer);
 
     /* Shutdown neighbor cache subsystem */
     NBShutdown();

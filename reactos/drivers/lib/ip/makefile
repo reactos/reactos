@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.3 2004/09/30 22:04:13 arty Exp $
+# $Id: makefile,v 1.4 2004/10/07 15:04:45 arty Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -11,6 +11,7 @@ TARGET_PCH = $(PATH_TO_TOP)/drivers/lib/ip/include/precomp.h
 # -DMEMTRACK
 TARGET_CFLAGS = \
 	-D__USE_W32API \
+	-DMEMTRACK \
 	-Wall -Werror \
 	-Iinclude \
 	-I../../net/tcpip/include \

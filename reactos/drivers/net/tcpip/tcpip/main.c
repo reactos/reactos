@@ -9,7 +9,7 @@
  */
 #include "precomp.h"
 
-//#define NDEBUG
+#define NDEBUG
 
 #ifndef NDEBUG
 DWORD DebugTraceLevel = 0x7fffffff;
@@ -29,6 +29,10 @@ ULONG EntityCount                = 0;
 ULONG EntityMax                  = 0;
 UDP_STATISTICS UDPStats;
 
+KTIMER IPTimer;
+KDPC IPTimeoutDpc;
+KSPIN_LOCK IpWorkLock;
+WORK_QUEUE_ITEM IpWorkItem;
 
 VOID TiWriteErrorLog(
     PDRIVER_OBJECT DriverContext,
@@ -45,7 +49,8 @@ VOID TiWriteErrorLog(
  *     ErrorCode        = An error code to put in the log entry
  *     UniqueErrorValue = UniqueErrorValue in the error log packet
  *     FinalStatus      = FinalStatus in the error log packet
- *     String           = If not NULL, a pointer to a string to put in log entry
+ *     String           = If not NULL, a pointer to a string to put in log 
+ *                        entry
  *     DumpDataCount    = Number of ULONGs of dump data
  *     DumpData         = Pointer to dump data for the log entry
  */
@@ -649,6 +654,8 @@ VOID STDCALL TiUnload(
   }
   KeReleaseSpinLock(&AddressFileListLock, OldIrql);
 #endif
+  /* Cancel timer */
+  KeCancelTimer(&IPTimer);
 
   /* Unregister loopback adapter */
   LoopUnregisterAdapter(NULL);
@@ -696,6 +703,24 @@ VOID STDCALL TiUnload(
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
 
+VOID STDCALL IPTimeoutDpcFn(
+    PKDPC Dpc,
+    PVOID DeferredContext,
+    PVOID SystemArgument1,
+    PVOID SystemArgument2)
+/*
+ * FUNCTION: Timeout DPC
+ * ARGUMENTS:
+ *     Dpc             = Pointer to our DPC object
+ *     DeferredContext = Pointer to context information (unused)
+ *     SystemArgument1 = Unused
+ *     SystemArgument2 = Unused
+ * NOTES:
+ *     This routine is dispatched once in a while to do maintainance jobs
+ */
+{
+    ExQueueWorkItem( &IpWorkItem, CriticalWorkQueue );
+}
 
 NTSTATUS
 #ifndef _MSC_VER
@@ -717,6 +742,7 @@ DriverEntry(
   UNICODE_STRING strDeviceName;
   UNICODE_STRING strNdisDeviceName;
   NDIS_STATUS NdisStatus;
+  LARGE_INTEGER DueTime;
 
   TI_DbgPrint(MAX_TRACE, ("Called.\n"));
   
@@ -817,9 +843,6 @@ DriverEntry(
   InitializeListHead(&InterfaceListHead);
   KeInitializeSpinLock(&InterfaceListLock);
 
-  /* Initialize the lan worker */
-  LANStartup();
-
   /* Initialize network level protocol subsystem */
   IPStartup(RegistryPath);
 
@@ -828,6 +851,9 @@ DriverEntry(
   RawIPStartup();
   UDPStartup();
   TCPStartup();
+
+  /* Initialize the lan worker */
+  LANStartup();
 
   /* Register protocol with NDIS */
   /* This used to be IP_DEVICE_NAME but the DDK says it has to match your entry in the SCM */
@@ -868,6 +894,17 @@ DriverEntry(
   DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = TiDispatch;
 
   DriverObject->DriverUnload = TiUnload;
+
+  /* Initialize our periodic timer and its associated DPC object. When the
+     timer expires, the IPTimeout deferred procedure call (DPC) is queued */
+  ExInitializeWorkItem( &IpWorkItem, IPTimeout, NULL );
+  KeInitializeDpc(&IPTimeoutDpc, IPTimeoutDpcFn, NULL);
+  KeInitializeTimer(&IPTimer);
+  
+  /* Start the periodic timer with an initial and periodic
+     relative expiration time of IP_TIMEOUT milliseconds */
+  DueTime.QuadPart = -(LONGLONG)IP_TIMEOUT * 10000;
+  KeSetTimerEx(&IPTimer, DueTime, IP_TIMEOUT, &IPTimeoutDpc);
 
   PREPARE_TESTS
 
