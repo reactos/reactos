@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: resource.c,v 1.3 2004/05/15 22:45:51 hbirr Exp $
+ * $Id: resource.c,v 1.4 2004/10/15 22:48:43 gvg Exp $
  */
 
 #include "videoprt.h"
@@ -376,7 +376,7 @@ VideoPortGetAccessRanges(
          if (FunctionNumber == 8)
          {
             DPRINT("Didn't find device.\n");
-            return ERROR_NO_SYSTEM_RESOURCES;
+            return ERROR_DEV_NOT_EXIST;
          }
       }
 
