@@ -19,16 +19,13 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  * DEFINES: i386                 - Target platform is i386
- *          NDIS_WRAPPER         - Define only for NDIS library
+ *          _NDIS_               - Define only for NDIS library
  *          NDIS_MINIPORT_DRIVER - Define only for NDIS miniport drivers
  *          NDIS40               - Use NDIS 4.0 structures by default
  *          NDIS50               - Use NDIS 5.0 structures by default
- *          NDIS51               - Use NDIS 5.1 structures by default
- *          NDIS40_MINIPORT      - Building NDIS 4.0 miniport driver
  *          NDIS50_MINIPORT      - Building NDIS 5.0 miniport driver
  *          NDIS51_MINIPORT      - Building NDIS 5.1 miniport driver
  */
-
 #ifndef __NDIS_H
 #define __NDIS_H
 
@@ -46,40 +43,28 @@ extern "C" {
 #include "netevent.h"
 #include <winsock2.h>
 
-#if defined(NDIS_WRAPPER)
+#if defined(_NDIS_)
   #define NDISAPI DECLSPEC_EXPORT
 #else
   #define NDISAPI DECLSPEC_IMPORT
 #endif
 
-#if defined(NDIS50_MINIPORT) && !defined(NDIS_MINIPORT_MAJOR_VERSION) && !defined(NDIS_MINIPORT_MINOR_VERSION)
-#define NDIS_MINIPORT_MAJOR_VERSION 5
-#define NDIS_MINIPORT_MINOR_VERSION 0
+#if defined(NDIS50_MINIPORT)
+#ifndef NDIS50
+#define NDIS50
 #endif
+#endif /* NDIS50_MINIPORT */
 
-#if defined(NDIS51_MINIPORT) && !defined(NDIS_MINIPORT_MAJOR_VERSION) && !defined(NDIS_MINIPORT_MINOR_VERSION)
-#define NDIS_MINIPORT_MAJOR_VERSION 5
-#define NDIS_MINIPORT_MINOR_VERSION 1
+#if defined(NDIS51_MINIPORT)
+#ifndef NDIS51
+#define NDIS51
 #endif
+#endif /* NDIS51_MINIPORT */
 
-#if defined(NDIS50) && !defined(NDIS_PROTOCOL_MAJOR_VERSION) && !defined(NDIS_PROTOCOL_MINOR_VERSION)
-#define NDIS_PROTOCOL_MAJOR_VERSION 5
-#define NDIS_PROTOCOL_MINOR_VERSION 0
-#endif
-
-#if defined(NDIS51) && !defined(NDIS_PROTOCOL_MAJOR_VERSION) && !defined(NDIS_PROTOCOL_MINOR_VERSION)
-#define NDIS_PROTOCOL_MAJOR_VERSION 5
-#define NDIS_PROTOCOL_MINOR_VERSION 1
-#endif
-
-#if defined(NDIS_MINIPORT_DRIVER) && !defined(BINARY_COMPATIBLE)
-#define BINARY_COMPATIBLE 1
-#endif
-
-#if !defined(_M_IX86) && BINARY_COMPATIBLE
-#undef BINARY_COMPATIBLE
-#define BINARY_COMPATIBLE 0
-#endif
+/* NDIS 3.0 is default */
+#if !defined(NDIS30) || !defined(NDIS40) || !defined(NDIS50) || !defined(NDIS51)
+#define NDIS30
+#endif /* !NDIS30 || !NDIS40 || !NDIS50 || !NDIS51 */
 
 #if 1
 /* FIXME: */
@@ -554,24 +539,6 @@ typedef struct _NDIS_DMA_BLOCK {
   BOOLEAN  InProgress;
 } NDIS_DMA_BLOCK, *PNDIS_DMA_BLOCK;
 
-typedef UCHAR NDIS_DMA_SIZE;
-
-#define NDIS_DMA_24BITS                         ((NDIS_DMA_SIZE)0)
-#define NDIS_DMA_32BITS                         ((NDIS_DMA_SIZE)1)
-#define NDIS_DMA_64BITS                         ((NDIS_DMA_SIZE)2)
-
-typedef enum _NDIS_PROCESSOR_TYPE {
-	NdisProcessorX86,
-	NdisProcessorMips,
-	NdisProcessorAlpha,
-	NdisProcessorPpc,
-	NdisProcessorAmd64
-} NDIS_PROCESSOR_TYPE, *PNDIS_PROCESSOR_TYPE;
-
-typedef enum _NDIS_ENVIRONMENT_TYPE {
-	NdisEnvironmentWindows,
-	NdisEnvironmentWindowsNt
-} NDIS_ENVIRONMENT_TYPE, *PNDIS_ENVIRONMENT_TYPE;
 
 /* Possible hardware architecture */
 typedef enum _NDIS_INTERFACE_TYPE {
@@ -1378,7 +1345,6 @@ typedef VOID DDKAPI
 #define NDIS30_PROTOCOL_CHARACTERISTICS_S \
   UCHAR  MajorNdisVersion; \
   UCHAR  MinorNdisVersion; \
-  USHORT  Filler; \
   _ANONYMOUS_UNION union { \
     UINT  Reserved; \
     UINT  Flags; \
@@ -1529,11 +1495,13 @@ typedef struct _NDIS_PROTOCOL_CHARACTERISTICS {
 typedef struct _NDIS_PROTOCOL_CHARACTERISTICS {
   NDIS40_PROTOCOL_CHARACTERISTICS_S;
 } NDIS_PROTOCOL_CHARACTERISTICS, *PNDIS_PROTOCOL_CHARACTERISTICS;
-#else /* NDIS30 */
+#elif defined(NDIS30)
 typedef struct _NDIS_PROTOCOL_CHARACTERISTICS {
   NDIS30_PROTOCOL_CHARACTERISTICS_S
 } NDIS_PROTOCOL_CHARACTERISTICS, *PNDIS_PROTOCOL_CHARACTERISTICS;
-#endif
+#else
+#error Define an NDIS version
+#endif /* NDIS30 */
 
 
 
@@ -1695,8 +1663,6 @@ DDKAPI
 NdisFreeBuffer(
   IN PNDIS_BUFFER  Buffer);
 
-#if BINARY_COMPATIBLE
-
 NDISAPI
 VOID
 DDKAPI
@@ -1730,7 +1696,12 @@ NdisQueryBufferOffset(
   OUT PUINT  Offset,
   OUT PUINT  Length);
 
-#else
+NDISAPI
+VOID
+DDKAPI
+NdisFreeBuffer(
+  IN PNDIS_BUFFER  Buffer);
+
 
 /*
  * VOID
@@ -1743,6 +1714,7 @@ NdisQueryBufferOffset(
 {                                                     \
   (*(ArraySize) = NDIS_BUFFER_TO_SPAN_PAGES(Buffer))  \
 }
+
 
 /*
  * VOID
@@ -1815,7 +1787,6 @@ NdisQueryBufferOffset(
   *((PUINT)Length) = MmGetMdlByteCount(Buffer);   \
 }
 
-#endif /* BINARY_COMPATIBLE */
 
 /*
  * PVOID
@@ -2229,24 +2200,6 @@ NdisQueryBufferOffset(
 
 /* Memory management routines */
 
-#if BINARY_COMPATIBLE
-
-NDISAPI
-VOID
-DDKAPI
-NdisCreateLookaheadBufferFromSharedMemory(
-  IN PVOID  pSharedMemory,
-  IN UINT  LookaheadLength,
-  OUT PVOID  *pLookaheadBuffer);
-
-NDISAPI
-VOID
-DDKAPI
-NdisDestroyLookaheadBufferFromSharedMemory(
-  IN PVOID  pLookaheadBuffer);
-
-#else
-
 /*
  * VOID
  * NdisCreateLookaheadBufferFromSharedMemory(
@@ -2266,46 +2219,7 @@ NdisDestroyLookaheadBufferFromSharedMemory(
  */
 #define NdisDestroyLookaheadBufferFromSharedMemory(_pLookaheadBuffer)
 
-#endif
-
-#if defined(_M_IX86) || defined(_M_AMD64)
-
-/*
- * VOID
- * NdisMoveMappedMemory(
- *   OUT PVOID  Destination,
- *   IN PVOID  Source,
- *   IN ULONG  Length);
- */
-#define NdisMoveMappedMemory(Destination, Source, Length) \
-  RtlCopyMemory(Destination, Source, Length)
-
-/*
- * VOID
- * NdisZeroMappedMemory(
- *   IN PVOID  Destination,
- *   IN ULONG  Length);
- */
-#define NdisZeroMappedMemory(Destination, Length) \
-  RtlZeroMemory(Destination, Length)
-
-#else
-
-#define NdisMoveMappedMemory(Destination, Source, Length) \
-{
-  PUCHAR _Dest = Destination, _Src = Source, _End = _Dest + Length;
-  while (_Dest < _End)
-    *_Dest++ = _Src++;
-}
-
-#define NdisZeroMappedMemory(Destination, Length) \
-{
-  PUCHAR _Dest = Destination, _End = _Dest + Length;
-  while (_Dest < _End)
-    *_Dest++ = 0;
-}
-
-#endif /* _M_IX86 or _M_AMD64 */
+#if defined(i386)
 
 /*
  * VOID
@@ -2319,6 +2233,16 @@ NdisDestroyLookaheadBufferFromSharedMemory(
 
 /*
  * VOID
+ * NdisMoveMappedMemory(
+ *   OUT PVOID  Destination,
+ *   IN PVOID  Source,
+ *   IN ULONG  Length);
+ */
+#define NdisMoveMappedMemory(Destination, Source, Length) \
+  RtlCopyMemory(Destination, Source, Length)
+
+/*
+ * VOID
  * NdisMoveToMappedMemory(
  *   OUT PVOID  Destination,
  *   IN PVOID  Source,
@@ -2326,6 +2250,8 @@ NdisDestroyLookaheadBufferFromSharedMemory(
  */
 #define NdisMoveToMappedMemory(Destination, Source, Length) \
   NdisMoveMappedMemory(Destination, Source, Length)
+
+#endif /* i386 */
 
 /*
  * VOID
@@ -2478,6 +2404,15 @@ NdisUpdateSharedMemory(
 
 /*
  * VOID
+ * NdisZeroMappedMemory(
+ *   IN PVOID  Destination,
+ *   IN ULONG  Length);
+ */
+#define NdisZeroMappedMemory(Destination, Length) \
+  RtlZeroMemory(Destination, Length)
+
+/*
+ * VOID
  * NdisMoveMemory(
  *   OUT  PVOID  Destination,
  *   IN PVOID  Source,
@@ -2624,46 +2559,6 @@ NdisUnicodeStringToAnsiString(
 
 /* Spin lock reoutines */
 
-#if BINARY_COMPATIBLE
-
-NDISAPI
-VOID
-DDKAPI
-NdisAllocateSpinLock(
-  IN PNDIS_SPIN_LOCK  SpinLock);
-
-NDISAPI
-VOID
-DDKAPI
-NdisFreeSpinLock(
-  IN PNDIS_SPIN_LOCK  SpinLock);
-
-NDISAPI
-VOID
-DDKAPI
-NdisAcquireSpinLock(
-  IN PNDIS_SPIN_LOCK  SpinLock);
-
-NDISAPI
-VOID
-DDKAPI
-NdisReleaseSpinLock(
-  IN PNDIS_SPIN_LOCK  SpinLock);
-
-NDISAPI
-VOID
-DDKAPI
-NdisDprAcquireSpinLock(
-  IN PNDIS_SPIN_LOCK  SpinLock);
-
-NDISAPI
-VOID
-DDKAPI
-NdisDprReleaseSpinLock(
-  IN PNDIS_SPIN_LOCK  SpinLock);
-
-#else
-
 /*
  * VOID
  * NdisAllocateSpinLock(
@@ -2714,7 +2609,7 @@ NdisDprReleaseSpinLock(
 #define NdisDprReleaseSpinLock(_SpinLock) \
   KeReleaseSpinLockFromDpcLevel(&(_SpinLock)->SpinLock)
 
-#endif /* BINARY_COMPATIBLE */
+
 
 /* I/O routines */
 
@@ -2998,7 +2893,7 @@ NdisWriteConfiguration(
   OUT  PNDIS_STATUS  Status,
   IN NDIS_HANDLE  WrapperConfigurationContext,
   IN PNDIS_STRING  Keyword,
-  IN PNDIS_CONFIGURATION_PARAMETER  ParameterValue);
+  IN PNDIS_CONFIGURATION_PARAMETER  *ParameterValue);
 
 NDISAPI
 VOID
@@ -3016,24 +2911,12 @@ NdisWriteErrorLogEntry(
  */
 #define NdisStallExecution KeStallExecutionProcessor
 
-#if BINARY_COMPATIBLE
-
-NDISAPI
-VOID
-DDKAPI
-NdisGetCurrentSystemTime(
-  IN PLARGE_INTEGER  pSystemTime);
-
-#else
-
 /*
  * VOID
  * NdisGetCurrentSystemTime(
  *   IN PLARGE_INTEGER  pSystemTime);
  */
 #define NdisGetCurrentSystemTime KeQuerySystemTime
-
-#endif
 
 NDISAPI
 VOID
@@ -3768,6 +3651,7 @@ NdisQueryBufferSafe(
   OUT PUINT  Length,
   IN UINT  Priority);
 
+
 /* Prototypes for NDIS_MINIPORT_CHARACTERISTICS */
 
 typedef BOOLEAN DDKAPI
@@ -3865,7 +3749,6 @@ typedef NDIS_STATUS DDKAPI
 #define NDIS30_MINIPORT_CHARACTERISTICS_S \
   UCHAR  MajorNdisVersion; \
   UCHAR  MinorNdisVersion; \
-  USHORT Filler; \
   UINT  Reserved; \
   W_CHECK_FOR_HANG_HANDLER  CheckForHangHandler; \
   W_DISABLE_INTERRUPT_HANDLER  DisableInterruptHandler; \
@@ -4006,23 +3889,23 @@ typedef VOID DDKAPI
   IN PVOID  CancelId);
 
 
-#if defined(NDIS51_MINIPORT)
+#if defined(NDIS51)
 typedef struct _NDIS_MINIPORT_CHARACTERISTICS {
   NDIS50_MINIPORT_CHARACTERISTICS_S
 } NDIS_MINIPORT_CHARACTERISTICS, *PNDIS_MINIPORT_CHARACTERISTICS;
-#elif defined(NDIS50_MINIPORT)
+#elif defined(NDIS50)
 typedef struct _NDIS_MINIPORT_CHARACTERISTICS {
   NDIS50_MINIPORT_CHARACTERISTICS_S
 } NDIS_MINIPORT_CHARACTERISTICS, *PNDIS_MINIPORT_CHARACTERISTICS;
-#elif defined(NDIS40_MINIPORT)
+#elif defined(NDIS40)
 typedef struct _NDIS_MINIPORT_CHARACTERISTICS {
   NDIS40_MINIPORT_CHARACTERISTICS_S
 } NDIS_MINIPORT_CHARACTERISTICS, *PNDIS_MINIPORT_CHARACTERISTICS;
-#else /* NDIS30 */
+#elif defined(NDIS30)
 typedef struct _NDIS_MINIPORT_CHARACTERISTICS {
   NDIS30_MINIPORT_CHARACTERISTICS_S
 } NDIS_MINIPORT_CHARACTERISTICS, *PNDIS_MINIPORT_CHARACTERISTICS;
-#endif
+#endif /* NDIS30 */
 
 
 typedef NDIS_STATUS DDKAPI
@@ -4084,7 +3967,7 @@ typedef struct _NDIS_MINIPORT_INTERRUPT {
   BOOLEAN  Filler1;
   KEVENT  DpcsCompletedEvent;
   BOOLEAN  SharedInterrupt;
-  BOOLEAN  IsrRequested;
+  BOOLEAN	 IsrRequested;
 } NDIS_MINIPORT_INTERRUPT, *PNDIS_MINIPORT_INTERRUPT;
 
 typedef struct _NDIS_MINIPORT_TIMER {
@@ -4174,7 +4057,7 @@ typedef struct _ETH_FILTER {
   PETH_BINDING_INFO  DirectedList;
   PETH_BINDING_INFO  BMList;
   PETH_BINDING_INFO  MCastSet;
-#if defined(NDIS_WRAPPER)
+#if defined(_NDIS_)
   UINT  NumOpens;
   PVOID  BindListLock;
 #endif
@@ -4186,7 +4069,7 @@ typedef VOID DDKAPI
 
 typedef VOID DDKAPI
 (*ETH_RCV_INDICATE_HANDLER)(
-  IN PETH_FILTER  Filter,
+  IN NDIS_HANDLE  MiniportAdapter,
   IN NDIS_HANDLE  MacReceiveContext,
   IN PCHAR  Address,
   IN PVOID  HeaderBuffer,
@@ -4361,7 +4244,7 @@ struct _NDIS_MINIPORT_BLOCK {
   UNICODE_STRING  MiniportName;
   PNDIS_BIND_PATHS  BindPaths;
   NDIS_HANDLE  OpenQueue;
-  REFERENCE  ShortRef;
+  REFERENCE  Ref;
   NDIS_HANDLE  DeviceContext;
   UCHAR  Padding1;
   UCHAR  LockAcquired;
@@ -4437,7 +4320,7 @@ struct _NDIS_MINIPORT_BLOCK {
   NDIS_WM_SEND_COMPLETE_HANDLER  WanSendCompleteHandler;
   WAN_RCV_HANDLER  WanRcvHandler;
   WAN_RCV_COMPLETE_HANDLER  WanRcvCompleteHandler;
-#if defined(NDIS_WRAPPER)
+#if defined(_NDIS_)
   PNDIS_MINIPORT_BLOCK  NextGlobalMiniport;
   SINGLE_LIST_ENTRY  WorkQueue[NUMBER_OF_WORK_ITEM_TYPES];
   SINGLE_LIST_ENTRY  SingleWorkItems[NUMBER_OF_SINGLE_WORK_ITEMS];
@@ -4587,7 +4470,7 @@ typedef struct _NDIS_COMMON_OPEN_BLOCK {
   RESET_COMPLETE_HANDLER  ResetCompleteHandler;
   STATUS_HANDLER  StatusHandler;
   STATUS_COMPLETE_HANDLER  StatusCompleteHandler;
-#if defined(NDIS_WRAPPER)
+#if defined(_NDIS_)
   ULONG  Flags;
   ULONG  References;
   KSPIN_LOCK  SpinLock;
@@ -4611,7 +4494,7 @@ typedef struct _NDIS_COMMON_OPEN_BLOCK {
 struct _NDIS_OPEN_BLOCK
 {
     NDIS_COMMON_OPEN_BLOCK NdisCommonOpenBlock;
-#if defined(NDIS_WRAPPER)
+#if defined(_NDIS_)
     struct _NDIS_OPEN_CO
     {
         struct _NDIS_CO_AF_BLOCK *  NextAf;
@@ -4649,7 +4532,7 @@ DDKAPI
 NdisMAllocateMapRegisters(
   IN NDIS_HANDLE  MiniportAdapterHandle,
   IN UINT  DmaChannel,
-  IN NDIS_DMA_SIZE  DmaSize,
+  IN BOOLEAN  Dma32BitAddresses,
   IN ULONG  PhysicalMapRegistersNeeded,
   IN ULONG  MaximumPhysicalMapping);
 
@@ -4744,7 +4627,7 @@ NdisMDeregisterIoPortRange(
                                 PacketSize)             \
 {                                                       \
     (*((PNDIS_MINIPORT_BLOCK)(MiniportAdapterHandle))->EthRxIndicateHandler)( \
-		((PNDIS_MINIPORT_BLOCK)(MiniportAdapterHandle))->FilterDbs.EthDB,  \
+		(MiniportAdapterHandle),  \
 		(MiniportReceiveContext), \
 		(HeaderBuffer),           \
 		(HeaderBuffer),           \
@@ -4834,7 +4717,7 @@ NdisMFreeMapRegisters(
 
 #define NdisMIndicateStatus(MiniportAdapterHandle,  \
    GeneralStatus, StatusBuffer, StatusBufferSize)   \
-  (*((PNDIS_MINIPORT_BLOCK)(MiniportAdapterHandle))->StatusHandler)(   \
+  (*((PNDIS_MINIPORT_BLOCK)(_M))->StatusHandler)(   \
   MiniportAdapterHandle, GeneralStatus, StatusBuffer, StatusBufferSize)
 
 /*
@@ -4918,37 +4801,8 @@ NdisMRegisterMiniport(
   IN PNDIS_MINIPORT_CHARACTERISTICS  MiniportCharacteristics,
   IN UINT  CharacteristicsLength);
 
-NDISAPI
-VOID
-DDKAPI
-NdisMSetTimer(
-  IN PNDIS_MINIPORT_TIMER  Timer,
-  IN UINT  MillisecondsToDelay);
 
-NDISAPI
-VOID
-DDKAPI
-NdisMInitializeTimer(
-  IN OUT PNDIS_MINIPORT_TIMER Timer,
-  IN NDIS_HANDLE MiniportAdapterHandle,
-  IN PNDIS_TIMER_FUNCTION TimerFunction,
-  IN PVOID FunctionContext);
-
-NDISAPI
-VOID
-DDKAPI
-NdisMSetPeriodicTimer(
-  IN PNDIS_MINIPORT_TIMER  Timer,
-  IN UINT  MillisecondPeriod);
-
-NDISAPI
-VOID
-DDKAPI
-NdisMCancelTimer(
-  IN PNDIS_MINIPORT_TIMER  Timer,
-  OUT PBOOLEAN  TimerCancelled);
-
-#if !defined(NDIS_WRAPPER)
+#if !defined(_NDIS_)
 
 /*
  * VOID
@@ -5347,7 +5201,6 @@ typedef VOID (*REMOVE_ADAPTER_HANDLER)(
 typedef struct _NDIS_MAC_CHARACTERISTICS {
   UCHAR  MajorNdisVersion;
   UCHAR  MinorNdisVersion;
-  USHORT  Filler;
   UINT  Reserved;
   OPEN_ADAPTER_HANDLER  OpenAdapterHandler;
   CLOSE_ADAPTER_HANDLER  CloseAdapterHandler;

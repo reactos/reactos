@@ -155,6 +155,7 @@ typedef struct _HAL_DISPATCH_TABLE *PHAL_DISPATCH_TABLE;
 typedef struct _HAL_PRIVATE_DISPATCH_TABLE *PHAL_PRIVATE_DISPATCH_TABLE;
 typedef struct _DRIVE_LAYOUT_INFORMATION *PDRIVE_LAYOUT_INFORMATION;
 typedef struct _DRIVE_LAYOUT_INFORMATION_EX *PDRIVE_LAYOUT_INFORMATION_EX;
+typedef struct _BUS_HANDLER *PBUS_HANDLER;
 
 /* Constants */
 #define	MAXIMUM_PROCESSORS                32
@@ -740,6 +741,7 @@ typedef VOID DDKAPI
   IN PVOID Context);
 
 
+
 /*
 ** System structures
 */
@@ -770,6 +772,7 @@ typedef struct _IO_STATUS_BLOCK {
   } DUMMYUNIONNAME;
   ULONG_PTR  Information;
 } IO_STATUS_BLOCK;
+
 
 typedef VOID DDKAPI
 (*PKNORMAL_ROUTINE)(
@@ -869,16 +872,9 @@ typedef struct _KDPC {
   PULONG_PTR  Lock;
 } KDPC, *PKDPC, *RESTRICTED_POINTER PRKDPC;
 
-typedef struct _KDPC_DATA {
-  LIST_ENTRY  DpcListHead;
-  ULONG  DpcLock;
-  ULONG  DpcQueueDepth;
-  ULONG  DpcCount;
-} KDPC_DATA, *PKDPC_DATA;
-
 typedef struct _WAIT_CONTEXT_BLOCK {
   KDEVICE_QUEUE_ENTRY  WaitQueueEntry;
-  struct _DRIVER_CONTROL  *DeviceRoutine;
+  PDRIVER_CONTROL DeviceRoutine;
   PVOID  DeviceContext;
   ULONG  NumberOfMapRegisters;
   PVOID  DeviceObject;
@@ -1360,6 +1356,12 @@ typedef enum _CM_SHARE_DISPOSITION {
 #define CM_RESOURCE_DMA_TYPE_B            0x0020
 #define CM_RESOURCE_DMA_TYPE_F            0x0040
 
+/* PCI STUFF */
+#define PCI_INVALID_VENDORID                0xFFFF
+
+#define PCI_COMMON_HDR_LENGTH (FIELD_OFFSET (PCI_COMMON_CONFIG, DeviceSpecific))
+
+
 typedef struct _CM_PARTIAL_RESOURCE_LIST {
   USHORT  Version;
   USHORT  Revision;
@@ -1724,7 +1726,8 @@ typedef struct _DEVICE_OBJECT {
   USHORT  Spare1;
   struct _DEVOBJ_EXTENSION  *DeviceObjectExtension;
   PVOID  Reserved;
-} DEVICE_OBJECT, *PDEVICE_OBJECT;
+} DEVICE_OBJECT;
+typedef struct _DEVICE_OBJECT *PDEVICE_OBJECT;
 
 typedef enum _DEVICE_RELATION_TYPE {
   BusRelations,
@@ -1920,150 +1923,6 @@ typedef struct _DMA_ADAPTER {
   USHORT  Size;
   PDMA_OPERATIONS  DmaOperations;
 } DMA_ADAPTER;
-
-
-typedef enum _ARBITER_REQUEST_SOURCE {
-  ArbiterRequestUndefined = -1,
-  ArbiterRequestLegacyReported,
-  ArbiterRequestHalReported,
-  ArbiterRequestLegacyAssigned,
-  ArbiterRequestPnpDetected,
-  ArbiterRequestPnpEnumerated
-} ARBITER_REQUEST_SOURCE;
-
-typedef enum _ARBITER_RESULT {
-  ArbiterResultUndefined = -1,
-  ArbiterResultSuccess,
-  ArbiterResultExternalConflict,
-  ArbiterResultNullRequest
-} ARBITER_RESULT;
-
-typedef enum _ARBITER_ACTION {
-  ArbiterActionTestAllocation,
-  ArbiterActionRetestAllocation,
-  ArbiterActionCommitAllocation,
-  ArbiterActionRollbackAllocation,
-  ArbiterActionQueryAllocatedResources,
-  ArbiterActionWriteReservedResources,
-  ArbiterActionQueryConflict,
-  ArbiterActionQueryArbitrate,
-  ArbiterActionAddReserved,
-  ArbiterActionBootAllocation
-} ARBITER_ACTION, *PARBITER_ACTION;
-
-typedef struct _ARBITER_CONFLICT_INFO {
-  PDEVICE_OBJECT  OwningObject;
-  ULONGLONG  Start;
-  ULONGLONG  End;
-} ARBITER_CONFLICT_INFO, *PARBITER_CONFLICT_INFO;
-
-typedef struct _ARBITER_PARAMETERS {
-  union {
-    struct {
-      IN OUT PLIST_ENTRY  ArbitrationList;
-      IN ULONG  AllocateFromCount;
-      IN PCM_PARTIAL_RESOURCE_DESCRIPTOR  AllocateFrom;
-    } TestAllocation;
-
-    struct {
-      IN OUT PLIST_ENTRY  ArbitrationList;
-      IN ULONG  AllocateFromCount;
-      IN PCM_PARTIAL_RESOURCE_DESCRIPTOR  AllocateFrom;
-    } RetestAllocation;
-
-    struct {
-      IN OUT PLIST_ENTRY  ArbitrationList;
-    } BootAllocation;
-
-    struct {
-      OUT PCM_PARTIAL_RESOURCE_LIST  *AllocatedResources;
-    } QueryAllocatedResources;
-
-    struct {
-      IN PDEVICE_OBJECT  PhysicalDeviceObject;
-      IN PIO_RESOURCE_DESCRIPTOR  ConflictingResource;
-      OUT PULONG  ConflictCount;
-      OUT PARBITER_CONFLICT_INFO  *Conflicts;
-    } QueryConflict;
-
-    struct {
-      IN PLIST_ENTRY  ArbitrationList;
-    } QueryArbitrate;
-
-    struct {
-      IN PDEVICE_OBJECT  ReserveDevice;
-    } AddReserved;
-  } Parameters;
-} ARBITER_PARAMETERS, *PARBITER_PARAMETERS;
-
-#define ARBITER_FLAG_BOOT_CONFIG 0x00000001
-
-typedef struct _ARBITER_LIST_ENTRY {
-  LIST_ENTRY  ListEntry;
-  ULONG  AlternativeCount;
-  PIO_RESOURCE_DESCRIPTOR  Alternatives;
-  PDEVICE_OBJECT  PhysicalDeviceObject;
-  ARBITER_REQUEST_SOURCE  RequestSource;
-  ULONG  Flags;
-  LONG_PTR  WorkSpace;
-  INTERFACE_TYPE  InterfaceType;
-  ULONG  SlotNumber;
-  ULONG  BusNumber;
-  PCM_PARTIAL_RESOURCE_DESCRIPTOR  Assignment;
-  PIO_RESOURCE_DESCRIPTOR  SelectedAlternative;
-  ARBITER_RESULT  Result;
-} ARBITER_LIST_ENTRY, *PARBITER_LIST_ENTRY;
-
-typedef NTSTATUS
-(DDKAPI *PARBITER_HANDLER)(
-  IN PVOID  Context,
-  IN ARBITER_ACTION  Action,
-  IN OUT PARBITER_PARAMETERS  Parameters);
-
-#define ARBITER_PARTIAL 0x00000001
-
-typedef struct _ARBITER_INTERFACE {
-  USHORT  Size;
-  USHORT  Version;
-  PVOID  Context;
-  PINTERFACE_REFERENCE  InterfaceReference;
-  PINTERFACE_DEREFERENCE  InterfaceDereference;
-  PARBITER_HANDLER  ArbiterHandler;
-  ULONG  Flags;
-} ARBITER_INTERFACE, *PARBITER_INTERFACE;
-
-typedef enum _RESOURCE_TRANSLATION_DIRECTION {
-  TranslateChildToParent,
-  TranslateParentToChild
-} RESOURCE_TRANSLATION_DIRECTION;
-
-typedef NTSTATUS
-(DDKAPI *PTRANSLATE_RESOURCE_HANDLER)(
-  IN PVOID  Context,
-  IN PCM_PARTIAL_RESOURCE_DESCRIPTOR  Source,
-  IN RESOURCE_TRANSLATION_DIRECTION  Direction,
-  IN ULONG  AlternativesCount,
-  IN IO_RESOURCE_DESCRIPTOR  Alternatives[],
-  IN PDEVICE_OBJECT  PhysicalDeviceObject,
-  OUT PCM_PARTIAL_RESOURCE_DESCRIPTOR  Target);
-
-typedef NTSTATUS
-(DDKAPI *PTRANSLATE_RESOURCE_REQUIREMENTS_HANDLER)(
-  IN PVOID  Context,
-  IN PIO_RESOURCE_DESCRIPTOR  Source,
-  IN PDEVICE_OBJECT  PhysicalDeviceObject,
-  OUT PULONG  TargetCount,
-  OUT PIO_RESOURCE_DESCRIPTOR  *Target);
-
-typedef struct _TRANSLATOR_INTERFACE {
-  USHORT  Size;
-  USHORT  Version;
-  PVOID  Context;
-  PINTERFACE_REFERENCE  InterfaceReference;
-  PINTERFACE_DEREFERENCE  InterfaceDereference;
-  PTRANSLATE_RESOURCE_HANDLER  TranslateResources;
-  PTRANSLATE_RESOURCE_REQUIREMENTS_HANDLER  TranslateResourceRequirements;
-} TRANSLATOR_INTERFACE, *PTRANSLATOR_INTERFACE;
 
 typedef enum _FILE_INFORMATION_CLASS {
   FileDirectoryInformation = 1,
@@ -2830,6 +2689,20 @@ typedef struct _IO_STACK_LOCATION {
 #define SL_INVOKE_ON_SUCCESS              0x40
 #define SL_INVOKE_ON_ERROR                0x80
 
+
+#define REG_CREATED_NEW_KEY         (0x00000001L)
+#define REG_OPENED_EXISTING_KEY     (0x00000002L)
+
+#define RTL_REGISTRY_ABSOLUTE     0
+#define RTL_REGISTRY_SERVICES     1
+#define RTL_REGISTRY_CONTROL      2
+#define RTL_REGISTRY_WINDOWS_NT   3
+#define RTL_REGISTRY_DEVICEMAP    4
+#define RTL_REGISTRY_USER         5
+#define RTL_REGISTRY_MAXIMUM      6
+#define RTL_REGISTRY_HANDLE       0x40000000
+#define RTL_REGISTRY_OPTIONAL     0x80000000
+
 typedef enum _KEY_INFORMATION_CLASS {
   KeyBasicInformation,
   KeyNodeInformation,
@@ -2912,6 +2785,20 @@ typedef enum _KEY_VALUE_INFORMATION_CLASS {
   KeyValueFullInformationAlign64,
   KeyValuePartialInformationAlign64
 } KEY_VALUE_INFORMATION_CLASS;
+
+typedef enum _KEY_SET_INFORMATION_CLASS {
+    KeyWriteTimeInformation,
+    KeyUserFlagsInformation,
+    MaxKeySetInfoClass
+} KEY_SET_INFORMATION_CLASS;
+
+typedef struct _KEY_WRITE_TIME_INFORMATION {
+    LARGE_INTEGER LastWriteTime;
+} KEY_WRITE_TIME_INFORMATION, *PKEY_WRITE_TIME_INFORMATION;
+
+typedef struct _KEY_USER_FLAGS_INFORMATION {
+    ULONG   UserFlags;
+} KEY_USER_FLAGS_INFORMATION, *PKEY_USER_FLAGS_INFORMATION;
 
 /* KEY_VALUE_Xxx.Type */
 
@@ -3257,11 +3144,6 @@ typedef struct _PAGED_LOOKASIDE_LIST {
   GENERAL_LOOKASIDE_S
   FAST_MUTEX  Obsoleted;
 } PAGED_LOOKASIDE_LIST, *PPAGED_LOOKASIDE_LIST;
-
-typedef struct _PP_LOOKASIDE_LIST {
-   struct _GENERAL_LOOKASIDE *P;
-   struct _GENERAL_LOOKASIDE *L;
-} PP_LOOKASIDE_LIST, *PPP_LOOKASIDE_LIST;
 
 typedef struct _CALLBACK_OBJECT *PCALLBACK_OBJECT;
 
@@ -3952,6 +3834,30 @@ typedef enum _INTERLOCKED_RESULT {
   ResultPositive = RESULT_POSITIVE
 } INTERLOCKED_RESULT;
 
+#define MAXIMUM_LEADBYTES   12
+
+typedef struct _CPTABLEINFO {
+    USHORT CodePage;                    
+    USHORT MaximumCharacterSize;
+    USHORT DefaultChar;
+    USHORT UniDefaultChar;
+    USHORT TransDefaultChar;
+    USHORT TransUniDefaultChar;
+    USHORT DBCSCodePage;
+    UCHAR  LeadByte[MAXIMUM_LEADBYTES];
+    PUSHORT MultiByteTable;
+    PVOID   WideCharTable;
+    PUSHORT DBCSRanges;
+    PUSHORT DBCSOffsets;
+} CPTABLEINFO, *PCPTABLEINFO;
+
+typedef struct _NLSTABLEINFO {
+    CPTABLEINFO OemTableInfo;
+    CPTABLEINFO AnsiTableInfo;
+    PUSHORT UpperCaseTable;             // 844 format upcase table
+    PUSHORT LowerCaseTable;             // 844 format lower case table
+} NLSTABLEINFO, *PNLSTABLEINFO;
+
 NTOSAPI
 KIRQL
 DDKAPI
@@ -3964,7 +3870,7 @@ KeGetCurrentIrql(
  *   VOID)
  */
 #define KeGetCurrentProcessorNumber() \
-  ((ULONG)KeGetCurrentKPCR()->ProcessorNumber)
+  ((ULONG)KeGetCurrentKPCR()->Number)
 
 #if !defined(__INTERLOCKED_DECLARED)
 #define __INTERLOCKED_DECLARED
@@ -4035,6 +3941,21 @@ VOID
 DDKFASTAPI
 KefReleaseSpinLockFromDpcLevel(
   IN PKSPIN_LOCK  SpinLock);
+  
+NTOSAPI
+KIRQL
+DDKFASTAPI
+KfAcquireSpinLock (
+    IN PKSPIN_LOCK SpinLock
+    );
+
+NTOSAPI
+VOID
+DDKFASTAPI
+KfReleaseSpinLock (
+    IN PKSPIN_LOCK SpinLock,
+    IN KIRQL NewIrql
+    );
 
 #define KeAcquireSpinLockAtDpcLevel(SpinLock) KefAcquireSpinLockAtDpcLevel(SpinLock)
 #define KeReleaseSpinLockFromDpcLevel(SpinLock) KefReleaseSpinLockFromDpcLevel(SpinLock)
@@ -4490,7 +4411,7 @@ RtlConvertUlongToLuid(
  */
 #ifndef RtlCopyMemory
 #define RtlCopyMemory(Destination, Source, Length) \
-  memcpy(Destination, Source, Length)
+  memcpy(Destination, Source, Length);
 #endif
 
 #ifndef RtlCopyBytes
@@ -4595,8 +4516,8 @@ NTOSAPI
 BOOLEAN
 DDKAPI
 RtlEqualUnicodeString(
-  IN CONST UNICODE_STRING  *String1,
-  IN CONST UNICODE_STRING  *String2,
+  IN PUNICODE_STRING  String1,
+  IN PUNICODE_STRING  String2,
   IN BOOLEAN  CaseInSensitive);
 
 /*
@@ -5057,7 +4978,7 @@ NTOSAPI
 ULONG
 DDKAPI
 RtlUnicodeStringToAnsiSize(
-  IN PUNICODE_STRING  UnicodeString);
+  IN PCUNICODE_STRING  UnicodeString);
 
 NTOSAPI
 NTSTATUS
@@ -5485,7 +5406,7 @@ ExInterlockedAddLargeStatistic(
 
 NTOSAPI
 ULONG
-DDKAPI
+DDKFASTAPI
 ExInterlockedAddUlong(
   IN PULONG  Addend,
   IN ULONG  Increment,
@@ -5508,7 +5429,7 @@ ExInterlockedFlushSList(
 
 NTOSAPI
 PLIST_ENTRY
-DDKAPI
+DDKFASTAPI
 ExInterlockedInsertHeadList(
   IN PLIST_ENTRY  ListHead,
   IN PLIST_ENTRY  ListEntry,
@@ -5516,7 +5437,7 @@ ExInterlockedInsertHeadList(
 
 NTOSAPI
 PLIST_ENTRY
-DDKAPI
+DDKFASTAPI
 ExInterlockedInsertTailList(
   IN PLIST_ENTRY  ListHead,
   IN PLIST_ENTRY  ListEntry,
@@ -5524,7 +5445,7 @@ ExInterlockedInsertTailList(
 
 NTOSAPI
 PSINGLE_LIST_ENTRY
-DDKAPI
+DDKFASTAPI
 ExInterlockedPopEntryList(
   IN PSINGLE_LIST_ENTRY  ListHead,
   IN PKSPIN_LOCK  Lock);
@@ -5541,7 +5462,7 @@ ExInterlockedPopEntryList(
 
 NTOSAPI
 PSINGLE_LIST_ENTRY
-DDKAPI
+DDKFASTAPI
 ExInterlockedPushEntryList(
   IN PSINGLE_LIST_ENTRY  ListHead,
   IN PSINGLE_LIST_ENTRY  ListEntry,
@@ -5561,7 +5482,7 @@ ExInterlockedPushEntryList(
 
 NTOSAPI
 PLIST_ENTRY
-DDKAPI
+DDKFASTAPI
 ExInterlockedRemoveHeadList(
   IN PLIST_ENTRY  ListHead,
   IN PKSPIN_LOCK  Lock);
@@ -6670,10 +6591,6 @@ IoOpenDeviceInterfaceRegistryKey(
   IN ACCESS_MASK  DesiredAccess,
   OUT PHANDLE  DeviceInterfaceKey);
 
-#define PLUGPLAY_REGKEY_DEVICE                            1
-#define PLUGPLAY_REGKEY_DRIVER                            2
-#define PLUGPLAY_REGKEY_CURRENT_HWPROFILE                 4
-
 NTOSAPI
 NTSTATUS
 DDKAPI
@@ -7402,19 +7319,6 @@ ULONG
 DDKAPI
 KeGetRecommendedSharedDataAlignment(
   VOID);
-
-NTOSAPI
-VOID
-DDKAPI
-KeInitializeApc(
-  IN PKAPC  Apc,
-	IN PKTHREAD  Thread,
-	IN UCHAR  StateIndex,
-	IN PKKERNEL_ROUTINE  KernelRoutine,
-	IN PKRUNDOWN_ROUTINE  RundownRoutine,
-	IN PKNORMAL_ROUTINE  NormalRoutine,
-	IN UCHAR  Mode,
-	IN PVOID  Context);
 
 NTOSAPI
 VOID
@@ -8594,6 +8498,10 @@ SeValidSecurityDescriptor(
 
 
 /** NtXxx routines **/
+#define NtCurrentProcess() ( (HANDLE)(LONG_PTR) -1 )  
+#define ZwCurrentProcess() NtCurrentProcess()         
+#define NtCurrentThread() ( (HANDLE)(LONG_PTR) -2 )   
+#define ZwCurrentThread() NtCurrentThread()           
 
 NTOSAPI
 NTSTATUS
@@ -8651,8 +8559,8 @@ DDKAPI
 NtCreateEvent(
   OUT PHANDLE  EventHandle,
   IN ACCESS_MASK  DesiredAccess,
-  IN POBJECT_ATTRIBUTES  ObjectAttributes  OPTIONAL,
-  IN EVENT_TYPE  EventType,
+  IN POBJECT_ATTRIBUTES  ObjectAttributes,
+  IN BOOLEAN  ManualReset,
   IN BOOLEAN  InitialState);
 
 NTOSAPI
@@ -8661,8 +8569,8 @@ DDKAPI
 ZwCreateEvent(
   OUT PHANDLE  EventHandle,
   IN ACCESS_MASK  DesiredAccess,
-  IN POBJECT_ATTRIBUTES  ObjectAttributes  OPTIONAL,
-  IN EVENT_TYPE  EventType,
+  IN POBJECT_ATTRIBUTES  ObjectAttributes,
+  IN BOOLEAN  ManualReset,
   IN BOOLEAN  InitialState);
 
 NTOSAPI
@@ -8935,14 +8843,14 @@ NTSTATUS
 DDKAPI
 NtSetEvent(
   IN HANDLE  EventHandle,
-  OUT PLONG  PreviousState  OPTIONAL);
+  IN PULONG  NumberOfThreadsReleased);
 
 NTOSAPI
 NTSTATUS
 DDKAPI
 ZwSetEvent(
   IN HANDLE  EventHandle,
-  OUT PLONG  PreviousState  OPTIONAL);
+  IN PULONG  NumberOfThreadsReleased);
 
 NTOSAPI
 NTSTATUS

@@ -33,7 +33,6 @@ extern "C" {
 #endif
 
 #include "ntddk.h"
-#include "ntapi.h"
 
 #pragma pack(push,4)
 
@@ -483,6 +482,7 @@ typedef struct _SHARED_CACHE_MAP                *PSHARED_CACHE_MAP;
 typedef struct _TERMINATION_PORT                *PTERMINATION_PORT;
 typedef struct _VACB                            *PVACB;
 typedef struct _VAD_HEADER                      *PVAD_HEADER;
+typedef struct _PEB                             *PPEB;
 
 typedef struct _NOTIFY_SYNC
 {
@@ -515,10 +515,6 @@ typedef enum _FILE_STORAGE_TYPE {
     StorageTypeEmbedding,
     StorageTypeStream
 } FILE_STORAGE_TYPE;
-
-typedef enum _IO_COMPLETION_INFORMATION_CLASS {
-    IoCompletionBasicInformation
-} IO_COMPLETION_INFORMATION_CLASS;
 
 typedef enum _OBJECT_INFO_CLASS {
     ObjectBasicInfo,
@@ -1436,14 +1432,6 @@ typedef struct _OBJECT_ALL_TYPES_INFO {
     OBJECT_TYPE_INFO    ObjectsTypeInfo[1];
 } OBJECT_ALL_TYPES_INFO, *POBJECT_ALL_TYPES_INFO;
 
-typedef struct _PAGEFAULT_HISTORY {
-    ULONG                           CurrentIndex;
-    ULONG                           MaxIndex;
-    KSPIN_LOCK                      SpinLock;
-    PVOID                           Reserved;
-    PROCESS_WS_WATCH_INFORMATION    WatchInfo[1];
-} PAGEFAULT_HISTORY, *PPAGEFAULT_HISTORY;
-
 typedef struct _PATHNAME_BUFFER {
     ULONG PathNameLength;
     WCHAR Name[1];
@@ -1492,6 +1480,596 @@ typedef struct _PUBLIC_BCB {
     LARGE_INTEGER   MappedFileOffset;
 } PUBLIC_BCB, *PPUBLIC_BCB;
 
+typedef enum _KBUGCHECK_CALLBACK_REASON {
+    KbCallbackInvalid,
+    KbCallbackReserved1,
+    KbCallbackSecondaryDumpData,
+    KbCallbackDumpIo,
+} KBUGCHECK_CALLBACK_REASON;
+
+typedef
+VOID
+(*PKBUGCHECK_REASON_CALLBACK_ROUTINE) (
+    IN KBUGCHECK_CALLBACK_REASON Reason,
+    IN struct _KBUGCHECK_REASON_CALLBACK_RECORD* Record,
+    IN OUT PVOID ReasonSpecificData,
+    IN ULONG ReasonSpecificDataLength
+    );
+
+typedef struct _KBUGCHECK_REASON_CALLBACK_RECORD {
+    LIST_ENTRY Entry;
+    PKBUGCHECK_REASON_CALLBACK_ROUTINE CallbackRoutine;
+    PUCHAR Component;
+    ULONG_PTR Checksum;
+    KBUGCHECK_CALLBACK_REASON Reason;
+    UCHAR State;
+} KBUGCHECK_REASON_CALLBACK_RECORD, *PKBUGCHECK_REASON_CALLBACK_RECORD;
+
+#define PROCESSOR_FEATURE_MAX 64
+
+typedef struct _KSYSTEM_TIME {
+    ULONG LowPart;
+    LONG High1Time;
+    LONG High2Time;
+} KSYSTEM_TIME, *PKSYSTEM_TIME;
+
+typedef enum _ALTERNATIVE_ARCHITECTURE_TYPE {
+    StandardDesign,
+    NEC98x86,
+    EndAlternatives
+} ALTERNATIVE_ARCHITECTURE_TYPE;
+
+typedef struct _KUSER_SHARED_DATA {
+    ULONG TickCountLowDeprecated;
+    ULONG TickCountMultiplier;
+    volatile KSYSTEM_TIME InterruptTime;
+    volatile KSYSTEM_TIME SystemTime;
+    volatile KSYSTEM_TIME TimeZoneBias;
+    USHORT ImageNumberLow;
+    USHORT ImageNumberHigh;
+    WCHAR NtSystemRoot[ 260 ];
+    ULONG MaxStackTraceDepth;
+    ULONG CryptoExponent;
+    ULONG TimeZoneId;
+    ULONG LargePageMinimum;
+    ULONG Reserved2[ 7 ];
+    NT_PRODUCT_TYPE NtProductType;
+    BOOLEAN ProductTypeIsValid;
+    ULONG NtMajorVersion;
+    ULONG NtMinorVersion;
+    BOOLEAN ProcessorFeatures[PROCESSOR_FEATURE_MAX];
+    ULONG Reserved1;
+    ULONG Reserved3;
+    volatile ULONG TimeSlip;
+    ALTERNATIVE_ARCHITECTURE_TYPE AlternativeArchitecture;
+    LARGE_INTEGER SystemExpirationDate;
+    ULONG SuiteMask;
+    BOOLEAN KdDebuggerEnabled;
+    volatile ULONG ActiveConsoleId;
+    volatile ULONG DismountCount;
+    ULONG ComPlusPackage;
+    ULONG LastSystemRITEventTickCount;
+    ULONG NumberOfPhysicalPages;
+    BOOLEAN SafeBootMode;
+    ULONG TraceLogging;
+    ULONGLONG   Fill0;
+    ULONGLONG   SystemCall[4];
+    union {
+        volatile KSYSTEM_TIME TickCount;
+        volatile ULONG64 TickCountQuad;
+    };
+
+} KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
+
+#define EVENT_QUERY_STATE       0x0001
+#define EVENT_MODIFY_STATE      0x0002  // winnt
+#define EVENT_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|0x3)
+
+#define EX_RUNDOWN_ACTIVE 1
+
+/* Security Stuff */
+#define SID_MAX_SUB_AUTHORITIES          (15)
+
+#define SECURITY_NULL_SID_AUTHORITY         {0,0,0,0,0,0}
+#define SECURITY_WORLD_SID_AUTHORITY        {0,0,0,0,0,1}
+#define SECURITY_LOCAL_SID_AUTHORITY        {0,0,0,0,0,2}
+#define SECURITY_CREATOR_SID_AUTHORITY      {0,0,0,0,0,3}
+#define SECURITY_NON_UNIQUE_AUTHORITY       {0,0,0,0,0,4}
+#define SECURITY_RESOURCE_MANAGER_AUTHORITY {0,0,0,0,0,9}
+
+#define SECURITY_NULL_RID                 (0x00000000L)
+#define SECURITY_WORLD_RID                (0x00000000L)
+#define SECURITY_LOCAL_RID                (0x00000000L)
+
+#define SECURITY_CREATOR_OWNER_RID        (0x00000000L)
+#define SECURITY_CREATOR_GROUP_RID        (0x00000001L)
+
+#define SECURITY_CREATOR_OWNER_SERVER_RID (0x00000002L)
+#define SECURITY_CREATOR_GROUP_SERVER_RID (0x00000003L)
+
+#define SECURITY_NT_AUTHORITY           {0,0,0,0,0,5}
+
+#define SECURITY_DIALUP_RID             (0x00000001L)
+#define SECURITY_NETWORK_RID            (0x00000002L)
+#define SECURITY_BATCH_RID              (0x00000003L)
+#define SECURITY_INTERACTIVE_RID        (0x00000004L)
+#define SECURITY_LOGON_IDS_RID          (0x00000005L)
+#define SECURITY_LOGON_IDS_RID_COUNT    (3L)
+#define SECURITY_SERVICE_RID            (0x00000006L)
+#define SECURITY_ANONYMOUS_LOGON_RID    (0x00000007L)
+#define SECURITY_PROXY_RID              (0x00000008L)
+#define SECURITY_ENTERPRISE_CONTROLLERS_RID (0x00000009L)
+#define SECURITY_SERVER_LOGON_RID       SECURITY_ENTERPRISE_CONTROLLERS_RID
+#define SECURITY_PRINCIPAL_SELF_RID     (0x0000000AL)
+#define SECURITY_AUTHENTICATED_USER_RID (0x0000000BL)
+#define SECURITY_RESTRICTED_CODE_RID    (0x0000000CL)
+#define SECURITY_TERMINAL_SERVER_RID    (0x0000000DL)
+#define SECURITY_REMOTE_LOGON_RID       (0x0000000EL)
+#define SECURITY_THIS_ORGANIZATION_RID  (0x0000000FL)
+
+#define SECURITY_LOCAL_SYSTEM_RID       (0x00000012L)
+#define SECURITY_LOCAL_SERVICE_RID      (0x00000013L)
+#define SECURITY_NETWORK_SERVICE_RID    (0x00000014L)
+
+#define SECURITY_NT_NON_UNIQUE          (0x00000015L)
+#define SECURITY_NT_NON_UNIQUE_SUB_AUTH_COUNT  (3L)
+
+#define SECURITY_BUILTIN_DOMAIN_RID     (0x00000020L)
+
+#define SECURITY_PACKAGE_BASE_RID       (0x00000040L)
+#define SECURITY_PACKAGE_RID_COUNT      (2L)
+#define SECURITY_PACKAGE_NTLM_RID       (0x0000000AL)
+#define SECURITY_PACKAGE_SCHANNEL_RID   (0x0000000EL)
+#define SECURITY_PACKAGE_DIGEST_RID     (0x00000015L)
+
+#define SECURITY_MAX_ALWAYS_FILTERED    (0x000003E7L)
+#define SECURITY_MIN_NEVER_FILTERED     (0x000003E8L)
+
+#define SECURITY_OTHER_ORGANIZATION_RID (0x000003E8L)
+
+#define FOREST_USER_RID_MAX            (0x000001F3L)
+
+#define DOMAIN_USER_RID_ADMIN          (0x000001F4L)
+#define DOMAIN_USER_RID_GUEST          (0x000001F5L)
+#define DOMAIN_USER_RID_KRBTGT         (0x000001F6L)
+
+#define DOMAIN_USER_RID_MAX            (0x000003E7L)
+
+#define DOMAIN_GROUP_RID_ADMINS        (0x00000200L)
+#define DOMAIN_GROUP_RID_USERS         (0x00000201L)
+#define DOMAIN_GROUP_RID_GUESTS        (0x00000202L)
+#define DOMAIN_GROUP_RID_COMPUTERS     (0x00000203L)
+#define DOMAIN_GROUP_RID_CONTROLLERS   (0x00000204L)
+#define DOMAIN_GROUP_RID_CERT_ADMINS   (0x00000205L)
+#define DOMAIN_GROUP_RID_SCHEMA_ADMINS (0x00000206L)
+#define DOMAIN_GROUP_RID_ENTERPRISE_ADMINS (0x00000207L)
+#define DOMAIN_GROUP_RID_POLICY_ADMINS (0x00000208L)
+
+
+
+
+// well-known aliases ...
+
+#define DOMAIN_ALIAS_RID_ADMINS        (0x00000220L)
+#define DOMAIN_ALIAS_RID_USERS         (0x00000221L)
+#define DOMAIN_ALIAS_RID_GUESTS        (0x00000222L)
+#define DOMAIN_ALIAS_RID_POWER_USERS   (0x00000223L)
+
+#define DOMAIN_ALIAS_RID_ACCOUNT_OPS   (0x00000224L)
+#define DOMAIN_ALIAS_RID_SYSTEM_OPS    (0x00000225L)
+#define DOMAIN_ALIAS_RID_PRINT_OPS     (0x00000226L)
+#define DOMAIN_ALIAS_RID_BACKUP_OPS    (0x00000227L)
+
+#define DOMAIN_ALIAS_RID_REPLICATOR    (0x00000228L)
+#define DOMAIN_ALIAS_RID_RAS_SERVERS   (0x00000229L)
+#define DOMAIN_ALIAS_RID_PREW2KCOMPACCESS (0x0000022AL)
+#define DOMAIN_ALIAS_RID_REMOTE_DESKTOP_USERS (0x0000022BL)
+#define DOMAIN_ALIAS_RID_NETWORK_CONFIGURATION_OPS (0x0000022CL)
+#define DOMAIN_ALIAS_RID_INCOMING_FOREST_TRUST_BUILDERS (0x0000022DL)
+
+#define DOMAIN_ALIAS_RID_MONITORING_USERS       (0x0000022EL)
+#define DOMAIN_ALIAS_RID_LOGGING_USERS          (0x0000022FL)
+#define DOMAIN_ALIAS_RID_AUTHORIZATIONACCESS    (0x00000230L)
+#define DOMAIN_ALIAS_RID_TS_LICENSE_SERVERS     (0x00000231L)
+
+typedef enum {
+    WinNullSid                                  = 0,
+    WinWorldSid                                 = 1,
+    WinLocalSid                                 = 2,
+    WinCreatorOwnerSid                          = 3,
+    WinCreatorGroupSid                          = 4,
+    WinCreatorOwnerServerSid                    = 5,
+    WinCreatorGroupServerSid                    = 6,
+    WinNtAuthoritySid                           = 7,
+    WinDialupSid                                = 8,
+    WinNetworkSid                               = 9,
+    WinBatchSid                                 = 10,
+    WinInteractiveSid                           = 11,
+    WinServiceSid                               = 12,
+    WinAnonymousSid                             = 13,
+    WinProxySid                                 = 14,
+    WinEnterpriseControllersSid                 = 15,
+    WinSelfSid                                  = 16,
+    WinAuthenticatedUserSid                     = 17,
+    WinRestrictedCodeSid                        = 18,
+    WinTerminalServerSid                        = 19,
+    WinRemoteLogonIdSid                         = 20,
+    WinLogonIdsSid                              = 21,
+    WinLocalSystemSid                           = 22,
+    WinLocalServiceSid                          = 23,
+    WinNetworkServiceSid                        = 24,
+    WinBuiltinDomainSid                         = 25,
+    WinBuiltinAdministratorsSid                 = 26,
+    WinBuiltinUsersSid                          = 27,
+    WinBuiltinGuestsSid                         = 28,
+    WinBuiltinPowerUsersSid                     = 29,
+    WinBuiltinAccountOperatorsSid               = 30,
+    WinBuiltinSystemOperatorsSid                = 31,
+    WinBuiltinPrintOperatorsSid                 = 32,
+    WinBuiltinBackupOperatorsSid                = 33,
+    WinBuiltinReplicatorSid                     = 34,
+    WinBuiltinPreWindows2000CompatibleAccessSid = 35,
+    WinBuiltinRemoteDesktopUsersSid             = 36,
+    WinBuiltinNetworkConfigurationOperatorsSid  = 37,
+    WinAccountAdministratorSid                  = 38,
+    WinAccountGuestSid                          = 39,
+    WinAccountKrbtgtSid                         = 40,
+    WinAccountDomainAdminsSid                   = 41,
+    WinAccountDomainUsersSid                    = 42,
+    WinAccountDomainGuestsSid                   = 43,
+    WinAccountComputersSid                      = 44,
+    WinAccountControllersSid                    = 45,
+    WinAccountCertAdminsSid                     = 46,
+    WinAccountSchemaAdminsSid                   = 47,
+    WinAccountEnterpriseAdminsSid               = 48,
+    WinAccountPolicyAdminsSid                   = 49,
+    WinAccountRasAndIasServersSid               = 50,
+    WinNTLMAuthenticationSid                    = 51,
+    WinDigestAuthenticationSid                  = 52,
+    WinSChannelAuthenticationSid                = 53,
+    WinThisOrganizationSid                      = 54,
+    WinOtherOrganizationSid                     = 55,
+    WinBuiltinIncomingForestTrustBuildersSid    = 56,
+    WinBuiltinPerfMonitoringUsersSid            = 57,
+    WinBuiltinPerfLoggingUsersSid               = 58,
+    WinBuiltinAuthorizationAccessSid            = 59,
+    WinBuiltinTerminalServerLicenseServersSid   = 60,
+} WELL_KNOWN_SID_TYPE;
+
+#define SYSTEM_LUID                     { 0x3E7, 0x0 }
+#define ANONYMOUS_LOGON_LUID            { 0x3e6, 0x0 }
+#define LOCALSERVICE_LUID               { 0x3e5, 0x0 }
+#define NETWORKSERVICE_LUID             { 0x3e4, 0x0 }
+
+#define ACL_REVISION     (2)
+#define ACL_REVISION_DS  (4)
+
+#define ACL_REVISION1   (1)
+#define MIN_ACL_REVISION ACL_REVISION2
+#define ACL_REVISION2   (2)
+#define ACL_REVISION3   (3)
+#define ACL_REVISION4   (4)
+#define MAX_ACL_REVISION ACL_REVISION4
+
+#define ACCESS_MIN_MS_ACE_TYPE                  (0x0)
+#define ACCESS_ALLOWED_ACE_TYPE                 (0x0)
+#define ACCESS_DENIED_ACE_TYPE                  (0x1)
+#define SYSTEM_AUDIT_ACE_TYPE                   (0x2)
+#define SYSTEM_ALARM_ACE_TYPE                   (0x3)
+#define ACCESS_MAX_MS_V2_ACE_TYPE               (0x3)
+
+#define ACCESS_ALLOWED_COMPOUND_ACE_TYPE        (0x4)
+#define ACCESS_MAX_MS_V3_ACE_TYPE               (0x4)
+
+#define ACCESS_MIN_MS_OBJECT_ACE_TYPE           (0x5)
+#define ACCESS_ALLOWED_OBJECT_ACE_TYPE          (0x5)
+#define ACCESS_DENIED_OBJECT_ACE_TYPE           (0x6)
+#define SYSTEM_AUDIT_OBJECT_ACE_TYPE            (0x7)
+#define SYSTEM_ALARM_OBJECT_ACE_TYPE            (0x8)
+#define ACCESS_MAX_MS_OBJECT_ACE_TYPE           (0x8)
+
+#define ACCESS_MAX_MS_V4_ACE_TYPE               (0x8)
+#define ACCESS_MAX_MS_ACE_TYPE                  (0x8)
+
+#define ACCESS_ALLOWED_CALLBACK_ACE_TYPE        (0x9)
+#define ACCESS_DENIED_CALLBACK_ACE_TYPE         (0xA)
+#define ACCESS_ALLOWED_CALLBACK_OBJECT_ACE_TYPE (0xB)
+#define ACCESS_DENIED_CALLBACK_OBJECT_ACE_TYPE  (0xC)
+#define SYSTEM_AUDIT_CALLBACK_ACE_TYPE          (0xD)
+#define SYSTEM_ALARM_CALLBACK_ACE_TYPE          (0xE)
+#define SYSTEM_AUDIT_CALLBACK_OBJECT_ACE_TYPE   (0xF)
+#define SYSTEM_ALARM_CALLBACK_OBJECT_ACE_TYPE   (0x10)
+
+#define ACCESS_MAX_MS_V5_ACE_TYPE               (0x10)
+
+// end_winnt
+
+
+// begin_winnt
+
+//
+//  The following are the inherit flags that go into the AceFlags field
+//  of an Ace header.
+//
+
+#define OBJECT_INHERIT_ACE                (0x1)
+#define CONTAINER_INHERIT_ACE             (0x2)
+#define NO_PROPAGATE_INHERIT_ACE          (0x4)
+#define INHERIT_ONLY_ACE                  (0x8)
+#define INHERITED_ACE                     (0x10)
+#define VALID_INHERIT_FLAGS               (0x1F)
+
+#define SUCCESSFUL_ACCESS_ACE_FLAG       (0x40)
+#define FAILED_ACCESS_ACE_FLAG           (0x80)
+
+#define SECURITY_DESCRIPTOR_REVISION     (1)
+#define SECURITY_DESCRIPTOR_REVISION1    (1)
+
+#define SECURITY_DESCRIPTOR_MIN_LENGTH   (sizeof(SECURITY_DESCRIPTOR))
+
+typedef USHORT SECURITY_DESCRIPTOR_CONTROL, *PSECURITY_DESCRIPTOR_CONTROL;
+
+#define SE_OWNER_DEFAULTED               (0x0001)
+#define SE_GROUP_DEFAULTED               (0x0002)
+#define SE_DACL_PRESENT                  (0x0004)
+#define SE_DACL_DEFAULTED                (0x0008)
+#define SE_SACL_PRESENT                  (0x0010)
+#define SE_SACL_DEFAULTED                (0x0020)
+#define SE_DACL_UNTRUSTED                (0x0040)
+#define SE_SERVER_SECURITY               (0x0080)
+#define SE_DACL_AUTO_INHERIT_REQ         (0x0100)
+#define SE_SACL_AUTO_INHERIT_REQ         (0x0200)
+#define SE_DACL_AUTO_INHERITED           (0x0400)
+#define SE_SACL_AUTO_INHERITED           (0x0800)
+#define SE_DACL_PROTECTED                (0x1000)
+#define SE_SACL_PROTECTED                (0x2000)
+#define SE_RM_CONTROL_VALID              (0x4000)
+#define SE_SELF_RELATIVE                 (0x8000)
+
+typedef struct _SECURITY_DESCRIPTOR_RELATIVE {
+    UCHAR Revision;
+    UCHAR Sbz1;
+    SECURITY_DESCRIPTOR_CONTROL Control;
+    ULONG Owner;
+    ULONG Group;
+    ULONG Sacl;
+    ULONG Dacl;
+} SECURITY_DESCRIPTOR_RELATIVE, *PISECURITY_DESCRIPTOR_RELATIVE;
+
+
+typedef struct _RTL_SPLAY_LINKS
+{
+  struct _RTL_SPLAY_LINKS *Parent;
+  struct _RTL_SPLAY_LINKS *LeftChild;
+  struct _RTL_SPLAY_LINKS *RightChild;
+} RTL_SPLAY_LINKS, *PRTL_SPLAY_LINKS;
+
+typedef struct _UNICODE_PREFIX_TABLE_ENTRY {
+	USHORT NodeTypeCode;
+	USHORT NameLength;
+	struct _UNICODE_PREFIX_TABLE_ENTRY *NextPrefixTree;
+	struct _UNICODE_PREFIX_TABLE_ENTRY *CaseMatch;
+	RTL_SPLAY_LINKS Links;
+	PUNICODE_STRING Prefix;
+} UNICODE_PREFIX_TABLE_ENTRY;
+typedef UNICODE_PREFIX_TABLE_ENTRY *PUNICODE_PREFIX_TABLE_ENTRY;
+
+typedef struct _UNICODE_PREFIX_TABLE {
+	USHORT NodeTypeCode;
+	USHORT NameLength;
+	PUNICODE_PREFIX_TABLE_ENTRY NextPrefixTree;
+	PUNICODE_PREFIX_TABLE_ENTRY LastNextEntry;
+} UNICODE_PREFIX_TABLE;
+typedef UNICODE_PREFIX_TABLE *PUNICODE_PREFIX_TABLE;
+
+typedef enum _TABLE_SEARCH_RESULT{
+    TableEmptyTree,
+    TableFoundNode,
+    TableInsertAsLeft,
+    TableInsertAsRight
+} TABLE_SEARCH_RESULT;
+
+
+typedef enum _RTL_GENERIC_COMPARE_RESULTS {
+	GenericLessThan,
+	GenericGreaterThan,
+	GenericEqual
+} RTL_GENERIC_COMPARE_RESULTS;
+
+struct _RTL_AVL_TABLE;
+
+
+typedef
+RTL_GENERIC_COMPARE_RESULTS
+(STDCALL *PRTL_AVL_COMPARE_ROUTINE) (
+	struct _RTL_AVL_TABLE *Table,
+	PVOID FirstStruct,
+	PVOID SecondStruct
+	);
+
+typedef
+PVOID
+(STDCALL *PRTL_AVL_ALLOCATE_ROUTINE) (
+	struct _RTL_AVL_TABLE *Table,
+	ULONG ByteSize
+	);
+
+typedef
+VOID
+(STDCALL *PRTL_AVL_FREE_ROUTINE) (
+	struct _RTL_AVL_TABLE *Table,
+	PVOID Buffer
+	);
+
+typedef
+NTSTATUS
+(STDCALL *PRTL_AVL_MATCH_FUNCTION) (
+	struct _RTL_AVL_TABLE *Table,
+	PVOID UserData,
+	PVOID MatchData
+	);
+
+typedef struct _RTL_BALANCED_LINKS {
+	struct _RTL_BALANCED_LINKS *Parent;
+	struct _RTL_BALANCED_LINKS *LeftChild;
+	struct _RTL_BALANCED_LINKS *RightChild;
+	CHAR Balance;
+	UCHAR Reserved[3];
+} RTL_BALANCED_LINKS;
+
+typedef RTL_BALANCED_LINKS *PRTL_BALANCED_LINKS;
+
+typedef struct _RTL_AVL_TABLE {
+	RTL_BALANCED_LINKS BalancedRoot;
+	PVOID OrderedPointer;
+	ULONG WhichOrderedElement;
+	ULONG NumberGenericTableElements;
+	ULONG DepthOfTree;
+	PRTL_BALANCED_LINKS RestartKey;
+	ULONG DeleteCount;
+	PRTL_AVL_COMPARE_ROUTINE CompareRoutine;
+	PRTL_AVL_ALLOCATE_ROUTINE AllocateRoutine;
+	PRTL_AVL_FREE_ROUTINE FreeRoutine;
+	PVOID TableContext;
+} RTL_AVL_TABLE;
+typedef RTL_AVL_TABLE *PRTL_AVL_TABLE;
+
+struct _RTL_GENERIC_TABLE;
+
+typedef
+RTL_GENERIC_COMPARE_RESULTS
+(STDCALL *PRTL_GENERIC_COMPARE_ROUTINE) (
+	struct _RTL_GENERIC_TABLE *Table,
+	PVOID FirstStruct,
+	PVOID SecondStruct
+	);
+
+typedef
+PVOID
+(STDCALL *PRTL_GENERIC_ALLOCATE_ROUTINE) (
+	struct _RTL_GENERIC_TABLE *Table,
+	ULONG ByteSize
+	);
+
+typedef
+VOID
+(STDCALL *PRTL_GENERIC_FREE_ROUTINE) (
+	struct _RTL_GENERIC_TABLE *Table,
+	PVOID Buffer
+	);
+
+typedef struct _RTL_GENERIC_TABLE {
+	PRTL_SPLAY_LINKS TableRoot;
+	LIST_ENTRY InsertOrderList;
+	PLIST_ENTRY OrderedPointer;
+	ULONG WhichOrderedElement;
+	ULONG NumberGenericTableElements;
+	PRTL_GENERIC_COMPARE_ROUTINE CompareRoutine;
+	PRTL_GENERIC_ALLOCATE_ROUTINE AllocateRoutine;
+	PRTL_GENERIC_FREE_ROUTINE FreeRoutine;
+	PVOID TableContext;
+} RTL_GENERIC_TABLE;
+typedef RTL_GENERIC_TABLE *PRTL_GENERIC_TABLE;
+
+// Information class 0
+typedef struct _PROCESS_BASIC_INFORMATION
+{
+	NTSTATUS ExitStatus;
+	PPEB PebBaseAddress;
+	KAFFINITY AffinityMask;
+	KPRIORITY BasePriority;
+	ULONG UniqueProcessId;
+	ULONG InheritedFromUniqueProcessId;
+} PROCESS_BASIC_INFORMATION, *PPROCESS_BASIC_INFORMATION;
+
+// Information class 3
+typedef struct _VM_COUNTERS_
+{
+	ULONG PeakVirtualSize;
+	ULONG VirtualSize;
+	ULONG PageFaultCount;
+	ULONG PeakWorkingSetSize;
+	ULONG WorkingSetSize;
+	ULONG QuotaPeakPagedPoolUsage;
+	ULONG QuotaPagedPoolUsage;
+	ULONG QuotaPeakNonPagedPoolUsage;
+	ULONG QuotaNonPagedPoolUsage;
+	ULONG PagefileUsage;
+	ULONG PeakPagefileUsage;
+} VM_COUNTERS, *PVM_COUNTERS;
+
+// Information class 4
+typedef struct _KERNEL_USER_TIMES
+{
+	LARGE_INTEGER CreateTime;
+	LARGE_INTEGER ExitTime;
+	LARGE_INTEGER KernelTime;
+	LARGE_INTEGER UserTime;
+} KERNEL_USER_TIMES, *PKERNEL_USER_TIMES;
+
+// Information class 9
+typedef struct _PROCESS_ACCESS_TOKEN
+{
+	HANDLE Token;
+	HANDLE Thread;
+} PROCESS_ACCESS_TOKEN, *PPROCESS_ACCESS_TOKEN;
+
+// Information class 14 
+typedef struct _POOLED_USAGE_AND_LIMITS_
+{
+	ULONG PeakPagedPoolUsage;
+	ULONG PagedPoolUsage;
+	ULONG PagedPoolLimit;
+	ULONG PeakNonPagedPoolUsage;
+	ULONG NonPagedPoolUsage;
+	ULONG NonPagedPoolLimit;
+	ULONG PeakPagefileUsage;
+	ULONG PagefileUsage;
+	ULONG PagefileLimit;
+} POOLED_USAGE_AND_LIMITS, *PPOOLED_USAGE_AND_LIMITS;
+
+// Information class 15
+typedef struct _PROCESS_WS_WATCH_INFORMATION
+{
+	PVOID FaultingPc;
+	PVOID FaultingVa;
+} PROCESS_WS_WATCH_INFORMATION, *PPROCESS_WS_WATCH_INFORMATION;
+
+// Information class 18
+typedef struct _PROCESS_PRIORITY_CLASS
+{
+	BOOLEAN Foreground;
+	UCHAR   PriorityClass;
+} PROCESS_PRIORITY_CLASS, *PPROCESS_PRIORITY_CLASS;
+
+// Information class 23
+typedef struct _PROCESS_DEVICEMAP_INFORMATION
+{
+	union {
+		struct {
+			HANDLE DirectoryHandle;
+		} Set;
+		struct {
+			ULONG DriveMap;
+			UCHAR DriveType[32];
+		} Query;
+	};
+} PROCESS_DEVICEMAP_INFORMATION, *pPROCESS_DEVICEMAP_INFORMATION;
+
+// Information class 24
+typedef struct _PROCESS_SESSION_INFORMATION
+{
+	ULONG SessionId;
+} PROCESS_SESSION_INFORMATION, *PPROCESS_SESSION_INFORMATION;
+
+typedef struct _PAGEFAULT_HISTORY {
+    ULONG                           CurrentIndex;
+    ULONG                           MaxIndex;
+    KSPIN_LOCK                      SpinLock;
+    PVOID                           Reserved;
+    PROCESS_WS_WATCH_INFORMATION    WatchInfo[1];
+} PAGEFAULT_HISTORY, *PPAGEFAULT_HISTORY;
+
 typedef struct _QUERY_PATH_REQUEST {
     ULONG                   PathNameLength;
     PIO_SECURITY_CONTEXT    SecurityContext;
@@ -1511,11 +2089,7 @@ typedef struct _RETRIEVAL_POINTERS_BUFFER {
     } Extents[1];
 } RETRIEVAL_POINTERS_BUFFER, *PRETRIEVAL_POINTERS_BUFFER;
 
-typedef struct _RTL_SPLAY_LINKS {
-    struct _RTL_SPLAY_LINKS *Parent;
-    struct _RTL_SPLAY_LINKS *LeftChild;
-    struct _RTL_SPLAY_LINKS *RightChild;
-} RTL_SPLAY_LINKS, *PRTL_SPLAY_LINKS;
+typedef struct _BUS_HANDLER *PBUS_HANDLER;
 
 typedef struct _SE_EXPORTS {
 
@@ -2159,12 +2733,72 @@ ExDisableResourceBoostLite (
     IN PERESOURCE Resource
 );
 
+LONGLONG
+FASTCALL
+ExfInterlockedCompareExchange64(
+    IN OUT LONGLONG volatile *Destination,
+    IN PLONGLONG              ExChange,
+    IN PLONGLONG              Comparand
+);
+    
 NTKERNELAPI
 ULONG
 NTAPI
 ExQueryPoolBlockSize (
     IN PVOID        PoolBlock,
     OUT PBOOLEAN    QuotaCharged
+);
+
+/* Rundown Locks */
+
+VOID
+FASTCALL
+ExInitializeRundownProtection (
+     IN PEX_RUNDOWN_REF RunRef
+);
+
+VOID
+FASTCALL
+ExReInitializeRundownProtection (
+     IN PEX_RUNDOWN_REF RunRef
+);
+
+BOOLEAN
+FASTCALL
+ExAcquireRundownProtection (
+     IN PEX_RUNDOWN_REF RunRef
+);
+
+BOOLEAN
+FASTCALL
+ExAcquireRundownProtectionEx (
+     IN PEX_RUNDOWN_REF RunRef,
+     IN ULONG Count
+);
+
+VOID
+FASTCALL
+ExReleaseRundownProtection (
+     IN PEX_RUNDOWN_REF RunRef
+);
+
+VOID
+FASTCALL
+ExReleaseRundownProtectionEx (
+     IN PEX_RUNDOWN_REF RunRef,
+     IN ULONG Count
+);
+
+VOID
+FASTCALL
+ExRundownCompleted (
+     IN PEX_RUNDOWN_REF RunRef
+);
+
+VOID
+FASTCALL
+ExWaitForRundownProtectionRelease (
+     IN PEX_RUNDOWN_REF RunRef
 );
 
 #define FlagOn(x, f) ((x) & (f))
@@ -3152,6 +3786,13 @@ KeInsertQueueApc (
     IN KPRIORITY  PriorityBoost
 );
 
+
+NTKERNELAPI
+KIRQL
+KeRaiseIrqlToSynchLevel (
+    VOID
+);
+    
 NTKERNELAPI
 LONG
 NTAPI
@@ -3551,6 +4192,13 @@ RtlDescribeChunk (
 );
 
 NTSYSAPI
+WCHAR
+NTAPI
+RtlDowncaseUnicodeChar(
+    WCHAR SourceCharacter
+    );
+
+NTSYSAPI
 BOOLEAN
 NTAPI
 RtlEqualSid (
@@ -3751,6 +4399,149 @@ NTAPI
 RtlValidSid (
     IN PSID Sid
 );
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlCustomCPToUnicodeN(
+    IN PCPTABLEINFO  CustomCP,
+    OUT PWCH         UnicodeString,
+    IN ULONG         MaxBytesInUnicodeString,
+    OUT PULONG       BytesInUnicodeString OPTIONAL,
+    IN PCH           CustomCPString,
+    IN ULONG         BytesInCustomCPString
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUnicodeToCustomCPN(
+    IN PCPTABLEINFO CustomCP,
+    OUT PCH         CustomCPString,
+    IN ULONG        MaxBytesInCustomCPString,
+    OUT PULONG      BytesInCustomCPString OPTIONAL,
+    IN PWCH         UnicodeString,
+    IN ULONG        BytesInUnicodeString
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUpcaseUnicodeToCustomCPN(
+    IN PCPTABLEINFO CustomCP,
+    OUT PCH         CustomCPString,
+    IN ULONG        MaxBytesInCustomCPString,
+    OUT PULONG      BytesInCustomCPString OPTIONAL,
+    IN PWCH         UnicodeString,
+    IN ULONG        BytesInUnicodeString
+);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlInitCodePageTable(
+    IN PUSHORT       TableBase,
+    OUT PCPTABLEINFO CodePageTable
+);
+
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlOemStringToUnicodeSize(
+    POEM_STRING OemString
+    );
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUnicodeStringToOemString(
+    POEM_STRING DestinationString,
+    PCUNICODE_STRING SourceString,
+    BOOLEAN AllocateDestinationString
+    );
+    
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlMultiByteToUnicodeN(
+    PWSTR UnicodeString,
+    ULONG MaxBytesInUnicodeString,
+    PULONG BytesInUnicodeString,
+    PCSTR MultiByteString,
+    ULONG BytesInMultiByteString
+    );
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUnicodeToMultiByteN(
+    PCHAR MultiByteString,
+    ULONG MaxBytesInMultiByteString,
+    PULONG BytesInMultiByteString,
+    PWSTR UnicodeString,
+    ULONG BytesInUnicodeString
+    );
+    
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUpcaseUnicodeToMultiByteN(
+    PCHAR MultiByteString,
+    ULONG MaxBytesInMultiByteString,
+    PULONG BytesInMultiByteString,
+    PWSTR UnicodeString,
+    ULONG BytesInUnicodeString
+    );
+    
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUpcaseUnicodeStringToOemString(
+    POEM_STRING DestinationString,
+    PCUNICODE_STRING SourceString,
+    BOOLEAN AllocateDestinationString
+    );
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlOemToUnicodeN(
+    PWSTR UnicodeString,
+    ULONG MaxBytesInUnicodeString,
+    PULONG BytesInUnicodeString,
+    IN PCHAR OemString,
+    ULONG BytesInOemString
+    );
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUnicodeToOemN(
+    PCHAR OemString,
+    ULONG MaxBytesInOemString,
+    PULONG BytesInOemString,
+    PWSTR UnicodeString,
+    ULONG BytesInUnicodeString
+    );
+    
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlMultiByteToUnicodeSize(
+    PULONG BytesInUnicodeString,
+    PCSTR MultiByteString,
+    ULONG BytesInMultiByteString
+    );
+    
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUnicodeToMultiByteSize(
+    PULONG BytesInMultiByteString,
+    IN PWSTR UnicodeString,
+    ULONG BytesInUnicodeString
+    );
 
 NTKERNELAPI
 NTSTATUS
@@ -4393,7 +5184,7 @@ NTSTATUS
 NTAPI
 ZwPulseEvent (
     IN HANDLE   EventHandle,
-    OUT PLONG   PreviousState OPTIONAL
+    OUT PULONG  PreviousState OPTIONAL
 );
 
 NTSYSAPI
@@ -4478,44 +5269,12 @@ ZwQueryInformationToken (
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwQueryObject (
-    IN HANDLE                      ObjectHandle,
-    IN OBJECT_INFORMATION_CLASS    ObjectInformationClass,
-    OUT PVOID                      ObjectInformation,
-    IN ULONG                       Length,
-    OUT PULONG                     ResultLength
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwQuerySection (
-    IN HANDLE                       SectionHandle,
-    IN SECTION_INFORMATION_CLASS    SectionInformationClass,
-    OUT PVOID                       SectionInformation,
-    IN ULONG                        SectionInformationLength,
-    OUT PULONG                      ResultLength OPTIONAL
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
 ZwQuerySecurityObject (
     IN HANDLE                   FileHandle,
     IN SECURITY_INFORMATION     SecurityInformation,
     OUT PSECURITY_DESCRIPTOR    SecurityDescriptor,
     IN ULONG                    Length,
     OUT PULONG                  ResultLength
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwQuerySystemInformation (
-    IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
-    OUT PVOID                   SystemInformation,
-    IN ULONG                    Length,
-    OUT PULONG                  ReturnLength
 );
 
 NTSYSAPI
@@ -4543,7 +5302,7 @@ NTSTATUS
 NTAPI
 ZwResetEvent (
     IN HANDLE   EventHandle,
-    OUT PLONG   PreviousState OPTIONAL
+    OUT PULONG  PreviousState OPTIONAL
 );
 
 #if (VER_PRODUCTBUILD >= 2195)
@@ -4601,17 +5360,7 @@ NTSTATUS
 NTAPI
 ZwSetEvent (
     IN HANDLE   EventHandle,
-    OUT PLONG   PreviousState OPTIONAL
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwSetInformationObject (
-    IN HANDLE                       ObjectHandle,
-    IN OBJECT_INFORMATION_CLASS    ObjectInformationClass,
-    IN PVOID                        ObjectInformation,
-    IN ULONG                        ObjectInformationLength
+    OUT PULONG  PreviousState OPTIONAL
 );
 
 NTSYSAPI
@@ -4636,15 +5385,6 @@ ZwSetSecurityObject (
 );
 
 #endif /* (VER_PRODUCTBUILD >= 2195) */
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwSetSystemInformation (
-    IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
-    IN PVOID                    SystemInformation,
-    IN ULONG                    Length
-);
 
 NTSYSAPI
 NTSTATUS
