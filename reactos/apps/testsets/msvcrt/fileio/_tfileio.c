@@ -75,6 +75,64 @@ static TCHAR nix_data[] = _T("line1: this is a bunch of readable text.\n")\
 #endif /*UNICODE*/
 
 
+//    result = create_test_file(file_name, _T("wb"), _T("rb"), file_data);
+
+static BOOL test_file_truncate(TCHAR* file_name)
+{
+    BOOL result = FALSE;
+    int count = -1;
+    int error_code;
+    TCHAR ch;
+    TCHAR* file_data = _T("this file should have been truncated to zero bytes...");
+    FILE *file = _tfopen(file_name, _T("wb"));
+
+    _tprintf(_T("test_file_truncate(\"%s\")\n"), file_name);
+
+    if (file != NULL) {
+        if (_fputts(file_data, file) != _TEOF) {
+        } else {
+            _tprintf(_T("ERROR: failed to write data to file \"%s\"\n"), file_name);
+            _tprintf(_T("ERROR: ferror returned %d\n"), ferror(file));
+        }
+        fclose(file);
+    } else {
+        _tprintf(_T("ERROR: failed to open/create file \"%s\" for output\n"), file_name);
+        _tprintf(_T("ERROR: ferror returned %d\n"), ferror(file));
+    }
+
+    file = _tfopen(file_name, _T("wb"));
+    if (file != NULL) {
+        error_code = ferror(file);
+        if (error_code) {
+             _tprintf(_T("ERROR: (%s) ferror returned %d\n"), file_name, error_code);
+        }
+        fclose(file);
+    } else {
+        _tprintf(_T("ERROR: (%s) failed to open file for truncating\n"), file_name);
+    }
+
+    file = _tfopen(file_name, _T("rb"));
+    if (file != NULL) {
+        count = 0;
+        while ((ch = _fgettc(file)) != _TEOF) {
+            _tprintf(_THEX_FORMAT, ch);
+            ++count;
+        }
+        error_code = ferror(file);
+        if (error_code) {
+             _tprintf(_T("ERROR: (%s) ferror returned %d after reading\n"), file_name, error_code);
+             perror("Read error");
+        }
+        fclose(file);
+    } else {
+        _tprintf(_T("ERROR: (%s) failed to open file for reading\n"), file_name);
+    }
+    if (count) {
+        result = TRUE;
+    }
+    return result;
+}
+
 static BOOL create_output_file(TCHAR* file_name, TCHAR* file_mode, TCHAR* file_data)
 {
     BOOL result = FALSE;
@@ -319,6 +377,11 @@ static int test_files(int test_num, char* type)
     int result = 0;
 
     printf("performing test: %d (%s)\n", test_num, type);
+
+
+    if (test_file_truncate(_T("zerosize.foo"))) {
+        test_unlink_files();
+    }
 
     switch (test_num) {
     case 1:
