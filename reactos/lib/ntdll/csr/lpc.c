@@ -1,4 +1,4 @@
-/* $Id: lpc.c,v 1.4 2001/12/02 23:34:40 dwelch Exp $
+/* $Id: lpc.c,v 1.5 2002/02/02 17:15:22 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -117,9 +117,9 @@ CsrClientConnectToServer(VOID)
    CSRSS_API_REPLY Reply;
    LPC_SECTION_WRITE LpcWrite;
    HANDLE CsrSectionHandle;
-   ULONG CsrSectionViewSize;
+   LARGE_INTEGER CsrSectionViewSize;
 
-   CsrSectionViewSize = CSR_CSRSS_SECTION_SIZE;
+   CsrSectionViewSize.QuadPart = CSR_CSRSS_SECTION_SIZE;
    Status = NtCreateSection(&CsrSectionHandle,
 			    SECTION_ALL_ACCESS,
 			    NULL,
@@ -136,7 +136,7 @@ CsrClientConnectToServer(VOID)
    LpcWrite.Length = sizeof(LPC_SECTION_WRITE);
    LpcWrite.SectionHandle = CsrSectionHandle;
    LpcWrite.SectionOffset = 0;
-   LpcWrite.ViewSize = CsrSectionViewSize;
+   LpcWrite.ViewSize = CsrSectionViewSize.u.LowPart;
    Status = NtConnectPort(&WindowsApiPort,
 			  &PortName,
 			  NULL,
@@ -157,8 +157,8 @@ CsrClientConnectToServer(VOID)
    /* Create the heap for communication for csrss. */
    CsrCommHeap = RtlCreateHeap(HEAP_NO_VALLOC,
 			       CsrSectionMapBase,
-			       CsrSectionViewSize,
-			       CsrSectionViewSize,
+			       CsrSectionViewSize.u.LowPart,
+			       CsrSectionViewSize.u.LowPart,
 			       0,
 			       NULL);
    if (CsrCommHeap == NULL)
