@@ -242,6 +242,8 @@ NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, TRUE );
 
+    FCB->EventsFired &= ~AFD_EVENT_ACCEPT;    
+
     if( FCB->NeedsNewListen ) {
 	AFD_DbgPrint(MID_TRACE,("ADDRESSFILE: %x\n", FCB->AddressFile.Handle));
 

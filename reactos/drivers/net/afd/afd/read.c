@@ -131,7 +131,7 @@ static VOID ProcessClose( PAFD_FCB FCB ) {
     }
     
     /* Handle closing signal */
-    FCB->PollState |= AFD_EVENT_CLOSE;
+    FCB->PollState |= AFD_EVENT_DISCONNECT;
 
     PollReeval( FCB->DeviceExt, FCB->FileObject );
 }
