@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.31 2000/02/25 23:27:51 ea Exp $
+; $Id: ntoskrnl.edf,v 1.32 2000/02/26 16:22:27 ea Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -80,6 +80,8 @@ FsRtlAddMcbEntry=FsRtlAddMcbEntry@16
 FsRtlAllocateResource=FsRtlAllocateResource@0
 FsRtlAreNamesEqual=FsRtlAreNamesEqual@16
 FsRtlBalanceReads=FsRtlBalanceReads@4
+FsRtlCheckLockForReadAccess=FsRtlCheckLockForReadAccess@8
+FsRtlCheckLockForWriteAccess=FsRtlCheckLockForWriteAccess@8
 FsRtlCopyRead=FsRtlCopyRead@32
 FsRtlCopyWrite=FsRtlCopyWrite@32
 FsRtlDeregisterUncProvider=FsRtlDeregisterUncProvider@4
@@ -87,9 +89,16 @@ FsRtlDissectDbcs=FsRtlDissectDbcs@16
 FsRtlDissectName=FsRtlDissectName@16
 FsRtlDoesDbcsContainWildCards=FsRtlDoesDbcsContainWildCards@4
 FsRtlDoesNameContainWildCards=FsRtlDoesNameContainWildCards@4
+FsRtlFastCheckLockForRead=FsRtlFastCheckLockForRead@24
+FsRtlFastCheckLockForWrite=FsRtlFastCheckLockForWrite@24
+FsRtlFastUnlockAll=FsRtlFastUnlockAll@16
+FsRtlFastUnlockAllByKey=FsRtlFastUnlockAllByKey@20
+FsRtlFastUnlockSingle=FsRtlFastUnlockSingle@32
 FsRtlGetFileSize=FsRtlGetFileSize@8
+FsRtlGetNextFileLock=FsRtlGetNextFileLock@8
 FsRtlGetNextLargeMcbEntry=FsRtlGetNextLargeMcbEntry@20
 FsRtlGetNextMcbEntry=FsRtlGetNextMcbEntry@20
+FsRtlInitializeFileLock=FsRtlInitializeFileLock@12
 FsRtlInitializeLargeMcb=FsRtlInitializeLargeMcb@8
 FsRtlInitializeMcb=FsRtlInitializeMcb@8
 FsRtlIsDbcsInExpression=FsRtlIsDbcsInExpression@8
@@ -108,6 +117,8 @@ FsRtlNumberOfRunsInLargeMcb=FsRtlNumberOfRunsInLargeMcb@4
 FsRtlNumberOfRunsInMcb=FsRtlNumberOfRunsInMcb@4
 FsRtlPostPagingFileStackOverflow=FsRtlPostPagingFileStackOverflow@12
 FsRtlPostStackOverflow=FsRtlPostStackOverflow@12
+FsRtlPrivateLock=FsRtlPrivateLock@48
+FsRtlProcessFileLock=FsRtlProcessFileLock@12
 FsRtlRegisterUncProvider=FsRtlRegisterUncProvider@12
 FsRtlRemoveLargeMcbEntry=FsRtlRemoveLargeMcbEntry@20
 FsRtlRemoveMcbEntry=FsRtlRemoveMcbEntry@12
@@ -115,6 +126,7 @@ FsRtlSplitLargeMcb=FsRtlSplitLargeMcb@20
 FsRtlSyncVolumes=FsRtlSyncVolumes@12
 FsRtlTruncateLargeMcb=FsRtlTruncateLargeMcb@12
 FsRtlTruncateMcb=FsRtlTruncateMcb@8
+FsRtlUninitializeFileLock=FsRtlUninitializeFileLock@4
 FsRtlUninitializeLargeMcb=FsRtlUninitializeLargeMcb@4
 FsRtlUninitializeMcb=FsRtlUninitializeMcb@4
 IoAllocateController
@@ -171,7 +183,7 @@ NtAdjustPrivilegesToken=NtAdjustPrivilegesToken@24
 NtAllocateLocallyUniqueId=NtAllocateLocallyUniqueId@4
 NtAllocateUuids=NtAllocateUuids@12
 NtAllocateVirtualMemory=NtAllocateVirtualMemory@24
-;NtBuildNumber <--- variable
+NtBuildNumber DATA
 NtClose=NtClose@4
 NtConnectPort=NtConnectPort@32
 ;NtConnectPort=NtConnectPort@8

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.34 2000/01/17 21:01:16 ekohl Exp $
+/* $Id: main.c,v 1.35 2000/02/26 16:22:27 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -28,6 +28,10 @@
 
 #define NDEBUG
 #include <internal/debug.h>
+
+/* DATA *********************************************************************/
+
+USHORT NtBuildNumber = KERNEL_VERSION_BUILD;	/* EXPORTED */
 
 /* FUNCTIONS ****************************************************************/
                                             

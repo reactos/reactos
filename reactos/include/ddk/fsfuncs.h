@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_FSFUNCS_H
 #define __INCLUDE_DDK_FSFUNCS_H
-/* $Id: fsfuncs.h,v 1.5 2000/02/25 23:27:50 ea Exp $ */
+/* $Id: fsfuncs.h,v 1.6 2000/02/26 16:21:34 ea Exp $ */
 VOID
 STDCALL
 FsRtlAddLargeMcbEntry (
@@ -37,6 +37,18 @@ DWORD
 STDCALL
 FsRtlBalanceReads (
 	DWORD	Unknown0
+	);
+BOOLEAN
+STDCALL
+FsRtlCheckLockForReadAccess (
+	DWORD	Unknown0,
+	DWORD	Unknown1
+	);
+BOOLEAN
+STDCALL
+FsRtlCheckLockForWriteAccess (
+	DWORD	Unknown0,
+	DWORD	Unknown1
 	);
 BOOLEAN
 STDCALL
@@ -93,11 +105,66 @@ STDCALL
 FsRtlDoesNameContainWildCards (
 	IN	PUNICODE_STRING	Name
 	);
+BOOLEAN
+STDCALL
+FsRtlFastCheckLockForRead (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3,
+	DWORD	Unknown4,
+	DWORD	Unknown5
+	);
+BOOLEAN
+STDCALL
+FsRtlFastCheckLockForWrite (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3,
+	DWORD	Unknown4,
+	DWORD	Unknown5
+	);
+NTSTATUS
+STDCALL
+FsRtlFastUnlockAll (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3
+	);
+NTSTATUS
+STDCALL
+FsRtlFastUnlockAllByKey (
+	IN	DWORD	Unknown0,
+	IN	DWORD	Unknown1,
+	IN	DWORD	Unknown2,
+	IN	DWORD	Unknown3,
+	IN	DWORD	Key
+	);
+NTSTATUS
+STDCALL
+FsRtlFastUnlockSingle (
+	IN	DWORD	Unknown0,
+	IN	DWORD	Unknown1,
+	IN	DWORD	Unknown2,
+	IN	DWORD	Unknown3,
+	IN	DWORD	Unknown4,
+	IN	DWORD	Unknown5,
+	IN	DWORD	Unknown6,
+	IN	DWORD	Unknown7
+	);
 DWORD
 STDCALL
 FsRtlGetFileSize (
 	DWORD	Unknown0,
 	DWORD	Unknown1
+	);
+NTSTATUS
+STDCALL
+FsRtlGetNextFileLock (
+	IN	DWORD	Unknown0,
+	IN OUT	PVOID	Unknown1
 	);
 VOID
 STDCALL
@@ -119,6 +186,13 @@ FsRtlGetNextMcbEntry (
 	);
 #define FsRtlEnterFileSystem    KeEnterCriticalRegion
 #define FsRtlExitFileSystem     KeLeaveCriticalRegion
+VOID
+STDCALL
+FsRtlInitializeFileLock (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2
+	);
 VOID
 STDCALL
 FsRtlInitializeLargeMcb (
@@ -243,6 +317,29 @@ FsRtlPostStackOverflow (
 	DWORD	Unknown1,
 	DWORD	Unknown2
 	);
+BOOLEAN
+STDCALL
+FsRtlPrivateLock (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3,
+	DWORD	Unknown4,
+	DWORD	Unknown5,
+	DWORD	Unknown6,
+	DWORD	Unknown7,
+	DWORD	Unknown8,
+	DWORD	Unknown9,
+	DWORD	Unknown10,
+	DWORD	Unknown11
+	);
+NTSTATUS
+STDCALL
+FsRtlProcessFileLock (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2
+	);
 DWORD
 STDCALL
 FsRtlRegisterUncProvider (
@@ -294,6 +391,11 @@ STDCALL
 FsRtlTruncateMcb (
 	DWORD	Unknown0,
 	DWORD	Unknown1
+	);
+VOID
+STDCALL
+FsRtlUninitializeFileLock (
+	IN OUT	PVOID	lpUnknown0
 	);
 VOID
 STDCALL

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.44 2000/02/25 23:27:50 ea Exp $
+; $Id: ntoskrnl.def,v 1.45 2000/02/26 16:22:27 ea Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -80,6 +80,8 @@ FsRtlAddMcbEntry@16
 FsRtlAllocateResource@0
 FsRtlAreNamesEqual@16
 FsRtlBalanceReads@4
+FsRtlCheckLockForReadAccess@8
+FsRtlCheckLockForWriteAccess@8
 FsRtlCopyRead@32
 FsRtlCopyWrite@32
 FsRtlDeregisterUncProvider@4
@@ -87,9 +89,16 @@ FsRtlDissectDbcs@16
 FsRtlDissectName@16
 FsRtlDoesDbcsContainWildCards@4
 FsRtlDoesNameContainWildCards@4
+FsRtlFastCheckLockForRead@24
+FsRtlFastCheckLockForWrite@24
+FsRtlFastUnlockAll@16
+FsRtlFastUnlockAllByKey@20
+FsRtlFastUnlockSingle@32
 FsRtlGetFileSize@8
+FsRtlGetNextFileLock@8
 FsRtlGetNextLargeMcbEntry@20
 FsRtlGetNextMcbEntry@20
+FsRtlInitializeFileLock@12
 FsRtlInitializeLargeMcb@8
 FsRtlInitializeMcb@8
 FsRtlIsDbcsInExpression@8
@@ -108,6 +117,8 @@ FsRtlNumberOfRunsInLargeMcb@4
 FsRtlNumberOfRunsInMcb@4
 FsRtlPostPagingFileStackOverflow@12
 FsRtlPostStackOverflow@12
+FsRtlPrivateLock@48
+FsRtlProcessFileLock@12
 FsRtlRegisterUncProvider@12
 FsRtlRemoveLargeMcbEntry@20
 FsRtlRemoveMcbEntry@12
@@ -115,6 +126,7 @@ FsRtlSplitLargeMcb@20
 FsRtlSyncVolumes@12
 FsRtlTruncateLargeMcb@12
 FsRtlTruncateMcb@8
+FsRtlUninitializeFileLock@4
 FsRtlUninitializeLargeMcb@4
 FsRtlUninitializeMcb@4
 IoAllocateController
@@ -171,7 +183,7 @@ NtAdjustPrivilegesToken@24
 NtAllocateLocallyUniqueId@4
 NtAllocateUuids@12
 NtAllocateVirtualMemory@24
-;NtBuildNumber <--- variable?
+NtBuildNumber DATA
 NtClose@4
 NtConnectPort@32
 ;NtConnectPort@8
