@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.41 2003/02/12 00:39:31 hyperion Exp $
+/* $Id: file.c,v 1.42 2003/03/06 13:00:51 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -245,75 +245,72 @@ SetFilePointer(HANDLE hFile,
 DWORD STDCALL
 GetFileType(HANDLE hFile)
 {
-   FILE_FS_DEVICE_INFORMATION DeviceInfo;
-   IO_STATUS_BLOCK StatusBlock;
-   NTSTATUS Status;
+  FILE_FS_DEVICE_INFORMATION DeviceInfo;
+  IO_STATUS_BLOCK StatusBlock;
+  NTSTATUS Status;
 
-   /* get real handle */
-   switch ((ULONG)hFile)
-     {
-	case STD_INPUT_HANDLE:
-	  hFile = NtCurrentPeb()->ProcessParameters->hStdInput;
+  /* Get real handle */
+  switch ((ULONG)hFile)
+    {
+      case STD_INPUT_HANDLE:
+	hFile = NtCurrentPeb()->ProcessParameters->hStdInput;
+	break;
 
-	  break;
+      case STD_OUTPUT_HANDLE:
+	hFile = NtCurrentPeb()->ProcessParameters->hStdOutput;
+	break;
 
-	case STD_OUTPUT_HANDLE:
-	  hFile = NtCurrentPeb()->ProcessParameters->hStdOutput;
+      case STD_ERROR_HANDLE:
+	hFile = NtCurrentPeb()->ProcessParameters->hStdError;
+	break;
+    }
 
-	  break;
+  /* Check for console handle */
+  if (IsConsoleHandle(hFile))
+    {
+      if (VerifyConsoleIoHandle(hFile))
+	return FILE_TYPE_CHAR;
+    }
 
-	case STD_ERROR_HANDLE:
-	  hFile = NtCurrentPeb()->ProcessParameters->hStdError;
+  Status = NtQueryVolumeInformationFile(hFile,
+					&StatusBlock,
+					&DeviceInfo,
+					sizeof(FILE_FS_DEVICE_INFORMATION),
+					FileFsDeviceInformation);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      return FILE_TYPE_UNKNOWN;
+    }
 
-	  break;
-     }
+  switch (DeviceInfo.DeviceType)
+    {
+      case FILE_DEVICE_CD_ROM:
+      case FILE_DEVICE_CD_ROM_FILE_SYSTEM:
+      case FILE_DEVICE_CONTROLLER:
+      case FILE_DEVICE_DATALINK:
+      case FILE_DEVICE_DFS:
+      case FILE_DEVICE_DISK:
+      case FILE_DEVICE_DISK_FILE_SYSTEM:
+      case FILE_DEVICE_VIRTUAL_DISK:
+	return FILE_TYPE_DISK;
 
-   /* check console handles */
-   if (IsConsoleHandle(hFile))
-     {
-//	if (VerifyConsoleHandle(hFile))
-	  return FILE_TYPE_CHAR;
-     }
+      case FILE_DEVICE_KEYBOARD:
+      case FILE_DEVICE_MOUSE:
+      case FILE_DEVICE_NULL:
+      case FILE_DEVICE_PARALLEL_PORT:
+      case FILE_DEVICE_PRINTER:
+      case FILE_DEVICE_SERIAL_PORT:
+      case FILE_DEVICE_SCREEN:
+      case FILE_DEVICE_SOUND:
+      case FILE_DEVICE_MODEM:
+	return FILE_TYPE_CHAR;
 
-   Status = NtQueryVolumeInformationFile(hFile,
-					 &StatusBlock,
-					 &DeviceInfo,
-					 sizeof(FILE_FS_DEVICE_INFORMATION),
-					 FileFsDeviceInformation);
-   if (!NT_SUCCESS(Status))
-     {
-	SetLastErrorByStatus(Status);
-	return FILE_TYPE_UNKNOWN;
-     }
+      case FILE_DEVICE_NAMED_PIPE:
+	return FILE_TYPE_PIPE;
+    }
 
-   switch (DeviceInfo.DeviceType)
-     {
-	case FILE_DEVICE_CD_ROM:
-	case FILE_DEVICE_CD_ROM_FILE_SYSTEM:
-	case FILE_DEVICE_CONTROLLER:
-	case FILE_DEVICE_DATALINK:
-	case FILE_DEVICE_DFS:
-	case FILE_DEVICE_DISK:
-	case FILE_DEVICE_DISK_FILE_SYSTEM:
-	case FILE_DEVICE_VIRTUAL_DISK:
-	  return FILE_TYPE_DISK;
-
-	case FILE_DEVICE_KEYBOARD:
-	case FILE_DEVICE_MOUSE:
-	case FILE_DEVICE_NULL:
-	case FILE_DEVICE_PARALLEL_PORT:
-	case FILE_DEVICE_PRINTER:
-	case FILE_DEVICE_SERIAL_PORT:
-	case FILE_DEVICE_SCREEN:
-	case FILE_DEVICE_SOUND:
-	case FILE_DEVICE_MODEM:
-	  return FILE_TYPE_CHAR;
-
-	case FILE_DEVICE_NAMED_PIPE:
-	  return FILE_TYPE_PIPE;
-     }
-
-   return FILE_TYPE_UNKNOWN;
+  return FILE_TYPE_UNKNOWN;
 }
 
 
