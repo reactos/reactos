@@ -86,7 +86,54 @@ CMD [/[C|K] command][/P][/Q][/T:bf]\n\n \
               (cannot be terminated).\n \
   /T:bf       Sets the background/foreground color (see COLOR command)."
 
+STRING_COLOR_HELP1, "Sets the default foreground and background colors.\n\n \
+COLOR [attr [/F]] \n\n \
+  attr        Specifies color attribute of console output\n \
+  /F          fill the console with color attribute\n\n \
+There are three ways to specify the colors:\n \
+1) [bright] name on [bright] name  (only the first three letters are required)\n \
+2) decimal on decimal\n \
+3) two hex digits\n\n \
+Colors are:\n \
+dec  hex  name       dec  hex  name\n \
+0    0    Black       8   8    Gray(Bright black)\n \
+1    1    Blue        9   9    Bright Blue\n \
+2    2    Green      10   A    Bright Green\n \
+3    3    Cyan       11   B    Bright Cyan\n \
+4    4    Red        12   C    Bright Red\n \
+5    5    Magenta    13   D    Bright Magenta\n \
+6    6    Yellow     14   E    Bright Yellow\n \
+7    7    White      15   F    Bright White"
 
+STRING_COPY_HELP1,  "Overwrite %s (Yes/No/All)? "
+
+STRING_COPY_HELP2, "Copies one or more files to another location.\n\n \
+COPY [/V][/Y|/-Y][/A|/B] source [/A|/B]\n \
+     [+ source [/A|/B] [+ ...]] [destination [/A|/B]]\n\n \
+  source       Specifies the file or files to be copied.\n \
+  /A           Indicates an ASCII text file.\n \
+  /B           Indicates a binary file.\n \
+  destination  Specifies the directory and/or filename for the new file(s).\n \
+  /V           Verifies that new files are written correctly.\n \
+  /Y           Suppresses prompting to confirm you want to overwrite an\n \
+               existing destination file.\n \
+  /-Y          Causes prompting to confirm you want to overwrite an\n \
+               existing destination file.\n\n \
+The switch /Y may be present in the COPYCMD environment variable.\n \
+..."
+
+STRING_DATE_HELP1, "\nEnter new date (mm%cdd%cyyyy): "
+
+STRING_DATE_HELP2, "\nEnter new date (dd%cmm%cyyyy): "
+
+STRING_DATE_HELP3, "\nEnter new date (yyyy%cmm%cdd): "
+
+STRING_DATE_HELP4, "Displays or sets the date.\n\n \
+DATE [/T][date]\n\n \
+  /T    display only\n\n \
+Type DATE without parameters to display the current date setting and\n \
+a prompt for a new one.  Press ENTER to keep the same date."
+				
 STRING_EXIT_HELP, "Exits the command line interpreter.\n\nEXIT"
 
 STRING_MKDIR_HELP,   "Creates a directory.\n\n \
@@ -103,8 +150,8 @@ STRING_REM_HELP, "Starts a comment line in a batch file.\n\nREM [Comment]"
 
 
 
-
-STRING_CHOICE_OPTION         "YN"
+STRING_CHOICE_OPTION,         "YN"
+STRING_COPY_OPTION,           "YNA"
 
 
 STRING_ALIAS_ERROR,          "Command line too long after alias expansion!\n"
@@ -121,6 +168,12 @@ STRING_CMD_ERROR2,           "Error creating temporary file for pipe data\n"
 STRING_CMD_ERROR3,           "Can't redirect to file %s\n"
 STRING_CMD_ERROR4,           "Running %s...\n"
 STRING_CMD_ERROR5,           "Running cmdexit.bat...\n"
+STRING_CONSOLE_ERROR,        "Unknown error: %d\n"
+STRING_COPY_ERROR1,          "Error: Cannot open source - %s!\n"
+STRING_COPY_ERROR2,          "Error: Can't copy onto itself!\n"
+STRING_COPY_ERROR3,          "Error writing destination!\n"
+STRING_COPY_ERROR4,          "Error: Not implemented yet!\n"
+STRING_DATE_ERROR,           "Invalid date."
 STRING_PARAM_ERROR,          "Required parameter missing\n"
 
 

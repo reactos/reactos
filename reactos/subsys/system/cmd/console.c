@@ -7,9 +7,13 @@
  *
  *    20-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        started
+ *
+ *    03-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc  
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 
 #define OUTPUT_BUFFER_SIZE  4096
@@ -210,6 +214,7 @@ VOID ConOutFormatMessage (DWORD MessageId, ...)
 	DWORD ret;
 	LPTSTR text;
 	va_list arg_ptr;
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
 	
 	va_start (arg_ptr, MessageId);
 	ret = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
@@ -228,7 +233,8 @@ VOID ConOutFormatMessage (DWORD MessageId, ...)
 	}
 	else
 	{
-		ConErrPrintf (_T("Unknown error: %d\n"), MessageId);
+		LoadString( GetModuleHandle(NULL), STRING_CONSOLE_ERROR, (LPTSTR) szMsg,sizeof(szMsg));
+        ConErrPrintf (_T((LPTSTR)szMsg));
 	}
 }
 

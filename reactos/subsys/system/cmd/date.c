@@ -26,9 +26,13 @@
  *
  *    04-Feb-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Fixed date input bug.
+ *
+ *    03-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc  
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 #ifdef INCLUDE_CMD_DATE
 
@@ -43,22 +47,24 @@ static WORD awMonths[2][13] =
 static VOID
 PrintDateString (VOID)
 {
+  WCHAR szMsg[RC_STRING_MAX_SIZE];
+
 	switch (nDateFormat)
 	{
 		case 0: /* mmddyy */
 		default:
-			ConOutPrintf (_T("\nEnter new date (mm%cdd%cyyyy): "),
-					cDateSeparator, cDateSeparator);
+			LoadString( GetModuleHandle(NULL), STRING_DATE_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
+            ConOutPrintf (_T((LPTSTR)szMsg), cDateSeparator, cDateSeparator);
 			break;
 
 		case 1: /* ddmmyy */
-			ConOutPrintf (_T("\nEnter new date (dd%cmm%cyyyy): "),
-					  cDateSeparator, cDateSeparator);
+			LoadString( GetModuleHandle(NULL), STRING_DATE_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
+            ConOutPrintf (_T((LPTSTR)szMsg), cDateSeparator, cDateSeparator);
 			break;
 
 		case 2: /* yymmdd */
-			ConOutPrintf (_T("\nEnter new date (yyyy%cmm%cdd): "),
-					  cDateSeparator, cDateSeparator);
+			LoadString( GetModuleHandle(NULL), STRING_DATE_HELP3, (LPTSTR) szMsg,sizeof(szMsg));
+            ConOutPrintf (_T((LPTSTR)szMsg), cDateSeparator, cDateSeparator);
 			break;
 	}
 }
@@ -183,14 +189,12 @@ INT cmd_date (LPTSTR cmd, LPTSTR param)
 	INT    i;
 	BOOL   bPrompt = TRUE;
 	INT    nDateString = -1;
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Displays or sets the date.\n\n"
-				   "DATE [/T][date]\n\n"
-				   "  /T    display only\n\n"
-				   "Type DATE without parameters to display the current date setting and\n"
-				   "a prompt for a new one.  Press ENTER to keep the same date."));
+		LoadString( GetModuleHandle(NULL), STRING_DATE_HELP4, (LPTSTR) szMsg,sizeof(szMsg));
+        ConOutPuts (_T((LPTSTR)szMsg));
 		return 0;
 	}
 
@@ -243,7 +247,9 @@ INT cmd_date (LPTSTR cmd, LPTSTR param)
 			freep (arg);
 			return 0;
 		}
-		ConErrPuts (_T("Invalid date."));
+		LoadString( GetModuleHandle(NULL), STRING_DATE_ERROR, (LPTSTR) szMsg,sizeof(szMsg));
+        ConErrPuts (_T((LPTSTR)szMsg));
+		
 	}
 
 	freep (arg);

@@ -20,9 +20,13 @@
  *
  *    27-Oct-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Disabled prompting when used in batch mode.
+ *
+ *    03-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
+ *        Remove all hardcode string to En.rc  
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 #ifdef INCLUDE_CMD_COPY
 
@@ -294,8 +298,17 @@ Overwrite (LPTSTR fn)
 {
 	TCHAR inp[10];
 	LPTSTR p;
+	
+	LPTSTR lpOptions;
+	TCHAR Options[3];
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
 
-	ConOutPrintf (_T("Overwrite %s (Yes/No/All)? "), fn);
+    LoadString( GetModuleHandle(NULL), STRING_COPY_OPTION, (LPTSTR) Options,sizeof(lpOptions));
+    lpOptions = _T(Options);
+
+    LoadString( GetModuleHandle(NULL), STRING_COPY_HELP1, (LPTSTR) szMsg,sizeof(szMsg));
+    ConOutPrintf (_T((LPTSTR)szMsg));
+	
 	ConInString (inp, 10);
 	ConOutPuts (_T(""));
 
@@ -303,9 +316,9 @@ Overwrite (LPTSTR fn)
 	for (p = inp; _istspace (*p); p++)
 		;
 
-	if (*p != _T('Y') && *p != _T('A'))
+	if (*p != lpOptions[0] && *p != lpOptions[2])
 		return 0;
-	if (*p == _T('A'))
+	if (*p == lpOptions[2])
 		return 2;
 
 	return 1;
@@ -326,6 +339,7 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 	DWORD  dwWritten;
 	DWORD  i;
 	BOOL   bEof = FALSE;
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
 
 #ifdef _DEBUG
 	DebugPrintf (_T("checking mode\n"));
@@ -337,7 +351,8 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 						   NULL, OPEN_EXISTING, 0, NULL);
 	if (hFileSrc == INVALID_HANDLE_VALUE)
 	{
-		ConErrPrintf (_T("Error: Cannot open source - %s!\n"), source);
+		  LoadString( GetModuleHandle(NULL), STRING_COPY_ERROR1, (LPTSTR) szMsg,sizeof(szMsg));
+          ConErrPrintf (_T((LPTSTR)szMsg), source);
 		return 0;
 	}
 
@@ -364,7 +379,9 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 	{
 		if (!_tcscmp (dest, source))
 		{
-			ConErrPrintf (_T("Error: Can't copy onto itself!\n"));
+			LoadString( GetModuleHandle(NULL), STRING_COPY_ERROR2, (LPTSTR) szMsg,sizeof(szMsg));
+            ConErrPrintf (_T((LPTSTR)szMsg), source);
+			
 			CloseHandle (hFileSrc);
 			return 0;
 		}
@@ -438,7 +455,10 @@ int copy (LPTSTR source, LPTSTR dest, int append, LPDWORD lpdwFlags)
 		WriteFile (hFileDest, buffer, dwRead, &dwWritten, NULL);
 		if (dwWritten != dwRead)
 		{
-			ConErrPrintf (_T("Error writing destination!\n"));
+			
+			LoadString( GetModuleHandle(NULL), STRING_COPY_ERROR3, (LPTSTR) szMsg,sizeof(szMsg));
+            ConErrPrintf (_T((LPTSTR)szMsg));
+
 			free (buffer);
 			CloseHandle (hFileDest);
 			CloseHandle (hFileSrc);
@@ -618,6 +638,7 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 	TCHAR dir_d[_MAX_DIR];
 	TCHAR file_d[_MAX_FNAME];
 	TCHAR ext_d[_MAX_EXT];
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	int argc;
 	int append;
@@ -634,23 +655,8 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 
 	if (!_tcsncmp (rest, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Copies one or more files to another location.\n"
-					   "\n"
-					   "COPY [/V][/Y|/-Y][/A|/B] source [/A|/B]\n"
-					   "     [+ source [/A|/B] [+ ...]] [destination [/A|/B]]\n"
-					   "\n"
-					   "  source       Specifies the file or files to be copied.\n"
-					   "  /A           Indicates an ASCII text file.\n"
-					   "  /B           Indicates a binary file.\n"
-					   "  destination  Specifies the directory and/or filename for the new file(s).\n"
-					   "  /V           Verifies that new files are written correctly.\n"
-					   "  /Y           Suppresses prompting to confirm you want to overwrite an\n"
-					   "               existing destination file.\n"
-					   "  /-Y          Causes prompting to confirm you want to overwrite an\n"
-					   "               existing destination file.\n"
-					   "\n"
-					   "The switch /Y may be present in the COPYCMD environment variable.\n"
-					   "..."));
+		LoadString( GetModuleHandle(NULL), STRING_COPY_HELP2, (LPTSTR) szMsg,sizeof(szMsg));
+        ConOutPuts (_T((LPTSTR)szMsg));
 		return 1;
 	}
 
@@ -722,7 +728,9 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 	}
 	else if (bDestFound && bWildcards)
 	{
-		ConErrPrintf (_T("Error: Not implemented yet!\n"));
+		LoadString( GetModuleHandle(NULL), STRING_COPY_ERROR4, (LPTSTR) szMsg,sizeof(szMsg));
+        ConErrPrintf (_T((LPTSTR)szMsg));
+
 		DeleteFileList (sources);
 		freep (p);
 		return 0;

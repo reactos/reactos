@@ -1,6 +1,7 @@
 #define RC_STRING_MAX_SIZE                 2048
 
 #define STRING_CHOICE_OPTION               200
+#define STRING_COPY_OPTION                 201
 
 
 #define STRING_ALIAS_ERROR                 300
@@ -17,7 +18,13 @@
 #define STRING_CMD_ERROR3                  311
 #define STRING_CMD_ERROR4                  312
 #define STRING_CMD_ERROR5                  313
-#define STRING_PARAM_ERROR                 314
+#define STRING_CONSOLE_ERROR               314
+#define STRING_COPY_ERROR1                 315
+#define STRING_COPY_ERROR2                 316
+#define STRING_COPY_ERROR3                 317
+#define STRING_COPY_ERROR4                 318
+#define STRING_DATE_ERROR                  319
+#define STRING_PARAM_ERROR                 320
 
 #define STRING_ATTRIB_HELP                 400
 #define STRING_ALIAS_HELP                  401
@@ -35,10 +42,17 @@
 #define STRING_CMD_HELP6                   413
 #define STRING_CMD_HELP7                   414
 #define STRING_CMD_HELP8                   415
-#define STRING_EXIT_HELP                   416
-#define STRING_MKDIR_HELP                  417
-#define STRING_RMDIR_HELP                  418
-#define STRING_REM_HELP                    419
+#define STRING_COLOR_HELP1                 416
+#define STRING_COPY_HELP1                  417
+#define STRING_COPY_HELP2                  418
+#define STRING_DATE_HELP1                  419
+#define STRING_DATE_HELP2                  420
+#define STRING_DATE_HELP3                  421
+#define STRING_DATE_HELP4                  422
+#define STRING_EXIT_HELP                   423
+#define STRING_MKDIR_HELP                  424
+#define STRING_RMDIR_HELP                  425
+#define STRING_REM_HELP                    426
 
 
 
