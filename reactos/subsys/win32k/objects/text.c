@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.52 2003/09/24 16:01:32 weiden Exp $ */
+/* $Id: text.c,v 1.53 2003/10/20 17:57:42 gvg Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -935,6 +935,7 @@ NtGdiGetTextMetrics(HDC hDC,
   	  SafeTm.tmAscent = (Face->size->metrics.ascender + 32) / 64; // units above baseline
 	  SafeTm.tmDescent = (- Face->size->metrics.descender + 32) / 64; // units below baseline
 	  SafeTm.tmHeight = SafeTm.tmAscent + SafeTm.tmDescent;
+          SafeTm.tmMaxCharWidth = (Face->size->metrics.max_advance + 32) / 64;
 	  Status = MmCopyToCaller(tm, &SafeTm, sizeof(TEXTMETRICW));
 	  }
       }
