@@ -12,7 +12,7 @@ int _spawnle(int mode, const char *path, const char *szArgv0, ... /*, const char
   va_list l = 0;
   va_start(l,szArgv0);
   do {
-  	a = (const char *)va_arg(l,const char *);
+  	a = (char *)va_arg(l,const char *);
 	szArg[i++] = (char *)a;
   } while ( a != NULL && i < 100 );
 
