@@ -62,7 +62,6 @@ lib\ntdll\ntdll.dll                     1
 lib\secur32\secur32.dll                 1
 lib\syssetup\syssetup.dll               1
 lib\twain\twain_32.dll                  1
-lib\winedbgc\winedbgc.dll		1
 lib\user32\user32.dll                   1
 lib\version\version.dll                 1
 lib\winspool\winspool.drv               1
