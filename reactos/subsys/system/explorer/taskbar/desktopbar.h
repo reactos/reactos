@@ -56,6 +56,7 @@
 #define	IDC_BROWSE				0x1014
 #define	IDC_SEARCH_PROGRAM		0x1015
 #define	IDC_SEARCH				0x1016
+#define	IDC_TERMINATE			0x1017
 
 #define	IDC_FIRST_MENU			0x3000
 

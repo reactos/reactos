@@ -183,10 +183,6 @@ CFG=make_explorer - Win32 bjam
 
 # Begin Source File
 
-SOURCE=..\..\..\ChangeLog
-# End Source File
-# Begin Source File
-
 SOURCE=.\Jamfile
 # End Source File
 # Begin Source File

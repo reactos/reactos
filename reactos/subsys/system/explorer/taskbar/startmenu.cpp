@@ -1690,6 +1690,9 @@ LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 		AddButton(ResString(IDS_SHUTDOWN),	ICID_LOGOFF, false, IDC_SHUTDOWN);
 
 
+	AddButton(ResString(IDS_TERMINATE),	ICID_LOGOFF, false, IDC_TERMINATE);
+
+
 #ifdef __MINGW32__
 	RegCloseKey(hkeyAdv);
 	RegCloseKey(hkey);
@@ -1830,9 +1833,11 @@ int StartMenuHandler::Command(int id, int code)
 		break;
 
 	  case IDC_LOGOFF:
-		/* The shell32 Dialog prompts about some system setting change. This is not what we want to display here.
 		CloseStartMenu(id);
-		ShowRestartDialog(g_Globals._hwndDesktopBar, EWX_LOGOFF);*/
+		ShowLogoffDialog(g_Globals._hwndDesktopBar, EWX_LOGOFF);
+		break;
+
+	  case IDC_TERMINATE:
 		DestroyWindow(GetParent(_hwnd));
 		break;
 
@@ -1974,24 +1979,29 @@ void StartMenuHandler::ShowLaunchDialog(HWND hwndOwner)
 	}
 }
 
-void StartMenuHandler::ShowRestartDialog(HWND hwndOwner, UINT flags)
+void StartMenuHandler::ShowLogoffDialog(HWND hwndOwner, UINT flags)
 {
-	static DynamicFct<RESTARTWINDOWSDLG> RestartDlg(TEXT("SHELL32"), 59);
+	static DynamicFct<LOGOFFWINDOWSDIALOG> LogoffWindowsDialog(TEXT("SHELL32"), 54);
+//	static DynamicFct<RESTARTWINDOWSDLG> RestartDialog(TEXT("SHELL32"), 59);
 
-	if (RestartDlg)
-		(*RestartDlg)(hwndOwner, (LPWSTR)L"You selected <Log Off>.\n\n", flags);	///@todo ANSI string conversion if needed
+	if (LogoffWindowsDialog)
+		(*LogoffWindowsDialog)(0);
+/* The RestartDialog function prompts about some system setting change. This is not what we want to display here.
+	else if (RestartDialog)
+		return (*RestartDialog)(hwndOwner, (LPWSTR)L"You selected <Log Off>.\n\n", flags) == 1;	///@todo ANSI string conversion if needed
+*/
 	else
-		MessageBox(hwndOwner, TEXT("RestartDlg() not yet implemented in SHELL32"), ResString(IDS_TITLE), MB_OK);
+		MessageBox(hwndOwner, TEXT("LogoffWindowsDialog() not yet implemented in SHELL32"), ResString(IDS_TITLE), MB_OK);
 }
 
 void ShowExitWindowsDialog(HWND hwndOwner)
 {
-	static DynamicFct<EXITWINDOWSDLG> ExitWindowsDlg(TEXT("SHELL32"), 60);
+	static DynamicFct<EXITWINDOWSDLG> ExitWindowsDialog(TEXT("SHELL32"), 60);
 
-	if (ExitWindowsDlg)
-		(*ExitWindowsDlg)(hwndOwner);
+	if (ExitWindowsDialog)
+		(*ExitWindowsDialog)(hwndOwner);
 	else
-		MessageBox(hwndOwner, TEXT("ExitWindowsDlg() not yet implemented in SHELL32"), ResString(IDS_TITLE), MB_OK);
+		MessageBox(hwndOwner, TEXT("ExitWindowsDialog() not yet implemented in SHELL32"), ResString(IDS_TITLE), MB_OK);
 }
 
 

@@ -290,6 +290,7 @@ BEGIN
     IDS_TITLE               "ReactOS Explorer"
     IDS_START               "ｽﾀｰﾄ"
     IDS_LOGOFF              "ログオフ..."
+    IDS_TERMINATE           "ログオフ"
     IDS_SHUTDOWN            "シャットダウン..."
     IDS_LAUNCH              "ファイル名を指定して実行..."
     IDS_START_HELP          "ヘルプ"
