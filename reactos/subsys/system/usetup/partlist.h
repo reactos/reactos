@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: partlist.h,v 1.19 2003/08/19 15:54:47 ekohl Exp $
+/* $Id: partlist.h,v 1.20 2003/08/20 20:07:33 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.h
@@ -142,6 +142,9 @@ DeleteCurrentPartition (PPARTLIST List);
 
 VOID
 CheckActiveBootPartition (PPARTLIST List);
+
+BOOLEAN
+CheckForLinuxFdiskPartitions (PPARTLIST List);
 
 BOOLEAN
 WritePartitionsToDisk (PPARTLIST List);

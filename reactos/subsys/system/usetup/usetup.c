@@ -113,6 +113,8 @@ static HINF SetupInf;
 
 static HSPFILEQ SetupFileQueue = NULL;
 
+static BOOLEAN WarnLinuxPartitions = TRUE;
+
 
 /* FUNCTIONS ****************************************************************/
 
@@ -705,6 +707,35 @@ SelectPartitionPage(PINPUT_RECORD Ir)
   CheckActiveBootPartition (PartitionList);
 
   DrawPartitionList (PartitionList);
+
+  /* Warn about partitions created by Linux Fdisk */
+  if (WarnLinuxPartitions == TRUE &&
+      CheckForLinuxFdiskPartitions (PartitionList) == TRUE)
+    {
+      PopupError ("Setup found that at least one harddisk contains an incompatible\n"
+		  "partition table that can not be handled properly!\n"
+		  "\n"
+		  "Creating or deleting partitions can destroy the partiton table.\n"
+		  "\n"
+		  "  \x07  Press F3 to quit Setup."
+		  "  \x07  Press ENTER to continue.",
+		  "F3= Quit  ENTER = Continue");
+      while (TRUE)
+	{
+	  ConInKey (Ir);
+
+	  if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	      (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
+	    {
+	      return QUIT_PAGE;
+	    }
+	  else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN) /* ENTER */
+	    {
+	      WarnLinuxPartitions = FALSE;
+	      return SELECT_PARTITION_PAGE;
+	    }
+	}
+    }
 
   while(TRUE)
     {

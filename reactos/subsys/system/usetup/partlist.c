@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: partlist.c,v 1.20 2003/08/20 16:59:46 ekohl Exp $
+/* $Id: partlist.c,v 1.21 2003/08/20 20:07:33 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.c
@@ -1657,6 +1657,59 @@ CheckActiveBootPartition (PPARTLIST List)
   /* FIXME: Might be incorrect if partitions were created by Linux FDISK */
   List->ActiveBootDisk = DiskEntry;
   List->ActiveBootPartition = PartEntry;
+}
+
+
+BOOLEAN
+CheckForLinuxFdiskPartitions (PPARTLIST List)
+{
+  PDISKENTRY DiskEntry;
+  PPARTENTRY PartEntry;
+  PLIST_ENTRY Entry1;
+  PLIST_ENTRY Entry2;
+  ULONG PartitionCount;
+  ULONG i;
+
+  Entry1 = List->DiskListHead.Flink;
+  while (Entry1 != &List->DiskListHead)
+    {
+      DiskEntry = CONTAINING_RECORD (Entry1,
+				     DISKENTRY,
+				     ListEntry);
+
+      Entry2 = DiskEntry->PartListHead.Flink;
+      while (Entry2 != &DiskEntry->PartListHead)
+	{
+	  PartEntry = CONTAINING_RECORD (Entry2,
+					 PARTENTRY,
+					 ListEntry);
+
+	  if (PartEntry->Unpartitioned == FALSE)
+	    {
+	      PartitionCount = 0;
+
+	      for (i = 0; i < 4; i++)
+		{
+		  if (!IsContainerPartition (PartEntry->PartInfo[i].PartitionType) &&
+		      PartEntry->PartInfo[i].PartitionLength.QuadPart != 0ULL)
+		    {
+		      PartitionCount++;
+		    }
+		}
+
+	      if (PartitionCount > 1)
+		{
+		  return TRUE;
+		}
+	    }
+
+	  Entry2 = Entry2->Flink;
+	}
+
+      Entry1 = Entry1->Flink;
+    }
+
+  return FALSE;
 }
 
 
