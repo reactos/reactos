@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.18 2000/06/29 23:35:51 dwelch Exp $
+/* $Id: init.c,v 1.19 2000/10/09 00:18:00 ekohl Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -29,13 +29,11 @@
 #include <ntos.h>
 #include <ntdll/rtl.h>
 #include <napi/lpc.h>
+#include <napi/shared_data.h>
 
 #include "smss.h"
 
 #define NDEBUG
-
-/* uncomment to run csrss.exe */
-#define RUN_CSRSS
 
 /* GLOBAL VARIABLES *********************************************************/
 
@@ -58,7 +56,7 @@ SmCreatePagingFiles (VOID)
 	/* FIXME: Read file names from registry */
 
 	RtlInitUnicodeString (&FileName,
-	                      L"\\??\\C:\\reactos\\pagefile.sys");
+	                      L"\\SystemRoot\\pagefile.sys");
 
 	NtCreatePagingFile (&FileName,
 	                    50,
@@ -76,13 +74,16 @@ SmSetEnvironmentVariables (VOID)
 	UNICODE_STRING EnvExpandedValue;
 	ULONG ExpandedLength;
 	WCHAR ExpandBuffer[512];
+	WCHAR ValueBuffer[MAX_PATH];
+	PKUSER_SHARED_DATA SharedUserData = 
+		(PKUSER_SHARED_DATA)USER_SHARED_DATA_BASE;
 
 	/*
 	 * The following environment variables are read from the registry.
-	 * Since the registry does not work yet, the environment variables
-	 * are set one by one, using hard-coded default values.
+	 * Because the registry does not work yet, the environment variables
+	 * are set one by one, using information from the shared user page.
 	 *
-	 * Variables:
+	 * Variables (example):
 	 *    SystemRoot = C:\reactos
 	 *    SystemDrive = C:
 	 *
@@ -91,20 +92,24 @@ SmSetEnvironmentVariables (VOID)
 	 *    windir = %SystemRoot%
 	 */
 
-	/* Set "SystemRoot = C:\reactos" */
+	/* copy system root into value buffer */
+	wcscpy (ValueBuffer, SharedUserData->NtSystemRoot);
+
+	/* set "SystemRoot = C:\reactos" */
 	RtlInitUnicodeString (&EnvVariable,
 	                      L"SystemRoot");
 	RtlInitUnicodeString (&EnvValue,
-	                      L"C:\\reactos");
+	                      ValueBuffer);
 	RtlSetEnvironmentVariable (&SmSystemEnvironment,
 	                           &EnvVariable,
 	                           &EnvValue);
 
+	/* cut off trailing path */
+	ValueBuffer[2] = 0;
+
 	/* Set "SystemDrive = C:" */
 	RtlInitUnicodeString (&EnvVariable,
 	                      L"SystemDrive");
-	RtlInitUnicodeString (&EnvValue,
-	                      L"C:");
 	RtlSetEnvironmentVariable (&SmSystemEnvironment,
 	                           &EnvVariable,
 	                           &EnvValue);
@@ -236,17 +241,15 @@ BOOL InitSessionManager (HANDLE	Children[])
    SmCreatePagingFiles ();
 #endif
    
-#if 0
-   /* Load missing registry hives */
+   /* Load remaining registry hives */
    NtInitializeRegistry (FALSE);
-#endif
    
    /* Set environment variables from registry */
    SmSetEnvironmentVariables ();
 
    /* Load the kernel mode driver win32k.sys */
    RtlInitUnicodeString (&CmdLineW,
-			 L"\\??\\C:\\reactos\\system32\\drivers\\win32k.sys");
+			 L"\\SystemRoot\\system32\\drivers\\win32k.sys");
    Status = NtLoadDriver (&CmdLineW);
    
    if (!NT_SUCCESS(Status))
@@ -254,7 +257,7 @@ BOOL InitSessionManager (HANDLE	Children[])
 	return FALSE;
      }
    
-#ifdef RUN_CSRSS
+   /* Run csrss.exe */
    RtlInitUnicodeString(&UnicodeString,
 			L"\\CsrssInitDone");
    InitializeObjectAttributes(&ObjectAttributes,
@@ -301,7 +304,7 @@ BOOL InitSessionManager (HANDLE	Children[])
 				  FALSE,
 				  0,
 				  0,
-	                               0,
+				  0,
 				  &ProcessInfo);
    
    RtlDestroyProcessParameters (ProcessParameters);
@@ -319,7 +322,6 @@ BOOL InitSessionManager (HANDLE	Children[])
    DbgPrint("SM: Finished waiting for csrss\n");
    
    Children[CHILD_CSRSS] = ProcessInfo.ProcessHandle;
-#endif /* RUN_CSRSS */
 
 
 	/* Start the simple shell (shell.exe) */

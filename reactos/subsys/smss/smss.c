@@ -1,4 +1,4 @@
-/* $Id: smss.c,v 1.7 2000/02/27 15:47:17 ekohl Exp $
+/* $Id: smss.c,v 1.8 2000/10/09 00:18:00 ekohl Exp $
  *
  * smss.c - Session Manager
  * 
@@ -48,7 +48,6 @@ PrintString (char* fmt,...)
 	va_list ap;
 	UNICODE_STRING UnicodeString;
 	ANSI_STRING AnsiString;
-	ULONG i;
 
 	va_start(ap, fmt);
 	vsprintf(buffer, fmt, ap);
@@ -92,38 +91,27 @@ void NtProcessStartup (PPEB Peb)
 				     TRUE,	/* alertable */
 				     NULL
 				     );
-	
-	
-	//		if (!NT_SUCCESS(wws))
+
+//	if (!NT_SUCCESS(wws))
 	if (wws > 1)
 	  {
 	     DisplayString( L"SM: NtWaitForMultipleObjects failed!\n" );
-	     /* FIXME: CRASH THE SYSTEM (BSOD) */
 	  }
 	else
 	  {
 	     DisplayString( L"SM: Process terminated!\n" );
-	     /* FIXME: CRASH THE SYSTEM (BSOD) */
 	  }
      }
    else
      {
-	DisplayString( L"SM: initialization failed!\n" );
-	/* FIXME: CRASH SYSTEM (BSOD)*/
+	DisplayString( L"SM: Initialization failed!\n" );
      }
-   
-   
-   /*
-    * OK: CSRSS asked to shutdown the system;
-    * We die.
-    */
-#if 0
-   NtRaiseHardError (
-		     STATUS_SYSTEM_PROCESS_TERMINATED,
-		...);
-#endif
-   
-   NtTerminateProcess(NtCurrentProcess(), 0);
+
+   /* Raise a hard error (crash the system/BSOD) */
+   NtRaiseHardError (STATUS_SYSTEM_PROCESS_TERMINATED,
+		     0,0,0,0,0);
+
+//   NtTerminateProcess(NtCurrentProcess(), 0);
 }
 
 /* EOF */
