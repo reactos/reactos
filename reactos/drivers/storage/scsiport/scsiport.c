@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.29 2003/06/24 12:31:40 ekohl Exp $
+/* $Id: scsiport.c,v 1.30 2003/07/10 19:41:20 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -231,6 +231,8 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
  *
  * RETURN VALUE
  * 	None.
+ *
+ * @implemented
  */
 
 VOID
@@ -254,6 +256,9 @@ ScsiDebugPrint(IN ULONG DebugPrintLevel,
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID STDCALL
 ScsiPortCompleteRequest(IN PVOID HwDeviceExtension,
 			IN UCHAR PathId,
@@ -266,6 +271,9 @@ ScsiPortCompleteRequest(IN PVOID HwDeviceExtension,
 }
 
 
+/*
+ * @implemented
+ */
 ULONG STDCALL
 ScsiPortConvertPhysicalAddressToUlong(IN SCSI_PHYSICAL_ADDRESS Address)
 {
@@ -274,6 +282,9 @@ ScsiPortConvertPhysicalAddressToUlong(IN SCSI_PHYSICAL_ADDRESS Address)
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID STDCALL
 ScsiPortFlushDma(IN PVOID HwDeviceExtension)
 {
@@ -282,6 +293,9 @@ ScsiPortFlushDma(IN PVOID HwDeviceExtension)
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 ScsiPortFreeDeviceBase(IN PVOID HwDeviceExtension,
 		       IN PVOID MappedAddress)
@@ -319,6 +333,9 @@ ScsiPortFreeDeviceBase(IN PVOID HwDeviceExtension,
 }
 
 
+/*
+ * @implemented
+ */
 ULONG STDCALL
 ScsiPortGetBusData(IN PVOID DeviceExtension,
 		   IN ULONG BusDataType,
@@ -335,6 +352,9 @@ ScsiPortGetBusData(IN PVOID DeviceExtension,
 }
 
 
+/*
+ * @implemented
+ */
 PVOID STDCALL
 ScsiPortGetDeviceBase(IN PVOID HwDeviceExtension,
 		      IN INTERFACE_TYPE BusType,
@@ -388,6 +408,9 @@ ScsiPortGetDeviceBase(IN PVOID HwDeviceExtension,
 }
 
 
+/*
+ * @unimplemented
+ */
 PVOID STDCALL
 ScsiPortGetLogicalUnit(IN PVOID HwDeviceExtension,
 		       IN UCHAR PathId,
@@ -399,6 +422,9 @@ ScsiPortGetLogicalUnit(IN PVOID HwDeviceExtension,
 }
 
 
+/*
+ * @unimplemented
+ */
 SCSI_PHYSICAL_ADDRESS STDCALL
 ScsiPortGetPhysicalAddress(IN PVOID HwDeviceExtension,
 			   IN PSCSI_REQUEST_BLOCK Srb OPTIONAL,
@@ -410,6 +436,9 @@ ScsiPortGetPhysicalAddress(IN PVOID HwDeviceExtension,
 }
 
 
+/*
+ * @unimplemented
+ */
 PSCSI_REQUEST_BLOCK STDCALL
 ScsiPortGetSrb(IN PVOID DeviceExtension,
 	       IN UCHAR PathId,
@@ -422,6 +451,9 @@ ScsiPortGetSrb(IN PVOID DeviceExtension,
 }
 
 
+/*
+ * @unimplemented
+ */
 PVOID STDCALL
 ScsiPortGetUncachedExtension(IN PVOID HwDeviceExtension,
 			     IN PPORT_CONFIGURATION_INFORMATION ConfigInfo,
@@ -432,6 +464,9 @@ ScsiPortGetUncachedExtension(IN PVOID HwDeviceExtension,
 }
 
 
+/*
+ * @unimplemented
+ */
 PVOID STDCALL
 ScsiPortGetVirtualAddress(IN PVOID HwDeviceExtension,
 			  IN SCSI_PHYSICAL_ADDRESS PhysicalAddress)
@@ -466,6 +501,8 @@ ScsiPortGetVirtualAddress(IN PVOID HwDeviceExtension,
  *
  * RETURN VALUE
  * 	Status.
+ *
+ * @implemented
  */
 
 ULONG STDCALL
@@ -614,6 +651,9 @@ ScsiPortInitialize(IN PVOID Argument1,
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID STDCALL
 ScsiPortIoMapTransfer(IN PVOID HwDeviceExtension,
 		      IN PSCSI_REQUEST_BLOCK Srb,
@@ -625,6 +665,9 @@ ScsiPortIoMapTransfer(IN PVOID HwDeviceExtension,
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID STDCALL
 ScsiPortLogError(IN PVOID HwDeviceExtension,
 		 IN PSCSI_REQUEST_BLOCK Srb OPTIONAL,
@@ -647,6 +690,9 @@ ScsiPortLogError(IN PVOID HwDeviceExtension,
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 ScsiPortMoveMemory(OUT PVOID Destination,
 		   IN PVOID Source,
@@ -658,6 +704,9 @@ ScsiPortMoveMemory(OUT PVOID Destination,
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 ScsiPortNotification(IN SCSI_NOTIFICATION_TYPE NotificationType,
 		     IN PVOID HwDeviceExtension,
@@ -696,6 +745,9 @@ ScsiPortNotification(IN SCSI_NOTIFICATION_TYPE NotificationType,
 }
 
 
+/*
+ * @implemented
+ */
 ULONG STDCALL
 ScsiPortSetBusDataByOffset(IN PVOID DeviceExtension,
 			   IN ULONG BusDataType,
@@ -715,6 +767,9 @@ ScsiPortSetBusDataByOffset(IN PVOID DeviceExtension,
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOLEAN STDCALL
 ScsiPortValidateRange(IN PVOID HwDeviceExtension,
 		      IN INTERFACE_TYPE BusType,

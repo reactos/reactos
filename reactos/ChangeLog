@@ -1,5 +1,10 @@
 2003-07-10  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* drivers/storage/scsiport/scsiport.c: Add @implemented and
+	@unimplemented to APIs.
+
+2003-07-10  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* drivers/net/ndis/ndis/40gone.c: Add @implemented and @unimplemented
 	to APIs.
 	* drivers/net/ndis/ndis/50gone.c: Ditto.
