@@ -1,9 +1,0 @@
-temp.exp
-*.tmp
-*.sym
-*.coff
-*.dll
-*.o
-*.d
-*.map
-*.gch

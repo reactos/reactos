@@ -1,7 +1,0 @@
-objects
-ndis.coff
-*.d
-*.o
-*.sym
-*.sys
-*.map
