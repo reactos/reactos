@@ -1,4 +1,4 @@
-/* $Id: spawn.c,v 1.1 2002/03/07 05:46:03 hyperion Exp $
+/* $Id: spawn.c,v 1.2 2002/03/07 06:08:00 hyperion Exp $
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -22,6 +22,8 @@
 #include <ddk/ntddk.h>
 #include <ntdll/base.h>
 #include <napi/i386/segment.h>
+#include <ntdll/rtl.h>
+#include <ntdll/ldr.h>
 #include <stddef.h>
 #include <string.h>
 #include <inttypes.h>
@@ -575,7 +577,7 @@ undoPData:
 
  /* STEP 5: create first thread */
  /* 5.1: get thunk routine's address */
- RtlInitializeAnsiString(&strStartEntry, "LdrInitializeThunk");
+ RtlInitAnsiString(&strStartEntry, "LdrInitializeThunk");
 
  nErrCode = LdrGetProcedureAddress
  (
