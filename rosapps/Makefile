@@ -18,7 +18,6 @@ APPS = cmdutils \
     	games$(SEP)winemine \
 	hcalc \
 	mc \
-	notepad \
 	notevil \
 	sysutils \
 	sysutils$(SEP)ctm \
