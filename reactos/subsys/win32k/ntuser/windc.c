@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.17 2003/08/05 15:41:03 weiden Exp $
+/* $Id: windc.c,v 1.18 2003/08/06 16:47:35 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -250,7 +250,7 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
 
       if (!(Flags & DCX_WINDOW))
 	{
-	  if (Window->Class->ClassW.style & CS_PARENTDC)
+	  if (Window->Class->style & CS_PARENTDC)
 	    {
 	      Flags |= DCX_PARENTCLIP;
 	    }

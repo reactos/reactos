@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.22 2003/08/05 15:41:03 weiden Exp $
+/* $Id: class.c,v 1.23 2003/08/06 16:47:35 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -70,7 +70,7 @@ ClassReferenceClassByAtom(PWNDCLASS_OBJECT* Class,
     {
     Current = CONTAINING_RECORD(CurrentEntry, WNDCLASS_OBJECT, ListEntry);
       
-	if (Current->ClassW.lpszClassName == (LPWSTR)(ULONG)Atom)
+	if (Current->lpszClassName == (PUNICODE_STRING)(ULONG)Atom)
 	{
 	*Class = Current;
 	ObmReferenceObject(Current);
@@ -168,12 +168,24 @@ W32kGetClassName(struct _WINDOW_OBJECT *WindowObject,
 		   int nMaxCount)
 {
 	int length;
-	length = wcslen(WindowObject->Class->ClassW.lpszClassName);
+	LPCWSTR name;
+	if (IS_ATOM(WindowObject->Class->lpszClassName))
+	{
+		/* FIXME find the string from the atom */
+		name = L"\0";
+		length = wcslen(name);
+	}
+	else
+	{
+		name = WindowObject->Class->lpszClassName->Buffer;
+		length = WindowObject->Class->lpszClassName->Length / sizeof(WCHAR);
+	}
 	if (length > nMaxCount)
 	{
 		length = nMaxCount;
 	}
-	wcsncpy(lpClassName,WindowObject->Class->ClassW.lpszClassName,length+1);
+	*(lpClassName+length) = 0;
+	wcsncpy(lpClassName,name,length);
 	return length;
 }
 
@@ -205,87 +217,53 @@ NtUserGetWOWClass(DWORD Unknown0,
 }
 
 PWNDCLASS_OBJECT FASTCALL
-W32kCreateClass(CONST WNDCLASSEXW *lpwcxw,
-                CONST WNDCLASSEXA *lpwcxa,
+W32kCreateClass(CONST WNDCLASSEXW *lpwcx,
                 BOOL bUnicodeClass,
                 RTL_ATOM Atom)
 {
-  PWNDCLASS_OBJECT ClassObject;
-  WORD  objectSize;
-  LPWSTR  namePtrW;
-  LPSTR   namePtrA;
-  ULONG menulenA=1, menulenW=sizeof(WCHAR);
+	PWNDCLASS_OBJECT ClassObject;
+	WORD  objectSize;
+	objectSize = sizeof(WNDCLASS_OBJECT);
+	ClassObject = ObmCreateObject(NULL, NULL, otClass, objectSize);
+	if (ClassObject == 0)
+	{          
+		return(NULL);
+	}
 
-  /* FIXME - how to handle INT resources? */
-  /* FIXME - lpszClassName = Atom? is that right */
-  if ( bUnicodeClass )
-    {
-      if ( lpwcxw->lpszMenuName )
-        {
-          menulenW = (wcslen(lpwcxw->lpszMenuName) + 1) * sizeof(WCHAR);
-          RtlUnicodeToMultiByteSize ( &menulenA, lpwcxw->lpszMenuName, menulenW );
-        }
-    }
-  else
-    {
-      if ( lpwcxa->lpszMenuName )
-        {
-          menulenA = strlen(lpwcxa->lpszMenuName) + 1;
-          RtlMultiByteToUnicodeSize ( &menulenW, lpwcxa->lpszMenuName, menulenA );
-        }
-    }
-  objectSize = sizeof(WNDCLASS_OBJECT);
-  ClassObject = ObmCreateObject(NULL, NULL, otClass, objectSize);
-  if (ClassObject == 0)
-    {          
-      return(NULL);
-    }
-
-  if ( bUnicodeClass )
-    {
-      memmove ( &ClassObject->ClassW, lpwcxw, sizeof(ClassObject->ClassW) );
-      memmove ( &ClassObject->ClassA, &ClassObject->ClassW, sizeof(ClassObject->ClassA) );
-	  ClassObject->ClassA.lpfnWndProc = 0xCCCCCCCC; /*FIXME: figure out what the correct strange value is and what to do with it */
-      namePtrW = ExAllocatePool(PagedPool, menulenW);
-	  if ( lpwcxw->lpszMenuName )
-        memmove ( namePtrW, lpwcxw->lpszMenuName, menulenW );
-      else
-        *namePtrW = L'\0';
-      ClassObject->ClassW.lpszMenuName = namePtrW;
-      namePtrA = ExAllocatePool(PagedPool, menulenA);
-      if ( *namePtrW )
-        RtlUnicodeToMultiByteN ( namePtrA, menulenA, NULL, namePtrW, menulenW );
-      else
-        *namePtrA = '\0';
-      ClassObject->ClassA.lpszMenuName = namePtrA;
-    }
-  else
-    {
-      memmove ( &ClassObject->ClassA, lpwcxa, sizeof(ClassObject->ClassA) );
-      memmove ( &ClassObject->ClassW, &ClassObject->ClassA, sizeof(ClassObject->ClassW) );
-	  ClassObject->ClassW.lpfnWndProc = 0xCCCCCCCC; /* FIXME: figure out what the correct strange value is and what to do with it */
-      namePtrA = ExAllocatePool(PagedPool, menulenA);
-      if ( lpwcxa->lpszMenuName )
-        memmove ( namePtrA, lpwcxa->lpszMenuName, menulenA );
-      else
-        *namePtrA = '\0';
-      ClassObject->ClassA.lpszMenuName = namePtrA;
-      namePtrW = ExAllocatePool(PagedPool, menulenW);
-      if ( *namePtrA )
-        RtlMultiByteToUnicodeN ( namePtrW, menulenW, NULL, namePtrA, menulenA );
-      else
-        *namePtrW = L'\0';
-      ClassObject->ClassW.lpszMenuName = namePtrW;
-    }
-  ClassObject->Unicode = bUnicodeClass;
-  ClassObject->ClassW.lpszClassName = (LPWSTR)(ULONG)Atom;
-  ClassObject->ClassA.lpszClassName = (LPSTR)(ULONG)Atom;
-  return(ClassObject);
+	ClassObject->cbSize = lpwcx->cbSize;
+	ClassObject->style = lpwcx->style;
+	ClassObject->cbClsExtra = lpwcx->cbClsExtra;
+	ClassObject->cbWndExtra = lpwcx->cbWndExtra;
+	ClassObject->hInstance = lpwcx->hInstance;
+	ClassObject->hIcon = lpwcx->hIcon;
+	ClassObject->hCursor = lpwcx->hCursor;
+	ClassObject->hbrBackground = lpwcx->hbrBackground;
+	ClassObject->Unicode = bUnicodeClass;
+	ClassObject->hIconSm = lpwcx->hIconSm;
+	ClassObject->lpszClassName = (PUNICODE_STRING)(ULONG)Atom;
+	if (bUnicodeClass)
+	{
+		ClassObject->lpfnWndProcW = lpwcx->lpfnWndProc;
+		ClassObject->lpfnWndProcA = (WNDPROC)0xCCCCCCCC;
+	}
+	else
+	{
+		ClassObject->lpfnWndProcA = lpwcx->lpfnWndProc;
+		ClassObject->lpfnWndProcW = (WNDPROC)0xCCCCCCCC;
+	}
+	if (HIWORD(lpwcx->lpszMenuName) == 0)
+	{
+		ClassObject->lpszMenuName = (PUNICODE_STRING)lpwcx->lpszMenuName;
+	}
+	else
+	{
+		RtlCreateUnicodeString(ClassObject->lpszMenuName,(LPWSTR)lpwcx->lpszMenuName);
+	}
+	return(ClassObject);
 }
 
 RTL_ATOM STDCALL
-NtUserRegisterClassExWOW(CONST WNDCLASSEXW *lpwcxw,
-			 CONST WNDCLASSEXA *lpwcxa,
+NtUserRegisterClassExWOW(CONST WNDCLASSEXW *lpwcx,
 			 BOOL bUnicodeClass,
 			 DWORD Unknown3,
 			 DWORD Unknown4,
@@ -295,117 +273,63 @@ NtUserRegisterClassExWOW(CONST WNDCLASSEXW *lpwcxw,
  *   Registers a new class with the window manager
  * ARGUMENTS:
  *   lpcxw          = Win32 extended window class structure (unicode)
- *   lpcxa          = Win32 extended window class structure (ascii)
  *   bUnicodeClass = Wether to send ANSI or unicode strings
  *                   to window procedures
  * RETURNS:
  *   Atom identifying the new class
  */
 {
-  PWINSTATION_OBJECT WinStaObject;
-  PWNDCLASS_OBJECT ClassObject;
-  NTSTATUS Status;
-  RTL_ATOM Atom;
-  LPWSTR classname;
-  int len;
-
-  DPRINT("About to open window station handle (0x%X)\n", 
-	 PROCESS_WINDOW_STATION());
-
-  Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-				       KernelMode,
-				       0,
-				       &WinStaObject);
-  if (!NT_SUCCESS(Status))
+	PWINSTATION_OBJECT WinStaObject;
+	PWNDCLASS_OBJECT ClassObject;
+	NTSTATUS Status;
+	RTL_ATOM Atom;
+	DPRINT("About to open window station handle (0x%X)\n", 
+	PROCESS_WINDOW_STATION());
+	Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+						KernelMode,
+						0,
+						&WinStaObject);
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT("Validation of window station handle (0x%X) failed\n",
+		PROCESS_WINDOW_STATION());
+		return((RTL_ATOM)0);
+	}
+	if (!IS_ATOM(lpwcx->lpszClassName))
     {
-      DPRINT("Validation of window station handle (0x%X) failed\n",
-	     PROCESS_WINDOW_STATION());
-      return((RTL_ATOM)0);
-    }
-  if (bUnicodeClass)
-  {
-	if (!IS_ATOM(lpwcxw->lpszClassName))
-	    {
 		Status = RtlAddAtomToAtomTable(WinStaObject->AtomTable,
-						(LPWSTR)lpwcxw->lpszClassName,
-						&Atom);
+					(LPWSTR)lpwcx->lpszClassName,
+					&Atom);
 		if (!NT_SUCCESS(Status))
 		{
-		ObDereferenceObject(WinStaObject);
-		DPRINT("Failed adding class name (%wS) to atom table\n",
-			lpwcxw->lpszClassName);
-		SetLastNtError(Status);      
-		return((RTL_ATOM)0);
+			ObDereferenceObject(WinStaObject);
+			DPRINT("Failed adding class name (%wS) to atom table\n",
+				lpwcx->lpszClassName);
+			SetLastNtError(Status);      
+			return((RTL_ATOM)0);
 		}
-		}
+	}
 	else
-	    {
-		Atom = (RTL_ATOM)(ULONG)lpwcxw->lpszClassName;
-		}
-	ClassObject = W32kCreateClass(lpwcxw, NULL, bUnicodeClass, Atom);
+	{
+		Atom = (RTL_ATOM)(ULONG)lpwcx->lpszClassName;
+	}
+	ClassObject = W32kCreateClass(lpwcx, bUnicodeClass, Atom);
 	if (ClassObject == NULL)
     {
-		if (!IS_ATOM(lpwcxw->lpszClassName))
+		if (!IS_ATOM(lpwcx->lpszClassName))
 		{
-		RtlDeleteAtomFromAtomTable(WinStaObject->AtomTable, Atom);
+			RtlDeleteAtomFromAtomTable(WinStaObject->AtomTable, Atom);
 		}
 		ObDereferenceObject(WinStaObject);
 		DPRINT("Failed creating window class object\n");
 		SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
 		return((RTL_ATOM)0);
 	}
-  }
-  else
-  {
-	if (!IS_ATOM(lpwcxa->lpszClassName))
-	    {
-		len = strlen(lpwcxa->lpszClassName);
-        classname = ExAllocatePool(PagedPool, ((len + 1) * sizeof(WCHAR)));
-		Status = RtlMultiByteToUnicodeN (classname,
-				   ((len + 1) * sizeof(WCHAR)),
-				   NULL,
-				   lpwcxa->lpszClassName,
-				   len);
-		if (!NT_SUCCESS(Status))
-		{
-			return 0;
-		}
-		Status = RtlAddAtomToAtomTable(WinStaObject->AtomTable,
-						(LPWSTR)classname,
-						&Atom);
-		if (!NT_SUCCESS(Status))
-		{
-		ObDereferenceObject(WinStaObject);
-		DPRINT("Failed adding class name (%wS) to atom table\n",
-			lpwcxa->lpszClassName);
-		SetLastNtError(Status);      
-		return((RTL_ATOM)0);
-		}
-		}
-	else
-	    {
-		Atom = (RTL_ATOM)(ULONG)lpwcxa->lpszClassName;
-		}
-	ClassObject = W32kCreateClass(NULL, lpwcxa, bUnicodeClass, Atom);
-	if (ClassObject == NULL)
-    {
-		if (!IS_ATOM(lpwcxa->lpszClassName))
-		{
-		RtlDeleteAtomFromAtomTable(WinStaObject->AtomTable, Atom);
-		}
-		ObDereferenceObject(WinStaObject);
-		DPRINT("Failed creating window class object\n");
-		SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
-		return((RTL_ATOM)0);
-	}
-  }
-  ExAcquireFastMutex(&PsGetWin32Process()->ClassListLock);
-  InsertTailList(&PsGetWin32Process()->ClassListHead, &ClassObject->ListEntry);
-  ExReleaseFastMutex(&PsGetWin32Process()->ClassListLock);
-  
-  ObDereferenceObject(WinStaObject);
-  
-  return(Atom);
+	ExAcquireFastMutex(&PsGetWin32Process()->ClassListLock);
+	InsertTailList(&PsGetWin32Process()->ClassListHead, &ClassObject->ListEntry);
+	ExReleaseFastMutex(&PsGetWin32Process()->ClassListLock);
+	ObDereferenceObject(WinStaObject);
+	return(Atom);
 }
 
 ULONG FASTCALL
@@ -415,27 +339,27 @@ W32kGetClassLong(struct _WINDOW_OBJECT *WindowObject, ULONG Offset, BOOL Ansi)
   switch (Offset)
     {
     case GCL_CBWNDEXTRA:
-      Ret = WindowObject->Class->ClassW.cbWndExtra;
+      Ret = WindowObject->Class->cbWndExtra;
       break;
     case GCL_CBCLSEXTRA:
-      Ret = WindowObject->Class->ClassW.cbClsExtra;
+      Ret = WindowObject->Class->cbClsExtra;
       break;
     case GCL_HBRBACKGROUND:
-      Ret = (ULONG)WindowObject->Class->ClassW.hbrBackground;
+      Ret = (ULONG)WindowObject->Class->hbrBackground;
       break;
     case GCL_HCURSOR:
-      Ret = (ULONG)WindowObject->Class->ClassW.hCursor;
+      Ret = (ULONG)WindowObject->Class->hCursor;
       break;
     case GCL_HICON:
-      Ret = (ULONG)WindowObject->Class->ClassW.hIcon;
+      Ret = (ULONG)WindowObject->Class->hIcon;
       break;
     case GCL_HICONSM:
-      Ret = (ULONG)WindowObject->Class->ClassW.hIconSm;
+      Ret = (ULONG)WindowObject->Class->hIconSm;
       break;
     case GCL_HMODULE:
-      Ret = (ULONG)WindowObject->Class->ClassW.hInstance;
+      Ret = (ULONG)WindowObject->Class->hInstance;
       break;
-    case GCL_MENUNAME:
+    /*case GCL_MENUNAME:
 	  if (Ansi)
 	  {
 		Ret = (ULONG)WindowObject->Class->ClassA.lpszMenuName;
@@ -444,18 +368,18 @@ W32kGetClassLong(struct _WINDOW_OBJECT *WindowObject, ULONG Offset, BOOL Ansi)
 	  {
 		Ret = (ULONG)WindowObject->Class->ClassW.lpszMenuName;
 	  }
-      break;
+      break;*/
     case GCL_STYLE:
-      Ret = WindowObject->Class->ClassW.style;
+      Ret = WindowObject->Class->style;
       break;
     case GCL_WNDPROC:
 	  if (WindowObject->Unicode)
 	  {
-		Ret = (ULONG)WindowObject->Class->ClassW.lpfnWndProc;
+		Ret = (ULONG)WindowObject->Class->lpfnWndProcW;
 	  }
 	  else
 	  {
-		Ret = (ULONG)WindowObject->Class->ClassA.lpfnWndProc;
+		Ret = (ULONG)WindowObject->Class->lpfnWndProcA;
 	  }
       break;
     default:
@@ -487,39 +411,31 @@ W32kSetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, LONG dwNewLong, BOOL
   switch (Offset)
     {
     case GCL_CBWNDEXTRA:
-      WindowObject->Class->ClassW.cbWndExtra = dwNewLong;
-      WindowObject->Class->ClassA.cbWndExtra = dwNewLong;
+      WindowObject->Class->cbWndExtra = dwNewLong;
       break;
     case GCL_CBCLSEXTRA:
-      WindowObject->Class->ClassW.cbClsExtra = dwNewLong;
-      WindowObject->Class->ClassA.cbClsExtra = dwNewLong;
+      WindowObject->Class->cbClsExtra = dwNewLong;
       break;
     case GCL_HBRBACKGROUND:
-      WindowObject->Class->ClassW.hbrBackground = (HBRUSH)dwNewLong;
-      WindowObject->Class->ClassA.hbrBackground = (HBRUSH)dwNewLong;
+      WindowObject->Class->hbrBackground = (HBRUSH)dwNewLong;
       break;
     case GCL_HCURSOR:
-      WindowObject->Class->ClassW.hCursor = (HCURSOR)dwNewLong;
-      WindowObject->Class->ClassA.hCursor = (HCURSOR)dwNewLong;
+      WindowObject->Class->hCursor = (HCURSOR)dwNewLong;
       break;
     case GCL_HICON:
-      WindowObject->Class->ClassW.hIcon = (HICON)dwNewLong;
-      WindowObject->Class->ClassA.hIcon = (HICON)dwNewLong;
+      WindowObject->Class->hIcon = (HICON)dwNewLong;
       break;
     case GCL_HICONSM:
-      WindowObject->Class->ClassW.hIconSm = (HICON)dwNewLong;
-      WindowObject->Class->ClassA.hIconSm = (HICON)dwNewLong;
+      WindowObject->Class->hIconSm = (HICON)dwNewLong;
       break;
     case GCL_HMODULE:
-      WindowObject->Class->ClassW.hInstance = (HINSTANCE)dwNewLong;
-      WindowObject->Class->ClassA.hInstance = (HINSTANCE)dwNewLong;
+      WindowObject->Class->hInstance = (HINSTANCE)dwNewLong;
       break;
     /*case GCL_MENUNAME:
       WindowObject->Class->Class.lpszMenuName = (LPCWSTR)dwNewLong;
       break;*/
     case GCL_STYLE:
-      WindowObject->Class->ClassW.style = dwNewLong;
-      WindowObject->Class->ClassA.style = dwNewLong;
+      WindowObject->Class->style = dwNewLong;
       break;
     /*case GCL_WNDPROC:
       WindowObject->Class->Class.lpfnWndProc = (WNDPROC)dwNewLong;

@@ -10,8 +10,19 @@
 
 typedef struct _WNDCLASS_OBJECT
 {
-  WNDCLASSEXA ClassA;
-  WNDCLASSEXW ClassW;
+  UINT    cbSize;
+  UINT    style;
+  WNDPROC lpfnWndProcA;
+  WNDPROC lpfnWndProcW;
+  int     cbClsExtra;
+  int     cbWndExtra;
+  HANDLE  hInstance;
+  HICON   hIcon;
+  HCURSOR hCursor;
+  HBRUSH  hbrBackground;
+  PUNICODE_STRING lpszMenuName;
+  PUNICODE_STRING lpszClassName;
+  HICON   hIconSm;
   BOOL Unicode;
   LIST_ENTRY ListEntry;
 } WNDCLASS_OBJECT, *PWNDCLASS_OBJECT;
@@ -34,8 +45,7 @@ NTSTATUS FASTCALL
 ClassReferenceClassByNameOrAtom(PWNDCLASS_OBJECT *Class,
 				LPWSTR ClassNameOrAtom);
 PWNDCLASS_OBJECT FASTCALL
-W32kCreateClass(CONST WNDCLASSEXW *lpwcxw,
-		CONST WNDCLASSEXA *lpwcxa,
+W32kCreateClass(CONST WNDCLASSEXW *lpwcx,
 		BOOL bUnicodeClass,
 		RTL_ATOM Atom);
 struct _WINDOW_OBJECT;

@@ -1158,8 +1158,7 @@ NtUserRedrawWindow
 
 RTL_ATOM
 STDCALL
-NtUserRegisterClassExWOW(CONST WNDCLASSEXW* lpwcxw,
-			 CONST WNDCLASSEXA* lpwcxa,
+NtUserRegisterClassExWOW(CONST WNDCLASSEXW* lpwcx,
 			 BOOL bUnicodeClass,
 			 DWORD Unknown3,
 			 DWORD Unknown4,

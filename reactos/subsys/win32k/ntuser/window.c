@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.78 2003/08/06 13:17:44 weiden Exp $
+/* $Id: window.c,v 1.79 2003/08/06 16:47:35 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -493,8 +493,8 @@ W32kCreateDesktopWindow(PWINSTATION_OBJECT WindowStation,
   WindowObject->ClientRect = WindowObject->WindowRect;
   WindowObject->UserData = 0;
   /*FIXME: figure out what the correct strange value is and what to do with it (and how to set the wndproc values correctly) */
-  WindowObject->WndProcA = DesktopClass->ClassA.lpfnWndProc;
-  WindowObject->WndProcW = DesktopClass->ClassW.lpfnWndProc;
+  WindowObject->WndProcA = DesktopClass->lpfnWndProcA;
+  WindowObject->WndProcW = DesktopClass->lpfnWndProcW;
   WindowObject->OwnerThread = PsGetCurrentThread();
 
   InitializeListHead(&WindowObject->ChildrenListHead);
@@ -605,7 +605,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   /* Create the window object. */
   WindowObject = (PWINDOW_OBJECT)
     ObmCreateObject(PsGetWin32Process()->WindowStation->HandleTable, &Handle,
-        otWindow, sizeof(WINDOW_OBJECT) + ClassObject->ClassW.cbWndExtra
+        otWindow, sizeof(WINDOW_OBJECT) + ClassObject->cbWndExtra
         );
 
   DPRINT("Created object with handle %X\n", Handle);
@@ -639,15 +639,15 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->Parent = ParentWindow;
   WindowObject->UserData = 0;
   WindowObject->Unicode = ClassObject->Unicode;
-  WindowObject->WndProcA = ClassObject->ClassA.lpfnWndProc;
-  WindowObject->WndProcW = ClassObject->ClassW.lpfnWndProc;
+  WindowObject->WndProcA = ClassObject->lpfnWndProcA;
+  WindowObject->WndProcW = ClassObject->lpfnWndProcW;
   WindowObject->OwnerThread = PsGetCurrentThread();
 
   /* extra window data */
-  if (ClassObject->ClassW.cbWndExtra != 0)
+  if (ClassObject->cbWndExtra != 0)
     {
       WindowObject->ExtraData = (PULONG)(WindowObject + 1);
-      WindowObject->ExtraDataSize = ClassObject->ClassW.cbWndExtra;
+      WindowObject->ExtraDataSize = ClassObject->cbWndExtra;
       RtlZeroMemory(WindowObject->ExtraData, WindowObject->ExtraDataSize);
     }
   else
