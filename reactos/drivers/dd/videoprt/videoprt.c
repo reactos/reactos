@@ -1,4 +1,4 @@
-/* $Id: videoprt.c,v 1.7 2003/07/08 17:06:44 gvg Exp $
+/* $Id: videoprt.c,v 1.8 2003/07/10 21:12:40 chorns Exp $
  *
  * VideoPort driver
  *   Written by Rex Jolliff
@@ -96,6 +96,9 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
   return(STATUS_SUCCESS);
 }
 
+/*
+ * @implemented
+ */
 VOID
 VideoPortDebugPrint(IN ULONG DebugPrintLevel,
                     IN PCHAR DebugMessage, ...)
@@ -114,6 +117,10 @@ VideoPortDebugPrint(IN ULONG DebugPrintLevel,
 	DbgPrint (Buffer);
 }
 
+
+/*
+ * @unimplemented
+ */
 VP_STATUS 
 STDCALL
 VideoPortDisableInterrupt(IN PVOID  HwDeviceExtension)
@@ -122,6 +129,10 @@ VideoPortDisableInterrupt(IN PVOID  HwDeviceExtension)
   UNIMPLEMENTED;
 }
 
+
+/*
+ * @unimplemented
+ */
 VP_STATUS 
 STDCALL
 VideoPortEnableInterrupt(IN PVOID  HwDeviceExtension)
@@ -130,6 +141,10 @@ VideoPortEnableInterrupt(IN PVOID  HwDeviceExtension)
   UNIMPLEMENTED;
 }
 
+
+/*
+ * @implemented
+ */
 VOID 
 STDCALL
 VideoPortFreeDeviceBase(IN PVOID  HwDeviceExtension, 
@@ -146,6 +161,10 @@ VideoPortFreeDeviceBase(IN PVOID  HwDeviceExtension,
   InternalUnmapMemory(DeviceExtension, MappedAddress);
 }
 
+
+/*
+ * @implemented
+ */
 ULONG 
 STDCALL
 VideoPortGetBusData(IN PVOID  HwDeviceExtension,
@@ -171,6 +190,10 @@ VideoPortGetBusData(IN PVOID  HwDeviceExtension,
                                Length);
 }
 
+
+/*
+ * @implemented
+ */
 UCHAR 
 STDCALL
 VideoPortGetCurrentIrql(VOID)
@@ -179,6 +202,10 @@ VideoPortGetCurrentIrql(VOID)
   return KeGetCurrentIrql();
 }
 
+
+/*
+ * @implemented
+ */
 PVOID 
 STDCALL
 VideoPortGetDeviceBase(IN PVOID  HwDeviceExtension,
@@ -197,6 +224,10 @@ VideoPortGetDeviceBase(IN PVOID  HwDeviceExtension,
   return InternalMapMemory(DeviceExtension, IoAddress, NumberOfUchars, InIoSpace);
 }
 
+
+/*
+ * @unimplemented
+ */
 VP_STATUS 
 STDCALL
 VideoPortGetDeviceData(IN PVOID  HwDeviceExtension,
@@ -208,6 +239,10 @@ VideoPortGetDeviceData(IN PVOID  HwDeviceExtension,
   UNIMPLEMENTED;
 }
 
+
+/*
+ * @implemented
+ */
 VP_STATUS 
 STDCALL
 VideoPortGetAccessRanges(IN PVOID  HwDeviceExtension,
@@ -323,6 +358,10 @@ VideoPortGetAccessRanges(IN PVOID  HwDeviceExtension,
   return STATUS_SUCCESS;
 }
 
+
+/*
+ * @unimplemented
+ */
 VP_STATUS 
 STDCALL
 VideoPortGetRegistryParameters(IN PVOID  HwDeviceExtension,
@@ -339,6 +378,10 @@ VideoPortGetRegistryParameters(IN PVOID  HwDeviceExtension,
 */
 }
 
+
+/*
+ * @implemented
+ */
 ULONG STDCALL
 VideoPortInitialize(IN PVOID  Context1,
                     IN PVOID  Context2,
@@ -542,6 +585,10 @@ VideoPortInitialize(IN PVOID  Context1,
   return  STATUS_SUCCESS;
 }
 
+
+/*
+ * @implemented
+ */
 VP_STATUS STDCALL
 VideoPortInt10(IN PVOID  HwDeviceExtension,
                IN PVIDEO_X86_BIOS_ARGUMENTS  BiosArguments)
@@ -576,6 +623,10 @@ VideoPortInt10(IN PVOID  HwDeviceExtension,
   return(Status);
 }
 
+
+/*
+ * @unimplemented
+ */
 VOID 
 STDCALL
 VideoPortLogError(IN PVOID  HwDeviceExtension,
@@ -591,6 +642,10 @@ VideoPortLogError(IN PVOID  HwDeviceExtension,
     }
 }
 
+
+/*
+ * @unimplemented
+ */
 VP_STATUS 
 STDCALL
 VideoPortMapBankedMemory(IN PVOID  HwDeviceExtension,
@@ -607,6 +662,10 @@ VideoPortMapBankedMemory(IN PVOID  HwDeviceExtension,
   UNIMPLEMENTED;
 }
 
+
+/*
+ * @implemented
+ */
 VP_STATUS 
 STDCALL
 VideoPortMapMemory(IN PVOID  HwDeviceExtension,
@@ -630,6 +689,10 @@ VideoPortMapMemory(IN PVOID  HwDeviceExtension,
   return NULL == *VirtualAddress ? STATUS_NO_MEMORY : STATUS_SUCCESS;
 }
 
+
+/*
+ * @implemented
+ */
 UCHAR 
 STDCALL
 VideoPortReadPortUchar(IN PUCHAR  Port)
@@ -638,6 +701,10 @@ VideoPortReadPortUchar(IN PUCHAR  Port)
   return  READ_PORT_UCHAR(Port);
 }
 
+
+/*
+ * @implemented
+ */
 USHORT 
 STDCALL
 VideoPortReadPortUshort(IN PUSHORT Port)
@@ -646,6 +713,10 @@ VideoPortReadPortUshort(IN PUSHORT Port)
   return  READ_PORT_USHORT(Port);
 }
 
+
+/*
+ * @implemented
+ */
 ULONG 
 STDCALL
 VideoPortReadPortUlong(IN PULONG Port)
@@ -654,6 +725,10 @@ VideoPortReadPortUlong(IN PULONG Port)
   return  READ_PORT_ULONG(Port);
 }
 
+
+/*
+ * @implemented
+ */
 VOID 
 STDCALL
 VideoPortReadPortBufferUchar(IN PUCHAR  Port, 
@@ -664,6 +739,10 @@ VideoPortReadPortBufferUchar(IN PUCHAR  Port,
   READ_PORT_BUFFER_UCHAR(Port, Buffer, Count);
 }
 
+
+/*
+ * @implemented
+ */
 VOID 
 STDCALL
 VideoPortReadPortBufferUshort(IN PUSHORT Port, 
@@ -674,6 +753,10 @@ VideoPortReadPortBufferUshort(IN PUSHORT Port,
   READ_PORT_BUFFER_USHORT(Port, Buffer, Count);
 }
 
+
+/*
+ * @implemented
+ */
 VOID 
 STDCALL
 VideoPortReadPortBufferUlong(IN PULONG Port, 
@@ -684,6 +767,10 @@ VideoPortReadPortBufferUlong(IN PULONG Port,
   READ_PORT_BUFFER_ULONG(Port, Buffer, Count);
 }
 
+
+/*
+ * @implemented
+ */
 UCHAR 
 STDCALL
 VideoPortReadRegisterUchar(IN PUCHAR Register)
@@ -692,6 +779,10 @@ VideoPortReadRegisterUchar(IN PUCHAR Register)
   return  READ_REGISTER_UCHAR(Register);
 }
 
+
+/*
+ * @implemented
+ */
 USHORT 
 STDCALL
 VideoPortReadRegisterUshort(IN PUSHORT Register)
@@ -700,6 +791,10 @@ VideoPortReadRegisterUshort(IN PUSHORT Register)
   return  READ_REGISTER_USHORT(Register);
 }
 
+
+/*
+ * @implemented
+ */
 ULONG 
 STDCALL
 VideoPortReadRegisterUlong(IN PULONG Register)
@@ -708,6 +803,10 @@ VideoPortReadRegisterUlong(IN PULONG Register)
   return  READ_REGISTER_ULONG(Register);
 }
 
+
+/*
+ * @implemented
+ */
 VOID 
 STDCALL
 VideoPortReadRegisterBufferUchar(IN PUCHAR  Register, 
@@ -718,6 +817,10 @@ VideoPortReadRegisterBufferUchar(IN PUCHAR  Register,
   READ_REGISTER_BUFFER_UCHAR(Register, Buffer, Count);
 }
 
+
+/*
+ * @implemented
+ */
 VOID 
 STDCALL
 VideoPortReadRegisterBufferUshort(IN PUSHORT  Register, 
@@ -728,6 +831,10 @@ VideoPortReadRegisterBufferUshort(IN PUSHORT  Register,
   READ_REGISTER_BUFFER_USHORT(Register, Buffer, Count);
 }
 
+
+/*
+ * @implemented
+ */
 VOID 
 STDCALL
 VideoPortReadRegisterBufferUlong(IN PULONG  Register, 
@@ -738,6 +845,10 @@ VideoPortReadRegisterBufferUlong(IN PULONG  Register,
   READ_REGISTER_BUFFER_ULONG(Register, Buffer, Count);
 }
 
+
+/*
+ * @implemented
+ */
 BOOLEAN 
 STDCALL
 VideoPortScanRom(IN PVOID  HwDeviceExtension, 
@@ -768,6 +879,10 @@ VideoPortScanRom(IN PVOID  HwDeviceExtension,
   return Found;
 }
 
+
+/*
+ * @implemented
+ */
 ULONG 
 STDCALL
 VideoPortSetBusData(IN PVOID  HwDeviceExtension,
@@ -786,6 +901,10 @@ VideoPortSetBusData(IN PVOID  HwDeviceExtension,
                                 Length);
 }
 
+
+/*
+ * @implemented
+ */
 VP_STATUS 
 STDCALL
 VideoPortSetRegistryParameters(IN PVOID  HwDeviceExtension,
@@ -810,6 +929,10 @@ VideoPortSetRegistryParameters(IN PVOID  HwDeviceExtension,
                                ValueLength);
 }
 
+
+/*
+ * @unimplemented
+ */
 VP_STATUS 
 STDCALL
 VideoPortSetTrappedEmulatorPorts(IN PVOID  HwDeviceExtension,
@@ -820,6 +943,10 @@ VideoPortSetTrappedEmulatorPorts(IN PVOID  HwDeviceExtension,
   UNIMPLEMENTED;
 }
 
+
+/*
+ * @implemented
+ */
 VOID 
 STDCALL
 VideoPortStartTimer(IN PVOID  HwDeviceExtension)
@@ -834,6 +961,10 @@ VideoPortStartTimer(IN PVOID  HwDeviceExtension)
   IoStartTimer(DeviceExtension->DeviceObject);
 }
 
+
+/*
+ * @implemented
+ */
 VOID 
 STDCALL
 VideoPortStopTimer(IN PVOID  HwDeviceExtension)
@@ -848,6 +979,10 @@ VideoPortStopTimer(IN PVOID  HwDeviceExtension)
   IoStopTimer(DeviceExtension->DeviceObject);
 }
 
+
+/*
+ * @implemented
+ */
 BOOLEAN 
 STDCALL
 VideoPortSynchronizeExecution(IN PVOID  HwDeviceExtension,
@@ -900,6 +1035,10 @@ VideoPortSynchronizeExecution(IN PVOID  HwDeviceExtension,
   return Ret;
 }
 
+
+/*
+ * @implemented
+ */
 VP_STATUS 
 STDCALL
 VideoPortUnmapMemory(IN PVOID  HwDeviceExtension,
@@ -919,6 +1058,10 @@ VideoPortUnmapMemory(IN PVOID  HwDeviceExtension,
   return STATUS_SUCCESS;
 }
 
+
+/*
+ * @unimplemented
+ */
 VP_STATUS 
 STDCALL
 VideoPortVerifyAccessRanges(IN PVOID  HwDeviceExtension,
@@ -929,6 +1072,10 @@ VideoPortVerifyAccessRanges(IN PVOID  HwDeviceExtension,
   return NO_ERROR;
 }
 
+
+/*
+ * @implemented
+ */
 VOID 
 STDCALL
 VideoPortWritePortUchar(IN PUCHAR  Port, 
@@ -938,6 +1085,10 @@ VideoPortWritePortUchar(IN PUCHAR  Port,
   WRITE_PORT_UCHAR(Port, Value);
 }
 
+
+/*
+ * @implemented
+ */
 VOID 
 STDCALL
 VideoPortWritePortUshort(IN PUSHORT  Port, 
@@ -947,6 +1098,10 @@ VideoPortWritePortUshort(IN PUSHORT  Port,
   WRITE_PORT_USHORT(Port, Value);
 }
 
+
+/*
+ * @implemented
+ */
 VOID 
 STDCALL
 VideoPortWritePortUlong(IN PULONG Port, 
@@ -956,6 +1111,10 @@ VideoPortWritePortUlong(IN PULONG Port,
   WRITE_PORT_ULONG(Port, Value);
 }
 
+
+/*
+ * @implemented
+ */
 VOID 
 STDCALL
 VideoPortWritePortBufferUchar(IN PUCHAR  Port, 
@@ -966,6 +1125,10 @@ VideoPortWritePortBufferUchar(IN PUCHAR  Port,
   WRITE_PORT_BUFFER_UCHAR(Port, Buffer, Count);
 }
 
+
+/*
+ * @implemented
+ */
 VOID 
 STDCALL
 VideoPortWritePortBufferUshort(IN PUSHORT  Port, 
@@ -976,6 +1139,10 @@ VideoPortWritePortBufferUshort(IN PUSHORT  Port,
   WRITE_PORT_BUFFER_USHORT(Port, Buffer, Count);
 }
 
+
+/*
+ * @implemented
+ */
 VOID 
 STDCALL
 VideoPortWritePortBufferUlong(IN PULONG  Port, 
@@ -986,6 +1153,10 @@ VideoPortWritePortBufferUlong(IN PULONG  Port,
   WRITE_PORT_BUFFER_ULONG(Port, Buffer, Count);
 }
 
+
+/*
+ * @implemented
+ */
 VOID 
 STDCALL
 VideoPortWriteRegisterUchar(IN PUCHAR  Register, 
@@ -995,6 +1166,10 @@ VideoPortWriteRegisterUchar(IN PUCHAR  Register,
   WRITE_REGISTER_UCHAR(Register, Value);
 }
 
+
+/*
+ * @implemented
+ */
 VOID 
 STDCALL
 VideoPortWriteRegisterUshort(IN PUSHORT  Register, 
@@ -1004,6 +1179,10 @@ VideoPortWriteRegisterUshort(IN PUSHORT  Register,
   WRITE_REGISTER_USHORT(Register, Value);
 }
 
+
+/*
+ * @implemented
+ */
 VOID 
 STDCALL
 VideoPortWriteRegisterUlong(IN PULONG  Register, 
@@ -1013,6 +1192,10 @@ VideoPortWriteRegisterUlong(IN PULONG  Register,
   WRITE_REGISTER_ULONG(Register, Value);
 }
 
+
+/*
+ * @implemented
+ */
 VOID 
 STDCALL
 VideoPortWriteRegisterBufferUchar(IN PUCHAR  Register, 
@@ -1023,6 +1206,10 @@ VideoPortWriteRegisterBufferUchar(IN PUCHAR  Register,
   WRITE_REGISTER_BUFFER_UCHAR(Register, Buffer, Count);
 }
 
+
+/*
+ * @implemented
+ */
 VOID STDCALL
 VideoPortWriteRegisterBufferUshort(IN PUSHORT  Register,
                                    IN PUSHORT  Buffer,
@@ -1032,6 +1219,10 @@ VideoPortWriteRegisterBufferUshort(IN PUSHORT  Register,
   WRITE_REGISTER_BUFFER_USHORT(Register, Buffer, Count);
 }
 
+
+/*
+ * @implemented
+ */
 VOID STDCALL
 VideoPortWriteRegisterBufferUlong(IN PULONG  Register,
                                   IN PULONG  Buffer,
@@ -1041,6 +1232,10 @@ VideoPortWriteRegisterBufferUlong(IN PULONG  Register,
   WRITE_REGISTER_BUFFER_ULONG(Register, Buffer, Count);
 }
 
+
+/*
+ * @implemented
+ */
 VOID STDCALL
 VideoPortZeroDeviceMemory(OUT PVOID  Destination,
 			  IN ULONG  Length)
