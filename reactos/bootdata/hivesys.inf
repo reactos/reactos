@@ -614,11 +614,6 @@ HKLM,"SYSTEM\Setup","SetupType",0x00010001,0x00000001
 HKLM,"SYSTEM\Setup","SystemPartition",0x00000000,"\Device\Harddisk0\Partition1"
 HKLM,"SYSTEM\Setup","SystemSetupInProgress",0x00010001,0x00000000
 
-; Version Information
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","CurrentVersion",0x00020000,"4.0"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","CSDVersion",0x00020000,"Service Pack 6"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","CurrentBuildNumber",0x00020000,"1381"
-
 ; ----------------------------- KJS Init ----------------------------
 HKLM,"SYSTEM\CurrentControlSet\Control\Kdb","kjsinit",0x00010000,\
 "function init(v) { var rk = '\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Kdb'; eval(System.regread(rk,v)); } for( i = 1; i <= 45; i++ ) { init((new Number(i)).toString()); }"

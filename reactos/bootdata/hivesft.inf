@@ -3,6 +3,11 @@ Signature="$ReactOS$
 
 [AddReg]
 
+; Version Information
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","CurrentVersion",0x00020000,"4.0"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","CSDVersion",0x00020000,"Service Pack 6"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","CurrentBuildNumber",0x00020000,"1381"
+
 ; Common shell folder settings
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Desktop",0x00020000,"%SystemDrive%\Documents and Settings\All Users\Desktop"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Common AppData",0x00020000,"%SystemDrive%\Documents and Settings\All Users\Application Data"
