@@ -663,6 +663,16 @@ __WSAFDIsSet(SOCKET s, LPFD_SET set)
     return FALSE;
 }
 
+void free_winsock_thread_block(PWINSOCK_THREAD_BLOCK p) {
+  if(p) {
+    if(p->Hostent) { free_hostent(p->Hostent); p->Hostent = 0; }
+    if(p->Getservbyname){}
+    if(p->Getservbyport) {}
+
+
+  }
+}
+
 BOOL
 STDCALL
 DllMain(HANDLE hInstDll,
@@ -708,6 +718,7 @@ DllMain(HANDLE hInstDll,
       return FALSE;
     }
 
+    p->Hostent = NULL;
     p->LastErrorValue = NO_ERROR;
     p->Getservbyname  = NULL;
     p->Getservbyport  = NULL;

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.18 2004/11/17 05:17:21 arty Exp $
+# $Id: makefile,v 1.19 2004/11/25 23:32:53 arty Exp $
 
 PATH_TO_TOP = ../..
 
@@ -19,14 +19,15 @@ TARGET_CFLAGS = \
  -fno-builtin \
  -DUNICODE \
  -DLE \
- -D__USE_W32API
+ -D__USE_W32API \
+ -D_WIN32_WINNT=0x0500
 
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -D_DISABLE_TIDENTS
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
 
-TARGET_SDKLIBS = ntdll.a kernel32.a advapi32.a
+TARGET_SDKLIBS = ntdll.a kernel32.a advapi32.a dnsapi.a
 
 TARGET_OBJECTS = \
   misc/bsd.o misc/catalog.o misc/dllmain.o \

@@ -157,6 +157,10 @@ WSAEnumNetworkEvents(
   INT Status;
   INT Errno;
 
+  WS_DbgPrint(MID_TRACE,("Called (Socket %x, hEventObject %x, "
+			 "lpNetworkEvents %x)\n",
+			 s, hEventObject, lpNetworkEvents));
+
   if (!lpNetworkEvents) {
     WSASetLastError(WSAEINVAL);
     return SOCKET_ERROR;
@@ -179,6 +183,8 @@ WSAEnumNetworkEvents(
 
   if (Status == SOCKET_ERROR)
     WSASetLastError(Errno);
+
+  WS_DbgPrint(MID_TRACE,("Leaving %x\n", Status));
 
   return Status;
 }

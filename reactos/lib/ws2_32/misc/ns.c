@@ -9,10 +9,15 @@
  */
 #include <ctype.h>
 #include <ws2_32.h>
+#include <winbase.h>
 
 #ifndef BUFSIZ
 #define BUFSIZ 1024
 #endif/*BUFSIZ*/
+
+#ifndef MAX_HOSTNAME_LEN
+#define MAX_HOSTNAME_LEN 256
+#endif
 
 /* Name resolution APIs */
 
@@ -337,6 +342,50 @@ WSAStringToAddressW(
     return 0;
 }
 
+void check_hostent(struct hostent **he) {
+  struct hostent *new_he;
+  WS_DbgPrint(MID_TRACE,("*he: %x\n",*he));
+  if(!*he) {
+    new_he = HeapAlloc(GlobalHeap, 0, sizeof(struct hostent) + MAX_HOSTNAME_LEN + 1);
+    new_he->h_name = (PCHAR)(new_he + 1);
+    new_he->h_aliases = 0;
+    new_he->h_addrtype = 0; // AF_INET
+    new_he->h_length = 0;   // sizeof(in_addr)
+    new_he->h_addr_list = HeapAlloc(GlobalHeap, 0, sizeof(char *) * 2);
+    RtlZeroMemory(new_he->h_addr_list, sizeof(char *) * 2);
+    *he = new_he;
+  }
+}
+
+void populate_hostent(struct hostent *he, char* name, DNS_A_DATA addr) {
+  ASSERT(he);
+  //he = HeapAlloc(GlobalHeap, 0, sizeof(struct hostent));
+  //he->h_name = HeapAlloc(GlobalHeap, 0, MAX_HOSTNAME_LEN+1);
+  strncpy(he->h_name, name, MAX_HOSTNAME_LEN);
+  he->h_aliases = 0;
+  he->h_addrtype = AF_INET;
+  he->h_length = sizeof(IN_ADDR); //sizeof(struct in_addr);
+  if( he->h_addr_list[0] ) HeapFree( GlobalHeap, 0, he->h_addr_list[0] );
+  he->h_addr_list[0] = HeapAlloc(GlobalHeap, 0, MAX_HOSTNAME_LEN+1);
+  WS_DbgPrint(MID_TRACE,("he->h_addr_list[0] %x\n", he->h_addr_list[0]));
+  RtlCopyMemory(he->h_addr_list[0], (char*)&addr.IpAddress, 
+		sizeof(addr.IpAddress));
+  he->h_addr_list[1] = 0;
+}
+
+
+#define HFREE(x) if(x) { HeapFree(GlobalHeap, 0, (x)); x=0; }
+void free_hostent(struct hostent *he) {
+  if(he) {
+    HFREE(he->h_name);
+    char *next = he->h_aliases[0];
+    while(next) { HFREE(next); next++; }
+    next = he->h_addr_list[0];
+    while(next) { HFREE(next); next++; }
+    HFREE(he->h_addr_list);
+    HFREE(he);
+  }
+}
 
 /* WinSock 1.1 compatible name resolution APIs */
 
@@ -356,21 +405,193 @@ gethostbyaddr(
 }
 
 /*
- * @unimplemented
+  Assumes rfc 1123 - adam * 
+   addr[1] = 0;
+    addr[0] = inet_addr(name);
+    strcpy( hostname, name );
+    if(addr[0] == 0xffffffff) return NULL;
+    he.h_addr_list = (void *)addr;
+    he.h_name = hostname;
+    he.h_aliases = NULL;
+    he.h_addrtype = AF_INET;
+    he.h_length = sizeof(addr);
+    return &he;
+
+<RANT>
+From the MSDN Platform SDK: Windows Sockets 2
+"The gethostbyname function cannot resolve IP address strings passed to it.
+Such a request is treated exactly as if an unknown host name were passed."
+</RANT>
+
+Defferring to the the documented behaviour, rather than the unix behaviour
+What if the hostname is in the HOSTS file? see getservbyname
+
+ * @implemented
  */
+
+/* DnsQuery -- lib/dnsapi/dnsapi/query.c */
+   /* see ws2_32.h, winsock2.h*/
+    /*getnetworkparameters - iphlp api */
+/*
+REFERENCES
+
+servent -- w32api/include/winsock2.h
+PWINSOCK_THREAD_BLOCK -- ws2_32.h
+dllmain.c -- threadlocal memory allocation / deallocation
+lib/dnsapi
+      
+
+*/
+      /* lib/adns/src/adns.h XXX */
+
+
+/*
+struct  hostent {
+        char    *h_name;
+        char    **h_aliases;
+        short   h_addrtype;
+        short   h_length;
+        char    **h_addr_list;
+#define h_addr h_addr_list[0]
+};
+struct  servent {
+        char    *s_name;
+        char    **s_aliases;
+        short   s_port;
+        char    *s_proto;
+};
+
+
+struct hostent defined in w32api/include/winsock2.h
+*/
+
+void free_servent(struct servent* s) {
+  HFREE(s->s_name);
+  char* next = s->s_aliases[0];
+  while(next) { HFREE(next); next++; }
+  s->s_port = 0;
+  HFREE(s->s_proto);
+  HFREE(s);
+}
+
+
+ 
 LPHOSTENT
 EXPORT
 gethostbyname(
     IN  CONST CHAR FAR* name)
 {
-    UNIMPLEMENTED
+  enum addr_type{ GH_INVALID, GH_IPV6, GH_IPV4, GH_RFC1123_DNS };
+  typedef enum addr_type addr_type;
+  addr_type addr;
+  int ret = 0;
+  char* found = 0;
+  DNS_STATUS dns_status = {0};
+  /* include/WinDNS.h -- look up DNS_RECORD on MSDN */
+  PDNS_RECORDA dp = 0;
 
-    return (LPHOSTENT)NULL;
+  addr = GH_INVALID;
+
+  PWINSOCK_THREAD_BLOCK p = NtCurrentTeb()->WinSockData;
+
+  if( !p ) {
+    WSASetLastError( WSANOTINITIALISED );
+    return NULL;
+  }
+
+  check_hostent(&p->Hostent);   /*XXX alloc_hostent*/
+
+  /* Hostname NULL - behave like gethostname */
+  if(name == NULL) {
+    ret = gethostname(p->Hostent->h_name, MAX_HOSTNAME_LEN);
+    return p->Hostent;
+  }
+
+  if(ret) {
+    WSASetLastError( WSAHOST_NOT_FOUND ); //WSANO_DATA  ??
+    return NULL;
+  }
+
+  /* Is it an IPv6 address? */
+  found = strstr(name, ":");
+  if( found != NULL ) {
+    addr = GH_IPV6;
+    goto act;
+  }
+
+  /* Is it an IPv4 address? */
+  if (!isalpha(name[0])) {
+    addr = GH_IPV4;
+    goto act;
+  }
+
+ addr = GH_RFC1123_DNS;
+
+ /* Broken out in case we want to get fancy later */
+ act:
+    switch(addr){
+      case GH_IPV6:
+	WSASetLastError(STATUS_NOT_IMPLEMENTED);
+	return NULL;
+	break;
+
+    case GH_INVALID:
+      WSASetLastError(WSAEFAULT);
+      return NULL;
+      break;
+
+    /* Note: If passed an IP address, MSDN says that gethostbyname()
+             treats it as an unknown host.
+       This is different from the unix implementation. Use inet_addr()
+    */
+    case GH_IPV4:
+    case GH_RFC1123_DNS:
+      /* DNS_TYPE_A: include/WinDNS.h */
+      /* DnsQuery -- lib/dnsapi/dnsapi/query.c */
+      dns_status = DnsQuery_A ( name, DNS_TYPE_A, DNS_QUERY_STANDARD,
+				0, /* extra dns servers */ &dp, 0 );
+
+      if(dns_status == 0) {
+	//ASSERT(dp->wType == DNS_TYPE_A);
+	//ASSERT(dp->wDataLength == sizeof(DNS_A_DATA));
+	PDNS_RECORDA curr;
+	for(curr=dp;
+	    curr != NULL && curr->wType != DNS_TYPE_A;
+	    curr = curr->pNext ) { 
+	  WS_DbgPrint(MID_TRACE,("wType: %i\n", curr->wType));
+	  /*empty */ 
+	}
+
+	if(curr) {
+	  WS_DbgPrint(MID_TRACE,("populating hostent\n"));
+	  WS_DbgPrint(MID_TRACE,("pName is (%s)\n", curr->pName));
+	  populate_hostent(p->Hostent, curr->pName, curr->Data.A);
+	  DnsRecordListFree(dp, DnsFreeRecordList);
+	  return p->Hostent;
+	} else {
+	  DnsRecordListFree(dp, DnsFreeRecordList);
+	}
+      }
+
+      WS_DbgPrint(MID_TRACE,("Called DnsQuery, but host not found. Err: %i\n",
+			     dns_status));
+      WSASetLastError(WSAHOST_NOT_FOUND);
+      return NULL;
+      
+      break;
+
+    default:
+      WSASetLastError(WSANO_RECOVERY);
+      return NULL;
+      break;
+    }
+
+    WSASetLastError(WSANO_RECOVERY);
+    return NULL;
 }
 
-
 /*
- * @unimplemented
+ * @implemented
  */
 INT
 EXPORT
@@ -378,15 +599,22 @@ gethostname(
     OUT CHAR FAR* name,
     IN  INT namelen)
 {
-    UNIMPLEMENTED
-
+  DWORD size = namelen;
+  
+  int ret = GetComputerNameExA(ComputerNameDnsHostname, name, &size);
+  if(ret == 0) {
+    WSASetLastError(WSAEFAULT);
+    return SOCKET_ERROR;
+  } else {
+    name[namelen-1] = '\0';
     return 0;
+  }
 }
 
 
 /*
  * XXX arty -- Partial implementation pending a better one.  This one will
- * do for normal purposes.
+ * do for normal purposes.#include <ws2_32.h>
  *
  * Return the address of a static LPPROTOENT corresponding to the named
  * protocol.  These structs aren't very interesting, so I'm not too ashamed
@@ -947,7 +1175,6 @@ WSAAsyncGetProtoByNumber(
 
     return (HANDLE)0;
 }
-
 
 /*
  * @unimplemented

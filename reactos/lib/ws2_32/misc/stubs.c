@@ -147,7 +147,7 @@ getsockopt(
  * @implemented
  */
 INT
-EXPORT
+EXPORT __stdcall
 setsockopt(
     IN  SOCKET s,
     IN  INT level,
