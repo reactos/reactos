@@ -1,4 +1,4 @@
-/* $Id: string.h,v 1.1 2003/11/17 02:12:52 hyperion Exp $
+/* $Id: string.h,v 1.2 2004/02/15 01:08:54 arty Exp $
  */
 
 #ifndef ROSRTL_STRING_H__
@@ -41,6 +41,10 @@ extern "C"
 }
 
 #define ROS_EMPTY_STRING {0, 0, NULL}
+
+NTSTATUS NTAPI RosAppendUnicodeString( PUNICODE_STRING ResultFirst,
+				       PUNICODE_STRING Second,
+				       BOOL Deallocate );
 
 #ifdef __cplusplus
 }
