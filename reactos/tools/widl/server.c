@@ -529,7 +529,10 @@ static void unmarshall_in_arguments(func_t *func, unsigned int *type_offset)
                         write_name(server, var);
                         fprintf(server, " = *((");
                         write_type(server, var->type, NULL, var->tname);
-                        fprintf(server, " __RPC_FAR*)_StubMsg.Buffer)++;\n");
+                        fprintf(server, " __RPC_FAR*)_StubMsg.Buffer);\n");
+                        print_server("_StubMsg.Buffer += sizeof(");
+                        write_type(server, var->type, NULL, var->tname);
+                        fprintf(server, ");\n");
                         fprintf(server, "\n");
                     }
                     else if (var->ptr_level == 1)

@@ -613,7 +613,11 @@ static void unmarshall_out_arguments(func_t *func)
                     write_name(client, var);
                     fprintf(client, " = *((");
                     write_type(client, var->type, NULL, var->tname);
-                    fprintf(client, " __RPC_FAR *)_StubMsg.Buffer)++;\n");
+                    fprintf(client, " __RPC_FAR *)_StubMsg.Buffer);\n");
+
+                    print_client("_StubMsg.Buffer += sizeof(");
+                    write_type(client, var->type, NULL, var->tname);
+                    fprintf(client, ");\n");
                 }
 
                 last_size = size;
@@ -659,7 +663,11 @@ static void unmarshall_out_arguments(func_t *func)
            print_client("_StubMsg.Buffer += %u;\n", alignment);
        print_client("_RetVal = *((");
        write_type(client, def->type, def, def->tname);
-       fprintf(client, " __RPC_FAR *)_StubMsg.Buffer)++;\n");
+       fprintf(client, " __RPC_FAR *)_StubMsg.Buffer);\n");
+
+       print_client("_StubMsg.Buffer += sizeof(");
+       write_type(client, def->type, def, def->tname);
+       fprintf(client, ");\n");
     }
 }
 
