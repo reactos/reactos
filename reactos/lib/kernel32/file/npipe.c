@@ -1,4 +1,4 @@
-/* $Id: npipe.c,v 1.10 2002/06/25 18:49:38 ekohl Exp $
+/* $Id: npipe.c,v 1.11 2002/07/10 15:09:57 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -287,51 +287,52 @@ BOOL STDCALL
 ConnectNamedPipe(HANDLE hNamedPipe,
 		 LPOVERLAPPED lpOverlapped)
 {
-   IO_STATUS_BLOCK Iosb;
-   HANDLE hEvent;
-   PIO_STATUS_BLOCK IoStatusBlock;
-   NTSTATUS Status;
-   
-   if (lpOverlapped != NULL)
-     {
-	lpOverlapped->Internal = STATUS_PENDING;
-	hEvent = lpOverlapped->hEvent;
-	IoStatusBlock = (PIO_STATUS_BLOCK)lpOverlapped;
-     }
-   else
-     {
-	IoStatusBlock = &Iosb;
-	hEvent = NULL;
-     }
-   
-   Status = NtFsControlFile(hNamedPipe,
-			    hEvent,
-			    NULL,
-			    NULL,
-			    IoStatusBlock,
-			    FSCTL_PIPE_LISTEN,
-			    NULL,
-			    0,
-			    NULL,
-			    0);
-   if ((lpOverlapped == NULL) && (Status == STATUS_PENDING))
-     {
-	Status = NtWaitForSingleObject(hNamedPipe,
-				       FALSE,
-				       NULL);
-	if (!NT_SUCCESS(Status))
-	  {
-	     SetLastErrorByStatus(Status);
-	     return(FALSE);
-	  }
-	Status = Iosb.Status;
-     }
-   if (!NT_SUCCESS(Status) || (Status == STATUS_PENDING))
-     {
-	SetLastErrorByStatus (Status);
-	return(FALSE);
-     }
-   return(TRUE);
+  PIO_STATUS_BLOCK IoStatusBlock;
+  IO_STATUS_BLOCK Iosb;
+  HANDLE hEvent;
+  NTSTATUS Status;
+
+  if (lpOverlapped != NULL)
+    {
+      lpOverlapped->Internal = STATUS_PENDING;
+      hEvent = lpOverlapped->hEvent;
+      IoStatusBlock = (PIO_STATUS_BLOCK)lpOverlapped;
+    }
+  else
+    {
+      IoStatusBlock = &Iosb;
+      hEvent = NULL;
+    }
+
+  Status = NtFsControlFile(hNamedPipe,
+			   hEvent,
+			   NULL,
+			   NULL,
+			   IoStatusBlock,
+			   FSCTL_PIPE_LISTEN,
+			   NULL,
+			   0,
+			   NULL,
+			   0);
+  if ((lpOverlapped == NULL) && (Status == STATUS_PENDING))
+    {
+      Status = NtWaitForSingleObject(hNamedPipe,
+				     FALSE,
+				     NULL);
+      if (!NT_SUCCESS(Status))
+	{
+	  SetLastErrorByStatus(Status);
+	  return(FALSE);
+	}
+      Status = Iosb.Status;
+    }
+  if ((!NT_SUCCESS(Status) && Status != STATUS_PIPE_CONNECTED) ||
+      (Status == STATUS_PENDING))
+    {
+      SetLastErrorByStatus(Status);
+      return(FALSE);
+    }
+  return(TRUE);
 }
 
 
