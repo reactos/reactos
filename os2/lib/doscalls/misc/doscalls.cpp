@@ -1,4 +1,4 @@
-/* $Id: doscalls.c,v 1.5 2002/05/30 15:11:46 robertk Exp $
+/* $Id: doscalls.cpp,v 1.1 2002/07/26 00:23:13 robertk Exp $
 */
 /*
  *
@@ -12,6 +12,7 @@
  */
 
 
+// here's only the NTDLL needet
 #include <ddk/ntddk.h>
 
  

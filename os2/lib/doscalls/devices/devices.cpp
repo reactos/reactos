@@ -1,4 +1,4 @@
-/* $Id: devices.cpp,v 1.1 2002/07/23 13:00:10 robertk Exp $
+/* $Id: devices.cpp,v 1.2 2002/07/26 00:23:12 robertk Exp $
 */
 /*
  *
@@ -9,11 +9,12 @@
  * PROGRAMMER:       Robert K. nonvolatil@yahoo.de
  * REVISION HISTORY:
  *    13-03-2002  Created
+ *	25-07-2002	Work to make it compile	
  */
 
 #define INCL_DOSDEVICES
-#include "../../../include/os2.h"
-#include <ddk/ntddk.h>
+#define INCL_DOSERRORS
+#include "ros2.h"
 
 
 /*******************************************/
@@ -55,5 +56,5 @@ APIRET STDCALL Dos32DevIOCtl(HFILE hDevice, ULONG category, ULONG function,
         PVOID pParams,ULONG cbParmLenMax,PULONG pcbParmLen,
         PVOID pData,ULONG cbDataLenMax,PULONG pcbDataLen)
 {
-	return 0;
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }

@@ -1,4 +1,4 @@
-/* $Id: openclose.cpp,v 1.1 2002/07/23 13:00:11 robertk Exp $
+/* $Id: openclose.cpp,v 1.2 2002/07/26 00:23:12 robertk Exp $
 */
 /*
  *
@@ -8,13 +8,14 @@
  * PURPOSE:          Kernelservices for OS/2 apps
  * PROGRAMMER:       Robert K. nonvolatil@yahoo.de
  * REVISION HISTORY:
- *    13-03-2002  Created
+ *  13-03-2002  Created
+ *	25-07-2002	Work to make it compile	
  */
 
 
 #define INCL_DOSFILEMGR
-#include "../../../include/os2.h"
-#include <ddk/ntddk.h>
+#define INCL_DOSERRORS
+#include "ros2.h"
 
 
 
@@ -38,7 +39,7 @@ IN PVOID EaBuffer OPTIONAL,
 IN ULONG EaLength
 );*/
 
-
+/*
 
 	   OBJECT_ATTRIBUTES ObjectAttributes;
    IO_STATUS_BLOCK IoStatusBlock;
@@ -114,17 +115,17 @@ IN ULONG EaLength
 	return INVALID_HANDLE_VALUE;
      }
    
-   return FileHandle;
+   return FileHandle;*/
 
-	return 0;
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /* close a Handle. seems finished */
 APIRET STDCALL  Dos32Close(HFILE hFile)
 {
-	NTSTATUS   nErrCode;
-	nErrCode = NtClose( (HANDLE)hFile );
+	NT::NTSTATUS   nErrCode;
+	nErrCode = NT::ZwClose( (NT::HANDLE)hFile );
 	switch( nErrCode )
 	{
 	case STATUS_SUCCESS:
@@ -139,14 +140,13 @@ APIRET STDCALL  Dos32Close(HFILE hFile)
 
 
 
-
 APIRET STDCALL  Dos32Read(HFILE hFile, PVOID pBuffer,
                             ULONG cbRead, PULONG pcbActual)
 {
-	NTSTATUS        nErrCode;
-	IO_STATUS_BLOCK isbStatus;
+	NT::NTSTATUS        nErrCode;
+	NT::IO_STATUS_BLOCK isbStatus;
 	// read data from file 
-	nErrCode = NtReadFile( (HANDLE)hFile,	NULL,	NULL,	NULL,
+	nErrCode = NT::ZwReadFile( (NT::HANDLE)hFile,	NULL,	NULL,	NULL,
 							&isbStatus,		pBuffer,	cbRead,
 							NULL,		NULL	);
 	// contains the # bytes actually read.
@@ -164,12 +164,13 @@ APIRET STDCALL  Dos32Read(HFILE hFile, PVOID pBuffer,
 APIRET STDCALL  Dos32Write(HFILE hFile, PVOID pBuffer,
                              ULONG cbWrite, PULONG pcbActual)
 { 
-	NTSTATUS        nErrCode;
-	IO_STATUS_BLOCK StatusBlk;
-	nErrCode = NtWriteFile( (HANDLE)hFile, NULL, NULL, NULL,
+	NT::NTSTATUS         nErrCode;
+	NT::IO_STATUS_BLOCK  StatusBlk;
+	nErrCode = NtWriteFile( (NT::HANDLE)hFile, NULL, NULL, NULL,
 							&StatusBlk, pBuffer, cbWrite, 0, NULL );
-	*pcbActual = StatusBlk.Information;
+	// FIXME *pcbActual = StatusBlk.Information;
 	// do an errorcode translation   FIXME: correct
+	return ERROR_CALL_NOT_IMPLEMENTED;
 	switch(nErrCode)
 	{
 	case STATUS_SUCCESS:
