@@ -216,6 +216,7 @@ RtlInitializeCriticalSectionAndSpinCount (
     CriticalSection->RecursionCount = 0;
     CriticalSection->OwningThread = 0;
     CriticalSection->SpinCount = (NtCurrentPeb()->NumberOfProcessors > 1) ? SpinCount : 0;
+    CriticalSection->LockSemaphore = 0;
 
     /* Allocate the Debug Data */
     CritcalSectionDebugData = RtlpAllocateDebugInfo();    
@@ -479,9 +480,10 @@ RtlpUnWaitCriticalSection(
     if (!NT_SUCCESS(Status)) {
         
         /* We've failed */
-        DPRINT1("Signaling Failed for: %x, %x\n", 
+        DPRINT1("Signaling Failed for: %x, %x, %x\n", 
                 CriticalSection, 
-                CriticalSection->LockSemaphore);
+                CriticalSection->LockSemaphore,
+		Status);
         RtlRaiseStatus(Status);
     }
 }
