@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.77 2004/12/13 21:59:28 weiden Exp $
+ * $Id: gdiobj.c,v 1.78 2004/12/17 15:12:37 navaraf Exp $
  */
 #include <w32k.h>
 
@@ -1245,11 +1245,7 @@ LockHandle:
     }
     else if((PrevProcId >> 1) != (LONG)PsGetCurrentProcessId())
     {
-      /* FIXME - should we really allow changing the ownership of objects we don't own? */
-      DPRINT1("WARNING! Changing ownership of object 0x%x (pid: 0x%x) from pid 0x%x!!!\n", ObjectHandle, PrevProcId >> 1, PsGetCurrentProcessId());
-      ProcessId = PrevProcId & ~0x1;
-      LockedProcessId = ProcessId | 0x1;
-      goto LockHandle;
+      DPRINT1("Attempted to change ownership of object 0x%x (pid: 0x%x) from pid 0x%x!!!\n", ObjectHandle, PrevProcId >> 1, PsGetCurrentProcessId());
     }
     else
     {
