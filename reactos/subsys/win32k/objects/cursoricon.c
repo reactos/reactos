@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.34 2003/12/10 22:09:56 weiden Exp $ */
+/* $Id: cursoricon.c,v 1.35 2003/12/10 22:47:11 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -303,6 +303,12 @@ IntDestroyCurIconObject(PWINSTATION_OBJECT WinStaObject, HANDLE Handle)
   Status = ObmReferenceObjectByHandle(HandleTable, Handle, otCursorIcon, (PVOID*)&Object);
   if(!NT_SUCCESS(Status))
   {
+    return FALSE;
+  }
+  
+  if(WinStaObject->SystemCursor.CurrentCursorObject == Object)
+  {
+    ObmDereferenceObject(Object);
     return FALSE;
   }
   
