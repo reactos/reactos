@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.14 2000/06/13 15:50:51 ekohl Exp $ */
+/* $Id: iofuncs.h,v 1.15 2000/06/30 22:49:26 ekohl Exp $ */
 
 /* --- EXPORTED BY NTOSKRNL --- */
 
@@ -1111,11 +1111,12 @@ IofCompleteRequest (
 VOID
 STDCALL
 IoAssignDriveLetters (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
+	IN	PLOADER_PARAMETER_BLOCK	LoaderBlock,
+	IN	PSTRING			NtDeviceName,
+	OUT	PUCHAR			NtSystemPath,
+	OUT	PSTRING			NtSystemPathString
 	);
+
 BOOLEAN
 STDCALL
 IoFlushAdapterBuffers (
@@ -1126,11 +1127,13 @@ IoFlushAdapterBuffers (
 	ULONG		Length,
 	BOOLEAN		WriteToDevice
 	);
+
 VOID
 STDCALL
 IoFreeAdapterChannel (
 	PADAPTER_OBJECT	AdapterObject
 	);
+
 VOID
 STDCALL
 IoFreeMapRegisters (
@@ -1138,6 +1141,7 @@ IoFreeMapRegisters (
 	PVOID		MapRegisterBase,
 	ULONG		NumberOfMapRegisters
 	);
+
 PHYSICAL_ADDRESS
 STDCALL
 IoMapTransfer (
@@ -1148,14 +1152,16 @@ IoMapTransfer (
 	PULONG		Length,
 	BOOLEAN		WriteToDevice
 	);
+
 NTSTATUS
 STDCALL
 IoReadPartitionTable (
-	PDEVICE_OBJECT				DeviceObject,
-	ULONG					SectorSize,
-	BOOLEAN					ReturnedRecognizedPartitions,
-	struct _DRIVE_LAYOUT_INFORMATION	** PBuffer
+	PDEVICE_OBJECT			DeviceObject,
+	ULONG				SectorSize,
+	BOOLEAN				ReturnedRecognizedPartitions,
+	PDRIVE_LAYOUT_INFORMATION	* PartitionBuffer
 	);
+
 NTSTATUS
 STDCALL
 IoSetPartitionInformation (
@@ -1164,20 +1170,19 @@ IoSetPartitionInformation (
 	ULONG		PartitionNumber,
 	ULONG		PartitionType
 	);
+
 NTSTATUS
 STDCALL
 IoWritePartitionTable (
-	PDEVICE_OBJECT	DeviceObject,
-	ULONG SectorSize,
-	ULONG SectorsPerTrack,
-	ULONG NumberOfHeads,
-	struct _DRIVE_LAYOUT_INFORMATION* PBuffer
+	PDEVICE_OBJECT			DeviceObject,
+	ULONG				SectorSize,
+	ULONG				SectorsPerTrack,
+	ULONG				NumberOfHeads,
+	PDRIVE_LAYOUT_INFORMATION	* PartitionBuffer
 	);
 
 
 /* --- --- --- INTERNAL or REACTOS ONLY --- --- --- */
-
-
 
 /*
  * FUNCTION: Registers the driver with WMI
@@ -1186,120 +1191,17 @@ IoWritePartitionTable (
  *          Action = Action to take
  * RETURNS: Status (?)
  */
-//NTSTATUS IoWMIRegistrationControl(DeviceObject, WMIREGACTION Action);
- 
+/*
+NTSTATUS
+IoWMIRegistrationControl (
+	PDEVICE_OBJECT DeviceObject,
+	WMIREGACTION Action);
+*/
 
-/*
- * FUNCTION: Returns a pointer to the callers
- * stack location in the irp 
- */
-/*
-PIO_STACK_LOCATION
-IoGetCurrentIrpStackLocation (
-	IRP	* irp
-	);
-*/
-/*
-ULONG
-IoGetFunctionCodeFromCtlCode (
-	ULONG	ControlCode
-	);
-*/
-/*
- * FUNCTION:  
- */
-/*
-PIO_STACK_LOCATION
-IoGetNextIrpStackLocation (
-	IRP	* irp
-	);
-*/
-/*
-VOID
-IoInitializeDpcRequest (
-	PDEVICE_OBJECT	DeviceObject,
-	PIO_DPC_ROUTINE	DpcRoutine
-	);
-*/
-/*
-BOOLEAN
-IoIsErrorUserInduced (
-	NTSTATUS	Status
-	);
-*/
 BOOLEAN
 IoIsTotalDeviceFailure (
 	NTSTATUS	Status
 	);
-/*
- * FUNCTION: Marks an IRP as pending
- * ARGUMENTS:
- *         Irp = Irp to mark
- * NOTE: If a driver doesn't complete the irp in its dispatch routine it
- * must mark it pending otherwise the I/O manager will complete it on
- * return from the dispatch routine.
- */
-/*
-VOID
-IoMarkIrpPending (
-	PIRP	Irp
-	);
-*/
-/*
-VOID
-IoRequestDpc (
-	PDEVICE_OBJECT	DeviceObject,
-	PIRP		Irp,
-	PVOID		Context
-	);
-*/
-/*
-PDRIVER_CANCEL
-IoSetCancelRoutine (
-	PIRP		Irp,
-	PDRIVER_CANCEL	CancelRoutine
-	);
-*/
-/*
-VOID
-IoSetCompletionRoutine (
-	PIRP			Irp,
-	PIO_COMPLETION_ROUTINE	CompletionRoutine,
-	PVOID			Context,
-	BOOLEAN			InvokeOnSuccess,
-	BOOLEAN			InvokeOnError,
-	BOOLEAN			InvokeOnCancel
-	);
-*/
-/*
-VOID
-IoSetNextIrpStackLocation (
-	PIRP	Irp
-	);
-*/
-/*
- * FUNCTION:  Determines the size of an IRP
- * ARGUMENTS: 
- *           StackSize = number of stack locations in the IRP
- * RETURNS: The size of the IRP in bytes 
- */
-/*
-USHORT
-IoSizeOfIrp (
-	CCHAR	StackSize
-	);
-*/
-#if 0
-// Preliminary guess
-NTKERNELAPI
-NTSTATUS
-IoQueryFileVolumeInformation (
-	IN	PFILE_OBJECT		FileObject,
-	IN	FS_INFORMATION_CLASS	FsInformationClass,
-	IN	ULONG			Length,
-	OUT	PVOID			FsInformation,
-	OUT	PULONG			ReturnedLength
-	);
-#endif
+
 
 #endif /* ndef _INCLUDE_DDK_IOFUNCS_H */

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.63 2000/06/18 15:21:18 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.64 2000/06/30 22:50:53 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -192,8 +192,8 @@ FsRtlUninitializeFileLock=FsRtlUninitializeFileLock@4
 FsRtlUninitializeLargeMcb=FsRtlUninitializeLargeMcb@4
 FsRtlUninitializeMcb=FsRtlUninitializeMcb@4
 FsRtlUninitializeOplock=FsRtlUninitializeOplock@4
-;HalDispatchTable DATA
-;HalPrivateDispatchTable DATA
+HalDispatchTable DATA
+HalPrivateDispatchTable DATA
 ;InterlockedCompareExchange=@InterlockedCompareExchange@12
 InterlockedCompareExchange=InterlockedCompareExchange@12
 ;InterlockedDecrement=@InterlockedDecrement@4
@@ -369,7 +369,7 @@ KeInsertQueueApc=KeInsertQueueApc@16
 KeInsertQueueDpc=KeInsertQueueDpc@12
 ;KeIsExecutingDpc
 KeLeaveCriticalRegion=KeLeaveCriticalRegion@0
-;KeLoaderBlock DATA
+KeLoaderBlock DATA
 KeNumberProcessors DATA
 ;KeProfileInterrupt
 ;KeProfileInterruptWithSource

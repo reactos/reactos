@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.48 2000/06/29 23:35:38 dwelch Exp $
+/* $Id: main.c,v 1.49 2000/06/30 22:53:32 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -33,6 +33,7 @@
 ULONG EXPORTED NtBuildNumber = KERNEL_VERSION_BUILD;
 ULONG EXPORTED NtGlobalFlag = 0;
 CHAR  EXPORTED KeNumberProcessors = 1;
+LOADER_PARAMETER_BLOCK EXPORTED KeLoaderBlock;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -301,6 +302,14 @@ void _main(boot_param* _bp)
    CHECKPOINT;
    LdrLoadAutoConfigDrivers();
    
+   /*
+    * Assign drive letters
+    */
+   IoAssignDriveLetters (&KeLoaderBlock,
+                         NULL,
+                         NULL,
+                         NULL);
+
   /*
    *  Launch initial process
    */

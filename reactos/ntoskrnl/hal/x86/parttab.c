@@ -1,4 +1,4 @@
-/* $Id: parttab.c,v 1.1 2000/03/26 19:38:18 ea Exp $
+/* $Id: parttab.c,v 1.2 2000/06/30 22:51:34 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -22,10 +22,10 @@
 NTSTATUS
 STDCALL
 IoReadPartitionTable (
-	PDEVICE_OBJECT				DeviceObject,
-	ULONG					SectorSize,
-	BOOLEAN					ReturnRecognizedPartitions,
-	struct _DRIVE_LAYOUT_INFORMATION	** PBuffer
+	PDEVICE_OBJECT			DeviceObject,
+	ULONG				SectorSize,
+	BOOLEAN				ReturnRecognizedPartitions,
+	PDRIVE_LAYOUT_INFORMATION	* PartitionBuffer
 	)
 {
 	UNIMPLEMENTED;
@@ -45,11 +45,11 @@ IoSetPartitionInformation (
 NTSTATUS
 STDCALL
 IoWritePartitionTable (
-	PDEVICE_OBJECT				DeviceObject,
-	ULONG					SectorSize,
-	ULONG					SectorsPerTrack,
-	ULONG					NumberOfHeads,
-	struct _DRIVE_LAYOUT_INFORMATION	* PBuffer
+	PDEVICE_OBJECT			DeviceObject,
+	ULONG				SectorSize,
+	ULONG				SectorsPerTrack,
+	ULONG				NumberOfHeads,
+	PDRIVE_LAYOUT_INFORMATION	* PBuffer
 	)
 {
 	UNIMPLEMENTED;

@@ -1,4 +1,4 @@
-/* $Id: halddk.h,v 1.1 2000/06/29 23:35:11 dwelch Exp $
+/* $Id: halddk.h,v 1.2 2000/06/30 22:49:26 ekohl Exp $
  *
  * COPYRIGHT:                See COPYING in the top level directory
  * PROJECT:                  ReactOS kernel
@@ -68,6 +68,224 @@ typedef struct _DEVICE_DESCRIPTION
 } DEVICE_DESCRIPTION, *PDEVICE_DESCRIPTION;
 
 typedef BOOLEAN (*PHAL_RESET_DISPLAY_PARAMETERS)(ULONG Columns, ULONG Rows);
+
+/* Hal dispatch table */
+
+typedef enum _HAL_QUERY_INFORMATION_CLASS
+{
+	HalInstalledBusInformation,
+	HalProfileSourceInformation,
+	HalSystemDockInformation,
+	HalPowerInformation,
+	HalProcessorSpeedInformation,
+	HalCallbackInformation,
+	HalMapRegisterInformation,
+	HalMcaLogInformation,
+	HalFrameBufferCachingInformation,
+	HalDisplayBiosInformation
+	/* information levels >= 0x8000000 reserved for OEM use */
+} HAL_QUERY_INFORMATION_CLASS, *PHAL_QUERY_INFORMATION_CLASS;
+
+
+typedef enum _HAL_SET_INFORMATION_CLASS
+{
+	HalProfileSourceInterval,
+	HalProfileSourceInterruptHandler,
+	HalMcaRegisterDriver
+} HAL_SET_INFORMATION_CLASS, *PHAL_SET_INFORMATION_CLASS;
+
+
+typedef
+NTSTATUS
+(*pHalQuerySystemInformation) (
+	IN	HAL_QUERY_INFORMATION_CLASS	InformationClass,
+	IN	ULONG				BufferSize,
+	IN OUT	PVOID				Buffer,
+	OUT	PULONG				ReturnedLength
+	);
+
+
+typedef
+NTSTATUS
+(*pHalSetSystemInformation) (
+	IN	HAL_SET_INFORMATION_CLASS	InformationClass,
+	IN	ULONG				BufferSize,
+	IN	PVOID				Buffer
+	);
+
+
+typedef
+NTSTATUS
+(*pHalQueryBusSlots) (
+//	IN	PBUS_HANDLER	BusHandler,
+	IN	PVOID		BusHandler,
+	IN	ULONG		BufferSize,
+	OUT	PULONG		SlotNumbers,
+	OUT	PULONG		ReturnedLength
+	);
+
+
+/* Control codes of HalDeviceControl function */
+#define BCTL_EJECT				0x0001
+#define BCTL_QUERY_DEVICE_ID			0x0002
+#define BCTL_QUERY_DEVICE_UNIQUE_ID		0x0003
+#define BCTL_QUERY_DEVICE_CAPABILITIES		0x0004
+#define BCTL_QUERY_DEVICE_RESOURCES		0x0005
+#define BCTL_QUERY_DEVICE_RESOURCE_REQUIREMENTS	0x0006
+#define BCTL_QUERY_EJECT                            0x0007
+#define BCTL_SET_LOCK                               0x0008
+#define BCTL_SET_POWER                              0x0009
+#define BCTL_SET_RESUME                             0x000A
+#define BCTL_SET_DEVICE_RESOURCES                   0x000B
+
+/* Defines for BCTL structures */
+typedef struct
+{
+	BOOLEAN	PowerSupported;
+	BOOLEAN	ResumeSupported;
+	BOOLEAN	LockSupported;
+	BOOLEAN	EjectSupported;
+	BOOLEAN	Removable;
+} BCTL_DEVICE_CAPABILITIES, *PBCTL_DEVICE_CAPABILITIES;
+
+
+typedef struct _DEVICE_CONTROL_CONTEXT
+{
+	NTSTATUS		Status;
+//	PDEVICE_HANDLER_OBJECT	DeviceHandler;
+	PVOID			DeviceHandler;
+	PDEVICE_OBJECT		DeviceObject;
+	ULONG			ControlCode;
+	PVOID			Buffer;
+	PULONG			BufferLength;
+	PVOID			Context;
+} DEVICE_CONTROL_CONTEXT, *PDEVICE_CONTROL_CONTEXT;
+
+
+typedef
+VOID
+(*PDEVICE_CONTROL_COMPLETION) (
+	IN	PDEVICE_CONTROL_CONTEXT	ControlContext
+	);
+
+
+typedef
+NTSTATUS
+(*pHalDeviceControl) (
+//	IN	PDEVICE_HANDLER_OBJECT		DeviceHandler,
+	IN	PVOID				DeviceHandler,
+	IN	PDEVICE_OBJECT			DeviceObject,
+	IN	ULONG				ControlCode,
+	IN OUT	PVOID				Buffer OPTIONAL,
+	IN OUT	PULONG				BufferLength OPTIONAL,
+	IN	PVOID				Context,
+	IN	PDEVICE_CONTROL_COMPLETION	CompletionRoutine
+	);
+
+
+typedef
+VOID
+(FASTCALL *pHalExamineMBR) (
+	IN	PDEVICE_OBJECT	DeviceObject,
+	IN	ULONG		SectorSize,
+	IN	ULONG		MBRTypeIdentifier,
+	OUT	PVOID		* Buffer
+	);
+
+typedef
+VOID
+(FASTCALL *pHalIoAssignDriveLetters) (
+	IN	PLOADER_PARAMETER_BLOCK	LoaderBlock,
+	IN	PSTRING			NtDeviceName,
+	OUT	PUCHAR			NtSystemPath,
+	OUT	PSTRING			NtSystemPathString
+	);
+
+typedef
+NTSTATUS
+(FASTCALL *pHalIoReadPartitionTable) (
+	IN	PDEVICE_OBJECT			DeviceObject,
+	IN	ULONG				SectorSize,
+	IN	BOOLEAN				ReturnRecognizedPartitions,
+	OUT	PDRIVE_LAYOUT_INFORMATION	* PartitionBuffer
+	);
+
+typedef
+NTSTATUS
+(FASTCALL *pHalIoSetPartitionInformation) (
+	IN	PDEVICE_OBJECT	DeviceObject,
+	IN	ULONG		SectorSize,
+	IN	ULONG		PartitionNumber,
+	IN	ULONG		PartitionType
+	);
+
+typedef
+NTSTATUS
+(FASTCALL *pHalIoWritePartitionTable) (
+	IN	PDEVICE_OBJECT			DeviceObject,
+	IN	ULONG				SectorSize,
+	IN	ULONG				SectorsPerTrack,
+	IN	ULONG				NumberOfHeads,
+	IN	PDRIVE_LAYOUT_INFORMATION	PartitionBuffer
+	);
+
+typedef
+//PBUS_HANDLER
+PVOID
+(FASTCALL *pHalHandlerForBus) (
+	IN	INTERFACE_TYPE	InterfaceType,
+	IN	ULONG		BusNumber
+	);
+
+typedef
+VOID
+(FASTCALL *pHalReferenceBusHandler) (
+//	IN	PBUS_HANDLER	BusHandler
+	IN	PVOID		BusHandler
+	);
+
+typedef struct _HAL_DISPATCH
+{
+	ULONG				Version;
+	pHalQuerySystemInformation	HalQuerySystemInformation;
+	pHalSetSystemInformation	HalSetSystemInformation;
+	pHalQueryBusSlots		HalQueryBusSlots;
+	pHalDeviceControl		HalDeviceControl;
+	pHalExamineMBR			HalExamineMBR;
+	pHalIoAssignDriveLetters	HalIoAssignDriveLetters;
+	pHalIoReadPartitionTable	HalIoReadPartitionTable;
+	pHalIoSetPartitionInformation	HalIoSetPartitionInformation;
+	pHalIoWritePartitionTable	HalIoWritePartitionTable;
+	pHalHandlerForBus		HalReferenceHandlerForBus;
+	pHalReferenceBusHandler		HalReferenceBusHandler;
+	pHalReferenceBusHandler		HalDereferenceBusHandler;
+} HAL_DISPATCH, *PHAL_DISPATCH;
+
+#define HAL_DISPATCH_VERSION 1
+
+#ifdef __NTOSKRNL__
+extern HAL_DISPATCH EXPORTED HalDispatchTable;
+#else
+extern HAL_DISPATCH IMPORTED HalDispatchTable;
+#endif
+
+
+/* Hal private dispatch table */
+
+typedef struct _HAL_PRIVATE_DISPATCH
+{
+	ULONG				Version;
+
+
+} HAL_PRIVATE_DISPATCH, *PHAL_PRIVATE_DISPATCH;
+
+#define HAL_PRIVATE_DISPATCH_VERSION 1
+
+#ifdef __NTOSKRNL__
+extern HAL_PRIVATE_DISPATCH EXPORTED HalPrivateDispatchTable;
+#else
+extern HAL_PRIVATE_DISPATCH IMPORTED HalPrivateDispatchTable;
+#endif
 
 
 VOID

@@ -3,17 +3,56 @@
 #ifndef __INCLUDE_DDK_KETYPES_H
 #define __INCLUDE_DDK_KETYPES_H
 
+
+typedef struct _LOADER_PARAMETER_BLOCK
+{
+	/*
+	 * Magic value (useless really)
+	 */
+        unsigned int magic;
+
+        /*
+         * Cursor position
+         */
+        unsigned int cursorx;
+        unsigned int cursory;
+
+        /*
+         * Number of files (including the kernel) loaded
+         */
+        unsigned int nr_files;
+
+        /*
+         * Range of physical memory being used by the system
+         */
+        unsigned int start_mem;
+        unsigned int end_mem;
+
+        /*
+         * List of module lengths (terminated by a 0)
+         */
+        unsigned int module_length[64];
+
+        /*
+         * Kernel parameter string
+         */
+        char kernel_parameters[256];
+
+} LOADER_PARAMETER_BLOCK, *PLOADER_PARAMETER_BLOCK;
+
 #ifdef __NTOSKRNL__
 extern CHAR EXPORTED KeNumberProcessors;
+extern LOADER_PARAMETER_BLOCK EXPORTED KeLoaderBlock;
 #else
 extern CHAR IMPORTED KeNumberProcessors;
+extern LOADER_PARAMETER_BLOCK IMPORTED KeLoaderBlock;
 #endif
 
 
 struct _KMUTANT;
 
 typedef LONG KPRIORITY;
-   
+
 typedef VOID (*PKBUGCHECK_CALLBACK_ROUTINE)(PVOID Buffer, ULONG Length);
 typedef BOOLEAN (*PKSYNCHRONIZE_ROUTINE)(PVOID SynchronizeContext);
 
@@ -27,8 +66,8 @@ typedef VOID (*PKKERNEL_ROUTINE)(struct _KAPC* Apc,
 				PVOID* NormalContext,
 				PVOID* SystemArgument1,
 				PVOID* SystemArgument2);
-	      
-typedef VOID (*PKRUNDOWN_ROUTINE)(struct _KAPC* Apc);	      
+
+typedef VOID (*PKRUNDOWN_ROUTINE)(struct _KAPC* Apc);
 
 struct _DISPATCHER_HEADER;
 
@@ -85,10 +124,10 @@ typedef struct _KTIMER
    BOOLEAN signaled;
    BOOLEAN running;
    TIMER_TYPE type;
-   ULONG period;   
+   ULONG period;
 } KTIMER, *PKTIMER;
 */
- 
+
 struct _KSPIN_LOCK;
 
 typedef struct _KSPIN_LOCK
@@ -103,7 +142,7 @@ typedef struct _KDEVICE_QUEUE
    KSPIN_LOCK Lock;
 } KDEVICE_QUEUE, *PKDEVICE_QUEUE;
 
-	      
+
 typedef struct _KAPC
 {
    CSHORT Type;
@@ -132,7 +171,7 @@ typedef struct
    ULONG Checksum;
    UCHAR State;
 } KBUGCHECK_CALLBACK_RECORD, *PKBUGCHECK_CALLBACK_RECORD;
-   
+
 typedef struct _KMUTEX
 {
    DISPATCHER_HEADER Header;
@@ -141,12 +180,12 @@ typedef struct _KMUTEX
    BOOLEAN Abandoned;
    UCHAR ApcDisable;
 } KMUTEX, *PKMUTEX, KMUTANT, *PKMUTANT;
-   
+
 typedef struct
 {
    DISPATCHER_HEADER Header;
    LONG Limit;
-} KSEMAPHORE, *PKSEMAPHORE; 
+} KSEMAPHORE, *PKSEMAPHORE;
 
 typedef struct _KEVENT
 {
@@ -177,8 +216,8 @@ typedef struct _KDPC
 {
    SHORT Type;
    UCHAR Number;
-   UCHAR Importance;   
-   LIST_ENTRY DpcListEntry; 
+   UCHAR Importance;
+   LIST_ENTRY DpcListEntry;
    PKDEFERRED_ROUTINE DeferredRoutine;
    PVOID DeferredContext;
    PVOID SystemArgument1;

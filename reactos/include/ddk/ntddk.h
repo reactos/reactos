@@ -1,4 +1,4 @@
-/* $Id: ntddk.h,v 1.14 2000/06/29 23:35:12 dwelch Exp $
+/* $Id: ntddk.h,v 1.15 2000/06/30 22:49:26 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -24,9 +24,10 @@ extern "C"
 #define FASTCALL STDCALL
 #endif
 
-#include <ntos/types.h>   
+#include <ntos/types.h>
+#include <ntos/disk.h>
 #include <napi/types.h>
-   
+
 #include <ddk/status.h>
 #include <ddk/ntdef.h>
 #include <ddk/defines.h>
@@ -42,22 +43,22 @@ extern "C"
 #include <ddk/extypes.h>
 #include <ddk/pstypes.h>
 #include <ddk/zwtypes.h>
-#include <ddk/ioctrl.h>   
+#include <ddk/ioctrl.h>
 #include <ddk/rtl.h>
 #include <ddk/halddk.h>
-   
+
 #include <ddk/zw.h>
 #include <ddk/cmfuncs.h>
 #include <ddk/exfuncs.h>
 #include <ddk/mmfuncs.h>
 #include <ddk/kdfuncs.h>
 #include <ddk/kefuncs.h>
-#include <ddk/iofuncs.h> 
+#include <ddk/iofuncs.h>
 #include <ddk/psfuncs.h>
 #include <ddk/obfuncs.h>
 #include <ddk/dbgfuncs.h>
-#include <ddk/sefuncs.h>      
-   
+#include <ddk/sefuncs.h>
+
 #ifdef __cplusplus
 };
 #endif
