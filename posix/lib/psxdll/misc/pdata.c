@@ -1,4 +1,4 @@
-/* $Id: pdata.c,v 1.2 2002/03/11 20:45:07 hyperion Exp $
+/* $Id: pdata.c,v 1.3 2002/03/21 22:43:13 hyperion Exp $
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -31,12 +31,13 @@ __PdxProcessDataToProcessParameters
  IN PUNICODE_STRING ImageFile
 )
 {
+ NTSTATUS nErrCode;
  UNICODE_STRING wstrEmpty = {0, 0, NULL};
  UNICODE_STRING wstrCommandLine = {0, 0, NULL};
- NTSTATUS     nErrCode;
  __fildes_t * fdDescriptor;
  int i;
 
+ /* RtlInitUnicodeString(&wstrEmpty, L""); */
  /* TODO: error checking */
 
  /* build the command line string from argument count and argument vector */
@@ -102,19 +103,11 @@ __PdxProcessDataToProcessParameters
   }
  }
 
-#ifndef NDEBUG
- wstrCommandLine.MaximumLength = wstrCommandLine.Length + sizeof(WCHAR);
- wstrCommandLine.Buffer = __realloc(wstrCommandLine.Buffer, wstrCommandLine.MaximumLength);
- wstrCommandLine.Buffer[wstrCommandLine.Length / sizeof(WCHAR)] = 0;
-
- INFO("command line is \"%ls\"\n", wstrCommandLine.Buffer);
-#endif
-
- RtlCreateProcessParameters
+ nErrCode = RtlCreateProcessParameters
  (
   ProcessParameters,
   ImageFile,
-  &wstrEmpty,
+  NULL,
   &wstrEmpty,
   &wstrCommandLine,
   0,
@@ -304,7 +297,7 @@ __PdxSerializeProcessData
   __free(pnArgLengths);
   __free(pnEnvVarsLengths);
   *SerializedProcessData = 0;
-  return;
+  return nErrCode;
  }
 
  INFO("%d bytes actually allocated\n", ulAllocSize);
@@ -478,6 +471,8 @@ __PdxSerializeProcessData
 
  /* success */
  *SerializedProcessData = pspdProcessData;
+
+ return (STATUS_SUCCESS);
 }
 
 /* unserialize a process data block. Dynamic data will be moved into the default
