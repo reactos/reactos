@@ -22,6 +22,20 @@ MingwModuleHandler::ref = 0;
 FILE*
 MingwModuleHandler::fMakefile = NULL;
 
+string
+ReplaceExtension ( const string& filename,
+	               const string& newExtension )
+{
+	size_t index = filename.find_last_of ( '/' );
+	if (index == string::npos) index = 0;
+	string tmp = filename.substr( index, filename.size() - index );
+	size_t ext_index = tmp.find_last_of( '.' );
+	if (ext_index != string::npos) 
+		return filename.substr ( 0, index + ext_index ) + newExtension;
+	return filename + newExtension;
+}
+
+
 MingwModuleHandler::MingwModuleHandler ( ModuleType moduletype )
 {
 	if ( !ref++ )
@@ -72,10 +86,10 @@ MingwModuleHandler::GetWorkingDirectory () const
 	return ".";
 }
 
-string 
-MingwModuleHandler::GetDirectory ( const string& filename ) const 
+string
+MingwModuleHandler::GetDirectory ( const string& filename )
 {
-	size_t index = filename.find_last_of ( '/' );
+	size_t index = filename.find_last_of ( CSEP );
 	if (index == string::npos)
 		return ".";
 	else
@@ -89,19 +103,6 @@ MingwModuleHandler::GetBasename ( const string& filename ) const
 	if (index != string::npos)
 		return filename.substr ( 0, index );
 	return "";
-}
-
-string
-MingwModuleHandler::ReplaceExtension ( const string& filename,
-                                       const string& newExtension ) const
-{
-	size_t index = filename.find_last_of ( '/' );
-	if (index == string::npos) index = 0;
-	string tmp = filename.substr( index, filename.size() - index );
-	size_t ext_index = tmp.find_last_of( '.' );
-	if (ext_index != string::npos) 
-		return filename.substr ( 0, index + ext_index ) + newExtension;
-	return filename + newExtension;
 }
 
 string
@@ -237,7 +238,7 @@ MingwModuleHandler::GetSourceFilenamesWithoutGeneratedFiles ( const Module& modu
 }
 
 string
-MingwModuleHandler::GetObjectFilename ( const string& sourceFilename ) const
+MingwModuleHandler::GetObjectFilename ( const string& sourceFilename )
 {
 	string newExtension;
 	string extension = GetExtension ( sourceFilename );
@@ -247,9 +248,8 @@ MingwModuleHandler::GetObjectFilename ( const string& sourceFilename ) const
 		newExtension = ".stubs.o";
 	else
 		newExtension = ".o";
-	return PassThruCacheDirectory (
-		FixupTargetFilename (
-			ReplaceExtension ( sourceFilename, newExtension ) ) );
+	return FixupTargetFilename (
+			ReplaceExtension ( sourceFilename, newExtension ) );
 }
 
 string
@@ -263,7 +263,7 @@ MingwModuleHandler::GetObjectFilenames ( const Module& module ) const
 	{
 		if ( objectFilenames.size () > 0 )
 			objectFilenames += " ";
-		objectFilenames += GetObjectFilename ( module.files[i]->name );
+		objectFilenames += PassThruCacheDirectory ( MingwModuleHandler::GetObjectFilename ( module.files[i]->name ) );
 	}
 	return objectFilenames;
 }
@@ -510,7 +510,7 @@ MingwModuleHandler::GenerateMacros (
 				fprintf ( fMakefile,
 					"%s := %s $(%s)\n",
 					objs_macro.c_str(),
-					GetObjectFilename(files[i]->name).c_str(),
+					PassThruCacheDirectory ( MingwModuleHandler::GetObjectFilename ( files[i]->name ) ).c_str (),
 					objs_macro.c_str() );
 			}
 		}
@@ -530,7 +530,7 @@ MingwModuleHandler::GenerateMacros (
 					fMakefile,
 					"%s%s",
 					( i%10 == 9 ? "\\\n\t" : " " ),
-					GetObjectFilename(files[i]->name).c_str() );
+					PassThruCacheDirectory ( MingwModuleHandler::GetObjectFilename ( files[i]->name ) ).c_str () );
 			}
 		}
 		fprintf ( fMakefile, "\n" );
@@ -612,7 +612,7 @@ MingwModuleHandler::GenerateGccCommand ( const Module& module,
                                          const string& cc,
                                          const string& cflagsMacro ) const
 {
-	string objectFilename = GetObjectFilename ( sourceFilename );
+	string objectFilename = PassThruCacheDirectory ( MingwModuleHandler::GetObjectFilename ( sourceFilename ) );
 	fprintf ( fMakefile,
 	          "%s: %s\n",
 	          objectFilename.c_str (),
@@ -631,7 +631,7 @@ MingwModuleHandler::GenerateGccAssemblerCommand ( const Module& module,
                                                   const string& cc,
                                                   const string& cflagsMacro ) const
 {
-	string objectFilename = GetObjectFilename ( sourceFilename );
+	string objectFilename = PassThruCacheDirectory ( MingwModuleHandler::GetObjectFilename ( sourceFilename ) );
 	fprintf ( fMakefile,
 	          "%s: %s\n",
 	          objectFilename.c_str (),
@@ -649,7 +649,7 @@ MingwModuleHandler::GenerateNasmCommand ( const Module& module,
                                           const string& sourceFilename,
                                           const string& nasmflagsMacro ) const
 {
-	string objectFilename = GetObjectFilename ( sourceFilename );
+	string objectFilename = PassThruCacheDirectory ( MingwModuleHandler::GetObjectFilename ( sourceFilename ) );
 	fprintf ( fMakefile,
 	          "%s: %s\n",
 	          objectFilename.c_str (),
@@ -667,7 +667,7 @@ MingwModuleHandler::GenerateWindresCommand ( const Module& module,
                                              const string& sourceFilename,
                                              const string& windresflagsMacro ) const
 {
-	string objectFilename = GetObjectFilename ( sourceFilename );
+	string objectFilename = PassThruCacheDirectory ( MingwModuleHandler::GetObjectFilename ( sourceFilename ) );
 	fprintf ( fMakefile,
 	          "%s: %s\n",
 	          objectFilename.c_str (),
@@ -908,7 +908,7 @@ MingwModuleHandler::GetCleanTargets ( vector<string>& out,
 	size_t i;
 
 	for ( i = 0; i < files.size(); i++ )
-		out.push_back ( GetObjectFilename(files[i]->name) );
+		out.push_back ( PassThruCacheDirectory ( MingwModuleHandler::GetObjectFilename ( files[i]->name ) ) );
 
 	for ( i = 0; i < ifs.size(); i++ )
 		GetCleanTargets ( out, ifs[i]->files, ifs[i]->ifs );

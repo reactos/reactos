@@ -1,5 +1,6 @@
 <module name="freeldr_base" type="objectlibrary">
 	<include base="freeldr_base">include</include>
+	<include base="freeldr_base">cache</include>
 	<compilerflag>-nostdlib</compilerflag>
 	<compilerflag>-nostdinc</compilerflag>
 	<compilerflag>-ffreestanding</compilerflag>

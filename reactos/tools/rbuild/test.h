@@ -108,6 +108,10 @@ class SourceFileTest : public BaseTest
 {
 public:
 	void Run();
+private:
+	bool IsParentOf ( const SourceFile* parent,
+	                  const SourceFile* child );
+
 };
 
 #endif /* __TEST_H */

@@ -3,6 +3,11 @@
 
 #include "../backend.h"
 
+extern std::string
+ReplaceExtension ( const std::string& filename,
+	               const std::string& newExtension );
+
+
 class MingwModuleHandler
 {
 public:
@@ -16,15 +21,13 @@ public:
 	static MingwModuleHandler* LookupHandler ( const std::string& location,
 	                                           ModuleType moduletype_ );
 	virtual void Process ( const Module& module ) = 0;
-        void GenerateDirectoryTargets () const;
-
+	void GenerateDirectoryTargets () const;
+	static std::string GetObjectFilename ( const std::string& sourceFilename );
+	static std::string GetDirectory ( const std::string& filename );
 protected:
 	const std::string &PassThruCacheDirectory ( const std::string &f ) const;
 	std::string GetWorkingDirectory () const;
-        std::string GetDirectory (const std::string& filename ) const;
 	std::string GetBasename ( const std::string& filename ) const;
-	std::string ReplaceExtension ( const std::string& filename,
-	                               const std::string& newExtension ) const;
 	std::string GetActualSourceFilename ( const std::string& filename ) const;
 	std::string GetModuleArchiveFilename ( const Module& module ) const;
 	bool IsGeneratedFile ( const File& file ) const;
@@ -37,7 +40,6 @@ protected:
 	std::string GetSourceFilenames ( const Module& module ) const;
 	std::string GetSourceFilenamesWithoutGeneratedFiles ( const Module& module ) const;
 
-	std::string GetObjectFilename ( const std::string& sourceFilename ) const;
 	std::string GetObjectFilenames ( const Module& module ) const;
 	void GenerateMacrosAndTargetsHost ( const Module& module ) const;
 	void GenerateMacrosAndTargetsTarget ( const Module& module ) const;
@@ -47,6 +49,8 @@ protected:
 	std::string GetInvocationDependencies ( const Module& module ) const;
 	std::string GetInvocationParameters ( const Invoke& invoke ) const;
 	void GenerateInvocations ( const Module& module ) const;
+	
+	std::string GetPreconditionDependenciesName ( const Module& module ) const;
 	void GeneratePreconditionDependencies ( const Module& module ) const;
 	std::string GetCFlagsMacro ( const Module& module ) const;
 	std::string GetObjectsMacro ( const Module& module ) const;
@@ -144,7 +148,6 @@ private:
 	                                const std::string& ar,
 	                                const std::string* clags,
 	                                const std::string* nasmflags ) const;
-	std::string GetPreconditionDependenciesName ( const Module& module ) const;
 	std::string GetSpecObjectDependencies ( const std::string& filename ) const;
 };
 

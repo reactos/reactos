@@ -352,7 +352,9 @@ class SourceFile
 public:
 	SourceFile ( AutomaticDependency* automaticDependency,
 	             Module& module,
-	             const std::string& filename );
+	             const std::string& filename,
+	             SourceFile* parent,
+	             bool isNonAutomaticDependency );
 	SourceFile* ParseFile ( const std::string& normalizedFilename );
 	void Parse ();
 	std::string Location () const;
@@ -360,11 +362,21 @@ public:
 	AutomaticDependency* automaticDependency;
 	Module& module;
 	std::string filename;
+	std::string filenamePart;
+	std::string directoryPart;
+	std::vector<SourceFile*> parents; /* List of files, this file is included from */
+	bool isNonAutomaticDependency;
+	std::string cachedDependencies;
 private:
+	void GetDirectoryAndFilenameParts ();
 	void Close ();
 	void Open ();
 	void SkipWhitespace ();
 	bool ReadInclude ( std::string& filename );
+	bool IsIncludedFrom ( const std::string& normalizedFilename );
+	SourceFile* GetParentSourceFile ();
+	bool IsParentOf ( const SourceFile* parent,
+	                  const SourceFile* child );
 	std::string buf;
 	const char *p;
 	const char *end;
@@ -387,9 +399,9 @@ public:
 	                          const std::string& includedFilename,
 	                          std::string& resolvedFilename );
 	SourceFile* RetrieveFromCacheOrParse ( Module& module,
-	                                       const std::string& filename );
-	SourceFile* RetrieveFromCache ( Module& module,
-	                                const std::string& filename );
+	                                       const std::string& filename,
+	                                       SourceFile* parentSourceFile );
+	SourceFile* RetrieveFromCache ( const std::string& filename );
 private:
 	void ProcessModule ( Module& module );
 	void ProcessFile ( Module& module,
