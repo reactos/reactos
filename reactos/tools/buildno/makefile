@@ -1,7 +1,7 @@
 BUILDNO_BASE = tools$(SEP)buildno
 
 BUILDNO_TARGET = \
-	$(ROS_INTERMEDIATE)$(BUILDNO_BASE)$(SEP)buildno$(EXEPOSTFIX)
+	$(EXEPREFIX)$(BUILDNO_BASE)$(SEP)buildno$(EXEPOSTFIX)
 
 BUILDNO_SOURCES = \
 	$(BUILDNO_BASE)$(SEP)buildno.cpp \
@@ -31,5 +31,8 @@ buildno_clean:
 # BUILDNO_H is defined from the top-level makefile now...
 #BUILDNO_H = .$(SEP)include$(SEP)reactos$(SEP)buildno.h
 
+.PHONY: buildno_h
+buildno_h: $(BUILDNO_H)
+
 $(BUILDNO_H): $(BUILDNO_TARGET)
-	$(EXEPREFIX)$(BUILDNO_TARGET) $(BUILDNO_H)
+	$(BUILDNO_TARGET) $(BUILDNO_H)

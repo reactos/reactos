@@ -110,7 +110,7 @@ BUGCODES_RC = .$(SEP)ntoskrnl$(SEP)bugcodes.rc
 ERRCODES_H = .$(SEP)include$(SEP)reactos$(SEP)errcodes.h
 ERRCODES_RC = .$(SEP)lib$(SEP)kernel32$(SEP)errcodes.rc
 
-include tools/Makefile
+include tools/tools.mak
 -include makefile.auto
 
 PREAUTO := \
