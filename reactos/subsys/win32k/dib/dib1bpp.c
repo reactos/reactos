@@ -8,43 +8,40 @@
 #include "../eng/objects.h"
 #include "dib.h"
 
-PFN_DIB_PutPixel DIB_1BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c)
+VOID DIB_1BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c)
 {
-  unsigned char *vp;
-  unsigned char mask;
   PBYTE addr = SurfObj->pvBits;
 
   addr += y * SurfObj->lDelta + (x >> 3);
 
   if(c == 0)
   {
-    *addr = (*addr ^ mask1Bpp[mod(x, 8)]);
+    *addr = (*addr ^ mask1Bpp[x % 8]);
   }
     else
   {
-    *addr = (*addr | mask1Bpp[mod(x, 8)]);
+    *addr = (*addr | mask1Bpp[x % 8]);
   }
 }
 
-PFN_DIB_GetPixel DIB_1BPP_GetPixel(PSURFOBJ SurfObj, LONG x, LONG y)
+ULONG DIB_1BPP_GetPixel(PSURFOBJ SurfObj, LONG x, LONG y)
 {
   PBYTE addr = SurfObj->pvBits + y * SurfObj->lDelta + (x >> 3);
 
-  if(*addr & mask1Bpp[mod(x, 8)]) return (PFN_DIB_GetPixel)(1);
-  return (PFN_DIB_GetPixel)(0);
+  return (*addr & mask1Bpp[x % 8] ? 1 : 0);
 }
 
-PFN_DIB_HLine DIB_1BPP_HLine(PSURFOBJ SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
+VOID DIB_1BPP_HLine(PSURFOBJ SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 {
-  while(x1 <= x2) {
+  while(x1 < x2) {
     DIB_1BPP_PutPixel(SurfObj, x1, y, c);
     x1++;
   }
 }
 
-PFN_DIB_VLine DIB_1BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
+VOID DIB_1BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 {
-  while(y1 <= y2) {
+  while(y1 < y2) {
     DIB_1BPP_PutPixel(SurfObj, x, y1, c);
     y1++;
   }
