@@ -1,4 +1,4 @@
-/* $Id: shutdown.c,v 1.2 2001/01/12 21:00:08 dwelch Exp $
+/* $Id: shutdown.c,v 1.3 2001/01/14 15:28:50 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -25,7 +25,24 @@ VfatShutdown(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
    DPRINT("VfatShutdown(DeviceObject %x, Irp %x)\n",DeviceObject, Irp);
 
-   /* FIXME: Shut down the file system */
+#if 0
+   /* FIXME: block new mount requests */
+
+
+   /* FIXME: Traverse list of logical volumes. For each volume: */
+     {
+	/* FIXME: acquire vcb resource exclusively */
+
+	/* FIXME: Flush logical volume */
+
+	/* FIXME: send IRP_MJ_SHUTDOWN to each volume */
+
+	/* FIXME: wait for completion of IRP_MJ_SHUTDOWN */
+
+	/* FIXME: release vcb resource */
+     }
+
+#endif
 
    Status = STATUS_SUCCESS;
 
