@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: balance.c,v 1.22 2003/10/23 20:28:08 hbirr Exp $
+/* $Id: balance.c,v 1.23 2003/11/16 15:20:39 hbirr Exp $
  *
  * PROJECT:     ReactOS kernel 
  * FILE:        ntoskrnl/mm/balance.c
@@ -61,6 +61,12 @@ static LIST_ENTRY AllocationListHead;
 static KSPIN_LOCK AllocationListLock;
 static ULONG MiPagesRequired = 0;
 static ULONG MiMinimumPagesPerRun = 10;
+
+static CLIENT_ID MiBalancerThreadId;
+static HANDLE MiBalancerThreadHandle = NULL;
+static KEVENT MiBalancerEvent;
+static KTIMER MiBalancerTimer;
+static LONG MiBalancerWork = 0;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -184,6 +190,13 @@ MmRebalanceMemoryConsumers(VOID)
     }
 }
 
+static BOOLEAN
+MiIsBalancerThread(VOID)
+{
+  return MiBalancerThreadHandle != NULL && 
+         PsGetCurrentThread() == MiBalancerThreadId.UniqueThread;
+}
+
 NTSTATUS
 MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait, 
 			    PHYSICAL_ADDRESS* AllocatedPage)
@@ -198,7 +211,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
    */
   OldUsed = InterlockedIncrement((LONG *)&MiMemoryConsumers[Consumer].PagesUsed);
   if (OldUsed >= (MiMemoryConsumers[Consumer].PagesTarget - 1) &&
-      !MiIsPagerThread())
+      !MiIsBalancerThread())
     {
       if (!CanWait)
 	{
@@ -208,10 +221,29 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
       MiTrimMemoryConsumer(Consumer);
     }
 
+  OldAvailable = InterlockedDecrement((LONG *)&MiNrAvailablePages);
+  /*
+   * Allocate always memory for the non paged pool and for the pager thread. 
+   */
+  if (Consumer == MC_NPPOOL || MiIsBalancerThread())
+    {
+      Page = MmAllocPage(Consumer, 0);
+      if (Page.QuadPart == 0LL)
+        {
+	  KEBUGCHECK(0);
+	}
+      *AllocatedPage = Page;
+      if (OldAvailable < MiMinimumAvailablePages &&
+	  MiBalancerThreadHandle != NULL)
+        {
+          KeSetEvent(&MiBalancerEvent, IO_NO_INCREMENT, FALSE);
+	}
+      return(STATUS_SUCCESS);
+    }
+
   /*
    * Make sure we don't exceed global targets.
    */
-  OldAvailable = InterlockedDecrement((LONG *)&MiNrAvailablePages);
   if (OldAvailable < MiMinimumAvailablePages)
     {
       MM_ALLOCATION_REQUEST Request;
@@ -229,21 +261,11 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
       InterlockedIncrement((LONG *)&MiPagesRequired);
 
       KeAcquireSpinLock(&AllocationListLock, &oldIrql);     
-      /* Always let the pager thread itself allocate memory. */
-      if (MiIsPagerThread())
-	{
-	  Page = MmAllocPage(Consumer, 0);
-	  KeReleaseSpinLock(&AllocationListLock, oldIrql);
-	  if (Page.QuadPart == 0LL)
-	    {
-	      KEBUGCHECK(0);
-	    }
-	  *AllocatedPage = Page;
-	  InterlockedDecrement((LONG *)&MiPagesRequired);
-	  return(STATUS_SUCCESS);
+
+      if (MiBalancerThreadHandle != NULL)
+        {
+          KeSetEvent(&MiBalancerEvent, IO_NO_INCREMENT, FALSE);
 	}
-      /* Otherwise start the pager thread if it isn't already working. */
-      MiStartPagerThread();
       InsertTailList(&AllocationListHead, &Request.ListEntry);
       KeReleaseSpinLock(&AllocationListLock, oldIrql);
 
@@ -261,7 +283,6 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
       MmTransferOwnershipPage(Page, Consumer);
       *AllocatedPage = Page;
       InterlockedDecrement((LONG *)&MiPagesRequired);
-      MiStopPagerThread();
       return(STATUS_SUCCESS);
     }
   
@@ -277,5 +298,127 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
 
   return(STATUS_SUCCESS);
 }
+
+VOID STDCALL
+MiBalancerThread(PVOID Unused)
+{
+  PVOID WaitObjects[2];
+  NTSTATUS Status;
+  ULONG i;
+  ULONG NrFreedPages;
+  ULONG NrPagesUsed;
+  ULONG Target;
+  BOOLEAN ShouldRun;
+
+
+  WaitObjects[0] = &MiBalancerEvent;
+  WaitObjects[1] = &MiBalancerTimer;
+
+  while (1)
+    {
+      Status = KeWaitForMultipleObjects(2,
+	                                WaitObjects,
+					WaitAny,
+					Executive,
+					KernelMode,
+					FALSE,
+					NULL,
+					NULL);
+
+      if (Status == STATUS_SUCCESS)
+        {
+	  /* MiBalancerEvent */
+	  CHECKPOINT;
+	  while (MiNrAvailablePages < MiMinimumAvailablePages)
+	    {
+	      for (i = 0; i < MC_MAXIMUM; i++)
+	        {
+                  if (MiMemoryConsumers[i].Trim != NULL)
+	            {
+	              NrFreedPages = 0;
+	              Status = MiMemoryConsumers[i].Trim(MiMinimumPagesPerRun, 0, &NrFreedPages);
+	              if (!NT_SUCCESS(Status))
+	                {
+	                  KEBUGCHECK(0);
+	                }
+		    }
+		}
+	    }
+	  InterlockedExchange(&MiBalancerWork, 0);
+	  CHECKPOINT;
+	}
+      else if (Status == STATUS_SUCCESS + 1)
+        {
+	  /* MiBalancerTimer */
+	  ShouldRun = MiNrAvailablePages < MiMinimumAvailablePages ? TRUE : FALSE;
+	  for (i = 0; i < MC_MAXIMUM; i++)
+	    {
+              if (MiMemoryConsumers[i].Trim != NULL)
+	        {
+		  NrPagesUsed = MiMemoryConsumers[i].PagesUsed;
+		  if (NrPagesUsed > MiMemoryConsumers[i].PagesTarget || ShouldRun)
+		    {
+		      if (NrPagesUsed > MiMemoryConsumers[i].PagesTarget)
+		        {
+		          Target = max (NrPagesUsed - MiMemoryConsumers[i].PagesTarget,
+			                MiMinimumPagesPerRun);
+			}
+		      else
+		        {
+			  Target = MiMinimumPagesPerRun;
+			}
+	              NrFreedPages = 0;
+	              Status = MiMemoryConsumers[i].Trim(Target, 0, &NrFreedPages);
+	              if (!NT_SUCCESS(Status))
+	                {
+	                  KEBUGCHECK(0);
+	                }
+		    }
+		}
+	    }
+	}
+      else
+        {
+	  DPRINT1("KeWaitForMultipleObjects failt, status = %x\n", Status);
+	  KEBUGCHECK(0);
+	}
+    }
+}
+
+VOID INIT_FUNCTION
+MiInitBalancerThread(VOID)
+{
+  KPRIORITY Priority;
+  NTSTATUS Status;
+
+  CHECKPOINT1;
+
+  KeInitializeEvent(&MiBalancerEvent, SynchronizationEvent, FALSE);
+  KeInitializeTimerEx(&MiBalancerTimer, SynchronizationTimer);
+  KeSetTimerEx(&MiBalancerTimer, 
+               (LARGE_INTEGER)(LONGLONG)-20000000LL,	    /* 2 sec */
+		2000,					    /* 2 sec */
+		NULL);
+
+  Status = PsCreateSystemThread(&MiBalancerThreadHandle,
+				THREAD_ALL_ACCESS,
+				NULL,
+				NULL,
+				&MiBalancerThreadId,
+				(PKSTART_ROUTINE) MiBalancerThread,
+				NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      KEBUGCHECK(0);
+    }
+  
+  Priority = LOW_REALTIME_PRIORITY + 1;
+  NtSetInformationThread(MiBalancerThreadHandle,
+			 ThreadPriority,
+			 &Priority,
+			 sizeof(Priority));
+  
+}
+
 
 /* EOF */

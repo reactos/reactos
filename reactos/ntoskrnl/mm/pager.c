@@ -1,4 +1,4 @@
-/* $Id: pager.c,v 1.15 2003/07/21 21:53:53 royce Exp $
+/* $Id: pager.c,v 1.16 2003/11/16 15:20:39 hbirr Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -21,14 +21,17 @@
 
 /* GLOBALS *******************************************************************/
 
+#if 0
 static HANDLE PagerThreadHandle;
 static CLIENT_ID PagerThreadId;
 static KEVENT PagerThreadEvent;
 static BOOLEAN PagerThreadShouldTerminate;
 static ULONG PagerThreadWorkCount;
+#endif
 
 /* FUNCTIONS *****************************************************************/
 
+#if 0
 BOOLEAN
 MiIsPagerThread(VOID)
 {
@@ -108,3 +111,4 @@ NTSTATUS MmInitPagerThread(VOID)
    
    return(STATUS_SUCCESS);
 }
+#endif

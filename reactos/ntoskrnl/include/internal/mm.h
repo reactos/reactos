@@ -334,7 +334,10 @@ VOID MmInit1(ULONG FirstKernelPhysAddress,
 VOID MmInit2(VOID);
 VOID MmInit3(VOID);
 VOID MiFreeInitMemory(VOID);
+#if 0
 NTSTATUS MmInitPagerThread(VOID);
+#endif
+VOID MiInitBalancerThread(VOID);
 NTSTATUS MmInitZeroPageThread(VOID);
 
 VOID MiInitKernelMap(VOID);
