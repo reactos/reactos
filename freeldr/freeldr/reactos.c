@@ -17,7 +17,6 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-	
 #include "freeldr.h"
 #include "asmcode.h"
 #include "reactos.h"
@@ -131,6 +130,15 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 		return;
 	}
 
+	/*
+	 * Find the hal image name
+	 */
+	if(!ReadSectionSettingByName(SectionId, "Hal", value, 1024))
+	{
+		MessageBox("HAL image file not specified for selected operating system.");
+		return;
+	}
+
 	DrawBackdrop();
 
 	DrawStatusText(" Loading...");
@@ -146,7 +154,7 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	}
 
 	/*
-	 * Parse the ini file and count the kernel and drivers
+	 * Parse the ini file and count the kernel, hal and drivers
 	 */
 	for (i=1; i<=GetNumSectionItems(SectionId); i++)
 	{
@@ -154,7 +162,9 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 		 * Read the setting and check if it's a driver
 		 */
 		ReadSectionSettingByNumber(SectionId, i, name, 1024, value, 1024);
-		if ((stricmp(name, "Kernel") == 0) || (stricmp(name, "Driver") == 0))
+		if ((stricmp(name, "Kernel") == 0) ||
+		    (stricmp(name, "Hal") == 0) ||
+		    (stricmp(name, "Driver") == 0))
 			nNumDriverFiles++;
 	}
 
@@ -192,6 +202,45 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 		 * Load the kernel image
 		 */
 		MultiBootLoadKernel(FilePointer);
+		
+		nNumFilesLoaded++;
+		DrawProgressBar((nNumFilesLoaded * 100) / nNumDriverFiles);
+	}
+
+	/*
+	 * Find the HAL image name
+	 * and try to load the kernel off the disk
+	 */
+	if(ReadSectionSettingByName(SectionId, "Hal", value, 1024))
+	{
+		/*
+		 * Set the name and try to open the PE image
+		 */
+		//strcpy(szFileName, szBootPath);
+		//strcat(szFileName, value);
+		strcpy(szFileName, value);
+
+		FilePointer = OpenFile(szFileName);
+		if (FilePointer == NULL)
+		{
+			strcat(value, " not found.");
+			MessageBox(value);
+			return;
+		}
+
+		/*
+		 * Update the status bar with the current file
+		 */
+		strcpy(name, " Reading ");
+		strcat(name, value);
+		while (strlen(name) < 80)
+			strcat(name, " ");
+		DrawStatusText(name);
+
+		/*
+		 * Load the HAL image
+		 */
+		MultiBootLoadModule(FilePointer, szFileName);
 		
 		nNumFilesLoaded++;
 		DrawProgressBar((nNumFilesLoaded * 100) / nNumDriverFiles);
