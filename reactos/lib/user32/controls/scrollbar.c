@@ -88,7 +88,7 @@ const struct builtin_class_descr SCROLL_builtin_class =
     CS_DBLCLKS | CS_VREDRAW | CS_HREDRAW | CS_PARENTDC, /* style */
     ScrollBarWndProc,       /* procW */
     NULL,                   /* procA (winproc is Unicode only) */
-    sizeof(SCROLLBARINFO) + sizeof(SCROLLINFO),  /* extra */
+    0,                      /* extra */
     IDC_ARROW,              /* cursor */
     0                       /* brush */
 };
@@ -1422,7 +1422,7 @@ ScrollBarWndProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
         return 0;
 
       case SBM_SETSCROLLINFO:
-        return SetScrollInfo(Wnd, SB_CTL, (SCROLLINFO *) lParam, wParam);
+        return NtUserSetScrollInfo(Wnd, SB_CTL, (SCROLLINFO *) lParam, wParam);
 
       case SBM_GETSCROLLINFO:
         return NtUserGetScrollInfo(Wnd, SB_CTL, (SCROLLINFO *) lParam);
@@ -1475,9 +1475,16 @@ GetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
  * @implemented
  */
 BOOL STDCALL
-GetScrollInfo(HWND Wnd, INT SBType, LPSCROLLINFO lpsi)
+GetScrollInfo(HWND Wnd, INT SBType, LPSCROLLINFO Info)
 {
-  return NtUserGetScrollInfo(Wnd, SBType, lpsi);
+  if (SB_CTL == SBType)
+    {
+      return SendMessageW(Wnd, SBM_GETSCROLLINFO, 0, (LPARAM) Info);
+    }
+  else
+    {
+      return NtUserGetScrollInfo(Wnd, SBType, Info);
+    }
 }
 
 /*
@@ -1522,9 +1529,16 @@ GetScrollRange(HWND Wnd, int Bar, LPINT MinPos, LPINT MaxPos)
  * @implemented
  */
 INT STDCALL
-SetScrollInfo(HWND hWnd, int nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
+SetScrollInfo(HWND Wnd, int SBType, LPCSCROLLINFO Info, BOOL bRedraw)
 {
-  return NtUserSetScrollInfo(hWnd, nBar, lpsi, bRedraw);
+  if (SB_CTL == SBType)
+    {
+      return SendMessageW(Wnd, SBM_SETSCROLLINFO, (WPARAM) bRedraw, (LPARAM) Info);
+    }
+  else
+    {
+      return NtUserSetScrollInfo(Wnd, SBType, Info, bRedraw);
+    }
 }
 
 /*

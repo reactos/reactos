@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scrollbar.c,v 1.32 2004/05/10 17:07:18 weiden Exp $
+/* $Id: scrollbar.c,v 1.33 2004/05/12 09:47:16 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -203,10 +203,10 @@ IntGetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPSCROLLINFO lpsi)
   UINT Mask;
   LPSCROLLINFO psi;
   
-  if(!SBID_IS_VAILD(nBar))
+  if(!SBID_IS_VALID(nBar))
   {
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
-    DPRINT1("Trying to get scrollinfo for unknown scrollbar type %d", nBar);
+    DPRINT1("Trying to get scrollinfo for unknown scrollbar type %d\n", nBar);
     return FALSE;
   }
 
@@ -263,7 +263,7 @@ IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedr
 /*   UINT new_flags;*/
   BOOL bChangeParams = FALSE; /* don't show/hide scrollbar if params don't change */
 
-  if(!SBID_IS_VAILD(nBar))
+  if(!SBID_IS_VALID(nBar))
   {
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
     DPRINT1("Trying to set scrollinfo for unknown scrollbar type %d", nBar);
@@ -414,10 +414,10 @@ IntGetScrollBarInfo(PWINDOW_OBJECT Window, LONG idObject, PSCROLLBARINFO psbi)
   
   Bar = SBOBJ_TO_SBID(idObject);
   
-  if(!SBID_IS_VAILD(Bar))
+  if(!SBID_IS_VALID(Bar))
   {
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
-    DPRINT1("Trying to get scrollinfo for unknown scrollbar type %d", Bar);
+    DPRINT1("Trying to get scrollinfo for unknown scrollbar type %d\n", Bar);
     return FALSE;
   }
   
@@ -453,7 +453,7 @@ IntCreateScrollBars(PWINDOW_OBJECT Window)
   }
   
   /* allocate memory for all scrollbars (HORZ, VERT, CONTROL) */
-  Size = 2 * (sizeof(WINDOW_SCROLLINFO));
+  Size = 3 * (sizeof(WINDOW_SCROLLINFO));
   if(!(Window->Scroll = ExAllocatePoolWithTag(PagedPool, Size, TAG_SBARINFO)))
   {
     DPRINT1("Unable to allocate memory for scrollbar information for window 0x%x\n", Window->Self);
@@ -604,14 +604,8 @@ NtUserGetScrollInfo(HWND hwnd, int fnBar, LPSCROLLINFO lpsi)
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
     return FALSE;
   }
-  
-  if(fnBar == SB_CTL)
-  {
-    IntSendMessage(Window->Self, SBM_GETSCROLLINFO, 0, (LPARAM)lpsi);
-    Ret = TRUE;
-  }
-  else
-    Ret = IntGetScrollInfo(Window, fnBar, &psi);
+
+  Ret = IntGetScrollInfo(Window, fnBar, &psi);
   
   IntReleaseWindowObject(Window);
   
@@ -652,7 +646,7 @@ NtUserEnableScrollBar(
     return FALSE;
   }
   
-  if(wSBflags != SB_BOTH && !SBID_IS_VAILD(wSBflags))
+  if(wSBflags != SB_BOTH && !SBID_IS_VALID(wSBflags))
   {
     IntReleaseWindowObject(Window);
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
@@ -718,7 +712,7 @@ NtUserSetScrollBarInfo(
   }
   
   Obj = SBOBJ_TO_SBID(idObject);
-  if(!SBID_IS_VAILD(Obj))
+  if(!SBID_IS_VALID(Obj))
   {
     IntReleaseWindowObject(Window);
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
@@ -770,13 +764,6 @@ NtUserSetScrollInfo(
   {
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
     return 0;
-  }
-  
-  if(fnBar == SB_CTL)
-  {
-    Ret = IntSendMessage(hwnd, SBM_SETSCROLLINFO, (WPARAM)bRedraw, (LPARAM)lpsi);
-    IntReleaseWindowObject(Window);
-    return Ret;
   }
   
   Status = MmCopyFromCaller(&ScrollInfo, lpsi, sizeof(SCROLLINFO) - sizeof(ScrollInfo.nTrackPos));
