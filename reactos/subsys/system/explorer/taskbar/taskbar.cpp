@@ -226,6 +226,97 @@ TaskBar::TaskBar(HWND hwnd)
 	_last_foreground_wnd = 0;
 }
 
+TaskBar::~TaskBar()
+{
+	//DeinstallShellHook();
+}
+
+LRESULT TaskBar::Init(LPCREATESTRUCT pcs)
+{
+	super::Init(pcs);
+
+	_htoolbar = CreateToolbarEx(_hwnd,
+		WS_CHILD|WS_VISIBLE|CCS_NODIVIDER|CCS_TOP|//CCS_NORESIZE|
+		TBSTYLE_LIST|TBSTYLE_TOOLTIPS|TBSTYLE_WRAPABLE|TBSTYLE_TRANSPARENT,
+		IDW_TASKTOOLBAR, 0, 0, 0, NULL, 0, 0, 0, 16, 16, sizeof(TBBUTTON));
+
+	SendMessage(_htoolbar, TB_SETBUTTONWIDTH, 0, MAKELONG(16,160));
+	//SendMessage(_htoolbar, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_MIXEDBUTTONS);
+	//SendMessage(_htoolbar, TB_SETDRAWTEXTFLAGS, DT_CENTER|DT_VCENTER, DT_CENTER|DT_VCENTER);
+	//SetWindowFont(_htoolbar, GetStockFont(ANSI_VAR_FONT), FALSE);
+
+	_next_id = IDC_FIRST_APP;
+
+	//InstallShellHook(_hwnd, WM_SHELLHOOK_NOTIFY);
+
+	Refresh();
+
+	SetTimer(_hwnd, 0, 200, NULL);
+
+	return 0;
+}
+
+LRESULT TaskBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
+{
+	switch(nmsg) {
+	  case WM_CLOSE:
+		break;
+
+	  case WM_SIZE:
+		SendMessage(_htoolbar, WM_SIZE, 0, 0);
+		break;
+
+	  case WM_TIMER:
+		Refresh();
+		return 0;
+
+	  case WM_SHELLHOOK_NOTIFY: {
+		int code = lparam;
+/*
+		switch(code) {
+		  case HSHELL_WINDOWCREATED:
+		  case HSHELL_WINDOWDESTROYED:
+		  case HSHELL_WINDOWACTIVATED:
+		  case HSHELL_WINDOWREPLACED:
+			Refresh();
+			break;
+		} */
+		Refresh();
+		break;}
+
+	  default:
+		return super::WndProc(nmsg, wparam, lparam);
+	}
+
+	return super::WndProc(nmsg, wparam, lparam);
+}
+
+int TaskBar::Command(int id, int code)
+{
+	TaskBarMap::iterator found = _map.find_id(id);
+
+	if (found != _map.end()) {
+		HWND hwnd = found->first;
+
+		if (hwnd==GetForegroundWindow() || hwnd==_last_foreground_wnd) {
+			ShowWindowAsync(hwnd, SW_MINIMIZE);
+			_last_foreground_wnd = 0;
+		} else {
+			 // switch to selected application window
+			if (IsIconic(hwnd))
+				ShowWindowAsync(hwnd, SW_RESTORE);
+
+			SetForegroundWindow(hwnd);
+
+			_last_foreground_wnd = hwnd;
+		}
+
+		return 0;
+	}
+
+	return super::Command(id, code);
+}
+
  // fill task bar with buttons for enumerated top level windows
 BOOL CALLBACK TaskBar::EnumWndProc(HWND hwnd, LPARAM lparam)
 {
@@ -264,15 +355,17 @@ BOOL CALLBACK TaskBar::EnumWndProc(HWND hwnd, LPARAM lparam)
 		++entry._used;
 		btn.idCommand = entry._id;
 
+		TCHAR title[BUFFER_LEN];
+
+		if (!GetWindowText(hwnd, title, BUFFER_LEN))
+			title[0] = '\0';
+
+		//@@ refresh window titles
+
 		 // create new toolbar buttons for new windows
 		if (!last_id) {
 			if (hwnd == GetForegroundWindow())
 				btn.fsState |= TBSTATE_PRESSED/*|TBSTATE_MARKED*/;
-
-			TCHAR title[BUFFER_LEN];
-
-			if (!GetWindowText(hwnd, title, BUFFER_LEN))
-				title[0] = '\0';
 
 			if (title[0])
 				btn.iString = (INT_PTR)title;
@@ -282,79 +375,18 @@ BOOL CALLBACK TaskBar::EnumWndProc(HWND hwnd, LPARAM lparam)
 
 			SendMessage(pThis->_htoolbar, TB_INSERTBUTTON, entry._btn_idx, (LPARAM)&btn);
 		}
+
+		 // move iconic windows out of sight
+		if (IsIconic(hwnd)) {
+			RECT rect;
+			GetWindowRect(hwnd, &rect);
+
+			if (rect.bottom > 0)
+				SetWindowPos(hwnd, 0, -32000, -32000, 0, 0, SWP_NOSIZE|SWP_NOZORDER|SWP_NOACTIVATE);
+		}
 	}
 
 	return TRUE;
-}
-
-LRESULT TaskBar::Init(LPCREATESTRUCT pcs)
-{
-	super::Init(pcs);
-
-	_htoolbar = CreateToolbarEx(_hwnd,
-		WS_CHILD|WS_VISIBLE|CCS_NODIVIDER|CCS_TOP|//CCS_NORESIZE|
-		TBSTYLE_LIST|TBSTYLE_TOOLTIPS|TBSTYLE_WRAPABLE|TBSTYLE_TRANSPARENT,
-		IDW_TASKTOOLBAR, 0, 0, 0, NULL, 0, 0, 0, 16, 16, sizeof(TBBUTTON));
-
-	SendMessage(_htoolbar, TB_SETBUTTONWIDTH, 0, MAKELONG(16,160));
-	//SendMessage(_htoolbar, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_MIXEDBUTTONS);
-	//SendMessage(_htoolbar, TB_SETDRAWTEXTFLAGS, DT_CENTER|DT_VCENTER, DT_CENTER|DT_VCENTER);
-	//SetWindowFont(_htoolbar, GetStockFont(ANSI_VAR_FONT), FALSE);
-
-	_next_id = IDC_FIRST_APP;
-
-	Refresh();
-
-	SetTimer(_hwnd, 0, 1000, NULL);
-
-	return 0;
-}
-
-LRESULT TaskBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
-{
-	switch(nmsg) {
-	  case WM_CLOSE:
-		break;
-
-	  case WM_SIZE:
-		SendMessage(_htoolbar, WM_SIZE, 0, 0);
-		break;
-
-	  case WM_TIMER:	// could be optimized by using WH_CBT hooks instead of timer
-		Refresh();
-		return 0;
-
-	  default:
-		return super::WndProc(nmsg, wparam, lparam);
-	}
-
-	return super::WndProc(nmsg, wparam, lparam);
-}
-
-int TaskBar::Command(int id, int code)
-{
-	TaskBarMap::iterator found = _map.find_id(id);
-
-	if (found != _map.end()) {
-		HWND hwnd = found->first;
-
-		if (hwnd==GetForegroundWindow() || hwnd==_last_foreground_wnd) {
-			ShowWindow(hwnd, SW_MINIMIZE);
-			_last_foreground_wnd = 0;
-		} else {
-			 // switch to selected application window
-			SetForegroundWindow(hwnd);
-
-			if (IsIconic(hwnd))
-				ShowWindow(hwnd, SW_RESTORE);
-
-			_last_foreground_wnd = hwnd;
-		}
-
-		return 0;
-	}
-
-	return super::Command(id, code);
 }
 
 void TaskBar::Refresh()

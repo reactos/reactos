@@ -86,10 +86,8 @@ void explorer_show_frame(HWND hwndDesktop, int cmdshow)
 }
 
 
-static void InitInstance(HINSTANCE hinstance)
+static void InitInstance(HINSTANCE hInstance)
 {
-	g_Globals._hInstance = hinstance;
-
 	setlocale(LC_COLLATE, "");	// set collating rules to local settings for compareName
 
 
@@ -97,9 +95,9 @@ static void InitInstance(HINSTANCE hinstance)
 
 	WindowClass wcFrame(CLASSNAME_FRAME);
 
-	wcFrame.hIcon		  = LoadIcon(hinstance, MAKEINTRESOURCE(IDI_EXPLORER));
+	wcFrame.hIcon		  = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_EXPLORER));
 	wcFrame.hCursor 	  = LoadCursor(0, IDC_ARROW);
-	wcFrame.hIconSm 	  = (HICON)LoadImage(hinstance,
+	wcFrame.hIconSm 	  = (HICON)LoadImage(hInstance,
 											 MAKEINTRESOURCE(IDI_EXPLORER),
 											 IMAGE_ICON,
 											 GetSystemMetrics(SM_CXSMICON),
@@ -133,7 +131,7 @@ static void InitInstance(HINSTANCE hinstance)
 }
 
 
-int explorer_main(HINSTANCE hinstance, HWND hwndDesktop, int cmdshow)
+int explorer_main(HINSTANCE hInstance, HWND hwndDesktop, int cmdshow)
 {
 	 // initialize COM and OLE
 	OleInit usingCOM;
@@ -144,7 +142,7 @@ int explorer_main(HINSTANCE hinstance, HWND hwndDesktop, int cmdshow)
 	try {
 		MSG msg;
 
-		InitInstance(hinstance);
+		InitInstance(hInstance);
 
 		if (hwndDesktop)
 			g_Globals._desktop_mode = true;
@@ -196,6 +194,8 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 		nShowCmd = SW_HIDE;
 		startup_desktop = TRUE;
 	}
+
+	g_Globals._hInstance = hInstance;
 
 	HWND hwndDesktop = 0;
 

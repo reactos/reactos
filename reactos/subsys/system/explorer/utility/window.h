@@ -75,7 +75,7 @@ protected:
 	static WINDOWCREATORFUNC s_window_creator;	//TODO: protect for multithreaded access
 
 	 // MDI child creation
-	static HHOOK s_hcbthook;
+	static HHOOK s_hcbtHook;
 	static LRESULT CALLBACK CBTHookProc(int code, WPARAM wparam, LPARAM lparam);
 };
 
@@ -126,7 +126,7 @@ struct WindowClass : public WNDCLASSEX
 };
 
 
-#define	WM_DISPATCH_COMMAND		(WM_APP+0)
+#define	WM_DISPATCH_COMMAND		(WM_APP+0x00)
 
 
 #define SPLIT_WIDTH 		5
@@ -140,7 +140,7 @@ struct MenuInfo
 	HMENU	_hMenuOptions;
 };
 
-#define	FRM_GET_MENUINFO		(WM_APP+1)
+#define	FRM_GET_MENUINFO		(WM_APP+0x01)
 
 #define	Frame_GetMenuInfo(hwnd) ((MenuInfo*)SNDMSG(hwnd, FRM_GET_MENUINFO, 0, 0))
 

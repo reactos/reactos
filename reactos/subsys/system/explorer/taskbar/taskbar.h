@@ -26,6 +26,8 @@
  //
 
 
+//#include "shellhook.h"
+
 #include <map>
 #include <set>
 
@@ -33,6 +35,8 @@
 #define	TASKBAR_HEIGHT	30
 #define	TASKBAR_LEFT	60
 //#define TASKBAR_AT_TOP
+
+#define	WM_SHELLHOOK_NOTIFY		(WM_APP+0x10)
 
 
 struct DesktopBar : public Window
@@ -74,6 +78,7 @@ struct TaskBar : public Window
 	typedef Window super;
 
 	TaskBar(HWND hwnd);
+	TaskBar::~TaskBar();
 
 	DesktopBar*	_desktop_bar;
 
@@ -87,7 +92,7 @@ protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 	int		Command(int id, int code);
 
-	static BOOL CALLBACK EnumWndProc(HWND, LPARAM);
+	static BOOL CALLBACK EnumWndProc(HWND hwnd, LPARAM lparam);
 
 	void	Refresh();
 };

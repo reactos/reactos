@@ -44,7 +44,7 @@ WindowClass::WindowClass(LPCTSTR classname, WNDPROC wndproc)
 }
 
 
-HHOOK Window::s_hcbthook = 0;
+HHOOK Window::s_hcbtHook = 0;
 Window::WINDOWCREATORFUNC Window::s_window_creator = NULL;
 const void* Window::s_new_info = NULL;
 
@@ -84,11 +84,11 @@ Window* Window::create_mdi_child(HWND hmdiclient, const MDICREATESTRUCT& mcs, WI
 	s_new_info = info;
 	s_new_child_wnd = NULL;
 
-	s_hcbthook = SetWindowsHookEx(WH_CBT, CBTHookProc, 0, GetCurrentThreadId());
+	s_hcbtHook = SetWindowsHookEx(WH_CBT, CBTHookProc, 0, GetCurrentThreadId());
 
 	HWND hwnd = (HWND) SendMessage(hmdiclient, WM_MDICREATE, 0, (LPARAM)&mcs);
 
-	UnhookWindowsHookEx(s_hcbthook);
+	UnhookWindowsHookEx(s_hcbtHook);
 
 	Window* child = s_new_child_wnd;
 	s_new_info = NULL;
@@ -110,7 +110,7 @@ LRESULT CALLBACK Window::CBTHookProc(int code, WPARAM wparam, LPARAM lparam)
 			s_new_child_wnd = child;
 	}
 
-	return CallNextHookEx(s_hcbthook, code, wparam, lparam);
+	return CallNextHookEx(s_hcbtHook, code, wparam, lparam);
 }
 
 

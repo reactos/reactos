@@ -44,15 +44,15 @@
 #define	IDW_FIRST_CHILD			0xC000	/*0x200*/
 
 
-#define	WM_TRANSLATE_MSG		(WM_APP+2)
-#define	WM_GET_FILEWND_PTR		(WM_APP+3)
+#define	WM_TRANSLATE_MSG		(WM_APP+0x02)
+#define	WM_GET_FILEWND_PTR		(WM_APP+0x03)
 
-#define	FRM_CALC_CLIENT			(WM_APP+4)
+#define	FRM_CALC_CLIENT			(WM_APP+0x04)
 #define	Frame_CalcFrameClient(hwnd, prt) ((BOOL)SNDMSG(hwnd, FRM_CALC_CLIENT, 0, (LPARAM)(PRECT)prt))
 
-#define	WM_OPEN_WINDOW			(WM_APP+5)
+#define	WM_OPEN_WINDOW			(WM_APP+0x05)
 
-#define	WM_GET_CONTROLWINDOW	(WM_APP+6)
+#define	WM_GET_CONTROLWINDOW	(WM_APP+0x06)
 
 
 #define CLASSNAME_FRAME 		TEXT("CabinetWClass")	// same class name for frame window as in MS Explorer
