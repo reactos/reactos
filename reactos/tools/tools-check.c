@@ -9,9 +9,9 @@
 
 #if (BINUTILS_VERSION_DATE >= 20040902 && BINUTILS_VERSION_DATE <= 20041008) || \
     (BINUTILS_VERSION_DATE < 20031001)
-#error Due to technical reasons your binutils version can't be used to \
-       build ReactOS. Please consider upgrading to newer version. See \
-       www.mingw.org for details.
+#error "Due to technical reasons your binutils version can't be used to" \
+       "build ReactOS. Please consider upgrading to newer version. See" \
+       "www.mingw.org for details."
 #endif
 
 /*
@@ -21,9 +21,9 @@
 
 #if (__GNUC__ == 3 && __GNUC_MINOR__ < 3) || \
     (__GNUC__ < 3)
-#error Due to technical reasons your GCC version can't be used to \
-       build ReactOS. Please consider upgrading to newer version. See \
-       www.mingw.org for details.
+#error "Due to technical reasons your GCC version can't be used to" \
+       "build ReactOS. Please consider upgrading to newer version. See" \
+       "www.mingw.org for details."
 #endif
 
 /*
