@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rw.c,v 1.5 2002/09/09 17:26:24 hbirr Exp $
+/* $Id: rw.c,v 1.6 2002/09/15 22:26:52 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -130,7 +130,7 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
       TempLength = ROUND_DOWN(Length, BLOCKSIZE);
       Status = CdfsReadSectors(DeviceExt->StorageDevice,
 			       Fcb->Entry.ExtentLocationL + (ReadOffset / BLOCKSIZE),
-			       Length / BLOCKSIZE,
+			       TempLength / BLOCKSIZE,
 			       Buffer);
       if (NT_SUCCESS(Status))
 	{
