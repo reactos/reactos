@@ -1,4 +1,4 @@
-/* $Id: global.c,v 1.21 2004/02/18 23:20:14 gvg Exp $
+/* $Id: global.c,v 1.22 2004/04/06 20:59:40 gvg Exp $
  *
  * Win32 Global/Local heap functions (GlobalXXX, LocalXXX).
  * These functions included in Win32 for compatibility with 16 bit Windows
@@ -47,10 +47,10 @@ typedef struct __GLOBAL_LOCAL_HANDLE
 
 static void DbgPrintStruct(PGLOBAL_HANDLE h)
 {
-    DbgPrint("Magic:     0x%X\n", h->Magic);
-    DbgPrint("Pointer:   0x%X\n", h->Pointer);
-    DbgPrint("Flags:     0x%X\n", h->Flags);
-    DbgPrint("LockCount: 0x%X\n", h->LockCount);
+    DPRINT("Magic:     0x%X\n", h->Magic);
+    DPRINT("Pointer:   0x%X\n", h->Pointer);
+    DPRINT("Flags:     0x%X\n", h->Flags);
+    DPRINT("LockCount: 0x%X\n", h->LockCount);
 }
 
 
@@ -116,10 +116,10 @@ GlobalAlloc(UINT uFlags,
             }
             else
             {
-                DbgPrint("Allocated a 0 size movable block.\n");
+                DPRINT("Allocated a 0 size movable block.\n");
                 DbgPrintStruct(phandle);
-                DbgPrint("Address of the struct: 0x%X\n", phandle);
-                DbgPrint("Address of pointer:    0x%X\n", &(phandle->Pointer));
+                DPRINT("Address of the struct: 0x%X\n", phandle);
+                DPRINT("Address of pointer:    0x%X\n", &(phandle->Pointer));
             }
         }
         HeapUnlock(hProcessHeap);
@@ -170,11 +170,11 @@ GlobalFlags(HGLOBAL hMem)
     DWORD		    retval;
     PGLOBAL_HANDLE	phandle;
 
-    DbgPrint("GlobalFlags( 0x%lX )\n", (ULONG)hMem);
+    DPRINT("GlobalFlags( 0x%lX )\n", (ULONG)hMem);
 
     if(!ISHANDLE(hMem))
     {
-        DbgPrint("GlobalFlags: Fixed memory.\n");
+        DPRINT("GlobalFlags: Fixed memory.\n");
         retval = 0;
     }
     else
@@ -198,7 +198,7 @@ GlobalFlags(HGLOBAL hMem)
         }
         else
         {
-            DbgPrint("GlobalSize: invalid handle\n");
+            DPRINT1("GlobalSize: invalid handle\n");
             retval = 0;
         }
         HeapUnlock(GetProcessHeap());
@@ -233,7 +233,7 @@ GlobalFree(HGLOBAL hMem)
 
             if(phandle->LockCount!=0)
             {
-                DbgPrint("Warning! GlobalFree(0x%X) Freeing a handle to a locked object.\n", hMem);
+                DPRINT1("Warning! GlobalFree(0x%X) Freeing a handle to a locked object.\n", hMem);
                 SetLastError(ERROR_INVALID_HANDLE);
             }
             
@@ -260,11 +260,11 @@ GlobalHandle(LPCVOID pMem)
     PGLOBAL_HANDLE         test = 0;
     LPCVOID        pointer_test = 0;
 
-    DbgPrint("GlobalHandle( 0x%lX )\n", (ULONG)pMem);
+    DPRINT("GlobalHandle( 0x%lX )\n", (ULONG)pMem);
     if (0 == pMem) /*Invalid argument */
     {
         SetLastError(ERROR_INVALID_PARAMETER);
-        DbgPrint("Error: 0 handle.\n");
+        DPRINT1("Error: 0 handle.\n");
         return 0;
     }
   
@@ -300,7 +300,7 @@ GlobalHandle(LPCVOID pMem)
     }
     else
     {
-        DbgPrint("GlobalHandle: Bad read pointer.\n");
+        DPRINT1("GlobalHandle: Bad read pointer.\n");
         SetLastError(ERROR_INVALID_HANDLE);
         handle = 0;
     }
@@ -533,7 +533,7 @@ GlobalSize(HGLOBAL hMem)
     SIZE_T         retval  = 0;
     PGLOBAL_HANDLE phandle = 0;
     
-    DbgPrint("GlobalSize( 0x%lX )\n", (ULONG)hMem);
+    DPRINT("GlobalSize( 0x%lX )\n", (ULONG)hMem);
     
     if(ISPOINTER(hMem)) /*FIXED*/
     {
@@ -558,7 +558,7 @@ GlobalSize(HGLOBAL hMem)
                     **      We should choose an error value to set as
                     **      the last error. Which One?
                     */
-                    DbgPrint("GlobalSize:  RtlSizeHeap failed.\n");
+                    DPRINT("GlobalSize:  RtlSizeHeap failed.\n");
                     retval = 0;
                 }
                 else /*Everything is ok*/
