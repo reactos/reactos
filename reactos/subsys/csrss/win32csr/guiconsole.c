@@ -1,4 +1,4 @@
-/* $Id: guiconsole.c,v 1.23 2004/12/04 22:09:02 navaraf Exp $
+/* $Id: guiconsole.c,v 1.24 2004/12/05 01:13:29 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -129,8 +129,10 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
   GuiData->MemoryBitmap = CreateCompatibleBitmap(Dc, 
                                                  Console->Size.X * GuiData->CharWidth, 
 						 Console->Size.Y * GuiData->CharHeight);
-  DeleteObject(SelectObject(GuiData->MemoryDC, GuiData->MemoryBitmap));
-  SelectObject(GuiData->MemoryDC, GuiData->Font); /* Don't delete stock font. */
+  /* NOTE: Don't delete the "first bitmap", it's done in DeleteDC. */
+  SelectObject(GuiData->MemoryDC, GuiData->MemoryBitmap);
+  /* NOTE: Don't delete stock font. */
+  SelectObject(GuiData->MemoryDC, GuiData->Font); 
 
   ReleaseDC(hWnd, Dc);
   GuiData->CursorBlinkOn = TRUE;
