@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.245 2004/07/24 01:28:15 navaraf Exp $
+/* $Id: window.c,v 1.246 2004/07/26 14:58:35 jimtabor Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1181,7 +1181,7 @@ NtUserBuildHwndList(
       Window = CONTAINING_RECORD(Current, WINDOW_OBJECT, ThreadListEntry);
       ASSERT(Window);
       
-      if(dwCount < nBufSize && pWnd && (Window->Style & WS_CHILD))
+      if(dwCount < nBufSize && pWnd)
       {
         Status = MmCopyToCaller(pWnd++, &Window->Self, sizeof(HWND));
         if(!NT_SUCCESS(Status))
@@ -1190,12 +1190,7 @@ NtUserBuildHwndList(
           break;
         }
       }
-      
-      if(!(Window->Style & WS_CHILD))
-      {
-        dwCount++;
-      }
-      
+      dwCount++;
       Current = Current->Flink;
     }
     IntUnLockThreadWindows(W32Thread);
