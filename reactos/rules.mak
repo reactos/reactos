@@ -178,5 +178,5 @@ export OS2_PATH_LIB=$(OS2_PATH)/lib
 export OS2_PATH_INC=$(OS2_PATH)/include
 
 # Other systems integration
-export ROOT_PATH=$(PATH_TO_TOP)/..
+export REGTESTS_PATH=$(PATH_TO_TOP)/regtests
 export REGTESTS_PATH_INC=$(PATH_TO_TOP)/regtests/shared
