@@ -27,6 +27,7 @@
 #include "winreg.h"
 #include "winnls.h"
 #include "shlwapi.h"
+#include "wingdi.h"
 #include "wine/debug.h"
 #include "msi.h"
 #include "msiquery.h"
@@ -53,18 +54,8 @@ void MSI_FreePackage( MSIOBJECTHDR *arg)
     MSIPACKAGE *package= (MSIPACKAGE*) arg;
 
     ACTION_remove_tracked_tempfiles(package);
+    ACTION_free_package_structures(package);
 
-    if (package->features && package->loaded_features > 0)
-        HeapFree(GetProcessHeap(),0,package->features);
-
-    if (package->folders && package->loaded_folders > 0)
-        HeapFree(GetProcessHeap(),0,package->folders);
-    
-    if (package->components && package->loaded_components > 0)
-        HeapFree(GetProcessHeap(),0,package->components);
-
-    if (package->files && package->loaded_files > 0)
-        HeapFree(GetProcessHeap(),0,package->files);
     msiobj_release( &package->db->hdr );
 }
 
@@ -169,9 +160,11 @@ http://msdn.microsoft.com/library/default.asp?url=/library/en-us/msi/setup/prope
 static VOID set_installer_properties(MSIPACKAGE *package)
 {
     WCHAR pth[MAX_PATH];
+    WCHAR *ptr;
     OSVERSIONINFOA OSVersion;
     DWORD verval;
-    WCHAR verstr[10], msiver[10];
+    WCHAR verstr[10], bufstr[20];
+    HDC dc;
 
     static const WCHAR cszbs[]={'\\',0};
     static const WCHAR CFF[] = 
@@ -202,6 +195,8 @@ static VOID set_installer_properties(MSIPACKAGE *package)
 {'A','p','p','D','a','t','a','F','o','l','d','e','r',0};
     static const WCHAR SF[] = 
 {'S','y','s','t','e','m','F','o','l','d','e','r',0};
+    static const WCHAR SF16[] = 
+{'S','y','s','t','e','m','1','6','F','o','l','d','e','r',0};
     static const WCHAR LADF[] = 
 {'L','o','c','a','l','A','p','p','D','a','t','a','F','o','l','d','e','r',0};
     static const WCHAR MPF[] = 
@@ -210,6 +205,8 @@ static VOID set_installer_properties(MSIPACKAGE *package)
 {'P','e','r','s','o','n','a','l','F','o','l','d','e','r',0};
     static const WCHAR WF[] = 
 {'W','i','n','d','o','w','s','F','o','l','d','e','r',0};
+    static const WCHAR WV[] = 
+{'W','i','n','d','o','w','s','V','o','l','u','m','e',0};
     static const WCHAR TF[]=
 {'T','e','m','p','F','o','l','d','e','r',0};
     static const WCHAR szAdminUser[] =
@@ -229,12 +226,15 @@ static VOID set_installer_properties(MSIPACKAGE *package)
 
     static const WCHAR szVersionMsi[] = { 'V','e','r','s','i','o','n','M','s','i',0 };
     static const WCHAR szFormat2[] = {'%','l','i','.','%','l','i',0};
+/* Screen properties */
+    static const WCHAR szScreenX[] = {'S','c','r','e','e','n','X',0};
+    static const WCHAR szScreenY[] = {'S','c','r','e','e','n','Y',0};
+    static const WCHAR szColorBits[] = {'C','o','l','o','r','B','i','t','s',0};
+    static const WCHAR szScreenFormat[] = {'%','d',0};
 
 /*
  * Other things I notice set
  *
-ScreenY
-ScreenX
 SystemLanguageID
 ComputerName
 UserLanguageID
@@ -251,7 +251,6 @@ CaptionHeight
 BorderTop
 BorderSide
 TextHeight
-ColorBits
 RedirectedDllSupport
 Time
 Date
@@ -313,6 +312,7 @@ Privileged
     SHGetFolderPathW(NULL,CSIDL_SYSTEM,NULL,0,pth);
     strcatW(pth,cszbs);
     MSI_SetPropertyW(package, SF, pth);
+    MSI_SetPropertyW(package, SF16, pth);
 
     SHGetFolderPathW(NULL,CSIDL_LOCAL_APPDATA,NULL,0,pth);
     strcatW(pth,cszbs);
@@ -330,6 +330,12 @@ Privileged
     strcatW(pth,cszbs);
     MSI_SetPropertyW(package, WF, pth);
 
+    SHGetFolderPathW(NULL,CSIDL_WINDOWS,NULL,0,pth);
+    ptr = strchrW(pth,'\\');
+    if (ptr)
+	*(ptr+1) = 0;
+    MSI_SetPropertyW(package, WV, pth);
+    
     GetTempPathW(MAX_PATH,pth);
     MSI_SetPropertyW(package, TF, pth);
 
@@ -357,8 +363,18 @@ Privileged
     /* just fudge this */
     MSI_SetPropertyW(package,szSPL,szSix);
 
-    sprintfW( msiver, szFormat2, MSI_MAJORVERSION, MSI_MINORVERSION);
-    MSI_SetPropertyW( package, szVersionMsi, msiver );
+    sprintfW( bufstr, szFormat2, MSI_MAJORVERSION, MSI_MINORVERSION);
+    MSI_SetPropertyW( package, szVersionMsi, bufstr );
+
+    /* Screen properties. */
+    dc = GetDC(0);
+    sprintfW( bufstr, szScreenFormat, GetDeviceCaps( dc, HORZRES ) );
+    MSI_SetPropertyW( package, szScreenX, bufstr );
+    sprintfW( bufstr, szScreenFormat, GetDeviceCaps( dc, VERTRES ));
+    MSI_SetPropertyW( package, szScreenY, bufstr );
+    sprintfW( bufstr, szScreenFormat, GetDeviceCaps( dc, BITSPIXEL ));
+    MSI_SetPropertyW( package, szColorBits, bufstr );
+    ReleaseDC(0, dc);
 }
 
 UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
@@ -406,6 +422,8 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
         package->loaded_folders = 0;
         package->loaded_components= 0;
         package->loaded_files = 0;
+        package->ActionFormat = NULL;
+        package->LastAction = NULL;
 
         /* OK, here is where we do a slew of things to the database to 
          * prep for all that is to come as a package */
@@ -747,6 +765,10 @@ UINT MSI_GetPropertyW(MSIPACKAGE *package, LPCWSTR szName,
     UINT rc;
 
     rc = MSI_GetPropertyRow(package, szName, &row);
+
+    if (*pchValueBuf > 0)
+        szValueBuf[0] = 0;
+
     if (rc == ERROR_SUCCESS)
     {
         rc = MSI_RecordGetStringW(row,1,szValueBuf,pchValueBuf);
@@ -755,6 +777,9 @@ UINT MSI_GetPropertyW(MSIPACKAGE *package, LPCWSTR szName,
 
     if (rc == ERROR_SUCCESS)
         TRACE("returning %s for property %s\n", debugstr_w(szValueBuf),
+            debugstr_w(szName));
+    else if (rc == ERROR_MORE_DATA)
+        TRACE("need %li sized buffer for %s\n", *pchValueBuf,
             debugstr_w(szName));
     else
     {
@@ -772,6 +797,9 @@ UINT MSI_GetPropertyA(MSIPACKAGE *package, LPCSTR szName,
     UINT rc, len;
     LPWSTR szwName;
 
+    if (*pchValueBuf > 0)
+        szValueBuf[0] = 0;
+    
     len = MultiByteToWideChar( CP_ACP, 0, szName, -1, NULL, 0 );
     szwName = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) );
     if (!szwName)
@@ -787,6 +815,9 @@ UINT MSI_GetPropertyA(MSIPACKAGE *package, LPCSTR szName,
 
     if (rc == ERROR_SUCCESS)
         TRACE("returning %s for property %s\n", debugstr_a(szValueBuf),
+            debugstr_a(szName));
+    else if (rc == ERROR_MORE_DATA)
+        TRACE("need %ld sized buffer for %s\n", *pchValueBuf,
             debugstr_a(szName));
     else
     {

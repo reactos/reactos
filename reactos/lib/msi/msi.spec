@@ -56,8 +56,8 @@
 56 stub MsiGetFeatureInfoW
 57 stdcall MsiGetFeatureStateA(long str ptr ptr)
 58 stdcall MsiGetFeatureStateW(long wstr ptr ptr)
-59 stub MsiGetFeatureUsageA
-60 stub MsiGetFeatureUsageW
+59 stdcall MsiGetFeatureUsageA(str str ptr ptr)
+60 stdcall MsiGetFeatureUsageW(wstr wstr ptr ptr)
 61 stub MsiGetFeatureValidStatesA
 62 stub MsiGetFeatureValidStatesW
 63 stub MsiGetLanguage
@@ -134,7 +134,7 @@
 134 stub MsiSetComponentStateA
 135 stub MsiSetComponentStateW
 136 stdcall MsiSetExternalUIA(ptr long ptr)
-137 stub MsiSetExternalUIW
+137 stdcall MsiSetExternalUIW(ptr long ptr)
 138 stdcall MsiSetFeatureStateA(long str long)
 139 stdcall MsiSetFeatureStateW(long wstr long)
 140 stub MsiSetInstallLevel
@@ -201,8 +201,8 @@
 201 stub MsiDecomposeDescriptorW
 202 stub MsiProvideQualifiedComponentExA
 203 stub MsiProvideQualifiedComponentExW
-204 stdcall MsiEnumRelatedProductsA(str long long str)
-205 stub MsiEnumRelatedProductsW
+204 stdcall MsiEnumRelatedProductsA(str long long ptr)
+205 stdcall MsiEnumRelatedProductsW(wstr long long ptr)
 206 stub MsiSetFeatureAttributesA
 207 stub MsiSetFeatureAttributesW
 208 stub MsiSourceListClearAllA

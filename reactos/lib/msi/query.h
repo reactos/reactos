@@ -52,6 +52,7 @@
 #define EXPR_STRCMP   7
 #define EXPR_UTF8     8
 #define EXPR_WILDCARD 9
+#define EXPR_COL_NUMBER_STRING 10
 
 struct sql_str {
     LPCWSTR data;

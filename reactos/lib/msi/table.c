@@ -1088,7 +1088,7 @@ static UINT TABLE_fetch_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT *
         return ERROR_FUNCTION_FAILED;
     }
 
-    TRACE("Data [%d][%d] = %d \n", row, col, *val );
+    /* TRACE("Data [%d][%d] = %d \n", row, col, *val ); */
 
     return ERROR_SUCCESS;
 }

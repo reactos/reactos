@@ -62,7 +62,7 @@ static BOOL SQL_MarkPrimaryKeys( create_col_info *cols,
 
 static struct expr * EXPR_complex( struct expr *l, UINT op, struct expr *r );
 static struct expr * EXPR_column( LPWSTR );
-static struct expr * EXPR_ival( struct sql_str *);
+static struct expr * EXPR_ival( struct sql_str *, int sign);
 static struct expr * EXPR_sval( struct sql_str *);
 static struct expr * EXPR_wildcard(void);
 
@@ -543,7 +543,11 @@ column_assignment:
 const_val:
     TK_INTEGER
         {
-            $$ = EXPR_ival( &$1 );
+            $$ = EXPR_ival( &$1, 1 );
+        }
+  | TK_MINUS  TK_INTEGER
+        {
+            $$ = EXPR_ival( &$2, -1 );
         }
   | TK_STRING
         {
@@ -717,13 +721,13 @@ static struct expr * EXPR_column( LPWSTR str )
     return e;
 }
 
-static struct expr * EXPR_ival( struct sql_str *str )
+static struct expr * EXPR_ival( struct sql_str *str , int sign)
 {
     struct expr *e = HeapAlloc( GetProcessHeap(), 0, sizeof *e );
     if( e )
     {
         e->type = EXPR_IVAL;
-        e->u.ival = atoiW( str->data );
+        e->u.ival = atoiW( str->data ) * sign;
     }
     return e;
 }
