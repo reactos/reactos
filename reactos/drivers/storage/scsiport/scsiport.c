@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.47 2004/02/29 11:19:21 hbirr Exp $
+/* $Id: scsiport.c,v 1.48 2004/03/22 19:59:31 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -33,7 +33,7 @@
 #include <ddk/ntddscsi.h>
 #include <rosrtl/string.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 
@@ -41,7 +41,7 @@
 
 #include "scsiport_int.h"
 
-//#define USE_DEVICE_QUEUES
+/* #define USE_DEVICE_QUEUES */
 
 /* TYPES *********************************************************************/
 
@@ -567,7 +567,8 @@ ScsiPortGetUncachedExtension(IN PVOID HwDeviceExtension,
     }
 
   /* Allocate a common DMA buffer */
-  DeviceExtension->CommonBufferLength = NumberOfBytes;
+  DeviceExtension->CommonBufferLength =
+    NumberOfBytes + DeviceExtension->SrbExtensionSize;
   DeviceExtension->VirtualAddress =
     HalAllocateCommonBuffer(DeviceExtension->AdapterObject,
 			    DeviceExtension->CommonBufferLength,
@@ -580,7 +581,8 @@ ScsiPortGetUncachedExtension(IN PVOID HwDeviceExtension,
       return NULL;
     }
 
-  return DeviceExtension->VirtualAddress;
+  return (PVOID)((ULONG_PTR)DeviceExtension->VirtualAddress +
+                 DeviceExtension->SrbExtensionSize);
 }
 
 
@@ -683,11 +685,10 @@ ScsiPortInitialize(IN PVOID Argument1,
     return(STATUS_INVALID_PARAMETER);
 
   DriverObject->DriverStartIo = ScsiPortStartIo;
-  DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)ScsiPortCreateClose;
-  DriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH)ScsiPortCreateClose;
-  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = (PDRIVER_DISPATCH)ScsiPortDeviceControl;
-  DriverObject->MajorFunction[IRP_MJ_SCSI] = (PDRIVER_DISPATCH)ScsiPortDispatchScsi;
-
+  DriverObject->MajorFunction[IRP_MJ_CREATE] = ScsiPortCreateClose;
+  DriverObject->MajorFunction[IRP_MJ_CLOSE] = ScsiPortCreateClose;
+  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = ScsiPortDeviceControl;
+  DriverObject->MajorFunction[IRP_MJ_SCSI] = ScsiPortDispatchScsi;
 
   SystemConfig = IoGetConfigurationInformation();
 
@@ -790,8 +791,6 @@ ScsiPortInitialize(IN PVOID Argument1,
       PortConfig->Length = sizeof(PORT_CONFIGURATION_INFORMATION);
       PortConfig->SystemIoBusNumber = BusNumber;
       PortConfig->AdapterInterfaceType = HwInitializationData->AdapterInterfaceType;
-//  PortConfig->BusInterruptLevel = oz_dev_pci_conf_inb (pciconfp, OZ_DEV_PCI_CONF_B_INTLINE);
-//  PortConfig->BusInterruptVector = ;
       PortConfig->InterruptMode =
 	(PortConfig->AdapterInterfaceType == PCIBus) ? LevelSensitive : Latched;
       PortConfig->MaximumTransferLength = SP_UNINITIALIZED_VALUE;
@@ -868,7 +867,7 @@ ScsiPortInitialize(IN PVOID Argument1,
 
       if (Result == SP_RETURN_FOUND)
 	{
-	  DPRINT("ScsiPortInitialize(): Found HBA!\n");
+	  DPRINT("ScsiPortInitialize(): Found HBA! (%x)\n", PortConfig->BusInterruptVector);
 
 	  /* Register an interrupt handler for this device */
 	  MappedIrq = HalGetInterruptVector(PortConfig->AdapterInterfaceType,
@@ -1238,7 +1237,8 @@ SpiGetPciConfigData (IN struct _HW_INITIALIZATION_DATA *HwInitializationData,
 		      SlotNumber.u.bits.DeviceNumber,
 		      SlotNumber.u.bits.FunctionNumber);
 
-	      PortConfig->BusInterruptLevel = PciConfig.u.type0.InterruptLine;
+	      PortConfig->BusInterruptLevel =
+	      PortConfig->BusInterruptVector = PciConfig.u.type0.InterruptLine;
 	      PortConfig->SlotNumber = SlotNumber.u.AsULONG;
 
 	      /* Initialize access ranges */
@@ -1423,6 +1423,7 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
 #ifdef USE_DEVICE_QUEUES
 	if (Srb->SrbFlags & SRB_FLAGS_BYPASS_FROZEN_QUEUE)
 	  {
+	    IoMarkIrpPending(Irp);
 	    IoStartPacket (DeviceObject, Irp, NULL, NULL);
 	  }
 	else
@@ -1437,12 +1438,14 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
 					   Srb->QueueSortKey))
 	      {
 		Srb->SrbStatus = SRB_STATUS_SUCCESS;
+		IoMarkIrpPending(Irp);
 		IoStartPacket (DeviceObject, Irp, NULL, NULL);
 	      }
 
 	    KeLowerIrql (oldIrql);
 	  }
 #else
+        IoMarkIrpPending(Irp);
         IoStartPacket (DeviceObject, Irp, NULL, NULL);
 #endif
 	return(STATUS_PENDING);
@@ -1451,6 +1454,7 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
       case SRB_FUNCTION_FLUSH:
 	if (DeviceExtension->PortConfig->CachesData == TRUE)
 	  {
+            IoMarkIrpPending(Irp);
 	    IoStartPacket(DeviceObject, Irp, NULL, NULL);
 	    return(STATUS_PENDING);
 	  }
@@ -1623,7 +1627,7 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
 				    Srb->Lun);
   if (LunExtension == NULL)
     {
-      DPRINT("No IRP_MJ_SCSI!\n");
+      DPRINT("Can't get LunExtension!\n");
       Irp->IoStatus.Status = STATUS_NO_SUCH_DEVICE;
       Irp->IoStatus.Information = 0;
       IoCompleteRequest (Irp,
@@ -1648,17 +1652,10 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
   Irp->IoStatus.Information = Srb->DataTransferLength;
 
   /* Allocte SRB extension */
-#if 0
   if (DeviceExtension->SrbExtensionSize != 0)
     {
-      Srb->SrbExtension = ExAllocatePool (NonPagedPool,
-					  DeviceExtension->SrbExtensionSize);
-      if (Srb->SrbExtension == NULL)
-	{
-	  DPRINT1("Failed to allocate the SRB-Extension!\n");
-	}
+      Srb->SrbExtension = DeviceExtension->VirtualAddress;
     }
-#endif
 
   DeviceExtension->CurrentIrp = Irp;
 
@@ -1667,14 +1664,6 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
 			      DeviceExtension))
     {
       DPRINT("Synchronization failed!\n");
-
-#if 0
-      if (Srb->SrbExtension != NULL)
-	{
-	  ExFreePool (Srb->SrbExtension);
-	  Srb->SrbExtension = NULL;
-	}
-#endif
 
       Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
       Irp->IoStatus.Information = 0;
@@ -1900,6 +1889,7 @@ SpiScanAdapter (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 {
   PSCSI_PORT_LUN_EXTENSION LunExtension;
   SCSI_REQUEST_BLOCK Srb;
+  PCDB Cdb;
   ULONG Bus;
   ULONG Target;
   ULONG Lun;
@@ -1913,7 +1903,11 @@ SpiScanAdapter (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
   Srb.DataBuffer = ExAllocatePool(NonPagedPool, 256);
   Srb.Function = SRB_FUNCTION_EXECUTE_SCSI;
   Srb.DataTransferLength = 256;
-  Srb.Cdb[0] = SCSIOP_INQUIRY;
+  Srb.CdbLength = 6;
+
+  Cdb = (PCDB) &Srb.Cdb;
+
+  Cdb->CDB6INQUIRY.OperationCode = SCSIOP_INQUIRY;
 
   for (Bus = 0; Bus < DeviceExtension->PortConfig->NumberOfBuses; Bus++)
     {
@@ -1927,6 +1921,8 @@ SpiScanAdapter (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 	    {
 	      Srb.Lun = Lun;
 	      Srb.SrbStatus = SRB_STATUS_SUCCESS;
+
+	      Cdb->CDB6INQUIRY.LogicalUnitNumber = Lun;
 
 	      LunExtension = SpiAllocateLunExtension (DeviceExtension,
 						      Bus,
@@ -2098,14 +2094,6 @@ ScsiPortDpcForIsr(IN PKDPC Dpc,
     {
       IrpStack = IoGetCurrentIrpStackLocation(DeviceExtension->CurrentIrp);
       Srb = IrpStack->Parameters.Scsi.Srb;
-
-#if 0
-      if (Srb->SrbExtension != NULL)
-	{
-	  ExFreePool (Srb->SrbExtension);
-	  Srb->SrbExtension = NULL;
-	}
-#endif
 
       if (DeviceExtension->OriginalSrb != NULL)
 	{
