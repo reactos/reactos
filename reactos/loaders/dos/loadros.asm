@@ -249,17 +249,72 @@ entry:
 .checkForHive:
 	; Check if it is a symbol file
 	cmp	byte [bx-5],'.'
-	jne	.pe_copy
+	jne	.lst_copy
 	cmp	byte [bx-4],'h'
-	jne	.pe_copy
+	jne	.lst_copy
 	cmp	byte [bx-3],'i'
-	jne	.pe_copy
+	jne	.lst_copy
 	cmp	byte [bx-2],'v'
-	jne	.pe_copy
+	jne	.lst_copy
 
 	call	sym_load_module
 	jmp	.after_copy
 
+.lst_copy:
+	;; Check for a module list file
+	cmp	byte [bx-5],'.'
+	jne	.pe_copy
+	cmp	byte [bx-4],'l'
+	jne	.pe_copy
+	cmp	byte [bx-3],'s'
+	jne	.pe_copy
+	cmp	byte [bx-2],'t'
+	jne	.pe_copy
+
+	call	sym_load_module
+
+	push	es
+	mov	bx,0x9000
+	push	bx
+	pop	es
+	xor	edi,edi
+
+.lst_copy_bytes:
+	mov	bx,_lst_name_local
+	
+.lst_byte:
+	mov	al,[es:di]
+	inc	di
+	cmp	al,' '
+	jg	.lst_not_space
+	mov	byte [bx],0
+	inc	bx
+.lst_space:
+	mov	al,[es:di]
+	inc	di
+	cmp	al,' '
+	jle	.lst_space
+.lst_not_space:
+	cmp	al,'*'
+	je	.lst_end
+	mov	[bx],al
+	inc	bx
+	jmp	.lst_byte
+
+.lst_end:
+	;; We are here because the terminator was encountered
+	mov	byte [bx],0		; Zero terminate
+	inc	bx
+	mov	byte [bx],0
+	mov	[end_cmd_line],bx	; Put in cmd_line_length
+	mov	dx,_lst_name_local; Put this address in di
+	mov	di,dx			; This, too, at the start of the
+					; string
+
+	pop	es
+
+	jmp	.start_loading	
+			
 .pe_copy:
 	call	pe_load_module
 
@@ -291,7 +346,7 @@ entry:
 	mov	dx, di
 	jmp	.start_loading
 
-.done_loading:
+.done_loading
 
 	;;
 	;; Initialize the multiboot information
@@ -376,40 +431,40 @@ entry:
 
 .done_mem:
 
-  ;;
-  ;; Retrieve BIOS memory map if available
-  ;;
-  xor ebx,ebx
-  mov edi, _multiboot_address_ranges
+	;;
+	;; Retrieve BIOS memory map if available
+	;;
+	xor ebx,ebx
+	mov edi, _multiboot_address_ranges
 
 .mmap_next:
 
-  mov edx, 'PAMS'
-  mov ecx, multiboot_address_range_size
-  mov eax, 0E820h
-  int 15h
-  jc  .done_mmap
+	mov edx, 'PAMS'
+	mov ecx, multiboot_address_range_size
+	mov eax, 0E820h
+	int 15h
+	jc  .done_mmap
 
-  cmp eax, 'PAMS'
-  jne .done_mmap
+	cmp eax, 'PAMS'
+	jne .done_mmap
 
-  add edi, multiboot_address_range_size
+	add edi, multiboot_address_range_size
 
-  cmp ebx, 0
-  jne .mmap_next
+	cmp ebx, 0
+	jne .mmap_next
 
-  ;;
-  ;; Prepare multiboot memory map structures
-  ;;
+	;;
+	;; Prepare multiboot memory map structures
+	;;
 
-  ;; Fill in the address descriptor size field
-  mov dword [_multiboot_address_range_descriptor_size], multiboot_address_range_size
+	;; Fill in the address descriptor size field
+	mov dword [_multiboot_address_range_descriptor_size], multiboot_address_range_size
 
-  ;; Set flag and base address and length of memory map
-  or  dword [_multiboot_flags], 40h
-  mov eax, edi
-  sub eax, _multiboot_address_ranges
-  mov dword [_multiboot_mmap_length], eax
+	;; Set flag and base address and length of memory map
+	or  dword [_multiboot_flags], 40h
+	mov eax, edi
+	sub eax, _multiboot_address_ranges
+	mov dword [_multiboot_mmap_length], eax
 
 	xor	eax, eax
 	mov	ax, ds
@@ -713,7 +768,10 @@ _current_size:
 	dd 0
 _current_file_size:
 	dd 0
-
+	
+_lst_name_local:
+	times 2048 db 0
+	
 	;;
 	;; Load a SYM file
 	;;	DS:DX = Filename
@@ -809,9 +867,9 @@ pe_load_module:
 	mov	dword [_mb_bss_end_addr], 0
 .first:
 
-  call  load_module2
-  call  load_module3
-  ret
+	call  load_module2
+	call  load_module3
+	ret
 
 load_module1:
 	;;
@@ -848,7 +906,7 @@ load_module1:
 	mov	dx, error_file_seek_failed
 	jmp	error
 .seek_start:
-  ret
+	ret
 
 load_module2:
 	;;
@@ -979,7 +1037,7 @@ load_module2:
 	and	di, 0xf000
 	add	edi, 0x1000
 .no_round:
-  ret
+	ret
 
 load_module3:  
 	mov	bx, [_multiboot_mods_count]

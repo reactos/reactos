@@ -1,0 +1,8 @@
+system32\drivers\scsiport.sys
+system32\drivers\atapi.sys
+system32\drivers\class2.sys
+system32\drivers\disk.sys
+system32\drivers\cdrom.sys
+system32\drivers\vfatfs.sys
+system32\config\system.hiv
+*

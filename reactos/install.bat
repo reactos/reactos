@@ -18,6 +18,7 @@ md %ROS_INSTALL%\system32\drivers
 md %ROS_INSTALL%\media
 md %ROS_INSTALL%\media\fonts
 copy boot.bat %ROS_INSTALL%
+copy bootc.lst %ROS_INSTALL%
 copy aboot.bat %ROS_INSTALL%
 copy system.hiv %ROS_INSTALL%\system32\config
 copy loaders\dos\loadros.com %ROS_INSTALL%
