@@ -692,7 +692,10 @@ GspSetThread(PCHAR Request)
 			  {
 			    GspOutBuffer[0] = 'O';
 			    GspOutBuffer[1] = 'K';
-	        GspRunThread = ThreadInfo;
+
+                            if(GspRunThread) ObDereferenceObject(GspRunThread);
+
+	                    GspRunThread = ThreadInfo;
 			  }
 			  else
 			  {
@@ -704,7 +707,10 @@ GspSetThread(PCHAR Request)
 			  {
 			    GspOutBuffer[0] = 'O';
 			    GspOutBuffer[1] = 'K';
-	        GspDbgThread = ThreadInfo;
+
+                            if(GspDbgThread) ObDereferenceObject(GspDbgThread);
+
+                            GspDbgThread = ThreadInfo;
 			  }
 			  else
 			  {
@@ -778,8 +784,11 @@ GspQuery(PCHAR Request)
     /* Get thread information */
     if (GspFindThread (ptr, &ThreadInfo))
 	  {
-      PCHAR String = GspThreadStates[ThreadInfo->Tcb.State];
-      GspMem2Hex (String, &GspOutBuffer[0], strlen (String), FALSE);
+             PCHAR String = GspThreadStates[ThreadInfo->Tcb.State];
+           
+             ObDereferenceObject(ThreadInfo);
+           
+             GspMem2Hex (String, &GspOutBuffer[0], strlen (String), FALSE);
 	  }
   }
 #if 0
@@ -840,6 +849,8 @@ GspQueryThreadStatus(PCHAR Request)
 
   if (GspFindThread (ptr, &ThreadInfo))
   {
+    ObDereferenceObject(ThreadInfo);
+
     GspOutBuffer[0] = 'O';
     GspOutBuffer[1] = 'K';
     GspOutBuffer[2] = '\0';
@@ -1306,8 +1317,11 @@ KdGdbStubInit(ULONG Phase)
 
 		  GspInitialized = TRUE;
 		  GspRunThread = PsGetCurrentThread();
+     
+                  ObReferenceObject(GspRunThread);
+
 /*		  GspDbgThread = PsGetCurrentThread(); */
-GspDbgThread = NULL;
+                  GspDbgThread = NULL;
 		  GspEnumThread = NULL;
 
       DbgBreakPointWithStatus (DBG_STATUS_CONTROL_C);
