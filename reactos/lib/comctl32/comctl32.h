@@ -191,6 +191,12 @@ BOOL WINAPI DPA_Merge (const HDPA, const HDPA, DWORD, PFNDPACOMPARE, PFNDPAMERGE
 #define TB_UNKWN463	(WM_USER+99)
 #define TB_UNKWN464	(WM_USER+100)
 
+#define FLATSB_CLASSA "flatsb_class32"
+
+/* FIXME: Rebar definition hack, should be patched in Wine */
+#undef RB_GETBANDINFO
+#define RB_GETBANDINFO (WM_USER+5)   /* just for compatibility */
+
 #define Header_GetItemA(w,i,d) (BOOL)SendMessageA((w),HDM_GETITEMA,(WPARAM)(i),(LPARAM)(HDITEMA*)(d))
 #define Header_GetItemW(w,i,d) (BOOL)SendMessageW((w),HDM_GETITEMW,(WPARAM)(i),(LPARAM)(HDITEMW*)(d))
 #define Header_SetItemA(w,i,d) (BOOL)SendMessageA((w),HDM_SETITEMA,(WPARAM)(i),(LPARAM)(const HDITEMA*)(d))
@@ -198,15 +204,30 @@ BOOL WINAPI DPA_Merge (const HDPA, const HDPA, DWORD, PFNDPACOMPARE, PFNDPAMERGE
 #define ListView_FindItemA(w,p,i) (INT)SendMessageA((w),LVM_FINDITEMA,(WPARAM)(p),(LPARAM)(LVFINDINFOA*)(i))
 #define ListView_FindItemW(w,p,i) (INT)SendMessageW((w),LVM_FINDITEMW,(WPARAM)(p),(LPARAM)(LVFINDINFOW*)(i))
 
-#define FLATSB_CLASSA "flatsb_class32"
-
-/* FIXME: Rebar definition hack, should be patched in Wine */
-#undef RB_GETBANDINFO
-#define RB_GETBANDINFO (WM_USER+5)   /* just for compatibility */
-
 /* Property sheet Wizard 97 styles */
 #define	PSH_WIZARD97_OLD 0x2000
 #define	PSH_WIZARD97_NEW 0x1000000
+
+/* FIXME: Submit to W32API */
+#ifndef HDM_SETBITMAPMARGIN
+#define HDM_SETBITMAPMARGIN	(HDM_FIRST+20)
 #endif
+#ifndef HDM_GETBITMAPMARGIN
+#define HDM_GETBITMAPMARGIN	(HDM_FIRST+21)
+#endif
+#ifndef RBBS_USECHEVRON
+#define RBBS_USECHEVRON	0x00000200
+#endif
+#ifndef RBHT_CHEVRON
+#define RBHT_CHEVRON	0x0008
+#endif
+#ifndef RB_PUSHCHEVRON
+#define RB_PUSHCHEVRON	(WM_USER+43)
+#endif
+#ifndef RBN_CHEVRONPUSHED
+#define RBN_CHEVRONPUSHED	(RBN_FIRST-10)
+#endif
+
+#endif /* __REACTOS__ */
 
 #endif  /* __WINE_COMCTL32_H */

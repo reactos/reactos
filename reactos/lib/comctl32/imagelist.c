@@ -450,7 +450,7 @@ BOOL WINAPI
 ImageList_Copy (HIMAGELIST himlDst, INT iDst,	HIMAGELIST himlSrc,
 		INT iSrc, UINT uFlags)
 {
-    TRACE("iDst=%d  iSrc=%d\n", iDst, iSrc);
+    TRACE("himlDst=%p iDst=%d himlSrc=%p iSrc=%d\n", himlDst, iDst, himlSrc, iSrc);
 
     if (!is_valid(himlSrc) || !is_valid(himlDst))
 	return FALSE;
@@ -1165,7 +1165,7 @@ ImageList_DrawIndirect (IMAGELISTDRAWPARAMS *pimldp)
     if (fState & ILS_SATURATE) FIXME("ILS_SATURATE: unimplemented!\n");
     if (fState & ILS_GLOW) FIXME("ILS_GLOW: unimplemented!\n");
     if (fState & ILS_SHADOW) FIXME("ILS_SHADOW: unimplemented!\n");
-    if (fState & ILS_ALPHA) FIXME("ILS_SHADOW: unimplemented!\n");
+    if (fState & ILS_ALPHA) FIXME("ILS_ALPHA: unimplemented!\n");
 
     if (fStyle & ILD_PRESERVEALPHA) FIXME("ILD_PRESERVEALPHA: unimplemented!\n");
     if (fStyle & ILD_SCALE) FIXME("ILD_SCALE: unimplemented!\n");
@@ -2650,8 +2650,8 @@ _write_bitmap(HBITMAP hBitmap, LPSTREAM pstm, int cx, int cy)
 
     /* XXX is this always correct? */
     icount = bm.bmWidth / cx;
-    nwidth = cx << 2;
-    nheight = cy * ((icount+3)>>2);
+    nwidth = cx;
+    nheight = cy * icount;
 
     bitCount = bm.bmBitsPixel == 1 ? 1 : 24;
     sizeImage = ((((bm.bmWidth * bitCount)+31) & ~31) >> 3) * bm.bmHeight;
@@ -2682,13 +2682,13 @@ _write_bitmap(HBITMAP hBitmap, LPSTREAM pstm, int cx, int cy)
     bmih->biPlanes        = 1;
     bmih->biBitCount      = bitCount;
     bmih->biCompression   = BI_RGB;
-    bmih->biSizeImage     = nsizeImage;
+    bmih->biSizeImage     = sizeImage;
     bmih->biXPelsPerMeter = 0;
     bmih->biYPelsPerMeter = 0;
     bmih->biClrUsed       = 0;
     bmih->biClrImportant  = 0;
 
-    lpBitsOrg = (LPBYTE)LocalAlloc(LMEM_ZEROINIT, nsizeImage);
+    lpBitsOrg = (LPBYTE)LocalAlloc(LMEM_ZEROINIT, sizeImage);
     if(!GetDIBits(xdc, hBitmap, 0, bm.bmHeight, lpBitsOrg,
 		  (BITMAPINFO *)bmih, DIB_RGB_COLORS))
 	goto failed;
@@ -2706,6 +2706,7 @@ _write_bitmap(HBITMAP hBitmap, LPSTREAM pstm, int cx, int cy)
 
     bmih->biWidth  = nwidth;
     bmih->biHeight = nheight;
+    bmih->biSizeImage = nsizeImage;
 
     if(bitCount == 1) {
         /* Hack. */

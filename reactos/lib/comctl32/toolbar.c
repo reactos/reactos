@@ -176,6 +176,12 @@ typedef struct
     WCHAR    text[64];
 } CUSTOMBUTTON, *PCUSTOMBUTTON;
 
+typedef enum
+{
+    IMAGE_LIST_DEFAULT,
+    IMAGE_LIST_HOT,
+    IMAGE_LIST_DISABLED
+} IMAGE_LIST_TYPE;
 
 #define SEPARATOR_WIDTH    8
 #define TOP_BORDER         2
@@ -364,12 +370,11 @@ TOOLBAR_IsValidBitmapIndex(TOOLBAR_INFO *infoPtr, INT index)
 * function. It returns TRUE if the image was drawn, FALSE otherwise.
 */
 static BOOL
-TOOLBAR_DrawImageList (TOOLBAR_INFO *infoPtr, TBUTTON_INFO *btnPtr, HIMAGELIST himl,
+TOOLBAR_DrawImageList (TOOLBAR_INFO *infoPtr, TBUTTON_INFO *btnPtr, IMAGE_LIST_TYPE imagelist,
 		        HDC hdc, UINT left, UINT top, UINT draw_flags)
 {
     INT index;
-
-    if (!himl) return FALSE;
+    HIMAGELIST himl;
 
     if (!TOOLBAR_IsValidBitmapIndex(infoPtr,btnPtr->iBitmap)) {
 	if (btnPtr->iBitmap == I_IMAGENONE) return FALSE;
@@ -385,6 +390,29 @@ TOOLBAR_DrawImageList (TOOLBAR_INFO *infoPtr, TBUTTON_INFO *btnPtr, HIMAGELIST h
 	    index);
 	return FALSE;
     }
+
+    switch(imagelist)
+    {
+    case IMAGE_LIST_DEFAULT:
+        himl = GETDEFIMAGELIST(infoPtr, GETHIMLID(infoPtr, btnPtr->iBitmap));
+        break;
+    case IMAGE_LIST_HOT:
+        himl = GETHOTIMAGELIST(infoPtr, GETHIMLID(infoPtr, btnPtr->iBitmap));
+        break;
+    case IMAGE_LIST_DISABLED:
+        himl = GETDISIMAGELIST(infoPtr, GETHIMLID(infoPtr, btnPtr->iBitmap));
+        break;
+    default:
+        himl = NULL;
+        FIXME("Shouldn't reach here\n");
+    }
+
+    if (!himl)
+    {
+       TRACE("no image list, returning FALSE\n");
+       return FALSE;
+    }
+
     TRACE("drawing index=%d, himl=%p, left=%d, top=%d, flags=%08x\n",
 	  index, himl, left, top, draw_flags);
 
@@ -524,30 +552,31 @@ TOOLBAR_DrawArrow (HDC hdc, INT left, INT top, INT colorRef)
  */
 static void
 TOOLBAR_DrawString (TOOLBAR_INFO *infoPtr, TBUTTON_INFO *btnPtr,
-		    HDC hdc, INT nState, DWORD dwStyle,
+		    HDC hdc, DWORD dwStyle,
                     RECT *rcText, LPWSTR lpText, NMTBCUSTOMDRAW *tbcd)
 {
     HFONT  hOldFont = 0;
     COLORREF clrOld = 0;
+    UINT state = tbcd->nmcd.uItemState;
 
     /* draw text */
     if (lpText) {
-	TRACE("string rect=(%ld,%ld)-(%ld,%ld)\n",
+	TRACE("string=%s rect=(%ld,%ld)-(%ld,%ld)\n", debugstr_w(lpText),
 	      rcText->left, rcText->top, rcText->right, rcText->bottom);
 
 	hOldFont = SelectObject (hdc, infoPtr->hFont);
-	if (!(nState & TBSTATE_ENABLED)) {
+	if ((state & CDIS_HOT) && (infoPtr->dwItemCDFlag & TBCDRF_HILITEHOTTRACK )) {
+	    clrOld = SetTextColor (hdc, tbcd->clrTextHighlight);
+	}
+	else if (state & CDIS_DISABLED) {
 	    clrOld = SetTextColor (hdc, tbcd->clrBtnHighlight);
 	    OffsetRect (rcText, 1, 1);
 	    DrawTextW (hdc, lpText, -1, rcText, infoPtr->dwDTFlags);
 	    SetTextColor (hdc, comctl32_color.clr3dShadow);
 	    OffsetRect (rcText, -1, -1);
 	}
-	else if (nState & TBSTATE_INDETERMINATE) {
+	else if (state & CDIS_INDETERMINATE) {
 	    clrOld = SetTextColor (hdc, comctl32_color.clr3dShadow);
-	}
-	else if (btnPtr->bHot && (infoPtr->dwItemCDFlag & TBCDRF_HILITEHOTTRACK )) {
-	    clrOld = SetTextColor (hdc, tbcd->clrTextHighlight);
 	}
 	else {
 	    clrOld = SetTextColor (hdc, tbcd->clrText);
@@ -636,7 +665,6 @@ TOOLBAR_DrawButton (HWND hwnd, TBUTTON_INFO *btnPtr, HDC hdc)
     NMTBCUSTOMDRAW tbcd;
     DWORD ntfret;
     INT offset;
-    HIMAGELIST himlDef;
 
     if (btnPtr->fsState & TBSTATE_HIDDEN)
 	return;
@@ -734,6 +762,10 @@ TOOLBAR_DrawButton (HWND hwnd, TBUTTON_INFO *btnPtr, HDC hdc)
     tbcd.rcText.top = 0;
     tbcd.rcText.right = rcText.right - rc.left;
     tbcd.rcText.bottom = rcText.bottom - rc.top;
+    /* we use this state later on to decide how to draw the buttons */
+    /* NOTE: applications can and do alter this to customize their  */
+    /* toolbars */
+    tbcd.nmcd.uItemState = TOOLBAR_TranslateState(btnPtr);
 
     /* FIXME: what should these be set to ????? */
     tbcd.hbrMonoDither = 0;
@@ -749,7 +781,6 @@ TOOLBAR_DrawButton (HWND hwnd, TBUTTON_INFO *btnPtr, HDC hdc)
 	tbcd.nmcd.hdc = hdc;
 	tbcd.nmcd.rc = rc;
 	tbcd.nmcd.dwItemSpec = btnPtr->idCommand;
-	tbcd.nmcd.uItemState = TOOLBAR_TranslateState(btnPtr);
 	tbcd.nmcd.lItemlParam = btnPtr->dwData;
 	ntfret = TOOLBAR_SendNotify ((NMHDR *)&tbcd, infoPtr, NM_CUSTOMDRAW);
 	infoPtr->dwItemCustDraw = ntfret & 0xffff;
@@ -784,12 +815,31 @@ TOOLBAR_DrawButton (HWND hwnd, TBUTTON_INFO *btnPtr, HDC hdc)
 	goto FINALNOTIFY;
     }
 
-    /* Determine index of image list */
-    himlDef = GETDEFIMAGELIST(infoPtr, GETHIMLID(infoPtr, btnPtr->iBitmap));
+    if ((dwStyle & TBSTYLE_FLAT) && (tbcd.nmcd.uItemState & CDIS_HOT))
+    {
+	if ( infoPtr->dwItemCDFlag & TBCDRF_HILITEHOTTRACK )
+	{
+            COLORREF oldclr;
+
+            oldclr = SetBkColor(hdc, tbcd.clrHighlightHotTrack);
+            ExtTextOutA(hdc, 0, 0, ETO_OPAQUE, &rc, NULL, 0, 0);
+            if (hasDropDownArrow)
+                ExtTextOutA(hdc, 0, 0, ETO_OPAQUE, &rcArrow, NULL, 0, 0);
+            SetBkColor(hdc, oldclr);
+	}
+	else
+	{
+            if (!(tbcd.nmcd.uItemState & CDIS_DISABLED) && !(infoPtr->dwItemCDFlag & TBCDRF_NOEDGES))
+            {
+                DrawEdge (hdc, &rc, BDR_RAISEDINNER, BF_RECT);
+                if (hasDropDownArrow)
+		    DrawEdge (hdc, &rcArrow, BDR_RAISEDINNER, BF_RECT);
+            }
+        }
+    }
 
     /* disabled */
-    if (!(btnPtr->fsState & TBSTATE_ENABLED)) {
-	HIMAGELIST himlDis = GETDISIMAGELIST(infoPtr, GETHIMLID(infoPtr, btnPtr->iBitmap));
+    if (tbcd.nmcd.uItemState & CDIS_DISABLED) {
 	if (!(dwStyle & TBSTYLE_FLAT) && !(infoPtr->dwItemCDFlag & TBCDRF_NOEDGES))
 	{
 	    DrawEdge (hdc, &rc, EDGE_RAISED,
@@ -805,17 +855,17 @@ TOOLBAR_DrawButton (HWND hwnd, TBUTTON_INFO *btnPtr, HDC hdc)
 	    TOOLBAR_DrawArrow(hdc, rcArrow.left, rcArrow.top + (rcArrow.bottom - rcArrow.top - ARROW_HEIGHT) / 2, COLOR_3DSHADOW);
 	}
 
-	if (!TOOLBAR_DrawImageList (infoPtr, btnPtr, himlDis,
+	if (!TOOLBAR_DrawImageList (infoPtr, btnPtr, IMAGE_LIST_DISABLED,
 				   hdc, rcBitmap.left, rcBitmap.top,
 				   ILD_NORMAL))
 	    TOOLBAR_DrawMasked (infoPtr, btnPtr, hdc, rcBitmap.left, rcBitmap.top);
 
-	TOOLBAR_DrawString (infoPtr, btnPtr, hdc, btnPtr->fsState, dwStyle, &rcText, lpText, &tbcd);
+	TOOLBAR_DrawString (infoPtr, btnPtr, hdc, dwStyle, &rcText, lpText, &tbcd);
 	goto FINALNOTIFY;
     }
 
     /* pressed TBSTYLE_BUTTON */
-    if (btnPtr->fsState & TBSTATE_PRESSED) {
+    if (tbcd.nmcd.uItemState & CDIS_SELECTED) {
 	offset = (infoPtr->dwItemCDFlag & TBCDRF_NOOFFSET) ? 0 : 1;
 	if (!(infoPtr->dwItemCDFlag & TBCDRF_NOEDGES))
 	{
@@ -836,17 +886,17 @@ TOOLBAR_DrawButton (HWND hwnd, TBUTTON_INFO *btnPtr, HDC hdc)
         if (hasDropDownArrow)
 	    TOOLBAR_DrawArrow(hdc, rcArrow.left, rcArrow.top + (rcArrow.bottom - rcArrow.top - ARROW_HEIGHT) / 2, COLOR_WINDOWFRAME);
 
-	TOOLBAR_DrawImageList (infoPtr, btnPtr, himlDef,
+	TOOLBAR_DrawImageList (infoPtr, btnPtr, IMAGE_LIST_DEFAULT,
 			       hdc, rcBitmap.left+offset, rcBitmap.top+offset,
 			       ILD_NORMAL);
 
-	TOOLBAR_DrawString (infoPtr, btnPtr, hdc, btnPtr->fsState, dwStyle, &rcText, lpText, &tbcd);
+	TOOLBAR_DrawString (infoPtr, btnPtr, hdc, dwStyle, &rcText, lpText, &tbcd);
 	goto FINALNOTIFY;
     }
 
     /* checked TBSTYLE_CHECK */
-    if ((btnPtr->fsStyle & TBSTYLE_CHECK) &&
-	(btnPtr->fsState & TBSTATE_CHECKED)) {
+    if ((tbcd.nmcd.uItemState & CDIS_CHECKED) &&
+	(btnPtr->fsStyle & TBSTYLE_CHECK)) {
 	if (!(infoPtr->dwItemCDFlag & TBCDRF_NOEDGES))
 	{
 	    if (dwStyle & TBSTYLE_FLAT)
@@ -859,80 +909,45 @@ TOOLBAR_DrawButton (HWND hwnd, TBUTTON_INFO *btnPtr, HDC hdc)
 
 	TOOLBAR_DrawPattern (hdc, &rc);
 
-	TOOLBAR_DrawImageList (infoPtr, btnPtr, himlDef,
+	TOOLBAR_DrawImageList (infoPtr, btnPtr, IMAGE_LIST_DEFAULT,
 			       hdc, rcBitmap.left+1, rcBitmap.top+1,
 			       ILD_NORMAL);
 
-	TOOLBAR_DrawString (infoPtr, btnPtr, hdc, btnPtr->fsState, dwStyle, &rcText, lpText, &tbcd);
+	TOOLBAR_DrawString (infoPtr, btnPtr, hdc, dwStyle, &rcText, lpText, &tbcd);
 	goto FINALNOTIFY;
     }
 
     /* indeterminate */
-    if (btnPtr->fsState & TBSTATE_INDETERMINATE) {
+    if (tbcd.nmcd.uItemState & CDIS_INDETERMINATE) {
 	if (!(infoPtr->dwItemCDFlag & TBCDRF_NOEDGES))
 	    DrawEdge (hdc, &rc, EDGE_RAISED,
 		      BF_SOFT | BF_RECT | BF_MIDDLE | BF_ADJUST);
 
 	TOOLBAR_DrawPattern (hdc, &rc);
 	TOOLBAR_DrawMasked (infoPtr, btnPtr, hdc, rcBitmap.left, rcBitmap.top);
-	TOOLBAR_DrawString (infoPtr, btnPtr, hdc, btnPtr->fsState, dwStyle, &rcText, lpText, &tbcd);
+	TOOLBAR_DrawString (infoPtr, btnPtr, hdc, dwStyle, &rcText, lpText, &tbcd);
 	goto FINALNOTIFY;
     }
 
     /* normal state */
     if (dwStyle & TBSTYLE_FLAT)
     {
-	if (btnPtr->bHot)
-	{
-	    if ( infoPtr->dwItemCDFlag & TBCDRF_HILITEHOTTRACK )
-	    {
-		COLORREF oldclr;
-
-		oldclr = SetBkColor(hdc, tbcd.clrHighlightHotTrack);
-		ExtTextOutA(hdc, 0, 0, ETO_OPAQUE, &rc, NULL, 0, 0);
-		if (hasDropDownArrow)
-		    ExtTextOutA(hdc, 0, 0, ETO_OPAQUE, &rcArrow, NULL, 0, 0);
-		SetBkColor(hdc, oldclr);
-	    }
-	    else
-	    {
-		if (!(infoPtr->dwItemCDFlag & TBCDRF_NOEDGES))
-		{
-		    DrawEdge (hdc, &rc, BDR_RAISEDINNER, BF_RECT);
-		    if (hasDropDownArrow)
-			DrawEdge (hdc, &rcArrow, BDR_RAISEDINNER, BF_RECT);
-		}
-	    }
-	}
-#if 1
-        else /* The following code needs to be removed after
-	      * "hot item" support has been implemented for the
-	      * case where it is being de-selected.
-	      */
-	{
-            FrameRect(hdc, &rc, GetSysColorBrush(COLOR_BTNFACE));
-            if (hasDropDownArrow)
-            FrameRect(hdc, &rcArrow, GetSysColorBrush(COLOR_BTNFACE));
-	}
-#endif
-
         if (hasDropDownArrow)
 	    TOOLBAR_DrawArrow(hdc, rcArrow.left+1, rcArrow.top + (rcArrow.bottom - rcArrow.top - ARROW_HEIGHT) / 2, COLOR_WINDOWFRAME);
 
-	if (btnPtr->bHot) {
-            HIMAGELIST himlHot = GETHOTIMAGELIST(infoPtr, 
-                GETHIMLID(infoPtr, btnPtr->iBitmap));
-	    /* if hot, attempt to draw with himlHot, if fails, use himlDef */
+	if (tbcd.nmcd.uItemState & CDIS_HOT) {
+	    /* if hot, attempt to draw with hot image list, if fails, 
+	       use default image list */
 	    if (!TOOLBAR_DrawImageList (infoPtr, btnPtr,
-					himlHot,
+					IMAGE_LIST_HOT,
 					hdc, rcBitmap.left,
 					rcBitmap.top, ILD_NORMAL))
-		TOOLBAR_DrawImageList (infoPtr, btnPtr, himlDef,
+		TOOLBAR_DrawImageList (infoPtr, btnPtr, IMAGE_LIST_DEFAULT,
 				       hdc, rcBitmap.left, rcBitmap.top,
 				       ILD_NORMAL);
 	}
 	else
-	    TOOLBAR_DrawImageList (infoPtr, btnPtr, himlDef,
+	    TOOLBAR_DrawImageList (infoPtr, btnPtr, IMAGE_LIST_DEFAULT,
 				   hdc, rcBitmap.left, rcBitmap.top,
 				   ILD_NORMAL);
     }
@@ -950,12 +965,13 @@ TOOLBAR_DrawButton (HWND hwnd, TBUTTON_INFO *btnPtr, HDC hdc)
 	    TOOLBAR_DrawArrow(hdc, rcArrow.left, rcArrow.top + (rcArrow.bottom - rcArrow.top - ARROW_HEIGHT) / 2, COLOR_WINDOWFRAME);
 	}
 
-	TOOLBAR_DrawImageList (infoPtr, btnPtr, himlDef,
+	TOOLBAR_DrawImageList (infoPtr, btnPtr, IMAGE_LIST_DEFAULT,
 			       hdc, rcBitmap.left, rcBitmap.top,
-			       ILD_NORMAL);}
+			       ILD_NORMAL);
+    }
 
 
-    TOOLBAR_DrawString (infoPtr, btnPtr, hdc, btnPtr->fsState, dwStyle, &rcText, lpText, &tbcd);
+    TOOLBAR_DrawString (infoPtr, btnPtr, hdc, dwStyle, &rcText, lpText, &tbcd);
 
  FINALNOTIFY:
     if (infoPtr->dwItemCustDraw & CDRF_NOTIFYPOSTPAINT)
@@ -2716,11 +2732,15 @@ TOOLBAR_AutoSize (HWND hwnd)
 	cy = infoPtr->nHeight;
 	cx = infoPtr->nWidth;
 
-	if (dwStyle & CCS_NOMOVEY) {
+	if ((dwStyle & CCS_BOTTOM) == CCS_NOMOVEY) {
 		GetWindowRect(hwnd, &window_rect);
 		ScreenToClient(parent, (LPPOINT)&window_rect.left);
 		y = window_rect.top;
 	}
+	if ((dwStyle & CCS_BOTTOM) == CCS_BOTTOM) {
+            GetWindowRect(hwnd, &window_rect);
+            y = parent_rect.bottom - ( window_rect.bottom - window_rect.top);
+        }
     }
 
     if (dwStyle & CCS_NOPARENTALIGN)
@@ -2737,10 +2757,9 @@ TOOLBAR_AutoSize (HWND hwnd)
     }
 
     infoPtr->bAutoSize = TRUE;
-    SetWindowPos (hwnd, HWND_TOP, parent_rect.left - x, parent_rect.top - y,
-                        cx, cy, uPosFlags);
-    /* The following line makes sure that the infoPtr->bAutoSize is turned off after
-     * the setwindowpos calls */
+    SetWindowPos (hwnd, HWND_TOP,  x, y, cx, cy, uPosFlags);
+    /* The following line makes sure that the infoPtr->bAutoSize is turned off
+     * after the setwindowpos calls */
     infoPtr->bAutoSize = FALSE;
 
     return 0;
@@ -2779,6 +2798,8 @@ TOOLBAR_ChangeBitmap (HWND hwnd, WPARAM wParam, LPARAM lParam)
     TOOLBAR_INFO *infoPtr = TOOLBAR_GetInfoPtr (hwnd);
     TBUTTON_INFO *btnPtr;
     INT nIndex;
+
+    TRACE("button %d, iBitmap now %d\n", wParam, LOWORD(lParam));
 
     nIndex = TOOLBAR_GetButtonIndex (infoPtr, (INT)wParam, FALSE);
     if (nIndex == -1)
@@ -4227,6 +4248,8 @@ TOOLBAR_SetHotImageList (HWND hwnd, WPARAM wParam, LPARAM lParam)
     if (infoPtr->iVersion >= 5)
         id = wParam;
 
+    TRACE("hwnd = %p, himl = %p, id = %d\n", hwnd, himl, id);
+
     himlTemp = TOOLBAR_InsertImageList(&infoPtr->himlHot, 
         &infoPtr->cimlHot, himl, id);
 
@@ -5170,10 +5193,9 @@ TOOLBAR_MouseMove (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
     if (infoPtr->nOldHit != nHit)
     {
-	/* Remove the effect of an old hot button if the button was enabled and was
+	/* Remove the effect of an old hot button if the button was
 	   drawn with the hot button effect */
-	if(infoPtr->nOldHit >= 0 && infoPtr->nOldHit == infoPtr->nHotItem &&
-		(infoPtr->buttons[infoPtr->nOldHit].fsState & TBSTATE_ENABLED))
+	if(infoPtr->nOldHit >= 0 && infoPtr->nOldHit == infoPtr->nHotItem)
 	{
 	    oldBtnPtr = &infoPtr->buttons[infoPtr->nOldHit];
 	    oldBtnPtr->bHot = FALSE;
@@ -5186,11 +5208,7 @@ TOOLBAR_MouseMove (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 	    infoPtr->nHotItem = nHit;
 
-            /* only enabled buttons show hot effect */
-            if(infoPtr->buttons[nHit].fsState & TBSTATE_ENABLED)
-            {
-                btnPtr->bHot = TRUE;
-            }
+            btnPtr->bHot = TRUE;
 	}
 
 	nmhotitem.dwFlags = HICF_MOUSE;
@@ -5208,7 +5226,7 @@ TOOLBAR_MouseMove (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	if (oldBtnPtr)
 	    InvalidateRect (hwnd, &oldBtnPtr->rect,
 			    TOOLBAR_HasText(infoPtr, oldBtnPtr));
-	if (btnPtr && (btnPtr->fsState & TBSTATE_ENABLED))
+	if (btnPtr)
 	    InvalidateRect(hwnd, &btnPtr->rect,
 			   TOOLBAR_HasText(infoPtr, btnPtr));
 
@@ -5483,7 +5501,7 @@ TOOLBAR_SetRedraw (HWND hwnd, WPARAM wParam, LPARAM lParam)
       *  According to testing V4.71 of COMCTL32 returns the
       *  *previous* status of the redraw flag (either 0 or 1)
       *  instead of the MSDN documented value of 0 if handled.
-      *  (For laughs see the "consistancy" with same function
+      *  (For laughs see the "consistency" with same function
       *   in rebar.)
       *
       *****************************************************/
@@ -5558,11 +5576,16 @@ TOOLBAR_Size (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	    cy = infoPtr->nHeight;
 	    cx = infoPtr->nWidth;
 
-	    if (dwStyle & CCS_NOMOVEY) {
+	    if ((dwStyle & CCS_BOTTOM) == CCS_NOMOVEY) {
 		GetWindowRect(hwnd, &window_rect);
 		ScreenToClient(parent, (LPPOINT)&window_rect.left);
-		y = window_rect.top;
+                y = window_rect.top;
 	    }
+            if ((dwStyle & CCS_BOTTOM) == CCS_BOTTOM) {
+                GetWindowRect(hwnd, &window_rect);
+                y = parent_rect.bottom -
+                    ( window_rect.bottom - window_rect.top);
+            }
 	}
 
 	if (dwStyle & CCS_NOPARENTALIGN) {
@@ -5581,8 +5604,7 @@ TOOLBAR_Size (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	    cx += GetSystemMetrics(SM_CYEDGE);
 	}
 
-	SetWindowPos (hwnd, 0, parent_rect.left - x, parent_rect.top - y,
-			cx, cy, uPosFlags | SWP_NOZORDER);
+	SetWindowPos (hwnd, 0,  x,  y, cx, cy, uPosFlags | SWP_NOZORDER);
     }
     return 0;
 }

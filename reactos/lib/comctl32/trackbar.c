@@ -97,16 +97,49 @@ typedef struct
 #define TIC_SELECTIONMARKMIN    0x100
 #define TIC_SELECTIONMARK       (TIC_SELECTIONMARKMAX | TIC_SELECTIONMARKMIN)
 
-static BOOL TRACKBAR_SendNotify (TRACKBAR_INFO *infoPtr, UINT code);
-
 static inline int 
-notify_customdraw(NMCUSTOMDRAW *pnmcd, int stage)
+notify_customdraw(TRACKBAR_INFO *infoPtr, NMCUSTOMDRAW *pnmcd, int stage)
 {
     pnmcd->dwDrawStage = stage;
-    return SendMessageW (GetParent(pnmcd->hdr.hwndFrom), WM_NOTIFY, 
+    return SendMessageW (infoPtr->hwndNotify, WM_NOTIFY, 
 		         pnmcd->hdr.idFrom, (LPARAM)pnmcd);
 }
 
+static LRESULT notify_hdr(TRACKBAR_INFO *infoPtr, INT code, LPNMHDR pnmh)
+{
+    LRESULT result;
+    
+    TRACE("(code=%d)\n", code);
+
+    pnmh->hwndFrom = infoPtr->hwndSelf;
+    pnmh->idFrom = GetWindowLongW(infoPtr->hwndSelf, GWL_ID);
+    pnmh->code = code;
+    result = SendMessageW(infoPtr->hwndNotify, WM_NOTIFY,
+			  (WPARAM)pnmh->idFrom, (LPARAM)pnmh);
+
+    TRACE("  <= %ld\n", result);
+
+    return result;
+}
+
+static inline int notify(TRACKBAR_INFO *infoPtr, INT code)
+{
+    NMHDR nmh;
+    return notify_hdr(infoPtr, code, &nmh);
+}
+
+static BOOL
+notify_with_scroll (TRACKBAR_INFO *infoPtr, UINT code)
+{
+    BOOL bVert = GetWindowLongW (infoPtr->hwndSelf, GWL_STYLE) & TBS_VERT;
+
+    TRACE("%x\n", code);
+
+    return (BOOL) SendMessageW (infoPtr->hwndNotify,
+                                bVert ? WM_VSCROLL : WM_HSCROLL,
+				(WPARAM)code, (LPARAM)infoPtr->hwndSelf);
+}
+    
 static void TRACKBAR_RecalculateTics (TRACKBAR_INFO *infoPtr)
 {
     int i, tic, nrTics;
@@ -126,7 +159,7 @@ static void TRACKBAR_RecalculateTics (TRACKBAR_INFO *infoPtr)
                                         (nrTics+1)*sizeof (DWORD));
 	if (!infoPtr->tics) {
 	    infoPtr->uNumTics = 0;
-	    TRACKBAR_SendNotify(infoPtr, NM_OUTOFMEMORY);
+	    notify(infoPtr, NM_OUTOFMEMORY);
 	    return;
 	}
     	infoPtr->uNumTics = nrTics;
@@ -200,26 +233,44 @@ TRACKBAR_GetAutoPageDirection (TRACKBAR_INFO *infoPtr, POINT clickPoint)
 }
 
 static void inline
-TRACKBAR_PageUp (TRACKBAR_INFO *infoPtr)
+TRACKBAR_PageDown (TRACKBAR_INFO *infoPtr)
 {
     if (infoPtr->lPos == infoPtr->lRangeMax) return;
 
     infoPtr->lPos += infoPtr->lPageSize;
     if (infoPtr->lPos > infoPtr->lRangeMax)
 	infoPtr->lPos = infoPtr->lRangeMax;
-    TRACKBAR_SendNotify (infoPtr, TB_PAGEUP);
+    notify_with_scroll (infoPtr, TB_PAGEDOWN);
 }
 
 
 static void inline
-TRACKBAR_PageDown (TRACKBAR_INFO *infoPtr)
+TRACKBAR_PageUp (TRACKBAR_INFO *infoPtr)
 {
     if (infoPtr->lPos == infoPtr->lRangeMin) return;
 
     infoPtr->lPos -= infoPtr->lPageSize;
     if (infoPtr->lPos < infoPtr->lRangeMin)
         infoPtr->lPos = infoPtr->lRangeMin;
-    TRACKBAR_SendNotify (infoPtr, TB_PAGEDOWN);
+    notify_with_scroll (infoPtr, TB_PAGEUP);
+}
+
+static void inline TRACKBAR_LineUp(TRACKBAR_INFO *infoPtr)
+{
+    if (infoPtr->lPos == infoPtr->lRangeMin) return;
+    infoPtr->lPos -= infoPtr->lLineSize;
+    if (infoPtr->lPos < infoPtr->lRangeMin)
+        infoPtr->lPos = infoPtr->lRangeMin;
+    notify_with_scroll (infoPtr, TB_LINEUP);
+}
+
+static void inline TRACKBAR_LineDown(TRACKBAR_INFO *infoPtr)
+{
+    if (infoPtr->lPos == infoPtr->lRangeMax) return;
+    infoPtr->lPos += infoPtr->lLineSize;
+    if (infoPtr->lPos > infoPtr->lRangeMax)
+        infoPtr->lPos = infoPtr->lRangeMax;
+    notify_with_scroll (infoPtr, TB_LINEDOWN);
 }
 
 static void
@@ -398,9 +449,9 @@ TRACKBAR_AutoPage (TRACKBAR_INFO *infoPtr, POINT clickPoint)
     TRACE("x=%ld, y=%ld, dir=%ld\n", clickPoint.x, clickPoint.y, dir);
 
     if (dir > 0 && (infoPtr->flags & TB_AUTO_PAGE_RIGHT))
-	TRACKBAR_PageUp(infoPtr);
-    else if (dir < 0 && (infoPtr->flags & TB_AUTO_PAGE_LEFT))
 	TRACKBAR_PageDown(infoPtr);
+    else if (dir < 0 && (infoPtr->flags & TB_AUTO_PAGE_LEFT))
+	TRACKBAR_PageUp(infoPtr);
     else return FALSE;
 
     infoPtr->flags |= TB_THUMBPOSCHANGED;
@@ -763,15 +814,15 @@ TRACKBAR_Refresh (TRACKBAR_INFO *infoPtr, HDC hdcDst)
 
     /* start the paint cycle */
     nmcd.rc = rcClient;
-    gcdrf = notify_customdraw(&nmcd, CDDS_PREPAINT);
+    gcdrf = notify_customdraw(infoPtr, &nmcd, CDDS_PREPAINT);
     if (gcdrf & CDRF_SKIPDEFAULT) goto cleanup;
     
     /* Erase backbround */
     if (gcdrf == CDRF_DODEFAULT ||
-        notify_customdraw(&nmcd, CDDS_PREERASE) != CDRF_SKIPDEFAULT) {
+        notify_customdraw(infoPtr, &nmcd, CDDS_PREERASE) != CDRF_SKIPDEFAULT) {
 	FillRect (hdc, &rcClient, GetSysColorBrush(COLOR_BTNFACE));
         if (gcdrf != CDRF_DODEFAULT)
-	    notify_customdraw(&nmcd, CDDS_POSTERASE);
+	    notify_customdraw(infoPtr, &nmcd, CDDS_POSTERASE);
     }
     
     /* draw channel */
@@ -779,12 +830,12 @@ TRACKBAR_Refresh (TRACKBAR_INFO *infoPtr, HDC hdcDst)
         nmcd.dwItemSpec = TBCD_CHANNEL;
 	nmcd.uItemState = CDIS_DEFAULT;
 	nmcd.rc = infoPtr->rcChannel;
-	icdrf = notify_customdraw(&nmcd, CDDS_ITEMPREPAINT);
+	icdrf = notify_customdraw(infoPtr, &nmcd, CDDS_ITEMPREPAINT);
     } else icdrf = CDRF_DODEFAULT;
     if ( !(icdrf & CDRF_SKIPDEFAULT) ) {
 	TRACKBAR_DrawChannel (infoPtr, hdc, dwStyle);
 	if (icdrf & CDRF_NOTIFYPOSTPAINT)
-	    notify_customdraw(&nmcd, CDDS_ITEMPOSTPAINT);
+	    notify_customdraw(infoPtr, &nmcd, CDDS_ITEMPOSTPAINT);
     }
 
 
@@ -794,12 +845,12 @@ TRACKBAR_Refresh (TRACKBAR_INFO *infoPtr, HDC hdcDst)
             nmcd.dwItemSpec = TBCD_TICS;
 	    nmcd.uItemState = CDIS_DEFAULT;
 	    nmcd.rc = rcClient;
-	    icdrf = notify_customdraw(&nmcd, CDDS_ITEMPREPAINT);
+	    icdrf = notify_customdraw(infoPtr, &nmcd, CDDS_ITEMPREPAINT);
         } else icdrf = CDRF_DODEFAULT;
 	if ( !(icdrf & CDRF_SKIPDEFAULT) ) {
 	    TRACKBAR_DrawTics (infoPtr, hdc, dwStyle);
 	    if (icdrf & CDRF_NOTIFYPOSTPAINT)
-		notify_customdraw(&nmcd, CDDS_ITEMPOSTPAINT);
+		notify_customdraw(infoPtr, &nmcd, CDDS_ITEMPOSTPAINT);
 	}
     }
     
@@ -809,12 +860,12 @@ TRACKBAR_Refresh (TRACKBAR_INFO *infoPtr, HDC hdcDst)
 	    nmcd.dwItemSpec = TBCD_THUMB;
 	    nmcd.uItemState = infoPtr->flags & TB_DRAG_MODE ? CDIS_HOT : CDIS_DEFAULT;
 	    nmcd.rc = infoPtr->rcThumb;
-	    icdrf = notify_customdraw(&nmcd, CDDS_ITEMPREPAINT);
+	    icdrf = notify_customdraw(infoPtr, &nmcd, CDDS_ITEMPREPAINT);
 	} else icdrf = CDRF_DODEFAULT;
 	if ( !(icdrf & CDRF_SKIPDEFAULT) ) {
             TRACKBAR_DrawThumb(infoPtr, hdc, dwStyle);
 	    if (icdrf & CDRF_NOTIFYPOSTPAINT)
-		notify_customdraw(&nmcd, CDDS_ITEMPOSTPAINT);
+		notify_customdraw(infoPtr, &nmcd, CDDS_ITEMPOSTPAINT);
 	}
     }
 
@@ -825,7 +876,7 @@ TRACKBAR_Refresh (TRACKBAR_INFO *infoPtr, HDC hdcDst)
 
     /* finish up the painting */
     if (gcdrf & CDRF_NOTIFYPOSTPAINT)
-	notify_customdraw(&nmcd, CDDS_POSTPAINT);
+	notify_customdraw(infoPtr, &nmcd, CDDS_POSTPAINT);
     
 cleanup:
     /* cleanup, if we rendered offscreen */
@@ -1196,7 +1247,7 @@ TRACKBAR_SetTic (TRACKBAR_INFO *infoPtr, LONG lPos)
                                     (infoPtr->uNumTics)*sizeof (DWORD));
     if (!infoPtr->tics) {
 	infoPtr->uNumTics = 0;
-	TRACKBAR_SendNotify(infoPtr, NM_OUTOFMEMORY);
+	notify(infoPtr, NM_OUTOFMEMORY);
 	return FALSE;
     }
     infoPtr->tics[infoPtr->uNumTics-1] = lPos;
@@ -1302,7 +1353,7 @@ TRACKBAR_Create (HWND hwnd, LPCREATESTRUCTW lpcs)
     infoPtr->uNumTics  = 0;    /* start and end tic are not included in count*/
     infoPtr->uTicFreq  = 1;
     infoPtr->tics      = NULL;
-    infoPtr->hwndNotify= GetParent (hwnd);
+    infoPtr->hwndNotify= lpcs->hwndParent;
 
     TRACKBAR_InitializeThumb (infoPtr);
 
@@ -1394,18 +1445,20 @@ static LRESULT
 TRACKBAR_LButtonUp (TRACKBAR_INFO *infoPtr, DWORD fwKeys, POINTS pts)
 {
     if (infoPtr->flags & TB_DRAG_MODE) {
-        TRACKBAR_SendNotify (infoPtr, TB_ENDTRACK);
+        notify_with_scroll (infoPtr, TB_THUMBPOSITION | (infoPtr->lPos<<16));
+        notify_with_scroll (infoPtr, TB_ENDTRACK);
         infoPtr->flags &= ~TB_DRAG_MODE;
         ReleaseCapture ();
-	TRACKBAR_SendNotify(infoPtr, NM_RELEASEDCAPTURE);
+	notify(infoPtr, NM_RELEASEDCAPTURE);
         TRACKBAR_ActivateToolTip(infoPtr, FALSE);
 	TRACKBAR_InvalidateThumb(infoPtr, infoPtr->lPos);
     }
     if (infoPtr->flags & TB_AUTO_PAGE) {
 	KillTimer (infoPtr->hwndSelf, TB_REFRESH_TIMER);
         infoPtr->flags &= ~TB_AUTO_PAGE;
+        notify_with_scroll (infoPtr, TB_ENDTRACK);
         ReleaseCapture ();
-	TRACKBAR_SendNotify(infoPtr, NM_RELEASEDCAPTURE);
+	notify(infoPtr, NM_RELEASEDCAPTURE);
     }
 
     return 0;
@@ -1415,7 +1468,7 @@ TRACKBAR_LButtonUp (TRACKBAR_INFO *infoPtr, DWORD fwKeys, POINTS pts)
 static LRESULT
 TRACKBAR_CaptureChanged (TRACKBAR_INFO *infoPtr)
 {
-    TRACKBAR_SendNotify (infoPtr, TB_ENDTRACK);
+    notify_with_scroll (infoPtr, TB_ENDTRACK);
     return 0;
 }
 
@@ -1470,19 +1523,6 @@ TRACKBAR_Timer (TRACKBAR_INFO *infoPtr, INT wTimerID, TIMERPROC *tmrpc)
 }
 
 
-static BOOL
-TRACKBAR_SendNotify (TRACKBAR_INFO *infoPtr, UINT code)
-{
-    BOOL bVert = GetWindowLongW (infoPtr->hwndSelf, GWL_STYLE) & TBS_VERT;
-
-    TRACE("%x\n", code);
-
-    return (BOOL) SendMessageW (GetParent (infoPtr->hwndSelf),
-                                bVert ? WM_VSCROLL : WM_HSCROLL,
-				(WPARAM)code, (LPARAM)infoPtr->hwndSelf);
-}
-
-
 static LRESULT
 TRACKBAR_MouseMove (TRACKBAR_INFO *infoPtr, DWORD fwKeys, POINTS pts)
 {
@@ -1508,7 +1548,7 @@ TRACKBAR_MouseMove (TRACKBAR_INFO *infoPtr, DWORD fwKeys, POINTS pts)
     infoPtr->lPos = dragPos;
 
     infoPtr->flags |= TB_THUMBPOSCHANGED;
-    TRACKBAR_SendNotify (infoPtr, TB_THUMBTRACK | (infoPtr->lPos<<16));
+    notify_with_scroll (infoPtr, TB_THUMBTRACK | (infoPtr->lPos<<16));
 
 
     TRACKBAR_InvalidateThumbMove(infoPtr, oldPos, dragPos);
@@ -1517,55 +1557,50 @@ TRACKBAR_MouseMove (TRACKBAR_INFO *infoPtr, DWORD fwKeys, POINTS pts)
     return TRUE;
 }
 
-
 static BOOL
 TRACKBAR_KeyDown (TRACKBAR_INFO *infoPtr, INT nVirtKey, DWORD lKeyData)
 {
-    BOOL downIsLeft = GetWindowLongW (infoPtr->hwndSelf, GWL_STYLE) & TBS_DOWNISLEFT;
+    DWORD style = GetWindowLongW (infoPtr->hwndSelf, GWL_STYLE);
+    BOOL downIsLeft = style & TBS_DOWNISLEFT;
+    BOOL vert = style & TBS_VERT;
     LONG pos = infoPtr->lPos;
 
     TRACE("%x\n", nVirtKey);
 
     switch (nVirtKey) {
     case VK_UP:
-	if (downIsLeft) goto step_right;
+	if (!vert && downIsLeft) TRACKBAR_LineDown(infoPtr);
+        else TRACKBAR_LineUp(infoPtr);
+        break;
     case VK_LEFT:
-    step_left:
-        if (infoPtr->lPos == infoPtr->lRangeMin) return FALSE;
-        infoPtr->lPos -= infoPtr->lLineSize;
-        if (infoPtr->lPos < infoPtr->lRangeMin)
-            infoPtr->lPos = infoPtr->lRangeMin;
-        TRACKBAR_SendNotify (infoPtr, TB_LINEUP);
+        if (vert && downIsLeft) TRACKBAR_LineDown(infoPtr);
+        else TRACKBAR_LineUp(infoPtr);
         break;
     case VK_DOWN:
-	if (downIsLeft) goto step_left;
+	if (!vert && downIsLeft) TRACKBAR_LineUp(infoPtr);
+        else TRACKBAR_LineDown(infoPtr);
+        break;
     case VK_RIGHT:
-    step_right:
-        if (infoPtr->lPos == infoPtr->lRangeMax) return FALSE;
-        infoPtr->lPos += infoPtr->lLineSize;
-        if (infoPtr->lPos > infoPtr->lRangeMax)
-            infoPtr->lPos = infoPtr->lRangeMax;
-        TRACKBAR_SendNotify (infoPtr, TB_LINEDOWN);
+	if (vert && downIsLeft) TRACKBAR_LineUp(infoPtr);
+        else TRACKBAR_LineDown(infoPtr);
         break;
     case VK_NEXT:
-	if (downIsLeft) goto page_left;
-    page_right:
-	TRACKBAR_PageUp(infoPtr);
+	if (!vert && downIsLeft) TRACKBAR_PageUp(infoPtr);
+        else TRACKBAR_PageDown(infoPtr);
         break;
     case VK_PRIOR:
-	if (downIsLeft) goto page_right;
-    page_left:
-	TRACKBAR_PageDown(infoPtr);
+	if (!vert && downIsLeft) TRACKBAR_PageDown(infoPtr);
+        else TRACKBAR_PageUp(infoPtr);
         break;
     case VK_HOME:
         if (infoPtr->lPos == infoPtr->lRangeMin) return FALSE;
         infoPtr->lPos = infoPtr->lRangeMin;
-        TRACKBAR_SendNotify (infoPtr, TB_TOP);
+        notify_with_scroll (infoPtr, TB_TOP);
         break;
     case VK_END:
         if (infoPtr->lPos == infoPtr->lRangeMax) return FALSE;
         infoPtr->lPos = infoPtr->lRangeMax;
-        TRACKBAR_SendNotify (infoPtr, TB_BOTTOM);
+        notify_with_scroll (infoPtr, TB_BOTTOM);
         break;
     }
 
@@ -1590,7 +1625,7 @@ TRACKBAR_KeyUp (TRACKBAR_INFO *infoPtr, INT nVirtKey, DWORD lKeyData)
     case VK_PRIOR:
     case VK_HOME:
     case VK_END:
-        TRACKBAR_SendNotify (infoPtr, TB_ENDTRACK);
+        notify_with_scroll (infoPtr, TB_ENDTRACK);
     }
     return TRUE;
 }

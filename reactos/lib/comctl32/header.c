@@ -3,6 +3,7 @@
  *
  *  Copyright 1998 Eric Kohl
  *  Copyright 2000 Eric Kohl for CodeWeavers
+ *  Copyright 2003 Maxime Bellenge
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,8 +29,6 @@
  *   - Use notification format
  *   - Correct the order maintenance code to preserve valid order
  *
- *  FIXME:
- *   - Little flaw when drawing a bitmap on the right side of the text.
  */
 
 #include <stdarg.h>
@@ -82,6 +81,7 @@ typedef struct
     INT       xOldTrack;	/* track offset (see above) after the last WM_MOUSEMOVE */
     INT       nOldWidth;	/* width of a sizing item after the last WM_MOUSEMOVE */
     INT       iHotItem;		/* index of hot item (cursor is over this item) */
+    INT       iMargin;          /* width of the margin that surrounds a bitmap */
 
     HIMAGELIST  himl;		/* handle to a image list (may be 0) */
     HEADER_ITEM *items;		/* pointer to array of HEADER_ITEM's */
@@ -234,19 +234,19 @@ HEADER_DrawItem (HWND hwnd, HDC hdc, INT iItem, BOOL bHotTrack)
 
 	    }
 
-	    if (rx >= bmp.bmWidth + 6) {
+	    if (rx >= bmp.bmWidth + infoPtr->iMargin) {
 		cx = bmp.bmWidth;
 	    }
 	    else {
-		cx = rx - 6;
+		cx = rx - infoPtr->iMargin;
 	    }
 
 	    hdcBitmap = CreateCompatibleDC (hdc);
 	    SelectObject (hdcBitmap, phdi->hbm);
-	    BitBlt (hdc, r.left + 3, yD, cx, cy, hdcBitmap, 0, yS, SRCCOPY);
+	    BitBlt (hdc, r.left + infoPtr->iMargin, yD, cx, cy, hdcBitmap, 0, yS, SRCCOPY);
 	    DeleteDC (hdcBitmap);
 
-	    r.left += (bmp.bmWidth + 3);
+	    r.left += (bmp.bmWidth + infoPtr->iMargin);
 	}
 
 
@@ -259,9 +259,13 @@ HEADER_DrawItem (HWND hwnd, HDC hdc, INT iItem, BOOL bHotTrack)
 	    GetObjectA (phdi->hbm, sizeof(BITMAP), (LPVOID)&bmp);
 
 	    textRect = r;
-	    DrawTextW (hdc, phdi->pszText, -1,
-	               &textRect, DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_CALCRECT);
-	    tx = textRect.right - textRect.left;
+	    if (phdi->fmt & HDF_STRING) {
+		DrawTextW (hdc, phdi->pszText, -1,
+			   &textRect, DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_CALCRECT);
+		tx = textRect.right - textRect.left;
+	    }
+	    else
+		tx = 0;
 	    ry = r.bottom - r.top;
 	    rx = r.right - r.left;
 
@@ -277,18 +281,18 @@ HEADER_DrawItem (HWND hwnd, HDC hdc, INT iItem, BOOL bHotTrack)
 
 	    }
 
-	    if (r.left + tx + bmp.bmWidth + 9 <= r.right) {
+	    if (r.left + tx + bmp.bmWidth + 2*infoPtr->iMargin <= r.right) {
 		cx = bmp.bmWidth;
-		xD = r.left + tx + 6;
+		xD = r.left + tx + infoPtr->iMargin;
 	    }
 	    else {
-		if (rx >= bmp.bmWidth + 6) {
+		if (rx >= bmp.bmWidth + infoPtr->iMargin ) {
 		    cx = bmp.bmWidth;
-		    xD = r.right - bmp.bmWidth - 3;
-		    r.right = xD - 3;
+		    xD = r.right - bmp.bmWidth - infoPtr->iMargin;
+		    r.right = xD - infoPtr->iMargin;
 		}
 		else {
-		    cx = rx - 3;
+		    cx = rx - infoPtr->iMargin;
 		    xD = r.left;
 		    r.right = r.left;
 		}
@@ -300,21 +304,37 @@ HEADER_DrawItem (HWND hwnd, HDC hdc, INT iItem, BOOL bHotTrack)
 	    DeleteDC (hdcBitmap);
 	}
 
-	if ((phdi->fmt & HDF_IMAGE) && (infoPtr->himl)) {
-	  r.left +=3;
-	  /* FIXME: (r.bottom- (infoPtr->himl->cy))/2 should horicontal center the image
-	     It looks like it doesn't work as expected*/
-	  ImageList_Draw (infoPtr->himl, phdi->iImage,hdc,r.left, (r.bottom- (infoPtr->himl->cy))/2,0);
-	  r.left += infoPtr->himl->cx;
+	if ((phdi->fmt & HDF_IMAGE) && !(phdi->fmt & HDF_BITMAP_ON_RIGHT) && (infoPtr->himl)) {
+	    r.left += infoPtr->iMargin;
+	    ImageList_DrawEx(infoPtr->himl, phdi->iImage, hdc, r.left, r.top + (r.bottom-r.top- infoPtr->himl->cy)/2,
+			     infoPtr->himl->cx, r.bottom-r.top, CLR_DEFAULT, CLR_DEFAULT, 0); 
+	    r.left += infoPtr->himl->cx;
 	}
+
+	if ((phdi->fmt & HDF_IMAGE) && (phdi->fmt & HDF_BITMAP_ON_RIGHT) && (infoPtr->himl)) {
+	    RECT textRect;
+	    INT  tx;    
+
+	    textRect = r;
+	    if (phdi->fmt & HDF_STRING) {
+		DrawTextW (hdc, phdi->pszText, -1,
+			   &textRect, DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_CALCRECT);
+		tx = textRect.right - textRect.left;
+	    } 
+	    else
+		tx = 0;
+	    ImageList_DrawEx(infoPtr->himl, phdi->iImage, hdc, r.left + tx + 2*infoPtr->iMargin,
+			     r.top + (r.bottom-r.top-infoPtr->himl->cy)/2, infoPtr->himl->cx, r.bottom-r.top, 
+			     CLR_DEFAULT, CLR_DEFAULT, 0);
+	}	
 
         if (((phdi->fmt & HDF_STRING)
 		|| (!(phdi->fmt & (HDF_OWNERDRAW|HDF_STRING|HDF_BITMAP|
 				   HDF_BITMAP_ON_RIGHT|HDF_IMAGE)))) /* no explicit format specified? */
 	    && (phdi->pszText)) {
             oldBkMode = SetBkMode(hdc, TRANSPARENT);
-            r.left += 3 ;
-	    r.right -= 3;
+	    r.left += infoPtr->iMargin;
+	    r.right -= infoPtr->iMargin;
 	    SetTextColor (hdc, (bHotTrack) ? COLOR_HIGHLIGHT : COLOR_BTNTEXT);
 	    DrawTextW (hdc, phdi->pszText, -1,
 	               &r, uTextJustify|DT_END_ELLIPSIS|DT_VCENTER|DT_SINGLELINE);
@@ -904,8 +924,9 @@ HEADER_InsertItemA (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	lpItem->cxy = phdi->cxy;
 
     if (phdi->mask & HDI_TEXT) {
+	static char empty[] = "";
 	if (!phdi->pszText) /* null pointer check */
-	    phdi->pszText = "";
+	    phdi->pszText = empty;
 	if (phdi->pszText != LPSTR_TEXTCALLBACKA) {
 	    len = MultiByteToWideChar(CP_ACP, 0, phdi->pszText, -1, NULL, 0);
 	    lpItem->pszText = Alloc( len*sizeof(WCHAR) );
@@ -1092,6 +1113,25 @@ HEADER_SetImageList (HWND hwnd, HIMAGELIST himl)
 
 
 static LRESULT
+HEADER_GetBitmapMargin(HWND hwnd)
+{
+    HEADER_INFO *infoPtr = HEADER_GetInfoPtr(hwnd);
+    
+    return infoPtr->iMargin;
+}
+
+static LRESULT
+HEADER_SetBitmapMargin(HWND hwnd, WPARAM wParam)
+{
+    HEADER_INFO *infoPtr = HEADER_GetInfoPtr (hwnd);
+    INT oldMargin = infoPtr->iMargin;
+
+    infoPtr->iMargin = (INT)wParam;
+
+    return oldMargin;
+}
+
+static LRESULT
 HEADER_SetItemA (HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
     HEADER_INFO *infoPtr = HEADER_GetInfoPtr (hwnd);
@@ -1261,6 +1301,7 @@ HEADER_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
     infoPtr->himl = 0;
     infoPtr->iHotItem = -1;
     infoPtr->bUnicode = IsWindowUnicode (hwnd);
+    infoPtr->iMargin = 3*GetSystemMetrics(SM_CXEDGE);
     infoPtr->nNotifyFormat =
 	SendMessageA (infoPtr->hwndNotify, WM_NOTIFYFORMAT, (WPARAM)hwnd, NF_QUERY);
 
@@ -1675,7 +1716,8 @@ HEADER_WindowProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 /*	case HDM_EDITFILTER: */
 
-/*	case HDM_GETBITMAPMARGIN: */
+	case HDM_GETBITMAPMARGIN:
+	    return HEADER_GetBitmapMargin(hwnd);
 
 	case HDM_GETIMAGELIST:
 	    return HEADER_GetImageList (hwnd);
@@ -1713,7 +1755,8 @@ HEADER_WindowProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case HDM_ORDERTOINDEX:
 	    return HEADER_OrderToIndex(hwnd, wParam);
 
-/*	case HDM_SETBITMAPMARGIN: */
+	case HDM_SETBITMAPMARGIN:
+	    return HEADER_SetBitmapMargin(hwnd, wParam);
 
 /*	case HDM_SETFILTERCHANGETIMEOUT: */
 

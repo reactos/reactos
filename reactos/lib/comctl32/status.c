@@ -807,8 +807,8 @@ STATUSBAR_WMDestroy (STATUSWINDOWINFO *infoPtr)
     if (infoPtr->hwndToolTip)
 	DestroyWindow (infoPtr->hwndToolTip);
 
-    Free (infoPtr);
     SetWindowLongW(infoPtr->Self, 0, 0);
+    Free (infoPtr);
     return 0;
 }
 

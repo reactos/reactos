@@ -119,7 +119,7 @@
  *
  *    Still to do:
  *  2. Following still not handled: RBBS_FIXEDBMP,
- *            RBBS_USECHEVRON, CCS_NORESIZE,
+ *            CCS_NORESIZE,
  *            CCS_NOMOVEX, CCS_NOMOVEY
  *  3. Following are only partially handled:
  *            RBS_AUTOSIZE, RBBS_VARIABLEHEIGHT
@@ -136,7 +136,7 @@
  *        WM_SYSCOLORCHANGE, WM_VKEYTOITEM, WM_WININICHANGE
  *  7. The following notifications are not implemented:
  *        NM_CUSTOMDRAW, NM_RELEASEDCAPTURE
- *        RB_CHEVRONPUSHED, RBN_MINMAX
+ *        RBN_MINMAX
  */
 
 #include <stdarg.h>
@@ -194,6 +194,7 @@ typedef struct
     RECT    rcCapImage;     /* calculated caption image rectangle */
     RECT    rcCapText;      /* calculated caption text rectangle */
     RECT    rcChild;        /* calculated child rectangle */
+    RECT    rcChevron;      /* calculated chevron rectangle */
 
     LPWSTR    lpText;
     HWND    hwndPrevParent;
@@ -210,6 +211,8 @@ typedef struct
 #define DRAW_TEXT       0x00000004
 #define DRAW_RIGHTSEP   0x00000010
 #define DRAW_BOTTOMSEP  0x00000020
+#define DRAW_CHEVRONHOT 0x00000040
+#define DRAW_CHEVRONPUSHED 0x00000080
 #define NTF_INVALIDATE  0x01000000
 
 typedef struct
@@ -248,9 +251,11 @@ typedef struct
     INT      iVersion;    /* version number */
     POINTS   dragStart;   /* x,y of button down */
     POINTS   dragNow;     /* x,y of this MouseMove */
-    INT      ihitBand;    /* band number of band whose gripper was grabbed */
+    INT      iOldBand;    /* last band that had the mouse cursor over it */
     INT      ihitoffset;  /* offset of hotspot from gripper.left */
     POINT    origin;      /* left/upper corner of client */
+    INT      ichevronhotBand; /* last band that had a hot chevron */
+    INT      iGrabbedBand;/* band number of band whose gripper was grabbed */
 
     REBAR_ROW  *rows;       /* pointer to row indexes              */
     REBAR_BAND *bands;      /* pointer to the array of rebar bands */
@@ -293,6 +298,9 @@ typedef struct
 /* if present.                                                     */
 #define GRIPPER_WIDTH  3
 
+/* Width of the chevron button if present */
+#define CHEVRON_WIDTH  10
+
 /* Height of divider for Rebar if not disabled (CCS_NODIVIDER)     */
 /* either top or bottom                                            */
 #define REBAR_DIVIDER  2
@@ -334,7 +342,7 @@ typedef struct
 static UINT mindragx = 0;
 static UINT mindragy = 0;
 
-static char *band_stylename[] = {
+static const char *band_stylename[] = {
     "RBBS_BREAK",              /* 0001 */
     "RBBS_FIXEDSIZE",          /* 0002 */
     "RBBS_CHILDEDGE",          /* 0004 */
@@ -346,7 +354,7 @@ static char *band_stylename[] = {
     "RBBS_NOGRIPPER",          /* 0100 */
     NULL };
 
-static char *band_maskname[] = {
+static const char *band_maskname[] = {
     "RBBIM_STYLE",         /*    0x00000001 */
     "RBBIM_COLORS",        /*    0x00000002 */
     "RBBIM_TEXT",          /*    0x00000004 */
@@ -437,10 +445,10 @@ REBAR_DumpBand (REBAR_INFO *iP)
     TRACE("hwnd=%p: color=%08lx/%08lx, bands=%u, rows=%u, cSize=%ld,%ld\n",
 	  iP->hwndSelf, iP->clrText, iP->clrBk, iP->uNumBands, iP->uNumRows,
 	  iP->calcSize.cx, iP->calcSize.cy);
-    TRACE("hwnd=%p: flags=%08x, dragStart=%d,%d, dragNow=%d,%d, ihitBand=%d\n",
+    TRACE("hwnd=%p: flags=%08x, dragStart=%d,%d, dragNow=%d,%d, iGrabbedBand=%d\n",
 	  iP->hwndSelf, iP->fStatus, iP->dragStart.x, iP->dragStart.y,
 	  iP->dragNow.x, iP->dragNow.y,
-	  iP->ihitBand);
+	  iP->iGrabbedBand);
     TRACE("hwnd=%p: style=%08lx, I'm Unicode=%s, notify in Unicode=%s, redraw=%s\n",
 	  iP->hwndSelf, iP->dwStyle, (iP->bUnicode)?"TRUE":"FALSE",
 	  (iP->NtfUnicode)?"TRUE":"FALSE", (iP->DoRedraw)?"TRUE":"FALSE");
@@ -484,6 +492,25 @@ REBAR_DumpBand (REBAR_INFO *iP)
 
 }
 
+static void
+REBAR_DrawChevron (HDC hdc, INT left, INT top, INT colorRef)
+{
+    INT x, y;
+    HPEN hPen, hOldPen;
+
+    if (!(hPen = CreatePen( PS_SOLID, 1, GetSysColor( colorRef )))) return;
+    hOldPen = SelectObject ( hdc, hPen );
+    x = left + 2;
+    y = top;
+    MoveToEx (hdc, x, y, NULL);
+    LineTo (hdc, x+5, y++); x++;
+    MoveToEx (hdc, x, y, NULL);
+    LineTo (hdc, x+3, y++); x++;
+    MoveToEx (hdc, x, y, NULL);
+    LineTo (hdc, x+1, y++);
+    SelectObject( hdc, hOldPen );
+    DeleteObject( hPen );
+}
 
 static HWND
 REBAR_GetNotifyParent (REBAR_INFO *infoPtr)
@@ -611,6 +638,22 @@ REBAR_DrawBand (HDC hdc, REBAR_INFO *infoPtr, REBAR_BAND *lpBand)
 	if (lpBand->clrFore != CLR_NONE)
 	    SetTextColor (hdc, oldcolor);
 	SelectObject (hdc, hOldFont);
+    }
+
+    if (!IsRectEmpty(&lpBand->rcChevron))
+    {
+        if (lpBand->fDraw & DRAW_CHEVRONPUSHED)
+        {
+            DrawEdge(hdc, &lpBand->rcChevron, BDR_SUNKENOUTER, BF_RECT | BF_MIDDLE);
+            REBAR_DrawChevron(hdc, lpBand->rcChevron.left+1, lpBand->rcChevron.top + 11, COLOR_WINDOWFRAME);
+        }
+        else if (lpBand->fDraw & DRAW_CHEVRONHOT)
+        {
+            DrawEdge(hdc, &lpBand->rcChevron, BDR_RAISEDINNER, BF_RECT | BF_MIDDLE);
+            REBAR_DrawChevron(hdc, lpBand->rcChevron.left, lpBand->rcChevron.top + 10, COLOR_WINDOWFRAME);
+        }
+        else
+            REBAR_DrawChevron(hdc, lpBand->rcChevron.left, lpBand->rcChevron.top + 10, COLOR_WINDOWFRAME);
     }
 
     if (lpBand->uCDret == (CDRF_NOTIFYPOSTPAINT | CDRF_NOTIFYITEMDRAW)) {
@@ -954,6 +997,13 @@ REBAR_CalcHorzBand (REBAR_INFO *infoPtr, UINT rstart, UINT rend, BOOL notify)
 	  SetRect (&lpBand->rcChild,
 		   lpBand->rcBand.left+lpBand->cxHeader, lpBand->rcBand.top+yoff,
 		   lpBand->rcBand.right-xoff, lpBand->rcBand.bottom-yoff);
+	  if ((lpBand->fStyle & RBBS_USECHEVRON) && (lpBand->rcChild.right - lpBand->rcChild.left < lpBand->cxIdeal))
+	  {
+	      lpBand->rcChild.right -= CHEVRON_WIDTH;
+	      SetRect(&lpBand->rcChevron, lpBand->rcChild.right,
+	              lpBand->rcChild.top, lpBand->rcChild.right + CHEVRON_WIDTH,
+	              lpBand->rcChild.bottom);
+	  }
       }
       else {
           SetRect (&lpBand->rcChild,
@@ -1430,6 +1480,8 @@ REBAR_Layout (REBAR_INFO *infoPtr, LPRECT lpRect, BOOL notify, BOOL resetclient)
 	lpBand = &infoPtr->bands[i];
 	lpBand->fDraw = 0;
 	lpBand->iRow = row;
+
+	SetRectEmpty(&lpBand->rcChevron);
 
 	if (HIDDENBAND(lpBand)) continue;
 
@@ -2207,7 +2259,7 @@ REBAR_InternalEraseBkGnd (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam, REC
 }
 
 static void
-REBAR_InternalHitTest (REBAR_INFO *infoPtr, LPPOINT lpPt, UINT *pFlags, INT *pBand)
+REBAR_InternalHitTest (REBAR_INFO *infoPtr, const LPPOINT lpPt, UINT *pFlags, INT *pBand)
 {
     REBAR_BAND *lpBand;
     RECT rect;
@@ -2227,7 +2279,6 @@ REBAR_InternalHitTest (REBAR_INFO *infoPtr, LPPOINT lpPt, UINT *pFlags, INT *pBa
 	}
 	else {
 	    /* somewhere inside */
-	    infoPtr->ihitBand = -1;
 	    for (iCount = 0; iCount < infoPtr->uNumBands; iCount++) {
 		lpBand = &infoPtr->bands[iCount];
 		if (HIDDENBAND(lpBand)) continue;
@@ -2236,7 +2287,6 @@ REBAR_InternalHitTest (REBAR_INFO *infoPtr, LPPOINT lpPt, UINT *pFlags, INT *pBa
 			*pBand = iCount;
 		    if (PtInRect (&lpBand->rcGripper, *lpPt)) {
 			*pFlags = RBHT_GRABBER;
-			infoPtr->ihitBand = iCount;
 			TRACE("ON GRABBER %d\n", iCount);
 			return;
 		    }
@@ -2253,6 +2303,11 @@ REBAR_InternalHitTest (REBAR_INFO *infoPtr, LPPOINT lpPt, UINT *pFlags, INT *pBa
 		    else if (PtInRect (&lpBand->rcChild, *lpPt)) {
 			*pFlags = RBHT_CLIENT;
 			TRACE("ON CLIENT %d\n", iCount);
+			return;
+		    }
+		    else if (PtInRect (&lpBand->rcChevron, *lpPt)) {
+			*pFlags = RBHT_CHEVRON;
+			TRACE("ON CHEVRON %d\n", iCount);
 			return;
 		    }
 		    else {
@@ -2373,14 +2428,14 @@ REBAR_HandleLRDrag (REBAR_INFO *infoPtr, POINTS *ptsmove)
 	    infoPtr->dragStart.x = 0;
 	    infoPtr->dragStart.y = 0;
 	    infoPtr->dragNow = infoPtr->dragStart;
-	    infoPtr->ihitBand = -1;
+	    infoPtr->iGrabbedBand = -1;
 	    ReleaseCapture ();
 	    return ;
 	}
 	infoPtr->fStatus |= BEGIN_DRAG_ISSUED;
     }
 
-    ihitBand = infoPtr->ihitBand;
+    ihitBand = infoPtr->iGrabbedBand;
     hitBand = &infoPtr->bands[ihitBand];
     imaxdBand = ihitBand; /* to suppress warning message */
 
@@ -3402,8 +3457,11 @@ REBAR_SetBandInfoA (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 	}
 	if (lprbbi->lpText) {
             INT len = MultiByteToWideChar( CP_ACP, 0, lprbbi->lpText, -1, NULL, 0 );
-            lpBand->lpText = (LPWSTR)Alloc (len*sizeof(WCHAR));
-            MultiByteToWideChar( CP_ACP, 0, lprbbi->lpText, -1, lpBand->lpText, len );
+            if (len > 1)
+            {
+                lpBand->lpText = (LPWSTR)Alloc (len*sizeof(WCHAR));
+                MultiByteToWideChar( CP_ACP, 0, lprbbi->lpText, -1, lpBand->lpText, len );
+            }
 	}
     }
 
@@ -3447,8 +3505,11 @@ REBAR_SetBandInfoW (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 	}
 	if (lprbbi->lpText) {
 	    INT len = lstrlenW (lprbbi->lpText);
-	    lpBand->lpText = (LPWSTR)Alloc ((len + 1)*sizeof(WCHAR));
-	    strcpyW (lpBand->lpText, lprbbi->lpText);
+	    if (len > 0)
+	    {
+	        lpBand->lpText = (LPWSTR)Alloc ((len + 1)*sizeof(WCHAR));
+	        strcpyW (lpBand->lpText, lprbbi->lpText);
+	    }
 	}
     }
 
@@ -3721,103 +3782,219 @@ REBAR_GetFont (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
     return (LRESULT)infoPtr->hFont;
 }
 
+static LRESULT
+REBAR_PushChevron(REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
+{
+    if (wParam >= 0 && (UINT)wParam < infoPtr->uNumBands)
+    {
+        NMREBARCHEVRON nmrbc;
+        REBAR_BAND *lpBand = &infoPtr->bands[wParam];
+
+        TRACE("Pressed chevron on band %d\n", wParam);
+
+        /* redraw chevron in pushed state */
+        lpBand->fDraw |= DRAW_CHEVRONPUSHED;
+        RedrawWindow(infoPtr->hwndSelf, &lpBand->rcChevron,0,
+          RDW_ERASE|RDW_INVALIDATE|RDW_UPDATENOW);
+
+        /* notify app so it can display a popup menu or whatever */
+        nmrbc.uBand = wParam;
+        nmrbc.wID = lpBand->wID;
+        nmrbc.lParam = lpBand->lParam;
+        nmrbc.rc = lpBand->rcChevron;
+        nmrbc.lParamNM = lParam;
+        REBAR_Notify((NMHDR*)&nmrbc, infoPtr, RBN_CHEVRONPUSHED);
+
+        /* redraw chevron in previous state */
+        lpBand->fDraw &= ~DRAW_CHEVRONPUSHED;
+        InvalidateRect(infoPtr->hwndSelf, &lpBand->rcChevron, TRUE);
+
+        return TRUE;
+    }
+    return FALSE;
+}
 
 static LRESULT
 REBAR_LButtonDown (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 {
     REBAR_BAND *lpBand;
+    UINT htFlags;
+    UINT iHitBand;
+    POINT ptMouseDown;
+    ptMouseDown.x = (INT)LOWORD(lParam);
+    ptMouseDown.y = (INT)HIWORD(lParam);
 
-    /* If InternalHitTest did not find a hit on the Gripper, */
-    /* then ignore the button click.                         */
-    if (infoPtr->ihitBand == -1) return 0;
+    REBAR_InternalHitTest(infoPtr, &ptMouseDown, &htFlags, &iHitBand);
+    lpBand = &infoPtr->bands[iHitBand];
 
-    SetCapture (infoPtr->hwndSelf);
+    if (htFlags == RBHT_CHEVRON)
+    {
+        REBAR_PushChevron(infoPtr, iHitBand, 0);
+    }
+    else if (htFlags == RBHT_GRABBER || htFlags == RBHT_CAPTION)
+    {
+        TRACE("Starting drag\n");
 
-    /* save off the LOWORD and HIWORD of lParam as initial x,y */
-    lpBand = &infoPtr->bands[infoPtr->ihitBand];
-    infoPtr->dragStart = MAKEPOINTS(lParam);
-    infoPtr->dragNow = infoPtr->dragStart;
-    if (infoPtr->dwStyle & CCS_VERT)
-        infoPtr->ihitoffset = infoPtr->dragStart.y - (lpBand->rcBand.top+REBAR_PRE_GRIPPER);
-    else
-        infoPtr->ihitoffset = infoPtr->dragStart.x - (lpBand->rcBand.left+REBAR_PRE_GRIPPER);
+        SetCapture (infoPtr->hwndSelf);
+        infoPtr->iGrabbedBand = iHitBand;
 
+        /* save off the LOWORD and HIWORD of lParam as initial x,y */
+        infoPtr->dragStart = MAKEPOINTS(lParam);
+        infoPtr->dragNow = infoPtr->dragStart;
+        if (infoPtr->dwStyle & CCS_VERT)
+            infoPtr->ihitoffset = infoPtr->dragStart.y - (lpBand->rcBand.top+REBAR_PRE_GRIPPER);
+        else
+            infoPtr->ihitoffset = infoPtr->dragStart.x - (lpBand->rcBand.left+REBAR_PRE_GRIPPER);
+    }
     return 0;
 }
-
 
 static LRESULT
 REBAR_LButtonUp (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 {
-    NMHDR layout;
-    RECT rect;
-    INT ihitBand;
+    if (infoPtr->iGrabbedBand >= 0)
+    {
+        NMHDR layout;
+        RECT rect;
 
-    /* If InternalHitTest did not find a hit on the Gripper, */
-    /* then ignore the button click.                         */
-    if (infoPtr->ihitBand == -1) return 0;
+        infoPtr->dragStart.x = 0;
+        infoPtr->dragStart.y = 0;
+        infoPtr->dragNow = infoPtr->dragStart;
 
-    ihitBand = infoPtr->ihitBand;
-    infoPtr->dragStart.x = 0;
-    infoPtr->dragStart.y = 0;
-    infoPtr->dragNow = infoPtr->dragStart;
-    infoPtr->ihitBand = -1;
+        ReleaseCapture ();
 
-    ReleaseCapture ();
+        if (infoPtr->fStatus & BEGIN_DRAG_ISSUED) {
+            REBAR_Notify(&layout, infoPtr, RBN_LAYOUTCHANGED);
+            REBAR_Notify_NMREBAR (infoPtr, infoPtr->iGrabbedBand, RBN_ENDDRAG);
+            infoPtr->fStatus &= ~BEGIN_DRAG_ISSUED;
+        }
 
-    if (infoPtr->fStatus & BEGIN_DRAG_ISSUED) {
-        REBAR_Notify((NMHDR *) &layout, infoPtr, RBN_LAYOUTCHANGED);
-	REBAR_Notify_NMREBAR (infoPtr, ihitBand, RBN_ENDDRAG);
-	infoPtr->fStatus &= ~BEGIN_DRAG_ISSUED;
+        infoPtr->iGrabbedBand = -1;
+
+        GetClientRect(infoPtr->hwndSelf, &rect);
+        InvalidateRect(infoPtr->hwndSelf, NULL, TRUE);
     }
-
-    GetClientRect(infoPtr->hwndSelf, &rect);
-    InvalidateRect(infoPtr->hwndSelf, NULL, TRUE);
 
     return 0;
 }
 
+static LRESULT
+REBAR_MouseLeave (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
+{
+    if (infoPtr->ichevronhotBand >= 0)
+    {
+        REBAR_BAND *lpChevronBand = &infoPtr->bands[infoPtr->ichevronhotBand];
+        if (lpChevronBand->fDraw & DRAW_CHEVRONHOT)
+        {
+            lpChevronBand->fDraw &= ~DRAW_CHEVRONHOT;
+            InvalidateRect(infoPtr->hwndSelf, &lpChevronBand->rcChevron, TRUE);
+        }
+    }
+    infoPtr->iOldBand = -1;
+    infoPtr->ichevronhotBand = -2;
+
+    return TRUE;
+}
 
 static LRESULT
 REBAR_MouseMove (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 {
-    REBAR_BAND *band1, *band2;
+    REBAR_BAND *lpChevronBand;
     POINTS ptsmove;
-
-    /* Validate entry as hit on Gripper has occurred */
-    if (GetCapture() != infoPtr->hwndSelf) return 0;
-    if (infoPtr->ihitBand == -1) return 0;
 
     ptsmove = MAKEPOINTS(lParam);
 
-    /* if mouse did not move much, exit */
-    if ((abs(ptsmove.x - infoPtr->dragNow.x) <= mindragx) &&
-	(abs(ptsmove.y - infoPtr->dragNow.y) <= mindragy)) return 0;
+    /* if we are currently dragging a band */
+    if (infoPtr->iGrabbedBand >= 0)
+    {
+        REBAR_BAND *band1, *band2;
+    
+        if (GetCapture() != infoPtr->hwndSelf)
+            ERR("We are dragging but haven't got capture?!?\n");
 
-    band1 = &infoPtr->bands[infoPtr->ihitBand-1];
-    band2 = &infoPtr->bands[infoPtr->ihitBand];
+        band1 = &infoPtr->bands[infoPtr->iGrabbedBand-1];
+        band2 = &infoPtr->bands[infoPtr->iGrabbedBand];
 
-    /* Test for valid drag case - must not be first band in row */
-    if (infoPtr->dwStyle & CCS_VERT) {
-	if ((ptsmove.x < band2->rcBand.left) ||
-	    (ptsmove.x > band2->rcBand.right) ||
-	    ((infoPtr->ihitBand > 0) && (band1->iRow != band2->iRow))) {
-	    FIXME("Cannot drag to other rows yet!!\n");
-	}
-	else {
-	    REBAR_HandleLRDrag (infoPtr, &ptsmove);
-	}
+        /* if mouse did not move much, exit */
+        if ((abs(ptsmove.x - infoPtr->dragNow.x) <= mindragx) &&
+            (abs(ptsmove.y - infoPtr->dragNow.y) <= mindragy)) return 0;
+
+        /* Test for valid drag case - must not be first band in row */
+        if (infoPtr->dwStyle & CCS_VERT) {
+            if ((ptsmove.x < band2->rcBand.left) ||
+	      (ptsmove.x > band2->rcBand.right) ||
+              ((infoPtr->iGrabbedBand > 0) && (band1->iRow != band2->iRow))) {
+                FIXME("Cannot drag to other rows yet!!\n");
+            }
+            else {
+                REBAR_HandleLRDrag (infoPtr, &ptsmove);
+            }
+        }
+        else {
+            if ((ptsmove.y < band2->rcBand.top) ||
+              (ptsmove.y > band2->rcBand.bottom) ||
+              ((infoPtr->iGrabbedBand > 0) && (band1->iRow != band2->iRow))) {
+                FIXME("Cannot drag to other rows yet!!\n");
+            }
+            else {
+                REBAR_HandleLRDrag (infoPtr, &ptsmove);
+            }
+        }
     }
-    else {
-	if ((ptsmove.y < band2->rcBand.top) ||
-	    (ptsmove.y > band2->rcBand.bottom) ||
-	    ((infoPtr->ihitBand > 0) && (band1->iRow != band2->iRow))) {
-	    FIXME("Cannot drag to other rows yet!!\n");
-	}
-	else {
-	    REBAR_HandleLRDrag (infoPtr, &ptsmove);
-	}
+    else
+    {
+        POINT ptMove;
+        INT iHitBand;
+        UINT htFlags;
+        TRACKMOUSEEVENT trackinfo;
+
+        ptMove.x = (INT)ptsmove.x;
+        ptMove.y = (INT)ptsmove.y;
+        REBAR_InternalHitTest(infoPtr, &ptMove, &htFlags, &iHitBand);
+
+        if (infoPtr->iOldBand >= 0 && infoPtr->iOldBand == infoPtr->ichevronhotBand)
+        {
+            lpChevronBand = &infoPtr->bands[infoPtr->ichevronhotBand];
+            if (lpChevronBand->fDraw & DRAW_CHEVRONHOT)
+            {
+                lpChevronBand->fDraw &= ~DRAW_CHEVRONHOT;
+                InvalidateRect(infoPtr->hwndSelf, &lpChevronBand->rcChevron, TRUE);
+            }
+            infoPtr->ichevronhotBand = -2;
+        }
+
+        if (htFlags == RBHT_CHEVRON)
+        {
+            /* fill in the TRACKMOUSEEVENT struct */
+            trackinfo.cbSize = sizeof(TRACKMOUSEEVENT);
+            trackinfo.dwFlags = TME_QUERY;
+            trackinfo.hwndTrack = infoPtr->hwndSelf;
+            trackinfo.dwHoverTime = 0;
+
+            /* call _TrackMouseEvent to see if we are currently tracking for this hwnd */
+            _TrackMouseEvent(&trackinfo);
+
+            /* Make sure tracking is enabled so we receive a WM_MOUSELEAVE message */
+            if(!(trackinfo.dwFlags & TME_LEAVE))
+            {
+                trackinfo.dwFlags = TME_LEAVE; /* notify upon leaving */
+
+                /* call TRACKMOUSEEVENT so we receive a WM_MOUSELEAVE message */
+                /* and can properly deactivate the hot chevron */
+                _TrackMouseEvent(&trackinfo);
+            }
+
+            lpChevronBand = &infoPtr->bands[iHitBand];
+            if (!(lpChevronBand->fDraw & DRAW_CHEVRONHOT))
+            {
+                lpChevronBand->fDraw |= DRAW_CHEVRONHOT;
+                InvalidateRect(infoPtr->hwndSelf, &lpChevronBand->rcChevron, TRUE);
+                infoPtr->ichevronhotBand = iHitBand;
+            }
+        }
+        infoPtr->iOldBand = iHitBand;
     }
+
     return 0;
 }
 
@@ -3869,7 +4046,9 @@ REBAR_NCCreate (HWND hwnd, WPARAM wParam, LPARAM lParam)
     infoPtr->clrText = CLR_NONE;
     infoPtr->clrBtnText = GetSysColor (COLOR_BTNTEXT);
     infoPtr->clrBtnFace = GetSysColor (COLOR_BTNFACE);
-    infoPtr->ihitBand = -1;
+    infoPtr->iOldBand = -1;
+    infoPtr->ichevronhotBand = -2;
+    infoPtr->iGrabbedBand = -1;
     infoPtr->hwndSelf = hwnd;
     infoPtr->DoRedraw = TRUE;
     infoPtr->hcurArrow = LoadCursorA (0, (LPSTR)IDC_ARROW);
@@ -4349,6 +4528,9 @@ REBAR_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case RB_MOVEBAND:
 	    return REBAR_MoveBand (infoPtr, wParam, lParam);
 
+	case RB_PUSHCHEVRON:
+	    return REBAR_PushChevron (infoPtr, wParam, lParam);
+
 	case RB_SETBANDINFOA:
 	    return REBAR_SetBandInfoA (infoPtr, wParam, lParam);
 
@@ -4424,6 +4606,9 @@ REBAR_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_MOUSEMOVE:
 	    return REBAR_MouseMove (infoPtr, wParam, lParam);
+
+	case WM_MOUSELEAVE:
+	    return REBAR_MouseLeave (infoPtr, wParam, lParam);
 
 	case WM_NCCALCSIZE:
 	    return REBAR_NCCalcSize (infoPtr, wParam, lParam);

@@ -1475,8 +1475,7 @@ static BOOL PROPSHEET_CreatePage(HWND hwndParent,
   }
 
   if (psInfo->proppage[index].useCallback)
-    (*(ppshpage->pfnCallback))(hwndParent,
-                               PSPCB_CREATE,
+    (*(ppshpage->pfnCallback))(0, PSPCB_CREATE,
                                (LPPROPSHEETPAGEW)ppshpage);
 
   if(ppshpage->dwFlags & PSP_INTERNAL_UNICODE)
@@ -2028,19 +2027,25 @@ static BOOL PROPSHEET_SetCurSel(HWND hwndDlg,
       index+=skipdir;
       if (index < 0) {
 	index = 0;
-	FIXME("Tried to skip before first property sheet page!\n");
+	WARN("Tried to skip before first property sheet page!\n");
 	break;
       }
       if (index >= psInfo->nPages) {
-	FIXME("Tried to skip after last property sheet page!\n");
+	WARN("Tried to skip after last property sheet page!\n");
 	index = psInfo->nPages-1;
 	break;
       }
     }
     else if (result != 0)
     {
-       index = PROPSHEET_FindPageByResId(psInfo, result);
-       continue;
+      int old_index = index;
+      index = PROPSHEET_FindPageByResId(psInfo, result);
+      if(index >= psInfo->nPages) {
+        index = old_index;
+        WARN("Tried to skip to nonexistant page by res id\n");
+        break;
+      }
+      continue;
     }
   }
   /*
