@@ -905,23 +905,26 @@ endif
 
 # Precompiled header support
 # When using PCHs, use dependency tracking to keep the .gch files up-to-date.
+# When TARGET_PCH is defined, we always want to clean the .gch file, even if
+# ROS_USE_PCH is not active. This prevents problems when switching between
+# PCH and non-PCH builds.
 
-MK_PCHNAME =
-ifeq ($(ROS_USE_PCH),yes)
 ifneq ($(TARGET_PCH),)
+MK_PCHCLEAN = $(TARGET_PCH).gch
+ifeq ($(ROS_USE_PCH),yes)
 MK_PCHNAME = $(TARGET_PCH).gch
-
 ifeq ($(TARGET_CPPAPP),yes)
 PCH_CC := $(CXX)
-else
+else # TARGET_CPPAPP
 PCH_CC := $(CC)
-endif
-
-
-endif # TARGET_PCH
-else  #
+endif # TARGET_CPPAPP
+else # ROS_USE_PCH
 MK_PCHNAME =
 endif # ROS_USE_PCH
+else # TARGET_PCH
+MK_PCHCLEAN =
+MK_PCHNAME =
+endif # TARGET_PCH
 
 # Be carefull not to clean non-object files
 MK_CLEANFILES := $(filter %.o,$(MK_OBJECTS))
@@ -931,7 +934,7 @@ MK_CLEANDEPS := $(join $(dir $(MK_CLEANFILTERED)), $(addprefix ., $(notdir $(MK_
 # FIXME: The $(MK_BASENAME).sym can be removed around 15 Feb 2005
 clean: $(MK_REGTESTS_CLEAN) $(SUBDIRS:%=%_clean)
 	$(HALFVERBOSEECHO) [CLEAN]
-	- $(RM) *.o $(MK_PCHNAME) $(MK_BASENAME).sym $(MK_BASENAME).a $(MK_RESOURCE) \
+	- $(RM) *.o $(MK_PCHCLEAN) $(MK_BASENAME).sym $(MK_BASENAME).a $(MK_RESOURCE) \
 	  $(MK_FULLNAME) $(MK_NOSTRIPNAME) $(MK_CLEANFILES) $(MK_CLEANDEPS) $(MK_BASENAME).map \
 	  junk.tmp base.tmp temp.exp $(MK_RC_BINARIES) $(MK_SPECDEF) $(MK_STUBS_SRC) \
 	  $(MK_GENERATED_MAKEFILE) $(TARGET_CLEAN)
