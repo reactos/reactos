@@ -1,4 +1,4 @@
-/* $Id: critical.c,v 1.16 2004/01/29 23:41:36 navaraf Exp $
+/* $Id: critical.c,v 1.17 2004/01/30 17:32:17 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -25,7 +25,7 @@ VOID STDCALL
 RtlDeleteCriticalSection(PCRITICAL_SECTION CriticalSection)
 {
    NtClose(CriticalSection->LockSemaphore);
-   CriticalSection->SpinCount = -1;
+   CriticalSection->LockCount = -1;
 }
 
 /*
