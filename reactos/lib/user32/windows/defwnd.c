@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.20 2003/02/28 22:59:30 rcampbell Exp $
+/* $Id: defwnd.c,v 1.21 2003/02/28 23:19:32 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -21,7 +21,6 @@
 /* GLOBALS *******************************************************************/
 
 static HBITMAP hbitmapClose;
-static HBITMAP hbitmapCloseD;
 static HBITMAP hbitmapMinimize;
 static HBITMAP hbitmapMinimizeD;
 static HBITMAP hbitmapMaximize;
