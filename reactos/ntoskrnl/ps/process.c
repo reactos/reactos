@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.43 2000/06/03 21:36:32 ekohl Exp $
+/* $Id: process.c,v 1.44 2000/06/04 17:27:39 ea Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -757,16 +757,18 @@ PiSnapshotProcessTable (
 	)
 {
 	KIRQL		OldIrql;
-	PLIST_ENTRY	CurrentEntry;
-	PEPROCESS	Current;
+	PLIST_ENTRY	CurrentEntryP;
+	PEPROCESS	CurrentP;
+	PLIST_ENTRY	CurrentEntryT;
+	PETHREAD	CurrentT;
 	
 	ULONG		RequiredSize = 0L;
 	BOOLEAN		SizeOnly = FALSE;
 
-	ULONG		SpiSizeLast = 0L;
-	ULONG		SpiSizeCurrent = 0L;
+	ULONG		SpiSize = 0L;
 	
 	PSYSTEM_PROCESS_INFORMATION	pInfoP = (PSYSTEM_PROCESS_INFORMATION) SnapshotBuffer;
+	PSYSTEM_PROCESS_INFORMATION	pInfoPLast = NULL;
 	PSYSTEM_THREAD_INFO		pInfoT = NULL;
 	
 
@@ -782,33 +784,18 @@ PiSnapshotProcessTable (
 	 * list is circular, the guard is false
 	 * after the last process.
 	 */
-	for (	CurrentEntry = PsProcessListHead.Flink;
-		(CurrentEntry != & PsProcessListHead);
-		CurrentEntry = CurrentEntry->Flink
+	for (	CurrentEntryP = PsProcessListHead.Flink;
+		(CurrentEntryP != & PsProcessListHead);
+		CurrentEntryP = CurrentEntryP->Flink
 		)
 	{
-		/* 
-		 * Get a reference to the 
-		 * process object we are
-		 * handling.
-		 */
-		Current = CONTAINING_RECORD(
-				CurrentEntry,
-				EPROCESS, 
-				Pcb.ProcessListEntry
-				);
-		/* FIXME: assert (NULL != Current) */
 		/*
 		 * Compute how much space is
 		 * occupied in the snapshot
 		 * by adding this process info.
+		 * (at least one thread).
 		 */
-		SpiSizeCurrent = 
-			sizeof (SYSTEM_PROCESS_INFORMATION)
-			+ (
-				(Current->ThreadCount - 1)
-				* sizeof (SYSTEM_THREAD_INFORMATION)
-				);
+		SpiSizeCurrent = sizeof (SYSTEM_PROCESS_INFORMATION);
 		RequiredSize += SpiSizeCurrent;
 		/*
 		 * Do not write process data in the
@@ -824,36 +811,112 @@ PiSnapshotProcessTable (
 			SizeOnly = TRUE;
 			continue;
 		}
+		/* 
+		 * Get a reference to the 
+		 * process descriptor we are
+		 * handling.
+		 */
+		CurrentP = CONTAINING_RECORD(
+				CurrentEntryP,
+				EPROCESS, 
+				Pcb.ProcessListEntry
+				);
+		/*
+		 * Write process data in the buffer.
+		 */
+		RtlZeroMemory (pInfoP, sizeof (SYSTEM_PROCESS_INFORMATION));
+		/* PROCESS */
+		pInfoP->ThreadCount = 0L;
+		pInfoP->ProcessId = CurrentP->UniqueProcessId;
+		RtlInitUnicodeString (
+			& pInfoP->Name,
+			CurrentP->ImageFileName
+			);
+		/* THREAD */
+		for (	pInfoT = & CurrentP->ThreadSysInfo [0],
+			CurrentEntryT = CurrentP->Pcb.ThreadListHead.Flink;
+			
+			(CurrentEntryT != & CurrentP->Pcb.ThreadListHead);
+			
+			pInfoT = & CurrentP->ThreadSysInfo [pInfoP->ThreadCount],
+			CurrentEntryT = CurrentEntryT->Flink
+			)
+		{
+			/*
+			 * Recalculate the size of the
+			 * information block.
+			 */
+			if (0 < pInfoP->ThreadCount)
+			{
+				RequiredSize += sizeof (SYSTEM_THREAD_INFORMATION);
+			}
+			/*
+			 * Do not write thread data in the
+			 * buffer if it is too small.
+			 */
+			if (TRUE == SizeOnly) continue;
+			/*
+			 * Check if the buffer can contain
+			 * the full snapshot.
+			 */
+			if (Size < RequiredSize)
+			{
+				SizeOnly = TRUE;
+				continue;
+			}
+			/* 
+			 * Get a reference to the 
+			 * thread descriptor we are
+			 * handling.
+			 */
+			CurrentT = CONTAINING_RECORD(
+					CurrentEntryT,
+					KTHREAD, 
+					Tcb.ThreadListEntry
+					);
+			/*
+			 * Write thread data.
+			 */
+			RtlZeroMemory (
+				pInfoT,
+				sizeof (SYSTEM_THREAD_INFORMATION)
+				);
+			pInfoT->KernelTime	= CurrentT-> ;	/* TIME */
+			pInfoT->UserTime	= CurrentT-> ;	/* TIME */
+			pInfoT->CreateTime	= CurrentT-> ;	/* TIME */
+			pInfoT->TickCount	= CurrentT-> ;	/* ULONG */
+			pInfoT->StartEIP	= CurrentT-> ;	/* ULONG */
+			pInfoT->ClientId	= CurrentT-> ;	/* CLIENT_ID */
+			pInfoT->ClientId	= CurrentT-> ;	/* CLIENT_ID */
+			pInfoT->DynamicPriority	= CurrentT-> ;	/* ULONG */
+			pInfoT->BasePriority	= CurrentT-> ;	/* ULONG */
+			pInfoT->nSwitches	= CurrentT-> ;	/* ULONG */
+			pInfoT->State		= CurrentT-> ;	/* DWORD */
+			pInfoT->WaitReason	= CurrentT-> ;	/* KWAIT_REASON */
+			/*
+			 * Count the number of threads 
+			 * this process has.
+			 */
+			++ pInfoP->ThreadCount;
+		}
+		/*
+		 * Save the size of information
+		 * stored in the buffer for the
+		 * current process.
+		 */
+		pInfoP->RelativeOffset = SpiSize;
+		/*
+		 * Save a reference to the last
+		 * valid information block.
+		 */
+		pInfoPLast = pInfoP;
 		/*
 		 * Compute the offset of the 
 		 * SYSTEM_PROCESS_INFORMATION
 		 * descriptor in the snapshot 
-		 * buffer for this process.
+		 * buffer for the next process.
 		 */
-		if (0L != SpiSizeLast)
-		{
-			(ULONG) pInfoP += SpiSizeLast;
-			/* Save current process SpiSize */
-			SpiSizeLast = SpiSizeCurrent;
-		}
-		/*
-		 * Write process data in the buffer.
-		 */
-		pInfoP->RelativeOffset = SpiSizeCurrent;
-		/* PROCESS */
-		pInfoP->ThreadCount =
-		pInfoP->ProcessId = Current->UniqueProcessId;
-		RtlInitUnicodeString (
-			& pInfoP->Name,
-			Current->ImageFileName
-			);
-		/* THREAD */
-		for (	ThreadIndex = 0;
-			(ThreadIndex < Current->ThreadCount);
-			ThreadIndex ++
-			)
-		{
-		}
+		(ULONG) pInfoP += SpiSize;
 	}
 	/*
 	 * Unlock the process list.
@@ -868,7 +931,10 @@ PiSnapshotProcessTable (
 	 */
 	if (TRUE == SizeOnly)
 	{
-		*pRequiredSize = RequiredSize;
+		if (NULL != RequiredSize)
+		{
+			*pRequiredSize = RequiredSize;
+		}
 		return STATUS_INFO_LENGTH_MISMATCH;
 	}
 	/*

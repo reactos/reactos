@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.70 2000/05/07 23:04:43 ekohl Exp $
+# $Id: makefile_rex,v 1.71 2000/06/04 17:27:35 ea Exp $
 #
 # ReactOS Operating System
 #
@@ -31,7 +31,6 @@ OBJECTS_NT = \
 	nt/ntsem.o \
 	nt/nttimer.o \
 	nt/plugplay.o \
-	nt/port.o \
 	nt/profile.o \
 	nt/zw.o
 	
@@ -233,6 +232,20 @@ OBJECTS_LDR = \
 	ldr/sysdll.o \
 	ldr/userldr.o
 
+# Local Procedure Call (Lpc)
+OBJECTS_LPC = \
+	lpc/close.o \
+	lpc/complete.o \
+	lpc/connect.o \
+	lpc/create.o \
+	lpc/listen.o \
+	lpc/port.o \
+	lpc/query.o \
+	lpc/queue.o \
+	lpc/receive.o \
+	lpc/reply.o \
+	lpc/send.o
+
 # Nation Language Support Library (Nls)
 OBJECTS_NLS = nls/nls.o
 
@@ -344,6 +357,12 @@ $(OBJECTS_PATH)/ldr.o: $(OBJECTS_LDR)
 		-o $(OBJECTS_PATH)/ldr.o \
 		$(OBJECTS_LDR)
 
+$(OBJECTS_PATH)/lpc.o: $(OBJECTS_LPC)
+	$(LD) \
+		-r \
+		-o $(OBJECTS_PATH)/lpc.o \
+		$(OBJECTS_LPC)
+
 $(OBJECTS_PATH)/nls.o: $(OBJECTS_NLS)
 	$(LD) \
 		-r \
@@ -385,6 +404,7 @@ OBJECTS = \
 	$(OBJECTS_PATH)/cm.o \
 	$(OBJECTS_PATH)/dbg.o \
 	$(OBJECTS_PATH)/ex.o \
+	$(OBJECTS_PATH)/lpc.o \
 	$(OBJECTS_PATH)/fs.o \
 	$(OBJECTS_PATH)/io.o \
 	$(OBJECTS_PATH)/kd.o \
@@ -403,13 +423,13 @@ OBJECTS = \
 ifeq ($(DOSCLI),yes)
 CLEAN_FILES = $(OBJECTS_PATH)\*.o cc\*.o cm\*.o dbg\*.o ex\*.o hal\x86\*.o io\*.o \
               ke\*.o ldr\*.o mm\*.o nt\*.o ob\*.o ps\*.o rtl\*.o se\*.o \
-              ke\i386\*.o mm\i386\*.o fs\*.o po\*.o nls\*.o \
+              ke\i386\*.o mm\i386\*.o fs\*.o po\*.o nls\*.o lpc\*.o \
               kd\*.o utils\export\export.exe $(TARGETNAME).o $(TARGETNAME).a junk.tmp \
               base.tmp temp.exp $(TARGETNAME).exe $(TARGETNAME).sym $(TARGETNAME).coff
 else
 CLEAN_FILES = $(OBJECTS_PATH)/*.o cc/*.o cm/*.o dbg/*.o ex/*.o hal/x86/*.o io/*.o \
               ke/*.o ldr/*.o mm/*.o nt/*.o ob/*.o ps/*.o rtl/*.o se/*.o \
-              ke/i386/*.o mm/i386/*.o fs/*.o po/*.o nls/*.o \
+              ke/i386/*.o mm/i386/*.o fs/*.o po/*.o nls/*.o lpc/*.o \
               kd/*.o utils/export/export $(TARGETNAME).o $(TARGETNAME).a junk.tmp \
               base.tmp temp.exp $(TARGETNAME).exe $(TARGETNAME).sym $(TARGETNAME).coff
 endif
@@ -541,3 +561,4 @@ WIN32_LEAN_AND_MEAN = yes
 WARNINGS_ARE_ERRORS = yes
 include ../rules.mak
 
+# EOF
