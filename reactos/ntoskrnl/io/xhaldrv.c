@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.13 2001/06/29 11:09:48 ekohl Exp $
+/* $Id: xhaldrv.c,v 1.14 2001/07/04 16:42:37 rex Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -541,6 +541,8 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
    KEVENT Event;
    IO_STATUS_BLOCK StatusBlock;
    ULARGE_INTEGER PartitionOffset;
+   ULARGE_INTEGER  nextPartitionOffset;
+   ULARGE_INTEGER  containerOffset;
    PUCHAR SectorBuffer;
    PIRP Irp;
    NTSTATUS Status;
@@ -578,6 +580,7 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 		 0x1000);
 
    PartitionOffset.QuadPart = 0;
+   containerOffset.QuadPart = 0;
 
    do
      {
@@ -710,18 +713,28 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 		  LayoutBuffer->PartitionCount++;
 	       }
 
+#if 0
 	     if (IsNormalPartition(PartitionTable->Partition[i].PartitionType))
 	       {
 		  PartitionOffset.QuadPart = (ULONGLONG)PartitionOffset.QuadPart +
 		     (((ULONGLONG)PartitionTable->Partition[i].StartingBlock +
 		       (ULONGLONG)PartitionTable->Partition[i].SectorCount)* (ULONGLONG)SectorSize);
 	       }
+#endif
 
 	     if (IsExtendedPartition(PartitionTable->Partition[i].PartitionType))
 	       {
 		  ExtendedFound = TRUE;
+                  if ((ULONGLONG) containerOffset.QuadPart == (ULONGLONG) 0)
+                  {
+                    containerOffset = PartitionOffset;
+                  }
+		  nextPartitionOffset.QuadPart = (ULONGLONG) containerOffset.QuadPart +
+		     (ULONGLONG) PartitionTable->Partition[i].StartingBlock * 
+                     (ULONGLONG) SectorSize;
 	       }
 	  }
+	  PartitionOffset = nextPartitionOffset;
      }
    while (ExtendedFound == TRUE);
 
@@ -730,7 +743,6 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 
    return STATUS_SUCCESS;
 }
-
 
 NTSTATUS FASTCALL
 xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
