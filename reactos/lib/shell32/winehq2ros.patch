@@ -18,3 +18,21 @@ diff -u -r1.14 shell32_En.rc
 +	IDS_SHUTDOWN_TITLE	"Shutdown"
 +	IDS_SHUTDOWN_PROMPT	"Do you want to shutdown?"
  }
+Index: shellpath.c
+===================================================================
+RCS file: /home/wine/wine/dlls/shell32/shellpath.c,v
+retrieving revision 1.87
+diff -u -r1.87 shellpath.c
+--- shellpath.c	20 Aug 2004 19:57:50 -0000	1.87
++++ shellpath.c	20 Sep 2004 18:20:35 -0000
+@@ -1485,6 +1485,10 @@
+             *ppidl = _ILCreatePrinters();
+             break;
+ 
++        case CSIDL_FONTS:
++            FIXME("virtual font folder");
++            break;
++
+         case CSIDL_BITBUCKET:
+             *ppidl = _ILCreateBitBucket();
+             break;
