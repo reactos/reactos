@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.40 2002/04/10 09:57:31 ekohl Exp $
+/* $Id: irp.c,v 1.41 2002/08/17 15:20:33 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -226,24 +226,28 @@ IofCompleteRequest(PIRP Irp,
    DPRINT("IoCompleteRequest(Irp %x, PriorityBoost %d) Event %x THread %x\n",
 	   Irp,PriorityBoost, Irp->UserEvent, PsGetCurrentThread());
 
-   for (i=0;i<Irp->StackCount;i++)
-     {
-	if (Irp->Stack[i].CompletionRoutine != NULL)
-	  {
-	     Status = Irp->Stack[i].CompletionRoutine(
+   for (i=Irp->CurrentLocation;i<Irp->StackCount;i++)
+   {
+      if (Irp->Stack[i].CompletionRoutine != NULL)
+      {
+	 Status = Irp->Stack[i].CompletionRoutine(
 					     Irp->Stack[i].DeviceObject,
 					     Irp,
 					     Irp->Stack[i].CompletionContext);
-	     if (Status == STATUS_MORE_PROCESSING_REQUIRED)
-	       {
-		  return;
-	       }
-	  }
-	if (Irp->Stack[i].Control & SL_PENDING_RETURNED)
-	  {
-	     Irp->PendingReturned = TRUE;
-	  }
-     }
+	 if (Status == STATUS_MORE_PROCESSING_REQUIRED)
+	 {
+	    return;
+	 }
+      }
+      if (Irp->Stack[i].Control & SL_PENDING_RETURNED)
+      {
+	 Irp->PendingReturned = TRUE;
+      }
+      if (Irp->CurrentLocation < Irp->StackCount - 1)
+      {
+	 IoSkipCurrentIrpStackLocation(Irp);
+      }
+   }
    if (Irp->PendingReturned)
      {
 	DPRINT("Dispatching APC\n");
