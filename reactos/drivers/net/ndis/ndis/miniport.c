@@ -16,8 +16,8 @@
 
 #ifdef DBG
 /* See debug.h for debug/trace constants */
-ULONG DebugTraceLevel = MIN_TRACE;
-//ULONG DebugTraceLevel = (MAX_TRACE + DEBUG_MINIPORT);
+//ULONG DebugTraceLevel = MIN_TRACE;
+ULONG DebugTraceLevel = (MAX_TRACE + DEBUG_MINIPORT);
 #endif /* DBG */
 
 
@@ -1280,6 +1280,7 @@ NdisMSetAttributesEx(
 	PLOGICAL_ADAPTER Adapter = GET_LOGICAL_ADAPTER(MiniportAdapterHandle);
 
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+    NDIS_DbgPrint(MIN_TRACE, ("NdisMSetAttributesEx() is partly-implemented."));
 
     Adapter->NdisMiniportBlock.MiniportAdapterContext = MiniportAdapterContext;
 	Adapter->Attributes = AttributeFlags & NDIS_ATTRIBUTE_BUS_MASTER;
