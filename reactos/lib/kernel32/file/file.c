@@ -377,28 +377,31 @@ DWORD STDCALL GetFileAttributesW(LPCWSTR lpFileName)
    HANDLE hFile;
    NTSTATUS errCode;
 
-   hFile = CreateFileW(lpFileName,	
-                       FILE_READ_ATTRIBUTES,
-		       FILE_SHARE_READ,	
-		       NULL,	
-		       OPEN_EXISTING,	
-		       FILE_ATTRIBUTE_NORMAL,	
+   hFile = CreateFileW(lpFileName,
+		       FILE_READ_ATTRIBUTES,
+		       FILE_SHARE_READ,
+		       NULL,
+		       OPEN_EXISTING,
+		       FILE_ATTRIBUTE_NORMAL,
 		       NULL);
-   
-	
+   if (hFile == INVALID_HANDLE_VALUE)
+     {
+	return 0xFFFFFFFF;
+     }
+
    errCode = NtQueryInformationFile(hFile,
 				    &IoStatusBlock,
-				    &FileBasic, 
+				    &FileBasic,
 				    sizeof(FILE_BASIC_INFORMATION),
 				    FileBasicInformation);
-   if (!NT_SUCCESS(errCode)) 
+   if (!NT_SUCCESS(errCode))
      {
 	CloseHandle(hFile);
 	SetLastError(RtlNtStatusToDosError(errCode));
-        return 0xFFFFFFFF;
+	return 0xFFFFFFFF;
      }
    CloseHandle(hFile);
-   return (DWORD)FileBasic.FileAttributes;  
+   return (DWORD)FileBasic.FileAttributes;
 }
 
 
@@ -407,14 +410,14 @@ WINBOOL STDCALL SetFileAttributesA(LPCSTR lpFileName,
 {
 	ULONG i;
 	WCHAR FileNameW[MAX_PATH];
-    	i = 0;
-   	while ((*lpFileName)!=0 && i < MAX_PATH)
-     	{
+	i = 0;
+	while ((*lpFileName)!=0 && i < MAX_PATH)
+	{
 		FileNameW[i] = *lpFileName;
 		lpFileName++;
 		i++;
-     	}
-   	FileNameW[i] = 0;
+	}
+	FileNameW[i] = 0;
 	return SetFileAttributesW(FileNameW, dwFileAttributes);
 }
 
