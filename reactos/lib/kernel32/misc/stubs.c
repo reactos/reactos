@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.82 2004/08/29 14:45:55 weiden Exp $
+/* $Id: stubs.c,v 1.83 2004/09/21 17:41:24 weiden Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -362,38 +362,6 @@ GetVDMCurrentDirectories (
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
 }
-
-#ifndef _OLE2NLS_IN_BUILD_
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-IsDBCSLeadByte (
-    BYTE    TestChar
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-IsDBCSLeadByteEx (
-    UINT    CodePage,
-    BYTE    TestChar
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-#endif
 
 
 /*

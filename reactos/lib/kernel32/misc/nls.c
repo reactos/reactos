@@ -879,4 +879,57 @@ GetOEMCP (VOID)
     return OemCodePage.CodePageTable.CodePage;
 }
 
+static inline BOOL
+IntIsLeadByte(PCPTABLEINFO TableInfo, UCHAR Ch)
+{
+  if(TableInfo->MaximumCharacterSize == 2)
+  {
+    UINT i;
+    for(i = 0; i < MAXIMUM_LEADBYTES; i++)
+    {
+      if(TableInfo->LeadByte[i] == Ch)
+      {
+        return TRUE;
+      }
+    }
+  }
+  return FALSE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+IsDBCSLeadByte (
+    BYTE    TestChar
+    )
+{
+   return IntIsLeadByte(&AnsiCodePage.CodePageTable, (UCHAR)TestChar);
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+IsDBCSLeadByteEx (
+    UINT    CodePage,
+    BYTE    TestChar
+    )
+{
+    PCODEPAGE_ENTRY CodePageEntry;
+    
+    CodePageEntry = IntGetCodePageEntry(CodePage);
+    if(CodePageEntry != NULL)
+    {
+      return IntIsLeadByte(&CodePageEntry->CodePageTable, (UCHAR)TestChar);
+    }
+
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+}
+
+
 /* EOF */
