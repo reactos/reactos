@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.62 2003/08/07 12:17:56 jimtabor Exp $
+/* $Id: console.c,v 1.63 2003/08/09 04:13:24 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -24,6 +24,38 @@
 static BOOL IgnoreCtrlEvents = FALSE;
 static ULONG NrCtrlHandlers = 0;
 static PHANDLER_ROUTINE* CtrlHandlers = NULL;
+
+/* Default Console Handler *****************************************************************/
+
+BOOL WINAPI DefaultConsoleHandler(DWORD Event)
+{
+	UINT ExitCode;
+	switch(Event)
+	{
+	case CTRL_C_EVENT:
+		DPRINT("Ctrl-C Event\n");
+//		ExitProcess((UINT)&ExitCode);
+		break;
+		
+	case CTRL_BREAK_EVENT:
+		DPRINT("Ctrl-Break Event\n");
+//		ExitProcess((UINT&ExitCode);
+		break;
+
+	case CTRL_SHUTDOWN_EVENT:
+		DPRINT("Ctrl Shutdown Event\n");
+		break;
+
+	case CTRL_CLOSE_EVENT:
+		DPRINT("Ctrl Close Event\n");
+		break;
+
+	case CTRL_LOGOFF_EVENT:		
+		DPRINT("Ctrl Logoff Event\n");
+		break;
+	}
+	return TRUE;
+}
 
 /* FUNCTIONS *****************************************************************/
 
