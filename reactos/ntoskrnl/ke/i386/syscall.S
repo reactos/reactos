@@ -97,12 +97,12 @@ _KiSystemService:
 
 #ifdef DBG
     /* Trick gdb 6 into backtracing over the system call */
-    pushl 4(%ebp)    /* DebugEIP */                                    // + 0x74
-    pushl (%ebp)     /* DebugEBP */                                    // + 0x78
+    mov 0x6c(%esp), %ebx
+    pushl 4(%ebx)    /* DebugEIP */                                    // + 0x74
 #else
     pushl 0x60(%esp) /* DebugEIP */                                    // + 0x74
-    pushl %ebp       /* DebugEBP */                                    // + 0x78
 #endif
+    pushl %ebp       /* DebugEBP */                                    // + 0x78
 
     /* Load the segment registers */
     sti
@@ -121,6 +121,16 @@ _KiSystemService:
     movl %ebp, KTHREAD_TRAP_FRAME(%esi)
 
 CheckValidCall:
+    
+#ifdef DBG
+    /*
+     * GDB thinks the function starts here and
+     * wants a standard prolog, so let's give it
+     */
+    pushl %ebp
+    movl %esp,%ebp
+    popl %ebp
+#endif
 
     /*
      * Find out which table offset to use. Converts 0x1124 into 0x10.
@@ -141,16 +151,6 @@ CheckValidCall:
     
     /* Invalid ID, try to load Win32K Table */
     jnb KiBBTUnexpectedRange
-    
-#ifdef DBG
-    /*
-     * GDB thinks the function starts here and
-     * wants a standard prolog, so let's give it
-     */
-    pushl %ebp
-    movl %esp,%ebp
-    popl %ebp
-#endif
 
     /* Users's current stack frame pointer is source */
     movl %edx, %esi
