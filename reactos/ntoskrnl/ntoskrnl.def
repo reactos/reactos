@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.131 2002/03/23 13:53:22 chorns Exp $
+; $Id: ntoskrnl.def,v 1.132 2002/03/23 19:44:46 chorns Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -98,12 +98,14 @@ ExDeleteBinaryTree@4
 ExInsertBinaryTree@12
 ExSearchBinaryTree@12
 ExRemoveBinaryTree@12
+ExTraverseBinaryTree@16
 ExInitializeSplayTree@16
 ExDeleteSplayTree@4
 ExInsertSplayTree@12
 ExSearchSplayTree@12
 ExRemoveSplayTree@12
 ExWeightOfSplayTree@8
+ExTraverseSplayTree@16
 ExInitializeHashTable@16
 ExDeleteHashTable@4
 ExInsertHashTable@16

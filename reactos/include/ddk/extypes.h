@@ -1,4 +1,4 @@
-/* $Id: extypes.h,v 1.8 2002/03/23 13:53:21 chorns Exp $ */
+/* $Id: extypes.h,v 1.9 2002/03/23 19:44:45 chorns Exp $ */
 
 #ifndef __INCLUDE_DDK_EXTYPES_H
 #define __INCLUDE_DDK_EXTYPES_H
@@ -160,8 +160,20 @@ typedef VOID STDCALL
 
 /* BEGIN REACTOS ONLY */
 
-typedef LONG STDCALL (*PKEY_COMPARATOR)(PVOID  Key1,
-  PVOID  Key2);
+typedef enum _TRAVERSE_METHOD {
+  TraverseMethodPreorder,
+  TraverseMethodInorder,
+  TraverseMethodPostorder
+} TRAVERSE_METHOD;
+
+typedef LONG STDCALL
+(*PKEY_COMPARATOR)(IN PVOID  Key1,
+  IN PVOID  Key2);
+
+typedef BOOLEAN STDCALL
+(*PTRAVERSE_ROUTINE)(IN PVOID  Context,
+  IN PVOID  Key,
+  IN PVOID  Value);
 
 struct _BINARY_TREE_NODE;
 

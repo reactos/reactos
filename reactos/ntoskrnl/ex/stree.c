@@ -40,10 +40,10 @@
 
 typedef struct _SPLAY_TREE_NODE
 {
-  /* Children on this branch has smaller keys than this node */
+  /* Children on this branch that has smaller keys than this node */
   struct _SPLAY_TREE_NODE  * SmallerChild;
 
-  /* Children on this branch has larger keys than this node */
+  /* Children on this branch that has larger keys than this node */
   struct _SPLAY_TREE_NODE  * LargerChild;
 
   /* Points to a node with identical key */
@@ -58,6 +58,11 @@ typedef struct _SPLAY_TREE_NODE
   /* The number of nodes rooted here */
   LONG  Weight;
 } SPLAY_TREE_NODE, *PSPLAY_TREE_NODE;
+
+typedef struct _TRAVERSE_CONTEXT {
+  PTRAVERSE_ROUTINE Routine;
+  PVOID Context;
+} TRAVERSE_CONTEXT, *PTRAVERSE_CONTEXT;
 
 #define SPLAY_INDEX 0
 #define SEARCH_INDEX 1
@@ -185,7 +190,7 @@ ExpDestroySplayTreeNode(PSPLAY_TREE Tree,
 
 /*
  * Splay using the key 'Key' (which may or may not be in the tree). The starting
- * root is Node. Weight fields are maintained.
+ * root is Node.
  * The lock for the tree must be acquired when this routine is called.
  * This routine does not maintain weight information.
  */
@@ -229,7 +234,7 @@ ExpSplayTreeNoWeight(PSPLAY_TREE Tree,
 			        if (ExpSplayTreeSmallerChildNode(Node) == NULL)
 			          break;
 		        }
-		
+
 		      ExpSplayTreeSmallerChildNode(r) = Node;           /* Link smaller */
 		      r = Node;
 		      Node = ExpSplayTreeSmallerChildNode(Node);
@@ -238,7 +243,7 @@ ExpSplayTreeNoWeight(PSPLAY_TREE Tree,
 		    {
 		      if (ExpSplayTreeLargerChildNode(Node) == NULL)
 			      break;
-		
+
 		      ChildEquality = (*Tree->Compare)(Key, ExpSplayTreeNodeKey(ExpSplayTreeLargerChildNode(Node)));
 		      if (ExpSplayTreeNodeMore(ChildEquality))
 		        {
@@ -250,7 +255,7 @@ ExpSplayTreeNoWeight(PSPLAY_TREE Tree,
 			        if (ExpSplayTreeLargerChildNode(Node) == NULL)
 			          break;
 		        }
-		
+
 		      ExpSplayTreeLargerChildNode(l) = Node;            /* Link larger */
 		      l = Node;
 		      Node = ExpSplayTreeLargerChildNode(Node);		
@@ -275,7 +280,7 @@ ExpSplayTreeNoWeight(PSPLAY_TREE Tree,
 
 /*
  * Splay using the key 'Key' (which may or may not be in the tree). The starting
- * root is Node. Weight fields are maintained.
+ * root is Node.
  * The lock for the tree must be acquired when this routine is called.
  * This routine maintains weight information.
  */
@@ -944,6 +949,141 @@ ExpSplayTreeMaxTreeWeight(PSPLAY_TREE Tree,
 
 
 /*
+ * Traverse a splay tree using preorder traversal method.
+ * Returns FALSE, if the traversal was terminated prematurely or
+ * TRUE if the callback routine did not request that the traversal
+ * be terminated prematurely.
+ * The lock for the tree must be acquired when this routine is called.
+ */
+BOOLEAN
+ExpTraverseSplayTreePreorder(PTRAVERSE_CONTEXT Context,
+  PSPLAY_TREE_NODE Node)
+{
+  PSPLAY_TREE_NODE n; 
+
+  if (Node == NULL)
+    return TRUE;
+
+  /* Call the traversal routine */
+  if (!(*Context->Routine)(Context->Context,
+    ExpSplayTreeNodeKey(Node),
+    ExpSplayTreeNodeValue(Node)))
+    {
+      return FALSE;
+    }
+
+	for (n = ExpSplayTreeNodeSame(Node); n; n = ExpSplayTreeNodeSame(n))
+		{
+		  /* Call the traversal routine */
+		  if (!(*Context->Routine)(Context->Context,
+		    ExpSplayTreeNodeKey(n),
+		    ExpSplayTreeNodeValue(n)))
+		    {
+		      return FALSE;
+		    }
+		}
+
+  /* Traverse 'smaller' subtree */
+  ExpTraverseSplayTreePreorder(Context, ExpSplayTreeSmallerChildNode(Node));
+
+  /* Traverse 'larger' subtree */
+  ExpTraverseSplayTreePreorder(Context, ExpSplayTreeLargerChildNode(Node));
+
+  return TRUE;
+}
+
+
+/*
+ * Traverse a splay tree using inorder traversal method.
+ * Returns FALSE, if the traversal was terminated prematurely or
+ * TRUE if the callback routine did not request that the traversal
+ * be terminated prematurely.
+ * The lock for the tree must be acquired when this routine is called.
+ */
+BOOLEAN
+ExpTraverseSplayTreeInorder(PTRAVERSE_CONTEXT Context,
+  PSPLAY_TREE_NODE Node)
+{
+  PSPLAY_TREE_NODE n;
+
+  if (Node == NULL)
+    return TRUE;
+
+  /* Traverse 'smaller' subtree */
+  ExpTraverseSplayTreeInorder(Context, ExpSplayTreeSmallerChildNode(Node));
+
+  /* Call the traversal routine */
+  if (!(*Context->Routine)(Context->Context,
+    ExpSplayTreeNodeKey(Node),
+    ExpSplayTreeNodeValue(Node)))
+    {
+      return FALSE;
+    }
+
+	for (n = ExpSplayTreeNodeSame(Node); n; n = ExpSplayTreeNodeSame(n))
+		{
+		  /* Call the traversal routine */
+		  if (!(*Context->Routine)(Context->Context,
+		    ExpSplayTreeNodeKey(n),
+		    ExpSplayTreeNodeValue(n)))
+		    {
+		      return FALSE;
+		    }
+		}
+
+  /* Traverse right subtree */
+  ExpTraverseSplayTreeInorder(Context, ExpSplayTreeLargerChildNode(Node));
+
+  return TRUE;
+}
+
+
+/*
+ * Traverse a splay tree using postorder traversal method.
+ * Returns FALSE, if the traversal was terminated prematurely or
+ * TRUE if the callback routine did not request that the traversal
+ * be terminated prematurely.
+ * The lock for the tree must be acquired when this routine is called.
+ */
+BOOLEAN
+ExpTraverseSplayTreePostorder(PTRAVERSE_CONTEXT Context,
+  PSPLAY_TREE_NODE Node)
+{
+  PSPLAY_TREE_NODE n;
+
+  if (Node == NULL)
+    return TRUE;
+
+  /* Traverse 'smaller' subtree */
+  ExpTraverseSplayTreePostorder(Context, ExpSplayTreeSmallerChildNode(Node));
+
+  /* Traverse 'larger' subtree */
+  ExpTraverseSplayTreePostorder(Context, ExpSplayTreeLargerChildNode(Node));
+
+  /* Call the traversal routine */
+  if (!(*Context->Routine)(Context->Context,
+    ExpSplayTreeNodeKey(Node),
+    ExpSplayTreeNodeValue(Node)))
+    {
+      return FALSE;
+    }
+
+	for (n = ExpSplayTreeNodeSame(Node); n; n = ExpSplayTreeNodeSame(n))
+		{
+		  /* Call the traversal routine */
+		  if (!(*Context->Routine)(Context->Context,
+		    ExpSplayTreeNodeKey(n),
+		    ExpSplayTreeNodeValue(n)))
+		    {
+		      return FALSE;
+		    }
+		}
+
+  return TRUE;
+}
+
+
+/*
  * Default key compare function. Compares the integer values of the two keys.
  */
 LONG STDCALL
@@ -1158,6 +1298,59 @@ ExWeightOfSplayTree(IN PSPLAY_TREE  Tree,
   ExpUnlockSplayTree(Tree, &OldIrql);
 
   return TRUE;
+}
+
+
+/*
+ * Traverse a splay tree using either preorder, inorder or postorder
+ * traversal method.
+ * Returns FALSE, if the traversal was terminated prematurely or
+ * TRUE if the callback routine did not request that the traversal
+ * be terminated prematurely.
+ */
+BOOLEAN STDCALL
+ExTraverseSplayTree(IN PSPLAY_TREE  Tree,
+  IN TRAVERSE_METHOD  Method,
+  IN PTRAVERSE_ROUTINE  Routine,
+  IN PVOID  Context)
+{
+  TRAVERSE_CONTEXT tc;
+  BOOLEAN Status;
+  KIRQL OldIrql;
+
+  tc.Routine = Routine;
+  tc.Context = Context;
+
+  ExpLockSplayTree(Tree, &OldIrql);
+
+  if (ExpSplayTreeRootNode(Tree) == NULL)
+		{
+      ExpUnlockSplayTree(Tree, &OldIrql);
+      return TRUE;
+		}
+
+  switch (Method)
+    {
+      case TraverseMethodPreorder:
+        Status = ExpTraverseSplayTreePreorder(&tc, ExpSplayTreeRootNode(Tree));
+        break;
+
+      case TraverseMethodInorder:
+        Status = ExpTraverseSplayTreeInorder(&tc, ExpSplayTreeRootNode(Tree));
+        break;
+
+      case TraverseMethodPostorder:
+        Status = ExpTraverseSplayTreePostorder(&tc, ExpSplayTreeRootNode(Tree));
+        break;
+
+      default:
+        Status = FALSE;
+        break;
+    }
+
+  ExpUnlockSplayTree(Tree, &OldIrql);
+
+  return Status;
 }
 
 /* EOF */

@@ -846,6 +846,12 @@ ExRemoveBinaryTree(IN PBINARY_TREE  Tree,
   IN PVOID  * Value);
 
 BOOLEAN STDCALL
+ExTraverseBinaryTree(IN PBINARY_TREE  Tree,
+  IN TRAVERSE_METHOD  Method,
+  IN PTRAVERSE_ROUTINE  Routine,
+  IN PVOID  Context);
+
+BOOLEAN STDCALL
 ExInitializeSplayTree(IN PSPLAY_TREE  Tree,
   IN PKEY_COMPARATOR  Compare,
   IN BOOLEAN  Weighted,
@@ -872,6 +878,12 @@ ExRemoveSplayTree(IN PSPLAY_TREE  Tree,
 BOOLEAN STDCALL
 ExWeightOfSplayTree(IN PSPLAY_TREE  Tree,
   OUT PULONG  Weight);
+
+BOOLEAN STDCALL
+ExTraverseSplayTree(IN PSPLAY_TREE  Tree,
+  IN TRAVERSE_METHOD  Method,
+  IN PTRAVERSE_ROUTINE  Routine,
+  IN PVOID  Context);
 
 BOOLEAN STDCALL
 ExInitializeHashTable(IN PHASH_TABLE  HashTable,

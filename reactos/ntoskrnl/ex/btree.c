@@ -41,11 +41,16 @@ typedef struct _BINARY_TREE_NODE
   PVOID  Value;
 } BINARY_TREE_NODE, *PBINARY_TREE_NODE;
 
+typedef struct _TRAVERSE_CONTEXT {
+  PTRAVERSE_ROUTINE Routine;
+  PVOID Context;
+} TRAVERSE_CONTEXT, *PTRAVERSE_CONTEXT;
+
 /* FUNCTIONS ****************************************************************/
 
 #define ExpBinaryTreeRootNode(Tree)(((PBINARY_TREE) (Tree))->RootNode)
-#define ExpIsExternalBinaryTreeNode(Node)(((Node)->LeftChild == NULL) && ((Node)->RightChild == NULL))
-#define ExpIsInternalBinaryTreeNode(Node)(!ExpIsExternalBinaryTreeNode(Node))
+#define ExpBinaryTreeIsExternalNode(Node)(((Node)->LeftChild == NULL) && ((Node)->RightChild == NULL))
+#define ExpBinaryTreeIsInternalNode(Node)(!ExpBinaryTreeIsExternalNode(Node))
 #define ExpBinaryTreeNodeKey(Node)((Node)->Key)
 #define ExpBinaryTreeNodeValue(Node)((Node)->Value)
 #define ExpBinaryTreeParentNode(Node)((Node)->Parent)
@@ -228,7 +233,7 @@ ExpSearchBinaryTree(PBINARY_TREE  Tree,
 
   /* FIXME: Possibly do this iteratively due to the small kernel-mode stack */
 
-  if (ExpIsExternalBinaryTreeNode(Node))
+  if (ExpBinaryTreeIsExternalNode(Node))
     {
       return Node;
     }
@@ -260,7 +265,7 @@ VOID
 ExpRemoveAboveExternalBinaryTreeNode(PBINARY_TREE Tree,
   PBINARY_TREE_NODE Node)
 {
-  assertmsg(ExpIsExternalBinaryTreeNode(Node), ("Node is not external"));
+  assertmsg(ExpBinaryTreeIsExternalNode(Node), ("Node is not external"));
 
   if (Node == ExpBinaryTreeRootNode(Tree))
 		{
@@ -294,13 +299,106 @@ ExpDeleteBinaryTree(PBINARY_TREE Tree,
 {
   /* FIXME: Possibly do this iteratively due to the small kernel-mode stack */
 
-  if (ExpIsInternalBinaryTreeNode(Node))
+  if (ExpBinaryTreeIsInternalNode(Node))
     {
       ExpDeleteBinaryTree(Tree, ExpBinaryTreeLeftChildNode(Node));
       ExpDeleteBinaryTree(Tree, ExpBinaryTreeRightChildNode(Node));
     }
 
   ExpDestroyBinaryTreeNode(Tree, Node);
+}
+
+
+/*
+ * Traverse a binary tree using preorder traversal method.
+ * Returns FALSE, if the traversal was terminated prematurely or
+ * TRUE if the callback routine did not request that the traversal
+ * be terminated prematurely.
+ * The lock for the tree must be acquired when this routine is called.
+ */
+BOOLEAN
+ExpTraverseBinaryTreePreorder(PTRAVERSE_CONTEXT Context,
+  PBINARY_TREE_NODE Node)
+{
+  if (ExpBinaryTreeIsInternalNode(Node))
+		{
+		  /* Call the traversal routine */
+		  if (!(*Context->Routine)(Context->Context,
+		    ExpBinaryTreeNodeKey(Node),
+		    ExpBinaryTreeNodeValue(Node)))
+		    {
+		      return FALSE;
+		    }
+
+      /* Traverse left subtree */
+      ExpTraverseBinaryTreePreorder(Context, ExpBinaryTreeLeftChildNode(Node));
+
+      /* Traverse right subtree */
+      ExpTraverseBinaryTreePreorder(Context, ExpBinaryTreeRightChildNode(Node));
+		}
+
+  return TRUE;
+}
+
+
+/*
+ * Traverse a binary tree using inorder traversal method.
+ * Returns FALSE, if the traversal was terminated prematurely or
+ * TRUE if the callback routine did not request that the traversal
+ * be terminated prematurely.
+ * The lock for the tree must be acquired when this routine is called.
+ */
+BOOLEAN
+ExpTraverseBinaryTreeInorder(PTRAVERSE_CONTEXT Context,
+  PBINARY_TREE_NODE Node)
+{
+  if (ExpBinaryTreeIsInternalNode(Node))
+		{
+      /* Traverse left subtree */
+      ExpTraverseBinaryTreeInorder(Context, ExpBinaryTreeLeftChildNode(Node));
+
+		  /* Call the traversal routine */
+		  if (!(*Context->Routine)(Context->Context,
+		    ExpBinaryTreeNodeKey(Node),
+		    ExpBinaryTreeNodeValue(Node)))
+		    {
+		      return FALSE;
+		    }
+
+      /* Traverse right subtree */
+      ExpTraverseBinaryTreeInorder(Context, ExpBinaryTreeRightChildNode(Node));
+		}
+
+  return TRUE;
+}
+
+
+/*
+ * Traverse a binary tree using postorder traversal method.
+ * Returns FALSE, if the traversal was terminated prematurely or
+ * TRUE if the callback routine did not request that the traversal
+ * be terminated prematurely.
+ * The lock for the tree must be acquired when this routine is called.
+ */
+BOOLEAN
+ExpTraverseBinaryTreePostorder(PTRAVERSE_CONTEXT Context,
+  PBINARY_TREE_NODE Node)
+{
+  if (ExpBinaryTreeIsInternalNode(Node))
+		{
+      /* Traverse left subtree */
+      ExpTraverseBinaryTreePostorder(Context, ExpBinaryTreeLeftChildNode(Node));
+
+      /* Traverse right subtree */
+      ExpTraverseBinaryTreePostorder(Context, ExpBinaryTreeRightChildNode(Node));
+
+		  /* Call the traversal routine */
+		  return (*Context->Routine)(Context->Context,
+		    ExpBinaryTreeNodeKey(Node),
+		    ExpBinaryTreeNodeValue(Node));
+		}
+
+  return TRUE;
 }
 
 
@@ -420,7 +518,7 @@ ExInsertBinaryTree(IN PBINARY_TREE  Tree,
     {
       Node = ExpSearchBinaryTree(Tree, Key, Node);
 
-		  if (ExpIsExternalBinaryTreeNode(Node))
+		  if (ExpBinaryTreeIsExternalNode(Node))
 		    {
           break;
 		    }
@@ -450,7 +548,7 @@ ExSearchBinaryTree(IN PBINARY_TREE  Tree,
   ExpLockBinaryTree(Tree, &OldIrql);
   Node = ExpSearchBinaryTree(Tree, Key, ExpBinaryTreeRootNode(Tree));
 
-  if (ExpIsInternalBinaryTreeNode(Node))
+  if (ExpBinaryTreeIsInternalNode(Node))
     {
 	    *Value = ExpBinaryTreeNodeValue(Node);
       ExpUnlockBinaryTree(Tree, &OldIrql);
@@ -479,7 +577,7 @@ ExRemoveBinaryTree(IN PBINARY_TREE  Tree,
 
   Node = ExpSearchBinaryTree(Tree, Key, ExpBinaryTreeRootNode(Tree));
 
-  if (ExpIsExternalBinaryTreeNode(Node))
+  if (ExpBinaryTreeIsExternalNode(Node))
 		{
       ExpUnlockBinaryTree(Tree, &OldIrql);
       return FALSE;
@@ -487,11 +585,11 @@ ExRemoveBinaryTree(IN PBINARY_TREE  Tree,
 	else
 		{
       *Value = ExpBinaryTreeNodeValue(Node);
-		  if (ExpIsExternalBinaryTreeNode(ExpBinaryTreeLeftChildNode(Node)))
+		  if (ExpBinaryTreeIsExternalNode(ExpBinaryTreeLeftChildNode(Node)))
 				{
           Node = ExpBinaryTreeLeftChildNode(Node);
 				}
-      else if (ExpIsExternalBinaryTreeNode(ExpBinaryTreeRightChildNode(Node)))
+      else if (ExpBinaryTreeIsExternalNode(ExpBinaryTreeRightChildNode(Node)))
 				{
           Node = ExpBinaryTreeRightChildNode(Node);
 				}
@@ -505,13 +603,60 @@ ExRemoveBinaryTree(IN PBINARY_TREE  Tree,
           do
             {
               Node = ExpBinaryTreeLeftChildNode(Node);
-            } while (ExpIsInternalBinaryTreeNode(Node));
+            } while (ExpBinaryTreeIsInternalNode(Node));
         }
 
       ExpRemoveAboveExternalBinaryTreeNode(Tree, Node);
       ExpUnlockBinaryTree(Tree, &OldIrql);
       return TRUE;
 		}
+}
+
+
+/*
+ * Traverse a binary tree using either preorder, inorder or postorder
+ * traversal method.
+ * Returns FALSE, if the traversal was terminated prematurely or
+ * TRUE if the callback routine did not request that the traversal
+ * be terminated prematurely.
+ */
+BOOLEAN STDCALL
+ExTraverseBinaryTree(IN PBINARY_TREE  Tree,
+  IN TRAVERSE_METHOD  Method,
+  IN PTRAVERSE_ROUTINE  Routine,
+  IN PVOID  Context)
+{
+  TRAVERSE_CONTEXT tc;
+  BOOLEAN Status;
+  KIRQL OldIrql;
+
+  tc.Routine = Routine;
+  tc.Context = Context;
+
+  ExpLockBinaryTree(Tree, &OldIrql);
+
+  switch (Method)
+    {
+      case TraverseMethodPreorder:
+        Status = ExpTraverseBinaryTreePreorder(&tc, ExpBinaryTreeRootNode(Tree));
+        break;
+
+      case TraverseMethodInorder:
+        Status = ExpTraverseBinaryTreeInorder(&tc, ExpBinaryTreeRootNode(Tree));
+        break;
+
+      case TraverseMethodPostorder:
+        Status = ExpTraverseBinaryTreePostorder(&tc, ExpBinaryTreeRootNode(Tree));
+        break;
+
+      default:
+        Status = FALSE;
+        break;
+    }
+
+  ExpUnlockBinaryTree(Tree, &OldIrql);
+
+  return Status;
 }
 
 /* EOF */
