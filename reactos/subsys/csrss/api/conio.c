@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.12 2000/10/09 00:12:01 ekohl Exp $
+/* $Id: conio.c,v 1.13 2000/12/01 12:39:17 jean Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -586,6 +586,7 @@ VOID Console_Api( DWORD RefreshEvent )
 		  if( ActiveConsole == 0 )
 		     {
 			DbgPrint( "CSR: No Active Console!\n" );
+	    		RtlLeaveCriticalSection( &ActiveConsoleLock );
 			RtlFreeHeap( CsrssApiHeap, 0, KeyEventRecord );
 			continue;
 		     }
@@ -610,6 +611,7 @@ VOID Console_Api( DWORD RefreshEvent )
       if( ActiveConsole == 0 )
 	 {
 	    DbgPrint( "CSR: No Active Console!\n" );
+	    RtlLeaveCriticalSection( &ActiveConsoleLock );
 	    RtlFreeHeap( CsrssApiHeap, 0, KeyEventRecord );
 	    continue;
 	 }
