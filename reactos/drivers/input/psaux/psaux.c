@@ -9,7 +9,7 @@
 */
 
 #include <ddk/ntddk.h>
-#include "../include/mouse.h"
+#include <ddk/ntddmou.h>
 #include "mouse.h"
 #include "psaux.h"
 
