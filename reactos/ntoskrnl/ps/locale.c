@@ -1,4 +1,4 @@
-/* $Id: locale.c,v 1.5 2003/10/12 17:05:50 hbirr Exp $
+/* $Id: locale.c,v 1.6 2003/11/17 02:12:51 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,6 +13,7 @@
 
 #include <ddk/ntddk.h>
 #include <internal/ps.h>
+#include <rosrtl/string.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -57,9 +58,9 @@ PiInitDefaultLocale(VOID)
    ValueInfo = (PKEY_VALUE_PARTIAL_INFORMATION)ValueBuffer;
 
    /* read system locale */
-   RtlInitUnicodeStringFromLiteral(&KeyName,
+   RtlRosInitUnicodeStringFromLiteral(&KeyName,
 			L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Nls\\Language");
-   RtlInitUnicodeStringFromLiteral(&ValueName,
+   RtlRosInitUnicodeStringFromLiteral(&ValueName,
 			L"Default");
 
    InitializeObjectAttributes(&ObjectAttributes,
@@ -97,9 +98,9 @@ PiInitDefaultLocale(VOID)
      }
 
    /* read default thread locale */
-   RtlInitUnicodeStringFromLiteral(&KeyName,
+   RtlRosInitUnicodeStringFromLiteral(&KeyName,
 			L"\\Registry\\User\\.Default\\Control Panel\\International");
-   RtlInitUnicodeStringFromLiteral(&ValueName,
+   RtlRosInitUnicodeStringFromLiteral(&ValueName,
 			L"Locale");
 
    InitializeObjectAttributes(&ObjectAttributes,
@@ -199,17 +200,17 @@ NtSetDefaultLocale(IN BOOLEAN ThreadOrSystem,
 				    &UserKey);
 	if (!NT_SUCCESS(Status))
 	  return(Status);
-	RtlInitUnicodeStringFromLiteral(&KeyName,
+	RtlRosInitUnicodeStringFromLiteral(&KeyName,
 			     L"Control Panel\\International");
-	RtlInitUnicodeStringFromLiteral(&ValueName,
+	RtlRosInitUnicodeStringFromLiteral(&ValueName,
 			     L"Locale");
      }
    else
      {
 	/* system locale */
-	RtlInitUnicodeStringFromLiteral(&KeyName,
+	RtlRosInitUnicodeStringFromLiteral(&KeyName,
 			     L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Nls\\Language");
-	RtlInitUnicodeStringFromLiteral(&ValueName,
+	RtlRosInitUnicodeStringFromLiteral(&ValueName,
 			     L"Default");
      }
 

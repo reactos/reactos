@@ -47,6 +47,7 @@ Copyright notice:
 
 #include <ddk/ntddk.h>
 #include <debug.h>
+#include <rosrtl/string.h>
 
 #include "precomp.h"
 #include "serial.h"
@@ -183,7 +184,7 @@ NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT DriverObject,
 		//ei unimplemented DriverObject->MajorFunction[IRP_MJ_CLOSE] = pice_close;
 		DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = pice_ioctl;
 
-		RtlInitUnicodeStringFromLiteral(&DeviceName, L"\\Device\\Pice");
+		RtlRosInitUnicodeStringFromLiteral(&DeviceName, L"\\Device\\Pice");
 		IoCreateDevice(DriverObject,
 				0,
 				&DeviceName,
@@ -193,7 +194,7 @@ NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT DriverObject,
 				&DeviceObject);
 		DeviceObject->Flags = DeviceObject->Flags | DO_BUFFERED_IO;
 
-		RtlInitUnicodeStringFromLiteral(&SymlinkName, L"\\??\\Pice");
+		RtlRosInitUnicodeStringFromLiteral(&SymlinkName, L"\\??\\Pice");
 		IoCreateSymbolicLink(&SymlinkName, &DeviceName);
 
 		return(STATUS_SUCCESS);

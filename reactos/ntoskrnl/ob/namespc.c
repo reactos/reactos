@@ -1,4 +1,4 @@
-/* $Id: namespc.c,v 1.43 2003/10/19 17:33:54 ekohl Exp $
+/* $Id: namespc.c,v 1.44 2003/11/17 02:12:51 hyperion Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -17,6 +17,7 @@
 #include <internal/ob.h>
 #include <internal/io.h>
 #include <internal/pool.h>
+#include <rosrtl/string.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -370,7 +371,7 @@ ObInit(VOID)
   ObDirectoryType->Create = ObpCreateDirectory;
   ObDirectoryType->DuplicationNotify = NULL;
   
-  RtlInitUnicodeStringFromLiteral(&ObDirectoryType->TypeName,
+  RtlRosInitUnicodeStringFromLiteral(&ObDirectoryType->TypeName,
 		       L"Directory");
 
   /* create 'type' object type*/
@@ -395,7 +396,7 @@ ObInit(VOID)
   ObTypeObjectType->Create = NULL;
   ObTypeObjectType->DuplicationNotify = NULL;
   
-  RtlInitUnicodeStringFromLiteral(&ObTypeObjectType->TypeName,
+  RtlRosInitUnicodeStringFromLiteral(&ObTypeObjectType->TypeName,
 		       L"ObjectType");
 
   /* create root directory */
@@ -410,7 +411,7 @@ ObInit(VOID)
 		 (PVOID*)&NameSpaceRoot);
 
   /* create '\ObjectTypes' directory */
-  RtlInitUnicodeStringFromLiteral(&Name,
+  RtlRosInitUnicodeStringFromLiteral(&Name,
 		       L"\\ObjectTypes");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &Name,

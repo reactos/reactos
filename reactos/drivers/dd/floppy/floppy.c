@@ -19,7 +19,7 @@
 #include "floppy.h"
 #define NDEBUG
 #include <debug.h>
-
+#include <rosrtl/string.h>
 
 FLOPPY_CONTROLLER_PARAMETERS ControllerParameters[FLOPPY_MAX_CONTROLLERS] = 
 {
@@ -131,7 +131,7 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
 #endif
     
    /* FIXME: Let's assume one drive and one controller for the moment */
-   RtlInitUnicodeStringFromLiteral(&DeviceName, L"\\Device\\Floppy0");
+   RtlRosInitUnicodeStringFromLiteral(&DeviceName, L"\\Device\\Floppy0");
    Status = IoCreateDevice(DriverObject,
 			   sizeof(FLOPPY_DEVICE_EXTENSION),
 			   &DeviceName,

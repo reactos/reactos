@@ -1,4 +1,4 @@
-/* $Id: database.c,v 1.11 2003/11/14 17:13:33 weiden Exp $
+/* $Id: database.c,v 1.12 2003/11/17 02:12:51 hyperion Exp $
  *
  * service control manager
  * 
@@ -27,6 +27,7 @@
 
 #define NTOS_MODE_USER
 #include <ntos.h>
+#include <rosrtl/string.h>
 
 #include <windows.h>
 #include <tchar.h>
@@ -247,7 +248,7 @@ ScmCreateServiceDataBase(VOID)
   if (!NT_SUCCESS(Status))
     return(Status);
 
-  RtlInitUnicodeStringFromLiteral(&ServicesKeyName,
+  RtlRosInitUnicodeStringFromLiteral(&ServicesKeyName,
 		       L"\\Registry\\Machine\\System\\CurrentControlSet\\Services");
 
   InitializeObjectAttributes(&ObjectAttributes,
@@ -329,12 +330,12 @@ ScmCheckDriver(PSERVICE Service)
 
   if (Service->Type == SERVICE_KERNEL_DRIVER)
     {
-      RtlInitUnicodeStringFromLiteral(&DirName,
+      RtlRosInitUnicodeStringFromLiteral(&DirName,
 			   L"\\Driver");
     }
   else
     {
-      RtlInitUnicodeStringFromLiteral(&DirName,
+      RtlRosInitUnicodeStringFromLiteral(&DirName,
 			   L"\\FileSystem");
     }
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: driver.c,v 1.31 2003/11/07 17:40:02 gvg Exp $
+/* $Id: driver.c,v 1.32 2003/11/17 02:12:52 hyperion Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -33,6 +33,7 @@
 #include <wchar.h>
 #include <ddk/winddi.h>
 #include <ddk/ntddvid.h>
+#include <rosrtl/string.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -245,7 +246,7 @@ PDEVICE_OBJECT DRIVER_FindMPDriver(LPCWSTR Name)
   PFILE_OBJECT VideoFileObject;
   PDEVICE_OBJECT VideoDeviceObject;
 
-  RtlInitUnicodeStringFromLiteral(&DeviceName, L"\\??\\DISPLAY1");
+  RtlRosInitUnicodeStringFromLiteral(&DeviceName, L"\\??\\DISPLAY1");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &DeviceName,
 			     0,

@@ -28,6 +28,7 @@
 #include <ddk/ntddk.h>
 #include <internal/ex.h>
 #include <internal/ob.h>
+#include <rosrtl/string.h>
 #include <wchar.h>
 
 #define NDEBUG
@@ -288,7 +289,7 @@ ExpWin32kInit(VOID)
   ExWindowStationObjectType->OkayToClose = NULL;
   ExWindowStationObjectType->Create = ExpWinStaObjectCreate;
   ExWindowStationObjectType->DuplicationNotify = NULL;
-  RtlInitUnicodeStringFromLiteral(&ExWindowStationObjectType->TypeName, L"WindowStation");
+  RtlRosInitUnicodeStringFromLiteral(&ExWindowStationObjectType->TypeName, L"WindowStation");
 
   ObpCreateTypeObject(ExWindowStationObjectType);
 
@@ -318,7 +319,7 @@ ExpWin32kInit(VOID)
   ExDesktopObjectType->OkayToClose = NULL;
   ExDesktopObjectType->Create = ExpDesktopObjectCreate;
   ExDesktopObjectType->DuplicationNotify = NULL;
-  RtlInitUnicodeStringFromLiteral(&ExDesktopObjectType->TypeName, L"Desktop");
+  RtlRosInitUnicodeStringFromLiteral(&ExDesktopObjectType->TypeName, L"Desktop");
 
   ObpCreateTypeObject(ExDesktopObjectType);
 }

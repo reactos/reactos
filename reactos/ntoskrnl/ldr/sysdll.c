@@ -18,6 +18,7 @@
 #include <internal/ob.h>
 #include <internal/ps.h>
 #include <internal/ldr.h>
+#include <rosrtl/string.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -80,7 +81,7 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
    OBJECT_ATTRIBUTES	FileObjectAttributes;
    HANDLE			FileHandle;
    HANDLE			NTDllSectionHandle;
-   UNICODE_STRING DllPathname = UNICODE_STRING_INITIALIZER(L"\\SystemRoot\\system32\\ntdll.dll");
+   UNICODE_STRING DllPathname = ROS_STRING_INITIALIZER(L"\\SystemRoot\\system32\\ntdll.dll");
    PIMAGE_DOS_HEADER	DosHeader;
    PIMAGE_NT_HEADERS	NTHeaders;
    PEPROCESS Process;

@@ -13,6 +13,7 @@
 
 #include <ddk/ntddk.h>
 #include <ddk/ntddmou.h>
+#include <rosrtl/string.h>
 #include "mouclass.h"
 
 #define NDEBUG
@@ -138,7 +139,7 @@ NTSTATUS ConnectMousePortDriver(PDEVICE_OBJECT ClassDeviceObject)
    PDEVICE_OBJECT PortDeviceObject = NULL;
    PFILE_OBJECT FileObject = NULL;
    NTSTATUS status;
-   UNICODE_STRING PortName = UNICODE_STRING_INITIALIZER(L"\\Device\\PointerClass0");
+   UNICODE_STRING PortName = ROS_STRING_INITIALIZER(L"\\Device\\PointerClass0");
    IO_STATUS_BLOCK ioStatus;
    KEVENT event;
    PIRP irp;
@@ -326,8 +327,8 @@ NTSTATUS STDCALL
 DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
    PDEVICE_OBJECT DeviceObject;
-   UNICODE_STRING DeviceName = UNICODE_STRING_INITIALIZER(L"\\Device\\MouseClass");
-   UNICODE_STRING SymlinkName = UNICODE_STRING_INITIALIZER(L"\\??\\MouseClass");   NTSTATUS Status;
+   UNICODE_STRING DeviceName = ROS_STRING_INITIALIZER(L"\\Device\\MouseClass");
+   UNICODE_STRING SymlinkName = ROS_STRING_INITIALIZER(L"\\??\\MouseClass");   NTSTATUS Status;
 
 
    DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)MouseClassDispatch;

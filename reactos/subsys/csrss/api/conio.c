@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.55 2003/10/23 06:53:20 gvg Exp $
+/* $Id: conio.c,v 1.56 2003/11/17 02:12:51 hyperion Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -16,6 +16,8 @@
 #include <ntdll/ldr.h>
 #include <ddk/ntddblue.h>
 #include <win32k/ntuser.h>
+#include <rosrtl/string.h>
+#include <rosrtl/minmax.h>
 #include "api.h"
 #include "usercsr.h"
 
@@ -71,7 +73,7 @@ CsrInitTextConsoleSupport(VOID)
   IO_STATUS_BLOCK Iosb;
   CONSOLE_SCREEN_BUFFER_INFO ScrInfo;
    
-  RtlInitUnicodeStringFromLiteral(&DeviceName, L"\\??\\BlueScreen");
+  RtlRosInitUnicodeStringFromLiteral(&DeviceName, L"\\??\\BlueScreen");
   InitializeObjectAttributes(&ObjectAttributes,
                              &DeviceName,
                              0,
@@ -785,10 +787,10 @@ inline BOOLEAN CsrpGetIntersection(
 
   CsrpInitRect(
     *Intersection,
-    RtlMax(Rect1.Top, Rect2.Top),
-    RtlMax(Rect1.Left, Rect2.Left),
-    RtlMin(Rect1.Bottom, Rect2.Bottom),
-    RtlMin(Rect1.Right, Rect2.Right));
+    RtlRosMax(Rect1.Top, Rect2.Top),
+    RtlRosMax(Rect1.Left, Rect2.Left),
+    RtlRosMin(Rect1.Bottom, Rect2.Bottom),
+    RtlRosMin(Rect1.Right, Rect2.Right));
   return TRUE;
 }
 
@@ -817,10 +819,10 @@ inline BOOLEAN CsrpGetUnion(
 	      {
           CsrpInitRect(
             *Union,
-            RtlMin(Rect1.Top, Rect2.Top),
-            RtlMin(Rect1.Left, Rect2.Left),
-            RtlMax(Rect1.Bottom, Rect2.Bottom),
-            RtlMax(Rect1.Right, Rect2.Right));
+            RtlRosMin(Rect1.Top, Rect2.Top),
+            RtlRosMin(Rect1.Left, Rect2.Left),
+            RtlRosMax(Rect1.Bottom, Rect2.Bottom),
+            RtlRosMax(Rect1.Right, Rect2.Right));
 	      }
     }
   return TRUE;
@@ -2397,8 +2399,8 @@ CSR_API(CsrWriteConsoleOutput)
      }
    WriteRegion = Request->Data.WriteConsoleOutputRequest.WriteRegion;
 
-   SizeY = RtlMin(BufferSize.Y - BufferCoord.Y, CsrpRectHeight(WriteRegion));
-   SizeX = RtlMin(BufferSize.X - BufferCoord.X, CsrpRectWidth(WriteRegion));
+   SizeY = RtlRosMin(BufferSize.Y - BufferCoord.Y, CsrpRectHeight(WriteRegion));
+   SizeX = RtlRosMin(BufferSize.X - BufferCoord.X, CsrpRectWidth(WriteRegion));
    WriteRegion.Bottom = WriteRegion.Top + SizeY - 1;
    WriteRegion.Right = WriteRegion.Left + SizeX - 1;
 
@@ -2872,8 +2874,8 @@ CSR_API(CsrReadConsoleOutput)
       return Reply->Status ;
    }
    
-   SizeY = RtlMin(BufferSize.Y - BufferCoord.Y, CsrpRectHeight(ReadRegion));
-   SizeX = RtlMin(BufferSize.X - BufferCoord.X, CsrpRectWidth(ReadRegion));
+   SizeY = RtlRosMin(BufferSize.Y - BufferCoord.Y, CsrpRectHeight(ReadRegion));
+   SizeX = RtlRosMin(BufferSize.X - BufferCoord.X, CsrpRectWidth(ReadRegion));
    ReadRegion.Bottom = ReadRegion.Top + SizeY;
    ReadRegion.Right = ReadRegion.Left + SizeX;
 

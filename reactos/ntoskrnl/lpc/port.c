@@ -1,4 +1,4 @@
-/* $Id: port.c,v 1.14 2003/10/12 17:05:48 hbirr Exp $
+/* $Id: port.c,v 1.15 2003/11/17 02:12:51 hyperion Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -21,6 +21,7 @@
 #include <internal/port.h>
 #include <internal/dbg.h>
 #include <internal/pool.h>
+#include <rosrtl/string.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -45,7 +46,7 @@ NiInitPort (VOID)
 {
    ExPortType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
    
-   RtlInitUnicodeStringFromLiteral(&ExPortType->TypeName,L"Port");
+   RtlRosInitUnicodeStringFromLiteral(&ExPortType->TypeName,L"Port");
    
    ExPortType->Tag = TAG('L', 'P', 'R', 'T');
    ExPortType->MaxObjects = ULONG_MAX;

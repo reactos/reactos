@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: logport.c,v 1.5 2003/11/14 17:13:32 weiden Exp $
+/* $Id: logport.c,v 1.6 2003/11/17 02:12:51 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -33,6 +33,7 @@
 #include <ntos.h>
 #include <napi/lpc.h>
 #include <windows.h>
+#include <rosrtl/string.h>
 
 #include "eventlog.h"
 
@@ -60,7 +61,7 @@ InitLogPort(VOID)
   ConnectPortHandle = NULL;
   MessagePortHandle = NULL;
 
-  RtlInitUnicodeStringFromLiteral(&PortName,
+  RtlRosInitUnicodeStringFromLiteral(&PortName,
 		       L"\\ErrorLogPort");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &PortName,

@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.30 2003/10/30 18:16:25 navaraf Exp $
+/* $Id: driver.c,v 1.31 2003/11/17 02:12:51 hyperion Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -23,6 +23,7 @@
 #include <internal/mm.h>
 #include <internal/ke.h>
 #include <internal/kd.h>
+#include <rosrtl/string.h>
 
 #include <roscfg.h>
 
@@ -118,7 +119,7 @@ IopInitDriverImplementation(VOID)
   IoDriverObjectType->OkayToClose = NULL;
   IoDriverObjectType->Create = IopCreateDriver;
   IoDriverObjectType->DuplicationNotify = NULL;
-  RtlInitUnicodeStringFromLiteral(&IoDriverObjectType->TypeName, L"Driver");
+  RtlRosInitUnicodeStringFromLiteral(&IoDriverObjectType->TypeName, L"Driver");
 
   ObpCreateTypeObject(IoDriverObjectType);
 }
@@ -289,7 +290,7 @@ IoCreateDriverList(VOID)
     return(Status);
 
   /* Enumerate services and create the service list */
-  RtlInitUnicodeStringFromLiteral(&ServicesKeyName,
+  RtlRosInitUnicodeStringFromLiteral(&ServicesKeyName,
 		       L"\\Registry\\Machine\\System\\CurrentControlSet\\Services");
 
   InitializeObjectAttributes(&ObjectAttributes,

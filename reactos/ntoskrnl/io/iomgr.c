@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.42 2003/11/14 15:17:08 ekohl Exp $
+/* $Id: iomgr.c,v 1.43 2003/11/17 02:12:51 hyperion Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -16,6 +16,7 @@
 #include <internal/ob.h>
 #include <internal/io.h>
 #include <internal/pool.h>
+#include <rosrtl/string.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -233,7 +234,7 @@ IoInit (VOID)
   IoDeviceObjectType->Create = IopCreateDevice;
   IoDeviceObjectType->DuplicationNotify = NULL;
   
-  RtlInitUnicodeStringFromLiteral(&IoDeviceObjectType->TypeName, L"Device");
+  RtlRosInitUnicodeStringFromLiteral(&IoDeviceObjectType->TypeName, L"Device");
 
   ObpCreateTypeObject(IoDeviceObjectType);
 
@@ -262,14 +263,14 @@ IoInit (VOID)
   IoFileObjectType->Create = IopCreateFile;
   IoFileObjectType->DuplicationNotify = NULL;
   
-  RtlInitUnicodeStringFromLiteral(&IoFileObjectType->TypeName, L"File");
+  RtlRosInitUnicodeStringFromLiteral(&IoFileObjectType->TypeName, L"File");
 
   ObpCreateTypeObject(IoFileObjectType);
 
   /*
    * Create the '\Driver' object directory
    */
-  RtlInitUnicodeStringFromLiteral(&DirName, L"\\Driver");
+  RtlRosInitUnicodeStringFromLiteral(&DirName, L"\\Driver");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &DirName,
 			     0,
@@ -282,7 +283,7 @@ IoInit (VOID)
   /*
    * Create the '\FileSystem' object directory
    */
-  RtlInitUnicodeStringFromLiteral(&DirName,
+  RtlRosInitUnicodeStringFromLiteral(&DirName,
 		       L"\\FileSystem");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &DirName,
@@ -296,7 +297,7 @@ IoInit (VOID)
   /*
    * Create the '\Device' directory
    */
-  RtlInitUnicodeStringFromLiteral(&DirName,
+  RtlRosInitUnicodeStringFromLiteral(&DirName,
 		       L"\\Device");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &DirName,
@@ -310,7 +311,7 @@ IoInit (VOID)
   /*
    * Create the '\??' directory
    */
-  RtlInitUnicodeStringFromLiteral(&DirName,
+  RtlRosInitUnicodeStringFromLiteral(&DirName,
 		       L"\\??");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &DirName,
@@ -324,7 +325,7 @@ IoInit (VOID)
   /*
    * Create the '\ArcName' directory
    */
-  RtlInitUnicodeStringFromLiteral(&DirName,
+  RtlRosInitUnicodeStringFromLiteral(&DirName,
 		       L"\\ArcName");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &DirName,
@@ -346,9 +347,9 @@ IoInit (VOID)
   /*
    * Create link from '\DosDevices' to '\??' directory
    */
-  RtlInitUnicodeStringFromLiteral(&LinkName,
+  RtlRosInitUnicodeStringFromLiteral(&LinkName,
 		       L"\\DosDevices");
-  RtlInitUnicodeStringFromLiteral(&DirName,
+  RtlRosInitUnicodeStringFromLiteral(&DirName,
 		       L"\\??");
   IoCreateSymbolicLink(&LinkName,
 		       &DirName);

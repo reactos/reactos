@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.133 2003/10/22 18:20:38 hbirr Exp $
+/* $Id: section.c,v 1.134 2003/11/17 02:12:51 hyperion Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -39,6 +39,7 @@
 #include <internal/cc.h>
 #include <ddk/ntifs.h>
 #include <ntos/minmax.h>
+#include <rosrtl/string.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -2101,7 +2102,7 @@ MmCreatePhysicalMemorySection(VOID)
   PSECTION_OBJECT PhysSection;
   NTSTATUS Status;
   OBJECT_ATTRIBUTES Obj;
-  UNICODE_STRING Name = UNICODE_STRING_INITIALIZER(L"\\Device\\PhysicalMemory");
+  UNICODE_STRING Name = ROS_STRING_INITIALIZER(L"\\Device\\PhysicalMemory");
   LARGE_INTEGER SectionSize;
    
   /*
@@ -2147,7 +2148,7 @@ MmInitSectionImplementation(VOID)
 {
    MmSectionObjectType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
    
-   RtlInitUnicodeStringFromLiteral(&MmSectionObjectType->TypeName, L"Section");
+   RtlRosInitUnicodeStringFromLiteral(&MmSectionObjectType->TypeName, L"Section");
    
    MmSectionObjectType->Tag = TAG('S', 'E', 'C', 'T');
    MmSectionObjectType->TotalObjects = 0;

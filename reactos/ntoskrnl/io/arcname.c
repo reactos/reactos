@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: arcname.c,v 1.15 2003/11/06 16:36:43 ekohl Exp $
+/* $Id: arcname.c,v 1.16 2003/11/17 02:12:51 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -29,6 +29,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <rosrtl/string.h>
 
 #include "internal/io.h"
 #include "internal/xhal.h"
@@ -412,7 +413,7 @@ IoCreateSystemRootLink(PCHAR ParameterLine)
   DPRINT("DeviceName: %wZ\n", &DeviceName);
 
   /* create the '\SystemRoot' link */
-  RtlInitUnicodeStringFromLiteral(&LinkName,
+  RtlRosInitUnicodeStringFromLiteral(&LinkName,
 		       L"\\SystemRoot");
 
   Status = IoCreateSymbolicLink(&LinkName,

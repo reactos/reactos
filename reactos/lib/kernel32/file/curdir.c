@@ -1,4 +1,4 @@
-/* $Id: curdir.c,v 1.38 2003/07/28 18:39:41 royce Exp $
+/* $Id: curdir.c,v 1.39 2003/11/17 02:12:50 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -224,7 +224,7 @@ GetTempPathW (
 	Value.MaximumLength = (nBufferLength - 1) * sizeof(WCHAR);
 	Value.Buffer = lpBuffer;
 
-	RtlInitUnicodeStringFromLiteral (&Name,
+	RtlRosInitUnicodeStringFromLiteral (&Name,
 	                      L"TMP");
 
 	Status = RtlQueryEnvironmentVariable_U (NULL,
@@ -232,7 +232,7 @@ GetTempPathW (
 	                                        &Value);
 	if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_TOO_SMALL)
 	{
-		RtlInitUnicodeStringFromLiteral (&Name,
+		RtlRosInitUnicodeStringFromLiteral (&Name,
 		                      L"TEMP");
 
 		Status = RtlQueryEnvironmentVariable_U (NULL,

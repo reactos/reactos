@@ -1,4 +1,4 @@
-/* $Id: beep.c,v 1.16 2003/09/20 20:12:43 weiden Exp $
+/* $Id: beep.c,v 1.17 2003/11/17 02:12:48 hyperion Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -14,6 +14,7 @@
 
 #include <ddk/ntddk.h>
 #include <ddk/ntddbeep.h>
+#include <rosrtl/string.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -240,8 +241,8 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 {
   PDEVICE_EXTENSION DeviceExtension;
   PDEVICE_OBJECT DeviceObject;
-  UNICODE_STRING DeviceName = UNICODE_STRING_INITIALIZER(L"\\Device\\Beep");
-  UNICODE_STRING SymlinkName = UNICODE_STRING_INITIALIZER(L"\\??\\Beep");
+  UNICODE_STRING DeviceName = ROS_STRING_INITIALIZER(L"\\Device\\Beep");
+  UNICODE_STRING SymlinkName = ROS_STRING_INITIALIZER(L"\\??\\Beep");
   NTSTATUS Status;
 
   DPRINT("Beep Device Driver 0.0.3\n");

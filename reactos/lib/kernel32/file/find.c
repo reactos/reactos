@@ -1,4 +1,4 @@
-/* $Id: find.c,v 1.39 2003/10/19 17:10:46 hbirr Exp $
+/* $Id: find.c,v 1.40 2003/11/17 02:12:50 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -183,7 +183,7 @@ InternalFindFirstFile (
 	/* change pattern: "*.*" --> "*" */
 	if (!wcscmp (SearchPattern, L"*.*"))
 	{
-	    RtlInitUnicodeStringFromLiteral(&PatternStr, L"*");
+	    RtlRosInitUnicodeStringFromLiteral(&PatternStr, L"*");
 	}
 	else
 	{

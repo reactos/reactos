@@ -8,6 +8,7 @@
  *   CSH 01/09-2000 Created
  */
 #include <afd.h>
+#include <rosrtl/string.h>
 
 #ifdef DBG
 
@@ -146,7 +147,7 @@ DriverEntry(
 {
     PDEVICE_EXTENSION DeviceExt;
     PDEVICE_OBJECT DeviceObject;
-    UNICODE_STRING DeviceName = UNICODE_STRING_INITIALIZER(L"\\Device\\Afd");
+    UNICODE_STRING DeviceName = ROS_STRING_INITIALIZER(L"\\Device\\Afd");
     NTSTATUS Status;
 
     Status = IoCreateDevice(DriverObject,

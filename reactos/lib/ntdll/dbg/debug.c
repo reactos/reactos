@@ -1,4 +1,4 @@
-/* $Id: debug.c,v 1.11 2003/09/12 17:51:47 vizzini Exp $
+/* $Id: debug.c,v 1.12 2003/11/17 02:12:50 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,6 +13,7 @@
 
 #include <ddk/ntddk.h>
 #include <ntdll/rtl.h>
+#include <rosrtl/string.h>
 #include <ntdll/dbg.h>
 #include <napi/lpc.h>
 
@@ -83,7 +84,7 @@ DbgSsInitialize(HANDLE ReplyPort,
 		ULONG Unknown3)
 {
 	SECURITY_QUALITY_OF_SERVICE Qos;
-	UNICODE_STRING PortName = UNICODE_STRING_INITIALIZER(L"\\DbgSsApiPort");
+	UNICODE_STRING PortName = ROS_STRING_INITIALIZER(L"\\DbgSsApiPort");
 	NTSTATUS Status;
 
 	Qos.Length = sizeof(SECURITY_QUALITY_OF_SERVICE);
@@ -129,7 +130,7 @@ NTSTATUS STDCALL
 DbgUiConnectToDbg(VOID)
 {
 	SECURITY_QUALITY_OF_SERVICE Qos;
-	UNICODE_STRING PortName = UNICODE_STRING_INITIALIZER(L"\\DbgUiApiPort");
+	UNICODE_STRING PortName = ROS_STRING_INITIALIZER(L"\\DbgUiApiPort");
 	NTSTATUS Status;
 	PTEB Teb;
 	ULONG InfoSize;

@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.121 2003/11/02 01:16:21 ekohl Exp $
+/* $Id: thread.c,v 1.122 2003/11/17 02:12:51 hyperion Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -28,6 +28,7 @@
 #include <internal/pool.h>
 #include <ntos/minmax.h>
 #include <internal/ldr.h>
+#include <rosrtl/string.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -481,7 +482,7 @@ PsInitThreadManagment(VOID)
    PsThreadType->Create = NULL;
    PsThreadType->DuplicationNotify = NULL;
    
-   RtlInitUnicodeStringFromLiteral(&PsThreadType->TypeName, L"Thread");
+   RtlRosInitUnicodeStringFromLiteral(&PsThreadType->TypeName, L"Thread");
    
    ObpCreateTypeObject(PsThreadType);
 

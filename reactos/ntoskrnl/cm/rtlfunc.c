@@ -9,6 +9,8 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <rosrtl/string.h>
+#include <rosrtl/minmax.h>
 #include <roscfg.h>
 #include <limits.h>
 #include <string.h>
@@ -222,7 +224,7 @@ RtlOpenCurrentUser(IN ACCESS_MASK DesiredAccess,
 		   OUT PHANDLE KeyHandle)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING KeyPath = UNICODE_STRING_INITIALIZER(L"\\Registry\\User\\.Default");
+  UNICODE_STRING KeyPath = ROS_STRING_INITIALIZER(L"\\Registry\\User\\.Default");
   NTSTATUS Status;
 
   Status = RtlFormatCurrentUserKeyPath(&KeyPath);
@@ -372,7 +374,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		    }
 		  else
 		    {
-		      ValueString->Length = RtlMin(SourceString->Length,
+		      ValueString->Length = RtlRosMin(SourceString->Length,
 						   ValueString->MaximumLength - sizeof(WCHAR));
 		      memcpy(ValueString->Buffer,
 			     SourceString->Buffer,
@@ -408,7 +410,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 			break;
 		      ValueString->Buffer[0] = 0;
 		    }
-		  ValueString->Length = RtlMin(ValueInfo->DataLength,
+		  ValueString->Length = RtlRosMin(ValueInfo->DataLength,
 					       ValueString->MaximumLength) - sizeof(WCHAR);
 		  memcpy(ValueString->Buffer,
 			 ValueInfo->Data,

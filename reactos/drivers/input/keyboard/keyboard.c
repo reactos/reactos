@@ -13,6 +13,7 @@
 #include <string.h>
 #include <ntos/keyboard.h>
 #include <ntos/minmax.h>
+#include <rosrtl/string.h>
 
 #include <ddk/ntddkbd.h>
 #include <ddk/ntdd8042.h>
@@ -842,8 +843,8 @@ NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT DriverObject,
  */
 {
    PDEVICE_OBJECT DeviceObject;
-   UNICODE_STRING DeviceName = UNICODE_STRING_INITIALIZER(L"\\Device\\Keyboard");
-   UNICODE_STRING SymlinkName = UNICODE_STRING_INITIALIZER(L"\\??\\Keyboard");
+   UNICODE_STRING DeviceName = ROS_STRING_INITIALIZER(L"\\Device\\Keyboard");
+   UNICODE_STRING SymlinkName = ROS_STRING_INITIALIZER(L"\\??\\Keyboard");
    
    DPRINT("Keyboard Driver 0.0.4\n");
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ntfs.c,v 1.3 2003/07/17 13:31:39 chorns Exp $
+/* $Id: ntfs.c,v 1.4 2003/11/17 02:12:49 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -28,6 +28,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <rosrtl/string.h>
 
 //#define NDEBUG
 #include <debug.h>
@@ -55,7 +56,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 {
   PDEVICE_OBJECT DeviceObject;
   NTSTATUS Status;
-  UNICODE_STRING DeviceName = UNICODE_STRING_INITIALIZER(L"\\Ntfs");
+  UNICODE_STRING DeviceName = ROS_STRING_INITIALIZER(L"\\Ntfs");
 
   DPRINT("NTFS 0.0.1\n");
 

@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.20 2003/11/03 20:30:23 gdalsnes Exp $
+/* $Id: rtl.h,v 1.21 2003/11/17 02:12:50 hyperion Exp $
  * 
  */
 
@@ -574,79 +574,6 @@ extern BOOLEAN IMPORTED NlsMbCodePageTag;
 extern BOOLEAN IMPORTED NlsMbOemCodePageTag;
 extern PUSHORT IMPORTED NlsOemLeadByteInfo;
 #endif /* __NTOSKRNL__ || __NTDLL__ */
-
-
-/*
- * NOTE: ReactOS extensions
- */
-#define RtlMin(X,Y) (((X) < (Y))? (X) : (Y))
-#define RtlMax(X,Y) (((X) > (Y))? (X) : (Y))
-#define RtlMin3(X,Y,Z) (((X) < (Y)) ? RtlMin(X,Z) : RtlMin(Y,Z))
-#define RtlMax3(X,Y,Z) (((X) > (Y)) ? RtlMax(X,Z) : RtlMax(Y,Z))
-
-
-/*
- * VOID
- * InitializeUnicodeString(PUNICODE_STRING DestinationString,
- *                         USHORT Lenght,
- *                         USHORT MaximumLength,
- *                         PCWSTR Buffer);
- *
- * Initialize n UNICODE_STRING from its fields. Use when you know the values of
- * all the fields in advance
- */
-
-#define InitializeUnicodeString(__PDEST_STRING__,__LENGTH__,__MAXLENGTH__,__BUFFER__) \
-{ \
-  (__PDEST_STRING__)->Length = (__LENGTH__); \
-  (__PDEST_STRING__)->MaximumLength = (__MAXLENGTH__); \
-  (__PDEST_STRING__)->Buffer = (__BUFFER__); \
-}
-
-
-/*
- * VOID
- * RtlInitUnicodeStringFromLiteral(PUNICODE_STRING DestinationString,
- *                                 PCWSTR SourceString);
- *
- * Initialize a UNICODE_STRING from a wide string literal. WARNING: use only with
- * string literals and statically initialized arrays, it will calculate the wrong
- * length otherwise
- */
-
-#define RtlInitUnicodeStringFromLiteral(__PDEST_STRING__,__SOURCE_STRING__) \
- InitializeUnicodeString( \
-  (__PDEST_STRING__), \
-  sizeof(__SOURCE_STRING__) - sizeof(WCHAR), \
-  sizeof(__SOURCE_STRING__), \
-  (__SOURCE_STRING__) \
-)
-
-
-/*
- * Static initializer for UNICODE_STRING variables.
- *
- * Usage:
- *    UNICODE_STRING wstr = UNICODE_STRING_INITIALIZER(L"string");
- */
-
-#define UNICODE_STRING_INITIALIZER(__SOURCE_STRING__) \
-{ \
-  sizeof((__SOURCE_STRING__)) - sizeof(WCHAR), \
-  sizeof((__SOURCE_STRING__)), \
-  (__SOURCE_STRING__) \
-}
-
-
-/*
- * Initializer for empty UNICODE_STRING variables.
- *
- * Usage:
- *    UNICODE_STRING wstr = EMPTY_UNICODE_STRING;
- */
-
-#define EMPTY_UNICODE_STRING {0, 0, NULL}
-
 
 /*
 VOID

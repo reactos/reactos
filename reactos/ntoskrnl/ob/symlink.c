@@ -1,4 +1,4 @@
-/* $Id: symlink.c,v 1.6 2003/10/14 14:45:23 ekohl Exp $
+/* $Id: symlink.c,v 1.7 2003/11/17 02:12:51 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -15,6 +15,7 @@
 #define NTOS_MODE_KERNEL
 #include <ntos.h>
 #include <internal/ob.h>
+#include <rosrtl/string.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -185,7 +186,7 @@ ObInitSymbolicLinkImplementation (VOID)
   ObSymbolicLinkType->Create = ObpCreateSymbolicLink;
   ObSymbolicLinkType->DuplicationNotify = NULL;
 
-  RtlInitUnicodeStringFromLiteral(&ObSymbolicLinkType->TypeName,
+  RtlRosInitUnicodeStringFromLiteral(&ObSymbolicLinkType->TypeName,
 				  L"SymbolicLink");
 
   ObpCreateTypeObject(ObSymbolicLinkType);

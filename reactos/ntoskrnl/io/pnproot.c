@@ -1,4 +1,4 @@
-/* $Id: pnproot.c,v 1.17 2003/10/16 12:50:30 ekohl Exp $
+/* $Id: pnproot.c,v 1.18 2003/11/17 02:12:51 hyperion Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -14,6 +14,7 @@
 #include <ddk/ntddk.h>
 #include <reactos/bugcodes.h>
 #include <internal/io.h>
+#include <rosrtl/string.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -452,7 +453,7 @@ PnpRootFdoEnumerateDevices(
     return STATUS_INSUFFICIENT_RESOURCES;
   }
 
-  RtlInitUnicodeStringFromLiteral(
+  RtlRosInitUnicodeStringFromLiteral(
     &KeyName,
     L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\" \
     ENUM_NAME_ROOT);

@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.22 2003/10/20 18:02:04 gvg Exp $
+/* $Id: init.c,v 1.23 2003/11/17 02:12:51 hyperion Exp $
  * 
  * reactos/subsys/csrss/init.c
  *
@@ -14,6 +14,7 @@
 #include <ntdll/rtl.h>
 #include <csrss/csrss.h>
 #include <win32k/win32k.h>
+#include <rosrtl/string.h>
 
 #include "api.h"
 
@@ -88,7 +89,7 @@ CsrInitVideo(VOID)
 
   InitializeVideoAddressSpace();
 
-  RtlInitUnicodeStringFromLiteral(&DeviceName, L"\\??\\DISPLAY1");
+  RtlRosInitUnicodeStringFromLiteral(&DeviceName, L"\\??\\DISPLAY1");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &DeviceName,
 			     0,
@@ -144,7 +145,7 @@ CsrServerInitialization (
    CsrInitVideo();
 
    /* NEW NAMED PORT: \ApiPort */
-   RtlInitUnicodeStringFromLiteral(&PortName, L"\\Windows\\ApiPort");
+   RtlRosInitUnicodeStringFromLiteral(&PortName, L"\\Windows\\ApiPort");
    InitializeObjectAttributes(&ObAttributes,
 			      &PortName,
 			      0,
@@ -190,7 +191,7 @@ CsrServerInitialization (
 	NtClose(ApiPortHandle);
 	return FALSE;
      }
-   RtlInitUnicodeStringFromLiteral( &RefreshEventName, L"\\TextConsoleRefreshEvent" );
+   RtlRosInitUnicodeStringFromLiteral( &RefreshEventName, L"\\TextConsoleRefreshEvent" );
    InitializeObjectAttributes( &RefreshEventAttr, &RefreshEventName, 0, NULL, NULL );
    Status = NtCreateEvent( &RefreshEventHandle, STANDARD_RIGHTS_ALL, &RefreshEventAttr, FALSE, FALSE );
    if( !NT_SUCCESS( Status ) )

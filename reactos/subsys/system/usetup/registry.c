@@ -28,6 +28,7 @@
 
 #include <ddk/ntddk.h>
 #include <ntdll/rtl.h>
+#include <rosrtl/string.h>
 
 #include "usetup.h"
 #include "registry.h"
@@ -614,7 +615,7 @@ SetInstallPathValue(PUNICODE_STRING InstallPath)
   NTSTATUS Status;
 
   /* Create the 'secret' InstallPath key */
-  RtlInitUnicodeStringFromLiteral (&KeyName,
+  RtlRosInitUnicodeStringFromLiteral (&KeyName,
 				   L"\\Registry\\Machine\\HARDWARE");
   InitializeObjectAttributes (&ObjectAttributes,
 			      &KeyName,
@@ -630,7 +631,7 @@ SetInstallPathValue(PUNICODE_STRING InstallPath)
       return FALSE;
     }
 
-  RtlInitUnicodeStringFromLiteral (&ValueName,
+  RtlRosInitUnicodeStringFromLiteral (&ValueName,
 				   L"InstallPath");
   Status = NtSetValueKey (KeyHandle,
 			  &ValueName,

@@ -13,6 +13,7 @@
 #include <internal/ob.h>
 #include <ntos/minmax.h>
 #include <reactos/bugcodes.h>
+#include <rosrtl/string.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -522,7 +523,7 @@ CmiGetLinkTarget(PREGISTRY_HIVE RegistryHive,
 		 PKEY_CELL KeyCell,
 		 PUNICODE_STRING TargetPath)
 {
-  UNICODE_STRING LinkName = UNICODE_STRING_INITIALIZER(L"SymbolicLinkValue");
+  UNICODE_STRING LinkName = ROS_STRING_INITIALIZER(L"SymbolicLinkValue");
   PVALUE_CELL ValueCell;
   PDATA_CELL DataCell;
   NTSTATUS Status;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.18 2003/11/11 22:17:18 weiden Exp $
+/* $Id: input.c,v 1.19 2003/11/17 02:12:52 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -40,6 +40,7 @@
 #include <include/mouse.h>
 #include <include/input.h>
 #include <include/hotkey.h>
+#include <rosrtl/string.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -64,7 +65,7 @@ KeyboardThreadMain(PVOID StartContext)
   IO_STATUS_BLOCK Iosb;
   NTSTATUS Status;
 
-  RtlInitUnicodeStringFromLiteral(&KeyboardDeviceName, L"\\??\\Keyboard");
+  RtlRosInitUnicodeStringFromLiteral(&KeyboardDeviceName, L"\\??\\Keyboard");
   InitializeObjectAttributes(&KeyboardObjectAttributes,
 			     &KeyboardDeviceName,
 			     0,
@@ -265,7 +266,7 @@ InitInputImpl(VOID)
    * Failures here don't result in a failure return, the system must be
    * able to operate without mouse
    */  
-  RtlInitUnicodeStringFromLiteral(&MouseDeviceName, L"\\??\\MouseClass");
+  RtlRosInitUnicodeStringFromLiteral(&MouseDeviceName, L"\\??\\MouseClass");
   InitializeObjectAttributes(&MouseObjectAttributes,
 			     &MouseDeviceName,
 			     0,

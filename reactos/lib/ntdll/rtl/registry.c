@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.26 2003/10/26 12:47:12 ekohl Exp $
+/* $Id: registry.c,v 1.27 2003/11/17 02:12:50 hyperion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -21,6 +21,7 @@
 
 #include <ddk/ntddk.h>
 #include <ntdll/rtl.h>
+#include <rosrtl/string.h>
 #include <ntos/minmax.h>
 
 #define NDEBUG
@@ -244,7 +245,7 @@ RtlOpenCurrentUser(IN ACCESS_MASK DesiredAccess,
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   NTSTATUS Status;
-  UNICODE_STRING KeyPath = UNICODE_STRING_INITIALIZER(L"\\Registry\\User\\.Default");
+  UNICODE_STRING KeyPath = ROS_STRING_INITIALIZER(L"\\Registry\\User\\.Default");
 
   Status = RtlFormatCurrentUserKeyPath(&KeyPath);
   if (NT_SUCCESS(Status))

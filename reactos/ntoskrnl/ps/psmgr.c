@@ -1,4 +1,4 @@
-/* $Id: psmgr.c,v 1.17 2003/10/12 17:05:50 hbirr Exp $
+/* $Id: psmgr.c,v 1.18 2003/11/17 02:12:51 hyperion Exp $
  *
  * COPYRIGHT:               See COPYING in the top level directory
  * PROJECT:                 ReactOS kernel
@@ -79,10 +79,10 @@ PsGetVersion (
 	)
 {
 	if (MajorVersion)
-		*MajorVersion = KERNEL_VERSION_MAJOR;
+		*MajorVersion = 4;
 
 	if (MinorVersion)
-		*MinorVersion = KERNEL_VERSION_MINOR;
+		*MinorVersion = 0;
 
 	if (BuildNumber)
 		*BuildNumber = NtBuildNumber;

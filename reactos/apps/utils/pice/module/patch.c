@@ -41,6 +41,7 @@ Copyright notice:
 
 #include <ddk/ntddkbd.h>
 #include <ddk/ntdd8042.h>
+#include <rosrtl/string.h>
 
 ////////////////////////////////////////////////////
 // GLOBALS
@@ -193,7 +194,7 @@ BOOLEAN PatchKeyboardDriver(void)
 {
 	PINTERNAL_I8042_HOOK_KEYBOARD phkData;
 	//When we have i8042 driver this should be changed!!!!!!!
-    UNICODE_STRING DevName = UNICODE_STRING_INITIALIZER(L"\\Device\\Keyboard");
+    UNICODE_STRING DevName = ROS_STRING_INITIALIZER(L"\\Device\\Keyboard");
 	PDEVICE_OBJECT kbdDevice = NULL;
 	PFILE_OBJECT FO = NULL;
 	NTSTATUS status;

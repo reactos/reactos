@@ -1,9 +1,10 @@
-/* $Id: lpcclt.c,v 1.12 2002/11/03 20:01:04 chorns Exp $
+/* $Id: lpcclt.c,v 1.13 2003/11/17 02:12:48 hyperion Exp $
  *
  * DESCRIPTION: Simple LPC Client
  * PROGRAMMER:  David Welch
  */
 #include <ddk/ntddk.h>
+#include <rosrtl/string.h>
 #include <windows.h>
 #include <napi/lpc.h>
 #include <stdarg.h>
@@ -31,7 +32,7 @@ void debug_printf(char* fmt, ...)
 
 int main(int argc, char* argv[])
 {
-   UNICODE_STRING PortName = UNICODE_STRING_INITIALIZER(TEST_PORT_NAME_U);
+   UNICODE_STRING PortName = ROS_STRING_INITIALIZER(TEST_PORT_NAME_U);
    NTSTATUS Status;
    HANDLE PortHandle;
    LPC_MAX_MESSAGE Request;

@@ -1,9 +1,10 @@
-/* $Id: lpcsrv.c,v 1.12 2003/08/07 11:47:32 silverblade Exp $
+/* $Id: lpcsrv.c,v 1.13 2003/11/17 02:12:48 hyperion Exp $
  *
  * DESCRIPTION: Simple LPC Server
  * PROGRAMMER:  David Welch
  */
 #include <ddk/ntddk.h>
+#include <rosrtl/string.h>
 #include <windows.h>
 #include <napi/lpc.h>
 #include <stdarg.h>
@@ -32,7 +33,7 @@ void debug_printf(char* fmt, ...)
 
 int main(int argc, char* argv[])
 {
-   UNICODE_STRING PortName = UNICODE_STRING_INITIALIZER(TEST_PORT_NAME_U);
+   UNICODE_STRING PortName = ROS_STRING_INITIALIZER(TEST_PORT_NAME_U);
    OBJECT_ATTRIBUTES ObjectAttributes;
    NTSTATUS Status;
    HANDLE NamedPortHandle;

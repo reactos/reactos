@@ -1,4 +1,5 @@
 #include <ntddk.h>
+#include <rosrtl/string.h>
 #include "vgavideo.h"
 
 #define NDEBUG
@@ -99,7 +100,7 @@ VOID  VGAResetDevice(OUT PSTATUS_BLOCK  StatusBlock)
 {
   HANDLE Event;
   OBJECT_ATTRIBUTES Attr;
-  UNICODE_STRING Name = UNICODE_STRING_INITIALIZER(L"\\TextConsoleRefreshEvent");
+  UNICODE_STRING Name = ROS_STRING_INITIALIZER(L"\\TextConsoleRefreshEvent");
   NTSTATUS Status;
   VIDEO_X86_BIOS_ARGUMENTS vxba;
   VP_STATUS vps;

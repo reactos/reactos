@@ -1,4 +1,4 @@
-/* $Id: lpc.c,v 1.10 2003/07/11 13:50:22 royce Exp $
+/* $Id: lpc.c,v 1.11 2003/11/17 02:12:50 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,6 +16,7 @@
 #include <ddk/ntddk.h>
 #include <ntdll/csr.h>
 #include <string.h>
+#include <rosrtl/string.h>
 
 #include <csrss/csrss.h>
 
@@ -137,7 +138,7 @@ CsrClientConnectToServer(VOID)
      {
        return(Status);
      }
-   RtlInitUnicodeStringFromLiteral(&PortName, L"\\Windows\\ApiPort");
+   RtlRosInitUnicodeStringFromLiteral(&PortName, L"\\Windows\\ApiPort");
    ConnectInfoLength = 0;
    LpcWrite.Length = sizeof(LPC_SECTION_WRITE);
    LpcWrite.SectionHandle = CsrSectionHandle;

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <windows.h>
 #include <ddk/ntddk.h>
+#include <rosrtl/string.h>
 
 HANDLE OutputHandle;
 HANDLE InputHandle;
@@ -20,7 +21,7 @@ int main(int argc, char* argv[])
    NTSTATUS Status;
    HANDLE FileHandle;
    OBJECT_ATTRIBUTES ObjectAttributes;
-   UNICODE_STRING FileName = UNICODE_STRING_INITIALIZER(L"\\C:\\a.txt");
+   UNICODE_STRING FileName = ROS_STRING_INITIALIZER(L"\\C:\\a.txt");
    IO_STATUS_BLOCK IoStatus;
    CHAR Buffer[256];
    HANDLE EventHandle;

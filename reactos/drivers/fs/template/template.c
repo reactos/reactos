@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: template.c,v 1.4 2002/08/20 20:37:07 hyperion Exp $
+/* $Id: template.c,v 1.5 2003/11/17 02:12:49 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -29,6 +29,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <rosrtl/string.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -249,7 +250,7 @@ DriverEntry(PDRIVER_OBJECT _DriverObject,
 {
   PDEVICE_OBJECT DeviceObject;
   NTSTATUS Status;
-  UNICODE_STRING DeviceName = UNICODE_STRING_INITIALIZER(L"\\Device\\BareFsd");
+  UNICODE_STRING DeviceName = ROS_STRING_INITIALIZER(L"\\Device\\BareFsd");
 
   DbgPrint("Bare FSD Template 0.0.1\n");
 

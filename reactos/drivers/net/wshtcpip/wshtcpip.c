@@ -8,6 +8,7 @@
  *   CSH 01/09-2000 Created
  */
 #include <wshtcpip.h>
+#include <rosrtl/string.h>
 
 #ifdef DBG
 
@@ -292,18 +293,18 @@ WSHOpenSocket2(
 
     switch (*SocketType) {
     case SOCK_STREAM:
-        RtlInitUnicodeStringFromLiteral(&String, DD_TCP_DEVICE_NAME);
+        RtlRosInitUnicodeStringFromLiteral(&String, DD_TCP_DEVICE_NAME);
         break;
 
     case SOCK_DGRAM:
-        RtlInitUnicodeStringFromLiteral(&String, DD_UDP_DEVICE_NAME);
+        RtlRosInitUnicodeStringFromLiteral(&String, DD_UDP_DEVICE_NAME);
         break;
 
     case SOCK_RAW:
         if ((*Protocol < 0) || (*Protocol > 255))
           return WSAEINVAL;
 
-        RtlInitUnicodeStringFromLiteral(&String, DD_RAW_IP_DEVICE_NAME);
+        RtlRosInitUnicodeStringFromLiteral(&String, DD_RAW_IP_DEVICE_NAME);
         break;
 
     default:

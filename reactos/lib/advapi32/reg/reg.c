@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.32 2003/11/16 10:41:42 gvg Exp $
+/* $Id: reg.c,v 1.33 2003/11/17 02:12:50 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -15,6 +15,7 @@
 #define NTOS_MODE_USER
 #include <ntos.h>
 #include <ddk/ntddk.h>
+#include <rosrtl/string.h>
 #include <ntdll/rtl.h>
 #include <windows.h>
 #include <wchar.h>
@@ -176,7 +177,7 @@ static NTSTATUS
 OpenClassesRootKey (PHANDLE KeyHandle)
 {
   OBJECT_ATTRIBUTES Attributes;
-  UNICODE_STRING KeyName = UNICODE_STRING_INITIALIZER(L"\\Registry\\Machine\\Software\\CLASSES");
+  UNICODE_STRING KeyName = ROS_STRING_INITIALIZER(L"\\Registry\\Machine\\Software\\CLASSES");
 
   DPRINT("OpenClassesRootKey()\n");
 
@@ -195,7 +196,7 @@ static NTSTATUS
 OpenLocalMachineKey (PHANDLE KeyHandle)
 {
   OBJECT_ATTRIBUTES Attributes;
-  UNICODE_STRING KeyName = UNICODE_STRING_INITIALIZER(L"\\Registry\\Machine");
+  UNICODE_STRING KeyName = ROS_STRING_INITIALIZER(L"\\Registry\\Machine");
 
   DPRINT("OpenLocalMachineKey()\n");
 
@@ -214,7 +215,7 @@ static NTSTATUS
 OpenUsersKey (PHANDLE KeyHandle)
 {
   OBJECT_ATTRIBUTES Attributes;
-  UNICODE_STRING KeyName = UNICODE_STRING_INITIALIZER(L"\\Registry\\User");
+  UNICODE_STRING KeyName = ROS_STRING_INITIALIZER(L"\\Registry\\User");
 
   DPRINT("OpenUsersKey()\n");
 
@@ -234,7 +235,7 @@ OpenCurrentConfigKey (PHANDLE KeyHandle)
 {
   OBJECT_ATTRIBUTES Attributes;
   UNICODE_STRING KeyName =
-  UNICODE_STRING_INITIALIZER(L"\\Registry\\Machine\\System\\CurrentControlSet\\Hardware Profiles\\Current");
+  ROS_STRING_INITIALIZER(L"\\Registry\\Machine\\System\\CurrentControlSet\\Hardware Profiles\\Current");
 
   DPRINT("OpenCurrentConfigKey()\n");
 

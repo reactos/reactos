@@ -1,4 +1,4 @@
-/* $Id: parallel.c,v 1.9 2003/09/20 20:12:43 weiden Exp $
+/* $Id: parallel.c,v 1.10 2003/11/17 02:12:49 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -13,6 +13,7 @@
 /* FUNCTIONS **************************************************************/
 
 #include <ddk/ntddk.h>
+#include <rosrtl/string.h>
 
 #include "parallel.h"
 
@@ -127,7 +128,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
  */
 {
    PDEVICE_OBJECT DeviceObject;
-   UNICODE_STRING DeviceName = UNICODE_STRING_INITIALIZER(L"\\Device\\Parallel");
+   UNICODE_STRING DeviceName = ROS_STRING_INITIALIZER(L"\\Device\\Parallel");
    NTSTATUS Status;
    
    DPRINT("Parallel Port Driver 0.0.1\n");

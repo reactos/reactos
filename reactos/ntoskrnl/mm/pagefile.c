@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.37 2003/10/12 17:05:48 hbirr Exp $
+/* $Id: pagefile.c,v 1.38 2003/11/17 02:12:51 hyperion Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -34,6 +34,7 @@
 #include <napi/core.h>
 #include <internal/ps.h>
 #include <internal/ldr.h>
+#include <rosrtl/string.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -664,7 +665,7 @@ MmInitializeCrashDump(HANDLE PageFileHandle, ULONG PageFileNum)
     }
 
   /* Load the diskdump driver. */
-  RtlInitUnicodeStringFromLiteral(&DiskDumpName, L"DiskDump");
+  RtlRosInitUnicodeStringFromLiteral(&DiskDumpName, L"DiskDump");
   ModuleObject = LdrGetModuleObject(&DiskDumpName);
   if (ModuleObject == NULL)
     {

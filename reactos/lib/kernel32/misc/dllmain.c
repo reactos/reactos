@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.29 2003/08/18 10:47:04 hbirr Exp $
+/* $Id: dllmain.c,v 1.30 2003/11/17 02:12:50 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -43,7 +43,7 @@ static NTSTATUS
 OpenBaseDirectory(PHANDLE DirHandle)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING Name = UNICODE_STRING_INITIALIZER(L"\\BaseNamedObjects");
+  UNICODE_STRING Name = ROS_STRING_INITIALIZER(L"\\BaseNamedObjects");
   NTSTATUS Status;
 
   InitializeObjectAttributes(&ObjectAttributes,

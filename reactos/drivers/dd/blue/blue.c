@@ -1,4 +1,4 @@
-/* $Id: blue.c,v 1.40 2003/07/12 10:24:45 chorns Exp $
+/* $Id: blue.c,v 1.41 2003/11/17 02:12:48 hyperion Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -13,6 +13,7 @@
 
 #include <roskrnl.h>
 #include <ddk/ntddblue.h>
+#include <rosrtl/string.h>
 #include <string.h>
 #include <defines.h>
 
@@ -621,8 +622,8 @@ NTSTATUS STDCALL
 DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
     PDEVICE_OBJECT DeviceObject;
-    UNICODE_STRING DeviceName = UNICODE_STRING_INITIALIZER(L"\\Device\\BlueScreen");
-    UNICODE_STRING SymlinkName = UNICODE_STRING_INITIALIZER(L"\\??\\BlueScreen");
+    UNICODE_STRING DeviceName = ROS_STRING_INITIALIZER(L"\\Device\\BlueScreen");
+    UNICODE_STRING SymlinkName = ROS_STRING_INITIALIZER(L"\\??\\BlueScreen");
 
     DPRINT ("Screen Driver 0.0.6\n");
 

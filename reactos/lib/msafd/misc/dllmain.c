@@ -10,6 +10,7 @@
 #include <string.h>
 #include <msafd.h>
 #include <helpers.h>
+#include <rosrtl/string.h>
 
 #ifdef DBG
 
@@ -104,7 +105,7 @@ NTSTATUS OpenSocket(
 
   AFD_DbgPrint(MAX_TRACE, ("EaInfo at (0x%X)  EaLength is (%d).\n", (UINT)EaInfo, (INT)EaLength));
 
-  RtlInitUnicodeStringFromLiteral(&DeviceName, L"\\Device\\Afd");
+  RtlRosInitUnicodeStringFromLiteral(&DeviceName, L"\\Device\\Afd");
 	InitializeObjectAttributes(
     &ObjectAttributes,
     &DeviceName,
@@ -674,7 +675,7 @@ NTSTATUS OpenCommandChannel(
   SocketInfo = (PAFD_SOCKET_INFORMATION)((ULONG_PTR)EaInfo->EaName + AFD_SOCKET_LENGTH);
   SocketInfo->CommandChannel = TRUE;
 
-  RtlInitUnicodeStringFromLiteral(&DeviceName, L"\\Device\\Afd");
+  RtlRosInitUnicodeStringFromLiteral(&DeviceName, L"\\Device\\Afd");
 	InitializeObjectAttributes(
     &ObjectAttributes,
     &DeviceName,

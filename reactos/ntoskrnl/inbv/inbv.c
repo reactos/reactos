@@ -1,4 +1,4 @@
-/* $Id: inbv.c,v 1.3 2003/10/12 17:05:44 hbirr Exp $
+/* $Id: inbv.c,v 1.4 2003/11/17 02:12:50 hyperion Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -14,6 +14,7 @@
 #include <roskrnl.h>
 #include <ntos/bootvid.h>
 #include <ddk/ntbootvid.h>
+#include <rosrtl/string.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -41,7 +42,7 @@ InbvCheckBootVid(VOID)
       OBJECT_ATTRIBUTES ObjectAttributes;
       UNICODE_STRING BootVidName;
 
-      RtlInitUnicodeStringFromLiteral(&BootVidName, L"\\Device\\BootVid");
+      RtlRosInitUnicodeStringFromLiteral(&BootVidName, L"\\Device\\BootVid");
       InitializeObjectAttributes(&ObjectAttributes,
 				 &BootVidName,
 				 0,

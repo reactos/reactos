@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: resource.c,v 1.12 2003/07/10 15:47:00 royce Exp $
+/* $Id: resource.c,v 1.13 2003/11/17 02:12:51 hyperion Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/resource.c
@@ -29,6 +29,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <rosrtl/string.h>
 
 
 #include <internal/debug.h>
@@ -195,7 +196,7 @@ IoReportHalResourceUsage(PUNICODE_STRING HalDescription,
   HANDLE DescriptionKey;
 
   /* Open/Create 'RESOURCEMAP' key. */
-  RtlInitUnicodeStringFromLiteral(&Name,
+  RtlRosInitUnicodeStringFromLiteral(&Name,
 		       L"\\Registry\\Machine\\HARDWARE\\RESOURCEMAP");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &Name,
@@ -213,7 +214,7 @@ IoReportHalResourceUsage(PUNICODE_STRING HalDescription,
     return(Status);
 
   /* Open/Create 'Hardware Abstraction Layer' key */
-  RtlInitUnicodeStringFromLiteral(&Name,
+  RtlRosInitUnicodeStringFromLiteral(&Name,
 		       L"Hardware Abstraction Layer");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &Name,
@@ -249,7 +250,7 @@ IoReportHalResourceUsage(PUNICODE_STRING HalDescription,
     return(Status);
 
   /* Add '.Raw' value. */
-  RtlInitUnicodeStringFromLiteral(&Name,
+  RtlRosInitUnicodeStringFromLiteral(&Name,
 		       L".Raw");
   Status = NtSetValueKey(DescriptionKey,
 			 &Name,
@@ -264,7 +265,7 @@ IoReportHalResourceUsage(PUNICODE_STRING HalDescription,
     }
 
   /* Add '.Translated' value. */
-  RtlInitUnicodeStringFromLiteral(&Name,
+  RtlRosInitUnicodeStringFromLiteral(&Name,
 		       L".Translated");
   Status = NtSetValueKey(DescriptionKey,
 			 &Name,

@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.35 2003/10/28 20:21:21 hbirr Exp $
+/* $Id: fcb.c,v 1.36 2003/11/17 02:12:49 hyperion Exp $
  *
  *
  * FILE:             drivers/fs/vfat/fcb.c
@@ -16,6 +16,7 @@
 #include <wchar.h>
 #include <limits.h>
 #include <ntos.h>
+#include <rosrtl/string.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -341,7 +342,7 @@ vfatMakeRootFCB(PDEVICE_EXTENSION  pVCB)
   NTSTATUS Status = STATUS_SUCCESS;
   UNICODE_STRING NameU;
 
-  RtlInitUnicodeStringFromLiteral(&NameU, L"\\");
+  RtlRosInitUnicodeStringFromLiteral(&NameU, L"\\");
 
   FCB = vfatNewFCB(&NameU);
   memset(FCB->entry.Filename, ' ', 11);
@@ -383,7 +384,7 @@ vfatOpenRootFCB(PDEVICE_EXTENSION  pVCB)
   PVFATFCB  FCB;
   UNICODE_STRING NameU;
 
-  RtlInitUnicodeStringFromLiteral(&NameU, L"\\");
+  RtlRosInitUnicodeStringFromLiteral(&NameU, L"\\");
 
   FCB = vfatGrabFCBFromTable (pVCB, &NameU);
   if (FCB == NULL)
@@ -600,7 +601,7 @@ vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB,
           pFCB,
           pFileNameU);
 
-  RtlInitUnicodeStringFromLiteral(&RootNameU, L"\\");
+  RtlRosInitUnicodeStringFromLiteral(&RootNameU, L"\\");
 
   //  Trivial case, open of the root directory on volume
   if (RtlEqualUnicodeString(pFileNameU, &RootNameU, FALSE))

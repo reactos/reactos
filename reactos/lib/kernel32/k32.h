@@ -25,3 +25,4 @@
 #include <csrss/csrss.h>
 #include <reactos/buildno.h>
 #include <rosrtl/thread.h>
+#include <rosrtl/string.h>

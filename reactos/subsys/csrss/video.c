@@ -1,8 +1,9 @@
-/* $Id: video.c,v 1.7 2003/10/20 18:02:04 gvg Exp $
+/* $Id: video.c,v 1.8 2003/11/17 02:12:51 hyperion Exp $
  *
  * ReactOS Project
  */
 #include <ddk/ntddk.h>
+#include <rosrtl/string.h>
 
 ULONG
 InitializeVideoAddressSpace(VOID)
@@ -20,7 +21,7 @@ InitializeVideoAddressSpace(VOID)
    /*
     * Open the physical memory section
     */
-   RtlInitUnicodeStringFromLiteral(&PhysMemName, L"\\Device\\PhysicalMemory");
+   RtlRosInitUnicodeStringFromLiteral(&PhysMemName, L"\\Device\\PhysicalMemory");
    InitializeObjectAttributes(&ObjectAttributes,
 			      &PhysMemName,
 			      0,

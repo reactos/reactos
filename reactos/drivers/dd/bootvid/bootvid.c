@@ -1,4 +1,4 @@
-/* $Id: bootvid.c,v 1.4 2003/11/14 17:13:24 weiden Exp $
+/* $Id: bootvid.c,v 1.5 2003/11/17 02:12:48 hyperion Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -14,6 +14,7 @@
 #include <ddk/ntddk.h>
 #include <ddk/ntbootvid.h>
 #include <reactos/resource.h>
+#include <rosrtl/string.h>
 
 #include "../../../ntoskrnl/include/internal/v86m.h"
 
@@ -167,7 +168,7 @@ InbvInitializeVideoAddressSpace(VOID)
    /*
     * Open the physical memory section
     */
-   RtlInitUnicodeStringFromLiteral(&PhysMemName, L"\\Device\\PhysicalMemory");
+   RtlRosInitUnicodeStringFromLiteral(&PhysMemName, L"\\Device\\PhysicalMemory");
    InitializeObjectAttributes(&ObjectAttributes,
 			      &PhysMemName,
 			      0,
@@ -800,7 +801,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
   DriverObject->DriverUnload = NULL;
 
   /* create device */
-  RtlInitUnicodeStringFromLiteral(&DeviceName, L"\\Device\\BootVid");
+  RtlRosInitUnicodeStringFromLiteral(&DeviceName, L"\\Device\\BootVid");
 
   Status = IoCreateDevice(DriverObject, 0, &DeviceName, FILE_DEVICE_BOOTVID,
                             0, FALSE, &BootVidDevice);

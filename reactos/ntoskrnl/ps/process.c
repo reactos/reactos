@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.119 2003/10/12 17:05:50 hbirr Exp $
+/* $Id: process.c,v 1.120 2003/11/17 02:12:51 hyperion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -30,6 +30,7 @@
 #include <internal/se.h>
 #include <internal/kd.h>
 #include <internal/nls.h>
+#include <rosrtl/string.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -261,7 +262,7 @@ PsInitProcessManagment(VOID)
    PsProcessType->Create = NULL;
    PsProcessType->DuplicationNotify = NULL;
    
-   RtlInitUnicodeStringFromLiteral(&PsProcessType->TypeName, L"Process");
+   RtlRosInitUnicodeStringFromLiteral(&PsProcessType->TypeName, L"Process");
    
    ObpCreateTypeObject(PsProcessType);
 

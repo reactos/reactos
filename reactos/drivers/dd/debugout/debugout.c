@@ -1,4 +1,4 @@
-/* $Id: debugout.c,v 1.1 2003/05/22 15:11:29 gvg Exp $
+/* $Id: debugout.c,v 1.2 2003/11/17 02:12:49 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -23,6 +23,7 @@
 
 /* INCLUDES */
 #include <ddk/ntddk.h>
+#include <rosrtl/string.h>
 
 /* FUNCTIONS */
 NTSTATUS STDCALL_FUNC
@@ -105,7 +106,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
   DriverObject->DriverUnload = (PDRIVER_UNLOAD) DebugOutUnload;
 
   /* create device */
-  RtlInitUnicodeStringFromLiteral(&DeviceName, L"\\Device\\DebugOut");
+  RtlRosInitUnicodeStringFromLiteral(&DeviceName, L"\\Device\\DebugOut");
 
   Status = IoCreateDevice(DriverObject, 0, &DeviceName, FILE_DEVICE_NULL,
                             0, FALSE, &DebugOutDevice);
@@ -114,7 +115,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
       return Status;
     }
 
-  RtlInitUnicodeStringFromLiteral(&DosName, L"\\DosDevices\\DebugOut");
+  RtlRosInitUnicodeStringFromLiteral(&DosName, L"\\DosDevices\\DebugOut");
   Status = IoCreateSymbolicLink(&DosName, &DeviceName);
   if (! NT_SUCCESS(Status))
     {

@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.9 2003/06/21 19:55:55 hbirr Exp $
+/* $Id: rw.c,v 1.10 2003/11/17 02:12:49 hyperion Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -10,6 +10,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ddk/ntddk.h>
+#include <rosrtl/minmax.h>
 #include "npfs.h"
 
 #define NDEBUG
@@ -113,7 +114,7 @@ NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
          /* Byte stream mode */
 	 while (Length > 0 && ReadFcb->ReadDataAvailable > 0)
 	   {
-	     CopyLength = RtlMin(ReadFcb->ReadDataAvailable, Length);
+	     CopyLength = RtlRosMin(ReadFcb->ReadDataAvailable, Length);
 	     if (ReadFcb->ReadPtr + CopyLength <= ReadFcb->Data + ReadFcb->MaxDataLength)
 	       {
                  memcpy(Buffer, ReadFcb->ReadPtr, CopyLength);
@@ -153,7 +154,7 @@ NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	 if (ReadFcb->ReadDataAvailable)
 	   {
 	     /* Truncate the message if the receive buffer is too small */
-	     CopyLength = RtlMin(ReadFcb->ReadDataAvailable, Length);
+	     CopyLength = RtlRosMin(ReadFcb->ReadDataAvailable, Length);
 	     memcpy(Buffer, ReadFcb->Data, CopyLength);
 
 	     Information = CopyLength;
@@ -265,7 +266,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
           DPRINT("Byte stream mode\n");
 	  while (Length > 0 && Fcb->WriteQuotaAvailable > 0)
 	    {
-              CopyLength = RtlMin(Length, Fcb->WriteQuotaAvailable);
+              CopyLength = RtlRosMin(Length, Fcb->WriteQuotaAvailable);
               if (Fcb->WritePtr + CopyLength <= Fcb->Data + Fcb->MaxDataLength)
 	        {
                   memcpy(Fcb->WritePtr, Buffer, CopyLength);
@@ -301,7 +302,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
         {
           if (Length > 0)
 	    {
-              CopyLength = RtlMin(Length, Fcb->WriteQuotaAvailable);
+              CopyLength = RtlRosMin(Length, Fcb->WriteQuotaAvailable);
 	      memcpy(Buffer, Fcb->Data, CopyLength);
 
 	      Information = CopyLength;

@@ -40,6 +40,7 @@
 #include <ntdll/ldr.h>
 #include <internal/safe.h>
 #include <internal/kd.h>
+#include <rosrtl/string.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -885,7 +886,7 @@ KdbLdrLoadAutoConfigDrivers(VOID)
    * is created after their module entries
    */
 
-  RtlInitUnicodeStringFromLiteral(&ModuleName, KERNEL_MODULE_NAME);
+  RtlRosInitUnicodeStringFromLiteral(&ModuleName, KERNEL_MODULE_NAME);
   ModuleObject = LdrGetModuleObject(&ModuleName);
   if (ModuleObject != NULL)
     {
@@ -893,7 +894,7 @@ KdbLdrLoadAutoConfigDrivers(VOID)
 			    &ModuleObject->TextSection->SymbolInfo);
     }
 
-  RtlInitUnicodeStringFromLiteral(&ModuleName, HAL_MODULE_NAME);
+  RtlRosInitUnicodeStringFromLiteral(&ModuleName, HAL_MODULE_NAME);
   ModuleObject = LdrGetModuleObject(&ModuleName);
   if (ModuleObject != NULL)
     {

@@ -1,4 +1,4 @@
-/* $Id: dlog.c,v 1.8 2003/10/12 17:05:45 hbirr Exp $
+/* $Id: dlog.c,v 1.9 2003/11/17 02:12:51 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,6 +16,7 @@
 #include <roscfg.h>
 #include <internal/kd.h>
 #include <ntos/minmax.h>
+#include <rosrtl/string.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -119,7 +120,7 @@ DebugLogInit2(VOID)
   UNICODE_STRING FileName;
   IO_STATUS_BLOCK Iosb;
 
-  RtlInitUnicodeStringFromLiteral(&FileName, L"\\SystemRoot\\debug.log");
+  RtlRosInitUnicodeStringFromLiteral(&FileName, L"\\SystemRoot\\debug.log");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &FileName,
 			     0,

@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.113 2003/10/16 14:48:22 ekohl Exp $
+/* $Id: registry.c,v 1.114 2003/11/17 02:12:50 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,6 +18,7 @@
 #include <roscfg.h>
 #include <internal/ob.h>
 #include <reactos/bugcodes.h>
+#include <rosrtl/string.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -465,7 +466,7 @@ CmiCreateCurrentControlSetLink(VOID)
 
   DPRINT("Link target '%S'\n", TargetNameBuffer);
 
-  RtlInitUnicodeStringFromLiteral(&LinkName,
+  RtlRosInitUnicodeStringFromLiteral(&LinkName,
 				  L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &LinkName,
@@ -485,7 +486,7 @@ CmiCreateCurrentControlSetLink(VOID)
       return(Status);
     }
 
-  RtlInitUnicodeStringFromLiteral(&LinkValue,
+  RtlRosInitUnicodeStringFromLiteral(&LinkValue,
 				  L"SymbolicLinkValue");
   Status = NtSetValueKey(KeyHandle,
 			 &LinkValue,
@@ -687,7 +688,7 @@ CmiInitControlSetLink (VOID)
   NTSTATUS Status;
 
   /* Create 'ControlSet001' key */
-  RtlInitUnicodeStringFromLiteral (&ControlSetKeyName,
+  RtlRosInitUnicodeStringFromLiteral (&ControlSetKeyName,
 				   L"\\Registry\\Machine\\SYSTEM\\ControlSet001");
   InitializeObjectAttributes (&ObjectAttributes,
 			      &ControlSetKeyName,
@@ -709,7 +710,7 @@ CmiInitControlSetLink (VOID)
   NtClose (KeyHandle);
 
   /* Link 'CurrentControlSet' to 'ControlSet001' key */
-  RtlInitUnicodeStringFromLiteral (&ControlSetLinkName,
+  RtlRosInitUnicodeStringFromLiteral (&ControlSetLinkName,
 				   L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet");
   InitializeObjectAttributes (&ObjectAttributes,
 			      &ControlSetLinkName,
@@ -729,7 +730,7 @@ CmiInitControlSetLink (VOID)
       return Status;
     }
 
-  RtlInitUnicodeStringFromLiteral (&ControlSetValueName,
+  RtlRosInitUnicodeStringFromLiteral (&ControlSetValueName,
 				   L"SymbolicLinkValue");
   Status = NtSetValueKey (KeyHandle,
 			  &ControlSetValueName,
@@ -770,7 +771,7 @@ CmiInitHives(BOOLEAN SetupBoot)
 
   if (SetupBoot == TRUE)
     {
-      RtlInitUnicodeStringFromLiteral(&KeyName,
+      RtlRosInitUnicodeStringFromLiteral(&KeyName,
 				      L"\\Registry\\Machine\\HARDWARE");
       InitializeObjectAttributes(&ObjectAttributes,
 				 &KeyName,
@@ -786,7 +787,7 @@ CmiInitHives(BOOLEAN SetupBoot)
 	  return(Status);
 	}
 
-      RtlInitUnicodeStringFromLiteral(&ValueName,
+      RtlRosInitUnicodeStringFromLiteral(&ValueName,
 				      L"InstallPath");
 
       BufferSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 4096;

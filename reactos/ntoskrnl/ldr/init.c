@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: init.c,v 1.43 2003/11/16 21:02:07 ekohl Exp $
+/* $Id: init.c,v 1.44 2003/11/17 02:12:51 hyperion Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ldr/init.c
@@ -45,6 +45,7 @@
 #include <internal/ps.h>
 #include <internal/ldr.h>
 #include <napi/teb.h>
+#include <rosrtl/string.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -397,7 +398,7 @@ LdrLoadInitialProcess(PHANDLE ProcessHandle,
   NTSTATUS Status;
 
   /* Get the absolute path to smss.exe. */
-  RtlInitUnicodeStringFromLiteral(&ImagePath,
+  RtlRosInitUnicodeStringFromLiteral(&ImagePath,
 				  L"\\SystemRoot\\system32\\smss.exe");
 
   /* Map process image */

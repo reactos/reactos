@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.51 2003/11/14 17:13:32 weiden Exp $
+/* $Id: init.c,v 1.52 2003/11/17 02:12:51 hyperion Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -33,6 +33,7 @@
 #include <ntdll/rtl.h>
 #include <ntdll/ldr.h>
 #include <napi/lpc.h>
+#include <rosrtl/string.h>
 
 #include "smss.h"
 
@@ -704,7 +705,7 @@ SmSetEnvironmentVariables(VOID)
 	 SharedUserData->NtSystemRoot);
 
   /* Set SystemRoot = "C:\reactos" */
-  RtlInitUnicodeStringFromLiteral(&EnvVariable,
+  RtlRosInitUnicodeStringFromLiteral(&EnvVariable,
 		       L"SystemRoot");
   RtlInitUnicodeString(&EnvValue,
 		       ValueBuffer);
@@ -716,7 +717,7 @@ SmSetEnvironmentVariables(VOID)
   ValueBuffer[2] = 0;
 
   /* Set SystemDrive = "C:" */
-  RtlInitUnicodeStringFromLiteral(&EnvVariable,
+  RtlRosInitUnicodeStringFromLiteral(&EnvVariable,
 		       L"SystemDrive");
   RtlInitUnicodeString(&EnvValue,
 		       ValueBuffer);
@@ -747,7 +748,7 @@ SmLoadSubsystems(VOID)
   NTSTATUS Status;
 
   /* Load kernel mode subsystem (aka win32k.sys) */
-  RtlInitUnicodeStringFromLiteral(&ImageInfo.ModuleName,
+  RtlRosInitUnicodeStringFromLiteral(&ImageInfo.ModuleName,
 		       L"\\SystemRoot\\system32\\win32k.sys");
 
   Status = NtSetSystemInformation(SystemLoadAndCallImage,
@@ -776,7 +777,7 @@ SignalInitEvent()
   UNICODE_STRING UnicodeString;
   HANDLE ReactOSInitEvent;
 
-  RtlInitUnicodeStringFromLiteral(&UnicodeString, L"\\ReactOSInitDone");
+  RtlRosInitUnicodeStringFromLiteral(&UnicodeString, L"\\ReactOSInitDone");
   InitializeObjectAttributes(&ObjectAttributes,
     &UnicodeString,
     EVENT_ALL_ACCESS,
@@ -925,7 +926,7 @@ InitSessionManager(HANDLE Children[])
   DPRINT("SM: initializing csrss\n");
 
   /* Run csrss.exe */
-  RtlInitUnicodeStringFromLiteral(&UnicodeString,
+  RtlRosInitUnicodeStringFromLiteral(&UnicodeString,
 				  L"\\CsrssInitDone");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &UnicodeString,
@@ -1036,7 +1037,7 @@ InitSessionManager(HANDLE Children[])
   Children[CHILD_WINLOGON] = ProcessInfo.ProcessHandle;
 
   /* Create the \DbgSsApiPort object (LPC) */
-  RtlInitUnicodeStringFromLiteral(&UnicodeString,
+  RtlRosInitUnicodeStringFromLiteral(&UnicodeString,
 		       L"\\DbgSsApiPort");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &UnicodeString,
@@ -1059,7 +1060,7 @@ InitSessionManager(HANDLE Children[])
 #endif
 
   /* Create the \DbgUiApiPort object (LPC) */
-  RtlInitUnicodeStringFromLiteral(&UnicodeString,
+  RtlRosInitUnicodeStringFromLiteral(&UnicodeString,
 		       L"\\DbgUiApiPort");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &UnicodeString,
