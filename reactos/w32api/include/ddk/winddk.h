@@ -428,100 +428,100 @@ typedef enum _IO_ALLOCATION_ACTION {
   DeallocateObjectKeepRegisters
 } IO_ALLOCATION_ACTION, *PIO_ALLOCATION_ACTION;
 
-typedef IO_ALLOCATION_ACTION DDKAPI
-(*PDRIVER_CONTROL)(
+typedef IO_ALLOCATION_ACTION
+(DDKAPI *PDRIVER_CONTROL)(
   IN struct _DEVICE_OBJECT  *DeviceObject,
   IN struct _IRP  *Irp,
   IN PVOID  MapRegisterBase,
   IN PVOID  Context);
 
-typedef VOID DDKAPI
-(*PDRIVER_LIST_CONTROL)(
+typedef VOID
+(DDKAPI *PDRIVER_LIST_CONTROL)(
   IN struct _DEVICE_OBJECT  *DeviceObject,
   IN struct _IRP  *Irp,
   IN struct _SCATTER_GATHER_LIST  *ScatterGather,
   IN PVOID  Context);
 
-typedef NTSTATUS DDKAPI
-(*PDRIVER_ADD_DEVICE)(
+typedef NTSTATUS
+(DDKAPI *PDRIVER_ADD_DEVICE)(
   IN struct _DRIVER_OBJECT  *DriverObject,
   IN struct _DEVICE_OBJECT  *PhysicalDeviceObject);
 
-typedef NTSTATUS DDKAPI
-(*PIO_COMPLETION_ROUTINE)(
+typedef NTSTATUS
+(DDKAPI *PIO_COMPLETION_ROUTINE)(
   IN struct _DEVICE_OBJECT  *DeviceObject,
   IN struct _IRP  *Irp,
   IN PVOID  Context);
 
-typedef VOID DDKAPI
-(*PDRIVER_CANCEL)(
+typedef VOID
+(DDKAPI *PDRIVER_CANCEL)(
   IN struct _DEVICE_OBJECT  *DeviceObject,
   IN struct _IRP  *Irp);
 
-typedef VOID DDKAPI
-(*PKDEFERRED_ROUTINE)(
+typedef VOID
+(DDKAPI *PKDEFERRED_ROUTINE)(
   IN struct _KDPC  *Dpc,
   IN PVOID  DeferredContext,
   IN PVOID  SystemArgument1,
   IN PVOID  SystemArgument2);
 
-typedef NTSTATUS DDKAPI
-(*PDRIVER_DISPATCH)(
+typedef NTSTATUS
+(DDKAPI *PDRIVER_DISPATCH)(
   IN struct _DEVICE_OBJECT  *DeviceObject,
   IN struct _IRP  *Irp);
 
-typedef VOID DDKAPI
-(*PIO_DPC_ROUTINE)(
+typedef VOID
+(DDKAPI *PIO_DPC_ROUTINE)(
   IN struct _KDPC  *Dpc,
   IN struct _DEVICE_OBJECT  *DeviceObject,
   IN struct _IRP  *Irp,
   IN PVOID  Context);
 
-typedef NTSTATUS DDKAPI
-(*PMM_DLL_INITIALIZE)(
+typedef NTSTATUS
+(DDKAPI *PMM_DLL_INITIALIZE)(
   IN PUNICODE_STRING  RegistryPath);
 
-typedef NTSTATUS DDKAPI
-(*PMM_DLL_UNLOAD)(
+typedef NTSTATUS
+(DDKAPI *PMM_DLL_UNLOAD)(
   VOID);
 
-typedef NTSTATUS DDKAPI
-(*PDRIVER_ENTRY)( 
+typedef NTSTATUS
+(DDKAPI *PDRIVER_ENTRY)( 
   IN struct _DRIVER_OBJECT  *DriverObject, 
   IN PUNICODE_STRING  RegistryPath); 
 
-typedef NTSTATUS DDKAPI
-(*PDRIVER_INITIALIZE)(
+typedef NTSTATUS
+(DDKAPI *PDRIVER_INITIALIZE)(
   IN struct _DRIVER_OBJECT  *DriverObject, 
   IN PUNICODE_STRING  RegistryPath);
 
-typedef BOOLEAN DDKAPI
-(*PKSERVICE_ROUTINE)(
+typedef BOOLEAN
+(DDKAPI *PKSERVICE_ROUTINE)(
   IN struct _KINTERRUPT  *Interrupt,
   IN PVOID  ServiceContext);
 
-typedef VOID DDKAPI
-(*PIO_TIMER_ROUTINE)(
+typedef VOID
+(DDKAPI *PIO_TIMER_ROUTINE)(
   IN struct _DEVICE_OBJECT  *DeviceObject,
   IN PVOID  Context);
 
-typedef VOID DDKAPI
-(*PDRIVER_REINITIALIZE)( 
+typedef VOID
+(DDKAPI *PDRIVER_REINITIALIZE)( 
   IN struct _DRIVER_OBJECT  *DriverObject, 
   IN PVOID  Context, 
   IN ULONG  Count); 
 
-typedef NTSTATUS DDKAPI
-(*PDRIVER_STARTIO)(
+typedef NTSTATUS
+(DDKAPI *PDRIVER_STARTIO)(
   IN struct _DEVICE_OBJECT  *DeviceObject,
   IN struct _IRP  *Irp);
 
-typedef BOOLEAN DDKAPI
-(*PKSYNCHRONIZE_ROUTINE)(
+typedef BOOLEAN
+(DDKAPI *PKSYNCHRONIZE_ROUTINE)(
   IN PVOID  SynchronizeContext);
 
-typedef VOID DDKAPI
-(*PDRIVER_UNLOAD)( 
+typedef VOID
+(DDKAPI *PDRIVER_UNLOAD)( 
   IN struct _DRIVER_OBJECT  *DriverObject); 
 
 
@@ -2331,7 +2331,6 @@ typedef struct _FAST_IO_DISPATCH {
   PFAST_IO_RELEASE_FOR_CCFLUSH  ReleaseForCcFlush;
 } FAST_IO_DISPATCH, *PFAST_IO_DISPATCH;
 
-/* NOTE: PVOID for methods to avoid 'assignment from incompatible pointer type' warning */
 typedef struct _DRIVER_OBJECT {
   CSHORT  Type;
   CSHORT  Size;
@@ -2343,11 +2342,11 @@ typedef struct _DRIVER_OBJECT {
   PDRIVER_EXTENSION  DriverExtension;
   UNICODE_STRING  DriverName;
   PUNICODE_STRING  HardwareDatabase;
-  PVOID  FastIoDispatch;
-  PVOID  DriverInit;
-  PVOID  DriverStartIo;
-  PVOID  DriverUnload;
-  PVOID  MajorFunction[IRP_MJ_MAXIMUM_FUNCTION + 1];
+  PFAST_IO_DISPATCH  FastIoDispatch;
+  PDRIVER_INITIALIZE  DriverInit;
+  PDRIVER_STARTIO  DriverStartIo;
+  PDRIVER_UNLOAD  DriverUnload;
+  PDRIVER_DISPATCH  MajorFunction[IRP_MJ_MAXIMUM_FUNCTION + 1];
 } DRIVER_OBJECT;
 typedef struct _DRIVER_OBJECT *PDRIVER_OBJECT;
 
@@ -3703,6 +3702,7 @@ typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
 #define LOW_LEVEL                          0
 #define APC_LEVEL                          1
 #define DISPATCH_LEVEL                     2
+#define SYNCH_LEVEL                       27
 #define PROFILE_LEVEL                     27
 #define CLOCK1_LEVEL                      28
 #define CLOCK2_LEVEL                      28
@@ -5790,8 +5790,6 @@ WRITE_REGISTER_USHORT(
   IN PUSHORT  Register,
   IN USHORT  Value);
 
-
-
 /** I/O manager routines **/
 
 NTOSAPI
@@ -7318,12 +7316,6 @@ KeLeaveCriticalRegion(
   VOID);
 
 NTOSAPI
-VOID
-DDKAPI
-KeLowerIrql(
-  IN KIRQL  NewIrql);
-
-NTOSAPI
 NTSTATUS
 DDKAPI
 KePulseEvent(
@@ -7365,19 +7357,6 @@ NTOSAPI
 ULONG
 DDKAPI
 KeQueryTimeIncrement(
-  VOID);
-
-NTOSAPI
-VOID
-DDKAPI
-KeRaiseIrql(
-  IN KIRQL  NewIrql,
-  OUT PKIRQL  OldIrql);
-
-NTOSAPI
-KIRQL
-DDKAPI
-KeRaiseIrqlToDpcLevel(
   VOID);
 
 NTOSAPI
@@ -7606,7 +7585,44 @@ KeWaitForSingleObject(
   IN BOOLEAN  Alertable,
   IN PLARGE_INTEGER  Timeout  OPTIONAL);
 
+#if defined(_X86_)
 
+NTOSAPI
+VOID
+FASTCALL
+KfLowerIrql(
+  IN KIRQL  NewIrql);
+
+NTOSAPI
+KIRQL
+FASTCALL
+KfRaiseIrql(
+  IN KIRQL  NewIrql);
+
+#define KeLowerIrql(a) KfLowerIrql(a)
+#define KeRaiseIrql(a,b) *(b) = KfRaiseIrql(a)
+
+#else
+
+NTOSAPI
+VOID
+DDKAPI
+KeLowerIrql(
+  IN KIRQL  NewIrql);
+
+NTOSAPI
+KIRQL
+DDKAPI
+KeRaiseIrql(
+  IN KIRQL  NewIrql);
+
+#endif
+
+NTOSAPI
+KIRQL
+DDKAPI
+KeRaiseIrqlToDpcLevel(
+  VOID);
 
 /** Memory manager routines **/
 

@@ -247,7 +247,7 @@ MouseSynchronizeRoutine(PVOID Context)
 	return TRUE;
 }
 
-VOID STDCALL
+NTSTATUS STDCALL
 SerialMouseStartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
 	PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
@@ -270,6 +270,8 @@ SerialMouseStartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 			IoStartNextPacket (DeviceObject, FALSE);
 		}
 	}
+
+	return STATUS_SUCCESS;
 }
 
 NTSTATUS STDCALL
@@ -652,9 +654,9 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 		return STATUS_UNSUCCESSFUL;
 	}
 
-	DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)SerialMouseDispatch;
-	DriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH)SerialMouseDispatch;
-	DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = (PDRIVER_DISPATCH)SerialMouseInternalDeviceControl;
+	DriverObject->MajorFunction[IRP_MJ_CREATE] = SerialMouseDispatch;
+	DriverObject->MajorFunction[IRP_MJ_CLOSE] = SerialMouseDispatch;
+	DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = SerialMouseInternalDeviceControl;
 	DriverObject->DriverStartIo = SerialMouseStartIo;
 
 	return STATUS_SUCCESS;
