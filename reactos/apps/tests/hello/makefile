@@ -2,6 +2,7 @@
 #
 #
 OBJECTS = ../common/crt0.o hello.o
+PROGS = hello.exe
 LIBS = ../../lib/kernel32/kernel32.a ../../lib/ntdll/ntdll.a
 CLEAN_FILES = hello.o hello.exe
 
@@ -14,13 +15,22 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 
 .phony: clean $(CLEAN_FILES:%=%_clean)
 
-floppy: $(FLOPPY_DIR)/apps/hello.exe
+floppy: $(PROGS:%=$(FLOPPY_DIR)/apps/%)
 
-$(FLOPPY_DIR)/apps/hello.exe: hello.exe
+$(PROGS:%=$(FLOPPY_DIR)/apps/%): $(FLOPPY_DIR)/apps/%: %
 ifeq ($(DOSCLI),yes)
-	$(CP) hello.exe $(FLOPPY_DIR)\apps\hello.exe
+	$(CP) $* $(FLOPPY_DIR)\apps\$*
 else
-	$(CP) hello.exe $(FLOPPY_DIR)/apps\hello.exe
+	$(CP) $* $(FLOPPY_DIR)/apps/$*
+endif
+
+dist: $(PROGS:%=../../$(DIST_DIR)/apps/%)
+
+$(PROGS:%=../../$(DIST_DIR)/apps/%): ../../$(DIST_DIR)/apps/%: %
+ifeq ($(DOSCLI),yes)
+	$(CP) $* ..\..\$(DIST_DIR)\apps\$*
+else
+	$(CP) $* ../../$(DIST_DIR)/apps/$*
 endif
 
 hello.exe: $(OBJECTS) $(LIBS)

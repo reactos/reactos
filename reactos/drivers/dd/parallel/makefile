@@ -1,6 +1,7 @@
 #
 #
 #
+TARGET=parallel
 OBJECTS= parallel.o ../../../ntoskrnl/ntoskrnl.a
 
 all: parallel.sys
@@ -16,13 +17,22 @@ clean:
 
 .phony: clean
 
-floppy: $(FLOPPY_DIR)/drivers/parallel.sys
+floppy: $(FLOPPY_DIR)/drivers/$(TARGET).sys
 
-$(FLOPPY_DIR)/drivers/parallel.sys: parallel.sys
+$(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
 ifeq ($(DOSCLI),yes)
-	$(CP) parallel.sys $(FLOPPY_DIR)\drivers\parallel.sys
+	$(CP) $(TARGET).sys $(FLOPPY_DIR)\drivers\$(TARGET).sys
 else
-	$(CP) parallel.sys $(FLOPPY_DIR)/drviers/parallel.sys
+	$(CP) $(TARGET).sys $(FLOPPY_DIR)/drivers/$(TARGET).sys
+endif
+
+dist: ../../../$(DIST_DIR)/drivers/$(TARGET).sys
+
+../../../$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
+ifeq ($(DOSCLI),yes)
+	$(CP) $(TARGET).sys ..\..\..\$(DIST_DIR)\drivers\$(TARGET).sys
+else
+	$(CP) $(TARGET).sys ../../../$(DIST_DIR)/drivers/$(TARGET).sys
 endif
 
 parallel.sys: $(OBJECTS)

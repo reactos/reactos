@@ -21,5 +21,13 @@ else
 	$(CP) loadros.com $(FLOPPY_DIR)/loadros.com
 endif
 
+dist: ../../$(DIST_DIR)/loadros.com
+
+../../$(DIST_DIR)/loadros.com: loadros.com
+ifeq ($(DOSCLI),yes)
+	$(CP) loadros.com ..\..\$(DIST_DIR)\loadros.com
+else
+	$(CP) loadros.com ../../$(DIST_DIR)/loadros.com
+endif
 
 include ../../rules.mak

@@ -1,6 +1,7 @@
 #
 #
 #
+TARGET=mouse
 OBJECTS= mouse.o ../../../ntoskrnl/ntoskrnl.a
 
 all: mouse.o
@@ -16,13 +17,22 @@ clean:
 
 .phony: clean
 
-floppy: # $(FLOPPY_DIR)/drivers/mouse.sys
+floppy: $(FLOPPY_DIR)/drivers/$(TARGET).sys
 
-$(FLOPPY_DIR)/drivers/mouse.sys: mouse.sys
+$(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
 ifeq ($(DOSCLI),yes)
-	$(CP) mouse.sys $(FLOPPY_DIR)\drivers\mouse.sys
+	$(CP) $(TARGET).sys $(FLOPPY_DIR)\drivers\$(TARGET).sys
 else
-	$(CP) mouse.sys $(FLOPPY_DIR)/drviers/mouse.sys
+	$(CP) $(TARGET).sys $(FLOPPY_DIR)/drivers/$(TARGET).sys
+endif
+
+dist: ../../../$(DIST_DIR)/drivers/$(TARGET).sys
+
+../../../$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
+ifeq ($(DOSCLI),yes)
+	$(CP) $(TARGET).sys ..\..\..\$(DIST_DIR)\drivers\$(TARGET).sys
+else
+	$(CP) $(TARGET).sys ../../../$(DIST_DIR)/drivers/$(TARGET).sys
 endif
 
 mouse.sys: $(OBJECTS)

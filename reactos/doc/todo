@@ -1,3 +1,12 @@
+
+* Critical path tasks
+       Test and debug Registry routines
+       Finish multiple system service table support (HalRegisterServiceTable)
+       Modify GENNTDLL to generate all needed system service tables
+
+* These tasks would be nice
+       Separate HAL into KM DLL
+
 * Function groups totally or partially unimplemented
 
        Dma functions (see hal/x86/dma.c)

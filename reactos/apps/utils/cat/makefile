@@ -2,6 +2,7 @@
 #
 #
 OBJECTS= cat.o
+PROGS= cat.exe
 
 all: cat.exe
 
@@ -14,14 +15,25 @@ clean:
 
 .phony: clean
 
-floppy: $(FLOPPY_DIR)/apps/cat.exe
+floppy: $(PROGS:%=$(FLOPPY_DIR)/apps/%)
 
-$(FLOPPY_DIR)/apps/cat.exe: cat.exe
+$(PROGS:%=$(FLOPPY_DIR)/apps/%): $(FLOPPY_DIR)/apps/%: %
 ifeq ($(DOSCLI),yes)
-	$(CP) cat.exe $(FLOPPY_DIR)\apps\cat.exe
+	$(CP) $* $(FLOPPY_DIR)\apps\$*
 else
-	$(CP) cat.exe $(FLOPPY_DIR)/apps/cat.exe
+	$(CP) $* $(FLOPPY_DIR)/apps/$*
 endif
+
+dist: $(PROGS:%=../../$(DIST_DIR)/apps/%)
+
+$(PROGS:%=../../$(DIST_DIR)/apps/%): ../../$(DIST_DIR)/apps/%: %
+ifeq ($(DOSCLI),yes)
+	$(CP) $* ..\..\$(DIST_DIR)\apps\$*
+else
+	$(CP) $* ../../$(DIST_DIR)/apps/$*
+endif
+
+.PHONY: floppy dist
 
 cat.exe: $(OBJECTS) $(LIBS)
 	$(CC) $(OBJECTS) -o cat.exe

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.17 1999/06/25 04:35:50 rex Exp $
+# $Id: makefile,v 1.18 1999/07/16 23:37:04 rex Exp $
 #
 # ReactOS Operating System
 #
@@ -98,13 +98,22 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 
 .PHONY: clean $(CLEAN_FILES:%=%_clean)
 
-floppy: $(FLOPPY_DIR)/dlls/ntdll.dll
+floppy: $(FLOPPY_DIR)/dlls/$(TARGET).dll
 
-$(FLOPPY_DIR)/dlls/ntdll.dll: ntdll.dll
+$(FLOPPY_DIR)/dlls/$(TARGET).dll: $(TARGET).dll
 ifeq ($(DOSCLI),yes)
-	$(CP) ntdll.dll $(FLOPPY_DIR)\dlls\ntdll.dll
+	$(CP) $(TARGET).dll $(FLOPPY_DIR)\dlls\$(TARGET).dll
 else
-	$(CP) ntdll.dll $(FLOPPY_DIR)/dlls/ntdll.dll
+	$(CP) $(TARGET).dll $(FLOPPY_DIR)/dlls/$(TARGET).dll
+endif
+
+dist: $(DIST_DIR)/dlls/$(TARGET).dll
+
+$(DIST_DIR)/dlls/$(TARGET).dll: $(TARGET).dll
+ifeq ($(DOSCLI),yes)
+	$(CP) $(TARGET).dll ..\..\$(DIST_DIR)\dlls\$(TARGET).dll
+else
+	$(CP) $(TARGET).dll ../../$(DIST_DIR)/dlls/$(TARGET).dll
 endif
 
 #WARNINGS_ARE_ERRORS = yes

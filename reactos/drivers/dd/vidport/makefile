@@ -1,6 +1,7 @@
 #
 #
 #
+TARGET=vidport
 OBJECTS = vidport.o ../../../ntoskrnl/ntoskrnl.a
 
 all: vidport.sys
@@ -16,13 +17,22 @@ clean:
 
 .phony: clean
 
-floppy: $(FLOPPY_DIR)/drivers/vidport.sys
+floppy: $(FLOPPY_DIR)/drivers/$(TARGET).sys
 
-$(FLOPPY_DIR)/drivers/vidport.sys: vidport.sys
+$(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
 ifeq ($(DOSCLI),yes)
-	$(CP) vidport.sys $(FLOPPY_DIR)\drivers\vidport.sys
+	$(CP) $(TARGET).sys $(FLOPPY_DIR)\drivers\$(TARGET).sys
 else
-	$(CP) vidport.sys $(FLOPPY_DIR)/drviers/vidport.sys
+	$(CP) $(TARGET).sys $(FLOPPY_DIR)/drivers/$(TARGET).sys
+endif
+
+dist: ../../../$(DIST_DIR)/drivers/$(TARGET).sys
+
+../../../$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
+ifeq ($(DOSCLI),yes)
+	$(CP) $(TARGET).sys ..\..\..\$(DIST_DIR)\drivers\$(TARGET).sys
+else
+	$(CP) $(TARGET).sys ../../../$(DIST_DIR)/drivers/$(TARGET).sys
 endif
 
 vidport.sys: $(OBJECTS)

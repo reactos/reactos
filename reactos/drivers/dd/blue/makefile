@@ -1,6 +1,7 @@
 #
 #
 #
+TARGET = blue
 
 OBJECTS = blue.o ../../../ntoskrnl/ntoskrnl.a
 
@@ -17,13 +18,22 @@ clean:
 
 .phony: clean
 
-floppy: $(FLOPPY_DIR)/drivers/blue.sys
+floppy: $(FLOPPY_DIR)/drivers/$(TARGET).sys
 
-$(FLOPPY_DIR)/drivers/blue.sys: blue.sys
+$(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
 ifeq ($(DOSCLI),yes)
-	$(CP) blue.sys $(FLOPPY_DIR)\drivers\blue.sys
+	$(CP) $(TARGET).sys $(FLOPPY_DIR)\drivers\$(TARGET).sys
 else
-	$(CP) blue.sys $(FLOPPY_DIR)/drviers/blue.sys
+	$(CP) $(TARGET).sys $(FLOPPY_DIR)/drivers/$(TARGET).sys
+endif
+
+dist: ../../../$(DIST_DIR)/drivers/$(TARGET).sys
+
+../../../$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
+ifeq ($(DOSCLI),yes)
+	$(CP) $(TARGET).sys ..\..\..\$(DIST_DIR)\drivers\$(TARGET).sys
+else
+	$(CP) $(TARGET).sys ../../../$(DIST_DIR)/drivers/$(TARGET).sys
 endif
 
 blue.sys: $(OBJECTS)

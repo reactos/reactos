@@ -2,8 +2,9 @@
 #
 #
 OBJECTS= args.o
+PROGS= args.exe
 
-all: args.exe
+all: $(PROGS)
 
 .phony: all
 
@@ -14,13 +15,22 @@ clean:
 
 .phony: clean
 
-floppy: $(FLOPPY_DIR)/apps/args.exe
+floppy: $(PROGS:%=$(FLOPPY_DIR)/apps/%)
 
-$(FLOPPY_DIR)/apps/args.exe: args.exe
+$(PROGS:%=$(FLOPPY_DIR)/apps/%): $(FLOPPY_DIR)/apps/%: %
 ifeq ($(DOSCLI),yes)
-	$(CP) args.exe $(FLOPPY_DIR)\apps\args.exe
+	$(CP) $* $(FLOPPY_DIR)\apps\$*
 else
-	$(CP) args.exe $(FLOPPY_DIR)/apps\args.exe
+	$(CP) $* $(FLOPPY_DIR)/apps/$*
+endif
+
+dist: $(PROGS:%=../../$(DIST_DIR)/apps/%)
+
+$(PROGS:%=../../$(DIST_DIR)/apps/%): ../../$(DIST_DIR)/apps/%: %
+ifeq ($(DOSCLI),yes)
+	$(CP) $* ..\..\$(DIST_DIR)\apps\$*
+else
+	$(CP) $* ../../$(DIST_DIR)/apps/$*
 endif
 
 args.exe: $(OBJECTS) $(LIBS)

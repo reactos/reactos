@@ -1,6 +1,7 @@
 #
 #
 #
+TARGET= serial
 OBJECTS= serial.o ../../../ntoskrnl/ntoskrnl.a
 
 all: serial.sys
@@ -16,13 +17,22 @@ clean:
 
 .phony: clean
 
-floppy: $(FLOPPY_DIR)/drivers/serial.sys
+floppy: $(FLOPPY_DIR)/drivers/$(TARGET).sys
 
-$(FLOPPY_DIR)/drivers/serial.sys: serial.sys
+$(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
 ifeq ($(DOSCLI),yes)
-	$(CP) serial.sys $(FLOPPY_DIR)\drivers\serial.sys
+	$(CP) $(TARGET).sys $(FLOPPY_DIR)\drivers\$(TARGET).sys
 else
-	$(CP) serial.sys $(FLOPPY_DIR)/drviers/serial.sys
+	$(CP) $(TARGET).sys $(FLOPPY_DIR)/drivers/$(TARGET).sys
+endif
+
+dist: ../../../$(DIST_DIR)/drivers/$(TARGET).sys
+
+../../../$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
+ifeq ($(DOSCLI),yes)
+	$(CP) $(TARGET).sys ..\..\..\$(DIST_DIR)\drivers\$(TARGET).sys
+else
+	$(CP) $(TARGET).sys ../../../$(DIST_DIR)/drivers/$(TARGET).sys
 endif
 
 serial.sys: $(OBJECTS)

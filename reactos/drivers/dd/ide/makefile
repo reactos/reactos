@@ -1,6 +1,7 @@
 #
 #
 #
+TARGET=ide
 OBJECTS = ide.o ../../../ntoskrnl/ntoskrnl.a
 
 all: ide.sys
@@ -16,13 +17,22 @@ clean:
 
 .phony: clean
 
-floppy: $(FLOPPY_DIR)/ide.sys
+floppy: $(FLOPPY_DIR)/drivers/$(TARGET).sys
 
-$(FLOPPY_DIR)/ide.sys: ide.sys
+$(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
 ifeq ($(DOSCLI),yes)
-	$(CP) ide.sys $(FLOPPY_DIR)\ide.sys
+	$(CP) $(TARGET).sys $(FLOPPY_DIR)\drivers\$(TARGET).sys
 else
-	$(CP) ide.sys $(FLOPPY_DIR)/ide.sys
+	$(CP) $(TARGET).sys $(FLOPPY_DIR)/drivers/$(TARGET).sys
+endif
+
+dist: ../../../$(DIST_DIR)/drivers/$(TARGET).sys
+
+../../../$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
+ifeq ($(DOSCLI),yes)
+	$(CP) $(TARGET).sys ..\..\..\$(DIST_DIR)\drivers\$(TARGET).sys
+else
+	$(CP) $(TARGET).sys ../../../$(DIST_DIR)/drivers/$(TARGET).sys
 endif
 
 ide.sys: $(OBJECTS)

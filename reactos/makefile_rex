@@ -17,7 +17,7 @@ include rules.mak
 COMPONENTS = iface_native ntoskrnl
 DLLS = ntdll kernel32 crtdll fmifs gdi32
 #DLLS = advapi32 mingw32 user32
-SUBSYS = # win32k
+#SUBSYS = win32k
 
 #
 # Select the server(s) you want to build
@@ -34,8 +34,8 @@ LOADERS = dos
 #
 # Select the device drivers and filesystems you want
 #
-DEVICE_DRIVERS = blue ide keyboard mouse null parallel serial vidport
-# DEVICE_DRIVERS = beep event floppy ide_test sound test test1
+DEVICE_DRIVERS = blue ide keyboard null parallel serial vidport
+# DEVICE_DRIVERS = beep event floppy ide_test mouse sound test test1
 FS_DRIVERS = vfat
 # FS_DRIVERS = minix ext2 template
 KERNEL_SERVICES = $(DEVICE_DRIVERS) $(FS_DRIVERS)
@@ -54,7 +54,7 @@ floppy: make_floppy_dirs autoexec_floppy $(COMPONENTS:%=%_floppy) \
         $(DLLS:%=%_floppy) $(LOADERS:%=%_floppy) \
         $(KERNEL_SERVICES:%=%_floppy) $(APPS:%=%_floppy)
 
-dist: clean_dist_dir $(COMPONENTS:%=%_dist) $(DLLS:%=%_dist) \
+dist: clean_dist_dir make_dist_dirs $(COMPONENTS:%=%_dist) $(DLLS:%=%_dist) \
       $(LOADERS:%=%_dist) $(KERNEL_SERVICES:%=%_dist) $(APPS:%=%_dist)
 
 #
@@ -224,7 +224,7 @@ endif
 # Make a distribution saveset
 #
 
-clean_dist_dirs:
+clean_dist_dir:
 ifeq ($(DOSCLI),yes)
 	$(RM) $(DIST_DIR)\dlls\*.*
 	$(RM) $(DIST_DIR)\apps\*.*
@@ -247,7 +247,7 @@ else
 	mkdir $(DIST_DIR) $(DIST_DIR)/dlls $(DIST_DIR)/apps $(DIST_DIR)/drivers
 endif
 
-.PHONY: clean_dist_dirs make_dist_dirs
+.PHONY: clean_dist_dir make_dist_dirs
 
 
 

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.31 1999/06/25 04:35:45 rex Exp $
+# $Id: makefile,v 1.32 1999/07/16 23:37:04 rex Exp $
 #
 # ReactOS Operating System
 #
@@ -207,15 +207,23 @@ clean: $(CLEAN_FILES:%=%_clean)
 $(CLEAN_FILES:%=%_clean): %_clean:
 	- $(RM) $*
 
-floppy: $(FLOPPY_DIR)/dlls/crtdll.dll
+floppy: $(FLOPPY_DIR)/dlls/$(TARGET).dll
 
-$(FLOPPY_DIR)/dlls/crtdll.dll: crtdll.dll
+$(FLOPPY_DIR)/dlls/$(TARGET).dll: $(TARGET).dll
 ifeq ($(DOSCLI),yes)
-	$(CP) crtdll.dll $(FLOPPY_DIR)\dlls\crtdll.dll
+	$(CP) $(TARGET).dll $(FLOPPY_DIR)\dlls\$(TARGET).dll
 else
-	$(CP) crtdll.dll $(FLOPPY_DIR)/dlls/crtdll.dll
+	$(CP) $(TARGET).dll $(FLOPPY_DIR)/dlls/$(TARGET).dll
 endif
 
+dist: $(DIST_DIR)/dlls/$(TARGET).dll
+
+$(DIST_DIR)/dlls/$(TARGET).dll: $(TARGET).dll
+ifeq ($(DOSCLI),yes)
+	$(CP) $(TARGET).dll ..\..\$(DIST_DIR)\dlls\$(TARGET).dll
+else
+	$(CP) $(TARGET).dll ../../$(DIST_DIR)/dlls/$(TARGET).dll
+endif
 
 include ../../rules.mak
 

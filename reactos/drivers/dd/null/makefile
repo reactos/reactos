@@ -1,6 +1,7 @@
 #
 #
 #
+TARGET=null
 OBJECTS= null.o ../../../ntoskrnl/ntoskrnl.a
 
 all: null.sys
@@ -16,13 +17,22 @@ clean:
 
 .phony: clean
 
-floppy: $(FLOPPY_DIR)/drivers/null.sys
+floppy: $(FLOPPY_DIR)/drivers/$(TARGET).sys
 
-$(FLOPPY_DIR)/drivers/null.sys: null.sys
+$(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
 ifeq ($(DOSCLI),yes)
-	$(CP) null.sys $(FLOPPY_DIR)\drivers\null.sys
+	$(CP) $(TARGET).sys $(FLOPPY_DIR)\drivers\$(TARGET).sys
 else
-	$(CP) null.sys $(FLOPPY_DIR)/drviers/null.sys
+	$(CP) $(TARGET).sys $(FLOPPY_DIR)/drivers/$(TARGET).sys
+endif
+
+dist: ../../../$(DIST_DIR)/drivers/$(TARGET).sys
+
+../../../$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
+ifeq ($(DOSCLI),yes)
+	$(CP) $(TARGET).sys ..\..\..\$(DIST_DIR)\drivers\$(TARGET).sys
+else
+	$(CP) $(TARGET).sys ../../../$(DIST_DIR)/drivers/$(TARGET).sys
 endif
 
 null.sys: $(OBJECTS)

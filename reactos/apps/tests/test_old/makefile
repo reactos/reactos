@@ -1,31 +1,38 @@
 #
 #
 #
-TEST_PROGS= test-stdio tst-printf tstdiomisc bug2 bug3 \
-            temptest test-fseek test_rdwr
+PROGS= test-stdio tst-printf tstdiomisc bug2 bug3 \
+       temptest test-fseek test_rdwr
 
-all: $(TEST_PROGS:%=%.exe)
+all: $(PROGS:%=%.exe)
 
 .phony: all
 
-$(TEST_PROGS:%=%_clean): %_clean:
+$(PROGS:%=%_clean): %_clean:
 	- $(RM) $*.o
 	- $(RM) $*.exe
 	- $(RM) $*.sym
 
-clean: $(TEST_PROGS:%=%_clean)
+clean: $(PROGS:%=%_clean)
 
 .phony: clean
 
-floppy: # $(TEST_PROGS:%=%_floppy)
+floppy: # $(PROGS:%=$(FLOPPY_DIR)/apps/%.exe)
 
-$(TEST_PROGS:%=%_floppy): %_floppy: $(FLOPPY_DIR)/apps/%.exe
-
-$(TEST_PROGS:%=$(FLOPPY_DIR)/apps/%.exe): $(FLOPPY_DIR)/apps/%.exe: %.exe
+$(PROGS:%=$(FLOPPY_DIR)/apps/%.exe): $(FLOPPY_DIR)/apps/%.exe: %.exe
 ifeq ($(DOSCLI),yes)
 	$(CP) $*.exe $(FLOPPY_DIR)\apps\$*.exe
 else
 	$(CP) $*.exe $(FLOPPY_DIR)/apps/$*.exe
+endif
+
+dist: $(PROGS:%=../../$(DIST_DIR)/apps/%.exe)
+
+$(PROGS:%=../../$(DIST_DIR)/apps/%.exe): ../../$(DIST_DIR)/apps/%.exe: %.exe
+ifeq ($(DOSCLI),yes)
+	$(CP) $*.exe ..\..\$(DIST_DIR)\apps\$*.exe
+else
+	$(CP) $*.exe ../../$(DIST_DIR)/apps/$*.exe
 endif
 
 bug2.exe: bug2.c

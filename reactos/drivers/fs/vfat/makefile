@@ -1,6 +1,7 @@
 #
 #
 #
+TARGET=vfatfsd
 OBJECTS = blockdev.o dir.o dirwr.o iface.o ../../../ntoskrnl/ntoskrnl.a
 
 all: vfatfsd.sys
@@ -23,13 +24,22 @@ endif
 
 .phony: clean
 
-floppy: $(FLOPPY_DIR)/drivers/vfatfsd.sys
+floppy: $(FLOPPY_DIR)/drivers/$(TARGET).sys
 
-$(FLOPPY_DIR)/drivers/vfatfsd.sys: vfatfsd.sys
+$(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
 ifeq ($(DOSCLI),yes)
-	$(CP) vfatfsd.sys $(FLOPPY_DIR)\vfatfsd.sys
+	$(CP) $(TARGET).sys $(FLOPPY_DIR)\drivers\$(TARGET).sys
 else
-	$(CP) vfatfsd.sys $(FLOPPY_DIR)/vfatfsd.sys
+	$(CP) $(TARGET).sys $(FLOPPY_DIR)/drivers/$(TARGET).sys
+endif
+
+dist: ../../../$(DIST_DIR)/drivers/$(TARGET).sys
+
+../../../$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
+ifeq ($(DOSCLI),yes)
+	$(CP) $(TARGET).sys ..\..\..\$(DIST_DIR)\drivers\$(TARGET).sys
+else
+	$(CP) $(TARGET).sys ../../../$(DIST_DIR)/drivers/$(TARGET).sys
 endif
 
 vfatfsd.sys: $(OBJECTS)
