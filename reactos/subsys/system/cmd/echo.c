@@ -1,4 +1,4 @@
-/* $Id: echo.c,v 1.3 2004/04/30 16:52:41 navaraf Exp $
+/* $Id: echo.c,v 1.4 2004/08/15 22:15:23 chorns Exp $
  *
  *  ECHO.C - internal echo commands.
  *
@@ -26,11 +26,10 @@
 
 #include "config.h"
 
-#include <windows.h>
+#include "precomp.h"
 #include <tchar.h>
 #include <string.h>
 
-#include "cmd.h"
 #include "batch.h"
 
 

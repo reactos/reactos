@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.17 2004/07/16 20:39:06 jc Exp $
+/* $Id: cmd.c,v 1.18 2004/08/15 22:15:23 chorns Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -133,7 +133,7 @@
 
 #include "config.h"
 
-#include <windows.h>
+#include "precomp.h"
 #include <tchar.h>
 #include <string.h>
 #include <stdlib.h>
@@ -146,7 +146,6 @@
 #define NT_SUCCESS(StatCode)  ((NTSTATUS)(StatCode) >= 0)
 #endif
 
-#include "cmd.h"
 #include "batch.h"
 
 #include <shellapi.h>

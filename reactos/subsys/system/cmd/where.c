@@ -76,11 +76,9 @@
 
 #include "config.h"
 
-#include <windows.h>
+#include "precomp.h"
 #include <string.h>
 #include <stdlib.h>
-
-#include "cmd.h"
 
 
 /* initial size of environment variable buffer */

@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.10 2004/07/03 17:40:24 navaraf Exp $
+/* $Id: dir.c,v 1.11 2004/08/15 22:15:23 chorns Exp $
  *
  *  DIR.C - dir internal command.
  *
@@ -124,14 +124,12 @@
 #include "config.h"
 
 #ifdef INCLUDE_CMD_DIR
-#include <windows.h>
+#include "precomp.h"
 #include <tchar.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
-
-#include "cmd.h"
 
 
 /* flag definitions */

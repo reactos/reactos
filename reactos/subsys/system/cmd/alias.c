@@ -31,13 +31,11 @@
 
 #ifdef FEATURE_ALIASES
 
-#include <windows.h>
+#include "precomp.h"
 #include <tchar.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-
-#include "cmd.h"
 
 
 typedef struct tagALIAS

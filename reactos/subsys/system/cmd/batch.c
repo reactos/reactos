@@ -1,4 +1,4 @@
-/* $Id: batch.c,v 1.3 2003/12/26 09:52:37 navaraf Exp $
+/* $Id: batch.c,v 1.4 2004/08/15 22:15:23 chorns Exp $
  *
  *  BATCH.C - batch file processor for CMD.EXE.
  *
@@ -58,13 +58,12 @@
 
 #include "config.h"
 
-#include <windows.h>
+#include "precomp.h"
 #include <tchar.h>
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
 
-#include "cmd.h"
 #include "batch.h"
 
 

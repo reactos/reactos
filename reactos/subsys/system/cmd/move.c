@@ -26,12 +26,10 @@
 
 #ifdef INCLUDE_CMD_MOVE
 
-#include <windows.h>
+#include "precomp.h"
 #include <tchar.h>
 #include <string.h>
 #include <ctype.h>
-
-#include "cmd.h"
 
 
 #define OVERWRITE_NO     0

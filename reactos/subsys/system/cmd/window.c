@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.1 2003/03/20 19:19:23 rcampbell Exp $
+/* $Id: window.c,v 1.2 2004/08/15 22:15:23 chorns Exp $
  *
  * WINDOW.C - activate & window internal commands.
  *
@@ -17,8 +17,7 @@
 
 #if (  defined(INCLUDE_CMD_WINDOW) ||  defined(INCLUDE_CMD_ACTIVATE)  )
 
-#include "cmd.h"
-#include <windows.h>
+#include "precomp.h"
 #include <stdlib.h>
 #include <string.h>
 #include <tchar.h>

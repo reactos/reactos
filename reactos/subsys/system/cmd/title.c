@@ -10,11 +10,9 @@
 
 #ifdef INCLUDE_CMD_TITLE
 
-#include <windows.h>
+#include "precomp.h"
 #include <tchar.h>
 #include <string.h>
-
-#include "cmd.h"
 
 
 INT cmd_title (LPTSTR cmd, LPTSTR param)

@@ -38,14 +38,13 @@
 
 #ifdef INCLUDE_CMD_DEL
 
-#include <windows.h>
+#include "precomp.h"
 #include <tchar.h>
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <math.h>
 
-#include "cmd.h"
 #include "batch.h"
 
 

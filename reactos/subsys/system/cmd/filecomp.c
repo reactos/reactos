@@ -22,14 +22,12 @@
 
 #include "config.h"
 
-#include <windows.h>
+#include "precomp.h"
 #include <tchar.h>
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <stdio.h>
-
-#include "cmd.h"
 
 
 #ifdef FEATURE_UNIX_FILENAME_COMPLETION

@@ -13,12 +13,10 @@
 
 #include "config.h"
 
-#include <windows.h>
+#include "precomp.h"
 #include <tchar.h>
 #include <string.h>
 #include <stdlib.h>
-
-#include "cmd.h"
 
 
 TCHAR cDateSeparator;

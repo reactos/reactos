@@ -32,12 +32,10 @@
 
 #ifdef INCLUDE_CMD_DATE
 
-#include <windows.h>
+#include "precomp.h"
 #include <tchar.h>
 #include <string.h>
 #include <ctype.h>
-
-#include "cmd.h"
 
 
 static WORD awMonths[2][13] =

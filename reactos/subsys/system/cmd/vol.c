@@ -24,11 +24,9 @@
 
 #ifdef INCLUDE_CMD_VOL
 
-#include <windows.h>
+#include "precomp.h"
 #include <tchar.h>
 #include <string.h>
-
-#include "cmd.h"
 
 
 static INT

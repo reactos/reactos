@@ -19,10 +19,9 @@
 
 #include "config.h"
 
-#include <windows.h>
+#include "precomp.h"
 #include <tchar.h>
 
-#include "cmd.h"
 
 /* a list of all the internal commands, associating their command names */
 /* to the functions to process them                                     */

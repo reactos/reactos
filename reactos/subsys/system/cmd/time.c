@@ -25,12 +25,10 @@
 
 #ifdef INCLUDE_CMD_TIME
 
-#include <windows.h>
+#include "precomp.h"
 #include <tchar.h>
 #include <string.h>
 #include <ctype.h>
-
-#include "cmd.h"
 
 
 static BOOL ParseTime (LPTSTR s)

@@ -27,11 +27,9 @@
 
 #ifdef INCLUDE_CMD_CLS
 
-#include <windows.h>
+#include "precomp.h"
 #include <tchar.h>
 #include <string.h>
-
-#include "cmd.h"
 
 
 INT cmd_cls (LPTSTR cmd, LPTSTR param)

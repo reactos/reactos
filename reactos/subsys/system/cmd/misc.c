@@ -31,14 +31,12 @@
 
 #include "config.h"
 
-#include <windows.h>
+#include "precomp.h"
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <tchar.h>
-
-#include "cmd.h"
 
 
 /*

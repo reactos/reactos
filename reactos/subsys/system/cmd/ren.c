@@ -21,12 +21,11 @@
 
 #ifdef INCLUDE_CMD_RENAME
 
-#include <windows.h>
+#include "precomp.h"
 #include <tchar.h>
 #include <string.h>
 #include <ctype.h>
 
-#include "cmd.h"
 #include "batch.h"
 
 enum

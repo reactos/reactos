@@ -12,13 +12,11 @@
 
 #ifdef INCLUDE_CMD_FREE
 
-#include <windows.h>
+#include "precomp.h"
 #include <tchar.h>
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
-
-#include "cmd.h"
 
 
 /*

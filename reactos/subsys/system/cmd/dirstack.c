@@ -18,12 +18,10 @@
 
 #ifdef FEATURE_DIRECTORY_STACK
 
-#include <windows.h>
+#include "precomp.h"
 #include <tchar.h>
 #include <string.h>
 #include <stdlib.h>
-
-#include "cmd.h"
 
 
 typedef struct tagDIRENTRY

@@ -10,14 +10,10 @@
 #include "config.h"
 
 #ifdef INCLUDE_CMD_MSGBOX
-#include <windows.h>
+#include "precomp.h"
 #include <ctype.h>
 #include <string.h>
 #include <tchar.h>
-#include "cmd.h"
-//#include <assert.h>
-
-//#include <malloc.h>
 
 
 #define U_TYPE_INIT 0

@@ -19,12 +19,10 @@
 
 #include "config.h"
 
-#include <windows.h>
+#include "precomp.h"
 #include <tchar.h>
 #include <stdio.h>
 #include <stdarg.h>
-
-#include "cmd.h"
 
 
 #define INVALID_SWITCH		_T("Invalid switch - /%c\n")

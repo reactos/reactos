@@ -27,11 +27,9 @@
 
 #ifdef INCLUDE_CMD_TYPE
 
-#include <windows.h>
+#include "precomp.h"
 #include <tchar.h>
 #include <string.h>
-
-#include "cmd.h"
 
 
 INT cmd_type (LPTSTR cmd, LPTSTR param)

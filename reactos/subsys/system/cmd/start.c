@@ -11,13 +11,11 @@
 #include "config.h"
 
 #ifdef INCLUDE_CMD_START
-#include <windows.h>
+#include "precomp.h"
 #include <tchar.h>
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-
-#include "cmd.h"
 
 
 INT cmd_start (LPTSTR first, LPTSTR rest)

@@ -22,11 +22,10 @@
 
 #include "config.h"
 
-#include <windows.h>
+#include "precomp.h"
 #include <tchar.h>
 #include <string.h>
 
-#include "cmd.h"
 #include "batch.h"
 
 

@@ -19,11 +19,9 @@
 
 #ifdef INCLUDE_CMD_VERIFY
 
-#include <windows.h>
+#include "precomp.h"
 #include <tchar.h>
 #include <string.h>
-
-#include "cmd.h"
 
 
 /* global verify flag */

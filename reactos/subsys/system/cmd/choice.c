@@ -18,13 +18,12 @@
 
 #ifdef INCLUDE_CMD_CHOICE
 
-#include <windows.h>
+#include "precomp.h"
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <tchar.h>
 
-#include "cmd.h"
 #include "batch.h"
 
 

@@ -1,4 +1,4 @@
-/* $Id: call.c,v 1.2 2003/08/07 09:27:42 hbirr Exp $
+/* $Id: call.c,v 1.3 2004/08/15 22:15:23 chorns Exp $
  *
  *  CALL.C - call internal batch command.
  *
@@ -28,13 +28,12 @@
 
 #include "config.h"
 
-#include <windows.h>
+#include "precomp.h"
 #include <tchar.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "cmd.h"
 #include "batch.h"
 
 

@@ -16,7 +16,7 @@ is to be called
 other are internal service functions*/
 
 
-#include "cmd.h"
+#include "precomp.h"
 
 #include <ctype.h>
 #include <tchar.h>

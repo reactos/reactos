@@ -13,12 +13,10 @@
 
 #ifdef INCLUDE_CMD_CHCP
 
-#include <windows.h>
+#include "precomp.h"
 #include <tchar.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "cmd.h"
 
 
 INT CommandChcp (LPTSTR cmd, LPTSTR param)

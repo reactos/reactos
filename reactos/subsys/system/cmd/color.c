@@ -1,4 +1,4 @@
-/* $Id: color.c,v 1.4 2004/02/19 17:04:11 gvg Exp $
+/* $Id: color.c,v 1.5 2004/08/15 22:15:23 chorns Exp $
  *
  *  COLOR.C - color internal command.
  *
@@ -21,12 +21,11 @@
 #include "config.h"
 
 #ifdef INCLUDE_CMD_COLOR
-#include <windows.h>
+#include "precomp.h"
 #include <tchar.h>
 #include <string.h>
 #include <stdlib.h>
 
-#include "cmd.h"
 
 static VOID ColorHelp (VOID)
 {

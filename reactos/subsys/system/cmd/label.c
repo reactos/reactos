@@ -18,12 +18,10 @@
 
 #ifdef INCLUDE_CMD_LABEL
 
-#include <windows.h>
+#include "precomp.h"
 #include <tchar.h>
 #include <string.h>
 #include <ctype.h>
-
-#include "cmd.h"
 
 
 INT cmd_label (LPTSTR cmd, LPTSTR param)

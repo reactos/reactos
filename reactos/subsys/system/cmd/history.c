@@ -37,23 +37,15 @@
  *
  */ 
 
-
-
-
-
-
 #include "config.h"
-
 
 #ifdef FEATURE_HISTORY
 
-#include <windows.h>
+#include "precomp.h"
 #include <tchar.h>
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-
-#include "cmd.h"
 
 
 typedef struct tagHISTORY
