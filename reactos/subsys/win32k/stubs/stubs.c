@@ -659,27 +659,6 @@ EngSetPrinterData(
 
 BOOL
 STDCALL
-EngStretchBlt(
-	IN SURFOBJ  *psoDest,
-	IN SURFOBJ  *psoSrc,
-	IN SURFOBJ  *psoMask,
-	IN CLIPOBJ  *pco,
-	IN XLATEOBJ  *pxlo,
-	IN COLORADJUSTMENT  *pca,
-	IN POINTL  *pptlHTOrg,
-	IN RECTL  *prclDest,
-	IN RECTL  *prclSrc,
-	IN POINTL  *pptlMask,
-	IN ULONG  iMode
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_0bs7.htm
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-BOOL
-STDCALL
 EngStrokeAndFillPath(
 	IN SURFOBJ  *pso,
 	IN PATHOBJ  *ppo,
