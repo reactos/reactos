@@ -663,8 +663,6 @@ void Pane::insert_entries(Entry* dir, int idx)
 	if (!entry)
 		return;
 
-	SendMessage(_hwnd, WM_SETREDRAW, FALSE, 0);	//ShowWindow(_hwnd, SW_HIDE);
-
 	for(; entry; entry=entry->_next) {
 #ifndef _LEFT_FILES
 		if (_treePane &&
@@ -688,8 +686,6 @@ void Pane::insert_entries(Entry* dir, int idx)
 		if (_treePane && entry->_expanded)
 			insert_entries(entry->_down, idx);
 	}
-
-	SendMessage(_hwnd, WM_SETREDRAW, TRUE, 0);	//ShowWindow(_hwnd, SW_SHOW);
 }
 
 

@@ -99,7 +99,7 @@ struct ShellDirectory : public ShellEntry, public Directory
 	}
 
 	virtual void read_directory(int scan_flags=SCAN_ALL);
-	virtual const void* get_next_path_component(const void*);
+	virtual const void* get_next_path_component(const void*) const;
 	virtual Entry* find_entry(const void* p);
 
 	virtual bool get_path(PTSTR path) const;

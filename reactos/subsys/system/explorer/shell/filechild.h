@@ -113,7 +113,6 @@ protected:
 	Root	_root;
 	Pane*	_left;
 	Pane*	_right;
-	SORT_ORDER _sortOrder;
 	TCHAR	_path[MAX_PATH];
 	bool	_header_wdths_ok;
 

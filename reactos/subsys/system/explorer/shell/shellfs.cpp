@@ -433,7 +433,7 @@ void ShellDirectory::read_directory(int scan_flags)
 	_scanned = true;
 }
 
-const void* ShellDirectory::get_next_path_component(const void* p)
+const void* ShellDirectory::get_next_path_component(const void* p) const
 {
 	LPITEMIDLIST pidl = (LPITEMIDLIST)p;
 
@@ -449,6 +449,10 @@ const void* ShellDirectory::get_next_path_component(const void* p)
 Entry* ShellDirectory::find_entry(const void* p)
 {
 	LPITEMIDLIST pidl = (LPITEMIDLIST) p;
+
+	 // handle special case of empty trailing id list entry
+	if (!pidl->mkid.cb)
+		return this;
 
 	for(Entry*entry=_down; entry; entry=entry->_next)
 		if (entry->_etype == ET_SHELL) {

@@ -112,24 +112,24 @@ Entry::~Entry()
 
 
  // read directory tree and expand to the given location
-Entry* Entry::read_tree(const void* path, SORT_ORDER sortOrder)
+Entry* Entry::read_tree(const void* path, SORT_ORDER sortOrder, int scan_flags)
 {
 	CONTEXT("Entry::read_tree()");
 
 	HCURSOR old_cursor = SetCursor(LoadCursor(0, IDC_WAIT));
 
 	Entry* entry = this;
-	Entry* next_entry = entry;
 
-	for(const void*p=path; p&&next_entry; p=entry->get_next_path_component(p)) {
-		entry = next_entry;
-
-		entry->read_directory(sortOrder);
+	for(const void*p=path; p && entry; ) {
+		entry->smart_scan(sortOrder, scan_flags);
 
 		if (entry->_down)
 			entry->_expanded = true;
 
-		next_entry = entry->find_entry(p);
+		Entry* found = entry->find_entry(p);
+		p = entry->get_next_path_component(p);
+
+		entry = found;
 	}
 
 	SetCursor(old_cursor);
@@ -138,9 +138,9 @@ Entry* Entry::read_tree(const void* path, SORT_ORDER sortOrder)
 }
 
 
-void Entry::read_directory(SORT_ORDER sortOrder, int scan_flags)
+void Entry::read_directory_base(SORT_ORDER sortOrder, int scan_flags)
 {
-	CONTEXT("Entry::read_directory(SORT_ORDER)");
+	CONTEXT("Entry::read_directory_base()");
 
 	 // call into subclass
 	read_directory(scan_flags);
@@ -304,13 +304,13 @@ void Entry::sort_directory(SORT_ORDER sortOrder)
 }
 
 
-void Entry::smart_scan(int scan_flags)
+void Entry::smart_scan(SORT_ORDER sortOrder, int scan_flags)
 {
 	CONTEXT("Entry::smart_scan()");
 
 	if (!_scanned) {
 		free_subentries();
-		read_directory(SORT_NAME, scan_flags);	// we could use IShellFolder2::GetDefaultColumn to determine sort order
+		read_directory_base(sortOrder, scan_flags);	///@todo We could use IShellFolder2::GetDefaultColumn to determine sort order.
 	}
 }
 
@@ -475,18 +475,26 @@ void Entry::free_subentries()
 }
 
 
-const void* Directory::get_next_path_component(const void* p)
+Entry* Root::read_tree(LPCTSTR path, int scan_flags)
 {
-	LPCTSTR s = (LPCTSTR) p;
+	Entry* entry;
 
-	while(*s && *s!=TEXT('\\') && *s!=TEXT('/'))
-		++s;
+	if (path && *path)
+		entry = _entry->read_tree(path, _sort_order);
+	else {
+		entry = _entry->read_tree(NULL, _sort_order);
 
-	while(*s==TEXT('\\') || *s==TEXT('/'))
-		++s;
+		_entry->smart_scan();
 
-	if (!*s)
-		return NULL;
+		if (_entry->_down)
+			_entry->_expanded = true;
+	}
 
-	return s;
+	return entry;
+}
+
+
+Entry* Root::read_tree(LPCITEMIDLIST pidl, int scan_flags)
+{
+	return _entry->read_tree(pidl, _sort_order);
 }

@@ -92,7 +92,7 @@ struct Pane : public SubclassedWindow
 	void	calc_single_width(int col);
 	void	draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol=-1);
 
-	void	insert_entries(Entry* dir, int idx);
+	void	insert_entries(Entry* dir, int idx=-1);
 	BOOL	command(UINT cmd);
 	int		Notify(int id, NMHDR* pnmh);
 

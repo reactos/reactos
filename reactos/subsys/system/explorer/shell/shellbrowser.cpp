@@ -80,18 +80,20 @@ LRESULT ShellBrowserChild::Init(LPCREATESTRUCT pcs)
 	const String& root_name = GetDesktopFolder().get_name(_create_info._root_shell_path, SHGDN_FORPARSING);
 
 	_root._drive_type = DRIVE_UNKNOWN;
+	_root._sort_order = SORT_NAME;
+
 	lstrcpy(_root._volname, root_name);	// most of the time "Desktop"
 	_root._fs_flags = 0;
 	lstrcpy(_root._fs, TEXT("Desktop"));
 
-//@@	_root._entry->read_tree(shell_info._root_shell_path.get_folder(), info._shell_path, SORT_NAME/*_sortOrder*/);
+//@@	_root._entry->read_tree(shell_info._root_shell_path.get_folder(), info._shell_path, _root._sort_order/*_sortOrder*/);
 
 /*@todo
 	we should call read_tree() here to iterate through the hierarchy and open all folders from shell_info._root_shell_path to shell_info._shell_path
 	-> see FileChildWindow::FileChildWindow()
 */
 	_root._entry = new ShellDirectory(GetDesktopFolder(), _create_info._root_shell_path, _hwnd);
-	_root._entry->read_directory();
+	_root._entry->read_directory_base(_root._sort_order);
 
 	/* already filled by ShellDirectory constructor
 	lstrcpy(_root._entry->_data.cFileName, TEXT("Desktop")); */

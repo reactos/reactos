@@ -181,6 +181,23 @@ void RegDirectory::read_directory(int scan_flags)
 }
 
 
+const void* RegDirectory::get_next_path_component(const void* p) const
+{
+	LPCTSTR s = (LPCTSTR) p;
+
+	while(*s && *s!=TEXT('\\'))
+		++s;
+
+	while(*s==TEXT('\\'))
+		++s;
+
+	if (!*s)
+		return NULL;
+
+	return s;
+}
+
+
 Entry* RegDirectory::find_entry(const void* p)
 {
 	LPCTSTR name = (LPCTSTR)p;

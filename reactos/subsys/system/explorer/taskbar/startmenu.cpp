@@ -193,9 +193,9 @@ void StartMenu::AddEntries()
 			WaitCursor wait;
 
 #ifdef _LAZY_ICONEXTRACT
-			dir.smart_scan(SCAN_FILESYSTEM);	// lazy icon extraction, try to read directly from filesystem
+			dir.smart_scan(SORT_NAME, SCAN_FILESYSTEM);	// lazy icon extraction, try to read directly from filesystem
 #else
-			dir.smart_scan(SCAN_EXTRACT_ICONS|SCAN_FILESYSTEM);
+			dir.smart_scan(SORT_NAME, SCAN_EXTRACT_ICONS|SCAN_FILESYSTEM);
 #endif
 		}
 
@@ -1870,9 +1870,9 @@ void RecentStartMenu::AddEntries()
 			WaitCursor wait;
 
 #ifdef _LAZY_ICONEXTRACT
-			dir.smart_scan(SCAN_FILESYSTEM);
+			dir.smart_scan(SORT_NAME, SCAN_FILESYSTEM);
 #else
-			dir.smart_scan(SCAN_EXTRACT_ICONS|SCAN_FILESYSTEM);
+			dir.smart_scan(SORT_NAME, SCAN_EXTRACT_ICONS|SCAN_FILESYSTEM);
 #endif
 		}
 

@@ -376,7 +376,7 @@ void BookmarkList::import_IE_favorites(ShellDirectory& dir, HWND hwnd)
 {
 	TCHAR path[MAX_PATH], ext[_MAX_EXT];
 
-	dir.smart_scan(SCAN_FILESYSTEM);
+	dir.smart_scan(SORT_NAME, SCAN_FILESYSTEM);
 
 	for(Entry*entry=dir._down; entry; entry=entry->_next) {
 		if (entry->_shell_attribs & SFGAO_HIDDEN)	// ignore files like "desktop.ini"
