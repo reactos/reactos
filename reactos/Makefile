@@ -101,7 +101,7 @@ WINE_OTHER = unicode
 
 WINE_TOOLS = wrc winebuild
 
-WINE_DLLS = rpcrt4 mapi32 ole32 oleaut32 oledlg olepro32 olecli olesvr \
+WINE_DLLS = mapi32 ole32 oleaut32 oledlg olepro32 olecli olesvr \
             shell32 shlwapi comctl32 shfolder shdocvw commdlg \
             ddraw dinput dplay dplayx \
             psapi richedit serialui tapi32 urlmon winspool wintrust
