@@ -648,7 +648,7 @@ endif
 # Protect uncompatible files here with an ifneq
 # if needed, until their problems can be found
 #
-ifeq ($(DBG), 0)
+ifneq ($(DBG),1)
   MK_CFLAGS += -O2 -Wno-strict-aliasing
   MK_CPPFLAGS += -O2 -Wno-strict-aliasing
 endif
