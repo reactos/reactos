@@ -28,4 +28,10 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 /* include localised resources */
 
 #include "En.rc"
+#include "Fr.rc"
+#include "It.rc"
+#include "Nl.rc"
+#include "Pt.rc"
+#include "Ru.rc"
+#include "Si.rc"
 
