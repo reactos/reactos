@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.145 2003/11/24 00:22:53 arty Exp $
+/* $Id: window.c,v 1.146 2003/11/24 00:26:08 arty Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -162,6 +162,38 @@ IntIsWindow(HWND hWnd)
       return FALSE;
    else
       IntReleaseWindowObject(Window);
+
+   return TRUE;
+}
+
+/*
+ * IntIsMenu
+ *
+ * The function determines whether the specified menu handle identifies
+ * an existing menu.
+ *
+ * Parameters
+ *    hMenu
+ *       Handle to the menu to test.
+ *
+ * Return Value
+ *    If the menu handle identifies an existing menu, the return value
+ *    is TRUE. If the menu handle does not identify an existing menu,
+ *    the return value is FALSE. 
+ *
+ * FIXME: Move this routine to menu.c.
+ */
+
+BOOL FASTCALL
+IntIsMenu(HMENU hMenu)
+{
+
+   PMENU_OBJECT Menu;
+
+   if (!(Menu = IntGetMenuObject(hMenu)))
+      return FALSE;
+   else
+      IntReleaseMenuObject(Menu);
 
    return TRUE;
 }
@@ -842,7 +874,7 @@ IntSetFocusWindow(HWND hWnd)
           hWndTop = NtUserGetAncestor(hWndTop, GA_PARENT);
         }
 
-#if 0
+#if 0 /* FIXME */
       /* call hooks */
       if (HOOK_CallHooks(WH_CBT, HCBT_SETFOCUS, (WPARAM)hwnd, (LPARAM)previous, TRUE))
         {
@@ -860,13 +892,16 @@ IntSetFocusWindow(HWND hWnd)
               return NULL;
             }
 #endif
+#if 0 /* FIXME */
           if (! NtUserIsWindow(hWnd))
             {
               /* Abort if window destroyed */
               return NULL;
             }
+#endif
         }
     }
+#if 0 /* FIXME */
   else
     {
       /* call hooks */
@@ -876,6 +911,7 @@ IntSetFocusWindow(HWND hWnd)
           return NULL;
         }
     }
+#endif
 
   hWndOldFocus = set_focus_window(hWnd, WindowObject, hWndOldFocus);
   if (WindowObject != NULL)
