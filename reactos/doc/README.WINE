@@ -51,15 +51,15 @@ reactos/lib/oldpro32		# Out of sync
 reactos/lib/richedit		# Synced to Wine-20041019
 reactos/lib/rpcrt4		# Synced to Wine-20041019
 reactos/lib/setupapi		# Out of sync
-reactos/lib/shell32             # 2004/08/08: Syncing in progress
-reactos/lib/shlwapi             # Synced to Wine-20040914
+reactos/lib/shell32             # Synced to Wine-20041019
+reactos/lib/shlwapi             # Synced to Wine-20041019
 reactos/lib/twain		# Out of sync
-reactos/lib/unicode		# Dependancy on this lib needs to be removed. Synced to Wine-20040914
+reactos/lib/unicode		# Dependancy on this lib needs to be removed. Synced to Wine-20041019
 reactos/lib/version		# Out of sync
 reactos/lib/wininet		# Out of sync
-reactos/lib/winmm		# Synced to Wine-20040914
-reactos/lib/winmm/midimap       # Synced to Wine-20040914
-reactos/lib/winmm/wavemap       # Synced to Wine-20040914
+reactos/lib/winmm		# Synced to Wine-20041019
+reactos/lib/winmm/midimap       # Synced to Wine-20041019
+reactos/lib/winmm/wavemap       # Synced to Wine-20041019
 
 ReactOS shares the following programs with Winehq.
 reactos/subsys/system/regedit	#Out of sync
