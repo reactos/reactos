@@ -18,13 +18,9 @@
 #
 	
 
-export CC	= gcc
-export LD	= ld
-export AR	= ar
-export RM	= cmd /C del
-export CP	= cmd /C copy
-export NASM	= nasm
-export MAKE	= make
+CC		= gcc
+LD		= ld
+RM		= cmd /C del
 
 FLAGS = -Wall
 
@@ -34,16 +30,24 @@ LIBS = -lkernel32
 
 .PHONY : clean
 
-all: install.exe
+all: ../bootsect/fat.h ../bootsect/fat32.h install.exe
+
+../bootsect/fat.h ../bootsect/fat32.h :
+	@$(MAKE) --no-print-directory -C ../bootsect
 
 install.exe: $(OBJS)
+	@echo ===================================================== LINKING install
 	$(CC) $(FLAGS) -o install.exe $(OBJS)
 
 install.o: install.c install.h volume.h
+	@echo ===================================================== Compiling $*
 	$(CC) $(FLAGS) -o install.o -c install.c
 
 volume.o: volume.c volume.h install.h
+	@echo ===================================================== Compiling $*
 	$(CC) $(FLAGS) -o volume.o -c volume.c
 
 clean:
-	
+	@-$(RM) *.o
+	@-$(RM) *.exe
+	@echo Clean ALL done.

@@ -1,6 +1,6 @@
 #
 #  FreeLoader
-#  Copyright (C) 1999, 2000, 2001  Brian Palmer  <brianp@sginet.com>
+#  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -16,29 +16,34 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
-	
 
-export CC		= gcc
-export LD		= ld
-export AR		= ar
-export RM		= cmd /C del
-export CP		= cmd /C copy
-export NASM_CMD	= nasm
-export MAKE		= make
 
-.PHONY : bootsect freeldr install clean
+#############################################
+# PROGRAMS
+#
+CC			= gcc
+RM			= cmd /C del
 
-all: bootsect freeldr install
+#############################################
 
-bootsect:
-	$(MAKE) -C bootsect
+TOOLS	=	deptool	\
+			bin2c
 
-freeldr: bootsect
-	$(MAKE) -C freeldr
+#############################################
 
-install:
-	$(MAKE) -C install
+all : $(TOOLS)
 
+#############################################
+
+%: %.c
+	@echo ===================================================== Compiling $*
+	@$(CC) -Wall -O3 -o $@ $<
+
+#############################################
+
+
+.PHONY : clean
 clean:
-	$(RM) *.bin
-	$(MAKE) -C freeldr clean
+	@-$(RM) $(TOOLS)
+	@-$(RM) *.exe
+	@echo Clean ALL done.

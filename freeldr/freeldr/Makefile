@@ -41,10 +41,10 @@ RM			= cmd /C del
 CP			= cmd /C copy
 MKDIR		= cmd /C md
 RMDIR		= cmd /C rd
-MAKE		= make
 NASM_CMD	= nasm
 OBJCOPY		= objcopy
 DEPTOOL		= $(SRCDIR)/../tools/deptool
+TOOLSDIR	= $(SRCDIR)/../tools
 
 #-----------------------------------------------------------------------------------------------------
 # TEST IF WE ARE IN THE TARGET DIRECTORY
@@ -240,9 +240,8 @@ all : $(DEPTOOL) freeldr.sys
 
 #############################################
 
-$(DEPTOOL): $(DEPTOOL).c
-	@echo ===================================================== Compiling deptool
-	@$(CC) -Wall -O3 -o $@ $<
+$(DEPTOOL) :
+	@$(MAKE) --no-print-directory -C $(TOOLSDIR)
 
 #############################################
 

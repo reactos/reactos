@@ -17,33 +17,34 @@
 #  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 
-export CC		= gcc
-export LD		= ld
-export AR		= ar
-export RM		= cmd /C del
-export CP		= cmd /C copy
-export NASM_CMD	= nasm
+RM			= cmd /C del
+NASM_CMD	= nasm
+BIN2C		= ../tools/bin2c
+TOOLSDIR	= ../tools
 
 .PHONY : clean
 
-all: fat.bin fat32.bin isoboot.bin bin2c.exe
+all: $(BIN2C) fat.bin fat32.bin isoboot.bin
 
-fat.bin: fat.asm bin2c.exe
-	$(NASM_CMD) -o fat.bin -f bin fat.asm
-	bin2c fat.bin fat.h fat_data
+$(BIN2C) :
+	@$(MAKE) --no-print-directory -C $(TOOLSDIR)
+
+fat.bin : fat.asm $(BIN2C)
+	@echo ===================================================== Assembling fat
+	@$(NASM_CMD) -o fat.bin -f bin fat.asm
+	@$(BIN2C) fat.bin fat.h fat_data
 
 
-fat32.bin: fat32.asm bin2c.exe
-	$(NASM_CMD) -o fat32.bin -f bin fat32.asm
-	bin2c fat32.bin fat32.h fat32_data
+fat32.bin : fat32.asm $(BIN2C)
+	@echo ===================================================== Assembling fat32
+	@$(NASM_CMD) -o fat32.bin -f bin fat32.asm
+	@$(BIN2C) fat32.bin fat32.h fat32_data
 
-isoboot.bin: isoboot.asm
-	$(NASM_CMD) -o isoboot.bin -f bin isoboot.asm
-
-bin2c.exe: bin2c.c
-	$(CC) -o bin2c.exe bin2c.c
+isoboot.bin : isoboot.asm
+	@echo ===================================================== Assembling isoboot
+	@$(NASM_CMD) -o isoboot.bin -f bin isoboot.asm
 
 clean:
-	- $(RM) *.bin
-	- $(RM) *.exe
-	- $(RM) *.h
+	@-$(RM) *.bin
+	@-$(RM) *.h
+	@echo Clean ALL done.
