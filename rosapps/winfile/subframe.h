@@ -1,7 +1,7 @@
 /*
  *  ReactOS winfile
  *
- *  listview.h
+ *  subframe.h
  *
  *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
  *
@@ -20,8 +20,8 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef __LISTVIEW_H__
-#define __LISTVIEW_H__
+#ifndef __SUBFRAME_H__
+#define __SUBFRAME_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,16 +34,14 @@ extern "C" {
 #include "resource.h"
 
 
-HWND CreateListView(HWND hwndParent, LPSTR lpszFileName);
-HWND create_header(HWND parent, Pane* pane, int id);
-void resize_tree(ChildWnd* child, int cx, int cy);
+LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
 
-void create_list_window(HWND parent, Pane* pane, int id, int id_header);
-LRESULT CALLBACK ListWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
+void resize_frame_client(HWND hwnd);
+
 
 
 #ifdef __cplusplus
 };
 #endif
 
-#endif // __LISTVIEW_H__
+#endif // __SUBFRAME_H__

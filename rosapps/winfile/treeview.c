@@ -1,7 +1,7 @@
 /*
  *  ReactOS winfile
  *
- *  treeview.cpp
+ *  treeview.c
  *
  *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
  *
@@ -33,13 +33,24 @@
 #include <process.h>
 #include <stdio.h>
 #endif
-    
+
+#include <shellapi.h>
+//#include <winspool.h>
+#include <windowsx.h>
+#include <shellapi.h>
+#include <ctype.h>
+#include <assert.h>
+#define ASSERT assert
+
 #include "winfile.h"
 #include "treeview.h"
+#include "entries.h"
+#include "utils.h"
+
 
 // Global Variables:
-extern HINSTANCE hInst;                   // current instance
-extern HWND hMainWnd;                     // Main Window
+extern HINSTANCE hInst;
+
 
 // Global variables and constants 
 // Image_Open, Image_Closed, and Image_Root - integer variables for 
@@ -200,12 +211,103 @@ HWND CreateTreeView(HWND hwndParent, LPSTR lpszFileName)
         WS_VISIBLE | WS_CHILD | WS_BORDER | TVS_HASLINES | TVS_HASBUTTONS | TVS_LINESATROOT,
         0, 0, rcClient.right, rcClient.bottom, 
         hwndParent, (HMENU)TREE_WINDOW, hInst, NULL); 
- 
+/* 
+    hwndTV = CreateWindow(_T("ListBox"), _T(""), WS_CHILD|WS_VISIBLE|WS_HSCROLL|WS_VSCROLL|
+						LBS_DISABLENOSCROLL|LBS_NOINTEGRALHEIGHT|LBS_OWNERDRAWFIXED|LBS_NOTIFY,
+						0, 0, 0, 0, parent, (HMENU)id, Globals.hInstance, 0);
+ */
     // Initialize the image list, and add items to the control. 
     if (!InitTreeViewImageLists(hwndTV) || !InitTreeViewItems(hwndTV, lpszFileName)) { 
         DestroyWindow(hwndTV); 
-        return FALSE; 
+        return NULL; 
     } 
     return hwndTV;
 } 
+
+////////////////////////////////////////////////////////////////////////////////
+static WNDPROC g_orgTreeWndProc;
+
+LRESULT CALLBACK TreeWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
+{
+	ChildWnd* child = (ChildWnd*)GetWindowLong(GetParent(hwnd), GWL_USERDATA);
+	Pane* pane = (Pane*)GetWindowLong(hwnd, GWL_USERDATA);
+	ASSERT(child);
+
+	switch(nmsg) {
+#ifndef _NO_EXTENSIONS
+		case WM_HSCROLL:
+			set_header(pane);
+			break;
+#endif
+
+		case WM_SETFOCUS:
+			child->focus_pane = pane==&child->right? 1: 0;
+			ListBox_SetSel(hwnd, TRUE, 1);
+			//TODO: check menu items
+			break;
+
+		case WM_KEYDOWN:
+			if (wparam == VK_TAB) {
+				//TODO: SetFocus(Globals.hDriveBar)
+				SetFocus(child->focus_pane? child->left.hwnd: child->right.hwnd);
+			}
+	}
+
+	return CallWindowProc(g_orgTreeWndProc, hwnd, nmsg, wparam, lparam);
+}
+
+
+static void init_output(HWND hwnd)
+{
+	TCHAR b[16];
+	HFONT old_font;
+	HDC hdc = GetDC(hwnd);
+
+	if (GetNumberFormat(LOCALE_USER_DEFAULT, 0, _T("1000"), 0, b, 16) > 4)
+		Globals.num_sep = b[1];
+	else
+		Globals.num_sep = _T('.');
+
+	old_font = SelectFont(hdc, Globals.hFont);
+	GetTextExtentPoint32(hdc, _T(" "), 1, &Globals.spaceSize);
+	SelectFont(hdc, old_font);
+	ReleaseDC(hwnd, hdc);
+}
+
+
+void create_tree_window(HWND parent, Pane* pane, int id, int id_header, LPSTR lpszFileName)
+{
+	static int s_init = 0;
+	Entry* entry = pane->root;
+#if 1
+	pane->hwnd = CreateTreeView(parent, lpszFileName);
+#else
+	pane->hwnd = CreateWindow(_T("ListBox"), _T(""), WS_CHILD|WS_VISIBLE|WS_HSCROLL|WS_VSCROLL|
+//								LBS_DISABLENOSCROLL|LBS_NOINTEGRALHEIGHT|LBS_OWNERDRAWFIXED|LBS_NOTIFY,
+								LBS_DISABLENOSCROLL|LBS_NOINTEGRALHEIGHT|LBS_NOTIFY,
+								0, 0, 0, 0, parent, (HMENU)id, Globals.hInstance, 0);
+#endif
+	SetWindowLong(pane->hwnd, GWL_USERDATA, (LPARAM)pane);
+	g_orgTreeWndProc = SubclassWindow(pane->hwnd, TreeWndProc);
+
+	SendMessage(pane->hwnd, WM_SETFONT, (WPARAM)Globals.hFont, FALSE);
+
+	 // insert entries into listbox
+	if (entry)
+		insert_entries(pane, entry, -1);
+
+	 // calculate column widths
+	if (!s_init) {
+		s_init = 1;
+		init_output(pane->hwnd);
+	}
+
+	calc_widths(pane, TRUE);
+
+#ifndef _NO_EXTENSIONS
+	pane->hwndHeader = create_header(parent, pane, id_header);
+#endif
+}
+
+
 

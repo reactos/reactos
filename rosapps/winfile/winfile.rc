@@ -34,10 +34,16 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 IDI_WINFILE             ICON    DISCARDABLE     "winfile.ICO"
 IDI_SMALL               ICON    DISCARDABLE     "SMALL.ICO"
 
+////////////////////////////////////////////////////////////////////////////////
+// Bitmaps
+//
+
 IDB_OPEN_FILE           BITMAP	DISCARDABLE     "folder1.bmp"
 IDB_CLOSED_FILE         BITMAP	DISCARDABLE     "folder2.bmp"
 IDB_ROOT                BITMAP	DISCARDABLE     "folder3.bmp"
-
+IDB_TOOLBAR				BITMAP	DISCARDABLE     "toolbar.bmp"
+IDB_DRIVEBAR			BITMAP	DISCARDABLE     "drivebar.bmp"
+IDB_IMAGES			    BITMAP	DISCARDABLE     "images.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -48,118 +54,106 @@ IDC_WINFILE MENU DISCARDABLE
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "E&xit",                       IDM_EXIT
-    END
-    POPUP "&Help"
-    BEGIN
-        MENUITEM "&About ...",                  IDM_ABOUT
-    END
-END
-
-IDR_WINFILE_MENU MENU DISCARDABLE 
-BEGIN
-    POPUP "&File"
-    BEGIN
-        MENUITEM "&Open",                       ID_VIEW_REFRESH
-        MENUITEM "&Move...\tF8",                ID_VIEW_REFRESH
-        MENUITEM "&Copy...\tF9",                ID_VIEW_REFRESH
-        MENUITEM "Copy to Clip&board...\tF9",   ID_VIEW_REFRESH
-        MENUITEM "&Delete...\tDel",             ID_VIEW_REFRESH
-        MENUITEM "Re&name...\t",                ID_VIEW_REFRESH
-        MENUITEM "Proper&ties...\tAlt+Enter",   ID_VIEW_REFRESH
+        MENUITEM "&Open\tEnter",                ID_FILE_OPEN, GRAYED
+        MENUITEM "&Move...\tF8",                ID_FILE_MOVE, GRAYED
+        MENUITEM "&Copy...\tF9",                ID_FILE_COPY, GRAYED
+        MENUITEM "Copy to Clip&board...\tF9",   ID_FILE_COPY_CLIPBOARD, GRAYED
+        MENUITEM "&Delete...\tDel",             ID_FILE_DELETE, GRAYED
+        MENUITEM "Re&name...\t",                ID_FILE_RENAME, GRAYED
+        MENUITEM "Proper&ties...\tAlt+Enter",   ID_FILE_PROPERTIES, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Compre&ss...\t",              ID_VIEW_REFRESH
-        MENUITEM "&Uncompress...\t",            ID_VIEW_REFRESH
+        MENUITEM "Compre&ss...\t",              ID_FILE_COMPRESS, GRAYED
+        MENUITEM "&Uncompress...\t",            ID_FILE_UNCOMPRESS, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Run...\t",                   ID_VIEW_REFRESH
-        MENUITEM "&Print...\t",                 ID_VIEW_REFRESH
-        MENUITEM "&Associate...\t",             ID_VIEW_REFRESH
+        MENUITEM "&Run...\t",                   ID_FILE_RUN
+        MENUITEM "&Print...\t",                 ID_FILE_PRINT, GRAYED
+        MENUITEM "&Associate...\t",             ID_FILE_ASSOCIATE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Cr&eate directory...\t",      ID_VIEW_REFRESH
-        MENUITEM "Searc&h...\t",                ID_VIEW_REFRESH
-        MENUITEM "Select &Files...\t",          ID_VIEW_REFRESH
+        MENUITEM "Cr&eate directory...\t",      ID_FILE_CREATE_DIRECTORY, GRAYED
+        MENUITEM "Searc&h...\t",                ID_FILE_SEARCH, GRAYED
+        MENUITEM "Select &Files...\t",          ID_FILE_SEARCH_FILES, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "E&xit",                       IDM_EXIT
+        MENUITEM "E&xit",                       ID_FILE_EXIT
     END
     POPUP "&Disk"
     BEGIN
-        MENUITEM "&Copy Disk...\t",             ID_VIEW_REFRESH
-        MENUITEM "&Label Disk...\t",            ID_VIEW_REFRESH
+        MENUITEM "&Copy Disk...\t",             ID_DISK_COPY_DISK, GRAYED
+        MENUITEM "&Label Disk...\t",            ID_DISK_LABEL_DISK, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Format Disk..\t",            ID_VIEW_REFRESH
+        MENUITEM "&Format Disk..\t",            ID_DISK_FORMAT_DISK
         MENUITEM SEPARATOR
-        MENUITEM "Connect &Network Drive...",   ID_VIEW_STATUSBAR
-        MENUITEM "&Disconnect Network Drive...",ID_VIEW_STATUSBAR
+        MENUITEM "Connect &Network Drive...",   ID_DISK_CONNECT_NETWORK_DRIVE, GRAYED
+        MENUITEM "&Disconnect Network Drive...",ID_DISK_DISCONNECT_NETWORK_DRIVE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Share &As...",                ID_VIEW_STATUSBAR
-        MENUITEM "S&top Sharing...",            ID_VIEW_STATUSBAR
+        MENUITEM "Share &As...",                ID_DISK_SHARE_AS, GRAYED
+        MENUITEM "S&top Sharing...",            ID_DISK_STOP_SHARING, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Select Drive...\t",          ID_VIEW_REFRESH
+        MENUITEM "&Select Drive...\t",          ID_DISK_SELECT_DRIVE, GRAYED
     END
     POPUP "&Tree"
     BEGIN
-        MENUITEM "E&xpand One Level\t+",        ID_VIEW_REFRESH
-        MENUITEM "Expand &Branch\t*",           ID_VIEW_REFRESH
-        MENUITEM "Expand &All\tCtrl+*",         ID_VIEW_REFRESH
+        MENUITEM "E&xpand One Level\t+",        ID_TREE_EXPAND_ONE_LEVEL
+        MENUITEM "Expand &Branch\t*",           ID_TREE_EXPAND_BRANCH
+        MENUITEM "Expand &All\tCtrl+*",         ID_TREE_EXPAND_ALL
         MENUITEM SEPARATOR
-        MENUITEM "&Indicate Expandable Branches",ID_VIEW_REFRESH
+        MENUITEM "&Indicate Expandable Branches",ID_TREE_INDICATE_EXPANDABLE_BRANCHES
     END
     POPUP "&View"
     BEGIN
-        MENUITEM "T&ree and Directory",          ID_VIEW_STATUSBAR
-        MENUITEM "Tr&ee Only",                   ID_VIEW_STATUSBAR
-        MENUITEM "Directory &Only",              ID_VIEW_STATUSBAR
+        MENUITEM "T&ree and Directory",          ID_VIEW_TREE_DIRECTORY, GRAYED
+        MENUITEM "Tr&ee Only",                   ID_VIEW_TREE_ONLY, GRAYED
+        MENUITEM "Directory &Only",              ID_VIEW_DIRECTORY_ONLY, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Sp&lit",                       ID_VIEW_SPLIT
+        MENUITEM "Sp&lit",                       ID_VIEW_SPLIT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Name",                        ID_VIEW_REFRESH
-        MENUITEM "&All File Details",            ID_VIEW_REFRESH
-        MENUITEM "&Partial Details...",          ID_VIEW_REFRESH
+        MENUITEM "&Name",                        ID_VIEW_NAME
+        MENUITEM "&All File Details",            ID_VIEW_ALL_FILE_DETAILS
+        MENUITEM "&Partial Details...",          ID_VIEW_PARTIAL_DETAILS, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Sort by Name",                ID_VIEW_REFRESH
-        MENUITEM "Sort &by Type",                ID_VIEW_REFRESH
-        MENUITEM "Sort by Si&ze",                ID_VIEW_REFRESH
-        MENUITEM "Sort by &Date",                ID_VIEW_REFRESH
+        MENUITEM "&Sort by Name",                ID_VIEW_SORT_BY_NAME
+        MENUITEM "Sort &by Type",                ID_VIEW_SORT_BY_TYPE
+        MENUITEM "Sort by Si&ze",                ID_VIEW_SORT_BY_SIZE
+        MENUITEM "Sort by &Date",                ID_VIEW_SORT_BY_DATE
         MENUITEM SEPARATOR
-        MENUITEM "By File &Type...",            ID_VIEW_REFRESH
+        MENUITEM "By File &Type...",            ID_VIEW_BY_FILE_TYPE, GRAYED
     END
     POPUP "&Options"
     BEGIN
-        MENUITEM "&Confirmation...",            ID_VIEW_REFRESH
-        MENUITEM "&Font...",                    ID_VIEW_REFRESH
-        MENUITEM "Customise Tool&bar...",       ID_VIEW_REFRESH
+        MENUITEM "&Confirmation...",            ID_OPTIONS_CONFIRMATION, GRAYED
+        MENUITEM "&Font...",                    ID_OPTIONS_FONT, GRAYED
+        MENUITEM "Customise Tool&bar...",       ID_OPTIONS_CUSTOMISE_TOOLBAR, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Toolbar...",                 ID_VIEW_REFRESH
-        MENUITEM "&Drivebar...",                ID_VIEW_REFRESH
-        MENUITEM "&Statusbar...",               ID_VIEW_REFRESH
+        MENUITEM "&Toolbar",                    ID_OPTIONS_TOOLBAR
+        MENUITEM "&Drivebar",                   ID_OPTIONS_DRIVEBAR
+        MENUITEM "&Statusbar",                  ID_OPTIONS_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&Open New Window on Connect", ID_VIEW_REFRESH
-        MENUITEM "&Minimise on Use",            ID_VIEW_REFRESH
-        MENUITEM "&Save Settings on Exit",      ID_VIEW_REFRESH
+        MENUITEM "&Open New Window on Connect", ID_OPTIONS_OPEN_NEW_WINDOW_ON_CONNECT
+        MENUITEM "&Minimise on Use",            ID_OPTIONS_MINIMISE_ON_USE
+        MENUITEM "&Save Settings on Exit",      ID_OPTIONS_SAVE_ON_EXIT
     END
     POPUP "&Security"
     BEGIN
-        MENUITEM "&Permissions...",             ID_VIEW_REFRESH, GRAYED
-        MENUITEM "&Auditing...",                ID_VIEW_REFRESH, GRAYED
-        MENUITEM "&Owner...",                   ID_VIEW_REFRESH, GRAYED
+        MENUITEM "&Permissions...",             ID_SECURITY_PERMISSIONS, GRAYED
+        MENUITEM "&Auditing...",                ID_SECURITY_AUDITING, GRAYED
+        MENUITEM "&Owner...",                   ID_SECURITY_OWNER, GRAYED
     END
     POPUP "&Window"
     BEGIN
-        MENUITEM "&New Window",                 ID_VIEW_REFRESH
-        MENUITEM "&Cascade",                    ID_VIEW_REFRESH
-        MENUITEM "Tile &Horizontally",          ID_VIEW_REFRESH
-        MENUITEM "&Tile Vertically",            ID_VIEW_REFRESH
-        MENUITEM "&Arrange Icons",              ID_VIEW_REFRESH
-        MENUITEM "&Refresh",                    ID_VIEW_REFRESH
-        MENUITEM SEPARATOR
+        MENUITEM "&New Window",                 ID_WINDOW_NEW_WINDOW
+        MENUITEM "&Cascade\tShift+F5",          ID_WINDOW_CASCADE
+        MENUITEM "Tile &Horizontally",          ID_WINDOW_TILE_HORZ
+        MENUITEM "&Tile Vertically\tShift+F4",  ID_WINDOW_TILE_VERT
+        MENUITEM "&Arrange Icons",              ID_WINDOW_ARRANGE_ICONS
+        MENUITEM "&Refresh\tF5",                ID_WINDOW_REFRESH
+//        MENUITEM SEPARATOR
     END
     POPUP "&Help"
     BEGIN
-        MENUITEM "&Contents",                   ID_HELP_HELPTOPICS
-        MENUITEM "&Search for Help on",         ID_HELP_HELPTOPICS
-        MENUITEM "&How to Use Help",            ID_HELP_HELPTOPICS
+        MENUITEM "&Contents",                   ID_HELP_CONTENTS, GRAYED
+        MENUITEM "&Search for Help on...",      ID_HELP_SEARCH_HELP, GRAYED
+        MENUITEM "&How to Use Help",            ID_HELP_HOW_TO_USE_HELP, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&About File Manager",         IDM_ABOUT
+        MENUITEM "&About File Manager",         ID_HELP_ABOUT
     END
 END
 
@@ -225,20 +219,29 @@ BEGIN
     ID_WINDOW_MENU          "Commands for manipulating windows"
     ID_HELP_MENU            "Commands for displaying help and information about file manager"
 
-    IDM_EXIT                "Quits the file manager"
+    ID_FILE_DELETE          "Deletes the selection"
+    ID_FILE_RENAME          "Renames the selection"
+    ID_FILE_SEARCH          "Finds a text string in a key, value or data"
+    ID_FILE_SEARCH_FILES    "Finds next occurrence of text specified in previous search"
+    ID_FILE_EXIT            "Quits the file manager"
 
-    ID_EDIT_DELETE          "Deletes the selection"
-    ID_EDIT_RENAME          "Renames the selection"
-    ID_EDIT_COPYKEYNAME     "Copies the name of the selected key to the clipboard"
-    ID_EDIT_FIND            "Finds a text string in a key, value or data"
-    ID_EDIT_FINDNEXT        "Finds next occurrence of text specified in previous search"
+    ID_OPTIONS_CONFIRMATION      "Controls confirmation messages..."
+    ID_OPTIONS_FONT              "Changes the File Manager Font..."
+    ID_OPTIONS_CUSTOMISE_TOOLBAR "Customises the toolbar..."
+    ID_OPTIONS_TOOLBAR           "Shows or hides the tool bar"
+    ID_OPTIONS_DRIVEBAR          "Shows or hides the drive bar"
+    ID_OPTIONS_STATUSBAR         "Shows or hides the status bar"
+    ID_OPTIONS_OPEN_NEW_WINDOW_ON_CONNECT "Opens a new window when connnecting"	    
+    ID_OPTIONS_MINIMISE_ON_USE   "Reduces File Manager to an icon at startup"
+    ID_OPTIONS_SAVE_ON_EXIT      "Saves settings when exiting File Manager"
 
-    ID_VIEW_STATUSBAR       "Shows or hides the status bar"
     ID_VIEW_SPLIT           "Change position of split between two panes"
-    ID_VIEW_REFRESH         "Refreshes the window"
+    ID_WINDOW_REFRESH       "Refreshes the window"
 
-	ID_HELP_HELPTOPICS      "Opens file manager help"
-    IDM_ABOUT               "Displays program information, version number and copyright"
+	ID_HELP_CONTENTS        "Displays contents for File Manager Help"
+	ID_HELP_SEARCH_HELP     "Searches for a topic in File Manager Help"
+	ID_HELP_HOW_TO_USE_HELP "Displays information about using help"
+    ID_HELP_ABOUT           "Displays program information, version number and copyright"
 
     IDC_WINFILE             "WINFILE"
     IDC_WINFILE_FRAME       "WINFILE_FRAME"
@@ -312,12 +315,7 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    ID_HELP_HELPTOPICS      "Opens File Manager Help."
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
-    IDM_ABOUT               "Displays program information, version number, and copyright."
+    ID_HELP_ABOUT           "Displays program information, version number, and copyright."
 END
 
 #endif    // English (Australia) resources

@@ -1,7 +1,7 @@
 /*
- *  ReactOS winfile
+ *  ReactOS Application Debug Routines
  *
- *  listview.cpp
+ *  debug.c
  *
  *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
  *
@@ -35,34 +35,5 @@
 #endif
     
 #include "winfile.h"
-#include "listview.h"
-
-
-// Global Variables:
-extern HINSTANCE hInst;
-extern HWND hMainWnd;
-
-
-HWND CreateListView(HWND hwndParent, LPSTR lpszFileName) 
-{ 
-    RECT rcClient;  // dimensions of client area 
-    HWND hwndLV;    // handle to list view control 
- 
-    // Get the dimensions of the parent window's client area, and create the list view control. 
-    GetClientRect(hwndParent, &rcClient); 
-    hwndLV = CreateWindowEx(0, WC_LISTVIEW, "List View", 
-        WS_VISIBLE | WS_CHILD | WS_BORDER | TVS_HASLINES, 
-        0, 0, rcClient.right, rcClient.bottom, 
-        hwndParent, (HMENU)LIST_WINDOW, hInst, NULL); 
- 
-    // Initialize the image list, and add items to the control. 
-/*
-    if (!InitListViewImageLists(hwndLV) || 
-            !InitListViewItems(hwndLV, lpszFileName)) { 
-        DestroyWindow(hwndLV); 
-        return FALSE; 
-    } 
- */
-    return hwndLV;
-} 
+#include "debug.h"
 

@@ -1,7 +1,7 @@
 /*
  *  ReactOS winfile
  *
- *  listview.h
+ *  mdiclient.h
  *
  *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
  *
@@ -20,8 +20,8 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef __LISTVIEW_H__
-#define __LISTVIEW_H__
+#ifndef __MDICLIENT_H__
+#define __MDICLIENT_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,16 +34,22 @@ extern "C" {
 #include "resource.h"
 
 
-HWND CreateListView(HWND hwndParent, LPSTR lpszFileName);
-HWND create_header(HWND parent, Pane* pane, int id);
-void resize_tree(ChildWnd* child, int cx, int cy);
 
-void create_list_window(HWND parent, Pane* pane, int id, int id_header);
-LRESULT CALLBACK ListWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
+LRESULT CALLBACK ChildWndProc(HWND, UINT, WPARAM, LPARAM);
+
+HWND create_child_window(ChildWnd* child);
+
+void toggle_child(HWND hwnd, UINT cmd, HWND hchild);
+ChildWnd* alloc_child_window(LPCTSTR path);
+void set_header(Pane* pane);
+
+void toggle_child(HWND hwnd, UINT cmd, HWND hchild);
+BOOL activate_drive_window(LPCTSTR path);
+
 
 
 #ifdef __cplusplus
 };
 #endif
 
-#endif // __LISTVIEW_H__
+#endif // __MDICLIENT_H__

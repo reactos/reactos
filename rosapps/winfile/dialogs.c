@@ -1,7 +1,7 @@
 /*
- *  ReactOS About Dialog Box
+ *  ReactOS winfile
  *
- *  about.cpp
+ *  dialogs.c
  *
  *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
  *
@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-    
+
 #ifdef _MSC_VER
 #include "stdafx.h"
 #else
@@ -34,38 +34,52 @@
 #include <stdio.h>
 #endif
     
+#include <shellapi.h>
+//#include <winspool.h>
+#include <windowsx.h>
+#include <shellapi.h>
+#include <ctype.h>
+#include <assert.h>
+#define ASSERT assert
+
 #include "winfile.h"
 #include "about.h"
+#include "dialogs.h"
+#include "utils.h"
+#include "debug.h"
 
 
-extern HINSTANCE hInst;
-//extern HWND hMainWnd;
+struct ExecuteDialog {
+	TCHAR	cmd[MAX_PATH];
+	int		cmdshow;
+};
 
-LRESULT CALLBACK AboutDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
-
-void ShowAboutBox(HWND hWnd)
+BOOL CALLBACK ExecuteDialogWndProg(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
-    DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, (DLGPROC)AboutDialogWndProc);
+	static struct ExecuteDialog* dlg;
+
+	switch(nmsg) {
+		case WM_INITDIALOG:
+			dlg = (struct ExecuteDialog*) lparam;
+			return 1;
+
+		case WM_COMMAND: {
+			int id = (int)wparam;
+
+			if (id == IDOK) {
+				GetWindowText(GetDlgItem(hwnd, 201), dlg->cmd, MAX_PATH);
+				dlg->cmdshow = Button_GetState(GetDlgItem(hwnd,214))&BST_CHECKED?
+												SW_SHOWMINIMIZED: SW_SHOWNORMAL;
+				EndDialog(hwnd, id);
+			} else if (id == IDCANCEL)
+				EndDialog(hwnd, id);
+
+			return 1;}
+	}
+
+	return 0;
 }
 
-LRESULT CALLBACK AboutDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    HWND    hLicenseEditWnd;
-    TCHAR   strLicense[0x1000];
 
-    switch (message) {
-    case WM_INITDIALOG:
-        hLicenseEditWnd = GetDlgItem(hDlg, IDC_LICENSE_EDIT);
-        LoadString(hInst, IDS_LICENSE, strLicense, 0x1000);
-        SetWindowText(hLicenseEditWnd, strLicense);
-        return TRUE;
-    case WM_COMMAND:
-        if ((LOWORD(wParam) == IDOK) || (LOWORD(wParam) == IDCANCEL)) {
-            EndDialog(hDlg, LOWORD(wParam));
-            return TRUE;
-        }
-        break;
-    }
-    return 0;
-}
+

@@ -1,7 +1,7 @@
 /*
  *  ReactOS winfile
  *
- *  listview.h
+ *  utils.h
  *
  *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
  *
@@ -20,8 +20,8 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef __LISTVIEW_H__
-#define __LISTVIEW_H__
+#ifndef __UTILS_H__
+#define __UTILS_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,19 +31,25 @@ extern "C" {
 #pragma once
 #endif // _MSC_VER > 1000
 
-#include "resource.h"
 
 
-HWND CreateListView(HWND hwndParent, LPSTR lpszFileName);
-HWND create_header(HWND parent, Pane* pane, int id);
-void resize_tree(ChildWnd* child, int cx, int cy);
+void display_error(HWND hwnd, DWORD error);
+void frame_get_clientspace(HWND hwnd, PRECT prect);
+BOOL toggle_fullscreen(HWND hwnd);
+void fullscreen_move(HWND hwnd);
 
-void create_list_window(HWND parent, Pane* pane, int id, int id_header);
-LRESULT CALLBACK ListWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
+BOOL calc_widths(Pane* pane, BOOL anyway);
+void calc_single_width(Pane* pane, int col);
+void read_directory(Entry* parent, LPCTSTR path, int sortOrder);
+int is_registered_type(LPCTSTR ext);
+int is_exe_file(LPCTSTR ext);
+void set_curdir(ChildWnd* child, Entry* entry);
+void get_path(Entry* dir, PTSTR path);
+
 
 
 #ifdef __cplusplus
 };
 #endif
 
-#endif // __LISTVIEW_H__
+#endif // __UTILS_H__

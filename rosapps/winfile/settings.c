@@ -1,7 +1,7 @@
 /*
  *  ReactOS winfile
  *
- *  listview.h
+ *  settings.c
  *
  *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
  *
@@ -20,30 +20,19 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef __LISTVIEW_H__
-#define __LISTVIEW_H__
-
-#ifdef __cplusplus
-extern "C" {
+#ifdef _MSC_VER
+#include "stdafx.h"
+#else
+#define WIN32_LEAN_AND_MEAN     // Exclude rarely-used stuff from Windows headers
+#include <windows.h>
+#include <commctrl.h>
+#include <stdlib.h>
+#include <malloc.h>
+#include <memory.h>
+#include <tchar.h>
+#include <process.h>
+#include <stdio.h>
 #endif
+    
+#include "winfile.h"
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-
-#include "resource.h"
-
-
-HWND CreateListView(HWND hwndParent, LPSTR lpszFileName);
-HWND create_header(HWND parent, Pane* pane, int id);
-void resize_tree(ChildWnd* child, int cx, int cy);
-
-void create_list_window(HWND parent, Pane* pane, int id, int id_header);
-LRESULT CALLBACK ListWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
-
-
-#ifdef __cplusplus
-};
-#endif
-
-#endif // __LISTVIEW_H__

@@ -20,8 +20,12 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef __WINFILE_TREEVIEW_H__
-#define __WINFILE_TREEVIEW_H__
+#ifndef __TREEVIEW_H__
+#define __TREEVIEW_H__
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #if _MSC_VER > 1000
 #pragma once
@@ -33,6 +37,14 @@
 
 HWND CreateTreeView(HWND hwndParent, LPSTR lpszFileName);
 
+void create_tree_window(HWND parent, Pane* pane, int id, int id_header, LPSTR lpszFileName);
+
+LRESULT CALLBACK TreeWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
 
 
-#endif // __WINFILE_TREEVIEW_H__
+
+#ifdef __cplusplus
+};
+#endif
+
+#endif // __TREEVIEW_H__
