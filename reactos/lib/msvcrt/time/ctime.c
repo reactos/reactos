@@ -89,7 +89,9 @@ void _set_daylight_export(int);
 void _set_timezone_export(int);
 
 
-static char WILDABBR[] = "   ";
+/* buffers must hold 64 characters! */
+static char TZ_NAME[64] = "PST";
+static char TZ_DST_NAME[64] = "PDT";
 
 #ifndef TRUE
 #define TRUE        1
@@ -183,8 +185,8 @@ static int lcl_is_set;
 static int gmt_is_set;
 
 char * _tzname[2] = {
-  WILDABBR,
-  WILDABBR
+  TZ_NAME,
+  TZ_DST_NAME,
 };
 
 static long
@@ -205,8 +207,8 @@ settzname(void)
   const struct state * CPP_CONST sp = lclptr;
   int i;
 
-  _tzname[0] = WILDABBR;
-  _tzname[1] = WILDABBR;
+  _tzname[0] = TZ_NAME;
+  _tzname[1] = TZ_DST_NAME;
 #ifdef ALL_STATE
   if (sp == NULL)
   {
@@ -1058,7 +1060,7 @@ gmtsub(const time_t * CPP_CONST timep, const long offset, struct tm * CPP_CONST 
    ** but this is no time for a treasure hunt.
    */
   if (offset != 0)
-    tmp->tm_zone = WILDABBR;
+    tmp->tm_zone = TZ_NAME;
   else
   {
 #ifdef ALL_STATE
