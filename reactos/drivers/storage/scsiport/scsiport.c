@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.46 2004/02/01 16:02:35 ekohl Exp $
+/* $Id: scsiport.c,v 1.47 2004/02/29 11:19:21 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -413,8 +413,10 @@ ScsiPortGetPhysicalAddress(IN PVOID HwDeviceExtension,
 {
   PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
   SCSI_PHYSICAL_ADDRESS PhysicalAddress;
+  SCSI_PHYSICAL_ADDRESS NextPhysicalAddress;
   ULONG BufferLength = 0;
   ULONG Offset;
+  PVOID EndAddress;
 
   DPRINT("ScsiPortGetPhysicalAddress(%p %p %p %p)\n",
 	 HwDeviceExtension, Srb, VirtualAddress, Length);
@@ -446,9 +448,46 @@ ScsiPortGetPhysicalAddress(IN PVOID HwDeviceExtension,
     }
   else
     {
-      /* FIXME */
-      DPRINT1("Srb != NULL is not implemented yet!\n");
-      UNIMPLEMENTED;
+      EndAddress = Srb->DataBuffer + Srb->DataTransferLength;
+      if (VirtualAddress == NULL)
+        {
+	  VirtualAddress = Srb->DataBuffer;
+	}
+      else if (VirtualAddress < Srb->DataBuffer || VirtualAddress >= EndAddress)
+        {
+	  PhysicalAddress.QuadPart = 0LL;
+	  return PhysicalAddress;
+	}
+      
+      PhysicalAddress = MmGetPhysicalAddress(VirtualAddress);
+      if (PhysicalAddress.QuadPart == 0LL)
+        {
+	  return PhysicalAddress;
+	}
+     
+      Offset = (ULONG_PTR)VirtualAddress & (PAGE_SIZE - 1);
+#if 1      
+      /* 
+       * FIXME:
+       *   MmGetPhysicalAddress doesn't return the offset within the page.
+       *   We must set the correct offset.
+       */
+      PhysicalAddress.u.LowPart = (PhysicalAddress.u.LowPart & ~(PAGE_SIZE - 1)) + Offset;
+#endif
+      BufferLength += PAGE_SIZE - Offset;
+      while (VirtualAddress + BufferLength < EndAddress)
+        {
+	  NextPhysicalAddress = MmGetPhysicalAddress(VirtualAddress + BufferLength);
+	  if (PhysicalAddress.QuadPart + (ULONGLONG)BufferLength != NextPhysicalAddress.QuadPart)
+	    {
+	      break;
+	    }
+	  BufferLength += PAGE_SIZE;
+	}
+      if (VirtualAddress + BufferLength >= EndAddress)
+        {
+	  BufferLength = EndAddress - VirtualAddress;
+	}
     }
 
   *Length = BufferLength;
