@@ -136,7 +136,7 @@ EXTERN(_GetConventionalMemorySize)
 
 
 /*
- * ULONG GetBiosMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap);
+ * ULONG GetBiosMemoryMap(PBIOS_MEMORY_MAP_ARRAY BiosMemoryMap);
  */
 _gbmm_mem_map_length:
 	.long 0

@@ -190,7 +190,7 @@ LoadBootDrivers(PCHAR szSystemRoot, int nPos)
   DbgPrint((DPRINT_REACTOS, "hServiceKey: %x\n", (int)hServiceKey));
 
   BufferSize = sizeof(ValueBuffer);
-  rc = RegQueryValue(hGroupKey, "List", NULL, (PUCHAR)&ValueBuffer, &BufferSize);
+  rc = RegQueryValue(hGroupKey, "List", NULL, (PUCHAR)ValueBuffer, &BufferSize);
   DbgPrint((DPRINT_REACTOS, "RegQueryValue(): rc %d\n", (int)rc));
   if (rc != ERROR_SUCCESS)
     return;
@@ -394,7 +394,7 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	mb_info.cmdline = (unsigned long)multiboot_kernel_cmdline;
 	mb_info.mods_count = 0;
 	mb_info.mods_addr = (unsigned long)multiboot_modules;
-	mb_info.mmap_length = (unsigned long)GetBiosMemoryMap((PBIOS_MEMORY_MAP)&multiboot_memory_map);
+	mb_info.mmap_length = (unsigned long)GetBiosMemoryMap((PBIOS_MEMORY_MAP_ARRAY)&multiboot_memory_map);
 	if (mb_info.mmap_length)
 	{
 		mb_info.mmap_addr = (unsigned long)&multiboot_memory_map;

@@ -37,13 +37,18 @@ typedef struct
 	ULONG	Reserved;
 } PACKED BIOS_MEMORY_MAP, *PBIOS_MEMORY_MAP;
 
+typedef struct
+{
+	BIOS_MEMORY_MAP	BiosMemoryMapArray[32];
+} PACKED BIOS_MEMORY_MAP_ARRAY, *PBIOS_MEMORY_MAP_ARRAY;
+
 
 ULONG	GetSystemMemorySize(VOID);								// Returns the amount of total memory in the system
 
 // These functions are implemented in mem.S
 ULONG	GetExtendedMemorySize(VOID);							// Returns extended memory size in KB
 ULONG	GetConventionalMemorySize(VOID);						// Returns conventional memory size in KB
-ULONG	GetBiosMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap);	// Fills mem_map structure with BIOS memory map and returns length of memory map
+ULONG	GetBiosMemoryMap(PBIOS_MEMORY_MAP_ARRAY BiosMemoryMap);	// Fills structure with BIOS memory map and returns memory map item count
 
 
 
