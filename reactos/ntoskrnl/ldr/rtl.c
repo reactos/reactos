@@ -1,4 +1,4 @@
-/* $Id: rtl.c,v 1.20 2004/08/15 16:39:06 chorns Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -28,9 +28,9 @@ RtlImageNtHeader (IN PVOID BaseAddress)
    
    DosHeader = (PIMAGE_DOS_HEADER)BaseAddress;
    NTHeaders = (PIMAGE_NT_HEADERS)((char*)BaseAddress + DosHeader->e_lfanew);
-   if ((DosHeader->e_magic != IMAGE_DOS_MAGIC)
+   if ((DosHeader->e_magic != IMAGE_DOS_SIGNATURE)
        || (DosHeader->e_lfanew == 0L)
-       || (*(PULONG) NTHeaders != IMAGE_PE_MAGIC))
+       || (*(PULONG) NTHeaders != IMAGE_NT_SIGNATURE))
      {
 	return(NULL);
      }

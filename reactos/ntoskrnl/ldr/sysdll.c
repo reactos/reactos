@@ -125,9 +125,9 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
     */
    DosHeader = (PIMAGE_DOS_HEADER) BlockBuffer;
    NTHeaders = (PIMAGE_NT_HEADERS) (BlockBuffer + DosHeader->e_lfanew);
-   if ((DosHeader->e_magic != IMAGE_DOS_MAGIC)
+   if ((DosHeader->e_magic != IMAGE_DOS_SIGNATURE)
        || (DosHeader->e_lfanew == 0L)
-       || (*(PULONG) NTHeaders != IMAGE_PE_MAGIC))
+       || (*(PULONG) NTHeaders != IMAGE_NT_SIGNATURE))
      {
 	DbgPrint("NTDLL format invalid\n");
 	ZwClose(FileHandle);	
