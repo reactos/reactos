@@ -1,4 +1,4 @@
-/* $Id: fs.c,v 1.38 2003/11/09 19:04:54 ekohl Exp $
+/* $Id: fs.c,v 1.39 2003/11/27 00:50:05 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -183,6 +183,7 @@ IoShutdownRegisteredFileSystems(VOID)
 
   DPRINT("IoShutdownRegisteredFileSystems()\n");
 
+  KeEnterCriticalRegion();
   ExAcquireResourceSharedLite(&FileSystemListLock,TRUE);
   KeInitializeEvent(&Event,
 		    NotificationEvent,
@@ -216,6 +217,7 @@ IoShutdownRegisteredFileSystems(VOID)
     }
 
   ExReleaseResourceLite(&FileSystemListLock);
+  KeLeaveCriticalRegion();
 }
 
 
@@ -360,6 +362,7 @@ IoMountVolume(IN PDEVICE_OBJECT DeviceObject,
 	return(STATUS_UNRECOGNIZED_VOLUME);
     }
 
+  KeEnterCriticalRegion();
   ExAcquireResourceSharedLite(&FileSystemListLock,TRUE);
   current_entry = FileSystemListHead.Flink;
   while (current_entry!=(&FileSystemListHead))
@@ -389,6 +392,7 @@ IoMountVolume(IN PDEVICE_OBJECT DeviceObject,
 	    Status = IopLoadFileSystem(DevObject);
 	    if (!NT_SUCCESS(Status))
 	      {
+          KeLeaveCriticalRegion();
 		return(Status);
 	      }
             ExAcquireResourceSharedLite(&FileSystemListLock,TRUE);
@@ -399,6 +403,7 @@ IoMountVolume(IN PDEVICE_OBJECT DeviceObject,
 	    DeviceObject->Vpb->Flags = DeviceObject->Vpb->Flags |
 	                               VPB_MOUNTED;
 	    ExReleaseResourceLite(&FileSystemListLock);
+      KeLeaveCriticalRegion();
 	    return(STATUS_SUCCESS);
 
 	  case STATUS_UNRECOGNIZED_VOLUME:
@@ -407,6 +412,7 @@ IoMountVolume(IN PDEVICE_OBJECT DeviceObject,
 	}
     }
   ExReleaseResourceLite(&FileSystemListLock);
+  KeLeaveCriticalRegion();
 
   return(STATUS_UNRECOGNIZED_VOLUME);
 }
@@ -575,6 +581,7 @@ IoRegisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
   assert(Fs!=NULL);
 
   Fs->DeviceObject = DeviceObject;
+  KeEnterCriticalRegion();
   ExAcquireResourceExclusiveLite(&FileSystemListLock, TRUE);
 
   /* The RAW filesystem device objects must be last in the list so the
@@ -586,6 +593,7 @@ IoRegisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
 		 &Fs->Entry);
 
   ExReleaseResourceLite(&FileSystemListLock);
+  KeLeaveCriticalRegion();
 
   IopNotifyFileSystemChange(DeviceObject,
 			    TRUE);
@@ -603,6 +611,7 @@ IoUnregisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
 
   DPRINT("IoUnregisterFileSystem(DeviceObject %x)\n",DeviceObject);
 
+  KeEnterCriticalRegion();
   ExAcquireResourceExclusiveLite(&FileSystemListLock, TRUE);
   current_entry = FileSystemListHead.Flink;
   while (current_entry!=(&FileSystemListHead))
@@ -613,12 +622,14 @@ IoUnregisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
 	  RemoveEntryList(current_entry);
 	  ExFreePool(current);
 	  ExReleaseResourceLite(&FileSystemListLock);
+    KeLeaveCriticalRegion();
 	  IopNotifyFileSystemChange(DeviceObject, FALSE);
 	  return;
 	}
       current_entry = current_entry->Flink;
     }
   ExReleaseResourceLite(&FileSystemListLock);
+  KeLeaveCriticalRegion();
 }
 
 

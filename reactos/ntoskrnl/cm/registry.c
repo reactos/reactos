@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.114 2003/11/17 02:12:50 hyperion Exp $
+/* $Id: registry.c,v 1.115 2003/11/27 00:48:11 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -988,6 +988,7 @@ CmShutdownRegistry(VOID)
     }
 
   /* Acquire hive list lock exclusively */
+  KeEnterCriticalRegion();
   ExAcquireResourceExclusiveLite(&CmiHiveListLock, TRUE);
 
   Entry = CmiHiveListHead.Flink;
@@ -1013,6 +1014,7 @@ CmShutdownRegistry(VOID)
 
   /* Release hive list lock */
   ExReleaseResourceLite(&CmiHiveListLock);
+  KeLeaveCriticalRegion();
 
   DPRINT1("CmShutdownRegistry() done\n");
 }
@@ -1029,6 +1031,7 @@ CmiHiveSyncRoutine(PVOID DeferredContext)
   CmiHiveSyncPending = FALSE;
 
   /* Acquire hive list lock exclusively */
+  KeEnterCriticalRegion();
   ExAcquireResourceExclusiveLite(&CmiHiveListLock, TRUE);
 
   Entry = CmiHiveListHead.Flink;
@@ -1054,6 +1057,7 @@ CmiHiveSyncRoutine(PVOID DeferredContext)
 
   /* Release hive list lock */
   ExReleaseResourceLite(&CmiHiveListLock);
+  KeLeaveCriticalRegion();
 
   DPRINT("DeferredContext %x\n", DeferredContext);
   ExFreePool(DeferredContext);

@@ -140,6 +140,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   KeyObject->SubKeys = NULL;
 
   /* Acquire hive lock */
+  KeEnterCriticalRegion();
   ExAcquireResourceExclusiveLite(&KeyObject->RegistryHive->HiveResource, TRUE);
 
   /* add key to subkeys of parent if needed */
@@ -155,6 +156,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
       DPRINT("CmiAddSubKey() failed (Status %lx)\n", Status);
       /* Release hive lock */
       ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+      KeLeaveCriticalRegion();
       ObDereferenceObject(KeyObject);
       ObDereferenceObject(Object);
       return STATUS_UNSUCCESSFUL;
@@ -186,6 +188,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 
   /* Release hive lock */
   ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+  KeLeaveCriticalRegion();
 
   ObDereferenceObject(KeyObject);
   ObDereferenceObject(Object);
@@ -220,6 +223,7 @@ NtDeleteKey(IN HANDLE KeyHandle)
     }
 
   /* Acquire hive lock */
+  KeEnterCriticalRegion();
   ExAcquireResourceExclusiveLite(&KeyObject->RegistryHive->HiveResource, TRUE);
 
   VERIFY_KEY_OBJECT(KeyObject);
@@ -238,6 +242,7 @@ NtDeleteKey(IN HANDLE KeyHandle)
 
   /* Release hive lock */
   ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+  KeLeaveCriticalRegion();
 
   DPRINT("PointerCount %lu\n", ObGetObjectPointerCount((PVOID)KeyObject));
 
@@ -300,6 +305,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
     }
 
   /* Acquire hive lock */
+  KeEnterCriticalRegion();
   ExAcquireResourceSharedLite(&KeyObject->RegistryHive->HiveResource, TRUE);
 
   VERIFY_KEY_OBJECT(KeyObject);
@@ -314,6 +320,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
       if (RegistryHive == CmiVolatileHive)
 	{
 	  ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+    KeLeaveCriticalRegion();
 	  ObDereferenceObject(KeyObject);
 	  DPRINT("No more volatile entries\n");
 	  return(STATUS_NO_MORE_ENTRIES);
@@ -336,6 +343,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 	  if (Index >= KeyCell->NumberOfSubKeys)
 	    {
 	      ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+        KeLeaveCriticalRegion();
 	      ObDereferenceObject(KeyObject);
 	      DPRINT("No more non-volatile entries\n");
 	      return(STATUS_NO_MORE_ENTRIES);
@@ -348,6 +356,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
       if (KeyCell->HashTableOffset == (BLOCK_OFFSET)-1)
 	{
 	  ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+    KeLeaveCriticalRegion();
 	  ObDereferenceObject(KeyObject);
 	  return(STATUS_NO_MORE_ENTRIES);
 	}
@@ -357,6 +366,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 	{
 	  DPRINT("CmiGetBlock() failed\n");
 	  ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+    KeLeaveCriticalRegion();
 	  ObDereferenceObject(KeyObject);
 	  return STATUS_UNSUCCESSFUL;
 	}
@@ -368,6 +378,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
   if (SubKeyCell == NULL)
     {
       ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+      KeLeaveCriticalRegion();
       ObDereferenceObject(KeyObject);
       DPRINT("No more entries\n");
       return(STATUS_NO_MORE_ENTRIES);
@@ -511,6 +522,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
     }
 
   ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+  KeLeaveCriticalRegion();
   ObDereferenceObject(KeyObject);
 
   DPRINT("Returning status %x\n", Status);
@@ -560,6 +572,7 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
     }
 
   /* Acquire hive lock */
+  KeEnterCriticalRegion();
   ExAcquireResourceSharedLite(&KeyObject->RegistryHive->HiveResource, TRUE);
 
   VERIFY_KEY_OBJECT(KeyObject);
@@ -577,6 +590,7 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
   if (!NT_SUCCESS(Status))
     {
       ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+      KeLeaveCriticalRegion();
       ObDereferenceObject(KeyObject);
       return Status;
     }
@@ -714,6 +728,7 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
     }
 
   ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+  KeLeaveCriticalRegion();
   ObDereferenceObject(KeyObject);
 
   return Status;
@@ -746,6 +761,7 @@ NtFlushKey(IN HANDLE KeyHandle)
   RegistryHive = KeyObject->RegistryHive;
 
   /* Acquire hive lock */
+  KeEnterCriticalRegion();
   ExAcquireResourceExclusiveLite(&RegistryHive->HiveResource,
 				 TRUE);
 
@@ -760,6 +776,7 @@ NtFlushKey(IN HANDLE KeyHandle)
     }
 
   ExReleaseResourceLite(&RegistryHive->HiveResource);
+  KeLeaveCriticalRegion();
 
   ObDereferenceObject(KeyObject);
 
@@ -861,6 +878,7 @@ NtQueryKey(IN HANDLE KeyHandle,
     }
 
   /* Acquire hive lock */
+  KeEnterCriticalRegion();
   ExAcquireResourceSharedLite(&KeyObject->RegistryHive->HiveResource, TRUE);
 
   VERIFY_KEY_OBJECT(KeyObject);
@@ -994,6 +1012,7 @@ NtQueryKey(IN HANDLE KeyHandle,
     }
 
   ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+  KeLeaveCriticalRegion();
   ObDereferenceObject(KeyObject);
 
   return(Status);
@@ -1037,6 +1056,7 @@ NtQueryValueKey(IN HANDLE KeyHandle,
     }
 
   /* Acquire hive lock */
+  KeEnterCriticalRegion();
   ExAcquireResourceSharedLite(&KeyObject->RegistryHive->HiveResource, TRUE);
 
   VERIFY_KEY_OBJECT(KeyObject);
@@ -1055,6 +1075,7 @@ NtQueryValueKey(IN HANDLE KeyHandle,
     {
       DPRINT("CmiScanKeyForValue() failed with status %x\n", Status);
       ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+      KeLeaveCriticalRegion();
       ObDereferenceObject(KeyObject);
       return(Status);
     }
@@ -1190,6 +1211,7 @@ NtQueryValueKey(IN HANDLE KeyHandle,
     }
 
   ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+  KeLeaveCriticalRegion();
   ObDereferenceObject(KeyObject);
 
   return Status;
@@ -1233,6 +1255,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
     return(Status);
 
   /* Acquire hive lock exclucively */
+  KeEnterCriticalRegion();
   ExAcquireResourceExclusiveLite(&KeyObject->RegistryHive->HiveResource, TRUE);
 
   VERIFY_KEY_OBJECT(KeyObject);
@@ -1250,6 +1273,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
       DPRINT("Value not found. Status 0x%X\n", Status);
 
       ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+      KeLeaveCriticalRegion();
       ObDereferenceObject(KeyObject);
       return(Status);
     }
@@ -1273,6 +1297,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
       DPRINT("Cannot add value. Status 0x%X\n", Status);
 
       ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+      KeLeaveCriticalRegion();      
       ObDereferenceObject(KeyObject);
       return(Status);
     }
@@ -1337,6 +1362,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
 	  DPRINT("CmiAllocateBlock() failed (Status %lx)\n", Status);
 
 	  ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+    KeLeaveCriticalRegion();
 	  ObDereferenceObject(KeyObject);
 
 	  return(Status);
@@ -1361,6 +1387,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
   CmiMarkBlockDirty (RegistryHive, KeyObject->KeyCellOffset);
 
   ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+  KeLeaveCriticalRegion();
   ObDereferenceObject(KeyObject);
 
   CmiSyncHives();
@@ -1391,6 +1418,7 @@ NtDeleteValueKey (IN HANDLE KeyHandle,
     }
 
   /* Acquire hive lock */
+  KeEnterCriticalRegion();
   ExAcquireResourceExclusiveLite(&KeyObject->RegistryHive->HiveResource, TRUE);
 
   VERIFY_KEY_OBJECT(KeyObject);
@@ -1405,6 +1433,7 @@ NtDeleteValueKey (IN HANDLE KeyHandle,
 
   /* Release hive lock */
   ExReleaseResourceLite (&KeyObject->RegistryHive->HiveResource);
+  KeLeaveCriticalRegion();
 
   ObDereferenceObject (KeyObject);
 
@@ -1591,6 +1620,7 @@ NtQueryMultipleValueKey (IN HANDLE KeyHandle,
     }
 
   /* Acquire hive lock */
+  KeEnterCriticalRegion();
   ExAcquireResourceSharedLite(&KeyObject->RegistryHive->HiveResource, TRUE);
 
   VERIFY_KEY_OBJECT(KeyObject);
@@ -1666,6 +1696,7 @@ NtQueryMultipleValueKey (IN HANDLE KeyHandle,
 
   /* Release hive lock */
   ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+  KeLeaveCriticalRegion();
 
   ObDereferenceObject(KeyObject);
 
@@ -1723,6 +1754,7 @@ NtSaveKey (IN HANDLE KeyHandle,
     }
 
   /* Acquire hive lock exclucively */
+  KeEnterCriticalRegion();
   ExAcquireResourceExclusiveLite (&KeyObject->RegistryHive->HiveResource,
 				  TRUE);
 
@@ -1731,6 +1763,7 @@ NtSaveKey (IN HANDLE KeyHandle,
     {
       DPRINT1 ("Cannot save a volatile key\n");
       ExReleaseResourceLite (&KeyObject->RegistryHive->HiveResource);
+      KeLeaveCriticalRegion();
       ObDereferenceObject (KeyObject);
       return STATUS_ACCESS_DENIED;
     }
@@ -1740,6 +1773,7 @@ NtSaveKey (IN HANDLE KeyHandle,
     {
       DPRINT1 ("CmiCreateTempHive() failed (Status %lx)\n", Status);
       ExReleaseResourceLite (&KeyObject->RegistryHive->HiveResource);
+      KeLeaveCriticalRegion();
       ObDereferenceObject (KeyObject);
       return(Status);
     }
@@ -1753,6 +1787,7 @@ NtSaveKey (IN HANDLE KeyHandle,
       DPRINT1 ("CmiCopyKey() failed (Status %lx)\n", Status);
       CmiRemoveRegistryHive (TempHive);
       ExReleaseResourceLite (&KeyObject->RegistryHive->HiveResource);
+      KeLeaveCriticalRegion();
       ObDereferenceObject (KeyObject);
       return(Status);
     }
@@ -1768,6 +1803,7 @@ NtSaveKey (IN HANDLE KeyHandle,
 
   /* Release hive lock */
   ExReleaseResourceLite(&KeyObject->RegistryHive->HiveResource);
+  KeLeaveCriticalRegion();
 
   ObDereferenceObject (KeyObject);
 
@@ -1806,6 +1842,7 @@ NtSetInformationKey (IN HANDLE KeyHandle,
     }
 
   /* Acquire hive lock */
+  KeEnterCriticalRegion();
   ExAcquireResourceExclusiveLite (&KeyObject->RegistryHive->HiveResource, TRUE);
 
   VERIFY_KEY_OBJECT(KeyObject);
@@ -1818,6 +1855,7 @@ NtSetInformationKey (IN HANDLE KeyHandle,
 
   /* Release hive lock */
   ExReleaseResourceLite (&KeyObject->RegistryHive->HiveResource);
+  KeLeaveCriticalRegion();
 
   ObDereferenceObject (KeyObject);
 
@@ -1858,6 +1896,7 @@ NtUnloadKey (IN POBJECT_ATTRIBUTES KeyObjectAttributes)
   DPRINT ("RegistryHive %p\n", RegistryHive);
 
   /* Acquire hive list lock exclusively */
+  KeEnterCriticalRegion();
   ExAcquireResourceExclusiveLite (&CmiHiveListLock,
 				  TRUE);
 
@@ -1869,6 +1908,7 @@ NtUnloadKey (IN POBJECT_ATTRIBUTES KeyObjectAttributes)
 
   /* Release hive list lock */
   ExReleaseResourceLite (&CmiHiveListLock);
+  KeLeaveCriticalRegion();
 
   CmiRemoveRegistryHive (RegistryHive);
 

@@ -96,17 +96,20 @@ VOID FASTCALL IntRestoreWinLock(WINLOCK_TYPE Type)
 
 inline VOID IntAcquireWinLockShared()
 {
+  KeEnterCriticalRegion();
   ExAcquireResourceSharedLite(&WinLock, TRUE /*Wait*/ );
 }
 
 inline VOID IntAcquireWinLockExclusive()
 {
+  KeEnterCriticalRegion();
   ExAcquireResourceExclusiveLite(&WinLock, TRUE /*Wait*/  );
 }
 
 inline VOID IntReleaseWinLock()
 {
   ExReleaseResourceLite(&WinLock ); 
+  KeLeaveCriticalRegion();
 }
 
 inline BOOL IntInitializeWinLock()

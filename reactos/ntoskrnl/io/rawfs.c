@@ -1,4 +1,4 @@
-/* $Id: rawfs.c,v 1.6 2003/07/21 21:53:51 royce Exp $
+/* $Id: rawfs.c,v 1.7 2003/11/27 00:50:22 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -640,9 +640,11 @@ RawFsMount(IN PRAWFS_IRP_CONTEXT IrpContext)
   VolumeFcb->RFCB.AllocationSize.QuadPart = VolumeFcb->RFCB.FileSize.QuadPart;
   DeviceExt->VolumeFcb = VolumeFcb;
 
+  KeEnterCriticalRegion();
   ExAcquireResourceExclusiveLite(&GlobalData->VolumeListLock, TRUE);
   InsertHeadList(&GlobalData->VolumeListHead, &DeviceExt->VolumeListEntry);
   ExReleaseResourceLite(&GlobalData->VolumeListLock);
+  KeLeaveCriticalRegion();
 
   /* No serial number */
   DeviceObject->Vpb->SerialNumber = 0;

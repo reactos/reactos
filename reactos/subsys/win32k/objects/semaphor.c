@@ -38,6 +38,7 @@ EngAcquireSemaphore ( IN HSEMAPHORE hsem )
 {
   // www.osr.com/ddk/graphics/gdifncs_14br.htm
   ASSERT(hsem);
+  KeEnterCriticalRegion();
   ExAcquireResourceExclusiveLite ( (PERESOURCE)hsem, TRUE );
 }
 
@@ -51,6 +52,7 @@ EngReleaseSemaphore ( IN HSEMAPHORE hsem )
   // www.osr.com/ddk/graphics/gdifncs_5u3r.htm
   ASSERT(hsem);
   ExReleaseResourceLite ( (PERESOURCE)hsem );
+  KeLeaveCriticalRegion();
 }
 
 /*

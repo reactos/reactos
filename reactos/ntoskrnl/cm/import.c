@@ -1,4 +1,4 @@
-/* $Id: import.c,v 1.24 2003/10/16 14:48:22 ekohl Exp $
+/* $Id: import.c,v 1.25 2003/11/27 00:48:11 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -143,6 +143,7 @@ CmImportBinaryHive (PCHAR ChunkBase,
   ExInitializeResourceLite(&Hive->HiveResource);
 
   /* Acquire hive list lock exclusively */
+  KeEnterCriticalRegion();
   ExAcquireResourceExclusiveLite(&CmiHiveListLock, TRUE);
 
   /* Add the new hive to the hive list */
@@ -150,6 +151,7 @@ CmImportBinaryHive (PCHAR ChunkBase,
 
   /* Release hive list lock */
   ExReleaseResourceLite(&CmiHiveListLock);
+  KeLeaveCriticalRegion();
 
   *RegistryHive = Hive;
 
