@@ -1,4 +1,4 @@
-/* $Id: stubsa.c,v 1.2 2000/02/20 22:52:48 ea Exp $
+/* $Id: stubsa.c,v 1.3 2000/02/27 11:04:36 jfilby Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -11,54 +11,11 @@
 #ifdef UNICODE
 #undef UNICODE
 #endif
+
+#undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <ddk/ntddk.h>
 
-static
-LPWSTR
-STDCALL
-AnsiStringToUnicodeString (
-	LPCSTR	AnsiString,
-	LPWSTR	UnicodeString,
-	BOOLEAN	AllocateBuffer
-	)
-{
-	int	Length;
-	LPWSTR	_UnicodeString = UnicodeString;
-
-	if (	(NULL == UnicodeString)
-		&& (FALSE == AllocateBuffer)
-		)
-	{
-		return NULL;
-	}
-	Length = (lstrlenA (AnsiString) + 1);
-	if (TRUE == AllocateBuffer)
-	{
-		_UnicodeString = LocalAlloc (
-					LMEM_ZEROINIT,
-					Length
-					);
-		if (NULL == _UnicodeString)
-		{
-			return NULL;
-		}
-	}
-	Length = MultiByteToWideChar (
-			CP_ACP,
-			0,
-			AnsiString,
-			-1,
-			_UnicodeString,
-			Length
-			);
-	if (0 == Length)
-	{
-		return NULL;
-	}
-	return _UnicodeString;
-}
-
-	
 int
 STDCALL
 AddFontResourceA(
@@ -91,70 +48,53 @@ CreateDCA (
 	CONST DEVMODE	* lpInitData
 	)
 {
-	LPCWSTR	lpwszDriver = NULL;
-	LPCWSTR	lpwszDevice = NULL;
-	LPCWSTR	lpwszOutput = NULL;
+        ANSI_STRING DriverA, DeviceA, OutputA;
+        UNICODE_STRING DriverU, DeviceU, OutputU;
 	HDC	hDC;
 
 	/*
 	 * If needed, convert to Unicode
 	 * any string parameter.
 	 */
+
 	if (NULL != lpszDriver)
 	{
-		lpwszDriver = AnsiStringToUnicodeString (
-				lpszDriver,
-				NULL,
-				TRUE
-				);
-		if (NULL == lpwszDriver)
-		{
-			return 0;
-		}
+		RtlInitAnsiString(&DriverA, (LPSTR)lpszDriver);
+		RtlAnsiStringToUnicodeString(&DriverU, &DriverA, TRUE);
 	}
 	if (NULL != lpszDevice)
 	{
-		lpwszDevice = AnsiStringToUnicodeString (
-				lpszDevice,
-				NULL,
-				TRUE
-				);
-		if (NULL == lpwszDevice)
-		{
-			return 0;
-		}
+		RtlInitAnsiString(&DeviceA, (LPSTR)lpszDevice);
+		RtlAnsiStringToUnicodeString(&DeviceU, &DeviceA, TRUE);
 	}
 	if (NULL != lpszOutput)
 	{
-		lpwszOutput = AnsiStringToUnicodeString (
-				lpszOutput,
-				NULL,
-				TRUE
-				);
-		if (NULL == lpwszOutput)
-		{
-			return 0;
-		}
+		RtlInitAnsiString(&OutputA, (LPSTR)lpszOutput);
+		RtlAnsiStringToUnicodeString(&OutputU, &OutputA, TRUE);
 	}
+
 	/*
 	 * Call the Unicode version
 	 * of CreateDC.
 	 */
+
 	hDC = CreateDCW (
-		lpwszDriver,
-		lpwszDevice,
-		lpwszOutput,
+		DriverU.Buffer,
+		DeviceU.Buffer,
+		OutputU.Buffer,
 		lpInitData
 		);
 	/*
 	 * Free Unicode parameters.
 	 */
-	if (NULL != lpszDriver) LocalFree (lpwszDriver);
-	if (NULL != lpszDevice) LocalFree (lpwszDevice);
-	if (NULL != lpszOutput) LocalFree (lpwszOutput);
+	RtlFreeUnicodeString(&DriverU);
+	RtlFreeUnicodeString(&DeviceU);
+	RtlFreeUnicodeString(&OutputU);
+
 	/*
 	 * Return the possible DC handle.
 	 */
+
 	return hDC;
 }
 

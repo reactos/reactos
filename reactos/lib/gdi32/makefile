@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.9 2000/02/20 22:52:48 ea Exp $
+# $Id: makefile,v 1.10 2000/02/27 11:04:36 jfilby Exp $
 #
 # Makefile for ReactOS gdi32.dll
 #
@@ -40,6 +40,7 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 		--output-lib $(TARGET).a
 	$(CC) $(TARGET).o \
 		../kernel32/kernel32.a \
+		../ntdll/ntdll.a \
 		-specs=$(TARGET)_specs \
 		-mdll \
 		-o junk.tmp \
@@ -54,6 +55,7 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 	- $(RM) base.tmp
 	$(CC) $(TARGET).o \
 		../kernel32/kernel32.a \
+		../ntdll/ntdll.a \
 		-specs=$(TARGET)_specs \
 		-mdll \
 		-o $(TARGET).dll \
