@@ -1,4 +1,4 @@
-/* $Id: ppool.c,v 1.4 2001/12/20 03:56:09 dwelch Exp $
+/* $Id: ppool.c,v 1.5 2001/12/26 23:34:07 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -198,12 +198,12 @@ ExFreePagedPool(IN PVOID Block)
   ExAcquireFastMutex(&MmPagedPoolLock);
 
   /*
-   * Begin setting up the new free block's header.
+   * Begin setting up the newly freed block's header.
    */
   FreeBlock->Size = UsedSize;
 
   /*
-   * Find the block immediate before and after it on the free list.
+   * Find the blocks immediately before and after the newly freed block on the free list.
    */
   PreviousBlock = NULL;
   NextBlock = MmPagedPoolFirstFreeBlock;
@@ -229,7 +229,7 @@ ExFreePagedPool(IN PVOID Block)
 
   /*
    * If the next block is immediately adjacent to the newly freed one then
-   * free them.
+   * merge them.
    */
   if (NextBlock != NULL && 
       ((PVOID)FreeBlock + FreeBlock->Size) == (PVOID)NextBlock)
@@ -245,7 +245,7 @@ ExFreePagedPool(IN PVOID Block)
 
   /*
    * If the previous block is adjacent to the newly freed one then
-   * purge them.
+   * merge them.
    */
   if (PreviousBlock != NULL && 
       ((PVOID)PreviousBlock + PreviousBlock->Size) == (PVOID)FreeBlock)

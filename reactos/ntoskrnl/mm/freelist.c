@@ -238,8 +238,6 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
    
    Reserved = 
      PAGE_ROUND_UP((MemorySizeInPages * sizeof(PHYSICAL_PAGE))) / PAGESIZE;
-   ReservedGap = 
-     PAGE_ROUND_UP((131072 * sizeof(PHYSICAL_PAGE))) / PAGESIZE;
    MmPageArray = (PHYSICAL_PAGE *)LastKernelAddress;
    
    DPRINT("Reserved %d\n", Reserved);
