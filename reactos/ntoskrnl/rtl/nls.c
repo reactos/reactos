@@ -1,4 +1,4 @@
-/* $Id: nls.c,v 1.15 2003/05/21 16:09:30 ekohl Exp $
+/* $Id: nls.c,v 1.16 2003/06/17 10:44:16 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -22,22 +22,20 @@
 
 /* GLOBALS *******************************************************************/
 
-
-UCHAR NlsLeadByteInfo = 0; /* exported */
-
-USHORT NlsOemLeadByteInfo = 0; /* exported */
-
-
 USHORT NlsAnsiCodePage = 0; /* exported */
 BOOLEAN NlsMbCodePageTag = FALSE; /* exported */
 PWCHAR NlsAnsiToUnicodeTable = NULL;
 PCHAR NlsUnicodeToAnsiTable = NULL;
+PWCHAR NlsDbcsUnicodeToAnsiTable = NULL;
+PUSHORT NlsLeadByteInfo = NULL; /* exported */
 
 
 USHORT NlsOemCodePage = 0;
 BOOLEAN NlsMbOemCodePageTag = FALSE; /* exported */
 PWCHAR NlsOemToUnicodeTable = NULL;
 PCHAR NlsUnicodeToOemTable =NULL;
+PWCHAR NlsDbcsUnicodeToOemTable = NULL;
+PUSHORT NlsOemLeadByteInfo = NULL; /* exported */
 
 
 PUSHORT NlsUnicodeUpcaseTable = NULL;
@@ -448,14 +446,18 @@ RtlResetRtlTranslations(IN PNLSTABLEINFO NlsTable)
   /* Set ANSI data */
   NlsAnsiToUnicodeTable = NlsTable->AnsiTableInfo.MultiByteTable;
   NlsUnicodeToAnsiTable = NlsTable->AnsiTableInfo.WideCharTable;
+  NlsDbcsUnicodeToAnsiTable = (PWCHAR)NlsTable->AnsiTableInfo.WideCharTable;
   NlsMbCodePageTag = (NlsTable->AnsiTableInfo.DBCSCodePage != 0);
+  NlsLeadByteInfo = NlsTable->AnsiTableInfo.DBCSOffsets;
   NlsAnsiCodePage = NlsTable->AnsiTableInfo.CodePage;
   DPRINT("Ansi codepage %hu\n", NlsAnsiCodePage);
 
   /* Set OEM data */
   NlsOemToUnicodeTable = NlsTable->OemTableInfo.MultiByteTable;
   NlsUnicodeToOemTable = NlsTable->OemTableInfo.WideCharTable;
+  NlsDbcsUnicodeToOemTable = (PWCHAR)NlsTable->OemTableInfo.WideCharTable;
   NlsMbOemCodePageTag = (NlsTable->OemTableInfo.DBCSCodePage != 0);
+  NlsOemLeadByteInfo = NlsTable->OemTableInfo.DBCSOffsets;
   NlsOemCodePage = NlsTable->OemTableInfo.CodePage;
   DPRINT("Oem codepage %hu\n", NlsOemCodePage);
 
@@ -548,6 +550,9 @@ RtlUnicodeToMultiByteSize(PULONG MbSize,
 			  PWCHAR UnicodeString,
 			  ULONG UnicodeSize)
 {
+  ULONG UnicodeLength;
+  ULONG MbLength;
+
   if (NlsMbCodePageTag == FALSE)
     {
       /* single-byte code page */
@@ -556,7 +561,19 @@ RtlUnicodeToMultiByteSize(PULONG MbSize,
   else
     {
       /* multi-byte code page */
-      /* FIXME */
+      UnicodeLength = UnicodeSize / sizeof(WCHAR);
+      MbLength = 0;
+      while (UnicodeLength > 0)
+	{
+	  if (NlsLeadByteInfo[*UnicodeString] & 0xff00)
+	    MbLength++;
+
+	  MbLength++;
+	  UnicodeLength--;
+	  UnicodeString++;
+	}
+
+      *MbSize = MbLength;
     }
 
   return(STATUS_SUCCESS);
@@ -767,8 +784,8 @@ RtlUpperChar (IN CHAR Source)
     }
   else
     {
-      /* single-byte code page */
-      /* FIXME: implement the multi-byte stuff!! */
+      /* multi-byte code page */
+      /* FIXME */
       Destination = Source;
     }
 
