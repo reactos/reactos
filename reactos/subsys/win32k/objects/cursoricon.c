@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.44 2004/01/17 15:20:25 navaraf Exp $ */
+/* $Id: cursoricon.c,v 1.45 2004/01/24 19:47:05 navaraf Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -98,87 +98,85 @@ SetPointerRect(PSYSTEM_CURSORINFO CurInfo, PRECTL PointerRect)
 
 #define COLORCURSORS_ALLOWED FALSE
 HCURSOR FASTCALL
-IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor, BOOL ForceChange)
+IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
+   BOOL ForceChange)
 {
-  PSURFOBJ SurfObj;
-  PSURFGDI SurfGDI;
-  SIZEL MouseSize;
-  PDEVINFO DevInfo;
-  PBITMAPOBJ MaskBmpObj;
-  PSYSTEM_CURSORINFO CurInfo;
-  PCURICON_OBJECT OldCursor;
-  HCURSOR Ret = (HCURSOR)0;
-  HBITMAP hMask = (HBITMAP)0, hColor = (HBITMAP)0;
-  PSURFOBJ soMask = NULL, soColor = NULL;
-  PXLATEOBJ XlateObj = NULL;
-  RECTL PointerRect;
+   PSURFOBJ SurfObj;
+   PSURFGDI SurfGDI;
+   SIZEL MouseSize;
+   PDEVINFO DevInfo;
+   PBITMAPOBJ MaskBmpObj;
+   PSYSTEM_CURSORINFO CurInfo;
+   PCURICON_OBJECT OldCursor;
+   HCURSOR Ret = (HCURSOR)0;
+   HBITMAP hMask = (HBITMAP)0, hColor = (HBITMAP)0;
+   PSURFOBJ soMask = NULL, soColor = NULL;
+   PXLATEOBJ XlateObj = NULL;
+   RECTL PointerRect;
   
-  CurInfo = &WinStaObject->SystemCursor;
-  OldCursor = CurInfo->CurrentCursorObject;
-  if(OldCursor)
-  {
-    Ret = (HCURSOR)OldCursor->Self;
-  }
+   CurInfo = &WinStaObject->SystemCursor;
+   OldCursor = CurInfo->CurrentCursorObject;
+   if (OldCursor)
+   {
+      Ret = (HCURSOR)OldCursor->Self;
+   }
   
-  if(!ForceChange && (OldCursor == NewCursor))
-  {
-    return Ret;
-  }
-  
-  {
-  /* FIXME use the desktop's HDC instead of using ScreenDeviceContext */
-    PDC dc = DC_LockDc(IntGetScreenDC());
-  if(!dc)
-  {
-    return Ret;
-  }
-  
-  SurfObj = (PSURFOBJ)AccessUserObject((ULONG) dc->Surface);
-  SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
-  DevInfo = dc->DevInfo;
-  DC_UnlockDc(IntGetScreenDC());
-  }
-  
-  if(!NewCursor && (CurInfo->CurrentCursorObject || ForceChange))
-  {
-    ExAcquireFastMutex(SurfGDI->DriverLock);
-    SurfGDI->PointerStatus = SurfGDI->SetPointerShape(SurfObj, NULL, NULL, NULL,
-                                                      0,
-                                                      0,
-                                                      CurInfo->x, 
-                                                      CurInfo->y, 
-                                                      &PointerRect,
-                                                      SPS_CHANGE);
-    ExReleaseFastMutex(SurfGDI->DriverLock);
-    SetPointerRect(CurInfo, &PointerRect);
-    
-    CurInfo->CurrentCursorObject = NewCursor; /* i.e. CurrentCursorObject = NULL */
-    CurInfo->ShowingCursor = 0;
-    return Ret;
-  }
-  
-  if (!NewCursor)
-  {
-    return Ret;
-  }
-
-  /* TODO: Fixme. Logic is screwed above */
-
-    ASSERT(NewCursor);
-    MaskBmpObj = BITMAPOBJ_LockBitmap(NewCursor->IconInfo.hbmMask);
-    if(MaskBmpObj)
-    {
-    const int maskBpp = MaskBmpObj->bitmap.bmBitsPixel;
-    BITMAPOBJ_UnlockBitmap(NewCursor->IconInfo.hbmMask);
-    if(maskBpp != 1)
-      {
-        DbgPrint("SetCursor: The Mask bitmap must have 1BPP!\n");
+   if (!ForceChange && OldCursor == NewCursor)
+   {
       return Ret;
+   }
+  
+   {
+      /* FIXME use the desktop's HDC instead of using ScreenDeviceContext */
+      PDC dc = DC_LockDc(IntGetScreenDC());
+
+      if (!dc)
+      {
+         return Ret;
+      }
+  
+      SurfObj = (PSURFOBJ)AccessUserObject((ULONG) dc->Surface);
+      SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
+      DevInfo = dc->DevInfo;
+      DC_UnlockDc(IntGetScreenDC());
+   }
+  
+   if (!NewCursor && (CurInfo->CurrentCursorObject || ForceChange))
+   {
+      ExAcquireFastMutex(SurfGDI->DriverLock);
+      SurfGDI->PointerStatus = SurfGDI->SetPointerShape(SurfObj, NULL, NULL, NULL,
+                                                        0, 0, CurInfo->x, CurInfo->y, 
+                                                        &PointerRect, SPS_CHANGE);
+      ExReleaseFastMutex(SurfGDI->DriverLock);
+      SetPointerRect(CurInfo, &PointerRect);
+    
+      CurInfo->CurrentCursorObject = NewCursor; /* i.e. CurrentCursorObject = NULL */
+      CurInfo->ShowingCursor = 0;
+      return Ret;
+   }
+  
+   if (!NewCursor)
+   {
+      return Ret;
+   }
+
+   /* TODO: Fixme. Logic is screwed above */
+
+   ASSERT(NewCursor);
+   MaskBmpObj = BITMAPOBJ_LockBitmap(NewCursor->IconInfo.hbmMask);
+   if (MaskBmpObj)
+   {
+      const int maskBpp = MaskBmpObj->bitmap.bmBitsPixel;
+      BITMAPOBJ_UnlockBitmap(NewCursor->IconInfo.hbmMask);
+      if (maskBpp != 1)
+      {
+         DbgPrint("SetCursor: The Mask bitmap must have 1BPP!\n");
+         return Ret;
       }
       
-      if((DevInfo->flGraphicsCaps2 & GCAPS2_ALPHACURSOR) && 
-         (SurfGDI->BitsPerPixel >= 16) && NewCursor->Shadow
-         && COLORCURSORS_ALLOWED)
+      if ((DevInfo->flGraphicsCaps2 & GCAPS2_ALPHACURSOR) && 
+          (SurfGDI->BitsPerPixel >= 16) && NewCursor->Shadow
+          && COLORCURSORS_ALLOWED)
       {
         /* FIXME - Create a color pointer, only 32bit bitmap, set alpha bits!
                    Do not pass a mask bitmap to DrvSetPointerShape()!
@@ -232,7 +230,8 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor, BOOL Fo
     {
       SurfGDI->SetPointerShape = EngSetPointerShape;
       SurfGDI->MovePointer = EngMovePointer;
-      EngSetPointerShape(SurfObj, soMask, soColor, XlateObj,
+      SurfGDI->PointerStatus = EngSetPointerShape(
+                         SurfObj, soMask, soColor, XlateObj,
                          NewCursor->IconInfo.xHotspot,
                          NewCursor->IconInfo.yHotspot,
                          CurInfo->x, 

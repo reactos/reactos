@@ -44,7 +44,8 @@ DrvSetPointerShape(
    IN RECTL *prcl,
    IN FLONG fl)
 {
-   return SPS_DECLINE;
+/*   return SPS_DECLINE;*/
+   return EngSetPointerShape(pso, psoMask, psoColor, pxlo, xHot, yHot, x, y, prcl, fl);
 }
 
 /*
@@ -64,13 +65,13 @@ DrvMovePointer(
    IN LONG y,
    IN RECTL *prcl)
 {
-
+   return EngMovePointer(pso, x, y, prcl);
 }
 
 #else
 
 VOID FASTCALL
-IntHideMousePointer(PPDEV ppdev)
+IntHideMousePointer(PPDEV ppdev, SURFOBJ *DestSurface)
 {
    if (ppdev->PointerAttributes.Enable == FALSE)
    {
@@ -83,7 +84,6 @@ IntHideMousePointer(PPDEV ppdev)
       RECTL DestRect;
       POINTL SrcPoint;
       SURFOBJ *SaveSurface;
-      SURFOBJ *DestSurface;
       SURFOBJ *MaskSurface;
 
       DestRect.left = max(ppdev->PointerAttributes.Column, 0);
@@ -99,18 +99,16 @@ IntHideMousePointer(PPDEV ppdev)
       SrcPoint.y = max(-ppdev->PointerAttributes.Row, 0);
 
       SaveSurface = EngLockSurface(ppdev->PointerSaveSurface);
-      DestSurface = EngLockSurface(ppdev->hSurfEng);
       MaskSurface = EngLockSurface(ppdev->PointerMaskSurface);
       EngBitBlt(DestSurface, SaveSurface, MaskSurface, NULL, NULL,
                 &DestRect, &SrcPoint, &SrcPoint, NULL, NULL, SRCCOPY);
       EngUnlockSurface(MaskSurface);
-      EngUnlockSurface(DestSurface);
       EngUnlockSurface(SaveSurface);
    }
 }
 
 VOID FASTCALL
-IntShowMousePointer(PPDEV ppdev)
+IntShowMousePointer(PPDEV ppdev, SURFOBJ *DestSurface)
 {
    if (ppdev->PointerAttributes.Enable == TRUE)
    {
@@ -128,7 +126,6 @@ IntShowMousePointer(PPDEV ppdev)
       RECTL DestRect;
       POINTL SrcPoint;
       SURFOBJ *SaveSurface;
-      SURFOBJ *DestSurface;
 
       SrcPoint.x = max(ppdev->PointerAttributes.Column, 0);
       SrcPoint.y = max(ppdev->PointerAttributes.Row, 0);
@@ -143,10 +140,8 @@ IntShowMousePointer(PPDEV ppdev)
          ppdev->ScreenHeight - ppdev->PointerAttributes.Row - 1);
 
       SaveSurface = EngLockSurface(ppdev->PointerSaveSurface);
-      DestSurface = EngLockSurface(ppdev->hSurfEng);
       EngBitBlt(SaveSurface, DestSurface, NULL, NULL, NULL,
                 &DestRect, &SrcPoint, NULL, NULL, NULL, SRCCOPY);
-      EngUnlockSurface(DestSurface);
       EngUnlockSurface(SaveSurface);
    }
 
@@ -157,7 +152,6 @@ IntShowMousePointer(PPDEV ppdev)
    {
       RECTL DestRect;
       POINTL SrcPoint;
-      SURFOBJ *DestSurf;
       SURFOBJ *ColorSurf;
       SURFOBJ *MaskSurf;
 
@@ -173,26 +167,24 @@ IntShowMousePointer(PPDEV ppdev)
       SrcPoint.x = max(-ppdev->PointerAttributes.Column, 0);
       SrcPoint.y = max(-ppdev->PointerAttributes.Row, 0);
 
-      DestSurf = EngLockSurface(ppdev->hSurfEng);
       MaskSurf = EngLockSurface(ppdev->PointerMaskSurface);
       if (ppdev->PointerColorSurface != NULL)
       {
          ColorSurf = EngLockSurface(ppdev->PointerColorSurface);
-         EngBitBlt(DestSurf, ColorSurf, MaskSurf, NULL, ppdev->XlateObject,
+         EngBitBlt(DestSurface, ColorSurf, MaskSurf, NULL, ppdev->PointerXlateObject,
                    &DestRect, &SrcPoint, &SrcPoint, NULL, NULL, 0xAACC);
          EngUnlockSurface(ColorSurf);
       }
       else
       {
          /* FIXME */
-         EngBitBlt(DestSurf, MaskSurf, NULL, NULL, NULL,
+         EngBitBlt(DestSurface, MaskSurf, NULL, NULL, ppdev->PointerXlateObject,
                    &DestRect, &SrcPoint, NULL, NULL, NULL, SRCAND);
          SrcPoint.y += ppdev->PointerAttributes.Height;
-         EngBitBlt(DestSurf, MaskSurf, NULL, NULL, NULL,
+         EngBitBlt(DestSurface, MaskSurf, NULL, NULL, ppdev->PointerXlateObject,
                    &DestRect, &SrcPoint, NULL, NULL, NULL, SRCINVERT);
       }
       EngUnlockSurface(MaskSurf);
-      EngUnlockSurface(DestSurf);
    }
 }
 
@@ -221,7 +213,7 @@ DrvSetPointerShape(
    PPDEV ppdev = (PPDEV)pso->dhpdev;
    SURFOBJ *TempSurfObj;
    
-   IntHideMousePointer(ppdev);
+   IntHideMousePointer(ppdev, pso);
 
    if (ppdev->PointerColorSurface != NULL)
    {
@@ -262,10 +254,10 @@ DrvSetPointerShape(
       return SPS_ACCEPT_EXCLUDE;
    }
 
-   ppdev->HotSpot.x = xHot;
-   ppdev->HotSpot.y = yHot;
+   ppdev->PointerHotSpot.x = xHot;
+   ppdev->PointerHotSpot.y = yHot;
 
-   ppdev->XlateObject = pxlo;
+   ppdev->PointerXlateObject = pxlo;
    ppdev->PointerAttributes.Column = x - xHot;
    ppdev->PointerAttributes.Row = y - yHot;
    ppdev->PointerAttributes.Width = psoMask->lDelta << 3;
@@ -330,7 +322,7 @@ DrvSetPointerShape(
          Size, lDelta, pso->iBitmapFormat, BMF_NOZEROINIT, NULL);
    }
 
-   IntShowMousePointer(ppdev);
+   IntShowMousePointer(ppdev, pso);
 
    return SPS_ACCEPT_EXCLUDE;
 }
@@ -358,7 +350,7 @@ DrvMovePointer(
    WasVisible = ppdev->PointerAttributes.Enable;
    if (WasVisible)
    {
-      IntHideMousePointer(ppdev);
+      IntHideMousePointer(ppdev, pso);
    }
 
    if (x == -1)
@@ -366,12 +358,12 @@ DrvMovePointer(
       return;
    }
 
-   ppdev->PointerAttributes.Column = x - ppdev->HotSpot.x;
-   ppdev->PointerAttributes.Row = y - ppdev->HotSpot.y;
+   ppdev->PointerAttributes.Column = x - ppdev->PointerHotSpot.x;
+   ppdev->PointerAttributes.Row = y - ppdev->PointerHotSpot.y;
 
    if (WasVisible)
    {
-      IntShowMousePointer(ppdev);
+      IntShowMousePointer(ppdev, pso);
    }
 }
 

@@ -26,7 +26,7 @@
 #include <ddk/winddi.h>
 #include <ddk/ntddvdeo.h>
 
-#define EXPERIMENTAL_MOUSE_CURSOR_SUPPORT
+//#define EXPERIMENTAL_MOUSE_CURSOR_SUPPORT
 
 typedef struct _PDEV
 {
@@ -48,12 +48,11 @@ typedef struct _PDEV
 
 #ifdef EXPERIMENTAL_MOUSE_CURSOR_SUPPORT
    VIDEO_POINTER_ATTRIBUTES PointerAttributes;
+   XLATEOBJ *PointerXlateObject;
    HSURF PointerColorSurface;
    HSURF PointerMaskSurface;
    HSURF PointerSaveSurface;
-   XLATEOBJ *XlateObject;
-   POINTL HotSpot;
-   CLIPOBJ *ScreenClipObj;
+   POINTL PointerHotSpot;
 #endif
 } PDEV, *PPDEV;
 

@@ -117,6 +117,19 @@ typedef struct
   DRIVER_FUNCTIONS DriverFunctions;
   PFILE_OBJECT VideoFileObject;
   FAST_MUTEX DriverLock;
+
+  struct {
+     BOOL Enable;
+     LONG Column;
+     LONG Row;
+     LONG Width;
+     LONG Height;
+  } PointerAttributes;
+  XLATEOBJ *PointerXlateObject;
+  HSURF PointerColorSurface;
+  HSURF PointerMaskSurface;
+  HSURF PointerSaveSurface;
+  POINTL PointerHotSpot;
 } GDIDEVICE;
 
 /*  Internal functions  */
