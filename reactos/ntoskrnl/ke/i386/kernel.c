@@ -179,8 +179,8 @@ KeInit1(VOID)
    memset(KPCR, 0, PAGE_SIZE);
    KPCR->Self = (PKPCR)KPCR_BASE;
    KPCR->Irql = HIGH_LEVEL;
-   KPCR->GDT = (PUSHORT)&KiBootGdt;
-   KPCR->IDT = (PUSHORT)&KiIdt;
+   KPCR->GDT = KiBootGdt;
+   KPCR->IDT = (PUSHORT)KiIdt;
    KPCR->TSS = &KiBootTss;
    KPCR->ProcessorNumber = 0;
    KiPcrInitDone = 1;
