@@ -62,7 +62,7 @@ WinMain(HINSTANCE hInstance,
       return(1);
     }
 
-  tf = CreateFont (13, 0, 0, TA_BASELINE, FW_NORMAL, FALSE, FALSE, FALSE,
+  tf = CreateFont (14, 0, 0, TA_BASELINE, FW_NORMAL, FALSE, FALSE, FALSE,
 		    ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
 		    DEFAULT_QUALITY, FIXED_PITCH|FF_DONTCARE, _T("Timmons"));
 
@@ -100,9 +100,9 @@ BOOL CALLBACK MyWindowEnumProc ( HWND hwnd, LPARAM lParam )
   TCHAR wndcaption[1024], buf[1024];
   EnumData* ped = (EnumData*)lParam;
   GetWindowText ( hwnd, wndcaption, sizeof(wndcaption)/sizeof(*wndcaption) );
-  _sntprintf ( buf, sizeof(buf)/sizeof(*buf), _T("%i - %s"), hwnd, wndcaption );
+  _sntprintf ( buf, sizeof(buf)/sizeof(*buf), _T("%x - %s"), hwnd, wndcaption );
   MyTextOut ( ped->hdc, ped->x, ped->y, buf );
-  ped->y += 12;
+  ped->y += 13;
   return TRUE;
 }
 
@@ -125,38 +125,34 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
     MyTextOut ( hDC, 10, 10, "EnumWnd Test" );
 
-    _sntprintf ( buf, sizeof(buf)/sizeof(*buf), _T("%d,%d,%d,%d"), rect.left, rect.top, rect.right, rect.bottom );
+    _sntprintf ( buf, sizeof(buf)/sizeof(*buf), _T("My HWND: %x"), hWnd );
     MyTextOut ( hDC, 10, 30, buf );
-
-    GetWindowRect(hWnd, &rect );
-    _sntprintf ( buf, sizeof(buf)/sizeof(*buf), _T("%d,%d,%d,%d"), rect.left, rect.top, rect.right, rect.bottom );
-    MyTextOut ( hDC, 10, 50, buf );
 
     ed.hdc = hDC;
     ed.x = 10;
-    ed.y = 90;
+    ed.y = 70;
 
     switch ( test )
     {
     case 1:
-      MyTextOut ( hDC, 10, 70, _T("Test #1: EnumWindows()") );
+      MyTextOut ( hDC, 10, 50, _T("Test #1: EnumWindows()") );
       EnumWindows ( MyWindowEnumProc, (LPARAM)&ed );
       break;
     case 2:
-      MyTextOut ( hDC, 10, 70, _T("Test #2: EnumChildWindows()") );
+      MyTextOut ( hDC, 10, 50, _T("Test #2: EnumChildWindows()") );
       EnumChildWindows ( hWnd, MyWindowEnumProc, (LPARAM)&ed );
       break;
     case 3:
-      MyTextOut ( hDC, 10, 70, _T("Test #3: EnumDesktopWindows") );
+      MyTextOut ( hDC, 10, 50, _T("Test #3: EnumDesktopWindows") );
       EnumDesktopWindows ( NULL, MyWindowEnumProc, (LPARAM)&ed );
       break;
     case 4:
-      MyTextOut ( hDC, 10, 70, _T("Test #4: EnumThreadWindows") );
+      MyTextOut ( hDC, 10, 50, _T("Test #4: EnumThreadWindows") );
       EnumThreadWindows ( GetCurrentThreadId(), MyWindowEnumProc, (LPARAM)&ed );
       break;
     default:
-      MyTextOut ( hDC, 10, 70, _T("Press any of the number keys from 1 to 4 to run a test") );
-      MyTextOut ( hDC, 10, 90, _T("Press the left and right mouse buttons to cycle through the tests") );
+      MyTextOut ( hDC, 10, 50, _T("Press any of the number keys from 1 to 4 to run a test") );
+      MyTextOut ( hDC, 10, 70, _T("Press the left and right mouse buttons to cycle through the tests") );
       break;
     }
 
