@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.46 2004/04/09 20:03:14 navaraf Exp $
+/* $Id: class.c,v 1.47 2004/05/10 12:21:22 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -107,7 +107,7 @@ static BOOL GetClassInfoExCommon(
     if (unicode)
         lpwcx->lpszMenuName = heap_string_poolW ( str2.Buffer, str2.Length );
     else
-        (LPWNDCLASSEXA) lpwcx->lpszMenuName = heap_string_poolA ( str2.Buffer, str2.Length );
+        ((LPWNDCLASSEXA) lpwcx)->lpszMenuName = heap_string_poolA ( str2.Buffer, str2.Length );
   }
 
   if ( !IS_ATOM(w.lpszClassName) && w.lpszClassName )
@@ -115,7 +115,7 @@ static BOOL GetClassInfoExCommon(
     if (unicode)
         lpwcx->lpszClassName = heap_string_poolW ( str3.Buffer, str3.Length );
     else
-        (LPWNDCLASSEXA) lpwcx->lpszClassName = heap_string_poolA ( str3.Buffer, str3.Length );
+        ((LPWNDCLASSEXA) lpwcx)->lpszClassName = heap_string_poolA ( str3.Buffer, str3.Length );
   }
 
   HEAP_free ( str2.Buffer );
