@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.47 2002/11/03 20:01:05 chorns Exp $
+/* $Id: console.c,v 1.48 2002/11/12 00:48:25 mdill Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -937,7 +937,7 @@ PeekConsoleInputA(
 	LPDWORD			lpNumberOfEventsRead
 	)
 {
- PCSRSS_API_REQUEST Request;
+  PCSRSS_API_REQUEST Request;
   CSRSS_API_REPLY Reply;
   NTSTATUS Status;
   PVOID BufferBase;
@@ -1118,8 +1118,55 @@ WriteConsoleInputA(
 	LPDWORD			 lpNumberOfEventsWritten
 	)
 {
-/* TO DO */
-	return FALSE;
+  PCSRSS_API_REQUEST Request;
+  CSRSS_API_REPLY Reply;
+  PVOID BufferBase, BufferTargetBase;
+  NTSTATUS Status;
+  DWORD Size;
+  
+  if(lpBuffer == NULL)
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+  
+  Size = nLength * sizeof(INPUT_RECORD);
+
+  Status = CsrCaptureParameterBuffer((PVOID)lpBuffer, Size, &BufferBase, &BufferTargetBase);
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastErrorByStatus(Status);
+    return FALSE;
+  }
+  
+  Request = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(CSRSS_API_REQUEST));
+  if(Request == NULL)
+  {
+    SetLastError(ERROR_OUTOFMEMORY);
+    CsrReleaseParameterBuffer(BufferBase);
+    return FALSE;
+  }
+
+  Request->Type = CSRSS_WRITE_CONSOLE_INPUT;
+  Request->Data.WriteConsoleInputRequest.ConsoleHandle = hConsoleInput;
+  Request->Data.WriteConsoleInputRequest.Length = nLength;
+  Request->Data.WriteConsoleInputRequest.InputRecord = (PINPUT_RECORD)BufferTargetBase;
+  
+  Status = CsrClientCallServer(Request, &Reply, sizeof(CSRSS_API_REQUEST), sizeof(CSRSS_API_REPLY));
+  if(!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
+  {
+    RtlFreeHeap(GetProcessHeap(), 0, Request);
+    CsrReleaseParameterBuffer(BufferBase);
+    return FALSE;
+  }
+  
+  if(lpNumberOfEventsWritten != NULL)
+    lpNumberOfEventsWritten = Reply.Data.WriteConsoleInputReply.Length;
+  
+  RtlFreeHeap(GetProcessHeap(), 0, Request);
+  CsrReleaseParameterBuffer(BufferBase);
+  
+  return TRUE;
 }
 
 
@@ -1155,8 +1202,62 @@ ReadConsoleOutputA(
 	PSMALL_RECT	lpReadRegion
 	)
 {
-/* TO DO */
-	return FALSE;
+  PCSRSS_API_REQUEST Request;
+  CSRSS_API_REPLY Reply;
+  PVOID BufferBase;
+  PVOID BufferTargetBase;
+  NTSTATUS Status;
+  DWORD Size, SizeX, SizeY;
+  
+  if(lpBuffer == NULL)
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+  
+  Size = dwBufferSize.X * dwBufferSize.Y * sizeof(CHAR_INFO);
+
+  Status = CsrCaptureParameterBuffer((PVOID)lpBuffer, Size, &BufferBase, &BufferTargetBase);
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastErrorByStatus(Status);
+    return FALSE;
+  }
+  
+  Request = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(CSRSS_API_REQUEST));
+  if(Request == NULL)
+  {
+    SetLastError(ERROR_OUTOFMEMORY);
+    CsrReleaseParameterBuffer(BufferBase);
+    return FALSE;
+  }
+   
+  Request->Type = CSRSS_READ_CONSOLE_OUTPUT;
+  Request->Data.ReadConsoleOutputRequest.ConsoleHandle = hConsoleOutput;
+  Request->Data.ReadConsoleOutputRequest.BufferSize = dwBufferSize;
+  Request->Data.ReadConsoleOutputRequest.BufferCoord = dwBufferCoord;
+  Request->Data.ReadConsoleOutputRequest.ReadRegion = *lpReadRegion;
+  Request->Data.ReadConsoleOutputRequest.CharInfo = (PCHAR_INFO)BufferTargetBase;
+  
+  Status = CsrClientCallServer(Request, &Reply, sizeof(CSRSS_API_REQUEST), sizeof(CSRSS_API_REPLY));
+  if(!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
+  {
+    SetLastErrorByStatus(Status);
+    RtlFreeHeap(GetProcessHeap(), 0, Request);
+    CsrReleaseParameterBuffer(BufferBase);
+    return FALSE;
+  }
+  
+  SizeX = Reply.Data.ReadConsoleOutputReply.ReadRegion.Right - Reply.Data.ReadConsoleOutputReply.ReadRegion.Left + 1;
+  SizeY = Reply.Data.ReadConsoleOutputReply.ReadRegion.Bottom - Reply.Data.ReadConsoleOutputReply.ReadRegion.Top + 1;
+  
+  memcpy(lpBuffer, BufferBase, sizeof(CHAR_INFO) * SizeX * SizeY);
+  *lpReadRegion = Reply.Data.ReadConsoleOutputReply.ReadRegion;
+  
+  RtlFreeHeap(GetProcessHeap(), 0, Request);
+  CsrReleaseParameterBuffer(BufferBase);
+  
+  return TRUE;
 }
 
 

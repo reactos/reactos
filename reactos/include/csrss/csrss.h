@@ -311,6 +311,31 @@ typedef struct
   DWORD Length;
 } CSRSS_PEEK_CONSOLE_INPUT_REPLY, *PCSRSS_PEEK_CONSOLE_INPUT_REPLY;
 
+typedef struct
+{
+  HANDLE ConsoleHandle;
+  COORD BufferSize;
+  COORD BufferCoord;
+  SMALL_RECT ReadRegion;
+  CHAR_INFO* CharInfo;
+} CSRSS_READ_CONSOLE_OUTPUT_REQUEST, *PCSRSS_READ_CONSOLE_OUTPUT_REQUEST;
+
+typedef struct
+{
+  SMALL_RECT ReadRegion;
+} CSRSS_READ_CONSOLE_OUTPUT_REPLY, *PCSRSS_READ_CONSOLE_OUTPUT_REPLY;
+
+typedef struct
+{
+  HANDLE ConsoleHandle;
+  DWORD Length;
+  INPUT_RECORD* InputRecord;
+} CSRSS_WRITE_CONSOLE_INPUT_REQUEST, *PCSRSS_WRITE_CONSOLE_INPUT_REQUEST;
+
+typedef struct
+{
+  DWORD Length;
+} CSRSS_WRITE_CONSOLE_INPUT_REPLY, *PCSRSS_WRITE_CONSOLE_INPUT_REPLY;
 
 #define CSRSS_MAX_WRITE_CONSOLE_REQUEST       \
       (MAX_MESSAGE_DATA - sizeof(ULONG) - sizeof(CSRSS_WRITE_CONSOLE_REQUEST))
@@ -364,7 +389,8 @@ typedef struct
 #define CSRSS_GET_SHUTDOWN_PARAMETERS       (0x1F)
 #define CSRSS_SET_SHUTDOWN_PARAMETERS       (0x20)
 #define CSRSS_PEEK_CONSOLE_INPUT            (0x21)
-
+#define CSRSS_READ_CONSOLE_OUTPUT           (0x22)
+#define CSRSS_WRITE_CONSOLE_INPUT           (0x23)
 
 /* Keep in sync with definition below. */
 #define CSRSS_REQUEST_HEADER_SIZE (sizeof(LPC_MESSAGE) + sizeof(ULONG))
@@ -406,6 +432,8 @@ typedef struct
     CSRSS_EXIT_REACTOS_REQUEST ExitReactosRequest;
     CSRSS_SHUTDOWN_PARAMETERS SetShutdownParametersRequest;
     CSRSS_PEEK_CONSOLE_INPUT_REQUEST PeekConsoleInputRequest;
+    CSRSS_READ_CONSOLE_OUTPUT_REQUEST ReadConsoleOutputRequest;
+    CSRSS_WRITE_CONSOLE_INPUT_REQUEST WriteConsoleInputRequest;
   } Data;
 } CSRSS_API_REQUEST, *PCSRSS_API_REQUEST;
 
@@ -434,6 +462,8 @@ typedef struct
     CSRSS_GET_NUM_INPUT_EVENTS_REPLY GetNumInputEventsReply;
     CSRSS_SHUTDOWN_PARAMETERS GetShutdownParametersReply;
     CSRSS_PEEK_CONSOLE_INPUT_REPLY PeekConsoleInputReply;
+    CSRSS_READ_CONSOLE_OUTPUT_REPLY ReadConsoleOutputReply;
+    CSRSS_WRITE_CONSOLE_INPUT_REPLY WriteConsoleInputReply;
   } Data;
 } CSRSS_API_REPLY, *PCSRSS_API_REPLY;
 

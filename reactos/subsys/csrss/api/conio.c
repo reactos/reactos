@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.37 2002/11/03 20:01:07 chorns Exp $
+/* $Id: conio.c,v 1.38 2002/11/12 00:48:26 mdill Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -1764,6 +1764,8 @@ CSR_API(CsrWriteConsoleOutput)
    UNLOCK;
    Reply->Data.WriteConsoleOutputReply.WriteRegion.Right = WriteRegion.Left + SizeX - 1;
    Reply->Data.WriteConsoleOutputReply.WriteRegion.Bottom = WriteRegion.Top + SizeY - 1;
+   Reply->Data.WriteConsoleOutputReply.WriteRegion.Left = WriteRegion.Left;
+   Reply->Data.WriteConsoleOutputReply.WriteRegion.Top = WriteRegion.Top;
    return (Reply->Status = STATUS_SUCCESS);
 }
 
@@ -2144,6 +2146,159 @@ CSR_API(CsrPeekConsoleInput)
    
    Reply->Status = STATUS_SUCCESS;
    Reply->Data.PeekConsoleInputReply.Length = NumItems;
+   return Reply->Status;
+}
+
+
+CSR_API(CsrReadConsoleOutput)
+{
+   PCHAR_INFO CharInfo;
+   PCHAR_INFO CurCharInfo;
+   PCSRSS_SCREEN_BUFFER ScreenBuffer;
+   DWORD Size;
+   DWORD Length;
+   DWORD SizeX, SizeY;
+   NTSTATUS Status;
+   COORD BufferSize;
+   COORD BufferCoord;
+   SMALL_RECT ReadRegion;
+   SMALL_RECT ScreenRect;
+   DWORD i, Y, X, Offset;
+      
+   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
+  
+   LOCK;
+  
+   Status = CsrGetObject(ProcessData, Request->Data.ReadConsoleOutputRequest.ConsoleHandle, (Object_t**)&ScreenBuffer);
+   if(!NT_SUCCESS(Status))
+   {
+      Reply->Status = Status;
+      UNLOCK;
+      return Reply->Status;
+   }
+
+   if(ScreenBuffer->Header.Type != CSRSS_SCREEN_BUFFER_MAGIC)
+   {
+      Reply->Status = STATUS_INVALID_HANDLE;
+      UNLOCK;
+      return Reply->Status;
+   }
+   
+   CharInfo = Request->Data.ReadConsoleOutputRequest.CharInfo;
+   ReadRegion = Request->Data.ReadConsoleOutputRequest.ReadRegion;
+   BufferSize = Request->Data.ReadConsoleOutputRequest.BufferSize;
+   BufferCoord = Request->Data.ReadConsoleOutputRequest.BufferCoord;
+   Length = BufferSize.X * BufferSize.Y;
+   Size = Length * sizeof(INPUT_RECORD);
+   
+    if(((PVOID)CharInfo < ProcessData->CsrSectionViewBase)
+         || (((PVOID)CharInfo + Size) > (ProcessData->CsrSectionViewBase + ProcessData->CsrSectionViewSize)))
+   {
+      UNLOCK;
+      Reply->Status = STATUS_ACCESS_VIOLATION;
+      return Reply->Status ;
+   }
+   
+   SizeY = RtlMin(BufferSize.Y - BufferCoord.Y, CsrpRectHeight(ReadRegion));
+   SizeX = RtlMin(BufferSize.X - BufferCoord.X, CsrpRectWidth(ReadRegion));
+   ReadRegion.Bottom = ReadRegion.Top + SizeY;
+   ReadRegion.Right = ReadRegion.Left + SizeX;
+
+   CsrpInitRect(ScreenRect, 0, 0, ScreenBuffer->MaxY - 1, ScreenBuffer->MaxX - 1);
+   if (!CsrpGetIntersection(&ReadRegion, ScreenRect, ReadRegion))
+   {
+      UNLOCK;
+      Reply->Status = STATUS_SUCCESS;
+      return Reply->Status;
+   }
+   
+   for(i = 0, Y = ReadRegion.Top; Y < ReadRegion.Bottom; ++i, ++Y)
+   {
+     CurCharInfo = CharInfo + (i * BufferSize.Y);
+     
+     Offset = (Y * ScreenBuffer->MaxX + ReadRegion.Left) * 2;
+     for(X = ReadRegion.Left; X < ReadRegion.Right; ++X)
+     {
+        CurCharInfo->Char.AsciiChar = GET_CELL_BUFFER(ScreenBuffer, Offset);
+        CurCharInfo->Attributes = GET_CELL_BUFFER(ScreenBuffer, Offset);
+        ++CurCharInfo;
+     }
+  }
+  
+   UNLOCK;
+   
+   Reply->Status = STATUS_SUCCESS;
+   Reply->Data.ReadConsoleOutputReply.ReadRegion.Right = ReadRegion.Left + SizeX - 1;
+   Reply->Data.ReadConsoleOutputReply.ReadRegion.Bottom = ReadRegion.Top + SizeY - 1;
+   Reply->Data.ReadConsoleOutputReply.ReadRegion.Left = ReadRegion.Left;
+   Reply->Data.ReadConsoleOutputReply.ReadRegion.Top = ReadRegion.Top;
+   
+   return Reply->Status;
+}
+
+
+CSR_API(CsrWriteConsoleInput)
+{
+   PINPUT_RECORD InputRecord;
+   PCSRSS_CONSOLE Console;
+   NTSTATUS Status;
+   DWORD Length;
+   DWORD Size;
+   DWORD i;
+   PLIST_ENTRY NextItem;
+   ConsoleInput* Record;
+   
+   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
+   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
+   
+   LOCK;
+   
+   Status = CsrGetObject(ProcessData, Request->Data.WriteConsoleInputRequest.ConsoleHandle, (Object_t**)&Console);
+   if(!NT_SUCCESS(Status))
+   {
+      Reply->Status = Status;
+      UNLOCK;
+      return Reply->Status;
+   }
+
+   if(Console->Header.Type != CSRSS_CONSOLE_MAGIC)
+   {
+      Reply->Status = STATUS_INVALID_HANDLE;
+      UNLOCK;
+      return Reply->Status;
+   }
+   
+   InputRecord = Request->Data.WriteConsoleInputRequest.InputRecord;
+   Length = Request->Data.WriteConsoleInputRequest.Length;
+   Size = Length * sizeof(INPUT_RECORD);
+   
+    if(((PVOID)InputRecord < ProcessData->CsrSectionViewBase)
+         || (((PVOID)InputRecord + Size) > (ProcessData->CsrSectionViewBase + ProcessData->CsrSectionViewSize)))
+   {
+      UNLOCK;
+      Reply->Status = STATUS_ACCESS_VIOLATION;
+      return Reply->Status ;
+   }
+   
+   for(i = 0; i < Length; ++i)
+   {
+      Record = RtlAllocateHeap(CsrssApiHeap, 0, sizeof(ConsoleInput));
+      if(Record == NULL)
+      {
+         UNLOCK;
+         Reply->Status = STATUS_INSUFFICIENT_RESOURCES;
+         return Reply->Status;
+      }
+      
+      Record->InputEvent = *InputRecord++;
+      InsertTailList(&Console->InputEvents, &Record->ListEntry);
+   }
+      
+   UNLOCK;
+   
+   Reply->Status = STATUS_SUCCESS;
+   Reply->Data.WriteConsoleInputReply.Length = i;
    return Reply->Status;
 }
 
