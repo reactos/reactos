@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.39 2001/12/20 03:56:09 dwelch Exp $
+/* $Id: console.c,v 1.40 2002/05/07 22:23:17 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -562,7 +562,7 @@ CloseConsoleHandle(HANDLE Handle)
       return FALSE;
     }
   /* FIXME: call CSRSS */
-  return FALSE;
+  return TRUE/*FALSE*/;
 }
 
 BOOLEAN STDCALL 
