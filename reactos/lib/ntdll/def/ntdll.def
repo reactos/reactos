@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.114 2004/02/01 20:48:05 ekohl Exp $
+; $Id: ntdll.def,v 1.115 2004/02/02 22:37:21 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -97,6 +97,7 @@ NtCreateThread@32
 NtCreateTimer@16
 NtCreateToken@52
 NtCreateWaitablePort@20
+_NtCurrentTeb@0
 NtDelayExecution@8
 NtDeleteAtom@4
 NtDeleteFile@4
@@ -281,7 +282,9 @@ RtlAcquirePebLock@0
 RtlAcquireResourceExclusive@8
 RtlAcquireResourceShared@8
 RtlAddAccessAllowedAce@16
+RtlAddAccessAllowedAceEx@20
 RtlAddAccessDeniedAce@16
+RtlAddAccessDeniedAceEx@20
 RtlAddAce@20
 ;RtlAddActionToRXact
 RtlAddAtomToAtomTable@12
@@ -410,9 +413,11 @@ RtlFindClearBits@12
 RtlFindClearBitsAndSet@12
 RtlFindClearRuns@16
 RtlFindLastBackwardRunClear@12
+RtlFindLeastSignificantBit@8
 RtlFindLongestRunClear@8
 RtlFindLongestRunSet@8
 RtlFindMessage@20
+RtlFindMostSignificantBit@8
 RtlFindNextForwardRunClear@12
 RtlFindRange@48
 RtlFindSetBits@12
@@ -974,8 +979,6 @@ InterlockedIncrement@4
 InterlockedDecrement@4
 InterlockedExchange@8
 InterlockedCompareExchange@12
-_NtCurrentTeb@0
-;RtlIpv4StringToAddressW
 ;?Allocate@CBufferAllocator@@UAEPAXK@Z
 ;CsrCaptureMessageMultiUnicodeStringsInPlace
 ;CsrGetProcessId
@@ -1092,9 +1095,7 @@ NtWaitForKeyedEvent@16
 ;RtlActivateActivationContext
 ;RtlActivateActivationContextEx
 ;RtlActivateActivationContextUnsafeFast
-RtlAddAccessAllowedAceEx@20
 ;RtlAddAccessAllowedObjectAce
-RtlAddAccessDeniedAceEx@20
 ;RtlAddAccessDeniedObjectAce
 ;RtlAddAuditAccessAceEx
 ;RtlAddAuditAccessObjectAce
@@ -1148,8 +1149,6 @@ RtlDuplicateUnicodeString@12
 ;RtlFindActivationContextSectionGuid
 ;RtlFindActivationContextSectionString
 RtlFindCharInUnicodeString@16
-RtlFindLeastSignificantBit@8
-RtlFindMostSignificantBit@8
 ;RtlFirstEntrySList
 ;RtlFlushSecureMemoryCache
 ;RtlFreeThreadActivationContextStack
@@ -1181,6 +1180,7 @@ RtlInterlockedPushEntrySList@8
 ;RtlIpv4AddressToStringA
 ;RtlIpv4AddressToStringW
 ;RtlIpv4StringToAddressA
+;RtlIpv4StringToAddressW
 ;RtlIpv6AddressToStringA
 ;RtlIpv6AddressToStringW
 ;RtlIpv6StringToAddressA

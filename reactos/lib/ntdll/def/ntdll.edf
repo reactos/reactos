@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.104 2004/02/01 20:48:05 ekohl Exp $
+; $Id: ntdll.edf,v 1.105 2004/02/02 22:37:21 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -97,6 +97,7 @@ NtCreateThread=NtCreateThread@32
 NtCreateTimer=NtCreateTimer@16
 NtCreateToken=NtCreateToken@52
 NtCreateWaitablePort=NtCreateWaitablePort@20
+NtCurrentTeb=_NtCurrentTeb@0
 NtDelayExecution=NtDelayExecution@8
 NtDeleteAtom=NtDeleteAtom@4
 NtDeleteFile=NtDeleteFile@4
@@ -281,7 +282,9 @@ RtlAcquirePebLock=RtlAcquirePebLock@0
 RtlAcquireResourceExclusive=RtlAcquireResourceExclusive@8
 RtlAcquireResourceShared=RtlAcquireResourceShared@8
 RtlAddAccessAllowedAce=RtlAddAccessAllowedAce@16
+RtlAddAccessAllowedAceEx=RtlAddAccessAllowedAceEx@20
 RtlAddAccessDeniedAce=RtlAddAccessDeniedAce@16
+RtlAddAccessDeniedAceEx=RtlAddAccessDeniedAceEx@20
 RtlAddAce=RtlAddAce@20
 ;RtlAddActionToRXact
 RtlAddAtomToAtomTable=RtlAddAtomToAtomTable@12
@@ -410,9 +413,11 @@ RtlFindClearBits=RtlFindClearBits@12
 RtlFindClearBitsAndSet=RtlFindClearBitsAndSet@12
 RtlFindClearRuns=RtlFindClearRuns@16
 RtlFindLastBackwardRunClear=RtlFindLastBackwardRunClear@12
+RtlFindLeastSignificantBit=RtlFindLeastSignificantBit@8
 RtlFindLongestRunClear=RtlFindLongestRunClear@8
 RtlFindLongestRunSet=RtlFindLongestRunSet@8
 RtlFindMessage=RtlFindMessage@20
+RtlFindMostSignificantBit=RtlFindMostSignificantBit@8 
 RtlFindNextForwardRunClear=RtlFindNextForwardRunClear@12
 RtlFindRange=RtlFindRange@48
 RtlFindSetBits=RtlFindSetBits@12
@@ -974,8 +979,6 @@ wcsstr
 wcstol
 wcstombs
 wcstoul
-NtCurrentTeb=_NtCurrentTeb@0
-;RtlIpv4StringToAddressW
 ;?Allocate@CBufferAllocator@@UAEPAXK@Z
 ;CsrCaptureMessageMultiUnicodeStringsInPlace
 ;CsrGetProcessId
@@ -1092,9 +1095,7 @@ NtWaitForKeyedEvent=NtWaitForKeyedEvent@16
 ;RtlActivateActivationContext
 ;RtlActivateActivationContextEx
 ;RtlActivateActivationContextUnsafeFast
-RtlAddAccessAllowedAceEx=RtlAddAccessAllowedAceEx@20
 ;RtlAddAccessAllowedObjectAce
-RtlAddAccessDeniedAceEx=RtlAddAccessDeniedAceEx@20
 ;RtlAddAccessDeniedObjectAce
 ;RtlAddAuditAccessAceEx
 ;RtlAddAuditAccessObjectAce
@@ -1148,8 +1149,6 @@ RtlDuplicateUnicodeString=RtlDuplicateUnicodeString@12
 ;RtlFindActivationContextSectionGuid
 ;RtlFindActivationContextSectionString
 RtlFindCharInUnicodeString=RtlFindCharInUnicodeString@16
-RtlFindLeastSignificantBit=RtlFindLeastSignificantBit@8
-RtlFindMostSignificantBit=RtlFindMostSignificantBit@8 
 ;RtlFirstEntrySList
 ;RtlFlushSecureMemoryCache
 ;RtlFreeThreadActivationContextStack
@@ -1181,6 +1180,7 @@ RtlInterlockedPushEntrySList=RtlInterlockedPushEntrySList@8
 ;RtlIpv4AddressToStringA
 ;RtlIpv4AddressToStringW
 ;RtlIpv4StringToAddressA
+;RtlIpv4StringToAddressW
 ;RtlIpv6AddressToStringA
 ;RtlIpv6AddressToStringW
 ;RtlIpv6StringToAddressA

@@ -159,31 +159,6 @@ NTSTATUS STDCALL NtPowerInformation(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x5
   return(FALSE);
 }
 
-/*
- * @unimplemented
- */
-NTSTATUS  STDCALL RtlAddAccessAllowedAceEx(
-	IN OUT PACL pAcl,
-	IN DWORD dwAceRevision,
-	IN DWORD AceFlags,
-	IN DWORD AccessMask,
-	IN PSID pSid)
-{
-  return(FALSE);
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS  STDCALL RtlAddAccessDeniedAceEx(
-	IN OUT PACL pAcl,
-	IN DWORD dwAceRevision,
-	IN DWORD AceFlags,
-	IN DWORD AccessMask,
-	IN PSID pSid)
-{
-  return(FALSE);
-}
 
 /*
  * @unimplemented

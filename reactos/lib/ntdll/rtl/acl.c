@@ -1,9 +1,9 @@
-/* $Id: acl.c,v 1.10 2003/07/11 13:50:23 royce Exp $
+/* $Id: acl.c,v 1.11 2004/02/02 22:38:12 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Security manager
- * FILE:              kernel/se/acl.c
+ * FILE:              lib/ntdll/rtl/acl.c
  * PROGRAMER:         David Welch <welch@cwcom.net>
  * REVISION HISTORY:
  *                 26/07/98: Added stubs for security functions
@@ -40,12 +40,10 @@ RtlFirstFreeAce(PACL Acl,
 	{
 	  return(FALSE);
 	}
-      if (Current->Header.AceType == 4)
+      if (Current->Header.AceType == ACCESS_ALLOWED_COMPOUND_ACE_TYPE &&
+	  Acl->AclRevision < ACL_REVISION3)
 	{
-	  if (Acl->AclRevision < 3)
-	    {
-	      return(FALSE);
-	    }
+	  return(FALSE);
 	}
       Current = (PACE)((PVOID)Current + (ULONG)Current->Header.AceSize);
       i++;
@@ -73,8 +71,8 @@ RtlGetAce(PACL Acl,
 
   *Ace = (PACE)(Acl + 1);
 
-  if (Acl->AclRevision != 2 &&
-      Acl->AclRevision != 3)
+  if (Acl->AclRevision < MIN_ACL_REVISION ||
+      Acl->AclRevision > MAX_ACL_REVISION)
     {
       return(STATUS_INVALID_PARAMETER);
     }
@@ -103,11 +101,12 @@ RtlGetAce(PACL Acl,
 
 
 static NTSTATUS
-RtlpAddKnownAce(PACL Acl,
-		ULONG Revision,
-		ACCESS_MASK AccessMask,
-		PSID Sid,
-		ULONG Type)
+RtlpAddKnownAce (PACL Acl,
+		 ULONG Revision,
+		 ULONG Flags,
+		 ACCESS_MASK AccessMask,
+		 PSID Sid,
+		 ULONG Type)
 {
   PACE Ace;
 
@@ -115,8 +114,8 @@ RtlpAddKnownAce(PACL Acl,
     {
       return(STATUS_INVALID_SID);
     }
-  if (Acl->AclRevision > 3 ||
-      Revision > 3)
+  if (Acl->AclRevision > MAX_ACL_REVISION ||
+      Revision > MAX_ACL_REVISION)
     {
       return(STATUS_UNKNOWN_REVISION);
     }
@@ -137,7 +136,7 @@ RtlpAddKnownAce(PACL Acl,
     {
       return(STATUS_ALLOTTED_SPACE_EXCEEDED);
     }
-  Ace->Header.AceFlags = 0;
+  Ace->Header.AceFlags = Flags;
   Ace->Header.AceType = Type;
   Ace->Header.AceSize = RtlLengthSid(Sid) + sizeof(ACE);
   Ace->AccessMask = AccessMask;
@@ -152,12 +151,17 @@ RtlpAddKnownAce(PACL Acl,
  * @implemented
  */
 NTSTATUS STDCALL
-RtlAddAccessAllowedAce(PACL Acl,
-		       ULONG Revision,
-		       ACCESS_MASK AccessMask,
-		       PSID Sid)
+RtlAddAccessAllowedAce (IN OUT PACL Acl,
+			IN ULONG Revision,
+			IN ACCESS_MASK AccessMask,
+			IN PSID Sid)
 {
-  return(RtlpAddKnownAce(Acl, Revision, AccessMask, Sid, 0));
+  return RtlpAddKnownAce (Acl,
+			  Revision,
+			  0,
+			  AccessMask,
+			  Sid,
+			  ACCESS_ALLOWED_ACE_TYPE);
 }
 
 
@@ -165,12 +169,55 @@ RtlAddAccessAllowedAce(PACL Acl,
  * @implemented
  */
 NTSTATUS STDCALL
-RtlAddAccessDeniedAce(PACL Acl,
-		      ULONG Revision,
-		      ACCESS_MASK AccessMask,
-		      PSID Sid)
+RtlAddAccessAllowedAceEx (IN OUT PACL Acl,
+			  IN ULONG Revision,
+			  IN ULONG Flags,
+			  IN ACCESS_MASK AccessMask,
+			  IN PSID Sid)
 {
-  return(RtlpAddKnownAce(Acl, Revision, AccessMask, Sid, 1));
+  return RtlpAddKnownAce (Acl,
+			  Revision,
+			  Flags,
+			  AccessMask,
+			  Sid,
+			  ACCESS_ALLOWED_ACE_TYPE);
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+RtlAddAccessDeniedAce (PACL Acl,
+		       ULONG Revision,
+		       ACCESS_MASK AccessMask,
+		       PSID Sid)
+{
+  return RtlpAddKnownAce (Acl,
+			  Revision,
+			  0,
+			  AccessMask,
+			  Sid,
+			  ACCESS_DENIED_ACE_TYPE);
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+RtlAddAccessDeniedAceEx (IN OUT PACL Acl,
+			 IN ULONG Revision,
+			 IN ULONG Flags,
+			 IN ACCESS_MASK AccessMask,
+			 IN PSID Sid)
+{
+  return RtlpAddKnownAce (Acl,
+			  Revision,
+			  Flags,
+			  AccessMask,
+			  Sid,
+			  ACCESS_DENIED_ACE_TYPE);
 }
 
 
@@ -211,8 +258,8 @@ RtlAddAce(PACL Acl,
   PACE Current;
   ULONG j;
 
-  if (Acl->AclRevision != 2 &&
-      Acl->AclRevision != 3)
+  if (Acl->AclRevision < MIN_ACL_REVISION ||
+      Acl->AclRevision > MAX_ACL_REVISION)
     {
       return(STATUS_INVALID_PARAMETER);
     }
@@ -236,8 +283,8 @@ RtlAddAce(PACL Acl,
   Current = (PACE)(Acl + 1);
   while ((PVOID)Current < ((PVOID)AceList + AceListLength))
     {
-      if (AceList->Header.AceType == 4 &&
-	  AclRevision < 3)
+      if (AceList->Header.AceType == ACCESS_ALLOWED_COMPOUND_ACE_TYPE &&
+	  AclRevision < ACL_REVISION3)
 	{
 	  return(STATUS_INVALID_PARAMETER);
 	}
@@ -306,8 +353,8 @@ RtlAddAuditAccessAce(PACL Acl,
       return(STATUS_INVALID_SID);
     }
 
-  if (Acl->AclRevision > 3 ||
-      Revision > 3)
+  if (Acl->AclRevision > MAX_ACL_REVISION ||
+      Revision > MAX_ACL_REVISION)
     {
       return(STATUS_REVISION_MISMATCH);
     }
@@ -333,7 +380,7 @@ RtlAddAuditAccessAce(PACL Acl,
     }
 
   Ace->Header.AceFlags = Flags;
-  Ace->Header.AceType = 2;
+  Ace->Header.AceType = SYSTEM_AUDIT_ACE_TYPE;
   Ace->Header.AceSize = RtlLengthSid(Sid) + sizeof(ACE);
   Ace->AccessMask = AccessMask;
   RtlCopySid(RtlLengthSid(Sid),
@@ -377,8 +424,8 @@ RtlDeleteAce(PACL Acl,
   PACE Ace;
   PACE Current;
 
-  if (Acl->AclRevision != 2 &&
-      Acl->AclRevision != 3)
+  if (Acl->AclRevision < MIN_ACL_REVISION ||
+      Acl->AclRevision > MAX_ACL_REVISION)
     {
       return(STATUS_INVALID_PARAMETER);
     }
@@ -422,8 +469,8 @@ RtlCreateAcl(PACL Acl,
       return(STATUS_BUFFER_TOO_SMALL);
     }
 
-  if (AclRevision != 2 &&
-      AclRevision != 3)
+  if (AclRevision < MIN_ACL_REVISION ||
+      AclRevision > MAX_ACL_REVISION)
     {
       return(STATUS_INVALID_PARAMETER);
     }
@@ -455,8 +502,8 @@ RtlQueryInformationAcl(PACL Acl,
 {
   PACE Ace;
 
-  if (Acl->AclRevision != 2 &&
-      Acl->AclRevision != 3)
+  if (Acl->AclRevision < MIN_ACL_REVISION ||
+      Acl->AclRevision > MAX_ACL_REVISION)
     {
       return(STATUS_INVALID_PARAMETER);
     }
@@ -520,8 +567,8 @@ RtlSetInformationAcl(PACL Acl,
 		     ULONG InformationLength,
 		     ACL_INFORMATION_CLASS InformationClass)
 {
-  if (Acl->AclRevision != 2 &&
-      Acl->AclRevision != 3)
+  if (Acl->AclRevision < MIN_ACL_REVISION ||
+      Acl->AclRevision > MAX_ACL_REVISION)
     {
       return(STATUS_INVALID_PARAMETER);
     }
@@ -558,15 +605,15 @@ RtlSetInformationAcl(PACL Acl,
  * @implemented
  */
 BOOLEAN STDCALL
-RtlValidAcl(PACL Acl)
+RtlValidAcl (PACL Acl)
 {
   PACE Ace;
   USHORT Size;
 
   Size = (Acl->AclSize + 3) & ~3;
 
-  if (Acl->AclRevision != 2 &&
-      Acl->AclRevision != 3)
+  if (Acl->AclRevision < MIN_ACL_REVISION ||
+      Acl->AclRevision > MAX_ACL_REVISION)
     {
       return(FALSE);
     }
