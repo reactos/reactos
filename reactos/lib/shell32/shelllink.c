@@ -289,7 +289,7 @@ static HRESULT WINAPI IPersistFile_fnSave(IPersistFile* iface, LPCOLESTR pszFile
     TRACE("(%p)->(%s)\n",This,debugstr_w(pszFileName));
 
     if (!pszFileName || !This->sPath)
-        return ERROR_UNKNOWN;
+        return E_FAIL;
 
     r = CreateStreamOnFile(pszFileName, STGM_READWRITE | STGM_CREATE, &stm);
     if( SUCCEEDED( r ) )
