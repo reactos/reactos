@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.27 2002/08/28 18:36:18 ekohl Exp $
+/* $Id: atapi.c,v 1.28 2002/09/04 21:33:26 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -704,7 +704,6 @@ AtapiInterrupt(IN PVOID DeviceExtension)
   ULONG SectorSize;
   ULONG TransferSize;
 
-
   DPRINT("AtapiInterrupt() called!\n");
 
   DevExt = (PATAPI_MINIPORT_EXTENSION)DeviceExtension;
@@ -727,6 +726,26 @@ AtapiInterrupt(IN PVOID DeviceExtension)
   IsLastBlock = FALSE;
 
   DeviceStatus = IDEReadStatus(CommandPortBase);
+  DPRINT("DeviceStatus: %x\n", DeviceStatus);
+
+  if (DeviceStatus & IDE_SR_BUSY)
+    {
+      /* Wait for BUSY to drop */
+      for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++)
+	{
+	  DeviceStatus = IDEReadStatus(CommandPortBase);
+	  if (!(DeviceStatus & IDE_SR_BUSY))
+	    {
+	      break;
+	    }
+	  ScsiPortStallExecution(10);
+	}
+      if (Retries >= IDE_MAX_BUSY_RETRIES)
+	{
+	  DPRINT1("Drive is BUSY for too long\n");
+	  /* FIXME: handle timeout */
+	}
+    }
 
   if ((DeviceStatus & IDE_SR_ERR) &&
       (Srb->Cdb[0] != SCSIOP_REQUEST_SENSE))
