@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.14 2004/10/18 19:11:07 chorns Exp $
+# $Id: Makefile,v 1.15 2004/11/28 01:30:01 hbirr Exp $
 
 PATH_TO_TOP = ../..
 
@@ -72,6 +72,7 @@ HAL_UP = \
 
 HAL_MP = \
   $(HAL_OBJECTS) \
+	apic.o \
 	mpsirql.o \
 	mpsboot.o \
 	mps.o

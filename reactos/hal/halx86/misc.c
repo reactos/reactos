@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.7 2004/11/01 19:01:25 hbirr Exp $
+/* $Id: misc.c,v 1.8 2004/11/28 01:30:01 hbirr Exp $
  *
  * COPYRIGHT:             See COPYING in the top level directory
  * PROJECT:               ReactOS kernel
@@ -12,6 +12,13 @@
 #include <roscfg.h>
 #include <ddk/ntddk.h>
 #include <hal.h>
+
+#ifdef MP
+#include <apic.h>
+#endif
+
+#define NDEBUG
+#include <internal/debug.h>
 
 /* FUNCTIONS ****************************************************************/
 
@@ -54,13 +61,15 @@ HalProcessorIdle(VOID)
 #endif
 }
 
-
 VOID STDCALL
-HalRequestIpi(ULONG Unknown)
+HalRequestIpi(ULONG ProcessorNo)
 {
-  return;
+  DPRINT("HalRequestIpi(ProcessorNo %d)\n", ProcessorNo);
+#ifdef MP 
+  APICSendIPI(1 << ProcessorNo,
+	      IPI_VECTOR|APIC_ICR0_LEVEL_DEASSERT|APIC_ICR0_DESTM);
+#endif
 }
-
 
 ULONG FASTCALL
 HalSystemVectorDispatchEntry (

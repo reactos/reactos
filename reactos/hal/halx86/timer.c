@@ -20,7 +20,7 @@
  * MA 02139, USA.  
  *
  */
-/* $Id: timer.c,v 1.7 2004/11/14 19:01:31 hbirr Exp $
+/* $Id: timer.c,v 1.8 2004/11/28 01:30:01 hbirr Exp $
  *
  * PROJECT:        ReactOS kernel
  * FILE:           ntoskrnl/hal/x86/udelay.c
@@ -321,11 +321,18 @@ KeQueryPerformanceCounter(PLARGE_INTEGER PerformanceFreq)
  * RETURNS: The number of performance counter ticks since boot
  */
 {
-  PKPCR Pcr = KeGetCurrentKPCR();
+  PKPCR Pcr;
   LARGE_INTEGER Value;
+  ULONG Flags;
+
+  Ki386SaveFlags(Flags);
+  Ki386DisableInterrupts();
+
+  Pcr = KeGetCurrentKPCR();
 
   if (Pcr->PrcbData.FeatureBits & X86_FEATURE_TSC)
   {
+     Ki386RestoreFlags(Flags);
      if (NULL != PerformanceFreq)
      {
         PerformanceFreq->QuadPart = Pcr->PrcbData.MHz * (ULONGLONG)1000000;   
@@ -337,6 +344,8 @@ KeQueryPerformanceCounter(PLARGE_INTEGER PerformanceFreq)
      LARGE_INTEGER TicksOld;
      LARGE_INTEGER TicksNew;
      ULONG CountsLeft;
+
+     Ki386RestoreFlags(Flags);
 
      if (NULL != PerformanceFreq)
      {

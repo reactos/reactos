@@ -1,4 +1,4 @@
-/* $Id: mps.S,v 1.3 2004/11/01 19:01:25 hbirr Exp $
+/* $Id: mps.S,v 1.4 2004/11/28 01:30:01 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -36,6 +36,19 @@
   popl  %ds; \
   popa;
 
+.global _MpsIpiInterrupt
+_MpsIpiInterrupt:
+  /* Save registers */	
+  BEFORE
+
+  /* Call the C handler */
+  call  _MpsIpiHandler
+
+	/* Return to the caller */
+  AFTER
+  iret
+  
+  
 .globl _MpsErrorInterrupt
 _MpsErrorInterrupt:
   /* Save registers */	
