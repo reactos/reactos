@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.36.4.1 2004/07/15 20:07:17 weiden Exp $
+/* $Id: input.c,v 1.36.4.2 2004/07/18 23:44:01 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -517,7 +517,7 @@ IntMouseInput(MOUSEINPUT *mi)
       MousePos.y += mi->dy;
     }
     
-    DesktopWindow = WinSta->ActiveDesktop->DesktopWindow;
+    DesktopWindow = WinSta->InputDesktop->DesktopWindow;
     if (DesktopWindow != NULL)
     {
       if(MousePos.x >= DesktopWindow->ClientRect.right)
@@ -713,7 +713,8 @@ IntSendInput(
    *         e.g. services running in the service window station cannot block input
    */
   if(!ThreadHasInputAccess(W32Thread) ||
-     !IntIsActiveDesktop(W32Thread->Desktop))
+     !W32Thread->Desktop ||
+     W32Thread->Desktop->WindowStation->InputDesktop != W32Thread->Desktop)
   {
     SetLastWin32Error(ERROR_ACCESS_DENIED);
     return 0;
@@ -753,7 +754,7 @@ IntSendInput(
 BOOL FASTCALL
 IntBlockInput(PW32THREAD W32Thread, BOOL BlockIt)
 {
-  UNIMPLEMENTED;
+  //UNIMPLEMENTED;
   return FALSE;
 }
 

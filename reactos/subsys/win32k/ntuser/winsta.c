@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: winsta.c,v 1.64.8.1 2004/07/15 20:07:18 weiden Exp $
+ *  $Id: winsta.c,v 1.64.8.2 2004/07/18 23:44:01 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -184,10 +184,12 @@ BOOL FASTCALL
 IntInitializeDesktopGraphics(VOID)
 {
   UNICODE_STRING DriverName;
+
   if (! IntCreatePrimarySurface())
     {
       return FALSE;
     }
+  
   RtlInitUnicodeString(&DriverName, L"DISPLAY");
   ScreenDeviceContext = IntGdiCreateDC(&DriverName, NULL, NULL, NULL);
   if (NULL == ScreenDeviceContext)
@@ -215,7 +217,7 @@ IntEndDesktopGraphics(VOID)
       NtGdiDeleteDC(ScreenDeviceContext);
       ScreenDeviceContext = NULL;
     }
-  IntHideDesktop(IntGetActiveDesktop());
+  IntHideDesktop(IntGetInputDesktop());
   IntDestroyPrimarySurface();
 }
 

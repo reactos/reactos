@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: desktop.c,v 1.17.2.1 2004/07/15 20:07:17 weiden Exp $
+ *  $Id: desktop.c,v 1.17.2.2 2004/07/18 23:44:01 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -48,9 +48,6 @@ ObFindHandleForObject(IN PEPROCESS Process,
 
 /* GLOBALS *******************************************************************/
 
-/* Currently active desktop */
-PDESKTOP_OBJECT InputDesktop = NULL;
-HDESK InputDesktopHandle = NULL; 
 HDC ScreenDeviceContext = NULL;
 
 /* INITALIZATION FUNCTIONS ****************************************************/
@@ -132,9 +129,12 @@ IntGetDesktopWorkArea(PDESKTOP_OBJECT Desktop, PRECT Rect)
 }
 
 PDESKTOP_OBJECT FASTCALL
-IntGetActiveDesktop(VOID)
+IntGetInputDesktop(VOID)
 {
-  return InputDesktop;
+  PWINSTATION_OBJECT WinSta;
+  WinSta = PsGetWin32Process()->WindowStation;
+  DbgPrint("IntGetInputDesktop (id 0x%x, winsta 0x%x, desktop 0x%x)\n", PsGetCurrentProcessId(), WinSta, (WinSta != NULL ? WinSta->InputDesktop : NULL));
+  return (WinSta != NULL ? WinSta->InputDesktop : NULL);
 }
 
 PWINDOW_OBJECT FASTCALL
@@ -185,7 +185,7 @@ IntGetDesktopObjectHandle(PDESKTOP_OBJECT DesktopObject)
 PUSER_MESSAGE_QUEUE FASTCALL
 IntGetActiveMessageQueue(VOID)
 {
-   PDESKTOP_OBJECT pdo = IntGetActiveDesktop();
+   PDESKTOP_OBJECT pdo = PsGetWin32Thread()->Desktop;
    if (!pdo)
    {
       DPRINT1("No active desktop\n");
@@ -207,7 +207,7 @@ IntSetActiveMessageQueue(PUSER_MESSAGE_QUEUE NewQueue)
    PUSER_MESSAGE_QUEUE Prev;
    PDESKTOP_OBJECT pdo;
    
-   if (!(pdo = IntGetActiveDesktop()))
+   if (!(pdo = PsGetWin32Thread()->Desktop))
    {
       DPRINT1("No active desktop\n");
       return NULL;
@@ -231,10 +231,10 @@ IntSetActiveMessageQueue(PUSER_MESSAGE_QUEUE NewQueue)
 PWINDOW_OBJECT FASTCALL
 IntGetDesktopWindow(VOID)
 {
-   PDESKTOP_OBJECT pdo = IntGetActiveDesktop();
+   PDESKTOP_OBJECT pdo = PsGetWin32Thread()->Desktop;
    if (!pdo)
    {
-      DPRINT("No active desktop\n");
+      DPRINT1("No desktop assigned to thread (process 0x%x)\n", PsGetCurrentProcessId());
       return NULL;
    }
   return pdo->DesktopWindow;
@@ -575,13 +575,9 @@ NtUserOpenInputDesktop(
 
    /* Get a pointer to the desktop object */
 
-   Status = IntValidateDesktopHandle(
-      InputDesktopHandle,
-      UserMode,
-      0,
-      &Object);
+   Object = IntGetInputDesktop();
 
-   if (!NT_SUCCESS(Status))
+   if (Object == NULL)
    {
       DPRINT("Validation of input desktop handle (0x%X) failed\n", InputDesktop);
       return (HDESK)0;
@@ -598,16 +594,14 @@ NtUserOpenInputDesktop(
       UserMode,
       (HANDLE*)&Desktop);
 
-   ObDereferenceObject(Object);
-
-   if (NT_SUCCESS(Status))
+   if (!NT_SUCCESS(Status))
    {
-      DPRINT("Successfully opened input desktop\n");
-      return (HDESK)Desktop;
+      DPRINT1("Failed to open the input desktop\n");
+      SetLastNtError(Status);
    }
 
-   SetLastNtError(Status);
-   return (HDESK)0;
+
+   return (HDESK)Desktop;
 }
 
 /*
@@ -763,11 +757,9 @@ NtUserSwitchDesktop(HDESK hDesktop)
    /* FIXME: Connect to input device */
 
    /* Set the active desktop in the desktop's window station. */
-   DesktopObject->WindowStation->ActiveDesktop = DesktopObject;
+   DesktopObject->WindowStation->InputDesktop = DesktopObject;
 
    /* Set the global state. */
-   InputDesktop = DesktopObject;
-   InputDesktopHandle = hDesktop;
    InputWindowStation = DesktopObject->WindowStation;
 
    ObDereferenceObject(DesktopObject);

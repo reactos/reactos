@@ -1,4 +1,4 @@
-/* $Id: csr.c,v 1.2 2004/07/12 20:09:35 gvg Exp $
+/* $Id: csr.c,v 1.2.2.1 2004/07/18 23:44:01 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -13,7 +13,7 @@ static HANDLE WindowsApiPort = NULL;
 static PEPROCESS CsrProcess = NULL;
 
 NTSTATUS FASTCALL
-CsrInit(void)
+CsrInit(VOID)
 {
   NTSTATUS Status;
   UNICODE_STRING PortName;
@@ -74,6 +74,29 @@ CsrNotify(PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply)
     }
 
   return Status;
+}
+
+PEPROCESS FASTCALL
+CsrAttachToCsrss(VOID)
+{
+  PEPROCESS OldProcess;
+  
+  OldProcess = PsGetCurrentProcess();
+  if(OldProcess != CsrProcess)
+  {
+    KeAttachProcess(CsrProcess);
+  }
+
+  return OldProcess;
+}
+
+VOID FASTCALL
+CsrDetachFromCsrss(PEPROCESS PrevProcess)
+{
+  if(PrevProcess != PsGetCurrentProcess())
+  {
+    KeDetachProcess();
+  }
 }
 
 /* EOF */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ntuser.c,v 1.1.4.1 2004/07/15 20:12:55 weiden Exp $
+/* $Id: ntuser.c,v 1.1.4.2 2004/07/18 23:44:01 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -903,7 +903,7 @@ NtUserGetDC(HWND hWnd)
     if(!(Window = IntGetDesktopWindow()))
     {
       LEAVE_CRITICAL();
-      DPRINT1("GetWindowDC(): Unable to get desktop window!\n");
+      DPRINT1("GetWindowDC(): Unable to get desktop window (process 0x%x)!\n", PsGetCurrentProcessId());
       NTUSER_FAIL_ERROR(ERROR_ACCESS_DENIED);
     }
   }

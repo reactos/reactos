@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.244.2.1 2004/07/15 20:07:18 weiden Exp $
+/* $Id: window.c,v 1.244.2.2 2004/07/18 23:44:01 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -790,7 +790,7 @@ IntCreateWindow(DWORD dwExStyle,
   DPRINT1("Created object with handle %X on Desktop 0x%x\n", Handle, PsGetWin32Thread()->Desktop);
   
   /* If there is no desktop window yet, we must be creating it */
-  InterlockedCompareExchange((LONG*)&PsGetWin32Thread()->Desktop->DesktopWindow, 0, (LONG)WindowObject);
+  InterlockedCompareExchange((LONG*)&PsGetWin32Thread()->Desktop->DesktopWindow, (LONG)WindowObject, 0);
 
   /*
    * Fill out the structure describing it.

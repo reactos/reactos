@@ -273,8 +273,6 @@ INT            FASTCALL IntReleaseDC(PWINDOW_OBJECT Window, HDC hDc);
 
 /* DESKTOPS *******************************************************************/
 
-extern PDESKTOP_OBJECT InputDesktop;
-extern HDESK InputDesktopHandle; 
 extern PCLASS_OBJECT DesktopWindowClass;
 extern HDC ScreenDeviceContext;
 
@@ -289,7 +287,7 @@ PWINDOW_OBJECT      FASTCALL IntGetDesktopWindow (VOID);
 PWINDOW_OBJECT      FASTCALL IntGetCurrentThreadDesktopWindow(VOID);
 PUSER_MESSAGE_QUEUE FASTCALL IntGetActiveMessageQueue(VOID);
 PUSER_MESSAGE_QUEUE FASTCALL IntSetActiveMessageQueue(PUSER_MESSAGE_QUEUE NewQueue);
-PDESKTOP_OBJECT     FASTCALL IntGetActiveDesktop(VOID);
+PDESKTOP_OBJECT     FASTCALL IntGetInputDesktop(VOID);
 NTSTATUS            FASTCALL IntShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height);
 NTSTATUS            FASTCALL IntHideDesktop(PDESKTOP_OBJECT Desktop);
 HDESK               FASTCALL IntGetDesktopObjectHandle(PDESKTOP_OBJECT DesktopObject);
@@ -1000,6 +998,11 @@ VOID          MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount);
 VOID FASTCALL SetPointerRect(PSYSTEM_CURSORINFO CurInfo, PRECTL PointerRect);
 
 /* MISC FUNCTIONS *************************************************************/
+
+NTSTATUS  FASTCALL CsrInit(VOID);
+NTSTATUS  FASTCALL CsrNotify(PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply);
+PEPROCESS FASTCALL CsrAttachToCsrss(VOID);
+VOID      FASTCALL CsrDetachFromCsrss(PEPROCESS PrevProcess);
 
 INT   FASTCALL IntGetSystemMetrics(INT nIndex);
 BOOL  FASTCALL IntSystemParametersInfo(UINT uiAction, UINT uiParam, PVOID pvParam, UINT fWinIni);

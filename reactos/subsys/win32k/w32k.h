@@ -36,7 +36,6 @@
 
 #include <include/misc.h>
 #include <include/color.h>
-#include <include/csr.h>
 #include <include/dib.h>
 #include <include/eng.h>
 #include <include/error.h>

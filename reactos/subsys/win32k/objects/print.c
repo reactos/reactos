@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: print.c,v 1.20 2004/07/14 20:48:58 navaraf Exp $ */
+/* $Id: print.c,v 1.20.2.1 2004/07/18 23:44:01 weiden Exp $ */
 #include <w32k.h>
 
 INT
@@ -65,6 +65,9 @@ IntEngExtEscape(
    INT      OutSize,
    LPVOID   OutData)
 {
+   if (Escape == 0x1101)
+      return 0;
+
    UNIMPLEMENTED;
    return -1;
 }
