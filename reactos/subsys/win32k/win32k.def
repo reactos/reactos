@@ -1,4 +1,4 @@
-; $Id: win32k.def,v 1.15 2003/02/15 19:16:33 gvg Exp $
+; $Id: win32k.def,v 1.16 2003/06/20 16:24:06 ekohl Exp $
 ;
 ; win32k.def
 ;
@@ -165,7 +165,6 @@ RtlUpcaseUnicodeToMultiByteN@20
 STROBJ_bEnum
 STROBJ_dwGetCodePage
 STROBJ_vEnumStart
-W32kCleanupForProcess@4
 W32kInitialize
 WNDOBJ_bEnum
 WNDOBJ_cEnumStart

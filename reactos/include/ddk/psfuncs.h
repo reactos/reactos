@@ -1,4 +1,4 @@
-/* $Id: psfuncs.h,v 1.23 2003/04/10 23:14:46 hyperion Exp $
+/* $Id: psfuncs.h,v 1.24 2003/06/20 16:19:33 ekohl Exp $
  */
 #ifndef _INCLUDE_DDK_PSFUNCS_H
 #define _INCLUDE_DDK_PSFUNCS_H
@@ -41,12 +41,13 @@ NTSTATUS STDCALL PsCreateSystemProcess(PHANDLE ProcessHandle,
 NTSTATUS STDCALL PsCreateWin32Process(struct _EPROCESS* Process);
 NTSTATUS STDCALL PsCreateWin32Thread(struct _ETHREAD* Thread);
 
-VOID STDCALL PsEstablishWin32Callouts(PVOID Param1,
-				      PVOID Param2,
-				      PVOID Param3,
-				      PVOID Param4,
-				      ULONG W32ThreadSize,
-				      ULONG W32ProcessSize);
+VOID STDCALL
+PsEstablishWin32Callouts (PW32_PROCESS_CALLBACK W32ProcessCallback,
+			  PW32_THREAD_CALLBACK W32ThreadCallback,
+			  PVOID Param3,
+			  PVOID Param4,
+			  ULONG W32ThreadSize,
+			  ULONG W32ProcessSize);
 
 #define PsGetCurrentProcess() IoGetCurrentProcess()
 #define PsGetCurrentThread() ((struct _ETHREAD*) (KeGetCurrentThread()))

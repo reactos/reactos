@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.156 2003/06/11 12:29:49 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.157 2003/06/20 16:22:56 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -631,15 +631,14 @@ PsAssignImpersonationToken@8
 ;PsChargePoolQuota@12
 PsCreateSystemProcess@12
 PsCreateSystemThread@28
-PsCreateWin32Thread@4
 PsCreateWin32Process@4
-PsGetWin32Thread@0
-PsGetWin32Process@0
 PsEstablishWin32Callouts@24
 PsGetCurrentProcessId@0
 PsGetCurrentThreadId@0
 PsGetProcessExitTime@0
 PsGetVersion@16
+PsGetWin32Thread@0
+PsGetWin32Process@0
 PsImpersonateClient@20
 PsInitialSystemProcess DATA
 PsIsThreadTerminating@4

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: syscall.S,v 1.11 2003/06/04 18:11:16 hbirr Exp $
+/* $Id: syscall.S,v 1.12 2003/06/20 16:21:11 ekohl Exp $
  *
  * FILE:            ntoskrnl/hal/x86/syscall.s
  * PURPOSE:         2E trap handler
@@ -198,9 +198,14 @@ new_shadowServiceInRange:
            movw %bx,%ds
 
 	   /* Call system call hook */
+//	   pushl %eax
+//	   call _KiSystemCallHook
+//	   popl %eax
+
+	   /* Call service check routine */
 	   pushl %eax
-	   call _KiSystemCallHook
-           popl %eax
+	   call _KiServiceCheck
+	   popl %eax
  
            /*  Make the system service call  */
            movl  %es:_KeServiceDescriptorTableShadow + 16, %ecx

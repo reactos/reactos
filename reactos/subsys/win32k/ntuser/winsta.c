@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winsta.c,v 1.15 2003/06/16 13:10:01 gvg Exp $
+/* $Id: winsta.c,v 1.16 2003/06/20 16:26:14 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -41,7 +41,6 @@
 #include <win32k/win32k.h>
 #include <include/winsta.h>
 #include <include/object.h>
-#include <include/guicheck.h>
 #include <napi/win32.h>
 #include <include/class.h>
 #include <include/window.h>
@@ -783,12 +782,9 @@ NtUserResolveDesktopForWOW(DWORD Unknown0)
 
 BOOL STDCALL
 NtUserSetThreadDesktop(HDESK hDesktop)
-{  
+{
   PDESKTOP_OBJECT DesktopObject;
   NTSTATUS Status;
-
-  /* Initialize the Win32 state if necessary. */
-  W32kGuiCheck();
 
   /* Validate the new desktop. */
   Status = ValidateDesktopHandle(hDesktop,
@@ -810,7 +806,10 @@ NtUserSetThreadDesktop(HDESK hDesktop)
 
   /* FIXME: Should check here to see if the thread has any windows. */
 
-  ObDereferenceObject(PsGetWin32Thread()->Desktop);
+  if (PsGetWin32Thread()->Desktop != NULL)
+    {
+      ObDereferenceObject(PsGetWin32Thread()->Desktop);
+    }
   PsGetWin32Thread()->Desktop = DesktopObject;
 
   return(TRUE);

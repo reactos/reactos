@@ -19,11 +19,12 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.28 2003/06/07 12:37:01 hbirr Exp $
+ * $Id: gdiobj.c,v 1.29 2003/06/20 16:26:53 ekohl Exp $
  *
  */
 
 #undef WIN32_LEAN_AND_MEAN
+#define WIN32_NO_STATUS
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <include/dce.h>
@@ -590,20 +591,15 @@ BOOL STDCALL  W32kDeleteObject(HGDIOBJ hObject)
 
 /*!
  * Internal function. Called when the process is destroyed to free the remaining GDI handles.
- * \param	Process - PID of the process that was destroyed.
+ * \param	Process - PID of the process that will be destroyed.
 */
-BOOL STDCALL W32kCleanupForProcess(INT Pid)
+BOOL FASTCALL CleanupForProcess (struct _EPROCESS *Process, INT Pid)
 {
   DWORD i;
   PGDI_HANDLE_ENTRY handleEntry;
   PGDIOBJHDR objectHeader;
   NTSTATUS Status;
-  PEPROCESS Process;
 
-  if (! NT_SUCCESS(PsLookupProcessByProcessId(Pid, &Process)))
-    {
-      return FALSE;
-    }
   KeAttachProcess(Process);
 
   for(i = 1; i < GDI_HANDLE_NUMBER; i++)
@@ -619,7 +615,6 @@ BOOL STDCALL W32kCleanupForProcess(INT Pid)
     }
 
   KeDetachProcess();
-  ObDereferenceObject(Process);
 
   return TRUE;
 }

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.61 2003/06/07 12:23:14 chorns Exp $
+/* $Id: create.c,v 1.62 2003/06/20 16:22:20 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -286,6 +286,9 @@ PiDeleteThread(PVOID ObjectBody)
 
   DPRINT("PiDeleteThread(ObjectBody %x)\n",ObjectBody);
 
+  /* Terminate Win32 thread */
+  PsTerminateWin32Thread (Thread);
+
   ObDereferenceObject(Thread->ThreadsProcess);
   Thread->ThreadsProcess = NULL;
 
@@ -305,7 +308,7 @@ PiDeleteThread(PVOID ObjectBody)
      NotifyRoutine[i](Thread->Cid.UniqueProcess,
                       Thread->Cid.UniqueThread,
                       FALSE);
-  }    
+  }
 
   KeReleaseThread(Thread);
   DPRINT("PiDeleteThread() finished\n");

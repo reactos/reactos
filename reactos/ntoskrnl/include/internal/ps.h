@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.47 2003/06/16 16:45:03 ekohl Exp $
+/* $Id: ps.h,v 1.48 2003/06/20 16:20:34 ekohl Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -521,6 +521,16 @@ VOID
 PsInitialiseSuspendImplementation(VOID);
 
 extern ULONG PiNrThreadsAwaitingReaping;
+
+
+NTSTATUS
+PsInitWin32Thread (PETHREAD Thread);
+
+VOID
+PsTerminateWin32Process (PEPROCESS Process);
+
+VOID
+PsTerminateWin32Thread (PETHREAD Thread);
 
 #endif /* ASSEMBLER */
 

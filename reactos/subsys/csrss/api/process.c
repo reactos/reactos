@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.26 2003/03/09 21:41:35 hbirr Exp $
+/* $Id: process.c,v 1.27 2003/06/20 16:23:34 ekohl Exp $
  *
  * reactos/subsys/csrss/api/process.c
  *
@@ -17,8 +17,6 @@
 
 #define NDEBUG
 #include <debug.h>
-
-BOOL STDCALL W32kCleanupForProcess( INT Process );
 
 #define LOCK   RtlEnterCriticalSection(&ProcessDataLock)
 #define UNLOCK RtlLeaveCriticalSection(&ProcessDataLock)
@@ -120,7 +118,6 @@ NTSTATUS STDCALL CsrFreeProcessData(ULONG Pid)
    if (pProcessData)
    {
       //DbgPrint("CsrFreeProcessData pid: %d\n", Pid);
-      W32kCleanupForProcess(Pid);  //should check if win32k process
       if (pProcessData->HandleTable)
       {
 	 for( c = 0; c < pProcessData->HandleTableSize; c++ )

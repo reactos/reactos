@@ -1,4 +1,4 @@
-/* $Id: usercall.c,v 1.23 2003/06/07 10:14:40 chorns Exp $
+/* $Id: usercall.c,v 1.24 2003/06/20 16:21:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -57,6 +57,30 @@ ULONG KiAfterSystemCallHook(ULONG NtStatus, PKTRAP_FRAME TrapFrame)
       KiDeliverUserApc(TrapFrame);
     }
   return(NtStatus);
+}
+
+
+VOID KiServiceCheck (ULONG Nr)
+{
+  PETHREAD Thread;
+
+  Thread = PsGetCurrentThread();
+
+#if 0
+  DbgPrint ("KiServiceCheck(%p) called\n", Thread);
+  DbgPrint ("Service %d (%p)\n", Nr, KeServiceDescriptorTableShadow[1].SSDT[Nr].SysCallPtr);
+#endif
+
+  if (Thread->Tcb.ServiceTable != KeServiceDescriptorTableShadow)
+    {
+#if 0
+      DbgPrint ("Initialize Win32 thread\n");
+#endif
+
+      PsInitWin32Thread (Thread);
+
+      Thread->Tcb.ServiceTable = KeServiceDescriptorTableShadow;
+    }
 }
 
 // This function should be used by win32k.sys to add its own user32/gdi32 services

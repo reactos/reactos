@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.142 2003/06/11 12:29:49 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.143 2003/06/20 16:22:56 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -630,15 +630,14 @@ PsAssignImpersonationToken=PsAssignImpersonationToken@8
 ;PsChargePoolQuota=PsChargePoolQuota@12
 PsCreateSystemProcess=PsCreateSystemProcess@12
 PsCreateSystemThread=PsCreateSystemThread@28
-PsCreateWin32Thread=PsCreateWin32Thread@4
 PsCreateWin32Process=PsCreateWin32Process@4
-PsGetWin32Thread=PsGetWin32Thread@0
-PsGetWin32Process=PsGetWin32Process@0
 PsEstablishWin32Callouts=PsEstablishWin32Callouts@24
 PsGetCurrentProcessId=PsGetCurrentProcessId@0
 PsGetCurrentThreadId=PsGetCurrentThreadId@0
 PsGetProcessExitTime=PsGetProcessExitTime@0
 PsGetVersion=PsGetVersion@16
+PsGetWin32Thread=PsGetWin32Thread@0
+PsGetWin32Process=PsGetWin32Process@0
 PsImpersonateClient=PsImpersonateClient@20
 PsInitialSystemProcess DATA
 PsIsThreadTerminating=PsIsThreadTerminating@4

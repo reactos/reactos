@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.107 2003/06/07 12:23:14 chorns Exp $
+/* $Id: process.c,v 1.108 2003/06/20 16:22:20 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -292,25 +292,29 @@ PiDeleteProcess(PVOID ObjectBody)
   DPRINT("PiDeleteProcess(ObjectBody %x)\n",ObjectBody);
 
   Process = (PEPROCESS)ObjectBody;
+
+  /* Terminate Win32 Process */
+  PsTerminateWin32Process (Process);
+
   KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
   NotifyRoutineCount = 0;
   for (i = 0; i < MAX_PROCESS_NOTIFY_ROUTINE_COUNT; i++)
-  {
-     if (PiProcessNotifyRoutine[i])
-     {
-        NotifyRoutine[NotifyRoutineCount++] = PiProcessNotifyRoutine[i];   
-     }
-  }
+    {
+      if (PiProcessNotifyRoutine[i])
+	{
+	  NotifyRoutine[NotifyRoutineCount++] = PiProcessNotifyRoutine[i];
+	}
+    }
   RemoveEntryList(&Process->ProcessListEntry);
   KeReleaseSpinLock(&PsProcessListLock, oldIrql);
 
   for (i = 0;i < NotifyRoutineCount; i++)
-  {
-     //must be called below DISPATCH_LVL
-     NotifyRoutine[i](Process->InheritedFromUniqueProcessId,
-                      (HANDLE)Process->UniqueProcessId,
-                      FALSE);   
-  }
+    {
+      /* must be called below DISPATCH_LVL */
+      NotifyRoutine[i](Process->InheritedFromUniqueProcessId,
+		       (HANDLE)Process->UniqueProcessId,
+		       FALSE);
+    }
 
   /* KDB hook */
   KDB_DELETEPROCESS_HOOK(Process);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.56 2003/06/16 13:43:16 gvg Exp $
+/* $Id: window.c,v 1.57 2003/06/20 16:26:14 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -470,7 +470,6 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   DPRINT("NtUserCreateWindowEx\n");
 
   /* Initialize gui state if necessary. */
-  W32kGuiCheck();
   W32kGraphicsCheck(TRUE);
 
   if (!RtlCreateUnicodeString(&WindowName,
@@ -1150,8 +1149,6 @@ NtUserFindWindowEx(HWND hwndParent,
   PLIST_ENTRY currentEntry;
   PWNDCLASS_OBJECT classObject;
   
-  W32kGuiCheck();
-  
   status = ClassReferenceClassByNameOrAtom(&classObject, ucClassName->Buffer);
   if (!NT_SUCCESS(status))
     {
@@ -1521,8 +1518,6 @@ NtUserGetWindowLong(HWND hWnd, DWORD Index)
   NTSTATUS Status;
   LONG Result;
 
-  W32kGuiCheck();
-
   Status = 
     ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->HandleTable,
 			       hWnd,
@@ -1596,8 +1591,6 @@ NtUserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
   NTSTATUS Status;
   LONG OldValue;
   STYLESTRUCT Style;
-
-  W32kGuiCheck();
 
   Status = 
     ObmReferenceObjectByHandle(PsGetWin32Process()->WindowStation->HandleTable,
@@ -1729,8 +1722,6 @@ BOOL STDCALL
 NtUserShowWindow(HWND hWnd,
 		 LONG nCmdShow)
 {
-  W32kGuiCheck();
-
   return(WinPosShowWindow(hWnd, nCmdShow));
 }
 
@@ -1785,4 +1776,5 @@ NtUserGetDesktopWindow()
 {
 	return W32kGetDesktopWindow();
 }
+
 /* EOF */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.17 2003/06/16 13:56:09 gvg Exp $
+/* $Id: class.c,v 1.18 2003/06/20 16:26:14 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -236,8 +236,6 @@ NtUserRegisterClassExWOW(LPWNDCLASSEXW lpwcx,
   PWNDCLASS_OBJECT ClassObject;
   NTSTATUS Status;
   RTL_ATOM Atom;
-  
-  W32kGuiCheck();
 
   DPRINT("About to open window station handle (0x%X)\n", 
 	 PROCESS_WINDOW_STATION());

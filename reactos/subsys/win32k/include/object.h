@@ -116,6 +116,8 @@ VOID  FASTCALL InitGdiObjectHandleTable (VOID);
 
 VOID  FASTCALL CreateStockObjects (VOID);
 
+BOOL  FASTCALL CleanupForProcess (struct _EPROCESS *Process, INT Pid);
+
 VOID  FASTCALL GDIOBJ_MarkObjectGlobal (HGDIOBJ ObjectHandle);
 BOOL  FASTCALL GDIOBJ_LockMultipleObj (PGDIMULTILOCK pList, INT nObj);
 

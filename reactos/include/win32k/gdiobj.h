@@ -100,8 +100,7 @@ BOOL    FASTCALL GDIOBJ_LockMultipleObj( PGDIMULTILOCK pList, INT nObj );
 BOOL    FASTCALL GDIOBJ_UnlockObj (HGDIOBJ Obj, WORD Magic);
 BOOL    FASTCALL GDIOBJ_UnlockMultipleObj( PGDIMULTILOCK pList, INT nObj );
 WORD    FASTCALL GDIOBJ_GetHandleMagic (HGDIOBJ ObjectHandle);
-VOID    STDCALL W32kDumpGdiObjects( INT Process );
-BOOL    STDCALL W32kCleanupForProcess( INT Process );
+VOID    STDCALL W32kDumpGdiObjects( INT Pid );
 
 #define GDIOBJFLAG_DEFAULT		(0x0)
 #define GDIOBJFLAG_IGNOREPID 	(0x1)

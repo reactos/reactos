@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.21 2003/06/14 21:21:23 gvg Exp $
+/* $Id: message.c,v 1.22 2003/06/20 16:26:14 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -31,7 +31,6 @@
 
 #include <ddk/ntddk.h>
 #include <win32k/win32k.h>
-#include <include/guicheck.h>
 #include <include/msgqueue.h>
 #include <include/window.h>
 #include <include/class.h>
@@ -252,9 +251,6 @@ NtUserPeekMessage(LPMSG UnsafeMsg,
   BOOL Present;
   PWINDOW_OBJECT Window;
 
-  /* Initialize the thread's win32 state if necessary. */ 
-  W32kGuiCheck();
-
   /* Validate input */
   if (NULL != Wnd)
     {
@@ -340,9 +336,6 @@ NtUserGetMessage(LPMSG UnsafeMsg,
   NTSTATUS Status;
   PWINDOW_OBJECT Window;
 
-  /* Initialize the thread's win32 state if necessary. */ 
-  W32kGuiCheck();
-
   /* Validate input */
   if (NULL != Wnd)
     {
@@ -411,9 +404,6 @@ NtUserPostMessage(HWND hWnd,
   MSG Mesg;
   PUSER_MESSAGE Message;
   NTSTATUS Status;
-
-  /* Initialize the thread's win32 state if necessary. */ 
-  W32kGuiCheck();
 
   if (WM_QUIT == Msg)
     {
@@ -573,8 +563,6 @@ NtUserSendNotifyMessage(HWND hWnd,
 BOOL STDCALL
 NtUserWaitMessage(VOID)
 {
-  /* Initialize the thread's win32 state if necessary. */ 
-  W32kGuiCheck();
 
   return W32kWaitMessage(NULL, 0, 0);
 }

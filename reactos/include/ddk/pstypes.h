@@ -23,20 +23,31 @@ struct _KTHREAD;
 
 typedef struct _KTHREAD *PKTHREAD, *PRKTHREAD;
 
-typedef NTSTATUS STDCALL_FUNC (*PKSTART_ROUTINE)(PVOID StartContext);
+typedef NTSTATUS STDCALL_FUNC
+(*PKSTART_ROUTINE)(PVOID StartContext);
 
-typedef VOID STDCALL_FUNC (*PCREATE_PROCESS_NOTIFY_ROUTINE)(HANDLE ParentId,
-						       HANDLE ProcessId,
-						       BOOLEAN Create);
+typedef VOID STDCALL_FUNC
+(*PCREATE_PROCESS_NOTIFY_ROUTINE)(HANDLE ParentId,
+				  HANDLE ProcessId,
+				  BOOLEAN Create);
 
-typedef VOID STDCALL_FUNC (*PCREATE_THREAD_NOTIFY_ROUTINE)(HANDLE ProcessId,
-						      HANDLE ThreadId,
-						      BOOLEAN Create);
+typedef VOID STDCALL_FUNC
+(*PCREATE_THREAD_NOTIFY_ROUTINE)(HANDLE ProcessId,
+				 HANDLE ThreadId,
+				 BOOLEAN Create);
+
+typedef NTSTATUS STDCALL_FUNC
+(*PW32_PROCESS_CALLBACK)(struct _EPROCESS *Process,
+			 BOOLEAN Create);
+
+typedef NTSTATUS STDCALL_FUNC
+(*PW32_THREAD_CALLBACK)(struct _ETHREAD *Thread,
+			BOOLEAN Create);
 
 typedef struct _STACK_INFORMATION
 {
-	PVOID 	BaseAddress;
-	PVOID	UpperAddress;
+  PVOID BaseAddress;
+  PVOID UpperAddress;
 } STACK_INFORMATION, *PSTACK_INFORMATION;
 
 typedef ULONG THREADINFOCLASS;

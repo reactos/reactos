@@ -59,7 +59,6 @@ W32kDeleteDC				1
 W32kDeleteEnhMetaFile			1
 W32kDeleteMetaFile			1
 W32kDeleteObject			1
-W32kCleanupForProcess			1
 W32kDescribePixelFormat			4
 #W32kDeviceCapabilitiesEx		?
 W32kDrawEscape				4

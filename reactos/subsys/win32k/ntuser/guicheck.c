@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: guicheck.c,v 1.12 2003/05/31 08:53:14 gvg Exp $
+/* $Id: guicheck.c,v 1.13 2003/06/20 16:26:14 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -74,54 +74,6 @@ W32kGraphicsCheck(BOOL Create)
 	}
     }
     
-}
-
-VOID FASTCALL
-W32kGuiCheck(VOID)
-{ 
-  if (PsGetWin32Process() == NULL)
-    {
-      NTSTATUS Status;
-
-      PsCreateWin32Process(PsGetCurrentProcess());
-
-      InitializeListHead(&PsGetWin32Process()->ClassListHead);
-      ExInitializeFastMutex(&PsGetWin32Process()->ClassListLock);      
-
-      Status = 
-	ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-				    UserMode,
-				    GENERIC_ALL,
-				    &PsGetWin32Process()->WindowStation);
-      if (!NT_SUCCESS(Status))
-	{
-	  DPRINT1("W32K: Failed to reference a window station for "
-		   "process.\n");
-	}
-    }
-
-  if (PsGetWin32Thread() == NULL)
-    {
-      NTSTATUS Status;
-
-      PsCreateWin32Thread(PsGetCurrentThread());
-      PsGetWin32Thread()->MessageQueue = MsqCreateMessageQueue();
-      InitializeListHead(&PsGetWin32Thread()->WindowListHead);
-      ExInitializeFastMutex(&PsGetWin32Thread()->WindowListLock);
-
-      /* By default threads get assigned their process's desktop. */
-      PsGetWin32Thread()->Desktop = NULL;
-      Status = ObReferenceObjectByHandle(PsGetCurrentProcess()->Win32Desktop,
-					 GENERIC_ALL,
-					 ExDesktopObjectType,
-					 UserMode,
-					 (PVOID*)&PsGetWin32Thread()->Desktop,
-					 NULL);
-      if (!NT_SUCCESS(Status))
-	{
-	  DPRINT1("W32K: Failed to reference a desktop for thread.\n");
-	}
-    }
 }
 
 /* EOF */
