@@ -1,7 +1,8 @@
 /*
- *  RPCRT4
- *
+ * ReactOS - RPCRT4
  * Copyright 2000 Huw D M Davies for Codeweavers
+ *
+ * Gettimeofday - Copyright Wu Yongwei
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,14 +17,17 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * NOTES: (sedwards) 
+ * Dont use this for anything major in ReactOS. Its only here
+ * to make dll dependancys happy and for the UUIDCreate Function.
  * 
+ * If you wish to work on rpcrt4 in ReactOS please look at the current winehq
+ * sources and figure out a way to implement a IPC/LPC bridge so we dont have
+ * for this code from WINE.
+ *
+ * throw the code out and start over. =)
  */
-
-#include "wine/config.h"
-#include "wine/port.h"
-#include "wine/debug.h"
-
-#define _TIMEVAL_DEFINED // ReactOS
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -65,6 +69,10 @@
 #ifdef HAVE_NETINET_IN_H
 # include <netinet/in.h>
 #endif
+
+#include "wine/config.h"
+#include "wine/port.h"
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -234,8 +242,6 @@ RPC_STATUS WINAPI UuidCreateNil(UUID *Uuid)
 
  /*************************************************************************
  * gettimeofday for systems that lack it
- *
- * By Wu Yongwei
  */
 
 #ifndef __GNUC__
