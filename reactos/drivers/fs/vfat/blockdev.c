@@ -19,6 +19,29 @@
 
 /* FUNCTIONS ***************************************************************/
 
+NTSTATUS STDCALL
+VfatReadWriteCompletion (IN PDEVICE_OBJECT DeviceObject,
+			 IN PIRP Irp,
+			 IN PVOID Context)
+{
+   PMDL Mdl;
+
+   DPRINT("VfatReadBlockDeviceCompletion(DeviceObject %x, Irp %x, Context %x)\n",
+          DeviceObject, Irp, Context);
+
+   while ((Mdl = Irp->MdlAddress))
+     {
+       Irp->MdlAddress = Mdl->Next;
+       IoFreeMdl(Mdl);
+     }
+
+   *Irp->UserIosb = Irp->IoStatus;
+   KeSetEvent(Irp->UserEvent, IO_NO_INCREMENT, FALSE);
+   IoFreeIrp(Irp);
+
+   return STATUS_MORE_PROCESSING_REQUIRED;
+}
+
 NTSTATUS
 VfatReadDisk (IN PDEVICE_OBJECT pDeviceObject,
 	      IN PLARGE_INTEGER ReadOffset,
@@ -56,6 +79,13 @@ VfatReadDisk (IN PDEVICE_OBJECT pDeviceObject,
       Stack = IoGetNextIrpStackLocation(Irp);
       Stack->Flags |= SL_OVERRIDE_VERIFY_VOLUME;
     }
+
+  IoSetCompletionRoutine(Irp,
+                         VfatReadWriteCompletion,
+			 NULL,
+			 TRUE,
+			 TRUE,
+			 TRUE);
 
   DPRINT ("Calling IO Driver... with irp %x\n", Irp);
   Status = IoCallDriver (pDeviceObject, Irp);
@@ -110,6 +140,13 @@ VfatWriteDisk (IN PDEVICE_OBJECT pDeviceObject,
       DPRINT ("WRITE failed!!!\n");
       return (STATUS_UNSUCCESSFUL);
     }
+
+  IoSetCompletionRoutine(Irp,
+			 VfatReadWriteCompletion,
+			 NULL,
+			 TRUE,
+			 TRUE,
+			 TRUE);
 
   DPRINT ("Calling IO Driver...\n");
   Status = IoCallDriver (pDeviceObject, Irp);
