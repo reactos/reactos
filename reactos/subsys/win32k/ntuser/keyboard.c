@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: keyboard.c,v 1.32 2004/11/15 14:40:14 ekohl Exp $
+/* $Id: keyboard.c,v 1.33 2004/11/15 16:36:28 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -511,10 +511,9 @@ void InitKbdLayout( PVOID *pkKeyboardLayout )
     }
     else
     {
-      DPRINT1("DefaultLocale = %lx\n", LocaleId);
-
+      DPRINT("DefaultLocale = %lx\n", LocaleId);
       swprintf(LocaleBuffer, L"%08lx", LocaleId);
-      DPRINT1("DefaultLocale = %S\n", LocaleBuffer);
+      DPRINT("DefaultLocale = %S\n", LocaleBuffer);
       RtlInitUnicodeString(&DefaultLocale, LocaleBuffer);
 
       RtlInitUnicodeString(&LayoutKeyName,
