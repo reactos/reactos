@@ -7,4 +7,8 @@ NTSTATUS FASTCALL
 IntSafeCopyUnicodeString(PUNICODE_STRING Dest,
                          PUNICODE_STRING Source);
 
+NTSTATUS FASTCALL
+IntSafeCopyUnicodeStringTerminateNULL(PUNICODE_STRING Dest,
+                                      PUNICODE_STRING Source);
+
 #endif /* ndef _SUBSYS_WIN32K_INCLUDE_CLEANUP_H */

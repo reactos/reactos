@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.233 2004/05/16 19:31:09 navaraf Exp $
+/* $Id: window.c,v 1.234 2004/05/19 19:09:20 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -3572,76 +3572,21 @@ NtUserRealChildWindowFromPoint(DWORD Unknown0,
 UINT STDCALL
 NtUserRegisterWindowMessage(PUNICODE_STRING MessageNameUnsafe)
 {
-#if 0
-  PLIST_ENTRY Current;
-  PREGISTERED_MESSAGE NewMsg, RegMsg;
-  UINT Msg = REGISTERED_MESSAGE_MIN;
-  UNICODE_STRING MessageName;
+  UNICODE_STRING SafeMessageName;
   NTSTATUS Status;
-
-  Status = MmCopyFromCaller(&MessageName, MessageNameUnsafe, sizeof(UNICODE_STRING));
-  if (! NT_SUCCESS(Status))
-    {
-      SetLastNtError(Status);
-      return 0;
-    }
-
-  NewMsg = ExAllocatePoolWithTag(PagedPool,
-                                 sizeof(REGISTERED_MESSAGE) +
-                                 MessageName.Length,
-                                 TAG_WNAM);
-  if (NULL == NewMsg)
-    {
-      SetLastNtError(STATUS_NO_MEMORY);
-      return 0;
-    }
-
-  Status = MmCopyFromCaller(NewMsg->MessageName, MessageName.Buffer, MessageName.Length);
-  if (! NT_SUCCESS(Status))
-    {
-      ExFreePool(NewMsg);
-      SetLastNtError(Status);
-      return 0;
-    }
-  NewMsg->MessageName[MessageName.Length / sizeof(WCHAR)] = L'\0';
-  if (wcslen(NewMsg->MessageName) != MessageName.Length / sizeof(WCHAR))
-    {
-      ExFreePool(NewMsg);
-      SetLastNtError(STATUS_INVALID_PARAMETER);
-      return 0;
-    }
-
-  Current = RegisteredMessageListHead.Flink;
-  while (Current != &RegisteredMessageListHead)
-    {
-      RegMsg = CONTAINING_RECORD(Current, REGISTERED_MESSAGE, ListEntry);
-      if (0 == wcscmp(NewMsg->MessageName, RegMsg->MessageName))
-	{
-	  ExFreePool(NewMsg);
-	  return Msg;
-	}
-      Msg++;
-      Current = Current->Flink;
-    }
-
-  if (REGISTERED_MESSAGE_MAX < Msg)
-    {
-      ExFreePool(NewMsg);
-      SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
-      return 0;
-    }
-
-  InsertTailList(&RegisteredMessageListHead, &(NewMsg->ListEntry));
-
-  return Msg;
-#else
-   /*
-    * Notes:
-    * - There's no need to call MmSafe*, because it should be done in kernel.
-    * - The passed UNICODE_STRING is expected to be NULL-terminated.
-    */
-   return (UINT)IntAddAtom(MessageNameUnsafe->Buffer);
-#endif
+  UINT Ret;
+  
+  Status = IntSafeCopyUnicodeStringTerminateNULL(&SafeMessageName, MessageNameUnsafe);
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    return 0;
+  }
+  
+  Ret = (UINT)IntAddAtom(SafeMessageName.Buffer);
+  
+  RtlFreeUnicodeString(&SafeMessageName);
+  return Ret;
 }
 
 

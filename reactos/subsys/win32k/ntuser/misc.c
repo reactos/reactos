@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.73 2004/05/14 23:57:32 weiden Exp $
+/* $Id: misc.c,v 1.74 2004/05/19 19:09:20 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1124,6 +1124,54 @@ IntSafeCopyUnicodeString(PUNICODE_STRING Dest,
       return Status;
     }
     
+    
+    return STATUS_SUCCESS;
+  }
+  
+  /* string is empty */
+  return STATUS_SUCCESS;
+}
+
+NTSTATUS FASTCALL
+IntSafeCopyUnicodeStringTerminateNULL(PUNICODE_STRING Dest,
+                                      PUNICODE_STRING Source)
+{
+  NTSTATUS Status;
+  PWSTR Src;
+  
+  Status = MmCopyFromCaller(Dest, Source, sizeof(UNICODE_STRING));
+  if(!NT_SUCCESS(Status))
+  {
+    return Status;
+  }
+  
+  if(Dest->Length > 0x4000)
+  {
+    return STATUS_UNSUCCESSFUL;
+  }
+  
+  Src = Dest->Buffer;
+  Dest->Buffer = NULL;
+  
+  if(Dest->Length > 0 && Src)
+  {
+    Dest->Buffer = ExAllocatePoolWithTag(NonPagedPool, Dest->Length + sizeof(WCHAR), TAG_STRING);
+    if(!Dest->Buffer)
+    {
+      return STATUS_NO_MEMORY;
+    }
+    
+    Status = MmCopyFromCaller(Dest->Buffer, Src, Dest->Length);
+    if(!NT_SUCCESS(Status))
+    {
+      ExFreePool(Dest->Buffer);
+      Dest->Buffer = NULL;
+      return Status;
+    }
+    
+    /* make sure the string is null-terminated */
+    Src = (PWSTR)((PBYTE)Dest->Buffer + Dest->Length);
+    *Src = L'\0';
     
     return STATUS_SUCCESS;
   }
