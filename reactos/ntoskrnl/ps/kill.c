@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.85 2004/11/20 23:46:37 blight Exp $
+/* $Id: kill.c,v 1.86 2004/11/21 18:42:58 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -133,6 +133,7 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
 
    DPRINT("terminating %x\n",CurrentThread);
 
+   CurrentThread->HasTerminated = TRUE;
    CurrentThread->ExitStatus = ExitStatus;
    KeQuerySystemTime((PLARGE_INTEGER)&CurrentThread->ExitTime);
    KeCancelTimer(&CurrentThread->Tcb.Timer);
@@ -192,7 +193,7 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
 
    oldIrql = KeAcquireDispatcherDatabaseLock();
    CurrentThread->Tcb.DispatcherHeader.SignalState = TRUE;
-   KeDispatcherObjectWake(&CurrentThread->Tcb.DispatcherHeader);
+   KiDispatcherObjectWake(&CurrentThread->Tcb.DispatcherHeader);
    KeReleaseDispatcherDatabaseLock (oldIrql);
 
    /* The last thread shall close the door on exit */
@@ -211,8 +212,9 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
 #ifdef _ENABLE_THRDEVTPAIR
    ExpSwapThreadEventPair(CurrentThread, NULL); /* Release the associated eventpair object, if there was one */
 #endif /* _ENABLE_THRDEVTPAIR */
-   KeRemoveAllWaitsThread (CurrentThread, STATUS_UNSUCCESSFUL, FALSE);
 
+   ASSERT(CurrentThread->Tcb.WaitBlockList == NULL);
+   
    PsDispatchThreadNoLock(THREAD_STATE_TERMINATED_1);
    DPRINT1("Unexpected return, CurrentThread %x PsGetCurrentThread() %x\n", CurrentThread, PsGetCurrentThread());
    KEBUGCHECK(0);
@@ -251,7 +253,7 @@ PsTerminateOtherThread(PETHREAD Thread,
  */
 {
   PKAPC Apc;
-  NTSTATUS Status;
+  KIRQL OldIrql;
 
   DPRINT("PsTerminateOtherThread(Thread %x, ExitStatus %x)\n",
 	 Thread, ExitStatus);
@@ -271,12 +273,14 @@ PsTerminateOtherThread(PETHREAD Thread,
 		   NULL,
 		   NULL,
 		   IO_NO_INCREMENT);
+
+  OldIrql = KeAcquireDispatcherDatabaseLock();          
   if (THREAD_STATE_BLOCKED == Thread->Tcb.State && UserMode == Thread->Tcb.WaitMode)
     {
       DPRINT("Unblocking thread\n");
-      Status = STATUS_THREAD_IS_TERMINATING;
-      KeRemoveAllWaitsThread(Thread, Status, TRUE);
+      KiAbortWaitThread((PKTHREAD)Thread, STATUS_THREAD_IS_TERMINATING);
     }
+  KeReleaseDispatcherDatabaseLock(OldIrql); 
 }
 
 NTSTATUS STDCALL
@@ -310,7 +314,7 @@ PiTerminateProcess(PEPROCESS Process,
    }
    OldIrql = KeAcquireDispatcherDatabaseLock ();
    Process->Pcb.DispatcherHeader.SignalState = TRUE;
-   KeDispatcherObjectWake(&Process->Pcb.DispatcherHeader);
+   KiDispatcherObjectWake(&Process->Pcb.DispatcherHeader);
    KeReleaseDispatcherDatabaseLock (OldIrql);
    ObDereferenceObject(Process);
    return(STATUS_SUCCESS);

@@ -72,7 +72,7 @@ VOID KeAcquireDispatcherDatabaseLockAtDpcLevel(VOID);
 VOID KeReleaseDispatcherDatabaseLock(KIRQL Irql);
 VOID KeReleaseDispatcherDatabaseLockFromDpcLevel(VOID);
 
-BOOLEAN KeDispatcherObjectWake(DISPATCHER_HEADER* hdr);
+BOOLEAN KiDispatcherObjectWake(DISPATCHER_HEADER* hdr);
 VOID STDCALL KeExpireTimers(PKDPC Apc,
 			    PVOID Arg1,
 			    PVOID Arg2,
@@ -81,7 +81,9 @@ VOID KeInitializeDispatcherHeader(DISPATCHER_HEADER* Header, ULONG Type,
 				  ULONG Size, ULONG SignalState);
 VOID KeDumpStackFrames(PULONG Frame);
 BOOLEAN KiTestAlert(VOID);
-VOID KeRemoveAllWaitsThread(struct _ETHREAD* Thread, NTSTATUS WaitStatus, BOOL Unblock);
+
+BOOLEAN KiAbortWaitThread(struct _KTHREAD* Thread, NTSTATUS WaitStatus);
+
 PULONG KeGetStackTopThread(struct _ETHREAD* Thread);
 VOID KeContextToTrapFrame(PCONTEXT Context, PKTRAP_FRAME TrapFrame);
 VOID STDCALL KiDeliverApc(KPROCESSOR_MODE PreviousMode,

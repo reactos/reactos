@@ -1,4 +1,4 @@
-/* $Id: usercall.c,v 1.31 2004/11/10 02:51:00 ion Exp $
+/* $Id: usercall.c,v 1.32 2004/11/21 18:42:58 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -41,14 +41,22 @@ KiSystemCallHook(ULONG Nr, ...)
 VOID
 KiAfterSystemCallHook(PKTRAP_FRAME TrapFrame)
 {
-  if (KeGetCurrentThread()->Alerted[1] != 0 && TrapFrame->Cs != KERNEL_CS)
-    {
-      KiDeliverApc(KernelMode, NULL, NULL);
-    }
-  if (KeGetCurrentThread()->Alerted[0] != 0 && TrapFrame->Cs != KERNEL_CS)
-    {
+   KIRQL oldIrql;
+   
+   /* If we are returning to umode, deliver one pending umode apc.
+    * Note that kmode apcs are also delivered, even if deliverymode is UserMode.
+    * This is because we can't return to umode with pending kmode apcs!
+    * FIXME: Should we deliver pending kmode apcs when returning from a 
+    * kmode-to-kmode syscall (ZwXxx calls)?????
+    * -Gunnar
+    */
+   if (TrapFrame->Cs != KERNEL_CS)
+   {
+      KeRaiseIrql(APC_LEVEL, &oldIrql);
       KiDeliverApc(UserMode, NULL, TrapFrame);
-    }
+      KeLowerIrql(oldIrql);
+   }
+
 }
 
 
