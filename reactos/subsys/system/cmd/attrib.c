@@ -30,6 +30,7 @@
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 #ifdef INCLUDE_CMD_ATTRIB
 
@@ -40,7 +41,7 @@ PrintAttribute (LPTSTR pszPath, LPTSTR pszFile, BOOL bRecurse)
 	WIN32_FIND_DATA findData;
 	HANDLE hFind;
 	TCHAR  szFullName[MAX_PATH];
-	LPTSTR pszFileName;
+	LPTSTR pszFileName;	 
 
 	/* prepare full file name buffer */
 	_tcscpy (szFullName, pszPath);
@@ -115,6 +116,7 @@ ChangeAttribute (LPTSTR pszPath, LPTSTR pszFile, DWORD dwMask,
 	DWORD  dwAttribute;
 	TCHAR  szFullName[MAX_PATH];
 	LPTSTR pszFileName;
+
 
 	/* prepare full file name buffer */
 	_tcscpy (szFullName, pszPath);
@@ -192,6 +194,7 @@ INT CommandAttrib (LPTSTR cmd, LPTSTR param)
 	BOOL   bDirectories = FALSE;
 	DWORD  dwAttrib = 0;
 	DWORD  dwMask = 0;
+	WCHAR szMsg[RC_STRING_MAX_SIZE];
 
 	/* initialize strings */
 	szPath[0] = _T('\0');
@@ -200,19 +203,8 @@ INT CommandAttrib (LPTSTR cmd, LPTSTR param)
 	/* print help */
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Displays or changes file attributes.\n\n"
-					   "ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n"
-					   "       [/S [/D]]\n\n"
-					   "  +   Sets an attribute\n"
-					   "  -   Clears an attribute\n"
-					   "  R   Read-only file attribute\n"
-					   "  A   Archive file attribute\n"
-					   "  S   System file attribute\n"
-					   "  H   Hidden file attribute\n"
-					   "  /S  Processes matching files in the current directory\n"
-					   "      and all subdirectories\n"
-					   "  /D  Processes direcories as well\n\n"
-					   "Type ATTRIB without a parameter to display the attributes of all files."));
+		LoadString( GetModuleHandle(NULL), STRING_ATTRIB_HELP, (LPTSTR) szMsg,sizeof(szMsg));
+        ConOutPuts (_T((LPTSTR)szMsg));
 		return 0;
 	}
 

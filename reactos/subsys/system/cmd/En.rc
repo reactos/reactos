@@ -1,0 +1,63 @@
+#include "resource.h"
+/* Start move all hard code string to En.rc 
+ * By Magnus Olsen  2005
+ */
+
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+STRINGTABLE DISCARDABLE
+{
+STRING_ATTRIB_HELP,    "Displays or changes file attributes.\n\n \
+ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] file ...\n \
+       [/S [/D]]\n\n \
+  +   Sets an attribute\n \
+  -   Clears an attribute\n \
+  R   Read-only file attribute\n \
+  A   Archive file attribute\n \
+  S   System file attribute\n \
+  H   Hidden file attribute\n \
+  /S  Processes matching files in the current directory\n \
+      and all subdirectories\n \
+  /D  Processes direcories as well\n\n \
+Type ATTRIB without a parameter to display the attributes of all files."
+
+STRING_CD_HELP,      "Changes the current directory or displays it's name\n\n \
+CHDIR [drive:][path]\n \
+CHDIR[..|-]\n \
+CD [drive:][path]\n \
+CD[..|-]\n\n \
+  ..   parent directory\n \
+  -    previous directory\n\n \
+Type CD drive: to display the current directory on the specified drive.\n \
+Type CD without a parameter to display the current drive and directory. "
+
+STRING_CHOICE_HELP, "Waits for the user to choose one of a set of choices.\n\n \
+CHOICE  [/C[:]choices][/N][/S][/T[:]c,nn][text]\n\n \
+  /C[:]choices  Specifies allowable keys. Default is YN.\n \
+  /N            Do not display choices and ? at the end of the prompt string.\n \
+  /S            Treat choice keys as case sensitive.\n \
+  /T[:]c,nn     Default choice to c after nn seconds.\n \
+  text          Prompt string to display.\n\n \
+ERRORLEVEL is set to offset of key user presses in choices."
+
+STRING_EXIT_HELP, "Exits the command line interpreter.\n\nEXIT"
+
+STRING_MKDIR_HELP,   "Creates a directory.\n\n \
+MKDIR [drive:]path\nMD [drive:]path"
+
+STRING_RMDIR_HELP,   "Removes a directory.\n\n \
+RMDIR [drive:]path\nRD [drive:]path"  
+
+STRING_REM_HELP, "Starts a comment line in a batch file.\n\nREM [Comment]"
+
+
+
+STRING_CHOICE_OPTION         "YN"
+
+
+
+STRING_CHOICE_ERROR,         "Invalid option. Expected format: /C[:]options"
+STRING_CHOICE_ERROR_TXT,     "Invalid option. Expected format: /T[:]c,nn"
+STRING_CHOICE_ERROR_OPTION,  "Illegal Option: %s"
+STRING_PARAM_ERROR,          "Required parameter missing\n"
+
+}

@@ -7,5 +7,13 @@
 #define REACTOS_STR_ORIGINAL_COPYRIGHT	"Copyright (C) 1994-1998 Tim Norman and others\0"
 #define REACTOS_STR_LEGAL_COPYRIGHT     "Copyright (C) 1998-2001 Eric Kohl and others\0"
 #include <reactos/version.rc>
+#include "En.rc"
+
+
 
 1	ICON	DISCARDABLE	res/terminal.ico
+
+
+
+
+
