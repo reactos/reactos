@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.37 2002/05/27 18:24:44 hbirr Exp $
+/* $Id: init.c,v 1.38 2002/06/12 23:26:56 ekohl Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -540,6 +540,32 @@ SmSetEnvironmentVariables(VOID)
 }
 
 
+static NTSTATUS
+SmLoadSubsystems(VOID)
+{
+  SYSTEM_GDI_DRIVER_INFORMATION GdiDriverInfo;
+  NTSTATUS Status;
+
+  /* Load kernel mode subsystem (aka win32k.sys) */
+  RtlInitUnicodeString(&GdiDriverInfo.DriverName,
+		       L"\\SystemRoot\\system32\\drivers\\win32k.sys");
+
+  Status = NtSetSystemInformation(SystemLoadGdiDriverInformation,
+				  &GdiDriverInfo,
+				  sizeof(SYSTEM_GDI_DRIVER_INFORMATION));
+#if 0
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
+#endif
+
+  /* FIXME: load more subsystems (csrss!) */
+
+  return(Status);
+}
+
+
 NTSTATUS
 InitSessionManager(HANDLE Children[])
 {
@@ -628,16 +654,13 @@ InitSessionManager(HANDLE Children[])
       return(Status);
     }
 
-  /* Load the kernel mode driver win32k.sys */
-  RtlInitUnicodeString(&CmdLineW,
-		       L"\\SystemRoot\\system32\\drivers\\win32k.sys");
-  Status = NtLoadDriver(&CmdLineW);
-#if 0
+  /* Load the subsystems */
+  Status = SmLoadSubsystems();
   if (!NT_SUCCESS(Status))
     {
+      PrintString("SM: Failed to load subsystems (Status %lx)\n", Status);
       return(Status);
     }
-#endif
 
   /* Run csrss.exe */
   RtlInitUnicodeString(&UnicodeString,
