@@ -175,3 +175,26 @@ DeleteObject(
 {
 	return W32kDeleteObject(a0);
 }
+
+HPALETTE
+STDCALL
+SelectPalette(
+	HDC		a0,
+	HPALETTE	a1,
+	BOOL		a2
+	)
+{
+	return W32kSelectPalette( a0, a1,a2 );
+}
+
+UINT
+STDCALL
+RealizePalette(
+	HDC	a0
+	)
+{
+	return W32kRealizePalette( a0 );
+}
+
+
+

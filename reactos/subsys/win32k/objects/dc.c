@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.44 2003/01/19 01:01:00 ei Exp $
+/* $Id: dc.c,v 1.45 2003/01/25 23:09:40 ei Exp $
  *
  * DC.C - Device context functions
  *
@@ -957,7 +957,9 @@ HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
 	  if( PalGDI ){
       	XlateObj = (PXLATEOBJ)EngCreateXlate(PalGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
       	pen = GDIOBJ_LockObj(dc->w.hPen, GO_PEN_MAGIC);
-      	pen->logpen.lopnColor = XLATEOBJ_iXlate(XlateObj, pen->logpen.lopnColor);
+		if( pen ){
+	      	pen->logpen.lopnColor = XLATEOBJ_iXlate(XlateObj, pen->logpen.lopnColor);
+		}
 	  	GDIOBJ_UnlockObj( dc->w.hPen, GO_PEN_MAGIC);
 	  }
       break;
@@ -970,8 +972,9 @@ HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
 	  if( PalGDI ){
       	XlateObj = (PXLATEOBJ)EngCreateXlate(PalGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
       	brush = GDIOBJ_LockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
-      	brush->iSolidColor = XLATEOBJ_iXlate(XlateObj,
-					     brush->logbrush.lbColor);
+		if( brush ){
+      		brush->iSolidColor = XLATEOBJ_iXlate(XlateObj, brush->logbrush.lbColor);
+		}
 	  	GDIOBJ_UnlockObj( dc->w.hBrush, GO_BRUSH_MAGIC);
 	  }
       break;

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.12 2002/09/08 10:22:40 chorns Exp $
+/* $Id: stubs.c,v 1.13 2003/01/25 23:09:40 ei Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -1050,19 +1050,6 @@ RestoreDC(
 }
 
 
-
-UINT
-STDCALL
-RealizePalette(
-	HDC	a0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
 BOOL
 STDCALL
 RoundRect(
@@ -1137,20 +1124,6 @@ int
 STDCALL
 SetMetaRgn(
 	HDC	hdc
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-
-HPALETTE
-STDCALL
-SelectPalette(
-	HDC		a0,
-	HPALETTE	a1,
-	BOOL		a2
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1477,12 +1450,12 @@ EnumEnhMetaFile(
 }
 
 
- 
-UINT  
-STDCALL 
+
+UINT
+STDCALL
 GetEnhMetaFileBits(
-	HENHMETAFILE	a0, 
-	UINT		a1, 
+	HENHMETAFILE	a0,
+	UINT		a1,
 	LPBYTE		a2
 	)
 {
@@ -1491,9 +1464,9 @@ GetEnhMetaFileBits(
 }
 
 
- 
-UINT  
-STDCALL 
+
+UINT
+STDCALL
 GetEnhMetaFileHeader(
 	HENHMETAFILE	a0,
 	UINT		a1,
@@ -1505,9 +1478,9 @@ GetEnhMetaFileHeader(
 }
 
 
- 
-UINT  
-STDCALL 
+
+UINT
+STDCALL
 GetEnhMetaFilePaletteEntries(
 	HENHMETAFILE	a0,
 	UINT		a1,
@@ -1519,9 +1492,9 @@ GetEnhMetaFilePaletteEntries(
 }
 
 
- 
-UINT  
-STDCALL 
+
+UINT
+STDCALL
 GetEnhMetaFilePixelFormat(
 	HENHMETAFILE			a0,
 	DWORD				a1,
@@ -1533,14 +1506,14 @@ GetEnhMetaFilePixelFormat(
 }
 
 
- 
-UINT  
-STDCALL 
+
+UINT
+STDCALL
 GetWinMetaFileBits(
 	HENHMETAFILE	a0,
-	UINT		a1, 
-	LPBYTE		a2, 
-	INT		a3, 
+	UINT		a1,
+	LPBYTE		a2,
+	INT		a3,
 	HDC		a4
 	)
 {
@@ -1549,12 +1522,12 @@ GetWinMetaFileBits(
 }
 
 
- 
-BOOL  
-STDCALL 
+
+BOOL
+STDCALL
 PlayEnhMetaFile(
-	HDC		a0, 
-	HENHMETAFILE	a1, 
+	HDC		a0,
+	HENHMETAFILE	a1,
 	CONST RECT	*a2
 	)
 {
@@ -1563,13 +1536,13 @@ PlayEnhMetaFile(
 }
 
 
- 
-BOOL  
-STDCALL 
+
+BOOL
+STDCALL
 PlayEnhMetaFileRecord(
 	HDC			a0,
-	LPHANDLETABLE		a1, 
-	CONST ENHMETARECORD	*a2, 
+	LPHANDLETABLE		a1,
+	CONST ENHMETARECORD	*a2,
 	UINT			a3
 	)
 {
@@ -1578,11 +1551,11 @@ PlayEnhMetaFileRecord(
 }
 
 
- 
-HENHMETAFILE  
-STDCALL 
+
+HENHMETAFILE
+STDCALL
 SetEnhMetaFileBits(
-	UINT		a0, 
+	UINT		a0,
 	CONST BYTE	*a1
 	)
 {
@@ -1591,13 +1564,13 @@ SetEnhMetaFileBits(
 }
 
 
- 
-HENHMETAFILE  
-STDCALL 
+
+HENHMETAFILE
+STDCALL
 SetWinMetaFileBits(
-	UINT			a0, 
-	CONST BYTE		*a1, 
-	HDC			a2, 
+	UINT			a0,
+	CONST BYTE		*a1,
+	HDC			a2,
 //	CONST METAFILEPICT	*a3
 		   PVOID a3
 	)
@@ -1607,12 +1580,12 @@ SetWinMetaFileBits(
 }
 
 
- 
-BOOL  
-STDCALL 
+
+BOOL
+STDCALL
 GdiComment(
-	HDC		a0, 
-	UINT		a1, 
+	HDC		a0,
+	UINT		a1,
 	CONST BYTE	*a2
 	)
 {
@@ -1621,15 +1594,15 @@ GdiComment(
 }
 
 
- 
-BOOL 
-STDCALL 
+
+BOOL
+STDCALL
 AngleArc(
-	HDC	hdc, 
-	int	a1, 
-	int	a2, 
-	DWORD	a3, 
-	FLOAT	a4, 
+	HDC	hdc,
+	int	a1,
+	int	a2,
+	DWORD	a3,
+	FLOAT	a4,
 	FLOAT	a5
 	)
 {
@@ -1638,13 +1611,13 @@ AngleArc(
 }
 
 
- 
-BOOL 
-STDCALL 
+
+BOOL
+STDCALL
 PolyPolyline(
-	HDC		hdc, 
-	CONST POINT	*a1, 
-	CONST DWORD	*a2, 
+	HDC		hdc,
+	CONST POINT	*a1,
+	CONST DWORD	*a2,
 	DWORD		a3
 	)
 {
@@ -1653,9 +1626,9 @@ PolyPolyline(
 }
 
 
- 
-BOOL 
-STDCALL 
+
+BOOL
+STDCALL
 GetWorldTransform(
 	HDC		hdc,
 	LPXFORM		a1
@@ -1666,11 +1639,11 @@ GetWorldTransform(
 }
 
 
- 
-BOOL 
-STDCALL 
+
+BOOL
+STDCALL
 SetWorldTransform(
-	HDC		a0, 
+	HDC		a0,
 	CONST XFORM	*a1
 	)
 {
@@ -1679,12 +1652,12 @@ SetWorldTransform(
 }
 
 
- 
-BOOL 
-STDCALL 
+
+BOOL
+STDCALL
 ModifyWorldTransform(
 	HDC		a0,
-	CONST XFORM	*a1, 
+	CONST XFORM	*a1,
 	DWORD		a2
 	)
 {
@@ -1693,12 +1666,12 @@ ModifyWorldTransform(
 }
 
 
- 
-BOOL 
-STDCALL 
+
+BOOL
+STDCALL
 CombineTransform(
-	LPXFORM		a0, 
-	CONST XFORM	*a1, 
+	LPXFORM		a0,
+	CONST XFORM	*a1,
 	CONST XFORM	*a2
 	)
 {
@@ -1707,13 +1680,13 @@ CombineTransform(
 }
 
 
- 
-UINT 
-STDCALL 
+
+UINT
+STDCALL
 GetDIBColorTable(
-	HDC		hdc, 
-	UINT		a1, 
-	UINT		a2, 
+	HDC		hdc,
+	UINT		a1,
+	UINT		a2,
 	RGBQUAD		*a3
 	)
 {
@@ -1722,13 +1695,13 @@ GetDIBColorTable(
 }
 
 
- 
-UINT 
-STDCALL 
+
+UINT
+STDCALL
 SetDIBColorTable(
-	HDC		hdc, 
-	UINT		a1, 
-	UINT		a2, 
+	HDC		hdc,
+	UINT		a1,
+	UINT		a2,
 	CONST RGBQUAD	*a3
 	)
 {
@@ -1737,11 +1710,11 @@ SetDIBColorTable(
 }
 
 
- 
-BOOL 
-STDCALL 
+
+BOOL
+STDCALL
 SetColorAdjustment(
-	HDC			hdc, 
+	HDC			hdc,
 	CONST COLORADJUSTMENT	*a1
 	)
 {
@@ -1750,11 +1723,11 @@ SetColorAdjustment(
 }
 
 
- 
-BOOL 
-STDCALL 
+
+BOOL
+STDCALL
 GetColorAdjustment(
-	HDC			hdc, 
+	HDC			hdc,
 	LPCOLORADJUSTMENT	a1
 	)
 {
@@ -1763,9 +1736,9 @@ GetColorAdjustment(
 }
 
 
- 
-HPALETTE 
-STDCALL 
+
+HPALETTE
+STDCALL
 CreateHalftonePalette(
 	HDC	hdc
 	)
@@ -1776,8 +1749,8 @@ CreateHalftonePalette(
 
 
 
-int 
-STDCALL 
+int
+STDCALL
 EndDoc(
 	HDC	hdc
 	)
@@ -1787,9 +1760,9 @@ EndDoc(
 }
 
 
- 
-int 
-STDCALL 
+
+int
+STDCALL
 StartPage(
 	HDC	hdc
 	)
@@ -1799,9 +1772,9 @@ StartPage(
 }
 
 
- 
-int 
-STDCALL 
+
+int
+STDCALL
 EndPage(
 	HDC	hdc
 	)
@@ -1811,9 +1784,9 @@ EndPage(
 }
 
 
- 
-int 
-STDCALL 
+
+int
+STDCALL
 AbortDoc(
 	HDC	hdc
 	)
@@ -1823,11 +1796,11 @@ AbortDoc(
 }
 
 
- 
-int 
-STDCALL 
+
+int
+STDCALL
 SetAbortProc(
-	HDC		hdc, 
+	HDC		hdc,
 	ABORTPROC	a1
 	)
 {
@@ -1836,9 +1809,9 @@ SetAbortProc(
 }
 
 
- 
-BOOL 
-STDCALL 
+
+BOOL
+STDCALL
 AbortPath(
 	HDC	hdc
 	)
@@ -1848,18 +1821,18 @@ AbortPath(
 }
 
 
- 
-BOOL 
-STDCALL 
+
+BOOL
+STDCALL
 ArcTo(
-	HDC	hdc, 
-	int	a1, 
-	int	a2, 
-	int	a3, 
-	int	a4, 
-	int	a5, 
+	HDC	hdc,
+	int	a1,
+	int	a2,
+	int	a3,
+	int	a4,
+	int	a5,
 	int	a6,
-	int	a7, 
+	int	a7,
 	int	a8
 	)
 {
@@ -1868,9 +1841,9 @@ ArcTo(
 }
 
 
- 
-BOOL 
-STDCALL 
+
+BOOL
+STDCALL
 BeginPath(
 	HDC	hdc
 	)
@@ -1880,9 +1853,9 @@ BeginPath(
 }
 
 
- 
-BOOL 
-STDCALL 
+
+BOOL
+STDCALL
 CloseFigure(
 	HDC	hdc
 	)
@@ -1892,9 +1865,9 @@ CloseFigure(
 }
 
 
- 
-BOOL 
-STDCALL 
+
+BOOL
+STDCALL
 EndPath(
 	HDC	hdc
 	)
@@ -1904,9 +1877,9 @@ EndPath(
 }
 
 
- 
-BOOL 
-STDCALL 
+
+BOOL
+STDCALL
 FillPath(
 	HDC	hdc
 	)
@@ -1916,9 +1889,9 @@ FillPath(
 }
 
 
- 
-BOOL 
-STDCALL 
+
+BOOL
+STDCALL
 FlattenPath(
 	HDC	hdc
 	)
@@ -1928,13 +1901,13 @@ FlattenPath(
 }
 
 
- 
-int  
-STDCALL 
+
+int
+STDCALL
 GetPath(
-	HDC		hdc, 
-	LPPOINT		a1, 
-	LPBYTE		a2, 
+	HDC		hdc,
+	LPPOINT		a1,
+	LPBYTE		a2,
 	int		a3
 	)
 {
@@ -1943,9 +1916,9 @@ GetPath(
 }
 
 
- 
-HRGN 
-STDCALL 
+
+HRGN
+STDCALL
 PathToRegion(
 	HDC	hdc
 	)
@@ -1955,13 +1928,13 @@ PathToRegion(
 }
 
 
- 
-BOOL 
-STDCALL 
+
+BOOL
+STDCALL
 PolyDraw(
-	HDC		hdc, 
-	CONST POINT	*a1, 
-	CONST BYTE	*a2, 
+	HDC		hdc,
+	CONST POINT	*a1,
+	CONST BYTE	*a2,
 	int		a3
 	)
 {
@@ -1970,11 +1943,11 @@ PolyDraw(
 }
 
 
- 
-BOOL 
-STDCALL 
+
+BOOL
+STDCALL
 SelectClipPath(
-	HDC	hdc, 
+	HDC	hdc,
 	int	a1
 	)
 {
@@ -1983,11 +1956,11 @@ SelectClipPath(
 }
 
 
- 
-int  
-STDCALL 
+
+int
+STDCALL
 SetArcDirection(
-	HDC	hdc, 
+	HDC	hdc,
 	int	a1
 	)
 {
@@ -1996,12 +1969,12 @@ SetArcDirection(
 }
 
 
- 
-BOOL 
-STDCALL 
+
+BOOL
+STDCALL
 SetMiterLimit(
-	HDC	hdc, 
-	FLOAT	a1, 
+	HDC	hdc,
+	FLOAT	a1,
 	PFLOAT	a2
 	)
 {
@@ -2010,9 +1983,9 @@ SetMiterLimit(
 }
 
 
- 
-BOOL 
-STDCALL 
+
+BOOL
+STDCALL
 StrokeAndFillPath(
 	HDC	hdc
 	)
@@ -2022,9 +1995,9 @@ StrokeAndFillPath(
 }
 
 
- 
-BOOL 
-STDCALL 
+
+BOOL
+STDCALL
 StrokePath(
 	HDC	hdc
 	)
@@ -2034,9 +2007,9 @@ StrokePath(
 }
 
 
- 
-BOOL 
-STDCALL 
+
+BOOL
+STDCALL
 WidenPath(
 	HDC	hdc
 	)
@@ -2046,14 +2019,14 @@ WidenPath(
 }
 
 
- 
-HPEN 
-STDCALL 
+
+HPEN
+STDCALL
 ExtCreatePen(
-	DWORD		a0, 
-	DWORD		a1, 
-	CONST LOGBRUSH	*a2, 
-	DWORD		a3, 
+	DWORD		a0,
+	DWORD		a1,
+	CONST LOGBRUSH	*a2,
+	DWORD		a3,
 	CONST DWORD	*a4
 	)
 {
@@ -2062,11 +2035,11 @@ ExtCreatePen(
 }
 
 
- 
-BOOL 
-STDCALL 
+
+BOOL
+STDCALL
 GetMiterLimit(
-	HDC	hdc, 
+	HDC	hdc,
 	PFLOAT	a1
 	)
 {
@@ -2075,9 +2048,9 @@ GetMiterLimit(
 }
 
 
- 
-int  
-STDCALL 
+
+int
+STDCALL
 GetArcDirection(
 	HDC	hdc
 	)
@@ -2087,7 +2060,7 @@ GetArcDirection(
 }
 
 
- 
+
 HRGN
 STDCALL
 CreatePolygonRgn(
@@ -2683,7 +2656,7 @@ wglSwapLayerBuffers(
 }
 
 
-/* === AFTER THIS POINT I GUESS... ========= 
+/* === AFTER THIS POINT I GUESS... =========
  * (based on stack size in Norlander's .def)
  * === WHERE ARE THEY DEFINED? =============
  */
