@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.178 2003/11/16 15:17:46 hbirr Exp $
+/* $Id: main.c,v 1.179 2003/12/14 18:16:18 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -793,7 +793,14 @@ KiSystemStartup(BOOLEAN BootProcessor)
   for(;;);
 }
 
-VOID INIT_FUNCTION
+/* 
+ * FIXME: 
+ *   INIT_FUNCTION is temporary disabled, because if ntoskrnl is compiled with 
+ *   higher optimisation levels, gcc puts directly some code from KiSystemStartup 
+ *   into _main. This code frees the memory from the init section (_main) and
+ *   that does crash reactos.
+ */
+VOID /*INIT_FUNCTION*/
 _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
 /*
  * FUNCTION: Called by the boot loader to start the kernel
