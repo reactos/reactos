@@ -620,11 +620,53 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 {
 	CONTEXT("WinMain()");
 
-	 // create desktop window and task bar only, if there is no other shell and we are
-	 // the first explorer instance
-	BOOL startup_desktop = !IsAnyDesktopRunning();
+	BOOL any_desktop_running = IsAnyDesktopRunning();
 
-	bool autostart = true;
+	BOOL startup_desktop;
+
+	 // command line option "-install" to replace previous shell application with ROS Explorer
+	if (_tcsstr(lpCmdLine,TEXT("-install"))) {
+		 // install ROS Explorer into the registry
+		TCHAR path[MAX_PATH];
+
+		int l = GetModuleFileName(0, path, MAX_PATH);
+		if (l) {
+			HKEY hkey;
+
+			if (!RegOpenKey(HKEY_LOCAL_MACHINE, TEXT("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon"), &hkey)) {
+
+				///@todo save previous shell application in config file
+
+				RegSetValueEx(hkey, TEXT("Shell"), 0, REG_SZ, (LPBYTE)path, l*sizeof(TCHAR));
+				RegCloseKey(hkey);
+			}
+		}
+
+		HWND shellWindow = GetShellWindow();
+
+		if (shellWindow) {
+			DWORD pid;
+
+			 // terminate shell process for NT like systems
+			GetWindowThreadProcessId(shellWindow, &pid);
+			HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+
+			 // On Win 9x it's sufficient to destroy the shell window.
+			DestroyWindow(shellWindow);
+
+			if (TerminateProcess(hProcess, 0))
+				WaitForSingleObject(hProcess, INFINITE);
+
+			CloseHandle(hProcess);
+		}
+
+		startup_desktop = TRUE;
+	} else
+		 // create desktop window and task bar only, if there is no other shell and we are
+		 // the first explorer instance
+		startup_desktop = !any_desktop_running;
+
+	bool autostart = !any_desktop_running;
 
 	 // disable autostart if the SHIFT key is pressed
 	if (GetAsyncKeyState(VK_SHIFT) < 0)
@@ -646,6 +688,8 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 
 	if (_tcsstr(lpCmdLine,TEXT("-noautostart")))
 		autostart = false;
+	else if (_tcsstr(lpCmdLine,TEXT("-autostart")))
+		autostart = true;
 
 #ifndef __WINE__
 	if (_tcsstr(lpCmdLine,TEXT("-console"))) {
