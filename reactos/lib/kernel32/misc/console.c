@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.64 2003/08/13 06:53:54 jimtabor Exp $
+/* $Id: console.c,v 1.65 2003/08/16 17:37:51 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -21,32 +21,35 @@
 
 #define _NOACHS(__X) (sizeof(__X) / sizeof((__X)[0]))
 extern BOOL WINAPI DefaultConsoleCtrlHandler(DWORD Event);
+extern __declspec(noreturn) VOID CALLBACK ConsoleControlDispatcher(DWORD CodeAndFlag);
+extern CRITICAL_SECTION ConsoleLock;
+extern BOOL WINAPI IsDebuggerPresent(VOID);
+
 
 /* GLOBALS *******************************************************************/
 
 static BOOL IgnoreCtrlEvents = FALSE;
 
-static PHANDLER_ROUTINE StaticCtrlHandlers[] =
-                        { (PHANDLER_ROUTINE) &DefaultConsoleCtrlHandler };
+static PHANDLER_ROUTINE StaticCtrlHandlers[] = 
+			{ (PHANDLER_ROUTINE) &DefaultConsoleCtrlHandler };
 static PHANDLER_ROUTINE* CtrlHandlers = StaticCtrlHandlers;
 static ULONG NrCtrlHandlers = _NOACHS(StaticCtrlHandlers);
 static ULONG CtrlHandlersArraySize = 0;
 
-/* Default Console Handler *****************************************************************/
+/* Default Console Control Handler *******************************************/
 
 BOOL WINAPI DefaultConsoleCtrlHandler(DWORD Event)
 {
 	UINT ExitCode;
+
 	switch(Event)
 	{
 	case CTRL_C_EVENT:
 		DPRINT("Ctrl-C Event\n");
-//		ExitProcess((UINT)&ExitCode);
 		break;
 		
 	case CTRL_BREAK_EVENT:
 		DPRINT("Ctrl-Break Event\n");
-//		ExitProcess((UINT&ExitCode);
 		break;
 
 	case CTRL_SHUTDOWN_EVENT:
@@ -61,8 +64,84 @@ BOOL WINAPI DefaultConsoleCtrlHandler(DWORD Event)
 		DPRINT("Ctrl Logoff Event\n");
 		break;
 	}
+//	ExitProcess((UINT)&ExitCode);
 	return TRUE;
 }
+
+
+__declspec(noreturn) VOID CALLBACK ConsoleControlDispatcher(DWORD CodeAndFlag)
+{
+DWORD nExitCode = 0;
+DWORD nCode = CodeAndFlag & MAXLONG;
+UINT i;
+
+SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
+
+	switch(nCode)
+	{
+	case CTRL_C_EVENT:
+	case CTRL_BREAK_EVENT:
+	{
+		if(IsDebuggerPresent())
+		{
+			EXCEPTION_RECORD erException;
+			erException.ExceptionCode = 
+			(nCode == CTRL_C_EVENT ? DBG_CONTROL_C : DBG_CONTROL_BREAK);
+			erException.ExceptionFlags = 0;
+			erException.ExceptionRecord = NULL;
+			erException.ExceptionAddress = &DefaultConsoleCtrlHandler;
+			erException.NumberParameters = 0;
+			RtlRaiseException(&erException);
+		}		
+		RtlEnterCriticalSection(&ConsoleLock);
+
+		if(!(nCode == CTRL_C_EVENT &&
+			NtCurrentPeb()->ProcessParameters->ProcessGroup & 1))
+		{
+			for(i = NrCtrlHandlers; i > 0; -- i)
+				if(CtrlHandlers[i - 1](nCode)) break;
+		}
+		RtlLeaveCriticalSection(&ConsoleLock);
+		ExitThread(0);
+	}
+	case CTRL_CLOSE_EVENT:
+	case CTRL_LOGOFF_EVENT:
+	case CTRL_SHUTDOWN_EVENT:
+		break;
+
+	default: ExitThread(0);
+	}
+
+	RtlEnterCriticalSection(&ConsoleLock);
+
+	if(!(nCode == CTRL_C_EVENT &&
+		NtCurrentPeb()->ProcessParameters->ProcessGroup & 1))
+	{
+	i = NrCtrlHandlers;
+	while(i > 0)
+		{
+		if (i == 1 && (CodeAndFlag & MINLONG) && 
+			(nCode == CTRL_LOGOFF_EVENT || nCode == CTRL_SHUTDOWN_EVENT))
+				break;
+
+			if(CtrlHandlers[i - 1](nCode))
+			{
+				switch(nCode)
+				{
+					case CTRL_CLOSE_EVENT:
+					case CTRL_LOGOFF_EVENT:
+					case CTRL_SHUTDOWN_EVENT:
+						nExitCode = CodeAndFlag;
+				}
+				break;
+			}
+			--i;
+		}
+	}
+	RtlLeaveCriticalSection(&ConsoleLock);
+	ExitThread(nExitCode);
+}
+
 
 /* FUNCTIONS *****************************************************************/
 
