@@ -196,7 +196,7 @@ IoSecondStageCompletion(
    IoStack =  (PIO_STACK_LOCATION)(Irp+1) + Irp->CurrentLocation;
    DeviceObject = IoStack->DeviceObject;
 
-   DPRINT("IoSecondStageCompletion(Irp %x, PriorityBoost %d, MajorFunction %x)\n", Irp, PriorityBoost, IoStack->MajorFunction);
+   DPRINT("IoSecondStageCompletion(Irp %x, MajorFunction %x)\n", Irp, IoStack->MajorFunction);
 
    switch (IoStack->MajorFunction)
      {
