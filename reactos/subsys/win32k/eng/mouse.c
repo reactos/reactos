@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.58 2004/01/25 16:47:09 navaraf Exp $
+/* $Id: mouse.c,v 1.59 2004/02/06 21:12:55 navaraf Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -549,6 +549,12 @@ IntHideMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
    }
 
    ppdev->PointerAttributes.Enable = FALSE;
+
+   if (ppdev->PointerAttributes.Column + ppdev->PointerHotSpot.x == -1)
+   {
+      return;
+   }
+
    if (ppdev->PointerSaveSurface != NULL)
    {
       RECTL DestRect;
@@ -721,7 +727,7 @@ EngSetPointerShape(
 
    if (psoMask == NULL)
    {
-      return SPS_ACCEPT_EXCLUDE;
+      return SPS_ACCEPT_NOEXCLUDE;
    }
 
    ppdev->PointerHotSpot.x = xHot;
@@ -731,6 +737,14 @@ EngSetPointerShape(
    ppdev->PointerAttributes.Row = y - yHot;
    ppdev->PointerAttributes.Width = psoMask->lDelta << 3;
    ppdev->PointerAttributes.Height = (psoMask->cjBits / psoMask->lDelta) >> 1;
+
+   if (prcl != NULL)
+   {
+      prcl->left = ppdev->PointerAttributes.Column;
+      prcl->top = ppdev->PointerAttributes.Row;
+      prcl->right = prcl->left + ppdev->PointerAttributes.Width;
+      prcl->bottom = prcl->top + ppdev->PointerAttributes.Height;
+   }
 
    if (psoColor != NULL)
    {
@@ -768,10 +782,7 @@ EngSetPointerShape(
     * FIXME: We should get this in pxlo parameter!
     */
 
-/*
-   ppdev->PointerXlateObject = pxlo;
-*/
-
+   if (pxlo == NULL)
    {
       HPALETTE BWPalette, DestPalette;
       ULONG BWColors[] = {0, 0xFFFFFF};
@@ -790,6 +801,10 @@ EngSetPointerShape(
       ppdev->PointerXlateObject = IntEngCreateXlate(DestMode, PAL_INDEXED,
          DestPalette, BWPalette);
       EngDeletePalette(BWPalette);
+   }
+   else
+   {
+      ppdev->PointerXlateObject = pxlo;
    }
 
    /*
@@ -834,26 +849,32 @@ EngMovePointer(
    IN RECTL *prcl)
 {
    GDIDEVICE *ppdev = (GDIDEVICE *)pso->hdev;
-   BOOL WasVisible;
+   PSURFGDI SurfGDI = AccessInternalObjectFromUserObject(pso);
 
-   WasVisible = ppdev->PointerAttributes.Enable;
-   if (WasVisible)
-   {
-      IntHideMousePointer(ppdev, pso);
-   }
+   /*
+    * Prevent GDI from trying to remve the mouse cursor,
+    * because it would cause unexpected reentrancy effects.
+    */
 
-   if (x == -1)
-   {
-      return;
-   }
+   SurfGDI->PointerStatus = SPS_ACCEPT_NOEXCLUDE;
 
+   IntHideMousePointer(ppdev, pso);
    ppdev->PointerAttributes.Column = x - ppdev->PointerHotSpot.x;
    ppdev->PointerAttributes.Row = y - ppdev->PointerHotSpot.y;
-
-   if (WasVisible)
+   if (x != -1)
    {
       IntShowMousePointer(ppdev, pso);
    }
+
+   if (prcl != NULL)
+   {
+      prcl->left = ppdev->PointerAttributes.Column;
+      prcl->top = ppdev->PointerAttributes.Row;
+      prcl->right = prcl->left + ppdev->PointerAttributes.Width;
+      prcl->bottom = prcl->top + ppdev->PointerAttributes.Height;
+   }
+
+   SurfGDI->PointerStatus = SPS_ACCEPT_EXCLUDE;
 }
 
 /* EOF */
