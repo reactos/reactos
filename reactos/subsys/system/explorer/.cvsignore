@@ -19,3 +19,4 @@ doxy-doc
 *.plg
 *.suo
 buildno.h
+*.gch
