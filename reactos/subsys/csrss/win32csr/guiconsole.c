@@ -802,7 +802,7 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         SetWindowLongW(hWnd, GWL_USERDATA, 0);
         return 0;
       case PM_CREATE_CONSOLE:
-        NewWindow = CreateWindowW(L"Win32CsrConsole",
+        NewWindow = CreateWindowW(L"ConsoleWindowClass",
                                   Console->Title.Buffer,
                                   WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
                                   CW_USEDEFAULT,
@@ -911,7 +911,7 @@ GuiInit(VOID)
     }
 
   wc.cbSize = sizeof(WNDCLASSEXW);
-  wc.lpszClassName = L"Win32CsrConsole";
+  wc.lpszClassName = L"ConsoleWindowClass";
   wc.lpfnWndProc = GuiConsoleWndProc;
   wc.style = 0;
   wc.hInstance = (HINSTANCE) GetModuleHandleW(NULL);
