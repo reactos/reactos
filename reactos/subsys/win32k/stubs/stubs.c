@@ -262,21 +262,6 @@ EngFillPath (
  */
 PVOID
 STDCALL
-EngFindImageProcAddress(
-	IN HANDLE  hModule,
-	IN LPSTR   lpProcName
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_0oiw.htm
-  UNIMPLEMENTED;
-  return NULL;
-}
-
-/*
- * @unimplemented
- */
-PVOID
-STDCALL
 EngFindResource(
 	IN  HANDLE  h,
 	IN  int     iName,

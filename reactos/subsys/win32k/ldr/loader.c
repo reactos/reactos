@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: loader.c,v 1.13 2003/11/24 14:19:52 gvg Exp $
+/* $Id: loader.c,v 1.14 2004/03/07 04:44:41 dwelch Exp $
  *
  */
 
@@ -89,6 +89,26 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
 
    return STATUS_PROCEDURE_NOT_FOUND;
 }
+
+PVOID STDCALL
+EngFindImageProcAddress(IN HANDLE Module,
+			IN LPSTR ProcName)
+{
+  PVOID Function;
+  NTSTATUS Status;
+  ANSI_STRING ProcNameString;
+  RtlInitAnsiString(&ProcNameString, ProcName);
+  Status = LdrGetProcedureAddress(Module, 
+				  &ProcNameString,
+				  0,
+				  &Function);
+  if (!NT_SUCCESS(Status))
+    {
+      return(NULL);
+    }
+  return(Function);
+}
+
 
 /*
  * @implemented
