@@ -4,7 +4,7 @@
 PATH_TO_TOP = ../../..
 
 TARGETNAME=ping
-BASE_CFLAGS = -I../../../include
+CFLAGS = -I../../../include
 
 OBJECTS = $(TARGETNAME).o
 PROGS = $(TARGETNAME).exe

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.63 2000/10/07 13:41:52 dwelch Exp $
+/* $Id: main.c,v 1.64 2000/10/07 18:44:07 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -387,7 +387,7 @@ void _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
     * Initializes the kernel parameter line.
     * This should be done by the boot loader.
     */
-   strcpy (KeLoaderBlock.CommandLine,
+   strcpy ((PUCHAR)KeLoaderBlock.CommandLine,
 	   "multi(0)disk(0)rdisk(0)partition(1)\\reactos /DEBUGPORT=SCREEN");
 
    /*
@@ -475,9 +475,10 @@ void _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
     }
    
    /* Create the SystemRoot symbolic link */
-  CreateSystemRootLink (KeLoaderBlock.CommandLine);
+   CreateSystemRootLink ((PUCHAR)KeLoaderBlock.CommandLine);
    
    CmInitializeRegistry2();
+   
    /*
     * Load Auto configured drivers
     */
@@ -495,11 +496,11 @@ void _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
     * Initialize shared user page:
     *  - set dos system path, dos device map, etc.
     */
-   InitSystemSharedUserPage (KeLoaderBlock.CommandLine);
+   InitSystemSharedUserPage ((PUCHAR)KeLoaderBlock.CommandLine);
 
-  /*
-   *  Launch initial process
-   */
+   /*
+    *  Launch initial process
+    */
    LdrLoadInitialProcess();
    
    DbgPrint("Finished main()\n");

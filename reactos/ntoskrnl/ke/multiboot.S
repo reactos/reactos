@@ -21,6 +21,7 @@
 	 *    EBX = Points to a structure in lowmem with data from the
 	 *    loader
 	 */
+	 
 _start:
         jmp     _multiboot_entry
          

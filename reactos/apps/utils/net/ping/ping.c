@@ -20,6 +20,8 @@
 /* Should be in the header files somewhere (exported by ntdll.dll) */
 long atol(const char *str);
 
+typedef long long __int64;
+
 char * _i64toa(__int64 value, char *string, int radix);
 
 #endif

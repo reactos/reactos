@@ -1,9 +1,11 @@
-# $Id: Makefile,v 1.3 2000/10/07 13:41:56 dwelch Exp $
+# $Id: Makefile,v 1.4 2000/10/07 18:44:07 dwelch Exp $
 #
 #
 PATH_TO_TOP = ../../../..
 
-TARGET = ne2000
+CFLAGS = -Iinclude
+
+TARGETNAME = ne2000
 
 OBJECTS = ne2000/main.o ne2000/8390.o $(TARGET).coff $(PATH_TO_TOP)/ntoskrnl/ntoskrnl.a
 
@@ -36,6 +38,7 @@ CLEAN_FILES = \
 		$(TARGETNAME).sys $(TARGETNAME).sym
 endif
 
+clean:
 
 $(TARGETNAME).sys: $(OBJECTS) $(TARGETNAME).def
 	$(LD) -r $(OBJECTS) -o $(TARGETNAME).o

@@ -2,7 +2,7 @@
 
 PATH_TO_TOP = ../..
 
-BASE_CFLAGS = -Iinclude -I../../include -DUNICODE
+CFLAGS = -Iinclude -DUNICODE
 
 TARGETNAME=ws2_32
 

@@ -2,7 +2,7 @@
 
 PATH_TO_TOP = ../../..
 
-BASE_CFLAGS = -I./ -I../../../include -DUNICODE
+CFLAGS = -I./ -DUNICODE
 
 TARGETNAME=wshtcpip
 

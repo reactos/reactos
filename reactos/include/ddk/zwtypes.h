@@ -4,6 +4,8 @@
 #define NtCurrentProcess() ( (HANDLE) 0xFFFFFFFF )
 #define NtCurrentThread() ( (HANDLE) 0xFFFFFFFE )
 
+typedef PVOID RTL_ATOM;
+
 #ifdef __NTOSKRNL__
 extern ULONG EXPORTED NtBuildNumber;
 #else

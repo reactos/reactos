@@ -1,4 +1,4 @@
-/* $Id: event.c,v 1.3 2000/10/06 16:54:04 ekohl Exp $
+/* $Id: event.c,v 1.4 2000/10/07 18:44:07 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,8 +18,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
-PKEVENT
-STDCALL
+PKEVENT STDCALL
 IoCreateNotificationEvent(PUNICODE_STRING EventName,
 			  PHANDLE EventHandle)
 {
@@ -40,13 +39,15 @@ IoCreateNotificationEvent(PUNICODE_STRING EventName,
 			  FALSE,
 			  TRUE);
    if (!NT_SUCCESS(Status))
-     return NULL;
+     {
+	return NULL;
+     }
 
    ObReferenceObjectByHandle(Handle,
 			     0,
 			     ExEventObjectType,
 			     KernelMode,
-			     &Event,
+			     (PVOID*)&Event,
 			     NULL);
    ObDereferenceObject(Event);
 
@@ -55,8 +56,7 @@ IoCreateNotificationEvent(PUNICODE_STRING EventName,
    return Event;
 }
 
-PKEVENT
-STDCALL
+PKEVENT STDCALL
 IoCreateSynchronizationEvent(PUNICODE_STRING EventName,
 			     PHANDLE EventHandle)
 {
@@ -77,13 +77,15 @@ IoCreateSynchronizationEvent(PUNICODE_STRING EventName,
 			  TRUE,
 			  TRUE);
    if (!NT_SUCCESS(Status))
-     return NULL;
+     {
+	return NULL;
+     }
 
    ObReferenceObjectByHandle(Handle,
 			     0,
 			     ExEventObjectType,
 			     KernelMode,
-			     &Event,
+			     (PVOID*)&Event,
 			     NULL);
    ObDereferenceObject(Event);
 
