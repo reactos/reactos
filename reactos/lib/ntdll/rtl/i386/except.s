@@ -1,4 +1,4 @@
-/* $Id: except.s,v 1.1 2002/10/26 00:32:18 chorns Exp $
+/* $Id: except.s,v 1.2 2002/10/26 07:32:08 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -212,7 +212,8 @@ _RtlpExceptionProtector:
 
     // Set DispatcherContext field to the exception registration for the
     // exception handler that executed when a nested exception occurred
-    movl     REP_DCONTEXT(%esp), %ecx    movl     REP_RFRAME(%esp), %eax
+    movl     REP_DCONTEXT(%esp), %ecx
+    movl     REP_RFRAME(%esp), %eax
     movl     %eax, (%ecx)
     movl     $ExceptionNestedException, %eax
 

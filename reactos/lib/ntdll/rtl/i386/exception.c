@@ -1,4 +1,4 @@
-/* $Id: exception.c,v 1.1 2002/10/26 00:32:18 chorns Exp $
+/* $Id: exception.c,v 1.2 2002/10/26 07:32:08 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel

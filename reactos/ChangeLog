@@ -1,5 +1,13 @@
 2002-10-26  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* lib/msvcrt/except/seh.s: Fix end-of-line formatting.
+	* lib/ntdll/rtl/i386/exception.c: Ditto.
+	* lib/ntdll/rtl/i386/except.s: Ditto.
+	* ntoskrnl/rtl/i386/except.s: Ditto.
+	* ntoskrnl/rtl/i386/seh.s: Ditto.
+
+2002-10-26  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* lib/msvcrt/Makefile (OBJECTS_EXCEPT): Add except/seh.o; Remove
 	except/exhand3.o.
 	* lib/msvcrt/except/exhand2.c (MsvcrtDebug): New function.
