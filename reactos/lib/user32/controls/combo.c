@@ -74,7 +74,7 @@ static UINT	CBitHeight, CBitWidth;
 #define COMBO_EDITBUTTONSPACE()  ( 0 )
 #define EDIT_CONTROL_PADDING()   ( 1 )
 
-// static LRESULT WINAPI ComboWndProcA( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam );
+static LRESULT WINAPI ComboWndProcA( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam );
 static LRESULT WINAPI ComboWndProcW( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam );
 
 /*********************************************************************
@@ -85,6 +85,7 @@ const struct builtin_class_descr COMBO_builtin_class =
     L"ComboBox",           /* name */
     CS_GLOBALCLASS | CS_PARENTDC | CS_DBLCLKS, /* style  */
     (WNDPROC) ComboWndProcW,        /* procW */
+    (WNDPROC) ComboWndProcA,        /* procA */
     sizeof(HEADCOMBO *),  /* extra */
     (LPCWSTR) IDC_ARROW,           /* cursor */
     0                     /* brush */
@@ -2181,19 +2182,14 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
                        DefWindowProcA(hwnd, message, wParam, lParam);
 }
 
-#if 0
 /***********************************************************************
  *           ComboWndProcA
- *
- * This is just a wrapper for the real ComboWndProc which locks/unlocks
- * window structs.
  */
 static LRESULT WINAPI ComboWndProcA( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     if (!IsWindow(hwnd)) return 0;
     return ComboWndProc_common( hwnd, message, wParam, lParam, FALSE );
 }
-#endif
 
 /***********************************************************************
  *           ComboWndProcW

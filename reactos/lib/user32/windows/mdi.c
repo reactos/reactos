@@ -153,9 +153,7 @@ static LONG MDI_ChildActivate( HWND, HWND );
 
 static HWND MDI_MoreWindowsDialog(HWND);
 static void MDI_SwapMenuItems(HWND, UINT, UINT);
-#ifndef __REACTOS__
 static LRESULT WINAPI MDIClientWndProcA( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-#endif
 static LRESULT WINAPI MDIClientWndProcW( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 
 #ifdef __REACTOS__
@@ -223,14 +221,15 @@ const struct builtin_class_descr MDICLIENT_builtin_class =
     L"MDIClient",            /* name */
     CS_GLOBALCLASS,         /* style */
     MDIClientWndProcW,      /* procW */
+    MDIClientWndProcA,      /* procA */
     sizeof(MDICLIENTINFO),  /* extra */
     IDC_ARROW,              /* cursor */
     (HBRUSH)(COLOR_APPWORKSPACE+1)    /* brush */
 #else
     "MDIClient",            /* name */
     CS_GLOBALCLASS,         /* style */
-    MDIClientWndProcA,      /* procA */
     MDIClientWndProcW,      /* procW */
+    MDIClientWndProcA,      /* procA */
     sizeof(MDICLIENTINFO),  /* extra */
     IDC_ARROW,              /* cursor */
     (HBRUSH)(COLOR_APPWORKSPACE+1)    /* brush */
@@ -1533,7 +1532,6 @@ static LRESULT MDIClientWndProc_common( HWND hwnd, UINT message,
                      DefWindowProcA( hwnd, message, wParam, lParam );
 }
 
-#ifndef __REACTOS__
 /***********************************************************************
  *		MDIClientWndProcA
  */
@@ -1542,7 +1540,6 @@ static LRESULT WINAPI MDIClientWndProcA( HWND hwnd, UINT message, WPARAM wParam,
     if (!IsWindow(hwnd)) return 0;
     return MDIClientWndProc_common( hwnd, message, wParam, lParam, FALSE );
 }
-#endif
 
 /***********************************************************************
  *		MDIClientWndProcW

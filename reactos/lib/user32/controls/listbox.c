@@ -1,4 +1,4 @@
-/* $Id: listbox.c,v 1.12 2003/10/04 22:36:36 weiden Exp $
+/* $Id: listbox.c,v 1.13 2003/11/08 15:35:58 mf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -155,7 +155,7 @@ typedef enum
 
 static TIMER_DIRECTION LISTBOX_Timer = LB_TIMER_NONE;
 
-//static LRESULT WINAPI ComboLBWndProcA( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam );
+static LRESULT WINAPI ComboLBWndProcA( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam );
 static LRESULT WINAPI ComboLBWndProcW( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam );
 static LRESULT WINAPI ListBoxWndProcA( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam );
 static LRESULT WINAPI ListBoxWndProcW( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam );
@@ -170,6 +170,7 @@ const struct builtin_class_descr LISTBOX_builtin_class =
     L"ListBox",            /* name */
     CS_GLOBALCLASS | CS_DBLCLKS /*| CS_PARENTDC*/,  /* style */
     (WNDPROC)ListBoxWndProcW,      /* procW */
+    (WNDPROC)ListBoxWndProcA,      /* procA */
     sizeof(LB_DESCR *),   /* extra */
     (LPCWSTR) IDC_ARROW,           /* cursor */
     0                     /* brush */
@@ -184,6 +185,7 @@ const struct builtin_class_descr COMBOLBOX_builtin_class =
     L"ComboLBox",          /* name */
     CS_GLOBALCLASS | CS_DBLCLKS | CS_SAVEBITS,  /* style */
     (WNDPROC)ComboLBWndProcW,      /* procW */
+    (WNDPROC)ComboLBWndProcA,      /* procA */
     sizeof(LB_DESCR *),   /* extra */
     (LPCWSTR) IDC_ARROW,           /* cursor */
     0                     /* brush */
@@ -2967,9 +2969,6 @@ static LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
 
 /***********************************************************************
  *           ListBoxWndProcA
- *
- * This is just a wrapper for the real wndproc, it only does window locking
- * and unlocking.
  */
 static LRESULT WINAPI ListBoxWndProcA( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
 {
@@ -3140,11 +3139,11 @@ static LRESULT WINAPI ComboLBWndProc_common( HWND hwnd, UINT msg,
  *  NOTE: in Windows, winproc address of the ComboLBox is the same
  *	  as that of the Listbox.
  */
-//LRESULT WINAPI ComboLBWndProcA( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
-//{
-//    if (!IsWindow(hwnd)) return 0;
-//    return ComboLBWndProc_common( hwnd, msg, wParam, lParam, FALSE );
-//}
+LRESULT WINAPI ComboLBWndProcA( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
+{
+    if (!IsWindow(hwnd)) return 0;
+    return ComboLBWndProc_common( hwnd, msg, wParam, lParam, FALSE );
+}
 
 /***********************************************************************
  *           ComboLBWndProcW

@@ -1,4 +1,4 @@
-/* $Id: button.c,v 1.12 2003/10/06 17:53:55 navaraf Exp $
+/* $Id: button.c,v 1.13 2003/11/08 15:35:58 mf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -36,7 +36,7 @@ static void GB_Paint( HWND hwnd, HDC hDC, UINT action );
 static void UB_Paint( HWND hwnd, HDC hDC, UINT action );
 static void OB_Paint( HWND hwnd, HDC hDC, UINT action );
 static void BUTTON_CheckAutoRadioButton( HWND hwnd );
-// static LRESULT WINAPI ButtonWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
+static LRESULT WINAPI ButtonWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 static LRESULT WINAPI ButtonWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 
 #define MAX_BTN_TYPE  12
@@ -86,6 +86,7 @@ const struct builtin_class_descr BUTTON_builtin_class =
     L"Button",            /* name */
     CS_GLOBALCLASS | CS_DBLCLKS | CS_VREDRAW | CS_HREDRAW | CS_PARENTDC, /* style  */
     (WNDPROC) ButtonWndProcW,      /* procW */
+	(WNDPROC) ButtonWndProcA,      /* procA */
     NB_EXTRA_BYTES,      /* extra */
     (LPCWSTR) IDC_ARROW,          /* cursor */
     0                    /* brush */
@@ -459,9 +460,7 @@ static LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
 
 /***********************************************************************
  *           ButtonWndProcW
- * The button window procedure. This is just a wrapper which locks
- * the passed HWND and calls the real window procedure (with a WND*
- * pointer pointing to the locked windowstructure).
+ * The button window procedure.
  */
 static LRESULT WINAPI ButtonWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
@@ -470,7 +469,6 @@ static LRESULT WINAPI ButtonWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 }
 
 
-#if 0
 /***********************************************************************
  *           ButtonWndProcA
  */
@@ -479,7 +477,6 @@ static LRESULT WINAPI ButtonWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
     if (!IsWindow( hWnd )) return 0;
     return ButtonWndProc_common( hWnd, uMsg, wParam, lParam, FALSE );
 }
-#endif
 
 
 /**********************************************************************
@@ -593,9 +590,10 @@ static UINT BUTTON_CalcLabelRect(HWND hwnd, HDC hdc, RECT *rc)
          r.bottom = r.top  + bm.bmHeight;
          break;
 
-      default:
       empty_rect:
         DbgPrint("[button] EMPTY RECT!\n");
+
+      default: /* BS_OWNERDRAW, ... */
          r.right = r.left;
          r.bottom = r.top;
          return (UINT)(LONG)-1;

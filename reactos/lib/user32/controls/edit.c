@@ -306,6 +306,7 @@ const struct builtin_class_descr EDIT_builtin_class =
     /*TODO: Fix ExtTextOut so that we can have the CS_PARENTDC style*/
     /*CS_GLOBALCLASS | CS_DBLCLKS | CS_PARENTDC,*/  /* style */
     (WNDPROC) EditWndProcW,         		/* procW */
+    (WNDPROC) EditWndProcA,         		/* procA */
     sizeof(EDITSTATE *),  			/* extra */
     (LPCWSTR) IDC_ARROW,                        	/* cursor */ /* FIXME Wine uses IDC_ARROWA */
     0                     			/* brush */
