@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.1 1999/05/15 07:23:34 ea Exp $
+# $Id: makefile,v 1.2 1999/10/03 22:10:15 ekohl Exp $
 #
 # ReactOS makefile for notevil
 # Compiler: egcs 1.1.2
@@ -23,12 +23,32 @@ $(TARGET).exe: $(OBJECTS)
 		-o $(TARGET).exe \
 		-lkernel32 \
 		-luser32 \
-		-lcrtdll 
+		-lcrtdll
 	$(NM) --numeric-sort $(TARGET).exe > $(TARGET).sym
-	
+
 $(TARGET).coff: $(TARGET).rc
 	$(RC) $(RFLAGS) $(TARGET).rc $(TARGET).coff
-	
+
+
+floppy: $(TARGET:%=$(FLOPPY_DIR)/apps/%)
+
+$(TARGET:%=$(FLOPPY_DIR)/apps/%): $(FLOPPY_DIR)/apps/%: %
+ifeq ($(DOSCLI),yes)
+	$(CP) $* $(FLOPPY_DIR)\apps\$*
+else
+	$(CP) $* $(FLOPPY_DIR)/apps/$*
+endif
+
+
+dist: $(TARGET:%=../$(DIST_DIR)/apps/%)
+
+$(TARGET:%=../$(DIST_DIR)/apps/%): ../$(DIST_DIR)/apps/%: %
+ifeq ($(DOSCLI),yes)
+	$(CP) $* ..\$(DIST_DIR)\apps\$*
+else
+	$(CP) $* ../$(DIST_DIR)/apps/$*
+endif
+
 include ../rules.mak
 
 # EOF

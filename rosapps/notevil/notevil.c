@@ -1,4 +1,4 @@
-/* $Id: notevil.c,v 1.1 1999/05/15 07:23:34 ea Exp $
+/* $Id: notevil.c,v 1.2 1999/10/03 22:10:15 ekohl Exp $
  *
  * notevil.c
  * 
@@ -36,6 +36,7 @@ LPCTSTR app_name = _TEXT("notevil");
 
 HANDLE	myself;
 HANDLE	ScreenBuffer;
+CONSOLE_SCREEN_BUFFER_INFO ScreenBufferInfo;
 
 void
 WriteStringAt(
@@ -47,7 +48,8 @@ WriteStringAt(
 	DWORD	cWritten = 0;
 	WORD	wLen = lstrlen(lpString);
 
-	if (0 == wLen) return;
+	if (0 == wLen)
+		return;
 	WriteConsoleOutputCharacter(
 		ScreenBuffer,
 		lpString,
@@ -74,7 +76,7 @@ WriteCoord(COORD c)
 
 	wsprintf(
 		buf,
-		_TEXT("x=%d  y=%d"),
+		_TEXT("x=%02d  y=%02d"),
 		c.X,
 		c.Y
 		);
@@ -111,19 +113,22 @@ GetNextString(
 	return 0;
 }
 
-	
+
 VOID
 DisplayTitle(VOID)
 {
-	COORD	xy = {24,12};
+	LPTSTR szTitle = _TEXT("ReactOS Coders Console Parade");
+	COORD  xy;
+
+	xy.X = (ScreenBufferInfo.dwSize.X - lstrlen(szTitle)) / 2;
+	xy.Y = ScreenBufferInfo.dwSize.Y / 2;
 
 	WriteStringAt(
-		_TEXT("ReactOS Coders Console Parade"),
+		szTitle,
 		xy,
 		(FOREGROUND_GREEN | FOREGROUND_INTENSITY)
 		);
 }
-
 
 
 #define RES_DELAY_CHANGE 12
@@ -134,11 +139,14 @@ MainLoop(void)
 	TCHAR	NameString [RES_BUFFER_SIZE];
 	DWORD	NameIndex = 1;
 	INT	NameLength = 0;
-	COORD	xy = {40,12}; 
+	COORD	xy;
 	INT	n = RES_DELAY_CHANGE;
 	INT	dir_y = 1;
 	INT	dir_x = 1;
-	WORD	wColor = 0;
+	WORD	wColor = 1;
+
+	xy.X = ScreenBufferInfo.dwSize.X / 2;
+	xy.Y = ScreenBufferInfo.dwSize.Y / 2;
 
 	for ( ; 1; ++n )
 	{
@@ -150,25 +158,31 @@ MainLoop(void)
 				& NameIndex
 				);
 			NameLength = lstrlen(NameString);
-			++wColor;
+			wColor++;
+			if ((wColor & 0x000F) == 0)
+				wColor = 1;
 		}
-		if (!xy.X)
+		if (xy.X == 0)
 		{
-			if (dir_x == -1) dir_x = 1;
+			if (dir_x == -1)
+				dir_x = 1;
 		}
-		else if (xy.X >	80 - NameLength)
+		else if (xy.X >= ScreenBufferInfo.dwSize.X - NameLength - 1)
 		{
-			if (dir_x == 1) dir_x = -1;
+			if (dir_x == 1)
+				dir_x = -1;
 		}
 		xy.X += dir_x;
-		switch (xy.Y)
+
+		if (xy.Y == 0)
 		{
-			case 0:
-				if (dir_y == -1) dir_y = 1;
-				break;
-			case 24:
-				if (dir_y == 1) dir_y = -1;
-				break;
+			if (dir_y == -1)
+				dir_y = 1;
+		}
+		else if (xy.Y >= ScreenBufferInfo.dwSize.Y - 1)
+		{
+			if (dir_y == 1)
+				dir_y = -1;
 		}
 		xy.Y += dir_y;
 #ifdef DISPLAY_COORD
@@ -178,14 +192,14 @@ MainLoop(void)
 		WriteStringAt(
 			NameString,
 			xy,
-			(wColor & 0x000F)
+			wColor
 			);
 		Sleep(100);
 		WriteStringAt(
 			NameString,
 			xy,
 			0
-			);	
+			);
 	}
 }
 
@@ -197,6 +211,14 @@ main(
 	)
 {
 	myself = GetModuleHandle(NULL);
+
+#if 1
+	GetConsoleScreenBufferInfo (GetStdHandle(STD_OUTPUT_HANDLE),
+	                            &ScreenBufferInfo);
+#else
+	ScreenBufferInfo.dwSize.X = 80;
+	ScreenBufferInfo.dwSize.Y = 25;
+#endif
 
 	ScreenBuffer = CreateConsoleScreenBuffer(
 			GENERIC_WRITE,
@@ -214,6 +236,7 @@ main(
 			);
 		return EXIT_FAILURE;
 	}
+
 	SetConsoleActiveScreenBuffer(ScreenBuffer);
 	MainLoop();
 	CloseHandle(ScreenBuffer);
