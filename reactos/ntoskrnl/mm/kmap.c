@@ -1,4 +1,4 @@
-/* $Id: kmap.c,v 1.27 2003/08/19 23:52:36 dwelch Exp $
+/* $Id: kmap.c,v 1.28 2003/08/20 14:53:16 royce Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -177,7 +177,7 @@ MiAllocNonPagedPoolRegion(ULONG nr_pages)
       AllocMapHint += nr_pages;
    }
    KeReleaseSpinLock(&AllocMapLock, oldlvl);
-   DPRINT("returning %x\n",NonPagedPoolBase + Base * PAGE_SIZE);
+   //DPRINT("returning %x\n",NonPagedPoolBase + Base * PAGE_SIZE);
    return MiKernelMapStart + Base * PAGE_SIZE;
 }
 
