@@ -97,6 +97,7 @@ ULONG ulNumStructMembers;
 
 BOOLEAN Expression(PVRET pvr);
 
+LIST_ENTRY *pModuleListHead = NULL;
 extern PDIRECTORY_OBJECT *pNameSpaceRoot;
 extern PDEBUG_MODULE pdebug_module_tail;
 extern PDEBUG_MODULE pdebug_module_head;
@@ -164,7 +165,7 @@ BOOLEAN InitModuleList( PDEBUG_MODULE *ppmodule, ULONG len )
 
 BOOLEAN ListUserModules( PPEB peb )
 {
-	PLIST_ENTRY ModuleListHead;
+	PLIST_ENTRY UserModuleListHead;
 	PLIST_ENTRY Entry;
 	PLDR_MODULE Module;
 	PPEB_LDR_DATA Ldr;
@@ -173,10 +174,10 @@ BOOLEAN ListUserModules( PPEB peb )
 
 	Ldr = peb->Ldr;
 	if( Ldr && IsAddressValid((ULONG)Ldr)){
-		ModuleListHead = &Ldr->InLoadOrderModuleList;
-		ASSERT(IsAddressValid((ULONG)ModuleListHead));
-		Entry = ModuleListHead->Flink;
-		while (Entry != ModuleListHead)
+		UserModuleListHead = &Ldr->InLoadOrderModuleList;
+		ASSERT(IsAddressValid((ULONG)UserModuleListHead));
+		Entry = UserModuleListHead->Flink;
+		while (Entry != UserModuleListHead)
 		{
 			Module = CONTAINING_RECORD(Entry, LDR_MODULE, InLoadOrderModuleList);
 			//DbgPrint("Module: %x, BaseAddress: %x\n", Module, Module->BaseAddress);
@@ -214,8 +215,8 @@ POBJECT FindDriverObjectDirectory( void )
 	   	 	DPRINT((0,"Scanning %S\n",current_obj->Name.Buffer));
 			if (_wcsicmp(current_obj->Name.Buffer, L"Modules")==0)
 			{
-				DPRINT((0,"Found it %x\n",HEADER_TO_BODY(current_obj)));
 				pd=HEADER_TO_BODY(current_obj);
+				DPRINT((0,"Found it %x\n",pd));
 				return pd;
 			}
 		  	current = current->Flink;
@@ -227,37 +228,35 @@ POBJECT FindDriverObjectDirectory( void )
 
 BOOLEAN ListDriverModules( void )
 {
-    PLIST_ENTRY current;
+    PLIST_ENTRY current_entry;
+	PMODULE_OBJECT current;
     POBJECT_HEADER current_obj;
-	PDIRECTORY_OBJECT pd;
-	PMODULE pm;
 
 	ENTER_FUNC();
 
-	if( pd = (PDIRECTORY_OBJECT) FindDriverObjectDirectory() ){
-		current = pd->head.Flink;
-		while (current!=(&(pd->head)))
+	ASSERT( pModuleListHead );
+
+	current_entry = pModuleListHead->Flink;
+
+  	while (current_entry != (pModuleListHead)){
+
+		current = CONTAINING_RECORD(current_entry,MODULE_OBJECT,ListEntry);
+
+		DPRINT((0,"FullName: %S, BaseName: %S, Length: %ld, EntryPoint: %x\n", current->FullName.Buffer,
+				current->BaseName.Buffer, current->Length, current->EntryPoint ));
+
+		pdebug_module_tail->BaseAddress = current->Base;
+		pdebug_module_tail->size = current->Length;
+		PICE_wcscpy( pdebug_module_tail->name, current->BaseName.Buffer);
+		pdebug_module_tail->EntryPoint = current->EntryPoint;
+
+		pdebug_module_tail = pdebug_module_tail->next;
+
+		if (current && _wcsicmp(current->BaseName.Buffer, L"ntoskrnl")==0)
 		{
-			current_obj = CONTAINING_RECORD(current,OBJECT_HEADER,Entry);
-	   	 	DPRINT((0,"Modules %S\n",current_obj->Name.Buffer));
-			pm = HEADER_TO_BODY(current_obj);
-			DPRINT((0,"FullName: %S, BaseName: %S, Length: %ld, EntryPoint: %x\n", pm->FullName.Buffer,
-					pm->BaseName.Buffer, pm->Length, pm->EntryPoint ));
-
-			pdebug_module_tail->size = pm->Length;
-			pdebug_module_tail->BaseAddress = pm->Base;
-			pdebug_module_tail->EntryPoint = pm->EntryPoint;
-			PICE_wcscpy( pdebug_module_tail->name, pm->BaseName.Buffer);
-			pdebug_module_tail = pdebug_module_tail->next;
-
-
-			if (_wcsicmp(pm->BaseName.Buffer, L"ntoskrnl")==0 && pm)
-			{
-			   kernel_end = (ULONG)pm->Base + pm->Length;
-		    }
-
-			current = current->Flink;
+		   kernel_end = (ULONG)current->Base + current->Length;
 		}
+		current_entry = current_entry->Flink;
 	}
 
 	LEAVE_FUNC();
@@ -1266,7 +1265,7 @@ LPSTR FindTypeDefinition(PICE_SYMBOLFILE_HEADER* pSymbols,ULONG ulTypeNumber,ULO
 		      PICE_strcat(szAccumulatedName,pName);
 		    }
 		  pTypeString = szAccumulatedName;
-		  
+
 		  pTypeSymbol = PICE_strchr(pTypeString,':');
 		  if(pTypeSymbol && (*(pTypeSymbol+1)=='t' || *(pTypeSymbol+1)=='T'))
 		    {
@@ -1286,7 +1285,7 @@ LPSTR FindTypeDefinition(PICE_SYMBOLFILE_HEADER* pSymbols,ULONG ulTypeNumber,ULO
         }
         pStab++;
     }
-    
+
     return FindTypeDefinitionForCombinedTypes(pSymbols,ulTypeNumber,ulFileNumber);
 
 }

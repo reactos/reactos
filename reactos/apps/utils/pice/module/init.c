@@ -45,6 +45,7 @@ PDIRECTORY_OBJECT *pNameSpaceRoot = NULL;
 PDEBUG_MODULE pdebug_module_tail = NULL;
 PDEBUG_MODULE pdebug_module_head = NULL;
 PMADDRESS_SPACE mm_init_mm;
+extern LIST_ENTRY *pModuleListHead;
 
 ULONG KeyboardIRQL;
 
@@ -113,6 +114,7 @@ BOOLEAN InitPICE(void)
 		return FALSE;
 	}
 */
+
     DPRINT((0,"InitPICE(): trace step 6\n"));
     // load the file /boot/System.map.
     // !!! It must be consistent with the current kernel at all cost!!!
@@ -144,8 +146,22 @@ BOOLEAN InitPICE(void)
 		return FALSE;
 	}
 
-    DPRINT((0,"InitPICE(): trace step 7.1\n"));
+	DPRINT((0,"InitPICE(): trace step 7.1\n"));
+	ScanExports("_ModuleListHead",&ulAddr);
+	pModuleListHead = (LIST_ENTRY*)ulAddr;
+    DPRINT((0,"pModuleListHead @ %X\n",pModuleListHead));
+	if(!pModuleListHead)
+	{
+		Print(OUTPUT_WINDOW,"pICE: ABORT (pModuleListHead not found)\n");
+		Print(OUTPUT_WINDOW,"pICE: press any key to continue...\n");
+        while(!GetKeyPolled());
+        UnloadSymbols();
+		ConsoleShutdown();
+        LEAVE_FUNC();
+		return FALSE;
+	}
 
+	DPRINT((0,"InitPICE(): trace step 7.2\n"));
 	ScanExports("_PsProcessListHead",&ulAddr);
 	pPsProcessListHead = (LIST_ENTRY*)ulAddr;
     DPRINT((0,"pPsProcessListHead @ %X\n",pPsProcessListHead));
