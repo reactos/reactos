@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.57 2001/01/21 00:07:51 phreak Exp $
+; $Id: ntdll.edf,v 1.58 2001/02/10 22:23:07 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -15,7 +15,7 @@ CsrClientCallServer=CsrClientCallServer@16
 CsrClientConnectToServer=CsrClientConnectToServer@0
 ;CsrFreeCaptureBuffer
 ;CsrIdentifyAlertableThread
-;CrsNewThread
+;CsrNewThread
 ;CsrProbeForRead
 ;CsrProbeForWrite
 CsrSetPriorityClass=CsrSetPriorityClass@8

@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.39 2001/02/10 10:04:39 ekohl Exp $
+/* $Id: utils.c,v 1.40 2001/02/10 22:23:30 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -194,7 +194,7 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
 	 */
 	if (LdrFindDll(&Module, &AdjustedName) == STATUS_SUCCESS)
 	{
-		DPRINT1("DLL %wZ already loaded.\n", &AdjustedName);
+		DPRINT("DLL %wZ already loaded.\n", &AdjustedName);
 		if (Module->LoadCount != -1)
 			Module->LoadCount++;
 		*BaseAddress = Module->BaseAddress;
@@ -1546,7 +1546,7 @@ LdrGetDllHandle (IN ULONG Unknown1,
    if ( DllName == NULL )
      {
 	*BaseAddress = NtCurrentPeb()->ImageBaseAddress;
-	DPRINT1("BaseAddress %x\n", *BaseAddress);
+	DPRINT("BaseAddress %x\n", *BaseAddress);
 	return STATUS_SUCCESS;
      }
 
