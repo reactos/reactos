@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.55 2003/11/25 22:06:31 gvg Exp $
+/* $Id: dllmain.c,v 1.56 2003/12/03 21:50:50 gvg Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -271,6 +271,19 @@ DllMain (
       return(Status);
     }
 
+  InitGdiObjectHandleTable ();
+
+  /* Initialize FreeType library */
+  if (! InitFontSupport())
+    {
+      DPRINT1("Unable to initialize font support\n");
+      return STATUS_UNSUCCESSFUL;
+    }
+
+  /* Create stock objects, ie. precreated objects commonly
+     used by win32 applications */
+  CreateStockObjects();
+
   return STATUS_SUCCESS;
 }
 
@@ -278,17 +291,6 @@ DllMain (
 BOOLEAN STDCALL
 Win32kInitialize (VOID)
 {
-  DPRINT("in Win32kInitialize\n");
-
-  InitGdiObjectHandleTable ();
-
-  // Initialize FreeType library
-  if (!InitFontSupport())
-    return FALSE;
-
-  // Create stock objects, ie. precreated objects commonly used by win32 applications
-  CreateStockObjects();
-
   return TRUE;
 }
 

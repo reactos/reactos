@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: guicheck.c,v 1.15 2003/11/25 22:06:31 gvg Exp $
+/* $Id: guicheck.c,v 1.16 2003/12/03 21:50:50 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -77,6 +77,7 @@ IntGraphicsCheck(BOOL Create)
     {
       if (W32Data->CreatedWindowOrDC)
         {
+          W32Data->CreatedWindowOrDC = FALSE;
           if (0 < NrGuiApplicationsRunning)
 	    {
               NrGuiApplicationsRunning--;
@@ -89,6 +90,12 @@ IntGraphicsCheck(BOOL Create)
     }
 
   return TRUE;
+}
+
+VOID STDCALL
+NtUserGraphicsDone()
+{
+  IntGraphicsCheck(FALSE);
 }
 
 /* EOF */

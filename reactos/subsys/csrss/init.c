@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.24 2003/12/02 11:38:47 gvg Exp $
+/* $Id: init.c,v 1.25 2003/12/03 21:50:49 gvg Exp $
  * 
  * reactos/subsys/csrss/init.c
  *
@@ -194,8 +194,6 @@ CsrServerInitialization (
 
   CsrIsCsrss( );
   CsrInitVideo();
-
-  Win32kInitialize();
 
   CsrssApiHeap = RtlCreateHeap(HEAP_GROWABLE,
                                NULL,

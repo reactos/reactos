@@ -1,4 +1,4 @@
-/* $Id: guiconsole.c,v 1.1 2003/12/02 11:38:46 gvg Exp $
+/* $Id: guiconsole.c,v 1.2 2003/12/03 21:50:49 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -12,6 +12,9 @@
 #include "conio.h"
 #include "guiconsole.h"
 #include "win32csr.h"
+
+/* Not defined in any header file */
+extern VOID STDCALL PrivateCsrssGraphicsDone(VOID);
 
 /* GLOBALS *******************************************************************/
 
@@ -493,7 +496,9 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         SetWindowLongW(hWnd, GWL_USERDATA, WindowCount);
         if (0 == WindowCount)
           {
+            NotifyWnd = NULL;
             DestroyWindow(hWnd);
+            PrivateCsrssGraphicsDone();
           }
         return 0;
       default:

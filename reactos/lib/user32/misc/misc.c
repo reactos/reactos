@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: misc.c,v 1.1 2003/11/19 12:33:32 weiden Exp $
+/* $Id: misc.c,v 1.2 2003/12/03 21:50:49 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/misc.c
@@ -46,3 +46,13 @@ GetGuiResources(
   return NtUserGetGuiResources(hProcess, uiFlags);
 }
 
+
+/*
+ * Private call for CSRSS
+ */
+VOID
+STDCALL
+PrivateCsrssGraphicsDone(VOID)
+{
+  NtUserGraphicsDone();
+}

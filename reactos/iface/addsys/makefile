@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.12 2003/11/14 17:13:29 weiden Exp $
+# $Id: makefile,v 1.13 2003/12/03 21:50:49 gvg Exp $
 #
 # ReactOS Operating System
 #
@@ -17,7 +17,6 @@ SVC_MASK=0x1000
 SVC_SERVICE_TABLE=../../subsys/win32k/main/svctab.c
 SVC_GDI_STUBS=../../lib/gdi32/misc/win32k.c
 SVC_USER_STUBS=../../lib/user32/misc/win32k.c
-SVC_CSRSS_STUBS=../../subsys/csrss/win32k.c
 
 SVC_FILES = $(SVC_GDI_STUBS) $(SVC_USER_STUBS) $(SVC_SERVICE_TABLE)
 
@@ -41,8 +40,7 @@ $(SVC_FILES): $(SVC_DB) $(TARGETNAME)$(EXE_POSTFIX)
 		$(SVC_DB) \
 		$(SVC_SERVICE_TABLE) \
 		$(SVC_GDI_STUBS) \
-		$(SVC_USER_STUBS) \
-		$(SVC_CSRSS_STUBS)
+		$(SVC_USER_STUBS)
 
 
 clean:

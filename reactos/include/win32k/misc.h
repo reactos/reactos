@@ -1,9 +1,9 @@
 #ifndef __WIN32K_MISC_H
 #define __WIN32K_MISC_H
 
-BOOLEAN
+VOID
 STDCALL
-Win32kInitialize (VOID);
+NtUserGraphicsDone(VOID);
 
 VOID
 FASTCALL

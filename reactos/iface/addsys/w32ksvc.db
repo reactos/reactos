@@ -174,7 +174,6 @@ NtGdiGetWinMetaFileBits			5
 NtGdiGetWindowExtEx			2
 NtGdiGetWindowOrgEx			2
 NtGdiGetWorldTransform			2
-Win32kInitialize				0
 NtGdiIntersectClipRect			5
 NtGdiInvertRgn				2
 NtGdiLPtoDP				3
@@ -564,6 +563,7 @@ NtUserGetWindow                         2
 NtUserGetLastActivePopup                1
 NtUserGetShellWindow                    0
 NtUserDereferenceWndProcHandle          2
+NtUserGraphicsDone                      0
 # DirectDraw system calls
 NtGdiD3dContextCreate                   4
 NtGdiD3dContextDestroy                  1
