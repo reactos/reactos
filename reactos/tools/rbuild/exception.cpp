@@ -75,7 +75,7 @@ FileNotFoundException::FileNotFoundException ( const string& filename )
 
 
 AccessDeniedException::AccessDeniedException ( const string& filename)
-	: Exception ( "Access denied to file '%s'.",
+	: Exception ( "Access denied to file or directory '%s'.",
 	             filename.c_str() )
 {
 	Filename = filename;

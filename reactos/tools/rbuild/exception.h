@@ -13,7 +13,7 @@ public:
 protected:
 	Exception ();
 	void SetMessage ( const char* message,
-	                  va_list args);
+	                  va_list args );
 };
 
 

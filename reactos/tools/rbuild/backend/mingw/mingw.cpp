@@ -3,7 +3,14 @@
 
 #include "mingw.h"
 #include <assert.h>
+#include <dirent.h>
 #include "modulehandler.h"
+
+#ifdef WIN32
+#define MKDIR(s) mkdir(s)
+#else
+#define MKDIR(s) mkdir(s, 0755)
+#endif
 
 using std::string;
 using std::vector;
@@ -20,7 +27,17 @@ public:
 	directory_map subdirs;
 	Directory ( const string& name );
 	void Add ( const char* subdir );
-	void CreateRule ( FILE* f, const string& parent );
+	void GenerateTree ( const string& parent );
+private:
+	bool mkdir_p ( const char* path );
+	string ReplaceVariable ( string name,
+	                         string value,
+	                         string path );
+	string GetIntermediatePath ();
+	string GetOutputPath ();
+	void ResolveVariablesInPath ( char* buf,
+	                              string path );
+	bool CreateDirectory ( string path );
 };
 
 Directory::Directory ( const string& name_ )
@@ -30,6 +47,16 @@ Directory::Directory ( const string& name_ )
 
 void Directory::Add ( const char* subdir )
 {
+	size_t i;
+	string s1 = string ( subdir );
+	if ( ( i = s1.find ( '$' ) ) != string::npos )
+	{
+		throw InvalidOperationException ( __FILE__,
+		                                  __LINE__,
+		                                  "No environment variables can be used here. Path was %s",
+		                                  subdir );
+	}
+
 	const char* p = strpbrk ( subdir, "/\\" );
 	if ( !p )
 		p = subdir + strlen(subdir);
@@ -40,27 +67,90 @@ void Directory::Add ( const char* subdir )
 		subdirs[s]->Add ( p );
 }
 
+bool
+Directory::mkdir_p ( const char* path )
+{
+	DIR *directory;
+	directory = opendir ( path );
+	if ( directory != NULL )
+	{
+		closedir ( directory );
+		return false;
+	}
+
+	if ( MKDIR ( path ) != 0 )
+		throw AccessDeniedException ( string ( path ) );
+	return true;
+}
+
+bool
+Directory::CreateDirectory ( string path )
+{
+	size_t index = 0;
+	size_t nextIndex;
+	if ( isalpha ( path[0] ) && path[1] == ':' && path[2] == CSEP )
+	{
+		nextIndex = path.find ( CSEP, 3);
+	}
+	else
+		nextIndex = path.find ( CSEP );
+
+	bool directoryWasCreated = false;
+	while ( nextIndex != string::npos )
+	{
+		nextIndex = path.find ( CSEP, index + 1 );
+		directoryWasCreated = mkdir_p ( path.substr ( 0, nextIndex ).c_str () );
+		index = nextIndex;
+	}
+	return directoryWasCreated;
+}
+
+string
+Directory::ReplaceVariable ( string name,
+	                         string value,
+	                         string path )
+{
+	size_t i = path.find ( name );
+	if ( i != string::npos )
+		return path.replace ( i, name.length (), value );
+	else
+		return path;
+}
+
+string
+Directory::GetIntermediatePath ()
+{
+	return "obj-i386";
+}
+
+string
+Directory::GetOutputPath ()
+{
+	return "output-i386";
+}
+
 void
-Directory::CreateRule ( FILE* f, const string& parent )
+Directory::ResolveVariablesInPath ( char* buf,
+	                                string path )
+{
+	string s = ReplaceVariable ( "$(INTERMEDIATE)", GetIntermediatePath (), path );
+	s = ReplaceVariable ( "$(OUTPUT)", GetOutputPath (), s );
+	strcpy ( buf, s.c_str () );
+}
+
+void
+Directory::GenerateTree ( const string& parent )
 {
 	string path;
 
 	if ( parent.size() )
 	{
-		fprintf ( f,
-			"%s%c%s: %s\n",
-			parent.c_str (),
-			CSEP,
-			name.c_str (),
-			parent.c_str () );
-
-		fprintf ( f,
-			"\t$(ECHO_MKDIR)\n" );
-
-		fprintf ( f,
-			"\t${mkdir} $@\n" );
-
+		char buf[256];
+		
 		path = parent + SSEP + name;
+		ResolveVariablesInPath ( buf, path );
+		if ( CreateDirectory ( buf ) )
+			printf ( "Created %s\n", buf );
 	}
 	else
 		path = name;
@@ -69,7 +159,7 @@ Directory::CreateRule ( FILE* f, const string& parent )
 		i != subdirs.end();
 		++i )
 	{
-		i->second->CreateRule ( f, path );
+		i->second->GenerateTree ( path );
 	}
 }
 
@@ -164,7 +254,7 @@ MingwBackend::Process ()
 		delete v[i];
 	}
 
-	GenerateDirectoryTargets ();
+	GenerateDirectories ();
 	CheckAutomaticDependencies ();
 	CloseMakefile ();
 }
@@ -412,16 +502,10 @@ MingwBackend::IncludeDirectoryTarget ( const string& directory ) const
 }
 
 void
-MingwBackend::GenerateDirectoryTargets ()
+MingwBackend::GenerateDirectories ()
 {
-	// TODO FIXME - write new directory creation
-	for ( int i = 0; i < 2; i++ )
-	{
-		Directory& d = *(!i ? int_directories : out_directories);
-		if ( i ) fprintf ( fMakefile, "ifneq ($(INTERMEDIATE),$(OUTPUT))\n" );
-		d.CreateRule ( fMakefile, "" );
-		if ( i ) fprintf ( fMakefile, "endif\n" );
-	}
+	int_directories->GenerateTree ( "" );
+	out_directories->GenerateTree ( "" );
 }
 
 string

@@ -22,7 +22,7 @@ private:
 	void GenerateGlobalCFlagsAndProperties ( const char* op,
 	                                         IfableData& data ) const;
 	std::string GenerateProjectLFLAGS () const;
-	void GenerateDirectoryTargets ();
+	void GenerateDirectories ();
 	void GenerateGlobalVariables () const;
 	bool IncludeInAllTarget ( const Module& module ) const;
 	void GenerateAllTarget ( const std::vector<MingwModuleHandler*>& handlers ) const;

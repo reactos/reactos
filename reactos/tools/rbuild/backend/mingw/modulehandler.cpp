@@ -100,11 +100,29 @@ MingwModuleHandler::SetUsePch ( bool b )
 	use_pch = b;
 }
 
+/* static*/ string
+MingwModuleHandler::RemoveVariables ( string path)
+{
+	size_t i = path.find ( '$' );
+	if ( i != string::npos )
+	{
+		size_t j = path.find ( ')', i );
+		if ( j != string::npos )
+		{
+			if ( j + 2 < path.length () && path[j + 1] == CSEP )
+				return path.substr ( j + 2);
+			else
+				return path.substr ( j + 1);
+		}
+	}
+	return path;
+}
+	
 /*static*/ string
 MingwModuleHandler::PassThruCacheDirectory (
 	const string &file, bool out )
 {
-	string directory ( GetDirectory ( file ) );
+	string directory ( GetDirectory ( RemoveVariables ( file ) ) );
 	string generatedFilesDirectory = backend->AddDirectoryTarget ( directory, out );
 	if ( directory.find ( generatedFilesDirectory ) != string::npos )
 		/* This path already includes the generated files directory variable */
@@ -347,10 +365,9 @@ MingwModuleHandler::GetObjectFilename (
 	else
 		newExtension = ".o";
 	string obj_file = PassThruCacheDirectory (
-		FixupTargetFilename (
-			ReplaceExtension (
-				sourceFilename,
-				newExtension ) ),
+		FixupTargetFilename ( ReplaceExtension (
+			RemoveVariables ( sourceFilename ),
+			                  newExtension ) ),
 			false );
 	if ( pclean_files )
 	{
