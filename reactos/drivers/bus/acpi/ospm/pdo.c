@@ -1,4 +1,4 @@
-/* $Id: pdo.c,v 1.2 2003/11/14 17:13:23 weiden Exp $
+/* $Id: pdo.c,v 1.3 2004/12/27 14:24:00 ekohl Exp $
  *
  * PROJECT:         ReactOS ACPI bus driver
  * FILE:            acpi/ospm/pdo.c
@@ -16,30 +16,90 @@
 
 /*** PRIVATE *****************************************************************/
 
-NTSTATUS
+static NTSTATUS
+AcpiDuplicateUnicodeString(
+  PUNICODE_STRING Destination,
+  PUNICODE_STRING Source,
+  POOL_TYPE PoolType)
+{
+  if (Source == NULL)
+  {
+    RtlInitUnicodeString(Destination, NULL);
+    return STATUS_SUCCESS;
+  }
+
+  Destination->Buffer = ExAllocatePool(PoolType, Source->MaximumLength);
+  if (Destination->Buffer == NULL)
+  {
+    return STATUS_INSUFFICIENT_RESOURCES;
+  }
+
+  Destination->MaximumLength = Source->MaximumLength;
+  Destination->Length = Source->Length;
+  RtlCopyMemory(Destination->Buffer, Source->Buffer, Source->MaximumLength);
+
+  return STATUS_SUCCESS;
+}
+
+
+static NTSTATUS
 PdoQueryId(
   IN PDEVICE_OBJECT DeviceObject,
   IN PIRP Irp,
   PIO_STACK_LOCATION IrpSp)
 {
   PPDO_DEVICE_EXTENSION DeviceExtension;
+  UNICODE_STRING String;
   NTSTATUS Status;
 
   DPRINT("Called\n");
 
   DeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
+  RtlInitUnicodeString(&String, NULL);
+
 //  Irp->IoStatus.Information = 0;
 
-  switch (IrpSp->Parameters.QueryId.IdType) {
+  switch (IrpSp->Parameters.QueryId.IdType)
+  {
     case BusQueryDeviceID:
+      DPRINT("BusQueryDeviceID\n");
+      Status = AcpiDuplicateUnicodeString(&String,
+                                          &DeviceExtension->DeviceID,
+                                          PagedPool);
+      DPRINT("DeviceID: %S\n", String.Buffer);
+      Irp->IoStatus.Information = (ULONG_PTR)String.Buffer;
       break;
 
     case BusQueryHardwareIDs:
+      DPRINT("BusQueryHardwareIDs\n");
+      Status = AcpiDuplicateUnicodeString(&String,
+                                          &DeviceExtension->HardwareIDs,
+                                          PagedPool);
+      Irp->IoStatus.Information = (ULONG_PTR)String.Buffer;
+      break;
+
     case BusQueryCompatibleIDs:
+      DPRINT("BusQueryCompatibleIDs\n");
+      Status = STATUS_NOT_IMPLEMENTED;
+      break;
+
     case BusQueryInstanceID:
+      DPRINT("BusQueryInstanceID\n");
+      Status = AcpiDuplicateUnicodeString(&String,
+                                          &DeviceExtension->InstanceID,
+                                          PagedPool);
+      DPRINT("InstanceID: %S\n", String.Buffer);
+      Irp->IoStatus.Information = (ULONG_PTR)String.Buffer;
+      break;
+
     case BusQueryDeviceSerialNumber:
+      DPRINT("BusQueryDeviceSerialNumber\n");
+      Status = STATUS_NOT_IMPLEMENTED;
+      break;
+
     default:
+      DPRINT("Unknown id type: %lx\n", IrpSp->Parameters.QueryId.IdType);
       Status = STATUS_NOT_IMPLEMENTED;
   }
 
@@ -47,7 +107,7 @@ PdoQueryId(
 }
 
 
-NTSTATUS
+static NTSTATUS
 PdoSetPower(
   IN PDEVICE_OBJECT DeviceObject,
   IN PIRP Irp,
@@ -126,6 +186,9 @@ PdoPnpControl(
     break;
 
   case IRP_MN_QUERY_ID:
+    Status = PdoQueryId(DeviceObject,
+                        Irp,
+                        IrpSp);
     break;
 
   case IRP_MN_QUERY_PNP_DEVICE_STATE:

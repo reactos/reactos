@@ -1,4 +1,4 @@
-/* $Id: acpisys.c,v 1.6 2004/12/25 00:44:49 greatlrd Exp $
+/* $Id: acpisys.c,v 1.7 2004/12/27 14:24:00 ekohl Exp $
  *
  * PROJECT:         ReactOS ACPI bus driver
  * FILE:            acpi/ospm/acpisys.c
@@ -125,9 +125,15 @@ ACPIAddDevice(
 
   DPRINT("Called\n");
 
-  Status = IoCreateDevice(DriverObject, sizeof(FDO_DEVICE_EXTENSION),
-    NULL, FILE_DEVICE_ACPI, FILE_DEVICE_SECURE_OPEN, TRUE, &Fdo);
-  if (!NT_SUCCESS(Status)) {
+  Status = IoCreateDevice(DriverObject,
+                          sizeof(FDO_DEVICE_EXTENSION),
+                          NULL,
+                          FILE_DEVICE_ACPI,
+                          FILE_DEVICE_SECURE_OPEN,
+                          TRUE,
+                          &Fdo);
+  if (!NT_SUCCESS(Status))
+  {
     DPRINT("IoCreateDevice() failed with status 0x%X\n", Status);
     return Status;
   }
