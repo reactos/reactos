@@ -484,7 +484,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
            );
           temp = _sntprintf ( text, sizeof(text)/sizeof(*text), _T("Horizontal: %d"), Scrollparameter.nPos );
 	  TextOut(hDC,200,100,text,strlen(text));
- 
+          ReleaseDC(hWnd, hDC);
  	  return 0;
          }
  	
@@ -560,7 +560,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
           );
           temp = _sntprintf ( text, sizeof(text)/sizeof(*text), _T("Vertical: %d"), Scrollparameter.nPos );
 	  TextOut(hDC,400,100,text,strlen(text));
- 
+          ReleaseDC(hWnd, hDC);
  	  return 0;
  	  }
 
@@ -644,9 +644,6 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 	 case WM_PAINT:
 	  hDC = BeginPaint(hWnd, &ps);
-	  EndPaint(hWnd, &ps);
-	  //SelectObject(hDC, tf);
-	  hDC = GetDC(hWnd);
 	  TextOut(hDC, 10, 10, "Hello World from ReactOS!", 
 			strlen("Hello World from ReactOS!"));
 	  TextOut(hDC, 10, 80, "Press Ctrl+C or Ctrl+Alt+F1 to test Hotkey support.", 
@@ -657,7 +654,6 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
           sprintf(sir, "%lu,%lu,%lu,%lu              ", wir.left, wir.top, wir.right, wir.bottom);
           TextOut(hDC, 10, 30, spr, 20);
           TextOut(hDC, 10, 50, sir, 20);
-	  ReleaseDC ( hWnd, hDC );
 
 	  /* Draw "Hello, World" in the middle of the upper
 	   * half of the window. */
