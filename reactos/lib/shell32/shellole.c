@@ -123,8 +123,8 @@ DWORD WINAPI __SHGUIDToStringW (REFGUID guid, LPWSTR str)
 /************************************************************************/
 
 LRESULT WINAPI SHCoCreateInstance(
-	LPCSTR aclsid,
-	REFCLSID clsid,
+	LPCWSTR aclsid,
+	const CLSID *clsid,
 	LPUNKNOWN pUnkOuter,
 	REFIID refiid,
 	LPVOID *ppv)
@@ -151,7 +151,7 @@ LRESULT WINAPI SHCoCreateInstance(
 	if (!clsid)
 	{
 	  if (!aclsid) return REGDB_E_CLASSNOTREG;
-	  SHCLSIDFromStringA(aclsid, &iid);
+	  SHCLSIDFromStringW(aclsid, &iid);
 	  myclsid = &iid;
 	}
 
@@ -280,7 +280,7 @@ DWORD WINAPI SHCLSIDFromStringA (LPCSTR clsid, CLSID *id)
         return CO_E_CLASSSTRING;
     return CLSIDFromString( buffer, id );
 }
-DWORD WINAPI SHCLSIDFromStringW (LPWSTR clsid, CLSID *id)
+DWORD WINAPI SHCLSIDFromStringW (LPCWSTR clsid, CLSID *id)
 {
 	TRACE("(%p(%s) %p)\n", clsid, debugstr_w(clsid), id);
 	return CLSIDFromString(clsid, id);

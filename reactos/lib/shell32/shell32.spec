@@ -95,7 +95,7 @@
   99 stdcall SetAppStartingCursor (long long)
  100 stdcall SHRestricted(long)
 
- 102 stdcall SHCoCreateInstance(ptr ptr long ptr ptr)
+ 102 stdcall SHCoCreateInstance(wstr ptr long ptr ptr)
  103 stdcall SignalFileOpen(long)
  104 stdcall FileMenu_DeleteAllItems(long)
  105 stdcall FileMenu_DrawItem(long ptr)

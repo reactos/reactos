@@ -831,14 +831,7 @@ HRESULT WINAPI SHCreateDefClassObject(
 	REFIID riidObject);
 
 DWORD WINAPI SHCLSIDFromStringA (LPCSTR clsid, CLSID *id);
-DWORD WINAPI SHCLSIDFromStringW (LPWSTR clsid, CLSID *id);
-
-HRESULT WINAPI SHCoCreateInstance(
-	LPCSTR lpszClsid,
-	REFCLSID rClsid,
-	LPUNKNOWN pUnkOuter,
-	REFIID riid,
-	LPVOID *ppv);
+DWORD WINAPI SHCLSIDFromStringW (LPCWSTR clsid, CLSID *id);
 
 void WINAPI SHFreeUnusedLibraries();
 
