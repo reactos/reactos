@@ -26,13 +26,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <rosrtl/string.h>
-#include <wchar.h>
-
 #define NDEBUG
-#include <debug.h>
-
 #include "vfat.h"
 
 /* FUNCTIONS ****************************************************************/
@@ -385,7 +379,8 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    PVFATFCB VolumeFcb = NULL;
    PVFATCCB Ccb = NULL;
    PDEVICE_OBJECT DeviceToMount;
-   UNICODE_STRING NameU;
+   UNICODE_STRING NameU = RTL_CONSTANT_STRING(L"\\$$Fat$$");
+   UNICODE_STRING VolumeNameU = RTL_CONSTANT_STRING(L"\\$$Volume$$");
 
    DPRINT("VfatMount(IrpContext %x)\n", IrpContext);
 
@@ -495,7 +490,6 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    DPRINT("FsDeviceObject %lx\n", DeviceObject);
 
    DeviceExt->FATFileObject = IoCreateStreamFileObject(NULL, DeviceExt->StorageDevice);
-   RtlRosInitUnicodeStringFromLiteral(&NameU, L"\\$$Fat$$");
    Fcb = vfatNewFCB(DeviceExt, &NameU);
    if (Fcb == NULL)
    {
@@ -541,9 +535,8 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    ExInitializeResourceLite(&DeviceExt->FatResource);
 
    InitializeListHead(&DeviceExt->FcbListHead);
-   RtlRosInitUnicodeStringFromLiteral(&NameU, L"\\$$Volume$$");
 
-   VolumeFcb = vfatNewFCB(DeviceExt, &NameU);
+   VolumeFcb = vfatNewFCB(DeviceExt, &VolumeNameU);
    if (VolumeFcb == NULL)
    {
       Status = STATUS_INSUFFICIENT_RESOURCES;

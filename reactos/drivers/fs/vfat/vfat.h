@@ -2,7 +2,8 @@
 
 #include <ddk/ntifs.h>
 #include <ddk/ntdddisk.h>
-#undef DeleteFile /* FIXME */
+#include <limits.h>
+#include <debug.h>
 
 #define USE_ROS_CC_AND_FS
 
@@ -11,6 +12,7 @@
 NTSTATUS NTAPI RtlOemStringToUnicodeString(PUNICODE_STRING, CONST STRING *, BOOLEAN);
 NTSTATUS NTAPI RtlDowncaseUnicodeString(PUNICODE_STRING, PCUNICODE_STRING, BOOLEAN);
 NTSTATUS NTAPI RtlUnicodeStringToOemString(POEM_STRING, PCUNICODE_STRING, BOOLEAN);
+#undef DeleteFile /* FIXME */
 #endif
 
 #ifdef USE_ROS_CC_AND_FS

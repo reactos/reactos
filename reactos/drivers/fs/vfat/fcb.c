@@ -13,14 +13,9 @@
 
 /*  -------------------------------------------------------  INCLUDES  */
 
-#include <ddk/ntddk.h>
-#include <wchar.h>
-#include <limits.h>
-#include <rosrtl/string.h>
+#include <wctype.h> /* towlower prototype */
 
 #define NDEBUG
-#include <debug.h>
-
 #include "vfat.h"
 
 /*  --------------------------------------------------------  DEFINES  */
@@ -372,9 +367,7 @@ vfatMakeRootFCB(PDEVICE_EXTENSION  pVCB)
   PVFATFCB  FCB;
   ULONG FirstCluster, CurrentCluster, Size = 0;
   NTSTATUS Status = STATUS_SUCCESS;
-  UNICODE_STRING NameU;
-
-  RtlRosInitUnicodeStringFromLiteral(&NameU, L"\\");
+  UNICODE_STRING NameU = RTL_CONSTANT_STRING(L"\\");
 
   FCB = vfatNewFCB(pVCB, &NameU);
   if (FCB->Flags & FCB_IS_FATX_ENTRY)
@@ -425,9 +418,7 @@ PVFATFCB
 vfatOpenRootFCB(PDEVICE_EXTENSION  pVCB)
 {
   PVFATFCB  FCB;
-  UNICODE_STRING NameU;
-
-  RtlRosInitUnicodeStringFromLiteral(&NameU, L"\\");
+  UNICODE_STRING NameU = RTL_CONSTANT_STRING(L"\\");
 
   FCB = vfatGrabFCBFromTable (pVCB, &NameU);
   if (FCB == NULL)
@@ -654,7 +645,7 @@ vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB,
   PVFATFCB  FCB = NULL;
   PVFATFCB  parentFCB;
   UNICODE_STRING NameU;
-  UNICODE_STRING RootNameU;
+  UNICODE_STRING RootNameU = RTL_CONSTANT_STRING(L"\\");
   PWCHAR curr, prev, last;
   ULONG Length;
 
@@ -668,8 +659,6 @@ vfatGetFCBForFile (PDEVICE_EXTENSION  pVCB,
 
   if (parentFCB == NULL)
   {
-     RtlRosInitUnicodeStringFromLiteral(&RootNameU, L"\\");
-
      //  Trivial case, open of the root directory on volume
      if (RtlEqualUnicodeString(pFileNameU, &RootNameU, FALSE))
      {

@@ -11,12 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <wchar.h>
-
 #define NDEBUG
-#include <debug.h>
-
 #include "vfat.h"
 
 /* FUNCTIONS ****************************************************************/

@@ -10,21 +10,16 @@
 
 */
 
-#include <ddk/ntddk.h>
-#include <wchar.h>
-
 #define NDEBUG
-#include <debug.h>
-
 #include "vfat.h"
 
 
 // function like DosDateTimeToFileTime
 BOOLEAN
-FsdDosDateTimeToSystemTime (PDEVICE_EXTENSION DeviceExt, USHORT wDosDate, WORD wDosTime, PLARGE_INTEGER SystemTime)
+FsdDosDateTimeToSystemTime (PDEVICE_EXTENSION DeviceExt, USHORT DosDate, USHORT DosTime, PLARGE_INTEGER SystemTime)
 {
-  PDOSTIME pdtime = (PDOSTIME) & wDosTime;
-  PDOSDATE pddate = (PDOSDATE) & wDosDate;
+  PDOSTIME pdtime = (PDOSTIME) &DosTime;
+  PDOSDATE pddate = (PDOSDATE) &DosDate;
   TIME_FIELDS TimeFields;
   LARGE_INTEGER LocalTime;
 

@@ -27,12 +27,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <rosrtl/string.h>
-
 #define NDEBUG
-#include <debug.h>
-
 #include "vfat.h"
 
 /* GLOBALS *****************************************************************/
@@ -53,7 +48,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
  */
 {
    PDEVICE_OBJECT DeviceObject;
-   UNICODE_STRING DeviceName = ROS_STRING_INITIALIZER(L"\\Fat");
+   UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Fat");
    NTSTATUS Status;
 
    Status = IoCreateDevice(DriverObject,

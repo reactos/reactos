@@ -12,13 +12,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <wchar.h>
-#include <ntos/minmax.h>
-
 #define NDEBUG
-#include <debug.h>
-
 #include "vfat.h"
 
 /* GLOBALS ******************************************************************/
