@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.117 2004/01/08 15:02:45 ekohl Exp $
+/* $Id: registry.c,v 1.118 2004/01/09 19:42:40 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -622,7 +622,7 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 
   VERIFY_KEY_OBJECT(NewKey);
 
-  ObDereferenceObject (NewKey);
+  /* Note: Do not dereference NewKey here! */
   ObDereferenceObject (ParentKey);
 
   return STATUS_SUCCESS;
@@ -725,6 +725,8 @@ CmiDisconnectHive (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
       Entry = Entry->Flink;
     }
 
+  /* Note: Dereference the key object twice in order to delete it */
+  ObDereferenceObject (KeyObject);
   ObDereferenceObject (KeyObject);
 
   *RegistryHive = Hive;
