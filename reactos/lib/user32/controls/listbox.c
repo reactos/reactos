@@ -1,4 +1,4 @@
-/* $Id: listbox.c,v 1.13 2003/11/08 15:35:58 mf Exp $
+/* $Id: listbox.c,v 1.14 2003/12/14 19:36:15 sedwards Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -10,14 +10,14 @@
  */
 
 #define NDEBUG
-#include <debug.h>
 #include <string.h>
 #include <stdlib.h>
 //#include <stdio.h>
 #include "windows.h"
 #include "controls.h"
 #include "user32/regcontrol.h"
-#include "user32.h"
+#include "wine/unicode.h"
+#include "wine/debug.h"
 
 /* Unimplemented yet:
  * - LBS_USETABSTOPS
@@ -29,42 +29,7 @@
 
 /* Start of hack section -------------------------------- */
 
-#define strcpyW wcscpy
-#define strlenW wcslen
-#define strncmpiW _wcsnicmp
-#define strcmpW wcscmp
-#define strcatW wcscat
-
-#define TRACE_ON(x) TRUE
-#define TRACE_(x) TRACE
-
 typedef short *LPINT16;
-// typedef short INT16, *LPINT16;
-// typedef unsigned short UINT16;
-
-char* debugstr_w(LPWSTR input)
-{
-        return "Need to convert";
-}
-
-char* debugstr_a(LPSTR input)
-{
-        return input;
-}
-
-void TRACE(const char* format, ...)
-{
-
-}
-
-void ERR(const char* format, ...)
-{
-
-}
-
-//void FIXME(const char* format, ...)
-//{
-//}
 
 BOOL is_old_app(HWND hwnd)
 {
