@@ -73,6 +73,7 @@ typedef struct CSRSS_CONSOLE_t
    BOOL EarlyReturn;                     /* wake client and return data, even if we are in line buffered mode, and we don't have a complete line */
    DWORD HardwareState;                  /* _GDI_MANAGED, _DIRECT */
    HWND hWindow;
+   ULONG ProcessId;      
 } CSRSS_CONSOLE, *PCSRSS_CONSOLE;
 
 typedef struct _CSRSS_PROCESS_DATA

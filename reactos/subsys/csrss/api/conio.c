@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.49 2003/07/29 23:03:01 jimtabor Exp $
+/* $Id: conio.c,v 1.50 2003/08/18 07:20:23 jimtabor Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -24,7 +24,7 @@
 
 /* FIXME: Is there a way to create real aliasses with gcc? [CSH] */
 #define ALIAS(Name, Target) typeof(Target) Name = Target
-
+extern VOID CsrConsoleCtrlEvent(DWORD Event);
 
 /* GLOBALS *******************************************************************/
 
@@ -34,8 +34,47 @@ static PCSRSS_CONSOLE ActiveConsole;
 CRITICAL_SECTION ActiveConsoleLock;
 static COORD PhysicalConsoleSize;
 static BOOL KeyReadInhibit = FALSE;
+static PCONTROLDISPATCHER CtrlDispatcher;
 
 /* FUNCTIONS *****************************************************************/
+
+VOID CsrConsoleCtrlEvent(DWORD Event)
+{
+HANDLE Process, hThread;
+NTSTATUS Status;
+CLIENT_ID ClientId, ClientId1;
+
+
+	ClientId.UniqueProcess = (HANDLE) ActiveConsole->ProcessId;
+	
+	
+	DPRINT1("CsrConsoleCtrlEvent Parent ProcessId = %x\n",	ClientId.UniqueProcess);
+		
+		
+	Status = NtOpenProcess( &Process, PROCESS_DUP_HANDLE, 0, &ClientId );
+	if( !NT_SUCCESS( Status ) )
+	{
+		DPRINT("CsrConsoleCtrlEvent: Failed for handle duplication\n");
+		return;
+	}
+
+	DPRINT1("CsrConsoleCtrlEvent Process Handle = %x\n", Process);
+
+
+	Status = RtlCreateUserThread(Process, NULL, FALSE, 0, NULL, NULL,
+					(PTHREAD_START_ROUTINE)CtrlDispatcher,
+					(PVOID) Event, hThread, &ClientId1);
+	if( !NT_SUCCESS( Status ) )
+	{
+		DPRINT("CsrConsoleCtrlEvent: Failed Thread creation\n");
+		NtClose(Process);
+		return;
+	}
+	DPRINT1("CsrConsoleCtrlEvent Parent ProcessId = %x, ReturnPId = %x, hT = %x\n",
+			ClientId.UniqueProcess, ClientId1.UniqueProcess, hThread);
+	NtClose(Process);
+}
+
 
 CSR_API(CsrAllocConsole)
 {
@@ -89,6 +128,11 @@ CSR_API(CsrAllocConsole)
 	 ProcessData->Console = 0;
 	 return Reply->Status = Status;
       }
+
+   CtrlDispatcher = Request->Data.AllocConsoleRequest.CtrlDispatcher;
+   DPRINT1("CSRSS:CtrlDispatcher address: %x\n", CtrlDispatcher);      
+   ProcessData->Console->ProcessId = ProcessData->ProcessId;
+
    ClientId.UniqueProcess = (HANDLE)ProcessData->ProcessId;
    Status = NtOpenProcess( &Process, PROCESS_DUP_HANDLE, 0, &ClientId );
    if( !NT_SUCCESS( Status ) )
@@ -1162,6 +1206,16 @@ VOID Console_Api( DWORD RefreshEvent )
 	       KeyEventRecord->Echoed = TRUE;
 	    }
       }
+
+	/* After all the keys processed */
+	if (((KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode == VK_PAUSE) || 
+		(KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode == 'C')) &&
+		(KeyEventRecord->InputEvent.Event.KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)))
+	{
+		DPRINT1("Console_Api Ctrl-C\n");
+		CsrConsoleCtrlEvent((DWORD)CTRL_C_EVENT);
+	}
+      
       ActiveConsole->WaitingChars++;
       if( !(ActiveConsole->Mode & ENABLE_LINE_INPUT) )
 	NtSetEvent( ActiveConsole->ActiveEvent, 0 );
