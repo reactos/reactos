@@ -1,4 +1,4 @@
-/* $Id: stubsw.c,v 1.32 2004/09/06 21:15:45 weiden Exp $
+/* $Id: stubsw.c,v 1.33 2004/12/30 02:32:23 navaraf Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -12,77 +12,6 @@
 #include "precomp.h"
 
 #define UNIMPLEMENTED DbgPrint("GDI32: %s is unimplemented, please try again later.\n", __FUNCTION__);
-
-/*
- * @implemented
- */
-int
-STDCALL
-AddFontResourceExW ( LPCWSTR lpszFilename, DWORD fl, PVOID pvReserved )
-{
-  UNICODE_STRING Filename;
-
-  /* FIXME handle fl parameter */
-  RtlInitUnicodeString(&Filename, lpszFilename);
-  return NtGdiAddFontResource ( &Filename, fl );
-}
-
-/*
- * @implemented
- */
-int
-STDCALL
-AddFontResourceW ( LPCWSTR lpszFilename )
-{
-	return AddFontResourceExW ( lpszFilename, 0, 0 );
-}
-
-
-/*
- * @implemented
- */
-HDC
-STDCALL
-CreateICW(
-	LPCWSTR			lpszDriver,
-	LPCWSTR			lpszDevice,
-	LPCWSTR			lpszOutput,
-	CONST DEVMODEW *	lpdvmInit
-	)
-{
-  UNICODE_STRING Driver, Device, Output;
-  
-  if(lpszDriver)
-    RtlInitUnicodeString(&Driver, lpszDriver);
-  if(lpszDevice)
-    RtlInitUnicodeString(&Device, lpszDevice);
-  if(lpszOutput)
-    RtlInitUnicodeString(&Output, lpszOutput);
-  return NtGdiCreateIC ((lpszDriver ? &Driver : NULL),
-		      (lpszDevice ? &Device : NULL),
-		      (lpszOutput ? &Output : NULL),
-		      (CONST PDEVMODEW)lpdvmInit );
-}
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-CreateScalableFontResourceW(
-	DWORD		fdwHidden,
-	LPCWSTR		lpszFontRes,
-	LPCWSTR		lpszFontFile,
-	LPCWSTR		lpszCurrentPath
-	)
-{
-  return NtGdiCreateScalableFontResource ( fdwHidden,
-					  lpszFontRes,
-					  lpszFontFile,
-					  lpszCurrentPath );
-}
-
 
 /*
  * @unimplemented
@@ -135,73 +64,6 @@ EnumFontsW(
 
 
 /*
- * @implemented
- */
-BOOL
-APIENTRY
-GetCharWidthFloatW(
-	HDC	hdc,
-	UINT	iFirstChar,
-	UINT	iLastChar,
-	PFLOAT	pxBuffer
-	)
-{
-  return NtGdiGetCharWidthFloat ( hdc, iFirstChar, iLastChar, pxBuffer );
-}
-
-
-/*
- * @implemented
- */
-BOOL
-APIENTRY
-GetCharABCWidthsW(
-	HDC	hdc,
-	UINT	uFirstChar,
-	UINT	uLastChar,
-	LPABC	lpabc
-	)
-{
-  return NtGdiGetCharABCWidths ( hdc, uFirstChar, uLastChar, lpabc );
-}
-
-
-/*
- * @implemented
- */
-BOOL
-APIENTRY
-GetCharABCWidthsFloatW(
-	HDC		hdc,
-	UINT		iFirstChar,
-	UINT		iLastChar,
-	LPABCFLOAT	lpABCF
-	)
-{
-  return NtGdiGetCharABCWidthsFloat ( hdc, iFirstChar, iLastChar, lpABCF );
-}
-
-
-/*
- * @implemented
- */
-DWORD
-STDCALL
-GetGlyphOutlineW(
-	HDC		hdc,
-	UINT		uChar,
-	UINT		uFormat,
-	LPGLYPHMETRICS	lpgm,
-	DWORD		cbBuffer,
-	LPVOID		lpvBuffer,
-	CONST MAT2	*lpmat2
-	)
-{
-  return NtGdiGetGlyphOutline ( hdc, uChar, uFormat, lpgm, cbBuffer, lpvBuffer, (CONST LPMAT2)lpmat2 );
-}
-
-
-/*
  * @unimplemented
  */
 UINT
@@ -219,67 +81,6 @@ GetOutlineTextMetricsW(
 
 
 /*
- * @implemented
- */
-BOOL
-APIENTRY
-GetTextExtentExPointW(
-	HDC		hdc,
-	LPCWSTR		lpszStr,
-	int		cchString,
-	int		nMaxExtent,
-	LPINT		lpnFit,
-	LPINT		alpDx,
-	LPSIZE		lpSize
-	)
-{
-  return NtGdiGetTextExtentExPoint (
-    hdc, lpszStr, cchString, nMaxExtent, lpnFit, alpDx, lpSize );
-}
-
-
-/*
- * @implemented
- */
-HDC
-STDCALL
-ResetDCW(
-	HDC		hdc,
-	CONST DEVMODEW	*lpInitData
-	)
-{
-  return NtGdiResetDC ( hdc, lpInitData );
-}
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-RemoveFontResourceW(
-	LPCWSTR	lpFileName
-	)
-{
-  return NtGdiRemoveFontResource ( lpFileName );
-}
-
-
-/*
- * @implemented
- */
-int 
-STDCALL 
-StartDocW(
-	HDC		hdc,
-	CONST DOCINFOW	*a1
-	)
-{
-	return NtGdiStartDoc ( hdc, (DOCINFOW *)a1 );
-}
-
-
-/*
  * @unimplemented
  */
 BOOL
@@ -293,21 +94,6 @@ PolyTextOutW(
 	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
-}
-
-
-/*
- * @implemented
- */
-int
-STDCALL
-GetTextFaceW(
-	HDC	a0,
-	int	a1,
-	LPWSTR	a2
-	)
-{
-	return NtGdiGetTextFace(a0, a1, a2);
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.65 2004/09/06 21:15:45 weiden Exp $
+/* $Id: stubs.c,v 1.66 2004/12/30 02:32:23 navaraf Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -1089,25 +1089,6 @@ WidenPath(
 	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-HPEN
-STDCALL
-ExtCreatePen(
-	DWORD		a0,
-	DWORD		a1,
-	CONST LOGBRUSH	*a2,
-	DWORD		a3,
-	CONST DWORD	*a4
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
 }
 
 

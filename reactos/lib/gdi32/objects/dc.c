@@ -3,340 +3,6 @@
 #define NDEBUG
 #include <debug.h>
 
-/*
- * @implemented
- */
-DWORD
-STDCALL
-GetObjectType(
-        HGDIOBJ         h
-        )
-{
-  return NtGdiGetObjectType(h);
-}
-
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-DPtoLP(
-        HDC     hdc,
-        LPPOINT lpPoints,
-        int     nCount
-        )
-{
-  return NtGdiDPtoLP(hdc, lpPoints, nCount);
-}
-
-
-/*
- * @implemented
- */
-COLORREF
-STDCALL
-SetBkColor(
-        HDC             hdc,
-        COLORREF        crColor
-        )
-{
-  return NtGdiSetBkColor(hdc, crColor);
-}
-
-
-/*
- * @implemented
- */
-int
-STDCALL
-GetGraphicsMode(
-        HDC     hdc
-        )
-{
-  return NtGdiGetGraphicsMode(hdc);
-}
-
-
-/*
- * @implemented
- */
-int
-STDCALL
-SetGraphicsMode(
-        HDC     hdc,
-        int     iMode
-        )
-{
-  return NtGdiSetGraphicsMode(hdc, iMode);
-}
-
-
-/*
- * @implemented
- */
-int
-STDCALL
-GetMapMode(
-        HDC     hdc
-        )
-{
-  return NtGdiGetMapMode(hdc);
-}
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-GetCurrentPositionEx(
-        HDC     hdc,
-        LPPOINT lpPoint
-        )
-{
-  return NtGdiGetCurrentPositionEx(hdc, lpPoint);
-}
-
-
-/*
- * @implemented
- */
-COLORREF
-STDCALL
-GetBkColor(
-        HDC     hdc
-        )
-{
-  return NtGdiGetBkColor(hdc);
-}
-
-
-/*
- * @implemented
- */
-int
-STDCALL
-GetBkMode(
-        HDC     hdc
-        )
-{
-  return NtGdiGetBkMode(hdc);
-}
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-GetBrushOrgEx(
-        HDC     hdc,
-        LPPOINT lppt
-        )
-{
-  return NtGdiGetBrushOrgEx(hdc, lppt);
-}
-
-
-/*
- * @implemented
- */
-int
-STDCALL
-GetROP2(
-        HDC     hdc
-        )
-{
-  return NtGdiGetROP2(hdc);
-}
-
-
-/*
- * @implemented
- */
-int
-STDCALL
-GetStretchBltMode(
-        HDC     hdc
-        )
-{
-  return NtGdiGetStretchBltMode(hdc);
-}
-
-
-
-/*
- * @implemented
- */
-UINT
-STDCALL
-GetTextAlign(
-        HDC     hdc
-        )
-{
-  return NtGdiGetTextAlign(hdc);
-}
-
-
-/*
- * @implemented
- */
-COLORREF
-STDCALL
-GetTextColor(
-        HDC     hdc
-        )
-{
-  return NtGdiGetTextColor(hdc);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-GetViewportExtEx(
-        HDC     hdc,
-        LPSIZE  lpSize
-        )
-{
-  return NtGdiGetViewportExtEx(hdc, lpSize);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-GetViewportOrgEx(
-        HDC             hdc,
-        LPPOINT         lpPoint
-        )
-{
-  return NtGdiGetViewportOrgEx(hdc, lpPoint);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-GetWindowExtEx(
-        HDC             hdc,
-        LPSIZE          lpSize
-        )
-{
-  return NtGdiGetWindowExtEx(hdc, lpSize);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-GetWindowOrgEx(
-        HDC             hdc,
-        LPPOINT         lpPoint
-        )
-{
-  return NtGdiGetWindowOrgEx(hdc, lpPoint);
-}
-
-
-/*
- * @implemented
- */
-int
-STDCALL
-SetBkMode(
-        HDC     hdc,
-        int     iBkMode
-        )
-{
-  return NtGdiSetBkMode(hdc, iBkMode);
-}
-
-
-/*
- * @implemented
- */
-int
-STDCALL
-SetROP2(
-        HDC     hdc,
-        int     fnDrawMode
-        )
-{
-  return NtGdiSetROP2(hdc, fnDrawMode);
-}
-
-
-/*
- * @implemented
- */
-int
-STDCALL
-SetStretchBltMode(
-        HDC     hdc,
-        int     iStretchMode
-        )
-{
-  return NtGdiSetStretchBltMode(hdc, iStretchMode);
-}
-
-
-/*
- * @implemented
- */
-DWORD
-STDCALL
-GetRelAbs(
-         HDC  hdc,
-         DWORD dwIgnore
-           )
-{
-  return NtGdiGetRelAbs(hdc);
-}
-
-
-/*
- * @implemented
- */
-HGDIOBJ STDCALL
-GetStockObject(int fnObject)
-{
-  return NtGdiGetStockObject(fnObject);
-}
-
-
-/*
- * @implemented
- */
-int STDCALL
-GetClipBox(
-	HDC hdc, 
-	LPRECT lprc)
-{
-  return NtGdiGetClipBox(hdc, lprc);
-}
-
-
-/*
- * @implemented
- */
-int
-STDCALL
-GetPolyFillMode(
-	HDC	hdc
-	)
-{
-  return NtGdiGetPolyFillMode(hdc);
-}
-
 
 /*
  * @implemented
@@ -442,9 +108,27 @@ CreateDCW (
 /*
  * @implemented
  */
-BOOL STDCALL DeleteDC( HDC hdc )
+HDC
+STDCALL
+CreateICW(
+	LPCWSTR			lpszDriver,
+	LPCWSTR			lpszDevice,
+	LPCWSTR			lpszOutput,
+	CONST DEVMODEW *	lpdvmInit
+	)
 {
-  return NtGdiDeleteDC(hdc);
+  UNICODE_STRING Driver, Device, Output;
+  
+  if(lpszDriver)
+    RtlInitUnicodeString(&Driver, lpszDriver);
+  if(lpszDevice)
+    RtlInitUnicodeString(&Device, lpszDevice);
+  if(lpszOutput)
+    RtlInitUnicodeString(&Output, lpszOutput);
+  return NtGdiCreateIC ((lpszDriver ? &Driver : NULL),
+		      (lpszDevice ? &Device : NULL),
+		      (lpszOutput ? &Output : NULL),
+		      (CONST PDEVMODEW)lpdvmInit );
 }
 
 
@@ -453,87 +137,52 @@ BOOL STDCALL DeleteDC( HDC hdc )
  */
 HDC
 STDCALL
-CreateCompatibleDC(
-	HDC  hdc
+CreateICA(
+	LPCSTR			lpszDriver,
+	LPCSTR			lpszDevice,
+	LPCSTR			lpszOutput,
+	CONST DEVMODEA *	lpdvmInit
 	)
 {
-  return NtGdiCreateCompatableDC(hdc);
-}
+  NTSTATUS Status;
+  LPWSTR lpszDriverW, lpszDeviceW, lpszOutputW;
+  UNICODE_STRING Driver, Device, Output;
+  DEVMODEW dvmInitW;
+  HDC rc = 0;
 
+  Status = HEAP_strdupA2W ( &lpszDriverW, lpszDriver );
+  if (!NT_SUCCESS (Status))
+    SetLastError (RtlNtStatusToDosError(Status));
+  else
+  {
+    Status = HEAP_strdupA2W ( &lpszDeviceW, lpszDevice );
+    if (!NT_SUCCESS (Status))
+      SetLastError (RtlNtStatusToDosError(Status));
+    else
+      {
+	Status = HEAP_strdupA2W ( &lpszOutputW, lpszOutput );
+	if (!NT_SUCCESS (Status))
+	  SetLastError (RtlNtStatusToDosError(Status));
+	else
+	  {
+	    if ( lpdvmInit )
+	      RosRtlDevModeA2W ( &dvmInitW, (const LPDEVMODEA)lpdvmInit );
+        
+        RtlInitUnicodeString(&Driver, lpszDriverW);
+        RtlInitUnicodeString(&Device, lpszDeviceW);
+        RtlInitUnicodeString(&Output, lpszOutputW);
+	    rc = NtGdiCreateIC ( &Driver,
+				&Device,
+				&Output,
+				lpdvmInit ? &dvmInitW : NULL );
 
-/*
- * @implemented
- */
-HGDIOBJ
-STDCALL
-SelectObject(
-	HDC	hdc,
-	HGDIOBJ	hgdiobj
-	)
-{
-  return NtGdiSelectObject(hdc, hgdiobj);
-}
-
-
-/*
- * @implemented
- */
-int
-STDCALL
-SetMapMode(
-	HDC	hdc,
-	int	fnMapMode
-	)
-{
-  return NtGdiSetMapMode(hdc, fnMapMode);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-SetViewportOrgEx(
-	HDC	hdc,
-	int	X,
-	int	Y,
-	LPPOINT	lpPoint
-	)
-{
-  return NtGdiSetViewportOrgEx(hdc, X, Y, lpPoint);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-OffsetViewportOrgEx(
-	HDC	hdc,
-	int	nXOffset,
-	int	nYOffset,
-	LPPOINT	lpPoint
-	)
-{
-  return NtGdiOffsetViewportOrgEx(hdc, nXOffset, nYOffset, lpPoint);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-SetWindowOrgEx(
-	HDC	hdc,
-	int	X,
-	int	Y,
-	LPPOINT	lpPoint
-	)
-{
-  return NtGdiSetWindowOrgEx(hdc, X, Y, lpPoint);
+	    HEAP_free ( lpszOutputW );
+	  }
+	HEAP_free ( lpszDeviceW );
+      }
+    HEAP_free ( lpszDriverW );
+  }
+  return rc;
 }
 
 
@@ -547,7 +196,7 @@ DeleteObject(HGDIOBJ hObject)
   if (0 != ((DWORD) hObject & 0x00800000))
     {
       DPRINT1("Trying to delete system object 0x%x\n", hObject);
-      return FALSE;
+      return TRUE;
     }
 
   return NtGdiDeleteObject(hObject);
@@ -557,350 +206,14 @@ DeleteObject(HGDIOBJ hObject)
 /*
  * @implemented
  */
-HPALETTE
+DWORD
 STDCALL
-SelectPalette(
-	HDC		hdc,
-	HPALETTE	hpal,
-	BOOL		bForceBackground
-	)
+GetRelAbs(
+         HDC  hdc,
+         DWORD dwIgnore
+           )
 {
-  return NtGdiSelectPalette(hdc, hpal, bForceBackground);
-}
-
-
-/*
- * @implemented
- */
-UINT
-STDCALL
-RealizePalette(
-	HDC	hdc
-	)
-{
-  return NtGdiRealizePalette(hdc);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-LPtoDP(
-	HDC	hdc,
-	LPPOINT	lpPoints,
-	int	nCount
-	)
-{
-  return NtGdiLPtoDP(hdc, lpPoints, nCount);
-}
-
-
-/*
- * @implemented
- */
-int
-STDCALL
-SetPolyFillMode(
-	HDC	hdc,
-	int	iPolyFillMode
-	)
-{
-  return NtGdiSetPolyFillMode(hdc, iPolyFillMode);
-}
-
-
-/*
- * @implemented
- */
-int
-STDCALL
-GetDeviceCaps(
-	HDC	hdc,
-	int	nIndex
-	)
-{
-  return NtGdiGetDeviceCaps(hdc, nIndex);
-}
-
-/*
- * @implemented
- */
-HPALETTE
-STDCALL
-CreatePalette(
-	CONST LOGPALETTE	*lplgpl
-	)
-{
-  return NtGdiCreatePalette((CONST PLOGPALETTE)lplgpl);
-}
-
-/*
- * @implemented
- */
-COLORREF
-STDCALL
-GetNearestColor(
-	HDC		hdc,
-	COLORREF	crColor
-	)
-{
-  return NtGdiGetNearestColor(hdc, crColor);
-}
-
-/*
- * @implemented
- */
-UINT
-STDCALL
-GetNearestPaletteIndex(
-	HPALETTE	hpal,
-	COLORREF	crColor
-	)
-{
-  return NtGdiGetNearestPaletteIndex(hpal, crColor);
-}
-
-/*
- * @implemented
- */
-UINT
-STDCALL
-GetPaletteEntries(
-	HPALETTE	hpal,
-	UINT		iStartIndex,
-	UINT		nEntries,
-	LPPALETTEENTRY	lppe
-	)
-{
-  return NtGdiGetPaletteEntries(hpal, iStartIndex, nEntries, lppe);
-}
-
-/*
- * @implemented
- */
-UINT
-STDCALL
-GetSystemPaletteEntries(
-	HDC		hdc,
-	UINT		iStartIndex,
-	UINT		nEntries,
-	LPPALETTEENTRY	lppe
-	)
-{
-  return NtGdiGetSystemPaletteEntries(hdc, iStartIndex, nEntries, lppe);
-}
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-RestoreDC(
-	HDC	hdc,
-	int	nSavedDC
-	)
-{
-  return NtGdiRestoreDC(hdc, nSavedDC);
-}
-
-
-/*
- * @implemented
- */
-int
-STDCALL
-SaveDC(
-	HDC	hdc
-	)
-{
-  return NtGdiSaveDC(hdc);
-}
-
-/*
- * @implemented
- */
-UINT
-STDCALL
-SetPaletteEntries(
-	HPALETTE		hpal,
-	UINT			iStart,
-	UINT			cEntries,
-	CONST PALETTEENTRY	*lppe
-	)
-{
-  return NtGdiSetPaletteEntries(hpal, iStart, cEntries, (CONST PPALETTEENTRY)lppe);
-}
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-GetWorldTransform(
-	HDC		hdc,
-	LPXFORM		lpXform
-	)
-{
-  return NtGdiGetWorldTransform(hdc, lpXform);
-}
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-SetWorldTransform(
-	HDC		hdc,
-	CONST XFORM	*lpXform
-	)
-{
-  return NtGdiSetWorldTransform(hdc, (CONST PXFORM)lpXform);
-}
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-ModifyWorldTransform(
-	HDC		hdc,
-	CONST XFORM	*lpXform,
-	DWORD		iMode
-	)
-{
-  return NtGdiModifyWorldTransform(hdc, (CONST PXFORM)lpXform, iMode);
-}
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-CombineTransform(
-	LPXFORM		lpxformResult,
-	CONST XFORM	*lpxform1,
-	CONST XFORM	*lpxform2
-	)
-{
-  return NtGdiCombineTransform(lpxformResult, (CONST PXFORM)lpxform1, (CONST PXFORM)lpxform2);
-}
-
-/*
- * @implemented
- */
-UINT
-STDCALL
-GetDIBColorTable(
-	HDC		hdc,
-	UINT		uStartIndex,
-	UINT		cEntries,
-	RGBQUAD		*pColors
-	)
-{
-  DbgPrint("GetDIBColorTable\n");
-  return NtGdiGetDIBColorTable(hdc, uStartIndex, cEntries, pColors);
-}
-
-/*
- * @implemented
- */
-UINT
-STDCALL
-SetDIBColorTable(
-	HDC		hdc,
-	UINT		uStartIndex,
-	UINT		cEntries,
-	CONST RGBQUAD	*pColors
-	)
-{
-  return NtGdiSetDIBColorTable(hdc, uStartIndex, cEntries, (RGBQUAD*)pColors);
-}
-
-/*
- * @implemented
- */
-HPALETTE
-STDCALL
-CreateHalftonePalette(
-	HDC	hdc
-	)
-{
-  return NtGdiCreateHalftonePalette(hdc);
-}
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-SetViewportExtEx(
-	HDC	hdc,
-	int	nXExtent,
-	int	nYExtent,
-	LPSIZE	lpSize
-	)
-{
-  return NtGdiSetViewportExtEx(hdc, nXExtent, nYExtent, lpSize);
-}
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-SetWindowExtEx(
-	HDC	hdc,
-	int	nXExtent,
-	int	nYExtent,
-	LPSIZE	lpSize
-	)
-{
-  return NtGdiSetWindowExtEx(hdc, nXExtent, nYExtent, lpSize);
-}
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-OffsetWindowOrgEx(
-	HDC	hdc,
-	int	nXOffset,
-	int	nYOffset,
-	LPPOINT	lpPoint
-	)
-{
-  return NtGdiOffsetWindowOrgEx(hdc, nXOffset, nYOffset, lpPoint);
-}
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-SetBitmapDimensionEx(
-	HBITMAP	hBitmap,
-	int	nWidth,
-	int	nHeight,
-	LPSIZE	lpSize
-	)
-{
- return NtGdiSetBitmapDimensionEx(hBitmap, nWidth, nHeight, lpSize);
-}
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-GetDCOrgEx(
-	HDC	hdc,
-	LPPOINT	lpPoint
-	)
-{
-  return NtGdiGetDCOrgEx(hdc, lpPoint);
+  return NtGdiGetRelAbs(hdc);
 }
 
 /*
@@ -919,36 +232,6 @@ GetDCOrg(
   return(MAKELONG(Pt.x, Pt.y));
 }
 
-/*
- * @implemented
- */
-BOOL
-STDCALL
-RectVisible(
-	HDC		hdc,
-	CONST RECT	*lprc
-	)
-{
-	return NtGdiRectVisible(hdc, (RECT *)lprc);
-}
-
-/*
- * @implemented
- */
-int
-STDCALL
-ExtEscape(
-	HDC		hdc,
-	int		nEscape,
-	int		cbInput,
-	LPCSTR		lpszInData,
-	int		cbOutput,
-	LPSTR		lpszOutData
-	)
-{
-  return NtGdiExtEscape(hdc, nEscape, cbInput, lpszInData, cbOutput, lpszOutData);
-}
-
 
 /*
  * @unimplemented
@@ -961,7 +244,7 @@ GetObjectA(HGDIOBJ Handle, int Size, LPVOID Buffer)
   DWORD Type;
   int Result;
 
-  Type = GetObjectType(Handle);
+  Type = NtGdiGetObjectType(Handle);
   if (0 == Type)
     {
       return 0;
@@ -1007,22 +290,6 @@ GetObjectW(HGDIOBJ Handle, int Size, LPVOID Buffer)
  */
 BOOL
 STDCALL
-SetBrushOrgEx(
-	HDC	hdc,
-	int	nXOrg,
-	int	nYOrg,
-	LPPOINT	lppt
-	)
-{
-  return NtGdiSetBrushOrgEx(hdc, nXOrg, nYOrg, lppt);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
 FixBrushOrgEx(
 	HDC	hdc,
 	int	nXOrg,
@@ -1036,35 +303,6 @@ FixBrushOrgEx(
   #endif
   
   return FALSE;
-}
-
-
-/*
- * @implemented
- */
-HGDIOBJ
-STDCALL
-GetCurrentObject(
-	HDC	hdc,
-	UINT	uObjectType
-	)
-{
-  return NtGdiGetCurrentObject(hdc, uObjectType);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-PtVisible(
-	HDC	hdc,
-	int	X,
-	int	Y
-	)
-{
-  return NtGdiPtVisible(hdc, X, Y);
 }
 
 /*
@@ -1115,4 +353,50 @@ SetDCPenColor(
 )
 {
   return NtUserSetDCPenColor(hdc, crColor);
+}
+
+
+/*
+ * @implemented
+ */
+HDC
+STDCALL
+ResetDCW(
+	HDC		hdc,
+	CONST DEVMODEW	*lpInitData
+	)
+{
+  return NtGdiResetDC ( hdc, lpInitData );
+}
+
+
+/*
+ * @implemented
+ */
+HDC
+STDCALL
+ResetDCA(
+	HDC		hdc,
+	CONST DEVMODEA	*lpInitData
+	)
+{
+  DEVMODEW InitDataW;
+
+  RosRtlDevModeA2W ( &InitDataW, (CONST LPDEVMODEA)lpInitData );
+
+  return NtGdiResetDC ( hdc, &InitDataW );
+}
+
+
+/*
+ * @implemented
+ */
+int 
+STDCALL 
+StartDocW(
+	HDC		hdc,
+	CONST DOCINFOW	*a1
+	)
+{
+	return NtGdiStartDoc ( hdc, (DOCINFOW *)a1 );
 }

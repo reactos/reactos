@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.40 2004/09/06 21:15:45 weiden Exp $
+# $Id: makefile,v 1.41 2004/12/30 02:32:23 navaraf Exp $
 
 PATH_TO_TOP = ../..
 
@@ -40,15 +40,9 @@ MISC_OBJECTS = \
 
 OBJECTS_OBJECTS = \
  objects/bitblt.o \
- objects/brush.o \
- objects/clip.o \
  objects/dc.o \
- objects/fillshap.o \
  objects/font.o \
- objects/line.o \
  objects/linedda.o \
- objects/metafile.o \
- objects/pen.o \
  objects/region.o \
  objects/text.o
 

@@ -1,4 +1,4 @@
-/* $Id: stubsa.c,v 1.34 2004/09/06 21:15:45 weiden Exp $
+/* $Id: stubsa.c,v 1.35 2004/12/30 02:32:23 navaraf Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -12,141 +12,6 @@
 #include "precomp.h"
 
 #define UNIMPLEMENTED DbgPrint("GDI32: %s is unimplemented, please try again later.\n", __FUNCTION__);
-
-/*
- * @implemented
- */
-int
-STDCALL
-AddFontResourceExA ( LPCSTR lpszFilename, DWORD fl, PVOID pvReserved )
-{
-  NTSTATUS Status;
-  PWSTR FilenameW;
-  int rc = 0;
-
-  Status = HEAP_strdupA2W ( &FilenameW, lpszFilename );
-  if ( !NT_SUCCESS (Status) )
-    SetLastError (RtlNtStatusToDosError(Status));
-  else
-    {
-      rc = AddFontResourceExW ( FilenameW, fl, pvReserved );
-
-      HEAP_free ( &FilenameW );
-    }
-  return rc;
-}
-
-/*
- * @implemented
- */
-int
-STDCALL
-AddFontResourceA ( LPCSTR lpszFilename )
-{
-  return AddFontResourceExA ( lpszFilename, 0, 0 );
-}
-
-
-/*
- * @implemented
- */
-HDC
-STDCALL
-CreateICA(
-	LPCSTR			lpszDriver,
-	LPCSTR			lpszDevice,
-	LPCSTR			lpszOutput,
-	CONST DEVMODEA *	lpdvmInit
-	)
-{
-  NTSTATUS Status;
-  LPWSTR lpszDriverW, lpszDeviceW, lpszOutputW;
-  UNICODE_STRING Driver, Device, Output;
-  DEVMODEW dvmInitW;
-  HDC rc = 0;
-
-  Status = HEAP_strdupA2W ( &lpszDriverW, lpszDriver );
-  if (!NT_SUCCESS (Status))
-    SetLastError (RtlNtStatusToDosError(Status));
-  else
-  {
-    Status = HEAP_strdupA2W ( &lpszDeviceW, lpszDevice );
-    if (!NT_SUCCESS (Status))
-      SetLastError (RtlNtStatusToDosError(Status));
-    else
-      {
-	Status = HEAP_strdupA2W ( &lpszOutputW, lpszOutput );
-	if (!NT_SUCCESS (Status))
-	  SetLastError (RtlNtStatusToDosError(Status));
-	else
-	  {
-	    if ( lpdvmInit )
-	      RosRtlDevModeA2W ( &dvmInitW, (const LPDEVMODEA)lpdvmInit );
-        
-        RtlInitUnicodeString(&Driver, lpszDriverW);
-        RtlInitUnicodeString(&Device, lpszDeviceW);
-        RtlInitUnicodeString(&Output, lpszOutputW);
-	    rc = NtGdiCreateIC ( &Driver,
-				&Device,
-				&Output,
-				lpdvmInit ? &dvmInitW : NULL );
-
-	    HEAP_free ( lpszOutputW );
-	  }
-	HEAP_free ( lpszDeviceW );
-      }
-    HEAP_free ( lpszDriverW );
-  }
-  return rc;
-}
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-CreateScalableFontResourceA(
-	DWORD		fdwHidden,
-	LPCSTR		lpszFontRes,
-	LPCSTR		lpszFontFile,
-	LPCSTR		lpszCurrentPath
-	)
-{
-  NTSTATUS Status;
-  LPWSTR lpszFontResW, lpszFontFileW, lpszCurrentPathW;
-  BOOL rc = FALSE;
-
-  Status = HEAP_strdupA2W ( &lpszFontResW, lpszFontRes );
-  if (!NT_SUCCESS (Status))
-    SetLastError (RtlNtStatusToDosError(Status));
-  else
-    {
-      Status = HEAP_strdupA2W ( &lpszFontFileW, lpszFontFile );
-      if (!NT_SUCCESS (Status))
-	SetLastError (RtlNtStatusToDosError(Status));
-      else
-	{
-	  Status = HEAP_strdupA2W ( &lpszCurrentPathW, lpszCurrentPath );
-	  if (!NT_SUCCESS (Status))
-	    SetLastError (RtlNtStatusToDosError(Status));
-	  else
-	    {
-	      rc = NtGdiCreateScalableFontResource ( fdwHidden,
-						    lpszFontResW,
-						    lpszFontFileW,
-						    lpszCurrentPathW );
-
-	      HEAP_free ( lpszCurrentPathW );
-	    }
-
-	  HEAP_free ( lpszFontFileW );
-	}
-
-      HEAP_free ( lpszFontResW );
-    }
-  return rc;
-}
 
 
 /*
@@ -169,7 +34,7 @@ DeviceCapabilitiesExA(
 
 
 /*
- * @implemented
+ * @unimplemented
  */
 int
 STDCALL
@@ -205,76 +70,6 @@ EnumFontsA (
 /*
  * @unimplemented
  */
-BOOL
-APIENTRY
-GetCharWidthFloatA(
-	HDC	hdc,
-	UINT	iFirstChar,
-	UINT	iLastChar,
-	PFLOAT	pxBuffer
-	)
-{
-  /* FIXME what to do with iFirstChar and iLastChar ??? */
-  return NtGdiGetCharWidthFloat ( hdc, iFirstChar, iLastChar, pxBuffer );
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-APIENTRY
-GetCharABCWidthsA(
-	HDC	hdc,
-	UINT	uFirstChar,
-	UINT	uLastChar,
-	LPABC	lpabc
-	)
-{
-  /* FIXME what to do with uFirstChar and uLastChar ??? */
-  return NtGdiGetCharABCWidths ( hdc, uFirstChar, uLastChar, lpabc );
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-APIENTRY
-GetCharABCWidthsFloatA(
-	HDC		hdc,
-	UINT		iFirstChar,
-	UINT		iLastChar,
-	LPABCFLOAT	lpABCF
-	)
-{
-  /* FIXME what to do with iFirstChar and iLastChar ??? */
-  return NtGdiGetCharABCWidthsFloat ( hdc, iFirstChar, iLastChar, lpABCF );
-}
-
-
-/*
- * @implemented
- */
-DWORD
-STDCALL
-GetGlyphOutlineA(
-	HDC		hdc,
-	UINT		uChar,
-	UINT		uFormat,
-	LPGLYPHMETRICS	lpgm,
-	DWORD		cbBuffer,
-	LPVOID		lpvBuffer,
-	CONST MAT2	*lpmat2
-	)
-{
-  return NtGdiGetGlyphOutline ( hdc, uChar, uFormat, lpgm, cbBuffer, lpvBuffer, (CONST LPMAT2)lpmat2 );
-}
-
-
-/*
- * @unimplemented
- */
 UINT
 APIENTRY
 GetOutlineTextMetricsA(
@@ -286,40 +81,6 @@ GetOutlineTextMetricsA(
   UNIMPLEMENTED;
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return 0;
-}
-
-
-/*
- * @implemented
- */
-BOOL
-APIENTRY
-GetTextExtentExPointA(
-	HDC		hdc,
-	LPCSTR		lpszStr,
-	int		cchString,
-	int		nMaxExtent,
-	LPINT		lpnFit,
-	LPINT		alpDx,
-	LPSIZE		lpSize
-	)
-{
-  NTSTATUS Status;
-  LPWSTR lpszStrW;
-  BOOL rc = 0;
-
-  Status = HEAP_strdupA2W ( &lpszStrW, lpszStr );
-  if (!NT_SUCCESS (Status))
-    SetLastError (RtlNtStatusToDosError(Status));
-  else
-  {
-    rc = NtGdiGetTextExtentExPoint (
-      hdc, lpszStrW, cchString, nMaxExtent, lpnFit, alpDx, lpSize );
-
-    HEAP_free ( lpszStrW );
-  }
-
-  return rc;
 }
 
 
@@ -340,51 +101,6 @@ GetCharacterPlacementA(
 	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
-}
-
-
-/*
- * @implemented
- */
-HDC
-STDCALL
-ResetDCA(
-	HDC		hdc,
-	CONST DEVMODEA	*lpInitData
-	)
-{
-  DEVMODEW InitDataW;
-
-  RosRtlDevModeA2W ( &InitDataW, (CONST LPDEVMODEA)lpInitData );
-
-  return NtGdiResetDC ( hdc, &InitDataW );
-}
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-RemoveFontResourceA(
-	LPCSTR	lpFileName
-	)
-{
-  NTSTATUS Status;
-  LPWSTR lpFileNameW;
-  BOOL rc = 0;
-
-  Status = HEAP_strdupA2W ( &lpFileNameW, lpFileName );
-  if (!NT_SUCCESS (Status))
-    SetLastError (RtlNtStatusToDosError(Status));
-  else
-    {
-      rc = NtGdiRemoveFontResource ( lpFileNameW );
-
-      HEAP_free ( lpFileNameW );
-    }
-
-  return rc;
 }
 
 
@@ -413,23 +129,6 @@ PolyTextOutA(
 	HDC			hdc, 
 	CONST POLYTEXTA		*a1, 
 	int			a2
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-GetTextFaceA(
-	HDC	a0,
-	int	a1,
-	LPSTR	a2
 	)
 {
 	UNIMPLEMENTED;

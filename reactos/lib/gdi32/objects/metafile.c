@@ -1,6 +1,5 @@
 #include "precomp.h"
 
-
 /*
  * @implemented
  */

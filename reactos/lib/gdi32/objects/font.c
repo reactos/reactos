@@ -1,4 +1,4 @@
-/* $Id: font.c,v 1.10 2004/12/25 11:18:50 navaraf Exp $
+/* $Id: font.c,v 1.11 2004/12/30 02:32:24 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -176,16 +176,6 @@ NewTextMetricExW2A(NEWTEXTMETRICEXA *tma, NEWTEXTMETRICEXW *tmw)
   tma->ntmFontSig = tmw->ntmFontSig;
 
   return TRUE;
-}
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-TranslateCharsetInfo(DWORD *pSrc, LPCHARSETINFO lpCs, DWORD dwFlags)
-{
-  return NtGdiTranslateCharsetInfo(pSrc, lpCs, dwFlags);
 }
 
 static int FASTCALL
@@ -382,39 +372,6 @@ GetCharWidthW (
 /*
  * @implemented
  */
-BOOL
-STDCALL
-GetCharWidth32W(
-	HDC	hdc,
-	UINT	iFirstChar,
-	UINT	iLastChar,
-	LPINT	lpBuffer
-	)
-{
-  return NtGdiGetCharWidth32 ( hdc, iFirstChar, iLastChar, lpBuffer );
-}
-
-
-/*
- * @implemented
- */
-DWORD
-STDCALL
-GetFontData(
-	HDC	a0,
-	DWORD	a1,
-	DWORD	a2,
-	LPVOID	a3,
-	DWORD	a4
-	)
-{
-	return NtGdiGetFontData(a0, a1, a2, a3, a4);
-}
-
-
-/*
- * @implemented
- */
 DWORD
 STDCALL
 GetCharacterPlacementW(
@@ -469,7 +426,7 @@ GetCharacterPlacementW(
     int c;
     for (i = 0; i < nSet; i++)
     {
-      if (GetCharWidth32W(hdc, lpString[i], lpString[i], &c))
+      if (NtGdiGetCharWidth32(hdc, lpString[i], lpString[i], &c))
         lpResults->lpDx[i]= c;
     }
   }
@@ -491,4 +448,337 @@ GetCharacterPlacementW(
     ret = MAKELONG(size.cx, size.cy);
 
   return ret;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+APIENTRY
+GetCharWidthFloatA(
+	HDC	hdc,
+	UINT	iFirstChar,
+	UINT	iLastChar,
+	PFLOAT	pxBuffer
+	)
+{
+  /* FIXME what to do with iFirstChar and iLastChar ??? */
+  return NtGdiGetCharWidthFloat ( hdc, iFirstChar, iLastChar, pxBuffer );
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+APIENTRY
+GetCharABCWidthsA(
+	HDC	hdc,
+	UINT	uFirstChar,
+	UINT	uLastChar,
+	LPABC	lpabc
+	)
+{
+  /* FIXME what to do with uFirstChar and uLastChar ??? */
+  return NtGdiGetCharABCWidths ( hdc, uFirstChar, uLastChar, lpabc );
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+APIENTRY
+GetCharABCWidthsFloatA(
+	HDC		hdc,
+	UINT		iFirstChar,
+	UINT		iLastChar,
+	LPABCFLOAT	lpABCF
+	)
+{
+  /* FIXME what to do with iFirstChar and iLastChar ??? */
+  return NtGdiGetCharABCWidthsFloat ( hdc, iFirstChar, iLastChar, lpABCF );
+}
+
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+GetGlyphOutlineA(
+	HDC		hdc,
+	UINT		uChar,
+	UINT		uFormat,
+	LPGLYPHMETRICS	lpgm,
+	DWORD		cbBuffer,
+	LPVOID		lpvBuffer,
+	CONST MAT2	*lpmat2
+	)
+{
+  return NtGdiGetGlyphOutline ( hdc, uChar, uFormat, lpgm, cbBuffer, lpvBuffer, (CONST LPMAT2)lpmat2 );
+}
+
+
+/*
+ * @implemented
+ */
+HFONT
+STDCALL
+CreateFontIndirectA(
+	CONST LOGFONTA		*lplf
+	)
+{
+  LOGFONTW tlf;
+
+  RosRtlLogFontA2W(&tlf, lplf);
+
+  return NtGdiCreateFontIndirect(&tlf);
+}
+
+
+/*
+ * @implemented
+ */
+HFONT
+STDCALL
+CreateFontIndirectW(
+	CONST LOGFONTW		*lplf
+	)
+{
+	return NtGdiCreateFontIndirect((CONST LPLOGFONTW)lplf);
+}
+
+
+/*
+ * @implemented
+ */
+HFONT
+STDCALL
+CreateFontA(
+	int	nHeight,
+	int	nWidth,
+	int	nEscapement,
+	int	nOrientation,
+	int	fnWeight,
+	DWORD	fdwItalic,
+	DWORD	fdwUnderline,
+	DWORD	fdwStrikeOut,
+	DWORD	fdwCharSet,
+	DWORD	fdwOutputPrecision,
+	DWORD	fdwClipPrecision,
+	DWORD	fdwQuality,
+	DWORD	fdwPitchAndFamily,
+	LPCSTR	lpszFace
+	)
+{
+        ANSI_STRING StringA;
+        UNICODE_STRING StringU;
+	HFONT ret;
+
+	RtlInitAnsiString(&StringA, (LPSTR)lpszFace);
+	RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
+
+        ret = CreateFontW(nHeight, nWidth, nEscapement, nOrientation, fnWeight, fdwItalic, fdwUnderline, fdwStrikeOut,
+                          fdwCharSet, fdwOutputPrecision, fdwClipPrecision, fdwQuality, fdwPitchAndFamily, StringU.Buffer);
+
+	RtlFreeUnicodeString(&StringU);
+
+	return ret;
+}
+
+
+/*
+ * @implemented
+ */
+HFONT
+STDCALL
+CreateFontW(
+	int	nHeight,
+	int	nWidth,
+	int	nEscapement,
+	int	nOrientation,
+	int	nWeight,
+	DWORD	fnItalic,
+	DWORD	fdwUnderline,
+	DWORD	fdwStrikeOut,
+	DWORD	fdwCharSet,
+	DWORD	fdwOutputPrecision,
+	DWORD	fdwClipPrecision,
+	DWORD	fdwQuality,
+	DWORD	fdwPitchAndFamily,
+	LPCWSTR	lpszFace
+	)
+{
+  return NtGdiCreateFont(nHeight, nWidth, nEscapement, nOrientation, nWeight, fnItalic, fdwUnderline, fdwStrikeOut,
+                         fdwCharSet, fdwOutputPrecision, fdwClipPrecision, fdwQuality, fdwPitchAndFamily, lpszFace);
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+CreateScalableFontResourceW(
+	DWORD		fdwHidden,
+	LPCWSTR		lpszFontRes,
+	LPCWSTR		lpszFontFile,
+	LPCWSTR		lpszCurrentPath
+	)
+{
+  return NtGdiCreateScalableFontResource ( fdwHidden,
+					  lpszFontRes,
+					  lpszFontFile,
+					  lpszCurrentPath );
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+CreateScalableFontResourceA(
+	DWORD		fdwHidden,
+	LPCSTR		lpszFontRes,
+	LPCSTR		lpszFontFile,
+	LPCSTR		lpszCurrentPath
+	)
+{
+  NTSTATUS Status;
+  LPWSTR lpszFontResW, lpszFontFileW, lpszCurrentPathW;
+  BOOL rc = FALSE;
+
+  Status = HEAP_strdupA2W ( &lpszFontResW, lpszFontRes );
+  if (!NT_SUCCESS (Status))
+    SetLastError (RtlNtStatusToDosError(Status));
+  else
+    {
+      Status = HEAP_strdupA2W ( &lpszFontFileW, lpszFontFile );
+      if (!NT_SUCCESS (Status))
+	SetLastError (RtlNtStatusToDosError(Status));
+      else
+	{
+	  Status = HEAP_strdupA2W ( &lpszCurrentPathW, lpszCurrentPath );
+	  if (!NT_SUCCESS (Status))
+	    SetLastError (RtlNtStatusToDosError(Status));
+	  else
+	    {
+	      rc = NtGdiCreateScalableFontResource ( fdwHidden,
+						    lpszFontResW,
+						    lpszFontFileW,
+						    lpszCurrentPathW );
+
+	      HEAP_free ( lpszCurrentPathW );
+	    }
+
+	  HEAP_free ( lpszFontFileW );
+	}
+
+      HEAP_free ( lpszFontResW );
+    }
+  return rc;
+}
+
+
+/*
+ * @implemented
+ */
+int
+STDCALL
+AddFontResourceExW ( LPCWSTR lpszFilename, DWORD fl, PVOID pvReserved )
+{
+  UNICODE_STRING Filename;
+
+  /* FIXME handle fl parameter */
+  RtlInitUnicodeString(&Filename, lpszFilename);
+  return NtGdiAddFontResource ( &Filename, fl );
+}
+
+
+/*
+ * @implemented
+ */
+int
+STDCALL
+AddFontResourceExA ( LPCSTR lpszFilename, DWORD fl, PVOID pvReserved )
+{
+  NTSTATUS Status;
+  PWSTR FilenameW;
+  int rc = 0;
+
+  Status = HEAP_strdupA2W ( &FilenameW, lpszFilename );
+  if ( !NT_SUCCESS (Status) )
+    SetLastError (RtlNtStatusToDosError(Status));
+  else
+    {
+      rc = AddFontResourceExW ( FilenameW, fl, pvReserved );
+
+      HEAP_free ( &FilenameW );
+    }
+  return rc;
+}
+
+
+/*
+ * @implemented
+ */
+int
+STDCALL
+AddFontResourceA ( LPCSTR lpszFilename )
+{
+  return AddFontResourceExA ( lpszFilename, 0, 0 );
+}
+
+
+/*
+ * @implemented
+ */
+int
+STDCALL
+AddFontResourceW ( LPCWSTR lpszFilename )
+{
+	return AddFontResourceExW ( lpszFilename, 0, 0 );
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+RemoveFontResourceW(
+	LPCWSTR	lpFileName
+	)
+{
+  return NtGdiRemoveFontResource ( lpFileName );
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+RemoveFontResourceA(
+	LPCSTR	lpFileName
+	)
+{
+  NTSTATUS Status;
+  LPWSTR lpFileNameW;
+  BOOL rc = 0;
+
+  Status = HEAP_strdupA2W ( &lpFileNameW, lpFileName );
+  if (!NT_SUCCESS (Status))
+    SetLastError (RtlNtStatusToDosError(Status));
+  else
+    {
+      rc = NtGdiRemoveFontResource ( lpFileNameW );
+
+      HEAP_free ( lpFileNameW );
+    }
+
+  return rc;
 }
