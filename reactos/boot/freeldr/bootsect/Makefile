@@ -32,26 +32,26 @@ $(BIN2C) :
 	@$(MAKE) --no-print-directory -C $(FREELDR_TOOLS_PATH)
 
 dosmbr.bin : dosmbr.asm
-	@echo ===================================================== Assembling dosmbr
+	@echo freeldr: Assembling dosmbr
 	@$(NASM_CMD) $(NFLAGS) -o dosmbr.bin -f bin dosmbr.asm
 
 fat.bin : fat.asm $(BIN2C)
-	@echo ===================================================== Assembling fat
+	@echo freeldr: Assembling fat
 	@$(NASM_CMD) $(NFLAGS) -o fat.bin -f bin fat.asm
 	@$(BIN2C) fat.bin fat.h fat_data
 
 
 fat32.bin : fat32.asm $(BIN2C)
-	@echo ===================================================== Assembling fat32
+	@echo freeldr: Assembling fat32
 	@$(NASM_CMD) $(NFLAGS) -o fat32.bin -f bin fat32.asm
 	@$(BIN2C) fat32.bin fat32.h fat32_data
 
 isoboot.bin : isoboot.asm
-	@echo ===================================================== Assembling isoboot
+	@echo freeldr: Assembling isoboot
 	@$(NASM_CMD) $(NFLAGS) -o isoboot.bin -f bin isoboot.asm
 
 ext2.bin : ext2.asm
-	@echo ===================================================== Assembling ext2
+	@echo freeldr: Assembling ext2
 	@$(NASM_CMD) $(NFLAGS) -o ext2.bin -f bin ext2.asm
 	@$(BIN2C) ext2.bin ext2.h ext2_data
 
@@ -77,4 +77,4 @@ bootcd_dirs:
 clean:
 	@-$(RM) *.bin
 	@-$(RM) *.h
-	@echo Clean ALL done.
+	@echo freeldr: Clean ALL done.
