@@ -1,4 +1,4 @@
-/* $Id: pool.c,v 1.33 2004/08/21 20:05:35 tamlin Exp $
+/* $Id: pool.c,v 1.34 2004/10/01 04:00:11 arty Exp $
  * 
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -93,6 +93,9 @@ ExAllocatePool (POOL_TYPE PoolType, ULONG NumberOfBytes)
  */
 {
    PVOID Block;
+   ASSERT_IRQL(DISPATCH_LEVEL);
+   assert(KeGetCurrentIrql() == PASSIVE_LEVEL || PoolType == NonPagedPool);
+
 #if defined(__GNUC__)
 
    Block = EiAllocatePool(PoolType,
@@ -120,6 +123,10 @@ PVOID STDCALL
 ExAllocatePoolWithTag (ULONG PoolType, ULONG NumberOfBytes, ULONG Tag)
 {
    PVOID Block;
+
+   ASSERT_IRQL(DISPATCH_LEVEL);
+   assert(KeGetCurrentIrql() == PASSIVE_LEVEL || PoolType != PagedPool);
+
 #if defined(__GNUC__)
 
    Block = EiAllocatePool(PoolType,
@@ -161,6 +168,9 @@ ExAllocatePoolWithTagPriority(
     IN EX_POOL_PRIORITY Priority
     )
 {
+   ASSERT_IRQL(DISPATCH_LEVEL);
+   assert(KeGetCurrentIrql() == PASSIVE_LEVEL || PoolType != PagedPool);
+
     /* Check if this is one of the "Special" Flags, used by the Verifier */
     if (Priority & 8) {
         /* Check if this is a xxSpecialUnderrun */
@@ -187,6 +197,9 @@ ExAllocatePoolWithQuotaTag (IN POOL_TYPE PoolType,
 {
     PVOID Block;
     PEPROCESS Process;
+
+    ASSERT_IRQL(DISPATCH_LEVEL);
+    assert(KeGetCurrentIrql() == PASSIVE_LEVEL || PoolType == NonPagedPool);
 
     /* Allocate the Pool First */
     Block = EiAllocatePool(PoolType,
@@ -232,6 +245,8 @@ ExAllocatePoolWithQuotaTag (IN POOL_TYPE PoolType,
 VOID STDCALL
 ExFreePool(IN PVOID Block)
 {
+   ASSERT_IRQL(DISPATCH_LEVEL);
+
    if (Block >= MmPagedPoolBase && (char*)Block < ((char*)MmPagedPoolBase + MmPagedPoolSize))
    {
       ExFreePagedPool(Block);
@@ -248,6 +263,7 @@ ExFreePool(IN PVOID Block)
 VOID STDCALL
 ExFreePoolWithTag(IN PVOID Block, IN ULONG Tag)
 {
+   ASSERT_IRQL(DISPATCH_LEVEL);
    /* FIXME: Validate the tag */
    ExFreePool(Block);
 }
