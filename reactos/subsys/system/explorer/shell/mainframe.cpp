@@ -144,12 +144,14 @@ MainFrame::MainFrame(HWND hwnd)
 	SendMessage(_hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
 	++drivebarBtn.iString;
 
+#ifdef _DEBUG
 	 // insert FAT direct file system access button
 	SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)TEXT("FAT\0"));
 
 	drivebarBtn.idCommand = ID_DRIVE_FAT;
 	SendMessage(_hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
 	++drivebarBtn.iString;
+#endif
 
 	 // insert web control button
 	SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)TEXT("Web\0"));

@@ -101,7 +101,10 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 	CONTEXT("FileChildWindow::FileChildWindow()");
 
 	TCHAR drv[_MAX_DRIVE+1];
-	Entry* entry;
+	Entry* entry = NULL;
+
+	_left = NULL;
+	_right = NULL;
 
 	switch(info._etype) {
 	  case ET_SHELL: {	//@@ evtl. Aufteilung von FileChildWindow in ShellChildWindow, WinChildWindow, UnixChildWindow
@@ -156,7 +159,7 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 		entry = _root._entry->read_tree(info._path, SORT_NONE);
 		break;
 
-	  case ET_FAT:
+	  case ET_FAT: {
 		_root._drive_type = DRIVE_UNKNOWN;
 
 		_tsplitpath(info._path, drv, NULL, NULL, NULL);
@@ -164,9 +167,13 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 		lstrcpy(_root._volname, TEXT("FAT XXX"));	//@@
 		lstrcpy(_root._fs, TEXT("FAT"));
 		lstrcpy(_root._path, drv);
-		_root._entry = new FATDrive(TEXT("c:/reactos-bochs/cdrv.img"));	//TEXT("\\\\.\\F:"));	//@@
-		entry = _root._entry->read_tree(info._path, SORT_NONE);
-		break;
+		FATDrive* drive = new FATDrive(TEXT("c:/reactos-bochs/cdrv.img"));	//TEXT("\\\\.\\F:"));	//@@
+
+		if (drive->_hDrive != INVALID_HANDLE_VALUE) {
+			_root._entry = drive;
+			entry = _root._entry->read_tree(info._path, SORT_NONE);
+		}
+		break;}
 
 	  default:	// ET_WINDOWS
 		_root._drive_type = GetDriveType(info._path);
@@ -179,24 +186,27 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 		entry = _root._entry->read_tree(info._path, SORT_NAME);
 	}
 
-	if (info._etype != ET_SHELL)
-		wsprintf(_root._entry->_data.cFileName, TEXT("%s - %s"), drv, _root._fs);
-/*@@else
-		lstrcpy(_root._entry->_data.cFileName, TEXT("GetDesktopFolder"));*/
+	if (_root._entry) {
+		if (info._etype != ET_SHELL)
+			wsprintf(_root._entry->_data.cFileName, TEXT("%s - %s"), drv, _root._fs);
+	/*@@else
+			lstrcpy(_root._entry->_data.cFileName, TEXT("GetDesktopFolder"));*/
 
-	_root._entry->_data.dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
+		_root._entry->_data.dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
 
 
-	if (info._open_mode & OWM_EXPLORE)	///@todo Is not-explore-mode for FileChildWindow completely implemented?
+		if (info._open_mode & OWM_EXPLORE)	///@todo Is not-explore-mode for FileChildWindow completely implemented?
 		_left_hwnd = *(_left=new Pane(_hwnd, IDW_TREE_LEFT, IDW_HEADER_LEFT, _root._entry, true, COL_CONTENT));
 
-	_right_hwnd = *(_right=new Pane(_hwnd, IDW_TREE_RIGHT, IDW_HEADER_RIGHT, NULL, false,
-									COL_TYPE|COL_SIZE|COL_DATE|COL_TIME|COL_ATTRIBUTES|COL_INDEX|COL_LINKS|COL_CONTENT));
+		_right_hwnd = *(_right=new Pane(_hwnd, IDW_TREE_RIGHT, IDW_HEADER_RIGHT, NULL, false,
+										COL_TYPE|COL_SIZE|COL_DATE|COL_TIME|COL_ATTRIBUTES|COL_INDEX|COL_LINKS|COL_CONTENT));
+	}
 
 	_sortOrder = SORT_NAME;
 	_header_wdths_ok = false;
 
-	set_curdir(entry, hwnd);
+	if (entry)
+		set_curdir(entry, hwnd);
 
 	if (_left_hwnd) {
 		int idx = ListBox_FindItemData(_left_hwnd, ListBox_GetCurSel(_left_hwnd), _left->_cur);
@@ -346,7 +356,7 @@ void FileChildWindow::resize_children(int cx, int cy)
 
 	cx = _split_pos + SPLIT_WIDTH/2;
 
-	{
+	if (_left && _right) {
 		WINDOWPOS wp;
 		HD_LAYOUT hdl;
 
@@ -397,7 +407,7 @@ LRESULT FileChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		case WM_SETFOCUS: {
 			TCHAR path[MAX_PATH];
 
-			if (_left->_cur) {
+			if (_left && _left->_cur) {
 				_left->_cur->get_path(path);
 				SetCurrentDirectory(path);
 			}
