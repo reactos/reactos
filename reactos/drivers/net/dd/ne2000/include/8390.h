@@ -143,11 +143,15 @@ typedef struct _PACKET_HEADER {
 } PACKET_HEADER, PPACKET_HEADER;
 
 
-#define NICDisableInterrupts(Adapter) \
-    NdisRawWritePortUchar((Adapter)->IOBase + PG0_IMR, 0x00);
+#define NICDisableInterrupts(Adapter) { \
+    NDIS_DbgPrint(MAX_TRACE, ("NICDisableInterrupts()\n")); \
+    NdisRawWritePortUchar((Adapter)->IOBase + PG0_IMR, 0x00); \
+}
 
-#define NICEnableInterrupts(Adapter) \
-    NdisRawWritePortUchar((Adapter)->IOBase + PG0_IMR, (Adapter)->InterruptMask);
+#define NICEnableInterrupts(Adapter) { \
+    NDIS_DbgPrint(MAX_TRACE, ("NICEnableInterrupts() Mask (0x%X)\n", (Adapter)->InterruptMask)); \
+    NdisRawWritePortUchar((Adapter)->IOBase + PG0_IMR, (Adapter)->InterruptMask); \
+}
 
 VOID MiniportHandleInterrupt(
     IN  NDIS_HANDLE MiniportAdapterContext);

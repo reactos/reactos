@@ -217,7 +217,10 @@ NDIS_STATUS MiniportInitialize(
 #ifndef NOCARD
     Status = NICInitialize(Adapter);
     if (Status != NDIS_STATUS_SUCCESS) {
-        NDIS_DbgPrint(MIN_TRACE, ("Cannot find NE2000 NIC. Status (0x%X).\n", Status));
+        DbgPrint("No NE2000 or compatible network adapter found at address 0x%X.\n",
+            Adapter->IOBase);
+
+        NDIS_DbgPrint(MID_TRACE, ("Status (0x%X).\n", Status));
         MiniportHalt((NDIS_HANDLE)Adapter);
         return Status;
     }
@@ -246,12 +249,12 @@ NDIS_STATUS MiniportInitialize(
     /* Setup the NIC */
     NICSetup(Adapter);
 
-    NDIS_DbgPrint(MIN_TRACE, ("TXStart (0x%X)  TXCount (0x%X)  PageStart (0x%X)\n",
+    NDIS_DbgPrint(MAX_TRACE, ("TXStart (0x%X)  TXCount (0x%X)  PageStart (0x%X)\n",
         Adapter->TXStart,
         Adapter->TXCount,
         Adapter->PageStart));
 
-    NDIS_DbgPrint(MIN_TRACE, ("PageStop (0x%X)  CurrentPage (0x%X)  NextPacket (0x%X).\n",
+    NDIS_DbgPrint(MAX_TRACE, ("PageStop (0x%X)  CurrentPage (0x%X)  NextPacket (0x%X).\n",
         Adapter->PageStop,
         Adapter->CurrentPage,
         Adapter->NextPacket));
