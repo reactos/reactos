@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.39 2004/02/21 16:36:02 jfilby Exp $
+/* $Id: volume.c,v 1.40 2004/02/25 09:55:30 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -21,7 +21,7 @@
 
 #include <k32.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include "../include/debug.h"
 
 
