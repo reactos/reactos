@@ -453,7 +453,7 @@ RegQueryValue(HKEY Key,
 	*Type = Value->Type;
       if ((Data != NULL) && (DataSize != NULL))
 	{
-	  if (*DataSize <= sizeof(PUCHAR))
+	  if (Value->DataSize <= sizeof(PUCHAR))
 	    {
 	      Size = min(Value->DataSize, *DataSize);
 	      memcpy(Data, &Value->Data, Size);
