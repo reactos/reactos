@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: draw.c,v 1.9 2003/03/14 07:24:35 rcampbell Exp $
+/* $Id: draw.c,v 1.10 2003/03/16 06:43:09 rcampbell Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -117,7 +117,6 @@ static const signed char LTRBInnerFlat[] = {
     -1, COLOR_BTNFACE,     COLOR_BTNFACE,     COLOR_BTNFACE,
     -1, COLOR_BTNFACE,     COLOR_BTNFACE,     COLOR_BTNFACE,
 };
-
 /* FUNCTIONS *****************************************************************/
 
 
@@ -893,8 +892,7 @@ static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
 
     //UITOOLS95_DFC_ButtonPush(dc, r, uFlags & 0xff00);
     if(uFlags & DFCS_PUSHED)
-      UITOOLS95_DrawRectEdge(dc,r,BDR_SUNKENINNER | BDR_SUNKENOUTER, BF_RECT |
-                             BF_SOFT | BF_MIDDLE);
+      UITOOLS95_DrawRectEdge(dc,r,EDGE_SUNKEN, BF_RECT | BF_MIDDLE | BF_SOFT);
     else
       UITOOLS95_DrawRectEdge(dc,r,BDR_RAISEDINNER | BDR_RAISEDOUTER, BF_RECT |
                                BF_SOFT | BF_MIDDLE);

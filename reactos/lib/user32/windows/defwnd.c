@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.36 2003/03/14 08:34:25 rcampbell Exp $
+/* $Id: defwnd.c,v 1.37 2003/03/16 06:43:09 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -96,7 +96,6 @@ UserSetupInternalPos(VOID)
   AtomInternalPos = GlobalAddAtomA(Str);
 }
 
-/* ReactOS extension */
 HPEN STDCALL
 GetSysColorPen(int nIndex)
 {
@@ -190,6 +189,25 @@ UserHasBigFrameStyle(ULONG Style, ULONG ExStyle)
 	 (ExStyle & WS_EX_DLGMODALFRAME));
 }
 
+INT GetFrameSize(HWND hWnd)
+{
+    ULONG uStyle;
+    ULONG uExStyle;
+
+    uStyle = GetWindowLong(hWnd, GWL_STYLE);
+    uExStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
+    
+    if (UserHasThinFrameStyle(uStyle, uExStyle))
+    {
+        return GetSystemMetrics( SM_CXBORDER );
+    }
+    else if (UserHasDlgFrameStyle(uStyle, uExStyle))
+    {
+        return GetSystemMetrics( SM_CXDLGFRAME );
+    }
+    return GetSystemMetrics( SM_CXFRAME );
+}
+
 void UserGetInsideRectNC( HWND hWnd, RECT *rect )
 {
   RECT WindowRect;
@@ -246,7 +264,7 @@ void UserDrawSysMenuButton( HWND hWnd, HDC hDC, BOOL down )
   hDcMem = CreateCompatibleDC(hDC);
   hSavedBitmap = SelectObject(hDcMem, hbSysMenu);
   BitBlt(hDC, Rect.left + 2, Rect.top + 
-         2, 16, 14, hDcMem,
+         2, 16, 16, hDcMem,
          (GetWindowLong(hWnd, GWL_STYLE) & WS_CHILD) ?
 	 GetSystemMetrics(SM_CXSIZE): 0, 0, SRCCOPY);
   SelectObject(hDcMem, hSavedBitmap);
@@ -264,6 +282,10 @@ static void UserDrawCloseButton ( HWND hWnd, HDC hDC, BOOL bDown )
                       GetSystemMetrics(SM_CXSIZE)) - 2;
     INT iBmpHeight = (bToolWindow ? GetSystemMetrics(SM_CYSMSIZE) :
                       GetSystemMetrics(SM_CYSIZE) - 4);
+    if(!(GetWindowLong( hWnd, GWL_STYLE ) & WS_SYSMENU))
+    {
+        return;
+    }
     UserGetInsideRectNC(hWnd, &rect);
     SetRect(&rect,
             rect.right - iBmpWidth - GetSystemMetrics(SM_CXFIXEDFRAME),
