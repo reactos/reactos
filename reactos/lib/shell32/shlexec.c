@@ -325,7 +325,7 @@ static UINT SHELL_ExecuteW(const WCHAR *lpCmd, void *env, BOOL shWait,
         /* Give 30 seconds to the app to come up, if desired. Probably only needed
            when starting app immediately before making a DDE connection. */
         if (shWait)
-            if (WaitForInputIdle( info.hProcess, 30000 ) == -1)
+            if (WaitForInputIdle( info.hProcess, 30000 ) == WAIT_FAILED)
                 WARN("WaitForInputIdle failed: Error %ld\n", GetLastError() );
         retval = 33;
 
