@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.62 2004/05/29 15:10:28 navaraf Exp $
+/* $Id: proc.c,v 1.63 2004/07/02 12:18:04 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -380,7 +380,6 @@ WinExec(LPCSTR lpCmdLine,
 {
    STARTUPINFOA StartupInfo;
    PROCESS_INFORMATION  ProcessInformation;
-   HINSTANCE hInst;
    DWORD dosErr;
 
    RtlZeroMemory(&StartupInfo, sizeof(StartupInfo));
@@ -388,31 +387,31 @@ WinExec(LPCSTR lpCmdLine,
    StartupInfo.wShowWindow = uCmdShow;
    StartupInfo.dwFlags = 0;
 
-   hInst = (HINSTANCE)CreateProcessA(NULL,
-				     (PVOID)lpCmdLine,
-				     NULL,
-				     NULL,
-				     FALSE,
-				     0,
-				     NULL,
-				     NULL,
-				     &StartupInfo,
-				     &ProcessInformation);
-   if ( hInst == NULL )
+   if (! CreateProcessA(NULL,
+			(PVOID)lpCmdLine,
+			NULL,
+			NULL,
+			FALSE,
+			0,
+			NULL,
+			NULL,
+			&StartupInfo,
+			&ProcessInformation))
      {
 	dosErr = GetLastError();
-	return dosErr;
+	return dosErr < 32 ? dosErr : ERROR_BAD_FORMAT;
      }
    if (NULL != lpfnGlobalRegisterWaitForInputIdle)
-   {
-     lpfnGlobalRegisterWaitForInputIdle (
-	ProcessInformation.hProcess,
-	10000
+     {
+       lpfnGlobalRegisterWaitForInputIdle (
+	  ProcessInformation.hProcess,
+          10000
 	);
-   }
-   NtClose (ProcessInformation.hProcess);
-   NtClose (ProcessInformation.hThread);
-   return 0;	
+     }
+   NtClose(ProcessInformation.hProcess);
+   NtClose(ProcessInformation.hThread);
+
+   return 33; /* Something bigger than 31 means success. */
 }
 
 
