@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.33 2003/01/15 21:24:33 chorns Exp $
+/* $Id: dir.c,v 1.34 2003/02/16 18:56:04 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -598,6 +598,7 @@ SearchPathW (
 						len * sizeof(WCHAR));
 		if (EnvironmentBufferW == NULL)
 		{
+			SetLastError(ERROR_OUTOFMEMORY);
 			return 0;
 		}
 
@@ -619,6 +620,10 @@ SearchPathW (
 	if (EnvironmentBufferW != NULL)
 	{
 		RtlFreeHeap(GetProcessHeap(), 0, EnvironmentBufferW);
+	}
+	if (retCode == 0)
+	{
+		SetLastError(ERROR_FILE_NOT_FOUND);
 	}
 	return retCode;
 }
