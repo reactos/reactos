@@ -1,4 +1,5 @@
-/*
+/* $Id: timer.c,v 1.18 1999/10/30 21:24:37 ea Exp $
+ *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
  * FILE:           ntoskrnl/ke/timer.c
@@ -184,9 +185,13 @@ NtDelayExecution (
 }
 
 
-NTSTATUS KeDelayExecutionThread(KPROCESSOR_MODE WaitMode,
-				BOOLEAN Alertable,
-				PLARGE_INTEGER Interval)
+NTSTATUS
+STDCALL
+KeDelayExecutionThread (
+	KPROCESSOR_MODE	WaitMode,
+	BOOLEAN		Alertable,
+	PLARGE_INTEGER	Interval
+	)
 /*
  * FUNCTION: Puts the current thread into an alertable or nonalertable 
  * wait state for a given internal
@@ -197,10 +202,19 @@ NTSTATUS KeDelayExecutionThread(KPROCESSOR_MODE WaitMode,
  * RETURNS: Status
  */
 {
-   PKTHREAD CurrentThread = KeGetCurrentThread();
-   KeAddThreadTimeout(CurrentThread,Interval);
-   return(KeWaitForSingleObject(&(CurrentThread->Timer),Executive,
-				KernelMode,Alertable,NULL));
+	PKTHREAD CurrentThread = KeGetCurrentThread();
+	KeAddThreadTimeout (
+		CurrentThread,
+		Interval
+		);
+	return (KeWaitForSingleObject (
+			& (CurrentThread->Timer),
+			Executive,
+			KernelMode,
+			Alertable,
+			NULL
+			)
+		);
 }
 
 VOID KeStallExecutionProcessor(ULONG MicroSeconds)

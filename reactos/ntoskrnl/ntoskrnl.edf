@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.8 1999/10/24 17:52:17 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.9 1999/10/30 21:24:37 ea Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -103,6 +103,7 @@ IoStopTimer
 KeBugCheck
 KeBugCheckEx
 KeClearEvent
+KeDelayExecutionThread=KeDelayExecutionThread@12
 KeFlushIoBuffers
 KeGetPreviousMode
 KeInitializeDpc
