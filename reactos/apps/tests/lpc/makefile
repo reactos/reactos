@@ -26,10 +26,21 @@ clean:
 	
 .phony: implib clean
 
+ifneq ($(BOOTCD_INSTALL),)
+
+install: $(PROGS:%=$(INSTALL_DIR)/%)
+
+$(PROGS:%=$(INSTALL_DIR)/%): $(INSTALL_DIR)/%: %
+	$(CP) $* $(INSTALL_DIR)/$*
+	
+else # BOOTCD_INSTALL
+
 install: $(PROGS:%=$(INSTALL_DIR)/bin/%)
 
 $(PROGS:%=$(INSTALL_DIR)/bin/%): $(INSTALL_DIR)/bin/%: %
 	$(CP) $* $(INSTALL_DIR)/bin/$*
+
+endif # BOOTCD_INSTALL
 
 dist: $(PROGS:%=$(DIST_DIR)/apps/%)
 

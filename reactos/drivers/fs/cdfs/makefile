@@ -1,6 +1,8 @@
-# $Id: makefile,v 1.4 2002/09/09 17:27:14 hbirr Exp $
+# $Id: makefile,v 1.5 2003/04/05 09:37:42 chorns Exp $
 
 PATH_TO_TOP = ../../..
+
+TARGET_BOOTSTRAP = yes
 
 TARGET_TYPE = driver
 

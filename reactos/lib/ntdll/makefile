@@ -1,6 +1,8 @@
-# $Id: makefile,v 1.79 2003/04/02 21:55:15 hyperion Exp $
+# $Id: makefile,v 1.80 2003/04/05 09:37:44 chorns Exp $
 
 PATH_TO_TOP = ../..
+
+TARGET_BOOTSTRAP = yes
 
 TARGET_TYPE = dynlink
 

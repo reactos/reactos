@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.29 2003/04/02 21:55:16 hyperion Exp $
+# $Id: helper.mk,v 1.30 2003/04/05 09:37:45 chorns Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -22,7 +22,7 @@
 #   $TARGET_HEADERS    = Header files that the object files depend on (optional)
 #   $TARGET_DEFNAME    = Base name of .def and .edf files (optional)
 #   $TARGET_BASENAME   = Base name of output file (overrides $TARGET_NAME if it exists) (optional)
-#   $TARGET_EXTENSION  = Extesion of the output file (optional)
+#   $TARGET_EXTENSION  = Extension of the output file (optional)
 #   $TARGET_DDKLIBS    = DDK libraries that are to be imported by the module (optional)
 #   $TARGET_SDKLIBS    = SDK libraries that are to be imported by the module (optional)
 #   $TARGET_LIBS       = Other libraries that are to be imported by the module (optional)
@@ -42,6 +42,8 @@
 #   $TARGET_LIBPATH    = Destination path for import libraries (optional)
 #   $TARGET_INSTALLDIR = Destination path when installed (optional)
 #   $TARGET_PCH        = Filename of header to use to generate a PCH if supported by the compiler (optional)
+#   $TARGET_BOOTSTRAP   = Wether this file is needed to bootstrap the installation (no,yes) (optional)
+#   $TARGET_BOOTSTRAP_NAME = Name on the installation medium (optional)
 #   $WINE_MODE         = Compile using WINE headers (no,yes) (optional)
 #   $WINE_RC           = Name of .rc file for WINE modules (optional)
 
@@ -94,6 +96,7 @@ endif
   MK_IMPLIBDEFPATH :=
   MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := bin
+  MK_BOOTCDDIR := system32
   MK_DISTDIR := apps
 ifeq ($(WINE_RC),)
   MK_RES_BASE := $(TARGET_NAME)
@@ -117,6 +120,7 @@ ifeq ($(TARGET_TYPE),proglib)
   MK_IMPLIBDEFPATH := $(SDK_PATH_LIB)
   MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := bin
+  MK_BOOTCDDIR := system32
   MK_DISTDIR := apps
   MK_RES_BASE := $(TARGET_NAME)
 endif
@@ -142,6 +146,7 @@ endif
   MK_IMPLIBDEFPATH := $(SDK_PATH_LIB)
   MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := system32
+  MK_BOOTCDDIR := system32
   MK_DISTDIR := dlls
 ifeq ($(WINE_RC),)
   MK_RES_BASE := $(TARGET_NAME)
@@ -165,6 +170,7 @@ ifeq ($(TARGET_TYPE),library)
   MK_IMPLIBDEFPATH :=
   MK_IMPLIB_EXT :=
   MK_INSTALLDIR := system32
+  MK_BOOTCDDIR := system32
   MK_DISTDIR := # FIXME
   MK_RES_BASE :=
 endif
@@ -184,6 +190,7 @@ ifeq ($(TARGET_TYPE),driver_library)
   MK_IMPLIBDEFPATH := $(DDK_PATH_LIB)
   MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := $(DDK_PATH_INC)
+  MK_BOOTCDDIR := .
   MK_DISTDIR := # FIXME
   MK_RES_BASE :=
 endif
@@ -203,6 +210,7 @@ ifeq ($(TARGET_TYPE),driver)
   MK_IMPLIBDEFPATH :=
   MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := system32/drivers
+  MK_BOOTCDDIR := .
   MK_DISTDIR := drivers
   MK_RES_BASE := $(TARGET_NAME)
 endif
@@ -222,6 +230,7 @@ ifeq ($(TARGET_TYPE),export_driver)
   MK_IMPLIBDEFPATH := $(DDK_PATH_LIB)
   MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := system32/drivers
+  MK_BOOTCDDIR := .
   MK_DISTDIR := drivers
   MK_RES_BASE := $(TARGET_NAME)
 endif
@@ -241,6 +250,7 @@ ifeq ($(TARGET_TYPE),hal)
   MK_IMPLIBDEFPATH :=
   MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := system32
+  MK_BOOTCDDIR := .
   MK_DISTDIR := dlls
   MK_RES_BASE := $(TARGET_NAME)
 endif
@@ -260,6 +270,7 @@ ifeq ($(TARGET_TYPE),bootpgm)
   MK_IMPLIBDEFPATH :=
   MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := system32
+  MK_BOOTCDDIR := system32
   MK_DISTDIR := # FIXME
   MK_RES_BASE := $(TARGET_NAME)
 endif
@@ -279,6 +290,7 @@ ifeq ($(TARGET_TYPE),miniport)
   MK_IMPLIBDEFPATH :=
   MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := system32/drivers
+  MK_BOOTCDDIR := .
   MK_DISTDIR := drivers
   MK_RES_BASE := $(TARGET_NAME)
 endif
@@ -298,6 +310,7 @@ ifeq ($(TARGET_TYPE),gdi_driver)
   MK_IMPLIBDEFPATH := $(DDK_PATH_LIB)
   MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := system32
+  MK_BOOTCDDIR := .
   MK_DISTDIR := dlls
   MK_RES_BASE := $(TARGET_NAME)
 endif
@@ -387,6 +400,11 @@ MK_RESOURCE := $(MK_RES_BASE).coff
 
 ifneq ($(TARGET_INSTALLDIR),)
   MK_INSTALLDIR := $(TARGET_INSTALLDIR)
+endif
+
+
+ifneq ($(BOOTCD_INSTALL),)
+  MK_INSTALLDIR := .
 endif
 
 
@@ -666,7 +684,7 @@ ifneq ($(TARGET_HEADERS),)
 $(TARGET_OBJECTS): $(TARGET_HEADERS)
 endif
 
-# install and dist rules
+# install, dist and bootcd rules
 
 ifeq ($(MK_IMPLIBONLY),yes)
 
@@ -676,15 +694,25 @@ install:
 
 dist:
 
+bootcd:
+
 else # MK_IMPLIBONLY
 
 
 install: $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME)
 
+ifeq ($(INSTALL_SYMBOLS),no)
+
+$(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME):
+	$(CP) $(MK_FULLNAME) $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME)
+
+else # INSTALL_SYMBOLS
+
 $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME): $(MK_FULLNAME) $(MK_BASENAME).sym
 	$(CP) $(MK_FULLNAME) $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME)
 	$(CP) $(MK_BASENAME).sym $(INSTALL_DIR)/symbols/$(MK_BASENAME).sym
 
+endif # INSTALL_SYMBOLS
 
 dist: $(DIST_DIR)/$(MK_DISTDIR)/$(MK_FULLNAME)
 
@@ -692,10 +720,30 @@ $(DIST_DIR)/$(MK_DISTDIR)/$(MK_FULLNAME): $(MK_FULLNAME)
 	$(CP) $(MK_FULLNAME) $(DIST_DIR)/$(MK_DISTDIR)/$(MK_FULLNAME)
 	$(CP) $(MK_BASENAME).sym $(DIST_DIR)/symbols/$(MK_BASENAME).sym
 
+# Bootstrap files for the bootable CD
+ifeq ($(TARGET_BOOTSTRAP),yes)
+
+ifneq ($(TARGET_BOOTSTRAP_NAME),)
+MK_BOOTSTRAP_NAME := $(TARGET_BOOTSTRAP_NAME)
+else # TARGET_BOOTSTRAP_NAME
+MK_BOOTSTRAP_NAME := $(MK_FULLNAME)
+endif # TARGET_BOOTSTRAP_NAME
+
+bootcd: $(BOOTCD_DIR)/reactos/$(MK_BOOTCDDIR)/$(MK_BOOTSTRAP_NAME)
+
+$(BOOTCD_DIR)/reactos/$(MK_BOOTCDDIR)/$(MK_BOOTSTRAP_NAME):
+	$(CP) $(MK_FULLNAME) $(BOOTCD_DIR)/reactos/$(MK_BOOTCDDIR)/$(MK_BOOTSTRAP_NAME)
+
+else # TARGET_BOOTSTRAP
+
+bootcd:
+	
+endif # TARGET_BOOTSTRAP
+
 endif # MK_IMPLIBONLY
 
 
-.phony: all depends implib clean install dist depends
+.phony: all depends implib clean install dist bootcd depends
 
 
 # Precompiled header support

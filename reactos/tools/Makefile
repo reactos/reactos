@@ -5,6 +5,7 @@ TOOLS = \
   depends$(EXE_POSTFIX) \
   rcopy$(EXE_POSTFIX) \
   rdel$(EXE_POSTFIX) \
+  rline$(EXE_POSTFIX) \
   rmkdir$(EXE_POSTFIX) \
   rrmdir$(EXE_POSTFIX) \
   rsym$(EXE_POSTFIX) \
@@ -32,6 +33,15 @@ endif
 
 rdel$(EXE_POSTFIX): rdel.c
 	$(HOST_CC) $(CFLAGS) rdel.c -o rdel$(EXE_POSTFIX)
+
+ifeq ($(HOST),mingw32-linux)
+rline$(EXE_POSTFIX): rline.c
+	$(HOST_CC) $(CFLAGS) -DUNIX_PATHS rline.c -o rline$(EXE_POSTFIX)
+endif
+ifeq ($(HOST),mingw32-windows)
+rline$(EXE_POSTFIX): rmkdir.c
+	$(HOST_CC) $(CFLAGS) -DDOS_PATHS rline.c -o rline$(EXE_POSTFIX)
+endif
 
 ifeq ($(HOST),mingw32-linux)
 rmkdir$(EXE_POSTFIX): rmkdir.c

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.92 2003/04/01 18:58:59 ekohl Exp $
+# $Id: Makefile,v 1.93 2003/04/05 09:37:44 chorns Exp $
 #
 # ReactOS Operating System
 #
@@ -670,6 +670,15 @@ clean:
 
 .PHONY: clean
 
+ifneq ($(BOOTCD_INSTALL),)
+
+install: all $(INSTALL_DIR)/$(TARGETNAME).exe
+
+$(INSTALL_DIR)/$(TARGETNAME).exe: $(TARGETNAME).exe
+	$(CP) $(TARGETNAME).exe $(INSTALL_DIR)/$(TARGETNAME).exe
+
+else # BOOTCD_INSTALL
+
 install: all $(INSTALL_DIR)/system32/$(TARGETNAME).exe $(INSTALL_DIR)/symbols/$(TARGETNAME).sym
 
 $(INSTALL_DIR)/system32/$(TARGETNAME).exe: $(TARGETNAME).exe
@@ -677,6 +686,9 @@ $(INSTALL_DIR)/system32/$(TARGETNAME).exe: $(TARGETNAME).exe
 
 $(INSTALL_DIR)/symbols/$(TARGETNAME).sym: $(TARGETNAME).sym
 	$(CP) $(TARGETNAME).sym $(INSTALL_DIR)/symbols/$(TARGETNAME).sym
+
+endif # BOOTCD_INSTALL
+
 
 .PHONY: install
 
@@ -686,6 +698,14 @@ $(DIST_DIR)/$(TARGETNAME).exe: $(TARGETNAME).exe
 	$(CP) $(TARGETNAME).exe $(DIST_DIR)/$(TARGETNAME).exe
 
 .PHONY: dist
+
+bootcd: all $(BOOTCD_DIR)/reactos/$(TARGETNAME).exe
+
+$(BOOTCD_DIR)/reactos/$(TARGETNAME).exe: $(TARGETNAME).exe
+	$(CP) $(TARGETNAME).exe $(BOOTCD_DIR)/reactos/$(TARGETNAME).exe
+
+.PHONY: bootcd
+
 
 ex/napi.o: ex/napi.c $(PATH_TO_TOP)/include/ntdll/napi.h
 

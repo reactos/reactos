@@ -1,6 +1,10 @@
-# $Id: makefile,v 1.9 2003/03/13 09:51:11 ekohl Exp $
+# $Id: makefile,v 1.10 2003/04/05 09:37:44 chorns Exp $
 
 PATH_TO_TOP = ../../..
+
+TARGET_BOOTSTRAP = yes
+
+TARGET_BOOTSTRAP_NAME = smss.exe
 
 TARGET_TYPE = program
 

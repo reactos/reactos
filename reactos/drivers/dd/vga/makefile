@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.11 2003/02/28 22:51:17 gvg Exp $
+# $Id: makefile,v 1.12 2003/04/05 09:37:42 chorns Exp $
 #
 #
 all:
@@ -20,3 +20,7 @@ dist:
 install:
 	$(MAKE) -C display install
 	$(MAKE) -C miniport install
+
+bootcd:
+	$(MAKE) -C display bootcd
+	$(MAKE) -C miniport bootcd

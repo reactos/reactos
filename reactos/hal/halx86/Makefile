@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.7 2003/02/26 14:14:03 ekohl Exp $
+# $Id: Makefile,v 1.8 2003/04/05 09:37:44 chorns Exp $
 
 PATH_TO_TOP = ../..
 
@@ -13,6 +13,8 @@ include $(PATH_TO_TOP)/rules.mak
 # Global configuration
 #
 include $(TOOLS_PATH)/config.mk
+
+TARGET_BOOTSTRAP = yes
 
 TARGET_TYPE = hal
 

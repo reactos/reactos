@@ -18,7 +18,11 @@ endif
 
 ifeq ($(HOST),mingw32-linux)
 TOPDIR := $(shell if [ "$$PWD" != "" ]; then echo $$PWD; else pwd; fi)
+else
+TOPDIR := $(shell cd)
 endif
+
+TOPDIR := $(TOPDIR)/$(PATH_TO_TOP)
 
 #
 # Choose various options
@@ -60,6 +64,8 @@ INSTALL_DIR = $(PATH_TO_TOP)/reactos
 DIST_DIR = $(PATH_TO_TOP)/dist
 # endif
 
+# Directory to build a bootable CD image in
+BOOTCD_DIR=$(TOPDIR)/../bootcd/disk
 
 CC = $(PREFIX)gcc
 CXX = $(PREFIX)g++
@@ -79,6 +85,7 @@ OBJCOPY = $(PREFIX)objcopy
 TOOLS_PATH = $(PATH_TO_TOP)/tools
 CP = $(TOOLS_PATH)/rcopy
 RM = $(TOOLS_PATH)/rdel
+RLINE = $(TOOLS_PATH)/rline
 RMDIR = $(TOOLS_PATH)/rrmdir
 RMKDIR = $(TOOLS_PATH)/rmkdir
 RSYM = $(TOOLS_PATH)/rsym

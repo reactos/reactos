@@ -1,3 +1,35 @@
+2003-04-05  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* Makefile: Add bootcd target.
+	(BOOTCD_INSTALL): Set for bootcd install.
+	* rules.mak (TOPDIR): Define on windows.
+	(BOOTCD_DIR): Define.
+	(RLINE): Define.
+	* apps/tests/lpc/makefile: Handle BOOTCD_INSTALL.
+	* apps/tests/mstest/Makefile: Ditto.
+	* apps/tests/nptest/Makefile: Ditto.
+	* apps/tests/shm/makefile: Ditto.
+	* ntoskrnl/Makefile: Handle BOOTCD_INSTALL. Add bootcd target.
+	* drivers/dd/vga/makefile: Add bootcd target.
+	* drivers/dd/blue/makefile (TARGET_BOOTSTRAP): Define as yes.
+	* drivers/dd/floppy/Makefile: Ditto.
+	* drivers/fs/cdfs/makefile: Ditto.
+	* drivers/fs/ntfs/makefile: Ditto.
+	* drivers/fs/vfat/makefile: Ditto.
+	* drivers/input/keyboard/makefile: Ditto.
+	* drivers/storage/atapi/makefile: Ditto.
+	* drivers/storage/cdrom/makefile: Ditto.
+	* drivers/storage/class2/makefile: Ditto.
+	* drivers/storage/disk/makefile: Ditto.
+	* drivers/storage/scsiport/makefile: Ditto.
+	* hal/halx86/Makefile: Ditto.
+	* lib/ntdll/makefile: Ditto.
+	* subsys/system/usetup/makefile (TARGET_BOOTSTRAP): Define as yes.
+	(TARGET_BOOTSTRAP_NAME): Define as smss.exe.
+	* tools/Makefile: Add rline executable.
+	* tools/helper.mk: Support bootcd targets.
+	* tools/rline.c: New file.
+
 2003-04-04  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* lib/freetype/builds/compiler/gcc.mk (CC): Comment out; use CC from
