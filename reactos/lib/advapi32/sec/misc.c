@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.28 2004/12/12 21:25:04 weiden Exp $
+/* $Id: misc.c,v 1.29 2004/12/13 07:09:56 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -8,6 +8,7 @@
 
 #include "advapi32.h"
 #include <accctrl.h>
+#include <malloc.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -478,31 +479,40 @@ RevertToSelf(VOID)
  *  lpSize   [I/O] Size of lpszName.
  *
  *
- * @unimplemented
+ * @implemented
  */
 BOOL WINAPI
 GetUserNameA( LPSTR lpszName, LPDWORD lpSize )
 {
-  size_t len;
-  const char* name = "Administrator";
- 
-  DPRINT1("GetUserNameA: stub\n");
+  WCHAR* lpszNameW = NULL;
+  DWORD len = 0;
+
   if ( !lpSize )
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
-  /* We need to include the null character when determining the size of the buffer. */
-  len = strlen(name) + 1;
-  if (len > *lpSize)
+
+  len = *lpSize;
+  lpszNameW = LocalAlloc ( LMEM_FIXED, len * sizeof(WCHAR) );
+
+  if ( !GetUserNameW ( lpszNameW, &len ) )
   {
-    SetLastError(ERROR_MORE_DATA);
-    *lpSize = len;
+    LocalFree ( lpszNameW );
     return FALSE;
   }
- 
+
+  len = wcstombs ( lpszName, lpszNameW, len );
+
+  LocalFree ( lpszNameW );
+
+  if ( len > *lpSize )
+  {
+    SetLastError(ERROR_INSUFFICIENT_BUFFER);
+    return FALSE;
+  }
+
   *lpSize = len;
-  strcpy(lpszName, name);
   return TRUE;
 }
 
@@ -511,26 +521,108 @@ GetUserNameA( LPSTR lpszName, LPDWORD lpSize )
  *
  * See GetUserNameA.
  *
- * @unimplemented
+ * @implemented
  */
 BOOL WINAPI
-GetUserNameW( LPWSTR lpszName, LPDWORD lpSize )
+GetUserNameW ( LPWSTR lpszName, LPDWORD lpSize )
 {
-//    char name[] = { "Administrator" };
+  HANDLE hToken = INVALID_HANDLE_VALUE;
+  DWORD tu_len = 0;
+  char* tu_buf = NULL;
+  TOKEN_USER* token_user = NULL;
+  DWORD an_len = 0;
+  SID_NAME_USE snu = SidTypeUser;
+  WCHAR* domain_name = NULL;
+  DWORD dn_len = 0;
 
-//    DWORD len = MultiByteToWideChar( CP_ACP, 0, name, -1, NULL, 0 );
+  if ( !OpenThreadToken ( GetCurrentThread(), TOKEN_QUERY, FALSE, &hToken ) )
+  {
+    DWORD dwLastError = GetLastError();
+    if ( dwLastError != ERROR_NO_TOKEN
+      && dwLastError != ERROR_NO_IMPERSONATION_TOKEN )
+    {
+      // don't call SetLastError(),
+      // as OpenThreadToken() ought to have set one
+      return FALSE;
+    }
+    if ( !OpenProcessToken ( GetCurrentProcess(), TOKEN_QUERY, &hToken ) )
+    {
+      // don't call SetLastError(),
+      // as OpenProcessToken() ought to have set one
+      return FALSE;
+    }
+  }
+  tu_buf = LocalAlloc ( LMEM_FIXED, 36 );
+  if ( !tu_buf )
+  {
+    SetLastError ( ERROR_NOT_ENOUGH_MEMORY );
+    return FALSE;
+  }
+  if ( !GetTokenInformation ( hToken, TokenUser, tu_buf, 36, &tu_len ) || tu_len > 36 )
+  {
+    LocalFree ( tu_buf );
+    tu_buf = LocalAlloc ( LMEM_FIXED, tu_len );
+    if ( !tu_buf )
+    {
+      SetLastError ( ERROR_NOT_ENOUGH_MEMORY );
+      return FALSE;
+    }
+    if ( !GetTokenInformation ( hToken, TokenUser, tu_buf, tu_len, &tu_len ) )
+    {
+      // don't call SetLastError(),
+      // as GetTokenInformation() ought to have set one
+      LocalFree ( tu_buf );
+      CloseHandle ( hToken );
+      return FALSE;
+    }
+  }
+  token_user = (TOKEN_USER*)tu_buf;
 
-//    if (len > *lpSize)
-//    {
-//        SetLastError(ERROR_MORE_DATA);
-//        *lpSize = len;
-//        return FALSE;
-//    }
+  an_len = *lpSize;
+  dn_len = 32;
+  domain_name = LocalAlloc ( LMEM_FIXED, dn_len * sizeof(WCHAR) );
+  if ( !domain_name )
+  {
+    LocalFree ( tu_buf );
+    SetLastError ( ERROR_NOT_ENOUGH_MEMORY );
+    return FALSE;
+  }
+  if ( !LookupAccountSidW ( NULL, token_user->User.Sid, lpszName, &an_len, domain_name, &dn_len, &snu )
+    || dn_len > 32 )
+  {
+    if ( dn_len > 32 )
+    {
+      LocalFree ( domain_name );
+      domain_name = LocalAlloc ( LMEM_FIXED, dn_len * sizeof(WCHAR) );
+      if ( !domain_name )
+      {
+        LocalFree ( tu_buf );
+        SetLastError ( ERROR_NOT_ENOUGH_MEMORY );
+        return FALSE;
+      }
+    }
+    if ( !LookupAccountSidW ( NULL, token_user->User.Sid, lpszName, &an_len, domain_name, &dn_len, &snu ) )
+    {
+      // don't call SetLastError(),
+      // as LookupAccountSid() ought to have set one
+      LocalFree ( domain_name );
+      CloseHandle ( hToken );
+      return FALSE;
+    }
+  }
 
-//    *lpSize = len;
-//    MultiByteToWideChar( CP_ACP, 0, name, -1, lpszName, len );
-    DPRINT1("GetUserNameW: stub\n");
-    return TRUE;
+  LocalFree ( domain_name );
+  LocalFree ( tu_buf );
+  CloseHandle ( hToken );
+
+  if ( an_len > *lpSize )
+  {
+    *lpSize = an_len;
+    SetLastError(ERROR_INSUFFICIENT_BUFFER);
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 
