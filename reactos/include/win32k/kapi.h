@@ -1,5 +1,6 @@
 #ifndef _WIN32K_KAPI_H
 #define _WIN32K_KAPI_H
+#include <win32k/ntddraw.h>
 #include <win32k/bitmaps.h>
 #include <win32k/brush.h>
 #include <win32k/cliprgn.h>
@@ -23,5 +24,4 @@
 #include <win32k/region.h>
 #include <win32k/text.h>
 #include <win32k/wingl.h>
-#include <win32k/ntddraw.h>
 #endif /* ndef _WIN32K_KAPI_H */

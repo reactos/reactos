@@ -1,8 +1,11 @@
-/* $Id: video.c,v 1.9 2003/12/26 09:52:37 navaraf Exp $
+/* $Id: video.c,v 1.10 2004/04/09 20:03:15 navaraf Exp $
  *
  * ReactOS Project
  */
+
+#include <windows.h>
 #include <ddk/ntddk.h>
+#include <ddk/ntapi.h>
 #include <rosrtl/string.h>
 
 ULONG
@@ -28,7 +31,7 @@ InitializeVideoAddressSpace(VOID)
 			      0,
 			      NULL,
 			      NULL);
-   Status = NtOpenSection(&PhysMemHandle, SECTION_ALL_ACCESS, 
+   Status = ZwOpenSection(&PhysMemHandle, SECTION_ALL_ACCESS, 
 			  &ObjectAttributes);
    if (!NT_SUCCESS(Status))
      {

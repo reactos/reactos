@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: desktop.c,v 1.9 2004/02/21 13:13:26 navaraf Exp $
+ *  $Id: desktop.c,v 1.10 2004/04/09 20:03:19 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -30,11 +30,9 @@
 /* INCLUDES ******************************************************************/
 
 #define __WIN32K__
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
 #include <ddk/ntddmou.h>
-#include <csrss/csrss.h>
 #include <win32k/win32k.h>
+#include <csrss/csrss.h>
 #include <include/winsta.h>
 #include <include/desktop.h>
 #include <include/object.h>
@@ -116,9 +114,9 @@ IntGetDesktopWorkArea(PDESKTOP_OBJECT Desktop)
   if((Ret->right == -1) && ScreenDeviceContext)
   {
     PDC dc;
-    PSURFOBJ SurfObj;
+    SURFOBJ *SurfObj;
     dc = DC_LockDc(ScreenDeviceContext);
-    SurfObj = (PSURFOBJ)AccessUserObject((ULONG) dc->Surface);
+    SurfObj = (SURFOBJ*)AccessUserObject((ULONG) dc->Surface);
     if(SurfObj)
     {
       Ret->right = SurfObj->sizlBitmap.cx;
@@ -197,7 +195,7 @@ NotifyCsrss(PCSRSS_API_REQUEST Request, PCSRSS_API_REPLY Reply)
       return Status;
     }
 
-   Request->Header.DataSize = sizeof(CSRSS_API_REQUEST) - sizeof(LPC_MESSAGE);
+   Request->Header.DataSize = sizeof(CSRSS_API_REQUEST) - LPC_MESSAGE_BASE_SIZE;
    Request->Header.MessageSize = sizeof(CSRSS_API_REQUEST);
    
    Status = ZwRequestWaitReplyPort(WindowsApiPort,
@@ -347,7 +345,7 @@ NtUserCreateDesktop(
     UserMode,
     dwDesiredAccess,
     NULL,
-    &Desktop);
+    (HANDLE*)&Desktop);
 
   if (NT_SUCCESS(Status))
     {
@@ -395,7 +393,7 @@ NtUserCreateDesktop(
     STANDARD_RIGHTS_REQUIRED,
     0,
     NULL,
-    &Desktop);
+    (HANDLE*)&Desktop);
 
   DesktopObject->Self = (HANDLE)Desktop;
   
@@ -506,7 +504,7 @@ NtUserOpenDesktop(
       UserMode,
       dwDesiredAccess,
       NULL,
-      &Desktop);
+      (HANDLE*)&Desktop);
 
    if (!NT_SUCCESS(Status))
    {
@@ -558,7 +556,7 @@ NtUserOpenInputDesktop(
    /* Get a pointer to the desktop object */
 
    Status = IntValidateDesktopHandle(
-      InputDesktop,
+      InputDesktopHandle,
       UserMode,
       0,
       &Object);
@@ -578,7 +576,7 @@ NtUserOpenInputDesktop(
       dwDesiredAccess,
       ExDesktopObjectType,
       UserMode,
-      &Desktop);
+      (HANDLE*)&Desktop);
 
    ObDereferenceObject(Object);
 

@@ -3,6 +3,7 @@
 
 #include <windows.h>
 #include <ddk/ntddk.h>
+#include <ddk/ntapi.h>
 #include <napi/win32.h>
 
 #define IS_ATOM(x) \

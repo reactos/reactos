@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: gradient.c,v 1.7 2004/04/06 21:53:48 weiden Exp $
+/* $Id: gradient.c,v 1.8 2004/04/09 20:03:16 navaraf Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -93,7 +93,7 @@ IntEngGradientFillRect(
   SURFOBJ *OutputObj;
   SURFGDI *OutputGDI;
   TRIVERTEX *v1, *v2;
-  RECT rcGradient, rcSG;
+  RECTL rcGradient, rcSG;
   RECT_ENUM RectEnum;
   BOOL EnumMore;
   ULONG i;
@@ -139,7 +139,7 @@ IntEngGradientFillRect(
         EnumMore = CLIPOBJ_bEnum(pco, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
         for (i = 0; i < RectEnum.c && RectEnum.arcl[i].top <= rcSG.bottom; i++)
         {
-          if(NtGdiIntersectRect(&FillRect, &RectEnum.arcl[i], &rcSG))
+          if(NtGdiIntersectRect(&FillRect, (PRECT)&RectEnum.arcl[i], (PRECT)&rcSG))
           {
             HVINITCOL(Red, 0);
             HVINITCOL(Green, 1);
@@ -166,7 +166,7 @@ IntEngGradientFillRect(
       EnumMore = CLIPOBJ_bEnum(pco, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
       for (i = 0; i < RectEnum.c && RectEnum.arcl[i].top <= rcSG.bottom; i++)
       {
-        if(NtGdiIntersectRect(&FillRect, &RectEnum.arcl[i], &rcSG))
+        if(NtGdiIntersectRect(&FillRect, (PRECT)&RectEnum.arcl[i], (PRECT)&rcSG))
         {
           HVINITCOL(Red, 0);
           HVINITCOL(Green, 1);
@@ -201,7 +201,7 @@ IntEngGradientFillRect(
     EnumMore = CLIPOBJ_bEnum(pco, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
     for (i = 0; i < RectEnum.c && RectEnum.arcl[i].top <= rcSG.bottom; i++)
     {
-      if(NtGdiIntersectRect(&FillRect, &RectEnum.arcl[i], &rcSG))
+      if(NtGdiIntersectRect(&FillRect, (PRECT)&RectEnum.arcl[i], (PRECT)&rcSG))
       {
         for(; FillRect.top < FillRect.bottom; FillRect.top++)
         {
@@ -337,7 +337,7 @@ IntEngGradientFillTriangle(
   ULONG i;
   POINTL Translate;
   INTENG_ENTER_LEAVE EnterLeave;
-  RECT FillRect;
+  RECTL FillRect;
   ULONG Color;
   
   BOOL sx[NLINES];
@@ -382,7 +382,7 @@ IntEngGradientFillTriangle(
       EnumMore = CLIPOBJ_bEnum(pco, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
       for (i = 0; i < RectEnum.c && RectEnum.arcl[i].top <= prclExtents->bottom; i++)
       {
-        if(NtGdiIntersectRect(&FillRect, &RectEnum.arcl[i], prclExtents))
+        if(NtGdiIntersectRect((PRECT)&FillRect, (PRECT)&RectEnum.arcl[i], (PRECT)prclExtents))
         {
           BOOL InY;
           
@@ -430,7 +430,7 @@ IntEngGradientFillTriangle(
     EnumMore = CLIPOBJ_bEnum(pco, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
     for (i = 0; i < RectEnum.c && RectEnum.arcl[i].top <= prclExtents->bottom; i++)
     {
-      if(NtGdiIntersectRect(&FillRect, &RectEnum.arcl[i], prclExtents))
+      if(NtGdiIntersectRect((PRECT)&FillRect, (PRECT)&RectEnum.arcl[i], (PRECT)prclExtents))
       {
         S_INITLINE(v1, v3, 0);
         S_INITLINE(v1, v2, 1);

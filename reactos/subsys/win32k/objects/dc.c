@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.127 2004/04/06 07:43:33 gvg Exp $
+/* $Id: dc.c,v 1.128 2004/04/09 20:03:20 navaraf Exp $
  *
  * DC.C - Device context functions
  *
@@ -25,14 +25,12 @@
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
-#include <ddk/ntddvid.h>
-
+#include <ddk/ntddvdeo.h>
 #include <internal/safe.h>
 #include <win32k/bitmaps.h>
 #include <win32k/brush.h>
 #include <win32k/cliprgn.h>
 #include <win32k/coord.h>
-#include <win32k/driver.h>
 #include <win32k/dc.h>
 #include <win32k/misc.h>
 #include <win32k/print.h>
@@ -215,7 +213,7 @@ NtGdiCreateCompatableDC(HDC hDC)
   NewDC->w.hFirstBitmap = hBitmap;
   NewDC->GDIDevice      = OrigDC->GDIDevice;
   pb = BITMAPOBJ_LockBitmap(hBitmap);
-  NewDC->Surface = BitmapToSurf(pb, NewDC->GDIDevice);
+  NewDC->Surface = (HSURF)BitmapToSurf(pb, NewDC->GDIDevice);
   BITMAPOBJ_UnlockBitmap(hBitmap);
 
   NewDC->w.hPalette = OrigDC->w.hPalette;
@@ -469,7 +467,7 @@ IntCreatePrimarySurface()
 {
    PGD_ENABLEDRIVER GDEnableDriver;
    DRVENABLEDATA DED;
-   PSURFOBJ SurfObj;
+   SURFOBJ *SurfObj;
    PSURFGDI SurfGDI;
    UNICODE_STRING DriverFileNames;
    PWSTR CurrentName;
@@ -522,7 +520,7 @@ IntCreatePrimarySurface()
             /*  Call DDI driver's EnableDriver function  */
             RtlZeroMemory(&DED, sizeof(DED));
 
-            if (! GDEnableDriver(DDI_DRIVER_VERSION, sizeof(DED), &DED))
+            if (! GDEnableDriver(DDI_DRIVER_VERSION_NT5_01, sizeof(DED), &DED))
             {
                DPRINT("DrvEnableDriver failed for %S\n", CurrentName);
             }
@@ -637,7 +635,7 @@ IntCreatePrimarySurface()
       /* Complete initialization of the physical device */
       PrimarySurface.DriverFunctions.CompletePDev(
          PrimarySurface.PDev,
-	 &PrimarySurface);
+	 (HDEV)&PrimarySurface);
 
       DPRINT("calling DRIVER_ReferenceDriver\n");
 
@@ -658,7 +656,7 @@ IntCreatePrimarySurface()
          continue;
       }
 
-      SurfObj = (PSURFOBJ)AccessUserObject((ULONG) PrimarySurface.Handle);
+      SurfObj = (SURFOBJ*)AccessUserObject((ULONG) PrimarySurface.Handle);
       SurfObj->dhpdev = PrimarySurface.PDev;
       SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) PrimarySurface.Handle);
       IntShowDesktop(
@@ -675,7 +673,7 @@ VOID FASTCALL
 IntDestroyPrimarySurface()
   {
 #if 0
-    PSURFOBJ SurfObj;
+    SURFOBJ *SurfObj;
     PSURFGDI SurfGDI;
 #endif
 
@@ -683,7 +681,7 @@ IntDestroyPrimarySurface()
 
 #if 0
     DPRINT("Hiding mouse pointer\n" );
-    SurfObj = (PSURFOBJ)AccessUserObject((ULONG) PrimarySurface.Handle);
+    SurfObj = (SURFOBJ*)AccessUserObject((ULONG) PrimarySurface.Handle);
     SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) PrimarySurface.Handle);
     SurfGDI->SetPointerShape(SurfObj, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0);
 #endif
@@ -749,7 +747,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
 	 sizeof(NewDC->FillPatternSurfaces));
   NewDC->PDev = PrimarySurface.PDev;
   NewDC->Surface = PrimarySurface.Handle;
-  NewDC->GDIDevice = &PrimarySurface;
+  NewDC->GDIDevice = (HDEV)&PrimarySurface;
   NewDC->DriverFunctions = PrimarySurface.DriverFunctions;
 
   NewDC->DMW.dmSize = sizeof(NewDC->DMW);
@@ -1707,7 +1705,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
   PDC dc;
   PGDIBRUSHOBJ pen;
   PGDIBRUSHOBJ brush;
-  PXLATEOBJ XlateObj;
+  XLATEOBJ *XlateObj;
   PPALGDI PalGDI;
   DWORD objectType;
   COLORREF *ColorMap;
@@ -1737,7 +1735,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
         {
           Mode = PalGDI->Mode;
           PALETTE_UnlockPalette(dc->w.hPalette);
-          XlateObj = (PXLATEOBJ)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL);
+          XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL);
           if (NULL != XlateObj)
             {
               pen = PENOBJ_LockPen((HPEN) hGDIObj);
@@ -1783,7 +1781,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
         {
 	  Mode = PalGDI->Mode;
           PALETTE_UnlockPalette(dc->w.hPalette);
-          XlateObj = (PXLATEOBJ)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL);
+          XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL);
           if (NULL != XlateObj)
             {
               brush = BRUSHOBJ_LockBrush((HBRUSH) hGDIObj);
@@ -1846,7 +1844,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       /* Release the old bitmap, lock the new one and convert it to a SURF */
       EngDeleteSurface(dc->Surface);
       dc->w.hBitmap = hGDIObj;
-      dc->Surface = BitmapToSurf(pb, dc->GDIDevice);
+      dc->Surface = (HSURF)BitmapToSurf(pb, dc->GDIDevice);
 
       // if we're working with a DIB, get the palette [fixme: only create if the selected palette is null]
       if(pb->dib)
@@ -2129,7 +2127,7 @@ DC_SetOwnership(HDC hDC, PEPROCESS Owner)
 }
 
 BOOL FASTCALL
-IntIsPrimarSurface(PSURFGDI SurfGDI)
+IntIsPrimarySurface(PSURFGDI SurfGDI)
 {
    if (PrimarySurface.Handle == NULL)
      {

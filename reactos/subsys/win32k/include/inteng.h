@@ -68,13 +68,13 @@ BOOL STDCALL IntEngPolyline(SURFOBJ *DestSurf,
 	                           MIX mix);
 CLIPOBJ* STDCALL IntEngCreateClipRegion(ULONG count,
 					 PRECTL pRect,
-					 RECTL rcBounds);
+					 PRECTL rcBounds);
 
 BOOL FASTCALL
-IntEngTransparentBlt(PSURFOBJ Dest,
-                     PSURFOBJ Source,
-                     PCLIPOBJ Clip,
-                     PXLATEOBJ ColorTranslation,
+IntEngTransparentBlt(SURFOBJ *Dest,
+                     SURFOBJ *Source,
+                     CLIPOBJ *Clip,
+                     XLATEOBJ *ColorTranslation,
                      PRECTL DestRect,
                      PRECTL SourceRect,
                      ULONG iTransColor,

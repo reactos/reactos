@@ -1,6 +1,8 @@
 #include <string.h>
 #include <windows.h>
 #include <ddk/ntddk.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
 /*#include <kernel32/error.h>*/
 
 /* FIXME: Currently IsBadWritePtr is implemented using VirtualQuery which

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: misc.c,v 1.4 2004/02/11 19:26:51 weiden Exp $ */
+/* $Id: misc.c,v 1.5 2004/04/09 20:03:16 navaraf Exp $ */
 #include <ddk/winddi.h>
 #include <include/dib.h>
 #include <include/object.h>
@@ -110,7 +110,7 @@ IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,
       {
       EngDeleteClip(EnterLeave->TrivialClipObj);
       EngFreeMem((*OutputObj)->pvBits);
-      EngDeleteSurface(EnterLeave->OutputBitmap);
+      EngDeleteSurface((HSURF)EnterLeave->OutputBitmap);
       return FALSE;
       }
     EnterLeave->DestRect.left = DestRect->left;
@@ -182,7 +182,7 @@ IntEngLeave(PINTENG_ENTER_LEAVE EnterLeave)
         }
       }
     EngFreeMem(EnterLeave->OutputObj->pvBits);
-    EngDeleteSurface(EnterLeave->OutputBitmap);
+    EngDeleteSurface((HSURF)EnterLeave->OutputBitmap);
     EngDeleteClip(EnterLeave->TrivialClipObj);
     }
   else

@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.131 2004/04/05 22:42:11 weiden Exp $
+/* $Id: defwnd.c,v 1.132 2004/04/09 20:03:14 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -12,6 +12,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <windows.h>
+#include <windowsx.h>
 #include <user32.h>
 #include <window.h>
 #include <user32/wininternal.h>
@@ -23,6 +24,13 @@
 
 #define NDEBUG
 #include <debug.h>
+
+#ifndef WM_SETVISIBLE
+#define WM_SETVISIBLE 9
+#endif
+#ifndef WM_QUERYDROPOBJECT
+#define WM_QUERYDROPOBJECT  0x022B
+#endif
 
 LRESULT DefWndNCPaint(HWND hWnd, HRGN hRgn);
 LRESULT DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect);
@@ -502,8 +510,8 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
 
   SystemParametersInfoA(SPI_GETDRAGFULLWINDOWS, 0, &DragFullWindows, 0);
   
-  pt.x = SLOWORD(dwPoint);
-  pt.y = SHIWORD(dwPoint);
+  pt.x = GET_X_LPARAM(dwPoint);
+  pt.y = GET_Y_LPARAM(dwPoint);
   capturePoint = pt;
   
   if (IsZoomed(hwnd) || !IsWindowVisible(hwnd))
@@ -1013,8 +1021,8 @@ User32DefWindowProc(HWND hWnd,
         case WM_NCHITTEST:
         {
             POINT Point;
-            Point.x = SLOWORD(lParam);
-            Point.y = SHIWORD(lParam);
+            Point.x = GET_X_LPARAM(lParam);
+            Point.y = GET_Y_LPARAM(lParam);
             return (DefWndNCHitTest(hWnd, Point));
         }
 
@@ -1045,8 +1053,8 @@ User32DefWindowProc(HWND hWnd,
             {
                 ReleaseCapture();
             }
-            Pt.x = SLOWORD(lParam);
-            Pt.y = SHIWORD(lParam);
+            Pt.x = GET_X_LPARAM(lParam);
+            Pt.y = GET_Y_LPARAM(lParam);
             ClientToScreen(hWnd, &Pt);
             lParam = MAKELPARAM(Pt.x, Pt.y);
             if (bUnicode)
@@ -1081,8 +1089,8 @@ User32DefWindowProc(HWND hWnd,
                 
                 Style = GetWindowLongW(hWnd, GWL_STYLE);
                 
-                Pt.x = SLOWORD(lParam);
-                Pt.y = SHIWORD(lParam);
+                Pt.x = GET_X_LPARAM(lParam);
+                Pt.y = GET_Y_LPARAM(lParam);
                 if (Style & WS_CHILD)
                 {
                     ScreenToClient(GetParent(hWnd), &Pt);
@@ -1286,8 +1294,8 @@ User32DefWindowProc(HWND hWnd,
         case WM_SYSCOMMAND:
         {
             POINT Pt;
-            Pt.x = SLOWORD(lParam);
-            Pt.y = SHIWORD(lParam);
+            Pt.x = GET_X_LPARAM(lParam);
+            Pt.y = GET_Y_LPARAM(lParam);
             return (DefWndHandleSysCommand(hWnd, wParam, Pt));
         }
 

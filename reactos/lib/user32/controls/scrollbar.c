@@ -36,6 +36,7 @@
 #include <draw.h>
 #include <stdlib.h>
 #include <string.h>
+#include <oleacc.h>
 #include <user32/regcontrol.h>
 #include <rosrtl/minmax.h>
 
@@ -75,6 +76,8 @@ HBRUSH DefWndControlColor(HDC hDC, UINT ctlType);
 
 static LRESULT WINAPI ScrollBarWndProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 
+UINT STDCALL SetSystemTimer(HWND,UINT_PTR,UINT,TIMERPROC);
+WINBOOL STDCALL KillSystemTimer(HWND,UINT_PTR);
 
 /*********************************************************************
  * scrollbar class descriptor

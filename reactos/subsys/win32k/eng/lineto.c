@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: lineto.c,v 1.31 2004/03/27 00:35:02 weiden Exp $
+ * $Id: lineto.c,v 1.32 2004/04/09 20:03:16 navaraf Exp $
  */
 
 #include <ddk/winddi.h>
@@ -502,9 +502,15 @@ IntEngLineTo(SURFOBJ *DestSurf,
 {
   BOOLEAN ret;
   SURFGDI *SurfGDI;
+  PGDIBRUSHOBJ GdiBrush;
   RECTL b;
 
-  if (Brush->logbrush.lbStyle == BS_NULL)
+  GdiBrush = CONTAINING_RECORD(
+     Brush,
+     GDIBRUSHOBJ,
+     BrushObject);
+
+  if (GdiBrush->flAttrs & GDIBRUSH_IS_NULL)
     return TRUE;
 
   /* No success yet */

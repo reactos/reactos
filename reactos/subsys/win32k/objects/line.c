@@ -16,14 +16,14 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: line.c,v 1.28 2004/04/05 21:26:25 navaraf Exp $ */
+/* $Id: line.c,v 1.29 2004/04/09 20:03:20 navaraf Exp $ */
 
 // Some code from the WINE project source (www.winehq.com)
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <internal/safe.h>
 #include <ddk/ntddk.h>
+#include <internal/safe.h>
 #include <win32k/dc.h>
 #include <win32k/line.h>
 #include <win32k/path.h>
@@ -72,7 +72,7 @@ IntGdiLineTo(DC  *dc,
   SURFOBJ *SurfObj;
   BOOL     Ret;
   PGDIBRUSHOBJ PenBrushObj;
-  RECT     Bounds;
+  RECTL    Bounds;
 
   SurfObj = (SURFOBJ*)AccessUserObject ( (ULONG)dc->Surface );
   if (NULL == SurfObj)

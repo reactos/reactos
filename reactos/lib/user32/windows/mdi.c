@@ -80,10 +80,6 @@
  *
  */
 
-#ifdef __REACTOS__
-#define __USE_W32API
-#endif
-
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>

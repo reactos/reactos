@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fillshap.c,v 1.46 2004/04/05 21:26:25 navaraf Exp $ */
+/* $Id: fillshap.c,v 1.47 2004/04/09 20:03:20 navaraf Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -104,10 +104,10 @@ IntGdiPolygon(PDC    dc,
 
 	for (CurrentPoint = 1; CurrentPoint < Count; ++CurrentPoint)
 	{
-	  DestRect.left     = MIN(DestRect.left, UnsafePoints[CurrentPoint].x);
-	  DestRect.right    = MAX(DestRect.right, UnsafePoints[CurrentPoint].x);
-	  DestRect.top      = MIN(DestRect.top, UnsafePoints[CurrentPoint].y);
-	  DestRect.bottom   = MAX(DestRect.bottom, UnsafePoints[CurrentPoint].y);
+	  DestRect.left     = min(DestRect.left, UnsafePoints[CurrentPoint].x);
+	  DestRect.right    = max(DestRect.right, UnsafePoints[CurrentPoint].x);
+	  DestRect.top      = min(DestRect.top, UnsafePoints[CurrentPoint].y);
+	  DestRect.bottom   = max(DestRect.bottom, UnsafePoints[CurrentPoint].y);
 	}
 
 #if 1
@@ -242,7 +242,7 @@ NtGdiEllipse(
    int RadiusX, RadiusY;
    int Temp;
    PGDIBRUSHOBJ FillBrush, PenBrush;
-   PSURFOBJ SurfObj;
+   SURFOBJ *SurfObj;
    RECTL RectBounds;
    PDC dc;
    BOOL ret = TRUE, Cond1, Cond2;
@@ -285,7 +285,7 @@ NtGdiEllipse(
       return FALSE;
    }
 
-   SurfObj = (PSURFOBJ)AccessUserObject((ULONG)dc->Surface);
+   SurfObj = (SURFOBJ*)AccessUserObject((ULONG)dc->Surface);
 
    nLeftRect += dc->w.DCOrgX;
    nRightRect += dc->w.DCOrgX - 1;
@@ -656,7 +656,7 @@ NtGdiPie(HDC  hDC,
 #ifdef TODO
   PDC dc;
   RECTL RectBounds;
-  PSURFOBJ SurfObj;
+  SURFOBJ *SurfObj;
   BRUSHOBJ PenBrushObj;
   PBRUSHOBJ FillBrushObj;
   PSHAPEPOINT ShapePoints;
@@ -705,7 +705,7 @@ NtGdiPie(HDC  hDC,
   RectBounds.top = Top;
   RectBounds.bottom = Bottom;
 
-  SurfObj = (PSURFOBJ) AccessUserObject((ULONG)dc->Surface);
+  SurfObj = (SURFOBJ*) AccessUserObject((ULONG)dc->Surface);
   HPenToBrushObj(&PenBrushObj, dc->w.hPen);
 
   /* Number of points for the circle is 4 * sqrt(2) * Radius, start
@@ -1427,7 +1427,7 @@ IntGdiGradientFill(
   Mode = PalDestGDI->Mode;
   PALETTE_UnlockPalette(dc->w.hPalette);
   
-  XlateObj = (PXLATEOBJ)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL);
+  XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL);
   ASSERT(XlateObj);
   
   Ret = IntEngGradientFill(SurfObj,

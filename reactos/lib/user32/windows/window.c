@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.107 2004/04/08 21:14:21 navaraf Exp $
+/* $Id: window.c,v 1.108 2004/04/09 20:03:15 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -18,6 +18,8 @@
 #include <strpool.h>
 #include <user32/callback.h>
 #include <user32/regcontrol.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -1453,7 +1455,7 @@ GetWindowContextHelpId(HWND hwnd)
 /*
  * @implemented
  */
-DWORD
+INT
 STDCALL
 InternalGetWindowText(HWND hWnd, LPWSTR lpString, int nMaxCount)
 {

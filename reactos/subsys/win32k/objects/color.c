@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: color.c,v 1.35 2004/03/27 00:35:02 weiden Exp $ */
+/* $Id: color.c,v 1.36 2004/04/09 20:03:20 navaraf Exp $ */
 
 // FIXME: Use PXLATEOBJ logicalToSystem instead of int *mapping
 
@@ -45,7 +45,9 @@ int COLOR_gapEnd = -1;
 int COLOR_gapFilled = 0;
 int COLOR_max = 256;
 
+#ifndef NO_MAPPING
 static HPALETTE hPrimaryPalette = 0; // used for WM_PALETTECHANGED
+#endif
 //static HPALETTE hLastRealizedPalette = 0; // UnrealizeObject() needs it
 
 const PALETTEENTRY COLOR_sysPalTemplate[NB_RESERVED_COLORS] =
@@ -142,7 +144,7 @@ HPALETTE STDCALL NtGdiCreatePalette(CONST PLOGPALETTE palette)
   PalGDI = (PPALGDI) PALETTE_LockPalette(NewPalette);
 
   PALETTE_ValidateFlags(PalGDI->IndexedColors, PalGDI->NumColors);
-  PalGDI->PalObj.logicalToSystem = NULL;
+  PalGDI->logicalToSystem = NULL;
 
   PALETTE_UnlockPalette(NewPalette);
 
@@ -297,7 +299,7 @@ A logical palette is a buffer between color-intensive applications and the syste
 */
 UINT STDCALL NtGdiRealizePalette(HDC hDC)
 {
-  PPALOBJ palPtr, sysPtr;
+  PALOBJ *palPtr, *sysPtr;
   PPALGDI palGDI, sysGDI;
   int realized = 0;
   PDC dc;
@@ -313,15 +315,19 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
   SurfGDI = (PSURFGDI)AccessInternalObject((ULONG)dc->Surface);
   systemPalette = NtGdiGetStockObject((INT)DEFAULT_PALETTE);
   palGDI = PALETTE_LockPalette(dc->w.hPalette);
-  palPtr = (PPALOBJ) palGDI;
+  palPtr = (PALOBJ*) palGDI;
 
   // Step 1: Create mapping of system palette\DC palette
+#ifndef NO_MAPPING
   realized = PALETTE_SetMapping(palPtr, 0, palGDI->NumColors,
                (dc->w.hPalette != hPrimaryPalette) ||
                (dc->w.hPalette == NtGdiGetStockObject(DEFAULT_PALETTE)));
+#else
+  realized = 0;
+#endif
 
   sysGDI = PALETTE_LockPalette(systemPalette);
-  sysPtr = (PPALOBJ) sysGDI;
+  sysPtr = (PALOBJ*) sysGDI;
 
   // Step 2:
   // The RealizePalette function modifies the palette for the device associated with the specified device context. If the
@@ -350,7 +356,7 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
   if(dc->w.flags != DC_MEMORY)
   {
     // Device managed DC
-    palPtr->logicalToSystem = IntEngCreateXlate(sysGDI->Mode, palGDI->Mode, systemPalette, dc->w.hPalette);
+    palGDI->logicalToSystem = IntEngCreateXlate(sysGDI->Mode, palGDI->Mode, systemPalette, dc->w.hPalette);
   }
 
   DC_UnlockDc(hDC);
@@ -361,10 +367,10 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
 BOOL STDCALL NtGdiResizePalette(HPALETTE  hpal,
                         UINT  Entries)
 {
-/*  PPALOBJ palPtr = (PPALOBJ)AccessUserObject(hPal);
+/*  PALOBJ *palPtr = (PALOBJ*)AccessUserObject(hPal);
   UINT cPrevEnt, prevVer;
   INT prevsize, size = sizeof(LOGPALETTE) + (cEntries - 1) * sizeof(PALETTEENTRY);
-  PXLATEOBJ XlateObj = NULL;
+  XLATEOBJ *XlateObj = NULL;
 
   if(!palPtr) return FALSE;
   cPrevEnt = palPtr->logpalette->palNumEntries;
@@ -377,7 +383,7 @@ BOOL STDCALL NtGdiResizePalette(HPALETTE  hpal,
 
   if(XlateObj)
   {
-    PXLATEOBJ NewXlateObj = (int*) HeapReAlloc(GetProcessHeap(), 0, XlateObj, cEntries * sizeof(int));
+    XLATEOBJ *NewXlateObj = (int*) HeapReAlloc(GetProcessHeap(), 0, XlateObj, cEntries * sizeof(int));
     if(NewXlateObj == NULL)
     {
       ERR("Can not resize logicalToSystem -- out of memory!");
@@ -471,8 +477,8 @@ UINT STDCALL NtGdiSetPaletteEntries(HPALETTE  hpal,
     }
   memcpy(&palGDI->IndexedColors[Start], pe, Entries * sizeof(PALETTEENTRY));
   PALETTE_ValidateFlags(palGDI->IndexedColors, palGDI->NumColors);
-  ExFreePool(palGDI->PalObj.logicalToSystem);
-  palGDI->PalObj.logicalToSystem = NULL;
+  ExFreePool(palGDI->logicalToSystem);
+  palGDI->logicalToSystem = NULL;
   PALETTE_UnlockPalette(hpal);
 
   return Entries;
@@ -505,7 +511,7 @@ NtGdiUpdateColors(HDC hDC)
 }
 
 INT STDCALL COLOR_PaletteLookupPixel(PALETTEENTRY *palPalEntry, INT size,
-                             PXLATEOBJ XlateObj, COLORREF col, BOOL skipReserved)
+                             XLATEOBJ *XlateObj, COLORREF col, BOOL skipReserved)
 {
   int i, best = 0, diff = 0x7fffffff;
   int r, g, b;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.50 2004/04/05 14:42:30 weiden Exp $
+/* $Id: class.c,v 1.51 2004/04/09 20:03:19 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -161,9 +161,11 @@ NtUserGetClassInfo(HINSTANCE hInstance, LPCWSTR lpClassName,
    NTSTATUS Status;
    RTL_ATOM Atom;
 
+   DPRINT("NtUserGetClassInfo(%S)\n", lpClassName);
    Status = ClassReferenceClassByNameOrAtom(&Class, lpClassName);
    if (!NT_SUCCESS(Status))
    {
+      DPRINT("Error (%x)\n", Status);
       SetLastNtError(Status);
       return 0;
    }
@@ -173,6 +175,7 @@ NtUserGetClassInfo(HINSTANCE hInstance, LPCWSTR lpClassName,
       lpWndClassEx->lpfnWndProc = Class->lpfnWndProcA;
    else
       lpWndClassEx->lpfnWndProc = Class->lpfnWndProcW;
+   DPRINT("%x\n", lpWndClassEx->lpfnWndProc);
    lpWndClassEx->cbClsExtra = Class->cbClsExtra;
    lpWndClassEx->cbWndExtra = Class->cbWndExtra;
    lpWndClassEx->hInstance = Class->hInstance;
@@ -414,6 +417,7 @@ NtUserRegisterClassExWOW(
   }
   if (!IS_ATOM(SafeClass.lpszClassName))
   {
+    DPRINT("NtUserRegisterClassExWOW(%S)\n", SafeClass.lpszClassName);
     /* FIXME - Safely copy/verify the buffer first!!! */
     Status = RtlAddAtomToAtomTable(WinStaObject->AtomTable,
       (LPWSTR)SafeClass.lpszClassName,
@@ -642,6 +646,8 @@ NtUserUnregisterClass(
    PWNDCLASS_OBJECT Class;
    PWINSTATION_OBJECT WinStaObject;
   
+   DPRINT("NtUserUnregisterClass(%S)\n", ClassNameOrAtom);
+   
    if (!ClassNameOrAtom)
    {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);

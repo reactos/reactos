@@ -7,7 +7,7 @@
 /* Internal region data. Can't use RGNDATA structure because buffer is allocated statically */
 typedef struct _ROSRGNDATA {
   RGNDATAHEADER rdh;
-  char*         Buffer;
+  PRECT         Buffer;
   RECT          BuiltInRect;   /* Testing shows that > 95% of all regions have only 1 rect.
                                   Including that here saves us from having to do another
                                   allocation */

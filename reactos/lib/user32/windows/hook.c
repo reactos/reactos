@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: hook.c,v 1.14 2004/01/23 23:38:26 ekohl Exp $
+/* $Id: hook.c,v 1.15 2004/04/09 20:03:14 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -31,6 +31,8 @@
 #include <windows.h>
 #include <user32.h>
 #include <user32/callback.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -205,13 +207,13 @@ NotifyWinEvent(
 HWINEVENTHOOK
 STDCALL
 SetWinEventHook(
-		DWORD        eventMin,
-		DWORD        eventMax,
+		UINT         eventMin,
+		UINT         eventMax,
 		HMODULE      hmodWinEventProc,
 		WINEVENTPROC pfnWinEventProc,
 		DWORD        idProcess,
 		DWORD        idThread,
-		DWORD        dwFlags
+		UINT         dwFlags
 		)
 {
   UNIMPLEMENTED;
@@ -347,11 +349,11 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
             {
               if (0 != HIWORD(Csa.lpszClass))
                 {
-                  RtlFreeHeap(RtlGetProcessHeap(), 0, (LPSTR) Csa.lpszClass);
+                  RtlFreeHeap(GetProcessHeap(), 0, (LPSTR) Csa.lpszClass);
                 }
               if (NULL != Csa.lpszName)
                 {
-                  RtlFreeHeap(RtlGetProcessHeap(), 0, (LPSTR) Csa.lpszName);
+                  RtlFreeHeap(GetProcessHeap(), 0, (LPSTR) Csa.lpszName);
                 }
             }
           break;

@@ -71,6 +71,13 @@ typedef struct
 #define  BRUSHOBJ_LockBrush(hBrush) ((PGDIBRUSHOBJ)GDIOBJ_LockObj((HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH))
 #define  BRUSHOBJ_UnlockBrush(hBrush) GDIOBJ_UnlockObj((HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH)
 
+#ifdef __USE_W32API
+typedef struct _PATRECT {
+	RECT r;
+	HBRUSH hBrush;
+} PATRECT, * PPATRECT;
+#endif
+
 HBRUSH STDCALL
 NtGdiCreateBrushIndirect(
    CONST LOGBRUSH *LogBrush);

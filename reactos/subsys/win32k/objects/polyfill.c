@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: polyfill.c,v 1.12 2003/08/19 21:29:20 royce Exp $
+/* $Id: polyfill.c,v 1.13 2004/04/09 20:03:20 navaraf Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -170,7 +170,7 @@ POLYGONFILL_MakeEdge(POINT From, POINT To)
 
   rc->xmajor = rc->absdx > rc->absdy;
 
-  rc->ErrorMax = MAX(rc->absdx,rc->absdy);
+  rc->ErrorMax = max(rc->absdx,rc->absdy);
 
   rc->Error += rc->ErrorMax / 2;
 
@@ -334,8 +334,8 @@ POLYGONFILL_UpdateScanline(FILL_EDGE* pEdge, int Scanline)
       pEdge->x += steps * pEdge->XDirection;
       pEdge->Error += steps * pEdge->absdy;
       ASSERT ( pEdge->Error < pEdge->ErrorMax );
-      pEdge->XIntercept[0] = MIN(x1,pEdge->x);
-      pEdge->XIntercept[1] = MAX(x1,pEdge->x);
+      pEdge->XIntercept[0] = min(x1,pEdge->x);
+      pEdge->XIntercept[1] = max(x1,pEdge->x);
     }
     else
     {
@@ -409,7 +409,7 @@ POLYGONFILL_FillScanLineAlternate(
   int ScanLine,
   FILL_EDGE* ActiveHead,
   SURFOBJ *SurfObj,
-  PBRUSHOBJ BrushObj,
+  BRUSHOBJ *BrushObj,
   MIX RopMode )
 {
   FILL_EDGE *pLeft, *pRight;
@@ -457,7 +457,7 @@ POLYGONFILL_FillScanLineWinding(
   int ScanLine,
   FILL_EDGE* ActiveHead,
   SURFOBJ *SurfObj,
-  PBRUSHOBJ BrushObj,
+  BRUSHOBJ *BrushObj,
   MIX RopMode )
 {
   FILL_EDGE *pLeft, *pRight;
@@ -497,8 +497,8 @@ POLYGONFILL_FillScanLineWinding(
 	)
       {
 	// yup, just tack it on to our existing line
-	x1 = MIN(x1,newx1);
-	x2 = MAX(x2,newx2);
+	x1 = min(x1,newx1);
+	x2 = max(x2,newx2);
       }
       else
       {
@@ -555,7 +555,7 @@ STDCALL
 FillPolygon(
   PDC dc,
   SURFOBJ *SurfObj,
-  PBRUSHOBJ BrushObj,
+  BRUSHOBJ *BrushObj,
   MIX RopMode,
   CONST PPOINT Points,
   int Count,
@@ -572,7 +572,7 @@ FillPolygon(
     int ScanLine,
     FILL_EDGE* ActiveHead,
     SURFOBJ *SurfObj,
-    PBRUSHOBJ BrushObj,
+    BRUSHOBJ *BrushObj,
     MIX RopMode );
 
   //DPRINT("FillPolygon\n");

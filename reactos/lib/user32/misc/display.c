@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: display.c,v 1.8 2004/01/23 23:38:26 ekohl Exp $
+/* $Id: display.c,v 1.9 2004/04/09 20:03:14 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/dde.c
@@ -29,9 +29,12 @@
 /* INCLUDES ******************************************************************/
 
 #include <windows.h>
-#include <user32.h>
-#include <debug.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
 #include <rosrtl/devmode.h>
+#include <win32k/ntuser.h>
+#define NDEBUG
+#include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
 
@@ -42,9 +45,11 @@ BOOL STDCALL
 EnumDisplayDevicesA(
   LPCSTR lpDevice,
   DWORD iDevNum,
-  PDISPLAY_DEVICE lpDisplayDevice,
+  PDISPLAY_DEVICEA lpDisplayDevice,
   DWORD dwFlags)
 {
+/* FIXME: This implementation doesn't convert the lpDisplayDevice structure! */
+#if 0
   BOOL rc;
   UNICODE_STRING Device;
   if ( !RtlCreateUnicodeStringFromAsciiz ( &Device, (PCSZ)lpDevice ) )
@@ -62,6 +67,9 @@ EnumDisplayDevicesA(
   RtlFreeUnicodeString ( &Device );
 
   return rc;
+#else
+  return 0;
+#endif
 }
 
 

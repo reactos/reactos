@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: winsta.c,v 1.56 2004/02/19 21:12:10 weiden Exp $
+ *  $Id: winsta.c,v 1.57 2004/04/09 20:03:19 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -331,7 +331,7 @@ NtUserCreateWindowStation(
       UserMode,
       dwDesiredAccess,
       NULL,
-      &WindowStation);
+      (PVOID*)&WindowStation);
 
    if (NT_SUCCESS(Status))
    {
@@ -371,7 +371,7 @@ NtUserCreateWindowStation(
       STANDARD_RIGHTS_REQUIRED,
       0,
       NULL,
-      &WindowStation);
+      (PVOID*)&WindowStation);
 
    if (!NT_SUCCESS(Status))
    {
@@ -490,8 +490,7 @@ NtUserOpenWindowStation(
       UserMode,
       dwDesiredAccess,
       NULL,
-      &WindowStation);
-
+      (PVOID*)&WindowStation);
 
    if (!NT_SUCCESS(Status))
    {

@@ -66,6 +66,7 @@ Already defined in makefile now.
              ((Style & WS_CHILD) && (ParentStyle & WS_THICKFRAME) && !(ParentStyle & WS_MAXIMIZE) && \
              (WindowRect.right - WindowRect.left == ParentClientRect.right) && \
              (WindowRect.bottom - WindowRect.top == ParentClientRect.bottom)))
+
 /*
  * FIXME: This should be moved to a header
  */
@@ -75,6 +76,8 @@ DWORD
 IntScrollHitTest(HWND hWnd, INT nBar, POINT pt, BOOL bDragging);
 HPEN STDCALL
 GetSysColorPen(int nIndex);
+
+BOOL STDCALL GdiGradientFill(HDC,PTRIVERTEX,ULONG,PVOID,ULONG,ULONG);
 
 extern ATOM AtomInternalPos;
 

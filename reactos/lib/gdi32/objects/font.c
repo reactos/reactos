@@ -1,4 +1,4 @@
-/* $Id: font.c,v 1.2 2004/03/23 07:59:47 gvg Exp $
+/* $Id: font.c,v 1.3 2004/04/09 20:03:13 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -14,6 +14,9 @@
 
 #include <windows.h>
 #include <rosrtl/logfont.h>
+#include <ddk/ntddk.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
 #include <win32k/font.h>
 #include <win32k/text.h>
 #include <internal/font.h>
@@ -242,8 +245,10 @@ IntEnumFontFamilies(HDC Dc, LPLOGFONTW LogFont, PVOID EnumProc, LPARAM lParam,
     {
       if (Unicode)
         {
-          Ret = ((FONTENUMEXPROCW) EnumProc)(&Info[i].EnumLogFontEx, &Info[i].NewTextMetricEx,
-                                             Info[i].FontType, lParam);
+          Ret = ((FONTENUMPROCW) EnumProc)(
+            (LPLOGFONTW)&Info[i].EnumLogFontEx,
+            (LPTEXTMETRICW)&Info[i].NewTextMetricEx,
+            Info[i].FontType, lParam);
         }
       else
         {
@@ -256,8 +261,10 @@ IntEnumFontFamilies(HDC Dc, LPLOGFONTW LogFont, PVOID EnumProc, LPARAM lParam,
                               EnumLogFontExA.elfScript, LF_FACESIZE, NULL, NULL);
           NewTextMetricExW2A(&NewTextMetricExA,
                              &Info[i].NewTextMetricEx);
-          Ret = ((FONTENUMEXPROCA) EnumProc)(&EnumLogFontExA, &NewTextMetricExA,
-                                             Info[i].FontType, lParam);
+          Ret = ((FONTENUMPROCA) EnumProc)(
+            (LPLOGFONTA)&EnumLogFontExA,
+            (LPTEXTMETRICA)&NewTextMetricExA,
+            Info[i].FontType, lParam);
         }
     }
 
@@ -270,7 +277,7 @@ IntEnumFontFamilies(HDC Dc, LPLOGFONTW LogFont, PVOID EnumProc, LPARAM lParam,
  * @implemented
  */
 int STDCALL
-EnumFontFamiliesExW(HDC Dc, LPLOGFONTW LogFont, FONTENUMEXPROCW EnumFontFamProc,
+EnumFontFamiliesExW(HDC Dc, LPLOGFONTW LogFont, FONTENUMPROCW EnumFontFamProc,
                     LPARAM lParam, DWORD Flags)
 {
   return IntEnumFontFamilies(Dc, LogFont, EnumFontFamProc, lParam, TRUE);
@@ -301,7 +308,7 @@ EnumFontFamiliesW(HDC Dc, LPCWSTR Family, FONTENUMPROCW EnumFontFamProc,
  * @implemented
  */
 int STDCALL
-EnumFontFamiliesExA (HDC Dc, LPLOGFONTA LogFont, FONTENUMEXPROCA EnumFontFamProc,
+EnumFontFamiliesExA (HDC Dc, LPLOGFONTA LogFont, FONTENUMPROCA EnumFontFamProc,
                      LPARAM lParam, DWORD dwFlags)
 {
   LOGFONTW LogFontW;

@@ -195,7 +195,7 @@ GetEnhMetaFilePixelFormat(
 	CONST PIXELFORMATDESCRIPTOR	*ppfd
 	)
 {
-ENHMETAHEADER pemh;
+	ENHMETAHEADER pemh;
 
 	if(GetEnhMetaFileHeader(hEmh, sizeof(ENHMETAHEADER), &pemh))
 	{

@@ -1,4 +1,4 @@
-/* $Id: print.c,v 1.6 2003/10/20 18:02:04 gvg Exp $
+/* $Id: print.c,v 1.7 2004/04/09 20:03:15 navaraf Exp $
  *
  * smss.c - Session Manager
  * 
@@ -27,17 +27,16 @@
  * 		Compiled successfully with egcs 1.1.2
  */
 
-#include <ddk/ntddk.h>
-
 #include <csrss/csrss.h>
-
+#include <ddk/ntddk.h>
+#include <ntos.h>
 
 VOID STDCALL DisplayString(LPCWSTR lpwString)
 {
    UNICODE_STRING us;
    
    RtlInitUnicodeString (&us, lpwString);
-   NtDisplayString (&us);
+   ZwDisplayString (&us);
 }
 
 VOID STDCALL PrintString (char* fmt, ...)
@@ -48,7 +47,7 @@ VOID STDCALL PrintString (char* fmt, ...)
    ANSI_STRING AnsiString;
    
    va_start(ap, fmt);
-	vsprintf(buffer, fmt, ap);
+   vsprintf(buffer, fmt, ap);
    va_end(ap);
    
    RtlInitAnsiString (&AnsiString, buffer);

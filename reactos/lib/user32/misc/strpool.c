@@ -2,6 +2,8 @@
 
 #include <windows.h>
 #include <ddk/ntddk.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
 #include <strpool.h>
 #include <string.h>
 

@@ -21,7 +21,7 @@ IntPatBlt(DC *dc,
           INT  Width,
           INT  Height,
           DWORD  ROP,
-          PBRUSHOBJ BrushObj);
+          BRUSHOBJ *BrushObj);
 
 /* Pen functions */
 

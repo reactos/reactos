@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.96 2004/03/11 21:38:58 dwelch Exp $
+# $Id: makefile,v 1.97 2004/04/09 20:03:18 navaraf Exp $
 
 PATH_TO_TOP = ../..
 
@@ -27,11 +27,9 @@ TARGET_CFLAGS =\
  -I$(PATH_TO_TOP)/ntoskrnl/include \
  -I$(FREETYPE_DIR)/include \
  -DUNICODE \
- -Wall -Werror
-
-# require os code to explicitly request A/W version of structs/functions
-#TARGET_CFLAGS += -D_DISABLE_TIDENTS -D__USE_W32API
-TARGET_CFLAGS += -D_DISABLE_TIDENTS
+ -Wall -Werror \
+ -D__USE_W32API -D_WIN32_WINNT=0x0500 \
+ -DWINVER=0x600 -D_WIN32K_
 
 TARGET_LFLAGS =\
  $(PATH_TO_TOP)/dk/nkm/lib/freetype.a \

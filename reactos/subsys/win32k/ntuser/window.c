@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.209 2004/04/02 23:54:26 weiden Exp $
+/* $Id: window.c,v 1.210 2004/04/09 20:03:19 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2712,25 +2712,6 @@ NtUserGetWindow(HWND hWnd, UINT Relationship)
    IntReleaseWindowObject(WindowObject);
 
    return hWndResult;
-}
-
-/*
- * NtUserGetWindowDC
- *
- * The NtUserGetWindowDC function retrieves the device context (DC) for the
- * entire window, including title bar, menus, and scroll bars. A window device
- * context permits painting anywhere in a window, because the origin of the
- * device context is the upper-left corner of the window instead of the client
- * area. 
- *
- * Status
- *    @implemented
- */
-
-DWORD STDCALL
-NtUserGetWindowDC(HWND hWnd)
-{
-   return (DWORD)NtUserGetDCEx(hWnd, 0, DCX_USESTYLE | DCX_WINDOW);
 }
 
 /*

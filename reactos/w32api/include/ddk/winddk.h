@@ -4142,6 +4142,8 @@ RemoveTailList(
   return Entry;
 }
 
+#if !defined(_WINBASE_H) || _WIN32_WINNT < 0x0501
+
 NTOSAPI
 PSLIST_ENTRY
 DDKFASTAPI
@@ -4154,6 +4156,8 @@ DDKFASTAPI
 InterlockedPushEntrySList(
   IN PSLIST_HEADER  ListHead,
   IN PSLIST_ENTRY  ListEntry);
+
+#endif
 
 /*
  * USHORT

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.27 2003/12/30 05:11:54 hyperion Exp $
+# $Id: makefile,v 1.28 2004/04/09 20:03:15 navaraf Exp $
 
 PATH_TO_TOP = ../..
 
@@ -18,7 +18,7 @@ TARGET_CFLAGS = -D__NTAPP__ -Wall -Werror -Iinclude
 TARGET_LFLAGS = -nostdlib
 
 # require os code to explicitly request A/W version of structs/functions
-TARGET_CFLAGS += -D_DISABLE_TIDENTS
+TARGET_CFLAGS += -D__USE_W32API -DWINVER=0x0600 -D_WIN32_WINNT=0x0501
 
 SUBDIRS = win32csr
 

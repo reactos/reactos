@@ -1,4 +1,4 @@
-/* $Id: user.c,v 1.2 2002/11/03 20:01:07 chorns Exp $
+/* $Id: user.c,v 1.3 2004/04/09 20:03:15 navaraf Exp $
  *
  * reactos/subsys/csrss/api/user.c
  *
@@ -32,8 +32,7 @@ CSR_API(CsrRegisterServicesProcess)
   NTSTATUS Status;
 
   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
-    sizeof(LPC_MESSAGE);
+  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
 
   if (ServicesProcessIdValid == TRUE)
     {
@@ -56,10 +55,7 @@ CSR_API(CsrRegisterServicesProcess)
 CSR_API(CsrExitReactos)
 {
   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
-    sizeof(LPC_MESSAGE);
-
-
+  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
 
   Reply->Status = STATUS_NOT_IMPLEMENTED;
 

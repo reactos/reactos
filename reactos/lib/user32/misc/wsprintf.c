@@ -35,6 +35,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <windows.h>
+#include <wine/winternl.h>
 #include "strpool.h"
 
 #define WPRINTF_LEFTALIGN   0x0001  /* Align output on the left ('-' prefix) */
@@ -552,9 +553,9 @@ DWORD STDCALL WCSToMBEx(WORD CodePage,LPWSTR UnicodeString,LONG UnicodeSize,LPST
 	}
 	if (Allocate)
 	{
-		*MBString = HEAP_alloc(MBSize);
+		*MBString = RtlAllocateHeap(GetProcessHeap(), 0, MBSize);
 	}
-	if ((CodePage == 0) || (CodePage == NLS_ANSI_CODE_PAGE))
+	if (CodePage == 0)
 	{
 		RtlUnicodeToMultiByteN(*MBString,MBSize,&Size,UnicodeString,UnicodeSize);
 	}
@@ -584,10 +585,10 @@ DWORD STDCALL MBToWCSEx(WORD CodePage,LPSTR MBString,LONG MBSize,LPWSTR *Unicode
 	}
 	if (Allocate)
 	{
-		*UnicodeString = HEAP_alloc(UnicodeSize);
+		*UnicodeString = RtlAllocateHeap(GetProcessHeap(), 0, UnicodeSize);
 	}
 	UnicodeSize *= sizeof(WCHAR);
-	if ((CodePage == 0) || (CodePage == NLS_ANSI_CODE_PAGE))
+	if (CodePage == 0)
 	{
 		RtlMultiByteToUnicodeN(*UnicodeString,UnicodeSize,&Size,MBString,MBSize);
 	}

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.64 2004/04/05 21:26:30 weiden Exp $
+/* $Id: windc.c,v 1.65 2004/04/09 20:03:19 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -46,6 +46,8 @@
 
 #define NDEBUG
 #include <debug.h>
+
+#define DCX_USESTYLE 0x10000
 
 /* GLOBALS *******************************************************************/
 
@@ -99,6 +101,25 @@ DceGetVisRgn(HWND hWnd, ULONG Flags, HWND hWndChild, ULONG CFlags)
   IntReleaseWindowObject(Window);
 
   return VisRgn;
+}
+
+/*
+ * NtUserGetWindowDC
+ *
+ * The NtUserGetWindowDC function retrieves the device context (DC) for the
+ * entire window, including title bar, menus, and scroll bars. A window device
+ * context permits painting anywhere in a window, because the origin of the
+ * device context is the upper-left corner of the window instead of the client
+ * area. 
+ *
+ * Status
+ *    @implemented
+ */
+
+DWORD STDCALL
+NtUserGetWindowDC(HWND hWnd)
+{
+   return (DWORD)NtUserGetDCEx(hWnd, 0, DCX_USESTYLE | DCX_WINDOW);
 }
 
 HDC STDCALL
@@ -565,7 +586,7 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
 
   DceSetDrawable(Window, Dce->hDC, Flags, UpdateClipOrigin);
 
-  if (UpdateVisRgn)
+//  if (UpdateVisRgn)
     {
       DceUpdateVisRgn(Dce, Window, Flags);
     }

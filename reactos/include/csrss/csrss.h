@@ -3,7 +3,7 @@
 
 #include <windows.h>
 #include <ddk/ntddblue.h>
-#include <ntos/keyboard.h>
+#include <ntos.h>
 
 #define CSR_PRIORITY_CLASS_NORMAL	(0x10)
 #define CSR_PRIORITY_CLASS_IDLE		(0x20)
@@ -535,7 +535,7 @@ typedef struct
 #define CSRSS_MAX_WRITE_CONSOLE_REQUEST       \
       (MAX_MESSAGE_DATA - sizeof(ULONG) - sizeof(CSRSS_WRITE_CONSOLE_REQUEST))
 
-#define CSRSS_MAX_SET_TITLE_REQUEST           (MAX_MESSAGE_DATA - sizeof( HANDLE ) - sizeof( DWORD ) - sizeof( ULONG ) - sizeof( LPC_MESSAGE ))
+#define CSRSS_MAX_SET_TITLE_REQUEST           (MAX_MESSAGE_DATA - sizeof( HANDLE ) - sizeof( DWORD ) - sizeof( ULONG ) - LPC_MESSAGE_BASE_SIZE)
 
 #define CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR   (MAX_MESSAGE_DATA - sizeof( ULONG ) - sizeof( CSRSS_WRITE_CONSOLE_OUTPUT_CHAR_REQUEST ))
 
@@ -599,99 +599,113 @@ typedef struct
 #define CSRSS_SET_CONSOLE_ICON              (0x2E)
 
 /* Keep in sync with definition below. */
-#define CSRSS_REQUEST_HEADER_SIZE (sizeof(LPC_MESSAGE) + sizeof(ULONG))
+#define CSRSS_REQUEST_HEADER_SIZE (LPC_MESSAGE_BASE_SIZE + sizeof(ULONG))
 
 typedef struct
 {
-  LPC_MESSAGE Header;
-  ULONG Type;
   union
   {
-    CSRSS_CREATE_PROCESS_REQUEST CreateProcessRequest;
-    CSRSS_CONNECT_PROCESS_REQUEST ConnectRequest;
-    CSRSS_WRITE_CONSOLE_REQUEST WriteConsoleRequest;
-    CSRSS_READ_CONSOLE_REQUEST ReadConsoleRequest;
-    CSRSS_ALLOC_CONSOLE_REQUEST AllocConsoleRequest;
-    CSRSS_SCREEN_BUFFER_INFO_REQUEST ScreenBufferInfoRequest;
-    CSRSS_SET_CURSOR_REQUEST SetCursorRequest;
-    CSRSS_FILL_OUTPUT_REQUEST FillOutputRequest;
-    CSRSS_READ_INPUT_REQUEST ReadInputRequest;
-    CSRSS_WRITE_CONSOLE_OUTPUT_CHAR_REQUEST WriteConsoleOutputCharRequest;
-    CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB_REQUEST WriteConsoleOutputAttribRequest;
-    CSRSS_FILL_OUTPUT_ATTRIB_REQUEST FillOutputAttribRequest;
-    CSRSS_SET_CURSOR_INFO_REQUEST SetCursorInfoRequest;
-    CSRSS_GET_CURSOR_INFO_REQUEST GetCursorInfoRequest;
-    CSRSS_SET_ATTRIB_REQUEST SetAttribRequest;
-    CSRSS_SET_CONSOLE_MODE_REQUEST SetConsoleModeRequest;
-    CSRSS_GET_CONSOLE_MODE_REQUEST GetConsoleModeRequest;
-    CSRSS_CREATE_SCREEN_BUFFER_REQUEST CreateScreenBufferRequest;
-    CSRSS_SET_SCREEN_BUFFER_REQUEST SetScreenBufferRequest;
-    CSRSS_SET_TITLE_REQUEST SetTitleRequest;
-    CSRSS_GET_TITLE_REQUEST GetTitleRequest;
-    CSRSS_WRITE_CONSOLE_OUTPUT_REQUEST WriteConsoleOutputRequest;
-    CSRSS_FLUSH_INPUT_BUFFER_REQUEST FlushInputBufferRequest;
-    CSRSS_SCROLL_CONSOLE_SCREEN_BUFFER_REQUEST 
-    ScrollConsoleScreenBufferRequest;
-    CSRSS_READ_CONSOLE_OUTPUT_CHAR_REQUEST ReadConsoleOutputCharRequest;
-    CSRSS_READ_CONSOLE_OUTPUT_ATTRIB_REQUEST ReadConsoleOutputAttribRequest;
-    CSRSS_GET_NUM_INPUT_EVENTS_REQUEST GetNumInputEventsRequest;
-    CSRSS_REGISTER_SERVICES_PROCESS_REQUEST RegisterServicesProcessRequest;
-    CSRSS_EXIT_REACTOS_REQUEST ExitReactosRequest;
-    CSRSS_SET_SHUTDOWN_PARAMETERS_REQUEST SetShutdownParametersRequest;
-    CSRSS_GET_SHUTDOWN_PARAMETERS_REQUEST GetShutdownParametersRequest;
-    CSRSS_PEEK_CONSOLE_INPUT_REQUEST PeekConsoleInputRequest;
-    CSRSS_READ_CONSOLE_OUTPUT_REQUEST ReadConsoleOutputRequest;
-    CSRSS_WRITE_CONSOLE_INPUT_REQUEST WriteConsoleInputRequest;
-    CSRSS_CLOSE_HANDLE_REQUEST CloseHandleRequest;
-    CSRSS_VERIFY_HANDLE_REQUEST VerifyHandleRequest;
-    CSRSS_DUPLICATE_HANDLE_REQUEST DuplicateHandleRequest;
-    CSRSS_SETGET_CONSOLE_HW_STATE_REQUEST ConsoleHardwareStateRequest;
-    CSRSS_CONSOLE_WINDOW ConsoleWindowRequest;
-    CSRSS_CREATE_DESKTOP_REQUEST CreateDesktopRequest;
-    CSRSS_SHOW_DESKTOP_REQUEST ShowDesktopRequest;
-    CSRSS_HIDE_DESKTOP_REQUEST HideDesktopRequest;
-    CSRSS_CONSOLE_SET_WINDOW_ICON ConsoleSetWindowIconRequest;
-  } Data;
+    LPC_MESSAGE Header;
+    struct
+    {
+      BYTE HeaderReserved[LPC_MESSAGE_BASE_SIZE];
+      ULONG Type;
+      union
+      {
+        CSRSS_CREATE_PROCESS_REQUEST CreateProcessRequest;
+        CSRSS_CONNECT_PROCESS_REQUEST ConnectRequest;
+        CSRSS_WRITE_CONSOLE_REQUEST WriteConsoleRequest;
+        CSRSS_READ_CONSOLE_REQUEST ReadConsoleRequest;
+        CSRSS_ALLOC_CONSOLE_REQUEST AllocConsoleRequest;
+        CSRSS_SCREEN_BUFFER_INFO_REQUEST ScreenBufferInfoRequest;
+        CSRSS_SET_CURSOR_REQUEST SetCursorRequest;
+        CSRSS_FILL_OUTPUT_REQUEST FillOutputRequest;
+        CSRSS_READ_INPUT_REQUEST ReadInputRequest;
+        CSRSS_WRITE_CONSOLE_OUTPUT_CHAR_REQUEST WriteConsoleOutputCharRequest;
+        CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB_REQUEST WriteConsoleOutputAttribRequest;
+        CSRSS_FILL_OUTPUT_ATTRIB_REQUEST FillOutputAttribRequest;
+        CSRSS_SET_CURSOR_INFO_REQUEST SetCursorInfoRequest;
+        CSRSS_GET_CURSOR_INFO_REQUEST GetCursorInfoRequest;
+        CSRSS_SET_ATTRIB_REQUEST SetAttribRequest;
+        CSRSS_SET_CONSOLE_MODE_REQUEST SetConsoleModeRequest;
+        CSRSS_GET_CONSOLE_MODE_REQUEST GetConsoleModeRequest;
+        CSRSS_CREATE_SCREEN_BUFFER_REQUEST CreateScreenBufferRequest;
+        CSRSS_SET_SCREEN_BUFFER_REQUEST SetScreenBufferRequest;
+        CSRSS_SET_TITLE_REQUEST SetTitleRequest;
+        CSRSS_GET_TITLE_REQUEST GetTitleRequest;
+        CSRSS_WRITE_CONSOLE_OUTPUT_REQUEST WriteConsoleOutputRequest;
+        CSRSS_FLUSH_INPUT_BUFFER_REQUEST FlushInputBufferRequest;
+        CSRSS_SCROLL_CONSOLE_SCREEN_BUFFER_REQUEST 
+        ScrollConsoleScreenBufferRequest;
+        CSRSS_READ_CONSOLE_OUTPUT_CHAR_REQUEST ReadConsoleOutputCharRequest;
+        CSRSS_READ_CONSOLE_OUTPUT_ATTRIB_REQUEST ReadConsoleOutputAttribRequest;
+        CSRSS_GET_NUM_INPUT_EVENTS_REQUEST GetNumInputEventsRequest;
+        CSRSS_REGISTER_SERVICES_PROCESS_REQUEST RegisterServicesProcessRequest;
+        CSRSS_EXIT_REACTOS_REQUEST ExitReactosRequest;
+        CSRSS_SET_SHUTDOWN_PARAMETERS_REQUEST SetShutdownParametersRequest;
+        CSRSS_GET_SHUTDOWN_PARAMETERS_REQUEST GetShutdownParametersRequest;
+        CSRSS_PEEK_CONSOLE_INPUT_REQUEST PeekConsoleInputRequest;
+        CSRSS_READ_CONSOLE_OUTPUT_REQUEST ReadConsoleOutputRequest;
+        CSRSS_WRITE_CONSOLE_INPUT_REQUEST WriteConsoleInputRequest;
+        CSRSS_CLOSE_HANDLE_REQUEST CloseHandleRequest;
+        CSRSS_VERIFY_HANDLE_REQUEST VerifyHandleRequest;
+        CSRSS_DUPLICATE_HANDLE_REQUEST DuplicateHandleRequest;
+        CSRSS_SETGET_CONSOLE_HW_STATE_REQUEST ConsoleHardwareStateRequest;
+        CSRSS_CONSOLE_WINDOW ConsoleWindowRequest;
+        CSRSS_CREATE_DESKTOP_REQUEST CreateDesktopRequest;
+        CSRSS_SHOW_DESKTOP_REQUEST ShowDesktopRequest;
+        CSRSS_HIDE_DESKTOP_REQUEST HideDesktopRequest;
+        CSRSS_CONSOLE_SET_WINDOW_ICON ConsoleSetWindowIconRequest;
+      } Data;
+    };
+  };
 } CSRSS_API_REQUEST, *PCSRSS_API_REQUEST;
 
 typedef struct
 {
-  LPC_MESSAGE Header;
-  NTSTATUS Status;
   union
   {
-    CSRSS_CREATE_PROCESS_REPLY CreateProcessReply;
-    CSRSS_CONNECT_PROCESS_REPLY ConnectReply;
-    CSRSS_WRITE_CONSOLE_REPLY WriteConsoleReply;
-    CSRSS_READ_CONSOLE_REPLY ReadConsoleReply;
-    CSRSS_ALLOC_CONSOLE_REPLY AllocConsoleReply;
-    CSRSS_SCREEN_BUFFER_INFO_REPLY ScreenBufferInfoReply;
-    CSRSS_READ_INPUT_REPLY ReadInputReply;
-    CSRSS_WRITE_CONSOLE_OUTPUT_CHAR_REPLY WriteConsoleOutputCharReply;
-    CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB_REPLY WriteConsoleOutputAttribReply;
-    CSRSS_GET_CURSOR_INFO_REPLY GetCursorInfoReply;
-    CSRSS_GET_CONSOLE_MODE_REPLY GetConsoleModeReply;
-    CSRSS_CREATE_SCREEN_BUFFER_REPLY CreateScreenBufferReply;
-    CSRSS_GET_TITLE_REPLY GetTitleReply;
-    CSRSS_WRITE_CONSOLE_OUTPUT_REPLY WriteConsoleOutputReply;
-    CSRSS_READ_CONSOLE_OUTPUT_CHAR_REPLY ReadConsoleOutputCharReply;
-    CSRSS_READ_CONSOLE_OUTPUT_ATTRIB_REPLY ReadConsoleOutputAttribReply;
-    CSRSS_GET_NUM_INPUT_EVENTS_REPLY GetNumInputEventsReply;
-    CSRSS_SET_SHUTDOWN_PARAMETERS_REPLY SetShutdownParametersReply;
-    CSRSS_GET_SHUTDOWN_PARAMETERS_REPLY GetShutdownParametersReply;
-    CSRSS_PEEK_CONSOLE_INPUT_REPLY PeekConsoleInputReply;
-    CSRSS_READ_CONSOLE_OUTPUT_REPLY ReadConsoleOutputReply;
-    CSRSS_WRITE_CONSOLE_INPUT_REPLY WriteConsoleInputReply;
-    CSRSS_GET_INPUT_HANDLE_REPLY GetInputHandleReply;
-    CSRSS_GET_OUTPUT_HANDLE_REPLY GetOutputHandleReply;
-    CSRSS_DUPLICATE_HANDLE_REPLY DuplicateHandleReply;
-    CSRSS_SETGET_CONSOLE_HW_STATE_REPLY ConsoleHardwareStateReply;
-    CSRSS_CONSOLE_WINDOW ConsoleWindowReply;
-    CSRSS_CREATE_DESKTOP_REPLY CreateDesktopReply;
-    CSRSS_SHOW_DESKTOP_REPLY ShowDesktopReply;
-    CSRSS_HIDE_DESKTOP_REPLY HideDesktopReply;
-    CSRSS_CONSOLE_SET_WINDOW_ICON ConsoleSetWindowIconReply;
-  } Data;
+    LPC_MESSAGE Header;
+    struct
+    {
+      BYTE HeaderReserved[LPC_MESSAGE_BASE_SIZE];
+      NTSTATUS Status;
+      union
+      {
+        CSRSS_CREATE_PROCESS_REPLY CreateProcessReply;
+        CSRSS_CONNECT_PROCESS_REPLY ConnectReply;
+        CSRSS_WRITE_CONSOLE_REPLY WriteConsoleReply;
+        CSRSS_READ_CONSOLE_REPLY ReadConsoleReply;
+        CSRSS_ALLOC_CONSOLE_REPLY AllocConsoleReply;
+        CSRSS_SCREEN_BUFFER_INFO_REPLY ScreenBufferInfoReply;
+        CSRSS_READ_INPUT_REPLY ReadInputReply;
+        CSRSS_WRITE_CONSOLE_OUTPUT_CHAR_REPLY WriteConsoleOutputCharReply;
+        CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB_REPLY WriteConsoleOutputAttribReply;
+        CSRSS_GET_CURSOR_INFO_REPLY GetCursorInfoReply;
+        CSRSS_GET_CONSOLE_MODE_REPLY GetConsoleModeReply;
+        CSRSS_CREATE_SCREEN_BUFFER_REPLY CreateScreenBufferReply;
+        CSRSS_GET_TITLE_REPLY GetTitleReply;
+        CSRSS_WRITE_CONSOLE_OUTPUT_REPLY WriteConsoleOutputReply;
+        CSRSS_READ_CONSOLE_OUTPUT_CHAR_REPLY ReadConsoleOutputCharReply;
+        CSRSS_READ_CONSOLE_OUTPUT_ATTRIB_REPLY ReadConsoleOutputAttribReply;
+        CSRSS_GET_NUM_INPUT_EVENTS_REPLY GetNumInputEventsReply;
+        CSRSS_SET_SHUTDOWN_PARAMETERS_REPLY SetShutdownParametersReply;
+        CSRSS_GET_SHUTDOWN_PARAMETERS_REPLY GetShutdownParametersReply;
+        CSRSS_PEEK_CONSOLE_INPUT_REPLY PeekConsoleInputReply;
+        CSRSS_READ_CONSOLE_OUTPUT_REPLY ReadConsoleOutputReply;
+        CSRSS_WRITE_CONSOLE_INPUT_REPLY WriteConsoleInputReply;
+        CSRSS_GET_INPUT_HANDLE_REPLY GetInputHandleReply;
+        CSRSS_GET_OUTPUT_HANDLE_REPLY GetOutputHandleReply;
+        CSRSS_DUPLICATE_HANDLE_REPLY DuplicateHandleReply;
+        CSRSS_SETGET_CONSOLE_HW_STATE_REPLY ConsoleHardwareStateReply;
+        CSRSS_CONSOLE_WINDOW ConsoleWindowReply;
+        CSRSS_CREATE_DESKTOP_REPLY CreateDesktopReply;
+        CSRSS_SHOW_DESKTOP_REPLY ShowDesktopReply;
+        CSRSS_HIDE_DESKTOP_REPLY HideDesktopReply;
+        CSRSS_CONSOLE_SET_WINDOW_ICON ConsoleSetWindowIconReply;
+      } Data;
+    };
+  };
 } CSRSS_API_REPLY, *PCSRSS_API_REPLY;
 
 #endif /* __INCLUDE_CSRSS_CSRSS_H */

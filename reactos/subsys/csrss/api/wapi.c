@@ -1,4 +1,4 @@
-/* $Id: wapi.c,v 1.33 2003/12/30 05:10:32 hyperion Exp $
+/* $Id: wapi.c,v 1.34 2004/04/09 20:03:15 navaraf Exp $
  * 
  * reactos/subsys/csrss/api/wapi.c
  *
@@ -10,10 +10,9 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <windows.h>
-#include <ntdll/rtl.h>
 #include <csrss/csrss.h>
+#include <ddk/ntddk.h>
+#include <ntdll/rtl.h>
 #include <debug.h>
 
 #include "api.h"
@@ -93,7 +92,7 @@ CsrApiCallHandler(PCSRSS_PROCESS_DATA ProcessData,
     {
       DPRINT1("CSR: Unknown request type 0x%x\n", Request->Type);
       Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-      Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
+      Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
       Reply->Status = STATUS_INVALID_SYSTEM_SERVICE;
     }
 }

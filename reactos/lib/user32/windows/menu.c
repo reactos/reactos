@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.61 2004/04/02 19:14:44 weiden Exp $
+/* $Id: menu.c,v 1.62 2004/04/09 20:03:15 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -41,7 +41,8 @@
 #include <draw.h>
 #include <window.h>
 #include <strpool.h>
-#include <ntos/rtl.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
 
 #include <user32/callback.h>
 #include "user32/regcontrol.h"
@@ -3585,7 +3586,7 @@ DrawMenuBar(HWND hWnd)
 /*
  * @implemented
  */
-UINT STDCALL
+BOOL STDCALL
 EnableMenuItem(HMENU hMenu,
 	       UINT uIDEnableItem,
 	       UINT uEnable)
@@ -4030,7 +4031,7 @@ InsertMenuItemW(
   UNICODE_STRING MenuText;
   BOOL res = FALSE;
   BOOL CleanHeap = FALSE;
-  HANDLE hHeap = RtlGetProcessHeap();
+  HANDLE hHeap = GetProcessHeap();
   mi.hbmpItem = (HBITMAP)0;
 
   // while we could just pass 'lpmii' to win32k, we make a copy so that
@@ -4370,7 +4371,7 @@ SetMenuItemInfoA(
   HMENU hMenu,
   UINT uItem,
   BOOL fByPosition,
-  LPMENUITEMINFOA lpmii)
+  LPCMENUITEMINFOA lpmii)
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -4386,7 +4387,7 @@ SetMenuItemInfoW(
   HMENU hMenu,
   UINT uItem,
   BOOL fByPosition,
-  LPMENUITEMINFOW lpmii)
+  LPCMENUITEMINFOW lpmii)
 {
   UNIMPLEMENTED;
   return FALSE;

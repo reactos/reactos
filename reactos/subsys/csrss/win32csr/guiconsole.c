@@ -1,4 +1,4 @@
-/* $Id: guiconsole.c,v 1.12 2004/03/14 17:53:27 weiden Exp $
+/* $Id: guiconsole.c,v 1.13 2004/04/09 20:03:16 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -63,7 +63,6 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
   HDC Dc;
   HFONT OldFont;
   TEXTMETRICW Metrics;
-  NTSTATUS Status;
 
   GuiData = HeapAlloc(Win32CsrApiHeap, HEAP_ZERO_MEMORY,
                       sizeof(GUI_CONSOLE_DATA) +
@@ -74,13 +73,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
       return FALSE;
     }
 
-  Status = RtlInitializeCriticalSection(&GuiData->Lock);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("RtlInitializeCriticalSection failed, Status=%x\n", Status);
-      HeapFree(Win32CsrApiHeap, 0, GuiData);
-      return FALSE;
-    }
+  InitializeCriticalSection(&GuiData->Lock);
 
   GuiData->LineBuffer = (PWCHAR)(GuiData + 1);
 
@@ -92,7 +85,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
   if (NULL == GuiData->Font)
     {
       DPRINT1("GuiConsoleNcCreate: CreateFont failed\n");
-      RtlDeleteCriticalSection(&GuiData->Lock);
+      DeleteCriticalSection(&GuiData->Lock);
       HeapFree(Win32CsrApiHeap, 0, GuiData);
       return FALSE;
     }
@@ -101,7 +94,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
     {
       DPRINT1("GuiConsoleNcCreate: GetDC failed\n");
       DeleteObject(GuiData->Font);
-      RtlDeleteCriticalSection(&GuiData->Lock);
+      DeleteCriticalSection(&GuiData->Lock);
       HeapFree(Win32CsrApiHeap, 0, GuiData);
       return FALSE;
     }
@@ -111,7 +104,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
       DPRINT1("GuiConsoleNcCreate: SelectObject failed\n");
       ReleaseDC(hWnd, Dc);
       DeleteObject(GuiData->Font);
-      RtlDeleteCriticalSection(&GuiData->Lock);
+      DeleteCriticalSection(&GuiData->Lock);
       HeapFree(Win32CsrApiHeap, 0, GuiData);
       return FALSE;
     }
@@ -121,7 +114,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
       SelectObject(Dc, OldFont);
       ReleaseDC(hWnd, Dc);
       DeleteObject(GuiData->Font);
-      RtlDeleteCriticalSection(&GuiData->Lock);
+      DeleteCriticalSection(&GuiData->Lock);
       HeapFree(Win32CsrApiHeap, 0, GuiData);
       return FALSE;
     }
@@ -498,7 +491,7 @@ GuiConsoleHandleNcDestroy(HWND hWnd)
   KillTimer(hWnd, 1);
   Console->PrivateData = NULL;
   DeleteDC(GuiData->MemoryDC);
-  RtlDeleteCriticalSection(&GuiData->Lock);
+  DeleteCriticalSection(&GuiData->Lock);
   HeapFree(Win32CsrApiHeap, 0, GuiData);
 }
 

@@ -1,4 +1,4 @@
-/* $Id: listbox.c,v 1.15 2004/01/02 19:49:47 gvg Exp $
+/* $Id: listbox.c,v 1.16 2004/04/09 20:03:13 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -38,6 +38,10 @@ BOOL is_old_app(HWND hwnd)
 #define WM_LBTRACKPOINT     0x0131
 #define WS_EX_DRAGDETECT    0x00000002L
 #define WM_BEGINDRAG        0x022C
+#define WM_SYSTIMER         280
+
+UINT STDCALL SetSystemTimer(HWND,UINT_PTR,UINT,TIMERPROC);
+WINBOOL STDCALL KillSystemTimer(HWND,UINT_PTR);
 
 /* End of hack section -------------------------------- */
 
@@ -737,7 +741,7 @@ static BOOL LISTBOX_SetTabStops( HWND hwnd, LB_DESCR *descr, INT count,
     if (short_ints)
     {
         INT i;
-        LPINT16 p = (LPINT16)tabs;
+        PUSHORT p = (PUSHORT)tabs;
 
         TRACE("[%p]: settabstops ", hwnd );
         for (i = 0; i < descr->nb_tabs; i++) {
@@ -2873,16 +2877,16 @@ static LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
         return LISTBOX_HandleMouseWheel( hwnd, descr, wParam );
     case WM_LBUTTONDOWN:
         return LISTBOX_HandleLButtonDown( hwnd, descr, wParam,
-                                          (INT16)LOWORD(lParam),
-                                          (INT16)HIWORD(lParam) );
+                                          (USHORT)LOWORD(lParam),
+                                          (USHORT)HIWORD(lParam) );
     case WM_LBUTTONDBLCLK:
         if (descr->style & LBS_NOTIFY)
             SEND_NOTIFICATION( hwnd, descr, LBN_DBLCLK );
         return 0;
     case WM_MOUSEMOVE:
         if (GetCapture() == hwnd)
-            LISTBOX_HandleMouseMove( hwnd, descr, (INT16)LOWORD(lParam),
-                                     (INT16)HIWORD(lParam) );
+            LISTBOX_HandleMouseMove( hwnd, descr, (USHORT)LOWORD(lParam),
+                                     (USHORT)HIWORD(lParam) );
         return 0;
     case WM_LBUTTONUP:
         return LISTBOX_HandleLButtonUp( hwnd, descr );
@@ -2991,8 +2995,8 @@ static LRESULT WINAPI ComboLBWndProc_common( HWND hwnd, UINT msg,
                 BOOL    captured;
                 RECT    clientRect;
 
-                mousePos.x = (INT16)LOWORD(lParam);
-                mousePos.y = (INT16)HIWORD(lParam);
+                mousePos.x = (USHORT)LOWORD(lParam);
+                mousePos.y = (USHORT)HIWORD(lParam);
 
                 /*
                  * If we are in a dropdown combobox, we simulate that
@@ -3033,8 +3037,8 @@ static LRESULT WINAPI ComboLBWndProc_common( HWND hwnd, UINT msg,
                  * we make sure there is no selection by re-selecting the
                  * item that was selected when the listbox was made visible.
                  */
-                mousePos.x = (INT16)LOWORD(lParam);
-                mousePos.y = (INT16)HIWORD(lParam);
+                mousePos.x = (USHORT)LOWORD(lParam);
+                mousePos.y = (USHORT)HIWORD(lParam);
 
                 GetClientRect(hwnd, &clientRect);
 
@@ -3054,8 +3058,8 @@ static LRESULT WINAPI ComboLBWndProc_common( HWND hwnd, UINT msg,
         case WM_LBUTTONDBLCLK:
         case WM_LBUTTONDOWN:
             return LISTBOX_HandleLButtonDownCombo(hwnd, descr, msg, wParam,
-                                                  (INT16)LOWORD(lParam),
-                                                  (INT16)HIWORD(lParam) );
+                                                  (USHORT)LOWORD(lParam),
+                                                  (USHORT)HIWORD(lParam) );
         case WM_NCACTIVATE:
             return FALSE;
         case WM_KEYDOWN:
@@ -3092,7 +3096,7 @@ static LRESULT WINAPI ComboLBWndProc_common( HWND hwnd, UINT msg,
     lRet = unicode ? ListBoxWndProcW( hwnd, msg, wParam, lParam ) :
                      ListBoxWndProcA( hwnd, msg, wParam, lParam );
 
-    TRACE_(combo)("\t default on msg [%04x]\n", (UINT16)msg );
+    TRACE_(combo)("\t default on msg [%04x]\n", (USHORT)msg );
 
     return lRet;
 }

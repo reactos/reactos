@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.44 2004/03/27 00:35:02 weiden Exp $
+ * $Id: dib.c,v 1.45 2004/04/09 20:03:20 navaraf Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -101,12 +101,12 @@ IntSetDIBits(
   HBITMAP     SourceBitmap, DestBitmap;
   INT         result = 0;
   BOOL        copyBitsResult;
-  PSURFOBJ    DestSurf, SourceSurf;
+  SURFOBJ    *DestSurf, *SourceSurf;
   PSURFGDI    DestGDI;
   SIZEL       SourceSize;
   POINTL      ZeroPoint;
   RECTL       DestRect;
-  PXLATEOBJ   XlateObj;
+  XLATEOBJ   *XlateObj;
   PPALGDI     hDCPalette;
   //RGBQUAD  *lpRGB;
   HPALETTE    DDB_Palette, DIB_Palette;
@@ -129,7 +129,7 @@ IntSetDIBits(
   // Create a temporary surface for the destination bitmap
   DestBitmap = BitmapToSurf(bitmap, DC->GDIDevice);
 
-  DestSurf   = (PSURFOBJ) AccessUserObject( (ULONG)DestBitmap );
+  DestSurf   = (SURFOBJ*) AccessUserObject( (ULONG)DestBitmap );
   DestGDI    = (PSURFGDI) AccessInternalObject( (ULONG)DestBitmap );
 
   // Create source surface
@@ -151,14 +151,14 @@ IntSetDIBits(
                                  BitmapFormat(bmi->bmiHeader.biBitCount, bmi->bmiHeader.biCompression),
                                  0,
                                  (PVOID)vBits );
-  SourceSurf = (PSURFOBJ)AccessUserObject((ULONG)SourceBitmap);
+  SourceSurf = (SURFOBJ*)AccessUserObject((ULONG)SourceBitmap);
 
   // Destination palette obtained from the hDC
   hDCPalette = PALETTE_LockPalette(DC->DevInfo->hpalDefault);
   if (NULL == hDCPalette)
     {
-      EngDeleteSurface(SourceBitmap);
-      EngDeleteSurface(DestBitmap);
+      EngDeleteSurface((HSURF)SourceBitmap);
+      EngDeleteSurface((HSURF)DestBitmap);
       BITMAPOBJ_UnlockBitmap(hBitmap);
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return 0;
@@ -171,8 +171,8 @@ IntSetDIBits(
   DIB_Palette = BuildDIBPalette ( (PBITMAPINFO)bmi, (PINT)&DIB_Palette_Type );
   if (NULL == DIB_Palette)
     {
-      EngDeleteSurface(SourceBitmap);
-      EngDeleteSurface(DestBitmap);
+      EngDeleteSurface((HSURF)SourceBitmap);
+      EngDeleteSurface((HSURF)DestBitmap);
       BITMAPOBJ_UnlockBitmap(hBitmap);
       SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
       return 0;
@@ -183,8 +183,8 @@ IntSetDIBits(
   if (NULL == XlateObj)
     {
       PALETTE_FreePalette(DIB_Palette);
-      EngDeleteSurface(SourceBitmap);
-      EngDeleteSurface(DestBitmap);
+      EngDeleteSurface((HSURF)SourceBitmap);
+      EngDeleteSurface((HSURF)DestBitmap);
       BITMAPOBJ_UnlockBitmap(hBitmap);
       SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
       return 0;
@@ -211,8 +211,8 @@ IntSetDIBits(
   // Clean up
   EngDeleteXlate(XlateObj);
   PALETTE_FreePalette(DIB_Palette);
-  EngDeleteSurface(SourceBitmap);
-  EngDeleteSurface(DestBitmap);
+  EngDeleteSurface((HSURF)SourceBitmap);
+  EngDeleteSurface((HSURF)DestBitmap);
 
 //  if (ColorUse == DIB_PAL_COLORS)
 //    WinFree((LPSTR)lpRGB);

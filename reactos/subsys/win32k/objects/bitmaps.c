@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.68 2004/04/06 17:54:32 weiden Exp $ */
+/* $Id: bitmaps.c,v 1.69 2004/04/09 20:03:20 navaraf Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -53,13 +53,13 @@ NtGdiBitBlt(
 {
 	PDC DCDest = NULL;
 	PDC DCSrc  = NULL;
-	PSURFOBJ SurfDest, SurfSrc;
+	SURFOBJ *SurfDest, *SurfSrc;
 	PSURFGDI SurfGDIDest, SurfGDISrc;
 	RECTL DestRect;
 	POINTL SourcePoint;
 	BOOL Status;
 	PPALGDI PalDestGDI, PalSourceGDI;
-	PXLATEOBJ XlateObj = NULL;
+	XLATEOBJ *XlateObj = NULL;
 	HPALETTE SourcePalette, DestPalette;
 	ULONG SourceMode, DestMode;
 	PGDIBRUSHOBJ BrushObj;
@@ -116,11 +116,11 @@ NtGdiBitBlt(
 	SourcePoint.y = YSrc;
 
 	/* Determine surfaces to be used in the bitblt */
-	SurfDest = (PSURFOBJ)AccessUserObject((ULONG)DCDest->Surface);
+	SurfDest = (SURFOBJ*)AccessUserObject((ULONG)DCDest->Surface);
 	SurfGDIDest = (PSURFGDI)AccessInternalObjectFromUserObject(SurfDest);
 	if (UsesSource)
 	{
-		SurfSrc  = (PSURFOBJ)AccessUserObject((ULONG)DCSrc->Surface);
+		SurfSrc  = (SURFOBJ*)AccessUserObject((ULONG)DCSrc->Surface);
 		SurfGDISrc  = (PSURFGDI)AccessInternalObjectFromUserObject(SurfSrc);
 	}
 	else
@@ -204,7 +204,7 @@ NtGdiBitBlt(
 	/* KB41464 details how to convert between mono and color */
 	if (DCDest->w.bitsPerPixel == 1)
 	{
-		XlateObj = (PXLATEOBJ)IntEngCreateMonoXlate(SourceMode, DestPalette,
+		XlateObj = (XLATEOBJ*)IntEngCreateMonoXlate(SourceMode, DestPalette,
 			SourcePalette, DCSrc->w.backgroundColor);
 	}
 	else if (UsesSource && 1 == DCSrc->w.bitsPerPixel)
@@ -216,7 +216,7 @@ NtGdiBitBlt(
 		Mono = EngCreatePalette(PAL_INDEXED, 2, Colors, 0, 0, 0);
 		if (NULL != Mono)
 		{
-			XlateObj = (PXLATEOBJ)IntEngCreateXlate(DestMode, PAL_INDEXED, DestPalette, Mono);
+			XlateObj = (XLATEOBJ*)IntEngCreateXlate(DestMode, PAL_INDEXED, DestPalette, Mono);
 		}
 		else
 		{
@@ -225,7 +225,7 @@ NtGdiBitBlt(
 	}
 	else
 	{
-		XlateObj = (PXLATEOBJ)IntEngCreateXlate(DestMode, SourceMode, DestPalette, SourcePalette);
+		XlateObj = (XLATEOBJ*)IntEngCreateXlate(DestMode, SourceMode, DestPalette, SourcePalette);
 	}
 	if (NULL == XlateObj)
 	{
@@ -279,9 +279,9 @@ NtGdiTransparentBlt(
 	COLORREF	TransColor)
 {
   PDC DCDest, DCSrc;
-  RECT rcDest, rcSrc;
-  PSURFOBJ SurfDest, SurfSrc;
-  PXLATEOBJ XlateObj;
+  RECTL rcDest, rcSrc;
+  SURFOBJ *SurfDest, *SurfSrc;
+  XLATEOBJ *XlateObj;
   HPALETTE SourcePalette, DestPalette;
   PPALGDI PalDestGDI, PalSourceGDI;
   USHORT PalDestMode, PalSrcMode;
@@ -351,18 +351,18 @@ NtGdiTransparentBlt(
   PALETTE_UnlockPalette(SourcePalette);
   
   /* Translate Transparent (RGB) Color to the source palette */
-  if((XlateObj = (PXLATEOBJ)IntEngCreateXlate(PalSrcMode, PAL_RGB, SourcePalette, NULL)))
+  if((XlateObj = (XLATEOBJ*)IntEngCreateXlate(PalSrcMode, PAL_RGB, SourcePalette, NULL)))
   {
     TransparentColor = XLATEOBJ_iXlate(XlateObj, (ULONG)TransColor);
     EngDeleteXlate(XlateObj);
   }
   
   /* Create the XLATE object to convert colors between source and destination */
-  XlateObj = (PXLATEOBJ)IntEngCreateXlate(PalDestMode, PalSrcMode, DestPalette, SourcePalette);
+  XlateObj = (XLATEOBJ*)IntEngCreateXlate(PalDestMode, PalSrcMode, DestPalette, SourcePalette);
   
-  SurfDest = (PSURFOBJ)AccessUserObject((ULONG)DCDest->Surface);
+  SurfDest = (SURFOBJ*)AccessUserObject((ULONG)DCDest->Surface);
   ASSERT(SurfDest);
-  SurfSrc = (PSURFOBJ)AccessUserObject((ULONG)DCSrc->Surface);
+  SurfSrc = (SURFOBJ*)AccessUserObject((ULONG)DCSrc->Surface);
   ASSERT(SurfSrc);
   
   rcDest.left = xDst;
@@ -625,11 +625,11 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 	COLORREF Result = (COLORREF)CLR_INVALID; // default to failure
 	BOOL bInRect = FALSE;
 	PSURFGDI Surface;
-	PSURFOBJ SurfaceObject;
+	SURFOBJ *SurfaceObject;
 	HPALETTE Pal;
 	PPALGDI PalGDI;
 	USHORT PalMode;
-	PXLATEOBJ XlateObj;
+	XLATEOBJ *XlateObj;
 
 	dc = DC_LockDc (hDC);
 
@@ -641,7 +641,7 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 	if ( IN_RECT(dc->CombinedClip->rclBounds,XPos,YPos) )
 	{
 		bInRect = TRUE;
-		SurfaceObject = (PSURFOBJ)AccessUserObject((ULONG)dc->Surface);
+		SurfaceObject = (SURFOBJ*)AccessUserObject((ULONG)dc->Surface);
 		ASSERT(SurfaceObject);
 		Surface = (PSURFGDI)AccessInternalObjectFromUserObject(SurfaceObject);
 		if ( Surface )
@@ -656,7 +656,7 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 				PalMode = PalGDI->Mode;
 				PALETTE_UnlockPalette(Pal);
 
-				XlateObj = (PXLATEOBJ)IntEngCreateXlate ( PAL_RGB, PalMode, NULL, Pal );
+				XlateObj = (XLATEOBJ*)IntEngCreateXlate ( PAL_RGB, PalMode, NULL, Pal );
 				if ( XlateObj )
 				{
 					// check if this DC has a DIB behind it...
@@ -1094,13 +1094,13 @@ NtGdiStretchBlt(
 {
 	PDC DCDest = NULL;
 	PDC DCSrc  = NULL;
-	PSURFOBJ SurfDest, SurfSrc;
+	SURFOBJ *SurfDest, *SurfSrc;
 	PSURFGDI SurfGDIDest, SurfGDISrc;
 	RECTL DestRect;
 	RECTL SourceRect;
 	BOOL Status;
 	PPALGDI PalDestGDI, PalSourceGDI;
-	PXLATEOBJ XlateObj = NULL;
+	XLATEOBJ *XlateObj = NULL;
 	HPALETTE SourcePalette, DestPalette;
 	ULONG SourceMode, DestMode;
 	PGDIBRUSHOBJ BrushObj;
@@ -1163,11 +1163,11 @@ NtGdiStretchBlt(
 	SourceRect.bottom = YOriginSrc+HeightSrc;
 
 	/* Determine surfaces to be used in the bitblt */
-	SurfDest = (PSURFOBJ)AccessUserObject((ULONG)DCDest->Surface);
+	SurfDest = (SURFOBJ*)AccessUserObject((ULONG)DCDest->Surface);
 	SurfGDIDest = (PSURFGDI)AccessInternalObjectFromUserObject(SurfDest);
 	if (UsesSource)
 	{
-		SurfSrc  = (PSURFOBJ)AccessUserObject((ULONG)DCSrc->Surface);
+		SurfSrc  = (SURFOBJ*)AccessUserObject((ULONG)DCSrc->Surface);
 		SurfGDISrc  = (PSURFGDI)AccessInternalObjectFromUserObject(SurfSrc);
 	}
 	else
@@ -1248,7 +1248,7 @@ NtGdiStretchBlt(
 		PALETTE_UnlockPalette(DestPalette);
 	}
 
-	XlateObj = (PXLATEOBJ)IntEngCreateXlate(DestMode, SourceMode, DestPalette, SourcePalette);
+	XlateObj = (XLATEOBJ*)IntEngCreateXlate(DestMode, SourceMode, DestPalette, SourcePalette);
 	if (NULL == XlateObj)
 	{
 		if (UsesSource && hDCSrc != hDCDest)

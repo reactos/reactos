@@ -2,8 +2,8 @@
  * DirectDraw NT driver interface
  */
 
-#ifndef __DDK_DDRAWINT_H
-#define __DDK_DDRAWINT_H
+#ifndef __DD_INCLUDED__
+#define __DD_INCLUDED__
 
 #include <ddraw.h>
 #include <ole32/guiddef.h>
@@ -1233,4 +1233,4 @@ typedef struct
 } /* extern "C" */
 #endif
 
-#endif /* __DDK_DDRAWINT_H */
+#endif /* __DD_INCLUDED__ */

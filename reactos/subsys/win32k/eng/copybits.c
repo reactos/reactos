@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: copybits.c,v 1.22 2004/03/05 09:02:41 hbirr Exp $
+/* $Id: copybits.c,v 1.23 2004/04/09 20:03:16 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -55,6 +55,7 @@ EngCopyBits(SURFOBJ *Dest,
   POINTL    ptlTmp;
   RECT_ENUM RectEnum;
   BOOL      EnumMore;
+  POINTL BrushOrigin;
 
   MouseSafetyOnDrawStart(Source, SourceGDI, SourcePoint->x, SourcePoint->y,
                          (SourcePoint->x + abs(DestRect->right - DestRect->left)),
@@ -127,10 +128,12 @@ EngCopyBits(SURFOBJ *Dest,
   SourceGDI = (PSURFGDI)AccessInternalObjectFromUserObject(Source);
   DestGDI   = (PSURFGDI)AccessInternalObjectFromUserObject(Dest);
 
+  BrushOrigin.x = BrushOrigin.y = 0;
+
   switch(clippingType)
     {
       case DC_TRIVIAL:
-        DestGDI->DIB_BitBlt(Dest, Source, DestGDI, SourceGDI, DestRect, SourcePoint, NULL, NULL, ColorTranslation, SRCCOPY);
+        DestGDI->DIB_BitBlt(Dest, Source, DestGDI, SourceGDI, DestRect, SourcePoint, NULL, BrushOrigin, ColorTranslation, SRCCOPY);
 
         MouseSafetyOnDrawEnd(Dest, DestGDI);
         MouseSafetyOnDrawEnd(Source, SourceGDI);
@@ -144,7 +147,7 @@ EngCopyBits(SURFOBJ *Dest,
         ptlTmp.x = SourcePoint->x + rclTmp.left - DestRect->left;
         ptlTmp.y = SourcePoint->y + rclTmp.top  - DestRect->top;
 
-        DestGDI->DIB_BitBlt(Dest, Source, DestGDI, SourceGDI, &rclTmp, &ptlTmp, NULL, NULL, ColorTranslation, SRCCOPY);
+        DestGDI->DIB_BitBlt(Dest, Source, DestGDI, SourceGDI, &rclTmp, &ptlTmp, NULL, BrushOrigin, ColorTranslation, SRCCOPY);
 
         MouseSafetyOnDrawEnd(Dest, DestGDI);
         MouseSafetyOnDrawEnd(Source, SourceGDI);
@@ -170,7 +173,7 @@ EngCopyBits(SURFOBJ *Dest,
               ptlTmp.y = SourcePoint->y + prcl->top - DestRect->top;
 
               if(!DestGDI->DIB_BitBlt(Dest, Source, DestGDI, SourceGDI,
-                                      prcl, &ptlTmp, NULL, NULL, ColorTranslation, SRCCOPY)) return FALSE;
+                                      prcl, &ptlTmp, NULL, BrushOrigin, ColorTranslation, SRCCOPY)) return FALSE;
 
               prcl++;
 

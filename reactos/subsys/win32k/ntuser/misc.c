@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.58 2004/04/02 22:16:09 weiden Exp $
+/* $Id: misc.c,v 1.59 2004/04/09 20:03:19 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -665,14 +665,14 @@ NtUserSystemParametersInfo(
       {
         HDC hDC;
         PDC dc;
-        PSURFOBJ SurfObj;
+        SURFOBJ *SurfObj;
         BOOL Ret = GradientCaptions;
         
         hDC = IntGetScreenDC();
         if(hDC)
         {
           dc = DC_LockDc(hDC);
-          SurfObj = (PSURFOBJ)AccessUserObject((ULONG) dc->Surface);
+          SurfObj = (SURFOBJ*)AccessUserObject((ULONG) dc->Surface);
           if(SurfObj)
             Ret = (SurfObj->iBitmapFormat > BMF_8BPP);
           DC_UnlockDc(hDC);

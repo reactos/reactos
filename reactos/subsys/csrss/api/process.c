@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.32 2004/01/11 17:31:15 gvg Exp $
+/* $Id: process.c,v 1.33 2004/04/09 20:03:15 navaraf Exp $
  *
  * reactos/subsys/csrss/api/process.c
  *
@@ -9,9 +9,8 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-
 #include <csrss/csrss.h>
+#include <ddk/ntddk.h>
 #include <ntdll/rtl.h>
 #include "api.h"
 #include "conio.h"
@@ -172,8 +171,7 @@ CSR_API(CsrCreateProcess)
    CSRSS_API_REQUEST ApiRequest;
    CSRSS_API_REPLY ApiReply;
 
-   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
-     sizeof(LPC_MESSAGE);
+   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
 
    NewProcessData = CsrCreateProcessData(Request->Data.CreateProcessRequest.NewProcessId);
@@ -195,11 +193,11 @@ CSR_API(CsrCreateProcess)
      {
         ApiRequest.Type = CSRSS_ALLOC_CONSOLE;
         ApiRequest.Header.DataSize = sizeof(CSRSS_ALLOC_CONSOLE_REQUEST);
-        ApiRequest.Header.MessageSize = sizeof(LPC_MESSAGE) + sizeof(CSRSS_ALLOC_CONSOLE_REQUEST);
+        ApiRequest.Header.MessageSize = LPC_MESSAGE_BASE_SIZE + sizeof(CSRSS_ALLOC_CONSOLE_REQUEST);
         ApiRequest.Data.AllocConsoleRequest.CtrlDispatcher = Request->Data.CreateProcessRequest.CtrlDispatcher;
 
         ApiReply.Header.DataSize = sizeof(CSRSS_ALLOC_CONSOLE_REPLY);
-        ApiReply.Header.MessageSize = sizeof(LPC_MESSAGE) + sizeof(CSRSS_ALLOC_CONSOLE_REPLY);
+        ApiReply.Header.MessageSize = LPC_MESSAGE_BASE_SIZE + sizeof(CSRSS_ALLOC_CONSOLE_REPLY);
 
         CsrApiCallHandler(NewProcessData, &ApiRequest, &ApiReply);
 
@@ -263,8 +261,7 @@ CSR_API(CsrTerminateProcess)
 {
    NTSTATUS Status;
 
-   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY)
-      - sizeof(LPC_MESSAGE);
+   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY);
 
    if (ProcessData == NULL)
@@ -281,8 +278,7 @@ CSR_API(CsrTerminateProcess)
 CSR_API(CsrConnectProcess)
 {
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
-     sizeof(LPC_MESSAGE);
+   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
 
    Reply->Status = STATUS_SUCCESS;
 
@@ -292,8 +288,7 @@ CSR_API(CsrConnectProcess)
 CSR_API(CsrGetShutdownParameters)
 {
   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
-    sizeof(LPC_MESSAGE);
+  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
 
   if (ProcessData == NULL)
   {
@@ -311,8 +306,7 @@ CSR_API(CsrGetShutdownParameters)
 CSR_API(CsrSetShutdownParameters)
 {
   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
-    sizeof(LPC_MESSAGE);
+  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
 
   if (ProcessData == NULL)
   {
@@ -330,7 +324,7 @@ CSR_API(CsrSetShutdownParameters)
 CSR_API(CsrGetInputHandle)
 {
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
+   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
 
    if (ProcessData == NULL)
    {
@@ -355,7 +349,7 @@ CSR_API(CsrGetInputHandle)
 CSR_API(CsrGetOutputHandle)
 {
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
+   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
 
    if (ProcessData == NULL)
    {
@@ -382,7 +376,7 @@ CSR_API(CsrGetOutputHandle)
 CSR_API(CsrCloseHandle)
 {
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
+   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
 
    if (ProcessData == NULL)
    {
@@ -398,7 +392,7 @@ CSR_API(CsrCloseHandle)
 CSR_API(CsrVerifyHandle)
 {
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
+   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
 
    Reply->Status = CsrVerifyObject(ProcessData, Request->Data.VerifyHandleRequest.Handle);
    if (!NT_SUCCESS(Reply->Status))
@@ -414,7 +408,7 @@ CSR_API(CsrDuplicateHandle)
   Object_t *Object;
 
   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
+  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
 
   ProcessData = CsrGetProcessData(Request->Data.DuplicateHandleRequest.ProcessId);
   Reply->Status = CsrGetObject(ProcessData, Request->Data.DuplicateHandleRequest.Handle, &Object);

@@ -1,4 +1,4 @@
-/* $Id: stubsw.c,v 1.27 2004/03/23 19:46:49 gvg Exp $
+/* $Id: stubsw.c,v 1.28 2004/04/09 20:03:13 navaraf Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -292,7 +292,7 @@ StartDocW(
 	CONST DOCINFOW	*a1
 	)
 {
-	return NtGdiStartDoc ( hdc, (CONST PDOCINFOW)a1 );
+	return NtGdiStartDoc ( hdc, (DOCINFOW *)a1 );
 }
 
 

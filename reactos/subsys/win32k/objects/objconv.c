@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: objconv.c,v 1.16 2004/04/05 21:26:25 navaraf Exp $ */
+/* $Id: objconv.c,v 1.17 2004/04/09 20:03:20 navaraf Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -60,7 +60,7 @@ HBITMAP FASTCALL BitmapToSurf(PBITMAPOBJ BitmapObj, HDEV GDIDevice)
     }
   if (NULL != BitmapHandle && NULL != GDIDevice)
     {
-      EngAssociateSurface(BitmapHandle, GDIDevice, 0);
+      EngAssociateSurface((HSURF)BitmapHandle, GDIDevice, 0);
     }
 
   return BitmapHandle;

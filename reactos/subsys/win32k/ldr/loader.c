@@ -16,15 +16,69 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: loader.c,v 1.14 2004/03/07 04:44:41 dwelch Exp $
+/* $Id: loader.c,v 1.15 2004/04/09 20:03:18 navaraf Exp $
  *
  */
 
 #include <ddk/ntddk.h>
 #include <ddk/winddi.h>
+#include <ddk/ntapi.h>
 
 #define NDEBUG
 #include <debug.h>
+
+#ifdef __USE_W32API
+PIMAGE_NT_HEADERS STDCALL
+RtlImageNtHeader(IN PVOID BaseAddress);
+#endif
+
+/*
+ * This is copied from ntdll...  It's needed for loading keyboard dlls.
+ */
+
+PVOID
+STDCALL
+RtlImageDirectoryEntryToData (
+	PVOID	BaseAddress,
+	BOOLEAN	bFlag,
+	ULONG	Directory,
+	PULONG	Size
+	)
+{
+	PIMAGE_NT_HEADERS NtHeader;
+	PIMAGE_SECTION_HEADER SectionHeader;
+	ULONG Va;
+	ULONG Count;
+
+	NtHeader = RtlImageNtHeader (BaseAddress);
+	if (NtHeader == NULL)
+		return NULL;
+
+	if (Directory >= NtHeader->OptionalHeader.NumberOfRvaAndSizes)
+		return NULL;
+
+	Va = NtHeader->OptionalHeader.DataDirectory[Directory].VirtualAddress;
+	if (Va == 0)
+		return NULL;
+
+	if (Size)
+		*Size = NtHeader->OptionalHeader.DataDirectory[Directory].Size;
+
+	if (bFlag)
+		return (PVOID)(BaseAddress + Va);
+
+	/* image mapped as ordinary file, we must find raw pointer */
+	SectionHeader = (PIMAGE_SECTION_HEADER)(NtHeader + 1);
+	Count = NtHeader->FileHeader.NumberOfSections;
+	while (Count--)
+	{
+		if (SectionHeader->VirtualAddress == Va)
+			return (PVOID)(BaseAddress + SectionHeader->PointerToRawData);
+		SectionHeader++;
+	}
+
+	return NULL;
+}
 
 /*
  * Blatantly stolen from ldr/utils.c in ntdll.  I can't link ntdll from
@@ -145,54 +199,6 @@ EngLoadModule(LPWSTR ModuleName)
   if (!NT_SUCCESS(Status)) return NULL;
 
   return (HANDLE)GdiDriverInfo.ModuleBase;
-}
-
-/*
- * This is copied from ntdll...  It's needed for loading keyboard dlls.
- */
-
-PVOID
-STDCALL
-RtlImageDirectoryEntryToData (
-	PVOID	BaseAddress,
-	BOOLEAN	bFlag,
-	ULONG	Directory,
-	PULONG	Size
-	)
-{
-	PIMAGE_NT_HEADERS NtHeader;
-	PIMAGE_SECTION_HEADER SectionHeader;
-	ULONG Va;
-	ULONG Count;
-
-	NtHeader = RtlImageNtHeader (BaseAddress);
-	if (NtHeader == NULL)
-		return NULL;
-
-	if (Directory >= NtHeader->OptionalHeader.NumberOfRvaAndSizes)
-		return NULL;
-
-	Va = NtHeader->OptionalHeader.DataDirectory[Directory].VirtualAddress;
-	if (Va == 0)
-		return NULL;
-
-	if (Size)
-		*Size = NtHeader->OptionalHeader.DataDirectory[Directory].Size;
-
-	if (bFlag)
-		return (PVOID)(BaseAddress + Va);
-
-	/* image mapped as ordinary file, we must find raw pointer */
-	SectionHeader = (PIMAGE_SECTION_HEADER)(NtHeader + 1);
-	Count = NtHeader->FileHeader.NumberOfSections;
-	while (Count--)
-	{
-		if (SectionHeader->VirtualAddress == Va)
-			return (PVOID)(BaseAddress + SectionHeader->PointerToRawData);
-		SectionHeader++;
-	}
-
-	return NULL;
 }
 
 /* EOF */

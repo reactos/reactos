@@ -19,8 +19,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef __WINE_DDRAWI_H
-#define __WINE_DDRAWI_H
+#ifndef __DDRAWI_INCLUDED__
+#define __DDRAWI_INCLUDED__
 
 #ifdef __cplusplus
 extern "C" {
@@ -616,7 +616,9 @@ typedef struct _DDHAL_GETDRIVERINFODATA {
 /*****************************************************************************
  * high-level ddraw implementation structures
  */
+#ifndef __USE_W32API
 typedef DWORD IUnknown; /* FIXME: implement proper definition */
+#endif
 typedef struct _IUNKNOWN_LIST {
     struct _IUNKNOWN_LIST *	lpLink;
     LPGUID			lpGuid;
@@ -1326,4 +1328,4 @@ typedef struct _DDHAL_WAITFORVERTICALBLANKDATA
 } /* extern "C" */
 #endif
 
-#endif /* __WINE_DDRAWI_H */
+#endif /* __DDRAWI_INCLUDED__ */

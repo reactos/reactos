@@ -1930,9 +1930,6 @@ NTAPI
 ZwStopProfile(
   IN HANDLE  ProfileHandle);
 
-
-
-
 /* Local Procedure Call (LPC) */
 
 typedef struct _LPC_MESSAGE {
@@ -1945,6 +1942,8 @@ typedef struct _LPC_MESSAGE {
 	ULONG  SectionSize;
 	UCHAR  Data[ANYSIZE_ARRAY];
 } LPC_MESSAGE, *PLPC_MESSAGE;
+
+#define LPC_MESSAGE_BASE_SIZE	24
 
 typedef enum _LPC_TYPE {
 	LPC_NEW_MESSAGE,

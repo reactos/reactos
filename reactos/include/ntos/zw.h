@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.21 2004/01/06 15:57:48 ekohl Exp $
+/* $Id: zw.h,v 1.22 2004/04/09 20:03:11 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -4446,10 +4446,12 @@ NtGetPlugPlayEvent (ULONG Reserved1,
 
 /* --- POWER MANAGEMENT --- */
 
+#ifndef __USE_W32API
 NTSTATUS STDCALL 
 NtSetSystemPowerState(IN POWER_ACTION SystemAction,
 		      IN SYSTEM_POWER_STATE MinSystemState,
 		      IN ULONG Flags);
+#endif
 
 /* --- DEBUG SUBSYSTEM --- */
 

@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.65 2004/04/05 21:26:25 navaraf Exp $
+ * $Id: gdiobj.c,v 1.66 2004/04/09 20:03:20 navaraf Exp $
  *
  */
 
@@ -193,7 +193,7 @@ static LOGFONTW DefaultGuiFont =
 
 #define NB_STOCK_OBJECTS (DEFAULT_GUI_FONT + 1)
 
-static HGDIOBJ *StockObjects[NB_STOCK_OBJECTS];
+static HGDIOBJ StockObjects[NB_STOCK_OBJECTS];
 static PGDI_HANDLE_TABLE  HandleTable = 0;
 static FAST_MUTEX  HandleTableMutex;
 static FAST_MUTEX  RefCountHandling;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.29 2004/03/31 18:37:12 gvg Exp $
+/* $Id: timer.c,v 1.30 2004/04/09 20:03:19 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -75,14 +75,22 @@ static CLIENT_ID     MsgTimerThreadId;
 BOOL FASTCALL
 IntInsertTimerAscendingOrder(PMSG_TIMER_ENTRY NewTimer)
 {
+  PLIST_ENTRY current;
 
-  InsertAscendingList(&TimerListHead,
-                      MSG_TIMER_ENTRY,
-                      ListEntry,                      
-                      NewTimer,
-                      Timeout.QuadPart);
-                      
-  return IsFirstEntry(&TimerListHead, &NewTimer->ListEntry);
+  current = TimerListHead.Flink;
+  while (current != &TimerListHead)
+  {
+    if (CONTAINING_RECORD(current, MSG_TIMER_ENTRY, ListEntry)->Timeout.QuadPart >=\
+        NewTimer->Timeout.QuadPart)
+    {
+      break;
+    }
+    current = current->Flink;
+  }
+
+  InsertTailList(current, &NewTimer->ListEntry);
+
+  return TimerListHead.Flink == &NewTimer->ListEntry;
 }
 
 

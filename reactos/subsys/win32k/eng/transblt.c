@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: transblt.c,v 1.16 2004/04/07 22:17:36 weiden Exp $
+/* $Id: transblt.c,v 1.17 2004/04/09 20:03:18 navaraf Exp $
  * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -47,10 +47,10 @@
 
 
 BOOL STDCALL
-EngTransparentBlt(PSURFOBJ Dest,
-		  PSURFOBJ Source,
-		  PCLIPOBJ Clip,
-		  PXLATEOBJ ColorTranslation,
+EngTransparentBlt(SURFOBJ *Dest,
+		  SURFOBJ *Source,
+		  CLIPOBJ *Clip,
+		  XLATEOBJ *ColorTranslation,
 		  PRECTL DestRect,
 		  PRECTL SourceRect,
 		  ULONG iTransColor,
@@ -217,10 +217,10 @@ EngTransparentBlt(PSURFOBJ Dest,
 }
 
 BOOL FASTCALL
-IntEngTransparentBlt(PSURFOBJ Dest,
-                     PSURFOBJ Source,
-                     PCLIPOBJ Clip,
-                     PXLATEOBJ ColorTranslation,
+IntEngTransparentBlt(SURFOBJ *Dest,
+                     SURFOBJ *Source,
+                     CLIPOBJ *Clip,
+                     XLATEOBJ *ColorTranslation,
                      PRECTL DestRect,
                      PRECTL SourceRect,
                      ULONG iTransColor,

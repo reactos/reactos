@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.64 2004/03/15 20:21:50 navaraf Exp $
+/* $Id: mouse.c,v 1.65 2004/04/09 20:03:16 navaraf Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -30,7 +30,7 @@
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <ddk/ntddmou.h>
-#include <win32k/win32k.h>
+#include <ddk/winddi.h>
 #include <win32k/dc.h>
 #include "objects.h"
 #include "include/msgqueue.h"
@@ -54,7 +54,7 @@
 /* FUNCTIONS *****************************************************************/
 
 BOOL FASTCALL
-IntIsPrimarSurface(PSURFGDI SurfGDI);
+IntIsPrimarySurface(PSURFGDI SurfGDI);
 
 
 BOOL FASTCALL
@@ -84,7 +84,7 @@ IntSwapMouseButton(PWINSTATION_OBJECT WinStaObject, BOOL Swap)
 }
 
 INT STDCALL
-MouseSafetyOnDrawStart(PSURFOBJ SurfObj, PSURFGDI SurfGDI, LONG HazardX1,
+MouseSafetyOnDrawStart(SURFOBJ *SurfObj, PSURFGDI SurfGDI, LONG HazardX1,
 		       LONG HazardY1, LONG HazardX2, LONG HazardY2)
 /*
  * FUNCTION: Notify the mouse driver that drawing is about to begin in
@@ -113,7 +113,7 @@ MouseSafetyOnDrawStart(PSURFOBJ SurfObj, PSURFGDI SurfGDI, LONG HazardX1,
       ObDereferenceObject(InputWindowStation);
       return(FALSE);
     }
-  if (!IntIsPrimarSurface(SurfGDI) || MouseEnabled == FALSE)
+  if (!IntIsPrimarySurface(SurfGDI) || MouseEnabled == FALSE)
     {
       ObDereferenceObject(InputWindowStation);
       return(FALSE);
@@ -176,7 +176,7 @@ SetPointerRect(PSYSTEM_CURSORINFO CurInfo, PRECTL PointerRect)
 }
 
 INT FASTCALL
-MouseSafetyOnDrawEnd(PSURFOBJ SurfObj, PSURFGDI SurfGDI)
+MouseSafetyOnDrawEnd(SURFOBJ *SurfObj, SURFGDI *SurfGDI)
 /*
  * FUNCTION: Notify the mouse driver that drawing has finished on a surface.
  */
@@ -201,7 +201,7 @@ MouseSafetyOnDrawEnd(PSURFOBJ SurfObj, PSURFGDI SurfGDI)
   }
   
   MouseEnabled = CurInfo->Enabled && CurInfo->ShowingCursor;
-  if (!IntIsPrimarSurface(SurfGDI) || MouseEnabled == FALSE)
+  if (!IntIsPrimarySurface(SurfGDI) || MouseEnabled == FALSE)
     {
       ExReleaseFastMutex(&CurInfo->CursorMutex);
       ObDereferenceObject(InputWindowStation);
@@ -243,7 +243,7 @@ MouseMoveCursor(LONG X, LONG Y)
   HDC hDC;
   PDC dc;
   BOOL res = FALSE;
-  PSURFOBJ SurfObj;
+  SURFOBJ *SurfObj;
   PSURFGDI SurfGDI;
   PSYSTEM_CURSORINFO CurInfo;
   MSG Msg;
@@ -269,7 +269,7 @@ MouseMoveCursor(LONG X, LONG Y)
       return FALSE;
     }
     dc = DC_LockDc(hDC);
-    SurfObj = (PSURFOBJ)AccessUserObject((ULONG) dc->Surface);
+    SurfObj = (SURFOBJ*)AccessUserObject((ULONG) dc->Surface);
     SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
     DC_UnlockDc( hDC );
     IntCheckClipCursor(&X, &Y, CurInfo);
@@ -323,7 +323,7 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
   LONG dScroll = 0;
   HDC hDC;
   PDC dc;
-  PSURFOBJ SurfObj;
+  SURFOBJ *SurfObj;
   PSURFGDI SurfGDI;
   MSG Msg;
   RECTL PointerRect;
@@ -349,7 +349,7 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
     return;
 
   dc = DC_LockDc(hDC);
-  SurfObj = (PSURFOBJ)AccessUserObject((ULONG) dc->Surface);
+  SurfObj = (SURFOBJ*)AccessUserObject((ULONG) dc->Surface);
   SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
   DC_UnlockDc( hDC );
 
@@ -499,7 +499,7 @@ VOID FASTCALL
 EnableMouse(HDC hDisplayDC)
 {
   PDC dc;
-  PSURFOBJ SurfObj;
+  SURFOBJ *SurfObj;
   PSURFGDI SurfGDI;
 
   if( hDisplayDC && InputWindowStation)
@@ -511,7 +511,7 @@ EnableMouse(HDC hDisplayDC)
     }
     
     dc = DC_LockDc(hDisplayDC);
-    SurfObj = (PSURFOBJ)AccessUserObject((ULONG) dc->Surface);
+    SurfObj = (SURFOBJ*)AccessUserObject((ULONG) dc->Surface);
     SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
     DC_UnlockDc( hDisplayDC );
     

@@ -20,7 +20,7 @@
 #define __WIN32K_CLIP_H
 
 typedef ULONG HCLIP;
-CLIPOBJ* STDCALL IntEngCreateClipRegion( ULONG count, PRECTL pRect, RECTL rcBounds );
+CLIPOBJ* STDCALL IntEngCreateClipRegion( ULONG count, PRECTL pRect, PRECTL rcBounds );
 VOID STDCALL IntEngDeleteClipRegion(CLIPOBJ *ClipObj);
 
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: print.c,v 1.15 2004/03/01 19:25:33 navaraf Exp $ */
+/* $Id: print.c,v 1.16 2004/04/09 20:03:20 navaraf Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -66,12 +66,12 @@ NtGdiEscape(HDC  hDC,
 INT
 STDCALL
 IntEngExtEscape(
-   HSURF  Surface,
-   INT    Escape,
-   INT    InSize,
-   LPVOID InData,
-   INT    OutSize,
-   LPVOID OutData)
+   SURFOBJ *Surface,
+   INT      Escape,
+   INT      InSize,
+   LPVOID   InData,
+   INT      OutSize,
+   LPVOID   OutData)
 {
    UNIMPLEMENTED;
    return -1;
@@ -87,7 +87,7 @@ IntGdiExtEscape(
    INT    OutSize,
    LPSTR  OutData)
 {
-   PSURFOBJ Surface = (PSURFOBJ)AccessUserObject((ULONG)dc->Surface);
+   SURFOBJ *Surface = (SURFOBJ*)AccessUserObject((ULONG)dc->Surface);
 
    if ( NULL == dc->DriverFunctions.Escape )
    {
@@ -197,7 +197,7 @@ NtGdiSetAbortProc(HDC  hDC,
 INT
 STDCALL
 NtGdiStartDoc(HDC  hDC,
-                  CONST PDOCINFOW  di)
+                  CONST LPDOCINFOW  di)
 {
   UNIMPLEMENTED;
 }

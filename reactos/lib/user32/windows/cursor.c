@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursor.c,v 1.19 2004/01/26 08:44:51 weiden Exp $
+/* $Id: cursor.c,v 1.20 2004/04/09 20:03:14 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/cursor.c
@@ -32,6 +32,9 @@
 #include <user32.h>
 #include <string.h>
 #include <debug.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
+#undef CopyCursor
 
 HBITMAP
 CopyBitmap(HBITMAP bmp);

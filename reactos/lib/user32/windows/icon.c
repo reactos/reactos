@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: icon.c,v 1.20 2004/02/23 22:04:38 navaraf Exp $
+/* $Id: icon.c,v 1.21 2004/04/09 20:03:14 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/icon.c
@@ -32,6 +32,8 @@
 #include <user32.h>
 #include <string.h>
 #include <stdlib.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -56,7 +58,7 @@ ICON_CreateIconFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cxDe
                                       (IconImage->icHeader.biHeight );
 
   /* create a BITMAPINFO header for the monocrome part of the icon */
-  bwBIH = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof (BITMAPINFOHEADER)+2*sizeof(RGBQUAD));
+  bwBIH = RtlAllocateHeap(GetProcessHeap(), 0, sizeof (BITMAPINFOHEADER)+2*sizeof(RGBQUAD));
 
   bwBIH->bmiHeader.biBitCount = 1;
   bwBIH->bmiHeader.biWidth = IconImage->icHeader.biWidth;
@@ -88,7 +90,7 @@ ICON_CreateIconFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cxDe
   SetDIBits(hDC, IconInfo.hbmMask, 0, IconImage->icHeader.biHeight, 
             ImageData, bwBIH, DIB_RGB_COLORS);
   
-  RtlFreeHeap(RtlGetProcessHeap(), 0, bwBIH);
+  RtlFreeHeap(GetProcessHeap(), 0, bwBIH);
   
   /* Create the icon based on everything we have so far */
   return NtUserCreateCursorIconHandle(&IconInfo, FALSE);
@@ -107,7 +109,7 @@ ICON_CreateCursorFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cx
   IconInfo.yHotspot = yHotspot;
   
   /* create a BITMAPINFO header for the monocrome part of the icon */
-  bwBIH = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof (BITMAPINFOHEADER)+2*sizeof(RGBQUAD));
+  bwBIH = RtlAllocateHeap(GetProcessHeap(), 0, sizeof (BITMAPINFOHEADER)+2*sizeof(RGBQUAD));
 
   bwBIH->bmiHeader.biBitCount = 1;
   bwBIH->bmiHeader.biWidth = IconImage->icHeader.biWidth;
@@ -145,7 +147,7 @@ ICON_CreateCursorFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cx
   
   IconInfo.hbmColor = (HBITMAP)0;
   
-  RtlFreeHeap(RtlGetProcessHeap(), 0, bwBIH);
+  RtlFreeHeap(GetProcessHeap(), 0, bwBIH);
   
   /* Create the icon based on everything we have so far */
   return NtUserCreateCursorIconHandle(&IconInfo, FALSE);
@@ -269,7 +271,7 @@ CreateIconFromResourceEx(
     }
 
   /* get an safe copy of the icon data */
-  SafeIconImage = RtlAllocateHeap(RtlGetProcessHeap(), 0, cbIconBits);
+  SafeIconImage = RtlAllocateHeap(GetProcessHeap(), 0, cbIconBits);
   memcpy(SafeIconImage, pbIconBits, cbIconBits);
   
   /* take into acount the origonal height was for both the AND and XOR images */
@@ -296,7 +298,7 @@ CreateIconFromResourceEx(
   hScreenDc = CreateCompatibleDC(NULL);
   if (hScreenDc == NULL)
     {
-      RtlFreeHeap(RtlGetProcessHeap(), 0, SafeIconImage);
+      RtlFreeHeap(GetProcessHeap(), 0, SafeIconImage);
       return(NULL);
     }
 
@@ -304,7 +306,7 @@ CreateIconFromResourceEx(
     hIcon = ICON_CreateIconFromData(hScreenDc, Data, SafeIconImage, cxDesired, cyDesired, wXHotspot, wYHotspot);
   else
     hIcon = ICON_CreateCursorFromData(hScreenDc, Data, SafeIconImage, cxDesired, cyDesired, wXHotspot, wYHotspot);
-  RtlFreeHeap(RtlGetProcessHeap(), 0, SafeIconImage);
+  RtlFreeHeap(GetProcessHeap(), 0, SafeIconImage);
   DeleteDC(hScreenDc);
 
   return hIcon;

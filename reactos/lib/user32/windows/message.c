@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.36 2004/03/11 14:47:43 weiden Exp $
+/* $Id: message.c,v 1.37 2004/04/09 20:03:15 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -12,6 +12,8 @@
 #include <user32.h>
 #include <string.h>
 #include <debug.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
 
 /*
  * @implemented
@@ -316,7 +318,7 @@ User32ConvertToAsciiMessage(UINT* Msg, WPARAM* wParam, LPARAM* lParam)
 	ANSI_STRING AString;
 
 	CsW = (CREATESTRUCTW*)(*lParam);
-	CsA = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(CREATESTRUCTA));
+	CsA = RtlAllocateHeap(GetProcessHeap(), 0, sizeof(CREATESTRUCTA));
 	memcpy(CsA, CsW, sizeof(CREATESTRUCTW));
 
 	RtlInitUnicodeString(&UString, CsW->lpszName);
@@ -360,7 +362,7 @@ User32FreeAsciiConvertedMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 	LPSTR TempString;
 	LPSTR InString;
 	InString = (LPSTR)lParam;
-	TempString = RtlAllocateHeap(RtlGetProcessHeap(), 0, strlen(InString) + 1);
+	TempString = RtlAllocateHeap(GetProcessHeap(), 0, strlen(InString) + 1);
 	strcpy(TempString, InString);
 	RtlInitAnsiString(&AnsiString, TempString);
 	UnicodeString.Length = wParam * sizeof(WCHAR);
@@ -375,7 +377,7 @@ User32FreeAsciiConvertedMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 		UnicodeString.Buffer[0] = L'\0';
 	      }
 	  }
-	RtlFreeHeap(RtlGetProcessHeap(), 0, TempString);
+	RtlFreeHeap(GetProcessHeap(), 0, TempString);
 	break;
       }
     case WM_SETTEXT:
@@ -391,12 +393,12 @@ User32FreeAsciiConvertedMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 	CREATESTRUCTA* Cs;
 
 	Cs = (CREATESTRUCTA*)lParam;
-	RtlFreeHeap(RtlGetProcessHeap(), 0, (LPSTR)Cs->lpszName);
+	RtlFreeHeap(GetProcessHeap(), 0, (LPSTR)Cs->lpszName);
 	if (HIWORD((ULONG)Cs->lpszClass) != 0)
 	  {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, (LPSTR)Cs->lpszClass);
+            RtlFreeHeap(GetProcessHeap(), 0, (LPSTR)Cs->lpszClass);
 	  }
-	RtlFreeHeap(RtlGetProcessHeap(), 0, Cs);
+	RtlFreeHeap(GetProcessHeap(), 0, Cs);
 	break;
       }
     }
@@ -474,6 +476,10 @@ CallWindowProcA(WNDPROC lpPrevWndFunc,
 {
   BOOL IsHandle;
   WndProcHandle wphData;
+
+  DbgPrint("CallWindowProcA(%p,%x,%x,%x,%x)\n",lpPrevWndFunc,hWnd,Msg,wParam,lParam);
+  if (lpPrevWndFunc == NULL)
+    lpPrevWndFunc = (WNDPROC)NtUserGetWindowLong(hWnd, GWL_WNDPROC, FALSE);
 
   IsHandle = NtUserDereferenceWndProcHandle(lpPrevWndFunc,&wphData);
   if (! IsHandle)
@@ -967,18 +973,19 @@ SendNotifyMessageW(
  * @implemented
  */
 BOOL STDCALL
-TranslateMessage(CONST MSG *lpMsg)
+TranslateMessageEx(CONST MSG *lpMsg, DWORD unk)
 {
-  return(TranslateMessageEx((LPMSG)lpMsg, 0));
+  return(NtUserTranslateMessage((LPMSG)lpMsg, (HKL)unk));
 }
+
 
 /*
  * @implemented
  */
 BOOL STDCALL
-TranslateMessageEx(CONST MSG *lpMsg, DWORD unk)
+TranslateMessage(CONST MSG *lpMsg)
 {
-  return(NtUserTranslateMessage((LPMSG)lpMsg, (HKL)unk));
+  return(TranslateMessageEx((LPMSG)lpMsg, 0));
 }
 
 
@@ -1112,7 +1119,7 @@ BOOL STDCALL SetMessageQueue(int cMessagesMax)
   return TRUE;
 }
 typedef DWORD (WINAPI * RealGetQueueStatusProc)(UINT flags);
-typedef DWORD (WINAPI * RealMsgWaitForMultipleObjectsExProc)(DWORD nCount, LPHANDLE lpHandles, DWORD dwMilliseconds, DWORD dwWakeMask, DWORD dwFlags);
+typedef DWORD (WINAPI * RealMsgWaitForMultipleObjectsExProc)(DWORD nCount, CONST HANDLE *lpHandles, DWORD dwMilliseconds, DWORD dwWakeMask, DWORD dwFlags);
 
 typedef struct _USER_MESSAGE_PUMP_ADDRESSES {
 	DWORD cbSize;
@@ -1126,14 +1133,14 @@ DWORD
 STDCALL
 RealMsgWaitForMultipleObjectsEx(
   DWORD nCount,
-  LPHANDLE pHandles,
+  CONST HANDLE *pHandles,
   DWORD dwMilliseconds,
   DWORD dwWakeMask,
   DWORD dwFlags);
 
 typedef BOOL (WINAPI * MESSAGEPUMPHOOKPROC)(BOOL Unregistering,PUSER_MESSAGE_PUMP_ADDRESSES MessagePumpAddresses);
 
-RTL_CRITICAL_SECTION gcsMPH;
+CRITICAL_SECTION gcsMPH;
 MESSAGEPUMPHOOKPROC gpfnInitMPH;
 DWORD gcLoadMPH = 0;
 USER_MESSAGE_PUMP_ADDRESSES gmph = {sizeof(USER_MESSAGE_PUMP_ADDRESSES),
@@ -1173,10 +1180,10 @@ void WINAPI ResetMessagePumpHook(PUSER_MESSAGE_PUMP_ADDRESSES Addresses)
 
 BOOL WINAPI RegisterMessagePumpHook(MESSAGEPUMPHOOKPROC Hook)
 {
-	RtlEnterCriticalSection(&gcsMPH);
+	EnterCriticalSection(&gcsMPH);
 	if(!Hook) {
 		SetLastError(ERROR_INVALID_PARAMETER);
-		RtlLeaveCriticalSection(&gcsMPH);
+		LeaveCriticalSection(&gcsMPH);
 		return FALSE;
 	}
 	if(!gcLoadMPH) {
@@ -1184,30 +1191,30 @@ BOOL WINAPI RegisterMessagePumpHook(MESSAGEPUMPHOOKPROC Hook)
 		gpfnInitMPH = Hook;
 		ResetMessagePumpHook(&Addresses);
 		if(!Hook(FALSE, &Addresses) || !Addresses.cbSize) {
-			RtlLeaveCriticalSection(&gcsMPH);
+			LeaveCriticalSection(&gcsMPH);
 			return FALSE;
 		}
 		memcpy(&gmph, &Addresses, Addresses.cbSize);
 	} else {
 		if(gpfnInitMPH != Hook) {
-			RtlLeaveCriticalSection(&gcsMPH);
+			LeaveCriticalSection(&gcsMPH);
 			return FALSE;
 		}
 	}
 	if(NtUserCallNoParam(NOPARAM_ROUTINE_INIT_MESSAGE_PUMP)) {
-		RtlLeaveCriticalSection(&gcsMPH);
+		LeaveCriticalSection(&gcsMPH);
 		return FALSE;
 	}
 	if (!gcLoadMPH++) {
 		InterlockedExchange(&gfMessagePumpHook, 1);
 	}
-	RtlLeaveCriticalSection(&gcsMPH);
+	LeaveCriticalSection(&gcsMPH);
 	return TRUE;
 }
 
 BOOL WINAPI UnregisterMessagePumpHook(VOID)
 {
-	RtlEnterCriticalSection(&gcsMPH);
+	EnterCriticalSection(&gcsMPH);
 	if(gcLoadMPH > 0) {
 		if(NtUserCallNoParam(NOPARAM_ROUTINE_UNINIT_MESSAGE_PUMP)) {
 			gcLoadMPH--;
@@ -1217,11 +1224,11 @@ BOOL WINAPI UnregisterMessagePumpHook(VOID)
 				ResetMessagePumpHook(&gmph);
 				gpfnInitMPH = 0;
 			}
-			RtlLeaveCriticalSection(&gcsMPH);
+			LeaveCriticalSection(&gcsMPH);
 			return TRUE;
 		}
 	}
-	RtlLeaveCriticalSection(&gcsMPH);
+	LeaveCriticalSection(&gcsMPH);
 	return FALSE;
 }
 
@@ -1230,7 +1237,7 @@ DWORD WINAPI GetQueueStatus(UINT flags)
 	return IsInsideMessagePumpHook() ? gmph.RealGetQueueStatus(flags) : RealGetQueueStatus(flags);
 }
 
-DWORD WINAPI MsgWaitForMultipleObjectsEx(DWORD nCount, LPHANDLE lpHandles, DWORD dwMilliseconds, DWORD dwWakeMask, DWORD dwFlags)
+DWORD WINAPI MsgWaitForMultipleObjectsEx(DWORD nCount, CONST HANDLE *lpHandles, DWORD dwMilliseconds, DWORD dwWakeMask, DWORD dwFlags)
 {
-	return IsInsideMessagePumpHook() ? gmph.RealMsgWaitForMultipleObjectsEx(nCount, lpHandles,dwMilliseconds, dwWakeMask, dwFlags) : RealMsgWaitForMultipleObjectsEx(nCount, lpHandles,dwMilliseconds, dwWakeMask, dwFlags);
+	return IsInsideMessagePumpHook() ? gmph.RealMsgWaitForMultipleObjectsEx(nCount, lpHandles, dwMilliseconds, dwWakeMask, dwFlags) : RealMsgWaitForMultipleObjectsEx(nCount, lpHandles,dwMilliseconds, dwWakeMask, dwFlags);
 }

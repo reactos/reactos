@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.52 2004/03/29 06:38:50 navaraf Exp $ */
+/* $Id: cursoricon.c,v 1.53 2004/04/09 20:03:20 navaraf Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -95,7 +95,7 @@ HCURSOR FASTCALL
 IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
    BOOL ForceChange)
 {
-   PSURFOBJ SurfObj;
+   SURFOBJ *SurfObj;
    PSURFGDI SurfGDI;
    SIZEL MouseSize;
    PDEVINFO DevInfo;
@@ -104,8 +104,8 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
    PCURICON_OBJECT OldCursor;
    HCURSOR Ret = (HCURSOR)0;
    HBITMAP hMask = (HBITMAP)0, hColor = (HBITMAP)0;
-   PSURFOBJ soMask = NULL, soColor = NULL;
-   PXLATEOBJ XlateObj = NULL;
+   SURFOBJ *soMask = NULL, *soColor = NULL;
+   XLATEOBJ *XlateObj = NULL;
    RECTL PointerRect;
    HDC Screen;
   
@@ -134,7 +134,7 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
          return Ret;
       }
   
-      SurfObj = (PSURFOBJ)AccessUserObject((ULONG) dc->Surface);
+      SurfObj = (SURFOBJ*)AccessUserObject((ULONG) dc->Surface);
       SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
       DevInfo = dc->DevInfo;
       DC_UnlockDc(Screen);
@@ -206,7 +206,7 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
             MouseSize.cx = MaskBmpObj->bitmap.bmWidth;
             MouseSize.cy = MaskBmpObj->bitmap.bmHeight;
             hMask = EngCreateBitmap(MouseSize, 4, BMF_1BPP, BMF_TOPDOWN, MaskBmpObj->bitmap.bmBits);
-            soMask = (PSURFOBJ)AccessUserObject((ULONG)hMask);
+            soMask = (SURFOBJ*)AccessUserObject((ULONG)hMask);
             BITMAPOBJ_UnlockBitmap(NewCursor->IconInfo.hbmMask);
           }
         }
@@ -256,11 +256,11 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
     
     if(hMask)
     {
-      EngDeleteSurface(hMask);
+      EngDeleteSurface((HSURF)hMask);
     }
     if(hColor)
     {
-      EngDeleteSurface(hColor);
+      EngDeleteSurface((HSURF)hColor);
     }
     if(XlateObj)
     {
@@ -796,7 +796,7 @@ NtUserDestroyCursorIcon(
 /*
  * @implemented
  */
-HANDLE
+HICON
 STDCALL
 NtUserFindExistingCursorIcon(
   HMODULE hModule,

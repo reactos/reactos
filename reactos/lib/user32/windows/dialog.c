@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dialog.c,v 1.24 2004/01/23 23:38:26 ekohl Exp $
+/* $Id: dialog.c,v 1.25 2004/04/09 20:03:14 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/dialog.c
@@ -30,18 +30,20 @@
  */
 
 /* INCLUDES ******************************************************************/
+
 #define __NTAPP__
 #include <windows.h>
 #include <string.h>
 #include <user32.h>
-#include <ntos/rtl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
 #include <debug.h>
 
 #include "user32/regcontrol.h"
 #include "../controls/controls.h"
-
 
 /* MACROS/DEFINITIONS ********************************************************/
 
@@ -1259,7 +1261,7 @@ inline static LPSTR HEAP_strdupWtoA( HANDLE heap, DWORD flags, LPCWSTR str )
 
     if (!str) return NULL;
     len = WideCharToMultiByte( CP_ACP, 0, str, -1, NULL, 0, NULL, NULL );
-    ret = RtlAllocateHeap(RtlGetProcessHeap(), flags, len );
+    ret = RtlAllocateHeap(GetProcessHeap(), flags, len );
     if(ret) WideCharToMultiByte( CP_ACP, 0, str, -1, ret, len, NULL, NULL );
     return ret;
 }

@@ -2368,7 +2368,7 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
 	case CB_SETEDITSEL:
 		if( lphc->wState & CBF_EDIT )
                     return SendMessageW(lphc->hWndEdit, EM_SETSEL,
-			  (INT)(INT16)LOWORD(lParam), (INT)(INT16)HIWORD(lParam) );
+			  (INT)(USHORT)LOWORD(lParam), (INT)(USHORT)HIWORD(lParam) );
 		return  CB_ERR;
 #ifndef __REACTOS__
 	case CB_SETEXTENDEDUI16:

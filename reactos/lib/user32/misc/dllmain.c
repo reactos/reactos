@@ -1,9 +1,12 @@
+#undef __USE_W32API
 #include <windows.h>
 #include <debug.h>
+#include <ddk/ntddk.h>
 #include <user32/callback.h>
 #include <user32/accel.h>
 #include <window.h>
 #include <menu.h>
+#define _WIN32K_KAPI_H
 #include <user32.h>
 #include <strpool.h>
 
@@ -14,7 +17,7 @@ DWORD DebugTraceLevel = MIN_TRACE;
 
 #endif /* DBG */
 
-extern RTL_CRITICAL_SECTION gcsMPH;
+extern CRITICAL_SECTION gcsMPH;
 static ULONG User32TlsIndex;
 
 /* To make the linker happy */
@@ -54,15 +57,15 @@ Init(VOID)
   DWORD Status;
 
   /* Set up the kernel callbacks. */
-  NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_WINDOWPROC] =
+  NtCurrentTeb()->Peb->KernelCallbackTable[USER32_CALLBACK_WINDOWPROC] =
     (PVOID)User32CallWindowProcFromKernel;
-  NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_SENDASYNCPROC] =
+  NtCurrentTeb()->Peb->KernelCallbackTable[USER32_CALLBACK_SENDASYNCPROC] =
     (PVOID)User32CallSendAsyncProcForKernel;
-  NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_LOADSYSMENUTEMPLATE] =
+  NtCurrentTeb()->Peb->KernelCallbackTable[USER32_CALLBACK_LOADSYSMENUTEMPLATE] =
     (PVOID)User32LoadSysMenuTemplateForKernel;
-  NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_LOADDEFAULTCURSORS] =
+  NtCurrentTeb()->Peb->KernelCallbackTable[USER32_CALLBACK_LOADDEFAULTCURSORS] =
     (PVOID)User32SetupDefaultCursors;
-  NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_HOOKPROC] =
+  NtCurrentTeb()->Peb->KernelCallbackTable[USER32_CALLBACK_HOOKPROC] =
     (PVOID)User32CallHookProcFromKernel;
 
   /* Allocate an index for user32 thread local data. */
@@ -70,8 +73,8 @@ Init(VOID)
 
   MenuInit();
 
-  RtlInitializeCriticalSection(&U32AccelCacheLock);
-  RtlInitializeCriticalSection(&gcsMPH);
+  InitializeCriticalSection(&U32AccelCacheLock);
+  InitializeCriticalSection(&gcsMPH);
 
   GdiDllInitialize(NULL, DLL_PROCESS_ATTACH, NULL);
 
@@ -104,7 +107,7 @@ DllMain(
     case DLL_PROCESS_ATTACH:
       hProcessHeap = RtlGetProcessHeap();
       Init();
-/*      InitThread();*/
+      InitThread();
       break;
     case DLL_THREAD_ATTACH:
       InitThread();
@@ -114,7 +117,7 @@ DllMain(
       break;
     case DLL_PROCESS_DETACH:
       DeleteFrameBrushes();
-/*      CleanupThread();*/
+      CleanupThread();
       Cleanup();
       break;
     }

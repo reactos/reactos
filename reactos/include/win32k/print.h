@@ -39,7 +39,7 @@ NtGdiSetAbortProc(HDC  hDC,
 INT
 STDCALL
 NtGdiStartDoc(HDC  hDC,
-                  CONST PDOCINFOW  di);
+                  CONST LPDOCINFOW  di);
 
 INT
 STDCALL

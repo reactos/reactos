@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: objects.h,v 1.29 2004/04/06 17:54:32 weiden Exp $
+/* $Id: objects.h,v 1.30 2004/04/09 20:03:16 navaraf Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -157,12 +157,12 @@ typedef VOID    (*PFN_DIB_VLine)          (SURFOBJ *, LONG, LONG, LONG, ULONG);
 typedef BOOLEAN (*PFN_DIB_BitBlt)         (SURFOBJ * DestSurf, SURFOBJ * SourceSurf,
                                            PSURFGDI DestGDI,  PSURFGDI SourceGDI,
                                            RECTL *  DestRect, POINTL *  SourcePoint,
-				           BRUSHOBJ *BrushObj, POINTL * BrushOrigin,
+				           BRUSHOBJ *BrushObj, POINTL BrushOrigin,
                                            XLATEOBJ *ColorTranslation, ULONG Rop4);
 typedef BOOLEAN (*PFN_DIB_StretchBlt)     (SURFOBJ * DestSurf, SURFOBJ * SourceSurf,
                                            PSURFGDI DestGDI,  PSURFGDI SourceGDI,
                                            RECTL *  DestRect, RECTL *  SourceRect,
-				           POINTL *MaskOrigin, POINTL * BrushOrigin,
+				           POINTL *MaskOrigin, POINTL BrushOrigin,
                                            XLATEOBJ *ColorTranslation, ULONG Mode);
 typedef BOOLEAN (*PFN_DIB_TransparentBlt) (SURFOBJ *, SURFOBJ *, PSURFGDI, PSURFGDI,
                                            RECTL*  ,  POINTL  *, XLATEOBJ  *,ULONG);

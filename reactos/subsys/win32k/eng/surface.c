@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: surface.c,v 1.36 2004/04/06 17:54:32 weiden Exp $
+/* $Id: surface.c,v 1.37 2004/04/09 20:03:16 navaraf Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -111,7 +111,7 @@ static VOID Dummy_VLine(SURFOBJ* SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 static BOOLEAN Dummy_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                             SURFGDI *DestGDI,  SURFGDI *SourceGDI,
                             RECTL*  DestRect,  POINTL  *SourcePoint,
-			                BRUSHOBJ* BrushObj, POINTL* BrushOrign,
+                            BRUSHOBJ* BrushObj, POINTL BrushOrign,
                             XLATEOBJ *ColorTranslation, ULONG Rop4)
 {
   return FALSE;
@@ -120,7 +120,7 @@ static BOOLEAN Dummy_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 static BOOLEAN Dummy_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                                 SURFGDI *DestGDI,  SURFGDI *SourceGDI,
                                 RECTL*  DestRect,  RECTL  *SourceRect,
-                                POINTL* MaskOrigin, POINTL* BrushOrign,
+                                POINTL* MaskOrigin, POINTL BrushOrign,
                                 XLATEOBJ *ColorTranslation, ULONG Mode)
 {
   return FALSE;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: nls.c,v 1.2 2003/07/11 15:59:37 royce Exp $
+/* $Id: nls.c,v 1.3 2004/04/09 20:03:16 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -31,7 +31,7 @@
 
 #include <ddk/winddi.h>
 #include <ddk/ntddk.h>
-
+#include <ntos.h>
 
 /* FUNCTIONS ****************************************************************/
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.67 2004/02/24 01:30:57 weiden Exp $
+/* $Id: dllmain.c,v 1.68 2004/04/09 20:03:18 navaraf Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -26,6 +26,10 @@
 #include <windows.h>
 #define NTOS_MODE_KERNEL
 #include <ntos.h>
+
+#ifdef __USE_W32API
+#include <ddk/ddrawint.h>
+#endif
 #include <ddk/winddi.h>
 
 #include <win32k/win32k.h>
@@ -48,6 +52,25 @@
 
 #define NDEBUG
 #include <win32k/debug1.h>
+
+#ifdef __USE_W32API
+typedef NTSTATUS (STDCALL *PW32_PROCESS_CALLBACK)(
+   struct _EPROCESS *Process,
+   BOOLEAN Create);
+
+typedef NTSTATUS (STDCALL *PW32_THREAD_CALLBACK)(
+   struct _ETHREAD *Thread,
+   BOOLEAN Create);
+
+VOID STDCALL
+PsEstablishWin32Callouts(
+   PW32_PROCESS_CALLBACK W32ProcessCallback,
+   PW32_THREAD_CALLBACK W32ThreadCallback,
+   PVOID Param3,
+   PVOID Param4,
+   ULONG W32ThreadSize,
+   ULONG W32ProcessSize);
+#endif
 
 extern SSDT Win32kSSDT[];
 extern SSPT Win32kSSPT[];

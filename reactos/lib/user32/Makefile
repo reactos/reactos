@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.36 2004/03/07 11:59:43 navaraf Exp $
+# $Id: Makefile,v 1.37 2004/04/09 20:03:13 navaraf Exp $
 
 PATH_TO_TOP = ../..
 
@@ -14,6 +14,9 @@ TARGET_CFLAGS = \
  -I./include \
  -DUNICODE \
  -D__REACTOS__ \
+ -D__USE_W32API \
+ -DWINVER=0x0600 \
+ -D_WIN32_WINNT=0x0501 \
  -Wall \
  -Werror \
  -fno-builtin

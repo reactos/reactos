@@ -1,4 +1,4 @@
-/* $Id: bitblt.c,v 1.20 2004/03/28 21:46:26 weiden Exp $
+/* $Id: bitblt.c,v 1.21 2004/04/09 20:03:13 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -323,7 +323,7 @@ STDCALL
 CreateDIBSection(HDC hDC,
 	CONST BITMAPINFO  *bmi,
 	UINT  Usage,
-	VOID  *Bits,
+	PVOID  *Bits,
 	HANDLE  hSection,
 	DWORD  dwOffset)
 {

@@ -22,7 +22,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifndef __USE_W32API
 #define __USE_W32API
+#endif
 
 #include "wine/config.h"
 #include "wine/port.h"

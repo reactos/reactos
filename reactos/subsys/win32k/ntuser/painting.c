@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.79 2004/03/23 18:08:07 weiden Exp $
+ *  $Id: painting.c,v 1.80 2004/04/09 20:03:19 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -53,6 +53,8 @@
 
 #define NDEBUG
 #include <win32k/debug1.h>
+
+#define DCX_USESTYLE 0x10000
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -755,7 +757,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
    }
    else
    {
-      NtUserGetClientRect(Window, &lPs->rcPaint);
+      NtUserGetClientRect(Window->Self, &lPs->rcPaint);
    }
    IntUnLockWindowUpdate(Window);
 

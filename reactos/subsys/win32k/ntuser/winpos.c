@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.108 2004/04/02 20:51:08 weiden Exp $
+/* $Id: winpos.c,v 1.109 2004/04/09 20:03:19 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -177,7 +177,7 @@ WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
 }
 
 VOID STATIC FASTCALL
-WinPosFindIconPos(HWND hWnd, POINT *Pos)
+WinPosFindIconPos(PWINDOW_OBJECT Window, POINT *Pos)
 {
   /* FIXME */
 }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: paint.c,v 1.25 2004/03/23 21:47:37 weiden Exp $
+/* $Id: paint.c,v 1.26 2004/04/09 20:03:15 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/paint.c
@@ -37,6 +37,8 @@
 static HBRUSH FrameBrushes[13];
 static HBITMAP hHatch;
 const DWORD HatchBitmap[4] = {0x5555AAAA, 0x5555AAAA, 0x5555AAAA, 0x5555AAAA};
+
+BOOL STDCALL PolyPatBlt(HDC,DWORD,PPATRECT,INT,ULONG);
 
 /* FUNCTIONS *****************************************************************/
 

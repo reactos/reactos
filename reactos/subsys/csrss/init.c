@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.25 2003/12/03 21:50:49 gvg Exp $
+/* $Id: init.c,v 1.26 2004/04/09 20:03:15 navaraf Exp $
  * 
  * reactos/subsys/csrss/init.c
  *
@@ -10,11 +10,11 @@
 
 /* INCLUDES ******************************************************************/
 
+#include <csrss/csrss.h>
 #include <ddk/ntddk.h>
 #include <ntdll/csr.h>
 #include <ntdll/rtl.h>
 #include <ntdll/ldr.h>
-#include <csrss/csrss.h>
 #include <win32k/win32k.h>
 #include <rosrtl/string.h>
 

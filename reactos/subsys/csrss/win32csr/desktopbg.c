@@ -1,4 +1,4 @@
-/* $Id: desktopbg.c,v 1.6 2004/01/17 15:18:25 navaraf Exp $
+/* $Id: desktopbg.c,v 1.7 2004/04/09 20:03:16 navaraf Exp $
  *
  * reactos/subsys/csrss/win32csr/desktopbg.c
  *
@@ -6,6 +6,18 @@
  *
  * ReactOS Operating System
  */
+
+/*
+ * There is a problem with size of LPC_MESSAGE structure. In the old ReactOS
+ * headers it doesn't contain the data field and so it has a different size.
+ * We must use this workaround to get our Data field 0-sized.
+ */
+
+#include <windef.h>
+#include <winnt.h>
+#undef ANYSIZE_ARRAY
+#define ANYSIZE_ARRAY 0
+#include <ddk/ntapi.h>
 
 #include <windows.h>
 #include <csrss/csrss.h>
@@ -187,7 +199,7 @@ CSR_API(CsrCreateDesktop)
   DPRINT("CsrCreateDesktop\n");
 
   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
+  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
 
   if (! Initialized)
     {
@@ -241,7 +253,7 @@ CSR_API(CsrShowDesktop)
   DPRINT("CsrShowDesktop\n");
 
   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
+  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
 
   Reply->Status = SendMessageW(Request->Data.ShowDesktopRequest.DesktopWindow,
                                PM_SHOW_DESKTOP,
@@ -258,7 +270,7 @@ CSR_API(CsrHideDesktop)
   DPRINT("CsrHideDesktop\n");
 
   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - sizeof(LPC_MESSAGE);
+  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
 
   Reply->Status = SendMessageW(Request->Data.ShowDesktopRequest.DesktopWindow,
                                PM_HIDE_DESKTOP, 0, 0)

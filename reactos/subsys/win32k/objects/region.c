@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.47 2004/04/05 21:26:25 navaraf Exp $ */
+/* $Id: region.c,v 1.48 2004/04/09 20:03:20 navaraf Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -69,7 +69,7 @@ IntEngPaint(IN SURFOBJ *Surface,IN CLIPOBJ *ClipRegion,IN BRUSHOBJ *Brush,IN POI
 /*
  *   Check to see if there is enough memory in the present region.
  */
-static inline int xmemcheck(ROSRGNDATA *reg, LPRECT *rect, LPRECT *firstrect ) {
+static inline int xmemcheck(ROSRGNDATA *reg, PRECT *rect, PRECT *firstrect ) {
 	if ( (reg->rdh.nCount+1)*sizeof( RECT ) >= reg->rdh.nRgnSize ) {
 		PRECT temp;
 		temp = ExAllocatePoolWithTag( PagedPool, (2 * (reg->rdh.nRgnSize)), TAG_REGION);
@@ -136,13 +136,13 @@ static BOOL FASTCALL REGION_CopyRegion(PROSRGNDATA dst, PROSRGNDATA src)
   {
     if (dst->rdh.nRgnSize < src->rdh.nCount * sizeof(RECT))
     {
-	  PCHAR temp;
+	  PRECT temp;
 
 	  temp = ExAllocatePoolWithTag(PagedPool, src->rdh.nCount * sizeof(RECT), TAG_REGION );
 	  if( !temp )
 		return FALSE;
 
-	  if( dst->Buffer && dst->Buffer != (char *) &dst->BuiltInRect )
+	  if( dst->Buffer && dst->Buffer != &dst->BuiltInRect )
 	  	ExFreePool( dst->Buffer );	//free the old buffer
 	  dst->Buffer = temp;
       dst->rdh.nRgnSize = src->rdh.nCount * sizeof(RECT);  //size of region buffer
@@ -217,7 +217,7 @@ static BOOL FASTCALL REGION_CropAndOffsetRegion(const PPOINT off, const PRECT re
     }
     else{
       xrect = ExAllocatePoolWithTag(PagedPool, rgnSrc->rdh.nCount * sizeof(RECT), TAG_REGION);
-	  if( rgnDst->Buffer && rgnDst->Buffer != (char *) &rgnDst->BuiltInRect )
+	  if( rgnDst->Buffer && rgnDst->Buffer != &rgnDst->BuiltInRect )
 	  	ExFreePool( rgnDst->Buffer ); //free the old buffer. will be assigned to xrect below.
 	}
 
@@ -245,7 +245,7 @@ static BOOL FASTCALL REGION_CropAndOffsetRegion(const PPOINT off, const PRECT re
       else
         RtlCopyMemory(xrect, rgnSrc->Buffer, rgnDst->rdh.nCount * sizeof(RECT));
 
-	  rgnDst->Buffer = (char*)xrect;
+	  rgnDst->Buffer = xrect;
     } else
       return FALSE;
   }
@@ -275,14 +275,14 @@ static BOOL FASTCALL REGION_CropAndOffsetRegion(const PPOINT off, const PRECT re
 
     if((rgnDst != rgnSrc) && (rgnDst->rdh.nCount < (i = (clipb - clipa))))
     {
-	  PCHAR temp;
+	  PRECT temp;
 	  temp = ExAllocatePoolWithTag( PagedPool, i * sizeof(RECT), TAG_REGION );
       if(!temp)
 	      return FALSE;
 
-	  if( rgnDst->Buffer && rgnDst->Buffer != (char *) &rgnDst->BuiltInRect )
+	  if( rgnDst->Buffer && rgnDst->Buffer != &rgnDst->BuiltInRect )
 	  	ExFreePool( rgnDst->Buffer ); //free the old buffer
-      (PRECT)rgnDst->Buffer = temp;
+      rgnDst->Buffer = temp;
       rgnDst->rdh.nCount = i;
 	  rgnDst->rdh.nRgnSize = i * sizeof(RECT);
     }
@@ -319,8 +319,8 @@ static BOOL FASTCALL REGION_CropAndOffsetRegion(const PPOINT off, const PRECT re
 
     rgnDst->rdh.nCount = j--;
     for(i = 0; i <= j; i++) // fixup top band
-      if(((PRECT)rgnDst->Buffer + i)->top < left)
-        ((PRECT)rgnDst->Buffer + i)->top = left;
+      if((rgnDst->Buffer + i)->top < left)
+        (rgnDst->Buffer + i)->top = left;
       else
         break;
 
@@ -341,7 +341,7 @@ static BOOL FASTCALL REGION_CropAndOffsetRegion(const PPOINT off, const PRECT re
 empty:
 	if(!rgnDst->Buffer)
 	{
-	  rgnDst->Buffer = (char*)ExAllocatePoolWithTag(PagedPool, RGN_DEFAULT_RECTS * sizeof(RECT), TAG_REGION);
+	  rgnDst->Buffer = (PRECT)ExAllocatePoolWithTag(PagedPool, RGN_DEFAULT_RECTS * sizeof(RECT), TAG_REGION);
 	  if(rgnDst->Buffer){
 	    rgnDst->rdh.nCount = RGN_DEFAULT_RECTS;
 		rgnDst->rdh.nRgnSize = RGN_DEFAULT_RECTS * sizeof(RECT);
@@ -814,7 +814,7 @@ REGION_RegionOp(
 		    newReg->Buffer = ExAllocatePoolWithTag( PagedPool, newReg->rdh.nCount*sizeof(RECT), TAG_REGION );
 
 		    if (! newReg->Buffer)
-				newReg->Buffer = (char*)prev_rects;
+				newReg->Buffer = prev_rects;
 			else{
 				newReg->rdh.nRgnSize = newReg->rdh.nCount*sizeof(RECT);
 				RtlCopyMemory( newReg->Buffer, prev_rects, newReg->rdh.nRgnSize );
@@ -829,7 +829,7 @@ REGION_RegionOp(
 		     * the region is empty
 		     */
 		    newReg->rdh.nRgnSize = sizeof(RECT);
-		    if (newReg->Buffer != (char *) &newReg->BuiltInRect)
+		    if (newReg->Buffer != &newReg->BuiltInRect)
 			ExFreePool( newReg->Buffer );
 		    newReg->Buffer = ExAllocatePoolWithTag( PagedPool, sizeof(RECT), TAG_REGION );
 			ASSERT( newReg->Buffer );
@@ -1405,7 +1405,7 @@ static void FASTCALL REGION_UnionRectWithRegion(const RECT *rect, ROSRGNDATA *rg
 {
     ROSRGNDATA region;
 
-    region.Buffer = (char*)(&(region.rdh.rcBound));
+    region.Buffer = &region.rdh.rcBound;
     region.rdh.nCount = 1;
     region.rdh.nRgnSize = sizeof( RECT );
     region.rdh.rcBound = *rect;
@@ -1484,7 +1484,7 @@ HRGN FASTCALL RGNDATA_AllocRgn(INT n)
         {
           if (1 == n)
             {
-              pReg->Buffer = (char *) &pReg->BuiltInRect;
+              pReg->Buffer = &pReg->BuiltInRect;
             }
           else
             {
@@ -1515,7 +1515,7 @@ HRGN FASTCALL RGNDATA_AllocRgn(INT n)
 BOOL FASTCALL RGNDATA_InternalDelete( PROSRGNDATA pRgn )
 {
   ASSERT(pRgn);
-  if(pRgn->Buffer && pRgn->Buffer != (char *) &pRgn->BuiltInRect)
+  if(pRgn->Buffer && pRgn->Buffer != &pRgn->BuiltInRect)
     ExFreePool(pRgn->Buffer);
   return TRUE;
 }
@@ -1867,7 +1867,7 @@ NtGdiFillRgn(HDC hDC, HRGN hRgn, HBRUSH hBrush)
 {
   HBRUSH oldhBrush;
   PROSRGNDATA rgn;
-  PRECTL r;
+  PRECT r;
 
   if (NULL == (rgn = RGNDATA_LockRgn(hRgn)))
     {
@@ -1880,7 +1880,7 @@ NtGdiFillRgn(HDC hDC, HRGN hRgn, HBRUSH hBrush)
       return FALSE;
     }
 
-  for (r = (PRECT) rgn->Buffer; r < ((PRECT) rgn->Buffer) + rgn->rdh.nCount; r++)
+  for (r = rgn->Buffer; r < rgn->Buffer + rgn->rdh.nCount; r++)
     {
       NtGdiPatBlt(hDC, r->left, r->top, r->right - r->left, r->bottom - r->top, PATCOPY);
     }
@@ -2038,7 +2038,7 @@ NtGdiPaintRgn(HDC  hDC,
   }
 
   ClipRegion = IntEngCreateClipRegion (
-	  visrgn->rdh.nCount, (PRECTL)visrgn->Buffer, visrgn->rdh.rcBound );
+	  visrgn->rdh.nCount, (PRECTL)visrgn->Buffer, (PRECTL)&visrgn->rdh.rcBound );
   ASSERT( ClipRegion );
   pBrush = BRUSHOBJ_LockBrush(dc->w.hBrush);
   ASSERT(pBrush);

@@ -814,7 +814,7 @@ SetDIBColorTable(
 	CONST RGBQUAD	*a3
 	)
 {
-	return NtGdiSetDIBColorTable(hdc,a1,a2,(CONST PRGBQUAD)a3);
+	return NtGdiSetDIBColorTable(hdc,a1,a2,(RGBQUAD*)a3);
 }
 
 /*

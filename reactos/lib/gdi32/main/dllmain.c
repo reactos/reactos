@@ -1,9 +1,9 @@
 /*
  * dllmain.c
  *
- * $Revision: 1.8 $
- * $Author: royce $
- * $Date: 2003/08/04 00:28:44 $
+ * $Revision: 1.9 $
+ * $Author: navaraf $
+ * $Date: 2004/04/09 20:03:11 $
  *
  */
 
@@ -24,6 +24,14 @@ DllMain (
 	)
 {
 	return TRUE;
+}
+
+
+VOID
+WINAPI
+GdiProcessSetup (VOID)
+{
+	hProcessHeap = GetProcessHeap();
 }
 
 
@@ -58,14 +66,6 @@ GdiDllInitialize (
 #endif
 
 	return TRUE;
-}
-
-
-VOID
-WINAPI
-GdiProcessSetup (VOID)
-{
-	hProcessHeap = RtlGetProcessHeap();
 }
 
 /* EOF */

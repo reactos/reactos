@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: prop.c,v 1.11 2004/01/23 23:38:26 ekohl Exp $
+/* $Id: prop.c,v 1.12 2004/04/09 20:03:15 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -31,6 +31,8 @@
 #include <windows.h>
 #include <user32.h>
 #include <strpool.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
 #include <debug.h>
 
 typedef struct _PROPLISTITEM
@@ -72,12 +74,12 @@ EnumPropsA(HWND hWnd, PROPENUMPROCA lpEnumFunc)
   
   if(Count > 0)
   {
-    pli = HEAP_alloc(Count);
+    pli = RtlAllocateHeap(GetProcessHeap(), 0, Count);
     
     Status = NtUserBuildPropList(hWnd, (LPVOID)pli, Count, &Count);
     if(!NT_SUCCESS(Status))
     {
-      HEAP_free(pli);
+      RtlFreeHeap(GetProcessHeap(), 0, pli);
       if(Status == STATUS_INVALID_HANDLE)
         SetLastError(ERROR_INVALID_WINDOW_HANDLE);
       else
@@ -98,7 +100,7 @@ EnumPropsA(HWND hWnd, PROPENUMPROCA lpEnumFunc)
         break;
     }
     
-    HEAP_free(pli);
+    RtlFreeHeap(GetProcessHeap(), 0, pli);
   }
   
   return ret;
@@ -134,12 +136,12 @@ EnumPropsExA(HWND hWnd, PROPENUMPROCEXA lpEnumFunc, LPARAM lParam)
   
   if(Count > 0)
   {
-    pli = HEAP_alloc(Count);
+    pli = RtlAllocateHeap(GetProcessHeap(), 0, Count);
     
     Status = NtUserBuildPropList(hWnd, (LPVOID)pli, Count, &Count);
     if(!NT_SUCCESS(Status))
     {
-      HEAP_free(pli);
+      RtlFreeHeap(GetProcessHeap(), 0, pli);
       if(Status == STATUS_INVALID_HANDLE)
         SetLastError(ERROR_INVALID_WINDOW_HANDLE);
       else
@@ -160,7 +162,7 @@ EnumPropsExA(HWND hWnd, PROPENUMPROCEXA lpEnumFunc, LPARAM lParam)
         break;
     }
     
-    HEAP_free(pli);
+    RtlFreeHeap(GetProcessHeap(), 0, pli);
   }
   
   return ret;
@@ -196,12 +198,12 @@ EnumPropsExW(HWND hWnd, PROPENUMPROCEXW lpEnumFunc, LPARAM lParam)
   
   if(Count > 0)
   {
-    pli = HEAP_alloc(Count);
+    pli = RtlAllocateHeap(GetProcessHeap(), 0, Count);
     
     Status = NtUserBuildPropList(hWnd, (LPVOID)pli, Count, &Count);
     if(!NT_SUCCESS(Status))
     {
-      HEAP_free(pli);
+      RtlFreeHeap(GetProcessHeap(), 0, pli);
       if(Status == STATUS_INVALID_HANDLE)
         SetLastError(ERROR_INVALID_WINDOW_HANDLE);
       else
@@ -222,7 +224,7 @@ EnumPropsExW(HWND hWnd, PROPENUMPROCEXW lpEnumFunc, LPARAM lParam)
         break;
     }
     
-    HEAP_free(pli);
+    RtlFreeHeap(GetProcessHeap(), 0, pli);
   }
   
   return ret;
@@ -258,12 +260,12 @@ EnumPropsW(HWND hWnd, PROPENUMPROCW lpEnumFunc)
   
   if(Count > 0)
   {
-    pli = HEAP_alloc(Count);
+    pli = RtlAllocateHeap(GetProcessHeap(), 0, Count);
     
     Status = NtUserBuildPropList(hWnd, (LPVOID)pli, Count, &Count);
     if(!NT_SUCCESS(Status))
     {
-      HEAP_free(pli);
+      RtlFreeHeap(GetProcessHeap(), 0, pli);
       if(Status == STATUS_INVALID_HANDLE)
         SetLastError(ERROR_INVALID_WINDOW_HANDLE);
       else
@@ -284,7 +286,7 @@ EnumPropsW(HWND hWnd, PROPENUMPROCW lpEnumFunc)
         break;
     }
     
-    HEAP_free(pli);
+    RtlFreeHeap(GetProcessHeap(), 0, pli);
   }
   
   return ret;

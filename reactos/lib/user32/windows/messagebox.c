@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: messagebox.c,v 1.24 2004/02/05 22:09:15 gvg Exp $
+/* $Id: messagebox.c,v 1.25 2004/04/09 20:03:15 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/messagebox.c
@@ -35,13 +35,14 @@
 #include <messages.h>
 #include <user32.h>
 #include <string.h>
-#include <ntos/rtl.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <debug.h>
 #include "resource.h"
 
-typedef UINT *LPUINT;
+//typedef UINT *LPUINT;
 #include <mmsystem.h>
 
 /* DEFINES *******************************************************************/
@@ -207,7 +208,7 @@ static INT_PTR CALLBACK MessageBoxProc( HWND hwnd, UINT message,
 #define SAFETY_MARGIN 32 /* Extra number of bytes to allocate in case we counted wrong */
 static int
 MessageBoxTimeoutIndirectW(
-  CONST LPMSGBOXPARAMS lpMsgBoxParams, UINT Timeout)
+  CONST MSGBOXPARAMS *lpMsgBoxParams, UINT Timeout)
 {
     DLGTEMPLATE *tpl;
     DLGITEMTEMPLATE *iico, *itxt;
@@ -393,7 +394,7 @@ MessageBoxTimeoutIndirectW(
                  (wcslen(ButtonText[i]) + 1) * sizeof(WCHAR);
     }
     
-    buf = RtlAllocateHeap(RtlGetProcessHeap(), 0, bufsize + SAFETY_MARGIN);
+    buf = RtlAllocateHeap(GetProcessHeap(), 0, bufsize + SAFETY_MARGIN);
         /* Just to be safe.... */
     if(!buf)
     {
@@ -633,7 +634,7 @@ MessageBoxTimeoutIndirectW(
     if(hFont)
       DeleteObject(hFont);
     
-    RtlFreeHeap(RtlGetProcessHeap(), 0, buf);
+    RtlFreeHeap(GetProcessHeap(), 0, buf);
     return ret;
 }
 
@@ -667,7 +668,7 @@ MessageBoxExA(
   UINT uType,
   WORD wLanguageId)
 {
-    MSGBOXPARAMS msgbox;
+    MSGBOXPARAMSA msgbox;
 
     msgbox.cbSize = sizeof(msgbox);
     msgbox.hwndOwner = hWnd;
@@ -696,13 +697,13 @@ MessageBoxExW(
   UINT uType,
   WORD wLanguageId)
 {
-    MSGBOXPARAMS msgbox;
+    MSGBOXPARAMSW msgbox;
 
     msgbox.cbSize = sizeof(msgbox);
     msgbox.hwndOwner = hWnd;
     msgbox.hInstance = 0;
-    msgbox.lpszText = (LPCSTR)lpText;
-    msgbox.lpszCaption =(LPCSTR) lpCaption;
+    msgbox.lpszText = lpText;
+    msgbox.lpszCaption = lpCaption;
     msgbox.dwStyle = uType;
     msgbox.lpszIcon = NULL;
     msgbox.dwContextHelpId = 0;
@@ -719,9 +720,9 @@ MessageBoxExW(
 int
 STDCALL
 MessageBoxIndirectA(
-  CONST LPMSGBOXPARAMS lpMsgBoxParams)
+  CONST MSGBOXPARAMSA *lpMsgBoxParams)
 {
-    MSGBOXPARAMS msgboxW;
+    MSGBOXPARAMSW msgboxW;
     UNICODE_STRING textW, captionW, iconW;
     int ret;
 
@@ -764,10 +765,10 @@ MessageBoxIndirectA(
     msgboxW.cbSize = sizeof(msgboxW);
     msgboxW.hwndOwner = lpMsgBoxParams->hwndOwner;
     msgboxW.hInstance = lpMsgBoxParams->hInstance;
-    msgboxW.lpszText = (LPCSTR)textW.Buffer;
-    msgboxW.lpszCaption = (LPCSTR)captionW.Buffer;
+    msgboxW.lpszText = textW.Buffer;
+    msgboxW.lpszCaption = captionW.Buffer;
     msgboxW.dwStyle = lpMsgBoxParams->dwStyle;
-    msgboxW.lpszIcon = (LPCSTR)iconW.Buffer;
+    msgboxW.lpszIcon = iconW.Buffer;
     msgboxW.dwContextHelpId = lpMsgBoxParams->dwContextHelpId;
     msgboxW.lpfnMsgBoxCallback = lpMsgBoxParams->lpfnMsgBoxCallback;
     msgboxW.dwLanguageId = lpMsgBoxParams->dwLanguageId;
@@ -793,7 +794,7 @@ MessageBoxIndirectA(
 int
 STDCALL
 MessageBoxIndirectW(
-  CONST LPMSGBOXPARAMS lpMsgBoxParams)
+  CONST MSGBOXPARAMSW *lpMsgBoxParams)
 {
     return MessageBoxTimeoutIndirectW(lpMsgBoxParams, (UINT)-1);
 }
@@ -826,7 +827,7 @@ MessageBoxTimeoutA(
   WORD wLanguageId,
   DWORD dwTime)
 {
-    MSGBOXPARAMS msgboxW;
+    MSGBOXPARAMSW msgboxW;
     UNICODE_STRING textW, captionW;
     int ret;
 
@@ -843,8 +844,8 @@ MessageBoxTimeoutA(
     msgboxW.cbSize = sizeof(msgboxW);
     msgboxW.hwndOwner = hWnd;
     msgboxW.hInstance = 0;
-    msgboxW.lpszText = (LPCSTR)textW.Buffer;
-    msgboxW.lpszCaption = (LPCSTR)captionW.Buffer;
+    msgboxW.lpszText = textW.Buffer;
+    msgboxW.lpszCaption = captionW.Buffer;
     msgboxW.dwStyle = uType;
     msgboxW.lpszIcon = NULL;
     msgboxW.dwContextHelpId = 0;
@@ -875,13 +876,13 @@ MessageBoxTimeoutW(
   WORD wLanguageId,
   DWORD dwTime)
 {
-    MSGBOXPARAMS msgbox;
+    MSGBOXPARAMSW msgbox;
 
     msgbox.cbSize = sizeof(msgbox);
     msgbox.hwndOwner = hWnd;
     msgbox.hInstance = 0;
-    msgbox.lpszText = (LPCSTR)lpText;
-    msgbox.lpszCaption =(LPCSTR) lpCaption;
+    msgbox.lpszText = lpText;
+    msgbox.lpszCaption = lpCaption;
     msgbox.dwStyle = uType;
     msgbox.lpszIcon = NULL;
     msgbox.dwContextHelpId = 0;

@@ -320,7 +320,7 @@ BOOL
 STDCALL
 EngGetFilePath(
 	IN  HANDLE h,
-	OUT WCHAR* pDest
+        OUT WCHAR (*pDest)[MAX_PATH+1]
 	)
 {
   // www.osr.com/ddk/graphics/gdifncs_5g2v.htm
@@ -879,7 +879,7 @@ FLOATOBJ_SubLong(
 ULONG
 STDCALL
 FONTOBJ_cGetAllGlyphHandles (
-	IN PFONTOBJ  FontObj,
+	IN FONTOBJ  *FontObj,
 	IN HGLYPH   *Glyphs
 	)
 {
@@ -893,7 +893,7 @@ FONTOBJ_cGetAllGlyphHandles (
 ULONG
 STDCALL
 FONTOBJ_cGetGlyphs(
-	IN PFONTOBJ FontObj,
+	IN FONTOBJ *FontObj,
 	IN ULONG    Mode,
 	IN ULONG    NumGlyphs,
 	IN HGLYPH  *GlyphHandles,
@@ -909,7 +909,7 @@ FONTOBJ_cGetGlyphs(
  */
 IFIMETRICS*
 STDCALL
-FONTOBJ_pifi ( IN PFONTOBJ FontObj )
+FONTOBJ_pifi ( IN FONTOBJ *FontObj )
 {
   UNIMPLEMENTED;
   return NULL;
@@ -921,7 +921,7 @@ FONTOBJ_pifi ( IN PFONTOBJ FontObj )
 PVOID
 STDCALL
 FONTOBJ_pvTrueTypeFontFile (
-	IN PFONTOBJ  FontObj,
+	IN FONTOBJ  *FontObj,
 	IN ULONG    *FileSize)
 {
   UNIMPLEMENTED;
@@ -933,7 +933,7 @@ FONTOBJ_pvTrueTypeFontFile (
  */
 XFORMOBJ*
 STDCALL
-FONTOBJ_pxoGetXform ( IN PFONTOBJ FontObj )
+FONTOBJ_pxoGetXform ( IN FONTOBJ *FontObj )
 {
   UNIMPLEMENTED;
   return NULL;
@@ -945,7 +945,7 @@ FONTOBJ_pxoGetXform ( IN PFONTOBJ FontObj )
 VOID
 STDCALL
 FONTOBJ_vGetInfo (
-	IN  PFONTOBJ   FontObj,
+	IN  FONTOBJ   *FontObj,
 	IN  ULONG      InfoSize,
 	OUT PFONTINFO  FontInfo)
 {
@@ -1243,10 +1243,10 @@ EngQuerySystemAttribute(
  */
 FLATPTR STDCALL
 HeapVidMemAllocAligned(
-   IN VIDEOMEMORY *lpVidMem,
+   IN LPVIDMEM lpVidMem,
    IN DWORD dwWidth,
    IN DWORD dwHeight,
-   IN /*LPSURFACEALIGNMENT*/LPVOID lpAlignment,
+   IN LPSURFACEALIGNMENT lpAlignment,
    OUT LPLONG lpNewPitch)
 {
    UNIMPLEMENTED;

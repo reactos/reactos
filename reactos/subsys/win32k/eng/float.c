@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: float.c,v 1.1 2004/03/11 21:38:58 dwelch Exp $
+/* $Id: float.c,v 1.2 2004/04/09 20:03:16 navaraf Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -52,7 +52,7 @@ EngRestoreFloatingPointState ( IN VOID *Buffer )
   return TRUE;
 }
 
-BOOL
+ULONG
 STDCALL
 EngSaveFloatingPointState(OUT VOID  *Buffer,
 			  IN ULONG  BufferSize)

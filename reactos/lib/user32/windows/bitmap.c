@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmap.c,v 1.27 2004/02/23 18:16:37 navaraf Exp $
+/* $Id: bitmap.c,v 1.28 2004/04/09 20:03:14 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -33,6 +33,8 @@
 #include <user32.h>
 #include <debug.h>
 #include <stdlib.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
 
 /*forward declerations... actualy in user32\windows\icon.c but usful here****/
 HICON ICON_CreateCursorFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cxDesired, int cyDesired, int xHotspot, int yHotspot);
@@ -221,7 +223,7 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
          return(NULL);
       }
 
-      SafeIconImage = RtlAllocateHeap(RtlGetProcessHeap(), 0, dirEntry->dwBytesInRes); 
+      SafeIconImage = RtlAllocateHeap(GetProcessHeap(), 0, dirEntry->dwBytesInRes); 
       memcpy(SafeIconImage, ((PBYTE)IconDIR) + dirEntry->dwImageOffset, dirEntry->dwBytesInRes);
    }
 
@@ -250,7 +252,7 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
 
   hIcon = ICON_CreateCursorFromData(hScreenDc, Data, SafeIconImage, 32, 32, dirEntry->Info.cursor.wXHotspot, dirEntry->Info.cursor.wYHotspot);
   DeleteDC(hScreenDc);
-  RtlFreeHeap(RtlGetProcessHeap(), 0, SafeIconImage);
+  RtlFreeHeap(GetProcessHeap(), 0, SafeIconImage);
   return hIcon;
 }
 
@@ -390,7 +392,7 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
 	       return(NULL);
 	  }
 
-      SafeIconImage = RtlAllocateHeap(RtlGetProcessHeap(), 0, dirEntry->dwBytesInRes); 
+      SafeIconImage = RtlAllocateHeap(GetProcessHeap(), 0, dirEntry->dwBytesInRes); 
 
       memcpy(SafeIconImage, ((PBYTE)IconDIR) + dirEntry->dwImageOffset, dirEntry->dwBytesInRes);
 
@@ -428,14 +430,14 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
   {
       if (fuLoad & LR_LOADFROMFILE)
 	  {
-	  	RtlFreeHeap(RtlGetProcessHeap(), 0, SafeIconImage);
+	  	RtlFreeHeap(GetProcessHeap(), 0, SafeIconImage);
         UnmapViewOfFile(IconDIR);
 	  }
       return(NULL);
   }
 
   hIcon = ICON_CreateIconFromData(hScreenDc, Data, SafeIconImage, width, height, width/2, height/2);
-  RtlFreeHeap(RtlGetProcessHeap(), 0, SafeIconImage);
+  RtlFreeHeap(GetProcessHeap(), 0, SafeIconImage);
   return hIcon;
 }
 
@@ -533,7 +535,7 @@ LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
     }
   Data = (PVOID)BitmapInfo + HeaderSize;
 
-  PrivateInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, HeaderSize);
+  PrivateInfo = RtlAllocateHeap(GetProcessHeap(), 0, HeaderSize);
   if (PrivateInfo == NULL)
     {
       if (fuLoad & LR_LOADFROMFILE)
@@ -572,7 +574,7 @@ LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
 			       Data, PrivateInfo, DIB_RGB_COLORS);
     }
 
-  RtlFreeHeap(RtlGetProcessHeap(), 0, PrivateInfo);
+  RtlFreeHeap(GetProcessHeap(), 0, PrivateInfo);
   /*DeleteDC(hScreenDc);*/
   if (fuLoad & LR_LOADFROMFILE)
     {

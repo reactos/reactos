@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.45 2004/04/08 21:14:21 navaraf Exp $
+/* $Id: class.c,v 1.46 2004/04/09 20:03:14 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -16,6 +16,8 @@
 #include <window.h>
 #include <strpool.h>
 #include <user32/regcontrol.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
 
 
 
@@ -490,7 +492,7 @@ RegisterClassExW(CONST WNDCLASSEXW *lpwcx)
   if ( !lpwcx->lpszClassName )
     return 0;
 
-  hHeap = RtlGetProcessHeap();
+  hHeap = GetProcessHeap();
   RtlCopyMemory ( &wndclass, lpwcx, sizeof(WNDCLASSEXW) );
 
   /* copy strings if needed */

@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.88 2004/04/05 21:26:25 navaraf Exp $ */
+/* $Id: text.c,v 1.89 2004/04/09 20:03:20 navaraf Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -34,7 +34,7 @@
 #include <win32k/brush.h>
 #include <win32k/dc.h>
 #include <win32k/text.h>
-#include <win32k/kapi.h>
+#include <win32k/font.h>
 #include <include/error.h>
 #include <include/desktop.h>
 #include <ft2build.h>
@@ -144,13 +144,13 @@ IntIsFontRenderingEnabled(VOID)
   BOOL Ret;
   HDC hDC;
   PDC dc;
-  PSURFOBJ SurfObj;
+  SURFOBJ *SurfObj;
   Ret = RenderingEnabled;
   hDC = IntGetScreenDC();
   if(hDC)
   {
     dc = DC_LockDc(hDC);
-    SurfObj = (PSURFOBJ)AccessUserObject((ULONG) dc->Surface);
+    SurfObj = (SURFOBJ*)AccessUserObject((ULONG) dc->Surface);
     if(SurfObj)
       Ret = (SurfObj->iBitmapFormat >= BMF_8BPP);
     DC_UnlockDc(hDC);
@@ -187,7 +187,7 @@ int FASTCALL
 IntGdiAddFontResource(PUNICODE_STRING Filename, DWORD fl)
 {
   HFONT NewFont;
-  PFONTOBJ FontObj;
+  FONTOBJ *FontObj;
   PFONTGDI FontGDI;
   NTSTATUS Status;
   HANDLE FileHandle;
@@ -202,7 +202,7 @@ IntGdiAddFontResource(PUNICODE_STRING Filename, DWORD fl)
   PFONT_ENTRY entry;
 
   NewFont = (HFONT)CreateGDIHandle(sizeof( FONTGDI ), sizeof( FONTOBJ ));
-  FontObj = (PFONTOBJ) AccessUserObject( (ULONG) NewFont );
+  FontObj = (FONTOBJ*) AccessUserObject( (ULONG) NewFont );
   FontGDI = (PFONTGDI) AccessInternalObject( (ULONG) NewFont );
 
   //  Open the Module
@@ -420,7 +420,7 @@ BOOL FASTCALL InitFontSupport(VOID)
 }
 
 static NTSTATUS STDCALL
-GetFontObjectsFromTextObj(PTEXTOBJ TextObj, HFONT *FontHandle, PFONTOBJ *FontObj, PFONTGDI *FontGDI)
+GetFontObjectsFromTextObj(PTEXTOBJ TextObj, HFONT *FontHandle, FONTOBJ **FontObj, PFONTGDI *FontGDI)
 {
   NTSTATUS Status = STATUS_SUCCESS;
 
@@ -1498,15 +1498,15 @@ NtGdiExtTextOut(
    HBRUSH hBrushBg = NULL;
    PGDIBRUSHOBJ BrushBg = NULL;
    HBITMAP HSourceGlyph;
-   PSURFOBJ SourceGlyphSurf;
+   SURFOBJ *SourceGlyphSurf;
    SIZEL bitSize;
    FT_CharMap found = 0, charmap;
    INT yoff;
-   PFONTOBJ FontObj;
+   FONTOBJ *FontObj;
    PFONTGDI FontGDI;
    PTEXTOBJ TextObj;
    PPALGDI PalDestGDI;
-   PXLATEOBJ XlateObj, XlateObj2;
+   XLATEOBJ *XlateObj, *XlateObj2;
    ULONG Mode;
    FT_Render_Mode RenderMode;
    BOOLEAN Render;
@@ -1598,7 +1598,7 @@ NtGdiExtTextOut(
 	   Mode = PalDestGDI->Mode;
 	   PALETTE_UnlockPalette(dc->w.hPalette);
    }
-   XlateObj = (PXLATEOBJ)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL);
+   XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, dc->w.hPalette, NULL);
    hBrushFg = NtGdiCreateSolidBrush(XLATEOBJ_iXlate(XlateObj, dc->w.textColor));
    BrushFg = BRUSHOBJ_LockBrush(hBrushFg);
    if ((fuOptions & ETO_OPAQUE) || dc->w.backgroundMode == OPAQUE)
@@ -1614,7 +1614,7 @@ NtGdiExtTextOut(
          goto fail;
       }
    }
-   XlateObj2 = (PXLATEOBJ)IntEngCreateXlate(PAL_RGB, Mode, NULL, dc->w.hPalette);
+   XlateObj2 = (XLATEOBJ*)IntEngCreateXlate(PAL_RGB, Mode, NULL, dc->w.hPalette);
   
    SourcePoint.x = 0;
    SourcePoint.y = 0;
@@ -1823,7 +1823,7 @@ NtGdiExtTextOut(
        */
 
       HSourceGlyph = EngCreateBitmap(bitSize, pitch, (glyph->bitmap.pixel_mode == ft_pixel_mode_grays) ? BMF_8BPP : BMF_1BPP, 0, glyph->bitmap.buffer);
-      SourceGlyphSurf = (PSURFOBJ)AccessUserObject((ULONG) HSourceGlyph);
+      SourceGlyphSurf = (SURFOBJ*)AccessUserObject((ULONG) HSourceGlyph);
     
       /*
        * Use the font data as a mask to paint onto the DCs surface using a
@@ -1842,7 +1842,7 @@ NtGdiExtTextOut(
          &BrushFg->BrushObject,
          &BrushOrigin);
 
-      EngDeleteSurface(HSourceGlyph);
+      EngDeleteSurface((HSURF)HSourceGlyph);
 
       if (NULL == Dx)
       {

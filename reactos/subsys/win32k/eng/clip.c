@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: clip.c,v 1.18 2003/12/31 14:43:48 weiden Exp $
+/* $Id: clip.c,v 1.19 2004/04/09 20:03:16 navaraf Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -43,7 +43,7 @@ VOID STDCALL IntEngDeleteClipRegion(CLIPOBJ *ClipObj)
 }
 
 CLIPOBJ* STDCALL
-IntEngCreateClipRegion(ULONG count, PRECTL pRect, RECTL rcBounds)
+IntEngCreateClipRegion(ULONG count, PRECTL pRect, PRECTL rcBounds)
 {
   HCLIP hClip;
   CLIPGDI* clipInt;
@@ -68,7 +68,7 @@ IntEngCreateClipRegion(ULONG count, PRECTL pRect, RECTL rcBounds)
 	  clipUser->iDComplexity = DC_COMPLEX;
 	  clipUser->iFComplexity = (count <= 4) ? FC_RECT4: FC_COMPLEX;
 	  clipUser->iMode = TC_RECTANGLES;
-	  RtlCopyMemory(&(clipUser->rclBounds), &rcBounds, sizeof(RECTL));
+	  RtlCopyMemory(&(clipUser->rclBounds), rcBounds, sizeof(RECTL));
 
 	  return clipUser;
 	}
@@ -80,20 +80,20 @@ IntEngCreateClipRegion(ULONG count, PRECTL pRect, RECTL rcBounds)
       if (hClip)
 	{
 	  clipInt = (CLIPGDI *) AccessInternalObject(hClip);
-	  RtlCopyMemory(clipInt->EnumRects.arcl, &rcBounds, sizeof(RECTL));
+	  RtlCopyMemory(clipInt->EnumRects.arcl, rcBounds, sizeof(RECTL));
 	  clipInt->EnumRects.c = 1;
 	  clipInt->EnumOrder = CD_ANY;
 
 	  clipUser = (CLIPOBJ *) AccessUserObject(hClip);
 	  ASSERT(NULL != clipUser);
 
-	  clipUser->iDComplexity = ((rcBounds.top==rcBounds.bottom)
-	                            && (rcBounds.left==rcBounds.right))
+	  clipUser->iDComplexity = ((rcBounds->top==rcBounds->bottom)
+	                            && (rcBounds->left==rcBounds->right))
 	                           ? DC_TRIVIAL : DC_RECT;
 	  clipUser->iFComplexity = FC_RECT;
 	  clipUser->iMode = TC_RECTANGLES;
 	  DPRINT("IntEngCreateClipRegion: iDComplexity: %d\n", clipUser->iDComplexity);
-	  RtlCopyMemory(&(clipUser->rclBounds), &rcBounds, sizeof(RECTL));
+	  RtlCopyMemory(&(clipUser->rclBounds), rcBounds, sizeof(RECTL));
 	  return clipUser;
 	}
     }

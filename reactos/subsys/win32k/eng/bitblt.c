@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.47 2004/04/07 19:57:43 navaraf Exp $
+/* $Id: bitblt.c,v 1.48 2004/04/09 20:03:16 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -113,7 +113,7 @@ BltMask(SURFOBJ* Dest,
    /* Pattern brushes */
    PGDIBRUSHOBJ GdiBrush;
    HBITMAP PatternSurface = NULL;
-   PSURFOBJ PatternObj;
+   SURFOBJ *PatternObj;
    ULONG PatternWidth, PatternHeight, PatternY;
   
    if (Mask == NULL)
@@ -137,7 +137,7 @@ BltMask(SURFOBJ* Dest,
       PatternSurface = BitmapToSurf(PatternBitmap, Dest->hdev);
       BITMAPOBJ_UnlockBitmap(GdiBrush->hbmPattern);
 
-      PatternObj = (PSURFOBJ)AccessUserObject((ULONG)PatternSurface);
+      PatternObj = (SURFOBJ*)AccessUserObject((ULONG)PatternSurface);
       PatternWidth = PatternObj->sizlBitmap.cx;
       PatternHeight = PatternObj->sizlBitmap.cy;
    }
@@ -176,7 +176,7 @@ BltMask(SURFOBJ* Dest,
    }
 
    if (PatternSurface != NULL)
-      EngDeleteSurface(PatternSurface);
+      EngDeleteSurface((HSURF)PatternSurface);
 
    return TRUE;
 }
@@ -223,7 +223,16 @@ CallDibBitBlt(SURFOBJ* OutputObj,
               POINTL* BrushOrigin,
               ROP4 Rop4)
 {
-  return OutputGDI->DIB_BitBlt(OutputObj, InputObj, OutputGDI, InputGDI, OutputRect, InputPoint, Brush, BrushOrigin, ColorTranslation, Rop4);
+  POINTL RealBrushOrigin;
+  if (BrushOrigin == NULL)
+    {
+      RealBrushOrigin.x = RealBrushOrigin.y = 0;
+    }
+  else
+    {
+      RealBrushOrigin = *BrushOrigin;
+    }
+  return OutputGDI->DIB_BitBlt(OutputObj, InputObj, OutputGDI, InputGDI, OutputRect, InputPoint, Brush, RealBrushOrigin, ColorTranslation, Rop4);
 }
 
 INT abs(INT nm);
@@ -600,7 +609,16 @@ CallDibStretchBlt(SURFOBJ* OutputObj,
                   POINTL* BrushOrigin,
                   ULONG Mode)
 {
-  return OutputGDI->DIB_StretchBlt(OutputObj, InputObj, OutputGDI, InputGDI, OutputRect, InputRect, MaskOrigin, BrushOrigin, ColorTranslation, Mode);
+  POINTL RealBrushOrigin;
+  if (BrushOrigin == NULL)
+    {
+      RealBrushOrigin.x = RealBrushOrigin.y = 0;
+    }
+  else
+    {
+      RealBrushOrigin = *BrushOrigin;
+    }
+  return OutputGDI->DIB_StretchBlt(OutputObj, InputObj, OutputGDI, InputGDI, OutputRect, InputRect, MaskOrigin, RealBrushOrigin, ColorTranslation, Mode);
 }
 
 

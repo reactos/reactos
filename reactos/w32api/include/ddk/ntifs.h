@@ -32,10 +32,10 @@
 extern "C" {
 #endif
 
-#pragma pack(push,4)
-
 #include "ntddk.h"
 #include "ntapi.h"
+
+#pragma pack(push,4)
 
 #define VER_PRODUCTBUILD 10000
 

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.57 2004/03/23 21:47:36 weiden Exp $
+/* $Id: stubs.c,v 1.58 2004/04/09 20:03:14 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -12,10 +12,11 @@
 #include <windows.h>
 #include <debug.h>
 #include <string.h>
-typedef UINT *LPUINT;
 #include <mmsystem.h>
 #include <user32.h>
-
+#ifdef __USE_W32API
+typedef PVOID LPIMEPROW, LPIMEPROA;
+#endif
 
 /*
  * @unimplemented
@@ -40,23 +41,6 @@ AttachThreadInput(
 {
   UNIMPLEMENTED;
   return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-long
-STDCALL
-BroadcastSystemMessage(
-  DWORD dwFlags,
-  LPDWORD lpdwRecipients,
-  UINT uiMessage,
-  WPARAM wParam,
-  LPARAM lParam)
-{
-  UNIMPLEMENTED;
-  return 0;
 }
 
 
@@ -185,7 +169,7 @@ DWORD
 STDCALL
 MsgWaitForMultipleObjects(
   DWORD nCount,
-  CONST LPHANDLE pHandles,
+  CONST HANDLE *pHandles,
   BOOL fWaitAll,
   DWORD dwMilliseconds,
   DWORD dwWakeMask)

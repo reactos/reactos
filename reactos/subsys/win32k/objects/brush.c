@@ -17,7 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: brush.c,v 1.33 2004/04/05 21:26:25 navaraf Exp $
+ * $Id: brush.c,v 1.34 2004/04/09 20:03:20 navaraf Exp $
  */
 
 #undef WIN32_LEAN_AND_MEAN
@@ -90,8 +90,8 @@ IntPatBlt(
    DWORD ROP,
    PGDIBRUSHOBJ BrushObj)
 {
-   RECT DestRect;
-   PSURFOBJ SurfObj;
+   RECTL DestRect;
+   SURFOBJ *SurfObj;
    BOOL ret;
 
    SurfObj = (SURFOBJ *)AccessUserObject((ULONG)dc->Surface);

@@ -3,6 +3,8 @@
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
 #include <debug.h>
 
 // global variables in a dll are process-global

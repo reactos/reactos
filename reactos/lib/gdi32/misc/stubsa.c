@@ -1,4 +1,4 @@
-/* $Id: stubsa.c,v 1.30 2004/03/23 19:46:49 gvg Exp $
+/* $Id: stubsa.c,v 1.31 2004/04/09 20:03:13 navaraf Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -15,6 +15,8 @@
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
+#define NTOS_MODE_USER
+#include <ntos.h>
 #include <win32k/text.h>
 #include <win32k/dc.h>
 #include <rosrtl/devmode.h>

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: palette.c,v 1.16 2004/03/27 00:35:02 weiden Exp $ */
+/* $Id: palette.c,v 1.17 2004/04/09 20:03:20 navaraf Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -31,8 +31,10 @@
 #include <include/color.h>
 #include <include/tags.h>
 
+#ifndef NO_MAPPING
 static int           PALETTE_firstFree = 0; 
 static unsigned char PALETTE_freeList[256];
+#endif
 
 int PALETTE_PaletteFlags     = 0;
 PALETTEENTRY *COLOR_sysPal   = NULL;
@@ -114,7 +116,9 @@ HPALETTE FASTCALL PALETTE_Init(VOID)
   int i;
   HPALETTE hpalette;
   PLOGPALETTE palPtr;
-  PPALOBJ palObj;
+#ifndef NO_MAPPING
+  PALOBJ *palObj;
+#endif
   const PALETTEENTRY* __sysPalTemplate = (const PALETTEENTRY*)COLOR_GetSystemPaletteTemplate();
 
   // create default palette (20 system colors)
@@ -134,7 +138,8 @@ HPALETTE FASTCALL PALETTE_Init(VOID)
   hpalette = NtGdiCreatePalette(palPtr);
   ExFreePool(palPtr);
 
-  palObj = (PPALOBJ)PALETTE_LockPalette(hpalette);
+#ifndef NO_MAPPING
+  palObj = (PALOBJ*)PALETTE_LockPalette(hpalette);
   if (palObj)
   {
     if (!(palObj->mapping = ExAllocatePool(NonPagedPool, sizeof(int) * 20)))
@@ -144,12 +149,14 @@ HPALETTE FASTCALL PALETTE_Init(VOID)
     }
     PALETTE_UnlockPalette(hpalette);
   }
+#endif
 
 /*  palette_size = visual->map_entries; */
 
   return hpalette;
 }
 
+#ifndef NO_MAPPING
 static void FASTCALL PALETTE_FormatSystemPalette(void)
 {
   // Build free list so we'd have an easy way to find
@@ -169,6 +176,7 @@ static void FASTCALL PALETTE_FormatSystemPalette(void)
   }
   PALETTE_freeList[j] = 0;
 }
+#endif
 
 VOID FASTCALL PALETTE_ValidateFlags(PALETTEENTRY* lpPalE, INT size)
 {
@@ -177,9 +185,10 @@ VOID FASTCALL PALETTE_ValidateFlags(PALETTEENTRY* lpPalE, INT size)
     lpPalE[i].peFlags = PC_SYS_USED | (lpPalE[i].peFlags & 0x07);
 }
 
+#ifndef NO_MAPPING
 // Set the color-mapping table for selected palette. 
 // Return number of entries which mapping has changed.
-INT STDCALL PALETTE_SetMapping(PPALOBJ palPtr, UINT uStart, UINT uNum, BOOL mapOnly)
+INT STDCALL PALETTE_SetMapping(PALOBJ *palPtr, UINT uStart, UINT uNum, BOOL mapOnly)
 {
   char flag;
   int  prevMapping = (palPtr->mapping) ? 1 : 0;
@@ -287,5 +296,6 @@ INT STDCALL PALETTE_SetMapping(PPALOBJ palPtr, UINT uStart, UINT uNum, BOOL mapO
   }
   return iRemapped;
 }
+#endif
 
 /* EOF */

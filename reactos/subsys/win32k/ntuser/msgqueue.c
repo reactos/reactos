@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.81 2004/04/07 21:12:08 gvg Exp $
+/* $Id: msgqueue.c,v 1.82 2004/04/09 20:03:19 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -246,7 +246,8 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
 {
   PUSER_MESSAGE_QUEUE ThreadQueue;
   USHORT Msg = Message->Msg.message;
-  PWINDOW_OBJECT CaptureWin, Window = NULL;
+  PWINDOW_OBJECT Window = NULL;
+  HWND CaptureWin;
   POINT Point;
 
   if (Msg == WM_LBUTTONDOWN || 

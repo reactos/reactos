@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.51 2004/03/24 00:13:31 royce Exp $
+/* $Id: stubs.c,v 1.52 2004/04/09 20:03:12 navaraf Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -13,6 +13,20 @@
 #endif
 #include <windows.h>
 #include <ddentry.h>
+#include <ddk/prntfont.h>
+
+#ifdef __USE_W32API
+typedef int (CALLBACK* EMFPLAYPROC)( HDC, INT, HANDLE );
+typedef DWORD FULLSCREENCONTROL;
+typedef DWORD SHAREDHANDLETABLE;
+typedef SHAREDHANDLETABLE *PSHAREDHANDLETABLE;
+typedef DWORD UNIVERSAL_FONT_ID;
+typedef UNIVERSAL_FONT_ID *PUNIVERSAL_FONT_ID;
+typedef DWORD REALIZATION_INFO;
+typedef REALIZATION_INFO *PREALIZATION_INFO;
+typedef DWORD CHWIDTHINFO;
+typedef CHWIDTHINFO *PCHWIDTHINFO;
+#endif
 
 /*
  * @unimplemented
@@ -135,7 +149,7 @@ STDCALL
 EnumObjects(
 	HDC		a0,
 	int		a1,
-	ENUMOBJECTSPROC	a2,
+	GOBJENUMPROC	a2,
 	LPARAM		a3
 	)
 {
@@ -614,7 +628,7 @@ STDCALL
 EnumMetaFile(
 	HDC			a0,
 	HMETAFILE		a1,
-	ENUMMETAFILEPROC	a2,
+	MFENUMPROC		a2,
 	LPARAM			a3
 	)
 {
@@ -659,7 +673,7 @@ STDCALL
 EnumEnhMetaFile(
 	HDC		a0,
 	HENHMETAFILE	a1,
-	ENHMETAFILEPROC	a2,
+	ENHMFENUMPROC	a2,
 	LPVOID		a3,
 	CONST RECT	*a4
 	)
@@ -792,9 +806,7 @@ SetWinMetaFileBits(
 	UINT			a0,
 	CONST BYTE		*a1,
 	HDC			a2,
-//	CONST METAFILEPICT	*a3
-		   PVOID a3
-	)
+	CONST METAFILEPICT	*a3)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -1624,7 +1636,7 @@ wglGetLayerPaletteEntries(
 	int		a1,
 	int		a2,
 	int		a3,
-	CONST COLORREF	*a4
+	COLORREF	*a4
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1749,12 +1761,12 @@ GetGlyphOutlineWow(
 /*
  * @unimplemented
  */
-DWORD
+INT
 STDCALL
 GetRandomRgn(
-	DWORD	a0,
-	DWORD	a1,
-	DWORD	a2
+	HDC	a0,
+	HRGN	a1,
+	INT	a2
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -3200,7 +3212,7 @@ BRUSHOBJ_hGetColorTransform(BRUSHOBJ *pbo)
  * @unimplemented
  */
 PVOID STDCALL
-BRUSHOBJ_pvAllocRbrush(IN PBRUSHOBJ BrushObj,
+BRUSHOBJ_pvAllocRbrush(IN BRUSHOBJ *BrushObj,
 		       IN ULONG ObjSize)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -3211,7 +3223,7 @@ BRUSHOBJ_pvAllocRbrush(IN PBRUSHOBJ BrushObj,
  * @unimplemented
  */
 PVOID STDCALL
-BRUSHOBJ_pvGetRbrush(IN PBRUSHOBJ BrushObj)
+BRUSHOBJ_pvGetRbrush(IN BRUSHOBJ *BrushObj)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -3231,7 +3243,7 @@ BRUSHOBJ_ulGetBrushColor(BRUSHOBJ *pbo)
  * @unimplemented
  */
 BOOL STDCALL
-CLIPOBJ_bEnum(IN PCLIPOBJ ClipObj,
+CLIPOBJ_bEnum(IN CLIPOBJ *ClipObj,
 	      IN ULONG ObjSize,
 	      OUT ULONG *EnumRects)
 {
@@ -3243,7 +3255,7 @@ CLIPOBJ_bEnum(IN PCLIPOBJ ClipObj,
  * @unimplemented
  */
 ULONG STDCALL
-CLIPOBJ_cEnumStart(IN PCLIPOBJ ClipObj,
+CLIPOBJ_cEnumStart(IN CLIPOBJ *ClipObj,
 		   IN BOOL ShouldDoAll,
 		   IN ULONG ClipType,
 		   IN ULONG BuildOrder,
@@ -3256,8 +3268,8 @@ CLIPOBJ_cEnumStart(IN PCLIPOBJ ClipObj,
 /*
  * @unimplemented
  */
-PPATHOBJ STDCALL
-CLIPOBJ_ppoGetPath(PCLIPOBJ ClipObj)
+PATHOBJ* STDCALL
+CLIPOBJ_ppoGetPath(CLIPOBJ *ClipObj)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -3367,7 +3379,7 @@ EngCreateBitmap(IN SIZEL Size,
 /*
  * @unimplemented
  */
-PCLIPOBJ STDCALL
+CLIPOBJ* STDCALL
 EngCreateClip(VOID)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -3731,10 +3743,10 @@ EngTextOut(SURFOBJ *pso,STROBJ *pstro,FONTOBJ *pfo,CLIPOBJ *pco,RECTL *prclExtra
  * @unimplemented
  */
 BOOL STDCALL
-EngTransparentBlt(IN PSURFOBJ Dest,
-		  IN PSURFOBJ Source,
-		  IN PCLIPOBJ Clip,
-		  IN PXLATEOBJ ColorTranslation,
+EngTransparentBlt(IN SURFOBJ *Dest,
+		  IN SURFOBJ *Source,
+		  IN CLIPOBJ *Clip,
+		  IN XLATEOBJ *ColorTranslation,
 		  IN PRECTL DestRect,
 		  IN PRECTL SourceRect,
 		  IN ULONG TransparentColor,
@@ -3781,7 +3793,7 @@ EngWideCharToMultiByte(UINT CodePage,LPWSTR WideCharString,INT BytesInWideCharSt
  */
 ULONG
 STDCALL
-FONTOBJ_cGetAllGlyphHandles(IN PFONTOBJ  FontObj,
+FONTOBJ_cGetAllGlyphHandles(IN FONTOBJ *FontObj,
                             IN HGLYPH  *Glyphs)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -3793,7 +3805,7 @@ FONTOBJ_cGetAllGlyphHandles(IN PFONTOBJ  FontObj,
  */
 ULONG
 STDCALL
-FONTOBJ_cGetGlyphs(IN PFONTOBJ FontObj,
+FONTOBJ_cGetGlyphs(IN FONTOBJ *FontObj,
                    IN ULONG    Mode,
                    IN ULONG    NumGlyphs,
                    IN HGLYPH  *GlyphHandles,
@@ -3828,7 +3840,7 @@ FONTOBJ_pfdg(FONTOBJ *pfo)
  */
 IFIMETRICS*
 STDCALL
-FONTOBJ_pifi(IN PFONTOBJ  FontObj)
+FONTOBJ_pifi(IN FONTOBJ  *FontObj)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -3839,7 +3851,7 @@ FONTOBJ_pifi(IN PFONTOBJ  FontObj)
  */
 PVOID
 STDCALL
-FONTOBJ_pvTrueTypeFontFile(IN PFONTOBJ  FontObj,
+FONTOBJ_pvTrueTypeFontFile(IN FONTOBJ  *FontObj,
                            IN ULONG    *FileSize)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -3851,7 +3863,7 @@ FONTOBJ_pvTrueTypeFontFile(IN PFONTOBJ  FontObj,
  */
 XFORMOBJ*
 STDCALL
-FONTOBJ_pxoGetXform(IN PFONTOBJ  FontObj)
+FONTOBJ_pxoGetXform(IN FONTOBJ  *FontObj)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -3862,7 +3874,7 @@ FONTOBJ_pxoGetXform(IN PFONTOBJ  FontObj)
  */
 VOID
 STDCALL
-FONTOBJ_vGetInfo(IN  PFONTOBJ   FontObj,
+FONTOBJ_vGetInfo(IN  FONTOBJ   *FontObj,
                  IN  ULONG      InfoSize,
                  OUT PFONTINFO  FontInfo)
 {

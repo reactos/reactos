@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: driver.c,v 1.37 2004/03/06 01:22:03 navaraf Exp $
+/* $Id: driver.c,v 1.38 2004/04/09 20:03:19 navaraf Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -33,6 +33,7 @@
 #include <wchar.h>
 #include <ddk/winddi.h>
 #include <ddk/ntddvid.h>
+#include <ddk/ntapi.h>
 #include <rosrtl/string.h>
 #include <include/tags.h>
 

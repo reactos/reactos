@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scrollbar.c,v 1.28 2004/03/27 10:46:31 gvg Exp $
+/* $Id: scrollbar.c,v 1.29 2004/04/09 20:03:19 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -42,6 +42,9 @@
 #include <include/scroll.h>
 #include <include/painting.h>
 #include <include/tags.h>
+#ifdef __USE_W32API
+#include <oleacc.h>
+#endif
 
 #define NDEBUG
 #include <debug.h>

@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.16 2004/01/11 17:31:15 gvg Exp $
+/* $Id: handle.c,v 1.17 2004/04/09 20:03:15 navaraf Exp $
  *
  * reactos/subsys/csrss/api/handle.c
  *
@@ -9,9 +9,8 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-
 #include <csrss/csrss.h>
+#include <ddk/ntddk.h>
 #include <ntdll/rtl.h>
 #include "api.h"
 
