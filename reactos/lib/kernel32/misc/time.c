@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.34 2004/12/01 14:24:51 ekohl Exp $
+/* $Id: time.c,v 1.35 2004/12/02 21:22:36 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -338,13 +338,12 @@ SetSystemTime(CONST SYSTEMTIME *lpSystemTime)
 DWORD STDCALL
 GetTimeZoneInformation(LPTIME_ZONE_INFORMATION lpTimeZoneInformation)
 {
-   TIME_ZONE_INFORMATION TimeZoneInformation;
    NTSTATUS Status;
 
    DPRINT("GetTimeZoneInformation()\n");
 
    Status = NtQuerySystemInformation(SystemCurrentTimeZoneInformation,
-				     &TimeZoneInformation,
+				     lpTimeZoneInformation,
 				     sizeof(TIME_ZONE_INFORMATION),
 				     NULL);
    if (!NT_SUCCESS(Status))
@@ -352,10 +351,6 @@ GetTimeZoneInformation(LPTIME_ZONE_INFORMATION lpTimeZoneInformation)
 	SetLastErrorByStatus(Status);
 	return TIME_ZONE_ID_INVALID;
      }
-
-   memcpy(lpTimeZoneInformation,
-	  &TimeZoneInformation,
-	  sizeof(TIME_ZONE_INFORMATION));
 
    return(SharedUserData->TimeZoneId);
 }
@@ -367,16 +362,11 @@ GetTimeZoneInformation(LPTIME_ZONE_INFORMATION lpTimeZoneInformation)
 BOOL STDCALL
 SetTimeZoneInformation(CONST TIME_ZONE_INFORMATION *lpTimeZoneInformation)
 {
-   TIME_ZONE_INFORMATION TimeZoneInformation;
    NTSTATUS Status;
 
    DPRINT("SetTimeZoneInformation()\n");
 
-   memcpy(&TimeZoneInformation,
-	  lpTimeZoneInformation,
-	  sizeof(TIME_ZONE_INFORMATION));
-
-   Status = RtlSetTimeZoneInformation(&TimeZoneInformation);
+   Status = RtlSetTimeZoneInformation((PTIME_ZONE_INFORMATION)lpTimeZoneInformation);
    if (!NT_SUCCESS(Status))
      {
 	DPRINT1("RtlSetTimeZoneInformation() failed (Status %lx)\n", Status);
@@ -385,7 +375,7 @@ SetTimeZoneInformation(CONST TIME_ZONE_INFORMATION *lpTimeZoneInformation)
      }
 
    Status = NtSetSystemInformation(SystemCurrentTimeZoneInformation,
-				   (PVOID)&TimeZoneInformation,
+				   (PVOID)lpTimeZoneInformation,
 				   sizeof(TIME_ZONE_INFORMATION));
    if (!NT_SUCCESS(Status))
      {
