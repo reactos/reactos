@@ -1,4 +1,4 @@
-/* $Id: guiconsole.c,v 1.15 2004/07/03 17:17:05 hbirr Exp $
+/* $Id: guiconsole.c,v 1.16 2004/07/28 22:28:50 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -32,6 +32,8 @@ typedef struct GUI_CONSOLE_DATA_TAG
   CRITICAL_SECTION Lock;
   HDC MemoryDC;
   HBITMAP MemoryBitmap;
+  RECT Selection;
+  POINT SelectionStart;
 } GUI_CONSOLE_DATA, *PGUI_CONSOLE_DATA;
 
 #ifndef WM_APP
@@ -134,6 +136,8 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
   GuiData->CursorBlinkOn = TRUE;
   GuiData->ForceCursorOff = FALSE;
 
+  GuiData->Selection.left = -1;
+  
   Console->PrivateData = GuiData;
   SetWindowLongW(hWnd, GWL_USERDATA, (LONG) Console);
 
@@ -180,6 +184,71 @@ GuiConsoleGetLogicalCursorPos(PCSRSS_SCREEN_BUFFER Buff, ULONG *CursorX, ULONG *
       *CursorY = Buff->CurrentY - Buff->ShowY;
     }
 }
+
+
+static VOID FASTCALL
+GuiConsoleUpdateSelection(HWND hWnd, PRECT rc, PGUI_CONSOLE_DATA GuiData)
+{
+  RECT oldRect = GuiData->Selection;
+  
+  if(rc != NULL)
+  {
+    RECT changeRect = *rc;
+
+    GuiData->Selection = *rc;
+
+    changeRect.left *= GuiData->CharWidth;
+    changeRect.top *= GuiData->CharHeight;
+    changeRect.right *= GuiData->CharWidth;
+    changeRect.bottom *= GuiData->CharHeight;
+    
+    if(rc->left != oldRect.left ||
+       rc->top != oldRect.top ||
+       rc->right != oldRect.right ||
+       rc->bottom != oldRect.bottom)
+    {
+      if(oldRect.left != -1)
+      {
+        HRGN rgn1, rgn2;
+        
+        oldRect.left *= GuiData->CharWidth;
+        oldRect.top *= GuiData->CharHeight;
+        oldRect.right *= GuiData->CharWidth;
+        oldRect.bottom *= GuiData->CharHeight;
+        
+        /* calculate the region that needs to be updated */
+        if((rgn1 = CreateRectRgnIndirect(&oldRect)))
+        {
+          if((rgn2 = CreateRectRgnIndirect(&changeRect)))
+          {
+            if(CombineRgn(rgn1, rgn2, rgn1, RGN_XOR) != ERROR)
+            {
+              InvalidateRgn(hWnd, rgn1, FALSE);
+            }
+
+            DeleteObject(rgn2);
+          }
+          DeleteObject(rgn1);
+        }
+      }
+      else
+      {
+        InvalidateRect(hWnd, &changeRect, FALSE);
+      }
+    }
+  }
+  else if(oldRect.left != -1)
+  {
+    /* clear the selection */
+    GuiData->Selection.left = -1;
+    oldRect.left *= GuiData->CharWidth;
+    oldRect.top *= GuiData->CharHeight;
+    oldRect.right *= GuiData->CharWidth;
+    oldRect.bottom *= GuiData->CharHeight;
+    InvalidateRect(hWnd, &oldRect, FALSE);
+  }
+}
+
 
 VOID FASTCALL
 GuiConsoleUpdateBitmap(HWND hWnd, RECT rc)
@@ -303,6 +372,22 @@ GuiConsoleHandlePaint(HWND hWnd)
              Ps.rcPaint.right - Ps.rcPaint.left + 1,
              Ps.rcPaint.bottom - Ps.rcPaint.top + 1, GuiData->MemoryDC,
              Ps.rcPaint.left, Ps.rcPaint.top, SRCCOPY);
+      
+      if (GuiData->Selection.left != -1)
+      {
+        RECT rc = GuiData->Selection;
+        
+        rc.left *= GuiData->CharWidth;
+        rc.top *= GuiData->CharHeight;
+        rc.right *= GuiData->CharWidth;
+        rc.bottom *= GuiData->CharHeight;
+
+        if (IntersectRect(&rc, &Ps.rcPaint, &rc))
+        {                 
+          PatBlt(Dc, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, DSTINVERT);
+        } 
+      }                   
+      
       EndPaint (hWnd, &Ps);
       LeaveCriticalSection(&GuiData->Lock);
     }
@@ -325,6 +410,12 @@ GuiConsoleHandleKey(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
   Message.message = msg;
   Message.wParam = wParam;
   Message.lParam = lParam;
+  
+  if(msg == WM_CHAR || msg == WM_SYSKEYDOWN)
+  {
+    /* clear the selection */
+    GuiConsoleUpdateSelection(hWnd, NULL, GuiData);
+  }
 
   ConioProcessKey(&Message, Console, FALSE);
 }
@@ -525,6 +616,133 @@ GuiConsoleHandleNcDestroy(HWND hWnd)
   HeapFree(Win32CsrApiHeap, 0, GuiData);
 }
 
+static VOID FASTCALL
+GuiConsoleLeftMouseDown(HWND hWnd, LPARAM lParam)
+{
+  PCSRSS_CONSOLE Console;
+  PGUI_CONSOLE_DATA GuiData;
+  POINTS pt;
+  RECT rc;
+  
+  GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
+  if (Console == NULL || GuiData == NULL) return;
+
+  pt = MAKEPOINTS(lParam);
+
+  rc.left = pt.x / GuiData->CharWidth;
+  rc.top = pt.y / GuiData->CharHeight;
+  rc.right = rc.left + 1;
+  rc.bottom = rc.top + 1;
+  
+  GuiData->SelectionStart.x = rc.left;
+  GuiData->SelectionStart.y = rc.top;
+  
+  SetCapture(hWnd);
+  
+  GuiConsoleUpdateSelection(hWnd, &rc, GuiData);
+}
+
+static VOID FASTCALL
+GuiConsoleLeftMouseUp(HWND hWnd, LPARAM lParam)
+{
+  PCSRSS_CONSOLE Console;
+  PGUI_CONSOLE_DATA GuiData;
+  RECT rc;
+  POINTS pt;
+  
+  GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
+  if (Console == NULL || GuiData == NULL) return;
+  if (GuiData->Selection.left == -1) return;
+  
+  pt = MAKEPOINTS(lParam);
+  
+  rc.left = GuiData->SelectionStart.x;
+  rc.top = GuiData->SelectionStart.y;
+  rc.right = (pt.x >= 0 ? (pt.x + GuiData->CharWidth - 1) / GuiData->CharWidth : 0);
+  rc.bottom = (pt.y >= 0 ? (pt.y + GuiData->CharHeight - 1) / GuiData->CharHeight : 0);
+
+  /* exchange left/top with right/bottom if required */
+  if(rc.left >= rc.right)
+  {
+    LONG tmp;
+    tmp = rc.left;
+    rc.left = max(rc.right - 1, 0);
+    rc.right = tmp + 1;
+  }
+  if(rc.top >= rc.bottom)
+  {
+    LONG tmp;
+    tmp = rc.top;
+    rc.top = max(rc.bottom - 1, 0);
+    rc.bottom = tmp + 1;
+  }
+
+  GuiConsoleUpdateSelection(hWnd, &rc, GuiData);
+  
+  ReleaseCapture();
+}
+
+static VOID FASTCALL
+GuiConsoleMouseMove(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+  PCSRSS_CONSOLE Console;
+  PGUI_CONSOLE_DATA GuiData;
+  RECT rc;
+  POINTS pt;
+  
+  if (!(wParam & MK_LBUTTON)) return;
+  
+  GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
+  if (Console == NULL || GuiData == NULL) return;
+  
+  pt = MAKEPOINTS(lParam);
+
+  rc.left = GuiData->SelectionStart.x;
+  rc.top = GuiData->SelectionStart.y;
+  rc.right = (pt.x >= 0 ? (pt.x + GuiData->CharWidth - 1) / GuiData->CharWidth : 0);
+  rc.bottom = (pt.y >= 0 ? (pt.y + GuiData->CharHeight - 1) / GuiData->CharHeight : 0);
+
+  /* exchange left/top with right/bottom if required */
+  if(rc.left >= rc.right)
+  {
+    LONG tmp;
+    tmp = rc.left;
+    rc.left = max(rc.right - 1, 0);
+    rc.right = tmp + 1;
+  }
+  if(rc.top >= rc.bottom)
+  {
+    LONG tmp;
+    tmp = rc.top;
+    rc.top = max(rc.bottom - 1, 0);
+    rc.bottom = tmp + 1;
+  }
+
+  GuiConsoleUpdateSelection(hWnd, &rc, GuiData);
+}    
+
+static VOID FASTCALL
+GuiConsoleRightMouseDown(HWND hWnd)
+{
+  PCSRSS_CONSOLE Console;
+  PGUI_CONSOLE_DATA GuiData;
+  
+  GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
+  if (Console == NULL || GuiData == NULL) return;
+
+  if (GuiData->Selection.left == -1)
+  {
+    /* FIXME - paste text from clipboard */
+  }
+  else
+  {
+    /* FIXME - copy selection to clipboard */
+    
+    GuiConsoleUpdateSelection(hWnd, NULL, GuiData);
+  }
+
+}    
+
 static LRESULT CALLBACK
 GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -558,6 +776,18 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
       case WM_NCDESTROY:
         GuiConsoleHandleNcDestroy(hWnd);
         Result = 0;
+        break;
+      case WM_LBUTTONDOWN:
+          GuiConsoleLeftMouseDown(hWnd, lParam);
+        break;
+      case WM_LBUTTONUP:
+          GuiConsoleLeftMouseUp(hWnd, lParam);
+        break;
+      case WM_RBUTTONDOWN:
+          GuiConsoleRightMouseDown(hWnd);
+        break;
+      case WM_MOUSEMOVE:
+          GuiConsoleMouseMove(hWnd, wParam, lParam);
         break;
       default:
         Result = DefWindowProcW(hWnd, msg, wParam, lParam);
