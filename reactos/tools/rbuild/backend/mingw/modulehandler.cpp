@@ -532,21 +532,60 @@ MingwModuleHandler::GenerateCommand ( const Module& module,
 	                                  sourceFilename.c_str () );
 }
 
-string
+void
 MingwModuleHandler::GenerateLinkerCommand ( const Module& module,
                                             const string& linker,
                                             const string& linkerParameters,
                                             const string& objectFilenames ) const
 {
+	string targetName ( module.GetTargetName () );
 	string target ( FixupTargetFilename ( module.GetPath () ) );
 	string importLibraryDependencies = GetImportLibraryDependencies ( module );
-	return ssprintf ( "%s %s -o %s %s %s %s\n",
-	                  linker.c_str (),
-		              linkerParameters.c_str (),
-                      target.c_str (),
-                      objectFilenames.c_str (),
-                      importLibraryDependencies.c_str (),
-                      GetLinkerMacro ( module ).c_str () );
+	if ( module.importLibrary != NULL )
+	{
+		static string ros_junk ( "$(ROS_TEMPORARY)" );
+		string base_tmp = ros_junk + module.name + ".base.tmp";
+		string junk_tmp = ros_junk + module.name + ".junk.tmp";
+		string temp_exp = ros_junk + module.name + ".temp.exp";
+
+		fprintf ( fMakefile,
+		          "\t%s %s -Wl,--base-file,%s -o %s %s %s %s\n",
+		          linker.c_str (),
+		          linkerParameters.c_str (),
+		          base_tmp.c_str (),
+		          junk_tmp.c_str (),
+		          objectFilenames.c_str (),
+		          importLibraryDependencies.c_str (),
+		          GetLinkerMacro ( module ).c_str () );
+
+		fprintf ( fMakefile,
+	              "\t${dlltool} --dllname %s --base-file %s --def %s --output-exp %s --kill-at\n",
+	              targetName.c_str (),
+	              base_tmp.c_str (),
+		          FixupTargetFilename ( module.GetBasePath () + SSEP + module.importLibrary->definition ).c_str (),
+	              temp_exp.c_str () );
+
+		fprintf ( fMakefile,
+		          "\t%s %s %s -o %s %s %s %s\n\n",
+		          linker.c_str (),
+		          linkerParameters.c_str (),
+		          temp_exp.c_str (),
+		          target.c_str (),
+		          objectFilenames.c_str (),
+		          importLibraryDependencies.c_str (),
+		          GetLinkerMacro ( module ).c_str () );
+	}
+	else
+	{
+		fprintf ( fMakefile,
+		          "\t%s %s -o %s %s %s %s\n\n",
+		          linker.c_str (),
+		          linkerParameters.c_str (),
+		          target.c_str (),
+		          objectFilenames.c_str (),
+		          importLibraryDependencies.c_str (),
+		          GetLinkerMacro ( module ).c_str () );
+	}
 }
 
 void
@@ -1060,13 +1099,10 @@ MingwKernelModeDLLModuleHandler::GenerateKernelModeDLLModuleTarget ( const Modul
 		          importLibraryDependencies.c_str () );
 
 		string linkerParameters ( "-Wl,--subsystem,native -Wl,--entry,_DriverEntry@8 -Wl,--image-base,0x10000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll" );
-		string linkerCommand = GenerateLinkerCommand ( module,
-                                                       "${gcc}",
-                                                       linkerParameters,
-                                                       archiveFilename );
-		fprintf ( fMakefile,
-		          "\t%s\n\n",
-		          linkerCommand.c_str () );
+		GenerateLinkerCommand ( module,
+                                "${gcc}",
+                                linkerParameters,
+                                archiveFilename );
 	}
 	else
 	{
@@ -1117,13 +1153,10 @@ MingwKernelModeDriverModuleHandler::GenerateKernelModeDriverModuleTarget ( const
 		          importLibraryDependencies.c_str () );
 
 		string linkerParameters ( "-Wl,--subsystem,native -Wl,--entry,_DriverEntry@8 -Wl,--image-base,0x10000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll" );
-		string linkerCommand = GenerateLinkerCommand ( module,
-                                                       "${gcc}",
-                                                       linkerParameters,
-                                                       archiveFilename );
-		fprintf ( fMakefile,
-		          "\t%s\n\n",
-		          linkerCommand.c_str () );
+		GenerateLinkerCommand ( module,
+                                "${gcc}",
+                                linkerParameters,
+                                archiveFilename );
 	}
 	else
 	{
@@ -1156,6 +1189,7 @@ MingwNativeDLLModuleHandler::GenerateNativeDLLModuleTarget ( const Module& modul
 	static string ros_junk ( "$(ROS_TEMPORARY)" );
 	string target ( FixupTargetFilename ( module.GetPath () ) );
 	string workingDirectory = GetWorkingDirectory ( );
+	string objectFilenames = GetObjectFilenames ( module );
 	string archiveFilename = GetModuleArchiveFilename ( module );
 	string importLibraryDependencies = GetImportLibraryDependencies ( module );
 	
@@ -1171,13 +1205,10 @@ MingwNativeDLLModuleHandler::GenerateNativeDLLModuleTarget ( const Module& modul
 		          importLibraryDependencies.c_str () );
 
 		string linkerParameters ( "-Wl,--subsystem,native -Wl,--entry,_DllMainCRTStartup@12 -Wl,--image-base,0x10000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -nostdlib -mdll" );
-		string linkerCommand = GenerateLinkerCommand ( module,
-                                                       "${gcc}",
-                                                       linkerParameters,
-                                                       archiveFilename );
-		fprintf ( fMakefile,
-		          "\t%s\n\n",
-		          linkerCommand.c_str () );
+		GenerateLinkerCommand ( module,
+                                "${gcc}",
+                                linkerParameters,
+                                objectFilenames );
 	}
 	else
 	{
@@ -1225,13 +1256,10 @@ MingwWin32DLLModuleHandler::GenerateWin32DLLModuleTarget ( const Module& module 
 		          importLibraryDependencies.c_str () );
 
 		string linkerParameters ( "-Wl,--subsystem,console -Wl,--entry,_DllMain@12 -Wl,--image-base,0x10000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -mdll" );
-		string linkerCommand = GenerateLinkerCommand ( module,
-                                                       "${gcc}",
-                                                       linkerParameters,
-                                                       archiveFilename );
-		fprintf ( fMakefile,
-		          "\t%s\n\n",
-		          linkerCommand.c_str () );
+		GenerateLinkerCommand ( module,
+                                "${gcc}",
+                                linkerParameters,
+                                archiveFilename );
 	}
 	else
 	{
@@ -1279,13 +1307,10 @@ MingwWin32GUIModuleHandler::GenerateWin32GUIModuleTarget ( const Module& module 
 		          importLibraryDependencies.c_str () );
 
 		string linkerParameters ( "-Wl,--subsystem,windows -Wl,--entry,_WinMainCRTStartup -Wl,--image-base,0x00400000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000" );
-		string linkerCommand = GenerateLinkerCommand ( module,
-                                                       "${gcc}",
-                                                       linkerParameters,
-                                                       objectFilenames );
-		fprintf ( fMakefile,
-		          "\t%s\n\n",
-		          linkerCommand.c_str () );
+		GenerateLinkerCommand ( module,
+                                "${gcc}",
+                                linkerParameters,
+                                objectFilenames );
 	}
 	else
 	{

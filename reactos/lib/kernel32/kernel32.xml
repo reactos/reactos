@@ -9,6 +9,9 @@
 	<library>pseh</library>
 	<library>rosrtl</library>
 	<library>ntdll</library>
+	<linkerflag>-lgcc</linkerflag>
+	<linkerflag>-nostartfiles</linkerflag>
+	<linkerflag>-nostdlib</linkerflag>
 	<invoke module="wmc">
 		<input>
 			<inputfile>kernel32.mc</inputfile>

@@ -1,5 +1,4 @@
 <module name="afd" type="kernelmodedriver">
-	<importlibrary definition="afd.def" />
 	<include base="afd">include</include>
 	<include base="ReactOS">include/afd</include>
 	<define name="__USE_W32API" />

@@ -6,6 +6,7 @@
 	<library>rosrtl</library>
 	<library>rtl</library>
 	<library>string</library>
+	<linkerflag>-lgcc</linkerflag>
 	<directory name="csr">
 		<file>capture.c</file>
 		<file>lpc.c</file>

@@ -251,23 +251,6 @@ RtlpDispatchException(IN PEXCEPTION_RECORD  ExceptionRecord,
  * @implemented
  */
 VOID STDCALL
-RtlRaiseStatus(NTSTATUS Status)
-{
-  EXCEPTION_RECORD ExceptionRecord;
-
-  DPRINT("RtlRaiseStatus(Status 0x%.08x)\n", Status);
-
-  ExceptionRecord.ExceptionCode    = Status;
-  ExceptionRecord.ExceptionRecord  = NULL;
-  ExceptionRecord.NumberParameters = 0;
-  ExceptionRecord.ExceptionFlags   = EXCEPTION_NONCONTINUABLE;
-  RtlRaiseException (& ExceptionRecord);
-}
-
-/*
- * @implemented
- */
-VOID STDCALL
 RtlUnwind(PEXCEPTION_REGISTRATION RegistrationFrame,
   PVOID ReturnAddress,
   PEXCEPTION_RECORD ExceptionRecord,

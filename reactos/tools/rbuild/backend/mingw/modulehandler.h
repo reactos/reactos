@@ -41,10 +41,10 @@ protected:
 	std::string GetCFlagsMacro ( const Module& module ) const;
 	std::string GetObjectsMacro ( const Module& module ) const;
 	std::string GetLinkerMacro ( const Module& module ) const;
-	std::string GenerateLinkerCommand ( const Module& module,
-	                                    const std::string& linker,
-	                                    const std::string& linkerParameters,
-	                                    const std::string& objectFilenames ) const;
+	void GenerateLinkerCommand ( const Module& module,
+	                             const std::string& linker,
+	                             const std::string& linkerParameters,
+	                             const std::string& objectFilenames ) const;
 	void GenerateImportLibraryTargetIfNeeded ( const Module& module ) const;
 	static FILE* fMakefile;
 private:
