@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.14 2001/03/08 22:06:00 dwelch Exp $
+# $Id: Makefile,v 1.15 2001/03/12 16:10:57 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -285,11 +285,11 @@ OBJECTS_KD = \
 	kd/service.o \
 	kd/dlog.o
 
-C_OBJECTS = $(OBJECTS_NT) $(OBJECTS_HAL) $(OBJECTS_MM) $(OBJECTS_MM_I386) \
+C_OBJECTS := $(OBJECTS_NT) $(OBJECTS_HAL) $(OBJECTS_MM) $(OBJECTS_MM_I386) \
 	$(OBJECTS_IO) $(OBJECTS_KE) $(OBJECTS_KE_I386) $(OBJECTS_OB) \
 	$(OBJECTS_PS) $(OBJECTS_EX) $(OBJECTS_CC) $(OBJECTS_FS) $(OBJECTS_SE) \
 	$(OBJECTS_DBG) $(OBJECTS_CM) $(OBJECTS_LDR) $(OBJECTS_LPC) \
-	$(OBJECTS_PO) $(OBJECTS_KD)	
+	$(OBJECTS_PO) $(OBJECTS_KD) $(OBJECTS_RTL)
 
 D_FILES := $(filter-out ex/napi.%, $(filter-out nt/zw.%, $(C_OBJECTS:.o=.d)))
 D1_FILES := $(join $(dir $(D_FILES)), $(addprefix ., $(notdir $(D_FILES))))
@@ -579,13 +579,13 @@ ke/main.o: ke/main.c ../include/reactos/buildno.h
 include $(D1_FILES)
 
 .%.d: %.c
-	$(CC) $(CFLAGS) -M $< | sed -e 's#$(*F).o#$(@D)/&#g' | sed -e 's@ /[^ ]*@@g' -e 's@^\(.*\)\.o:@.\1.d \1.o:@' > $@
+	$(CC) $(CFLAGS) -M $< | sed -f depends.sed | sed -e s#$(*F)\.o#$(@D)/$(*F).o#g -e s#\.$(*F)\.d#$(@D)/.$(*F).d#g > $@
 
 .%.d: %.s
-	$(CC) $(CFLAGS) -M -MG $< | sed -e 's#$(*F).o#$(@D)/&#g' | sed -e 's@ /[^ ]*@@g' -e 's@^\(.*\)\.o:@.\1.d \1.o:@' > $@
+	$(CC) $(CFLAGS) -M $< | sed -f depends.sed | sed -e s#$(*F)\.o#$(@D)/$(*F).o#g -e s#\.$(*F)\.d#$(@D)/.$(*F).d#g > $@
 
 .%.d: %.S
-	$(CC) $(CFLAGS) -M -MG $< | sed -e 's#$(*F).o#$(@D)/&#g' | sed -e 's@ /[^ ]*@@g' -e 's@^\(.*\)\.o:@.\1.d \1.o:@' > $@
+	$(CC) $(CFLAGS) -M $< | sed -f depends.sed | sed -e s#$(*F)\.o#$(@D)/$(*F).o#g -e s#\.$(*F)\.d#$(@D)/.$(*F).d#g > $@
 
 include $(PATH_TO_TOP)/rules.mak
 
