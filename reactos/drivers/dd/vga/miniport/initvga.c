@@ -88,9 +88,11 @@ void InitVGAMode()
   WRITE_PORT_UCHAR((PUCHAR)0x3ce,0x08);
   WRITE_PORT_UCHAR((PUCHAR)0x3cf,0xff);
 
+  // Zero out video memory (clear a possibly trashed screen)
+  RtlZeroMemory(vidmem, 64000);
+
   vgaPreCalc();
 }
-
 
 VOID  VGAResetDevice(OUT PSTATUS_BLOCK  StatusBlock)
 {
