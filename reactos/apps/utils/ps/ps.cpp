@@ -4,7 +4,7 @@
 static char* title = "     PID   PARENT  TIME NAME\n";
 char buf[256];
 
-void main()
+int main()
 {
   HANDLE stdout = GetStdHandle(STD_OUTPUT_HANDLE);
 
@@ -40,3 +40,12 @@ void main()
 
   CloseHandle(pl);
 }
+/*
+WINBOOL
+STDCALL
+FileTimeToDosDateTime(
+		      CONST FILETIME *lpFileTime,
+		      LPWORD lpFatDate,
+		      LPWORD lpFatTime
+		      );
+ */

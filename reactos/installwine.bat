@@ -30,6 +30,7 @@ copy ..\wine\dlls\dplayx\dplayx.dll 	%WINE_INSTALL%
 copy ..\wine\dlls\mapi32\mapi32.dll 	%WINE_INSTALL%
 copy ..\wine\dlls\mpr\mpr.dll 		%WINE_INSTALL%
 copy ..\wine\dlls\netapi32\netapi32.dll %WINE_INSTALL%
+copy ..\wine\dlls\odbc32\odbc32.dll 	%WINE_INSTALL%
 copy ..\wine\dlls\ole32\ole32.dll 	%WINE_INSTALL%
 copy ..\wine\dlls\oleaut32\oleaut32.dll %WINE_INSTALL%
 copy ..\wine\dlls\olecli\olecli32.dll   %WINE_INSTALL%
@@ -46,7 +47,7 @@ copy ..\wine\dlls\shfolder\shfolder.dll	%WINE_INSTALL%
 copy ..\wine\dlls\shlwapi\shlwapi.dll	%WINE_INSTALL%
 copy ..\wine\dlls\tapi32\tapi32.dll	%WINE_INSTALL%
 copy ..\wine\dlls\urlmon\urlmon.dll	%WINE_INSTALL%
-copy ..\wine\dlls\version\version.dll	%WINE_INSTALL%
+REMcopy ..\wine\dlls\version\version.dll	%WINE_INSTALL%
 copy ..\wine\dlls\wintrust\wintrust.dll	%WINE_INSTALL%
 copy ..\wine\dlls\winspool\winspool.drv	%WINE_INSTALL%
 REM

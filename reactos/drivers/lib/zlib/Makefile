@@ -1,10 +1,12 @@
-# $Id: Makefile,v 1.5 2002/08/17 01:42:01 dwelch Exp $
+# $Id: Makefile,v 1.6 2003/01/01 11:11:48 robd Exp $
 
 PATH_TO_TOP = ../../..
 
 TARGET_TYPE = library
 
 TARGET_NAME = zlib
+
+TARGET_NORC = yes
 
 TARGET_CFLAGS = \
  -MMD -O3 -Wall -Wwrite-strings -Wpointer-arith -Wconversion \
