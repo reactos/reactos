@@ -2097,15 +2097,18 @@ BOOL WINAPI TranslateMDISysAccel( HWND hwndClient, LPMSG msg )
  */
 void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
 {
-/* FIXME */
-#ifndef __REACTOS__
     SCROLLINFO info;
     RECT childRect, clientRect;
+#ifndef __REACTOS__
     HWND *list;
+#else
+    HWND hWndCurrent;
+#endif
 
     GetClientRect( hwnd, &clientRect );
     SetRectEmpty( &childRect );
 
+#ifndef __REACTOS__
     if ((list = WIN_ListChildren( hwnd )))
     {
         int i;
@@ -2127,6 +2130,26 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
         }
         HeapFree( GetProcessHeap(), 0, list );
     }
+#else
+    hWndCurrent = GetWindow(hwnd, GW_CHILD);
+    while (hWndCurrent != NULL)
+    {
+        DWORD style = GetWindowLongW( hWndCurrent, GWL_STYLE );
+        if (style & WS_MAXIMIZE)
+        {
+            ShowScrollBar( hwnd, SB_BOTH, FALSE );
+            return;
+        }
+        if (style & WS_VISIBLE)
+        {
+            RECT WindowRect;
+
+            GetWindowRect( hWndCurrent, &WindowRect );
+            UnionRect( &childRect, &WindowRect, &childRect );
+        }
+        hWndCurrent = GetWindow(hWndCurrent, GW_HWNDNEXT);
+    }
+#endif
     UnionRect( &childRect, &clientRect, &childRect );
 
     /* set common info values */
@@ -2151,7 +2174,6 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
 			SetScrollInfo(hwnd, scroll, &info, TRUE);
 			break;
     }
-#endif
 }
 
 
