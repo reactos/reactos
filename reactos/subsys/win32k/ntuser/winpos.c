@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.89 2004/02/17 17:43:09 weiden Exp $
+/* $Id: winpos.c,v 1.90 2004/02/18 12:21:57 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1246,7 +1246,7 @@ WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, POINT Point,
   PWINDOW_OBJECT Current;
 
   ExAcquireFastMutexUnsafe(&ScopeWin->ChildrenListLock);
-  Current = ScopeWin->LastChild;
+  Current = ScopeWin->FirstChild;
   while (Current)
     {
       if (Current->Style & WS_VISIBLE &&
@@ -1278,7 +1278,7 @@ WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, POINT Point,
 	  ExReleaseFastMutexUnsafe(&ScopeWin->ChildrenListLock);
 	  return(0);
 	}
-      Current = Current->PrevSibling;
+      Current = Current->NextSibling;
     }
 		  
   ExReleaseFastMutexUnsafe(&ScopeWin->ChildrenListLock);
