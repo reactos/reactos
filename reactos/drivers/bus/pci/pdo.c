@@ -1,4 +1,4 @@
-/* $Id: pdo.c,v 1.7 2004/08/18 08:25:58 ekohl Exp $
+/* $Id: pdo.c,v 1.8 2004/08/18 22:11:15 ekohl Exp $
  *
  * PROJECT:         ReactOS PCI bus driver
  * FILE:            pdo.c
@@ -435,7 +435,9 @@ PdoQueryResourceRequirements(
       {
         Descriptor->Type = CmResourceTypePort;
         Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-        Descriptor->Flags = CM_RESOURCE_PORT_IO;
+        Descriptor->Flags = CM_RESOURCE_PORT_IO |
+                            CM_RESOURCE_PORT_16_BIT_DECODE |
+                            CM_RESOURCE_PORT_POSITIVE_DECODE;
 
         Descriptor->u.Port.Length = Length;
         Descriptor->u.Port.Alignment = 1;
@@ -461,12 +463,14 @@ PdoQueryResourceRequirements(
       {
         Descriptor->Type = CmResourceTypePort;
         Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-        Descriptor->Flags = CM_RESOURCE_PORT_IO;
+        Descriptor->Flags = CM_RESOURCE_PORT_IO |
+                            CM_RESOURCE_PORT_16_BIT_DECODE |
+                            CM_RESOURCE_PORT_POSITIVE_DECODE;
 
         Descriptor->u.Port.Length = Length;
         Descriptor->u.Port.Alignment = Length;
         Descriptor->u.Port.MinimumAddress.QuadPart = (ULONGLONG)0;
-        Descriptor->u.Port.MaximumAddress.QuadPart = (ULONGLONG)(ULONG)-1;
+        Descriptor->u.Port.MaximumAddress.QuadPart = (ULONGLONG)0x00000000FFFFFFFF;
       }
       else
       {
@@ -477,7 +481,7 @@ PdoQueryResourceRequirements(
         Descriptor->u.Memory.Length = Length;
         Descriptor->u.Memory.Alignment = Length;
         Descriptor->u.Port.MinimumAddress.QuadPart = (ULONGLONG)0;
-        Descriptor->u.Port.MaximumAddress.QuadPart = (ULONGLONG)(ULONG)-1;
+        Descriptor->u.Port.MaximumAddress.QuadPart = (ULONGLONG)0x00000000FFFFFFFF;
       }
       Descriptor++;
     }
@@ -489,6 +493,7 @@ PdoQueryResourceRequirements(
       Descriptor->Type = CmResourceTypeInterrupt;
       Descriptor->ShareDisposition = CmResourceShareShared;
       Descriptor->Flags = CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE;
+
       Descriptor->u.Interrupt.MinimumVector = 0;
       Descriptor->u.Interrupt.MaximumVector = 0xFF;
     }
@@ -519,7 +524,9 @@ PdoQueryResourceRequirements(
       {
         Descriptor->Type = CmResourceTypePort;
         Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-        Descriptor->Flags = CM_RESOURCE_PORT_IO;
+        Descriptor->Flags = CM_RESOURCE_PORT_IO |
+                            CM_RESOURCE_PORT_16_BIT_DECODE |
+                            CM_RESOURCE_PORT_POSITIVE_DECODE;
 
         Descriptor->u.Port.Length = Length;
         Descriptor->u.Port.Alignment = 1;
@@ -545,12 +552,14 @@ PdoQueryResourceRequirements(
       {
         Descriptor->Type = CmResourceTypePort;
         Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-        Descriptor->Flags = CM_RESOURCE_PORT_IO;
+        Descriptor->Flags = CM_RESOURCE_PORT_IO |
+                            CM_RESOURCE_PORT_16_BIT_DECODE |
+                            CM_RESOURCE_PORT_POSITIVE_DECODE;
 
         Descriptor->u.Port.Length = Length;
         Descriptor->u.Port.Alignment = Length;
         Descriptor->u.Port.MinimumAddress.QuadPart = (ULONGLONG)0;
-        Descriptor->u.Port.MaximumAddress.QuadPart = (ULONGLONG)(ULONG)-1;
+        Descriptor->u.Port.MaximumAddress.QuadPart = (ULONGLONG)0x00000000FFFFFFFF;
       }
       else
       {
