@@ -694,12 +694,47 @@ typedef struct _GLYPHPOS
 typedef struct _STROBJ
 {
   ULONG      cGlyphs;
-  LONG       flAccel;
+  FLONG      flAccel;
   ULONG      ulCharInc;
   RECTL      rclBkGround;
   GLYPHPOS  *pgp;
   LPWSTR     pwszOrg;
 } STROBJ, *PSTROBJ;
+
+typedef struct _WCRUN
+{
+  WCHAR   wcLow;
+  USHORT  cGlyphs;
+  HGLYPH *phg;
+} WCRUN, *PWCRUN;
+
+typedef struct _FD_GLYPHSET
+{
+  ULONG  cjThis;
+  FLONG  flAccel;
+  ULONG  cGlyphsSupported;
+  ULONG  cRuns;
+  WCRUN  awcrun[1];
+} FD_GLYPHSET, *PFD_GLYPHSET;
+
+struct _DRIVEROBJ;
+
+typedef BOOL (CALLBACK * FREEOBJPROC) (struct _DRIVEROBJ* pDriverObj);
+
+typedef struct _DRIVEROBJ
+{
+  PVOID  pvObj;
+  FREEOBJPROC  pFreeProc;
+  HDEV  hdev;
+  DHPDEV  dhpdev;
+} DRIVEROBJ;
+
+typedef struct _TYPE1_FONT
+{
+  HANDLE  hPFM;
+  HANDLE  hPFB;
+  ULONG  ulIdentifier;
+} TYPE1_FONT;
 
 /*
  * Functions Prefixed with Drv are calls made from GDI to DDI, and
@@ -1347,28 +1382,49 @@ FLOATOBJ_SubFloatObj
 FLOATOBJ_SubLong
 */
 
-ULONG FONTOBJ_cGetAllGlyphHandles(IN PFONTOBJ  FontObj,
-                                  IN HGLYPH  *Glyphs);
-ULONG FONTOBJ_cGetGlyphs(IN PFONTOBJ  FontObj,
-                         IN ULONG  Mode,
-                         IN ULONG  NumGlyphs,
-                         IN HGLYPH  *GlyphHandles,
-                         IN PVOID  *OutGlyphs);
-PGAMMA_TABLES FONTOBJ_pGetGammaTables(IN PFONTOBJ  FontObj);
-IFIMETRICS *FONTOBJ_pifi(IN PFONTOBJ  FontObj);
-PVOID  FONTOBJ_pvTrueTypeFontFile(IN PFONTOBJ  FontObj,
-                                  IN ULONG  *FileSize);
-XFORMOBJ *FONTOBJ_pxoGetXform(IN PFONTOBJ  FontObj);
-VOID  FONTOBJ_vGetInfo(IN PFONTOBJ  FontObj,
-                       IN ULONG  InfoSize,
-                       OUT PFONTINFO  FontInfo);
+ULONG
+STDCALL
+FONTOBJ_cGetAllGlyphHandles(IN PFONTOBJ  FontObj,
+                            IN HGLYPH  *Glyphs);
+
+ULONG
+STDCALL
+FONTOBJ_cGetGlyphs(IN PFONTOBJ FontObj,
+                   IN ULONG    Mode,
+                   IN ULONG    NumGlyphs,
+                   IN HGLYPH  *GlyphHandles,
+                   IN PVOID   *OutGlyphs);
+
+PGAMMA_TABLES
+STDCALL
+FONTOBJ_pGetGammaTables(IN PFONTOBJ  FontObj);
+
+IFIMETRICS*
+STDCALL
+FONTOBJ_pifi(IN PFONTOBJ  FontObj);
+
+PVOID
+STDCALL
+FONTOBJ_pvTrueTypeFontFile(IN PFONTOBJ  FontObj,
+                           IN ULONG    *FileSize);
+
+XFORMOBJ*
+STDCALL
+FONTOBJ_pxoGetXform(IN PFONTOBJ  FontObj);
+
+VOID
+STDCALL
+FONTOBJ_vGetInfo(IN  PFONTOBJ   FontObj,
+                 IN  ULONG      InfoSize,
+                 OUT PFONTINFO  FontInfo);
 
 /*
 HT_ComputeRGBGammaTable
 HT_Get8BPPFormatPalette
 */
 
-ULONG STDCALL
+ULONG
+STDCALL
 PALOBJ_cGetColors(PALOBJ *PalObj,
 		  ULONG Start,
 		  ULONG Colors,
