@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.44 2003/12/28 13:53:14 weiden Exp $
+/* $Id: message.c,v 1.45 2003/12/28 14:21:03 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -148,6 +148,25 @@ NtUserDispatchMessage(CONST MSG* UnsafeMsg)
   
   return IntDispatchMessage(&Msg);
 }
+
+
+BOOL STDCALL
+NtUserTranslateMessage(LPMSG lpMsg,
+		       HKL dwhkl)
+{
+  NTSTATUS Status;
+  MSG SafeMsg;
+
+  Status = MmCopyFromCaller(&SafeMsg, lpMsg, sizeof(MSG));
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    return FALSE;
+  }
+
+  return IntTranslateKbdMessage(&SafeMsg, dwhkl);
+}
+
 
 VOID FASTCALL
 IntSendSpecialMessages(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg)

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: keyboard.c,v 1.20 2003/12/13 06:19:59 arty Exp $
+/* $Id: keyboard.c,v 1.21 2003/12/28 14:21:03 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -574,42 +574,38 @@ PKBDTABLES W32kGetDefaultKeyLayout() {
   return pkKeyboardLayout;
 }
 
-BOOL STDCALL
-NtUserTranslateMessage(LPMSG lpMsg,
-		       HKL dwhkl) /* Used to pass the kbd layout */
+BOOL FASTCALL
+IntTranslateKbdMessage(LPMSG lpMsg,
+                       HKL dwhkl)
 {
   static INT dead_char = 0;
   LONG UState = 0;
   WCHAR wp[2] = { 0 };
   MSG NewMsg = { 0 };
-  MSG InMsg = { 0 };
   PUSER_MESSAGE UMsg;
   PKBDTABLES keyLayout;
   BOOL Result = FALSE;
   DWORD ScanCode = 0;
 
-  if( !NT_SUCCESS(MmCopyFromCaller(&InMsg, lpMsg, sizeof(InMsg))) ) {
-    return FALSE;
-  }
 
   keyLayout = PsGetWin32Thread()->KeyboardLayout;
   if( !keyLayout )
     return FALSE;
 
-  if (InMsg.message != WM_KEYDOWN && InMsg.message != WM_SYSKEYDOWN)
+  if (lpMsg->message != WM_KEYDOWN && lpMsg->message != WM_SYSKEYDOWN)
     return FALSE;
 
-  ScanCode = (InMsg.lParam >> 16) & 0xff;
+  ScanCode = (lpMsg->lParam >> 16) & 0xff;
 
   ExAcquireFastMutex(&QueueStateLock);
 
-  UState = ToUnicodeInner(InMsg.wParam, HIWORD(InMsg.lParam) & 0xff,
+  UState = ToUnicodeInner(lpMsg->wParam, HIWORD(lpMsg->lParam) & 0xff,
 			  QueueKeyStateTable, wp, 2, 0, 
 			  keyLayout );
 
   if (UState == 1)
     {
-      NewMsg.message = (InMsg.message == WM_KEYDOWN) ? WM_CHAR : WM_SYSCHAR;
+      NewMsg.message = (lpMsg->message == WM_KEYDOWN) ? WM_CHAR : WM_SYSCHAR;
       if (dead_char)
         {
 	  ULONG i;
@@ -632,20 +628,20 @@ NtUserTranslateMessage(LPMSG lpMsg,
 	}
       if (dead_char) 
 	{
-	  NewMsg.hwnd = InMsg.hwnd;
+	  NewMsg.hwnd = lpMsg->hwnd;
 	  NewMsg.wParam = dead_char;
-	  NewMsg.lParam = InMsg.lParam;
+	  NewMsg.lParam = lpMsg->lParam;
 	  UMsg = MsqCreateMessage(&NewMsg);
 	  dead_char = 0;
 	  if (UMsg)
 	    MsqPostMessage(PsGetWin32Thread()->MessageQueue, UMsg);
 	}
       
-      NewMsg.hwnd = InMsg.hwnd;
+      NewMsg.hwnd = lpMsg->hwnd;
       NewMsg.wParam = wp[0];
-      NewMsg.lParam = InMsg.lParam;
+      NewMsg.lParam = lpMsg->lParam;
       UMsg = MsqCreateMessage(&NewMsg);
-      DPRINT( "CHAR='%c' %04x %08x\n", wp[0], wp[0], InMsg.lParam );
+      DPRINT( "CHAR='%c' %04x %08x\n", wp[0], wp[0], lpMsg->lParam );
       if (UMsg) 
 	MsqPostMessage(PsGetWin32Thread()->MessageQueue, UMsg);
       Result = TRUE;
@@ -653,10 +649,10 @@ NtUserTranslateMessage(LPMSG lpMsg,
   else if (UState == -1)
     {
       NewMsg.message = 
-	(InMsg.message == WM_KEYDOWN) ? WM_DEADCHAR : WM_SYSDEADCHAR;
-      NewMsg.hwnd = InMsg.hwnd;
+	(lpMsg->message == WM_KEYDOWN) ? WM_DEADCHAR : WM_SYSDEADCHAR;
+      NewMsg.hwnd = lpMsg->hwnd;
       NewMsg.wParam = wp[0];
-      NewMsg.lParam = InMsg.lParam;
+      NewMsg.lParam = lpMsg->lParam;
       dead_char = wp[0];
       UMsg = MsqCreateMessage(&NewMsg);
       if (UMsg)
