@@ -33,7 +33,7 @@ HFONT MakeFont(
    // supported.  For compatibility with these platforms you
    // should initialize the XFORM::eM22 data member to 1.0.
    //
-   XFORM xf = {0, 0, 0, 1.0};
+   XFORM xf = {0, 0, 0, 1.0, 0, 0};
    GetWorldTransform(hDestDC, &xf);
    int pixels_per_inch = GetDeviceCaps(hDestDC, LOGPIXELSY);
 

@@ -126,7 +126,7 @@ HWND RegisterAndCreateWindow (
 	wc.lpfnWndProc = WndProc;   // window procedure: mandatory
 	wc.hInstance = hInst;         // owner of the class: mandatory
 	wc.lpszClassName = className; // mandatory
-	wc.hCursor = LoadCursor ( 0, IDC_ARROW ); // optional
+	wc.hCursor = LoadCursor ( 0, (LPCTSTR)IDC_ARROW ); // optional
 	wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1); // optional
 	wc.style = 0;
 	wc.cbClsExtra = 0;

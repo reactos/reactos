@@ -44,7 +44,7 @@ main(int argc, char *argv[])
       z++;
       thread=CreateThread(NULL,
 			  0x1000,
-			  thread_1,
+			  (LPTHREAD_START_ROUTINE)thread_1,
 			  NULL,
 			  0,
 			  &thread_id);

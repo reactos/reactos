@@ -152,9 +152,9 @@ WinMain (HINSTANCE hInst, HINSTANCE hPrev, LPSTR lpCmd, int nShow)
         wndclass.hInstance = hInst;
 
         /* Use standard application icon and arrow cursor provided by the OS */
-        wndclass.hIcon = LoadIcon (NULL, IDI_APPLICATION);
-        wndclass.hIconSm = LoadIcon (NULL, IDI_APPLICATION);
-        wndclass.hCursor = LoadCursor (NULL, IDC_ARROW);
+        wndclass.hIcon = LoadIcon (NULL, (LPCTSTR)IDI_APPLICATION);
+        wndclass.hIconSm = LoadIcon (NULL, (LPCTSTR)IDI_APPLICATION);
+        wndclass.hCursor = LoadCursor (NULL, (LPCTSTR)IDC_ARROW);
 
         /* Color the background white */
         wndclass.hbrBackground = (HBRUSH) GetStockObject (WHITE_BRUSH);

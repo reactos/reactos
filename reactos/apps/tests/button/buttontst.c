@@ -68,7 +68,7 @@ int STDCALL WinMain(
    TestWndClass.cbSize = sizeof(WNDCLASSEX);
    TestWndClass.lpfnWndProc = &TestWndProc;
    TestWndClass.hInstance = AppInstance;
-   TestWndClass.hCursor = LoadCursor(0, IDC_ARROW);
+   TestWndClass.hCursor = LoadCursor(0, (LPCTSTR)IDC_ARROW);
    TestWndClass.hbrBackground = CreateSolidBrush(RGB(255,255,230));
    TestWndClass.lpszClassName = TEST_WND_CLASS;
    Result = RegisterClassEx(&TestWndClass);

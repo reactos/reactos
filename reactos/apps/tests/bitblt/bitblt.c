@@ -32,7 +32,7 @@ int APIENTRY WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance,
    wc.style = CS_VREDRAW | CS_HREDRAW | CS_DBLCLKS;
    wc.lpfnWndProc = MainWndProc;
    wc.hInstance = HInstance;
-   wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+   wc.hCursor = LoadCursor(NULL, (LPCTSTR)IDC_ARROW);
   /* wc.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_BTNFACE + 1); */
    wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
    wc.lpszClassName = WndClassName;

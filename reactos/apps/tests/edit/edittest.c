@@ -51,7 +51,7 @@ POINTL point={10,3};
 RECT  rect = {0,0,20,20},rect2;
 DWORD StartP,EndP;
 
-#define ReplaceText "->> Replaced!! <<-"
+#define ReplaceTextStr "->> Replaced!! <<-"
 
 char* AllocatedText;  /* Buffer in the heap to feed it to the edit control */
 char* NewText = "New text for the edit control";
@@ -211,7 +211,7 @@ Msg[] =
      "EM_LINELENGTH",EM_LINELENGTH,-1,0,&HandlePrintReturnHex,
 
      "EM_GETWORDBREAKPROC",EM_GETWORDBREAKPROC,0,0,&HandlePrintReturnHex,
-     "EM_REPLACESEL",EM_REPLACESEL,TRUE,(LPARAM)&ReplaceText,&HandlePrintReturnHex,
+     "EM_REPLACESEL",EM_REPLACESEL,TRUE,(LPARAM)&ReplaceTextStr,&HandlePrintReturnHex,
 
      "EM_LINESCROLL",EM_LINESCROLL,5,1,&HandlePrintReturnHex,
      "EM_SCROLL",EM_SCROLL,SB_LINEDOWN,0,&HandlePrintReturnHex,
@@ -592,7 +592,7 @@ RegisterAndCreateWindow (HINSTANCE hInst,
 	wc.hInstance = hInst;       /* owner of the class */
 
 	wc.lpszClassName = className; 
-	wc.hCursor = LoadCursor ( 0, IDC_ARROW );
+	wc.hCursor = LoadCursor ( 0, (LPCTSTR)IDC_ARROW );
 	wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
 	wc.style = CS_HREDRAW | CS_VREDRAW;
 	wc.cbClsExtra = 0;

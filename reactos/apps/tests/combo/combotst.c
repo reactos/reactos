@@ -632,7 +632,7 @@ RegisterAndCreateWindow (HINSTANCE hInst,
     wc.hInstance = hInst;       /* owner of the class */
 
     wc.lpszClassName = className;
-    wc.hCursor = LoadCursor ( 0, IDC_ARROW );
+    wc.hCursor = LoadCursor ( 0, (LPCTSTR)IDC_ARROW );
     wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
     wc.style = CS_HREDRAW | CS_VREDRAW;
     wc.cbClsExtra = 0;

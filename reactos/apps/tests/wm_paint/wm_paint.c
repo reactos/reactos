@@ -31,7 +31,7 @@ int APIENTRY WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance,
    wc.style = CS_VREDRAW | CS_HREDRAW | CS_DBLCLKS;
    wc.lpfnWndProc = MainWndProc;
    wc.hInstance = HInstance;
-   wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+   wc.hCursor = LoadCursor(NULL, (LPCTSTR)IDC_ARROW);
    wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
    wc.lpszClassName = WndClassName;
 
@@ -72,7 +72,7 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
          // determine the invalidated area of the window            
          RECT RUpdate;
          HDC Hdc;
-         GetUpdateRect(HWnd, &RUpdate, NULL);
+         GetUpdateRect(HWnd, &RUpdate, FALSE);
 
          // grab a handle to our window's
          // common display device context

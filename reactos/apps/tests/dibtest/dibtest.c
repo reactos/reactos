@@ -40,8 +40,8 @@ WinMain(HINSTANCE hInstance,
   wc.lpfnWndProc = MainWndProc;
   wc.style = CS_VREDRAW | CS_HREDRAW;
   wc.hInstance = hInstance;
-  wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-  wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+  wc.hIcon = LoadIcon(NULL, (LPCTSTR)IDI_APPLICATION);
+  wc.hCursor = LoadCursor(NULL, (LPCTSTR)IDC_ARROW);
   wc.hbrBackground = (HBRUSH)GetStockObject(GRAY_BRUSH);
   wc.lpszMenuName = NULL;
   wc.cbClsExtra = 0;
