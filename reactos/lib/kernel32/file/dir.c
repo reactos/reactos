@@ -524,7 +524,7 @@ SearchPathA(
 	for(i=0;i<nBufferLength;i++)
 		lpBuffer[i] = (char)BufferW[i];
 
-	lpFilePart = strrchr(lpBuffer,'\\')+1;
+        *lpFilePart = strrchr(lpBuffer,'\\')+1;
 	return RetValue;
 }
 
@@ -654,9 +654,7 @@ DWORD STDCALL SearchPathW(LPCWSTR lpPath,
 		}
 		else
 			wcscpy(FileAndExtensionW,lpFileName);
-
-		
-		
+        
 		
 		lstrcatW(BufferW,L"\\??\\");
 		lstrcatW(BufferW,lpPath);
@@ -697,7 +695,6 @@ DWORD STDCALL SearchPathW(LPCWSTR lpPath,
 		FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,         
    		0		                                                                
 		);
-
 	
 
 		if ( !NT_SUCCESS(errCode) ) {
@@ -706,12 +703,11 @@ DWORD STDCALL SearchPathW(LPCWSTR lpPath,
 		else {
 			NtClose(FileHandle);
 			wcscpy(lpBuffer,&BufferW[4]);
-			lpFilePart = wcsrchr(lpBuffer,'\\')+1;
+                        *lpFilePart = wcsrchr(lpBuffer,'\\')+1;
 		}
 
 	}
 
 	return lstrlenW(lpBuffer);
-
 }
 

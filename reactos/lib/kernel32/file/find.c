@@ -1,4 +1,3 @@
-
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -54,8 +53,17 @@ typedef struct _WIN32_FIND_DATA_ASCII {
   CHAR    cAlternateFileName[ 14 ]; 
 } WIN32_FIND_DATA_ASCII, *PWIN32_FIND_DATA_ASCII; 
 
+/* FUNCTIONS ****************************************************************/
 
-/* FUNCTIONS *****************************************************************/
+static void FileDataToWin32Data(LPWIN32_FIND_DATA lpFindFileData, PKERNEL32_FIND_FILE_DATA IData)
+{
+   lpFindFileData->dwFileAttributes = IData->FileInfo.FileAttributes;
+//   memcpy(&lpFindFileData->ftCreationTime,&IData->FileInfo.CreationTime,sizeof(FILETIME));
+//   memcpy(&lpFindFileData->ftLastAccessTime,&IData->FileInfo.LastAccessTime,sizeof(FILETIME));
+//   memcpy(&lpFindFileData->ftLastWriteTime,&IData->FileInfo.LastWriteTime,sizeof(FILETIME));
+   lpFindFileData->nFileSizeHigh = IData->FileInfo.EndOfFile.HighPart;
+   lpFindFileData->nFileSizeLow = IData->FileInfo.EndOfFile.LowPart;
+}
 
 WINBOOL STDCALL InternalFindNextFile(HANDLE hFindFile,
                                      LPWIN32_FIND_DATA lpFindFileData)
@@ -87,18 +95,6 @@ WINBOOL STDCALL InternalFindNextFile(HANDLE hFindFile,
    FileDataToWin32Data(lpFindFileData, IData);
 
    return(TRUE);
-}
-
-static FileDataToWin32Data(LPWIN32_FIND_DATA lpFindFileData, PKERNEL32_FIND_FILE_DATA IData)
-{
- int i;
-   lpFindFileData->dwFileAttributes = IData->FileInfo.FileAttributes;
-//   memcpy(&lpFindFileData->ftCreationTime,&IData->FileInfo.CreationTime,sizeof(FILETIME));
-//   memcpy(&lpFindFileData->ftLastAccessTime,&IData->FileInfo.LastAccessTime,sizeof(FILETIME));
-//   memcpy(&lpFindFileData->ftLastWriteTime,&IData->FileInfo.LastWriteTime,sizeof(FILETIME));
-   lpFindFileData->nFileSizeHigh = IData->FileInfo.EndOfFile.HighPart;
-   lpFindFileData->nFileSizeLow = IData->FileInfo.EndOfFile.LowPart;
-
 }
 
 HANDLE STDCALL InternalFindFirstFile(LPCWSTR lpFileName, 
@@ -289,16 +285,14 @@ HANDLE STDCALL FindFirstFileW(LPCWSTR lpFileName,
 {
    PWIN32_FIND_DATA_UNICODE Ret;
    PKERNEL32_FIND_FILE_DATA IData;
-   int i;
 
    IData = InternalFindFirstFile(lpFileName,lpFindFileData);
    Ret = (PWIN32_FIND_DATA_UNICODE)lpFindFileData;
 
    memcpy(Ret->cFileName, IData->FileInfo.FileName, 
 	  IData->FileInfo.FileNameLength);
-   memset(Ret->cAlternateFileName, IData->FileInfo.ShortName, 
+   memcpy(Ret->cAlternateFileName, IData->FileInfo.ShortName, 
 	  IData->FileInfo.ShortNameLength);
-
 
    return(IData);
 }
@@ -308,7 +302,6 @@ WINBOOL STDCALL FindNextFileW(HANDLE hFindFile,
 {
    PWIN32_FIND_DATA_UNICODE Ret;
    PKERNEL32_FIND_FILE_DATA IData;
-   int i;
 
    IData = (PKERNEL32_FIND_FILE_DATA)hFindFile;   
    if (!InternalFindNextFile(hFindFile, lpFindFileData))

@@ -40,7 +40,7 @@ int DRIVE_IsValid( int drive )
 
     Drives[0] = 'A' + drive -1;
     if ((drive < 0) || (drive >= MAX_DOS_DRIVES)) return 0;
-    if ( CreateFileA(Drives,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_FLAG_BACKUP_SEMANTICS|FILE_ATTRIBUTE_DIRECTORY,NULL) == -1 ) {
+    if ( CreateFileA(Drives,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_FLAG_BACKUP_SEMANTICS|FILE_ATTRIBUTE_DIRECTORY,NULL) == INVALID_HANDLE_VALUE ) {
 	return 0;
     }
     return drive;
