@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.47 2003/11/03 18:51:40 ekohl Exp $
+/* $Id: dllmain.c,v 1.48 2003/11/07 17:40:02 gvg Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -47,9 +47,6 @@
 extern SSDT Win32kSSDT[];
 extern SSPT Win32kSSPT[];
 extern ULONG Win32kNumberOfSysCalls;
-
-PEPROCESS Win32kDeviceProcess;
-
 
 NTSTATUS STDCALL
 Win32kProcessCallback (struct _EPROCESS *Process,
@@ -269,8 +266,6 @@ BOOLEAN STDCALL
 Win32kInitialize (VOID)
 {
   DPRINT("in Win32kInitialize\n");
-
-  Win32kDeviceProcess = PsGetCurrentProcess();
 
   InitGdiObjectHandleTable ();
 

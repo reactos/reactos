@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: driver.c,v 1.30 2003/10/25 18:45:13 gvg Exp $
+/* $Id: driver.c,v 1.31 2003/11/07 17:40:02 gvg Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -235,21 +235,15 @@ BOOL DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED,
 
 typedef VP_STATUS (*PMP_DRIVERENTRY)(PVOID, PVOID);
 
-HANDLE DRIVER_FindMPDriver(LPCWSTR  Name)
+PDEVICE_OBJECT DRIVER_FindMPDriver(LPCWSTR Name)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING DeviceName;
   IO_STATUS_BLOCK Iosb;
   HANDLE DisplayHandle;
   NTSTATUS Status;
-  PEPROCESS CurrentProcess;
-
-  CurrentProcess = PsGetCurrentProcess();
-  if (CurrentProcess != Win32kDeviceProcess)
-    {
-      /* Switch to process context in which handle is to be valid */
-      KeAttachProcess(Win32kDeviceProcess);
-    }
+  PFILE_OBJECT VideoFileObject;
+  PDEVICE_OBJECT VideoDeviceObject;
 
   RtlInitUnicodeStringFromLiteral(&DeviceName, L"\\??\\DISPLAY1");
   InitializeObjectAttributes(&ObjectAttributes,
@@ -263,10 +257,21 @@ HANDLE DRIVER_FindMPDriver(LPCWSTR  Name)
 		      &Iosb,
 		      0,
 		      FILE_SYNCHRONOUS_IO_ALERT);
-
-  if (CurrentProcess != Win32kDeviceProcess)
+  if (NT_SUCCESS(Status))
     {
-      KeDetachProcess();
+      Status = ObReferenceObjectByHandle(DisplayHandle,
+                                         FILE_READ_DATA | FILE_WRITE_DATA,
+                                         IoFileObjectType,
+                                         KernelMode,
+                                         (PVOID *)&VideoFileObject,
+                                         NULL);
+      if (NT_SUCCESS(Status))
+        {
+          VideoDeviceObject = VideoFileObject->DeviceObject;
+          ObReferenceObject(VideoDeviceObject);
+          ObDereferenceObject(VideoFileObject);
+        }
+      ZwClose(DisplayHandle);
     }
 
   if (!NT_SUCCESS(Status))
@@ -276,7 +281,7 @@ HANDLE DRIVER_FindMPDriver(LPCWSTR  Name)
       return(NULL);
     }
 
-  return(DisplayHandle);
+  return VideoDeviceObject;
 }
 
 

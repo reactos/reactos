@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.95 2003/11/05 22:46:05 gvg Exp $
+/* $Id: dc.c,v 1.96 2003/11/07 17:40:02 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -192,7 +192,7 @@ NtGdiCreateCompatableDC(HDC  hDC)
   /* DriverName is copied in the AllocDC routine  */
   if(OrigDC == NULL)
   {
-    NewDC->DeviceDriver = PrimarySurface.DisplayDevice;
+    NewDC->DeviceDriver = (HANDLE) PrimarySurface.VideoDeviceObject;
   }
   else
   {
@@ -310,23 +310,6 @@ FindDriverFileNames(PUNICODE_STRING DriverFileNames)
   DPRINT("DriverFileNames %S\n", DriverFileNames->Buffer);
 
   return TRUE;
-}
-
-static void FASTCALL
-CloseMiniport()
-{
-  PEPROCESS CurrentProcess;
-
-  CurrentProcess = PsGetCurrentProcess();
-  if (CurrentProcess != Win32kDeviceProcess)
-    {
-      KeAttachProcess(Win32kDeviceProcess);
-    }
-  ZwClose(PrimarySurface.DisplayDevice);
-  if (CurrentProcess != Win32kDeviceProcess)
-    {
-      KeDetachProcess();
-    }
 }
 
 static NTSTATUS STDCALL
@@ -501,13 +484,10 @@ NtGdiCreatePrimarySurface(LPCWSTR Driver,
   PWSTR CurrentName;
   BOOL GotDriver;
   BOOL DoDefault;
-  NTSTATUS Status;
-  PFILE_OBJECT FileObject;
-  PEPROCESS CurrentProcess;
   extern void FASTCALL IntInitDesktopWindow(ULONG Width, ULONG Height);
 
   /*  Open the miniport driver  */
-  if ((PrimarySurface.DisplayDevice = DRIVER_FindMPDriver(Driver)) == NULL)
+  if ((PrimarySurface.VideoDeviceObject = DRIVER_FindMPDriver(Driver)) == NULL)
   {
     DPRINT1("FindMPDriver failed\n");
     return(FALSE);
@@ -565,7 +545,7 @@ NtGdiCreatePrimarySurface(LPCWSTR Driver,
   RtlFreeUnicodeString(&DriverFileNames);
   if (! GotDriver)
   {
-    CloseMiniport();
+    ObDereferenceObject(PrimarySurface.VideoDeviceObject);
     DPRINT1("No suitable DDI driver found\n");
     return FALSE;
   }
@@ -580,35 +560,10 @@ NtGdiCreatePrimarySurface(LPCWSTR Driver,
   /*  Construct DDI driver function dispatch table  */
   if (!DRIVER_BuildDDIFunctions(&DED, &PrimarySurface.DriverFunctions))
   {
-    CloseMiniport();
+    ObDereferenceObject(PrimarySurface.VideoDeviceObject);
     DPRINT1("BuildDDIFunctions failed\n");
     return(FALSE);
   }
-
-  CurrentProcess = PsGetCurrentProcess();
-  if (CurrentProcess != Win32kDeviceProcess)
-    {  
-      /* Switch to process context in which device handle is valid */
-      KeAttachProcess(Win32kDeviceProcess);
-    }
-
-  Status = ObReferenceObjectByHandle(PrimarySurface.DisplayDevice,
-				     FILE_READ_DATA | FILE_WRITE_DATA,
-				     IoFileObjectType,
-				     KernelMode,
-				     (PVOID *)&FileObject,
-				     NULL);
-  if (CurrentProcess != Win32kDeviceProcess)
-    {
-      KeDetachProcess();
-    }
-
-  if (!NT_SUCCESS(Status))
-    {
-      CloseMiniport();
-      DPRINT1("Referencing miniport device failed with status 0x%08x\n", Status);
-      return FALSE;
-    }
 
   /*  Allocate a phyical device handle from the driver  */
   if (SetupDevMode(&PrimarySurface.DMW))
@@ -624,7 +579,7 @@ NtGdiCreatePrimarySurface(LPCWSTR Driver,
                                                   &PrimarySurface.DevInfo,
                                                   NULL,
                                                   L"",
-                                                  (HANDLE) (FileObject->DeviceObject));
+                                                  (HANDLE) (PrimarySurface.VideoDeviceObject));
       DoDefault = (NULL == PrimarySurface.PDev);
       if (DoDefault)
         {
@@ -650,12 +605,11 @@ NtGdiCreatePrimarySurface(LPCWSTR Driver,
                                                   &PrimarySurface.DevInfo,
                                                   NULL,
                                                   L"",
-                                                  (HANDLE) (FileObject->DeviceObject));
+                                                  (HANDLE) (PrimarySurface.VideoDeviceObject));
 
       if (NULL == PrimarySurface.PDev)
         {
-          ObDereferenceObject(FileObject);
-          CloseMiniport();
+          ObDereferenceObject(PrimarySurface.VideoDeviceObject);
           DPRINT1("DrvEnablePDEV with default parameters failed\n");
           DPRINT1("Perhaps DDI driver doesn't match miniport driver?\n");
           return FALSE;
@@ -691,8 +645,7 @@ NtGdiCreatePrimarySurface(LPCWSTR Driver,
     PrimarySurface.DriverFunctions.EnableSurface(PrimarySurface.PDev);
   if (NULL == PrimarySurface.Handle)
     {
-      ObDereferenceObject(FileObject);
-      CloseMiniport();
+      ObDereferenceObject(PrimarySurface.VideoDeviceObject);
       DPRINT1("DrvEnableSurface failed\n");
       return FALSE;
     }
@@ -824,7 +777,7 @@ NtGdiDeleteDC(HDC  DCHandle)
       CHECKPOINT;
       DCToDelete->DriverFunctions.DisablePDev(DCToDelete->PDev);
 
-      CloseMiniport();
+      ObDereferenceObject(PrimarySurface.VideoDeviceObject);
 
       PrimarySurfaceCreated = FALSE;
     }
