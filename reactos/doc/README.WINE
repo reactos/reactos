@@ -1,4 +1,4 @@
-# ReactOS WINE porting guide for 0.2
+# ReactOS WINE porting guide for 0.3
 # Update this file when you port a dll/program from WINE.
 
 The ReactOS Project shares quite a bit of code with the WINE project.
@@ -39,6 +39,7 @@ reactos/lib/comctl32            # Synced to Wine-20041201
 reactos/lib/comdlg32		# Synced to Wine-20041201
 reactos/lib/dinput		# Synced to Wine-20041201
 reactos/lib/dinput8		# Synced to Wine-20041201
+reactos/lib/dsound		# Synced to Wine-20041201
 reactos/lib/icmp		# Synced to Wine-20041201
 reactos/lib/iphlpapi		# Out of sync
 reactos/lib/imagehlp		# Patches for BindImage need review and submission to winehq.
@@ -46,7 +47,7 @@ reactos/lib/msvcrt20		# Out of sync
 reactos/lib/mpr                 # Synced to Wine-20041201
 reactos/lib/msacm		# Out of sync
 reactos/lib/msi			# Synced to Wine-20041201
-reactos/lib/msvidoe		# Out of sync
+reactos/lib/msvideo		# Out of sync
 reactos/lib/netapi32		# Out of sync
 reactos/lib/odbc32		# In sync. Depends on port of Linux ODBC.
 reactos/lib/ole32               # Synced to Wine-20041201
@@ -68,8 +69,8 @@ reactos/lib/winmm/midimap       # Synced to Wine-20041201
 reactos/lib/winmm/wavemap       # Synced to Wine-20041201
 
 ReactOS shares the following programs with Winehq.
-reactos/subsys/system/regedit	#Out of sync
-reactos/subsys/system/expand
+reactos/subsys/system/regedit	# Out of sync
+reactos/subsys/system/expand	# Out of sync
 
 In addition the following libs, dlls and source files are mostly based on code ported
 from Winehq CVS. If you are looking to update something in these files
@@ -78,12 +79,26 @@ check Wine current souces first as it may already be fixed.
 reactos/lib/imm32		# 
 reactos/lib/uuid		#
 
-reactos/lib/user32/controls/button.c
-reactos/lib/user32/controls/edit.c
-reactos/lib/user32/controls/static.c
-reactos/lib/user32/misc/wsprintf.c
-reactos/lib/user32/windows/mdi.c
-reactos/lib/gdi32/objects/linedda.c
-reactos/lib/kernel32/misc/errormsg.c
-reactos/lib/msvcrt/wine/* - C++ exception handing
+advapi32 -
+  reactos/lib/advapi32/crypyto/*.c	# Synced to Wine-20041201
+
+gdi32 -
+  reactos/lib/gdi32/objects/linedda.c	# Out of sync
+
+kernel32 -
+  reactos/lib/kernel32/misc/errormsg.c	# Out of sync
+  reactos/lib/kernel32/misc/profile.c	# Out of sync
+  reactos/lib/kernel32/misc/lcformat.c	# Out of sync
+
+msvcrt -
+  reactos/lib/msvcrt/wine/*.c		# Out of sync
+
+User32 -
+  reactos/lib/user32/controls/button.c	# Out of sync
+  reactos/lib/user32/controls/edit.c	# Out of sync
+  reactos/lib/user32/controls/static.c	# Out of sync
+  reactos/lib/user32/misc/wsprintf.c	# Out of sync
+  reactos/lib/user32/windows/mdi.c	# Out of sync
+
+
                                                          `
