@@ -11,6 +11,7 @@ typedef struct _W32THREAD
   struct _KBDTABLES* KeyboardLayout;
   struct _DESKTOP_OBJECT* Desktop;
   DWORD MessagePumpHookValue;
+  BOOLEAN IsExiting;
 } W32THREAD, *PW32THREAD;
 
 #include <poppack.h>
@@ -30,8 +31,8 @@ typedef struct _W32PROCESS
   struct _WINSTATION_OBJECT* WindowStation;
   WORD GDIObjects;
   WORD UserObjects;
-  BOOL CreatedWindowOrDC;
-  BOOL ManualGuiCheck;
+  BOOLEAN CreatedWindowOrDC;
+  BOOLEAN ManualGuiCheck;
 } W32PROCESS, *PW32PROCESS;
 
 PW32THREAD STDCALL

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.65 2004/01/24 08:26:25 ekohl Exp $
+/* $Id: dllmain.c,v 1.66 2004/02/05 20:09:10 gvg Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -141,6 +141,7 @@ Win32kThreadCallback (struct _ETHREAD *Thread,
       DbgPrint ("  Create thread\n");
 #endif
 
+      Win32Thread->IsExiting = FALSE;
       IntDestroyCaret(Win32Thread);
       Win32Thread->MessageQueue = MsqCreateMessageQueue(Thread);
       Win32Thread->KeyboardLayout = W32kGetDefaultKeyLayout();
@@ -170,6 +171,7 @@ Win32kThreadCallback (struct _ETHREAD *Thread,
       DbgPrint ("  Destroy thread\n");
 #endif
 
+      Win32Thread->IsExiting = TRUE;
       HOOK_DestroyThreadHooks(Thread);
       RemoveTimersThread(Thread->Cid.UniqueThread);
       UnregisterThreadHotKeys(Thread);

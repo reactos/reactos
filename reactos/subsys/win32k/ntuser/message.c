@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.48 2004/01/28 20:54:30 gvg Exp $
+/* $Id: message.c,v 1.49 2004/02/05 20:09:10 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -716,6 +716,7 @@ IntSendMessage(HWND hWnd,
   PMSGMEMORY MsgMemoryEntry;
   INT lParamBufferSize;
   LPARAM lParamPacked;
+  PW32THREAD Win32Thread;
 
   /* FIXME: Check for a broadcast or topmost destination. */
 
@@ -727,11 +728,18 @@ IntSendMessage(HWND hWnd,
       return 0;
     }
 
-  /* FIXME: Check for an exiting window. */
+  Win32Thread = PsGetWin32Thread();
 
-  if (NULL != PsGetWin32Thread() &&
-      Window->MessageQueue == PsGetWin32Thread()->MessageQueue)
+  if (NULL != Win32Thread &&
+      Window->MessageQueue == Win32Thread->MessageQueue)
     {
+      if (Win32Thread->IsExiting)
+        {
+          /* Never send messages to exiting threads */
+          IntReleaseWindowObject(Window);
+          return 0;
+        }
+
       /* See if this message type is present in the table */
       MsgMemoryEntry = FindMsgMemory(Msg);
       if (NULL == MsgMemoryEntry)
