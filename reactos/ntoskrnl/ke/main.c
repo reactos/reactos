@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.97 2001/06/04 11:27:54 chorns Exp $
+/* $Id: main.c,v 1.98 2001/06/29 20:43:55 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -39,6 +39,7 @@
 #include <internal/ke.h>
 #include <internal/io.h>
 #include <internal/po.h>
+#include <internal/se.h>
 #include <napi/shared_data.h>
 #include <internal/v86m.h>
 #include <internal/kd.h>
@@ -65,6 +66,29 @@ static ULONG LastKernelAddress;
 volatile BOOLEAN Initialized = FALSE;
 
 /* FUNCTIONS ****************************************************************/
+
+static BOOLEAN
+RtlpCheckFileNameExtension(PCHAR FileName,
+			   PCHAR Extension)
+{
+   PCHAR Ext;
+
+   Ext = strrchr(FileName, '.');
+   if ((Extension == NULL) || (*Extension == 0))
+     {
+	if (Ext == NULL)
+	  return TRUE;
+	else
+	  return FALSE;
+     }
+   if (*Extension != '.')
+     Ext++;
+   
+   if (_stricmp(Ext, Extension) == 0)
+     return TRUE;
+   else
+     return FALSE;
+}
 
 static VOID
 CreateSystemRootLink (PCSZ ParameterLine)
@@ -437,7 +461,7 @@ ExpInitializeExecutive(VOID)
   assert(FIELD_OFFSET(KPCR, CurrentThread) == KPCR_CURRENT_THREAD);
   
   LdrInit1();
-      
+  
   KeLowerIrql(DISPATCH_LEVEL);
   
   NtEarlyInitVdm();
@@ -461,7 +485,7 @@ ExpInitializeExecutive(VOID)
   KeInit2();
   
   KeLowerIrql(PASSIVE_LEVEL);
-      
+  
   ObInit();
   PiInitProcessManager();
   
@@ -476,7 +500,7 @@ ExpInitializeExecutive(VOID)
   HalDisplayString("are welcome to change it and/or distribute copies of it "
 		   "under certain\n"); 
   HalDisplayString("conditions. There is absolutely no warranty for "
-		   "ReactOS.\n");
+		   "ReactOS.\n\n");
 
   /* Initialize all processors */
   KeNumberProcessors = 0;
@@ -494,19 +518,23 @@ ExpInitializeExecutive(VOID)
 
   if (KeNumberProcessors > 1)
     {
-      sprintf(str, "Found %d system processors.\n",
-	      KeNumberProcessors);
+      sprintf(str,
+	      "Found %d system processors. [%lu MB Memory]\n",
+	      KeNumberProcessors,
+	      (KeLoaderBlock.MemHigher + 1088)/ 1024);
     }
   else
     {
-      strcpy(str, "Found 1 system processor.\n");
+      sprintf(str,
+	      "Found 1 system processor. [%lu MB Memory]\n",
+	      (KeLoaderBlock.MemHigher + 1088)/ 1024);
     }
   HalDisplayString(str);
 
   /*
    * Initialize various critical subsystems
    */
-  HalInitSystem (1, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+  HalInitSystem(1, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
 
   ExInit();
   IoInit();
@@ -517,7 +545,70 @@ ExpInitializeExecutive(VOID)
   MmInit3();
   
   /* Report all resources used by hal */
-  HalReportResourceUsage ();
+  HalReportResourceUsage();
+  
+//  DumpBIOSMemoryMap();
+  
+  /*
+   * Initalize services loaded at boot time
+   */
+  DPRINT1("%d files loaded\n",KeLoaderBlock.ModsCount);
+  for (i=0; i < KeLoaderBlock.ModsCount; i++)
+    {
+      CPRINT("Module: '%s' at %08lx, length 0x%08lx\n",
+       KeLoaderModules[i].String,
+       KeLoaderModules[i].ModStart,
+       KeLoaderModules[i].ModEnd - KeLoaderModules[i].ModStart);
+    }
+
+  /*  Pass 1: load nls files  */
+  for (i = 1; i < KeLoaderBlock.ModsCount; i++)
+    {
+      name = (PCHAR)KeLoaderModules[i].String;
+      if (RtlpCheckFileNameExtension(name, ".nls"))
+	{
+	  ULONG Mod2Start = 0;
+	  ULONG Mod2End = 0;
+	  ULONG Mod3Start = 0;
+	  ULONG Mod3End = 0;
+
+	  name = (PCHAR)KeLoaderModules[i+1].String;
+	  if (RtlpCheckFileNameExtension(name, ".nls"))
+	    {
+	      Mod2Start = (ULONG)KeLoaderModules[i+1].ModStart;
+	      Mod2End = (ULONG)KeLoaderModules[i+1].ModEnd;
+
+	      name = (PCHAR)KeLoaderModules[i+2].String;
+	      if (RtlpCheckFileNameExtension(name, ".nls"))
+	        {
+		  Mod3Start = (ULONG)KeLoaderModules[i+2].ModStart;
+		  Mod3End = (ULONG)KeLoaderModules[i+2].ModEnd;
+	        }
+	    }
+
+	  /* Initialize nls sections */
+	  RtlpInitNlsSections((ULONG)KeLoaderModules[i].ModStart,
+			      (ULONG)KeLoaderModules[i].ModEnd,
+			      Mod2Start,
+			      Mod2End,
+			      Mod3Start,
+			      Mod3End);
+	  break;
+	}
+    }
+
+  /*  Pass 2: load registry chunks passed in  */
+  for (i = 1; i < KeLoaderBlock.ModsCount; i++)
+    {
+      start = KeLoaderModules[i].ModStart;
+      name = (PCHAR)KeLoaderModules[i].String;
+      if (RtlpCheckFileNameExtension(name, "") ||
+	  RtlpCheckFileNameExtension(name, ".hiv"))
+	{
+	  CPRINT("Process registry chunk at %08lx\n", start);
+	  CmImportHive((PCHAR) start);
+	}
+    }
 
   /*
    * Enter the kernel debugger before starting up the boot drivers
@@ -526,36 +617,17 @@ ExpInitializeExecutive(VOID)
   KdbEnter();
 #endif /* KDBG */
 
-  /*
-   * Initalize services loaded at boot time
-   */
-  DPRINT1("%d files loaded\n",KeLoaderBlock.ModsCount);
-  for (i=0; i < KeLoaderBlock.ModsCount; i++)
-    {
-      CPRINT("Module: %s\n", KeLoaderModules[i].String);
-    }
-
-  /*  Pass 1: load registry chunks passed in  */
-  for (i = 1; i < KeLoaderBlock.ModsCount; i++)
-    {
-      start = KeLoaderModules[i].ModStart;
-      if (strcmp ((PCHAR) start, "REGEDIT4") == 0)
-	{
-	  CPRINT("Process registry chunk at %08lx\n", start);
-	  CmImportHive((PCHAR) start);
-	}
-    }
-
-  /*  Pass 2: process boot loaded drivers  */
+  /*  Pass 3: process boot loaded drivers  */
   for (i=1; i < KeLoaderBlock.ModsCount; i++)
     {
       start = KeLoaderModules[i].ModStart;
       length = KeLoaderModules[i].ModEnd - start;
       name = (PCHAR)KeLoaderModules[i].String;
-      if (strcmp ((PCHAR) start, "REGEDIT4") != 0)
+      if (RtlpCheckFileNameExtension(name, ".sys") ||
+	  RtlpCheckFileNameExtension(name, ".sym"))
 	{
 	  CPRINT("Processing module '%s' at %08lx, length 0x%08lx\n",
-      name, start, length);
+	         name, start, length);
 	  LdrProcessDriver((PVOID)start, name, length);
 	}
     }
@@ -577,7 +649,7 @@ ExpInitializeExecutive(VOID)
   /*
    * Start the motherboard enumerator (the HAL)
    */
-  HalInitSystem (2, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+  HalInitSystem(2, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
 
   /*
    * Load boot start drivers
