@@ -10,11 +10,6 @@
 #include <string.h>
 #include <windows.h>
 
-extern void SetupOnce();
-
-#define _SetupOnce() \
-void SetupOnce()
-
 /* Valid values for Command parameter of TestRoutine */
 #define TESTCMD_RUN       0   /* Buffer contains information about what failed */
 #define TESTCMD_TESTNAME  1   /* Buffer contains description of test */
@@ -28,7 +23,7 @@ extern int _Result;
 extern char *_Buffer;
 
 /* Macros to simplify tests */
-#define _Dispatcher(FunctionName, TestName) \
+#define DISPATCHER(FunctionName, TestName) \
 void \
 FunctionName(int Command) \
 { \
@@ -170,9 +165,6 @@ _GetProcAddress(HMODULE hModule,
 
 HINSTANCE STDCALL
 _LoadLibraryA(LPCSTR lpLibFileName);
-
-VOID STDCALL
-_ExitProcess(UINT uExitCode);
 
 static inline PCHAR
 FrameworkGetExportedFunctionNameInternal(PAPI_DESCRIPTION ApiDescription)

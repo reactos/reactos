@@ -26,9 +26,3 @@ _LoadLibraryA(LPCSTR lpLibFileName)
 {
   return LoadLibraryA(lpLibFileName);
 }
-
-VOID STDCALL
-_ExitProcess(UINT uExitCode)
-{
-  ExitProcess(uExitCode);
-}

@@ -1,0 +1,1282 @@
+
+win32base.nostrip.dll:     file format pei-i386
+
+Disassembly of section .text:
+
+60001000 <_DllMainCRTStartup@12>:
+60001000:	55                   	push   %ebp
+60001001:	89 e5                	mov    %esp,%ebp
+60001003:	83 ec 18             	sub    $0x18,%esp
+60001006:	89 75 fc             	mov    %esi,0xfffffffc(%ebp)
+60001009:	8b 75 0c             	mov    0xc(%ebp),%esi
+6000100c:	89 5d f8             	mov    %ebx,0xfffffff8(%ebp)
+6000100f:	83 fe 01             	cmp    $0x1,%esi
+60001012:	74 5c                	je     60001070 <_DllMainCRTStartup@12+0x70>
+60001014:	89 74 24 04          	mov    %esi,0x4(%esp)
+60001018:	8b 55 10             	mov    0x10(%ebp),%edx
+6000101b:	89 54 24 08          	mov    %edx,0x8(%esp)
+6000101f:	8b 55 08             	mov    0x8(%ebp),%edx
+60001022:	89 14 24             	mov    %edx,(%esp)
+60001025:	e8 66 09 00 00       	call   60001990 <_DllMain@12>
+6000102a:	83 ec 0c             	sub    $0xc,%esp
+6000102d:	83 fe 01             	cmp    $0x1,%esi
+60001030:	89 c3                	mov    %eax,%ebx
+60001032:	74 2c                	je     60001060 <_DllMainCRTStartup@12+0x60>
+60001034:	85 f6                	test   %esi,%esi
+60001036:	75 0c                	jne    60001044 <_DllMainCRTStartup@12+0x44>
+60001038:	8b 0d 00 40 00 60    	mov    0x60004000,%ecx
+6000103e:	85 c9                	test   %ecx,%ecx
+60001040:	75 10                	jne    60001052 <_DllMainCRTStartup@12+0x52>
+60001042:	31 db                	xor    %ebx,%ebx
+60001044:	89 d8                	mov    %ebx,%eax
+60001046:	8b 5d f8             	mov    0xfffffff8(%ebp),%ebx
+60001049:	8b 75 fc             	mov    0xfffffffc(%ebp),%esi
+6000104c:	89 ec                	mov    %ebp,%esp
+6000104e:	5d                   	pop    %ebp
+6000104f:	c2 0c 00             	ret    $0xc
+60001052:	e8 59 00 00 00       	call   600010b0 <___dll_exit>
+60001057:	eb eb                	jmp    60001044 <_DllMainCRTStartup@12+0x44>
+60001059:	8d b4 26 00 00 00 00 	lea    0x0(%esi),%esi
+60001060:	85 c0                	test   %eax,%eax
+60001062:	75 d0                	jne    60001034 <_DllMainCRTStartup@12+0x34>
+60001064:	e8 47 00 00 00       	call   600010b0 <___dll_exit>
+60001069:	eb c9                	jmp    60001034 <_DllMainCRTStartup@12+0x34>
+6000106b:	90                   	nop    
+6000106c:	8d 74 26 00          	lea    0x0(%esi),%esi
+60001070:	c7 04 24 80 00 00 00 	movl   $0x80,(%esp)
+60001077:	e8 44 0d 00 00       	call   60001dc0 <_malloc>
+6000107c:	a3 00 40 00 60       	mov    %eax,0x60004000
+60001081:	85 c0                	test   %eax,%eax
+60001083:	74 1a                	je     6000109f <_DllMainCRTStartup@12+0x9f>
+60001085:	c7 00 00 00 00 00    	movl   $0x0,(%eax)
+6000108b:	a3 10 40 00 60       	mov    %eax,0x60004010
+60001090:	e8 0b 0a 00 00       	call   60001aa0 <__pei386_runtime_relocator>
+60001095:	e8 96 09 00 00       	call   60001a30 <___main>
+6000109a:	e9 75 ff ff ff       	jmp    60001014 <_DllMainCRTStartup@12+0x14>
+6000109f:	e8 0c 0d 00 00       	call   60001db0 <__errno>
+600010a4:	c7 00 0c 00 00 00    	movl   $0xc,(%eax)
+600010aa:	31 c0                	xor    %eax,%eax
+600010ac:	eb 98                	jmp    60001046 <_DllMainCRTStartup@12+0x46>
+600010ae:	89 f6                	mov    %esi,%esi
+
+600010b0 <___dll_exit>:
+600010b0:	55                   	push   %ebp
+600010b1:	89 e5                	mov    %esp,%ebp
+600010b3:	83 ec 08             	sub    $0x8,%esp
+600010b6:	89 5d fc             	mov    %ebx,0xfffffffc(%ebp)
+600010b9:	8b 15 00 40 00 60    	mov    0x60004000,%edx
+600010bf:	85 d2                	test   %edx,%edx
+600010c1:	74 29                	je     600010ec <___dll_exit+0x3c>
+600010c3:	8b 1d 10 40 00 60    	mov    0x60004010,%ebx
+600010c9:	83 eb 04             	sub    $0x4,%ebx
+600010cc:	39 d3                	cmp    %edx,%ebx
+600010ce:	72 0d                	jb     600010dd <___dll_exit+0x2d>
+600010d0:	8b 03                	mov    (%ebx),%eax
+600010d2:	85 c0                	test   %eax,%eax
+600010d4:	75 2a                	jne    60001100 <___dll_exit+0x50>
+600010d6:	83 eb 04             	sub    $0x4,%ebx
+600010d9:	39 d3                	cmp    %edx,%ebx
+600010db:	73 f3                	jae    600010d0 <___dll_exit+0x20>
+600010dd:	89 14 24             	mov    %edx,(%esp)
+600010e0:	e8 bb 0c 00 00       	call   60001da0 <_free>
+600010e5:	31 c0                	xor    %eax,%eax
+600010e7:	a3 00 40 00 60       	mov    %eax,0x60004000
+600010ec:	c7 04 24 00 00 00 00 	movl   $0x0,(%esp)
+600010f3:	e8 98 0c 00 00       	call   60001d90 <_fflush>
+600010f8:	8b 5d fc             	mov    0xfffffffc(%ebp),%ebx
+600010fb:	89 ec                	mov    %ebp,%esp
+600010fd:	5d                   	pop    %ebp
+600010fe:	c3                   	ret    
+600010ff:	90                   	nop    
+60001100:	ff d0                	call   *%eax
+60001102:	8b 15 00 40 00 60    	mov    0x60004000,%edx
+60001108:	eb cc                	jmp    600010d6 <___dll_exit+0x26>
+6000110a:	8d b6 00 00 00 00    	lea    0x0(%esi),%esi
+
+60001110 <_atexit>:
+60001110:	55                   	push   %ebp
+60001111:	89 e5                	mov    %esp,%ebp
+60001113:	83 ec 18             	sub    $0x18,%esp
+60001116:	c7 44 24 08 10 40 00 	movl   $0x60004010,0x8(%esp)
+6000111d:	60 
+6000111e:	8b 55 08             	mov    0x8(%ebp),%edx
+60001121:	c7 44 24 04 00 40 00 	movl   $0x60004000,0x4(%esp)
+60001128:	60 
+60001129:	89 14 24             	mov    %edx,(%esp)
+6000112c:	e8 4f 0c 00 00       	call   60001d80 <___dllonexit>
+60001131:	85 c0                	test   %eax,%eax
+60001133:	0f 95 c2             	setne  %dl
+60001136:	89 ec                	mov    %ebp,%esp
+60001138:	5d                   	pop    %ebp
+60001139:	0f b6 c2             	movzbl %dl,%eax
+6000113c:	48                   	dec    %eax
+6000113d:	c3                   	ret    
+6000113e:	89 f6                	mov    %esi,%esi
+
+60001140 <__onexit>:
+60001140:	55                   	push   %ebp
+60001141:	89 e5                	mov    %esp,%ebp
+60001143:	83 ec 18             	sub    $0x18,%esp
+60001146:	c7 44 24 08 10 40 00 	movl   $0x60004010,0x8(%esp)
+6000114d:	60 
+6000114e:	8b 55 08             	mov    0x8(%ebp),%edx
+60001151:	c7 44 24 04 00 40 00 	movl   $0x60004000,0x4(%esp)
+60001158:	60 
+60001159:	89 14 24             	mov    %edx,(%esp)
+6000115c:	e8 1f 0c 00 00       	call   60001d80 <___dllonexit>
+60001161:	89 ec                	mov    %ebp,%esp
+60001163:	5d                   	pop    %ebp
+60001164:	c3                   	ret    
+60001165:	90                   	nop    
+60001166:	90                   	nop    
+60001167:	90                   	nop    
+60001168:	90                   	nop    
+60001169:	90                   	nop    
+6000116a:	90                   	nop    
+6000116b:	90                   	nop    
+6000116c:	90                   	nop    
+6000116d:	90                   	nop    
+6000116e:	90                   	nop    
+6000116f:	90                   	nop    
+
+60001170 <___do_sjlj_init>:
+60001170:	55                   	push   %ebp
+60001171:	89 e5                	mov    %esp,%ebp
+60001173:	5d                   	pop    %ebp
+60001174:	e9 c7 09 00 00       	jmp    60001b40 <___w32_sharedptr_initialize>
+60001179:	90                   	nop    
+6000117a:	90                   	nop    
+6000117b:	90                   	nop    
+6000117c:	90                   	nop    
+6000117d:	90                   	nop    
+6000117e:	90                   	nop    
+6000117f:	90                   	nop    
+
+60001180 <_RegisterTests>:
+60001180:	55                   	push   %ebp
+60001181:	89 e5                	mov    %esp,%ebp
+60001183:	83 ec 08             	sub    $0x8,%esp
+60001186:	83 ec 0c             	sub    $0xc,%esp
+60001189:	68 ca 15 00 60       	push   $0x600015ca
+6000118e:	e8 2f 06 00 00       	call   600017c2 <_AddTest>
+60001193:	83 c4 10             	add    $0x10,%esp
+60001196:	c9                   	leave  
+60001197:	c3                   	ret    
+60001198:	90                   	nop    
+60001199:	90                   	nop    
+6000119a:	90                   	nop    
+6000119b:	90                   	nop    
+6000119c:	90                   	nop    
+6000119d:	90                   	nop    
+6000119e:	90                   	nop    
+6000119f:	90                   	nop    
+
+600011a0 <_AllocateMemory>:
+600011a0:	55                   	push   %ebp
+600011a1:	89 e5                	mov    %esp,%ebp
+600011a3:	83 ec 08             	sub    $0x8,%esp
+600011a6:	83 ec 04             	sub    $0x4,%esp
+600011a9:	ff 75 08             	pushl  0x8(%ebp)
+600011ac:	6a 00                	push   $0x0
+600011ae:	83 ec 04             	sub    $0x4,%esp
+600011b1:	e8 10 00 00 00       	call   600011c6 <_NtCurrentPeb>
+600011b6:	83 c4 04             	add    $0x4,%esp
+600011b9:	ff 70 18             	pushl  0x18(%eax)
+600011bc:	e8 6f 06 00 00       	call   60001830 <_RtlAllocateHeap@12>
+600011c1:	83 c4 04             	add    $0x4,%esp
+600011c4:	c9                   	leave  
+600011c5:	c3                   	ret    
+
+600011c6 <_NtCurrentPeb>:
+600011c6:	55                   	push   %ebp
+600011c7:	89 e5                	mov    %esp,%ebp
+600011c9:	83 ec 04             	sub    $0x4,%esp
+600011cc:	64 a1 30 00 00 00    	mov    %fs:0x30,%eax
+600011d2:	89 45 fc             	mov    %eax,0xfffffffc(%ebp)
+600011d5:	8b 45 fc             	mov    0xfffffffc(%ebp),%eax
+600011d8:	c9                   	leave  
+600011d9:	c3                   	ret    
+
+600011da <_FreeMemory>:
+600011da:	55                   	push   %ebp
+600011db:	89 e5                	mov    %esp,%ebp
+600011dd:	83 ec 08             	sub    $0x8,%esp
+600011e0:	83 ec 04             	sub    $0x4,%esp
+600011e3:	ff 75 08             	pushl  0x8(%ebp)
+600011e6:	6a 00                	push   $0x0
+600011e8:	e8 d9 ff ff ff       	call   600011c6 <_NtCurrentPeb>
+600011ed:	ff 70 18             	pushl  0x18(%eax)
+600011f0:	e8 4b 06 00 00       	call   60001840 <_RtlFreeHeap@12>
+600011f5:	83 c4 04             	add    $0x4,%esp
+600011f8:	c9                   	leave  
+600011f9:	c3                   	ret    
+
+600011fa <_DummyThreadMain@4>:
+600011fa:	55                   	push   %ebp
+600011fb:	89 e5                	mov    %esp,%ebp
+600011fd:	b8 00 00 00 00       	mov    $0x0,%eax
+60001202:	5d                   	pop    %ebp
+60001203:	c2 04 00             	ret    $0x4
+
+60001206 <_RunPrivateTests>:
+60001206:	55                   	push   %ebp
+60001207:	89 e5                	mov    %esp,%ebp
+60001209:	83 ec 18             	sub    $0x18,%esp
+6000120c:	68 00 30 00 60       	push   $0x60003000
+60001211:	6a 00                	push   $0x0
+60001213:	6a 00                	push   $0x0
+60001215:	6a 00                	push   $0x0
+60001217:	e8 84 06 00 00       	call   600018a0 <_CreateEventA@16>
+6000121c:	89 45 f8             	mov    %eax,0xfffffff8(%ebp)
+6000121f:	83 7d f8 00          	cmpl   $0x0,0xfffffff8(%ebp)
+60001223:	75 05                	jne    6000122a <_RunPrivateTests+0x24>
+60001225:	e9 a1 00 00 00       	jmp    600012cb <_RunPrivateTests+0xc5>
+6000122a:	83 ec 0c             	sub    $0xc,%esp
+6000122d:	ff 75 08             	pushl  0x8(%ebp)
+60001230:	e8 7b 06 00 00       	call   600018b0 <_GetModuleHandleA@4>
+60001235:	83 c4 0c             	add    $0xc,%esp
+60001238:	89 45 fc             	mov    %eax,0xfffffffc(%ebp)
+6000123b:	83 7d fc 00          	cmpl   $0x0,0xfffffffc(%ebp)
+6000123f:	74 49                	je     6000128a <_RunPrivateTests+0x84>
+60001241:	83 ec 08             	sub    $0x8,%esp
+60001244:	6a 00                	push   $0x0
+60001246:	6a 00                	push   $0x0
+60001248:	6a 00                	push   $0x0
+6000124a:	68 fa 11 00 60       	push   $0x600011fa
+6000124f:	6a 00                	push   $0x0
+60001251:	6a 00                	push   $0x0
+60001253:	e8 68 06 00 00       	call   600018c0 <_CreateThread@24>
+60001258:	83 c4 08             	add    $0x8,%esp
+6000125b:	89 45 f4             	mov    %eax,0xfffffff4(%ebp)
+6000125e:	83 7d f4 00          	cmpl   $0x0,0xfffffff4(%ebp)
+60001262:	74 59                	je     600012bd <_RunPrivateTests+0xb7>
+60001264:	83 ec 08             	sub    $0x8,%esp
+60001267:	68 88 13 00 00       	push   $0x1388
+6000126c:	ff 75 f8             	pushl  0xfffffff8(%ebp)
+6000126f:	e8 5c 06 00 00       	call   600018d0 <_WaitForSingleObject@8>
+60001274:	83 c4 08             	add    $0x8,%esp
+60001277:	89 45 f0             	mov    %eax,0xfffffff0(%ebp)
+6000127a:	83 ec 0c             	sub    $0xc,%esp
+6000127d:	ff 75 f4             	pushl  0xfffffff4(%ebp)
+60001280:	e8 5b 06 00 00       	call   600018e0 <_CloseHandle@4>
+60001285:	83 c4 0c             	add    $0xc,%esp
+60001288:	eb 33                	jmp    600012bd <_RunPrivateTests+0xb7>
+6000128a:	83 ec 0c             	sub    $0xc,%esp
+6000128d:	ff 75 08             	pushl  0x8(%ebp)
+60001290:	e8 5b 06 00 00       	call   600018f0 <_LoadLibraryA@4>
+60001295:	83 c4 0c             	add    $0xc,%esp
+60001298:	89 45 fc             	mov    %eax,0xfffffffc(%ebp)
+6000129b:	83 7d fc 00          	cmpl   $0x0,0xfffffffc(%ebp)
+6000129f:	74 1c                	je     600012bd <_RunPrivateTests+0xb7>
+600012a1:	83 ec 0c             	sub    $0xc,%esp
+600012a4:	ff 75 f8             	pushl  0xfffffff8(%ebp)
+600012a7:	e8 34 06 00 00       	call   600018e0 <_CloseHandle@4>
+600012ac:	83 c4 0c             	add    $0xc,%esp
+600012af:	83 ec 0c             	sub    $0xc,%esp
+600012b2:	ff 75 fc             	pushl  0xfffffffc(%ebp)
+600012b5:	e8 46 06 00 00       	call   60001900 <_FreeLibrary@4>
+600012ba:	83 c4 0c             	add    $0xc,%esp
+600012bd:	83 ec 0c             	sub    $0xc,%esp
+600012c0:	ff 75 f8             	pushl  0xfffffff8(%ebp)
+600012c3:	e8 18 06 00 00       	call   600018e0 <_CloseHandle@4>
+600012c8:	83 c4 0c             	add    $0xc,%esp
+600012cb:	c9                   	leave  
+600012cc:	c3                   	ret    
+
+600012cd <_RegTestMain@8>:
+600012cd:	55                   	push   %ebp
+600012ce:	89 e5                	mov    %esp,%ebp
+600012d0:	83 ec 08             	sub    $0x8,%esp
+600012d3:	83 ec 0c             	sub    $0xc,%esp
+600012d6:	68 0c 30 00 60       	push   $0x6000300c
+600012db:	e8 26 ff ff ff       	call   60001206 <_RunPrivateTests>
+600012e0:	83 c4 10             	add    $0x10,%esp
+600012e3:	e8 4c 03 00 00       	call   60001634 <_InitializeTests>
+600012e8:	e8 93 fe ff ff       	call   60001180 <_RegisterTests>
+600012ed:	83 ec 08             	sub    $0x8,%esp
+600012f0:	ff 75 0c             	pushl  0xc(%ebp)
+600012f3:	ff 75 08             	pushl  0x8(%ebp)
+600012f6:	e8 84 04 00 00       	call   6000177f <_PerformTests>
+600012fb:	83 c4 10             	add    $0x10,%esp
+600012fe:	c9                   	leave  
+600012ff:	c2 08 00             	ret    $0x8
+60001302:	90                   	nop    
+60001303:	90                   	nop    
+60001304:	90                   	nop    
+60001305:	90                   	nop    
+60001306:	90                   	nop    
+60001307:	90                   	nop    
+60001308:	90                   	nop    
+60001309:	90                   	nop    
+6000130a:	90                   	nop    
+6000130b:	90                   	nop    
+6000130c:	90                   	nop    
+6000130d:	90                   	nop    
+6000130e:	90                   	nop    
+6000130f:	90                   	nop    
+
+60001310 <_RunTest>:
+60001310:	55                   	push   %ebp
+60001311:	89 e5                	mov    %esp,%ebp
+60001313:	81 ec b8 01 00 00    	sub    $0x1b8,%esp
+60001319:	66 c7 45 f2 02 00    	movw   $0x2,0xfffffff2(%ebp)
+6000131f:	83 ec 08             	sub    $0x8,%esp
+60001322:	8d 85 58 fe ff ff    	lea    0xfffffe58(%ebp),%eax
+60001328:	50                   	push   %eax
+60001329:	66 8b 45 f2          	mov    0xfffffff2(%ebp),%ax
+6000132d:	25 ff ff 00 00       	and    $0xffff,%eax
+60001332:	50                   	push   %eax
+60001333:	e8 d8 05 00 00       	call   60001910 <_WSAStartup@8>
+60001338:	83 c4 08             	add    $0x8,%esp
+6000133b:	89 85 50 fe ff ff    	mov    %eax,0xfffffe50(%ebp)
+60001341:	83 bd 50 fe ff ff 00 	cmpl   $0x0,0xfffffe50(%ebp)
+60001348:	74 28                	je     60001372 <_RunTest+0x62>
+6000134a:	83 ec 04             	sub    $0x4,%esp
+6000134d:	ff b5 50 fe ff ff    	pushl  0xfffffe50(%ebp)
+60001353:	68 18 30 00 60       	push   $0x60003018
+60001358:	ff 75 08             	pushl  0x8(%ebp)
+6000135b:	e8 00 05 00 00       	call   60001860 <_sprintf>
+60001360:	83 c4 10             	add    $0x10,%esp
+60001363:	c7 85 4c fe ff ff 01 	movl   $0x1,0xfffffe4c(%ebp)
+6000136a:	00 00 00 
+6000136d:	e9 50 02 00 00       	jmp    600015c2 <_RunTest+0x2b2>
+60001372:	8b 85 58 fe ff ff    	mov    0xfffffe58(%ebp),%eax
+60001378:	3c 02                	cmp    $0x2,%al
+6000137a:	75 10                	jne    6000138c <_RunTest+0x7c>
+6000137c:	8b 85 58 fe ff ff    	mov    0xfffffe58(%ebp),%eax
+60001382:	66 c1 e8 08          	shr    $0x8,%ax
+60001386:	84 c0                	test   %al,%al
+60001388:	75 02                	jne    6000138c <_RunTest+0x7c>
+6000138a:	eb 27                	jmp    600013b3 <_RunTest+0xa3>
+6000138c:	83 ec 08             	sub    $0x8,%esp
+6000138f:	68 3c 30 00 60       	push   $0x6000303c
+60001394:	ff 75 08             	pushl  0x8(%ebp)
+60001397:	e8 b4 04 00 00       	call   60001850 <_strcpy>
+6000139c:	83 c4 10             	add    $0x10,%esp
+6000139f:	e8 7c 05 00 00       	call   60001920 <_WSACleanup@0>
+600013a4:	c7 85 4c fe ff ff 01 	movl   $0x1,0xfffffe4c(%ebp)
+600013ab:	00 00 00 
+600013ae:	e9 0f 02 00 00       	jmp    600015c2 <_RunTest+0x2b2>
+600013b3:	e8 78 05 00 00       	call   60001930 <_WSACreateEvent@0>
+600013b8:	89 45 ec             	mov    %eax,0xffffffec(%ebp)
+600013bb:	83 7d ec 00          	cmpl   $0x0,0xffffffec(%ebp)
+600013bf:	75 33                	jne    600013f4 <_RunTest+0xe4>
+600013c1:	83 ec 04             	sub    $0x4,%esp
+600013c4:	83 ec 0c             	sub    $0xc,%esp
+600013c7:	e8 74 05 00 00       	call   60001940 <_WSAGetLastError@0>
+600013cc:	83 c4 0c             	add    $0xc,%esp
+600013cf:	50                   	push   %eax
+600013d0:	68 68 30 00 60       	push   $0x60003068
+600013d5:	ff 75 08             	pushl  0x8(%ebp)
+600013d8:	e8 83 04 00 00       	call   60001860 <_sprintf>
+600013dd:	83 c4 10             	add    $0x10,%esp
+600013e0:	e8 3b 05 00 00       	call   60001920 <_WSACleanup@0>
+600013e5:	c7 85 4c fe ff ff 01 	movl   $0x1,0xfffffe4c(%ebp)
+600013ec:	00 00 00 
+600013ef:	e9 ce 01 00 00       	jmp    600015c2 <_RunTest+0x2b2>
+600013f4:	8d 45 ec             	lea    0xffffffec(%ebp),%eax
+600013f7:	89 45 f4             	mov    %eax,0xfffffff4(%ebp)
+600013fa:	83 ec 0c             	sub    $0xc,%esp
+600013fd:	6a 00                	push   $0x0
+600013ff:	6a 00                	push   $0x0
+60001401:	6a 00                	push   $0x0
+60001403:	ff 75 f4             	pushl  0xfffffff4(%ebp)
+60001406:	6a 01                	push   $0x1
+60001408:	e8 43 05 00 00       	call   60001950 <_WSAWaitForMultipleEvents@20>
+6000140d:	83 c4 0c             	add    $0xc,%esp
+60001410:	89 85 54 fe ff ff    	mov    %eax,0xfffffe54(%ebp)
+60001416:	81 bd 54 fe ff ff 02 	cmpl   $0x102,0xfffffe54(%ebp)
+6000141d:	01 00 00 
+60001420:	74 2f                	je     60001451 <_RunTest+0x141>
+60001422:	68 02 01 00 00       	push   $0x102
+60001427:	ff b5 54 fe ff ff    	pushl  0xfffffe54(%ebp)
+6000142d:	68 90 30 00 60       	push   $0x60003090
+60001432:	ff 75 08             	pushl  0x8(%ebp)
+60001435:	e8 26 04 00 00       	call   60001860 <_sprintf>
+6000143a:	83 c4 10             	add    $0x10,%esp
+6000143d:	e8 de 04 00 00       	call   60001920 <_WSACleanup@0>
+60001442:	c7 85 4c fe ff ff 01 	movl   $0x1,0xfffffe4c(%ebp)
+60001449:	00 00 00 
+6000144c:	e9 71 01 00 00       	jmp    600015c2 <_RunTest+0x2b2>
+60001451:	83 ec 0c             	sub    $0xc,%esp
+60001454:	ff 75 ec             	pushl  0xffffffec(%ebp)
+60001457:	e8 04 05 00 00       	call   60001960 <_WSASetEvent@4>
+6000145c:	83 c4 0c             	add    $0xc,%esp
+6000145f:	85 c0                	test   %eax,%eax
+60001461:	75 33                	jne    60001496 <_RunTest+0x186>
+60001463:	83 ec 04             	sub    $0x4,%esp
+60001466:	83 ec 0c             	sub    $0xc,%esp
+60001469:	e8 d2 04 00 00       	call   60001940 <_WSAGetLastError@0>
+6000146e:	83 c4 0c             	add    $0xc,%esp
+60001471:	50                   	push   %eax
+60001472:	68 e4 30 00 60       	push   $0x600030e4
+60001477:	ff 75 08             	pushl  0x8(%ebp)
+6000147a:	e8 e1 03 00 00       	call   60001860 <_sprintf>
+6000147f:	83 c4 10             	add    $0x10,%esp
+60001482:	e8 99 04 00 00       	call   60001920 <_WSACleanup@0>
+60001487:	c7 85 4c fe ff ff 01 	movl   $0x1,0xfffffe4c(%ebp)
+6000148e:	00 00 00 
+60001491:	e9 2c 01 00 00       	jmp    600015c2 <_RunTest+0x2b2>
+60001496:	8d 45 ec             	lea    0xffffffec(%ebp),%eax
+60001499:	89 45 f4             	mov    %eax,0xfffffff4(%ebp)
+6000149c:	83 ec 0c             	sub    $0xc,%esp
+6000149f:	6a 00                	push   $0x0
+600014a1:	6a 00                	push   $0x0
+600014a3:	6a 00                	push   $0x0
+600014a5:	ff 75 f4             	pushl  0xfffffff4(%ebp)
+600014a8:	6a 01                	push   $0x1
+600014aa:	e8 a1 04 00 00       	call   60001950 <_WSAWaitForMultipleEvents@20>
+600014af:	83 c4 0c             	add    $0xc,%esp
+600014b2:	89 85 54 fe ff ff    	mov    %eax,0xfffffe54(%ebp)
+600014b8:	83 bd 54 fe ff ff 00 	cmpl   $0x0,0xfffffe54(%ebp)
+600014bf:	74 2c                	je     600014ed <_RunTest+0x1dd>
+600014c1:	6a 00                	push   $0x0
+600014c3:	ff b5 54 fe ff ff    	pushl  0xfffffe54(%ebp)
+600014c9:	68 08 31 00 60       	push   $0x60003108
+600014ce:	ff 75 08             	pushl  0x8(%ebp)
+600014d1:	e8 8a 03 00 00       	call   60001860 <_sprintf>
+600014d6:	83 c4 10             	add    $0x10,%esp
+600014d9:	e8 42 04 00 00       	call   60001920 <_WSACleanup@0>
+600014de:	c7 85 4c fe ff ff 01 	movl   $0x1,0xfffffe4c(%ebp)
+600014e5:	00 00 00 
+600014e8:	e9 d5 00 00 00       	jmp    600015c2 <_RunTest+0x2b2>
+600014ed:	83 ec 0c             	sub    $0xc,%esp
+600014f0:	ff 75 ec             	pushl  0xffffffec(%ebp)
+600014f3:	e8 78 04 00 00       	call   60001970 <_WSAResetEvent@4>
+600014f8:	83 c4 0c             	add    $0xc,%esp
+600014fb:	85 c0                	test   %eax,%eax
+600014fd:	75 33                	jne    60001532 <_RunTest+0x222>
+600014ff:	83 ec 04             	sub    $0x4,%esp
+60001502:	83 ec 0c             	sub    $0xc,%esp
+60001505:	e8 36 04 00 00       	call   60001940 <_WSAGetLastError@0>
+6000150a:	83 c4 0c             	add    $0xc,%esp
+6000150d:	50                   	push   %eax
+6000150e:	68 5c 31 00 60       	push   $0x6000315c
+60001513:	ff 75 08             	pushl  0x8(%ebp)
+60001516:	e8 45 03 00 00       	call   60001860 <_sprintf>
+6000151b:	83 c4 10             	add    $0x10,%esp
+6000151e:	e8 fd 03 00 00       	call   60001920 <_WSACleanup@0>
+60001523:	c7 85 4c fe ff ff 01 	movl   $0x1,0xfffffe4c(%ebp)
+6000152a:	00 00 00 
+6000152d:	e9 90 00 00 00       	jmp    600015c2 <_RunTest+0x2b2>
+60001532:	8d 45 ec             	lea    0xffffffec(%ebp),%eax
+60001535:	89 45 f4             	mov    %eax,0xfffffff4(%ebp)
+60001538:	83 ec 0c             	sub    $0xc,%esp
+6000153b:	6a 00                	push   $0x0
+6000153d:	6a 00                	push   $0x0
+6000153f:	6a 00                	push   $0x0
+60001541:	ff 75 f4             	pushl  0xfffffff4(%ebp)
+60001544:	6a 01                	push   $0x1
+60001546:	e8 05 04 00 00       	call   60001950 <_WSAWaitForMultipleEvents@20>
+6000154b:	83 c4 0c             	add    $0xc,%esp
+6000154e:	89 85 54 fe ff ff    	mov    %eax,0xfffffe54(%ebp)
+60001554:	81 bd 54 fe ff ff 02 	cmpl   $0x102,0xfffffe54(%ebp)
+6000155b:	01 00 00 
+6000155e:	74 11                	je     60001571 <_RunTest+0x261>
+60001560:	e8 bb 03 00 00       	call   60001920 <_WSACleanup@0>
+60001565:	c7 85 4c fe ff ff 01 	movl   $0x1,0xfffffe4c(%ebp)
+6000156c:	00 00 00 
+6000156f:	eb 51                	jmp    600015c2 <_RunTest+0x2b2>
+60001571:	83 ec 0c             	sub    $0xc,%esp
+60001574:	ff 75 ec             	pushl  0xffffffec(%ebp)
+60001577:	e8 04 04 00 00       	call   60001980 <_WSACloseEvent@4>
+6000157c:	83 c4 0c             	add    $0xc,%esp
+6000157f:	85 c0                	test   %eax,%eax
+60001581:	75 30                	jne    600015b3 <_RunTest+0x2a3>
+60001583:	83 ec 04             	sub    $0x4,%esp
+60001586:	83 ec 0c             	sub    $0xc,%esp
+60001589:	e8 b2 03 00 00       	call   60001940 <_WSAGetLastError@0>
+6000158e:	83 c4 0c             	add    $0xc,%esp
+60001591:	50                   	push   %eax
+60001592:	68 84 31 00 60       	push   $0x60003184
+60001597:	ff 75 08             	pushl  0x8(%ebp)
+6000159a:	e8 c1 02 00 00       	call   60001860 <_sprintf>
+6000159f:	83 c4 10             	add    $0x10,%esp
+600015a2:	e8 79 03 00 00       	call   60001920 <_WSACleanup@0>
+600015a7:	c7 85 4c fe ff ff 01 	movl   $0x1,0xfffffe4c(%ebp)
+600015ae:	00 00 00 
+600015b1:	eb 0f                	jmp    600015c2 <_RunTest+0x2b2>
+600015b3:	e8 68 03 00 00       	call   60001920 <_WSACleanup@0>
+600015b8:	c7 85 4c fe ff ff 00 	movl   $0x0,0xfffffe4c(%ebp)
+600015bf:	00 00 00 
+600015c2:	8b 85 4c fe ff ff    	mov    0xfffffe4c(%ebp),%eax
+600015c8:	c9                   	leave  
+600015c9:	c3                   	ret    
+
+600015ca <_Ws2eventTest>:
+600015ca:	55                   	push   %ebp
+600015cb:	89 e5                	mov    %esp,%ebp
+600015cd:	83 ec 08             	sub    $0x8,%esp
+600015d0:	8b 45 08             	mov    0x8(%ebp),%eax
+600015d3:	89 45 f8             	mov    %eax,0xfffffff8(%ebp)
+600015d6:	83 7d f8 00          	cmpl   $0x0,0xfffffff8(%ebp)
+600015da:	74 08                	je     600015e4 <_Ws2eventTest+0x1a>
+600015dc:	83 7d f8 01          	cmpl   $0x1,0xfffffff8(%ebp)
+600015e0:	74 15                	je     600015f7 <_Ws2eventTest+0x2d>
+600015e2:	eb 2f                	jmp    60001613 <_Ws2eventTest+0x49>
+600015e4:	83 ec 0c             	sub    $0xc,%esp
+600015e7:	ff 75 0c             	pushl  0xc(%ebp)
+600015ea:	e8 21 fd ff ff       	call   60001310 <_RunTest>
+600015ef:	83 c4 10             	add    $0x10,%esp
+600015f2:	89 45 fc             	mov    %eax,0xfffffffc(%ebp)
+600015f5:	eb 23                	jmp    6000161a <_Ws2eventTest+0x50>
+600015f7:	83 ec 08             	sub    $0x8,%esp
+600015fa:	68 aa 31 00 60       	push   $0x600031aa
+600015ff:	ff 75 0c             	pushl  0xc(%ebp)
+60001602:	e8 49 02 00 00       	call   60001850 <_strcpy>
+60001607:	83 c4 10             	add    $0x10,%esp
+6000160a:	c7 45 fc 00 00 00 00 	movl   $0x0,0xfffffffc(%ebp)
+60001611:	eb 07                	jmp    6000161a <_Ws2eventTest+0x50>
+60001613:	c7 45 fc 01 00 00 00 	movl   $0x1,0xfffffffc(%ebp)
+6000161a:	8b 45 fc             	mov    0xfffffffc(%ebp),%eax
+6000161d:	c9                   	leave  
+6000161e:	c3                   	ret    
+6000161f:	90                   	nop    
+
+60001620 <_DriverTest>:
+60001620:	55                   	push   %ebp
+60001621:	89 e5                	mov    %esp,%ebp
+60001623:	b8 00 00 00 00       	mov    $0x0,%eax
+60001628:	5d                   	pop    %ebp
+60001629:	c3                   	ret    
+
+6000162a <__regtestsTest>:
+6000162a:	55                   	push   %ebp
+6000162b:	89 e5                	mov    %esp,%ebp
+6000162d:	b8 00 00 00 00       	mov    $0x0,%eax
+60001632:	5d                   	pop    %ebp
+60001633:	c3                   	ret    
+
+60001634 <_InitializeTests>:
+60001634:	55                   	push   %ebp
+60001635:	89 e5                	mov    %esp,%ebp
+60001637:	c7 05 40 40 00 60 40 	movl   $0x60004040,0x60004040
+6000163e:	40 00 60 
+60001641:	c7 05 44 40 00 60 40 	movl   $0x60004040,0x60004044
+60001648:	40 00 60 
+6000164b:	5d                   	pop    %ebp
+6000164c:	c3                   	ret    
+
+6000164d <_PerformTest>:
+6000164d:	55                   	push   %ebp
+6000164e:	89 e5                	mov    %esp,%ebp
+60001650:	81 ec 88 02 00 00    	sub    $0x288,%esp
+60001656:	83 ec 04             	sub    $0x4,%esp
+60001659:	68 c8 00 00 00       	push   $0xc8
+6000165e:	6a 00                	push   $0x0
+60001660:	8d 85 88 fd ff ff    	lea    0xfffffd88(%ebp),%eax
+60001666:	50                   	push   %eax
+60001667:	e8 14 02 00 00       	call   60001880 <_memset>
+6000166c:	83 c4 10             	add    $0x10,%esp
+6000166f:	83 ec 04             	sub    $0x4,%esp
+60001672:	68 c8 00 00 00       	push   $0xc8
+60001677:	6a 00                	push   $0x0
+60001679:	8d 85 58 fe ff ff    	lea    0xfffffe58(%ebp),%eax
+6000167f:	50                   	push   %eax
+60001680:	e8 fb 01 00 00       	call   60001880 <_memset>
+60001685:	83 c4 10             	add    $0x10,%esp
+60001688:	83 ec 08             	sub    $0x8,%esp
+6000168b:	8b 55 0c             	mov    0xc(%ebp),%edx
+6000168e:	8d 85 88 fd ff ff    	lea    0xfffffd88(%ebp),%eax
+60001694:	50                   	push   %eax
+60001695:	6a 01                	push   $0x1
+60001697:	8b 42 08             	mov    0x8(%edx),%eax
+6000169a:	ff d0                	call   *%eax
+6000169c:	83 c4 10             	add    $0x10,%esp
+6000169f:	85 c0                	test   %eax,%eax
+600016a1:	74 22                	je     600016c5 <_PerformTest+0x78>
+600016a3:	83 7d 10 00          	cmpl   $0x0,0x10(%ebp)
+600016a7:	74 05                	je     600016ae <_PerformTest+0x61>
+600016a9:	e9 cf 00 00 00       	jmp    6000177d <_PerformTest+0x130>
+600016ae:	83 ec 08             	sub    $0x8,%esp
+600016b1:	68 bc 31 00 60       	push   $0x600031bc
+600016b6:	8d 85 88 fd ff ff    	lea    0xfffffd88(%ebp),%eax
+600016bc:	50                   	push   %eax
+600016bd:	e8 8e 01 00 00       	call   60001850 <_strcpy>
+600016c2:	83 c4 10             	add    $0x10,%esp
+600016c5:	83 7d 10 00          	cmpl   $0x0,0x10(%ebp)
+600016c9:	74 1e                	je     600016e9 <_PerformTest+0x9c>
+600016cb:	83 ec 08             	sub    $0x8,%esp
+600016ce:	ff 75 10             	pushl  0x10(%ebp)
+600016d1:	8d 85 88 fd ff ff    	lea    0xfffffd88(%ebp),%eax
+600016d7:	50                   	push   %eax
+600016d8:	e8 b3 01 00 00       	call   60001890 <__stricmp>
+600016dd:	83 c4 10             	add    $0x10,%esp
+600016e0:	85 c0                	test   %eax,%eax
+600016e2:	74 05                	je     600016e9 <_PerformTest+0x9c>
+600016e4:	e9 94 00 00 00       	jmp    6000177d <_PerformTest+0x130>
+600016e9:	83 ec 08             	sub    $0x8,%esp
+600016ec:	8b 55 0c             	mov    0xc(%ebp),%edx
+600016ef:	8d 85 58 fe ff ff    	lea    0xfffffe58(%ebp),%eax
+600016f5:	50                   	push   %eax
+600016f6:	6a 00                	push   $0x0
+600016f8:	8b 42 08             	mov    0x8(%edx),%eax
+600016fb:	ff d0                	call   *%eax
+600016fd:	83 c4 10             	add    $0x10,%esp
+60001700:	89 85 84 fd ff ff    	mov    %eax,0xfffffd84(%ebp)
+60001706:	83 bd 84 fd ff ff 00 	cmpl   $0x0,0xfffffd84(%ebp)
+6000170d:	74 24                	je     60001733 <_PerformTest+0xe6>
+6000170f:	8d 85 58 fe ff ff    	lea    0xfffffe58(%ebp),%eax
+60001715:	50                   	push   %eax
+60001716:	8d 85 88 fd ff ff    	lea    0xfffffd88(%ebp),%eax
+6000171c:	50                   	push   %eax
+6000171d:	68 c4 31 00 60       	push   $0x600031c4
+60001722:	8d 85 28 ff ff ff    	lea    0xffffff28(%ebp),%eax
+60001728:	50                   	push   %eax
+60001729:	e8 32 01 00 00       	call   60001860 <_sprintf>
+6000172e:	83 c4 10             	add    $0x10,%esp
+60001731:	eb 1e                	jmp    60001751 <_PerformTest+0x104>
+60001733:	83 ec 04             	sub    $0x4,%esp
+60001736:	8d 85 88 fd ff ff    	lea    0xfffffd88(%ebp),%eax
+6000173c:	50                   	push   %eax
+6000173d:	68 ec 31 00 60       	push   $0x600031ec
+60001742:	8d 85 28 ff ff ff    	lea    0xffffff28(%ebp),%eax
+60001748:	50                   	push   %eax
+60001749:	e8 12 01 00 00       	call   60001860 <_sprintf>
+6000174e:	83 c4 10             	add    $0x10,%esp
+60001751:	83 7d 08 00          	cmpl   $0x0,0x8(%ebp)
+60001755:	74 14                	je     6000176b <_PerformTest+0x11e>
+60001757:	83 ec 0c             	sub    $0xc,%esp
+6000175a:	8d 85 28 ff ff ff    	lea    0xffffff28(%ebp),%eax
+60001760:	50                   	push   %eax
+60001761:	8b 45 08             	mov    0x8(%ebp),%eax
+60001764:	ff d0                	call   *%eax
+60001766:	83 c4 10             	add    $0x10,%esp
+60001769:	eb 12                	jmp    6000177d <_PerformTest+0x130>
+6000176b:	83 ec 0c             	sub    $0xc,%esp
+6000176e:	8d 85 28 ff ff ff    	lea    0xffffff28(%ebp),%eax
+60001774:	50                   	push   %eax
+60001775:	e8 f6 00 00 00       	call   60001870 <_DbgPrint>
+6000177a:	83 c4 10             	add    $0x10,%esp
+6000177d:	c9                   	leave  
+6000177e:	c3                   	ret    
+
+6000177f <_PerformTests>:
+6000177f:	55                   	push   %ebp
+60001780:	89 e5                	mov    %esp,%ebp
+60001782:	83 ec 18             	sub    $0x18,%esp
+60001785:	a1 40 40 00 60       	mov    0x60004040,%eax
+6000178a:	89 45 fc             	mov    %eax,0xfffffffc(%ebp)
+6000178d:	81 7d fc 40 40 00 60 	cmpl   $0x60004040,0xfffffffc(%ebp)
+60001794:	74 2a                	je     600017c0 <_PerformTests+0x41>
+60001796:	8b 45 fc             	mov    0xfffffffc(%ebp),%eax
+60001799:	8b 00                	mov    (%eax),%eax
+6000179b:	89 45 f8             	mov    %eax,0xfffffff8(%ebp)
+6000179e:	8b 45 fc             	mov    0xfffffffc(%ebp),%eax
+600017a1:	89 45 f4             	mov    %eax,0xfffffff4(%ebp)
+600017a4:	83 ec 04             	sub    $0x4,%esp
+600017a7:	ff 75 0c             	pushl  0xc(%ebp)
+600017aa:	ff 75 f4             	pushl  0xfffffff4(%ebp)
+600017ad:	ff 75 08             	pushl  0x8(%ebp)
+600017b0:	e8 98 fe ff ff       	call   6000164d <_PerformTest>
+600017b5:	83 c4 10             	add    $0x10,%esp
+600017b8:	8b 45 f8             	mov    0xfffffff8(%ebp),%eax
+600017bb:	89 45 fc             	mov    %eax,0xfffffffc(%ebp)
+600017be:	eb cd                	jmp    6000178d <_PerformTests+0xe>
+600017c0:	c9                   	leave  
+600017c1:	c3                   	ret    
+
+600017c2 <_AddTest>:
+600017c2:	55                   	push   %ebp
+600017c3:	89 e5                	mov    %esp,%ebp
+600017c5:	83 ec 08             	sub    $0x8,%esp
+600017c8:	83 ec 0c             	sub    $0xc,%esp
+600017cb:	6a 0c                	push   $0xc
+600017cd:	e8 ce f9 ff ff       	call   600011a0 <_AllocateMemory>
+600017d2:	83 c4 10             	add    $0x10,%esp
+600017d5:	89 45 fc             	mov    %eax,0xfffffffc(%ebp)
+600017d8:	83 7d fc 00          	cmpl   $0x0,0xfffffffc(%ebp)
+600017dc:	75 12                	jne    600017f0 <_AddTest+0x2e>
+600017de:	83 ec 0c             	sub    $0xc,%esp
+600017e1:	68 0e 32 00 60       	push   $0x6000320e
+600017e6:	e8 85 00 00 00       	call   60001870 <_DbgPrint>
+600017eb:	83 c4 10             	add    $0x10,%esp
+600017ee:	eb 33                	jmp    60001823 <_AddTest+0x61>
+600017f0:	8b 55 fc             	mov    0xfffffffc(%ebp),%edx
+600017f3:	8b 45 08             	mov    0x8(%ebp),%eax
+600017f6:	89 42 08             	mov    %eax,0x8(%edx)
+600017f9:	a1 44 40 00 60       	mov    0x60004044,%eax
+600017fe:	89 45 f8             	mov    %eax,0xfffffff8(%ebp)
+60001801:	8b 45 fc             	mov    0xfffffffc(%ebp),%eax
+60001804:	c7 00 40 40 00 60    	movl   $0x60004040,(%eax)
+6000180a:	8b 55 fc             	mov    0xfffffffc(%ebp),%edx
+6000180d:	8b 45 f8             	mov    0xfffffff8(%ebp),%eax
+60001810:	89 42 04             	mov    %eax,0x4(%edx)
+60001813:	8b 55 f8             	mov    0xfffffff8(%ebp),%edx
+60001816:	8b 45 fc             	mov    0xfffffffc(%ebp),%eax
+60001819:	89 02                	mov    %eax,(%edx)
+6000181b:	8b 45 fc             	mov    0xfffffffc(%ebp),%eax
+6000181e:	a3 44 40 00 60       	mov    %eax,0x60004044
+60001823:	c9                   	leave  
+60001824:	c3                   	ret    
+60001825:	90                   	nop    
+60001826:	90                   	nop    
+60001827:	90                   	nop    
+60001828:	90                   	nop    
+60001829:	90                   	nop    
+6000182a:	90                   	nop    
+6000182b:	90                   	nop    
+6000182c:	90                   	nop    
+6000182d:	90                   	nop    
+6000182e:	90                   	nop    
+6000182f:	90                   	nop    
+
+60001830 <_RtlAllocateHeap@12>:
+60001830:	ff 25 48 61 00 60    	jmp    *0x60006148
+60001836:	90                   	nop    
+60001837:	90                   	nop    
+	...
+
+60001840 <_RtlFreeHeap@12>:
+60001840:	ff 25 4c 61 00 60    	jmp    *0x6000614c
+60001846:	90                   	nop    
+60001847:	90                   	nop    
+	...
+
+60001850 <_strcpy>:
+60001850:	ff 25 5c 61 00 60    	jmp    *0x6000615c
+60001856:	90                   	nop    
+60001857:	90                   	nop    
+	...
+
+60001860 <_sprintf>:
+60001860:	ff 25 58 61 00 60    	jmp    *0x60006158
+60001866:	90                   	nop    
+60001867:	90                   	nop    
+	...
+
+60001870 <_DbgPrint>:
+60001870:	ff 25 44 61 00 60    	jmp    *0x60006144
+60001876:	90                   	nop    
+60001877:	90                   	nop    
+	...
+
+60001880 <_memset>:
+60001880:	ff 25 54 61 00 60    	jmp    *0x60006154
+60001886:	90                   	nop    
+60001887:	90                   	nop    
+	...
+
+60001890 <__stricmp>:
+60001890:	ff 25 50 61 00 60    	jmp    *0x60006150
+60001896:	90                   	nop    
+60001897:	90                   	nop    
+	...
+
+600018a0 <_CreateEventA@16>:
+600018a0:	ff 25 24 61 00 60    	jmp    *0x60006124
+600018a6:	90                   	nop    
+600018a7:	90                   	nop    
+	...
+
+600018b0 <_GetModuleHandleA@4>:
+600018b0:	ff 25 30 61 00 60    	jmp    *0x60006130
+600018b6:	90                   	nop    
+600018b7:	90                   	nop    
+	...
+
+600018c0 <_CreateThread@24>:
+600018c0:	ff 25 28 61 00 60    	jmp    *0x60006128
+600018c6:	90                   	nop    
+600018c7:	90                   	nop    
+	...
+
+600018d0 <_WaitForSingleObject@8>:
+600018d0:	ff 25 38 61 00 60    	jmp    *0x60006138
+600018d6:	90                   	nop    
+600018d7:	90                   	nop    
+	...
+
+600018e0 <_CloseHandle@4>:
+600018e0:	ff 25 20 61 00 60    	jmp    *0x60006120
+600018e6:	90                   	nop    
+600018e7:	90                   	nop    
+	...
+
+600018f0 <_LoadLibraryA@4>:
+600018f0:	ff 25 34 61 00 60    	jmp    *0x60006134
+600018f6:	90                   	nop    
+600018f7:	90                   	nop    
+	...
+
+60001900 <_FreeLibrary@4>:
+60001900:	ff 25 2c 61 00 60    	jmp    *0x6000612c
+60001906:	90                   	nop    
+60001907:	90                   	nop    
+	...
+
+60001910 <_WSAStartup@8>:
+60001910:	ff 25 80 61 00 60    	jmp    *0x60006180
+60001916:	90                   	nop    
+60001917:	90                   	nop    
+	...
+
+60001920 <_WSACleanup@0>:
+60001920:	ff 25 68 61 00 60    	jmp    *0x60006168
+60001926:	90                   	nop    
+60001927:	90                   	nop    
+	...
+
+60001930 <_WSACreateEvent@0>:
+60001930:	ff 25 70 61 00 60    	jmp    *0x60006170
+60001936:	90                   	nop    
+60001937:	90                   	nop    
+	...
+
+60001940 <_WSAGetLastError@0>:
+60001940:	ff 25 74 61 00 60    	jmp    *0x60006174
+60001946:	90                   	nop    
+60001947:	90                   	nop    
+	...
+
+60001950 <_WSAWaitForMultipleEvents@20>:
+60001950:	ff 25 84 61 00 60    	jmp    *0x60006184
+60001956:	90                   	nop    
+60001957:	90                   	nop    
+	...
+
+60001960 <_WSASetEvent@4>:
+60001960:	ff 25 7c 61 00 60    	jmp    *0x6000617c
+60001966:	90                   	nop    
+60001967:	90                   	nop    
+	...
+
+60001970 <_WSAResetEvent@4>:
+60001970:	ff 25 78 61 00 60    	jmp    *0x60006178
+60001976:	90                   	nop    
+60001977:	90                   	nop    
+	...
+
+60001980 <_WSACloseEvent@4>:
+60001980:	ff 25 6c 61 00 60    	jmp    *0x6000616c
+60001986:	90                   	nop    
+60001987:	90                   	nop    
+	...
+
+60001990 <_DllMain@12>:
+60001990:	55                   	push   %ebp
+60001991:	89 e5                	mov    %esp,%ebp
+60001993:	b8 01 00 00 00       	mov    $0x1,%eax
+60001998:	5d                   	pop    %ebp
+60001999:	c2 0c 00             	ret    $0xc
+6000199c:	90                   	nop    
+6000199d:	90                   	nop    
+6000199e:	90                   	nop    
+6000199f:	90                   	nop    
+
+600019a0 <___do_global_dtors>:
+600019a0:	55                   	push   %ebp
+600019a1:	89 e5                	mov    %esp,%ebp
+600019a3:	83 ec 08             	sub    $0x8,%esp
+600019a6:	a1 04 20 00 60       	mov    0x60002004,%eax
+600019ab:	8b 10                	mov    (%eax),%edx
+600019ad:	85 d2                	test   %edx,%edx
+600019af:	75 04                	jne    600019b5 <___do_global_dtors+0x15>
+600019b1:	89 ec                	mov    %ebp,%esp
+600019b3:	5d                   	pop    %ebp
+600019b4:	c3                   	ret    
+600019b5:	ff 10                	call   *(%eax)
+600019b7:	8b 15 04 20 00 60    	mov    0x60002004,%edx
+600019bd:	8b 4a 04             	mov    0x4(%edx),%ecx
+600019c0:	8d 42 04             	lea    0x4(%edx),%eax
+600019c3:	a3 04 20 00 60       	mov    %eax,0x60002004
+600019c8:	85 c9                	test   %ecx,%ecx
+600019ca:	75 e9                	jne    600019b5 <___do_global_dtors+0x15>
+600019cc:	eb e3                	jmp    600019b1 <___do_global_dtors+0x11>
+600019ce:	89 f6                	mov    %esi,%esi
+
+600019d0 <___do_global_ctors>:
+600019d0:	55                   	push   %ebp
+600019d1:	89 e5                	mov    %esp,%ebp
+600019d3:	83 ec 08             	sub    $0x8,%esp
+600019d6:	89 5d fc             	mov    %ebx,0xfffffffc(%ebp)
+600019d9:	a1 20 1e 00 60       	mov    0x60001e20,%eax
+600019de:	83 f8 ff             	cmp    $0xffffffff,%eax
+600019e1:	74 29                	je     60001a0c <___do_global_ctors+0x3c>
+600019e3:	85 c0                	test   %eax,%eax
+600019e5:	89 c3                	mov    %eax,%ebx
+600019e7:	75 17                	jne    60001a00 <___do_global_ctors+0x30>
+600019e9:	c7 04 24 a0 19 00 60 	movl   $0x600019a0,(%esp)
+600019f0:	e8 1b f7 ff ff       	call   60001110 <_atexit>
+600019f5:	8b 5d fc             	mov    0xfffffffc(%ebp),%ebx
+600019f8:	89 ec                	mov    %ebp,%esp
+600019fa:	5d                   	pop    %ebp
+600019fb:	c3                   	ret    
+600019fc:	8d 74 26 00          	lea    0x0(%esi),%esi
+60001a00:	ff 14 9d 20 1e 00 60 	call   *0x60001e20(,%ebx,4)
+60001a07:	4b                   	dec    %ebx
+60001a08:	75 f6                	jne    60001a00 <___do_global_ctors+0x30>
+60001a0a:	eb dd                	jmp    600019e9 <___do_global_ctors+0x19>
+60001a0c:	8b 0d 24 1e 00 60    	mov    0x60001e24,%ecx
+60001a12:	31 c0                	xor    %eax,%eax
+60001a14:	85 c9                	test   %ecx,%ecx
+60001a16:	74 cb                	je     600019e3 <___do_global_ctors+0x13>
+60001a18:	ba 20 1e 00 60       	mov    $0x60001e20,%edx
+60001a1d:	8d 76 00             	lea    0x0(%esi),%esi
+60001a20:	40                   	inc    %eax
+60001a21:	8b 4c 82 04          	mov    0x4(%edx,%eax,4),%ecx
+60001a25:	85 c9                	test   %ecx,%ecx
+60001a27:	75 f7                	jne    60001a20 <___do_global_ctors+0x50>
+60001a29:	eb b8                	jmp    600019e3 <___do_global_ctors+0x13>
+60001a2b:	90                   	nop    
+60001a2c:	8d 74 26 00          	lea    0x0(%esi),%esi
+
+60001a30 <___main>:
+60001a30:	55                   	push   %ebp
+60001a31:	89 e5                	mov    %esp,%ebp
+60001a33:	83 ec 08             	sub    $0x8,%esp
+60001a36:	89 5d fc             	mov    %ebx,0xfffffffc(%ebp)
+60001a39:	8b 15 00 20 00 60    	mov    0x60002000,%edx
+60001a3f:	85 d2                	test   %edx,%edx
+60001a41:	75 27                	jne    60001a6a <___main+0x3a>
+60001a43:	a1 20 1e 00 60       	mov    0x60001e20,%eax
+60001a48:	ba 01 00 00 00       	mov    $0x1,%edx
+60001a4d:	89 15 00 20 00 60    	mov    %edx,0x60002000
+60001a53:	83 f8 ff             	cmp    $0xffffffff,%eax
+60001a56:	74 25                	je     60001a7d <___main+0x4d>
+60001a58:	85 c0                	test   %eax,%eax
+60001a5a:	89 c3                	mov    %eax,%ebx
+60001a5c:	75 13                	jne    60001a71 <___main+0x41>
+60001a5e:	c7 04 24 a0 19 00 60 	movl   $0x600019a0,(%esp)
+60001a65:	e8 a6 f6 ff ff       	call   60001110 <_atexit>
+60001a6a:	8b 5d fc             	mov    0xfffffffc(%ebp),%ebx
+60001a6d:	89 ec                	mov    %ebp,%esp
+60001a6f:	5d                   	pop    %ebp
+60001a70:	c3                   	ret    
+60001a71:	ff 14 9d 20 1e 00 60 	call   *0x60001e20(,%ebx,4)
+60001a78:	4b                   	dec    %ebx
+60001a79:	75 f6                	jne    60001a71 <___main+0x41>
+60001a7b:	eb e1                	jmp    60001a5e <___main+0x2e>
+60001a7d:	8b 0d 24 1e 00 60    	mov    0x60001e24,%ecx
+60001a83:	31 c0                	xor    %eax,%eax
+60001a85:	85 c9                	test   %ecx,%ecx
+60001a87:	74 cf                	je     60001a58 <___main+0x28>
+60001a89:	ba 20 1e 00 60       	mov    $0x60001e20,%edx
+60001a8e:	89 f6                	mov    %esi,%esi
+60001a90:	40                   	inc    %eax
+60001a91:	8b 5c 82 04          	mov    0x4(%edx,%eax,4),%ebx
+60001a95:	85 db                	test   %ebx,%ebx
+60001a97:	75 f7                	jne    60001a90 <___main+0x60>
+60001a99:	eb bd                	jmp    60001a58 <___main+0x28>
+60001a9b:	90                   	nop    
+60001a9c:	90                   	nop    
+60001a9d:	90                   	nop    
+60001a9e:	90                   	nop    
+60001a9f:	90                   	nop    
+
+60001aa0 <__pei386_runtime_relocator>:
+60001aa0:	55                   	push   %ebp
+60001aa1:	b9 5c 32 00 60       	mov    $0x6000325c,%ecx
+60001aa6:	81 f9 5c 32 00 60    	cmp    $0x6000325c,%ecx
+60001aac:	89 e5                	mov    %esp,%ebp
+60001aae:	73 16                	jae    60001ac6 <__pei386_runtime_relocator+0x26>
+60001ab0:	8b 51 04             	mov    0x4(%ecx),%edx
+60001ab3:	8b 01                	mov    (%ecx),%eax
+60001ab5:	83 c1 08             	add    $0x8,%ecx
+60001ab8:	01 82 00 00 00 60    	add    %eax,0x60000000(%edx)
+60001abe:	81 f9 5c 32 00 60    	cmp    $0x6000325c,%ecx
+60001ac4:	72 ea                	jb     60001ab0 <__pei386_runtime_relocator+0x10>
+60001ac6:	5d                   	pop    %ebp
+60001ac7:	c3                   	ret    
+60001ac8:	90                   	nop    
+60001ac9:	90                   	nop    
+60001aca:	90                   	nop    
+60001acb:	90                   	nop    
+60001acc:	90                   	nop    
+60001acd:	90                   	nop    
+60001ace:	90                   	nop    
+60001acf:	90                   	nop    
+
+60001ad0 <___w32_sharedptr_default_unexpected>:
+60001ad0:	55                   	push   %ebp
+60001ad1:	a1 60 40 00 60       	mov    0x60004060,%eax
+60001ad6:	89 e5                	mov    %esp,%ebp
+60001ad8:	5d                   	pop    %ebp
+60001ad9:	8b 48 04             	mov    0x4(%eax),%ecx
+60001adc:	ff e1                	jmp    *%ecx
+60001ade:	89 f6                	mov    %esi,%esi
+
+60001ae0 <___w32_sharedptr_get>:
+60001ae0:	55                   	push   %ebp
+60001ae1:	ba 42 00 00 00       	mov    $0x42,%edx
+60001ae6:	89 e5                	mov    %esp,%ebp
+60001ae8:	53                   	push   %ebx
+60001ae9:	0f b7 c0             	movzwl %ax,%eax
+60001aec:	83 ec 64             	sub    $0x64,%esp
+60001aef:	89 54 24 08          	mov    %edx,0x8(%esp)
+60001af3:	8d 55 a8             	lea    0xffffffa8(%ebp),%edx
+60001af6:	31 db                	xor    %ebx,%ebx
+60001af8:	89 54 24 04          	mov    %edx,0x4(%esp)
+60001afc:	89 04 24             	mov    %eax,(%esp)
+60001aff:	e8 dc 02 00 00       	call   60001de0 <_GetAtomNameA@12>
+60001b04:	83 ec 0c             	sub    $0xc,%esp
+60001b07:	85 c0                	test   %eax,%eax
+60001b09:	ba 1f 00 00 00       	mov    $0x1f,%edx
+60001b0e:	b9 01 00 00 00       	mov    $0x1,%ecx
+60001b13:	75 07                	jne    60001b1c <___w32_sharedptr_get+0x3c>
+60001b15:	eb 1f                	jmp    60001b36 <___w32_sharedptr_get+0x56>
+60001b17:	01 c9                	add    %ecx,%ecx
+60001b19:	4a                   	dec    %edx
+60001b1a:	78 0e                	js     60001b2a <___w32_sharedptr_get+0x4a>
+60001b1c:	80 7c 15 a8 41       	cmpb   $0x41,0xffffffa8(%ebp,%edx,1)
+60001b21:	75 f4                	jne    60001b17 <___w32_sharedptr_get+0x37>
+60001b23:	09 cb                	or     %ecx,%ebx
+60001b25:	01 c9                	add    %ecx,%ecx
+60001b27:	4a                   	dec    %edx
+60001b28:	79 f2                	jns    60001b1c <___w32_sharedptr_get+0x3c>
+60001b2a:	83 3b 3c             	cmpl   $0x3c,(%ebx)
+60001b2d:	75 07                	jne    60001b36 <___w32_sharedptr_get+0x56>
+60001b2f:	89 d8                	mov    %ebx,%eax
+60001b31:	8b 5d fc             	mov    0xfffffffc(%ebp),%ebx
+60001b34:	c9                   	leave  
+60001b35:	c3                   	ret    
+60001b36:	e8 95 02 00 00       	call   60001dd0 <_abort>
+60001b3b:	90                   	nop    
+60001b3c:	8d 74 26 00          	lea    0x0(%esi),%esi
+
+60001b40 <___w32_sharedptr_initialize>:
+60001b40:	55                   	push   %ebp
+60001b41:	89 e5                	mov    %esp,%ebp
+60001b43:	57                   	push   %edi
+60001b44:	56                   	push   %esi
+60001b45:	53                   	push   %ebx
+60001b46:	81 ec cc 00 00 00    	sub    $0xcc,%esp
+60001b4c:	8b 0d 60 40 00 60    	mov    0x60004060,%ecx
+60001b52:	85 c9                	test   %ecx,%ecx
+60001b54:	74 08                	je     60001b5e <___w32_sharedptr_initialize+0x1e>
+60001b56:	8d 65 f4             	lea    0xfffffff4(%ebp),%esp
+60001b59:	5b                   	pop    %ebx
+60001b5a:	5e                   	pop    %esi
+60001b5b:	5f                   	pop    %edi
+60001b5c:	5d                   	pop    %ebp
+60001b5d:	c3                   	ret    
+60001b5e:	c7 45 98 41 41 41 41 	movl   $0x41414141,0xffffff98(%ebp)
+60001b65:	a1 1c 32 00 60       	mov    0x6000321c,%eax
+60001b6a:	8d 75 98             	lea    0xffffff98(%ebp),%esi
+60001b6d:	c7 45 9c 41 41 41 41 	movl   $0x41414141,0xffffff9c(%ebp)
+60001b74:	c7 45 a0 41 41 41 41 	movl   $0x41414141,0xffffffa0(%ebp)
+60001b7b:	89 45 b8             	mov    %eax,0xffffffb8(%ebp)
+60001b7e:	a1 20 32 00 60       	mov    0x60003220,%eax
+60001b83:	c7 45 a4 41 41 41 41 	movl   $0x41414141,0xffffffa4(%ebp)
+60001b8a:	c7 45 a8 41 41 41 41 	movl   $0x41414141,0xffffffa8(%ebp)
+60001b91:	89 45 bc             	mov    %eax,0xffffffbc(%ebp)
+60001b94:	a1 24 32 00 60       	mov    0x60003224,%eax
+60001b99:	c7 45 ac 41 41 41 41 	movl   $0x41414141,0xffffffac(%ebp)
+60001ba0:	c7 45 b0 41 41 41 41 	movl   $0x41414141,0xffffffb0(%ebp)
+60001ba7:	89 45 c0             	mov    %eax,0xffffffc0(%ebp)
+60001baa:	a1 28 32 00 60       	mov    0x60003228,%eax
+60001baf:	c7 45 b4 41 41 41 41 	movl   $0x41414141,0xffffffb4(%ebp)
+60001bb6:	89 45 c4             	mov    %eax,0xffffffc4(%ebp)
+60001bb9:	a1 2c 32 00 60       	mov    0x6000322c,%eax
+60001bbe:	89 45 c8             	mov    %eax,0xffffffc8(%ebp)
+60001bc1:	a1 30 32 00 60       	mov    0x60003230,%eax
+60001bc6:	89 45 cc             	mov    %eax,0xffffffcc(%ebp)
+60001bc9:	a1 34 32 00 60       	mov    0x60003234,%eax
+60001bce:	89 45 d0             	mov    %eax,0xffffffd0(%ebp)
+60001bd1:	a1 38 32 00 60       	mov    0x60003238,%eax
+60001bd6:	89 45 d4             	mov    %eax,0xffffffd4(%ebp)
+60001bd9:	0f b7 05 3c 32 00 60 	movzwl 0x6000323c,%eax
+60001be0:	66 89 45 d8          	mov    %ax,0xffffffd8(%ebp)
+60001be4:	89 34 24             	mov    %esi,(%esp)
+60001be7:	e8 04 02 00 00       	call   60001df0 <_FindAtomA@4>
+60001bec:	0f b7 c0             	movzwl %ax,%eax
+60001bef:	83 ec 04             	sub    $0x4,%esp
+60001bf2:	85 c0                	test   %eax,%eax
+60001bf4:	89 85 44 ff ff ff    	mov    %eax,0xffffff44(%ebp)
+60001bfa:	0f 85 3a 01 00 00    	jne    60001d3a <___w32_sharedptr_initialize+0x1fa>
+60001c00:	c7 04 24 3c 00 00 00 	movl   $0x3c,(%esp)
+60001c07:	e8 b4 01 00 00       	call   60001dc0 <_malloc>
+60001c0c:	85 c0                	test   %eax,%eax
+60001c0e:	89 c3                	mov    %eax,%ebx
+60001c10:	0f 84 58 01 00 00    	je     60001d6e <___w32_sharedptr_initialize+0x22e>
+60001c16:	fc                   	cld    
+60001c17:	89 c7                	mov    %eax,%edi
+60001c19:	8b 85 44 ff ff ff    	mov    0xffffff44(%ebp),%eax
+60001c1f:	b9 0f 00 00 00       	mov    $0xf,%ecx
+60001c24:	f3 ab                	repz stos %eax,%es:(%edi)
+60001c26:	c7 43 04 d0 1d 00 60 	movl   $0x60001dd0,0x4(%ebx)
+60001c2d:	b9 01 00 00 00       	mov    $0x1,%ecx
+60001c32:	c7 43 08 d0 1a 00 60 	movl   $0x60001ad0,0x8(%ebx)
+60001c39:	a1 20 40 00 60       	mov    0x60004020,%eax
+60001c3e:	c7 03 3c 00 00 00    	movl   $0x3c,(%ebx)
+60001c44:	8b 15 24 40 00 60    	mov    0x60004024,%edx
+60001c4a:	c7 43 28 00 00 00 00 	movl   $0x0,0x28(%ebx)
+60001c51:	89 43 14             	mov    %eax,0x14(%ebx)
+60001c54:	a1 20 20 00 60       	mov    0x60002020,%eax
+60001c59:	89 53 18             	mov    %edx,0x18(%ebx)
+60001c5c:	8b 15 24 20 00 60    	mov    0x60002024,%edx
+60001c62:	89 43 1c             	mov    %eax,0x1c(%ebx)
+60001c65:	a1 30 40 00 60       	mov    0x60004030,%eax
+60001c6a:	89 53 20             	mov    %edx,0x20(%ebx)
+60001c6d:	c7 43 30 ff ff ff ff 	movl   $0xffffffff,0x30(%ebx)
+60001c74:	89 43 2c             	mov    %eax,0x2c(%ebx)
+60001c77:	8b 15 2c 20 00 60    	mov    0x6000202c,%edx
+60001c7d:	a1 28 20 00 60       	mov    0x60002028,%eax
+60001c82:	89 53 38             	mov    %edx,0x38(%ebx)
+60001c85:	ba 1f 00 00 00       	mov    $0x1f,%edx
+60001c8a:	89 43 34             	mov    %eax,0x34(%ebx)
+60001c8d:	8d 76 00             	lea    0x0(%esi),%esi
+60001c90:	89 d8                	mov    %ebx,%eax
+60001c92:	21 c8                	and    %ecx,%eax
+60001c94:	83 f8 01             	cmp    $0x1,%eax
+60001c97:	19 c0                	sbb    %eax,%eax
+60001c99:	24 20                	and    $0x20,%al
+60001c9b:	01 c9                	add    %ecx,%ecx
+60001c9d:	04 41                	add    $0x41,%al
+60001c9f:	88 84 15 48 ff ff ff 	mov    %al,0xffffff48(%ebp,%edx,1)
+60001ca6:	4a                   	dec    %edx
+60001ca7:	79 e7                	jns    60001c90 <___w32_sharedptr_initialize+0x150>
+60001ca9:	a1 1c 32 00 60       	mov    0x6000321c,%eax
+60001cae:	89 85 68 ff ff ff    	mov    %eax,0xffffff68(%ebp)
+60001cb4:	a1 20 32 00 60       	mov    0x60003220,%eax
+60001cb9:	89 85 6c ff ff ff    	mov    %eax,0xffffff6c(%ebp)
+60001cbf:	a1 24 32 00 60       	mov    0x60003224,%eax
+60001cc4:	89 85 70 ff ff ff    	mov    %eax,0xffffff70(%ebp)
+60001cca:	a1 28 32 00 60       	mov    0x60003228,%eax
+60001ccf:	89 85 74 ff ff ff    	mov    %eax,0xffffff74(%ebp)
+60001cd5:	a1 2c 32 00 60       	mov    0x6000322c,%eax
+60001cda:	89 85 78 ff ff ff    	mov    %eax,0xffffff78(%ebp)
+60001ce0:	a1 30 32 00 60       	mov    0x60003230,%eax
+60001ce5:	89 85 7c ff ff ff    	mov    %eax,0xffffff7c(%ebp)
+60001ceb:	a1 34 32 00 60       	mov    0x60003234,%eax
+60001cf0:	89 45 80             	mov    %eax,0xffffff80(%ebp)
+60001cf3:	a1 38 32 00 60       	mov    0x60003238,%eax
+60001cf8:	89 45 84             	mov    %eax,0xffffff84(%ebp)
+60001cfb:	0f b7 05 3c 32 00 60 	movzwl 0x6000323c,%eax
+60001d02:	66 89 45 88          	mov    %ax,0xffffff88(%ebp)
+60001d06:	8d 85 48 ff ff ff    	lea    0xffffff48(%ebp),%eax
+60001d0c:	89 04 24             	mov    %eax,(%esp)
+60001d0f:	e8 ec 00 00 00       	call   60001e00 <_AddAtomA@4>
+60001d14:	0f b7 f8             	movzwl %ax,%edi
+60001d17:	83 ec 04             	sub    $0x4,%esp
+60001d1a:	85 ff                	test   %edi,%edi
+60001d1c:	75 41                	jne    60001d5f <___w32_sharedptr_initialize+0x21f>
+60001d1e:	31 d2                	xor    %edx,%edx
+60001d20:	85 d2                	test   %edx,%edx
+60001d22:	75 1d                	jne    60001d41 <___w32_sharedptr_initialize+0x201>
+60001d24:	89 1c 24             	mov    %ebx,(%esp)
+60001d27:	e8 74 00 00 00       	call   60001da0 <_free>
+60001d2c:	89 34 24             	mov    %esi,(%esp)
+60001d2f:	e8 bc 00 00 00       	call   60001df0 <_FindAtomA@4>
+60001d34:	83 ec 04             	sub    $0x4,%esp
+60001d37:	0f b7 c0             	movzwl %ax,%eax
+60001d3a:	e8 a1 fd ff ff       	call   60001ae0 <___w32_sharedptr_get>
+60001d3f:	89 c3                	mov    %eax,%ebx
+60001d41:	89 1d 60 40 00 60    	mov    %ebx,0x60004060
+60001d47:	8d 43 04             	lea    0x4(%ebx),%eax
+60001d4a:	a3 50 40 00 60       	mov    %eax,0x60004050
+60001d4f:	8d 43 08             	lea    0x8(%ebx),%eax
+60001d52:	a3 70 40 00 60       	mov    %eax,0x60004070
+60001d57:	8d 65 f4             	lea    0xfffffff4(%ebp),%esp
+60001d5a:	5b                   	pop    %ebx
+60001d5b:	5e                   	pop    %esi
+60001d5c:	5f                   	pop    %edi
+60001d5d:	5d                   	pop    %ebp
+60001d5e:	c3                   	ret    
+60001d5f:	89 f8                	mov    %edi,%eax
+60001d61:	e8 7a fd ff ff       	call   60001ae0 <___w32_sharedptr_get>
+60001d66:	39 d8                	cmp    %ebx,%eax
+60001d68:	89 fa                	mov    %edi,%edx
+60001d6a:	75 b2                	jne    60001d1e <___w32_sharedptr_initialize+0x1de>
+60001d6c:	eb b2                	jmp    60001d20 <___w32_sharedptr_initialize+0x1e0>
+60001d6e:	e8 5d 00 00 00       	call   60001dd0 <_abort>
+60001d73:	90                   	nop    
+60001d74:	90                   	nop    
+60001d75:	90                   	nop    
+60001d76:	90                   	nop    
+60001d77:	90                   	nop    
+60001d78:	90                   	nop    
+60001d79:	90                   	nop    
+60001d7a:	90                   	nop    
+60001d7b:	90                   	nop    
+60001d7c:	90                   	nop    
+60001d7d:	90                   	nop    
+60001d7e:	90                   	nop    
+60001d7f:	90                   	nop    
+
+60001d80 <___dllonexit>:
+60001d80:	ff 25 a4 61 00 60    	jmp    *0x600061a4
+60001d86:	90                   	nop    
+60001d87:	90                   	nop    
+	...
+
+60001d90 <_fflush>:
+60001d90:	ff 25 b0 61 00 60    	jmp    *0x600061b0
+60001d96:	90                   	nop    
+60001d97:	90                   	nop    
+	...
+
+60001da0 <_free>:
+60001da0:	ff 25 b4 61 00 60    	jmp    *0x600061b4
+60001da6:	90                   	nop    
+60001da7:	90                   	nop    
+	...
+
+60001db0 <__errno>:
+60001db0:	ff 25 a8 61 00 60    	jmp    *0x600061a8
+60001db6:	90                   	nop    
+60001db7:	90                   	nop    
+	...
+
+60001dc0 <_malloc>:
+60001dc0:	ff 25 b8 61 00 60    	jmp    *0x600061b8
+60001dc6:	90                   	nop    
+60001dc7:	90                   	nop    
+	...
+
+60001dd0 <_abort>:
+60001dd0:	ff 25 ac 61 00 60    	jmp    *0x600061ac
+60001dd6:	90                   	nop    
+60001dd7:	90                   	nop    
+	...
+
+60001de0 <_GetAtomNameA@12>:
+60001de0:	ff 25 98 61 00 60    	jmp    *0x60006198
+60001de6:	90                   	nop    
+60001de7:	90                   	nop    
+	...
+
+60001df0 <_FindAtomA@4>:
+60001df0:	ff 25 94 61 00 60    	jmp    *0x60006194
+60001df6:	90                   	nop    
+60001df7:	90                   	nop    
+	...
+
+60001e00 <_AddAtomA@4>:
+60001e00:	ff 25 90 61 00 60    	jmp    *0x60006190
+60001e06:	90                   	nop    
+60001e07:	90                   	nop    
+	...
+
+60001e10 <___sjlj_init_ctor>:
+60001e10:	55                   	push   %ebp
+60001e11:	89 e5                	mov    %esp,%ebp
+60001e13:	5d                   	pop    %ebp
+60001e14:	e9 57 f3 ff ff       	jmp    60001170 <___do_sjlj_init>
+60001e19:	90                   	nop    
+60001e1a:	90                   	nop    
+60001e1b:	90                   	nop    
+60001e1c:	90                   	nop    
+60001e1d:	90                   	nop    
+60001e1e:	90                   	nop    
+60001e1f:	90                   	nop    
+
+60001e20 <__CTOR_LIST__>:
+60001e20:	ff                   	(bad)  
+60001e21:	ff                   	(bad)  
+60001e22:	ff                   	(bad)  
+60001e23:	ff 10                	call   *(%eax)
+
+60001e24 <.ctors>:
+60001e24:	10 1e                	adc    %bl,(%esi)
+60001e26:	00 60 00             	add    %ah,0x0(%eax)
+60001e29:	00 00                	add    %al,(%eax)
+	...
+
+60001e2c <__DTOR_LIST__>:
+60001e2c:	ff                   	(bad)  
+60001e2d:	ff                   	(bad)  
+60001e2e:	ff                   	(bad)  
+60001e2f:	ff 00                	incl   (%eax)
+60001e31:	00 00                	add    %al,(%eax)
+	...
