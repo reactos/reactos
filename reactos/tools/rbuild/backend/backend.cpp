@@ -2,8 +2,9 @@
 #pragma warning ( disable : 4786 ) // identifier was truncated to '255' characters in the debug information
 #endif//_MSC_VER
 
+#include "../Rbuild.h"
 #include "backend.h"
 
-Backend::Backend()
+Backend::Backend ( Project& project ) : ProjectNode(project)
 {
 }

@@ -22,12 +22,8 @@ protected:
 	              int actual,
 	              const char* file,
 	              int line);
-	void AreEqual(string expected,
-	              string actual,
-	              const char* file,
-	              int line);
-	void AreEqual(const char* expected,
-	              string actual,
+	void AreEqual(const std::string& expected,
+	              const std::string& actual,
 	              const char* file,
 	              int line);
 	void AreNotEqual(int expected,

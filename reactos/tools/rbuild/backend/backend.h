@@ -6,9 +6,9 @@
 class Backend
 {
 public:
-	Backend();
+	Backend ( Project& );
 protected:
-	Project ProjectNode;
+	Project& ProjectNode;
 };
 
 #endif /* __BACKEND_H */

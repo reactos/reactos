@@ -3,15 +3,13 @@
 
 #include <string>
 
-using std::string;
-
 class Exception
 {
 public:
-	Exception(string message);
+	Exception(const std::string& message);
 	Exception(const char* format,
 	          ...);
-	string Message;
+	std::string Message;
 protected:
 	Exception();
 	void SetMessage(const char* message,
@@ -22,8 +20,8 @@ protected:
 class FileNotFoundException : public Exception
 {
 public:
-	FileNotFoundException(string filename);
-	string Filename;
+	FileNotFoundException(const std::string& filename);
+	std::string Filename;
 };
 
 

@@ -18,7 +18,7 @@ public:
 	std::vector<Module*> modules;
 
 	Project ();
-	Project ( string filename );
+	Project ( const std::string& filename );
 	~Project ();
 	void ProcessXML ( const XMLElement& e, const std::string& path );
 private:

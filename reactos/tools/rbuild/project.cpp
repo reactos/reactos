@@ -11,7 +11,7 @@ Project::Project()
 {
 }
 
-Project::Project(string filename)
+Project::Project(const string& filename)
 {
 	if ( !xmlfile.open ( filename ) )
 		throw FileNotFoundException ( filename );

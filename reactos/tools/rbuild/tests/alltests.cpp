@@ -61,8 +61,8 @@ void BaseTest::AreEqual(int expected,
 	}
 }
 
-void BaseTest::AreEqual(string expected,
-                        string actual,
+void BaseTest::AreEqual(const std::string& expected,
+                        const std::string& actual,
                         const char* file,
                         int line)
 {
@@ -74,17 +74,6 @@ void BaseTest::AreEqual(string expected,
 		       file,
 		       line);
 	}
-}
-
-void BaseTest::AreEqual(const char* expected,
-                        string actual,
-                        const char* file,
-                        int line)
-{
-	AreEqual(string(expected),
-             actual,
-             file,
-             line);
 }
 
 void BaseTest::AreNotEqual(int expected,

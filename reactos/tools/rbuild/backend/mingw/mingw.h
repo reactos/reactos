@@ -1,12 +1,12 @@
-#ifndef __MINGW_H
-#define __MINGW_H
-#if 0
-#include "backend.h"
+#ifndef MINGW_H
+#define MINGW_H
+
+#include "../backend.h"
 
 class MingwBackend : public Backend
 {
 public:
-	MingwBackend();
+	MingwBackend ( Project& );
 };
-#endif
-#endif /* __MINGW_H */
+
+#endif /* MINGW_H */

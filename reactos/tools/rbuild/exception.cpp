@@ -5,11 +5,13 @@
 #include <stdarg.h>
 #include "rbuild.h"
 
+using std::string;
+
 Exception::Exception()
 {
 }
 
-Exception::Exception(string message)
+Exception::Exception(const string& message)
 {
 	Message = message;
 }
@@ -33,7 +35,7 @@ void Exception::SetMessage(const char* message,
 }
 
 
-FileNotFoundException::FileNotFoundException(string filename)
+FileNotFoundException::FileNotFoundException(const string& filename)
 	: Exception ( "File '%s' not found.", filename.c_str() )
 {
 	Filename = filename;

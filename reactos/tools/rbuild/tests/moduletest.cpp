@@ -1,5 +1,7 @@
 #include "test.h"
 
+using std::string;
+
 void ModuleTest::Run()
 {
 	string projectFilename ( "tests/data/module.xml" );
