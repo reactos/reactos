@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.2 2003/05/18 17:16:17 ea Exp $
+/* $Id: timer.c,v 1.3 2003/05/22 02:07:22 gdalsnes Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -43,6 +43,8 @@
 
 /* GLOBALS *******************************************************************/
 
+//windows 2000 has room for 32768 handle-less timers
+#define NUM_HANDLE_LESS_TIMERS   1024
 
 static FAST_MUTEX     Mutex;
 static LIST_ENTRY     TimerListHead;
@@ -313,11 +315,9 @@ TimerThreadMain(VOID)
                continue;
             }
             
-            /*
-             * FIXME: small window here, where the thread can exit between the thread lookup 
-             * and the message posting (missing ref count?)
-             */
             MsqPostMessage(((PW32THREAD)Thread->Win32Thread)->MessageQueue, MsqCreateMessage(&MsgTimer->Msg));
+
+            ObDereferenceObject(Thread);
 
             //set up next periodic timeout
             MsgTimer->Timeout.QuadPart += (MsgTimer->Period * 10000); 
@@ -349,16 +349,18 @@ NTSTATUS FASTCALL
 InitTimerImpl(VOID)
 {
    NTSTATUS Status;
+   ULONG BitmapBytes;
+
+   BitmapBytes = ROUND_UP(NUM_HANDLE_LESS_TIMERS, sizeof(ULONG) * 8) / 8;
 
    InitializeListHead(&TimerListHead);
    KeInitializeTimer(&Timer);
    ExInitializeFastMutex(&Mutex);
 
-   //windows 2000 has room for 32768 handle-less timers
-   HandleLessTimersBitMapBuffer = ExAllocatePool(PagedPool, PAGE_SIZE);
+   HandleLessTimersBitMapBuffer = ExAllocatePool(PagedPool, BitmapBytes);
    RtlInitializeBitMap(&HandleLessTimersBitMap,
                        HandleLessTimersBitMapBuffer,
-                       PAGE_SIZE * sizeof(ULONG));
+                       BitmapBytes * 8);
 
    //yes we need this, since ExAllocatePool isn't supposed to zero out allocated memory
    RtlClearAllBits(&HandleLessTimersBitMap); 
