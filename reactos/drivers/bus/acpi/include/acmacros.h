@@ -1,7 +1,7 @@
 /******************************************************************************
  *
  * Name: acmacros.h - C macros for the entire subsystem.
- *       $Revision: 1.3 $
+ *       $Revision: 1.4 $
  *
  *****************************************************************************/
 
@@ -186,9 +186,15 @@
 
 /* Macros for GAS addressing */
 
+#ifdef __GNUC__
+#define ACPI_PCI_DEVICE_MASK            (UINT64) 0x0000FFFF00000000ULL
+#define ACPI_PCI_FUNCTION_MASK          (UINT64) 0x00000000FFFF0000ULL
+#define ACPI_PCI_REGISTER_MASK          (UINT64) 0x000000000000FFFFULL
+#else
 #define ACPI_PCI_DEVICE_MASK            (UINT64) 0x0000FFFF00000000
 #define ACPI_PCI_FUNCTION_MASK          (UINT64) 0x00000000FFFF0000
 #define ACPI_PCI_REGISTER_MASK          (UINT64) 0x000000000000FFFF
+#endif
 
 #define ACPI_PCI_FUNCTION(a)            (u32) ((((a) & ACPI_PCI_FUNCTION_MASK) >> 16))
 #define ACPI_PCI_DEVICE(a)              (u32) ((((a) & ACPI_PCI_DEVICE_MASK) >> 32))

@@ -445,9 +445,7 @@ BOOL WINAPI MapAndLoad(
 	BOOL DotDll, 
 	BOOL ReadOnly)
 {
-  HANDLE hFile = NULL;
   HANDLE hFileMapping = NULL;
-  HMODULE hModule = NULL;
   PIMAGE_NT_HEADERS NtHeader = NULL;
   ULONG	Tried = 0;
   UCHAR Buffer[MAX_PATH];

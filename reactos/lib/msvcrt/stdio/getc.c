@@ -1,4 +1,4 @@
-/* $Id: getc.c,v 1.10 2004/08/15 18:16:38 chorns Exp $
+/* $Id: getc.c,v 1.11 2004/08/20 00:57:44 navaraf Exp $
  *
  *  ReactOS msvcrt library
  *
@@ -80,7 +80,8 @@ wint_t getwc(FILE *fp)
     if (fp->_flag & _IOBINARY) {
         if (fp->_cnt > 1) {
             fp->_cnt -= sizeof(wchar_t);
-            c = (wint_t)*((wchar_t*)(fp->_ptr))++;
+            c = *((wchar_t*)fp->_ptr);
+            fp->_ptr += sizeof(wchar_t);
         } else {
             c = _filwbuf(fp);
             // need to fix by one values of  fp->_ptr and fp->_cnt

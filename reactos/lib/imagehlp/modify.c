@@ -586,7 +586,7 @@ BindpBindThunk(
 	if (!OrdinalNumber) return FALSE;
 
 	/* Write the Pointer */
-	(ULONG)BoundThunk->u1.Function = AddressOfPointers[OrdinalNumber] + LibraryOptionalHeader32->ImageBase;
+	BoundThunk->u1.Function = (PDWORD)(AddressOfPointers[OrdinalNumber] + LibraryOptionalHeader32->ImageBase);
 
 	/* Load DLL's Exports */
     ExportsBase = (ULONG)ImageDirectoryEntryToData (LoadedLibrary->MappedAddress, 
@@ -598,12 +598,12 @@ BindpBindThunk(
     ExportsBase += LibraryOptionalHeader32->ImageBase;
 
 	/* Check if the Export is forwarded (meaning that it's pointer is inside the Export Table) */
-    if ((ULONG)BoundThunk->u1.Function > ExportsBase && (ULONG)BoundThunk->u1.Function < (ExportsBase + ExportSize)) {
+    if (BoundThunk->u1.Function > (PDWORD)ExportsBase && BoundThunk->u1.Function < (PDWORD)(ExportsBase + ExportSize)) {
         
 		//FIXME("This Thunk is a forward...calling forward thunk bounder\n");
 
 		/* Replace the Forwarder String by the actual Pointer */
-        (ULONG)BoundThunk->u1.Function = BindpAddBoundForwarder (BoundImportDescriptor,
+        BoundThunk->u1.Function = (PDWORD)BindpAddBoundForwarder (BoundImportDescriptor,
 														DllPath,
 														ImageRvaToVa (LoadedLibrary->FileHeader,
 																		LoadedLibrary->MappedAddress,
