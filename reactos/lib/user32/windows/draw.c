@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: draw.c,v 1.14 2003/07/20 01:24:52 jimtabor Exp $
+/* $Id: draw.c,v 1.15 2003/07/20 03:01:13 jimtabor Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -1479,7 +1479,7 @@ RECT r = *lprc;
 	PatBlt( hDC, r.left, r.top, r.right - r.left, 1, PATCOPY );
 	PatBlt( hDC, r.left, r.bottom - 1, r.right - r.left, 1, PATCOPY );
                                                                             
-	W32kSelectObject( hDC, oldbrush );
+	SelectObject( hDC, oldbrush );
 	return TRUE;
 }
 
