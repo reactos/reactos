@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.122 2004/06/02 18:24:09 hyperion Exp $
+# $Id: Makefile,v 1.123 2004/06/05 12:06:41 hbirr Exp $
 #
 # ReactOS Operating System
 #
@@ -744,7 +744,7 @@ ke/main.o: ke/main.c $(PATH_TO_TOP)/include/reactos/buildno.h
 %.o: %.s
 	$(AS) $(ASFLAGS) -c $< -o $@
 %.o: %.asm
-	$(NASM) $(NFLAGS) $< -o $@
+	$(NASM_CMD) $(NFLAGS) $< -o $@
 %.coff: %.rc
 	$(RC) $(RCFLAGS) $< -o $@
 
