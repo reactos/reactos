@@ -1,0 +1,61 @@
+#include <defines.h>
+#include <reactos/resource.h>
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+1001 DIALOGEX 0, 0, 230, 230
+STYLE WS_POPUP | WS_BORDER | DS_CENTER | DS_MODALFRAME | WS_CAPTION | DS_ABSALIGN | WS_SYSMENU
+FONT 8, "Tahoma", FW_BOLD, 0
+CAPTION "Settings"
+BEGIN
+    GROUPBOX    "", 0, 5, 2, 220, 203
+
+    LTEXT       "Sample Device Technology :", 666, 11, 10, 210, 12
+    COMBOBOX    "", 666, 10, 20, 210, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT       "Playback Samples Using :", 666, 11, 40, 150, 12
+    COMBOBOX    "", 666, 10, 50, 210, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT       "Record Samples Using :", 666, 11, 70, 150, 12
+    COMBOBOX    "", 666, 10, 80, 210, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON  "OK", 666, 90, 210, 50, 14
+    
+    PUSHBUTTON "Settings", 666, 160, 40, 50, 14
+    PUSHBUTTON "Settings", 666, 160, 70, 50, 14
+
+    LTEXT       "Sample playback is DISABLED.", 666, 11, 180, 210, 12
+END
+
+
+
+VS_VERSION_INFO VERSIONINFO
+	FILEVERSION	RES_UINT_FV_MAJOR,RES_UINT_FV_MINOR,RES_UINT_FV_REVISION,RES_UINT_FV_BUILD
+	PRODUCTVERSION	RES_UINT_PV_MAJOR,RES_UINT_PV_MINOR,RES_UINT_PV_REVISION,RES_UINT_PV_BUILD
+	FILEFLAGSMASK	0x3fL
+#ifdef _DEBUG
+	FILEFLAGS	0x1L
+#else
+	FILEFLAGS	0x0L
+#endif
+	FILEOS		0x40004L
+	FILETYPE	0x2L
+	FILESUBTYPE	0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName",	RES_STR_COMPANY_NAME
+            VALUE "FileDescription",    "MPU-401 MIDI Driver DLL\0"
+            VALUE "FileVersion",    "0.0.1\0"
+            VALUE "InternalName",   "mpu401\0"
+            VALUE "LegalCopyright",	RES_STR_LEGAL_COPYRIGHT
+            VALUE "OriginalFilename",   "mpu401.dll\0"
+            VALUE "ProductName",	RES_STR_PRODUCT_NAME
+            VALUE "ProductVersion",	RES_STR_PRODUCT_VERSION
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+

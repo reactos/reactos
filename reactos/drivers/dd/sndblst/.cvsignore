@@ -1,0 +1,8 @@
+*.tmp
+*.exp
+*.coff
+*.d
+*.o
+*.sym
+*.sys
+*.map

@@ -1,0 +1,14 @@
+LIBRARY mpu401
+
+DESCRIPTION "MPU401 driver DLL"
+
+EXETYPE WINDOWS
+
+EXPORTS
+DriverProc
+;mxdMessage
+;auxMessage
+;wodMessage
+;widMessage
+modMessage = modSynthMessage
+Test
