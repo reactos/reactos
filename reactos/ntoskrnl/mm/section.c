@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.99 2002/10/01 19:27:24 chorns Exp $
+/* $Id: section.c,v 1.100 2002/11/05 20:50:02 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -318,12 +318,13 @@ MiReadPage(PMEMORY_AREA MemoryArea,
       *       Page - Variable that receives a page contains the read data.
       */
 {
-  IO_STATUS_BLOCK IoStatus;
+  ULONG BaseOffset;
+  PVOID BaseAddress;
+  BOOLEAN UptoDate;
+  PCACHE_SEGMENT CacheSeg;
   PFILE_OBJECT FileObject;
-  PMDL Mdl;
   NTSTATUS Status;
   PREACTOS_COMMON_FCB_HEADER Fcb;
-  KEVENT Event;
 
   FileObject = MemoryArea->Data.SectionData.Section->FileObject;
   Fcb = (PREACTOS_COMMON_FCB_HEADER)FileObject->FsContext;
@@ -336,10 +337,6 @@ MiReadPage(PMEMORY_AREA MemoryArea,
   if (FileObject->Flags & FO_DIRECT_CACHE_PAGING_READ &&
       (Offset->QuadPart % PAGE_SIZE) == 0)
     {
-      ULONG BaseOffset;
-      PVOID BaseAddress;
-      BOOLEAN UptoDate;
-      PCACHE_SEGMENT CacheSeg;
       PHYSICAL_ADDRESS Addr;
 
       /*
@@ -348,7 +345,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
        * alignment less than the file system block size.
        */
       Status = CcRosGetCacheSegment(Fcb->Bcb,
-				 (ULONG)Offset->QuadPart,
+				 Offset->u.LowPart,
 				 &BaseOffset,
 				 &BaseAddress,
 				 &UptoDate,
@@ -366,6 +363,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
           Status = ReadCacheSegment(CacheSeg);
 	  if (!NT_SUCCESS(Status))
 	  {
+	      CcRosReleaseCacheSegment(Fcb->Bcb, CacheSeg, FALSE, FALSE, FALSE);
 	      return Status;
 	  }
 	}
@@ -373,15 +371,16 @@ MiReadPage(PMEMORY_AREA MemoryArea,
        * Retrieve the page from the cache segment that we actually want.
        */
       Addr = MmGetPhysicalAddress(BaseAddress +
-				  Offset->QuadPart - BaseOffset);
+				  Offset->u.LowPart - BaseOffset);
       (*Page) = Addr;
       MmReferencePage((*Page));
 
       CcRosReleaseCacheSegment(Fcb->Bcb, CacheSeg, TRUE, FALSE, TRUE);
-      return(STATUS_SUCCESS);
     }
   else
     {
+      PVOID PageAddr;
+      ULONG OffsetInPage;
       /*
        * Allocate a page, this is rather complicated by the possibility
        * we might have to move other things out of memory
@@ -392,28 +391,70 @@ MiReadPage(PMEMORY_AREA MemoryArea,
 	  return(Status);
 	}
 
-      /*
-       * Create an mdl to hold the page we are going to read data into.
-       */
-      Mdl = MmCreateMdl(NULL, NULL, PAGE_SIZE);
-      MmBuildMdlFromPages(Mdl, &Page->u.LowPart);
-      /*
-       * Call the FSD to read the page
-       */
-
-      KeInitializeEvent(&Event, NotificationEvent, FALSE);
-      Status = IoPageRead(FileObject,
-			  Mdl,
-			  Offset,
-			  &Event,
-			  &IoStatus);
-      if (Status == STATUS_PENDING)
+      Status = CcRosGetCacheSegment(Fcb->Bcb,
+				 Offset->u.LowPart,
+				 &BaseOffset,
+				 &BaseAddress,
+				 &UptoDate,
+				 &CacheSeg);
+      if (!NT_SUCCESS(Status))
+	{
+	  return(Status);
+	}
+      if (!UptoDate)
+	{
+	  /*
+	   * If the cache segment isn't up to date then call the file
+	   * system to read in the data.
+	   */
+          Status = ReadCacheSegment(CacheSeg);
+	  if (!NT_SUCCESS(Status))
+	  {
+	      CcRosReleaseCacheSegment(Fcb->Bcb, CacheSeg, FALSE, FALSE, FALSE);
+	      return Status;
+	  }
+	}
+      PageAddr = ExAllocatePageWithPhysPage(*Page);
+      OffsetInPage = BaseOffset + CacheSeg->Bcb->CacheSegmentSize - Offset->u.LowPart;
+      if (OffsetInPage >= PAGE_SIZE)
       {
-        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-        return(IoStatus.Status);
+         memcpy(PageAddr, BaseAddress + Offset->u.LowPart - BaseOffset, PAGE_SIZE);
       }
-      return(Status);
+      else
+      {
+	 memcpy(PageAddr, BaseAddress + Offset->u.LowPart - BaseOffset, OffsetInPage);
+         CcRosReleaseCacheSegment(Fcb->Bcb, CacheSeg, TRUE, FALSE, FALSE);
+         Status = CcRosGetCacheSegment(Fcb->Bcb,
+				 Offset->u.LowPart + OffsetInPage,
+				 &BaseOffset,
+				 &BaseAddress,
+				 &UptoDate,
+				 &CacheSeg);
+         if (!NT_SUCCESS(Status))
+	   {
+	     ExUnmapPage(PageAddr);
+	     return(Status);
+	   }
+         if (!UptoDate)
+	   {
+	     /*
+	      * If the cache segment isn't up to date then call the file
+	      * system to read in the data.
+	      */
+             Status = ReadCacheSegment(CacheSeg);
+	     if (!NT_SUCCESS(Status))
+	       {
+	         CcRosReleaseCacheSegment(Fcb->Bcb, CacheSeg, FALSE, FALSE, FALSE);
+		 ExUnmapPage(PageAddr);
+	         return Status;
+	       }
+	   }
+	 memcpy(PageAddr + OffsetInPage, BaseAddress, PAGE_SIZE - OffsetInPage);
+      }
+      CcRosReleaseCacheSegment(Fcb->Bcb, CacheSeg, TRUE, FALSE, FALSE);
+      ExUnmapPage(PageAddr);
     }
+  return(STATUS_SUCCESS);
 }
 
 NTSTATUS
@@ -558,7 +599,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 
 	   Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
 					   Address,
-					   Attributes,
+					   MemoryArea->Attributes,
 					   Page,
 					   FALSE);
 	   if (!NT_SUCCESS(Status))
@@ -1253,7 +1294,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
   /*
    * Take an additional reference to the page.
    */
-  MmReferencePage(PhysicalAddress);
+//  MmReferencePage(PhysicalAddress);
 
   /*
    * Paging out data mapped read-only is easy.
@@ -1680,7 +1721,7 @@ MmAlterViewAttributes(PMADDRESS_SPACE AddressSpace,
 
   if (OldProtect != NewProtect)
     {
-      for (i = 0; i < (RegionSize / PAGE_SIZE); i++)
+      for (i = 0; i < PAGE_ROUND_UP(RegionSize) / PAGE_SIZE; i++)
 	{
 	  PVOID Address = BaseAddress + (i * PAGE_SIZE);
 	  ULONG Protect = NewProtect;
@@ -2873,6 +2914,19 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
 
   PageOp = MmCheckForPageOp(MArea, 0, NULL, MArea->Data.SectionData.Segment,
 			    Offset);
+  
+  if (PageOp)
+  {  
+     KeWaitForSingleObject(&PageOp->CompletionEvent,
+			   0,
+			   KernelMode,
+			   FALSE,
+			   NULL);
+     MmReleasePageOp(PageOp);
+     PageOp = MmCheckForPageOp(MArea, 0, NULL, MArea->Data.SectionData.Segment,
+			       Offset);
+  }
+  
   assert(PageOp == NULL);
 
   /*
@@ -3189,7 +3243,7 @@ MmAllocateSection (IN ULONG Length)
      }
    MmUnlockAddressSpace(AddressSpace);
    DPRINT("Result %p\n",Result);
-   for (i = 0; (i <= (Length / PAGE_SIZE)); i++)
+   for (i = 0; i < PAGE_ROUND_UP(Length) / PAGE_SIZE; i++)
      {
        PHYSICAL_ADDRESS Page;
 
@@ -3310,22 +3364,22 @@ MmMapViewOfSection(IN PVOID SectionObject,
 
        /* Check there is enough space to map the section at that point. */
        if (MmOpenMemoryAreaByRegion(AddressSpace, ImageBase, 
-				    ImageSize) != NULL)
+				    PAGE_ROUND_UP(ImageSize)) != NULL)
 	 {
 	   /* Fail if the user requested a fixed base address. */
 	   if ((*BaseAddress) != NULL)
 	     {
 	       MmUnlockSection(Section);
 	       MmUnlockAddressSpace(AddressSpace);
-	       return(Status);
+	       return(STATUS_UNSUCCESSFUL);
 	     }
 	   /* Otherwise find a gap to map the image. */
-	   ImageBase = MmFindGap(AddressSpace, ImageSize);
+	   ImageBase = MmFindGap(AddressSpace, PAGE_ROUND_UP(ImageSize));
 	   if (ImageBase == NULL)
 	     {
 	       MmUnlockSection(Section);
 	       MmUnlockAddressSpace(AddressSpace);
-	       return(Status);
+	       return(STATUS_UNSUCCESSFUL);
 	     }
 	 }
 				    
