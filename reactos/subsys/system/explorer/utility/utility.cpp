@@ -251,12 +251,16 @@ String get_windows_version_str()
 
 	switch(osvi.dwPlatformId) {
 	  case VER_PLATFORM_WIN32_NT:
+#ifdef _ROS_	// This work around can be removed if ReactOS gets a unique version number.
+		str = TEXT("ReactOS");
+#else
 		if (osvi.dwMajorVersion <= 4)
 			str = TEXT("Microsoft Windows NT");
 		else if (osvi.dwMajorVersion==5 && osvi.dwMinorVersion==0)
 			str = TEXT("Microsoft Windows 2000");
 		else if (osvi.dwMajorVersion==5 && osvi.dwMinorVersion==1)
 			str = TEXT("Microsoft Windows XP");
+#endif
 
 		if (osvie_val) {
 			if (osvi.wProductType == VER_NT_WORKSTATION) {
