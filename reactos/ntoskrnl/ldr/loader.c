@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.150 2004/10/26 10:56:38 ekohl Exp $
+/* $Id: loader.c,v 1.151 2004/11/13 13:09:07 weiden Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -43,8 +43,8 @@
 
 LIST_ENTRY ModuleListHead;
 KSPIN_LOCK ModuleListLock;
-STATIC MODULE_OBJECT NtoskrnlModuleObject;
-STATIC MODULE_OBJECT HalModuleObject;
+MODULE_OBJECT NtoskrnlModuleObject;
+MODULE_OBJECT HalModuleObject;
 
 LIST_ENTRY ModuleTextListHead;
 STATIC MODULE_TEXT_SECTION NtoskrnlTextSection;
