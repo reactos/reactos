@@ -13,7 +13,8 @@ include rules.mak
 #
 # Available applications
 #
-APPS = cmd cmdutils notevil sysutils dflat32 mc net\ping net\ncftp net\telnet
+APPS = cmd cmdutils notevil sysutils dflat32 mc net\ping net\ncftp \
+net\telnet net\whois
 
 all: $(APPS)
 .PHONY: all
