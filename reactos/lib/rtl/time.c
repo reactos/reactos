@@ -74,7 +74,7 @@ BOOLEAN STDCALL
 RtlCutoverTimeToSystemTime(IN PTIME_FIELDS CutoverTimeFields,
                            OUT PLARGE_INTEGER SystemTime,
                            IN PLARGE_INTEGER CurrentTime,
-                           IN ULONG Unknown)
+                           IN BOOLEAN ThisYearsCutoverOnly)
 {
   TIME_FIELDS AdjustedTimeFields;
   TIME_FIELDS CurrentTimeFields;
@@ -82,6 +82,7 @@ RtlCutoverTimeToSystemTime(IN PTIME_FIELDS CutoverTimeFields,
   LARGE_INTEGER CutoverSystemTime;
   CSHORT MonthLength;
   CSHORT Days;
+  BOOLEAN NextYearsCutover = FALSE;
 
   /* Check fixed cutover time */
   if (CutoverTimeFields->Year != 0)
@@ -105,44 +106,59 @@ RtlCutoverTimeToSystemTime(IN PTIME_FIELDS CutoverTimeFields,
 
   RtlTimeToTimeFields(CurrentTime, &CurrentTimeFields);
 
-  /* Compute the cutover time of the first day of the current month */
-  AdjustedTimeFields.Year = CurrentTimeFields.Year;
-  AdjustedTimeFields.Month = CutoverTimeFields->Month;
-  AdjustedTimeFields.Day = 1;
-  AdjustedTimeFields.Hour = CutoverTimeFields->Hour;
-  AdjustedTimeFields.Minute = CutoverTimeFields->Minute;
-  AdjustedTimeFields.Second = CutoverTimeFields->Second;
-  AdjustedTimeFields.Milliseconds = CutoverTimeFields->Milliseconds;
-
-  if (!RtlTimeFieldsToTime(&AdjustedTimeFields, &CutoverSystemTime))
-    return FALSE;
-
-  RtlTimeToTimeFields(&CutoverSystemTime, &CutoverSystemTimeFields);
-
-  /* Adjust day to first matching weekday */
-  if (CutoverSystemTimeFields.Weekday != CutoverTimeFields->Weekday)
+  while (TRUE)
   {
-    if (CutoverSystemTimeFields.Weekday < CutoverTimeFields->Weekday)
-      Days = CutoverTimeFields->Weekday - CutoverSystemTimeFields.Weekday;
-    else
-      Days = DAYSPERWEEK - (CutoverSystemTimeFields.Weekday - CutoverTimeFields->Weekday);
+    /* Compute the cutover time of the first day of the current month */
+    AdjustedTimeFields.Year = CurrentTimeFields.Year;
+    if (NextYearsCutover == TRUE)
+      AdjustedTimeFields.Year++;
 
-    AdjustedTimeFields.Day += Days;
+    AdjustedTimeFields.Month = CutoverTimeFields->Month;
+    AdjustedTimeFields.Day = 1;
+    AdjustedTimeFields.Hour = CutoverTimeFields->Hour;
+    AdjustedTimeFields.Minute = CutoverTimeFields->Minute;
+    AdjustedTimeFields.Second = CutoverTimeFields->Second;
+    AdjustedTimeFields.Milliseconds = CutoverTimeFields->Milliseconds;
+
+    if (!RtlTimeFieldsToTime(&AdjustedTimeFields, &CutoverSystemTime))
+      return FALSE;
+
+    RtlTimeToTimeFields(&CutoverSystemTime, &CutoverSystemTimeFields);
+
+    /* Adjust day to first matching weekday */
+    if (CutoverSystemTimeFields.Weekday != CutoverTimeFields->Weekday)
+    {
+      if (CutoverSystemTimeFields.Weekday < CutoverTimeFields->Weekday)
+        Days = CutoverTimeFields->Weekday - CutoverSystemTimeFields.Weekday;
+      else
+        Days = DAYSPERWEEK - (CutoverSystemTimeFields.Weekday - CutoverTimeFields->Weekday);
+
+      AdjustedTimeFields.Day += Days;
+    }
+
+    /* Adjust the number of weeks */
+    if (CutoverTimeFields->Day > 1)
+    {
+      Days = DAYSPERWEEK * (CutoverTimeFields->Day - 1);
+      MonthLength = MonthLengths[IsLeapYear(AdjustedTimeFields.Year)][AdjustedTimeFields.Month - 1];
+      if ((AdjustedTimeFields.Day + Days) > MonthLength)
+        Days -= DAYSPERWEEK;
+
+      AdjustedTimeFields.Day += Days;
+    }
+
+    if (!RtlTimeFieldsToTime(&AdjustedTimeFields, &CutoverSystemTime))
+      return FALSE;
+
+    if (ThisYearsCutoverOnly == TRUE ||
+        NextYearsCutover == TRUE ||
+        CutoverSystemTime.QuadPart >= CurrentTime->QuadPart)
+    {
+      break;
+    }
+
+    NextYearsCutover = TRUE;
   }
-
-  /* Adjust the number of weeks */
-  if (CutoverTimeFields->Day > 1)
-  {
-    Days = DAYSPERWEEK * (CutoverTimeFields->Day - 1);
-    MonthLength = MonthLengths[IsLeapYear(AdjustedTimeFields.Year)][AdjustedTimeFields.Month - 1];
-    if ((AdjustedTimeFields.Day + Days) > MonthLength)
-      Days -= DAYSPERWEEK;
-
-    AdjustedTimeFields.Day += Days;
-  }
-
-  if (!RtlTimeFieldsToTime(&AdjustedTimeFields, &CutoverSystemTime))
-    return FALSE;
 
   SystemTime->QuadPart = CutoverSystemTime.QuadPart;
 

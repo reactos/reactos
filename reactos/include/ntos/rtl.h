@@ -112,7 +112,7 @@ static __inline VOID
 InsertHeadList(
 	IN PLIST_ENTRY  ListHead,
 	IN PLIST_ENTRY  Entry)
-{ 
+{
 	PLIST_ENTRY OldFlink;
 	OldFlink = ListHead->Flink;
 	Entry->Flink = OldFlink;
@@ -140,7 +140,7 @@ static __inline VOID
 InsertTailList(
 	IN PLIST_ENTRY  ListHead,
 	IN PLIST_ENTRY  Entry)
-{ 
+{
 	PLIST_ENTRY OldBlink;
 	OldBlink = ListHead->Blink;
 	Entry->Flink = ListHead;
@@ -882,7 +882,7 @@ BOOLEAN STDCALL
 RtlCutoverTimeToSystemTime(IN PTIME_FIELDS CutoverTimeFields,
                            OUT PLARGE_INTEGER SystemTime,
                            IN PLARGE_INTEGER CurrentTime,
-                           IN ULONG Unknown);
+                           IN BOOLEAN ThisYearsCutoverOnly);
 
 NTSTATUS STDCALL
 RtlDecompressBuffer(IN USHORT CompressionFormat,
