@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.25 2003/10/05 18:13:27 navaraf Exp $
+; $Id: msvcrt.def,v 1.26 2003/12/07 22:59:13 navaraf Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -258,7 +258,7 @@ _execve
 _execvp
 _execvpe
 _exit
-;_expand
+_expand
 _fcloseall
 _fcvt
 _fdopen
@@ -443,7 +443,7 @@ _memicmp
 _mkdir
 _mktemp
 ;_mktime64
-;_msize
+_msize
 _nextafter
 _onexit
 _open

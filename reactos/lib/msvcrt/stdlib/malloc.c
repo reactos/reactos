@@ -69,6 +69,22 @@ void* realloc(void* _ptr, size_t _size)
    return HeapReAlloc(hHeap, 0, _ptr, _size);
 }
 
+/*
+ * @implemented
+ */
+void* _expand(void* _ptr, size_t _size)
+{
+   return HeapReAlloc(GetProcessHeap(), HEAP_REALLOC_IN_PLACE_ONLY, _ptr, _size);
+}
+
+/*
+ * @implemented
+ */
+size_t _msize(void* _ptr)
+{
+   return HeapSize(GetProcessHeap(), 0, _ptr);
+}
+
 /* ?_set_new_mode@@YAHH@Z (MSVCRT.@) */
 int MSVCRT__set_new_mode(int mode)
 {
