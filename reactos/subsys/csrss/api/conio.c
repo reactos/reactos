@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.43 2003/03/09 21:40:19 hbirr Exp $
+/* $Id: conio.c,v 1.44 2003/03/16 16:14:38 hbirr Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -1259,6 +1259,21 @@ CSR_API(CsrWriteConsoleOutputChar)
    Buff->CurrentY = (Request->Data.WriteConsoleOutputCharRequest.Coord.Y + Buff->ShowY) % Buff->MaxY;
    Buffer[Request->Data.WriteConsoleOutputCharRequest.Length] = 0;
    CsrpWriteConsole( Buff, Buffer, Request->Data.WriteConsoleOutputCharRequest.Length, FALSE );
+   if( ActiveConsole->ActiveBuffer == Buff )
+     {
+       Status = NtDeviceIoControlFile( ConsoleDeviceHandle,
+				       NULL,
+				       NULL,
+				       NULL,
+				       &Iosb,
+				       IOCTL_CONSOLE_WRITE_OUTPUT_CHARACTER,
+				       0,
+				       0,
+				       &Request->Data.WriteConsoleOutputCharRequest.Coord,
+				       sizeof (COORD) + Request->Data.WriteConsoleOutputCharRequest.Length );
+       if( !NT_SUCCESS( Status ) )
+	 DPRINT1( "Failed to write output chars: %x\n", Status );
+     }
    Reply->Data.WriteConsoleOutputCharReply.EndCoord.X = Buff->CurrentX - Buff->ShowX;
    Reply->Data.WriteConsoleOutputCharReply.EndCoord.Y = (Buff->CurrentY + Buff->MaxY - Buff->ShowY) % Buff->MaxY;
    Buff->CurrentY = Y;
