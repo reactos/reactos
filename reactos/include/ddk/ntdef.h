@@ -6,7 +6,7 @@ struct _ETHREAD;
 struct _EPROCESS;
 
 #ifndef NTKERNELAPI
-#define NTKERNELAPI STDCAL
+#define NTKERNELAPI STDCALL
 #endif
 
 #ifndef NTSYSAPI
