@@ -1,4 +1,4 @@
-/* $Id: move.c,v 1.10 2003/07/10 18:50:51 chorns Exp $
+/* $Id: move.c,v 1.11 2003/11/18 05:16:31 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -15,7 +15,6 @@
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
-#include <kernel32/error.h>
 
 
 #define FILE_RENAME_SIZE  MAX_PATH +sizeof(FILE_RENAME_INFORMATION)

@@ -1,4 +1,4 @@
-/* $Id: errormsg.c,v 1.13 2003/11/16 12:56:44 mf Exp $
+/* $Id: errormsg.c,v 1.14 2003/11/18 05:17:22 royce Exp $
  *
  * reactos/lib/kernel32/misc/errormsg.c
  *
@@ -27,7 +27,7 @@
 
 // #define NDEBUG
 #include <kernel32/kernel32.h>
-#include <kernel32/error.h>
+/*#include <kernel32/error.h>*/
 
 #define USE_WINE_PORT
 

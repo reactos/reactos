@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.9 2003/10/04 22:36:36 weiden Exp $
+/* $Id: timer.c,v 1.10 2003/11/18 05:17:22 royce Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/dde.c
@@ -29,7 +29,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <windows.h>
-#include <kernel32/error.h>
+/*#include <kernel32/error.h>*/
 #include <user32.h>
 #include <debug.h>
 

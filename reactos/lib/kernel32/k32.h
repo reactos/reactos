@@ -12,7 +12,6 @@
 #include <windows.h>
 #include <kernel32/proc.h>
 #include <kernel32/thread.h>
-#include <kernel32/error.h>
 #include <ntdll/base.h>
 #include <ntdll/rtl.h>
 #include <ntdll/dbg.h>

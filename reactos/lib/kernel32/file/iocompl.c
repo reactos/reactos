@@ -1,4 +1,4 @@
-/* $Id: iocompl.c,v 1.11 2003/09/21 14:02:29 mf Exp $
+/* $Id: iocompl.c,v 1.12 2003/11/18 05:16:31 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,8 +11,6 @@
 
 #include <k32.h>
 
-
-#include <kernel32/error.h>
 
 /*
  * @implemented
