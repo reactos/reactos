@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: process.c,v 1.21 2004/08/01 07:24:59 hbirr Exp $
+/* $Id: process.c,v 1.22 2004/08/01 21:57:35 navaraf Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/process.c
@@ -33,6 +33,7 @@
 #include <internal/ke.h>
 #include <internal/mm.h>
 #include <internal/ps.h>
+#include <reactos/bugcodes.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -57,7 +58,7 @@ KeAttachProcess (PEPROCESS Process)
    if (CurrentThread->OldProcess != NULL)
      {
 	DbgPrint("Invalid attach (thread is already attached)\n");
-	KEBUGCHECK(0);
+	KEBUGCHECK(INVALID_PROCESS_ATTACH_ATTEMPT);
      }
    
    KeRaiseIrql(DISPATCH_LEVEL, &oldlvl);
@@ -102,7 +103,7 @@ KeDetachProcess (VOID)
    if (CurrentThread->OldProcess == NULL)
      {
 	DbgPrint("Invalid detach (thread was not attached)\n");
-	KEBUGCHECK(0);
+	KEBUGCHECK(INVALID_PROCESS_DETACH_ATTEMPT);
      }
    
    KeRaiseIrql(DISPATCH_LEVEL, &oldlvl);

@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.28 2004/08/01 07:24:57 hbirr Exp $
+/* $Id: copy.c,v 1.29 2004/08/01 21:57:34 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -54,13 +54,13 @@ CcInitCacheZeroPage(VOID)
    if (!NT_SUCCESS(Status))
    {
        DbgPrint("Can't allocate CcZeroPage.\n");
-       KEBUGCHECK(0);
+       KEBUGCHECKCC;
    }
    Status = MiZeroPage(CcZeroPage);
    if (!NT_SUCCESS(Status))
    {
        DbgPrint("Can't zero out CcZeroPage.\n");
-       KEBUGCHECK(0);
+       KEBUGCHECKCC;
    }
 }
 

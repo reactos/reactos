@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: balance.c,v 1.31 2004/08/01 07:24:57 hbirr Exp $
+/* $Id: balance.c,v 1.32 2004/08/01 21:57:35 navaraf Exp $
  *
  * PROJECT:     ReactOS kernel 
  * FILE:        ntoskrnl/mm/balance.c
@@ -31,6 +31,7 @@
 #include <ddk/ntddk.h>
 #include <internal/mm.h>
 #include <ntos/minmax.h>
+#include <reactos/bugcodes.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -219,7 +220,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
       Page = MmAllocPage(Consumer, 0);
       if (Page == 0)
       {
-         KEBUGCHECK(0);
+         KEBUGCHECK(NO_PAGES_AVAILABLE);
       }
       *AllocatedPage = Page;
       if (MmStats.NrFreePages <= MiMinimumAvailablePages &&
@@ -267,7 +268,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
       Page = Request.Page;
       if (Page == 0)
       {
-         KEBUGCHECK(0);
+         KEBUGCHECK(NO_PAGES_AVAILABLE);
       }
       MmTransferOwnershipPage(Page, Consumer);
       *AllocatedPage = Page;
@@ -281,7 +282,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
    Page = MmAllocPage(Consumer, 0);
    if (Page == 0)
    {
-      KEBUGCHECK(0);
+      KEBUGCHECK(NO_PAGES_AVAILABLE);
    }
    *AllocatedPage = Page;
 
@@ -368,7 +369,7 @@ MiBalancerThread(PVOID Unused)
       }
       else
       {
-         DPRINT1("KeWaitForMultipleObjects failt, status = %x\n", Status);
+         DPRINT1("KeWaitForMultipleObjects failed, status = %x\n", Status);
          KEBUGCHECK(0);
       }
    }

@@ -631,7 +631,13 @@ Language=English
 MAILSLOT_FILE_SYSTEM
 .
 
-
+MessageId=0x53
+Severity=Success
+Facility=System
+SymbolicName=NO_BOOT_DEVICE
+Language=English
+NO_BOOT_DEVICE
+.
 
 MessageId=0x54
 Severity=Success
@@ -972,9 +978,6 @@ SymbolicName=SPIN_LOCK_INIT_FAILURE
 Language=English
 SPIN_LOCK_INIT_FAILURE
 .
-
-
-
 
 MessageId=0x9A
 Severity=Informational

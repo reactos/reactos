@@ -176,7 +176,7 @@ CcSetFileSizes (IN PFILE_OBJECT FileObject,
 	   else
 	   {
 	      DPRINT1("Anyone has referenced a cache segment behind the new size.\n");
-	      KEBUGCHECK(0);
+	      KEBUGCHECKCC;
 	   }
 	}
      }

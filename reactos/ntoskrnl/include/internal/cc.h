@@ -1,8 +1,9 @@
 #ifndef __INCLUDE_INTERNAL_CC_H
 #define __INCLUDE_INTERNAL_CC_H
-/* $Id: cc.h,v 1.19 2004/02/26 19:29:55 hbirr Exp $ */
-#include <ddk/ntifs.h>
 
+/* $Id: cc.h,v 1.20 2004/08/01 21:57:34 navaraf Exp $ */
+#include <ddk/ntifs.h>
+#include <reactos/bugcodes.h>
 
 typedef struct _BCB
 {
@@ -132,5 +133,13 @@ CcRosRequestCacheSegment (BCB*		    Bcb,
 NTSTATUS 
 CcTryToInitializeFileCache(PFILE_OBJECT FileObject);
 
+/*
+ * Macro for generic cache manage bugchecking. Note that this macro assumes
+ * that the file name including extension is always longer than 4 characters.
+ */
+#define KEBUGCHECKCC \
+    KEBUGCHECKEX(CACHE_MANAGER, \
+    (*(DWORD*)(__FILE__ + sizeof(__FILE__) - 4) << 16) | \
+    (__LINE__ & 0xFFFF), 0, 0, 0)
 
 #endif

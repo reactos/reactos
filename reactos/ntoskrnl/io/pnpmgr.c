@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.30 2004/06/23 21:42:50 ion Exp $
+/* $Id: pnpmgr.c,v 1.31 2004/08/01 21:57:34 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -1432,7 +1432,7 @@ PnpInit(VOID)
    if (!NT_SUCCESS(Status))
    {
       CPRINT("IoCreateDriverObject() failed\n");
-      KEBUGCHECK(PHASE1_INITIALIZATION_FAILED);
+      KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
    }
 
    Status = IoCreateDevice(IopRootDriverObject, 0, NULL, FILE_DEVICE_CONTROLLER,
@@ -1440,14 +1440,14 @@ PnpInit(VOID)
    if (!NT_SUCCESS(Status))
    {
       CPRINT("IoCreateDevice() failed\n");
-      KEBUGCHECK(PHASE1_INITIALIZATION_FAILED);
+      KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
    }
 
    Status = IopCreateDeviceNode(NULL, Pdo, &IopRootDeviceNode);
    if (!NT_SUCCESS(Status))
    {
       CPRINT("Insufficient resources\n");
-      KEBUGCHECK(PHASE1_INITIALIZATION_FAILED);
+      KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
    }
 
    IopRootDeviceNode->Pdo->Flags |= DO_BUS_ENUMERATED_DEVICE;

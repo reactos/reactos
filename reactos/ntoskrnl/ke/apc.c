@@ -35,6 +35,7 @@
 #include <internal/ke.h>
 #include <internal/ldr.h>
 #include <internal/pool.h>
+#include <reactos/bugcodes.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -108,7 +109,8 @@ KiDeliverNormalApc(VOID)
        if (Apc->NormalRoutine == NULL)
 	 {
 	   DbgPrint("Exiting kernel with kernel APCs pending.\n");
-	   KEBUGCHECK(0);
+	   KEBUGCHECKEX(KERNEL_APC_PENDING_DURING_EXIT, (ULONG)Apc,
+	                Thread->Tcb.KernelApcDisable, oldlvl, 0);
 	 }
        Apc->Inserted = FALSE;
        Thread->Tcb.ApcState.KernelApcInProgress++;
@@ -677,8 +679,8 @@ KiSwapApcEnvironment(
   }
   else
   {
-    KEBUGCHECK(0);
+    /* FIXME: Is this the correct bug code? */
+    KEBUGCHECK(APC_INDEX_MISMATCH);
   }
-
 }
 

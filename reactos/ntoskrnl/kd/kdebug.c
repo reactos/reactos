@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.52 2004/06/23 00:49:43 ion Exp $
+/* $Id: kdebug.c,v 1.53 2004/08/01 21:57:35 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -466,7 +466,7 @@ KdSystemDebugControl(ULONG Code)
   /* B - Bug check the system. */
   else if (Code == 1)
     {
-      KEBUGCHECK(0);
+      KEBUGCHECK(0xDEADDEAD);
     }
   /* 
    * C -  Dump statistics about the distribution of tagged blocks in 

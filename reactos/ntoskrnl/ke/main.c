@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.189 2004/07/30 19:28:48 jimtabor Exp $
+/* $Id: main.c,v 1.190 2004/08/01 21:57:35 navaraf Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -276,7 +276,7 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
    if (BootDriveFound == FALSE)
      {
 	DbgPrint("No system drive found!\n");
-	KEBUGCHECK (0x0);
+	KEBUGCHECK (NO_BOOT_DEVICE);
      }
 }
 
