@@ -37,9 +37,17 @@
 NotifyIconIndex::NotifyIconIndex(NOTIFYICONDATA* pnid)
 {
 	_hWnd = pnid->hWnd;
+	_uID = pnid->uID;
 
-	 // special case for windows task manager icons
-	_uID = (int)pnid->uID>=0? pnid->uID: 0;
+	 // special handling for windows task manager
+	if ((int)_uID < 0)
+		_uID = 0;
+}
+
+NotifyIconIndex::NotifyIconIndex()
+{
+	_hWnd = 0;
+	_uID = 0;
 }
 
 
@@ -48,10 +56,17 @@ NotifyInfo::NotifyInfo()
 	_idx = -1;
 	_hIcon = 0;
 	_dwState = 0;
+	_uCallbackMessage = 0;
 }
 
 NotifyInfo& NotifyInfo::operator=(NOTIFYICONDATA* pnid)
 {
+	_hWnd = pnid->hWnd;
+	_uID = pnid->uID;
+
+	if (pnid->uFlags & NIF_MESSAGE)
+		_uCallbackMessage = pnid->uCallbackMessage;
+
 	if (pnid->uFlags & NIF_ICON)
 		_hIcon = pnid->hIcon;
 
@@ -94,7 +109,23 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		break;
 
 	  default:
-		return super::WndProc(nmsg, wparam, lparam);
+		if (nmsg>=WM_MOUSEFIRST && nmsg<=WM_MOUSELAST) {
+			NotifyIconSet::iterator found = IconHitTest(Point(lparam));
+
+			if (found != _sorted_icons.end()) {
+				NotifyInfo& entry = const_cast<NotifyInfo&>(*found);	// Why does GCC 3.3 need this additional const_cast ?!
+
+				 // Notify the message the the owner if it's still alive
+				if (IsWindow(entry._hWnd))	//TODO: We could check this regularly for all icons by using WM_TIMER to prevent for hanging icons
+					PostMessage(entry._hWnd, entry._uCallbackMessage, entry._uID, nmsg);
+				else {
+					 // delete icons without owner window
+					if (_icon_map.erase(entry))
+						Refresh();
+				}
+			}
+		} else
+			return super::WndProc(nmsg, wparam, lparam);
 	}
 
 	return 0;
@@ -102,24 +133,25 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 LRESULT NotifyArea::ProcessTrayNotification(int notify_code, NOTIFYICONDATA* pnid)
 {
-	NotifyIconMap::iterator found = _icon_map.find(pnid);
-
 	switch(notify_code) {
 	  case NIM_ADD:
-	  case NIM_MODIFY: {
-		NotifyInfo& entry = _icon_map[pnid] = pnid;
+	  case NIM_MODIFY:
+		if ((int)pnid->uID >= 0) {
+			NotifyInfo& entry = _icon_map[pnid] = pnid;
 
-		 // a new entry?
-		if (entry._idx == -1)
-			entry._idx = ++_next_idx;
-		Refresh();
-		break;}
+			 // a new entry?
+			if (entry._idx == -1)
+				entry._idx = ++_next_idx;
 
-	  case NIM_DELETE:
-		if (found != _icon_map.end()) {
-			_icon_map.erase(found);
+			Refresh();
+		} else {
 			Refresh();
 		}
+		break;
+
+	  case NIM_DELETE:
+		if (_icon_map.erase(pnid))
+			Refresh();
 		break;
 
 #if NOTIFYICON_VERSION>=3	// currently (as of 21.08.2003) missing in MinGW headers
@@ -154,15 +186,47 @@ void NotifyArea::Paint()
 	int x = 2;
 	int y = 2;
 
-	for(NotifyIconSet::const_iterator it=_sorted_icons.begin(); it!=_sorted_icons.end(); ++it) {
+	for(NotifyIconSet::const_iterator it=_sorted_icons.begin(); it!=_sorted_icons.end(); ++it)
+	{
+		const NotifyInfo& entry = *it;
+
 #ifdef NIF_STATE	// currently (as of 21.08.2003) missing in MinGW headers
-		if (!(it->_dwState & NIS_HIDDEN))
+		if (!(entry._dwState & NIS_HIDDEN))
 #endif
 		{
-			DrawIconEx(canvas, x, y, it->_hIcon, 16, 16, 0, 0, DI_NORMAL);
+			DrawIconEx(canvas, x, y, entry._hIcon, 16, 16, 0, 0, DI_NORMAL);
 			x += 20;
 		}
 	}
+}
+
+
+ /// search for a icon at a given client coordinate position
+NotifyIconSet::iterator NotifyArea::IconHitTest(const POINT& pos)
+{
+	if (pos.y<2 || pos.y>=2+16)
+		return _sorted_icons.end();
+
+	NotifyIconSet::iterator it = _sorted_icons.begin();
+
+	int x = 2;
+
+	for(; it!=_sorted_icons.end(); ++it)
+	{
+		NotifyInfo& entry = const_cast<NotifyInfo&>(*it);	// Why does GCC 3.3 need this additional const_cast ?!
+
+#ifdef NIF_STATE	// currently (as of 21.08.2003) missing in MinGW headers
+		if (!(entry._dwState & NIS_HIDDEN))
+#endif
+		{
+			if (pos.x>=x && pos.x<x+16)
+				break;
+
+			x += 20;
+		}
+	}
+
+	return it;
 }
 
 

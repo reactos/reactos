@@ -45,21 +45,25 @@ struct NotifyIconIndex
 
 	HWND	_hWnd;
 	UINT	_uID;
+
+protected:
+	NotifyIconIndex();
 };
 
-struct NotifyInfo
+struct NotifyInfo : public NotifyIconIndex
 {
 	NotifyInfo();
 
 	 // sort operator
 	friend bool operator<(const NotifyInfo& a, const NotifyInfo& b)
-		{return a._idx<b._idx;}
+		{return a._idx < b._idx;}
 
 	NotifyInfo& operator=(NOTIFYICONDATA* pnid);
 
 	int		_idx;	// display index
 	HICON	_hIcon;
 	DWORD	_dwState;
+	UINT	_uCallbackMessage;
 };
 
 typedef map<NotifyIconIndex, NotifyInfo> NotifyIconMap;
@@ -89,6 +93,8 @@ protected:
 
 	void	Refresh();
 	void	Paint();
+
+	NotifyIconSet::iterator IconHitTest(const POINT& pos);
 };
 
 

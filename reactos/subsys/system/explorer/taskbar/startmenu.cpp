@@ -202,13 +202,7 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		_submenu = 0;
 		break;
 
-	  default:
-		if (nmsg == PM_DESKTOP_GOT_FOCUS) {
-			CloseStartMenu();
-			return 0;
-		}
-
-	  def:
+	  default: def:
 		return super::WndProc(nmsg, wparam, lparam);
 	}
 
@@ -467,11 +461,11 @@ LRESULT StartMenuButton::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		PostParent(PM_STARTENTRY_FOCUSED, _hasSubmenu, (LPARAM)_hwnd);
 		goto def;
 
-	  default: 
-		if (nmsg == PM_DESKTOP_GOT_FOCUS)
-			return SendParent(nmsg, wparam, lparam);
+	  case WM_CANCELMODE:
+		 // route WM_CANCELMODE to the startmenu window
+		return SendParent(nmsg, wparam, lparam);
 
-	  def:
+	  default: def:
 		return super::WndProc(nmsg, wparam, lparam);
 	}
 

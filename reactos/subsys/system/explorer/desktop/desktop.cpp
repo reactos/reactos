@@ -32,9 +32,6 @@
 #include "../explorer_intres.h"
 
 
-UINT PM_DESKTOP_GOT_FOCUS = RegisterWindowMessage(WINMSG_DESKTOP_GOT_FOCUS);
-
-
 static BOOL (WINAPI*SetShellWindow)(HWND);
 static BOOL (WINAPI*SetShellWindowEx)(HWND, HWND);
 
@@ -212,9 +209,9 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		break;
 
 	  case WM_SETFOCUS:
-		 // notify Startmenu of focus change
+		 // close startup menu and other popup menus like on the tray notification icons
 		if (wparam)
-			SendMessage((HWND)wparam, PM_DESKTOP_GOT_FOCUS, 0, 0);
+			SendMessage((HWND)wparam, WM_CANCELMODE, 0, 0);
 		goto def;
 
 	  case WM_GETISHELLBROWSER:
