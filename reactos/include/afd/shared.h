@@ -168,6 +168,7 @@ typedef struct _AFD_DISCONNECT_INFO {
 /* AFD SEND/RECV Flags */
 #define AFD_SKIP_FIO			0x1L
 #define AFD_OVERLAPPED			0x2L
+#define AFD_IMMEDIATE                   0x4L
 
 /* IOCTL Generation */
 #define FSCTL_AFD_BASE                  FILE_DEVICE_NETWORK
