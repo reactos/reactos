@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.93 2004/02/21 13:13:27 navaraf Exp $
+/* $Id: winpos.c,v 1.94 2004/02/21 13:37:26 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1282,9 +1282,9 @@ WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, POINT *Point,
 	      Point->y < Current->ClientRect.bottom)
 	    {
 	      USHORT ChildHitTest;
-	      ExReleaseFastMutexUnsafe(&ScopeWin->ChildrenListLock);
 	      if(WinPosSearchChildren(Current, Point, Window, &ChildHitTest))
 	      {
+                ExReleaseFastMutexUnsafe(&ScopeWin->ChildrenListLock);
 	        *HitTest = ChildHitTest;
 	        return TRUE;
 	      }
