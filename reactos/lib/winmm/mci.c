@@ -1840,7 +1840,7 @@ static	DWORD MCI_SysInfo(UINT uDevID, DWORD dwFlags, LPMCI_SYSINFO_PARMSW lpParm
 		    RegQueryInfoKeyW( hKey, 0, 0, 0, &cnt, 0, 0, 0, 0, 0, 0, 0);
 		    RegCloseKey( hKey );
 		}
-		if (GetPrivateProfileStringW(wszMci, 0, wszNull, buf, sizeof(buf), wszSystemIni))
+		if (GetPrivateProfileStringW(wszMci, 0, wszNull, buf, sizeof(buf) / sizeof(buf[0]), wszSystemIni))
 		    for (s = buf; *s; s += strlenW(s) + 1) cnt++;
 	    }
 	} else {
@@ -1892,7 +1892,7 @@ static	DWORD MCI_SysInfo(UINT uDevID, DWORD dwFlags, LPMCI_SYSINFO_PARMSW lpParm
 	        RegCloseKey( hKey );
 	    }
 	    if (!s) {
-		if (GetPrivateProfileStringW(wszMci, 0, wszNull, buf, sizeof(buf), wszSystemIni)) {
+		if (GetPrivateProfileStringW(wszMci, 0, wszNull, buf, sizeof(buf) / sizeof(buf[0]), wszSystemIni)) {
 		    for (p = buf; *p; p += strlenW(p) + 1, cnt++) {
                         TRACE("%ld: %s\n", cnt, debugstr_w(p));
 			if (cnt == lpParms->dwNumber - 1) {
