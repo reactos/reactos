@@ -150,6 +150,7 @@ typedef struct _TA_ADDRESS {
 #define TdiConnectionContext            "ConnectionContext"
 #define TDI_TRANSPORT_ADDRESS_LENGTH    (sizeof(TdiTransportAddress) - 1)
 #define TDI_CONNECTION_CONTEXT_LENGTH   (sizeof(TdiConnectionContext) - 1)
+#define TDI_ADDRESS_HEADER_LEN (2 * sizeof(USHORT))
 
 typedef struct _TRANSPORT_ADDRESS {
     LONG        TAAddressCount;

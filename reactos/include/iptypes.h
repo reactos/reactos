@@ -19,6 +19,7 @@
 #ifndef WINE_IPTYPES_H_
 #define WINE_IPTYPES_H_
 
+#include <nspapi.h>
 #include <time.h>
 
 #define MAX_ADAPTER_DESCRIPTION_LENGTH  128

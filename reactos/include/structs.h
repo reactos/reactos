@@ -3746,22 +3746,11 @@ typedef struct tagNONCLIENTMETRICSW {
 typedef_tident(NONCLIENTMETRICS)
 typedef_tident(LPNONCLIENTMETRICS)
 
-typedef struct _SERVICE_ADDRESS {
-  DWORD   dwAddressType;
-  DWORD   dwAddressFlags;
-  DWORD   dwAddressLength;
-  DWORD   dwPrincipalLength;
-  BYTE   *lpAddress;
-  BYTE   *lpPrincipal;
-} SERVICE_ADDRESS;
-
-typedef struct _SERVICE_ADDRESSES {
-  DWORD   dwAddressCount;
-  SERVICE_ADDRESS   Addresses[1];
-} SERVICE_ADDRESSES, *LPSERVICE_ADDRESSES;
+#include <serviceinfo.h>
 
 #ifndef GUID_DEFINED
 #define GUID_DEFINED
+
 typedef struct _GUID
 {
     unsigned long  Data1;
@@ -3770,33 +3759,8 @@ typedef struct _GUID
     unsigned char Data4[8];
 } GUID, *LPGUID;
 typedef GUID CLSID, *LPCLSID;
-#endif
 
-typedef struct _SERVICE_INFOA {
-  LPGUID   lpServiceType;
-  LPSTR    lpServiceName;
-  LPSTR    lpComment;
-  LPSTR    lpLocale;
-  DWORD    dwDisplayHint;
-  DWORD    dwVersion;
-  DWORD    dwTime;
-  LPSTR    lpMachineName;
-  LPSERVICE_ADDRESSES lpServiceAddress;
-  BLOB ServiceSpecificInfo;
-} SERVICE_INFOA, *LPSERVICE_INFOA;
-
-typedef struct _SERVICE_INFOW {
-  LPGUID   lpServiceType;
-  LPWSTR   lpServiceName;
-  LPWSTR   lpComment;
-  LPWSTR   lpLocale;
-  DWORD    dwDisplayHint;
-  DWORD    dwVersion;
-  DWORD    dwTime;
-  LPWSTR   lpMachineName;
-  LPSERVICE_ADDRESSES lpServiceAddress;
-  BLOB ServiceSpecificInfo;
-} SERVICE_INFOW, *LPSERVICE_INFOW;
+#endif/*GUID_DEFINED*/
 
 typedef_tident(SERVICE_INFO);
 typedef_tident(LPSERVICE_INFO);

@@ -35,10 +35,13 @@ extern "C" {
 
 #include "ntddk.h"
 
+#ifndef TDI_SUCCESS
+#define TDI_SUCCESS 0
+#endif/*TDI_SUCCESS*/
 
 typedef struct TDIEntityID {
     ULONG   tei_entity;
-	ULONG   tei_instance;
+    ULONG   tei_instance;
 } TDIEntityID;
 
 #define	MAX_TDI_ENTITIES			512
@@ -69,6 +72,16 @@ typedef struct TDIEntityID {
 #define	IF_GENERIC					0x200
 #define	IF_MIB						0x202
 
+/* ID to use for requesting an IFEntry for an interface */
+#define IF_MIB_STATS_ID            1
+
+/* ID to use for requesting an IPSNMPInfo for an interface */
+#define IP_MIB_STATS_ID            1 /* Hmm.  I'm not sure I like this */
+
+/* ID to use for requesting the route table */
+#define IP_MIB_ROUTETABLE_ENTRY_ID  0x101
+#define IP_MIB_ADDRTABLE_ENTRY_ID 102
+
 /* TDIObjectID.toi_class constants */
 #define	INFO_CLASS_GENERIC          0x100
 #define	INFO_CLASS_PROTOCOL	        0x200
@@ -86,7 +99,132 @@ typedef struct _TDIObjectID {
 	ULONG   toi_id;
 } TDIObjectID;
 
-#define	CONTEXT_SIZE                16
+#define MAX_PHYSADDR_SIZE           010
+
+/* Basic interface information like from SIOCGIF* */
+/* 0x5c bytes without description tail */
+typedef struct _IFEntry {
+    ULONG if_index;
+    ULONG if_type;
+    ULONG if_mtu;
+    ULONG if_speed;
+    ULONG if_physaddrlen;
+    UCHAR if_physaddr[MAX_PHYSADDR_SIZE];
+    ULONG if_adminstatus;
+    ULONG if_operstatus;
+    ULONG if_lastchange;
+    ULONG if_inoctets;
+    ULONG if_inucastpkts;
+    ULONG if_innucastpkts;
+    ULONG if_indiscards;
+    ULONG if_inerrors;
+    ULONG if_inunknownprotos;
+    ULONG if_outoctets;
+    ULONG if_outucastpkts;
+    ULONG if_outnucastpkts;
+    ULONG if_outdiscards;
+    ULONG if_outerrors;
+    ULONG if_outqlen;
+    ULONG if_descrlen;
+    UCHAR if_descr[1];
+} IFEntry;
+
+/* Control information like from /proc/sys/net/ipv4/... */
+/* 0x58 bytes */
+#if 1
+typedef struct _IPSNMPInfo {
+    ULONG ipsi_index;
+    ULONG ipsi_forwarding;
+    ULONG ipsi_defaultttl;
+    ULONG ipsi_inreceives;
+    ULONG ipsi_inhdrerrors;
+    ULONG ipsi_inaddrerrors;
+    ULONG ipsi_inunknownprotos;
+    ULONG ipsi_indiscards;
+    ULONG ipsi_indelivers;
+    ULONG ipsi_outrequests;
+    ULONG ipsi_routingdiscards;
+    ULONG ipsi_outdiscards;
+    ULONG ipsi_outnoroutes;
+    ULONG ipsi_reasmtimeout;
+    ULONG ipsi_reasmreqds;
+    ULONG ipsi_reasmoks;
+    ULONG ipsi_reasmfails;
+    ULONG ipsi_fragoks;
+    ULONG ipsi_fragfails;
+    ULONG ipsi_fragcreates;
+    ULONG ipsi_numif;
+    ULONG ipsi_numaddr;
+    ULONG ipsi_numroutes;
+} IPSNMPInfo;
+#else
+typedef struct _IPSNMPInfo {
+    ULONG ipsi_forwarding;
+    ULONG ipsi_defaultttl;
+    ULONG ipsi_inreceives;
+    ULONG ipsi_inhdrerrors;
+    ULONG ipsi_inaddrerrors;
+    ULONG ipsi_inunknownprotos;
+    ULONG ipsi_indiscards;
+    ULONG ipsi_indelivers;
+    ULONG ipsi_outrequests;
+    ULONG ipsi_routingdiscards;
+    ULONG ipsi_outdiscards;
+    ULONG ipsi_outnoroutes;
+    ULONG ipsi_reasmtimeout;
+    ULONG ipsi_reasmreqds;
+    ULONG ipsi_reasmoks;
+    ULONG ipsi_reasmfails;
+    ULONG ipsi_fragoks;
+    ULONG ipsi_fragfails;
+    ULONG ipsi_fragcreates;
+    ULONG ipsi_numif;
+    ULONG ipsi_numaddr;
+    ULONG ipsi_numroutes;
+} IPSNMPInfo;
+#endif
+
+// BEGIN ORIGINAL SOURCE INFORMATION --
+// Gets ip info for the current interface list.
+
+// Tom Sanfilippo
+// tsanfilippo@earthlink.net
+// December 12, 1999
+
+// Thanks are due to Thomas F. Divine <tdivine@pcausa.com>
+// for pointing out the updated wshsmple in the NT4DDK.
+// The headers in that sample allowed the input parameters
+// to finally be discovered.
+// END ORIGINAL SOURCE INFORMATION --
+
+typedef struct _IPRouteEntry {
+    ULONG ire_addr;
+    ULONG ire_index;            //matches if_index in IFEntry and iae_index in IPAddrEntry
+    ULONG ire_metric;
+    ULONG ire_dest;             //??
+    ULONG ire_unk2;             //??
+    ULONG ire_unk3;             //??
+    ULONG ire_gw;
+    ULONG ire_unk4;             //??
+    ULONG ire_unk5;             //??
+    ULONG ire_unk6;             //??
+    ULONG ire_mask;
+    ULONG ire_unk7;             //??
+    ULONG ire_unk8;             //??
+} IPRouteEntry;
+
+typedef struct _IPAddrEntry {
+    ULONG iae_addr;
+    ULONG iae_index;
+    ULONG iae_mask;
+    ULONG iae_bcastaddr;
+    ULONG iae_reasmsize;
+    ULONG iae_context;
+    ULONG iae_pad;
+} IPAddrEntry;
+
+#define	CONTEXT_SIZE                   16
+#define MAX_ADAPTER_DESCRIPTION_LENGTH 64 /* guess */
 
 typedef struct _TCP_REQUEST_QUERY_INFORMATION_EX {
 	TDIObjectID ID;

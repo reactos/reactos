@@ -22,6 +22,8 @@
 #ifndef _TCPIOCTL_H
 #define _TCPIOCTL_H
 
+#define DD_TCP_DEVICE_NAME L"\\Device\\Tcp"
+
 /* TCP/UDP/RawIP IOCTL code definitions */
 
 #define FSCTL_TCP_BASE     FILE_DEVICE_NETWORK

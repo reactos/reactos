@@ -137,10 +137,6 @@ typedef struct IPADDR_ENTRY {
 
 #define TL_INSTANCE 0
 
-#define IP_MIB_STATS_ID             0x1
-#define IP_MIB_ADDRTABLE_ENTRY_ID   0x102
-
-
 /* IPv4 header format */
 typedef struct IPv4_HEADER {
     UCHAR VerIHL;                /* 4-bit version, 4-bit Internet Header Length */
