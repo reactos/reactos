@@ -1,4 +1,4 @@
-/* $Id: win32.c,v 1.12 2004/11/03 22:43:00 weiden Exp $
+/* $Id: win32.c,v 1.13 2004/11/05 23:53:06 weiden Exp $
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -922,6 +922,121 @@ GetWsChanges(HANDLE hProcess,
   }
 
   return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+GetProcessImageFileNameW(HANDLE hProcess,
+                         LPWSTR lpImageFileName,
+                         DWORD nSize)
+{
+  PUNICODE_STRING ImageFileName;
+  ULONG BufferSize;
+  NTSTATUS Status;
+
+  BufferSize = sizeof(UNICODE_STRING) + (nSize * sizeof(WCHAR));
+
+  ImageFileName = (PUNICODE_STRING)LocalAlloc(LMEM_FIXED, BufferSize);
+  if(ImageFileName != NULL)
+  {
+    DWORD Ret;
+    Status = NtQueryInformationProcess(hProcess,
+                                       ProcessImageFileName,
+                                       ImageFileName,
+                                       BufferSize,
+                                       NULL);
+    if(NT_SUCCESS(Status))
+    {
+      memcpy(lpImageFileName, ImageFileName->Buffer, ImageFileName->Length);
+
+      /* make sure the string is null-terminated! */
+      lpImageFileName[ImageFileName->Length / sizeof(WCHAR)] = L'\0';
+      Ret = ImageFileName->Length / sizeof(WCHAR);
+    }
+    else
+    {
+      if(Status == STATUS_INFO_LENGTH_MISMATCH)
+      {
+        /* XP sets this error code for some reason if the buffer is too small */
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+      }
+      else
+      {
+        SetLastErrorByStatus(Status);
+      }
+      Ret = 0;
+    }
+
+    LocalFree((HLOCAL)ImageFileName);
+    return Ret;
+  }
+
+  return 0;
+}
+
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+GetProcessImageFileNameA(HANDLE hProcess,
+                         LPSTR lpImageFileName,
+                         DWORD nSize)
+{
+  PUNICODE_STRING ImageFileName;
+  ULONG BufferSize;
+  NTSTATUS Status;
+
+  BufferSize = sizeof(UNICODE_STRING) + (nSize * sizeof(WCHAR));
+
+  ImageFileName = (PUNICODE_STRING)LocalAlloc(LMEM_FIXED, BufferSize);
+  if(ImageFileName != NULL)
+  {
+    DWORD Ret;
+    Status = NtQueryInformationProcess(hProcess,
+                                       ProcessImageFileName,
+                                       ImageFileName,
+                                       BufferSize,
+                                       NULL);
+    if(NT_SUCCESS(Status))
+    {
+      WideCharToMultiByte(CP_ACP,
+                          0,
+                          ImageFileName->Buffer,
+                          ImageFileName->Length / sizeof(WCHAR),
+                          lpImageFileName,
+                          nSize,
+                          NULL,
+                          NULL);
+
+      /* make sure the string is null-terminated! */
+      lpImageFileName[ImageFileName->Length / sizeof(WCHAR)] = '\0';
+      Ret = ImageFileName->Length / sizeof(WCHAR);
+    }
+    else
+    {
+      if(Status == STATUS_INFO_LENGTH_MISMATCH)
+      {
+        /* XP sets this error code for some reason if the buffer is too small */
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+      }
+      else
+      {
+        SetLastErrorByStatus(Status);
+      }
+      Ret = 0;
+    }
+
+    LocalFree((HLOCAL)ImageFileName);
+    return Ret;
+  }
+
+  return 0;
 }
 
 /* EOF */
