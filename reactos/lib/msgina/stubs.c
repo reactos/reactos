@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.2 2003/11/24 15:28:54 weiden Exp $
+/* $Id: stubs.c,v 1.3 2003/11/24 17:24:29 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS msgina.dll
@@ -73,22 +73,6 @@ WlxDisplaySASNotice(
 {
   UNIMPLEMENTED;
   return;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL WINAPI
-WlxInitialize(
-	LPWSTR lpWinsta,
-	HANDLE hWlx,
-	PVOID  pvReserved,
-	PVOID  pWinlogonFunctions,
-	PVOID  *pWlxContext)
-{
-  UNIMPLEMENTED;
-  return FALSE;
 }
 
 

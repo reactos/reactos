@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgina.c,v 1.2 2003/11/24 15:28:54 weiden Exp $
+/* $Id: msgina.c,v 1.3 2003/11/24 17:24:29 weiden Exp $
  *
  * PROJECT:         ReactOS msgina.dll
  * FILE:            lib/msgina/msgina.c
@@ -29,6 +29,9 @@
 #include <WinWlx.h>
 #include "msgina.h"
 
+extern HINSTANCE hDllInstance;
+
+
 /*
  * @implemented
  */
@@ -37,7 +40,7 @@ WlxNegotiate(
 	DWORD  dwWinlogonVersion,
 	PDWORD pdwDllVersion)
 {
-  if(dwWinlogonVersion < GINA_VERSION)
+  if(!pdwDllVersion || (dwWinlogonVersion < GINA_VERSION))
     return FALSE;
   
   *pdwDllVersion = GINA_VERSION;
@@ -45,17 +48,57 @@ WlxNegotiate(
   return TRUE;
 }
 
+
+/*
+ * @implemented
+ */
+BOOL WINAPI
+WlxInitialize(
+	LPWSTR lpWinsta,
+	HANDLE hWlx,
+	PVOID  pvReserved,
+	PVOID  pWinlogonFunctions,
+	PVOID  *pWlxContext)
+{
+  PGINA_CONTEXT pgContext;
+  
+  pgContext = (PGINA_CONTEXT)LocalAlloc(LMEM_FIXED | LMEM_ZEROINIT, sizeof(GINA_CONTEXT));
+  if(!pgContext)
+    return FALSE;
+  
+  /* return the context to winlogon */
+  *pWlxContext = (PVOID)pgContext;
+  
+  pgContext->hDllInstance = hDllInstance;
+  
+  /* save pointer to dispatch table */
+  pgContext->pWlxFuncs = (PWLX_DISPATCH_VERSION_1_3) pWinlogonFunctions;
+  
+  /* save the winlogon handle used to call the dispatch functions */
+  pgContext->hWlx = hWlx;
+  
+  /* save window station */
+  pgContext->station = lpWinsta;
+  
+  /* notify winlogon that we will use the default SAS */
+  pgContext->pWlxFuncs->WlxUseCtrlAltDel(hWlx);
+  
+  return TRUE;
+}
+
+
 BOOL STDCALL
 DllMain(
-	PVOID hinstDll,
-	ULONG dwReason,
-	PVOID reserved)
+	HINSTANCE hinstDLL,
+	DWORD     dwReason,
+	LPVOID    lpvReserved)
 {
   switch (dwReason)
   {
     case DLL_PROCESS_ATTACH:
-      break;
+      /* fall through */
     case DLL_THREAD_ATTACH:
+      hDllInstance = hinstDLL;
       break;
     case DLL_THREAD_DETACH:
       break;
