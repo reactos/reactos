@@ -54,16 +54,18 @@ bool XMLPos::go(const char* path)
 
 
  /// read XML stream into XML tree below _pos
-XML_Status XMLReader::read(std::istream& in)
+XML_Status XMLReaderBase::read()
 {
 	XML_Status status = XML_STATUS_OK;
 
-	while(in.good() && status==XML_STATUS_OK) {
+	while(status == XML_STATUS_OK) {
 		char* buffer = (char*) XML_GetBuffer(_parser, BUFFER_LEN);
 
-		in.read(buffer, BUFFER_LEN);
+		int l = read_buffer(buffer, BUFFER_LEN);
+		if (l < 0)
+			break;
 
-		status = XML_ParseBuffer(_parser, in.gcount(), false);
+		status = XML_ParseBuffer(_parser, l, false);
 	}
 
 	if (status != XML_STATUS_ERROR)
@@ -81,9 +83,9 @@ XML_Status XMLReader::read(std::istream& in)
 
 
  /// store XML version and encoding into XML reader
-void XMLCALL XMLReader::XML_XmlDeclHandler(void* userData, const XML_Char* version, const XML_Char* encoding, int standalone)
+void XMLCALL XMLReaderBase::XML_XmlDeclHandler(void* userData, const XML_Char* version, const XML_Char* encoding, int standalone)
 {
-	XMLReader* pReader = (XMLReader*) userData;
+	XMLReaderBase* pReader = (XMLReaderBase*) userData;
 
 	if (version) {
 		pReader->_xml_version = version;
@@ -92,9 +94,9 @@ void XMLCALL XMLReader::XML_XmlDeclHandler(void* userData, const XML_Char* versi
 }
 
  /// notifications about XML start tag
-void XMLCALL XMLReader::XML_StartElementHandler(void* userData, const XML_Char* name, const XML_Char** atts)
+void XMLCALL XMLReaderBase::XML_StartElementHandler(void* userData, const XML_Char* name, const XML_Char** atts)
 {
-	XMLReader* pReader = (XMLReader*) userData;
+	XMLReaderBase* pReader = (XMLReaderBase*) userData;
 	XMLPos& pos = pReader->_pos;
 
 	 // search for end of first line
@@ -139,9 +141,9 @@ void XMLCALL XMLReader::XML_StartElementHandler(void* userData, const XML_Char* 
 }
 
  /// notifications about XML end tag
-void XMLCALL XMLReader::XML_EndElementHandler(void* userData, const XML_Char* name)
+void XMLCALL XMLReaderBase::XML_EndElementHandler(void* userData, const XML_Char* name)
 {
-	XMLReader* pReader = (XMLReader*) userData;
+	XMLReaderBase* pReader = (XMLReaderBase*) userData;
 	XMLPos& pos = pReader->_pos;
 
 	 // search for end of first line
@@ -174,15 +176,15 @@ void XMLCALL XMLReader::XML_EndElementHandler(void* userData, const XML_Char* na
 }
 
  /// store content, white space and comments
-void XMLCALL XMLReader::XML_DefaultHandler(void* userData, const XML_Char* s, int len)
+void XMLCALL XMLReaderBase::XML_DefaultHandler(void* userData, const XML_Char* s, int len)
 {
-	XMLReader* pReader = (XMLReader*) userData;
+	XMLReaderBase* pReader = (XMLReaderBase*) userData;
 
 	pReader->_content.append(s, len);
 }
 
 
-std::string XMLReader::get_error_string() const
+std::string XMLReaderBase::get_error_string() const
 {
 	XML_Error error = XML_GetErrorCode(_parser);
 

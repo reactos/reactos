@@ -345,7 +345,7 @@ struct XMLNode : public String
 	 // access to protected class members for XMLPos and XMLReader
 	friend struct XMLPos;
 	friend struct const_XMLPos;
-	friend struct XMLReader;
+	friend struct XMLReaderBase;
 
 	XMLNode(const String& name)
 	 :	String(name)
@@ -375,6 +375,26 @@ struct XMLNode : public String
 			delete _children.back();
 			_children.pop_back();
 		}
+	}
+
+	void clear()
+	{
+		_leading.erase();
+		_content.erase();
+		_end_leading.erase();
+		_trailing.erase();
+
+		_attributes.clear();
+
+		while(!_children.empty()) {
+			XMLNode* node = _children.back();
+			_children.pop_back();
+
+			node->clear();
+			delete node;
+		}
+
+		String::erase();
 	}
 
 	XMLNode& operator=(const XMLNode& other)
@@ -926,6 +946,9 @@ struct XMLPos
 	}
 #endif
 
+	String& str() {return *_cur;}
+	const String& str() const {return *_cur;}
+
 protected:
 	XMLNode* _root;
 	XMLNode* _cur;
@@ -1017,6 +1040,8 @@ struct const_XMLPos
 	}
 #endif
 
+	const String& str() const {return *_cur;}
+
 protected:
 	const XMLNode* _root;
 	const XMLNode* _cur;
@@ -1046,7 +1071,17 @@ struct XMLBool
 			_value = def;
 	}
 
-	XMLBool(XMLNode* node, const String& name, const String& attr_name, bool def=false)
+	XMLBool(const XMLNode* node, const String& attr_name, bool def=false)
+	{
+		const String& value = node->get(attr_name);
+
+		if (!value.empty())
+			_value = !_tcsicmp(value, TEXT("TRUE"));
+		else
+			_value = def;
+	}
+
+	XMLBool(const XMLNode* node, const String& name, const String& attr_name, bool def=false)
 	{
 		const String& value = node->value(name, attr_name);
 
@@ -1119,14 +1154,14 @@ protected:
 };
 
 
-struct XMLNumber
+struct XMLInt
 {
-	XMLNumber(int value)
+	XMLInt(int value)
 	 :	_value(value)
 	{
 	}
 
-	XMLNumber(LPCTSTR value, int def=0)
+	XMLInt(LPCTSTR value, int def=0)
 	{
 		if (value && *value)
 			_value = _ttoi(value);
@@ -1134,12 +1169,22 @@ struct XMLNumber
 			_value = def;
 	}
 
-	XMLNumber(XMLNode* node, const String& name, const String& attr_name, int def=0)
+	XMLInt(const XMLNode* node, const String& attr_name, int def=0)
+	{
+		const String& value = node->get(attr_name);
+
+		if (!value.empty())
+			_value = _ttoi(value);
+		else
+			_value = def;
+	}
+
+	XMLInt(const XMLNode* node, const String& name, const String& attr_name, int def=0)
 	{
 		const String& value = node->value(name, attr_name);
 
 		if (!value.empty())
-			_value = _ttoi(node->value(name, attr_name));
+			_value = _ttoi(value);
 		else
 			_value = def;
 	}
@@ -1163,16 +1208,16 @@ private:
 	void operator=(const XMLBool&); // disallow assignment operations
 };
 
-struct XMLNumberRef
+struct XMLIntRef
 {
-	XMLNumberRef(XMLNode* node, const String& name, const String& attr_name, int def=0)
+	XMLIntRef(XMLNode* node, const String& name, const String& attr_name, int def=0)
 	 :	_ref(node->value(name, attr_name))
 	{
 		if (_ref.empty())
 			assign(def);
 	}
 
-	XMLNumberRef& operator=(int value)
+	XMLIntRef& operator=(int value)
 	{
 		assign(value);
 
@@ -1202,9 +1247,9 @@ protected:
 #endif
 
  /// XML file reader
-struct XMLReader
+struct XMLReaderBase
 {
-	XMLReader(XMLNode* node)
+	XMLReaderBase(XMLNode* node)
 	 :	_pos(node),
 		_parser(XML_ParserCreate(NULL))
 	{
@@ -1216,12 +1261,14 @@ struct XMLReader
 		_last_tag = TAG_NONE;
 	}
 
-	~XMLReader()
+	virtual ~XMLReaderBase()
 	{
 		XML_ParserFree(_parser);
 	}
 
-	XML_Status read(std::istream& in);
+	XML_Status read();
+
+	virtual int read_buffer(char* buffer, int len) = 0;
 
 	std::string get_position() const
 	{
@@ -1250,6 +1297,30 @@ protected:
 	static void XMLCALL XML_StartElementHandler(void* userData, const XML_Char* name, const XML_Char** atts);
 	static void XMLCALL XML_EndElementHandler(void* userData, const XML_Char* name);
 	static void XMLCALL XML_DefaultHandler(void* userData, const XML_Char* s, int len);
+};
+
+
+struct XMLReader : public XMLReaderBase
+{
+	XMLReader(XMLNode* node, std::istream& in)
+	 :	XMLReaderBase(node),
+		_in(in)
+	{
+	}
+
+	 /// read XML stream into XML tree below _pos
+	int read_buffer(char* buffer, int len)
+	{
+		if (!_in.good())
+			return -1;
+
+		_in.read(buffer, BUFFER_LEN);
+
+		return _in.gcount();
+	}
+
+protected:
+	std::istream&	_in;
 };
 
 
@@ -1293,18 +1364,9 @@ struct XMLDoc : public XMLNode
 
 	std::istream& read(std::istream& in)
 	{
-		XMLReader reader(this);
+		XMLReader reader(this, in);
 
-		XML_Status status = reader.read(in);
-
-		if (status == XML_STATUS_ERROR) {
-			std::ostringstream out;
-
-			out << reader.get_position() << " " << reader.get_error_string();
-
-			_last_error = reader.get_error_code();
-			_last_error_msg = out.str();
-		}
+		read(reader);
 
 		return in;
 	}
@@ -1312,14 +1374,19 @@ struct XMLDoc : public XMLNode
 	bool read(LPCTSTR path)
 	{
 		tifstream in(path);
-		XMLReader reader(this);
+		XMLReader reader(this, in);
 
-		XML_Status status = reader.read(in);
+		return read(reader, path);
+	}
+
+	bool read(XMLReaderBase& reader, const char* display_path="")
+	{
+		XML_Status status = reader.read();
 
 		if (status == XML_STATUS_ERROR) {
 			std::ostringstream out;
 
-			out << path << reader.get_position() << " " << reader.get_error_string();
+			out << display_path << reader.get_position() << " " << reader.get_error_string();
 
 			_last_error = reader.get_error_code();
 			_last_error_msg = out.str();
@@ -1361,6 +1428,18 @@ struct XMLDoc : public XMLNode
 
 	XML_Error	_last_error;
 	std::string	_last_error_msg;
+};
+
+
+struct XMLMessage : public XMLDoc
+{
+	XMLMessage(const char* name)
+	 :	_pos(this)
+	{
+		_pos.create(name);
+	}
+
+	XMLPos	_pos;
 };
 
 
