@@ -32,12 +32,13 @@ struct ShellEntry : public Entry
 	ShellEntry(Entry* parent, LPITEMIDLIST shell_path) : Entry(parent, ET_SHELL), _pidl(shell_path) {}
 	ShellEntry(Entry* parent, const ShellPath& shell_path) : Entry(parent, ET_SHELL), _pidl(shell_path) {}
 
-	virtual bool get_path(PTSTR path) const;
-	virtual ShellPath create_absolute_pidl() const;
-	virtual BOOL launch_entry(HWND hwnd, UINT nCmdShow=SW_SHOWNORMAL);
-	virtual HRESULT GetUIObjectOf(HWND hWnd, REFIID riid, LPVOID* ppvOut);
+	virtual bool		get_path(PTSTR path) const;
+	virtual ShellPath	create_absolute_pidl() const;
+	virtual HRESULT		GetUIObjectOf(HWND hWnd, REFIID riid, LPVOID* ppvOut);
+	virtual BOOL		launch_entry(HWND hwnd, UINT nCmdShow=SW_SHOWNORMAL);
+	virtual HRESULT		do_context_menu(HWND hwnd, LPPOINT pptScreen);
 
-	IShellFolder* get_parent_folder() const;
+	IShellFolder*		get_parent_folder() const;
 
 	ShellPath	_pidl;	// parent relative PIDL
 

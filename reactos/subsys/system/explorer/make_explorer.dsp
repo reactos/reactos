@@ -199,6 +199,10 @@ SOURCE=.\Makefile.MinGW
 # End Source File
 # Begin Source File
 
+SOURCE=.\Makefile.PCH
+# End Source File
+# Begin Source File
+
 SOURCE=.\Makefile.Wine
 # End Source File
 # End Target

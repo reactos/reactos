@@ -202,6 +202,17 @@ BOOL ShellEntry::launch_entry(HWND hwnd, UINT nCmdShow)
 }
 
 
+HRESULT ShellEntry::do_context_menu(HWND hwnd, LPPOINT pptScreen)
+{
+	ShellDirectory* dir = static_cast<ShellDirectory*>(_up);
+
+	ShellFolder folder = dir? dir->_folder: GetDesktopFolder();
+	LPCITEMIDLIST pidl = _pidl;
+
+	return ShellFolderContextMenu(folder, hwnd, 1, &pidl, pptScreen->x, pptScreen->y);
+}
+
+
 HRESULT ShellEntry::GetUIObjectOf(HWND hWnd, REFIID riid, LPVOID* ppvOut)
 {
 	LPCITEMIDLIST pidl = _pidl;

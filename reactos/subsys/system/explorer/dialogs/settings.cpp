@@ -159,8 +159,10 @@ TaskbarSettingsDlg::TaskbarSettingsDlg(HWND hwnd)
  :	super(hwnd),
 	_cfg_org(g_Globals._cfg)
 {
-	CheckDlgButton(hwnd, ID_SHOW_CLOCK, XMLBool(g_Globals.get_cfg("desktopbar"), "options", "show-clock", true)? BST_CHECKED: BST_UNCHECKED);
-	CheckDlgButton(hwnd, ID_HIDE_INACTIVE_ICONS, XMLBool(g_Globals.get_cfg("notify-icons"), "options", "hide-inactive", true)? BST_CHECKED: BST_UNCHECKED);
+	XMLPos options(g_Globals.get_cfg("desktopbar"), "options");
+
+	CheckDlgButton(hwnd, ID_SHOW_CLOCK, XMLBool(options, "show-clock", true)? BST_CHECKED: BST_UNCHECKED);
+	CheckDlgButton(hwnd, ID_HIDE_INACTIVE_ICONS, XMLBool(options, "hide-inactive", true)? BST_CHECKED: BST_UNCHECKED);
 }
 
 int TaskbarSettingsDlg::Notify(int id, NMHDR* pnmh)
@@ -190,13 +192,13 @@ int	TaskbarSettingsDlg::Command(int id, int code)
 		break;
 
 	  case ID_SHOW_CLOCK:
-		XMLBoolRef(g_Globals.get_cfg("desktopbar"), "options", "show-clock", true).toggle();
+		XMLBoolRef(XMLPos(g_Globals.get_cfg("desktopbar"),"options"), "show-clock", true).toggle();
 		SendMessage(g_Globals._hwndDesktopBar, PM_REFRESH_CONFIG, 0, 0);
 		PropSheet_Changed(GetParent(_hwnd), _hwnd);
 		break;
 
 	  case ID_HIDE_INACTIVE_ICONS:
-		XMLBoolRef(g_Globals.get_cfg("notify-icons"), "options", "hide-inactive", true).toggle();
+		XMLBoolRef(XMLPos(g_Globals.get_cfg("notify-icons"),"options"), "hide-inactive", true).toggle();
 		SendMessage(g_Globals._hwndDesktopBar, PM_REFRESH_CONFIG, 0, 0);
 		PropSheet_Changed(GetParent(_hwnd), _hwnd);
 		break;

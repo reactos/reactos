@@ -395,6 +395,52 @@ BOOL Entry::launch_entry(HWND hwnd, UINT nCmdShow)
 }
 
 
+HRESULT Entry::do_context_menu(HWND hwnd, const POINT& pos)
+{
+	ShellPath shell_path = create_absolute_pidl();
+	LPCITEMIDLIST pidl_abs = shell_path;
+
+	if (!pidl_abs)
+		return S_FALSE;	// no action for registry entries, etc.
+
+	static DynamicFct<HRESULT(WINAPI*)(LPCITEMIDLIST, REFIID, LPVOID*, LPCITEMIDLIST*)> SHBindToParent(TEXT("SHELL32"), "SHBindToParent");
+
+	if (SHBindToParent) {
+		IShellFolder* parentFolder;
+		LPCITEMIDLIST pidlLast;
+
+		 // get and use the parent folder to display correct context menu in all cases -> correct "Properties" dialog for directories, ...
+		HRESULT hr = (*SHBindToParent)(pidl_abs, IID_IShellFolder, (LPVOID*)&parentFolder, &pidlLast);
+
+		if (SUCCEEDED(hr)) {
+			hr = ShellFolderContextMenu(parentFolder, hwnd, 1, &pidlLast, pos.x, pos.y);
+
+			parentFolder->Release();
+		}
+
+		return hr;
+	} else {
+		/**@todo use parent folder instead of desktop folder
+		Entry* dir = _up;
+
+		ShellPath parent_path;
+
+		if (dir)
+			parent_path = dir->create_absolute_pidl();
+		else
+			parent_path = DesktopFolderPath();
+
+		ShellPath shell_path = create_relative_pidl(parent_path);
+		LPCITEMIDLIST pidl = shell_path;
+
+		ShellFolder parent_folder = parent_path;
+		return ShellFolderContextMenu(parent_folder, hwnd, 1, &pidl, pos.x, pos.y);
+		*/
+		return ShellFolderContextMenu(GetDesktopFolder(), hwnd, 1, &pidl_abs, pos.x, pos.y);
+	}
+}
+
+
 HRESULT Entry::GetUIObjectOf(HWND hWnd, REFIID riid, LPVOID* ppvOut)
 {
 	TCHAR path[MAX_PATH];

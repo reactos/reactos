@@ -132,6 +132,7 @@ void QuickLaunchBar::AddShortcuts()
 	int cy = HIWORD(size);
 	RECT rect = {0, 0, cx, cy};
 	RECT textRect = {0, 0, cx-7, cy-7};
+
 	for(int i=0; i<DESKTOP_COUNT; ++i) {
 		HBITMAP hbmp = CreateCompatibleBitmap(canvas, cx, cy);
 		HBITMAP hbmp_old = SelectBitmap(hdc, hbmp);
@@ -230,7 +231,28 @@ LRESULT QuickLaunchBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		UpdateDesktopButtons(wparam);
 		break;
 
-	  default:
+	  case WM_CONTEXTMENU: {
+		TBBUTTON btn;
+		QuickLaunchMap::iterator it;
+		Point pt(lparam), clnt_pt=pt;
+		ScreenToClient(_hwnd, &clnt_pt);
+
+		Entry* entry = NULL;
+		int idx = SendMessage(_hwnd, TB_HITTEST, 0, (LPARAM)&clnt_pt);
+
+		if (idx>=0 &&
+			SendMessage(_hwnd, TB_GETBUTTON, idx, (LPARAM)&btn)!=-1 &&
+			(it=_entries.find(btn.idCommand))!=_entries.end()) {
+			entry = it->second._entry;
+		}
+
+		if (entry)	// entry is NULL for desktop switch buttons
+			CHECKERROR(entry->do_context_menu(_hwnd, pt));
+		else
+			goto def;
+		break;}
+
+	  default: def:
 		return super::WndProc(nmsg, wparam, lparam);
 	}
 

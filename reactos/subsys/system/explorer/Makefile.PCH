@@ -81,7 +81,7 @@ DELAYIMPORTS = oleaut32 wsock32
 
 all: precomp.h.gch $(TARGET)
 
-precomp.h.gch:
+precomp.h.gch: *.h utility/*.h shell/*.h desktop/*.h
 	$(CXX) $(CFLAGS) precomp.h
 
 $(TARGET): $(OBJECTS) $(PROGRAM)$(RES_SUFFIX) notifyhook.dll libexpat.dll

@@ -216,14 +216,16 @@ void NotifyArea::read_config()
 #endif
 	{
 		if (pos.go_down("desktopbar")) {
-			clock_visible = XMLBoolRef(pos, "options", "show-clock", !get_hide_clock_from_registry());
+			clock_visible = XMLBoolRef(XMLPos(pos,"options"), "show-clock", !get_hide_clock_from_registry());
 			pos.back();
 		}
 	}
 
 	if (pos.go_down("notify-icons")) {
-		_hide_inactive = XMLBool(pos, "options", "hide-inactive", true);	///@todo read default setting from registry
-		_show_hidden = XMLBool(pos, "options", "show-hidden", false);	///@todo read default setting from registry
+		XMLPos options(pos, "options");
+
+		_hide_inactive = XMLBool(options, "hide-inactive", true);	///@todo read default setting from registry
+		_show_hidden = XMLBool(options, "show-hidden", false);	///@todo read default setting from registry
 
 		XMLChildrenFilter icons(pos, "icon");
 
@@ -260,13 +262,14 @@ void NotifyArea::write_config()
 	XMLPos pos = g_Globals.get_cfg();
 
 	pos.smart_create("desktopbar");
-	XMLBoolRef(pos, "options", "show-clock") = _hwndClock!=0;
+	XMLBoolRef(XMLPos(pos,"options"), "show-clock") = _hwndClock!=0;
 	pos.back();
 
 	pos.smart_create("notify-icons");
 
-	XMLBoolRef(pos, "options", "hide-inactive") = _hide_inactive;
-	XMLBoolRef(pos, "options", "show-hidden") = _show_hidden;
+	XMLPos options(pos, "options");
+	XMLBoolRef(options, "hide-inactive") = _hide_inactive;
+	XMLBoolRef(options, "show-hidden") = _show_hidden;
 
 	for(NotifyIconCfgList::iterator it=_cfg.begin(); it!=_cfg.end(); ++it) {
 		NotifyIconConfig& cfg = *it;
@@ -285,6 +288,8 @@ void NotifyArea::write_config()
 
 		pos.back();
 	}
+
+	pos.back();	// smart_create
 }
 
 void NotifyArea::show_clock(bool flag)
