@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: wizard.c,v 1.15 2004/11/24 23:09:46 ekohl Exp $
+/* $Id: wizard.c,v 1.16 2004/11/27 13:33:40 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -145,16 +145,15 @@ GplDlgProc(HWND hwndDlg,
         SendMessageA(GetDlgItem(hwndDlg, IDC_GPL_TEXT), WM_SETTEXT, 0, (LPARAM) GplText);
         HeapFree(GetProcessHeap(), 0, GplText);
         SetFocus(GetDlgItem(hwndDlg, IDOK));
-	return FALSE;
-        break;
+        return FALSE;
 
       case WM_CLOSE:
         EndDialog(hwndDlg, IDCANCEL);
         break;
 
       case WM_COMMAND:
-	if (HIWORD(wParam) == BN_CLICKED && IDOK == LOWORD(wParam))
-	  {
+        if (HIWORD(wParam) == BN_CLICKED && IDOK == LOWORD(wParam))
+          {
             EndDialog(hwndDlg, IDOK);
           }
         break;
@@ -251,7 +250,7 @@ AckPageDlgProc(HWND hwndDlg,
         {
           Projects = NULL;
           ProjectsSize = 256;
-	  do
+          do
             {
               Projects = HeapAlloc(GetProcessHeap(), 0, ProjectsSize * sizeof(WCHAR));
               if (NULL == Projects)
@@ -572,6 +571,7 @@ SetKeyboardLayoutName(HWND hwnd)
   RegCloseKey(hKey);
 #endif
 }
+
 
 static VOID
 RunInputLocalePage(HWND hwnd)
