@@ -12,7 +12,12 @@ include $(PATH_TO_TOP)/rules.mak
 BINUTILS_VERSION_DATE=$(word 5,$(shell $(PREFIX)ld -v))
 
 all: 
+ifeq ($(HOST),mingw32-linux)
+	@echo "#define BINUTILS_VERSION_DATE $(BINUTILS_VERSION_DATE)" > tools-check.h
+endif
+ifeq ($(HOST),mingw32-windows)
 	@echo #define BINUTILS_VERSION_DATE $(BINUTILS_VERSION_DATE) > tools-check.h
+endif
 	$(HOST_CC) -c tools-check.c -o tools-check.temp
 	$(RM) tools-check.temp
 	$(RM) tools-check.h

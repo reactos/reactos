@@ -11,7 +11,7 @@
     (BINUTILS_VERSION_DATE < 20031001)
 #error Due to technical reasons your binutils version can't be used to \
        build ReactOS. Please consider upgrading to newer version. See \
-       www.mingw.org for details.)
+       www.mingw.org for details.
 #endif
 
 /*
@@ -23,7 +23,7 @@
     (__GNUC__ < 3)
 #error Due to technical reasons your GCC version can't be used to \
        build ReactOS. Please consider upgrading to newer version. See \
-       www.mingw.org for details.)
+       www.mingw.org for details.
 #endif
 
 /*
