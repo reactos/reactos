@@ -1,4 +1,4 @@
-/* $Id: send.c,v 1.11 2003/07/11 01:23:15 royce Exp $
+/* $Id: send.c,v 1.12 2003/08/18 11:48:19 hbirr Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -268,24 +268,38 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
    /*
     * Wait for a reply
     */
-   KeWaitForSingleObject(&Port->Semaphore,
-			 UserRequest,
-			 UserMode,
-			 FALSE,
-			 NULL);
+   Status = KeWaitForSingleObject(&Port->Semaphore,
+			          UserRequest,
+			          UserMode,
+			          FALSE,
+			          NULL);
+   if (Status == STATUS_SUCCESS)
+     {
    
-   /*
-    * Dequeue the reply
-    */
-   KeAcquireSpinLock(&Port->Lock, &oldIrql);
-   Message = EiDequeueMessagePort(Port);
-   KeReleaseSpinLock(&Port->Lock, oldIrql);
-   DPRINT("Message->Message.MessageSize %d\n",
-	   Message->Message.MessageSize);
-   Status = MmCopyToCaller(UnsafeLpcReply, &Message->Message, 
-			   Message->Message.MessageSize);
-   ExFreePool(Message);
-   
+       /*
+        * Dequeue the reply
+        */
+       KeAcquireSpinLock(&Port->Lock, &oldIrql);
+       Message = EiDequeueMessagePort(Port);
+       KeReleaseSpinLock(&Port->Lock, oldIrql);
+       if (Message)
+         {
+           DPRINT("Message->Message.MessageSize %d\n",
+	          Message->Message.MessageSize);
+           Status = MmCopyToCaller(UnsafeLpcReply, &Message->Message, 
+			           Message->Message.MessageSize);
+           ExFreePool(Message);
+         }
+       else
+         Status = STATUS_UNSUCCESSFUL;
+     }
+   else
+     {
+       if (NT_SUCCESS(Status))
+         {
+	   Status = STATUS_UNSUCCESSFUL;
+	 }
+     }
    ObDereferenceObject(Port);
    
    return(Status);
