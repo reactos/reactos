@@ -198,8 +198,14 @@ XLATEOBJ *IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
   ASSERT( XlateObj );
   ASSERT( XlateGDI );
 
-  SourcePalGDI = (PALGDI*)AccessInternalObject((ULONG)PaletteSource);
-  DestPalGDI = (PALGDI*)AccessInternalObject((ULONG)PaletteDest);
+  if (NULL != PaletteSource)
+  {
+    SourcePalGDI = (PALGDI*)AccessInternalObject((ULONG)PaletteSource);
+  }
+  if (NULL != PaletteDest)
+  {
+    DestPalGDI = (PALGDI*)AccessInternalObject((ULONG)PaletteDest);
+  }
 
   XlateObj->iSrcType = SourcePalType;
   XlateObj->iDstType = DestPalType;
