@@ -246,6 +246,14 @@ LPWSTR ConvertToWideChar(LPCSTR lpString)
 #define FreeConvertedWideChar(lpwString) free(lpwString)
 #endif
 
+void DisplayMessage(BOOL bConsole, BOOL bSilent, LPCTSTR lpMessage, LPCTSTR lpTitle, UINT uType)
+{
+	if (!bSilent)
+		MessageBox(0,lpMessage,lpTitle,uType);
+	if (bConsole)
+		_tprintf(_T("%s: %s\n\n"),lpTitle,lpMessage);
+}
+
 int WINAPI WinMain(
   HINSTANCE hInstance,
   HINSTANCE hPrevInstance,
@@ -300,10 +308,11 @@ int WINAPI WinMain(
 			case _T('i'):
 			case _T('I'):
 				bInstall = TRUE;
-				if (argv[i][2] == _T(':'))
-					lptDllCmdLine = argv[i]+3;
-				else
-					lptDllCmdLine = _T("");
+				lptDllCmdLine = argv[i];
+				while (*lptDllCmdLine != 0 && *lptDllCmdLine != _T(':'))
+					lptDllCmdLine++;
+				if (*lptDllCmdLine == _T(':'))
+					lptDllCmdLine++;
 				break;
 			case _T('n'):
 			case _T('N'):
@@ -321,37 +330,31 @@ int WINAPI WinMain(
 
 	// An unrecognized flag was used, display a message and show available options
 	if (lptFuncName) {
-		if (!bSilent) {
-			lptMsgBuffer = (LPTSTR)malloc((_tcslen(UsageMessage) - 2 + _tcslen(InvalidFlag) - 2 + _tcslen(lptFuncName) + 1) * sizeof(TCHAR));
-			_stprintf(lptMsgBuffer + (_tcslen(UsageMessage) - 2),InvalidFlag,lptFuncName);
-			_stprintf(lptMsgBuffer,UsageMessage,lptMsgBuffer + (_tcslen(UsageMessage) - 2));
-			MessageBox(0,lptMsgBuffer,ModuleTitle,MB_ICONEXCLAMATION);
-			free(lptMsgBuffer);
-		}
+		lptMsgBuffer = (LPTSTR)malloc((_tcslen(UsageMessage) - 2 + _tcslen(InvalidFlag) - 2 + _tcslen(lptFuncName) + 1) * sizeof(TCHAR));
+		_stprintf(lptMsgBuffer + (_tcslen(UsageMessage) - 2),InvalidFlag,lptFuncName);
+		_stprintf(lptMsgBuffer,UsageMessage,lptMsgBuffer + (_tcslen(UsageMessage) - 2));
+		DisplayMessage(bConsole,bSilent,lptMsgBuffer,ModuleTitle,MB_ICONEXCLAMATION);
+		free(lptMsgBuffer);
 		GlobalFree(argv);
 		return EXITCODE_PARAMERROR;
 	}
 
 	// /n was used without /i, display a message and show available options
 	if (bNoRegister && (!bInstall)) {
-		if (!bSilent) {
-			lptMsgBuffer = (LPTSTR)malloc((_tcslen(UsageMessage) - 2 + _tcslen(SwitchN_NoI) + 1) * sizeof(TCHAR));
-			_stprintf(lptMsgBuffer,UsageMessage,SwitchN_NoI);
-			MessageBox(0,lptMsgBuffer,ModuleTitle,MB_ICONEXCLAMATION);
-			free(lptMsgBuffer);
-		}
+		lptMsgBuffer = (LPTSTR)malloc((_tcslen(UsageMessage) - 2 + _tcslen(SwitchN_NoI) + 1) * sizeof(TCHAR));
+		_stprintf(lptMsgBuffer,UsageMessage,SwitchN_NoI);
+		DisplayMessage(bConsole,bSilent,lptMsgBuffer,ModuleTitle,MB_ICONEXCLAMATION);
+		free(lptMsgBuffer);
 		GlobalFree(argv);
 		return EXITCODE_PARAMERROR;
 	}
 
 	// No dll was specified, display a message and show available options
 	if (nDllCount == 0) {
-		if (!bSilent) {
-			lptMsgBuffer = (LPTSTR)malloc((_tcslen(UsageMessage) - 2 + _tcslen(NoDllSpecified) + 1) * sizeof(TCHAR));
-			_stprintf(lptMsgBuffer,UsageMessage,NoDllSpecified);
-			MessageBox(0,lptMsgBuffer,ModuleTitle,MB_ICONEXCLAMATION);
-			free(lptMsgBuffer);
-		}
+		lptMsgBuffer = (LPTSTR)malloc((_tcslen(UsageMessage) - 2 + _tcslen(NoDllSpecified) + 1) * sizeof(TCHAR));
+		_stprintf(lptMsgBuffer,UsageMessage,NoDllSpecified);
+		DisplayMessage(bConsole,bSilent,lptMsgBuffer,ModuleTitle,MB_ICONEXCLAMATION);
+		free(lptMsgBuffer);
 		GlobalFree(argv);
 		return EXITCODE_PARAMERROR;
 	}
@@ -382,7 +385,7 @@ int WINAPI WinMain(
 			lptDllName = argv[i];
 
 			// Everything is all setup, so load the dll now
-			hDll = LoadLibrary(lptDllName);
+			hDll = LoadLibraryEx(lptDllName,0,LOAD_WITH_ALTERED_SEARCH_PATH);
 			if (hDll) {
 				if (!bNoRegister) {
 					// Get the address of DllRegisterServer or DllUnregisterServer
@@ -390,33 +393,29 @@ int WINAPI WinMain(
 					if (fnDllRegister) {
 						// If the function exists, call it
 						hResult = fnDllRegister();
-						if (!bSilent) {
-							if (hResult == S_OK) {
-								// (Un)register succeeded, display a message
-								lptMsgBuffer = (LPTSTR)malloc((_tcslen(SuccessMessage) - 4 + _tcslen(lptFuncName) + _tcslen(lptDllName) + 1) * sizeof(TCHAR));
-								_stprintf(lptMsgBuffer,SuccessMessage,lptFuncName,lptDllName);
-								MessageBox(0,lptMsgBuffer,ModuleTitle,MB_ICONINFORMATION);
-							}
-							else {
-								// (Un)register failed, display a message
-								lptMsgBuffer = (LPTSTR)malloc((_tcslen(FailureMessage) + _tcslen(lptFuncName) + _tcslen(lptDllName) + 1) * sizeof(TCHAR));
-								_stprintf(lptMsgBuffer,FailureMessage,lptFuncName,lptDllName,hResult);
-								MessageBox(0,lptMsgBuffer,ModuleTitle,MB_ICONEXCLAMATION);
-							}
-							free(lptMsgBuffer);
+						if (hResult == S_OK) {
+							// (Un)register succeeded, display a message
+							lptMsgBuffer = (LPTSTR)malloc((_tcslen(SuccessMessage) - 4 + _tcslen(lptFuncName) + _tcslen(lptDllName) + 1) * sizeof(TCHAR));
+							_stprintf(lptMsgBuffer,SuccessMessage,lptFuncName,lptDllName);
+							DisplayMessage(bConsole,bSilent,lptMsgBuffer,ModuleTitle,MB_ICONINFORMATION);
 						}
+						else {
+							// (Un)register failed, display a message
+							lptMsgBuffer = (LPTSTR)malloc((_tcslen(FailureMessage) + _tcslen(lptFuncName) + _tcslen(lptDllName) + 1) * sizeof(TCHAR));
+							_stprintf(lptMsgBuffer,FailureMessage,lptFuncName,lptDllName,hResult);
+							DisplayMessage(bConsole,bSilent,lptMsgBuffer,ModuleTitle,MB_ICONEXCLAMATION);
+						}
+						free(lptMsgBuffer);
 						if (hResult != S_OK)
 							nRetValue = EXITCODE_FAILURE;
 					}
 					else {
 						FreeLibrary(hDll);
-						if (!bSilent) {
-							// Dll(Un)register was not found, display an error message
-							lptMsgBuffer = (LPTSTR)malloc((_tcslen(MissingEntry) - 8 + _tcslen(lptFuncName) * 2 + _tcslen(lptDllName) * 2 + 1) * sizeof(TCHAR));
-							_stprintf(lptMsgBuffer,MissingEntry,lptDllName,lptFuncName,lptFuncName,lptDllName);
-							MessageBox(0,lptMsgBuffer,ModuleTitle,MB_ICONEXCLAMATION);
-							free(lptMsgBuffer);
-						}
+						// Dll(Un)register was not found, display an error message
+						lptMsgBuffer = (LPTSTR)malloc((_tcslen(MissingEntry) - 8 + _tcslen(lptFuncName) * 2 + _tcslen(lptDllName) * 2 + 1) * sizeof(TCHAR));
+						_stprintf(lptMsgBuffer,MissingEntry,lptDllName,lptFuncName,lptFuncName,lptDllName);
+						DisplayMessage(bConsole,bSilent,lptMsgBuffer,ModuleTitle,MB_ICONEXCLAMATION);
+						free(lptMsgBuffer);
 						nRetValue = EXITCODE_NOENTRY;
 					}
 				}
@@ -430,33 +429,29 @@ int WINAPI WinMain(
 							hResult = fnDllInstall(1,lpwDllCmdLine);
 						else
 							hResult = fnDllInstall(0,lpwDllCmdLine);
-						if (!bSilent) {
-							if (hResult == S_OK) {
-								// (Un)install succeeded, display a message
-								lptMsgBuffer = (LPTSTR)malloc((_tcslen(SuccessMessage) - 4 + _tcslen(tszDllInstall) + _tcslen(lptDllName) + 1) * sizeof(TCHAR));
-								_stprintf(lptMsgBuffer,SuccessMessage,tszDllInstall,lptDllName);
-								MessageBox(0,lptMsgBuffer,ModuleTitle,MB_ICONINFORMATION);
-							}
-							else {
-								// (Un)install failed, display a message
-								lptMsgBuffer = (LPTSTR)malloc((_tcslen(FailureMessage) + _tcslen(tszDllInstall) + _tcslen(lptDllName) + 1) * sizeof(TCHAR));
-								_stprintf(lptMsgBuffer,FailureMessage,tszDllInstall,lptDllName,hResult);
-								MessageBox(0,lptMsgBuffer,ModuleTitle,MB_ICONEXCLAMATION);
-							}
-							free(lptMsgBuffer);
+						if (hResult == S_OK) {
+							// (Un)install succeeded, display a message
+							lptMsgBuffer = (LPTSTR)malloc((_tcslen(SuccessMessage) - 4 + _tcslen(tszDllInstall) + _tcslen(lptDllName) + 1) * sizeof(TCHAR));
+							_stprintf(lptMsgBuffer,SuccessMessage,tszDllInstall,lptDllName);
+							DisplayMessage(bConsole,bSilent,lptMsgBuffer,ModuleTitle,MB_ICONINFORMATION);
 						}
+						else {
+							// (Un)install failed, display a message
+							lptMsgBuffer = (LPTSTR)malloc((_tcslen(FailureMessage) + _tcslen(tszDllInstall) + _tcslen(lptDllName) + 1) * sizeof(TCHAR));
+							_stprintf(lptMsgBuffer,FailureMessage,tszDllInstall,lptDllName,hResult);
+							DisplayMessage(bConsole,bSilent,lptMsgBuffer,ModuleTitle,MB_ICONEXCLAMATION);
+						}
+						free(lptMsgBuffer);
 						if (hResult != S_OK)
 							nRetValue = EXITCODE_FAILURE;
 					}
 					else {
 						FreeLibrary(hDll);
-						if (!bSilent) {
-							// DllInstall was not found, display an error message
-							lptMsgBuffer = (LPTSTR)malloc((_tcslen(MissingEntry) - 8 + _tcslen(tszDllInstall) * 2 + _tcslen(lptDllName) * 2 + 1) * sizeof(TCHAR));
-							_stprintf(lptMsgBuffer,MissingEntry,lptDllName,tszDllInstall,tszDllInstall,lptDllName);
-							MessageBox(0,lptMsgBuffer,ModuleTitle,MB_ICONEXCLAMATION);
-							free(lptMsgBuffer);
-						}
+						// DllInstall was not found, display an error message
+						lptMsgBuffer = (LPTSTR)malloc((_tcslen(MissingEntry) - 8 + _tcslen(tszDllInstall) * 2 + _tcslen(lptDllName) * 2 + 1) * sizeof(TCHAR));
+						_stprintf(lptMsgBuffer,MissingEntry,lptDllName,tszDllInstall,tszDllInstall,lptDllName);
+						DisplayMessage(bConsole,bSilent,lptMsgBuffer,ModuleTitle,MB_ICONEXCLAMATION);
+						free(lptMsgBuffer);
 						nRetValue = EXITCODE_NOENTRY;
 					}
 				}
@@ -465,14 +460,12 @@ int WINAPI WinMain(
 				FreeLibrary(hDll);
 			}
 			else {
-				if (!bSilent) {
-					// The dll could not be loaded; display an error message
-					dwErr = GetLastError();
-					lptMsgBuffer = (LPTSTR)malloc((_tcslen(DllNotLoaded) + 2 + _tcslen(lptDllName) + 1) * sizeof(TCHAR));
-					_stprintf(lptMsgBuffer,DllNotLoaded,lptDllName,dwErr);
-					MessageBox(0,lptMsgBuffer,ModuleTitle,MB_ICONEXCLAMATION);
-					free(lptMsgBuffer);
-				}
+				// The dll could not be loaded; display an error message
+				dwErr = GetLastError();
+				lptMsgBuffer = (LPTSTR)malloc((_tcslen(DllNotLoaded) + 2 + _tcslen(lptDllName) + 1) * sizeof(TCHAR));
+				_stprintf(lptMsgBuffer,DllNotLoaded,lptDllName,dwErr);
+				DisplayMessage(bConsole,bSilent,lptMsgBuffer,ModuleTitle,MB_ICONEXCLAMATION);
+				free(lptMsgBuffer);
 				nRetValue = EXITCODE_LOADERROR;
 			}
 		}
