@@ -241,6 +241,7 @@ static HRESULT WINAPI IPersistFile_fnLoad(IPersistFile* iface, LPCOLESTR pszFile
             r = IPersistStream_Load(StreamThis, stm);
             ShellLink_UpdatePath(This->sPathRel, pszFileName, This->sWorkDir, &This->sPath);
             IStream_Release( stm );
+            This->bDirty = TRUE;
         }
 
         return r;
@@ -297,7 +298,11 @@ static HRESULT WINAPI IPersistFile_fnSave(IPersistFile* iface, LPCOLESTR pszFile
         IStream_Release( stm );
 
         if( SUCCEEDED( r ) )
+	{
             StartLinkProcessor( pszFileName );
+
+            This->bDirty = FALSE;
+        }
         else
         {
             DeleteFileW( pszFileName );
