@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.7 2003/07/23 17:04:24 gvg Exp $
+/* $Id: timer.c,v 1.8 2003/07/29 18:17:53 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -379,6 +379,11 @@ TimerThreadMain(
       {
          MsgTimer = CONTAINING_RECORD( TimerListHead.Flink, MSG_TIMER_ENTRY, ListEntry);
          KeSetTimer(&Timer, MsgTimer->Timeout, NULL);
+      }
+      else
+      {
+         /* Reinitialize the timer, this reset the state of the timer event on which we wait */
+         KeInitializeTimer(&Timer);
       }
 
       ExReleaseFastMutex(&Mutex);
