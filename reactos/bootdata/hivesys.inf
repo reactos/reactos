@@ -10,7 +10,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\ComputerName\ComputerName","ComputerName"
 ; NLS Codepage settings
 
 ;; Currently selected language for input
-HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale","(Default)",0x00000000,"00000409"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale","(Default)",0x00000000,"00000409"
 
 ;; Keyboard Layouts
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000409","Layout File",0x00000000,"kbdus.dll"
