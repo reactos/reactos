@@ -189,7 +189,7 @@ U32 MmGetAddressablePageCountIncludingHoles(PBIOS_MEMORY_MAP BiosMemoryMap, U32 
 	// off-by-one error
 	if (EndAddress >= 0xFFFFFFFF)
 	{
-		EndAddress = 0x100000000;
+		EndAddress = 0x100000000LL;
 
 		DbgPrint((DPRINT_MEMORY, "MmGetEndAddressOfAnyMemory() returned 0xFFFFFFFF, correcting to be 0x100000000.\n"));
 	}

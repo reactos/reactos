@@ -1,6 +1,6 @@
 #
 #  FreeLoader
-#  Copyright (C) 1998-2002  Brian Palmer  <brianp@sginet.com>
+#  Copyright (C) 1999, 2000, 2001  Brian Palmer  <brianp@sginet.com>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -17,46 +17,43 @@
 #  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 
-
-#############################################
-# PROGRAMS
-#
-CC			= gcc
-
-ifeq ($(HOST),mingw32-linux)
-RM			= rm -f
-else
-RM			= cmd /C del
+# Windows is default host environment
+ifeq ($(HOST),)
+HOST = mingw32-windows
 endif
 
-#############################################
+#
+# Choose various options
+#
+ifeq ($(HOST),mingw32-linux)
+RM			= rm -f
+CP			= cp -f 
+MKDIR		= mkdir
+SEP      = /
+else
+RM			= cmd /C del
+CP			= copy /Y 
+MKDIR		= md
+SEP      = \$(EMPTY_VAR)
+endif
 
-TOOLS	=	deptool	\
-			bin2c \
-			hosttype \
-			rdel \
-			rcopy \
-			rmkdir \
-			rrmdir
+NASM_CMD	= nasm
+NFLAGS = -fwin32 -dwin32
+BIN2C		= ..$(SEP)tools$(SEP)bin2c
+TOOLSDIR	= ..$(SEP)tools
 
-#############################################
+all:
+	$(MAKE) -C tools
+	$(MAKE) -C bootsect
+	$(MAKE) -C freeldr
+	$(MAKE) -C install
+	$(MAKE) -C fdebug
 
-all : $(TOOLS)
-	@echo Tools are up to date.
-
-% :: all
-
-#############################################
-
-%: %.c
-	@echo ===================================================== Compiling $*
-	@$(CC) -Wall -O3 -o $@ $<
-
-#############################################
-
+clean:
+	$(MAKE) -C bootsect clean
+	$(MAKE) -C freeldr clean
+	$(MAKE) -C install clean
+	$(MAKE) -C fdebug clean
+	$(MAKE) -C tools clean
 
 .PHONY : clean
-clean:
-	@-$(RM) $(TOOLS)
-	@-$(RM) *.exe
-	@echo Clean ALL done.

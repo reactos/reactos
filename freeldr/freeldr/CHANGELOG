@@ -1,3 +1,10 @@
+Changes in v1.8.15 (29/08/2003) (chorns)
+
+- Add top-level makefile
+- Add fdebug/.cvsignore
+- Don't use rdel to remove files in tools/Makefile
+- Remove warning in freeldr/mm/meminit.c
+
 Changes in v1.8.14 (10/08/2003) (chorns)
 
 - Clear screen to black when booting ReactOS
