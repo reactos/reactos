@@ -641,7 +641,7 @@ LdrpLoadModuleSymbols(PUNICODE_STRING FileName,
                       &ObjectAttributes,
                       &IoStatusBlock,
                       0,
-                      FILE_SYNCHRONOUS_IO_NONALERT);
+                      FILE_SYNCHRONOUS_IO_NONALERT|FILE_NO_INTERMEDIATE_BUFFERING);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("Could not open symbol file: %wZ\n", &SymFileName);
@@ -667,7 +667,7 @@ LdrpLoadModuleSymbols(PUNICODE_STRING FileName,
 
   /*  Allocate nonpageable memory for symbol file  */
   FileBuffer = ExAllocatePool(NonPagedPool,
-                              FileStdInfo.EndOfFile.u.LowPart);
+                              FileStdInfo.AllocationSize.u.LowPart);
 
   if (FileBuffer == NULL)
     {
@@ -683,7 +683,7 @@ LdrpLoadModuleSymbols(PUNICODE_STRING FileName,
                       FileBuffer,
                       FileStdInfo.EndOfFile.u.LowPart,
                       0, 0);
-  if (!NT_SUCCESS(Status))
+  if (!NT_SUCCESS(Status) && Status != STATUS_END_OF_FILE)
     {
       DPRINT("Could not read symbol file into memory (Status 0x%x)\n", Status);
       ExFreePool(FileBuffer);
@@ -869,11 +869,18 @@ KdbProcessSymbolFile(PVOID ModuleLoadBase, PCHAR FileName, ULONG Length)
   PSYMBOLFILE_HEADER SymbolFileHeader;
   PIMAGE_SYMBOL_INFO SymbolInfo;
   ANSI_STRING AnsiString;
+  PCHAR Extension;
 
   DPRINT("Module %s is a symbol file\n", FileName);
 
   strncpy(TmpBaseName, FileName, MAX_PATH-1);
   TmpBaseName[MAX_PATH-1] = '\0';
+  /* remove the extension '.sym' */
+  Extension = strrchr(TmpBaseName, '.');
+  if (Extension && 0 == _stricmp(Extension, ".sym"))
+    {
+      *Extension = 0;
+    }
   
   DPRINT("base: %s (Length %d)\n", TmpBaseName, Length);
   
