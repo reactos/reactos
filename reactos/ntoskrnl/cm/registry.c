@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.23 2000/06/29 23:35:33 dwelch Exp $
+/* $Id: registry.c,v 1.24 2000/08/11 08:17:41 jean Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,6 +11,7 @@
  */
 
 #undef WIN32_LEAN_AND_MEAN
+#include <defines.h>
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
 #include <wchar.h>
@@ -18,11 +19,11 @@
 //#define NDEBUG
 #include <internal/debug.h>
 
-// #define  PROTO_REG  1  /* Comment out to disable */
+#define  PROTO_REG  1  /* Comment out to disable */
 
 /*  -----------------------------------------------------  Typedefs  */
 
-#if PROTO_REG
+#define ULONG_MAX 0x7fffffff
 
 #define  REG_BLOCK_SIZE  4096
 #define  REG_HEAP_BLOCK_DATA_OFFSET  32
@@ -39,6 +40,8 @@
 #define  REG_ROOT_KEY_NAME  L"\\Registry"
 #define  SYSTEM_REG_FILE  L"\\SystemDir\\System32\\Config\\SYSTEM.DAT"
 
+
+// BLOCK_OFFSET = offset in file after header block
 typedef DWORD  BLOCK_OFFSET;
 
 typedef struct _HEADER_BLOCK
@@ -61,11 +64,12 @@ typedef struct _HEADER_BLOCK
 typedef struct _HEAP_BLOCK
 {
   DWORD  BlockId;
-  BLOCK_OFFSET  PreviousHeapBlock;
-  BLOCK_OFFSET  NextHeapBlock;
+  BLOCK_OFFSET  BlockOffset;
   DWORD  BlockSize;
 } HEAP_BLOCK, *PHEAP_BLOCK;
 
+// each sub_block begin with this struct :
+// in a free subblock, higher bit of SubBlockSize is set
 typedef struct _FREE_SUB_BLOCK
 {
   DWORD  SubBlockSize;
@@ -76,19 +80,24 @@ typedef struct _KEY_BLOCK
   WORD  SubBlockId;
   WORD  Type;
   LARGE_INTEGER  LastWriteTime;
+  DWORD UnUsed1;
   BLOCK_OFFSET  ParentKeyOffset;
   DWORD  NumberOfSubKeys;
+  DWORD UnUsed2;
   BLOCK_OFFSET  HashTableOffset;
+  DWORD UnUsed3;
   DWORD  NumberOfValues;
   BLOCK_OFFSET  ValuesOffset;
   BLOCK_OFFSET  SecurityKeyOffset;
   BLOCK_OFFSET  ClassNameOffset;
-  DWORD  Unused1;
-  DWORD  NameSize;
-  DWORD  ClassSize;
-  WCHAR  Name[1];
+  DWORD  Unused4[5];
+  WORD  NameSize;
+  WORD  ClassSize;
+  WCHAR  Name[0];
 } KEY_BLOCK, *PKEY_BLOCK;
 
+// hash record :
+// HashValue=four letters of value's name
 typedef struct _HASH_RECORD
 {
   BLOCK_OFFSET  KeyOffset;
@@ -99,24 +108,24 @@ typedef struct _HASH_TABLE_BLOCK
 {
   WORD  SubBlockId;
   WORD  HashTableSize;
-  HASH_RECORD  Table[1];
+  HASH_RECORD  Table[0];
 } HASH_TABLE_BLOCK, *PHASH_TABLE_BLOCK;
 
 typedef struct _VALUE_LIST_BLOCK
 {
-  BLOCK_OFFSET  Values[1];
+  BLOCK_OFFSET  Values[0];
 } VALUE_LIST_BLOCK, *PVALUE_LIST_BLOCK;
 
 typedef struct _VALUE_BLOCK
 {
-  WORD  SubBlockId;
-  WORD  NameSize;
-  DWORD  DataSize;
-  BLOCK_OFFSET  DataOffset;
+  WORD  SubBlockId;	// "kv"
+  WORD  NameSize;	// length of Name
+  DWORD  DataSize;	// length of datas in the subblock pinted by DataOffset
+  BLOCK_OFFSET  DataOffset;	// datas are here if DataSize <=4
   DWORD  DataType;
   WORD  Flags;
   WORD  Unused1;
-  WCHAR  Name[1];
+  WCHAR  Name[0];
 } VALUE_BLOCK, *PVALUE_BLOCK;
 
 typedef struct _IN_MEMORY_BLOCK
@@ -156,15 +165,23 @@ typedef struct _KEY_OBJECT
 
 /*  -------------------------------------------------  File Statics  */
 
+#if PROTO_REG
 static POBJECT_TYPE  CmiKeyType = NULL;
+static PREGISTRY_FILE  CmiVolatileFile = NULL;
 static PKEY_OBJECT  CmiKeyList = NULL;
 static KSPIN_LOCK  CmiKeyListLock;
-static PREGISTRY_FILE  CmiVolatileFile = NULL;
 static PREGISTRY_FILE  CmiSystemFile = NULL;
+#endif
 
 /*  -----------------------------------------  Forward Declarations  */
 
-static PVOID  CmiObjectParse(PVOID  ParsedObject, PWSTR  *Path);
+#if PROTO_REG
+//static PVOID  CmiObjectParse(PVOID  ParsedObject, PWSTR  *Path);
+static NTSTATUS CmiObjectParse(PVOID ParsedObject,
+		     PVOID *NextObject,
+		     PUNICODE_STRING FullPath,
+		     PWSTR *Path);
+
 static VOID  CmiObjectDelete(PVOID  DeletedObject);
 static NTSTATUS  CmiBuildKeyPath(PWSTR  *KeyPath, 
                                  POBJECT_ATTRIBUTES  ObjectAttributes);
@@ -489,7 +506,7 @@ NtDeleteKey (
   KeyObject->Flags |= KO_MARKED_FOR_DELETE;
   
   /*  Dereference the object  */
-  ObDeleteHandle(KeyHandle);
+  ObDeleteHandle(PsGetCurrentProcess(),KeyHandle);
   /* FIXME: I think that ObDeleteHandle should dereference the object  */
   ObDereferenceObject(KeyObject);
 
@@ -1341,14 +1358,18 @@ RtlWriteRegistryValue (
 
 /*  ------------------------------------------  Private Implementation  */
 
-#if PROTO_REG
 
-static PVOID 
-CmiObjectParse(PVOID  ParsedObject, PWSTR  *Path)
+#if PROTO_REG
+//static PVOID 
+//CmiObjectParse(PVOID  ParsedObject, PWSTR  *Path)
+static NTSTATUS CmiObjectParse(PVOID ParsedObject,
+		     PVOID *NextObject,
+		     PUNICODE_STRING FullPath,
+		     PWSTR *Path)
 {
   NTSTATUS  Status;
   /* FIXME: this should be allocated based on the largest subkey name  */
-  WCHAR  CurKeyName[256];
+  WCHAR  CurKeyName[260];
   PWSTR  Remainder, NextSlash;
   PREGISTRY_FILE  RegistryFile;
   PKEY_OBJECT  NewKeyObject;
@@ -1371,7 +1392,9 @@ CmiObjectParse(PVOID  ParsedObject, PWSTR  *Path)
                                  UserMode);
       *Path = NULL;
 
-      return  NewKeyObject;
+//      return  NewKeyObject;
+      //FIXME
+      return Status;
     }
 
   CurKeyBlock = CmiGetKeyBlock(RegistryFile, 
@@ -1429,7 +1452,8 @@ CmiObjectParse(PVOID  ParsedObject, PWSTR  *Path)
                                 CmiKeyType);
   if (NewKeyObject == NULL)
     {
-      return  NULL;
+      //FIXME : return the good error code
+      return  STATUS_UNSUCCESSFUL;
     }
   NewKeyObject->Flags = 0;
   NewKeyObject->Name = ExAllocatePool(NonPagedPool, 
@@ -1440,7 +1464,8 @@ CmiObjectParse(PVOID  ParsedObject, PWSTR  *Path)
   CmiAddKeyToList(NewKeyObject);
   *Path = (Remainder != NULL) ? Remainder - 1 : NULL;
   
-  return  NewKeyObject;
+  NextObject = (PVOID)NewKeyObject;
+  return STATUS_SUCCESS;
 }
 
 static VOID  
