@@ -1,4 +1,4 @@
-/* $Id: cmd.h,v 1.20 2000/07/19 06:58:13 ekohl Exp $
+/* $Id: cmd.h,v 1.21 2001/02/03 10:37:51 ekohl Exp $
  *
  *  CMD.H - header file for the modules in CMD.EXE
  *
@@ -65,6 +65,13 @@
 #define D_OFF        "off"
 
 
+/* command line buffer length */
+#ifdef __REACTOS__
+#define CMDLINE_LENGTH  512
+#else
+#define CMDLINE_LENGTH  8192
+//#define CMDLINE_LENGTH  1024
+#endif
 
 /* global variables */
 extern HANDLE hOut;
