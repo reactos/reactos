@@ -5,7 +5,7 @@
  * FILE:            ntoskrnl/io/plugplay.c
  * PURPOSE:         Plug-and-play interface routines
  * 
- * PROGRAMMERS:     David Welch (welch@mcmail.com)
+ * PROGRAMMERS:     Eric Kohl <eric.kohl@t-online.de>
  */
 
 /* INCLUDES *****************************************************************/
@@ -146,7 +146,9 @@ NtGetPlugPlayEvent(IN ULONG Reserved1,
   }
 
   /* Get entry from the tail of the queue */
-  Entry = (PPNP_EVENT_ENTRY)IopPnpEventQueueHead.Blink;
+  Entry = CONTAINING_RECORD(IopPnpEventQueueHead.Blink,
+                            PNP_EVENT_ENTRY,
+                            ListEntry);
 
   /* Check the buffer size */
   if (BufferLength < Entry->Event.TotalSize)
