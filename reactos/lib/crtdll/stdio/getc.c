@@ -40,19 +40,20 @@ int getc(FILE *fp)
 
 wint_t  getwc(FILE *fp)
 {
+  wint_t c;
 	
  // might check on multi bytes if text mode
  
   if(fp->_cnt > 0) {
         fp->_cnt -= sizeof(wchar_t);
-        return (wint_t )*((wchar_t *)(fp->_ptr))++;
+        c = *((wchar_t *)(fp->_ptr));
+        fp->_ptr += sizeof(wchar_t);
   } 
   else {
-	return _filwbuf(fp);
+	c = _filwbuf(fp);
   }
   
-  // never reached
-  return -1;
+  return c;
 }
 
 

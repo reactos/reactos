@@ -108,35 +108,35 @@ INT GetHelperDLLEntries(
   /* The following functions MUST be supported */    
     e = GetProcAddress(HelperDLL->hModule, "WSHEnumProtocols");
     if (!e) return ERROR_BAD_PROVIDER;
-  ((PVOID) HelperDLL->EntryTable.lpWSHEnumProtocols) = e;
+  HelperDLL->EntryTable.lpWSHEnumProtocols = e;
 
   e = GetProcAddress(HelperDLL->hModule, "WSHGetSockaddrType");
     if (!e) return ERROR_BAD_PROVIDER;
-  ((PVOID) HelperDLL->EntryTable.lpWSHGetSockaddrType) = e;
+  HelperDLL->EntryTable.lpWSHGetSockaddrType = e;
 
     e = GetProcAddress(HelperDLL->hModule, "WSHGetSocketInformation");
     if (!e) return ERROR_BAD_PROVIDER;
-  ((PVOID) HelperDLL->EntryTable.lpWSHGetSocketInformation) = e;
+  HelperDLL->EntryTable.lpWSHGetSocketInformation = e;
 
     e = GetProcAddress(HelperDLL->hModule, "WSHGetWildcardSockaddr");
     if (!e) return ERROR_BAD_PROVIDER;
-  ((PVOID) HelperDLL->EntryTable.lpWSHGetWildcardSockaddr) = e;
+  HelperDLL->EntryTable.lpWSHGetWildcardSockaddr = e;
 
     e = GetProcAddress(HelperDLL->hModule, "WSHGetWinsockMapping");
     if (!e) return ERROR_BAD_PROVIDER;
-  ((PVOID) HelperDLL->EntryTable.lpWSHGetWinsockMapping) = e;
+  HelperDLL->EntryTable.lpWSHGetWinsockMapping = e;
 
     e = GetProcAddress(HelperDLL->hModule, "WSHNotify");
     if (!e) return ERROR_BAD_PROVIDER;
-  ((PVOID) HelperDLL->EntryTable.lpWSHNotify) = e;
+  HelperDLL->EntryTable.lpWSHNotify = e;
 
     e = GetProcAddress(HelperDLL->hModule, "WSHOpenSocket");
     if (!e) return ERROR_BAD_PROVIDER;
-  ((PVOID) HelperDLL->EntryTable.lpWSHOpenSocket) = e;
+  HelperDLL->EntryTable.lpWSHOpenSocket = e;
 
     e = GetProcAddress(HelperDLL->hModule, "WSHSetSocketInformation");
     if (!e) return ERROR_BAD_PROVIDER;
-  ((PVOID) HelperDLL->EntryTable.lpWSHSetSocketInformation) = e;
+  HelperDLL->EntryTable.lpWSHSetSocketInformation = e;
 
 
   /* 
@@ -144,28 +144,28 @@ INT GetHelperDLLEntries(
   Whoever wants to call them, must check that the pointer is not NULL.
   */
     e = GetProcAddress(HelperDLL->hModule, "WSHAddressToString");
-  ((PVOID) HelperDLL->EntryTable.lpWSHAddressToString) = e;
+  HelperDLL->EntryTable.lpWSHAddressToString = e;
   
     e = GetProcAddress(HelperDLL->hModule, "WSHGetBroadcastSockaddr");
-	((PVOID) HelperDLL->EntryTable.lpWSHGetBroadcastSockaddr) = e;
+	HelperDLL->EntryTable.lpWSHGetBroadcastSockaddr = e;
 
     e = GetProcAddress(HelperDLL->hModule, "WSHGetProviderGuid");
-	((PVOID) HelperDLL->EntryTable.lpWSHGetProviderGuid) = e;
+	HelperDLL->EntryTable.lpWSHGetProviderGuid = e;
 
     e = GetProcAddress(HelperDLL->hModule, "WSHGetWSAProtocolInfo");
-	((PVOID) HelperDLL->EntryTable.lpWSHGetWSAProtocolInfo) = e;
+	HelperDLL->EntryTable.lpWSHGetWSAProtocolInfo = e;
 
     e = GetProcAddress(HelperDLL->hModule, "WSHIoctl");
-	((PVOID) HelperDLL->EntryTable.lpWSHIoctl) = e;
+	HelperDLL->EntryTable.lpWSHIoctl = e;
 
     e = GetProcAddress(HelperDLL->hModule, "WSHJoinLeaf");
-	((PVOID) HelperDLL->EntryTable.lpWSHJoinLeaf) = e;
+	HelperDLL->EntryTable.lpWSHJoinLeaf = e;
 
     e = GetProcAddress(HelperDLL->hModule, "WSHOpenSocket2");
-	((PVOID) HelperDLL->EntryTable.lpWSHOpenSocket2) = e;
+	HelperDLL->EntryTable.lpWSHOpenSocket2 = e;
 
     e = GetProcAddress(HelperDLL->hModule, "WSHStringToAddress");
-	((PVOID) HelperDLL->EntryTable.lpWSHStringToAddress) = e;
+	HelperDLL->EntryTable.lpWSHStringToAddress = e;
 
     return NO_ERROR;
 }

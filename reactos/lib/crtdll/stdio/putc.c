@@ -46,7 +46,8 @@ int putwc(wint_t c, FILE* fp)
  
         if (fp->_cnt > 0 ) {
                 fp->_cnt-= sizeof(wchar_t);
- 		*((wchar_t *)(fp->_ptr))++  = c;
+ 		*((wchar_t *)(fp->_ptr))  = c;
+                fp->_ptr += sizeof(wchar_t);
 		return (wint_t)c;
         }
         else
