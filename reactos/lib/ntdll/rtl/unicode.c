@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.35 2004/02/02 19:04:11 hbirr Exp $
+/* $Id: unicode.c,v 1.36 2004/02/03 14:37:35 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,17 +11,15 @@
 
 #include <ddk/ntddk.h>
 #include <ntdll/rtl.h>
-//#include <internal/nls.h>
 #include <ctype.h>
 #include <ntos/minmax.h>
+
 #define NDEBUG
 #include <ntdll/ntdll.h>
 
 
 extern PUSHORT NlsUnicodeUpcaseTable;
 extern PUSHORT NlsUnicodeLowercaseTable;
-
-WCHAR STDCALL RtlDowncaseUnicodeChar(IN WCHAR Source);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -750,6 +748,16 @@ RtlFreeUnicodeString(
 	UnicodeString->MaximumLength = 0;
 }
 
+/*
+ * @unimplemented
+ */
+NTSTATUS STDCALL
+RtlGUIDFromString (IN PUNICODE_STRING GuidString,
+		   OUT GUID* Guid)
+{
+  return STATUS_NOT_IMPLEMENTED;
+}
+
 
 /*
  * @implemented
@@ -826,6 +834,18 @@ RtlInitUnicodeString(
 		DestinationString->MaximumLength = DestSize + sizeof(WCHAR);
 	}
 	DestinationString->Buffer = (PWSTR)SourceString;
+}
+
+
+/*
+ * @unimplemented
+ */
+NTSTATUS STDCALL
+RtlInt64ToUnicodeString (IN ULONGLONG Value,
+			 IN ULONG Base,
+			 OUT PUNICODE_STRING String)
+{
+  return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -1192,6 +1212,46 @@ RtlPrefixUnicodeString(
 		return TRUE;
 	}
 	return FALSE;
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+RtlStringFromGUID (IN REFGUID Guid,
+		   OUT PUNICODE_STRING GuidString)
+{
+  STATIC CONST PWCHAR Hex = L"0123456789ABCDEF";
+  WCHAR Buffer[40];
+  PWCHAR BufferPtr;
+  ULONG i;
+
+  if (Guid == NULL)
+    {
+      return STATUS_INVALID_PARAMETER;
+    }
+
+  swprintf (Buffer,
+	    L"{%08lX-%04X-%04X-%02X%02X-",
+	    Guid->Data1,
+	    Guid->Data2,
+	    Guid->Data3,
+	    Guid->Data4[0],
+	    Guid->Data4[1]);
+  BufferPtr = Buffer + 25;
+
+  /* 6 hex bytes */
+  for (i = 2; i < 8; i++)
+    {
+      *BufferPtr++ = Hex[Guid->Data4[i] >> 4];
+      *BufferPtr++ = Hex[Guid->Data4[i] & 0xf];
+    }
+
+  *BufferPtr++ = L'}';
+  *BufferPtr++ = L'\0';
+
+  return RtlCreateUnicodeString (GuidString, Buffer);
 }
 
 
@@ -1836,47 +1896,6 @@ ULONG STDCALL
 RtlxUnicodeStringToOemSize (IN PUNICODE_STRING UnicodeString)
 {
   return RtlUnicodeStringToAnsiSize (UnicodeString);
-}
-
-/*
- * @implemented
- */
-NTSTATUS
-STDCALL
-RtlStringFromGUID(
-    IN REFGUID Guid,
-    OUT PUNICODE_STRING GuidString
-    )
-{
-	STATIC CONST PWCHAR Hex = L"0123456789ABCDEF";
-	WCHAR Buffer[40];
-	PWCHAR BufferPtr;
-	INT i;
-	
-	if( Guid == NULL )
-	{
-		return STATUS_INVALID_PARAMETER;
-	}
-
-	swprintf( Buffer, L"{%08lX-%04X-%04X-%02X%02X-",
-					  Guid->Data1,
-					  Guid->Data2,
-					  Guid->Data3,
-					  Guid->Data4[0],
-					  Guid->Data4[1]);
-	BufferPtr = Buffer + 25;
-
-	/* 6 hex bytes */
-	for (i = 2; i < 8; i++)
-	{
-		*BufferPtr++ = Hex[Guid->Data4[i] >> 4];
-		*BufferPtr++ = Hex[Guid->Data4[i] & 0xf];
-	}
-
-	*BufferPtr++ = '}';
-	*BufferPtr++ = '\0';
-		
-	return RtlCreateUnicodeString( GuidString, Buffer );
 }
 
 /* EOF */

@@ -206,14 +206,6 @@ RtlInitUnicodeStringEx(PUNICODE_STRING target,PCWSTR source)
 /*
  * @unimplemented
  */
-NTSTATUS  STDCALL RtlInt64ToUnicodeString(ULONGLONG value,ULONG base,UNICODE_STRING *str)
-{
-  return(FALSE);
-}
-
-/*
- * @unimplemented
- */
 ULONGLONG
 STDCALL
 VerSetConditionMask(
@@ -536,20 +528,6 @@ STDCALL
 NtUnloadKeyEx(
     IN POBJECT_ATTRIBUTES TargetKey,
     IN HANDLE Event OPTIONAL
-    )
-{
-  return(FALSE);
-}
-
-
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-RtlGUIDFromString(
-    IN PUNICODE_STRING GuidString,
-    OUT GUID* Guid
     )
 {
   return(FALSE);
