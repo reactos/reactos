@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.100 2003/10/19 19:51:48 navaraf Exp $
+/* $Id: defwnd.c,v 1.101 2003/10/23 19:39:00 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1304,7 +1304,7 @@ VOID STATIC
 DefWndDoSizeMove(HWND hwnd, WORD wParam)
 {
   MSG msg;
-  RECT sizingRect, mouseRect, origRect;
+  RECT sizingRect, mouseRect, origRect, clipRect;
   HDC hdc;
   LONG hittest = (LONG)(wParam & 0x0f);
   HCURSOR hDragCursor = 0, hOldCursor = 0;
@@ -1376,12 +1376,17 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
     {
       MapWindowPoints( 0, hWndParent, (LPPOINT)&sizingRect, 2 );
       GetClientRect(hWndParent, &mouseRect );
+      clipRect = mouseRect;
+      MapWindowPoints(hWndParent, HWND_DESKTOP, (LPPOINT)&clipRect, 2);
     }
   else 
     {
       SetRect(&mouseRect, 0, 0, GetSystemMetrics(SM_CXSCREEN), 
 	      GetSystemMetrics(SM_CYSCREEN));
+      SystemParametersInfoW(SPI_GETWORKAREA, 0, &clipRect, 0);
     }
+  ClipCursor(&clipRect);
+  
   origRect = sizingRect;
   if (ON_LEFT_BORDER(hittest))
     {
@@ -1527,6 +1532,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
     }
   
   ReleaseCapture();
+  ClipCursor(NULL);
   if( iconic )
     {
       if( moved ) /* restore cursors, show icon title later on */
