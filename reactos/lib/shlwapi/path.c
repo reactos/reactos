@@ -32,7 +32,7 @@
 #include "wingdi.h"
 #include "winuser.h"
 #include "winreg.h"
-#include "winnls.h"
+#include "winternl.h"
 #define NO_SHLWAPI_STREAM
 #include "shlwapi.h"
 #include "wine/debug.h"
@@ -3116,8 +3116,11 @@ BOOL WINAPI PathRenameExtensionW(LPWSTR lpszPath, LPCWSTR lpszExt)
  */
 BOOL WINAPI PathSearchAndQualifyA(LPCSTR lpszPath, LPSTR lpszBuf, UINT cchBuf)
 {
-  FIXME("(%s,%p,0x%08x)-stub\n", debugstr_a(lpszPath), lpszBuf, cchBuf);
-  return FALSE;
+    TRACE("(%s,%p,0x%08x)\n", debugstr_a(lpszPath), lpszBuf, cchBuf);
+
+    if(SearchPathA(NULL, lpszPath, NULL, cchBuf, lpszBuf, NULL))
+        return TRUE;
+    return !!GetFullPathNameA(lpszPath, cchBuf, lpszBuf, NULL);
 }
 
 /*************************************************************************
@@ -3127,8 +3130,11 @@ BOOL WINAPI PathSearchAndQualifyA(LPCSTR lpszPath, LPSTR lpszBuf, UINT cchBuf)
  */
 BOOL WINAPI PathSearchAndQualifyW(LPCWSTR lpszPath, LPWSTR lpszBuf, UINT cchBuf)
 {
-  FIXME("(%s,%p,0x%08x)-stub\n", debugstr_w(lpszPath), lpszBuf, cchBuf);
-  return FALSE;
+    TRACE("(%s,%p,0x%08x)\n", debugstr_w(lpszPath), lpszBuf, cchBuf);
+
+    if(SearchPathW(NULL, lpszPath, NULL, cchBuf, lpszBuf, NULL))
+        return TRUE;
+    return !!GetFullPathNameW(lpszPath, cchBuf, lpszBuf, NULL);
 }
 
 /*************************************************************************
@@ -3200,6 +3206,42 @@ LPWSTR WINAPI PathSkipRootW(LPCWSTR lpszPath)
 /*************************************************************************
  * PathCreateFromUrlA   [SHLWAPI.@]
  *
+ * See PathCreateFromUrlW
+ */
+HRESULT WINAPI PathCreateFromUrlA(LPCSTR pszUrl, LPSTR pszPath,
+                                  LPDWORD pcchPath, DWORD dwReserved)
+{
+    WCHAR bufW[MAX_PATH];
+    WCHAR *pathW = bufW;
+    UNICODE_STRING urlW;
+    HRESULT ret;
+    DWORD lenW = sizeof(bufW)/sizeof(WCHAR), lenA;
+
+    if(!RtlCreateUnicodeStringFromAsciiz(&urlW, pszUrl))
+        return E_INVALIDARG;
+    if((ret = PathCreateFromUrlW(urlW.Buffer, pathW, &lenW, dwReserved)) == E_POINTER) {
+        pathW = HeapAlloc(GetProcessHeap(), 0, lenW * sizeof(WCHAR));
+        ret = PathCreateFromUrlW(urlW.Buffer, pathW, &lenW, dwReserved);
+    }
+    if(ret == S_OK) {
+        RtlUnicodeToMultiByteSize(&lenA, pathW, lenW * sizeof(WCHAR));
+        if(*pcchPath > lenA) {
+            RtlUnicodeToMultiByteN(pszPath, *pcchPath - 1, &lenA, pathW, lenW * sizeof(WCHAR));
+            pszPath[lenA] = 0;
+            *pcchPath = lenA;
+        } else {
+            *pcchPath = lenA + 1;
+            ret = E_POINTER;
+        }
+    }
+    if(pathW != bufW) HeapFree(GetProcessHeap(), 0, pathW);
+    RtlFreeUnicodeString(&urlW);
+    return ret;
+}
+
+/*************************************************************************
+ * PathCreateFromUrlW   [SHLWAPI.@]
+ *
  * Create a path from a URL
  *
  * PARAMS
@@ -3212,79 +3254,66 @@ LPWSTR WINAPI PathSkipRootW(LPCWSTR lpszPath)
  *  Success: S_OK. lpszPath contains the URL in path format,
  *  Failure: An HRESULT error code such as E_INVALIDARG.
  */
-HRESULT WINAPI PathCreateFromUrlA(LPCSTR lpszUrl, LPSTR lpszPath,
-                                  LPDWORD pcchPath, DWORD dwFlags)
+HRESULT WINAPI PathCreateFromUrlW(LPCWSTR pszUrl, LPWSTR pszPath,
+                                  LPDWORD pcchPath, DWORD dwReserved)
 {
-  LPSTR pszPathPart;
-  TRACE("(%s,%p,%p,0x%08lx)\n", debugstr_a(lpszUrl), lpszPath, pcchPath, dwFlags);
+    static const WCHAR file_colon[] = { 'f','i','l','e',':',0 };
+    HRESULT hr;
+    DWORD nslashes = 0;
+    WCHAR *ptr;
 
-  if (!lpszUrl || !lpszPath || !pcchPath || !*pcchPath)
-    return E_INVALIDARG;
+    TRACE("(%s,%p,%p,0x%08lx)\n", debugstr_w(pszUrl), pszPath, pcchPath, dwReserved);
 
-  pszPathPart = StrChrA(lpszUrl, ':');
-  if ((((pszPathPart - lpszUrl) == 1) && isalpha(*lpszUrl)) ||
-         !lstrcmpA(lpszUrl, "file:"))
-  {
-    return UrlUnescapeA(pszPathPart, lpszPath, pcchPath, dwFlags);
-  }
-    /* extracts thing prior to : in pszURL and checks against:
-     *   https
-     *   shell
-     *   local
-     *   about  - if match returns E_INVALIDARG
-     */
+    if (!pszUrl || !pszPath || !pcchPath || !*pcchPath)
+        return E_INVALIDARG;
 
-  return E_INVALIDARG;
-}
 
-/*************************************************************************
- * PathCreateFromUrlW   [SHLWAPI.@]
- *
- * See PathCreateFromUrlA.
- */
-HRESULT WINAPI PathCreateFromUrlW(LPCWSTR lpszUrl, LPWSTR lpszPath,
-                                  LPDWORD pcchPath, DWORD dwFlags)
-{
-  static const WCHAR stemp[] = { 'f','i','l','e',':','/','/','/',0 };
-  LPWSTR pwszPathPart;
-  HRESULT hr;
+    if (strncmpW(pszUrl, file_colon, 5))
+        return E_INVALIDARG;
+    pszUrl += 5;
 
-  TRACE("(%s,%p,%p,0x%08lx)\n", debugstr_w(lpszUrl), lpszPath, pcchPath, dwFlags);
+    while(*pszUrl == '/' || *pszUrl == '\\') {
+        nslashes++;
+        pszUrl++;
+    }
 
-  if (!lpszUrl || !lpszPath || !pcchPath || !*pcchPath)
-    return E_INVALIDARG;
+    if(isalphaW(*pszUrl) && (pszUrl[1] == ':' || pszUrl[1] == '|') && (pszUrl[2] == '/' || pszUrl[2] == '\\'))
+        nslashes = 0;
 
-  /* Path of the form file:///... */
-  if (!strncmpW(lpszUrl, stemp, 8))
-  {
-    lpszUrl += 8;
-  }
-  /* Path of the form file://... */
-  else if (!strncmpW(lpszUrl, stemp, 7))
-  {
-    lpszUrl += 7;
-  }
-  /* Path of the form file:... */
-  else if (!strncmpW(lpszUrl, stemp, 5))
-  {
-    lpszUrl += 5;
-  }
+    switch(nslashes) {
+    case 2:
+        pszUrl -= 2;
+        break;
+    case 0:
+        break;
+    default:
+        pszUrl -= 1;
+        break;
+    }
 
-  /* Ensure that path is of the form c:... or c|... */
-  if (lpszUrl[1] != ':' && lpszUrl[1] != '|' && isalphaW(*lpszUrl))
-    return E_INVALIDARG;
+    hr = UrlUnescapeW((LPWSTR)pszUrl, pszPath, pcchPath, 0);
+    if(hr != S_OK) return hr;
 
-  hr = UrlUnescapeW((LPWSTR) lpszUrl, lpszPath, pcchPath, dwFlags);
-  if (lpszPath[1] == '|')
-    lpszPath[1] = ':';
+    for(ptr = pszPath; *ptr; ptr++)
+        if(*ptr == '/') *ptr = '\\';
 
-  for (pwszPathPart = lpszPath; *pwszPathPart; pwszPathPart++)
-    if (*pwszPathPart == '/')
-      *pwszPathPart = '\\';
+    while(*pszPath == '\\')
+        pszPath++;
+ 
+    if(isalphaW(*pszPath) && pszPath[1] == '|' && pszPath[2] == '\\') /* c|\ -> c:\ */
+        pszPath[1] = ':';
 
-  TRACE("Returning %s\n",debugstr_w(lpszPath));
+    if(nslashes == 2 && (ptr = strchrW(pszPath, '\\'))) { /* \\host\c:\ -> \\hostc:\ */
+        ptr++;
+        if(isalphaW(*ptr) && (ptr[1] == ':' || ptr[1] == '|') && ptr[2] == '\\') {
+            memmove(ptr - 1, ptr, (strlenW(ptr) + 1) * sizeof(WCHAR));
+            (*pcchPath)--;
+        }
+    }
 
-  return hr;
+    TRACE("Returning %s\n",debugstr_w(pszPath));
+
+    return hr;
 }
 
 /*************************************************************************
