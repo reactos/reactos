@@ -1,4 +1,4 @@
-/* $Id: ppool.c,v 1.34 2004/12/11 00:13:37 royce Exp $
+/* $Id: ppool.c,v 1.35 2004/12/12 23:09:13 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -20,11 +20,11 @@
 /* Define to enable strict checking of the paged pool on every allocation */
 /* #define ENABLE_VALIDATE_POOL */
 
-#undef assert
-#define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); KeBugCheck(0); }
-#define ASSERT_SIZE(n) assert ( (n) <= MmPagedPoolSize && (n) > 0 )
+#undef ASSERT
+#define ASSERT(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); KeBugCheck(0); }
+#define ASSERT_SIZE(n) ASSERT ( (n) <= MmPagedPoolSize && (n) > 0 )
 #define IS_PPOOL_PTR(p) ((size_t)(p)) >= ((size_t)MmPagedPoolBase) && ((size_t)(p)) < ((size_t)((size_t)MmPagedPoolBase+MmPagedPoolSize))
-#define ASSERT_PTR(p) assert ( IS_PPOOL_PTR(p) )
+#define ASSERT_PTR(p) ASSERT ( IS_PPOOL_PTR(p) )
 
 // to disable buffer over/under-run detection, set the following macro to 0
 #if !defined(DBG) && !defined(KDBG)
@@ -303,7 +303,7 @@ ExAllocatePagedPoolWithTag (IN POOL_TYPE PoolType,
          PVOID CurrentBlockEnd = (char*)CurrentBlock + CurrentBlock->Size;
          /* calculate last size-aligned address available within this block */
          PVOID AlignedAddr = MM_ROUND_DOWN((char*)CurrentBlockEnd-NumberOfBytes-MM_PPOOL_REDZONE_BYTES, Alignment);
-         assert ( (char*)AlignedAddr+NumberOfBytes+MM_PPOOL_REDZONE_BYTES <= (char*)CurrentBlockEnd );
+         ASSERT ( (char*)AlignedAddr+NumberOfBytes+MM_PPOOL_REDZONE_BYTES <= (char*)CurrentBlockEnd );
 
          /* special case, this address is already size-aligned, and the right size */
          if ( Addr == AlignedAddr )
@@ -343,7 +343,7 @@ ExAllocatePagedPoolWithTag (IN POOL_TYPE PoolType,
          {
             PMM_PPOOL_FREE_BLOCK_HEADER NewFreeBlock =
                (PMM_PPOOL_FREE_BLOCK_HEADER)address_to_block(BestAlignedAddr);
-            assert ( BestAlignedAddr > Addr );
+            ASSERT ( BestAlignedAddr > Addr );
             NewFreeBlock->Size = (char*)Addr + BestBlock->Size - (char*)BestAlignedAddr;
 #if MM_PPOOL_REDZONE_BYTES
             NewFreeBlock->FreeMagic = MM_PPOOL_FREEMAGIC;
@@ -553,7 +553,7 @@ ExFreePagedPool(IN PVOID Block)
             pPrev = pPrev->NextUsed;
          // if this assert fails - memory has been corrupted
          // ( or I have a logic error...! )
-         assert ( pPrev->NextUsed == UsedBlock );
+         ASSERT ( pPrev->NextUsed == UsedBlock );
          pPrev->NextUsed = UsedBlock->NextUsed;
       }
    }
