@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.65 2003/07/21 21:53:53 royce Exp $
+/* $Id: window.c,v 1.66 2003/07/24 15:59:34 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1451,70 +1451,11 @@ NtUserMoveWindow(
     int nHeight,
     BOOL bRepaint)
 {
-    PWINDOW_OBJECT Window = W32kGetWindowObject(hWnd);
-    ULONG uStyle, uExStyle;
-    WINDOWPOS pWinPos;
+	UINT	flags = SWP_NOZORDER | SWP_NOACTIVATE;
 
-    if (!Window) return FALSE;
-    
-    uStyle = Window->Style;
-    uExStyle = Window->ExStyle;
-    pWinPos.hwnd = hWnd;
-    
-    pWinPos.x = X;
-    pWinPos.y = Y;
-    if (nWidth > NtUserGetSystemMetrics(SM_CXMIN))
-        pWinPos.cx = pWinPos.x + nWidth;
-    else
-        pWinPos.cx = pWinPos.x + NtUserGetSystemMetrics(SM_CXMIN);
-        
-    if (nHeight > NtUserGetSystemMetrics(SM_CYMIN))
-        pWinPos.cy = pWinPos.x + nHeight;
-    else
-        pWinPos.cy = pWinPos.y + NtUserGetSystemMetrics(SM_CYMIN);
-    W32kSendWINDOWPOSCHANGINGMessage(Window->Self, &pWinPos);
-    
-    Window->WindowRect.top = Window->ClientRect.top = pWinPos.y;
-    Window->WindowRect.left = Window->ClientRect.left = pWinPos.x;
-    Window->WindowRect.bottom = Window->ClientRect.bottom = pWinPos.cy;
-    Window->WindowRect.right = Window->ClientRect.right = pWinPos.cx;
-    
-    if (!(uStyle & WS_THICKFRAME))
-    {
-      Window->ClientRect.top += NtUserGetSystemMetrics(SM_CYFIXEDFRAME);
-      Window->ClientRect.bottom -= NtUserGetSystemMetrics(SM_CYFIXEDFRAME);
-      Window->ClientRect.left += NtUserGetSystemMetrics(SM_CXFIXEDFRAME);
-      Window->ClientRect.right -= NtUserGetSystemMetrics(SM_CXFIXEDFRAME);
-    }
-    else
-    {
-        Window->ClientRect.top += NtUserGetSystemMetrics(SM_CYSIZEFRAME);
-        Window->ClientRect.bottom -= NtUserGetSystemMetrics(SM_CYSIZEFRAME);
-        Window->ClientRect.left += NtUserGetSystemMetrics(SM_CXSIZEFRAME);
-        Window->ClientRect.right -= NtUserGetSystemMetrics(SM_CXSIZEFRAME);
-    }
-
-    if (uStyle & WS_CAPTION)
-       Window->ClientRect.top += NtUserGetSystemMetrics(SM_CYCAPTION) + 1;
-    if ( Window->Class->Class.lpszMenuName)
-    {
-        Window->ClientRect.top += NtUserGetSystemMetrics(SM_CYMENU);
-    }
-
-    W32kSendWINDOWPOSCHANGEDMessage(Window->Self, &pWinPos);
-    
-    NtUserSendMessage(hWnd, WM_MOVE, 0, MAKEWORD(Window->ClientRect.left,
-                                                 Window->ClientRect.top));
-                                                 
-    NtUserSendMessage(hWnd, WM_SIZE, 0, MAKEWORD(Window->ClientRect.right -
-                                                 Window->ClientRect.left,
-                                                 Window->ClientRect.bottom -
-                                                 Window->ClientRect.top));
-
-    /* FIXME:  Send WM_NCCALCSIZE */
-    W32kReleaseWindowObject(Window);
-    if (bRepaint) NtUserSendMessage(hWnd, WM_PAINT, 0, 0);
-    return TRUE;
+	if(!bRepaint)
+		flags |= SWP_NOREDRAW;
+	return NtUserSetWindowPos(hWnd, 0, X, Y, nWidth, nHeight, flags);
 }
 
 /*
