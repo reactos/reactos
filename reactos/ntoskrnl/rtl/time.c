@@ -13,8 +13,10 @@
 
 #include <ddk/ntddk.h>
 
+#define NDEBUG
 #include <internal/debug.h>
 
+#define TICKSPERMIN        600000000
 #define TICKSPERSEC        10000000
 #define TICKSPERMSEC       10000
 #define SECSPERDAY         86400
@@ -54,14 +56,11 @@ static __inline void NormalizeTimeFields(CSHORT *FieldToNormalize,
 VOID RtlTimeToTimeFields(PLARGE_INTEGER liTime,
 			 PTIME_FIELDS TimeFields)
 {
-
-#if 1
-
   const int *Months;
   int LeapSecondCorrections, SecondsInDay, CurYear;
   int LeapYear, CurMonth, GMTOffset;
   long int Days;
-  long long int Time = *(long long int *)&liTime;
+  long long int Time = (long long int)liTime->QuadPart;
 
     /* Extract millisecond from time and convert time into seconds */
   TimeFields->Milliseconds = (CSHORT) ((Time % TICKSPERSEC) / TICKSPERMSEC);
@@ -122,22 +121,12 @@ VOID RtlTimeToTimeFields(PLARGE_INTEGER liTime,
     Days = Days - (long) Months[CurMonth];
   TimeFields->Month = (CSHORT) (CurMonth + 1);
   TimeFields->Day = (CSHORT) (Days + 1);
-
-#else
-
-   UNIMPLEMENTED;
-
-#endif
-
 }
 
 BOOLEAN RtlTimeFieldsToTime(PTIME_FIELDS tfTimeFields,
 			    PLARGE_INTEGER Time)
 {
-
-#if 1
-
-  int CurYear, CurMonth;
+  int CurYear, CurMonth, MonthLength;
   long long int rcTime;
   TIME_FIELDS TimeFields = *tfTimeFields;
 
@@ -162,12 +151,13 @@ BOOLEAN RtlTimeFieldsToTime(PTIME_FIELDS tfTimeFields,
                           &TimeFields.Day, 
                           HOURSPERDAY);
     }
-  while (TimeFields.Day >
-         MonthLengths[IsLeapYear(TimeFields.Year)][TimeFields.Month - 1])
+  MonthLength =
+    MonthLengths[IsLeapYear(TimeFields.Year)][TimeFields.Month - 1];
+  while (TimeFields.Day > MonthLength)
     {
       NormalizeTimeFields(&TimeFields.Day, 
                           &TimeFields.Month, 
-                          SECSPERMIN);
+                          MonthLength);
     }
   while (TimeFields.Month > MONSPERYEAR)
     {
@@ -191,14 +181,11 @@ BOOLEAN RtlTimeFieldsToTime(PTIME_FIELDS tfTimeFields,
             TimeFields.Second;
   rcTime *= TICKSPERSEC;
   rcTime += TimeFields.Milliseconds * TICKSPERMSEC;
+
+    /* FIXME: handle UTC bias here */
+//  rcTime += UTCBias * TICKSPERMIN;
+
   *Time = *(LARGE_INTEGER *)&rcTime;
 
   return TRUE;
-
-#else
-
-   UNIMPLEMENTED;
-
-#endif
-
 }

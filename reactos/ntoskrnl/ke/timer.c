@@ -582,13 +582,6 @@ VOID KeInitializeTimerImpl(VOID)
     * Calculate the starting time for the system clock
     */
    HalQueryRealTimeClock(&TimeFields);
-   DbgPrint("Date: %d.%d.%d\nTime: %d:%d:%d\n",
-            TimeFields.Day,
-            TimeFields.Month,
-            TimeFields.Year,
-            TimeFields.Hour,
-            TimeFields.Minute,
-            TimeFields.Second);
    RtlTimeFieldsToTime(&TimeFields, &SystemBootTime);
    boot_time=SystemBootTime.QuadPart;
    system_time=boot_time;

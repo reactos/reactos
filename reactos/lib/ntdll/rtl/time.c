@@ -54,14 +54,11 @@ static __inline void NormalizeTimeFields(CSHORT *FieldToNormalize,
 VOID RtlTimeToTimeFields(PLARGE_INTEGER liTime,
 			 PTIME_FIELDS TimeFields)
 {
-
-#if 1
-
   const int *Months;
   int LeapSecondCorrections, SecondsInDay, CurYear;
   int LeapYear, CurMonth, GMTOffset;
   long int Days;
-  long long int Time = *(long long int *)liTime;
+  long long int Time = (long long int)liTime->QuadPart;
 
     /* Extract millisecond from time and convert time into seconds */
   TimeFields->Milliseconds = (CSHORT) ((Time % TICKSPERSEC) / TICKSPERMSEC);
@@ -122,21 +119,11 @@ VOID RtlTimeToTimeFields(PLARGE_INTEGER liTime,
     Days = Days - (long) Months[CurMonth];
   TimeFields->Month = (CSHORT) (CurMonth + 1);
   TimeFields->Day = (CSHORT) (Days + 1);
-
-#else
-
-   UNIMPLEMENTED;
-
-#endif
-
 }
 
 BOOLEAN RtlTimeFieldsToTime(PTIME_FIELDS tfTimeFields,
 			    PLARGE_INTEGER Time)
 {
-
-#if 1
-
   int CurYear, CurMonth;
   long long int rcTime;
   TIME_FIELDS TimeFields = *tfTimeFields;
@@ -194,11 +181,4 @@ BOOLEAN RtlTimeFieldsToTime(PTIME_FIELDS tfTimeFields,
   *Time = *(LARGE_INTEGER *)&rcTime;
 
   return TRUE;
-
-#else
-
-   UNIMPLEMENTED;
-
-#endif
-
 }
