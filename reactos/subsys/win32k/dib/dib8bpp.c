@@ -38,15 +38,7 @@ DIB_8BPP_GetPixel(SURFOBJ *SurfObj, LONG x, LONG y)
 VOID
 DIB_8BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 {
-  PBYTE byteaddr = SurfObj->pvScan0 + y * SurfObj->lDelta;
-  PBYTE addr = byteaddr + x1;
-  LONG cx = x1;
-
-  while(cx < x2) {
-    *addr = c;
-    ++addr;
-    ++cx;
-  }
+  memset(SurfObj->pvScan0 + y * SurfObj->lDelta + x1, (BYTE) c, x2 - x1);
 }
 
 VOID
