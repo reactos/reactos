@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.82 2001/03/18 21:28:30 dwelch Exp $
+/* $Id: main.c,v 1.83 2001/03/25 02:34:28 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -41,6 +41,7 @@
 #include <napi/shared_data.h>
 #include <internal/v86m.h>
 #include <internal/kd.h>
+#include <internal/trap.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -515,6 +516,9 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
    assert(FIELD_OFFSET(ETHREAD, ThreadsProcess) == ETHREAD_THREADS_PROCESS);
    assert(FIELD_OFFSET(KPROCESS, PageTableDirectory) == 
 	  KPROCESS_PAGE_TABLE_DIRECTORY);
+   assert(FIELD_OFFSET(KTRAP_FRAME, Reserved9) == KTRAP_FRAME_RESERVED9);
+   assert(FIELD_OFFSET(KV86M_TRAP_FRAME, regs) == TF_REGS);
+   assert(FIELD_OFFSET(KV86M_TRAP_FRAME, orig_ebp) == TF_ORIG_EBP);
    
    last_kernel_address = KeLoaderModules[KeLoaderBlock.ModsCount - 1].ModEnd;
    

@@ -1,4 +1,4 @@
-/* $Id: vidport.c,v 1.17 2001/03/20 15:09:02 ekohl Exp $
+/* $Id: vidport.c,v 1.18 2001/03/25 02:34:29 dwelch Exp $
  *
  * VideoPort driver
  *   Written by Rex Jolliff
@@ -18,6 +18,9 @@
 static VOID STDCALL VidStartIo(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 static NTSTATUS STDCALL VidDispatchOpenClose(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
 static NTSTATUS STDCALL VidDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+
+static HANDLE CsrssHandle;
+static struct _EPROCESS* Csrss;
 
 //  -------------------------------------------------------  Public Interface
 
@@ -181,6 +184,7 @@ VideoPortInitialize(IN PVOID  Context1,
   ULONG DeviceNumber = 0;
   UNICODE_STRING DeviceName;
   UNICODE_STRING SymlinkName;
+  CLIENT_ID Cid;
 
   /*  Build Dispatch table from passed data  */
   MPDriverObject->DriverStartIo = (PDRIVER_STARTIO) HwInitializationData->HwStartIO;
@@ -285,6 +289,32 @@ VideoPortInitialize(IN PVOID  Context1,
     }
   while (Again);
 
+  /* Find a process handle for csrss */
+  Cid.UniqueProcess = 3;
+  Cid.UniqueThread = 0;
+  Status = ZwOpenProcess(&CsrssHandle,
+			 PROCESS_ALL_ACCESS,
+			 NULL,
+			 &Cid);
+  if (!NT_SUCCESS(Status))
+    {
+      DbgPrint("VIDPORT: Failed to open csrss\n");
+      Csrss = NULL;
+    }
+  else
+    {
+      Status = ObReferenceObjectByHandle(CsrssHandle,
+					 PROCESS_ALL_ACCESS,
+					 NULL,
+					 KernelMode,
+					 (PVOID*)&Csrss,
+					 NULL);
+      if (!NT_SUCCESS(Status))
+	{
+	  DbgPrint("VIDPORT: Failed to reference csrss handle\n");
+	  Csrss = NULL;
+	}
+    }  
 
   /* FIXME: initialize timer routine for MP Driver  */
   if (HwInitializationData->HwTimer != NULL)
@@ -317,8 +347,7 @@ VideoPortInt10(IN PVOID  HwDeviceExtension,
   KV86M_REGISTERS Regs;
   NTSTATUS Status;
    
-  /* FIXME: Attach to csrss */
-  /* FIXME: Check address space is set up */
+  KeAttachProcess(Csrss);
    
   memset(&Regs, 0, sizeof(Regs));
   Regs.Eax = BiosArguments->Eax;
@@ -329,6 +358,9 @@ VideoPortInt10(IN PVOID  HwDeviceExtension,
   Regs.Edi = BiosArguments->Edi;
   Regs.Ebp = BiosArguments->Ebp;
   Status = Ke386CallBios(0x10, &Regs);
+
+  KeDetachProcess();
+
   return(Status);
 }
 

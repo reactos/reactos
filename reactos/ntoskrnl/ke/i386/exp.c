@@ -202,12 +202,10 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
    /*
     * If this was a V86 mode exception then handle it specially
     */
-#if 0
-   if (tf->eflags & (1 << 17))
+   if (Tf->Eflags & (1 << 17))
      {
-       return(KeV86Exception(tf, cr2));
+       return(KeV86Exception(ExceptionNr, Tf, cr2));
      }
-#endif
 
    /*
     * Check for stack underflow

@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.72 2001/03/18 19:35:14 dwelch Exp $
+/* $Id: thread.c,v 1.73 2001/03/25 02:34:29 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -47,7 +47,7 @@ static BOOLEAN DoneInitYet = FALSE;
 ULONG PiNrThreads = 0;
 ULONG PiNrRunnableThreads = 0;
 
-static PETHREAD CurrentThread = NULL;
+PETHREAD CurrentThread = NULL;
 
 static GENERIC_MAPPING PiThreadMapping = {THREAD_READ,
 					  THREAD_WRITE,

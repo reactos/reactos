@@ -330,7 +330,8 @@ VOID MmSetSavedSwapEntryPage(PVOID PhysicalAddress,
    KeReleaseSpinLock(&PageListLock, oldIrql);
 }
 
-SWAPENTRY MmGetSavedSwapEntryPage(PVOID PhysicalAddress)
+SWAPENTRY 
+MmGetSavedSwapEntryPage(PVOID PhysicalAddress)
 {
    ULONG Start = (ULONG)PhysicalAddress / PAGESIZE;
    SWAPENTRY SavedSwapEntry;

@@ -27,7 +27,8 @@
 #include <internal/v86m.h>
 #include <ddk/i386/tss.h>
 #include <internal/trap.h>
-		
+#include <internal/ps.h>
+			
 .globl _Ki386RetToV86Mode
 .globl _KiV86Complete
 	
@@ -65,7 +66,12 @@ _Ki386RetToV86Mode:
 	 * use to handle exceptions
 	 */
 	pushl	%ebx
-	
+
+	/*
+	 * Since we are going to fiddle with the stack pointer this must be
+	 * a critical section for this processor
+	 */
+
 	/*
 	 * The stack used for handling exceptions from v86 mode in this thread
 	 * will be the current stack adjusted so we don't overwrite the 
@@ -74,6 +80,18 @@ _Ki386RetToV86Mode:
 	movl    $_KiTss, %esi
 	movl	%esp, KTSS_ESP0(%esi)
 
+	/*
+	 * We also need to set the stack in the kthread structure
+	 */
+	movl	_CurrentThread, %esi
+	movl	KTHREAD_INITIAL_STACK(%esi), %edi
+	movl	%esp, KTHREAD_INITIAL_STACK(%esi)
+
+	/*
+	 * Save the old initial stack
+	 */
+	pushl	%edi
+	
 	/*
 	 * Create the stack frame for an iret to v86 mode
 	 */
@@ -109,26 +127,39 @@ _Ki386RetToV86Mode:
 	 * exception on the stack.
 	 */
 _KiV86Complete:
-        addl    $4, %esp        /* Ignore pointer to trap frame */    
-
 	/* Restore the original ebp */
 	movl	TF_ORIG_EBP(%esp), %ebp
 	
 	/* Get a pointer to the OUT_REGS structure */
 	movl	12(%ebp), %ebx
-	
+
+	/* Skip debug information and unsaved registers */
+	addl	$0x30, %esp	
+
+	/* Ignore 32-bit segment registers */
+	addl	$12, %esp
+
 	/* Save the vm86 registers into the OUT_REGS structure */
-	popl    KV86M_REGISTERS_EDI(%ebx)
-	popl    KV86M_REGISTERS_ESI(%ebx)
-	popl	KV86M_REGISTERS_EBP(%ebx)
-	addl    $4, %esp         /* Ignore ring0 esp */
-	popl	KV86M_REGISTERS_EBX(%ebx)
 	popl	KV86M_REGISTERS_EDX(%ebx)
 	popl	KV86M_REGISTERS_ECX(%ebx)
 	popl	KV86M_REGISTERS_EAX(%ebx)
-	addl    $4,  %esp       /* Ignore trap code */
-	addl	$16, %esp	/* Ignore 32-bit segment registers */
-	addl	$4, %esp	/* Ignore error code */
+
+	/* Ignore the previous mode */
+	addl	$4, %esp
+
+	/* Ignore old exception handler list */
+	addl	$4, %esp
+	
+	/* Ignore the 32-bit fs register */
+	addl	$4, %esp
+
+	popl	KV86M_REGISTERS_EDI(%ebx)
+	popl	KV86M_REGISTERS_ESI(%ebx)
+	popl	KV86M_REGISTERS_EBX(%ebx)
+	popl	KV86M_REGISTERS_EBP(%ebx)
+
+	/* Ignore error code */
+	addl	$4, %esp
 
 	popl	KV86M_REGISTERS_EIP(%ebx)
 	popl	KV86M_REGISTERS_CS(%ebx)
@@ -140,6 +171,29 @@ _KiV86Complete:
 	popl	KV86M_REGISTERS_FS(%ebx)
 	popl	KV86M_REGISTERS_GS(%ebx)
 
+	/*
+	 * We are going to fiddle with the stack so this must be a critical
+	 * section for this process
+	 */
+	cli
+
+	/*
+	 * Restore the initial stack
+	 */
+	popl	%eax
+	movl    $_KiTss, %esi
+	movl	%eax, KTSS_ESP0(%esi)
+
+	/*
+	 * We also need to set the stack in the kthread structure
+	 */
+	movl	$_CurrentThread, %esi
+	movl	KTHREAD_INITIAL_STACK(%esi), %edi
+	movl	%eax, KTHREAD_INITIAL_STACK(%esi)	
+
+	/* Exit the critical section */
+	sti
+	
 	/* Ignore IN_REGS pointer */
 	addl	$4, %esp
 	

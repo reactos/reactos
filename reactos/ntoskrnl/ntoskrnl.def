@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.100 2001/03/07 08:57:08 dwelch Exp $
+; $Id: ntoskrnl.def,v 1.101 2001/03/25 02:34:27 dwelch Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -542,7 +542,7 @@ NtSetInformationThread@16
 NtSetSecurityObject@12
 NtSetSystemTime@8
 NtUnlockFile@20
-;NtVdmControl@8 <--- ?
+NtVdmControl@8
 NtWaitForSingleObject@12
 NtWriteFile@36
 ;ObAssignSecurity@16

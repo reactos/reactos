@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.10 2000/07/07 01:16:18 phreak Exp $
+/* $Id: init.c,v 1.11 2001/03/25 02:34:30 dwelch Exp $
  * 
  * reactos/subsys/csrss/init.c
  *
@@ -34,6 +34,9 @@ HANDLE CsrSbApiPort = INVALID_HANDLE_VALUE;
 UNICODE_STRING CsrDirectoryName;
 
 extern HANDLE CsrssApiHeap;
+
+ULONG
+InitializeVideoAddressSpace(VOID);
 
 static NTSTATUS
 CsrParseCommandLine (
@@ -167,6 +170,9 @@ CsrServerInitialization (
        PrintString( "CSR: Unable to create console thread\n" );
        return FALSE;
      }
+
+   InitializeVideoAddressSpace();
+
    return TRUE;
 }
 

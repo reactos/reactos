@@ -1,4 +1,4 @@
-/* $Id: iospace.c,v 1.8 2001/02/10 22:51:10 dwelch Exp $
+/* $Id: iospace.c,v 1.9 2001/03/25 02:34:28 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -65,7 +65,8 @@ MmMapIoSpace (IN PHYSICAL_ADDRESS PhysicalAddress,
 				&Result,
 				NumberOfBytes,
 				0,
-				&marea);
+				&marea,
+				FALSE);
    if (!NT_SUCCESS(STATUS_SUCCESS))
      {
 	return (NULL);

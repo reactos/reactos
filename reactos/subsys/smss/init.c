@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.22 2001/02/02 20:48:38 ekohl Exp $
+/* $Id: init.c,v 1.23 2001/03/25 02:34:30 dwelch Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -45,6 +45,75 @@ PWSTR SmSystemEnvironment = NULL;
 
 
 /* FUNCTIONS ****************************************************************/
+
+static VOID
+SmCreatePagingFiles (VOID)
+{
+  UNICODE_STRING FileName;
+  ULONG ulCurrentSize;
+  ULONG i, j;
+  CHAR FileNameBufA[255];
+  ANSI_STRING FileNameA;
+  NTSTATUS Status;
+  HANDLE FileHandle;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  IO_STATUS_BLOCK Iosb;
+  LARGE_INTEGER Offset;
+  static CHAR Buffer[4096];
+  BOOL Found = FALSE;
+
+  for (i = 0; i < 4; i++)
+    {
+      for (j = 0; j < 4; j++)
+	{
+	  sprintf(FileNameBufA, "\\Device\\Harddisk%d\\Partition%d", i, j);
+	  RtlInitAnsiString(&FileNameA, FileNameBufA);
+	  RtlAnsiStringToUnicodeString(&FileName, &FileNameA, TRUE);
+	  InitializeObjectAttributes(&ObjectAttributes,
+				     &FileName,
+				     0,
+				     NULL,
+				     NULL);
+
+	  Status = ZwOpenFile(&FileHandle,
+			      FILE_ALL_ACCESS,
+			      &ObjectAttributes,
+			      &Iosb,
+			      0,
+			      0);
+	  if (!NT_SUCCESS(Status))
+	    {
+	      continue;
+	    }
+
+	  Offset.QuadPart = 0;
+	  Status = ZwReadFile(FileHandle,
+			      NULL,
+			      NULL,
+			      NULL,
+			      &Iosb,
+			      Buffer,
+			      4096,
+			      &Offset,
+			      NULL);
+	  if (!NT_SUCCESS(Status))
+	    {
+	      DbgPrint("SM: Failed to read first page of partition\n");
+	      continue;
+	    }
+
+	  if (memcmp(&Buffer[4096 - 10], "SWAP-SPACE", 10) == 0 ||
+	      memcmp(&Buffer[4096 - 10], "SWAPSPACE2", 10) == 0)
+	    {
+	      DbgPrint("SM: Found swap space at %s\n", FileNameA);
+	      Found = TRUE;
+	      break;
+	    }
+
+	  ZwClose(FileHandle);
+	}
+    }
+}
 
 #if 0
 static VOID
@@ -241,10 +310,8 @@ BOOL InitSessionManager (HANDLE	Children[])
    
    /* FIXME: Load the well known DLLs */
    
-#if 0
    /* Create paging files */
-   SmCreatePagingFiles ();
-#endif
+   //   SmCreatePagingFiles ();
    
    /* Load remaining registry hives */
    NtInitializeRegistry (FALSE);

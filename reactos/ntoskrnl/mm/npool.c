@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.43 2001/03/16 18:11:23 dwelch Exp $
+/* $Id: npool.c,v 1.44 2001/03/25 02:34:28 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -195,6 +195,10 @@ MiAddToTagHashTable(BLOCK_HDR* block)
 	  return;
 	}
       previous = current;
+      if ((PVOID)current->tag_next >= (PVOID)0xc1123160)
+	{
+	  DbgPrint("previous %x\n", previous);
+	}
       current = current->tag_next;
     }
   block->tag_next = NULL;

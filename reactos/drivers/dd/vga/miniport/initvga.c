@@ -96,10 +96,14 @@ VideoMode Mode3 = {
 void InitVGAMode()
 {
    int i;
+   VIDEO_X86_BIOS_ARGUMENTS vxba;
+   VP_STATUS vps;
 
    // FIXME: Use Vidport to map the memory properly
    vidmem = (char *)(0xd0000000 + 0xa0000);
-   setMode(Mode12);
+   vxba.Eax = 0x0012;
+   vps = VideoPortInt10(NULL, &vxba);
+   //   setMode(Mode12);
 
    WRITE_PORT_USHORT((PUSHORT)0x3C4, 0x0f02); // index=MASK MAP, write to all bitplanes
    i = vidmem[0];

@@ -27,74 +27,31 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_TRAP_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_TRAP_H
 
-#define TF_EDI          (0x0)
-#define TF_ESI          (0x4)
-#define TF_EBP          (0x8)
-#define TF_ESP          (0xC)
-#define TF_EBX          (0x10)
-#define TF_EDX          (0x14)
-#define TF_ECX          (0x18)
-#define TF_EAX          (0x1C)
-#define TF_TYPE         (0x20)
-#define TF_DS           (0x24)
-#define TF_ES           (0x28)
-#define TF_FS           (0x2C)
-#define TF_GS           (0x30)
-#define TF_ERROR_CODE   (0x34)
-#define TF_EIP          (0x38)
-#define TF_CS           (0x3C)
-#define TF_EFLAGS       (0x40)
-#define TF_ESP0         (0x44)
-#define TF_SS0          (0x48)
-#define TF_V86_ES       (0x4C)
-#define TF_V86_DS       (0x50)
-#define TF_V86_FS       (0x54)
-#define TF_V86_GS       (0x58)
-#define TF_REGS         (0x5C)
-#define TF_ORIG_EBP     (0x60)
+#define TF_SAVED_ORIG_STACK (0x8C)
+#define TF_REGS         (0x90)
+#define TF_ORIG_EBP     (0x94)
+
 
 #ifndef __ASM__
 
-struct trap_frame
+#include <internal/ke.h>
+
+typedef struct _KV86M_TRAP_FRAME
 {
-  ULONG edi;
-  ULONG esi; 
-  ULONG ebp;
-  ULONG esp; 
-  ULONG ebx;
-  ULONG edx; 
-  ULONG ecx;
-  ULONG eax;
-  ULONG type;
-  ULONG ds;
-  ULONG es;
-  ULONG fs;
-  ULONG gs;
-  ULONG error_code;
-  ULONG eip;
-  ULONG cs;
-  ULONG eflags;
-  ULONG esp0;
-  ULONG ss0;
-   
-   /*
-    * These members are only valid in v86 mode
-    */
-  ULONG v86_es;
-  ULONG v86_ds;
-  ULONG v86_fs;
-  ULONG v86_gs;
+  KTRAP_FRAME Tf;
   
+  ULONG SavedInitialStack;
+
   /*
    * These are put on the top of the stack by the routine that entered
    * v86 mode so the exception handlers can find the control information
    */
   struct _KV86M_REGISTERS* regs;     
   ULONG orig_ebp;
-};
+} KV86M_TRAP_FRAME, *PKV86M_TRAP_FRAME;
 
 ULONG
-KeV86Exception(struct trap_frame* tf, ULONG address);
+KeV86Exception(ULONG ExceptionNr, PKTRAP_FRAME Tf, ULONG address);
 
 #endif /* not __ASM__ */
 

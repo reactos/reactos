@@ -191,7 +191,7 @@ NtUnloadKey			ZwUnloadKey			  4
 NtUnlockFile			ZwUnlockFile			  20          
 NtUnlockVirtualMemory		ZwUnlockVirtualMemory		  16          
 NtUnmapViewOfSection		ZwUnmapViewOfSection		  8           
-NtVdmControl			ZwVdmControl			  8           
+NtVdmControl			ZwVdmControl			  8         
 NtWaitForMultipleObjects	ZwWaitForMultipleObjects	  20          
 NtWaitForSingleObject		ZwWaitForSingleObject		  12          
 NtWaitHighEventPair		ZwWaitHighEventPair		  4           

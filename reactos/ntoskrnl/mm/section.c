@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.51 2001/03/13 16:25:54 dwelch Exp $
+/* $Id: section.c,v 1.52 2001/03/25 02:34:28 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1485,7 +1485,8 @@ MmMapViewOfSegment(PEPROCESS Process,
 			      BaseAddress,
 			      ViewSize,
 			      Protect,
-			      &MArea);
+			      &MArea,
+			      FALSE);
    if (!NT_SUCCESS(Status))
      {
 	MmUnlockAddressSpace(AddressSpace);
@@ -1955,7 +1956,8 @@ MmAllocateSection (IN ULONG Length)
 				&Result,
 				Length,
 				0,
-				&marea);
+				&marea,
+				FALSE);
    if (!NT_SUCCESS(STATUS_SUCCESS))
      {
 	return (NULL);

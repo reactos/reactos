@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.32 2001/03/21 23:06:08 chorns Exp $
+/* $Id: mdl.c,v 1.33 2001/03/25 02:34:28 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -102,7 +102,8 @@ PVOID STDCALL MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
 			       &Base,
 			       Mdl->ByteCount + Mdl->ByteOffset,
 			       0,
-			       &Result);
+			       &Result,
+			       FALSE);
    if (!NT_SUCCESS(Status))
      {
 	MmUnlockAddressSpace(MmGetKernelAddressSpace());

@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.44 2001/03/16 18:11:23 dwelch Exp $
+/* $Id: virtual.c,v 1.45 2001/03/25 02:34:29 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -7,7 +7,7 @@
  * PROGRAMMER:  David Welch
  * UPDATE HISTORY:
  *              09/4/98: Created
- *              10/6/98: Corrections from Fatahi (i_fatahi@hotmail.com)
+ *              10/6/98: Corrections from Iwan Fatahi (i_fatahi@hotmail.com)
  *              30/9/98: Implemented ZwxxxVirtualMemory functions
  */
  
@@ -183,23 +183,81 @@ ULONG MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
 			     PVOID Address,
 			     PBOOLEAN Ul)
 {
-   PHYSICAL_ADDRESS PhysicalAddress;
+   ULONG PhysicalAddress;
+   BOOL WasDirty;
+   SWAPENTRY SwapEntry;
+   NTSTATUS Status;
+   PMDL Mdl;
    
+   /*
+    * Paging out code or readonly data is easy.
+    */
    if ((MemoryArea->Attributes & PAGE_READONLY) ||
-       (MemoryArea->Attributes & PAGE_EXECUTE_READ) ||
-       !MmIsPageDirty(PsGetCurrentProcess(), Address))
+       (MemoryArea->Attributes & PAGE_EXECUTE_READ))
      {
-	PhysicalAddress = MmGetPhysicalAddress(Address);
-	
-	MmRemovePageFromWorkingSet(AddressSpace->Process,
-				   Address);
-	MmDeleteVirtualMapping(PsGetCurrentProcess(), Address, FALSE);
-	MmDereferencePage((PVOID)PhysicalAddress.u.LowPart);
-	*Ul = TRUE;
-	return(1);
+       MmRemovePageFromWorkingSet(AddressSpace->Process, Address);
+       MmDeleteVirtualMapping(PsGetCurrentProcess(), Address, FALSE,
+			      NULL, &PhysicalAddress);
+       MmDereferencePage((PVOID)PhysicalAddress);
+       *Ul = TRUE;
+       return(1);
      }
-   *Ul = FALSE;
-   return(0);     
+
+   /*
+    * Otherwise this is read-write data
+    */
+   MmDeleteVirtualMapping(PsGetCurrentProcess(), Address, FALSE,
+			  &WasDirty, &PhysicalAddress);
+   if (!WasDirty)
+     {
+       MmRemovePageFromWorkingSet(AddressSpace->Process, Address);
+       MmDereferencePage((PVOID)PhysicalAddress);
+       *Ul = TRUE;
+       return(1);
+     }
+
+   /*
+    * If necessary, allocate an entry in the paging file for this page
+    */
+   SwapEntry = MmGetSavedSwapEntryPage((PVOID)PhysicalAddress);
+   if (SwapEntry == 0)
+     {
+       SwapEntry = MmAllocSwapPage();
+       if (SwapEntry == 0)
+	 {
+	   Status = MmCreateVirtualMapping(PsGetCurrentProcess(),   
+					   Address,
+					   MemoryArea->Attributes,
+					   PhysicalAddress);
+	   *Ul = FALSE;
+	   return(0);
+	 }
+     }
+   
+   /*
+    * Write the page to the pagefile
+    */
+   Mdl = MmCreateMdl(NULL, NULL, PAGESIZE);
+   MmBuildMdlFromPages(Mdl, &PhysicalAddress);
+   Status = MmWriteToSwapPage(SwapEntry, Mdl);
+   if (!NT_SUCCESS(Status))
+     {
+       DPRINT1("MM: Failed to write to swap page\n");
+       Status = MmCreateVirtualMapping(PsGetCurrentProcess(),   
+				       Address,
+				       MemoryArea->Attributes,
+				       PhysicalAddress);
+       *Ul = FALSE;
+       return(0);
+     }
+
+   /*
+    * Otherwise we have succeeded, free the page
+    */
+   MmRemovePageFromWorkingSet(AddressSpace->Process, Address);
+   MmDereferencePage((PVOID)PhysicalAddress);
+   *Ul = TRUE;
+   return(1);
 }
 
 NTSTATUS
@@ -291,6 +349,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
 	*/
        if (!NT_SUCCESS(PageOp->Status))
 	 {
+	   MmReleasePageOp(PageOp);
 	   return(Status);
 	 }
        MmLockAddressSpace(AddressSpace);
@@ -385,7 +444,7 @@ MmModifyAttributes(PMADDRESS_SPACE AddressSpace,
 	  PhysicalAddr = MmGetPhysicalAddress(BaseAddress + (i*PAGESIZE));
 	  MmDeleteVirtualMapping(AddressSpace->Process,
 				 BaseAddress + (i*PAGESIZE),
-				 FALSE);
+				 FALSE, NULL, NULL);
 	  if (PhysicalAddr.u.LowPart != 0)
 	    {
 	      MmRemovePageFromWorkingSet(AddressSpace->Process,
@@ -895,7 +954,7 @@ NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
    AddressSpace = &Process->AddressSpace;
    MmLockAddressSpace(AddressSpace);
    
-   if (BaseAddress != 0)
+   if (PBaseAddress != 0)
      {
 	MemoryArea = MmOpenMemoryAreaByAddress(&Process->AddressSpace,
 					       BaseAddress);
@@ -938,7 +997,8 @@ NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
 			       &BaseAddress,
 			       RegionSize,
 			       Protect,
-			       &MemoryArea);
+			       &MemoryArea,
+			       PBaseAddress != 0);
    
    if (!NT_SUCCESS(Status))
      {

@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.43 2001/03/18 19:35:11 dwelch Exp $
+/* $Id: zw.h,v 1.44 2001/03/25 02:34:27 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -5246,9 +5246,8 @@ NtSystemDebugControl(DEBUG_CONTROL_CODE ControlCode,
 
 NTSTATUS
 STDCALL
-NtVdmControl (
-	VOID
-	);
+NtVdmControl (ULONG ControlCode, PVOID ControlData);
+
 
 /* --- WIN32 --- */
 

@@ -1,4 +1,4 @@
-/* $Id: kmap.c,v 1.8 2001/03/16 18:11:23 dwelch Exp $
+/* $Id: kmap.c,v 1.9 2001/03/25 02:34:28 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -43,7 +43,7 @@ ExUnmapPage(PVOID Addr)
    DPRINT("i %x\n",i);
    
    KeAcquireSpinLock(&AllocMapLock, &oldIrql);
-   MmDeleteVirtualMapping(NULL, (PVOID)Addr, FALSE);
+   MmDeleteVirtualMapping(NULL, (PVOID)Addr, FALSE, NULL, NULL);
    clear_bit(i%32, &AllocMap[i/32]);
    KeReleaseSpinLock(&AllocMapLock, oldIrql);
 }
@@ -60,6 +60,36 @@ ExAllocatePage(VOID)
     }
 
   return(ExAllocatePageWithPhysPage(PhysPage));
+}
+
+NTSTATUS
+MiZeroPage(ULONG PhysPage)
+{
+  PVOID TempAddress;
+
+  TempAddress = ExAllocatePageWithPhysPage(PhysPage);
+  if (TempAddress == NULL)
+    {
+      return(STATUS_NO_MEMORY);
+    }
+  memset(TempAddress, 0, PAGESIZE);
+  ExUnmapPage(TempAddress);
+  return(STATUS_SUCCESS);
+}
+
+NTSTATUS
+MiCopyFromUserPage(ULONG DestPhysPage, PVOID SourceAddress)
+{
+  PVOID TempAddress;
+
+  TempAddress = ExAllocatePageWithPhysPage(DestPhysPage);
+  if (TempAddress == NULL)
+    {
+      return(STATUS_NO_MEMORY);
+    }
+  memcpy(TempAddress, SourceAddress, PAGESIZE);
+  ExUnmapPage(TempAddress);
+  return(STATUS_SUCCESS);
 }
 
 PVOID 

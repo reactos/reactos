@@ -1,4 +1,4 @@
-/* $Id: cont.c,v 1.9 2001/03/08 22:06:01 dwelch Exp $
+/* $Id: cont.c,v 1.10 2001/03/25 02:34:28 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -44,7 +44,8 @@ MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
 			       &BaseAddress,
 			       NumberOfBytes,
 			       0,
-			       &MArea);
+			       &MArea,
+			       FALSE);
    if (!NT_SUCCESS(Status))
      {
 	return(NULL);

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.11 2001/01/14 15:27:15 ekohl Exp $
+# $Id: makefile,v 1.12 2001/03/25 02:34:30 dwelch Exp $
 #
 # CSRSS: Client/server runtime subsystem
 #
@@ -14,7 +14,7 @@ OBJECTS_API = api/process.o api/wapi.o api/conio.o api/handle.o
 
 OBJECTS_SBAPI =
 
-OBJECTS_MISC = $(TARGET).o init.o print.o $(TARGET).coff 
+OBJECTS_MISC = $(TARGET).o init.o print.o video.o $(TARGET).coff 
 
 OBJECTS = $(OBJECTS_API) $(OBJECTS_SBAPI) $(OBJECTS_MISC)
 

@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.14 2001/03/16 18:11:23 dwelch Exp $
+/* $Id: mminit.c,v 1.15 2001/03/25 02:34:28 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -100,7 +100,8 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
 		      &BaseAddress,
 		      Length,
 		      0,
-		      &kernel_text_desc);
+		      &kernel_text_desc,
+		      FALSE);
    
    Length = PAGE_ROUND_UP(((ULONG)&_bss_end__)) - 
             PAGE_ROUND_UP(((ULONG)&_text_end__));
@@ -114,7 +115,8 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
 		      &BaseAddress,
 		      Length,
 		      0,
-		      &kernel_data_desc);
+		      &kernel_data_desc,
+		      FALSE);
    
    BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG)&_bss_end__));
 //   Length = ParamLength;
@@ -125,7 +127,8 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
 		      &BaseAddress,
 		      Length,
 		      0,
-		      &kernel_param_desc);
+		      &kernel_param_desc,
+		      FALSE);
 
    BaseAddress = (PVOID)(LastKernelAddress + PAGESIZE);
    Length = NONPAGED_POOL_SIZE;
@@ -135,7 +138,8 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
 		      &BaseAddress,
 		      Length,
 		      0,
-		      &kernel_pool_desc);
+		      &kernel_pool_desc,
+		      FALSE);
    
    BaseAddress = (PVOID)KERNEL_SHARED_DATA_BASE;
    Length = PAGESIZE;
@@ -145,7 +149,8 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
 		      &BaseAddress,
 		      Length,
 		      0,
-		      &kernel_shared_data_desc);
+		      &kernel_shared_data_desc,
+		      FALSE);
    MmSharedDataPagePhysicalAddress = MmAllocPage(0);
    Status = MmCreateVirtualMapping(NULL,
 				   (PVOID)KERNEL_SHARED_DATA_BASE,
@@ -257,7 +262,7 @@ VOID MmInit1(ULONG FirstKrnlPhysAddr,
 	i<(KERNEL_BASE + PAGE_TABLE_SIZE); 
 	i=i+PAGESIZE)
      {
-	MmDeleteVirtualMapping(NULL, (PVOID)(i), FALSE);
+	MmDeleteVirtualMapping(NULL, (PVOID)(i), FALSE, NULL, NULL);
      }
    DPRINT("Almost done MmInit()\n");
    

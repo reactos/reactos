@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.21 2001/03/16 18:11:21 dwelch Exp $
+/* $Id: view.c,v 1.22 2001/03/25 02:34:27 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -167,7 +167,8 @@ CcRequestCacheSegment(PBCB Bcb,
 		      &current->BaseAddress,
 		      Bcb->CacheSegmentSize,
 		      PAGE_READWRITE,
-		      (PMEMORY_AREA*)&current->MemoryArea);
+		      (PMEMORY_AREA*)&current->MemoryArea,
+		      FALSE);
    current->Valid = FALSE;
    current->FileOffset = FileOffset;
    current->Bcb = Bcb;

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.59 2001/03/18 19:35:14 dwelch Exp $
+/* $Id: process.c,v 1.60 2001/03/25 02:34:29 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -468,7 +468,8 @@ NtCreateProcess (OUT PHANDLE ProcessHandle,
 			       &BaseAddress,
 			       PAGESIZE,
 			       PAGE_READONLY,
-			       &MemoryArea);
+			       &MemoryArea,
+			       FALSE);
    MmUnlockAddressSpace(&Process->AddressSpace);
    if (!NT_SUCCESS(Status))
      {

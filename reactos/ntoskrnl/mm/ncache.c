@@ -1,4 +1,4 @@
-/* $Id: ncache.c,v 1.9 2001/03/08 22:06:02 dwelch Exp $
+/* $Id: ncache.c,v 1.10 2001/03/25 02:34:28 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -60,7 +60,8 @@ MmAllocateNonCachedMemory(IN ULONG NumberOfBytes)
 				&Result,
 				NumberOfBytes,
 				0,
-				&marea);
+				&marea,
+				FALSE);
    if (!NT_SUCCESS(Status))
      {
 	return (NULL);

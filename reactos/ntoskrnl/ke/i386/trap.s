@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: trap.s,v 1.8 2001/03/22 11:14:22 dwelch Exp $
+/* $Id: trap.s,v 1.9 2001/03/25 02:34:28 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/trap.s
@@ -80,7 +80,7 @@ _KiTrapProlog:
 	pushl	%fs
 
 	/* 
-	 * Check that the PCR exits, very early in the boot process it may 
+	 * Check that the PCR exists, very early in the boot process it may 
 	 * not 
 	 */
 	cmpl	$0, %ss:_KiPcrInitDone

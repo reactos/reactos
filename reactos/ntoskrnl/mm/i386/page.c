@@ -1,6 +1,23 @@
-/* $Id: page.c,v 1.23 2001/03/16 18:11:24 dwelch Exp $
+/*
+ *  ReactOS kernel
+ *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
  *
- * COPYRIGHT:   See COPYING in the top directory
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: page.c,v 1.24 2001/03/25 02:34:29 dwelch Exp $
+ *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
  * PURPOSE:     low level memory managment manipulation
@@ -318,20 +335,31 @@ ULONG MmGetPhysicalAddressForProcess(PEPROCESS Process,
    return(PAGE_MASK(PageEntry));
 }
 
-VOID MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage)
+VOID
+MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage,
+		       BOOL* WasDirty, ULONG* PhysicalAddr)
 /*
-` * FUNCTION: Delete a virtual mapping 
+ * FUNCTION: Delete a virtual mapping 
  */
 {
-   PULONG Pte;
+   ULONG Pte;
    PULONG Pde;
    PEPROCESS CurrentProcess = PsGetCurrentProcess();
    BOOLEAN WasValid;
 
+   /*
+    * If we are setting a page in another process we need to be in its
+    * context.
+    */
    if (Process != NULL && Process != CurrentProcess)
      {
 	KeAttachProcess(Process);
      }
+
+   /*
+    * Set the page directory entry, we may have to copy the entry from
+    * the global page directory.
+    */
    Pde = ADDR_TO_PDE(Address);
    if ((*Pde) == 0 && 
        MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] != 0)
@@ -347,17 +375,24 @@ VOID MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage)
 	  }	
 	return;
      }
-   Pte = ADDR_TO_PTE(Address);
-   WasValid = (PAGE_MASK(*Pte) != 0);
+
+   /*
+    * Atomically set the entry to zero and get the old value.
+    */
+   Pte = (ULONG)InterlockedExchange((PLONG)ADDR_TO_PTE(Address), 0);
+   WasValid = (PAGE_MASK(Pte) != 0);
    if (WasValid)
      {
-       MmMarkPageUnmapped((PVOID)PAGE_MASK(*Pte));
+       MmMarkPageUnmapped((PVOID)PAGE_MASK(Pte));
      }
    if (FreePage && WasValid)
      {
-        MmDereferencePage((PVOID)PAGE_MASK(*Pte));
+        MmDereferencePage((PVOID)PAGE_MASK(Pte));
      }
-   *Pte = 0;
+
+   /*
+    * Decrement the reference count for this page table.
+    */
    if (Process != NULL && WasValid &&
        Process->AddressSpace.PageTableRefCountTable != NULL &&
        ADDR_TO_PAGE_TABLE(Address) < 768)
@@ -374,9 +409,25 @@ VOID MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage)
 	  }
 #endif
      }
+
+   /*
+    * If necessary go back to the original context
+    */
    if (Process != NULL && Process != CurrentProcess)
      {
 	KeDetachProcess();
+     }
+
+   /*
+    * Return some information to the caller
+    */
+   if (WasDirty != NULL)
+     {
+       *WasDirty = Pte & PA_DIRTY;
+     }
+   if (PhysicalAddr != NULL)
+     {
+       *PhysicalAddr = PAGE_MASK(Pte);
      }
 }
 
@@ -481,6 +532,32 @@ PULONG MmGetPageEntry(PVOID PAddress)
 BOOLEAN MmIsPageDirty(PEPROCESS Process, PVOID Address)
 {
    return((MmGetPageEntryForProcess(Process, Address)) & PA_DIRTY);
+}
+
+BOOLEAN 
+MmIsAccessedAndResetAccessPage(PEPROCESS Process, PVOID Address)
+{
+   PULONG PageEntry;
+   PEPROCESS CurrentProcess = PsGetCurrentProcess();
+   BOOLEAN Accessed;
+
+   if (Process != CurrentProcess)
+     {
+	KeAttachProcess(Process);
+     }
+   PageEntry = MmGetPageEntry(Address);
+   Accessed = (*PageEntry) & PA_ACCESSED;
+   if (Accessed)
+     {
+       (*PageEntry) = (*PageEntry) & (~PA_ACCESSED);
+       FLUSH_TLB;
+     }
+   if (Process != CurrentProcess)
+     {
+	KeDetachProcess();
+     }
+
+   return(Accessed);
 }
 
 VOID MmSetCleanPage(PEPROCESS Process, PVOID Address)

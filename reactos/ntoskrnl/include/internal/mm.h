@@ -136,6 +136,15 @@ typedef struct
      } Data;
 } MEMORY_AREA, *PMEMORY_AREA;
 
+typedef struct _KCIRCULAR_QUEUE
+{
+  ULONG First;
+  ULONG Last;
+  ULONG CurrentSize;
+  ULONG MaximumSize;  
+  PVOID* Mem;
+} KCIRCULAR_QUEUE, *PKCIRCULAR_QUEUE;
+
 typedef struct _MADDRESS_SPACE
 {
   LIST_ENTRY MAreaListHead;
@@ -143,11 +152,7 @@ typedef struct _MADDRESS_SPACE
   ULONG LowestAddress;
   struct _EPROCESS* Process;
   PMEMORY_AREA WorkingSetArea;
-  ULONG WorkingSetSize;
-  ULONG WorkingSetLruFirst;
-  ULONG WorkingSetLruLast;
-  ULONG WorkingSetPagesAllocated;
-  ULONG WorkingSetMaximumLength;
+  KCIRCULAR_QUEUE WSQueue;
   PUSHORT PageTableRefCountTable;
   ULONG PageTableRefCountTableSize;
 } MADDRESS_SPACE, *PMADDRESS_SPACE;
@@ -169,7 +174,8 @@ NTSTATUS MmCreateMemoryArea(struct _EPROCESS* Process,
 			    PVOID* BaseAddress,
 			    ULONG Length,
 			    ULONG Attributes,
-			    MEMORY_AREA** Result);
+			    MEMORY_AREA** Result,
+			    BOOL FixedAddress);
 MEMORY_AREA* MmOpenMemoryAreaByAddress(PMADDRESS_SPACE AddressSpace, 
 				       PVOID Address);
 NTSTATUS MmInitMemoryAreas(VOID);
@@ -208,9 +214,15 @@ NTSTATUS MmCopyMmInfo(struct _EPROCESS* Src,
 		      struct _EPROCESS* Dest);
 NTSTATUS MmReleaseMmInfo(struct _EPROCESS* Process);
 NTSTATUS Mmi386ReleaseMmInfo(struct _EPROCESS* Process);
-VOID MmDeleteVirtualMapping(struct _EPROCESS* Process, 
-			    PVOID Address, 
-			    BOOL FreePage);
+VOID
+MmDeleteVirtualMapping(struct _EPROCESS* Process, 
+		       PVOID Address, 
+		       BOOL FreePage,
+		       BOOL* WasDirty,
+		       ULONG* PhysicalPage);
+
+#define MM_PAGE_CLEAN     (0)
+#define MM_PAGE_DIRTY     (1)
 
 VOID MmBuildMdlFromPages(PMDL Mdl, PULONG Pages);
 PVOID MmGetMdlPageAddress(PMDL Mdl, PVOID Offset);
@@ -433,5 +445,13 @@ typedef struct _MM_IMAGE_SECTION_OBJECT
 
 VOID 
 MmFreeVirtualMemory(struct _EPROCESS* Process, PMEMORY_AREA MemoryArea);
+NTSTATUS
+MiCopyFromUserPage(ULONG DestPhysPage, PVOID SourceAddress);
+NTSTATUS
+MiZeroPage(ULONG PhysPage);
+BOOLEAN 
+MmIsAccessedAndResetAccessPage(struct _EPROCESS* Process, PVOID Address);
+SWAPENTRY 
+MmGetSavedSwapEntryPage(PVOID PhysicalAddress);
 
 #endif

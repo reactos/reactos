@@ -1,6 +1,23 @@
-/* $Id: pagefile.c,v 1.10 2001/02/06 00:11:19 dwelch Exp $
+/*
+ *  ReactOS kernel
+ *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
  *
- * COPYRIGHT:       See COPYING in the top level directory
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: pagefile.c,v 1.11 2001/03/25 02:34:28 dwelch Exp $
+ *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
  * PURPOSE:         Paging file functions
@@ -40,13 +57,16 @@ typedef struct _PAGINGFILE
 
 /* List of paging files, both used and free */
 static PPAGINGFILE PagingFileList[MAX_PAGING_FILES];
+
 /* Lock for examining the list of paging files */
 static KSPIN_LOCK PagingFileListLock;
 
 /* Number of pages that are available for swapping */
 static ULONG MiFreeSwapPages;
+
 /* Number of pages that have been allocated for swapping */
 static ULONG MiUsedSwapPages;
+
 /* 
  * Number of pages that have been reserved for swapping but not yet allocated 
  */
@@ -58,6 +78,7 @@ static ULONG MiReservedSwapPages;
  * reserved. Setting this to zero turns off commit checking altogether.
  */
 #define MM_PAGEFILE_COMMIT_RATIO      (1)
+
 /*
  * Number of pages that can be used for potentially swapable memory without
  * pagefile space being reserved. The intention is that is allows smss

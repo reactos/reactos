@@ -1,6 +1,23 @@
-/* $Id: wset.c,v 1.8 2001/03/18 21:28:30 dwelch Exp $
+/*
+ *  ReactOS kernel
+ *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: wset.c,v 1.9 2001/03/25 02:34:29 dwelch Exp $
  * 
- * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/wset.c
  * PURPOSE:         Manages working sets
@@ -20,12 +37,76 @@
 
 /* FUNCTIONS *****************************************************************/
 
-PVOID MmGetDirtyPagesFromWorkingSet(struct _EPROCESS* Process)
+VOID
+KiInitializeCircularQueue(PKCIRCULAR_QUEUE Queue, ULONG MaximumSize, 
+			  PVOID* Mem)
+{
+  Queue->MaximumSize = MaximumSize;
+  Queue->CurrentSize = 0;
+  Queue->First = Queue->Last = 0;
+  Queue->Mem = Mem;
+}
+
+VOID
+KiInsertItemCircularQueue(PKCIRCULAR_QUEUE Queue, PVOID Item)
+{
+  Queue->Mem[Queue->Last] = Item;
+  Queue->Last = (Queue->Last + 1) % Queue->MaximumSize;
+  Queue->CurrentSize++;
+}
+
+VOID
+KiRemoveItemCircularQueue(PKCIRCULAR_QUEUE Queue, PVOID Item)
+{
+  ULONG i, j;
+
+  j = Queue->First;
+  for (i = 0; i < Queue->CurrentSize; i++)
+    {
+      if (Queue->Mem[j] == Item)
+	{
+	  if (j != Queue->First)
+	    {
+	      if (j > 0 && Queue->First <= j)
+		{
+		  memmove(&Queue->Mem[Queue->First + 1], 
+			  &Queue->Mem[Queue->First],
+			  sizeof(PVOID) * (j - Queue->First));
+		}
+	      else if (j > 0 && Queue->First > j)
+		{
+		  memmove(&Queue->Mem[1], &Queue->Mem[0],
+			  sizeof(PVOID) * j);
+		  Queue->Mem[0] = Queue->Mem[Queue->MaximumSize - 1];
+		  memmove(&Queue[Queue->First + 1], &Queue[Queue->First],
+			  sizeof(PVOID) * 
+			  ((Queue->MaximumSize - 1) - Queue->First));
+		}
+	      else if (j == 0)
+		{
+		  Queue->Mem[0] = Queue->Mem[Queue->MaximumSize];
+		  memmove(&Queue[Queue->First + 1], &Queue[Queue->First],
+			  sizeof(PVOID) * 
+			  ((Queue->MaximumSize - 1) - Queue->First));
+		}
+	    }
+	  Queue->First = (Queue->First + 1) % Queue->MaximumSize;
+	  Queue->CurrentSize--;
+	  return;
+	}
+      j = (j + 1) % Queue->MaximumSize;
+    }
+  KeBugCheck(0);
+}
+
+PVOID 
+MmGetDirtyPagesFromWorkingSet(struct _EPROCESS* Process)
 {
    return(NULL);
 }
 
-VOID MmLockWorkingSet(PEPROCESS Process)
+VOID 
+MmLockWorkingSet(PEPROCESS Process)
 {
    (VOID)KeWaitForMutexObject(&Process->WorkingSetLock,
 			      0,
@@ -49,7 +130,8 @@ MmInitializeWorkingSet(PEPROCESS Process, PMADDRESS_SPACE AddressSpace)
 
   /*
    * The maximum number of pages in the working set is the maximum
-   * of the size of physical memory and the size of the user address space
+   * of the size of physical memory and the size of the user address space.
+   * In either case the maximum size is 3Mb.
    */
   MaximumLength = MmStats.NrTotalPages - MmStats.NrReservedPages;
   MaximumLength = min(MaximumLength, KERNEL_BASE / PAGESIZE);
@@ -68,15 +150,15 @@ MmInitializeWorkingSet(PEPROCESS Process, PMADDRESS_SPACE AddressSpace)
 			      &BaseAddress,
 			      MaximumLength,
 			      0,
-			      &AddressSpace->WorkingSetArea);
+			      &AddressSpace->WorkingSetArea,
+			      FALSE);
   if (!NT_SUCCESS(Status))
     {
       KeBugCheck(0);
     }
-  AddressSpace->WorkingSetSize = 0;
-  AddressSpace->WorkingSetLruFirst = 0;
-  AddressSpace->WorkingSetLruLast = 0;
-  AddressSpace->WorkingSetMaximumLength = MaximumLength;
+  KiInitializeCircularQueue(&Process->AddressSpace.WSQueue,
+			    MaximumLength,
+			    (PVOID*)BaseAddress);
   KeInitializeMutex(&Process->WorkingSetLock, 1);
   Process->WorkingSetPage = BaseAddress;
   Status = MmCreateVirtualMapping(NULL,
@@ -90,10 +172,11 @@ MmInitializeWorkingSet(PEPROCESS Process, PMADDRESS_SPACE AddressSpace)
   memset(Process->WorkingSetPage, 0, 4096);
 }
 
-ULONG MmPageOutPage(PMADDRESS_SPACE AddressSpace,
-		    PMEMORY_AREA MArea,
-		    PVOID Address,
-		    PBOOLEAN Ul)
+ULONG 
+MmPageOutPage(PMADDRESS_SPACE AddressSpace,
+	      PMEMORY_AREA MArea,
+	      PVOID Address,
+	      PBOOLEAN Ul)
 {
    ULONG Count;
    
@@ -122,35 +205,61 @@ ULONG MmPageOutPage(PMADDRESS_SPACE AddressSpace,
    return(0);
 }
 
+VOID
+MmLruAdjustWorkingSet(PEPROCESS Process)
+{
+  ULONG i, j;
+  PVOID CurrentAddress;
+
+  MmLockWorkingSet(Process);
+
+  j = Process->AddressSpace.WSQueue.First;
+  for (i = 0; i < Process->AddressSpace.WSQueue.CurrentSize; i++)
+    {
+      CurrentAddress = Process->AddressSpace.WSQueue.Mem[j];
+      if (MmIsAccessedAndResetAccessPage(Process, CurrentAddress))
+	{
+	  DbgPrint("L");
+	  KiRemoveItemCircularQueue(&Process->AddressSpace.WSQueue,
+				    CurrentAddress);
+	  KiInsertItemCircularQueue(&Process->AddressSpace.WSQueue,
+				    CurrentAddress);
+	}
+      j = (j + 1) % Process->AddressSpace.WSQueue.MaximumSize;
+    }
+
+  MmUnlockWorkingSet(Process);
+}
+
 ULONG 
 MmTrimWorkingSet(PEPROCESS Process, ULONG ReduceHint)
+     /*
+      * Reduce the size of the working set of a process
+      */
 {
    ULONG i, j;
    PMADDRESS_SPACE AddressSpace;
-   PVOID* WSet;
    ULONG Count;
    BOOLEAN Ul;
    
    MmLockWorkingSet(Process);
    
-   WSet = (PVOID*)Process->WorkingSetPage;
    AddressSpace = &Process->AddressSpace;
    
    Count = 0;
-   j = AddressSpace->WorkingSetLruFirst;
+   j = AddressSpace->WSQueue.First;
    
-   for (i = 0; i < AddressSpace->WorkingSetSize; )
+   for (i = 0; i < AddressSpace->WSQueue.CurrentSize; )
      {
 	PVOID Address;
 	PMEMORY_AREA MArea;
 	
-	Address = WSet[j];
+	Address = AddressSpace->WSQueue.Mem[j];
 		
 	MArea = MmOpenMemoryAreaByAddress(AddressSpace, Address);
-	
 	if (MArea == NULL)
 	  {
-	     KeBugCheck(0);
+	    KeBugCheck(0);
 	  }
 	
 	Count = Count + MmPageOutPage(AddressSpace, MArea, Address, &Ul);
@@ -159,12 +268,12 @@ MmTrimWorkingSet(PEPROCESS Process, ULONG ReduceHint)
 	  {
 	     MmLockWorkingSet(Process);
 	     
-	     j = AddressSpace->WorkingSetLruFirst;
+	     j = AddressSpace->WSQueue.First;
 	     i = 0;
 	  }
 	else
 	  {
-	     j = (j + 1) % AddressSpace->WorkingSetMaximumLength;
+	     j = (j + 1) % AddressSpace->WSQueue.MaximumSize;
 	     i++;
 	  }
 			
@@ -178,84 +287,51 @@ MmTrimWorkingSet(PEPROCESS Process, ULONG ReduceHint)
    return(Count);
 }
 
-VOID 
+VOID
 MmRemovePageFromWorkingSet(PEPROCESS Process, PVOID Address)
      /*
-      * Remove a page from a process's working set
+      * Remove a page from a process's working set.
       */
 {
-   ULONG i;
-   PMADDRESS_SPACE AddressSpace;
-   PVOID* WSet;
-   ULONG j;
-   
    MmLockWorkingSet(Process);
 
-   WSet = (PVOID*)Process->WorkingSetPage;
-   AddressSpace = &Process->AddressSpace;
-   
-   j = AddressSpace->WorkingSetLruFirst;
-   for (i = 0; i < AddressSpace->WorkingSetSize; i++)
-     {
-	if (WSet[j] == Address)
-	  {
-	     WSet[j] = WSet[AddressSpace->WorkingSetLruLast - 1];
-	     if (AddressSpace->WorkingSetLruLast != 0)
-	       {
-		 AddressSpace->WorkingSetLruLast--;
-	       }
-	     else
-	       {
-		  AddressSpace->WorkingSetLruLast = 
-		    AddressSpace->WorkingSetMaximumLength;
-	       }
-	     MmUnlockWorkingSet(Process);
-	     return;
-	  }
-	j = (j + 1) % AddressSpace->WorkingSetMaximumLength;
-     }
-   KeBugCheck(0);
+   KiRemoveItemCircularQueue(&Process->AddressSpace.WSQueue, Address);
+
+   MmUnlockWorkingSet(Process);
 }
 
 VOID
-MmAddPageToWorkingSet(PEPROCESS Process,
-		      PVOID Address)
+MmAddPageToWorkingSet(PEPROCESS Process, PVOID Address)
      /*
-      * Insert a page into a process's working set 
+      * insert a page into a process's working set 
       */
 {
-   PVOID* WSet;
    PMADDRESS_SPACE AddressSpace;
-   BOOLEAN Present;
-   ULONG Current;
    PVOID NextAddress;
 
    AddressSpace = &Process->AddressSpace;
    
    /*
-    * This can't happen unless there is a bug 
+    * This can't happen unless there is a bug.
     */
-   if (AddressSpace->WorkingSetSize == AddressSpace->WorkingSetMaximumLength)
+   if (AddressSpace->WSQueue.CurrentSize == AddressSpace->WSQueue.MaximumSize)
      {
        KeBugCheck(0);
      }
 
    /*
-    * Lock the working set
+    * lock the working set
     */
    MmLockWorkingSet(Process);
-   
-   WSet = (PVOID*)Process->WorkingSetPage;
-   
-   Current = AddressSpace->WorkingSetLruLast;
-   
+
    /*
-    * If we are growing the working set then check to see if we need
+    * if we are growing the working set then check to see if we need
     * to allocate a page
-    */
-   NextAddress = (PVOID)PAGE_ROUND_DOWN((PVOID)&WSet[Current]);
-   Present = MmIsPagePresent(NULL, NextAddress);
-   if (!Present)
+    */   
+   NextAddress = 
+     (PVOID)PAGE_ROUND_DOWN((PVOID)&
+		AddressSpace->WSQueue.Mem[AddressSpace->WSQueue.Last]);
+   if (!MmIsPagePresent(NULL, NextAddress))
      {
        PVOID Page;
        NTSTATUS Status;
@@ -280,11 +356,7 @@ MmAddPageToWorkingSet(PEPROCESS Process,
    /*
     * Insert the page in the working set
     */
-   WSet[Current] = Address;  
-
-   AddressSpace->WorkingSetLruLast = 
-     (Current + 1) % AddressSpace->WorkingSetMaximumLength;
-   AddressSpace->WorkingSetSize++;
+   KiInsertItemCircularQueue(&AddressSpace->WSQueue, Address);
 
    /*
     * And unlock

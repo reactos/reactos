@@ -32,9 +32,11 @@ NtEarlyInitVdm(VOID)
   memcpy(OrigIVT, (PVOID)0x0, 1024);
 }
 
-NTSTATUS STDCALL NtVdmControl(VOID)
+NTSTATUS STDCALL NtVdmControl(ULONG ControlCode,
+			      PVOID ControlData)
 {
-   UNIMPLEMENTED;
+  memcpy(ControlData, OrigIVT, 1024);
+  return(STATUS_SUCCESS);
 }
 
 /* EOF */
