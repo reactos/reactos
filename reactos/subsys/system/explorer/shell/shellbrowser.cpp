@@ -72,6 +72,8 @@ ShellBrowserChild::~ShellBrowserChild()
 
 LRESULT ShellBrowserChild::Init(LPCREATESTRUCT pcs)
 {
+	CONTEXT("ShellBrowserChild::Init()");
+
 	if (super::Init(pcs))
 		return 1;
 
@@ -105,6 +107,8 @@ LRESULT ShellBrowserChild::Init(LPCREATESTRUCT pcs)
 
 void ShellBrowserChild::InitializeTree()
 {
+	CONTEXT("ShellBrowserChild::InitializeTree()");
+
 	TreeView_SetImageList(_left_hwnd, _himlSmall, TVSIL_NORMAL);
 	TreeView_SetScrollTime(_left_hwnd, 100);
 
@@ -150,6 +154,8 @@ void ShellBrowserChild::InitializeTree()
 
 bool ShellBrowserChild::InitDragDrop()
 {
+	CONTEXT("ShellBrowserChild::InitDragDrop()");
+
 	_pDropTarget = new TreeDropTarget(_left_hwnd);
 
 	if (!_pDropTarget)
@@ -180,6 +186,8 @@ bool ShellBrowserChild::InitDragDrop()
 
 void ShellBrowserChild::OnTreeItemRClick(int idCtrl, LPNMHDR pnmh)
 {
+	CONTEXT("ShellBrowserChild::OnTreeItemRClick()");
+
 	TVHITTESTINFO tvhti;
 
 	GetCursorPos(&tvhti.pt);
@@ -196,6 +204,8 @@ void ShellBrowserChild::OnTreeItemRClick(int idCtrl, LPNMHDR pnmh)
 
 void ShellBrowserChild::Tree_DoItemMenu(HWND hwndTreeView, HTREEITEM hItem, LPPOINT pptScreen)
 {
+	CONTEXT("ShellBrowserChild::Tree_DoItemMenu()");
+
 	LPARAM itemData = TreeView_GetItemData(hwndTreeView, hItem);
 
 	if (itemData) {
@@ -273,6 +283,8 @@ void ShellBrowserChild::Tree_DoItemMenu(HWND hwndTreeView, HTREEITEM hItem, LPPO
 
 void ShellBrowserChild::OnTreeGetDispInfo(int idCtrl, LPNMHDR pnmh)
 {
+	CONTEXT("ShellBrowserChild::OnTreeGetDispInfo()");
+
 	LPNMTVDISPINFO lpdi = (LPNMTVDISPINFO)pnmh;
 	ShellEntry* entry = (ShellEntry*)lpdi->item.lParam;
 
@@ -307,6 +319,8 @@ void ShellBrowserChild::OnTreeGetDispInfo(int idCtrl, LPNMHDR pnmh)
 
 void ShellBrowserChild::OnTreeItemExpanding(int idCtrl, LPNMTREEVIEW pnmtv)
 {
+	CONTEXT("ShellBrowserChild::OnTreeItemExpanding()");
+
 	if (pnmtv->action == TVE_COLLAPSE)
         TreeView_Expand(_left_hwnd, pnmtv->itemNew.hItem, TVE_COLLAPSE|TVE_COLLAPSERESET);
     else if (pnmtv->action == TVE_EXPAND) {
@@ -330,6 +344,8 @@ void ShellBrowserChild::OnTreeItemExpanding(int idCtrl, LPNMTREEVIEW pnmtv)
 
 int ShellBrowserChild::InsertSubitems(HTREEITEM hParentItem, Entry* entry, IShellFolder* pParentFolder)
 {
+	CONTEXT("ShellBrowserChild::InsertSubitems()");
+
 	WaitCursor wait;
 
 	int cnt = 0;
@@ -381,6 +397,8 @@ int ShellBrowserChild::InsertSubitems(HTREEITEM hParentItem, Entry* entry, IShel
 
 void ShellBrowserChild::OnTreeItemSelected(int idCtrl, LPNMTREEVIEW pnmtv)
 {
+	CONTEXT("ShellBrowserChild::OnTreeItemSelected()");
+
 	ShellEntry* entry = (ShellEntry*)pnmtv->itemNew.lParam;
 
 	_last_sel = pnmtv->itemNew.hItem;
@@ -402,6 +420,8 @@ void ShellBrowserChild::OnTreeItemSelected(int idCtrl, LPNMTREEVIEW pnmtv)
 
 void ShellBrowserChild::UpdateFolderView(IShellFolder* folder)
 {
+	CONTEXT("ShellBrowserChild::UpdateFolderView()");
+
 	FOLDERSETTINGS fs;
 	IShellView* pLastShellView = _pShellView;
 
@@ -467,6 +487,8 @@ int ShellBrowserChild::Notify(int id, NMHDR* pnmh)
 
 HRESULT ShellBrowserChild::OnDefaultCommand(LPIDA pIDList)
 {
+	CONTEXT("ShellBrowserChild::OnDefaultCommand()");
+
 	if (pIDList->cidl>=1) {
 		if (_left_hwnd) {	// explorer mode
 			if (_last_sel) {
@@ -506,6 +528,8 @@ HRESULT ShellBrowserChild::OnDefaultCommand(LPIDA pIDList)
 
 bool ShellBrowserChild::expand_folder(ShellDirectory* entry)
 {
+	CONTEXT("ShellBrowserChild::expand_folder()");
+
 	//HTREEITEM hitem_sel = TreeView_GetSelection(_left_hwnd);
 	if (!_last_sel)
 		return false;

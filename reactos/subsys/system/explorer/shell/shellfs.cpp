@@ -37,6 +37,8 @@
 
 bool ShellDirectory::fill_w32fdata_shell(LPCITEMIDLIST pidl, SFGAOF attribs, WIN32_FIND_DATA* pw32fdata, BY_HANDLE_FILE_INFORMATION* pbhfi, bool do_access)
 {
+	CONTEXT("ShellDirectory::fill_w32fdata_shell()");
+
 	bool bhfi_valid = false;
 
 	if (do_access && !( (attribs&SFGAO_FILESYSTEM) && SUCCEEDED(
@@ -107,6 +109,8 @@ bool ShellDirectory::fill_w32fdata_shell(LPCITEMIDLIST pidl, SFGAOF attribs, WIN
 
 ShellPath ShellEntry::create_absolute_pidl() const
 {
+	CONTEXT("ShellEntry::create_absolute_pidl()");
+
 	if (_up/* && _up->_etype==ET_SHELL*/) {
 		ShellDirectory* dir = static_cast<ShellDirectory*>(_up);
 
@@ -130,6 +134,8 @@ void ShellEntry::get_path(PTSTR path) const
  // get full path of a shell folder
 void ShellDirectory::get_path(PTSTR path) const
 {
+	CONTEXT("ShellDirectory::get_path()");
+
 	path[0] = TEXT('\0');
 
 	SFGAOF attribs = 0;
@@ -174,6 +180,8 @@ BOOL ShellEntry::launch_entry(HWND hwnd, UINT nCmdShow)
 
 static HICON extract_icon(IShellFolder* folder, LPCITEMIDLIST pidl)
 {
+	CONTEXT("extract_icon()");
+
 	IExtractIcon* pExtract;
 
 	if (SUCCEEDED(folder->GetUIObjectOf(0, 1, (LPCITEMIDLIST*)&pidl, IID_IExtractIcon, 0, (LPVOID*)&pExtract))) {
@@ -229,6 +237,8 @@ static HICON extract_icon(IShellFolder* folder, LPCITEMIDLIST pidl)
 
 void ShellDirectory::read_directory()
 {
+	CONTEXT("ShellDirectory::read_directory()");
+
 	int level = _level + 1;
 
 	Entry* first_entry = NULL;

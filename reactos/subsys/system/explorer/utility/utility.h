@@ -85,7 +85,7 @@ using namespace _com_util;
 #define	BUFFER_LEN				1024
 
 
-#define	LOG(x) OutputDebugString(x)
+#define	LOG(x) 	OutputDebugString(FmtString(TEXT("%s\n"), (LPCTSTR)(x)));
 
 
  /// initialization of windows common controls
@@ -510,6 +510,60 @@ struct String
 	String& operator=(const super& s) {super::assign(s); return *this;}
 
 	operator LPCTSTR() const {return c_str();}
+
+	String& printf(LPCTSTR fmt, ...)
+	{
+		va_list l;
+		TCHAR b[BUFFER_LEN];
+
+		va_start(l, fmt);
+		super::assign(b, _vstprintf(b, fmt, l));
+		va_end(l);
+
+		return *this;
+	}
+
+	String& vprintf(LPCTSTR fmt, va_list l)
+	{
+		TCHAR b[BUFFER_LEN];
+
+		super::assign(b, _vstprintf(b, fmt, l));
+
+		return *this;
+	}
+
+	String& appendf(LPCTSTR fmt, ...)
+	{
+		va_list l;
+		TCHAR b[BUFFER_LEN];
+
+		va_start(l, fmt);
+		super::append(b, _vstprintf(b, fmt, l));
+		va_end(l);
+
+		return *this;
+	}
+
+	String& vappendf(LPCTSTR fmt, va_list l)
+	{
+		TCHAR b[BUFFER_LEN];
+
+		super::append(b, _vstprintf(b, fmt, l));
+
+		return *this;
+	}
+};
+
+struct FmtString : public String
+{
+	FmtString(LPCTSTR fmt, ...)
+	{
+		va_list l;
+
+		va_start(l, fmt);
+		vprintf(fmt, l);
+		va_end(l);
+	}
 };
 
 
@@ -571,14 +625,14 @@ protected:
 
 struct Context
 {
-	Context(LPCTSTR ctx)
+	Context(const char* ctx)
 	 :	_ctx(ctx)
 	{
 		_last = s_current;
 		s_current = this;
 	}
 
-	Context(LPCTSTR ctx, LPCSTR obj)
+	Context(const char* ctx, LPCSTR obj)
 	 :	_ctx(ctx),
 		_obj(obj)
 	{
@@ -586,7 +640,7 @@ struct Context
 		s_current = this;
 	}
 
-	Context(LPCTSTR ctx, LPCWSTR obj)
+	Context(const char* ctx, LPCWSTR obj)
 	 :	_ctx(ctx),
 		_obj(obj)
 	{
@@ -599,7 +653,10 @@ struct Context
 		s_current = _last;
 	}
 
-	LPCTSTR	_ctx;
+	String toString() const;
+	String getStackTrace() const;
+
+	const char* _ctx;
 	String	_obj;
 
 	static Context current() {return *s_current;}
@@ -612,8 +669,9 @@ protected:
 };
 
 #define	CONTEXT_OBJ __ctx__._obj
-#define	CONTEXT(c) Context __ctx__(TEXT(c))
-#define	OBJ_CONTEXT(c, o) Context __ctx__(TEXT(c), o);
+#define	CONTEXT(c) Context __ctx__(c)
+#define	CURRENT_CONTEXT Context::current()
+#define	OBJ_CONTEXT(c, o) Context __ctx__(c, o);
 
 
 #endif // __cplusplus

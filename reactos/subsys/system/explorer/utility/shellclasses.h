@@ -102,45 +102,44 @@ struct COMException : public COMExceptionBase
 
 	COMException(HRESULT hr)
 	 :	super(hr),
-		_ctx(Context::current()._ctx),
-		_obj(Context::current()._obj),
+		_ctx(CURRENT_CONTEXT),
 		_file(NULL), _line(0)
 	{
 		LOG(toString());
+		LOG(CURRENT_CONTEXT.getStackTrace());
 	}
 
 	COMException(HRESULT hr, const char* file, int line)
 	 :	super(hr),
-		_ctx(Context::current()._ctx),
-		_obj(Context::current()._obj),
+		_ctx(CURRENT_CONTEXT),
 		_file(file), _line(line)
 	{
 		LOG(toString());
+		LOG(CURRENT_CONTEXT.getStackTrace());
 	}
 
 	COMException(HRESULT hr, const String& obj)
 	 :	super(hr),
-		_ctx(Context::current()._ctx),
-		_obj(obj),
+		_ctx(CURRENT_CONTEXT),
 		_file(NULL), _line(0)
 	{
-		_ctx = Context::current()._ctx;
+		_ctx = CURRENT_CONTEXT;
 		LOG(toString());
+		LOG(CURRENT_CONTEXT.getStackTrace());
 	}
 
 	COMException(HRESULT hr, const String& obj, const char* file, int line)
 	 :	super(hr),
-		_ctx(Context::current()._ctx),
-		_obj(obj),
+		_ctx(CURRENT_CONTEXT),
 		_file(file), _line(line)
 	{
 		LOG(toString());
+		LOG(CURRENT_CONTEXT.getStackTrace());
 	}
 
 	String toString() const;
 
-	LPCTSTR _ctx;
-	String	_obj;
+	Context _ctx;
 
 	const char* _file;
 	int _line;

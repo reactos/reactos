@@ -102,6 +102,8 @@ Entry::~Entry()
  // read directory tree and expand to the given location
 Entry* Entry::read_tree(const void* path, SORT_ORDER sortOrder)
 {
+	CONTEXT("Entry::read_tree()");
+
 	HCURSOR old_cursor = SetCursor(LoadCursor(0, IDC_WAIT));
 
 	Entry* entry = this;
@@ -126,6 +128,8 @@ Entry* Entry::read_tree(const void* path, SORT_ORDER sortOrder)
 
 void Entry::read_directory(SORT_ORDER sortOrder)
 {
+	CONTEXT("Entry::read_directory(SORT_ORDER)");
+
 	 // call into subclass
 	read_directory();
 
@@ -282,6 +286,8 @@ void Entry::sort_directory(SORT_ORDER sortOrder)
 
 void Entry::smart_scan()
 {
+	CONTEXT("Entry::smart_scan()");
+
 	if (!_scanned) {
 		free_subentries();
 		read_directory(SORT_NAME);	// we could use IShellFolder2::GetDefaultColumn to determine sort order

@@ -62,35 +62,46 @@ LPWSTR wcscpyn(LPWSTR dest, LPCWSTR source, size_t count)
 }
 
 
-Context Context::s_main(TEXT("-NO-CONTEXT-"));
+Context Context::s_main("-NO-CONTEXT-");
 Context* Context::s_current = &Context::s_main;
 
+String Context::toString() const
+{
+	FmtString str(TEXT("%hs"), _ctx);
 
- // Exception Handler for COM exceptions
+	if (!_obj.empty())
+		str.appendf(TEXT("\nObject: %s"), (LPCTSTR)_obj);
+
+	return str;
+}
+
+String Context::getStackTrace() const
+{
+	 // evtl. besser ostringstream verwenden
+	String str = TEXT("Context Trace:\n");
+
+	for(const Context*p=this; p!=&s_main; p=p->_last)
+		str.appendf(TEXT("ctx=%hs obj=%s\n"), p->_ctx, (LPCTSTR)p->_obj);
+
+	return str;
+}
+
 
 String COMException::toString() const
 {
 	TCHAR msg[4*BUFFER_LEN];
 	LPTSTR p = msg;
 
-	p += _stprintf(p, TEXT("%s"), super::ErrorMessage());
-
-	if (_ctx)
-		p += _stprintf(p, TEXT("\nContext: %s"), _ctx);
-
-	if (!_obj.empty())
-		p += _stprintf(p, TEXT("\nObject: %s"), (LPCTSTR)_obj);
+	p += _stprintf(p, TEXT("%s\nContext: %s"), super::ErrorMessage(), (LPCTSTR)_ctx.toString());
 
 	if (_file)
-#ifdef UNICODE
 		p += _stprintf(p, TEXT("\nLocation: %hs(%d)"), _file, _line);
-#else
-		p += _stprintf(p, TEXT("\nLocation: %s, line %d"), _file, _line);
-#endif
 
 	return msg;
 }
 
+
+ /// Exception Handler for COM exceptions
 
 void HandleException(COMException& e, HWND hwnd)
 {

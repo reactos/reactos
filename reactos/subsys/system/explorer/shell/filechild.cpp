@@ -439,6 +439,8 @@ void FileChildWindow::activate_entry(Pane* pane, HWND hwnd)
 
 void FileChildWindow::scan_entry(Entry* entry, HWND hwnd)
 {
+	CONTEXT("FileChildWindow::scan_entry()");
+
 	int idx = ListBox_GetCurSel(_left_hwnd);
 	HCURSOR old_cursor = SetCursor(LoadCursor(0, IDC_WAIT));
 
