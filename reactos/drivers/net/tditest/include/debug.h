@@ -41,8 +41,6 @@ extern ULONG DebugTraceLevel;
 
 #endif /* _MSC_VER */
 
-/* in ndis.h now */
-#if 0
 #ifdef ASSERT
 #undef ASSERT
 #endif
@@ -52,7 +50,6 @@ extern ULONG DebugTraceLevel;
 #else /* NASSERT */
 #define ASSERT(x) if (!(x)) { TDI_DbgPrint(MIN_TRACE, ("Assertion "#x" failed at %s:%d\n", __FILE__, __LINE__)); KeBugCheck(0); }
 #endif /* NASSERT */
-#endif
 #define ASSERT_IRQL(x) ASSERT(KeGetCurrentIrql() <= (x))
 
 #else /* DBG */

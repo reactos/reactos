@@ -18,7 +18,7 @@
 #include <rosrtl/string.h>
 
 #ifdef DBG
-DWORD DebugTraceLevel = MIN_TRACE;
+DWORD DebugTraceLevel = -1;
 #endif /* DBG */
 
 PDEVICE_OBJECT TCPDeviceObject   = NULL;
@@ -190,8 +190,10 @@ CP
      TDI_TRANSPORT_ADDRESS_LENGTH) == TDI_TRANSPORT_ADDRESS_LENGTH)) {
     /* This is a request to open an address */
 CP
+
+	/* XXX This should probably be done in IoCreateFile() */
     /* Parameter checks */
-    Address = (PTA_IP_ADDRESS)(EaInfo->EaName + EaInfo->EaNameLength);
+    Address = (PTA_IP_ADDRESS)(EaInfo->EaName + EaInfo->EaNameLength + 1); //0-term
     if ((EaInfo->EaValueLength < sizeof(TA_IP_ADDRESS)) ||
       (Address->TAAddressCount != 1) ||
       (Address->Address[0].AddressLength < TDI_ADDRESS_LENGTH_IP) ||
@@ -389,9 +391,9 @@ NTSTATUS TiCleanupFileObject(
 
 
 NTSTATUS
-//#ifndef _MSC_VER
+#ifndef _MSC_VER
 STDCALL_FUNC
-//#endif
+#endif
 TiDispatchOpenClose(
   IN PDEVICE_OBJECT DeviceObject,
   IN PIRP Irp)

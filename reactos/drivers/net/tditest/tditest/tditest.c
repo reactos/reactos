@@ -878,9 +878,6 @@ VOID TdiUnload(
 	ObReferenceObjectByHandle(SendThread, THREAD_ALL_ACCESS, NULL, KernelMode, &SendThreadObject, NULL);
 	ObReferenceObjectByHandle(ReceiveThread, THREAD_ALL_ACCESS, NULL, KernelMode, &ReceiveThreadObject, NULL);
 
-	ASSERT(ReceiveThreadObject);
-	ASSERT(SendThreadObject);
-
 	KeSetEvent(&StopEvent, 0, FALSE);
 
 	/* Wait for send thread to stop */

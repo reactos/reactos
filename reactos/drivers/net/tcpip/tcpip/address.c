@@ -414,4 +414,43 @@ PADDRESS_FILE AddrSearchNext(
         return NULL;
 }
 
+ULONG inet_addr(PCSTR AddrString)
+/*
+ * Convert an ansi string dotted-quad address to a ulong
+ * NOTES:
+ *     - this isn't quite like the real inet_addr() - * it doesn't 
+ *       handle "10.1" and similar - but it's good enough.
+ *     - Returns in *host* byte order, unlike real inet_addr()
+ */
+{
+	ULONG Octets[4] = {0,0,0,0};
+	ULONG i = 0;
+
+	if(!AddrString)
+		return -1;
+
+	while(*AddrString)
+		{
+			CHAR c = *AddrString;
+			AddrString++;
+
+			if(c == '.')
+				{
+					i++;
+					continue;
+				}
+
+			if(c < '0' || c > '9')
+				return -1;
+
+			Octets[i] *= 10;
+			Octets[i] += (c - '0');
+
+			if(Octets[i] > 255)
+				return -1;
+		}
+
+	return (Octets[3] << 24) + (Octets[2] << 16) + (Octets[1] << 8) + Octets[0];
+}
+
 /* EOF */

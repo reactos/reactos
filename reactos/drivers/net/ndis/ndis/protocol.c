@@ -716,7 +716,7 @@ NdisRegisterProtocol(
   InitializeListHead(&Protocol->AdapterListHead);
 
   /* 
-   * bind the adapter to all of its miniports 
+   * bind the protocol to all of its miniports 
    *
    * open registry path
    * get list of devices from Bind key

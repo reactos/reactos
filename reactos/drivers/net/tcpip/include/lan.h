@@ -81,7 +81,8 @@ typedef struct LAN_ADAPTER {
 
 
 NDIS_STATUS LANRegisterAdapter(
-    PNDIS_STRING AdapterName);
+    PNDIS_STRING AdapterName,
+		PNDIS_STRING RegistryPath);
 
 NDIS_STATUS LANUnregisterAdapter(
     PLAN_ADAPTER Adapter);

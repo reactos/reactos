@@ -499,12 +499,13 @@ VOID ProtocolBindAdapter(
  *     BindContext: Handle provided by NDIS to track pending binding operations
  *     DeviceName: Name of the miniport device to bind to
  *     SystemSpecific1: Pointer to a registry path with protocol-specific configuration information
- *     SystemSpecific2: Unused
+ *     SystemSpecific2: Unused & must not be touched
  */
 {
+	/* XXX confirm that this is still true, or re-word the following comment */
 	/* we get to ignore BindContext because we will never pend an operation with NDIS */
-	TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
-	*Status = LANRegisterAdapter(DeviceName);
+	TI_DbgPrint(DEBUG_DATALINK, ("Called with registry path %wZ\n", SystemSpecific1));
+	*Status = LANRegisterAdapter(DeviceName, SystemSpecific1);
 }
 
 
@@ -591,7 +592,8 @@ VOID LANTransmit(
 
 
 VOID BindAdapter(
-    PLAN_ADAPTER Adapter)
+    PLAN_ADAPTER Adapter,
+		PNDIS_STRING RegistryPath)
 /*
  * FUNCTION: Binds a LAN adapter to IP layer
  * ARGUMENTS:
@@ -653,16 +655,87 @@ VOID BindAdapter(
         return;
     }
 
-    /* FIXME: Get address from registry.
-       For now just use a private address, eg. 10.0.0.100 */
-    Address = AddrBuildIPv4(0x6400000A);
- //   Address = AddrBuildIPv4(0x6048F2D1);	// 209.242.72.96
-    if (!Address) {
-        TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-        FreeTDPackets(Adapter);
-        IPDestroyInterface(Adapter->Context);
-        return;
-    }
+			{
+				/* 
+				 * Query per-adapter configuration from the registry 
+				 * In case anyone is curious:  there *is* an Ndis configuration api
+				 * for this sort of thing, but it doesn't really support things like
+				 * REG_MULTI_SZ very well, and there is a note in the DDK that says that
+				 * protocol drivers developed for win2k and above just use the native
+				 * services (ZwOpenKey, etc).
+				 */
+
+				OBJECT_ATTRIBUTES Attributes;
+				HANDLE RegHandle;
+				NTSTATUS Status;
+				UNICODE_STRING ValueName;
+				UCHAR buf[1024];
+				PKEY_VALUE_PARTIAL_INFORMATION Information = (PKEY_VALUE_PARTIAL_INFORMATION)buf;
+				ULONG ResultLength;
+				ANSI_STRING AnsiAddress;
+				UNICODE_STRING UnicodeAddress;
+				ULONG AnsiLen;
+
+				InitializeObjectAttributes(&Attributes, RegistryPath, OBJ_CASE_INSENSITIVE, 0, 0);
+				Status = ZwOpenKey(&RegHandle, GENERIC_READ, &Attributes);
+
+				if(!NT_SUCCESS(Status))
+					{
+						TI_DbgPrint(MIN_TRACE, ("Unable to open protocol-specific registry key: 0x%x\n", Status));
+
+						/* XXX how do we proceed?  No ip address, no parameters... do we guess? */
+						FreeTDPackets(Adapter);
+						IPDestroyInterface(Adapter->Context);
+						return;
+					}
+
+				RtlInitUnicodeString(&ValueName, L"IPAddress");
+				ZwQueryValueKey(RegHandle, &ValueName, KeyValuePartialInformation, Information, sizeof(buf), &ResultLength);
+				ZwClose(RegHandle);
+
+				/* IP address is stored as a REG_MULTI_SZ - we only pay attention to the first one though */
+				TI_DbgPrint(MIN_TRACE, ("Information DataLength: 0x%x\n", Information->DataLength));
+
+				UnicodeAddress.Buffer = (PWCHAR)&Information->Data;
+				UnicodeAddress.Length = Information->DataLength;
+				UnicodeAddress.MaximumLength = Information->DataLength;
+
+				AnsiLen = RtlUnicodeStringToAnsiSize(&UnicodeAddress);
+				
+				if(!AnsiLen)
+					{
+						TI_DbgPrint(MIN_TRACE, ("Unable to calculate address length\n"));
+						FreeTDPackets(Adapter);
+						IPDestroyInterface(Adapter->Context);
+						return;
+					}
+
+				AnsiAddress.Buffer = ExAllocatePoolWithTag(PagedPool, AnsiLen, 0x01020304);
+
+				if(!AnsiAddress.Buffer)
+					{
+						TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+						FreeTDPackets(Adapter);
+						IPDestroyInterface(Adapter->Context);
+						return;
+					}
+
+				RtlUnicodeStringToAnsiString(&AnsiAddress, &UnicodeAddress, FALSE);
+
+				AnsiAddress.Buffer[AnsiAddress.Length] = 0;
+
+				Address = AddrBuildIPv4(inet_addr(AnsiAddress.Buffer));
+
+				if (!Address) {
+						TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+						FreeTDPackets(Adapter);
+						IPDestroyInterface(Adapter->Context);
+						return;
+				}
+
+				TI_DbgPrint(MID_TRACE, ("--> Our IP address on this interface: 0x%x\n", inet_addr(AnsiAddress.Buffer)));
+			}
+
     /* Create a net table entry for this interface */
     if (!IPCreateNTE(IF, Address, 8)) {
         TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
@@ -721,7 +794,8 @@ VOID UnbindAdapter(
 
 
 NDIS_STATUS LANRegisterAdapter(
-    PNDIS_STRING AdapterName)
+    PNDIS_STRING AdapterName,
+		PNDIS_STRING RegistryPath)
 /*
  * FUNCTION: Registers protocol with an NDIS adapter
  * ARGUMENTS:
@@ -734,6 +808,7 @@ NDIS_STATUS LANRegisterAdapter(
     PLAN_ADAPTER IF;
     NDIS_STATUS NdisStatus;
     NDIS_STATUS OpenStatus;
+		PNDIS_CONFIGURATION_PARAMETER Parameter;
     UINT MediaIndex;
     NDIS_MEDIUM MediaArray[MAX_MEDIA];
     UINT AddressOID;
@@ -874,7 +949,7 @@ NDIS_STATUS LANRegisterAdapter(
                                 &AdapterListLock);
 
     /* Bind adapter to IP layer */
-    BindAdapter(IF);
+    BindAdapter(IF, RegistryPath);
 
     TI_DbgPrint(DEBUG_DATALINK, ("Leaving.\n"));
 
@@ -952,7 +1027,7 @@ NTSTATUS LANRegisterProtocol(
     ProtChars.MinorNdisVersion               = NDIS_VERSION_MINOR;
     ProtChars.Name.Length                    = Name->Length;
     ProtChars.Name.Buffer                    = Name->Buffer;
-	 ProtChars.Name.MaximumLength             = Name->MaximumLength;
+    ProtChars.Name.MaximumLength             = Name->MaximumLength;
     ProtChars.OpenAdapterCompleteHandler     = ProtocolOpenAdapterComplete;
     ProtChars.CloseAdapterCompleteHandler    = ProtocolCloseAdapterComplete;
     ProtChars.ResetCompleteHandler           = ProtocolResetComplete;
@@ -963,7 +1038,7 @@ NTSTATUS LANRegisterProtocol(
     ProtChars.ReceiveCompleteHandler         = ProtocolReceiveComplete;
     ProtChars.StatusHandler                  = ProtocolStatus;
     ProtChars.StatusCompleteHandler          = ProtocolStatusComplete;
-	 ProtChars.BindAdapterHandler             = ProtocolBindAdapter;
+    ProtChars.BindAdapterHandler             = ProtocolBindAdapter;
 
 	/* Try to register protocol */
     NdisRegisterProtocol(&NdisStatus,
