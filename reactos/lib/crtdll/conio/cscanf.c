@@ -1,19 +1,18 @@
-#include <crtdll/conio.h>
-#include <stdarg.h>
-#include <stdio.h>
+#include <msvcrt/conio.h>
+#include <msvcrt/stdarg.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/internal/stdio.h>
 
-int
-_cscanf(char *fmt, ...)
+int _cscanf(char *fmt, ...)
 {
-	int cnt;
+    int cnt;
 
-	va_list ap;
+    va_list ap;
 
-	//fixme cscanf should scan the console's keyboard
-	va_start(ap, fmt);
-	cnt = __vscanf(fmt, ap);
-	va_end(ap);
-	return cnt;
+    //fixme cscanf should scan the console's keyboard
+    va_start(ap, fmt);
+    cnt = __vscanf(fmt, ap);
+    va_end(ap);
+
+    return cnt;
 }
-
-

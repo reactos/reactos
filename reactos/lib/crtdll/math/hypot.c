@@ -16,9 +16,9 @@
  *
  */
  
-#include <crtdll/float.h>
-#include <crtdll/math.h>
-#include <crtdll/errno.h>
+#include <msvcrt/float.h>
+#include <msvcrt/math.h>
+#include <msvcrt/errno.h>
  
 /* Approximate square roots of DBL_MAX and DBL_MIN.  Numbers
    between these two shouldn't neither overflow nor underflow
@@ -78,7 +78,7 @@ _hypot(double x, double y)
  
 #ifdef  TEST
  
-#include <crtdll/stdio.h>
+#include <msvcrt/stdio.h>
  
 int
 main(void)

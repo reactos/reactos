@@ -17,8 +17,7 @@ int _cwait(int* pnStatus, int hProc, int nAction)
   DWORD ExitCode;
 
   nAction = 0;
-  if (WaitForSingleObject((void *)hProc,INFINITE) != WAIT_OBJECT_0)
-    {
+  if (WaitForSingleObject((void *)hProc,INFINITE) != WAIT_OBJECT_0) {
       __set_errno(ECHILD);
       return -1;
     }

@@ -14,8 +14,8 @@ int _putch(int c)
 {
   DWORD NumberOfCharsWritten;
 
-  if (WriteFile(GetStdHandle(STD_OUTPUT_HANDLE),&c,1,&NumberOfCharsWritten,NULL))
+  if (WriteFile(GetStdHandle(STD_OUTPUT_HANDLE),&c,1,&NumberOfCharsWritten,NULL)) {
     return -1;
-
+  }
   return NumberOfCharsWritten;
 }

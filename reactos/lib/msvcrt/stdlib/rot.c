@@ -9,6 +9,7 @@
  */
 
 #include <msvcrt/stdlib.h>
+#include <msvcrt/crttypes.h>
 
 unsigned int _rotl( unsigned int value, int shift )
 {

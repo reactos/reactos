@@ -1,8 +1,8 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <crtdll/stdio.h>
-#include <crtdll/string.h>
-#include <crtdll/stdlib.h>
-#include <crtdll/errno.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/string.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/errno.h>
 
 
 char __syserr00[] = "No Error";

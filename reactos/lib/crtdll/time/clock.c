@@ -9,8 +9,8 @@
  */
 
 #include <windows.h>
-#include <crtdll/time.h>
-#include <crtdll/internal/file.h>
+#include <msvcrt/time.h>
+#include <msvcrt/internal/file.h>
 
 VOID STDCALL GetSystemTimeAsFileTime(LPFILETIME  lpSystemTimeAsFileTime );
 

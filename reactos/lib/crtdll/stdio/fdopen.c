@@ -1,5 +1,5 @@
-#include <crtdll/stdio.h>
-#include <crtdll/internal/file.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/internal/file.h>
 
 FILE *	__alloc_file(void);
 
@@ -48,15 +48,7 @@ FILE *_fdopen(int handle, char *mode)
     file->_flag = _IOWRT;
 
   file->_base = file->_ptr = NULL;   
+
   return file;
 }        
-                       
-                        
-                        
-                        
-                       
-                       
-                      
-                      
-                      
-                       
+

@@ -1,14 +1,14 @@
 
 #include <windows.h>
-#include <crtdll/io.h>
-#include <crtdll/errno.h>
-#include <crtdll/stdio.h>
-#include <crtdll/stdlib.h>
-#include <crtdll/string.h>
-#include <crtdll/internal/file.h>
+#include <msvcrt/io.h>
+#include <msvcrt/errno.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/string.h>
+#include <msvcrt/internal/file.h>
 
-FILE *
-_popen (const char *cm, const char *md) /* program name, pipe mode */
+
+FILE *_popen (const char *cm, const char *md) /* program name, pipe mode */
 {
   FILE *pf;
   HANDLE hReadPipe, hWritePipe;

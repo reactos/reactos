@@ -13,9 +13,12 @@
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 
-#include <crtdll/stdio.h>
-#include <crtdll/string.h>
-#include <crtdll/io.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/string.h>
+#include <msvcrt/io.h>
+
+#define NDEBUG
+#include <msvcrt/msvcrtdbg.h>
 
 
 char* _mktemp (char *_template)
@@ -24,8 +27,7 @@ char* _mktemp (char *_template)
   char *cp, *dp;
   int i, len, xcount, loopcnt;
 
- 
-
+  DPRINT("_mktemp('%s')\n", _template);
   len = strlen (_template);
   cp = _template + len;
 

@@ -1,4 +1,4 @@
-#include <crtdll/tchar.h>
+#include <msvcrt/tchar.h>
 
 char * _strinc(const char *str) 
 { 

@@ -7,10 +7,11 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-#include <crtdll/time.h>
-#include <crtdll/stdio.h>
-#include <crtdll/errno.h>
-#include <crtdll/internal/file.h>
+#include <msvcrt/time.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/errno.h>
+#include <msvcrt/internal/file.h>
+
 
 char *_strtime(char* buf)
 {

@@ -1,6 +1,5 @@
-#include <windows.h>
-#include <crtdll/io.h>
-#include <crtdll/internal/file.h>
+#include <msvcrt/io.h>
+#include <msvcrt/internal/file.h>
 
 int _dup2( int handle1, int handle2 )
 {

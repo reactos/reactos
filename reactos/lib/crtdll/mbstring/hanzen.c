@@ -9,7 +9,7 @@
  *              12/04/99: Created
  */
 
-#include <crtdll/mbctype.h>
+#include <msvcrt/mbctype.h>
 
 static unsigned short han_to_zen_ascii_table[0x5f] = {
   0x8140, 0x8149, 0x8168, 0x8194, 0x8190, 0x8193, 0x8195, 0x8166,

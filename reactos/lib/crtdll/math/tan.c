@@ -18,16 +18,20 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.  */
 
+#include <msvcrt/math.h>
 
 double tan (double __x);
 
 double tan (double __x)
 {
   register double __value;
+#ifdef __GNUC__
   register double __value2 __attribute__ ((unused));
   __asm __volatile__
     ("fptan"
      : "=t" (__value2), "=u" (__value) : "0" (__x));
-
+#else
+  __value = linkme_tan(__x);
+#endif /*__GNUC__*/
   return __value;
 }

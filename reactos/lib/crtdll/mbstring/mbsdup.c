@@ -9,8 +9,8 @@
  *              12/04/99: Created
  */
 
-#include <crtdll/mbstring.h>
-#include <crtdll/stdlib.h>
+#include <msvcrt/mbstring.h>
+#include <msvcrt/stdlib.h>
 
 unsigned char * _mbsdup(const unsigned char *_s)
 {

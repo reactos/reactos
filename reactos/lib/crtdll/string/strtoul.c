@@ -1,5 +1,5 @@
-#include <crtdll/string.h>
-#include <crtdll/ctype.h>
+#include <msvcrt/string.h>
+#include <msvcrt/ctype.h>
 
 unsigned long strtoul(const char *cp,char **endp,unsigned int base)
 {

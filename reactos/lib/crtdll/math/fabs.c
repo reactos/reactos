@@ -18,15 +18,19 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.  */
 
+#include <msvcrt/math.h>
 
 double fabs (double __x);
 
 double fabs (double __x)
 {
   register double __value;
+#ifdef __GNUC__
   __asm __volatile__
     ("fabs"
      : "=t" (__value) : "0" (__x));
-
+#else
+  __value = linkme_fabs(__x);
+#endif /*__GNUC__*/
   return __value;
 }

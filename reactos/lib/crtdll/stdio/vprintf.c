@@ -18,8 +18,8 @@ Cambridge, MA 02139, USA.  */
 
 #include <stdarg.h>
 #undef	__OPTIMIZE__	/* Avoid inline `vprintf' function.  */
-#include <crtdll/stdio.h>
-#include <crtdll/wchar.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/wchar.h>
 
 #undef	vprintf
 #undef	vwprintf

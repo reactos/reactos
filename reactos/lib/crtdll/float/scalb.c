@@ -1,5 +1,5 @@
-#include <crtdll/float.h>
-#include <crtdll/internal/ieee.h>
+#include <msvcrt/float.h>
+#include <msvcrt/internal/ieee.h>
 
 double _scalb( double __x, long e )
 {
@@ -8,5 +8,4 @@ double _scalb( double __x, long e )
 	x->exponent += e;
 
 	return __x;
-
 }

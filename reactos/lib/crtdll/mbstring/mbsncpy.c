@@ -8,7 +8,7 @@
  *              12/04/99: Created
  */
 
-#include <crtdll/mbstring.h>
+#include <msvcrt/mbstring.h>
 
 unsigned char *_mbsncpy(unsigned char *str1, const unsigned char *str2, size_t n)
 {

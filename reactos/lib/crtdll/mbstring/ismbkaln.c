@@ -7,8 +7,8 @@
  * UPDATE HISTORY:
  *              12/04/99: Created
  */
-#include <crtdll/mbctype.h>
-#include <crtdll/ctype.h>
+#include <msvcrt/mbctype.h>
+#include <msvcrt/ctype.h>
 
 int _ismbbkalnum( unsigned int c )
 {

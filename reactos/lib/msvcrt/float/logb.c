@@ -22,10 +22,13 @@
 
 double _logb (double __x)
 {
-  register double __value, __junk;
+  register double __value;
+#ifdef __GNUC__
+  register double __junk;
   __asm __volatile__
     ("fxtract\n\t"
      : "=t" (__junk), "=u" (__value) : "0" (__x));
-
+#else
+#endif /*__GNUC__*/
   return __value;
 }

@@ -1,5 +1,5 @@
-#include <crtdll/io.h>
-#include <crtdll/fcntl.h>
+#include <msvcrt/io.h>
+#include <msvcrt/fcntl.h>
 
 int _creat(const char *filename, int mode)
 {

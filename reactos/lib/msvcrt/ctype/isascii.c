@@ -19,11 +19,3 @@ int iswascii(wint_t c)
 {
    return __isascii(c);
 }
-
-
-
-
-
-
-
-

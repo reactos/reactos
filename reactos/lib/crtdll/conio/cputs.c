@@ -8,10 +8,10 @@
  *              28/12/98: Created
  */
 #include <windows.h>
-#include <crtdll/conio.h>
-#include <crtdll/string.h>
-#include <crtdll/stdio.h>
-#include <crtdll/internal/file.h>
+#include <msvcrt/conio.h>
+#include <msvcrt/string.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/internal/file.h>
 
 int _cputs(const char *_str)
 {

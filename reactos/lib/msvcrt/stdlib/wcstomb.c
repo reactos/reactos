@@ -29,7 +29,7 @@
 
 static const wchar_t encoding_mask[] =
 {
-  ~0x7ff, ~0xffff, ~0x1fffff, ~0x3ffffff
+  (wchar_t)~0x7ff, (wchar_t)~0xffff, (wchar_t)~0x1fffff, (wchar_t)~0x3ffffff
 };
 
 static const unsigned char encoding_byte[] =

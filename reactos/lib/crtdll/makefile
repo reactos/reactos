@@ -1,6 +1,8 @@
-# $Id: makefile,v 1.49 2002/11/19 17:16:14 robd Exp $
+# $Id: makefile,v 1.50 2002/11/24 18:42:12 robd Exp $
 
 PATH_TO_TOP = ../..
+
+PATH_TO_MSVCRT = ../msvcrt
 
 TARGET_DEFONLY = yes
 
@@ -17,7 +19,6 @@ TARGET_SDKLIBS = kernel32.a
 TARGET_OBJECTS = $(TARGET_NAME).o
 
 TARGET_CLEAN = \
-	assert/*.o \
 	conio/*.o \
 	ctype/*.o \
 	direct/*.o \
@@ -50,9 +51,6 @@ include $(PATH_TO_TOP)/rules.mak
 include $(TOOLS_PATH)/helper.mk
 
 
-ASSERT_OBJECTS = \
-	assert/assert.o
-
 CONIO_OBJECTS = \
 	conio/cgets.o \
 	conio/cprintf.o \
@@ -65,6 +63,7 @@ CONIO_OBJECTS = \
 	conio/ungetch.o
 
 CTYPE_OBJECTS = \
+	ctype/ctype.o \
 	ctype/isalnum.o \
 	ctype/isalpha.o \
 	ctype/isascii.o \
@@ -241,6 +240,8 @@ MBSTRING_OBJECTS = \
 
 MISC_OBJECTS = \
 	misc/amsg.o \
+	misc/assert.o \
+	misc/debug.o \
 	misc/dllmain.o \
 	misc/GetArgs.o \
 	misc/initterm.o \
@@ -452,38 +453,38 @@ TIME_OBJECTS = \
 	time/strtime.o \
 	time/time.o
 
-WCHAR_OBJECTS = \
-	wchar/wcscat.o \
-	wchar/wcschr.o \
-	wchar/wcscmp.o \
+WSTRING_OBJECTS = \
+	$(PATH_TO_MSVCRT)/wstring/wcscat.o \
+	$(PATH_TO_MSVCRT)/wstring/wcschr.o \
+	$(PATH_TO_MSVCRT)/wstring/wcscmp.o \
 	wchar/wcscoll.o \
-	wchar/wcscpy.o \
-	wchar/wcscspn.o \
-	wchar/wcsdup.o \
-	wchar/wcsicmp.o \
+	$(PATH_TO_MSVCRT)/wstring/wcscpy.o \
+	$(PATH_TO_MSVCRT)/wstring/wcscspn.o \
+	$(PATH_TO_MSVCRT)/wstring/wcsdup.o \
+	$(PATH_TO_MSVCRT)/wstring/wcsicmp.o \
 	wchar/wcslen.o \
-	wchar/wcslwr.o \
-	wchar/wcsncat.o \
-	wchar/wcsncmp.o \
-	wchar/wcsncpy.o \
-	wchar/wcsnlen.o \
-	wchar/wcspbrk.o \
-	wchar/wcsrchr.o \
-	wchar/wcsrev.o \
-	wchar/wcsset.o \
-	wchar/wcsspn.o \
-	wchar/wcsstr.o \
+	$(PATH_TO_MSVCRT)/wstring/wcslwr.o \
+	$(PATH_TO_MSVCRT)/wstring/wcsncat.o \
+	$(PATH_TO_MSVCRT)/wstring/wcsncmp.o \
+	$(PATH_TO_MSVCRT)/wstring/wcsncpy.o \
+	$(PATH_TO_MSVCRT)/wstring/wcsnlen.o \
+	$(PATH_TO_MSVCRT)/wstring/wcspbrk.o \
+	$(PATH_TO_MSVCRT)/wstring/wcsrchr.o \
+	$(PATH_TO_MSVCRT)/wstring/wcsrev.o \
+	$(PATH_TO_MSVCRT)/wstring/wcsset.o \
+	$(PATH_TO_MSVCRT)/wstring/wcsspn.o \
+	$(PATH_TO_MSVCRT)/wstring/wcsstr.o \
 	wchar/wcstod.o \
 	wchar/wcstok.o \
 	wchar/wcstol.o \
-	wchar/wcsupr.o \
-	wchar/wcsxfrm.o \
+	$(PATH_TO_MSVCRT)/wstring/wcsupr.o \
+	$(PATH_TO_MSVCRT)/wstring/wcsxfrm.o \
 	wchar/wtoi.o \
 	wchar/wcstombs.o \
-	wchar/wcsnicmp.o 
+	$(PATH_TO_MSVCRT)/wstring/wcsnicmp.o 
+
 
 OBJECTS = \
-	$(ASSERT_OBJECTS) \
 	$(CONIO_OBJECTS) \
 	$(CTYPE_OBJECTS) \
 	$(DIRECT_OBJECTS) \
@@ -505,7 +506,7 @@ OBJECTS = \
 	$(SYS_STAT_OBJECTS) \
 	$(TCHAR_OBJECTS) \
 	$(TIME_OBJECTS) \
-	$(WCHAR_OBJECTS)
+	$(WSTRING_OBJECTS)
 
 $(TARGET_NAME).o: $(OBJECTS)
 	$(LD) -r $(OBJECTS) -o $(TARGET_NAME).o

@@ -16,27 +16,22 @@
 
 int _getch(void)
 {
-  DWORD  NumberOfCharsRead = 0;
-  char c;
-
-  if (char_avail)
-    {
-      c = ungot_char;
-      char_avail = 0;
+    DWORD  NumberOfCharsRead = 0;
+    char c;
+    if (char_avail) {
+        c = ungot_char;
+        char_avail = 0;
+    } else {
+        ReadConsoleA(_get_osfhandle(stdin->_file),
+		             &c,
+		             1,
+		             &NumberOfCharsRead,
+		             NULL);
     }
-  else
-    {
-      ReadConsoleA(_get_osfhandle(stdin->_file),
-		   &c,
-		   1,
-		   &NumberOfCharsRead,
-		   NULL);
-    }
-  if (c == 10)
-    c = 13;
-  putchar(c);
-
-  return c;
+    if (c == 10)
+        c = 13;
+    putchar(c);
+    return c;
 }
 
 #if 0

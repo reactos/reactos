@@ -1,4 +1,4 @@
-#include <crtdll/mbstring.h>
+#include <msvcrt/mbstring.h>
 
 unsigned char * _mbstok(unsigned char *s, unsigned char *delim)
 {

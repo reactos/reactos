@@ -1,6 +1,6 @@
-#include <crtdll/stdio.h>
-#include <crtdll/conio.h>
-#include <crtdll/wchar.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/conio.h>
+#include <msvcrt/wchar.h>
 
 int	_fputchar (int c)
 {

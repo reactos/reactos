@@ -2,11 +2,11 @@
 #include <msvcrt/stdio.h>
 #include <msvcrt/internal/file.h>
 
-// not exported by msvcrt
+
+// not exported by msvcrt or crtdll
 __file_rec *__file_rec_list;
 
-void
-_fwalk(void (*func)(FILE *))
+void _fwalk(void (*func)(FILE *))
 {
   __file_rec *fr;
   int i;

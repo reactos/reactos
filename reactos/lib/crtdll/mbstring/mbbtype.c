@@ -8,8 +8,8 @@
  *              12/04/99: Created
  */
 
-#include <crtdll/mbstring.h>
-#include <crtdll/mbctype.h>
+#include <msvcrt/mbstring.h>
+#include <msvcrt/mbctype.h>
 
 int _mbbtype(unsigned char c , int type)
 {

@@ -8,7 +8,8 @@
  *              03/04/99: Created
  */
 
-#include <crtdll/stdlib.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/crttypes.h>
 
 unsigned int _rotl( unsigned int value, int shift )
 {

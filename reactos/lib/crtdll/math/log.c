@@ -18,16 +18,21 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.  */
 
+#include <msvcrt/math.h>
+
 double log (double __x);
 
 double log (double __x)
 {
   register double __value;
+#ifdef __GNUC__
   __asm __volatile__
     ("fldln2\n\t"
      "fxch\n\t"
      "fyl2x"
      : "=t" (__value) : "0" (__x));
-
+#else
+  __value = linkme_log(__x);
+#endif /*__GNUC__*/
   return __value;
 }

@@ -1,13 +1,9 @@
-#include <crtdll/stdlib.h>
+#include <msvcrt/stdlib.h>
 
 
-void  _initterm (
-        void (* fStart[])(void),
-        void (* fEnd[])(void)
-        )
+void _initterm(void (*fStart[])(void), void (*fEnd[])(void))
 {
 	int i = 0;
-
 
 	if ( fStart == NULL || fEnd == NULL )
 		return;
@@ -19,13 +15,11 @@ void  _initterm (
 		i++;
 	}
 }
+
+
 typedef int (* _onexit_t)(void);
 
-_onexit_t __dllonexit (
-        _onexit_t func,
-	void (** fStart[])(void),
-        void (** fEnd[])(void)
-        )
+_onexit_t __dllonexit(_onexit_t func, void (** fStart[])(void),	void (** fEnd[])(void))
 {
 }
 

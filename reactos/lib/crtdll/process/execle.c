@@ -1,6 +1,6 @@
-#include <crtdll/process.h>
-#include <crtdll/stdlib.h>
-#include <crtdll/stdarg.h>
+#include <msvcrt/process.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/stdarg.h>
 
 
 // fixme rewrite to pass the array variants to va_list variant

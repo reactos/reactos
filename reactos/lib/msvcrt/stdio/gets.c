@@ -1,27 +1,63 @@
-/*
- * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS system libraries
- * FILE:        lib/crtdll/stdio/gets.c
- * PURPOSE:     Get a character string from stdin
- * PROGRAMER:   DJ Delorie
- * UPDATE HISTORY:
- *              28/12/98: Appropriated for Reactos
+/* $Id: gets.c,v 1.4 2002/11/24 18:42:24 robd Exp $
+ *
+ *  ReactOS msvcrt library
+ *
+ *  gets.c
+ *
+ *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
+ *
+ *  Based on original work Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details
+ *                         28/12/1998: Appropriated for Reactos
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
+
 #include <msvcrt/stdio.h>
 
-char *gets(char *s)
+char* gets(char* s)
 {
-  int c;
-  char *cs;
+    int c;
+    char* cs;
 
-  cs = s;
-  while ((c = getchar()) != '\n' && c != EOF)
-    *cs++ = c;
-  if (c == EOF && cs==s)
-    return NULL;
-  *cs++ = '\0';
-  return s;
+    cs = s;
+    while ((c = getc(stdin)) != '\n' && c != EOF)
+        *cs++ = c;
+    if (c == EOF && cs == s)
+        return NULL;
+    *cs++ = '\0';
+    return s;
+}
+
+#ifndef WEOF
+#define	WEOF	(wchar_t)(0xFFFF)
+#endif
+
+// Get a line from the stdin stream.
+wchar_t* _getws(wchar_t* s)
+{
+    wchar_t c;
+    wchar_t* cs;
+
+    cs = s;
+    while ((c = getwc(stdin)) != L'\n' && c != WEOF)
+        *cs++ = c;
+    if (c == WEOF && cs == s)
+        return NULL;
+    *cs++ = L'\0';
+    return s;
 }
 
 #if 0

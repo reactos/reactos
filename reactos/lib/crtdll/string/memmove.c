@@ -1,4 +1,4 @@
-#include <crtdll/string.h>
+#include <msvcrt/string.h>
 
 
 void * memmove(void *dest,const void *src,size_t count)

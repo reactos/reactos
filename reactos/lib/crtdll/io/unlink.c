@@ -8,7 +8,7 @@
  *              28/12/98: Created
  */
 #include <windows.h>
-#include <crtdll/io.h>
+#include <msvcrt/io.h>
 
 
 

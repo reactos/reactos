@@ -1,5 +1,6 @@
-#include <crtdll/string.h>
-#include <crtdll/stdlib.h>
+#include <msvcrt/string.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/crttypes.h>
 
 char* _strnset (char* szToFill, int szFill, size_t sizeMaxFill)
 {

@@ -14,7 +14,7 @@
 #include <msvcrt/internal/file.h>
 
 
-FILE *	__alloc_file(void);
+FILE *  __alloc_file(void);
 
 FILE *
 tmpfile(void)
@@ -38,7 +38,7 @@ tmpfile(void)
    // errno = 0;
     temp_fd = _open(temp_name, 0, SH_DENYRW);
   //  if (  errno == ENOENT )
-//	break;
+//  break;
   } while (temp_fd == -1 && (temp_name = tmpnam(0)) != 0);
 
   if (temp_name == 0)

@@ -18,14 +18,19 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.  */
 
+#include <msvcrt/math.h>
+
 double ldexp (double __x, int __y);
 
 double ldexp (double __x, int __y)
 {
   register double __value;
+#ifdef __GNUC__
   __asm __volatile__
     ("fscale"
      : "=t" (__value) : "0" (__x), "u" ((double) __y));
-
+#else
+  __value = linkme_ldexp(__x, __y);
+#endif /*__GNUC__*/
   return __value;
 }

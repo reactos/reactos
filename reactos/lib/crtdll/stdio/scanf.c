@@ -17,9 +17,9 @@ not, write to the Free Software Foundation, Inc., 675 Mass Ave,
 Cambridge, MA 02139, USA.  */
 
 #include <stdarg.h>
-#include <crtdll/stdio.h>
-#include <crtdll/wchar.h>
-#include <crtdll/alloc.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/wchar.h>
+#include <msvcrt/alloc.h>
 
 
 /* The function `vscanf' is not defined in ISO C.  Therefore we must
@@ -48,8 +48,6 @@ int scanf (const char *format, ...)
   return done;
 }
 
-
-
 int
 wscanf(const wchar_t *fmt, ...)
 {
@@ -66,7 +64,6 @@ wscanf(const wchar_t *fmt, ...)
   done = VSCANF (f, arg);
   va_end (arg);
   free(f);
+
   return done;
 }
-
-

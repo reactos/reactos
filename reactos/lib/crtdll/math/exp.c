@@ -18,11 +18,13 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.  */
 
+#include <msvcrt/math.h>
 
 double exp (double __x);
 
 double exp (double __x)
 {
+#ifdef __GNUC__
   register double __value, __exponent;
   __asm __volatile__
     ("fldl2e                    # e^x = 2^(x * log2(e))\n\t"
@@ -39,4 +41,7 @@ double exp (double __x)
      : "=t" (__value) : "0" (__value), "u" (__exponent));
 
   return __value;
+#else
+  return linkme_exp(__x);
+#endif /*__GNUC__*/
 }

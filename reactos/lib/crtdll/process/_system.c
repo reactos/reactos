@@ -1,4 +1,5 @@
-/*
+/* $Id: _system.c,v 1.6 2002/11/24 18:42:15 robd Exp $
+ *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/crtdll/process/system.c
@@ -8,9 +9,9 @@
  *              04/03/99: Created
  */
 #include <windows.h>
-#include <crtdll/stdlib.h>
-#include <crtdll/string.h>
-#include <crtdll/process.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/string.h>
+#include <msvcrt/process.h>
 
 int system(const char *command)
 {

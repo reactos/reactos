@@ -108,7 +108,7 @@ wint_t  _filwbuf(FILE *fp)
 }
 
 // convert the carriage return line feed pairs
-
+/*
 int _readcnv(int fn, void *buf, size_t siz  )
 {
 	char *bufp = (char *)buf;
@@ -128,4 +128,4 @@ int _readcnv(int fn, void *buf, size_t siz  )
 	}
 	return n + cr;
 }
-
+ */

@@ -17,9 +17,9 @@
    Boston, MA 02111-1307, USA.  */
 
 #include <stdarg.h>
-#include <crtdll/stdio.h>
-#include <crtdll/wchar.h>
-#include <crtdll/alloc.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/wchar.h>
+#include <msvcrt/alloc.h>
 
 
 int __vsscanf (const char *s,const char *format,va_list arg);
@@ -38,17 +38,7 @@ int sscanf (const char *s,const char *format, ...)
   return done;
 }
 
-#ifdef USE_IN_LIBIO
-# undef _IO_sscanf
-/* This is for libg++.  */
-strong_alias (sscanf, _IO_sscanf)
-#endif
-
-
-
-
-int
-swscanf(const wchar_t *str, const wchar_t *fmt, ...)
+int swscanf(const wchar_t *str, const wchar_t *fmt, ...)
 {
   va_list arg;
   int done;
@@ -71,9 +61,6 @@ swscanf(const wchar_t *str, const wchar_t *fmt, ...)
   va_end (arg);
 
   free(f);
+
   return done;
-
-
 }
-
-

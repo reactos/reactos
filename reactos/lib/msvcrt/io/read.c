@@ -1,4 +1,4 @@
-/* $Id: read.c,v 1.8 2002/09/08 10:22:50 chorns Exp $
+/* $Id: read.c,v 1.9 2002/11/24 18:42:22 robd Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -49,25 +49,46 @@ size_t _read(int _fd, void *_buf, size_t _nbyte)
    /* text mode */
    if (_rbyte && istext)
    {
+      int found_cr = 0;
       int cr = 0;
       DWORD count = _rbyte;
 
       /* repeat for all bytes in the buffer */
       for(; count; bufp++, count--)
       {
-         /* carriage return */
-         if (*bufp == '\r')
-            cr++;
-         /* shift characters back, to ignore carriage returns */
-         else if (cr != 0)
+#if 1
+          /* carriage return */
+          if (*bufp == '\r') {
+            found_cr = 1;
+            if (cr != 0) {
+                *(bufp - cr) = *bufp;
+            }
+            continue;
+          }
+          if (found_cr) {
+            found_cr = 0;
+            if (*bufp == '\n') {
+              cr++;
+              *(bufp - cr) = *bufp;
+            } else {
+            }
+          } else if (cr != 0) {
             *(bufp - cr) = *bufp;
-
+          }
+#else
+         /* carriage return */
+          if (*bufp == '\r') {
+            cr++;
+          }
+         /* shift characters back, to ignore carriage returns */
+          else if (cr != 0) {
+            *(bufp - cr) = *bufp;
+          }
+#endif
       }
-
       /* ignore the carriage returns */
       _rbyte -= cr;
    }
-
    DPRINT("%d\n", _rbyte);
    return _rbyte;
 }

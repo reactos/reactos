@@ -18,13 +18,18 @@ Cambridge, MA 02139, USA.  */
 
 #include <msvcrt/stdio.h>
 
+
 /* Read a word (int) from STREAM.  */
 int _getw(FILE *stream)
 {
   int w;
 
   /* Is there a better way?  */
-  if (fread( &w, sizeof(w), 1, stream) != 1)
+  if (fread( &w, sizeof(w), 1, stream) != 1) {
+    // EOF is a legitimate integer value so users must 
+    // check feof or ferror to verify an EOF return.
     return(EOF);
+  }
   return(w);
 }
+

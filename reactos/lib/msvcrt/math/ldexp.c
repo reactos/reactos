@@ -25,9 +25,12 @@ double ldexp (double __x, int __y);
 double ldexp (double __x, int __y)
 {
   register double __value;
+#ifdef __GNUC__
   __asm __volatile__
     ("fscale"
      : "=t" (__value) : "0" (__x), "u" ((double) __y));
-
+#else
+  __value = linkme_ldexp(__x, __y);
+#endif /*__GNUC__*/
   return __value;
 }

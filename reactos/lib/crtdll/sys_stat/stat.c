@@ -1,15 +1,16 @@
 #include <windows.h>
-#include <crtdll/sys/types.h>
-#include <crtdll/sys/stat.h>
-#include <crtdll/fcntl.h>
-#include <crtdll/io.h>
-#include <crtdll/errno.h>
+#include <msvcrt/sys/types.h>
+#include <msvcrt/sys/stat.h>
+#include <msvcrt/fcntl.h>
+#include <msvcrt/io.h>
+#include <msvcrt/errno.h>
 
 
 int _stat( const char *path, struct stat *buffer )
 {
- WIN32_FIND_DATA wfd;
- HANDLE fh;
+  HANDLE fh;
+  WIN32_FIND_DATA wfd;
+
   fh = FindFirstFile (path,&wfd);
   if ( fh == INVALID_HANDLE_VALUE )
   {

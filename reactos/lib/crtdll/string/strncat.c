@@ -1,5 +1,5 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <crtdll/string.h>
+#include <msvcrt/string.h>
 
 char *
 strncat(char *dst, const char *src, size_t n)

@@ -9,6 +9,7 @@
  */
 #include <windows.h>
 #include <msvcrt/io.h>
+#include <msvcrt/stdlib.h>
 #include <msvcrt/internal/file.h>
 
 #define NDEBUG
@@ -19,7 +20,8 @@
 size_t _write(int _fd, const void *_buf, size_t _nbyte)
 {
    char *tmp, *in, *out;
-   int count, result;
+   int result;
+   unsigned int count;
    DWORD wbyte;
 
    DPRINT("_write(fd %d, buf %x, nbyte %d)\n", _fd, _buf, _nbyte);
@@ -65,7 +67,7 @@ size_t _write(int _fd, const void *_buf, size_t _nbyte)
 		result = -1; 
 		break;
 	    }
-	    if (wbyte < BUFSIZE - count)
+	    if (wbyte < (BUFSIZE - count))
 	    {
 		result = in - (char*)_buf;
 		break;
@@ -81,6 +83,27 @@ size_t _write(int _fd, const void *_buf, size_t _nbyte)
    {
       if(!WriteFile(_get_osfhandle(_fd), _buf, _nbyte, &wbyte, NULL))
       {
+          DWORD error = GetLastError();
+    if (error != ERROR_SUCCESS) {
+    	PTSTR msg;
+    	if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_FROM_SYSTEM,
+	    	0, error, MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT), (PTSTR)&msg, 0, NULL))
+            printf("_write(fd %d, buf %x, nbyte %d) - %s\n", _fd, _buf, _nbyte, msg);
+    	else
+            printf("_write(fd %d, buf %x, nbyte %d) - unknown error: %d\n", _fd, _buf, _nbyte, msg, error);
+    	LocalFree(msg);
+    }
+/*
+DWORD FormatMessage(
+  DWORD dwFlags,      // source and processing options
+  LPCVOID lpSource,   // message source
+  DWORD dwMessageId,  // message identifier
+  DWORD dwLanguageId, // language identifier
+  LPTSTR lpBuffer,    // message buffer
+  DWORD nSize,        // maximum size of message buffer
+  va_list *Arguments  // array of message inserts
+);
+ */
 	  return -1;
       }
       return wbyte;

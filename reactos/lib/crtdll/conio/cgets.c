@@ -1,8 +1,8 @@
-#include <crtdll/conio.h>
-#include <crtdll/stdlib.h>
+#include <msvcrt/conio.h>
+#include <msvcrt/stdlib.h>
 
-char *
-_cgets(char *string)
+
+char *_cgets(char *string)
 {
   unsigned len = 0;
   unsigned int maxlen_wanted;

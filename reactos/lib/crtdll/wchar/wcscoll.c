@@ -1,6 +1,5 @@
 
-
-#include <crtdll/wchar.h>
+#include <msvcrt/string.h>
 
 int wcscoll(const wchar_t *a1,const wchar_t *a2)
 {

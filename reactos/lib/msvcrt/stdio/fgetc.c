@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crtdll/stdio/fgetc.c
+ * FILE:        lib/msvcrt/stdio/fgetc.c
  * PURPOSE:     Get a character string from stdin
  * PROGRAMER:   Boudewijn Dekker
  * UPDATE HISTORY:

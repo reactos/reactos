@@ -1,4 +1,4 @@
-/* $Id: setmode.c,v 1.7 2002/11/18 03:19:42 robd Exp $
+/* $Id: setmode.c,v 1.8 2002/11/24 18:42:22 robd Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -19,6 +19,6 @@
 
 int _setmode(int _fd, int _newmode)
 {
-  DPRINT("_setmod(fd %d, newmode %x)\n", _fd, _newmode);
-  return __fileno_setmode(_fd, _newmode);
+    DPRINT("_setmod(fd %d, newmode %x)\n", _fd, _newmode);
+    return __fileno_setmode(_fd, _newmode);
 }

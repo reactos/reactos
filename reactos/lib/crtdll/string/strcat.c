@@ -1,12 +1,12 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <crtdll/string.h>
+#include <msvcrt/string.h>
 
-char *
-strcat(char *s, const char *append)
+
+char* strcat(char* s, const char* append)
 {
-  char *save = s;
+    char* save = s;
 
-  for (; *s; ++s);
-  while ((*s++ = *append++));
-  return save;
+    for (; *s; ++s);
+        while ((*s++ = *append++));
+    return save;
 }

@@ -1,4 +1,4 @@
-#include <crtdll/mbstring.h>
+#include <msvcrt/mbstring.h>
 
 unsigned int _mbsnextc (const unsigned char *src)
 {

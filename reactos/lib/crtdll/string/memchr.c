@@ -1,7 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
+#include <msvcrt/string.h>
 
-
-#include <crtdll/string.h>
 
 void *
 memchr(const void *s, int c, size_t n)

@@ -17,17 +17,17 @@
    Boston, MA 02111-1307, USA.  */
 
 
-#include <crtdll/errno.h>
+#include <msvcrt/errno.h>
 #include <limits.h>
-#include <crtdll/ctype.h>
+#include <msvcrt/ctype.h>
 #include <stdarg.h>
-#include <crtdll/stdio.h>
-#include <crtdll/stdlib.h>
-#include <crtdll/string.h>
-#include <crtdll/wchar.h>
-#include <crtdll/malloc.h>
-#include <crtdll/internal/file.h>
-#include <crtdll/mbstring.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/string.h>
+#include <msvcrt/wchar.h>
+#include <msvcrt/malloc.h>
+#include <msvcrt/internal/file.h>
+#include <msvcrt/mbstring.h>
 /* The internal entry points for `strtoX' take an extra flag argument
    saying whether or not to parse locale-dependent number grouping.  */
 
@@ -48,7 +48,7 @@ unsigned long int __strtoul_internal  (const char *__nptr,  char **__endptr, int
 
 /* Those are flags in the conversion format. */
 # define LONG		0x001	/* l: long or double */
-# define LONGDBL	0x002	/* L: long long or long double */
+# define LONGDBL	0x002	/* L: LONGLONG or long double */
 # define SHORT		0x004	/* h: short */
 # define SUPPRESS	0x008	/* *: suppress assignment */
 # define POINTER	0x010	/* weird %p pointer (`fake hex') */
@@ -320,7 +320,7 @@ int __vfscanf (FILE *s, const char *format, va_list argptr)
 	    break;
 	  case 'q':
 	  case 'L':
-	    /* double's are long double's, and int's are long long int's.  */
+	    /* double's are long double's, and int's are LONGLONG int's.  */
 	    if (flags & TYPEMOD)
 	      /* Signal illegal format element.  */
 	      conv_error ();

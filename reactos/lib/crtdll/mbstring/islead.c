@@ -1,5 +1,5 @@
 #include <windows.h>
-#include <crtdll/mbstring.h>
+#include <msvcrt/mbstring.h>
 
 int isleadbyte(char *mbstr)
 {

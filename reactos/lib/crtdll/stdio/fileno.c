@@ -1,4 +1,4 @@
-#include <crtdll/stdio.h>
+#include <msvcrt/stdio.h>
 
 #undef fileno
 int fileno(FILE *f) 

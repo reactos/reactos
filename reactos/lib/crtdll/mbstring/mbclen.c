@@ -1,6 +1,5 @@
-#include <crtdll/mbstring.h>
-
-#include <crtdll/stdlib.h>
+#include <msvcrt/mbstring.h>
+#include <msvcrt/stdlib.h>
 
 
 size_t _mbclen(const unsigned char *s)

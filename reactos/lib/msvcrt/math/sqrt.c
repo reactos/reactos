@@ -24,9 +24,12 @@ double sqrt (double __x);
 double sqrt (double __x)
 {
   register double __value;
+#ifdef __GNUC__
   __asm __volatile__
     ("fsqrt"
      : "=t" (__value) : "0" (__x));
-
+#else
+  __value = linkme_sqrt(__x);
+#endif /*__GNUC__*/
   return __value;
 }

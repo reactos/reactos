@@ -89,15 +89,15 @@ static int skip_atoi(const char **s)
 }
 
 
-static int do_div(long long *n,int base)
+static int do_div(LONGLONG *n,int base)
 {
-	int __res = ((unsigned long long) *n) % (unsigned) base;
-	*n = ((unsigned long long) *n) / (unsigned) base;
+	int __res = ((ULONGLONG) *n) % (unsigned) base;
+	*n = ((ULONGLONG) *n) / (unsigned) base;
 	return __res;
 }
 
 
-static int number(FILE * f, long long num, int base, int size, int precision ,int type)
+static int number(FILE * f, LONGLONG num, int base, int size, int precision ,int type)
 {
 	char c,sign,tmp[66];
 	const char *digits="0123456789abcdefghijklmnopqrstuvwxyz";
@@ -688,7 +688,7 @@ static int stringw(FILE *f, const wchar_t* sw, int len, int field_width, int pre
 int __vfprintf(FILE *f, const char *fmt, va_list args)
 {
 	int len;
-	unsigned long long num;
+	ULONGLONG num;
 	int i, base;
 	long double _ldouble;
 	double _double;
@@ -1052,7 +1052,7 @@ int __vfprintf(FILE *f, const char *fmt, va_list args)
 		}
 
 		if (qualifier == 'I')
-			num = va_arg(args, unsigned long long);
+			num = va_arg(args, ULONGLONG);
 		else if (qualifier == 'l')
 			num = va_arg(args, unsigned long);
 		else if (qualifier == 'h') {

@@ -12,36 +12,19 @@
 #include <msvcrt/errno.h>
 #include <msvcrt/internal/file.h>
 
-char *_strdate( const char *datestr )
+
+char* _strdate(const char* datestr)
 {
-  time_t t;
-  struct tm *d;
-  char *dt = (char *)datestr;
+    time_t t;
+    struct tm* d;
+    char* dt = (char*)datestr;
 
-  if ( datestr == NULL )
-    {
-      __set_errno(EINVAL);
-      return NULL;
+    if (datestr == NULL) {
+        __set_errno(EINVAL);
+        return NULL;
     }
-  t =  time(NULL);
-  d = localtime(&t);
-  sprintf(dt,"%d/%d/%d",d->tm_mday,d->tm_mon+1,d->tm_year);
-  return dt;
-}
-
-wchar_t *_wstrdate( const wchar_t *datestr )
-{
-  time_t t;
-  struct tm *d;
-  wchar_t *dt = (wchar_t *)datestr;
-
-  if ( datestr == NULL )
-    {
-      __set_errno(EINVAL);
-      return NULL;
-    }
-  t =  time(NULL);
-  d = localtime(&t);
-  swprintf(dt,L"%d/%d/%d",d->tm_mday,d->tm_mon+1,d->tm_year);
-  return dt;
+    t = time(NULL);
+    d = localtime(&t);
+    sprintf(dt,"%d/%d/%d",d->tm_mday,d->tm_mon+1,d->tm_year);
+    return dt;
 }

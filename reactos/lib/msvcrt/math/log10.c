@@ -25,11 +25,14 @@ double log10 (double __x);
 double log10 (double __x)
 {
   register double __value;
+#ifdef __GNUC__
   __asm __volatile__
     ("fldlg2\n\t"
      "fxch\n\t"
      "fyl2x"
      : "=t" (__value) : "0" (__x));
-
+#else
+  __value = linkme_log10(__x);
+#endif /*__GNUC__*/
   return __value;
 }

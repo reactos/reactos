@@ -18,18 +18,22 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.  */
 
+#include <msvcrt/math.h>
 
 double fmod (double __x, double __y);
 
 double fmod (double __x, double __y)
 {
   register double __value;
+#ifdef __GNUC__
   __asm __volatile__
     ("1:        fprem\n\t"
      "fstsw     %%ax\n\t"
      "sahf\n\t"
      "jp        1b"
      : "=t" (__value) : "0" (__x), "u" (__y) : "ax", "cc");
-
+#else
+  __value = linkme_fmod(__x, __y);
+#endif /*__GNUC__*/
   return __value;
 }

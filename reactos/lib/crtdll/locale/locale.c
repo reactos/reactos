@@ -1,12 +1,11 @@
-#include <crtdll/stdio.h>
-#include <crtdll/locale.h>
-#include <crtdll/string.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/locale.h>
+#include <msvcrt/string.h>
 #include <limits.h>
 
 
 int _current_category;	/* used by setlocale */
 const char *_current_locale;
-int __mb_cur_max_dll = 1;
 
 int parse_locale(char *locale, char *lang, char *country, char *code_page);
 
@@ -140,4 +139,3 @@ struct lconv *localeconv(void)
 {
   return (struct lconv *) &_lconv;
 }
-

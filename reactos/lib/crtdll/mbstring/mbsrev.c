@@ -1,4 +1,4 @@
-#include <crtdll/mbstring.h>
+#include <msvcrt/mbstring.h>
 
 unsigned char * _mbsrev(unsigned char *s)
 {

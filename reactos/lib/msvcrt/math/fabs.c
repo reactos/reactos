@@ -25,9 +25,12 @@ double fabs (double __x);
 double fabs (double __x)
 {
   register double __value;
+#ifdef __GNUC__
   __asm __volatile__
     ("fabs"
      : "=t" (__value) : "0" (__x));
-
+#else
+  __value = linkme_fabs(__x);
+#endif /*__GNUC__*/
   return __value;
 }

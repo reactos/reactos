@@ -1,10 +1,9 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <crtdll/stdio.h>
-#include <crtdll/errno.h>
-#include <crtdll/internal/file.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/errno.h>
+#include <msvcrt/internal/file.h>
 
-int
-fsetpos(FILE *stream,const fpos_t *pos)
+int fsetpos(FILE *stream,const fpos_t *pos)
 {
   if (stream && pos)
   {

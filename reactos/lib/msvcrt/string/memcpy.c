@@ -1,5 +1,6 @@
 #include <msvcrt/string.h>
 
+
 /* This is the most reliable way to avoid incompatibilities
    in available built-in functions on various systems.  */
 void *

@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.15 2001/10/03 02:15:55 ekohl Exp $
+; $Id: msvcrt.def,v 1.16 2002/11/24 18:42:20 robd Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -606,7 +606,7 @@ fgetc
 fgetpos
 fgets
 fgetwc
-; fgetws
+fgetws
 floor
 fmod
 fopen
@@ -614,7 +614,7 @@ fprintf
 fputc
 fputs
 fputwc
-; fputws
+fputws
 fread
 free
 freopen
@@ -631,7 +631,7 @@ getchar
 getenv
 gets
 getwc
-; getwchar
+getwchar
 gmtime
 is_wctype
 isalnum
@@ -669,8 +669,8 @@ log10
 longjmp
 malloc
 mblen
-; mbstowcs
-; mbtowc
+mbstowcs
+mbtowc
 memchr
 memcmp
 memcpy
@@ -763,10 +763,10 @@ wcsstr
 wcstod
 wcstok
 wcstol
-; wcstombs
+wcstombs
 wcstoul
 wcsxfrm
-; wctomb
+wctomb
 wprintf
 wscanf
 

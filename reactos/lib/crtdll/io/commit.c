@@ -1,9 +1,8 @@
 #include <windows.h>
-#include <crtdll/io.h>
-#include <crtdll/errno.h>
-#include <crtdll/internal/file.h>
+#include <msvcrt/io.h>
+#include <msvcrt/errno.h>
+#include <msvcrt/internal/file.h>
 
-int _commode_dll = _IOCOMMIT;
 
 int _commit(int _fd)
 {

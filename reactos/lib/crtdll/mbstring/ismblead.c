@@ -9,9 +9,9 @@
  *              12/04/99: Created
  */
 
-#include <crtdll/mbstring.h>
-#include <crtdll/stdlib.h>
-#include <crtdll/mbctype.h>
+#include <msvcrt/mbstring.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/mbctype.h>
 
 size_t _mbclen2(const unsigned int s);
 

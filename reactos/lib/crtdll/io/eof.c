@@ -1,5 +1,5 @@
 #include <windows.h>
-#include <crtdll/io.h>
+#include <msvcrt/io.h>
 
 int _eof( int _fd )
 {
@@ -12,8 +12,4 @@ int _eof( int _fd )
 		return 1;
 
 	return 0;
-
-
-		
-	
 }

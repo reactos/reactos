@@ -25,10 +25,13 @@ double atan (double __x);
 double atan (double __x)
 {
   register double __value;
+#ifdef __GNUC__
   __asm __volatile__
     ("fld1\n\t"
      "fpatan"
      : "=t" (__value) : "0" (__x));
-
+#else
+  __value = linkme_atan(__x);
+#endif /*__GNUC__*/
   return __value;
 }

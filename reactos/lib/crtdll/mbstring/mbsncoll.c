@@ -7,7 +7,7 @@
  * UPDATE HISTORY:
  *              12/04/99: Created
  */
-#include <crtdll/mbstring.h>
+#include <msvcrt/mbstring.h>
 
 int colldif(unsigned short c1, unsigned short c2);
 

@@ -1,4 +1,5 @@
-/*
+/* $Id: pipe.c,v 1.4 2002/11/24 18:42:13 robd Exp $
+ *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/crtdll/io/pipe.c
@@ -8,8 +9,8 @@
  *              28/12/98: Appropriated for Reactos
  */
 #include <windows.h>
-#include <crtdll/io.h>
-#include <crtdll/internal/file.h>
+#include <msvcrt/io.h>
+#include <msvcrt/internal/file.h>
 
 
 int _pipe(int _fildes[2], unsigned int size, int mode )

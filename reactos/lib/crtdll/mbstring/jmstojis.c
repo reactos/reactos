@@ -1,4 +1,4 @@
-#include <crtdll/mbstring.h>
+#include <msvcrt/mbstring.h>
 
 unsigned short _mbcjmstojis(unsigned short c)
 {

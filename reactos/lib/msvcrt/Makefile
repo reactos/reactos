@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.25 2002/10/31 07:26:08 hbirr Exp $
+# $Id: Makefile,v 1.26 2002/11/24 18:42:20 robd Exp $
 
 PATH_TO_TOP = ../..
 
@@ -8,23 +8,40 @@ TARGET_TYPE = dynlink
 
 TARGET_NAME = msvcrt
 
+TARGET_BASE = 0x78000000
+
 TARGET_LFLAGS = -nostartfiles
 
-TARGET_SDKLIBS = kernel32.a ntdll.a
+TARGET_SDKLIBS = kernel32.a
+#TARGET_SDKLIBS = kernel32.a ntdll.a
 
 TARGET_GCCLIBS = gcc
 
-TARGET_BASE = 0x78000000
-
-TARGET_CFLAGS = -D__MSVCRT__
+TARGET_CFLAGS = -D_MSVCRT_LIB_
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 
 TARGET_CLEAN = \
-  conio/*.o ctype/*.o direct/*.o except/*.o float/*.o io/*.o \
-	locale/*.o math/*.o mbstring/*.o misc/*.o process/*.o search/*.o \
-	setjmp/*.o signal/*.o stdio/*.o stdlib/*.o string/*.o sys_stat/*.o \
-	time/*.o wstring/*.o
+	conio/*.o \
+	ctype/*.o \
+	direct/*.o \
+	except/*.o \
+	float/*.o \
+	io/*.o \
+	locale/*.o \
+	math/*.o \
+	mbstring/*.o \
+	misc/*.o \
+	process/*.o \
+	search/*.o \
+	setjmp/*.o \
+	signal/*.o \
+	stdio/*.o \
+	stdlib/*.o \
+	string/*.o \
+	sys_stat/*.o \
+	time/*.o \
+	wstring/*.o
 
 
 include $(PATH_TO_TOP)/rules.mak
@@ -32,7 +49,7 @@ include $(PATH_TO_TOP)/rules.mak
 include $(TOOLS_PATH)/helper.mk
 
 
-OBJECTS_CONIO = \
+CONIO_OBJECTS = \
 	conio/cgets.o \
 	conio/cprintf.o \
 	conio/cputs.o \
@@ -43,7 +60,8 @@ OBJECTS_CONIO = \
 	conio/putch.o \
 	conio/ungetch.o
 
-OBJECTS_CTYPE = \
+CTYPE_OBJECTS = \
+	ctype/ctype.o \
 	ctype/isalnum.o \
 	ctype/isalpha.o \
 	ctype/isascii.o \
@@ -62,7 +80,7 @@ OBJECTS_CTYPE = \
 	ctype/iscsym.o \
 	ctype/isctype.o
 
-OBJECTS_DIRECT = \
+DIRECT_OBJECTS = \
 	direct/chdir.o \
 	direct/chdrive.o \
 	direct/getcwd.o \
@@ -70,9 +88,14 @@ OBJECTS_DIRECT = \
 	direct/getdfree.o \
 	direct/getdrive.o \
 	direct/mkdir.o \
-	direct/rmdir.o
+	direct/rmdir.o \
+	direct/wchdir.o \
+	direct/wgetcwd.o \
+	direct/wgetdcwd.o \
+	direct/wmkdir.o \
+	direct/wrmdir.o
 
-OBJECTS_EXCEPT = \
+EXCEPT_OBJECTS = \
 	except/seh.o \
 	except/abnorter.o \
 	except/exhand2.o \
@@ -80,7 +103,7 @@ OBJECTS_EXCEPT = \
 	except/unwind.o \
 	except/xcptfil.o
 
-OBJECTS_FLOAT = \
+FLOAT_OBJECTS = \
 	float/chgsign.o \
 	float/clearfp.o \
 	float/cntrlfp.o \
@@ -94,7 +117,7 @@ OBJECTS_FLOAT = \
 	float/scalb.o \
 	float/statfp.o
 
-OBJECTS_IO = \
+IO_OBJECTS = \
 	io/access.o \
 	io/chmod.o \
 	io/chsize.o \
@@ -105,11 +128,13 @@ OBJECTS_IO = \
 	io/dup2.o \
 	io/eof.o \
 	io/filelen.o \
+	io/fileleni.o \
 	io/find.o \
 	io/fmode.o \
 	io/isatty.o \
 	io/locking.o \
 	io/lseek.o \
+	io/lseeki64.o \
 	io/mktemp.o \
 	io/open.o \
 	io/pipe.o \
@@ -117,15 +142,24 @@ OBJECTS_IO = \
 	io/setmode.o \
 	io/sopen.o \
 	io/tell.o \
+	io/telli64.o \
 	io/umask.o \
 	io/unlink.o \
 	io/utime.o \
-	io/write.o
+	io/waccess.o \
+	io/wchmod.o \
+	io/wcreate.o \
+	io/wfind.o \
+	io/wmktemp.o \
+	io/wopen.o \
+	io/write.o \
+	io/wunlink.o \
+	io/wutime.o
 
-OBJECTS_LOCALE = \
+LOCALE_OBJECTS = \
 	locale/locale.o
 
-OBJECTS_MATH = \
+MATH_OBJECTS = \
 	math/acos.o \
 	math/adjust.o \
 	math/asin.o \
@@ -158,7 +192,7 @@ OBJECTS_MATH = \
 	math/tan.o \
 	math/tanh.o
 
-OBJECTS_MBSTRING = \
+MBSTRING_OBJECTS = \
 	mbstring/hanzen.o \
 	mbstring/ischira.o \
 	mbstring/iskana.o \
@@ -214,16 +248,18 @@ OBJECTS_MBSTRING = \
 	mbstring/mbstrlen.o \
 	mbstring/mbsupr.o
 
-OBJECTS_MISC = \
+MISC_OBJECTS = \
 	misc/amsg.o \
 	misc/assert.o \
+	misc/crtmain.o \
 	misc/dllmain.o \
+	misc/environ.o \
 	misc/getargs.o \
 	misc/initterm.o \
 	misc/purecall.o \
 	misc/tls.o
 
-OBJECTS_PROCESS = \
+PROCESS_OBJECTS = \
 	process/_cwait.o \
 	process/_system.o \
 	process/dll.o \
@@ -232,17 +268,17 @@ OBJECTS_PROCESS = \
 	process/thread.o \
 	process/threadid.o
 
-OBJECTS_SEARCH = \
+SEARCH_OBJECTS = \
 	search/lfind.o \
 	search/lsearch.o
 
-OBJECTS_SETJMP = \
+SETJMP_OBJECTS = \
 	setjmp/setjmp.o
 	
-OBJECTS_SIGNAL = \
+SIGNAL_OBJECTS = \
 	signal/signal.o
 
-OBJECTS_STDIO = \
+STDIO_OBJECTS = \
 	stdio/allocfil.o \
 	stdio/clearerr.o \
 	stdio/fclose.o \
@@ -254,6 +290,7 @@ OBJECTS_STDIO = \
 	stdio/fgetchar.o \
 	stdio/fgetpos.o \
 	stdio/fgets.o \
+	stdio/fgetws.o \
 	stdio/filbuf.o \
 	stdio/fileno.o \
 	stdio/flsbuf.o \
@@ -302,9 +339,13 @@ OBJECTS_STDIO = \
 	stdio/vprintf.o \
 	stdio/vscanf.o \
 	stdio/vsprintf.o \
-	stdio/vsscanf.o
+	stdio/vsscanf.o \
+	stdio/wfdopen.o \
+	stdio/wrename.o \
+	stdio/wtempnam.o \
+	stdio/wtmpnam.o
 
-OBJECTS_STDLIB = \
+STDLIB_OBJECTS = \
 	stdlib/_exit.o \
 	stdlib/abort.o \
 	stdlib/abs.o \
@@ -329,6 +370,8 @@ OBJECTS_STDLIB = \
 	stdlib/ldiv.o \
 	stdlib/makepath.o \
 	stdlib/malloc.o \
+	stdlib/mbstowcs.o \
+	stdlib/mbtowc.o \
 	stdlib/obsol.o \
 	stdlib/putenv.o \
 	stdlib/qsort.o \
@@ -342,11 +385,19 @@ OBJECTS_STDLIB = \
 	stdlib/swab.o \
 	stdlib/wcstod.o \
 	stdlib/wcstol.o \
+	stdlib/wcstombs.o \
 	stdlib/wcstoul.o \
+	stdlib/wctomb.o \
+	stdlib/wfulpath.o \
+	stdlib/witoa.o \
+	stdlib/witow.o \
+	stdlib/wsenv.o \
+	stdlib/wsplitp.o \
+	stdlib/wmakpath.o \
 	stdlib/wtoi.o \
 	stdlib/wtoi64.o
 
-OBJECTS_STRING = \
+STRING_OBJECTS = \
 	string/memccpy.o \
 	string/memchr.o \
 	string/memcmp.o \
@@ -367,6 +418,7 @@ OBJECTS_STRING = \
 	string/strlwr.o \
 	string/strncat.o \
 	string/strncmp.o \
+	string/strncoll.o \
 	string/strncpy.o \
 	string/strnicmp.o \
 	string/strnlen.o \
@@ -380,21 +432,27 @@ OBJECTS_STRING = \
 	string/strupr.o \
 	string/strxfrm.o 
 
-OBJECTS_SYS_STAT = \
+SYS_STAT_OBJECTS = \
 	sys_stat/fstat.o \
+	sys_stat/fstati64.o \
 	sys_stat/futime.o \
-	sys_stat/stat.o
+	sys_stat/stat.o \
+	sys_stat/wstat.o
 
-OBJECTS_TIME = \
+TIME_OBJECTS = \
 	time/clock.o \
 	time/ctime.o \
 	time/difftime.o \
 	time/strdate.o \
 	time/strftime.o \
 	time/strtime.o \
-	time/time.o
+	time/time.o \
+	time/wctime.o \
+	time/wstrdate.o \
+	time/wstrtime.o
 
-OBJECTS_WSTRING = \
+
+WSTRING_OBJECTS = \
 	wstring/wcscat.o \
 	wstring/wcschr.o \
 	wstring/wcscmp.o \
@@ -421,26 +479,26 @@ OBJECTS_WSTRING = \
 	wstring/wcsxfrm.o
 
 OBJECTS = \
-	$(OBJECTS_CONIO) \
-	$(OBJECTS_CTYPE) \
-	$(OBJECTS_DIRECT) \
-	$(OBJECTS_EXCEPT) \
-	$(OBJECTS_FLOAT) \
-	$(OBJECTS_IO) \
-	$(OBJECTS_LOCALE) \
-	$(OBJECTS_MATH) \
-	$(OBJECTS_MBSTRING) \
-	$(OBJECTS_MISC) \
-	$(OBJECTS_PROCESS) \
-	$(OBJECTS_SEARCH) \
-	$(OBJECTS_SETJMP) \
-	$(OBJECTS_SIGNAL) \
-	$(OBJECTS_STDIO) \
-	$(OBJECTS_STDLIB) \
-	$(OBJECTS_STRING) \
-	$(OBJECTS_SYS_STAT) \
-	$(OBJECTS_TIME) \
-	$(OBJECTS_WSTRING)
+	$(CONIO_OBJECTS) \
+	$(CTYPE_OBJECTS) \
+	$(DIRECT_OBJECTS) \
+	$(EXCEPT_OBJECTS) \
+	$(FLOAT_OBJECTS) \
+	$(IO_OBJECTS) \
+	$(LOCALE_OBJECTS) \
+	$(MATH_OBJECTS) \
+	$(MBSTRING_OBJECTS) \
+	$(MISC_OBJECTS) \
+	$(PROCESS_OBJECTS) \
+	$(SEARCH_OBJECTS) \
+	$(SETJMP_OBJECTS) \
+	$(SIGNAL_OBJECTS) \
+	$(STDIO_OBJECTS) \
+	$(STDLIB_OBJECTS) \
+	$(STRING_OBJECTS) \
+	$(SYS_STAT_OBJECTS) \
+	$(TIME_OBJECTS) \
+	$(WSTRING_OBJECTS)
 
 $(TARGET_NAME).o: $(OBJECTS)
 	$(LD) -r $(OBJECTS) -o $(TARGET_NAME).o

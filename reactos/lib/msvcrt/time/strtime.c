@@ -12,36 +12,19 @@
 #include <msvcrt/errno.h>
 #include <msvcrt/internal/file.h>
 
-char *_strtime(char* buf)
+
+char* _strtime(char* buf)
 {
-  time_t t;
-  struct tm *d;
-  char *dt = (char *)buf;
+    time_t t;
+    struct tm *d;
+    char* dt = (char*)buf;
 
-  if ( buf == NULL )
-    {
-      __set_errno(EINVAL);
-      return NULL;
+    if ( buf == NULL ) {
+        __set_errno(EINVAL);
+        return NULL;
     }
-  t =  time(NULL);
-  d = localtime(&t);
-  sprintf(dt,"%d:%d:%d",d->tm_hour,d->tm_min,d->tm_sec);
-  return dt;
-}
-
-wchar_t *_wstrtime(wchar_t* buf)
-{
-  time_t t;
-  struct tm *d;
-  wchar_t *dt = (wchar_t *)buf;
-
-  if ( buf == NULL )
-    {
-      __set_errno(EINVAL);
-      return NULL;
-    }
-  t =  time(NULL);
-  d = localtime(&t);
-  swprintf(dt,L"%d:%d:%d",d->tm_hour,d->tm_min,d->tm_sec);
-  return dt;
+    t = time(NULL);
+    d = localtime(&t);
+    sprintf(dt,"%d:%d:%d",d->tm_hour,d->tm_min,d->tm_sec);
+    return dt;
 }

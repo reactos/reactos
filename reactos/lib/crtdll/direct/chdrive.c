@@ -1,10 +1,10 @@
-#include <crtdll/direct.h>
-#include <crtdll/stdlib.h>
-#include <crtdll/ctype.h>
 #include <windows.h>
+#include <msvcrt/ctype.h>
+#include <msvcrt/direct.h>
+#include <msvcrt/stdlib.h>
+
 
 int cur_drive = 0;
-
 
 
 int _chdrive( int drive )
@@ -20,7 +20,5 @@ int _chdrive( int drive )
 		d[2] = 0;
 		SetCurrentDirectoryA(d);
 	}
-
-
 	return 0;
 }

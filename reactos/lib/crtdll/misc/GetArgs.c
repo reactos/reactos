@@ -1,6 +1,6 @@
 #include <windows.h>
-#include <crtdll/stdlib.h>
-#include <crtdll/string.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/string.h>
 
 
 char *_pgmptr_dll;

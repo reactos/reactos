@@ -2,7 +2,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crtdll/conio/getch.c
+ * FILE:        lib/msvcrt/stdio/putchar.c
  * PURPOSE:     Writes a character to stdout
  * PROGRAMER:   Boudewijn Dekker
  * UPDATE HISTORY:
@@ -12,6 +12,8 @@
 
 #undef putc
 #undef putchar
+#undef putwc
+#undef putwchar
 
 int putchar(int c)
 {

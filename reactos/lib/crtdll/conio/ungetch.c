@@ -10,15 +10,16 @@
  *              28/12/98: Created
  */
 
-#include <crtdll/process.h>
+#include <msvcrt/conio.h>
+#include <msvcrt/internal/console.h>
+
 #define EOF -1
 
 int char_avail = 0;
-char ungot_char = 0;
+int ungot_char = 0;
 
 
-int
-_ungetch(int c)
+int _ungetch(int c)
 {
   if (char_avail)
     return(EOF);

@@ -1,21 +1,26 @@
 #include <windows.h>
-#include <crtdll/stdio.h>
-#include <crtdll/stdlib.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/stdlib.h>
 
 
 char *_tempnam(const char *dir,const char *prefix )
 {
-	char *TempFileName = malloc(MAX_PATH);
-	char *d;
-	if ( dir == NULL )
-		d = getenv("TMP");
-	else 
-		d = (char *)dir;
+    char *TempFileName = malloc(MAX_PATH);
+    char *d;
 
-	if ( GetTempFileNameA(d, prefix, 0, TempFileName ) == 0 ) {
-		free(TempFileName);
-		return NULL;
-	}
-		
-	return TempFileName;
+    if ( dir == NULL )
+        d = getenv("TMP");
+    else 
+        d = (char *)dir;
+
+#ifdef _MSVCRT_LIB_
+    if (GetTempFileNameA(d, prefix, 1, TempFileName) == 0) {
+#else
+    if (GetTempFileNameA(d, prefix, 0, TempFileName) == 0) {
+#endif /*_MSVCRT_LIB_*/
+        free(TempFileName);
+        return NULL;
+    }
+        
+    return TempFileName;
 }

@@ -1,4 +1,4 @@
-#include <crtdll/stdlib.h>
+#include <msvcrt/stdlib.h>
 
 void **__pxcptinfoptrs (void)
 {

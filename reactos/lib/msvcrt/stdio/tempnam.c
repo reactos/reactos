@@ -3,40 +3,25 @@
 #include <msvcrt/stdlib.h>
 
 
-char *_tempnam(const char *dir,const char *prefix )
+char* _tempnam(const char* dir,const char* prefix)
 {
-  char *TempFileName = malloc(MAX_PATH);
-  char *d;
+    char* TempFileName = malloc(MAX_PATH);
+    char* d;
 
-  if (dir == NULL)
-    d = getenv("TMP");
-  else
-    d = (char *)dir;
+    if (dir == NULL)
+        d = getenv("TMP");
+    else
+        d = (char*)dir;
 
-  if (GetTempFileNameA(d, prefix, 1, TempFileName) == 0)
-    {
-      free(TempFileName);
-      return NULL;
+#ifdef _MSVCRT_LIB_    // TODO: check on difference?
+    if (GetTempFileNameA(d, prefix, 1, TempFileName) == 0) {
+#else// TODO: FIXME: review which is correct
+    if (GetTempFileNameA(d, prefix, 0, TempFileName) == 0) {
+#endif /*_MSVCRT_LIB_*/
+
+        free(TempFileName);
+        return NULL;
     }
 
-  return TempFileName;
-}
-
-wchar_t *_wtempnam(const wchar_t *dir,const wchar_t *prefix)
-{
-  wchar_t *TempFileName = malloc(MAX_PATH);
-  wchar_t *d;
-
-  if (dir == NULL)
-    d = _wgetenv(L"TMP");
-  else 
-    d = (wchar_t *)dir;
-
-  if (GetTempFileNameW(d, prefix, 1, TempFileName) == 0)
-    {
-      free(TempFileName);
-      return NULL;
-    }
-
-  return TempFileName;
+    return TempFileName;
 }

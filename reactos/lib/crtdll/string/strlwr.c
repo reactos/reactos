@@ -8,8 +8,8 @@
  * Copyright 1997 Uwe Bonnes
  */
 
-#include <crtdll/string.h>
-#include <crtdll/ctype.h>
+#include <msvcrt/string.h>
+#include <msvcrt/ctype.h>
 
 char * _strlwr(char *x)
 {

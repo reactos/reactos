@@ -17,8 +17,8 @@ not, write to the Free Software Foundation, Inc., 675 Mass Ave,
 Cambridge, MA 02139, USA.  */
 
 #include <stdarg.h>
-#include <crtdll/stdio.h>
-#include <crtdll/internal/file.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/internal/file.h>
 
 int __vfscanf (FILE *s, const char *format, va_list argptr);
 
@@ -27,10 +27,9 @@ int __vfscanf (FILE *s, const char *format, va_list argptr);
 
 /* Read formatted input from stdin according to the format
    string in FORMAT, using the argument list in ARG.  */
-int
-__vscanf (const char *format, va_list arg)
+int __vscanf (const char *format, va_list arg)
 {
-  return __vfscanf (stdin, format, arg);
+  return __vfscanf(stdin, format, arg);
 }
 //weak_alias (__vscanf, vscanf)
 

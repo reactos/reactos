@@ -9,20 +9,20 @@
  */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 
-#include <crtdll/sys/types.h>
-#include <crtdll/stdio.h>
-#include <crtdll/io.h>
-#include <crtdll/fcntl.h>
-#include <crtdll/internal/file.h>
-#include <crtdll/share.h>
+#include <msvcrt/sys/types.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/io.h>
+#include <msvcrt/fcntl.h>
+#include <msvcrt/share.h>
+#include <msvcrt/internal/file.h>
 
 
-FILE *	__alloc_file(void);
+FILE* __alloc_file(void);
 
 
-FILE* _fsopen(const char *file, const char *mode, int shflag)
+FILE* _fsopen(const char* file, const char* mode, int shflag)
 {
-  FILE *f;
+  FILE* f;
   int fd, rw, oflags = 0;
   char tbchar;
    
@@ -64,19 +64,17 @@ FILE* _fsopen(const char *file, const char *mode, int shflag)
   else
     oflags |= (_fmode & (O_TEXT|O_BINARY));
 
-
-
   if ( shflag == _SH_DENYNO )
-	shf = _S_IREAD | _S_IWRITE;
+    shf = _S_IREAD | _S_IWRITE;
   else if( shflag == _SH_DENYRD )
-	shf =  _S_IWRITE;
+    shf =  _S_IWRITE;
   else if( shflag == _SH_DENYRW )
-	shf =  0;
+    shf =  0;
   else if( shflag == _SH_DENYWR )
-	shf =  _S_IREAD;
+    shf =  _S_IREAD;
   else
-	shf = _S_IREAD | _S_IWRITE;
-  
+    shf = _S_IREAD | _S_IWRITE;
+
   fd = _open(file, oflags, shf);
   if (fd < 0)
     return NULL;

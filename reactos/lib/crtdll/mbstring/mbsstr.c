@@ -1,5 +1,5 @@
-#include <crtdll/mbstring.h>
-#include <crtdll/stdlib.h>
+#include <msvcrt/mbstring.h>
+#include <msvcrt/stdlib.h>
 
 unsigned char *_mbsstr(const unsigned char *src1,const unsigned char *src2)
 {

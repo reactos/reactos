@@ -1,5 +1,6 @@
-#include <crtdll/float.h>
+#include <msvcrt/float.h>
 
-long _ftol(double fl) {
+long _ftol(double fl)
+{
 	return (long)fl;
 }

@@ -1,6 +1,6 @@
-#include <crtdll/math.h>
-#include <crtdll/stdlib.h>
-#include <crtdll/internal/ieee.h>
+#include <msvcrt/math.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/internal/ieee.h>
 
 double
 frexp(double __x, int *exptr)

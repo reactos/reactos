@@ -1,5 +1,5 @@
-#include <crtdll/float.h>
-#include <crtdll/internal/ieee.h>
+#include <msvcrt/float.h>
+#include <msvcrt/internal/ieee.h>
 
 double _copysign (double __d, double __s)
 {

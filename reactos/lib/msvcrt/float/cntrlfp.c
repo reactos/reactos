@@ -10,7 +10,7 @@ unsigned int _controlfp(unsigned int unNew, unsigned int unMask)
 unsigned int _control87(unsigned int unNew, unsigned int unMask)
 {
 register unsigned int __res;
-
+#ifdef __GNUC__
 __asm__ __volatile__ (
 	"pushl	%%eax \n\t"		/* make room on stack */
 	"fstcw	(%%esp) \n\t"
@@ -31,6 +31,7 @@ __asm__ __volatile__ (
 	"popl	%%edx \n\t"
 
 	:"=r" (__res):"r" (unNew),"r" (unMask): "ax", "dx", "cx");
-
+#else
+#endif /*__GNUC__*/
 	return __res;
 }

@@ -1,9 +1,7 @@
 #include <msvcrt/stdlib.h>
 
 
-void
-_initterm(void (* fStart[])(void),
-	  void (* fEnd[])(void))
+void _initterm(void (*fStart[])(void), void (*fEnd[])(void))
 {
    int i = 0;
 
@@ -21,15 +19,11 @@ _initterm(void (* fStart[])(void),
 
 typedef int (* _onexit_t)(void);
 
-_onexit_t
-__dllonexit(_onexit_t func,
-	    void (** fStart[])(void),
-	    void (** fEnd[])(void))
+_onexit_t __dllonexit(_onexit_t func, void (** fStart[])(void),	void (** fEnd[])(void))
 {
 }
 
-_onexit_t
-_onexit(_onexit_t x)
+_onexit_t _onexit(_onexit_t x)
 {
-   return x;
+    return x;
 }

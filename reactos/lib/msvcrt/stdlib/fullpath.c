@@ -10,20 +10,13 @@
 #include <windows.h>
 #include <msvcrt/stdlib.h>
 
-char *_fullpath( char *absPath, const char *relPath, size_t maxLength )
+
+char* _fullpath(char* absPath, const char* relPath, size_t maxLength)
 {
-	char *lpFilePart;
-	if ( GetFullPathNameA(relPath,maxLength,absPath,&lpFilePart) == 0 )
-		return NULL;
+    char* lpFilePart;
 
-	return absPath;
-}
+    if (GetFullPathNameA(relPath,maxLength,absPath,&lpFilePart) == 0)
+        return NULL;
 
-wchar_t *_wfullpath( wchar_t *absPath, const wchar_t *relPath, size_t maxLength )
-{
-	wchar_t *lpFilePart;
-	if ( GetFullPathNameW(relPath,maxLength,absPath,&lpFilePart) == 0 )
-		return NULL;
-
-	return absPath;
+    return absPath;
 }

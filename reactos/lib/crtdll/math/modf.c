@@ -10,9 +10,9 @@
  * ====================================================
  */
 
-#include <crtdll/float.h>
-#include <crtdll/math.h>
-#include <crtdll/internal/ieee.h>
+#include <msvcrt/float.h>
+#include <msvcrt/math.h>
+#include <msvcrt/internal/ieee.h>
 
 
 

@@ -16,15 +16,15 @@ License along with the GNU C Library; see the file COPYING.LIB.  If
 not, write to the Free Software Foundation, Inc., 675 Mass Ave,
 Cambridge, MA 02139, USA.  */
 
-#include <crtdll/sys/timeb.h>
-#include <crtdll/time.h>
-#include <crtdll/errno.h>
-#include <crtdll/stdlib.h>
-#include <crtdll/internal/file.h>
+#include <msvcrt/sys/timeb.h>
+#include <msvcrt/time.h>
+#include <msvcrt/errno.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/internal/file.h>
+
+
 // crtdll has void return type instead of int
-void
-_ftime (timebuf)
-     struct timeb *timebuf;
+void _ftime(struct timeb* timebuf)
 {
   int save = errno;
   struct tm *tp;
@@ -44,4 +44,3 @@ _ftime (timebuf)
   __set_errno (save);
   return;
 }
-

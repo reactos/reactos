@@ -8,7 +8,7 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-#include <crtdll/stdio.h>
+#include <msvcrt/stdio.h>
 
 #undef putc
 #undef putchar

@@ -1,5 +1,5 @@
 #include <windows.h>
-#include <crtdll/process.h>
+#include <msvcrt/process.h>
 
 int _getpid (void)
 {

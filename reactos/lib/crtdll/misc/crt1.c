@@ -19,18 +19,18 @@
  *  DISCLAMED. This includes but is not limited to warrenties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.3 $
- * $Author: ariadne $
- * $Date: 1999/04/23 18:42:21 $
+ * $Revision: 1.4 $
+ * $Author: robd $
+ * $Date: 2002/11/24 18:42:15 $
  *
  */
 
-#include <crtdll/stdlib.h>
-#include <crtdll/stdio.h>
-#include <crtdll/io.h>
-#include <crtdll/fcntl.h>
-#include <crtdll/process.h>
-#include <crtdll/float.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/io.h>
+#include <msvcrt/fcntl.h>
+#include <msvcrt/process.h>
+#include <msvcrt/float.h>
 #include <windows.h>
 
 /* NOTE: The code for initializing the _argv, _argc, and environ variables

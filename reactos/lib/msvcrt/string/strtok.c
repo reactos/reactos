@@ -2,7 +2,7 @@
 #include <msvcrt/string.h>
 #include <msvcrt/internal/tls.h>
 
-char *strtok(char *s, const char *delim)
+char* strtok(char* s, const char* delim)
 {
   const char *spanp;
   int c, sc;

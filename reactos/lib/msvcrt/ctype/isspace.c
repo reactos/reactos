@@ -2,7 +2,7 @@
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/msvcrt/ctype/isspace.c
- * PURPOSE:     Checks for a whitespace characters
+ * PURPOSE:     Test for a space character
  * PROGRAMER:   Boudewijn Dekker
  * UPDATE HISTORY:
  *              28/12/98: Created

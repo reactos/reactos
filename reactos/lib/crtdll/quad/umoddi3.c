@@ -34,10 +34,10 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: umoddi3.c,v 1.1 1999/04/17 09:10:23 ariadne Exp $
+ * $Id: umoddi3.c,v 1.2 2002/11/24 18:42:16 robd Exp $
  */
 
-#include <crtdll/internal/quad.h>
+#include <msvcrt/internal/quad.h>
 
 /*
  * Return remainder after dividing two unsigned quads.

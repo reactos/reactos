@@ -8,8 +8,8 @@
  *              12/04/99: Created
  */
 
-#include <crtdll/mbctype.h>
-#include <crtdll/ctype.h>
+#include <msvcrt/mbctype.h>
+#include <msvcrt/ctype.h>
 
 // code page 952 only
 int _ismbcupper( unsigned int c )

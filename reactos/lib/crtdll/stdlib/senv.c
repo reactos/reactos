@@ -1,14 +1,19 @@
-#include <crtdll/stdlib.h>
 #include <windows.h>
-#include <crtdll/string.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/string.h>
+
+#define NDEBUG
+#include <msvcrt/msvcrtdbg.h>
 
 void _searchenv(const char *file,const char *var,char *path )
 {
 	char *env = getenv(var);
-
 	char *x;
 	char *y;
 	char *FilePart;
+
+	DPRINT("_searchenv()\n");
+
 	x = strchr(env,'=');
 	if ( x != NULL ) {
 		*x = 0;
@@ -24,5 +29,4 @@ void _searchenv(const char *file,const char *var,char *path )
 		y = strchr(env,';');
 	}
 	return;
-	
 }

@@ -1,9 +1,8 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <crtdll/string.h>
-//#include <crtdll/unconst.h>
+#include <msvcrt/string.h>
 
-char *
-strstr(const char *s, const char *find)
+
+char *strstr(const char *s, const char *find)
 {
   char c, sc;
   size_t len;

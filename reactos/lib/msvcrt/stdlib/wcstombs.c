@@ -39,10 +39,12 @@ static const unsigned char encoding_byte[] =
 
 /* We don't need the state really because we don't have shift states
    to maintain between calls to this function.  */
-static mbstate_t internal;
+typedef int mbstate_t;
+static mbstate_t mbstate_internal;
 
 
-extern mbstate_t __no_r_state;  /* Defined in mbtowc.c.  */
+mbstate_t __no_r_state;  /* Now defined in wcstombs.c.  */
+//extern mbstate_t __no_r_state;  /* Defined in mbtowc.c.  */
 
 size_t
 __wcsrtombs (char *dst, const wchar_t **src, size_t len, mbstate_t *ps);
@@ -77,7 +79,7 @@ __wcsrtombs (char *dst, const wchar_t **src, size_t len, mbstate_t *ps)
   const wchar_t *run = *src;
 
   if (ps == NULL)
-    ps = &internal;
+    ps = &mbstate_internal;
 
   if (dst == NULL)
     /* The LEN parameter has to be ignored if we don't actually write

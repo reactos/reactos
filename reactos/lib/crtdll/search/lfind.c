@@ -1,5 +1,5 @@
-#include <crtdll/search.h>
-#include <crtdll/stdlib.h>
+#include <msvcrt/search.h>
+#include <msvcrt/stdlib.h>
 
 
 void *_lfind(const void *key, const void *base, size_t *nelp,
@@ -7,7 +7,8 @@ void *_lfind(const void *key, const void *base, size_t *nelp,
 {
 	char *char_base = (char *)base;
 	int i;
-	for(i=0;i<*nelp;i++) {
+
+    for (i = 0; i < *nelp; i++) {
 		if ( compar(key,char_base) == 0)
 			return char_base;
 		char_base += width;

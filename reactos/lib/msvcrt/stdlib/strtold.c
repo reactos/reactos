@@ -5,8 +5,12 @@
 
 static double powten[] =
 {
-  1e1L, 1e2L, 1e4L, 1e8L, 1e16L, 1e32L, 1e64L, 1e128L, 1e256L
+  1e1L, 1e2L, 1e4L, 1e8L, 1e16L, 1e32L, 1e64L, 1e128L, 1e256L,
+#ifdef __GNUC__
   1e512L, 1e512L*1e512L, 1e2048L, 1e4096L
+#else
+  1e256L, 1e256L, 1e256L, 1e256L
+#endif
 };
 
 long double

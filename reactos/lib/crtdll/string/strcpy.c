@@ -1,5 +1,7 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-char* strcpy(char *to, const char *from);
+#include <msvcrt/string.h>
+
+#pragma function(strcpy)
 
 char* strcpy(char *to, const char *from)
 {

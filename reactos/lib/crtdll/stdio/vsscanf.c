@@ -16,20 +16,18 @@ License along with the GNU C Library; see the file COPYING.LIB.  If
 not, write to the Free Software Foundation, Inc., 675 Mass Ave,
 Cambridge, MA 02139, USA.  */
 
-#include <crtdll/errno.h>
-#include <stdarg.h>
-#include <crtdll/stdio.h>
-#include <crtdll/string.h>
-#include <crtdll/internal/file.h>
+#include <msvcrt/errno.h>
+#include <msvcrt/stdarg.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/string.h>
+#include <msvcrt/internal/file.h>
+#include <msvcrt/internal/stdio.h>
 
 #undef  vsscanf
 
-int __vfscanf (FILE *s, const char *format, va_list argptr);
-
 /* Read formatted input from S according to the format
    string FORMAT, using the argument list in ARG.  */
-int
-__vsscanf (const char *s,const char *format,va_list arg)
+int __vsscanf(const char *s,const char *format,va_list arg)
 {
   FILE f;
 
@@ -41,18 +39,12 @@ __vsscanf (const char *s,const char *format,va_list arg)
 
   memset ((void *) &f, 0, sizeof (f));
 
-
-
   f._flag = _IOREAD;
   f._ptr = (char *)s;
   f._base = (char *)s;
   f._bufsiz = strlen(s);
   f._cnt = f._bufsiz;
- 
 
   return __vfscanf (&f, format, arg);
 }
-
-
-//weak_alias (__vsscanf, vsscanf)
 

@@ -1,6 +1,6 @@
-#include <crtdll/process.h>
-#include <crtdll/stdlib.h>
-#include <crtdll/stdarg.h>
+#include <msvcrt/process.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/stdarg.h>
 
 
 int execlpe(const char *path, const char *szArgv0, ... /*, const char **envp */)

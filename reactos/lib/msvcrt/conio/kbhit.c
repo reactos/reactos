@@ -17,12 +17,11 @@
 
 int _kbhit(void)
 {
-  INPUT_RECORD InputRecord;
+  //INPUT_RECORD InputRecord;
   DWORD NumberRead=0;
   if (char_avail)
     return(1);
-  else
-    {
+  else {
       //FIXME PeekConsoleInput might do DeviceIo
       //PeekConsoleInput((HANDLE)stdin->_file,&InputRecord,1,&NumberRead);
       return NumberRead;

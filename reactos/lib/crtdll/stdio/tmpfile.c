@@ -2,22 +2,17 @@
 /* Copyright (C) 1997 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1998 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-//#include <crtdll/stubs.h>
-#include <crtdll/stdio.h>
-#include <crtdll/string.h>
-#include <crtdll/stdlib.h>
-#include <crtdll/errno.h>
-#include <crtdll/fcntl.h>
-//#include <crtdll/unistd.h>
-#include <crtdll/io.h>
-#include <crtdll/internal/file.h>
-#include <crtdll/share.h>
 
-#if 0
-#ifndef __dj_include_stdio_h_
-#define _name_to_remove _tmpfname
-#endif
-#endif
+#include <msvcrt/stdio.h>
+#include <msvcrt/string.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/errno.h>
+#include <msvcrt/fcntl.h>
+//#include <msvcrt/unistd.h>
+#include <msvcrt/io.h>
+#include <msvcrt/share.h>
+#include <msvcrt/internal/file.h>
+
 
 FILE *	__alloc_file(void);
 

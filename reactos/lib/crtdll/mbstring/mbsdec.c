@@ -1,4 +1,4 @@
-#include <crtdll/mbstring.h>
+#include <msvcrt/mbstring.h>
 
 unsigned char * _mbsdec(const unsigned char *str, const unsigned char *cur)
 {

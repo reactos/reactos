@@ -1,8 +1,8 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 
-#include <crtdll/stdio.h>
-#include <crtdll/io.h>
-#include <crtdll/internal/file.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/io.h>
+#include <msvcrt/internal/file.h>
 
 
 void rewind(FILE *f)

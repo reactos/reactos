@@ -1,4 +1,5 @@
-/*
+/* $Id: fstat.c,v 1.11 2002/11/24 18:42:19 robd Exp $
+ *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/crtdll/sys/fstat.c
@@ -7,19 +8,17 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-#include	<windows.h>
-#include 	<crtdll/sys/types.h>
-#include	<crtdll/sys/stat.h>
-#include 	<crtdll/fcntl.h>
-#include	<crtdll/string.h>
-#include	<crtdll/errno.h>
-#include	<crtdll/internal/file.h>
+#include <windows.h>
+#include <msvcrt/sys/types.h>
+#include <msvcrt/sys/stat.h>
+#include <msvcrt/fcntl.h>
+#include <msvcrt/string.h>
+#include <msvcrt/errno.h>
+#include <msvcrt/internal/file.h>
 
 
-int
-_fstat(int fd, struct stat *statbuf)
+int _fstat(int fd, struct stat* statbuf)
 {
- 
   BY_HANDLE_FILE_INFORMATION  FileInformation;
 
   if (!statbuf)

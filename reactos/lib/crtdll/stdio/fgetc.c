@@ -9,17 +9,15 @@
 		25/02/99: Added fgetwc
  */
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <crtdll/stdio.h>
-#include <crtdll/internal/file.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/internal/file.h>
 
-int
-fgetc(FILE *f)
+int fgetc(FILE *f)
 {
   return getc(f);
 }
 
-wint_t
-fgetwc(FILE *f)
+wint_t fgetwc(FILE *f)
 {
   return getwc(f);
 }

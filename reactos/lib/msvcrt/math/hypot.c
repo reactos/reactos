@@ -78,7 +78,7 @@ _hypot(double x, double y)
  
 #ifdef  TEST
  
-#include <crtdll/stdio.h>
+#include <msvcrt/stdio.h>
  
 int
 main(void)

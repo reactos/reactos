@@ -16,7 +16,10 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.  */
 
-#include <stdarg.h>
+//#include <stdarg.h>
+#include <msvcrt/stdarg.h> // robd
+#include <msvcrt/crttypes.h> // robd
+
 #include <msvcrt/errno.h>
 #include <limits.h>
 #include <msvcrt/ctype.h>
@@ -39,17 +42,17 @@ long int __strtol_internal (const char *__nptr, char **__endptr,	int __base, int
 unsigned long int __strtoul_internal  (const char *__nptr,  char **__endptr, int __base, int __group);
 
 
-
-#ifdef	__GNUC__
-#define	HAVE_LONGLONG
-#define	LONGLONG	long long
-#else
-#define	LONGLONG	long
-#endif
+#include <msvcrt/crttypes.h> // robd
+//#ifdef	__GNUC__
+//#define	HAVE_LONGLONG
+//#define	LONGLONG	LONGLONG
+//#else
+//#define	LONGLONG	long
+//#endif
 
 /* Those are flags in the conversion format. */
 # define LONG		0x001	/* l: long or double */
-# define LONGDBL	0x002	/* L: long long or long double */
+# define LONGDBL	0x002	/* L: LONGLONG or long double */
 # define SHORT		0x004	/* h: short */
 # define SUPPRESS	0x008	/* *: suppress assignment */
 # define POINTER	0x010	/* weird %p pointer (`fake hex') */
@@ -112,8 +115,7 @@ void ADDW(int Ch)	\
       char *old = wp;
       wpmax = UCHAR_MAX > 2 * wpmax ? UCHAR_MAX : 2 * wpmax;
       wp = (char *) malloc (wpmax);
-      if (old != NULL)
-        {
+	  if (old != NULL) {					    
 	  memcpy (wp, old, wpsize);
 	  free(old);
 	}
@@ -148,8 +150,8 @@ int __vfscanf (FILE *s, const char *format, va_list argptr)
   /* Integral holding variables.  */
   union
     {
-      long long int q;
-      unsigned long long int uq;
+      LONGLONG int q;
+      ULONGLONG int uq;
       long int l;
       unsigned long int ul;
     } num;
@@ -321,7 +323,7 @@ int __vfscanf (FILE *s, const char *format, va_list argptr)
 	    break;
 	  case 'q':
 	  case 'L':
-	    /* double's are long double's, and int's are long long int's.  */
+	    /* double's are long double's, and int's are LONGLONG int's.  */
 	    if (flags & TYPEMOD)
 	      /* Signal illegal format element.  */
 	      conv_error ();
@@ -780,7 +782,7 @@ int __vfscanf (FILE *s, const char *format, va_list argptr)
 	    if (! number_signed)
 		{
 			if (flags & LONGDBL) {
-		    		*ARG (unsigned LONGLONG int *) = num.uq;
+		    		*ARG (ULONGLONG int *) = num.uq;
 			}
 			else if (flags & LONG)
 				*ARG (unsigned long int *) = num.ul;
@@ -1066,7 +1068,11 @@ float __strtof_internal (const char *__nptr, char **__endptr,int __group)
 static double powten[] =
 {
   1e1L, 1e2L, 1e4L, 1e8L, 1e16L, 1e32L, 1e64L, 1e128L, 1e256L,
+#ifdef __GNUC__
   1e512L, 1e512L*1e512L, 1e2048L, 1e4096L
+#else
+      1e256L, 1e256L, 1e256L, 1e256L
+#endif
 };
 
 long double __strtold_internal  (const char *s,char **sret, int __group)

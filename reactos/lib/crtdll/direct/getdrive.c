@@ -1,10 +1,9 @@
-#include <crtdll/direct.h>
-#include <crtdll/ctype.h>
 #include <windows.h>
+#include <msvcrt/ctype.h>
+#include <msvcrt/direct.h>
+
 
 extern int cur_drive;
-
-
 
 int _getdrive( void )
 {

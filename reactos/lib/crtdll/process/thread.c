@@ -1,7 +1,7 @@
 #include <windows.h>
-#include <crtdll/process.h>
-#include <crtdll/errno.h>
-#include <crtdll/internal/file.h>
+#include <msvcrt/process.h>
+#include <msvcrt/errno.h>
+#include <msvcrt/internal/file.h>
 
 
 unsigned long

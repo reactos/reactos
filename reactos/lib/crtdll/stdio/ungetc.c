@@ -1,14 +1,13 @@
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <crtdll/stdio.h>
-#include <crtdll/internal/file.h>
-#include <crtdll/wchar.h>
-#include <crtdll/errno.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/wchar.h>
+#include <msvcrt/errno.h>
+#include <msvcrt/internal/file.h>
 
-int
-ungetc(int c, FILE *f)
+
+int ungetc(int c, FILE *f)
 {
-
   if (!__validfp (f) || !OPEN4READING(f)) {
       __set_errno (EINVAL);
       return EOF;
@@ -16,8 +15,6 @@ ungetc(int c, FILE *f)
 
   if (c == EOF )
 	return EOF;
-
-  
     
   if ( f->_ptr == NULL || f->_base == NULL)
    	 return EOF;
@@ -52,8 +49,6 @@ ungetwc(wchar_t c, FILE *f)
   if (c == (wchar_t)EOF )
 	return EOF;
 
-  
-    
   if ( f->_ptr == NULL || f->_base == NULL)
    	 return EOF;
 

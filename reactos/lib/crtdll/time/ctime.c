@@ -39,22 +39,25 @@ static char sccsid[] = "@(#)ctime.c	5.23 (Berkeley) 6/22/90";
 ** (guy@auspex.com).
 */
 
-
-
-
-#include <crtdll/fcntl.h>
-#include <crtdll/time.h>
-#include <crtdll/string.h>
-#include <crtdll/ctype.h>
-#include <crtdll/stdio.h>
-#include <crtdll/stdlib.h>
+#include <msvcrt/fcntl.h>
+#include <msvcrt/time.h>
+#include <msvcrt/string.h>
+#include <msvcrt/ctype.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/stdlib.h>
 
 #include <windows.h>
 #include "tzfile.h"
 
-#include <crtdll/io.h>
+#include <msvcrt/io.h>
 
 #include "posixrul.h"
+
+#ifdef __cplusplus 
+#define CPP_CONST const 
+#else
+#define CPP_CONST
+#endif
 
 #define P(s)		s
 #define alloc_size_t	size_t
@@ -84,8 +87,15 @@ static char sccsid[] = "@(#)ctime.c	5.23 (Berkeley) 6/22/90";
 ** manual page of what this "time zone abbreviation" means (doing this so
 ** that tzname[0] has the "normal" length of three characters).
 */
+
+#ifdef _MSVCRT_LIB_
+int _daylight;
+int _timezone;
+#else
 int _daylight_dll;
 int _timezone_dll;
+#endif /*_MSVCRT_LIB_*/
+
 
 static char WILDABBR[] = "   ";
 
@@ -135,35 +145,35 @@ struct rule {
 /*
 ** Prototypes for static functions.
 */
-
+#if 0
 static long		detzcode P((const char * codep));
 static const char *	getzname P((const char * strp));
-static const char *	getnum P((const char * strp, int * nump, int min,
-				int max));
+static const char * getnum P((const char * strp, int * nump, int min, int max));
 static const char *	getsecs P((const char * strp, long * secsp));
 static const char *	getoffset P((const char * strp, long * offsetp));
 static const char *	getrule P((const char * strp, struct rule * rulep));
 static void		gmtload P((struct state * sp));
-static void		gmtsub P((const time_t * timep, long offset,
-				struct tm * tmp));
-static void		localsub P((const time_t * timep, long offset,
-				struct tm * tmp));
+static void     gmtsub P((const time_t * timep, long offset, struct tm * tmp));
+static void     localsub P((const time_t * timep, long offset, struct tm * tmp));
 static void		normalize P((int * tensptr, int * unitsptr, int base));
 static void		settzname P((void));
-static time_t		time1 P((struct tm * tmp, void (* funcp)(const time_t * const, const long, struct tm * const),
-				long offset));
-static time_t		time2 P((struct tm *tmp, void (* funcp)(const time_t * const, const long, struct tm * const),
-				long offset, int * okayp));
-static void		timesub P((const time_t * timep, long offset,
-				const struct state * sp, struct tm * tmp));
-static int		tmcomp P((const struct tm * atmp,
-				const struct tm * btmp));
-static time_t		transtime P((time_t janfirst, int year,
-				const struct rule * rulep, long offset));
+static time_t   time1 P((struct tm * tmp, void (* funcp)(const time_t * CPP_CONST, const long, struct tm * CPP_CONST), long offset));
+static time_t   time2 P((struct tm *tmp, void (* funcp)(const time_t * CPP_CONST, const long, struct tm * CPP_CONST), long offset, int * okayp));
+static void     timesub P((const time_t * timep, long offset, const struct state * sp, struct tm * tmp));
+static int      tmcomp P((const struct tm * atmp, const struct tm * btmp));
+static time_t   transtime P((time_t janfirst, int year, const struct rule * rulep, long offset));
 static int		tzload P((const char * name, struct state * sp));
-static int		tzparse P((const char * name, struct state * sp,
-				int lastditch));
+static int      tzparse P((const char * name, struct state * sp, int lastditch));
 static void		tzsetwall(void);
+
+#else
+
+static const char * getnum(const char * strp, int * CPP_CONST nump, const int min, const int max);
+static void     timesub(const time_t * CPP_CONST timep, const long offset, const struct state * CPP_CONST sp, struct tm * CPP_CONST tmp);
+static time_t   transtime(const time_t janfirst, const int year, const struct rule * CPP_CONST rulep, const long offset);
+static void     tzsetwall(void);
+
+#endif
 
 #ifdef ALL_STATE
 static struct state *lclptr;
@@ -186,7 +196,7 @@ char * _tzname[2] = {
 };
 
 static long
-detzcode(const char * const codep)
+detzcode(const char * CPP_CONST codep)
 {
   long result;
   int i;
@@ -200,7 +210,7 @@ detzcode(const char * const codep)
 static void
 settzname(void)
 {
-  const struct state * const sp = lclptr;
+  const struct state * CPP_CONST sp = lclptr;
   int i;
 
   _tzname[0] = WILDABBR;
@@ -214,7 +224,7 @@ settzname(void)
 #endif /* defined ALL_STATE */
   for (i = 0; i < sp->typecnt; ++i)
   {
-    register const struct ttinfo * const ttisp = &sp->ttis[i];
+    register const struct ttinfo * CPP_CONST ttisp = &sp->ttis[i];
 
     _tzname[ttisp->tt_isdst] =
       (char *)&sp->chars[ttisp->tt_abbrind];
@@ -232,7 +242,7 @@ settzname(void)
    */
   for (i = 0; i < sp->timecnt; ++i)
   {
-    const struct ttinfo * const ttisp = &sp->ttis[sp->types[i]];
+    const struct ttinfo * CPP_CONST ttisp = &sp->ttis[sp->types[i]];
 
     _tzname[ttisp->tt_isdst] = (char *)&sp->chars[ttisp->tt_abbrind];
   }
@@ -260,7 +270,7 @@ tzdir(void)
 }
 
 static int
-tzload(const char *name, struct state * const sp)
+tzload(const char *name, struct state * CPP_CONST sp)
 {
   const char * p;
   int i;
@@ -419,7 +429,7 @@ getzname(const char *strp)
 */
 
 static const char *
-getnum(const char *strp, int * const nump, const int min, const int max)
+getnum(const char *strp, int * CPP_CONST nump, const int min, const int max)
 {
   char c;
   int num;
@@ -449,7 +459,7 @@ getnum(const char *strp, int * const nump, const int min, const int max)
 */
 
 static const char *
-getsecs(const char *strp, long * const secsp)
+getsecs(const char *strp, long * CPP_CONST secsp)
 {
   int num;
 
@@ -484,7 +494,7 @@ getsecs(const char *strp, long * const secsp)
 */
 
 static const char *
-getoffset(const char *strp, long * const offsetp)
+getoffset(const char *strp, long * CPP_CONST offsetp)
 {
   int neg;
 
@@ -513,7 +523,7 @@ getoffset(const char *strp, long * const offsetp)
 */
 
 static const char *
-getrule(const char *strp, struct rule * const rulep)
+getrule(const char *strp, struct rule * CPP_CONST rulep)
 {
   if (*strp == 'J')
   {
@@ -575,7 +585,7 @@ getrule(const char *strp, struct rule * const rulep)
 */
 
 static time_t
-transtime(const time_t janfirst, const int year, const struct rule * const rulep, const long offset)
+transtime(const time_t janfirst, const int year, const struct rule * CPP_CONST rulep, const long offset)
 {
   int leapyear;
   time_t value=0;
@@ -667,7 +677,7 @@ transtime(const time_t janfirst, const int year, const struct rule * const rulep
 */
 
 static int
-tzparse(const char *name, struct state * const sp, const int lastditch)
+tzparse(const char *name, struct state * CPP_CONST sp, const int lastditch)
 {
   const char * stdname;
   const char * dstname=0;
@@ -891,7 +901,7 @@ tzparse(const char *name, struct state * const sp, const int lastditch)
 }
 
 static void
-gmtload(struct state * const sp)
+gmtload(struct state * CPP_CONST sp)
 {
   if (tzload(GMT, sp) != 0)
     (void) tzparse(GMT, sp, TRUE);
@@ -968,7 +978,7 @@ tzsetwall(void)
 
 /*ARGSUSED*/
 static void
-localsub(const time_t * const timep, const long offset, struct tm * const tmp)
+localsub(const time_t * CPP_CONST timep, const long offset, struct tm * CPP_CONST tmp)
 {
   const struct state * sp;
   const struct ttinfo * ttisp;
@@ -1016,7 +1026,7 @@ localsub(const time_t * const timep, const long offset, struct tm * const tmp)
 }
 
 struct tm *
-localtime(const time_t * const timep)
+localtime(const time_t * CPP_CONST timep)
 {
   static struct tm tm;
 
@@ -1029,7 +1039,7 @@ localtime(const time_t * const timep)
 */
 
 static void
-gmtsub(const time_t * const timep, const long offset, struct tm * const tmp)
+gmtsub(const time_t * CPP_CONST timep, const long offset, struct tm * CPP_CONST tmp)
 {
   if (!gmt_is_set)
   {
@@ -1063,7 +1073,7 @@ gmtsub(const time_t * const timep, const long offset, struct tm * const tmp)
 }
 
 struct tm *
-gmtime(const time_t * const timep)
+gmtime(const time_t * CPP_CONST timep)
 {
   static struct tm tm;
 
@@ -1072,7 +1082,7 @@ gmtime(const time_t * const timep)
 }
 
 static void
-timesub(const time_t * const timep, const long offset, const struct state * const sp, struct tm * const tmp)
+timesub(const time_t * CPP_CONST timep, const long offset, const struct state * CPP_CONST sp, struct tm * CPP_CONST tmp)
 {
   const struct lsinfo * lp;
   long days;
@@ -1192,7 +1202,7 @@ asctime(const struct tm *timeptr)
 }
 
 char *
-ctime(const time_t * const timep)
+ctime(const time_t * CPP_CONST timep)
 {
   return asctime(localtime(timep));
 }
@@ -1211,7 +1221,7 @@ ctime(const time_t * const timep)
 #endif /* !defined WRONG */
 
 static void
-normalize(int * const tensptr, int * const unitsptr, const int base)
+normalize(int * CPP_CONST tensptr, int * CPP_CONST unitsptr, const int base)
 {
   if (*unitsptr >= base)
   {
@@ -1231,7 +1241,7 @@ normalize(int * const tensptr, int * const unitsptr, const int base)
 }
 
 static int
-tmcomp(const struct tm * const atmp, const struct tm * const btmp)
+tmcomp(const struct tm * CPP_CONST atmp, const struct tm * CPP_CONST btmp)
 {
   int result;
 
@@ -1245,7 +1255,7 @@ tmcomp(const struct tm * const atmp, const struct tm * const btmp)
 }
 
 static time_t
-time2(struct tm *tmp, void (*const funcp)(const time_t *const,const long,struct tm *), const long offset, int * const okayp)
+time2(struct tm *tmp, void (*const funcp)(const time_t * CPP_CONST, const long, struct tm *), const long offset, int * CPP_CONST okayp)
 {
   const struct state * sp;
   int dir;
@@ -1295,7 +1305,12 @@ time2(struct tm *tmp, void (*const funcp)(const time_t *const,const long,struct 
    ** If time_t is signed, then 0 is the median value,
    ** if time_t is unsigned, then 1 << bits is median.
    */
+#ifdef _MSVCRT_LIB_
+  t = (time_t) ((1 << bits) - 1);
+#else // TODO: FIXME: review which is correct
   t = (time_t) 1 << bits;
+#endif /*_MSVCRT_LIB_*/
+
   for ( ; ; )
   {
     (*funcp)(&t, offset, &mytm);
@@ -1357,7 +1372,7 @@ time2(struct tm *tmp, void (*const funcp)(const time_t *const,const long,struct 
 }
 
 static time_t
-time1(struct tm * const tmp, void (*const funcp)(const time_t * const, const long, struct tm *), const long offset)
+time1(struct tm * CPP_CONST tmp, void (*const funcp)(const time_t * CPP_CONST, const long, struct tm *), const long offset)
 {
   time_t t;
   const struct state * sp;
@@ -1407,7 +1422,3 @@ mktime(struct tm * tmp)
 {
   return time1(tmp, localsub, 0L);
 }
-
-
-
-

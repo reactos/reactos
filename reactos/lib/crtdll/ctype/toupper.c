@@ -1,6 +1,6 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <crtdll/ctype.h>
-#include <crtdll/wchar.h>
+#include <msvcrt/ctype.h>
+
 
 #undef toupper
 int toupper(int c)
@@ -25,9 +25,12 @@ int _toupper(int c)
    return(c);
 }
 
+/*
 wchar_t _towupper(wchar_t c)
 {
    if (iswctype (c, _LOWER))
       return (c + (L'A' - L'a'));
    return(c);
 }
+*/
+

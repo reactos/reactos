@@ -19,9 +19,9 @@
  *  DISCLAMED. This includes but is not limited to warrenties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.3 $
- * $Author: ariadne $
- * $Date: 1999/04/23 18:42:21 $
+ * $Revision: 1.4 $
+ * $Author: robd $
+ * $Date: 2002/11/24 18:42:15 $
  *
  */
 
@@ -29,8 +29,8 @@
  * Access to a standard 'main'-like argument count and list. Also included
  * is a table of environment variables.
  */
-int	_argc = 0;
-char**	_argv = 0;
+int _argc = 0;
+char**  _argv = 0;
 
 /* NOTE: Thanks to Pedro A. Aranda Gutiirrez <paag@tid.es> for pointing
  * this out to me. GetMainArgs (used below) takes a fourth argument
@@ -44,13 +44,9 @@ char**	_argv = 0;
  * defining _CRT_glob and setting it to zero, like this:
  *  int _CRT_glob = 0;
  */
-extern int	_CRT_glob;
+extern int  _CRT_glob;
 
-#ifdef __MSVCRT__
-extern void __getmainargs(int *, char***, char***, int);
-#else
 extern void __GetMainArgs(int *, char***, char***, int);
-#endif
 
 /*
  * Initialize the _argc, _argv and environ variables.
@@ -58,18 +54,18 @@ extern void __GetMainArgs(int *, char***, char***, int);
 static void
 _mingw32_init_mainargs (void)
 {
-	/* The environ variable is provided directly in stdlib.h through
-	 * a dll function call. */
-	char**	dummy_environ;
+    /* The environ variable is provided directly in stdlib.h through
+     * a dll function call. */
+    char**  dummy_environ;
 
-	/*
-	 * Microsoft's runtime provides a function for doing just that.
-	 */
-#ifdef __MSVCRT__
-	(void) __getmainargs(&_argc, &_argv, &dummy_environ, _CRT_glob);
+    /*
+     * Microsoft's runtime provides a function for doing just that.
+     */
+#ifdef _MSVCRT_LIB_
+    (void) __getmainargs(&_argc, &_argv, &dummy_environ, _CRT_glob);
 #else
-	/* CRTDLL version */
-	(void) __GetMainArgs(&_argc, &_argv, &dummy_environ, _CRT_glob);
+    /* CRTDLL version */
+    (void) __GetMainArgs(&_argc, &_argv, &dummy_environ, _CRT_glob);
 #endif
 }
 

@@ -1,15 +1,13 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 
-#include <crtdll/sys/types.h>
-#include <crtdll/stdio.h>
-#include <crtdll/fcntl.h>
-#include <crtdll/internal/file.h>
-#include <crtdll/io.h>
+#include <msvcrt/sys/types.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/fcntl.h>
+#include <msvcrt/io.h>
+#include <msvcrt/internal/file.h>
 
 
-
-FILE *
-freopen(const char *file, const char *mode, FILE *f)
+FILE *freopen(const char *file, const char *mode, FILE *f)
 {
   int fd, rw, oflags=0;
   char tbchar;

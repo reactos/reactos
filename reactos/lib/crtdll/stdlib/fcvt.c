@@ -1,6 +1,6 @@
 /* Copyright (C) 1998 DJ Delorie, see COPYING.DJ for details */
-#include <crtdll/stdlib.h>
-#include <crtdll/float.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/float.h>
 
 char *fcvtbuf (double, int, int *, int *, char *);
 

@@ -1,9 +1,17 @@
 #include <windows.h>
 
+#ifdef __GNUC__
+#else
+#endif
+ULONG DbgPrint(PCH Format,...)
+{
+    return 0;
+}
+
 VOID STDCALL
 MsvcrtDebug(ULONG Value)
 {
-  DbgPrint("MsvcrtDebug 0x%.08x\n", Value);
+    //DbgPrint("MsvcrtDebug 0x%.08x\n", Value);
 }
 
 EXCEPTION_DISPOSITION
@@ -13,5 +21,6 @@ void *Frame,
 struct _CONTEXT *ContextRecord,
 void *DispatcherContext)
 {
-	printf("_except_handler2()\n");
+    //printf("_except_handler2()\n");
+    return 0;
 }

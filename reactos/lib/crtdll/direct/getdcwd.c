@@ -1,5 +1,5 @@
 #include <windows.h>
-#include <crtdll/direct.h>
+#include <msvcrt/direct.h>
 
 char* _getdcwd (int nDrive, char* caBuffer, int nBufLen)
 {
@@ -8,16 +8,12 @@ char* _getdcwd (int nDrive, char* caBuffer, int nBufLen)
 	
 	if ( nDrive < 1 || nDrive > 26 )
 		return NULL;
-	
 	if ( dr != nDrive )
 		_chdrive(nDrive);
-	
 	i = GetCurrentDirectoryA(nBufLen,caBuffer);
 	if ( i  == nBufLen )
 		return NULL;
-	
 	if ( dr != nDrive )
 		_chdrive(dr);
-	
 	return caBuffer;
 }

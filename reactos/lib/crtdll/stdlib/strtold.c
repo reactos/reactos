@@ -1,12 +1,16 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <crtdll/stdlib.h>
-#include <crtdll/ctype.h>
-//#include <crtdll/unconst.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/ctype.h>
+//#include <msvcrt/unconst.h>
 
 static double powten[] =
 {
-  1e1L, 1e2L, 1e4L, 1e8L, 1e16L, 1e32L, 1e64L, 1e128L, 1e256L
+  1e1L, 1e2L, 1e4L, 1e8L, 1e16L, 1e32L, 1e64L, 1e128L, 1e256L,
+#ifdef __GNUC__
   1e512L, 1e512L*1e512L, 1e2048L, 1e4096L
+#else
+  1e256L, 1e256L, 1e256L, 1e256L
+#endif
 };
 
 long double

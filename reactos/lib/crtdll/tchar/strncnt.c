@@ -1,6 +1,6 @@
-#include <crtdll/tchar.h>
-#include <crtdll/sys/types.h>
-#include <crtdll/string.h>
+#include <msvcrt/tchar.h>
+#include <msvcrt/sys/types.h>
+#include <msvcrt/string.h>
 
 size_t _strncnt( const char *str, size_t max) 
 { 
