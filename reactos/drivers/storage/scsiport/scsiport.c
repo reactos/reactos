@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.40 2003/10/03 10:47:40 ekohl Exp $
+/* $Id: scsiport.c,v 1.41 2003/10/03 16:18:34 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -324,7 +324,7 @@ ScsiPortGetDeviceBase(IN PVOID HwDeviceExtension,
   ULONG AddressSpace;
   PVOID MappedAddress;
 
-  DPRINT("ScsiPortGetDeviceBase() called\n");
+  DPRINT ("ScsiPortGetDeviceBase() called\n");
 
   AddressSpace = (ULONG)InIoSpace;
   if (HalTranslateBusAddress(BusType,
@@ -469,7 +469,7 @@ ScsiPortGetSrb(IN PVOID DeviceExtension,
 	       IN UCHAR Lun,
 	       IN LONG QueueTag)
 {
-  DPRINT("ScsiPortGetSrb()\n");
+  DPRINT1("ScsiPortGetSrb()\n");
   UNIMPLEMENTED;
 }
 
@@ -485,7 +485,7 @@ ScsiPortGetUncachedExtension(IN PVOID HwDeviceExtension,
   PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
   DEVICE_DESCRIPTION DeviceDescription;
 
-  DPRINT("ScsiPortGetUncachedExtension(%p %p %lu)\n",
+  DPRINT1("ScsiPortGetUncachedExtension(%p %p %lu)\n",
 	 HwDeviceExtension, ConfigInfo, NumberOfBytes);
 
   DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
@@ -704,6 +704,7 @@ ScsiPortInitialize(IN PVOID Argument1,
 
       DeviceExtension->MiniPortExtensionSize = HwInitializationData->DeviceExtensionSize;
       DeviceExtension->LunExtensionSize = HwInitializationData->SpecificLuExtensionSize;
+      DeviceExtension->SrbExtensionSize = HwInitializationData->SrbExtensionSize;
       DeviceExtension->HwStartIo = HwInitializationData->HwStartIo;
       DeviceExtension->HwInterrupt = HwInitializationData->HwInterrupt;
 
@@ -853,6 +854,13 @@ ScsiPortInitialize(IN PVOID Argument1,
 	    {
 	      DbgPrint("Could not connect interrupt %d\n",
 		       PortConfig->BusInterruptVector);
+	      goto ByeBye;
+	    }
+
+	  if (!(HwInitializationData->HwInitialize)(&DeviceExtension->MiniPortDeviceExtension))
+	    {
+	      DbgPrint("HwInitialize() failed!");
+	      Status = STATUS_UNSUCCESSFUL;
 	      goto ByeBye;
 	    }
 
@@ -1137,6 +1145,8 @@ SpiGetPciConfigData (IN struct _HW_INITIALIZATION_DATA *HwInitializationData,
   ULONG FunctionNumber;
   CHAR VendorIdString[8];
   CHAR DeviceIdString[8];
+  ULONG i;
+  ULONG RangeLength;
 
   DPRINT ("SpiGetPciConfiguration() called\n");
 
@@ -1190,7 +1200,57 @@ SpiGetPciConfigData (IN struct _HW_INITIALIZATION_DATA *HwInitializationData,
 		      SlotNumber.u.bits.DeviceNumber,
 		      SlotNumber.u.bits.FunctionNumber);
 
+	      PortConfig->BusInterruptLevel = PciConfig.u.type0.InterruptLine;
 	      PortConfig->SlotNumber = SlotNumber.u.AsULONG;
+
+	      /* Initialize access ranges */
+	      if (PortConfig->NumberOfAccessRanges > 0)
+		{
+		  if (PortConfig->NumberOfAccessRanges > PCI_TYPE0_ADDRESSES)
+		    PortConfig->NumberOfAccessRanges = PCI_TYPE0_ADDRESSES;
+
+		  for (i = 0; i < PortConfig->NumberOfAccessRanges; i++)
+		    {
+		      PortConfig->AccessRanges[i].RangeStart.QuadPart =
+			PciConfig.u.type0.BaseAddresses[i] & PCI_ADDRESS_IO_ADDRESS_MASK;
+		      if (PortConfig->AccessRanges[i].RangeStart.QuadPart != 0)
+			{
+			  RangeLength = (ULONG)-1;
+			  HalSetBusDataByOffset (PCIConfiguration,
+						 BusNumber,
+						 SlotNumber.u.AsULONG,
+						 (PVOID)&RangeLength,
+						 0x10 + (i * sizeof(ULONG)),
+						 sizeof(ULONG));
+
+			  HalGetBusDataByOffset (PCIConfiguration,
+						 BusNumber,
+						 SlotNumber.u.AsULONG,
+						 (PVOID)&RangeLength,
+						 0x10 + (i * sizeof(ULONG)),
+						 sizeof(ULONG));
+
+			  HalSetBusDataByOffset (PCIConfiguration,
+						 BusNumber,
+						 SlotNumber.u.AsULONG,
+						 (PVOID)&PciConfig.u.type0.BaseAddresses[i],
+						 0x10 + (i * sizeof(ULONG)),
+						 sizeof(ULONG));
+			  if (RangeLength != 0)
+			    {
+			      PortConfig->AccessRanges[0].RangeLength =
+			        -(RangeLength & PCI_ADDRESS_IO_ADDRESS_MASK);
+			      PortConfig->AccessRanges[i].RangeInMemory =
+				!(PciConfig.u.type0.BaseAddresses[i] & PCI_ADDRESS_IO_SPACE);
+
+			      DPRINT1("RangeStart 0x%lX  RangeLength 0x%lX  RangeInMemory %s\n",
+				     PciConfig.u.type0.BaseAddresses[i] & PCI_ADDRESS_IO_ADDRESS_MASK,
+				     -(RangeLength & PCI_ADDRESS_IO_ADDRESS_MASK),
+				     (PciConfig.u.type0.BaseAddresses[i] & PCI_ADDRESS_IO_SPACE)?"FALSE":"TRUE");
+			    }
+			}
+		    }
+		}
 
 	      NextSlotNumber->u.bits.DeviceNumber = DeviceNumber;
 	      NextSlotNumber->u.bits.FunctionNumber = FunctionNumber + 1;
@@ -1526,6 +1586,19 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
   Irp->IoStatus.Status = STATUS_SUCCESS;
   Irp->IoStatus.Information = Srb->DataTransferLength;
 
+  /* Allocte SRB extension */
+#if 0
+  if (DeviceExtension->SrbExtensionSize != 0)
+    {
+      Srb->SrbExtension = ExAllocatePool (NonPagedPool,
+					  DeviceExtension->SrbExtensionSize);
+      if (Srb->SrbExtension == NULL)
+	{
+	  DPRINT1("Failed to allocate the SRB-Extension!\n");
+	}
+    }
+#endif
+
   DeviceExtension->CurrentIrp = Irp;
 
   if (!KeSynchronizeExecution(DeviceExtension->Interrupt,
@@ -1533,6 +1606,14 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
 			      DeviceExtension))
     {
       DPRINT("Synchronization failed!\n");
+
+#if 0
+      if (Srb->SrbExtension != NULL)
+	{
+	  ExFreePool (Srb->SrbExtension);
+	  Srb->SrbExtension = NULL;
+	}
+#endif
 
       Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
       Irp->IoStatus.Information = 0;
@@ -1689,6 +1770,8 @@ SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
   PKEVENT Event;
   PIRP Irp;
   NTSTATUS Status;
+
+  DPRINT ("SpiSendInquiry() called\n");
 
   Event = ExAllocatePool (NonPagedPool,
 			  sizeof(KEVENT));
@@ -1944,6 +2027,14 @@ ScsiPortDpcForIsr(IN PKDPC Dpc,
     {
       IrpStack = IoGetCurrentIrpStackLocation(DeviceExtension->CurrentIrp);
       Srb = IrpStack->Parameters.Scsi.Srb;
+
+#if 0
+      if (Srb->SrbExtension != NULL)
+	{
+	  ExFreePool (Srb->SrbExtension);
+	  Srb->SrbExtension = NULL;
+	}
+#endif
 
       if (DeviceExtension->OriginalSrb != NULL)
 	{

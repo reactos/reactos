@@ -74,6 +74,8 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
   ULONG LunExtensionSize;
   LIST_ENTRY LunExtensionListHead;
 
+  ULONG SrbExtensionSize;
+
   PIO_SCSI_CAPABILITIES PortCapabilities;
 
   PDEVICE_OBJECT DeviceObject;
