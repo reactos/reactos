@@ -1,4 +1,0 @@
-LIBRARY unbzip2.dll
-
-EXPORTS
-BZ2_bzBuffToBuffDecompress@24
