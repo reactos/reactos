@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.64 2004/08/15 18:40:07 chorns Exp $
+/* $Id: stubs.c,v 1.65 2004/09/06 21:15:45 weiden Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -9,26 +9,7 @@
  *
  */
 
-/* Can't use precomp.h because of this */
-#ifdef UNICODE
-#undef UNICODE
-#endif
-#include <windows.h>
-#include <ddentry.h>
-#include <ddk/prntfont.h>
-
-#ifdef __USE_W32API
-typedef int (CALLBACK* EMFPLAYPROC)( HDC, INT, HANDLE );
-typedef DWORD FULLSCREENCONTROL;
-typedef DWORD SHAREDHANDLETABLE;
-typedef SHAREDHANDLETABLE *PSHAREDHANDLETABLE;
-typedef DWORD UNIVERSAL_FONT_ID;
-typedef UNIVERSAL_FONT_ID *PUNIVERSAL_FONT_ID;
-typedef DWORD REALIZATION_INFO;
-typedef REALIZATION_INFO *PREALIZATION_INFO;
-typedef DWORD CHWIDTHINFO;
-typedef CHWIDTHINFO *PCHWIDTHINFO;
-#endif
+#include "precomp.h"
 
 #define UNIMPLEMENTED DbgPrint("GDI32: %s is unimplemented, please try again later.\n", __FUNCTION__);
 
@@ -1910,45 +1891,9 @@ EndFormPage(HDC hdc)
 /*
  * @unimplemented
  */
-BOOL
-STDCALL
-EudcLoadLinkW(LPCWSTR pBaseFaceName,LPCWSTR pEudcFontPath,INT iPriority,INT iFontLinkType)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL 
-STDCALL
-EudcUnloadLinkW(LPCWSTR pBaseFaceName,LPCWSTR pEudcFontPath)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
 BOOL 
 STDCALL
 FontIsLinked(HDC hdc)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-int 
-STDCALL
-GdiAddFontResourceW(LPCWSTR filename,FLONG f,DESIGNVECTOR *pdv)
 {
 	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1997,18 +1942,6 @@ GdiArtificialDecrementDriver(LPWSTR pDriverName,BOOL unknown)
 BOOL
 STDCALL
 GdiCleanCacheDC(HDC hdc)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL 
-STDCALL
-GdiConsoleTextOut(HDC hdc, POLYTEXTW *lpto,UINT nStrings, RECTL *prclBounds)
 {
 	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -2427,18 +2360,6 @@ GetEUDCTimeStamp(VOID)
 /*
  * @unimplemented
  */
-DWORD 
-STDCALL
-GetEUDCTimeStampExW(LPCWSTR str)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
 ULONG 
 STDCALL
 GetFontAssocStatus(HDC hdc)
@@ -2587,38 +2508,6 @@ RemoveFontMemResourceEx(
 /*
  * @unimplemented
  */
-BOOL 
-STDCALL
-RemoveFontResourceExA(
-	LPCSTR lpFileName,
-	DWORD fl,
-	PVOID pdv
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL 
-STDCALL
-RemoveFontResourceExW(
-	LPCWSTR lpFileName,
-	DWORD fl,
-	PVOID pdv
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
 int 
 STDCALL
 RemoveFontResourceTracking(LPCSTR lpString,int unknown)
@@ -2731,72 +2620,6 @@ UnloadNetworkFonts(DWORD unknown)
  */
 BOOL 
 STDCALL
-bInitSystemAndFontsDirectoriesW(LPWSTR *SystemDir,LPWSTR *FontsDir)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL 
-STDCALL
-bMakePathNameW(LPWSTR lpBuffer,LPCWSTR lpFileName,LPWSTR *lpFilePart,DWORD unknown)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-HFONT 
-STDCALL
-CreateFontIndirectExA(const ENUMLOGFONTEXDVA *elfexd)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-DWORD 
-STDCALL
-GetGlyphIndicesA(
-	HDC hdc,
-	LPCSTR lpstr,
-	int c,
-	LPWORD pgi,
-	DWORD fl
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-UINT 
-STDCALL
-GetStringBitmapA(HDC hdc,LPSTR psz,BOOL unknown,UINT cj,BYTE *lpSB)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL 
-STDCALL
 GetTextExtentExPointI(
 	HDC hdc,
 	LPWORD pgiIn,
@@ -2806,48 +2629,6 @@ GetTextExtentExPointI(
 	LPINT alpDx,
 	LPSIZE lpSize
 )
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-HFONT
-STDCALL
-CreateFontIndirectExW(const ENUMLOGFONTEXDVW *elfexd)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-DWORD 
-STDCALL
-GetGlyphIndicesW(
-	HDC hdc,
-	LPCWSTR lpstr,
-	int c,
-	LPWORD pgi,
-	DWORD fl
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-UINT 
-STDCALL
-GetStringBitmapW(HDC hdc,LPWSTR pwsz,BOOL unknown,UINT cj,BYTE *lpSB)
 {
 	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -2999,18 +2780,6 @@ GdiCreateLocalMetaFilePict(HENHMETAFILE hmo)
 DWORD
 STDCALL
 GdiGetCharDimensions(HDC hdc,LPTEXTMETRICW lptm,BOOL unk)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-PSHAREDHANDLETABLE
-STDCALL
-GdiQueryTable(VOID)
 {
 	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

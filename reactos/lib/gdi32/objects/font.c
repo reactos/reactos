@@ -1,4 +1,4 @@
-/* $Id: font.c,v 1.8 2004/08/15 18:40:07 chorns Exp $
+/* $Id: font.c,v 1.9 2004/09/06 21:15:46 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -9,11 +9,6 @@
  */
 
 #include "precomp.h"
-#include <rosrtl/logfont.h>
-#include <win32k/font.h>
-#include <win32k/text.h>
-#include <internal/font.h>
-#include <wine/unicode.h>
 
 #define NDEBUG
 #include <debug.h>

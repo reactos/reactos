@@ -22,7 +22,7 @@
  */
 
 #include "precomp.h"
-#include <string.h>
+
 #define NDEBUG
 #include <win32k/debug1.h>
 

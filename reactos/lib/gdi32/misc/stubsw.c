@@ -1,4 +1,4 @@
-/* $Id: stubsw.c,v 1.31 2004/08/15 18:40:07 chorns Exp $
+/* $Id: stubsw.c,v 1.32 2004/09/06 21:15:45 weiden Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -10,7 +10,6 @@
  */
 
 #include "precomp.h"
-#include <win32k/kapi.h>
 
 #define UNIMPLEMENTED DbgPrint("GDI32: %s is unimplemented, please try again later.\n", __FUNCTION__);
 
@@ -494,6 +493,148 @@ GetFontResourceInfoW(
 	DWORD	a2,
 	DWORD	a3
 	)
+{
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+EudcLoadLinkW(LPCWSTR pBaseFaceName,LPCWSTR pEudcFontPath,INT iPriority,INT iFontLinkType)
+{
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+EudcUnloadLinkW(LPCWSTR pBaseFaceName,LPCWSTR pEudcFontPath)
+{
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+/*
+ * @unimplemented
+ */
+int
+STDCALL
+GdiAddFontResourceW(LPCWSTR filename,FLONG f,DESIGNVECTOR *pdv)
+{
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+GdiConsoleTextOut(HDC hdc, POLYTEXTW *lpto,UINT nStrings, RECTL *prclBounds)
+{
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+GetEUDCTimeStampExW(LPCWSTR str)
+{
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+RemoveFontResourceExW(
+	LPCWSTR lpFileName,
+	DWORD fl,
+	PVOID pdv
+)
+{
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+bInitSystemAndFontsDirectoriesW(LPWSTR *SystemDir,LPWSTR *FontsDir)
+{
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+bMakePathNameW(LPWSTR lpBuffer,LPCWSTR lpFileName,LPWSTR *lpFilePart,DWORD unknown)
+{
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HFONT
+STDCALL
+CreateFontIndirectExW(const ENUMLOGFONTEXDVW *elfexd)
+{
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+GetGlyphIndicesW(
+	HDC hdc,
+	LPCWSTR lpstr,
+	int c,
+	LPWORD pgi,
+	DWORD fl
+)
+{
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+/*
+ * @unimplemented
+ */
+UINT
+STDCALL
+GetStringBitmapW(HDC hdc,LPWSTR pwsz,BOOL unknown,UINT cj,BYTE *lpSB)
 {
 	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

@@ -1,21 +1,7 @@
 #include "precomp.h"
-#include <win32k/kapi.h>
-#include <rosrtl/logfont.h>
 
 #define NDEBUG
 #include <debug.h>
-
-#define NtUserGetDCBrushColor(hbr) \
-  (COLORREF)NtUserCallTwoParam((DWORD)(hbr), OBJ_BRUSH, TWOPARAM_ROUTINE_GETDCCOLOR)
-
-#define NtUserGetDCPenColor(hbr) \
-  (COLORREF)NtUserCallTwoParam((DWORD)(hbr), OBJ_PEN, TWOPARAM_ROUTINE_GETDCCOLOR)
-
-#define NtUserSetDCBrushColor(hbr, crColor) \
-  (COLORREF)NtUserCallTwoParam((DWORD)(hbr), (DWORD)crColor, TWOPARAM_ROUTINE_SETDCBRUSHCOLOR)
-
-#define NtUserSetDCPenColor(hbr, crColor) \
-  (COLORREF)NtUserCallTwoParam((DWORD)(hbr), (DWORD)crColor, TWOPARAM_ROUTINE_SETDCPENCOLOR)
 
 /*
  * @implemented

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.39 2004/08/15 18:40:07 chorns Exp $
+# $Id: makefile,v 1.40 2004/09/06 21:15:45 weiden Exp $
 
 PATH_TO_TOP = ../..
 
@@ -31,6 +31,7 @@ MAIN_OBJECTS = main/dllmain.o
 
 MISC_OBJECTS = \
  misc/heap.o \
+ misc/misc.o \
  misc/stubs.o \
  misc/stubsa.o \
  misc/stubsw.o \

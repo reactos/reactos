@@ -16,71 +16,26 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: clip.c,v 1.9 2004/09/06 21:15:46 weiden Exp $
+/* $Id: misc.c,v 1.1 2004/09/06 21:15:45 weiden Exp $
  *
  * PROJECT:         ReactOS gdi32.dll
- * FILE:            lib/gdi32/objects/clip.c
- * PURPOSE:         Clipping functions
- * PROGRAMMER:      Ge van Geldorp (ge@gse.nl)
+ * FILE:            lib/gdi32/misc/misc.c
+ * PURPOSE:         Miscellaneous functions
+ * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  * UPDATE HISTORY:
- *      2003/06/26  GvG  Created
+ *      2004/09/04  Created
  */
 
 #include "precomp.h"
 
-/*
- * @implemented
- */
-int
-STDCALL
-SelectClipRgn(HDC hdc, HRGN hrgn)
-{
-  return NtGdiSelectClipRgn(hdc, hrgn);
-}
+PGDI_TABLE_ENTRY GdiHandleTable = NULL;
 
 /*
  * @implemented
  */
-int
+PVOID
 STDCALL
-IntersectClipRect(
-	HDC		hdc,
-	int		nLeftRect,
-	int		nTopRect,
-	int		nRightRect,
-	int		nBottomRect
-	)
+GdiQueryTable(VOID)
 {
-  return NtGdiIntersectClipRect(hdc, nLeftRect, nTopRect, nRightRect, nBottomRect);
+  return (PVOID)GdiHandleTable;
 }
-
-/*
- * @implemented
- */
-int
-STDCALL
-ExcludeClipRect(
-	HDC		hdc,
-	int		nLeftRect,
-	int		nTopRect,
-	int		nRightRect,
-	int		nBottomRect
-	)
-{
-  return NtGdiExcludeClipRect(hdc, nLeftRect, nTopRect, nRightRect, nBottomRect);
-}
-
-/*
- * @implemented
- */
-int
-STDCALL
-ExtSelectClipRgn(
-	HDC	hdc,
-	HRGN	hrgn,
-	int	fnMode
-	)
-{
-  return NtGdiExtSelectClipRgn(hdc, hrgn, fnMode);
-}
-

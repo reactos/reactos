@@ -163,6 +163,7 @@ NtUserCallNextHookEx(
 #define NOPARAM_ROUTINE_GETMESSAGEEXTRAINFO	0xffff0005
 #define NOPARAM_ROUTINE_ANYPOPUP	0xffff0006
 #define NOPARAM_ROUTINE_CSRSS_INITIALIZED	0xffff0007
+#define NOPARAM_ROUTINE_GDI_QUERY_TABLE	0xffff0008
 DWORD
 STDCALL
 NtUserCallNoParam(
@@ -1764,6 +1765,18 @@ typedef struct tagKMDDELPARAM
       LPARAM Unpacked;
     } Value;
 } KMDDELPARAM, *PKMDDELPARAM;
+
+#include <pshpack1.h>
+typedef struct _GDI_TABLE_ENTRY
+{
+  PVOID KernelData;         /* Points to the kernel mode structure */
+  unsigned short ProcessId; /* process id that created the object, 0 for stock objects */
+  unsigned short Count;     /* we don't use this field, only NT4 uses it */
+  unsigned short Upper;     /* copy of the upper 16 bit of the handle, contains the object type */
+  unsigned short nType;     /* object type */
+  PVOID UserData;           /* Points to the user mode structure, usually NULL though */
+} GDI_TABLE_ENTRY, *PGDI_TABLE_ENTRY;
+#include <poppack.h>
 
 #endif /* __WIN32K_NTUSER_H */
 

@@ -1,5 +1,4 @@
 #include "precomp.h"
-#include <win32k/kapi.h>
 
 
 /*

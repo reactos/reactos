@@ -1,4 +1,4 @@
-/* $Id: stubsa.c,v 1.33 2004/08/15 18:40:07 chorns Exp $
+/* $Id: stubsa.c,v 1.34 2004/09/06 21:15:45 weiden Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -9,21 +9,7 @@
  *
  */
 
-/* Can't use precomp.h because of this */
-#ifdef UNICODE
-#undef UNICODE
-#endif
-
-#undef WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <ddk/ntddk.h>
-#define NTOS_MODE_USER
-#include <ntos.h>
-#include <win32k/text.h>
-#include <win32k/dc.h>
-#include <rosrtl/devmode.h>
-#include <rosrtl/logfont.h>
-#include <internal/heap.h>
+#include "precomp.h"
 
 #define UNIMPLEMENTED DbgPrint("GDI32: %s is unimplemented, please try again later.\n", __FUNCTION__);
 
@@ -616,6 +602,66 @@ UpdateICMRegKeyA(
 	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+RemoveFontResourceExA(
+	LPCSTR lpFileName,
+	DWORD fl,
+	PVOID pdv
+)
+{
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+HFONT
+STDCALL
+CreateFontIndirectExA(const ENUMLOGFONTEXDVA *elfexd)
+{
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+GetGlyphIndicesA(
+	HDC hdc,
+	LPCSTR lpstr,
+	int c,
+	LPWORD pgi,
+	DWORD fl
+)
+{
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+/*
+ * @unimplemented
+ */
+UINT
+STDCALL
+GetStringBitmapA(HDC hdc,LPSTR psz,BOOL unknown,UINT cj,BYTE *lpSB)
+{
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
 }
 
 

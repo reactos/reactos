@@ -4,6 +4,7 @@
 // global variables in a dll are process-global
 HANDLE hProcessHeap = NULL;
 
+
 PVOID
 HEAP_alloc ( DWORD len )
 {

@@ -1,4 +1,4 @@
-/* $Id: bitblt.c,v 1.23 2004/08/15 18:40:07 chorns Exp $
+/* $Id: bitblt.c,v 1.24 2004/09/06 21:15:45 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -8,7 +8,7 @@
  */
 
 #include "precomp.h"
-#include <win32k/kapi.h>
+
 #include <debug.h>
 
 /*

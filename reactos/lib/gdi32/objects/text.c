@@ -1,8 +1,4 @@
 #include "precomp.h"
-#include <string.h>
-#include <win32k/kapi.h>
-#include <internal/font.h>
-#include <rosrtl/logfont.h>
 
 
 /*
