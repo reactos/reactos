@@ -17,6 +17,8 @@ int main(int argc, char *argv[])
     BOOL bResult;
     HANDLE hPort;
     int i;
+    int j;
+    int k;
 	int nPortNum = 1;
 
 	TCHAR szPortName[MAX_PORTNAME_LEN];
@@ -44,6 +46,7 @@ int main(int argc, char *argv[])
     printf("CreateFile() returned: %lx\n", hPort);
 
     printf("Fiddling with DTR and RTS control lines...\n");
+	for (i = 0; i < 100; i++) {
 	bResult = EscapeCommFunction(hPort, SETDTR);
     if (!bResult) {
         printf("WARNING: EscapeCommFunction(SETDTR) failed: %lx\n", bResult);
@@ -52,7 +55,28 @@ int main(int argc, char *argv[])
     if (!bResult) {
         printf("WARNING: EscapeCommFunction(SETRTS) failed: %lx\n", bResult);
     }
-
+	for (j = 0; j < 1000; j++) {
+		k *= j;
+	}
+/*
+#define CLRDTR	(6)
+#define CLRRTS	(4)
+#define SETDTR	(5)
+#define SETRTS	(3)
+#define SETXOFF	(1)
+#define SETXON	(2)
+#define SETBREAK	(8)
+#define CLRBREAK	(9)
+ */
+	bResult = EscapeCommFunction(hPort, CLRDTR);
+    if (!bResult) {
+        printf("WARNING: EscapeCommFunction(CLRDTR) failed: %lx\n", bResult);
+    }
+	bResult = EscapeCommFunction(hPort, CLRRTS);
+    if (!bResult) {
+        printf("WARNING: EscapeCommFunction(CLRRTS) failed: %lx\n", bResult);
+    }
+	}
     printf("Getting the default line characteristics...\n");
 	dcb.DCBlength = sizeof(DCB);
 	if (!GetCommState(hPort, &dcb)) {
@@ -70,14 +94,9 @@ int main(int argc, char *argv[])
         printf("ERROR: failed to set the comm state: %lx\n", bResult);
         return 3;
     }
-    printf("INFO: preparing the transmit buffer: %lx\n", bResult);
 	for (i = 0; i < BUFSIZE; i++) {
         txBuffer[i] = (CHAR)i;
-    }
-	for (i = 0; i < BUFSIZE; i++) {
-        printf(" %d ", txBuffer[i]);
-    }
-    for (i = 0; i < BUFSIZE; i++) {
+        //printf(" %d ", txBuffer[i]);
         rxBuffer[i] = 0xFF;
     }
     printf("\n");
