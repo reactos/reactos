@@ -1,4 +1,4 @@
-/* $Id: profile.c,v 1.8 2004/03/17 14:46:23 ekohl Exp $
+/* $Id: profile.c,v 1.9 2004/04/19 10:51:17 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -72,6 +72,31 @@ AppendSystemPostfix (LPWSTR lpName,
     }
 
   return TRUE;
+}
+
+
+BOOL WINAPI
+CreateUserProfileA (PSID Sid,
+		    LPCSTR lpUserName)
+{
+  UNICODE_STRING UserName;
+  BOOL bResult;
+  NTSTATUS Status;
+
+  Status = RtlCreateUnicodeStringFromAsciiz (&UserName,
+					     (LPSTR)lpUserName);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastError (RtlNtStatusToDosError (Status));
+      return FALSE;
+    }
+
+  bResult = CreateUserProfileW (Sid,
+				UserName.Buffer);
+
+  RtlFreeUnicodeString (&UserName);
+
+  return bResult;
 }
 
 

@@ -1,6 +1,7 @@
 LIBRARY userenv.dll
 EXPORTS
 InitializeProfiles=InitializeProfiles@0 @100 NONAME
+CreateUserProfileA=CreateUserProfileA@8 @109 NONAME
 CreateUserProfileW=CreateUserProfileW@8 @110 NONAME
 CreateEnvironmentBlock=CreateEnvironmentBlock@12
 DestroyEnvironmentBlock=DestroyEnvironmentBlock@4
