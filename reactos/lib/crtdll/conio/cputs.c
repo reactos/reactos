@@ -15,9 +15,9 @@
 
 int     _cputs(const char *_str)
 {
-	int len = strlen(_str);
-	int written = 0;
-	if ( !WriteFile(filehnd(stdout->_file),_str,len,&written,NULL)) 
-		return -1;
-	return 0;
+  int len = strlen(_str);
+  DWORD written = 0;
+  if (!WriteFile(filehnd(stdout->_file),_str,len,&written,NULL)) 
+    return -1;
+  return 0;
 }
