@@ -1,4 +1,4 @@
-/* $Id: notevil.c,v 1.4 2001/01/31 03:03:20 phreak Exp $
+/* $Id: notevil.c,v 1.5 2001/02/18 19:31:38 phreak Exp $
  *
  * notevil.c
  * 
@@ -37,6 +37,7 @@ LPCTSTR app_name = _TEXT("notevil");
 HANDLE	myself;
 HANDLE	ScreenBuffer;
 CONSOLE_SCREEN_BUFFER_INFO ScreenBufferInfo;
+HANDLE WaitableTimer;
 
 void
 WriteStringAt(
@@ -50,13 +51,14 @@ WriteStringAt(
 
 	if (0 == wLen)
 		return;
-	WriteConsoleOutputCharacter(
-		ScreenBuffer,
-		lpString,
-		wLen,
-		xy,
-		& cWritten
-		);
+	// don't bother writing text when erasing
+	if( wColor )
+	  WriteConsoleOutputCharacter( ScreenBuffer,
+				       lpString,
+				       wLen,
+				       xy,
+				       & cWritten
+				       );
 	FillConsoleOutputAttribute(
 		ScreenBuffer,
 		wColor,
@@ -194,7 +196,7 @@ MainLoop(void)
 			xy,
 			wColor
 			);
-		Sleep(100);
+		WaitForSingleObject( WaitableTimer, INFINITE );
 		WriteStringAt(
 			NameString,
 			xy,
@@ -210,8 +212,10 @@ main(
 	char	*argv []
 	)
 {
-        DWORD Written;
+        LARGE_INTEGER lint;
+	DWORD Written;
 	COORD Coord = { 0, 0 };
+	
 	myself = GetModuleHandle(NULL);
 
 	GetConsoleScreenBufferInfo (GetStdHandle(STD_OUTPUT_HANDLE),
@@ -240,6 +244,19 @@ main(
 				    ScreenBufferInfo.dwSize.X * ScreenBufferInfo.dwSize.Y,
 				    Coord,
 				    &Written );
+
+	WaitableTimer = CreateWaitableTimer( NULL, FALSE, NULL );
+	if( WaitableTimer == INVALID_HANDLE_VALUE )
+	  {
+	    printf( "CreateWaitabletimer() failed\n" );
+	    return 1;
+	  }
+	lint.QuadPart = -2000000;
+	if( SetWaitableTimer( WaitableTimer, &lint, 200, NULL, NULL, FALSE ) == FALSE )
+	  {
+	    printf( "SetWaitableTimer() failed: %x\n", GetLastError() );
+	    return 2;
+	  }
 	SetConsoleActiveScreenBuffer(ScreenBuffer);
 	MainLoop();
 	CloseHandle(ScreenBuffer);
