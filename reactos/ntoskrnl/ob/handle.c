@@ -193,6 +193,19 @@ ObDuplicateObject(PEPROCESS SourceProcess,
   NewHandleEntry.u2.GrantedAccess = ((Options & DUPLICATE_SAME_ACCESS) ?
                                      SourceHandleEntry->u2.GrantedAccess :
                                      DesiredAccess);
+  if (Options & DUPLICATE_SAME_ACCESS)
+  {
+    NewHandleEntry.u2.GrantedAccess = SourceHandleEntry->u2.GrantedAccess;
+  }
+  else
+  {
+    if (DesiredAccess & GENERIC_ANY)
+    {
+      RtlMapGenericMask(&DesiredAccess,
+                        ObjectHeader->ObjectType->Mapping);
+    }
+    NewHandleEntry.u2.GrantedAccess = DesiredAccess;
+  }
   
   /* reference the object so it doesn't get deleted after releasing the lock
      and before creating a new handle for it */
@@ -336,23 +349,39 @@ NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
        SourceHandle == NtCurrentProcess())
      {
        PVOID ObjectBody;
+       POBJECT_TYPE ObjectType;
        
+       ObjectType = (SourceHandle == NtCurrentThread()) ? PsThreadType : PsProcessType;
+
        Status = ObReferenceObjectByHandle(SourceHandle,
-                                          PROCESS_DUP_HANDLE,
-                                          NULL,
+                                          0,
+                                          ObjectType,
                                           PreviousMode,
                                           &ObjectBody,
                                           NULL);
        if(NT_SUCCESS(Status))
        {
+         if (Options & DUPLICATE_SAME_ACCESS)
+         {
+           /* grant all access rights */
+           DesiredAccess = ((ObjectType == PsThreadType) ? THREAD_ALL_ACCESS : PROCESS_ALL_ACCESS);
+         }
+         else
+         {
+           if (DesiredAccess & GENERIC_ANY)
+           {
+             RtlMapGenericMask(&DesiredAccess,
+                               ObjectType->Mapping);
+           }
+         }
          Status = ObCreateHandle(TargetProcess,
                                  ObjectBody,
-                                 THREAD_ALL_ACCESS,
+                                 DesiredAccess,
                                  InheritHandle,
                                  &hTarget);
 
          ObDereferenceObject(ObjectBody);
-         
+
          if (Options & DUPLICATE_CLOSE_SOURCE)
          {
            ObDeleteHandle(SourceProcess,
@@ -781,7 +810,6 @@ ObReferenceObjectByHandle(HANDLE Handle,
         KeLeaveCriticalRegion();
         
         DPRINT1("GrantedAccess: 0x%x, ~GrantedAccess: 0x%x, DesiredAccess: 0x%x, denied: 0x%x\n", GrantedAccess, ~GrantedAccess, DesiredAccess, ~GrantedAccess & DesiredAccess);
-        KEBUGCHECK(0);
 
         return(STATUS_ACCESS_DENIED);
      }
