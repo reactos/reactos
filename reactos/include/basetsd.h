@@ -14,14 +14,6 @@
 #endif
 #endif
 
-typedef unsigned long DWORD_PTR, *PDWORD_PTR;
-typedef int INT_PTR, *PINT_PTR;
-typedef unsigned int UINT_PTR, *PUINT_PTR;
-typedef long LONG_PTR, *PLONG_PTR;
-typedef unsigned long ULONG_PTR, *PULONG_PTR;
-typedef ULONG_PTR SIZE_T, *PSIZE_T;
-typedef LONG_PTR SSIZE_T, *PSSIZE_T;
-
 #else /* __USE_W32API */
 
 #ifdef __GNUC__
