@@ -91,7 +91,7 @@ public:
 };
 
 
-struct ExecuteDialog {	// TODO: integrate dialogs with Window class
+struct ExecuteDialog {	///@todo use class Dialog
 	TCHAR	cmd[MAX_PATH];
 	int		cmdshow;
 

@@ -140,14 +140,14 @@ LRESULT Pane::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 		child->set_focus_pane(this);
 		ListBox_SetSel(_hwnd, TRUE, 1);
-		/*TODO: check menu items */
+		/*@todo check menu items */
 		break;}
 
 	  case WM_KEYDOWN: {
 		FileChildWindow* child = (FileChildWindow*) SendMessage(GetParent(_hwnd), PM_GET_FILEWND_PTR, 0, 0);
 
 		if (wparam == VK_TAB) {
-			/*TODO: SetFocus(g_Globals.hdrivebar) */
+			/*@todo SetFocus(g_Globals.hdrivebar) */
 			child->switch_focus_pane();
 		}
 		break;}
@@ -159,7 +159,7 @@ LRESULT Pane::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 bool Pane::create_header(HWND hparent, int id)
 {
-	HWND hwnd = CreateWindow(WC_HEADER, 0, WS_CHILD|WS_VISIBLE|HDS_HORZ/*TODO: |HDS_BUTTONS + sort orders*/,
+	HWND hwnd = CreateWindow(WC_HEADER, 0, WS_CHILD|WS_VISIBLE|HDS_HORZ/*@todo |HDS_BUTTONS + sort orders*/,
 								0, 0, 0, 0, hparent, (HMENU)id, g_Globals._hInstance, 0);
 	if (!hwnd)
 		return false;
@@ -513,7 +513,7 @@ void Pane::draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 		if (calcWidthCol == -1)
 			_out_wrkr.output_number(dis, _positions, col, buffer);
 		else if (calcWidthCol==col || calcWidthCol==COLUMNS)
-			calc_width(dis, col, buffer);	// TODO: not ever time enough
+			calc_width(dis, col, buffer);	///@todo not in every case time enough
 
 		++col;
 	}
@@ -970,7 +970,7 @@ BOOL Pane::command(UINT cmd)
 			InvalidateRect(_hwnd, 0, TRUE);
 			break;}
 
-		        /* TODO: more command ids... */
+		        /*@todo more command ids... */
 
 		default:
 			return FALSE;

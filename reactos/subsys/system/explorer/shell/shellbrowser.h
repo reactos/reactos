@@ -42,7 +42,7 @@ struct ShellBrowserChild : public ChildWindow, public IShellBrowserImpl
 		ChildWindow* child = ChildWindow::create(hmdiclient, info._pos.rcNormalPosition,
 													WINDOW_CREATOR_INFO(ShellBrowserChild,ShellChildWndInfo), CLASSNAME_CHILDWND, NULL, &info);
 #else
-		//TODO: SDI implementation
+		///@todo SDI implementation
 #endif
 
 		ShowWindow(*child, info._pos.showCmd);

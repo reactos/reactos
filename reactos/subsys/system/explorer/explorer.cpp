@@ -166,7 +166,7 @@ int explorer_main(HINSTANCE hInstance, HWND hwndDesktop, int cmdshow)
 	if (cmdshow != SW_HIDE) {
 /*	// don't maximize if being called from the ROS desktop
 		if (cmdshow == SW_SHOWNORMAL)
-				//TODO: read window placement from registry
+				///@todo read window placement from registry
 			cmdshow = SW_MAXIMIZE;
 */
 

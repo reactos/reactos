@@ -168,7 +168,7 @@ LRESULT	DesktopWindow::Init(LPCREATESTRUCT pcs)
 
 		hr = _pShellView->CreateViewWindow(NULL, &fs, this, &rect, &hWndView);
 
-		//TODO: use IShellBrowser::GetViewStateStream() to restore previous view state -> see SHOpenRegStream()
+		///@todo use IShellBrowser::GetViewStateStream() to restore previous view state -> see SHOpenRegStream()
 
 		if (SUCCEEDED(hr)) {
 			_pShellView->UIActivate(SVUIA_ACTIVATE_FOCUS);
@@ -241,7 +241,7 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 	  case WM_DESTROY:
 
-		//TODO: use IShellBrowser::GetViewStateStream() and _pShellView->SaveViewState() to store view state
+		///@todo use IShellBrowser::GetViewStateStream() and _pShellView->SaveViewState() to store view state
 		
 		if (SetShellWindow)
 			SetShellWindow(0);

@@ -2588,7 +2588,7 @@ static void draw_item(Pane* pane, LPDRAWITEMSTRUCT dis, Entry* entry, int calcWi
 			if (calcWidthCol == -1)
 				output_number(pane, dis, col, buffer);
 			else if (calcWidthCol==col || calcWidthCol==COLUMNS)
-				calc_width(pane, dis, col, buffer);/*TODO: not ever time enough */
+				calc_width(pane, dis, col, buffer);/*TODO: not in every case time enough */
 		}
 
 		col++;

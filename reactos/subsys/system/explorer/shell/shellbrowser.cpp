@@ -117,7 +117,7 @@ void ShellBrowserChild::InitializeTree()
 
 //@@	_root._entry->read_tree(shell_info._root_shell_path.get_folder(), info._shell_path, SORT_NAME/*_sortOrder*/);
 
-/* TODO:
+/*@todo
 	we should call read_tree() here to iterate through the hierarchy and open all folders from shell_info._root_shell_path to shell_info._shell_path
 	-> see FileChildWindow::FileChildWindow()
 */
@@ -287,7 +287,7 @@ void ShellBrowserChild::OnTreeGetDispInfo(int idCtrl, LPNMHDR pnmh)
 /*
 		if (lpdi->item.mask & TVIF_TEXT)
 			if (SHGetFileInfo((LPCTSTR)pidl, 0, &sfi, sizeof(sfi), SHGFI_PIDL|SHGFI_DISPLAYNAME))
-				lstrcpy(lpdi->item.pszText, sfi.szDisplayName);	//TODO: look at cchTextMax if there is enough space available
+				lstrcpy(lpdi->item.pszText, sfi.szDisplayName);	///@todo look at cchTextMax if there is enough space available
 			else
 				lpdi->item.pszText = entry->_data.cFileName;
 */

@@ -33,14 +33,14 @@ public:
 					{
 						 // copy the file or dir
 
-						//TODO: Add the code to handle Copy
+						///@todo Add the code to handle Copy
 
 					}
 					else if (DROPEFFECT_MOVE & *pdwEffect)
 					{
 						 // move the file or dir
 
-						//TODO: Add the code to handle Move
+						///@todo Add the code to handle Move
 
 					}
 				}

@@ -302,7 +302,7 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 				shell_path = path;	// create as "rooted" window
 			}
 		} else {
-			//TODO: read paths and window placements from registry
+			///@todo read paths and window placements from registry
 			GetCurrentDirectory(MAX_PATH, buffer);
 			path = buffer;
 		}
@@ -365,12 +365,12 @@ int MainFrame::Command(int id, int code)
 			return 0;
 		}
 
-		GetCurrentDirectory(MAX_PATH, path); //TODO: store last directory per drive
+		GetCurrentDirectory(MAX_PATH, path); ///@todo store last directory per drive
 
 #ifndef _NO_MDI
 		FileChildWindow::create(_hmdiclient, FileChildWndInfo(path));
 #else
-		//TODO: SDI implementation
+		///@todo SDI implementation
 #endif
 		return 1;
 	}
@@ -388,7 +388,7 @@ int MainFrame::Command(int id, int code)
 #ifndef _NO_MDI
 		FileChildWindow::create(_hmdiclient, FileChildWndInfo(path));
 #else
-		//TODO: SDI implementation
+		///@todo SDI implementation
 #endif
 		break;}
 
@@ -454,7 +454,7 @@ int MainFrame::Command(int id, int code)
 #ifndef _NO_MDI
 		FileChildWindow::create(_hmdiclient, FileChildWndInfo(path));
 #else
-		//TODO: SDI implementation
+		///@todo SDI implementation
 #endif
 		break;}
 #endif
@@ -469,7 +469,7 @@ int MainFrame::Command(int id, int code)
 #ifndef _NO_MDI
 		FileChildWindow::create(_hmdiclient, ShellChildWndInfo(path,DesktopFolderPath()));
 #else
-		//TODO: SDI implementation
+		///@todo SDI implementation
 #endif
 		break;}
 
@@ -486,7 +486,7 @@ int MainFrame::Command(int id, int code)
 		ShellBrowserChild::create(_hmdiclient, ShellChildWndInfo(path,DesktopFolderPath()));
 		break;}
 
-	//TODO: There are even more menu items!
+	///@todo There are even more menu items!
 
 	  case ID_ABOUT:
 		ShellAbout(_hwnd, ResString(IDS_TITLE), NULL, 0);
@@ -497,7 +497,7 @@ int MainFrame::Command(int id, int code)
 		break;
 
 	  default:
-		/*TODO: if (wParam >= PM_FIRST_LANGUAGE && wParam <= PM_LAST_LANGUAGE)
+		/*@todo if (wParam >= PM_FIRST_LANGUAGE && wParam <= PM_LAST_LANGUAGE)
 			STRING_SelectLanguageByNumber(wParam - PM_FIRST_LANGUAGE);
 		else */if ((id<IDW_FIRST_CHILD || id>=IDW_FIRST_CHILD+0x100) &&
 			(id<SC_SIZE || id>SC_RESTORE))

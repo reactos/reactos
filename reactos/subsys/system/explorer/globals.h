@@ -53,7 +53,7 @@ struct ResString : public String
 	ResString(UINT nid);
 };
 
- /// 
+ /// convenient loading of standard (32x32) icon resources
 struct ResIcon
 {
 	ResIcon(UINT nid);
@@ -64,6 +64,7 @@ protected:
 	HICON	_hIcon;
 };
 
+ /// convenient loading of small (16x16) icon resources
 struct SmallIcon
 {
 	SmallIcon(UINT nid);

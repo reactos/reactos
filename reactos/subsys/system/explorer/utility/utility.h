@@ -98,7 +98,7 @@ struct CommonControlInit
 
  /// wait cursor
 
-struct WaitCursor	//TODO: integrate with WM_SETCURSOR to enable multithreaded background tasks as program launching
+struct WaitCursor	///@todo integrate with WM_SETCURSOR to enable multithreaded background tasks as program launching
 {
 	WaitCursor()
 	{

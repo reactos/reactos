@@ -241,7 +241,7 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			 // create a floating copy of the current start menu
  			WindowRect pos(_hwnd);
 
-			//TODO: do something similar to StartMenuRoot::TrackStartmenu() in order to automatically close submenus when clicking on the desktop background
+			///@todo do something similar to StartMenuRoot::TrackStartmenu() in order to automatically close submenus when clicking on the desktop background
 			StartMenu::Create(pos.left+3, pos.bottom-3, _create_info._folders, 0, _create_info._title, _create_info._creator);
 			CloseStartMenu();
 		}
@@ -262,7 +262,7 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		CloseStartMenu();
 		break;
 
-	  case PM_STARTENTRY_FOCUSED: {	//TODO: use TrackMouseEvent() and WM_MOUSEHOVER to wait a bit before opening submenus
+	  case PM_STARTENTRY_FOCUSED: {	///@todo use TrackMouseEvent() and WM_MOUSEHOVER to wait a bit before opening submenus
 		BOOL hasSubmenu = wparam;
 		HWND hctrl = (HWND)lparam;
 
@@ -388,7 +388,7 @@ StartMenuEntry& StartMenu::AddEntry(const ShellFolder folder, const ShellEntry* 
 	for(ShellEntryMap::iterator it=_entries.begin(); it!=_entries.end(); ++it) {
 		StartMenuEntry& sme = it->second;
 
-		if (sme._title == entry_name)	//TODO: speed up by using a map indexed by name
+		if (sme._title == entry_name)	///@todo speed up by using a map indexed by name
 			for(ShellEntrySet::iterator it2=sme._entries.begin(); it2!=sme._entries.end(); ++it2) {
 				if ((*it2)->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 					 // merge the new shell entry with the existing of the same name
@@ -553,7 +553,7 @@ void StartMenu::ActivateEntry(int id, const ShellEntrySet& entries)
 			 // If the entry is no subdirectory, there can only be one shell entry.
 			assert(entries.size()==1);
 
-			entry->launch_entry(_hwnd);	//TODO: launch in the background; specify correct HWND for error message box titles
+			entry->launch_entry(_hwnd);	///@todo launch in the background; specify correct HWND for error message box titles
 
 			 // close start menus after launching the selected entry
 			CloseStartMenu(id);
@@ -986,7 +986,7 @@ int StartMenuRoot::Command(int id, int code)
 
 void StartMenuRoot::ShowLaunchDialog(HWND hwndDesktopBar)
 {
-	 //TODO: All text phrases should be put into the resources.
+	 ///@todo All text phrases should be put into the resources.
 	static LPCSTR szTitle = "Create New Task";
 	static LPCSTR szText = "Type the name of a program, folder, document, or Internet resource, and Task Manager will open it for you.";
 
@@ -1021,7 +1021,7 @@ void StartMenuRoot::ShowRestartDialog(HWND hwndOwner, UINT flags)
 	static DynamicFct<RESTARTWINDOWSDLG> RestartDlg(TEXT("SHELL32"), 59);
 
 	if (RestartDlg)
-		(*RestartDlg)(hwndOwner, (LPWSTR)L"You selected <Log Off>.\n\n", flags);	//TODO: ANSI string conversion if needed
+		(*RestartDlg)(hwndOwner, (LPWSTR)L"You selected <Log Off>.\n\n", flags);	///@todo ANSI string conversion if needed
 }
 
 void StartMenuRoot::ShowSearchDialog()
@@ -1112,7 +1112,7 @@ int BrowseMenu::Command(int id, int code)
 		break;
 
 	  case IDC_DRIVES:
-		//TODO: exclude removeable drives
+		///@todo exclude removeable drives
 		CreateSubmenu(id, CSIDL_DRIVES, ResString(IDS_DRIVES));
 		break;
 
@@ -1142,6 +1142,6 @@ void RecentStartMenu::AddEntries()
 		}
 
 		dir.sort_directory(SORT_DATE);
-		AddShellEntries(dir, 16, smd._subfolders);	//TODO: read max. count of entries from registry
+		AddShellEntries(dir, 16, smd._subfolders);	///@todo read max. count of entries from registry
 	}
 }

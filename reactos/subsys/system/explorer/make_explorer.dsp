@@ -130,7 +130,7 @@ CFG=make_explorer - Win32 doxy docu
 # PROP Intermediate_Dir "Debug"
 # PROP Cmd_Line "msdevfilt -java make docu"
 # PROP Rebuild_Opt "full-docu"
-# PROP Target_File "doxy-doc\html\index.html"
+# PROP Target_File "explorer.exe"
 # PROP Bsc_Name ""
 # PROP Target_Dir ""
 

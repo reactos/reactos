@@ -231,7 +231,7 @@ void FindProgramDlg::add_entry(const FPDEntry& cache_entry)
 	String lwr_path = cache_entry._path;
 	String lwr_name = cache_entry._shell_entry->_display_name;
 
-#ifndef __WINE__ //TODO
+#ifndef __WINE__ ///@todo
 	_tcslwr((LPTSTR)lwr_path.c_str());
 	_tcslwr((LPTSTR)lwr_name.c_str());
 #endif
@@ -289,7 +289,7 @@ void FindProgramDlg::LaunchSelected()
 	Lock lock(_thread._crit_sect);
 
 	int count = ListView_GetSelectedCount(_list_ctrl);
-	//TODO: ask user if there are many selected items
+	///@todo ask user if there are many selected items
 
 	for(int idx=-1; (idx=ListView_GetNextItem(_list_ctrl, idx, LVNI_SELECTED))!=-1; ) {
 		LPARAM lparam = ListView_GetItemData(_list_ctrl, idx);

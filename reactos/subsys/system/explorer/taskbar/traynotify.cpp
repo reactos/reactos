@@ -75,7 +75,7 @@ NotifyInfo& NotifyInfo::operator=(NOTIFYICONDATA* pnid)
 		_dwState = (_dwState&~pnid->dwStateMask) | (pnid->dwState&pnid->dwStateMask);
 #endif
 
-	//TODO: store and display tool tip texts
+	///@todo store and display tool tip texts
 
 	return *this;
 }
@@ -189,14 +189,14 @@ LRESULT NotifyArea::ProcessTrayNotification(int notify_code, NOTIFYICONDATA* pni
 	switch(notify_code) {
 	  case NIM_ADD:
 	  case NIM_MODIFY:
-		if ((int)pnid->uID >= 0) {	//TODO: fix for windows task manager
+		if ((int)pnid->uID >= 0) {	///@todo fix for windows task manager
 			NotifyInfo& entry = _icon_map[pnid] = pnid;
 
 			 // a new entry?
 			if (entry._idx == -1)
 				entry._idx = ++_next_idx;
 
-			Refresh();	//TODO: call only if really changes occurred
+			Refresh();	///@todo call only if really changes occurred
 		}
 		break;
 

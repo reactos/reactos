@@ -113,14 +113,14 @@ void DesktopBar::RegisterHotkeys()
 	 // register hotkey WIN+E opening explorer
 	RegisterHotKey(_hwnd, 0, MOD_WIN, 'E');
 
-		//TODO: register all common hotkeys
+		///@todo register all common hotkeys
 }
 
 void DesktopBar::ProcessHotKey(int id_hotkey)
 {
 	switch(id_hotkey) {
 	  case 0:	explorer_show_frame(_hwnd, SW_SHOWNORMAL);	break;
-		//TODO: implement all common hotkeys
+		///@todo implement all common hotkeys
 	}
 }
 
@@ -197,7 +197,7 @@ LRESULT DesktopBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 int DesktopBar::Command(int id, int code)
 {
 	switch(id) {
-	  case IDC_START:	//TODO: startmenu should popup for WM_LBUTTONDOWN, not for WM_COMMAND
+	  case IDC_START:	///@todo startmenu should popup for WM_LBUTTONDOWN, not for WM_COMMAND
 		ShowStartMenu();
 		break;
 
@@ -233,7 +233,7 @@ LRESULT DesktopBar::ProcessCopyData(COPYDATASTRUCT* pcd)
 	if (pcd->dwData == 1) {
 		TrayNotifyCDS* ptr = (TrayNotifyCDS*) pcd->lpData;
 
-		//TODO: process the differnt versions of the NOTIFYICONDATA structure (look at cbSize to decide which one)
+		///@todo process the differnt versions of the NOTIFYICONDATA structure (look at cbSize to decide which one)
 
 		NotifyArea* notify_area = GET_WINDOW(NotifyArea, _hwndNotify);
 
