@@ -143,12 +143,12 @@ typedef struct _SECURITY_SUBJECT_CONTEXT
 
 typedef struct _SECURITY_CLIENT_CONTEXT
 {
-  SECURITY_QUALITY_OF_SERVICE SecurityQos;	/* 0x00 */
-  PACCESS_TOKEN Token;				/* 0x0C */
-  BOOLEAN DirectlyAccessClientToken;		/* 0x10 */
-  BOOLEAN DirectAccessEffectiveOnly;		/* 0x11 */
-  BOOLEAN ServerIsRemote;			/* 0x12 */
-  TOKEN_CONTROL ClientTokenControl;		/* 0x14 */
+    SECURITY_QUALITY_OF_SERVICE SecurityQos;
+    PACCESS_TOKEN               ClientToken;
+    BOOLEAN                     DirectlyAccessClientToken;
+    BOOLEAN                     DirectAccessEffectiveOnly;
+    BOOLEAN                     ServerIsRemote;
+    TOKEN_CONTROL               ClientTokenControl;
 } SECURITY_CLIENT_CONTEXT, *PSECURITY_CLIENT_CONTEXT;
 
 

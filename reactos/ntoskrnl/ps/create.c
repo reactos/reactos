@@ -134,7 +134,7 @@ PsImpersonateClient (IN PETHREAD Thread,
 						  sizeof(PS_IMPERSONATION_INFORMATION));
     }
 
-  Thread->ImpersonationInfo->Level = ImpersonationLevel;
+  Thread->ImpersonationInfo->ImpersonationLevel = ImpersonationLevel;
   Thread->ImpersonationInfo->CopyOnOpen = CopyOnOpen;
   Thread->ImpersonationInfo->EffectiveOnly = EffectiveOnly;
   Thread->ImpersonationInfo->Token = Token;
@@ -167,7 +167,7 @@ PsReferenceEffectiveToken(PETHREAD Thread,
 	Token = Thread->ImpersonationInfo->Token;
 	*TokenType = TokenImpersonation;
 	*EffectiveOnly = Thread->ImpersonationInfo->EffectiveOnly;
-	*Level = Thread->ImpersonationInfo->Level;
+	*Level = Thread->ImpersonationInfo->ImpersonationLevel;
      }
    return(Token);
 }
@@ -219,9 +219,9 @@ NtImpersonateThread(IN HANDLE ThreadHandle,
 
   SeImpersonateClient (&ClientContext,
 		       Thread);
-  if (ClientContext.Token != NULL)
+  if (ClientContext.ClientToken != NULL)
     {
-      ObDereferenceObject (ClientContext.Token);
+      ObDereferenceObject (ClientContext.ClientToken);
     }
 
   ObDereferenceObject (ThreadToImpersonate);
@@ -244,7 +244,7 @@ PsReferenceImpersonationToken(IN PETHREAD Thread,
       return NULL;
     }
 
-  *ImpersonationLevel = Thread->ImpersonationInfo->Level;
+  *ImpersonationLevel = Thread->ImpersonationInfo->ImpersonationLevel;
   *CopyOnOpen = Thread->ImpersonationInfo->CopyOnOpen;
   *EffectiveOnly = Thread->ImpersonationInfo->EffectiveOnly;
   ObReferenceObjectByPointer (Thread->ImpersonationInfo->Token,
@@ -255,8 +255,11 @@ PsReferenceImpersonationToken(IN PETHREAD Thread,
   return Thread->ImpersonationInfo->Token;
 }
 
+#ifdef PsDereferencePrimaryToken
+#undef PsDereferenceImpersonationToken
+#endif
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 STDCALL
@@ -264,11 +267,16 @@ PsDereferenceImpersonationToken(
     IN PACCESS_TOKEN ImpersonationToken
     )
 {
-	UNIMPLEMENTED;	
+    if (ImpersonationToken) {
+        ObDereferenceObject(ImpersonationToken);
+    }
 }
 
+#ifdef PsDereferencePrimaryToken
+#undef PsDereferencePrimaryToken
+#endif
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 STDCALL
@@ -276,7 +284,7 @@ PsDereferencePrimaryToken(
     IN PACCESS_TOKEN PrimaryToken
     )
 {
-	UNIMPLEMENTED;	
+    ObDereferenceObject(PrimaryToken);
 }
 
 /*
@@ -305,7 +313,7 @@ PsDisableImpersonation(
    ImpersonationState->Token = Thread->ImpersonationInfo->Token;
    ImpersonationState->CopyOnOpen = Thread->ImpersonationInfo->CopyOnOpen;
    ImpersonationState->EffectiveOnly = Thread->ImpersonationInfo->EffectiveOnly;
-   ImpersonationState->Level = Thread->ImpersonationInfo->Level;
+   ImpersonationState->Level = Thread->ImpersonationInfo->ImpersonationLevel;
 
 /* FIXME */
 /*   ExfReleasePushLock(&Thread->ThreadLock); */

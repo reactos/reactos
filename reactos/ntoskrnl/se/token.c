@@ -317,7 +317,6 @@ SeCopyClientToken(PACCESS_TOKEN Token,
 {
    NTSTATUS Status;
    OBJECT_ATTRIBUTES ObjectAttributes;
-   PTOKEN TokenNew;
      
    InitializeObjectAttributes(&ObjectAttributes,
 			      NULL,
@@ -332,7 +331,6 @@ SeCopyClientToken(PACCESS_TOKEN Token,
 				PreviousMode,
 			    (PTOKEN*)&NewToken);
    
-   *NewToken = (PACCESS_TOKEN)TokenNew;
    return(Status);
 }
 
@@ -423,7 +421,7 @@ SeCreateClientSecurity(IN struct _ETHREAD *Thread,
   ClientContext->SecurityQos.ContextTrackingMode = Qos->ContextTrackingMode;
   ClientContext->SecurityQos.EffectiveOnly = Qos->EffectiveOnly;
   ClientContext->ServerIsRemote = RemoteClient;
-  ClientContext->Token = NewToken;
+  ClientContext->ClientToken = NewToken;
 
   return(STATUS_SUCCESS);
 }
@@ -511,7 +509,7 @@ SeImpersonateClient(IN PSECURITY_CLIENT_CONTEXT ClientContext,
       ServerThread = PsGetCurrentThread();
     }
   PsImpersonateClient(ServerThread,
-		      ClientContext->Token,
+		      ClientContext->ClientToken,
 		      1,
 		      (ULONG)b,
 		      ClientContext->SecurityQos.ImpersonationLevel);
