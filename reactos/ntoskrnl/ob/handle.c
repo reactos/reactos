@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: handle.c,v 1.36 2002/04/07 09:24:36 sedwards Exp $
+/* $Id: handle.c,v 1.37 2002/05/07 22:38:29 hbirr Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -81,7 +81,7 @@ static PHANDLE_REP ObpGetObjectByHandle(PHANDLE_TABLE HandleTable, HANDLE h)
  */
 {
    PLIST_ENTRY current;
-   unsigned int handle = (((unsigned int)h) - 1) >> 2;
+   unsigned int handle = (((unsigned int)h) >> 2) - 1;
    unsigned int count=handle/HANDLE_BLOCK_ENTRIES;
    HANDLE_BLOCK* blk = NULL;
    unsigned int i;
@@ -192,6 +192,14 @@ NTSTATUS STDCALL NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
    
    KeReleaseSpinLock(&SourceProcess->HandleTable.ListLock, oldIrql);
    
+   if (!SourceHandleRep->Inherit)
+   {
+      ObDereferenceObject(TargetProcess);
+      ObDereferenceObject(SourceProcess);
+      ObDereferenceObject(ObjectBody);
+      return STATUS_INVALID_HANDLE;
+   }
+
    ObCreateHandle(TargetProcess,
 		  ObjectBody,
 		  DesiredAccess,
@@ -255,7 +263,7 @@ VOID ObCloseAllHandles(PEPROCESS Process)
 					     0,
 					     NULL,
 					     UserMode);
-		  Header->HandleCount--;
+		  InterlockedDecrement(&Header->HandleCount);
 		  current->handles[i].ObjectBody = NULL;
 		  
 		  KeReleaseSpinLock(&HandleTable->ListLock, oldIrql);
@@ -320,11 +328,12 @@ VOID ObCreateHandleTable(PEPROCESS Parent,
  *       Process = Process whose handle table is to be created
  */
 {
-   PHANDLE_TABLE ParentHandleTable;
+   PHANDLE_TABLE ParentHandleTable, HandleTable;
    KIRQL oldIrql;
    PLIST_ENTRY parent_current;
    ULONG i;
-   
+   PHANDLE_BLOCK current_block, new_block;   
+
    DPRINT("ObCreateHandleTable(Parent %x, Inherit %d, Process %x)\n",
 	  Parent,Inherit,Process);
    
@@ -334,41 +343,44 @@ VOID ObCreateHandleTable(PEPROCESS Parent,
    if (Parent != NULL)
      {
 	ParentHandleTable = &Parent->HandleTable;
-	
+	HandleTable = &Process->HandleTable;
+
 	KeAcquireSpinLock(&Parent->HandleTable.ListLock, &oldIrql);
+	KeAcquireSpinLockAtDpcLevel(&Process->HandleTable.ListLock);
 	
 	parent_current = ParentHandleTable->ListHead.Flink;
 	
 	while (parent_current != &ParentHandleTable->ListHead)
 	  {
-	     HANDLE_BLOCK* current_block = CONTAINING_RECORD(parent_current,
-							     HANDLE_BLOCK,
-							     entry);
-	     HANDLE NewHandle;
-	     
+	     current_block = CONTAINING_RECORD(parent_current,
+					       HANDLE_BLOCK,
+					       entry);
+	     new_block = ExAllocatePoolWithTag(NonPagedPool,
+		                               sizeof(HANDLE_BLOCK),
+					       TAG_HANDLE_TABLE);
+             if (new_block == NULL)
+	     {
+		break;
+	     }
+	     RtlZeroMemory(new_block, sizeof(HANDLE_BLOCK));
+
 	     for (i=0; i<HANDLE_BLOCK_ENTRIES; i++)
-	       {
-		  if (Inherit || current_block->handles[i].Inherit)
-		    {
-		       ObCreateHandle(Process,
-				      current_block->handles[i].ObjectBody,
-				      current_block->handles[i].GrantedAccess,
-				      current_block->handles[i].Inherit,
-				      &NewHandle);
-		    }
-		  else
-		    {
-		       ObCreateHandle(Process,
-				      NULL,
-				      0,
-				      current_block->handles[i].Inherit,
-				      &NewHandle);
-		    }
-	       }
-	     
+	     {
+		if (current_block->handles[i].ObjectBody)
+		{
+		   if (current_block->handles[i].Inherit && Inherit)
+		   {
+		      new_block->handles[i].ObjectBody = current_block->handles[i].ObjectBody;
+		      new_block->handles[i].GrantedAccess = current_block->handles[i].GrantedAccess;
+		      new_block->handles[i].Inherit = TRUE;
+		      InterlockedIncrement(&(BODY_TO_HEADER(current_block->handles[i].ObjectBody)->HandleCount));
+		   }
+		}
+	     }
+             InsertTailList(&(Process->HandleTable.ListHead), &new_block->entry);
 	     parent_current = parent_current->Flink;
 	  }
-	
+        KeReleaseSpinLockFromDpcLevel(&Process->HandleTable.ListLock);
 	KeReleaseSpinLock(&Parent->HandleTable.ListLock, oldIrql);
      }
 }
@@ -400,7 +412,7 @@ PVOID ObDeleteHandle(PEPROCESS Process, HANDLE Handle)
    if (ObjectBody != NULL)
      {
 	Header = BODY_TO_HEADER(ObjectBody);
-	BODY_TO_HEADER(ObjectBody)->HandleCount--;
+	InterlockedDecrement(&(BODY_TO_HEADER(ObjectBody)->HandleCount));
 	ObReferenceObjectByPointer(ObjectBody,
 				   0,
 				   NULL,
@@ -451,7 +463,7 @@ NTSTATUS ObCreateHandle(PEPROCESS Process,
 
    if (ObjectBody != NULL)
      {
-	BODY_TO_HEADER(ObjectBody)->HandleCount++;
+	InterlockedIncrement(&(BODY_TO_HEADER(ObjectBody)->HandleCount));
      }
    HandleTable = &Process->HandleTable;
    KeAcquireSpinLock(&HandleTable->ListLock, &oldlvl);
@@ -498,10 +510,10 @@ NTSTATUS ObCreateHandle(PEPROCESS Process,
    RtlZeroMemory(new_blk,sizeof(HANDLE_BLOCK));
    InsertTailList(&(Process->HandleTable.ListHead),
 		  &new_blk->entry);
-   KeReleaseSpinLock(&HandleTable->ListLock, oldlvl);
    new_blk->handles[0].ObjectBody = ObjectBody;
    new_blk->handles[0].GrantedAccess = GrantedAccess;
    new_blk->handles[0].Inherit = Inherit;
+   KeReleaseSpinLock(&HandleTable->ListLock, oldlvl);
    *HandleReturn = (HANDLE)(handle << 2);
    return(STATUS_SUCCESS);
 }
