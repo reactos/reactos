@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.4 2003/04/05 09:37:43 chorns Exp $
+# $Id: makefile,v 1.5 2003/11/13 14:18:53 ekohl Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -9,6 +9,8 @@ TARGET_TYPE = export_driver
 TARGET_NAME = class2
 
 TARGET_OBJECTS = $(TARGET_NAME).o
+
+TARGET_CFLAGS = -Werror -Wall
 
 include $(PATH_TO_TOP)/rules.mak
 

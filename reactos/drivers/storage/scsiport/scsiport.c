@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.43 2003/11/01 10:42:32 hbirr Exp $
+/* $Id: scsiport.c,v 1.44 2003/11/13 14:20:03 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -73,12 +73,6 @@ static VOID STDCALL
 ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
 		IN PIRP Irp);
 
-static IO_ALLOCATION_ACTION STDCALL
-ScsiPortAllocateController(IN PDEVICE_OBJECT DeviceObject,
-			   IN PIRP Irp,
-			   IN PVOID MapRegisterBase,
-			   IN PVOID Context);
-
 static BOOLEAN STDCALL
 ScsiPortStartPacket(IN OUT PVOID Context);
 
@@ -126,6 +120,9 @@ ScsiPortIoTimer(PDEVICE_OBJECT DeviceObject,
 static PSCSI_REQUEST_BLOCK
 ScsiPortInitSenseRequestSrb(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 			    PSCSI_REQUEST_BLOCK OriginalSrb);
+
+static VOID
+ScsiPortFreeSenseRequestSrb(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension);
 
 static NTSTATUS
 SpiBuildDeviceMap (PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
@@ -471,6 +468,7 @@ ScsiPortGetSrb(IN PVOID DeviceExtension,
 {
   DPRINT1("ScsiPortGetSrb()\n");
   UNIMPLEMENTED;
+  return NULL;
 }
 
 
@@ -610,7 +608,7 @@ ScsiPortInitialize(IN PVOID Argument1,
 		   IN PVOID HwContext)
 {
   PDRIVER_OBJECT DriverObject = (PDRIVER_OBJECT)Argument1;
-  PUNICODE_STRING RegistryPath = (PUNICODE_STRING)Argument2;
+//  PUNICODE_STRING RegistryPath = (PUNICODE_STRING)Argument2;
   PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
   PCONFIGURATION_INFORMATION SystemConfig;
   PPORT_CONFIGURATION_INFORMATION PortConfig;
@@ -1544,7 +1542,6 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
   PIO_STACK_LOCATION IrpStack;
   PSCSI_REQUEST_BLOCK Srb;
   KIRQL oldIrql;
-  BOOLEAN Result;
 
   DPRINT("ScsiPortStartIo() called!\n");
 
@@ -1563,16 +1560,16 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
       IoCompleteRequest (Irp,
 			 IO_NO_INCREMENT);
       if (oldIrql < DISPATCH_LEVEL)
-        {
-          KeRaiseIrql (DISPATCH_LEVEL, 
-	               &oldIrql);
-          IoStartNextPacket (DeviceObject,
-	                     FALSE);
-          KeLowerIrql(oldIrql);
+	{
+	  KeRaiseIrql (DISPATCH_LEVEL,
+		       &oldIrql);
+	  IoStartNextPacket (DeviceObject,
+			     FALSE);
+	  KeLowerIrql (oldIrql);
 	}
       else
-        {
-          IoStartNextPacket (DeviceObject,
+	{
+	  IoStartNextPacket (DeviceObject,
 			     FALSE);
 	}
       return;
@@ -1592,16 +1589,16 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
       IoCompleteRequest (Irp,
 			 IO_NO_INCREMENT);
       if (oldIrql < DISPATCH_LEVEL)
-        {
-          KeRaiseIrql (DISPATCH_LEVEL, 
-	               &oldIrql);
-          IoStartNextPacket (DeviceObject,
-	                     FALSE);
-          KeLowerIrql(oldIrql);
+	{
+	  KeRaiseIrql (DISPATCH_LEVEL,
+		       &oldIrql);
+	  IoStartNextPacket (DeviceObject,
+			     FALSE);
+	  KeLowerIrql (oldIrql);
 	}
       else
-        {
-          IoStartNextPacket (DeviceObject,
+	{
+	  IoStartNextPacket (DeviceObject,
 			     FALSE);
 	}
       return;
@@ -1644,16 +1641,16 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
       IoCompleteRequest(Irp,
 			IO_NO_INCREMENT);
       if (oldIrql < DISPATCH_LEVEL)
-        {
-          KeRaiseIrql (DISPATCH_LEVEL, 
-	               &oldIrql);
-          IoStartNextPacket (DeviceObject,
-	                     FALSE);
-          KeLowerIrql(oldIrql);
+	{
+	  KeRaiseIrql (DISPATCH_LEVEL,
+		       &oldIrql);
+	  IoStartNextPacket (DeviceObject,
+			     FALSE);
+	  KeLowerIrql (oldIrql);
 	}
       else
-        {
-          IoStartNextPacket (DeviceObject,
+	{
+	  IoStartNextPacket (DeviceObject,
 			     FALSE);
 	}
     }
@@ -1866,7 +1863,6 @@ SpiScanAdapter (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
   ULONG Bus;
   ULONG Target;
   ULONG Lun;
-  BOOLEAN Result;
   NTSTATUS Status;
 
   DPRINT ("SpiScanAdapter() called\n");
@@ -2093,7 +2089,7 @@ ScsiPortDpcForIsr(IN PKDPC Dpc,
 	  RtlZeroMemory(&DeviceExtension->InternalSenseData, sizeof(SENSE_DATA));
 
 	  IrpStack->Parameters.Scsi.Srb = DeviceExtension->OriginalSrb;
-	  DeviceExtension->OriginalSrb = NULL;
+	  ScsiPortFreeSenseRequestSrb (DeviceExtension);
 	}
       else if ((SRB_STATUS(Srb->SrbStatus) != SRB_STATUS_SUCCESS) &&
 	       (Srb->ScsiStatus == SCSISTAT_CHECK_CONDITION))

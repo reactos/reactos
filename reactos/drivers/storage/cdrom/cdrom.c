@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdrom.c,v 1.25 2003/11/10 18:09:54 ekohl Exp $
+/* $Id: cdrom.c,v 1.26 2003/11/13 14:18:26 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -437,16 +437,15 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 			     IN PCLASS_INIT_DATA InitializationData)
 {
   PDEVICE_EXTENSION DiskDeviceExtension; /* defined in class2.h */
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING UnicodeDeviceDirName;
   PDEVICE_OBJECT DiskDeviceObject;
-  SCSI_REQUEST_BLOCK Srb;
   PCDROM_DATA CdromData;
   CHAR NameBuffer[80];
-  HANDLE Handle;
+#if 0
+  SCSI_REQUEST_BLOCK Srb;
   PUCHAR Buffer;
   ULONG Length;
   PCDB Cdb;
+#endif
   NTSTATUS Status;
 
   DPRINT("CdromClassCreateDeviceObject() called\n");

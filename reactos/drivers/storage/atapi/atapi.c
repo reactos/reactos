@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.44 2003/08/22 13:50:39 ekohl Exp $
+/* $Id: atapi.c,v 1.45 2003/11/13 14:17:51 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -200,22 +200,16 @@ AtapiIdentifyDevice(IN ULONG CommandPort,
 		    OUT PIDE_DRIVE_IDENTIFY DrvParms);
 
 static BOOLEAN
-IDEResetController(IN ULONG CommandPort,
-		   IN ULONG ControlPort);
-
-static int
 AtapiPolledRead(IN ULONG CommandPort,
 		IN ULONG ControlPort,
-		IN BYTE PreComp,
-		IN BYTE SectorCnt,
-		IN BYTE SectorNum,
-		IN BYTE CylinderLow,
-		IN BYTE CylinderHigh,
-		IN BYTE DrvHead,
-		IN BYTE Command,
-		OUT BYTE *Buffer);
-
-
+		IN UCHAR PreComp,
+		IN UCHAR SectorCnt,
+		IN UCHAR SectorNum,
+		IN UCHAR CylinderLow,
+		IN UCHAR CylinderHigh,
+		IN UCHAR DrvHead,
+		IN UCHAR Command,
+		OUT PUCHAR Buffer);
 
 static ULONG
 AtapiSendAtapiCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
@@ -1170,7 +1164,8 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   ULONG ControlPortBase;
   ULONG UnitNumber;
   ULONG Retries;
-  BYTE High, Low;
+  UCHAR High;
+  UCHAR Low;
 
   DPRINT("AtapiFindDevices() called\n");
 
@@ -1203,10 +1198,10 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
       IDEWriteCylinderLow(CommandPortBase, 0);
 
       if (Low != 0x55 || High != 0xaa)
-      {
-         DPRINT("No Drive found. UnitNumber %d CommandPortBase %x\n", UnitNumber, CommandPortBase);
-	 continue;
-      }
+	{
+	  DPRINT("No Drive found. UnitNumber %d CommandPortBase %x\n", UnitNumber, CommandPortBase);
+	  continue;
+	}
 
       IDEWriteCommand(CommandPortBase, IDE_CMD_RESET);
 
@@ -1302,56 +1297,6 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 }
 
 
-//    AtapiResetController
-//
-//  DESCRIPTION:
-//    Reset the controller and report completion status
-//
-//  RUN LEVEL:
-//    PASSIVE_LEVEL
-//
-//  ARGUMENTS:
-//    IN  WORD  CommandPort  The address of the command port
-//    IN  WORD  ControlPort  The address of the control port
-//
-//  RETURNS:
-//
-
-static BOOLEAN
-AtapiResetController(IN ULONG CommandPort,
-		     IN ULONG ControlPort)
-{
-  int Retries;
-
-  /* Assert drive reset line */
-  IDEWriteDriveControl(ControlPort, IDE_DC_SRST);
-
-  /* Wait for min. 25 microseconds */
-  ScsiPortStallExecution(IDE_RESET_PULSE_LENGTH);
-
-  /* Negate drive reset line */
-  IDEWriteDriveControl(ControlPort, 0);
-
-  /* Wait for BUSY negation */
-  for (Retries = 0; Retries < IDE_RESET_BUSY_TIMEOUT * 1000; Retries++)
-    {
-      if (!(IDEReadStatus(CommandPort) & IDE_SR_BUSY))
-	{
-	  break;
-	}
-      ScsiPortStallExecution(10);
-    }
-
-  if (Retries >= IDE_RESET_BUSY_TIMEOUT * 1000)
-    {
-      return(FALSE);
-    }
-
-    //  return TRUE if controller came back to life. and
-    //  the registers are initialized correctly
-  return(IDEReadError(CommandPort) == 1);
-}
-
 /*
  *  AtapiIdentifyDevice
  *
@@ -1397,10 +1342,10 @@ AtapiIdentifyDevice(IN ULONG CommandPort,
 		      0,
 		      (DriveNum ? IDE_DH_DRV1 : 0),
 		      (Atapi ? IDE_CMD_IDENT_ATAPI_DRV : IDE_CMD_IDENT_ATA_DRV),
-		      (BYTE *)DrvParms) != 0)
+		      (PUCHAR)DrvParms) == FALSE)
     {
       DPRINT("IDEPolledRead() failed\n");
-      return(FALSE);
+      return FALSE;
     }
 
   /*  Report on drive parameters if debug mode  */
@@ -1467,7 +1412,7 @@ AtapiIdentifyDevice(IN ULONG CommandPort,
     }
   DPRINT("BytesPerSector %d\n", DrvParms->BytesPerSector);
 
-  return(TRUE);
+  return TRUE;
 }
 
 
@@ -1480,38 +1425,38 @@ AtapiIdentifyDevice(IN ULONG CommandPort,
 //    PASSIVE_LEVEL
 //
 //  ARGUMENTS:
-//    IN   WORD  Address       Address of command port for drive
-//    IN   BYTE  PreComp       Value to write to precomp register
-//    IN   BYTE  SectorCnt     Value to write to sectorCnt register
-//    IN   BYTE  SectorNum     Value to write to sectorNum register
-//    IN   BYTE  CylinderLow   Value to write to CylinderLow register
-//    IN   BYTE  CylinderHigh  Value to write to CylinderHigh register
-//    IN   BYTE  DrvHead       Value to write to Drive/Head register
-//    IN   BYTE  Command       Value to write to Command register
-//    OUT  BYTE  *Buffer       Buffer for output data
+//    IN   ULONG  CommandPort   Address of command port for drive
+//    IN   ULONG  ControlPort   Address of control port for drive
+//    IN   UCHAR  PreComp       Value to write to precomp register
+//    IN   UCHAR  SectorCnt     Value to write to sectorCnt register
+//    IN   UCHAR  SectorNum     Value to write to sectorNum register
+//    IN   UCHAR  CylinderLow   Value to write to CylinderLow register
+//    IN   UCHAR  CylinderHigh  Value to write to CylinderHigh register
+//    IN   UCHAR  DrvHead       Value to write to Drive/Head register
+//    IN   UCHAR  Command       Value to write to Command register
+//    OUT  PUCHAR Buffer        Buffer for output data
 //
 //  RETURNS:
-//    int  0 is success, non 0 is an error code
+//    BOOLEAN: TRUE success, FALSE error
 //
 
-static int
+static BOOLEAN
 AtapiPolledRead(IN ULONG CommandPort,
 		IN ULONG ControlPort,
-		IN BYTE PreComp,
-		IN BYTE SectorCnt,
-		IN BYTE SectorNum,
-		IN BYTE CylinderLow,
-		IN BYTE CylinderHigh,
-		IN BYTE DrvHead,
-		IN BYTE Command,
-		OUT BYTE *Buffer)
+		IN UCHAR PreComp,
+		IN UCHAR SectorCnt,
+		IN UCHAR SectorNum,
+		IN UCHAR CylinderLow,
+		IN UCHAR CylinderHigh,
+		IN UCHAR DrvHead,
+		IN UCHAR Command,
+		OUT PUCHAR Buffer)
 {
   ULONG SectorCount = 0;
   ULONG RetryCount;
   BOOLEAN Junk = FALSE;
   UCHAR Status;
 
-//#if 0
   /* Wait for BUSY to clear */
   for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES; RetryCount++)
     {
@@ -1527,9 +1472,8 @@ AtapiPolledRead(IN ULONG CommandPort,
   if (RetryCount >= IDE_MAX_BUSY_RETRIES)
     {
       DPRINT("Drive is BUSY for too long\n");
-      return(IDE_ER_ABRT);
+      return FALSE;
     }
-//#endif
 
   /*  Write Drive/Head to select drive  */
   IDEWriteDriveHead(CommandPort, IDE_DH_FIXED | DrvHead);
@@ -1552,7 +1496,7 @@ AtapiPolledRead(IN ULONG CommandPort,
     }
   if (RetryCount >= IDE_MAX_BUSY_RETRIES)
     {
-      return IDE_ER_ABRT;
+      return FALSE;
     }
 #endif
 
@@ -1601,8 +1545,9 @@ AtapiPolledRead(IN ULONG CommandPort,
 	      ScsiPortStallExecution(50);
 	      IDEReadStatus(CommandPort);
 
-	      return(IDE_ER_ABRT);
+	      return FALSE;
 	    }
+
 	  if (Status & IDE_SR_DRQ)
 	    {
 	      break;
@@ -1613,7 +1558,7 @@ AtapiPolledRead(IN ULONG CommandPort,
 	      ScsiPortStallExecution(50);
 	      IDEReadStatus(CommandPort);
 
-	      return(IDE_ER_ABRT);
+	      return FALSE;
 	    }
 	}
       ScsiPortStallExecution(10);
@@ -1626,7 +1571,7 @@ AtapiPolledRead(IN ULONG CommandPort,
       ScsiPortStallExecution(50);
       IDEReadStatus(CommandPort);
 
-      return(IDE_ER_ABRT);
+      return FALSE;
     }
 
   while (1)
@@ -1656,7 +1601,7 @@ AtapiPolledRead(IN ULONG CommandPort,
 		  ScsiPortStallExecution(50);
 		  IDEReadStatus(CommandPort);
 
-		  return(IDE_ER_ABRT);
+		  return FALSE;
 		}
 	      if (Status & IDE_SR_DRQ)
 		{
@@ -1678,7 +1623,7 @@ AtapiPolledRead(IN ULONG CommandPort,
 		  ScsiPortStallExecution(50);
 		  IDEReadStatus(CommandPort);
 
-		  return(0);
+		  return TRUE;
 		}
 	    }
 	}
@@ -1822,7 +1767,7 @@ AtapiSendAtapiCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
 	break;
     }
 
-  CdbSize = (DeviceExtension->DeviceParams[Srb->TargetId].ConfigBits & 0x3 == 1) ? 16 : 12;
+  CdbSize = ((DeviceExtension->DeviceParams[Srb->TargetId].ConfigBits & 0x3) == 1) ? 16 : 12;
   DPRINT("CdbSize: %lu\n", CdbSize);
 
   /* Write command packet */
@@ -2281,7 +2226,7 @@ AtapiFlushCache(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   /* Wait for controller ready */
   for (Retries = 0; Retries < IDE_MAX_WRITE_RETRIES; Retries++)
     {
-      BYTE  Status = IDEReadStatus(DeviceExtension->CommandPortBase);
+      Status = IDEReadStatus(DeviceExtension->CommandPortBase);
       if (!(Status & IDE_SR_BUSY) || (Status & IDE_SR_ERR))
 	{
 	  break;

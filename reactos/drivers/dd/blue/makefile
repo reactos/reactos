@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.20 2003/04/05 09:37:41 chorns Exp $
+# $Id: makefile,v 1.21 2003/11/13 14:20:53 ekohl Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -9,6 +9,8 @@ TARGET_TYPE = driver
 TARGET_NAME = blue
 
 TARGET_OBJECTS = blue.o
+
+TARGET_CFLAGS = -Wall -Werror
 
 include $(PATH_TO_TOP)/rules.mak
 

@@ -48,7 +48,7 @@ BOOLEAN FloppyIsrUnexpected( PCONTROLLER_OBJECT Controller )
 BOOLEAN FloppyIsrDetectMedia( PCONTROLLER_OBJECT Controller )
 {
   PFLOPPY_CONTROLLER_EXTENSION ControllerExtension = (PFLOPPY_CONTROLLER_EXTENSION)Controller->ControllerExtension;
-  BYTE SectorSize;
+  UCHAR SectorSize;
 
   DPRINT("FloppyIsrDetectMedia() called\n");
 
@@ -128,10 +128,12 @@ BOOLEAN FloppyIsrReadWrite( PCONTROLLER_OBJECT Controller )
 {
   // read result registers from read or write command, and queue dpc to start next operation
   PFLOPPY_CONTROLLER_EXTENSION ControllerExtension = (PFLOPPY_CONTROLLER_EXTENSION)Controller->ControllerExtension;
-  BYTE Cyl, Head, Sector;
-  PFLOPPY_DEVICE_EXTENSION DeviceExtension = (PFLOPPY_DEVICE_EXTENSION)ControllerExtension->Device->DeviceExtension;
-  PIO_STACK_LOCATION Stk = IoGetCurrentIrpStackLocation( ControllerExtension->Irp );
-  BOOLEAN WriteToDevice = Stk->MajorFunction == IRP_MJ_WRITE ? TRUE : FALSE;
+  UCHAR Cyl;
+  UCHAR Head;
+  UCHAR Sector;
+//  PFLOPPY_DEVICE_EXTENSION DeviceExtension = (PFLOPPY_DEVICE_EXTENSION)ControllerExtension->Device->DeviceExtension;
+//  PIO_STACK_LOCATION Stk = IoGetCurrentIrpStackLocation( ControllerExtension->Irp );
+//  BOOLEAN WriteToDevice = Stk->MajorFunction == IRP_MJ_WRITE ? TRUE : FALSE;
 
 
   ControllerExtension->St0 = FloppyReadDATA( ControllerExtension->PortBase );
@@ -147,6 +149,7 @@ BOOLEAN FloppyIsrReadWrite( PCONTROLLER_OBJECT Controller )
   Sector = FloppyReadDATA( ControllerExtension->PortBase );    // sector
   KeStallExecutionProcessor( 100 );
   ControllerExtension->SectorSizeCode = FloppyReadDATA( ControllerExtension->PortBase );
+
   // reprogam for next sector if we are not done reading track
   /*  if( ( ControllerExtension->TransferLength -= ( 128 << ControllerExtension->SectorSizeCode ) ) )
     {
@@ -176,15 +179,19 @@ BOOLEAN FloppyIsrReadWrite( PCONTROLLER_OBJECT Controller )
   return TRUE;
 }
 
+
 // actual ISR, passes controll to handler for current state in state machine
 
 BOOLEAN STDCALL
-FloppyIsr(PKINTERRUPT Interrupt,
-	  PVOID ServiceContext)
+FloppyIsr (PKINTERRUPT Interrupt,
+	   PVOID ServiceContext)
 {
-   PCONTROLLER_OBJECT Controller = (PCONTROLLER_OBJECT)ServiceContext;
-   PFLOPPY_CONTROLLER_EXTENSION ControllerExtension = (PFLOPPY_CONTROLLER_EXTENSION)Controller->ControllerExtension;
-   BYTE Byte;
+  PCONTROLLER_OBJECT Controller;
+  PFLOPPY_CONTROLLER_EXTENSION ControllerExtension;
+  UCHAR Byte;
+
+  Controller = (PCONTROLLER_OBJECT)ServiceContext;
+  ControllerExtension = (PFLOPPY_CONTROLLER_EXTENSION)Controller->ControllerExtension;
 
    // need to make sure interrupt is for us, and add some delay for the damn FDC
    // without the delay, even though the thing has interrupted, it's still not ready
@@ -200,4 +207,4 @@ FloppyIsr(PKINTERRUPT Interrupt,
    return ControllerExtension->IsrState( Controller );
 }
 
-
+/* EOF */

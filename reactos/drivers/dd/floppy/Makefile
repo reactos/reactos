@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.11 2003/04/05 09:37:42 chorns Exp $
+# $Id: Makefile,v 1.12 2003/11/13 14:22:03 ekohl Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -12,6 +12,8 @@ TARGET_OBJECTS = \
   dpc.o \
   floppy.o \
   isr.o
+
+TARGET_CFLAGS = -Wall -Werror
 
 include $(PATH_TO_TOP)/rules.mak
 

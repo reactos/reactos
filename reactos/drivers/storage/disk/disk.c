@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.32 2003/07/23 18:45:08 ekohl Exp $
+/* $Id: disk.c,v 1.33 2003/11/13 14:19:23 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1714,7 +1714,9 @@ ScsiDiskUpdateFixedDiskGeometry(IN PDEVICE_EXTENSION DeviceExtension)
   HANDLE BusKey;
   ULONG DiskNumber;
   ULONG Length;
+#if 0
   ULONG i;
+#endif
   ULONG Cylinders;
   ULONG Sectors;
   ULONG SectorsPerTrack;

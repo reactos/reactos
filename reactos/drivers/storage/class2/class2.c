@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.45 2003/11/11 15:31:31 ekohl Exp $
+/* $Id: class2.c,v 1.46 2003/11/13 14:18:53 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -729,7 +729,6 @@ ScsiClassFindUnclaimedDevices(IN PCLASS_INIT_DATA InitializationData,
   PUCHAR Buffer;
   ULONG Bus;
   ULONG UnclaimedDevices = 0;
-  NTSTATUS Status;
 
   DPRINT("ScsiClassFindUnclaimedDevices() called\n");
 
@@ -1028,7 +1027,6 @@ ScsiClassInterpretSenseInfo(IN PDEVICE_OBJECT DeviceObject,
   PIO_ERROR_LOG_PACKET LogPacket;
 #endif
   PSENSE_DATA SenseData;
-  NTSTATUS LogStatus;
   BOOLEAN LogError;
   BOOLEAN Retry;
 

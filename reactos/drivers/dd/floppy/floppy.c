@@ -42,10 +42,10 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
    UNICODE_STRING DeviceName;
    NTSTATUS Status;
    PDEVICE_OBJECT DeviceObject;
-   PCONFIGURATION_INFORMATION ConfigInfo;
+//   PCONFIGURATION_INFORMATION ConfigInfo;
    LARGE_INTEGER Timeout;
-   BYTE Byte;
-   int c;
+//   BYTE Byte;
+//   int c;
    PCONFIGURATION_INFORMATION Config;
    DEVICE_DESCRIPTION DeviceDescription;
    ULONG MaxMapRegs;
@@ -431,109 +431,138 @@ FloppyExecuteReadWrite(PDEVICE_OBJECT DeviceObject,
    return KeepObject;
 }
 
-NTSTATUS STDCALL
-FloppyDispatchOpenClose(PDEVICE_OBJECT DeviceObject,
-			PIRP Irp)
-{
-   DPRINT("FloppyDispatchOpenClose\n");
-   return STATUS_SUCCESS;
-}
 
 NTSTATUS STDCALL
-FloppyDispatchReadWrite(PDEVICE_OBJECT DeviceObject,
-		        PIRP Irp)
+FloppyDispatchOpenClose (PDEVICE_OBJECT DeviceObject,
+			 PIRP Irp)
 {
-  PFLOPPY_DEVICE_EXTENSION DeviceExtension = (PFLOPPY_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-  PFLOPPY_CONTROLLER_EXTENSION ControllerExtension = (PFLOPPY_CONTROLLER_EXTENSION)DeviceExtension->Controller->ControllerExtension;
-  PIO_STACK_LOCATION Stk = IoGetCurrentIrpStackLocation( Irp );
+  DPRINT ("FloppyDispatchOpenClose\n");
+  return STATUS_SUCCESS;
+}
+
+
+NTSTATUS STDCALL
+FloppyDispatchReadWrite (PDEVICE_OBJECT DeviceObject,
+			 PIRP Irp)
+{
+  PFLOPPY_DEVICE_EXTENSION DeviceExtension;
+  PIO_STACK_LOCATION Stack;
   KIRQL oldlvl;
-  
-  if( Stk->Parameters.Read.ByteOffset.u.HighPart )
+
+  DeviceExtension = (PFLOPPY_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+  Stack = IoGetCurrentIrpStackLocation (Irp);
+
+  if (Stack->Parameters.Read.ByteOffset.u.HighPart)
     {
       Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
       Irp->IoStatus.Information = 0;
-      IoCompleteRequest( Irp, 1 );
+      IoCompleteRequest (Irp, 1);
       return STATUS_INVALID_PARAMETER;
     }
-  // store currentva in drivercontext
-  Irp->Tail.Overlay.DriverContext[0] = MmGetMdlVirtualAddress( Irp->MdlAddress );
-  DPRINT( "FloppyDispatchReadWrite: offset = %x, length = %x, va = %x\n",
-	  Stk->Parameters.Read.ByteOffset.u.LowPart,
-	  Stk->Parameters.Read.Length,
-	  Irp->Tail.Overlay.DriverContext[0] );
-  // Queue IRP
+
+  /* Store currentva in drivercontext */
+  Irp->Tail.Overlay.DriverContext[0] = MmGetMdlVirtualAddress (Irp->MdlAddress);
+  DPRINT ("FloppyDispatchReadWrite: offset = %x, length = %x, va = %x\n",
+	  Stack->Parameters.Read.ByteOffset.u.LowPart,
+	  Stack->Parameters.Read.Length,
+	  Irp->Tail.Overlay.DriverContext[0]);
+
+  /* Queue IRP */
   Irp->IoStatus.Status = STATUS_SUCCESS;
-  Irp->IoStatus.Information = Stk->Parameters.Read.Length;
-  IoMarkIrpPending( Irp );
-  KeRaiseIrql( DISPATCH_LEVEL, &oldlvl );
-  IoAllocateController( ((PFLOPPY_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->Controller,
+  Irp->IoStatus.Information = Stack->Parameters.Read.Length;
+  IoMarkIrpPending (Irp);
+
+  KeRaiseIrql (DISPATCH_LEVEL,
+	       &oldlvl);
+  IoAllocateController (DeviceExtension->Controller,
 			DeviceObject,
 			FloppyExecuteReadWrite,
-			Irp );
-  KeLowerIrql( oldlvl );
+			Irp);
+  KeLowerIrql (oldlvl);
+
   DPRINT( "oldlvl = %x\n", oldlvl );
+
   return STATUS_PENDING;
 }
 
-IO_ALLOCATION_ACTION STDCALL
-FloppyAdapterControl(PDEVICE_OBJECT DeviceObject,
-		     PIRP Irp,
-		     PVOID MapRegisterBase,
-		     PVOID Context)
-{
-  PFLOPPY_CONTROLLER_EXTENSION ControllerExtension = (PFLOPPY_CONTROLLER_EXTENSION)Context;
 
-  // just set the event, and return KeepObject
+IO_ALLOCATION_ACTION STDCALL
+FloppyAdapterControl (PDEVICE_OBJECT DeviceObject,
+		      PIRP Irp,
+		      PVOID MapRegisterBase,
+		      PVOID Context)
+{
+  PFLOPPY_CONTROLLER_EXTENSION ControllerExtension;
+
+  ControllerExtension = (PFLOPPY_CONTROLLER_EXTENSION)Context;
   CHECKPOINT;
+
+  /* Just set the event, and return KeepObject */
   ControllerExtension->MapRegisterBase = MapRegisterBase;
-  KeSetEvent( &ControllerExtension->Event, 0, FALSE );
+  KeSetEvent (&ControllerExtension->Event,
+	      0,
+	      FALSE);
+
   return KeepObject;
 }
 
+
 NTSTATUS STDCALL
-FloppyDispatchDeviceControl(PDEVICE_OBJECT DeviceObject,
-			    PIRP Irp)
+FloppyDispatchDeviceControl (PDEVICE_OBJECT DeviceObject,
+			     PIRP Irp)
 {
-   PIO_STACK_LOCATION IrpStack;
-   ULONG ControlCode, InputLength, OutputLength;
-   NTSTATUS Status;
+  PIO_STACK_LOCATION Stack;
+  ULONG ControlCode;
+  ULONG InputLength;
+  ULONG OutputLength;
+  NTSTATUS Status;
 
-   DPRINT("FloppyDispatchDeviceControl\n");
+  DPRINT ("FloppyDispatchDeviceControl\n");
 
-   IrpStack = IoGetCurrentIrpStackLocation(Irp);
-   ControlCode = IrpStack->Parameters.DeviceIoControl.IoControlCode;
-   InputLength = IrpStack->Parameters.DeviceIoControl.InputBufferLength;
-   OutputLength = IrpStack->Parameters.DeviceIoControl.OutputBufferLength;
+  Stack = IoGetCurrentIrpStackLocation(Irp);
+  ControlCode = Stack->Parameters.DeviceIoControl.IoControlCode;
+  InputLength = Stack->Parameters.DeviceIoControl.InputBufferLength;
+  OutputLength = Stack->Parameters.DeviceIoControl.OutputBufferLength;
 
-   switch (ControlCode)
-   {
+  switch (ControlCode)
+    {
       case IOCTL_DISK_GET_DRIVE_GEOMETRY:
-         if (OutputLength < sizeof(DISK_GEOMETRY))
-         {
-            Status = STATUS_INVALID_PARAMETER;
-	 }
-	 else
-	 {
-            PDISK_GEOMETRY Geometry = Irp->AssociatedIrp.SystemBuffer;
-            // FIXME: read the first sector of the diskette
-            Geometry->MediaType = F3_1Pt44_512;
-            Geometry->Cylinders.QuadPart = 80;
-            Geometry->TracksPerCylinder = 2 * 18;
-            Geometry->SectorsPerTrack = 18;
-            Geometry->BytesPerSector = 512;
-            Status = STATUS_SUCCESS;
-            Irp->IoStatus.Information = sizeof(DISK_GEOMETRY);
-        }
-        break;
-     default:
-        Status = STATUS_INVALID_DEVICE_REQUEST;
-   }
-   Irp->IoStatus.Status = Status;
-   IoCompleteRequest(Irp, NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT);	
-   return Status;
+	if (OutputLength < sizeof(DISK_GEOMETRY))
+	  {
+	    Status = STATUS_INVALID_PARAMETER;
+	  }
+	else
+	  {
+	    PDISK_GEOMETRY Geometry = Irp->AssociatedIrp.SystemBuffer;
+
+	    // FIXME: read the first sector of the diskette
+	    Geometry->MediaType = F3_1Pt44_512;
+	    Geometry->Cylinders.QuadPart = 80;
+	    Geometry->TracksPerCylinder = 2 * 18;
+	    Geometry->SectorsPerTrack = 18;
+	    Geometry->BytesPerSector = 512;
+	    Status = STATUS_SUCCESS;
+	    Irp->IoStatus.Information = sizeof(DISK_GEOMETRY);
+	  }
+	break;
+
+      default:
+	Status = STATUS_INVALID_DEVICE_REQUEST;
+	Irp->IoStatus.Information = 0;
+	break;
+    }
+
+  Irp->IoStatus.Status = Status;
+  IoCompleteRequest (Irp,
+		     NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT);
+
+  return Status;
 }
 
-/*    ModuleEntry
+
+/*
+ *  DriverEntry
  *
  *  DESCRIPTION:
  *    This function initializes the driver, locates and claims 
@@ -550,31 +579,31 @@ FloppyDispatchDeviceControl(PDEVICE_OBJECT DeviceObject,
  *                                       key
  *
  *  RETURNS:
- *    NTSTATUS  
+ *    NTSTATUS
  */
 NTSTATUS STDCALL
-DriverEntry(IN PDRIVER_OBJECT DriverObject,
-	    IN PUNICODE_STRING RegistryPath)
+DriverEntry (IN PDRIVER_OBJECT DriverObject,
+	     IN PUNICODE_STRING RegistryPath)
 {
-   DPRINT("Floppy driver\n");
-   
-   /* Export other driver entry points... */
-   DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)FloppyDispatchOpenClose;
-   DriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH)FloppyDispatchOpenClose;
-   DriverObject->MajorFunction[IRP_MJ_READ] = (PDRIVER_DISPATCH)FloppyDispatchReadWrite;
-   DriverObject->MajorFunction[IRP_MJ_WRITE] = (PDRIVER_DISPATCH)FloppyDispatchReadWrite;
-   DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] =
-     (PDRIVER_DISPATCH)FloppyDispatchDeviceControl;
-   
-   /*  Try to detect controller and abort if it fails */
-   if (!FloppyCreateController(DriverObject,
+  DPRINT ("Floppy driver\n");
+
+  /* Export other driver entry points... */
+  DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)FloppyDispatchOpenClose;
+  DriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH)FloppyDispatchOpenClose;
+  DriverObject->MajorFunction[IRP_MJ_READ] = (PDRIVER_DISPATCH)FloppyDispatchReadWrite;
+  DriverObject->MajorFunction[IRP_MJ_WRITE] = (PDRIVER_DISPATCH)FloppyDispatchReadWrite;
+  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] =
+    (PDRIVER_DISPATCH)FloppyDispatchDeviceControl;
+
+  /*  Try to detect controller and abort if it fails */
+  if (!FloppyCreateController (DriverObject,
 			       &ControllerParameters[0],
 			       0))
-     {
-	DPRINT("Could not find floppy controller\n");
-	return STATUS_NO_SUCH_DEVICE;
-     }
-   
+    {
+      DPRINT ("Could not find floppy controller\n");
+      return STATUS_NO_SUCH_DEVICE;
+    }
+
    return STATUS_SUCCESS;
 }
 
