@@ -66,6 +66,6 @@ VOID KdInitSystem(ULONG Reserved, PLOADER_PARAMETER_BLOCK LoaderBlock);
 /*
  * 
  */
-#define MM_STACK_SIZE             (12*4096)
+#define MM_STACK_SIZE             (3*4096)
 
 #endif /* INCLUDE_INTERNAL_NTOSKRNL_H */
