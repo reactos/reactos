@@ -28,7 +28,8 @@ LdrInitModuleManagement (
 	);
 NTSTATUS
 LdrProcessDriver (
-	IN	PVOID	ModuleLoadBase
+	IN	PVOID	ModuleLoadBase,
+	IN	PCHAR	FileName
 	);
 NTSTATUS
 LdrpMapSystemDll (
@@ -59,12 +60,18 @@ NTSTATUS LdrLoadGdiDriver (PUNICODE_STRING DriverName,
 			   PVOID *EntryPoint,
 			   PVOID *ExportSectionPointer);
 
+NTSTATUS
+LdrpQueryModuleInformation(PVOID Buffer,
+			   ULONG Size,
+			   PULONG ReqSize);
+
 PVOID STDCALL
 RtlImageDirectoryEntryToData (
 	IN PVOID	BaseAddress,
 	IN BOOLEAN	ImageLoaded,
 	IN ULONG	Directory,
 	OUT PULONG	Size);
+
 
 
 #endif /* __INCLUDE_INTERNAL_LDR_H */

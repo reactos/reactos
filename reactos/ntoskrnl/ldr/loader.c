@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.65 2000/10/22 16:36:51 ekohl Exp $
+/* $Id: loader.c,v 1.66 2001/01/18 16:55:00 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -28,6 +28,7 @@
 #include <internal/mmhal.h>
 #include <internal/ob.h>
 #include <internal/ps.h>
+#include <internal/ldr.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -47,9 +48,6 @@ POBJECT_TYPE EXPORTED IoDriverObjectType = NULL;
 
 /* FORWARD DECLARATIONS ******************************************************/
 
-NTSTATUS LdrLoadDriver(PUNICODE_STRING Filename);
-NTSTATUS LdrProcessDriver(PVOID ModuleLoadBase);
-
 PMODULE_OBJECT  LdrLoadModule(PUNICODE_STRING Filename);
 PMODULE_OBJECT  LdrProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING ModuleName);
 PVOID  LdrGetExportAddress(PMODULE_OBJECT ModuleObject, char *Name, unsigned short Hint);
@@ -60,7 +58,7 @@ static NTSTATUS LdrCreateModule(PVOID ObjectBody,
                                 POBJECT_ATTRIBUTES ObjectAttributes);
 
 /*  PE Driver load support  */
-static PMODULE_OBJECT  LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING ModuleName);
+static PMODULE_OBJECT  LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING FileName);
 static PVOID  LdrPEGetExportAddress(PMODULE_OBJECT ModuleObject,
                                     char *Name,
                                     unsigned short Hint);
@@ -99,7 +97,7 @@ VOID LdrInitModuleManagement(VOID)
   IoDriverObjectType->QueryName = NULL;
   IoDriverObjectType->OkayToClose = NULL;
   IoDriverObjectType->Create = LdrCreateModule;
-  RtlInitUnicodeString(&IoDriverObjectType->TypeName, L"Module");
+  RtlInitUnicodeString(&IoDriverObjectType->TypeName, L"Driver");
 
   /*  Create Modules object directory  */
   wcscpy(NameBuffer, MODULE_ROOT_NAME);
@@ -296,8 +294,6 @@ LdrLoadModule(PUNICODE_STRING Filename)
   OBJECT_ATTRIBUTES ObjectAttributes;
   PMODULE_OBJECT  ModuleObject;
   FILE_STANDARD_INFORMATION FileStdInfo;
-  WCHAR  NameBuffer[60];
-  UNICODE_STRING  ModuleName;
 
   /*  Check for module already loaded  */
   if ((ModuleObject = LdrOpenModule(Filename)) != NULL)
@@ -367,19 +363,7 @@ LdrLoadModule(PUNICODE_STRING Filename)
 
   NtClose(FileHandle);
 
-  /*  Build module object name  */
-  wcscpy(NameBuffer, MODULE_ROOT_NAME);
-  if (wcsrchr(Filename->Buffer, '\\') != 0)
-    {
-      wcscat(NameBuffer, wcsrchr(Filename->Buffer, '\\') + 1);
-    }
-  else
-    {
-      wcscat(NameBuffer, Filename->Buffer);
-    }
-  RtlInitUnicodeString (&ModuleName, NameBuffer);
-
-  ModuleObject = LdrProcessModule(ModuleLoadBase, &ModuleName);
+  ModuleObject = LdrProcessModule(ModuleLoadBase, Filename);
 
   /*  Cleanup  */
   ExFreePool(ModuleLoadBase);
@@ -388,19 +372,24 @@ LdrLoadModule(PUNICODE_STRING Filename)
 }
 
 NTSTATUS
-LdrProcessDriver(PVOID ModuleLoadBase)
+LdrProcessDriver(PVOID ModuleLoadBase, PCHAR FileName)
 {
-  PMODULE_OBJECT ModuleObject;
+   PMODULE_OBJECT ModuleObject;
+   UNICODE_STRING ModuleName;
 
-  ModuleObject = LdrProcessModule(ModuleLoadBase, 0);
-  if (ModuleObject == 0)
-    {
-      return STATUS_UNSUCCESSFUL;
-    }
+   RtlCreateUnicodeStringFromAsciiz(&ModuleName,
+				    FileName);
+   ModuleObject = LdrProcessModule(ModuleLoadBase,
+				   &ModuleName);
+   RtlFreeUnicodeString(&ModuleName);
+   if (ModuleObject == NULL)
+     {
+	return STATUS_UNSUCCESSFUL;
+     }
 
-  /* FIXME: should we dereference the ModuleObject here?  */
+   /* FIXME: should we dereference the ModuleObject here?  */
 
-  return IoInitializeDriver(ModuleObject->EntryPoint); 
+   return IoInitializeDriver(ModuleObject->EntryPoint);
 }
 
 PMODULE_OBJECT
@@ -427,7 +416,6 @@ LdrOpenModule(PUNICODE_STRING  Filename)
   OBJECT_ATTRIBUTES  ObjectAttributes;
   PMODULE_OBJECT  ModuleObject;
   UNICODE_STRING RemainingPath;
-//  PWSTR  RemainingPath;
 
   wcscpy(NameBuffer, MODULE_ROOT_NAME);
   if (wcsrchr(Filename->Buffer, '\\') != 0)
@@ -478,10 +466,88 @@ LdrGetExportAddress(PMODULE_OBJECT ModuleObject,
     }
 }
 
+NTSTATUS
+LdrpQueryModuleInformation(PVOID Buffer,
+			   ULONG Size,
+			   PULONG ReqSize)
+{
+   PLIST_ENTRY current_entry;
+   PMODULE_OBJECT current;
+   ULONG ModuleCount = 0;
+   PSYSTEM_MODULE_INFORMATION Smi;
+   ANSI_STRING AnsiName;
+   PCHAR p;
+
+//   KeAcquireSpinLock(&ModuleListLock,&oldlvl);
+
+   /* calculate required size */
+   current_entry = ModuleListHead.Flink;
+   while (current_entry != (&ModuleListHead))
+     {
+	ModuleCount++;
+	current_entry = current_entry->Flink;
+     }
+
+   *ReqSize = sizeof(SYSTEM_MODULE_INFORMATION)+
+	(ModuleCount - 1) * sizeof(SYSTEM_MODULE_ENTRY);
+
+   if (Size < *ReqSize)
+     {
+//	KeReleaseSpinLock(&ModuleListLock,oldlvl);
+	return STATUS_INFO_LENGTH_MISMATCH;
+     }
+
+   /* fill the buffer */
+   memset(Buffer, '=', Size);
+
+   Smi = (PSYSTEM_MODULE_INFORMATION)Buffer;
+   Smi->Count = ModuleCount;
+
+   ModuleCount = 0;
+   current_entry = ModuleListHead.Flink;
+   while (current_entry != (&ModuleListHead))
+     {
+	current = CONTAINING_RECORD(current_entry,MODULE_OBJECT,ListEntry);
+
+	Smi->Module[ModuleCount].Unknown2 = 0;		/* Always 0 */
+	Smi->Module[ModuleCount].BaseAddress = current->Base;
+	Smi->Module[ModuleCount].Size = current->Length;
+	Smi->Module[ModuleCount].Unknown3 = 0;		/* Flags ??? */
+	Smi->Module[ModuleCount].EntryIndex = ModuleCount;
+
+	AnsiName.Length = 0;
+	AnsiName.MaximumLength = 256;
+	AnsiName.Buffer = Smi->Module[ModuleCount].Name;
+	RtlUnicodeStringToAnsiString(&AnsiName,
+				     &current->Name,
+				     FALSE);
+
+	p = strrchr (AnsiName.Buffer, '\\');
+	if (p == NULL)
+	  {
+	     Smi->Module[ModuleCount].PathLength = 0;
+	     Smi->Module[ModuleCount].NameLength = strlen(AnsiName.Buffer);
+	  }
+	else
+	  {
+	     p++;
+	     Smi->Module[ModuleCount].PathLength = p - AnsiName.Buffer;
+	     Smi->Module[ModuleCount].NameLength = strlen(p);
+	  }
+
+	ModuleCount++;
+	current_entry = current_entry->Flink;
+     }
+
+//   KeReleaseSpinLock(&ModuleListLock,oldlvl);
+
+   return STATUS_SUCCESS;
+}
+
 /*  ----------------------------------------------  PE Module support */
 
 PMODULE_OBJECT
-LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING pModuleName)
+LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING FileName)
 {
   unsigned int DriverSize, Idx, Idx2;
   ULONG RelocDelta, NumRelocs;
@@ -492,7 +558,6 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING pModuleName)
   PIMAGE_FILE_HEADER PEFileHeader;
   PIMAGE_OPTIONAL_HEADER PEOptionalHeader;
   PIMAGE_SECTION_HEADER PESectionHeaders;
-  PIMAGE_EXPORT_DIRECTORY  ExportDirectory;
   PRELOCATION_DIRECTORY RelocDir;
   PRELOCATION_ENTRY RelocEntry;
   PMODULE_OBJECT  LibraryModuleObject;
@@ -764,32 +829,14 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING pModuleName)
     }
 
   /*  Create ModuleName string  */
-  if (pModuleName != 0)
+  wcscpy(NameBuffer, MODULE_ROOT_NAME);
+  if (wcsrchr(FileName->Buffer, '\\') != 0)
     {
-      wcscpy(NameBuffer, pModuleName->Buffer);
+      wcscat(NameBuffer, wcsrchr(FileName->Buffer, '\\') + 1);
     }
   else
     {
-      wcscpy(NameBuffer, MODULE_ROOT_NAME);
-      if (PEOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT]
-            .VirtualAddress != 0)
-        {
-          ExportDirectory = (PIMAGE_EXPORT_DIRECTORY) (DriverBase +
-            PEOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT]
-              .VirtualAddress);
-          wcscat(NameBuffer, DriverBase + ExportDirectory->Name);
-        }
-      else
-        {
-          char buf[12];
-
-          sprintf(buf, "%08X", (DWORD) DriverBase);
-          for (Idx = 0; NameBuffer[Idx] != 0; Idx++)
-            ;
-          Idx2 = 0;
-          while ((NameBuffer[Idx + Idx2] = (WCHAR) buf[Idx2]) != 0)
-            Idx2++;
-        }
+      wcscat(NameBuffer, FileName->Buffer);
     }
   RtlInitUnicodeString (&ModuleName, NameBuffer);
   DbgPrint("Module name is: %wZ\n", &ModuleName);
@@ -812,7 +859,8 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING pModuleName)
   ModuleObject->Base = DriverBase;
   ModuleObject->Flags = MODULE_FLAG_PE;
   InsertTailList(&ModuleListHead, &ModuleObject->ListEntry);
-  RtlCreateUnicodeString(&ModuleObject->Name, NameBuffer);
+  RtlCreateUnicodeString(&ModuleObject->Name, FileName->Buffer);
+
   ModuleObject->EntryPoint = (PVOID) ((DWORD)DriverBase + 
     PEOptionalHeader->AddressOfEntryPoint);
   ModuleObject->Length = DriverSize;
@@ -834,7 +882,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING pModuleName)
   return  ModuleObject;
 }
 
-static PVOID  
+static PVOID
 LdrPEGetExportAddress(PMODULE_OBJECT ModuleObject,
                       char *Name,
                       unsigned short Hint)

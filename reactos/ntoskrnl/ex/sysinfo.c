@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.9 2001/01/17 02:02:39 ekohl Exp $
+/* $Id: sysinfo.c,v 1.10 2001/01/18 16:53:50 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -317,11 +317,10 @@ QSI_DEF(SystemCallTimeInformation)
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
-/* Class 11 - Modules Information */
+/* Class 11 - Module Information */
 QSI_DEF(SystemModuleInformation)
 {
-	/* FIXME */
-	return (STATUS_NOT_IMPLEMENTED);
+	return LdrpQueryModuleInformation(Buffer, Size, ReqSize);
 }
 
 /* Class 12 - Locks Information */

@@ -430,16 +430,15 @@ struct _SYSTEM_FLAGS_INFORMATION
 typedef
 struct _SYSTEM_MODULE_ENTRY
 {
-	ULONG	Unused;
-	ULONG	Always0;
-	ULONG	ModuleBaseAddress;
-	ULONG	ModuleSize;
-	ULONG	Unknown;
-	ULONG	ModuleEntryIndex;
-	USHORT	ModuleNameLength; /* Length of module name not including the path, this field contains valid value only for NTOSKRNL module*/
-	USHORT	ModulePathLength; /* Length of 'directory path' part of modulename*/
-	CHAR	ModuleName [256];
-
+	ULONG	Unknown1;
+	ULONG	Unknown2;
+	PVOID	BaseAddress;
+	ULONG	Size;
+	ULONG	Unknown3;
+	ULONG	EntryIndex;
+	USHORT	NameLength; /* Length of module name not including the path, this field contains valid value only for NTOSKRNL module*/
+	USHORT	PathLength; /* Length of 'directory path' part of modulename*/
+	CHAR	Name [256];
 } SYSTEM_MODULE_ENTRY, * PSYSTEM_MODULE_ENTRY;
 
 typedef
@@ -447,7 +446,6 @@ struct _SYSTEM_MODULE_INFORMATION
 {
 	ULONG			Count;
 	SYSTEM_MODULE_ENTRY	Module [1];
-	
 } SYSTEM_MODULE_INFORMATION, *PSYSTEM_MODULE_INFORMATION;
 
 // SystemLocksInformation (12)

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.75 2001/01/17 19:07:13 ea Exp $
+/* $Id: main.c,v 1.76 2001/01/18 16:54:22 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -452,8 +452,8 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
     */
    strcpy (KeLoaderCommandLine,
 	   "multi(0)disk(0)rdisk(0)partition(1)\\reactos ");
-   strcat (KeLoaderCommandLine, (PUCHAR)KeLoaderBlock.CommandLine);   
-
+   strcat (KeLoaderCommandLine, (PUCHAR)KeLoaderBlock.CommandLine);
+   
    KeLoaderBlock.CommandLine = (ULONG)KeLoaderCommandLine;
    strcpy(KeLoaderModuleStrings[0], "ntoskrnl.exe");
    KeLoaderModules[0].String = (ULONG)KeLoaderModuleStrings[0];
@@ -565,7 +565,7 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
        if (strcmp ((PCHAR) start, "REGEDIT4") != 0)
 	 {
 	    DPRINT1("process module '%s' at %08lx\n", name, start);
-	    LdrProcessDriver((PVOID)start);
+	    LdrProcessDriver((PVOID)start, name);
 	 }
      }
    
