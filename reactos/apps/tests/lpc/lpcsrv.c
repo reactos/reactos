@@ -1,4 +1,4 @@
-/* $Id: lpcsrv.c,v 1.4 2000/01/22 22:22:48 ea Exp $
+/* $Id: lpcsrv.c,v 1.5 2000/03/10 13:46:07 ekohl Exp $
  *
  * DESCRIPTION: Simple LPC Server
  * PROGRAMMER:  David Welch
@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
 			 0);
    if (!NT_SUCCESS(Status))
      {
-	printf("(lpcsrv.exe) Failed to create port (Status = 0x%08X)\n", Status);
+	printf("(lpcsrv.exe) Failed to create port (Status = 0x%08lX)\n", Status);
 	return EXIT_FAILURE;
      }
    
@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
 			 &ConnectMsg);
    if (!NT_SUCCESS(Status))
      {
-	printf("(lpcsrv.exe) Failed to listen for connections (Status = 0x%08X)\n", Status);
+	printf("(lpcsrv.exe) Failed to listen for connections (Status = 0x%08lX)\n", Status);
 	return EXIT_FAILURE;
      }
    
@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
 				NULL);
    if (!NT_SUCCESS(Status))
      {
-	printf("(lpcsrv.exe) Failed to accept connection (Status = 0x%08X)\n", Status);
+	printf("(lpcsrv.exe) Failed to accept connection (Status = 0x%08lX)\n", Status);
 	return EXIT_FAILURE;
      }   
    
@@ -81,7 +81,7 @@ int main(int argc, char* argv[])
    Status = NtCompleteConnectPort(PortHandle);
    if (!NT_SUCCESS(Status))
      {
-	printf("(lpcsrv.exe) Failed to complete connection (Status = 0x%08X)\n", Status);
+	printf("(lpcsrv.exe) Failed to complete connection (Status = 0x%08lX)\n", Status);
 	return EXIT_FAILURE;
      }
    
@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
 					&Request);
 	if (!NT_SUCCESS(Status))
 	  {
-	     printf("(lpcsrv.exe) Failed to receive request (Status = 0x%08X)\n", Status);
+	     printf("(lpcsrv.exe) Failed to receive request (Status = 0x%08lX)\n", Status);
              return EXIT_FAILURE;
 	  }
 	

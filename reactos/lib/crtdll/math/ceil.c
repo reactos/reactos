@@ -1,3 +1,5 @@
+#include <crtdll/math.h>
+
 double ceil (double __x);
 
 double ceil (double __x)
