@@ -534,31 +534,43 @@ GetNetworkParams(PFIXED_INFO pFixedInfo, PULONG pOutBufLen)
     /* Now we have the name servers, place the first one in the struct,
        and follow it with the rest */
     if (!PrivateNSEnum.NumServers)
-      RtlZeroMemory( &pFixedInfo->DnsServerList, sizeof(IP_ADDR_STRING) );
+      RtlZeroMemory( &pFixedInfo->DnsServerList, 
+		     sizeof(pFixedInfo->DnsServerList) );
     else
       memcpy( &pFixedInfo->DnsServerList, &PrivateNSEnum.AddrString[0],
 	      sizeof(PrivateNSEnum.AddrString[0]) );
-    pFixedInfo->CurrentDnsServer = &pFixedInfo->DnsServerList;
-    if (PrivateNSEnum.NumServers > 1) 
+
+    if (PrivateNSEnum.NumServers > 1) {
+      pFixedInfo->CurrentDnsServer = &pFixedInfo->DnsServerList;
       memcpy( &AddressAfterFixedInfo[0],
 	      &PrivateNSEnum.AddrString[1],
 	      sizeof(IP_ADDR_STRING) * (PrivateNSEnum.NumServers - 1) );
-    else
-      pFixedInfo->CurrentDnsServer->Next = 0;
+    } else if (PrivateNSEnum.NumServers == 0) {
+      pFixedInfo->CurrentDnsServer = &pFixedInfo->DnsServerList;
+    } else {
+      pFixedInfo->CurrentDnsServer = 0;
+    }
 
     for( CurrentServer = 0; 
-	 CurrentServer < PrivateNSEnum.NumServers - 1;
+	 PrivateNSEnum.NumServers &&
+	   CurrentServer < PrivateNSEnum.NumServers - 1;
 	 CurrentServer++ ) {
       pFixedInfo->CurrentDnsServer->Next = &AddressAfterFixedInfo[CurrentServer];
       pFixedInfo->CurrentDnsServer = &AddressAfterFixedInfo[CurrentServer];
       pFixedInfo->CurrentDnsServer->Next = 0;
     }
-    /* For now, set the first server as the current server */
-    pFixedInfo->CurrentDnsServer = &pFixedInfo->DnsServerList;
+
+    /* For now, set the first server as the current server, if there are any */
+    if( PrivateNSEnum.NumServers ) {
+      pFixedInfo->CurrentDnsServer = &pFixedInfo->DnsServerList;
+    }
+
     free(PrivateNSEnum.AddrString);
   }
   else
   {
+    WSH_DbgPrint( MIN_TRACE,
+		  ("Open Tcpip parameters key: error %08x\n", errCode ));
     result = ERROR_NO_DATA; // No adapter information exists for the local computer
   }
 
@@ -587,7 +599,11 @@ GetNetworkParams(PFIXED_INFO pFixedInfo, PULONG pOutBufLen)
   }
   else
   {
+    WSH_DbgPrint(MIN_TRACE,
+		 ("iphlpapi: Ignoring lack of netbios data for now.\n"));
+#if 0
     result = ERROR_NO_DATA; // No adapter information exists for the local computer
+#endif
   }
 
   return result;
