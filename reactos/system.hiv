@@ -6,6 +6,37 @@ REGEDIT4
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Control]
 
+[\Registry\Machine\SYSTEM\CurrentControlSet\Control\NLS]
+
+[\Registry\Machine\SYSTEM\CurrentControlSet\Control\NLS\CodePage]
+"10000"="c_10000.nls"
+"1252"="c_1252.nls"
+"437"="c_437.nls"
+"850"="c_850.nls"
+"ACP"="1252"
+"OEMCP"="437"
+"MACCP"="10000"
+
+[\Registry\Machine\SYSTEM\CurrentControlSet\Control\NLS\Language]
+"0401"="l_intl.nls"
+"0402"="l_intl.nls"
+"0403"="l_intl.nls"
+"0404"="l_intl.nls"
+"0405"="l_intl.nls"
+"0406"="l_intl.nls"
+"0407"="l_intl.nls"
+"0408"="l_intl.nls"
+"0409"="l_intl.nls"
+"040a"="l_intl.nls"
+"040b"="l_intl.nls"
+"040c"="l_intl.nls"
+"040d"="l_intl.nls"
+"040e"="l_intl.nls"
+"040f"="l_intl.nls"
+"0410"="l_intl.nls"
+"Default"="0409"
+"InstallLanguage"="0409"
+
 [\Registry\Machine\SYSTEM\CurrentControlSet\Control\ServiceGroupOrder]
 "List"="Primary Disk;Boot File System;Base;Pointer Port;Keyboard Port;Pointer Class;Keyboard Class;Video;File System"
 
