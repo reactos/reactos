@@ -522,6 +522,8 @@ VOID DisplayTCPPacket(
     }
 }
 
+#endif DBG /* DBG */
+
 void GetDataPtr( PNDIS_PACKET Packet,
 		 UINT Offset, 
 		 PUCHAR *DataOut,
@@ -607,5 +609,3 @@ VOID FreeNdisPacketX
     NdisFreePacket(Packet);
     UntrackFL(File,Line,Packet);
 }
-
-#endif /* DBG */
