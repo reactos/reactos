@@ -133,7 +133,8 @@ RtlpAddKnownAce (PACL Acl,
    {
       return(STATUS_ALLOTTED_SPACE_EXCEEDED);
    }
-   if (RtlLengthSid(Sid) + sizeof(ACE) > Acl->AclSize)
+   if ((ULONG_PTR)Ace + RtlLengthSid(Sid) + sizeof(ACE) >
+       (ULONG_PTR)Acl + Acl->AclSize)
    {
       return(STATUS_ALLOTTED_SPACE_EXCEEDED);
    }

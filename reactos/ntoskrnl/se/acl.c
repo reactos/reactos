@@ -1,4 +1,4 @@
-/* $Id: acl.c,v 1.20 2004/08/15 16:39:11 chorns Exp $
+/* $Id: acl.c,v 1.21 2004/11/06 21:32:16 navaraf Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -33,26 +33,21 @@ PACL SeUnrestrictedDacl = NULL;
 BOOLEAN INIT_FUNCTION
 SepInitDACLs(VOID)
 {
-  ULONG AclLength2;
-  ULONG AclLength3;
-  ULONG AclLength4;
-
-  AclLength2 = sizeof(ACL) +
-	       2 * (RtlLengthRequiredSid(1) + sizeof(ACE));
-  AclLength3 = sizeof(ACL) +
-	       3 * (RtlLengthRequiredSid(1) + sizeof(ACE));
-  AclLength4 = sizeof(ACL) +
-	       4 * (RtlLengthRequiredSid(1) + sizeof(ACE));
+  ULONG AclLength;
 
   /* create PublicDefaultDacl */
+  AclLength = sizeof(ACL) +
+	      (sizeof(ACE) + RtlLengthSid(SeWorldSid)) +
+	      (sizeof(ACE) + RtlLengthSid(SeLocalSystemSid));
+
   SePublicDefaultDacl = ExAllocatePoolWithTag(NonPagedPool,
-					      AclLength2,
+					      AclLength,
 					      TAG_ACL);
   if (SePublicDefaultDacl == NULL)
     return FALSE;
 
   RtlCreateAcl(SePublicDefaultDacl,
-	       AclLength2,
+	       AclLength,
 	       ACL_REVISION);
 
   RtlAddAccessAllowedAce(SePublicDefaultDacl,
@@ -67,14 +62,20 @@ SepInitDACLs(VOID)
 
 
   /* create PublicDefaultUnrestrictedDacl */
+  AclLength = sizeof(ACL) +
+	      (sizeof(ACE) + RtlLengthSid(SeWorldSid)) +
+	      (sizeof(ACE) + RtlLengthSid(SeLocalSystemSid)) +
+	      (sizeof(ACE) + RtlLengthSid(SeAliasAdminsSid)) +
+	      (sizeof(ACE) + RtlLengthSid(SeRestrictedCodeSid));
+
   SePublicDefaultUnrestrictedDacl = ExAllocatePoolWithTag(NonPagedPool,
-							  AclLength4,
+							  AclLength,
 							  TAG_ACL);
   if (SePublicDefaultUnrestrictedDacl == NULL)
     return FALSE;
 
   RtlCreateAcl(SePublicDefaultUnrestrictedDacl,
-	       AclLength4,
+	       AclLength,
 	       ACL_REVISION);
 
   RtlAddAccessAllowedAce(SePublicDefaultUnrestrictedDacl,
@@ -98,14 +99,19 @@ SepInitDACLs(VOID)
 			 SeRestrictedCodeSid);
 
   /* create PublicOpenDacl */
+  AclLength = sizeof(ACL) +
+	      (sizeof(ACE) + RtlLengthSid(SeWorldSid)) +
+	      (sizeof(ACE) + RtlLengthSid(SeLocalSystemSid)) +
+	      (sizeof(ACE) + RtlLengthSid(SeAliasAdminsSid));
+
   SePublicOpenDacl = ExAllocatePoolWithTag(NonPagedPool,
-					   AclLength3,
+					   AclLength,
 					   TAG_ACL);
   if (SePublicOpenDacl == NULL)
     return FALSE;
 
   RtlCreateAcl(SePublicOpenDacl,
-	       AclLength3,
+	       AclLength,
 	       ACL_REVISION);
 
   RtlAddAccessAllowedAce(SePublicOpenDacl,
@@ -124,14 +130,20 @@ SepInitDACLs(VOID)
 			 SeAliasAdminsSid);
 
   /* create PublicOpenUnrestrictedDacl */
+  AclLength = sizeof(ACL) +
+	      (sizeof(ACE) + RtlLengthSid(SeWorldSid)) +
+	      (sizeof(ACE) + RtlLengthSid(SeLocalSystemSid)) +
+	      (sizeof(ACE) + RtlLengthSid(SeAliasAdminsSid)) +
+	      (sizeof(ACE) + RtlLengthSid(SeRestrictedCodeSid));
+
   SePublicOpenUnrestrictedDacl = ExAllocatePoolWithTag(NonPagedPool,
-						       AclLength4,
+						       AclLength,
 						       TAG_ACL);
   if (SePublicOpenUnrestrictedDacl == NULL)
     return FALSE;
 
   RtlCreateAcl(SePublicOpenUnrestrictedDacl,
-	       AclLength4,
+	       AclLength,
 	       ACL_REVISION);
 
   RtlAddAccessAllowedAce(SePublicOpenUnrestrictedDacl,
@@ -155,14 +167,18 @@ SepInitDACLs(VOID)
 			 SeRestrictedCodeSid);
 
   /* create SystemDefaultDacl */
+  AclLength = sizeof(ACL) +
+	      (sizeof(ACE) + RtlLengthSid(SeLocalSystemSid)) +
+	      (sizeof(ACE) + RtlLengthSid(SeAliasAdminsSid));
+
   SeSystemDefaultDacl = ExAllocatePoolWithTag(NonPagedPool,
-					      AclLength2,
+					      AclLength,
 					      TAG_ACL);
   if (SeSystemDefaultDacl == NULL)
     return FALSE;
 
   RtlCreateAcl(SeSystemDefaultDacl,
-	       AclLength2,
+	       AclLength,
 	       ACL_REVISION);
 
   RtlAddAccessAllowedAce(SeSystemDefaultDacl,
@@ -176,14 +192,18 @@ SepInitDACLs(VOID)
 			 SeAliasAdminsSid);
 
   /* create UnrestrictedDacl */
+  AclLength = sizeof(ACL) +
+	      (sizeof(ACE) + RtlLengthSid(SeWorldSid)) +
+	      (sizeof(ACE) + RtlLengthSid(SeRestrictedCodeSid));
+
   SeUnrestrictedDacl = ExAllocatePoolWithTag(NonPagedPool,
-					     AclLength2,
+					     AclLength,
 					     TAG_ACL);
   if (SeUnrestrictedDacl == NULL)
     return FALSE;
 
   RtlCreateAcl(SeUnrestrictedDacl,
-	       AclLength2,
+	       AclLength,
 	       ACL_REVISION);
 
   RtlAddAccessAllowedAce(SeUnrestrictedDacl,
