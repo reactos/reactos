@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.17 2002/09/08 10:22:36 chorns Exp $
+/* $Id: reg.c,v 1.18 2002/11/02 13:55:06 robd Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -286,7 +286,7 @@ RegCloseKey(HKEY hKey)
  *	RegConnectRegistryA
  */
 LONG STDCALL
-RegConnectRegistryA(LPSTR lpMachineName,
+RegConnectRegistryA(LPCSTR lpMachineName,
 		    HKEY hKey,
 		    PHKEY phkResult)
 {
@@ -299,7 +299,7 @@ RegConnectRegistryA(LPSTR lpMachineName,
  *	RegConnectRegistryW
  */
 LONG STDCALL
-RegConnectRegistryW(LPWSTR lpMachineName,
+RegConnectRegistryW(LPCWSTR lpMachineName,
 		    HKEY hKey,
 		    PHKEY phkResult)
 {
@@ -495,7 +495,8 @@ RegDeleteKeyA(
 	OBJECT_ATTRIBUTES ObjectAttributes;
 	UNICODE_STRING SubKeyStringW;
 	ANSI_STRING SubKeyStringA;
-	HANDLE ParentKey;
+//	HANDLE ParentKey;
+	HKEY ParentKey;
 	HANDLE TargetKey;
 	NTSTATUS Status;
 	LONG ErrorCode;
@@ -563,7 +564,7 @@ RegDeleteKeyW(
 {
 	OBJECT_ATTRIBUTES ObjectAttributes;
 	UNICODE_STRING SubKeyString;
-	HANDLE ParentKey;
+	HKEY ParentKey;
 	HANDLE TargetKey;
 	NTSTATUS Status;
 	LONG ErrorCode;
@@ -627,7 +628,7 @@ RegDeleteValueA(
 	ANSI_STRING ValueNameA;
 	NTSTATUS Status;
 	LONG ErrorCode;
-	HANDLE KeyHandle;
+	HKEY KeyHandle;
 
 	Status = MapDefaultKey(&KeyHandle,
 			       hKey);
@@ -675,7 +676,7 @@ RegDeleteValueW(
 	UNICODE_STRING ValueName;
 	NTSTATUS Status;
 	LONG ErrorCode;
-	HANDLE KeyHandle;
+	HKEY KeyHandle;
 
 	Status = MapDefaultKey(&KeyHandle,
 			       hKey);
@@ -843,7 +844,7 @@ RegEnumKeyExW(
 	DWORD dwError = ERROR_SUCCESS;
 	ULONG BufferSize;
 	ULONG ResultSize;
-  HANDLE KeyHandle;
+    HKEY KeyHandle;
 
   Status = MapDefaultKey(&KeyHandle, hKey);
 	if (!NT_SUCCESS(Status))
@@ -856,7 +857,12 @@ RegEnumKeyExW(
 	BufferSize = sizeof (KEY_NODE_INFORMATION) + *lpcbName * sizeof(WCHAR);
 	if (lpClass)
 		BufferSize += *lpcbClass;
-	KeyInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferSize);
+
+    //
+    // I think this is a memory leak, always allocated again below ???
+    //
+    // KeyInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferSize);
+    //
 
   /* We don't know the exact size of the data returned, so call
      NtEnumerateKey() with a buffer size determined from parameters
@@ -1031,7 +1037,7 @@ RegEnumValueW(
 	DWORD dwError = ERROR_SUCCESS;
 	ULONG BufferSize;
 	ULONG ResultSize;
-  HANDLE KeyHandle;
+    HKEY KeyHandle;
 
   Status = MapDefaultKey(&KeyHandle, hKey);
   if (!NT_SUCCESS(Status))
@@ -1103,7 +1109,7 @@ RegEnumValueW(
 	  	if (lpData)
 	  	{
 	  		memcpy(lpData,
-	  			(PVOID)((ULONG_PTR)ValueInfo->Name + ValueInfo->DataOffset),
+	  			(PVOID)((ULONG_PTR)ValueInfo + ValueInfo->DataOffset),
 	  			ValueInfo->DataLength);
 	  		*lpcbData = (DWORD)ValueInfo->DataLength;
 	  	}
@@ -1124,7 +1130,7 @@ RegEnumValueW(
 LONG STDCALL
 RegFlushKey(HKEY hKey)
 {
-  HANDLE KeyHandle;
+  HKEY KeyHandle;
   NTSTATUS Status;
   LONG ErrorCode;
   
@@ -1235,7 +1241,7 @@ RegOpenKeyA(HKEY hKey,
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING SubKeyString;
-  HANDLE KeyHandle;
+  HKEY KeyHandle;
   LONG ErrorCode;
   NTSTATUS Status;
 
@@ -1292,7 +1298,7 @@ RegOpenKeyW (
 	NTSTATUS		errCode;
 	UNICODE_STRING		SubKeyString;
 	OBJECT_ATTRIBUTES	ObjectAttributes;
-	HANDLE			KeyHandle;
+	HKEY			KeyHandle;
 	LONG			ErrorCode;
 
 	errCode = MapDefaultKey(&KeyHandle,
@@ -1342,7 +1348,7 @@ RegOpenKeyExA(HKEY hKey,
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING SubKeyString;
-  HANDLE KeyHandle;
+  HKEY KeyHandle;
   LONG ErrorCode;
   NTSTATUS Status;
 
@@ -1395,7 +1401,7 @@ RegOpenKeyExW(HKEY hKey,
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING SubKeyString;
-  HANDLE KeyHandle;
+  HKEY KeyHandle;
   LONG ErrorCode;
   NTSTATUS Status;
 
@@ -1515,7 +1521,7 @@ RegQueryInfoKeyW(
   KEY_FULL_INFORMATION FullInfoBuffer;
   PKEY_FULL_INFORMATION FullInfo;
   ULONG FullInfoSize;
-  HANDLE KeyHandle;
+  HKEY KeyHandle;
   NTSTATUS Status;
   LONG ErrorCode;
   ULONG Length;
@@ -1629,7 +1635,7 @@ LONG
 STDCALL
 RegQueryMultipleValuesA(
 	HKEY	hKey,
-	PVALENT	val_list,
+	PVALENTA val_list,
 	DWORD	num_vals,
 	LPSTR	lpValueBuf,
 	LPDWORD	ldwTotsize
@@ -1648,7 +1654,7 @@ LONG
 STDCALL
 RegQueryMultipleValuesW(
 	HKEY	hKey,
-	PVALENT	val_list,
+	PVALENTW val_list,
 	DWORD	num_vals,
 	LPWSTR	lpValueBuf,
 	LPDWORD	ldwTotsize
@@ -1745,7 +1751,7 @@ LONG
 STDCALL
 RegQueryValueExA(
 	HKEY	hKey,
-	LPSTR	lpValueName,
+	LPCSTR	lpValueName,
 	LPDWORD	lpReserved,
 	LPDWORD	lpType,
 	LPBYTE	lpData,
@@ -1849,7 +1855,7 @@ LONG
 STDCALL
 RegQueryValueExW(
 	HKEY	hKey,
-	LPWSTR	lpValueName,
+	LPCWSTR	lpValueName,
 	LPDWORD	lpReserved,
 	LPDWORD	lpType,
 	LPBYTE	lpData,
@@ -1862,7 +1868,7 @@ RegQueryValueExW(
 	DWORD dwError = ERROR_SUCCESS;
 	ULONG BufferSize;
 	ULONG ResultSize;
-  HANDLE KeyHandle;
+    HKEY KeyHandle;
 
   DPRINT("hKey 0x%X  lpValueName %S  lpData 0x%X  lpcbData %d\n",
     hKey, lpValueName, lpData, lpcbData ? *lpcbData : 0);
@@ -1954,7 +1960,7 @@ RegQueryValueW(
 	NTSTATUS		errCode;
 	UNICODE_STRING		SubKeyString;
 	OBJECT_ATTRIBUTES	ObjectAttributes;
-	HANDLE			KeyHandle;
+	HKEY			KeyHandle;
   HANDLE			RealKey;
 	LONG			  ErrorCode;
   BOOL        CloseRealKey;
@@ -2120,7 +2126,7 @@ RegSaveKeyW(HKEY hKey,
   UNICODE_STRING NtName;
   IO_STATUS_BLOCK IoStatusBlock;
   HANDLE FileHandle;
-  HANDLE KeyHandle;
+  HKEY KeyHandle;
   NTSTATUS Status;
   LONG ErrorCode;
 
@@ -2353,7 +2359,7 @@ RegSetValueExW(
 {
 	UNICODE_STRING ValueName;
   PUNICODE_STRING pValueName;
-  HANDLE KeyHandle;
+    HKEY KeyHandle;
 	NTSTATUS Status;
   LONG ErrorCode;
 
@@ -2409,7 +2415,7 @@ RegSetValueW(
 	NTSTATUS		errCode;
 	UNICODE_STRING		SubKeyString;
 	OBJECT_ATTRIBUTES	ObjectAttributes;
-	HANDLE			KeyHandle;
+	HKEY			KeyHandle;
   HANDLE			RealKey;
 	LONG			  ErrorCode;
   BOOL        CloseRealKey;
