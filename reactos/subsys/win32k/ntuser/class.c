@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.49 2004/03/09 21:21:39 dwelch Exp $
+/* $Id: class.c,v 1.50 2004/04/05 14:42:30 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -39,6 +39,7 @@
 #include <include/window.h>
 #include <include/color.h>
 #include <include/tags.h>
+#include <internal/safe.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -273,7 +274,7 @@ IntCreateClass(CONST WNDCLASSEXW *lpwcx,
                 RTL_ATOM Atom)
 {
 	PWNDCLASS_OBJECT ClassObject;
-	WORD  objectSize;
+	ULONG  objectSize;
 	NTSTATUS Status;
 
 	/* Check for double registration of the class. */
@@ -343,7 +344,7 @@ IntCreateClass(CONST WNDCLASSEXW *lpwcx,
 	if (ClassObject->cbClsExtra != 0)
 	{
 		ClassObject->ExtraData = (PCHAR)(ClassObject + 1);
-		RtlZeroMemory(ClassObject->ExtraData, ClassObject->cbClsExtra);
+		RtlZeroMemory(ClassObject->ExtraData, (ULONG)ClassObject->cbClsExtra);
 	}
 	else
 	{
@@ -373,10 +374,32 @@ NtUserRegisterClassExWOW(
  *   Atom identifying the new class
  */
 {
+  WNDCLASSEXW SafeClass;
   PWINSTATION_OBJECT WinStaObject;
   PWNDCLASS_OBJECT ClassObject;
   NTSTATUS Status;
   RTL_ATOM Atom;
+  
+  if(!lpwcx)
+  {
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return (RTL_ATOM)0;
+  }
+  
+  Status = MmCopyFromCaller(&SafeClass, lpwcx, sizeof(WNDCLASSEXW));
+  if (!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    return (RTL_ATOM)0;
+  }
+  
+	/* Deny negative sizes */
+  if(lpwcx->cbClsExtra < 0 || lpwcx->cbWndExtra < 0)
+  {
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return (RTL_ATOM)0;
+  }
+  
   DPRINT("About to open window station handle (0x%X)\n", 
     PROCESS_WINDOW_STATION());
   Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
@@ -389,10 +412,11 @@ NtUserRegisterClassExWOW(
       PROCESS_WINDOW_STATION());
     return((RTL_ATOM)0);
   }
-  if (!IS_ATOM(lpwcx->lpszClassName))
+  if (!IS_ATOM(SafeClass.lpszClassName))
   {
+    /* FIXME - Safely copy/verify the buffer first!!! */
     Status = RtlAddAtomToAtomTable(WinStaObject->AtomTable,
-      (LPWSTR)lpwcx->lpszClassName,
+      (LPWSTR)SafeClass.lpszClassName,
       &Atom);
     if (!NT_SUCCESS(Status))
     {
@@ -405,12 +429,12 @@ NtUserRegisterClassExWOW(
   }
   else
   {
-    Atom = (RTL_ATOM)(ULONG)lpwcx->lpszClassName;
+    Atom = (RTL_ATOM)(ULONG)SafeClass.lpszClassName;
   }
-  ClassObject = IntCreateClass(lpwcx, bUnicodeClass, wpExtra, Atom);
+  ClassObject = IntCreateClass(&SafeClass, bUnicodeClass, wpExtra, Atom);
   if (ClassObject == NULL)
   {
-    if (!IS_ATOM(lpwcx->lpszClassName))
+    if (!IS_ATOM(SafeClass.lpszClassName))
     {
       RtlDeleteAtomFromAtomTable(WinStaObject->AtomTable, Atom);
     }
