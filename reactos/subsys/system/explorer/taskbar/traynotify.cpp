@@ -381,15 +381,10 @@ void ClockWindow::TimerTick()
 
 bool ClockWindow::FormatTime()
 {
-	SYSTEMTIME systime;
 	TCHAR buffer[16];
 	TCHAR TimeFormat[] = TEXT("hh':'mm tt");
-	GetLocalTime(&systime);
 
-	GetTimeFormat(LOCALE_USER_DEFAULT,0,NULL,TimeFormat,buffer,sizeof(buffer));
-
-	//_stprintf(buffer, TEXT("%02d:%02d:%02d"), systime.wHour, systime.wMinute, systime.wSecond);
-	//_stprintf(buffer, TEXT("%02d:%02d"), systime.wHour, systime.wMinute);
+	GetTimeFormatW(LOCALE_USER_DEFAULT,0,NULL,TimeFormat,buffer,sizeof(buffer));
 
 	if (_tcscmp(buffer, _time)) {
 		_tcscpy(_time, buffer);
