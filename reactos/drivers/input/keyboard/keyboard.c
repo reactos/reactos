@@ -314,7 +314,7 @@ static BYTE VirtualToAscii(WORD keyCode,BOOL isDown)
          case VK_BACK:
             return 127;
          case VK_RETURN:
-            return 10;                     
+            return '\r';                     
          case 219:                      /* [ */
             if (ctrlKeyState & SHIFT_PRESSED)
                return 0;
@@ -370,7 +370,7 @@ static BYTE VirtualToAscii(WORD keyCode,BOOL isDown)
       case VK_SPACE:
          return ' ';
       case VK_RETURN:
-         return '\n';
+         return '\r';
       case VK_BACK:
          return 8;
       case VK_TAB:
