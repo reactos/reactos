@@ -180,13 +180,28 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
 
   while(pleCurEntry != pleListHead)
   {
+
+   UNICODE_STRING Unicode;
+   WCHAR  Buffer[256 * sizeof(WCHAR)];
+   
    /* read the current module */
    Status = NtReadVirtualMemory ( ProcessHandle,
             CONTAINING_RECORD(pleCurEntry, LDR_MODULE, InLoadOrderModuleList),
                                  &lmModule,
                                  sizeof(LDR_MODULE),
                                  NULL );
- 
+
+   /* Import module name from remote Process user space. */ 
+   Unicode.Length = lmModule.FullDllName.Length;
+   Unicode.MaximumLength = lmModule.FullDllName.MaximumLength;
+   Unicode.Buffer = Buffer;
+
+   Status = NtReadVirtualMemory ( ProcessHandle,
+                                  lmModule.FullDllName.Buffer,
+                                  Unicode.Buffer,
+                                  Unicode.Length,
+                                  NULL );
+   
    if (!NT_SUCCESS(Status))
      {
         /* failure */
@@ -194,8 +209,7 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
         return Status;
      }
 
-      DPRINT("  Module %wZ\n",
-             &lmModule.FullDllName);
+      DPRINT("  Module %wZ\n", &Unicode);
 
       if (UsedSize > Size)
         {
@@ -216,7 +230,7 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
           AnsiString.MaximumLength = 256;
           AnsiString.Buffer        = ModulePtr->ModuleName;
           RtlUnicodeStringToAnsiString(&AnsiString,
-                                       &lmModule.FullDllName,
+                                       &Unicode,
                                        FALSE);
 
           p = strrchr(ModulePtr->ModuleName, '\\');
@@ -377,7 +391,6 @@ else
      }
     
     MSize = Mp->ModuleCount * (sizeof(MODULE_INFORMATION) + 8);
-
     Buf->ModuleInformation = Mp;        
     Buf->SizeOfInfo = Buf->SizeOfInfo + MSize;
      }
