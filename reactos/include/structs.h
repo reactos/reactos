@@ -2518,10 +2518,40 @@ typedef struct tagMENUITEMINFO {
   HBITMAP hbmpChecked;
   HBITMAP hbmpUnchecked;
   DWORD   dwItemData;
-  LPTSTR  dwTypeData;
+  LPTSTR   dwTypeData;
   UINT    cch;
 } MENUITEMINFO, *LPMENUITEMINFO;
 typedef MENUITEMINFO CONST *LPCMENUITEMINFO;
+
+typedef struct tagMENUITEMINFOA {
+  UINT    cbSize;
+  UINT    fMask;
+  UINT    fType;
+  UINT    fState;
+  UINT    wID;
+  HMENU   hSubMenu;
+  HBITMAP hbmpChecked;
+  HBITMAP hbmpUnchecked;
+  DWORD   dwItemData;
+  LPSTR   dwTypeData;
+  UINT    cch;
+} MENUITEMINFOA, *LPMENUITEMINFOA;
+typedef MENUITEMINFOA CONST *LPCMENUITEMINFOA;
+
+typedef struct tagMENUITEMINFOW {
+  UINT    cbSize;
+  UINT    fMask;
+  UINT    fType;
+  UINT    fState;
+  UINT    wID;
+  HMENU   hSubMenu;
+  HBITMAP hbmpChecked;
+  HBITMAP hbmpUnchecked;
+  DWORD   dwItemData;
+  LPWSTR  dwTypeData;
+  UINT    cch;
+} MENUITEMINFOW, *LPMENUITEMINFOW;
+typedef MENUITEMINFOW CONST *LPCMENUITEMINFOW;
 
 typedef struct {
   WORD mtOption;
