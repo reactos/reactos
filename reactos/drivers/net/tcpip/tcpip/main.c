@@ -18,8 +18,10 @@
 
 
 #ifdef DBG
+
 /* See debug.h for debug/trace constants */
 DWORD DebugTraceLevel = MIN_TRACE;
+
 #endif /* DBG */
 
 PDEVICE_OBJECT TCPDeviceObject   = NULL;
@@ -525,11 +527,11 @@ VOID TiUnload(
  *     DriverObject = Pointer to driver object created by the system
  */
 {
-#ifdef BDG
+#ifdef DBG
     KIRQL OldIrql;
 
     KeAcquireSpinLock(&AddressFileListLock, &OldIrql);
-    if (!IsListEmpty(AddressFileList)) {
+    if (!IsListEmpty(&AddressFileListHead)) {
         TI_DbgPrint(MIN_TRACE, ("Open address file objects exists.\n"));
     }
     KeReleaseSpinLock(&AddressFileListLock, OldIrql);
@@ -539,9 +541,7 @@ VOID TiUnload(
     LoopUnregisterAdapter(NULL);
 
     /* Unregister protocol with NDIS */
-#ifdef _MSC_VER
     LANUnregisterProtocol();
-#endif
 
     /* Shutdown transport level protocol subsystems */
     TCPShutdown();
@@ -601,12 +601,12 @@ DriverEntry(
     UNICODE_STRING strDeviceName;
     STRING strNdisDeviceName;
     NDIS_STATUS NdisStatus;
-#ifdef _MSC_VER
     PLAN_ADAPTER Adapter;
     NDIS_STRING DeviceName;
-#endif
 
     TI_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    /* FIXME: Create symbolic links in Win32 namespace */
 
     /* Create IP device object */
     RtlInitUnicodeString(&strDeviceName, DD_IP_DEVICE_NAME);
@@ -700,22 +700,22 @@ DriverEntry(
         TiUnload(DriverObject);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
+
 #if 1
-#ifdef _MSC_VER
     /* Open underlying adapter(s) we are bound to */
 
     /* FIXME: Get binding information from registry */
 
     /* Put your own NDIS adapter device name here */
 
-#if 0
+    /* ReactOS */
+    NdisInitUnicodeString(&DeviceName, L"\\Device\\ne2000");
+
     /* NT4 */
-    NdisInitUnicodeString(&DeviceName, L"\\Device\\El90x1");
-#else
+    //NdisInitUnicodeString(&DeviceName, L"\\Device\\El90x1");
+
     /* NT5 */
-    NdisInitUnicodeString(&DeviceName,
-        L"\\Device\\{56388B49-67BB-4419-A3F4-28DF190B9149}");
-#endif
+    //NdisInitUnicodeString(&DeviceName, L"\\Device\\{56388B49-67BB-4419-A3F4-28DF190B9149}");
 
     NdisStatus = LANRegisterAdapter(&DeviceName, &Adapter);
     if (!NT_SUCCESS(NdisStatus)) {
@@ -732,7 +732,7 @@ DriverEntry(
         return STATUS_DEVICE_DOES_NOT_EXIST;
     }
 #endif
-#endif
+
     /* Setup network layer and transport layer entities */
     EntityList = ExAllocatePool(NonPagedPool, sizeof(TDIEntityID) * 2);
     if (!NT_SUCCESS(Status)) {

@@ -31,14 +31,12 @@ VOID SendICMPComplete(
 {
     PIP_PACKET IPPacket = (PIP_PACKET)Context;
 
-    TI_DbgPrint(MAX_TRACE, ("Called.\n"));
-
-    TI_DbgPrint(MAX_TRACE, ("Freeing NDIS packet (%X).\n", Packet));
+    TI_DbgPrint(DEBUG_ICMP, ("Freeing NDIS packet (%X).\n", Packet));
 
     /* Free packet */
     FreeNdisPacket(Packet);
 
-    TI_DbgPrint(MAX_TRACE, ("Freeing IP packet at %X.\n", IPPacket));
+    TI_DbgPrint(DEBUG_ICMP, ("Freeing IP packet at %X.\n", IPPacket));
 
     PoolFreeBuffer(IPPacket);
 }
@@ -66,14 +64,14 @@ PIP_PACKET PrepareICMPPacket(
     PVOID DataBuffer;
     ULONG Size;
 
-    TI_DbgPrint(MAX_TRACE, ("Called. DataSize = %d.\n", DataSize));
+    TI_DbgPrint(DEBUG_ICMP, ("Called. DataSize (%d).\n", DataSize));
 
     /* Prepare ICMP packet */
     IPPacket = PoolAllocateBuffer(sizeof(IP_PACKET));
     if (!IPPacket)
         return NULL;
 
-    TI_DbgPrint(MAX_TRACE, ("IPPacket at %X.\n", IPPacket));
+    TI_DbgPrint(DEBUG_ICMP, ("IPPacket at (0x%X).\n", IPPacket));
 
     Size = MaxLLHeaderSize + sizeof(IPv4_HEADER) +
         sizeof(ICMP_HEADER) + DataSize;
@@ -83,7 +81,7 @@ PIP_PACKET PrepareICMPPacket(
         return NULL;
     }
 
-    TI_DbgPrint(MAX_TRACE, ("Size = %d, Data at %X.\n", Size, DataBuffer));
+    TI_DbgPrint(DEBUG_ICMP, ("Size (%d). Data at (0x%X).\n", Size, DataBuffer));
 
     /* Allocate NDIS packet */
     NdisAllocatePacket(&NdisStatus, &NdisPacket, GlobalPacketPool);
@@ -93,7 +91,7 @@ PIP_PACKET PrepareICMPPacket(
         return NULL;
     }
 
-    TI_DbgPrint(MAX_TRACE, ("NdisPacket at %X.\n", NdisPacket));
+    TI_DbgPrint(MAX_TRACE, ("NdisPacket at (0x%X).\n", NdisPacket));
 
     /* Allocate NDIS buffer for maximum link level header and ICMP packet */
     NdisAllocateBuffer(&NdisStatus, &NdisBuffer, GlobalBufferPool,
@@ -105,7 +103,7 @@ PIP_PACKET PrepareICMPPacket(
         return NULL;
     }
 
-    TI_DbgPrint(MAX_TRACE, ("NdisBuffer at %X.\n", NdisBuffer));
+    TI_DbgPrint(MAX_TRACE, ("NdisBuffer at (0x%X).\n", NdisBuffer));
 
     /* Link NDIS buffer into packet */
     NdisChainBufferAtFront(NdisPacket, NdisBuffer);
@@ -164,26 +162,24 @@ VOID ICMPReceive(
     PICMP_HEADER ICMPHeader;
     PIP_PACKET NewPacket;
     UINT DataSize;
-    ULONG Checksum;
 
-    TI_DbgPrint(MID_TRACE, ("Called.\n"));
+    TI_DbgPrint(DEBUG_ICMP, ("Called.\n"));
 
     ICMPHeader = (PICMP_HEADER)IPPacket->Data;
 
-    TI_DbgPrint(MID_TRACE, ("Size = %d.\n", IPPacket->TotalSize));
+    TI_DbgPrint(DEBUG_ICMP, ("Size (%d).\n", IPPacket->TotalSize));
 
-    TI_DbgPrint(MID_TRACE, ("HeaderSize = %d.\n", IPPacket->HeaderSize));
+    TI_DbgPrint(DEBUG_ICMP, ("HeaderSize (%d).\n", IPPacket->HeaderSize));
 
-    TI_DbgPrint(MID_TRACE, ("Type = %d.\n", ICMPHeader->Type));
+    TI_DbgPrint(DEBUG_ICMP, ("Type (%d).\n", ICMPHeader->Type));
 
-    TI_DbgPrint(MID_TRACE, ("Code = %d.\n", ICMPHeader->Code));
+    TI_DbgPrint(DEBUG_ICMP, ("Code (%d).\n", ICMPHeader->Code));
 
-    TI_DbgPrint(MID_TRACE, ("Checksum = %X.\n", ICMPHeader->Checksum));
+    TI_DbgPrint(DEBUG_ICMP, ("Checksum (0x%X).\n", ICMPHeader->Checksum));
 
-    /* Checksum ICMP header and data and compare */
-    Checksum = DN2H(IPv4Checksum(IPPacket->Data, IPPacket->TotalSize - IPPacket->HeaderSize, 0));
-    if (Checksum != 0xFFFF) {
-        TI_DbgPrint(MIN_TRACE, ("Bad ICMP checksum (0x%X).\n", Checksum));
+    /* Checksum ICMP header and data */
+    if (!CorrectChecksum(IPPacket->Data, IPPacket->TotalSize - IPPacket->HeaderSize)) {
+        TI_DbgPrint(DEBUG_ICMP, ("Bad ICMP checksum.\n"));
         /* Discard packet */
         return;
     }
@@ -193,8 +189,10 @@ VOID ICMPReceive(
         /* Reply with an ICMP echo reply message */
         DataSize  = IPPacket->TotalSize - IPPacket->HeaderSize - sizeof(ICMP_HEADER);
         NewPacket = PrepareICMPPacket(NTE, &IPPacket->SrcAddr, DataSize);
-        if (!NewPacket)
+        if (!NewPacket) {
+            TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
             return;
+        }
 
         /* Copy ICMP header and data into new packet */
         RtlCopyMemory(NewPacket->Data, IPPacket->Data, DataSize  + sizeof(ICMP_HEADER));
@@ -204,11 +202,11 @@ VOID ICMPReceive(
 
         ICMPTransmit(NTE, NewPacket);
 
-        TI_DbgPrint(MID_TRACE, ("Echo reply sent.\n"));
+        TI_DbgPrint(DEBUG_ICMP, ("Echo reply sent.\n"));
 
         return;
     default:
-        TI_DbgPrint(MID_TRACE, ("Discarded ICMP datagram of unknown type.\n"));
+        TI_DbgPrint(DEBUG_ICMP, ("Discarded ICMP datagram of unknown type.\n"));
         /* Discard packet */
         break;
     }
@@ -227,7 +225,7 @@ VOID ICMPTransmit(
 {
     PROUTE_CACHE_NODE RCN;
 
-    TI_DbgPrint(MID_TRACE, ("Called.\n"));
+    TI_DbgPrint(DEBUG_ICMP, ("Called.\n"));
 
     /* Calculate checksum of ICMP header and data */
     ((PICMP_HEADER)IPPacket->Data)->Checksum = (USHORT)
@@ -243,10 +241,10 @@ VOID ICMPTransmit(
         /* We're done with the RCN */
         DereferenceObject(RCN);
     } else {
-        TI_DbgPrint(MIN_TRACE, ("RCN at 0x%X.\n", RCN));
+        TI_DbgPrint(MIN_TRACE, ("RCN at (0x%X).\n", RCN));
 
         /* No route to destination (or no free resources) */
-        TI_DbgPrint(MIN_TRACE, ("No route to destination address 0x%X.\n",
+        TI_DbgPrint(DEBUG_ICMP, ("No route to destination address 0x%X.\n",
             IPPacket->DstAddr.Address.IPv4Address));
         /* Discard packet */
         FreeNdisPacket(IPPacket->NdisPacket);
@@ -277,15 +275,17 @@ VOID ICMPReply(
     UINT DataSize;
     PIP_PACKET NewPacket;
 
-    TI_DbgPrint(MID_TRACE, ("Called (Type=%d, Code=%d).\n", Type, Code));
+    TI_DbgPrint(DEBUG_ICMP, ("Called. Type (%d)  Code (%d).\n", Type, Code));
 
     DataSize = IPPacket->TotalSize;
     if ((DataSize) > (576 - sizeof(IPv4_HEADER) - sizeof(ICMP_HEADER)))
         DataSize = 576;
 
     NewPacket = PrepareICMPPacket(NTE, &IPPacket->SrcAddr, DataSize);
-    if (!NewPacket)
+    if (!NewPacket) {
+        TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         return;
+    }
 
     RtlCopyMemory((PVOID)((ULONG_PTR)NewPacket->Data + sizeof(ICMP_HEADER)),
         IPPacket->Header, DataSize);

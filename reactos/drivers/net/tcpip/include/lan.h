@@ -35,7 +35,7 @@ typedef struct ETH_HEADER {
 
 /* Per adapter information */
 typedef struct LAN_ADAPTER {
-    struct LAN_ADAPTER *Next;               /* Pointer to next adapter */
+    LIST_ENTRY ListEntry;                   /* Entry on list */
     KSPIN_LOCK Lock;                        /* Lock for this structure */
     UCHAR State;                            /* State of the adapter */
     KEVENT Event;                           /* Opening event */
@@ -69,7 +69,7 @@ typedef struct LAN_ADAPTER {
 #define LOOKAHEAD_SIZE  128
 
 /* Ethernet types. We swap constants so we can compare values at runtime
-   without swapping them */
+   without swapping them there */
 #define ETYPE_IPv4 WH2N(0x0800)
 #define ETYPE_IPv6 WH2N(0x0000) /* FIXME */
 #define ETYPE_ARP  WH2N(0x0806)
@@ -78,8 +78,6 @@ typedef struct LAN_ADAPTER {
 #define LAN_PROTO_IPv4 0x0000 /* Internet Protocol version 4 */
 #define LAN_PROTO_IPv6 0x0001 /* Internet Protocol version 6 */
 #define LAN_PROTO_ARP  0x0002 /* Address Resolution Protocol */
-
-extern PLAN_ADAPTER Adapters;
 
 
 NDIS_STATUS LANRegisterAdapter(

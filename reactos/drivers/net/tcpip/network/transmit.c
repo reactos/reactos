@@ -270,8 +270,11 @@ NTSTATUS IPSendFragment(
     }
 
     PC(NdisPacket)->DLComplete = IPSendComplete;
-    (*NCE->Interface->Transmit)(NCE->Interface->Context, NdisPacket,
-        MaxLLHeaderSize, NCE->LinkAddress, LAN_PROTO_IPv4);
+    (*NCE->Interface->Transmit)(NCE->Interface->Context,
+                                NdisPacket,
+                                MaxLLHeaderSize,
+                                NCE->LinkAddress,
+                                LAN_PROTO_IPv4);
 
     return STATUS_SUCCESS;
 }

@@ -549,7 +549,7 @@ PADDRESS_ENTRY IPGetDefaultADE(
     PLIST_ENTRY CurrentADEEntry;
     PIP_INTERFACE CurrentIF;
     PADDRESS_ENTRY CurrentADE;
-#if 0
+#if 1
     BOOLEAN LoopbackIsRegistered = FALSE;
 #endif
     TI_DbgPrint(DEBUG_IP, ("Called. AddressType (0x%X).\n", AddressType));
@@ -560,7 +560,7 @@ PADDRESS_ENTRY IPGetDefaultADE(
     CurrentIFEntry = InterfaceListHead.Flink;
     while (CurrentIFEntry != &InterfaceListHead) {
 	    CurrentIF = CONTAINING_RECORD(CurrentIFEntry, IP_INTERFACE, ListEntry);
-#if 0
+#if 1
         if (CurrentIF != Loopback) {
 #endif
             /* Search the address entry list and return the first appropriate ADE found */
@@ -573,13 +573,13 @@ PADDRESS_ENTRY IPGetDefaultADE(
                     return CurrentADE;
                 }
                 CurrentADEEntry = CurrentADEEntry->Flink;
-#if 0
+#if 1
         } else
             LoopbackIsRegistered = TRUE;
 #endif
         CurrentIFEntry = CurrentIFEntry->Flink;
     }
-#if 0
+#if 1
     /* No address was found. Use loopback interface if available */
     if (LoopbackIsRegistered) {
         CurrentADEEntry = Loopback->ADEListHead.Flink;
@@ -671,19 +671,27 @@ PIP_INTERFACE IPCreateInterface(
 
     TI_DbgPrint(DEBUG_IP, ("Called. BindInfo (0x%X).\n", BindInfo));
 
+#ifdef DBG
+    if (BindInfo->Address) {
+        PUCHAR A = BindInfo->Address;
+        TI_DbgPrint(DEBUG_IP, ("Interface address (%02X %02X %02X %02X %02X %02X).\n",
+            A[0], A[1], A[2], A[3], A[4], A[5]));
+    }
+#endif
+
     IF = PoolAllocateBuffer(sizeof(IP_INTERFACE));
     if (!IF) {
         TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         return NULL;
     }
 
-    IF->RefCount      = 1;
-    IF->Context       = BindInfo->Context;
-    IF->HeaderSize    = BindInfo->HeaderSize;
+    IF->RefCount   = 1;
+    IF->Context    = BindInfo->Context;
+    IF->HeaderSize = BindInfo->HeaderSize;
 	if (IF->HeaderSize > MaxLLHeaderSize)
 		MaxLLHeaderSize = IF->HeaderSize;
 
-    IF->MinFrameSize  = BindInfo->MinFrameSize;
+    IF->MinFrameSize = BindInfo->MinFrameSize;
 	if (IF->MinFrameSize > MinLLFrameSize)
 		MinLLFrameSize = IF->MinFrameSize;
 

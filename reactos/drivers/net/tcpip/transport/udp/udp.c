@@ -351,6 +351,9 @@ VOID UDPReceive(
 
         /* FIXME: IPv6 is not supported */
         return;
+
+    default:
+        return;
     }
 
     UDPHeader = (PUDP_HEADER)IPPacket->Data;

@@ -37,8 +37,8 @@ VOID RealTransmit(
 {
     KIRQL OldIrql;
     PNDIS_PACKET NdisPacket;
+    PNDIS_BUFFER NdisBuffer;
     IP_PACKET IPPacket;
-    PNDIS_BUFFER Buffer;
 
     TI_DbgPrint(MAX_TRACE, ("Called.\n"));
 
@@ -59,10 +59,10 @@ VOID RealTransmit(
         IPPacket.NdisPacket = NdisPacket;
 
         NdisGetFirstBufferFromPacket(NdisPacket,
-                                    &Buffer,
-                                    &IPPacket.Header,
-                                    &IPPacket.ContigSize,
-                                    &IPPacket.TotalSize);
+                                     &NdisBuffer,
+                                     &IPPacket.Header,
+                                     &IPPacket.ContigSize,
+                                     &IPPacket.TotalSize);
 
         IPReceive(Context, &IPPacket);
 

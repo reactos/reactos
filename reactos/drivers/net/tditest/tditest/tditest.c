@@ -422,8 +422,14 @@ NTSTATUS TdiQueryAddress(
                     break;
                 }
 
-                /* Select the first address returned */
-                *Address = DN2H(IpAddress->Addr);
+                if (SnmpInfo.NumAddr != 1) {
+                    /* Skip loopback address */
+                    *Address = DN2H(((PIPADDR_ENTRY)((ULONG)IpAddress + sizeof(IPADDR_ENTRY)))->Addr);
+                } else {
+                    /* Select the first address returned */
+                    *Address = DN2H(IpAddress->Addr);
+                }
+
                 ExFreePool(IpAddress);
             } else {
                 Status = STATUS_UNSUCCESSFUL;

@@ -211,12 +211,16 @@ VOID ARPReceive(
     Header = (PARP_HEADER)Packet->Header;
 
     /* FIXME: Ethernet only */
-    if (WN2H(Header->HWType) != 1)
+    if (WN2H(Header->HWType) != 1) {
+        TI_DbgPrint(DEBUG_ARP, ("Unknown ARP hardware type (0x%X).\n", WN2H(Header->HWType)));
         return;
+    }
 
     /* Check protocol type */
-    if (Header->ProtoType != ETYPE_IPv4)
+    if (Header->ProtoType != ETYPE_IPv4) {
+        TI_DbgPrint(DEBUG_ARP, ("Unknown ARP protocol type (0x%X).\n", WN2H(Header->ProtoType)));
         return;
+    }
 
     SenderHWAddress    = (PVOID)((ULONG_PTR)Header + sizeof(ARP_HEADER));
     SenderProtoAddress = (PVOID)((ULONG_PTR)SenderHWAddress + Header->HWAddrLen);
@@ -226,16 +230,16 @@ VOID ARPReceive(
     TargetProtoAddress = (PVOID)((ULONG_PTR)SenderProtoAddress +
         Header->ProtoAddrLen + Header->HWAddrLen);
 
-    Address = AddrBuildIPv4(*(PULONG)(TargetProtoAddress));
+    Address = AddrBuildIPv4(*((PULONG)TargetProtoAddress));
     ADE = IPLocateADE(Address, ADE_UNICAST);
     if (!ADE) {
-        TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+        TI_DbgPrint(DEBUG_ARP, ("Target address (0x%X) is not mine.\n", *((PULONG)TargetProtoAddress)));
         return;
     }
 
     /* Check if we know the sender */
 
-    AddrInitIPv4(Address, *(PULONG)(SenderProtoAddress));
+    AddrInitIPv4(Address, *((PULONG)SenderProtoAddress));
     NCE = NBLocateNeighbor(Address);
     if (NCE) {
         DereferenceObject(Address);
@@ -269,8 +273,11 @@ VOID ARPReceive(
         ARP_OPCODE_REPLY);               /* ARP reply */
     if (NdisPacket) {
         PC(NdisPacket)->DLComplete = ARPTransmitComplete;
-        (*Interface->Transmit)(Interface->Context, NdisPacket,
-            MaxLLHeaderSize, SenderHWAddress, LAN_PROTO_ARP);
+        (*Interface->Transmit)(Interface->Context,
+                               NdisPacket,
+                               MaxLLHeaderSize,
+                               SenderHWAddress,
+                               LAN_PROTO_ARP);
     }
 }
 
