@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.8 2001/11/03 16:48:07 chorns Exp $
+# $Id: helper.mk,v 1.9 2001/12/11 06:00:07 phreak Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -439,8 +439,8 @@ ifeq ($(MK_EXETYPE),dll)
 	$(CC) -Wl,--base-file,base.tmp \
 		-Wl,--entry,$(TARGET_ENTRY) \
 		$(TARGET_LFLAGS) \
-		-o junk.tmp $(MK_GCCLIBS) \
-		$(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS)
+		-o junk.tmp \
+		$(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS) $(MK_GCCLIBS)
 	- $(RM) junk.tmp
 	$(DLLTOOL) --dllname $(MK_FULLNAME) \
 		--base-file base.tmp \
@@ -449,8 +449,8 @@ ifeq ($(MK_EXETYPE),dll)
 endif
 	$(CC) $(TARGET_LFLAGS) \
 		-Wl,--entry,$(TARGET_ENTRY) $(MK_EXTRACMD2) \
-	  -o $(MK_NOSTRIPNAME) $(MK_GCCLIBS) \
-	  $(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS)
+	  -o $(MK_NOSTRIPNAME) \
+	  $(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS) $(MK_GCCLIBS)
 	- $(RM) temp.exp
 	- $(NM) --numeric-sort $(MK_NOSTRIPNAME) > $(MK_BASENAME).sym
 endif # KM_MODE
@@ -469,8 +469,8 @@ $(MK_NOSTRIPNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_LIBS)
 		-Wl,--entry,$(TARGET_ENTRY) \
 		$(TARGET_LFLAGS) \
 		-nostartfiles -nostdlib \
-		-o junk.tmp $(MK_GCCLIBS) \
-		$(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS)
+		-o junk.tmp \
+		$(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS) $(MK_GCCLIBS)
 	- $(RM) junk.tmp
 	$(DLLTOOL) --dllname $(MK_FULLNAME) \
 		--base-file base.tmp \
@@ -484,8 +484,8 @@ $(MK_NOSTRIPNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_LIBS)
 		-Wl,--entry,$(TARGET_ENTRY) \
 		-Wl,temp.exp \
 		-mdll -nostartfiles -nostdlib \
-		-o $(MK_NOSTRIPNAME) $(MK_GCCLIBS) \
-	  $(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS)
+		-o $(MK_NOSTRIPNAME) \
+	  $(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS) $(MK_GCCLIBS)
 	- $(RM) temp.exp
 	- $(NM) --numeric-sort $(MK_NOSTRIPNAME) > $(MK_BASENAME).sym
 
