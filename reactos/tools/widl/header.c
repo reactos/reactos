@@ -668,7 +668,10 @@ static void write_function_proto(type_t *iface)
     fprintf(header, " ");
     write_name(header, def);
     fprintf(header, "(\n");
-    write_args(header, cur->args, iface->name, 0, TRUE);
+    if (cur->args)
+      write_args(header, cur->args, iface->name, 0, TRUE);
+    else
+      fprintf(header, "    void");
     fprintf(header, ");\n");
 
     cur = PREV_LINK(cur);
@@ -783,6 +786,7 @@ void write_com_interface(type_t *iface)
 void write_rpc_interface(type_t *iface)
 {
   unsigned long ver = get_attrv(iface->attrs, ATTR_VERSION);
+  char *var = get_attrp(iface->attrs, ATTR_IMPLICIT_HANDLE);
 
   if (!iface->funcs) return;
 
@@ -790,6 +794,10 @@ void write_rpc_interface(type_t *iface)
   fprintf(header, " * %s interface (v%d.%d)\n", iface->name, LOWORD(ver), HIWORD(ver));
   fprintf(header, " */\n");
   write_iface_guid(iface);
+  if (var)
+  {
+    fprintf(header, "extern handle_t %s;\n", var);
+  }
   fprintf(header, "extern RPC_IF_HANDLE %s_v%d_%d_c_ifspec;\n", iface->name, LOWORD(ver), HIWORD(ver));
   fprintf(header, "extern RPC_IF_HANDLE %s_v%d_%d_s_ifspec;\n", iface->name, LOWORD(ver), HIWORD(ver));
   write_function_proto(iface);

@@ -58,6 +58,7 @@ typedef struct _typelib_t typelib_t;
 enum attr_type
 {
     ATTR_ASYNC,
+    ATTR_AUTO_HANDLE,
     ATTR_CALLAS,
     ATTR_CASE,
     ATTR_CONTEXTHANDLE,
@@ -70,6 +71,7 @@ enum attr_type
     ATTR_ENDPOINT,
     ATTR_ENTRY_STRING,
     ATTR_ENTRY_ORDINAL,
+    ATTR_EXPLICIT_HANDLE,
     ATTR_HANDLE,
     ATTR_HELPCONTEXT,
     ATTR_HELPFILE,
@@ -80,6 +82,7 @@ enum attr_type
     ATTR_ID,
     ATTR_IDEMPOTENT,
     ATTR_IIDIS,
+    ATTR_IMPLICIT_HANDLE,
     ATTR_IN,
     ATTR_INPUTSYNC,
     ATTR_LENGTHIS,
@@ -147,7 +150,7 @@ enum type_kind
     TKIND_UNION,
     TKIND_MAX
 };
-   
+
 struct _attr_t {
   enum attr_type type;
   union {

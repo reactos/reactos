@@ -116,6 +116,7 @@ static void write_typeformatstring(void)
 static void write_function_stubs(type_t *iface)
 {
     func_t *cur = iface->funcs;
+    char *handle_name = get_attrp(iface->attrs, ATTR_IMPLICIT_HANDLE);
     int method_count = 0;
     unsigned int proc_offset = 0;
 
@@ -148,6 +149,9 @@ static void write_function_stubs(type_t *iface)
             fprintf(client, " _RetVal;\n");
         }
 
+        if (handle_name)
+            print_client("RPC_BINDING_HANDLE _Handle = 0;\n");
+
         print_client("RPC_MESSAGE _RpcMessage;\n");
         print_client("MIDL_STUB_MESSAGE _StubMsg;\n");
         fprintf(client, "\n");
@@ -164,24 +168,32 @@ static void write_function_stubs(type_t *iface)
         indent--;
         fprintf(client, "\n");
 
+        if (handle_name)
+            print_client("_Handle = %s;\n", handle_name);
 
         /* FIXME: marshal arguments */
         print_client("_StubMsg.BufferLength = 0UL;\n");
-        print_client("NdrNsGetBuffer(\n");
+//        print_client("NdrNsGetBuffer(\n");
+        print_client("NdrGetBuffer(\n");
         indent++;
         print_client("(PMIDL_STUB_MESSAGE)&_StubMsg,\n");
         print_client("_StubMsg.BufferLength,\n");
-        print_client("%s__MIDL_AutoBindHandle);\n", iface->name);
+        if (handle_name)
+            print_client("%_Handle);\n");
+        else
+            print_client("%s__MIDL_AutoBindHandle);\n", iface->name);
         indent--;
         fprintf(client, "\n");
 
 
         /* send/recieve message */
-        print_client("NdrNsSendReceive(\n");
+//        print_client("NdrNsSendReceive(\n");
+        print_client("NdrSendReceive(\n");
         indent++;
         print_client("(PMIDL_STUB_MESSAGE)&_StubMsg,\n");
-        print_client("(unsigned char __RPC_FAR *)_StubMsg.Buffer,\n");
-        print_client("(RPC_BINDING_HANDLE __RPC_FAR *) &%s__MIDL_AutoBindHandle);\n", iface->name);
+        print_client("(unsigned char __RPC_FAR *)_StubMsg.Buffer);\n");
+//        print_client("(unsigned char __RPC_FAR *)_StubMsg.Buffer,\n");
+//        print_client("(RPC_BINDING_HANDLE __RPC_FAR *) &%s__MIDL_AutoBindHandle);\n", iface->name);
         indent--;
 
         /* unmarshal return value */
@@ -206,7 +218,7 @@ static void write_function_stubs(type_t *iface)
             write_type(client, def->type, def, def->tname);
             fprintf(client, " __RPC_FAR *)_StubMsg.Buffer)++;\n");
 
-            /* FIXME: update pro_offset */
+            /* FIXME: update proc_offset */
             proc_offset += 2;
         }
 
@@ -242,11 +254,13 @@ static void write_function_stubs(type_t *iface)
     }
 }
 
+
 static void write_bindinghandledecl(type_t *iface)
 {
     print_client("static RPC_BINDING_HANDLE %s__MIDL_AutoBindHandle;\n", iface->name);
     fprintf(client, "\n");
 }
+
 
 static void write_stubdescdecl(type_t *iface)
 {
@@ -257,13 +271,18 @@ static void write_stubdescdecl(type_t *iface)
 
 static void write_stubdescriptor(type_t *iface)
 {
+    char *handle_name = get_attrp(iface->attrs, ATTR_IMPLICIT_HANDLE);
+
     print_client("static const MIDL_STUB_DESC %s_StubDesc =\n", iface->name);
     print_client("{\n");
     indent++;
     print_client("(void __RPC_FAR *)& %s___RpcClientInterface,\n", iface->name);
     print_client("MIDL_user_allocate,\n");
     print_client("MIDL_user_free,\n");
-    print_client("&%s__MIDL_AutoBindHandle,\n", iface->name);
+    if (handle_name)
+        print_client("&%s,\n", handle_name);
+    else
+        print_client("&%s__MIDL_AutoBindHandle,\n", iface->name);
     print_client("0,\n");
     print_client("0,\n");
     print_client("0,\n");
@@ -354,6 +373,18 @@ static void write_formatstringsdecl(type_t *iface)
 }
 
 
+static void write_implicithandledecl(type_t *iface)
+{
+    char *var = get_attrp(iface->attrs, ATTR_IMPLICIT_HANDLE);
+
+    if (var)
+    {
+        fprintf(client, "handle_t %s;\n", var);
+        fprintf(client, "\n");
+    }
+}
+
+
 static void init_client(void)
 {
     if (client) return;
@@ -388,6 +419,7 @@ void write_client(ifref_t *ifaces)
         return;
 
     write_formatstringsdecl(lcur->iface);
+    write_implicithandledecl(lcur->iface);
 
     write_clientinterfacedecl(lcur->iface);
     write_stubdescdecl(lcur->iface);

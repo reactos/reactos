@@ -4498,7 +4498,7 @@ static struct keyword {
 	{"entry",			tENTRY},
 	{"enum",			tENUM},
 	{"error_status_t",		tERRORSTATUST},
-/* ... */
+	{"explicit_handle",		tEXPLICITHANDLE},
 	{"extern",			tEXTERN},
 /* ... */
 	{"float",			tFLOAT},
@@ -4512,13 +4512,14 @@ static struct keyword {
 	{"helpstringcontext",		tHELPSTRINGCONTEXT},
 	{"helpstringdll",		tHELPSTRINGDLL},
 /* ... */
-	{"hidden",                      tHIDDEN},
+	{"hidden",			tHIDDEN},
 	{"hyper",			tHYPER},
 	{"id",				tID},
 	{"idempotent",			tIDEMPOTENT},
 /* ... */
 	{"iid_is",			tIIDIS},
 /* ... */
+	{"implicit_handle",		tIMPLICITHANDLE},
 	{"import",			tIMPORT},
 	{"importlib",			tIMPORTLIB},
 	{"in",				tIN},
@@ -4559,7 +4560,7 @@ static struct keyword {
 	{"readonly",			tREADONLY},
 	{"ref",				tREF},
 /* ... */
-	{"restricted",                  tRESTRICTED},
+	{"restricted",			tRESTRICTED},
 	{"retval",			tRETVAL},
 /* ... */
 	{"short",			tSHORT},

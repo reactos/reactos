@@ -118,6 +118,28 @@ static void write_typeformatstring(void)
 }
 
 
+unsigned int get_required_stack_size(type_t *type)
+{
+    switch(type->type)
+    {
+        case RPC_FC_BYTE:
+        case RPC_FC_CHAR:
+        case RPC_FC_WCHAR:
+        case RPC_FC_USHORT:
+        case RPC_FC_SHORT:
+        case RPC_FC_ULONG:
+        case RPC_FC_LONG:
+            return 4;
+
+      case RPC_FC_HYPER:
+            return 8;
+
+        default:
+            error("Unknown/unsupported type: %s\n", type->name);
+    }
+}
+
+
 static void write_function_stubs(type_t *iface)
 {
     func_t *cur = iface->funcs;
@@ -197,7 +219,7 @@ static void write_function_stubs(type_t *iface)
         if (!is_void(def->type, NULL))
         {
             fprintf(server, "\n");
-            print_server("_StubMsg.BufferLength = %uU;\n", 4); /* FIXME */
+            print_server("_StubMsg.BufferLength = %uU;\n", get_required_stack_size(def->type));
             print_server("_pRpcMessage->BufferLength = _StubMsg.BufferLength;\n");
             fprintf(server, "\n");
             print_server("_Status = I_RpcGetBuffer(_pRpcMessage);\n");

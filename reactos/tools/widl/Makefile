@@ -63,10 +63,10 @@ YACCOPT   = #-v
 #	Optional use of flex and bison, this will allow independent building from
 #	Wine.
 #
-#y.tab.c y.tab.h: parser.y
-#	bison $(YACCOPT) -d -o y.tab.c parser.y
+y.tab.c y.tab.h: parser.y
+	bison $(YACCOPT) -d -o y.tab.c parser.y
 #
-#lex.yy.c: parser.l y.tab.h
-#	flex $(LEXOPT) -d -8 -olex.yy.c parser.l
+lex.yy.c: parser.l y.tab.h
+	flex $(LEXOPT) -d -8 -olex.yy.c parser.l
 
 # EOF
