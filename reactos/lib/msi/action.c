@@ -3478,7 +3478,7 @@ static UINT ACTION_RegisterTypeLibraries(MSIPACKAGE *package)
             continue;
         }
 
-//        res = LoadTypeLib(package->files[index].TargetPath,&ptLib);
+        res = LoadTypeLib(package->files[index].TargetPath,&ptLib);
         if (SUCCEEDED(res))
         {
             WCHAR help[MAX_PATH];
@@ -3489,7 +3489,7 @@ static UINT ACTION_RegisterTypeLibraries(MSIPACKAGE *package)
 
             resolve_folder(package,helpid,help,FALSE,FALSE,NULL);
 
-//            res = RegisterTypeLib(ptLib,package->files[index].TargetPath,help);
+            res = RegisterTypeLib(ptLib,package->files[index].TargetPath,help);
             if (!SUCCEEDED(res))
                 ERR("Failed to register type library %s\n",
                      debugstr_w(package->files[index].TargetPath));
@@ -3505,7 +3505,7 @@ static UINT ACTION_RegisterTypeLibraries(MSIPACKAGE *package)
             }
 
             if (ptLib){
-                //ITypeLib_Release(ptLib);
+                ITypeLib_Release(ptLib);
                 }
         }
         else

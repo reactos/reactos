@@ -40,6 +40,9 @@
 
 #include "initguid.h"
 
+UINT WINAPI MsiGetFileVersionW(LPCWSTR szFilePath, LPWSTR lpVersionBuf, DWORD* pcchVersionBuf, LPWSTR lpLangBuf, DWORD* pcchLangBuf);
+
+
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
 /*
