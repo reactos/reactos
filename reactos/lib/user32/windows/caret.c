@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: caret.c,v 1.2 2003/10/16 22:07:37 weiden Exp $
+/* $Id: caret.c,v 1.3 2003/10/17 20:31:56 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/caret.c
@@ -33,6 +33,33 @@
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
+
+void DrawCaret(HWND hWnd, PTHRDCARETINFO CaretInfo)
+{
+  HDC hDC, hComp;
+  
+  hDC = GetDC(hWnd);
+  if(hDC)
+  {
+    if(CaretInfo->Bitmap && GetBitmapDimensionEx(CaretInfo->Bitmap, &CaretInfo->Size))
+    {
+      hComp = CreateCompatibleDC(hDC);
+      if(hComp)
+      {
+        SelectObject(hComp, CaretInfo->Bitmap);
+        BitBlt(hDC, CaretInfo->Pos.x, CaretInfo->Pos.y, CaretInfo->Size.cx, CaretInfo->Size.cy, hComp, 0, 0, SRCINVERT);
+        DeleteDC(hComp);
+      }
+      else
+        PatBlt(hDC, CaretInfo->Pos.x, CaretInfo->Pos.y, CaretInfo->Size.cx, CaretInfo->Size.cy, DSTINVERT);
+    }
+    else
+    {
+      PatBlt(hDC, CaretInfo->Pos.x, CaretInfo->Pos.y, CaretInfo->Size.cx, CaretInfo->Size.cy, DSTINVERT);
+    }
+    ReleaseDC(hWnd, hDC);
+  }
+}
 
 /*
  * @implemented

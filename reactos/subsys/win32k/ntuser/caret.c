@@ -1,4 +1,4 @@
-/* $Id: caret.c,v 1.2 2003/10/16 22:07:37 weiden Exp $
+/* $Id: caret.c,v 1.3 2003/10/17 20:31:56 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -15,14 +15,28 @@
 #include <include/window.h>
 #include <include/caret.h>
 #include <include/timer.h>
+#include <include/callback.h>
 
 #define NDEBUG
 #include <debug.h>
 
 BOOL FASTCALL
+IntHideCaret(PTHRDCARETINFO CaretInfo)
+{
+  if(CaretInfo->hWnd && CaretInfo->Visible && CaretInfo->Showing)
+  {
+    IntCallWindowProc(NULL, CaretInfo->hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
+    CaretInfo->Showing = 0;
+    return TRUE;
+  }
+  return FALSE;
+}
+
+BOOL FASTCALL
 IntDestroyCaret(PW32THREAD Win32Thread)
 {
   PTHRDCARETINFO CaretInfo = ThrdCaretInfo(Win32Thread);
+  IntHideCaret(CaretInfo);
   RtlZeroMemory(CaretInfo, sizeof(THRDCARETINFO));
   return TRUE;
 }
@@ -48,8 +62,11 @@ IntSetCaretPos(int X, int Y)
   {
     if(CaretInfo->Pos.x != X || CaretInfo->Pos.y != Y)
     {
+      IntHideCaret(CaretInfo);
+      CaretInfo->Showing = 0;
       CaretInfo->Pos.x = X;
       CaretInfo->Pos.y = Y;
+      IntCallWindowProc(NULL, CaretInfo->hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
       IntSetTimer(CaretInfo->hWnd, IDCARETTIMER, IntGetCaretBlinkTime(), NULL, TRUE);
     }
     return TRUE;
@@ -59,17 +76,30 @@ IntSetCaretPos(int X, int Y)
 }
 
 BOOL FASTCALL
-IntSwitchCaretShowing(VOID)
+IntSwitchCaretShowing(PVOID Info)
 {
   PTHRDCARETINFO CaretInfo = ThrdCaretInfo(PsGetCurrentThread()->Win32Thread);
   
   if(CaretInfo->hWnd)
   {
     CaretInfo->Showing = (CaretInfo->Showing ? 0 : 1);
+    MmCopyToCaller(Info, CaretInfo, sizeof(THRDCARETINFO));
     return TRUE;
   }
   
   return FALSE;
+}
+
+VOID FASTCALL
+IntDrawCaret(HWND hWnd)
+{
+  PTHRDCARETINFO CaretInfo = ThrdCaretInfo(PsGetCurrentThread()->Win32Thread);
+  
+  if(CaretInfo->hWnd && CaretInfo->Visible && CaretInfo->Showing)
+  {
+    IntCallWindowProc(NULL, CaretInfo->hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
+    CaretInfo->Showing = 1;
+  }
 }
 
 
@@ -102,6 +132,9 @@ NtUserCreateCaret(
   IntRemoveTimer(hWnd, IDCARETTIMER, PsGetCurrentThreadId(), TRUE);
   
   CaretInfo = ThrdCaretInfo(WindowObject->OwnerThread->Win32Thread);
+  
+  IntHideCaret(CaretInfo);
+  
   CaretInfo->hWnd = hWnd;
   if(hBitmap)
   {
@@ -183,10 +216,8 @@ NtUserHideCaret(
   if(CaretInfo->Visible)
   {
     IntRemoveTimer(hWnd, IDCARETTIMER, PsGetCurrentThreadId(), TRUE);
-    if(CaretInfo->Showing)
-    {
-      /* FIXME send another WM_SYSTIMER message to hide the cursor */
-    }
+    
+    IntHideCaret(CaretInfo);
     CaretInfo->Visible = 0;
     CaretInfo->Showing = 0;
   }
@@ -229,7 +260,10 @@ NtUserShowCaret(
   if(!CaretInfo->Visible)
   {
     CaretInfo->Visible = 1;
-    CaretInfo->Showing = 0;
+    if(!CaretInfo->Showing)
+    {
+      IntCallWindowProc(NULL, CaretInfo->hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
+    }
     IntSetTimer(hWnd, IDCARETTIMER, IntGetCaretBlinkTime(), NULL, TRUE);
   }
   

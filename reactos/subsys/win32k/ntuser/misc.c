@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.20 2003/10/16 22:07:37 weiden Exp $
+/* $Id: misc.c,v 1.21 2003/10/17 20:31:56 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -61,10 +61,6 @@ NtUserCallNoParam(DWORD Routine)
     
     case NOPARAM_ROUTINE_DESTROY_CARET:
       Result = (DWORD)IntDestroyCaret(PsGetCurrentThread()->Win32Thread);
-      break;
-    
-    case NOPARAM_ROUTINE_SWITCHCARETSHOWING:
-      Result = (DWORD)IntSwitchCaretShowing();
       break;
     
     default:
@@ -143,6 +139,9 @@ NtUserCallOneParam(
 
       ObDereferenceObject(WinStaObject);
       return Result;
+    
+    case ONEPARAM_ROUTINE_SWITCHCARETSHOWING:
+      return (DWORD)IntSwitchCaretShowing((PVOID)Param);
     
     case ONEPARAM_ROUTINE_SETCARETBLINKTIME:
       return (DWORD)IntSetCaretBlinkTime((UINT)Param);

@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.98 2003/10/16 22:07:37 weiden Exp $
+/* $Id: defwnd.c,v 1.99 2003/10/17 20:31:56 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -2268,12 +2268,15 @@ User32DefWindowProc(HWND hWnd,
         
         case WM_SYSTIMER:
         {
+          THRDCARETINFO CaretInfo;
           switch(wParam)
           {
             case 0xffff: /* Caret timer */
-              /* switch showing byte in win32k */
-              NtUserCallNoParam(NOPARAM_ROUTINE_SWITCHCARETSHOWING);
-              /* FIXME - get the caret information and draw the caret */
+              /* switch showing byte in win32k and get information about the caret */
+              if(NtUserCallOneParam((DWORD)&CaretInfo, ONEPARAM_ROUTINE_SWITCHCARETSHOWING) && (CaretInfo.hWnd == hWnd))
+              {
+                DrawCaret(hWnd, &CaretInfo);
+              }
               break;
           }
           break;
