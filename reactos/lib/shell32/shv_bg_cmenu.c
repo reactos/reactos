@@ -307,6 +307,7 @@ static BOOL DoPaste(
 #endif
 	return bSuccess;
 }
+
 /**************************************************************************
 * ISVBgCm_fnInvokeCommand()
 */
@@ -317,8 +318,8 @@ static HRESULT WINAPI ISVBgCm_fnInvokeCommand(
 	ICOM_THIS(BgCmImpl, iface);
 
 	LPSHELLBROWSER	lpSB;
-	LPSHELLVIEW	lpSV;
-	HWND	hWndSV;
+	LPSHELLVIEW lpSV = NULL;
+	HWND hWndSV = 0;
 
 	TRACE("(%p)->(invcom=%p verb=%p wnd=%p)\n",This,lpcmi,lpcmi->lpVerb, lpcmi->hwnd);
 
@@ -331,15 +332,13 @@ static HRESULT WINAPI ISVBgCm_fnInvokeCommand(
 	  }
 	}
 
-	if(lpSV)
-	{
 	  if(HIWORD(lpcmi->lpVerb))
 	  {
 	    TRACE("%s\n",lpcmi->lpVerb);
 
 	    if (! strcmp(lpcmi->lpVerb,CMDSTR_NEWFOLDERA))
 	    {
-	      if(lpSV) DoNewFolder(iface, lpSV);
+                DoNewFolder(iface, lpSV);
 	    }
 	    else if (! strcmp(lpcmi->lpVerb,CMDSTR_VIEWLISTA))
 	    {
@@ -371,8 +370,9 @@ static HRESULT WINAPI ISVBgCm_fnInvokeCommand(
 	    }
 	  }
 
+        if (lpSV)
 	  IShellView_Release(lpSV);	/* QueryActiveShellView does AddRef*/
-	}
+
 	return NOERROR;
 }
 
