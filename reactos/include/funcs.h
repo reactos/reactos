@@ -7502,6 +7502,48 @@ HRESULT WINAPI
 SHLoadInProc (REFCLSID);
 */
 
+/* Win32 Fibers */
+
+typedef
+VOID (WINAPI *PFIBER_START_ROUTINE) (
+	IN LPVOID lpFiberArgument
+	);
+typedef PFIBER_START_ROUTINE LPFIBER_START_ROUTINE;
+
+LPVOID
+STDCALL
+ConvertThreadToFiber (
+	LPVOID lpArgument
+	);
+LPVOID
+STDCALL
+CreateFiber (
+	DWORD			dwStackSize,
+	LPFIBER_START_ROUTINE	lpStartAddress,
+	LPVOID			lpArgument
+	);
+VOID
+STDCALL
+DeleteFiber(
+	LPVOID	lpFiber
+	);
+PVOID
+STDCALL
+GetCurrentFiber (
+	VOID
+	);
+PVOID
+STDCALL
+GetFiberData (
+	VOID
+	);
+VOID
+STDCALL
+SwitchToFiber (
+	LPVOID	lpFiber
+	);
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
