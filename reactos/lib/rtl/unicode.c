@@ -2256,6 +2256,8 @@ RtlCreateUnicodeString(
 
 /*
  * private
+ *
+ * Creates a nullterminated UNICODE_STRING
  */
 BOOLEAN
 FASTCALL

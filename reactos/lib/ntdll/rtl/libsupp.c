@@ -19,6 +19,13 @@
 
 /* FUNCTIONS ***************************************************************/
 
+KPROCESSOR_MODE
+RtlpGetMode()
+{ 
+   return UserMode; 
+}
+
+
 PVOID 
 STDCALL
 ExAllocatePool(
