@@ -248,6 +248,7 @@ VOID MouseClassStartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
    if(DeviceExtension->InputCount>0)
    {
+      KIRQL oldIrql;
       // FIXME: We should not send too much input data.. depends on the max buffer size of the win32k
       ReadSize = DeviceExtension->InputCount * sizeof(MOUSE_INPUT_DATA);
 
@@ -263,9 +264,18 @@ VOID MouseClassStartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
       Irp->IoStatus.Information = ReadSize;
       Stack->Parameters.Read.Length = ReadSize;
-
-      IoStartNextPacket(DeviceObject, FALSE);
       IoCompleteRequest(Irp, IO_MOUSE_INCREMENT);
+      oldIrql = KeGetCurrentIrql();
+      if (oldIrql < DISPATCH_LEVEL)
+        {
+          KeRaiseIrql (DISPATCH_LEVEL, &oldIrql);
+          IoStartNextPacket (DeviceObject, FALSE);
+          KeLowerIrql(oldIrql);
+        }
+      else
+        {
+          IoStartNextPacket (DeviceObject, FALSE);
+	}
    } else {
       DeviceExtension->ReadIsPending = TRUE;
    }

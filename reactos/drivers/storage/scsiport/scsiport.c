@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.42 2003/10/19 10:43:10 robd Exp $
+/* $Id: scsiport.c,v 1.43 2003/11/01 10:42:32 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1553,6 +1553,8 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
 
   DPRINT("DeviceExtension %p\n", DeviceExtension);
 
+  oldIrql = KeGetCurrentIrql();
+
   if (IrpStack->MajorFunction != IRP_MJ_SCSI)
     {
       DPRINT("No IRP_MJ_SCSI!\n");
@@ -1560,8 +1562,19 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
       Irp->IoStatus.Information = 0;
       IoCompleteRequest (Irp,
 			 IO_NO_INCREMENT);
-      IoStartNextPacket (DeviceObject,
-			 FALSE);
+      if (oldIrql < DISPATCH_LEVEL)
+        {
+          KeRaiseIrql (DISPATCH_LEVEL, 
+	               &oldIrql);
+          IoStartNextPacket (DeviceObject,
+	                     FALSE);
+          KeLowerIrql(oldIrql);
+	}
+      else
+        {
+          IoStartNextPacket (DeviceObject,
+			     FALSE);
+	}
       return;
     }
 
@@ -1578,8 +1591,19 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
       Irp->IoStatus.Information = 0;
       IoCompleteRequest (Irp,
 			 IO_NO_INCREMENT);
-      IoStartNextPacket (DeviceObject,
-			 FALSE);
+      if (oldIrql < DISPATCH_LEVEL)
+        {
+          KeRaiseIrql (DISPATCH_LEVEL, 
+	               &oldIrql);
+          IoStartNextPacket (DeviceObject,
+	                     FALSE);
+          KeLowerIrql(oldIrql);
+	}
+      else
+        {
+          IoStartNextPacket (DeviceObject,
+			     FALSE);
+	}
       return;
     }
 
@@ -1619,8 +1643,19 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
       Irp->IoStatus.Information = 0;
       IoCompleteRequest(Irp,
 			IO_NO_INCREMENT);
-      IoStartNextPacket(DeviceObject,
-			FALSE);
+      if (oldIrql < DISPATCH_LEVEL)
+        {
+          KeRaiseIrql (DISPATCH_LEVEL, 
+	               &oldIrql);
+          IoStartNextPacket (DeviceObject,
+	                     FALSE);
+          KeLowerIrql(oldIrql);
+	}
+      else
+        {
+          IoStartNextPacket (DeviceObject,
+			     FALSE);
+	}
     }
 
   KeAcquireSpinLock(&DeviceExtension->IrpLock, &oldIrql);
@@ -1634,9 +1669,10 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
   if (DeviceExtension->IrpFlags & IRP_FLAG_NEXT)
     {
       DeviceExtension->IrpFlags &= ~IRP_FLAG_NEXT;
-      KeReleaseSpinLock(&DeviceExtension->IrpLock, oldIrql);
+      KeReleaseSpinLockFromDpcLevel(&DeviceExtension->IrpLock);
       IoStartNextPacket(DeviceObject,
 			FALSE);
+      KeLowerIrql(oldIrql);
     }
   else
     {
@@ -2015,14 +2051,13 @@ ScsiPortDpcForIsr(IN PKDPC Dpc,
   PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
   PIO_STACK_LOCATION IrpStack;
   PSCSI_REQUEST_BLOCK Srb;
-  KIRQL oldIrql;
 
   DPRINT("ScsiPortDpcForIsr(Dpc %p  DpcDeviceObject %p  DpcIrp %p  DpcContext %p)\n",
 	 Dpc, DpcDeviceObject, DpcIrp, DpcContext);
 
   DeviceExtension = (PSCSI_PORT_DEVICE_EXTENSION)DpcContext;
 
-  KeAcquireSpinLock(&DeviceExtension->IrpLock, &oldIrql);
+  KeAcquireSpinLockAtDpcLevel(&DeviceExtension->IrpLock);
   if (DeviceExtension->IrpFlags)
     {
       IrpStack = IoGetCurrentIrpStackLocation(DeviceExtension->CurrentIrp);
@@ -2068,7 +2103,7 @@ ScsiPortDpcForIsr(IN PKDPC Dpc,
 	  DeviceExtension->OriginalSrb = Srb;
 	  IrpStack->Parameters.Scsi.Srb = ScsiPortInitSenseRequestSrb(DeviceExtension,
 								      Srb);
-	  KeReleaseSpinLock(&DeviceExtension->IrpLock, oldIrql);
+	  KeReleaseSpinLockFromDpcLevel(&DeviceExtension->IrpLock);
 	  if (!KeSynchronizeExecution(DeviceExtension->Interrupt,
 				      ScsiPortStartPacket,
 				      DeviceExtension))
@@ -2100,17 +2135,17 @@ ScsiPortDpcForIsr(IN PKDPC Dpc,
       if (DeviceExtension->IrpFlags & IRP_FLAG_NEXT)
 	{
 	  DeviceExtension->IrpFlags &= ~IRP_FLAG_NEXT;
-	  KeReleaseSpinLock(&DeviceExtension->IrpLock, oldIrql);
+	  KeReleaseSpinLockFromDpcLevel(&DeviceExtension->IrpLock);
 	  IoStartNextPacket(DpcDeviceObject, FALSE);
 	}
       else
 	{
-	  KeReleaseSpinLock(&DeviceExtension->IrpLock, oldIrql);
+	  KeReleaseSpinLockFromDpcLevel(&DeviceExtension->IrpLock);
 	}
     }
   else
     {
-      KeReleaseSpinLock(&DeviceExtension->IrpLock, oldIrql);
+      KeReleaseSpinLockFromDpcLevel(&DeviceExtension->IrpLock);
     }
 
   DPRINT("ScsiPortDpcForIsr() done\n");

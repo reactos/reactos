@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.41 2003/10/15 22:16:44 vizzini Exp $
+/* $Id: class2.c,v 1.42 2003/11/01 10:42:32 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1269,8 +1269,18 @@ ScsiClassIoComplete(IN PDEVICE_OBJECT DeviceObject,
     {
       if (IrpStack->MajorFunction != IRP_MJ_DEVICE_CONTROL)
 	{
-	  IoStartNextPacket(DeviceObject,
-			    FALSE);
+	  KIRQL oldIrql;
+	  oldIrql = KeGetCurrentIrql();
+          if (oldIrql < DISPATCH_LEVEL)
+            {
+              KeRaiseIrql (DISPATCH_LEVEL, &oldIrql);
+              IoStartNextPacket (DeviceObject, FALSE);
+              KeLowerIrql(oldIrql);
+	    }
+          else
+            {
+              IoStartNextPacket (DeviceObject, FALSE);
+	    }
 	}
     }
 
@@ -1372,8 +1382,18 @@ ScsiClassIoCompleteAssociated(IN PDEVICE_OBJECT DeviceObject,
 
       if (DeviceExtension->ClassStartIo)
 	{
-	  IoStartNextPacket(DeviceObject,
-			    FALSE);
+	  KIRQL oldIrql;
+	  oldIrql = KeGetCurrentIrql();
+          if (oldIrql < DISPATCH_LEVEL)
+            {
+              KeRaiseIrql (DISPATCH_LEVEL, &oldIrql);
+              IoStartNextPacket (DeviceObject, FALSE);
+              KeLowerIrql(oldIrql);
+	    }
+          else
+            {
+              IoStartNextPacket (DeviceObject, FALSE);
+	    }
 	}
     }
 

@@ -254,10 +254,21 @@ SerialMouseStartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
 	if (KeSynchronizeExecution(DeviceExtension->MouseInterrupt, MouseSynchronizeRoutine, Irp))
 	{
+        	KIRQL oldIrql;
 		Irp->IoStatus.Status = STATUS_SUCCESS;
 		Irp->IoStatus.Information = 0;
 		IoCompleteRequest(Irp, IO_NO_INCREMENT);
-		IoStartNextPacket(DeviceObject, FALSE);
+	        oldIrql = KeGetCurrentIrql();
+                if (oldIrql < DISPATCH_LEVEL)
+                  {
+                    KeRaiseIrql (DISPATCH_LEVEL, &oldIrql);
+                    IoStartNextPacket (DeviceObject, FALSE);
+                    KeLowerIrql(oldIrql);
+	          }
+                else
+                  {
+                    IoStartNextPacket (DeviceObject, FALSE);
+	          }
 	}
 }
 
