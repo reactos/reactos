@@ -19,9 +19,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.3 $
+ * $Revision: 1.4 $
  * $Author: ariadne $
- * $Date: 1999/04/02 21:42:06 $
+ * $Date: 1999/04/27 06:16:04 $
  *
  */
 
@@ -52,8 +52,8 @@ int	_ungetch (int cUnget);
 #define	getch 			_getch
 #define	getche  		_getche
 #define	kbhit 			_kbhit
-#define	putch (cPut)		_putch(cPut)
-#define	ungetch (cUnget)	_ungetch(cUnget)
+#define	putch(cPut)		_putch(cPut)
+#define	ungetch(cUnget)		_ungetch(cUnget)
 
 #endif	/* Not _NO_OLDNAMES */
 

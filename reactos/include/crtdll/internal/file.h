@@ -28,9 +28,17 @@ extern "C" {
 
 
 // might need check for IO_APPEND aswell
-#define WRITE_STREAM(f) ((((f)->_flag & _IOWRT) == _IOWRT ) ||  (((f)->_flag & _IORW) ==  _IORW ))
+#define OPEN4WRITING(f) ((((f)->_flag & _IOWRT) == _IOWRT ) )
 
-#define READ_STREAM(f) ((((f)->_flag & _IOREAD) == _IOREAD ) ||  (((f)->_flag & _IORW) ==  _IORW ))
+#define OPEN4READING(f) ((((f)->_flag & _IOREAD) == _IOREAD ) )
+
+// might need check for IO_APPEND aswell
+#define WRITE_STREAM(f) ((((f)->_flag & _IOWRT) == _IOWRT ) )
+
+#define READ_STREAM(f) ((((f)->_flag & _IOREAD) == _IOREAD ) )
+
+
+char __validfp (FILE *f);
 
 int __set_errno(int err);
 void *filehnd(int fn);

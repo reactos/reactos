@@ -19,6 +19,9 @@ typedef struct {
   unsigned int mantissah:32;
   unsigned int exponent:15;
   unsigned int sign:1;
+  unsigned int empty:16;
 } long_double_t;
+
+
 
 #endif
