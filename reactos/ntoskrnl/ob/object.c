@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.71 2003/10/30 21:34:54 ekohl Exp $
+/* $Id: object.c,v 1.72 2003/11/09 23:20:27 gvg Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -805,6 +805,34 @@ ObGetObjectHandleCount(PVOID Object)
   Header = BODY_TO_HEADER(Object);
 
   return(Header->HandleCount);
+}
+
+
+/**********************************************************************
+ * NAME							EXPORTED
+ *	ObDereferenceObject@4
+ *
+ * DESCRIPTION
+ *	Decrements a given object's reference count and performs
+ *	retention checks.
+ *
+ * ARGUMENTS
+ *	ObjectBody = Body of the object.
+ *
+ * RETURN VALUE
+ * 	None.
+ *
+ * @implemented
+ */
+
+#ifdef ObDereferenceObject
+#undef ObDereferenceObject
+#endif
+
+VOID STDCALL
+ObDereferenceObject(IN PVOID Object)
+{
+  ObfDereferenceObject(Object);
 }
 
 /* EOF */
