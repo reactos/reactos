@@ -59,17 +59,18 @@ W32kAddFontResource(LPCWSTR  Filename)
   FT_Face face;
   ANSI_STRING StringA;
   UNICODE_STRING StringU;
+  IO_STATUS_BLOCK Iosb;
 
-  FontObj = EngAllocMem(FL_ZERO_MEMORY, sizeof(FONTOBJ), NULL);
-  FontGDI = EngAllocMem(FL_ZERO_MEMORY, sizeof(FONTGDI), NULL);
-  NewFont = CreateGDIHandle(FontGDI, FontObj);
+  FontObj = EngAllocMem(FL_ZERO_MEMORY, sizeof(FONTOBJ), 0);
+  FontGDI = EngAllocMem(FL_ZERO_MEMORY, sizeof(FONTGDI), 0);
+  NewFont = (HFONT)CreateGDIHandle(FontGDI, FontObj);
 
-  RtlCreateUnicodeString(&uFileName, Filename);
+  RtlCreateUnicodeString(&uFileName, (LPWSTR)Filename);
 
   //  Open the Module
   InitializeObjectAttributes(&ObjectAttributes, &uFileName, 0, NULL, NULL);
 
-  Status = NtOpenFile(&FileHandle, FILE_ALL_ACCESS, &ObjectAttributes, NULL, 0, 0);
+  Status = NtOpenFile(&FileHandle, FILE_ALL_ACCESS, &ObjectAttributes, &Iosb, 0, 0);
 
   if (!NT_SUCCESS(Status))
   {
@@ -78,7 +79,7 @@ W32kAddFontResource(LPCWSTR  Filename)
   }
 
   //  Get the size of the file
-  Status = NtQueryInformationFile(FileHandle, NULL, &FileStdInfo, sizeof(FileStdInfo), FileStandardInformation);
+  Status = NtQueryInformationFile(FileHandle, &Iosb, &FileStdInfo, sizeof(FileStdInfo), FileStandardInformation);
   if (!NT_SUCCESS(Status))
   {
     DbgPrint("Could not get file size\n");
@@ -96,7 +97,7 @@ W32kAddFontResource(LPCWSTR  Filename)
   }
    
   //  Load driver into memory chunk
-  Status = NtReadFile(FileHandle, 0, 0, 0, 0, buffer, FileStdInfo.EndOfFile.u.LowPart, 0, 0);
+  Status = NtReadFile(FileHandle, 0, 0, 0, &Iosb, buffer, FileStdInfo.EndOfFile.u.LowPart, 0, 0);
   if (!NT_SUCCESS(Status))
   {
     DbgPrint("could not read module file into memory");
