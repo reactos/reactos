@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.13 2003/03/05 22:50:24 ekohl Exp $
+/* $Id: handle.c,v 1.14 2003/03/09 21:41:00 hbirr Exp $
  *
  * reactos/subsys/csrss/api/handle.c
  *
@@ -15,15 +15,23 @@
 #include "api.h"
 #include <ntdll/rtl.h>
 
+#define NDEBUG
+#include <debug.h>
+
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS STDCALL CsrGetObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle, Object_t **Object )
 {
    ULONG h = (((ULONG)Handle) >> 2) - 1;
-  //   DbgPrint( "CsrGetObject, Object: %x, %x, %x\n", Object, Handle, ProcessData->HandleTableSize );
+   DPRINT("CsrGetObject, Object: %x, %x, %x\n", Object, Handle, ProcessData ? ProcessData->HandleTableSize : 0);
+
+   if (ProcessData == NULL)
+   {
+      return STATUS_INVALID_PARAMETER;
+   }
    if( h >= ProcessData->HandleTableSize )
      {
-       DbgPrint( "CsrGetObject returning invalid handle\n" );
+       DPRINT("CsrGetObject returning invalid handle\n");
        return STATUS_INVALID_HANDLE;
      }
    *Object = ProcessData->HandleTable[h];
@@ -37,6 +45,10 @@ NTSTATUS STDCALL CsrReleaseObject(PCSRSS_PROCESS_DATA ProcessData,
 {
    Object_t *Object;
    ULONG h = (((ULONG)Handle) >> 2) - 1;
+   if (ProcessData == NULL)
+   {
+      return STATUS_INVALID_PARAMETER;
+   }
    if( h >= ProcessData->HandleTableSize || ProcessData->HandleTable[h] == 0 )
       return STATUS_INVALID_HANDLE;
    /* dec ref count */
@@ -58,6 +70,11 @@ NTSTATUS STDCALL CsrInsertObject( PCSRSS_PROCESS_DATA ProcessData, PHANDLE Handl
 {
    ULONG i;
    PVOID* NewBlock;
+
+   if (ProcessData == NULL)
+   {
+      return STATUS_INVALID_PARAMETER;
+   }
 
    for (i = 0; i < ProcessData->HandleTableSize; i++)
      {
@@ -93,6 +110,10 @@ NTSTATUS STDCALL CsrVerifyObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle
 {
   ULONG h = (((ULONG)Handle) >> 2) - 1;
 
+  if (ProcessData == NULL)
+  {
+      return STATUS_INVALID_PARAMETER;
+  }
   if (h >= ProcessData->HandleTableSize)
     {
       return STATUS_INVALID_HANDLE;
