@@ -70,19 +70,13 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
    UNICODE_STRING NtPathU;
    HANDLE FileHandle;
    NTSTATUS Status;
-   ULONG Flags = 0;
+   ULONG FileAttributes, Flags = 0;
    CSRSS_API_REQUEST Request;
    CSRSS_API_REPLY Reply;
+   PVOID EaBuffer = NULL;
+   ULONG EaLength = 0;
 
    DPRINT("CreateFileW(lpFileName %S)\n",lpFileName);
-
-   if(hTemplateFile != NULL && hTemplateFile != INVALID_HANDLE_VALUE)
-   {
-    /* FIXME */
-    DPRINT1("Template file feature not supported yet\n");
-    SetLastError(ERROR_NOT_SUPPORTED);
-    return INVALID_HANDLE_VALUE;
-   }
 
    /* validate & translate the creation disposition */
    switch (dwCreationDisposition)
@@ -128,57 +122,56 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
   /* validate & translate the flags */
 
    /* translate the flags that need no validation */
-  if (!(dwFlagsAndAttributes & FILE_FLAG_OVERLAPPED)){
-    /* yes, nonalert is correct! apc's are not delivered
-    while waiting for file io to complete */
-    Flags |= FILE_SYNCHRONOUS_IO_NONALERT;
-  }
+   if (!(dwFlagsAndAttributes & FILE_FLAG_OVERLAPPED))
+   {
+      /* yes, nonalert is correct! apc's are not delivered
+      while waiting for file io to complete */
+      Flags |= FILE_SYNCHRONOUS_IO_NONALERT;
+   }
    
    if(dwFlagsAndAttributes & FILE_FLAG_WRITE_THROUGH)
-    Flags |= FILE_WRITE_THROUGH;
+      Flags |= FILE_WRITE_THROUGH;
 
    if(dwFlagsAndAttributes & FILE_FLAG_NO_BUFFERING)
-    Flags |= FILE_NO_INTERMEDIATE_BUFFERING;
+      Flags |= FILE_NO_INTERMEDIATE_BUFFERING;
 
    if(dwFlagsAndAttributes & FILE_FLAG_RANDOM_ACCESS)
-    Flags |= FILE_RANDOM_ACCESS;
+      Flags |= FILE_RANDOM_ACCESS;
    
    if(dwFlagsAndAttributes & FILE_FLAG_SEQUENTIAL_SCAN)
-    Flags |= FILE_SEQUENTIAL_ONLY;
+      Flags |= FILE_SEQUENTIAL_ONLY;
    
    if(dwFlagsAndAttributes & FILE_FLAG_DELETE_ON_CLOSE)
-    Flags |= FILE_DELETE_ON_CLOSE;
+      Flags |= FILE_DELETE_ON_CLOSE;
    
    if(dwFlagsAndAttributes & FILE_FLAG_BACKUP_SEMANTICS)
    {
-    if(dwDesiredAccess & GENERIC_ALL)
-      Flags |= FILE_OPEN_FOR_BACKUP_INTENT | FILE_OPEN_FOR_RECOVERY;
-    else
-    {
-      if(dwDesiredAccess & GENERIC_READ)
-        Flags |= FILE_OPEN_FOR_BACKUP_INTENT;
-      
-      if(dwDesiredAccess & GENERIC_WRITE)
-        Flags |= FILE_OPEN_FOR_RECOVERY;
-    }
+      if(dwDesiredAccess & GENERIC_ALL)
+         Flags |= FILE_OPEN_FOR_BACKUP_INTENT | FILE_OPEN_FOR_RECOVERY;
+      else
+      {
+         if(dwDesiredAccess & GENERIC_READ)
+            Flags |= FILE_OPEN_FOR_BACKUP_INTENT;
+
+         if(dwDesiredAccess & GENERIC_WRITE)
+            Flags |= FILE_OPEN_FOR_RECOVERY;
+      }
    }
    else
-    Flags |= FILE_NON_DIRECTORY_FILE;
+      Flags |= FILE_NON_DIRECTORY_FILE;
+
+   if(dwFlagsAndAttributes & FILE_FLAG_OPEN_REPARSE_POINT)
+      Flags |= FILE_OPEN_REPARSE_POINT;
+
+   if(dwFlagsAndAttributes & FILE_FLAG_OPEN_NO_RECALL)
+      Flags |= FILE_OPEN_NO_RECALL;
+
+   FileAttributes = (dwFlagsAndAttributes & (FILE_ATTRIBUTE_VALID_FLAGS & ~FILE_ATTRIBUTE_DIRECTORY));
     
-    
-  /* handle may allways be waited on and querying attributes are allways allowed */
-  dwDesiredAccess |= SYNCHRONIZE|FILE_READ_ATTRIBUTES; 
+   /* handle may allways be waited on and querying attributes are allways allowed */
+   dwDesiredAccess |= SYNCHRONIZE | FILE_READ_ATTRIBUTES;
 
    /* FILE_FLAG_POSIX_SEMANTICS is handled later */
-
-#if 0
-   /* FIXME: Win32 constants to be defined */
-   if(dwFlagsAndAttributes & FILE_FLAG_OPEN_REPARSE_POINT)
-    Flags |= FILE_OPEN_REPARSE_POINT;
-   
-   if(dwFlagsAndAttributes & FILE_FLAG_OPEN_NO_RECALL)
-    Flags |= FILE_OPEN_NO_RECALL;
-#endif
 
    /* check for console output */
    if (0 == _wcsicmp(L"CONOUT$", lpFileName))
@@ -219,15 +212,81 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
          return Reply.Data.GetInputHandleReply.InputHandle;
       }
    }
+   
+   if (hTemplateFile != NULL)
+   {
+      FILE_EA_INFORMATION EaInformation;
+
+      for (;;)
+      {
+         /* try to get the size of the extended attributes, if we fail just continue
+            creating the file without copying the attributes! */
+         Status = NtQueryInformationFile(hTemplateFile,
+                                         &IoStatusBlock,
+                                         &EaInformation,
+                                         sizeof(FILE_EA_INFORMATION),
+                                         FileEaInformation);
+         if (NT_SUCCESS(Status) && (EaInformation.EaSize != 0))
+         {
+            /* there's extended attributes to read, let's give it a try */
+            EaBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                       0,
+                                       EaInformation.EaSize);
+            if (EaBuffer == NULL)
+            {
+               /* the template file handle is valid and has extended attributes,
+                  however we seem to lack some memory here. We should fail here! */
+               SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+               return INVALID_HANDLE_VALUE;
+            }
+            
+            Status = NtQueryEaFile(hTemplateFile,
+                                   &IoStatusBlock,
+                                   EaBuffer,
+                                   EaInformation.EaSize,
+                                   FALSE,
+                                   NULL,
+                                   0,
+                                   NULL,
+                                   TRUE);
+            
+            if (NT_SUCCESS(Status))
+            {
+               /* we successfully read the extended attributes, break the loop
+                  and continue */
+               break;
+            }
+            else
+            {
+               RtlFreeHeap(RtlGetProcessHeap(),
+                           0,
+                           EaBuffer);
+               EaBuffer = NULL;
+               
+               if (Status != STATUS_BUFFER_TOO_SMALL)
+               {
+                  /* unless we just allocated not enough memory, break the loop
+                     and just continue without copying extended attributes */
+                  break;
+               }
+            }
+         }
+         else
+         {
+            /* we either failed to get the size of the extended attributes or
+               they're empty, just continue as there's no need to copy
+               attributes */
+            break;
+         }
+      }
+   }
 
    /* build the object attributes */
-   InitializeObjectAttributes(
-    &ObjectAttributes,
-    &NtPathU,
-    0,
-    NULL,
-    NULL
-   );
+   InitializeObjectAttributes(&ObjectAttributes,
+                              &NtPathU,
+                              0,
+                              NULL,
+                              NULL);
 
    if (lpSecurityAttributes)
    {
@@ -246,14 +305,22 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
 			  &ObjectAttributes,
 			  &IoStatusBlock,
 			  NULL,
-			  dwFlagsAndAttributes,
+			  FileAttributes,
 			  dwShareMode,
 			  dwCreationDisposition,
 			  Flags,
-			  NULL,
-			  0);
+			  EaBuffer,
+			  EaLength);
 
    RtlFreeUnicodeString(&NtPathU);
+   
+   /* free the extended attributes buffer if allocated */
+   if (EaBuffer != NULL)
+   {
+      RtlFreeHeap(RtlGetProcessHeap(),
+                  0,
+                  EaBuffer);
+   }
 
    /* error */
    if (!NT_SUCCESS(Status))
