@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.67 2004/04/30 22:17:59 weiden Exp $
+/* $Id: mouse.c,v 1.68 2004/05/01 08:55:04 weiden Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -75,19 +75,17 @@ EnableMouse(HDC hDisplayDC)
     SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
     DC_UnlockDc( hDisplayDC );
     
+    /* Move the cursor to the screen center */
+    DPRINT("Setting Cursor up at 0x%x, 0x%x\n", SurfObj->sizlBitmap.cx / 2, SurfObj->sizlBitmap.cy / 2);
+    ExAcquireFastMutex(&InputWindowStation->SystemCursor.CursorMutex);
+    InputWindowStation->SystemCursor.x = SurfObj->sizlBitmap.cx / 2;
+    InputWindowStation->SystemCursor.y = SurfObj->sizlBitmap.cy / 2;
+    ExReleaseFastMutex(&InputWindowStation->SystemCursor.CursorMutex);
     IntSetCursor(InputWindowStation, NULL, TRUE);
     
     InputWindowStation->SystemCursor.Enabled = (SPS_ACCEPT_EXCLUDE == SurfGDI->PointerStatus ||
                                                 SPS_ACCEPT_NOEXCLUDE == SurfGDI->PointerStatus);
     
-    /* Move the cursor to the screen center */
-    DPRINT("Setting Cursor up at 0x%x, 0x%x\n", SurfObj->sizlBitmap.cx / 2, SurfObj->sizlBitmap.cy / 2);
-    #if 0
-    ExAcquireFastMutex(&CurInfo->CursorMutex);
-    MouseMoveCursor(SurfObj->sizlBitmap.cx / 2, SurfObj->sizlBitmap.cy / 2);
-    ExReleaseFastMutex(&CurInfo->CursorMutex);
-    #endif
-
     ObDereferenceObject(InputWindowStation);
   }
   else
