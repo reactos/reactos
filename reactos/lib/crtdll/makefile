@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.58 2003/07/16 21:54:22 royce Exp $
+# $Id: makefile,v 1.59 2003/07/16 22:09:07 royce Exp $
 
 PATH_TO_TOP = ../..
 
@@ -339,7 +339,7 @@ STDIO_OBJECTS = \
 	$(PATH_TO_MSVCRT)/stdio/rename.o \
 	$(PATH_TO_MSVCRT)/stdio/rewind.o \
 	$(PATH_TO_MSVCRT)/stdio/rmtmp.o \
-	stdio/scanf.o \
+	$(PATH_TO_MSVCRT)/stdio/scanf.o \
 	$(PATH_TO_MSVCRT)/stdio/setbuf.o \
 	stdio/setbuffe.o \
 	stdio/setlineb.o \
