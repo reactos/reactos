@@ -1545,10 +1545,10 @@ DetectHardware(VOID)
 
   DbgPrint((DPRINT_HWDETECT, "DetectHardware() Done\n"));
 
-//#if 0
+#if 0
   printf("*** System stopped ***\n");
   for (;;);
-//#endif
+#endif
 }
 
 /* EOF */
